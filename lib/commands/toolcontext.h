@@ -42,13 +42,14 @@ struct config_info {
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
 struct cmd_context {
-	/* format handler allocates all objects from here */
-	struct pool *mem;
+	struct pool *libmem;	/* For permanent config data */
+	struct pool *mem;	/* Transient: Cleared between each command */
 
 	const struct format_type *fmt;	/* Current format to use by default */
 	struct format_type *fmt_backup;	/* Format to use for backups */
 
 	struct list formats;	/* Available formats */
+	const char *hostname;
 
 	char *cmd_line;
 	struct command *command;

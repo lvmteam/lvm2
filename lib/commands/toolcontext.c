@@ -33,6 +33,7 @@
 
 #include <locale.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <syslog.h>
 #include <time.h>
 
@@ -424,6 +425,23 @@ static int _init_formats(struct cmd_context *cmd)
 	return 0;
 }
 
+static int _init_hostname(struct cmd_context *cmd)
+{
+	struct utsname uts;
+
+	if (uname(&uts)) {
+		log_sys_error("uname", "_init_hostname");
+		return 0;
+	}
+
+	if (!(cmd->hostname = pool_strdup(cmd->libmem, uts.nodename))) {
+		log_error("_init_hostname: pool_strdup failed");
+		return 0;
+	}
+
+	return 1;
+}
+
 /* Entry point */
 struct cmd_context *create_toolcontext(struct arg *the_args)
 {
@@ -464,6 +482,11 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 
 	_init_logging(cmd);
 
+	if (!(cmd->libmem = pool_create(4 * 1024))) {
+		log_error("Library memory pool creation failed");
+		return 0;
+	}
+
 	if (!_process_config(cmd))
 		goto error;
 
@@ -481,6 +504,9 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	memlock_init(cmd);
 
 	if (!_init_formats(cmd))
+		goto error;
+
+	if (!_init_hostname(cmd))
 		goto error;
 
 	cmd->current_settings = cmd->default_settings;
@@ -523,6 +549,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	pool_destroy(cmd->mem);
 	dev_cache_exit();
 	destroy_config_tree(cmd->cf);
+	pool_destroy(cmd->libmem);
 	dbg_free(cmd);
 
 	release_log_memory();

@@ -202,7 +202,8 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 	return vg;
 }
 
-static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
+static struct disk_list *_flatten_pv(struct format_instance *fid,
+				     struct pool *mem, struct volume_group *vg,
 				     struct physical_volume *pv,
 				     const char *dev_dir)
 {
@@ -219,7 +220,7 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	list_init(&dl->uuids);
 	list_init(&dl->lvds);
 
-	if (!export_pv(mem, vg, &dl->pvd, pv) ||
+	if (!export_pv(fid->fmt->cmd, mem, vg, &dl->pvd, pv) ||
 	    !export_vg(&dl->vgd, vg) ||
 	    !export_uuids(dl, vg) ||
 	    !export_lvs(dl, vg, pv, dev_dir) || !calculate_layout(dl)) {
@@ -243,7 +244,7 @@ static int _flatten_vg(struct format_instance *fid, struct pool *mem,
 	list_iterate(pvh, &vg->pvs) {
 		pvl = list_item(pvh, struct pv_list);
 
-		if (!(data = _flatten_pv(mem, vg, pvl->pv, dev_dir))) {
+		if (!(data = _flatten_pv(fid, mem, vg, pvl->pv, dev_dir))) {
 			stack;
 			return 0;
 		}
@@ -422,7 +423,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	dl->mem = mem;
 	dl->dev = pv->dev;
 
-	if (!export_pv(mem, NULL, &dl->pvd, pv)) {
+	if (!export_pv(fmt->cmd, mem, NULL, &dl->pvd, pv)) {
 		stack;
 		goto bad;
 	}
