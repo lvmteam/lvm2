@@ -41,7 +41,8 @@ static int _ignore_md(struct dev_filter *f, struct device *dev)
 	}
 
 	if (ret < 0) {
-		log_debug("%s: Skipping: error in md component detection");
+		log_debug("%s: Skipping: error in md component detection",
+			  dev_name(dev));
 		return 0;
 	}
 
