@@ -69,10 +69,10 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 
-        if (!lock_vol(vg_name_old, LCK_VG | LCK_WRITE)) {
-                log_error("Can't get lock for %s", vg_name_old);
-                return ECMD_FAILED;
-        }
+	if (!lock_vol(vg_name_old, LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for %s", vg_name_old);
+		return ECMD_FAILED;
+	}
 
 	if (!(vg_old = cmd->fid->ops->vg_read(cmd->fid, vg_name_old))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
@@ -80,11 +80,11 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-        if (vg_old->status & EXPORTED_VG) {
+	if (vg_old->status & EXPORTED_VG) {
 		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
-                log_error("Volume group \"%s\" is exported", vg_old->name);
-                return ECMD_FAILED;
-        }
+		log_error("Volume group \"%s\" is exported", vg_old->name);
+		return ECMD_FAILED;
+	}
 
 	if (!(vg_old->status & LVM_WRITE)) {
 		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
@@ -143,7 +143,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Renaming \"%s\" to \"%s\"", old_path, new_path);
 		if (rename(old_path, new_path)) {
 			log_error("Renaming \"%s\" to \"%s\" failed: %s",
-			  	old_path, new_path, strerror(errno));
+				  old_path, new_path, strerror(errno));
 			goto error;
 		}
 	}

@@ -24,12 +24,12 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name);
 
 int vgexport(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (!argc && !arg_count(cmd,all_ARG)) {
+	if (!argc && !arg_count(cmd, all_ARG)) {
 		log_error("Please supply volume groups or use -a for all.");
 		return ECMD_FAILED;
 	}
 
-	if (argc && arg_count(cmd,all_ARG)) {
+	if (argc && arg_count(cmd, all_ARG)) {
 		log_error("No arguments permitted when using -a for all.");
 		return ECMD_FAILED;
 	}
@@ -57,7 +57,7 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name)
 	}
 
 	if (lvs_in_vg_activated(vg)) {
-		log_error("Volume group \"%s\" has active logical volumes", 
+		log_error("Volume group \"%s\" has active logical volumes",
 			  vg_name);
 		goto error;
 	}
@@ -67,15 +67,15 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name)
 
 	vg->status |= EXPORTED_VG;
 
-	if (!cmd->fid->ops->vg_write(cmd->fid,vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		goto error;
 
 	backup(vg);
 
 	log_print("Volume group \"%s\" successfully exported", vg->name);
-	
+
 	return 0;
 
-     error:
+      error:
 	return ECMD_FAILED;
 }

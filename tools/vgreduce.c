@@ -20,7 +20,8 @@
 
 #include "tools.h"
 
-static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv);
+static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
+			   struct physical_volume *pv);
 
 int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 {
@@ -34,12 +35,12 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc == 1 && !arg_count(cmd,all_ARG)) {
+	if (argc == 1 && !arg_count(cmd, all_ARG)) {
 		log_error("Please enter physical volume paths or option -a");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc > 1 && arg_count(cmd,all_ARG)) {
+	if (argc > 1 && arg_count(cmd, all_ARG)) {
 		log_error("Option -a and physical volume paths mutually "
 			  "exclusive");
 		return EINVALID_CMD_LINE;
@@ -61,11 +62,11 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-        if (vg->status & EXPORTED_VG) {
-                log_error("Volume group \"%s\" is exported", vg->name);
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", vg->name);
 		lock_vol(vg_name, LCK_VG | LCK_NONE);
-                return ECMD_FAILED;
-        }
+		return ECMD_FAILED;
+	}
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
@@ -105,7 +106,8 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 }
 
 /* Or take pv_name instead? */
-static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv)
+static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
+			   struct physical_volume *pv)
 {
 	struct pv_list *pvl;
 	const char *name = dev_name(pv->dev);
@@ -144,8 +146,7 @@ static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg, str
 
 	if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
 		log_error("Removal of physical volume \"%s\" from "
-			  "\"%s\" failed",
-			  name, vg->name);
+			  "\"%s\" failed", name, vg->name);
 		return ECMD_FAILED;
 	}
 

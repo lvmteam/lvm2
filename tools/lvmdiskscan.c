@@ -14,9 +14,9 @@
 #include "tools.h"
 
 int _get_max_dev_name_len(struct dev_filter *filter);
-void _count(struct device*, int*, int*);
-void _print(struct device*, uint64_t, char*);
-int _check_device(struct device*);
+void _count(struct device *, int *, int *);
+void _print(struct device *, uint64_t, char *);
+int _check_device(struct device *);
 
 int disks_found = 0;
 int parts_found = 0;
@@ -27,25 +27,25 @@ int max_len;
 int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	uint64_t size;
-        struct dev_iter *iter;
-        struct device *dev;
+	struct dev_iter *iter;
+	struct device *dev;
 	struct physical_volume *pv;
 
-	if (arg_count(cmd,lvmpartition_ARG))
+	if (arg_count(cmd, lvmpartition_ARG))
 		log_print("WARNING: only considering LVM devices");
 
 	max_len = _get_max_dev_name_len(cmd->filter);
 
-        if (!(iter = dev_iter_create(cmd->filter))) {
-                log_error("dev_iter_create failed");
-                return 0;
-        }
+	if (!(iter = dev_iter_create(cmd->filter))) {
+		log_error("dev_iter_create failed");
+		return 0;
+	}
 
-        /* Do scan */
-        for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
+	/* Do scan */
+	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		/* Try if it is a PV first */
-		if((pv = cmd->fid->ops->pv_read(cmd->fid, dev_name(dev)))) {
-			if(!dev_get_size(dev, &size)) {
+		if ((pv = cmd->fid->ops->pv_read(cmd->fid, dev_name(dev)))) {
+			if (!dev_get_size(dev, &size)) {
 				log_error("Couldn't get size of \"%s\"",
 					  dev_name(dev));
 				continue;
@@ -55,15 +55,17 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 			continue;
 		}
 		/* If user just wants PVs we are done */
-		if (arg_count(cmd,lvmpartition_ARG)) continue;
-		
+		if (arg_count(cmd, lvmpartition_ARG))
+			continue;
+
 		/* What other device is it? */
-		if(!_check_device(dev)) continue;
-        }
-        dev_iter_destroy(iter);
+		if (!_check_device(dev))
+			continue;
+	}
+	dev_iter_destroy(iter);
 
 	/* Display totals */
-	if (!arg_count(cmd,lvmpartition_ARG)) {
+	if (!arg_count(cmd, lvmpartition_ARG)) {
 		log_print("%d disk%s",
 			  disks_found, disks_found == 1 ? "" : "s");
 		log_print("%d partition%s",
@@ -77,8 +79,8 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 	return 0;
 }
 
-
-int _check_device(struct device *dev) {
+int _check_device(struct device *dev)
+{
 	char buffer;
 	uint64_t size;
 
@@ -89,55 +91,58 @@ int _check_device(struct device *dev) {
 		dev_close(dev);
 		return 0;
 	}
-	if(!dev_get_size(dev, &size)) {
-		log_error("Couldn't get size of \"%s\"",
-			  dev_name(dev));
+	if (!dev_get_size(dev, &size)) {
+		log_error("Couldn't get size of \"%s\"", dev_name(dev));
 	}
 	_print(dev, size, NULL);
 	_count(dev, &disks_found, &parts_found);
 	if (!dev_close(dev)) {
-               	log_error("dev_close on \"%s\" failed", dev_name(dev));
+		log_error("dev_close on \"%s\" failed", dev_name(dev));
 		return 0;
 	}
 	return 1;
 }
 
-
-int _get_max_dev_name_len(struct dev_filter *filter) {
+int _get_max_dev_name_len(struct dev_filter *filter)
+{
 	int len = 0;
 	int max_len = 0;
-        struct dev_iter *iter;
-        struct device *dev;
+	struct dev_iter *iter;
+	struct device *dev;
 
-        if (!(iter = dev_iter_create(filter))) {
-                log_error("dev_iter_create failed");
-                return 0;
-        }
-
-        /* Do scan */
-        for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
-		len = strlen(dev_name(dev));
-		if (len > max_len) max_len = len;
+	if (!(iter = dev_iter_create(filter))) {
+		log_error("dev_iter_create failed");
+		return 0;
 	}
-        dev_iter_destroy(iter);
+
+	/* Do scan */
+	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
+		len = strlen(dev_name(dev));
+		if (len > max_len)
+			max_len = len;
+	}
+	dev_iter_destroy(iter);
 
 	return max_len;
 }
 
+void _count(struct device *dev, int *disks, int *parts)
+{
+	int c = dev_name(dev)[strlen(dev_name(dev)) - 1];
 
-void _count(struct device *dev, int *disks, int *parts) {
-	int c = dev_name(dev)[strlen(dev_name(dev))-1];
-
-	if(!isdigit(c))	(*disks)++;
-	else		(*parts)++;
+	if (!isdigit(c))
+		(*disks)++;
+	else
+		(*parts)++;
 }
 
-void _print(struct device *dev, uint64_t size, char *what) {
-	char *dummy = display_size(size/2, SIZE_SHORT);
+void _print(struct device *dev, uint64_t size, char *what)
+{
+	char *dummy = display_size(size / 2, SIZE_SHORT);
 	const char *name = dev_name(dev);
 
-	if(!what) {
-		
+	if (!what) {
+
 		what = "";
 	}
 

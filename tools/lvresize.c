@@ -51,19 +51,19 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if (!strcmp(cmd_name, "lvextend"))
 		resize = LV_EXTEND;
 
-	if (arg_count(cmd,extents_ARG) + arg_count(cmd,size_ARG) != 1) {
+	if (arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG) != 1) {
 		log_error("Please specify either size or extents (not both)");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,extents_ARG)) {
-		extents = arg_int_value(cmd,extents_ARG, 0);
-		sign = arg_sign_value(cmd,extents_ARG, SIGN_NONE);
+	if (arg_count(cmd, extents_ARG)) {
+		extents = arg_int_value(cmd, extents_ARG, 0);
+		sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
 	}
 
-	if (arg_count(cmd,size_ARG)) {
-		size = arg_int_value(cmd,size_ARG, 0);
-		sign = arg_sign_value(cmd,size_ARG, SIGN_NONE);
+	if (arg_count(cmd, size_ARG)) {
+		size = arg_int_value(cmd, size_ARG, 0);
+		sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
 	}
 
 	if (resize == LV_EXTEND && sign == SIGN_MINUS) {
@@ -76,12 +76,12 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,stripes_ARG)) {
+	if (arg_count(cmd, stripes_ARG)) {
 		log_print("Varied striping not yet supported. Ignoring.");
 		/* FUTURE stripes = arg_int_value(cmd,stripes_ARG, 1); */
 	}
 
-	if (arg_count(cmd,stripesize_ARG)) {
+	if (arg_count(cmd, stripesize_ARG)) {
 		log_print("Varied stripesize not yet supported. Ignoring.");
 		/* FUTURE stripesize = 2 * arg_int_value(cmd,stripesize_ARG, 0); */
 	}
@@ -115,15 +115,15 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-        if (vg->status & EXPORTED_VG) {
-                log_error("Volume group %s is exported", vg->name);
-                goto error;
-        }
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group %s is exported", vg->name);
+		goto error;
+	}
 
-        if (!(vg->status & LVM_WRITE)) {
-                log_error("Volume group %s is read-only", vg_name);
-                goto error;
-        }
+	if (!(vg->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg_name);
+		goto error;
+	}
 
 	/* does LV exist? */
 	if (!(lvl = find_lv_in_vg(vg, lv_name))) {
@@ -186,7 +186,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			struct stripe_segment *seg;
 			uint32_t sz, str;
 
- 			seg = list_item(segh, struct stripe_segment);
+			seg = list_item(segh, struct stripe_segment);
 			sz = seg->stripe_size;
 			str = seg->stripes;
 
@@ -290,7 +290,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			dbg_free(dummy);
 		}
 
-		if (!arg_count(cmd,force_ARG)) {
+		if (!arg_count(cmd, force_ARG)) {
 			if (yes_no_prompt("Do you really want to reduce %s?"
 					  " [y/n]: ", lv_name) == 'n') {
 				log_print("Logical volume %s NOT reduced",
@@ -307,8 +307,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if ((resize == LV_EXTEND && argc) &&
-	    !(pvh = create_pv_list(cmd->mem, vg,
-				    argc - opt, argv + opt))) {
+	    !(pvh = create_pv_list(cmd->mem, vg, argc - opt, argv + opt))) {
 		stack;
 		goto error;
 	}
@@ -330,7 +329,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			goto error;
 	}
 
-
 	active = lv_active(lv);
 
 /********* FIXME Suspend lv  ***********/
@@ -339,7 +337,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		goto error;
 
-        backup(vg);
+	backup(vg);
 
 	if (active && !lv_reactivate(lv))
 		goto error;

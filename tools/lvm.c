@@ -24,11 +24,11 @@
 #include <stdlib.h>
 
 #ifdef READLINE_SUPPORT
-  #include <readline/readline.h>
-  #include <readline/history.h>
-  #ifndef HAVE_RL_COMPLETION_MATCHES
-    #define rl_completion_matches(a, b) completion_matches((char *)a, b)
-  #endif
+#include <readline/readline.h>
+#include <readline/history.h>
+#ifndef HAVE_RL_COMPLETION_MATCHES
+#define rl_completion_matches(a, b) completion_matches((char *)a, b)
+#endif
 #endif
 
 /* 
@@ -41,7 +41,6 @@ struct arg the_args[ARG_COUNT + 1] = {
 #undef arg
 
 };
-
 
 static int _array_size;
 static int _num_commands;
@@ -56,7 +55,6 @@ static FILE *_log;
 
 /* lvm1 label handler */
 static struct labeller *_lvm1_label;
-
 
 /*
  * This structure only contains those options that
@@ -76,7 +74,6 @@ struct config_info {
 
 static struct config_info _default_settings;
 static struct config_info _current_settings;
-
 
 /*
  * The lvm_sys_dir contains:
@@ -551,14 +548,13 @@ static int merge_synonym(int oldarg, int newarg)
 {
 	struct arg *old, *new;
 
-	if (arg_count(cmd,oldarg) && arg_count(cmd,newarg)) {
+	if (arg_count(cmd, oldarg) && arg_count(cmd, newarg)) {
 		log_error("%s and %s are synonyms.  Please only supply one.",
-			  the_args[oldarg].long_arg,
-			  the_args[newarg].long_arg);
+			  the_args[oldarg].long_arg, the_args[newarg].long_arg);
 		return 0;
 	}
 
-	if (!arg_count(cmd,oldarg))
+	if (!arg_count(cmd, oldarg))
 		return 1;
 
 	old = the_args + oldarg;
@@ -589,44 +585,43 @@ static int process_common_commands(struct command *com)
 {
 	_current_settings = _default_settings;
 
-	if (arg_count(cmd,suspend_ARG))
+	if (arg_count(cmd, suspend_ARG))
 		kill(getpid(), SIGSTOP);
 
-	if (arg_count(cmd,debug_ARG))
+	if (arg_count(cmd, debug_ARG))
 		_current_settings.debug = _LOG_FATAL +
-					  (arg_count(cmd,debug_ARG) - 1);
+		    (arg_count(cmd, debug_ARG) - 1);
 
-	if (arg_count(cmd,verbose_ARG))
-		_current_settings.verbose = arg_count(cmd,verbose_ARG);
+	if (arg_count(cmd, verbose_ARG))
+		_current_settings.verbose = arg_count(cmd, verbose_ARG);
 
-	if (arg_count(cmd,quiet_ARG)) {
+	if (arg_count(cmd, quiet_ARG)) {
 		_current_settings.debug = 0;
 		_current_settings.verbose = 0;
 	}
 
-	if (arg_count(cmd,test_ARG))
-		_current_settings.test = arg_count(cmd,test_ARG);
+	if (arg_count(cmd, test_ARG))
+		_current_settings.test = arg_count(cmd, test_ARG);
 
-	if (arg_count(cmd,help_ARG)) {
+	if (arg_count(cmd, help_ARG)) {
 		usage(com->name);
 		return ECMD_PROCESSED;
 	}
 
-	if (arg_count(cmd,version_ARG)) {
-		return version(cmd, 0, (char **)NULL);
+	if (arg_count(cmd, version_ARG)) {
+		return version(cmd, 0, (char **) NULL);
 	}
 
-	if (arg_count(cmd,autobackup_ARG)) {
+	if (arg_count(cmd, autobackup_ARG)) {
 		_current_settings.archive = 1;
 		_current_settings.backup = 1;
 	}
 
-	if (arg_count(cmd,partial_ARG)) {
+	if (arg_count(cmd, partial_ARG)) {
 		init_partial(1);
 		log_print("Partial mode. Incomplete volume groups will "
 			  "be activated read-only.");
-	}
-	else
+	} else
 		init_partial(0);
 
 	/* Handle synonyms */
@@ -693,18 +688,18 @@ static char *_copy_command_line(struct pool *mem, int argc, char **argv)
 			goto bad;
 
 		if (i < (argc - 1))
-			if (!pool_grow_object(cmd->mem, " ", 1));
+			if (!pool_grow_object(cmd->mem, " ", 1)) ;
 	}
 
 	/*
 	 * Terminate.
 	 */
 	if (!pool_grow_object(mem, "\0", 1))
-              goto bad;
+		goto bad;
 
 	return pool_end_object(mem);
 
- bad:
+      bad:
 	log_err("Couldn't copy command line.");
 	pool_abandon_object(mem);
 	return NULL;
@@ -733,7 +728,7 @@ static int run_command(int argc, char **argv)
 
 	_use_settings(&_current_settings);
 
-	locking_type = find_config_int(cmd->cf->root, "global/locking_type", 
+	locking_type = find_config_int(cmd->cf->root, "global/locking_type",
 				       '/', 1);
 	if (!init_locking(locking_type, cmd->cf)) {
 		log_error("Locking type %d initialisation failed.",
@@ -760,7 +755,6 @@ static int run_command(int argc, char **argv)
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
 		usage(cmd->command->name);
-
 
 	return ret;
 }
@@ -804,9 +798,8 @@ static void __init_log(struct config_file *cf)
 
 	const char *log_file, *prefix;
 
-
 	_default_settings.syslog =
-		find_config_int(cf->root, "log/syslog", '/', 1);
+	    find_config_int(cf->root, "log/syslog", '/', 1);
 	if (_default_settings.syslog != 1)
 		fin_syslog();
 
@@ -814,11 +807,11 @@ static void __init_log(struct config_file *cf)
 		init_syslog(_default_settings.syslog);
 
 	_default_settings.debug =
-		find_config_int(cf->root, "log/level", '/', 0);
+	    find_config_int(cf->root, "log/level", '/', 0);
 	init_debug(_default_settings.debug);
 
 	_default_settings.verbose =
-		find_config_int(cf->root, "log/verbose", '/', 0);
+	    find_config_int(cf->root, "log/verbose", '/', 0);
 	init_verbose(_default_settings.verbose);
 
 	init_indent(find_config_int(cf->root, "log/indent", '/', 1));
@@ -858,14 +851,14 @@ static int _init_backup(struct config_file *cf)
 
 	/* set up archiving */
 	_default_settings.archive =
-		find_config_bool(cmd->cf->root, "backup/archive", '/',
-				 DEFAULT_ARCHIVE_ENABLED);
+	    find_config_bool(cmd->cf->root, "backup/archive", '/',
+			     DEFAULT_ARCHIVE_ENABLED);
 
 	days = find_config_int(cmd->cf->root, "backup/retain_days", '/',
 			       DEFAULT_ARCHIVE_DAYS);
 
 	min = find_config_int(cmd->cf->root, "backup/retain_min", '/',
-				 DEFAULT_ARCHIVE_NUMBER);
+			      DEFAULT_ARCHIVE_NUMBER);
 
 	if (lvm_snprintf(default_dir, sizeof(default_dir), "%s/%s", _sys_dir,
 			 DEFAULT_ARCHIVE_SUBDIR) == -1) {
@@ -884,8 +877,8 @@ static int _init_backup(struct config_file *cf)
 
 	/* set up the backup */
 	_default_settings.backup =
-		find_config_bool(cmd->cf->root, "backup/backup", '/',
-				 DEFAULT_BACKUP_ENABLED);
+	    find_config_bool(cmd->cf->root, "backup/backup", '/',
+			     DEFAULT_BACKUP_ENABLED);
 
 	if (lvm_snprintf(default_dir, sizeof(default_dir), "%s/%s", _sys_dir,
 			 DEFAULT_BACKUP_SUBDIR) == -1) {
@@ -989,8 +982,7 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 		return 0;
 	}
 
-	lvm_cache = find_config_str(cf->root, "devices/cache", '/',
-				    cache_file);
+	lvm_cache = find_config_str(cf->root, "devices/cache", '/', cache_file);
 
 	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
 		log_error("Failed to create persistent device filter");
@@ -1092,8 +1084,7 @@ static int init(void)
 	if (stat(config_file, &info) != -1) {
 		/* we've found a config file */
 		if (!read_config(cmd->cf, config_file)) {
-			log_error("Failed to load config file %s",
-				  config_file);
+			log_error("Failed to load config file %s", config_file);
 			return 0;
 		}
 
@@ -1101,15 +1092,15 @@ static int init(void)
 	}
 
 	_default_settings.umask = find_config_int(cmd->cf->root,
-						 "global/umask", '/',
-						 DEFAULT_UMASK);
+						  "global/umask", '/',
+						  DEFAULT_UMASK);
 
-	if ((old_umask = umask((mode_t)_default_settings.umask)) !=
-	    (mode_t)_default_settings.umask)
-		log_verbose("Set umask to %04o", _default_settings.umask);
+	if ((old_umask = umask((mode_t) _default_settings.umask)) !=
+	    (mode_t) _default_settings.umask)
+		    log_verbose("Set umask to %04o", _default_settings.umask);
 
 	if (lvm_snprintf(_dev_dir, sizeof(_dev_dir), "%s/",
-        		 find_config_str(cmd->cf->root, "devices/dir",
+			 find_config_str(cmd->cf->root, "devices/dir",
 					 '/', DEFAULT_DEV_DIR)) < 0) {
 		log_error("Device directory given in config file too long");
 		return 0;
@@ -1121,7 +1112,7 @@ static int init(void)
 	dm_log_init(print_log);
 
 	if (lvm_snprintf(_proc_dir, sizeof(_proc_dir), "%s",
-        		 find_config_str(cmd->cf->root, "global/proc",
+			 find_config_str(cmd->cf->root, "global/proc",
 					 '/', DEFAULT_PROC_DIR)) < 0) {
 		log_error("Device directory given in config file too long");
 		return 0;
@@ -1301,7 +1292,7 @@ static char *_list_args(const char *text, int state)
 			char c;
 			if (!(c = (the_args +
 				   com->valid_args[match_no++])->short_arg))
-				continue;
+				    continue;
 
 			sprintf(s, "-%c", c);
 			if (!strncmp(text, s, len))
@@ -1358,7 +1349,6 @@ static int _hist_file(char *buffer, size_t size)
 	return 1;
 }
 
-
 static void _read_history(void)
 {
 	char hist_file[PATH_MAX];
@@ -1369,7 +1359,7 @@ static void _read_history(void)
 	if (read_history(hist_file))
 		log_very_verbose("Couldn't read history from %s.", hist_file);
 
-        stifle_history(find_config_int(cmd->cf->root, "shell/history_size",
+	stifle_history(find_config_int(cmd->cf->root, "shell/history_size",
 				       '/', DEFAULT_MAX_HISTORY));
 
 }

@@ -21,17 +21,22 @@
 #include "tools.h"
 
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv);
-static int lvchange_permission(struct cmd_context *cmd, struct logical_volume *lv);
-static int lvchange_availability(struct cmd_context *cmd, struct logical_volume *lv);
-static int lvchange_contiguous(struct cmd_context *cmd, struct logical_volume *lv);
-static int lvchange_readahead(struct cmd_context *cmd, struct logical_volume *lv);
-static int lvchange_persistent(struct cmd_context *cmd, struct logical_volume *lv);
+static int lvchange_permission(struct cmd_context *cmd,
+			       struct logical_volume *lv);
+static int lvchange_availability(struct cmd_context *cmd,
+				 struct logical_volume *lv);
+static int lvchange_contiguous(struct cmd_context *cmd,
+			       struct logical_volume *lv);
+static int lvchange_readahead(struct cmd_context *cmd,
+			      struct logical_volume *lv);
+static int lvchange_persistent(struct cmd_context *cmd,
+			       struct logical_volume *lv);
 
 int lvchange(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (!arg_count(cmd,available_ARG) && !arg_count(cmd,contiguous_ARG)
-	    && !arg_count(cmd,permission_ARG) && !arg_count(cmd,readahead_ARG)
-	    && !arg_count(cmd,minor_ARG) && !arg_count(cmd,persistent_ARG)) {
+	if (!arg_count(cmd, available_ARG) && !arg_count(cmd, contiguous_ARG)
+	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
+	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, persistent_ARG)) {
 		log_error("One or more of -a, -C, -m, -M, -p or -r required");
 		return EINVALID_CMD_LINE;
 	}
@@ -41,7 +46,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,minor_ARG) && argc != 1) {
+	if (arg_count(cmd, minor_ARG) && argc != 1) {
 		log_error("Only give one logical volume when specifying minor");
 		return EINVALID_CMD_LINE;
 	}
@@ -54,9 +59,9 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 	int doit = 0;
 	int archived = 0;
 
-	if (!(lv->vg->status & LVM_WRITE) && 
-	    (arg_count(cmd,contiguous_ARG) || arg_count(cmd,permission_ARG) ||
-	     arg_count(cmd,readahead_ARG) || arg_count(cmd,persistent_ARG))) {
+	if (!(lv->vg->status & LVM_WRITE) &&
+	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
 		log_error("Only -a permitted with read-only volume "
 			  "group \"%s\"", lv->vg->name);
 		return EINVALID_CMD_LINE;
@@ -69,13 +74,13 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	if (lv->status & SNAPSHOT) {
-		log_error("Can't change snapshot logical volume \"%s\"", 
+		log_error("Can't change snapshot logical volume \"%s\"",
 			  lv->name);
 		return ECMD_FAILED;
 	}
 
 	/* access permission change */
-	if (arg_count(cmd,permission_ARG)) {
+	if (arg_count(cmd, permission_ARG)) {
 		if (!archive(lv->vg))
 			return ECMD_FAILED;
 		archived = 1;
@@ -83,7 +88,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	/* allocation policy change */
-	if (arg_count(cmd,contiguous_ARG)) {
+	if (arg_count(cmd, contiguous_ARG)) {
 		if (!archived && !archive(lv->vg))
 			return ECMD_FAILED;
 		archived = 1;
@@ -91,7 +96,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	/* read ahead sector change */
-	if (arg_count(cmd,readahead_ARG)) {
+	if (arg_count(cmd, readahead_ARG)) {
 		if (!archived && !archive(lv->vg))
 			return ECMD_FAILED;
 		archived = 1;
@@ -99,7 +104,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	/* read ahead sector change */
-	if (arg_count(cmd,persistent_ARG)) {
+	if (arg_count(cmd, persistent_ARG)) {
 		if (!archived && !archive(lv->vg))
 			return ECMD_FAILED;
 		archived = 1;
@@ -110,37 +115,41 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 		log_print("Logical volume \"%s\" changed", lv->name);
 
 	/* availability change */
-	if (arg_count(cmd,available_ARG))
+	if (arg_count(cmd, available_ARG))
 		if (!lvchange_availability(cmd, lv))
 			return ECMD_FAILED;
 
 	return 0;
 }
 
-static int lvchange_permission(struct cmd_context *cmd, struct logical_volume *lv)
+static int lvchange_permission(struct cmd_context *cmd,
+			       struct logical_volume *lv)
 {
 	int lv_access;
 
-	lv_access = arg_int_value(cmd,permission_ARG, 0);
+	lv_access = arg_int_value(cmd, permission_ARG, 0);
 
 	if ((lv_access & LVM_WRITE) && (lv->status & LVM_WRITE)) {
-		log_error("Logical volume \"%s\" is already writable", lv->name);
+		log_error("Logical volume \"%s\" is already writable",
+			  lv->name);
 		return 0;
 	}
 
 	if (!(lv_access & LVM_WRITE) && !(lv->status & LVM_WRITE)) {
-		log_error("Logical volume \"%s\" is already read only", lv->name);
+		log_error("Logical volume \"%s\" is already read only",
+			  lv->name);
 		return 0;
 	}
 
 	if (lv_access & LVM_WRITE) {
 		lv->status |= LVM_WRITE;
-		log_verbose("Setting logical volume \"%s\" read/write", lv->name);
+		log_verbose("Setting logical volume \"%s\" read/write",
+			    lv->name);
 	} else {
 		lv->status &= ~LVM_WRITE;
-		log_verbose("Setting logical volume \"%s\" read-only", lv->name);
+		log_verbose("Setting logical volume \"%s\" read-only",
+			    lv->name);
 	}
-
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg))
@@ -155,16 +164,17 @@ static int lvchange_permission(struct cmd_context *cmd, struct logical_volume *l
 	return 1;
 }
 
-static int lvchange_availability(struct cmd_context *cmd, struct logical_volume *lv)
+static int lvchange_availability(struct cmd_context *cmd,
+				 struct logical_volume *lv)
 {
 	int activate = 0;
 	int active;
 
-	if (strcmp(arg_str_value(cmd,available_ARG, "n"), "n"))
+	if (strcmp(arg_str_value(cmd, available_ARG, "n"), "n"))
 		activate = 1;
 
-	if (arg_count(cmd,minor_ARG)) {
-		lv->minor = arg_int_value(cmd,minor_ARG, -1);
+	if (arg_count(cmd, minor_ARG)) {
+		lv->minor = arg_int_value(cmd, minor_ARG, -1);
 	}
 
 	if ((active = lv_active(lv)) < 0) {
@@ -173,24 +183,24 @@ static int lvchange_availability(struct cmd_context *cmd, struct logical_volume 
 	}
 
 	if (activate && active) {
-		log_verbose("Logical volume \"%s\" is already active", 
+		log_verbose("Logical volume \"%s\" is already active",
 			    lv->name);
 		return 0;
 	}
 
 	if (!activate && !active) {
-		log_verbose("Logical volume \"%s\" is already inactive", 
+		log_verbose("Logical volume \"%s\" is already inactive",
 			    lv->name);
 		return 0;
 	}
-	
+
 	if (activate & lv_suspended(lv)) {
-		log_verbose("Reactivating logical volume \"%s\"", lv->name); 
+		log_verbose("Reactivating logical volume \"%s\"", lv->name);
 		if (!lv_reactivate(lv))
 			return 0;
 		return 1;
 	}
-	
+
 	if (activate) {
 		log_verbose("Activating logical volume \"%s\"", lv->name);
 		if (!lv_activate(lv))
@@ -204,11 +214,12 @@ static int lvchange_availability(struct cmd_context *cmd, struct logical_volume 
 	return 1;
 }
 
-static int lvchange_contiguous(struct cmd_context *cmd, struct logical_volume *lv)
+static int lvchange_contiguous(struct cmd_context *cmd,
+			       struct logical_volume *lv)
 {
 	int lv_allocation = 0;
 
-	if (strcmp(arg_str_value(cmd,contiguous_ARG, "n"), "n"))
+	if (strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n"))
 		lv_allocation |= ALLOC_CONTIGUOUS;
 
 	if ((lv_allocation & ALLOC_CONTIGUOUS) &&
@@ -220,8 +231,9 @@ static int lvchange_contiguous(struct cmd_context *cmd, struct logical_volume *l
 
 	if (!(lv_allocation & ALLOC_CONTIGUOUS) &&
 	    !(lv->status & ALLOC_CONTIGUOUS)) {
-		log_error("Allocation policy of logical volume \"%s\" is already"
-			  " not contiguous", lv->name);
+		log_error
+		    ("Allocation policy of logical volume \"%s\" is already"
+		     " not contiguous", lv->name);
 		return 0;
 	}
 
@@ -252,11 +264,12 @@ static int lvchange_contiguous(struct cmd_context *cmd, struct logical_volume *l
 	return 1;
 }
 
-static int lvchange_readahead(struct cmd_context *cmd, struct logical_volume *lv)
+static int lvchange_readahead(struct cmd_context *cmd,
+			      struct logical_volume *lv)
 {
 	int read_ahead = 0;
 
-	read_ahead = arg_int_value(cmd,readahead_ARG, 0);
+	read_ahead = arg_int_value(cmd, readahead_ARG, 0);
 
 /******* FIXME Ranges? 
 	if (read_ahead < LVM_MIN_READ_AHEAD || read_ahead > LVM_MAX_READ_AHEAD) {
@@ -272,7 +285,8 @@ static int lvchange_readahead(struct cmd_context *cmd, struct logical_volume *lv
 	}
 
 	lv->read_ahead = read_ahead;
-	log_verbose("Setting read ahead to %u for \"%s\"", read_ahead, lv->name);
+	log_verbose("Setting read ahead to %u for \"%s\"", read_ahead,
+		    lv->name);
 
 	log_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
@@ -284,9 +298,10 @@ static int lvchange_readahead(struct cmd_context *cmd, struct logical_volume *lv
 	return 1;
 }
 
-static int lvchange_persistent(struct cmd_context *cmd, struct logical_volume *lv)
+static int lvchange_persistent(struct cmd_context *cmd,
+			       struct logical_volume *lv)
 {
-	if (!strcmp(arg_str_value(cmd,persistent_ARG, "n"), "n")) {
+	if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n")) {
 		if (!(lv->status & FIXED_MINOR)) {
 			log_error("Minor number is already not persistent "
 				  "for \"%s\"", lv->name);
@@ -300,12 +315,12 @@ static int lvchange_persistent(struct cmd_context *cmd, struct logical_volume *l
 			log_error("Cannot change minor number when active");
 			return 0;
 		}
-		if (!arg_count(cmd,minor_ARG)) {
+		if (!arg_count(cmd, minor_ARG)) {
 			log_error("Minor number must be specified with -My");
 			return 0;
 		}
 		lv->status |= FIXED_MINOR;
-		lv->minor = arg_int_value(cmd,minor_ARG, -1);
+		lv->minor = arg_int_value(cmd, minor_ARG, -1);
 		log_verbose("Setting persistent minor number to %d for \"%s\"",
 			    lv->minor, lv->name);
 	}
@@ -319,4 +334,3 @@ static int lvchange_persistent(struct cmd_context *cmd, struct logical_volume *l
 
 	return 1;
 }
-

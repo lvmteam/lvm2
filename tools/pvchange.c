@@ -33,17 +33,17 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	struct list *pvh, *pvs;
 
-	if (arg_count(cmd,allocatable_ARG) == 0) {
+	if (arg_count(cmd, allocatable_ARG) == 0) {
 		log_error("Please give the x option");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!(arg_count(cmd,all_ARG)) && !argc) {
+	if (!(arg_count(cmd, all_ARG)) && !argc) {
 		log_error("Please give a physical volume path");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,all_ARG) && argc) {
+	if (arg_count(cmd, all_ARG) && argc) {
 		log_error("Option a and PhysicalVolumePath are exclusive");
 		return EINVALID_CMD_LINE;
 	}
@@ -53,8 +53,9 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
 			if (!(pv = cmd->fid->ops->pv_read(cmd->fid, pv_name))) {
-				log_error("Failed to read physical volume \"%s\"",
-					  pv_name);
+				log_error
+				    ("Failed to read physical volume \"%s\"",
+				     pv_name);
 				continue;
 			}
 			total++;
@@ -69,14 +70,15 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		list_iterate(pvh, pvs) {
 			total++;
 			done += pvchange_single(cmd,
-				list_item(pvh, struct pv_list)->pv);
+						list_item(pvh,
+							  struct pv_list)->pv);
 		}
 	}
 
 	log_print("%d physical volume%s changed / %d physical volume%s "
 		  "not changed",
-                  done, done > 1 ? "s" : "",
-                  total - done, total - done > 1 ? "s" : "");
+		  done, done > 1 ? "s" : "",
+		  total - done, total - done > 1 ? "s" : "");
 
 	return 0;
 }
@@ -88,11 +90,12 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 
 	const char *pv_name = dev_name(pv->dev);
 
-	int allocatable = !strcmp(arg_str_value(cmd,allocatable_ARG, "n"), "y");
+	int allocatable =
+	    !strcmp(arg_str_value(cmd, allocatable_ARG, "n"), "y");
 
 	/* If in a VG, must change using volume group. */
 	if (*pv->vg_name) {
-		log_verbose("Finding volume group of physical volume \"%s\"", 
+		log_verbose("Finding volume group of physical volume \"%s\"",
 			    pv_name);
 
 		if (!lock_vol(pv->vg_name, LCK_VG | LCK_WRITE)) {
@@ -103,17 +106,17 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		if (!(vg = cmd->fid->ops->vg_read(cmd->fid, pv->vg_name))) {
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Unable to find volume group of \"%s\"",
-			pv_name);
+				  pv_name);
 			return 0;
 		}
 
-        	if (vg->status & EXPORTED_VG) {
+		if (vg->status & EXPORTED_VG) {
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
-                	log_error("Volume group \"%s\" is exported", vg->name);
-                	return ECMD_FAILED;
-        	}
+			log_error("Volume group \"%s\" is exported", vg->name);
+			return ECMD_FAILED;
+		}
 
-	        if (!(vg->status & LVM_WRITE)) {
+		if (!(vg->status & LVM_WRITE)) {
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Volume group \"%s\" is read-only", vg->name);
 			return ECMD_FAILED;
@@ -121,8 +124,9 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
-			log_error("Unable to find \"%s\" in volume group \"%s\"",
-				pv_name, vg->name);
+			log_error
+			    ("Unable to find \"%s\" in volume group \"%s\"",
+			     pv_name, vg->name);
 			return 0;
 		}
 		pv = pvl->pv;
@@ -132,7 +136,8 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 
 	/* change allocatability for a PV */
 	if (allocatable && (pv->status & ALLOCATABLE_PV)) {
-		log_error("Physical volume \"%s\" is already allocatable", pv_name);
+		log_error("Physical volume \"%s\" is already allocatable",
+			  pv_name);
 		if (*pv->vg_name)
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 		return 0;
@@ -147,7 +152,8 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 	}
 
 	if (allocatable) {
-		log_verbose("Setting physical volume \"%s\" allocatable", pv_name);
+		log_verbose("Setting physical volume \"%s\" allocatable",
+			    pv_name);
 		pv->status |= ALLOCATABLE_PV;
 	} else {
 		log_verbose("Setting physical volume \"%s\" NOT allocatable",
@@ -157,7 +163,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
-		if (!(cmd->fid->ops->vg_write(cmd->fid,vg))) {
+		if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
@@ -167,7 +173,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 	} else {
 		if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
-			log_error("Failed to store physical volume \"%s\"", 
+			log_error("Failed to store physical volume \"%s\"",
 				  pv_name);
 			return 0;
 		}

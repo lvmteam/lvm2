@@ -45,7 +45,7 @@
 #define MAX_ARGS 64
 
 /* command functions */
-typedef int (*command_fn)(struct cmd_context *cmd, int argc, char **argv);
+typedef int (*command_fn) (struct cmd_context * cmd, int argc, char **argv);
 
 #define xx(a, b...) int a(struct cmd_context *cmd, int argc, char **argv);
 #include "commands.h"
@@ -68,7 +68,7 @@ typedef enum {
 struct arg {
 	char short_arg;
 	char *long_arg;
-	int (*fn)(struct arg *a);
+	int (*fn) (struct arg * a);
 
 	int count;
 	char *value;
@@ -78,13 +78,13 @@ struct arg {
 
 /* a register of the lvm commands */
 struct command {
-        const char *name;
-        const char *desc;
-        const char *usage;
-        command_fn fn;
+	const char *name;
+	const char *desc;
+	const char *usage;
+	command_fn fn;
 
-        int num_args;
-        int *valid_args;
+	int num_args;
+	int *valid_args;
 };
 
 void usage(const char *name);
@@ -101,11 +101,13 @@ int permission_arg(struct arg *a);
 char yes_no_prompt(const char *prompt, ...);
 
 /* we use the enums to access the switches */
-static inline int arg_count(struct cmd_context *cmd, int a) {
+static inline int arg_count(struct cmd_context *cmd, int a)
+{
 	return cmd->args[a].count;
 }
 
-static inline char *arg_value(struct cmd_context *cmd, int a) {
+static inline char *arg_value(struct cmd_context *cmd, int a)
+{
 	return cmd->args[a].value;
 }
 
@@ -114,7 +116,8 @@ static inline char *arg_str_value(struct cmd_context *cmd, int a, char *def)
 	return arg_count(cmd, a) ? cmd->args[a].value : def;
 }
 
-static inline uint32_t arg_int_value(struct cmd_context *cmd, int a, uint32_t def)
+static inline uint32_t arg_int_value(struct cmd_context *cmd, int a,
+				     uint32_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].i_value : def;
 }

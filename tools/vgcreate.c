@@ -24,7 +24,7 @@
 #define DEFAULT_PV 255
 #define DEFAULT_LV 255
 
-#define DEFAULT_EXTENT 4096  /* In KB */
+#define DEFAULT_EXTENT 4096	/* In KB */
 
 int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 {
@@ -46,11 +46,12 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	vg_name = argv[0];
-	max_lv = arg_int_value(cmd,maxlogicalvolumes_ARG, DEFAULT_LV);
-	max_pv = arg_int_value(cmd,maxphysicalvolumes_ARG, DEFAULT_PV);
+	max_lv = arg_int_value(cmd, maxlogicalvolumes_ARG, DEFAULT_LV);
+	max_pv = arg_int_value(cmd, maxphysicalvolumes_ARG, DEFAULT_PV);
 
 	/* Units of 512-byte sectors */
-	extent_size = arg_int_value(cmd,physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
+	extent_size =
+	    arg_int_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
 
 	if (max_lv < 1) {
 		log_error("maxlogicalvolumes too low");
@@ -62,25 +63,25 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-        /* Strip dev_dir if present */
-        if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
-                vg_name += strlen(cmd->dev_dir);
+	/* Strip dev_dir if present */
+	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
+		vg_name += strlen(cmd->dev_dir);
 
-        snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
-        if (path_exists(vg_path)) {
+	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
+	if (path_exists(vg_path)) {
 		log_error("%s: already exists in filesystem", vg_path);
 		return ECMD_FAILED;
 	}
 
-        if (!is_valid_chars(vg_name)) {
-                log_error("New volume group name \"%s\" has invalid characters",
-                          vg_name);
-                return ECMD_FAILED;
-        }
+	if (!is_valid_chars(vg_name)) {
+		log_error("New volume group name \"%s\" has invalid characters",
+			  vg_name);
+		return ECMD_FAILED;
+	}
 
 	/* Create the new VG */
 	if (!(vg = vg_create(cmd->fid, vg_name, extent_size, max_pv, max_lv,
-		       argc - 1, argv + 1)))
+			     argc - 1, argv + 1)))
 		return ECMD_FAILED;
 
 	if (max_lv != vg->max_lv)
@@ -91,16 +92,16 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Warning: Setting maxphysicalvolumes to %d",
 			  vg->max_pv);
 
-        if (!lock_vol("", LCK_VG | LCK_WRITE)) {
-                log_error("Can't get lock for orphan PVs");
-                return ECMD_FAILED;
-        }
+	if (!lock_vol("", LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
 
-        if (!lock_vol(vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
-                log_error("Can't get lock for %s", vg_name);
+	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+		log_error("Can't get lock for %s", vg_name);
 		lock_vol("", LCK_VG | LCK_NONE);
-                return ECMD_FAILED;
-        }
+		return ECMD_FAILED;
+	}
 
 	if (!archive(vg)) {
 		lock_vol(vg_name, LCK_VG | LCK_NONE);

@@ -24,15 +24,15 @@ static int vgimport_single(struct cmd_context *cmd, const char *vg_name);
 
 int vgimport(struct cmd_context *cmd, int argc, char **argv)
 {
-        if (!argc && !arg_count(cmd,all_ARG)) {
-                log_error("Please supply volume groups or use -a for all.");
-                return ECMD_FAILED;
-        }
+	if (!argc && !arg_count(cmd, all_ARG)) {
+		log_error("Please supply volume groups or use -a for all.");
+		return ECMD_FAILED;
+	}
 
-        if (argc && arg_count(cmd,all_ARG)) {
-                log_error("No arguments permitted when using -a for all.");
-                return ECMD_FAILED;
-        }
+	if (argc && arg_count(cmd, all_ARG)) {
+		log_error("No arguments permitted when using -a for all.");
+		return ECMD_FAILED;
+	}
 
 	return process_each_vg(cmd, argc, argv, LCK_WRITE, &vgimport_single);
 }
@@ -62,13 +62,13 @@ static int vgimport_single(struct cmd_context *cmd, const char *vg_name)
 
 	vg->status &= ~EXPORTED_VG;
 
-	if (!cmd->fid->ops->vg_write(cmd->fid,vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		goto error;
 
 	backup(vg);
 
 	log_print("Volume group \"%s\" successfully imported", vg->name);
-	
+
 	return 0;
 
       error:

@@ -27,7 +27,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!argc) {
 		log_error("Please enter volume group name and "
-		          "physical volume(s)");
+			  "physical volume(s)");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -40,10 +40,10 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-        if (!lock_vol("", LCK_VG | LCK_WRITE)) {
-                log_error("Can't get lock for orphan PVs");
-                return ECMD_FAILED;
-        }
+	if (!lock_vol("", LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
@@ -57,10 +57,10 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-        if (vg->status & EXPORTED_VG) {
-                log_error("Volume group \"%s\" is exported", vg->name);
-                goto error;
-        }
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", vg->name);
+		goto error;
+	}
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
@@ -90,7 +90,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Volume group \"%s\" will be extended by %d new "
 		    "physical volumes", vg_name, argc);
 
-        /* store vg on disk(s) */
+	/* store vg on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		goto error;
 

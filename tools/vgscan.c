@@ -51,9 +51,8 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-	log_print("Found %svolume group \"%s\"", 
-		  (vg->status & EXPORTED_VG) ? "exported " : "",
-		  vg_name);
+	log_print("Found %svolume group \"%s\"",
+		  (vg->status & EXPORTED_VG) ? "exported " : "", vg_name);
 
 	return 0;
 }

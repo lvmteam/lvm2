@@ -22,11 +22,11 @@
 
 int lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	if (arg_count(cmd,colon_ARG))
+	if (arg_count(cmd, colon_ARG))
 		lvdisplay_colons(lv);
 	else {
 		lvdisplay_full(cmd, lv);
-		if (arg_count(cmd,maps_ARG))
+		if (arg_count(cmd, maps_ARG))
 			lvdisplay_segments(lv);
 	}
 
@@ -37,11 +37,10 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
 	/* FIXME Allow VG args via process_each */
 
-	if (arg_count(cmd,colon_ARG) && arg_count(cmd,verbose_ARG)) {
+	if (arg_count(cmd, colon_ARG) && arg_count(cmd, verbose_ARG)) {
 		log_error("Options -v and -c are incompatible");
 		return EINVALID_CMD_LINE;
 	}
 
 	return process_each_lv(cmd, argc, argv, &lvdisplay_single);
 }
-

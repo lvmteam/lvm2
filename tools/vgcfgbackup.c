@@ -36,8 +36,8 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-	if (arg_count(cmd,file_ARG)) {
-		_backup_to_file(arg_value(cmd,file_ARG), vg);
+	if (arg_count(cmd, file_ARG)) {
+		_backup_to_file(arg_value(cmd, file_ARG), vg);
 
 	} else {
 		/* just use the normal backup code */
@@ -56,4 +56,3 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 {
 	return process_each_vg(cmd, argc, argv, LCK_READ, &vg_backup_single);
 }
-

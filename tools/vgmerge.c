@@ -20,7 +20,8 @@
 
 #include "tools.h"
 
-int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to, const char *vg_name_from);
+int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
+		   const char *vg_name_from);
 
 int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 {
@@ -46,7 +47,8 @@ int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 	return ret_max;
 }
 
-int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to, const char *vg_name_from)
+int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
+		   const char *vg_name_from)
 {
 	struct volume_group *vg_to, *vg_from;
 	struct list *lvh1, *lvh2;
@@ -69,11 +71,11 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to, const char *
 		return ECMD_FAILED;
 	}
 
-        if (vg_to->status & EXPORTED_VG) {
-                log_error("Volume group \"%s\" is exported", vg_to->name);
+	if (vg_to->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", vg_to->name);
 		lock_vol(vg_name_to, LCK_VG | LCK_NONE);
-                return ECMD_FAILED;
-        }
+		return ECMD_FAILED;
+	}
 
 	if (!(vg_to->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_to->name);
@@ -93,10 +95,10 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to, const char *
 		goto error;
 	}
 
-        if (vg_from->status & EXPORTED_VG) {
-                log_error("Volume group \"%s\" is exported", vg_from->name);
-                goto error;
-        }
+	if (vg_from->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", vg_from->name);
+		goto error;
+	}
 
 	if (!(vg_from->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_from->name);
@@ -143,8 +145,7 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to, const char *
 				log_error("Duplicate logical volume "
 					  "name \"%s\" "
 					  "in \"%s\" and \"%s\"",
-					  name1, vg_to->name,
-					  vg_from->name);
+					  name1, vg_to->name, vg_from->name);
 				goto error;
 			}
 		}

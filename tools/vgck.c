@@ -47,9 +47,8 @@ static int vgck_single(struct cmd_context *cmd, const char *vg_name)
 	log_error("not all physical volumes of volume group \"%s\" online",
 	log_error("volume group \"%s\" has physical volumes with ",
 		  "invalid version",
-********/			     
+********/
 
 	/* FIXME: free */
 	return 0;
 }
-
