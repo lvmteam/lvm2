@@ -87,9 +87,33 @@ int do_autobackup(struct volume_group *vg)
 	return 0;
 }
 
+int process_each_lv_in_vg(struct volume_group *vg,
+			  int (*process_single) (struct logical_volume *lv))
+{
+	int ret_max = 0;
+	int ret = 0;
+
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	/* FIXME Export-handling */
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group %s is exported", vg->name);
+		return ECMD_FAILED;
+	}
+	list_iterate(lvh, &vg->lvs) {
+		lv = &list_item(lvh, struct lv_list)->lv;
+		ret = process_single(lv);
+		if (ret > ret_max)
+			ret_max = ret;
+	}
+
+	return ret_max;
+
+}
+
 int process_each_lv(int argc, char **argv,
-		    int (*process_single) (struct volume_group * vg,
-					   struct logical_volume * lv))
+		    int (*process_single) (struct logical_volume * lv))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -135,7 +159,7 @@ int process_each_lv(int argc, char **argv,
 
 			lv = &list_item(lvh, struct lv_list)->lv;
 
-			if ((ret = process_single(vg, lv)) > ret_max)
+			if ((ret = process_single(lv)) > ret_max)
 				ret_max = ret;
 		}
 	} else {
@@ -152,20 +176,9 @@ int process_each_lv(int argc, char **argv,
 					ret_max = ECMD_FAILED;
 				continue;
 			}
-			/* FIXME Export-handling */
-			if (vg->status & EXPORTED_VG) {
-				log_error("Volume group %s is exported",
-					  vg_name);
-				if (ret_max < ECMD_FAILED)
-					ret_max = ECMD_FAILED;
-				continue;
-			}
-			list_iterate(lvh, &vg->lvs) {
-				lv = &list_item(lvh, struct lv_list)->lv;
-				ret = process_single(vg, lv);
-				if (ret > ret_max)
-					ret_max = ret;
-			}
+			ret = process_each_lv_in_vg(vg, process_single);
+			if (ret > ret_max)
+				ret_max = ret;
 			vg_count++;
 		}
 	}
@@ -196,14 +209,33 @@ int process_each_vg(int argc, char **argv,
 		}
 		list_iterate(vgh, vgs) {
 			ret =
-			    process_single(list_item(vgh, struct name_list)->
-					   name);
+			    process_single(list_item
+					   (vgh, struct name_list)->name);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
 	}
 
 	return ret_max;
+}
+
+int process_each_pv_in_vg(struct volume_group *vg,
+		    int (*process_single) (struct volume_group * vg,
+					   struct physical_volume * pv))
+{
+	int ret_max = 0;
+	int ret = 0;
+	struct list *pvh;
+
+		list_iterate(pvh, &vg->pvs) {
+			ret = process_single(vg,
+					     &list_item(pvh,
+							struct pv_list)->pv);
+			if (ret > ret_max)
+				ret_max = ret;
+		}
+	return ret_max;
+
 }
 
 int process_each_pv(int argc, char **argv, struct volume_group *vg,
@@ -233,13 +265,7 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 		}
 	} else {
 		log_verbose("Using all physical volume(s) in volume group");
-		list_iterate(pvh, &vg->pvs) {
-			ret = process_single(vg,
-					     &list_item(pvh,
-							struct pv_list)->pv);
-			if (ret > ret_max)
-				ret_max = ret;
-		}
+		process_each_pv_in_vg(vg, process_single);
 	}
 
 	return ret_max;

@@ -188,5 +188,6 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 		}
 	}
 
+	/* FIXME: Always display error */
 	return (len == 0);
 }

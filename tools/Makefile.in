@@ -40,6 +40,7 @@ SOURCES=\
 	vgck.c \
 	vgchange.c \
 	vgcreate.c \
+	vgdisplay.c \
 	vgextend.c \
 	vgreduce.c \
 	vgremove.c \

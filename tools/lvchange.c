@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-static int lvchange_single(struct volume_group *vg, struct logical_volume *lv);
+static int lvchange_single(struct logical_volume *lv);
 static int lvchange_permission(struct logical_volume *lv);
 static int lvchange_availability(struct logical_volume *lv);
 static int lvchange_contiguous(struct logical_volume *lv);
@@ -42,12 +42,12 @@ int lvchange(int argc, char **argv)
 	return process_each_lv(argc, argv, &lvchange_single);
 }
 
-static int lvchange_single(struct volume_group *vg, struct logical_volume *lv)
+static int lvchange_single(struct logical_volume *lv)
 {
 	char *vg_name;
 	int doit = 0;
 
-	if (!(vg->status & ACTIVE)) {
+	if (!(lv->vg->status & ACTIVE)) {
 		log_error("Volume group %s must be active before changing a "
 			  "logical volume", vg_name);
 		return ECMD_FAILED;
