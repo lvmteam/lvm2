@@ -78,7 +78,7 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 /*
  * Returns 1 if percent set, else 0 on failure.
  */
-int lv_snapshot_percentage(struct logical_volume *lv, float *percent)
+int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 {
 	int r;
 	struct dev_manager *dm;
@@ -88,9 +88,9 @@ int lv_snapshot_percentage(struct logical_volume *lv, float *percent)
 		return 0;
 	}
 
-	if (!(r = dev_manager_get_snapshot_use(dm, lv, percent)))
+	if (!(r = dev_manager_snapshot_percent(dm, lv, percent)))
 		stack;
-	
+
 	dev_manager_destroy(dm);
 
 	return r;
