@@ -1,5 +1,6 @@
 Version 2.01.04 - 
 ===================================
+  Gulm clvmd doesn't report "connection refused" errors.
 
 Version 2.01.03 - 1st February 2005
 ===================================
