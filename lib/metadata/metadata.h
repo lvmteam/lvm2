@@ -239,4 +239,7 @@ struct volume_group *vg_find(const char *lv_name);
 /* Find an LV within a given VG */
 struct logical_volume *lv_find(struct volume_group *vg, const char *lv_name);
 
+/* Find a PV within a given VG */
+struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
+
 #endif

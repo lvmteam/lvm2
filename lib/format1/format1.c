@@ -37,27 +37,21 @@ static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 	struct volume_group *vg = pool_alloc(mem, sizeof(*vg));
 	struct disk_list *dl;
 
-	if (list_empty(pvs)) {
-		stack;
-		return NULL;
-	}
+	if (!vg)
+		goto bad;
+
+	if (list_empty(pvs))
+		goto bad;
 
 	dl = list_entry(pvs->next, struct disk_list, list);
-
-	if (!vg) {
-		stack;
-		return NULL;
-	}
 
 	memset(vg, 0, sizeof(*vg));
 
 	INIT_LIST_HEAD(&vg->pvs);
 	INIT_LIST_HEAD(&vg->lvs);
 
-	if (!_check_vgs(pvs)) {
-		stack;
-		return NULL;
-	}
+	if (!_check_vgs(pvs))
+		goto bad;
 
 	if (!import_vg(mem, vg, dl))
 		goto bad;
@@ -130,6 +124,7 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	    !export_lvs(dl, vg, pv, prefix) ||
 	    !calculate_layout(dl)) {
 		stack;
+		pool_free(mem, dl);
 		return NULL;
 	}
 
@@ -239,6 +234,7 @@ static struct list_head *_get_pvs(struct io_space *is)
 
 	if (!(results = pool_alloc(is->mem, sizeof(*results)))) {
 		stack;
+		pool_destroy(mem);
 		return NULL;
 	}
 
@@ -259,8 +255,8 @@ static struct list_head *_get_pvs(struct io_space *is)
 	return results;
 
  bad:
-	pool_destroy(mem);
 	pool_free(mem, results);
+	pool_destroy(mem);
 	return NULL;
 }
 
@@ -359,7 +355,7 @@ static int _pv_write(struct io_space *is, struct physical_volume *pv)
 
 	if (!(dl = pool_alloc(mem, sizeof(*dl)))) {
 		stack;
-		return 0;
+		goto bad;
 	}
 	dl->mem = mem;
 	dl->dev = pv->dev;
@@ -386,11 +382,11 @@ static int _pv_write(struct io_space *is, struct physical_volume *pv)
 int _vg_setup(struct io_space *is, struct volume_group *vg)
 {
 	/* just check max_pv and max_lv */
-	if (vg->max_lv > MAX_LV)
-		vg->max_lv = MAX_LV;
+	if (vg->max_lv >= MAX_LV)
+		vg->max_lv = MAX_LV - 1;
 
-        if (vg->max_pv > MAX_PV)
-		vg->max_pv = MAX_PV;
+        if (vg->max_pv >= MAX_PV)
+		vg->max_pv = MAX_PV - 1;
 
 	return 1;
 }
@@ -398,6 +394,7 @@ int _vg_setup(struct io_space *is, struct volume_group *vg)
 void _destroy(struct io_space *ios)
 {
 	dbg_free(ios->prefix);
+	pool_destroy(ios->mem);
 	dbg_free(ios);
 }
 

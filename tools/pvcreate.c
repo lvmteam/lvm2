@@ -13,7 +13,7 @@ const char _really_init[] =
  * See if we may pvcreate on this device.
  * 0 indicates we may not.
  */
-static int _check(const char *name)
+static int pvcreate_check(const char *name)
 {
 	struct physical_volume *pv;
 
@@ -36,6 +36,11 @@ static int _check(const char *name)
 		return 0;
 	}
 
+	if (pv->status & ACTIVE) {
+		log_error("Can't create on active physical volume %s", name);
+		return 0;
+	}
+
 	/* we must have -ff to overwrite a non orphan */
 	if (arg_count(force_ARG) < 2) {
 		log_error("Can't initialize physical volume %s of "
@@ -50,42 +55,38 @@ static int _check(const char *name)
 		return 0;
 	}
 
-	if (pv->status & ACTIVE) {
-		log_error("Can't create on active physical volume %s", name);
-		return 0;
+	if (arg_count(force_ARG)) {
+		log_print("WARNING: Forcing physical volume creation on "
+			  "%s%s%s", name,
+			  pv->vg_name[0] ? " of volume group " : "",
+			  pv->vg_name[0] ? pv->vg_name : "");
 	}
 
 	return 1;
 }
 
-static void pvcreate_single(const char *name)
+static void pvcreate_single(const char *pv_name)
 {
 	struct physical_volume *pv;
 
-	if (arg_count(force_ARG)) {
-		log_print("WARNING: forcing physical volume creation on %s",
-			  name);
+	if (!pvcreate_check(pv_name))
+		return;
 
-		if (pv->vg_name[0])
-			log_print(" of volume group %s", pv->vg_name);
-		log_print(" ");
-	}
-
-	if (!(pv = pv_create(ios, name))) {
-		log_err("Failed to setup physical volume %s", name);
+	if (!(pv = pv_create(ios, pv_name))) {
+		log_err("Failed to setup physical volume %s", pv_name);
 		return;
 	}
+
 	log_verbose("Set up physical volume for %s with %llu sectors",
-		    name, pv->size);
+		    pv_name, pv->size);
 
-
-	log_verbose("Writing physical volume data to disk %s", name);
+	log_verbose("Writing physical volume data to disk %s", pv_name);
 	if (!(ios->pv_write(ios, pv))) {
-		log_error("Failed to write physical volume %s", name);
+		log_error("Failed to write physical volume %s", pv_name);
 		return;
 	}
 
-	log_print("Physical volume %s successfully created", name);
+	log_print("Physical volume %s successfully created", pv_name);
 }
 
 int pvcreate(int argc, char **argv)
@@ -103,10 +104,6 @@ int pvcreate(int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
-
-		if (!_check(argv[i]))
-			continue;
-
 		pvcreate_single(argv[i]);
 		pool_empty(ios->mem);
 	}
