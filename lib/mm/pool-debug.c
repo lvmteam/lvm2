@@ -77,7 +77,7 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 	} else
 		p->blocks = p->tail = b;
 
-	return &b->data;
+	return &b->data[0];
 }
 
 void pool_empty(struct pool *p)
@@ -91,9 +91,9 @@ void pool_free(struct pool *p, void *ptr)
 	struct block *b, *prev = NULL;
 
 	for (b = p->blocks; b; b = b->next) {
-		prev = b;
-		if ((void *) &b->data == ptr)
+		if ((void *) &b->data[0] == ptr)
 			break;
+		prev = b;
 	}
 
 	/*
@@ -102,11 +102,6 @@ void pool_free(struct pool *p, void *ptr)
 	 * pool, or isn't the start of a block.
 	 */
 	assert(b);
-	if (!b) {
-		log_err("pool asked to free a pointer that was not "
-			"allocated from this pool.");
-		assert(0);
-	}
 
 	_free_blocks(b);
 
