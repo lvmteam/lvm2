@@ -230,6 +230,7 @@ static int _resume(int argc, char **argv)
 static int _info(int argc, char **argv)
 {
 	int r = 0;
+	char *uuid;
 
 	/* remove <dev_name> */
 	struct dm_task *dmt;
@@ -263,6 +264,9 @@ static int _info(int argc, char **argv)
 
 	if (info.target_count != -1)
 		printf("Number of targets: %d\n", info.target_count);
+
+	if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
+		printf("UUID: %s\n", uuid);
 
 	r = 1;
 
