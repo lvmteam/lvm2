@@ -1,3 +1,7 @@
+Version 1.00.14 - 6 Apr 2004
+============================
+  Fix static selinux build.
+
 Version 1.00.13 - 6 Apr 2004
 ============================
   Add some basic selinux support.
