@@ -35,7 +35,7 @@ int lvremove(struct cmd_context *cmd, int argc, char **argv)
 static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct volume_group *vg;
-	int active;
+	struct dm_info info;
 
 	vg = lv->vg;
 
@@ -50,14 +50,17 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
-	if (lv_open_count(lv) > 0) {
+	if (!lv_info(lv, &info)) {
+		stack;
+		return ECMD_FAILED;
+	}
+
+	if (info.open_count) {
 		log_error("Can't remove open logical volume \"%s\"", lv->name);
 		return ECMD_FAILED;
 	}
 
-	active = (lv_active(lv) > 0);
-
-	if (active && !arg_count(cmd, force_ARG)) {
+	if (info.exists && !arg_count(cmd, force_ARG)) {
 		if (yes_no_prompt("Do you really want to remove active "
 				  "logical volume \"%s\"? [y/n]: ",
 				  lv->name) == 'n') {

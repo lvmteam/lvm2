@@ -32,31 +32,31 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 	return process_each_lv(cmd, argc, argv, &lvscan_single);
 
 /*********** FIXME Count!   Add private struct to process_each*  
-	if (!lv_total)
-		log_print("no logical volumes found");
-	else {
-		log_print
-		    ("%d logical volumes with %s total in %d volume group%s",
-		     lv_total, (dummy =
-				display_size(lv_capacity_total / 2, SIZE_SHORT)),
-		     vg_total, vg_total == 1 ? "" : "s");
-		dbg_free(dummy);
-		dummy = NULL;
-		if (lv_active > 0)
-			printf("%d active", lv_active);
-		if (lv_active > 0 && lv_total - lv_active > 0)
-			printf(" / ");
-		if (lv_total - lv_active > 0)
-			printf("%d inactive", lv_total - lv_active);
-		printf(" logical volumes\n");
-	}
+*	if (!lv_total)
+*		log_print("no logical volumes found");
+*	else {
+*		log_print
+*		    ("%d logical volumes with %s total in %d volume group%s",
+*		     lv_total, (dummy =
+*				display_size(lv_capacity_total / 2, SIZE_SHORT)),
+*		     vg_total, vg_total == 1 ? "" : "s");
+*		dbg_free(dummy);
+*		dummy = NULL;
+*		if (lv_active > 0)
+*			printf("%d active", lv_active);
+*		if (lv_active > 0 && lv_total - lv_active > 0)
+*			printf(" / ");
+*		if (lv_total - lv_active > 0)
+*			printf("%d inactive", lv_total - lv_active);
+*		printf(" logical volumes\n");
+*	}
 *************/
 
 }
 
 static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	int active = 0;
+	struct dm_info info;
 	int lv_total = 0;
 	ulong lv_capacity_total = 0;
 
@@ -64,10 +64,9 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv)
 	const char *active_str, *snapshot_str;
 
 /* FIXME Add -D arg to skip this! */
-	if (lv_active(lv) > 0) {
+	if (lv_info(lv, &info) && info.exists)
 		active_str = "ACTIVE   ";
-		active++;
-	} else
+	else
 		active_str = "inactive ";
 
 	if (lv_is_origin(lv))
