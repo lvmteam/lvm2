@@ -31,14 +31,14 @@ LIBS = @LIBS@
 CFLAGS += @CFLAGS@
 
 # Setup directory variables
-prefix = $(DESTDIR)@prefix@
-exec_prefix = $(DESTDIR)@exec_prefix@
-bindir = @bindir@
-libdir = @libdir@
-sbindir = @sbindir@
-infodir = @infodir@
-mandir = @mandir@
-localedir = @LOCALEDIR@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = $(DESTDIR)@bindir@
+libdir = $(DESTDIR)@libdir@
+sbindir = $(DESTDIR)@sbindir@
+infodir = $(DESTDIR)@infodir@
+mandir = $(DESTDIR)@mandir@
+localedir = $(DESTDIR)@LOCALEDIR@
 
 # setup misc variables
 # define the ownership variables for the binaries and man pages
