@@ -18,17 +18,22 @@ TARGETS=$(interface)/libdevmapper.so
 include ../make.tmpl
 
 
-install: @interface@/libdevmapper.so
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/libdevmapper.so.$(LIB_VERSION)
+install: install_@interface@
 	$(LN_S) -f libdevmapper.so.$(LIB_VERSION) $(libdir)/libdevmapper.so
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
 		$(includedir)/libdevmapper.h
 
-.PHONY: install 
+.PHONY: install install_@interface@
 
+install_fs: fs/libdevmapper.so
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+		$(libdir)/libdevmapper.so.$(LIB_VERSION)
 
-ifeq ($(interface),ioctl)
+install_ioctl: ioctl/libdevmapper.so
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+		$(libdir)/libdevmapper.so.$(LIB_VERSION).$(IOCTL_VERSION)
+	$(LN_S) -f libdevmapper.so.$(LIB_VERSION).$(IOCTL_VERSION) \
+		 $(libdir)/libdevmapper.so.$(LIB_VERSION)
 
 ioctl/libdevmapper.o: ioctl_version
 
@@ -41,4 +46,3 @@ ioctl_version: ioctl/libdevmapper.c
 
 .PHONY: ioctl_version
 
-endif
