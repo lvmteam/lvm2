@@ -9,6 +9,7 @@ Package: lvm2
 Architecture: any
 Depends: ${shlibs:Depends}
 Replaces: lvm10, lvm-common
+Conflicts: lvm10, lvm-common
 Provides: lvm-binaries
 Suggests: dmsetup
 Description: The Linux Logical Volume Manager
