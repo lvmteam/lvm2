@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software (UK) Limited.
+ * Copyright (C) 2001-2002 Sistina Software (UK) Limited.
  *
  * This file is released under the LGPL.
  */
@@ -12,6 +12,7 @@
 #include "pool.h"
 #include "config.h"
 #include "hash.h"
+#include "display.h"
 #include "dbg_malloc.h"
 #include "toolcontext.h"
 
@@ -19,6 +20,13 @@
 #include <sys/types.h>
 #include <sys/file.h>
 #include <limits.h>
+
+
+/* Arbitrary limits copied from format1/disk_rep.h */
+#define MAX_PV 256
+#define MAX_LV 256
+#define MAX_VG 99
+#define MAX_PV_SIZE	((uint32_t) -1) /* 2TB in sectors - 1 */
 
 /*
  * NOTE: Currently there can be only one vg per file.
@@ -30,47 +38,45 @@ struct text_c {
 	struct uuid_map *um;
 };
 
-static void _not_written(const char *cmd)
-{
-	log_err("The text format is lacking an implementation for '%s'", cmd);
-}
-
-static struct list *_get_vgs(struct format_instance *fi)
-{
-	_not_written("_get_vgs");
-	return NULL;
-}
-
-static struct list *_get_pvs(struct format_instance *fi)
-{
-	_not_written("_get_vgs");
-	return NULL;
-}
-
-static struct physical_volume *_pv_read(struct format_instance *fi,
-					const char *pv_name)
-{
-	_not_written("_get_vgs");
-	return NULL;
-}
-
 static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 		     struct volume_group *vg)
 {
-	_not_written("_get_vgs");
-	return 0;
-}
+	/* setup operations for the PV structure */
+	if (pv->size > MAX_PV_SIZE)
+		pv->size--;
+	if (pv->size > MAX_PV_SIZE) {
+		/* FIXME Limit hardcoded */
+		log_error("Physical volumes cannot be bigger than 2TB");
+		return 0;
+	}
 
-static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
-{
-	_not_written("_get_vgs");
-	return 0;
+	return 1;
 }
 
 static int _vg_setup(struct format_instance *fi, struct volume_group *vg)
 {
-	_not_written("_get_vgs");
-	return 0;
+	/* just check max_pv and max_lv */
+	if (vg->max_lv >= MAX_LV)
+		vg->max_lv = MAX_LV - 1;
+
+        if (vg->max_pv >= MAX_PV)
+		vg->max_pv = MAX_PV - 1;
+
+	return 1;
+}
+
+static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
+{
+	uint64_t max_size = UINT_MAX;
+
+	if (lv->size > max_size) {
+                char *dummy = display_size(max_size, SIZE_SHORT);
+		log_error("logical volumes cannot be larger than %s", dummy);
+		dbg_free(dummy);
+		return 0;
+	}
+
+	return 1;
 }
 
 static struct volume_group *_vg_read(struct format_instance *fi,
@@ -154,6 +160,174 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 	return 1;
 }
 
+static struct list *_get_vgs(struct format_instance *fi)
+{
+    	struct text_c *tc = (struct text_c *) fi->private;
+	struct list *names = pool_alloc(fi->cmd->mem, sizeof(*names));
+	struct name_list *nl;
+	struct volume_group *vg;
+	char *slash;
+	char *vgname;
+
+	if (!names) {
+		stack;
+		return NULL;
+	}
+
+	list_init(names);
+
+	/* Determine the VG name from the file name */
+	slash = rindex(tc->path, '/');
+	if (slash) {
+	    vgname = pool_alloc(fi->cmd->mem, strlen(slash));
+	    strcpy(vgname, slash+1);
+	}
+	else {
+	    vgname = pool_alloc(fi->cmd->mem, strlen(tc->path)+1);
+	    strcpy(vgname, tc->path);
+	}
+
+	vg = _vg_read(fi, vgname);
+	if (vg) {
+
+	    pool_free(fi->cmd->mem, vg);
+	    if (!(nl = pool_alloc(fi->cmd->mem, sizeof(*nl)))) {
+		stack;
+		goto bad;
+	    }
+	    nl->name = vgname;
+
+	    list_add(names, &nl->list);
+	}
+
+	return names;
+
+ bad:
+	pool_free(fi->cmd->mem, names);
+	return NULL;
+}
+
+static struct list *_get_pvs(struct format_instance *fi)
+{
+        struct pv_list *pvl;
+	struct list *vgh;
+	struct list *pvh;
+	struct list *results = pool_alloc(fi->cmd->mem, sizeof(*results));
+        struct list *vgs = _get_vgs(fi);
+
+	list_init(results);
+
+	list_iterate(vgh, vgs) {
+	    struct volume_group *vg;
+	    struct name_list *nl;
+
+	    nl = list_item(vgh, struct name_list);
+	    vg = _vg_read(fi, nl->name);
+	    if (vg) {
+		list_iterate(pvh, &vg->pvs) {
+		    struct pv_list *vgpv = list_item(pvh, struct pv_list);
+
+		    pvl = pool_alloc(fi->cmd->mem, sizeof(*pvl));
+		    if (!pvl) {
+			stack;
+			goto bad;
+		    }
+		    /* ?? do we need to clone the pv structure...really? Nah. */
+		    pvl->pv = vgpv->pv;
+		    list_add(results, &pvl->list);
+		}
+	    }
+	}
+	return results;
+
+ bad:
+	pool_free(fi->cmd->mem, vgs);
+        return NULL;
+}
+
+static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
+{
+        struct volume_group *vg;
+	struct list *pvh;
+
+	vg = _vg_read(fi, pv->vg_name);
+
+	/* Find the PV in this VG */
+	if (vg) {
+	    list_iterate(pvh, &vg->pvs) {
+		struct pv_list *vgpv = list_item(pvh, struct pv_list);
+
+		if (id_equal(&pv->id, &vgpv->pv->id)) {
+		    vgpv->pv->status = pv->status;
+		    vgpv->pv->size = pv->size;
+
+		    /* Not sure if it's worth doing these */
+		    vgpv->pv->pe_size = pv->pe_size;
+		    vgpv->pv->pe_count = pv->pe_count;
+		    vgpv->pv->pe_start = pv->pe_start;
+		    vgpv->pv->pe_allocated = pv->pe_allocated;
+
+		    /* Write it back */
+		    _vg_write(fi, vg);
+		    pool_free(fi->cmd->mem, vg);
+		    return 1;
+		}
+	    }
+	    pool_free(fi->cmd->mem, vg);
+	}
+
+	/* Can't handle PVs not in a VG */
+	return 0;
+}
+
+static struct physical_volume *_pv_read(struct format_instance *fi,
+					const char *pv_name)
+{
+        struct list *vgs = _get_vgs(fi);
+	struct list *vgh;
+	struct list *pvh;
+	struct physical_volume *pv;
+
+	/* Look for the PV */
+	list_iterate(vgh, vgs) {
+	    struct volume_group *vg;
+	    struct name_list *nl;
+
+	    nl = list_item(vgh, struct name_list);
+	    vg = _vg_read(fi, nl->name);
+	    if (vg) {
+		list_iterate(pvh, &vg->pvs) {
+		    struct pv_list *vgpv = list_item(pvh, struct pv_list);
+
+		    if (strcmp(dev_name(vgpv->pv->dev), pv_name) == 0) {
+			pv = pool_alloc(fi->cmd->mem, sizeof(*pv));
+			if (!pv) {
+			    stack;
+			    pool_free(fi->cmd->mem, vg);
+			    return NULL;
+			}
+			/* Memberwise copy */
+			*pv = *vgpv->pv;
+
+			pv->vg_name = pool_alloc(fi->cmd->mem, strlen(vgpv->pv->vg_name)+1);
+			if (!pv->vg_name) {
+			    stack;
+			    pool_free(fi->cmd->mem, vg);
+			    return NULL;
+			}
+			strcpy(pv->vg_name, vgpv->pv->vg_name);
+			pool_free(fi->cmd->mem, vg);
+			return pv;
+		    }
+		}
+		pool_free(fi->cmd->mem, vg);
+	    }
+	}
+
+        return NULL;
+}
+
+
 static void _destroy(struct format_instance *fi)
 {
 	struct text_c *tc = (struct text_c *) fi->private;
@@ -171,6 +345,7 @@ static struct format_handler _text_handler = {
 	pv_setup: _pv_setup,
 	pv_write: _pv_write,
 	vg_setup: _vg_setup,
+	lv_setup: _lv_setup,
 	vg_read: _vg_read,
 	vg_write: _vg_write,
 	destroy: _destroy
