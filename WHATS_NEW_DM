@@ -1,3 +1,6 @@
+Version 1.00.21 - 
+============================
+
 Version 1.00.20 - 6 Jan 2005
 ============================
   Attempt to fix /dev/mapper/control transparently if it's wrong.
