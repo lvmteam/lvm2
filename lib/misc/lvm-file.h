@@ -32,3 +32,6 @@ int is_empty_dir(const char *dir);
  * if directory was successfully created (or already exists), else 0.
  */
 int create_dir(const char *dir);
+
+/* Sync directory changes */
+void sync_dir(const char *file);
