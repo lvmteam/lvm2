@@ -230,7 +230,7 @@ static int _resume(int argc, char **argv)
 static int _info(int argc, char **argv)
 {
 	int r = 0;
-	char *uuid;
+	const char *uuid;
 
 	/* remove <dev_name> */
 	struct dm_task *dmt;
