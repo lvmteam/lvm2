@@ -418,7 +418,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	 */
 	if (lp->pv_count) {
 		if (!(pvh = create_pv_list(cmd->mem, vg,
-					   lp->pv_count, lp->pvs))) {
+					   lp->pv_count, lp->pvs, 1))) {
 			stack;
 			return 0;
 		}

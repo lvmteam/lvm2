@@ -206,13 +206,13 @@ static int _create_areas(struct pool *mem, struct pv_map *pvm, uint32_t start,
 static int _create_allocatable_areas(struct pool *mem, struct pv_map *pvm)
 {
 	struct list *alloc_areas, *aah;
-	struct alloc_area *aa;
+	struct pe_range *aa;
 
-	alloc_areas = pvm->pvl->alloc_areas;
+	alloc_areas = pvm->pvl->pe_ranges;
 
 	if (alloc_areas) {
 		list_iterate(aah, alloc_areas) {
-			aa = list_item(aah, struct alloc_area);
+			aa = list_item(aah, struct pe_range);
 			if (!_create_areas(mem, pvm, aa->start, aa->count)) {
 				stack;
 				return 0;

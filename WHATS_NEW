@@ -1,5 +1,6 @@
 Version 2.00.21 - 
 =============================
+  Change alloc_areas to pe_ranges and allow suppression of availability checks.
   Add dev_size column to pvs.
   Add report columns for in-kernel device number.
 
