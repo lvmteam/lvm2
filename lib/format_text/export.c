@@ -513,7 +513,7 @@ static int _print_snapshot(struct formatter *f, struct snapshot *snap,
 	}
 
 	seg.le = 0;
-	seg.len = snap->origin->le_count;
+	seg.len = snap->le_count;
 	seg.origin = snap->origin;
 	seg.cow = snap->cow;
 	seg.chunk_size = snap->chunk_size;

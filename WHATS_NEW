@@ -1,5 +1,6 @@
 Version 2.01.01 - 
 ===================================
+  Store snapshot and origin sizes separately.
   Update vgcreate man page.
 
 Version 2.01.00 - 17th January 2005

@@ -878,6 +878,7 @@ static int _populate_snapshot(struct dev_manager *dm,
 	struct snapshot *s;
 	struct dev_layer *dlo, *dlc;
 	char devbufo[10], devbufc[10];
+	uint64_t size;
 
 	if (!(s = find_cow(dl->lv))) {
 		log_error("Couldn't find snapshot for '%s'.", dl->lv->name);
@@ -925,10 +926,10 @@ static int _populate_snapshot(struct dev_manager *dm,
 		return 0;
 	}
 
-	log_debug("Adding target: 0 %" PRIu64 " snapshot %s",
-		  s->origin->size, params);
-	if (!dm_task_add_target
-	    (dmt, UINT64_C(0), s->origin->size, "snapshot", params)) {
+	size = (uint64_t) s->le_count * s->origin->vg->extent_size;
+
+	log_debug("Adding target: 0 %" PRIu64 " snapshot %s", size, params);
+	if (!dm_task_add_target(dmt, UINT64_C(0), size, "snapshot", params)) {
 		stack;
 		return 0;
 	}

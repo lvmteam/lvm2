@@ -255,6 +255,7 @@ struct snapshot {
 
 	int persistent;		/* boolean */
 	uint32_t chunk_size;	/* in 512 byte sectors */
+	uint32_t le_count;
 
 	struct logical_volume *origin;
 	struct logical_volume *cow;
@@ -496,9 +497,9 @@ struct snapshot *find_cow(const struct logical_volume *lv);
 struct snapshot *find_origin(const struct logical_volume *lv);
 struct list *find_snapshots(const struct logical_volume *lv);
 
-int vg_add_snapshot(struct logical_volume *origin,
-		    struct logical_volume *cow,
-		    int persistent, struct id *id, uint32_t chunk_size);
+int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
+		    int persistent, struct id *id, uint32_t extent_count,
+		    uint32_t chunk_size);
 
 int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow);
 
