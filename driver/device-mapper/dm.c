@@ -338,19 +338,19 @@ static inline int __map_buffer(struct mapped_device *md,
  */
 static inline int __find_node(struct dm_table *t, struct buffer_head *bh)
 {
-	int i = 0, l, r = 0;
+	int l, n = 0, k = 0;
 	offset_t *node;
 
 	for (l = 0; l < t->depth; l++) {
-		r = (CHILD_PER_NODE * r) + i;
-		node = t->index[l] + (r * KEYS_PER_NODE);
+		n = get_child(n, k);
+		node = get_node(t, l, n);
 
-		for (i = 0; i < KEYS_PER_NODE; i++)
-			if (node[i] >= bh->b_rsector)
+		for (k = 0; k < KEYS_PER_NODE; k++)
+			if (node[k] >= bh->b_rsector)
 				break;
 	}
 
-	return (KEYS_PER_NODE * r) + i;
+	return (KEYS_PER_NODE * n) + k;
 }
 
 static int request(request_queue_t *q, int rw, struct buffer_head *bh)

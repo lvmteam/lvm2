@@ -134,7 +134,7 @@
 #define MAX_DEPTH 16
 #define NODE_SIZE L1_CACHE_BYTES
 #define KEYS_PER_NODE (NODE_SIZE / sizeof(offset_t))
-#define CHILD_PER_NODE (KEYS_PER_NODE + 1)
+#define CHILDREN_PER_NODE (KEYS_PER_NODE + 1)
 #define DM_NAME_LEN 64
 
 enum {
@@ -262,6 +262,23 @@ int dm_fs_remove(struct mapped_device *md);
 
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
+
+/*
+ * calculate the index of the child node of the
+ * n'th node k'th key.
+ */
+static inline int get_child(int n, int k)
+{
+	return (n * CHILDREN_PER_NODE) + k;
+}
+
+/*
+ * returns the n'th node of level l from table t.
+ */
+static inline offset_t *get_node(struct dm_table *t, int l, int n)
+{
+	return t->index[l] + (n * KEYS_PER_NODE);
+}
 
 static inline int is_active(struct mapped_device *md)
 {
