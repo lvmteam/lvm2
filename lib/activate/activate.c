@@ -7,6 +7,7 @@
 #include "metadata.h"
 #include "activate.h"
 #include "log.h"
+#include "fs.h"
 
 #include <devmapper/libdevmapper.h>
 
@@ -162,10 +163,9 @@ int _load(struct logical_volume *lv, int task)
 }
 
 /* FIXME: Always display error msg */
-/* FIXME: Create dev entry if required */
 int lv_activate(struct logical_volume *lv)
 {
-	return _load(lv, DM_DEVICE_CREATE);
+	return _load(lv, DM_DEVICE_CREATE) && fs_add_lv(lv);
 }
 
 int _suspend(struct logical_volume *lv, int sus)
@@ -219,6 +219,9 @@ int lv_deactivate(struct logical_volume *lv)
 		stack;
 
 	dm_task_destroy(dmt);
+
+	fs_del_lv(lv);
+
 	return r;
 }
 
