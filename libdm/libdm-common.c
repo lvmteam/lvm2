@@ -70,6 +70,7 @@ struct dm_task *dm_task_create(int type)
         memset(dmt, 0, sizeof(*dmt));
 
         dmt->type = type;
+	dmt->minor = -1;
         return dmt;
 }
 
@@ -104,6 +105,13 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 
         return 1;
 }
+
+int dm_task_set_minor(struct dm_task *dmt, int minor)
+{
+        dmt->minor = minor;
+        return 1;
+}
+
 
 int dm_task_add_target(struct dm_task *dmt,
                        uint64_t start,
