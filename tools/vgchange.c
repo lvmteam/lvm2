@@ -79,6 +79,7 @@ static int vgchange_single(const char *vg_name)
 void vgchange_available(struct volume_group *vg)
 {
 	int lv_open;
+	struct list_head *pvh;
 	int available = !strcmp(arg_str_value(available_ARG, "n"), "y");
 
 	/* FIXME Kernel status to override disk flags ! */
@@ -99,10 +100,17 @@ void vgchange_available(struct volume_group *vg)
 		return;
 	}
 
-	if (available)
+	if (available) {
 		vg->status |= ACTIVE;
-	else
+		list_for_each(pvh, &vg->pvs)
+			list_entry(pvh, struct pv_list, list)->pv.status 
+				  |= ACTIVE;
+	} else {
 		vg->status &= ~ACTIVE;
+		list_for_each(pvh, &vg->pvs)
+			list_entry(pvh, struct pv_list, list)->pv.status 
+				  &= ~ACTIVE;
+	}
 
 	if (!ios->vg_write(ios, vg))
 		return;

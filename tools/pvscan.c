@@ -31,20 +31,20 @@ int pvscan(int argc, char **argv)
 	int pvs_found = 0;
 	char *s1, *s2, *s3;
 
-	struct pv_list *pvs_list, *pvl;
+	struct list_head *pvs;
 	struct list_head *pvh;
+	struct pv_list *pvl;
 	struct physical_volume *pv;
 
 	uint64_t size_total = 0;
 	uint64_t size_new = 0;
-	uint64_t size = 0;
 
 	int len = 0;
 	pv_max_name_len = 0;
 	vg_max_name_len = 0;
 
 	if (arg_count(novolumegroup_ARG) && arg_count(exported_ARG)) {
-		log_error("options e and n incompatible");
+		log_error("Options -e and -n are incompatible");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -55,17 +55,17 @@ int pvscan(int argc, char **argv)
 
 	log_verbose("Walking through all physical volumes");
 
-	if (!(pvs_list = ios->get_pvs(ios)))
+	if (!(pvs = ios->get_pvs(ios)))
 		return ECMD_FAILED;
 
 	/* eliminate exported/new if required */
-	list_for_each(pvh, &pvs_list->list) {
+	list_for_each(pvh, pvs) {
 		pvl = list_entry(pvh, struct pv_list, list);
 		pv = &pvl->pv;
 
-		if ((arg_count(exported_ARG) && !(pv->status & STATUS_EXPORTED))
-		    || (arg_count(novolumegroup_ARG) && (pv->vg_name[0]))) {
-			list_del(&pvl->list);	/* Plus deallocation? */
+		if ((arg_count(exported_ARG) && !(pv->status & EXPORTED_VG))
+		    || (arg_count(novolumegroup_ARG) && (*pv->vg_name))) {
+			list_del(&pvl->list);	
 			continue;
 		}
 
@@ -81,20 +81,20 @@ int pvscan(int argc, char **argv)
 ********/
 		pvs_found++;
 
-		size = dev_get_size(pv->dev);
-		size_total += size;
 
-		if (pv->vg_name[0]) {
+		if (!*pv->vg_name) {
 			new_pvs_found++;
-			size_new += size;
-		}
+			size_new += pv->size;
+			size_total += pv->size;
+		} else 
+			size_total += (pv->pe_count - pv->pe_allocated) 
+				      * pv->pe_size;
 	}
 
 	/* find maximum pv name length */
 	pv_max_name_len = vg_max_name_len = 0;
-	list_for_each(pvh, &pvs_list->list) {
-		pvl = list_entry(pvh, struct pv_list, list);
-		pv = &pvl->pv;
+	list_for_each(pvh, pvs) {
+		pv = &list_entry(pvh, struct pv_list, list)->pv;
 		len = strlen(pv->dev->name);
 		if (pv_max_name_len < len)
 			pv_max_name_len = len;
@@ -105,19 +105,15 @@ int pvscan(int argc, char **argv)
 	pv_max_name_len += 2;
 	vg_max_name_len += 2;
 
-	list_for_each(pvh, &pvs_list->list) {
-		pvl = list_entry(pvh, struct pv_list, list);
-		pv = &pvl->pv;
-
-		pvscan_display_single(pv);
-	}
+	list_for_each(pvh, pvs)
+		pvscan_display_single(&list_entry(pvh, struct pv_list, list)->pv);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");
 		return 0;
 	}
 
-	log_print("total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
+	log_print("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
 		  pvs_found,
 		  (s1 = display_size(size_total / 2, SIZE_SHORT)),
 		  pvs_found - new_pvs_found,
@@ -150,65 +146,61 @@ void pvscan_display_single(struct physical_volume *pv)
 	}
 
 	if (arg_count(verbose_ARG) > 1) {
-		pv_show(pv);
+		/* FIXME As per pv_display! Drop through for now. */
+		/* pv_show(pv); */
+
 		log_print("System Id             %s", pv->exported);
-		log_print("");
-		return;
+
+		/* log_print(" "); */
+		/* return; */
 	}
 
 	memset(pv_tmp_name, 0, sizeof (pv_tmp_name));
 
-	active_str = (pv->status & ACTIVE) ? "ACTIVE   " : "inactive ";
+	active_str = (pv->status & ACTIVE) ? "ACTIVE  " : "Inactive";
 
-	vg_name_len = strlen(pv->vg_name) - sizeof (EXPORTED) + 1;
+	vg_name_len = strlen(pv->vg_name) - sizeof (EXPORTED_TAG) + 1;
 
 	if (arg_count(uuid_ARG)) {
 		sprintf(pv_tmp_name,
 			"%-*s with UUID %s",
 			pv_max_name_len - 2,
-			pv->dev->name, display_uuid(pv->id->uuid));
+			pv->dev->name, display_uuid(pv->id.uuid));
 	} else {
-		sprintf(pv_tmp_name, "%s", pv->dev.name);
+		sprintf(pv_tmp_name, "%s", pv->dev->name);
 	}
 
-	if (!pv->vg_name[0]) {
-		log_print("%s PV %-*s is in no VG  [%s]", active_str,
+	if (!*pv->vg_name) {
+		log_print("%s PV %-*s is in no VG %-*s [%s]", active_str,
 			  pv_max_name_len, pv_tmp_name,
+			  vg_max_name_len - 6, " ",
 			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));
 		dbg_free(s1);
 		return;
 	}
 
-	/* FIXME What is pe_total now? */
 	if (strcmp(&pv->vg_name[vg_name_len], EXPORTED_TAG) == 0) {
 		strncpy(vg_name_this, pv->vg_name, vg_name_len);
-		log_print("%sPV %-*s  is in EXPORTED VG %s [%s / %s free]",
+		log_print("%s PV %-*s  is in EXPORTED VG %s [%s / %s free]",
 			  active_str, pv_max_name_len, pv_tmp_name,
 			  vg_name_this, (s1 =
-					 display_size(pv->pe_total *
+					 display_size(pv->pe_count *
 						      pv->pe_size / 2,
 						      SIZE_SHORT)),
-			  (s2 = display_size((pv->pe_total - pv->pe_allocated)
+			  (s2 = display_size((pv->pe_count - pv->pe_allocated)
 					     * pv->pe_size / 2, SIZE_SHORT)));
 		dbg_free(s1);
 		dbg_free(s2);
 		return;
 	}
 
-	if (!vg_check_name(pv->vg_name)) {
-		log_print
-		    ("%sPV %-*s  is associated to an unknown VG ",
-		     active_str, pv_max_name_len, pv_tmp_name);
-		return;
-	}
-
 	sprintf(vg_tmp_name, "%s", pv->vg_name);
 	log_print
-	    ("%sPV %-*s of VG %-*s [%s / %s free]", active_str, pv_max_name_len,
+	    ("%s PV %-*s of VG %-*s [%s / %s free]", active_str, pv_max_name_len,
 	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
-	     (s1 = display_size(pv->pe_total * pv->pe_size / 2, SIZE_SHORT)),
+	     (s1 = display_size(pv->pe_count * pv->pe_size / 2, SIZE_SHORT)),
 	     (s2 =
-	      display_size((pv->pe_total - pv->pe_allocated) * pv->pe_size / 2,
+	      display_size((pv->pe_count - pv->pe_allocated) * pv->pe_size / 2,
 			   SIZE_SHORT)));
 	dbg_free(s1);
 	dbg_free(s2);
