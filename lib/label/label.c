@@ -32,6 +32,8 @@ struct label_ondisk
 {
     uint32_t magic;
     uint32_t crc;
+    uint64_t label1_loc;
+    uint64_t label2_loc;
     uint16_t datalen;
     uint16_t pad;
 
@@ -48,32 +50,24 @@ struct filter_private
 };
 
 
-/* CRC32 code taken from Linux kernel */
-static int crc32( int initial, char * s, int length )
+/* Calculate CRC32 of a buffer */
+static uint32_t crc32(uint32_t initial, const unsigned char *databuf, size_t datalen)
 {
-        /* indices */
-        int perByte;
-        int perBit;
+    uint32_t idx, crc = initial;
+    static const u_int crctab[] = {
+        0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
+        0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+        0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
+        0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
+    };
 
-        /* crc polynomial for Ethernet */
-        const unsigned long poly = 0xedb88320;
-
-        /* crc value - carry over */
-        unsigned long crc_value = initial;
-
-        for ( perByte = 0; perByte < length; perByte ++ ) {
-                unsigned char   c;
-
-                c = *(s++);
-                for ( perBit = 0; perBit < 8; perBit++ ) {
-                        crc_value = (crc_value>>1)^
-                                (((crc_value^c)&0x01)?poly:0);
-                        c >>= 1;
-                }
-        }
-        return  crc_value;
+    for (idx = 0; idx < datalen; idx++) {
+        crc ^= *databuf++;
+        crc = (crc >> 4) ^ crctab[crc & 0xf];
+        crc = (crc >> 4) ^ crctab[crc & 0xf];
+    }
+    return crc;
 }
-
 
 /* Calculate crc */
 static uint32_t calc_crc(struct label *label)
@@ -89,6 +83,13 @@ static uint32_t calc_crc(struct label *label)
     return crcval;
 }
 
+/* Calculate the locations we should find the labels in */
+static inline void get_label_locations(uint64_t size, uint32_t sectsize, long *first, long *second)
+{
+    *first  = sectsize;
+    *second = size*BLOCK_SIZE - sectsize;
+}
+
 /* Read a label off disk - the data area is allocated
    from the pool in label->pool and should be freed by
    the caller */
@@ -100,6 +101,7 @@ int label_read(struct device *dev, struct label *label)
     struct   label_ondisk *ondisk;
     int      status;
     int      iter;
+    long     offset[2];
 
     if (!dev_get_size(dev, &size))
 	return 0;
@@ -120,15 +122,12 @@ int label_read(struct device *dev, struct label *label)
 	return 0;
     }
     ondisk = (struct label_ondisk *)block;
+    get_label_locations(size, sectsize, &offset[0], &offset[1]);
 
     /* If the first label is bad then use the second */
     for (iter = 0; iter <= 1; iter++)
     {
-	if (iter == 0)
-	    status = dev_read(dev, sectsize, sectsize, block);
-	else
-	    status = dev_read(dev, size*BLOCK_SIZE - sectsize, sectsize, block);
-
+	status = dev_read(dev, offset[iter], sectsize, block);
 	if (status)
 	{
 	    struct label incore;
@@ -156,6 +155,8 @@ int label_read(struct device *dev, struct label *label)
 	    incore.version[0] = xlate32(ondisk->version[0]);
 	    incore.version[1] = xlate32(ondisk->version[1]);
 	    incore.version[2] = xlate32(ondisk->version[2]);
+	    incore.label1_loc = xlate64(ondisk->label1_loc);
+	    incore.label2_loc = xlate64(ondisk->label2_loc);
 	    incore.datalen = xlate16(ondisk->datalen);
 	    incore.data = block + sizeof(struct label_ondisk);
 	    incore.crc = xlate32(ondisk->crc);
@@ -171,6 +172,14 @@ int label_read(struct device *dev, struct label *label)
 			  iter, dev_name(dev), incore.crc, calc_crc(&incore));
 		continue;
 	    }
+
+	    /* Check label locations match our view of the device */
+	    if (incore.label1_loc != offset[0])
+		log_error("Label 1 location is wrong in label %d - check block size of the device\n",
+			  iter);
+	    if (incore.label2_loc != offset[1])
+		log_error("Label 2 location is wrong in label %d - the size of the device must have changed\n",
+			  iter);
 
 	    /* Copy to user's data area */
 	    *label = incore;
@@ -202,6 +211,7 @@ int label_write(struct device *dev, struct label *label)
     char     *block;
     struct label_ondisk *ondisk;
     int       status1, status2;
+    long      offset[2];
 
     if (!dev_get_size(dev, &size))
 	return 0;
@@ -226,12 +236,18 @@ int label_write(struct device *dev, struct label *label)
 
     /* Make sure the label has the right magic number in it */
     label->magic = LABEL_MAGIC;
+    label->label1_loc = offset[0];
+    label->label2_loc = offset[1];
+
+    get_label_locations(size, sectsize, &offset[0], &offset[1]);
 
     /* Make into ondisk format */
     ondisk->magic = xlate32(LABEL_MAGIC);
     ondisk->version[0] = xlate32(label->version[0]);
     ondisk->version[1] = xlate32(label->version[1]);
     ondisk->version[2] = xlate32(label->version[2]);
+    ondisk->label1_loc = xlate64(offset[0]);
+    ondisk->label2_loc = xlate64(offset[1]);
     ondisk->datalen = xlate16(label->datalen);
     strncpy(ondisk->disk_type, label->disk_type, sizeof(ondisk->disk_type));
     memcpy(block+sizeof(struct label_ondisk), label->data, label->datalen);
@@ -244,13 +260,13 @@ int label_write(struct device *dev, struct label *label)
 	return 0;
     }
 
-    status1 = dev_write(dev, sectsize, sizeof(struct label_ondisk) + label->datalen, block);
+    status1 = dev_write(dev, offset[0], sizeof(struct label_ondisk) + label->datalen, block);
     if (!status1)
 	log_error("Error writing label 1\n");
 
     /* Write another at the end of the device */
-    status2 = dev_write(dev, size*BLOCK_SIZE - sectsize, sizeof(struct label_ondisk) + label->datalen, block);
-    if (!status1)
+    status2 = dev_write(dev, offset[1], sizeof(struct label_ondisk) + label->datalen, block);
+    if (!status2)
 	log_error("Error writing label 2\n");
 
     pool_free(label_pool, block);
@@ -419,6 +435,7 @@ int labels_match(struct device *dev)
     struct   label_ondisk *ondisk1;
     struct   label_ondisk *ondisk2;
     int      status = 0;
+    long     offset[2];
 
     if (!dev_get_size(dev, &size))
 	return 0;
@@ -447,14 +464,16 @@ int labels_match(struct device *dev)
     ondisk1 = (struct label_ondisk *)block1;
     ondisk2 = (struct label_ondisk *)block2;
 
+    get_label_locations(size, sectsize, &offset[0], &offset[1]);
+
     /* Fetch em */
     if (!dev_open(dev, O_RDONLY))
 	goto finish;
 
-    if (!dev_read(dev, sectsize, sectsize, block1))
+    if (!dev_read(dev, offset[0], sectsize, block1))
 	goto finish;
 
-    if (!dev_read(dev, size*BLOCK_SIZE - sectsize, sectsize, block2))
+    if (!dev_read(dev, offset[1], sectsize, block2))
 	goto finish;
 
     dev_close(dev);
