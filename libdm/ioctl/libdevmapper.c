@@ -34,6 +34,9 @@ void dm_task_destroy(struct dm_task *dmt)
 		free(t);
 	}
 
+	if (dmt->dev_name)
+		free(dmt->dev_name);
+
 	if (dmt->newname)
 		free(dmt->newname);
 
