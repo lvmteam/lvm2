@@ -704,7 +704,8 @@ static void __init_log(struct config_file *cf)
 		find_config_int(cf->root, "log/level", '/', 0);
 	_default_settings.verbose =
 		find_config_int(cf->root, "log/verbose", '/', 0);
-	_default_settings.test = find_config_int(cf->root, "log/test", '/', 0);
+	_default_settings.test = find_config_int(cf->root, "global/test", 
+						 '/', 0);
 
 	if (find_config_int(cf->root, "log/overwrite", '/', 0))
 		open_mode = "w";
