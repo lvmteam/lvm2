@@ -16,8 +16,9 @@ struct label {
 	char volume_type[32];
 	uint32_t version[3];
 
-	size_t extra_len;
-	char *extra_info;
+	void *extra_info;
+
+	struct labeller *labeller;
 };
 
 struct labeller;
@@ -51,6 +52,11 @@ struct label_ops {
 	int (*verify)(struct labeller *l, struct device *dev);
 
 	/*
+	 * Destroy a previously read label.
+	 */
+	int (*destroy_label)(struct labeller *l, struct label *label);
+
+	/*
 	 * Destructor.
 	 */
 	void (*destroy)(struct labeller *l);
@@ -72,7 +78,7 @@ struct labeller *label_get_handler(const char *name);
 int label_remove(struct device *dev);
 int label_read(struct device *dev, struct label **result);
 int label_verify(struct device *dev);
-void label_free(struct label *l);
+void label_destroy(struct label *lab);
 
 /*
  * We'll support two label types: the 'pretend the

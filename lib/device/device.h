@@ -22,6 +22,11 @@ struct device {
 	int fd;
 };
 
+struct device_list {
+	struct list list;
+	struct device *dev;
+};
+
 /*
  * All io should use these routines.
  */

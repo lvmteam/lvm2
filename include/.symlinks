@@ -13,8 +13,10 @@
 ../lib/filters/filter-regex.h
 ../lib/filters/filter.h
 ../lib/format1/format1.h
+../lib/format1/lvm1_label.h
 ../lib/format_text/format-text.h
 ../lib/label/label.h
+../lib/label/uuid-map.h
 ../lib/log/log.h
 ../lib/metadata/metadata.h
 ../lib/mm/dbg_malloc.h
