@@ -680,7 +680,7 @@ static int init(void)
 	struct stat info;
 	struct pool *ios_pool;
 
-	/* FIXME: Override from config file */
+	/* FIXME: Override from config file. (Append trailing slash if reqd)*/
 	char *prefix = "/dev/";
 
 	if (!(_cf = create_config_file())) {
