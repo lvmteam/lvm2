@@ -226,7 +226,8 @@ static int _read_linear(struct pool *mem, struct lv_map *lvm)
 			seg->len++;
 
 		while ((lvm->map[le + seg->len].pv == seg->area[0].pv) &&
-		       (lvm->map[le + seg->len].pe == seg->area[0].pe +
+		       (seg->area[0].pv &&
+			lvm->map[le + seg->len].pe == seg->area[0].pe +
 			seg->len));
 
 		le += seg->len;
@@ -249,7 +250,8 @@ static int _check_stripe(struct lv_map *lvm, struct stripe_segment *seg,
 	 */
 	for (st = 0; st < seg->stripes; st++)
 		if ((lvm->map[le + st * len].pv != seg->area[st].pv) ||
-		    (lvm->map[le + st * len].pe != seg->area[st].pe + seg->len))
+		    (seg->area[st].pv &&
+		     lvm->map[le + st * len].pe != seg->area[st].pe + seg->len))
 			return 0;
 
 	return 1;
