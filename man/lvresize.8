@@ -1,0 +1,53 @@
+.TH LVRESIZE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+lvresize \- resize a logical volume
+.SH SYNOPSIS
+.B lvresize
+[\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-h/\-?/\-\-help]
+[\-i/\-\-stripes Stripes [\-I/\-\-stripesize StripeSize]]
+{\-l/\-\-extents [+]LogicalExtentsNumber |
+\-L/\-\-size [+]LogicalVolumeSize[kKmMgGtT]}
+[\-t/\-\-test]
+[\-v/\-\-verbose] LogicalVolumePath [PhysicalVolumePath...]
+.SH DESCRIPTION
+lvresize allows you to resize a logical volume.
+Be careful when reducing a logical volume's size, because data in the reduced
+part is lost!!!
+You should therefore ensure that any filesystem on the volume is
+shrunk first so that the extents that are to be removed are not in use.
+Resizing snapshot logical volumes (see
+.B lvcreate(8)
+for information about creating snapshots) is supported as well.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.I \-l, \-\-extents [+/-]LogicalExtentsNumber
+Change or set the logical volume size in units of logical extents.
+With the + or - sign the value is added to or subtracted from the actual size
+of the logical volume and without it, the value is taken as an absolute one.
+.TP
+.I \-L, \-\-size [+/-]LogicalVolumeSize[kKmMgGtT]
+Change or set the logical volume size in units in units of megabytes.
+A size suffix of M for megabytes, G for gigabytes or T for terabytes is
+optional.  With the + or - sign the value is added to or subtracted from
+the actual size of the logical volume and without it, the value is taken as an
+absolute one.
+.TP
+.I \-i, \-\-stripes Stripes
+Gives the number of stripes to use when extending a Logical Volume.
+Defaults to whatever the last segment of the Logical Volume uses.
+Not applicable to LVs using the original metadata LVM format, which must
+use a single value throughout.
+.TP
+.I \-I, \-\-stripesize StripeSize
+Gives the number of kilobytes for the granularity of the stripes.
+Defaults to whatever the last segment of the Logical Volume uses.
+Not applicable to LVs using the original metadata LVM format, which
+must use a single value throughout.
+.br
+StripeSize must be 2^n (n = 2 to 9)
+.SH SEE ALSO
+.BR lvm (8), 
+.BR lvcreate (8), 
+.BR lvreduce (8), 
+.BR lvchange (8)

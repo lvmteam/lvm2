@@ -1,0 +1,34 @@
+.TH VGMERGE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgsplit \- split a volume group into two
+.SH SYNOPSIS
+.B vgsplit
+[\-A/\-\-autobackup y/n] 
+[\-d/\-\-debug] 
+[\-h/\-?/\-\-help] 
+[\-l/\-\-list]
+[\-M/\-\-metadatatype 1/2]
+[\-t/\-\-test] 
+[\-v/\-\-verbose] 
+ExistingVolumeGroupName NewVolumeGroupName
+PhysicalVolumePath [PhysicalVolumePath...]
+.SH DESCRIPTION
+.B vgsplit 
+creates 
+.I NewVolumeGroupName
+and moves
+.IR PhysicalVolumePath (s)
+from
+.I ExistingVolumeGroupName
+into it.
+Logical Volumes cannot be split between Volume Groups.
+Each existing Logical Volumes must be entirely on the Physical Volumes forming
+either the old or the new Volume Group.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.SH SEE ALSO
+.BR lvm (8), 
+.BR vgcreate (8), 
+.BR vgextend (8), 
+.BR vgreduce (8),
+.BR vgmerge (8)
