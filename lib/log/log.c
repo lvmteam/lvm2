@@ -59,8 +59,8 @@ void print_log(int level, const char *file, int line, const char *format, ...) {
 	va_start(ap, format);
 	switch(level) {
 	  case _LOG_DEBUG:
-		if (_verbose_level > 2) {
-			printf("      ");
+		if (_verbose_level > 2 && format[1]) {
+			printf("        ");
 			vprintf(format, ap);
 			putchar('\n');
 		}

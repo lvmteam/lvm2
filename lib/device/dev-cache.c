@@ -63,7 +63,7 @@ static char *_follow_link(const char *path, struct stat *info)
 	buffer[n] = '\0';
 
 	if (stat(buffer, info) < 0) {
-		log_sys_err("stat");
+		log_sys_very_verbose("stat", buffer);
 		return NULL;
 	}
 
@@ -123,10 +123,10 @@ static int _insert(const char *path, int recurse)
 	struct stat info;
 	struct device *dev;
 
-	log_debug("dev-cache adding %s", path);
+	log_very_verbose("dev-cache adding %s", path);
 
 	if (stat(path, &info) < 0) {
-		log_sys_err("stat");
+		log_sys_very_verbose("stat", path);
 		return 0;
 	}
 

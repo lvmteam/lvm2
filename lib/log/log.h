@@ -42,10 +42,8 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 #define log_warn(x...) plog(_LOG_WARN, x)
 #define log_err(x...) plog(_LOG_ERR, x)
 #define log_fatal(x...) plog(_LOG_FATAL, x)
-#define log_sys_err(x)  log_debug("system call '%s' failed (%s)", \
-                                  x, strerror(errno))
 
-#define stack log_debug( "stack trace" )
+#define stack log_debug( "s" )
 
 /*
  * Macros to use for messages:
@@ -55,6 +53,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
  *   log_verbose - print to stdout if verbose is set (-v)
  *   log_very_verbose - print to stdout if verbose is set twice (-vv)
  *   log_debug - print to stdout if verbose is set three times (-vvv)
+ *               (suppressed if single-character string such as with 'stack')
  *
  * In addition, messages will be logged to file or syslog if they
  * are more serious than the log level specified with -d.
@@ -64,6 +63,12 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 #define log_print(fmt, args...) log_warn(fmt , ## args)
 #define log_verbose(fmt, args...) log_notice(fmt , ## args)
 #define log_very_verbose(fmt, args...) log_info(fmt , ## args)
+
+/* System call equivalents */
+#define log_sys_error(x, y) \
+		log_err("%s: %s failed: %s", y, x, strerror(errno))
+#define log_sys_very_verbose(x, y) \
+		log_info("%s: %s failed: %s", y, x, strerror(errno))
 
 #endif
 
