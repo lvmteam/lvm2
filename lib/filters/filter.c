@@ -53,6 +53,7 @@ static const device_info_t device_info[] = {
 	{"ubd", 16},		/* User-mode virtual block device */
 	{"ataraid", 16},	/* ATA Raid */
 	{"drbd", 16},		/* Distributed Replicated Block Device */
+	{"power2", 16},		/* EMC Powerpath */
 	{NULL, 0}
 };
 
