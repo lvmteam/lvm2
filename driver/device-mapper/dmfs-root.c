@@ -132,7 +132,7 @@ struct inode *dmfs_create_root(struct super_block *sb, int mode)
 		inode->i_blksize = PAGE_CACHE_SIZE;
 		inode->i_blocks = 0;
 		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_ctime = CURRENT_TIME;
+		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_root_file_operations;
 		inode->i_op = &dmfs_root_dir_operations;
 	}
