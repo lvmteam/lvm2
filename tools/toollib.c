@@ -170,16 +170,16 @@ int process_each_pv_in_vg(struct volume_group *vg,
 	int ret_max = 0;
 	int ret = 0;
 	struct list *pvh;
+	struct physical_volume *pv;
 
-		list_iterate(pvh, &vg->pvs) {
-			ret = process_single(vg,
-					     &list_item(pvh,
-							struct pv_list)->pv);
-			if (ret > ret_max)
-				ret_max = ret;
-		}
+	list_iterate(pvh, &vg->pvs) {
+		pv = list_item(pvh, struct pv_list)->pv;
+
+		if ((ret = process_single(vg, pv)) > ret_max)
+			ret_max = ret;
+	}
+
 	return ret_max;
-
 }
 
 int process_each_pv(int argc, char **argv, struct volume_group *vg,
@@ -201,7 +201,7 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 					  vg->name);
 				continue;
 			}
-			ret = process_single(vg, &pvl->pv);
+			ret = process_single(vg, pvl->pv);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
@@ -283,4 +283,46 @@ char *default_vgname(struct format_instance *fi)
 	}
 
 	return pool_strdup(fid->cmd->mem, vg_path);
+}
+
+struct list *create_pv_list(struct pool *mem,
+			    struct volume_group *vg,
+			    int argc, char **argv)
+{
+	struct list *r;
+	struct pv_list *pvl, *new_pvl;
+	int i;
+
+	/* Build up list of PVs */
+	if (!(r = pool_alloc(mem, sizeof(*r)))) {
+		log_error("Allocation of list failed");
+		return NULL;
+	}
+	list_init(r);
+
+	for (i = 0; i < argc; i++) {
+
+		if (!(pvl = find_pv_in_vg(vg, argv[i]))) {
+			log_err("Physical Volume %s not found in "
+				"Volume Group %s", argv[i], vg->name);
+			return NULL;
+		}
+
+		if (pvl->pv->pe_count == pvl->pv->pe_allocated) {
+			log_err("No free extents on physical volume %s",
+				argv[i]);
+			continue;
+			/* FIXME Buy check not empty at end! */
+		}
+
+		if (!(new_pvl = pool_alloc(mem, sizeof(*new_pvl)))) {
+			log_err("Unable to allocate physical volume list.");
+			return NULL;
+		}
+
+		memcpy(new_pvl, pvl, sizeof(*new_pvl));
+		list_add(r, &new_pvl->list);
+	}
+
+	return r;
 }

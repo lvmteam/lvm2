@@ -230,7 +230,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 
 	list_iterate (pvh, &vg->pvs) {
 
-		pv = &(list_item(pvh, struct pv_list)->pv);
+		pv = list_item(pvh, struct pv_list)->pv;
 
 		if (!(name = _get_pv_name(f, pv))) {
 			stack;
@@ -240,8 +240,6 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		_nl(f);
 		_out(f, "%s {", name);
 		_inc_indent(f);
-
-		pv = &list_item(pvh, struct pv_list)->pv;
 
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer))) {
 			stack;
@@ -396,7 +394,7 @@ static int _build_pv_names(struct formatter *f,
 	}
 
 	list_iterate (pvh, &vg->pvs) {
-		pv = &list_item(pvh, struct pv_list)->pv;
+		pv = list_item(pvh, struct pv_list)->pv;
 
 		if (lvm_snprintf(buffer, sizeof(buffer),
 				 "pv%d", count++) < 0) {

@@ -161,7 +161,7 @@ static int _flatten_vg(struct pool *mem, struct volume_group *vg,
 	list_iterate(pvh, &vg->pvs) {
 		pvl = list_item(pvh, struct pv_list);
 
-		if (!(data = _flatten_pv(mem, vg, &pvl->pv, dev_dir))) {
+		if (!(data = _flatten_pv(mem, vg, pvl->pv, dev_dir))) {
 			stack;
 			return 0;
 		}
@@ -314,8 +314,8 @@ static struct list *_get_vgs(struct format_instance *fi)
 	list_iterate(pvh, pvs) {
 		struct pv_list *pvl = list_item(pvh, struct pv_list);
 
-		if (!(*pvl->pv.vg_name) ||
-	 	     _find_vg_name(names, pvl->pv.vg_name))
+		if (!(*pvl->pv->vg_name) ||
+	 	     _find_vg_name(names, pvl->pv->vg_name))
 			continue;
 
 		if (!(nl = pool_alloc(fi->cmd->mem, sizeof(*nl)))) {
@@ -323,7 +323,8 @@ static struct list *_get_vgs(struct format_instance *fi)
 			goto bad;
 		}
 
-		if (!(nl->name = pool_strdup(fi->cmd->mem, pvl->pv.vg_name))) {
+		if (!(nl->name = pool_strdup(fi->cmd->mem,
+					     pvl->pv->vg_name))) {
 			stack;
 			goto bad;
 		}

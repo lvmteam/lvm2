@@ -135,7 +135,7 @@ struct name_list {
 
 struct pv_list {
 	struct list list;
-	struct physical_volume pv;
+	struct physical_volume *pv;
 };
 
 struct lv_list {

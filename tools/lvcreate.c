@@ -129,34 +129,16 @@ int lvcreate(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (argc) {
-		/* Build up list of PVs */
-		if (!(pvh = pool_alloc(fid->cmd->mem, sizeof(struct list)))) {
-			log_error("pvh list allocation failed");
-			return ECMD_FAILED;
-		}
-		list_init(pvh);
-		for (; opt < argc; opt++) {
-			if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
-				log_error("Physical Volume %s not found in "
-					  "Volume Group %s", argv[opt],
-					  vg->name);
-				return EINVALID_CMD_LINE;
-			}
-
-			if (pvl->pv.pe_count == pvl->pv.pe_allocated) {
-				log_error("No free extents on physical volume"
-					  " %s", argv[opt]);
-				continue;
-				/* FIXME But check not null at end! */
-			}
-
-			// FIXME: pv_lists should be duplicated.
-			list_add(pvh, &pvl->list);
-		}
-	} else {
+	if (!argc)
 		/* Use full list from VG */
 		pvh = &vg->pvs;
+
+	else {
+		if (!(pvh = create_pv_list(fid->cmd->mem, vg,
+					   argc - opt, argv + opt))) {
+			stack;
+			return ECMD_FAILED;
+		}
 	}
 
 	if (argc && argc < stripes ) {
@@ -166,7 +148,7 @@ int lvcreate(int argc, char **argv)
 	}
 
 	if (stripes < 1 || stripes > MAX_STRIPES) {
-		log_error("Number of stripes (%d) must be between %d and %d", 
+		log_error("Number of stripes (%d) must be between %d and %d",
 			  stripes, 1, MAX_STRIPES);
 		return EINVALID_CMD_LINE;
 	}
@@ -212,7 +194,7 @@ int lvcreate(int argc, char **argv)
 		return ECMD_FAILED;
 
 	if (!(lv = lv_create(lv_name, status, stripes, stripesize, extents,
-			     vg, pvh))) 
+			     vg, pvh)))
 		return ECMD_FAILED;
 
 	if (arg_count(readahead_ARG)) {
@@ -242,7 +224,7 @@ int lvcreate(int argc, char **argv)
 
 		if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", fid->cmd->dev_dir,
 				 lv->vg->name, lv->name) < 0) {
-			log_error("Name too long - device not zeroed (%s)", 
+			log_error("Name too long - device not zeroed (%s)",
 				  lv->name);
 			return ECMD_FAILED;
 		}

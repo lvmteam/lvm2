@@ -49,4 +49,12 @@ int is_valid_chars(char *n);
 char *default_vgname(struct format_instance *fi);
 char *extract_vgname(struct format_instance *fi, char *lv_name);
 
+/*
+ * Builds a list of pv's from the names in argv.  Used in
+ * lvcreate/extend.
+ */
+struct list *create_pv_list(struct pool *mem,
+			    struct volume_group *vg,
+			    int argc, char **argv);
+
 #endif
