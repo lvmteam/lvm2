@@ -16,6 +16,7 @@ Version 2.00.27 - 24th November 2004
   Trap large memory allocation requests.
   Fix to partition table detection code.
   Improve filter debug mesgs.
+  Make clvmd_fix_conf.sh UNDOable
 
 Version 2.00.26 - 23rd November 2004
 ====================================
