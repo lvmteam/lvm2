@@ -28,12 +28,12 @@ int pvdisplay(int argc, char **argv)
 
 	if (argc == 0) {
 		log_error("please enter a physical volume path");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(colon_ARG) && arg_count(verbose_ARG)) {
 		log_error("option v not allowed with option c");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	for (opt = 0; opt < argc; opt++)

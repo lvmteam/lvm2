@@ -31,24 +31,25 @@ int init_autobackup()
 {
 	char *lvm_autobackup;
 
-	if (arg_count(autobackup_ARG))
+	if (arg_count(autobackup_ARG)) {
 		_autobackup = strcmp(arg_str_value(autobackup_ARG, "y"), "n");
-	else {
-		_autobackup = 1;	/* default */
+		return 0;
+	}
 
-		lvm_autobackup = getenv("LVM_AUTOBACKUP");
-		if (lvm_autobackup) {
-			log_print
-			    ("using environment variable LVM_AUTOBACKUP to set option A");
-			if (strcasecmp(lvm_autobackup, "no") == 0)
-				_autobackup = 0;
-			else if (strcasecmp(lvm_autobackup, "yes") != 0) {
-				log_error
-				    ("environment variable LVM_AUTOBACKUP has invalid value \"%s\"!",
-				     lvm_autobackup);
-				return -1;
-			}
-		}
+	_autobackup = 1;	/* default */
+
+	lvm_autobackup = getenv("LVM_AUTOBACKUP");
+	if (!lvm_autobackup)
+		return 0;
+
+	log_print("using environment variable LVM_AUTOBACKUP "
+		  "to set option A");
+	if (!strcasecmp(lvm_autobackup, "no"))
+		_autobackup = 0;
+	else if (strcasecmp(lvm_autobackup, "yes")) {
+		log_error("environment variable LVM_AUTOBACKUP has "
+			  "invalid value \"%s\"!", lvm_autobackup);
+		return -1;
 	}
 
 	return 0;

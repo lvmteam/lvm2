@@ -36,9 +36,9 @@ int pvscan(int argc, char **argv)
 	struct list_head *pvh;
 	struct physical_volume *pv;
 
-	__uint64_t size_total = 0;
-	__uint64_t size_new = 0;
-	__uint64_t size = 0;
+	uint64_t size_total = 0;
+	uint64_t size_new = 0;
+	uint64_t size = 0;
 
 	int len = 0;
 	pv_max_name_len = 0;
@@ -46,7 +46,7 @@ int pvscan(int argc, char **argv)
 
 	if (arg_count(novolumegroup_ARG) && arg_count(exported_ARG)) {
 		log_error("options e and n incompatible");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(exported_ARG) || arg_count(novolumegroup_ARG))
@@ -59,7 +59,7 @@ int pvscan(int argc, char **argv)
 	ios = active_ios();
 
 	if (!(pvs_list = ios->get_pvs(ios)))
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 
 	/* eliminate exported/new if required */
 	list_for_each(pvh, &pvs_list->list) {

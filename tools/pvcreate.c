@@ -28,12 +28,12 @@ int pvcreate(int argc, char **argv)
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(yes_ARG) && !arg_count(force_ARG)) {
 		log_error("option y can only be given with option f");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	for (opt = 0; opt < argc; opt++)
