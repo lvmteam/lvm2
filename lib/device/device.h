@@ -89,6 +89,9 @@ static inline const char *dev_name(const struct device *dev)
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);
 
+/* Does device contain md superblock?  If so, where? */
+int dev_is_md(struct device *dev, uint64_t *sb);
+
 /* FIXME Check partition type if appropriate */
 
 #define is_lvm_partition(a) 1

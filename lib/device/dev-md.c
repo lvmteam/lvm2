@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2004 Luca Berra
+ * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -13,10 +14,7 @@
  */
 
 #include "lib.h"
-#include "filter-md.h"
 #include "metadata.h"
-
-#ifdef linux
 
 /* Lifted from <linux/raid/md_p.h> because of difficulty including it */
 
@@ -26,49 +24,45 @@
 #define MD_NEW_SIZE_SECTORS(x) ((x & ~(MD_RESERVED_SECTORS - 1)) \
 				- MD_RESERVED_SECTORS)
 
-static int _ignore_md(struct dev_filter *f, struct device *dev)
+/*
+ * Returns -1 on error
+ */
+int dev_is_md(struct device *dev, uint64_t *sb)
 {
-	int ret = dev_is_md(dev, NULL);
+	int ret = 0;
 
-	if (ret == 1) {
-		log_debug("%s: Skipping md component device", dev_name(dev));
+#ifdef linux
+
+	uint64_t size, sb_offset;
+	uint32_t md_magic;
+
+	if (!dev_get_size(dev, &size)) {
+		stack;
+		return -1;
+	}
+
+	if (size < MD_RESERVED_SECTORS * 2)
 		return 0;
+
+	if (!dev_open(dev)) {
+		stack;
+		return -1;
 	}
 
-	if (ret < 0) {
-		log_debug("%s: Skipping: error in md component detection");
-		return 0;
+	sb_offset = MD_NEW_SIZE_SECTORS(size) << SECTOR_SHIFT;
+
+	/* Check if it is an md component device. */
+	if (dev_read(dev, sb_offset, sizeof(uint32_t), &md_magic) &&
+	    (md_magic == MD_SB_MAGIC)) {
+		if (sb)
+			*sb = sb_offset;
+		ret = 1;
 	}
 
-	return 1;
-}
-
-static void _destroy(struct dev_filter *f)
-{
-	dbg_free(f);
-}
-
-struct dev_filter *md_filter_create(void)
-{
-	struct dev_filter *f;
-
-	if (!(f = dbg_malloc(sizeof(*f)))) {
-		log_error("md filter allocation failed");
-		return NULL;
-	}
-
-	f->passes_filter = _ignore_md;
-	f->destroy = _destroy;
-	f->private = NULL;
-
-	return f;
-}
-
-#else
-
-struct dev_filter *md_filter_create(void)
-{
-	return NULL;
-}
+	if (!dev_close(dev))
+		stack;
 
 #endif
+	return ret;
+}
+
