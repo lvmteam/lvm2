@@ -22,9 +22,10 @@
 #define _LVM_ERROR_H_INCLUDE
 
 #define LVM_EINVALID_CMD_LINE	1
-#define LVM_ENOMEM	2
+#define LVM_ENOMEM		2
 #define LVM_ENO_SUCH_CMD	3
 #define LVM_ECMD_PROCESSED	4
+#define LVM_ECMD_FAILED		5
 
 #endif /* #ifndef _LVM_ERROR_H_INCLUDE */
 

@@ -79,9 +79,6 @@ int permission_arg(struct arg *a);
 
 char yes_no_prompt(char *prompt, ...);
 
-struct dev_mgr *active_dev_mgr(void);
-struct config_file *active_config_file(void);
-
 /* we use the enums to access the switches */
 static inline int arg_count(int a) {
 	return the_args[a].count;
@@ -107,3 +104,6 @@ static inline int arg_count_increment(int a)
 }
 
 #endif
+struct config_file *active_config_file(void);
+struct dev_filter *active_filter(void);
+struct io_space *active_ios(void);

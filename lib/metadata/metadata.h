@@ -12,9 +12,10 @@
 
 #include <sys/types.h>
 #include "dev-cache.h"
+#include "list.h"
 
 #define ID_LEN 32
-
+#define NAME_LEN 128
 
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
@@ -42,8 +43,13 @@
 
 
 
+#define EXPORTED_TAG "PV_EXP"  /* Identifier of exported PV */
+#define IMPORTED_TAG "PV_IMP"  /* Identifier of imported PV */
+
+
+
 struct id {
-	__uint8_t chars[ID_LEN];
+	__uint8_t uuid[ID_LEN];
 };
 
 struct logical_volume;
@@ -52,6 +58,7 @@ struct physical_volume {
         struct id *id;
 	struct device *dev;
 	char *vg_name;
+	char *exported;
 
         __uint32_t status;
         __uint64_t size;
@@ -101,11 +108,20 @@ struct volume_group {
         struct logical_volume **lv;
 };
 
+struct string_list {
+	struct list_head list;
+	char * string;
+};
+
+struct pv_list {
+	struct list_head list;
+	struct physical_volume pv;
+};
 
 /* ownership of returned objects passes */
 struct io_space {
-	struct str_list *(*get_vgs)(struct io_space *is);
-	struct dev_list *(*get_pvs)(struct io_space *is);
+	struct string_list *(*get_vgs)(struct io_space *is);
+	struct pv_list *(*get_pvs)(struct io_space *is);
 
 	struct physical_volume *(*pv_read)(struct io_space *is,
 					struct device *dev);
