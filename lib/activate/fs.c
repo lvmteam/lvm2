@@ -19,8 +19,7 @@
 
 void _build_lv_path(char *buffer, size_t len, struct logical_volume *lv)
 {
-	snprintf(buffer, len, "%s%s/%s_%s",
-		 lv->vg->cmd->dev_dir, dm_dir(), lv->vg->name, lv->name);
+	snprintf(buffer, len, "%s/%s_%s", dm_dir(), lv->vg->name, lv->name);
 }
 
 void _build_vg_path(char *buffer, size_t len, struct volume_group *vg)
