@@ -131,7 +131,7 @@ int pvscan(int argc, char **argv)
 
 void pvscan_display_single(struct physical_volume *pv)
 {
-
+	char uuid[64];
 	int vg_name_len = 0;
 
 	char *s1, *s2;
@@ -161,10 +161,13 @@ void pvscan_display_single(struct physical_volume *pv)
 	vg_name_len = strlen(pv->vg_name) - sizeof (EXPORTED_TAG) + 1;
 
 	if (arg_count(uuid_ARG)) {
-		sprintf(pv_tmp_name,
-			"%-*s with UUID %s",
-			pv_max_name_len - 2,
-			dev_name(pv->dev), display_uuid(pv->id.uuid));
+		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+			stack;
+			return;
+		}
+
+		sprintf(pv_tmp_name, "%-*s with UUID %s",
+			pv_max_name_len - 2, dev_name(pv->dev), uuid);
 	} else {
 		sprintf(pv_tmp_name, "%s", dev_name(pv->dev));
 	}

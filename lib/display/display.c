@@ -18,13 +18,15 @@
  *
  */
 
-#include <sys/types.h>
-#include <string.h>
 #include "metadata.h"
 #include "dbg_malloc.h"
 #include "log.h"
 #include "display.h"
 #include "activate.h"
+#include "uuid.h"
+
+#include <sys/types.h>
+#include <string.h>
 
 #define SIZE_BUF 128
 
@@ -60,48 +62,17 @@ char *display_size(unsigned long long size, size_len_t sl)
 	return size_buf;
 }
 
-/*
- * FIXME: this function is badly named, it doesn't display the data it
- * creates a new uuid string with -'s in it.  It would be better if
- * the destination was passed in as well. EJT
- */
-char *display_uuid(char *uuidstr)
-{
-	int i, j;
-	char *uuid;
-
-	if ((!uuidstr) || !(uuid = dbg_malloc(NAME_LEN))) {
-		log_error("no memory for uuid display buffer");
-		return NULL;
-	}
-
-	memset(uuid, 0, NAME_LEN);
-
-	i = 6;
-	memcpy(uuid, uuidstr, i);
-	uuidstr += i;
-
-	for (j = 0; j < 6; j++) {
-		uuid[i++] = '-';
-		memcpy(&uuid[i], uuidstr, 4);
-		uuidstr += 4;
-		i += 4;
-	}
-
-	memcpy(&uuid[i], uuidstr, 2);
-
-	/* Caller must free */
-	return uuid;
-}
-
 void pvdisplay_colons(struct physical_volume *pv)
 {
-	char *uuid;
+	char uuid[64];
 
 	if (!pv)
 		return;
 
-	uuid = display_uuid(pv->id.uuid);
+	if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+		stack;
+		return;
+	}
 
 	log_print("%s:%s:%" PRIu64 ":-1:%u:%u:-1:%" PRIu64 ":%u:%u:%u:%s",
 		  dev_name(pv->dev), pv->vg_name, pv->size,
@@ -114,14 +85,12 @@ void pvdisplay_colons(struct physical_volume *pv)
 		  pv->pe_count - pv->pe_allocated,
 		  pv->pe_allocated, *uuid ? uuid : "none");
 
-	dbg_free(uuid);
-
 	return;
 }
 
 void pvdisplay_full(struct physical_volume *pv)
 {
-	char *uuid;
+	char uuid[64];
 	char *size, *size1;	/*, *size2; */
 
 	uint64_t pe_free;
@@ -129,7 +98,10 @@ void pvdisplay_full(struct physical_volume *pv)
 	if (!pv)
 		return;
 
-	uuid = display_uuid(pv->id.uuid);
+	if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+		stack;
+		return;
+	}
 
 	log_print("--- %sPhysical volume ---", pv->pe_size ? "" : "NEW ");
 	log_print("PV Name               %s", dev_name(pv->dev));
@@ -178,8 +150,6 @@ void pvdisplay_full(struct physical_volume *pv)
 
 	log_print("PV UUID               %s", *uuid ? uuid : "none");
 	log_print(" ");
-
-	dbg_free(uuid);
 
 	return;
 }
@@ -456,6 +426,7 @@ void vgdisplay_full(struct volume_group *vg)
 {
 	uint32_t access;
 	char *s1;
+	char uuid[64];
 
 	log_print("--- Volume group ---");
 	log_print("VG Name               %s", vg->name);
@@ -513,16 +484,12 @@ void vgdisplay_full(struct volume_group *vg)
 	log_print("Free  PE / Size       %u / %s", vg->free_count, s1);
 	dbg_free(s1);
 
-	if (strlen(vg->id.uuid))
-		s1 = display_uuid(vg->id.uuid);
-	else
-		s1 = "none";
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
+		stack;
+		return;
+	}
 
-	log_print("VG UUID               %s", s1);
-
-	if (strlen(vg->id.uuid))
-		dbg_free(s1);
-
+	log_print("VG UUID               %s", uuid);
 	log_print(" ");
 
 	return;
