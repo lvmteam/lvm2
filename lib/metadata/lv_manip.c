@@ -174,6 +174,29 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	return r;
 }
 
+static char *_make_up_lv_name(struct volume_group *vg,
+			      char *buffer, size_t len)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+	int high = 1, i;
+
+	list_iterate(lvh, &vg->lvs) {
+		lv = &(list_item(lvh, struct lv_list)->lv);
+
+		if (sscanf(lv->name, "lvol%d", &i) != 1)
+			continue;
+
+		if (i > high)
+			high = i + 1;
+	}
+
+	if (snprintf(buffer, len, "lvol%d", high) < 0)
+		return NULL;
+
+	return buffer;
+}
+
 struct logical_volume *lv_create(const char *name,
 				 uint32_t status,
 				 uint32_t stripes,
@@ -185,17 +208,18 @@ struct logical_volume *lv_create(const char *name,
 	struct cmd_context *cmd = vg->cmd;
 	struct lv_list *ll = NULL;
 	struct logical_volume *lv;
+	char dname[32];
 	int i;
 
 	if (!extents) {
-		log_error("Unable to create logical volume %s with no extents",
-			  name);
+		log_err("Unable to create logical volume %s with no extents",
+			name);
 		return NULL;
 	}
 
 	if (vg->free_count < extents) {
-		log_error("Insufficient free extents (%u) in volume group %s: "
-			  "%u required", vg->free_count, vg->name, extents);
+		log_err("Insufficient free extents (%u) in volume group %s: "
+			"%u required", vg->free_count, vg->name, extents);
 		return NULL;
 	}
 
@@ -204,6 +228,14 @@ struct logical_volume *lv_create(const char *name,
 			  "in volume group %s", vg->max_lv, vg->name);
 		return NULL;
 	}
+
+	if (!name &&
+	    !(name = _make_up_lv_name(vg, dname, sizeof(dname)))) {
+		log_err("Unable to think of a name for logical volume.");
+		return NULL;
+	}
+
+	log_verbose("Creating logical volume %s", name);
 
 	if (!(ll = pool_zalloc(cmd->mem, sizeof(*ll)))) {
 		stack;
