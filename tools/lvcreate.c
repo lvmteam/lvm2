@@ -220,8 +220,8 @@ int lvcreate(int argc, char **argv)
 	}
 *************/
 
-	if (!(lv = lv_create(lv_name, status, stripes, stripesize,
-			     extents, vg, pvh)))
+	if (!(lv = lv_create(lv_name, status, stripes, stripesize, extents, 
+			     vg, pvh))) 
 		return ECMD_FAILED;
 
 	if (arg_count(readahead_ARG)) {

@@ -20,18 +20,16 @@
 
 #include "tools.h"
 
-static int lvscan_single(const char *vg_name);
+static int lvscan_single(struct volume_group *vg, struct logical_volume *lv);
 
 int lvscan(int argc, char **argv)
 {
-	int ret;
-
 	if (argc) {
 		log_error("No additional command line arguments allowed");
 		return EINVALID_CMD_LINE;
 	}
 
-	ret = process_each_vg(argc, argv, &lvscan_single);
+	return process_each_lv(argc, argv, &lvscan_single);
 
 /*********** FIXME Count!   Add private struct to process_each*  
 	if (!lv_total)
@@ -54,51 +52,29 @@ int lvscan(int argc, char **argv)
 	}
 *************/
 
-	return ret;
 }
 
-static int lvscan_single(const char *vg_name)
+static int lvscan_single(struct volume_group *vg, struct logical_volume *lv)
 {
 	int lv_active = 0;
 	int lv_total = 0;
 	ulong lv_capacity_total = 0;
 
-	int vg_total = 0;
 	char *dummy;
 	const char *active_str, *snapshot_str;
 
-	struct volume_group *vg;
-	struct logical_volume *lv;
-	struct list *lvh;
+	if (lv->status & ACTIVE) {
+		active_str = "ACTIVE   ";
+		lv_active++;
+	} else
+		active_str = "inactive ";
 
-	log_verbose("Checking for volume group %s", vg_name);
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s not found", vg_name);
-		return ECMD_FAILED;
-	}
-
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group %s is exported", vg_name);
-		return ECMD_FAILED;
-	}
-
-	vg_total++;
-
-	list_iterate(lvh, &vg->lvs) {
-		lv = &list_item(lvh, struct lv_list)->lv;
-
-		if (lv->status & ACTIVE) {
-			active_str = "ACTIVE   ";
-			lv_active++;
-		} else
-			active_str = "inactive ";
-
-		if (lv->status & SNAPSHOT_ORG)
-			snapshot_str = "Original";
-		else if (lv->status & SNAPSHOT)
-			snapshot_str = "Snapshot";
-		else
-			snapshot_str = "        ";
+	if (lv->status & SNAPSHOT_ORG)
+		snapshot_str = "Original";
+	else if (lv->status & SNAPSHOT)
+		snapshot_str = "Snapshot";
+	else
+		snapshot_str = "        ";
 
 /********** FIXME Snapshot
 		if (lv->status & SNAPSHOT)
@@ -108,19 +84,18 @@ static int lvscan_single(const char *vg_name)
 					 SIZE_SHORT);
 		else
 ***********/
-			dummy =
-			    display_size(lv->size / 2, SIZE_SHORT);
+	dummy = display_size(lv->size / 2, SIZE_SHORT);
 
-		log_print("%s%s '%s%s/%s' [%s]%s%s", active_str, snapshot_str,
-		       fid->cmd->dev_dir, vg->name, lv->name, dummy,
-		       (lv->status & ALLOC_STRICT) ? " strict" : "",
-		       (lv->status & ALLOC_CONTIGUOUS) ? " contiguous" : "");
+	log_print("%s%s '%s%s/%s' [%s]%s%s", active_str, snapshot_str,
+		  fid->cmd->dev_dir, vg->name, lv->name, dummy,
+		  (lv->status & ALLOC_STRICT) ? " strict" : "",
+		  (lv->status & ALLOC_CONTIGUOUS) ? " contiguous" : "");
 
-                dbg_free(dummy);
+	dbg_free(dummy);
 
-		/* FIXME sprintf? */
-                if (lv->stripes > 1 && !(lv->status & SNAPSHOT))
-                        log_print(" striped[%u]", lv->stripes);
+	/* FIXME sprintf? */
+	if (lv->stripes > 1 && !(lv->status & SNAPSHOT))
+		log_print(" striped[%u]", lv->stripes);
 
 /******** FIXME Device number display & Snapshot
 		if (arg_count(blockdevice_ARG))
@@ -132,7 +107,7 @@ static int lvscan_single(const char *vg_name)
 			printf(" of %s", lv->lv_snapshot_org->name);
 *****************/
 
-		lv_total++;
+	lv_total++;
 
 /******** FIXME Snapshot
 		if (lv->status & SNAPSHOT)
@@ -140,9 +115,7 @@ static int lvscan_single(const char *vg_name)
 			    lv->lv_remap_end * lv->lv_chunk_size
 		else
 ********/
-			lv_capacity_total += lv->size;
-	}
+	lv_capacity_total += lv->size;
 
 	return 0;
 }
-

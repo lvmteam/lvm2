@@ -32,6 +32,10 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 		    int (*process_single) (struct volume_group *vg,
 					   struct physical_volume *pv));
 
+int process_each_lv(int argc, char **argv, 
+		    int (*process_single) (struct volume_group *vg,
+					   struct logical_volume *lv));
+
 int is_valid_chars(char *n);
 
 char *default_vgname(struct format_instance *fi);

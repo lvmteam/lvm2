@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-static int lvchange_single(char *lv_name);
+static int lvchange_single(struct volume_group *vg, struct logical_volume *lv);
 static int lvchange_permission(struct logical_volume *lv);
 static int lvchange_availability(struct logical_volume *lv);
 static int lvchange_contiguous(struct logical_volume *lv);
@@ -28,10 +28,6 @@ static int lvchange_readahead(struct logical_volume *lv);
 
 int lvchange(int argc, char **argv)
 {
-	int opt;
-	int ret = 0;
-	int ret_max = 0;
-
 	if (!arg_count(available_ARG) && !arg_count(contiguous_ARG)
 	    && !arg_count(permission_ARG) && !arg_count(readahead_ARG)) {
 		log_error("One or more of -a, -C, -p or -r required");
@@ -43,36 +39,13 @@ int lvchange(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	/* Walk through logical volumes */
-	for (opt = 0; opt < argc; opt++) {
-		ret = lvchange_single(argv[opt]);
-		if (ret > ret_max)
-			ret_max = ret;
-	}
-
-	return ret_max;
+	return process_each_lv(argc, argv, &lvchange_single);
 }
 
-static int lvchange_single(char *lv_name)
+static int lvchange_single(struct volume_group *vg, struct logical_volume *lv)
 {
 	char *vg_name;
 	int doit = 0;
-
-	struct volume_group *vg;
-	struct list *lvh;
-	struct logical_volume *lv;
-
-	/* FIXME Common code here - Add to a foreach? */
-	/* does VG exist? */
-	if (!(vg_name = extract_vgname(fid, lv_name))) {
-		return ECMD_FAILED;
-	}
-
-	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s doesn't exist", vg_name);
-		return ECMD_FAILED;
-	}
 
 	if (!(vg->status & ACTIVE)) {
 		log_error("Volume group %s must be active before changing a "
@@ -80,22 +53,14 @@ static int lvchange_single(char *lv_name)
 		return ECMD_FAILED;
 	}
 
-	if (!(lvh = find_lv_in_vg(vg, lv_name))) {
-		log_error("Can't find logical volume %s in volume group %s",
-			  lv_name, vg_name);
-		return ECMD_FAILED;
-	}
-
-	lv = &list_item(lvh, struct lv_list)->lv;
-
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't change logical volume %s under snapshot",
-			  lv_name);
+			  lv->name);
 		return ECMD_FAILED;
 	}
 
 	if (lv->status & SNAPSHOT) {
-		log_error("Can't change snapshot logical volume %s", lv_name);
+		log_error("Can't change snapshot logical volume %s", lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -196,9 +161,10 @@ static int lvchange_availability(struct logical_volume *lv)
 	if (lv_stat & ACTIVE) {
 		if (!lv_activate(lv))
 			return 0;
-	} else
+	} else {
 		if (!lv_deactivate(lv))
 			return 0;
+	}
 
 	return 1;
 }
@@ -220,24 +186,24 @@ static int lvchange_contiguous(struct logical_volume *lv)
 	if (!(lv_allocation & ALLOC_CONTIGUOUS) &&
 	    !(lv->status & ALLOC_CONTIGUOUS)) {
 		log_error("Allocation policy of logical volume %s is already"
-		     " not contiguous", lv->name);
+			  " not contiguous", lv->name);
 		return 0;
 	}
 
 /******** FIXME lv_check_contiguous? 
 	if ((lv_allocation & ALLOC_CONTIGUOUS)
 		    && (ret = lv_check_contiguous(vg, lv_index + 1)) == FALSE) {
-			log_error("No contiguous logical volume \"%s\"", lv_name);
+			log_error("No contiguous logical volume %s", lv->name);
 			return 0;
 *********/
 
 	if (lv_allocation & ALLOC_CONTIGUOUS) {
 		lv->status |= ALLOC_CONTIGUOUS;
-		log_verbose("Setting contiguous allocation policy for %s", 
-	                    lv->name);
+		log_verbose("Setting contiguous allocation policy for %s",
+			    lv->name);
 	} else {
 		lv->status &= ~ALLOC_CONTIGUOUS;
-		log_verbose("Removing contiguous allocation policy for %s", 
+		log_verbose("Removing contiguous allocation policy for %s",
 			    lv->name);
 	}
 

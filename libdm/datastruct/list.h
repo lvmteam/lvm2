@@ -52,4 +52,8 @@ static inline int list_empty(struct list *head) {
 #define list_item(v, t) \
     ((t *)((char *)(v) - (unsigned int) &((t *) 0)->list))
 
+/* Given a known element in a known structure, locate the struct list */
+#define list_head(v, t, e) \
+    (((t *)((char *)(v) - (unsigned int) &((t *) 0)->e))->list)
+
 #endif

@@ -87,6 +87,92 @@ int do_autobackup(struct volume_group *vg)
 	return 0;
 }
 
+int process_each_lv(int argc, char **argv,
+		    int (*process_single) (struct volume_group * vg,
+					   struct logical_volume * lv))
+{
+	int opt = 0;
+	int ret_max = 0;
+	int ret = 0;
+	int vg_count = 0;
+
+	struct list *lvh;
+	struct list *vgh, *vgs;
+	struct volume_group *vg;
+	struct logical_volume *lv;
+
+	char *vg_name;
+
+	if (argc) {
+		log_verbose("Using logical volume(s) on command line");
+		for (; opt < argc; opt++) {
+			char *lv_name = argv[opt];
+
+			/* does VG exist? */
+			if (!(vg_name = extract_vgname(fid, lv_name))) {
+				if (ret_max < ECMD_FAILED)
+					ret_max = ECMD_FAILED;
+				continue;
+			}
+
+			log_verbose("Finding volume group %s", vg_name);
+			if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+				log_error("Volume group %s doesn't exist",
+					  vg_name);
+				if (ret_max < ECMD_FAILED)
+					ret_max = ECMD_FAILED;
+				continue;
+			}
+
+			if (!(lvh = find_lv_in_vg(vg, lv_name))) {
+				log_error("Can't find logical volume %s "
+					  "in volume group %s",
+					  lv_name, vg_name);
+				if (ret_max < ECMD_FAILED)
+					ret_max = ECMD_FAILED;
+				continue;
+			}
+
+			lv = &list_item(lvh, struct lv_list)->lv;
+
+			if ((ret = process_single(vg, lv)) > ret_max)
+				ret_max = ret;
+		}
+	} else {
+		log_verbose("Finding all logical volume(s)");
+		if (!(vgs = fid->ops->get_vgs(fid))) {
+			log_error("No volume groups found");
+			return ECMD_FAILED;
+		}
+		list_iterate(vgh, vgs) {
+			vg_name = list_item(vgh, struct name_list)->name;
+			if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+				log_error("Volume group %s not found", vg_name);
+				if (ret_max < ECMD_FAILED)
+					ret_max = ECMD_FAILED;
+				continue;
+			}
+			/* FIXME Export-handling */
+			if (vg->status & EXPORTED_VG) {
+				log_error("Volume group %s is exported",
+					  vg_name);
+				if (ret_max < ECMD_FAILED)
+					ret_max = ECMD_FAILED;
+				continue;
+			}
+			list_iterate(lvh, &vg->lvs) {
+				lv = &list_item(lvh, struct lv_list)->lv;
+				ret = process_single(vg, lv);
+				if (ret > ret_max)
+					ret_max = ret;
+			}
+			vg_count++;
+		}
+	}
+
+	return ret_max;
+}
+
 int process_each_vg(int argc, char **argv,
 		    int (*process_single) (const char *vg_name))
 {
@@ -95,7 +181,7 @@ int process_each_vg(int argc, char **argv,
 	int ret = 0;
 
 	struct list *vgh;
-	struct list *vgs_list;
+	struct list *vgs;
 
 	if (argc) {
 		log_verbose("Using volume group(s) on command line");
@@ -104,13 +190,14 @@ int process_each_vg(int argc, char **argv,
 				ret_max = ret;
 	} else {
 		log_verbose("Finding all volume group(s)");
-		if (!(vgs_list = fid->ops->get_vgs(fid))) {
+		if (!(vgs = fid->ops->get_vgs(fid))) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
-		list_iterate(vgh, vgs_list) {
-			ret = process_single(
-				list_item(vgh, struct name_list)->name);
+		list_iterate(vgh, vgs) {
+			ret =
+			    process_single(list_item(vgh, struct name_list)->
+					   name);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
@@ -138,16 +225,18 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 					  vg->name);
 				continue;
 			}
-			ret = process_single(vg, 
-				     &list_item(pvh, struct pv_list)->pv);
+			ret = process_single(vg,
+					     &list_item(pvh,
+							struct pv_list)->pv);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
 	} else {
 		log_verbose("Using all physical volume(s) in volume group");
 		list_iterate(pvh, &vg->pvs) {
-			ret = process_single(vg, 
-				    &list_item(pvh, struct pv_list)->pv);
+			ret = process_single(vg,
+					     &list_item(pvh,
+							struct pv_list)->pv);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
@@ -166,7 +255,7 @@ int is_valid_chars(char *n)
 }
 
 char *extract_vgname(struct format_instance *fi, char *lv_name)
-{ 
+{
 	char *vg_name = lv_name;
 	char *st;
 	char *dev_dir = fi->cmd->dev_dir;
@@ -180,7 +269,8 @@ char *extract_vgname(struct format_instance *fi, char *lv_name)
 		/* Require exactly one slash */
 		/* FIXME But allow for consecutive slashes */
 		if (!(st = strchr(vg_name, '/')) || (strchr(st + 1, '/'))) {
-			log_error("%s: Invalid path for Logical Volume", lv_name);
+			log_error("%s: Invalid path for Logical Volume",
+				  lv_name);
 			return 0;
 		}
 
@@ -196,10 +286,11 @@ char *extract_vgname(struct format_instance *fi, char *lv_name)
 
 	if (!(vg_name = default_vgname(fid))) {
 		if (lv_name)
-			log_error("Path required for Logical Volume %s", lv_name);
+			log_error("Path required for Logical Volume %s",
+				  lv_name);
 		return 0;
 	}
-		
+
 	return vg_name;
 }
 
@@ -209,7 +300,7 @@ char *default_vgname(struct format_instance *fi)
 	char *dev_dir = fi->cmd->dev_dir;
 
 	/* Take default VG from environment? */
-	vg_path = getenv("LVM_VG_NAME"); 
+	vg_path = getenv("LVM_VG_NAME");
 	if (!vg_path)
 		return 0;
 
@@ -218,11 +309,10 @@ char *default_vgname(struct format_instance *fi)
 		vg_path += strlen(dev_dir);
 
 	if (strchr(vg_path, '/')) {
-		log_error("Environment Volume Group in LVM_VG_NAME invalid: %s", 
+		log_error("Environment Volume Group in LVM_VG_NAME invalid: %s",
 			  vg_path);
 		return 0;
 	}
 
 	return pool_strdup(fid->cmd->mem, vg_path);
 }
-

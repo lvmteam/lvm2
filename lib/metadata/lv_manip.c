@@ -175,7 +175,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 }
 
 static char *_generate_lv_name(struct volume_group *vg,
-			      char *buffer, size_t len)
+			       char *buffer, size_t len)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
@@ -229,8 +229,7 @@ struct logical_volume *lv_create(const char *name,
 		return NULL;
 	}
 
-	if (!name &&
-	    !(name = _generate_lv_name(vg, dname, sizeof(dname)))) {
+	if (!name && !(name = _generate_lv_name(vg, dname, sizeof(dname)))) {
 		log_error("Failed to generate unique name for the new "
 			  "logical volume");
 		return NULL;
@@ -350,19 +349,17 @@ int lv_extend(struct logical_volume *lv, uint32_t extents,
 	return 0;
 }
 
-int lv_remove(struct volume_group *vg, struct list *lvh)
+int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 {
 	int i;
-	struct logical_volume *lv;
 
-	lv = &list_item(lvh, struct lv_list)->lv;
 	for (i = 0; i < lv->le_count; i++)
 		lv->map[i].pv->pe_allocated--;
 
 	vg->lv_count--;
 	vg->free_count += lv->le_count;
 
-	list_del(lvh);
+	list_del(&list_head(lv, struct lv_list, lv));
 
 	return 1;
 }
