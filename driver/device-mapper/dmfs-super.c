@@ -24,6 +24,8 @@
 
 #define DMFS_MAGIC 0x444D4653
 
+extern struct inode *dmfs_create_root(struct super_block *sb, int);
+
 static int dmfs_statfs(struct super_block *sb, struct statfs *buf)
 {
 	buf->f_type = sb->s_magic;
