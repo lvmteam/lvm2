@@ -14,5 +14,7 @@ int str_list_add(struct pool *mem, struct list *sll, const char *str);
 int str_list_del(struct list *sll, const char *str);
 int str_list_match_item(struct list *sll, const char *str);
 int str_list_match_list(struct list *sll, struct list *sll2);
+int str_list_lists_equal(struct list *sll, struct list *sll2);
+int str_list_dup(struct pool *mem, struct list *sllnew, struct list *sllold);
 
 #endif
