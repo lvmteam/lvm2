@@ -24,6 +24,7 @@ SOURCES=\
 	lvm.c \
 	lvmchange.c \
 	pvcreate.c \
+	pvscan.c \
 	toollib.c \
 	vgck.c \
 	vgchange.c \
