@@ -65,9 +65,72 @@ static struct device *_create_dev(dev_t d)
 	return dev;
 }
 
+/* Return 1 if we prefer path1 else return 0 */
+static int _compare_paths(const char *path0, const char *path1)
+{
+	int slash0 = 0, slash1 = 0;
+	const char *p;
+	char p0[PATH_MAX], p1[PATH_MAX];
+	char *s0, *s1;
+	struct stat stat0, stat1;
+
+	/* Return the path with fewer slashes */
+	for (p = path0; p++; p = (const char *) strchr(p, '/'))
+		slash0++;
+
+	for (p = path1; p++; p = (const char *) strchr(p, '/'))
+		slash1++;
+
+	if (slash0 < slash1)
+		return 0;
+	if (slash1 < slash0)
+		return 1;
+
+	strncpy(p0, path0, PATH_MAX);
+	strncpy(p1, path1, PATH_MAX);
+	s0 = &p0[0] + 1;
+	s1 = &p1[0] + 1;
+
+	/* We prefer symlinks - they exist for a reason!
+	 * So we prefer a shorter path before the first symlink in the name.
+	 * FIXME Configuration option to invert this? */
+	while (s0) {
+		s0 = strchr(s0, '/');
+		s1 = strchr(s1, '/');
+		if (s0) {
+			*s0 = '\0';
+			*s1 = '\0';
+		}
+		if (lstat(p0, &stat0)) {
+			log_sys_error("lstat", p0);
+			return 1;
+		}
+		if (lstat(p1, &stat1)) {
+			log_sys_error("lstat", p1);
+			return 0;
+		}
+		if (S_ISLNK(stat0.st_mode) && !S_ISLNK(stat1.st_mode))
+			return 0;
+		if (!S_ISLNK(stat0.st_mode) && S_ISLNK(stat1.st_mode))
+			return 1;
+		if (s0) {
+			*s0++ = '/';
+			*s1++ = '/';
+		}
+	}
+
+	/* ASCII comparison */
+	if (strcmp(path0, path1) < 0)
+		return 0;
+	else
+		return 1;
+}
+
 static int _add_alias(struct device *dev, const char *path)
 {
 	struct str_list *sl = _alloc(sizeof(*sl));
+	const char *oldpath;
+	int prefer_old = 1;
 
 	if (!sl) {
 		stack;
@@ -79,7 +142,16 @@ static int _add_alias(struct device *dev, const char *path)
 		return 0;
 	}
 
-	list_add(&dev->aliases, &sl->list);
+	if (!list_empty(&dev->aliases)) {
+		oldpath = list_item(dev->aliases.n, struct str_list)->str;
+		prefer_old = _compare_paths(path, oldpath);
+	}
+
+	if (prefer_old)
+		list_add(&dev->aliases, &sl->list);
+	else
+		list_add_h(&dev->aliases, &sl->list);
+
 	return 1;
 }
 
