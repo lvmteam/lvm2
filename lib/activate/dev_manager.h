@@ -8,6 +8,7 @@
 #define _LVM_DEV_MANAGER_H
 
 #include "metadata.h"
+#include "config.h"
 
 struct dev_manager;
 struct dm_info;
@@ -15,7 +16,8 @@ struct dm_info;
 /*
  * Constructor and destructor.
  */
-struct dev_manager *dev_manager_create(const char *vg_name);
+struct dev_manager *dev_manager_create(const char *vg_name,
+				       struct config_tree *cf);
 void dev_manager_destroy(struct dev_manager *dm);
 
 /*
