@@ -116,7 +116,7 @@ xx(lvextend,
    autobackup_ARG, extents_ARG, size_ARG)
 
 xx(lvmchange,
-   "Reset the LVM driver - not for general use",
+   "With the device mapper, lvmchange is obsolete and does nothing.",
    "lvmchange\n" 
    "\t[-d/--debug]\n"
    "\t[-f/--force]\n"

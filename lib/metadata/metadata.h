@@ -100,6 +100,9 @@ struct volume_group {
         __uint32_t extent_count;
         __uint32_t free_count;
 
+        __uint32_t max_lv;
+        __uint32_t max_pv;
+
         /* physical volumes */
         __uint32_t pv_count;
         struct physical_volume **pv;
