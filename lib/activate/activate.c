@@ -540,7 +540,7 @@ int lvs_in_vg_opened(struct volume_group *vg)
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		count += (_lv_open_count(lv) == 1);
+		count += (_lv_open_count(lv) > 0);
 	}
 
 	return count;
