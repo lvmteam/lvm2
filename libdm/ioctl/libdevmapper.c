@@ -351,7 +351,8 @@ int dm_task_run(struct dm_task *dmt)
 	snprintf(control, sizeof(control), "%s/control", dm_dir());
 
 	if ((fd = open(control, O_RDWR)) < 0) {
-		log_error("Couldn't open device-mapper control device");
+		log_error("%s: open failed: %s", control, strerror(errno));
+		log_error("Is device-mapper driver missing from kernel?");
 		goto bad;
 	}
 
