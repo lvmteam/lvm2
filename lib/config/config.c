@@ -115,6 +115,7 @@ struct config_file *create_config_file()
         }
 
         c->mem = mem;
+	c->cf.root = (struct config_node *)NULL;
         return &c->cf;
 }
 
