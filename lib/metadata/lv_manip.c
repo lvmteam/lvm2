@@ -271,7 +271,7 @@ int lv_extend(struct io_space *ios,
 	struct pe_specifier *new_map;
 	struct logical_volume *new_lv;
 
-	if (!(new_map = pool_zalloc(ios->mem, sizeof(*new_map) * 
+	if (!(new_map = pool_zalloc(ios->mem, sizeof(*new_map) *
 				    (extents + lv->le_count)))) {
 		stack;
 		return 0;
@@ -284,12 +284,12 @@ int lv_extend(struct io_space *ios,
 		stack;
 		return 0;
 	}
-	
+
 	memcpy(new_lv, lv, sizeof(*lv));
 	new_lv->map = new_map;
 	new_lv->le_count += extents;
 
-	if (!_allocate(lv->vg, lv, acceptable_pvs, lv->le_count)) {
+	if (!_allocate(new_lv->vg, new_lv, acceptable_pvs, new_lv->le_count)) {
 		stack;
 		goto bad;
 	}

@@ -355,6 +355,12 @@ int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvs)
 				lv = lvs[lv_num];
 				le = e[i].le_num;
 
+				if (le >= lv->le_count) {
+					log_err("logical extent number "
+						"out of bounds");
+					return 0;
+				}
+
 				lv->map[le].pv = pv;
 				lv->map[le].pe = i;
 			}
