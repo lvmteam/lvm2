@@ -736,9 +736,9 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	}
 
 	if (info.exists)
-		r = dev_manager_mknodes(lv);
+		r = dev_manager_lv_mknodes(lv);
 	else
-		r = dev_manager_rmnodes(lv);
+		r = dev_manager_lv_rmnodes(lv);
 
 	fs_unlock();
 
