@@ -48,9 +48,9 @@ static int _set_allocated(struct hash_table *hash,
 
 	if (!(pvm = (struct pv_map *) hash_lookup(hash, dev_name(pv->dev)))) {
 		/*
-		 * it does matter that this fails, it just means
-		 * this part of the lv is on a pv that we're not
-		 * interested in allocating to.
+		 * it doesn't matter that this fails, it just
+		 * means this part of the lv is on a pv that
+		 * we're not interested in allocating to.
 		 */
 		return 1;
 	}
