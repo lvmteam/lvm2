@@ -26,6 +26,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	struct volume_group *vg;
 	const char *tag;
 	alloc_policy_t alloc;
+	int clustered;
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -129,6 +130,17 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 	}
+
+	if (arg_count(cmd, clustered_ARG))
+        	clustered = !strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
+	else
+		/* Default depends on current locking type */
+		clustered = locking_is_clustered();
+
+	if (clustered)
+		vg->status |= CLUSTERED;
+	else
+		vg->status &= ~CLUSTERED;
 
 	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");

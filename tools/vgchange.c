@@ -83,6 +83,12 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		return ECMD_FAILED;
 	}
 
+	if (activate && lockingfailed() && (vg->status & CLUSTERED)) {
+		log_error("Locking inactive: ignoring clustered "
+			  "volume group %s", vg->name);
+		return ECMD_FAILED;
+	}
+
 	if (activate && (active = lvs_in_vg_activated(vg)))
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
@@ -157,6 +163,41 @@ static int _vgchange_resizeable(struct cmd_context *cmd,
 		vg->status |= RESIZEABLE_VG;
 	else
 		vg->status &= ~RESIZEABLE_VG;
+
+	if (!vg_write(vg) || !vg_commit(vg))
+		return ECMD_FAILED;
+
+	backup(vg);
+
+	log_print("Volume group \"%s\" successfully changed", vg->name);
+
+	return ECMD_PROCESSED;
+}
+
+static int _vgchange_clustered(struct cmd_context *cmd,
+			       struct volume_group *vg)
+{
+	int clustered = !strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
+
+	if (clustered && (vg->status & CLUSTERED)) {
+		log_error("Volume group \"%s\" is already clustered",
+			  vg->name);
+		return ECMD_FAILED;
+	}
+
+	if (!clustered && !(vg->status & CLUSTERED)) {
+		log_error("Volume group \"%s\" is already not clustered",
+			  vg->name);
+		return ECMD_FAILED;
+	}
+
+	if (!archive(vg))
+		return ECMD_FAILED;
+
+	if (clustered)
+		vg->status |= CLUSTERED;
+	else
+		vg->status &= ~CLUSTERED;
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		return ECMD_FAILED;
@@ -334,6 +375,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	else if (arg_count(cmd, alloc_ARG))
 		r = _vgchange_alloc(cmd, vg);
 
+	else if (arg_count(cmd, clustered_ARG))
+		r = _vgchange_clustered(cmd, vg);
+
 	return r;
 }
 
@@ -343,8 +387,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	    (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
 	     arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
 	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) +
-	     arg_count(cmd, alloc_ARG))) {
-		log_error("One of -a, -l, -x, --alloc, --addtag, --deltag "
+	     arg_count(cmd, clustered_ARG) + arg_count(cmd, alloc_ARG))) {
+		log_error("One of -a, -c, -l, -x, --alloc, --addtag, --deltag "
 			  "or --uuid required");
 		return EINVALID_CMD_LINE;
 	}
@@ -353,9 +397,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
 	    arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
 	    arg_count(cmd, addtag_ARG) + arg_count(cmd, alloc_ARG) +
-	    arg_count(cmd, uuid_ARG) > 1) {
-		log_error("Only one of -a, -l, -x, --alloc, --addtag, --deltag "
-		          "or --uuid allowed");
+	    arg_count(cmd, uuid_ARG) + arg_count(cmd, clustered_ARG) > 1) {
+		log_error("Only one of -a, -c, -l, -x, --uuid, --alloc, "
+			  "--addtag or --deltag allowed");
 		return EINVALID_CMD_LINE;
 	}
 

@@ -71,6 +71,7 @@ void init_cmd_name(int status);
 void init_msg_prefix(const char *prefix);
 void init_indent(int indent);
 void init_ignorelockingfailure(int level);
+void init_lockingfailed(int level);
 void init_security_level(int level);
 
 void set_cmd_name(const char *cmd_name);
@@ -82,6 +83,7 @@ int pvmove_mode(void);
 int full_scan_done(void);
 int debug_level(void);
 int ignorelockingfailure(void);
+int lockingfailed(void);
 int security_level(void);
 
 /* Suppress messages to stdout/stderr */
