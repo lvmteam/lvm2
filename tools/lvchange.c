@@ -80,27 +80,48 @@ static int lvchange_availability(struct cmd_context *cmd,
 
 	activate = arg_uint_value(cmd, available_ARG, 0);
 
-	if (activate) {
-		log_verbose("Activating logical volume \"%s\"", lv->name);
-		if (lv_is_origin(lv) || (activate == 2)) {
-			if (!activate_lv_excl(cmd, lv->lvid.s)) {
-				stack;
-				return 0;
-			}
-		} else if (!activate_lv(cmd, lv->lvid.s)) {
+	if (activate == CHANGE_ALN) {
+		log_verbose("Deactivating logical volume \"%s\" locally",
+			    lv->name);
+		if (!deactivate_lv_local(cmd, lv->lvid.s)) {
 			stack;
 			return 0;
 		}
-		if ((lv->status & LOCKED) && (pvname = get_pvmove_pvname_from_lv(lv))) {
-			log_verbose("Spawning background pvmove process for %s",
-				    pvname);
-			pvmove_poll(cmd, pvname, 1);
-		}
-	} else {
+	} else if (activate == CHANGE_AN) {
 		log_verbose("Deactivating logical volume \"%s\"", lv->name);
 		if (!deactivate_lv(cmd, lv->lvid.s)) {
 			stack;
 			return 0;
+		}
+	} else {
+		if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
+			log_verbose("Activating logical volume \"%s\" "
+				    "exclusively", lv->name);
+			if (!activate_lv_excl(cmd, lv->lvid.s)) {
+				stack;
+				return 0;
+			}
+		} else if (activate == CHANGE_ALY) {
+			log_verbose("Activating logical volume \"%s\" locally",
+				    lv->name);
+			if (!activate_lv_local(cmd, lv->lvid.s)) {
+				stack;
+				return 0;
+			}
+		} else {
+			log_verbose("Activating logical volume \"%s\"",
+				    lv->name);
+			if (!activate_lv(cmd, lv->lvid.s)) {
+				stack;
+				return 0;
+			}
+		}
+
+		if ((lv->status & LOCKED) &&
+		    (pvname = get_pvmove_pvname_from_lv(lv))) {
+			log_verbose("Spawning background pvmove process for %s",
+				    pvname);
+			pvmove_poll(cmd, pvname, 1);
 		}
 	}
 

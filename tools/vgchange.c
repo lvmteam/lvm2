@@ -31,14 +31,22 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			continue;
 
 		/* Can't deactive a pvmove LV */
-		if (!activate && (lv->status & PVMOVE))
+		/* FIXME There needs to be a controlled way of doing this */
+		if (((activate == CHANGE_AN) || (activate == CHANGE_ALN)) &&
+		    (lv->status & PVMOVE))
 			continue;
 
-		if (!activate) {
+		if (activate == CHANGE_AN) {
 			if (!deactivate_lv(cmd, lv->lvid.s))
 				continue;
-		} else if (lv_is_origin(lv) || (activate == 2)) {
+		} else if (activate == CHANGE_ALN) {
+			if (!deactivate_lv_local(cmd, lv->lvid.s))
+				continue;
+		} else if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
 			if (!activate_lv_excl(cmd, lv->lvid.s))
+				continue;
+		} else if (activate == CHANGE_ALY) {
+			if (!activate_lv_local(cmd, lv->lvid.s))
 				continue;
 		} else if (!activate_lv(cmd, lv->lvid.s))
 			continue;
@@ -96,7 +104,7 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 
 	if (alloc == ALLOC_INHERIT) {
 		log_error("Volume Group allocation policy cannot inherit "
-		          "from anything");
+			  "from anything");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -120,7 +128,6 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 
 	return ECMD_PROCESSED;
 }
-
 
 static int _vgchange_resizeable(struct cmd_context *cmd,
 				struct volume_group *vg)

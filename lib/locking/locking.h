@@ -63,6 +63,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
  */
 #define LCK_NONBLOCK	0x00000010	/* Don't block waiting for lock? */
 #define LCK_HOLD	0x00000020	/* Hold lock when lock_vol returns? */
+#define LCK_LOCAL	0x00000040	/* Don't propagate to other nodes */
 
 /*
  * Common combinations
@@ -85,9 +86,14 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define activate_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_ACTIVATE | LCK_HOLD)
 #define activate_lv_excl(cmd, vol)	\
 				lock_vol(cmd, vol, LCK_LV_EXCLUSIVE | LCK_HOLD)
+#define activate_lv_local(cmd, vol)	\
+	lock_vol(cmd, vol, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
+#define deactivate_lv_local(cmd, vol)	\
+	lock_vol(cmd, vol, LCK_LV_DEACTIVATE | LCK_LOCAL)
 
 /* Process list of LVs */
 int suspend_lvs(struct cmd_context *cmd, struct list *lvs);
 int resume_lvs(struct cmd_context *cmd, struct list *lvs);
 int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs);
+
 
