@@ -25,20 +25,20 @@
 
 #include "dm.h"
 
-static struct target *_targets;
+static struct target_type *_targets;
 static spinlock_t _lock = SPIN_LOCK_UNLOCKED;
 
-struct target *__get_target(const char *name)
+struct target_type *__get_target(const char *name)
 {
-	struct target *t;
+	struct target_type *t;
 	for (t = _targets; t && strcmp(t->name, name); t = t->next)
 		;
 	return t;
 }
 
-struct target *dm_get_target(const char *name)
+struct target_type *dm_get_target(const char *name)
 {
-	struct target *t;
+	struct target_type *t;
 
 	spin_lock(&_lock);
 	t = __get_target(name);
@@ -50,7 +50,8 @@ struct target *dm_get_target(const char *name)
 int register_map_target(const char *name, dm_ctr_fn ctr,
 			dm_dtr_fn dtr, dm_map_fn map)
 {
-	struct target *t = kmalloc(sizeof(*t) + strlen(name) + 1, GFP_KERNEL);
+	struct target_type *t =
+		kmalloc(sizeof(*t) + strlen(name) + 1, GFP_KERNEL);
 
 	if (!t)
 		return -ENOMEM;
@@ -78,12 +79,8 @@ int register_map_target(const char *name, dm_ctr_fn ctr,
 
 
 /*
- * now for a couple of simple targets:
- *
- * 'io-err' target always fails an io, useful for bringing up LV's
- * that have holes in them.
- *
- * 'linear' target maps a linear range of a device
+ * io-err: always fails an io, useful for bringing
+ * up LV's that have holes in them.
  */
 static int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
 		      const char *cb, const char *ce, void **result)
@@ -104,7 +101,9 @@ static int io_err_map(struct buffer_head *bh, void *context)
 	return 0;
 }
 
-
+/*
+ * linear: maps a linear range of a device.
+ */
 struct linear_c {
 	kdev_t dev;
 	int offset;		/* FIXME: we need a signed offset type */
@@ -113,9 +112,8 @@ struct linear_c {
 static int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
 		      const char *cb, const char *ce, void **result)
 {
-	/* context string should be of the form:
-	 *  <major> <minor> <offset>
-	 */
+	/* <major> <minor> <offset> */
+
 	struct linear_c *lc;
 	unsigned int major, minor, start;
 	int r;
@@ -160,7 +158,10 @@ static int linear_map(struct buffer_head *bh, void *context)
 	return 1;
 }
 
-int dm_std_targets(void)
+/*
+ * registers io-err and linear targets
+ */
+int dm_target_init(void)
 {
 	int ret;
 

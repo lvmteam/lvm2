@@ -66,7 +66,7 @@ struct pf_data {
 	int minor;
 };
 
-int dm_init_fs(void)
+int dm_fs_init(void)
 {
 	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
 
@@ -90,11 +90,11 @@ int dm_init_fs(void)
 	return 0;
 
  fail:
-	dm_fin_fs();
+	dm_fs_exit();
 	return -ENOMEM;
 }
 
-void dm_fin_fs(void)
+void dm_fs_exit(void)
 {
 	if (_control) {
 		remove_proc_entry(_control_name, _proc_dir);
@@ -229,7 +229,7 @@ static int process_table(const char *b, const char *e, int minor)
 	} else {
 		/* add the new entry */
 		char target[64];
-		struct target *t;
+		struct target_type *t;
 		offset_t start, size, high;
 		size_t len;
 

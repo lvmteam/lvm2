@@ -27,19 +27,36 @@
 
 #include "dm.h"
 
-static int alloc_targets(struct mapped_device *md, int num);
-
+/* ceiling(n / size) * size */
 static inline ulong round_up(ulong n, ulong size)
 {
 	ulong r = n % size;
 	return n + (r ? (size - r) : 0);
 }
 
+/* ceiling(n / size) */
 static inline ulong div_up(ulong n, ulong size)
 {
 	return round_up(n, size) / size;
 }
 
+/* ceiling(log_size(n)) */
+static uint int_log(ulong base, ulong n)
+{
+	int result = 0;
+
+	while (n != 1) {
+		n = div_up(n, base);
+		result++;
+	}
+
+	return result;
+}
+
+/*
+ * return the highest key that you could lookup
+ * from the n'th node on level l of the btree.
+ */
 static offset_t high(struct mapped_device *md, int l, int n)
 {
 	while (1) {
@@ -52,8 +69,14 @@ static offset_t high(struct mapped_device *md, int l, int n)
 		l++;
 		n = (n + 1) * (KEYS_PER_NODE + 1) - 1;
 	}
+
+	return -1;
 }
 
+/*
+ * fills in a level of the btree based on the
+ * highs of the level below it.
+ */
 static int setup_btree_index(int l, struct mapped_device *md)
 {
 	int n, c, cn;
@@ -63,13 +86,14 @@ static int setup_btree_index(int l, struct mapped_device *md)
 
 		for (c = 0; c < KEYS_PER_NODE; c++)
 			k[c] = high(md, l + 1, cn++);
-		cn++;
+		cn++;		/* one extra for the child that's
+                                   greater than all keys */
 	}
 
 	return 0;
 }
 
-void dm_free_table(struct mapped_device *md)
+void dm_table_free(struct mapped_device *md)
 {
 	int i;
 	for (i = 0; i < md->depth; i++) {
@@ -86,70 +110,14 @@ void dm_free_table(struct mapped_device *md)
 	md->num_allocated = 0;
 }
 
-int dm_table_start(struct mapped_device *md)
-{
-	int r;
-	set_bit(DM_LOADING, &md->state);
-
-	dm_free_table(md);
-	if ((r = alloc_targets(md, 64)))
-		return r;
-
-	return 0;
-}
-
-int dm_table_add_entry(struct mapped_device *md, offset_t high,
-		 dm_map_fn target, void *context)
-{
-	if (md->num_targets >= md->num_targets &&
-	    alloc_targets(md, md->num_allocated * 2))
-		return -ENOMEM;
-
-	md->highs[md->num_targets] = high;
-	md->targets[md->num_targets].map = target;
-	md->targets[md->num_targets].private = context;
-
-	md->num_targets++;
-	return 0;
-}
-
-int dm_table_complete(struct mapped_device *md)
-{
-	int n, i;
-
-	clear_bit(DM_LOADING, &md->state);
-
-	/* how many indexes will the btree have ? */
-	for (n = div_up(md->num_targets, KEYS_PER_NODE), i = 1; n != 1; i++)
-		n = div_up(n, KEYS_PER_NODE + 1);
-
-	md->depth = i;
-	md->counts[md->depth - 1] = div_up(md->num_targets, KEYS_PER_NODE);
-
-	while (--i)
-		md->counts[i - 1] = div_up(md->counts[i], KEYS_PER_NODE + 1);
-
-	for (i = 0; i < md->depth; i++) {
-		size_t s = NODE_SIZE * md->counts[i];
-		md->index[i] = vmalloc(s);
-		memset(md->index[i], -1, s);
-	}
-
-	/* bottom layer is easy */
-	md->index[md->depth - 1] = md->highs;
-
-	/* fill in higher levels */
-	for (i = md->depth - 1; i; i--)
-		setup_btree_index(i - 1, md);
-
-	set_bit(DM_LOADED, &md->state);
-	return 0;
-}
-
+/*
+ * md->highs, and md->targets are managed as
+ * dynamic arrays during a table load.
+ */
 static int alloc_targets(struct mapped_device *md, int num)
 {
 	offset_t *n_highs;
-	struct target_instance *n_targets;
+	struct target *n_targets;
 
 	if (!(n_highs = vmalloc(sizeof(*n_highs) * num)))
 		return -ENOMEM;
@@ -176,3 +144,76 @@ static int alloc_targets(struct mapped_device *md, int num)
 
 	return 0;
 }
+
+int dm_table_start(struct mapped_device *md)
+{
+	int r;
+	set_bit(DM_LOADING, &md->state);
+
+	dm_table_free(md);
+
+	/* allocate a single nodes worth to start with */
+	if ((r = alloc_targets(md, KEYS_PER_NODE)))
+		return r;
+
+	return 0;
+}
+
+static inline int check_space(struct mapped_device *md)
+{
+	if (md->num_targets >= md->num_allocated)
+		return alloc_targets(md, md->num_allocated * 2);
+
+	return 0;
+}
+
+int dm_table_add_entry(struct mapped_device *md, offset_t high,
+		       dm_map_fn target, void *context)
+{
+	int r;
+
+	if ((r = check_space(md)))
+		return r;
+
+	md->highs[md->num_targets] = high;
+	md->targets[md->num_targets].map = target;
+	md->targets[md->num_targets].private = context;
+	md->num_targets++;
+
+	return 0;
+}
+
+int dm_table_complete(struct mapped_device *md)
+{
+	int i, leaf_nodes;
+
+	clear_bit(DM_LOADING, &md->state);
+
+	/* how many indexes will the btree have ? */
+	leaf_nodes = div_up(md->num_targets, KEYS_PER_NODE);
+	i = 1 + int_log(leaf_nodes, KEYS_PER_NODE + 1);
+
+	md->depth = i;
+	md->counts[md->depth - 1] = div_up(md->num_targets, KEYS_PER_NODE);
+
+	while (--i)
+		md->counts[i - 1] = div_up(md->counts[i], KEYS_PER_NODE + 1);
+
+	for (i = 0; i < (md->depth - 1); i++) {
+		size_t s = NODE_SIZE * md->counts[i];
+		md->index[i] = vmalloc(s);
+		memset(md->index[i], -1, s);
+	}
+
+	/* bottom layer is easy */
+	md->index[md->depth - 1] = md->highs;
+
+	/* fill in higher levels */
+	for (i = md->depth - 1; i; i--)
+		setup_btree_index(i - 1, md);
+
+	set_bit(DM_LOADED, &md->state);
+	return 0;
+}
+
+
