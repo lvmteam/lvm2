@@ -162,6 +162,9 @@ static int _version(int argc, char **argv)
 	struct dm_task *dmt;
 	char version[80];
 
+	if (dm_get_library_version(version, sizeof(version)))
+		printf("Library version:   %s\n", version);
+
 	if (!(dmt = dm_task_create(DM_DEVICE_VERSION)))
 		return 0;
 

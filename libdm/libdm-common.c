@@ -58,6 +58,12 @@ void _build_dev_path(char *buffer, size_t len, const char *dev_name)
         	snprintf(buffer, len, "%s/%s", _dm_dir, dev_name);
 }
 
+int dm_get_library_version(char *version, size_t size)
+{
+	strncpy(version, DM_LIB_VERSION, size);
+	return 1;
+}
+
 struct dm_task *dm_task_create(int type)
 {
         struct dm_task *dmt = malloc(sizeof(*dmt));
