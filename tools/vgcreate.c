@@ -25,6 +25,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	char vg_path[PATH_MAX];
 	struct volume_group *vg;
 	const char *tag;
+	alloc_policy_t alloc;
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -40,6 +41,13 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	vg_name = argv[0];
 	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
 	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
+	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
+
+	if (alloc == ALLOC_INHERIT) {
+		log_error("Volume Group allocation policy cannot inherit "
+			  "from anything");
+		return EINVALID_CMD_LINE;
+	}
 
 	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
 		if (!max_lv)
@@ -92,7 +100,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* Create the new VG */
-	if (!(vg = vg_create(cmd, vg_name, extent_size, max_pv, max_lv,
+	if (!(vg = vg_create(cmd, vg_name, extent_size, max_pv, max_lv, alloc,
 			     argc - 1, argv + 1)))
 		return ECMD_FAILED;
 

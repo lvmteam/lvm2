@@ -466,6 +466,9 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		return 0;
 	}
 
+	if (alloc == ALLOC_INHERIT)
+		alloc = vg->alloc;
+
 	/*
 	 * Build the sets of available areas on the pv's.
 	 */
@@ -479,15 +482,16 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	else if (mirrored_pv)
 		r = _alloc_mirrored(lv, pvms, allocated, segtype, mirrored_pv,
 				    mirrored_pe);
+
 	else if (alloc == ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
 
-	else if (alloc == ALLOC_NEXT_FREE || alloc == ALLOC_DEFAULT)
+	else if (alloc == ALLOC_NORMAL || alloc == ALLOC_ANYWHERE)
 		r = _alloc_next_free(lv, pvms, allocated);
 
 	else {
-		log_error("Unknown allocation policy: "
-			  "unable to setup logical volume.");
+		log_error("Unrecognised allocation policy: "
+			  "unable to set up logical volume.");
 		goto out;
 	}
 

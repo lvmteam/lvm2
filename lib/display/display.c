@@ -27,9 +27,10 @@ static struct {
 	const char *str;
 } _policies[] = {
 	{
-	ALLOC_NEXT_FREE, "next free"}, {
 	ALLOC_CONTIGUOUS, "contiguous"}, {
-	ALLOC_DEFAULT, "next free (default)"}
+	ALLOC_NORMAL, "normal"}, {
+	ALLOC_ANYWHERE, "anywhere"}, {
+	ALLOC_INHERIT, "inherit"}
 };
 
 static int _num_policies = sizeof(_policies) / sizeof(*_policies);
@@ -122,8 +123,12 @@ alloc_policy_t get_alloc_from_string(const char *str)
 		if (!strcmp(_policies[i].str, str))
 			return _policies[i].alloc;
 
-	log_error("Unrecognised allocation policy - using default");
-	return ALLOC_DEFAULT;
+	/* Special case for old metadata */
+	if(!strcmp("next free", str))
+		return ALLOC_NORMAL;
+
+	log_error("Unrecognised allocation policy %s", str);
+	return ALLOC_INVALID;
 }
 
 const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)

@@ -117,45 +117,30 @@ static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	return 1;
 }
 
-static int lvchange_contiguous(struct cmd_context *cmd,
-			       struct logical_volume *lv)
+static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	int want_contiguous = 0;
+	alloc_policy_t alloc;
 
-	if (strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n"))
-		want_contiguous = 1;
+	want_contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
+	alloc = want_contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
+	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, alloc);
 
-	if (want_contiguous && lv->alloc == ALLOC_CONTIGUOUS) {
+	if (alloc == lv->alloc) {
 		log_error("Allocation policy of logical volume \"%s\" is "
-			  "already contiguous", lv->name);
+			  "already %s", lv->name, get_alloc_string(alloc));
 		return 0;
 	}
 
-	if (!want_contiguous && lv->alloc != ALLOC_CONTIGUOUS) {
-		log_error
-		    ("Allocation policy of logical volume \"%s\" is already"
-		     " not contiguous", lv->name);
-		return 0;
-	}
+	lv->alloc = alloc;
 
-/******** FIXME lv_check_contiguous?
-	if (want_contiguous)
-		    && (ret = lv_check_contiguous(vg, lv_index + 1)) == FALSE) {
-			log_error("No contiguous logical volume \"%s\"", lv->name);
-			return 0;
-*********/
+	/* FIXME If contiguous, check existing extents already are */
 
-	if (want_contiguous) {
-		lv->alloc = ALLOC_CONTIGUOUS;
-		log_verbose("Setting contiguous allocation policy for \"%s\"",
-			    lv->name);
-	} else {
-		lv->alloc = ALLOC_DEFAULT;
-		log_verbose("Reverting to default allocation policy for \"%s\"",
-			    lv->name);
-	}
+	log_verbose("Setting contiguous allocation policy for \"%s\" to %s",
+		    lv->name, get_alloc_string(alloc));
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
+
 	if (!vg_write(lv->vg)) {
 		stack;
 		return 0;
@@ -170,7 +155,6 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 	}
 
 	return 1;
-
 }
 
 static int lvchange_readahead(struct cmd_context *cmd,
@@ -365,7 +349,8 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!(lv->vg->status & LVM_WRITE) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
+	     arg_count(cmd, alloc_ARG))) {
 		log_error("Only -a permitted with read-only volume "
 			  "group \"%s\"", lv->vg->name);
 		return EINVALID_CMD_LINE;
@@ -373,7 +358,8 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_origin(lv) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
+	     arg_count(cmd, alloc_ARG))) {
 		log_error("Can't change logical volume \"%s\" under snapshot",
 			  lv->name);
 		return ECMD_FAILED;
@@ -401,11 +387,11 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* allocation policy change */
-	if (arg_count(cmd, contiguous_ARG)) {
+	if (arg_count(cmd, contiguous_ARG) || arg_count(cmd, alloc_ARG)) {
 		if (!archived && !archive(lv->vg))
 			return ECMD_FAILED;
 		archived = 1;
-		doit += lvchange_contiguous(cmd, lv);
+		doit += lvchange_alloc(cmd, lv);
 	}
 
 	/* read ahead sector change */
@@ -461,9 +447,10 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
 	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)
 	    && !arg_count(cmd, persistent_ARG) && !arg_count(cmd, addtag_ARG)
-	    && !arg_count(cmd, deltag_ARG) && !arg_count(cmd, refresh_ARG)) {
+	    && !arg_count(cmd, deltag_ARG) && !arg_count(cmd, refresh_ARG)
+	    && !arg_count(cmd, alloc_ARG)) {
 		log_error("One or more of -a, -C, -j, -m, -M, -p, -r, "
-			  "--refresh, --addtag or --deltag required");
+			  "--refresh, --alloc, --addtag or --deltag required");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -471,7 +458,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
 	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
-	     arg_count(cmd, refresh_ARG))) {
+	     arg_count(cmd, refresh_ARG) || arg_count(cmd, alloc_ARG))) {
 		log_error("Only -a permitted with --ignorelockingfailure");
 		return EINVALID_CMD_LINE;
 	}
@@ -489,6 +476,11 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, minor_ARG) && argc != 1) {
 		log_error("Only give one logical volume when specifying minor");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, contiguous_ARG) && arg_count(cmd, alloc_ARG)) {
+		log_error("Only one of --alloc and --contiguous permitted");
 		return EINVALID_CMD_LINE;
 	}
 

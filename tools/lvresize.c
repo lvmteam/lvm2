@@ -115,6 +115,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size = 0;
 	uint32_t extents_used = 0;
 	uint32_t size_rest;
+	alloc_policy_t alloc;
 	char *lock_lvid;
 	struct lv_list *lvl;
 	int consistent = 1;
@@ -170,6 +171,8 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		goto error;
 	}
 
+	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lv->alloc);
+	
 	if (lp->size) {
 		if (lp->size % vg->extent_size) {
 			if (lp->sign == SIGN_MINUS)
@@ -393,7 +396,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 		if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes,
 			       lp->stripe_size, 0u, lp->extents - lv->le_count,
-			       NULL, 0u, 0u, lp->pvh, lv->alloc)) {
+			       NULL, 0u, 0u, lp->pvh, alloc)) {
 			goto error;
 		}
 	}

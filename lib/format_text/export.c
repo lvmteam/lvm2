@@ -307,6 +307,13 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	outf(f, "max_lv = %u", vg->max_lv);
 	outf(f, "max_pv = %u", vg->max_pv);
 
+	/* Default policy is NORMAL; INHERIT is meaningless */
+	if (vg->alloc != ALLOC_NORMAL && vg->alloc != ALLOC_INHERIT) {
+		f->nl(f);
+		outf(f, "allocation_policy = \"%s\"",
+		     get_alloc_string(vg->alloc));
+	}
+
 	return 1;
 }
 
@@ -597,9 +604,10 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 			outf(f, "tags = %s", buffer);
 		}
 
-		if (lv->alloc != ALLOC_DEFAULT)
+		if (lv->alloc != ALLOC_INHERIT)
 			outf(f, "allocation_policy = \"%s\"",
 			     get_alloc_string(lv->alloc));
+
 		if (lv->read_ahead)
 			outf(f, "read_ahead = %u", lv->read_ahead);
 		if (lv->major >= 0)

@@ -42,6 +42,7 @@ arg(refresh_ARG, '\0', "refresh", NULL)
 arg(mknodes_ARG, '\0', "mknodes", NULL)
 arg(minor_ARG, '\0', "minor", minor_arg)
 arg(type_ARG, '\0', "type", segtype_arg)
+arg(alloc_ARG, '\0', "alloc", alloc_arg)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg)

@@ -237,6 +237,7 @@ int import_vg(struct pool *mem,
 	vg->free_count = vgd->pe_total - vgd->pe_allocated;
 	vg->max_lv = vgd->lv_max;
 	vg->max_pv = vgd->pv_max;
+	vg->alloc = ALLOC_NORMAL;
 
 	if (partial)
 		vg->status |= PARTIAL_VG;
@@ -316,7 +317,7 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	if (lvd->lv_allocation & LV_CONTIGUOUS)
 		lv->alloc = ALLOC_CONTIGUOUS;
 	else
-		lv->alloc = ALLOC_NEXT_FREE;
+		lv->alloc = ALLOC_NORMAL;
 
 	lv->read_ahead = lvd->lv_read_ahead;
 	lv->size = lvd->lv_size;

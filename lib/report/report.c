@@ -98,6 +98,20 @@ struct row {
 	struct field *(*sort_fields)[];	/* Fields in sort order */
 };
 
+static char _alloc_policy_char(alloc_policy_t alloc)
+{
+	switch (alloc) {
+	case ALLOC_CONTIGUOUS:
+		return 'c';
+	case ALLOC_NORMAL:
+		return 'n';
+	case ALLOC_ANYWHERE:
+		return 'a';
+	default:
+		return 'i';
+	}
+}
+
 /*
  * Data-munging functions to prepare each data type for display and sorting
  */
@@ -279,10 +293,7 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 	else
 		repstr[1] = 'r';
 
-	if (lv->alloc == ALLOC_CONTIGUOUS)
-		repstr[2] = 'c';
-	else
-		repstr[2] = 'n';
+	repstr[2] = _alloc_policy_char(lv->alloc);
 
 	if (lv->status & LOCKED)
 		repstr[2] = toupper(repstr[2]);
@@ -354,33 +365,35 @@ static int _pvstatus_disp(struct report_handle *rh, struct field *field,
 static int _vgstatus_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
-	const uint32_t status = *(const uint32_t *) data;
+	const struct volume_group *vg = (const struct volume_group *) data;
 	char *repstr;
 
-	if (!(repstr = pool_zalloc(rh->mem, 5))) {
+	if (!(repstr = pool_zalloc(rh->mem, 6))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	if (status & LVM_WRITE)
+	if (vg->status & LVM_WRITE)
 		repstr[0] = 'w';
 	else
 		repstr[0] = 'r';
 
-	if (status & RESIZEABLE_VG)
+	if (vg->status & RESIZEABLE_VG)
 		repstr[1] = 'z';
 	else
 		repstr[1] = '-';
 
-	if (status & EXPORTED_VG)
+	if (vg->status & EXPORTED_VG)
 		repstr[2] = 'x';
 	else
 		repstr[2] = '-';
 
-	if (status & PARTIAL_VG)
+	if (vg->status & PARTIAL_VG)
 		repstr[3] = 'p';
 	else
 		repstr[3] = '-';
+
+	repstr[4] = _alloc_policy_char(vg->alloc);
 
 	field->report_string = repstr;
 	field->sort_value = (const void *) field->report_string;

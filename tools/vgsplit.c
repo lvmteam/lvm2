@@ -215,7 +215,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Create new VG structure */
 	if (!(vg_to = vg_create(cmd, vg_name_to, vg_from->extent_size,
-				vg_from->max_pv, vg_from->max_lv, 0, NULL)))
+				vg_from->max_pv, vg_from->max_lv,
+				vg_from->alloc, 0, NULL)))
 		goto error;
 
 	/* Archive vg_from before changing it */
