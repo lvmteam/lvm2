@@ -82,7 +82,8 @@ int register_map_target(const char *name, dm_ctr_fn ctr,
  *
  * 'linear' target maps a linear range of a device
  */
-int _io_err_ctr(offset_t b, offset_t e, const char *context, void **result)
+int _io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
+		const char *context, void **result)
 {
 	/* this takes no arguments */
 	*result = 0;
@@ -106,7 +107,8 @@ struct linear_c {
 	int offset;		/* FIXME: we need a signed offset type */
 };
 
-int _linear_ctr(offset_t b, offset_t e, const char *context, void **result)
+int _linear_ctr(offset_t b, offset_t e, struct mapped_device *md,
+		const char *context, void **result)
 {
 	/* context string should be of the form:
 	 *  <major> <minor> <offset>
@@ -138,7 +140,10 @@ int _linear_ctr(offset_t b, offset_t e, const char *context, void **result)
 	lc->dev = MKDEV(major, minor);
 	lc->offset = start - b;
 
-	/* FIXME: we should open the PV */
+	if (!dm_add_device(md, lc->dev)) {
+		kfree(lc);
+		return 0;
+	}
 
 	*result = lc;
 	return 1;

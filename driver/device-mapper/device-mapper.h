@@ -28,34 +28,29 @@
 #ifndef DEVICE_MAPPER_H
 #define DEVICE_MAPPER_H
 
+#ifdef __KERNEL__
+
 #include <linux/major.h>
 
 /* FIXME: steal LVM's devices for now */
 #define DM_BLK_MAJOR LVM_BLK_MAJOR
-#define DM_CTL_MAJOR LVM_CHAR_MAJOR
 
-#define DM_NAME_LEN 64
-
+struct mapped_device;
 typedef unsigned int offset_t;
 
-struct dm_request {
-	int minor;		/* -1 indicates no preference */
-	char name[DM_NAME_LEN];
-};
-
-#define	MAPPED_DEVICE_CREATE _IOWR(DM_CTL_MAJOR, 0, struct dm_request)
-#define MAPPED_DEVICE_DESTROY _IOW(DM_CTL_MAJOR, 1, struct dm_request)
-
-#ifdef __KERNEL__
-typedef int (*dm_ctr_fn)(offset_t b, offset_t e,
+typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct mapped_device *md,
 			 const char *context, void **result);
 typedef void (*dm_dtr_fn)(void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
 
 int register_map_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
 			dm_map_fn map);
-#endif
 
+/* contructors should call this to make sure any destination devices
+   are handled correctly (ie. opened/closed) */
+int dm_add_device(struct mapped_device *md, kdev_t dev);
+
+#endif
 #endif
 
 /*
