@@ -217,7 +217,7 @@ struct logical_volume *lv_create(struct io_space *ios,
 				 uint32_t status,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
-				 uint64_t extents,
+				 uint32_t extents,
 				 struct volume_group *vg,
 				 struct pv_list *acceptable_pvs);
 
