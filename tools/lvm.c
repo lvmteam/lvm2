@@ -714,6 +714,8 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))
 		return ECMD_FAILED;
 
+	log_debug("Processing: %s", cmd->cmd_line);
+
 	if (!(cmd->command = _find_command(argv[0])))
 		return ENO_SUCH_CMD;
 
