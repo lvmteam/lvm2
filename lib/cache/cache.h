@@ -9,12 +9,9 @@
 #define _LVM_CACHE_H
 
 #include "dev-cache.h"
-#include "list.h"
 #include "uuid.h"
 #include "label.h"
 #include "metadata.h"
-
-#include <sys/types.h>
 
 #define ORPHAN ""
 

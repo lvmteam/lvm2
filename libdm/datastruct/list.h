@@ -7,6 +7,8 @@
 #ifndef _LVM_LIST_H
 #define _LVM_LIST_H
 
+#include <assert.h>
+
 struct list {
 	struct list *n, *p;
 };

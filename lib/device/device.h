@@ -7,8 +7,6 @@
 #ifndef _LVM_DEVICE_H
 #define _LVM_DEVICE_H
 
-#include "lvm-types.h"
-#include "list.h"
 #include "uuid.h"
 
 #define DEV_ACCESSED_W		0x00000001	/* Device written to? */

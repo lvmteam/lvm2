@@ -10,8 +10,6 @@
 #include "defaults.h"
 #include "sharedlib.h"
 
-#include <dlfcn.h>
-
 static void *_locking_lib = NULL;
 static void (*_end_fn) (void) = NULL;
 static int (*_lock_fn) (struct cmd_context * cmd, const char *resource,

@@ -25,11 +25,9 @@
 #include "config.h"
 
 #include <dirent.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <fcntl.h>
-#include <linux/kdev_t.h>
 
 #define NUMBER_OF_MAJORS 256
 

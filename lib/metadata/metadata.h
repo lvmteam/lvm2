@@ -12,17 +12,13 @@
 
 #include "ctype.h"
 #include "dev-cache.h"
-#include "list.h"
 #include "uuid.h"
-
-#include <sys/types.h>
-#include <asm/page.h>
 
 #define NAME_LEN 128
 #define MAX_STRIPES 128
 #define SECTOR_SHIFT 9L
 #define SECTOR_SIZE ( 1L << SECTOR_SHIFT )
-#define STRIPE_SIZE_MIN ( PAGE_SIZE >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
+#define STRIPE_SIZE_MIN ( getpagesize() >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define PE_ALIGN (65536UL >> SECTOR_SHIFT)	/* PE alignment */

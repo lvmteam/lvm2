@@ -23,6 +23,9 @@
 
 #include "config.h"
 
+#include <sys/stat.h>
+#include <linux/kdev_t.h>
+
 struct dev_filter *lvm_type_filter_create(const char *proc,
 					  struct config_node *cn);
 

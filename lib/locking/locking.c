@@ -107,11 +107,13 @@ int init_locking(int type, struct config_tree *cf)
 		log_very_verbose("File-based locking enabled.");
 		return 1;
 
+#ifdef HAVE_LIBDL
 	case 2:
 		if (!init_external_locking(&_locking, cf))
 			break;
 		log_very_verbose("External locking enabled.");
 		return 1;
+#endif
 
 	default:
 		log_error("Unknown locking type requested.");

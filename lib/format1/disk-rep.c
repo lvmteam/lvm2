@@ -11,9 +11,7 @@
 #include "filter.h"
 #include "cache.h"
 
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <linux/kdev_t.h>
 
 #define fail do {stack; return 0;} while(0)
 #define xx16(v) disk->v = xlate16(disk->v)
@@ -132,7 +130,7 @@ static int _munge_formats(struct pv_disk *pvd)
 
 static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 {
-	if (dev_read(dev, __UINT64_C(0), sizeof(*pvd), pvd) != sizeof(*pvd)) {
+	if (dev_read(dev, UINT64_C(0), sizeof(*pvd), pvd) != sizeof(*pvd)) {
 		log_very_verbose("Failed to read PV data from %s",
 				 dev_name(dev));
 		return 0;

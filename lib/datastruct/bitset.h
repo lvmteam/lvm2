@@ -7,7 +7,6 @@
 #ifndef _LVM_BITSET_H
 #define _LVM_BITSET_H
 
-#include "lvm-types.h"
 #include "pool.h"
 
 #include <limits.h>

@@ -67,7 +67,7 @@ static int _check_device(struct cmd_context *cmd, struct device *dev)
 	if (!dev_open(dev, 0)) {
 		return 0;
 	}
-	if (dev_read(dev, __UINT64_C(0), (size_t) 1, &buffer) != 1) {
+	if (dev_read(dev, UINT64_C(0), (size_t) 1, &buffer) != 1) {
 		dev_close(dev);
 		return 0;
 	}

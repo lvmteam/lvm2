@@ -11,12 +11,11 @@
 #include "list.h"
 #include "lvm-types.h"
 #include "btree.h"
+#include "filter.h"
 
-#include <sys/stat.h>
 #include <unistd.h>
 #include <sys/param.h>
 #include <dirent.h>
-#include <linux/kdev_t.h>
 
 struct dev_iter {
 	struct btree_iter *current;

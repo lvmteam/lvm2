@@ -1027,7 +1027,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	}
 	if (!add_da
 	    (fmt, NULL, &info->das, pv->pe_start << SECTOR_SHIFT,
-	     __UINT64_C(0))) {
+	     UINT64_C(0))) {
 		stack;
 		return 0;
 	}

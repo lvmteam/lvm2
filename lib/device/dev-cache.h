@@ -7,7 +7,6 @@
 #ifndef _LVM_DEV_CACHE_H
 #define _LVM_DEV_CACHE_H
 
-#include <sys/types.h>
 #include "lvm-types.h"
 #include "device.h"
 

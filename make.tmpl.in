@@ -93,6 +93,10 @@ ifeq ("@HAVE_RL_COMPLETION_MATCHES@", "yes")
   CFLAGS += -DHAVE_RL_COMPLETION_MATCHES
 endif
 
+ifeq ("@HAVE_LIBDL@", "yes")
+  CFLAGS += -DHAVE_LIBDL
+endif
+
 ifeq ("@LVM1@", "internal")
   CFLAGS += -DLVM1_INTERNAL
 endif

@@ -30,7 +30,7 @@
  */
 struct arg the_args[ARG_COUNT + 1] = {
 
-#define arg(a, b, c, d) {b, "--" c, d, 0, NULL, 0, 0, __INT64_C(0), __UINT64_C(0), 0, NULL},
+#define arg(a, b, c, d) {b, "--" c, d, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), 0, NULL},
 #include "args.h"
 #undef arg
 

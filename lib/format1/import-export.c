@@ -12,10 +12,10 @@
 #include "hash.h"
 #include "list.h"
 #include "lvm-string.h"
+#include "filter.h"
 
 #include <time.h>
 #include <sys/utsname.h>
-#include <linux/kdev_t.h>
 
 static int _check_vg_name(const char *name)
 {

@@ -15,7 +15,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <asm/page.h>
 
 enum {
 	TOK_INT,
@@ -128,7 +127,7 @@ int read_config_fd(struct config_tree *cf, int fd, const char *file,
 
 	if (size2) {
 		/* FIXME Attempt adjacent mmaps MAP_FIXED into malloced space 
-		 * one PAGE_SIZE larger than required...
+		 * one page size larger than required...
 		 */
 		if (!(p->fb = dbg_malloc(size + size2))) {
 			stack;
@@ -151,7 +150,7 @@ int read_config_fd(struct config_tree *cf, int fd, const char *file,
 			goto out;
 		}
 	} else {
-		mmap_offset = offset % PAGE_SIZE;
+		mmap_offset = offset % getpagesize();
 		/* memory map the file */
 		p->fb = mmap((caddr_t) 0, size + mmap_offset, PROT_READ,
 			     MAP_PRIVATE, fd, offset - mmap_offset);

@@ -7,8 +7,6 @@
 #ifndef _LVM_HASH_H
 #define _LVM_HASH_H
 
-#include "lvm-types.h"
-
 struct hash_table;
 struct hash_node;
 
