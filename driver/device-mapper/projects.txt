@@ -26,3 +26,9 @@
 
  o Further reduction of common code between the filesystem source files.
 
+[For 2.4.14-pre and upwards]
+
+ o Use fail_writepage() in address_space_operations
+ o Kernel takes care of module reference count for block devices, so all we
+   need to do is add an owner field in the right place.
+
