@@ -66,6 +66,7 @@
 #include <errno.h>
 
 #include "list.h"
+#include "hash.h"
 #include "locking.h"
 #include "log.h"
 #include "lvm-functions.h"
@@ -135,6 +136,61 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 }
 
+static int lock_vg(struct local_client *client)
+{
+    struct hash_table *lock_hash;
+    struct clvm_header *header =
+	(struct clvm_header *) client->bits.localsock.cmd;
+    unsigned char lock_cmd;
+    unsigned char lock_flags;
+    char *args = header->node + strlen(header->node) + 1;
+    int lkid;
+    int status = 0;
+    char *lockname;
+
+    /* Keep a track of VG locks in our own hash table. In current
+       practice there should only ever be more than two VGs locked
+       if a user tries to merge lots of them at once */
+    if (client->bits.localsock.private) {
+	lock_hash = (struct hash_table *)client->bits.localsock.private;
+    }
+    else {
+	lock_hash = hash_create(3);
+	if (!lock_hash)
+	    return ENOMEM;
+	client->bits.localsock.private = (void *)lock_hash;
+    }
+
+    lock_cmd = args[0];
+    lock_flags = args[1];
+    lockname = &args[2];
+    DEBUGLOG("doing PRE command LOCK_VG '%s' at %x (client=%p)\n", lockname, lock_cmd, client);
+
+    if (lock_cmd == LCK_UNLOCK) {
+
+	lkid = (int)(long)hash_lookup(lock_hash, lockname);
+	if (lkid == 0)
+	    return EINVAL;
+
+	status = sync_unlock(lockname, lkid);
+	if (status)
+	    status = errno;
+	else
+	    hash_remove(lock_hash, lockname);
+    }
+    else {
+
+	status = sync_lock(lockname, (int)lock_cmd, (int)lock_flags, &lkid);
+	if (status)
+	    status = errno;
+	else
+	    hash_insert(lock_hash, lockname, (void *)lkid);
+    }
+
+    return status;
+}
+
+
 /* Pre-command is a good place to get locks that are needed only for the duration
    of the commands around the cluster (don't forget to free them in post-command),
    and to sanity check the command arguments */
@@ -156,22 +212,7 @@ int do_pre_command(struct local_client *client)
 		break;
 
 	case CLVMD_CMD_LOCK_VG:
-		lock_cmd = args[0];
-		lock_flags = args[1];
-		lockname = &args[2];
-		DEBUGLOG("doing PRE command LOCK_VG %s at %x\n", lockname,
-			 lock_cmd);
-		if (lock_cmd == LCK_UNLOCK) {
-		        status = sync_unlock(lockname, (int) (long) client->bits.localsock.private);
-			if (status)
-				status = errno;
-		} else {
-			status = sync_lock(lockname, (int) lock_cmd, (int) lock_flags, &lockid);
-			if (status)
-				status = errno;
-			else
-			        client->bits.localsock.private = (void *) lockid;
-		}
+       	        status = lock_vg(client);
 		break;
 
 	case CLVMD_CMD_LOCK_LV:
@@ -204,6 +245,7 @@ int do_post_command(struct local_client *client)
 	case CLVMD_CMD_TEST:
 		status =
 		    sync_unlock("CLVMD_TEST", (int) (long) client->bits.localsock.private);
+		client->bits.localsock.private = 0;
 		break;
 
 	case CLVMD_CMD_LOCK_VG:
@@ -218,4 +260,26 @@ int do_post_command(struct local_client *client)
 		break;
 	}
 	return status;
+}
+
+
+/* Called when the client is about to be deleted */
+void cmd_client_cleanup(struct local_client *client)
+{
+    if (client->bits.localsock.private) {
+
+	struct hash_node *v;
+	struct hash_table *lock_hash =
+	    (struct hash_table *)client->bits.localsock.private;
+
+	hash_iterate(v, lock_hash) {
+		int lkid = (int)(long)hash_get_data(lock_hash, v);
+
+		DEBUGLOG("cleanup: Unlocking lkid %x\n", lkid);
+		sync_unlock("DUMMY", lkid);
+	}
+
+	hash_destroy(lock_hash);
+	client->bits.localsock.private = 0;
+    }
 }

@@ -337,7 +337,7 @@ static void get_members()
 		}
 		nodelist.max_members = count_nodes;
 		nodelist.nodes = nodes;
-		
+
 		num_nodes = ioctl(cluster_sock, SIOCCLUSTER_GETMEMBERS, &nodelist);
 		if (num_nodes <= 0) {
 		        perror("get node details");
@@ -441,6 +441,7 @@ int sync_lock(const char *resource, int mode, int flags, int *lockid)
 		return -1;
 	}
 
+	DEBUGLOG("sync_lock: '%s' mode:%d flags=%d\n", resource,mode,flags);
 	/* Conversions need the lockid in the LKSB */
 	if (flags & LKF_CONVERT)
 		lwait.lksb.sb_lkid = *lockid;
@@ -466,6 +467,7 @@ int sync_lock(const char *resource, int mode, int flags, int *lockid)
 	*lockid = lwait.lksb.sb_lkid;
 
 	errno = lwait.lksb.sb_status;
+	DEBUGLOG("sync_lock: returning lkid %x\n", *lockid);
 	if (lwait.lksb.sb_status)
 		return -1;
 	else
@@ -476,6 +478,8 @@ int sync_unlock(const char *resource /* UNUSED */, int lockid)
 {
 	int status;
 	struct lock_wait lwait;
+
+	DEBUGLOG("sync_unlock: '%s' lkid:%x\n", resource, lockid);
 
 	pthread_cond_init(&lwait.cond, NULL);
 	pthread_mutex_init(&lwait.mutex, NULL);
