@@ -58,10 +58,10 @@ int import_pv(struct pool *mem, struct device *dev,
 	if (vg &&
 	    strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))
 		log_very_verbose("System ID %s on %s differs from %s for "
-				 "volume group", pvd->system_id, 
+				 "volume group", pvd->system_id,
 				 dev_name(pv->dev), vg->system_id);
-	
-	/* 
+
+	/*
 	 * If exported, we still need to flag in pv->status too because
 	 * we don't always have a struct volume_group when we need this.
 	 */
@@ -89,7 +89,7 @@ int _system_id(char *s, const char *prefix)
 		return 0;
 	}
 
-	if (lvm_snprintf(s, NAME_LEN, "%s%s%lu", 
+	if (lvm_snprintf(s, NAME_LEN, "%s%s%lu",
 			 prefix, uts.nodename, time(NULL)) < 0) {
 		log_error("Generated system_id too long");
 		return 0;
@@ -120,14 +120,14 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 		strncpy(pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));
 
 	/* Preserve existing system_id if it exists */
-	if (vg && *vg->system_id) 
+	if (vg && *vg->system_id)
 		strncpy(pvd->system_id, vg->system_id, sizeof(pvd->system_id));
 
 	/* Is VG already exported or being exported? */
 	if (vg && (vg->status & EXPORTED_VG)) {
 		/* Does system_id need setting? */
-		if (!*vg->system_id || 
-		    strncmp(vg->system_id, EXPORTED_TAG, 
+		if (!*vg->system_id ||
+		    strncmp(vg->system_id, EXPORTED_TAG,
 			    sizeof(EXPORTED_TAG) - 1)) {
 			if (!_system_id(pvd->system_id, EXPORTED_TAG)) {
 				stack;
@@ -160,7 +160,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 		}
 
 	/* Update internal system_id if we changed it */
-	if (vg && 
+	if (vg &&
 	    (!*vg->system_id ||
 	     strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id))))
 		strncpy(vg->system_id, pvd->system_id, NAME_LEN);

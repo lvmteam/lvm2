@@ -94,6 +94,10 @@ struct volume_group {
         /* logical volumes */
         uint32_t lv_count;
 	struct list lvs;
+
+	/* snapshots */
+	uint32_t snapshot_count;
+	struct list snapshots;
 };
 
 struct stripe_segment {
@@ -128,6 +132,14 @@ struct logical_volume {
 	struct list segments;
 };
 
+struct snapshot {
+	int persistent;		/* boolean */
+	uint32_t chunk_size;	/* in 512 byte sectors */
+
+	struct logical_volume *origin;
+	struct logical_volume *cow;
+};
+
 struct name_list {
 	struct list list;
 	char *name;
@@ -141,6 +153,12 @@ struct pv_list {
 struct lv_list {
 	struct list list;
 	struct logical_volume *lv;
+};
+
+struct snapshot_list {
+	struct list list;
+
+	struct snapshot *snapshot;
 };
 
 struct format_instance {
@@ -313,6 +331,21 @@ int lv_check_segments(struct logical_volume *lv);
  * to merge as many segments as possible.
  */
 int lv_merge_segments(struct logical_volume *lv);
+
+
+/*
+ * Useful functions for managing snapshots.
+ */
+int lv_is_origin(struct volume_group *vg, struct logical_volume *lv);
+int lv_is_cow(struct volume_group *vg, struct logical_volume *lv);
+
+int vg_add_snapshot(struct volume_group *vg,
+		    struct logical_volume *origin,
+		    struct logical_volume *cow,
+		    int persistent,
+		    uint32_t chunk_size);
+
+int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow);
 
 
 #endif
