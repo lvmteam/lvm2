@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "metadata.h"
+#include "xlate.h"
 
 /* Lifted from <linux/raid/md_p.h> because of difficulty including it */
 
