@@ -36,6 +36,7 @@ SOFLAG += @SOFLAG@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = $(DESTDIR)@bindir@
+confdir = $(DESTDIR)@CONFDIR@/lvm
 includedir = $(DESTDIR)@includedir@
 libdir = $(DESTDIR)@libdir@
 sbindir = $(DESTDIR)@sbindir@

@@ -258,6 +258,11 @@ if test x$INTL = xyes; then
   		    [ LOCALEDIR='${prefix}/share/locale' ])
 fi
 
+AC_ARG_WITH(confdir,
+	    [  --with-confdir=DIR      Configuration files in DIR [EXEC_PREFIX/etc]],
+  	    [ CONFDIR="$withval" ],
+ 	    [ CONFDIR='${exec_prefix}/etc' ])
+
 if test "-f VERSION"; then
   LVM_VERSION="\"`cat VERSION`\""
 else
@@ -286,6 +291,7 @@ AC_SUBST(HAVE_SELINUX)
 AC_SUBST(CMDLIB)
 AC_SUBST(MSGFMT)
 AC_SUBST(LOCALEDIR)
+AC_SUBST(CONFDIR)
 AC_SUBST(INTL_PACKAGE)
 AC_SUBST(INTL)
 
@@ -294,6 +300,7 @@ dnl keep utility scripts running properly
 AC_OUTPUT( 								\
 Makefile								\
 make.tmpl                                                               \
+doc/Makefile								\
 include/Makefile						 	\
 lib/Makefile							 	\
 lib/format1/Makefile						 	\

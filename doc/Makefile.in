@@ -1,5 +1,4 @@
 #
-# Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
 # Copyright (C) 2004 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the LVM2.
@@ -16,30 +15,15 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-SUBDIRS = doc include man 
+CONFSRC=example.conf
+CONFDEST=lvm.conf
 
-ifeq ("@INTL@", "yes")
-  SUBDIRS += po
-endif
+include ../make.tmpl
 
-SUBDIRS += lib tools
-
-ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS += lib/format1 \
-	     po \
-	     test/mm test/device test/format1 test/regex test/filters
-endif
-
-include make.tmpl
-
-lib: include
-tools: lib
-po: lib tools
-
-ifeq ("@INTL@", "yes")
-lib.pofile: include.pofile
-tools.pofile: lib.pofile
-po.pofile: lib.pofile tools.pofile
-pofile: po.pofile
-endif
+install:
+	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \
+		echo "Installing $(CONFSRC) as $(confdir)/$(CONFDEST)"; \
+		@INSTALL@ -D -o $(OWNER) -g $(GROUP) -m 644 $(CONFSRC) \
+			$(confdir)/$(CONFDEST); \
+	fi
 
