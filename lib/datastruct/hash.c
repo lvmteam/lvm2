@@ -175,7 +175,7 @@ unsigned hash_get_num_entries(struct hash_table *t)
 	return t->num_nodes;
 }
 
-void hash_iterate(struct hash_table *t, iterate_fn f)
+void hash_iter(struct hash_table *t, iterate_fn f)
 {
 	struct hash_node *c;
 	int i;
