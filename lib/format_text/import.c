@@ -9,11 +9,12 @@
 #include "pool.h"
 #include "log.h"
 #include "uuid.h"
+#include "hash.h"
 
 
 typedef int (*section_fn)(struct pool *mem,
 			  struct volume_group *vg, struct config_node *pvn,
-			  struct config_node *vgn);
+			  struct config_node *vgn, struct hash_table *pv_hash);
 
 #define _read_int32(root, path, result) \
 	get_config_uint32(root, path, '/', result)
@@ -46,7 +47,8 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 
 static int _read_pv(struct pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
-		    struct config_node *vgn)
+		    struct config_node *vgn,
+		    struct hash_table *pv_hash)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -103,6 +105,16 @@ static int _read_pv(struct pool *mem,
 	pv->pe_allocated = 0;
 
 	list_add(&vg->pvs, &pvl->list);
+
+	/*
+	 * Add the pv to the pv hash for quick lookup when we read
+	 * the lv segments.
+	 */
+	if (!hash_insert(pv_hash, pvn->key, pv)) {
+		stack;
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -125,7 +137,8 @@ static void _insert_segment(struct logical_volume *lv,
 }
 
 static int _read_segment(struct pool *mem, struct volume_group *vg,
-			 struct logical_volume *lv, struct config_node *sn)
+			 struct logical_volume *lv, struct config_node *sn,
+			 struct hash_table *pv_hash)
 {
 	int s;
 	struct stripe_segment *seg;
@@ -190,14 +203,12 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			return 0;
 		}
 
-#if 0
-		if (!(pv = _find_pv(cv->v.str, pv_hash))) {
+		if (!(pv = hash_lookup(pv_hash, cv->v.str))) {
 			log_err("Couldn't find physical volume (%s) for "
 				"segment '%s'.",
 				cn->v->v.str ? cn->v->v.str : "NULL", sn->key);
 				return 0;
 		}
-#endif
 
 		seg->area[s].pv = pv;
 
@@ -238,7 +249,8 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 }
 
 static int _read_segments(struct pool *mem, struct volume_group *vg,
-			  struct logical_volume *lv, struct config_node *lvn)
+			  struct logical_volume *lv, struct config_node *lvn,
+			  struct hash_table *pv_hash)
 {
 	struct config_node *sn;
 	int count = 0, seg_count;
@@ -249,7 +261,7 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 		 * All sub-sections are assumed to be segments.
 		 */
 		if (sn->v) {
-			if (!_read_segment(mem, vg, lv, sn)) {
+			if (!_read_segment(mem, vg, lv, sn, pv_hash)) {
 				stack;
 				return 0;
 			}
@@ -290,7 +302,7 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 
 static int _read_lv(struct pool *mem,
 		    struct volume_group *vg, struct config_node *lvn,
-		    struct config_node *vgn)
+		    struct config_node *vgn, struct hash_table *pv_hash)
 {
 	struct logical_volume *lv;
 	struct lv_list *lvl;
@@ -327,7 +339,7 @@ static int _read_lv(struct pool *mem,
 	}
 
 	list_init(&lv->segments);
-	if (!_read_segments(mem, vg, lv, lvn)) {
+	if (!_read_segments(mem, vg, lv, lvn, pv_hash)) {
 		stack;
 		return 0;
 	}
@@ -339,7 +351,8 @@ static int _read_lv(struct pool *mem,
 
 static int _read_sections(const char *section, section_fn fn,
 			  struct pool *mem,
-			  struct volume_group *vg, struct config_node *vgn)
+			  struct volume_group *vg, struct config_node *vgn,
+			  struct hash_table *pv_hash)
 {
 	struct config_node *n;
 
@@ -349,7 +362,7 @@ static int _read_sections(const char *section, section_fn fn,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(mem, vg, vgn, n)) {
+		if (!fn(mem, vg, vgn, n, pv_hash)) {
 			stack;
 			return 0;
 		}
@@ -362,6 +375,7 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 {
 	struct config_node *vgn = cf->root, *cn;
 	struct volume_group *vg;
+	struct hash_table *pv_hash = NULL;
 
 	if (!vgn) {
 		log_err("Couldn't not find volume group.");
@@ -418,19 +432,32 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 		goto bad;
 	}
 
+	/*
+	 * The pv hash memoises the pv section names -> pv
+	 * structures.
+	 */
+	if (!(pv_hash = hash_create(32))) {
+		log_err("Couldn't create hash table.");
+		goto bad;
+	}
+
 	list_init(&vg->pvs);
-	if (!_read_sections("physical_volumes", _read_pv, mem, vg, vgn)) {
+	if (!_read_sections("physical_volumes", _read_pv, mem, vg,
+			    vgn, pv_hash)) {
 		log_err("Couldn't read all physical volumes for volume "
 			"group.");
 		goto bad;
 	}
 
 	list_init(&vg->lvs);
-	if (!_read_sections("logical_volumes", _read_lv, mem, vg, vgn)) {
+	if (!_read_sections("logical_volumes", _read_lv, mem, vg,
+			    vgn, pv_hash)) {
 		log_err("Couldn't read all logical volumes for volume "
 			"group.");
 		goto bad;
 	}
+
+	hash_destroy(pv_hash);
 
 	/*
 	 * Finished.
@@ -438,6 +465,9 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 	return vg;
 
  bad:
+	if (pv_hash)
+		hash_destroy(pv_hash);
+
 	pool_free(mem, vg);
 	return NULL;
 }
