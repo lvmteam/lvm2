@@ -308,6 +308,19 @@ xx(pvmove,
 
    autobackup_ARG, force_ARG,  name_ARG, test_ARG)
 
+xx(pvresize,
+   "Resize a physical volume in use by a volume group",
+   "pvmove "
+   "[-A|--autobackup {y|n}] "
+   "[-d|--debug] "
+   "[-h|--help]\n\t"
+   "[-s|--size PhysicalVolumeSize[kKmMgGtT]" "\n"
+   "[-v|--verbose] "
+   "[--version]\n\t"
+   "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
+
+   autobackup_ARG, physicalvolumesize_ARG)
+
 xx(pvscan,
    "List all physical volumes",
    "pvscan " "\n"

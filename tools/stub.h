@@ -11,6 +11,7 @@ int lvmsadc(struct cmd_context *cmd, int argc, char **argv) unimplemented
 int lvmsar(struct cmd_context *cmd, int argc, char **argv) unimplemented
 int pvdata(struct cmd_context *cmd, int argc, char **argv) unimplemented
 int pvmove(struct cmd_context *cmd, int argc, char **argv) unimplemented
+int pvresize(struct cmd_context *cmd, int argc, char **argv) unimplemented
 int vgmknodes(struct cmd_context *cmd, int argc, char **argv) unimplemented
 int vgsplit(struct cmd_context *cmd, int argc, char **argv) unimplemented
 
