@@ -260,7 +260,7 @@ static int _get_word(const char *b, const char *e,
 	*wb = b;
 	while(b != e && !isspace((int) b))
 		b++;
-	*we = e;
+	*we = b;
 	return 1;
 }
 
