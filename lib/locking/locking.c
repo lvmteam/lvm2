@@ -14,17 +14,29 @@
 
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <limits.h>
 
 static struct locking_type _locking;
 static sigset_t _oldset;
 
 static int _lock_count = 0;	/* Number of locks held */
+static int _write_lock_held = 0;
 static int _signals_blocked = 0;
 
-static void _block_signals(void)
+static void _block_signals(int flags)
 {
 	sigset_t set;
+
+	if (!_write_lock_held && (flags & LCK_SCOPE_MASK) == LCK_LV &&
+	    (flags & LCK_TYPE_MASK) == LCK_WRITE) {
+		if (mlockall(MCL_CURRENT | MCL_FUTURE))
+			log_sys_error("mlockall", "");
+		else {
+			log_very_verbose("Locking memory");
+			_write_lock_held = 1;
+		}
+	}
 
 	if (_signals_blocked)
 		return;
@@ -46,6 +58,15 @@ static void _block_signals(void)
 
 static void _unblock_signals(void)
 {
+	if (!_lock_count && _write_lock_held) {
+		if (munlockall()) {
+			log_very_verbose("Unlocking memory");
+			log_sys_error("munlockall", "");
+		}
+
+		_write_lock_held = 0;
+	}
+
 	/* Don't unblock signals while any locks are held */
 	if (!_signals_blocked || _lock_count)
 		return;
@@ -149,7 +170,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
  */
 static int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
 {
-	_block_signals();
+	_block_signals(flags);
 
 	if (!(_locking.lock_resource(cmd, resource, flags))) {
 		_unblock_signals();
