@@ -99,7 +99,7 @@ $(SUBDIRS.distclean):
 %.d: %.c
 	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 		INC_LNS=`echo $(INC_LNS) | sed -e 's/\\//\\\\\\//g'`; \
-		$(CC) -MM $(INCLUDES) $< | \
+		$(CC) -MM $(INCLUDES) $(CFLAGS) $< | \
 		sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d : $$INC_LNS /g" > $@; \
 		[ -s $@ ] || $(RM) $@
 
