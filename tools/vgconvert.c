@@ -153,7 +153,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	if (test_mode()) {
 		log_verbose("Test mode: Skipping metadata writing for VG %s in"
 			    " format %s", vg_name, cmd->fmt->name);
-		return 0;
+		return ECMD_PROCESSED;
 	}
 
 	log_verbose("Writing metadata for VG %s using format %s", vg_name,
@@ -168,7 +168,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 
 	backup(vg);
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int vgconvert(struct cmd_context *cmd, int argc, char **argv)

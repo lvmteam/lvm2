@@ -151,7 +151,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
 		  vg_name_old, vg_name_new);
 
-	return 0;
+	return ECMD_PROCESSED;
 
       error:
 	unlock_vg(cmd, vg_name_new);

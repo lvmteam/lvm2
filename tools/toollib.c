@@ -357,6 +357,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 						  "found in Volume Group "
 						  "\"%s\"", argv[opt],
 						  vg->name);
+					ret_max = ECMD_FAILED;
 					continue;
 				}
 				pv = pvl->pv;
@@ -364,6 +365,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				if (!(pv = pv_read(cmd, argv[opt], NULL, NULL))) {
 					log_error("Failed to read physical "
 						  "volume \"%s\"", argv[opt]);
+					ret_max = ECMD_FAILED;
 					continue;
 				}
 			}
@@ -376,7 +378,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		if (vg) {
 			log_verbose("Using all physical volume(s) in "
 				    "volume group");
-			process_each_pv_in_vg(cmd, vg, handle, process_single);
+			ret = process_each_pv_in_vg(cmd, vg, handle, process_single);
+			if (ret > ret_max)
+				ret_max = ret;
 		} else {
 			log_verbose("Scanning for physical volume names");
 			if (!(pvslist = get_pvs(cmd)))

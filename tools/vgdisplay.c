@@ -38,12 +38,12 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 
 	if (arg_count(cmd, colon_ARG)) {
 		vgdisplay_colons(vg);
-		return 0;
+		return ECMD_PROCESSED;
 	}
 
 	if (arg_count(cmd, short_ARG)) {
 		vgdisplay_short(vg);
-		return 0;
+		return ECMD_PROCESSED;
 	}
 
 	vgdisplay_full(vg);	/* was vg_show */
@@ -57,7 +57,7 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 		process_each_pv_in_vg(cmd, vg, NULL, &pvdisplay_short);
 	}
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int vgdisplay(struct cmd_context *cmd, int argc, char **argv)

@@ -376,7 +376,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!lvchange_availability(cmd, lv))
 			return ECMD_FAILED;
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int lvchange(struct cmd_context *cmd, int argc, char **argv)

@@ -127,5 +127,5 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Volume group \"%s\" successfully created", vg->name);
 
-	return 0;
+	return ECMD_PROCESSED;
 }

@@ -563,11 +563,11 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	memset(&lp, 0, sizeof(lp));
 
 	if (!_read_params(&lp, cmd, argc, argv))
-		return -EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 
 	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", lp.vg_name);
-		return 0;
+		return ECMD_FAILED;
 	}
 
 	if (!_lvcreate(cmd, &lp)) {
@@ -575,7 +575,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	r = 0;
+	r = ECMD_PROCESSED;
 
       out:
 	unlock_vg(cmd, lp.vg_name);

@@ -40,7 +40,7 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 		  (vg->status & EXPORTED_VG) ? "exported " : "", vg_name,
 		  vg->fid->fmt->name);
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int vgscan(struct cmd_context *cmd, int argc, char **argv)

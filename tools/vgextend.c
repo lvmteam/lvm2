@@ -102,7 +102,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Volume group \"%s\" successfully extended", vg_name);
 
-	return 0;
+	return ECMD_PROCESSED;
 
       error:
 	unlock_vg(cmd, vg_name);

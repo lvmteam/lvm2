@@ -59,7 +59,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 					  lv->name) == 'n') {
 				log_print("Logical volume \"%s\" not removed",
 					  lv->name);
-				return 0;
+				return ECMD_FAILED;
 			}
 		}
 	}
@@ -97,7 +97,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 
 	log_print("Logical volume \"%s\" successfully removed", lv->name);
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int lvremove(struct cmd_context *cmd, int argc, char **argv)

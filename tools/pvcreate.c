@@ -73,8 +73,8 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	return 1;
 }
 
-static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
-			    void *handle)
+static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
+			   void *handle)
 {
 	struct physical_volume *pv, *existing_pv;
 	struct id id, *idp = NULL;
@@ -92,12 +92,12 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	if (arg_count(cmd, uuidstr_ARG)) {
 		uuid = arg_str_value(cmd, uuidstr_ARG, "");
 		if (!id_read_format(&id, uuid))
-			return;
+			return EINVALID_CMD_LINE;
 		if ((dev = device_from_pvid(cmd, &id)) &&
 		    (dev != dev_cache_get(pv_name, cmd->filter))) {
 			log_error("uuid %s already in use on \"%s\"", uuid,
 				  dev_name(dev));
-			return;
+			return ECMD_FAILED;
 		}
 		idp = &id;
 	}
@@ -109,13 +109,13 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		if (!(vg = backup_read_vg(cmd, NULL, restorefile))) {
 			log_error("Unable to read volume group from %s",
 				  restorefile);
-			return;
+			return ECMD_FAILED;
 		}
 		init_partial(0);
 		if (!(existing_pv = find_pv_in_vg_by_uuid(vg, idp))) {
 			log_error("Can't find uuid %s in backup file %s",
 				  uuid, restorefile);
-			return;
+			return ECMD_FAILED;
 		}
 		pe_start = existing_pv->pe_start;
 		extent_size = existing_pv->pe_size;
@@ -124,7 +124,7 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 
 	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
-		return;
+		return ECMD_FAILED;
 	}
 
 	if (!pvcreate_check(cmd, pv_name))
@@ -186,14 +186,18 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 
 	log_print("Physical volume \"%s\" successfully created", pv_name);
 
+	unlock_vg(cmd, "");
+	return ECMD_PROCESSED;
+
       error:
 	unlock_vg(cmd, "");
-	return;
+	return ECMD_FAILED;
 }
 
 int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
-	int i;
+	int i, r;
+	int ret = ECMD_PROCESSED;
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
@@ -235,9 +239,10 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
-		pvcreate_single(cmd, argv[i], NULL);
-		pool_empty(cmd->mem);
+		r = pvcreate_single(cmd, argv[i], NULL);
+		if (r > ret)
+			ret = r;
 	}
 
-	return 0;
+	return ret;
 }

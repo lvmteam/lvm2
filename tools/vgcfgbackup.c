@@ -38,7 +38,7 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_print("Volume group \"%s\" successfully backed up.", vg_name);
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)

@@ -220,7 +220,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	log_print("Removed \"%s\" from volume group \"%s\"", name, vg->name);
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int vgreduce(struct cmd_context *cmd, int argc, char **argv)

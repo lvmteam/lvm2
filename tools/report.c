@@ -32,7 +32,7 @@ static int _vgs_single(struct cmd_context *cmd, const char *vg_name,
 	if (!report_object(handle, vg, NULL, NULL, NULL))
 		return ECMD_FAILED;
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -41,7 +41,7 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!report_object(handle, lv->vg, lv, NULL, NULL))
 		return ECMD_FAILED;
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 static int _segs_single(struct cmd_context *cmd, struct lv_segment *seg,
@@ -50,7 +50,7 @@ static int _segs_single(struct cmd_context *cmd, struct lv_segment *seg,
 	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg))
 		return ECMD_FAILED;
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 static int _lvsegs_single(struct cmd_context *cmd, struct logical_volume *lv,
@@ -66,12 +66,12 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!lock_vol(cmd, pv->vg_name, LCK_VG_READ)) {
 		log_error("Can't lock %s: skipping", pv->vg_name);
-		return 0;
+		return ECMD_FAILED;
 	}
 	if (!(vg = vg_read(cmd, pv->vg_name, &consistent))) {
 		log_error("Can't read %s: skipping", pv->vg_name);
 		unlock_vg(cmd, pv->vg_name);
-		return 0;
+		return ECMD_FAILED;
 	}
 
 	if (!report_object(handle, vg, NULL, pv, NULL))
@@ -79,7 +79,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	unlock_vg(cmd, pv->vg_name);
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 static int _report(struct cmd_context *cmd, int argc, char **argv,
@@ -89,6 +89,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	const char *opts;
 	char *str;
 	const char *keys = NULL, *options = NULL, *separator;
+	int r = ECMD_PROCESSED;
 
 	int aligned, buffered, headings;
 
@@ -192,27 +193,27 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	switch (report_type) {
 	case LVS:
-		process_each_lv(cmd, argc, argv, LCK_VG_READ, report_handle,
-				&_lvs_single);
+		r = process_each_lv(cmd, argc, argv, LCK_VG_READ, report_handle,
+				    &_lvs_single);
 		break;
 	case VGS:
-		process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, report_handle,
-				&_vgs_single);
+		r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
+				    report_handle, &_vgs_single);
 		break;
 	case PVS:
-		process_each_pv(cmd, argc, argv, NULL, report_handle,
-				&_pvs_single);
+		r = process_each_pv(cmd, argc, argv, NULL, report_handle,
+				    &_pvs_single);
 		break;
 	case SEGS:
-		process_each_lv(cmd, argc, argv, LCK_VG_READ, report_handle,
-				&_lvsegs_single);
+		r = process_each_lv(cmd, argc, argv, LCK_VG_READ, report_handle,
+				    &_lvsegs_single);
 		break;
 	}
 
 	report_output(report_handle);
 
 	report_free(report_handle);
-	return ECMD_PROCESSED;
+	return r;
 }
 
 int lvs(struct cmd_context *cmd, int argc, char **argv)
