@@ -231,11 +231,13 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 
 	seg->lv = lv;
 	seg->type = SEG_MIRRORED;
+	seg->status = 0u;
 	seg->le = *ix;
 	seg->len = count;
 	seg->area_len = count;
 	seg->stripe_size = 0;
 	seg->area_count = 2;
+	seg->extents_moved = 0u;
 	/* FIXME Remove AREA_PV restriction here? */
 	seg->area[0].type = AREA_PV;
 	seg->area[0].u.pv.pv = mirrored_pv;
@@ -274,14 +276,15 @@ static int _alloc_contiguous(struct logical_volume *lv,
 
 		/* first item in the list is the biggest */
 		pva = list_item(pvm->areas.n, struct pv_area);
+		if (pva->count < lv->le_count)
+			continue;
 
 		if (!_alloc_linear_area(lv, &allocated, pvm, pva)) {
 			stack;
 			return 0;
 		}
 
-		if (allocated == lv->le_count)
-			break;
+		break;
 	}
 
 	if (allocated != lv->le_count) {
@@ -303,7 +306,9 @@ static int _alloc_mirrored(struct logical_volume *lv,
 	struct list *tmp1;
 	struct pv_map *pvm;
 	struct pv_area *pva;
+	uint32_t max_found = 0;
 
+	/* Try each PV in turn */
 	list_iterate(tmp1, pvms) {
 		pvm = list_item(tmp1, struct pv_map);
 
@@ -312,6 +317,10 @@ static int _alloc_mirrored(struct logical_volume *lv,
 
 		/* first item in the list is the biggest */
 		pva = list_item(pvm->areas.n, struct pv_area);
+		if (pva->count < lv->le_count - allocated) {
+			max_found = pva->count;
+			continue;
+		}
 
 		if (!_alloc_mirrored_area(lv, &allocated, pvm, pva,
 					  mirrored_pv, mirrored_pe)) {
@@ -325,7 +334,7 @@ static int _alloc_mirrored(struct logical_volume *lv,
 	if (allocated != lv->le_count) {
 		log_error("Insufficient contiguous allocatable extents (%u) "
 			  "for logical volume %s: %u required",
-			  allocated, lv->name, lv->le_count);
+			  allocated + max_found, lv->name, lv->le_count);
 		return 0;
 	}
 
@@ -371,11 +380,13 @@ static int _alloc_next_free(struct logical_volume *lv,
 static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		     struct list *allocatable_pvs, uint32_t allocated,
 		     uint32_t stripes, uint32_t stripe_size,
-		     struct physical_volume *mirrored_pv, uint32_t mirrored_pe)
+		     struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
+		     uint32_t status)
 {
 	int r = 0;
 	struct pool *scratch;
 	struct list *pvms, *old_tail = lv->segments.p, *segh;
+	struct lv_segment *seg;
 
 	if (!(scratch = pool_create(1024))) {
 		stack;
@@ -413,8 +424,11 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		 * Iterate through the new segments, updating pe
 		 * counts in pv's.
 		 */
-		for (segh = lv->segments.p; segh != old_tail; segh = segh->p)
-			_get_extents(list_item(segh, struct lv_segment));
+		for (segh = lv->segments.p; segh != old_tail; segh = segh->p) {
+			seg = list_item(segh, struct lv_segment);
+			_get_extents(seg);
+			seg->status = status;
+		}
 	} else {
 		/*
 		 * Put the segment list back how we found it.
@@ -428,7 +442,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	return r;
 }
 
-static char *_generate_lv_name(struct volume_group *vg,
+static char *_generate_lv_name(struct volume_group *vg, const char *format,
 			       char *buffer, size_t len)
 {
 	struct list *lvh;
@@ -438,14 +452,14 @@ static char *_generate_lv_name(struct volume_group *vg,
 	list_iterate(lvh, &vg->lvs) {
 		lv = (list_item(lvh, struct lv_list)->lv);
 
-		if (sscanf(lv->name, "lvol%d", &i) != 1)
+		if (sscanf(lv->name, format, &i) != 1)
 			continue;
 
 		if (i > high)
 			high = i;
 	}
 
-	if (lvm_snprintf(buffer, len, "lvol%d", high + 1) < 0)
+	if (lvm_snprintf(buffer, len, format, high + 1) < 0)
 		return NULL;
 
 	return buffer;
@@ -453,6 +467,7 @@ static char *_generate_lv_name(struct volume_group *vg,
 
 struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       const char *name,
+				       const char *name_format,
 				       uint32_t status,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg)
@@ -468,7 +483,8 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 		return NULL;
 	}
 
-	if (!name && !(name = _generate_lv_name(vg, dname, sizeof(dname)))) {
+	if (!name && !(name = _generate_lv_name(vg, name_format, dname,
+						sizeof(dname)))) {
 		log_error("Failed to generate unique name for the new "
 			  "logical volume");
 		return NULL;
@@ -547,7 +563,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 		return NULL;
 	}
 
-	if (!(lv = lv_create_empty(fi, name, status, alloc, vg))) {
+	if (!(lv = lv_create_empty(fi, name, "lvol%d", status, alloc, vg))) {
 		stack;
 		return NULL;
 	}
@@ -556,7 +572,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 	lv->le_count = extents;
 
 	if (!_allocate(vg, lv, allocatable_pvs, 0u, stripes, stripe_size,
-		       NULL, 0u)) {
+		       NULL, 0u, 0u)) {
 		stack;
 		return NULL;
 	}
@@ -618,7 +634,7 @@ int lv_extend(struct format_instance *fi,
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
 
 	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count,
-		       stripes, stripe_size, NULL, 0u)) {
+		       stripes, stripe_size, NULL, 0u, 0u)) {
 		lv->le_count = old_le_count;
 		lv->size = old_size;
 		stack;
@@ -643,7 +659,8 @@ int lv_extend_mirror(struct format_instance *fid,
 		     struct logical_volume *lv,
 		     struct physical_volume *mirrored_pv,
 		     uint32_t mirrored_pe,
-		     uint32_t extents, struct list *allocatable_pvs)
+		     uint32_t extents, struct list *allocatable_pvs,
+		     uint32_t status)
 {
 	uint32_t old_le_count = lv->le_count;
 	uint64_t old_size = lv->size;
@@ -652,7 +669,7 @@ int lv_extend_mirror(struct format_instance *fid,
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
 
 	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count,
-		       1, extents, mirrored_pv, mirrored_pe)) {
+		       1, extents, mirrored_pv, mirrored_pe, status)) {
 		lv->le_count = old_le_count;
 		lv->size = old_size;
 		stack;
@@ -690,6 +707,20 @@ int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 	return 1;
 }
 
+/* Unlock list of LVs */
+int unlock_lvs(struct cmd_context *cmd, struct list *lvs)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	list_iterate(lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		unlock_lv(cmd, lv->lvid.s);
+	}
+
+	return 1;
+}
+
 /* Lock a list of LVs */
 int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
 {
@@ -700,22 +731,10 @@ int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
 		lv = list_item(lvh, struct lv_list)->lv;
 		if (!lock_vol(cmd, lv->lvid.s, flags)) {
 			log_error("Failed to lock %s", lv->name);
+			/* FIXME Only unlock the locked ones */
+			unlock_lvs(cmd, lvs);
 			return 0;
 		}
-	}
-
-	return 1;
-}
-
-/* Unlock list of LVs */
-int unlock_lvs(struct cmd_context *cmd, struct list *lvs)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-
-	list_iterate(lvh, lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		unlock_lv(cmd, lv->lvid.s);
 	}
 
 	return 1;
