@@ -1,0 +1,10 @@
+--- linux-2.4.12/kernel/ksyms.c	Wed Oct 17 13:08:17 2001
++++ linux/kernel/ksyms.c	Mon Oct 15 15:26:47 2001
+@@ -519,6 +519,7 @@
+ 
+ /* binfmt_aout */
+ EXPORT_SYMBOL(get_write_access);
++EXPORT_SYMBOL(deny_write_access);
+ 
+ /* time */
+ EXPORT_SYMBOL(get_fast_time);
