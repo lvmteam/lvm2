@@ -1,0 +1,21 @@
+before beta
+-----------
+
+autobackup/text format
+export/import
+striping
+stats
+snapshots
+pvmove
+64bit review
+
+before alpha
+------------
+
+FIXME review
+extra validation in format1 (must be done before alpha)
+status flag review (confirm all use of ->status is consistent)
+file system handling (being done)
+error message review
+correct handling of *existing* snapshots
+review statics
