@@ -169,6 +169,7 @@ struct target {
 struct dm_table {
 	atomic_t refcnt;
 
+	char *err_msg;
 	/* btree table */
 	int depth;
 	int counts[MAX_DEPTH];	/* in nodes */

@@ -121,8 +121,7 @@ int dm_unregister_target(struct target_type *t)
  * up LV's that have holes in them.
  */
 static int io_err_ctr(struct dm_table *t, offset_t b, offset_t l,
-		      struct text_region *args, void **result,
-		      dm_error_fn fn, void *private)
+		      struct text_region *args, void **result)
 {
 	/* this takes no arguments */
 	*result = 0;

@@ -43,8 +43,7 @@ struct linear_c {
  * <dev_path> <offset>
  */
 static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
-		      struct text_region *args, void **result,
-		      dm_error_fn fn, void *private)
+		      struct text_region *args, void **result)
 {
 	struct linear_c *lc;
 	unsigned int start;
@@ -55,7 +54,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 	int hardsect_size;
 
 	if (!dm_get_word(args, &word)) {
-		fn("couldn't get device path", private);
+		t->err_msg = "couldn't get device path";
 		return -EINVAL;
 	}
 
@@ -65,26 +64,26 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 	if (IS_ERR(bdev)) {
 		switch (PTR_ERR(bdev)) {
 			case -ENOTBLK:
-				fn("not a block device", private);
+				t->err_msg = "not a block device";
 				break;
 			case -EACCES:
-				fn("nodev mount option", private);
+				t->err_msg = "nodev mount option";
 				break;
 			case -ENOENT:
 			default:
-				fn("no such device", private);
+				t->err_msg = "no such device";
 		}
 		return PTR_ERR(bdev);
 	}
 
 	if (!dm_get_number(args, &start)) {
-		fn("destination start not given", private);
+		t->err_msg = "destination start not given";
 		rv = -EINVAL;
 		goto out_bdev_put;
 	}
 
 	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
-		fn("couldn't allocate memory for linear context\n", private);
+		t->err_msg = "couldn't allocate memory for linear context\n";
 		rv = -ENOMEM;
 		goto out_bdev_put;
 	}
