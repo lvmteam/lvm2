@@ -9,6 +9,8 @@
 #include "pool.h"
 #include "hash.h"
 #include "list.h"
+#include "lvm-types.h"
+#include "btree.h"
 #include "dbg_malloc.h"
 
 #include <stdlib.h>
@@ -24,7 +26,7 @@
  */
 
 struct dev_iter {
-	struct hash_node *current;
+	struct btree_iter *current;
 	struct dev_filter *filter;
 };
 
@@ -35,7 +37,8 @@ struct dir_list {
 
 static struct {
 	struct pool *mem;
-	struct hash_table *devices;
+	struct hash_table *names;
+	struct btree *devices;
 
 	int has_scanned;
 	struct list_head dirs;
@@ -46,10 +49,91 @@ static struct {
 #define _alloc(x) pool_alloc(_cache.mem, (x))
 #define _free(x) pool_free(_cache.mem, (x))
 
-static int _dir_scan(const char *dir);
+static int _insert(const char *path, int rec);
+
+static struct device *_create_dev(const char *path, dev_t d)
+{
+	struct device *dev;
+	char *name = pool_strdup(_cache.mem, path);
+
+	if (!name) {
+		stack;
+		return NULL;
+	}
+
+	if (!(dev = _alloc(sizeof(*dev)))) {
+		stack;
+		goto bad;
+	}
+
+	dev->name = name;
+	INIT_LIST_HEAD(&dev->aliases);
+	dev->dev = d;
+	return dev;
+
+ bad:
+	_free(name);
+	return NULL;
+}
+
+static int _add_alias(struct device *dev, const char *path)
+{
+	struct str_list *sl = _alloc(sizeof(*sl));
+
+	if (!sl) {
+		stack;
+		return 0;
+	}
+
+	if (!(sl->str = pool_strdup(_cache.mem, path))) {
+		stack;
+		return 0;
+	}
+
+	list_add(&sl->list, &dev->aliases);
+	return 1;
+}
 
 /*
- * return a new path for the destination of the path.
+ * Either creates a new dev, or adds an alias to
+ * an existing dev.
+ */
+static int _insert_dev(const char *path, dev_t d)
+{
+	struct device *dev;
+
+	/* is this device already registered ? */
+	if ((dev = (struct device *) btree_lookup(_cache.devices, d))) {
+		if (!_add_alias(dev, path)) {
+			log_err("Couldn't add alias to dir cache.");
+			return 0;
+		}
+
+	} else {
+		/* create new device */
+		if (!(dev = _create_dev(path, d))) {
+			stack;
+			return 0;
+		}
+
+		if (!(btree_insert(_cache.devices, d, dev))) {
+			log_err("Couldn't insert device into binary tree.");
+			_free(dev);
+			return 0;
+		}
+	}
+
+	/* insert the name/alias */
+	if (!(hash_insert(_cache.names, path, dev))) {
+		log_err("Couldn't insert device into hash table.");
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * return a new path for the destination of the link.
  */
 static char *_follow_link(const char *path, struct stat *info)
 {
@@ -68,6 +152,16 @@ static char *_follow_link(const char *path, struct stat *info)
 	}
 
 	return pool_strdup(_cache.mem, buffer);
+}
+
+static char *_join(const char *dir, const char *name)
+{
+	int len = strlen(dir) + strlen(name) + 2;
+	char *r = dbg_malloc(len);
+	if (r)
+		snprintf(r, len, "%s/%s", dir, name);
+
+	return r;
 }
 
 /*
@@ -92,92 +186,9 @@ static void _collapse_slashes(char *str)
 	*str = *ptr;
 }
 
-static struct device *_create_dev(const char *path, struct stat *info)
+static int _insert_dir(const char *dir)
 {
-	struct device *dev;
-	char *name = pool_strdup(_cache.mem, path);
-
-	if (!name) {
-		stack;
-		return NULL;
-	}
-
-	_collapse_slashes(name);
-
-	if (!(dev = _alloc(sizeof(*dev)))) {
-		stack;
-		goto bad;
-	}
-
-	dev->name = name;
-	dev->dev = info->st_rdev;
-	return dev;
-
- bad:
-	_free(name);
-	return NULL;
-}
-
-static int _insert(const char *path, int recurse)
-{
-	struct stat info;
-	struct device *dev;
-
-	/* If entry already exists, replace it */
-        if ((dev = (struct device *)hash_lookup(_cache.devices, path))) {
-		log_debug("dev-cache: removing %s", path);
-		hash_remove(_cache.devices, path);
-	}
-
-	if (stat(path, &info) < 0) {
-		log_sys_very_verbose("stat", path);
-		return 0;
-	}
-
-	if (S_ISDIR(info.st_mode)) {
-		if (recurse)
-			return _dir_scan(path);
-
-		return 0;
-	}
-
-	if (S_ISLNK(info.st_mode)) {
-		log_debug("%s: Following symbolic link", path);
-		if (!(path = _follow_link(path, &info))) {
-			stack;
-			return 0;
-		}
-	}
-
-	if (!S_ISBLK(info.st_mode)) {
-		log_debug("%s: Not a block device", path);
-		return 0;
-	}
-
-	if (!(dev = _create_dev(path, &info))) {
-		log_debug("%s: Creation of device cache entry failed!", path);
-		return 0;
-	}
-
-	log_debug("dev-cache: adding %s", path);
-	hash_insert(_cache.devices, path, dev);
-
-	return 1;
-}
-
-static char *_join(const char *dir, const char *name)
-{
-	int len = strlen(dir) + strlen(name) + 2;
-	char *r = dbg_malloc(len);
-	if (r)
-		snprintf(r, len, "%s/%s", dir, name);
-
-	return r;
-}
-
-static int _dir_scan(const char *dir)
-{
-	int n, dirent_count;
+	int n, dirent_count, r = 1;
 	struct dirent **dirent;
 	char *path;
 
@@ -189,16 +200,69 @@ static int _dir_scan(const char *dir)
 				continue;
 			}
 
-			if ((path = _join(dir, dirent[n]->d_name)))
-				_insert(path, 1);
+			if (!(path = _join(dir, dirent[n]->d_name))) {
+				stack;
+				return 0;
+			}
 
+			_collapse_slashes(path);
+			r &= _insert(path, 1);
 			dbg_free(path);
+
 			free(dirent[n]);
 		}
 		free(dirent);
 	}
 
-	return 1;
+	return r;
+}
+
+static int _insert(const char *path, int rec)
+{
+	struct stat info;
+	char *actual_path;
+	int r = 0;
+
+	if (stat(path, &info) < 0) {
+		log_sys_very_verbose("stat", path);
+		return 0;
+	}
+
+	/* follow symlinks if neccessary. */
+	if (S_ISLNK(info.st_mode)) {
+		log_debug("%s: Following symbolic link", path);
+		if (!(actual_path = _follow_link(path, &info))) {
+			stack;
+			return 0;
+		}
+
+		if (stat(actual_path, &info) < 0) {
+			log_sys_very_verbose("stat", actual_path);
+			return 0;
+		}
+
+		dbg_free(actual_path);
+	}
+
+	if (S_ISDIR(info.st_mode)) { /* add a directory */
+		if (rec)
+			r = _insert_dir(path);
+
+	} else {		/* add a device */
+		if (!S_ISBLK(info.st_mode)) {
+			log_debug("%s: Not a block device", path);
+			return 0;
+		}
+
+		if (!_insert_dev(path, info.st_rdev)) {
+			stack;
+			return 0;
+		}
+
+		r = 1;
+	}
+
+	return r;
 }
 
 static void _full_scan(void)
@@ -210,7 +274,7 @@ static void _full_scan(void)
 
 	list_for_each(tmp, &_cache.dirs) {
 		struct dir_list *dl = list_entry(tmp, struct dir_list, list);
-		_dir_scan(dl->dir);
+		_insert_dir(dl->dir);
 	}
 
 	_cache.has_scanned = 1;
@@ -218,27 +282,39 @@ static void _full_scan(void)
 
 int dev_cache_init(void)
 {
+	_cache.names = NULL;
+
 	if (!(_cache.mem = pool_create(10 * 1024))) {
 		stack;
 		return 0;
 	}
 
-	if (!(_cache.devices = hash_create(128))) {
+	if (!(_cache.names = hash_create(128))) {
 		stack;
 		pool_destroy(_cache.mem);
 		_cache.mem = 0;
 		return 0;
 	}
 
+	if (!(_cache.devices = btree_create(_cache.mem))) {
+		log_err("Couldn't create binary tree for dev-cache.");
+		goto bad;
+	}
+
 	INIT_LIST_HEAD(&_cache.dirs);
 
 	return 1;
+
+ bad:
+	dev_cache_exit();
+	return 0;
 }
 
 void dev_cache_exit(void)
 {
 	pool_destroy(_cache.mem);
-	hash_destroy(_cache.devices);
+	if (_cache.names)
+		hash_destroy(_cache.names);
 }
 
 int dev_cache_add_dir(const char *path)
@@ -267,11 +343,11 @@ int dev_cache_add_dir(const char *path)
 
 struct device *dev_cache_get(const char *name, struct dev_filter *f)
 {
-	struct device *d = (struct device *) hash_lookup(_cache.devices, name);
+	struct device *d = (struct device *) hash_lookup(_cache.names, name);
 
 	if (!d) {
 		_insert(name, 0);
-		d = (struct device *) hash_lookup(_cache.devices, name);
+		d = (struct device *) hash_lookup(_cache.names, name);
 	}
 
 	return (d && (!f || f->passes_filter(f, d))) ? d : NULL;
@@ -285,7 +361,7 @@ struct dev_iter *dev_iter_create(struct dev_filter *f)
 		return NULL;
 
 	_full_scan();
-	di->current = hash_get_first(_cache.devices);
+	di->current = btree_first(_cache.devices);
 	di->filter = f;
 
 	return di;
@@ -298,8 +374,8 @@ void dev_iter_destroy(struct dev_iter *iter)
 
 static inline struct device *_iter_next(struct dev_iter *iter)
 {
-	struct device *d = hash_get_data(_cache.devices, iter->current);
-	iter->current = hash_get_next(_cache.devices, iter->current);
+	struct device *d = btree_get_data(iter->current);
+	iter->current = btree_next(iter->current);
 	return d;
 }
 

@@ -15,6 +15,13 @@ int main(int argc, char **argv)
 	int i;
 	struct device *dev;
 	struct dev_iter *iter;
+	struct list_head *tmp;
+	struct str_list *sl;
+
+	if (argc < 2) {
+		fprintf(stderr, "usage: %s <dir>\n", argv[0]);
+		exit(1);
+	}
 
 	init_log(stderr);
 	init_debug(_LOG_INFO);
@@ -36,8 +43,15 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	while ((dev = dev_iter_get(iter)))
-		printf("%s\n", dev->name);
+	while ((dev = dev_iter_get(iter))) {
+		printf("%s", dev->name);
+
+		list_for_each(tmp, &dev->aliases) {
+			sl = list_entry(tmp, struct str_list, list);
+			printf(", %s", sl->str);
+		}
+		printf("\n");
+	}
 
 	dev_iter_destroy(iter);
 	dev_cache_exit();

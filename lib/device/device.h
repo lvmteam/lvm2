@@ -8,6 +8,7 @@
 #define _LVM_DEVICE_H
 
 #include "lvm-types.h"
+#include "list.h"
 
 /*
  * All devices in LVM will be represented by one of these.
@@ -15,6 +16,7 @@
  */
 struct device {
 	char *name;
+	struct list_head aliases; /* struct str_list from lvm-types.h */
 	dev_t dev;
 };
 
