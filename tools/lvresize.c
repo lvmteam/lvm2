@@ -37,7 +37,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct list *pvh, *segh;
 	struct lv_list *lvl;
 	int opt = 0;
-	int active;
 
 	enum {
 		LV_ANY = 0,
@@ -332,20 +331,24 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			goto error;
 	}
 
-	active = lv_active(lv);
-
-/********* FIXME Suspend lv  ***********/
+	if (!lock_vol(lv, LCK_LV | LCK_WRITE)) {
+		log_error("Can't get lock for %s", lv_name);
+		goto error;
+	}
 
 	/* store vg on disk(s) */
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
+		/* FIXME: Attempt reversion? */
+		lock_vol(lv, LCK_LV | LCK_NONE);
 		goto error;
+	}
 
 	backup(vg);
 
-	if (active && !lv_reactivate(lv))
+	if (!lock_vol(lv, LCK_LV | LCK_NONE)) {
+		log_error("Problem reactivating %s", lv_name);
 		goto error;
-
-/********* FIXME Resume *********/
+	}
 
 	lock_vol(vg_name, LCK_VG | LCK_NONE);
 

@@ -159,7 +159,7 @@ int lock_resource(const char *resource, int flags)
 				     "%s/V_%s", _lock_dir, resource);
 		break;
 	case LCK_LV:
-		/* No-op for now */
+		/* No-op: see FIXME below */
 		return 1;
 	default:
 		log_error("Unrecognised lock scope: %d",
@@ -173,6 +173,24 @@ int lock_resource(const char *resource, int flags)
 	return 1;
 }
 
+/****** FIXME  This is stuck a layer above until activate unit 
+		can take labels and read its own metadata
+
+	if ((flags & LCK_SCOPE_MASK) == LCK_LV)	{
+		switch (flags & LCK_TYPE_MASK) {
+		case LCK_NONE:
+			if (lv_active_by_id(resource))
+				lv_resume_by_id(resource);
+			break;
+		case LCK_WRITE:
+			if (lv_active_by_id(resource))
+				lv_suspend_by_id(resource);
+			break;
+		default:
+			break;
+		}
+	}
+*******/
 
 int init_file_locking(struct locking_type *locking, struct config_file *cf)
 {

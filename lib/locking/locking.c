@@ -120,6 +120,7 @@ void fin_locking(void)
  */
 int lock_vol(const void *vol, int flags)
 {
+	struct logical_volume *lv;
 	char resource[258];
 
 	switch (flags & LCK_SCOPE_MASK) {
@@ -133,6 +134,13 @@ int lock_vol(const void *vol, int flags)
 		/* 
 		 * Suspends LV if it's active. 
 		 */
+		lv = (struct logical_volume *) vol;
+		if (lvm_snprintf(resource, sizeof(resource), "%s/%s",
+			         lv->vg->name, lv->name) < 0) {
+			log_error("Lock resource name too long: %s", resource);
+			return 0;
+		}
+		break;
 	default:
 		log_error("Unrecognised lock scope: %d",
 			  flags & LCK_SCOPE_MASK);
@@ -144,6 +152,26 @@ int lock_vol(const void *vol, int flags)
 	if (!(_locking.lock_resource(resource, flags))) {
 		_enable_signals();
 		return 0;
+	}
+
+/****** FIXME
+	This should move down into lock_resource when the activation calls
+        can handle struct ids and read their own metadata. 
+******/
+
+	if ((flags & LCK_SCOPE_MASK) == LCK_LV) {
+		switch (flags & LCK_TYPE_MASK) {
+		case LCK_NONE:
+			if (lv_active(lv))
+				lv_reactivate(lv);
+			break;
+		case LCK_WRITE:
+			if (lv_active(lv))
+				lv_suspend(lv);
+			break;
+		default:
+			break;
+		}
 	}
 
 	_update_lock_count(flags);
