@@ -1,3 +1,16 @@
+lvm2 (1.95.11-1) unstable; urgency=low
+
+  * New upstream release.  (Closes: #171436)
+  * Removed TODO and INTRO from debian/docs; added WHATS_NEW.
+  * Remove vgcfgrestore.8 undocumented symlink.
+  * Added a README.Debian, mentioning the device-mapper kernel module
+    requirement that lvm2 has.  (Closes: #171674)
+  * Get rid of debian/conffiles (debhelper's smart enough to figure that out).
+  * debian/copyright fix to appease lintian.
+  * Fix typo in tools/commands.h that caused /usr/sbin/; to be created.
+
+ -- Andres Salomon <dilinger@mp3revolution.net>  Mon,  9 Dec 2002 02:51:02 -0400
+
 lvm2 (1.95.10-2) unstable; urgency=low
 
   * Fix software raid problems by ensuring lvm init script runs after
