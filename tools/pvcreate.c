@@ -15,6 +15,10 @@
 
 #include "tools.h"
 
+struct pvcreate_params {
+	int zero;
+};
+
 const char _really_init[] =
     "Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ";
 
@@ -107,6 +111,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 			   void *handle)
 {
+	struct pvcreate_params *pp = (struct pvcreate_params *) handle;
 	struct physical_volume *pv, *existing_pv;
 	struct id id, *idp = NULL;
 	const char *uuid = NULL;
@@ -207,6 +212,17 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		goto error;
 	}
 
+	if (pp->zero) {
+		log_verbose("Zeroing start of device %s", pv_name);
+		if (!dev_open_quiet(dev)) {
+			log_error("%s not opened: device not zeroed", pv_name);
+			goto error;
+		}
+			
+		dev_zero(dev, UINT64_C(0), (size_t) 2048);
+		dev_close(dev);
+	}
+
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
 	if (!(pv_write(cmd, pv, &mdas, arg_int64_value(cmd, labelsector_ARG,
@@ -229,6 +245,7 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i, r;
 	int ret = ECMD_PROCESSED;
+	struct pvcreate_params pp;
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
@@ -269,8 +286,15 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, zero_ARG))
+		pp.zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
+	else if (arg_count(cmd, restorefile_ARG) || arg_count(cmd, uuidstr_ARG))
+		pp.zero = 0;
+	else
+		pp.zero = 1;
+
 	for (i = 0; i < argc; i++) {
-		r = pvcreate_single(cmd, argv[i], NULL);
+		r = pvcreate_single(cmd, argv[i], &pp);
 		if (r > ret)
 			ret = r;
 	}
