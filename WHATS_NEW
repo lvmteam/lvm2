@@ -1,6 +1,7 @@
 Version 2.01.05 -
 ===================================
   Make clvmd config check a little more tolerant.
+  gulm clvmd can now cope with >1 message arriving in a TCP message.
 
 Version 2.01.04 - 9th February 2005
 ===================================
