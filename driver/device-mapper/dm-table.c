@@ -114,7 +114,6 @@ struct dm_table *dm_table_create(void)
 
 	memset(t, 0, sizeof(*t));
 	INIT_LIST_HEAD(&t->devices);
-	INIT_LIST_HEAD(&t->errors);
 
 	/* allocate a single nodes worth of targets to
 	   begin with */
@@ -140,8 +139,6 @@ static void free_devices(struct list_head *devices)
 void dm_table_destroy(struct dm_table *t)
 {
 	int i;
-
-	dmfs_zap_errors(t);
 
 	/* free the indexes (see dm_table_complete) */
 	if (t->depth >= 2)

@@ -48,6 +48,8 @@ static void dmfs_delete_inode(struct inode *inode)
 			dm_table_destroy(dmi->table);
 		if (dmi->dentry)
 			dput(dmi->dentry);
+		if (!list_empty(&dmi->errors))
+			dmfs_zap_errors(inode);
 		kfree(dmi);
 	}
 
@@ -106,6 +108,7 @@ struct inode *dmfs_new_inode(struct super_block *sb, int mode)
 		}
 		memset(dmi, 0, sizeof(struct dmfs_i));
 		init_MUTEX(&dmi->sem);
+		INIT_LIST_HEAD(&dmi->errors);
 		inode->u.generic_ip = dmi;
 	}
 	return inode;

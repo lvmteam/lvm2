@@ -178,8 +178,6 @@ struct dm_table {
 
 	/* a list of devices used by this table */
 	struct list_head devices;
-
-	struct list_head errors;
 };
 
 /*
@@ -208,6 +206,7 @@ struct dmfs_i {
 	struct dm_table *table;
 	struct mapped_device *md;
 	struct dentry *dentry;
+	struct list_head errors;
 };
 
 #define DMFS_I(inode) ((struct dmfs_i *)(inode)->u.generic_ip)
@@ -241,8 +240,8 @@ int dm_table_add_target(struct dm_table *t, offset_t high,
 int dm_table_complete(struct dm_table *t);
 
 /* dmfs-error.c */
-void dmfs_add_error(struct dm_table *t, unsigned num, char *str);
-void dmfs_zap_errors(struct dm_table *t);
+void dmfs_add_error(struct inode *inode, unsigned num, char *str);
+void dmfs_zap_errors(struct inode *inode);
 
 /* dmfs-super.c */
 struct super_block *dmfs_read_super(struct super_block *, void *, int);
