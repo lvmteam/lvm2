@@ -9,6 +9,7 @@
 
 #include <inttypes.h>
 #include <sys/types.h>
+#include <linux/types.h>
 
 /*
  * Since it is quite laborious to build the ioctl
@@ -69,7 +70,7 @@ struct dm_info {
 
 struct dm_deps {
 	unsigned int count;
-	dev_t device[0];
+	__kernel_dev_t device[0];
 };
 
 int dm_get_library_version(char *version, size_t size);

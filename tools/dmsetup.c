@@ -283,6 +283,9 @@ static int _deps(int argc, char **argv)
 	if (!dm_task_run(dmt))
 		goto out;
 
+	if (!dm_task_get_info(dmt, &info))
+		goto out;
+
 	if (!(deps = dm_task_get_deps(dmt)))
 		goto out;
 

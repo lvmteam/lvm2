@@ -291,7 +291,7 @@ int dm_task_run(struct dm_task *dmt)
 		break;
 
 	case DM_DEVICE_DEPS:
-		command = DM_DEP;
+		command = DM_DEPS;
 		break;
 
 	case DM_DEVICE_RENAME:
