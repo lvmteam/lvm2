@@ -118,12 +118,9 @@ static struct block_device *dm_get_device(struct block_device *bdev)
 	if (n) {
 		kmem_cache_free(bdev_cachep, n);
 	}
-	if (rv) {
-		d = ERR_PTR(rv);
-	}
 	up(&bdev_sem);
 
-	return d->bdev;
+	return rv ? ERR_PTR(rv) : d->bdev;
 }
 
 struct block_device *dm_blkdev_get(const char *path)
