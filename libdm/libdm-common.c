@@ -26,7 +26,7 @@
 
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
 
-/* 
+/*
  * Library users can provide their own logging
  * function.
  */
@@ -35,7 +35,7 @@ void _default_log(int level, const char *file, int line,
 {
         va_list ap;
 
-        va_start(ap, f); 
+        va_start(ap, f);
         vfprintf(stderr, f, ap);
         va_end(ap);
 
