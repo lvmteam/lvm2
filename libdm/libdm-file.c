@@ -19,7 +19,10 @@
 #include <sys/file.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <malloc.h>
+
+#ifdef linux
+#  include <malloc.h>
+#endif
 
 static int _create_dir_recursive(const char *dir)
 {
