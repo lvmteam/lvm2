@@ -86,6 +86,19 @@ static void _unblock_signals(void)
 	return;
 }
 
+void reset_locking(void)
+{
+	int was_locked = _lock_count;
+
+	_lock_count = 0;
+	_write_lock_held = 0;
+
+	_locking.reset_locking();
+
+	if (was_locked)
+		_unblock_signals();
+}
+
 static inline void _update_lock_count(int flags)
 {
 	if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
