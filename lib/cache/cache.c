@@ -11,6 +11,9 @@
 #include "toolcontext.h"
 #include "dev-cache.h"
 #include "metadata.h"
+#include "filter.h"
+
+#include <linux/kdev_t.h>
 
 static struct hash_table *_pvid_hash = NULL;
 static struct hash_table *_vgid_hash = NULL;
@@ -409,6 +412,26 @@ struct cache_info *cache_add(struct labeller *labeller, const char *pvid,
 		list_init(&info->list);
 		info->dev = dev;
 	} else {
+		if (existing->dev != dev) {
+			/* Is the existing entry a duplicate pvid e.g. md ? */
+			if (MAJOR(existing->dev->dev) == md_major() &&
+			    MAJOR(dev->dev) != md_major()) {
+				log_very_verbose("Ignoring duplicate PV %s on "
+						 "%s - using md %s",
+						 pvid, dev_name(dev),
+						 dev_name(existing->dev));
+				return NULL;
+			} else if (MAJOR(existing->dev->dev) != md_major() &&
+				   MAJOR(dev->dev) == md_major())
+				log_very_verbose("Duplicate PV %s on %s - "
+						 "using md %s", pvid,
+						 dev_name(existing->dev),
+						 dev_name(dev));
+			else
+				log_error("Found duplicate PV %s: using %s not "
+					  "%s", pvid, dev_name(dev),
+					  dev_name(existing->dev));
+		}
 		info = existing;
 		/* Has labeller changed? */
 		if (info->label->labeller != labeller) {
