@@ -7,15 +7,16 @@
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
+interface = @interface@
 
-SOURCES=libdevmapper.c
+SOURCES=$(interface)/libdevmapper.c
 
-TARGETS=libdevmapper.so
+TARGETS=$(interface)/libdevmapper.so
 
 include ../make.tmpl
 
-install: libdevmapper.so
-	$(INSTALL) -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) libdevmapper.so \
+install: @interface@/libdevmapper.so
+	$(INSTALL) -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)
 	$(INSTALL) -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
 		$(includedir)
