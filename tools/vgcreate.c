@@ -31,6 +31,7 @@ int vgcreate(int argc, char **argv)
 	int max_lv, max_pv;
 	uint32_t extent_size;
 	char *vg_name;
+	char vg_path[PATH_MAX];
 	struct volume_group *vg;
 
 	if (!argc) {
@@ -64,6 +65,9 @@ int vgcreate(int argc, char **argv)
         /* Strip dev_dir if present */
         if (!strncmp(vg_name, fid->cmd->dev_dir, strlen(fid->cmd->dev_dir)))
                 vg_name += strlen(fid->cmd->dev_dir);
+
+        snprintf(vg_path, PATH_MAX, "%s%s", fid->cmd->dev_dir, vg_name);
+        if (!check_dir(vg_path)) return ECMD_FAILED;
 
         if (!is_valid_chars(vg_name)) {
                 log_error("New volume group name '%s' has invalid characters",

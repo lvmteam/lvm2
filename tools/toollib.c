@@ -8,6 +8,21 @@
 
 #include <sys/stat.h>
 
+int check_dir(const char *dir)
+{
+        struct stat info;
+
+	if (!*dir)
+		return 1;
+
+        if (stat(dir, &info) != -1 ) {
+                log_error("%s exists", dir);
+		return 0;
+	}
+
+	return 1;
+}
+
 int create_dir(const char *dir)
 {
         struct stat info;
