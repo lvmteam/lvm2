@@ -96,14 +96,13 @@ static int alloc_targets(struct dm_table *t, int num)
 	offset_t *n_highs;
 	struct target *n_targets;
 	int n = t->num_targets;
+	int size = (sizeof(struct target) + sizeof(offset_t)) * num;
 
-	if (!(n_highs = vmalloc(sizeof(*n_highs) * num)))
+	n_highs = vmalloc(size);
+	if (n_highs == NULL)
 		return -ENOMEM;
 
-	if (!(n_targets = vmalloc(sizeof(*n_targets) * num))) {
-		vfree(n_highs);
-		return -ENOMEM;
-	}
+	n_targets = (struct target *)(n_highs + num);
 
 	if (n) {
 		memcpy(n_highs, t->highs, sizeof(*n_highs) * n);
@@ -111,7 +110,6 @@ static int alloc_targets(struct dm_table *t, int num)
 	}
 
 	vfree(t->highs);
-	vfree(t->targets);
 
 	t->num_allocated = num;
 	t->highs = n_highs;
