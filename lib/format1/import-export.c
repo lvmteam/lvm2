@@ -506,7 +506,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		lvdl->lvd.lv_dev = MKDEV(0, lv_num);
 		lvdl->lvd.lv_number = lv_num;
 
-		if (!hash_insert(lvd_hash, lvdl->lvd.lv_name, &lvdl->lvd)) {
+		if (!hash_insert(lvd_hash, ll->lv->name, &lvdl->lvd)) {
 			stack;
 			goto out;
 		}
@@ -531,12 +531,14 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 					       struct snapshot_list)->snapshot;
 
 		if (!(org = hash_lookup(lvd_hash, s->origin->name))) {
-			stack;
+			log_err("Couldn't find snapshot origin '%s'.",
+				s->origin->name);
 			goto out;
 		}
 
 		if (!(cow = hash_lookup(lvd_hash, s->cow->name))) {
-			stack;
+			log_err("Couldn't find snapshot cow store '%s'.",
+				s->cow->name);
 			goto out;
 		}
 

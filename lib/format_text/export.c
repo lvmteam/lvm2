@@ -345,12 +345,12 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 		return 1;
 
 	_out(f, "logical_volumes {");
-	_nl(f);
 	_inc_indent(f);
 
 	list_iterate (lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
+		_nl(f);
 		_out(f, "%s {", lv->name);
 		_inc_indent(f);
 
@@ -418,7 +418,6 @@ static int _print_snapshots(struct formatter *f, struct volume_group *vg)
 		return 1;
 
 	_out(f, "snapshots {");
-	_nl(f);
 	_inc_indent(f);
 
 	list_iterate (sh, &vg->snapshots) {
