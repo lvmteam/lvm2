@@ -79,7 +79,7 @@ int dm_init_fs()
 	if (!(_proc_dir = create_proc_entry(_fs_dir, S_IFDIR, &proc_root)))
 		goto fail;
 
-	if (!(_control = create_proc_entry(_control_name, S_IWUGO, _proc_dir)))
+	if (!(_control = create_proc_entry(_control_name, S_IWUSR, _proc_dir)))
 		goto fail;
 
 	_control->write_proc = _line_splitter;
@@ -121,7 +121,8 @@ int dm_fs_add(struct mapped_device *md)
 	pfd->fn = _process_table;
 	pfd->minor = MINOR(md->dev);
 
-	if (!(md->pde = create_proc_entry(md->name, 0, _proc_dir))) {
+	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR, 
+					_proc_dir))) {
 		kfree(pfd);
 		return -ENOMEM;
 	}
@@ -130,7 +131,7 @@ int dm_fs_add(struct mapped_device *md)
 	md->pde->data = pfd;
 
 	md->devfs_entry =
-		devfs_register(_dev_dir, md->name, DEVFS_FL_DEFAULT,
+		devfs_register(_dev_dir, md->name, DEVFS_FL_CURRENT_OWNER,
 			       MAJOR(md->dev), MINOR(md->dev),
 			       S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
 			       &dm_blk_dops, NULL);
