@@ -1,3 +1,13 @@
+lvm2 (1.95.15-1) unstable; urgency=low
+  
+  * New upstream release.
+  * Remove undocumented manpage symlinks.
+  * Update description to be more informative.  (Closes: #173499)
+  * Add kernel-patch-device-mapper suggestion.
+  * Update standards version.
+
+ -- Andres Salomon <dilinger@mp3revolution.net>  Sun, 16 Feb 2002 04:21:26 -0400
+
 lvm2 (1.95.11-1) unstable; urgency=low
 
   * New upstream release.  (Closes: #171436)
