@@ -524,7 +524,8 @@ int lvs_in_vg_activated(struct volume_group *vg)
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		count += (_lv_active(lv) == 1);
+		if (lv->status & VISIBLE_LV)
+			count += (_lv_active(lv) == 1);
 	}
 
 	return count;
@@ -541,7 +542,8 @@ int lvs_in_vg_opened(struct volume_group *vg)
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		count += (_lv_open_count(lv) > 0);
+		if (lv->status & VISIBLE_LV)
+			count += (_lv_open_count(lv) > 0);
 	}
 
 	return count;

@@ -1,5 +1,6 @@
 Version 2.00.16 - 
 =============================
+  Only include visible LVs in active/open counts.
   Add virtual segment types, zero and error.  A large sparse device can be
 constructed as a writeable snapshot of a large zero segment.
   Add --type to lvcreate/resize.
