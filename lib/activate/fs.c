@@ -130,8 +130,7 @@ static int _rm_link(struct logical_volume *lv, const char *lv_name)
 
 int fs_add_lv(struct logical_volume *lv, const char *dev)
 {
-	if (!_mk_dir(lv->vg) ||
-	    !_mk_link(lv, dev)) {
+	if (!_mk_dir(lv->vg) || !_mk_link(lv, dev)) {
 		stack;
 		return 0;
 	}
@@ -141,8 +140,7 @@ int fs_add_lv(struct logical_volume *lv, const char *dev)
 
 int fs_del_lv(struct logical_volume *lv)
 {
-	if (!_rm_link(lv, lv->name) ||
-	    !_rm_dir(lv->vg)) {
+	if (!_rm_link(lv, lv->name) || !_rm_dir(lv->vg)) {
 		stack;
 		return 0;
 	}
@@ -150,10 +148,11 @@ int fs_del_lv(struct logical_volume *lv)
 	return 1;
 }
 
+/* FIXME Use rename() */
 int fs_rename_lv(struct logical_volume *lv,
 		 const char *dev, const char *old_name)
 {
-	if (!_rm_link(lv, old_name))
+	if (old_name && !_rm_link(lv, old_name))
 		stack;
 
 	if (!_mk_link(lv, dev))
