@@ -12,19 +12,17 @@
 #include "uuid-map.h"
 
 /*
- * The archive format is used to maintain a set of metadata
- * backup files in an archive directory.  'retain_days' is the
- * minimum number of days that an archive file must be held for.
- * 'min_archives' is the minimum number of archives required to
- * be kept for each volume group.
+ * Archives a vg config.  'retain_days' is the minimum number of
+ * days that an archive file must be held for.  'min_archives' is
+ * the minimum number of archives required to be kept for each
+ * volume group.
  */
-struct format_instance *archive_format_create(struct cmd_context *cmd,
-					      const char *dir,
-					      uint32_t retain_days,
-					      uint32_t min_archives,
-					      const char *desc);
+int archive_vg(struct volume_group *vg,
+	       const char *dir,
+	       const char *desc,
+	       uint32_t retain_days,
+	       uint32_t min_archive);
 
-void backup_expire(struct format_instance *fi);
 
 /*
  * The text format can read and write a volume_group to a file.
