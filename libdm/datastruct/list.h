@@ -63,26 +63,6 @@ static inline struct list *list_next(struct list *head, struct list *elem)
 	return (list_end(head, elem) ? NULL : elem->n);
 }
 
-#define list_iterate(v, head) \
-	for (v = (head)->n; v != head; v = v->n)
-
-#define list_uniterate(v, head, start) \
-	for (v = (start)->p; v != head; v = v->p)
-
-#define list_iterate_safe(v, t, head) \
-	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
-
-static inline unsigned int list_size(const struct list *head)
-{
-	unsigned int s = 0;
-	const struct list *v;
-
-	list_iterate(v, head)
-	    s++;
-
-	return s;
-}
-
 #define list_item(v, t) \
     ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->list))
 
@@ -95,5 +75,29 @@ static inline unsigned int list_size(const struct list *head)
 
 /* Given a known element in a known structure, locate the list head */
 #define list_head(v, t, e) struct_field(v, t, e, list)
+
+#define list_iterate(v, head) \
+	for (v = (head)->n; v != head; v = v->n)
+
+#define list_uniterate(v, head, start) \
+	for (v = (start)->p; v != head; v = v->p)
+
+#define list_iterate_safe(v, t, head) \
+	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
+
+#define list_iterate_items(v, head) \
+	for (v = list_item((head)->n, typeof(*v)); &v->list != (head); \
+	     v = list_item(v->list.n, typeof(*v)))
+
+static inline unsigned int list_size(const struct list *head)
+{
+	unsigned int s = 0;
+	const struct list *v;
+
+	list_iterate(v, head)
+	    s++;
+
+	return s;
+}
 
 #endif
