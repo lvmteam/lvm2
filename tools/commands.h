@@ -87,9 +87,9 @@ xx(lvcreate,
    "\t[--version]\n"
    "\tVolumeGroupName [PhysicalVolumePath...]\n\n",
 
-   autobackup_ARG, contiguous_ARG, extents_ARG, minor_ARG, name_ARG,
-   permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
-   snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, zero_ARG)
+   autobackup_ARG, chunksize_ARG, contiguous_ARG, extents_ARG,
+   minor_ARG, name_ARG, permission_ARG, persistent_ARG, readahead_ARG,
+   size_ARG, snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
