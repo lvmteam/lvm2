@@ -13,6 +13,7 @@
 
 #include <libdevmapper.h>
 #include <limits.h>
+#include <dirent.h>
 
 /*
  * activate(dirty lvs)
@@ -44,7 +45,8 @@
  * deactivate(dirty lvs)
  * ---------------------
  *
- * 1) Examine dm directory, create active_list *excluding* dirty_list
+ * 1) Examine dm directory, create active_list *excluding*
+      dirty_list.  All vg layers go into tree.
  *
  * 2) Build vg tree given active_list, no dirty layers.
  *
@@ -551,8 +553,9 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	return 1;
 }
 
-static struct dev_layer *
-_create_layer(struct pool *mem, const char *layer, struct logical_volume *lv)
+static struct dev_layer *_create_dev(struct pool *mem,
+				     char *name,
+				     struct logical_volume *lv)
 {
 	struct dev_layer *dl;
 
@@ -561,10 +564,7 @@ _create_layer(struct pool *mem, const char *layer, struct logical_volume *lv)
 		return NULL;
 	}
 
-	if (!(dl->name = _build_name(mem, lv->vg->name, lv->name, layer))) {
-		stack;
-		return NULL;
-	}
+	dl->name = name;
 
 	if (!_info(dl->name, &dl->info)) {
 		stack;
@@ -576,6 +576,20 @@ _create_layer(struct pool *mem, const char *layer, struct logical_volume *lv)
 	list_init(&dl->pre_active);
 
 	return dl;
+}
+
+static struct dev_layer *_create_layer(struct pool *mem,
+				       const char *layer,
+				       struct logical_volume *lv)
+{
+	char *name;
+
+	if (!(name = _build_name(mem, lv->vg->name, lv->name, layer))) {
+		stack;
+		return NULL;
+	}
+
+	return _create_dev(mem, name, lv);
 }
 
 /*
@@ -598,6 +612,146 @@ static struct dev_layer *_lookup(struct dev_manager *dm,
 }
 
 
+static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv)
+{
+	/*
+	 * only one layer.
+	 */
+	struct dev_layer *dl;
+	if (!(dl = _create_layer(dm->mem, NULL, lv))) {
+		stack;
+		return 0;
+	}
+	dl->populate = _populate_vanilla;
+	_set_flag(dl, VISIBLE);
+
+	if (!hash_insert(dm->layers, dl->name, dl)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
+{
+	/*
+	 * origin(org)
+	 * org
+	 */
+	struct dev_layer *dl;
+	char *real_name;
+	struct str_list *sl;
+
+	if (!(dl = _create_layer(dm->mem, "real", lv))) {
+		stack;
+		return 0;
+	}
+	dl->populate = _populate_vanilla;
+	_clear_flag(dl, VISIBLE);
+
+	if (!hash_insert(dm->layers, dl->name, dl)) {
+		stack;
+		return 0;
+	}
+	real_name = dl->name;
+
+	if (!(dl = _create_layer(dm->mem, NULL, lv))) {
+		stack;
+		return 0;
+	}
+	dl->populate = _populate_origin;
+	_set_flag(dl, VISIBLE);
+
+	/* add the dependency on the real device */
+	if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+		stack;
+		return 0;
+	}
+
+	if (!(sl->str = pool_strdup(dm->mem, real_name))) {
+		stack;
+		return 0;
+	}
+
+	list_add(&dl->pre_create, &sl->list);
+
+	if (!hash_insert(dm->layers,dl->name, dl)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
+			    struct snapshot *s)
+{
+	/*
+	 * snapshot(org, cow)
+	 * cow
+	 */
+	struct dev_layer *dl;
+	char *cow_name;
+	struct str_list *sl;
+
+	if (!(dl = _create_layer(dm->mem, "cow", lv))) {
+		stack;
+		return 0;
+	}
+	dl->populate = _populate_vanilla;
+	_clear_flag(dl, VISIBLE);
+
+	/* insert the cow layer */
+	if (!hash_insert(dm->layers, dl->name, dl)) {
+		stack;
+		return 0;
+	}
+	cow_name = dl->name;
+
+	if (!(dl = _create_layer(dm->mem, NULL, lv))) {
+		stack;
+		return 0;
+	}
+	dl->populate = _populate_snapshot;
+	_set_flag(dl, VISIBLE);
+
+	/* add the dependency on the real device */
+	if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+		stack;
+		return 0;
+	}
+
+	if (!(sl->str = pool_strdup(dm->mem, cow_name))) {
+		stack;
+		return 0;
+	}
+
+	list_add(&dl->pre_create, &sl->list);
+
+	/* add the dependency on the org device */
+	if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+		stack;
+		return 0;
+	}
+
+	if (!(sl->str = _build_name(dm->mem, dm->vg_name,
+				    s->origin->name, "real"))) {
+		stack;
+		return 0;
+	}
+
+	list_add(&dl->pre_create, &sl->list);
+
+	/* insert the snapshot layer */
+	if (!hash_insert(dm->layers,dl->name, dl)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Inserts the appropriate dev_layers for a logical volume.
  */
@@ -609,135 +763,13 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 	 * FIXME: this doesn't cope with recursive snapshots yet.
 	 * FIXME: split this function up.
 	 */
-	if ((s = find_cow(lv))) {
-		/*
-		 * snapshot(org, cow)
-		 * cow
-		 */
-		struct dev_layer *dl;
-		char *cow_name;
-		struct str_list *sl;
+	if ((s = find_cow(lv)))
+		return _expand_snapshot(dm, lv, s);
 
-		if (!(dl = _create_layer(dm->mem, "cow", lv))) {
-			stack;
-			return 0;
-		}
-		dl->populate = _populate_vanilla;
-		_clear_flag(dl, VISIBLE);
+	else if (lv_is_origin(lv))
+		return _expand_origin(dm, lv);
 
-		/* insert the cow layer */
-		if (!hash_insert(dm->layers, dl->name, dl)) {
-			stack;
-			return 0;
-		}
-		cow_name = dl->name;
-
-		if (!(dl = _create_layer(dm->mem, NULL, lv))) {
-			stack;
-			return 0;
-		}
-		dl->populate = _populate_snapshot;
-		_set_flag(dl, VISIBLE);
-
-		/* add the dependency on the real device */
-		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
-			stack;
-			return 0;
-		}
-
-		if (!(sl->str = pool_strdup(dm->mem, cow_name))) {
-			stack;
-			return 0;
-		}
-
-		list_add(&dl->pre_create, &sl->list);
-
-		/* add the dependency on the org device */
-		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
-			stack;
-			return 0;
-		}
-
-		if (!(sl->str = _build_name(dm->mem, dm->vg_name,
-					    s->origin->name, "real"))) {
-			stack;
-			return 0;
-		}
-
-		list_add(&dl->pre_create, &sl->list);
-
-		/* insert the snapshot layer */
-		if (!hash_insert(dm->layers,dl->name, dl)) {
-			stack;
-			return 0;
-		}
-
-	} else if (lv_is_origin(lv)) {
-		/*
-		 * origin(org)
-		 * org
-		 */
-		struct dev_layer *dl;
-		char *real_name;
-		struct str_list *sl;
-
-		if (!(dl = _create_layer(dm->mem, "real", lv))) {
-			stack;
-			return 0;
-		}
-		dl->populate = _populate_vanilla;
-		_clear_flag(dl, VISIBLE);
-
-		if (!hash_insert(dm->layers, dl->name, dl)) {
-			stack;
-			return 0;
-		}
-		real_name = dl->name;
-
-		if (!(dl = _create_layer(dm->mem, NULL, lv))) {
-			stack;
-			return 0;
-		}
-		dl->populate = _populate_origin;
-		_set_flag(dl, VISIBLE);
-
-		/* add the dependency on the real device */
-		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
-			stack;
-			return 0;
-		}
-
-		if (!(sl->str = pool_strdup(dm->mem, real_name))) {
-			stack;
-			return 0;
-		}
-
-		list_add(&dl->pre_create, &sl->list);
-
-		if (!hash_insert(dm->layers,dl->name, dl)) {
-			stack;
-			return 0;
-		}
-
-	} else {
-		/*
-		 * only one layer.
-		 */
-		struct dev_layer *dl;
-		if (!(dl = _create_layer(dm->mem, NULL, lv))) {
-			stack;
-			return 0;
-		}
-		dl->populate = _populate_vanilla;
-		_set_flag(dl, VISIBLE);
-
-		if (!hash_insert(dm->layers, dl->name, dl)) {
-			stack;
-			return 0;
-		}
-	}
-
-	return 1;
+	return _expand_vanilla(dm, lv);
 }
 
 /*
@@ -1004,8 +1036,6 @@ static int _execute(struct dev_manager *dm, struct logical_volume *lv,
 	return 1;
 }
 
-
-
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	if (!_execute(dm, lv, _create_rec)) {
@@ -1025,3 +1055,97 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 
 	return 0;
 }
+
+
+/*
+ * ATM we decide which vg a layer belongs to by
+ * looking at the beginning of the device
+ * name.
+ */
+static int _belong_to_vg(const char *vg, const char *name)
+{
+	/*
+	 * FIXME: broken for vg's with '-'s in.
+	 */
+	return !strncmp(vg, name, strlen(vg));
+}
+
+static int _add_existing_layer(struct dev_manager *dm, const char *name)
+{
+	struct dev_layer *new;
+	char *copy;
+
+	if (!(copy = pool_strdup(dm->mem, name))) {
+		stack;
+		return 0;
+	}
+
+	if (!(new = _create_dev(dm->mem, copy, NULL))) {
+		stack;
+		return 0;
+	}
+
+	if (!_info(new->name, &new->info)) {
+		stack;
+		return 0;
+	}
+
+	if (!hash_insert(dm->layers, new->name, new)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _scan_existing_devices(struct dev_manager *dm)
+{
+	const char *dev_dir = dm_dir();
+
+	int i, count, r = 1;
+	struct dirent **dirent;
+	const char *name;
+
+	count = scandir(dev_dir, &dirent, NULL, alphasort);
+	if (!count)
+		return 1;
+
+	if (count < 0) {
+		log_err("Couldn't scan device-mapper directory '%s'.",
+			dev_dir);
+		return 0;
+	}
+
+	/*
+	 * Scan the devices.
+	 */
+	for (i = 0; i < count; i++) {
+		name = dirent[i]->d_name;
+
+		/*
+		 * Ignore dot files.
+		 */
+		if (name[0] == '.')
+			continue;
+
+		/*
+		 * Does this layer belong to us ?
+		 */
+		if (_belong_to_vg(dm->vg_name, name) &&
+		    !_add_existing_layer(dm, name)) {
+			stack;
+			r = 0;
+			break;
+		}
+	}
+
+	/*
+	 * Free the directory entries.
+	 */
+	for (i = 0; i < count; i++)
+		free(dirent[i]);
+	free(dirent);
+
+	return r;
+}
+
