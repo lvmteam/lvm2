@@ -113,6 +113,8 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 	list_del(pvh);
 	*pv->vg_name = '\0';
 	vg->pv_count--;
+	vg->free_count -= pv->pe_count - pv->pe_allocated;
+	vg->extent_count -= pv->pe_count;
 
 	if (!(fid->ops->vg_write(fid, vg))) {
 		log_error("Removal of physical volume %s from %s failed",

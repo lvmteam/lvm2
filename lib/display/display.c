@@ -65,7 +65,8 @@ char *display_size(unsigned long long size, size_len_t sl)
  * creates a new uuid string with -'s in it.  It would be better if
  * the destination was passed in as well. EJT
  */
-char *display_uuid(char *uuidstr) {
+char *display_uuid(char *uuidstr)
+{
 	int i, j;
 	char *uuid;
 
@@ -103,33 +104,30 @@ void pvdisplay_colons(struct physical_volume *pv)
 	uuid = display_uuid(pv->id.uuid);
 
 	log_print("%s:%s:%llu:-1:%u:%u:-1:%llu:%u:%u:%u:%s",
-	       dev_name(pv->dev),
-	       pv->vg_name,
-	       pv->size,
-	       /* FIXME pv->pv_number, Derive or remove? */
-	       pv->status, /* FIXME Support old or new format here? */
-	       pv->status & ALLOCATED_PV,  /* FIXME Remove? */
-	       /* FIXME pv->lv_cur, Remove? */
-	       pv->pe_size / 2,
-	       pv->pe_count,
-	       pv->pe_count - pv->pe_allocated,
-	       pv->pe_allocated, 
-	       *uuid ? uuid : "none");
+		  dev_name(pv->dev), pv->vg_name, pv->size,
+		  /* FIXME pv->pv_number, Derive or remove? */
+		  pv->status,	/* FIXME Support old or new format here? */
+		  pv->status & ALLOCATED_PV,	/* FIXME Remove? */
+		  /* FIXME pv->lv_cur, Remove? */
+		  pv->pe_size / 2,
+		  pv->pe_count,
+		  pv->pe_count - pv->pe_allocated,
+		  pv->pe_allocated, *uuid ? uuid : "none");
 
 	dbg_free(uuid);
 
 	return;
 }
 
-void pvdisplay_full(struct physical_volume * pv)
+void pvdisplay_full(struct physical_volume *pv)
 {
-        char *uuid;
-	char *size, *size1; /*, *size2; */
+	char *uuid;
+	char *size, *size1;	/*, *size2; */
 
 	uint64_t pe_free;
 
-        if (!pv)
-                return;
+	if (!pv)
+		return;
 
 	uuid = display_uuid(pv->id.uuid);
 
@@ -139,16 +137,15 @@ void pvdisplay_full(struct physical_volume * pv)
 
 	size = display_size(pv->size / 2, SIZE_SHORT);
 	if (pv->pe_size && pv->pe_count) {
-		size1 = display_size((pv->size - pv->pe_count * pv->pe_size) 
-					/ 2, SIZE_SHORT);
+		size1 = display_size((pv->size - pv->pe_count * pv->pe_size)
+				     / 2, SIZE_SHORT);
 
 /******** FIXME display LVM on-disk data size 
 		size2 = display_size(pv->size / 2, SIZE_SHORT);
 ********/
 
-		log_print("PV Size               %s"
-			  " / not usable %s",   /*  [LVM: %s]", */
-			  size, size1);         /* , size2);    */
+		log_print("PV Size               %s" " / not usable %s",	/*  [LVM: %s]", */
+			  size, size1);	/* , size2);    */
 
 		dbg_free(size1);
 		/* dbg_free(size2); */
@@ -161,7 +158,7 @@ void pvdisplay_full(struct physical_volume * pv)
 **********/
 
 	log_print("PV Status             %savailable",
-	       (pv->status & ACTIVE) ? "" : "NOT ");
+		  (pv->status & ACTIVE) ? "" : "NOT ");
 
 	pe_free = pv->pe_count - pv->pe_allocated;
 	if (pv->pe_count && (pv->status & ALLOCATED_PV))
@@ -192,16 +189,16 @@ void pvdisplay_full(struct physical_volume * pv)
 
 void pv_display_short(struct physical_volume *pv)
 {
-	if (!pv) 
+	if (!pv)
 		return;
 
 	log_print("PV Name               %s     ", dev_name(pv->dev));
 	/* FIXME  pv->pv_number); */
 	log_print("PV Status             %savailable / %sallocatable",
-		(pv->status & ACTIVE) ? "" : "NOT ",
-		(pv->status & ALLOCATED_PV) ? "" : "NOT ");
+		  (pv->status & ACTIVE) ? "" : "NOT ",
+		  (pv->status & ALLOCATED_PV) ? "" : "NOT ");
 	log_print("Total PE / Free PE    %u / %u",
-	       pv->pe_count, pv->pe_count - pv->pe_allocated);
+		  pv->pe_count, pv->pe_count - pv->pe_allocated);
 
 	return;
 }
@@ -211,24 +208,17 @@ void lvdisplay_colons(struct logical_volume *lv)
 	log_print("%s/%s:%s:%d:%d:-1:%d:%llu:%d:-1:%d:%d:-1:-1",
 		  /* FIXME Prefix - attach to struct volume_group? */
 		  lv->vg->name,
-	          lv->name,  
-	          lv->vg->name,
-	          (lv->status & (LVM_READ | LVM_WRITE)) >> 8,
-	          lv->status & ACTIVE,
-	          /* FIXME lv->lv_number,  */
-	          lvs_in_vg_opened(lv->vg),
-	          lv->size,
-	          lv->le_count,
-	          /* FIXME num allocated?  */
-	          (lv->status & (ALLOC_STRICT | ALLOC_CONTIGUOUS)) >> 12,
-	          lv->read_ahead 
-		   /* FIXME device num MAJOR(lv->lv_dev), MINOR(lv->lv_dev) */
-	         );
-	return;
-}
-
-void lvdisplay_extents(struct logical_volume *lv)
-{
+		  lv->name,
+		  lv->vg->name,
+		  (lv->status & (LVM_READ | LVM_WRITE)) >> 8,
+		  lv->status & ACTIVE,
+		  /* FIXME lv->lv_number,  */
+		  lvs_in_vg_opened(lv->vg), lv->size, lv->le_count,
+		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
+		  ((lv->status & ALLOC_STRICT) +
+		   (lv->status & ALLOC_CONTIGUOUS) * 2), lv->read_ahead
+		  /* FIXME device num MAJOR(lv->lv_dev), MINOR(lv->lv_dev) */
+	    );
 	return;
 }
 
@@ -237,14 +227,14 @@ void lvdisplay_full(struct logical_volume *lv)
 	char *size;
 	uint32_t alloc;
 
-    log_print("--- Logical volume ---");
+	log_print("--- Logical volume ---");
 
 	/* FIXME prefix */
 	log_print("LV Name                %s/%s", lv->vg->name, lv->name);
-    log_print("VG Name                %s", lv->vg->name);
+	log_print("VG Name                %s", lv->vg->name);
 
-    log_print("LV Write Access        %s",
-              (lv->status & LVM_WRITE) ? "read/write" : "read only");
+	log_print("LV Write Access        %s",
+		  (lv->status & LVM_WRITE) ? "read/write" : "read only");
 
 /******* FIXME Snapshot
     if (lv->status & (LVM_SNAPSHOT_ORG | LVM_SNAPSHOT)) {
@@ -291,8 +281,8 @@ void lvdisplay_full(struct logical_volume *lv)
     }
 ***********/
 
-    log_print("LV Status              %savailable",
-    	(lv->status & ACTIVE) ? "" : "NOT ");
+	log_print("LV Status              %savailable",
+		  (lv->status & ACTIVE) ? "" : "NOT ");
 
 /********* FIXME lv_number
     log_print("LV #                   %u", lv->lv_number + 1);
@@ -313,12 +303,11 @@ void lvdisplay_full(struct logical_volume *lv)
 #endif
 ********/
 
-
 	size = display_size(lv->size / 2, SIZE_SHORT);
-    log_print("LV Size                %s", size);
-    dbg_free(size);
+	log_print("LV Size                %s", size);
+	dbg_free(size);
 
-    log_print("Current LE             %u", lv->le_count);
+	log_print("Current LE             %u", lv->le_count);
 
 /********** FIXME allocation
     log_print("Allocated LE           %u", lv->allocated_le);
@@ -356,13 +345,12 @@ void lvdisplay_full(struct logical_volume *lv)
     }
 ******************/
 
-    if (lv->stripes > 1) {
-	log_print("Stripes                %u", lv->stripes);
+	if (lv->stripes > 1) {
+		log_print("Stripes                %u", lv->stripes);
 /*********** FIXME stripesize 
 	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
 ***********/
-    }
-
+	}
 
 /**************
 #ifdef LVM_FUTURE
@@ -374,15 +362,17 @@ void lvdisplay_full(struct logical_volume *lv)
 #endif
 ***************/
 
+	/* FIXME next free == ALLOC_SIMPLE */
 	alloc = lv->status & (ALLOC_STRICT | ALLOC_CONTIGUOUS);
-    log_print("Allocation             %s%s%s%s",
-		!(alloc & (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "next free" : "",
-		(alloc == ALLOC_STRICT) ? "strict" : "",
-		(alloc == ALLOC_CONTIGUOUS) ? "contiguous" : "",
-		(alloc == (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "strict/contiguous" : ""
-		);
+	log_print("Allocation             %s%s%s%s",
+		  !(alloc & (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "next free" :
+		  "", (alloc == ALLOC_STRICT) ? "strict" : "",
+		  (alloc == ALLOC_CONTIGUOUS) ? "contiguous" : "",
+		  (alloc ==
+		   (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "strict/contiguous" :
+		  "");
 
-    log_print("Read ahead sectors     %u\n", lv->read_ahead);
+	log_print("Read ahead sectors     %u\n", lv->read_ahead);
 
 /****************
 #ifdef LVM_FUTURE
@@ -399,6 +389,46 @@ void lvdisplay_full(struct logical_volume *lv)
 	   MAJOR(lv->lv_dev), MINOR(lv->lv_dev));
 *************/
 
-    return;
+	return;
 }
 
+
+void lvdisplay_extents(struct logical_volume *lv)
+{
+	int le;
+	struct list *pvh;
+	struct physical_volume *pv;
+
+	log_verbose("--- Distribution of logical volume on physical "
+		    "volumes  ---");
+	log_verbose("PV Name                  PE on PV     ");
+
+	list_iterate(pvh, &lv->vg->pvs) {
+		int count = 0;
+		pv = &list_item(pvh, struct pv_list)->pv;
+		for (le = 0; le < lv->le_count; le++)
+			if (lv->map[le].pv->dev == pv->dev)
+				count++;
+		if (count)
+			log_verbose("%-25s %d", dev_name(pv->dev), count);
+	}
+
+/********* FIXME "reads      writes" 
+
+	   
+    printf("\n   --- logical volume i/o statistic ---\n"
+	   "   %d reads  %d writes\n", sum_reads, sum_writes);
+
+******* */
+
+	log_verbose(" ");
+	log_verbose("--- Logical extents ---");
+	log_verbose("LE    PV                        PE");
+
+	for (le = 0; le < lv->le_count; le++) {
+		log_verbose("%05d %-25s %05u  ", le,
+			    dev_name(lv->map[le].pv->dev), lv->map[le].pe);
+	}
+
+	return;
+}
