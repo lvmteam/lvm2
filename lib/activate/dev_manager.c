@@ -875,13 +875,14 @@ static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct dev_layer *dl;
 	struct list *lvh;
+	struct logical_volume *lvt;
 
 	/*
 	 * Build layers for complete vg.
 	 */
 	list_iterate (lvh, &lv->vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (!_expand_lv(dm, lv)) {
+		lvt = list_item(lvh, struct lv_list)->lv;
+		if (!_expand_lv(dm, lvt)) {
 			stack;
 			return 0;
 		}
