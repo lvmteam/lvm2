@@ -4,7 +4,7 @@
  * This file is released under the GPL.
  */
 
-#include "libdm.h"
+#include "libdevmapper.h"
 
 #include <stdio.h>
 #include <stdlib.h>
