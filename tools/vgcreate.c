@@ -49,6 +49,11 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, DEFAULT_LV);
 	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, DEFAULT_PV);
 
+	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
+		log_error("Physical extent size may not be negative");
+		return EINVALID_CMD_LINE;
+	}
+
 	/* Units of 512-byte sectors */
 	extent_size =
 	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;

@@ -148,12 +148,22 @@ static int _read_size_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (arg_count(cmd, extents_ARG))
+	if (arg_count(cmd, extents_ARG)) {
+		if (arg_sign_value(cmd, extents_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative number of extents is invalid");
+			return 0;
+		}
 		lp->extents = arg_uint_value(cmd, extents_ARG, 0);
+	}
 
 	/* Size returned in kilobyte units; held in sectors */
-	if (arg_count(cmd, size_ARG))
+	if (arg_count(cmd, size_ARG)) {
+		if (arg_sign_value(cmd, size_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative size is invalid");
+			return 0;
+		}
 		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)) * 2;
+	}
 
 	return 1;
 }
@@ -172,8 +182,13 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 			log_print("Redundant stripes argument: default is 1");
 	}
 
-	if (arg_count(cmd, stripesize_ARG))
+	if (arg_count(cmd, stripesize_ARG)) {
+		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative stripesize is invalid");
+			return 0;
+		}
 		lp->stripe_size = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
+	}
 
 	if (lp->stripes == 1 && lp->stripe_size) {
 		log_print("Ignoring stripesize argument with single stripe");
@@ -220,6 +235,10 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	if (arg_count(cmd, snapshot_ARG)) {
 		if (arg_count(cmd, zero_ARG)) {
 			log_error("-s and -Z are incompatible");
+			return 0;
+		}
+		if (arg_sign_value(cmd, chunksize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative chunk size is invalid");
 			return 0;
 		}
 		lp->chunk_size = 2 * arg_uint_value(cmd, chunksize_ARG, 8);

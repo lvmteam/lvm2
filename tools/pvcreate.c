@@ -130,8 +130,16 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	if (!pvcreate_check(cmd, pv_name))
 		goto error;
 
+	if (arg_sign_value(cmd, physicalvolumesize_ARG, 0) == SIGN_MINUS) {
+		log_error("Physical volume size may not be negative");
+		goto error;
+	}
 	size = arg_uint64_value(cmd, physicalvolumesize_ARG, UINT64_C(0)) * 2;
 
+	if (arg_sign_value(cmd, metadatasize_ARG, 0) == SIGN_MINUS) {
+		log_error("Metadata size may not be negative");
+		goto error;
+	}
 	pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0))
 	    * 2;
 	if (!pvmetadatasize)
