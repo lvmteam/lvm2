@@ -1682,13 +1682,14 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		}
 	}
 
-	if (!(cn = find_config_node(cmd->cft->root, "metadata/disk_areas")))
-		return fmt;
-
-	for (cn = cn->child; cn; cn = cn->sib) {
-		if (!_get_config_disk_area(cmd, cn, &mda_lists->raws))
-			goto err;
+	if ((cn = find_config_node(cmd->cft->root, "metadata/disk_areas"))) {
+		for (cn = cn->child; cn; cn = cn->sib) {
+			if (!_get_config_disk_area(cmd, cn, &mda_lists->raws))
+				goto err;
+		}
 	}
+
+	log_very_verbose("Initialised format: %s", fmt->name);
 
 	return fmt;
 

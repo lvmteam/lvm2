@@ -97,5 +97,7 @@ struct segment_type *init_zero_segtype(struct cmd_context *cmd)
 	segtype->private = NULL;
 	segtype->flags = SEG_CAN_SPLIT | SEG_VIRTUAL;
 
+	log_very_verbose("Initialised segtype: %s", segtype->name);
+
 	return segtype;
 }

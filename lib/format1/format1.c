@@ -591,5 +591,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 		return NULL;
 	}
 
+	log_very_verbose("Initialised format: %s", fmt->name);
+
 	return fmt;
 }
