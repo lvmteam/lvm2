@@ -16,6 +16,6 @@
 #ifndef _LVM_CMDLINE_H
 #define _LVM_CMDLINE_H
 
-int lvm2_main(int argc, char **argv);
+int lvm2_main(int argc, char **argv, int is_static);
 
 #endif

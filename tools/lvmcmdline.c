@@ -1409,7 +1409,7 @@ static void _exec_lvm1_command(struct cmd_context *cmd, int argc, char **argv)
 	log_sys_error("execvp", path);
 }
 
-int lvm2_main(int argc, char **argv)
+int lvm2_main(int argc, char **argv, int is_static)
 {
 	char *namebase, *base;
 	int ret, alias = 0;
@@ -1417,10 +1417,6 @@ int lvm2_main(int argc, char **argv)
 
 	_close_stray_fds();
 
-	if (!(cmd = _init_lvm()))
-		return -1;
-
-	cmd->argv = argv;
 	namebase = strdup(argv[0]);
 	base = basename(namebase);
 	while (*base == '/')
@@ -1428,8 +1424,21 @@ int lvm2_main(int argc, char **argv)
 	if (strcmp(base, "lvm") && strcmp(base, "lvm.static") &&
 	    strcmp(base, "initrd-lvm"))
 		alias = 1;
+
+	if (is_static && strcmp(base, "lvm.static") && 
+	    path_exists(LVM_SHARED_PATH) &&
+	    !getenv("LVM_DID_EXEC")) {
+		setenv("LVM_DID_EXEC", base, 1);
+		execvp(LVM_SHARED_PATH, argv);
+		unsetenv("LVM_DID_EXEC");
+	}
+
 	free(namebase);
 
+	if (!(cmd = _init_lvm()))
+		return -1;
+
+	cmd->argv = argv;
 	_register_commands();
 
 	if (_lvm1_fallback(cmd)) {
