@@ -71,7 +71,7 @@ static char *err_table[] = {
 		rv = ttype->ctr(t, start, size, str, &context);
 		msg = context;
 		if (rv == 0) {
-			printk("dmfs_parse: %lu %lu %s %s\n", start, size, 
+			printk("dmfs_parse: %u %u %s %s\n", start, size, 
 				ttype->name,
 				ttype->print ? ttype->print(context) : "-");
 			msg = "Error adding target to table";
@@ -121,6 +121,7 @@ static int dmfs_line_is_not_comment(char *str)
 
 struct dmfs_desc {
 	struct dm_table *table;
+	struct inode *inode;
 	char *tmp;
 	loff_t tmpl;
 	unsigned long lnum;
@@ -151,7 +152,7 @@ static int dmfs_read_actor(read_descriptor_t *desc, struct page *page, unsigned 
 			if (dmfs_line_is_not_comment(d->tmp)) {
 				msg = dmfs_parse_line(d->table, d->tmp);
 				if (msg) {
-					dmfs_add_error(t, d->lnum, msg);
+					dmfs_add_error(d->inode, d->lnum, msg);
 				}
 			}
 			d->lnum++;
@@ -191,6 +192,7 @@ static struct dm_table *dmfs_parse(struct inode *inode, struct file *filp)
 			desc.count = inode->i_size;
 			desc.buf = (char *)&d;
 			d.table = t;
+			d.inode = inode;
 			d.tmp = (char *)page;
 			d.tmpl = 0;
 			d.lnum = 1;
