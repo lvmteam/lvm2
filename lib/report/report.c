@@ -165,6 +165,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
 	char *repstr;
+	struct snapshot *snap;
+	float snap_percent;
 
 	if (!(repstr = pool_zalloc(rh->mem, 7))) {
 		log_error("pool_alloc failed");
@@ -202,6 +204,13 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 			repstr[5] = 'o';	/* Open */
 		else
 			repstr[5] = '-';
+
+		/* Snapshot dropped? */
+		if ((snap = find_cow(lv)) &&
+		    (!lv_snapshot_percent(snap->cow, &snap_percent) ||
+		     snap_percent < 0))
+			repstr[0] = toupper(repstr[0]);
+
 	} else {
 		repstr[4] = '-';
 		repstr[5] = '-';
@@ -555,10 +564,16 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(snap = find_cow(lv))
-	    || !lv_snapshot_percent(snap->cow, &snap_percent)) {
+	if (!(snap = find_cow(lv))) {
 		field->report_string = "";
 		*sortval = __UINT64_C(0);
+		field->sort_value = sortval;
+		return 1;
+	}
+
+	if (!lv_snapshot_percent(snap->cow, &snap_percent) || snap_percent < 0) {
+		field->report_string = "100.00";
+		*sortval = __UINT64_C(100);
 		field->sort_value = sortval;
 		return 1;
 	}
@@ -744,7 +759,8 @@ static int _parse_options(struct report_handle *rh, const char *format)
 		while (*we && *we != ',')
 			we++;
 		if (!_field_match(rh, ws, (size_t) (we - ws))) {
-			log_error("Unrecognised field: %.*s", (int) (we - ws), ws);
+			log_error("Unrecognised field: %.*s", (int) (we - ws),
+				  ws);
 			return 0;
 		}
 	}
@@ -765,7 +781,8 @@ static int _parse_keys(struct report_handle *rh, const char *keys)
 		while (*we && *we != ',')
 			we++;
 		if (!_key_match(rh, ws, (size_t) (we - ws))) {
-			log_error("Unrecognised field: %.*s", (int) (we - ws), ws);
+			log_error("Unrecognised field: %.*s", (int) (we - ws),
+				  ws);
 			return 0;
 		}
 	}
