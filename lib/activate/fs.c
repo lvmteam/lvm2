@@ -29,7 +29,7 @@ static int _mk_dir(struct volume_group *vg)
 {
 	char vg_path[PATH_MAX];
 
-	if (lvm_snprintf(vg_path, sizeof(vg_path), "%s/%s",
+	if (lvm_snprintf(vg_path, sizeof(vg_path), "%s%s",
 			 vg->cmd->dev_dir, vg->name) == -1) {
 		log_error("Couldn't construct name of volume "
 			  "group directory.");
@@ -46,7 +46,7 @@ static int _rm_dir(struct volume_group *vg)
 {
 	char vg_path[PATH_MAX];
 
-	if (lvm_snprintf(vg_path, sizeof(vg_path), "%s/%s",
+	if (lvm_snprintf(vg_path, sizeof(vg_path), "%s%s",
 			 vg->cmd->dev_dir, vg->name) == -1) {
 		log_error("Couldn't construct name of volume "
 			  "group directory.");
@@ -64,7 +64,7 @@ static int _mk_link(struct logical_volume *lv, const char *dev)
 	char lv_path[PATH_MAX], link_path[PATH_MAX];
 	struct stat buf;
 
-	if (lvm_snprintf(lv_path, sizeof(lv_path), "%s/%s/%s",
+	if (lvm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s",
 			 lv->vg->cmd->dev_dir, lv->vg->name, lv->name) == -1) {
 		log_error("Couldn't create source pathname for "
 			  "logical volume link %s", lv->name);
@@ -91,7 +91,7 @@ static int _mk_link(struct logical_volume *lv, const char *dev)
 		}
 	}
 
-	log_very_verbose("Linking %s to %s", link_path, lv_path);
+	log_very_verbose("Linking %s -> %s", lv_path, link_path);
 	if (symlink(link_path, lv_path) < 0) {
 		log_sys_error("symlink", lv_path);
 		return 0;
@@ -105,7 +105,7 @@ static int _rm_link(struct logical_volume *lv, const char *lv_name)
 	struct stat buf;
 	char lv_path[PATH_MAX];
 
-	if (lvm_snprintf(lv_path, sizeof(lv_path), "%s/%s/%s",
+	if (lvm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s",
 			 lv->vg->cmd->dev_dir, lv->vg->name, lv_name) == -1) {
 		log_error("Couldn't determine link pathname.");
 		return 0;

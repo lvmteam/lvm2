@@ -66,4 +66,8 @@ int activate_lvs_in_vg(struct volume_group *vg);
  */
 int deactivate_lvs_in_vg(struct volume_group *vg);
 
+
+
+int lv_setup_cow_store(struct logical_volume *lv);
+
 #endif
