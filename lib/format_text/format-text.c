@@ -213,32 +213,41 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	return NULL;
 }
 
-static struct raw_locn *_vg_posn(struct format_instance *fid,
-				 struct device_area *dev_area,
-				 const char *vgname)
+/*
+ * Determine offset for uncommitted metadata
+ */
+static uint64_t _next_rlocn_offset(struct raw_locn *rlocn,
+				   struct mda_header *mdah)
 {
+	if (!rlocn)
+		/* Find an empty slot */
+		/* FIXME Assume only one VG per mdah for now */
+		return MDA_HEADER_SIZE;
 
-	struct mda_header *mdah;
-
-	if (!(mdah = _raw_read_mda_header(fid->fmt, dev_area))) {
-		stack;
-		return NULL;
-	}
-
-	return _find_vg_rlocn(dev_area, mdah, vgname);
+	/* Start of free space - round up to next sector; circular */
+	return ((rlocn->offset + rlocn->size +
+		(SECTOR_SIZE - rlocn->size % SECTOR_SIZE) -
+		MDA_HEADER_SIZE) % (mdah->size - MDA_HEADER_SIZE))
+	       + MDA_HEADER_SIZE;
 }
 
 static int _raw_holds_vgname(struct format_instance *fid,
 			     struct device_area *dev_area, const char *vgname)
 {
 	int r = 0;
+	struct mda_header *mdah;
 
 	if (!dev_open(dev_area->dev)) {
 		stack;
 		return 0;
 	}
 
-	if (_vg_posn(fid, dev_area, vgname))
+	if (!(mdah = _raw_read_mda_header(fid->fmt, dev_area))) {
+		stack;
+		return 0;
+	}
+
+	if (_find_vg_rlocn(dev_area, mdah, vgname))
 		r = 1;
 
 	if (!dev_close(dev_area->dev))
@@ -268,7 +277,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		goto out;
 	}
 
-	if (!(rlocn = _vg_posn(fid, area, vgname))) {
+	if (!(rlocn = _find_vg_rlocn(area, mdah, vgname))) {
 		log_debug("VG %s not found on %s", vgname, dev_name(area->dev));
 		goto out;
 	}
@@ -349,18 +358,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	if ((rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name))) {
-		/* Start of free space - round up to next sector; circular */
-		mdac->rlocn.offset =
-		    ((rlocn->offset + rlocn->size +
-		      (SECTOR_SIZE - rlocn->size % SECTOR_SIZE) -
-		      MDA_HEADER_SIZE) % (mdah->size - MDA_HEADER_SIZE))
-		    + MDA_HEADER_SIZE;
-	} else {
-		/* Find an empty slot */
-		/* FIXME Assume only one VG per mdah for now */
-		mdac->rlocn.offset = MDA_HEADER_SIZE;
-	}
+	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name);
+	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
 	if (!(mdac->rlocn.size = text_vg_export_raw(vg, "", buf, sizeof(buf)))) {
 		log_error("VG %s metadata writing failed", vg->name);
