@@ -66,6 +66,8 @@ struct config_info {
 	int verbose;
 	int test;
 	int syslog;
+	const char *msg_prefix;
+	int cmd_name;		/* Show command name? */
 
 	int archive;		/* should we archive ? */
 	int backup;		/* should we backup ? */
@@ -682,6 +684,9 @@ static void _use_settings(struct config_info *settings)
 	init_verbose(settings->verbose);
 	init_test(settings->test);
 
+	init_msg_prefix(_default_settings.msg_prefix);
+	init_cmd_name(_default_settings.cmd_name);
+
 	archive_enable(settings->archive);
 	backup_enable(settings->backup);
 
@@ -738,9 +743,6 @@ static int run_command(int argc, char **argv)
 	}
 
 	set_cmd_name(cmd->command->name);
-
-	/* FIXME: not sure that this is the best place for this... */
-	init_msg_prefix(find_config_str(cmd->cf->root, "log/prefix", '/', 0));
 
 	if ((ret = process_common_commands(cmd->command)))
 		return ret;
@@ -815,7 +817,7 @@ static void __init_log(struct config_file *cf)
 {
 	char *open_mode = "a";
 
-	const char *log_file, *prefix;
+	const char *log_file;
 
 	_default_settings.syslog =
 	    find_config_int(cf->root, "log/syslog", '/', 1);
@@ -834,10 +836,15 @@ static void __init_log(struct config_file *cf)
 	init_verbose(_default_settings.verbose);
 
 	init_indent(find_config_int(cf->root, "log/indent", '/', 1));
-	if ((prefix = find_config_str(cf->root, "log/prefix", '/', 0)))
-		init_msg_prefix(prefix);
 
-	init_cmd_name(find_config_int(cf->root, "log/command_names", '/', 0));
+	_default_settings.msg_prefix = find_config_str(cf->root, "log/prefix",
+						       '/', DEFAULT_MSG_PREFIX);
+	init_msg_prefix(_default_settings.msg_prefix);
+
+	_default_settings.cmd_name = find_config_int(cf->root,
+						     "log/command_names", '/',
+						     DEFAULT_CMD_NAME);
+	init_cmd_name(_default_settings.cmd_name);
 
 	_default_settings.test = find_config_int(cf->root, "global/test",
 						 '/', 0);
