@@ -136,6 +136,7 @@
 #define KEYS_PER_NODE (NODE_SIZE / sizeof(offset_t))
 #define CHILDREN_PER_NODE (KEYS_PER_NODE + 1)
 #define DM_NAME_LEN 64
+#define MAX_TARGET_LINE 256
 
 enum {
 	DM_BOUND = 0,		/* device has been bound to a table */
@@ -230,7 +231,7 @@ extern struct block_device_operations dm_blk_dops;
 
 /* dm-target.c */
 int dm_target_init(void);
-struct target_type *dm_get_target(const char *name);
+struct target_type *dm_get_target_type(const char *name);
 
 
 /* dm.c */
@@ -239,8 +240,10 @@ struct mapped_device *dm_find_by_minor(int minor);
 
 int dm_create(const char *name, int minor);
 int dm_remove(const char *name);
-int dm_bind(struct mapped_device *md, struct dm_table *t);
-int dm_activate(struct mapped_device *md);
+
+int dm_activate(struct mapped_device *md, struct dm_table *t);
+int dm_deactivate(struct mapped_device *md);
+
 void dm_suspend(struct mapped_device *md);
 
 
@@ -253,12 +256,38 @@ int dm_table_add_target(struct dm_table *t, offset_t high,
 int dm_table_complete(struct dm_table *t);
 
 
+/* dm-parse.c */
+struct text_region {
+	const char *b;
+	const char *e;
+};
+
+typedef int (*extract_line_fn)(struct text_region *line,
+			       void *private);
+
+struct dm_table *dm_parse(extract_line_fn line_fn, void *line_private,
+			  dm_error_fn err_fn, void *err_private);
+
+/*
+ * These may be useful for people writing target
+ * types.
+ */
+int dm_get_number(struct text_region *txt, unsigned int *n);
+int dm_get_line(struct text_region *txt, struct text_region *line);
+int dm_get_word(struct text_region *txt, struct text_region *word);
+void dm_txt_copy(char *dest, size_t max, struct text_region *txt);
+void dm_eat_space(struct text_region *txt);
+
+static inline int dm_empty_tok(struct text_region *txt)
+{
+	return txt->b >= txt->e;
+}
+
+
 /* dm-fs.c */
 int dm_fs_init(void);
 void dm_fs_exit(void);
 
-int dm_fs_add(struct mapped_device *md);
-int dm_fs_remove(struct mapped_device *md);
 
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
@@ -285,56 +314,8 @@ static inline int is_active(struct mapped_device *md)
 	return test_bit(DM_ACTIVE, &md->state);
 }
 
-static inline const char *eat_space(const char *b, const char *e)
-{
-	while(b != e && isspace((int) *b))
-		b++;
-
-	return b;
-}
-
-
 /*
  * FIXME: these are too big to be inlines
  */
-static inline int get_number(const char **b, const char *e, unsigned int *n)
-{
-	char *ptr;
-	*b = eat_space(*b, e);
-	if (*b >= e)
-		return -EINVAL;
-
-	*n = simple_strtoul(*b, &ptr, 10);
-	if (ptr == *b)
-		return -EINVAL;
-	*b = ptr;
-
-	return 0;
-}
-
-static inline int get_word(const char *b, const char *e,
-			   const char **wb, const char **we)
-{
-	b = eat_space(b, e);
-
-	if (b == e)
-		return -EINVAL;
-
-	*wb = b;
-	while(b != e && !isspace((int) *b))
-		b++;
-	*we = b;
-	return 0;
-}
-
-static inline void tok_cpy(char *dest, size_t max,
-			   const char *b, const char *e)
-{
-	size_t len = e - b;
-	if (len > --max)
-		len = max;
-	strncpy(dest, b, len);
-	dest[len] = '\0';
-}
 
 #endif

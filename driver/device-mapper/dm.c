@@ -63,6 +63,9 @@ static int _block_size[MAX_DEVICES];
 static int _blksize_size[MAX_DEVICES];
 static int _hardsect_size[MAX_DEVICES];
 
+const char *_fs_dir = "device-mapper";
+static devfs_handle_t _dev_dir;
+
 static int request(request_queue_t *q, int rw, struct buffer_head *bh);
 
 /*
@@ -95,6 +98,9 @@ static int dm_init(void)
 	}
 
 	blk_queue_make_request(BLK_DEFAULT_QUEUE(MAJOR_NR), request);
+
+	_dev_dir = devfs_mk_dir(0, _fs_dir, NULL);
+
 
 	printk(KERN_INFO "%s %d.%d.%d initialised\n", _name,
 	       _version[0], _version[1], _version[2]);
@@ -485,6 +491,40 @@ static void close_dev(struct dev_list *d)
 	d->bd = 0;
 }
 
+/*
+ * Open a list of devices.
+ */
+static int open_devices(struct dev_list *devices)
+{
+	int r;
+	struct dev_list *d, *od;
+
+	/* open all the devices */
+	for (d = devices; d; d = d->next)
+		if ((r = open_dev(d)))
+			goto bad;
+
+	return 0;
+
+ bad:
+	od = d;
+	for (d = devices; d != od; d = d->next)
+		close_dev(d);
+	return r;
+}
+
+/*
+ * Close a list of devices.
+ */
+static void close_devices(struct dev_list *d)
+{
+	/* close all the devices */
+	while (d) {
+		close_dev(d);
+		d = d->next;
+	}
+}
+
 static inline struct mapped_device *__find_by_name(const char *name)
 {
 	int i;
@@ -517,6 +557,26 @@ struct mapped_device *dm_find_by_minor(int minor)
 	return md;
 }
 
+static int register_device(struct mapped_device *md)
+{
+	md->devfs_entry =
+		devfs_register(_dev_dir, md->name, DEVFS_FL_CURRENT_OWNER,
+			       MAJOR(md->dev), MINOR(md->dev),
+			       S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
+			       &dm_blk_dops, NULL);
+
+	if (!md->devfs_entry)
+		return -ENOMEM;
+
+	return 0;
+}
+
+static int unregister_device(struct mapped_device *md)
+{
+	devfs_unregister(md->devfs_entry);
+	return 0;
+}
+
 /*
  * constructor for a new device
  */
@@ -542,7 +602,7 @@ int dm_create(const char *name, int minor)
 	strcpy(md->name, name);
 	_devs[minor] = md;
 
-	if ((r = dm_fs_add(md))) {
+	if ((r = register_device(md))) {
 		wu;
 		return r;
 	}
@@ -572,7 +632,7 @@ int dm_remove(const char *name)
 		return -EPERM;
 	}
 
-	if ((r = dm_fs_remove(md))) {
+	if ((r = unregister_device(md))) {
 		wu;
 		return r;
 	}
@@ -605,19 +665,11 @@ static int __find_hardsect_size(struct dev_list *dl)
 }
 
 /*
- * bind a table to the device, the device must not
- * be active, though it could have another table
- * aready bound.
+ * Bind a table to the device.
  */
-int dm_bind(struct mapped_device *md, struct dm_table *t)
+void __bind(struct mapped_device *md, struct dm_table *t)
 {
 	int minor = MINOR(md->dev);
-
-	wl;
-	if (is_active(md)) {
-		wu;
-		return -EPERM;
-	}
 
 	md->map = t;
 
@@ -627,9 +679,6 @@ int dm_bind(struct mapped_device *md, struct dm_table *t)
 	_blksize_size[minor] = BLOCK_SIZE;
 	_hardsect_size[minor] = __find_hardsect_size(t->devices);
 	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
-	wu;
-
-	return 0;
 }
 
 /*
@@ -652,45 +701,69 @@ static void __flush_deferred_io(struct mapped_device *md)
  * previously suspended rather than newly created
  * then all queued io is flushed
  */
-int dm_activate(struct mapped_device *md)
+int dm_activate(struct mapped_device *md, struct dm_table *table)
 {
-	int ret;
-	struct dev_list *d, *od;
+	int r;
+
+	/* check that the mapping has at least been loaded. */
+	if (!table->num_targets)
+		return -EINVAL;
 
 	wl;
 
+	/* you must be deactivated first */
 	if (is_active(md)) {
 		wu;
-		return 0;
+		return -EPERM;
 	}
 
-	if (!md->map) {
+	__bind(md, table);
+
+	if ((r = open_devices(md->map->devices))) {
 		wu;
-		return -ENXIO;
+		return r;
 	}
-
-	/* open all the devices */
-	for (d = md->map->devices; d; d = d->next)
-		if ((ret = open_dev(d)))
-			goto bad;
 
 	set_bit(DM_ACTIVE, &md->state);
 	__flush_deferred_io(md);
 	wu;
 
 	return 0;
-
- bad:
-	od = d;
-	for (d = md->map->devices; d != od; d = d->next)
-		close_dev(d);
-	ru;
-
-	return ret;
 }
 
 /*
- * we need to be able to change a mapping table
+ * Deactivate the device, the device must not be
+ * opened by anyone.
+ */
+int dm_deactivate(struct mapped_device *md)
+{
+	rl;
+	if (md->use_count) {
+		ru;
+		return -EPERM;
+	}
+
+	fsync_dev(md->dev);
+
+	ru;
+
+	wl;
+	if (md->use_count) {
+		/* drat, somebody got in quick ... */
+		wu;
+		return -EPERM;
+	}
+
+        close_devices(md->map->devices);
+	md->map = 0;
+	clear_bit(DM_ACTIVE, &md->state);
+	wu;
+
+	return 0;
+}
+
+/*
+ * We need to be able to change a mapping table
  * under a mounted filesystem.  for example we
  * might want to move some data in the background.
  * Before the table can be swapped with
@@ -701,10 +774,15 @@ int dm_activate(struct mapped_device *md)
 void dm_suspend(struct mapped_device *md)
 {
 	DECLARE_WAITQUEUE(wait, current);
-	struct dev_list *d;
 
-	if (!is_active(md))
+	wl;
+	if (!is_active(md)) {
+		wu;
 		return;
+	}
+
+	clear_bit(DM_ACTIVE, &md->state);
+	wu;
 
 	/* wait for all the pending io to flush */
 	add_wait_queue(&md->wait, &wait);
@@ -722,11 +800,9 @@ void dm_suspend(struct mapped_device *md)
 	current->state = TASK_RUNNING;
 	remove_wait_queue(&md->wait, &wait);
 
-	/* close all the devices */
-	for (d = md->map->devices; d; d = d->next)
-		close_dev(d);
+	close_devices(md->map->devices);
 
-	clear_bit(DM_ACTIVE, &md->state);
+	md->map = 0;
 	wu;
 }
 
@@ -742,6 +818,9 @@ struct block_device_operations dm_blk_dops = {
  */
 module_init(dm_init);
 module_exit(dm_exit);
+
+MODULE_DESCRIPTION("device-mapper driver");
+MODULE_AUTHOR("Joe Thornber <thornber@btconnect.com>");
 
 /*
  * Local variables:
