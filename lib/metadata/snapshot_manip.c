@@ -134,7 +134,8 @@ int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
 	if (id)
 		s->id = *id;
 	else if (!id_create(&s->id)) {
-		log_error("Snapshot UUID creation failed");
+		log_error("Random UUID creation failed for snapshot %s.",
+			  cow->name);
 		return 0;
 	}
 
