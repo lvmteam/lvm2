@@ -35,10 +35,8 @@ struct lvcreate_params {
 	char **pvs;
 };
 
-
 static int _read_name_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd,
-			     int *pargc, char ***pargv)
+			     struct cmd_context *cmd, int *pargc, char ***pargv)
 {
 	int argc = *pargc;
 	char **argv = *pargv, *ptr;
@@ -87,7 +85,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 			if (lp->lv_name && strchr(lp->lv_name, '/')) {
 				if (!(lp->vg_name =
 				      extract_vgname(cmd->fid, lp->lv_name)))
-					return 0;
+					    return 0;
 
 				if (strcmp(lp->vg_name, argv[0])) {
 					log_error("Inconsistent volume group "
@@ -110,8 +108,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 }
 
 static int _read_size_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd,
-			     int *pargc, char ***pargv)
+			     struct cmd_context *cmd, int *pargc, char ***pargv)
 {
 	/*
 	 * There are two mutually exclusive ways of specifying
@@ -164,8 +161,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 
 	if (lp->stripes > 1 && !lp->stripe_size) {
 		lp->stripe_size = 2 * STRIPE_SIZE_DEFAULT;
-		log_print("Using default stripesize %dKB",
-			  lp->stripe_size / 2);
+		log_print("Using default stripesize %dKB", lp->stripe_size / 2);
 	}
 
 	if (argc && argc < lp->stripes) {
@@ -274,8 +270,7 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 
 	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
 			 lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - device not zeroed (%s)",
-			  lv->name);
+		log_error("Name too long - device not zeroed (%s)", lv->name);
 		return 0;
 	}
 
@@ -295,23 +290,19 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 	return 1;
 }
 
-static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
-		     struct logical_volume **plv)
+static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 {
 	uint32_t size_rest;
 	uint32_t status = 0;
 	struct volume_group *vg;
 	struct logical_volume *lv, *org;
 	struct list *pvh;
-
-
-	*plv = NULL;
+	char lvidbuf[128];
 
 	if (lp->contiguous)
 		status |= ALLOC_CONTIGUOUS;
 	else
 		status |= ALLOC_SIMPLE;
-
 
 	status |= lp->permission;
 
@@ -339,7 +330,6 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		return 0;
 	}
 
-
 	/*
 	 * Create the pv list.
 	 */
@@ -351,7 +341,6 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		}
 	} else
 		pvh = &vg->pvs;
-
 
 	if (lp->stripe_size > vg->extent_size) {
 		log_error("Setting stripe size %d KB to physical extent "
@@ -368,7 +357,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 			char *s1;
 
 			lp->extents += vg->extent_size - lp->extents %
-				vg->extent_size;
+			    vg->extent_size;
 			log_print("Rounding up size to full physical "
 				  "extent %s",
 				  (s1 = display_size(lp->extents / 2,
@@ -391,23 +380,9 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (!archive(vg))
-		return 0;
-
 	if (!(lv = lv_create(cmd->fid, lp->lv_name, status,
 			     lp->stripes, lp->stripe_size, lp->extents,
-			     vg, pvh)))
-		return 0;
-
-	if (lp->zero)
-		_zero_lv(cmd, lv);
-	else
-		log_print("WARNING: \"%s\" not zeroed", lv->name);
-
-	if (lp->snapshot && !vg_add_snapshot(org, lv, 1, lp->chunk_size)) {
-		log_err("Couldn't create snapshot.");
-		return 0;
-	}
+			     vg, pvh))) return 0;
 
 	if (lp->read_ahead) {
 		log_verbose("Setting read ahead sectors");
@@ -420,14 +395,57 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		log_verbose("Setting minor number to %d", lv->minor);
 	}
 
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		return 0;
+
+	if (!archive(vg))
+		return 0;
+
 	/* store vg on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		return 0;
 
+	if (!lock_vol(cmd, lvidbuf, LCK_LV_ACTIVATE))
+		return 0;
+
+	if (lp->zero || lp->snapshot)
+		_zero_lv(cmd, lv);
+	else
+		log_print("WARNING: \"%s\" not zeroed", lv->name);
+
+	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
+
+	if (lp->snapshot) {
+		if (!lock_vol(cmd, lvidbuf, LCK_LV_DEACTIVATE)) {
+			log_err("Couldn't lock snapshot.");
+			return 0;
+		}
+
+		lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
+
+		if (!vg_add_snapshot(org, lv, 1, lp->chunk_size)) {
+			log_err("Couldn't create snapshot.");
+			return 0;
+		}
+
+		/* store vg on disk(s) */
+		if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+			return 0;
+
+		if (!lock_vol(cmd, lvidbuf, LCK_LV_ACTIVATE))
+			return 0;
+		lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
+	}
+
 	backup(vg);
+
 	log_print("Logical volume \"%s\" created", lv->name);
 
-	*plv = lv;
+	/*
+	 * FIXME: as a sanity check we could try reading the
+	 * last block of the device ?
+	 */
+
 	return 1;
 }
 
@@ -435,8 +453,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int r = ECMD_FAILED;
 	struct lvcreate_params lp;
-	struct logical_volume *lv;
-	char lvidbuf[128];
 
 	memset(&lp, 0, sizeof(lp));
 
@@ -448,26 +464,14 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return 0;
 	}
 
-	if (!_lvcreate(cmd, &lp, &lv)) {
+	if (!_lvcreate(cmd, &lp)) {
 		stack;
 		goto out;
 	}
 
-	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
-		return 0;
-
-	if (!lock_vol(cmd, lvidbuf, LCK_LV_ACTIVATE))
-		goto out;
-	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
-
-	/*
-	 * FIXME: as a sanity check we could try reading the
-	 * last block of the device ?
-	 */
-
 	r = 0;
 
- out:
+      out:
 	lock_vol(cmd, lp.vg_name, LCK_VG_UNLOCK);
 	return r;
 }
