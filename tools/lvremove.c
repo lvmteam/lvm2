@@ -20,62 +20,29 @@
 
 #include "tools.h"
 
-int lvremove_single(char *lv_name);
+static int lvremove_single(struct volume_group *vg, struct logical_volume *lv);
 
 int lvremove(int argc, char **argv)
 {
-	int opt;
-	int ret = 0;
-
 	if (!argc) {
 		log_error("Please enter one or more logical volume paths");
 		return EINVALID_CMD_LINE;
 	}
 
-	for (opt = 0; opt < argc; opt++) {
-		if ((ret = lvremove_single(argv[opt])))
-			break;
-	}
-
-	return ret;
+	return process_each_lv(argc, argv, &lvremove_single);
 }
 
-int lvremove_single(char *lv_name)
+static int lvremove_single(struct volume_group *vg, struct logical_volume *lv)
 {
-	char *vg_name = NULL;
-
-	struct volume_group *vg;
-	struct list *lvh;
-	struct logical_volume *lv;
-
-	/* does VG exist? */
-	if (!(vg_name = extract_vgname(fid, lv_name))) {
-		return ECMD_FAILED;
-	}
-
-	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s doesn't exist", vg_name);
-		return ECMD_FAILED;
-	}
-
 	if (!(vg->status & ACTIVE)) {
 		log_error("Volume group %s must be active before removing a "
-			  "logical volume", vg_name);
+			  "logical volume", vg->name);
 		return ECMD_FAILED;
 	}
-
-	if (!(lvh = find_lv_in_vg(vg, lv_name))) {
-		log_error("Can't find logical volume %s in volume group %s",
-			  lv_name, vg_name);
-		return ECMD_FAILED;
-	}
-
-	lv = &list_item(lvh, struct lv_list)->lv;
 
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't remove logical volume %s under snapshot",
-			  lv_name);
+			  lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -83,7 +50,7 @@ int lvremove_single(char *lv_name)
 	if (lv->open) {
 		log_error("can't remove open %s logical volume %s",
 			  lv->status & SNAPSHOT ? "snapshot" : "",
-			  lv_name);
+			  lv->name);
 		return ECMD_FAILED;
 	}
 ************/
@@ -91,21 +58,21 @@ int lvremove_single(char *lv_name)
 	if (!arg_count(force_ARG)) {
 		if (yes_no_prompt
 		    ("Do you really want to remove %s? [y/n]: ",
-		     lv_name) == 'n') {
-			log_print("Logical volume %s not removed", lv_name);
+		     lv->name) == 'n') {
+			log_print("Logical volume %s not removed", lv->name);
 			return 0;
 		}
 	}
 
-	log_verbose("Releasing logical volume %s", lv_name);
-	if (!lv_remove(vg, lvh)) {
-		log_error("Error releasing logical volume %s", lv_name);
+	log_verbose("Releasing logical volume %s", lv->name);
+	if (!lv_remove(vg, lv)) {
+		log_error("Error releasing logical volume %s", lv->name);
 		return ECMD_FAILED;
 	}
 
 /********* FIXME
-	log_verbose("Unlinking special file %s", lv_name);
-	if (!lvm_check_devfs() && unlink(lv_name) == -1)
+	log_verbose("Unlinking special file %s", lv->name);
+	if (!lvm_check_devfs() && unlink(lv->name) == -1)
 		log_error("Error unlinking special file %s", lv_name);
 **********/
 
@@ -114,10 +81,10 @@ int lvremove_single(char *lv_name)
 		return ECMD_FAILED;
 
 /******** FIXME
-	if ((ret = do_autobackup(vg_name, vg)))
+	if ((ret = do_autobackup(vg->name, vg)))
 		return ret;
 **********/
 
-	log_print("logical volume %s successfully removed", lv_name);
+	log_print("logical volume %s successfully removed", lv->name);
 	return 0;
 }

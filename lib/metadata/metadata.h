@@ -248,7 +248,8 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents);
 int lv_extend(struct logical_volume *lv,
 	      uint32_t extents, struct list *allocatable_pvs);
 
-int lv_remove(struct volume_group *vg, struct list *lvh);
+/* lv must be part of vg->lvs */
+int lv_remove(struct volume_group *vg, struct logical_volume *lv);
 
 
 /* FIXME: Move to other files */
