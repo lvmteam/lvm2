@@ -36,14 +36,14 @@ struct chunk *_new_chunk(struct pool *p, size_t s);
 /* by default things come out aligned for doubles */
 #define DEFAULT_ALIGNMENT __alignof__ (double)
 
-struct pool *pool_create(size_t chunk_hint)
+struct pool *pool_create(const char *name, size_t chunk_hint)
 {
 	size_t new_size = 1024;
 	struct pool *p = dbg_malloc(sizeof(*p));
 
 	if (!p) {
-		log_error("Couldn't create memory pool (size %" PRIsize_t ")",
-			  sizeof(*p));
+		log_error("Couldn't create memory pool %s (size %"
+			  PRIsize_t ")", name, sizeof(*p));
 		return 0;
 	}
 	memset(p, 0, sizeof(*p));

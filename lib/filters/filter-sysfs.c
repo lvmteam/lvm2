@@ -265,7 +265,7 @@ struct dev_filter *sysfs_filter_create(const char *proc)
 	if (!_locate_sysfs_blocks(proc, sys_block, sizeof(sys_block)))
 		return NULL;
 
-	if (!(mem = pool_create(256))) {
+	if (!(mem = pool_create("sysfs", 256))) {
 		log_error("sysfs pool creation failed");
 		return NULL;
 	}

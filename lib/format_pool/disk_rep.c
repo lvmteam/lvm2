@@ -259,7 +259,7 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 
 	/* FIXME: maybe should return a different error in memory
 	 * allocation failure */
-	if (!(tmpmem = pool_create(512))) {
+	if (!(tmpmem = pool_create("pool read_vg", 512))) {
 		stack;
 		return 0;
 	}

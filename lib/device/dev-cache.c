@@ -387,7 +387,7 @@ int dev_cache_init(void)
 {
 	_cache.names = NULL;
 
-	if (!(_cache.mem = pool_create(10 * 1024))) {
+	if (!(_cache.mem = pool_create("dev_cache", 10 * 1024))) {
 		stack;
 		return 0;
 	}

@@ -652,7 +652,7 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 	struct physical_volume *pv;
 	char buffer[32], *name;
 
-	if (!(f->mem = pool_create(512))) {
+	if (!(f->mem = pool_create("text pv_names", 512))) {
 		stack;
 		goto bad;
 	}

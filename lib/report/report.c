@@ -1081,7 +1081,7 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		rh->field_prefix = "";
 	}
 
-	if (!(rh->mem = pool_create(10 * 1024))) {
+	if (!(rh->mem = pool_create("report", 10 * 1024))) {
 		log_error("Allocation of memory pool for report failed");
 		return NULL;
 	}

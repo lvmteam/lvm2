@@ -99,7 +99,7 @@ static int _tok_match(const char *str, const char *b, const char *e)
 struct config_tree *create_config_tree(const char *filename)
 {
 	struct cs *c;
-	struct pool *mem = pool_create(10 * 1024);
+	struct pool *mem = pool_create("config", 10 * 1024);
 
 	if (!mem) {
 		stack;

@@ -183,7 +183,7 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda)
 {
-	struct pool *mem = pool_create(1024 * 10);
+	struct pool *mem = pool_create("lvm1 vg_read", 1024 * 10);
 	struct list pvs;
 	struct volume_group *vg = NULL;
 	list_init(&pvs);
@@ -276,7 +276,7 @@ static int _flatten_vg(struct format_instance *fid, struct pool *mem,
 static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 		     struct metadata_area *mda)
 {
-	struct pool *mem = pool_create(1024 * 10);
+	struct pool *mem = pool_create("lvm1 vg_write", 1024 * 10);
 	struct list pvds;
 	int r = 0;
 
@@ -299,7 +299,7 @@ static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
-	struct pool *mem = pool_create(1024);
+	struct pool *mem = pool_create("lvm1 pv_read", 1024);
 	struct disk_list *dl;
 	struct device *dev;
 	int r = 0;
@@ -421,7 +421,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	pv->pe_size = pv->pe_count = 0;
 	pv->pe_start = PE_ALIGN;
 
-	if (!(mem = pool_create(1024))) {
+	if (!(mem = pool_create("lvm1 pv_write", 1024))) {
 		stack;
 		return 0;
 	}

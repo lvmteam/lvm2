@@ -919,7 +919,7 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	struct pool *mem;
 	struct dev_manager *dm;
 
-	if (!(mem = pool_create(16 * 1024))) {
+	if (!(mem = pool_create("dev_manager", 16 * 1024))) {
 		stack;
 		return NULL;
 	}

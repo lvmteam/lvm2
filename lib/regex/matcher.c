@@ -275,7 +275,7 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns,
 	int i;
 	size_t len = 0;
 	struct rx_node *rx;
-	struct pool *scratch = pool_create(10 * 1024);
+	struct pool *scratch = pool_create("regex matcher", 10 * 1024);
 	struct matcher *m;
 
 	if (!scratch) {
