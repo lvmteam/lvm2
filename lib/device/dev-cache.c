@@ -298,25 +298,17 @@ int dev_cache_init(void)
 	return 0;
 }
 
+iterate_fn _check_closed(void *data)
+{
+	struct device *dev = (struct device *) data;
+
+	if (dev->fd >= 0)
+		log_err("Device '%s' has been left open.", dev_name(dev));
+}
+
 static inline void _check_for_open_devices(void)
 {
-#ifndef NDEBUG
-	struct dev_iter *i = dev_iter_create(NULL);
-	struct device *dev;
-
-	if (!i) {
-		stack;
-		return;
-	}
-
-	while ((dev = dev_iter_get(i))) {
-		if (dev->fd >= 0)
-			log_err("Device '%s' has been left open.",
-				dev_name(dev));
-	}
-
-	dev_iter_destroy(i);
-#endif
+	hash_iterate(_cache.names, _check_closed);
 }
 
 void dev_cache_exit(void)

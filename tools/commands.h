@@ -348,13 +348,12 @@ xx(vgcfgrestore,
    "\t[-l[l]|--list [--list]]" "\n"
    "\t[-n|--name VolumeGroupName] " "\n"
    "\t[-h|--help]" "\n"
-   "\t[-o|--oldpath OldPhysicalVolumePath] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose]" "\n"
    "\t[--version] " "\n"
-   "[PhysicalVolumePath]\n", 
+   "\tVolumeGroupName",
 
-   file_ARG, list_ARG, name_ARG, oldpath_ARG, test_ARG)
+   file_ARG, list_ARG, name_ARG, test_ARG)
 
 xx(vgchange,
    "Change volume group attributes",
