@@ -62,6 +62,11 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (cmd->fmt->features & FMT_MDAS) {
+		if (arg_sign_value(cmd, metadatasize_ARG, 0) == SIGN_MINUS) {
+			log_error("Metadata size may not be negative");
+			return EINVALID_CMD_LINE;
+		}
+
 		pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG,
 						  UINT64_C(0)) * 2;
 		if (!pvmetadatasize)

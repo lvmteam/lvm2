@@ -133,6 +133,10 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_count(cmd, stripesize_ARG)) {
+		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
+			log_error("Stripesize may not be negative.");
+			goto error;
+		}
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
 			ssize = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
 		else
