@@ -167,7 +167,7 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 	return r;
 }
 
-static int _create(int argc, char **argv)
+static int _create(int argc, char **argv, void *data)
 {
 	if (argc == 1)
 		return _load(DM_DEVICE_CREATE, argv[1], NULL, NULL);
@@ -176,12 +176,12 @@ static int _create(int argc, char **argv)
 		     (argc == 3) ? argv[3] : NULL);
 }
 
-static int _reload(int argc, char **argv)
+static int _reload(int argc, char **argv, void *data)
 {
 	return _load(DM_DEVICE_RELOAD, argv[1], argv[2], NULL);
 }
 
-static int _rename(int argc, char **argv)
+static int _rename(int argc, char **argv, void *data)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -206,7 +206,7 @@ static int _rename(int argc, char **argv)
 	return r;
 }
 
-static int _version(int argc, char **argv)
+static int _version(int argc, char **argv, void *data)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -258,155 +258,38 @@ static int _simple(int task, const char *name, int display)
 	return r;
 }
 
-static int _remove_all(int argc, char **argv)
+static int _remove_all(int argc, char **argv, void *data)
 {
 	return _simple(DM_DEVICE_REMOVE_ALL, "", 0);
 }
 
-static int _remove(int argc, char **argv)
+static int _remove(int argc, char **argv, void *data)
 {
 	return _simple(DM_DEVICE_REMOVE, argv[1], 0);
 }
 
-static int _suspend(int argc, char **argv)
+static int _suspend(int argc, char **argv, void *data)
 {
 	return _simple(DM_DEVICE_SUSPEND, argv[1], 1);
 }
 
-static int _resume(int argc, char **argv)
+static int _resume(int argc, char **argv, void *data)
 {
 	return _simple(DM_DEVICE_RESUME, argv[1], 1);
 }
 
-static int _clear(int argc, char **argv)
+static int _clear(int argc, char **argv, void *data)
 {
 	return _simple(DM_DEVICE_CLEAR, argv[1], 1);
 }
 
-static int _wait(int argc, char **argv)
+static int _wait(int argc, char **argv, void *data)
 {
 	return _simple(DM_DEVICE_WAITEVENT, argv[1], 2);
 }
 
-static int _status(int argc, char **argv)
-{
-	int r = 0;
-	struct dm_task *dmt;
-	void *next = NULL;
-	uint64_t start, length;
-	char *target_type = NULL;
-	char *params;
-	int cmd;
-
-	if (!strcmp(argv[0], "status"))
-		cmd = DM_DEVICE_STATUS;
-	else
-		cmd = DM_DEVICE_TABLE;
-
-	if (!(dmt = dm_task_create(cmd)))
-		return 0;
-
-	if (!dm_task_set_name(dmt, argv[1]))
-		goto out;
-
-	if (!dm_task_run(dmt))
-		goto out;
-
-	if (_switches[VERBOSE_ARG])
-		_display_info(dmt);
-
-	/* Fetch targets and print 'em */
-	do {
-		next = dm_get_next_target(dmt, next, &start, &length,
-					  &target_type, &params);
-		if (target_type) {
-			printf("%" PRIu64 " %" PRIu64 " %s %s\n",
-			       start, length, target_type, params);
-		}
-	} while (next);
-
-	r = 1;
-
-      out:
-	dm_task_destroy(dmt);
-	return r;
-
-}
-
-static int _info(int argc, char **argv)
-{
-	int r = 0;
-
-	/* remove <dev_name> */
-	struct dm_task *dmt;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
-		return 0;
-
-	if (!dm_task_set_name(dmt, argv[1]))
-		goto out;
-
-	if (!dm_task_run(dmt))
-		goto out;
-
-	_display_info(dmt);
-	r = 1;
-
-      out:
-	dm_task_destroy(dmt);
-	return r;
-}
-
-static int _deps(int argc, char **argv)
-{
-	int r = 0;
-	uint32_t i;
-	struct dm_deps *deps;
-
-	/* remove <dev_name> */
-	struct dm_task *dmt;
-	struct dm_info info;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_DEPS)))
-		return 0;
-
-	if (!dm_task_set_name(dmt, argv[1]))
-		goto out;
-
-	if (!dm_task_run(dmt))
-		goto out;
-
-	if (!dm_task_get_info(dmt, &info))
-		goto out;
-
-	if (!(deps = dm_task_get_deps(dmt)))
-		goto out;
-
-	if (!info.exists) {
-		printf("Device does not exist.\n");
-		r = 1;
-		goto out;
-	}
-
-	if (_switches[VERBOSE_ARG])
-		_display_info(dmt);
-
-	printf("%d dependencies\t:", deps->count);
-
-	for (i = 0; i < deps->count; i++)
-		printf(" (%d, %d)",
-		       (int) MAJOR(deps->device[i]),
-		       (int) MINOR(deps->device[i]));
-	printf("\n");
-
-	r = 1;
-
-      out:
-	dm_task_destroy(dmt);
-	return r;
-}
-
-static int _ls(int argc, char **argv)
+static int _process_all(int argc, char **argv,
+			int (*fn)(int argc, char **argv, void *data))
 {
 	int r = 0;
 	struct dm_names *names;
@@ -431,8 +314,8 @@ static int _ls(int argc, char **argv)
 
 	do {
 		names = (void *) names + next;
-		printf("%s\t(%d, %d)\n", names->name,
-		       (int) MAJOR(names->dev), (int) MINOR(names->dev));
+		if (!fn(argc, argv, (void *)names))
+			r = 0;
 		next = names->next;
 	} while (next);
 
@@ -441,10 +324,181 @@ static int _ls(int argc, char **argv)
 	return r;
 }
 
+static int _status(int argc, char **argv, void *data)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	void *next = NULL;
+	uint64_t start, length;
+	char *target_type = NULL;
+	char *params;
+	int cmd;
+	struct dm_names *names = (struct dm_names *)data;
+	char *name;
+
+	if (argc == 1 && !data)
+		return _process_all(argc, argv, _status);
+
+	if (data)
+		name = names->name;
+	else
+		name = argv[1];
+
+	if (!strcmp(argv[0], "status"))
+		cmd = DM_DEVICE_STATUS;
+	else
+		cmd = DM_DEVICE_TABLE;
+
+	if (!(dmt = dm_task_create(cmd)))
+		return 0;
+
+	if (!dm_task_set_name(dmt, name))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	if (_switches[VERBOSE_ARG])
+		_display_info(dmt);
+
+	/* Fetch targets and print 'em */
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length,
+					  &target_type, &params);
+		if (data && !_switches[VERBOSE_ARG])
+			printf("%s: ", name);
+		if (target_type) {
+			printf("%" PRIu64 " %" PRIu64 " %s %s\n",
+			       start, length, target_type, params);
+		}
+	} while (next);
+
+	if (data && _switches[VERBOSE_ARG])
+		printf("\n");
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+
+}
+
+static int _info(int argc, char **argv, void *data)
+{
+	int r = 0;
+
+	struct dm_task *dmt;
+	struct dm_names *names = (struct dm_names *)data;
+	char *name;
+
+	if (argc == 1 && !data)
+		return _process_all(argc, argv, _info);
+
+	if (data)
+		name = names->name;
+	else
+		name = argv[1];
+
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
+		return 0;
+
+	if (!dm_task_set_name(dmt, name))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	_display_info(dmt);
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _deps(int argc, char **argv, void *data)
+{
+	int r = 0;
+	uint32_t i;
+	struct dm_deps *deps;
+	struct dm_task *dmt;
+	struct dm_info info;
+	struct dm_names *names = (struct dm_names *)data;
+	char *name;
+
+	if (argc == 1 && !data)
+		return _process_all(argc, argv, _deps);
+
+	if (data)
+		name = names->name;
+	else
+		name = argv[1];
+
+	if (!(dmt = dm_task_create(DM_DEVICE_DEPS)))
+		return 0;
+
+	if (!dm_task_set_name(dmt, name))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	if (!dm_task_get_info(dmt, &info))
+		goto out;
+
+	if (!(deps = dm_task_get_deps(dmt)))
+		goto out;
+
+	if (!info.exists) {
+		printf("Device does not exist.\n");
+		r = 1;
+		goto out;
+	}
+
+	if (_switches[VERBOSE_ARG])
+		_display_info(dmt);
+
+	if (data && !_switches[VERBOSE_ARG])
+		printf("%s: ", name);
+	printf("%d dependencies\t:", deps->count);
+
+	for (i = 0; i < deps->count; i++)
+		printf(" (%d, %d)",
+		       (int) MAJOR(deps->device[i]),
+		       (int) MINOR(deps->device[i]));
+	printf("\n");
+
+	if (data && _switches[VERBOSE_ARG])
+		printf("\n");
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _display_name(int argc, char **argv, void *data)
+{
+	struct dm_names *names = (struct dm_names *)data;
+
+	printf("%s\t(%d, %d)\n", names->name,
+	       (int) MAJOR(names->dev), (int) MINOR(names->dev));
+
+	return 1;
+}
+
+static int _ls(int argc, char **argv, void *data)
+{
+	return _process_all(argc, argv, _display_name);
+}
+
 /*
  * dispatch table
  */
-typedef int (*command_fn) (int argc, char **argv);
+typedef int (*command_fn) (int argc, char **argv, void *data);
 
 struct command {
 	const char *name;
@@ -465,10 +519,10 @@ static struct command _commands[] = {
 	{"reload", "<dev_name> <table_file>", 2, 2, _reload},
 	{"rename", "<dev_name> <new_name>", 2, 2, _rename},
 	{"ls", "", 0, 0, _ls},
-	{"info", "<dev_name>", 1, 1, _info},
-	{"deps", "<dev_name>", 1, 1, _deps},
-	{"status", "<dev_name>", 1, 1, _status},
-	{"table", "<dev_name>", 1, 1, _status},
+	{"info", "[<dev_name>]", 0, 1, _info},
+	{"deps", "[<dev_name>]", 0, 1, _deps},
+	{"status", "[<dev_name>]", 0, 1, _status},
+	{"table", "[<dev_name>]", 0, 1, _status},
 	{"wait", "<dev_name>", 1, 1, _wait},
 	{"version", "", 0, 0, _version},
 	{NULL, NULL, 0, 0, NULL}
@@ -575,7 +629,7 @@ int main(int argc, char **argv)
 	}
 
       doit:
-	if (!c->fn(argc, argv)) {
+	if (!c->fn(argc, argv, NULL)) {
 		fprintf(stderr, "Command failed\n");
 		exit(1);
 	}
