@@ -26,6 +26,55 @@ typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
 #define _read_int64(root, path, result) \
 	get_config_uint64(root, path, '/', result)
 
+/*
+ * Logs an attempt to read an invalid format file.
+ */
+static void _invalid_format(const char *str)
+{
+	log_err("invalid text format file (%s)", str);
+}
+
+/*
+ * Checks that the config file contains vg metadata, and that it
+ * is in a version that we understand.
+ */
+static int _check_version(struct config_file *cf)
+{
+	struct config_node *cn;
+	struct config_value *cv;
+
+	/*
+	 * Check the contents field.
+	 */
+	if (!(cn = find_config_node(cf->root, CONTENTS_FIELD, '/'))) {
+		_invalid_format("no contents field");
+		return 0;
+	}
+
+	cv = cn->v;
+	if (!cv || cv->type != CFG_STRING || strcmp(cv->v.str, CONTENTS_VALUE))
+	{
+		_invalid_format("incorrect contents field");
+		return 0;
+	}
+
+	/*
+	 * Check the version number.
+	 */
+	if (!(cn = find_config_node(cf->root, FORMAT_VERSION_FIELD, '/'))) {
+		_invalid_format("no version field");
+		return 0;
+	}
+
+	cv = cn->v;
+	if (!cv || cv->type != CFG_INT || cv->v.i != FORMAT_VERSION_VALUE) {
+		_invalid_format("incorrect version number");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _read_id(struct id *id, struct config_node *cn, const char *path)
 {
 	struct config_value *cv;
@@ -663,6 +712,9 @@ struct volume_group *text_vg_import(struct format_instance *fid,
 		log_error("Couldn't read volume group file.");
 		goto out;
 	}
+
+	if (!_check_version(cf))
+		goto out;
 
 	if (!(vg = _read_vg(fid, cf, um))) {
 		stack;
