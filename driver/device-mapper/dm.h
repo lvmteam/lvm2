@@ -275,6 +275,10 @@ static inline const char *eat_space(const char *b, const char *e)
 	return b;
 }
 
+
+/*
+ * FIXME: these are too big to be inlines
+ */
 static inline int get_number(const char **b, const char *e, unsigned int *n)
 {
 	char *ptr;
@@ -288,6 +292,31 @@ static inline int get_number(const char **b, const char *e, unsigned int *n)
 	*b = ptr;
 
 	return 0;
+}
+
+static inline int get_word(const char *b, const char *e,
+			   const char **wb, const char **we)
+{
+	b = eat_space(b, e);
+
+	if (b == e)
+		return -EINVAL;
+
+	*wb = b;
+	while(b != e && !isspace((int) *b))
+		b++;
+	*we = b;
+	return 0;
+}
+
+static inline void tok_cpy(char *dest, size_t max,
+			   const char *b, const char *e)
+{
+	size_t len = e - b;
+	if (len > --max)
+		len = max;
+	strncpy(dest, b, len);
+	dest[len] = '\0';
 }
 
 #endif

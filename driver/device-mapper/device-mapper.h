@@ -53,6 +53,7 @@ int dm_register_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
  * destination devices are handled correctly
  * (ie. opened/closed).
  */
+int dm_table_lookup_device(const char *path, kdev_t *d);
 int dm_table_add_device(struct dm_table *t, kdev_t dev);
 void dm_table_remove_device(struct dm_table *t, kdev_t dev);
 
