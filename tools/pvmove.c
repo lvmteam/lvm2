@@ -123,7 +123,7 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 /* Create new LV with mirror segments for the required copies */
 static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						struct volume_group *vg,
-						struct physical_volume *pv,
+						struct list *source_pvl,
 						const char *lv_name,
 						struct list *allocatable_pvs,
 						struct list **lvs_changed)
@@ -165,7 +165,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			log_print("Skipping locked LV %s", lv->name);
 			continue;
 		}
-		if (!insert_pvmove_mirrors(cmd, lv_mirr, pv, lv,
+		if (!insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
 					   allocatable_pvs, *lvs_changed)) {
 			stack;
 			return NULL;
@@ -248,12 +248,18 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 			  int argc, char **argv)
 {
 	const char *lv_name = NULL;
+	char *pv_name_arg;
 	struct volume_group *vg;
+	struct list *source_pvl;
 	struct list *allocatable_pvs;
 	struct list *lvs_changed;
 	struct physical_volume *pv;
 	struct logical_volume *lv_mirr;
 	int first_time = 1;
+
+	pv_name_arg = argv[0];
+	argc--;
+	argv++;
 
 	/* Find PV (in VG) */
 	if (!(pv = find_pv_by_name(cmd, pv_name))) {
@@ -299,6 +305,13 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 
 		first_time = 0;
 	} else {
+		/* Determine PE ranges to be moved */
+		if (!(source_pvl = create_pv_list(cmd->mem, vg, 1,
+						  &pv_name_arg, 0))) {
+			stack;
+			unlock_vg(cmd, pv->vg_name);
+			return ECMD_FAILED;
+		}
 
 		/* Get PVs we can use for allocation */
 		if (!(allocatable_pvs = _get_allocatable_pvs(cmd, argc, argv,
@@ -314,7 +327,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 			return ECMD_FAILED;
 		}
 
-		if (!(lv_mirr = _set_up_pvmove_lv(cmd, vg, pv, lv_name,
+		if (!(lv_mirr = _set_up_pvmove_lv(cmd, vg, source_pvl, lv_name,
 						  allocatable_pvs,
 						  &lvs_changed))) {
 			stack;
@@ -459,12 +472,21 @@ int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 int pvmove(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *pv_name = NULL;
+	char *colon;
 	int ret;
 
 	if (argc) {
 		pv_name = argv[0];
-		argc--;
-		argv++;
+
+		/* Drop any PE lists from PV name */
+		if ((colon = strchr(pv_name, ':'))) {
+			if (!(pv_name = pool_strndup(cmd->mem, pv_name,
+						     (unsigned) (colon -
+								 pv_name)))) {
+				log_error("Failed to clone PV name");
+				return 0;
+			}
+		}
 
 		if (!arg_count(cmd, abort_ARG) &&
 		    (ret = _set_up_pvmove(cmd, pv_name, argc, argv)) !=
@@ -472,6 +494,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 			stack;
 			return ret;
 		}
+
 	}
 
 	return pvmove_poll(cmd, pv_name,

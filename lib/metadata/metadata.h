@@ -501,7 +501,7 @@ int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow);
  */
 int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv_mirr,
-			  struct physical_volume *pv,
+			  struct list *source_pvl,
 			  struct logical_volume *lv,
 			  struct list *allocatable_pvs,
 			  struct list *lvs_changed);

@@ -95,7 +95,7 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "mirror_count = %u", seg->area_count);
 	if (seg->status & PVMOVE)
-		out_size(f, (uint64_t) seg->extents_copied,
+		out_size(f, (uint64_t) seg->extents_copied * seg->lv->vg->extent_size,
 			 "extents_moved = %u", seg->extents_copied);
 
 	return out_areas(f, seg, "mirror");
@@ -130,6 +130,7 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 	int mirror_status = MIRR_RUNNING;
 	int areas = seg->area_count;
 	int start_area = 0u;
+	uint32_t region_size, region_max;
 
 	if (!*target_state)
 		*target_state = _init_target(mem, cft);
@@ -143,7 +144,7 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 		if (seg->extents_copied == seg->area_len) {
 			mirror_status = MIRR_COMPLETED;
 			start_area = 1;
-		} else if (*pvmove_mirror_count++) {
+		} else if ((*pvmove_mirror_count)++) {
 			mirror_status = MIRR_DISABLED;
 			areas = 1;
 		}
@@ -153,8 +154,20 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 		*target = "linear";
 	} else {
 		*target = "mirror";
+
+		/* Find largest power of 2 region size unit we can use */
+		region_max = (1 << (ffs(seg->area_len) - 1)) *
+			      seg->lv->vg->extent_size;
+
+		region_size = mirr_state->region_size;
+		if (region_max < region_size) {
+			region_size = region_max;
+			log_verbose("Using reduced mirror region size of %u sectors",
+				    region_size);
+		}
+
 		if ((*pos = lvm_snprintf(params, paramsize, "core 1 %u %u ",
-					 mirr_state->region_size, areas)) < 0) {
+					 region_size, areas)) < 0) {
 			stack;
 			return -1;
 		}
@@ -162,7 +175,6 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 
 	return compose_areas_line(dm, seg, params, paramsize, pos, start_area,
 				  areas);
-
 }
 
 static int _target_percent(void **target_state, struct pool *mem,
@@ -188,8 +200,7 @@ static int _target_percent(void **target_state, struct pool *mem,
 	*total_denominator += denominator;
 
 	if (seg)
-		seg->extents_copied = mirr_state->region_size *
-		    numerator / seg->lv->vg->extent_size;
+		seg->extents_copied = seg->area_len * numerator / denominator;
 
 	return 1;
 }

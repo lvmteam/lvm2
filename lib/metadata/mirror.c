@@ -26,7 +26,7 @@
  */
 int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv_mirr,
-			  struct physical_volume *pv,
+			  struct list *source_pvl,
 			  struct logical_volume *lv,
 			  struct list *allocatable_pvs,
 			  struct list *lvs_changed)
@@ -34,9 +34,15 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	struct list *segh;
 	struct lv_segment *seg;
 	struct lv_list *lvl;
+	struct pv_list *pvl;
 	int lv_used = 0;
 	uint32_t s, start_le, extent_count = 0u;
 	struct segment_type *segtype;
+	struct pe_range *per;
+	uint32_t pe_start, pe_end, per_end, stripe_multiplier;
+
+	/* Only 1 PV may feature in source_pvl */
+	pvl = list_item(source_pvl->n, struct pv_list);
 
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "mirror"))) {
 		stack;
@@ -50,43 +56,113 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
                 return 0;
         }
 
+	/* Split LV segments to match PE ranges */
+	list_iterate(segh, &lv->segments) {
+		seg = list_item(segh, struct lv_segment);
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg->area[s].type != AREA_PV ||
+			    seg->area[s].u.pv.pv->dev != pvl->pv->dev)
+				continue;
+
+			/* Do these PEs need moving? */
+			list_iterate_items(per, pvl->pe_ranges) {
+				pe_start = seg->area[s].u.pv.pe;
+				pe_end = pe_start + seg->area_len - 1;
+				per_end = per->start + per->count - 1;
+
+				/* No overlap? */
+				if ((pe_end < per->start) ||
+				    (pe_start > per_end))
+					continue;
+
+				if (seg->segtype->flags & SEG_AREAS_STRIPED)
+					stripe_multiplier = seg->area_count;
+				else
+					stripe_multiplier = 1;
+
+				if ((per->start != pe_start &&
+				     per->start > pe_start) &&
+				    !lv_split_segment(lv, seg->le +
+						      (per->start - pe_start) *
+						      stripe_multiplier)) {
+					stack;
+					return 0;
+				}
+
+				if ((per_end != pe_end &&
+				     per_end < pe_end) &&
+				    !lv_split_segment(lv, seg->le +
+						      (per_end - pe_start + 1) *
+						      stripe_multiplier)) {
+					stack;
+					return 0;
+				}
+			}
+		}
+	}
+
 	/* Work through all segments on the supplied PV */
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg->area[s].type != AREA_PV ||
-			    seg->area[s].u.pv.pv->dev != pv->dev)
+			    seg->area[s].u.pv.pv->dev != pvl->pv->dev)
 				continue;
 
-			/* First time, add LV to list of LVs affected */
-			if (!lv_used) {
-				if (!(lvl = pool_alloc(cmd->mem, sizeof(*lvl)))) {
-					log_error("lv_list alloc failed");
+			pe_start = seg->area[s].u.pv.pe;
+
+			/* Do these PEs need moving? */
+			list_iterate_items(per, pvl->pe_ranges) {
+				per_end = per->start + per->count - 1;
+
+				if ((pe_start < per->start) ||
+				    (pe_start > per_end))
+					continue;
+
+				log_debug("Matched PE range %u-%u against "
+					  "%s %u len %u", per->start, per_end,
+					  dev_name(seg->area[s].u.pv.pv->dev),
+					  seg->area[s].u.pv.pe, seg->area_len);
+
+				/* First time, add LV to list of LVs affected */
+				if (!lv_used) {
+					if (!(lvl = pool_alloc(cmd->mem, sizeof(*lvl)))) {
+						log_error("lv_list alloc failed");
+						return 0;
+					}
+					lvl->lv = lv;
+					list_add(lvs_changed, &lvl->list);
+					lv_used = 1;
+				}
+	
+				log_very_verbose("Moving %s:%u-%u of %s/%s",
+						 dev_name(pvl->pv->dev),
+						 seg->area[s].u.pv.pe,
+						 seg->area[s].u.pv.pe +
+						     seg->area_len - 1,
+						 lv->vg->name, lv->name);
+
+				start_le = lv_mirr->le_count;
+				if (!lv_extend(lv->vg->fid, lv_mirr, segtype, 1,
+				       	seg->area_len, 0u, seg->area_len,
+				       	seg->area[s].u.pv.pv,
+				       	seg->area[s].u.pv.pe,
+				       	PVMOVE, allocatable_pvs,
+				       	lv->alloc)) {
+					log_error("Allocation for temporary "
+					  	"pvmove LV failed");
 					return 0;
 				}
-				lvl->lv = lv;
-				list_add(lvs_changed, &lvl->list);
-				lv_used = 1;
+				seg->area[s].type = AREA_LV;
+				seg->area[s].u.lv.lv = lv_mirr;
+				seg->area[s].u.lv.le = start_le;
+	
+				extent_count += seg->area_len;
+	
+				lv->status |= LOCKED;
+
+				break;
 			}
-
-			start_le = lv_mirr->le_count;
-			if (!lv_extend(lv->vg->fid, lv_mirr, segtype, 1,
-				       seg->area_len, 0u, seg->area_len,
-				       seg->area[s].u.pv.pv,
-				       seg->area[s].u.pv.pe,
-				       PVMOVE, allocatable_pvs,
-				       lv->alloc)) {
-				log_error("Allocation for temporary "
-					  "pvmove LV failed");
-				return 0;
-			}
-			seg->area[s].type = AREA_LV;
-			seg->area[s].u.lv.lv = lv_mirr;
-			seg->area[s].u.lv.le = start_le;
-
-			extent_count += seg->area_len;
-
-			lv->status |= LOCKED;
 		}
 	}
 
@@ -167,7 +243,11 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				lv1->status &= ~LOCKED;
 			}
 		}
+		if (!lv_merge_segments(lv1))
+			stack;
+
 	}
+
 
 	return 1;
 }
