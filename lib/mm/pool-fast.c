@@ -36,7 +36,8 @@ struct pool *pool_create(size_t chunk_hint)
 	struct pool *p = dbg_malloc(sizeof(*p));
 
 	if (!p) {
-		log_error("Couldn't create memory pool");
+		log_error("Couldn't create memory pool (size %u)",
+			  sizeof(*p));
 		return 0;
 	}
 	memset(p, 0, sizeof(*p));
@@ -223,7 +224,7 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 		p->spare_chunk = 0;
 	} else {
 		if (!(c = dbg_malloc(s))) {
-			log_err("Out of memory.");
+			log_err("Out of memory.  Requested %u bytes.", s);
 			return NULL;
 		}
 

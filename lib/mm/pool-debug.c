@@ -32,7 +32,8 @@ struct pool *pool_create(size_t chunk_hint)
 	struct pool *mem = dbg_malloc(sizeof(*mem));
 
 	if (!mem) {
-		stack;
+		log_error("Couldn't create memory pool (size %u)",
+			  sizeof(*mem));
 		return NULL;
 	}
 
@@ -79,7 +80,7 @@ static struct block *_new_block(size_t s, unsigned alignment)
 	struct block *b = dbg_malloc(len);
 
 	if (!b) {
-		log_err("Out of memory.");
+		log_err("Out of memory.  Requested %u bytes.", len);
 		return NULL;
 	}
 
