@@ -436,7 +436,7 @@ int vg_add_snapshot(struct logical_volume *origin,
 
 int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow);
 
-static inline int validate_vgname(const char *n)
+static inline int validate_name(const char *n)
 {
 	register char c;
 	register int len = 0;

@@ -781,7 +781,7 @@ int vgname_from_mda(const struct format_type *fmt, struct device_area *dev_area,
 		buf[len] = '\0';
 
 		/* Ignore this entry if the characters aren't permissible */
-		if (!validate_vgname(buf)) {
+		if (!validate_name(buf)) {
 			stack;
 			goto out;
 		}
