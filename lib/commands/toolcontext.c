@@ -311,7 +311,9 @@ static int _init_filters(struct cmd_context *cmd)
 	if (!*cmd->sys_dir)
 		cmd->dump_filter = 0;
 
-	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
+	if (!stat(lvm_cache, &st) &&
+	    (st.st_mtime > config_file_timestamp(cmd->cf)) &&
+	    !persistent_filter_load(f4))
 		log_verbose("Failed to load existing device cache from %s",
 			    lvm_cache);
 

@@ -234,6 +234,13 @@ int read_config_file(struct config_tree *cf, const char *file)
 	return r;
 }
 
+time_t config_file_timestamp(struct config_tree *cf)
+{
+	struct cs *c = (struct cs *) cf;
+
+	return c->timestamp;
+}
+
 /*
  * Returns 1 if config file reloaded
  */

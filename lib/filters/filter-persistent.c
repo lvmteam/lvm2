@@ -109,6 +109,8 @@ int persistent_filter_load(struct dev_filter *f)
 		r = 1;
 	}
 
+	log_very_verbose("Loaded persistent filter cache from %s", pf->file);
+
       out:
 	destroy_config_tree(cf);
 	return r;
