@@ -372,13 +372,7 @@ int export_extents(struct disk_list *dl, int lv_num,
 		   struct physical_volume *pv)
 {
 	struct pe_disk *ped;
-	int len = sizeof(struct pe_disk) * lv->le_count, le;
-
-	if (!(dl->extents = pool_alloc(dl->mem, len))) {
-		stack;
-		return 0;
-	}
-	memset(&dl->extents, 0, len);
+	int le;
 
 	for (le = 0; le < lv->le_count; le++) {
 		if (lv->map[le].pv == pv) {
@@ -474,7 +468,18 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	struct list_head *tmp;
 	struct lv_list *ll;
 	struct lvd_list *lvdl;
-	int lv_num = 1;
+	int lv_num = 1, len;
+
+	/*
+	 * setup the pv's extents array
+	 */
+	len = sizeof(struct pe_disk) * dl->pv.pe_total;
+	if (!(dl->extents = pool_alloc(dl->mem, len))) {
+		stack;
+		return 0;
+	}
+	memset(&dl->extents, 0, len);
+
 
 	list_for_each(tmp, &dl->lvs) {
 		ll = list_entry(tmp, struct lv_list, list);
