@@ -1,16 +1,19 @@
-.TH DMSETUP 8 "Nov 29 2001" "Linux" "MAINTENTANCE COMMANDS"
+.TH DMSETUP 8 "Sep 17 2003" "Linux" "MAINTENTANCE COMMANDS"
 .SH NAME
 dmsetup \- low level logical volume management
 .SH SYNOPSIS
 .ad l
-.B dmsetup create
-.I device_name table_file [uuid]
+.B dmsetup create 
+.I device_name [table_file [uuid]]
 .br
 .B dmsetup remove
 .I device_name
 .br
-.B dmsetup rename
-.I device_name new_name
+.B dmsetup load
+.I device_name table_file
+.br
+.B dmsetup clear
+.I device_name table_file
 .br
 .B dmsetup suspend
 .I device_name
@@ -21,23 +24,27 @@ dmsetup \- low level logical volume management
 .B dmsetup reload
 .I device_name table_file
 .br
+.B dmsetup rename
+.I device_name new_name
+.br
+.B dmsetup ls
+.br
 .B dmsetup info
-.I device_name
+.I [device_name]
 .br
 .B dmsetup deps
-.I device_name
+.I [device_name]
 .br
 .B dmsetup status
-.I device_name
+.I [device_name]
 .br
 .B dmsetup table
-.I device_name
+.I [device_name]
 .br
 .B dmsetup wait
 .I device_name
 .br
 .B dmsetup remove_all
-.I device_name
 .br
 .B dmsetup version
 .ad b
@@ -48,77 +55,103 @@ each sector in the logical device.
 
 The first argument to dmsetup is a command. 
 The second argument is the logical device name or uuid.
+.SH OPTIONS
+.IP \fB-j|--major\ \fImajor
+.br
+Specify the major number to use on creation.
+.IP \fB-j|--minor\ \fIminor
+.br
+Specify the minor number to use on creation.
+.IP \fB-r|--readonly
+.br
+Set the table being loaded read-only.
+.IP \fB-v|--verbose [-v|--verbose]
+.br
+Produce additional output.
+.IP \fB--version
+.br
+Display the library and kernel driver version.
 .SH COMMANDS
 .IP \fBcreate
-.I device_name table_file [uuid]
+.I device_name [table_file [uuid]]
 .br
-Attempts to create a device using the table file given.
+Creates a device with the given name.
+If a table file is given, it is loaded and made live.
 The optional uuid can be used in place of
 device_name in subsequent dmsetup commands.  If
 successful a device will appear as
 /dev/device-mapper/<device-name>.  See below for information
 on the table file format.
+.IP \fBdeps
+.I device_name
+.br
+Outputs a list of (major, minor) pairs for devices referenced by the
+live table for the specified device.
+.IP \fBinfo
+.I device_name
+.br
+Outputs some brief information about the device in the form:
+.br
+    State: SUSPENDED|ACTIVE, READ-ONLY
+.br
+    Tables present: LIVE and/or INACTIVE
+.br
+    Open reference count
+.br
+    Last event sequence number (used by \fBwait\fP)
+.br
+    Major and minor device number
+.br
+    Number of targets in the live table
+.IP \fBls
+.br
+List device names.
+.IP \fBload|reload
+.I device_name table_file
+.br
+Loads table_file into the inactive table slot for device_name.
 .IP \fBremove
 .I device_name
 .br
-Removes a device
+Removes a device.  It will no longer be visible to dmsetup and
+will be deleted when its open_count is zero.
+.IP \fBremove_all
+.br
+Attempts to remove all device definitions i.e. reset the driver.
+Use with care!
 .IP \fBrename
 .I device_name new_name
 .br
-Renames a device
+Renames a device.
+.IP \fBresume
+.I device_name
+.br
+Un-suspends a device.  
+If an inactive table has been loaded, it becomes live.
+Postponed I/O then gets re-queued for processing.
+.IP \fBstatus
+.I device_name
+.br
+Outputs status information for each of the device's targets.
 .IP \fBsuspend
 .I device_name
 .br
 Suspends a device.  Any I/O that has already been mapped by the device
 but has not yet completed will be flushed.  Any further I/O to that
 device will be postponed for as long as the device is suspended.
-.IP \fBresume
-.I device_name
-.br
-Un-suspends a device.  Postponed I/O now gets re-queued for processing.
-.IP \fBreload
-.I device_name table_file
-.br
-This command will only work if a device is in the suspended state.
-It changes the mapping table for an existing device.
-.IP \fBinfo
-.I device_name
-.br
-Outputs some brief information about the device in the form:
-.br
-    SUSPENDED|ACTIVE
-.br
-    open_count
-.br
-    major,minor
-.br
-    target_count
-.IP \fBdeps
-.I device_name
-.br
-Outputs a list of (major, minor) pairs for devices referenced by the
-specified device.
-.IP \fBstatus
-.I device_name
-.br
-Outputs status information for each of the device's targets.
 .IP \fBtable
 .I device_name
 .br
-Outputs the current table for the device in a format than can be fed
-back in using the create or reload commands.
-.IP \fBwait
-.I device_name
-.br
-Sleeps until an event is triggered against a device.
-.IP \fBremove_all
-.br
-Attempts to remove all device definitions i.e. reset the driver.
-Use with care!
+Outputs the current table for the device in a format that can be fed
+back in using the create or load commands.
 .IP \fBversion
 .I device_name
 .br
 Outputs version information.
+.IP \fBwait
+.I device_name
+.br
+Sleeps until an event is triggered against a device.
 .SH TABLE FORMAT
 Each line of the table specifies a single target and is of the form:
 .br
@@ -151,15 +184,12 @@ will map the first chunk (16k) as follows:
 .br
     etc.
 
-
-.IP \fBio-err
+.IP \fBerror
 .br
 Errors any I/O that goes to this area.  Useful for testing or
 for creating devices with holes in them.
 
-
 .SH EXAMPLES
-
 
 # A table to join two disks together
 .br
@@ -167,7 +197,6 @@ for creating devices with holes in them.
 0 1028160 linear /dev/hda 0
 .br
 1028160 3903762 linear /dev/hdb 0
-
 
 
 # A table to stripe across the two disks, 
