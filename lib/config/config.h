@@ -7,6 +7,7 @@
 #ifndef _LVM_CONFIG_H
 #define _LVM_CONFIG_H
 
+#include <inttypes.h>
 
 enum {
         CFG_STRING,
@@ -59,10 +60,13 @@ float find_config_float(struct config_node *cn, const char *path,
 int find_config_bool(struct config_node *cn, const char *path,
 		    char sep, int fail);
 
+
+
+int get_config_uint32(struct config_node *cn, const char *path,
+		      char sep, uint32_t *result);
+
+int get_config_uint64(struct config_node *cn, const char *path,
+		      char sep, uint64_t *result);
+
 #endif
 
-/*
- * Local variables:
- * c-file-style: "linux"
- * End:
- */
