@@ -703,7 +703,7 @@ static int _populate_snapshot(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (snprintf(params, sizeof(params), "%s/%s %s/%s P %d 128",
+	if (snprintf(params, sizeof(params), "%s/%s %s/%s P %d",
 		     dm_dir(), origin, dm_dir(), cow, s->chunk_size) == -1) {
 		stack;
 		return 0;
