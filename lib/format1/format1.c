@@ -151,6 +151,8 @@ static int _flatten_vg(struct pool *mem, struct volume_group *vg,
 	}
 
 	export_numbers(pvs, vg);
+	export_pv_act(pvs);
+
 	return 1;
 }
 

@@ -218,5 +218,6 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg);
 
 void export_numbers(struct list_head *pvs, struct volume_group *vg);
 
+void export_pv_act(struct list_head *pvs);
 
 #endif
