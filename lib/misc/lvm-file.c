@@ -86,7 +86,11 @@ int lvm_rename(const char *old, const char *new)
 {
 	struct stat buf;
 
-	link(old, new);
+	if (link(old, new)) {
+		log_error("%s: rename to %s failed: %s", old, new,
+			  strerror(errno));
+		return 0;
+	}
 
 	if (stat(old, &buf)) {
 		log_sys_error("stat", old);
