@@ -259,8 +259,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 			log_verbose("Finding volume group \"%s\"", vg_name);
 			vg = vg_read(cmd, vg_name, &consistent);
 			if ((ret = process_single(cmd, vg_name, vg, consistent,
-						  handle))
-			    > ret_max)
+						  handle)) > ret_max)
 				ret_max = ret;
 			unlock_vg(cmd, vg_name);
 		}
@@ -563,7 +562,8 @@ struct list *create_pv_list(struct pool *mem,
 	for (i = 0; i < argc; i++) {
 		if ((colon = strchr(argv[i], ':'))) {
 			if (!(pvname = pool_strndup(mem, argv[i],
-						    colon - argv[i]))) {
+						    (unsigned) (colon -
+								argv[i])))) {
 				log_error("Failed to clone PV name");
 				return NULL;
 			}
