@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -13,20 +13,14 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "lib.h"
 #include "libdm-targets.h"
 #include "libdm-common.h"
 #include "list.h"
-#include "log.h"
 #include "kdev_t.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
 #include <sys/param.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
 #include <linux/dm-ioctl.h>
 
 #ifdef HAVE_SELINUX
@@ -100,13 +94,13 @@ struct dm_task *dm_task_create(int type)
 {
 	struct dm_task *dmt = malloc(sizeof(*dmt));
 
-	if (!dm_check_version())
-		return NULL;
-
 	if (!dmt) {
 		log_error("dm_task_create: malloc(%d) failed", sizeof(*dmt));
 		return NULL;
 	}
+
+	if (!dm_check_version())
+		return NULL;
 
 	memset(dmt, 0, sizeof(*dmt));
 
@@ -205,7 +199,7 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 }
 
 #ifdef HAVE_SELINUX
-static int _set_selinux_context(const char *path)
+int set_selinux_context(const char *path)
 {
 	security_context_t scontext;
 
@@ -270,7 +264,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	}
 
 #ifdef HAVE_SELINUX
-	if (!_set_selinux_context(path))
+	if (!set_selinux_context(path))
 		return 0;
 #endif
 
