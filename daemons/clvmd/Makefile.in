@@ -18,7 +18,6 @@ VPATH = @srcdir@
 SOURCES = \
 	clvmd-command.c  \
 	clvmd.c          \
-	libclvm.c        \
 	lvm-functions.c  \
 	system-lv.c
 
