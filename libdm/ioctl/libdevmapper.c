@@ -90,7 +90,9 @@ static struct cmd_data _cmd_data_v4[] = {
 	{"names",	DM_LIST_DEVICES,	{4, 0, 0}},
 	{"clear",	DM_TABLE_CLEAR,		{4, 0, 0}},
 	{"mknodes",	DM_DEV_STATUS,		{4, 0, 0}},
+#ifdef DM_LIST_VERSIONS
 	{"versions",	DM_LIST_VERSIONS,	{4, 1, 0}},
+#endif
 };
 /* *INDENT-ON* */
 
