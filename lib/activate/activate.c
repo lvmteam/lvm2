@@ -238,34 +238,6 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
 #endif
 }
 
-int activate_lvs_in_vg(struct volume_group *vg)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-	int count = 0;
-
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		count += (!lv_active(lv) && lv_activate(lv));
-	}
-
-	return count;
-}
-
-int deactivate_lvs_in_vg(struct volume_group *vg)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-	int count = 0;
-
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		count += ((lv_active(lv) == 1) && lv_deactivate(lv));
-	}
-
-	return count;
-}
-
 /*
  * These two functions return the number of LVs in the state,
  * or -1 on error.
