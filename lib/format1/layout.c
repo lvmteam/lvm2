@@ -105,9 +105,8 @@ int calculate_layout(struct disk_list *dl)
 
 
 /*
- * It may seem strange to have a struct
- * physical_volume in here, but the number of
- * extents that can fit on a disk *is* metadata
+ * It may seem strange to have a struct physical_volume in here,
+ * but the number of extents that can fit on a disk *is* metadata
  * format dependant.
  */
 int calculate_extent_count(struct physical_volume *pv)
@@ -117,15 +116,13 @@ int calculate_extent_count(struct physical_volume *pv)
 
 	if (!pvd) {
 		stack;
-		dbg_free(pvd);
 		return 0;
 	}
 
 	/*
-	 * Guess how many extents will fit,
-	 * bearing in mind that one is going to be
-	 * knocked off at the start of the next
-	 * loop.
+	 * Guess how many extents will fit, bearing in mind that
+	 * one is going to be knocked off at the start of the
+	 * next loop.
 	 */
 	pvd->pe_total = (pv->size / pv->pe_size);
 
