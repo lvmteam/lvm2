@@ -28,6 +28,9 @@
 #include <dirent.h>
 #include <ctype.h>
 
+#define FMT_TEXT_NAME "lvm2"
+#define FMT_TEXT_ALIAS "text"
+
 static struct format_instance *_create_text_instance(const struct format_type
 						     *fmt, const char *vgname,
 						     void *context);

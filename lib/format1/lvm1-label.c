@@ -52,8 +52,10 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	struct lvmcache_info *info;
 
 	munge_exported_vg(pvd);
-	if (!(info = lvmcache_add(l, pvd->pv_uuid, dev, pvd->vg_name, NULL)))
+	if (!(info = lvmcache_add(l, pvd->pv_uuid, dev, pvd->vg_name, NULL))) {
+		stack;
 		return 0;
+	}
 	*label = info->label;
 
 	info->device_size = xlate32(pvd->pv_size) << SECTOR_SHIFT;

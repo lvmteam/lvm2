@@ -16,6 +16,8 @@
 #include "lvm1-label.h"
 #include "format1.h"
 
+#define FMT_LVM1_NAME "lvm1"
+
 /* VG consistency checks */
 static int _check_vgs(struct list *pvs, int *partial)
 {
@@ -75,9 +77,9 @@ static int _check_vgs(struct list *pvs, int *partial)
 	}
 
 	/* On entry to fn, list known to be non-empty */
-	if (pv_count != dl->vgd.pv_cur) {
+	if (pv_count != first->vgd.pv_cur) {
 		log_error("%d PV(s) found for VG %s: expected %d",
-			  pv_count, dl->pvd.vg_name, dl->vgd.pv_cur);
+			  pv_count, first->pvd.vg_name, first->vgd.pv_cur);
 		if (!partial_mode())
 			return 0;
 		*partial = 1;

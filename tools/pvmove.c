@@ -639,9 +639,11 @@ int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		log_verbose("Checking progress every %u seconds",
 			    parms.interval);
 
-	if (parms.interval == 0) {
-		parms.interval = DEFAULT_INTERVAL;
+	if (!parms.interval) {
 		parms.progress_display = 0;
+
+		if (!pv_name)
+			parms.interval = DEFAULT_INTERVAL;
 	}
 
 	if (parms.background) {
@@ -669,8 +671,9 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 		argc--;
 		argv++;
 
-		if ((ret = _set_up_pvmove(cmd, pv_name, argc, argv)) !=
-		    ECMD_PROCESSED) {
+		if (!arg_count(cmd, abort_ARG) &&
+		    (ret = _set_up_pvmove(cmd, pv_name, argc, argv)) !=
+		     ECMD_PROCESSED) {
 			stack;
 			return ret;
 		}

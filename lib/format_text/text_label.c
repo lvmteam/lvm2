@@ -56,8 +56,8 @@ static int _write(struct label *label, char *buf)
 	}
 
 	/* NULL-termination */
-	pvh_dlocn_xl->offset = xlate64(0);
-	pvh_dlocn_xl->size = xlate64(0);
+	pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
+	pvh_dlocn_xl->size = xlate64(UINT64_C(0));
 	pvh_dlocn_xl++;
 
 	/* List of metadata area header locations */
@@ -74,8 +74,8 @@ static int _write(struct label *label, char *buf)
 	}
 
 	/* NULL-termination */
-	pvh_dlocn_xl->offset = xlate64(0);
-	pvh_dlocn_xl->size = xlate64(0);
+	pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
+	pvh_dlocn_xl->size = xlate64(UINT64_C(0));
 
 	return 1;
 }

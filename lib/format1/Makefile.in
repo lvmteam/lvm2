@@ -22,7 +22,7 @@ TARGETS=liblvm2format1.so
 include ../../make.tmpl
 
 
-install: libformat1.so
+install: liblvm2format1.so
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2format1.so.$(LIB_VERSION)
 	$(LN_S) -f liblvm2format1.so.$(LIB_VERSION) $(libdir)/liblvm2format1.so
