@@ -274,7 +274,7 @@ static int _line_splitter(struct file *file, const char *buffer,
 	while(b < e) {
 		b = _eat_space(b, e);
 		if (b == e)
-			return 0;
+			break;
 
 		lb = b;
 		while((b != e) && *b != '\n')
@@ -315,5 +315,5 @@ static void _tok_cpy(char *dest, size_t max,
 	if (len > --max)
 		len = max;
 	strncpy(dest, b, len);
-	dest[len] = '0';
+	dest[len] = '\0';
 }
