@@ -30,7 +30,7 @@ MAN8DIR=${mandir}/man8
 
 include $(top_srcdir)/make.tmpl
 
-ifeq ("@CLVMD@", "yes")
+ifneq ("@CLVMD@", "none")
   install: install_cluster
 endif
 

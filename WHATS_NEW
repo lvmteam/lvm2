@@ -1,5 +1,6 @@
 Version 2.00.30 - 
 ====================================
+  Fix clvmd man makefile.
   Extend dev_open logging.
   Make clvmd_fix_conf.sh UNDOable.
 
