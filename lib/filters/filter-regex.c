@@ -42,7 +42,7 @@ static int _extract_pattern(struct pool *mem, const char *pat,
 	pat++;
 
 	/*
-	 * get the seperator
+	 * get the separator
 	 */
 	switch (*pat) {
 	case '(':
@@ -75,7 +75,7 @@ static int _extract_pattern(struct pool *mem, const char *pat,
 	 */
 	ptr = r + strlen(r) - 1;
 	if (*ptr != sep) {
-		log_info("invalid seperator at end of regex");
+		log_info("invalid separator at end of regex");
 		return 0;
 	}
 	*ptr = '\0';
