@@ -77,11 +77,26 @@ static int pvcreate_check(const char *name)
 static void pvcreate_single(const char *pv_name)
 {
 	struct physical_volume *pv;
+	struct id id, *idp = NULL;
+	char *uuid;
+	struct device *dev;
+
+	if (arg_count(uuidstr_ARG)) {
+		uuid = arg_str_value(uuidstr_ARG,"");
+		if (!id_read_format(&id, uuid))
+			return;
+		if ((dev = uuid_map_lookup(the_um, &id))) {
+			log_error("uuid %s already in use on %s", uuid,
+				  dev_name(dev));
+			return;
+		}
+		idp = &id;
+	}
 
 	if (!pvcreate_check(pv_name))
 		return;
 
-	if (!(pv = pv_create(fid, pv_name))) {
+	if (!(pv = pv_create(fid, pv_name, idp))) {
 		log_err("Failed to setup physical volume %s", pv_name);
 		return;
 	}
@@ -104,6 +119,11 @@ int pvcreate(int argc, char **argv)
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(uuidstr_ARG) && argc != 1) {
+		log_error("Can only set uuid on one volume at once");
 		return EINVALID_CMD_LINE;
 	}
 

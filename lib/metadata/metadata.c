@@ -185,7 +185,9 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 	return NULL;
 }
 
-struct physical_volume *pv_create(struct format_instance *fi, const char *name)
+struct physical_volume *pv_create(struct format_instance *fi, 
+				  const char *name,
+				  struct id *id)
 {
 	struct pool *mem = fi->cmd->mem;
 	struct physical_volume *pv = pool_alloc(mem, sizeof (*pv));
@@ -195,7 +197,11 @@ struct physical_volume *pv_create(struct format_instance *fi, const char *name)
 		return NULL;
 	}
 
-	id_create(&pv->id);
+	if (!id)
+		id_create(&pv->id);
+	else
+		memcpy(&pv->id, id, sizeof(*id));
+
 	if (!(pv->dev = dev_cache_get(name, fi->cmd->filter))) {
 		log_err("Couldn't find device '%s'", name);
 		goto bad;

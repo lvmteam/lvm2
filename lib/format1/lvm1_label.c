@@ -6,10 +6,13 @@
 
 #include "lvm1_label.h"
 #include "dbg_malloc.h"
-#include "pool.h"
 #include "disk-rep.h"
 #include "log.h"
 #include "label.h"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 static void _not_supported(const char *op)
 {
@@ -19,12 +22,20 @@ static void _not_supported(const char *op)
 
 static int _can_handle(struct labeller *l, struct device *dev)
 {
-	struct pool *mem = (struct pool *) l->private;
-	struct disk_list *dl;
+	struct pv_disk pvd;
+	int r;
 
-	dl = read_disk(dev, mem, NULL);
-	pool_empty(mem);
-	return dl ? 1 : 0;
+        if (!dev_open(dev, O_RDONLY)) {
+                stack;
+                return 0;
+        }
+
+	r = read_pvd(dev, &pvd);
+
+        if (!dev_close(dev))
+                stack;
+
+	return r;
 }
 
 static int _write(struct labeller *l,
@@ -40,7 +51,7 @@ static int _remove(struct labeller *l, struct device *dev)
 	return 0;
 }
 
-static struct label *_to_label(struct disk_list *dl)
+static struct label *_to_label(struct pv_disk *pvd)
 {
 	struct label *l;
 	struct lvm_label_info *info;
@@ -50,12 +61,12 @@ static struct label *_to_label(struct disk_list *dl)
 		return NULL;
 	}
 
-	if (!(info = (struct lvm_label_info *) dbg_strdup(dl->pvd.vg_name))) {
+	if (!(info = (struct lvm_label_info *) dbg_strdup(pvd->vg_name))) {
 		dbg_free(l);
 		return NULL;
 	}
 
-	memcpy(&l->id, &dl->pvd.pv_uuid, sizeof(l->id));
+	memcpy(&l->id, &pvd->pv_uuid, sizeof(l->id));
 	strcpy(l->volume_type, "lvm");
 	l->version[0] = 1;
 	l->version[0] = 0;
@@ -65,14 +76,22 @@ static struct label *_to_label(struct disk_list *dl)
 	return l;
 }
 
-static int _read(struct labeller *l,
-		 struct device *dev, struct label **label)
+static int _read(struct labeller *l, struct device *dev, struct label **label)
 {
-	struct pool *mem = (struct pool *) l->private;
-	struct disk_list *dl;
+	struct pv_disk pvd;
 	int r = 0;
 
-	if (!(dl = read_disk(dev, mem, NULL))) {
+        if (!dev_open(dev, O_RDONLY)) {
+                stack;
+                return 0;
+        }
+
+	r = read_pvd(dev, &pvd);
+
+        if (!dev_close(dev))
+                stack;
+
+	if (!r) {
 		stack;
 		return 0;
 	}
@@ -80,13 +99,12 @@ static int _read(struct labeller *l,
 	/*
 	 * Convert the disk_list into a label structure.
 	 */
-	if ((*label = _to_label(dl)))
-		r = 1;
-	else
+	if (!(*label = _to_label(&pvd))) {
 		stack;
+		return 0;
+	}
 
-	pool_empty(mem);
-	return r;
+	return 1;
 }
 
 static void _destroy_label(struct labeller *l, struct label *label)
@@ -97,8 +115,6 @@ static void _destroy_label(struct labeller *l, struct label *label)
 
 static void _destroy(struct labeller *l)
 {
-	struct pool *mem = (struct pool *) l->private;
-	pool_destroy(mem);
 	dbg_free(l);
 }
 
@@ -116,21 +132,14 @@ struct label_ops _lvm1_ops = {
 struct labeller *lvm1_labeller_create(void)
 {
 	struct labeller *l;
-	struct pool *mem;
 
 	if (!(l = dbg_malloc(sizeof(*l)))) {
 		log_err("Couldn't allocate labeller object.");
 		return NULL;
 	}
 
-	if (!(mem = pool_create(256))) {
-		log_err("Couldn't create pool object for labeller.");
-		dbg_free(l);
-		return NULL;
-	}
-
 	l->ops = &_lvm1_ops;
-	l->private = mem;
+	l->private = NULL;
 
 	return l;
 }

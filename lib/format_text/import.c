@@ -439,22 +439,26 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 
 	vgn = vgn->child;
 	if (!_read_id(&vg->id, vgn, "id")) {
-		log_err("Couldn't read uuid for volume group.");
+		log_err("Couldn't read uuid for volume group %s.",
+			vg->name);
 		goto bad;
 	}
 
 	if (!(cn = find_config_node(vgn, "status", '/'))) {
-		log_err("Couldn't find status flags for volume group.");
+		log_err("Couldn't find status flags for volume group %s.",
+			vg->name);
 		goto bad;
 	}
 
 	if (!(read_flags(&vg->status, VG_FLAGS, cn->v))) {
-		log_err("Couldn't read status flags for volume group.");
+		log_err("Couldn't read status flags for volume group %s.",
+			vg->name);
 		goto bad;
 	}
 
 	if (!_read_int32(vgn, "extent_size", &vg->extent_size)) {
-		log_err("Couldn't read extent size for volume group.");
+		log_err("Couldn't read extent size for volume group %s.",
+			vg->name);
 		goto bad;
 	}
 
@@ -464,12 +468,14 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 	 */
 
 	if (!_read_int32(vgn, "max_lv", &vg->max_lv)) {
-		log_err("Couldn't read 'max_lv' for volume group.");
+		log_err("Couldn't read 'max_lv' for volume group %s.",
+			vg->name);
 		goto bad;
 	}
 
 	if (!_read_int32(vgn, "max_pv", &vg->max_pv)) {
-		log_err("Couldn't read 'max_pv' for volume group.");
+		log_err("Couldn't read 'max_pv' for volume group %s.",
+			vg->name);
 		goto bad;
 	}
 
@@ -485,8 +491,8 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 	list_init(&vg->pvs);
 	if (!_read_sections("physical_volumes", _read_pv, mem, vg,
 			    vgn, pv_hash, um)) {
-		log_err("Couldn't read all physical volumes for volume "
-			"group.");
+		log_err("Couldn't find all physical volumes for volume "
+			"group %s.", vg->name);
 		goto bad;
 	}
 
@@ -494,7 +500,7 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 	if (!_read_sections("logical_volumes", _read_lv, mem, vg,
 			    vgn, pv_hash, um)) {
 		log_err("Couldn't read all logical volumes for volume "
-			"group.");
+			"group %s.", vg->name);
 		goto bad;
 	}
 
@@ -526,12 +532,14 @@ struct volume_group *text_vg_import(struct cmd_context *cmd,
 	}
 
 	if (!read_config(cf, file)) {
-		log_err("Couldn't read volume group file.");
+		log_error("Couldn't read volume group file.");
 		goto out;
 	}
 
-	if (!(vg = _read_vg(cmd->mem, cf, um)))
+	if (!(vg = _read_vg(cmd->mem, cf, um))) {
 		stack;
+		goto out;
+	}
 
 	vg->cmd = cmd;
 

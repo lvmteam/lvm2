@@ -129,12 +129,26 @@ static int _munge_formats(struct pv_disk *pvd)
 	return 1;
 }
 
-static int _read_pvd(struct disk_list *data)
+int read_pvd(struct device *dev, struct pv_disk *pvd)
 {
-	struct pv_disk *pvd = &data->pvd;
-	if (dev_read(data->dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd))
-		fail;
+	if (dev_read(dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd)) {
+		log_debug("Failed to read PV data from %s", dev_name(dev));
+		return 0;
+	}
+
 	_xlate_pvd(pvd);
+
+	if (pvd->id[0] != 'H' || pvd->id[1] != 'M') {
+		log_very_verbose("%s does not have a valid PV identifier",
+				 dev_name(dev));
+		return 0;
+	}
+
+	if (!_munge_formats(pvd)) {
+		log_very_verbose("Unknown metadata version %d found on %s",
+				 pvd->version, dev_name(dev));
+		return 0;
+	}
 
 	return 1;
 }
@@ -255,20 +269,8 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 	list_init(&data->uuids);
 	list_init(&data->lvds);
 
-	if (!_read_pvd(data)) {
-		log_debug("Failed to read PV data from %s", name);
-		goto bad;
-	}
-
-	if (data->pvd.id[0] != 'H' || data->pvd.id[1] != 'M') {
-		log_very_verbose("%s does not have a valid PV identifier",
-				 name);
-		goto bad;
-	}
-
-	if (!_munge_formats(&data->pvd)) {
-		log_very_verbose("Unknown metadata version %d found on %s",
-				 data->pvd.version, name);
+	if (!read_pvd(dev, &data->pvd)) {
+		stack;
 		goto bad;
 	}
 

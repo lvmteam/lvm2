@@ -178,6 +178,8 @@ int calculate_extent_count(struct physical_volume *pv);
  * Low level io routines which read/write
  * disk_lists.
  */
+int read_pvd(struct device *dev, struct pv_disk *pvd);
+
 struct disk_list *read_disk(struct device *dev, struct pool *mem,
 			    const char *vg_name);
 
