@@ -133,7 +133,8 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 }
 
 static int _flatten_vg(struct pool *mem, struct volume_group *vg,
-		       struct list_head *pvs, const char *prefix)
+		       struct list_head *pvs, const char *prefix,
+		       struct dev_filter *filter)
 {
 	struct list_head *tmp;
 	struct pv_list *pvl;
@@ -153,6 +154,11 @@ static int _flatten_vg(struct pool *mem, struct volume_group *vg,
 	export_numbers(pvs, vg);
 	export_pv_act(pvs);
 
+	if (!export_vg_number(pvs, vg->name, filter)) {
+		stack;
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -169,7 +175,8 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 
 	INIT_LIST_HEAD(&pvs);
 
-	r = _flatten_vg(mem, vg, &pvs, is->prefix) && write_pvs(&pvs);
+	r = (_flatten_vg(mem, vg, &pvs, is->prefix, is->filter) &&
+	     write_pvs(&pvs));
 	pool_destroy(mem);
 	return r;
 }
