@@ -98,7 +98,7 @@ install: all $(SUBDIRS.install)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-$(SUBDIRS.install): 
+$(SUBDIRS.install): $(SUBDIRS)
 	$(MAKE) -C $(@:.install=) install
 
 $(SUBDIRS.clean):
