@@ -9,6 +9,7 @@
 #include "log.h"
 #include "dbg_malloc.h"
 #include "lvm-string.h"
+#include "merge.h"
 
 #include <assert.h>
 
@@ -150,7 +151,7 @@ static int _alloc_striped(struct logical_volume *lv,
 		/* sort the areas so we allocate from the biggest */
 		qsort(areas, index, sizeof(*areas), _comp_area);
 
-		if (!_alloc_stripe_area(lv, stripes, stripe_size, areas, 
+		if (!_alloc_stripe_area(lv, stripes, stripe_size, areas,
 					&allocated)) {
 			stack;
 			goto out;
@@ -494,6 +495,12 @@ int lv_extend(struct logical_volume *lv,
 		       stripes, stripe_size)) {
 		lv->le_count = old_le_count;
 		lv->size = old_size;
+		return 0;
+	}
+
+	if (!merge_segments(lv)) {
+		log_err("Couldn't merge segments after extending "
+			"logical volume.");
 		return 0;
 	}
 
