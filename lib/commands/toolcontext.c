@@ -798,7 +798,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 #endif
 
 	if (!setlocale(LC_ALL, ""))
-		log_error("setlocale failed");
+		log_very_verbose("setlocale failed");
 
 #ifdef INTL_PACKAGE
 	bindtextdomain(INTL_PACKAGE, LOCALEDIR);
