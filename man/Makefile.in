@@ -40,7 +40,7 @@ install:
 	   @INSTALL@ -D -o $(OWNER) -g $(GROUP) -m 444 $$f $(MAN8DIR)/$$f; \
 	done
 
-	@echo "Installing $(MAN5) in $(MAN8DIR)"
+	@echo "Installing $(MAN5) in $(MAN5DIR)"
 	@for f in $(MAN5); \
 	do \
 	   $(RM) $(MAN5DIR)/$$f; \
