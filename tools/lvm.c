@@ -92,6 +92,7 @@ static struct config_info _current_settings;
  */
 static char _sys_dir[PATH_MAX] = "/etc/lvm";
 static char _dev_dir[PATH_MAX];
+static char _proc_dir[PATH_MAX];
 
 /* static functions */
 static void register_commands(void);
@@ -705,11 +706,11 @@ static void __init_log(struct config_file *cf)
 		find_config_int(cf->root, "log/verbose", '/', 0);
 	_default_settings.test = find_config_int(cf->root, "log/test", '/', 0);
 
-	init_debug(_default_settings.debug);
-	init_verbose(_default_settings.verbose);
-
 	if (find_config_int(cf->root, "log/overwrite", '/', 0))
 		open_mode = "w";
+
+	init_debug(_default_settings.debug);
+	init_verbose(_default_settings.verbose);
 
 	if (log_file) {
 		/* set up the logging */
@@ -826,7 +827,7 @@ static struct dev_filter *filter_components_setup(struct config_file *cf)
 	struct config_node *cn;
 	struct dev_filter *f1, *f2, *f3;
 
-	if (!(f2 = lvm_type_filter_create()))
+	if (!(f2 = lvm_type_filter_create(_proc_dir)))
 		return 0;
 
 	if (!(cn = find_config_node(cf->root, "devices/filter", '/'))) {
@@ -998,6 +999,13 @@ static int init(void)
 	dm_set_dev_dir(cmd->dev_dir);
 
 	dm_log_init(print_log);
+
+	if (lvm_snprintf(_proc_dir, sizeof(_proc_dir), "%s",
+        		 find_config_str(cmd->cf->root, "global/proc",
+					 '/', DEFAULT_PROC_DIR)) < 0) {
+		log_error("Device directory given in config file too long");
+		return 0;
+	}
 
 	if (!_init_backup(cmd->cf))
 		return 0;

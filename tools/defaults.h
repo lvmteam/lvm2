@@ -20,6 +20,7 @@
 #define DEFAULT_ARCHIVE_NUMBER 10
 
 #define DEFAULT_DEV_DIR "/dev"
+#define DEFAULT_PROC_DIR "/proc"
 
 #define DEFAULT_UMASK 0077
 
