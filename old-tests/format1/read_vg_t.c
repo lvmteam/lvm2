@@ -6,6 +6,8 @@
 
 #include "log.h"
 #include "format1.h"
+#include "dbg_malloc.h"
+
 #include <stdio.h>
 
 int main(int argc, char **argv)
@@ -31,7 +33,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	ios = create_lvm_v1_format(NULL);
+	ios = create_lvm1_format(NULL);
 	vg = ios->vg_read(ios, argv[1]);
 
 	if (!vg) {
