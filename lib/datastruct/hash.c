@@ -59,10 +59,10 @@ static struct hash_node *_create_node(const char *str)
 	return n;
 }
 
-static unsigned _hash(const char *str, unsigned len)
+static unsigned _hash(const char *str)
 {
 	unsigned long h = 0, g;
-	while (*str && len--) {
+	while (*str) {
 		h <<= 4;
 		h += _nums[(int) *str++];
 		g = h & ((unsigned long) 0xf << 16u);
@@ -125,28 +125,16 @@ void hash_destroy(struct hash_table *t)
 	dbg_free(t);
 }
 
-static inline struct hash_node **_find_fixed(struct hash_table *t,
-					     const char *key, unsigned len)
+static inline struct hash_node **_find(struct hash_table *t, const char *key)
 {
-	unsigned h = _hash(key, len) & (t->num_slots - 1);
+	unsigned h = _hash(key) & (t->num_slots - 1);
 	struct hash_node **c;
 
 	for (c = &t->slots[h]; *c; c = &((*c)->next))
-		if (!strncmp(key, (*c)->key, len))
+		if (!strcmp(key, (*c)->key))
 			break;
 
 	return c;
-}
-
-static inline struct hash_node **_find(struct hash_table *t, const char *key)
-{
-	return _find_fixed(t, key, strlen(key));
-}
-
-void *hash_lookup_fixed(struct hash_table *t, const char *key, unsigned len)
-{
-	struct hash_node **c = _find_fixed(t, key, len);
-	return *c ? (*c)->data : 0;
 }
 
 void *hash_lookup(struct hash_table *t, const char *key)
@@ -238,6 +226,6 @@ struct hash_node *hash_get_first(struct hash_table *t)
 
 struct hash_node *hash_get_next(struct hash_table *t, struct hash_node *n)
 {
-	unsigned h = _hash(n->key, strlen(n->key)) & (t->num_slots - 1);
+	unsigned h = _hash(n->key) & (t->num_slots - 1);
 	return n->next ? n->next : _next_slot(t, h + 1);
 }
