@@ -36,7 +36,7 @@ void *malloc_aux(size_t s, const char *file, int line)
 	size_t tsize = s + sizeof(*nb) + sizeof(unsigned long);
 
 	if (!(nb = malloc(tsize))) {
-		log_error("couldn't allocate any memory, size = %u", s);
+		log_error("couldn't allocate any memory, size = %lu", s);
 		return 0;
 	}
 
@@ -159,7 +159,7 @@ int dump_memory(void)
 
 	for (mb = _head; mb; mb = mb->next) {
 		print_log(_LOG_INFO, mb->file, mb->line, 
-			  "block %d at %p, size %d",
+			  "block %d at %p, size %ld",
 			  mb->id, mb->magic, mb->length);
 		tot += mb->length;
 	}
