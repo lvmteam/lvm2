@@ -1,0 +1,21 @@
+--- linux-2.4.14/include/linux/fs.h	Fri Nov 23 12:10:17 2001
++++ linux/include/linux/fs.h	Fri Nov 23 11:41:13 2001
+@@ -968,6 +968,7 @@
+ extern struct vfsmount *kern_mount(struct file_system_type *);
+ extern int may_umount(struct vfsmount *);
+ extern long do_mount(char *, char *, char *, unsigned long, void *);
++extern int do_umount(struct vfsmount *mnt, int flags);
+ 
+ #define kern_umount mntput
+ 
+--- linux-2.4.14/fs/namespace.c	Tue Oct 16 02:47:36 2001
++++ linux/fs/namespace.c	Fri Nov 23 12:08:13 2001
+@@ -359,7 +359,7 @@
+ 	}
+ }
+ 
+-static int do_umount(struct vfsmount *mnt, int flags)
++int do_umount(struct vfsmount *mnt, int flags)
+ {
+ 	struct super_block * sb = mnt->mnt_sb;
+ 	int retval = 0;
