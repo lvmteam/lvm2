@@ -1,5 +1,6 @@
 Version 2.00.26 - 
 =====================================
+  Separate out md superblock detection code.
   Prevent snapshot origin resizing.
   Improve a vgremove error message.
   Update some man pages.
