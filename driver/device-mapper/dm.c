@@ -440,7 +440,7 @@ struct mapped_device *dm_find_minor(int minor)
 	return md;
 }
 
-int dm_create(int minor, const char *name)
+int dm_create(const char *name, int minor)
 {
 	struct mapped_device *md;
 
@@ -465,10 +465,11 @@ int dm_create(int minor, const char *name)
 	return 0;
 }
 
-int dm_remove(const char *name, int minor)
+int dm_remove(const char *name)
 {
 	struct mapped_device *md;
 	struct dev_list *d, *n;
+	int minor;
 
 	wl;
 	if (!(md = __find_name(name))) {
