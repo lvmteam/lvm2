@@ -52,7 +52,7 @@ int import_pv(struct pool *mem, struct device *dev,
 		pv->status |= ACTIVE;
 
 	if (pvd->pv_allocatable)
-		pv->status |= ALLOCATED_PV;
+		pv->status |= ALLOCATABLE_PV;
 
 	pv->size = pvd->pv_size;
 	pv->pe_size = pvd->pe_size;
@@ -101,7 +101,7 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 	if (pv->status & ACTIVE)
 		pvd->pv_status |= PV_ACTIVE;
 
-	if (pv->status & ALLOCATED_PV)
+	if (pv->status & ALLOCATABLE_PV)
 		pvd->pv_allocatable = PV_ALLOCATABLE;
 
 	pvd->pv_size = pv->size;
@@ -142,7 +142,7 @@ int import_vg(struct pool *mem,
 		vg->status |= EXPORTED_VG;
 
 	if (vgd->vg_status & VG_EXTENDABLE)
-		vg->status |= EXTENDABLE_VG;
+		vg->status |= RESIZEABLE_VG;
 
 	if (vgd->vg_access & VG_READ)
 		vg->status |= LVM_READ;
@@ -187,7 +187,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	if (vg->status & EXPORTED_VG)
 		vgd->vg_status |= VG_EXPORTED;
 
-	if (vg->status & EXTENDABLE_VG)
+	if (vg->status & RESIZEABLE_VG)
 		vgd->vg_status |= VG_EXTENDABLE;
 
 	vgd->lv_max = vg->max_lv;

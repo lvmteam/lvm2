@@ -11,6 +11,10 @@
 arg(version_ARG, '\0', "version", NULL)
 arg(quiet_ARG, '\0', "quiet", NULL)
 
+/* Allow some variations */
+arg(resizable_ARG, '\0', "resizable", yes_no_arg)
+arg(allocation_ARG, '\0', "allocation", yes_no_arg)
+
 /*
  * ... and now the short args.
  */
@@ -59,7 +63,8 @@ arg(uuid_ARG, 'u', "uuid", NULL)
 arg(uuidlist_ARG, 'U', "uuidlist", NULL)
 arg(verbose_ARG, 'v', "verbose", NULL)
 arg(volumegroup_ARG, 'V', "volumegroup", NULL)
-arg(allocation_ARG, 'x', "allocation", yes_no_arg)
+arg(allocatable_ARG, 'x', "allocatable", yes_no_arg)
+arg(resizeable_ARG, 'x', "resizeable", yes_no_arg)
 arg(yes_ARG, 'y', "yes", NULL)
 arg(zero_ARG, 'Z', "zero", yes_no_arg)
 arg(suspend_ARG, 'z', "suspend", NULL)

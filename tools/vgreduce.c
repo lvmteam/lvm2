@@ -61,7 +61,7 @@ int vgreduce(int argc, char **argv)
 	}
 *******/
 
-	if (!(vg->status & EXTENDABLE_VG)) {
+	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group %s is not reducable", vg_name);
 		return ECMD_FAILED;
 	}

@@ -39,9 +39,6 @@ int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 		return 0;
 	}
 
-	/* FIXME For LVM2, set on PV creation instead of here? */
-	pv->status |= ALLOCATED_PV;
-
 	/* FIXME check this */
 	pv->exported = NULL;
 
@@ -159,7 +156,7 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 		goto bad;
 	}
 
-	vg->status = (ACTIVE | EXTENDABLE_VG | LVM_READ | LVM_WRITE);
+	vg->status = (ACTIVE | RESIZEABLE_VG | LVM_READ | LVM_WRITE);
 
 	vg->extent_size = extent_size;
 	vg->extent_count = 0;
@@ -214,7 +211,7 @@ struct physical_volume *pv_create(struct format_instance *fi, const char *name)
 
 	*pv->vg_name = 0;
 	pv->exported = NULL;
-	pv->status = 0;
+	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
 		log_err("Couldn't get size of device '%s'", name);

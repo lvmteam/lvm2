@@ -107,7 +107,7 @@ void pvdisplay_colons(struct physical_volume *pv)
 		  dev_name(pv->dev), pv->vg_name, pv->size,
 		  /* FIXME pv->pv_number, Derive or remove? */
 		  pv->status,	/* FIXME Support old or new format here? */
-		  pv->status & ALLOCATED_PV,	/* FIXME Remove? */
+		  pv->status & ALLOCATABLE_PV,  /* FIXME remove? */
 		  /* FIXME pv->lv_cur, Remove? */
 		  pv->pe_size / 2,
 		  pv->pe_count,
@@ -161,7 +161,7 @@ void pvdisplay_full(struct physical_volume *pv)
 		  (pv->status & ACTIVE) ? "" : "NOT ");
 
 	pe_free = pv->pe_count - pv->pe_allocated;
-	if (pv->pe_count && (pv->status & ALLOCATED_PV))
+	if (pv->pe_count && (pv->status & ALLOCATABLE_PV))
 		log_print("Allocatable           yes %s",
 			  (!pe_free && pv->pe_count) ? "(but full)" : "");
 	else
@@ -196,14 +196,13 @@ int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv)
 	/* FIXME  pv->pv_number); */
 	log_print("PV Status             %savailable / %sallocatable",
 		  (pv->status & ACTIVE) ? "" : "NOT ",
-		  (pv->status & ALLOCATED_PV) ? "" : "NOT ");
+		  (pv->status & ALLOCATABLE_PV) ? "" : "NOT ");
 	log_print("Total PE / Free PE    %u / %u",
 		  pv->pe_count, pv->pe_count - pv->pe_allocated);
 
 	log_print(" ");
 	return 0;
 }
-
 
 
 void lvdisplay_colons(struct logical_volume *lv)
@@ -474,7 +473,7 @@ void vgdisplay_full(struct volume_group *vg)
 	log_print("VG Status             %savailable%s/%sresizable",
 		  vg->status & ACTIVE ? "" : "NOT ",
 		  vg->status & EXPORTED_VG ? "/exported" : "",
-		  vg->status & EXTENDABLE_VG ? "" : "NOT ");
+		  vg->status & RESIZEABLE_VG ? "" : "NOT ");
 /******* FIXME vg number
 	log_print ("VG #                  %u\n", vg->vg_number);
 ********/
