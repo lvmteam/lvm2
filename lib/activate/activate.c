@@ -6,6 +6,7 @@
 
 #include "metadata.h"
 #include "activate.h"
+#include "display.h"
 #include "log.h"
 #include "fs.h"
 
@@ -118,7 +119,7 @@ static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
 		count++;
 	}
 
-	snprintf(params, sizeof(params), "%s %llu",
+	snprintf(params, sizeof(params), "%s %" FMT_64 "u",
 		 dev_name(first->pv->dev),
 		 first->pv->pe_start + (esize * first->pe));
 
