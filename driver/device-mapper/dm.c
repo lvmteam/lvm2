@@ -687,7 +687,7 @@ struct mapped_device *dm_find_by_minor(int minor)
 	return md;
 }
 
-#ifdef CONFIG_DEVFS
+#ifdef CONFIG_DEVFS_FS
 static int register_device(struct mapped_device *md)
 {
 	md->devfs_entry =
