@@ -20,81 +20,77 @@
 
 #include "tools.h"
 
-void pvdisplay_device(const char *pv_name);
+void pvdisplay_single(struct physical_volume *pv);
 
 int pvdisplay(int argc, char **argv)
 {
-	int opt;
+	int opt=0;
 
-	if (argc == 0) {
-		log_error("please enter a physical volume path");
-		return EINVALID_CMD_LINE;
-	}
+	struct list_head *pvh, *pvs;
+	struct physical_volume *pv;
 
 	if (arg_count(colon_ARG) && arg_count(verbose_ARG)) {
-		log_error("option v not allowed with option c");
+		log_error("Option -v not allowed with option -c");
 		return EINVALID_CMD_LINE;
 	}
 
-	for (opt = 0; opt < argc; opt++)
-		pvdisplay_device(argv[opt]);
+	if (argc)  {
+                log_very_verbose("Using physical volume(s) on command line");
 
-	putchar('\n');
+		for (; opt < argc; opt++) {
+			if (!(pv = ios->pv_read(ios, argv[opt]))) {
+                                log_error("Failed to read physical volume %s",
+                                          argv[opt]);
+				continue;
+			}
+			pvdisplay_single(pv);
+		}
+	} else {
+                log_verbose("Scanning for physical volume names");
+                if (!(pvs = ios->get_pvs(ios)))
+                        return ECMD_FAILED;
+
+                list_for_each(pvh, pvs)
+                        pvdisplay_single(&list_entry(pvh, struct pv_list,                                                            list)->pv);
+	}
+
 	return 0;
 }
 
-void pvdisplay_device(const char *pv_name)
+void pvdisplay_single(struct physical_volume *pv)
 {
-	struct dev_mgr *dm;
-	struct device *pv_dev;
+	char *sz;
+        uint64_t size;
 
-	pv_t *pv = NULL;
-	lv_disk_t *lvs = NULL;
+	char *pv_name = pv->dev->name;
 
-	dm = active_dev_mgr();
-
-	if (!(pv_dev = dev_by_name(dm, pv_name))) {
-		log_error("device \"%s\" not found", pv_name);
-		return;
-	}
+	if (!*pv->vg_name)
+		size = pv->size;
+	else 
+		size = (pv->pe_count - pv->pe_allocated) * pv->pe_size;
 
 	if (arg_count(short_ARG)) {
-		long size;
-		char *sz;
-
-		/* Returns size in 512-byte units */
-		if ((size = device_get_size(pv_name)) < 0) {
-			log_error("Failed to get size of physical volume %s",
-				  pv_name);
-			return;
-		}
-
 		sz = display_size(size / 2, SIZE_SHORT);
-		log_print("Device \"%s\" has a capacity of %s", pv_name, sz);
+		log_print("Device '%s' has a capacity of %s", pv_name, sz);
 
 		dbg_free(sz);
-	}
-
-	if (!(pv = pv_read(dm, pv_name))) {
 		return;
 	}
 
-/* FIXME: Check attributes
-	MD_DEVICE, 
-        log_error("\"%s\" no VALID physical volume \"%s\"", lvm_error ( ret), pv_name);
+	if (pv->status & EXPORTED_VG) 
+        	log_print("Physical volume '%s' of volume group '%s' "
+			  "is exported" , pv_name, pv->vg_name);
 
-	EXPORTED
-        pv->vg_name[strlen(pv->vg_name)-strlen(EXPORTED)] = 0;
-        log_print("physical volume \"%s\" of volume group \"%s\" is exported" , pv_name, pv->vg_name);
-
-	Valid ID
+/********* FIXME
         log_error("no physical volume identifier on \"%s\"" , pv_name);
+*********/
 
-	NEW
-        pv_check_new (pv)
-        log_print ( "\"%s\" is a new physical volume of %s",
-                  pv_name, ( dummy = lvm_show_size ( size / 2, SHORT)));
-*/
+	if (!pv->vg_name) {
+        	log_print ( "'%s' is a new physical volume of %s",
+                  	     pv_name, ( sz = display_size ( size / 2, 
+								SIZE_SHORT)));
+		dbg_free(sz);
+	}
 
 /* FIXME: Check active - no point?
       log_very_verbose("checking physical volume activity" );
@@ -102,22 +98,22 @@ void pvdisplay_device(const char *pv_name)
          pv_status  ( pv->vg_name, pv->pv_name, &pv)
 */
 
-/* FIXME: Check consistency - or do this when reading metadata? 
+/* FIXME: Check consistency - do this when reading metadata BUT trigger mesgs
       log_very_verbose("checking physical volume consistency" );
       ret = pv_check_consistency (pv)
-      log_error("\"%s\" checking consistency of physical volume \"%s\"", lvm_error ( ret), pv_name);
 */
 
 	if (arg_count(colon_ARG)) {
-		pv_display_colons(pv);
-		goto pvdisplay_device_out;
+		pvdisplay_colons(pv);
+		return;
 	}
 
-	pv_display_full(pv);
+	pvdisplay_full(pv);
 
 	if (!arg_count(verbose_ARG))
-		goto pvdisplay_device_out;
+		return;
 
+/******* FIXME
 	if (pv->pe_allocated) {
 		if (!(pv->pe = pv_read_pe(pv_name, pv)))
 			goto pvdisplay_device_out;
@@ -128,12 +124,8 @@ void pvdisplay_device(const char *pv_name)
 		pv_display_pe_text(pv, pv->pe, lvs);
 	} else
 		log_print("no logical volume on physical volume %s", pv_name);
-
-      pvdisplay_device_out:
-	if (pv)
-		dbg_free(pv->pe);
-	dbg_free(pv);
-	dbg_free(lvs);
+**********/
 
 	return;
 }
+

@@ -21,11 +21,26 @@
 #ifndef _LVM_DISPLAY_H
 #define _LVM_DISPLAY_H
 
+#include "metadata.h"
+
 typedef	enum {SIZE_LONG=0, SIZE_SHORT=1} size_len_t;
 
 /* Specify size in KB */
 char *display_size(unsigned long long size, size_len_t sl);
-
 char *display_uuid(char *uuidstr);
 
+void pvdisplay_colons(struct physical_volume *pv);
+void pvdisplay_full(struct physical_volume *pv);
+#if 0
+void pv_show_short(pv_t * pv);
+void pv_display_pe(pv_t * pv, pe_disk_t * pe);
+void pv_display_pe_free(int pe_free, int p);
+void pv_display_pe_text(pv_t * pv, pe_disk_t * pe, lv_disk_t * lvs);
+
+static inline unsigned long get_pe_offset(ulong p, pv_t *pv)
+{
+        return pv->pe_start + (p * pv->pe_size);
+}
+
+#endif
 #endif

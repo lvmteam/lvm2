@@ -359,11 +359,15 @@ static int _pv_write(struct io_space *is, struct physical_volume *pv)
 
 	INIT_LIST_HEAD(&pvs);
 
-	if (*pv->vg_name) {
+	if (*pv->vg_name || pv->pe_allocated ) {
 		log_error("Assertion failed: can't _pv_write non-orphan PV " 
 			  "(in VG %s)", pv->vg_name);
 		return 0;
 	}
+
+	/* Ensure any residual PE structure is gone */
+	pv->pe_size = pv->pe_count = pv->pe_start = 0;
+	pv->status &= ~ALLOCATED_PV;
 
 	if (!(mem = pool_create(1024))) {
 		stack;
