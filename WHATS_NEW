@@ -1,3 +1,7 @@
+Version 2.00.13 - 64 Apr 2004
+=============================
+  Ignore error setting selinux file context if fs doesn't support it.
+
 Version 2.00.12 - 14 Apr 2004
 =============================
   Install a default lvm.conf into /etc/lvm if there isn't one already.

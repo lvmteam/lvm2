@@ -215,7 +215,7 @@ static int _set_selinux_context(const char *path)
 		return 0;
 	}
 
-	if (lsetfilecon(path, scontext) < 0) {
+	if ((lsetfilecon(path, scontext) < 0) && (errno != ENOTSUP)) {
 		log_error("%s: lsetfilecon failed: %s", path, strerror(errno));
 		free(scontext);
 		return 0;

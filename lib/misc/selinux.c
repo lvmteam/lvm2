@@ -31,7 +31,7 @@ int set_selinux_context(const char *path)
 		return 0;
 	}
 
-	if (lsetfilecon(path, scontext) < 0) {
+	if ((lsetfilecon(path, scontext) < 0) && (errno != ENOTSUP)) {
 		log_sys_error("lsetfilecon", path);
 		free(scontext);
 		return 0;
