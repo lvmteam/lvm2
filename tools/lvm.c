@@ -502,10 +502,33 @@ static struct arg *find_arg(struct command *com, int opt)
 	return 0;
 }
 
+static int merge_synonym(int oldarg, int newarg)
+{
+	struct arg *old, *new;
+
+	if (arg_count(oldarg) && arg_count(newarg)) {
+		log_error("%s and %s are synonyms.  Please only supply one.",
+			  the_args[oldarg].long_arg, 
+			  the_args[newarg].long_arg);
+		return 0;
+	}
+
+	if (!arg_count(oldarg))
+		return 1;
+
+	old = the_args + oldarg;
+	new = the_args + newarg;
+
+	new->count = old->count;
+	new->value = old->value;
+	new->i_value = old->i_value;
+	new->sign = old->sign;
+
+	return 1;
+}
+
 static int process_common_commands(struct command *com)
 {
-	int l;
-
 	_current_settings = _default_settings;
 
 	if (arg_count(suspend_ARG))
@@ -537,12 +560,16 @@ static int process_common_commands(struct command *com)
 		return ECMD_PROCESSED;
 	}
 
-	/* Set autobackup if command takes this option */
-	for (l = 0; l < com->num_args; l++)
-		if (arg_count(autobackup_ARG)) {
-			_current_settings.archive = 1;
-			_current_settings.backup = 1;
-		}
+	if (arg_count(autobackup_ARG)) {
+		_current_settings.archive = 1;
+		_current_settings.backup = 1;
+	}
+
+	/* Handle synonyms */
+	if (!merge_synonym(resizable_ARG, resizeable_ARG) ||
+	    !merge_synonym(allocation_ARG, allocatable_ARG) ||
+	    !merge_synonym(allocation_ARG, resizeable_ARG))
+		return ECMD_FAILED;
 
 	/* Zero indicates it's OK to continue processing this command */
 	return 0;
