@@ -173,4 +173,6 @@ static inline const char *command_name(struct cmd_context *cmd)
 	return cmd->command->name;
 }
 
+int pvmove_poll(struct cmd_context *cmd, const char *pv, unsigned background);
+
 #endif
