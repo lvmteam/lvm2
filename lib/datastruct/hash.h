@@ -21,12 +21,16 @@ int hash_insert(struct hash_table *t, const char *key, void *data);
 void hash_remove(struct hash_table *t, const char *key);
 
 unsigned hash_get_num_entries(struct hash_table *t);
-void hash_iterate(struct hash_table *t, iterate_fn f);
+void hash_iter(struct hash_table *t, iterate_fn f);
 
 char *hash_get_key(struct hash_table *t, struct hash_node *n);
 void *hash_get_data(struct hash_table *t, struct hash_node *n);
 struct hash_node *hash_get_first(struct hash_table *t);
 struct hash_node *hash_get_next(struct hash_table *t, struct hash_node *n);
+
+#define hash_iterate(v, h) \
+	for (v = hash_get_first(h); v; \
+	     v = hash_get_next(h, v))
 
 #endif
 
