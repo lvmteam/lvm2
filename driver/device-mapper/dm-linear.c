@@ -24,16 +24,18 @@
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/fs.h>
+#include <linux/blkdev.h>
 #include <linux/device-mapper.h>
 
-#include "dm.h" /* going away soon */
+#include "dm.h"
 
 /*
  * linear: maps a linear range of a device.
  */
 struct linear_c {
-	kdev_t dev;
+	kdev_t rdev;
 	long delta;		/* FIXME: we need a signed offset type */
+	struct dm_bdev *bdev;
 };
 
 /*
@@ -46,10 +48,11 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 {
 	struct linear_c *lc;
 	unsigned int start;
-	kdev_t dev;
-	int r;
 	char path[256];
 	struct text_region word;
+	struct dm_bdev *bdev;
+	int rv = 0;
+	int hardsect_size;
 
 	if (!dm_get_word(args, &word)) {
 		fn("couldn't get device path", private);
@@ -58,38 +61,45 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 
 	dm_txt_copy(path, sizeof(path) - 1, &word);
 
-	if ((r = dm_table_lookup_device(path, &dev))) {
+
+	bdev = dm_blkdev_get(path);
+	if (IS_ERR(bdev)) {
 		fn("no such device", private);
-		return r;
+		return PTR_ERR(bdev);
 	}
 
 	if (!dm_get_number(args, &start)) {
 		fn("destination start not given", private);
-		return -EINVAL;
+		rv = -EINVAL;
+		goto out_bdev_put;
 	}
 
 	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
 		fn("couldn't allocate memory for linear context\n", private);
-		return -ENOMEM;
+		rv = -ENOMEM;
+		goto out_bdev_put;
 	}
 
-	lc->dev = dev;
+	lc->rdev = dm_bdev2rdev(bdev);
+	lc->bdev = bdev;
 	lc->delta = (int) start - (int) b;
 
-	if ((r = dm_table_add_device(t, lc->dev))) {
-		fn("failed to add destination device to list", private);
-		kfree(lc);
-		return r;
-	}
+	hardsect_size = get_hardsect_size(lc->rdev);
+	if (t->hardsect_size > hardsect_size);
+		t->hardsect_size = hardsect_size;
 
 	*result = lc;
 	return 0;
+
+out_bdev_put:
+	dm_blkdev_put(bdev);
+	return rv;
 }
 
 static void linear_dtr(struct dm_table *t, void *c)
 {
 	struct linear_c *lc = (struct linear_c *) c;
-	dm_table_remove_device(t, lc->dev);
+	dm_blkdev_put(lc->bdev);
 	kfree(c);
 }
 
@@ -97,7 +107,7 @@ static int linear_map(struct buffer_head *bh, void *context)
 {
 	struct linear_c *lc = (struct linear_c *) context;
 
-	bh->b_rdev = lc->dev;
+	bh->b_rdev = lc->rdev;
 	bh->b_rsector = bh->b_rsector + lc->delta;
 	return 1;
 }
@@ -138,4 +148,5 @@ module_exit(linear_exit);
 
 MODULE_AUTHOR("Joe Thornber <thornber@uk.sistina.com>");
 MODULE_DESCRIPTION("Device Mapper: Linear mapping");
+MODULE_LICENSE("GPL");
 

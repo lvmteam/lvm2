@@ -146,18 +146,6 @@ enum {
 };
 
 /*
- * devices that a metadevice uses and hence should
- * open/close
- */
-struct dev_list {
-	kdev_t dev;
-	atomic_t count;
-
-	struct block_device *bd;
-	struct dev_list *next;
-};
-
-/*
  * io that had to be deferred while we were
  * suspended
  */
@@ -184,13 +172,11 @@ struct dm_table {
 	int counts[MAX_DEPTH];	/* in nodes */
 	offset_t *index[MAX_DEPTH];
 
+	int hardsect_size;
 	int num_targets;
 	int num_allocated;
 	offset_t *highs;
 	struct target *targets;
-
-	/* a list of devices used by this table */
-	struct dev_list *devices;
 };
 
 /*
@@ -245,28 +231,13 @@ int dm_table_add_target(struct dm_table *t, offset_t high,
 			struct target_type *type, void *private);
 int dm_table_complete(struct dm_table *t);
 
-
 /* dm-parse.c */
-struct text_region {
-	const char *b;
-	const char *e;
-};
-
 typedef int (*extract_line_fn)(struct text_region *line,
 			       void *private);
 
 struct dm_table *dm_parse(extract_line_fn line_fn, void *line_private,
 			  dm_error_fn err_fn, void *err_private);
 
-/*
- * These may be useful for people writing target
- * types.
- */
-int dm_get_number(struct text_region *txt, unsigned int *n);
-int dm_get_line(struct text_region *txt, struct text_region *line);
-int dm_get_word(struct text_region *txt, struct text_region *word);
-void dm_txt_copy(char *dest, size_t max, struct text_region *txt);
-void dm_eat_space(struct text_region *txt);
 
 static inline int dm_empty_tok(struct text_region *txt)
 {

@@ -64,14 +64,34 @@ struct target_type {
 int dm_register_target(struct target_type *t);
 int dm_unregister_target(struct target_type *t);
 
+struct dm_bdev {
+        struct list_head list;
+        struct block_device *bdev;
+        int use;
+};
 
-/* contructors should call this to make sure any
- * destination devices are handled correctly
- * (ie. opened/closed).
+struct dm_bdev *dm_blkdev_get(const char *path);
+void dm_blkdev_put(struct dm_bdev *);
+
+static inline kdev_t dm_bdev2rdev(struct dm_bdev *d)
+{
+	return to_kdev_t(d->bdev->bd_dev);
+}
+
+struct text_region {
+        const char *b;
+        const char *e;
+};
+
+/*
+ * These may be useful for people writing target
+ * types.
  */
-int dm_table_lookup_device(const char *path, kdev_t *d);
-int dm_table_add_device(struct dm_table *t, kdev_t dev);
-void dm_table_remove_device(struct dm_table *t, kdev_t dev);
+int dm_get_number(struct text_region *txt, unsigned int *n);
+int dm_get_line(struct text_region *txt, struct text_region *line);
+int dm_get_word(struct text_region *txt, struct text_region *word);
+void dm_txt_copy(char *dest, size_t max, struct text_region *txt);
+void dm_eat_space(struct text_region *txt);
 
 #endif /* DEVICE_MAPPER_H */
 
