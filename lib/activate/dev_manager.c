@@ -88,12 +88,14 @@ struct dl_list {
 };
 
 static const char *stripe_filler = NULL;
+static uint32_t mirror_region_size = 0;
 
 struct dev_manager {
 	struct pool *mem;
 
 	struct config_tree *cf;
 	const char *stripe_filler;
+	uint32_t mirror_region_size;
 
 	char *vg_name;
 
@@ -269,7 +271,8 @@ static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
 /*
  * Low level device-layer operations.
  */
-static struct dm_task *_setup_task(const char *name, const char *uuid, int task)
+static struct dm_task *_setup_task(const char *name, const char *uuid, 
+				   uint32_t *event_nr, int task)
 {
 	struct dm_task *dmt;
 
@@ -284,6 +287,9 @@ static struct dm_task *_setup_task(const char *name, const char *uuid, int task)
 	if (uuid && *uuid)
 		dm_task_set_uuid(dmt, uuid);
 
+	if (event_nr)
+		dm_task_set_event_nr(dmt, *event_nr);
+
 	return dmt;
 }
 
@@ -294,7 +300,7 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 	struct dm_task *dmt;
 	const char *u;
 
-	if (!(dmt = _setup_task(name, uuid, DM_DEVICE_INFO))) {
+	if (!(dmt = _setup_task(name, uuid, 0, DM_DEVICE_INFO))) {
 		stack;
 		return 0;
 	}
@@ -348,7 +354,7 @@ static int _status_run(const char *name, const char *uuid,
 	char *type = NULL;
 	char *params = NULL;
 
-	if (!(dmt = _setup_task(name, uuid, DM_DEVICE_STATUS))) {
+	if (!(dmt = _setup_task(name, uuid, 0, DM_DEVICE_STATUS))) {
 		stack;
 		return 0;
 	}
@@ -405,10 +411,12 @@ static int _status(const char *name, const char *uuid,
 }
 
 static int _percent_run(const char *name, const char *uuid,
-			const char *target_type, float *percent)
+			const char *target_type, int wait, float *percent,
+			uint32_t *event_nr)
 {
 	int r = 0;
 	struct dm_task *dmt;
+	struct dm_info info;
 	void *next = NULL;
 	uint64_t start, length;
 	char *type = NULL;
@@ -420,7 +428,9 @@ static int _percent_run(const char *name, const char *uuid,
 
 	*percent = -1;
 
-	if (!(dmt = _setup_task(name, uuid, DM_DEVICE_STATUS))) {
+	if (!(dmt = _setup_task(name, uuid, event_nr,
+				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS)))
+	{
 		stack;
 		return 0;
 	}
@@ -430,12 +440,29 @@ static int _percent_run(const char *name, const char *uuid,
 		goto out;
 	}
 
+	if (!dm_task_get_info(dmt, &info) || !info.exists) {
+		stack;
+		goto out;
+	}
+
+	if (event_nr)
+		*event_nr = info.event_nr;
+
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length, &type,
 					  &params);
 
 		if (!type || !params || strcmp(type, target_type))
 			continue;
+
+		/* Mirror? */
+		if (!strcmp(type, "mirror") &&
+		    sscanf(params, "%*d %*d:%*d %*d:%*d %" PRIu64 "/%" PRIu64,
+			   &numerator, &denominator) == 2) {
+			total_numerator += numerator;
+			total_denominator += denominator;
+			continue;
+		}
 
 		if (strcmp(type, "snapshot"))
 			continue;
@@ -455,7 +482,9 @@ static int _percent_run(const char *name, const char *uuid,
 	} while (next);
 
 	if (total_denominator)
-		*percent = (float) total_numerator *100 / total_denominator;
+		*percent = (float) total_numerator * 100 / total_denominator;
+	else
+		*percent = 100;
 
 	r = 1;
 
@@ -465,12 +494,14 @@ static int _percent_run(const char *name, const char *uuid,
 }
 
 static int _percent(const char *name, const char *uuid, const char *target_type,
-		    float *percent)
+		    int wait, float *percent, uint32_t *event_nr)
 {
-	if (uuid && *uuid && _percent_run(NULL, uuid, target_type, percent))
+	if (uuid && *uuid
+	    && _percent_run(NULL, uuid, target_type, wait, percent, event_nr))
 		return 1;
 
-	if (name && _percent_run(name, NULL, target_type, percent))
+	if (name && _percent_run(name, NULL, target_type, wait, percent,
+				 event_nr))
 		return 1;
 
 	return 0;
@@ -483,7 +514,7 @@ static int _rename(struct dev_layer *dl, char *newname)
 
 	log_verbose("Renaming %s to %s", dl->name, newname);
 
-	if (!(dmt = _setup_task(dl->name, NULL, DM_DEVICE_RENAME))) {
+	if (!(dmt = _setup_task(dl->name, NULL, 0, DM_DEVICE_RENAME))) {
 		stack;
 		return 0;
 	}
@@ -514,7 +545,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 
 	log_verbose("Loading %s", dl->name);
 	if (!(dmt = _setup_task(task == DM_DEVICE_CREATE ? dl->name : NULL,
-				dl->dlid, task))) {
+				dl->dlid, 0, task))) {
 		stack;
 		return 0;
 	}
@@ -591,7 +622,7 @@ static int _remove(struct dev_layer *dl)
 	else
 		log_very_verbose("Removing %s", dl->name);
 
-	if (!(dmt = _setup_task(dl->name, NULL, DM_DEVICE_REMOVE))) {
+	if (!(dmt = _setup_task(dl->name, NULL, 0, DM_DEVICE_REMOVE))) {
 		stack;
 		return 0;
 	}
@@ -622,7 +653,7 @@ static int _suspend_or_resume(const char *name, action_t suspend)
 	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
 
 	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
-	if (!(dmt = _setup_task(name, NULL, task))) {
+	if (!(dmt = _setup_task(name, NULL, 0, task))) {
 		stack;
 		return 0;
 	}
@@ -690,6 +721,8 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 		/* Target formats:
 		 *   linear [device offset]+
 		 *   striped #stripes stripe_size [device offset]+
+		 *   mirror  #logs [log_type #log_params [log_params]*]+ 
+		 *           #mirrors [device offset log_number]+
 		 */
 	case SEG_STRIPED:
 		if (areas == 1)
@@ -707,6 +740,12 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 		}
 		break;
 	case SEG_MIRRORED:
+		target = "mirror";
+		if ((tw = lvm_snprintf(params, sizeof(params),
+				       "core 1 %u %u ",
+				       dm->mirror_region_size, areas)) < 0)
+			goto error;
+		w = tw;
 		break;
 	}
 
@@ -869,6 +908,14 @@ struct dev_manager *dev_manager_create(const char *vg_name,
 	}
 	dm->stripe_filler = stripe_filler;
 
+	if (!mirror_region_size) {
+		mirror_region_size = 2 * find_config_int(cf->root,
+							 "activation/mirror_region_size",
+							 '/',
+							 DEFAULT_MIRROR_REGION_SIZE);
+	}
+	dm->mirror_region_size = mirror_region_size;
+
 	if (!(dm->vg_name = pool_strdup(dm->mem, vg_name))) {
 		stack;
 		goto bad;
@@ -939,7 +986,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device status percentage for %s", name);
-	if (!(_percent(name, lv->lvid.s, "snapshot", percent))) {
+	if (!(_percent(name, lv->lvid.s, "snapshot", 0, percent, NULL))) {
 		stack;
 		return 0;
 	}
@@ -947,6 +994,33 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	/* FIXME pool_free ? */
 
 	/* If the snapshot isn't available, percent will be -1 */
+	return 1;
+}
+
+/* FIXME Merge with snapshot_percent, auto-detecting target type */
+/* FIXME Cope with more than one target */
+int dev_manager_mirror_percent(struct dev_manager *dm,
+			       struct logical_volume *lv, int wait,
+			       float *percent, uint32_t *event_nr)
+{
+	char *name;
+
+	/*
+	 * Build a name for the top layer.
+	 */
+	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
+		stack;
+		return 0;
+	}
+
+	/* FIXME pool_free ? */
+
+	log_debug("Getting device mirror status percentage for %s", name);
+	if (!(_percent(name, lv->lvid.s, "mirror", wait, percent, event_nr))) {
+		stack;
+		return 0;
+	}
+
 	return 1;
 }
 

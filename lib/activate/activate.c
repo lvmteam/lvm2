@@ -46,6 +46,10 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 {
 	return 0;
 }
+int lv_mirror_percent(struct logical_volume *lv, float *percent, int wait)
+{
+	return 0;
+}
 int lvs_in_vg_activated(struct volume_group *vg)
 {
 	return 0;
@@ -180,6 +184,29 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 	}
 
 	if (!(r = dev_manager_snapshot_percent(dm, lv, percent)))
+		stack;
+
+	dev_manager_destroy(dm);
+
+	return r;
+}
+
+/* FIXME Merge with snapshot_percent */
+int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
+		      uint32_t *event_nr)
+{
+	int r;
+	struct dev_manager *dm;
+
+	if (!activation())
+		return 0;
+
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
+		stack;
+		return 0;
+	}
+
+	if (!(r = dev_manager_mirror_percent(dm, lv, wait, percent, event_nr)))
 		stack;
 
 	dev_manager_destroy(dm);
