@@ -47,3 +47,4 @@
 ../lib/report/report.h
 ../lib/uuid/uuid.h
 ../po/pogen.h
+../tools/version.h

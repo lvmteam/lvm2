@@ -1,3 +1,9 @@
+Version 2.00.28 - 26th November 2004
+====================================
+  Fix partition table signature detection.
+  Minor configure/makefile tidy.
+  Export version.h from tools for clvmd.
+
 Version 2.00.27 - 24th November 2004
 ====================================
   Trap large memory allocation requests.
