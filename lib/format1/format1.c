@@ -10,6 +10,7 @@
 #include "hash.h"
 #include "list.h"
 #include "log.h"
+#include "display.h"
 
 static int _check_vgs(struct list_head *pvs)
 {
@@ -387,6 +388,32 @@ int _vg_setup(struct io_space *is, struct volume_group *vg)
 
         if (vg->max_pv >= MAX_PV)
 		vg->max_pv = MAX_PV - 1;
+
+	if (vg->extent_size > MAX_PE_SIZE || vg->extent_size < MIN_PE_SIZE) {
+		char *dummy, *dummy2;
+
+		log_error("Extent size must be between %s and %s",
+			(dummy = display_size(MIN_PE_SIZE / 2, SIZE_SHORT)), 
+			(dummy2 = display_size(MAX_PE_SIZE / 2, SIZE_SHORT)));
+
+		dbg_free(dummy);
+		dbg_free(dummy2);
+		return 0;
+	}
+
+	if (vg->extent_size % MIN_PE_SIZE) {
+		char *dummy;
+		log_error("Extent size must be multiple of %s",
+			(dummy = display_size(MIN_PE_SIZE / 2, SIZE_SHORT)));
+		dbg_free(dummy);
+		return 0;
+	}
+
+	/* Redundant? */
+	if (vg->extent_size & (vg->extent_size - 1)) {
+		log_error("Extent size must be power of 2");
+		return 0;
+	}
 
 	return 1;
 }

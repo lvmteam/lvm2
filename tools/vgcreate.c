@@ -9,7 +9,8 @@
 /* FIXME From config file? */
 #define DEFAULT_PV 255
 #define DEFAULT_LV 255
-#define DEFAULT_EXTENT 8192
+
+#define DEFAULT_EXTENT 4096  /* In KB */
 
 int vgcreate(int argc, char **argv)
 {
@@ -31,7 +32,9 @@ int vgcreate(int argc, char **argv)
 	vg_name = argv[0];
 	max_lv = arg_int_value(maxlogicalvolumes_ARG, DEFAULT_LV);
 	max_pv = arg_int_value(maxphysicalvolumes_ARG, DEFAULT_PV);
-	extent_size = arg_int_value(physicalextentsize_ARG, DEFAULT_EXTENT);
+
+	/* Units of 512-byte sectors */
+	extent_size = arg_int_value(physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
 
 	if (max_lv < 1) {
 		log_error("maxlogicalvolumes too low");
