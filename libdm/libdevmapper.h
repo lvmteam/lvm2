@@ -66,6 +66,7 @@ struct dm_info {
 	unsigned int target_count;
 };
 
+int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 

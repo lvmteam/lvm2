@@ -14,3 +14,5 @@ extern struct target *create_target(uint64_t start,
 int add_dev_node(const char *dev_name, dev_t dev);
 int rm_dev_node(const char *dev_name);
 
+#define DM_LIB_VERSION @DM_LIB_VERSION@
+
