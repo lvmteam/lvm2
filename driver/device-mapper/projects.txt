@@ -1,5 +1,31 @@
-    List of projects, ideas and pending bug fixes
+    List of projects, ideas and pending bug fixes (no particular order)
    ===============================================
 
- o Pending merge with ioctl interface version of the code.
+ o Odd crash needs fixing when doing lookup in dmfs-lv.c (doesn't seem to
+   occur on first logical volume)
+
+ o Verify that table parsing code is still doing the right thing.
+
+ o Verify ioctl() interface is still working the same way as it used to
+
+ o Error handling in dm-ioctl.c:parse_table()
+
+ o Locking on mapped_devices in dm-ioctl.c
+
+ o Port to 2.5 kernels (new block I/O layer)
+
+ o Investigate char device number allocation for dm-ioctl.c (maybe use misc
+   device ?)
+
+ o dm-table.c:dm_table_get_device() only appears to check the sizes when
+   allocating new devices
+
+ o Investigate overhead of vmalloc()ed tables and if required look at ways
+   of using "normal" kernel memory instead.
+
+ o Add ability to change the blocksize of logical volumes
+
+ o General code tidy
+
+ o Testing, testing, testing....
 
