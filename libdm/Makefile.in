@@ -13,7 +13,7 @@ SOURCES=libdm-common.c $(interface)/libdevmapper.c
 
 INCLUDES=-I$(interface)
 
-TARGETS=$(interface)/libdevmapper.so
+TARGETS=$(interface)/libdevmapper.so $(interface)/libdevmapper.a
 
 include ../make.tmpl
 
@@ -23,7 +23,13 @@ install: install_@interface@
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
 		$(includedir)/libdevmapper.h
 
-.PHONY: install install_@interface@
+install_static: install_@interface@_static
+	$(LN_S) -f libdevmapper.a.$(LIB_VERSION) $(libdir)/libdevmapper.a
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
+		$(includedir)/libdevmapper.h
+
+
+.PHONY: install install_@interface@ install_static install_@interface@_static
 
 install_fs: fs/libdevmapper.so
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
@@ -32,6 +38,10 @@ install_fs: fs/libdevmapper.so
 install_ioctl: ioctl/libdevmapper.so
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper.so.$(LIB_VERSION)
+
+install_ioctl_static: ioctl/libdevmapper.a
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+		$(libdir)/libdevmapper.a.$(LIB_VERSION)
 
 distclean_lib: 
 	$(RM) libdm-common.h
