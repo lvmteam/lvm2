@@ -2183,7 +2183,7 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 	return _action(dm, lv, SUSPEND);
 }
 
-int dev_manager_mknodes(const struct logical_volume *lv)
+int dev_manager_lv_mknodes(const struct logical_volume *lv)
 {
 	char *name;
 
@@ -2196,7 +2196,7 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 	return fs_add_lv(lv, name);
 }
 
-int dev_manager_rmnodes(const struct logical_volume *lv)
+int dev_manager_lv_rmnodes(const struct logical_volume *lv)
 {
 	return fs_del_lv(lv);
 }
