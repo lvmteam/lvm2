@@ -44,6 +44,10 @@ enum {
 	DM_DEVICE_RENAME,
 
 	DM_DEVICE_VERSION,
+
+	DM_DEVICE_STATUS,
+	DM_DEVICE_TABLE,
+	DM_DEVICE_WAITEVENT
 };
 
 struct dm_task;
@@ -90,6 +94,13 @@ int dm_task_set_minor(struct dm_task *dmt, int minor);
 int dm_task_add_target(struct dm_task *dmt,
 		       uint64_t start,
 		       uint64_t size, const char *ttype, const char *params);
+
+/* Use this to retrive target information returned from a STATUS call */
+void *dm_get_next_target(struct dm_task *dmt,
+			 void *next, unsigned long long *start,
+			 unsigned long long *length,
+			 char **target_type,
+			 char **params);
 
 /*
  * Call this to actually run the ioctl.
