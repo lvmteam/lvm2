@@ -98,7 +98,7 @@ int lvremove_single(char *lv_name)
 	}
 
 	log_verbose("Releasing logical volume %s", lv_name);
-	if (lv_remove(vg, lvh)) {
+	if (!lv_remove(vg, lvh)) {
 		log_error("Error releasing logical volume %s", lv_name);
 		return ECMD_FAILED;
 	}
