@@ -72,13 +72,10 @@ int vgextend(int argc, char **argv)
 		    "physical volumes", vg_name, argc);
 
         /* store vg on disk(s) */
-        if (!fid->ops->vg_write(fid, vg))
-                return ECMD_FAILED;
+	if (!fid->ops->vg_write(fid, vg))
+		return ECMD_FAILED;
 
-/********* FIXME
-	if ((ret = do_autobackup(vg_name, vg)))
-		return ret;
-*********/
+	autobackup(vg);
 
 	log_print("Volume group '%s' successfully extended", vg_name);
 

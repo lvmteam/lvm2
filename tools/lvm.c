@@ -65,6 +65,9 @@ static int _debug;
 static int _default_verbose;
 static int _verbose;
 
+static int _default_test;
+static int _test;
+
 /*
  * The lvm_sys_dir contains:
  *
@@ -509,31 +512,22 @@ static int process_common_commands(struct command *com)
 	if (arg_count(suspend_ARG))
 		kill(getpid(), SIGSTOP);
 
-	/*
-	 * debug
-	 */
 	_debug = _default_debug;
 	if (arg_count(debug_ARG))
 		_debug = arg_count(debug_ARG);
 
-	/*
-	 * verbose
-	 */
 	_verbose = _default_verbose;
 	if (arg_count(verbose_ARG))
 		_verbose = arg_count(verbose_ARG);
-
 
 	if (arg_count(quiet_ARG)) {
 		_debug = 0;
 		_verbose = 0;
 	}
 
-
-	if ((l = arg_count(test_ARG))) {
-		log_error("Test mode. Metadata will NOT be updated.");
-		init_test(l);
-	}
+	_test = _default_test;
+	if (arg_count(test_ARG))
+		_test = arg_count(test_ARG);
 
 	if (arg_count(help_ARG)) {
 		usage(com->name);
@@ -602,6 +596,7 @@ static int run_command(int argc, char **argv)
 
 	init_debug(_debug);
 	init_verbose(_verbose);
+	init_test(_test);
 
 	ret = the_command->fn(argc, argv);
 
@@ -611,6 +606,7 @@ static int run_command(int argc, char **argv)
 	 */
 	init_debug(_default_debug);
 	init_verbose(_default_verbose);
+	init_test(_default_test);
 
 	/*
 	 * free off any memory the command used.
@@ -674,6 +670,9 @@ static void __init_log(struct config_file *cf)
 
 	_default_verbose = find_config_int(cf->root, "log/verbose", '/', 0);
 	init_verbose(_default_verbose);
+
+	_default_test = find_config_int(cf->root, "log/test", '/', 0);
+	init_test(_default_test);
 }
 
 static int dev_cache_setup(struct config_file *cf)
@@ -772,6 +771,9 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 	if (find_config_int(cf->root, "devices/write_cache_state", '/', 1))
 		_dump_filter = 1;
 
+	if (!*_sys_dir)
+		_dump_filter = 0;
+
 	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
 		log_verbose("Failed to load existing device cache from %s",
 			    lvm_cache);
@@ -783,6 +785,7 @@ static int _get_env_vars(void)
 {
 	const char *e;
 
+	/* Set to "" to avoid using any system directory */
 	if ((e = getenv("LVM_SYSTEM_DIR"))) {
 		if (lvm_snprintf(_sys_dir, sizeof(_sys_dir), "%s", e) < 0) {
 			log_error("LVM_SYSTEM_DIR environment variable "
@@ -797,9 +800,13 @@ static int _get_env_vars(void)
 static int init(void)
 {
 	struct stat info;
-	char config_file[PATH_MAX];
+	char config_file[PATH_MAX] = "";
 
 	if (!_get_env_vars())
+		return 0;
+
+	/* Create system directory if it doesn't already exist */
+	if (!create_dir(_sys_dir))
 		return 0;
 
 	if (!(cmd = dbg_malloc(sizeof(*cmd)))) {
@@ -818,8 +825,8 @@ static int init(void)
 	/* send log messages to stderr for now */
 	init_log(stderr);
 
-	if (lvm_snprintf(config_file, sizeof(config_file),
-			 "%s/lvm.conf", _sys_dir) < 0) {
+	if (*_sys_dir && lvm_snprintf(config_file, sizeof(config_file),
+				      "%s/lvm.conf", _sys_dir) < 0) {
 		log_error("lvm_sys_dir was too long");
 		return 0;
 	}
@@ -847,12 +854,18 @@ static int init(void)
 
 	dm_log_init(print_log);
 
-	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir), "%s/backup",
-        		 find_config_str(cmd->cf->root, "backup/dir", 
-					 '/', _sys_dir)) < 0) {
+	if (!*strncpy(_backup_dir, 
+		      find_config_str(cmd->cf->root, "backup/dir", '/', ""), 
+		      sizeof(_backup_dir)) &&
+	    *_sys_dir &&
+	    lvm_snprintf(_backup_dir, sizeof(_backup_dir), "%s/backup",
+			 _sys_dir) < 0) {
 		log_error("Backup directory given in config file too long");
 		return 0;
 	}
+
+	if (!create_dir(_backup_dir))
+		return 0;
 
 	_backup_days = find_config_int(cmd->cf->root, "backup/days", '/', 
 				       _backup_days);

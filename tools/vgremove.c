@@ -74,6 +74,8 @@ static int vgremove_single(const char *vg_name)
 		}
 	}
 
+	autobackup(vg);
+
 	if (!ret)
 		log_print("Volume group %s successfully removed", vg_name);
 	else

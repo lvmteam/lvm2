@@ -130,6 +130,8 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 		return ECMD_FAILED;
 	}
 
+	autobackup(vg);
+
 	log_print("Removed %s from volume group %s", name, vg->name);
 
 	return 0;

@@ -88,6 +88,8 @@ int vgcreate(int argc, char **argv)
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
+	autobackup(vg);
+
 	log_print("Volume group %s successfully created", vg->name);
 
 	return 0;

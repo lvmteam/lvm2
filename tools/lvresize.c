@@ -345,16 +345,13 @@ int lvresize(int argc, char **argv)
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
+        autobackup(vg);
+
 	/* FIXME Ensure it always displays errors? */
 	if (!lv_reactivate(lv))
 		return ECMD_FAILED;
 
 /********* FIXME Resume *********/
-
-/********* FIXME Backup 
-        if ((ret = do_autobackup(vg_name, vg)))
-                return ret;
-************/
 
 	log_print("Logical volume %s successfully resized", lv_name);
 

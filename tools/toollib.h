@@ -26,6 +26,8 @@ int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 		    int autobackup);
 int autobackup(struct volume_group *vg);
 
+int create_dir(const char *dir);
+
 int process_each_vg(int argc, char **argv,
 		    int (*process_single) (const char *vg_name));
 
