@@ -39,7 +39,7 @@ struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
 
 	memset(&file, 0, sizeof(struct file));
 
-	if (path_init(name, LOOKUP_FOLLOW, &nd))
+	if (!path_init(name, LOOKUP_FOLLOW, &nd))
 		return ERR_PTR(-EINVAL);
 
 	err = path_walk(name, &nd);
@@ -115,8 +115,8 @@ static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry,
 		return PTR_ERR(de);
 
 	inode = dmfs_create_symlink(dir, S_IRWXUGO);
-	if (IS_ERR(inode)) {
-		rv = PTR_ERR(inode);
+	if (inode == NULL) {
+		rv = -ENOSPC;
 		goto out_allow_write;
 	}
 
@@ -136,7 +136,6 @@ static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry,
 	return rv;
 
 out_dput:
-	dput(DMFS_I(inode)->dentry);
 	DMFS_I(inode)->dentry = NULL;
 out_allow_write:
 	{
@@ -266,9 +265,9 @@ struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *de
 		memcpy(tmp_name, name, dentry->d_name.len);
 		tmp_name[dentry->d_name.len] = 0;
 		md = dm_create(tmp_name, -1);
-		if (md == NULL) {
+		if (IS_ERR(md)) {
 			iput(inode);
-			return NULL;
+			return ERR_PTR(PTR_ERR(md));
 		}
 		DMFS_I(inode)->md = md;
 	}

@@ -48,6 +48,7 @@ void dmfs_zap_errors(struct dm_table *t)
 
 	while(!list_empty(&t->errors)) {
 		e = list_entry(t->errors.next, struct dmfs_error, list);
+		list_del(&e->list);
 		kfree(e);
 	}
 }
