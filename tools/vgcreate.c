@@ -92,32 +92,32 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Warning: Setting maxphysicalvolumes to %d",
 			  vg->max_pv);
 
-	if (!lock_vol(cmd, "", LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
 
-	if (!lock_vol(cmd, vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		log_error("Can't get lock for %s", vg_name);
-		lock_vol(cmd, "", LCK_VG | LCK_NONE);
+		lock_vol(cmd, "", LCK_VG_UNLOCK);
 		return ECMD_FAILED;
 	}
 
 	if (!archive(vg)) {
-		lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
-		lock_vol(cmd, "", LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+		lock_vol(cmd, "", LCK_VG_UNLOCK);
 		return ECMD_FAILED;
 	}
 
 	/* Store VG on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
-		lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
-		lock_vol(cmd, "", LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+		lock_vol(cmd, "", LCK_VG_UNLOCK);
 		return ECMD_FAILED;
 	}
 
-	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
-	lock_vol(cmd, "", LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+	lock_vol(cmd, "", LCK_VG_UNLOCK);
 
 	backup(vg);
 

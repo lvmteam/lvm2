@@ -431,13 +431,14 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	int r = ECMD_FAILED;
 	struct lvcreate_params lp;
 	struct logical_volume *lv;
+	char lvidbuf[128];
 
 	memset(&lp, 0, sizeof(lp));
 
 	if (!_read_params(&lp, cmd, argc, argv))
 		return -EINVALID_CMD_LINE;
 
-	if (!lock_vol(cmd, lp.vg_name, LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", lp.vg_name);
 		return 0;
 	}
@@ -447,12 +448,15 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (!lp.snapshot && !lv_setup_cow_store(lv)) {
+	if (lp.snapshot && !lv_setup_cow_store(lv)) {
 		stack;
 		goto out;
 	}
 
-	if (!lv_activate(lv))
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		return 0;
+
+	if (!lock_vol(cmd, lvidbuf, LCK_LV_ACTIVATE))
 		goto out;
 
 	if (!lp.snapshot) {
@@ -461,7 +465,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 		else if (!_zero(cmd, lv)) {
 			stack;
-			goto out;
+			goto out_lv;
 		}
 	}
 
@@ -472,7 +476,9 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	r = 0;
 
+ out_lv:
+	lock_vol(cmd, lp.vg_name, LCK_LV_UNLOCK);
  out:
-	lock_vol(cmd, lp.vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, lp.vg_name, LCK_VG_UNLOCK);
 	return r;
 }

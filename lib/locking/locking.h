@@ -20,7 +20,9 @@ void fin_locking(void);
  *
  * LCK_LV:
  *   Lock/unlock an individual logical volume
- *   Also suspends/resumes the LV if it's active.
+ *   If it's active, LCK_WRITE suspends it; LCK_EXCLUSIVE deactivates it;
+ *   LCK_NONE unsuspends it.
+ *   LCK_READ activates it.
  *   char *vol holds "VG_name/LV_uuid"
  *
  * FIXME: Change to something like
@@ -35,6 +37,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
 #define LCK_NONE	0x00000000
 #define LCK_READ	0x00000001
 #define LCK_WRITE	0x00000002
+#define LCK_EXCL	0x00000003
 
 /*
  * Lock scope
@@ -47,4 +50,16 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
  * Lock bits
  */
 #define LCK_NONBLOCK	0x00010000
+
+/*
+ * Common combinations
+ */
+#define LCK_VG_READ		(LCK_VG | LCK_READ)
+#define LCK_VG_WRITE		(LCK_VG | LCK_WRITE)
+#define LCK_VG_UNLOCK		(LCK_VG | LCK_NONE)
+
+#define LCK_LV_DEACTIVATE	(LCK_LV | LCK_EXCL)
+#define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE)
+#define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ)
+#define LCK_LV_UNLOCK		(LCK_LV | LCK_NONE)
 

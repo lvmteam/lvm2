@@ -140,7 +140,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 			}
 			if ((ret = process_single(cmd, vg_name)) > ret_max)
 				ret_max = ret;
-			lock_vol(cmd, (void *) vg_name, LCK_VG | LCK_NONE);
+			lock_vol(cmd, (void *) vg_name, LCK_VG_UNLOCK);
 		}
 	} else {
 		log_verbose("Finding all volume groups");
@@ -158,7 +158,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 			if (ret > ret_max)
 				ret_max = ret;
-			lock_vol(cmd, (void *) vg_name, LCK_VG | LCK_NONE);
+			lock_vol(cmd, (void *) vg_name, LCK_VG_UNLOCK);
 		}
 	}
 

@@ -166,8 +166,16 @@ int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 			if (!lv_resume_if_active(cmd, resource))
 				return 0;
 			break;
+		case LCK_READ:
+			if (!lv_activate_if_inactive(cmd, resource))
+				return 0;
+			break;
 		case LCK_WRITE:
 			if (!lv_suspend_if_active(cmd, resource))
+				return 0;
+			break;
+		case LCK_EXCL:
+			if (!lv_deactivate_if_active(cmd, resource))
 				return 0;
 			break;
 		default:
