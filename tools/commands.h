@@ -410,6 +410,7 @@ xx(pvdisplay,
    "\n"
    "pvdisplay --columns|-C\n"
    "\t[--aligned]\n"
+   "\t[-a|--all]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -424,9 +425,9 @@ xx(pvdisplay,
    "\t[--version]" "\n"
    "\t[PhysicalVolumePath [PhysicalVolumePath...]]\n",
 
-   aligned_ARG, colon_ARG, columns_ARG, ignorelockingfailure_ARG, maps_ARG,
-   noheadings_ARG, nosuffix_ARG, options_ARG, separator_ARG, short_ARG,
-   sort_ARG, unbuffered_ARG, units_ARG)
+   aligned_ARG, all_ARG, colon_ARG, columns_ARG, ignorelockingfailure_ARG,
+   maps_ARG, noheadings_ARG, nosuffix_ARG, options_ARG, separator_ARG,
+   short_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(pvmove,
    "Move extents from one physical volume to another",
