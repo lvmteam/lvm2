@@ -65,17 +65,19 @@ static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 
 static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 {
+/******** FIXME Any LV size restriction? 
 	uint64_t max_size = UINT_MAX;
 
-	if (!*lv->lvid.s)
-		lvid_create(&lv->lvid, &lv->vg->id);
-
 	if (lv->size > max_size) {
-		char *dummy = display_size(max_size, SIZE_SHORT);
+		char *dummy = display_size(max_size / 2, SIZE_SHORT);
 		log_error("logical volumes cannot be larger than %s", dummy);
 		dbg_free(dummy);
 		return 0;
 	}
+*/
+
+	if (!*lv->lvid.s)
+		lvid_create(&lv->lvid, &lv->vg->id);
 
 	return 1;
 }
