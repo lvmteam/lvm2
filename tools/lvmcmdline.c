@@ -978,7 +978,7 @@ static void _close_stray_fds(void)
 {
 	struct rlimit rlim;
 	int fd;
-	char *suppress_warnings = NULL;
+	int suppress_warnings = 0;
 
 	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
 		fprintf(stderr, "getrlimit(RLIMIT_NOFILE) failed: %s\n",
