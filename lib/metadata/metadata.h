@@ -72,7 +72,7 @@ struct pv_area {
 struct stripe_segment {
 	struct list list;
 
-	uint32_t chunk_size;
+	uint32_t stripe_size;
 	uint32_t stripes;
 
 	/* There will be one pv_area for each stripe */
