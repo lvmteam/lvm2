@@ -80,7 +80,6 @@ static struct dm_bdev *dm_get_device(struct block_device *bdev)
 
 	n->bdev = bdev;
 	n->use = 1;
-	n->flags = 0;
 
 	down(&bdev_sem);
 	read_lock(&bdev_lock);
@@ -109,12 +108,11 @@ static struct dm_bdev *dm_get_device(struct block_device *bdev)
 	return d;
 }
 
-struct dm_bdev *dm_blkdev_get(const char *name)
+struct dm_bdev *dm_blkdev_get(const char *path)
 {
 	struct dm_bdev *d;
 	struct nameidata nd;
 	struct inode *inode;
-	int rv;
 
 	if (!path_init(path, LOOKUP_FOLLOW, &nd))
 		return ERR_PTR(-EINVAL);
@@ -128,7 +126,7 @@ struct dm_bdev *dm_blkdev_get(const char *name)
 		goto out;
 	}
 
-	d = dm_get_device(inode->i_bdev->bd_dev);
+	d = dm_get_device(inode->i_bdev);
 
 out:
 	path_release(&nd);
@@ -165,4 +163,6 @@ void dm_blkdev_put(struct dm_bdev *d)
 		dm_blkdev_drop(d);
 }
 
+EXPORT_SYMBOL(dm_blkdev_get);
+EXPORT_SYMBOL(dm_blkdev_put);
 

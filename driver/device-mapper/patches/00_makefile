@@ -1,10 +1,10 @@
 --- linux-2.4.9-ac5/drivers/md/Makefile	Sat Sep  1 16:24:46 2001
-+++ linux/drivers/md/Makefile	Thu Sep 13 18:00:10 2001
++++ linux/drivers/md/Makefile	Fri Sep 14 09:12:39 2001
 @@ -7,6 +7,7 @@
  export-objs	:= md.o xor.o
  list-multi	:= lvm-mod.o
  lvm-mod-objs	:= lvm.o lvm-snap.o lvm-fs.o
-+dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-fs.o dm-parse.o
++dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-fs.o dm-parse.o dm-blkdev.o
  
  # Note: link order is important.  All raid personalities
  # and xor.o must come before md.o, as they each initialise 

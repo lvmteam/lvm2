@@ -131,7 +131,8 @@ struct dm_table *dm_table_create(void)
 
 	/* allocate a single nodes worth of targets to
 	   begin with */
-	if (t && alloc_targets(t, KEYS_PER_NODE)) {
+	t->hardsect_size = PAGE_CACHE_SIZE;
+	if (alloc_targets(t, KEYS_PER_NODE)) {
 		kfree(t);
 		t = 0;
 	}
@@ -160,19 +161,6 @@ void dm_table_destroy(struct dm_table *t)
 			tgt->type->dtr(t, tgt->private);
 	}
 	vfree(t->targets);
-
-	/* free the device list */
-	if (t->devices) {
-		struct dev_list *d, *n;
-
-		WARN("there are still devices present, someone isn't "
-		     "calling dm_table_remove_device");
-
-		for (d = t->devices; d; d = n) {
-			n = d->next;
-			kfree(d);
-		}
-	}
 
 	kfree(t);
 }
@@ -208,98 +196,6 @@ int dm_table_add_target(struct dm_table *t, offset_t high,
 }
 
 /*
- * convert a device path to a kdev_t.
- */
-int dm_table_lookup_device(const char *path, kdev_t *d)
-{
-	int r;
-	struct nameidata nd;
-	struct inode *inode;
-
-	if (!path_init(path, LOOKUP_FOLLOW, &nd))
-		return 0;
-
-	if ((r = path_walk(path, &nd)))
-		goto bad;
-
-	inode = nd.dentry->d_inode;
-	if (!inode) {
-		r = -ENOENT;
-		goto bad;
-	}
-
-	if (!S_ISBLK(inode->i_mode)) {
-		r = -EINVAL;
-		goto bad;
-	}
-
-	*d = inode->i_bdev->bd_dev;
-
- bad:
-	path_release(&nd);
-	return r;
-}
-
-/*
- * see if we've already got a device in the list.
- */
-static struct dev_list **find_device(struct dev_list **d, kdev_t dev)
-{
-	while (*d) {
-		if ((*d)->dev == dev)
-			break;
-
-		d = &(*d)->next;
-	}
-
-	return d;
-}
-
-/*
- * add a device to the list, or just increment the
- * usage count if it's already present.
- */
-int dm_table_add_device(struct dm_table *t, kdev_t dev)
-{
-	struct dev_list *d;
-
-	d = *find_device(&t->devices, dev);
-	if (!d) {
-		d = kmalloc(sizeof(*d), GFP_KERNEL);
-		if (!d)
-			return -ENOMEM;
-
-		d->dev = dev;
-		atomic_set(&d->count, 0);
-		d->next = t->devices;
-		t->devices = d;
-	}
-	atomic_inc(&d->count);
-
-	return 0;
-}
-
-/*
- * decrement a devices use count and remove it if
- * neccessary.
- */
-void dm_table_remove_device(struct dm_table *t, kdev_t dev)
-{
-	struct dev_list **d = find_device(&t->devices, dev);
-
-	if (!*d) {
-		WARN("asked to remove a device that isn't present");
-		return;
-	}
-
-	if (atomic_dec_and_test(&(*d)->count)) {
-		struct dev_list *node = *d;
-		*d = (*d)->next;
-		kfree(node);
-	}
-}
-
-/*
  * builds the btree to index the map
  */
 int dm_table_complete(struct dm_table *t)
@@ -324,5 +220,3 @@ int dm_table_complete(struct dm_table *t)
 	return 0;
 }
 
-
-EXPORT_SYMBOL(dm_table_add_device);
