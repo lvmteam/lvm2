@@ -35,6 +35,8 @@
 #define DEVICE_OFF(d)                    /* do-nothing */
 
 #include <linux/blk.h>
+#include <linux/blkpg.h>
+#include <linux/hdreg.h>
 
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
@@ -123,7 +125,7 @@ static void dm_exit(void)
 /*
  * block device functions
  */
-static int blk_open(struct inode *inode, struct file *file)
+static int dm_blk_open(struct inode *inode, struct file *file)
 {
 	int minor = MINOR(inode->i_rdev);
 	struct mapped_device *md;
@@ -146,7 +148,7 @@ static int blk_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int blk_close(struct inode *inode, struct file *file)
+static int dm_blk_close(struct inode *inode, struct file *file)
 {
 	int minor = MINOR(inode->i_rdev);
 	struct mapped_device *md;
@@ -169,18 +171,55 @@ static int blk_close(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int blk_ioctl(struct inode *inode, struct file *file,
+#define VOLUME_SIZE(minor) ((_block_size[(minor)] << 10) / 
+			    _hardsect_size[(minor)])
+
+static int dm_blk_ioctl(struct inode *inode, struct file *file,
 		      uint command, ulong a)
 {
-	/* FIXME: check in the latest Rubini that all expected ioctl's
-	   are supported */
-
 	int minor = MINOR(inode->i_rdev);
 	long size;
 
+	if (minor >= MAX_DEVICES)
+		return -ENXIO;
+
 	switch (command) {
+	case BLKSSZGET:
+	case BLKROGET:
+	case BLKROSET:
+#if 0
+	case BLKELVSET:
+	case BLKELVGET:
+#endif
+		return blk_ioctl(inode->i_dev, command, a);
+		break;
+
+	case HDIO_GETGEO:
+		{
+			struct hd_geometry tmp = { heads: 64, sectors: 32 };
+
+			tmp.cylinders = VOLUME_SIZE(minor) / tmp.heads / 
+					tmp.sectors;
+
+			if (copy_to_user((char *)a, &tmp, sizeof(tmp)))
+				return -EFAULT;
+			break;
+		}
+
+	case HDIO_GETGEO_BIG:
+		{
+			struct hd_big_geometry tmp = { heads: 64, sectors: 32 };
+
+			tmp.cylinders = VOLUME_SIZE(minor) / tmp.heads /
+					tmp.sectors;
+
+			if (copy_to_user((char *)a, &tmp, sizeof(tmp)))
+				return -EFAULT;
+			break;
+		}
+
 	case BLKGETSIZE:
-		size = _block_size[minor] * 1024 / _hardsect_size[minor];
+		size = VOLUME_SIZE(minor);
 		if (copy_to_user((void *) a, &size, sizeof(long)))
 			return -EFAULT;
 		break;
@@ -206,6 +245,9 @@ static int blk_ioctl(struct inode *inode, struct file *file,
 
 	case BLKRRPART:
 		return -EINVAL;
+#if 0
+	case LVM_BMAP: /* we need some method for LILO to use */
+#endif
 
 	default:
 		printk(KERN_WARNING "%s - unknown block ioctl %d",
@@ -802,9 +844,9 @@ void dm_suspend(struct mapped_device *md)
 
 
 struct block_device_operations dm_blk_dops = {
-	open:     blk_open,
-	release:  blk_close,
-	ioctl:    blk_ioctl
+	open:     dm_blk_open,
+	release:  dm_blk_close,
+	ioctl:    dm_blk_ioctl
 };
 
 /*
