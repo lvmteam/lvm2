@@ -73,6 +73,16 @@ struct inode *dmfs_create_symlink(struct inode *dir, int mode)
 	return inode;
 }
 
+static int dmfs_lv_unlink(struct inode *inode, struct dentry *dentry)
+{
+	if (!(inode->i_mode & S_IFLNK))
+		return -EINVAL;
+
+	inode->n_link--;
+	dput(dentry);
+	return 0;
+}
+
 static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry, 
 			   const char *symname)
 {

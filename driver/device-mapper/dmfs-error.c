@@ -24,8 +24,14 @@
 
 static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
+	struct dmfs_i *dmi = DMFS_I(file->f_dentry->d_parent->d_inode);
+	struct dm_table *t = dmi->table;
+	int copied = 0;
 
-	return size;
+	if (!access_ok(VERIFY_WRITE, buf, count))
+		return -EFAULT;
+
+	return copied;
 }
 
 static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasync)
