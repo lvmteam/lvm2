@@ -315,17 +315,18 @@ xx(lvscan,
 xx(pvchange,
    "Change attributes of physical volume(s)",
    "pvchange\n"
+   "\t[-a|--all]\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
+   "\t[-t|--test]\n"
+   "\t[-u|--uuid]\n"
+   "\t[-x|--allocatable y|n]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
-   "\t[-a|--all]\n"
-   "\t[-t|--test]\n"
-   "\t[-x|--allocatable y|n]\n"
    "\t[PhysicalVolumePath...]\n",
 
-   all_ARG, allocatable_ARG, allocation_ARG, autobackup_ARG, test_ARG)
+   all_ARG, allocatable_ARG, allocation_ARG, autobackup_ARG, test_ARG, uuid_ARG)
 
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
@@ -531,6 +532,7 @@ xx(vgchange,
    "\t[-h|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-t|--test]" "\n"
+   "\t[-u|--uuid] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
    "\t{-a|--available {y|n}  |" "\n"
@@ -539,7 +541,8 @@ xx(vgchange,
    "\t[VolumeGroupName...]\n",
 
    allocation_ARG, autobackup_ARG, available_ARG, ignorelockingfailure_ARG,
-   logicalvolume_ARG, partial_ARG, resizeable_ARG, resizable_ARG, test_ARG)
+   logicalvolume_ARG, partial_ARG, resizeable_ARG, resizable_ARG, test_ARG,
+   uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",

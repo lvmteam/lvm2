@@ -33,8 +33,11 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	const char *pv_name = dev_name(pv->dev);
 
 	int consistent = 1;
-	int allocatable =
-	    !strcmp(arg_str_value(cmd, allocatable_ARG, "n"), "y");
+	int allocatable = 0;
+
+	if (arg_count(cmd, allocatable_ARG))
+		allocatable = !strcmp(arg_str_value(cmd, allocatable_ARG, "n"),
+				      "y");
 
 	/* If in a VG, must change using volume group. */
 	if (*pv->vg_name) {
@@ -43,7 +46,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 		if (!lock_vol(cmd, pv->vg_name, LCK_VG_WRITE)) {
 			log_error("Can't get lock for %s", pv->vg_name);
-			return ECMD_FAILED;
+			return 0;
 		}
 
 		if (!(vg = vg_read(cmd, pv->vg_name, &consistent))) {
@@ -56,13 +59,13 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (vg->status & EXPORTED_VG) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Volume group \"%s\" is exported", vg->name);
-			return ECMD_FAILED;
+			return 0;
 		}
 
 		if (!(vg->status & LVM_WRITE)) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Volume group \"%s\" is read-only", vg->name);
-			return ECMD_FAILED;
+			return 0;
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
@@ -72,13 +75,19 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			     pv_name, vg->name);
 			return 0;
 		}
+		if (arg_count(cmd, uuid_ARG) && lvs_in_vg_activated(vg)) {
+			unlock_vg(cmd, pv->vg_name);
+			log_error("Volume group containing %s has active "
+				  "logical volumes", pv_name);
+			return 0;
+		}
 		pv = pvl->pv;
 		if (!archive(vg))
 			return 0;
 	} else {
 		if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
 			log_error("Can't get lock for orphans");
-			return ECMD_FAILED;
+			return 0;
 		}
 
 		if (!(pv = pv_read(cmd, pv_name, &mdas, &sector))) {
@@ -89,43 +98,48 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 	}
 
-	if (!*pv->vg_name && 
-	    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
-		log_error("Allocatability not supported by orphan "
-			  "%s format PV %s", pv->fmt->name, pv_name);
-		unlock_vg(cmd, ORPHAN);
-		return 0;
-	}
-
-	/* change allocatability for a PV */
-	if (allocatable && (pv->status & ALLOCATABLE_PV)) {
-		log_error("Physical volume \"%s\" is already allocatable",
-			  pv_name);
-		if (*pv->vg_name)
-			unlock_vg(cmd, pv->vg_name);
-		else
+	if (arg_count(cmd, allocatable_ARG)) {
+		if (!*pv->vg_name &&
+		    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
+			log_error("Allocatability not supported by orphan "
+				  "%s format PV %s", pv->fmt->name, pv_name);
 			unlock_vg(cmd, ORPHAN);
-		return 1;
-	}
+			return 0;
+		}
 
-	if (!allocatable && !(pv->status & ALLOCATABLE_PV)) {
-		log_error("Physical volume \"%s\" is already unallocatable",
-			  pv_name);
-		if (*pv->vg_name)
-			unlock_vg(cmd, pv->vg_name);
-		else
-			unlock_vg(cmd, ORPHAN);
-		return 1;
-	}
+		/* change allocatability for a PV */
+		if (allocatable && (pv->status & ALLOCATABLE_PV)) {
+			log_error("Physical volume \"%s\" is already "
+				  "allocatable", pv_name);
+			if (*pv->vg_name)
+				unlock_vg(cmd, pv->vg_name);
+			else
+				unlock_vg(cmd, ORPHAN);
+			return 1;
+		}
 
-	if (allocatable) {
-		log_verbose("Setting physical volume \"%s\" allocatable",
-			    pv_name);
-		pv->status |= ALLOCATABLE_PV;
+		if (!allocatable && !(pv->status & ALLOCATABLE_PV)) {
+			log_error("Physical volume \"%s\" is already "
+				  "unallocatable", pv_name);
+			if (*pv->vg_name)
+				unlock_vg(cmd, pv->vg_name);
+			else
+				unlock_vg(cmd, ORPHAN);
+			return 1;
+		}
+
+		if (allocatable) {
+			log_verbose("Setting physical volume \"%s\" "
+				    "allocatable", pv_name);
+			pv->status |= ALLOCATABLE_PV;
+		} else {
+			log_verbose("Setting physical volume \"%s\" NOT "
+				    "allocatable", pv_name);
+			pv->status &= ~ALLOCATABLE_PV;
+		}
 	} else {
-		log_verbose("Setting physical volume \"%s\" NOT allocatable",
-			    pv_name);
-		pv->status &= ~ALLOCATABLE_PV;
+		/* --uuid: Change PV ID randomly */
+		id_create(&pv->id);
 	}
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
@@ -168,8 +182,9 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	list_init(&mdas);
 
-	if (arg_count(cmd, allocatable_ARG) == 0) {
-		log_error("Please give the x option");
+	if (arg_count(cmd, allocatable_ARG) +
+	    + arg_count(cmd, uuid_ARG) != 1) {
+		log_error("Please give exactly one option of -x or --uuid");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -211,8 +226,8 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("%d physical volume%s changed / %d physical volume%s "
 		  "not changed",
-		  done, done > 1 ? "s" : "",
-		  total - done, total - done > 1 ? "s" : "");
+		  done, done == 1 ? "" : "s",
+		  total - done, (total - done) == 1 ? "" : "s");
 
 	return (total == done) ? ECMD_PROCESSED : ECMD_FAILED;
 }
