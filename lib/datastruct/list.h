@@ -56,6 +56,11 @@ static inline int list_end(struct list *head, struct list *elem)
 	return elem->n == head;
 }
 
+static inline struct list *list_next(struct list *head, struct list *elem)
+{
+	return (list_end(head, elem) ? NULL : elem->n);
+}
+
 #define list_iterate(v, head) \
 	for (v = (head)->n; v != head; v = v->n)
 
