@@ -33,6 +33,19 @@ struct dmfs_error {
 	char *msg;
 };
 
+static struct dmfs_error oom_error;
+
+static struct list_head oom_list = {
+	next: &oom_error.list,
+	prev: &oom_error.list,
+};
+
+static struct dmfs_error oom_error = {
+	list: { next: &oom_list, prev: &oom_list },
+	len: 39,
+	msg: "Out of memory during creation of table\n",
+};
+
 void dmfs_add_error(struct inode *inode, unsigned num, char *str)
 {
 	struct dmfs_i *dmi = DMFS_I(inode);
@@ -64,9 +77,16 @@ static void *e_start(void *context, loff_t *pos)
 	struct dmfs_i *dmi = context;
 
 	down(&dmi->sem);
-	list_for_each(p, &dmi->errors)
-		if (n-- == 0)
-			return list_entry(p, struct dmfs_error, list);
+	if (dmi->status) {
+		list_for_each(p, &oom_list)
+			if (n-- == 0)
+				return list_entry(p, struct dmfs_error, list);
+	} else {
+		list_for_each(p, &dmi->errors)
+			if (n-- == 0)
+				return list_entry(p, struct dmfs_error, list);
+	}
+
 	return NULL;
 }
 
@@ -75,7 +95,7 @@ static void *e_next(void *context, void *v, loff_t *pos)
 	struct dmfs_i *dmi = context;
 	struct list_head *p = ((struct dmfs_error *)v)->list.next;
 	(*pos)++;
-	return (p == &dmi->errors) ? NULL 
+	return (p == &dmi->errors) || (p == &oom_list) ? NULL 
 				   : list_entry(p, struct dmfs_error, list);
 }
 

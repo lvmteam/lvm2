@@ -7,6 +7,7 @@ struct dmfs_i {
         struct mapped_device *md;
         struct dentry *dentry;
         struct list_head errors;
+	int status;
 };
 
 #define DMFS_I(inode) ((struct dmfs_i *)(inode)->u.generic_ip)

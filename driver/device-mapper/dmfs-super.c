@@ -53,6 +53,7 @@ static void dmfs_delete_inode(struct inode *inode)
 		if (!list_empty(&dmi->errors))
 			dmfs_zap_errors(inode);
 		kfree(dmi);
+		MOD_DEC_USE_COUNT; /* Don't remove */
 	}
 
 	inode->u.generic_ip = NULL;
@@ -121,6 +122,7 @@ struct inode *dmfs_new_private_inode(struct super_block *sb, int mode)
 		init_MUTEX(&dmi->sem);
 		INIT_LIST_HEAD(&dmi->errors);
 		inode->u.generic_ip = dmi;
+		MOD_INC_USE_COUNT; /* Don't remove */
 	}
 	return inode;
 }
@@ -140,6 +142,8 @@ int __init dmfs_init(void)
 	if (IS_ERR(dmfs_mnt)) {
 		ret = PTR_ERR(dmfs_mnt);
 		unregister_filesystem(&dmfs_fstype);
+	} else {
+		MOD_DEC_USE_COUNT; /* Yes, this really is correct... */
 	}
 out:
 	return ret;
@@ -147,7 +151,9 @@ out:
 
 int __exit dmfs_exit(void)
 {
-	/* kern_umount(&dmfs_mnt); */
+	MOD_INC_USE_COUNT; /* So that it lands up being zero */
+
+	do_umount(dmfs_mnt, 0);
 
 	unregister_filesystem(&dmfs_fstype);
 
