@@ -46,10 +46,10 @@ static int _merge(struct lv_segment *first, struct lv_segment *second)
 
 int lv_merge_segments(struct logical_volume *lv)
 {
-	struct list *segh;
+	struct list *segh, *t;
 	struct lv_segment *current, *prev = NULL;
 
-	list_iterate(segh, &lv->segments) {
+	list_iterate_safe(segh, t, &lv->segments) {
 		current = list_item(segh, struct lv_segment);
 
 		if (_merge(prev, current))
