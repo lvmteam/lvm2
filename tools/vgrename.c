@@ -33,7 +33,7 @@ int vgrename(int argc, char **argv)
 	struct list *pvh;
 
 	if (argc != 2) {
-		log_error("old and new volume group names need specifying");
+		log_error("Old and new volume group names need specifying");
 		return EINVALID_CMD_LINE;
 	}
 

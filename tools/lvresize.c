@@ -76,12 +76,12 @@ int lvresize(int argc, char **argv)
 	}
 
 	if (arg_count(stripes_ARG)) {
-                log_print("Stripes not yet implemented in LVM2. Ignoring.");
-                stripes = arg_int_value(stripes_ARG, 1);
-        }
-		
-        if (arg_count(stripesize_ARG))
-                stripesize = 2 * arg_int_value(stripesize_ARG, 0);
+		log_print("Stripes not yet implemented in LVM2. Ignoring.");
+		stripes = arg_int_value(stripes_ARG, 1);
+	}
+
+	if (arg_count(stripesize_ARG))
+		stripesize = 2 * arg_int_value(stripesize_ARG, 0);
 
 	if (!argc) {
 		log_error("Please provide the logical volume name");
@@ -183,10 +183,9 @@ int lvresize(int argc, char **argv)
 			uint32_t sz = lv->segments[seg]->stripesize;
 			uint32_t str = lv->segments[seg]->stripes;
 
-		    	if ((seg_stripesize && seg_stripesize != sz 
+			if ((seg_stripesize && seg_stripesize != sz
 			     && !stripesize) ||
-		     	    (seg_stripes && seg_stripes != str 
-			     && !stripes)) {
+			    (seg_stripes && seg_stripes != str && !stripes)) {
 				log_error("Please specify number of "
 					  "stripes (-i) and stripesize (-I)");
 				return EINVALID_CMD_LINE;
@@ -213,8 +212,8 @@ int lvresize(int argc, char **argv)
 			log_error("Ignoring stripes and stripesize arguments "
 				  "when reducing");
 		for (seg = 0; seg < lv->segment_count; seg++) {
-			uint32_t seg_extents = lv->segments[seg]->pe_count * 
-					       vg->extent_size;
+			uint32_t seg_extents = lv->segments[seg]->pe_count *
+			    vg->extent_size;
 
 			seg_stripesize = lv->segments[seg]->stripesize;
 			seg_stripes = lv->segments[seg]->stripes;
@@ -230,12 +229,12 @@ int lvresize(int argc, char **argv)
 		stripes = seg_stripes;
 	}
 
-        if ((size_rest = seg_size % (stripes * vg->extent_size))) {
-        	log_print("Rounding size (%d extents) down to stripe boundary "
-			  "size of last segment (%d extents)", extents, 
-			  extents - size_rest );
-                extents = extents - size_rest;
-        }
+	if ((size_rest = seg_size % (stripes * vg->extent_size))) {
+		log_print("Rounding size (%d extents) down to stripe boundary "
+			  "size of last segment (%d extents)", extents,
+			  extents - size_rest);
+		extents = extents - size_rest;
+	}
 
 	if (extents == lv->le_count) {
 		log_error("New size (%d extents) matches existing size "
@@ -326,8 +325,7 @@ int lvresize(int argc, char **argv)
 		log_print("Extending logical volume %s to %s", lv_name, dummy);
 		dbg_free(dummy);
 
-		lv_extend(lv, stripes, stripesize, extents - lv->le_count, 
-			  pvh);
+		lv_extend(lv, stripes, stripesize, extents - lv->le_count, pvh);
 	}
 
 /********* FIXME Suspend lv  ***********/
