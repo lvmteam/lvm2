@@ -12,12 +12,14 @@ SOURCES=\
 	read_vg_t.c \
 	pretty_print.c \
 	get_pvs_t.c \
-	read_pv_t.c
+	read_pv_t.c \
+	get_vgs_t.c
 
 TARGETS=\
 	read_vg_t \
 	get_pvs_t \
-	read_pv_t
+	read_pv_t \
+	get_vgs_t
 
 include ../../make.tmpl
 
@@ -29,4 +31,7 @@ get_pvs_t: get_pvs_t.o pretty_print.o $(top_srcdir)/lib/liblvm.a
 
 read_pv_t: read_pv_t.o pretty_print.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o read_pv_t read_pv_t.o pretty_print.o -L$(top_srcdir)/lib -llvm
+
+get_vgs_t: get_vgs_t.o pretty_print.o $(top_srcdir)/lib/liblvm.a
+	$(CC) -o get_vgs_t get_vgs_t.o pretty_print.o -L$(top_srcdir)/lib -llvm
 

@@ -14,5 +14,6 @@
 void dump_pv(struct physical_volume *pv, FILE *fp);
 void dump_lv(struct logical_volume *lv, FILE *fp);
 void dump_vg(struct volume_group *vg, FILE *fp);
+void dump_vg_names(struct list_head *vg_names, FILE *fp);
 
 #endif

@@ -443,6 +443,64 @@ static struct list_head *_get_pvs(struct io_space *is)
 	return NULL;
 }
 
+static int _find_vg_name(struct list_head *names, const char *vg)
+{
+	struct list_head *tmp;
+	struct name_list *nl;
+
+	list_for_each(tmp, names) {
+		nl = list_entry(tmp, struct name_list, list);
+		if (!strcmp(nl->name, vg))
+			return 1;
+	}
+
+	return 0;
+}
+
+static struct list_head *_get_vgs(struct io_space *is)
+{
+	struct list_head *tmp, *pvs;
+	struct list_head *names = pool_alloc(is->mem, sizeof(*names));
+	struct name_list *nl;
+
+	if (!names) {
+		stack;
+		return NULL;
+	}
+
+	INIT_LIST_HEAD(names);
+
+	if (!(pvs = _get_pvs(is))) {
+		stack;
+		goto bad;
+	}
+
+	list_for_each(tmp, pvs) {
+		struct pv_list *pvl = list_entry(tmp, struct pv_list, list);
+
+		if (_find_vg_name(names, pvl->pv.vg_name))
+			continue;
+
+		if (!(nl = pool_alloc(is->mem, sizeof(*nl)))) {
+			stack;
+			goto bad;
+		}
+
+		if (!(nl->name = pool_strdup(is->mem, pvl->pv.vg_name))) {
+			stack;
+			goto bad;
+		}
+
+		list_add(&nl->list, names);
+	}
+
+	return names;
+
+ bad:
+	pool_free(is->mem, names);
+	return NULL;
+}
+
 void _destroy(struct io_space *ios)
 {
 	dbg_free(ios->prefix);
@@ -454,7 +512,7 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 {
 	struct io_space *ios = dbg_malloc(sizeof(*ios));
 
-	ios->get_vgs = NULL;
+	ios->get_vgs = _get_vgs;
 	ios->get_pvs = _get_pvs;
 	ios->pv_read = _pv_read;
 	ios->pv_write = NULL;

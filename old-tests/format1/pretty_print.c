@@ -64,3 +64,14 @@ void dump_vg(struct volume_group *vg, FILE *fp)
 		dump_lv(&lvl->lv, fp);
 	}
 }
+
+void dump_vg_names(struct list_head *vg_names, FILE *fp)
+{
+	struct list_head *tmp;
+	struct name_list *nl;
+
+	list_for_each(tmp, vg_names) {
+		nl = list_entry(tmp, struct name_list, list);
+		fprintf(fp, "%s\n", nl->name);
+	}
+}
