@@ -112,7 +112,8 @@ Example: \fBtypes = ["fd", 16]\fP.
 To create physical volumes on device-mapper volumes
 created outside LVM2, perhaps encrypted ones from \fBcryptsetup\fP,
 you'll need \fBtypes = ["device-mapper", 16]\fP.  But if you do this,
-be careful to avoid recursion within LVM2.
+be careful to avoid recursion within LVM2.  The figure for number 
+of partitions is not currently used in LVM2 - and might never be.
 .IP
 \fBsysfs_scan\fP (em If set to 1 and your kernel supports sysfs and 
 it is mounted, sysfs will be used as a quick way of filtering out
@@ -210,10 +211,167 @@ Defaults to /proc.
 Interpreted as octal if the first digit is zero.
 Defaults to 077.  
 Use 022 to allow other users to read the files by default.
+.IP
+\fBformat\fP \(em The default value of \fB--metadatatype\fP used
+to determine which format of metadata to use when creating new 
+physical volumes and volume groups. \fBlvm1\fP or \fBlvm2\fP.
+.IP
+\fBfallback_to_lvm1\fP \(em Set this to 1 if you need to 
+be able to switch between 2.4 kernels using LVM1 and kernels
+including device-mapper.
+The LVM2 tools should be installed as normal and
+the LVM1 tools should be installed with a .lvm1 suffix e.g.
+vgscan.lvm1.  
+If an LVM2 tool is then run but unable to communicate
+with device-mapper, it will automatically invoke the equivalent LVM1 
+version of the tool.  Note that for LVM1 tools to 
+manipulate physical volumes and volume groups created by LVM2 you 
+must use \fB--metadataformat lvm1\fP when creating them.
+.IP
+\fBlibrary_dir\fP \(em A directory searched for LVM2's shared libraries
+ahead of the places \fBdlopen\fP (3) searches.
+.IP
+\fBformat_libraries\fP \(em A list of shared libraries to load that contain
+code to process different formats of metadata. For example, liblvm2formatpool.so
+is needed to read GFS pool metadata if LVM2 was configured \fB--with-pool=shared\fP.
+.IP
+\fBlocking_type\fP \(em What type of locking to use.
+1 is the default, which use flocks on files in \fBlocking_dir\fP
+(see below) to
+avoid conflicting LVM2 commands running concurrently on a single
+machine. 0 disables locking and risks corrupting your metadata.
+If set to 2, the tools will load the external \fBlocking_library\fP
+(see below).
+If the tools were configured \fB--with-cluster=internal\fP 
+(the default) then 3 means to use built-in cluster-wide locking.
+All changes to logical volumes and their states are communicated
+using locks.
+.IP
+\fBlocking_dir\fP \(em The directory LVM2 places its file locks
+if \fBlocking_type\fP is set to 1.  The default is \fB/var/lock/lvm\fP.
+.IP
+\fBlocking_library\fP \(em The name of the external locking
+library to load if \fBlocking_type\fP is set to 2.
+The default is \fBlvm2_locking.so\fP.  If you need to write
+such a library, look at the lib/locking source code directory.
+.TP
+\fBtags\fP \(em Host tag settings
+.IP
+\fBhosttags\fP \(em If set to 1, create a host tag with the machine name.
+Setting this to 0 does nothing, neither creating nor destroying any tag.
+The machine name used is the nodename as returned by \fBuname\fP (2).
+.IP
+Additional host tags to be set can be listed here as subsections. 
+The @ prefix for tags is optional.
+Each of these host tag subsections can contain a \fBhost_list\fP 
+array of host names. If any one of these entries matches the machine 
+name exactly then the host tag gets defined on this particular host, 
+otherwise it doesn't.
+.IP
+After lvm.conf has been processed, LVM2 works through each host
+tag that has been defined in turn, and if there is a configuration
+file called lvm_\fB<host_tag>\fP.conf it attempts to load it.
+Any settings read in override settings found in earlier files.
+Any additional host tags defined get appended to the search list,
+so in turn they can lead to further configuration files being processed.
+Use \fBlvm dumpconfig\fP to check the result of config
+file processing.
+.IP
+The following example always sets host tags \fBtag1\fP and
+sets \fBtag2\fP on machines fs1 and fs2:
+.IP
+tags { tag1 { } tag2 { host_list = [ "fs1", "fs2" ] } }
+.IP
+These options are useful if you are replicating configuration files
+around a cluster.  Use of \fBhosttags = 1\fP means every machine
+can have static and identical local configuration files yet use 
+different settings and activate different logical volumes by
+default.  See also \fBvolume_list\fP below and \fB--addtag\fP 
+in \fBlvm\fP (8).
+.TP
+\fBactivation\fP \(em Settings affecting device-mapper activation
+.IP
+\fBmissing_stripe_filler\fP \(em When activating an incomplete
+logical volume in partial mode, this missing data is replaced
+with this device.  It could perhaps be a block device that always
+returns an error when it is accessed, or one that always
+returns zeros.  See \fBlvcreate\fP (8) for how to create
+such devices.
+.IP
+\fBmirror_region_size\fP \(em Unit size in KB for copy operations
+when mirroring.
+.IP
+\fBreserved_memory\fP, \fBreserved_stack\fP \(em How many KB to reserve 
+for LVM2 to use while logical volumes are suspended.  If insufficient 
+memory is reserved before suspension, there is a risk of machine deadlock.
+.IP
+\fBprocess_priority\fP \(em The nice value to use while devices are
+suspended.  This is set to a high priority so that logical volumes
+are suspended (with I/O generated by other processes to those
+logical volumes getting queued) for the shortest possible time.
+.IP
+\fBvolume_list\fP \(em This acts as a filter through which
+all requests to activate a logical volume on this machine
+are passed.  A logical volume is only activated if it matches
+an item in the list.  Tags must be preceded by @ and are checked
+against all tags defined in the logical volume and volume group 
+metadata for a match.
+@* is short-hand to check every tag set on the host machine (see
+\fBtags\fP above).
+Logical volume and volume groups can also be included in the list
+by name e.g. vg00, vg00/lvol1.
+.TP
+\fBmetadata\fP \(em Advanced metadata settings
+.IP
+\fBpvmetadatacopies\fP \(em When creating a physical volume using the
+LVM2 metadata format, this is the default number of copies of metadata
+to store on each physical volume.  
+Currently it can be set to 0, 1 or 2.  The default is 1.  
+If set to 2, one copy is placed at the beginning of the disk
+and the other is placed at the end.
+It can be overridden on the command line with \fB--metadatacopies\fP.
+If creating a volume group with just one physical volume, it's a
+good idea to have 2 copies.  If creating a large volume group with
+many physical volumes, you may decide that 3 copies of the metadata
+is sufficient, i.e. setting it to 1 on three of the physical volumes,
+and 0 on the rest.  Every volume group must contain at least one 
+physical volume with at least 1 copy of the metadata (unless using
+the text files described below).  The disadvantage of having lots
+of copies is that every time the tools access the volume group, every
+copy of the metadata has to be accessed, and this slows down the
+tools.
+.IP
+\fBpvmetadatasize\fP \(em Approximate number of sectors to set aside
+for each copy of the metadata. Volume groups with large numbers of
+physical or logical volumes, or volumes groups containing complex 
+logical volume structures will need additional space for their metadata.
+The metadata areas are treated as circular buffers, so
+unused space becomes filled with an archive of the most recent
+previous versions of the metadata.
+.IP
+\fBdirs\fP \(em List of directories holding live copies of LVM2
+metadata as text files.  These directories must not be on logical
+volumes.  It is possible to use LVM2 with a couple of directories
+here, preferably on different (non-logical-volume) filesystems
+and with no other on-disk metadata, \fBpvmetadatacopies = 0\fP.
+Alternatively these directories can be in addition to the
+on-disk metadata areas.  This feature was created during the
+development of the LVM2 metadata before the new on-disk metadata
+areas were designed and no longer gets tested.  
+It is not supported under low-memory conditions, and it is 
+important never to edit these metadata files unless you fully 
+understand how things work: to make changes you should always use 
+the tools as normal, or else vgcfgbackup, edit backup, vgcfgrestore.
 .SH FILES
 .I /etc/lvm/lvm.conf
+.I /etc/lvm/.cache
+.I /etc/lvm/archive
+.I /etc/lvm/backup
+.I /var/lock/lvm
 .SH SEE ALSO
-.BR lvm (8)
-.BR umask (2)
-.BR syslog (3)
+.BR lvm (8),
+.BR umask (2),
+.BR uname (2),
+.BR dlopen (3),
+.BR syslog (3),
 .BR syslog.conf (5)
