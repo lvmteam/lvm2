@@ -37,6 +37,7 @@ SOURCES=\
 	label/label.c \
 	log/log.c \
 	metadata/lv_manip.c \
+	metadata/merge.c \
 	metadata/metadata.c \
 	metadata/pv_map.c \
 	mm/dbg_malloc.c \
