@@ -185,7 +185,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
 	dmi->suspend = (dmt->type == DM_DEVICE_SUSPEND) ? 1 : 0;
 	dmi->open_count = 0;
-	dmi->minor = -1;
+	dmi->minor = dmt->minor;
 	dmi->read_only = dmt->read_only;
 
 	dmi->target_count = count;

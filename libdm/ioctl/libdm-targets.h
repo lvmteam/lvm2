@@ -20,6 +20,7 @@ struct dm_task {
 	struct target *head, *tail;
 
 	int read_only;
+	int minor;
 	struct dm_ioctl *dmi;
 	char *newname;
 };

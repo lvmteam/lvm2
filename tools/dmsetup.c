@@ -28,10 +28,12 @@
  */
 enum {
 	READ_ONLY = 0,
+	MINOR_ARG,
 	NUM_SWITCHES
 };
 
 static int _switches[NUM_SWITCHES];
+static int _values[NUM_SWITCHES];
 
 
 /*
@@ -105,6 +107,9 @@ static int _load(int task, const char *name, const char *file)
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
 		goto out;
 
+	if (_switches[MINOR_ARG] && !dm_task_set_minor(dmt, _values[MINOR_ARG]))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -126,6 +131,30 @@ static int _reload(int argc, char **argv)
 	return _load(DM_DEVICE_RELOAD, argv[1], argv[2]);
 }
 
+static int _rename(int argc, char **argv)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+        if (!(dmt = dm_task_create(DM_DEVICE_RENAME)))
+                return 0;
+
+        if (!dm_task_set_name(dmt, argv[1]))
+                goto out;
+
+	if (!dm_task_set_newname(dmt, argv[2]))
+		goto out;
+
+        if (!dm_task_run(dmt))
+                goto out;
+
+        r = 1;
+
+out:
+        dm_task_destroy(dmt);
+
+        return r;
+}
 
 static int _simple(int task, const char *name)
 {
@@ -226,6 +255,7 @@ static struct command _commands[] = {
 	{"resume", "<dev_name>", 1, _resume},
 	{"reload", "<dev_name> <table_file>", 2, _reload},
 	{"info", "<dev_name>", 1, _info},
+	{"rename", "<dev_name> <new_name>", 2, _rename},
 	{NULL, NULL, 0, NULL}
 };
 
@@ -258,17 +288,25 @@ static int _process_switches(int *argc, char ***argv)
 
 	static struct option long_options[] = {
 		{"read-only", 0, NULL, READ_ONLY},
+		{"minor", 1, NULL, MINOR_ARG},
+		{"", 0, NULL, 0}
 	};
 
 	/*
 	 * Zero all the index counts.
 	 */
 	memset(&_switches, 0, sizeof(_switches));
+	memset(&_values, 0, sizeof(_values));
 
-	while ((c = getopt_long(*argc, *argv, "r",
-				long_options, &index)) != -1)
+	while ((c = getopt_long(*argc, *argv, "m:r",
+				long_options, &index)) != -1) {
 		if (c == 'r' || index == READ_ONLY)
 			_switches[READ_ONLY]++;
+		if (c == 'm' || index == MINOR_ARG) {
+			_switches[MINOR_ARG]++;
+			_values[MINOR_ARG] = atoi(optarg);
+		}
+	}
 
 	*argv += optind;
 	*argc -= optind;

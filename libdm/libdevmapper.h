@@ -66,8 +66,8 @@ struct dm_info {
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 
 int dm_task_set_ro(struct dm_task *dmt);
-
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
+int dm_task_set_minor(struct dm_task *dmt, int minor);
 
 /*
  * Use these to prepare for a create or reload.
