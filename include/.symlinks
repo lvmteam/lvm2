@@ -1,6 +1,7 @@
 ../lib/activate/activate.h
 ../lib/config/config.h
 ../lib/datastruct/bitset.h
+../lib/datastruct/btree.h
 ../lib/datastruct/hash.h
 ../lib/datastruct/list.h
 ../lib/datastruct/lvm-types.h
