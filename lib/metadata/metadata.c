@@ -290,14 +290,14 @@ struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 	return NULL;
 }
 
-struct lv_list *find_lv_in_vg_by_uuid(struct volume_group *vg, const char *uuid)
+struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg, union lvid *lvid)
 {
 	struct list *lvh;
 	struct lv_list *lvl;
 
 	list_iterate(lvh, &vg->lvs) {
 		lvl = list_item(lvh, struct lv_list);
-		if (!strncmp(lvl->lv->id.uuid, uuid, ID_LEN))
+		if (!strncmp(lvl->lv->lvid.s, lvid->s, sizeof(*lvid)))
 			return lvl;
 	}
 
@@ -324,14 +324,3 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 	return NULL;
 }
 
-char *lvid(struct logical_volume *lv, char *buf, int size)
-{
-	/* FIXME Create uuid.h functions for all uuid manipulation */
-	if (lvm_snprintf(buf, size, "%s/%." ID_LEN_S "s", lv->vg->name, 
-			 lv->id.uuid) < 0) {
-		log_error("Buffer too small to hold LV id: %s", buf);
-		return NULL;
-	}
-
-	return buf;
-}

@@ -14,6 +14,9 @@
 #include "toolcontext.h"
 #include "dev_manager.h"
 
+/* FIXME Temporary */
+#include "vgcache.h"
+
 #include <limits.h>
 #include <linux/kdev_t.h>
 #include <fcntl.h>
@@ -270,22 +273,21 @@ int lvs_in_vg_opened(struct volume_group *vg)
 	return count;
 }
 
-/* FIXME Currently lvid is "vgname/lv_uuid". Needs to be vg_uuid/lv_uuid. */
 static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
-					    const char *lvid)
+					    const char *lvid_s)
 {
 	struct lv_list *lvl;
 	struct volume_group *vg;
+	union lvid *lvid;
 	char *vgname;
-	char *slash;
 
-	if (!(slash = strchr(lvid, '/'))) {
-		log_error("Invalid VG/LV identifier: %s", lvid);
+	lvid = (union lvid *) lvid_s;
+
+	/* FIXME Change vgread to accept vgid directly - can't rely on cache */
+	if (!(vgname = vgname_from_vgid(cmd, &lvid->id[0]))) {
+		log_error("Volume group for uuid not found: %s", lvid_s);
 		return NULL;
 	}
-
-	vgname = pool_strdup(cmd->mem, lvid);
-	*strchr(vgname, '/') = '\0';
 
 	log_verbose("Finding volume group \"%s\"", vgname);
 	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vgname))) {
@@ -298,8 +300,8 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(lvl = find_lv_in_vg_by_uuid(vg, slash + 1))) {
-		log_verbose("Can't find logical volume id %s", lvid);
+	if (!(lvl = find_lv_in_vg_by_lvid(vg, lvid))) {
+		log_very_verbose("Can't find logical volume id %s", lvid_s);
 		return NULL;
 	}
 
@@ -308,11 +310,11 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 
 /* These functions should become the new interface and the _if_active
  * bits then disappear */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid)
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid)))
+	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
 	if (lv_active(lv) > 0)
@@ -322,11 +324,11 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid)
 }
 
 
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid)
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid)))
+	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
 	if ((lv_active(lv) > 0) && lv_suspended(lv))
@@ -335,11 +337,11 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid)
 	return 1;
 }
 
-int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid)
+int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid)))
+	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
 	if (lv_active(lv) > 0)
@@ -348,12 +350,12 @@ int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid)
 	return 1;
 }
 
-int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid)
+int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 	int active;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid)))
+	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
 	active = lv_active(lv);

@@ -16,8 +16,17 @@ struct id {
 	uint8_t uuid[ID_LEN];
 };
 
-int id_from_lvnum(struct id *id, int lv_num);
-int lvnum_from_id(struct id *id);
+/*
+ * Unique logical volume identifier
+ * With format1 this is VG uuid + LV uuid + '\0'
+ */
+union lvid {
+	struct id id[2];
+	char s[2 * sizeof(struct id) + 1];	
+};
+
+int lvid_from_lvnum(union lvid *lvid, struct id *vgid, int lv_num);
+int lvnum_from_lvid(union lvid *lvid);
 
 int id_create(struct id *id);
 int id_valid(struct id *id);

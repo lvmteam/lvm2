@@ -40,10 +40,10 @@ int lv_rename(const char *old_name, struct logical_volume *lv);
  * These should eventually replace some of the above and maybe
  * use config file to determine whether or not to activate
  */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid);
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid);
-int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid);
-int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid);
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s);
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s);
+int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid_s);
+int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid_s);
 
 
 /*

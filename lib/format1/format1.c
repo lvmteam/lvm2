@@ -429,7 +429,7 @@ static int _find_free_lvnum(struct logical_volume *lv)
 
 	list_iterate(lvh, &lv->vg->lvs) {
 		lvl = list_item(lvh, struct lv_list);
-		lvnum_used[lvnum_from_id(&lvl->lv->id)] = 1;
+		lvnum_used[lvnum_from_lvid(&lvl->lv->lvid)] = 1;
 	}
 
 	while (lvnum_used[i])
@@ -442,7 +442,7 @@ static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
 {
 	uint64_t max_size = UINT_MAX;
 
-	id_from_lvnum(&lv->id, _find_free_lvnum(lv));
+	lvid_from_lvnum(&lv->lvid, &lv->vg->id, _find_free_lvnum(lv));
 
 	if (lv->le_count > MAX_LE_TOTAL) {
 		log_error("logical volumes cannot contain more than "

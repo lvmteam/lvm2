@@ -416,7 +416,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 
 	lv = ll->lv;
 
-	strcpy(lv->id.uuid, "");
+	lv->vg = vg;
 
 	if (!(lv->name = pool_strdup(cmd->mem, name))) {
 		stack;
@@ -428,7 +428,6 @@ struct logical_volume *lv_create(struct format_instance *fi,
 	lv->minor = -1;
 	lv->size = (uint64_t) extents * vg->extent_size;
 	lv->le_count = extents;
-	lv->vg = vg;
 	list_init(&lv->segments);
 
 	if (!_allocate(vg, lv, acceptable_pvs, 0u, stripes, stripe_size)) {

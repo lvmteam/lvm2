@@ -10,8 +10,11 @@
 #include "hash.h"
 #include "dbg_malloc.h"
 #include "log.h"
+#include "uuid.h"
+#include "toolcontext.h"
 
 static struct hash_table *_vghash;
+static struct hash_table *_vgidhash;
 static struct hash_table *_pvhash;
 
 const char *all_devices = "\0";
@@ -19,6 +22,9 @@ const char *all_devices = "\0";
 int vgcache_init()
 {
 	if (!(_vghash = hash_create(128)))
+		return 0;
+
+	if (!(_vgidhash = hash_create(128)))
 		return 0;
 
 	if (!(_pvhash = hash_create(128)))
@@ -44,6 +50,23 @@ struct list *vgcache_find(const char *vg_name)
 	return &vgn->pvdevs;
 }
 
+struct list *vgcache_find_by_vgid(const char *vgid)
+{
+	struct vgname_entry *vgn;
+	char vgid_s[ID_LEN + 1];
+
+	if (!_vgidhash || !vgid)
+		return NULL;
+
+	memcpy(vgid_s, vgid, ID_LEN);
+	vgid_s[ID_LEN] = '\0';
+
+	if (!(vgn = hash_lookup(_vgidhash, vgid_s)))
+		return NULL;
+
+	return &vgn->pvdevs;
+}
+
 void vgcache_del_orphan(struct device *dev)
 {
 	struct pvdev_list *pvdev;
@@ -55,7 +78,7 @@ void vgcache_del_orphan(struct device *dev)
 	}
 }
 
-int vgcache_add_entry(const char *vg_name, struct device *dev)
+int vgcache_add_entry(const char *vg_name, const char *vgid, struct device *dev)
 {
 	const char *pv_name;
 	struct vgname_entry *vgn;
@@ -67,6 +90,7 @@ int vgcache_add_entry(const char *vg_name, struct device *dev)
 			log_error("struct vgname_entry allocation failed");
 			return 0;
 		}
+		memset(vgn, 0, sizeof(struct vgname_entry));
 
 		pvdevs = &vgn->pvdevs;
 		list_init(pvdevs);
@@ -79,6 +103,17 @@ int vgcache_add_entry(const char *vg_name, struct device *dev)
 		if (!hash_insert(_vghash, vg_name, vgn)) {
 			log_error("vgcache_add: VG hash insertion failed");
 			return 0;
+		}
+
+		if (vgid) {
+			memcpy(vgn->vgid, vgid, ID_LEN);
+			vgn->vgid[ID_LEN] = '\0';
+
+			if (!hash_insert(_vgidhash, vgn->vgid, vgn)) {
+				log_error("vgcache_add: vgid hash insertion "
+					  "failed");
+				return 0;
+			}
 		}
 	}
 
@@ -115,7 +150,7 @@ int vgcache_add_entry(const char *vg_name, struct device *dev)
 }
 
 /* vg_name of "\0" is an orphan PV; NULL means only add to all_devices */
-int vgcache_add(const char *vg_name, struct device *dev)
+int vgcache_add(const char *vg_name, const char *vgid, struct device *dev)
 {
 	if (!_vghash && !vgcache_init())
 		return 0;
@@ -125,11 +160,11 @@ int vgcache_add(const char *vg_name, struct device *dev)
 		vgcache_del_orphan(dev);
 
 	/* Add PV if vg_name supplied */
-	if (vg_name && *vg_name && !vgcache_add_entry(vg_name, dev))
+	if (vg_name && *vg_name && !vgcache_add_entry(vg_name, vgid, dev))
 		return 0;
 
 	/* Always add to all_devices */
-	return vgcache_add_entry(all_devices, dev);
+	return vgcache_add_entry(all_devices, NULL, dev);
 }
 
 void vgcache_destroy_entry(struct vgname_entry *vgn)
@@ -147,6 +182,8 @@ void vgcache_destroy_entry(struct vgname_entry *vgn)
 			dbg_free(pvdev);
 		}
 		dbg_free(vgn->vgname);
+		if (_vgidhash && vgn->vgid[0])
+			hash_remove(_vgidhash, vgn->vgid);
 	}
 	dbg_free(vgn);
 }
@@ -165,8 +202,34 @@ void vgcache_del(const char *vg_name)
 		return;
 
 	hash_remove(_vghash, vg_name);
+	if (vgn->vgid[0])
+		hash_remove(_vgidhash, vgn->vgid);
+
 	vgcache_destroy_entry(vgn);
 }
+
+
+void vgcache_del_by_vgid(const char *vgid)
+{
+	struct vgname_entry *vgn;
+	char vgid_s[ID_LEN + 1];
+
+	if (!_vgidhash || !vgid)
+		return;
+
+	memcpy(vgid_s, vgid, ID_LEN);
+	vgid_s[ID_LEN] = '\0';
+
+	if (!(vgn = hash_lookup(_vghash, vgid_s)))
+		return;
+
+	hash_remove(_vgidhash, vgn->vgid);
+	if (vgn->vgname[0])
+		hash_remove(_vghash, vgn->vgname);
+
+	vgcache_destroy_entry(vgn);
+}
+
 
 void vgcache_destroy()
 {
@@ -176,8 +239,31 @@ void vgcache_destroy()
 		_vghash = NULL;
 	}
 
+	if (_vgidhash) {
+		hash_destroy(_vgidhash);
+		_vgidhash = NULL;
+	}
+
 	if (_pvhash) {
 		hash_destroy(_pvhash);
 		_pvhash = NULL;
 	}
 }
+
+char *vgname_from_vgid(struct cmd_context *cmd, struct id *vgid)
+{
+	struct vgname_entry *vgn;
+	char vgid_s[ID_LEN + 1];
+
+	if (!_vgidhash || !vgid)
+		return NULL;
+
+	memcpy(vgid_s, vgid->uuid, ID_LEN);
+	vgid_s[ID_LEN] = '\0';
+
+	if (!(vgn = hash_lookup(_vgidhash, vgid_s)))
+		return NULL;
+
+	return pool_strdup(cmd->mem, vgn->vgname);
+}
+

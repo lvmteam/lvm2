@@ -305,7 +305,7 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 		log_very_verbose("%s is not a member of any VG", name);
 
 		/* Update VG cache */
-		vgcache_add(data->pvd.vg_name, dev);
+		vgcache_add(data->pvd.vg_name, NULL, dev);
 
 		return (vg_name) ? NULL : data;
 	}
@@ -319,7 +319,7 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 	_munge_exported_vg(data);
 
 	/* Update VG cache with what we found */
-	vgcache_add(data->pvd.vg_name, dev);
+	vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, dev);
 
 	if (vg_name && strcmp(vg_name, data->pvd.vg_name)) {
 		log_very_verbose("%s is not a member of the VG %s",
@@ -582,13 +582,18 @@ static int __write_all_pvd(struct disk_list *data)
 		return 0;
 	}
 
-	if (!test_mode())
-		vgcache_add(data->pvd.vg_name, data->dev);
+		vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, data->dev);
 	/*
 	 * Stop here for orphan pv's.
 	 */
-	if (data->pvd.vg_name[0] == '\0')
+	if (data->pvd.vg_name[0] == '\0') {
+		if (!test_mode())
+			vgcache_add(data->pvd.vg_name, NULL, data->dev);
 		return 1;
+	}
+
+	if (!test_mode())
+		vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, data->dev);
 
 	if (!_write_vgd(data)) {
 		log_error("Failed to write VG data to %s", pv_name);

@@ -31,7 +31,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	uint32_t size_rest;
 	sign_t sign = SIGN_NONE;
 	char *lv_name, *vg_name;
-	char lvidbuf[128];
 	char *st;
 	char *dummy;
 	const char *cmd_name;
@@ -332,10 +331,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			goto error;
 	}
 
-	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
-		goto error;
-
-	if (!lock_vol(cmd, lvidbuf, LCK_LV_SUSPEND)) {
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
 		log_error("Can't get lock for %s", lv_name);
 		goto error;
 	}
@@ -343,13 +339,13 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	/* store vg on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
 		/* FIXME: Attempt reversion? */
-		lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
+		lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
 		goto error;
 	}
 
 	backup(vg);
 
-	if (!lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK)) {
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK)) {
 		log_error("Problem reactivating %s", lv_name);
 		goto error;
 	}

@@ -36,7 +36,6 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct volume_group *vg;
 	int active;
-	char lvidbuf[128];
 
 	vg = lv->vg;
 
@@ -56,7 +55,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
-	active = lv_active(lv);
+	active = (lv_active(lv) > 0);
 
 	if (active && !arg_count(cmd, force_ARG)) {
 		if (yes_no_prompt("Do you really want to remove active "
@@ -68,22 +67,21 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 		}
 	}
 
-	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
-		return 0;
-
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-	if (!lock_vol(cmd, lvidbuf, LCK_LV_DEACTIVATE)) {
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
 		log_error("Unable to deactivate logical volume \"%s\"",
 			  lv->name);
 		return ECMD_FAILED;
 	}
 
-	log_verbose("Removing snapshot.");
-	if (lv_is_cow(lv) && !vg_remove_snapshot(lv->vg, lv)) {
-		stack;
-		return ECMD_FAILED;
+	if (lv_is_cow(lv)) {
+		log_verbose("Removing snapshot %s", lv->name);
+ 		if (!vg_remove_snapshot(lv->vg, lv)) {
+			stack;
+			return ECMD_FAILED;
+		}
 	}
 
 	log_verbose("Releasing logical volume \"%s\"", lv->name);
@@ -97,8 +95,6 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 		return ECMD_FAILED;
 
 	backup(vg);
-
-	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
 
 	log_print("Logical volume \"%s\" successfully removed", lv->name);
 	return 0;

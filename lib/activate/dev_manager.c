@@ -133,7 +133,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	int r;
 	struct dm_task *dmt;
 
-	log_very_verbose("Loading %s", dl->name);
+	log_verbose("Loading %s", dl->name);
 	if (!(dmt = _setup_task(dl->name, task))) {
 		stack;
 		return 0;
@@ -162,7 +162,7 @@ static int _remove(struct dev_layer *dl)
 	int r;
 	struct dm_task *dmt;
 
-	log_very_verbose("Removing %s", dl->name);
+	log_verbose("Removing %s", dl->name);
 	if (!(dmt = _setup_task(dl->name, DM_DEVICE_REMOVE))) {
 		stack;
 		return 0;

@@ -205,7 +205,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	char uuid[64];
 	struct snapshot *snap;
 
-	if (!id_write_format(&lv->id, uuid, sizeof(uuid))) {
+	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
 		stack;
 		return 0;
 	}

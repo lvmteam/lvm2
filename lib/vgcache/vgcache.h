@@ -12,10 +12,13 @@
 #include <asm/page.h>
 #include "dev-cache.h"
 #include "list.h"
+#include "uuid.h"
+#include "toolcontext.h"
 
 struct vgname_entry {
 	struct list pvdevs;
 	char *vgname;
+	char vgid[ID_LEN + 1];
 };
 
 struct pvdev_list {
@@ -28,9 +31,13 @@ void vgcache_destroy();
 
 /* Return list of PVs in named VG */
 struct list *vgcache_find(const char *vg_name);
+struct list *vgcache_find_by_vgid(const char *vgid);
+
+/* FIXME Temporary function */
+char *vgname_from_vgid(struct cmd_context *cmd, struct id *vgid);
 
 /* Add/delete a device */
-int vgcache_add(const char *vg_name, struct device *dev);
+int vgcache_add(const char *vg_name, const char *vgid, struct device *dev);
 void vgcache_del(const char *vg_name);
 
 #endif
