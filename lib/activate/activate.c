@@ -94,7 +94,7 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	char params[1024];
 	uint64_t esize = seg->lv->vg->extent_size;
 	uint32_t s, stripes = seg->stripes;
-	int w, tw;
+	int w = 0, tw = 0;
 	const char *no_space =
 		"Insufficient space to write target parameters.";
 
@@ -110,6 +110,7 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 		w = tw;
 	}
 
+	
 	for (s = 0; s < stripes; s++, w += tw) {
 		tw = snprintf(params + w, sizeof(params) - w,
 			      "%s %" PRIu64 "%s",
@@ -164,7 +165,8 @@ int _load(struct logical_volume *lv, int task)
 	if (!(r = dm_task_run(dmt)))
 		stack;
 
-	log_verbose("Logical volume %s activated", lv->name);
+	log_verbose("Logical volume %s%s activated", lv->name,
+		    r == 1 ? "" : " not");
 
  out:
 	dm_task_destroy(dmt);
