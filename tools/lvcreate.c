@@ -356,6 +356,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 {
 	uint32_t size_rest;
 	uint32_t status = 0;
+	uint64_t tmp_size;
 	alloc_policy_t alloc = ALLOC_DEFAULT;
 	struct volume_group *vg;
 	struct logical_volume *lv, *org = NULL;
@@ -412,17 +413,16 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 	if (lp->size) {
 		/* No of 512-byte sectors */
-		lp->extents = lp->size;
+		tmp_size = lp->size;
 
-		if (lp->extents % vg->extent_size) {
-			lp->extents += vg->extent_size - lp->extents %
+		if (tmp_size % vg->extent_size) {
+			tmp_size += vg->extent_size - tmp_size %
 			    vg->extent_size;
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, (uint64_t) lp->extents / 2,
-					       SIZE_SHORT));
+				  display_size(cmd, tmp_size / 2, SIZE_SHORT));
 		}
 
-		lp->extents /= vg->extent_size;
+		lp->extents = tmp_size / vg->extent_size;
 	}
 
 	if ((size_rest = lp->extents % lp->stripes)) {
