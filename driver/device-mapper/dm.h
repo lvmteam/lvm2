@@ -39,6 +39,11 @@ enum {
 	DM_ACTIVE,
 };
 
+struct dev_list {
+	kdev_t dev;
+	struct dev_list *next;
+};
+
 struct mapped_device {
 	kdev_t dev;
 	char name[DM_NAME_LEN];
@@ -59,6 +64,9 @@ struct mapped_device {
 
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
+
+	/* a list of devices used by this md */
+	struct dev_list *devices;
 };
 
 /* dm-target.c */
@@ -74,13 +82,12 @@ struct target {
 struct target *dm_get_target(const char *name);
 int dm_std_targets(void);
 
-
 /* dm.c */
 struct mapped_device *dm_find_name(const char *name);
 struct mapped_device *dm_find_minor(int minor);
 
-void dm_suspend(struct mapped_device *md);
 void dm_activate(struct mapped_device *md);
+void dm_suspend(struct mapped_device *md);
 
 /* dm-table.c */
 int dm_start_table(struct mapped_device *md);

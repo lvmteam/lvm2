@@ -97,10 +97,8 @@
  * implement most LVM features (omitting striped volumes and
  * snapshots).
  *
- * At the moment this driver has a temporary ioctl interface, but I will
- * move this to a read/write interface on either a /proc file or a
- * char device.  This will allow scripts to simply cat a text mapping
- * table in order to set up a volume.
+ * The driver is controlled through a /proc interface...
+ * FIXME: finish
  *
  * At the moment the table assumes 32 bit keys (sectors), the move to
  * 64 bits will involve no interface changes, since the tables will be
@@ -439,7 +437,7 @@ struct mapped_device *dm_find_minor(int minor)
 	return md;
 }
 
-static int dm_create(int minor, const char *name)
+int dm_create(int minor, const char *name)
 {
 	struct mapped_device *md;
 
@@ -462,10 +460,11 @@ static int dm_create(int minor, const char *name)
 	up_write(&_dev_lock);
 }
 
-static int dm_remove(const char *name, int minor)
+int dm_remove(const char *name, int minor)
 {
 	struct mapped_device *md;
 	int minor;
+	struct dev_list *d, *n;
 
 	down_write(&_dev_lock);
 	if (!(md = __find_dev(name))) {
@@ -474,6 +473,10 @@ static int dm_remove(const char *name, int minor)
 	}
 
 	dm_clear_table(md);
+	for (d = md->devices; d; d = n) {
+		n = d->next;
+		kfree(d);
+	}
 
 	minor = MINOR(md->dev);
 	_free_dev(md);
@@ -481,6 +484,57 @@ static int dm_remove(const char *name, int minor)
 	up_write(&_dev_lock);
 	return 0;
 }
+
+int dm_add_device(struct mapped_device *md, kdev_t dev)
+{
+	struct dev_list *d = kmalloc(sizeof(*d));
+
+	if (!d)
+		return 0;
+
+	d->dev = dev;
+	d->next = md->devices;
+	md->devices = d;
+	return 1;
+}
+
+int dm_activate(struct mapped_device *md)
+{
+	int ret;
+	struct dev_list *d, *od;
+
+	if (is_active(md))
+		return 1;
+
+	/* open all the devices */
+	for (d = md->devices; d; d = d->next)
+		if ((ret = _open_dev(d->dev)))
+			goto bad;
+
+	return 0;
+
+ bad:
+
+	od = d;
+	for (d = md->devices; d != od; d = d->next)
+		_close_dev(d->dev);
+
+	return ret;
+}
+
+void dm_suspend(struct mapped_device *md)
+{
+	struct dev_list *d;
+	if (!is_active(md))
+		return;
+
+	/* close all the devices */
+	for (d = md->devices; d; d = d->next)
+		_close_dev(d->dev));
+
+	set_active(md, 0);
+}
+
 
 /*
  * module hooks
