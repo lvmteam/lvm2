@@ -27,7 +27,7 @@ SHELL = /bin/sh
 INSTALL = @INSTALL@
 LN_S = @LN_S@
 LIBS = @LIBS@
-CFLAGS = @CFLAGS@
+CFLAGS += @CFLAGS@
 
 # Setup directory variables
 prefix = $(DESTDIR)@prefix@
