@@ -16,7 +16,7 @@
  * seperated by a single ':', any colons in the vg name are
  * doubled up to form a pair.
  */
-int build_dm_name(char *buffer, size_t len,
+int build_dm_name(char *buffer, size_t len, const char *prefix,
 		  const char *vg_name, const char *lv_name)
 {
 	char *out;
@@ -36,7 +36,7 @@ int build_dm_name(char *buffer, size_t len,
 	if (!len)
 		return 0;
 
-	if (lvm_snprintf(out, len, ":%s", lv_name) == -1) {
+	if (lvm_snprintf(out, len, ":%s%s", prefix, lv_name) == -1) {
 		log_err("Couldn't build logical volume name.");
 		return 0;
 	}
@@ -44,12 +44,13 @@ int build_dm_name(char *buffer, size_t len,
 	return 1;
 }
 
-int build_dm_path(char *buffer, size_t len,
+int build_dm_path(char *buffer, size_t len, const char *prefix,
 		  const char *vg_name, const char *lv_name)
 {
 	char dev_name[PATH_MAX];
 
-	if (!build_dm_name(dev_name, sizeof(dev_name), vg_name, lv_name)) {
+	if (!build_dm_name(dev_name, sizeof(dev_name),
+			   prefix, vg_name, lv_name)) {
 		stack;
 		return 0;
 	}
