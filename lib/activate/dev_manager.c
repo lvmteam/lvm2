@@ -694,6 +694,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 
 static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 {
+#if 0
 	struct logical_volume *active;
 	struct snapshot *s;
 	struct list *sh;
@@ -709,6 +710,9 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 	}
 
 	return _expand_vanilla(dm, lv);
+#else
+	return _expand_origin_real(dm, lv);
+#endif
 }
 
 static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
