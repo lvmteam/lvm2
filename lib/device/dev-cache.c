@@ -62,6 +62,7 @@ static struct device *_create_dev(dev_t d)
 
 	list_init(&dev->aliases);
 	dev->dev = d;
+	dev->fd = -1;
 	return dev;
 }
 
@@ -297,8 +298,31 @@ int dev_cache_init(void)
 	return 0;
 }
 
+static inline void _check_for_open_devices(void)
+{
+#ifndef NDEBUG
+	struct dev_iter *i = dev_iter_create(NULL);
+	struct device *dev;
+
+	if (!i) {
+		stack;
+		return;
+	}
+
+	while ((dev = dev_iter_get(i))) {
+		if (dev->fd >= 0)
+			log_err("Device '%s' has been left open.",
+				dev_name(dev));
+	}
+
+	dev_iter_destroy(i);
+#endif
+}
+
 void dev_cache_exit(void)
 {
+	_check_for_open_devices();
+
 	pool_destroy(_cache.mem);
 	if (_cache.names)
 		hash_destroy(_cache.names);

@@ -9,6 +9,10 @@
 #include "xlate.h"
 #include "log.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #define fail do {stack; return 0;} while(0)
 #define xx16(v) disk->v = xlate16(disk->v)
 #define xx32(v) disk->v = xlate32(disk->v)
@@ -229,8 +233,8 @@ static int _read_extents(struct disk_list *data)
 	return 1;
 }
 
-struct disk_list *read_disk(struct device *dev, struct pool *mem,
-			  const char *vg_name)
+static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
+				     const char *vg_name)
 {
 	struct disk_list *data = pool_alloc(mem, sizeof(*data));
 	const char *name = dev_name(dev);
@@ -304,6 +308,25 @@ struct disk_list *read_disk(struct device *dev, struct pool *mem,
 	pool_free(data->mem, data);
 	return NULL;
 }
+
+struct disk_list *read_disk(struct device *dev, struct pool *mem,
+			    const char *vg_name)
+{
+	struct disk_list *r;
+
+	if (!dev_open(dev, O_RDONLY)) {
+		stack;
+		return NULL;
+	}
+
+	r = __read_disk(dev, mem, vg_name);
+
+	if (!dev_close(dev))
+		stack;
+
+	return r;
+}
+
 
 /*
  * Build a list of pv_d's structures, allocated
@@ -433,7 +456,10 @@ static int _write_pvd(struct disk_list *data)
 	return 1;
 }
 
-static int _write_all_pvd(struct disk_list *data)
+/*
+ * assumes the device has been opened.
+ */
+static int __write_all_pvd(struct disk_list *data)
 {
 	const char *pv_name = dev_name(data->dev);
 
@@ -472,11 +498,32 @@ static int _write_all_pvd(struct disk_list *data)
 }
 
 /*
+ * opens the device and hands to the above fn.
+ */
+static int _write_all_pvd(struct disk_list *data)
+{
+	int r;
+
+	if (!dev_open(data->dev, O_WRONLY)) {
+		stack;
+		return 0;
+	}
+
+	r = __write_all_pvd(data);
+
+	if (!dev_close(data->dev))
+		stack;
+
+	return r;
+}
+
+
+/*
  * Writes all the given pv's to disk.  Does very
  * little sanity checking, so make sure correct
  * data is passed to here.
  */
-int write_pvds(struct list *pvs)
+int write_disks(struct list *pvs)
 {
 	struct list *pvh;
 	struct disk_list *dl;

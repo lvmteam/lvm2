@@ -179,12 +179,12 @@ int calculate_extent_count(struct physical_volume *pv);
  * disk_lists.
  */
 struct disk_list *read_disk(struct device *dev, struct pool *mem,
-			   const char *vg_name);
+			    const char *vg_name);
 
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		   struct pool *mem, struct list *results);
 
-int write_pvds(struct list *pvs);
+int write_disks(struct list *pvs);
 
 
 /*
