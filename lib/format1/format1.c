@@ -317,14 +317,12 @@ static int _pv_setup(const struct format_type *fmt,
 	/*
 	 * This works out pe_start and pe_count.
 	 */
-	if (!calculate_extent_count(pv, extent_size, extent_count)) {
+	if (!calculate_extent_count(pv, extent_size, extent_count, pe_start)) {
 		stack;
 		return 0;
 	}
 
 	/* Retain existing extent locations exactly */
-	/* FIXME Relax this so a non-overlapping existing pe_start can also 
-	 * be used in place of the calculated one */
 	if (((pe_start || extent_count) && (pe_start != pv->pe_start)) ||
 	    (extent_count && (extent_count != pv->pe_count))) {
 		log_error("Metadata would overwrite physical extents");
