@@ -850,7 +850,7 @@ static int get_all_cluster_nodes()
 	return -1;
     }
 
-    for (i=1; i++;)
+    for (i=1;;i++)
     {
 	char nodekey[256];
 	char nodeip[MAX_CSID_LEN];
