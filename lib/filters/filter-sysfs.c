@@ -9,9 +9,8 @@
 #include "lvm-string.h"
 #include "pool.h"
 
-#include <sys/sysmacros.h>
-#include <sys/param.h>
-#include <sys/types.h>
+#ifdef linux
+
 #include <dirent.h>
 
 static int _locate_sysfs_blocks(const char *proc, char *path, size_t len)
@@ -271,3 +270,11 @@ struct dev_filter *sysfs_filter_create(const char *proc)
 	return NULL;
 }
 
+#else
+
+struct dev_filter *sysfs_filter_create(const char *proc)
+{
+	return NULL;
+}
+
+#endif
