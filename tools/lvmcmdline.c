@@ -1190,6 +1190,92 @@ static int _shell(struct cmd_context *cmd)
 
 #endif
 
+#ifdef CMDLIB
+
+void *lvm2_init(void)
+{
+	struct cmd_context *cmd;
+
+	_register_commands();
+
+	if (!(cmd = _init_lvm()))
+		return NULL;
+
+	return (void *) cmd;
+}
+
+int lvm2_run(void *handle, const char *cmdline)
+{
+	int argc, ret, oneoff = 0;
+	char *args[MAX_ARGS], **argv, *cmdcopy = NULL;
+	struct cmd_context *cmd;
+
+	argv = args;
+
+	if (!handle) {
+		oneoff = 1;
+		if (!(handle = lvm2_init())) {
+			log_error("Handle initialisation failed.");
+			return ECMD_FAILED;
+		}
+	}
+
+	cmd = (struct cmd_context *) handle;
+
+	cmd->argv = argv;
+
+	if (!(cmdcopy = dbg_strdup(cmdline))) {
+		log_error("Cmdline copy failed.");
+		ret = ECMD_FAILED;
+		goto out;
+	}
+
+	if (_split(cmdcopy, &argc, argv, MAX_ARGS) == MAX_ARGS) {
+		log_error("Too many arguments.  Limit is %d.", MAX_ARGS);
+		ret = EINVALID_CMD_LINE;
+		goto out;
+	}
+
+	if (!argc) {
+		log_error("No command supplied");
+		ret = EINVALID_CMD_LINE;
+		goto out;
+	}
+
+	ret = _run_command(cmd, argc, argv);
+
+      out:
+	dbg_free(cmdcopy);
+
+	if (oneoff)
+		lvm2_exit(handle);
+
+	return ret;
+}
+
+void lvm2_log_level(void *handle, int level)
+{
+	struct cmd_context *cmd = (struct cmd_context *) handle;
+
+	cmd->default_settings.verbose = level - VERBOSE_BASE_LEVEL;
+
+	return;
+}
+
+void lvm2_log_fn(lvm2_log_fn_t log_fn)
+{
+	init_log_fn(log_fn);
+}
+
+void lvm2_exit(void *handle)
+{
+	struct cmd_context *cmd = (struct cmd_context *) handle;
+
+	_fin(cmd);
+}
+
+#endif
+
 int lvm2_main(int argc, char **argv)
 {
 	char *namebase, *base;
