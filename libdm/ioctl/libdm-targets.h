@@ -28,6 +28,7 @@ struct dm_task {
 	struct target *head, *tail;
 
 	int read_only;
+	uint32_t event_nr;
 	int major;
 	int minor;
 	union {

@@ -128,6 +128,7 @@ static int _dm_task_get_info_v1(struct dm_task *dmt, struct dm_info *info)
 	info->read_only = dmt->dmi.v1->flags & DM_READONLY_FLAG ? 1 : 0;
 	info->target_count = dmt->dmi.v1->target_count;
 	info->open_count = dmt->dmi.v1->open_count;
+	info->event_nr = 0;
 	info->major = MAJOR(dmt->dmi.v1->dev);
 	info->minor = MINOR(dmt->dmi.v1->dev);
 
@@ -513,6 +514,7 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	info->read_only = dmt->dmi.v3->flags & DM_READONLY_FLAG ? 1 : 0;
 	info->target_count = dmt->dmi.v3->target_count;
 	info->open_count = dmt->dmi.v3->open_count;
+	info->event_nr = dmt->dmi.v3->event_nr;
 	info->major = MAJOR(dmt->dmi.v3->dev);
 	info->minor = MINOR(dmt->dmi.v3->dev);
 
@@ -548,6 +550,13 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 		log_error("dm_task_set_newname: strdup(%s) failed", newname);
 		return 0;
 	}
+
+	return 1;
+}
+
+int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
+{
+	dmt->event_nr = event_nr;
 
 	return 1;
 }
@@ -691,6 +700,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 		strncpy(dmi->uuid, dmt->uuid, sizeof(dmi->uuid));
 
 	dmi->target_count = count;
+	dmi->event_nr = dmt->event_nr;
 
 	b = (void *) (dmi + 1);
 	e = (void *) ((char *) dmi + len);
