@@ -86,7 +86,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	     (yes_no_prompt("Software RAID md superblock "
 			    "detected on %s. Wipe it? [y/n] ", name) == 'y'))) {
 		log_print("Wiping software RAID md superblock on %s", name);
-		if (!dev_zero(dev, md_superblock, 512)) {
+		if (!dev_zero(dev, md_superblock, 4)) {
 			log_error("Failed to wipe RAID md superblock on %s",
 				  name);
 			return 0;
