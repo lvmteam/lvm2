@@ -117,6 +117,9 @@ static int add_internal_client(int fd, fd_callback_t callback)
     client->callback = callback;
     add_client(client);
 
+    /* Set Close-on-exec */
+    fcntl(fd, F_SETFD, 1);
+
     return 0;
 }
 
@@ -471,7 +474,7 @@ static int lock_login_reply(void *misc, uint32_t error, uint8_t which)
 	lock_start_flag = 0;
 	pthread_mutex_unlock(&lock_start_mutex);
     }
-
+    
     return 0;
 }
 
@@ -486,7 +489,7 @@ static int lock_lock_state(void *misc, uint8_t *key, uint16_t keylen,
 
     /* No waiting process to wake up when we are shutting down */
     if (in_shutdown)
-	    return;
+	    return 0;
 
     lwait = hash_lookup(lock_hash, key);
     if (!lwait)

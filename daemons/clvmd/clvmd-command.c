@@ -274,9 +274,10 @@ void cmd_client_cleanup(struct local_client *client)
 
 	hash_iterate(v, lock_hash) {
 		int lkid = (int)(long)hash_get_data(lock_hash, v);
+		char *lockname = hash_get_key(lock_hash, v);
 
-		DEBUGLOG("cleanup: Unlocking lkid %x\n", lkid);
-		sync_unlock("DUMMY", lkid);
+		DEBUGLOG("cleanup: Unlocking lock %s %x\n", lockname, lkid);
+		sync_unlock(lockname, lkid);
 	}
 
 	hash_destroy(lock_hash);
