@@ -127,7 +127,7 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 	memset(pvd->vg_name, 0, sizeof(pvd->vg_name));
 
 	if (pv->vg_name)
-		strcpy(pvd->vg_name, pv->vg_name);
+		strncpy(pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));
 
 	//pvd->pv_major = MAJOR(pv->dev);
 	//pvd->pv_number = ??;

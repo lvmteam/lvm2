@@ -163,6 +163,8 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 		return 0;
 	}
 
+	INIT_LIST_HEAD(&pvs);
+
 	r = _flatten_vg(mem, vg, &pvs, is->prefix) && write_pvs(&pvs);
 	pool_destroy(mem);
 	return r;
