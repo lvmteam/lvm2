@@ -50,14 +50,11 @@ int import_pv(struct pool *mem, struct device *dev,
 		return 0;
 	}
 
-	/* Store system_id if PV belongs to a VG */
-	if (vg && !vg->system_id && 
-	    !(vg->system_id = pool_strdup(mem, pvd->system_id))) {
-		stack;
-		return 0;
-	}
+	/* Store system_id from first PV if PV belongs to a VG */
+	if (vg && !*vg->system_id)
+	    strncpy(vg->system_id, pvd->system_id, NAME_LEN);
 
-	if (vg && vg->system_id &&
+	if (vg &&
 	    strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))
 		log_very_verbose("System ID %s on %s differs from %s for "
 				 "volume group", pvd->system_id, 
@@ -122,13 +119,13 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 		strncpy(pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));
 
 	/* Preserve existing system_id if it exists */
-	if (vg && vg->system_id) 
+	if (vg && *vg->system_id) 
 		strncpy(pvd->system_id, vg->system_id, sizeof(pvd->system_id));
 
 	/* Is VG already exported or being exported? */
 	if (vg && (vg->status & EXPORTED_VG)) {
 		/* Does system_id need setting? */
-		if (!vg->system_id || 
+		if (!*vg->system_id || 
 		    strncmp(vg->system_id, EXPORTED_TAG, 
 			    sizeof(EXPORTED_TAG) - 1)) {
 			if (!_system_id(pvd->system_id, EXPORTED_TAG)) {
@@ -146,7 +143,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 	}
 
 	/* Is VG being imported? */
-	if (vg && !(vg->status & EXPORTED_VG) && vg->system_id &&
+	if (vg && !(vg->status & EXPORTED_VG) && *vg->system_id &&
 	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
 		if (!_system_id(pvd->system_id, IMPORTED_TAG)) {
 			stack;
@@ -163,12 +160,9 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 
 	/* Update internal system_id if we changed it */
 	if (vg && 
-	    (!vg->system_id ||
-	     strncmp(vg->system_id, pvd->system_id, 
-		     sizeof(pvd->system_id)))) {
-		if (!(vg->system_id = pool_strdup(mem, pvd->system_id)))
-			log_error("System ID update failed");
-	}
+	    (!*vg->system_id ||
+	     strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id))))
+		strncpy(vg->system_id, pvd->system_id, NAME_LEN);
 
 	//pvd->pv_major = MAJOR(pv->dev);
 
@@ -201,6 +195,13 @@ int import_vg(struct pool *mem,
 		stack;
 		return 0;
 	}
+
+	if (!(vg->system_id = pool_alloc(mem, NAME_LEN))) {
+		stack;
+		return 0;
+	}
+
+	*vg->system_id = '\0';
 
 	if (vgd->vg_status & VG_EXPORTED)
 		vg->status |= EXPORTED_VG;

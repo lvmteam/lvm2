@@ -153,7 +153,8 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 	}
 
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
-	vg->system_id = NULL;
+	vg->system_id = pool_alloc(mem, NAME_LEN);
+	*vg->system_id = '\0';
 
 	vg->extent_size = extent_size;
 	vg->extent_count = 0;
