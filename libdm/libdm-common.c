@@ -35,8 +35,16 @@ void _default_log(int level, const char *file, int line,
 {
         va_list ap;
 
+	if (level > _LOG_WARN)
+		return;
+
         va_start(ap, f);
-        vfprintf(stderr, f, ap);
+
+	if (level == _LOG_WARN)
+        	vprintf(f, ap);
+	else
+        	vfprintf(stderr, f, ap);
+
         va_end(ap);
 
         fprintf(stderr, "\n");

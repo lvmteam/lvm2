@@ -254,6 +254,8 @@ static int _info(int argc, char **argv)
 		goto out;
 	}
 
+	printf("Name:              %s\n", argv[1]);
+
 	printf("State:             %s\n",
 	       info.suspended ? "SUSPENDED" : "ACTIVE");
 
