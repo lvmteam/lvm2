@@ -339,6 +339,8 @@ static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	if (lv->status & FIXED_MINOR) {
 		lvd->lv_status |= LV_PERSISTENT_MINOR;
 		lvd->lv_dev = MKDEV(lv->major, lv->minor);
+	} else {
+		lvd->lv_dev = MKDEV(LVM_BLK_MAJOR, lvnum_from_lvid(&lv->lvid));
 	}
 
 	lvd->lv_read_ahead = lv->read_ahead;

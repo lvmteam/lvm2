@@ -743,3 +743,26 @@ int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
 
 	return 1;
 }
+
+uint32_t find_free_lvnum(struct logical_volume *lv)
+{
+	int lvnum_used[MAX_RESTRICTED_LVS + 1];
+	uint32_t i = 0;
+	struct list *lvh;
+	struct lv_list *lvl;
+	int lvnum;
+
+	memset(&lvnum_used, 0, sizeof(lvnum_used));
+
+	list_iterate(lvh, &lv->vg->lvs) {
+		lvl = list_item(lvh, struct lv_list);
+		lvnum = lvnum_from_lvid(&lvl->lv->lvid);
+		if (lvnum <= MAX_RESTRICTED_LVS)
+			lvnum_used[lvnum] = 1;
+	}
+
+	while (lvnum_used[i])
+		i++;
+
+	return i;
+}
