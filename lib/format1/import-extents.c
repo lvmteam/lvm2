@@ -238,30 +238,55 @@ static int _read_linear(struct pool *mem, struct lv_map *lvm)
 
 static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 {
-	uint32_t stripes = lvm->stripes, s;
-	uint32_t stripe_len = lvm->lv->le_count / stripes;
+	uint32_t stripes = lvm->stripes, s, le = 0, pe;
 	struct stripe_segment *seg;
 	struct pe_specifier *pes;
 
-	if (!(seg = _alloc_seg(mem, stripes))) {
-		stack;
-		return 0;
+	while (le < lvm->lv->le_count) {
+		if (!(seg = _alloc_seg(mem, stripes))) {
+			stack;
+			return 0;
+		}
+
+		seg->lv = lvm->lv;
+		seg->le = le;
+		seg->len = 0;
+		seg->stripe_size = lvm->stripe_size;
+		seg->stripes = stripes;
+	
+		seg->area[0].pv = lvm->map[le].pv;
+		seg->area[0].pe = lvm->map[le].pe;
+
+		do
+			seg->len++;
+		while ((lvm->map[le + seg->len].pv == seg->area[0].pv) &&
+		       (lvm->map[le + seg->len].pe == seg->area[0].pe +
+			seg->len));
+
+		for (s = 1; s < stripes; s++) {
+			pes = &lvm->map[le + s * seg->len];
+	
+			seg->area[s].pv = pes->pv;
+			seg->area[s].pe = pes->pe;
+
+			for (pe = 0; pe < seg->len; pe++) {
+				if (lvm->map[le + s * seg->len + pe].pe !=
+					pes->pe + pe) {
+					log_error("Incompatible striping at LE"
+						  " %d on %s", 
+						  le + s * seg->len + pe,
+						  seg->lv->name);
+					return 0;
+				}
+			}
+		}
+ 
+		seg->len *= stripes;
+		le += seg->len;
+
+		list_add(&lvm->lv->segments, &seg->list);
 	}
 
-	seg->lv = lvm->lv;
-	seg->le = 0;
-	seg->len = lvm->lv->le_count;
-	seg->stripe_size = lvm->stripe_size;
-	seg->stripes = stripes;
-
-	for (s = 0; s < stripes; s++) {
-		pes = &lvm->map[s * stripe_len];
-
-		seg->area[s].pv = pes->pv;
-		seg->area[s].pe = pes->pe;
-	}
-
-	list_add(&lvm->lv->segments, &seg->list);
 	return 1;
 }
 

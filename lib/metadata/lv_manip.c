@@ -21,7 +21,7 @@ static void _get_extents(struct stripe_segment *seg)
 	struct physical_volume *pv;
 
 	for (s = 0; s < seg->stripes; s++) {
-		pv = seg->area[s % seg->stripes].pv;
+		pv = seg->area[s].pv;
 		count = seg->len / seg->stripes;
 		pv->pe_allocated += count;
 	}
@@ -33,7 +33,7 @@ static void _put_extents(struct stripe_segment *seg)
 	struct physical_volume *pv;
 
 	for (s = 0; s < seg->stripes; s++) {
-		pv = seg->area[s % seg->stripes].pv;
+		pv = seg->area[s].pv;
 		count = seg->len / seg->stripes;
 
 		assert(pv->pe_allocated >= count);
@@ -54,7 +54,8 @@ static struct stripe_segment *_alloc_segment(struct pool *mem, int stripes)
 	return seg;
 }
 
-static int _alloc_stripe_area(struct logical_volume *lv, int stripes,
+static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
+			      uint32_t stripe_size,
 			      struct pv_area **areas, uint32_t *index)
 {
 	uint32_t count = lv->le_count - *index;
@@ -75,6 +76,7 @@ static int _alloc_stripe_area(struct logical_volume *lv, int stripes,
 	seg->le = *index;
 	seg->len = per_area * stripes;
 	seg->stripes = stripes;
+	seg->stripe_size = stripe_size;
 
 	for (s = 0; s < stripes; s++) {
 		struct pv_area *pva = areas[s];
@@ -147,7 +149,8 @@ static int _alloc_striped(struct logical_volume *lv,
 		/* sort the areas so we allocate from the biggest */
 		qsort(areas, index, sizeof(*areas), _comp_area);
 
-		if (!_alloc_stripe_area(lv, stripes, areas, &allocated)) {
+		if (!_alloc_stripe_area(lv, stripes, stripe_size, areas, 
+					&allocated)) {
 			stack;
 			goto out;
 		}
@@ -175,7 +178,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
 
 	count = pva->count;
 	remaining = lv->le_count - *index;
-	if (count < remaining)
+	if (count > remaining)
 		count = remaining;
 
 	if (!(seg = _alloc_segment(lv->vg->cmd->mem, 1))) {
@@ -272,7 +275,7 @@ static int _alloc_simple(struct logical_volume *lv,
 		return 0;
 	}
 
-	return 0;
+	return 1;
 }
 
 /*
@@ -384,6 +387,13 @@ struct logical_volume *lv_create(const char *name,
 	if (vg->max_lv == vg->lv_count) {
 		log_error("Maximum number of logical volumes (%u) reached "
 			  "in volume group %s", vg->max_lv, vg->name);
+		return NULL;
+	}
+
+	if (stripes > list_size(acceptable_pvs)) {
+		log_error("Number of stripes (%u) must not exceed "
+			  "number of physical volumes (%d)", stripes,
+			   list_size(acceptable_pvs));
 		return NULL;
 	}
 

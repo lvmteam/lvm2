@@ -281,6 +281,8 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	lvd->lv_read_ahead = lv->read_ahead;
 	lvd->lv_stripes = list_item(lv->segments.n,
 				    struct stripe_segment)->stripes;
+	lvd->lv_stripesize = list_item(lv->segments.n,
+				    struct stripe_segment)->stripe_size;
 
         lvd->lv_size = lv->size;
         lvd->lv_allocated_le = lv->le_count;
@@ -314,8 +316,8 @@ int export_extents(struct disk_list *dl, int lv_num,
 			for (pe = 0; pe < (seg->len / seg->stripes); pe++) {
 				ped = &dl->extents[pe + seg->area[s].pe];
 				ped->lv_num = lv_num;
-				ped->le_num = seg->le + s +
-					(seg->stripes * pe);
+				ped->le_num = seg->le + pe +
+					      s * (seg->len / seg->stripes);
 			}
 		}
 	}
