@@ -126,7 +126,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 			char *name2 = list_item(lvh2,
 						struct lv_list)->lv->name;
 			if (!strcmp(name1, name2)) {
-				log_error("Duplicate logical volume ",
+				log_error("Duplicate logical volume "
 					  "name \"%s\" "
 					  "in \"%s\" and \"%s\"",
 					  name1, vg_to->name,
