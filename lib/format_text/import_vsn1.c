@@ -22,7 +22,7 @@
 #include "toolcontext.h"
 #include "lvmcache.h"
 #include "lv_alloc.h"
-#include "segtypes.h"
+#include "segtype.h"
 #include "text_import.h"
 
 typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,

@@ -18,7 +18,7 @@
 #include "list.h"
 #include "toolcontext.h"
 #include "metadata.h"
-#include "segtypes.h"
+#include "segtype.h"
 #include "display.h"
 #include "text_export.h"
 #include "text_import.h"

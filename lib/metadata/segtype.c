@@ -15,7 +15,7 @@
 
 #include "lib.h"
 #include "toolcontext.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 					     const char *str)

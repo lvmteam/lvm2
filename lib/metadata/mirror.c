@@ -16,7 +16,7 @@
 #include "lib.h"
 #include "metadata.h"
 #include "toolcontext.h"
-#include "segtypes.h"
+#include "segtype.h"
 #include "display.h"
 #include "activate.h"
 

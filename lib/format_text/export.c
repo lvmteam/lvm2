@@ -20,7 +20,7 @@
 #include "pool.h"
 #include "display.h"
 #include "lvm-string.h"
-#include "segtypes.h"
+#include "segtype.h"
 #include "text_export.h"
 
 #include <stdarg.h>

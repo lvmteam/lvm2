@@ -18,7 +18,7 @@
 #include "display.h"
 #include "activate.h"
 #include "toolcontext.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 #define SIZE_BUF 128
 

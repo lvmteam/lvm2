@@ -18,7 +18,7 @@
 #include "toolcontext.h"
 #include "lv_alloc.h"
 #include "str_list.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 /*
  * Attempt to merge two adjacent segments.

@@ -33,7 +33,7 @@
 #include "display.h"
 #include "memlock.h"
 #include "str_list.h"
-#include "segtypes.h"
+#include "segtype.h"
 #include "lvmcache.h"
 
 #ifdef HAVE_LIBDL

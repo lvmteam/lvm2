@@ -25,7 +25,7 @@
 #include "lvm-string.h"
 #include "filter.h"
 #include "toolcontext.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 #include <time.h>
 
