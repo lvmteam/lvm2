@@ -20,22 +20,19 @@
 #ifndef _LVM_DEV_MANAGER_H
 #define _LVM_DEV_MANAGER_H
 
+#include <stdio.h>
 #include <sys/types.h>
 #include "config.h"
 
-struct device {
-	char *name;
-	dev_t dev;
-};
+struct dev_manager;
+struct dev_iter;
 
-struct dev_mgr;
-typedef struct _dummy_counter *dev_counter_t;
-
-struct dev_mgr *init_dev_manager(struct config_node *cfg_node);
+struct dev_manager *create_dev_manager();
 void fin_dev_manager(struct dev_mgr *dm);
 
-struct device *dev_by_name(struct dev_mgr *dm, const char *name);
-struct device *dev_by_dev(struct dev_mgr *dm, dev_t d);
+struct device *get_dev_by_name(struct dev_mgr *dm, const char *name);
+struct device *get_dev_by_dev(struct dev_mgr *dm, dev_t d);
+void put_dev(struct dev_mgr *dm, const char *name);
 
 /* either of these trigger a full scan, the first time they're run */
 dev_counter_t init_dev_scan(struct dev_mgr *dm);

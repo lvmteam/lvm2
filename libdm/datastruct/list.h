@@ -32,9 +32,9 @@ struct list_head {
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static __inline__ void __list_add(struct list_head * new,
-	struct list_head * prev,
-	struct list_head * next)
+static __inline__ void __list_add(struct list_head *new,
+				  struct list_head *prev,
+				  struct list_head *next)
 {
 	next->prev = new;
 	new->next = next;

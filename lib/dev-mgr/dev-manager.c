@@ -124,9 +124,9 @@ struct dev_mgr *init_dev_manager(struct config_node *cn)
 	memset(dm, 0, sizeof(*dm));
 	dm->pool = pool;
 
-	if(cn) 
+	if(cn)
 		base_dir = find_config_str(cn, "dev-mgr/base_dir", '/', 0);
-	if(!base_dir)	
+	if(!base_dir)
 		base_dir = DEFAULT_BASE_DIR;
 
 	dm->devdir = pool_alloc(dm->pool, sizeof(char*));
@@ -447,7 +447,7 @@ static int _scan_proc_dev(struct dev_mgr *dm)
 			i = 0;
 			while (line[i] == ' ' && line[i] != '\0')
 				i++;
-			
+
 			/* If its not a number it may be name of section */
 			line_maj = atoi(((char *) (line + i)));
 			if (line_maj == 0) {
@@ -457,7 +457,7 @@ static int _scan_proc_dev(struct dev_mgr *dm)
 			/* We only want block devices ... */
 			if (!blocksection)
 				continue;
-			
+
 			/* Find the start of the device major name */
 			while (line[i] != ' ' && line[i] != '\0')
 				i++;
@@ -468,13 +468,13 @@ static int _scan_proc_dev(struct dev_mgr *dm)
 			   match, set the array member corresponding to the
 			   major number to !0 */
 			for (j = 0; device_names[j] != NULL; j++) {
-				
+
 				dev_len = strlen(device_names[j]);
 				if (dev_len <= strlen(line + i)) {
 					if (strncmp (device_names[j],
 							line + i,
 							dev_len) == 0) {
-				
+
 						dm->valid_majors[line_maj]='1';
 						ret++;
 						break;
