@@ -21,8 +21,8 @@
 #include "tools.h"
 
 /* FIXME From config file? */
-#define DEFAULT_PV 255
-#define DEFAULT_LV 255
+#define DEFAULT_PV 256
+#define DEFAULT_LV 256
 
 #define DEFAULT_EXTENT 4096	/* In KB */
 
