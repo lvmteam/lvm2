@@ -110,21 +110,6 @@ struct linear_c {
 	int offset;		/* FIXME: we need a signed offset type */
 };
 
-static int get_number(const char **b, const char *e, unsigned int *n)
-{
-	char *ptr;
-	*b = eat_space(*b, e);
-	if (*b >= e)
-		return -EINVAL;
-
-	*n = simple_strtoul(*b, &ptr, 10);
-	if (ptr == *b)
-		return -EINVAL;
-	*b = ptr;
-
-	return 0;
-}
-
 int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
 	       const char *cb, const char *ce, void **result)
 {
