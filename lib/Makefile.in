@@ -14,6 +14,7 @@ SOURCES=\
 	dev-mgr/dev-cache.c \
 	device/dev-cache.c \
 	device/dev-io.c \
+	format1/disk-rep.c \
 	format1/format1.c \
 	log/log.c \
 	mm/dbg_malloc.c \

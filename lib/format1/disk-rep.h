@@ -2,11 +2,20 @@
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
- *
  */
 
 #ifndef DISK_REP_FORMAT1_H
 #define DISK_REP_FORMAT1_H
+
+#include "lvm-types.h"
+#include "metadata.h"
+#include "pool.h"
+
+#define MAX_PV 256
+#define MAX_LV 256
+#define MAX_VG 99
+
+#define UNMAPPED_EXTENT ((uint16_t) -1)
 
 struct data_area {
 	uint32_t base;
@@ -63,8 +72,8 @@ struct lv_disk {
 };
 
 struct vg_disk {
-        uint8_t vg_uuid[UUID_LEN]; /* volume group UUID */
-        uint8_t vg_name_dummy[NAME_LEN-UUID_LEN]; /* rest of v1 VG name */
+        uint8_t vg_uuid[ID_LEN]; /* volume group UUID */
+        uint8_t vg_name_dummy[NAME_LEN - ID_LEN]; /* rest of v1 VG name */
         uint32_t vg_number;     /* volume group number */
         uint32_t vg_access;     /* read/write */
         uint32_t vg_status;     /* active or not */
@@ -93,12 +102,13 @@ struct uuid_list {
 	char uuid[NAME_LEN + 1];
 };
 
-struct lv_list {
+struct lvd_list {
 	struct list_head list;
 	struct lv_disk lv;
-}
+};
 
 struct disk_list {
+	struct pool *mem;
 	struct device *dev;
 	struct list_head list;
 

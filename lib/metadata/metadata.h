@@ -98,11 +98,11 @@ struct volume_group {
 
         /* physical volumes */
         uint32_t pv_count;
-        struct physical_volume **pv;
+	struct list_head pvs;
 
         /* logical volumes */
         uint32_t lv_count;
-        struct logical_volume **lv;
+	struct list_head lvs;
 };
 
 struct name_list {
@@ -113,6 +113,11 @@ struct name_list {
 struct pv_list {
 	struct list_head list;
 	struct physical_volume pv;
+};
+
+struct lv_list {
+	struct list_head list;
+	struct logical_volume lv;
 };
 
 /* ownership of returned objects passes */
@@ -158,6 +163,7 @@ struct io_space {
 	/* Default to "/dev/" */
 	char *prefix;
 
+	struct pool *mem;
 	struct dev_filter *filter;
 	void *private;
 };
@@ -166,12 +172,6 @@ struct io_space {
 struct io_space *create_text_format(struct dev_filter *filter,
 				    const char *text_file);
 struct io_space *create_lvm_v1_format(struct dev_filter *filter);
-
-inline int write_backup(struct io_space *orig, struct io_space *text)
-{
-
-}
-
 
 int id_eq(struct id *op1, struct id *op2);
 
