@@ -1,6 +1,4 @@
 /*
- * tools/lib/dev-manager.c
- *
  * Copyright (C) 2001 Sistina Software
  *
  * This LVM library is free software; you can redistribute it and/or
@@ -19,22 +17,6 @@
  * MA 02111-1307, USA
  */
 
-/*
- * Changelog
- *
- *	14/08/2001 - Initial checkin (AJL)
- *	15/08/2001 - Several structural changes
- *		+ Got rid of _hash_name_lookup and _hash_dev_lookup
- *		+ Got rid of _destroy_hash_table
- *		+ The fin_* fxns now return void
- *		+ Split _hash_insert into _name_insert, _dev_insert, and
- *		  _list_insert.  Most of the logic from _hash_insert is now in
- *		  _add.
- *	20/08/2001 - Created _add_named_device and used it in dev_by_name
- *	21/08/2001 - Basic config file support added
- *
- */
-
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -42,8 +24,8 @@
 #include <string.h>
 #include <linux/kdev_t.h>
 #include "hash.h"
-#include "mm/pool.h"
-#include "log/log.h"
+#include "pool.h"
+#include "log.h"
 #include "dev-manager.h"
 
 #define DEFAULT_BASE_DIR "/dev"

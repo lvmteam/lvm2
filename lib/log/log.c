@@ -1,6 +1,4 @@
 /*
- * tools/lib/lvm_log.c
- *
  * Copyright (C) 2001  Sistina Software
  *
  *
@@ -18,13 +16,6 @@
  * License along with this LVM library; if not, write to the Free
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
  * MA 02111-1307, USA
- *
- */
-
-/*
- * Changelog
- *
- *   22/01/2001 - First version (Joe Thornber)
  *
  */
 

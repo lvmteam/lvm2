@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TOOLS_H
-#define TOOLS_H
+#ifndef _LVM_TOOLS_H
+#define _LVM_TOOLS_H
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -27,15 +27,16 @@
 #include <sys/types.h>
 #include <string.h>
 
-#include "metadata/metadata.h"
-#include "config/config.h"
-#include "dev-mgr/dev-manager.h"
-#include "device/device.h"
-#include "display/display.h"
-#include "display/metadata.h"
+#include "metadata.h"
+#include "config.h"
+#include "dev-cache.h"
+#include "dev-manager.h"
+#include "device.h"
+#include "display.h"
 #include "errors.h"
-#include "log/log.h"
-#include "mm/dbg_malloc.h"
+#include "list.h"
+#include "log.h"
+#include "dbg_malloc.h"
 #include "toollib.h"
 
 #define CMD_LEN 256

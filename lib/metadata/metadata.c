@@ -18,14 +18,14 @@
  */
 
 #include <string.h>
-#include "mm/dbg_malloc.h"
-#include "dev-mgr/dev-manager.h"
-#include "log/log.h"
-#include "metadata/metadata.h"
+#include "dbg_malloc.h"
+#include "dev-manager.h"
+#include "log.h"
+#include "metadata.h"
 
 /* FIXME: Use registered fn ptrs to avoid including this? */
 /*        Split into external/internal hdr files? */
-#include "metadata/lvm_v1.h"
+#include "lvm_v1.h"
 
 pv_t *pv_read(struct dev_mgr *dm, const char *pv_name)
 {

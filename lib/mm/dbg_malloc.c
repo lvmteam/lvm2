@@ -1,6 +1,4 @@
 /*
- * dbg_malloc.c
- *
  * Copyright (C) 2000, 2001 Sistina Software
  *
  * lvm is free software; you can redistribute it and/or modify
@@ -18,10 +16,6 @@
  * the Free Software Foundation, 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * Changelog
- *
- *    9/11/2000 - First version by Joe Thornber
- *
  * TODO:
  *
  *  Thread safety seems to have fallen out, put lock back in.
@@ -33,7 +27,7 @@
 #include <string.h>
 
 #include "dbg_malloc.h"
-#include "log/log.h"
+#include "log.h"
 
 struct memblock {
 	struct memblock *prev, *next; /* All allocated blocks are linked */

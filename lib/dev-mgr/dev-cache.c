@@ -1,6 +1,4 @@
 /*
- * tools/lib/dev-manager.h
- *
  * Copyright (C) 2001 Sistina Software
  *
  * This file is released under the GPL.

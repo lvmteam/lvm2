@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef LVM_TOOLLIB_H
-#define LVM_TOOLLIB_H
+#ifndef _LVM_TOOLLIB_H
+#define _LVM_TOOLLIB_H
 
 int autobackup_set (void);
 int init_autobackup (void);

@@ -1,6 +1,4 @@
 /*
- * tools/lib/dev-manager.h
- *
  * Copyright (C) 2001 Sistina Software
  *
  * This LVM library is free software; you can redistribute it and/or
@@ -23,7 +21,7 @@
 #define _LVM_DEV_MANAGER_H
 
 #include <sys/types.h>
-#include "config/config.h"
+#include "config.h"
 
 struct device {
 	char *name;

@@ -32,7 +32,7 @@
 #include <linux/genhd.h>
 
 #include "device.h"
-#include "log/log.h"
+#include "log.h"
 
 int do_ioctl(const char *file, int mode, unsigned long cmd, void *req)
 {

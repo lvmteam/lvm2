@@ -24,10 +24,10 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#include "mm/dbg_malloc.h"
-#include "dev-mgr/dev-manager.h"
-#include "log/log.h"
-#include "metadata/metadata.h"
+#include "dbg_malloc.h"
+#include "dev-manager.h"
+#include "log.h"
+#include "metadata.h"
 
 /*
  * FIXME: these should not allocate memory
