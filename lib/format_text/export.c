@@ -329,7 +329,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	struct logical_volume *lv;
 	struct stripe_segment *seg;
 	char buffer[256];
-	int seg_count = 1;
+	int seg_count;
 
 	_out(f, "logical_volumes {");
 	_nl(f);
@@ -352,6 +352,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 		_out(f, "segment_count = %u", _count_segments(lv));
 		_nl(f);
 
+		seg_count = 1;
 		list_iterate (segh, &lv->segments) {
 			seg = list_item(segh, struct stripe_segment);
 
