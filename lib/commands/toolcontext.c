@@ -181,6 +181,12 @@ static int _process_config(struct cmd_context *cmd)
 		return 0;
 	}
 
+	if (*cmd->proc_dir && !dir_exists(cmd->proc_dir)) {
+		log_error("Warning: proc dir %s not found - some checks will be bypassed",
+			  cmd->proc_dir);
+		cmd->proc_dir[0] = '\0';
+	}
+
 	/* activation? */
 	cmd->default_settings.activation = find_config_int(cmd->cft->root,
 							   "global/activation",
@@ -825,8 +831,13 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 		goto error;
 
 	/* Create system directory if it doesn't already exist */
-	if (*cmd->sys_dir && !create_dir(cmd->sys_dir))
+	if (*cmd->sys_dir && !create_dir(cmd->sys_dir)) {
+		log_error("Failed to create LVM2 system dir for metadata backups, config "
+			  "files and internal cache.");
+		log_error("Set environment variable LVM_SYSTEM_DIR to alternative location "
+			  "or empty string.");
 		goto error;
+	}
 
 	if (!(cmd->libmem = pool_create("library", 4 * 1024))) {
 		log_error("Library memory pool creation failed");
