@@ -43,6 +43,7 @@ sbindir = $(DESTDIR)@sbindir@
 infodir = $(DESTDIR)@infodir@
 mandir = $(DESTDIR)@mandir@
 localedir = $(DESTDIR)@LOCALEDIR@
+staticdir = $(DESTDIR)@STATICDIR@
 
 # setup misc variables
 # define the ownership variables for the binaries and man pages

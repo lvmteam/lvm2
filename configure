@@ -309,7 +309,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=/usr
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR INTL_PACKAGE INTL LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -865,7 +865,8 @@ Optional Packages:
   --with-lvm1=TYPE        LVM1 metadata support: internal/shared/none
                           TYPE=internal
   --with-localedir=DIR    Translation files in DIR PREFIX/share/locale
-  --with-confdir=DIR      Configuration files in DIR EXEC_PREFIX/etc
+  --with-confdir=DIR      Configuration files in DIR /etc
+  --with-staticdir=DIR    Static binary in DIR EXEC_PREFIX/sbin
 
 Some influential environment variables:
   CC          C compiler command
@@ -5063,14 +5064,25 @@ if test "${with_confdir+set}" = set; then
   withval="$with_confdir"
    CONFDIR="$withval"
 else
-   CONFDIR='${exec_prefix}/etc'
+   CONFDIR='/etc'
 fi;
+
+
+# Check whether --with-staticdir or --without-staticdir was given.
+if test "${with_staticdir+set}" = set; then
+  withval="$with_staticdir"
+   STATICDIR="$withval"
+else
+   STATICDIR='${exec_prefix}/sbin'
+fi;
+
 
 if test "-f VERSION"; then
   LVM_VERSION="\"`cat VERSION`\""
 else
   LVM_VERSION="Unknown"
 fi
+
 
 
 
@@ -5797,6 +5809,7 @@ s,@HAVE_SELINUX@,$HAVE_SELINUX,;t t
 s,@CMDLIB@,$CMDLIB,;t t
 s,@LOCALEDIR@,$LOCALEDIR,;t t
 s,@CONFDIR@,$CONFDIR,;t t
+s,@STATICDIR@,$STATICDIR,;t t
 s,@INTL_PACKAGE@,$INTL_PACKAGE,;t t
 s,@INTL@,$INTL,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t

@@ -134,7 +134,7 @@ install_tools_dynamic: lvm .commands
 
 install_tools_static: lvm.static
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm.static \
-		$(sbindir)/lvm.static
+		$(staticdir)/lvm.static
 
 install: $(INSTALL_TARGETS)
 
