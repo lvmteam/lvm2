@@ -166,7 +166,7 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 {
 	int s;
 	int suffix = 1;
-	uint64_t byte;
+	uint64_t byte = UINT64_C(0);
 	uint64_t units = UINT64_C(1024);
 	char *size_buf = NULL;
 	const char *size_str[][3] = {
