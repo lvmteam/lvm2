@@ -10,7 +10,7 @@
 #include "metadata.h"
 
 #ifdef DEVMAPPER_SUPPORT
-#include <libdevmapper.h>
+#  include <libdevmapper.h>
 #endif
 
 struct lvinfo {
