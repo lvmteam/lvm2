@@ -407,9 +407,11 @@ static void *get_initial_state()
 		return NULL;
 
 	while (fgets(line, sizeof(line), lvs)) {
-		if (sscanf(line, "%s %s %s\n", vg, lv, flags) == 3) {
+	        if (sscanf(line, "%s %s %s\n", vg, lv, flags) == 3) {
+
 			/* States: s:suspended a:active S:dropped snapshot I:invalid snapshot */
-			if (flags[4] == 'a' || flags[4] == 's') {	/* is it active or suspended? */
+		        if (strlen(vg) == 38 &&                         /* is is a valid UUID ? */
+			    (flags[4] == 'a' || flags[4] == 's')) {	/* is it active or suspended? */
 				/* Convert hyphen-separated UUIDs into one */
 				memcpy(&uuid[0], &vg[0], 6);
 				memcpy(&uuid[6], &vg[7], 4);
