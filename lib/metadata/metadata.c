@@ -274,7 +274,7 @@ struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
 		return NULL;
 }
 
-struct physical_volume *_find_pv(struct volume_group *vg, struct device *dev)
+struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 {
 	struct list *pvh;
 	struct physical_volume *pv;

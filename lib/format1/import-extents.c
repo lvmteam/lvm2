@@ -80,13 +80,13 @@ static int _fill_lv_array(struct lv_map **lvs,
 {
 	struct list *lvh;
 	struct lv_map *lvm;
-	int i = 0;
 
 	memset(lvs, 0, sizeof(*lvs) * MAX_LV);
 	list_iterate(lvh, &dl->lvds) {
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 
-		if (!(lvm = hash_lookup(maps, ll->lvd.lv_name))) {
+		if (!(lvm = hash_lookup(maps, strrchr(ll->lvd.lv_name, '/')
+					      + 1 ))) {
 			log_err("Physical volume (%s) contains an "
 				"unknown logical volume (%s).",
 				dev_name(dl->dev), ll->lvd.lv_name);
@@ -128,8 +128,7 @@ static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
 
 			if (lv_num == UNMAPPED_EXTENT)
 				continue;
-
-			} else {
+			else {
 				lv_num--;
 				lvm = lvms[lv_num];
 

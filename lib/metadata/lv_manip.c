@@ -319,6 +319,7 @@ struct logical_volume *lv_create(const char *name,
 	lv->read_ahead = 0;
 	lv->size = extents * vg->extent_size;
 	lv->le_count = extents;
+	lv->vg = vg;
 	list_init(&lv->segments);
 
 	if (!_allocate(vg, lv, acceptable_pvs, 0u, stripes, stripe_size)) {
@@ -328,7 +329,6 @@ struct logical_volume *lv_create(const char *name,
 
 	vg->lv_count++;
 	list_add(&vg->lvs, &ll->list);
-	lv->vg = vg;
 
 	return lv;
 

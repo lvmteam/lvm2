@@ -359,12 +359,11 @@ int lvdisplay_full(struct logical_volume *lv)
     }
 ******************/
 
-	if (lv->stripes > 1) {
-		log_print("Stripes                %u", lv->stripes);
-/*********** FIXME stripesize 
+	log_print("Segments               %u", list_size(&lv->segments));
+
+/********* FIXME Stripes & stripesize for each segment
 	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
 ***********/
-	}
 
 /**************
 #ifdef LVM_FUTURE
@@ -417,6 +416,7 @@ void lvdisplay_extents(struct logical_volume *lv)
 		    "volumes  ---");
 	log_verbose("PV Name                  PE on PV     ");
 
+/********* FIXME Segments & Stripes
 	list_iterate(pvh, &lv->vg->pvs) {
 		int count = 0;
 		pv = &list_item(pvh, struct pv_list)->pv;
@@ -427,6 +427,7 @@ void lvdisplay_extents(struct logical_volume *lv)
 			log_verbose("%-25s %d", dev_name(pv->dev), count);
 	}
 
+**********/
 /********* FIXME "reads      writes" 
 
 	   
@@ -439,10 +440,12 @@ void lvdisplay_extents(struct logical_volume *lv)
 	log_verbose("--- Logical extents ---");
 	log_verbose("LE    PV                        PE");
 
+/******** FIXME Segments & Stripes
 	for (le = 0; le < lv->le_count; le++) {
 		log_verbose("%05d %-25s %05u  ", le,
 			    dev_name(lv->map[le].pv->dev), lv->map[le].pe);
 	}
+******/
 
 	log_verbose(" ");
 
