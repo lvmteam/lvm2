@@ -783,13 +783,21 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	return 1;
 }
 
+/*
+ * Layers are removed in a top-down manner.
+ */
 int _remove_rec(struct dev_manager *dm, struct dev_layer *dl)
 {
 	struct list *sh;
 	struct dev_layer *dep;
 	char *name;
 
-	if (dl->info.exists && !_suspend(dl)) {
+	if (dl->info.exists && dl->info.suspended && !_resume(dl)) {
+		stack;
+		return 0;
+	}
+
+	if (!_remove(dl)) {
 		stack;
 		return 0;
 	}
@@ -806,11 +814,6 @@ int _remove_rec(struct dev_manager *dm, struct dev_layer *dl)
 			stack;
 			return 0;
 		}
-	}
-
-	if (dl->info.exists && (!_resume(dl) || !_remove(dl))) {
-		stack;
-		return 0;
 	}
 
 	return 1;
