@@ -57,7 +57,7 @@ struct command *the_command;
 struct cmd_context *cmd;
 
 /* Whether or not to dump persistent filter state */
-static int dump_filter;
+static int _dump_filter;
 
 static int _interactive;
 static FILE *_log;
@@ -684,7 +684,7 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 	struct dev_filter *f3, *f4;
 	struct stat st;
 
-	dump_filter = 0;
+	_dump_filter = 0;
 
 	if (!(f3 = filter_components_setup(cmd->cf)))
 		return 0;
@@ -699,7 +699,7 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 
 	/* Should we ever dump persistent filter state? */
 	if (find_config_int(cf->root, "devices/write_cache_state", '/', 1))
-		dump_filter = 1;
+		_dump_filter = 1;
 
 	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
 		log_verbose("Failed to load existing device cache from %s",
@@ -780,7 +780,7 @@ static void __fin_commands(void)
 
 static void fin(void)
 {
-	if (dump_filter)
+	if (_dump_filter)
 		persistent_filter_dump(cmd->filter);
 
 	fid->ops->destroy(fid);
