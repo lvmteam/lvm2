@@ -283,7 +283,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 
 	dm_task_destroy(dmt);
 
-	if (_get_flag(dl, VISIBLE))
+	if (r && _get_flag(dl, VISIBLE))
 		fs_add_lv(dl->lv, dl->name);
 
 	_clear_flag(dl, DIRTY);
@@ -297,9 +297,9 @@ static int _remove(struct dev_layer *dl)
 	struct dm_task *dmt;
 
 	if (_get_flag(dl, VISIBLE))
-		log_verbose("Unloading %s", dl->name);
+		log_verbose("Removing %s", dl->name);
 	else
-		log_very_verbose("Unloading %s", dl->name);
+		log_very_verbose("Removing %s", dl->name);
 
 	if (!(dmt = _setup_task(dl->name, DM_DEVICE_REMOVE))) {
 		stack;
@@ -316,7 +316,7 @@ static int _remove(struct dev_layer *dl)
 
 	dm_task_destroy(dmt);
 
-	if (_get_flag(dl, VISIBLE))
+	if (r && _get_flag(dl, VISIBLE))
 		fs_del_lv(dl->lv);
 
 	_clear_flag(dl, ACTIVE);
@@ -1220,6 +1220,23 @@ static int _add_lv(struct pool *mem,
 	return 1;
 }
 
+static int _add_lvs(struct pool *mem,
+		    struct list *head, struct logical_volume *origin)
+{
+	struct logical_volume *lv;
+	struct snapshot *s;
+	struct list *lvh;
+
+	list_iterate(lvh, &origin->vg->lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		if ((s = find_cow(lv)) && s->origin == origin)
+			if (!_add_lv(mem, head, lv))
+				return 0;
+	}
+
+	return _add_lv(mem, head, origin);
+}
+
 static void _remove_lv(struct list *head, struct logical_volume *lv)
 {
 	struct list *lvh;
@@ -1232,6 +1249,22 @@ static void _remove_lv(struct list *head, struct logical_volume *lv)
 			break;
 		}
 	}
+}
+
+/* Remove any snapshots with given origin */
+static void _remove_lvs(struct list *head, struct logical_volume *origin)
+{
+	struct logical_volume *active;
+	struct snapshot *s;
+	struct list *sh;
+
+	list_iterate(sh, head) {
+		active = list_item(sh, struct lv_list)->lv;
+		if ((s = find_cow(active)) && s->origin == origin)
+			_remove_lv(head, active);
+	}
+
+	_remove_lv(head, origin);
 }
 
 static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
@@ -1266,7 +1299,7 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 	return 1;
 }
 
-static int _activate(struct dev_manager *dm, struct logical_volume *lv,
+static int _activate(struct dev_manager *dm, struct logical_volume *lv, 
 		     activate_t activate)
 {
 	if (!_scan_existing_devices(dm)) {
@@ -1280,12 +1313,12 @@ static int _activate(struct dev_manager *dm, struct logical_volume *lv,
 	}
 
 	/* Remove from active list if present */
-	_remove_lv(&dm->active_list, lv);
+	_remove_lvs(&dm->active_list, lv);
 
 	if (activate == ACTIVATE) {
 		/* Add to active and dirty lists */
-		if (!_add_lv(dm->mem, &dm->dirty_list, lv) ||
-		    !_add_lv(dm->mem, &dm->active_list, lv)) {
+		if (!_add_lvs(dm->mem, &dm->dirty_list, lv) ||
+		    !_add_lvs(dm->mem, &dm->active_list, lv)) {
 			stack;
 			return 0;
 		}

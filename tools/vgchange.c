@@ -35,6 +35,10 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
+		/* Only request activatation of snapshot origin devices */
+		if (lv_is_cow(lv))
+			continue;
+
 		if (!lock_vol(cmd, lv->lvid.s, lock | LCK_NONBLOCK))
 			continue;
 
