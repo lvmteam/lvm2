@@ -134,8 +134,7 @@ static int _get_proc_number(const char *file, const char *name,
 				fclose(fl);
 				return 1;
 			}
-		}
-		do {
+		} else do {
 			c = fgetc(fl);
 		} while (c != EOF && c != '\n');
 	}
