@@ -272,7 +272,7 @@ static struct dm_task *_setup_task(const char *name, const char *uuid, int task)
 }
 
 static int _info_run(const char *name, const char *uuid, struct dm_info *info,
-		 struct pool *mem, char **uuid_out)
+		     struct pool *mem, char **uuid_out)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -310,7 +310,7 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 static int _info(const char *name, const char *uuid, struct dm_info *info,
 		 struct pool *mem, char **uuid_out)
 {
-	if (uuid && *uuid && _info_run(NULL, uuid, info, mem, uuid_out) 
+	if (uuid && *uuid && _info_run(NULL, uuid, info, mem, uuid_out)
 	    && info->exists)
 		return 1;
 
@@ -370,6 +370,20 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 		log_error("Couldn't populate device '%s'.", dl->name);
 		r = 0;
 		goto out;
+	}
+
+	/*
+	 * Do we want a specific minor number ?
+	 */
+	if (dl->lv->minor >= 0 && _get_flag(dl, VISIBLE)) {
+		if (!dm_task_set_minor(dmt, dl->lv->minor)) {
+			log_error("Failed to set minor number for %s to %d "
+				  "during activation.", dl->name,
+				  dl->lv->minor);
+			goto out;
+		} else
+			log_very_verbose("Set minor number for %s to %d.",
+					 dl->name, dl->lv->minor);
 	}
 
 	if (!_get_flag(dl, READWRITE)) {
@@ -696,8 +710,8 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	char *name;
 
 	/*
- 	 * Build a name for the top layer.
- 	 */
+	 * Build a name for the top layer.
+	 */
 	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
 		stack;
 		return 0;
@@ -773,8 +787,7 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 
 static inline int _read_only_lv(struct logical_volume *lv)
 {
-		return (!(lv->vg->status & LVM_WRITE) ||
-			!(lv->status & LVM_WRITE));
+	return (!(lv->vg->status & LVM_WRITE) || !(lv->status & LVM_WRITE));
 }
 
 static struct dev_layer *_create_layer(struct dev_manager *dm,
@@ -1289,13 +1302,12 @@ static int _belong_to_vg(const char *vgname, const char *name)
 	const char *v = vgname, *n = name;
 
 	while (*v) {
-		if ((*v != *n) || 
-		    (*v == '-' && *(++n) != '-'))
+		if ((*v != *n) || (*v == '-' && *(++n) != '-'))
 			return 0;
 		v++, n++;
 	}
 
-	if (*n == '-' && *(n+1) != '-')
+	if (*n == '-' && *(n + 1) != '-')
 		return 1;
 	else
 		return 0;
