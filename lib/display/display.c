@@ -75,6 +75,7 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 		break;
 	case 's':
 		v *= SECTOR_SIZE;
+		break;
 	case 'b':
 	case 'B':
 		v *= UINT64_C(1);
@@ -82,6 +83,7 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 #define KILO UINT64_C(1024)
 	case 'k':
 		v *= KILO;
+		break;
 	case 'm':
 		v *= KILO * KILO;
 		break;

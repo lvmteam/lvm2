@@ -42,7 +42,44 @@ static struct {
 
 static int _insert(const char *path, int rec);
 
-static struct device *_create_dev(dev_t d)
+struct device *dev_create_file(const char *filename, struct device *dev,
+			       struct str_list *alias)
+{
+	int allocate = !dev;
+
+	if (allocate && !(dev = dbg_malloc(sizeof(*dev)))) {
+		log_error("struct device allocation failed");
+		return NULL;
+	}
+	if (allocate && !(alias = dbg_malloc(sizeof(*alias)))) {
+		log_error("struct str_list allocation failed");
+		dbg_free(dev);
+		return NULL;
+	}
+	if (!(alias->str = dbg_strdup(filename))) {
+		log_error("filename strdup failed");
+		if (allocate) {
+			dbg_free(dev);
+			dbg_free(alias);
+		}
+		return NULL;
+	}
+	dev->flags = DEV_REGULAR;
+	if (allocate)
+		dev->flags |= DEV_ALLOCED;
+	list_init(&dev->aliases);
+	list_add(&dev->aliases, &alias->list);
+	dev->end = UINT64_C(0);
+	dev->dev = 0;
+	dev->fd = -1;
+	dev->open_count = 0;
+	memset(dev->pvid, 0, sizeof(dev->pvid));
+	list_init(&dev->open_list);
+
+	return dev;
+}
+
+static struct device *_dev_create(dev_t d)
 {
 	struct device *dev;
 
@@ -50,12 +87,14 @@ static struct device *_create_dev(dev_t d)
 		log_error("struct device allocation failed");
 		return NULL;
 	}
-
+	dev->flags = 0;
 	list_init(&dev->aliases);
 	dev->dev = d;
 	dev->fd = -1;
-	dev->flags = 0;
+	dev->open_count = 0;
+	dev->end = UINT64_C(0);
 	memset(dev->pvid, 0, sizeof(dev->pvid));
+	list_init(&dev->open_list);
 
 	return dev;
 }
@@ -175,7 +214,7 @@ static int _insert_dev(const char *path, dev_t d)
 	if (!(dev = (struct device *) btree_lookup(_cache.devices,
 						   (uint32_t) d))) {
 		/* create new device */
-		if (!(dev = _create_dev(d))) {
+		if (!(dev = _dev_create(d))) {
 			stack;
 			return 0;
 		}
@@ -402,20 +441,31 @@ int dev_cache_add_dir(const char *path)
 
 /* Check cached device name is still valid before returning it */
 /* This should be a rare occurrence */
+/* set quiet if the cache is expected to be out-of-date */
 /* FIXME Make rest of code pass/cache struct device instead of dev_name */
-const char *dev_name_confirmed(struct device *dev)
+const char *dev_name_confirmed(struct device *dev, int quiet)
 {
 	struct stat buf;
-	char *name;
+	const char *name;
 	int r;
 
 	while ((r = stat(name = list_item(dev->aliases.n,
 					  struct str_list)->str, &buf)) ||
 	       (buf.st_rdev != dev->dev)) {
-		if (r < 0)
-			log_sys_error("stat", name);
-		log_error("Path %s no longer valid for device(%d,%d)",
-			  name, (int) MAJOR(dev->dev), (int) MINOR(dev->dev));
+		if (r < 0) {
+			if (quiet)
+				log_sys_debug("stat", name);
+			else
+				log_sys_error("stat", name);
+		}
+		if (quiet)
+			log_debug("Path %s no longer valid for device(%d,%d)",
+			  	  name, (int) MAJOR(dev->dev),
+				  (int) MINOR(dev->dev));
+		else
+			log_error("Path %s no longer valid for device(%d,%d)",
+				  name, (int) MAJOR(dev->dev),
+				  (int) MINOR(dev->dev));
 
 		/* Remove the incorrect hash entry */
 		hash_remove(_cache.names, name);

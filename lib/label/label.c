@@ -9,7 +9,7 @@
 #include "list.h"
 #include "crc.h"
 #include "xlate.h"
-#include "cache.h"
+#include "lvmcache.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -104,21 +104,17 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	struct list *lih;
 	struct labeller_i *li;
 	struct labeller *r = NULL;
-	int already_open;
 	struct label_header *lh;
 	uint64_t sector;
 	int found = 0;
 	char readbuf[LABEL_SCAN_SIZE];
 
-	already_open = dev_is_open(dev);
-
-	if (!already_open && !dev_open(dev, O_RDONLY)) {
+	if (!dev_open(dev)) {
 		stack;
 		return NULL;
 	}
 
-	if (dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf) !=
-	    LABEL_SCAN_SIZE) {
+	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf)) {
 		log_debug("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -178,7 +174,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 		log_very_verbose("%s: No label detected", dev_name(dev));
 
       out:
-	if (!already_open && !dev_close(dev))
+	if (!dev_close(dev))
 		stack;
 
 	return r;
@@ -200,13 +196,18 @@ int label_remove(struct device *dev)
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
-	if (!dev_open(dev, O_RDWR)) {
+	if (!dev_open(dev)) {
 		stack;
 		return 0;
 	}
 
-	if (dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf) !=
-	    LABEL_SCAN_SIZE) {
+	/*
+	 * We flush the device just in case someone is stupid
+	 * enough to be trying to import an open pv into lvm.
+	 */
+	dev_flush(dev);
+
+	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf)) {
 		log_debug("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
@@ -236,8 +237,8 @@ int label_remove(struct device *dev)
 		if (wipe) {
 			log_info("%s: Wiping label at sector %" PRIu64,
 				 dev_name(dev), sector);
-			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE,
-				      buf) != LABEL_SIZE) {
+			if (!dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE,
+				       buf)) {
 				log_error("Failed to remove label from %s at "
 					  "sector %" PRIu64, dev_name(dev),
 					  sector);
@@ -278,7 +279,6 @@ int label_write(struct device *dev, struct label *label)
 	char buf[LABEL_SIZE];
 	struct label_header *lh = (struct label_header *) buf;
 	int r = 1;
-	int already_open;
 
 	if ((LABEL_SIZE + (label->sector << SECTOR_SHIFT)) > LABEL_SCAN_SIZE) {
 		log_error("Label sector %" PRIu64 " beyond range (%ld)",
@@ -298,21 +298,19 @@ int label_write(struct device *dev, struct label *label)
 	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
 				      ((void *) &lh->offset_xl - (void *) lh)));
 
-	already_open = dev_is_open(dev);
-	if (!already_open && dev_open(dev, O_RDWR)) {
+	if (!dev_open(dev)) {
 		stack;
 		return 0;
 	}
 
 	log_info("%s: Writing label to sector %" PRIu64, dev_name(dev),
 		 label->sector);
-	if (dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf) !=
-	    LABEL_SIZE) {
+	if (!dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
 		log_debug("Failed to write label to %s", dev_name(dev));
 		r = 0;
 	}
 
-	if (!already_open && dev_close(dev))
+	if (!dev_close(dev))
 		stack;
 
 	return r;

@@ -752,7 +752,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
       out:
 	if (test_mode()) {
 		log_verbose("Test mode: Wiping internal cache");
-		cache_destroy();
+		lvmcache_destroy();
 	}
 
 	cmd->current_settings = cmd->default_settings;

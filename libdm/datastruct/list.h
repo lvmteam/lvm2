@@ -13,6 +13,8 @@ struct list {
 	struct list *n, *p;
 };
 
+#define LIST_INIT(name)	struct list name = { &(name), &(name) }
+
 static inline void list_init(struct list *head)
 {
 	head->n = head->p = head;
@@ -64,6 +66,9 @@ static inline struct list *list_next(struct list *head, struct list *elem)
 #define list_iterate(v, head) \
 	for (v = (head)->n; v != head; v = v->n)
 
+#define list_uniterate(v, head, start) \
+	for (v = (start)->p; v != head; v = v->p)
+
 #define list_iterate_safe(v, t, head) \
 	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
 
@@ -80,6 +85,9 @@ static inline unsigned int list_size(const struct list *head)
 
 #define list_item(v, t) \
     ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->list))
+
+#define list_struct_base(v, t, h) \
+    ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->h))
 
 /* Given a known element in a known structure, locate another */
 #define struct_field(v, t, e, f) \

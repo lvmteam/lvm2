@@ -89,6 +89,8 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	/* FIXME -D disk_ARG is now redundant */
+
 /********* FIXME: Do without this - or else 2(+) passes! 
 	   Figure out longest volume group name 
 	for (c = opt; opt < argc; opt++) {

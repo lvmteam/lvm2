@@ -7,7 +7,7 @@
 #ifndef _LVM_LABEL_H
 #define _LVM_LABEL_H
 
-#include "cache.h"
+#include "lvmcache.h"
 #include "uuid.h"
 #include "device.h"
 

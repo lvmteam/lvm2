@@ -17,9 +17,6 @@ You should therefore ensure that the (eg) filesystem on the volume is
 resized
 .i before
 running lvreduce so that the extents that are to be removed are not in use.
-If the filesystem is ext2 then you can use the 
-.B e2fsadm(8)
-command to both resize the filesystem and the logical volume together.
 .br.
 Shrinking snapshot logical volumes (see
 .B lvcreate(8)

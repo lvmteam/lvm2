@@ -5,11 +5,16 @@
  */
 
 #include "lib.h"
+#include "device.h"
+#include "memlock.h"
+#include "lvm-string.h"
 
 #include <stdarg.h>
 #include <syslog.h>
 
-static FILE *_log = 0;
+static FILE *_log_file;
+static struct device _log_dev;
+static struct str_list _log_dev_alias;
 
 static int _verbose_level = 0;
 static int _test = 0;
@@ -17,16 +22,45 @@ static int _partial = 0;
 static int _pvmove = 0;
 static int _debug_level = 0;
 static int _syslog = 0;
+static int _log_to_file = 0;
+static int _log_direct = 0;
+static int _log_while_suspended = 0;
 static int _indent = 1;
 static int _log_cmd_name = 0;
 static int _log_suppress = 0;
 static int _ignorelockingfailure = 0;
 static char _cmd_name[30] = "";
 static char _msg_prefix[30] = "  ";
+static int _already_logging = 0;
 
-void init_log(FILE *fp)
+void init_log_file(const char *log_file, int append)
 {
-	_log = fp;
+	const char *open_mode = append ? "a" : "w";
+
+	if (!(_log_file = fopen(log_file, open_mode))) {
+		log_sys_error("fopen", log_file);
+		return;
+	}
+
+	_log_to_file = 1;
+}
+
+void init_log_direct(const char *log_file, int append)
+{
+	const char *filename;
+	int open_flags = append ? 0 : O_TRUNC;
+
+	filename = dbg_strdup(log_file);
+	dev_create_file(filename, &_log_dev, &_log_dev_alias);
+	if (!dev_open_flags(&_log_dev, O_RDWR | O_CREAT | open_flags, 1, 0))
+		return;
+
+	_log_direct = 1;
+}
+
+void init_log_while_suspended(int log_while_suspended)
+{
+	_log_while_suspended = log_while_suspended;
 }
 
 void init_syslog(int facility)
@@ -40,9 +74,23 @@ void log_suppress(int suppress)
 	_log_suppress = suppress;
 }
 
-void fin_log()
+void release_log_memory(void)
 {
-	_log = 0;
+	dbg_free((char *) _log_dev_alias.str);
+	_log_dev_alias.str = "activate_log file";
+}
+
+void fin_log(void)
+{
+	if (_log_direct) {
+		dev_close(&_log_dev);
+		_log_direct = 0;
+	}
+
+	if (_log_to_file) {
+		fclose(_log_file);
+		_log_to_file = 0;
+	}
 }
 
 void fin_syslog()
@@ -136,6 +184,8 @@ int debug_level()
 void print_log(int level, const char *file, int line, const char *format, ...)
 {
 	va_list ap;
+	char buf[1024];
+	int bufused, n;
 
 	if (!_log_suppress) {
 		va_start(ap, format);
@@ -194,20 +244,48 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 	if (level > _debug_level)
 		return;
 
-	if (_log) {
-		fprintf(_log, "%s:%d %s%s", file, line, _cmd_name, _msg_prefix);
+	if (_log_to_file && (_log_while_suspended || !memlock())) {
+		fprintf(_log_file, "%s:%d %s%s", file, line, _cmd_name,
+			_msg_prefix);
 
 		va_start(ap, format);
-		vfprintf(_log, format, ap);
+		vfprintf(_log_file, format, ap);
 		va_end(ap);
 
-		fprintf(_log, "\n");
-		fflush(_log);
+		fprintf(_log_file, "\n");
+		fflush(_log_file);
 	}
 
-	if (_syslog) {
+	if (_syslog && (_log_while_suspended || !memlock())) {
 		va_start(ap, format);
 		vsyslog(level, format, ap);
 		va_end(ap);
+	}
+
+	/* FIXME This code is unfinished - pre-extend & condense. */
+	if (!_already_logging && _log_direct && memlock()) {
+		_already_logging = 1;
+		memset(&buf, ' ', sizeof(buf));
+		bufused = 0;
+		if ((n = lvm_snprintf(buf, sizeof(buf) - bufused - 1,
+				      "%s:%d %s%s", file, line, _cmd_name,
+				      _msg_prefix)) == -1)
+			goto done;
+
+		bufused += n;
+
+		va_start(ap, format);
+		n = vsnprintf(buf + bufused - 1, sizeof(buf) - bufused - 1,
+			      format, ap);
+		va_end(ap);
+		bufused += n;
+
+	      done:
+		buf[bufused - 1] = '\n';
+		buf[bufused] = '\n';
+		buf[sizeof(buf) - 1] = '\n';
+		/* FIXME real size bufused */
+		dev_append(&_log_dev, sizeof(buf), buf);
+		_already_logging = 0;
 	}
 }

@@ -213,8 +213,13 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 		/* Snapshot dropped? */
 		if ((snap = find_cow(lv)) &&
 		    (!lv_snapshot_percent(snap->cow, &snap_percent) ||
-		     snap_percent < 0))
+		     snap_percent < 0 || snap_percent >= 100)) {
 			repstr[0] = toupper(repstr[0]);
+			if (info.suspended)
+				repstr[4] = 'S';
+			else
+				repstr[4] = 'I';
+		}
 
 	} else {
 		repstr[4] = '-';
@@ -582,6 +587,7 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct snapshot *snap;
+	struct lvinfo info;
 	float snap_percent;
 	uint64_t *sortval;
 	char *repstr;
@@ -591,7 +597,8 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(snap = find_cow(lv))) {
+	if (!(snap = find_cow(lv)) ||
+	    (lv_info(snap->cow, &info) && !info.exists)) {
 		field->report_string = "";
 		*sortval = UINT64_C(0);
 		field->sort_value = sortval;

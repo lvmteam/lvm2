@@ -20,6 +20,7 @@
 #include "crc.h"
 #include "xlate.h"
 #include "label.h"
+#include "memlock.h"
 
 #include <unistd.h>
 #include <sys/file.h>
@@ -107,8 +108,7 @@ static struct mda_header *_raw_read_mda_header(const struct format_type *fmt,
 		return NULL;
 	}
 
-	if (dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah) !=
-	    MDA_HEADER_SIZE) {
+	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah)) {
 		stack;
 		pool_free(fmt->cmd->mem, mdah);
 		return NULL;
@@ -156,8 +156,7 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 
-	if (dev_write(dev, start_byte, MDA_HEADER_SIZE, mdah)
-	    != MDA_HEADER_SIZE) {
+	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, mdah)) {
 		stack;
 		pool_free(fmt->cmd->mem, mdah);
 		return 0;
@@ -178,9 +177,8 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 
 	/* FIXME Ignore if checksum incorrect!!! */
 	while (rlocn->offset) {
-		if (dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-			     sizeof(vgnamebuf), vgnamebuf)
-		    != sizeof(vgnamebuf)) {
+		if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
+			      sizeof(vgnamebuf), vgnamebuf)) {
 			stack;
 			return NULL;
 		}
@@ -214,7 +212,7 @@ static int _raw_holds_vgname(struct format_instance *fid,
 {
 	int r = 0;
 
-	if (!dev_open(dev_area->dev, O_RDONLY)) {
+	if (!dev_open(dev_area->dev)) {
 		stack;
 		return 0;
 	}
@@ -239,7 +237,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	char *desc;
 	uint32_t wrap = 0;
 
-	if (!dev_open(area->dev, O_RDONLY)) {
+	if (!dev_open(area->dev)) {
 		stack;
 		return NULL;
 	}
@@ -264,8 +262,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	}
 
 	/* FIXME 64-bit */
-	if (!(vg = text_vg_import_fd(fid, dev_name(area->dev),
-				     dev_fd(area->dev),
+	if (!(vg = text_vg_import_fd(fid, NULL, area->dev,
 				     (off_t) (area->start + rlocn->offset),
 				     (uint32_t) (rlocn->size - wrap),
 				     (off_t) (area->start + MDA_HEADER_SIZE),
@@ -321,7 +318,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!found)
 		return 1;
 
-	if (!dev_open(mdac->area.dev, O_RDWR)) {
+	if (!dev_open(mdac->area.dev)) {
 		stack;
 		return 0;
 	}
@@ -370,9 +367,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		  mdac->rlocn.offset, mdac->rlocn.size - new_wrap);
 
 	/* Write text out, circularly */
-	if (dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
-		      (size_t) (mdac->rlocn.size - new_wrap),
-		      buf) != mdac->rlocn.size - new_wrap) {
+	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
+		       (size_t) (mdac->rlocn.size - new_wrap), buf)) {
 		stack;
 		goto out;
 	}
@@ -382,11 +378,10 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			  dev_name(mdac->area.dev), mdac->area.start +
 			  MDA_HEADER_SIZE, new_wrap);
 
-		if (dev_write(mdac->area.dev,
-			      mdac->area.start + MDA_HEADER_SIZE,
-			      (size_t) new_wrap,
-			      buf + mdac->rlocn.size - new_wrap)
-		    != new_wrap) {
+		if (!dev_write(mdac->area.dev,
+			       mdac->area.start + MDA_HEADER_SIZE,
+			       (size_t) new_wrap,
+			       buf + mdac->rlocn.size - new_wrap)) {
 			stack;
 			goto out;
 		}
@@ -403,7 +398,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	r = 1;
 
       out:
-	if (!dev_close(mdac->area.dev))
+	if (!r && !dev_close(mdac->area.dev))
 		stack;
 
 	return r;
@@ -431,11 +426,6 @@ static int _vg_commit_raw(struct format_instance *fid, struct volume_group *vg,
 
 	if (!found)
 		return 1;
-
-	if (!dev_open(mdac->area.dev, O_RDWR)) {
-		stack;
-		return 0;
-	}
 
 	if (!(mdah = _raw_read_mda_header(fid->fmt, &mdac->area))) {
 		stack;
@@ -469,6 +459,33 @@ static int _vg_commit_raw(struct format_instance *fid, struct volume_group *vg,
 	return r;
 }
 
+/* Close metadata area devices */
+static int _vg_revert_raw(struct format_instance *fid, struct volume_group *vg,
+			  struct metadata_area *mda)
+{
+	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	struct physical_volume *pv;
+	struct list *pvh;
+	int found = 0;
+
+	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
+	list_iterate(pvh, &vg->pvs) {
+		pv = list_item(pvh, struct pv_list)->pv;
+		if (pv->dev == mdac->area.dev) {
+			found = 1;
+			break;
+		}
+	}
+
+	if (!found)
+		return 1;
+
+	if (!dev_close(mdac->area.dev))
+		stack;
+
+	return 1;
+}
+
 static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 			  struct metadata_area *mda)
 {
@@ -477,7 +494,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	struct raw_locn *rlocn;
 	int r = 0;
 
-	if (!dev_open(mdac->area.dev, O_RDWR)) {
+	if (!dev_open(mdac->area.dev)) {
 		stack;
 		return 0;
 	}
@@ -738,7 +755,7 @@ static int _scan_file(const struct format_type *fmt)
 				fid = _create_text_instance(fmt, NULL, NULL);
 				if ((vg = _vg_read_file_name(fid, vgname,
 							     path)))
-					cache_update_vg(vg);
+					lvmcache_update_vg(vg);
 			}
 
 		if (closedir(d))
@@ -753,13 +770,10 @@ int vgname_from_mda(const struct format_type *fmt, struct device_area *dev_area,
 {
 	struct raw_locn *rlocn;
 	struct mda_header *mdah;
-	int already_open;
 	unsigned int len;
 	int r = 0;
 
-	already_open = dev_is_open(dev_area->dev);
-
-	if (!already_open && !dev_open(dev_area->dev, O_RDONLY)) {
+	if (!dev_open(dev_area->dev)) {
 		stack;
 		return 0;
 	}
@@ -772,8 +786,8 @@ int vgname_from_mda(const struct format_type *fmt, struct device_area *dev_area,
 	rlocn = mdah->raw_locns;
 
 	while (rlocn->offset) {
-		if (dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-			     size, buf) != (signed) size) {
+		if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
+			      size, buf)) {
 			stack;
 			goto out;
 		}
@@ -797,7 +811,7 @@ int vgname_from_mda(const struct format_type *fmt, struct device_area *dev_area,
 	}
 
       out:
-	if (!already_open && dev_close(dev_area->dev))
+	if (!dev_close(dev_area->dev))
 		stack;
 
 	return r;
@@ -824,7 +838,7 @@ static int _scan_raw(const struct format_type *fmt)
 				    sizeof(vgnamebuf))) {
 			if ((vg = _vg_read_raw_area(&fid, vgnamebuf,
 						    &rl->dev_area)))
-				cache_update_vg(vg);
+				lvmcache_update_vg(vg);
 		}
 	}
 
@@ -960,7 +974,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		     struct list *mdas, int64_t label_sector)
 {
 	struct label *label;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	struct mda_context *mdac;
 	struct list *mdash;
 	struct metadata_area *mda;
@@ -970,8 +984,8 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 
 	/* FIXME Test mode don't update cache? */
 
-	if (!(info = cache_add(fmt->labeller, (char *) &pv->id, pv->dev,
-			       ORPHAN, NULL))) {
+	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
+				  ORPHAN, NULL))) {
 		stack;
 		return 0;
 	}
@@ -1035,7 +1049,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		return 0;
 	}
 
-	if (!dev_open(pv->dev, O_RDWR)) {
+	if (!dev_open(pv->dev)) {
 		stack;
 		return 0;
 	}
@@ -1121,7 +1135,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 {
 	struct label *label;
 	struct device *dev;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	struct metadata_area *mda, *mda_new;
 	struct mda_context *mdac, *mdac_new;
 	struct list *mdah, *dah;
@@ -1137,7 +1151,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		stack;
 		return 0;
 	}
-	info = (struct cache_info *) label->info;
+	info = (struct lvmcache_info *) label->info;
 
 	/* Have we already cached vgname? */
 	if (info->vginfo && info->vginfo->vgname && *info->vginfo->vgname &&
@@ -1147,12 +1161,15 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 	}
 
 	/* Perform full scan and try again */
-	cache_label_scan(fmt->cmd, 1);
+	if (!memlock()) {
+		lvmcache_label_scan(fmt->cmd, 1);
 
-	if (info->vginfo && info->vginfo->vgname && *info->vginfo->vgname &&
-	    _get_pv_from_vg(info->fmt, info->vginfo->vgname, info->dev->pvid,
-			    pv)) {
-		return 1;
+		if (info->vginfo && info->vginfo->vgname &&
+		    *info->vginfo->vgname &&
+		    _get_pv_from_vg(info->fmt, info->vginfo->vgname,
+				    info->dev->pvid, pv)) {
+			return 1;
+		}
 	}
 
 	/* Orphan */
@@ -1251,7 +1268,8 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	vg_read:_vg_read_raw,
 	vg_write:_vg_write_raw,
 	vg_remove:_vg_remove_raw,
-	vg_commit:_vg_commit_raw
+	vg_commit:_vg_commit_raw,
+	vg_revert:_vg_revert_raw
 };
 
 /* pvmetadatasize in sectors */
@@ -1265,7 +1283,7 @@ static int _pv_setup(const struct format_type *fmt,
 	struct metadata_area *mda, *mda_new, *mda2;
 	struct mda_context *mdac, *mdac_new, *mdac2;
 	struct list *pvmdas, *pvmdash, *mdash;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	int found;
 	uint64_t pe_end = 0;
 
@@ -1357,7 +1375,7 @@ static struct format_instance *_create_text_instance(const struct format_type
 	struct raw_list *rl;
 	struct list *dlh, *dir_list, *rlh, *raw_list, *mdas, *mdash, *infoh;
 	char path[PATH_MAX];
-	struct cache_vginfo *vginfo;
+	struct lvmcache_vginfo *vginfo;
 
 	if (!(fid = pool_alloc(fmt->cmd->mem, sizeof(*fid)))) {
 		log_error("Couldn't allocate format instance object.");
@@ -1425,13 +1443,13 @@ static struct format_instance *_create_text_instance(const struct format_type
 		}
 
 		/* Scan PVs in VG for any further MDAs */
-		cache_label_scan(fmt->cmd, 0);
+		lvmcache_label_scan(fmt->cmd, 0);
 		if (!(vginfo = vginfo_from_vgname(vgname))) {
 			stack;
 			goto out;
 		}
 		list_iterate(infoh, &vginfo->infos) {
-			mdas = &(list_item(infoh, struct cache_info)->mdas);
+			mdas = &(list_item(infoh, struct lvmcache_info)->mdas);
 			list_iterate(mdash, mdas) {
 				mda = list_item(mdash, struct metadata_area);
 				mdac =

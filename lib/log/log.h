@@ -39,8 +39,11 @@
 #define _LOG_ERR 3
 #define _LOG_FATAL 2
 
-void init_log(FILE *fp);
+void init_log_file(const char *log_file, int append);
+void init_log_direct(const char *log_file, int append);
+void init_log_while_suspended(int log_while_suspended);
 void fin_log(void);
+void release_log_memory(void);
 
 void init_syslog(int facility);
 void fin_syslog(void);
@@ -66,6 +69,9 @@ int ignorelockingfailure(void);
 /* Suppress messages to stdout/stderr */
 void log_suppress(int suppress);
 
+/* Suppress messages to syslog */
+void syslog_suppress(int suppress);
+
 void print_log(int level, const char *file, int line, const char *format, ...)
     __attribute__ ((format(printf, 4, 5)));
 
@@ -90,5 +96,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 		log_err("%s: %s failed: %s", y, x, strerror(errno))
 #define log_sys_very_verbose(x, y) \
 		log_info("%s: %s failed: %s", y, x, strerror(errno))
+#define log_sys_debug(x, y) \
+		log_debug("%s: %s failed: %s", y, x, strerror(errno))
 
 #endif

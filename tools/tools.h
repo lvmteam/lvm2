@@ -14,7 +14,7 @@
 #include "log.h"
 #include "activate.h"
 #include "archive.h"
-#include "cache.h"
+#include "lvmcache.h"
 #include "config.h"
 #include "defaults.h"
 #include "dbg_malloc.h"
@@ -72,7 +72,7 @@ struct arg {
 	const char *long_arg;
 	int (*fn) (struct cmd_context * cmd, struct arg * a);
 
-	int count;
+	unsigned int count;
 	char *value;
 	int32_t i_value;
 	uint32_t ui_value;
@@ -111,7 +111,7 @@ int units_arg(struct cmd_context *cmd, struct arg *a);
 char yes_no_prompt(const char *prompt, ...);
 
 /* we use the enums to access the switches */
-static inline const int arg_count(struct cmd_context *cmd, int a)
+static inline const unsigned int arg_count(struct cmd_context *cmd, int a)
 {
 	return cmd->args[a].count;
 }

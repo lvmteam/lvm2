@@ -93,6 +93,9 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	backup(vg);
 
+	if (!vg_commit(vg))
+		return ECMD_FAILED;
+
 	log_print("Logical volume \"%s\" successfully removed", lv->name);
 	return 0;
 }
@@ -104,6 +107,6 @@ int lvremove(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(cmd, argc, argv, LCK_VG_READ, NULL,
+	return process_each_lv(cmd, argc, argv, LCK_VG_WRITE, NULL,
 			       &lvremove_single);
 }

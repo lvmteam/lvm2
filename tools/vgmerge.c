@@ -165,7 +165,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!vg_write(vg_to)) {
+	if (!vg_write(vg_to) || !vg_commit(vg_to)) {
 		goto error;
 	}
 

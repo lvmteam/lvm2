@@ -204,7 +204,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->free_count -= pv->pe_count - pv->pe_alloc_count;
 	vg->extent_count -= pv->pe_count;
 
-	if (!vg_write(vg)) {
+	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("Removal of physical volume \"%s\" from "
 			  "\"%s\" failed", name, vg->name);
 		return ECMD_FAILED;
@@ -308,7 +308,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		vg->status &= ~PARTIAL_VG;
 		vg->status |= LVM_WRITE;
 
-		if (!vg_write(vg)) {
+		if (!vg_write(vg) || !vg_commit(vg)) {
 			log_error("Failed to write out a consistent VG for %s",
 				  vg_name);
 			unlock_vg(cmd, vg_name);

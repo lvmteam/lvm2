@@ -204,6 +204,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	struct logical_volume *lv_mirr, *lv;
 	struct list *lvh;
 
+	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty(vg->fid, NULL, "pvmove%d",
 					LVM_READ | LVM_WRITE,
 					ALLOC_CONTIGUOUS, vg))) {
@@ -220,6 +221,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 
 	list_init(*lvs_changed);
 
+	/* Find segments to be moved and set up mirrors */
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 		if ((lv == lv_mirr) || (lv_name && strcmp(lv->name, lv_name)))
@@ -251,6 +253,14 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 			    struct logical_volume *lv_mirr,
 			    struct list *lvs_changed, int first_time)
 {
+	log_verbose("Updating volume group metadata");
+	if (!vg_write(vg)) {
+		log_error("ABORTING: Volume group metadata update failed.");
+		return 0;
+	}
+
+	backup(vg);
+
 	if (!lock_lvs(cmd, lvs_changed, LCK_LV_SUSPEND | LCK_HOLD)) {
 		stack;
 		return 0;
@@ -260,20 +270,18 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
 			stack;
 			unlock_lvs(cmd, lvs_changed);
+			vg_revert(vg);
 			return 0;
 		}
 	}
 
-	log_verbose("Updating volume group metadata");
-	if (!vg_write(vg)) {
+	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
 		if (!first_time)
 			unlock_lv(cmd, lv_mirr->lvid.s);
 		unlock_lvs(cmd, lvs_changed);
 		return 0;
 	}
-
-	backup(vg);
 
 	if (first_time) {
 		if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_ACTIVATE)) {
@@ -308,6 +316,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	struct logical_volume *lv_mirr;
 	int first_time = 1;
 
+	/* Find PV (in VG) */
 	if (!(pv = _find_pv_by_name(cmd, pv_name))) {
 		stack;
 		return EINVALID_CMD_LINE;
@@ -321,6 +330,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		}
 	}
 
+	/* Read VG */
 	log_verbose("Finding volume group \"%s\"", pv->vg_name);
 
 	if (!(vg = _get_vg(cmd, pv->vg_name))) {
@@ -340,6 +350,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 			return ECMD_FAILED;
 		}
 
+		/* Ensure mirror LV is active */
 		if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_ACTIVATE)) {
 			log_error
 			    ("ABORTING: Temporary mirror activation failed.");
@@ -398,6 +409,17 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int r = 1;
 
+	if (!remove_pvmove_mirrors(vg, lv_mirr)) {
+		log_error("ABORTING: Removal of temporary mirror failed");
+		return 0;
+	}
+
+	if (!vg_write(vg)) {
+		log_error("ABORTING: Failed to write new data locations "
+			  "to disk.");
+		return 0;
+	}
+
 	if (!lock_lvs(cmd, lvs_changed, LCK_LV_SUSPEND | LCK_HOLD)) {
 		log_error("Locking LVs to remove temporary mirror failed");
 		r = 0;
@@ -408,16 +430,10 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		r = 0;
 	}
 
-	if (!remove_pvmove_mirrors(vg, lv_mirr)) {
-		log_error("ABORTING: Removal of temporary mirror failed");
-		unlock_lv(cmd, lv_mirr->lvid.s);
-		unlock_lvs(cmd, lvs_changed);
-		return 0;
-	}
-
-	if (!vg_write(vg)) {
+	if (!vg_commit(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
+		vg_revert(vg);
 		unlock_lv(cmd, lv_mirr->lvid.s);
 		unlock_lvs(cmd, lvs_changed);
 		return 0;
@@ -435,22 +451,21 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		r = 0;
 	}
 
+	unlock_lvs(cmd, lvs_changed);
+
 	if (!lv_remove(vg, lv_mirr)) {
 		log_error("ABORTING: Removal of temporary pvmove LV failed");
-		unlock_lvs(cmd, lvs_changed);
 		return 0;
 	}
 
 	log_verbose("Writing out final volume group after pvmove");
-	if (!vg_write(vg)) {
+	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
-		unlock_lvs(cmd, lvs_changed);
 		return 0;
 	}
 
-	unlock_lvs(cmd, lvs_changed);
-
+	/* FIXME backup positioning */
 	backup(vg);
 
 	return r;
@@ -466,7 +481,6 @@ static int _check_pvmove_status(struct cmd_context *cmd,
 	float segment_percent = 0.0, overall_percent = 0.0;
 	uint32_t event_nr = 0;
 
-	/* By default, caller should not retry */
 	*finished = 1;
 
 	if (!lv_mirror_percent(lv_mirr, !parms->interval, &segment_percent,

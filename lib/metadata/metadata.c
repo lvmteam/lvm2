@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software (UK) Limited.
+ * Copyright (C) 2001-2003 Sistina Software (UK) Limited.
  *
  * This file is released under the LGPL.
  */
@@ -10,7 +10,8 @@
 #include "metadata.h"
 #include "toolcontext.h"
 #include "lvm-string.h"
-#include "cache.h"
+#include "lvmcache.h"
+#include "memlock.h"
 
 static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 			 const char *pv_name)
@@ -437,11 +438,14 @@ int vg_remove(struct volume_group *vg)
 	return 1;
 }
 
+/*
+ * After vg_write() returns success,
+ * caller MUST call either vg_commit() or vg_revert()
+ */
 int vg_write(struct volume_group *vg)
 {
-	struct list *mdah;
+	struct list *mdah, *mdah2;
 	struct metadata_area *mda;
-	int cache_updated = 0;
 
 	if (vg->status & PARTIAL_VG) {
 		log_error("Cannot change metadata for partial volume group %s",
@@ -461,21 +465,61 @@ int vg_write(struct volume_group *vg)
 		mda = list_item(mdah, struct metadata_area);
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
 			stack;
+			/* Revert */
+			list_uniterate(mdah2, &vg->fid->metadata_areas, mdah) {
+				mda = list_item(mdah2, struct metadata_area);
+				if (mda->ops->vg_revert &&
+				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
+					stack;
+				}
+			}
 			return 0;
 		}
 	}
 
+	return 1;
+}
+
+/* Commit pending changes */
+int vg_commit(struct volume_group *vg)
+{
+	struct list *mdah;
+	struct metadata_area *mda;
+	int cache_updated = 0;
+	int failed = 0;
+
 	/* Commit to each copy of the metadata area */
 	list_iterate(mdah, &vg->fid->metadata_areas) {
 		mda = list_item(mdah, struct metadata_area);
-		if (!cache_updated) {
-			cache_update_vg(vg);
-			cache_updated = 1;
-		}
+		failed = 0;
 		if (mda->ops->vg_commit &&
 		    !mda->ops->vg_commit(vg->fid, vg, mda)) {
 			stack;
-			return 0;
+			failed = 1;
+		}
+		/* Update cache first time we succeed */
+		if (!failed && !cache_updated) {
+			lvmcache_update_vg(vg);
+			cache_updated = 1;
+		}
+
+	}
+
+	/* If at least one mda commit succeeded, it was committed */
+	return cache_updated;
+}
+
+/* Don't commit any pending changes */
+int vg_revert(struct volume_group *vg)
+{
+	struct list *mdah;
+	struct metadata_area *mda;
+
+	list_iterate(mdah, &vg->fid->metadata_areas) {
+		mda = list_item(mdah, struct metadata_area);
+		if (mda->ops->vg_revert &&
+		    !mda->ops->vg_revert(vg->fid, vg, mda)) {
+			stack;
 		}
 	}
 
@@ -485,7 +529,7 @@ int vg_write(struct volume_group *vg)
 /* Make orphan PVs look like a VG */
 static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 {
-	struct cache_vginfo *vginfo;
+	struct lvmcache_vginfo *vginfo;
 	struct list *ih;
 	struct device *dev;
 	struct pv_list *pvl;
@@ -511,7 +555,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	}
 
 	list_iterate(ih, &vginfo->infos) {
-		dev = list_item(ih, struct cache_info)->dev;
+		dev = list_item(ih, struct lvmcache_info)->dev;
 		if (!(pv = pv_read(cmd, dev_name(dev), NULL, NULL))) {
 			continue;
 		}
@@ -552,9 +596,13 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	/* Find the vgname in the cache */
 	/* If it's not there we must do full scan to be completely sure */
 	if (!(fmt = fmt_from_vgname(vgname))) {
-		cache_label_scan(cmd, 0);
+		lvmcache_label_scan(cmd, 0);
 		if (!(fmt = fmt_from_vgname(vgname))) {
-			cache_label_scan(cmd, 1);
+			if (memlock()) {
+				stack;
+				return NULL;
+			}
+			lvmcache_label_scan(cmd, 1);
 			if (!(fmt = fmt_from_vgname(vgname))) {
 				stack;
 				return NULL;
@@ -593,7 +641,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 		return NULL;
 	}
 
-	cache_update_vg(correct_vg);
+	lvmcache_update_vg(correct_vg);
 
 	if (inconsistent) {
 		if (!*consistent)
@@ -634,10 +682,10 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
  */
 struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 {
-	char *vgname;
-	struct list *vgnames, *slh;
+	// const char *vgname;
+	// struct list *vgnames, *slh;
 	struct volume_group *vg;
-	struct cache_vginfo *vginfo;
+	struct lvmcache_vginfo *vginfo;
 	int consistent = 0;
 
 	/* Is corresponding vgname already cached? */
@@ -654,7 +702,14 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 		}
 	}
 
-	/* The slow way - full scan required to cope with vgrename */
+	return NULL;
+
+	/* FIXME Need a genuine read by ID here - don't vg_read by name! */
+	/* FIXME Disabled vgrenames while active for now because we aren't
+	 *       allowed to do a full scan here any more. */
+
+/*** FIXME Cope with vgrename here
+	// The slow way - full scan required to cope with vgrename 
 	if (!(vgnames = get_vgs(cmd, 1))) {
 		log_error("vg_read_by_vgid: get_vgs failed");
 		return NULL;
@@ -663,7 +718,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 	list_iterate(slh, vgnames) {
 		vgname = list_item(slh, struct str_list)->str;
 		if (!vgname || !*vgname)
-			continue;	/* FIXME Unnecessary? */
+			continue;	// FIXME Unnecessary? 
 		consistent = 0;
 		if ((vg = vg_read(cmd, vgname, &consistent)) &&
 		    !strncmp(vg->id.uuid, vgid, ID_LEN)) {
@@ -677,6 +732,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 	}
 
 	return NULL;
+***/
 }
 
 /* Only called by activate.c */
@@ -713,7 +769,7 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 {
 	struct physical_volume *pv;
 	struct label *label;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	struct device *dev;
 
 	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {
@@ -726,7 +782,7 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 		return 0;
 	}
 
-	info = (struct cache_info *) label->info;
+	info = (struct lvmcache_info *) label->info;
 	if (label_sector && *label_sector)
 		*label_sector = label->sector;
 
@@ -751,13 +807,13 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 /* May return empty list */
 struct list *get_vgs(struct cmd_context *cmd, int full_scan)
 {
-	return cache_get_vgnames(cmd, full_scan);
+	return lvmcache_get_vgnames(cmd, full_scan);
 }
 
 struct list *get_pvs(struct cmd_context *cmd)
 {
 	struct list *results;
-	char *vgname;
+	const char *vgname;
 	struct list *pvh, *tmp;
 	struct list *vgnames, *slh;
 	struct volume_group *vg;
@@ -765,7 +821,7 @@ struct list *get_pvs(struct cmd_context *cmd)
 	int old_partial;
 	int old_pvmove;
 
-	cache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd, 0);
 
 	if (!(results = pool_alloc(cmd->mem, sizeof(*results)))) {
 		log_error("PV list allocation failed");

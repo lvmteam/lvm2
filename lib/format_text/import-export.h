@@ -54,7 +54,7 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 time_t *when, char **desc);
 struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       const char *file,
-				       int fd,
+				       struct device *dev,
 				       off_t offset, uint32_t size,
 				       off_t offset2, uint32_t size2,
 				       checksum_fn_t checksum_fn,

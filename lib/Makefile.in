@@ -14,7 +14,7 @@ endif
 
 SOURCES=\
 	activate/activate.c \
-	cache/cache.c \
+	cache/lvmcache.c \
 	commands/toolcontext.c \
 	config/config.c \
 	datastruct/bitset.c \
@@ -49,6 +49,7 @@ SOURCES=\
 	misc/crc.c \
 	misc/lvm-file.c \
 	misc/lvm-string.c \
+	mm/memlock.c \
 	mm/pool.c \
 	regex/matcher.c \
 	regex/parse_rx.c \

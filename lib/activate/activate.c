@@ -7,6 +7,7 @@
 #include "lib.h"
 #include "metadata.h"
 #include "activate.h"
+#include "memlock.h"
 #include "display.h"
 #include "fs.h"
 #include "lvm-string.h"
@@ -16,6 +17,7 @@
 
 #include <limits.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
 
@@ -46,7 +48,8 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 {
 	return 0;
 }
-int lv_mirror_percent(struct logical_volume *lv, float *percent, int wait)
+int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
+		      uint32_t *event_nr)
 {
 	return 0;
 }
@@ -73,6 +76,10 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 {
 	return 1;
+}
+void activation_exit(void)
+{
+	return;
 }
 
 #else				/* DEVMAPPER_SUPPORT */
@@ -340,9 +347,6 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
-	if (!activation())
-		return 1;
-
 	if (test_mode()) {
 		_skip("Suspending '%s'.", lv->name);
 		return 1;
@@ -353,8 +357,15 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-	if (info.exists && !info.suspended)
-		return _lv_suspend(lv);
+	if (!info.exists || info.suspended)
+		return 1;
+
+	memlock_inc();
+	if (!_lv_suspend(lv)) {
+		memlock_dec();
+		fs_unlock();
+		return 0;
+	}
 
 	return 1;
 }
@@ -380,8 +391,14 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-	if (info.exists && info.suspended)
-		return _lv_activate(lv);
+	if (!info.exists || !info.suspended)
+		return 1;
+
+	if (!_lv_activate(lv))
+		return 0;
+
+	memlock_dec();
+	fs_unlock();
 
 	return 1;
 }
@@ -390,6 +407,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
+	int r;
 
 	if (!activation())
 		return 1;
@@ -407,16 +425,22 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-	if (info.exists)
-		return _lv_deactivate(lv);
+	if (!info.exists)
+		return 1;
 
-	return 1;
+	memlock_inc();
+	r = _lv_deactivate(lv);
+	memlock_dec();
+	fs_unlock();
+
+	return r;
 }
 
 int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
+	int r;
 
 	if (!activation())
 		return 1;
@@ -434,10 +458,19 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-	if (!info.exists || info.suspended)
-		return _lv_activate(lv);
+	if (info.exists && !info.suspended)
+		return 1;
 
-	return 1;
+	memlock_inc();
+	r = _lv_activate(lv);
+	memlock_dec();
+	fs_unlock();
+
+	return r;
 }
 
+void activation_exit(void)
+{
+	dev_manager_exit();
+}
 #endif

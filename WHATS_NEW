@@ -74,7 +74,7 @@ changes.
 What's not finished?
 ====================
 The internal cache.  If you turn on debugging output you'll see lots of
-repeated disk reads, many of which will eventually get optimised out.
+repeated messages, many of which will eventually get optimised out.
 
 --test sometimes causes a command to fail (e.g. vgconvert --test) even 
 though the real command would work: again, fixing this is waiting for 
@@ -90,7 +90,4 @@ Display output.  Some metadata information cannot yet be displayed.
 
 Recovery tools to salvage "lost" metadata directly from the disks:
 but we hope the new format will mean such tools are hardly ever needed!
-
-pvmove will be enhanced to remove the volume group lock so that you can
-run other commands alongside.
 

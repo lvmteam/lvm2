@@ -12,7 +12,7 @@
 #include "list.h"
 #include "display.h"
 #include "toolcontext.h"
-#include "cache.h"
+#include "lvmcache.h"
 #include "lvm1-label.h"
 #include "format1.h"
 
@@ -248,7 +248,7 @@ static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 			 fid->fmt->cmd->filter) &&
 	     write_disks(fid->fmt, &pvds));
 
-	cache_update_vg(vg);
+	lvmcache_update_vg(vg);
 	pool_destroy(mem);
 	return r;
 }
@@ -381,10 +381,10 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	struct disk_list *dl;
 	struct list pvs;
 	struct label *label;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 
-	if (!(info = cache_add(fmt->labeller, (char *) &pv->id, pv->dev,
-			       pv->vg_name, NULL))) {
+	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
+				  pv->vg_name, NULL))) {
 		stack;
 		return 0;
 	}

@@ -126,6 +126,8 @@ struct metadata_area_ops {
 			 struct metadata_area * mda);
 	int (*vg_commit) (struct format_instance * fid,
 			  struct volume_group * vg, struct metadata_area * mda);
+	int (*vg_revert) (struct format_instance * fid,
+			  struct volume_group * vg, struct metadata_area * mda);
 	int (*vg_remove) (struct format_instance * fi, struct volume_group * vg,
 			  struct metadata_area * mda);
 };
@@ -338,6 +340,8 @@ struct format_handler {
  * Utility functions
  */
 int vg_write(struct volume_group *vg);
+int vg_commit(struct volume_group *vg);
+int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 			     int *consistent);
 struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid);

@@ -111,7 +111,7 @@ static void _vgchange_resizeable(struct cmd_context *cmd,
 	else
 		vg->status &= ~RESIZEABLE_VG;
 
-	if (!vg_write(vg))
+	if (!vg_write(vg) || !vg_commit(vg))
 		return;
 
 	backup(vg);
@@ -144,7 +144,7 @@ static void _vgchange_logicalvolume(struct cmd_context *cmd,
 
 	vg->max_lv = max_lv;
 
-	if (!vg_write(vg))
+	if (!vg_write(vg) || !vg_commit(vg))
 		return;
 
 	backup(vg);

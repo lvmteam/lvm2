@@ -234,7 +234,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
 	struct list *pvh;
 	struct physical_volume *pv;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 
 	/*
 	 * FIXME: Check that the PVs referenced in the backup are
@@ -270,7 +270,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 		}
 	}
 
-	if (!vg_write(vg)) {
+	if (!vg_write(vg) || !vg_commit(vg)) {
 		stack;
 		return 0;
 	}
