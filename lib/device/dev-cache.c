@@ -268,7 +268,7 @@ void _check_closed(struct device *dev)
 
 static inline void _check_for_open_devices(void)
 {
-	hash_iterate(_cache.names, (iterate_fn)_check_closed);
+	hash_iter(_cache.names, (iterate_fn)_check_closed);
 }
 
 void dev_cache_exit(void)
