@@ -5,6 +5,8 @@ vgcreate \- create a volume group
 .B vgcreate
 .RB [ \-\-addtag
 .IR Tag ]
+.RB [ \-\-alloc 
+.IR AllocationPolicy ]
 .RB [ \-A | \-\-autobackup " {" y | n }]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
@@ -58,11 +60,11 @@ changes of the PE size in an existing VG are not supported.
 To create a volume group named
 .B test_vg 
 using physical volumes
-.BR /dev/hdk1 ", " /dev/hdl1 ", and " /dev/hdm1
+.BR /dev/hdk1 ", and " /dev/hdl1
 with default physical extent size of 4MB:
 .nf
 
-\	vgcreate test_vg /dev/sd[k-m]1
+\	vgcreate test_vg /dev/sdk1 /dev/sdl1
 
 .fi
 To limit kernel memory usage, there is a limit of 65536 physical extents

@@ -7,6 +7,7 @@ Version 2.00.26 -
   Improve clvmd error reporting during startup.
   Make clvmd cope with large gaps in node numbers IDs.
   Make clvmd initialisation cope better with debugging output.
+  Tidy clvmd socket callbacks so all work happens outside main loop.
   clvmd -V now displays lvm version too.
   Add optional gulm build for clvmd
 

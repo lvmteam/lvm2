@@ -3,6 +3,7 @@
 lvresize \- resize a logical volume
 .SH SYNOPSIS
 .B lvresize
+[\-\-alloc AllocationPolicy]
 [\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-h/\-?/\-\-help]
 [\-i/\-\-stripes Stripes [\-I/\-\-stripesize StripeSize]]
 {\-l/\-\-extents [+]LogicalExtentsNumber |
@@ -27,7 +28,7 @@ With the + or - sign the value is added to or subtracted from the actual size
 of the logical volume and without it, the value is taken as an absolute one.
 .TP
 .I \-L, \-\-size [+/-]LogicalVolumeSize[kKmMgGtT]
-Change or set the logical volume size in units in units of megabytes.
+Change or set the logical volume size in units of megabytes.
 A size suffix of M for megabytes, G for gigabytes or T for terabytes is
 optional.  With the + or - sign the value is added to or subtracted from
 the actual size of the logical volume and without it, the value is taken as an
