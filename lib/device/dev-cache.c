@@ -108,12 +108,12 @@ static int _insert_dev(const char *path, dev_t d)
 	}
 
 	if (!_add_alias(dev, path)) {
-		log_err("Couldn't add alias to dir cache.");
+		log_err("Couldn't add alias to dev cache.");
 		return 0;
 	}
 
 	if (!hash_insert(_cache.names, path, dev)) {
-		log_err("Couldn't add name to hash in dir cache.");
+		log_err("Couldn't add name to hash in dev cache.");
 		return 0;
 	}
 
