@@ -2155,6 +2155,7 @@ ac_given_INSTALL="$INSTALL"
 trap 'rm -fr `echo "\
 Makefile								\
 make.tmpl                                                               \
+include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
@@ -2249,6 +2250,7 @@ cat >> $CONFIG_STATUS <<EOF
 CONFIG_FILES=\${CONFIG_FILES-"\
 Makefile								\
 make.tmpl                                                               \
+include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\

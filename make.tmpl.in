@@ -51,7 +51,8 @@ SUFFIXES=
 SUFFIXES=.c .d .o
 
 CFLAGS+=-g -Wall -DDEBUG_MEM -DBOUNDS_CHECK -DDEBUG
-INCLUDES+=-I. -I$(top_srcdir)/lib
+INCLUDES+=-I. -I$(top_srcdir)/include
+INC_LNS=$(top_srcdir)\\/include\\/.symlinks_created
 
 ifeq ("@READLINE@", "yes")
   CFLAGS += -DREADLINE_SUPPORT
@@ -88,8 +89,8 @@ $(SUBDIRS.distclean):
 
 %.d: %.c
 	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
-		$(CC) -MM $(INCLUDES) $< \
-		| sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d : /g" > $@; \
+		$(CC) -MM $(INCLUDES) $< | \
+		sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d : $(INC_LNS) /g" > $@; \
 		[ -s $@ ] || $(RM) $@
 
 clean: $(SUBDIRS.clean)

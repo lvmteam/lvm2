@@ -131,6 +131,7 @@ dnl keep utility scripts running properly
 AC_OUTPUT( 								\
 Makefile								\
 make.tmpl                                                               \
+include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
