@@ -35,7 +35,7 @@ INSTALL_TARGETS = \
 	install_clvmd
 
 clvmd: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
-	$(CC) -o clvmd $(OBJECTS) $(LD_FLAGS) $(LVMLIBS) $(LIBS)
+	$(CC) -o clvmd $(OBJECTS) $(LDFLAGS) $(LVMLIBS) $(LIBS)
 
 .PHONY: install_clvmd
 
@@ -44,4 +44,3 @@ install_clvmd: $(TARGETS)
 		$(sbindir)/clvmd
 
 install: $(INSTALL_TARGETS)
-
