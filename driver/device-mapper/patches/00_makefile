@@ -1,5 +1,6 @@
---- linux-2.4.14/drivers/md/Makefile	Mon Sep 24 16:29:14 2001
-+++ linux/drivers/md/Makefile	Wed Nov  7 10:48:26 2001
+diff -ru linux-2.4.16/drivers/md/Makefile linux/drivers/md/Makefile
+--- linux-2.4.16/drivers/md/Makefile	Tue Nov 27 15:55:57 2001
++++ linux/drivers/md/Makefile	Thu Nov 29 10:30:29 2001
 @@ -4,9 +4,12 @@
  
  O_TARGET	:= mddev.o
@@ -7,10 +8,10 @@
 -export-objs	:= md.o xor.o
 +export-objs	:= md.o xor.o dm-table.o dm-target.o
  list-multi	:= lvm-mod.o
- lvm-mod-objs	:= lvm.o lvm-snap.o
+ lvm-mod-objs	:= lvm.o lvm-snap.o lvm-fs.o
 +dm-mod-objs	:= dm.o dm-table.o dm-target.o dmfs-super.o dmfs-root.o \
-+		   dmfs-tdir.o dmfs-table.o dmfs-error.o dmfs-status.o \
-+		   dmfs-lv.o seq_file.o
++		dmfs-lv.o dmfs-table.o dmfs-error.o dmfs-status.o \
++		dmfs-active.o
  
  # Note: link order is important.  All raid personalities
  # and xor.o must come before md.o, as they each initialise 
