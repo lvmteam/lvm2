@@ -92,8 +92,8 @@ int vgrename(int argc, char **argv)
 
 	/* FIXME Should vg_write fix these implicitly? It has to check them. */
 	list_for_each(pvh, &vg_old->pvs) {
-		strcpy(list_entry(pvh, struct pv_list, list)->pv.vg_name, 
-			vg_name_new);
+		strcpy(list_entry(pvh, struct pv_list, list)->pv.vg_name,
+		       vg_name_new);
 	}
 
 /********** FIXME: Check within vg_write now
@@ -147,4 +147,3 @@ char *lv_change_vgname(char *vg_name, char *lv_name)
 	    strncpy(lv_name_buf, lv_name, NAME_LEN - 1); return lv_name_buf;}
 
 **********************/
-

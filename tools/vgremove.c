@@ -32,13 +32,13 @@ static int vgremove_single(const char *vg_name)
 	struct volume_group *vg;
 	struct physical_volume *pv;
 	struct list_head *pvh;
+	int ret = 0;
 
-        log_verbose("Checking for volume group %s", vg_name);
-        if (!(vg = ios->vg_read(ios, vg_name))) {
-                log_error("Volume group %s doesn't exist", vg_name);
-                return ECMD_FAILED;
-        }
-
+	log_verbose("Checking for volume group %s", vg_name);
+	if (!(vg = ios->vg_read(ios, vg_name))) {
+		log_error("Volume group %s doesn't exist", vg_name);
+		return ECMD_FAILED;
+	}
 
 	if (vg->status & ACTIVE) {
 		log_error("Volume group %s is still active", vg_name);
@@ -47,7 +47,7 @@ static int vgremove_single(const char *vg_name)
 
 	if (vg->lv_count) {
 		log_error("Volume group %s still contains %d logical volume(s)",
-			vg_name, vg->lv_count);
+			  vg_name, vg->lv_count);
 		return ECMD_FAILED;
 	}
 
@@ -58,19 +58,23 @@ static int vgremove_single(const char *vg_name)
 	}
 *************/
 
-
 	/* init physical volumes */
 	list_for_each(pvh, &vg->pvs) {
 		pv = &list_entry(pvh, struct pv_list, list)->pv;
 		log_verbose("Removing physical volume %s from volume group %s",
 			    pv->dev->name, vg_name);
-		pv->vg_name = '\0';
-		if (!(ios->pv_write(ios, pv)))
+		*pv->vg_name = '\0';
+		if (!(ios->pv_write(ios, pv))) {
 			log_error("Failed to remove physical volume %s from "
-				"volume group %s", pv->dev->name, vg_name);
+				  "volume group %s", pv->dev->name, vg_name);
+			ret = ECMD_FAILED;
+		}
 	}
 
-	log_print("Volume group %s successfully removed", vg_name);
+	if (!ret)
+		log_print("Volume group %s successfully removed", vg_name);
+	else
+		log_error("Volume group %s not properly removed", vg_name);
 
-	return 0;
+	return ret;
 }

@@ -91,6 +91,10 @@ static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
 		return NULL;
 	}
 
+        /* Strip prefix if present */
+        if (!strncmp(vg_name, is->prefix, strlen(is->prefix)))
+                vg_name += strlen(is->prefix);
+
 	if (!read_pvs_in_vg(vg_name, is->filter, mem, &pvs)) {
 		stack;
 		return NULL;
@@ -295,7 +299,8 @@ static struct list_head *_get_vgs(struct io_space *is)
 	list_for_each(tmp, pvs) {
 		struct pv_list *pvl = list_entry(tmp, struct pv_list, list);
 
-		if (_find_vg_name(names, pvl->pv.vg_name))
+		if (!(*pvl->pv.vg_name) ||  
+	 	     _find_vg_name(names, pvl->pv.vg_name))
 			continue;
 
 		if (!(nl = pool_alloc(is->mem, sizeof(*nl)))) {
@@ -358,8 +363,9 @@ static int _pv_write(struct io_space *is, struct physical_volume *pv)
 
 	INIT_LIST_HEAD(&pvs);
 
-	if (pv->vg_name) {
-		log_info("pv_write should only be called for an orphan pv");
+	if (*pv->vg_name) {
+		log_error("Assertion failed: can't _pv_write non-orphan PV " 
+			  "(in VG %s)", pv->vg_name);
 		return 0;
 	}
 

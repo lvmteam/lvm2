@@ -45,7 +45,5 @@ int vgextend(int argc, char **argv) {return 1;}
 int vgimport(int argc, char **argv) {return 1;}
 int vgmerge(int argc, char **argv) {return 1;}
 int vgmknodes(int argc, char **argv) {return 1;}
-int vgreduce(int argc, char **argv) {return 1;}
-int vgscan(int argc, char **argv) {return 1;}
 int vgsplit(int argc, char **argv) {return 1;}
 
