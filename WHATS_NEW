@@ -1,5 +1,6 @@
 Version 2.01.04 - 
 ===================================
+  lvm2cmd.so should skip the check for open fds.
   Remove unused -f from pvmove.
   Gulm clvmd doesn't report "connection refused" errors.
   clvmd does a basic config file sanity check at startup.

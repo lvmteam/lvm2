@@ -998,8 +998,6 @@ static struct cmd_context *_init_lvm(void)
 {
 	struct cmd_context *cmd;
 
-	_close_stray_fds();
-
 	if (!(cmd = create_toolcontext(&the_args[0]))) {
 		stack;
 		return NULL;
@@ -1416,6 +1414,8 @@ int lvm2_main(int argc, char **argv)
 	char *namebase, *base;
 	int ret, alias = 0;
 	struct cmd_context *cmd;
+
+	_close_stray_fds();
 
 	if (!(cmd = _init_lvm()))
 		return -1;
