@@ -1,3 +1,10 @@
+lvm2 (1.95.10-2) unstable; urgency=low
+
+  * Fix software raid problems by ensuring lvm init script runs after
+    raidtools init script.  (Closes: #152569)
+
+ -- Andres Salomon <dilinger@mp3revolution.net>  Tue,  3 Sep 2002 04:05:43 -0400
+
 lvm2 (1.95.10-1) unstable; urgency=low
 
   * New upstream release (Beta 3.2).
