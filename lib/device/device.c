@@ -13,6 +13,54 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "lib.h"
+#include "lvm-types.h"
+#include "device.h"
+#include "metadata.h"
+#include "filter.h"
+
+#define PART_MAGIC 0xAA55
+
+static int _is_whole_disk(struct device *dev)
+{
+	int parts = max_partitions(MINOR(dev->dev));
+
+	if (!parts || !(MINOR(dev->dev) % parts))
+		return 1;
+
+	return 0;
+}
+
+static int _has_partition_table(struct device *dev)
+{
+	int ret = 0;
+	uint32_t part_magic;
+	uint64_t part_offset;
+
+	if (!dev_open(dev)) {
+		stack;
+		return -1;
+	}
+
+	part_offset = sizeof(unsigned short) * 255;
+	if (dev_read(dev, part_offset, sizeof(part_magic), &part_magic) &&
+	    (part_magic == PART_MAGIC))
+		ret = 1;
+
+	if (!dev_close(dev))
+		stack;
+
+	return ret;
+}
+
+int is_partitioned_dev(struct device *dev)
+{
+	if (_is_whole_disk(dev))
+		return 0;
+
+	return _has_partition_table(dev);
+}
+
 #if 0
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -27,24 +75,13 @@
 #include <linux/major.h>
 #include <linux/genhd.h>
 
-#include "dbg_malloc.h"
-#include "log.h"
-#include "dev-cache.h"
-#include "metadata.h"
-#include "device.h"
-
 int _get_partition_type(struct dev_filter *filter, struct device *d);
 
-#define MINOR_PART(dm, d) (MINOR((d)->dev) % dev_max_partitions(dm, (d)->dev))
+#define MINOR_PART(dev) (MINOR((dev)->dev) % max_partitions(MINOR((dev)->dev)))
 
-int is_whole_disk(struct dev_filter *filter, struct device *d)
+int is_extended_partition(struct device *d)
 {
-	return (MINOR_PART(dm, d)) ? 0 : 1;
-}
-
-int is_extended_partition(struct dev_mgr *dm, struct device *d)
-{
-	return (MINOR_PART(dm, d) > 4) ? 1 : 0;
+	return (MINOR_PART(d) > 4) ? 1 : 0;
 }
 
 struct device *dev_primary(struct dev_mgr *dm, struct device *d)

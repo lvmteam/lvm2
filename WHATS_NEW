@@ -1,5 +1,6 @@
 Version 2.00.26 - 
 =====================================
+  Detect partition table signature.
   pvcreate wipes md superblocks. (With --uuid or --restorefile it prompts.)
   Separate out md superblock detection code.
   Prevent snapshot origin resizing.

@@ -27,6 +27,9 @@
 
 #define NUMBER_OF_MAJORS 4096
 
+/* FIXME Make this sparse */
+static int _max_partitions_by_major[NUMBER_OF_MAJORS];
+
 typedef struct {
 	const char *name;
 	const int max_partitions;
@@ -62,29 +65,34 @@ static const device_info_t device_info[] = {
 static int _passes_lvm_type_device_filter(struct dev_filter *f,
 					  struct device *dev)
 {
-	int fd;
 	const char *name = dev_name(dev);
+	int ret = 1;
 
 	/* Is this a recognised device type? */
-	if (!(((int *) f->private)[MAJOR(dev->dev)])) {
+	if (!_max_partitions_by_major[MAJOR(dev->dev)]) {
 		log_debug("%s: Skipping: Unrecognised LVM device type %"
 			  PRIu64, name, (uint64_t) MAJOR(dev->dev));
 		return 0;
 	}
 
 	/* Check it's accessible */
-	if ((fd = open(name, O_RDONLY)) < 0) {
-		log_debug("%s: Skipping: open failed: %s", name,
-			  strerror(errno));
+	if (!dev_open_flags(dev, O_RDONLY, 0, 0)) {
+		log_debug("%s: Skipping: open failed", name);
 		return 0;
 	}
+	
+	if (is_partitioned_dev(dev)) {
+		log_debug("%s: Skipping: partition table signature found",
+			  name);
+		ret = 0;
+	}
 
-	close(fd);
+	dev_close(dev);
 
-	return 1;
+	return ret;
 }
 
-static int *_scan_proc_dev(const char *proc, const struct config_node *cn)
+static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 {
 	char line[80];
 	char proc_devices[PATH_MAX];
@@ -94,36 +102,29 @@ static int *_scan_proc_dev(const char *proc, const struct config_node *cn)
 	int blocksection = 0;
 	size_t dev_len = 0;
 	struct config_value *cv;
-	int *max_partitions_by_major;
 	char *name;
-
-	/* FIXME Make this sparse */
-	if (!(max_partitions_by_major =
-	      dbg_malloc(sizeof(int) * NUMBER_OF_MAJORS))) {
-		log_error("Filter failed to allocate max_partitions_by_major");
-		return NULL;
-	}
 
 	if (!*proc) {
 		log_verbose("No proc filesystem found: using all block device "
 			    "types");
 		for (i = 0; i < NUMBER_OF_MAJORS; i++)
-			max_partitions_by_major[i] = 1;
-		return max_partitions_by_major;
+			_max_partitions_by_major[i] = 1;
+		return 1;
 	}
+
+	memset(_max_partitions_by_major, 0, sizeof(int) * NUMBER_OF_MAJORS);
 
 	if (lvm_snprintf(proc_devices, sizeof(proc_devices),
 			 "%s/devices", proc) < 0) {
 		log_error("Failed to create /proc/devices string");
-		return NULL;
+		return 0;
 	}
 
 	if (!(pd = fopen(proc_devices, "r"))) {
 		log_sys_error("fopen", proc_devices);
-		return NULL;
+		return 0;
 	}
 
-	memset(max_partitions_by_major, 0, sizeof(int) * NUMBER_OF_MAJORS);
 	while (fgets(line, 80, pd) != NULL) {
 		i = 0;
 		while (line[i] == ' ' && line[i] != '\0')
@@ -158,13 +159,13 @@ static int *_scan_proc_dev(const char *proc, const struct config_node *cn)
 			if (dev_len <= strlen(line + i) &&
 			    !strncmp(device_info[j].name, line + i, dev_len) &&
 			    (line_maj < NUMBER_OF_MAJORS)) {
-				max_partitions_by_major[line_maj] =
+				_max_partitions_by_major[line_maj] =
 				    device_info[j].max_partitions;
 				break;
 			}
 		}
 
-		if (max_partitions_by_major[line_maj] || !cn)
+		if (_max_partitions_by_major[line_maj] || !cn)
 			continue;
 
 		/* Check devices/types for local variations */
@@ -172,7 +173,7 @@ static int *_scan_proc_dev(const char *proc, const struct config_node *cn)
 			if (cv->type != CFG_STRING) {
 				log_error("Expecting string in devices/types "
 					  "in config file");
-				return NULL;
+				return 0;
 			}
 			dev_len = strlen(cv->v.str);
 			name = cv->v.str;
@@ -181,24 +182,29 @@ static int *_scan_proc_dev(const char *proc, const struct config_node *cn)
 				log_error("Max partition count missing for %s "
 					  "in devices/types in config file",
 					  name);
-				return NULL;
+				return 0;
 			}
 			if (!cv->v.i) {
 				log_error("Zero partition count invalid for "
 					  "%s in devices/types in config file",
 					  name);
-				return NULL;
+				return 0;
 			}
 			if (dev_len <= strlen(line + i) &&
 			    !strncmp(name, line + i, dev_len) &&
 			    (line_maj < NUMBER_OF_MAJORS)) {
-				max_partitions_by_major[line_maj] = cv->v.i;
+				_max_partitions_by_major[line_maj] = cv->v.i;
 				break;
 			}
 		}
 	}
 	fclose(pd);
-	return max_partitions_by_major;
+	return 1;
+}
+
+int max_partitions(int major)
+{
+	return _max_partitions_by_major[major];
 }
 
 struct dev_filter *lvm_type_filter_create(const char *proc,
@@ -213,8 +219,9 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 
 	f->passes_filter = _passes_lvm_type_device_filter;
 	f->destroy = lvm_type_filter_destroy;
+	f->private = NULL;
 
-	if (!(f->private = _scan_proc_dev(proc, cn))) {
+	if (!_scan_proc_dev(proc, cn)) {
 		stack;
 		return NULL;
 	}
@@ -224,7 +231,6 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 
 void lvm_type_filter_destroy(struct dev_filter *f)
 {
-	dbg_free(f->private);
 	dbg_free(f);
 	return;
 }
