@@ -35,6 +35,9 @@ void dm_task_destroy(struct dm_task *dmt)
 		free(t);
 	}
 
+	if (dmt->newname)
+		free(dmt->newname);
+
 	if (dmt->dmi)
 		free(dmt->dmi);
 
@@ -59,6 +62,16 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 int dm_task_set_ro(struct dm_task *dmt)
 {
 	dmt->read_only = 1;
+	return 1;
+}
+
+int dm_task_set_newname(struct dm_task *dmt, const char *newname)
+{
+	if (!(dmt->newname = strdup(newname))) {
+		log("dm_task_set_newname: strdup(%s) failed", newname);
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -154,6 +167,14 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 		count++;
 	}
 
+	if (count && dmt->newname) {
+		log("targets and newname are incompatible");
+		return NULL;
+	}
+
+	if (dmt->newname)
+		len += strlen(dmt->newname) + 1;
+
 	if (!(dmi = malloc(len)))
 		return NULL;
 
@@ -175,6 +196,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	for (t = dmt->head; t; t = t->next)
 		if (!(b = _add_target(t, b, e)))
 			goto bad;
+
+	if (dmt->newname)
+		strcpy(b, dmt->newname);
 
 	return dmi;
 
@@ -225,6 +249,10 @@ int dm_task_run(struct dm_task *dmt)
 
 	case DM_DEVICE_INFO:
 		command = DM_INFO;
+		break;
+
+	case DM_DEVICE_RENAME:
+		command = DM_RENAME;
 		break;
 
 	default:
