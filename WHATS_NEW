@@ -1,5 +1,6 @@
 Version 2.01.06 - 
 ====================================
+  Suppress 'open failed' error messages during scanning.
   Fix default value of metadatacopies in documentation (2->1).
   Fix clvmd-gulm locking.
   ./configure --enable-debug now enables debugging code in clvmd.

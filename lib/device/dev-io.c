@@ -341,7 +341,10 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 #endif
 
 	if ((dev->fd = open(name, flags, 0777)) < 0) {
-		log_sys_error("open", name);
+		if (quiet)
+			log_sys_debug("open", name);
+		else
+			log_sys_error("open", name);
 		return 0;
 	}
 
