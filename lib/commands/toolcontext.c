@@ -23,6 +23,7 @@
 #include "activate.h"
 #include "filter.h"
 #include "filter-composite.h"
+#include "filter-md.h"
 #include "filter-persistent.h"
 #include "filter-regex.h"
 #include "filter-sysfs.h"
@@ -275,7 +276,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_FILTERS 3
+#define MAX_FILTERS 4
 
 static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
@@ -285,14 +286,24 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 	memset(filters, 0, sizeof(filters));
 
-	/* sysfs filter */
+	/*
+	 * Filters listed in order: top one gets applied first.
+	 * Failure to initialise some filters is not fatal.
+	 * Update MAX_FILTERS definition above when adding new filters.
+	 */
+
+	/*
+	 * sysfs filter. Only available on 2.6 kernels.  Non-critical.
+	 * Listed first because it's very efficient at eliminating 
+	 * unavailable devices.
+	 */
 	if (find_config_bool(cmd->cft->root, "devices/sysfs_scan",
 			     DEFAULT_SYSFS_SCAN)) {
 		if ((filters[nr_filt] = sysfs_filter_create(cmd->proc_dir)))
 			nr_filt++;
 	}
 
-	/* regex filter */
+	/* regex filter. Optional. */
 	if (!(cn = find_config_node(cmd->cft->root, "devices/filter")))
 		log_debug("devices/filter not found in config file: no regex "
 			  "filter installed");
@@ -302,14 +313,21 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	/* device type filter */
+	/* device type filter. Required. */
 	cn = find_config_node(cmd->cft->root, "devices/types");
 	if (!(filters[nr_filt++] = lvm_type_filter_create(cmd->proc_dir, cn))) {
 		log_error("Failed to create lvm type filter");
 		return NULL;
 	}
 
-	/* only build a composite filter if we really need it */
+	/* md component filter. Optional, non-critical. */
+	if (find_config_bool(cmd->cft->root, "devices/md_component_detection",
+			     DEFAULT_MD_COMPONENT_DETECTION)) {
+		if ((filters[nr_filt] = md_filter_create()))
+			nr_filt++;
+	}
+
+	/* Only build a composite filter if we really need it. */
 	return (nr_filt == 1) ?
 	    filters[0] : composite_filter_create(nr_filt, filters);
 }

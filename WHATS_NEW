@@ -1,5 +1,7 @@
-Version 2.00.13 - 64 Apr 2004
+Version 2.00.13 - 16 Apr 2004
 =============================
+  Set devices/md_component_detection = 1 to ignore devices containing md
+  superblocks. [Luca Berra]
   Ignore error setting selinux file context if fs doesn't support it.
 
 Version 2.00.12 - 14 Apr 2004
