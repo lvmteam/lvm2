@@ -662,3 +662,22 @@ void vgdisplay_short(struct volume_group *vg)
 			       SIZE_SHORT));
 	return;
 }
+
+void display_formats(struct cmd_context *cmd)
+{
+	struct format_type *fmt;
+
+	list_iterate_items(fmt, &cmd->formats) {
+		log_print("%s", fmt->name);
+	}
+}
+
+void display_segtypes(struct cmd_context *cmd)
+{
+	struct segment_type *segtype;
+
+	list_iterate_items(segtype, &cmd->segtypes) {
+		log_print("%s", segtype->name);
+	}
+}
+

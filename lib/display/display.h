@@ -45,6 +45,9 @@ void vgdisplay_full(struct volume_group *vg);
 void vgdisplay_colons(struct volume_group *vg);
 void vgdisplay_short(struct volume_group *vg);
 
+void display_formats(struct cmd_context *cmd);
+void display_segtypes(struct cmd_context *cmd);
+
 /*
  * Allocation policy display conversion routines.
  */
