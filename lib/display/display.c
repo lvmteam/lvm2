@@ -202,6 +202,12 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	uint32_t alloc;
 	struct dm_info info;
 	int inkernel;
+	char uuid[64];
+
+	if (!id_write_format(&lv->id, uuid, sizeof(uuid))) {
+		stack;
+		return 0;
+	}
 
 	inkernel = lv_info(lv, &info) && info.exists;
 
@@ -210,6 +216,8 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	log_print("LV Name                %s%s/%s", lv->vg->cmd->dev_dir,
 		  lv->vg->name, lv->name);
 	log_print("VG Name                %s", lv->vg->name);
+
+	log_print("LV UUID                %s", uuid);
 
 	log_print("LV Write Access        %s",
 		  (lv->status & LVM_WRITE) ? "read/write" : "read only");

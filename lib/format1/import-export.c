@@ -273,6 +273,9 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 {
 	memset(&lv->id, 0, sizeof(lv->id));
+
+	id_from_lvnum(&lv->id, lvd->lv_number);
+
         if (!(lv->name = _create_lv_name(mem, lvd->lv_name))) {
 		stack;
 		return 0;

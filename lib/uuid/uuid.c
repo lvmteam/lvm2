@@ -19,6 +19,32 @@ static unsigned char _c[] =
 static int _built_inverse;
 static unsigned char _inverse_c[256];
 
+int id_from_lvnum(struct id *id, int lv_num)
+{
+	int i;
+
+	for (i = ID_LEN; i; i--) {
+		id->uuid[i - 1] = _c[lv_num % (sizeof(_c) - 1)];
+		lv_num /= sizeof(_c) - 1;
+	}
+
+	return 1;
+}
+
+int lvnum_from_id(struct id *id)
+{
+	int i, lv_num = 0;
+	unsigned char *c;
+
+	for (i = 0; i < ID_LEN; i++) {
+		lv_num *= sizeof(_c) - 1;
+		if ((c = strchr(_c, id->uuid[i])))
+			lv_num += (int) (c - _c);
+	}
+
+	return lv_num;
+}
+
 int id_create(struct id *id)
 {
 	int random, i, len = sizeof(id->uuid);

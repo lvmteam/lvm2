@@ -354,6 +354,13 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 		_out(f, "%s {", lv->name);
 		_inc_indent(f);
 
+		if (!id_write_format(&lv->id, buffer, sizeof(buffer))) {
+			stack;
+			return 0;
+		}
+
+		_out(f, "id = \"%s\"", buffer);
+
 		if (!print_flags(lv->status, LV_FLAGS,
 				 buffer, sizeof(buffer))) {
 			stack;

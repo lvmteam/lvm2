@@ -15,6 +15,9 @@ struct id {
 	uint8_t uuid[ID_LEN];
 };
 
+int id_from_lvnum(struct id *id, int lv_num);
+int lvnum_from_id(struct id *id);
+
 int id_create(struct id *id);
 int id_valid(struct id *id);
 int id_equal(struct id *lhs, struct id *rhs);
