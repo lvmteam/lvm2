@@ -75,7 +75,7 @@ int init_cluster()
 	/* Open the cluster communication socket */
 	cluster_sock = socket(AF_CLUSTER, SOCK_DGRAM, CLPROTO_CLIENT);
 	if (cluster_sock == -1) {
-		perror("Can't open cluster socket");
+		log_error("Can't open cluster socket");
 		return -1;
 	}
 
@@ -320,7 +320,7 @@ static void get_members()
 
 	num_nodes = ioctl(cluster_sock, SIOCCLUSTER_GETMEMBERS, 0);
 	if (num_nodes == -1) {
-		perror("get nodes");
+		log_error("Unable to get node count");
 	} else {
 	        /* Not enough room for new nodes list ? */
 	        if (num_nodes > count_nodes && nodes) {
@@ -332,7 +332,7 @@ static void get_members()
 		        count_nodes = num_nodes + 10; /* Overallocate a little */
 		        nodes = malloc(count_nodes * sizeof(struct cl_cluster_node));
 			if (!nodes) {
-			        perror("Unable to allocate nodes array\n");
+			        log_error("Unable to allocate nodes array\n");
 				exit(5);
 			}
 		}
@@ -341,7 +341,7 @@ static void get_members()
 
 		num_nodes = ioctl(cluster_sock, SIOCCLUSTER_GETMEMBERS, &nodelist);
 		if (num_nodes <= 0) {
-		        perror("get node details");
+		        log_error("Unable to get node details");
 			exit(6);
 		}
 
