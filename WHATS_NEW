@@ -1,5 +1,8 @@
-Version 2.00.19 -
+Version 2.00.19 - 29 June 2004
 ==============================
+  Reduce severity of setlocale failure message.
+  Recognise argv[0] "initrd-lvm" (pld-linux).
+  Make -O2 configurable.
   Added --disable-selinux to configure script.
   LD_FLAGS->LDFLAGS & LD_DEPS->LDDEPS in configure script.
   Add init_debug to clvmd.
