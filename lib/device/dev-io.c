@@ -51,12 +51,6 @@
 #  endif
 #endif
 
-
-/* FIXME Use _llseek for 64-bit
-_syscall5(int,  _llseek,  uint,  fd, ulong, hi, ulong, lo, loff_t *, res, uint, wh);
- if (_llseek((unsigned) fd, (ulong) (offset >> 32), (ulong) (offset & 0xFFFFFFFF), &pos, SEEK_SET) < 0) { 
-*/
-
 static LIST_INIT(_open_devices);
 
 /*-----------------------------------------------------------------
