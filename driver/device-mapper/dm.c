@@ -346,7 +346,7 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 	int r, minor = MINOR(bh->b_rdev);
 
 	if (minor >= MAX_DEVICES)
-		return -ENXIO;
+		goto bad_no_lock;
 
 	rl;
 	md = _devs[minor];
@@ -359,11 +359,10 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 		ru;
 		r = queue_io(md, bh, rw);
 
-		if (r < 0) {
-			buffer_IO_error(bh);
-			return 0;
+		if (r < 0)
+			goto bad_no_lock;
 
-		} else if (r > 0)
+		else if (r > 0)
 			return 0; /* deferred successfully */
 
 		rl;	/* FIXME: there's still a race here */
@@ -377,6 +376,8 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 
  bad:
 	ru;
+
+ bad_no_lock:
 	buffer_IO_error(bh);
 	return 0;
 }
