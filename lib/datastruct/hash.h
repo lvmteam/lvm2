@@ -14,6 +14,7 @@ typedef void (*iterate_fn)(void *data);
 
 struct hash_table *hash_create(unsigned size_hint);
 void hash_destroy(struct hash_table *t);
+void hash_wipe(struct hash_table *t);
 
 void *hash_lookup(struct hash_table *t, const char *key);
 int hash_insert(struct hash_table *t, const char *key, void *data);

@@ -29,6 +29,9 @@ int vgscan(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+        log_verbose("Wiping cache of LVM-capable devices");
+        persistent_filter_wipe(ios->filter);
+
 	log_print("Reading all physical volumes (this may take a while...)");
 
 	return process_each_vg(argc, argv, &vgscan_single);

@@ -53,8 +53,10 @@ int pvscan(int argc, char **argv)
 			  arg_count(exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 
-	log_verbose("Walking through all physical volumes");
+	log_verbose("Wiping cache of LVM-capable devices");
+	persistent_filter_wipe(ios->filter);
 
+	log_verbose("Walking through all physical volumes");
 	if (!(pvs = ios->get_pvs(ios)))
 		return ECMD_FAILED;
 

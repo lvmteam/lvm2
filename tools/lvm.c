@@ -49,6 +49,8 @@ static struct command *_commands;
 struct io_space *ios;
 
 static struct dev_filter *_filter;
+/* Whether or not to dump persistent filter state */
+static int dump_filter;
 static struct config_file *_cf;
 
 static int _interactive;
@@ -642,6 +644,8 @@ static struct dev_filter *filter_setup(void)
 	struct dev_filter *f3, *f4;
 	struct stat st;
 
+	dump_filter = 0;
+
 	if (!(f3 = filter_components_setup()))
 		return 0;
 
@@ -650,9 +654,13 @@ static struct dev_filter *filter_setup(void)
 
 	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
 		log_error("Failed to create persistent device filter");
-		return f3;
+		return 0;
 	}
 
+	/* Should we ever dump persistent filter state? */
+	if (find_config_int(_cf->root, "devices/write_cache_state", '/', 1))
+		dump_filter = 1;
+	
 	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
 		log_verbose("Failed to load existing device cache from %s",
 			    lvm_cache);
@@ -728,6 +736,9 @@ static void __fin_commands(void)
 
 static void fin(void)
 {
+	if (dump_filter)
+		persistent_filter_dump(_filter);
+
 	ios->destroy(ios);
 	_filter->destroy(_filter);
 	dev_cache_exit();
