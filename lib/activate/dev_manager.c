@@ -2068,10 +2068,10 @@ static int _targets_present(struct dev_manager *dm, struct list *lvs)
 			list_iterate(segh, &lv->segments) {
 				seg = list_item(segh, struct lv_segment);
 				if (seg->segtype->ops->target_present &&
-		    		    !seg->segtype->ops->target_present()) {
+				    !seg->segtype->ops->target_present()) {
 					log_error("Can't expand LV: %s target "
 						  "support missing "
-				  	  	  "from kernel?",
+						  "from kernel?",
 						  seg->segtype->name);
 					return 0;
 				}

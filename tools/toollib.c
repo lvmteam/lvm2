@@ -827,7 +827,7 @@ struct list *create_pv_list(struct pool *mem,
 			}
 			list_iterate_items(pvl, &vg->pvs) {
 				if (str_list_match_item(&pvl->pv->tags,
-				    tagname)) {
+							tagname)) {
 					_create_pv_entry(mem, pvl, NULL, r);
 				}
 			}
