@@ -10,6 +10,10 @@
 #include "log.h"
 #include "fs.h"
 #include "lvm-string.h"
+#include "names.h"
+
+#include <limits.h>
+
 
 int library_version(char *version, size_t size)
 {
@@ -18,14 +22,9 @@ int library_version(char *version, size_t size)
 	return 1;
 }
 
-static void _build_lv_name(char *buffer, size_t s, const char *vg_name,
-			   const char *lv_name)
-{
-	snprintf(buffer, s, "%s_%s", vg_name, lv_name);
-}
-
 static struct dm_task *_setup_task_with_name(struct logical_volume *lv,
-				   	     const char *lv_name, int task)
+					     const char *lv_name,
+				   	     int task)
 {
 	char name[128];
 	struct dm_task *dmt;
@@ -35,7 +34,11 @@ static struct dm_task *_setup_task_with_name(struct logical_volume *lv,
 		return NULL;
 	}
 
-	_build_lv_name(name, sizeof(name), lv->vg->name, lv_name);
+	if (!build_dm_name(name, sizeof(name), lv->vg->name, lv_name)) {
+		stack;
+		return NULL;
+	}
+
 	dm_task_set_name(dmt, name);
 
 	return dmt;
@@ -101,7 +104,7 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 int lv_rename(const char *old_name, struct logical_volume *lv)
 {
 	int r = 0;
-	char new_name[128];
+	char new_name[PATH_MAX];
 	struct dm_task *dmt;
 
 	if (test_mode())
@@ -112,7 +115,11 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
 		return 0;
 	}
 
-	_build_lv_name(new_name, sizeof(new_name), lv->vg->name, lv->name);
+	if (!build_dm_name(new_name, sizeof(new_name),
+			   lv->vg->name, lv->name)) {
+		stack;
+		return 0;
+	}
 
 	if (!dm_task_set_newname(dmt, new_name)) {
 		stack;
