@@ -1,0 +1,49 @@
+# An example volume group
+
+vg {
+	id = "ksjdlfksjldskjlsk"
+	name = "sample_volume_group"
+
+	status = [???]
+
+	extent_size = 8192 	# 4M
+	extent_count = 1024
+	free_count = 430
+
+	max_lv = 99
+        max_pv = 255
+
+	physical_volumes = ["pv1", "pv2"]
+	logical_volumes = ["lv1", "lv2"]
+}
+
+pv1 {
+	id = "lksjdflksdlsk"
+
+	major = 123
+	minor = 23
+
+	status = [???]
+        size = ??
+
+	pe_start = 8192
+        pe_count = 300
+        pe_allocated = 30
+}
+
+lv1 {
+	id = "lksdflskj"
+        name = "music"
+
+        status = [???]
+	read_ahead = 1024
+	stripes = 1
+
+        size = ??
+        le_count = 30
+
+        map = ["pv1", 0,
+	       "pv2", 1,
+	       ...
+              ]
+}
