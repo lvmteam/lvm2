@@ -21,6 +21,10 @@ running lvreduce so that the extents that are to be removed are not in use.
 Shrinking snapshot logical volumes (see
 .B lvcreate(8)
 for information to create snapshots) is supported as well.
+.br
+Sizes will be rounded if necessary - for example, the volume size must
+be an exact number of extents and the size of a striped segment must
+be a multiple of the number of stripes.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -41,11 +45,12 @@ With the - sign the value will be subtracted from
 the logical volume's actual size and without it it will be taken as
 an absolute size.
 .SH Example
-"lvreduce -l -3 /dev/vg00/lvol1" reduces the size of logical volume lvol1
+"lvreduce -l -3 vg00/lvol1" reduces the size of logical volume lvol1
 in volume group vg00 by 3 logical extents.
 .SH SEE ALSO
-.BR lvm (8), 
+.BR lvchange (8),
 .BR lvcreate (8), 
 .BR lvextend (8), 
-.BR lvresize (8), 
-.BR lvchange (8)
+.BR lvm (8), 
+.BR lvresize (8),
+.BR vgreduce (8)

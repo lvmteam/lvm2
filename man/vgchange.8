@@ -3,22 +3,24 @@
 vgchange \- change attributes of a volume group
 .SH SYNOPSIS
 .B vgchange
-.RB [\-\-addtag
+.RB [ \-\-addtag
 .IR Tag ]
-.RB [\-A | \-\-autobackup " {" y | n }]
-.RB [\-a | \-\-available " [e|l] {" y | n }]
-.RB [\-d | \-\-debug]
-.RB [\-\-deltag
+.RB [ \-\-alloc
+.IR AllocationPolicy ]
+.RB [ \-A | \-\-autobackup " {" y | n }]
+.RB [ \-a | \-\-available " [e|l] {" y | n }]
+.RB [ \-d | \-\-debug]
+.RB [ \-\-deltag
 .IR Tag ]
-.RB [\-h | \-\-help]
-.RB [\-\-ignorelockingfailure]
-.RB [\-l | \-\-logicalvolume
+.RB [ \-h | \-\-help]
+.RB [ \-\-ignorelockingfailure]
+.RB [ \-l | \-\-logicalvolume
 .IR MaxLogicalVolumes ]
-.RB [\-P | \-\-partial]
-.RB [-t | \-\-test]
-.RB [\-v | \-\-verbose]
-.RB [\-\-version ]
-.RB [\-x | \-\-resizeable " {" y | n }]
+.RB [ \-P | \-\-partial]
+.RB [ -t | \-\-test]
+.RB [ \-v | \-\-verbose]
+.RB [ \-\-version ]
+.RB [ \-x | \-\-resizeable " {" y | n }]
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 .B vgchange

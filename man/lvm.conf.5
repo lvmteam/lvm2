@@ -4,9 +4,13 @@ lvm.conf \- Configuration file for LVM2
 .SH SYNOPSIS
 .B /etc/lvm/lvm.conf
 .SH DESCRIPTION
-lvm.conf is loaded once, during the initialisation phase of 
-\fBlvm\fP.
+lvm.conf is loaded during the initialisation phase of 
+\fBlvm\fP (8).  This file can in turn lead to other files
+being loaded - settings read in later override earlier
+settings.  File timestamps are checked between commands and if 
+any have changed, all the files are reloaded.  
 .LP
+Use \fBlvm dumpconfig\fP to check what settings are in use.
 .SH SYNTAX
 .LP
 This section describes the configuration file syntax.
@@ -69,7 +73,8 @@ The sections that may be present in the file are:
 \fBdevices\fP \(em Device settings
 .IP
 \fBdir\fP \(em Directory in which to create volume group device nodes.
-Defaults to "/dev".
+Defaults to "/dev".  Commands also accept this as a prefix on volume 
+group names.
 .IP
 \fBscan\fP \(em List of directories to scan recursively for 
 LVM physical volumes.
@@ -81,8 +86,13 @@ Patterns are regular expressions delimited by any character and preceded
 by \fBa\fP (for accept) or \fBr\fP (for reject).  The list is traversed
 in order, and the first regex that matches determines if the device
 will be accepted or rejected (ignored).  Devices that don't match
-any patterns are accepted.
-For example, to ignore /dev/cdrom you could use:
+any patterns are accepted. If you want to reject patterns that
+don't match, end the list with "r/.*/".
+If there are several names for the same device (e.g. symbolic links
+in /dev), if any name matches any \fBa\fP pattern, the
+device is accepted; otherwise if any name matches any \fBr\fP
+pattern it is rejected; otherwise it is accepted.
+As an example, to ignore /dev/cdrom you could use:
 \fBdevices { filter=["r|cdrom|"] }\fP 
 .IP
 \fBcache\fP \(em Persistent filter cache file.
@@ -95,9 +105,23 @@ Defaults to 1.
 \fBtypes\fP \(em List of pairs of additional acceptable block device types
 found in /proc/devices together with maximum (non-zero) number of
 partitions (normally 16).  By default, LVM2 supports ide, sd, md, loop, 
-dasd, dac960, nbd, ida, cciss, ubd and ataraid.  Block devices with major
-numbers of different types are ignored by LVM2.  Example:
-\fBtypes = ["fd", 16]\fP
+dasd, dac960, nbd, ida, cciss, ubd, ataraid, drbd, power2, i2o_block
+and iseries/vd.  Block devices with major
+numbers of different types are ignored by LVM2.  
+Example: \fBtypes = ["fd", 16]\fP.
+To create physical volumes on device-mapper volumes
+created outside LVM2, perhaps encrypted ones from \fBcryptsetup\fP,
+you'll need \fBtypes = ["device-mapper", 16]\fP.  But if you do this,
+be careful to avoid recursion within LVM2.
+.IP
+\fBsysfs_scan\fP (em If set to 1 and your kernel supports sysfs and 
+it is mounted, sysfs will be used as a quick way of filtering out
+block devices that are not present.
+.IP
+\fBmd_component_detection\fP (em If set to 1, LVM2 will ignore devices
+used as components of software RAID (md) devices by looking for md
+superblocks. This doesn't always work satisfactorily e.g. if a device 
+has been reused without wiping the md superblocks first.
 .TP
 \fBlog\fP \(em Default log settings
 .IP
@@ -120,7 +144,8 @@ See /usr/include/sys/syslog.h for safe facility values to use.
 For example, LOG_LOCAL0 might be 128.
 .IP
 \fBindent\fP \(em When set to 1 (the default) messages are indented 
-according to their severity.  Set to 0 to turn off indentation.
+according to their severity, two spaces per level.  
+Set to 0 to turn off indentation.
 .IP
 \fBcommand_names\fP \(em When set to 1, the command name is used as a
 prefix for each message.
@@ -128,6 +153,11 @@ Default is 0 (off).
 .IP
 \fBprefix\fP \(em Prefix used for all messages (after the command name).
 Default is two spaces.
+.IP
+\fBactivation\fP \(em Set to 1 to log messages while
+devices are suspended during activation.  
+Only set this temporarily while debugging a problem because
+in low memory situations this setting can cause your machine to lock up.
 .TP
 \fBbackup\fP \(em Configuration for metadata backups.
 .IP
@@ -165,8 +195,13 @@ Defaults to 30.
 .TP
 \fBglobal\fP \(em Global settings
 .IP
-\fBtest\fP \(em If set to 1, run tools in test mode i.e. no metadata
-gets updated.
+\fBtest\fP \(em If set to 1, run tools in test mode i.e. no changes to
+the on-disk metadata will get made.  It's equivalent to having the
+-t option on every command.
+.IP
+\fBactivation\fP \(em Set to 0 to turn off all communication with
+the device-mapper driver.  Useful if you want to manipulate logical
+volumes while device-mapper is not present in your kernel.
 .IP
 \fBproc\fP \(em Mount point of proc filesystem.
 Defaults to /proc.
@@ -177,8 +212,6 @@ Defaults to 077.
 Use 022 to allow other users to read the files by default.
 .SH FILES
 .I /etc/lvm/lvm.conf
-.br
-.I $HOME/.lvm_history
 .SH SEE ALSO
 .BR lvm (8)
 .BR umask (2)
