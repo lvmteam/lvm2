@@ -239,8 +239,7 @@ struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 
 	list_iterate(pvh, &vg->pvs) {
 		pvl = list_item(pvh, struct pv_list);
-		/* FIXME check dev not name */
-		if (!strcmp(dev_name(pvl->pv->dev), pv_name))
+		if (pvl->pv->dev == dev_cache_get(pv_name, vg->cmd->filter))
 			return pvl;
 	}
 
