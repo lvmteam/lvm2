@@ -344,7 +344,7 @@ struct disk_list *read_disk(struct device *dev, struct pool *mem,
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		   struct pool *mem, struct list *head)
 {
-	struct dev_iter *iter = dev_iter_create(filter);
+	struct dev_iter *iter;
 	struct device *dev;
 	struct disk_list *data = NULL;
 
@@ -364,10 +364,14 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		     list_size(head) == data->vgd.pv_cur))
 			return 1;
 
-		/* Something changed. */
+		/* Something changed. Remove the hints. */
 		list_init(head);
-		/* FIXME Do at a lower level? */
 		vgcache_del(vg_name);
+	}
+
+	if (!(iter = dev_iter_create(filter))) {
+		log_error("read_pvs_in_vg: dev_iter_create failed");
+		return 0;
 	}
 
 	/* Otherwise do a complete scan */
@@ -498,6 +502,7 @@ static int __write_all_pvd(struct disk_list *data)
 		return 0;
 	}
 
+	vgcache_add(data->pvd.vg_name, data->dev);
 	/*
 	 * Stop here for orphan pv's.
 	 */
