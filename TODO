@@ -1,14 +1,3 @@
-before beta
------------
-
-autobackup/text format
-export/import
-striping
-stats
-snapshots
-pvmove
-64bit review
-
 before alpha
 ------------
 
@@ -19,3 +8,26 @@ file system handling (being done)
 error message review
 correct handling of *existing* snapshots
 review statics
+review consistency checks for full compatibility with LVM1
+iospace split/rename
+
+before beta1
+-----------
+
+autobackup/text format
+export/import
+striping
+64bit review
+
+before 2.0
+----------
+
+partial activation
+atomic transactions
+persistent minors
+stats
+snapshots
+pvmove
+
+
+
