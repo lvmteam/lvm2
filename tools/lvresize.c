@@ -34,9 +34,8 @@ int lvresize(int argc, char **argv)
 	char *st;
 	char *dummy;
 	const char *cmd_name;
-	struct list *lvh, *pvh, *pvl;
+	struct list *lvh, *pvh, *pvl, *segh;
 	int opt = 0;
-	int seg;
 
 	enum {
 		LV_ANY = 0,
@@ -179,9 +178,13 @@ int lvresize(int argc, char **argv)
 
 	/* If extending, find stripes, stripesize & size of last segment */
 	if (extents > lv->le_count && (!stripes || !stripesize)) {
-		for (seg = 0; seg < lv->segment_count; seg++) {
-			uint32_t sz = lv->segments[seg]->stripesize;
-			uint32_t str = lv->segments[seg]->stripes;
+		list_iterate(segh, &lv->segments) {
+			struct stripe_segment *seg;
+			uint32_t sz, str;
+
+ 			seg = list_item(segh, struct stripe_segment);
+			sz = seg->stripe_size;
+			str = seg->stripes;
 
 			if ((seg_stripesize && seg_stripesize != sz
 			     && !stripesize) ||
@@ -211,12 +214,16 @@ int lvresize(int argc, char **argv)
 		if (stripes || stripesize)
 			log_error("Ignoring stripes and stripesize arguments "
 				  "when reducing");
-		for (seg = 0; seg < lv->segment_count; seg++) {
-			uint32_t seg_extents = lv->segments[seg]->pe_count *
-			    vg->extent_size;
 
-			seg_stripesize = lv->segments[seg]->stripesize;
-			seg_stripes = lv->segments[seg]->stripes;
+		list_iterate(segh, &lv->segments) {
+			struct stripe_segment *seg;
+			uint32_t seg_extents;
+
+			seg = list_item(segh, struct stripe_segment);
+			seg_extents = seg->len;
+
+			seg_stripesize = seg->stripe_size;
+			seg_stripes = seg->stripes;
 
 			if (extents <= extents_used + seg_extents)
 				break;

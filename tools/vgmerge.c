@@ -116,14 +116,22 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 
 	/* Merge volume groups */
 	while (!list_empty(&vg_from->pvs)) {
-		list_del(&vg_from->pvs);
-		list_add(&vg_to->pvs, &vg_from->pvs);
+		struct list *pvh = vg_from->pvs.n;
+		struct physical_volume *pv;
+
+		list_del(pvh);
+		list_add(&vg_to->pvs, pvh);
+
+		pv = &list_item(pvh, struct pv_list)->pv;
+		pv->vg_name = pool_strdup(fid->cmd->mem, vg_to->name);
 	}
 	vg_to->pv_count += vg_from->pv_count;
 
 	while (!list_empty(&vg_from->lvs)) {
-		list_del(&vg_from->lvs);
-		list_add(&vg_to->lvs, &vg_from->lvs);
+		struct list *lvh = vg_from->lvs.n;
+
+		list_del(lvh);
+		list_add(&vg_to->lvs, lvh);
 	}
 	vg_to->lv_count += vg_from->lv_count;
 

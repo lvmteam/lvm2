@@ -49,6 +49,16 @@ static inline int list_empty(struct list *head) {
 #define list_iterate(v, head) \
     for (v = (head)->n; v != head; v = v->n)
 
+static inline int list_size(struct list *head) {
+	int s = 0;
+	struct list *v;
+
+	list_iterate(v, head)
+		s++;
+
+	return s;
+}
+
 #define list_item(v, t) \
     ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->list))
 

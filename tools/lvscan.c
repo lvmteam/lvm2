@@ -94,9 +94,11 @@ static int lvscan_single(struct logical_volume *lv)
 	dbg_free(dummy);
 
 	/* FIXME sprintf? */
-	/* FIXME Handle segments? */
+	
+/*********** FIXME Handle segments?
 	if (lv->segments[0]->stripes > 1 && !(lv->status & SNAPSHOT))
 		log_print(" striped[%u]", lv->segments[0]->stripes);
+****************/
 
 /******** FIXME Device number display & Snapshot
 		if (arg_count(blockdevice_ARG))
