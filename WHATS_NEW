@@ -1,7 +1,9 @@
 Version 2.01.06 - 
 ====================================
   Fix clvmd-gulm locking.
-  ./configure --enable-debug now enables debugging code in clvmd
+  ./configure --enable-debug now enables debugging code in clvmd.
+  Fix clvmd-gulm node up/down code so it actually works.
+  clvmd-gulm now releases locks when shut down.
 
 Version 2.01.05 - 18th February 2005
 ====================================

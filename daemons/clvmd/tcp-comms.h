@@ -10,3 +10,4 @@ int get_main_gulm_cluster_fd(void);
 int cluster_fd_gulm_callback(struct local_client *fd, char *buf, int len, char *csid, struct local_client **new_client);
 int gulm_cluster_send_message(void *buf, int msglen, char *csid, const char *errtext);
 void get_our_gulm_csid(char *csid);
+int gulm_connect_csid(char *csid, struct local_client **newclient);

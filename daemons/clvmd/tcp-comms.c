@@ -2,6 +2,7 @@
 *******************************************************************************
 **
 **  Copyright (C) Sistina Software, Inc.  2002-2003  All rights reserved.
+**  Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
 **
 *******************************************************************************
 ******************************************************************************/
@@ -280,13 +281,14 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
 	add_down_node(remcsid);
     }
     else {
+	    gulm_add_up_node(csid);
 	    /* Send it back to clvmd */
 	    process_message(client, buf, len, csid);
     }
     return status;
 }
 
-static int connect_csid(char *csid, struct local_client **newclient)
+int gulm_connect_csid(char *csid, struct local_client **newclient)
 {
     int fd;
     struct sockaddr_in6 addr;
@@ -350,7 +352,7 @@ static int tcp_send_message(void *buf, int msglen, unsigned char *csid, const ch
     client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
     if (!client)
     {
-	status = connect_csid(csid, &client);
+	status = gulm_connect_csid(csid, &client);
 	if (status)
 	    return -1;
     }
