@@ -134,17 +134,19 @@ static void _quote_hyphens(char **out, const char *src)
 char *build_dm_name(struct pool *mem, const char *vg,
 		    const char *lv, const char *layer)
 {
-	size_t len = 0;
-	int hyphens = 0;
+	size_t len = 1;
+	int hyphens = 1;
 	char *r, *out;
 
 	_count_hyphens(vg, &len, &hyphens);
 	_count_hyphens(lv, &len, &hyphens);
 
-	if (layer && *layer)
+	if (layer && *layer) {
 		_count_hyphens(layer, &len, &hyphens);
+		hyphens++;
+	}
 
-	len += hyphens + 2;
+	len += hyphens;
 
 	if (!(r = pool_alloc(mem, len))) {
 		stack;
