@@ -43,7 +43,7 @@ void dm_task_destroy(struct dm_task *dmt)
 	free(dmt);
 }
 
-int dm_task_get_driver_version(struct dm_task *dmt, char *version, 
+int dm_task_get_driver_version(struct dm_task *dmt, char *version,
 			       size_t size)
 {
 	if (!dmt->dmi)
@@ -75,6 +75,11 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
+struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
+{
+	return (struct dm_deps *) (((void *) dmt->dmi) + dmt->dmi->data_start);
+}
+
 int dm_task_set_ro(struct dm_task *dmt)
 {
 	dmt->read_only = 1;
@@ -92,8 +97,8 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 }
 
 struct target *create_target(uint64_t start,
-				     uint64_t len,
-				     const char *type, const char *params)
+			     uint64_t len,
+			     const char *type, const char *params)
 {
 	struct target *t = malloc(sizeof(*t));
 
@@ -171,6 +176,8 @@ static void *_add_target(struct target *t, void *out, void *end)
 
 static struct dm_ioctl *_flatten(struct dm_task *dmt)
 {
+	const size_t min_size = 16 * 1024;
+
 	struct dm_ioctl *dmi;
 	struct target *t;
 	size_t len = sizeof(struct dm_ioctl);
@@ -190,6 +197,13 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	if (dmt->newname)
 		len += strlen(dmt->newname) + 1;
+
+	/*
+	 * Give len a minimum size so that we have space to store
+	 * dependencies or status information.
+	 */
+	if (len < min_size)
+		len = min_size;
 
 	if (!(dmi = malloc(len)))
 		return NULL;
@@ -274,6 +288,10 @@ int dm_task_run(struct dm_task *dmt)
 
 	case DM_DEVICE_INFO:
 		command = DM_INFO;
+		break;
+
+	case DM_DEVICE_DEPS:
+		command = DM_DEP;
 		break;
 
 	case DM_DEVICE_RENAME:
