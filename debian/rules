@@ -102,7 +102,6 @@ binary-arch: build install
 	dh_installcron
 	dh_installman
 	dh_installinfo 
-	dh_undocumented
 	dh_installchangelogs
 	dh_strip
 	dh_link
