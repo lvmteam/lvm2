@@ -124,6 +124,8 @@ static inline void _update_vg_lock_count(int flags)
  */
 int init_locking(int type, struct config_tree *cft)
 {
+	init_lockingfailed(0);
+
 	switch (type) {
 	case 0:
 		init_no_locking(&_locking, cft);
@@ -165,6 +167,7 @@ int init_locking(int type, struct config_tree *cft)
 	log_verbose("Locking disabled - only read operations permitted.");
 
 	init_no_locking(&_locking, cft);
+	init_lockingfailed(1);
 
 	return 1;
 }
@@ -321,3 +324,9 @@ int vg_write_lock_held(void)
 {
 	return _vg_write_lock_held;
 }
+
+int locking_is_clustered(void)
+{
+	return (_locking.flags & LCK_CLUSTERED) ? 1 : 0;
+}
+

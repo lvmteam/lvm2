@@ -446,7 +446,7 @@ int init_cluster_locking(struct locking_type *locking, struct config_tree *cft)
 	locking->lock_resource = _lock_resource;
 	locking->fin_locking = _locking_end;
 	locking->reset_locking = _reset_locking;
-	locking->flags = LCK_PRE_MEMLOCK;
+	locking->flags = LCK_PRE_MEMLOCK | LCK_CLUSTERED;
 
 	_clvmd_sock = _open_local_sock();
 	if (_clvmd_sock == -1)
@@ -463,6 +463,7 @@ int locking_init(int type, struct config_tree *cf, uint32_t *flags)
 
 	/* Ask LVM to lock memory before calling us */
 	*flags |= LCK_PRE_MEMLOCK;
+	*flags |= LCK_CLUSTERED;
 
 	return 1;
 }

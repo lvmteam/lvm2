@@ -94,6 +94,12 @@ static int lvchange_availability(struct cmd_context *cmd,
 			return 0;
 		}
 	} else {
+		if (lockingfailed() && (lv->vg->status & CLUSTERED)) {
+                	log_verbose("Locking failed: ignoring clustered "
+				    "logical volume %s", lv->name);
+                	return 0;
+        	}
+
 		if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
 			log_verbose("Activating logical volume \"%s\" "
 				    "exclusively", lv->name);
@@ -361,6 +367,7 @@ static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
 
 	return 1;
 }
+
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle)
 {

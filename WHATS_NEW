@@ -1,5 +1,6 @@
 Version 2.01.08 - 
 ================================
+  Add clustered attribute so vgchange can identify clustered VGs w/o locking.
   Improve detection of external changes affecting internal cache.
   Add 'already in device cache' debug message.
   Add -a to pvdisplay -C.

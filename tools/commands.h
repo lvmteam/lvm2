@@ -566,6 +566,7 @@ xx(vgchange,
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
    "\t{-a|--available [e|l]{y|n}  |" "\n"
+   "\t -c|--clustered {y|n} |" "\n"
    "\t -x|--resizeable {y|n} |" "\n"
    "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
    "\t --addtag Tag |\n"
@@ -573,8 +574,8 @@ xx(vgchange,
    "\t[VolumeGroupName...]\n",
 
    addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, available_ARG,
-   deltag_ARG, ignorelockingfailure_ARG, logicalvolume_ARG, partial_ARG,
-   resizeable_ARG, resizable_ARG, test_ARG, uuid_ARG)
+   clustered_ARG, deltag_ARG, ignorelockingfailure_ARG, logicalvolume_ARG,
+   partial_ARG, resizeable_ARG, resizable_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
@@ -608,6 +609,7 @@ xx(vgcreate,
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--addtag Tag] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
+   "\t[-c|--clustered] " "\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|--help]" "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
@@ -619,7 +621,7 @@ xx(vgcreate,
    "\t[--version] " "\n"
    "\tVolumeGroupName PhysicalVolume [PhysicalVolume...]\n",
 
-   addtag_ARG, alloc_ARG, autobackup_ARG, maxlogicalvolumes_ARG,
+   addtag_ARG, alloc_ARG, autobackup_ARG, clustered_ARG, maxlogicalvolumes_ARG,
    maxphysicalvolumes_ARG, metadatatype_ARG, physicalextentsize_ARG, test_ARG)
 
 xx(vgdisplay,
