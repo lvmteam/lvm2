@@ -125,7 +125,7 @@ void hash_destroy(struct hash_table *t)
 	dbg_free(t);
 }
 
-static inline struct hash_node **_find(struct hash_table *t, const char *key)
+static struct hash_node **_find(struct hash_table *t, const char *key)
 {
 	unsigned h = _hash(key) & (t->num_slots - 1);
 	struct hash_node **c;
