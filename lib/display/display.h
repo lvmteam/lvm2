@@ -31,6 +31,11 @@ char *display_uuid(char *uuidstr);
 
 void pvdisplay_colons(struct physical_volume *pv);
 void pvdisplay_full(struct physical_volume *pv);
+
+void lvdisplay_colons(struct logical_volume *lv);
+void lvdisplay_extents(struct logical_volume *lv);
+void lvdisplay_full(struct logical_volume *lv);
+
 #if 0
 void pv_show_short(pv_t * pv);
 void pv_display_pe(pv_t * pv, pe_disk_t * pe);
