@@ -696,8 +696,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
  */
 struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 {
-	// const char *vgname;
-	// struct list *vgnames, *slh;
+	const char *vgname;
+	struct list *vgnames, *slh;
 	struct volume_group *vg;
 	struct lvmcache_vginfo *vginfo;
 	int consistent = 0;
@@ -716,13 +716,14 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 		}
 	}
 
-	return NULL;
+	/* Mustn't scan if memory locked: ensure cache gets pre-populated! */
+	if (memlock())
+		return NULL;
 
 	/* FIXME Need a genuine read by ID here - don't vg_read by name! */
 	/* FIXME Disabled vgrenames while active for now because we aren't
 	 *       allowed to do a full scan here any more. */
 
-/*** FIXME Cope with vgrename here
 	// The slow way - full scan required to cope with vgrename 
 	if (!(vgnames = get_vgs(cmd, 1))) {
 		log_error("vg_read_by_vgid: get_vgs failed");
@@ -746,7 +747,6 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 	}
 
 	return NULL;
-***/
 }
 
 /* Only called by activate.c */
