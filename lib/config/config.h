@@ -13,6 +13,7 @@ enum {
         CFG_STRING,
         CFG_FLOAT,
         CFG_INT,
+	CFG_EMPTY_ARRAY
 };
 
 struct config_value {
