@@ -32,8 +32,11 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	struct physical_volume *pv;
 
 	/* is the partition type set correctly ? */
-	if ((arg_count(cmd, force_ARG) < 1) && !is_lvm_partition(name))
+	if ((arg_count(cmd, force_ARG) < 1) && !is_lvm_partition(name)) {
+		log_error("%s: Not LVM partition type: use -f to override",
+			  name);
 		return 0;
+	}
 
 	/* is there a pv here already */
 	if (!(pv = cmd->fid->ops->pv_read(cmd->fid, name)))
@@ -54,7 +57,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	/* prompt */
 	if (!arg_count(cmd, yes_ARG) &&
 	    yes_no_prompt(_really_init, name, pv->vg_name) == 'n') {
-		log_print("Physical volume \"%s\" not initialized", name);
+		log_print("%s: physical volume not initialized", name);
 		return 0;
 	}
 
@@ -94,14 +97,15 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 
         size = arg_int64_value(cmd, physicalvolumesize_ARG, 0) * 2;
 	if (!(pv = pv_create(cmd->fid, pv_name, idp, size))) {
-		log_err("Failed to setup physical volume \"%s\"", pv_name);
+		log_error("Failed to setup physical volume \"%s\"", pv_name);
 		return;
 	}
 
 	log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 		    " sectors", pv_name, pv->size);
 
-	log_verbose("Writing physical volume data to disk \"%s\"", pv_name);
+	log_very_verbose("Writing physical volume data to disk \"%s\"",
+			 pv_name);
 	if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		return;

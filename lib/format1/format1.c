@@ -395,15 +395,17 @@ static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 		     struct volume_group *vg)
 {
 	/* setup operations for the PV structure */
-
-	if (pv->size > MAX_PV_SIZE) pv->size--;
+	if (pv->size > MAX_PV_SIZE)
+		pv->size--;
 	if (pv->size > MAX_PV_SIZE) {
-		log_error("physical volumes cannot be bigger than 2TB");
+		/* FIXME Limit hardcoded */
+		log_error("Physical volumes cannot be bigger than 2TB");
 		return 0;
 	}
 
-	/* setup operations which need members derived from the VG */
-	if (!vg) return 1;
+	/* Nothing more to do if pe_size isn't known */
+	if (!vg) 
+		return 1;
 
 	/*
 	 * This works out pe_start and pe_count.

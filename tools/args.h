@@ -10,6 +10,7 @@
  */
 arg(version_ARG, '\0', "version", NULL)
 arg(quiet_ARG, '\0', "quiet", NULL)
+arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", size_arg)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg)
@@ -58,7 +59,6 @@ arg(physicalvolume_ARG, 'P', "physicalvolume", NULL)
 arg(readahead_ARG, 'r', "readahead", int_arg)
 arg(reset_ARG, 'R', "reset", NULL)
 arg(physicalextentsize_ARG, 's', "physicalextentsize", size_arg)
-arg(physicalvolumesize_ARG, 's', "size", size_arg)
 arg(stdin_ARG, 's', "stdin", NULL)
 arg(snapshot_ARG, 's', "snapshot", NULL)
 arg(short_ARG, 's', "short", NULL)

@@ -279,7 +279,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 		if (lv_active(lv) > 0) {
 			dummy =
-			    display_size((unsigned long long)
+			    display_size((uint64_t)
 					 extents * (vg->extent_size / 2),
 					 SIZE_SHORT);
 			log_print("WARNING: Reducing active%s logical volume "
@@ -321,7 +321,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			/* Use full list from VG */
 			pvh = &vg->pvs;
 		}
-		dummy = display_size((unsigned long long)
+		dummy = display_size((uint64_t)
 				     extents * (vg->extent_size / 2),
 				     SIZE_SHORT);
 		log_print("Extending logical volume %s to %s", lv_name, dummy);
