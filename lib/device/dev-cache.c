@@ -186,7 +186,7 @@ static int _add_alias(struct device *dev, const char *path)
 	/* Is name already there? */
 	list_iterate(ah, &dev->aliases) {
 		if (!strcmp(list_item(ah, struct str_list)->str, path)) {
-			stack;
+			log_debug("%s: Already in device cache", path);
 			return 1;
 		}
 	}

@@ -1,5 +1,6 @@
 Version 2.01.08 - 
 ================================
+  Add 'already in device cache' debug message.
   Add -a to pvdisplay -C.
   Avoid rmdir opendir error messsages when dir was already removed.
   Tighten signal handlers.
