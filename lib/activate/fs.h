@@ -9,6 +9,12 @@
 
 #include "metadata.h"
 
+/*
+ * These calls, private to the activate unit, set
+ * up the volume group directory in /dev and the
+ * symbolic links to the dm device.
+ */
+
 int fs_add_lv(struct logical_volume *lv);
 int fs_del_lv(struct logical_volume *lv);
 
