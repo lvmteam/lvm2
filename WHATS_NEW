@@ -1,5 +1,6 @@
 Version 2.00.22 - 
 ==================================
+  Fix /dev/vgname perms.
   Restructure xlate.h.
   Add clvmd man page.
 

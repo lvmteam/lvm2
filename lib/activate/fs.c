@@ -46,7 +46,7 @@ static int _mk_dir(const char *dev_dir, const char *vg_name)
 		return 1;
 
 	log_very_verbose("Creating directory %s", vg_path);
-	if (mkdir(vg_path, 0555)) {
+	if (mkdir(vg_path, 0777)) {
 		log_sys_error("mkdir", vg_path);
 		return 0;
 	}
