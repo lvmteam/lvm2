@@ -342,7 +342,7 @@ char yes_no_prompt(const char *prompt, ...)
 static void register_commands()
 {
 #define xx(a, b, c...) register_command(# a, a, b, ## c, \
-                                        debug_ARG, help_ARG, suspend_ARG, \
+                                        debug_ARG, help_ARG, \
                                         version_ARG, verbose_ARG, \
 					quiet_ARG, -1);
 #include "commands.h"
