@@ -8,15 +8,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <ctype.h>
-#include <errno.h>
-#include <unistd.h>
 #include <getopt.h>
 #include <linux/kdev_t.h>
 
@@ -327,7 +320,8 @@ static int _info(int argc, char **argv)
 
 static int _deps(int argc, char **argv)
 {
-	int r = 0, i;
+	int r = 0;
+	uint32_t i;
 	struct dm_deps *deps;
 
 	/* remove <dev_name> */

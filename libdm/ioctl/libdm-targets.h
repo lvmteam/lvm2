@@ -30,7 +30,7 @@ struct dm_task {
 	int read_only;
 	int minor;
 	union {
-		struct dm_ioctl *v2;
+		struct dm_ioctl *v3;
 		struct dm_ioctl_v1 *v1;
 	} dmi;
 	char *newname;
