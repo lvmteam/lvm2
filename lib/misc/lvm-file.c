@@ -7,6 +7,7 @@
 #include "log.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
+#include "dbg_malloc.h"
 
 #include <stdlib.h>
 #include <unistd.h>
