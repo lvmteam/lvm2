@@ -42,6 +42,8 @@ int lv_rename(const char *old_name, struct logical_volume *lv);
  */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid);
+int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid);
+int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid);
 
 
 /*

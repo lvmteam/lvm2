@@ -57,28 +57,28 @@ struct dev_manager {
 
 
 /*
- * Device layer names are all of the form <vg>:<lv>:<layer>, any
- * other colons that appear in these names are quoted with yet
- * another colon.  The top layer of any device is always called
- * 'top'.  eg, vg0:lvol0:top.
+ * Device layer names are all of the form <vg>-<lv>-<layer>, any
+ * other hyphens that appear in these names are quoted with yet
+ * another hyphen.  The top layer of any device is always called
+ * 'top'.  eg, vg0-lvol0-top.
  */
-static void _count_colons(const char *str, size_t *len, int *colons)
+static void _count_hyphens(const char *str, size_t *len, int *hyphens)
 {
 	const char *ptr;
 
 	for (ptr = str; *ptr; ptr++, (*len)++)
-		if (*ptr == ':')
-			(*colons)++;
+		if (*ptr == '-')
+			(*hyphens)++;
 }
 
 /*
- * Copies a string, quoting colons with colons.
+ * Copies a string, quoting hyphens with hyphens.
  */
-static void _quote_colons(char **out, const char *src)
+static void _quote_hyphens(char **out, const char *src)
 {
 	while (*src) {
-		if (*src == ':')
-			*(*out)++ = ':';
+		if (*src == '-')
+			*(*out)++ = '-';
 
 		*(*out)++ = *src++;
 	}
@@ -88,14 +88,14 @@ static char *_build_name(struct pool *mem, const char *vg,
 			 const char *lv, const char *layer)
 {
 	size_t len = 0;
-	int colons = 0;
+	int hyphens = 0;
 	char *r, *out;
 
-	_count_colons(vg, &len, &colons);
-	_count_colons(lv, &len, &colons);
-	_count_colons(layer, &len, &colons);
+	_count_hyphens(vg, &len, &hyphens);
+	_count_hyphens(lv, &len, &hyphens);
+	_count_hyphens(layer, &len, &hyphens);
 
-	len += colons + 2;
+	len += hyphens + 2;
 
 	if (!(r = pool_alloc(mem, len))) {
 		stack;
@@ -103,9 +103,9 @@ static char *_build_name(struct pool *mem, const char *vg,
 	}
 
 	out = r;
-	_quote_colons(&out, vg); *out++ = ':';
-	_quote_colons(&out, lv); *out++ = ':';
-	_quote_colons(&out, layer); *out = '\0';
+	_quote_hyphens(&out, vg); *out++ = '-';
+	_quote_hyphens(&out, lv); *out++ = '-';
+	_quote_hyphens(&out, layer); *out = '\0';
 
 	return r;
 }
@@ -133,7 +133,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	int r;
 	struct dm_task *dmt;
 
-	log_very_verbose("Creating %s.", dl->name);
+	log_very_verbose("Loading %s", dl->name);
 	if (!(dmt = _setup_task(dl->name, task))) {
 		stack;
 		return 0;
@@ -148,7 +148,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	}
 
 	if (!(r = dm_task_run(dmt)))
-		log_err("Couldn't create device '%s'.", dl->name);
+		log_err("Couldn't load device '%s'.", dl->name);
 	dm_task_destroy(dmt);
 
 	if (dl->visible)
@@ -162,7 +162,7 @@ static int _remove(struct dev_layer *dl)
 	int r;
 	struct dm_task *dmt;
 
-	log_very_verbose("Removing device '%s'.", dl->name);
+	log_very_verbose("Removing %s", dl->name);
 	if (!(dmt = _setup_task(dl->name, DM_DEVICE_REMOVE))) {
 		stack;
 		return 0;

@@ -376,7 +376,7 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 	}
 
 	if (!(lvl = find_lv_in_vg_by_uuid(vg, slash + 1))) {
-		log_error("Can't find logical volume id %s", lvid);
+		log_verbose("Can't find logical volume id %s", lvid);
 		return NULL;
 	}
 
@@ -390,7 +390,7 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid)
 	if (!(lv = _lv_from_lvid(cmd, lvid)))
 		return 0;
 
-	if (lv_active(lv))
+	if (lv_active(lv) > 0)
 		lv_suspend(lv);
 	return 1;
 }
@@ -402,8 +402,34 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid)
 	if (!(lv = _lv_from_lvid(cmd, lvid)))
 		return 0;
 
-	if (lv_active(lv))
+	if ((lv_active(lv) > 0) && lv_suspended(lv))
 		lv_reactivate(lv);
+
+	return 1;
+}
+
+int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid)
+{
+	struct logical_volume *lv;
+
+	if (!(lv = _lv_from_lvid(cmd, lvid)))
+		return 0;
+
+	if (lv_active(lv) > 0)
+		lv_deactivate(lv);
+
+	return 1;
+}
+
+int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid)
+{
+	struct logical_volume *lv;
+
+	if (!(lv = _lv_from_lvid(cmd, lvid)))
+		return 0;
+
+	if (!lv_active(lv))
+		lv_activate(lv);
 
 	return 1;
 }
