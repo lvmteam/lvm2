@@ -1051,10 +1051,11 @@ static void fin(void)
 	dbg_free(cmd);
 	archive_exit();
 	backup_exit();
+	_exit_uuid_map();
 	__fin_commands();
+
 	dump_memory();
 	fin_log();
-	_exit_uuid_map();
 
 	if (_log)
 		fclose(_log);
