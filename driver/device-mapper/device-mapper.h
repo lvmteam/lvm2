@@ -15,7 +15,8 @@
 #ifndef DEVICE_MAPPER_H
 #define DEVICE_MAPPER_H
 
-#include <linux/major.h>
+#define DM_DIR "device-mapper"
+#define DM_MAX_TYPE_NAME 16
 
 struct dm_table;
 struct dm_dev;
@@ -40,6 +41,7 @@ typedef char *(*dm_print_fn)(void *context);
  * (ie. opened/closed).
  */
 int dm_table_get_device(struct dm_table *t, const char *path,
+			offset_t start, offset_t len,
 			struct dm_dev **result);
 void dm_table_put_device(struct dm_table *table, struct dm_dev *d);
 
@@ -58,19 +60,6 @@ struct target_type {
 
 int dm_register_target(struct target_type *t);
 int dm_unregister_target(struct target_type *t);
-
-static inline char *next_token(char **p)
-{
-        static const char *delim = " \t";
-        char *r;
-
-        do {
-                r = strsep(p, delim);
-        } while(r && *r == 0);
-
-        return r;
-}
-
 
 #endif /* DEVICE_MAPPER_H */
 

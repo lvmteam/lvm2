@@ -55,12 +55,12 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 		return -EINVAL;
 
 	inode = dmfs_create_lv(dir->i_sb, mode, dentry);
-	if (inode) {
+	if (!IS_ERR(inode)) {
 		d_instantiate(dentry, inode);
 		dget(dentry);
-		rv = 0;
+		return 0;
 	}
-	return rv;
+	return PTR_ERR(inode);
 }
 
 /*
@@ -99,8 +99,9 @@ static int dmfs_root_rmdir(struct inode *dir, struct dentry *dentry)
 
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
-		ret = dm_deactivate(DMFS_I(inode)->md);
+		ret = dm_destroy(DMFS_I(inode)->md);
 		if (ret == 0) {
+			DMFS_I(inode)->md = NULL;
 			inode->i_nlink--;
 			dput(dentry);
 		}
