@@ -323,6 +323,13 @@ static struct list_head *_get_vgs(struct io_space *is)
 	return NULL;
 }
 
+static int _pv_write(struct io_space *is, struct physical_volume *pv)
+{
+	log_err("format1:pv_write not implemented.");
+	return 1;
+}
+
+
 void _destroy(struct io_space *ios)
 {
 	dbg_free(ios->prefix);
@@ -337,7 +344,7 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 	ios->get_vgs = _get_vgs;
 	ios->get_pvs = _get_pvs;
 	ios->pv_read = _pv_read;
-	ios->pv_write = NULL;
+	ios->pv_write = _pv_write;
 	ios->vg_read = _vg_read;
 	ios->vg_write = _vg_write;
 	ios->destroy = _destroy;
