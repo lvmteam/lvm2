@@ -503,10 +503,9 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 				log_error("Option%s%c%s%s may not be repeated",
 					  a->short_arg ? " -" : "",
 					  a->short_arg ? : ' ',
-					  (a->short_arg && a->long_arg) ? 
-						"/" : "",
-					  a->long_arg ? : "");
-					return 0;
+					  (a->short_arg && a->long_arg) ?
+					  "/" : "", a->long_arg ? : "");
+				return 0;
 			}
 
 			if (!optarg) {
@@ -883,8 +882,7 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cft)
 		return 0;
 	}
 
-	dir = find_config_str(cmd->cft->root, "backup/backup_dir",
-			      default_dir);
+	dir = find_config_str(cmd->cft->root, "backup/backup_dir", default_dir);
 
 	if (!backup_init(dir)) {
 		log_debug("backup_init failed.");
@@ -894,7 +892,7 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cft)
 	return 1;
 }
 
-static struct cmd_context *_init(void)
+static struct cmd_context *_init_lvm(void)
 {
 	struct cmd_context *cmd;
 
@@ -1193,7 +1191,7 @@ int main(int argc, char **argv)
 	int ret, alias = 0;
 	struct cmd_context *cmd;
 
-	if (!(cmd = _init()))
+	if (!(cmd = _init_lvm()))
 		return -1;
 
 	cmd->argv = argv;
