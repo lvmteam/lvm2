@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <linux/kdev_t.h>
 
-#include <linux/fs.h>
+#include <linux/limits.h>
 #include <sys/ioctl.h>
 #include <linux/dm-ioctl.h>
 
@@ -25,20 +25,32 @@
 
 #define ALIGNMENT sizeof(int)
 
-static char *dm_cmd_list[] = {
-	"create",
-	"reload",
-	"remove",
-	"remove_all",
-	"suspend",
-	"resume",
-	"info",
-	"deps",
-	"rename",
-	"version",
-	"status",
-	"table",
-	"waitevent"
+/*
+ * Ensure build compatibility.  The hard-coded version here (major, minor)
+ * is the highest present in the _cmd_data array below.
+ */
+#if DM_VERSION_MAJOR != 1 || DM_VERSION_MINOR < 0
+	#error The version of dm-ioctl.h included is incompatible.
+#endif
+
+static struct {
+	char *name;
+	int cmd;
+	int version[3];
+} _cmd_data[] = {
+	{ "create",	DM_DEV_CREATE,    {1, 0, 0} },
+	{ "reload",	DM_DEV_RELOAD,    {1, 0, 0} },
+	{ "remove",	DM_DEV_REMOVE,    {1, 0, 0} },
+	{ "remove_all",	DM_REMOVE_ALL,    {1, 0, 0} },
+	{ "suspend",	DM_DEV_SUSPEND,   {1, 0, 0} },
+	{ "resume",	DM_DEV_SUSPEND,   {1, 0, 0} },
+	{ "info",	DM_DEV_STATUS,    {1, 0, 0} },
+	{ "deps",	DM_DEV_DEPS,      {1, 0, 0} },
+	{ "rename",	DM_DEV_RENAME,    {1, 0, 0} },
+	{ "version",	DM_VERSION,       {1, 0, 0} },
+	{ "status",	DM_TARGET_STATUS, {1, 0, 0} },
+	{ "table",	DM_TARGET_STATUS, {1, 0, 0} },
+	{ "waitevent",	DM_TARGET_WAIT,   {1, 0, 0} },
 };
 
 static void *_align(void *ptr, unsigned int a)
@@ -283,9 +295,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	memset(dmi, 0, len);
 
-	dmi->version[0] = DM_IOCTL_MAJOR;
-	dmi->version[1] = DM_IOCTL_MINOR;
-	dmi->version[2] = DM_IOCTL_PATCH;
+	dmi->version[0] = _cmd_data[dmt->type].version[0];
+	dmi->version[1] = _cmd_data[dmt->type].version[1];
+	dmi->version[2] = _cmd_data[dmt->type].version[2];
 	dmi->data_size = len;
 	dmi->data_start = sizeof(struct dm_ioctl);
 
@@ -343,71 +355,23 @@ int dm_task_run(struct dm_task *dmt)
 		goto bad;
 	}
 
-	switch (dmt->type) {
-	case DM_DEVICE_CREATE:
-		command = DM_DEV_CREATE;
-		break;
-
-	case DM_DEVICE_RELOAD:
-		command = DM_DEV_RELOAD;
-		break;
-
-	case DM_DEVICE_REMOVE:
-		command = DM_DEV_REMOVE;
-		break;
-
-	case DM_DEVICE_REMOVE_ALL:
-		command = DM_REMOVE_ALL;
-		break;
-
-	case DM_DEVICE_SUSPEND:
-		command = DM_DEV_SUSPEND;
-		break;
-
-	case DM_DEVICE_RESUME:
-		command = DM_DEV_SUSPEND;
-		break;
-
-	case DM_DEVICE_INFO:
-		command = DM_DEV_STATUS;
-		break;
-
-	case DM_DEVICE_DEPS:
-		command = DM_DEV_DEPS;
-		break;
-
-	case DM_DEVICE_RENAME:
-		command = DM_DEV_RENAME;
-		break;
-
-	case DM_DEVICE_VERSION:
-		command = DM_VERSION;
-		break;
-
-	case DM_DEVICE_STATUS:
-		command = DM_TARGET_STATUS;
-		break;
-
-	case DM_DEVICE_TABLE:
-		dmi->flags |= DM_STATUS_TABLE_FLAG;
-		command = DM_TARGET_STATUS;
-		break;
-
-	case DM_DEVICE_WAITEVENT:
-		command = DM_TARGET_WAIT;
-		break;
-
-	default:
+	if (dmt->type >= (sizeof(_cmd_data) / sizeof(*_cmd_data))) {
 		log_error("Internal error: unknown device-mapper task %d",
 			  dmt->type);
 		goto bad;
 	}
 
-	log_debug("dm %s %s %s %s", dm_cmd_list[dmt->type], dmi->name,
+	command = _cmd_data[dmt->type].cmd;
+
+	if (dmt->type == DM_DEVICE_TABLE)
+		dmi->flags |= DM_STATUS_TABLE_FLAG;
+
+
+	log_debug("dm %s %s %s %s", _cmd_data[dmt->type].name, dmi->name,
 		  dmi->uuid, dmt->newname ? dmt->newname : "");
 	if (ioctl(fd, command, dmi) < 0) {
-		log_error("device-mapper ioctl cmd %d failed: %s", dmt->type,
-			  strerror(errno));
+		log_error("device-mapper ioctl cmd %d failed: %s",
+			  _IOC_NR(command), strerror(errno));
 		goto bad;
 	}
 
