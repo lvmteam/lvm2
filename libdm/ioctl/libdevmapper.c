@@ -44,6 +44,8 @@ void dm_task_destroy(struct dm_task *dmt)
 
 	for (t = dmt->head; t; t = n) {
 		n = t->next;
+		free(t->params);
+		free(t->type);
 		free(t);
 	}
 
