@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2005-01-17 20:15+0000\n"
+"POT-Creation-Date: 2005-01-21 18:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -69,44 +69,44 @@ msgstr ""
 #: activate/dev_manager.c:657 activate/dev_manager.c:714
 #: activate/dev_manager.c:723 activate/dev_manager.c:778
 #: activate/dev_manager.c:803 activate/dev_manager.c:846
-#: activate/dev_manager.c:866 activate/dev_manager.c:888
-#: activate/dev_manager.c:893 activate/dev_manager.c:924
-#: activate/dev_manager.c:932 activate/dev_manager.c:949
-#: activate/dev_manager.c:954 activate/dev_manager.c:969
-#: activate/dev_manager.c:974 activate/dev_manager.c:1007
-#: activate/dev_manager.c:1017 activate/dev_manager.c:1033
-#: activate/dev_manager.c:1043 activate/dev_manager.c:1065
-#: activate/dev_manager.c:1074 activate/dev_manager.c:1088
-#: activate/dev_manager.c:1096 activate/dev_manager.c:1109
-#: activate/dev_manager.c:1129 activate/dev_manager.c:1134
-#: activate/dev_manager.c:1140 activate/dev_manager.c:1162
-#: activate/dev_manager.c:1183 activate/dev_manager.c:1205
-#: activate/dev_manager.c:1217 activate/dev_manager.c:1229
-#: activate/dev_manager.c:1243 activate/dev_manager.c:1256
-#: activate/dev_manager.c:1266 activate/dev_manager.c:1306
-#: activate/dev_manager.c:1317 activate/dev_manager.c:1327
-#: activate/dev_manager.c:1334 activate/dev_manager.c:1340
-#: activate/dev_manager.c:1408 activate/dev_manager.c:1427
-#: activate/dev_manager.c:1449 activate/dev_manager.c:1457
-#: activate/dev_manager.c:1485 activate/dev_manager.c:1490
-#: activate/dev_manager.c:1519 activate/dev_manager.c:1525
-#: activate/dev_manager.c:1546 activate/dev_manager.c:1564
-#: activate/dev_manager.c:1578 activate/dev_manager.c:1588
-#: activate/dev_manager.c:1598 activate/dev_manager.c:1616
-#: activate/dev_manager.c:1639 activate/dev_manager.c:1673
-#: activate/dev_manager.c:1689 activate/dev_manager.c:1747
-#: activate/dev_manager.c:1756 activate/dev_manager.c:1765
-#: activate/dev_manager.c:1774 activate/dev_manager.c:1779
-#: activate/dev_manager.c:1784 activate/dev_manager.c:1796
-#: activate/dev_manager.c:1806 activate/dev_manager.c:1812
-#: activate/dev_manager.c:1848 activate/dev_manager.c:1853
-#: activate/dev_manager.c:1885 activate/dev_manager.c:1903
-#: activate/dev_manager.c:2078 activate/dev_manager.c:2090
-#: activate/dev_manager.c:2096 activate/dev_manager.c:2110
-#: activate/dev_manager.c:2115 activate/dev_manager.c:2122
-#: activate/dev_manager.c:2130 activate/dev_manager.c:2138
-#: activate/dev_manager.c:2144 activate/dev_manager.c:2151
-#: activate/dev_manager.c:2156 activate/dev_manager.c:2184 activate/fs.c:234
+#: activate/dev_manager.c:866 activate/dev_manager.c:889
+#: activate/dev_manager.c:894 activate/dev_manager.c:925
+#: activate/dev_manager.c:933 activate/dev_manager.c:950
+#: activate/dev_manager.c:955 activate/dev_manager.c:970
+#: activate/dev_manager.c:975 activate/dev_manager.c:1008
+#: activate/dev_manager.c:1018 activate/dev_manager.c:1034
+#: activate/dev_manager.c:1044 activate/dev_manager.c:1066
+#: activate/dev_manager.c:1075 activate/dev_manager.c:1089
+#: activate/dev_manager.c:1097 activate/dev_manager.c:1110
+#: activate/dev_manager.c:1130 activate/dev_manager.c:1135
+#: activate/dev_manager.c:1141 activate/dev_manager.c:1163
+#: activate/dev_manager.c:1184 activate/dev_manager.c:1206
+#: activate/dev_manager.c:1218 activate/dev_manager.c:1230
+#: activate/dev_manager.c:1244 activate/dev_manager.c:1257
+#: activate/dev_manager.c:1267 activate/dev_manager.c:1307
+#: activate/dev_manager.c:1318 activate/dev_manager.c:1328
+#: activate/dev_manager.c:1335 activate/dev_manager.c:1341
+#: activate/dev_manager.c:1409 activate/dev_manager.c:1428
+#: activate/dev_manager.c:1450 activate/dev_manager.c:1458
+#: activate/dev_manager.c:1486 activate/dev_manager.c:1491
+#: activate/dev_manager.c:1520 activate/dev_manager.c:1526
+#: activate/dev_manager.c:1547 activate/dev_manager.c:1565
+#: activate/dev_manager.c:1579 activate/dev_manager.c:1589
+#: activate/dev_manager.c:1599 activate/dev_manager.c:1617
+#: activate/dev_manager.c:1640 activate/dev_manager.c:1674
+#: activate/dev_manager.c:1690 activate/dev_manager.c:1748
+#: activate/dev_manager.c:1757 activate/dev_manager.c:1766
+#: activate/dev_manager.c:1775 activate/dev_manager.c:1780
+#: activate/dev_manager.c:1785 activate/dev_manager.c:1797
+#: activate/dev_manager.c:1807 activate/dev_manager.c:1813
+#: activate/dev_manager.c:1849 activate/dev_manager.c:1854
+#: activate/dev_manager.c:1886 activate/dev_manager.c:1904
+#: activate/dev_manager.c:2079 activate/dev_manager.c:2091
+#: activate/dev_manager.c:2097 activate/dev_manager.c:2111
+#: activate/dev_manager.c:2116 activate/dev_manager.c:2123
+#: activate/dev_manager.c:2131 activate/dev_manager.c:2139
+#: activate/dev_manager.c:2145 activate/dev_manager.c:2152
+#: activate/dev_manager.c:2157 activate/dev_manager.c:2185 activate/fs.c:234
 #: activate/fs.c:241 activate/fs.c:248 activate/fs.c:251 activate/fs.c:325
 #: archiver.c:71 archiver.c:78 archiver.c:90 archiver.c:166 archiver.c:236
 #: archiver.c:286 archiver.c:303 archiver.c:345 archiver.c:350
@@ -139,7 +139,7 @@ msgstr ""
 #: filters/filter-regex.c:105 filters/filter-regex.c:126
 #: filters/filter-regex.c:151 filters/filter-regex.c:212
 #: filters/filter-regex.c:217 filters/filter-regex.c:224
-#: filters/filter-regex.c:229 filters/filter-sysfs.c:285 filters/filter.c:252
+#: filters/filter-regex.c:229 filters/filter-sysfs.c:285 filters/filter.c:253
 #: format1/disk-rep.c:220 format1/disk-rep.c:232 format1/disk-rep.c:237
 #: format1/disk-rep.c:256 format1/disk-rep.c:259 format1/disk-rep.c:290
 #: format1/disk-rep.c:293 format1/disk-rep.c:312 format1/disk-rep.c:315
@@ -182,9 +182,9 @@ msgstr ""
 #: format_pool/format_pool.c:193 format_pool/format_pool.c:202
 #: format_pool/format_pool.c:208 format_pool/format_pool.c:238
 #: format_pool/format_pool.c:243 format_pool/format_pool.c:253
-#: format_pool/format_pool.c:258 format_pool/import_export.c:96
-#: format_pool/import_export.c:222 format_pool/import_export.c:259
-#: format_pool/import_export.c:295 format_pool/import_export.c:300
+#: format_pool/format_pool.c:258 format_pool/import_export.c:97
+#: format_pool/import_export.c:223 format_pool/import_export.c:260
+#: format_pool/import_export.c:296 format_pool/import_export.c:301
 #: format_text/archive.c:122 format_text/archive.c:142
 #: format_text/archive.c:169 format_text/archive.c:264
 #: format_text/archive.c:374 format_text/export.c:257 format_text/export.c:258
@@ -217,32 +217,32 @@ msgstr ""
 #: format_text/export.c:717 format_text/export.c:721 format_text/export.c:725
 #: format_text/export.c:729 format_text/export.c:732 format_text/export.c:755
 #: format_text/export.c:783 format_text/export.c:796 format_text/flags.c:88
-#: format_text/flags.c:132 format_text/format-text.c:125
-#: format_text/format-text.c:173 format_text/format-text.c:195
-#: format_text/format-text.c:216 format_text/format-text.c:229
-#: format_text/format-text.c:237 format_text/format-text.c:254
-#: format_text/format-text.c:259 format_text/format-text.c:264
-#: format_text/format-text.c:284 format_text/format-text.c:293
-#: format_text/format-text.c:335 format_text/format-text.c:340
-#: format_text/format-text.c:385 format_text/format-text.c:398
-#: format_text/format-text.c:415 format_text/format-text.c:444
-#: format_text/format-text.c:470 format_text/format-text.c:497
-#: format_text/format-text.c:511 format_text/format-text.c:516
-#: format_text/format-text.c:539 format_text/format-text.c:553
-#: format_text/format-text.c:790 format_text/format-text.c:795
-#: format_text/format-text.c:804 format_text/format-text.c:815
-#: format_text/format-text.c:828 format_text/format-text.c:1011
-#: format_text/format-text.c:1069 format_text/format-text.c:1074
-#: format_text/format-text.c:1085 format_text/format-text.c:1087
-#: format_text/format-text.c:1095 format_text/format-text.c:1165
-#: format_text/format-text.c:1171 format_text/format-text.c:1350
-#: format_text/format-text.c:1356 format_text/format-text.c:1375
-#: format_text/format-text.c:1409 format_text/format-text.c:1429
-#: format_text/format-text.c:1447 format_text/format-text.c:1452
-#: format_text/format-text.c:1466 format_text/format-text.c:1479
-#: format_text/format-text.c:1485 format_text/format-text.c:1516
-#: format_text/format-text.c:1521 format_text/format-text.c:1526
-#: format_text/format-text.c:1535 format_text/format-text.c:1638
+#: format_text/flags.c:132 format_text/format-text.c:128
+#: format_text/format-text.c:176 format_text/format-text.c:198
+#: format_text/format-text.c:219 format_text/format-text.c:232
+#: format_text/format-text.c:240 format_text/format-text.c:257
+#: format_text/format-text.c:262 format_text/format-text.c:267
+#: format_text/format-text.c:287 format_text/format-text.c:296
+#: format_text/format-text.c:338 format_text/format-text.c:343
+#: format_text/format-text.c:388 format_text/format-text.c:401
+#: format_text/format-text.c:418 format_text/format-text.c:447
+#: format_text/format-text.c:473 format_text/format-text.c:500
+#: format_text/format-text.c:514 format_text/format-text.c:519
+#: format_text/format-text.c:542 format_text/format-text.c:556
+#: format_text/format-text.c:793 format_text/format-text.c:798
+#: format_text/format-text.c:807 format_text/format-text.c:818
+#: format_text/format-text.c:831 format_text/format-text.c:1014
+#: format_text/format-text.c:1072 format_text/format-text.c:1077
+#: format_text/format-text.c:1088 format_text/format-text.c:1090
+#: format_text/format-text.c:1098 format_text/format-text.c:1168
+#: format_text/format-text.c:1174 format_text/format-text.c:1353
+#: format_text/format-text.c:1359 format_text/format-text.c:1378
+#: format_text/format-text.c:1412 format_text/format-text.c:1432
+#: format_text/format-text.c:1450 format_text/format-text.c:1455
+#: format_text/format-text.c:1469 format_text/format-text.c:1482
+#: format_text/format-text.c:1488 format_text/format-text.c:1519
+#: format_text/format-text.c:1524 format_text/format-text.c:1529
+#: format_text/format-text.c:1538 format_text/format-text.c:1641
 #: format_text/import.c:53 format_text/import.c:72
 #: format_text/import_vsn1.c:123 format_text/import_vsn1.c:134
 #: format_text/import_vsn1.c:167 format_text/import_vsn1.c:276
@@ -258,12 +258,12 @@ msgstr ""
 #: label/label.c:125 label/label.c:190 label/label.c:212 label/label.c:264
 #: label/label.c:278 label/label.c:313 label/label.c:321 label/label.c:333
 #: label/label.c:345 locking/cluster_locking.c:85
-#: locking/cluster_locking.c:416 locking/cluster_locking.c:428
-#: locking/cluster_locking.c:432 locking/external_locking.c:76 lvchange.c:49
+#: locking/cluster_locking.c:424 locking/cluster_locking.c:436
+#: locking/cluster_locking.c:440 locking/external_locking.c:76 lvchange.c:49
 #: lvchange.c:87 lvchange.c:93 lvchange.c:101 lvchange.c:108 lvchange.c:115
 #: lvchange.c:165 lvchange.c:173 lvchange.c:207 lvchange.c:292 lvchange.c:350
 #: lvchange.c:358 lvcreate.c:265 lvcreate.c:436 lvcreate.c:517 lvcreate.c:523
-#: lvcreate.c:564 lvcreate.c:571 lvcreate.c:655 lvmcmdline.c:1004
+#: lvcreate.c:564 lvcreate.c:571 lvcreate.c:656 lvmcmdline.c:1004
 #: lvremove.c:74 lvrename.c:146 lvrename.c:157 lvrename.c:164 lvrename.c:169
 #: lvresize.c:360 lvresize.c:417 lvresize.c:424 lvresize.c:431 lvresize.c:443
 #: lvresize.c:450 lvresize.c:456 lvresize.c:475 lvresize.c:489 lvresize.c:514
@@ -272,17 +272,17 @@ msgstr ""
 #: metadata/lv_manip.c:599 metadata/lv_manip.c:641 metadata/lv_manip.c:652
 #: metadata/lv_manip.c:700 metadata/lv_manip.c:714 metadata/merge.c:179
 #: metadata/metadata.c:174 metadata/metadata.c:198 metadata/metadata.c:266
-#: metadata/metadata.c:278 metadata/metadata.c:468 metadata/metadata.c:509
-#: metadata/metadata.c:515 metadata/metadata.c:521 metadata/metadata.c:545
-#: metadata/metadata.c:570 metadata/metadata.c:588 metadata/metadata.c:651
-#: metadata/metadata.c:656 metadata/metadata.c:689 metadata/metadata.c:831
-#: metadata/metadata.c:910 metadata/metadata.c:943 metadata/mirror.c:48
+#: metadata/metadata.c:281 metadata/metadata.c:471 metadata/metadata.c:512
+#: metadata/metadata.c:518 metadata/metadata.c:524 metadata/metadata.c:548
+#: metadata/metadata.c:573 metadata/metadata.c:591 metadata/metadata.c:654
+#: metadata/metadata.c:659 metadata/metadata.c:692 metadata/metadata.c:834
+#: metadata/metadata.c:913 metadata/metadata.c:946 metadata/mirror.c:48
 #: metadata/mirror.c:88 metadata/mirror.c:97 metadata/mirror.c:247
 #: metadata/mirror.c:327 metadata/pv_map.c:33 metadata/pv_map.c:40
 #: metadata/pv_map.c:95 metadata/pv_map.c:115 metadata/pv_map.c:172
 #: metadata/pv_map.c:199 metadata/pv_map.c:217 metadata/pv_map.c:226
 #: metadata/pv_map.c:244 metadata/pv_map.c:258 metadata/snapshot_manip.c:124
-#: metadata/snapshot_manip.c:141 mirror/mirrored.c:96 mirror/mirrored.c:171
+#: metadata/snapshot_manip.c:143 mirror/mirrored.c:96 mirror/mirrored.c:171
 #: mirror/mirrored.c:251 misc/lvm-string.c:152 pvmove.c:98 pvmove.c:103
 #: pvmove.c:179 pvmove.c:207 pvmove.c:214 pvmove.c:278 pvmove.c:285
 #: pvmove.c:294 pvmove.c:323 pvmove.c:336 pvmove.c:343 pvmove.c:350
@@ -292,10 +292,11 @@ msgstr ""
 #: regex/parse_rx.c:229 regex/parse_rx.c:280 regex/parse_rx.c:305
 #: regex/parse_rx.c:328 regex/parse_rx.c:340 regex/ttree.c:91
 #: regex/ttree.c:111 report/report.c:522 report/report.c:550
-#: report/report.c:682 snapshot/snapshot.c:74 snapshot/snapshot.c:83
-#: snapshot/snapshot.c:84 snapshot/snapshot.c:85 snapshot/snapshot.c:154
-#: striped/striped.c:90 striped/striped.c:160 striped/striped.c:209
-#: toollib.c:739 toollib.c:789 toollib.c:836 vgcfgbackup.c:65 vgcfgbackup.c:74
+#: report/report.c:682 snapshot/snapshot.c:78 snapshot/snapshot.c:87
+#: snapshot/snapshot.c:89 snapshot/snapshot.c:90 snapshot/snapshot.c:91
+#: snapshot/snapshot.c:160 striped/striped.c:90 striped/striped.c:160
+#: striped/striped.c:209 toollib.c:734 toollib.c:784 toollib.c:831
+#: uuid/uuid.c:91 uuid/uuid.c:95 vgcfgbackup.c:65 vgcfgbackup.c:74
 #: vgcfgbackup.c:81 vgreduce.c:28 vgreduce.c:84 vgreduce.c:92 vgreduce.c:98
 #: vgreduce.c:106 vgreduce.c:142 vgreduce.c:158 zero/zero.c:90
 msgid "<backtrace>"
@@ -367,8 +368,8 @@ msgstr ""
 msgid "Couldn't split up dm layer name %s"
 msgstr ""
 
-#: activate/dev_manager.c:464 format_text/format-text.c:637
-#: format_text/format-text.c:662 format_text/format-text.c:696
+#: activate/dev_manager.c:464 format_text/format-text.c:640
+#: format_text/format-text.c:665 format_text/format-text.c:699
 #, c-format
 msgid "Renaming %s to %s"
 msgstr ""
@@ -492,7 +493,7 @@ msgstr ""
 msgid "Couldn't find real device layer %s in hash"
 msgstr ""
 
-#: activate/dev_manager.c:857 activate/dev_manager.c:910
+#: activate/dev_manager.c:857 activate/dev_manager.c:911
 #, c-format
 msgid "Couldn't create origin device parameters for '%s'."
 msgstr ""
@@ -502,109 +503,109 @@ msgstr ""
 msgid "Adding target: 0 %llu snapshot-origin %s"
 msgstr ""
 
-#: activate/dev_manager.c:883
+#: activate/dev_manager.c:884
 #, c-format
 msgid "Couldn't find snapshot for '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:898
+#: activate/dev_manager.c:899
 #, c-format
 msgid "Couldn't find origin device layer %s in hash"
 msgstr ""
 
-#: activate/dev_manager.c:904
+#: activate/dev_manager.c:905
 #, c-format
 msgid "Couldn't find cow device layer %s in hash"
 msgstr ""
 
-#: activate/dev_manager.c:917
+#: activate/dev_manager.c:918
 #, c-format
 msgid "Couldn't create cow device parameters for '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:928
+#: activate/dev_manager.c:931
 #, c-format
 msgid "Adding target: 0 %llu snapshot %s"
 msgstr ""
 
-#: activate/dev_manager.c:1014 activate/dev_manager.c:1094
+#: activate/dev_manager.c:1015 activate/dev_manager.c:1095
 #, c-format
 msgid "Getting device info for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1040
+#: activate/dev_manager.c:1041
 #, c-format
 msgid "Getting device status percentage for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1071
+#: activate/dev_manager.c:1072
 #, c-format
 msgid "Getting device mirror status percentage for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1394 activate/dev_manager.c:1554
+#: activate/dev_manager.c:1395 activate/dev_manager.c:1555
 #, c-format
 msgid "Couldn't find device layer '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:1474
+#: activate/dev_manager.c:1475
 #, c-format
 msgid "_suspend_parents couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1480
+#: activate/dev_manager.c:1481
 #, c-format
 msgid "BUG: pre-suspend loop detected (%s)"
 msgstr ""
 
-#: activate/dev_manager.c:1508
+#: activate/dev_manager.c:1509
 #, c-format
 msgid "_resume_with_deps couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1514 activate/dev_manager.c:1559
+#: activate/dev_manager.c:1515 activate/dev_manager.c:1560
 #, c-format
 msgid "BUG: pre-create loop detected (%s)"
 msgstr ""
 
-#: activate/dev_manager.c:1666 activate/dev_manager.c:1682
+#: activate/dev_manager.c:1667 activate/dev_manager.c:1683
 #, c-format
 msgid ""
 "_populate_pre_suspend_lists: Couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1728
+#: activate/dev_manager.c:1729
 #, c-format
 msgid "Couldn't deactivate device %s"
 msgstr ""
 
-#: activate/dev_manager.c:1845
+#: activate/dev_manager.c:1846
 #, c-format
 msgid "Found existing layer '%s'"
 msgstr ""
 
-#: activate/dev_manager.c:2024
+#: activate/dev_manager.c:2025
 #, c-format
 msgid "Can't expand LV: %s target support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2036
+#: activate/dev_manager.c:2037
 msgid "Can't expand LV: Mirror support missing from tools?"
 msgstr ""
 
-#: activate/dev_manager.c:2043
+#: activate/dev_manager.c:2044
 msgid "Can't expand LV: Mirror support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2051
+#: activate/dev_manager.c:2052
 msgid "Can't expand LV: Snapshot support missing from tools?"
 msgstr ""
 
-#: activate/dev_manager.c:2058
+#: activate/dev_manager.c:2059
 msgid "Can't expand LV: Snapshot support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2086
+#: activate/dev_manager.c:2087
 #, c-format
 msgid "Found active lv %s%s"
 msgstr ""
@@ -628,12 +629,12 @@ msgstr ""
 #: device/dev-io.c:240 device/dev-io.c:242 device/dev-io.c:248
 #: device/dev-io.c:344 device/dev-io.c:400 filters/filter-persistent.c:184
 #: filters/filter-sysfs.c:43 filters/filter-sysfs.c:155
-#: filters/filter-sysfs.c:179 filters/filter-sysfs.c:222 filters/filter.c:151
+#: filters/filter-sysfs.c:179 filters/filter-sysfs.c:222 filters/filter.c:152
 #: format_text/archive.c:221 format_text/archive.c:230
-#: format_text/format-text.c:612 format_text/format-text.c:626
-#: format_text/format-text.c:632 format_text/format-text.c:657
-#: format_text/format-text.c:719 format_text/format-text.c:724
-#: format_text/format-text.c:750 format_text/format-text.c:775
+#: format_text/format-text.c:615 format_text/format-text.c:629
+#: format_text/format-text.c:635 format_text/format-text.c:660
+#: format_text/format-text.c:722 format_text/format-text.c:727
+#: format_text/format-text.c:753 format_text/format-text.c:778
 #: locking/file_locking.c:61 locking/file_locking.c:69
 #: locking/file_locking.c:72 locking/file_locking.c:103
 #: locking/file_locking.c:169 locking/file_locking.c:183
@@ -643,7 +644,7 @@ msgstr ""
 #: misc/lvm-file.c:102 misc/lvm-file.c:151 misc/lvm-file.c:163
 #: misc/lvm-file.c:192 misc/lvm-file.c:201 misc/lvm-file.c:229
 #: misc/lvm-file.c:234 mm/memlock.c:98 mm/memlock.c:106 mm/memlock.c:117
-#: toollib.c:948 uuid/uuid.c:86 uuid/uuid.c:91
+#: toollib.c:966 uuid/uuid.c:84 uuid/uuid.c:89
 #, c-format
 msgid "%s: %s failed: %s"
 msgstr ""
@@ -799,7 +800,7 @@ msgstr ""
 msgid "Cache locking failure for %s"
 msgstr ""
 
-#: cache/lvmcache.c:192 toollib.c:481
+#: cache/lvmcache.c:192 toollib.c:467
 msgid "dev_iter creation failed"
 msgstr ""
 
@@ -807,8 +808,8 @@ msgstr ""
 msgid "vgnames list allocation failed"
 msgstr ""
 
-#: cache/lvmcache.c:233 toollib.c:161 toollib.c:206 toollib.c:214
-#: toollib.c:226 toollib.c:286 toollib.c:395 toollib.c:415 toollib.c:540
+#: cache/lvmcache.c:233 toollib.c:147 toollib.c:192 toollib.c:200
+#: toollib.c:212 toollib.c:272 toollib.c:381 toollib.c:401 toollib.c:526
 msgid "strlist allocation failed"
 msgstr ""
 
@@ -939,7 +940,7 @@ msgstr ""
 msgid "Invalid string in config file: devices/scan"
 msgstr ""
 
-#: commands/toolcontext.c:484 format_text/format-text.c:1678
+#: commands/toolcontext.c:484 format_text/format-text.c:1681
 #, c-format
 msgid "Failed to add %s to internal device cache"
 msgstr ""
@@ -1645,7 +1646,7 @@ msgstr ""
 msgid "Please specify one file for output"
 msgstr ""
 
-#: error/errseg.c:100 mirror/mirrored.c:261 snapshot/snapshot.c:164
+#: error/errseg.c:100 mirror/mirrored.c:261 snapshot/snapshot.c:170
 #: striped/striped.c:220 zero/zero.c:100
 #, c-format
 msgid "Initialised segtype: %s"
@@ -1782,54 +1783,54 @@ msgstr ""
 msgid "sysfs dev_set creation failed"
 msgstr ""
 
-#: filters/filter.c:84
+#: filters/filter.c:85
 #, c-format
 msgid "%s: Skipping: Unrecognised LVM device type %llu"
 msgstr ""
 
-#: filters/filter.c:91
+#: filters/filter.c:92
 #, c-format
 msgid "%s: Skipping: open failed"
 msgstr ""
 
-#: filters/filter.c:97
+#: filters/filter.c:98
 #, c-format
 msgid "%s: Skipping: dev_get_size failed"
 msgstr ""
 
-#: filters/filter.c:102
+#: filters/filter.c:103
 #, c-format
 msgid "%s: Skipping: Too small to hold a PV"
 msgstr ""
 
-#: filters/filter.c:107
+#: filters/filter.c:108
 #, c-format
 msgid "%s: Skipping: Partition table signature found"
 msgstr ""
 
-#: filters/filter.c:134
+#: filters/filter.c:135
 msgid "No proc filesystem found: using all block device types"
 msgstr ""
 
-#: filters/filter.c:146
+#: filters/filter.c:147
 msgid "Failed to create /proc/devices string"
 msgstr ""
 
-#: filters/filter.c:201
+#: filters/filter.c:202
 msgid "Expecting string in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:209
+#: filters/filter.c:210
 #, c-format
 msgid "Max partition count missing for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:215
+#: filters/filter.c:216
 #, c-format
 msgid "Zero partition count invalid for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:243
+#: filters/filter.c:244
 msgid "LVM type filter allocation failed"
 msgstr ""
 
@@ -2012,7 +2013,7 @@ msgid "Couldn't register lvm1 label handler."
 msgstr ""
 
 #: format1/format1.c:594 format_pool/format_pool.c:360
-#: format_text/format-text.c:1692
+#: format_text/format-text.c:1695
 #, c-format
 msgid "Initialised format: %s"
 msgstr ""
@@ -2211,45 +2212,45 @@ msgstr ""
 msgid "Couldn't register pool label handler."
 msgstr ""
 
-#: format_pool/import_export.c:67
+#: format_pool/import_export.c:68
 msgid "Unable to allocate lv list structure"
 msgstr ""
 
-#: format_pool/import_export.c:72
+#: format_pool/import_export.c:73
 msgid "Unable to allocate logical volume structure"
 msgstr ""
 
-#: format_pool/import_export.c:101
+#: format_pool/import_export.c:102
 #, c-format
 msgid "Calculated lv uuid for lv %s: %s"
 msgstr ""
 
-#: format_pool/import_export.c:137
+#: format_pool/import_export.c:138
 msgid "Unable to allocate pv list structure"
 msgstr ""
 
-#: format_pool/import_export.c:141
+#: format_pool/import_export.c:142
 msgid "Unable to allocate pv structure"
 msgstr ""
 
-#: format_pool/import_export.c:169
+#: format_pool/import_export.c:170
 msgid "Unable to duplicate vg_name string"
 msgstr ""
 
-#: format_pool/import_export.c:192
+#: format_pool/import_export.c:193
 #, c-format
 msgid "Found sptype %X and converted it to %s"
 msgstr ""
 
-#: format_pool/import_export.c:205
+#: format_pool/import_export.c:206
 msgid "Unable to allocate striped lv_segment structure"
 msgstr ""
 
-#: format_pool/import_export.c:209
+#: format_pool/import_export.c:210
 msgid "Stripe size must be a power of 2"
 msgstr ""
 
-#: format_pool/import_export.c:249
+#: format_pool/import_export.c:250
 msgid "Unable to allocate linear lv_segment structure"
 msgstr ""
 
@@ -2352,227 +2353,232 @@ msgstr ""
 msgid "Unknown status flag '%s'."
 msgstr ""
 
-#: format_text/format-text.c:120
+#: format_text/format-text.c:92
+#, c-format
+msgid "Random lvid creation failed for %s/%s."
+msgstr ""
+
+#: format_text/format-text.c:123
 msgid "struct mda_header allocation failed"
 msgstr ""
 
-#: format_text/format-text.c:133
+#: format_text/format-text.c:136
 msgid "Incorrect metadata area header checksum"
 msgstr ""
 
-#: format_text/format-text.c:140
+#: format_text/format-text.c:143
 msgid "Wrong magic number in metadata area header"
 msgstr ""
 
-#: format_text/format-text.c:145
+#: format_text/format-text.c:148
 #, c-format
 msgid "Incompatible metadata area header version: %d"
 msgstr ""
 
-#: format_text/format-text.c:151
+#: format_text/format-text.c:154
 #, c-format
 msgid "Incorrect start sector in metadata area header: %llu"
 msgstr ""
 
-#: format_text/format-text.c:272 format_text/format-text.c:373
+#: format_text/format-text.c:275 format_text/format-text.c:376
 #, c-format
 msgid "VG %s metadata too large for circular buffer"
 msgstr ""
 
-#: format_text/format-text.c:287
+#: format_text/format-text.c:290
 #, c-format
 msgid "Read %s metadata (%u) from %s at %llu size %llu"
 msgstr ""
 
-#: format_text/format-text.c:358
+#: format_text/format-text.c:361
 #, c-format
 msgid "VG %s metadata writing failed"
 msgstr ""
 
-#: format_text/format-text.c:378
+#: format_text/format-text.c:381
 #, c-format
 msgid "Writing %s metadata to %s at %llu len %llu"
 msgstr ""
 
-#: format_text/format-text.c:390
+#: format_text/format-text.c:393
 #, c-format
 msgid "Writing metadata to %s at %llu len %u"
 msgstr ""
 
-#: format_text/format-text.c:457
+#: format_text/format-text.c:460
 #, c-format
 msgid "Committing %s metadata (%u) to %s header at %llu"
 msgstr ""
 
-#: format_text/format-text.c:462 format_text/format-text.c:531
+#: format_text/format-text.c:465 format_text/format-text.c:534
 msgid "Failed to write metadata area header"
 msgstr ""
 
-#: format_text/format-text.c:564
+#: format_text/format-text.c:567
 #, c-format
 msgid "'%s' does not contain volume group '%s'."
 msgstr ""
 
-#: format_text/format-text.c:568
+#: format_text/format-text.c:571
 #, c-format
 msgid "Read volume group %s from %s"
 msgstr ""
 
-#: format_text/format-text.c:602
+#: format_text/format-text.c:605
 msgid "Text format failed to determine directory."
 msgstr ""
 
-#: format_text/format-text.c:607
+#: format_text/format-text.c:610
 msgid "Couldn't create temporary text file name."
-msgstr ""
-
-#: format_text/format-text.c:617
-#, c-format
-msgid "Writing %s metadata to %s"
 msgstr ""
 
 #: format_text/format-text.c:620
 #, c-format
+msgid "Writing %s metadata to %s"
+msgstr ""
+
+#: format_text/format-text.c:623
+#, c-format
 msgid "Failed to write metadata to %s."
 msgstr ""
 
-#: format_text/format-text.c:638 format_text/format-text.c:664
-#: format_text/format-text.c:701
+#: format_text/format-text.c:641 format_text/format-text.c:667
+#: format_text/format-text.c:704
 #, c-format
 msgid "%s: rename to %s failed: %s"
 msgstr ""
 
-#: format_text/format-text.c:653
+#: format_text/format-text.c:656
 #, c-format
 msgid "Test mode: Skipping committing %s metadata (%u)"
 msgstr ""
 
-#: format_text/format-text.c:656
+#: format_text/format-text.c:659
 #, c-format
 msgid "Unlinking %s"
 msgstr ""
 
-#: format_text/format-text.c:661
+#: format_text/format-text.c:664
 #, c-format
 msgid "Committing %s metadata (%u)"
 msgstr ""
 
-#: format_text/format-text.c:698
+#: format_text/format-text.c:701
 msgid "Test mode: Skipping rename"
 msgstr ""
 
-#: format_text/format-text.c:762 format_text/format-text.c:1422
+#: format_text/format-text.c:765 format_text/format-text.c:1425
 #, c-format
 msgid "Name too long %s/%s"
 msgstr ""
 
-#: format_text/format-text.c:891
+#: format_text/format-text.c:894
 #, c-format
 msgid "Physical extents end beyond end of device %s!"
 msgstr ""
 
-#: format_text/format-text.c:907
+#: format_text/format-text.c:910
 #, c-format
 msgid "Warning: metadata area fills disk %s"
 msgstr ""
 
-#: format_text/format-text.c:937 format_text/format-text.c:983
+#: format_text/format-text.c:940 format_text/format-text.c:986
 msgid "Failed to wipe new metadata area"
 msgstr ""
 
-#: format_text/format-text.c:1032
+#: format_text/format-text.c:1035
 #, c-format
 msgid "Creating metadata area on %s at sector %llu size %llu sectors"
 msgstr ""
 
-#: format_text/format-text.c:1111
+#: format_text/format-text.c:1114
 #, c-format
 msgid "format_text: _vg_read failed to read VG %s"
 msgstr ""
 
-#: format_text/format-text.c:1117
+#: format_text/format-text.c:1120
 #, c-format
 msgid "Warning: Volume group %s is not consistent"
 msgstr ""
 
-#: format_text/format-text.c:1144
+#: format_text/format-text.c:1147
 msgid "_add_raw allocation failed"
 msgstr ""
 
-#: format_text/format-text.c:1204
+#: format_text/format-text.c:1207
 #, c-format
 msgid "Must be exactly one data area (found %d) on PV %s"
 msgstr ""
 
-#: format_text/format-text.c:1221 format_text/format-text.c:1225
+#: format_text/format-text.c:1224 format_text/format-text.c:1228
 msgid "metadata_area allocation failed"
 msgstr ""
 
-#: format_text/format-text.c:1399
+#: format_text/format-text.c:1402
 msgid "Couldn't allocate format instance object."
 msgstr ""
 
-#: format_text/format-text.c:1510
+#: format_text/format-text.c:1513
 #, c-format
 msgid "%s: Volume group filename may not end in .tmp"
 msgstr ""
 
-#: format_text/format-text.c:1544
+#: format_text/format-text.c:1547
 msgid "Couldn't allocate text format context object."
 msgstr ""
 
-#: format_text/format-text.c:1566
+#: format_text/format-text.c:1569
 msgid "_add_dir allocation failed"
 msgstr ""
 
-#: format_text/format-text.c:1569
+#: format_text/format-text.c:1572
 #, c-format
 msgid "Adding text format metadata dir: %s"
 msgstr ""
 
-#: format_text/format-text.c:1586
+#: format_text/format-text.c:1589
 msgid "Empty metadata disk_area section of config file"
 msgstr ""
 
-#: format_text/format-text.c:1591
+#: format_text/format-text.c:1594
 msgid "Missing start_sector in metadata disk_area section of config file"
 msgstr ""
 
-#: format_text/format-text.c:1598
+#: format_text/format-text.c:1601
 msgid "Missing size in metadata disk_area section of config file"
 msgstr ""
 
-#: format_text/format-text.c:1605
+#: format_text/format-text.c:1608
 msgid "Missing uuid in metadata disk_area section of config file"
 msgstr ""
 
-#: format_text/format-text.c:1611
+#: format_text/format-text.c:1614
 #, c-format
 msgid "Invalid uuid in metadata disk_area section of config file: %s"
 msgstr ""
 
-#: format_text/format-text.c:1620 format_text/import_vsn1.c:155
+#: format_text/format-text.c:1623 format_text/import_vsn1.c:155
 msgid "Couldn't find device."
 msgstr ""
 
-#: format_text/format-text.c:1622 format_text/import_vsn1.c:157
+#: format_text/format-text.c:1625 format_text/import_vsn1.c:157
 #, c-format
 msgid "Couldn't find device with uuid '%s'."
 msgstr ""
 
-#: format_text/format-text.c:1649
+#: format_text/format-text.c:1652
 msgid "Failed to allocate dir_list"
 msgstr ""
 
-#: format_text/format-text.c:1660
+#: format_text/format-text.c:1663
 msgid "Couldn't create text label handler."
 msgstr ""
 
-#: format_text/format-text.c:1665
+#: format_text/format-text.c:1668
 msgid "Couldn't register text label handler."
 msgstr ""
 
-#: format_text/format-text.c:1672
+#: format_text/format-text.c:1675
 msgid "Invalid string in config file: metadata/dirs"
 msgstr ""
 
@@ -2905,28 +2911,28 @@ msgstr ""
 msgid "EOF reading CLVMD"
 msgstr ""
 
-#: locking/cluster_locking.c:152
+#: locking/cluster_locking.c:156
 #, c-format
 msgid "cluster request failed: %s"
 msgstr ""
 
-#: locking/cluster_locking.c:345
+#: locking/cluster_locking.c:351
 #, c-format
 msgid "clvmd not running on node %s"
 msgstr ""
 
-#: locking/cluster_locking.c:349
+#: locking/cluster_locking.c:356
 #, c-format
 msgid "Error locking on node %s: %s"
 msgstr ""
 
-#: locking/cluster_locking.c:398 locking/file_locking.c:260
+#: locking/cluster_locking.c:406 locking/file_locking.c:260
 #: locking/locking.c:244 locking/no_locking.c:71
 #, c-format
 msgid "Unrecognised lock scope: %d"
 msgstr ""
 
-#: locking/cluster_locking.c:404
+#: locking/cluster_locking.c:412
 #, c-format
 msgid "Locking %s at 0x%x"
 msgstr ""
@@ -3387,7 +3393,7 @@ msgstr ""
 msgid "%s: not found: device not zeroed"
 msgstr ""
 
-#: lvcreate.c:407 pvmove.c:291 toollib.c:339 vgreduce.c:258
+#: lvcreate.c:407 pvmove.c:291 toollib.c:325 vgreduce.c:258
 #, c-format
 msgid "Finding volume group \"%s\""
 msgstr ""
@@ -3398,8 +3404,8 @@ msgstr ""
 msgid "Volume group \"%s\" doesn't exist"
 msgstr ""
 
-#: lvcreate.c:415 lvrename.c:117 metadata/metadata.c:809 polldaemon.c:192
-#: pvchange.c:69 pvmove.c:72 toollib.c:39 vgchange.c:308 vgck.c:32
+#: lvcreate.c:415 lvrename.c:117 metadata/metadata.c:812 polldaemon.c:192
+#: pvchange.c:69 pvmove.c:72 toollib.c:42 vgchange.c:312 vgck.c:32
 #: vgconvert.c:54 vgextend.c:57 vgmerge.c:44 vgmerge.c:69 vgreduce.c:316
 #: vgremove.c:35 vgrename.c:80 vgsplit.c:184
 #, c-format
@@ -3407,7 +3413,7 @@ msgid "Volume group \"%s\" is exported"
 msgstr ""
 
 #: lvcreate.c:420 lvremove.c:27 lvrename.c:122 pvchange.c:75 pvmove.c:78
-#: vgchange.c:303 vgconvert.c:49 vgexport.c:38 vgextend.c:62 vgmerge.c:50
+#: vgchange.c:307 vgconvert.c:49 vgexport.c:38 vgextend.c:62 vgmerge.c:50
 #: vgmerge.c:74 vgreduce.c:322 vgrename.c:86 vgsplit.c:190
 #, c-format
 msgid "Volume group \"%s\" is read-only"
@@ -3508,21 +3514,21 @@ msgstr ""
 msgid "Failed to suspend origin %s"
 msgstr ""
 
-#: lvcreate.c:613
+#: lvcreate.c:614
 msgid "Couldn't create snapshot."
 msgstr ""
 
-#: lvcreate.c:622
+#: lvcreate.c:623
 #, c-format
 msgid "Problem reactivating origin %s"
 msgstr ""
 
-#: lvcreate.c:629
+#: lvcreate.c:630
 #, c-format
 msgid "Logical volume \"%s\" created"
 msgstr ""
 
-#: lvcreate.c:650 lvrename.c:107 lvresize.c:509 pvchange.c:56 pvmove.c:61
+#: lvcreate.c:651 lvrename.c:107 lvresize.c:509 pvchange.c:56 pvmove.c:61
 #: vgcreate.c:139 vgextend.c:47 vgmerge.c:33 vgmerge.c:57 vgreduce.c:260
 #: vgrename.c:68 vgrename.c:102 vgsplit.c:173 vgsplit.c:197
 #, c-format
@@ -4247,7 +4253,7 @@ msgstr ""
 msgid "Couldn't create uuid for volume group '%s'."
 msgstr ""
 
-#: metadata/metadata.c:230 metadata/metadata.c:664
+#: metadata/metadata.c:230 metadata/metadata.c:667
 msgid "Failed to create format instance"
 msgstr ""
 
@@ -4256,155 +4262,160 @@ msgstr ""
 msgid "Format specific setup of volume group '%s' failed."
 msgstr ""
 
-#: metadata/metadata.c:285
+#: metadata/metadata.c:273
+#, c-format
+msgid "Failed to create random uuid for %s."
+msgstr ""
+
+#: metadata/metadata.c:288
 #, c-format
 msgid "%s: Couldn't get size."
 msgstr ""
 
-#: metadata/metadata.c:291
+#: metadata/metadata.c:294
 #, c-format
 msgid "WARNING: %s: Overriding real size. You could lose data."
 msgstr ""
 
-#: metadata/metadata.c:293
+#: metadata/metadata.c:296
 #, c-format
 msgid "%s: Pretending size is %llu sectors."
 msgstr ""
 
-#: metadata/metadata.c:299
+#: metadata/metadata.c:302
 #, c-format
 msgid "%s: Size must exceed minimum of %ld sectors."
 msgstr ""
 
-#: metadata/metadata.c:316
+#: metadata/metadata.c:319
 #, c-format
 msgid "%s: Format-specific setup of physical volume failed."
 msgstr ""
 
-#: metadata/metadata.c:430
+#: metadata/metadata.c:433
 #, c-format
 msgid "Physical volume %s not found"
 msgstr ""
 
-#: metadata/metadata.c:435
+#: metadata/metadata.c:438
 #, c-format
 msgid "Physical volume %s not in a volume group"
 msgstr ""
 
-#: metadata/metadata.c:486
+#: metadata/metadata.c:489
 #, c-format
 msgid "Cannot change metadata for partial volume group %s"
 msgstr ""
 
-#: metadata/metadata.c:492
+#: metadata/metadata.c:495
 msgid "Aborting vg_write: No metadata areas to write to!"
 msgstr ""
 
-#: metadata/metadata.c:502
+#: metadata/metadata.c:505
 msgid "Format does not support writing volumegroup metadata areas"
 msgstr ""
 
-#: metadata/metadata.c:593
+#: metadata/metadata.c:596
 msgid "vg allocation failed"
 msgstr ""
 
-#: metadata/metadata.c:602
+#: metadata/metadata.c:605
 msgid "vg name allocation failed"
 msgstr ""
 
-#: metadata/metadata.c:612
+#: metadata/metadata.c:615
 msgid "pv_list allocation failed"
 msgstr ""
 
-#: metadata/metadata.c:702
+#: metadata/metadata.c:705
 #, c-format
 msgid "Inconsistent metadata copies found for partial volume group %s"
 msgstr ""
 
-#: metadata/metadata.c:708
+#: metadata/metadata.c:711
 #, c-format
 msgid "Inconsistent metadata copies found - updating to use version %u"
 msgstr ""
 
-#: metadata/metadata.c:711
+#: metadata/metadata.c:714
 msgid "Automatic metadata correction failed"
 msgstr ""
 
-#: metadata/metadata.c:715
+#: metadata/metadata.c:718
 msgid "Automatic metadata correction commit failed"
 msgstr ""
 
-#: metadata/metadata.c:722
+#: metadata/metadata.c:725
 #, c-format
 msgid "WARNING: Interrupted pvmove detected in volume group %s"
 msgstr ""
 
-#: metadata/metadata.c:724
+#: metadata/metadata.c:727
 msgid "Please restore the metadata by running vgcfgrestore."
 msgstr ""
 
-#: metadata/metadata.c:751 metadata/metadata.c:781
+#: metadata/metadata.c:754 metadata/metadata.c:784
 #, c-format
 msgid "Volume group %s metadata is inconsistent"
 msgstr ""
 
-#: metadata/metadata.c:769
+#: metadata/metadata.c:772
 msgid "vg_read_by_vgid: get_vgs failed"
 msgstr ""
 
-#: metadata/metadata.c:801
+#: metadata/metadata.c:804
 #, c-format
 msgid "Finding volume group for uuid %s"
 msgstr ""
 
-#: metadata/metadata.c:803
+#: metadata/metadata.c:806
 #, c-format
 msgid "Volume group for uuid not found: %s"
 msgstr ""
 
-#: metadata/metadata.c:807
+#: metadata/metadata.c:810
 #, c-format
 msgid "Found volume group \"%s\""
 msgstr ""
 
-#: metadata/metadata.c:813
+#: metadata/metadata.c:816
 #, c-format
 msgid "Can't find logical volume id %s"
 msgstr ""
 
-#: metadata/metadata.c:837
+#: metadata/metadata.c:840
 #, c-format
 msgid "No physical volume label read from %s"
 msgstr ""
 
-#: metadata/metadata.c:847
+#: metadata/metadata.c:850
 #, c-format
 msgid "pv allocation for '%s' failed"
 msgstr ""
 
-#: metadata/metadata.c:855
+#: metadata/metadata.c:858
 #, c-format
 msgid "Failed to read existing physical volume '%s'"
 msgstr ""
 
-#: metadata/metadata.c:886
+#: metadata/metadata.c:889
 msgid "PV list allocation failed"
 msgstr ""
 
-#: metadata/metadata.c:894
+#: metadata/metadata.c:897
 msgid "get_pvs: get_vgs failed"
 msgstr ""
 
-#: metadata/metadata.c:914
+#: metadata/metadata.c:917
 #, c-format
 msgid "Warning: Volume Group %s is not consistent"
 msgstr ""
 
-#: metadata/metadata.c:932
+#: metadata/metadata.c:935
 msgid "Format does not support writing physical volumes"
 msgstr ""
 
-#: metadata/metadata.c:937
+#: metadata/metadata.c:940
 #, c-format
 msgid "Assertion failed: can't _pv_write non-orphan PV (in VG %s)"
 msgstr ""
@@ -4495,11 +4506,12 @@ msgstr ""
 msgid "'%s' is already in use as a snapshot."
 msgstr ""
 
-#: metadata/snapshot_manip.c:136
-msgid "Snapshot UUID creation failed"
+#: metadata/snapshot_manip.c:137
+#, c-format
+msgid "Random UUID creation failed for snapshot %s."
 msgstr ""
 
-#: metadata/snapshot_manip.c:170
+#: metadata/snapshot_manip.c:172
 msgid "Asked to remove an unknown snapshot."
 msgstr ""
 
@@ -4588,9 +4600,9 @@ msgstr ""
 msgid "Unable to open external %s library %s"
 msgstr ""
 
-#: mm/dbg_malloc.c:223
+#: mm/dbg_malloc.c:224
 #, c-format
-msgid "Huge memory allocation (size %u) rejected - metadata corruption?"
+msgid "Huge memory allocation (size %Zu) rejected - metadata corruption?"
 msgstr ""
 
 #: mm/memlock.c:100
@@ -4634,7 +4646,7 @@ msgstr ""
 msgid "Forking background process"
 msgstr ""
 
-#: polldaemon.c:39 toollib.c:940
+#: polldaemon.c:39 toollib.c:958
 #, c-format
 msgid "fork failed: %s"
 msgstr ""
@@ -4764,52 +4776,57 @@ msgstr ""
 msgid "Failed to remove tag %s from physical volume%s"
 msgstr ""
 
-#: pvchange.c:179
+#: pvchange.c:177
 #, c-format
-msgid "Updating physical volume \"%s\""
+msgid "Failed to generate new random UUID for %s."
 msgstr ""
 
 #: pvchange.c:183
 #, c-format
+msgid "Updating physical volume \"%s\""
+msgstr ""
+
+#: pvchange.c:187
+#, c-format
 msgid "Failed to store physical volume \"%s\" in volume group \"%s\""
 msgstr ""
 
-#: pvchange.c:192
+#: pvchange.c:196
 #, c-format
 msgid "Failed to store physical volume \"%s\""
 msgstr ""
 
-#: pvchange.c:199
+#: pvchange.c:203
 #, c-format
 msgid "Physical volume \"%s\" changed"
 msgstr ""
 
-#: pvchange.c:221
+#: pvchange.c:225
 msgid "Please give exactly one option of -x, -uuid, --addtag or --deltag"
 msgstr ""
 
-#: pvchange.c:227
+#: pvchange.c:231
 msgid "Please give a physical volume path"
 msgstr ""
 
-#: pvchange.c:232
+#: pvchange.c:236
 msgid "Option a and PhysicalVolumePath are exclusive"
 msgstr ""
 
-#: pvchange.c:237 toollib.c:525
+#: pvchange.c:241 toollib.c:511
 msgid "Using physical volume(s) on command line"
 msgstr ""
 
-#: pvchange.c:242
+#: pvchange.c:246
 #, c-format
 msgid "Failed to read physical volume %s"
 msgstr ""
 
-#: pvchange.c:250 toollib.c:595
+#: pvchange.c:254 toollib.c:581
 msgid "Scanning for physical volume names"
 msgstr ""
 
-#: pvchange.c:261
+#: pvchange.c:265
 #, c-format
 msgid "%d physical volume%s changed / %d physical volume%s not changed"
 msgstr ""
@@ -5099,7 +5116,7 @@ msgstr ""
 msgid "ABORTING: Can't reread PV %s"
 msgstr ""
 
-#: pvmove.c:503 toollib.c:887
+#: pvmove.c:503 toollib.c:882
 msgid "Failed to clone PV name"
 msgstr ""
 
@@ -5337,7 +5354,7 @@ msgstr ""
 msgid "Volume group %s not found"
 msgstr ""
 
-#: reporter.c:65 toollib.c:247 toollib.c:335
+#: reporter.c:65 toollib.c:233 toollib.c:321
 #, c-format
 msgid "Can't lock %s: skipping"
 msgstr ""
@@ -5424,154 +5441,154 @@ msgid ""
 "Metadata in LVM1 format can still be displayed using LVM1's pvdata command."
 msgstr ""
 
-#: toollib.c:88
+#: toollib.c:91
 msgid "One or more specified logical volume(s) not found."
 msgstr ""
 
-#: toollib.c:105
-#, c-format
-msgid "Can't lock %s for metadata recovery: skipping"
-msgstr ""
-
-#: toollib.c:141
+#: toollib.c:127
 msgid "Using logical volume(s) on command line"
 msgstr ""
 
-#: toollib.c:154 toollib.c:388 toollib.c:531 toollib.c:868
+#: toollib.c:140 toollib.c:374 toollib.c:517 toollib.c:863
 #, c-format
 msgid "Skipping invalid tag %s"
 msgstr ""
 
-#: toollib.c:181 toollib.c:633 toollib.c:644
+#: toollib.c:167 toollib.c:622 toollib.c:633
 #, c-format
 msgid "\"%s\": Invalid path for Logical Volume"
 msgstr ""
 
-#: toollib.c:222
+#: toollib.c:208
 msgid "vg/lv string alloc failed"
 msgstr ""
 
-#: toollib.c:235
+#: toollib.c:221
 msgid "Finding all logical volumes"
 msgstr ""
 
-#: toollib.c:237 toollib.c:426
+#: toollib.c:223 toollib.c:412
 msgid "No volume groups found"
 msgstr ""
 
-#: toollib.c:257 vgcfgbackup.c:55 vgck.c:22 vgreduce.c:282 vgscan.c:22
+#: toollib.c:243 vgcfgbackup.c:55 vgck.c:22 vgreduce.c:282 vgscan.c:22
 #, c-format
 msgid "Volume group \"%s\" not found"
 msgstr ""
 
-#: toollib.c:260 vgchange.c:297 vgck.c:27 vgconvert.c:43 vgscan.c:29
+#: toollib.c:246 vgchange.c:301 vgck.c:27 vgconvert.c:43 vgscan.c:29
 #, c-format
 msgid "Volume group \"%s\" inconsistent"
 msgstr ""
 
-#: toollib.c:382
+#: toollib.c:368
 msgid "Using volume group(s) on command line"
 msgstr ""
 
-#: toollib.c:409
+#: toollib.c:395
 #, c-format
 msgid "Invalid volume group name: %s"
 msgstr ""
 
-#: toollib.c:424
+#: toollib.c:410
 msgid "Finding all volume groups"
 msgstr ""
 
-#: toollib.c:547 toollib.c:893
+#: toollib.c:533 toollib.c:888
 #, c-format
 msgid "Physical Volume \"%s\" not found in Volume Group \"%s\""
 msgstr ""
 
-#: toollib.c:558
+#: toollib.c:544
 #, c-format
 msgid "Failed to read physical volume \"%s\""
 msgstr ""
 
-#: toollib.c:584
+#: toollib.c:570
 msgid "Using all physical volume(s) in volume group"
 msgstr ""
 
-#: toollib.c:651
+#: toollib.c:640
 msgid "Allocation of vg_name failed"
 msgstr ""
 
-#: toollib.c:661
+#: toollib.c:650
 #, c-format
 msgid "Path required for Logical Volume \"%s\""
 msgstr ""
 
-#: toollib.c:689
+#: toollib.c:681
 #, c-format
 msgid "Environment Volume Group in LVM_VG_NAME invalid: \"%s\""
 msgstr ""
 
-#: toollib.c:702
+#: toollib.c:697
 #, c-format
 msgid "Adding PE range: start PE %u length %u"
 msgstr ""
 
-#: toollib.c:710
+#: toollib.c:705
 #, c-format
 msgid "Overlapping PE ranges detected (%u-%u, %u-%u)"
 msgstr ""
 
-#: toollib.c:719 toollib.c:856 toollib.c:913
+#: toollib.c:714 toollib.c:851 toollib.c:908
 msgid "Allocation of list failed"
 msgstr ""
 
-#: toollib.c:783
+#: toollib.c:778
 #, c-format
 msgid "PE range error: start extent %u to end extent %u"
 msgstr ""
 
-#: toollib.c:798
+#: toollib.c:793
 #, c-format
 msgid "Physical extent parsing error at %s"
 msgstr ""
 
-#: toollib.c:811
+#: toollib.c:806
 #, c-format
 msgid "Physical volume %s not allocatable"
 msgstr ""
 
-#: toollib.c:817
+#: toollib.c:812
 #, c-format
 msgid "No free extents on physical volume \"%s\""
 msgstr ""
 
-#: toollib.c:822 toollib.c:920
+#: toollib.c:817 toollib.c:915
 msgid "Unable to allocate physical volume list."
 msgstr ""
 
-#: toollib.c:829
+#: toollib.c:824
 msgid "Allocation of pe_ranges list failed"
 msgstr ""
 
-#: toollib.c:901
+#: toollib.c:896
 msgid "No specified PVs have space available"
 msgstr ""
 
-#: toollib.c:937
+#: toollib.c:938
+#, c-format
+msgid "Can't lock %s for metadata recovery: skipping"
+msgstr ""
+
+#: toollib.c:955
 #, c-format
 msgid "Executing: %s %s %s %s"
 msgstr ""
 
-#: toollib.c:954
+#: toollib.c:972
 #, c-format
 msgid "wait4 child process %u failed: %s"
 msgstr ""
 
-#: toollib.c:960
+#: toollib.c:978
 #, c-format
 msgid "Child %u exited abnormally"
 msgstr ""
 
-#: toollib.c:965
+#: toollib.c:983
 #, c-format
 msgid "%s failed: %u"
 msgstr ""
@@ -5683,7 +5700,7 @@ msgstr ""
 msgid "Volume group allocation policy is already %s"
 msgstr ""
 
-#: vgchange.c:131 vgchange.c:166 vgchange.c:208 vgchange.c:250 vgchange.c:278
+#: vgchange.c:131 vgchange.c:166 vgchange.c:208 vgchange.c:250 vgchange.c:282
 #, c-format
 msgid "Volume group \"%s\" successfully changed"
 msgstr ""
@@ -5728,24 +5745,29 @@ msgstr ""
 msgid "Volume group has active logical volumes"
 msgstr ""
 
-#: vgchange.c:290 vgconvert.c:36 vgexport.c:23
+#: vgchange.c:268
+#, c-format
+msgid "Failed to generate new random UUID for VG %s."
+msgstr ""
+
+#: vgchange.c:294 vgconvert.c:36 vgexport.c:23
 #, c-format
 msgid "Unable to find volume group \"%s\""
 msgstr ""
 
-#: vgchange.c:343
+#: vgchange.c:347
 msgid "One of -a, -l, -x, --alloc, --addtag, --deltag or --uuid required"
 msgstr ""
 
-#: vgchange.c:353
+#: vgchange.c:357
 msgid "Only one of -a, -l, -x, --alloc, --addtag, --deltag or --uuid allowed"
 msgstr ""
 
-#: vgchange.c:360
+#: vgchange.c:364
 msgid "--ignorelockingfailure only available with -a"
 msgstr ""
 
-#: vgchange.c:366
+#: vgchange.c:370
 msgid "-A option not necessary with -a option"
 msgstr ""
 
