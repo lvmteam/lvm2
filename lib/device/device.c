@@ -38,6 +38,8 @@
 #include <linux/major.h>
 #include <linux/genhd.h>
 
+
+
 #if 0
 int _get_partition_type(struct dev_filter *filter, struct device *d);
 

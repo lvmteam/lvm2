@@ -332,7 +332,6 @@ static int _pv_setup(struct io_space *is, struct physical_volume *pv,
 	}
 
 	pv->exported = NULL;
-
         pv->status = ACTIVE;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {

@@ -13,6 +13,7 @@ SOURCES=\
 	datastruct/hash.c \
 	device/dev-cache.c \
 	device/dev-io.c \
+	device/device.c \
 	filters/filter.c \
 	format1/disk-rep.c \
 	format1/format1.c \
@@ -20,8 +21,10 @@ SOURCES=\
 	format1/layout.c \
 	format1/vg_number.c \
 	log/log.c \
+	metadata/metadata.c \
 	mm/dbg_malloc.c \
-	mm/pool.c
+	mm/pool.c \
+	uuid/uuid.c
 
 TARGETS=liblvm.a
 

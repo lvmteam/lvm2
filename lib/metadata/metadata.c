@@ -1,49 +1,51 @@
 /*
- * Copyright (C)  2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This LVM library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This LVM library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this LVM library; if not, write to the Free
- * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
- * MA 02111-1307, USA
+ * This file is released under the GPL.
  */
 
-#include <string.h>
-#include "dbg_malloc.h"
-#include "dev-cache.h"
 #include "log.h"
+#include "pool.h"
+#include "device.h"
+#include "dev-cache.h"
 #include "metadata.h"
 
-pv_t *pv_read(struct dev_mgr *dm, const char *pv_name)
+#include <string.h>
+
+struct physical_volume *pv_create(const char *name, struct io_space *ios)
 {
-	/* FIXME: Use config to select lvm_v1 format?  Cache results? */
-	/*        Pass structure around rather than pv_name? */
+	struct physical_volume *pv = pool_alloc(ios->mem, sizeof(*pv));
 
-	log_very_verbose("Reading metadata from %s", pv_name);
+	if (!pv) {
+		stack;
+		return NULL;
+	}
 
-	return pv_read_lvm_v1(dm, pv_name);
+        id_create(&pv->id);
+	if (!(pv->dev = dev_cache_get(name, ios->filter))) {
+		log_err("Couldn't find device '%s'", name);
+		goto bad;
+	}
 
+	pv->vg_name = NULL;
+	pv->exported = NULL;
+        pv->status = 0;
+
+	if (!dev_get_size(pv->dev, &pv->size)) {
+		log_err("Couldn't get size of device '%s'", name);
+		goto bad;
+	}
+
+        pv->pe_size = 0;
+        pv->pe_start = 0;
+        pv->pe_count = 0;
+        pv->pe_allocated = 0;
+	return pv;
+
+ bad:
+	pool_free(ios->mem, pv);
+	return NULL;
 }
 
-pe_disk_t *pv_read_pe(const char *pv_name, const pv_t * pv)
-{
-	log_very_verbose("Reading PE metadata from %s", pv_name);
 
-	return pv_read_pe_lvm_v1(pv_name, pv);
-}
 
-lv_disk_t *pv_read_lvs(const pv_t *pv)
-{
-	log_very_verbose("Reading LV metadata from %s", pv->pv_name);
-
-	return pv_read_lvs_lvm_v1(pv);
-}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
  *
@@ -13,8 +13,8 @@
 #include <sys/types.h>
 #include "dev-cache.h"
 #include "list.h"
+#include "uuid.h"
 
-#define ID_LEN 32
 #define NAME_LEN 128
 
 /* Various flags */
@@ -43,14 +43,10 @@
 #define IMPORTED_TAG "PV_IMP"  /* Identifier of imported PV */
 
 
-struct id {
-	uint8_t uuid[ID_LEN];
-};
-
 struct physical_volume {
         struct id id;
 	struct device *dev;
-	char *vg_name;		/* VG component of name only - not full path */
+	char *vg_name;
 	char *exported;
 
         uint32_t status;
@@ -71,7 +67,7 @@ struct pe_specifier {
 struct logical_volume {
         /* disk */
 	struct id id;
-        char *name;		/* LV component of name only - not full path */
+        char *name;
 
         uint32_t status;
 
@@ -84,7 +80,7 @@ struct logical_volume {
 
 struct volume_group {
 	struct id id;
-	char *name;		/* VG component of name only - not full path */
+	char *name;
 
         uint32_t status;
 
@@ -194,6 +190,15 @@ struct io_space {
 	void *private;
 };
 
+/*
+ * Utility functions
+ */
+struct physical_volume *pv_create(const char *name, struct io_space *ios);
+
+
+
+
+
 
 /* FIXME: Move to other files */
 struct io_space *create_text_format(struct dev_filter *filter,
@@ -203,7 +208,6 @@ int id_eq(struct id *op1, struct id *op2);
 
 /* Create consistent new empty structures, populated with defaults */
 struct volume_group *vg_create();
-struct physical_volume *pv_create();
 
 int vg_destroy(struct volume_group *vg);
 

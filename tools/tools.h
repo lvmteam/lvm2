@@ -79,7 +79,7 @@ int int_arg(struct arg *a);
 int string_arg(struct arg *a);
 int permission_arg(struct arg *a);
 
-char yes_no_prompt(char *prompt, ...);
+char yes_no_prompt(const char *prompt, ...);
 
 /* we use the enums to access the switches */
 static inline int arg_count(int a) {
