@@ -34,6 +34,12 @@ void *malloc_aux(size_t s, const char *file, int line)
 	struct memblock *nb;
 	size_t tsize = s + sizeof(*nb) + sizeof(unsigned long);
 
+	if (s > 50000000) {
+		log_error("Huge memory allocation (size %" PRIuPTR
+			  ") rejected - bug?", s);
+		return 0;
+	}
+
 	if (!(nb = malloc(tsize))) {
 		log_error("couldn't allocate any memory, size = %" PRIuPTR, s);
 		return 0;
