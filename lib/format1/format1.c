@@ -386,7 +386,7 @@ static struct list_head *_get_pvs(struct io_space *is)
 		goto bad;
 	}
 
-	if (!_import_pvs(mem, &pvs, results, &count)) {
+	if (!_import_pvs(is->mem, &pvs, results, &count)) {
 		stack;
 		goto bad;
 	}
@@ -411,8 +411,8 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 {
 	struct io_space *ios = dbg_malloc(sizeof(*ios));
 
-	ios->get_vgs = _get_pvs;
-	ios->get_pvs = NULL;
+	ios->get_vgs = NULL;
+	ios->get_pvs = _get_pvs;
 	ios->pv_read = NULL;
 	ios->pv_write = NULL;
 	ios->vg_read = _vg_read;
