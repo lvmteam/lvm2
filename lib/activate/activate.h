@@ -13,7 +13,8 @@ int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 
 /*
- * Status functions.  Return count (0 upwards) or else -1 on error.
+ * Status functions.  Return count (0 upwards) or else -1 on
+ * error.
  */
 int lv_active(struct logical_volume *lv);
 int lv_suspended(struct logical_volume *lv);
