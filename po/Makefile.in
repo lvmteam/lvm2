@@ -19,7 +19,7 @@ LANGS=de
 
 TARGETS=$(LANGS:%=%.mo)
 
-include ../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 install: $(TARGETS)
 	@echo Installing translation files in $(localedir)

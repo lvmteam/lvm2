@@ -24,7 +24,7 @@ TARGETS=\
 	rfilter_t \
 	pfilter_t
 
-include ../../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 rfilter_t: rfilter_t.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o rfilter_t rfilter_t.o -L$(top_srcdir)/lib -llvm

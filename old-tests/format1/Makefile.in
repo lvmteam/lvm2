@@ -31,7 +31,7 @@ TARGETS=\
 	read_pv_t \
 	get_vgs_t
 
-include ../../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 read_vg_t: read_vg_t.o pretty_print.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o read_vg_t read_vg_t.o pretty_print.o -L$(top_srcdir)/lib -llvm

@@ -136,5 +136,5 @@ LIB_STATIC = liblvm.a
 
 $(SUBDIRS): $(LIB_STATIC)
 
-include ../make.tmpl
+include $(top_srcdir)/make.tmpl
 

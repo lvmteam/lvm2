@@ -21,7 +21,7 @@ SOURCES=\
 
 TARGETS=dev_cache_t
 
-include ../../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 dev_cache_t: dev_cache_t.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o dev_cache_t dev_cache_t.o -L$(top_srcdir)/lib -llvm

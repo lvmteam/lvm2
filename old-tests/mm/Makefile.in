@@ -21,7 +21,7 @@ SOURCES=\
 
 TARGETS=dbg_malloc_t
 
-include ../../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 dbg_malloc_t: dbg_malloc_t.o
 	$(CC) $(CFLAGS) -o dbg_malloc_t dbg_malloc_t.o \

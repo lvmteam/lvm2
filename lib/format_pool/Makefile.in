@@ -24,7 +24,7 @@ SOURCES =\
 
 LIB_SHARED = liblvm2formatpool.so
 
-include ../../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 .PHONY: install
 
