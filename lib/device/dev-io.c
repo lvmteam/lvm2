@@ -294,12 +294,17 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	const char *name;
 
 	if (dev->fd >= 0) {
-		if (!(dev->flags & DEV_OPENED_RW) &&
-		    ((flags & O_ACCMODE) == O_RDWR))
+		if ((dev->flags & DEV_OPENED_RW) ||
+		    ((flags & O_ACCMODE) != O_RDWR)) {
+			dev->open_count++;
+			return 1;
+		}
+
+		if (dev->open_count)
 			log_debug("WARNING: %s already opened read-only",
 				  dev_name(dev));
-		dev->open_count++;
-		return 1;
+		else
+			dev_close_immediate(dev);
 	}
 
 	if (memlock())
