@@ -4,14 +4,11 @@
  * This file is released under the LGPL.
  */
 
-#include "log.h"
+#include "lib.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
-#include "dbg_malloc.h"
 
-#include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>

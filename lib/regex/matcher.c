@@ -4,14 +4,12 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "matcher.h"
 #include "parse_rx.h"
-#include "log.h"
 #include "ttree.h"
 #include "bitset.h"
 
-#include <string.h>
-#include <stdio.h>
 #include <assert.h>
 
 struct dfa_state {
@@ -330,8 +328,8 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns, int num)
 	return NULL;
 }
 
-static inline struct dfa_state *
-_step_matcher(unsigned char c, struct dfa_state *cs, int *r)
+static inline struct dfa_state *_step_matcher(unsigned char c,
+					      struct dfa_state *cs, int *r)
 {
 	if (!(cs = cs->lookup[c]))
 		return NULL;
@@ -356,7 +354,7 @@ int matcher_run(struct matcher *m, const char *b)
 
 	_step_matcher(DOLLAR_CHAR, cs, &r);
 
- out:
+      out:
 	/* subtract 1 to get back to zero index */
 	return r - 1;
 }

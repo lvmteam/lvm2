@@ -4,18 +4,15 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "metadata.h"
 #include "activate.h"
 #include "display.h"
-#include "log.h"
 #include "fs.h"
 #include "lvm-string.h"
 #include "pool.h"
 #include "toolcontext.h"
 #include "dev_manager.h"
-
-/* FIXME Temporary */
-#include "vgcache.h"
 
 #include <limits.h>
 #include <linux/kdev_t.h>
@@ -23,8 +20,32 @@
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
 
+static int _activation = 1;
+
+void set_activation(int activation)
+{
+	if (activation == _activation)
+		return;
+
+	_activation = activation;
+	if (_activation)
+		log_verbose("Activation enabled. Device-mapper kernel "
+			    "driver will be used.");
+	else
+		log_verbose("Activation disabled. No device-mapper "
+			    "interaction will be attempted.");
+}
+
+int activation()
+{
+	return _activation;
+}
+
 int library_version(char *version, size_t size)
 {
+	if (!activation())
+		return 0;
+
 	if (!dm_get_library_version(version, size))
 		return 0;
 	return 1;
@@ -34,6 +55,9 @@ int driver_version(char *version, size_t size)
 {
 	int r = 0;
 	struct dm_task *dmt;
+
+	if (!activation())
+		return 0;
 
 	log_very_verbose("Getting driver version");
 	if (!(dmt = dm_task_create(DM_DEVICE_VERSION))) {
@@ -63,6 +87,9 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 	int r;
 	struct dev_manager *dm;
 
+	if (!activation())
+		return 0;
+
 	if (!(dm = dev_manager_create(lv->vg->name))) {
 		stack;
 		return 0;
@@ -82,6 +109,9 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 {
 	int r;
 	struct dev_manager *dm;
+
+	if (!activation())
+		return 0;
 
 	if (!(dm = dev_manager_create(lv->vg->name))) {
 		stack;
@@ -182,6 +212,9 @@ int lvs_in_vg_activated(struct volume_group *vg)
 	struct logical_volume *lv;
 	int count = 0;
 
+	if (!activation())
+		return 0;
+
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 		count += (_lv_active(lv) == 1);
@@ -196,6 +229,9 @@ int lvs_in_vg_opened(struct volume_group *vg)
 	struct logical_volume *lv;
 	int count = 0;
 
+	if (!activation())
+		return 0;
+
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 		count += (_lv_open_count(lv) == 1);
@@ -204,43 +240,20 @@ int lvs_in_vg_opened(struct volume_group *vg)
 	return count;
 }
 
-static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
-					    const char *lvid_s)
-{
-	struct lv_list *lvl;
-	struct volume_group *vg;
-	union lvid *lvid;
-
-	lvid = (union lvid *) lvid_s;
-
-	log_very_verbose("Finding volume group for uuid %s", lvid_s);
-	if (!(vg = vg_read_by_vgid(cmd, lvid->id[0].uuid))) {
-		log_error("Volume group for uuid not found: %s", lvid_s);
-		return NULL;
-	}
-
-	log_verbose("Found volume group \"%s\"", vg->name);
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg->name);
-		return NULL;
-	}
-
-	if (!(lvl = find_lv_in_vg_by_lvid(vg, lvid))) {
-		log_very_verbose("Can't find logical volume id %s", lvid_s);
-		return NULL;
-	}
-
-	return lvl->lv;
-}
-
 /* These return success if the device is not active */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 	struct dm_info info;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
+	if (!activation())
+		return 1;
+
+	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
+
+	if (!activation())
+		return 1;
 
 	if (test_mode()) {
 		_skip("Suspending '%s'.", lv->name);
@@ -263,7 +276,10 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 	struct logical_volume *lv;
 	struct dm_info info;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
+	if (!activation())
+		return 1;
+
+	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
 	if (test_mode()) {
@@ -287,7 +303,10 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	struct logical_volume *lv;
 	struct dm_info info;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
+	if (!activation())
+		return 1;
+
+	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
 	if (test_mode()) {
@@ -311,7 +330,10 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 	struct logical_volume *lv;
 	struct dm_info info;
 
-	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
+	if (!activation())
+		return 1;
+
+	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
 	if (test_mode()) {

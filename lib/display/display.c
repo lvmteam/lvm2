@@ -18,18 +18,82 @@
  *
  */
 
+#include "lib.h"
 #include "metadata.h"
-#include "dbg_malloc.h"
-#include "log.h"
 #include "display.h"
 #include "activate.h"
-#include "uuid.h"
 #include "toolcontext.h"
 
-#include <sys/types.h>
-#include <string.h>
-
 #define SIZE_BUF 128
+
+static struct {
+	alloc_policy_t alloc;
+	const char *str;
+} _policies[] = {
+	{
+	ALLOC_NEXT_FREE, "next free"}, {
+	ALLOC_CONTIGUOUS, "contiguous"}, {
+	ALLOC_DEFAULT, "next free (default)"}
+};
+
+static struct {
+	segment_type_t segtype;
+	const char *str;
+} _segtypes[] = {
+	{
+	SEG_STRIPED, "striped"}, {
+	SEG_MIRROR, "mirror"}, {
+	SEG_SNAPSHOT, "snapshot"}
+};
+
+static int _num_policies = sizeof(_policies) / sizeof(*_policies);
+static int _num_segtypes = sizeof(_segtypes) / sizeof(*_segtypes);
+
+const char *get_alloc_string(alloc_policy_t alloc)
+{
+	int i;
+
+	for (i = 0; i < _num_policies; i++)
+		if (_policies[i].alloc == alloc)
+			return _policies[i].str;
+
+	return NULL;
+}
+
+const char *get_segtype_string(segment_type_t segtype)
+{
+	int i;
+
+	for (i = 0; i < _num_segtypes; i++)
+		if (_segtypes[i].segtype == segtype)
+			return _segtypes[i].str;
+
+	return NULL;
+}
+
+alloc_policy_t get_alloc_from_string(const char *str)
+{
+	int i;
+
+	for (i = 0; i < _num_policies; i++)
+		if (!strcmp(_policies[i].str, str))
+			return _policies[i].alloc;
+
+	log_error("Unrecognised allocation policy - using default");
+	return ALLOC_DEFAULT;
+}
+
+segment_type_t get_segtype_from_string(const char *str)
+{
+	int i;
+
+	for (i = 0; i < _num_segtypes; i++)
+		if (!strcmp(_segtypes[i].str, str))
+			return _segtypes[i].segtype;
+
+	log_error("Unrecognised segment type - using default (striped)");
+	return SEG_STRIPED;
+}
 
 char *display_size(uint64_t size, size_len_t sl)
 {
@@ -89,7 +153,8 @@ void pvdisplay_colons(struct physical_volume *pv)
 	return;
 }
 
-void pvdisplay_full(struct physical_volume *pv)
+/* FIXME Include label fields */
+void pvdisplay_full(struct physical_volume *pv, void *handle)
 {
 	char uuid[64];
 	char *size, *size1;	/*, *size2; */
@@ -104,18 +169,6 @@ void pvdisplay_full(struct physical_volume *pv)
 		return;
 	}
 
-	/* Compat */
-	if(!pv->pe_size) {
-		size = display_size((uint64_t) pv->size / 2, SIZE_SHORT);
-		log_print("\"%s\" is a new physical volume of %s", dev_name(pv->dev), size);
-		dbg_free(size);
-		return;
-	}
-
-	set_cmd_name("");
-	init_msg_prefix("");
-
-/****** FIXME Do we really need this conditional here? */
 	log_print("--- %sPhysical volume ---", pv->pe_size ? "" : "NEW ");
 	log_print("PV Name               %s", dev_name(pv->dev));
 	log_print("VG Name               %s%s", pv->vg_name,
@@ -126,14 +179,12 @@ void pvdisplay_full(struct physical_volume *pv)
 		size1 = display_size((pv->size - pv->pe_count * pv->pe_size)
 				     / 2, SIZE_SHORT);
 
-/******** FIXME display LVM on-disk data size - static for now...
+/******** FIXME display LVM on-disk data size
 		size2 = display_size(pv->size / 2, SIZE_SHORT);
 ********/
 
-		log_print("PV Size               %s [%llu secs]" " / not "
-			  "usable %s [LVM: %s]",
-			  size, (uint64_t) pv->size, size1, "151 KB");
-	/* , size2);    */
+		log_print("PV Size               %s" " / not usable %s",	/*  [LVM: %s]", */
+			  size, size1);	/* , size2);    */
 
 		dbg_free(size1);
 		/* dbg_free(size2); */
@@ -141,12 +192,9 @@ void pvdisplay_full(struct physical_volume *pv)
 		log_print("PV Size               %s", size);
 	dbg_free(size);
 
-/******** FIXME anytime this *isn't* available? */
-	log_print("PV Status             available");
-
-/*********FIXME Anything use this?
-	log_print("PV#                   %u", pv->pv_number);
-**********/
+	/* PV number not part of LVM2 design
+	   log_print("PV#                   %u", pv->pv_number);
+	 */
 
 	pe_free = pv->pe_count - pv->pe_alloc_count;
 	if (pv->pe_count && (pv->status & ALLOCATABLE_PV))
@@ -155,18 +203,13 @@ void pvdisplay_full(struct physical_volume *pv)
 	else
 		log_print("Allocatable           NO");
 
-/*********FIXME Erm...where is this stored?
-	log_print("Cur LV                %u", vg->lv_count);
-*/
+	/* LV count is no longer available when displaying PV
+	   log_print("Cur LV                %u", vg->lv_count);
+	 */
 	log_print("PE Size (KByte)       %" PRIu64, pv->pe_size / 2);
 	log_print("Total PE              %u", pv->pe_count);
 	log_print("Free PE               %" PRIu64, pe_free);
 	log_print("Allocated PE          %u", pv->pe_alloc_count);
-
-#ifdef LVM_FUTURE
-	printf("Stale PE              %u", pv->pe_stale);
-#endif
-
 	log_print("PV UUID               %s", *uuid ? uuid : "none");
 	log_print(" ");
 
@@ -174,7 +217,7 @@ void pvdisplay_full(struct physical_volume *pv)
 }
 
 int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
-		    struct physical_volume *pv)
+		    struct physical_volume *pv, void *handle)
 {
 	if (!pv)
 		return 0;
@@ -189,8 +232,6 @@ int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
 	log_print(" ");
 	return 0;
 }
-
-
 
 void lvdisplay_colons(struct logical_volume *lv)
 {
@@ -207,59 +248,21 @@ void lvdisplay_colons(struct logical_volume *lv)
 		  /* FIXME lv->lv_number,  */
 		  inkernel ? info.open_count : 0, lv->size, lv->le_count,
 		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
-		  ((lv->alloc == ALLOC_STRICT) +
-		   (lv->alloc == ALLOC_CONTIGUOUS) * 2), lv->read_ahead,
+		  (lv->alloc == ALLOC_CONTIGUOUS ? 2 : 0), lv->read_ahead,
 		  inkernel ? info.major : -1, inkernel ? info.minor : -1);
 	return;
 }
 
-
-static struct {
-	alloc_policy_t alloc;
-	const char *str;
-} _policies[] = {
-	{ALLOC_NEXT_FREE, "next free"},
-	{ALLOC_STRICT, "strict"},
-	{ALLOC_CONTIGUOUS, "contiguous"}
-};
-
-static int _num_policies = sizeof(_policies) / sizeof(*_policies);
-
-const char *get_alloc_string(alloc_policy_t alloc)
-{
-	int i;
-
-	for (i = 0; i < _num_policies; i++)
-		if (_policies[i].alloc == alloc)
-			return _policies[i].str;
-
-	return NULL;
-}
-
-alloc_policy_t get_alloc_from_string(const char *str)
-{
-	int i;
-
-	for (i = 0; i < _num_policies; i++)
-		if (!strcmp(_policies[i].str, str))
-			return _policies[i].alloc;
-
-	log_warn("Unknown allocation policy, defaulting to next free");
-	return ALLOC_NEXT_FREE;
-}
-
-int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
+int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
+		   void *handle)
 {
 	char *size;
 	struct dm_info info;
-	int inkernel;
+	int inkernel, snap_active;
 	char uuid[64];
-	struct snapshot *snap;
-	struct stripe_segment *seg;
-	struct list *lvseg;
-	struct logical_volume *origin;
-	float snap_percent;
-	int snap_active;
+	struct snapshot *snap = NULL;
+	struct list *slh, *snaplist;
+	float snap_percent; /* fused, fsize; */
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
 		stack;
@@ -268,161 +271,99 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 
 	inkernel = lv_info(lv, &info) && info.exists;
 
-	set_cmd_name("");
-	init_msg_prefix("");
-
 	log_print("--- Logical volume ---");
 
 	log_print("LV Name                %s%s/%s", lv->vg->cmd->dev_dir,
 		  lv->vg->name, lv->name);
 	log_print("VG Name                %s", lv->vg->name);
 
-/* Not in LVM1 format
 	log_print("LV UUID                %s", uuid);
-**/
+
 	log_print("LV Write Access        %s",
 		  (lv->status & LVM_WRITE) ? "read/write" : "read only");
 
-	/* see if this LV is an origin for a snapshot */
-	if ((snap = find_origin(lv))) {
-		struct list *slh, *snaplist = find_snapshots(lv);
-
+	if (lv_is_origin(lv)) {
 		log_print("LV snapshot status     source of");
+
+		snaplist = find_snapshots(lv);
 		list_iterate(slh, snaplist) {
 			snap = list_item(slh, struct snapshot_list)->snapshot;
 			snap_active = lv_snapshot_percent(snap->cow,
 							  &snap_percent);
 			log_print("                       %s%s/%s [%s]",
-				 lv->vg->cmd->dev_dir, lv->vg->name,
-				 snap->cow->name,
-				 (snap_active > 0) ? "active" : "INACTIVE");
+				  lv->vg->cmd->dev_dir, lv->vg->name,
+				  snap->cow->name,
+				  (snap_active > 0) ? "active" : "INACTIVE");
 		}
-		/* reset so we don't try to use this to display other snapshot
- 		 * related information. */
-		snap = NULL;
-		snap_active = 0;
-	}
-	/* Check to see if this LV is a COW target for a snapshot */
-	else if ((snap = find_cow(lv))) {
+	} else if ((snap = find_cow(lv))) {
 		snap_active = lv_snapshot_percent(lv, &snap_percent);
 		log_print("LV snapshot status     %s destination for %s%s/%s",
-		 	  (snap_active > 0) ? "active" : "INACTIVE",
+			  (snap_active > 0) ? "active" : "INACTIVE",
 			  lv->vg->cmd->dev_dir, lv->vg->name,
 			  snap->origin->name);
 	}
-
 
 	if (inkernel && info.suspended)
 		log_print("LV Status              suspended");
 	else
 		log_print("LV Status              %savailable",
-			  !inkernel || (snap && (snap_active < 1))
-			    ?  "NOT " : "");
+			  inkernel ? "" : "NOT ");
 
-/********* FIXME lv_number - not sure that we're going to bother with this
+/********* FIXME lv_number
     log_print("LV #                   %u", lv->lv_number + 1);
 ************/
 
-/* LVM1 lists the number of LVs open in this field, therefore, so do we. */
-	log_print("# open                 %u", lvs_in_vg_opened(lv->vg));
-
-/* We're not going to use this count ATM, 'cause it's not what LVM1 does
 	if (inkernel)
 		log_print("# open                 %u", info.open_count);
-*/
-/********
-#ifdef LVM_FUTURE
-    printf("Mirror copies          %u\n", lv->lv_mirror_copies);
-    printf("Consistency recovery   ");
-    if (lv->lv_recovery | LV_BADBLOCK_ON)
-	printf("bad blocks\n");
-    else
-	printf("none\n");
-    printf("Schedule               %u\n", lv->lv_schedule);
-#endif
-********/
 
-	if(snap)
-		origin = snap->origin;
-	else
-		origin = lv;
-
-	size = display_size(origin->size / 2, SIZE_SHORT);
+	size = display_size(snap ? snap->origin->size / 2 : lv->size / 2,
+			    SIZE_SHORT);
 	log_print("LV Size                %s", size);
 	dbg_free(size);
 
-	log_print("Current LE             %u", origin->le_count);
+	log_print("Current LE             %u",
+		  snap ? snap->origin->le_count : lv->le_count);
 
-/********** FIXME allocation - is there anytime the allocated LEs will not
- * equal the current LEs? */
-	log_print("Allocated LE           %u", origin->le_count);
-/**********/
+/********** FIXME allocation
+    log_print("Allocated LE           %u", lv->allocated_le);
+**********/
 
-
-	list_iterate(lvseg, &lv->segments) {
-		seg = list_item(lvseg, struct stripe_segment);
-		if(seg->stripes > 1) {
-			log_print("Stripes                %u", seg->stripes);
-			log_print("Stripe size (KByte)    %u",
-				  seg->stripe_size/2);
-		}
-		/* only want the first segment for LVM1 format output */
-		break;
-	}
-
-	if(snap) {
-		float fused, fsize;
-		if(snap_percent == -1)
-			snap_percent=100;
-
-		size = display_size(snap->chunk_size / 2, SIZE_SHORT);
-		log_print("snapshot chunk size    %s", size);
-		dbg_free(size);
-
-		size = display_size(lv->size / 2, SIZE_SHORT);
-		sscanf(size, "%f", &fsize);
-		fused = fsize * ( snap_percent / 100 );
-		log_print("Allocated to snapshot  %2.2f%% [%2.2f/%s]",
-			  snap_percent, fused, size);
-		dbg_free(size);
-
-		/* FIXME: Think this'll make them wonder?? */
-		log_print("Allocated to COW-table %s", "00.01 KB");
-	}
-
-/** Not in LVM1 format output **
 	log_print("Segments               %u", list_size(&lv->segments));
-***/
 
 /********* FIXME Stripes & stripesize for each segment
 	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
 ***********/
 
-/**************
-#ifdef LVM_FUTURE
-    printf("Bad block             ");
-    if (lv->lv_badblock == LV_BADBLOCK_ON)
-	printf("on\n");
-    else
-	printf("off\n");
-#endif
-***************/
+    if (snap) {
+    	if (snap_percent == -1)
+		snap_percent = 100;
+
+	size = display_size(snap->chunk_size / 2, SIZE_SHORT);
+	log_print("Snapshot chunk size    %s", size);
+	dbg_free(size);
+
+/*
+	size = display_size(lv->size / 2, SIZE_SHORT);
+	sscanf(size, "%f", &fsize);
+	fused = fsize * snap_percent / 100;
+*/
+	log_print("Allocated to snapshot  %.2f%% ", /* [%.2f/%s]", */
+		  snap_percent);  /*, fused, size); */
+	/* dbg_free(size); */
+    }
+
+/********** FIXME Snapshot
+	size = ???
+	log_print("Allocated to COW-table %s", size);
+	dbg_free(size);
+    }
+******************/
 
 	log_print("Allocation             %s", get_alloc_string(lv->alloc));
 	log_print("Read ahead sectors     %u", lv->read_ahead);
 
 	if (lv->status & FIXED_MINOR)
 		log_print("Persistent minor       %d", lv->minor);
-
-/****************
-#ifdef LVM_FUTURE
-    printf("IO Timeout (seconds)   ");
-    if (lv->lv_io_timeout == 0)
-	printf("default\n\n");
-    else
-	printf("%lu\n\n", lv->lv_io_timeout);
-#endif
-*************/
 
 	if (inkernel)
 		log_print("Block device           %d:%d", info.major,
@@ -433,15 +374,15 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	return 0;
 }
 
-void _display_stripe(struct stripe_segment *seg, int s, const char *pre)
+void _display_stripe(struct lv_segment *seg, int s, const char *pre)
 {
 	uint32_t len = seg->len / seg->stripes;
 
-	log_print("%sphysical volume\t%s", pre,
+	log_print("%sPhysical volume\t%s", pre,
 		  seg->area[s].pv ? dev_name(seg->area[s].pv->dev) : "Missing");
 
 	if (seg->area[s].pv)
-		log_print("%sphysical extents\t%d to %d", pre,
+		log_print("%sPhysical extents\t%d to %d", pre,
 			  seg->area[s].pe, seg->area[s].pe + len - 1);
 }
 
@@ -449,29 +390,38 @@ int lvdisplay_segments(struct logical_volume *lv)
 {
 	int s;
 	struct list *segh;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 
 	log_print("--- Segments ---");
 
 	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct stripe_segment);
+		seg = list_item(segh, struct lv_segment);
 
-		log_print("logical extent %d to %d:",
+		log_print("Logical extent %d to %d:",
 			  seg->le, seg->le + seg->len - 1);
 
-		if (seg->stripes == 1)
-			_display_stripe(seg, 0, "  ");
+		log_print("  Type\t\t%s", get_segtype_string(seg->type));
 
-		else {
-			log_print("  stripes\t\t%d", seg->stripes);
-			log_print("  stripe size\t\t%d", seg->stripe_size);
+		switch (seg->type) {
+		case SEG_STRIPED:
+			if (seg->stripes == 1)
+				_display_stripe(seg, 0, "  ");
+			else {
+				log_print("  Stripes\t\t%d", seg->stripes);
+				log_print("  Stripe size\t\t%d",
+					  seg->stripe_size);
 
-			for (s = 0; s < seg->stripes; s++) {
-				log_print("  stripe %d:", s);
-				_display_stripe(seg, s, "    ");
+				for (s = 0; s < seg->stripes; s++) {
+					log_print("  Stripe %d:", s);
+					_display_stripe(seg, s, "    ");
+				}
 			}
+			log_print(" ");
+			break;
+		case SEG_SNAPSHOT:
+		case SEG_MIRROR:
+			;
 		}
-		log_print(" ");
 	}
 
 	log_print(" ");
@@ -486,29 +436,24 @@ void vgdisplay_extents(struct volume_group *vg)
 void vgdisplay_full(struct volume_group *vg)
 {
 	uint32_t access;
+	uint32_t active_pvs;
 	char *s1;
 	char uuid[64];
-	uint32_t active_pvs;
-	struct list *pvlist;
 
-	set_cmd_name("");
-	init_msg_prefix("");
-
-	/* get the number of active PVs */
-	if(vg->status & PARTIAL_VG) {
-		active_pvs=0;
-		list_iterate(pvlist, &(vg->pvs)) {
-			active_pvs++;
-		}
-	}
+	if (vg->status & PARTIAL_VG)
+		active_pvs = list_size(&vg->pvs);
 	else
-		active_pvs=vg->pv_count;
+		active_pvs = vg->pv_count;
 
 	log_print("--- Volume group ---");
 	log_print("VG Name               %s", vg->name);
-/****** Not in LVM1 output, so we aren't outputing it here:
 	log_print("System ID             %s", vg->system_id);
-*******/
+	log_print("Format                %s", vg->fid->fmt->name);
+	if (vg->fid->fmt->features & FMT_MDAS) {
+		log_print("Metadata Areas        %d",
+			  list_size(&vg->fid->metadata_areas));
+		log_print("Metadata Sequence No  %d", vg->seqno);
+	}
 	access = vg->status & (LVM_READ | LVM_WRITE);
 	log_print("VG Access             %s%s%s%s",
 		  access == (LVM_READ | LVM_WRITE) ? "read/write" : "",
@@ -516,28 +461,30 @@ void vgdisplay_full(struct volume_group *vg)
 		  access == LVM_WRITE ? "write" : "",
 		  access == 0 ? "error" : "");
 	log_print("VG Status             %s%sresizable",
-		  vg->status & EXPORTED_VG ? "exported/" : "available/",
+		  vg->status & EXPORTED_VG ? "exported/" : "",
 		  vg->status & RESIZEABLE_VG ? "" : "NOT ");
+	/* vg number not part of LVM2 design
+	   log_print ("VG #                  %u\n", vg->vg_number);
+	 */
 	if (vg->status & CLUSTERED) {
 		log_print("Clustered             yes");
 		log_print("Shared                %s",
 			  vg->status & SHARED ? "yes" : "no");
 	}
-/****** FIXME VG # - we aren't implementing this because people should
- * use the UUID for this anyway
-	log_print("VG #                  %u", vg->vg_number);
-*******/
 	log_print("MAX LV                %u", vg->max_lv);
 	log_print("Cur LV                %u", vg->lv_count);
-        log_print("Open LV               %u", lvs_in_vg_opened(vg));
-        log_print("MAX LV Size           256 TB");
+	log_print("Open LV               %u", lvs_in_vg_opened(vg));
+/****** FIXME Max LV Size
+      log_print ( "MAX LV Size           %s",
+               ( s1 = display_size ( LVM_LV_SIZE_MAX(vg) / 2, SIZE_SHORT)));
+      free ( s1);
+*********/
 	log_print("Max PV                %u", vg->max_pv);
 	log_print("Cur PV                %u", vg->pv_count);
-      	log_print("Act PV                %u", active_pvs);
+	log_print("Act PV                %u", active_pvs);
 
-	s1 =
-	    display_size((uint64_t) vg->extent_count * (vg->extent_size / 2),
-			 SIZE_SHORT);
+	s1 = display_size((uint64_t) vg->extent_count * (vg->extent_size / 2),
+			  SIZE_SHORT);
 	log_print("VG Size               %s", s1);
 	dbg_free(s1);
 
@@ -554,9 +501,8 @@ void vgdisplay_full(struct volume_group *vg)
 		  vg->extent_count - vg->free_count, s1);
 	dbg_free(s1);
 
-	s1 =
-	    display_size((uint64_t) vg->free_count * (vg->extent_size / 2),
-			 SIZE_SHORT);
+	s1 = display_size((uint64_t) vg->free_count * (vg->extent_size / 2),
+			  SIZE_SHORT);
 	log_print("Free  PE / Size       %u / %s", vg->free_count, s1);
 	dbg_free(s1);
 
@@ -580,9 +526,8 @@ void vgdisplay_short(struct volume_group *vg)
 {
 	char *s1, *s2, *s3;
 	s1 = display_size(vg->extent_count * vg->extent_size / 2, SIZE_SHORT);
-	s2 =
-	    display_size((vg->extent_count - vg->free_count) * vg->extent_size /
-			 2, SIZE_SHORT);
+	s2 = display_size((vg->extent_count -
+			   vg->free_count) * vg->extent_size / 2, SIZE_SHORT);
 	s3 = display_size(vg->free_count * vg->extent_size / 2, SIZE_SHORT);
 	log_print("\"%s\" %-9s [%-9s used / %s free]", vg->name,
 /********* FIXME if "open" print "/used" else print "/idle"???  ******/

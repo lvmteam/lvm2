@@ -28,8 +28,8 @@
  *
  */
 
-#include <stdio.h>
-#include <string.h>
+#include <stdio.h>   /* FILE */
+#include <string.h>  /* strerror() */
 #include <errno.h>
 
 #define _LOG_DEBUG 7
@@ -91,8 +91,3 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 
 #endif
 
-/*
- * Local variables:
- * c-file-style: "linux"
- * End:
- */

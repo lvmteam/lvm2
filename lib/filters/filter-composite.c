@@ -4,9 +4,8 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "filter-composite.h"
-#include "dbg_malloc.h"
-#include "log.h"
 
 #include <stdarg.h>
 

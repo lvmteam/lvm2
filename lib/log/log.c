@@ -4,7 +4,8 @@
  * This file is released under the LGPL.
  */
 
-#include "log.h"
+#include "lib.h"
+
 #include <stdarg.h>
 #include <syslog.h>
 
@@ -22,7 +23,7 @@ static int _ignorelockingfailure = 0;
 static char _cmd_name[30] = "";
 static char _msg_prefix[30] = "  ";
 
-void init_log(FILE * fp)
+void init_log(FILE *fp)
 {
 	_log = fp;
 }
@@ -57,9 +58,9 @@ void init_verbose(int level)
 
 void init_test(int level)
 {
+	if (!_test && level)
+		log_print("Test mode: Metadata will NOT be updated.");
 	_test = level;
-	if (_test)
-		log_print("Test mode. Metadata will NOT be updated.");
 }
 
 void init_partial(int level)

@@ -4,18 +4,18 @@
  * This file is released under the LGPL.
  */
 
-#include <sys/types.h>
+#include "lib.h"
+#include "config.h"
+#include "crc.h"
+#include "pool.h"
+#include "device.h"
+
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <string.h>
-#include <errno.h>
-
-#include "config.h"
-#include "pool.h"
-#include "log.h"
+#include <asm/page.h>
 
 enum {
 	TOK_INT,
@@ -32,10 +32,10 @@ enum {
 };
 
 struct parser {
-	const char *fb, *fe;	/* file limits */
+	char *fb, *fe;		/* file limits */
 
 	int t;			/* token limits and type */
-	const char *tb, *te;
+	char *tb, *te;
 
 	int fd;			/* descriptor for file being parsed */
 	int line;		/* line number we are on */
@@ -44,8 +44,10 @@ struct parser {
 };
 
 struct cs {
-	struct config_file cf;
+	struct config_tree cf;
 	struct pool *mem;
+	time_t timestamp;
+	char *filename;
 };
 
 static void _get_token(struct parser *p);
@@ -81,7 +83,7 @@ static int _tok_match(const char *str, const char *b, const char *e)
 /*
  * public interface
  */
-struct config_file *create_config_file(void)
+struct config_tree *create_config_tree(void)
 {
 	struct cs *c;
 	struct pool *mem = pool_create(10 * 1024);
@@ -99,20 +101,24 @@ struct config_file *create_config_file(void)
 
 	c->mem = mem;
 	c->cf.root = (struct config_node *) NULL;
+	c->timestamp = 0;
+	c->filename = NULL;
 	return &c->cf;
 }
 
-void destroy_config_file(struct config_file *cf)
+void destroy_config_tree(struct config_tree *cf)
 {
 	pool_destroy(((struct cs *) cf)->mem);
 }
 
-int read_config(struct config_file *cf, const char *file)
+int read_config_fd(struct config_tree *cf, int fd, const char *file,
+		   off_t offset, uint32_t size, off_t offset2, uint32_t size2,
+		   checksum_fn_t checksum_fn, uint32_t checksum)
 {
 	struct cs *c = (struct cs *) cf;
 	struct parser *p;
-	struct stat info;
-	int r = 1, fd;
+	off_t mmap_offset;
+	int r = 0;
 
 	if (!(p = pool_alloc(c->mem, sizeof(*p)))) {
 		stack;
@@ -120,9 +126,90 @@ int read_config(struct config_file *cf, const char *file)
 	}
 	p->mem = c->mem;
 
-	/* memory map the file */
-	if (stat(file, &info) || S_ISDIR(info.st_mode)) {
+	if (size2) {
+		/* FIXME Attempt adjacent mmaps MAP_FIXED into malloced space 
+		 * one PAGE_SIZE larger than required...
+		 */
+		if (!(p->fb = dbg_malloc(size + size2))) {
+			stack;
+			return 0;
+		}
+		if (lseek(fd, offset, SEEK_SET) < 0) {
+			log_sys_error("lseek", file);
+			goto out;
+		}
+		if (raw_read(fd, p->fb, size) != size) {
+			log_error("Circular read from %s failed", file);
+			goto out;
+		}
+		if (lseek(fd, offset2, SEEK_SET) < 0) {
+			log_sys_error("lseek", file);
+			goto out;
+		}
+		if (raw_read(fd, p->fb + size, size2) != size2) {
+			log_error("Circular read from %s failed", file);
+			goto out;
+		}
+	} else {
+		mmap_offset = offset % PAGE_SIZE;
+		/* memory map the file */
+		p->fb = mmap((caddr_t) 0, size + mmap_offset, PROT_READ,
+			     MAP_PRIVATE, fd, offset - mmap_offset);
+		if (p->fb == (caddr_t) (-1)) {
+			log_sys_error("mmap", file);
+			goto out;
+		}
+
+		p->fb = p->fb + mmap_offset;
+	}
+
+	if (checksum_fn && checksum !=
+	    (checksum_fn(checksum_fn(INITIAL_CRC, p->fb, size),
+			 p->fb + size, size2))) {
+		log_error("%s: Checksum error", file);
+		goto out;
+	}
+
+	p->fe = p->fb + size + size2;
+
+	/* parse */
+	p->tb = p->te = p->fb;
+	p->line = 1;
+	_get_token(p);
+	if (!(cf->root = _file(p))) {
+		stack;
+		goto out;
+	}
+
+	r = 1;
+
+      out:
+	if (size2)
+		dbg_free(p->fb);
+	else {
+		/* unmap the file */
+		if (munmap((char *) (p->fb - mmap_offset), size)) {
+			log_sys_error("munmap", file);
+			r = 0;
+		}
+	}
+
+	return r;
+}
+
+int read_config_file(struct config_tree *cf, const char *file)
+{
+	struct cs *c = (struct cs *) cf;
+	struct stat info;
+	int r = 1, fd;
+
+	if (stat(file, &info)) {
 		log_sys_error("stat", file);
+		return 0;
+	}
+
+	if (!S_ISREG(info.st_mode)) {
+		log_error("%s is not a regular file", file);
 		return 0;
 	}
 
@@ -136,34 +223,79 @@ int read_config(struct config_file *cf, const char *file)
 		return 0;
 	}
 
-	p->fb = mmap((caddr_t) 0, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (p->fb == (caddr_t) (-1)) {
-		log_sys_error("mmap", file);
-		close(fd);
-		return 0;
-	}
-	p->fe = p->fb + info.st_size;
-
-	/* parse */
-	p->tb = p->te = p->fb;
-	p->line = 1;
-	_get_token(p);
-	if (!(cf->root = _file(p))) {
-		stack;
-		r = 0;
-	}
-
-	/* unmap the file */
-	if (munmap((char *) p->fb, info.st_size)) {
-		log_sys_error("munmap", file);
-		r = 0;
-	}
+	r = read_config_fd(cf, fd, file, 0, info.st_size, 0, 0,
+			   (checksum_fn_t) NULL, 0);
 
 	close(fd);
+
+	c->timestamp = info.st_mtime;
+	c->filename = pool_strdup(c->mem, file);
+
 	return r;
 }
 
-static void _write_value(FILE * fp, struct config_value *v)
+/*
+ * Returns 1 if config file reloaded
+ */
+int reload_config_file(struct config_tree **cf)
+{
+	struct config_tree *new_cf;
+	struct cs *c = (struct cs *) *cf;
+	struct cs *new_cs;
+	struct stat info;
+	int r, fd;
+
+	if (stat(c->filename, &info) == -1) {
+		if (errno == ENOENT)
+			return 1;
+		log_sys_error("stat", c->filename);
+		log_error("Failed to reload configuration file");
+		return 0;
+	}
+
+	if (!S_ISREG(info.st_mode)) {
+		log_error("Configuration file %s is not a regular file",
+			  c->filename);
+		return 0;
+	}
+
+	/* Unchanged? */
+	if (c->timestamp == info.st_mtime)
+		return 0;
+
+	log_verbose("Detected config file change: Reloading %s", c->filename);
+
+	if (info.st_size == 0) {
+		log_verbose("Config file reload: %s is empty", c->filename);
+		return 0;
+	}
+
+	if ((fd = open(c->filename, O_RDONLY)) < 0) {
+		log_sys_error("open", c->filename);
+		return 0;
+	}
+
+	if (!(new_cf = create_config_tree())) {
+		log_error("Allocation of new config_tree failed");
+		return 0;
+	}
+
+	r = read_config_fd(new_cf, fd, c->filename, 0, info.st_size, 0, 0,
+			   (checksum_fn_t) NULL, 0);
+	close(fd);
+
+	if (r) {
+		new_cs = (struct cs *) new_cf;
+		new_cs->filename = pool_strdup(new_cs->mem, c->filename);
+		new_cs->timestamp = info.st_mtime;
+		destroy_config_tree(*cf);
+		*cf = new_cf;
+	}
+
+	return r;
+}
+
+static void _write_value(FILE *fp, struct config_value *v)
 {
 	switch (v->type) {
 	case CFG_STRING:
@@ -183,11 +315,12 @@ static void _write_value(FILE * fp, struct config_value *v)
 		break;
 
 	default:
-		log_err("Unknown value type");
+		log_error("_write_value: Unknown value type: %d", v->type);
+
 	}
 }
 
-static int _write_config(struct config_node *n, FILE * fp, int level)
+static int _write_config(struct config_node *n, FILE *fp, int level)
 {
 	char space[MAX_INDENT + 1];
 	int l = (level < MAX_INDENT) ? level : MAX_INDENT;
@@ -230,7 +363,7 @@ static int _write_config(struct config_node *n, FILE * fp, int level)
 	return 1;
 }
 
-int write_config(struct config_file *cf, const char *file)
+int write_config_file(struct config_tree *cf, const char *file)
 {
 	int r = 1;
 	FILE *fp = fopen(file, "w");
@@ -332,9 +465,8 @@ static struct config_value *_value(struct parser *p)
 				match(TOK_COMMA);
 		}
 		match(TOK_ARRAY_E);
-
 		/*
-		 * Special case an empty array.
+		 * Special case for an empty array.
 		 */
 		if (!h) {
 			if (!(h = _create_value(p)))
@@ -342,6 +474,7 @@ static struct config_value *_value(struct parser *p)
 
 			h->type = CFG_EMPTY_ARRAY;
 		}
+
 	} else
 		h = _type(p);
 
@@ -352,6 +485,7 @@ static struct config_value *_type(struct parser *p)
 {
 	/* [0-9]+ | [0-9]*\.[0-9]* | ".*" */
 	struct config_value *v = _create_value(p);
+
 	if (!v)
 		return NULL;
 
@@ -403,7 +537,7 @@ static void _get_token(struct parser *p)
 {
 	p->tb = p->te;
 	_eat_space(p);
-	if (p->tb == p->fe) {
+	if (p->tb == p->fe || !*p->tb) {
 		p->t = TOK_EOF;
 		return;
 	}
@@ -444,13 +578,14 @@ static void _get_token(struct parser *p)
 	case '"':
 		p->t = TOK_STRING;
 		p->te++;
-		while ((p->te != p->fe) && (*p->te != '"')) {
-			if ((*p->te == '\\') && (p->te + 1 != p->fe))
+		while ((p->te != p->fe) && (*p->te) && (*p->te != '"')) {
+			if ((*p->te == '\\') && (p->te + 1 != p->fe) &&
+			    *(p->te + 1))
 				p->te++;
 			p->te++;
 		}
 
-		if (p->te != p->fe)
+		if ((p->te != p->fe) && (*p->te))
 			p->te++;
 		break;
 
@@ -467,7 +602,7 @@ static void _get_token(struct parser *p)
 	case '8':
 	case '9':
 		p->te++;
-		while (p->te != p->fe) {
+		while ((p->te != p->fe) && (*p->te)) {
 			if (*p->te == '.') {
 				if (p->t == TOK_FLOAT)
 					break;
@@ -480,7 +615,7 @@ static void _get_token(struct parser *p)
 
 	default:
 		p->t = TOK_IDENTIFIER;
-		while ((p->te != p->fe) && !isspace(*p->te) &&
+		while ((p->te != p->fe) && (*p->te) && !isspace(*p->te) &&
 		       (*p->te != '#') && (*p->te != '='))
 			p->te++;
 		break;
@@ -489,15 +624,15 @@ static void _get_token(struct parser *p)
 
 static void _eat_space(struct parser *p)
 {
-	while (p->tb != p->fe) {
+	while ((p->tb != p->fe) && (*p->tb)) {
 		if (*p->te == '#') {
-			while ((p->te != p->fe) && (*p->te != '\n'))
+			while ((p->te != p->fe) && (*p->te) && (*p->te != '\n'))
 				p->te++;
 			p->line++;
 		}
 
 		else if (isspace(*p->te)) {
-			while ((p->te != p->fe) && isspace(*p->te)) {
+			while ((p->te != p->fe) && (*p->te) && isspace(*p->te)) {
 				if (*p->te == '\n')
 					p->line++;
 				p->te++;
@@ -674,7 +809,7 @@ int find_config_bool(struct config_node *cn, const char *path,
 }
 
 int get_config_uint32(struct config_node *cn, const char *path,
-		      char sep, uint32_t * result)
+		      char sep, uint32_t *result)
 {
 	struct config_node *n;
 
@@ -688,7 +823,7 @@ int get_config_uint32(struct config_node *cn, const char *path,
 }
 
 int get_config_uint64(struct config_node *cn, const char *path,
-		      char sep, uint64_t * result)
+		      char sep, uint64_t *result)
 {
 	struct config_node *n;
 
@@ -715,4 +850,3 @@ int get_config_str(struct config_node *cn, const char *path,
 	*result = n->v->v.str;
 	return 1;
 }
-

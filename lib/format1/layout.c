@@ -4,9 +4,8 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "disk-rep.h"
-#include "log.h"
-#include "dbg_malloc.h"
 
 /*
  * Only works with powers of 2.
@@ -36,7 +35,7 @@ static uint32_t _next_base(struct data_area *area)
  */
 static int _adjust_pe_on_disk(struct pv_disk *pvd)
 {
-	uint32_t pe_start = pvd->pe_start * SECTOR_SIZE;
+	uint32_t pe_start = pvd->pe_start << SECTOR_SHIFT;
 
 	if (pe_start < pvd->pe_on_disk.base + pvd->pe_on_disk.size)
 		return 0;
@@ -103,11 +102,10 @@ int calculate_layout(struct disk_list *dl)
 }
 
 /*
- * It may seem strange to have a struct physical_volume in here,
- * but the number of extents that can fit on a disk *is* metadata
- * format dependant.
+ * The number of extents that can fit on a disk is metadata format dependant.
  */
-int calculate_extent_count(struct physical_volume *pv)
+int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
+			   uint32_t max_extent_count)
 {
 	struct pv_disk *pvd = dbg_malloc(sizeof(*pvd));
 	uint32_t end;
@@ -122,10 +120,13 @@ int calculate_extent_count(struct physical_volume *pv)
 	 * one is going to be knocked off at the start of the
 	 * next loop.
 	 */
-	pvd->pe_total = (pv->size / pv->pe_size);
+	if (max_extent_count)
+		pvd->pe_total = max_extent_count + 1;
+	else
+		pvd->pe_total = (pv->size / extent_size);
 
 	if (pvd->pe_total < PE_SIZE_PV_SIZE_REL) {
-		log_error("Insufficient space for extents on %s",
+		log_error("Too few extents on %s.  Try smaller extent size.",
 			  dev_name(pv->dev));
 		dbg_free(pvd);
 		return 0;
@@ -135,11 +136,12 @@ int calculate_extent_count(struct physical_volume *pv)
 		pvd->pe_total--;
 		_calc_simple_layout(pvd);
 		end = ((pvd->pe_on_disk.base + pvd->pe_on_disk.size +
-		        SECTOR_SIZE - 1) / SECTOR_SIZE);
+			SECTOR_SIZE - 1) >> SECTOR_SHIFT);
 
 		pvd->pe_start = _round_up(end, PE_ALIGN);
 
-	} while ((pvd->pe_start + (pvd->pe_total * pv->pe_size)) > pv->size);
+	} while ((pvd->pe_start + (pvd->pe_total * extent_size))
+		 > pv->size);
 
 	if (pvd->pe_total > MAX_PE_TOTAL) {
 		log_error("Metadata extent limit (%u) exceeded for %s - "
@@ -151,6 +153,7 @@ int calculate_extent_count(struct physical_volume *pv)
 
 	pv->pe_count = pvd->pe_total;
 	pv->pe_start = pvd->pe_start;
+	/* We can't set pe_size here without breaking LVM1 compatibility */
 	dbg_free(pvd);
 	return 1;
 }

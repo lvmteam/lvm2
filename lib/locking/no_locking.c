@@ -5,7 +5,7 @@
  *
  */
 
-#include "log.h"
+#include "lib.h"
 #include "locking.h"
 #include "locking_types.h"
 #include "lvm-string.h"
@@ -51,7 +51,7 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 	return 1;
 }
 
-int init_no_locking(struct locking_type *locking, struct config_file *cf)
+int init_no_locking(struct locking_type *locking, struct config_tree *cf)
 {
 	locking->lock_resource = _no_lock_resource;
 	locking->fin_locking = _no_fin_locking;

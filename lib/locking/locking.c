@@ -5,13 +5,12 @@
  *
  */
 
-#include "log.h"
+#include "lib.h"
 #include "locking.h"
 #include "locking_types.h"
 #include "lvm-string.h"
 #include "activate.h"
 #include "toolcontext.h"
-#include "defaults.h"
 
 #include <signal.h>
 #include <sys/stat.h>
@@ -72,7 +71,7 @@ static inline void _update_lock_count(int flags)
 /*
  * Select a locking type
  */
-int init_locking(int type, struct config_file *cf)
+int init_locking(int type, struct config_tree *cf)
 {
 	switch (type) {
 	case 0:
@@ -122,9 +121,12 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
 	struct stat info;
 	char path[PATH_MAX];
 
-	if (lvm_snprintf(path, sizeof(path), "%s/lvm/VGs/%s",
-			 find_config_str(cmd->cf->root, "global/proc", '/',
-					 DEFAULT_PROC_DIR), vgname) < 0) {
+	/* We'll allow operations on orphans */
+	if (!*vgname)
+		return 1;
+
+	if (lvm_snprintf(path, sizeof(path), "%s/lvm/VGs/%s", cmd->proc_dir,
+			 vgname) < 0) {
 		log_error("LVM1 proc VG pathname too long for %s", vgname);
 		return 0;
 	}

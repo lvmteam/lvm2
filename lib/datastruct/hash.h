@@ -7,6 +7,8 @@
 #ifndef _LVM_HASH_H
 #define _LVM_HASH_H
 
+#include "lvm-types.h"
+
 struct hash_table;
 struct hash_node;
 
@@ -17,6 +19,7 @@ void hash_destroy(struct hash_table *t);
 void hash_wipe(struct hash_table *t);
 
 void *hash_lookup(struct hash_table *t, const char *key);
+void *hash_lookup_fixed(struct hash_table *t, const char *key, uint32_t len);
 int hash_insert(struct hash_table *t, const char *key, void *data);
 void hash_remove(struct hash_table *t, const char *key);
 

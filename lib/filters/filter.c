@@ -18,18 +18,14 @@
  *
  */
 
-#include "dbg_malloc.h"
-#include "log.h"
+#include "lib.h"
 #include "dev-cache.h"
 #include "filter.h"
 #include "lvm-string.h"
 
-#include <stdlib.h>
 #include <dirent.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <linux/kdev_t.h>
@@ -43,6 +39,7 @@ typedef struct {
 
 static int _md_major = -1;
 
+/* FIXME Move list into config file */
 static device_info_t device_info[] = {
 	{"ide", 16},		/* IDE disk */
 	{"sd", 16},		/* SCSI disk */

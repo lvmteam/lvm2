@@ -4,15 +4,13 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "bitset.h"
-#include "dbg_malloc.h"
-
-#include <stdlib.h>
 
 /* FIXME: calculate this. */
 #define INT_SHIFT 5
 
-bitset_t bitset_create(struct pool * mem, unsigned num_bits)
+bitset_t bitset_create(struct pool *mem, unsigned num_bits)
 {
 	int n = (num_bits / BITS_PER_INT) + 2;
 	int size = sizeof(int) * n;

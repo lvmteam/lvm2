@@ -4,15 +4,17 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "disk-rep.h"
-#include "dbg_malloc.h"
 #include "pool.h"
 #include "hash.h"
 #include "limits.h"
 #include "list.h"
-#include "log.h"
 #include "display.h"
 #include "toolcontext.h"
+#include "cache.h"
+#include "lvm1-label.h"
+#include "format1.h"
 
 /* VG consistency checks */
 static int _check_vgs(struct list *pvs, int *partial)
@@ -113,7 +115,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	if (!import_vg(mem, vg, dl, partial))
 		goto bad;
 
-	if (!import_pvs(fid, mem, vg, pvs, &vg->pvs, &vg->pv_count))
+	if (!import_pvs(fid->fmt, mem, vg, pvs, &vg->pvs, &vg->pv_count))
 		goto bad;
 
 	if (!import_lvs(mem, vg, pvs))
@@ -134,7 +136,8 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 }
 
 static struct volume_group *_vg_read(struct format_instance *fid,
-				     const char *vg_name, void *mda)
+				     const char *vg_name,
+				     struct metadata_area *mda)
 {
 	struct pool *mem = pool_create(1024 * 10);
 	struct list pvs;
@@ -185,8 +188,7 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	if (!export_pv(mem, vg, &dl->pvd, pv) ||
 	    !export_vg(&dl->vgd, vg) ||
 	    !export_uuids(dl, vg) ||
-	    !export_lvs(dl, vg, pv, dev_dir) ||
-	    !calculate_layout(dl)) {
+	    !export_lvs(dl, vg, pv, dev_dir) || !calculate_layout(dl)) {
 		stack;
 		pool_free(mem, dl);
 		return NULL;
@@ -227,7 +229,7 @@ static int _flatten_vg(struct format_instance *fid, struct pool *mem,
 }
 
 static int _vg_write(struct format_instance *fid, struct volume_group *vg,
-		     void *mdl)
+		     struct metadata_area *mda)
 {
 	struct pool *mem = pool_create(1024 * 10);
 	struct list pvds;
@@ -243,26 +245,28 @@ static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 	r = (_flatten_vg(fid, mem, vg, &pvds, fid->fmt->cmd->dev_dir,
 			 fid->fmt->cmd->filter) &&
 	     write_disks(fid->fmt, &pvds));
+
+	cache_update_vg(vg);
 	pool_destroy(mem);
 	return r;
 }
 
-int _pv_read(struct format_type *fmt, const char *name,
-	     struct physical_volume *pv)
+int _pv_read(struct format_type *fmt, const char *pv_name,
+	     struct physical_volume *pv, struct list *mdas)
 {
 	struct pool *mem = pool_create(1024);
 	struct disk_list *dl;
 	struct device *dev;
 	int r = 0;
 
-	log_very_verbose("Reading physical volume data %s from disk", name);
+	log_very_verbose("Reading physical volume data %s from disk", pv_name);
 
 	if (!mem) {
 		stack;
 		return 0;
 	}
 
-	if (!(dev = dev_cache_get(name, fmt->cmd->filter))) {
+	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter))) {
 		stack;
 		goto out;
 	}
@@ -277,7 +281,7 @@ int _pv_read(struct format_type *fmt, const char *name,
 		goto out;
 	}
 
-	pv->fid = fmt->ops->create_instance(fmt, NULL, NULL);
+	pv->fmt = fmt;
 
 	r = 1;
 
@@ -286,120 +290,42 @@ int _pv_read(struct format_type *fmt, const char *name,
 	return r;
 }
 
-static struct list *_get_pvs(struct format_type *fmt, struct list *results)
+static int _pv_setup(struct format_type *fmt,
+		     uint64_t pe_start, uint32_t extent_count,
+		     uint32_t extent_size,
+		     int pvmetadatacopies,
+		     uint64_t pvmetadatasize, struct list *mdas,
+		     struct physical_volume *pv, struct volume_group *vg)
 {
-	struct pool *mem = pool_create(1024 * 10);
-	struct list pvs;
-	uint32_t count;
+	char *sz;
 
-	if (!mem) {
-		stack;
-		return NULL;
-	}
-
-	list_init(&pvs);
-
-	if (!read_pvs_in_vg(fmt, NULL, fmt->cmd->filter, mem, &pvs)) {
-		stack;
-		goto bad;
-	}
-
-	if (!import_pvs(NULL, fmt->cmd->mem, NULL, &pvs, results, &count)) {
-		stack;
-		goto bad;
-	}
-
-	pool_destroy(mem);
-	return results;
-
-      bad:
-	pool_destroy(mem);
-	return NULL;
-}
-
-static int _find_vg_name(struct list *names, const char *vg)
-{
-	struct list *nh;
-	struct name_list *nl;
-
-	list_iterate(nh, names) {
-		nl = list_item(nh, struct name_list);
-		if (!strcmp(nl->name, vg))
-			return 1;
-	}
-
-	return 0;
-}
-
-static struct list *_get_vgs(struct format_type *fmt, struct list *names)
-{
-	struct list *pvh;
-	struct list *pvs;
-	struct name_list *nl;
-
-	if (!(pvs = pool_alloc(fmt->cmd->mem, sizeof(*pvs)))) {
-		log_error("PV list allocation failed");
-		goto err;
-	}
-
-	list_init(pvs);
-
-	if (!_get_pvs(fmt, pvs)) {
-		stack;
-		goto err;
-	}
-
-	list_iterate(pvh, pvs) {
-		struct pv_list *pvl = list_item(pvh, struct pv_list);
-
-		if (!(*pvl->pv->vg_name) ||
-		    _find_vg_name(names, pvl->pv->vg_name))
-			continue;
-
-		if (!(nl = pool_alloc(fmt->cmd->mem, sizeof(*nl)))) {
-			stack;
-			goto err;
-		}
-
-		if (!(nl->name = pool_strdup(fmt->cmd->mem, pvl->pv->vg_name))) {
-			stack;
-			goto err;
-		}
-
-		list_add(names, &nl->list);
-	}
-
-	if (list_empty(names))
-		pool_free(fmt->cmd->mem, pvs);
-
-	return names;
-
-      err:
-	pool_free(fmt->cmd->mem, pvs);
-	return NULL;
-}
-
-static int _pv_setup(struct format_instance *fid, struct physical_volume *pv,
-		     struct volume_group *vg)
-{
-	/* setup operations for the PV structure */
 	if (pv->size > MAX_PV_SIZE)
 		pv->size--;
 	if (pv->size > MAX_PV_SIZE) {
-		/* FIXME Limit hardcoded */
-		log_error("Physical volumes cannot be bigger than 2TB");
+		log_error("Physical volumes cannot be bigger than %s",
+			  sz = display_size(MAX_PV_SIZE / 2, SIZE_SHORT));
+		dbg_free(sz);
 		return 0;
 	}
 
-	/* Nothing more to do if pe_size isn't known */
-	if (!vg)
+	/* Nothing more to do if extent size isn't provided */
+	if (!extent_size)
 		return 1;
 
 	/*
 	 * This works out pe_start and pe_count.
 	 */
-	if (!calculate_extent_count(pv)) {
+	if (!calculate_extent_count(pv, extent_size, extent_count)) {
 		stack;
+		return 0;
+	}
+
+	/* Retain existing extent locations exactly */
+	/* FIXME Relax this so a non-overlapping existing pe_start can also 
+	 * be used in place of the calculated one */
+	if (((pe_start || extent_count) && (pe_start != pv->pe_start)) ||
+	    (extent_count && (extent_count != pv->pe_count))) {
+		log_error("Metadata would overwrite physical extents");
 		return 0;
 	}
 
@@ -448,20 +374,27 @@ static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 	return 1;
 }
 
-static int _pv_write(struct format_instance *fid, struct physical_volume *pv,
-		     void *mdl)
+static int _pv_write(struct format_type *fmt, struct physical_volume *pv,
+		     struct list *mdas, int64_t sector)
 {
 	struct pool *mem;
 	struct disk_list *dl;
 	struct list pvs;
+	struct label *label;
+	struct cache_info *info;
 
-	list_init(&pvs);
-
-	if (*pv->vg_name || pv->pe_alloc_count) {
-		log_error("Assertion failed: can't _pv_write non-orphan PV "
-			  "(in VG %s)", pv->vg_name);
+	if (!(info = cache_add(fmt->labeller, (char *) &pv->id, pv->dev,
+			       pv->vg_name, NULL))) {
+		stack;
 		return 0;
 	}
+	label = info->label;
+	info->device_size = pv->size << SECTOR_SHIFT;
+	info->fmt = fmt;
+
+	list_init(&info->mdas);
+
+	list_init(&pvs);
 
 	/* Ensure any residual PE structure is gone */
 	pv->pe_size = pv->pe_count = 0;
@@ -488,10 +421,10 @@ static int _pv_write(struct format_instance *fid, struct physical_volume *pv,
 	   dev_write in order to make other disk tools happy */
 	dl->pvd.pv_on_disk.base = METADATA_BASE;
 	dl->pvd.pv_on_disk.size = PV_SIZE;
-	dl->pvd.pe_on_disk.base = PE_ALIGN * SECTOR_SIZE;
+	dl->pvd.pe_on_disk.base = PE_ALIGN << SECTOR_SHIFT;
 
 	list_add(&pvs, &dl->list);
-	if (!write_disks(fid->fmt, &pvs)) {
+	if (!write_disks(fmt, &pvs)) {
 		stack;
 		goto bad;
 	}
@@ -542,6 +475,11 @@ int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 	return 1;
 }
 
+static struct metadata_area_ops _metadata_format1_ops = {
+	vg_read:_vg_read,
+	vg_write:_vg_write,
+};
+
 struct format_instance *_create_instance(struct format_type *fmt,
 					 const char *vgname, void *private)
 {
@@ -563,6 +501,7 @@ struct format_instance *_create_instance(struct format_type *fmt,
 		return NULL;
 	}
 
+	mda->ops = &_metadata_format1_ops;
 	mda->metadata_locn = NULL;
 	list_add(&fid->metadata_areas, &mda->list);
 
@@ -580,21 +519,21 @@ void _destroy(struct format_type *fmt)
 }
 
 static struct format_handler _format1_ops = {
-	get_vgs:	_get_vgs,
-	get_pvs:	_get_pvs,
-	pv_read:	_pv_read,
-	pv_setup:	_pv_setup,
-	pv_write:	_pv_write,
-	lv_setup:	_lv_setup,
-	vg_read:	_vg_read,
-	vg_setup:	_vg_setup,
-	vg_write:	_vg_write,
+	pv_read:_pv_read,
+	pv_setup:_pv_setup,
+	pv_write:_pv_write,
+	lv_setup:_lv_setup,
+	vg_setup:_vg_setup,
 	create_instance:_create_instance,
 	destroy_instance:_destroy_instance,
-	destroy:	_destroy,
+	destroy:_destroy,
 };
 
-struct format_type *create_lvm1_format(struct cmd_context *cmd)
+#ifdef LVM1_INTERNAL
+struct format_type *init_lvm1_format(struct cmd_context *cmd)
+#else				/* Shared */
+struct format_type *init_format(struct cmd_context *cmd)
+#endif
 {
 	struct format_type *fmt = dbg_malloc(sizeof(*fmt));
 
@@ -606,8 +545,19 @@ struct format_type *create_lvm1_format(struct cmd_context *cmd)
 	fmt->cmd = cmd;
 	fmt->ops = &_format1_ops;
 	fmt->name = FMT_LVM1_NAME;
+	fmt->alias = NULL;
 	fmt->features = 0;
 	fmt->private = NULL;
+
+	if (!(fmt->labeller = lvm1_labeller_create(fmt))) {
+		log_error("Couldn't create lvm1 label handler.");
+		return NULL;
+	}
+
+	if (!(label_register_handler(FMT_LVM1_NAME, fmt->labeller))) {
+		log_error("Couldn't register lvm1 label handler.");
+		return NULL;
+	}
 
 	return fmt;
 }
