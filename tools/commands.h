@@ -436,7 +436,6 @@ xx(pvmove,
    "\t[--alloc AllocationPolicy]\n"
    "\t[-b|--background]\n"
    "\t[-d|--debug]\n "
-   "\t[-f|--force]\n"
    "\t[-h|-?|--help]\n"
    "\t[-i|--interval seconds]\n"
    "\t[-t|--test]\n "
@@ -447,7 +446,7 @@ xx(pvmove,
    "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n"
    "\t[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
 
-   abort_ARG, alloc_ARG, autobackup_ARG, background_ARG, force_ARG,
+   abort_ARG, alloc_ARG, autobackup_ARG, background_ARG, 
    interval_ARG, name_ARG, test_ARG)
 
 xx(pvremove,
