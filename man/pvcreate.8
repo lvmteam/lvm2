@@ -36,13 +36,19 @@ to add
 .I PhysicalVolume
 to an existing volume group.
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
 .BR \-f ", " \-\-force
 Force the creation without any confirmation.  You can not recreate
 (reinitialize) a physical volume belonging to an existing volume group.
-In an emergency you can override this behaviour with -ff.  In no case
-case can you initialize an active physical volume with this command.
+In an emergency you can override this behaviour with -ff.
+.TP
+.BR \-u ", " \-\-uuid " uuid"
+Specify the uuid for the device.  
+Without this option, \fBpvcreate\fP generates a random uuid.
+All of your physical volumes must have unique uuids.
+You need to use this option to restore a backup of LVM metadata onto 
+a replacement device - see \fBvgcfgrestore\fP(8).
 .TP
 .BR \-y ", " \-\-yes
 Answer yes to all questions.
@@ -54,4 +60,5 @@ SCSI disk for later use by LVM:
 .sp
 .SH SEE ALSO
 .BR lvm "(8), " vgcreate "(8), " vgextend "(8), " lvcreate "(8), "
-.BR cfdisk "(8), " fdisk "(8), " losetup "(8), " mdadd "(8)"
+.BR cfdisk "(8), " fdisk "(8), " losetup "(8), " mdadd "(8), "
+.BR vgcfgrestore "(8)"

@@ -51,6 +51,7 @@ static device_info_t device_info[] = {
 	{"ida", 16},		/* Compaq SMART2 */
 	{"cciss", 16},		/* Compaq CCISS array */
 	{"ubd", 16},		/* User-mode virtual block device */
+	{"ataraid", 16},	/* ATA Raid */
 	{NULL, 0}
 };
 

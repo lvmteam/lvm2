@@ -233,7 +233,8 @@ struct format_handler {
  * Utility functions
  */
 struct physical_volume *pv_create(struct format_instance *fi,
-				  const char *name);
+				  const char *name,
+				  struct id *id);
 
 struct volume_group *vg_create(struct format_instance *fi, const char *name,
 			       uint32_t extent_size, int max_pv, int max_lv,
