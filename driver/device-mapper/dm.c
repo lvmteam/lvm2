@@ -171,7 +171,7 @@ static int dm_blk_close(struct inode *inode, struct file *file)
 	return 0;
 }
 
-#define VOLUME_SIZE(minor) ((_block_size[(minor)] << 10) / 
+#define VOLUME_SIZE(minor) ((_block_size[(minor)] << 10) / \
 			    _hardsect_size[(minor)])
 
 static int dm_blk_ioctl(struct inode *inode, struct file *file,
