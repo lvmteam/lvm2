@@ -1,10 +1,16 @@
+lvm2 (0.95.05-3) unstable; urgency=low
+
+  * Get rid of awk dependency in init script.  (Closes: #146257)
+
+ -- Andres Salomon <dilinger@mp3revolution.net>  Sun, 12 May 2002 04:39:06 -0500
+
 lvm2 (0.95.05-2) unstable; urgency=low
 
   * Use ${shlibs:Depends} in Depends.
   * Get rid of postinst/postrm scripts, use debhelper's init script instead.
   * Add Conflicts against lvm10, lvm-common.
   * Fix endian issues on big-endian machines.
-    
+
  -- Andres Salomon <dilinger@mp3revolution.net>  Thu,  2 May 2002 23:53:53 -0500
 
 lvm2 (0.95.05-1) unstable; urgency=low
