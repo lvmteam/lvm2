@@ -30,6 +30,10 @@ int memlock(void)
 {
 	return 0;
 }
+void memlock_init(struct cmd_context *cmd)
+{
+	return;
+}
 
 #else				/* DEVMAPPER_SUPPORT */
 

@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 static unsigned char _c[] =
-    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#";
 
 static int _built_inverse;
 static unsigned char _inverse_c[256];

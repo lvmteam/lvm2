@@ -531,7 +531,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	else
 		*percent = 100;
 
-	log_debug("Mirror percent: %f", *percent);
+	log_debug("LV percent: %f", *percent);
 	r = 1;
 
       out:

@@ -11,9 +11,6 @@
 #include "metadata.h"
 #include "pool.h"
 
-#define FMT_TEXT_NAME "lvm2"
-#define FMT_TEXT_ALIAS "text"
-
 /*
  * Archives a vg config.  'retain_days' is the minimum number of
  * days that an archive file must be held for.  'min_archives' is
