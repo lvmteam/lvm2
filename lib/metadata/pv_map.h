@@ -20,6 +20,7 @@
  */
 
 struct pv_area {
+	struct pv_map *map;
 	uint32_t start;
 	uint32_t count;
 
@@ -36,5 +37,7 @@ struct pv_map {
 
 struct list *create_pv_maps(struct pool *mem,
 			    struct volume_group *vg, struct list *pvs);
+
+void consume_pv_area(struct pv_area *area, uint32_t to_go);
 
 #endif
