@@ -21,6 +21,10 @@
 
 /* Heavily based upon ramfs */
 
+#include <linux/config.h>
+#include <linux/ctype.h>
+#include <linux/fs.h>
+
 static int is_identifier(const char *str, int len)
 {
 	while(len--) {
@@ -39,7 +43,7 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	if (!is_identifier(name, dentry->d_name.len))
 		return -EPERM;
 
-	rv = dmfs_create_dir(dir, dentry, mode);
+	rv = dmfs_create_lv(dir, dentry, mode);
 	if (rv == 0) {
 		rv = dm_create(name, -1);
 	}
@@ -100,7 +104,7 @@ static int dmfs_root_rename(struct inode *old_dir, struct dentry *old_dentry,
 	if (old_dir != new_dir)
 		return -EPERM;
 
-	return -EINVAL; /* FIXME: so a change of LV name here */
+	return -EINVAL; /* FIXME: a change of LV name here */
 }
 
 static int dmfs_root_sync(struct file *file, struct dentry *dentry, int datasync)
