@@ -101,11 +101,12 @@ char *display_size(uint64_t size, size_len_t sl)
 	ulong byte = 1024 * 1024 * 1024;
 	char *size_buf = NULL;
 	char *size_str[][2] = {
-		{"Terabyte", "TB"},
-		{"Gigabyte", "GB"},
-		{"Megabyte", "MB"},
-		{"Kilobyte", "KB"},
-		{"", ""}
+		{" Terabyte", "TB"},
+		{" Gigabyte", "GB"},
+		{" Megabyte", "MB"},
+		{" Kilobyte", "KB"},
+		{"", ""},
+		{"         ", "  "}
 	};
 
 	if (!(size_buf = dbg_malloc(SIZE_BUF))) {
@@ -114,13 +115,13 @@ char *display_size(uint64_t size, size_len_t sl)
 	}
 
 	if (size == 0LL)
-		sprintf(size_buf, "0");
+		sprintf(size_buf, "0%s", size_str[5][sl]);
 	else {
 		s = 0;
 		while (size_str[s] && size < byte)
 			s++, byte /= 1024;
 		snprintf(size_buf, SIZE_BUF - 1,
-			 "%.2f %s", (float) size / byte, size_str[s][sl]);
+			 "%.2f%s", (float) size / byte, size_str[s][sl]);
 	}
 
 	/* Caller to deallocate */
