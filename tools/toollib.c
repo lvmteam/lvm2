@@ -312,7 +312,6 @@ struct list *create_pv_list(struct pool *mem,
 			log_err("No free extents on physical volume %s",
 				argv[i]);
 			continue;
-			/* FIXME Buy check not empty at end! */
 		}
 
 		if (!(new_pvl = pool_alloc(mem, sizeof(*new_pvl)))) {
@@ -324,5 +323,5 @@ struct list *create_pv_list(struct pool *mem,
 		list_add(r, &new_pvl->list);
 	}
 
-	return r;
+	return list_empty(r) ? r : NULL;
 }
