@@ -58,11 +58,14 @@ CFLAGS+=-g -fno-omit-frame-pointer
 #CFLAGS+=-pg
 #LD_FLAGS=-pg
 
-CFLAGS+=-DDEBUG_MEM -DDEBUG #-DDEBUG_POOL
+CFLAGS+=-DDEBUG_MEM -DDEBUG
+#CFLAGS+=-DDEBUG_POOL
 #CFLAGS+=-DBOUNDS_CHECK
 
 INCLUDES+=-I. -I$(top_srcdir)/include
 INC_LNS=$(top_srcdir)/include/.symlinks_created
+
+DEPS=$(top_srcdir)/make.tmpl Makefile $(INC_LNS)
 
 ifeq ("@READLINE@", "yes")
   CFLAGS += -DREADLINE_SUPPORT
@@ -98,9 +101,9 @@ $(SUBDIRS.distclean):
 
 %.d: %.c
 	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
-		INC_LNS=`echo $(INC_LNS) | sed -e 's/\\//\\\\\\//g'`; \
+		DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
 		$(CC) -MM $(INCLUDES) $(CFLAGS) $< | \
-		sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d : $$INC_LNS /g" > $@; \
+		sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d : $$DEPS /g" > $@; \
 		[ -s $@ ] || $(RM) $@
 
 clean: $(SUBDIRS.clean)
