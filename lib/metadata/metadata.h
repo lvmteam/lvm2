@@ -395,22 +395,7 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 int vg_extend(struct format_instance *fi, struct volume_group *vg,
 	      int pv_count, char **pv_names);
 
-/*
- * Create a new LV within a given volume group.
- *
- */
-struct logical_volume *lv_create(struct format_instance *fi,
-				 const char *name,
-				 uint32_t status,
-				 alloc_policy_t alloc,
-				 struct segment_type *segtype,
-				 uint32_t stripes,
-				 uint32_t stripe_size,
-				 uint32_t mirrors,
-				 uint32_t extents,
-				 struct volume_group *vg,
-				 struct list *allocatable_pvs);
-
+/* Manipulate LVs */
 struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       const char *name,
 				       const char *name_format,
@@ -418,7 +403,6 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg);
 
-/* Manipulate LVs */
 int lv_reduce(struct format_instance *fi,
 	      struct logical_volume *lv, uint32_t extents);
 
@@ -428,7 +412,8 @@ int lv_extend(struct format_instance *fid,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t extents,
 	      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
-	      uint32_t status, struct list *allocatable_pvs);
+	      uint32_t status, struct list *allocatable_pvs,
+	      alloc_policy_t alloc);
 
 /* lv must be part of vg->lvs */
 int lv_remove(struct volume_group *vg, struct logical_volume *lv);

@@ -188,15 +188,16 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 
 	lp->stripes = 1;
 
+	/* Default is striped */
+	if (!(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
+		stack;
+		return 0;
+	}
+
 	if (arg_count(cmd, stripes_ARG)) {
 		lp->stripes = arg_uint_value(cmd, stripes_ARG, 1);
 		if (lp->stripes == 1)
 			log_print("Redundant stripes argument: default is 1");
-		else if (!(lp->segtype = get_segtype_from_string(cmd,
-								 "striped"))) {
-			stack;
-			return 0;
-		}
 	}
 
 	if (arg_count(cmd, stripesize_ARG)) {
@@ -475,10 +476,36 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		status |= LVM_WRITE;
 	}
 
-	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc, lp->segtype,
-			     lp->stripes, lp->stripe_size, lp->mirrors,
-			     lp->extents, vg, pvh)))
+	if (!lp->extents) {
+		log_error("Unable to create logical volume %s with no extents",
+			  lp->lv_name);
 		return 0;
+	}
+
+	if (vg->free_count < lp->extents) {
+		log_error("Insufficient free extents (%u) in volume group %s: "
+			  "%u required", vg->free_count, vg->name, lp->extents);
+		return 0;
+	}
+
+	if (lp->stripes > list_size(pvh)) {
+		log_error("Number of stripes (%u) must not exceed "
+			  "number of physical volumes (%d)", lp->stripes,
+			  list_size(pvh));
+		return 0;
+	}
+
+	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d",
+				   status, alloc, vg))) {
+		stack;
+		return 0;
+	}
+
+	if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes, lp->stripe_size,
+		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, alloc)) {
+		stack;
+		return 0;
+	}
 
 	if (lp->read_ahead) {
 		log_verbose("Setting read ahead sectors");

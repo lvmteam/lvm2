@@ -1,5 +1,7 @@
 Version 2.00.16 - 
 =============================
+  Push lv_create & alloc policy up to tool level.
+  Fix pvdisplay return code.
   Detect invalid LV names in arg lists.
   Reporting uses line-at-a-time output.
   lvm2 format sets unlimited_vols format flag.
