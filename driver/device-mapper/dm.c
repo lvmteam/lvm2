@@ -79,7 +79,7 @@ static int dm_init(void)
 				0, 0, NULL, NULL)))
 		return -ENOMEM;
 
-	if ((ret = dm_fs_init()) || (ret = dm_target_init()))
+	if ((ret = dm_fs_init()) || (ret = dm_target_init()) || (ret = dm_init_blkdev()))
 		return ret;
 
 	/* set up the arrays */
@@ -109,6 +109,7 @@ static void dm_exit(void)
 		WARN("it looks like there are still some io_hooks allocated");
 
 	dm_fs_exit();
+	dm_cleanup_blkdev();
 
 	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
 		printk(KERN_ERR "%s -- unregister_blkdev failed\n", _name);
@@ -502,69 +503,6 @@ static struct mapped_device *alloc_dev(int minor)
 	return md;
 }
 
-/*
- * open a device so we can use it as a map
- * destination.
- */
-static int open_dev(struct dev_list *d)
-{
-	int err;
-
-	if (!(d->bd = bdget(kdev_t_to_nr(d->dev))))
-		return -ENOMEM;
-
-	if ((err = blkdev_get(d->bd, FMODE_READ|FMODE_WRITE, 0, BDEV_FILE))) {
-		bdput(d->bd);
-		return err;
-	}
-
-	return 0;
-}
-
-/*
- * close a device that we've been using.
- */
-static void close_dev(struct dev_list *d)
-{
-	blkdev_put(d->bd, BDEV_FILE);
-	bdput(d->bd);
-	d->bd = 0;
-}
-
-/*
- * Open a list of devices.
- */
-static int open_devices(struct dev_list *devices)
-{
-	int r;
-	struct dev_list *d, *od;
-
-	/* open all the devices */
-	for (d = devices; d; d = d->next)
-		if ((r = open_dev(d)))
-			goto bad;
-
-	return 0;
-
- bad:
-	od = d;
-	for (d = devices; d != od; d = d->next)
-		close_dev(d);
-	return r;
-}
-
-/*
- * Close a list of devices.
- */
-static void close_devices(struct dev_list *d)
-{
-	/* close all the devices */
-	while (d) {
-		close_dev(d);
-		d = d->next;
-	}
-}
-
 static inline struct mapped_device *__find_by_name(const char *name)
 {
 	int i;
@@ -686,25 +624,6 @@ int dm_remove(const char *name)
 }
 
 /*
- * the hardsect size for a mapped device is the
- * smallest hard sect size from the devices it
- * maps onto.
- */
-static int __find_hardsect_size(struct dev_list *dl)
-{
-	int result = INT_MAX, size;
-
-	while(dl) {
-		size = get_hardsect_size(dl->dev);
-		if (size < result)
-			result = size;
-		dl = dl->next;
-	}
-
-	return result;
-}
-
-/*
  * Bind a table to the device.
  */
 void __bind(struct mapped_device *md, struct dm_table *t)
@@ -717,7 +636,7 @@ void __bind(struct mapped_device *md, struct dm_table *t)
 
 	/* FIXME: block size depends on the mapping table */
 	_blksize_size[minor] = BLOCK_SIZE;
-	_hardsect_size[minor] = __find_hardsect_size(t->devices);
+	_hardsect_size[minor] = t->hardsect_size;
 	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
 }
 
@@ -743,8 +662,6 @@ static void __flush_deferred_io(struct mapped_device *md)
  */
 int dm_activate(struct mapped_device *md, struct dm_table *table)
 {
-	int r;
-
 	/* check that the mapping has at least been loaded. */
 	if (!table->num_targets)
 		return -EINVAL;
@@ -758,11 +675,6 @@ int dm_activate(struct mapped_device *md, struct dm_table *table)
 	}
 
 	__bind(md, table);
-
-	if ((r = open_devices(md->map->devices))) {
-		up_write(&_dev_lock);
-		return r;
-	}
 
 	set_bit(DM_ACTIVE, &md->state);
 	__flush_deferred_io(md);
@@ -794,7 +706,6 @@ int dm_deactivate(struct mapped_device *md)
 		return -EPERM;
 	}
 
-        close_devices(md->map->devices);
 	md->map = 0;
 	clear_bit(DM_ACTIVE, &md->state);
 	up_write(&_dev_lock);
@@ -839,8 +750,6 @@ void dm_suspend(struct mapped_device *md)
 
 	current->state = TASK_RUNNING;
 	remove_wait_queue(&md->wait, &wait);
-
-	close_devices(md->map->devices);
 
 	md->map = 0;
 	up_write(&_dev_lock);

@@ -244,6 +244,9 @@ static inline int dm_empty_tok(struct text_region *txt)
 	return txt->b >= txt->e;
 }
 
+/* dm-blkdev.c */
+int dm_init_blkdev(void);
+void dm_cleanup_blkdev(void);
 
 /* dm-fs.c */
 int dm_fs_init(void);

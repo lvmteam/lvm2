@@ -24,12 +24,6 @@
 #include <linux/list.h>
 #include "dm.h"
 
-struct dm_bdev {
-	struct list_head list;
-	struct block_device *bdev;
-	int use;
-};
-
 /* 
  * Lock ordering: Always get bdev_sem before bdev_lock if you need both locks.
  *
@@ -166,3 +160,17 @@ void dm_blkdev_put(struct dm_bdev *d)
 EXPORT_SYMBOL(dm_blkdev_get);
 EXPORT_SYMBOL(dm_blkdev_put);
 
+int dm_init_blkdev(void)
+{
+	bdev_cachep = kmem_cache_create("dm_bdev", sizeof(struct dm_bdev),
+					0, 0, NULL, NULL);
+	if (bdev_cachep == NULL)
+		return -ENOMEM;
+	return 0;
+}
+
+void dm_cleanup_blkdev(void)
+{
+	if (kmem_cache_destroy(bdev_cachep))
+		printk(KERN_ERR "Device Mapper: dm_bdev cache not empty\n");
+}
