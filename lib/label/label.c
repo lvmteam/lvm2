@@ -40,7 +40,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 	return li;
 }
 
-static void _free_li(struct list *li)
+static void _free_li(struct labeller_i *li)
 {
 	dbg_free(li);
 }
@@ -55,12 +55,12 @@ int label_init(void)
 void label_exit(void)
 {
 	struct list *c, *n;
-	struct labeller_list *ll;
+	struct labeller_i *li;
 
 	for (c = _labellers.n; c != &_labellers; c = n) {
 		n = c->n;
-		ll = list_item(c, struct labeller_list);
-		_free_li(c);
+		li = list_item(c, struct labeller_i);
+		_free_li(li);
 	}
 }
 
@@ -91,55 +91,55 @@ struct labeller *label_get_handler(const char *name)
 	return NULL;
 }
 
-static struct labeller *_find_labeller(const char *device)
+static struct labeller *_find_labeller(struct device *dev)
 {
 	struct list *lih;
 	struct labeller_i *li;
 
 	list_iterate (lih, &_labellers) {
 		li = list_item(lih, struct labeller_i);
-		if (li->l->ops->can_handle(device))
+		if (li->l->ops->can_handle(li->l, dev))
 			return li->l;
 	}
 
-	log_err("Could not find label on device '%s'.", device);
+	log_err("Could not find label on device '%s'.", dev_name(dev));
 	return NULL;
 }
 
-int label_remove(const char *device)
+int label_remove(struct device *dev)
 {
 	struct labeller *l;
 
-	if (!(l = _find_labeller(device))) {
+	if (!(l = _find_labeller(dev))) {
 		stack;
 		return 0;
 	}
 
-	return l->ops->remove(device);
+	return l->ops->remove(l, dev);
 }
 
-int label_read(const char *path, struct label **result)
+int label_read(struct device *dev, struct label **result)
 {
 	struct labeller *l;
 
-	if (!(l = _find_labeller(device))) {
+	if (!(l = _find_labeller(dev))) {
 		stack;
 		return 0;
 	}
 
-	return l->ops->read(device, label);
+	return l->ops->read(l, dev, result);
 }
 
-int label_verify(const char *path)
+int label_verify(struct device *dev)
 {
 	struct labeller *l;
 
-	if (!(l = _find_labeller(device))) {
+	if (!(l = _find_labeller(dev))) {
 		stack;
 		return 0;
 	}
 
-	return l->ops->verify(device);
+	return l->ops->verify(l, dev);
 }
 
 void label_free(struct label *l)
