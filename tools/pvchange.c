@@ -97,7 +97,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			unlock_vg(cmd, pv->vg_name);
 		else
 			unlock_vg(cmd, ORPHAN);
-		return 0;
+		return 1;
 	}
 
 	if (!allocatable && !(pv->status & ALLOCATABLE_PV)) {
@@ -107,7 +107,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			unlock_vg(cmd, pv->vg_name);
 		else
 			unlock_vg(cmd, ORPHAN);
-		return 0;
+		return 1;
 	}
 
 	if (allocatable) {
