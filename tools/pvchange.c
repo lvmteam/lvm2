@@ -88,8 +88,7 @@ int pvchange_single(struct physical_volume *pv)
 
 	int allocatable = !strcmp(arg_str_value(allocatable_ARG, "n"), "y");
 
-	/* If in a VG, must change using volume group.  Pointless. */
-	/* FIXME: Provide a direct pv_write_pv that *only* touches PV structs*/
+	/* If in a VG, must change using volume group. */
 	if (*pv->vg_name) {
 		log_verbose("Finding volume group of physical volume %s", 
 			    pv_name);
@@ -97,6 +96,17 @@ int pvchange_single(struct physical_volume *pv)
 			log_error("Unable to find volume group of %s", pv_name);
 			return 0;
 		}
+
+        	if (vg->status & EXPORTED_VG) {
+                	log_error("Volume group %s is exported", vg->name);
+                	return ECMD_FAILED;
+        	}
+
+	        if (!(vg->status & LVM_WRITE)) {
+			log_error("Volume group %s is read-only", vg->name);
+			return ECMD_FAILED;
+		}
+
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			log_error("Unable to find %s in volume group %s",
 				pv_name, vg->name);

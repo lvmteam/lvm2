@@ -39,6 +39,11 @@ static int lvremove_single(struct logical_volume *lv)
 
 	vg = lv->vg;
 
+	if (!(vg->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg->name);
+		return ECMD_FAILED;
+	}
+
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't remove logical volume %s under snapshot",
 			  lv->name);

@@ -56,6 +56,11 @@ static int vgchange_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
+	if (!(vg->status & LVM_WRITE) && !arg_count(available_ARG)) {
+		log_error("Volume group %s is read-only", vg->name);
+		return ECMD_FAILED;
+	}
+
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group %s is exported", vg_name);
 		return ECMD_FAILED;

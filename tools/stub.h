@@ -10,7 +10,6 @@ int lvmsadc(int argc, char **argv) {return 1;}
 int lvmsar(int argc, char **argv) {return 1;}
 int pvdata(int argc, char **argv) {return 1;}
 int pvmove(int argc, char **argv) {return 1;}
-int vgexport(int argc, char **argv) {return 1;}
 int vgimport(int argc, char **argv) {return 1;}
 int vgmknodes(int argc, char **argv) {return 1;}
 int vgsplit(int argc, char **argv) {return 1;}

@@ -257,6 +257,26 @@ static int _read_extents(struct disk_list *data)
 	return 1;
 }
 
+/* 
+ * If exported, remove "PV_EXP" from end of VG name 
+ */
+static void _munge_exported_vg(struct disk_list *data)
+{
+	int l, s;
+
+	/* Return if PV not in a VG or VG not exported */
+	if ((!*data->pvd.vg_name) ||
+	    !(data->vgd.vg_status & VG_EXPORTED))
+		return;
+
+	l = strlen(data->pvd.vg_name);
+	s = sizeof(EXPORTED_TAG);
+	if (!strncmp(data->pvd.vg_name + l - s + 1, EXPORTED_TAG, s))
+		     data->pvd.vg_name[l - s + 1] = '\0';
+
+	data->pvd.pv_status |= VG_EXPORTED;
+}
+
 static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 				     const char *vg_name)
 {
@@ -278,25 +298,32 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 		goto bad;
 	}
 
-	/* Update VG cache with whatever we found */
-	vgcache_add(data->pvd.vg_name, dev);
-
 	/*
 	 * is it an orphan ?
 	 */
 	if (!*data->pvd.vg_name) {
 		log_very_verbose("%s is not a member of any VG", name);
-		return (vg_name) ? NULL : data;
-	}
 
-	if (vg_name && strcmp(vg_name, data->pvd.vg_name)) {
-		log_very_verbose("%s is not a member of the VG %s",
-				 name, vg_name);
-		goto bad;
+		/* Update VG cache */
+		vgcache_add(data->pvd.vg_name, dev);
+
+		return (vg_name) ? NULL : data;
 	}
 
 	if (!_read_vgd(data)) {
 		log_error("Failed to read VG data from PV (%s)", name);
+		goto bad;
+	}
+
+	/* If VG is exported, set VG name back to the real name */
+	_munge_exported_vg(data);
+
+	/* Update VG cache with what we found */
+	vgcache_add(data->pvd.vg_name, dev);
+
+	if (vg_name && strcmp(vg_name, data->pvd.vg_name)) {
+		log_very_verbose("%s is not a member of the VG %s",
+				 name, vg_name);
 		goto bad;
 	}
 
@@ -315,7 +342,9 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 		goto bad;
 	}
 
-	log_very_verbose("Found %s in VG %s", name, data->pvd.vg_name);
+	log_very_verbose("Found %s in %sVG %s", name, 
+			 (data->vgd.vg_status & VG_EXPORTED) ? "exported " : "",
+			 data->pvd.vg_name);
 
 	return data;
 
@@ -515,7 +544,7 @@ static int _write_pvd(struct disk_list *data)
 	ulong size = data->pvd.pv_on_disk.size;
 
 	if(size < sizeof(struct pv_disk)) {
-		log_err("Invalid PV size.");
+		log_error("Invalid PV structure size.");
 		return 0;
 	}
 

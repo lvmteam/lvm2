@@ -47,6 +47,14 @@ static int lvchange_single(struct logical_volume *lv)
 	int doit = 0;
 	int archived = 0;
 
+	if ((lv->vg->status & PARTIAL_VG) && 
+	    (arg_count(contiguous_ARG) || arg_count(permission_ARG) ||
+	     arg_count(readahead_ARG))) {
+		log_error("Only -a permitted with partial volume group %s",
+			  lv->vg->name);
+		return EINVALID_CMD_LINE;
+	}
+
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't change logical volume %s under snapshot",
 			  lv->name);

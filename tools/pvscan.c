@@ -150,7 +150,8 @@ void pvscan_display_single(struct physical_volume *pv)
 		/* FIXME As per pv_display! Drop through for now. */
 		/* pv_show(pv); */
 
-		log_print("System Id             %s", pv->exported);
+		/* FIXME - Moved to Volume Group structure */
+		/* log_print("System Id             %s", pv->vg->system_id); */
 
 		/* log_print(" "); */
 		/* return; */
@@ -158,7 +159,7 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	memset(pv_tmp_name, 0, sizeof (pv_tmp_name));
 
-	vg_name_len = strlen(pv->vg_name) - sizeof (EXPORTED_TAG) + 1;
+	vg_name_len = strlen(pv->vg_name) + 1;
 
 	if (arg_count(uuid_ARG)) {
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
@@ -181,9 +182,9 @@ void pvscan_display_single(struct physical_volume *pv)
 		return;
 	}
 
-	if (strcmp(&pv->vg_name[vg_name_len], EXPORTED_TAG) == 0) {
+	if (pv->status & EXPORTED_VG) {
 		strncpy(vg_name_this, pv->vg_name, vg_name_len);
-		log_print("PV %-*s  is in EXPORTED VG %s [%s / %s free]",
+		log_print("PV %-*s  is in exported VG %s [%s / %s free]",
 			  pv_max_name_len, pv_tmp_name,
 			  vg_name_this, (s1 =
 					 display_size(pv->pe_count *

@@ -12,6 +12,7 @@
 #include "hash.h"
 #include "list.h"
 #include "log.h"
+#include "lvm-string.h"
 
 #include <time.h>
 #include <sys/utsname.h>
@@ -37,6 +38,7 @@ static char *_create_lv_name(struct pool *mem, const char *full_name)
 }
 
 int import_pv(struct pool *mem, struct device *dev,
+	      struct volume_group *vg,
 	      struct physical_volume *pv, struct pv_disk *pvd)
 {
 	memset(pv, 0, sizeof(*pv));
@@ -47,6 +49,26 @@ int import_pv(struct pool *mem, struct device *dev,
 		stack;
 		return 0;
 	}
+
+	/* Store system_id if PV belongs to a VG */
+	if (vg && !vg->system_id && 
+	    !(vg->system_id = pool_strdup(mem, pvd->system_id))) {
+		stack;
+		return 0;
+	}
+
+	if (vg && vg->system_id &&
+	    strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))
+		log_very_verbose("System ID %s on %s differs from %s for "
+				 "volume group", pvd->system_id, 
+				 dev_name(pv->dev), vg->system_id);
+	
+	/* 
+	 * If exported, we still need to flag in pv->status too because
+	 * we don't always have a struct volume_group when we need this.
+	 */
+	if (pvd->pv_status & VG_EXPORTED)
+		pv->status |= EXPORTED_VG;
 
 	if (pvd->pv_allocatable)
 		pv->status |= ALLOCATABLE_PV;
@@ -60,7 +82,7 @@ int import_pv(struct pool *mem, struct device *dev,
 	return 1;
 }
 
-static int _system_id(char *system_id)
+int _system_id(char *s, const char *prefix)
 {
 	struct utsname uts;
 
@@ -69,11 +91,17 @@ static int _system_id(char *system_id)
 		return 0;
 	}
 
-	sprintf(system_id, "%s%lu", uts.nodename, time(NULL));
+	if (lvm_snprintf(s, NAME_LEN, "%s%s%lu", 
+			 prefix, uts.nodename, time(NULL)) < 0) {
+		log_error("Generated system_id too long");
+		return 0;
+	}
+
 	return 1;
 }
 
-int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
+int export_pv(struct pool *mem, struct volume_group *vg,
+	      struct pv_disk *pvd, struct physical_volume *pv)
 {
 	memset(pvd, 0, sizeof(*pvd));
 
@@ -93,6 +121,54 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 	if (pv->vg_name)
 		strncpy(pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));
 
+	/* Preserve existing system_id if it exists */
+	if (vg && vg->system_id) 
+		strncpy(pvd->system_id, vg->system_id, sizeof(pvd->system_id));
+
+	/* Is VG already exported or being exported? */
+	if (vg && (vg->status & EXPORTED_VG)) {
+		/* Does system_id need setting? */
+		if (!vg->system_id || 
+		    strncmp(vg->system_id, EXPORTED_TAG, 
+			    sizeof(EXPORTED_TAG))) {
+			if (!_system_id(pvd->system_id, EXPORTED_TAG)) {
+				stack;
+				return 0;
+			}
+		}
+		if (strlen(pvd->vg_name) + sizeof(EXPORTED_TAG) >
+		    sizeof(pvd->vg_name)) {
+			log_error("Volume group name %s too long to export",
+				  pvd->vg_name);
+			return 0;
+		}
+		strcat(pvd->vg_name, EXPORTED_TAG);
+	}
+
+	/* Is VG being imported? */
+	if (vg && !(vg->status & EXPORTED_VG) && vg->system_id &&
+	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG))) {
+		if (!_system_id(pvd->system_id, IMPORTED_TAG)) {
+			stack;
+			return 0;
+		}
+	}
+
+	/* Generate system_id if PV is in VG */
+	if (!pvd->system_id || !*pvd->system_id)
+		if (!_system_id(pvd->system_id, "")) {
+			stack;
+			return 0;
+		}
+
+	/* Update internal system_id if we changed it */
+	if (vg && 
+	    (!vg->system_id ||
+	     strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))) {
+		if (!(vg->system_id = pool_strdup(mem, pvd->system_id)))
+			log_error("System ID update failed");
+	}
+
 	//pvd->pv_major = MAJOR(pv->dev);
 
 	if (pv->status & ALLOCATABLE_PV)
@@ -105,16 +181,12 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 	pvd->pe_allocated = pv->pe_allocated;
 	pvd->pe_start = pv->pe_start;
 
-	if (!_system_id(pvd->system_id)) {
-		stack;
-		return 0;
-	}
-
 	return 1;
 }
 
 int import_vg(struct pool *mem,
-	      struct volume_group *vg, struct disk_list *dl)
+	      struct volume_group *vg, struct disk_list *dl,
+	      int partial)
 {
 	struct vg_disk *vgd = &dl->vgd;
 	memcpy(vg->id.uuid, vgd->vg_uuid, ID_LEN);
@@ -135,10 +207,10 @@ int import_vg(struct pool *mem,
 	if (vgd->vg_status & VG_EXTENDABLE)
 		vg->status |= RESIZEABLE_VG;
 
-	if (vgd->vg_access & VG_READ)
+	if (partial || (vgd->vg_access & VG_READ))
 		vg->status |= LVM_READ;
 
-	if (vgd->vg_access & VG_WRITE)
+	if (!partial && (vgd->vg_access & VG_WRITE))
 		vg->status |= LVM_WRITE;
 
 	if (vgd->vg_access & VG_CLUSTERED)
@@ -152,6 +224,10 @@ int import_vg(struct pool *mem,
 	vg->free_count = vgd->pe_total - vgd->pe_allocated;
 	vg->max_lv = vgd->lv_max;
 	vg->max_pv = vgd->pv_max;
+
+	if (partial)
+		vg->status |= PARTIAL_VG;
+
 	return 1;
 }
 
@@ -307,8 +383,8 @@ int export_extents(struct disk_list *dl, int lv_num,
 	return 1;
 }
 
-int import_pvs(struct pool *mem, struct list *pvds,
-	       struct list *results, int *count)
+int import_pvs(struct pool *mem, struct volume_group *vg,
+	       struct list *pvds, struct list *results, int *count)
 {
 	struct list *pvdh;
 	struct disk_list *dl;
@@ -325,7 +401,7 @@ int import_pvs(struct pool *mem, struct list *pvds,
 			return 0;
 		}
 
-		if (!import_pv(mem, dl->dev, pvl->pv, &dl->pvd)) {
+		if (!import_pv(mem, dl->dev, vg, pvl->pv, &dl->pvd)) {
 			stack;
 			return 0;
 		}

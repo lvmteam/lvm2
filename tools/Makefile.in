@@ -44,6 +44,7 @@ SOURCES=\
 	vgck.c \
 	vgcreate.c \
 	vgdisplay.c \
+	vgexport.c \
 	vgextend.c \
 	vgmerge.c \
 	vgreduce.c \

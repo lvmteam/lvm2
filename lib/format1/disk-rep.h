@@ -55,6 +55,9 @@
 #define	PV_ACTIVE            0x01	/* pv_status */
 #define	PV_ALLOCATABLE       0x02	/* pv_allocatable */
 
+#define EXPORTED_TAG "PV_EXP"	/* Identifier for exported PV */
+#define IMPORTED_TAG "PV_IMP"	/* Identifier for imported PV */
+
 
 struct data_area {
 	uint32_t base;
@@ -197,11 +200,14 @@ int write_disks(struct list *pvds);
  * core structures.
  */
 int import_pv(struct pool *mem, struct device *dev,
+	      struct volume_group *vg,
 	      struct physical_volume *pv, struct pv_disk *pvd);
-int export_pv(struct pv_disk *pvd, struct physical_volume *pv);
+int export_pv(struct pool *mem, struct volume_group *vg,
+	      struct pv_disk *pvd, struct physical_volume *pv);
 
 int import_vg(struct pool *mem,
-	      struct volume_group *vg, struct disk_list *dl);
+	      struct volume_group *vg, struct disk_list *dl,
+	      int partial);
 int export_vg(struct vg_disk *vgd, struct volume_group *vg);
 
 int import_lv(struct pool *mem, struct logical_volume *lv,
@@ -215,8 +221,8 @@ int export_extents(struct disk_list *dl, int lv_num,
 		   struct logical_volume *lv,
 		   struct physical_volume *pv);
 
-int import_pvs(struct pool *mem, struct list *pvds,
-	       struct list *results, int *count);
+int import_pvs(struct pool *mem, struct volume_group *vg,
+	       struct list *pvds, struct list *results, int *count);
 
 int import_lvs(struct pool *mem, struct volume_group *vg,
 	       struct list *pvds);

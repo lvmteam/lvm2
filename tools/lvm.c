@@ -132,6 +132,8 @@ int main(int argc, char **argv)
 
 	namebase = strdup(argv[0]);
 	base = basename(namebase);
+	while (*base == '/')
+		base++;
 	if (strcmp(base, "lvm"))
 		alias = 1;
 	free(namebase);
@@ -610,6 +612,11 @@ static int process_common_commands(struct command *com)
 		_current_settings.archive = 1;
 		_current_settings.backup = 1;
 	}
+
+	if (arg_count(partial_ARG))
+		init_partial(1);
+	else
+		init_partial(0);
 
 	/* Handle synonyms */
 	if (!merge_synonym(resizable_ARG, resizeable_ARG) ||

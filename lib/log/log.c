@@ -12,6 +12,7 @@ static FILE *_log = 0;
 
 static int _verbose_level = 0;
 static int _test = 0;
+static int _partial = 0;
 static int _debug_level = 0;
 static int _syslog = 0;
 static int _indent = 1;
@@ -48,6 +49,14 @@ void init_test(int level) {
 		log_print("Test mode. Metadata will NOT be updated.");
 }
 
+void init_partial(int level) {
+	_partial = level;
+	if (_partial)
+		log_print("Partial mode. Incomplete volume groups will "
+			  "be activated read-only.");
+
+}
+
 void init_cmd_name(int status) {
 	_log_cmd_name = status;
 }
@@ -70,6 +79,10 @@ void init_indent(int indent) {
 
 int test_mode() {
 	return _test;
+}
+
+int partial_mode() {
+	return _partial;
 }
 
 void init_debug(int level) {
