@@ -25,13 +25,17 @@ void fin_locking(void);
 int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
 
 /*
- * Lock type
+ * Lock type - these numbers are the same as VMS and the IBM DLM
  */
 #define LCK_TYPE_MASK	0x000000FF
-#define LCK_UNLOCK	0x00000000
-#define LCK_READ	0x00000001
-#define LCK_WRITE	0x00000002
-#define LCK_EXCL	0x00000003
+
+#define LCK_NULL	0x00000000 /* LCK$_NLMODE */
+#define LCK_READ	0x00000001 /* LCK$_CRMODE */
+                                   /* LCK$_CWMODE */
+                                   /* LCK$_PRMODE */
+#define LCK_WRITE	0x00000004 /* LCK$_PWMODE */
+#define LCK_EXCL	0x00000005 /* LCK$_EXMODE */
+#define LCK_UNLOCK      0x00000010 /* This is ours */
 
 /*
  * Lock scope
