@@ -1,4 +1,4 @@
-Version 2.00.30 - 
+Version 2.00.30 - 10th December 2004
 ====================================
   Additional device-handling debug messages.
   Additional verbosity level -vvvv includes line numbers and backtraces.
