@@ -503,6 +503,11 @@ static int run_command(int argc, char **argv)
 
 	ret = com->fn(argc, argv);
 
+	/*
+	 * free off any memory the command used.
+	 */
+	pool_empty(ios->mem);
+
 	if (ret == EINVALID_CMD_LINE && !_interactive)
 		usage(com->name);
 

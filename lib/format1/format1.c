@@ -326,21 +326,6 @@ static struct list_head *_get_vgs(struct io_space *is)
 static int _pv_setup(struct io_space *is, struct physical_volume *pv,
 		     struct volume_group *vg)
 {
-	if (!(pv->vg_name = pool_strdup(is->mem, vg->name))) {
-		stack;
-		return 0;
-	}
-
-	pv->exported = NULL;
-        pv->status = ACTIVE;
-
-	if (!dev_get_size(pv->dev, &pv->size)) {
-		stack;
-		return 0;
-	}
-
-	pv->pe_size = vg->extent_size;
-
 	/*
 	 * This works out pe_start and pe_count.
 	 */
@@ -348,8 +333,6 @@ static int _pv_setup(struct io_space *is, struct physical_volume *pv,
 		stack;
 		return 0;
 	}
-
-	pv->pe_allocated = 0;
 
 	return 1;
 }
@@ -400,6 +383,17 @@ static int _pv_write(struct io_space *is, struct physical_volume *pv)
 	return 0;
 }
 
+int _vg_setup(struct io_space *is, struct volume_group *vg)
+{
+	/* just check max_pv and max_lv */
+	if (vg->max_lv > MAX_LV)
+		vg->max_lv = MAX_LV;
+
+        if (vg->max_pv > MAX_PV)
+		vg->max_pv = MAX_PV;
+
+	return 1;
+}
 
 void _destroy(struct io_space *ios)
 {

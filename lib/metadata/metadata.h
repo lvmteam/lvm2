@@ -136,9 +136,9 @@ struct io_space {
 					   const char *pv_name);
 
 	/*
-	 * Fill out a pv ready for importing into
-	 * a vg.  *Be careful*, this allocates
-	 * vg_name from is->mem.
+	 * Tweak an already filled out a pv ready
+	 * for importing into a vg.  eg. pe_count
+	 * is format specific.
 	 */
 	int (*pv_setup)(struct io_space *is, struct physical_volume *pv,
 			struct volume_group *vg);
@@ -149,6 +149,12 @@ struct io_space {
 	 * be null.
 	 */
 	int (*pv_write)(struct io_space *is, struct physical_volume *pv);
+
+	/*
+	 * Tweak an already filled out vg.  eg,
+	 * max_pv is format specific.
+	 */
+	int (*vg_setup)(struct io_space *is, struct volume_group *vg);
 
 	/*
 	 * If vg_name doesn't contain any slash,
@@ -193,6 +199,9 @@ struct io_space {
 /*
  * Utility functions
  */
+struct volume_group *vg_create(struct io_space *ios, const char *name,
+			       uint64_t extent_size, int max_pv, int max_lv,
+			       int pv_count, char **pv_names);
 struct physical_volume *pv_create(struct io_space *ios, const char *name);
 
 
