@@ -216,7 +216,7 @@ int lvcreate(int argc, char **argv)
 		struct device *dev;
 		char *name;
 
-		if (!(name = dbg_malloc(PATH_MAX))) {
+		if (!(name = pool_alloc(fid->cmd->mem, PATH_MAX))) {
 			log_error("Name allocation failed - device not zeroed");
 			return ECMD_FAILED;
 		}

@@ -280,9 +280,9 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 	/*
 	 * is it an orphan ?
 	 */
-	if (data->pvd.vg_name == '\0') {
+	if (!*data->pvd.vg_name) {
 		log_very_verbose("%s is not a member of any VG", name);
-		return data;
+		return (vg_name) ? NULL : data;
 	}
 
 	if (vg_name && strcmp(vg_name, data->pvd.vg_name)) {

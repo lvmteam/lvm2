@@ -173,9 +173,9 @@ void pvscan_display_single(struct physical_volume *pv)
 	}
 
 	if (!*pv->vg_name) {
-		log_print("PV %-*s is in no VG %-*s [%s]", 
+		log_print("PV %-*s    %-*s [%s]", 
 			  pv_max_name_len, pv_tmp_name,
-			  vg_max_name_len - 6, " ",
+			  vg_max_name_len, " ",
 			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));
 		dbg_free(s1);
 		return;
@@ -198,7 +198,7 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	sprintf(vg_tmp_name, "%s", pv->vg_name);
 	log_print
-	    ("PV %-*s of VG %-*s [%s / %s free]", pv_max_name_len,
+	    ("PV %-*s VG %-*s [%s / %s free]", pv_max_name_len,
 	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
 	     (s1 = display_size(pv->pe_count * pv->pe_size / 2, SIZE_SHORT)),
 	     (s2 =
