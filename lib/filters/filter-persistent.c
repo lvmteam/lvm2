@@ -53,7 +53,7 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 	struct config_value *cv;
 
 	if (!(cn = find_config_node(cf->root, path, '/'))) {
-		log_info("Couldn't find 'valid_devices' array in '%s'",
+		log_verbose("Couldn't find 'valid_devices' array in '%s'",
 			 pf->file);
 		return 0;
 	}
@@ -64,13 +64,13 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 	 */
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type != CFG_STRING) {
-			log_info("Valid_devices array contains a value "
+			log_verbose("Valid_devices array contains a value "
 				 "which is not a string ... ignoring");
 			continue;
 		}
 
 		if (!hash_insert(pf->devices, cv->v.str, data))
-			log_info("Couldn't add '%s' to filter ... ignoring",
+			log_verbose("Couldn't add '%s' to filter ... ignoring",
 				 cv->v.str);
 	}
 	return 1;
@@ -137,7 +137,7 @@ int persistent_filter_dump(struct dev_filter *f)
 	log_very_verbose("Dumping persistent device cache to %s", pf->file);
 
 	if (!fp) {
-		log_info("Couldn't open '%s' for to hold valid devices.",
+		log_error("Couldn't open '%s' for to hold valid devices.",
 			 pf->file);
 		return 0;
 	}
@@ -197,7 +197,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	pf->real = real;
 
 	if (!(_init_hash(pf))) {
-		log_err("Couldn't create hash table for persistent filter.");
+		log_error("Couldn't create hash table for persistent filter.");
 		goto bad;
 	}
 

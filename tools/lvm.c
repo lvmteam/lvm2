@@ -555,10 +555,11 @@ struct dev_filter *active_filter(void)
 static void __init_log(struct config_file *cf)
 {
 	const char *log_file = find_config_str(cf->root, "log/file", '/', 0);
+	int verbose_level;
 
 	if (log_file) {
 		/* set up the logging */
-		if (!(_log = fopen(log_file, "w")))
+		if (!(_log = fopen(log_file, "a")))
 			log_error("Couldn't open log file %s", log_file);
 		else
 			init_log(_log);
@@ -566,6 +567,9 @@ static void __init_log(struct config_file *cf)
 
 	_debug_level = find_config_int(cf->root, "log/level", '/', 0);
 	init_debug(_debug_level);
+
+	verbose_level = find_config_int(cf->root, "log/verbose", '/', 0);
+	init_verbose(verbose_level);
 }
 
 static int dev_cache_setup(void)
@@ -584,6 +588,8 @@ static int dev_cache_setup(void)
 				  "device cache");
 			return 0;
 		}
+		log_verbose("device/scan not in config file: Defaulting to /dev");
+		return 1;
 	}
 
 	for (cv = cn->v; cv; cv = cv->next) {
@@ -603,16 +609,17 @@ static int dev_cache_setup(void)
 	return 1;
 }
 
-static struct dev_filter *filter_setup(void)
+static struct dev_filter *filter_components_setup(void)
 {
 	struct config_node *cn;
-	struct dev_filter *f1, *f2, *f3, *f4;
+	struct dev_filter *f1, *f2, *f3;
 
 	if (!(f2 = lvm_type_filter_create()))
 		return 0;
 
 	if (!(cn = find_config_node(_cf->root, "devices/filter", '/'))) {
-		log_debug("devices/filter not found in config file");
+		log_debug("devices/filter not found in config file: no regex "
+			  "filter installed");
 		return f2;
 	}
 
@@ -621,10 +628,34 @@ static struct dev_filter *filter_setup(void)
 		return f2;
 	}
 
-	if (!(f4 = composite_filter_create(2, f1, f2))) {
+	if (!(f3 = composite_filter_create(2, f1, f2))) {
 		log_error("Failed to create composite device filter");
 		return f2;
 	}
+
+	return f3;
+}
+
+static struct dev_filter *filter_setup(void)
+{
+	const char *lvm_cache;
+	struct dev_filter *f3, *f4;
+	struct stat st;
+
+	if (!(f3 = filter_components_setup()))
+		return 0;
+
+	lvm_cache = find_config_str(_cf->root, "devices/cache", '/',
+					"/etc/lvm/.cache");
+
+	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
+		log_error("Failed to create persistent device filter");
+		return f3;
+	}
+
+	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
+		log_verbose("Failed to load existing device cache from %s",
+			    lvm_cache);
 
 	return f4;
 }
@@ -660,7 +691,6 @@ static int init(void)
 
 		__init_log(_cf);
 	}
-
 
 	if (!dev_cache_setup()) {
 		goto out;
