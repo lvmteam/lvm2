@@ -63,11 +63,16 @@ const struct format_type *fmt_from_vgname(const char *vgname)
 struct cache_vginfo *vginfo_from_vgid(const char *vgid)
 {
 	struct cache_vginfo *vginfo;
+	char id[ID_LEN + 1];
 
 	if (!_vgid_hash || !vgid)
 		return NULL;
 
-	if (!(vginfo = hash_lookup_fixed(_vgid_hash, vgid, ID_LEN)))
+	/* vgid not necessarily NULL-terminated */
+	strncpy(&id[0], vgid, ID_LEN);
+	id[ID_LEN] = '\0';
+
+	if (!(vginfo = hash_lookup(_vgid_hash, id)))
 		return NULL;
 
 	return vginfo;
@@ -76,11 +81,15 @@ struct cache_vginfo *vginfo_from_vgid(const char *vgid)
 struct cache_info *info_from_pvid(const char *pvid)
 {
 	struct cache_info *info;
+	char id[ID_LEN + 1];
 
 	if (!_pvid_hash || !pvid)
 		return NULL;
 
-	if (!(info = hash_lookup_fixed(_pvid_hash, pvid, ID_LEN)))
+	strncpy(&id[0], pvid, ID_LEN);
+	id[ID_LEN] = '\0';
+
+	if (!(info = hash_lookup(_pvid_hash, id)))
 		return NULL;
 
 	return info;
