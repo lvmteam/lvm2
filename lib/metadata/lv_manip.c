@@ -160,8 +160,8 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		r = _alloc_simple(lv, pvms, allocated);
 
 	else {
-		log_err("Unknown allocation policy, "
-			"unable to setup logical volume.");
+		log_error("Unknown allocation policy: "
+			  "unable to setup logical volume.");
 		goto out;
 	}
 
@@ -179,7 +179,7 @@ static char *_make_up_lv_name(struct volume_group *vg,
 {
 	struct list *lvh;
 	struct logical_volume *lv;
-	int high = 1, i;
+	int high = 1, i, s;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
@@ -191,7 +191,7 @@ static char *_make_up_lv_name(struct volume_group *vg,
 			high = i + 1;
 	}
 
-	if (snprintf(buffer, len, "lvol%d", high) < 0)
+	if ((s = snprintf(buffer, len, "lvol%d", high)) < 0 || s >= len)
 		return NULL;
 
 	return buffer;
@@ -212,14 +212,14 @@ struct logical_volume *lv_create(const char *name,
 	int i;
 
 	if (!extents) {
-		log_err("Unable to create logical volume %s with no extents",
-			name);
+		log_error("Unable to create logical volume %s with no extents",
+			  name);
 		return NULL;
 	}
 
 	if (vg->free_count < extents) {
-		log_err("Insufficient free extents (%u) in volume group %s: "
-			"%u required", vg->free_count, vg->name, extents);
+		log_error("Insufficient free extents (%u) in volume group %s: "
+			  "%u required", vg->free_count, vg->name, extents);
 		return NULL;
 	}
 
@@ -231,7 +231,8 @@ struct logical_volume *lv_create(const char *name,
 
 	if (!name &&
 	    !(name = _make_up_lv_name(vg, dname, sizeof(dname)))) {
-		log_err("Unable to think of a name for logical volume.");
+		log_error("Failed to generate unique name for the new "
+			  "logical volume");
 		return NULL;
 	}
 

@@ -100,7 +100,7 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 		return NULL;
 	}
 
-        /* Strip prefix if present */
+        /* Strip dev_dir if present */
 	vg_name = strip_dir(vg_name, fi->cmd->dev_dir);
 
 	if (!read_pvs_in_vg(vg_name, fi->cmd->filter, mem, &pvs)) {
@@ -122,7 +122,7 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 
 static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 				     struct physical_volume *pv,
-				     const char *prefix)
+				     const char *dev_dir)
 {
 	struct disk_list *dl = pool_alloc(mem, sizeof(*dl));
 
@@ -140,7 +140,7 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	if (!export_pv(&dl->pvd, pv) ||
 	    !export_vg(&dl->vgd, vg) ||
 	    !export_uuids(dl, vg) ||
-	    !export_lvs(dl, vg, pv, prefix) ||
+	    !export_lvs(dl, vg, pv, dev_dir) ||
 	    !calculate_layout(dl)) {
 		stack;
 		pool_free(mem, dl);
@@ -151,7 +151,7 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 }
 
 static int _flatten_vg(struct pool *mem, struct volume_group *vg,
-		       struct list *pvs, const char *prefix,
+		       struct list *pvds, const char *dev_dir,
 		       struct dev_filter *filter)
 {
 	struct list *pvh;
@@ -161,18 +161,18 @@ static int _flatten_vg(struct pool *mem, struct volume_group *vg,
 	list_iterate(pvh, &vg->pvs) {
 		pvl = list_item(pvh, struct pv_list);
 
-		if (!(data = _flatten_pv(mem, vg, &pvl->pv, prefix))) {
+		if (!(data = _flatten_pv(mem, vg, &pvl->pv, dev_dir))) {
 			stack;
 			return 0;
 		}
 
-		list_add(pvs, &data->list);
+		list_add(pvds, &data->list);
 	}
 
-	export_numbers(pvs, vg);
-	export_pv_act(pvs);
+	export_numbers(pvds, vg);
+	export_pv_act(pvds);
 
-	if (!export_vg_number(pvs, vg->name, filter)) {
+	if (!export_vg_number(pvds, vg->name, filter)) {
 		stack;
 		return 0;
 	}
@@ -183,7 +183,7 @@ static int _flatten_vg(struct pool *mem, struct volume_group *vg,
 static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
 	struct pool *mem = pool_create(1024 * 10);
-	struct list pvs;
+	struct list pvds;
 	int r = 0;
 
 	if (!mem) {
@@ -191,10 +191,10 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 		return 0;
 	}
 
-	list_init(&pvs);
+	list_init(&pvds);
 
-	r = (_flatten_vg(mem, vg, &pvs, fi->cmd->dev_dir, fi->cmd->filter) &&
-	     write_disks(&pvs));
+	r = (_flatten_vg(mem, vg, &pvds, fi->cmd->dev_dir, fi->cmd->filter) &&
+	     write_disks(&pvds));
 	pool_destroy(mem);
 	return r;
 }

@@ -277,7 +277,7 @@ struct physical_volume *_find_pv(struct volume_group *vg, struct device *dev);
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
 
 /*
- * Remove a prefix directory if present.
+ * Remove a dev_dir if present.
  */
 const char *strip_dir(const char *vg_name, const char *dir);
 

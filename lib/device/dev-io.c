@@ -44,13 +44,14 @@ int dev_open(struct device *dev, int flags)
 {
 	const char *name = dev_name(dev);
 
+	/* FIXME Check flags (eg is write now reqd?) */
 	if (dev->fd >= 0) {
-		log_err("Device '%s' has already been opened", name);
+		log_error("Device '%s' has already been opened", name);
 		return 0;
 	}
 
 	if ((dev->fd = open(name, flags)) < 0) {
-		log_sys_error("open", "opening device");
+		log_sys_error("open", name);
 		return 0;
 	}
 
@@ -60,12 +61,14 @@ int dev_open(struct device *dev, int flags)
 int dev_close(struct device *dev)
 {
 	if (dev->fd < 0) {
-		log_err("Request to close device '%s', "
-			"which has not been opened.", dev_name(dev));
+		log_error("Attempt to close device '%s' "
+			  "which is not open.", dev_name(dev));
 		return 0;
 	}
 
-	close(dev->fd);
+	if (close(dev->fd))
+		log_sys_error("close", dev_name(dev));
+
 	dev->fd = -1;
 
 	return 1;
@@ -140,7 +143,7 @@ int64_t dev_write(struct device *dev, uint64_t offset,
 	int fd = dev->fd;
 
 	if (fd < 0) {
-		log_err("Attempt to write to an unopened device (%s).", name);
+		log_error("Attempt to write to unopened device %s", name);
 		return 0;
 	}
 
@@ -160,7 +163,8 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 	int fd = dev->fd;
 
 	if (fd < 0) {
-		log_err("Attempt to zero an unopened device (%s).", name);
+		log_error("Attempt to zero part of an unopened device %s", 
+			  name);
 		return 0;
 	}
 
