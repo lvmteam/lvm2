@@ -69,9 +69,11 @@ struct pe_specifier {
 };
 
 struct stripe_segment {
-	uint32_t count;
 	uint32_t chunk_size;
-        struct pe_specifier[1];
+	uint32_t pe_count;
+
+	/* variable sized pe array */
+        struct pe_specifier pes[1];
 };
 
 struct cmd_context;
