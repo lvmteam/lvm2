@@ -235,7 +235,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		log_verbose("Finding all logical volumes");
 		if (!(vgnames = get_vgs(cmd, 0)) || list_empty(vgnames)) {
 			log_error("No volume groups found");
-			return ECMD_FAILED;
+			return ret_max;
 		}
 	}
 
@@ -424,7 +424,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		log_verbose("Finding all volume groups");
 		if (!(vgnames = get_vgs(cmd, 0)) || list_empty(vgnames)) {
 			log_error("No volume groups found");
-			return ECMD_FAILED;
+			return ret_max;
 		}
 	}
 
