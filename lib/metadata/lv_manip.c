@@ -595,6 +595,7 @@ int lv_reduce(struct format_instance *fi,
 	struct list *segh;
 	struct lv_segment *seg;
 	uint32_t count = extents;
+	int striped;
 
 	for (segh = lv->segments.p;
 	     (segh != &lv->segments) && count; segh = segh->p) {
@@ -609,6 +610,16 @@ int lv_reduce(struct format_instance *fi,
 			/* reduce this segment */
 			_put_extents(seg);
 			seg->len -= count;
+			striped = (seg->type == SEG_STRIPED);
+			/* Caller must ensure exact divisibility */
+			if (striped && (count % seg->area_count)) {
+				log_error("Segment extent reduction %" PRIu32
+					  "not divisible by #stripes %" PRIu32,
+					  count, seg->area_count);
+				return 0;
+			}
+			seg->area_len -=
+			    count / (striped ? seg->area_count : 1);
 			_get_extents(seg);
 			count = 0;
 		}
