@@ -414,7 +414,6 @@ static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
 			  "%d extents.", MAX_LE_TOTAL);
 		return 0;
 	}
-printf ( "lv->size: %" PRIu64 "  max_size: %" PRIu64 "\n", lv->size, max_size);
 	if (lv->size > max_size) {
                 char *dummy = display_size(max_size, SIZE_SHORT);
 		log_error("logical volumes cannot be larger than %s", dummy);
