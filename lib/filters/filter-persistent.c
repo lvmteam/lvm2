@@ -55,7 +55,7 @@ static int _load(struct pfilter *pf)
 	}
 
 	if (!(cn = find_config_node(cf->root, "/valid_devices", '/'))) {
-		log_info("couldn't find 'valid_devices' array in '%s'",
+		log_info("Couldn't find 'valid_devices' array in '%s'",
 			 pf->file);
 		goto out;
 	}
@@ -66,13 +66,13 @@ static int _load(struct pfilter *pf)
 	 */
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type != CFG_STRING) {
-			log_info("valid_devices array contains a value "
+			log_info("Valid_devices array contains a value "
 				 "which is not a string ... ignoring");
 			continue;
 		}
 
 		if (!hash_insert(pf->devices, cv->v.str, PF_UNCHECKED))
-			log_info("couldn't add '%s' to filter ... ignoring",
+			log_info("Couldn't add '%s' to filter ... ignoring",
 				 cv->v.str);
 	}
 	r = 1;
@@ -87,6 +87,8 @@ static int _dump(struct pfilter *pf)
 	int first = 1;
 	struct hash_node *n;
 	FILE *fp = fopen(pf->file, "w");
+
+	log_very_verbose("Dumping persistent device cache to %s", pf->file);
 
 	if (!fp) {
 		log_info("Couldn't open '%s' for to hold valid devices.",
@@ -118,6 +120,8 @@ static int _check(const char *path)
 
 	if (fd >= 0)
 		r = 1;
+	else
+		log_debug("Unable to open %s: %s", path, strerror(errno));
 
 	close(fd);
 	return r;

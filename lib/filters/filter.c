@@ -54,10 +54,8 @@ static device_info_t device_info[] = {
 
 static int *scan_proc_dev(void);
 
-static int passes_config_device_filter(struct dev_filter *f, struct device *dev)
+static int passes_lvm_type_device_filter(struct dev_filter *f, struct device *dev)
 {
-	/* FIXME Check against config file scan/reject entries */
-
 	/* Is this a recognised device type? */
 	if (!(((int *) f->private)[MAJOR(dev->dev)]))
 		return 0;
@@ -65,7 +63,7 @@ static int passes_config_device_filter(struct dev_filter *f, struct device *dev)
 		return 1;
 }
 
-struct dev_filter *config_filter_create()
+struct dev_filter *lvm_type_filter_create()
 {
 	struct dev_filter *f;
 
@@ -74,7 +72,7 @@ struct dev_filter *config_filter_create()
 		return NULL;
 	}
 
-	f->passes_filter = passes_config_device_filter;
+	f->passes_filter = passes_lvm_type_device_filter;
 
 	if (!(f->private = scan_proc_dev()))
 		return NULL;
@@ -82,7 +80,7 @@ struct dev_filter *config_filter_create()
 	return f;
 }
 
-void config_filter_destroy(struct dev_filter *f)
+void lvm_type_filter_destroy(struct dev_filter *f)
 {
 	dbg_free(f->private);
 	dbg_free(f);

@@ -36,7 +36,7 @@ struct pool *pool_create(size_t chunk_hint)
 	struct pool *p = dbg_malloc(sizeof(*p));
 
 	if (!p) {
-		log_err("couldn't create pool");
+		log_error("Couldn't create memory pool");
 		return 0;
 	}
 	memset(p, 0, sizeof(*p));
@@ -115,7 +115,7 @@ void pool_free(struct pool *p, void *ptr)
 	}
 
 	if (!c)
-		log_warn("pool_free asked to free a pointer "
+		log_debug("pool_free asked to free a pointer "
 			 "that wasn't in the pool, doing nothing");
 	else
 		p->chunk = c;
