@@ -143,6 +143,11 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	lv = lvl->lv;
 
+	if (lv->status & LOCKED) {
+		log_error("Cannot rename locked LV %s", lv->name);
+		goto error;
+	}
+
 	if (!archive(lv->vg))
 		goto error;
 
