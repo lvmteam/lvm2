@@ -1,5 +1,6 @@
 Version 2.00.30 - 
 ====================================
+  Fix lvreduce man page .i->.I
   Fix vgsplit man page title.
   Fix clvmd man makefile.
   Extend dev_open logging.
