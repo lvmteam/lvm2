@@ -42,8 +42,8 @@ struct linear_c {
  * construct a linear mapping.
  * <dev_path> <offset>
  */
-static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
-		      struct text_region *args, void **result)
+static void *linear_ctr(struct dm_table *t, offset_t b, offset_t l,
+		      struct text_region *args)
 {
 	struct linear_c *lc;
 	unsigned int start;
@@ -55,7 +55,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 
 	if (!dm_get_word(args, &word)) {
 		t->err_msg = "couldn't get device path";
-		return -EINVAL;
+		return ERR_PTR(-EINVAL);
 	}
 
 	dm_txt_copy(path, sizeof(path) - 1, &word);
@@ -73,7 +73,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 			default:
 				t->err_msg = "no such device";
 		}
-		return PTR_ERR(bdev);
+		return bdev;
 	}
 
 	if (!dm_get_number(args, &start)) {
@@ -96,12 +96,11 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 	if (t->hardsect_size > hardsect_size)
 		t->hardsect_size = hardsect_size;
 
-	*result = lc;
-	return 0;
+	return lc;
 
 out_bdev_put:
 	dm_blkdev_put(bdev);
-	return rv;
+	return ERR_PTR(rv);
 }
 
 static void linear_dtr(struct dm_table *t, void *c)

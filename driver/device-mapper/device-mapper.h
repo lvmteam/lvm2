@@ -40,9 +40,9 @@ typedef unsigned int offset_t;
 typedef void (*dm_error_fn)(const char *message, void *private);
 
 /* constructor, destructor and map fn types */
-typedef int (*dm_ctr_fn)(struct dm_table *t,
+typedef void *(*dm_ctr_fn)(struct dm_table *t,
 			 offset_t b, offset_t l,
-			 struct text_region *args, void **result);
+			 struct text_region *args);
 
 typedef void (*dm_dtr_fn)(struct dm_table *t, void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, int rw, void *context);
