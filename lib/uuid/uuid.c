@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <assert.h>
 
 static unsigned char _c[] =
     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -82,32 +83,53 @@ int id_cmp(struct id *lhs, struct id *rhs)
 
 int id_write_format(struct id *id, char *buffer, size_t size)
 {
-	int i;
+	int i, tot;
 
-	/* split into 8 groups of four, with dashes in between */
-	if (size < (GROUPS * 5))
+	static int group_size[] = {6, 4, 4, 4, 4, 4, 6};
+
+	assert(ID_LEN == 32);
+
+	/* split into groups seperated by dashes */
+	if (size < (32 + 6 + 1)) {
+		log_err("Couldn't write uuid, buffer too small.");
 		return 0;
-
-	for (i = 0; i < GROUPS; i++) {
-		memcpy(buffer + (i * 5), id->uuid + (i * 4), 4);
-		buffer[(i * 5) + 4] = '-';
 	}
 
-	buffer[(GROUPS * 5) - 1] = '\0';
+	for (i = 0, tot = 0; i < 7; i++) {
+		memcpy(buffer, id->uuid + tot, group_size[i]);
+		buffer += group_size[i];
+		tot += group_size[i];
+		*buffer++ = '-';
+	}
+
+	*--buffer = '\0';
 	return 1;
 }
 
 int id_read_format(struct id *id, char *buffer)
 {
-	int i;
+	int out = 0;
 
-	if (strlen(buffer) < (GROUPS * 5)) {
-		log_err("Insufficient characters to be a proper uuid.");
-		return 0;
+	/* just strip out any dashes */
+	while (*buffer) {
+
+		if (*buffer == '-') {
+			buffer++;
+			continue;
+		}
+
+		if (out >= ID_LEN) {
+			log_err("Too many characters to be uuid.");
+			return 0;
+		}
+
+		id->uuid[out++] = *buffer++;
 	}
 
-	for (i = 0; i < ID_LEN; i++)
-		id->uuid[i] = buffer[((i / 4) * 5) + (i % 4)];
+	if (out != ID_LEN) {
+		log_err("Couldn't read uuid, incorrect number of characters.");
+		return 0;
+	}
 
 	return id_valid(id);
 }
