@@ -68,6 +68,12 @@ struct pe_specifier {
         uint32_t pe;
 };
 
+struct stripe_segment {
+	uint32_t count;
+	uint32_t chunk_size;
+        struct pe_specifier[1];
+};
+
 struct cmd_context;
 
 struct volume_group {
@@ -108,8 +114,9 @@ struct logical_volume {
         uint64_t size;
         uint32_t le_count;
 
-        /* le -> pe mapping array */
-        struct pe_specifier *map;
+        /* the segment array */
+	uint32_t segment_count;
+        struct stripe_segment *segments;
 };
 
 struct name_list {
