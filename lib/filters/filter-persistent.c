@@ -52,7 +52,7 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 	struct config_node *cn;
 	struct config_value *cv;
 
-	if (!(cn = find_config_node(cf->root, "/valid_devices", '/'))) {
+	if (!(cn = find_config_node(cf->root, path, '/'))) {
 		log_info("Couldn't find 'valid_devices' array in '%s'",
 			 pf->file);
 		return 0;
