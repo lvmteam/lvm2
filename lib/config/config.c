@@ -245,6 +245,9 @@ int reload_config_file(struct config_tree **cf)
 	struct stat info;
 	int r, fd;
 
+	if (!c->filename)
+		return 0;
+
 	if (stat(c->filename, &info) == -1) {
 		if (errno == ENOENT)
 			return 1;
