@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-void pvdisplay_device(const char *pv_dev);
+void pvdisplay_device(const char *pv_name);
 
 int pvdisplay(int argc, char **argv)
 {
@@ -59,13 +59,13 @@ void pvdisplay_device(const char *pv_name)
 	}
 
 	if (arg_count(short_ARG)) {
-		int size;
+		long size;
 		char *sz;
 
 		/* Returns size in 512-byte units */
 		if ((size = device_get_size(pv_name)) < 0) {
-			log_error("%s: getting size of physical volume \"%s\"", 
-			  	strerror(size), pv_name);
+			log_error("Failed to get size of physical volume %s",
+				  pv_name);
 			return;
 		}
 
