@@ -116,8 +116,7 @@ static void _init_logging(struct cmd_context *cmd)
 	    find_config_int(cmd->cft->root, "global/test", 0);
 
 	/* Settings for logging to file */
-	if (find_config_int(cmd->cft->root, "log/overwrite",
-			    DEFAULT_OVERWRITE))
+	if (find_config_int(cmd->cft->root, "log/overwrite", DEFAULT_OVERWRITE))
 		append = 0;
 
 	log_file = find_config_str(cmd->cft->root, "log/file", 0);
@@ -198,49 +197,258 @@ static int _process_config(struct cmd_context *cmd)
 	return 1;
 }
 
-/* Find and read config file */
-static int _init_config(struct cmd_context *cmd)
+static int _set_tag(struct cmd_context *cmd, const char *tag)
 {
-	struct stat info;
-	char config_file[PATH_MAX] = "";
+	log_very_verbose("Setting host tag: %s", pool_strdup(cmd->libmem, tag));
 
-	if (!(cmd->cft = create_config_tree())) {
-		stack;
-		return 0;
-	}
-
-	/* No config file if LVM_SYSTEM_DIR is empty */
-	if (!*cmd->sys_dir)
-		return 1;
-
-	if (lvm_snprintf(config_file, sizeof(config_file),
-			 "%s/lvm.conf", cmd->sys_dir) < 0) {
-		log_error("LVM_SYSTEM_DIR was too long");
-		destroy_config_tree(cmd->cft);
-		return 0;
-	}
-
-	/* Is there a config file? */
-	if (stat(config_file, &info) == -1) {
-		if (errno == ENOENT)
-			return 1;
-		log_sys_error("stat", config_file);
-		destroy_config_tree(cmd->cft);
-		return 0;
-	}
-
-	if (!read_config_file(cmd->cft, config_file)) {
-		log_error("Failed to load config file %s", config_file);
-		destroy_config_tree(cmd->cft);
+	if (!str_list_add(cmd->libmem, &cmd->tags, tag)) {
+		log_error("_set_tag: str_list_add %s failed", tag);
 		return 0;
 	}
 
 	return 1;
 }
 
-static int _init_dev_cache(struct cmd_context *cmd)
+static int _check_host_filters(struct cmd_context *cmd, struct config_node *hn,
+			       int *passes)
 {
 	struct config_node *cn;
+	struct config_value *cv;
+
+	*passes = 1;
+
+	for (cn = hn; cn; cn = cn->sib) {
+		if (!cn->v)
+			continue;
+		if (!strcmp(cn->key, "host_list")) {
+			*passes = 0;
+			if (cn->v->type == CFG_EMPTY_ARRAY)
+				continue;
+			for (cv = cn->v; cv; cv = cv->next) {
+				if (cv->type != CFG_STRING) {
+					log_error("Invalid hostname string "
+						  "for tag %s", cn->key);
+					return 0;
+				}
+				if (!strcmp(cv->v.str, cmd->hostname)) {
+					*passes = 1;
+					return 1;
+				}
+			}
+		}
+		if (!strcmp(cn->key, "host_filter")) {
+			log_error("host_filter not supported yet");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _init_tags(struct cmd_context *cmd, struct config_tree *cft)
+{
+	const struct config_node *tn, *cn;
+	const char *tag;
+	int passes;
+
+	if (!(tn = find_config_node(cft->root, "tags")) || !tn->child)
+		return 1;
+
+	/* NB hosttags 0 when already 1 intentionally does not delete the tag */
+	if (!cmd->hosttags && find_config_int(cft->root, "tags/hosttags",
+					      DEFAULT_HOSTTAGS)) {
+		/* FIXME Strip out invalid chars: only A-Za-z0-9_+.- */
+		if (!_set_tag(cmd, cmd->hostname)) {
+			stack;
+			return 0;
+		}
+		cmd->hosttags = 1;
+	}
+
+	for (cn = tn->child; cn; cn = cn->sib) {
+		if (cn->v)
+			continue;
+		tag = cn->key;
+		if (*tag == '@')
+			tag++;
+		if (!validate_name(tag)) {
+			log_error("Invalid tag in config file: %s", cn->key);
+			return 0;
+		}
+		if (cn->child) {
+			passes = 0;
+			if (!_check_host_filters(cmd, cn->child, &passes)) {
+				stack;
+				return 0;
+			}
+			if (!passes)
+				continue;
+		}
+		if (!_set_tag(cmd, tag)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _load_config_file(struct cmd_context *cmd, const char *tag)
+{
+	char config_file[PATH_MAX] = "";
+	const char *filler = "";
+	struct stat info;
+	struct config_tree_list *cfl;
+
+	if (*tag)
+		filler = "_";
+
+	if (lvm_snprintf(config_file, sizeof(config_file), "%s/lvm%s%s.conf",
+			 cmd->sys_dir, filler, tag) < 0) {
+		log_error("LVM_SYSTEM_DIR or tag was too long");
+		return 0;
+	}
+
+	if (!(cfl = pool_alloc(cmd->libmem, sizeof(*cfl)))) {
+		log_error("config_tree_list allocation failed");
+		return 0;
+	}
+
+	if (!(cfl->cft = create_config_tree(config_file))) {
+		log_error("config_tree allocation failed");
+		return 0;
+	}
+
+	/* Is there a config file? */
+	if (stat(config_file, &info) == -1) {
+		if (errno == ENOENT) {
+			list_add(&cmd->config_files, &cfl->list);
+			goto out;
+		}
+		log_sys_error("stat", config_file);
+		destroy_config_tree(cfl->cft);
+		return 0;
+	}
+
+	log_very_verbose("Loading config file: %s", config_file);
+	if (!read_config_file(cfl->cft)) {
+		log_error("Failed to load config file %s", config_file);
+		destroy_config_tree(cfl->cft);
+		return 0;
+	}
+
+	list_add(&cmd->config_files, &cfl->list);
+
+      out:
+	if (*tag)
+		_init_tags(cmd, cfl->cft);
+	else
+		/* Use temporary copy of lvm.conf while loading other files */
+		cmd->cft = cfl->cft;
+
+	return 1;
+}
+
+/* Find and read first config file */
+static int _init_lvm_conf(struct cmd_context *cmd)
+{
+	/* No config file if LVM_SYSTEM_DIR is empty */
+	if (!*cmd->sys_dir) {
+		if (!(cmd->cft = create_config_tree(NULL))) {
+			log_error("Failed to create config tree");
+			return 0;
+		}
+		return 1;
+	}
+
+	if (!_load_config_file(cmd, "")) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+/* Read any additional config files */
+static int _init_tag_configs(struct cmd_context *cmd)
+{
+	struct str_list *sl;
+
+	/* Tag list may grow while inside this loop */
+	list_iterate_items(sl, &cmd->tags) {
+		if (!_load_config_file(cmd, sl->str)) {
+			stack;
+			return 0;
+		}
+
+	}
+
+	return 1;
+}
+
+static int _merge_config_files(struct cmd_context *cmd)
+{
+	struct config_tree_list *cfl;
+
+	/* Replace temporary duplicate copy of lvm.conf */
+	if (cmd->cft->root) {
+		if (!(cmd->cft = create_config_tree(NULL))) {
+			log_error("Failed to create config tree");
+			return 0;
+		}
+	}
+
+	list_iterate_items(cfl, &cmd->config_files) {
+		/* Merge all config trees into cmd->cft using merge/tag rules */
+		if (!merge_config_tree(cmd, cmd->cft, cfl->cft)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static void _destroy_tags(struct cmd_context *cmd)
+{
+	struct list *slh, *slht;
+
+	list_iterate_safe(slh, slht, &cmd->tags) {
+		list_del(slh);
+	}
+}
+
+int config_files_changed(struct cmd_context *cmd)
+{
+	struct config_tree_list *cfl;
+
+	list_iterate_items(cfl, &cmd->config_files) {
+		if (config_file_changed(cfl->cft))
+			return 1;
+	}
+
+	return 0;
+}
+
+static void _destroy_tag_configs(struct cmd_context *cmd)
+{
+	struct config_tree_list *cfl;
+
+	if (cmd->cft && cmd->cft->root) {
+		destroy_config_tree(cmd->cft);
+		cmd->cft = NULL;
+	}
+
+	list_iterate_items(cfl, &cmd->config_files) {
+		destroy_config_tree(cfl->cft);
+	}
+
+	list_init(&cmd->config_files);
+}
+
+static int _init_dev_cache(struct cmd_context *cmd)
+{
+	const struct config_node *cn;
 	struct config_value *cv;
 
 	if (!dev_cache_init()) {
@@ -281,7 +489,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
 	unsigned nr_filt = 0;
-	struct config_node *cn;
+	const struct config_node *cn;
 	struct dev_filter *filters[MAX_FILTERS];
 
 	memset(filters, 0, sizeof(filters));
@@ -351,8 +559,8 @@ static int _init_filters(struct cmd_context *cmd)
 		return 0;
 	}
 
-	dev_cache =
-	    find_config_str(cmd->cft->root, "devices/cache", cache_file);
+	dev_cache = find_config_str(cmd->cft->root, "devices/cache",
+				    cache_file);
 	if (!(f4 = persistent_filter_create(f3, dev_cache))) {
 		log_error("Failed to create persistent device filter");
 		return 0;
@@ -384,7 +592,7 @@ static int _init_formats(struct cmd_context *cmd)
 	struct list *fmth;
 
 #ifdef HAVE_LIBDL
-	struct config_node *cn;
+	const struct config_node *cn;
 #endif
 
 	label_init();
@@ -476,105 +684,6 @@ static int _init_hostname(struct cmd_context *cmd)
 	return 1;
 }
 
-static int _set_tag(struct cmd_context *cmd, const char *tag)
-{
-	log_very_verbose("Setting host tag: %s", pool_strdup(cmd->libmem, tag));
-
-	if (!str_list_add(cmd->libmem, &cmd->tags, tag)) {
-		log_error("_init_tags: str_list_add %s failed", tag);
-		return 0;
-	}
-
-	return 1;
-}
-
-static int _check_host_filters(struct cmd_context *cmd, struct config_node *hn,
-			       int *passes)
-{
-	struct config_node *cn;
-	struct config_value *cv;
-
-	*passes = 1;
-
-	for (cn = hn; cn; cn = cn->sib) {
-		if (!cn->v)
-			continue;
-		if (!strcmp(cn->key, "host_list")) {
-			*passes = 0;
-			if (cn->v->type == CFG_EMPTY_ARRAY)
-				continue;
-			for (cv = cn->v; cv; cv = cv->next) {
-				if (cv->type != CFG_STRING) {
-					log_error("Invalid hostname string "
-						  "for tag %s", cn->key);
-					return 0;
-				}
-				if (!strcmp(cv->v.str, cmd->hostname)) {
-					*passes = 1;
-					return 1;
-				}
-			}
-		}
-		if (!strcmp(cn->key, "host_filter")) {
-			log_error("host_filter not supported yet");
-			return 0;
-		}
-	}
-
-	return 1;
-}
-	
-static int _init_tags(struct cmd_context *cmd)
-{
-	struct config_node *tn, *cn;
-	const char *tag;
-	int passes;
-
-	list_init(&cmd->tags);
-
-	if (!(tn = find_config_node(cmd->cft->root, "tags")) ||
-	    !tn->child) {
-		log_very_verbose("No tags defined in config file");
-		return 1;
-	}
-
-	if (find_config_int(cmd->cft->root, "tags/hosttags",
-			    DEFAULT_HOSTTAGS)) {
-		/* FIXME Strip out invalid chars: only A-Za-z0-9_+.- */
-		if (!_set_tag(cmd, cmd->hostname)) {
-			stack;
-			return 0;
-		}
-	}
-
-	for (cn = tn->child; cn; cn = cn->sib) {
-		if (cn->v)
-			continue;
-		tag = cn->key;
-		if (*tag == '@')
-			tag++;
-		if (!validate_name(tag)) {
-			log_error("Invalid tag in config file: %s", cn->key);
-			return 0;
-		}
-		if (cn->child) {
-			passes = 0;
-			if (!_check_host_filters(cmd, cn->child, &passes)) {
-				stack;
-				return 0;
-			}
-			if (!passes)
-				continue;
-		}
-		if (!_set_tag(cmd, tag)) {
-			stack;
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
 /* Entry point */
 struct cmd_context *create_toolcontext(struct arg *the_args)
 {
@@ -599,7 +708,10 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	}
 	memset(cmd, 0, sizeof(*cmd));
 	cmd->args = the_args;
+	cmd->hosttags = 0;
 	list_init(&cmd->formats);
+	list_init(&cmd->tags);
+	list_init(&cmd->config_files);
 
 	strcpy(cmd->sys_dir, DEFAULT_SYS_DIR);
 
@@ -610,15 +722,27 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (*cmd->sys_dir && !create_dir(cmd->sys_dir))
 		goto error;
 
-	if (!_init_config(cmd))
-		goto error;
-
-	_init_logging(cmd);
-
 	if (!(cmd->libmem = pool_create(4 * 1024))) {
 		log_error("Library memory pool creation failed");
 		return 0;
 	}
+
+	if (!_init_lvm_conf(cmd))
+		goto error;
+
+	_init_logging(cmd);
+
+	if (!_init_hostname(cmd))
+		goto error;
+
+	if (!_init_tags(cmd, cmd->cft))
+		goto error;
+
+	if (!_init_tag_configs(cmd))
+		goto error;
+
+	if (!_merge_config_files(cmd))
+		goto error;
 
 	if (!_process_config(cmd))
 		goto error;
@@ -639,29 +763,14 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (!_init_formats(cmd))
 		goto error;
 
-	if (!_init_hostname(cmd))
-		goto error;
-
-	if (!_init_tags(cmd))
-		goto error;
-
 	cmd->current_settings = cmd->default_settings;
 
+	cmd->config_valid = 1;
 	return cmd;
 
       error:
 	dbg_free(cmd);
 	return NULL;
-}
-
-int refresh_toolcontext(struct cmd_context *cmd)
-{
-	_init_logging(cmd);
-	_init_tags(cmd);
-
-	/* FIXME Reset filters and dev_cache */
-
-	return 1;
 }
 
 static void _destroy_formats(struct list *formats)
@@ -682,6 +791,61 @@ static void _destroy_formats(struct list *formats)
 	}
 }
 
+int refresh_toolcontext(struct cmd_context *cmd)
+{
+	log_verbose("Reloading config files");
+
+	if (cmd->config_valid) {
+		if (cmd->dump_filter)
+			persistent_filter_dump(cmd->filter);
+	}
+
+	activation_exit();
+	lvmcache_destroy();
+	label_exit();
+	_destroy_formats(&cmd->formats);
+	if (cmd->filter) {
+		cmd->filter->destroy(cmd->filter);
+		cmd->filter = NULL;
+	}
+	dev_cache_exit();
+	_destroy_tags(cmd);
+	_destroy_tag_configs(cmd);
+
+	cmd->config_valid = 0;
+
+	cmd->hosttags = 0;
+
+	if (!_init_lvm_conf(cmd))
+		return 0;
+
+	_init_logging(cmd);
+
+	if (!_init_tags(cmd, cmd->cft))
+		return 0;
+
+	if (!_init_tag_configs(cmd))
+		return 0;
+
+	if (!_merge_config_files(cmd))
+		return 0;
+
+	if (!_process_config(cmd))
+		return 0;
+
+	if (!_init_dev_cache(cmd))
+		return 0;
+
+	if (!_init_filters(cmd))
+		return 0;
+
+	if (!_init_formats(cmd))
+		return 0;
+
+	cmd->config_valid = 1;
+	return 1;
+}
+
 void destroy_toolcontext(struct cmd_context *cmd)
 {
 	if (cmd->dump_filter)
@@ -694,7 +858,8 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	cmd->filter->destroy(cmd->filter);
 	pool_destroy(cmd->mem);
 	dev_cache_exit();
-	destroy_config_tree(cmd->cft);
+	_destroy_tags(cmd);
+	_destroy_tag_configs(cmd);
 	pool_destroy(cmd->libmem);
 	dbg_free(cmd);
 

@@ -16,7 +16,8 @@
 #ifndef _LVM_CONFIG_H
 #define _LVM_CONFIG_H
 
-#include "device.h"
+struct device;
+struct cmd_context;
 
 enum {
 	CFG_STRING,
@@ -45,42 +46,51 @@ struct config_tree {
 	struct config_node *root;
 };
 
-struct config_tree *create_config_tree(void);
-void destroy_config_tree(struct config_tree *cf);
+struct config_tree_list {
+	struct list list;
+	struct config_tree *cft;
+};
+
+struct config_tree *create_config_tree(const char *filename);
+void destroy_config_tree(struct config_tree *cft);
 
 typedef uint32_t (*checksum_fn_t) (uint32_t initial, void *buf, uint32_t size);
 
-int read_config_fd(struct config_tree *cf, struct device *dev,
+int read_config_fd(struct config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum);
 
-int read_config_file(struct config_tree *cf, const char *file);
-int write_config_file(struct config_tree *cf, const char *file);
-int reload_config_file(struct config_tree **cf);
-time_t config_file_timestamp(struct config_tree *cf);
+int read_config_file(struct config_tree *cft);
+int write_config_file(struct config_tree *cft, const char *file);
+time_t config_file_timestamp(struct config_tree *cft);
+int config_file_changed(struct config_tree *cft);
+int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
+		      struct config_tree *newdata);
 
-struct config_node *find_config_node(struct config_node *cn,
+struct config_node *find_config_node(const struct config_node *cn,
 				     const char *path);
 
-const char *find_config_str(struct config_node *cn, const char *path,
+const char *find_config_str(const struct config_node *cn, const char *path,
 			    const char *fail);
 
-int find_config_int(struct config_node *cn, const char *path, int fail);
+int find_config_int(const struct config_node *cn, const char *path, int fail);
 
-float find_config_float(struct config_node *cn, const char *path, float fail);
+float find_config_float(const struct config_node *cn, const char *path,
+			float fail);
 
 /*
  * Understands (0, ~0), (y, n), (yes, no), (on,
  * off), (true, false).
  */
-int find_config_bool(struct config_node *cn, const char *path, int fail);
+int find_config_bool(const struct config_node *cn, const char *path, int fail);
 
-int get_config_uint32(struct config_node *cn, const char *path,
+int get_config_uint32(const struct config_node *cn, const char *path,
 		      uint32_t *result);
 
-int get_config_uint64(struct config_node *cn, const char *path,
+int get_config_uint64(const struct config_node *cn, const char *path,
 		      uint64_t *result);
 
-int get_config_str(struct config_node *cn, const char *path, char **result);
+int get_config_str(const struct config_node *cn, const char *path,
+		   char **result);
 
 #endif

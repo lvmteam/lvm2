@@ -1,3 +1,9 @@
+Version 2.00.16 - 
+=============================
+  Support for tagged config files.
+  Don't abort operations if selinux present but disabled.
+  Fix typo in configure which left HAVE_LIBDL unset.
+
 Version 2.00.15 - 19 Apr 2004
 =============================
   configure --with-owner= --with-group= to avoid -o and -g args to 'install'

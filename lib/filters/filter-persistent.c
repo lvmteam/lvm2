@@ -63,7 +63,7 @@ int persistent_filter_wipe(struct dev_filter *f)
 static int _read_array(struct pfilter *pf, struct config_tree *cft,
 		       const char *path, void *data)
 {
-	struct config_node *cn;
+	const struct config_node *cn;
 	struct config_value *cv;
 
 	if (!(cn = find_config_node(cft->root, path))) {
@@ -99,12 +99,12 @@ int persistent_filter_load(struct dev_filter *f)
 	int r = 0;
 	struct config_tree *cft;
 
-	if (!(cft = create_config_tree())) {
+	if (!(cft = create_config_tree(pf->file))) {
 		stack;
 		return 0;
 	}
 
-	if (!read_config_file(cft, pf->file)) {
+	if (!read_config_file(cft)) {
 		stack;
 		goto out;
 	}
