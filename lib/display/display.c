@@ -258,7 +258,7 @@ void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 		log_print("PV Size               %s" " / not usable %s",	/*  [LVM: %s]", */
 			  size,
 			  display_size(cmd, (pv->size -
-					     pv->pe_count * pv->pe_size),
+				       (uint64_t) pv->pe_count * pv->pe_size),
 				       SIZE_SHORT));
 
 	} else
