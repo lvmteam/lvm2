@@ -188,7 +188,6 @@ struct dm_table {
 struct mapped_device {
 	kdev_t dev;
 	char name[DM_NAME_LEN];
-	struct inode *inode;
 
 	int use_count;
 	int state;
