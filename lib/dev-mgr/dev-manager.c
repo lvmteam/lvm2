@@ -39,12 +39,30 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <linux/kdev_t.h>
 #include "hash.h"
 #include "mm/pool.h"
 #include "log/log.h"
 #include "dev-manager.h"
 
 #define DEFAULT_BASE_DIR "/dev"
+#define LOCAL_EPARAM 1
+#define LOCAL_CHECK_NAME 2
+#define LOCAL_DEVICE_TYPE_INVALID 3
+
+static const char *device_names[] = {
+		"ide",			/* IDE disk */
+		"sd",			/* SCSI disk */
+		"md",			/* Multiple Disk driver (SoftRAID) */
+		"loop",			/* Loop device */
+		"dasd",			/* DASD disk (IBM S/390, zSeries) */
+		"dac960",		/* DAC960 */
+		"nbd",			/* Network Block Device */
+		"ida",			/* Compaq SMART2 */
+		"cciss",		/* Compaq CCISS array */
+		"ubd",			/* User-mode virtual block device */
+		NULL
+};
 
 struct dev_i {
 	struct device d;
@@ -92,6 +110,7 @@ static void _name_insert(struct dev_mgr *dm, struct dev_i *device);
 static void _dev_insert(struct dev_mgr *dm, struct dev_i *device);
 static void _list_insert(struct dev_mgr *dm, struct dev_i *device);
 static unsigned int _hash_dev(dev_t d);
+static int _check_dev(struct stat *stat_b);
 
 static inline struct device *_get_dev(struct dev_i *di)
 {
@@ -243,7 +262,7 @@ static struct dev_i *_add_named_device(struct dev_mgr *dm, const char *devpath)
 	struct stat stat_b;
 
 	/* FIXME: move lvm_check_dev into this file */
-	if ((stat(devpath, &stat_b) == -1) || lvm_check_dev(&stat_b, 1))
+	if ((stat(devpath, &stat_b) == -1) || _check_dev(&stat_b))
 		goto out;
 
 	/* Check for directories and scan them if they aren't this directory
@@ -405,6 +424,67 @@ static unsigned int _hash_dev(dev_t d)
 	/* FIXME: find suitable fn from Knuth */
 	return (unsigned int) d;
 }
+
+static int _check_dev(struct stat *stat_b)
+{
+	char line[80];
+	int ret = 1;
+	int seek_major = MAJOR(stat_b->st_rdev);
+
+	if (stat_b == NULL)
+		ret = -LOCAL_EPARAM;
+	else if ( ! S_ISBLK(stat_b->st_mode))
+		ret = -LOCAL_CHECK_NAME;
+	else {
+	FILE *procdevices = NULL;
+	int i, j = 0;
+	int line_major = 0;
+	int blocksection = 0;
+	
+	/* FIXME Ought to cache this first time */
+	if ((procdevices = fopen("/proc/devices", "r")) != NULL) {
+		while (fgets(line, 80, procdevices) != NULL) {
+			i = 0;
+			while (line[i] == ' ' && line[i] != '\0')
+				i++;
+			
+			/* If its not a number it may be name of section */
+			line_major = atoi(((char *) (line + i)));
+			if (line_major == 0) {
+				blocksection = (line[i] == 'B') ? 1 : 0;
+				continue;
+			}
+			/* We only want block devices ... */
+			if (!blocksection)
+				continue;
+			
+			if (line_major == seek_major) {
+				while (line[i] != ' ' && line[i] != '\0')
+					i++;
+				while (line[i] == ' ' && line[i] != '\0')
+					i++;
+				for (j = 0; device_names[j] != NULL; j++) {
+				    if (strlen(device_names[j])
+						    <= strlen(line + i)) {
+					if (strncmp (device_names[j],
+						line + i,
+						strlen(device_names[j])) == 0) {
+					    ret = j;
+					    break;
+					}
+			    	    }
+				}
+				break;
+			}
+		}
+		fclose(procdevices);
+	}
+	}
+
+	return ret;
+}
+
+
 
 /*
  * Local variables:
