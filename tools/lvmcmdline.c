@@ -989,7 +989,7 @@ static void _close_stray_fds(void)
 		if (!close(fd))
 			fprintf(stderr, "File descriptor %d left open\n", fd);
 		else if (errno != EBADF)
-			fprintf(stderr, "Close failed on stray file ",
+			fprintf(stderr, "Close failed on stray file "
 				"descriptor %d: %s\n", fd, strerror(errno));
 	}
 }
