@@ -453,6 +453,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 				  "supported yet");
 			return 0;
 		}
+		/* Must zero cow */
+		status |= LVM_WRITE;
 	}
 
 	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc,
@@ -512,6 +514,9 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if (lp->snapshot) {
+		/* Reset permission after zeroing */
+		if (!(lp->permission & LVM_WRITE))
+			lv->status &= ~LVM_WRITE;
 		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
 			log_err("Couldn't unlock snapshot.");
 			return 0;

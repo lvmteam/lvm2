@@ -1409,6 +1409,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	dl->populate = _populate_vanilla;
 	_clear_flag(dl, VISIBLE);
 	_clear_flag(dl, TOPLEVEL);
+	_set_flag(dl, READWRITE);
 
 	cow_dlid = dl->dlid;
 
