@@ -86,8 +86,10 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	char path[PATH_MAX];
 	struct stat st1, st2;
 
-        if (dmt->dev_name)
+        if (dmt->dev_name) {
                 free(dmt->dev_name);
+		dmt->dev_name = NULL;
+	}
 
 	/* If path was supplied, remove it if it points to the same device
 	 * as its last component.
@@ -110,6 +112,21 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	}
 
         return 1;
+}
+
+int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
+{
+	if (dmt->uuid) {
+		free(dmt->uuid);
+		dmt->uuid = NULL;
+	}
+
+	if (!(dmt->uuid = strdup(uuid))) {
+		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
+		return 0;
+	}
+
+	return 1;
 }
 
 int dm_task_set_minor(struct dm_task *dmt, int minor)

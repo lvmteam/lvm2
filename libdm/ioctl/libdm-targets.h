@@ -23,5 +23,7 @@ struct dm_task {
 	int minor;
 	struct dm_ioctl *dmi;
 	char *newname;
+
+	char *uuid;
 };
 
