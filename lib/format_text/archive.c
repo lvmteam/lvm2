@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-#define SECS_PER_DAY 86400
+#define SECS_PER_DAY 86400	/* 24*60*60 */
 
 /*
  * The format instance is given a directory path upon creation.
@@ -137,6 +137,7 @@ static struct list *_scan_archive(struct pool *mem,
 
 	list_init(results);
 
+	/* Sort fails beyond 5-digit indexes */
 	if ((count = scandir(dir, &dirent, NULL, alphasort)) < 0) {
 		log_err("Couldn't scan archive directory.");
 		return 0;
@@ -148,8 +149,8 @@ static struct list *_scan_archive(struct pool *mem,
 			continue;
 
 		/* check the name is the correct format */
-		if (!_split_vg(dirent[i]->d_name, vg_name,
-			       sizeof(vg_name), &index))
+		if (!_split_vg(dirent[i]->d_name, vg_name, sizeof(vg_name),
+			       &index))
 			continue;
 
 		/* is it the vg we're interested in ? */
@@ -187,50 +188,42 @@ static struct list *_scan_archive(struct pool *mem,
 	return results;
 }
 
-/* Gets rid of those expired archive files! */
-void _remove_expired(struct list *archives, uint32_t retain_days,
-		     uint32_t min_archive)
+static void _remove_expired(struct list *archives, uint32_t archives_size,
+			    uint32_t retain_days, uint32_t min_archive)
 {
 	struct list *bh;
 	struct archive_file *bf;
 	struct stat sb;
-	uint32_t size;
-	time_t retain_secs;
-
-	/* Add one to the list size because we've just created a new archive
-	   file before calling this.  FIXME: Can we really assume this? */
-	size = list_size(archives) + 1;
+	time_t retain_time;
 
 	/* Make sure there are enough archives to even bother looking for
 	 * expired ones... */
-	if(size > min_archive) {
+	if (archives_size <= min_archive)
+		return;
 
-		/* Calculate now minus the retain_days (in seconds) since
-		   the epoch */
-		retain_secs = time(NULL) - (time_t) retain_days * SECS_PER_DAY;
+	/* Convert retain_days into the time after which we must retain */
+	retain_time = time(NULL) - (time_t) retain_days * SECS_PER_DAY;
 
-		list_iterate(bh, archives) {
+	/* Assume list is ordered oldest first (by index) */
+	list_iterate(bh, archives) {
+		bf = list_item(bh, struct archive_file);
 
-			bf = list_item(bh, struct archive_file);
-
-			/* Get the mtime of the file and unlink if too old */
-			if(stat(bf->path, &sb)) {
-				log_sys_error("stat", bf->path);
-				break;
-			}
-			if(sb.st_mtime < retain_secs) {
-
-				if(unlink(bf->path))
-					log_sys_error("unlink", bf->path);
-				
-				size--;
-				/* Don't delete any more if we've reached the
-				 * minimum */
-				if(size <= min_archive)
-					break;
-
-			}
+		/* Get the mtime of the file and unlink if too old */
+		if (stat(bf->path, &sb)) {
+			log_sys_error("stat", bf->path);
+			continue;
 		}
+
+		if (sb.st_mtime > retain_time)
+			return;
+
+		log_very_verbose("Expiring archive %s", bf->path);
+		if (unlink(bf->path))
+			log_sys_error("unlink", bf->path);
+
+		/* Don't delete any more if we've reached the minimum */
+		if (--archives_size <= min_archive)
+			return;
 	}
 }
 
@@ -238,7 +231,7 @@ int archive_vg(struct volume_group *vg,
 	       const char *dir, const char *desc,
 	       uint32_t retain_days, uint32_t min_archive)
 {
-	int i, fd;
+	int i, fd, renamed = 0;
 	unsigned int index = 0;
 	struct archive_file *last;
 	FILE *fp = NULL;
@@ -277,7 +270,6 @@ int archive_vg(struct volume_group *vg,
 
 	if (list_empty(archives))
 		index = 0;
-
 	else {
 		last = list_item(archives->p, struct archive_file);
 		index = last->index + 1;
@@ -286,18 +278,21 @@ int archive_vg(struct volume_group *vg,
 	for (i = 0; i < 10; i++) {
 		if (lvm_snprintf(archive_name, sizeof(archive_name),
 				 "%s/%s_%05d.vg", dir, vg->name, index) < 0) {
-			log_err("archive file name too long.");
+			log_error("Archive file name too long.");
 			return 0;
 		}
 
-		if (lvm_rename(temp_file, archive_name))
+		if ((renamed = lvm_rename(temp_file, archive_name)))
 			break;
 
 		index++;
 	}
 
-	/* Now remove expired files */
-	_remove_expired(archives, retain_days, min_archive);
+	if (!renamed)
+		log_error("Archive rename failed for %s", temp_file);
+
+	_remove_expired(archives, list_size(archives) + renamed, retain_days,
+			min_archive);
 
 	return 1;
 }
