@@ -66,6 +66,7 @@ struct dm_info {
 	int exists;
 	int suspended;
 	int32_t open_count;
+	uint32_t event_nr;
 	uint32_t major;
 	uint32_t minor;		/* minor device number */
 	int read_only;		/* 0:read-write; 1:read-only */
@@ -90,6 +91,7 @@ int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
 int dm_task_set_minor(struct dm_task *dmt, int minor);
 int dm_task_set_major(struct dm_task *dmt, int major);
+int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr);
 
 /*
  * Use these to prepare for a create or reload.
