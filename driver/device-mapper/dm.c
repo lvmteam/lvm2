@@ -148,7 +148,6 @@ static int dm_blk_open(struct inode *inode, struct file *file)
 	md->use_count++;
 	wu;
 
-	MOD_INC_USE_COUNT;
 	return 0;
 }
 
@@ -171,7 +170,6 @@ static int dm_blk_close(struct inode *inode, struct file *file)
 	md->use_count--;
 	wu;
 
-	MOD_DEC_USE_COUNT;
 	return 0;
 }
 
