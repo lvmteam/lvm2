@@ -57,7 +57,75 @@
 #include <linux/blk.h>
 
 /*
- * FIXME: write description
+ * This driver attempts to provide a generic way of specifying logical
+ * devices which are mapped onto other devices.
+ *
+ * It does this by mapping sections of the logical device onto 'targets'.
+ *
+ * When the logical device is accessed the make_request function looks up
+ * the correct target for the given sector, and then asks this target
+ * to do the remapping.
+ *
+ * A btree like structure is used to hold the sector range -> target
+ * mapping.  Because we know all the entries in the btree in advance
+ * we can make a very compact tree, omitting pointers to child nodes,
+ * (child nodes locations can be calculated). Each node of the btree is
+ * 1 level cache line in size, this gives a small performance boost.
+ *
+ * A userland test program for the btree gave the following results on a
+ * 1 Gigahertz Athlon machine:
+ *
+ * entries in btree               lookups per second
+ * ----------------               ------------------
+ * 5                              25,000,000
+ * 1000                           7,700,000
+ * 10,000,000                     3,800,000
+ *
+ * Of course these results should be taken with a pinch of salt; the lookups
+ * were sequential and there were no other applications (other than X + emacs)
+ * running to give any pressure on the level 1 cache.
+ *
+ * Typically LVM users would find they have very few targets for each
+ * LV (probably less than 10).
+ *
+ * Target types are not hard coded, instead the
+ * 'register_mapping_type' function should be called.  A target type
+ * is specified using three functions (see the header):
+ *
+ * dm_ctr_fn - takes a string and contructs a target specific piece of
+ *             context data.
+ * dm_dtr_fn - destroy contexts.
+ * dm_map_fn - function that takes a buffer_head and some previously
+ *             constructed context and performs the remapping.
+ *
+ * This file contains two trivial mappers, which are automatically registered:
+ * 'linear', and 'io_error'. Linear alone would be enough to implement most
+ * LVM features (omitting striped volumes and snapshots).
+ *
+ * At the moment this driver has a temporary ioctl interface, but I will
+ * move this to a read/write interface on either a /proc file or a
+ * char device.  This will allow scripts to simply cat a text mapping
+ * table in order to set up a volume.
+ *
+ * At the moment the table assumes 32 bit keys (sectors), the move to
+ * 64 bits will involve no interface changes, since the tables wil be
+ * read in as ascii data.  A different table implementation can
+ * therefor be provided at another time.  Either just by changing offset_t
+ * to 64 bits, or maybe implementing a structure which looks up the keys in
+ * stages (ie, 32 bits at a time).
+ *
+ * More interesting targets:
+ *
+ * striped mapping; given a stripe size and a number of device regions
+ * this would stripe data across the regions.  Especially useful, since
+ * we could limit each striped region to a 32 bit area and then avoid
+ * nasy 64 bit %'s.
+ *
+ * mirror mapping (reflector ?); would set off a kernel thread slowly
+ * copying data from one region to another, ensuring that any new
+ * writes got copied to both destinations correctly.  Great for
+ * implementing pvmove.  Not sure how userland would be notified that
+ * the copying process had completed.
  */
 
 #define MAX_DEVICES 64
