@@ -325,40 +325,6 @@ static int _wait(int argc, char **argv, void *data)
 		       (argc == 3) ? atoi(argv[2]) : 0, 1);
 }
 
-static int _process_mapper_dir(int argc, char **argv,
-			       int (*fn) (int argc, char **argv, void *data))
-{
-	struct dirent *dirent;
-	struct dm_names *names;
-	DIR *d;
-	const char *dir;
-	int r = 1;
-
-	dir = dm_dir();
-	if (!(d = opendir(dir))) {
-		fprintf(stderr, "opendir %s: %s", dir, strerror(errno));
-		return 0;
-	}
-
-	while ((dirent = readdir(d))) {
-		if (!strcmp(dirent->d_name, ".") ||
-		    !strcmp(dirent->d_name, "..") ||
-		    !strcmp(dirent->d_name, "control"))
-			continue;
-		/* Set up names->name for _info */
-		names = (void *) dirent->d_name -
-		    ((void *) &names->name - (void *) &names->dev);
-		if (!fn(argc, argv, names))
-			r = 0;
-	}
-
-	if (closedir(d)) {
-		fprintf(stderr, "closedir %s: %s", dir, strerror(errno));
-	}
-
-	return r;
-}
-
 static int _process_all(int argc, char **argv,
 			int (*fn) (int argc, char **argv, void *data))
 {
@@ -367,9 +333,6 @@ static int _process_all(int argc, char **argv,
 	unsigned next = 0;
 
 	struct dm_task *dmt;
-
-	if (!strcmp(argv[0], "mknodes"))
-		r = _process_mapper_dir(argc, argv, fn);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_LIST)))
 		return 0;
@@ -495,14 +458,34 @@ static int _targets(int argc, char **argv, void *data)
 
 }
 
+static int _mknodes(int argc, char **argv, void *data)
+{
+	struct dm_task *dmt;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
+		return 0;
+
+	if (argc == 2 && !dm_task_set_name(dmt, argv[1]))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
 static int _info(int argc, char **argv, void *data)
 {
 	int r = 0;
 
 	struct dm_task *dmt;
 	struct dm_names *names = (struct dm_names *) data;
-	char *name;
-	int taskno;
+	char *name = NULL;
 
 	if (argc == 1 && !data)
 		return _process_all(argc, argv, _info);
@@ -512,22 +495,16 @@ static int _info(int argc, char **argv, void *data)
 	else
 		name = argv[1];
 
-	if (!strcmp(argv[0], "mknodes"))
-		taskno = DM_DEVICE_MKNODES;
-	else
-		taskno = DM_DEVICE_INFO;
-
-	if (!(dmt = dm_task_create(taskno)))
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
 		return 0;
 
-	if (!dm_task_set_name(dmt, name))
+	if (name && !dm_task_set_name(dmt, name))
 		goto out;
 
 	if (!dm_task_run(dmt))
 		goto out;
 
-	if (taskno == DM_DEVICE_INFO)
-		_display_info(dmt);
+	_display_info(dmt);
 
 	r = 1;
 
@@ -640,10 +617,10 @@ static struct command _commands[] = {
 	{"ls", "", 0, 0, _ls},
 	{"info", "[<dev_name>]", 0, 1, _info},
 	{"deps", "[<dev_name>]", 0, 1, _deps},
-	{"mknodes", "[<dev_name>]", 0, 1, _info},
 	{"status", "[<dev_name>]", 0, 1, _status},
 	{"table", "[<dev_name>]", 0, 1, _status},
 	{"wait", "<dev_name> [<event_nr>]", 1, 2, _wait},
+	{"mknodes", "[<dev_name>]", 0, 1, _mknodes},
 	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
 	{NULL, NULL, 0, 0, NULL}
