@@ -15,6 +15,8 @@
 #include "fs.h"
 #include "log.h"
 
+#include <devmapper/libdevmapper.h>
+
 /*
  * FIXME: copied straight from LVM1.
  *
@@ -54,8 +56,8 @@ static int _check_devfs(const char *dev_prefix)
 
 void _build_lv_path(char *buffer, size_t len, struct logical_volume *lv)
 {
-	snprintf(buffer, len, "%s/device-mapper/%s-%s",
-		 lv->vg->cmd->dev_dir, lv->vg->name, lv->name);
+	snprintf(buffer, len, "%s%s/%s-%s",
+		 lv->vg->cmd->dev_dir, dm_dir(), lv->vg->name, lv->name);
 }
 
 void _build_vg_path(char *buffer, size_t len, struct volume_group *vg)
@@ -72,16 +74,23 @@ void _build_link_path(char *buffer, size_t len, struct logical_volume *lv)
 static int _mk_node(struct logical_volume *lv)
 {
 	char lv_path[PATH_MAX];
+	char dm_path[PATH_MAX];
 	dev_t dev;
 	const char *dev_dir = lv->vg->cmd->dev_dir;
 
 	if (_check_devfs(dev_dir))
 		return 1;
 
-	_build_lv_path(lv_path, sizeof(lv_path), lv);
+	snprintf(dm_path, PATH_MAX, "%s%s", dev_dir, dm_dir());
+	if (mkdir(dm_path, 0555) && errno != EEXIST) {
+		log_sys_error("mkdir", dm_path);
+		return 0;
+	}
 
+	_build_lv_path(lv_path, sizeof(lv_path), lv);
+	
 	if (mknod(lv_path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
-		log_sys_error("mknod", "creating lv device node");
+		log_sys_error("mknod", lv_path);
 		return 0;
 	}
 
@@ -99,7 +108,7 @@ static int _rm_node(struct logical_volume *lv)
 	_build_lv_path(lv_path, sizeof(lv_path), lv);
 
 	if (unlink(lv_path) < 0) {
-		log_sys_error("unlink", "removing lv device node");
+		log_sys_error("unlink", lv_path);
 		return 0;
 	}
 
@@ -137,7 +146,7 @@ static int _mk_link(struct logical_volume *lv)
 	_build_link_path(link_path, sizeof(link_path), lv);
 
 	if (symlink(lv_path, link_path) < 0) {
-		log_sys_error("symlink", "creating lv symlink");
+		log_sys_error("symlink", link_path);
 		return 0;
 	}
 
@@ -151,7 +160,7 @@ static int _rm_link(struct logical_volume *lv)
 	_build_link_path(link_path, sizeof(link_path), lv);
 
 	if (unlink(link_path) < 0) {
-		log_sys_error("unlink", "unlink lv symlink");
+		log_sys_error("unlink", link_path);
 		return 0;
 	}
 

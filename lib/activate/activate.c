@@ -148,7 +148,7 @@ int _load(struct logical_volume *lv, int task)
 	 */
 	while (le < lv->le_count) {
 		if (!_emit_target(dmt, lv, &le)) {
-			log_err("unable to activate logical volume '%s'",
+			log_error("Unable to activate logical volume '%s'",
 				lv->name);
 			goto out;
 		}
