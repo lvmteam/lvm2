@@ -31,13 +31,24 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	uint64_t sector;
 
 	const char *pv_name = dev_name(pv->dev);
+	const char *tag = NULL;
 
 	int consistent = 1;
 	int allocatable = 0;
+	int tagarg = 0;
+
+	if (arg_count(cmd, addtag_ARG))
+		tagarg = addtag_ARG;
+	else if (arg_count(cmd, deltag_ARG))
+		tagarg = deltag_ARG;
 
 	if (arg_count(cmd, allocatable_ARG))
 		allocatable = !strcmp(arg_str_value(cmd, allocatable_ARG, "n"),
 				      "y");
+	else if (tagarg && !(tag = arg_str_value(cmd, tagarg, NULL))) {
+		log_error("Failed to get tag");
+		return 0;
+	}
 
 	/* If in a VG, must change using volume group. */
 	if (*pv->vg_name) {
@@ -75,6 +86,12 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			     pv_name, vg->name);
 			return 0;
 		}
+		if (tagarg && !(vg->fid->fmt->features & FMT_TAGS)) {
+			unlock_vg(cmd, pv->vg_name);
+			log_error("Volume group containing %s does not "
+				  "support tags", pv_name);
+			return 0;
+		}
 		if (arg_count(cmd, uuid_ARG) && lvs_in_vg_activated(vg)) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Volume group containing %s has active "
@@ -85,6 +102,11 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (!archive(vg))
 			return 0;
 	} else {
+		if (tagarg) {
+			log_error("Can't change tag on Physical Volume %s not "
+				  "in volume group", pv_name);
+			return 0;
+		}
 		if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
 			log_error("Can't get lock for orphans");
 			return 0;
@@ -137,6 +159,21 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 				    "allocatable", pv_name);
 			pv->status &= ~ALLOCATABLE_PV;
 		}
+	} else if (tagarg) {
+		/* tag or deltag */
+		if ((tagarg == addtag_ARG)) {
+			if (!str_list_add(cmd->mem, &pv->tags, tag)) {
+				log_error("Failed to add tag %s to physical "
+					  "volume %s", tag, pv_name);
+				return 0;
+			}
+		} else {
+			if (!str_list_del(&pv->tags, tag)) {
+				log_error("Failed to remove tag %s from "
+					  "physical volume" "%s", tag, pv_name);
+				return 0;
+			}
+		}
 	} else {
 		/* --uuid: Change PV ID randomly */
 		id_create(&pv->id);
@@ -182,9 +219,10 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	list_init(&mdas);
 
-	if (arg_count(cmd, allocatable_ARG) +
-	    + arg_count(cmd, uuid_ARG) != 1) {
-		log_error("Please give exactly one option of -x or --uuid");
+	if (arg_count(cmd, allocatable_ARG) + arg_count(cmd, addtag_ARG) +
+	    arg_count(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) != 1) {
+		log_error("Please give exactly one option of -x, -uuid, "
+			  "--addtag or --deltag");
 		return EINVALID_CMD_LINE;
 	}
 

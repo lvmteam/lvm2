@@ -51,10 +51,11 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 	if (arg_count(cmd, verbose_ARG)) {
 		vgdisplay_extents(vg);
 
-		process_each_lv_in_vg(cmd, vg, NULL, &lvdisplay_full);
+		process_each_lv_in_vg(cmd, vg, NULL, NULL, NULL,
+				      &lvdisplay_full);
 
 		log_print("--- Physical volumes ---");
-		process_each_pv_in_vg(cmd, vg, NULL, &pvdisplay_short);
+		process_each_pv_in_vg(cmd, vg, NULL, NULL, &pvdisplay_short);
 	}
 
 	return ECMD_PROCESSED;

@@ -33,6 +33,7 @@
 #include "lvm-file.h"
 #include "lvm-string.h"
 #include "pool.h"
+#include "str_list.h"
 #include "toolcontext.h"
 #include "toollib.h"
 
@@ -104,6 +105,7 @@ int int_arg_with_sign(struct cmd_context *cmd, struct arg *a);
 int major_arg(struct cmd_context *cmd, struct arg *a);
 int minor_arg(struct cmd_context *cmd, struct arg *a);
 int string_arg(struct cmd_context *cmd, struct arg *a);
+int tag_arg(struct cmd_context *cmd, struct arg *a);
 int permission_arg(struct cmd_context *cmd, struct arg *a);
 int metadatatype_arg(struct cmd_context *cmd, struct arg *a);
 int units_arg(struct cmd_context *cmd, struct arg *a);

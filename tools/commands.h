@@ -56,8 +56,10 @@ xx(lvchange,
    "lvchange\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-a|--available y|n]\n"
+   "\t[--addtag Tag]\n"
    "\t[-C|--contiguous y|n]\n"
    "\t[-d|--debug]\n"
+   "\t[--deltag Tag]\n"
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -72,12 +74,14 @@ xx(lvchange,
 
    autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
    ignorelockingfailure_ARG, major_ARG, minor_ARG, partial_ARG, permission_ARG,
-   persistent_ARG, readahead_ARG, test_ARG)
+   persistent_ARG, readahead_ARG, addtag_ARG, deltag_ARG,
+   test_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
    "lvcreate " "\n"
    "\t[-A|--autobackup {y|n}]\n"
+   "\t[--addtag Tag]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
@@ -97,6 +101,7 @@ xx(lvcreate,
    "lvcreate -s|--snapshot\n"
    "\t[-c|--chunksize]\n"
    "\t[-A|--autobackup {y|n}]\n"
+   "\t[--addtag Tag]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
@@ -112,9 +117,10 @@ xx(lvcreate,
    "\t[--version]\n"
    "\tOriginalLogicalVolume[Path] [PhysicalVolumePath...]\n\n",
 
-   autobackup_ARG, chunksize_ARG, contiguous_ARG, extents_ARG, major_ARG, minor_ARG, 
-   name_ARG, permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
-   snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, zero_ARG)
+   autobackup_ARG, chunksize_ARG, contiguous_ARG, extents_ARG, major_ARG,
+   minor_ARG, name_ARG, permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
+   snapshot_ARG, stripes_ARG, stripesize_ARG, addtag_ARG, test_ARG,
+   zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -323,10 +329,13 @@ xx(pvchange,
    "\t[-u|--uuid]\n"
    "\t[-x|--allocatable y|n]\n"
    "\t[-v|--verbose]\n"
+   "\t[--addtag Tag]\n"
+   "\t[--deltag Tag]\n"
    "\t[--version]" "\n"
    "\t[PhysicalVolumePath...]\n",
 
-   all_ARG, allocatable_ARG, allocation_ARG, autobackup_ARG, test_ARG, uuid_ARG)
+   all_ARG, allocatable_ARG, allocation_ARG, autobackup_ARG, deltag_ARG,
+   addtag_ARG, test_ARG, uuid_ARG)
 
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
@@ -537,12 +546,14 @@ xx(vgchange,
    "\t[--version]" "\n"
    "\t{-a|--available {y|n}  |" "\n"
    "\t -x|--resizeable {y|n} |" "\n"
-   "\t -l|--logicalvolume MaxLogicalVolumes}" "\n"
+   "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
+   "\t --addtag Tag |\n"
+   "\t --deltag Tag}\n"
    "\t[VolumeGroupName...]\n",
 
    allocation_ARG, autobackup_ARG, available_ARG, ignorelockingfailure_ARG,
-   logicalvolume_ARG, partial_ARG, resizeable_ARG, resizable_ARG, test_ARG,
-   uuid_ARG)
+   logicalvolume_ARG, partial_ARG, resizeable_ARG, resizable_ARG, deltag_ARG,
+   addtag_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
@@ -574,6 +585,7 @@ xx(vgcreate,
    "Create a volume group",
    "vgcreate" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[--addtag Tag] " "\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|--help]" "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
@@ -586,7 +598,7 @@ xx(vgcreate,
    "\tVolumeGroupName PhysicalVolume [PhysicalVolume...]\n",
 
    autobackup_ARG, maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
-   metadatatype_ARG, physicalextentsize_ARG, test_ARG)
+   metadatatype_ARG, physicalextentsize_ARG, addtag_ARG, test_ARG)
 
 xx(vgdisplay,
    "Display volume group information",

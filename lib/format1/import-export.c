@@ -56,9 +56,9 @@ int import_pv(struct pool *mem, struct device *dev,
 
 	if (vg &&
 	    strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))
-		log_very_verbose("System ID %s on %s differs from %s for "
-				 "volume group", pvd->system_id,
-				 dev_name(pv->dev), vg->system_id);
+		    log_very_verbose("System ID %s on %s differs from %s for "
+				     "volume group", pvd->system_id,
+				     dev_name(pv->dev), vg->system_id);
 
 	/*
 	 * If exported, we still need to flag in pv->status too because
@@ -75,6 +75,8 @@ int import_pv(struct pool *mem, struct device *dev,
 	pv->pe_start = pvd->pe_start;
 	pv->pe_count = pvd->pe_total;
 	pv->pe_alloc_count = pvd->pe_allocated;
+
+	list_init(&pv->tags);
 
 	return 1;
 }
@@ -162,7 +164,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 	if (vg &&
 	    (!*vg->system_id ||
 	     strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id))))
-		strncpy(vg->system_id, pvd->system_id, NAME_LEN);
+		    strncpy(vg->system_id, pvd->system_id, NAME_LEN);
 
 	//pvd->pv_major = MAJOR(pv->dev);
 
@@ -314,6 +316,7 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	lv->le_count = lvd->lv_allocated_le;
 
 	list_init(&lv->segments);
+	list_init(&lv->tags);
 
 	return 1;
 }

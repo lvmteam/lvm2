@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software (UK) Limited.
+ * Copyright (C) 2001-2003 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
  */
@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  struct list *arg_lvnames, struct list *tags,
 			  void *handle,
 			  int (*process_single) (struct cmd_context * cmd,
 						 struct logical_volume * lv,
@@ -16,6 +17,10 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int ret_max = 0;
 	int ret = 0;
+	int process_all = 0;
+	int process_lv = 0;
+	int tags_supplied = 0;
+	int lvargs_supplied = 0;
 
 	struct lv_list *lvl;
 
@@ -24,14 +29,47 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
+	if (tags && !list_empty(tags))
+		tags_supplied = 1;
+
+	if (arg_lvnames && !list_empty(arg_lvnames))
+		lvargs_supplied = 1;
+
+	/* Process all LVs in this VG if no restrictions given */
+	if (!tags_supplied && !lvargs_supplied)
+		process_all = 1;
+
+	/* Or if VG tags match */
+	if (!process_lv && tags_supplied &&
+	    str_list_match_list(tags, &vg->tags))
+		process_all = 1;
+
 	list_iterate_items(lvl, &vg->lvs) {
+		/* Should we process this LV? */
+		if (process_all)
+			process_lv = 1;
+		else
+			process_lv = 0;
+
+		/* LV tag match? */
+		if (!process_lv && tags_supplied &&
+		    str_list_match_list(tags, &lvl->lv->tags))
+			process_lv = 1;
+
+		/* LV name match? */
+		if (!process_lv && lvargs_supplied &&
+		    str_list_match_item(arg_lvnames, lvl->lv->name))
+			process_lv = 1;
+
+		if (!process_lv)
+			continue;
+
 		ret = process_single(cmd, lvl->lv, handle);
 		if (ret > ret_max)
 			ret_max = ret;
 	}
 
 	return ret_max;
-
 }
 
 struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
@@ -60,26 +98,52 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	int opt = 0;
 	int ret_max = 0;
 	int ret = 0;
-	int vg_count = 0;
 	int consistent;
 
-	struct list *slh, *vgnames;
+	struct list *slh, *tags_arg;
+	struct list *vgnames;		/* VGs to process */
+	struct str_list *sll;
 	struct volume_group *vg;
-	struct logical_volume *lv;
-	struct lv_list *lvl;
+	struct list tags, lvnames;
+	struct list arg_lvnames;	/* Cmdline vgname or vgname/lvname */
+	char *vglv;
+	size_t vglv_sz;
 
 	const char *vgname;
 
+	list_init(&tags);
+	list_init(&arg_lvnames);
+
 	if (argc) {
+		struct list arg_vgnames;
+
 		log_verbose("Using logical volume(s) on command line");
+		list_init(&arg_vgnames);
+
 		for (; opt < argc; opt++) {
-			char *lv_name = argv[opt];
+			const char *lv_name = argv[opt];
 			char *vgname_def;
-			int vgname_provided = 1;
 			int dev_dir_found = 0;
 
-			/* Do we have a vgname or lvname? */
+			/* Do we have a tag or vgname or lvname? */
 			vgname = lv_name;
+
+			if (*vgname == '@') {
+				if (!validate_name(vgname + 1)) {
+					log_error("Skipping invalid tag %s",
+						  vgname);
+					continue;
+				}
+				if (!str_list_add(cmd->mem, &tags,
+						  pool_strdup(cmd->mem,
+							      vgname + 1))) {
+					log_error("strlist allocation failed");
+					return ECMD_FAILED;
+				}
+				continue;
+			}
+
+			/* FIXME Jumbled parsing */
 			if (*vgname == '/') {
 				while (*vgname == '/')
 					vgname++;
@@ -94,131 +158,124 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			}
 			if (*vgname == '/') {
 				log_error("\"%s\": Invalid path for Logical "
-					  "Volume", lv_name);
+					  "Volume", argv[opt]);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
 				continue;
 			}
+			lv_name = vgname;
 			if (strchr(vgname, '/')) {
 				/* Must be an LV */
-				vgname_provided = 0;
-				if (!(vgname = extract_vgname(cmd, lv_name))) {
+				lv_name = strchr(vgname, '/');
+				while (*lv_name == '/')
+					lv_name++;
+				if (!(vgname = extract_vgname(cmd, vgname))) {
 					if (ret_max < ECMD_FAILED)
 						ret_max = ECMD_FAILED;
 					continue;
 				}
-			}
-
-			if (!dev_dir_found &&
+			} else if (!dev_dir_found &&
 			    (vgname_def = default_vgname(cmd))) {
-				vgname_provided = 0;
 				vgname = vgname_def;
-			}
+			} else
+				lv_name = NULL;
 
-			log_verbose("Finding volume group \"%s\"", vgname);
-			if (!lock_vol(cmd, vgname, lock_type)) {
-				log_error("Can't lock %s: skipping", vgname);
-				continue;
-			}
-			if (lock_type & LCK_WRITE)
-				consistent = 1;
-			else
-				consistent = 0;
-			if (!(vg = vg_read(cmd, vgname, &consistent)) ||
-			    !consistent) {
-				unlock_vg(cmd, vgname);
-				if (!vg)
-					log_error("Volume group \"%s\" "
-						  "not found", vgname);
-				else
-					log_error("Volume group \"%s\" "
-						  "inconsistent", vgname);
-				if (!vg || !(vg =
-					     recover_vg(cmd, vgname,
-							lock_type))) {
-					unlock_vg(cmd, vgname);
-					if (ret_max < ECMD_FAILED)
-						ret_max = ECMD_FAILED;
-					continue;
-				}
-			}
-
-			if (vg->status & EXPORTED_VG) {
-				log_error("Volume group \"%s\" is exported",
-					  vg->name);
-				unlock_vg(cmd, vgname);
+			if (!str_list_add(cmd->mem, &arg_vgnames,
+					  pool_strdup(cmd->mem, vgname))) {
+				log_error("strlist allocation failed");
 				return ECMD_FAILED;
 			}
 
-			if (vgname_provided) {
-				if ((ret =
-				     process_each_lv_in_vg(cmd, vg, handle,
-							   process_single)) >
-				    ret_max)
-					ret_max = ret;
-				unlock_vg(cmd, vgname);
-				continue;
+			if (!lv_name) {
+				if (!str_list_add(cmd->mem, &arg_lvnames,
+					  pool_strdup(cmd->mem, vgname))) {
+					log_error("strlist allocation failed");
+					return ECMD_FAILED;
+				}
+			} else {
+				vglv_sz = strlen(vgname) + strlen(lv_name) + 2;
+				if (!(vglv = pool_alloc(cmd->mem, vglv_sz)) ||
+				    lvm_snprintf(vglv, vglv_sz, "%s/%s", vgname,
+						 lv_name) < 0) {
+					log_error("vg/lv string alloc failed");
+					return ECMD_FAILED;
+				}
+				if (!str_list_add(cmd->mem, &arg_lvnames,
+						  vglv)) {  
+					log_error("strlist allocation failed");
+					return ECMD_FAILED;
+				}
 			}
-
-			if (!(lvl = find_lv_in_vg(vg, lv_name))) {
-				log_error("Can't find logical volume \"%s\" "
-					  "in volume group \"%s\"",
-					  lv_name, vgname);
-				if (ret_max < ECMD_FAILED)
-					ret_max = ECMD_FAILED;
-				unlock_vg(cmd, vgname);
-				continue;
-			}
-
-			lv = lvl->lv;
-
-			if ((ret = process_single(cmd, lv, handle)) > ret_max)
-				ret_max = ret;
-			unlock_vg(cmd, vgname);
 		}
-	} else {
+		vgnames = &arg_vgnames;
+	} 
+
+	if (!argc || !list_empty(&tags)) {
 		log_verbose("Finding all logical volumes");
-		if (!(vgnames = get_vgs(cmd, 0))) {
+		if (!(vgnames = get_vgs(cmd, 0)) || list_empty(vgnames)) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
-		list_iterate(slh, vgnames) {
-			vgname = list_item(slh, struct str_list)->str;
-			if (!vgname || !*vgname)
-				continue;	/* FIXME Unnecessary? */
-			if (!lock_vol(cmd, vgname, lock_type)) {
-				log_error("Can't lock %s: skipping", vgname);
+	}
+
+	list_iterate(slh, vgnames) {
+		vgname = list_item(slh, struct str_list)->str;
+		if (!vgname || !*vgname)
+			continue;	/* FIXME Unnecessary? */
+		if (!lock_vol(cmd, vgname, lock_type)) {
+			log_error("Can't lock %s: skipping", vgname);
+			continue;
+		}
+		if (lock_type & LCK_WRITE)
+			consistent = 1;
+		else
+			consistent = 0;
+		if (!(vg = vg_read(cmd, vgname, &consistent)) ||
+		    !consistent) {
+			unlock_vg(cmd, vgname);
+			if (!vg)
+				log_error("Volume group \"%s\" "
+					  "not found", vgname);
+			else
+				log_error("Volume group \"%s\" "
+					  "inconsistent", vgname);
+			if (!vg || !(vg =
+				     recover_vg(cmd, vgname,
+						lock_type))) {
+				unlock_vg(cmd, vgname);
+				if (ret_max < ECMD_FAILED)
+					ret_max = ECMD_FAILED;
 				continue;
 			}
-			if (lock_type & LCK_WRITE)
-				consistent = 1;
-			else
-				consistent = 0;
-			if (!(vg = vg_read(cmd, vgname, &consistent)) ||
-			    !consistent) {
-				unlock_vg(cmd, vgname);
-				if (!vg)
-					log_error("Volume group \"%s\" "
-						  "not found", vgname);
-				else
-					log_error("Volume group \"%s\" "
-						  "inconsistent", vgname);
-				if (!vg || !(vg =
-					     recover_vg(cmd, vgname,
-							lock_type))) {
-					unlock_vg(cmd, vgname);
-					if (ret_max < ECMD_FAILED)
-						ret_max = ECMD_FAILED;
-					continue;
+		}
+
+		tags_arg = &tags;
+		list_init(&lvnames);	/* LVs to be processed in this VG */
+		list_iterate_items(sll, &arg_lvnames) {
+			const char *vg_name = sll->str;
+			const char *lv_name = strchr(vg_name, '/');
+
+			if ((!lv_name && !strcmp(vg_name, vgname))) {
+				/* Process all LVs in this VG */
+				tags_arg = NULL;
+				list_init(&lvnames);
+				break;
+			} else if (!strncmp(vg_name, vgname, strlen(vgname)) &&
+				   strlen(vgname) == lv_name - vg_name) {
+				if (!str_list_add(cmd->mem, &lvnames,
+						  pool_strdup(cmd->mem,
+							      lv_name + 1))) {
+				log_error("strlist allocation failed");
+				return ECMD_FAILED;
 				}
 			}
-			ret = process_each_lv_in_vg(cmd, vg, handle,
-						    process_single);
-			unlock_vg(cmd, vgname);
-			if (ret > ret_max)
-				ret_max = ret;
-			vg_count++;
 		}
+
+		ret = process_each_lv_in_vg(cmd, vg, &lvnames, tags_arg,
+					    handle, process_single);
+		unlock_vg(cmd, vgname);
+		if (ret > ret_max)
+			ret_max = ret;
 	}
 
 	return ret_max;
@@ -244,6 +301,44 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 	return ret_max;
 }
 
+static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
+			   struct list *tags, struct list *arg_vgnames,
+			   int lock_type, int consistent, void *handle,
+			   int ret_max,
+			   int (*process_single) (struct cmd_context * cmd,
+						  const char *vg_name,
+						  struct volume_group * vg,
+						  int consistent, void *handle))
+{
+	struct volume_group *vg;
+	int ret = 0;
+
+	if (!lock_vol(cmd, vg_name, lock_type)) {
+		log_error("Can't lock %s: skipping", vg_name);
+		return ret_max;
+	}
+
+	log_verbose("Finding volume group \"%s\"", vg_name);
+	vg = vg_read(cmd, vg_name, &consistent);
+
+	if (!list_empty(tags)) {
+		/* Only process if a tag matches or it's on arg_vgnames */
+		if (!str_list_match_item(arg_vgnames, vg_name) &&
+		    !str_list_match_list(tags, &vg->tags)) {
+			unlock_vg(cmd, vg_name);
+			return ret_max;
+		}
+	}
+
+	if ((ret = process_single(cmd, vg_name, vg, consistent,
+				  handle)) > ret_max)
+		ret_max = ret;
+
+	unlock_vg(cmd, vg_name);
+
+	return ret_max;
+}
+
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		    int lock_type, int consistent, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
@@ -253,18 +348,37 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 {
 	int opt = 0;
 	int ret_max = 0;
-	int ret = 0;
 
-	struct list *slh, *vgnames;
-	struct volume_group *vg;
+	struct str_list *sl;
+	struct list *vgnames;
+	struct list arg_vgnames, tags;
 
 	const char *vg_name;
 	char *dev_dir = cmd->dev_dir;
 
+	list_init(&tags);
+	list_init(&arg_vgnames);
+
 	if (argc) {
 		log_verbose("Using volume group(s) on command line");
+
 		for (; opt < argc; opt++) {
 			vg_name = argv[opt];
+			if (*vg_name == '@') {
+				if (!validate_name(vg_name + 1)) {
+					log_error("Skipping invalid tag %s",
+						  vg_name);
+					continue;
+				}
+				if (!str_list_add(cmd->mem, &tags,
+						  pool_strdup(cmd->mem,
+							      vg_name + 1))) {
+					log_error("strlist allocation failed");
+					return ECMD_FAILED;
+				}
+				continue;
+			}
+
 			if (*vg_name == '/') {
 				while (*vg_name == '/')
 					vg_name++;
@@ -277,46 +391,38 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 					  vg_name);
 				continue;
 			}
-			if (!lock_vol(cmd, vg_name, lock_type)) {
-				log_error("Can't lock %s: skipping", vg_name);
-				continue;
+			if (!str_list_add(cmd->mem, &arg_vgnames,
+					  pool_strdup(cmd->mem, vg_name))) {
+				log_error("strlist allocation failed");
+				return ECMD_FAILED;
 			}
-			log_verbose("Finding volume group \"%s\"", vg_name);
-			vg = vg_read(cmd, vg_name, &consistent);
-			if ((ret = process_single(cmd, vg_name, vg, consistent,
-						  handle)) > ret_max)
-				ret_max = ret;
-			unlock_vg(cmd, vg_name);
 		}
-	} else {
+
+		vgnames = &arg_vgnames;
+	}
+
+	if (!argc || !list_empty(&tags)) {
 		log_verbose("Finding all volume groups");
 		if (!(vgnames = get_vgs(cmd, 0)) || list_empty(vgnames)) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
-		list_iterate(slh, vgnames) {
-			vg_name = list_item(slh, struct str_list)->str;
-			if (!vg_name || !*vg_name)
-				continue;	/* FIXME Unnecessary? */
-			if (!lock_vol(cmd, vg_name, lock_type)) {
-				log_error("Can't lock %s: skipping", vg_name);
-				continue;
-			}
-			log_verbose("Finding volume group \"%s\"", vg_name);
-			vg = vg_read(cmd, vg_name, &consistent);
-			ret = process_single(cmd, vg_name, vg, consistent,
-					     handle);
-			if (ret > ret_max)
-				ret_max = ret;
-			unlock_vg(cmd, vg_name);
-		}
+	}
+
+	list_iterate_items(sl, vgnames) {
+		vg_name = sl->str;
+		if (!vg_name || !*vg_name)
+			continue;	/* FIXME Unnecessary? */
+		ret_max = _process_one_vg(cmd, vg_name, &tags, &arg_vgnames,
+					  lock_type, consistent, handle,
+					  ret_max, process_single);
 	}
 
 	return ret_max;
 }
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  void *handle,
+			  struct list *tags, void *handle,
 			  int (*process_single) (struct cmd_context * cmd,
 						 struct volume_group * vg,
 						 struct physical_volume * pv,
@@ -326,9 +432,13 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	int ret = 0;
 	struct pv_list *pvl;
 
-	list_iterate_items(pvl, &vg->pvs)
+	list_iterate_items(pvl, &vg->pvs) {
+		if (tags && !list_empty(tags) &&
+		    !str_list_match_list(tags, &pvl->pv->tags))
+			continue;
 		if ((ret = process_single(cmd, vg, pvl->pv, handle)) > ret_max)
 			ret_max = ret;
+	}
 
 	return ret_max;
 }
@@ -346,11 +456,33 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 
 	struct pv_list *pvl;
 	struct physical_volume *pv;
-	struct list *pvslist;
+	struct list *pvslist, *vgnames;
+	struct list tags;
+	struct str_list *sll;
+	char *tagname;
+	int consistent = 1;
+
+	list_init(&tags);
 
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
+			if (*argv[opt] == '@') {
+				tagname = argv[opt] + 1;
+
+				if (!validate_name(tagname)) {
+					log_error("Skipping invalid tag %s",
+						  tagname);
+					continue;
+				}
+				if (!str_list_add(cmd->mem, &tags,
+						  pool_strdup(cmd->mem,
+							      tagname))) {
+					log_error("strlist allocation failed");
+					return ECMD_FAILED;
+				}
+				continue;
+			}
 			if (vg) {
 				if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
 					log_error("Physical Volume \"%s\" not "
@@ -374,11 +506,25 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (ret > ret_max)
 				ret_max = ret;
 		}
+		if (!list_empty(&tags) && (vgnames = get_vgs(cmd, 0)) &&
+		    !list_empty(vgnames)) {
+			list_iterate_items(sll, vgnames) {
+				vg = vg_read(cmd, sll->str, &consistent);
+				if (!consistent)
+					continue;
+				ret = process_each_pv_in_vg(cmd, vg, &tags,
+							    handle,
+							    process_single);
+				if (ret > ret_max)
+					ret_max = ret;
+			}
+		}
 	} else {
 		if (vg) {
 			log_verbose("Using all physical volume(s) in "
 				    "volume group");
-			ret = process_each_pv_in_vg(cmd, vg, handle, process_single);
+			ret = process_each_pv_in_vg(cmd, vg, NULL, handle,
+						    process_single);
 			if (ret > ret_max)
 				ret_max = ret;
 		} else {
@@ -424,7 +570,7 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 				  "Volume", lv_name);
 			return 0;
 		}
-	
+
 		/* Require exactly one set of consecutive slashes */
 		if ((st = strchr(vg_name, '/')))
 			while (*st == '/')
@@ -589,13 +735,56 @@ static int _parse_pes(struct pool *mem, char *c, struct list *alloc_areas,
 	return 0;
 }
 
+static void _create_pv_entry(struct pool *mem, struct pv_list *pvl,
+			     char *colon, struct list *r)
+{
+	const char *pvname;
+	struct pv_list *new_pvl;
+	struct list *alloc_areas;
+
+	pvname = dev_name(pvl->pv->dev);
+	if (!(pvl->pv->status & ALLOCATABLE_PV)) {
+		log_error("Physical volume %s not allocatable", pvname);
+		return;
+	}
+
+	if (pvl->pv->pe_count == pvl->pv->pe_alloc_count) {
+		log_err("No free extents on physical volume \"%s\"",
+			pvname);
+		return;
+	}
+
+	if (!(new_pvl = pool_alloc(mem, sizeof(*new_pvl)))) {
+		log_err("Unable to allocate physical volume list.");
+		return;
+	}
+
+	memcpy(new_pvl, pvl, sizeof(*new_pvl));
+
+	if (!(alloc_areas = pool_alloc(mem, sizeof(*alloc_areas)))) {
+		log_error("Allocation of alloc_areas list failed");
+		return;
+	}
+	list_init(alloc_areas);
+
+	/* Specify which physical extents may be used for allocation */
+	if (!_parse_pes(mem, colon, alloc_areas, pvl->pv->pe_count)) {
+		stack;
+		return;
+	}
+	new_pvl->alloc_areas = alloc_areas;
+
+	list_add(r, &new_pvl->list);
+}
+
 struct list *create_pv_list(struct pool *mem,
 			    struct volume_group *vg, int argc, char **argv)
 {
 	struct list *r;
-	struct list *alloc_areas;
-	struct pv_list *pvl, *new_pvl;
-	char *pvname = NULL, *colon;
+	struct pv_list *pvl;
+	struct list tags, arg_pvnames;
+	const char *pvname = NULL; 
+	char *colon, *tagname;
 	int i;
 
 	/* Build up list of PVs */
@@ -605,58 +794,52 @@ struct list *create_pv_list(struct pool *mem,
 	}
 	list_init(r);
 
+	list_init(&tags);
+	list_init(&arg_pvnames);
+
 	for (i = 0; i < argc; i++) {
-		if ((colon = strchr(argv[i], ':'))) {
-			if (!(pvname = pool_strndup(mem, argv[i],
+		if (*argv[i] == '@') {
+			tagname = argv[i] + 1;
+			if (!validate_name(tagname)) {
+				log_error("Skipping invalid tag %s", tagname);
+				continue;
+			}
+			list_iterate_items(pvl, &vg->pvs) {
+				if (str_list_match_item(&pvl->pv->tags,
+				    tagname)) {
+					_create_pv_entry(mem, pvl, NULL, r);
+				}
+			}
+			continue;
+		}
+
+		pvname = argv[i];
+
+		if ((colon = strchr(pvname, ':'))) {
+			if (!(pvname = pool_strndup(mem, pvname,
 						    (unsigned) (colon -
-								argv[i])))) {
+								pvname)))) {
 				log_error("Failed to clone PV name");
 				return NULL;
 			}
-		} else
-			pvname = argv[i];
-
-		if (!(pvl = find_pv_in_vg(vg, pvname))) {
-			log_err("Physical Volume \"%s\" not found in "
-				"Volume Group \"%s\"", pvname, vg->name);
-			return NULL;
 		}
 
-		if (!(pvl->pv->status & ALLOCATABLE_PV)) {
-			log_error("Physical volume %s not allocatable", pvname);
-			continue;
-		}
-
-		if (pvl->pv->pe_count == pvl->pv->pe_alloc_count) {
-			log_err("No free extents on physical volume \"%s\"",
-				pvname);
-			continue;
-		}
-
-		if (!(new_pvl = pool_alloc(mem, sizeof(*new_pvl)))) {
-			log_err("Unable to allocate physical volume list.");
-			return NULL;
-		}
-
-		memcpy(new_pvl, pvl, sizeof(*new_pvl));
-		list_add(r, &new_pvl->list);
-
-		if (!(alloc_areas = pool_alloc(mem, sizeof(*alloc_areas)))) {
-			log_error("Allocation of alloc_areas list failed");
-			return NULL;
-		}
-		list_init(alloc_areas);
-
-		/* Specify which physical extents may be used for allocation */
-		if (!_parse_pes(mem, colon, alloc_areas, pvl->pv->pe_count)) {
-			stack;
-			return NULL;
-		}
-		new_pvl->alloc_areas = alloc_areas;
+                if (!(pvl = find_pv_in_vg(vg, pvname))) {
+                        log_err("Physical Volume \"%s\" not found in "
+                                "Volume Group \"%s\"", pvname, vg->name);
+                        return NULL;
+                }
+		_create_pv_entry(mem, pvl, colon, r);
 	}
+
+	if (list_empty(r))
+		log_error("No specified PVs have space available");
 
 	return list_empty(r) ? NULL : r;
 }
+
+
+
 
 struct list *clone_pv_list(struct pool *mem, struct list *pvsl)
 {

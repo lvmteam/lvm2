@@ -178,6 +178,16 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 		return 0;
 	}
 
+	list_init(&pv->tags);
+
+	/* Optional tags */
+	if ((cn = find_config_node(pvn, "tags", '/')) &&
+	    !(read_tags(mem, &pv->tags, cn->v))) {
+		log_error("Couldn't read tags for physical volume %s in %s.",
+			  dev_name(pv->dev), vg->name);
+		return 0;
+	}
+
 	/* adjust the volume group. */
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
@@ -292,6 +302,14 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->type = segtype;
 	seg->status = seg_status;
 	seg->extents_moved = extents_moved;
+
+	/* Optional tags */
+	if ((cn = find_config_node(sn, "tags", '/')) &&
+	    !(read_tags(mem, &seg->tags, cn->v))) {
+		log_error("Couldn't read tags for a segment of %s/%s.",
+			  vg->name, lv->name);
+		return 0;
+	}
 
 	switch (segtype) {
 	case SEG_SNAPSHOT:
@@ -544,6 +562,15 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 		lv->read_ahead = 0;
 
 	list_init(&lv->segments);
+	list_init(&lv->tags);
+
+	/* Optional tags */
+	if ((cn = find_config_node(lvn, "tags", '/')) &&
+	    !(read_tags(mem, &lv->tags, cn->v))) {
+		log_error("Couldn't read tags for logical volume %s/%s.",
+			  vg->name, lv->name);
+		return 0;
+	}
 
 	lv->vg = vg;
 	vg->lv_count++;
@@ -748,6 +775,14 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	list_init(&vg->lvs);
 	list_init(&vg->snapshots);
+	list_init(&vg->tags);
+
+	/* Optional tags */
+	if ((cn = find_config_node(vgn, "tags", '/')) &&
+	    !(read_tags(mem, &vg->tags, cn->v))) {
+		log_error("Couldn't read tags for volume group %s.", vg->name);
+		goto bad;
+	}
 
 	if (!_read_sections(fid, "logical_volumes", _read_lvnames, mem, vg,
 			    vgn, pv_hash, 1)) {

@@ -361,6 +361,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	struct volume_group *vg;
 	struct logical_volume *lv, *org = NULL;
 	struct list *pvh;
+	const char *tag;
 	int consistent = 1;
 
 	if (lp->contiguous)
@@ -457,9 +458,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		status |= LVM_WRITE;
 	}
 
-	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc,
-			     lp->stripes, lp->stripe_size, lp->extents,
-			     vg, pvh)))
+	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc, lp->stripes,
+			     lp->stripe_size, lp->extents, vg, pvh)))
 		return 0;
 
 	if (lp->read_ahead) {
@@ -473,6 +473,25 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		lv->status |= FIXED_MINOR;
 		log_verbose("Setting device number to (%d, %d)", lv->major,
 			    lv->minor);
+	}
+
+	if (arg_count(cmd, addtag_ARG)) {
+		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
+			log_error("Failed to get tag");
+			return 0;
+		}
+
+		if (!(lv->vg->fid->fmt->features & FMT_TAGS)) {
+			log_error("Volume group %s does not support tags",
+				  lv->vg->name);
+			return 0;
+		}
+
+		if (!str_list_add(cmd->mem, &lv->tags, tag)) {
+			log_error("Failed to add tag %s to %s/%s",
+				  tag, lv->vg->name, lv->name);
+			return 0;
+		}
 	}
 
 	if (!archive(vg))

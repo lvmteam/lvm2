@@ -163,6 +163,48 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 	return ECMD_PROCESSED;
 }
 
+static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
+			 int arg)
+{
+	const char *tag;
+
+	if (!(tag = arg_str_value(cmd, arg, NULL))) {
+		log_error("Failed to get tag");
+		return ECMD_FAILED;
+	}
+
+	if (!(vg->fid->fmt->features & FMT_TAGS)) {
+		log_error("Volume group %s does not support tags", vg->name);
+		return ECMD_FAILED;
+	}
+
+	if (!archive(vg))
+		return ECMD_FAILED;
+
+	if ((arg == addtag_ARG)) {
+		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
+			log_error("Failed to add tag %s to volume group %s",
+				  tag, vg->name);
+			return ECMD_FAILED;
+		}
+	} else {
+		if (!str_list_del(&vg->tags, tag)) {
+			log_error("Failed to remove tag %s from volume group "
+				  "%s", tag, vg->name);
+			return ECMD_FAILED;
+		}
+	}
+
+	if (!vg_write(vg) || !vg_commit(vg))
+		return ECMD_FAILED;
+
+	backup(vg);
+
+	log_print("Volume group \"%s\" successfully changed", vg->name);
+
+	return ECMD_PROCESSED;
+}
+
 static int _vgchange_uuid(struct cmd_context *cmd, struct volume_group *vg)
 {
 	struct lv_list *lvl;
@@ -195,7 +237,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg, int consistent,
 			   void *handle)
 {
-	int r = 0;
+	int r = ECMD_FAILED;
 
 	if (!vg) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
@@ -229,6 +271,12 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	else if (arg_count(cmd, logicalvolume_ARG))
 		r = _vgchange_logicalvolume(cmd, vg);
 
+	else if (arg_count(cmd, addtag_ARG))
+		r = _vgchange_tag(cmd, vg, addtag_ARG);
+
+	else if (arg_count(cmd, deltag_ARG))
+		r = _vgchange_tag(cmd, vg, deltag_ARG);
+
 	else if (arg_count(cmd, uuid_ARG))
 		r = _vgchange_uuid(cmd, vg);
 
@@ -239,14 +287,18 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!
 	    (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
-	     arg_count(cmd, resizeable_ARG) + arg_count(cmd, uuid_ARG))) {
-		log_error("One of -a, -l, --uuid or -x options required");
+	     arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
+	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG))) {
+		log_error("One of -a, -l, -x, --addtag, --deltag or --uuid "
+			  "options required");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
-	    arg_count(cmd, resizeable_ARG) + arg_count(cmd, uuid_ARG) > 1) {
-		log_error("Only one of -a, -l, --uuid or -x options allowed");
+	    arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
+	    arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) > 1) {
+		log_error("Only one of -a, -l, -x, --addtag, --deltag or --uuid"
+			  " options allowed");
 		return EINVALID_CMD_LINE;
 	}
 

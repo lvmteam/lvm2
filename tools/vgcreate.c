@@ -29,6 +29,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	char *vg_name;
 	char vg_path[PATH_MAX];
 	struct volume_group *vg;
+	const char *tag;
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -108,6 +109,24 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Warning: Setting maxphysicalvolumes to %d "
 			  "(0 means unlimited)", vg->max_pv);
 
+ 	if (arg_count(cmd, addtag_ARG)) {
+ 		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
+ 			log_error("Failed to get tag");
+ 			return ECMD_FAILED;
+ 		}
+  
+  		if (!(vg->fid->fmt->features & FMT_TAGS)) {
+  			log_error("Volume group format does not support tags");
+  			return ECMD_FAILED;
+  		}
+  
+ 		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
+ 			log_error("Failed to add tag %s to volume group %s",
+ 				  tag, vg_name);
+ 			return ECMD_FAILED;
+ 		}
+ 	}
+ 
 	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;

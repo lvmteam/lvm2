@@ -59,13 +59,14 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 						      void *handle));
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  void *handle,
+			  struct list *tags, void *handle,
 			  int (*process_single) (struct cmd_context * cmd,
 						 struct volume_group * vg,
 						 struct physical_volume * pv,
 						 void *handle));
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  struct list *arg_lvnames, struct list *tags,
 			  void *handle,
 			  int (*process_single) (struct cmd_context * cmd,
 						 struct logical_volume * lv,
