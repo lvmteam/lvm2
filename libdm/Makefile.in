@@ -29,10 +29,10 @@ include ../make.tmpl
 .PHONY: install_dynamic install_static \
 	install_@interface@ install_@interface@_static
 
+INSTALL_TYPE = install_dynamic
+
 ifeq ("@STATIC_LINK@", "yes")
-  INSTALL_TYPE = install_static
-else
-  INSTALL_TYPE = install_dynamic
+  INSTALL_TYPE += install_static
 endif
 
 install: $(INSTALL_TYPE)
