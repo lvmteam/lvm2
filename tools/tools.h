@@ -38,6 +38,7 @@
 #include "config.h"
 #include "dev-cache.h"
 #include "device.h"
+#include "vgcache.h"
 #include "display.h"
 #include "errors.h"
 #include "filter.h"
