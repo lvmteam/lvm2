@@ -47,8 +47,6 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 		  display_size(cmd, lv->size / 2, SIZE_SHORT),
 		  get_alloc_string(lv->alloc));
 
-	/* FIXME sprintf? */
-
 	lv_total++;
 
 	lv_capacity_total += lv->size;
@@ -65,5 +63,4 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	return process_each_lv(cmd, argc, argv, LCK_VG_READ, NULL,
 			       &lvscan_single);
-
 }

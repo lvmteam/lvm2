@@ -93,6 +93,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (lvs_in_vg_activated(vg_old)) {
+		unlock_vg(cmd, vg_name_old);
 		log_error("Volume group \"%s\" still has active LVs",
 			  vg_name_old);
 		/* FIXME Remove this restriction */
@@ -136,7 +137,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!vg_write(vg_old)) {
+	if (!vg_write(vg_old) || !vg_commit(vg_old)) {
 		goto error;
 	}
 

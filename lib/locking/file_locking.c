@@ -13,6 +13,7 @@
 #include "defaults.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
+#include "lvmcache.h"
 
 #include <limits.h>
 #include <unistd.h>
@@ -202,24 +203,39 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 		else
 			lvm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/V_%s", _lock_dir, resource);
+
 		if (!_lock_file(lockfile, flags))
 			return 0;
+
+		switch (flags & LCK_TYPE_MASK) {
+		case LCK_UNLOCK:
+			lvmcache_unlock_vgname(resource);
+			break;
+		default:
+			lvmcache_lock_vgname(resource,
+					     (flags & LCK_TYPE_MASK) ==
+					     LCK_READ);
+		}
 		break;
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
+			log_debug("Unlocking LV %s", resource);
 			if (!lv_resume_if_active(cmd, resource))
 				return 0;
 			break;
 		case LCK_READ:
+			log_debug("Locking LV %s (R)", resource);
 			if (!lv_activate(cmd, resource))
 				return 0;
 			break;
 		case LCK_WRITE:
+			log_debug("Locking LV %s (W)", resource);
 			if (!lv_suspend_if_active(cmd, resource))
 				return 0;
 			break;
 		case LCK_EXCL:
+			log_debug("Locking LV %s (EX)", resource);
 			if (!lv_deactivate(cmd, resource))
 				return 0;
 			break;

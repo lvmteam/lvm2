@@ -27,7 +27,7 @@ static int _write(struct label *label, char *buf)
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	struct disk_locn *pvh_dlocn_xl;
 	struct list *mdash, *dash;
 	struct metadata_area *mda;
@@ -40,7 +40,7 @@ static int _write(struct label *label, char *buf)
 	strncpy(lh->type, label->type, sizeof(label->type));
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
-	info = (struct cache_info *) label->info;
+	info = (struct lvmcache_info *) label->info;
 	pvhdr->device_size_xl = xlate64(info->device_size);
 	memcpy(pvhdr->pv_uuid, &info->dev->pvid, sizeof(struct id));
 
@@ -185,7 +185,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
 	struct list *mdah;
@@ -195,7 +195,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
 
-	if (!(info = cache_add(l, pvhdr->pv_uuid, dev, NULL, NULL)))
+	if (!(info = lvmcache_add(l, pvhdr->pv_uuid, dev, NULL, NULL)))
 		return 0;
 	*label = info->label;
 
@@ -230,7 +230,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (vgname_from_mda(info->fmt, &mdac->area, vgnamebuf,
 				    sizeof(vgnamebuf))) {
-			cache_update_vgname(info, vgnamebuf);
+			lvmcache_update_vgname(info, vgnamebuf);
 		}
 	}
 
@@ -241,7 +241,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 
 static void _destroy_label(struct labeller *l, struct label *label)
 {
-	struct cache_info *info = (struct cache_info *) label->info;
+	struct lvmcache_info *info = (struct lvmcache_info *) label->info;
 
 	if (info->mdas.n)
 		del_mdas(&info->mdas);

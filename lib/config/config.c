@@ -110,14 +110,15 @@ void destroy_config_tree(struct config_tree *cf)
 	pool_destroy(((struct cs *) cf)->mem);
 }
 
-int read_config_fd(struct config_tree *cf, int fd, const char *file,
+int read_config_fd(struct config_tree *cf, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum)
 {
 	struct cs *c = (struct cs *) cf;
 	struct parser *p;
-	off_t mmap_offset = 0;
 	int r = 0;
+	int use_mmap = 1;
+	off_t mmap_offset = 0;
 
 	if (!(p = pool_alloc(c->mem, sizeof(*p)))) {
 		stack;
@@ -125,47 +126,43 @@ int read_config_fd(struct config_tree *cf, int fd, const char *file,
 	}
 	p->mem = c->mem;
 
-	if (size2) {
-		/* FIXME Attempt adjacent mmaps MAP_FIXED into malloced space 
-		 * one page size larger than required...
-		 */
+	/* Only use mmap with regular files */
+	if (!(dev->flags & DEV_REGULAR) || size2)
+		use_mmap = 0;
+
+	if (use_mmap) {
+		mmap_offset = offset % getpagesize();
+		/* memory map the file */
+		p->fb = mmap((caddr_t) 0, size + mmap_offset, PROT_READ,
+			     MAP_PRIVATE, dev_fd(dev), offset - mmap_offset);
+		if (p->fb == (caddr_t) (-1)) {
+			log_sys_error("mmap", dev_name(dev));
+			goto out;
+		}
+		p->fb = p->fb + mmap_offset;
+	} else {
 		if (!(p->fb = dbg_malloc(size + size2))) {
 			stack;
 			return 0;
 		}
-		if (lseek(fd, offset, SEEK_SET) < 0) {
-			log_sys_error("lseek", file);
+		if (!dev_read(dev, (uint64_t) offset, size, p->fb)) {
+			log_error("Read from %s failed", dev_name(dev));
 			goto out;
 		}
-		if (raw_read(fd, p->fb, size) != size) {
-			log_error("Circular read from %s failed", file);
-			goto out;
+		if (size2) {
+			if (!dev_read(dev, (uint64_t) offset2, size2,
+				      p->fb + size)) {
+				log_error("Circular read from %s failed",
+					  dev_name(dev));
+				goto out;
+			}
 		}
-		if (lseek(fd, offset2, SEEK_SET) < 0) {
-			log_sys_error("lseek", file);
-			goto out;
-		}
-		if (raw_read(fd, p->fb + size, size2) != size2) {
-			log_error("Circular read from %s failed", file);
-			goto out;
-		}
-	} else {
-		mmap_offset = offset % getpagesize();
-		/* memory map the file */
-		p->fb = mmap((caddr_t) 0, size + mmap_offset, PROT_READ,
-			     MAP_PRIVATE, fd, offset - mmap_offset);
-		if (p->fb == (caddr_t) (-1)) {
-			log_sys_error("mmap", file);
-			goto out;
-		}
-
-		p->fb = p->fb + mmap_offset;
 	}
 
 	if (checksum_fn && checksum !=
 	    (checksum_fn(checksum_fn(INITIAL_CRC, p->fb, size),
 			 p->fb + size, size2))) {
-		log_error("%s: Checksum error", file);
+		log_error("%s: Checksum error", dev_name(dev));
 		goto out;
 	}
 
@@ -183,12 +180,12 @@ int read_config_fd(struct config_tree *cf, int fd, const char *file,
 	r = 1;
 
       out:
-	if (size2)
+	if (!use_mmap)
 		dbg_free(p->fb);
 	else {
 		/* unmap the file */
 		if (munmap((char *) (p->fb - mmap_offset), size + mmap_offset)) {
-			log_sys_error("munmap", file);
+			log_sys_error("munmap", dev_name(dev));
 			r = 0;
 		}
 	}
@@ -200,7 +197,8 @@ int read_config_file(struct config_tree *cf, const char *file)
 {
 	struct cs *c = (struct cs *) cf;
 	struct stat info;
-	int r = 1, fd;
+	struct device *dev;
+	int r = 1;
 
 	if (stat(file, &info)) {
 		log_sys_error("stat", file);
@@ -217,15 +215,20 @@ int read_config_file(struct config_tree *cf, const char *file)
 		return 1;
 	}
 
-	if ((fd = open(file, O_RDONLY)) < 0) {
-		log_sys_error("open", file);
+	if (!(dev = dev_create_file(file, NULL, NULL))) {
+		stack;
 		return 0;
 	}
 
-	r = read_config_fd(cf, fd, file, 0, (size_t) info.st_size, 0, 0,
+	if (!dev_open_flags(dev, O_RDONLY, 0, 0)) {
+		stack;
+		return 0;
+	}
+
+	r = read_config_fd(cf, dev, 0, (size_t) info.st_size, 0, 0,
 			   (checksum_fn_t) NULL, 0);
 
-	close(fd);
+	dev_close(dev);
 
 	c->timestamp = info.st_mtime;
 	c->filename = pool_strdup(c->mem, file);
@@ -249,7 +252,8 @@ int reload_config_file(struct config_tree **cf)
 	struct cs *c = (struct cs *) *cf;
 	struct cs *new_cs;
 	struct stat info;
-	int r, fd;
+	struct device *dev;
+	int r;
 
 	if (!c->filename)
 		return 0;
@@ -279,19 +283,25 @@ int reload_config_file(struct config_tree **cf)
 		return 0;
 	}
 
-	if ((fd = open(c->filename, O_RDONLY)) < 0) {
-		log_sys_error("open", c->filename);
-		return 0;
-	}
-
 	if (!(new_cf = create_config_tree())) {
 		log_error("Allocation of new config_tree failed");
 		return 0;
 	}
 
-	r = read_config_fd(new_cf, fd, c->filename, 0, (size_t) info.st_size,
+	if (!(dev = dev_create_file(c->filename, NULL, NULL))) {
+		stack;
+		return 0;
+	}
+
+	if (!dev_open_flags(dev, O_RDONLY, 0, 0)) {
+		stack;
+		return 0;
+	}
+
+	r = read_config_fd(new_cf, dev, 0, (size_t) info.st_size,
 			   0, 0, (checksum_fn_t) NULL, 0);
-	close(fd);
+
+	dev_close(dev);
 
 	if (r) {
 		new_cs = (struct cs *) new_cf;

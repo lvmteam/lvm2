@@ -8,6 +8,8 @@
 #include "lvm-types.h"
 #include "device.h"
 #include "metadata.h"
+#include "lvmcache.h"
+#include "memlock.h"
 
 #include <limits.h>
 #include <sys/stat.h>
@@ -17,13 +19,187 @@
 
 #ifdef linux
 #  define u64 uint64_t		/* Missing without __KERNEL__ */
+#  undef WNOHANG		/* Avoid redefinition */
+#  undef WUNTRACED		/* Avoid redefinition */
 #  include <linux/fs.h>		/* For block ioctl definitions */
 #  define BLKSIZE_SHIFT SECTOR_SHIFT
+#else
+#  include <sys/disk.h>
+#  define BLKBSZGET DKIOCGETBLOCKSIZE
+#  define BLKSSZGET DKIOCGETBLOCKSIZE
+#  define BLKGETSIZE64 DKIOCGETBLOCKCOUNT
+#  define BLKFLSBUF DKIOCSYNCHRONIZECACHE
+#  define BLKSIZE_SHIFT 0
+#  ifndef O_DIRECT
+#    define O_DIRECT	0
+#  endif
 #endif
 
-/* FIXME 64 bit offset!!!
+/* FIXME Use _llseek for 64-bit
 _syscall5(int,  _llseek,  uint,  fd, ulong, hi, ulong, lo, loff_t *, res, uint, wh);
+ if (_llseek((unsigned) fd, (ulong) (offset >> 32), (ulong) (offset & 0xFFFFFFFF), &pos, SEEK_SET) < 0) { 
 */
+
+static LIST_INIT(_open_devices);
+
+/*-----------------------------------------------------------------
+ * The standard io loop that keeps submitting an io until it's
+ * all gone.
+ *---------------------------------------------------------------*/
+static int _io(struct device_area *where, void *buffer, int should_write)
+{
+	int fd = dev_fd(where->dev);
+	ssize_t n = 0;
+	size_t total = 0;
+
+	if (fd < 0) {
+		log_error("Attempt to read an unopened device (%s).",
+			  dev_name(where->dev));
+		return 0;
+	}
+
+	/*
+	 * Skip all writes in test mode.
+	 */
+	if (should_write && test_mode())
+		return 1;
+
+	if (where->size > SSIZE_MAX) {
+		log_error("Read size too large: %" PRIu64, where->size);
+		return 0;
+	}
+
+	if (lseek(fd, (off_t) where->start, SEEK_SET) < 0) {
+		log_sys_error("lseek", dev_name(where->dev));
+		return 0;
+	}
+
+	while (total < (size_t) where->size) {
+		do
+			n = should_write ?
+			    write(fd, buffer, (size_t) where->size - total) :
+			    read(fd, buffer, (size_t) where->size - total);
+		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
+
+		if (n <= 0)
+			break;
+
+		total += n;
+		buffer += n;
+	}
+
+	return (total == (size_t) where->size);
+}
+
+/*-----------------------------------------------------------------
+ * LVM2 uses O_DIRECT when performing metadata io, which requires
+ * block size aligned accesses.  If any io is not aligned we have
+ * to perform the io via a bounce buffer, obviously this is quite
+ * inefficient.
+ *---------------------------------------------------------------*/
+
+/*
+ * Get the sector size from an _open_ device.
+ */
+static int _get_block_size(struct device *dev, unsigned int *size)
+{
+	int s;
+
+	if (ioctl(dev_fd(dev), BLKBSZGET, &s) < 0) {
+		log_sys_error("ioctl BLKBSZGET", dev_name(dev));
+		return 0;
+	}
+
+	*size = (unsigned int) s;
+	return 1;
+}
+
+/*
+ * Widens a region to be an aligned region.
+ */
+static void _widen_region(unsigned int block_size, struct device_area *region,
+			  struct device_area *result)
+{
+	uint64_t mask = block_size - 1, delta;
+	memcpy(result, region, sizeof(*result));
+
+	/* adjust the start */
+	delta = result->start & mask;
+	if (delta) {
+		result->start -= delta;
+		result->size += delta;
+	}
+
+	/* adjust the end */
+	delta = (result->start + result->size) & mask;
+	if (delta)
+		result->size += block_size - delta;
+}
+
+static int _aligned_io(struct device_area *where, void *buffer,
+		       int should_write)
+{
+	void *bounce;
+	unsigned int block_size = 0;
+	uintptr_t mask;
+	struct device_area widened;
+
+	if (!(where->dev->flags & DEV_REGULAR) &&
+	    !_get_block_size(where->dev, &block_size)) {
+		stack;
+		return 0;
+	}
+
+	if (!block_size)
+		block_size = SECTOR_SIZE * 2;
+
+	_widen_region(block_size, where, &widened);
+
+	/* Do we need to use a bounce buffer? */
+	mask = block_size - 1;
+	if (!memcmp(where, &widened, sizeof(widened)) &&
+	    !((uintptr_t) buffer & mask))
+		return _io(where, buffer, should_write);
+
+	/* Allocate a bounce buffer with an extra block */
+	if (!(bounce = alloca((size_t) widened.size + block_size))) {
+		log_error("Bounce buffer alloca failed");
+		return 0;
+	}
+
+	/*
+	 * Realign start of bounce buffer (using the extra sector)
+	 */
+	if (((uintptr_t) bounce) & mask)
+		bounce = (void *) ((((uintptr_t) bounce) + mask) & ~mask);
+
+	/* channel the io through the bounce buffer */
+	if (!_io(&widened, bounce, 0)) {
+		if (!should_write) {
+			stack;
+			return 0;
+		}
+		/* FIXME pre-extend the file */
+		memset(bounce, '\n', widened.size);
+	}
+
+	if (should_write) {
+		memcpy(bounce + (where->start - widened.start), buffer,
+		       (size_t) where->size);
+
+		/* ... then we write */
+		return _io(&widened, bounce, 1);
+	}
+
+	memcpy(buffer, bounce + (where->start - widened.start),
+	       (size_t) where->size);
+
+	return 1;
+}
+
+/*-----------------------------------------------------------------
+ * Public functions
+ *---------------------------------------------------------------*/
 
 int dev_get_size(struct device *dev, uint64_t *size)
 {
@@ -70,52 +246,104 @@ int dev_get_sectsize(struct device *dev, uint32_t *size)
 	return 1;
 }
 
-static void _flush(int fd)
+void dev_flush(struct device *dev)
 {
-	if (ioctl(fd, BLKFLSBUF, 0) >= 0)
+	if (!(dev->flags & DEV_REGULAR) && ioctl(dev->fd, BLKFLSBUF, 0) >= 0)
 		return;
 
-	if (fsync(fd) >= 0)
+	if (fsync(dev->fd) >= 0)
 		return;
 
 	sync();
 }
 
-int dev_open(struct device *dev, int flags)
+int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 {
 	struct stat buf;
-	const char *name = dev_name_confirmed(dev);
+	const char *name;
 
-	if (!name) {
+	if (dev->fd >= 0) {
+		dev->open_count++;
+		return 1;
+	}
+
+	if (memlock())
+		log_error("WARNING: dev_open(%s) called while suspended",
+			  dev_name(dev));
+
+	if (dev->flags & DEV_REGULAR)
+		name = dev_name(dev);
+	else if (!(name = dev_name_confirmed(dev, quiet))) {
 		stack;
 		return 0;
 	}
 
-	if (dev->fd >= 0) {
-		log_error("Device '%s' has already been opened", name);
-		return 0;
-	}
-
-	if ((stat(name, &buf) < 0) || (buf.st_rdev != dev->dev)) {
+	if (!(dev->flags & DEV_REGULAR) &&
+	    ((stat(name, &buf) < 0) || (buf.st_rdev != dev->dev))) {
 		log_error("%s: stat failed: Has device name changed?", name);
 		return 0;
 	}
 
-	if ((dev->fd = open(name, flags)) < 0) {
+	if (direct)
+		flags |= O_DIRECT;
+
+	if ((dev->fd = open(name, flags, 0777)) < 0) {
 		log_sys_error("open", name);
 		return 0;
 	}
 
-	if ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev)) {
+	dev->open_count = 1;
+	dev->flags &= ~DEV_ACCESSED_W;
+
+	if (!(dev->flags & DEV_REGULAR) &&
+	    ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev))) {
 		log_error("%s: fstat failed: Has device name changed?", name);
 		dev_close(dev);
 		dev->fd = -1;
 		return 0;
 	}
-	_flush(dev->fd);
-	dev->flags = 0;
+#if !O_DIRECT
+	if (!(dev->flags & DEV_REGULAR))
+		dev_flush(dev);
+#endif
+
+	if ((flags & O_CREAT) && !(flags & O_TRUNC)) {
+		dev->end = lseek(dev->fd, (off_t) 0, SEEK_END);
+	}
+
+	list_add(&_open_devices, &dev->open_list);
+	log_debug("Opened %s", dev_name(dev));
 
 	return 1;
+}
+
+int dev_open_quiet(struct device *dev)
+{
+	/* FIXME Open O_RDONLY if vg read lock? */
+	return dev_open_flags(dev, O_RDWR, 1, 1);
+}
+
+int dev_open(struct device *dev)
+{
+	/* FIXME Open O_RDONLY if vg read lock? */
+	return dev_open_flags(dev, O_RDWR, 1, 0);
+}
+
+static void _close(struct device *dev)
+{
+	if (close(dev->fd))
+		log_sys_error("close", dev_name(dev));
+	dev->fd = -1;
+	list_del(&dev->open_list);
+
+	log_debug("Closed %s", dev_name(dev));
+
+	if (dev->flags & DEV_ALLOCED) {
+		dbg_free((void *) list_item(dev->aliases.n, struct str_list)->
+			 str);
+		dbg_free(dev->aliases.n);
+		dbg_free(dev);
+	}
 }
 
 int dev_close(struct device *dev)
@@ -125,123 +353,88 @@ int dev_close(struct device *dev)
 			  "which is not open.", dev_name(dev));
 		return 0;
 	}
-
+#if !O_DIRECT
 	if (dev->flags & DEV_ACCESSED_W)
-		_flush(dev->fd);
+		dev_flush(dev);
+#endif
 
-	if (close(dev->fd))
-		log_sys_error("close", dev_name(dev));
-
-	dev->fd = -1;
+	/* FIXME lookup device in cache to get vgname and see if it's locked? */
+	if (--dev->open_count < 1 && !vgs_locked())
+		_close(dev);
 
 	return 1;
 }
 
-ssize_t raw_read(int fd, void *buf, size_t count)
+void dev_close_all(void)
 {
-	ssize_t n = 0, tot = 0;
+	struct list *doh, *doht;
+	struct device *dev;
 
-	if (count > SSIZE_MAX)
-		return -1;
-
-	while (tot < (signed) count) {
-		do
-			n = read(fd, buf, count - tot);
-		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
-
-		if (n <= 0)
-			return tot ? tot : n;
-
-		tot += n;
-		buf += n;
+	list_iterate_safe(doh, doht, &_open_devices) {
+		dev = list_struct_base(doh, struct device, open_list);
+		if (dev->open_count < 1)
+			_close(dev);
 	}
-
-	return tot;
 }
 
-ssize_t dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
+int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
-	const char *name = dev_name(dev);
-	int fd = dev->fd;
-	/* loff_t pos; */
+	struct device_area where;
 
-	if (fd < 0) {
-		log_err("Attempt to read an unopened device (%s).", name);
+	if (!dev->open_count)
 		return 0;
-	}
 
-	/* if (_llseek((unsigned) fd, (ulong) (offset >> 32), (ulong) (offset & 0xFFFFFFFF), &pos, SEEK_SET) < 0) { */
-	if (lseek(fd, (off_t) offset, SEEK_SET) < 0) {
-		log_sys_error("lseek", name);
-		return 0;
-	}
+	where.dev = dev;
+	where.start = offset;
+	where.size = len;
 
-	return raw_read(fd, buffer, len);
+	return _aligned_io(&where, buffer, 0);
 }
 
-static int _write(int fd, const void *buf, size_t count)
+/* FIXME If O_DIRECT can't extend file, dev_extend first; dev_truncate after.
+ *       But fails if concurrent processes writing
+ */
+
+/* FIXME pre-extend the file */
+int dev_append(struct device *dev, size_t len, void *buffer)
 {
-	ssize_t n = 0;
-	int tot = 0;
+	int r;
 
-	/* Skip all writes */
-	if (test_mode())
-		return count;
+	if (!dev->open_count)
+		return 0;
 
-	while (tot < count) {
-		do
-			n = write(fd, buf, count - tot);
-		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
+	r = dev_write(dev, dev->end, len, buffer);
+	dev->end += (uint64_t) len;
 
-		if (n <= 0)
-			return tot ? tot : n;
-
-		tot += n;
-		buf += n;
-	}
-
-	return tot;
+#if !O_DIRECT
+	dev_flush(dev);
+#endif
+	return r;
 }
 
-int64_t dev_write(struct device * dev, uint64_t offset, size_t len,
-		  void *buffer)
+int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
-	const char *name = dev_name(dev);
-	int fd = dev->fd;
+	struct device_area where;
 
-	if (fd < 0) {
-		log_error("Attempt to write to unopened device %s", name);
+	if (!dev->open_count)
 		return 0;
-	}
 
-	if (lseek(fd, (off_t) offset, SEEK_SET) < 0) {
-		log_sys_error("lseek", name);
-		return 0;
-	}
+	where.dev = dev;
+	where.start = offset;
+	where.size = len;
 
 	dev->flags |= DEV_ACCESSED_W;
 
-	return _write(fd, buffer, len);
+	return _aligned_io(&where, buffer, 1);
 }
 
 int dev_zero(struct device *dev, uint64_t offset, size_t len)
 {
-	int64_t r;
 	size_t s;
 	char buffer[4096];
-	int already_open;
 
-	already_open = dev_is_open(dev);
-
-	if (!already_open && !dev_open(dev, O_RDWR)) {
+	if (!dev_open(dev)) {
 		stack;
-		return 0;
-	}
-
-	if (lseek(dev->fd, (off_t) offset, SEEK_SET) < 0) {
-		log_sys_error("lseek", dev_name(dev));
-		if (!already_open && !dev_close(dev))
-			stack;
 		return 0;
 	}
 
@@ -256,21 +449,17 @@ int dev_zero(struct device *dev, uint64_t offset, size_t len)
 	memset(buffer, 0, sizeof(buffer));
 	while (1) {
 		s = len > sizeof(buffer) ? sizeof(buffer) : len;
-		r = _write(dev->fd, buffer, s);
-
-		if (r <= 0)
+		if (!dev_write(dev, offset, s, buffer))
 			break;
 
-		len -= r;
-		if (!len) {
-			r = 1;
+		len -= s;
+		if (!len)
 			break;
-		}
 	}
 
 	dev->flags |= DEV_ACCESSED_W;
 
-	if (!already_open && !dev_close(dev))
+	if (!dev_close(dev))
 		stack;
 
 	/* FIXME: Always display error */

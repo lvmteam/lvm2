@@ -11,14 +11,14 @@
 #include "display.h"
 #include "hash.h"
 #include "toolcontext.h"
-#include "cache.h"
+#include "lvmcache.h"
 
 /* FIXME Use tidier inclusion method */
 static struct text_vg_version_ops *(_text_vsn_list[2]);
 
 struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       const char *file,
-				       int fd,
+				       struct device *dev,
 				       off_t offset, uint32_t size,
 				       off_t offset2, uint32_t size2,
 				       checksum_fn_t checksum_fn,
@@ -45,10 +45,9 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		goto out;
 	}
 
-	if ((fd == -1 && !read_config_file(cf, file)) ||
-	    (fd != -1 && !read_config_fd(cf, fd, file, offset, size,
-					 offset2, size2, checksum_fn,
-					 checksum))) {
+	if ((!dev && !read_config_file(cf, file)) ||
+	    (dev && !read_config_fd(cf, dev, offset, size,
+				    offset2, size2, checksum_fn, checksum))) {
 		log_error("Couldn't read volume group metadata.");
 		goto out;
 	}
@@ -78,6 +77,6 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 					 const char *file,
 					 time_t *when, char **desc)
 {
-	return text_vg_import_fd(fid, file, -1, 0, 0, 0, 0, NULL, 0,
+	return text_vg_import_fd(fid, file, NULL, 0, 0, 0, 0, NULL, 0,
 				 when, desc);
 }

@@ -7,6 +7,8 @@
 #ifndef _LVM_CONFIG_H
 #define _LVM_CONFIG_H
 
+#include "device.h"
+
 enum {
 	CFG_STRING,
 	CFG_FLOAT,
@@ -39,7 +41,7 @@ void destroy_config_tree(struct config_tree *cf);
 
 typedef uint32_t (*checksum_fn_t) (uint32_t initial, void *buf, uint32_t size);
 
-int read_config_fd(struct config_tree *cf, int fd, const char *file,
+int read_config_fd(struct config_tree *cf, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum);
 

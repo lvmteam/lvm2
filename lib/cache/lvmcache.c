@@ -6,20 +6,23 @@
  */
 
 #include "lib.h"
-#include "cache.h"
+#include "lvmcache.h"
 #include "hash.h"
 #include "toolcontext.h"
 #include "dev-cache.h"
 #include "metadata.h"
 #include "filter.h"
+#include "memlock.h"
 
 static struct hash_table *_pvid_hash = NULL;
 static struct hash_table *_vgid_hash = NULL;
 static struct hash_table *_vgname_hash = NULL;
+static struct hash_table *_lock_hash = NULL;
 static struct list _vginfos;
-int _has_scanned = 0;
+static int _has_scanned = 0;
+static int _vgs_locked = 0;
 
-int cache_init(void)
+int lvmcache_init(void)
 {
 	list_init(&_vginfos);
 
@@ -32,12 +35,52 @@ int cache_init(void)
 	if (!(_pvid_hash = hash_create(128)))
 		return 0;
 
+	if (!(_lock_hash = hash_create(128)))
+		return 0;
+
 	return 1;
 }
 
-struct cache_vginfo *vginfo_from_vgname(const char *vgname)
+void lvmcache_lock_vgname(const char *vgname, int read_only)
 {
-	struct cache_vginfo *vginfo;
+	if (!_lock_hash && !lvmcache_init()) {
+		log_error("Internal cache initialisation failed");
+		return;
+	}
+
+	if (!hash_insert(_lock_hash, vgname, (void *) 1))
+		log_error("Cache locking failure for %s", vgname);
+
+	_vgs_locked++;
+}
+
+static int _vgname_is_locked(const char *vgname) __attribute__ ((unused));
+static int _vgname_is_locked(const char *vgname)
+{
+	if (!_lock_hash)
+		return 0;
+
+	return hash_lookup(_lock_hash, vgname) ? 1 : 0;
+}
+
+void lvmcache_unlock_vgname(const char *vgname)
+{
+	/* FIXME: Clear all CACHE_LOCKED flags in this vg */
+	hash_remove(_lock_hash, vgname);
+
+	/* FIXME Do this per-VG */
+	if (!--_vgs_locked)
+		dev_close_all();
+}
+
+int vgs_locked(void)
+{
+	return _vgs_locked;
+}
+
+struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname)
+{
+	struct lvmcache_vginfo *vginfo;
 
 	if (!_vgname_hash)
 		return NULL;
@@ -50,7 +93,7 @@ struct cache_vginfo *vginfo_from_vgname(const char *vgname)
 
 const struct format_type *fmt_from_vgname(const char *vgname)
 {
-	struct cache_vginfo *vginfo;
+	struct lvmcache_vginfo *vginfo;
 
 	if (!(vginfo = vginfo_from_vgname(vgname)))
 		return NULL;
@@ -58,9 +101,9 @@ const struct format_type *fmt_from_vgname(const char *vgname)
 	return vginfo->fmt;
 }
 
-struct cache_vginfo *vginfo_from_vgid(const char *vgid)
+struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid)
 {
-	struct cache_vginfo *vginfo;
+	struct lvmcache_vginfo *vginfo;
 	char id[ID_LEN + 1];
 
 	if (!_vgid_hash || !vgid)
@@ -76,9 +119,9 @@ struct cache_vginfo *vginfo_from_vgid(const char *vgid)
 	return vginfo;
 }
 
-struct cache_info *info_from_pvid(const char *pvid)
+struct lvmcache_info *info_from_pvid(const char *pvid)
 {
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	char id[ID_LEN + 1];
 
 	if (!_pvid_hash || !pvid)
@@ -93,7 +136,7 @@ struct cache_info *info_from_pvid(const char *pvid)
 	return info;
 }
 
-static void _rescan_entry(struct cache_info *info)
+static void _rescan_entry(struct lvmcache_info *info)
 {
 	struct label *label;
 
@@ -108,7 +151,7 @@ static int _scan_invalid(void)
 	return 1;
 }
 
-int cache_label_scan(struct cmd_context *cmd, int full_scan)
+int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 {
 	struct label *label;
 	struct dev_iter *iter;
@@ -125,7 +168,7 @@ int cache_label_scan(struct cmd_context *cmd, int full_scan)
 
 	_scanning_in_progress = 1;
 
-	if (!_vgname_hash && !cache_init()) {
+	if (!_vgname_hash && !lvmcache_init()) {
 		log_error("Internal cache initialisation failed");
 		goto out;
 	}
@@ -162,12 +205,12 @@ int cache_label_scan(struct cmd_context *cmd, int full_scan)
 	return r;
 }
 
-struct list *cache_get_vgnames(struct cmd_context *cmd, int full_scan)
+struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 {
 	struct list *vgih, *vgnames;
 	struct str_list *sl;
 
-	cache_label_scan(cmd, full_scan);
+	lvmcache_label_scan(cmd, full_scan);
 
 	if (!(vgnames = pool_alloc(cmd->mem, sizeof(struct list)))) {
 		log_error("vgnames list allocation failed");
@@ -183,7 +226,7 @@ struct list *cache_get_vgnames(struct cmd_context *cmd, int full_scan)
 		}
 		if (!(sl->str = pool_strdup(cmd->mem,
 					    list_item(vgih,
-						      struct cache_vginfo)->
+						      struct lvmcache_vginfo)->
 					    vgname))) {
 			log_error("vgname allocation failed");
 			return NULL;
@@ -197,34 +240,37 @@ struct list *cache_get_vgnames(struct cmd_context *cmd, int full_scan)
 struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 {
 	struct label *label;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 
 	/* Already cached ? */
 	if ((info = info_from_pvid((char *) pvid))) {
 		if (label_read(info->dev, &label)) {
-			info = (struct cache_info *) label->info;
+			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
 				return info->dev;
 		}
 	}
 
-	cache_label_scan(cmd, 0);
+	lvmcache_label_scan(cmd, 0);
 
 	/* Try again */
 	if ((info = info_from_pvid((char *) pvid))) {
 		if (label_read(info->dev, &label)) {
-			info = (struct cache_info *) label->info;
+			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
 				return info->dev;
 		}
 	}
 
-	cache_label_scan(cmd, 1);
+	if (memlock())
+		return NULL;
+
+	lvmcache_label_scan(cmd, 1);
 
 	/* Try again */
 	if ((info = info_from_pvid((char *) pvid))) {
 		if (label_read(info->dev, &label)) {
-			info = (struct cache_info *) label->info;
+			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
 				return info->dev;
 		}
@@ -233,7 +279,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	return NULL;
 }
 
-static void _drop_vginfo(struct cache_info *info)
+static void _drop_vginfo(struct lvmcache_info *info)
 {
 	if (!list_empty(&info->list)) {
 		list_del(&info->list);
@@ -254,7 +300,7 @@ static void _drop_vginfo(struct cache_info *info)
 }
 
 /* Unused
-void cache_del(struct cache_info *info)
+void lvmcache_del(struct lvmcache_info *info)
 {
 	if (info->dev->pvid[0] && _pvid_hash)
 		hash_remove(_pvid_hash, info->dev->pvid);
@@ -268,7 +314,7 @@ void cache_del(struct cache_info *info)
 	return;
 } */
 
-static int _cache_update_pvid(struct cache_info *info, const char *pvid)
+static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 {
 	if (!strcmp(info->dev->pvid, pvid))
 		return 1;
@@ -277,14 +323,14 @@ static int _cache_update_pvid(struct cache_info *info, const char *pvid)
 	}
 	strncpy(info->dev->pvid, pvid, sizeof(info->dev->pvid));
 	if (!hash_insert(_pvid_hash, pvid, info)) {
-		log_error("_cache_update: pvid insertion failed: %s", pvid);
+		log_error("_lvmcache_update: pvid insertion failed: %s", pvid);
 		return 0;
 	}
 
 	return 1;
 }
 
-static int _cache_update_vgid(struct cache_info *info, const char *vgid)
+static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 {
 	if (!vgid || !info->vginfo || !strncmp(info->vginfo->vgid, vgid,
 					       sizeof(info->vginfo->vgid)))
@@ -297,18 +343,18 @@ static int _cache_update_vgid(struct cache_info *info, const char *vgid)
 
 	strncpy(info->vginfo->vgid, vgid, sizeof(info->vginfo->vgid));
 	info->vginfo->vgid[sizeof(info->vginfo->vgid) - 1] = '\0';
-	if (!hash_insert(_vgid_hash, vgid, info->vginfo)) {
-		log_error("_cache_update: vgid hash insertion failed: %s",
-			  vgid);
+	if (!hash_insert(_vgid_hash, info->vginfo->vgid, info->vginfo)) {
+		log_error("_lvmcache_update: vgid hash insertion failed: %s",
+			  info->vginfo->vgid);
 		return 0;
 	}
 
 	return 1;
 }
 
-int cache_update_vgname(struct cache_info *info, const char *vgname)
+int lvmcache_update_vgname(struct lvmcache_info *info, const char *vgname)
 {
-	struct cache_vginfo *vginfo;
+	struct lvmcache_vginfo *vginfo;
 
 	/* If vgname is NULL and we don't already have a vgname, 
 	 * assume ORPHAN - we want every entry to have a vginfo
@@ -326,7 +372,7 @@ int cache_update_vgname(struct cache_info *info, const char *vgname)
 	/* Get existing vginfo or create new one */
 	if (!(vginfo = vginfo_from_vgname(vgname))) {
 		if (!(vginfo = dbg_malloc(sizeof(*vginfo)))) {
-			log_error("cache_update_vgname: list alloc failed");
+			log_error("lvmcache_update_vgname: list alloc failed");
 			return 0;
 		}
 		memset(vginfo, 0, sizeof(*vginfo));
@@ -359,11 +405,11 @@ int cache_update_vgname(struct cache_info *info, const char *vgname)
 	return 1;
 }
 
-int cache_update_vg(struct volume_group *vg)
+int lvmcache_update_vg(struct volume_group *vg)
 {
 	struct list *pvh;
 	struct physical_volume *pv;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 	char pvid_s[ID_LEN + 1];
 	int vgid_updated = 0;
 
@@ -374,9 +420,9 @@ int cache_update_vg(struct volume_group *vg)
 		strncpy(pvid_s, (char *) &pv->id, sizeof(pvid_s) - 1);
 		/* FIXME Could pv->dev->pvid ever be different? */
 		if ((info = info_from_pvid(pvid_s))) {
-			cache_update_vgname(info, vg->name);
+			lvmcache_update_vgname(info, vg->name);
 			if (!vgid_updated) {
-				_cache_update_vgid(info, (char *) &vg->id);
+				_lvmcache_update_vgid(info, (char *) &vg->id);
 				vgid_updated = 1;
 			}
 		}
@@ -385,15 +431,15 @@ int cache_update_vg(struct volume_group *vg)
 	return 1;
 }
 
-struct cache_info *cache_add(struct labeller *labeller, const char *pvid,
-			     struct device *dev,
-			     const char *vgname, const char *vgid)
+struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
+				   struct device *dev,
+				   const char *vgname, const char *vgid)
 {
 	struct label *label;
-	struct cache_info *existing, *info;
+	struct lvmcache_info *existing, *info;
 	char pvid_s[ID_LEN + 1];
 
-	if (!_vgname_hash && !cache_init()) {
+	if (!_vgname_hash && !lvmcache_init()) {
 		log_error("Internal cache initialisation failed");
 		return NULL;
 	}
@@ -408,7 +454,7 @@ struct cache_info *cache_add(struct labeller *labeller, const char *pvid,
 			return NULL;
 		}
 		if (!(info = dbg_malloc(sizeof(*info)))) {
-			log_error("cache_info allocation failed");
+			log_error("lvmcache_info allocation failed");
 			label_destroy(label);
 			return NULL;
 		}
@@ -456,7 +502,7 @@ struct cache_info *cache_add(struct labeller *labeller, const char *pvid,
 	info->fmt = (const struct format_type *) labeller->private;
 	info->status |= CACHE_INVALID;
 
-	if (!_cache_update_pvid(info, pvid_s)) {
+	if (!_lvmcache_update_pvid(info, pvid_s)) {
 		if (!existing) {
 			dbg_free(info);
 			label_destroy(label);
@@ -464,7 +510,7 @@ struct cache_info *cache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	if (!cache_update_vgname(info, vgname)) {
+	if (!lvmcache_update_vgname(info, vgname)) {
 		if (!existing) {
 			hash_remove(_pvid_hash, pvid_s);
 			strcpy(info->dev->pvid, "");
@@ -474,14 +520,14 @@ struct cache_info *cache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	if (!_cache_update_vgid(info, vgid))
+	if (!_lvmcache_update_vgid(info, vgid))
 		/* Non-critical */
 		stack;
 
 	return info;
 }
 
-static void _cache_destroy_entry(struct cache_info *info)
+static void _lvmcache_destroy_entry(struct lvmcache_info *info)
 {
 	if (!list_empty(&info->list))
 		list_del(&info->list);
@@ -490,14 +536,19 @@ static void _cache_destroy_entry(struct cache_info *info)
 	dbg_free(info);
 }
 
-static void _cache_destroy_vgnamelist(struct cache_vginfo *vginfo)
+static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 {
 	if (vginfo->vgname)
 		dbg_free(vginfo->vgname);
 	dbg_free(vginfo);
 }
 
-void cache_destroy(void)
+static void _lvmcache_destroy_lockname(int present)
+{
+	/* Nothing to do */
+}
+
+void lvmcache_destroy(void)
 {
 	_has_scanned = 0;
 
@@ -507,15 +558,23 @@ void cache_destroy(void)
 	}
 
 	if (_pvid_hash) {
-		hash_iter(_pvid_hash, (iterate_fn) _cache_destroy_entry);
+		hash_iter(_pvid_hash, (iterate_fn) _lvmcache_destroy_entry);
 		hash_destroy(_pvid_hash);
 		_pvid_hash = NULL;
 	}
 
 	if (_vgname_hash) {
-		hash_iter(_vgname_hash, (iterate_fn) _cache_destroy_vgnamelist);
+		hash_iter(_vgname_hash,
+			  (iterate_fn) _lvmcache_destroy_vgnamelist);
 		hash_destroy(_vgname_hash);
 		_vgname_hash = NULL;
 	}
+
+	if (_lock_hash) {
+		hash_iter(_lock_hash, (iterate_fn) _lvmcache_destroy_lockname);
+		hash_destroy(_lock_hash);
+		_lock_hash = NULL;
+	}
+
 	list_init(&_vginfos);
 }

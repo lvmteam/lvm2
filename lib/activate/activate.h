@@ -28,6 +28,8 @@ int activation(void);
 int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 
+void activation_exit(void);
+
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s);
 int lv_activate(struct cmd_context *cmd, const char *lvid_s);

@@ -10,6 +10,7 @@
 #include "locking_types.h"
 #include "lvm-string.h"
 #include "activate.h"
+#include "lvmcache.h"
 
 #include <signal.h>
 
@@ -32,6 +33,15 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 {
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
+		switch (flags & LCK_TYPE_MASK) {
+		case LCK_UNLOCK:
+			lvmcache_unlock_vgname(resource);
+			break;
+		default:
+			lvmcache_lock_vgname(resource,
+					     (flags & LCK_TYPE_MASK) ==
+					     LCK_READ);
+		}
 		break;
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {

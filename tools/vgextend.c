@@ -92,7 +92,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		    "physical volumes", vg_name, argc);
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg))
+	if (!vg_write(vg) || !vg_commit(vg))
 		goto error;
 
 	backup(vg);

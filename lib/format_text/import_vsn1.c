@@ -11,7 +11,7 @@
 #include "display.h"
 #include "hash.h"
 #include "toolcontext.h"
-#include "cache.h"
+#include "lvmcache.h"
 
 typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
 			   struct volume_group * vg, struct config_node * pvn,

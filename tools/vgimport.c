@@ -45,7 +45,7 @@ static int vgimport_single(struct cmd_context *cmd, const char *vg_name,
 
 	vg->status &= ~EXPORTED_VG;
 
-	if (!vg_write(vg))
+	if (!vg_write(vg) || !vg_commit(vg))
 		goto error;
 
 	backup(vg);

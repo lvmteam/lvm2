@@ -1,5 +1,5 @@
 ../lib/activate/activate.h
-../lib/cache/cache.h
+../lib/cache/lvmcache.h
 ../lib/commands/errors.h
 ../lib/commands/toolcontext.h
 ../lib/config/config.h
@@ -24,6 +24,7 @@
 ../lib/log/log.h
 ../lib/metadata/metadata.h
 ../lib/mm/dbg_malloc.h
+../lib/mm/memlock.h
 ../lib/mm/pool.h
 ../lib/mm/xlate.h
 ../lib/misc/crc.h

@@ -10,7 +10,7 @@
 #include "label.h"
 #include "metadata.h"
 #include "xlate.h"
-#include "cache.h"
+#include "lvmcache.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -49,9 +49,9 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 		 struct label **label)
 {
 	struct pv_disk *pvd = (struct pv_disk *) buf;
-	struct cache_info *info;
+	struct lvmcache_info *info;
 
-	if (!(info = cache_add(l, pvd->pv_uuid, dev, pvd->vg_name, NULL)))
+	if (!(info = lvmcache_add(l, pvd->pv_uuid, dev, pvd->vg_name, NULL)))
 		return 0;
 	*label = info->label;
 

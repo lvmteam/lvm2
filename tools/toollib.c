@@ -76,13 +76,31 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		log_verbose("Using logical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			char *lv_name = argv[opt];
+			char *vgname_def;
 			int vgname_provided = 1;
+			int dev_dir_found = 0;
 
 			/* Do we have a vgname or lvname? */
 			vgname = lv_name;
+			if (*vgname == '/') {
+				while (*vgname == '/')
+					vgname++;
+				vgname--;
+			}
 			if (!strncmp(vgname, cmd->dev_dir,
-				     strlen(cmd->dev_dir)))
+				     strlen(cmd->dev_dir))) {
 				vgname += strlen(cmd->dev_dir);
+				dev_dir_found = 1;
+				while (*vgname == '/')
+					vgname++;
+			}
+			if (*vgname == '/') {
+				log_error("\"%s\": Invalid path for Logical "
+					  "Volume", lv_name);
+				if (ret_max < ECMD_FAILED)
+					ret_max = ECMD_FAILED;
+				continue;
+			}
 			if (strchr(vgname, '/')) {
 				/* Must be an LV */
 				vgname_provided = 0;
@@ -91,6 +109,12 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 						ret_max = ECMD_FAILED;
 					continue;
 				}
+			}
+
+			if (!dev_dir_found &&
+			    (vgname_def = default_vgname(cmd))) {
+				vgname_provided = 0;
+				vgname = vgname_def;
 			}
 
 			log_verbose("Finding volume group \"%s\"", vgname);
@@ -238,13 +262,18 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	struct list *slh, *vgnames;
 	struct volume_group *vg;
 
-	char *vg_name;
+	const char *vg_name;
 	char *dev_dir = cmd->dev_dir;
 
 	if (argc) {
 		log_verbose("Using volume group(s) on command line");
 		for (; opt < argc; opt++) {
 			vg_name = argv[opt];
+			if (*vg_name == '/') {
+				while (*vg_name == '/')
+					vg_name++;
+				vg_name--;
+			}
 			if (!strncmp(vg_name, dev_dir, strlen(dev_dir)))
 				vg_name += strlen(dev_dir);
 			if (strchr(vg_name, '/')) {
@@ -378,16 +407,34 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 	const char *vg_name = lv_name;
 	char *st;
 	char *dev_dir = cmd->dev_dir;
+	int dev_dir_provided = 0;
 
 	/* Path supplied? */
 	if (vg_name && strchr(vg_name, '/')) {
 		/* Strip dev_dir (optional) */
-		if (!strncmp(vg_name, dev_dir, strlen(dev_dir)))
+		if (*vg_name == '/') {
+			while (*vg_name == '/')
+				vg_name++;
+			vg_name--;
+		}
+		if (!strncmp(vg_name, dev_dir, strlen(dev_dir))) {
 			vg_name += strlen(dev_dir);
+			dev_dir_provided = 1;
+			while (*vg_name == '/')
+				vg_name++;
+		}
+		if (*vg_name == '/') {
+			log_error("\"%s\": Invalid path for Logical "
+				  "Volume", lv_name);
+			return 0;
+		}
+	
+		/* Require exactly one set of consecutive slashes */
+		if ((st = strchr(vg_name, '/')))
+			while (*st == '/')
+				st++;
 
-		/* Require exactly one slash */
-		/* FIXME But allow for consecutive slashes */
-		if (!(st = strchr(vg_name, '/')) || (strchr(st + 1, '/'))) {
+		if (!strchr(vg_name, '/') || strchr(st, '/')) {
 			log_error("\"%s\": Invalid path for Logical Volume",
 				  lv_name);
 			return 0;
@@ -424,6 +471,11 @@ char *default_vgname(struct cmd_context *cmd)
 		return 0;
 
 	/* Strip dev_dir (optional) */
+	if (*vg_path == '/') {
+		while (*vg_path == '/')
+			vg_path++;
+		vg_path--;
+	}
 	if (!strncmp(vg_path, dev_dir, strlen(dev_dir)))
 		vg_path += strlen(dev_dir);
 

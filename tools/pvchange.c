@@ -122,7 +122,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
-		if (!vg_write(vg)) {
+		if (!vg_write(vg) || !vg_commit(vg)) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);

@@ -48,7 +48,8 @@ enum {
 	READWRITE = 3,
 	SUSPENDED = 4,
 	NOPROPAGATE = 5,
-	TOPLEVEL = 6
+	TOPLEVEL = 6,
+	REMOVE = 7
 };
 
 enum {
@@ -86,6 +87,9 @@ struct dev_layer {
 	 * Reloads get propagated to this list.  Holds str_lists.
 	 */
 	struct list pre_create;
+
+	/* Inverse of pre_create */
+	struct list pre_suspend;
 
 };
 
@@ -149,7 +153,7 @@ static inline void _clear_flag(struct dev_layer *dl, int bit)
 	dl->flags &= ~(1 << bit);
 }
 
-static int _pre_list_add(struct pool *mem, struct list *pl, char *str)
+static int _pre_list_add(struct pool *mem, struct list *pl, const char *str)
 {
 	struct str_list *sl;
 	struct list *plh;
@@ -159,7 +163,10 @@ static int _pre_list_add(struct pool *mem, struct list *pl, char *str)
 		return 0;
 	}
 
+	/* Already in list? */
 	list_iterate(plh, pl) {
+		if (!strcmp(str, list_item(plh, struct str_list)->str))
+			return 1;
 	}
 
 	if (!(sl = pool_alloc(mem, sizeof(*sl)))) {
@@ -633,14 +640,29 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 			log_very_verbose("Activating %s read-only", dl->name);
 	}
 
-	if (!(r = dm_task_run(dmt)))
+	if (!(r = dm_task_run(dmt))) {
 		log_error("Couldn't load device '%s'.", dl->name);
+		if ((dl->lv->minor >= 0 || dl->lv->major >= 0) &&
+		    _get_flag(dl, VISIBLE))
+			log_error("Perhaps the persistent device number "
+				  "%d:%d is already in use?",
+				  dl->lv->major, dl->lv->minor);
+	}
 
 	if (!dm_task_get_info(dmt, &dl->info)) {
 		stack;
 		r = 0;
 		goto out;
 	}
+
+	if (!dl->info.exists || !dl->info.live_table) {
+		stack;
+		r = 0;
+		goto out;
+	}
+
+	log_very_verbose("Activated %s %s %03u:%03u", dl->name,
+			 dl->dlid, dl->info.major, dl->info.minor);
 
 	if (r && _get_flag(dl, VISIBLE))
 		fs_add_lv(dl->lv, dl->name);
@@ -753,6 +775,8 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 	const char *target = NULL;
 	const char *trailing_space;
 	int mirror_status;
+	struct dev_layer *dl;
+	char devbuf[10];
 
 	switch (seg->type) {
 	case SEG_SNAPSHOT:
@@ -819,15 +843,23 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 					  (seg->area[s].u.pv.pv->pe_start +
 					   (esize * seg->area[s].u.pv.pe)),
 					  trailing_space);
-		else
+		else {
+			if (!(dl = hash_lookup(dm->layers,
+					       seg->area[s].u.lv.lv->lvid.s))) {
+				log_error("device layer %s missing from hash",
+					  seg->area[s].u.lv.lv->lvid.s);
+				return 0;
+			}
+			if (!dm_format_dev(devbuf, sizeof(devbuf), dl->info.major, dl->info.minor)) {
+				log_error("Failed to format device number as dm target (%u,%u)",
+					  dl->info.major, dl->info.minor);
+				return 0;
+			}
 			tw = lvm_snprintf(params + w, sizeof(params) - w,
-					  "%s/%s %" PRIu64 "%s", dm_dir(),
-					  _build_name(dm->mem,
-						      seg->lv->vg->name,
-						      seg->area[s].u.lv.lv->
-						      name, NULL),
+					  "%s %" PRIu64 "%s", devbuf,
 					  esize * seg->area[s].u.lv.le,
 					  trailing_space);
+		}
 
 		if (tw < 0)
 			goto error;
@@ -874,13 +906,20 @@ static int _populate_origin(struct dev_manager *dm,
 {
 	char *real;
 	char params[PATH_MAX + 32];
+	struct dev_layer *dlr;
 
-	if (!(real = _build_name(dm->mem, dm->vg_name, dl->lv->name, "real"))) {
+	if (!(real = _build_dlid(dm->mem, dl->lv->lvid.s, "real"))) {
 		stack;
 		return 0;
 	}
 
-	if (lvm_snprintf(params, sizeof(params), "%s/%s", dm_dir(), real) == -1) {
+	if (!(dlr = hash_lookup(dm->layers, real))) {
+		log_error("Couldn't find real device layer %s in hash", real);
+		return 0;
+	}
+
+	if (!dm_format_dev(params, sizeof(params), dlr->info.major,
+			   dlr->info.minor)) {
 		log_error("Couldn't create origin device parameters for '%s'.",
 			  real);
 		return 0;
@@ -903,25 +942,37 @@ static int _populate_snapshot(struct dev_manager *dm,
 	char *origin, *cow;
 	char params[PATH_MAX * 2 + 32];
 	struct snapshot *s;
+	struct dev_layer *dlo, *dlc;
 
 	if (!(s = find_cow(dl->lv))) {
 		log_error("Couldn't find snapshot for '%s'.", dl->lv->name);
 		return 0;
 	}
 
-	if (!(origin = _build_name(dm->mem, dm->vg_name,
-				   s->origin->name, "real"))) {
+	if (!(origin = _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
 		stack;
 		return 0;
 	}
 
-	if (!(cow = _build_name(dm->mem, dm->vg_name, s->cow->name, "cow"))) {
+	if (!(cow = _build_dlid(dm->mem, s->cow->lvid.s, "cow"))) {
 		stack;
 		return 0;
 	}
 
-	if (snprintf(params, sizeof(params), "%s/%s %s/%s P %d",
-		     dm_dir(), origin, dm_dir(), cow, s->chunk_size) == -1) {
+	if (!(dlo = hash_lookup(dm->layers, origin))) {
+		log_error("Couldn't find origin device layer %s in hash",
+			  origin);
+		return 0;
+	}
+
+	if (!(dlc = hash_lookup(dm->layers, cow))) {
+		log_error("Couldn't find cow device layer %s in hash", cow);
+		return 0;
+	}
+
+	if (snprintf(params, sizeof(params), "%03u:%03u %03u:%03u P %d",
+		     dlo->info.major, dlo->info.minor,
+		     dlc->info.major, dlc->info.minor, s->chunk_size) == -1) {
 		stack;
 		return 0;
 	}
@@ -1108,6 +1159,7 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 		dl->dlid = dlid;
 
 	list_init(&dl->pre_create);
+	list_init(&dl->pre_suspend);
 
 	if (!hash_insert(dm->layers, dl->dlid, dl)) {
 		stack;
@@ -1172,12 +1224,13 @@ static struct dev_layer *_lookup(struct dev_manager *dm,
 	return dl;
 }
 
-static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv)
+static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
+			   int was_origin)
 {
 	/*
 	 * only one layer.
 	 */
-	struct dev_layer *dl;
+	struct dev_layer *dl, *dlr;
 	struct list *segh;
 	struct lv_segment *seg;
 	uint32_t s;
@@ -1205,13 +1258,34 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv)
 				continue;
 			if (!_pre_list_add(dm->mem, &dl->pre_create,
 					   _build_dlid(dm->mem,
-						       seg->area[s].u.lv.lv->
-						       lvid.s, NULL))) {
+						       seg->area[s].u.lv.
+						       lv->lvid.s, NULL))) {
 				stack;
 				return 0;
 			}
 			_set_flag(dl, NOPROPAGATE);
 		}
+	}
+
+	if (!was_origin)
+		return 1;
+
+	/* Deactivating the last snapshot */
+	if (!(dlr = _create_layer(dm, "real", lv))) {
+		stack;
+		return 0;
+	}
+
+	dlr->populate = _populate_vanilla;
+	_clear_flag(dlr, VISIBLE);
+	_clear_flag(dlr, TOPLEVEL);
+	_set_flag(dlr, REMOVE);
+	
+	/* add the dependency on the real device */
+	if (!_pre_list_add(dm->mem, &dl->pre_create,
+			   pool_strdup(dm->mem, dlr->dlid))) {
+		stack;
+		return 0;
 	}
 
 	return 1;
@@ -1259,7 +1333,7 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 
 	/*
 	 * We only need to create an origin layer if one of our
-	 * snapshots is in the active list.
+	 * snapshots is in the active list
 	 */
 	list_iterate(sh, &dm->active_list) {
 		active = list_item(sh, struct lv_list)->lv;
@@ -1267,7 +1341,10 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 			return _expand_origin_real(dm, lv);
 	}
 
-	return _expand_vanilla(dm, lv);
+	/*
+	 * We're deactivating the last snapshot
+	 */
+	return _expand_vanilla(dm, lv, 1);
 }
 
 static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
@@ -1298,16 +1375,22 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	_set_flag(dl, VISIBLE);
 	_set_flag(dl, TOPLEVEL);
 
-	/* add the dependency on the real device */
+	/* add the dependency on the cow device */
 	if (!_pre_list_add(dm->mem, &dl->pre_create,
 			   pool_strdup(dm->mem, cow_dlid))) {
 		stack;
 		return 0;
 	}
 
-	/* add the dependency on the org device */
+	/* add the dependency on the real origin device */
 	if (!_pre_list_add(dm->mem, &dl->pre_create,
 			   _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
+		stack;
+		return 0;
+	}
+
+	/* add the dependency on the visible origin device */
+	if (!_pre_list_add(dm->mem, &dl->pre_suspend, s->origin->lvid.s)) {
 		stack;
 		return 0;
 	}
@@ -1331,7 +1414,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 	else if (lv_is_origin(lv))
 		return _expand_origin(dm, lv);
 
-	return _expand_vanilla(dm, lv);
+	return _expand_vanilla(dm, lv, 0);
 }
 
 /*
@@ -1355,7 +1438,7 @@ static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
 			      int flag)
 {
 	struct list *sh;
-	char *dlid;
+	const char *dlid;
 	struct dev_layer *dep;
 
 	list_iterate(sh, &dl->pre_create) {
@@ -1432,25 +1515,89 @@ static int _mark_lvs(struct dev_manager *dm, struct list *lvs, int flag)
 	return 1;
 }
 
-static inline int _suspend_parent(struct dev_layer *parent)
+static int _suspend_parents(struct dev_manager *dm, struct dev_layer *dl)
 {
-	return (!parent || !parent->info.exists || _suspend(parent));
+	struct list *sh;
+	struct dev_layer *dep;
+	const char *dlid;
+
+	list_iterate(sh, &dl->pre_suspend) {
+		dlid = list_item(sh, struct str_list)->str;
+
+		if (!(dep = hash_lookup(dm->layers, dlid))) {
+			log_debug("_suspend_parents couldn't find device "
+				  "layer '%s' - skipping.", dlid);
+			continue;
+		}
+
+		if (!strcmp(dep->dlid, dl->dlid)) {
+			log_error("BUG: pre-suspend loop detected (%s)", dlid);
+			return 0;
+		}
+
+		if (!_suspend_parents(dm, dep)) {
+			stack;
+			return 0;
+		}
+
+		if (dep->info.exists & !_suspend(dep)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _resume_with_deps(struct dev_manager *dm, struct dev_layer *dl)
+{
+	struct list *sh;
+	struct dev_layer *dep;
+	const char *dlid;
+
+	list_iterate(sh, &dl->pre_create) {
+		dlid = list_item(sh, struct str_list)->str;
+
+		if (!(dep = hash_lookup(dm->layers, dlid))) {
+			log_debug("_resume_with_deps couldn't find device "
+				  "layer '%s' - skipping.", dlid);
+			continue;
+		}
+
+		if (!strcmp(dep->dlid, dl->dlid)) {
+			log_error("BUG: pre-create loop detected (%s)", dlid);
+			return 0;
+		}
+
+		if (!_resume_with_deps(dm, dep)) {
+			stack;
+			return 0;
+		}
+	}
+
+	if (dl->info.exists & !_get_flag(dl, SUSPENDED) &&
+	    !_resume(dl)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }
 
 /*
  * Recurses through the tree, ensuring that devices are created
  * in correct order.
  */
-static int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
-		       struct dev_layer *parent)
+static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 {
 	struct list *sh;
 	struct dev_layer *dep;
-	char *dlid, *newname, *suffix;
+	const char *dlid;
+	char *newname, *suffix;
 
-	/* FIXME Create and use a _suspend_parents() function instead */
 	/* Suspend? */
-	if (_get_flag(dl, SUSPENDED) && (!_suspend_parent || !_suspend(dl))) {
+	if (_get_flag(dl, SUSPENDED) &&
+	    (!_suspend_parents(dm, dl) || !_suspend(dl))) {
 		stack;
 		return 0;
 	}
@@ -1463,17 +1610,12 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 			return 0;
 		}
 
-		if (!_suspend_parent(parent)) {
-			stack;
-			return 0;
-		}
-
 		if (!strcmp(dep->dlid, dl->dlid)) {
 			log_error("BUG: pre-create loop detected (%s)", dlid);
 			return 0;
 		}
 
-		if (!_create_rec(dm, dep, dl)) {
+		if (!_create_rec(dm, dep)) {
 			stack;
 			return 0;
 		}
@@ -1486,7 +1628,7 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 		newname = _build_name(dm->mem, dm->vg_name, dl->lv->name,
 				      suffix);
 		if (strcmp(newname, dl->name)) {
-			if (!_suspend_parent(parent) ||
+			if (!_suspend_parents(dm, dl) ||
 			    !_suspend(dl) || !_rename(dl, newname)) {
 				stack;
 				return 0;
@@ -1496,7 +1638,7 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 
 	/* Create? */
 	if (!dl->info.exists) {
-		if (!_suspend_parent(parent) ||
+		if (!_suspend_parents(dm, dl) ||
 		    !_load(dm, dl, DM_DEVICE_CREATE)) {
 			stack;
 			return 0;
@@ -1506,20 +1648,15 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 
 	/* Reload? */
 	if (_get_flag(dl, RELOAD) &&
-	    (!_suspend_parent(parent) || !_suspend(dl) ||
+	    (!_suspend_parents(dm, dl) || !_suspend(dl) ||
 	     !_load(dm, dl, DM_DEVICE_RELOAD))) {
-		stack;
-		return 0;
-	}
-
-	/* Resume? */
-	if (!_get_flag(dl, SUSPENDED) && (!_suspend_parent || !_resume(dl))) {
 		stack;
 		return 0;
 	}
 
 	return 1;
 }
+
 
 static int _build_all_layers(struct dev_manager *dm, struct volume_group *vg)
 {
@@ -1549,6 +1686,9 @@ static int _fill_in_remove_list(struct dev_manager *dm)
 	hash_iterate(hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
 
+		if (_get_flag(dl, REMOVE))
+			_clear_flag(dl, ACTIVE);
+
 		if (!_get_flag(dl, ACTIVE)) {
 			dll = pool_alloc(dm->mem, sizeof(*dll));
 			if (!dll) {
@@ -1558,6 +1698,55 @@ static int _fill_in_remove_list(struct dev_manager *dm)
 
 			dll->dl = dl;
 			list_add(&dm->remove_list, &dll->list);
+		}
+	}
+
+	return 1;
+}
+
+static int _populate_pre_suspend_lists(struct dev_manager *dm)
+{
+	struct hash_node *hn;
+	struct dev_layer *dl;
+	struct list *sh;
+	const char *dlid;
+	struct dev_layer *dep;
+
+	hash_iterate(hn, dm->layers) {
+		dl = hash_get_data(dm->layers, hn);
+
+		list_iterate(sh, &dl->pre_suspend) {
+			dlid = list_item(sh, struct str_list)->str;
+
+			if (!(dep = hash_lookup(dm->layers, dlid))) {
+				log_debug("_populate_pre_suspend_lists: "
+					  "Couldn't find device layer '%s' - "
+					  "skipping.", dlid);
+				continue;
+			}
+
+			if (!_pre_list_add(dm->mem, &dep->pre_create,
+					   dl->dlid)) {
+				stack;
+				return 0;
+			}
+		}
+
+		list_iterate(sh, &dl->pre_create) {
+			dlid = list_item(sh, struct str_list)->str;
+
+			if (!(dep = hash_lookup(dm->layers, dlid))) {
+				log_debug("_populate_pre_suspend_lists: "
+					  "Couldn't find device layer '%s' - "
+					  "skipping.", dlid);
+				continue;
+			}
+
+			if (!_pre_list_add(dm->mem, &dep->pre_suspend,
+					   dl->dlid)) {
+				stack;
+				return 0;
+			}
 		}
 	}
 
@@ -1649,6 +1838,11 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
 		return 0;
 	}
 
+	if (!_populate_pre_suspend_lists(dm)) {
+		stack;
+		return 0;
+	}
+
 	/*
 	 * Now only top level devices will be unmarked.
 	 */
@@ -1656,7 +1850,20 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
 		dl = hash_get_data(dm->layers, hn);
 
 		if (_get_flag(dl, ACTIVE) && _get_flag(dl, TOPLEVEL))
-			_create_rec(dm, dl, NULL);
+			if (!_create_rec(dm, dl)) {
+				stack;
+				return 0;
+			}
+	}
+
+	/* Resume devices */
+	hash_iterate(hn, dm->layers) {
+		dl = hash_get_data(dm->layers, hn);
+
+		if (!_resume_with_deps(dm, dl)) {
+			stack;
+			return 0;
+		}
 	}
 
 	if (!_remove_old_layers(dm)) {
@@ -1708,41 +1915,41 @@ static int _add_existing_layer(struct dev_manager *dm, const char *name)
 	return 1;
 }
 
-/* FIXME Get this info directly from the driver not the unreliable fs */
 static int _scan_existing_devices(struct dev_manager *dm)
 {
-	const char *dev_dir = dm_dir();
 
-	int r = 1;
-	const char *name;
-	struct dirent *dirent;
-	DIR *d;
+	int r = 0;
+	struct dm_names *names;
+	unsigned next = 0;
 
-	if (!(d = opendir(dev_dir))) {
-		log_sys_error("opendir", dev_dir);
+	struct dm_task *dmt;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_LIST)))
 		return 0;
-	}
 
-	while ((dirent = readdir(d))) {
-		name = dirent->d_name;
+	if (!dm_task_run(dmt))
+		goto out;
 
-		if (name[0] == '.')
-			continue;
+	if (!(names = dm_task_get_names(dmt)))
+		goto out;
 
-		/*
-		 * Does this layer belong to us ?
-		 */
-		if (_belong_to_vg(dm->vg_name, name) &&
-		    !_add_existing_layer(dm, name)) {
+	r = 1;
+	if (!names->dev)
+		goto out;
+
+	do {
+		names = (void *) names + next;
+		if (_belong_to_vg(dm->vg_name, names->name) &&
+		    !_add_existing_layer(dm, names->name)) {
 			stack;
 			r = 0;
 			break;
 		}
-	}
+		next = names->next;
+	} while (next);
 
-	if (closedir(d))
-		log_sys_error("closedir", dev_dir);
-
+      out:
+	dm_task_destroy(dmt);
 	return r;
 }
 
@@ -1952,4 +2159,9 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 {
 	return _action(dm, lv, SUSPEND);
+}
+
+void dev_manager_exit(void)
+{
+	dm_lib_exit();
 }

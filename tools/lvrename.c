@@ -148,25 +148,37 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-	if (!archive(lv->vg))
+	if (!archive(lv->vg)) {
+		stack;
 		goto error;
-
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD |
-		      LCK_NONBLOCK))
-		goto error;
+	}
 
 	if (!(lv->name = pool_strdup(cmd->mem, lv_name_new))) {
 		log_error("Failed to allocate space for new name");
-		goto lverror;
+		goto error;
 	}
 
 	log_verbose("Writing out updated volume group");
-	if (!vg_write(vg))
-		goto lverror;
-
-	unlock_lv(cmd, lv->lvid.s);
+	if (!vg_write(vg)) {
+		stack;
+		goto error;
+	}
 
 	backup(lv->vg);
+
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD |
+		      LCK_NONBLOCK)) {
+		stack;
+		goto error;
+	}
+
+	if (!vg_commit(vg)) {
+		stack;
+		unlock_lv(cmd, lv->lvid.s);
+		goto error;
+	}
+
+	unlock_lv(cmd, lv->lvid.s);
 
 	unlock_vg(cmd, vg_name);
 
@@ -174,9 +186,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		  lv_name_old, lv_name_new, vg_name);
 
 	return 0;
-
-      lverror:
-	unlock_lv(cmd, lv->lvid.s);
 
       error:
 	unlock_vg(cmd, vg_name);

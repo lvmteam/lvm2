@@ -110,7 +110,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* Store VG on disk(s) */
-	if (!vg_write(vg)) {
+	if (!vg_write(vg) || !vg_commit(vg)) {
 		unlock_vg(cmd, vg_name);
 		unlock_vg(cmd, "");
 		return ECMD_FAILED;

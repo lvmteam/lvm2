@@ -9,6 +9,7 @@
 #include "toolcontext.h"
 #include "lvm-string.h"
 #include "lvm-file.h"
+#include "memlock.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,12 +18,12 @@
 #include <dirent.h>
 #include <libdevmapper.h>
 
-static int _mk_dir(struct volume_group *vg)
+static int _mk_dir(const char *dev_dir, const char *vg_name)
 {
 	char vg_path[PATH_MAX];
 
 	if (lvm_snprintf(vg_path, sizeof(vg_path), "%s%s",
-			 vg->cmd->dev_dir, vg->name) == -1) {
+			 dev_dir, vg_name) == -1) {
 		log_error("Couldn't construct name of volume "
 			  "group directory.");
 		return 0;
@@ -40,12 +41,12 @@ static int _mk_dir(struct volume_group *vg)
 	return 1;
 }
 
-static int _rm_dir(struct volume_group *vg)
+static int _rm_dir(const char *dev_dir, const char *vg_name)
 {
 	char vg_path[PATH_MAX];
 
 	if (lvm_snprintf(vg_path, sizeof(vg_path), "%s%s",
-			 vg->cmd->dev_dir, vg->name) == -1) {
+			 dev_dir, vg_name) == -1) {
 		log_error("Couldn't construct name of volume "
 			  "group directory.");
 		return 0;
@@ -93,37 +94,38 @@ static void _rm_blks(const char *dir)
 	}
 }
 
-static int _mk_link(struct logical_volume *lv, const char *dev)
+static int _mk_link(const char *dev_dir, const char *vg_name,
+		    const char *lv_name, const char *dev)
 {
 	char lv_path[PATH_MAX], link_path[PATH_MAX], lvm1_group_path[PATH_MAX];
 	char vg_path[PATH_MAX];
 	struct stat buf;
 
 	if (lvm_snprintf(vg_path, sizeof(vg_path), "%s%s",
-			 lv->vg->cmd->dev_dir, lv->vg->name) == -1) {
+			 dev_dir, vg_name) == -1) {
 		log_error("Couldn't create path for volume group dir %s",
-			  lv->vg->name);
+			  vg_name);
 		return 0;
 	}
 
 	if (lvm_snprintf(lv_path, sizeof(lv_path), "%s/%s", vg_path,
-			 lv->name) == -1) {
+			 lv_name) == -1) {
 		log_error("Couldn't create source pathname for "
-			  "logical volume link %s", lv->name);
+			  "logical volume link %s", lv_name);
 		return 0;
 	}
 
 	if (lvm_snprintf(link_path, sizeof(link_path), "%s/%s",
 			 dm_dir(), dev) == -1) {
 		log_error("Couldn't create destination pathname for "
-			  "logical volume link for %s", lv->name);
+			  "logical volume link for %s", lv_name);
 		return 0;
 	}
 
 	if (lvm_snprintf(lvm1_group_path, sizeof(lvm1_group_path), "%s/group",
 			 vg_path) == -1) {
 		log_error("Couldn't create pathname for LVM1 group file for %s",
-			  lv->vg->name);
+			  vg_name);
 		return 0;
 	}
 
@@ -167,13 +169,14 @@ static int _mk_link(struct logical_volume *lv, const char *dev)
 	return 1;
 }
 
-static int _rm_link(struct logical_volume *lv, const char *lv_name)
+static int _rm_link(const char *dev_dir, const char *vg_name,
+		    const char *lv_name)
 {
 	struct stat buf;
 	char lv_path[PATH_MAX];
 
 	if (lvm_snprintf(lv_path, sizeof(lv_path), "%s%s/%s",
-			 lv->vg->cmd->dev_dir, lv->vg->name, lv_name) == -1) {
+			 dev_dir, vg_name, lv_name) == -1) {
 		log_error("Couldn't determine link pathname.");
 		return 0;
 	}
@@ -192,35 +195,143 @@ static int _rm_link(struct logical_volume *lv, const char *lv_name)
 	return 1;
 }
 
-int fs_add_lv(struct logical_volume *lv, const char *dev)
+typedef enum {
+	FS_ADD,
+	FS_DEL,
+	FS_RENAME
+} fs_op_t;
+
+static int _do_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
+		     const char *lv_name, const char *dev,
+		     const char *old_lv_name)
 {
-	if (!_mk_dir(lv->vg) || !_mk_link(lv, dev)) {
-		stack;
-		return 0;
+	switch (type) {
+	case FS_ADD:
+		if (!_mk_dir(dev_dir, vg_name) ||
+		    !_mk_link(dev_dir, vg_name, lv_name, dev)) {
+			stack;
+			return 0;
+		}
+		break;
+	case FS_DEL:
+		if (!_rm_link(dev_dir, vg_name, lv_name) ||
+		    !_rm_dir(dev_dir, vg_name)) {
+			stack;
+			return 0;
+		}
+		break;
+		/* FIXME Use rename() */
+	case FS_RENAME:
+		if (old_lv_name && !_rm_link(dev_dir, vg_name, old_lv_name))
+			stack;
+
+		if (!_mk_link(dev_dir, vg_name, lv_name, dev))
+			stack;
 	}
 
 	return 1;
+}
+
+static LIST_INIT(_fs_ops);
+
+struct fs_op_parms {
+	struct list list;
+	fs_op_t type;
+	char *dev_dir;
+	char *vg_name;
+	char *lv_name;
+	char *dev;
+	char *old_lv_name;
+	char names[0];
+};
+
+static void _store_str(char **pos, char **ptr, const char *str)
+{
+	strcpy(*pos, str);
+	*ptr = *pos;
+	*pos += strlen(*ptr) + 1;
+}
+
+static int _stack_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
+			const char *lv_name, const char *dev,
+			const char *old_lv_name)
+{
+	struct fs_op_parms *fsp;
+	size_t len = strlen(dev_dir) + strlen(vg_name) + strlen(lv_name) +
+	    strlen(dev) + strlen(old_lv_name) + 5;
+	char *pos;
+
+	if (!(fsp = dbg_malloc(sizeof(*fsp) + len))) {
+		log_error("No space to stack fs operation");
+		return 0;
+	}
+
+	pos = fsp->names;
+	fsp->type = type;
+
+	_store_str(&pos, &fsp->dev_dir, dev_dir);
+	_store_str(&pos, &fsp->vg_name, vg_name);
+	_store_str(&pos, &fsp->lv_name, lv_name);
+	_store_str(&pos, &fsp->dev, dev);
+	_store_str(&pos, &fsp->old_lv_name, old_lv_name);
+
+	list_add(&_fs_ops, &fsp->list);
+
+	return 1;
+}
+
+static void _pop_fs_ops(void)
+{
+	struct list *fsph, *fspht;
+	struct fs_op_parms *fsp;
+
+	list_iterate_safe(fsph, fspht, &_fs_ops) {
+		fsp = list_item(fsph, struct fs_op_parms);
+		_do_fs_op(fsp->type, fsp->dev_dir, fsp->vg_name, fsp->lv_name,
+			  fsp->dev, fsp->old_lv_name);
+		list_del(&fsp->list);
+		dbg_free(fsp);
+	}
+}
+
+static int _fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
+		  const char *lv_name, const char *dev, const char *old_lv_name)
+{
+	if (memlock()) {
+		if (!_stack_fs_op(type, dev_dir, vg_name, lv_name, dev,
+				  old_lv_name)) {
+			stack;
+			return 0;
+		}
+		return 1;
+	}
+
+	return _do_fs_op(type, dev_dir, vg_name, lv_name, dev, old_lv_name);
+}
+
+int fs_add_lv(struct logical_volume *lv, const char *dev)
+{
+	return _fs_op(FS_ADD, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
+		      dev, "");
 }
 
 int fs_del_lv(struct logical_volume *lv)
 {
-	if (!_rm_link(lv, lv->name) || !_rm_dir(lv->vg)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
+	return _fs_op(FS_DEL, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
+		      "", "");
 }
 
-/* FIXME Use rename() */
 int fs_rename_lv(struct logical_volume *lv,
 		 const char *dev, const char *old_name)
 {
-	if (old_name && !_rm_link(lv, old_name))
-		stack;
+	return _fs_op(FS_RENAME, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
+		      dev, old_name);
+}
 
-	if (!_mk_link(lv, dev))
-		stack;
-
-	return 1;
+void fs_unlock(void)
+{
+	if (!memlock()) {
+		dm_lib_release();
+		_pop_fs_ops();
+	}
 }

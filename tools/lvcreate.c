@@ -187,7 +187,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 		log_print("Using default stripesize %dKB", lp->stripe_size / 2);
 	}
 
-	if (argc && argc < lp->stripes) {
+	if (argc && (unsigned) argc < lp->stripes) {
 		log_error("Too few physical volumes on "
 			  "command line for %d-way striping", lp->stripes);
 		return 0;
@@ -324,7 +324,7 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!(dev_open(dev, O_WRONLY)))
+	if (!dev_open_quiet(dev))
 		return 0;
 
 	dev_zero(dev, UINT64_C(0), (size_t) 4096);
@@ -458,13 +458,22 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg))
+	if (!vg_write(vg)) {
+		stack;
 		return 0;
+	}
+
+	backup(vg);
+
+	if (!vg_commit(vg)) {
+		stack;
+		return 0;
+	}
 
 	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE)) {
 		if (lp->snapshot)
 			/* FIXME Remove the failed lv we just added */
-			log_error("Aborting. Failed to wipe snapshot "
+			log_error("Aborting. Failed to activate snapshot "
 				  "exception store. Remove new LV and retry.");
 		else
 			log_error("Failed to activate new LV.");
@@ -489,6 +498,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			return 0;
 		}
 
+		/* FIXME write/commit/backup sequence issue */
 		if (!lock_vol(cmd, org->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
 			log_error("Failed to lock origin %s", org->name);
 			return 0;
@@ -500,7 +510,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		}
 
 		/* store vg on disk(s) */
-		if (!vg_write(vg))
+		if (!vg_write(vg) || !vg_commit(vg))
 			return 0;
 
 		if (!unlock_lv(cmd, org->lvid.s)) {
@@ -508,7 +518,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			return 0;
 		}
 	}
-
+	/* FIXME out of sequence */
 	backup(vg);
 
 	log_print("Logical volume \"%s\" created", lv->name);

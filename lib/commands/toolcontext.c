@@ -20,6 +20,7 @@
 #include "lvm-file.h"
 #include "format-text.h"
 #include "display.h"
+#include "memlock.h"
 
 #ifdef HAVE_LIBDL
 #include "sharedlib.h"
@@ -33,6 +34,10 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include <time.h>
+
+#ifdef linux
+#  include <malloc.h>
+#endif
 
 static FILE *_log;
 
@@ -55,7 +60,7 @@ static int _get_env_vars(struct cmd_context *cmd)
 
 static void _init_logging(struct cmd_context *cmd)
 {
-	const char *open_mode = "a";
+	int append = 1;
 	time_t t;
 
 	const char *log_file;
@@ -100,16 +105,18 @@ static void _init_logging(struct cmd_context *cmd)
 	/* Settings for logging to file */
 	if (find_config_int(cmd->cf->root, "log/overwrite", '/',
 			    DEFAULT_OVERWRITE))
-		open_mode = "w";
+		append = 0;
 
 	log_file = find_config_str(cmd->cf->root, "log/file", '/', 0);
-	if (log_file) {
-		/* set up the logging */
-		if (!(_log = fopen(log_file, open_mode)))
-			log_error("Couldn't open log file %s", log_file);
-		else
-			init_log(_log);
-	}
+	if (log_file)
+		init_log_file(log_file, append);
+
+	log_file = find_config_str(cmd->cf->root, "log/activate_file", '/', 0);
+	if (log_file)
+		init_log_direct(log_file, append);
+
+	init_log_while_suspended(find_config_int(cmd->cf->root,
+						 "log/activation", '/', 0));
 
 	t = time(NULL);
 	log_verbose("Logging initialised at %s", ctime(&t));
@@ -285,7 +292,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 static int _init_filters(struct cmd_context *cmd)
 {
-	const char *lvm_cache;
+	const char *dev_cache;
 	struct dev_filter *f3, *f4;
 	struct stat st;
 	char cache_file[PATH_MAX];
@@ -302,9 +309,9 @@ static int _init_filters(struct cmd_context *cmd)
 		return 0;
 	}
 
-	lvm_cache =
+	dev_cache =
 	    find_config_str(cmd->cf->root, "devices/cache", '/', cache_file);
-	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
+	if (!(f4 = persistent_filter_create(f3, dev_cache))) {
 		log_error("Failed to create persistent device filter");
 		return 0;
 	}
@@ -316,11 +323,11 @@ static int _init_filters(struct cmd_context *cmd)
 	if (!*cmd->sys_dir)
 		cmd->dump_filter = 0;
 
-	if (!stat(lvm_cache, &st) &&
+	if (!stat(dev_cache, &st) &&
 	    (st.st_mtime > config_file_timestamp(cmd->cf)) &&
 	    !persistent_filter_load(f4))
 		log_verbose("Failed to load existing device cache from %s",
-			    lvm_cache);
+			    dev_cache);
 
 	cmd->filter = f4;
 
@@ -411,6 +418,10 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 {
 	struct cmd_context *cmd;
 
+#ifdef M_MMAP_MAX
+	mallopt(M_MMAP_MAX, 0);
+#endif
+
 	if (!setlocale(LC_ALL, ""))
 		log_error("setlocale failed");
 
@@ -452,6 +463,8 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 		return 0;
 	}
 
+	memlock_init(cmd);
+
 	if (!_init_formats(cmd))
 		goto error;
 
@@ -487,7 +500,8 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	if (cmd->dump_filter)
 		persistent_filter_dump(cmd->filter);
 
-	cache_destroy();
+	activation_exit();
+	lvmcache_destroy();
 	label_exit();
 	_destroy_formats(&cmd->formats);
 	cmd->filter->destroy(cmd->filter);
@@ -496,6 +510,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	destroy_config_tree(cmd->cf);
 	dbg_free(cmd);
 
+	release_log_memory();
 	dump_memory();
 	fin_log();
 	fin_syslog();

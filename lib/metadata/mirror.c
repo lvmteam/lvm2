@@ -68,7 +68,6 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	return 1;
 }
 
-/* Remove a temporary mirror */
 int remove_pvmove_mirrors(struct volume_group *vg,
 			  struct logical_volume *lv_mirr)
 {
@@ -226,6 +225,7 @@ struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			}
 		}
 	      next_lv:
+		;
 	}
 
 	return lvs;

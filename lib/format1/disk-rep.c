@@ -9,7 +9,7 @@
 #include "pool.h"
 #include "xlate.h"
 #include "filter.h"
-#include "cache.h"
+#include "lvmcache.h"
 
 #include <fcntl.h>
 
@@ -130,7 +130,7 @@ static int _munge_formats(struct pv_disk *pvd)
 
 static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 {
-	if (dev_read(dev, UINT64_C(0), sizeof(*pvd), pvd) != sizeof(*pvd)) {
+	if (!dev_read(dev, UINT64_C(0), sizeof(*pvd), pvd)) {
 		log_very_verbose("Failed to read PV data from %s",
 				 dev_name(dev));
 		return 0;
@@ -155,7 +155,7 @@ static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 
 static int _read_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 {
-	if (dev_read(dev, pos, sizeof(*disk), disk) != sizeof(*disk))
+	if (!dev_read(dev, pos, sizeof(*disk), disk))
 		fail;
 
 	_xlate_lvd(disk);
@@ -167,7 +167,7 @@ static int _read_vgd(struct disk_list *data)
 {
 	struct vg_disk *vgd = &data->vgd;
 	uint64_t pos = data->pvd.vg_on_disk.base;
-	if (dev_read(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
+	if (!dev_read(data->dev, pos, sizeof(*vgd), vgd))
 		fail;
 
 	_xlate_vgd(vgd);
@@ -184,8 +184,7 @@ static int _read_uuids(struct disk_list *data)
 	uint64_t end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
 	while (pos < end && num_read < data->vgd.pv_cur) {
-		if (dev_read(data->dev, pos, sizeof(buffer), buffer) !=
-		    sizeof(buffer))
+		if (!dev_read(data->dev, pos, sizeof(buffer), buffer))
 			fail;
 
 		if (!(ul = pool_alloc(data->mem, sizeof(*ul))))
@@ -244,7 +243,7 @@ static int _read_extents(struct disk_list *data)
 	if (!extents)
 		fail;
 
-	if (dev_read(data->dev, pos, len, extents) != len)
+	if (!dev_read(data->dev, pos, len, extents))
 		fail;
 
 	_xlate_extents(extents, data->pvd.pe_total);
@@ -279,7 +278,7 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 {
 	struct disk_list *dl = pool_alloc(mem, sizeof(*dl));
 	const char *name = dev_name(dev);
-	struct cache_info *info;
+	struct lvmcache_info *info;
 
 	if (!dl) {
 		stack;
@@ -296,8 +295,8 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 		goto bad;
 	}
 
-	if (!(info = cache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
-			       dl->pvd.vg_name, NULL)))
+	if (!(info = lvmcache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
+				  dl->pvd.vg_name, NULL)))
 		stack;
 	else {
 		info->device_size = xlate32(dl->pvd.pv_size) << SECTOR_SHIFT;
@@ -365,7 +364,7 @@ struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 {
 	struct disk_list *r;
 
-	if (!dev_open(dev, O_RDONLY)) {
+	if (!dev_open(dev)) {
 		stack;
 		return NULL;
 	}
@@ -415,13 +414,13 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 	struct device *dev;
 	struct disk_list *data = NULL;
 	struct list *vgih;
-	struct cache_vginfo *vginfo;
+	struct lvmcache_vginfo *vginfo;
 
 	/* Fast path if we already saw this VG and cached the list of PVs */
 	if (vg_name && (vginfo = vginfo_from_vgname(vg_name)) &&
 	    vginfo->infos.n) {
 		list_iterate(vgih, &vginfo->infos) {
-			dev = list_item(vgih, struct cache_info)->dev;
+			dev = list_item(vgih, struct lvmcache_info)->dev;
 			if (dev && !(data = read_disk(fmt, dev, mem, vg_name)))
 				break;
 			_add_pv_to_list(head, data);
@@ -463,7 +462,7 @@ static int _write_vgd(struct disk_list *data)
 	uint64_t pos = data->pvd.vg_on_disk.base;
 
 	_xlate_vgd(vgd);
-	if (dev_write(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
+	if (!dev_write(data->dev, pos, sizeof(*vgd), vgd))
 		fail;
 
 	_xlate_vgd(vgd);
@@ -486,7 +485,7 @@ static int _write_uuids(struct disk_list *data)
 		}
 
 		ul = list_item(uh, struct uuid_list);
-		if (dev_write(data->dev, pos, NAME_LEN, ul->uuid) != NAME_LEN)
+		if (!dev_write(data->dev, pos, NAME_LEN, ul->uuid))
 			fail;
 
 		pos += NAME_LEN;
@@ -498,7 +497,7 @@ static int _write_uuids(struct disk_list *data)
 static int _write_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 {
 	_xlate_lvd(disk);
-	if (dev_write(dev, pos, sizeof(*disk), disk) != sizeof(*disk))
+	if (!dev_write(dev, pos, sizeof(*disk), disk))
 		fail;
 
 	_xlate_lvd(disk);
@@ -542,7 +541,7 @@ static int _write_extents(struct disk_list *data)
 	uint64_t pos = data->pvd.pe_on_disk.base;
 
 	_xlate_extents(extents, data->pvd.pe_total);
-	if (dev_write(data->dev, pos, len, extents) != len)
+	if (!dev_write(data->dev, pos, len, extents))
 		fail;
 
 	_xlate_extents(extents, data->pvd.pe_total);
@@ -574,7 +573,7 @@ static int _write_pvd(struct disk_list *data)
 	memcpy(buf, &data->pvd, sizeof(struct pv_disk));
 
 	_xlate_pvd((struct pv_disk *) buf);
-	if (dev_write(data->dev, pos, size, buf) != size) {
+	if (!dev_write(data->dev, pos, size, buf)) {
 		dbg_free(buf);
 		fail;
 	}
@@ -640,7 +639,7 @@ static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data)
 {
 	int r;
 
-	if (!dev_open(data->dev, O_WRONLY)) {
+	if (!dev_open(data->dev)) {
 		stack;
 		return 0;
 	}

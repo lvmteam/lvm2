@@ -17,7 +17,7 @@
 
 struct str_list {
 	struct list list;
-	char *str;
+	const char *str;
 };
 
 #endif

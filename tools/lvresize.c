@@ -24,6 +24,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
+	struct snapshot *snap;
 	struct lvinfo info;
 	uint32_t extents = 0;
 	uint32_t size = 0;
@@ -34,7 +35,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	sign_t sign = SIGN_NONE;
 	char *lv_name;
 	const char *vg_name;
-	char *st;
+	char *st, *lock_lvid;
 	const char *cmd_name;
 	struct list *pvh, *segh;
 	struct lv_list *lvl;
@@ -368,21 +369,33 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			goto error;
 	}
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
-		log_error("Can't get lock for %s", lv_name);
-		goto error;
-	}
-
 	/* store vg on disk(s) */
 	if (!vg_write(vg)) {
-		/* FIXME: Attempt reversion? */
-		unlock_lv(cmd, lv->lvid.s);
+		stack;
 		goto error;
 	}
 
 	backup(vg);
 
-	if (!unlock_lv(cmd, lv->lvid.s)) {
+	/* If snapshot, must suspend all associated devices */
+	if ((snap = find_cow(lv)))
+		lock_lvid = snap->origin->lvid.s;
+	else
+		lock_lvid = lv->lvid.s;
+
+	if (!lock_vol(cmd, lock_lvid, LCK_LV_SUSPEND | LCK_HOLD)) {
+		log_error("Can't get lock for %s", lv_name);
+		vg_revert(vg);
+		goto error;
+	}
+
+	if (!vg_commit(vg)) {
+		stack;
+		unlock_lv(cmd, lock_lvid);
+		goto error;
+	}
+
+	if (!unlock_lv(cmd, lock_lvid)) {
 		log_error("Problem reactivating %s", lv_name);
 		goto error;
 	}
