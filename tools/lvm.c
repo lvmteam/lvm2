@@ -27,6 +27,7 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "stub.h"
 #include "vgcache.h"
@@ -63,6 +64,16 @@ static int _dump_filter;
 static int _interactive;
 static FILE *_log;
 static int _debug_level;
+
+/*
+ * The lvm_system_dir contains:
+ *
+ * o  The lvm configuration (lvm.conf)
+ * o  The persistent filter cache (.cache)
+ * o  Volume group backups (backups)
+ *
+ */
+static char _system_dir[PATH_MAX] = "/etc/lvm";
 
 /* static functions */
 static void register_commands(void);
@@ -536,7 +547,7 @@ int help(int argc, char **argv)
 	return 0;
 }
 
-static void display_help()
+static void display_help(void)
 {
 	int i;
 
@@ -702,14 +713,22 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 	const char *lvm_cache;
 	struct dev_filter *f3, *f4;
 	struct stat st;
+	char cache_file[PATH_MAX];
 
 	_dump_filter = 0;
 
 	if (!(f3 = filter_components_setup(cmd->cf)))
 		return 0;
 
+	if (snprintf(cache_file, sizeof(cache_file),
+		     "%s/.cache", _system_dir) < 0) {
+		log_err("Persistent cache filename too long ('%s/.cache').",
+			_system_dir);
+		return 0;
+	}
+
 	lvm_cache = find_config_str(cf->root, "devices/cache", '/',
-				    "/etc/lvm/.cache");
+				    cache_file);
 
 	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
 		log_error("Failed to create persistent device filter");
@@ -727,15 +746,32 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 	return f4;
 }
 
+static int _get_env_vars(void)
+{
+	const char *e;
+
+	if ((e = getenv("LVM_SYSTEM_DIR"))) {
+		if (snprintf(_system_dir, sizeof(_system_dir), "%s", e) < 0) {
+			log_err("LVM_SYSTEM_DIR environment variable "
+				"is too long.");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 static int init(void)
 {
-	int ret = 0;
-	const char *e = getenv("LVM_CONFIG_FILE");
 	struct stat info;
+	char config_file[PATH_MAX];
+
+	if (!_get_env_vars())
+		return 0;
 
 	if (!(cmd = dbg_malloc(sizeof(*cmd)))) {
 		log_error("Failed to allocate command context");
-		goto out;
+		return 0;
 	}
 
 	/* FIXME: Override from config file. (Append trailing slash if reqd) */
@@ -744,7 +780,7 @@ static int init(void)
 
 	if (!(cmd->cf = create_config_file())) {
 		stack;
-		goto out;
+		return 0;
 	}
 
 	/* Use LOG_USER for syslog messages by default */
@@ -753,12 +789,18 @@ static int init(void)
 	/* send log messages to stderr for now */
 	init_log(stderr);
 
-	e = e ? e : "/etc/lvm/lvm.conf";
-	if (stat(e, &info) != -1) {
+	if (snprintf(config_file, sizeof(config_file),
+		     "%s/lvm.conf", _system_dir) < 0) {
+		log_err("lvm_system_dir was too long");
+		return 0;
+	}
+
+	if (stat(config_file, &info) != -1) {
 		/* we've found a config file */
-		if (!read_config(cmd->cf, e)) {
-			log_error("Failed to load config file %s", e);
-			goto out;
+		if (!read_config(cmd->cf, config_file)) {
+			log_error("Failed to load config file %s",
+				  config_file);
+			return 0;
 		}
 
 		__init_log(cmd->cf);
@@ -766,28 +808,23 @@ static int init(void)
 
 	dm_log_init(print_log);
 
-	if (!dev_cache_setup(cmd->cf)) {
-		goto out;
-	}
+	if (!dev_cache_setup(cmd->cf))
+		return 0;
 
 	if (!(cmd->filter = filter_setup(cmd->cf))) {
 		log_error("Failed to set up internal device filters");
-		goto out;
+		return 0;
 	}
 
 	if (!(cmd->mem = pool_create(4 * 1024))) {
 		log_error("Command pool creation failed");
-		goto out;
+		return 0;
 	}
 
-	if (!(fid = create_lvm1_format(cmd))) {
-		goto out;
-	}
+	if (!(fid = create_lvm1_format(cmd)))
+		return 0;
 
-	ret = 1;
-
-      out:
-	return ret;
+	return 1;
 }
 
 static void __fin_commands(void)
