@@ -336,7 +336,7 @@ static struct config_value *_type(struct parser *p)
         switch (p->t) {
         case TOK_INT:
 		v->type = CFG_INT;
-		v->v.i = strtol(p->tb, 0, 10); /* FIXME: check error */
+		v->v.i = strtol(p->tb, 0, 0); /* FIXME: check error */
                 match(TOK_INT);
                 break;
 
