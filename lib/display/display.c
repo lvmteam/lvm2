@@ -59,8 +59,12 @@ char *display_size(unsigned long long size, size_len_t sl)
 	return size_buf;
 }
 
-char *display_uuid(char *uuidstr)
-{
+/*
+ * FIXME: this function is badly named, it doesn't display the data it
+ * creates a new uuid string with -'s in it.  It would be better if
+ * the destination was passed in as well. EJT
+ */
+char *display_uuid(char *uuidstr) {
 	int i, j;
 	char *uuid;
 

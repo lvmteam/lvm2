@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include "dev-cache.h"
 #include "list.h"
+#include "lvm-types.h"
+
 
 #define ID_LEN 32
 #define NAME_LEN 128
@@ -49,7 +51,7 @@
 
 
 struct id {
-	__uint8_t uuid[ID_LEN];
+	uint8_t uuid[ID_LEN];
 };
 
 struct physical_volume {
@@ -58,19 +60,19 @@ struct physical_volume {
 	char *vg_name;
 	char *exported;
 
-        __uint32_t status;
-        __uint64_t size;
+        uint32_t status;
+        uint64_t size;
 
         /* physical extents */
-        __uint64_t pe_size;
-        __uint64_t pe_start;
-        __uint32_t pe_count;
-        __uint32_t pe_allocated;
+        uint64_t pe_size;
+        uint64_t pe_start;
+        uint32_t pe_count;
+        uint32_t pe_allocated;
 };
 
 struct pe_specifier {
         struct physical_volume *pv;
-        __uint32_t pe;
+        uint32_t pe;
 };
 
 struct logical_volume {
@@ -78,12 +80,12 @@ struct logical_volume {
 	struct id *id;
         char *name;
 
-        __uint32_t access;
-        __uint32_t status;
-        __uint32_t open;
+        uint32_t access;
+        uint32_t status;
+        uint32_t open;
 
-        __uint64_t size;
-        __uint32_t le_count;
+        uint64_t size;
+        uint32_t le_count;
 
         /* le -> pe mapping array */
         struct pe_specifier *map;
@@ -93,22 +95,22 @@ struct volume_group {
 	struct id *id;
 	char *name;
 
-        __uint32_t status;
-        __uint32_t access;
+        uint32_t status;
+        uint32_t access;
 
-        __uint64_t extent_size;
-        __uint32_t extent_count;
-        __uint32_t free_count;
+        uint64_t extent_size;
+        uint32_t extent_count;
+        uint32_t free_count;
 
-        __uint32_t max_lv;
-        __uint32_t max_pv;
+        uint32_t max_lv;
+        uint32_t max_pv;
 
         /* physical volumes */
-        __uint32_t pv_count;
+        uint32_t pv_count;
         struct physical_volume **pv;
 
         /* logical volumes */
-        __uint32_t lv_count;
+        uint32_t lv_count;
         struct logical_volume **lv;
 };
 
@@ -144,12 +146,6 @@ struct io_space {
 struct io_space *create_text_format(struct dev_filter *filter,
 				    const char *text_file);
 struct io_space *create_lvm_v1_format(struct dev_filter *filter);
-
-inline int write_backup(struct io_space *orig, struct io_space *text)
-{
-
-}
-
 
 int id_eq(struct id *op1, struct id *op2);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited
  *
  * This file is released under the GPL.
  */
@@ -30,7 +30,7 @@ struct block_list {
 static void _leak_memory(void)
 {
 	int i;
-	struct block_list *b, *head, **l = &head;
+	struct block_list *b, *head, **l = &head, *n;
 
 	/* allocate a list of blocks */
 	for (i = 0; i < 1000; i++) {
@@ -39,20 +39,21 @@ static void _leak_memory(void)
 			log_fatal("Couldn't allocate memory");
 			exit(1);
 		}
-		
+
 		b->next = 0;
 		*l = b;
 		l = &b->next;
 	}
 
 	/* free off every other block */
-	for (i = 0, l = head; *l; l = &(*l)->next, i++) {
+	for (b = head, i = 0; b; b = n, i++) {
+		n = b->next;
 		if(i & 0x1)
-			db_free(b);
+			dbg_free(b);
 	}
 }
 
-static void _bounds_overrun()
+static void _bounds_overrun(void)
 {
 	char *b;
 
@@ -66,7 +67,7 @@ static void _bounds_overrun()
 	dbg_free(b);
 }
 
-static void _bounds_underrun()
+static void _bounds_underrun(void)
 {
 	char *b;
 
@@ -80,7 +81,7 @@ static void _bounds_underrun()
 	dbg_free(b);
 }
 
-static void _free_dud()
+static void _free_dud(void)
 {
 	char *b;
 
@@ -91,7 +92,7 @@ static void _free_dud()
 	dbg_free(b + 100);
 }
 
-static void _free_twice()
+static void _free_twice(void)
 {
 	char *b;
 
@@ -107,7 +108,8 @@ int main(int argc, char **argv)
 {
 	char opt;
 
-	init_log();
+	init_log(stderr);
+	init_debug(_LOG_DEBUG);
 	opt = getopt(argc, argv, "hlbufd");
 	switch(opt) {
 	case EOF:

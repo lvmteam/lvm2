@@ -4,14 +4,25 @@
  * This file is released under the GPL.
  */
 
+#include "device.h"
+#include "lvm-types.h"
+#include "log.h"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+
 int dev_get_size(struct device *dev, uint64_t *size)
 {
 	int fd;
 	long s;
 
 	log_verbose("Getting device size");
-	if ((fd = open(pv, O_RDONLY)) < 0) {
-		log_sys_error("open");
+	if ((fd = open(dev->name, O_RDONLY)) < 0) {
+		log_sys_err("open");
 		return 0;
 	}
 

@@ -135,4 +135,5 @@ include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
+test/mm/Makefile							\
 )
