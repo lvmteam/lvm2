@@ -255,14 +255,15 @@ static int _read_extents(struct disk_list *data)
 /* 
  * If exported, remove "PV_EXP" from end of VG name 
  */
-void munge_exported_vg(struct pv_disk *pvd, struct vg_disk *vgd)
+void munge_exported_vg(struct pv_disk *pvd)
 {
 	int l;
 	size_t s;
 
-	/* Return if PV not in a VG or VG not exported */
-	if ((!*pvd->vg_name) || (vgd && !(vgd->vg_status & VG_EXPORTED)))
+	/* Return if PV not in a VG */
+	if ((!*pvd->vg_name))
 		return;
+	/* FIXME also check vgd->status & VG_EXPORTED? */
 
 	l = strlen(pvd->vg_name);
 	s = sizeof(EXPORTED_TAG);
@@ -296,7 +297,7 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 	}
 
 	/* If VG is exported, set VG name back to the real name */
-	munge_exported_vg(&dl->pvd, &dl->vgd);
+	munge_exported_vg(&dl->pvd);
 
 	if (!(info = lvmcache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
 				  dl->pvd.vg_name, NULL)))
