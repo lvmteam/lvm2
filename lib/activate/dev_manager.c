@@ -297,9 +297,9 @@ static int _remove(struct dev_layer *dl)
 	struct dm_task *dmt;
 
 	if (_get_flag(dl, VISIBLE))
-		log_verbose("Removing %s", dl->name);
+		log_verbose("Unloading %s", dl->name);
 	else
-		log_very_verbose("Removing %s", dl->name);
+		log_very_verbose("Unloading %s", dl->name);
 
 	if (!(dmt = _setup_task(dl->name, DM_DEVICE_REMOVE))) {
 		stack;
