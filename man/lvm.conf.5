@@ -84,6 +84,13 @@ will be accepted or rejected (ignored).  Devices that don't match
 any patterns are accepted.
 For example, to ignore /dev/cdrom you could use:
 \fBdevices { filter=["r|cdrom|"] }\fP 
+.IP
+\fBcache\fP \(em Persistent filter cache file.
+Defaults to "/etc/lvm/.cache".
+.IP
+\fBwrite_cache_state\fP \(em Set to 0 to disable the writing out of the 
+persistent filter cache file when \fBlvm\fP exits.
+Defaults to 1.
 .TP
 \fBlog\fP \(em Default log settings
 .IP
@@ -102,7 +109,7 @@ is invoked.  By default tools append messages to the log file.
 \fBtest\fP \(em If set to 1, run tools in test mode i.e. no metadata
 gets updated.
 .TP
-\fBbackups\fP \(em Configuration for metadata backups
+\fBbackup\fP \(em Configuration for metadata backups
 .IP
 \fBdir\fP \(em Directory used for automatic metadata backups.
 Defaults to "/etc/lvm/backup".
