@@ -439,9 +439,12 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 
 	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE)) {
-		/* FIXME Remove the failed lv we just added */
-		log_error("Aborting. Failed to wipe snapshot "
-			  "exception store. Remove new LV and retry.");
+		if (lp->snapshot)
+			/* FIXME Remove the failed lv we just added */
+			log_error("Aborting. Failed to wipe snapshot "
+				  "exception store. Remove new LV and retry.");
+		else
+			log_error("Failed to activate new LV.");
 		return 0;
 	}
 
