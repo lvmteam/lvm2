@@ -27,11 +27,6 @@ static ssize_t dmfs_status_read(struct file *file, char *buf, size_t size, loff_
 	return size;
 }
 
-static ssize_t dmfs_status_write(struct file *file, const char *buf, size_t size, loff_t *pos)
-{
-	return size;
-}
-
 static int dmfs_status_sync(struct file *file, struct dentry *dentry, int datasync)
 {
 	return 0;
@@ -39,7 +34,6 @@ static int dmfs_status_sync(struct file *file, struct dentry *dentry, int datasy
 
 static struct dm_table_file_operations = {
 	read:		dmfs_status_read,
-	write:		dmfs_status_write,
 	fsync:		dmfs_status_sync,
 };
 

@@ -252,6 +252,29 @@ static int dmfs_commit_write(struct file *file, struct page *page,
 	return 0;
 }
 
+static int dmfs_table_open(struct inode *inode, struct file *file)
+{
+	struct dentry *dentry = file->f_dentry;
+	struct inode *inode = dentry->d_parent->d_inode;
+
+	if (file->f_mode & FMODE_WRITE) {
+		if (get_write_access(inode))
+			return -EPERM;
+	}
+
+	return 0;
+}
+
+static int dmfs_table_release(struct inode *inode, struct file *file)
+{
+	if (file->f_mode & FMODE_WRITE) {
+		struct dentry *dentry = file->f_dentry;
+		struct inode *inode = dentry->d_parent->d_inode;
+
+		put_write_access(inode);
+	}
+}
+
 static int dmfs_table_sync(struct file *file, struct dentry *dentry, int datasync)
 {
 	return 0;
@@ -268,6 +291,8 @@ static struct dmfs_table_file_operations = {
  	llseek:		generic_file_llseek,
 	read:		generic_file_read,
 	write:		generic_file_write,
+	open:		dmfs_table_open,
+	release:	dmfs_table_release,
 	fsync:		dmfs_table_sync,
 	release:	dmfs_release,
 };

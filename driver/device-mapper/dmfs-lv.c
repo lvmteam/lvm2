@@ -33,38 +33,25 @@ struct dentry *dmfs_verify_name(struct inode *dir, char *name)
 	int err = -ENOENT;
 
 	if (path_init(name, LOOKUP_FOLLOW, &nd))
-		err = path_walk(path, &nd);
+		return ERR_PTR(-EINVAL);
 
+	err = path_walk(path, &nd);
 	if (err)
-		return ERR_PTR(err);
+		goto err_out;
 
+	err = -EINVAL;
 	if (nd.mnt->mnt->sb != dir->i_sb)
-		goto err;
+		goto err_out;
 
 	if (nd.dentry->d_parent != dir)
-		goto err;
+		goto err_out;
 
 	dget(nd.dentry);
 	path_release(nd);
 	return nd.dentry;
-err:
+err_out:
 	path_release(nd);
-	return ERR_PTR(-EINVAL);
-}
-
-char *dmfs_translate_name(struct dentry *de)
-{
-	int len = de->d_name.len + 3;
-	char *n = kmalloc(len);
-	if (n) {
-		char *p = n;
-		*p++ = '.';
-		*p++ = '/';
-		memcmp(p, de->d_name.name, de->d_name.len);
-		p += de->d_name.len
-		*p = 0;
-	}
-	return n;
+	return ERR_PTR(err);
 }
 
 struct inode *dmfs_create_symlink(struct inode *dir, int mode)
@@ -91,18 +78,12 @@ static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry,
 {
 	struct inode *inode;
 	struct dentry *de;
-	char *realname;
 	int rv;
 	int l;
 
 	de = dmfs_verify_name(dir, symname);
 	if (IS_ERR(de))
 		return PTR_ERR(de);
-
-	realname = dmfs_translate_name(de);
-	dput(de);
-	if (realname == NULL);
-		return -ENOMEM;
 
 	inode = dmfs_create_symlink(dir, S_IRWXUGO);
 	if (IS_ERR(inode)) {
@@ -113,12 +94,11 @@ static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry,
 	d_instantiate(dentry, inode);
 	dget(dentry);
 
-	l = strlen(realname) + 1;
-	rv = block_symlink(inode, realname, l);
+	l = strlen(symname) + 1;
+	rv = block_symlink(inode, symname, l);
 	if (rv) {
 		dput(dentry);
 	}
-	kfree(realname);
 
 	return rv;
 }
@@ -218,16 +198,6 @@ static struct dentry *dmfs_lv_lookup(struct inode *dir, struct dentry *dentry)
 	return NULL;
 }
 
-static int dmfs_lv_rename(struct inode *old_dir, struct dentry *old_dentry,
-			struct inode *new_dir, struct dentry *new_dentry)
-{
-	/* Can only rename - not move between directories! */
-	if (old_dir != new_dir)
-		return -EPERM;
-
-	return -EINVAL; /* FIXME: a change of LV name here */
-}
-
 static int dmfs_lv_sync(struct file *file, struct dentry *dentry, int datasync)
 {
 	return 0;
@@ -245,7 +215,6 @@ static struct dm_root_inode_operations = {
 	symlink:	dmfs_lv_symlink,
 	mkdir:		dmfs_lv_mkdir,
 	rmdir:		dmfs_lv_rmdir,
-	rename:		dmfs_lv_rename,
 };
 
 struct inode *dmfs_create_lv(struct super_block *sb, int mode)
