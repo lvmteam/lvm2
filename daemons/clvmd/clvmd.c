@@ -303,6 +303,7 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 		newfd->bits.localsock.threadid = 0;
 		newfd->bits.localsock.finished = 0;
 		newfd->bits.localsock.pipe_client = NULL;
+		newfd->bits.localsock.private = NULL;
 		newfd->bits.localsock.all_success = 1;
 		DEBUGLOG("Got new connection on fd %d\n", newfd->fd);
 		*new_client = newfd;
@@ -496,6 +497,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 						lastfd->next = thisfd->next;
 						free_fd = thisfd;
 						thisfd = lastfd;
+						cmd_client_cleanup(free_fd);
 						free(free_fd);
 						break;
 					}
@@ -717,6 +719,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		struct local_client *newfd;
 		char csid[MAX_CSID_LEN];
 		struct clvm_header *inheader;
+		int status;
 
 		inheader = (struct clvm_header *) buffer;
 
@@ -863,8 +866,10 @@ static int read_from_local_sock(struct local_client *thisfd)
 		/* Run the pre routine */
 		thisfd->bits.localsock.in_progress = TRUE;
 		thisfd->bits.localsock.state = PRE_COMMAND;
-		pthread_create(&thisfd->bits.localsock.threadid, NULL,
+		DEBUGLOG("Creating pre&post thread\n");
+		status = pthread_create(&thisfd->bits.localsock.threadid, NULL,
 			       pre_and_post_thread, thisfd);
+		DEBUGLOG("Created pre&post thread, state = %d\n", status);
 	}
 	return len;
 }

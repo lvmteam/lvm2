@@ -111,7 +111,7 @@ extern int do_command(struct local_client *client, struct clvm_header *msg,
 /* Pre and post command routines are called only on the local node */
 extern int do_pre_command(struct local_client *client);
 extern int do_post_command(struct local_client *client);
-
+extern void cmd_client_cleanup(struct local_client *client);
 extern int add_client(struct local_client *new_client);
 
 extern void clvmd_cluster_init_completed(void);
