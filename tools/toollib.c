@@ -5,52 +5,45 @@
  */
 
 #include "tools.h"
-#include "format-text.h"
-#include "metadata.h"
-#include "lvm-string.h"
 
-#include <ctype.h>
-#include <limits.h>
-
-static int _autobackup = 1;
+static int _autobackup;
 static char _backup_dir[PATH_MAX];
-static int _period = 7;		/* backups will be kept for at least 7 days */
-static int _min_backups = 10;	/* always have at least ten backups, even
-				 * if they're older than the period */
+static int _keep_days;		/* keep for at least this number of days */
+static int _keep_number;	/* keep at least this number of backups */
 
 /*
- * Work out by looking at command line, config
- * file and environment variable whether we should
- * do an autobackup.
+ * Determine whether or not to do autobackup.  
+ * Cmd line overrides environment variable which in turn overrides config file
  */
-int autobackup_init(const char *system_dir)
+int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
+		    int autobackup)
 {
 	char *lvm_autobackup;
 
 	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir), 
-			 "%s/backup", system_dir) < 0) {
-		log_err("Backup directory (%s/backup) too long.", system_dir);
+			 "%s", backup_dir) < 0) {
+		log_error("Backup directory name too long.");
 		return 0;
 	}
+
+	_keep_days = keep_days;
+	_keep_number = keep_number;
+	_autobackup = autobackup;	/* Config file setting */
 
 	if (arg_count(autobackup_ARG)) {
 		_autobackup = !strcmp(arg_str_value(autobackup_ARG, "y"), "y");
 		return 1;
 	}
 
-	_autobackup = 1;	/* default */
-
 	lvm_autobackup = getenv("LVM_AUTOBACKUP");
 	if (!lvm_autobackup)
 		return 1;
 
-	log_print("using environment variable LVM_AUTOBACKUP "
-		  "to set option A");
+	log_verbose("Setting autobackup from environment (LVM_AUTOBACKUP)");
 	if (!strcasecmp(lvm_autobackup, "no"))
 		_autobackup = 0;
-
 	else if (strcasecmp(lvm_autobackup, "yes")) {
-		log_error("environment variable LVM_AUTOBACKUP has "
+		log_error("Environment variable LVM_AUTOBACKUP has "
 			  "invalid value \"%s\"!", lvm_autobackup);
 		return 0;
 	}
@@ -78,8 +71,8 @@ static int __autobackup(struct volume_group *vg)
 	}
 
 	if (!(backer = backup_format_create(vg->cmd, _backup_dir,
-					    _period, _min_backups))) {
-		log_err("Couldn't create backup object.");
+					    _keep_days, _keep_number))) {
+		log_error("Couldn't create backup object.");
 		return 0;
 	}
 

@@ -25,12 +25,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <ctype.h>
 #include <string.h>
+#include <limits.h>
 
 #include "pool.h"
 #include "dbg_malloc.h"
 #include "list.h"
 #include "log.h"
+#include "lvm-string.h"
 #include "metadata.h"
 #include "config.h"
 #include "dev-cache.h"
@@ -42,6 +45,7 @@
 #include "filter-composite.h"
 #include "filter-regex.h"
 #include "format1.h"
+#include "format-text.h"
 #include "toollib.h"
 #include "activate.h"
 

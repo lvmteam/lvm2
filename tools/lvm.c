@@ -13,7 +13,6 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#include <limits.h>
 
 #include "stub.h"
 #include "vgcache.h"
@@ -68,20 +67,24 @@ static int _debug;
 static int _default_verbose;
 static int _verbose;
 
-
 /*
  * The lvm_sys_dir contains:
  *
  * o  The lvm configuration (lvm.conf)
  * o  The persistent filter cache (.cache)
- * o  Volume group backups (backups)
+ * o  Volume group backups (backup/)
  *
  */
 static char _sys_dir[PATH_MAX] = "/etc/lvm";
 static char _backup_dir[PATH_MAX];
 static char _dev_dir[PATH_MAX];
 
+static int _backup_days = 14; 		/* Keep at least 14 days */
+static int _backup_number = 10;		/* Keep at least 10 backups */
+static int _backup_auto = 1;		/* Autobackups enabled by default */
+
 #define DEFAULT_DEV_DIR "/dev"
+
 
 /* static functions */
 static void register_commands(void);
@@ -548,7 +551,8 @@ static int process_common_commands(struct command *com)
 	/* Set autobackup if command takes this option */
 	for (l = 0; l < com->num_args; l++)
 		if (com->valid_args[l] == autobackup_ARG)
-			if (!autobackup_init(_backup_dir))
+			if (!autobackup_init(_backup_dir, _backup_days,
+					     _backup_number, _backup_auto))
 				return EINVALID_CMD_LINE;
 
 	/* Zero indicates it's OK to continue processing this command */
@@ -845,12 +849,21 @@ static int init(void)
 
 	dm_log_init(print_log);
 
-	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir), "%s",
+	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir), "%s/backup",
         		 find_config_str(cmd->cf->root, "backup/dir", 
 					 '/', _sys_dir)) < 0) {
 		log_error("Backup directory given in config file too long");
 		return 0;
 	}
+
+	_backup_days = find_config_int(cmd->cf->root, "backup/days", '/', 
+				       _backup_days);
+
+	_backup_number = find_config_int(cmd->cf->root, "backup/keep", '/', 
+					 _backup_number);
+
+	_backup_auto = find_config_int(cmd->cf->root, "backup/auto", '/', 
+					 _backup_auto);
 
 	if (!dev_cache_setup(cmd->cf))
 		return 0;

@@ -8,6 +8,7 @@
 #include "pv_map.h"
 #include "log.h"
 #include "dbg_malloc.h"
+#include "lvm-string.h"
 
 #include <assert.h>
 
@@ -353,7 +354,7 @@ static char *_generate_lv_name(struct volume_group *vg,
 			high = i;
 	}
 
-	if ((s = snprintf(buffer, len, "lvol%d", high + 1)) < 0 || s >= len)
+	if (lvm_snprintf(buffer, len, "lvol%d", high + 1) < 0)
 		return NULL;
 
 	return buffer;
