@@ -59,7 +59,7 @@ case "$host_os" in
 		SOFLAG="-shared"
 		DEVMAPPER=yes
 		ODIRECT=yes
-		FSADM=yes ;;
+		FSADM=no ;;
 	darwin*)
 		CFLAGS="-no-cpp-precomp -fno-common"
 		CLDFLAGS=
@@ -227,6 +227,11 @@ echo "$ac_t""$CMDLIB" 1>&6
 if test x$CMDLIB = xyes; then
 	CFLAGS="$CFLAGS -DCMDLIB"
 fi
+
+echo $ac_n "checking whether to enable fsadm""... $ac_c" 1>&6
+dnl Enable fsadm
+AC_ARG_ENABLE(fsadm, [  --enable-fsadm          Enable fsadm], FSADM=yes)
+echo "$ac_t""$FSADM" 1>&6
 
 dnl Mess with default exec_prefix
 if [[ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ]];
@@ -402,5 +407,11 @@ if test x$ODIRECT != xyes; then
   echo
   echo Warning: O_DIRECT disabled.
   echo Use of pvmove may cause machine to lock up under low memory conditions.
+  echo
+fi
+
+if test x$FSADM == xyes; then
+  echo
+  echo Warning: fsadm support is untested.
   echo
 fi
