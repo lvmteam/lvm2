@@ -26,6 +26,7 @@ struct device {
  * All io should use these routines.
  */
 int dev_get_size(struct device *dev, uint64_t *size);
+int dev_get_sectsize(struct device *dev, uint32_t *size);
 
 int dev_open(struct device *dev, int flags);
 int dev_close(struct device *dev);
