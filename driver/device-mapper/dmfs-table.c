@@ -216,7 +216,7 @@ static int dmfs_table_release(struct inode *inode, struct file *f)
 	if (f->f_mode & FMODE_WRITE) {
 
 		down(&dmi->sem);
-		table = dmfs_parse(inode);
+		table = dmfs_parse(dentry->d_parent->d_inode);
 
 		if (table) {
 			if (dmi->table)
@@ -311,6 +311,15 @@ static int dmfs_table_sync(struct file *file, struct dentry *dentry, int datasyn
 	return 0;
 }
 
+static int dmfs_table_revalidate(struct dentry *dentry)
+{
+	struct inode *inode = dentry->d_inode;
+	struct inode *parent = dentry->d_parent->d_inode;
+
+	inode->i_size = parent->i_size;
+	return 0;
+}
+
 struct address_space_operations dmfs_address_space_operations = {
 	readpage:	dmfs_readpage,
 	writepage:	dmfs_writepage,
@@ -328,6 +337,7 @@ static struct file_operations dmfs_table_file_operations = {
 };
 
 static struct inode_operations dmfs_table_inode_operations = {
+	revalidate:	dmfs_table_revalidate,
 };
 
 struct inode *dmfs_create_table(struct inode *dir, int mode)
