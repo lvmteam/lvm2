@@ -367,12 +367,13 @@ xx(pvcreate,
    "\t[-u|--uuid uuid] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[-y|--yes]" "\n"
+   "\t[-Z|--zero {y|n}]\n"
    "\t[--version] " "\n"
    "\tPhysicalVolume [PhysicalVolume...]\n",
 
    force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
    metadatasize_ARG, physicalvolumesize_ARG, restorefile_ARG, uuidstr_ARG,
-   yes_ARG)
+   yes_ARG, zero_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
