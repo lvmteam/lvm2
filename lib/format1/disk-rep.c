@@ -8,6 +8,7 @@
 #include "pool.h"
 #include "xlate.h"
 #include "log.h"
+#include "vgcache.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -25,66 +26,71 @@
  */
 static void _xlate_pvd(struct pv_disk *disk)
 {
-        xx16(version);
+	xx16(version);
 
-        xx32(pv_on_disk.base); xx32(pv_on_disk.size);
-        xx32(vg_on_disk.base); xx32(vg_on_disk.size);
-        xx32(pv_uuidlist_on_disk.base); xx32(pv_uuidlist_on_disk.size);
-        xx32(lv_on_disk.base); xx32(lv_on_disk.size);
-        xx32(pe_on_disk.base); xx32(pe_on_disk.size);
+	xx32(pv_on_disk.base);
+	xx32(pv_on_disk.size);
+	xx32(vg_on_disk.base);
+	xx32(vg_on_disk.size);
+	xx32(pv_uuidlist_on_disk.base);
+	xx32(pv_uuidlist_on_disk.size);
+	xx32(lv_on_disk.base);
+	xx32(lv_on_disk.size);
+	xx32(pe_on_disk.base);
+	xx32(pe_on_disk.size);
 
-        xx32(pv_major);
-        xx32(pv_number);
-        xx32(pv_status);
-        xx32(pv_allocatable);
-        xx32(pv_size);
-        xx32(lv_cur);
-        xx32(pe_size);
-        xx32(pe_total);
-        xx32(pe_allocated);
+	xx32(pv_major);
+	xx32(pv_number);
+	xx32(pv_status);
+	xx32(pv_allocatable);
+	xx32(pv_size);
+	xx32(lv_cur);
+	xx32(pe_size);
+	xx32(pe_total);
+	xx32(pe_allocated);
 	xx32(pe_start);
 }
 
 static void _xlate_lvd(struct lv_disk *disk)
 {
-        xx32(lv_access);
-        xx32(lv_status);
-        xx32(lv_open);
-        xx32(lv_dev);
-        xx32(lv_number);
-        xx32(lv_mirror_copies);
-        xx32(lv_recovery);
-        xx32(lv_schedule);
-        xx32(lv_size);
-        xx32(lv_snapshot_minor);
-        xx16(lv_chunk_size);
-        xx16(dummy);
-        xx32(lv_allocated_le);
-        xx32(lv_stripes);
-        xx32(lv_stripesize);
-        xx32(lv_badblock);
-        xx32(lv_allocation);
-        xx32(lv_io_timeout);
-        xx32(lv_read_ahead);
+	xx32(lv_access);
+	xx32(lv_status);
+	xx32(lv_open);
+	xx32(lv_dev);
+	xx32(lv_number);
+	xx32(lv_mirror_copies);
+	xx32(lv_recovery);
+	xx32(lv_schedule);
+	xx32(lv_size);
+	xx32(lv_snapshot_minor);
+	xx16(lv_chunk_size);
+	xx16(dummy);
+	xx32(lv_allocated_le);
+	xx32(lv_stripes);
+	xx32(lv_stripesize);
+	xx32(lv_badblock);
+	xx32(lv_allocation);
+	xx32(lv_io_timeout);
+	xx32(lv_read_ahead);
 }
 
 static void _xlate_vgd(struct vg_disk *disk)
 {
-        xx32(vg_number);
-        xx32(vg_access);
-        xx32(vg_status);
-        xx32(lv_max);
-        xx32(lv_cur);
-        xx32(lv_open);
-        xx32(pv_max);
-        xx32(pv_cur);
-        xx32(pv_act);
-        xx32(dummy);
-        xx32(vgda);
-        xx32(pe_size);
-        xx32(pe_total);
-        xx32(pe_allocated);
-        xx32(pvg_total);
+	xx32(vg_number);
+	xx32(vg_access);
+	xx32(vg_status);
+	xx32(lv_max);
+	xx32(lv_cur);
+	xx32(lv_open);
+	xx32(pv_max);
+	xx32(pv_cur);
+	xx32(pv_act);
+	xx32(dummy);
+	xx32(vgda);
+	xx32(pe_size);
+	xx32(pe_total);
+	xx32(pe_allocated);
+	xx32(pvg_total);
 }
 
 static void _xlate_extents(struct pe_disk *extents, int count)
@@ -163,7 +169,7 @@ static int _read_uuids(struct disk_list *data)
 	ulong pos = data->pvd.pv_uuidlist_on_disk.base;
 	ulong end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
-	while(pos < end && num_read < data->vgd.pv_cur) {
+	while (pos < end && num_read < data->vgd.pv_cur) {
 		if (dev_read(data->dev, pos, sizeof(buffer), buffer) !=
 		    sizeof(buffer))
 			fail;
@@ -195,7 +201,7 @@ static int _read_lvs(struct disk_list *data)
 	struct lvd_list *ll;
 	struct vg_disk *vgd = &data->vgd;
 
-	for(i = 0; (i < vgd->lv_max) && (read < vgd->lv_cur); i++) {
+	for (i = 0; (i < vgd->lv_max) && (read < vgd->lv_cur); i++) {
 		pos = data->pvd.lv_on_disk.base + (i * sizeof(struct lv_disk));
 		ll = pool_alloc(data->mem, sizeof(*ll));
 
@@ -266,6 +272,9 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 		goto bad;
 	}
 
+	/* Update VG cache with whatever we found */
+	vgcache_add(data->pvd.vg_name, dev);
+
 	/*
 	 * is it an orphan ?
 	 */
@@ -304,7 +313,7 @@ static struct disk_list *__read_disk(struct device *dev, struct pool *mem,
 
 	return data;
 
- bad:
+      bad:
 	pool_free(data->mem, data);
 	return NULL;
 }
@@ -327,12 +336,10 @@ struct disk_list *read_disk(struct device *dev, struct pool *mem,
 	return r;
 }
 
-
 /*
- * Build a list of pv_d's structures, allocated
- * from mem.  We keep track of the first object
- * allocated form the pool so we can free off all
- * the memory if something goes wrong.
+ * Build a list of pv_d's structures, allocated from mem.  
+ * We keep track of the first object allocated form the pool
+ * so we can free off all the memory if something goes wrong.
  */
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		   struct pool *mem, struct list *head)
@@ -341,9 +348,33 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 	struct device *dev;
 	struct disk_list *data = NULL;
 
+	struct list *pvdh, *pvdh2;
+
+	/* Fast path if we already saw this VG and cached the list of PVs */
+	if ((pvdh = vgcache_find(vg_name))) {
+		list_iterate(pvdh2, pvdh) {
+			dev = list_item(pvdh2, struct pvdev_list)->dev;
+			if ((data = read_disk(dev, mem, vg_name)))
+				list_add(head, &data->list);
+		}
+
+		/* Did we find the whole VG? */
+		if (!vg_name || !*vg_name ||
+		    (data && *data->pvd.vg_name &&
+		     list_size(head) == data->vgd.pv_cur))
+			return 1;
+
+		/* Something changed. */
+		list_init(head);
+		/* FIXME Do at a lower level? */
+		vgcache_del(vg_name);
+	}
+
+	/* Otherwise do a complete scan */
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
-		if ((data = read_disk(dev, mem, vg_name)))
+		if ((data = read_disk(dev, mem, vg_name))) {
 			list_add(head, &data->list);
+		}
 	}
 	dev_iter_destroy(iter);
 
@@ -352,7 +383,6 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 
 	return 1;
 }
-
 
 static int _write_vgd(struct disk_list *data)
 {
@@ -412,7 +442,7 @@ static int _write_lvs(struct disk_list *data)
 
 	if (!dev_zero(data->dev, pos, data->pvd.lv_on_disk.size)) {
 		log_error("Couldn't zero lv area on device '%s'",
-			dev_name(data->dev));
+			  dev_name(data->dev));
 		return 0;
 	}
 
@@ -516,7 +546,6 @@ static int _write_all_pvd(struct disk_list *data)
 
 	return r;
 }
-
 
 /*
  * Writes all the given pv's to disk.  Does very

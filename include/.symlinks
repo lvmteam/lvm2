@@ -13,6 +13,7 @@
 ../lib/filters/filter-regex.h
 ../lib/filters/filter.h
 ../lib/format1/format1.h
+../lib/label/label.h
 ../lib/log/log.h
 ../lib/metadata/metadata.h
 ../lib/mm/dbg_malloc.h
@@ -20,4 +21,4 @@
 ../lib/mm/xlate.h
 ../lib/regex/matcher.h
 ../lib/uuid/uuid.h
-../lib/label/label.h
+../lib/vgcache/vgcache.h

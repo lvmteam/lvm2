@@ -29,8 +29,11 @@ int vgscan(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-        log_verbose("Wiping cache of LVM-capable devices");
-        persistent_filter_wipe(fid->cmd->filter);
+	log_verbose("Wiping cache of LVM-capable devices");
+	persistent_filter_wipe(fid->cmd->filter);
+
+	log_verbose("Wiping internal cache of PVs in VGs");
+	vgcache_destroy();
 
 	log_print("Reading all physical volumes (this may take a while...)");
 
@@ -62,9 +65,7 @@ static int vgscan_single(const char *vg_name)
 	}
 *********/
 
-	
-
-	log_print("%d logical volumes in volume group %s activated", 
+	log_print("%d logical volumes in volume group %s activated",
 		  activate_lvs_in_vg(vg), vg_name);
 
 	return 0;

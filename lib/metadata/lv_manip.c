@@ -487,6 +487,8 @@ int lv_extend(struct logical_volume *lv,
 	lv->le_count += extents;
 	lv->size += extents * lv->vg->extent_size;
 
+	/* FIXME: Format1 must ensure stripes is consistent with 1st seg */
+
 	if (!_allocate(lv->vg, lv, acceptable_pvs, old_le_count,
 		       stripes, stripe_size)) {
 		lv->le_count = old_le_count;
