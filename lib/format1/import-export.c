@@ -311,7 +311,7 @@ int export_extents(struct disk_list *dl, int lv_num,
 			if (seg->area[s].pv != pv)
 				continue; /* not our pv */
 
-			for (pe = 0; pe < seg->len; pe++) {
+			for (pe = 0; pe < (seg->len / seg->stripes); pe++) {
 				ped = &dl->extents[pe + seg->area[s].pe];
 				ped->lv_num = lv_num;
 				ped->le_num = seg->le + s +

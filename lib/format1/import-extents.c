@@ -128,6 +128,7 @@ static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
 
 			if (lv_num == UNMAPPED_EXTENT)
 				continue;
+
 			else {
 				lv_num--;
 				lvm = lvms[lv_num];
@@ -190,58 +191,84 @@ static int _check_maps_are_complete(struct hash_table *maps)
 	return 1;
 }
 
-static int _same_segment(struct stripe_segment *seg, struct lv_map *lvm,
-			 uint32_t count)
+static struct stripe_segment *_alloc_seg(struct pool *mem, uint32_t stripes)
 {
-	uint32_t s;
-	uint32_t le = seg->le + (count * seg->stripes);
+	struct stripe_segment *seg;
+	uint32_t len = sizeof(*seg) + (stripes * sizeof(seg->area[0]));
 
-	for (s = 0; s < seg->stripes; s++) {
-		if ((lvm->map[le + s].pv != seg->area[s].pv) ||
-		    (lvm->map[le + s].pe != seg->area[s].pe + count))
-			return 0;
+	if (!(seg = pool_zalloc(mem, len))) {
+		stack;
+		return NULL;
 	}
-	return 1;
+
+	return seg;
 }
 
-static int _build_segments(struct pool *mem, struct lv_map *lvm)
+static int _read_linear(struct pool *mem, struct lv_map *lvm)
 {
-	uint32_t stripes = lvm->stripes;
-	uint32_t le, s, count;
+	uint32_t le = 0;
 	struct stripe_segment *seg;
-	size_t len;
 
-	len = sizeof(*seg) * (stripes * sizeof(seg->area[0]));
-
-	le = 0;
 	while (le < lvm->lv->le_count) {
-		if (!(seg = pool_zalloc(mem, len))) {
-			stack;
-			return 0;
-		}
+		seg = _alloc_seg(mem, 1);
 
 		seg->lv = lvm->lv;
 		seg->le = le;
 		seg->len = 0;
-		seg->stripe_size = lvm->stripe_size;
-		seg->stripes = stripes;
+		seg->stripe_size = 0;
+		seg->stripes = 1;
 
-		for (s = 0; s < stripes; s++) {
-			seg->area[s].pv = lvm->map[le + s].pv;
-			seg->area[s].pe = lvm->map[le + s].pe;
-		}
+		seg->area[0].pv = lvm->map[le].pv;
+		seg->area[0].pe = lvm->map[le].pe;
 
-		count = 1;
-		do {
-			le += stripes;
-			seg->len += stripes;
+		do
+			seg->len++;
 
-		} while (_same_segment(seg, lvm, count++));
+		while ((lvm->map[le + seg->len].pv == seg->area[0].pv) &&
+		       (lvm->map[le + seg->len].pe == seg->area[0].pe +
+			seg->len));
+
+		le += seg->len;
 
 		list_add(&lvm->lv->segments, &seg->list);
 	}
 
 	return 1;
+}
+
+static int _read_stripes(struct pool *mem, struct lv_map *lvm)
+{
+	uint32_t stripes = lvm->stripes, s;
+	uint32_t stripe_len = lvm->lv->le_count / stripes;
+	struct stripe_segment *seg;
+	struct pe_specifier *pes;
+
+	if (!(seg = _alloc_seg(mem, stripes))) {
+		stack;
+		return 0;
+	}
+
+	seg->lv = lvm->lv;
+	seg->le = 0;
+	seg->len = lvm->lv->le_count;
+	seg->stripe_size = lvm->stripe_size;
+	seg->stripes = stripes;
+
+	for (s = 0; s < stripes; s++) {
+		pes = &lvm->map[s * stripe_len];
+
+		seg->area[s].pv = pes->pv;
+		seg->area[s].pe = pes->pe;
+	}
+
+	list_add(&lvm->lv->segments, &seg->list);
+	return 1;
+}
+
+static int _build_segments(struct pool *mem, struct lv_map *lvm)
+{
+	return (lvm->stripes > 1 ? _read_stripes(mem, lvm) :
+		_read_linear(mem, lvm));
 }
 
 static int _build_all_segments(struct pool *mem, struct hash_table *maps)
