@@ -25,6 +25,7 @@
 #include "list.h"
 #include "log.h"
 #include "lvm-string.h"
+#include "lvm-file.h"
 #include "metadata.h"
 #include "config.h"
 #include "dev-cache.h"
@@ -41,6 +42,7 @@
 #include "toollib.h"
 #include "activate.h"
 #include "archive.h"
+#include "locking.h"
 
 #include <stdio.h>
 #include <stdarg.h>

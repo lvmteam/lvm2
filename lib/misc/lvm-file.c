@@ -99,3 +99,57 @@ int lvm_rename(const char *old, const char *new)
 	return 1;
 }
 
+
+int path_exists(const char *path)
+{
+	struct stat info;
+
+	if (!*path)
+		return 0;
+
+	if (stat(path, &info) < 0)
+		return 0;
+
+	return 1;
+}
+
+int dir_exists(const char *path)
+{
+	struct stat info;
+
+	if (!*path)
+		return 0;
+
+	if (stat(path, &info) < 0)
+		return 0;
+
+	if (!S_ISDIR(info.st_mode))
+		return 0;
+
+	return 1;
+}
+
+
+/* FIXME: Make this create directories recursively */
+int create_dir(const char *dir)
+{
+	struct stat info;
+
+	if (!*dir)
+		return 1;
+
+	if (stat(dir, &info) < 0) {
+		log_verbose("Creating directory \"%s\"", dir);
+		if (!mkdir(dir, 0777))
+			return 1;
+		log_sys_error("mkdir", dir);
+		return 0;
+	}
+
+	if (S_ISDIR(info.st_mode))
+		return 1;
+
+	log_error("Directory \"%s\" not found", dir);
+	return 0;
+}
+

@@ -40,25 +40,36 @@ int vgextend(int argc, char **argv)
 	argc--;
 	argv++;
 
+        if (!lock_vol("", LCK_VG | LCK_WRITE)) {
+                log_error("Can't get lock for orphan PVs");
+                return ECMD_FAILED;
+        }
+
 	log_verbose("Checking for volume group \"%s\"", vg_name);
+	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+		lock_vol("", LCK_VG | LCK_NONE);
+		log_error("Can't get lock for %s", vg_name);
+		goto error;
+	}
+
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group \"%s\" not found.", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
         if (vg->status & EXPORTED_VG) {
                 log_error("Volume group \"%s\" is exported", vg->name);
-                return ECMD_FAILED;
+                goto error;
         }
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" is not resizeable.", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 /********** FIXME
@@ -69,11 +80,11 @@ int vgextend(int argc, char **argv)
 **********/
 
 	if (!archive(vg))
-		return ECMD_FAILED;
+		goto error;
 
 	/* extend vg */
 	if (!vg_extend(fid, vg, argc, argv))
-		return ECMD_FAILED;
+		goto error;
 
 	/* ret > 0 */
 	log_verbose("Volume group \"%s\" will be extended by %d new "
@@ -81,11 +92,19 @@ int vgextend(int argc, char **argv)
 
         /* store vg on disk(s) */
 	if (!fid->ops->vg_write(fid, vg))
-		return ECMD_FAILED;
+		goto error;
 
 	backup(vg);
+
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol("", LCK_VG | LCK_NONE);
 
 	log_print("Volume group \"%s\" successfully extended", vg_name);
 
 	return 0;
+
+      error:
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol("", LCK_VG | LCK_NONE);
+	return ECMD_FAILED;
 }

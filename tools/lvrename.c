@@ -85,57 +85,63 @@ int lvrename(int argc, char **argv)
 	}
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
+
+	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for %s", vg_name);
+		return ECMD_FAILED;
+	}
+
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
         if (vg->status & EXPORTED_VG) {
                 log_error("Volume group \"%s\" is exported", vg->name);
-                return ECMD_FAILED;
+		goto error;
         }
 
         if (!(vg->status & LVM_WRITE)) {
                 log_error("Volume group \"%s\" is read-only", vg_name);
-                return ECMD_FAILED;
+		goto error;
         }
 
 	if (find_lv_in_vg(vg, lv_name_new)) {
 		log_error("Logical volume \"%s\" already exists in "
 			  "volume group \"%s\"", lv_name_new, vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!(lvl = find_lv_in_vg(vg, lv_name_old))) {
 		log_error("Existing logical volume \"%s\" not found in "
 			  "volume group \"%s\"", lv_name_old, vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	lv = lvl->lv;
 
 	if (!archive(lv->vg))
-		return ECMD_FAILED;
+		goto error;
 
 	if ((active = lv_active(lv)) < 0) {
 		log_error("Unable to determine status of \"%s\"", lv->name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (active && !lv_suspend(lv)) {
 		log_error("Failed to suspend \"%s\"", lv->name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!(lv->name = pool_strdup(fid->cmd->mem, lv_name_new))) {
 		log_error("Failed to allocate space for new name");
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
 	if (!(fid->ops->vg_write(fid, vg))) {
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (active) {
@@ -145,8 +151,14 @@ int lvrename(int argc, char **argv)
 
 	backup(lv->vg);
 
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+
 	log_print("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
 		  lv_name_old, lv_name_new, vg_name);
 
 	return 0;
+
+      error:
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	return ECMD_FAILED;
 }

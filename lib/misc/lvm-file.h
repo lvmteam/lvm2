@@ -16,3 +16,14 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd);
  */
 int lvm_rename(const char *old, const char *new);
 
+/*
+ * Return 1 if path exists else return 0
+ */
+int path_exists(const char *path);
+int dir_exists(const char *path);
+
+/*
+ * Create directory (but not recursively) if necessary
+ * Return 1 if directory exists on return, else 0
+ */
+int create_dir(const char *dir);

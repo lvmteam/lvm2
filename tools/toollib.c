@@ -8,43 +8,6 @@
 
 #include <sys/stat.h>
 
-int dir_exists(const char *dir)
-{
-	struct stat info;
-
-	if (!*dir)
-		return 1;
-
-	if (stat(dir, &info) != -1) {
-		log_error("\"%s\" exists", dir);
-		return 0;
-	}
-
-	return 1;
-}
-
-int create_dir(const char *dir)
-{
-	struct stat info;
-
-	if (!*dir)
-		return 1;
-
-	if (stat(dir, &info) < 0) {
-		log_verbose("Creating directory \"%s\"", dir);
-		if (!mkdir(dir, 0777))
-			return 1;
-		log_sys_error("mkdir", dir);
-		return 0;
-	}
-
-	if (S_ISDIR(info.st_mode))
-		return 1;
-
-	log_error("Directory \"%s\" not found", dir);
-	return 0;
-}
-
 int process_each_lv_in_vg(struct volume_group *vg,
 			  int (*process_single) (struct logical_volume *lv))
 {
@@ -151,7 +114,7 @@ int process_each_lv(int argc, char **argv,
 	return ret_max;
 }
 
-int process_each_vg(int argc, char **argv,
+int process_each_vg(int argc, char **argv, int lock_type,
 		    int (*process_single) (const char *vg_name))
 {
 	int opt = 0;
@@ -161,11 +124,20 @@ int process_each_vg(int argc, char **argv,
 	struct list *vgh;
 	struct list *vgs;
 
+	char *vg_name;
+
 	if (argc) {
 		log_verbose("Using volume group(s) on command line");
-		for (; opt < argc; opt++)
-			if ((ret = process_single(argv[opt])) > ret_max)
+		for (; opt < argc; opt++) {
+			vg_name = argv[opt];
+			if (!lock_vol((void *)vg_name,  LCK_VG | lock_type)) {
+				log_error("Can't lock %s: skipping", vg_name);
+				continue;
+			}
+			if ((ret = process_single(vg_name)) > ret_max)
 				ret_max = ret;
+			lock_vol((void *)vg_name,  LCK_VG | LCK_NONE);
+		}
 	} else {
 		log_verbose("Finding all volume groups");
 		if (!(vgs = fid->ops->get_vgs(fid))) {
@@ -173,11 +145,16 @@ int process_each_vg(int argc, char **argv,
 			return ECMD_FAILED;
 		}
 		list_iterate(vgh, vgs) {
-			ret =
-			    process_single(list_item
-					   (vgh, struct name_list)->name);
+			vg_name = list_item (vgh, struct name_list)->name;
+			if (!lock_vol((void *)vg_name,  LCK_VG | lock_type)) {
+				log_error("Can't lock %s: skipping", vg_name);
+				continue;
+			}
+			ret = process_single(vg_name);
+					   
 			if (ret > ret_max)
 				ret_max = ret;
+			lock_vol((void *)vg_name,  LCK_VG | LCK_NONE);
 		}
 	}
 

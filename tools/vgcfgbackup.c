@@ -54,6 +54,6 @@ static int vg_backup_single(const char *vg_name)
 
 int vgcfgbackup(int argc, char **argv)
 {
-	return process_each_vg(argc, argv, &vg_backup_single);
+	return process_each_vg(argc, argv, LCK_READ, &vg_backup_single);
 }
 

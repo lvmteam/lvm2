@@ -37,7 +37,7 @@ int vgscan(int argc, char **argv)
 
 	log_print("Reading all physical volumes.  This may take a while...");
 
-	return process_each_vg(argc, argv, &vgscan_single);
+	return process_each_vg(argc, argv, LCK_READ, &vgscan_single);
 }
 
 static int vgscan_single(const char *vg_name)
@@ -45,6 +45,7 @@ static int vgscan_single(const char *vg_name)
 	struct volume_group *vg;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
+
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;

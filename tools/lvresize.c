@@ -105,26 +105,31 @@ int lvresize(int argc, char **argv)
 
 	/* does VG exist? */
 	log_verbose("Finding volume group %s", vg_name);
+	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for %s", vg_name);
+		return ECMD_FAILED;
+	}
+
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
         if (vg->status & EXPORTED_VG) {
                 log_error("Volume group %s is exported", vg->name);
-                return ECMD_FAILED;
+                goto error;
         }
 
         if (!(vg->status & LVM_WRITE)) {
                 log_error("Volume group %s is read-only", vg_name);
-                return ECMD_FAILED;
+                goto error;
         }
 
 	/* does LV exist? */
 	if (!(lvl = find_lv_in_vg(vg, lv_name))) {
 		log_error("Logical volume %s not found in volume group %s",
 			  lv_name, vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	lv = lvl->lv;
@@ -157,7 +162,7 @@ int lvresize(int argc, char **argv)
 		if (extents >= lv->le_count) {
 			log_error("Unable to reduce %s below 1 extent",
 				  lv_name);
-			return EINVALID_CMD_LINE;
+			goto error_cmdline;
 		}
 
 		extents = lv->le_count - extents;
@@ -165,13 +170,13 @@ int lvresize(int argc, char **argv)
 
 	if (!extents) {
 		log_error("New size of 0 not permitted");
-		return EINVALID_CMD_LINE;
+		goto error_cmdline;
 	}
 
 	if (extents == lv->le_count) {
 		log_error("New size (%d extents) matches existing size "
 			  "(%d extents)", extents, lv->le_count);
-		return EINVALID_CMD_LINE;
+		goto error_cmdline;
 	}
 
 	/* If extending, find stripes, stripesize & size of last segment */
@@ -190,7 +195,7 @@ int lvresize(int argc, char **argv)
 			    (seg_stripes && seg_stripes != str && !stripes)) {
 				log_error("Please specify number of "
 					  "stripes (-i) and stripesize (-I)");
-				return EINVALID_CMD_LINE;
+				goto error_cmdline;
 			}
 
 			seg_stripesize = sz;
@@ -245,7 +250,7 @@ int lvresize(int argc, char **argv)
 	if (extents == lv->le_count) {
 		log_error("New size (%d extents) matches existing size "
 			  "(%d extents)", extents, lv->le_count);
-		return EINVALID_CMD_LINE;
+		goto error_cmdline;
 	}
 
 	if (extents < lv->le_count) {
@@ -253,7 +258,7 @@ int lvresize(int argc, char **argv)
 			log_error("New size given (%d extents) not larger "
 				  "than existing size (%d extents)",
 				  extents, lv->le_count);
-			return EINVALID_CMD_LINE;
+			goto error_cmdline;
 		} else
 			resize = LV_REDUCE;
 	}
@@ -263,7 +268,7 @@ int lvresize(int argc, char **argv)
 			log_error("New size given (%d extents) not less than "
 				  "existing size (%d extents)", extents,
 				  lv->le_count);
-			return EINVALID_CMD_LINE;
+			goto error_cmdline;
 		} else
 			resize = LV_EXTEND;
 	}
@@ -290,27 +295,27 @@ int lvresize(int argc, char **argv)
 					  " [y/n]: ", lv_name) == 'n') {
 				log_print("Logical volume %s NOT reduced",
 					  lv_name);
-				return ECMD_FAILED;
+				goto error;
 			}
 		}
 
 		if (!archive(vg))
-			return ECMD_FAILED;
+			goto error;
 
 		if (!lv_reduce(fid, lv, lv->le_count - extents))
-			return ECMD_FAILED;
+			goto error;
 	}
 
 	if ((resize == LV_EXTEND && argc) &&
 	    !(pvh = create_pv_list(fid->cmd->mem, vg,
 				    argc - opt, argv + opt))) {
 		stack;
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (resize == LV_EXTEND) {
 		if (!archive(vg))
-			return ECMD_FAILED;
+			goto error;
 
 		if (!argc) {
 			/* Use full list from VG */
@@ -322,7 +327,7 @@ int lvresize(int argc, char **argv)
 
 		if (!lv_extend(fid, lv, stripes, stripesize,
 			       extents - lv->le_count, pvh))
-			return ECMD_FAILED;
+			goto error;
 	}
 
 
@@ -332,16 +337,26 @@ int lvresize(int argc, char **argv)
 
 	/* store vg on disk(s) */
 	if (!fid->ops->vg_write(fid, vg))
-		return ECMD_FAILED;
+		goto error;
 
         backup(vg);
 
 	if (active && !lv_reactivate(lv))
-		return ECMD_FAILED;
+		goto error;
 
 /********* FIXME Resume *********/
+
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
 
 	log_print("Logical volume %s successfully resized", lv_name);
 
 	return 0;
+
+      error:
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	return ECMD_FAILED;
+
+      error_cmdline:
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	return EINVALID_CMD_LINE;
 }

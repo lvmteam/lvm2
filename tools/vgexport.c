@@ -34,7 +34,7 @@ int vgexport(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	return process_each_vg(argc, argv, &vgexport_single);
+	return process_each_vg(argc, argv, LCK_READ, &vgexport_single);
 }
 
 static int vgexport_single(const char *vg_name)
@@ -43,36 +43,39 @@ static int vgexport_single(const char *vg_name)
 
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is already exported", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (lvs_in_vg_activated(vg)) {
 		log_error("Volume group \"%s\" has active logical volumes", 
 			  vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!archive(vg))
-		return ECMD_FAILED;
+		goto error;
 
 	vg->status |= EXPORTED_VG;
 
 	if (!fid->ops->vg_write(fid,vg))
-		return ECMD_FAILED;
+		goto error;
 
 	backup(vg);
 
 	log_print("Volume group \"%s\" successfully exported", vg->name);
 	
 	return 0;
+
+     error:
+	return ECMD_FAILED;
 }

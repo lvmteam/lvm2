@@ -26,6 +26,7 @@ int vgreduce(int argc, char **argv)
 {
 	struct volume_group *vg;
 	char *vg_name;
+	int ret;
 
 	if (!argc) {
 		log_error("Please give volume group name and "
@@ -49,29 +50,42 @@ int vgreduce(int argc, char **argv)
 	argc--;
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
+	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for %s", vg_name);
+		return ECMD_FAILED;
+	}
+
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
+		lock_vol(vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
         if (vg->status & EXPORTED_VG) {
                 log_error("Volume group \"%s\" is exported", vg->name);
+		lock_vol(vg_name, LCK_VG | LCK_NONE);
                 return ECMD_FAILED;
         }
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
+		lock_vol(vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" is not reducable", vg_name);
+		lock_vol(vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
 	/* FIXME: Pass private structure through to all these functions */
 	/* and update in batch here? */
-	return process_each_pv(argc, argv, vg, vgreduce_single);
+	ret = process_each_pv(argc, argv, vg, vgreduce_single);
+
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+
+	return ret;
 
 /******* FIXME
 	log_error ("no empty physical volumes found in volume group \"%s\"", vg_name);

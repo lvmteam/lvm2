@@ -68,17 +68,26 @@ int vgrename(int argc, char **argv)
 	}
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
+
+        if (!lock_vol(vg_name_old, LCK_VG | LCK_WRITE)) {
+                log_error("Can't get lock for %s", vg_name_old);
+                return ECMD_FAILED;
+        }
+
 	if (!(vg_old = fid->ops->vg_read(fid, vg_name_old))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
+		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
         if (vg_old->status & EXPORTED_VG) {
+		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
                 log_error("Volume group \"%s\" is exported", vg_old->name);
                 return ECMD_FAILED;
         }
 
 	if (!(vg_old->status & LVM_WRITE)) {
+		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
 		log_error("Volume group \"%s\" is read-only", vg_old->name);
 		return ECMD_FAILED;
 	}
@@ -89,20 +98,28 @@ int vgrename(int argc, char **argv)
 /***** FIXME Handle this with multiple LV renames!
 		if (!force_ARG) {
 			log_error("Use -f to force the rename");
+			lock_vol(vg_name_old, LCK_VG | LCK_NONE);
 			return ECMD_FAILED;
 		}
 *****/
 	}
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_new);
-	if ((vg_new = fid->ops->vg_read(fid, vg_name_new))) {
-		log_error("New volume group \"%s\" already exists",
-			  vg_name_new);
+
+	if (!lock_vol(vg_name_new, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+		log_error("Can't get lock for %s", vg_name_new);
 		return ECMD_FAILED;
 	}
 
+	if ((vg_new = fid->ops->vg_read(fid, vg_name_new))) {
+		log_error("New volume group \"%s\" already exists",
+			  vg_name_new);
+		goto error;
+	}
+
 	if (!archive(vg_old))
-		return ECMD_FAILED;
+		goto error;
 
 	/* Change the volume group name */
 	strcpy(vg_old->name, vg_name_new);
@@ -116,35 +133,43 @@ int vgrename(int argc, char **argv)
 /********** FIXME: Check within vg_write now
 			log_error("A new logical volume path exceeds "
 				  "maximum of %d!", NAME_LEN - 2);
-			return ECMD_FAILED;
+			goto error;
 *************/
 
 	sprintf(old_path, "%s%s", dev_dir, vg_name_old);
 	sprintf(new_path, "%s%s", dev_dir, vg_name_new);
 
-	log_verbose("Renaming \"%s\" to \"%s\"", old_path, new_path);
-	if (rename(old_path, new_path)) {
-		log_error("Renaming \"%s\" to \"%s\" failed: %s",
-			  old_path, new_path, strerror(errno));
-		return ECMD_FAILED;
+	if (dir_exists(old_path)) {
+		log_verbose("Renaming \"%s\" to \"%s\"", old_path, new_path);
+		if (rename(old_path, new_path)) {
+			log_error("Renaming \"%s\" to \"%s\" failed: %s",
+			  	old_path, new_path, strerror(errno));
+			goto error;
+		}
 	}
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
 	if (!(fid->ops->vg_write(fid, vg_old))) {
-		return ECMD_FAILED;
+		goto error;
 	}
 
-/******* FIXME Any LV things to update? */
+/******* FIXME Rename any active LVs! *****/
 
 	backup(vg_old);
+
+	lock_vol(vg_name_new, LCK_VG | LCK_NONE);
+	lock_vol(vg_name_old, LCK_VG | LCK_NONE);
 
 	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
 		  vg_name_old, vg_name_new);
 
-	/* FIXME: Deallocations */
-
 	return 0;
+
+      error:
+	lock_vol(vg_name_new, LCK_VG | LCK_NONE);
+	lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+	return ECMD_FAILED;
 }
 
 /* FIXME: Moved into vg_write now */

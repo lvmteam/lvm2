@@ -24,7 +24,19 @@ static int vgremove_single(const char *vg_name);
 
 int vgremove(int argc, char **argv)
 {
-	return process_each_vg(argc, argv, &vgremove_single);
+	int ret;
+
+	if (!lock_vol("", LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
+		
+	ret = process_each_vg(argc, argv, LCK_WRITE | LCK_NONBLOCK, 
+			      &vgremove_single);
+
+	lock_vol("", LCK_VG | LCK_NONE);
+
+	return ret;
 }
 
 static int vgremove_single(const char *vg_name)
