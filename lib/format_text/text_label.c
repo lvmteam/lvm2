@@ -18,6 +18,7 @@
 #include "layout.h"
 #include "label.h"
 #include "xlate.h"
+#include "lvmcache.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>

@@ -216,7 +216,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg);
 
 int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd);
 
-int import_extents(struct pool *mem, struct volume_group *vg,
+int import_extents(struct cmd_context *cmd, struct volume_group *vg,
 		   struct list *pvds);
 int export_extents(struct disk_list *dl, uint32_t lv_num,
 		   struct logical_volume *lv, struct physical_volume *pv);

@@ -1,4 +1,5 @@
 ../lib/activate/activate.h
+../lib/activate/targets.h
 ../lib/cache/lvmcache.h
 ../lib/commands/errors.h
 ../lib/commands/toolcontext.h
@@ -21,11 +22,14 @@
 ../lib/filters/filter.h
 ../lib/format1/format1.h
 ../lib/format_text/format-text.h
+../lib/format_text/text_export.h
+../lib/format_text/text_import.h
 ../lib/label/label.h
 ../lib/locking/locking.h
 ../lib/log/log.h
 ../lib/metadata/lv_alloc.h
 ../lib/metadata/metadata.h
+../lib/metadata/segtypes.h
 ../lib/mm/dbg_malloc.h
 ../lib/mm/memlock.h
 ../lib/mm/pool.h

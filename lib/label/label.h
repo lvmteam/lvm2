@@ -16,7 +16,6 @@
 #ifndef _LVM_LABEL_H
 #define _LVM_LABEL_H
 
-#include "lvmcache.h"
 #include "uuid.h"
 #include "device.h"
 
@@ -24,6 +23,8 @@
 #define LABEL_SIZE SECTOR_SIZE	/* Think very carefully before changing this */
 #define LABEL_SCAN_SECTORS 4L
 #define LABEL_SCAN_SIZE (LABEL_SCAN_SECTORS << SECTOR_SHIFT)
+
+struct labeller;
 
 /* On disk - 32 bytes */
 struct label_header {

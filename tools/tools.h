@@ -43,6 +43,7 @@
 #include "lvm-file.h"
 #include "lvm-string.h"
 #include "pool.h"
+#include "segtypes.h"
 #include "str_list.h"
 #include "toolcontext.h"
 #include "toollib.h"

@@ -39,6 +39,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct lv_segment *seg;
 	uint32_t seg_extents;
 	uint32_t sz, str;
+	struct segment_type *segtype;
 
 	enum {
 		LV_ANY = 0,
@@ -196,8 +197,8 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	/* If extending, find stripes, stripesize & size of last segment */
 	if (extents > lv->le_count && !(stripes == 1 || (stripes > 1 && ssize))) {
 		list_iterate_items(seg, &lv->segments) {
-			if (seg->type != SEG_STRIPED)
-				continue;
+			if (strcmp(seg->segtype->ops->name(seg), "striped"))
+				continue;	/* Not striped */
 
 			sz = seg->stripe_size;
 			str = seg->area_count;
@@ -243,7 +244,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		list_iterate_items(seg, &lv->segments) {
 			seg_extents = seg->len;
 
-			if (seg->type == SEG_STRIPED) {
+			if (seg->segtype->flags & SEG_AREAS_STRIPED) {
 				seg_stripesize = seg->stripe_size;
 				seg_stripes = seg->area_count;
 			}
@@ -354,9 +355,14 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			  display_size(cmd, (uint64_t)
 				       extents * (vg->extent_size / 2),
 				       SIZE_SHORT));
+		if (!(segtype = get_segtype_from_string(lv->vg->cmd,
+							"striped"))) {
+			stack;
+			return 0;
+		}
 
-		if (!lv_extend(vg->fid, lv, stripes, ssize,
-			       extents - lv->le_count, pvh))
+		if (!lv_extend(vg->fid, lv, segtype, stripes, ssize, 0u,
+			       extents - lv->le_count, NULL, 0u, 0u, pvh))
 			goto error;
 	}
 

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
+# Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
 # Copyright (C) 2004 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the LVM2.
@@ -16,32 +16,17 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-SUBDIRS = doc include man 
+SOURCES = snapshot.c
 
-ifeq ("@INTL@", "yes")
-  SUBDIRS += po
-endif
+LIB_SHARED = liblvm2snapshot.so
 
-SUBDIRS += lib tools
+include ../../make.tmpl
 
-ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS += lib/format1 \
-	     lib/mirror \
-	     lib/snapshot \
-	     po \
-	     test/mm test/device test/format1 test/regex test/filters
-endif
+.PHONY: install
 
-include make.tmpl
-
-lib: include
-tools: lib
-po: lib tools
-
-ifeq ("@INTL@", "yes")
-lib.pofile: include.pofile
-tools.pofile: lib.pofile
-po.pofile: lib.pofile tools.pofile
-pofile: po.pofile
-endif
+install: liblvm2snapshot.so
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
+		$(libdir)/liblvm2snapshot.so.$(LIB_VERSION)
+	$(LN_S) -f liblvm2snapshot.so.$(LIB_VERSION) \
+		$(libdir)/liblvm2snapshot.so
 

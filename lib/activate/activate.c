@@ -25,6 +25,7 @@
 #include "toolcontext.h"
 #include "dev_manager.h"
 #include "str_list.h"
+#include "config.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -341,7 +342,7 @@ static int _lv_info(const struct logical_volume *lv, int mknodes,
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name))) {
 		stack;
 		return 0;
 	}
@@ -387,7 +388,7 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name))) {
 		stack;
 		return 0;
 	}
@@ -419,7 +420,7 @@ int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
 	if (!info.exists)
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name))) {
 		stack;
 		return 0;
 	}
@@ -462,7 +463,7 @@ static int _lv_activate_lv(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name))) {
 		stack;
 		return 0;
 	}
@@ -479,7 +480,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name))) {
 		stack;
 		return 0;
 	}
@@ -496,7 +497,7 @@ static int _lv_suspend_lv(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
+	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name))) {
 		stack;
 		return 0;
 	}

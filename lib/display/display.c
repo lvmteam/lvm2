@@ -18,6 +18,7 @@
 #include "display.h"
 #include "activate.h"
 #include "toolcontext.h"
+#include "segtypes.h"
 
 #define SIZE_BUF 128
 
@@ -31,18 +32,7 @@ static struct {
 	ALLOC_DEFAULT, "next free (default)"}
 };
 
-static struct {
-	segment_type_t segtype;
-	const char *str;
-} _segtypes[] = {
-	{
-	SEG_STRIPED, "striped"}, {
-	SEG_MIRRORED, "mirror"}, {
-	SEG_SNAPSHOT, "snapshot"}
-};
-
 static int _num_policies = sizeof(_policies) / sizeof(*_policies);
-static int _num_segtypes = sizeof(_segtypes) / sizeof(*_segtypes);
 
 uint64_t units_to_bytes(const char *units, char *unit_type)
 {
@@ -124,17 +114,6 @@ const char *get_alloc_string(alloc_policy_t alloc)
 	return NULL;
 }
 
-const char *get_segtype_string(segment_type_t segtype)
-{
-	int i;
-
-	for (i = 0; i < _num_segtypes; i++)
-		if (_segtypes[i].segtype == segtype)
-			return _segtypes[i].str;
-
-	return "unknown";
-}
-
 alloc_policy_t get_alloc_from_string(const char *str)
 {
 	int i;
@@ -145,18 +124,6 @@ alloc_policy_t get_alloc_from_string(const char *str)
 
 	log_error("Unrecognised allocation policy - using default");
 	return ALLOC_DEFAULT;
-}
-
-segment_type_t get_segtype_from_string(const char *str)
-{
-	int i;
-
-	for (i = 0; i < _num_segtypes; i++)
-		if (!strcmp(_segtypes[i].str, str))
-			return _segtypes[i].segtype;
-
-	log_error("Unrecognised segment type - using default (striped)");
-	return SEG_STRIPED;
 }
 
 const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
@@ -386,8 +353,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 			snap_active = lv_snapshot_percent(snap->cow,
 							  &snap_percent);
 			if (!snap_active || snap_percent < 0 ||
-			    snap_percent >= 100)
-				snap_active = 0;
+			    snap_percent >= 100) snap_active = 0;
 			log_print("                       %s%s/%s [%s]",
 				  lv->vg->cmd->dev_dir, lv->vg->name,
 				  snap->cow->name,
@@ -478,7 +444,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 	return 0;
 }
 
-static void _display_stripe(struct lv_segment *seg, uint32_t s, const char *pre)
+void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre)
 {
 	switch (seg->area[s].type) {
 	case AREA_PV:
@@ -506,52 +472,18 @@ static void _display_stripe(struct lv_segment *seg, uint32_t s, const char *pre)
 
 int lvdisplay_segments(struct logical_volume *lv)
 {
-	uint32_t s;
-	struct list *segh;
 	struct lv_segment *seg;
 
 	log_print("--- Segments ---");
 
-	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct lv_segment);
-
+	list_iterate_items(seg, &lv->segments) {
 		log_print("Logical extent %u to %u:",
 			  seg->le, seg->le + seg->len - 1);
 
-		if (seg->type == SEG_STRIPED && seg->area_count == 1)
-			log_print("  Type\t\tlinear");
-		else
-			log_print("  Type\t\t%s",
-				  get_segtype_string(seg->type));
+		log_print("  Type\t\t%s", seg->segtype->ops->name(seg));
 
-		switch (seg->type) {
-		case SEG_STRIPED:
-			if (seg->area_count == 1)
-				_display_stripe(seg, 0, "  ");
-			else {
-				log_print("  Stripes\t\t%u", seg->area_count);
-				log_print("  Stripe size\t\t%u KB",
-					  seg->stripe_size / 2);
-
-				for (s = 0; s < seg->area_count; s++) {
-					log_print("  Stripe %d:", s);
-					_display_stripe(seg, s, "    ");
-				}
-			}
-			log_print(" ");
-			break;
-		case SEG_SNAPSHOT:
-			break;
-		case SEG_MIRRORED:
-			log_print("  Mirrors\t\t%u", seg->area_count);
-			log_print("  Mirror size\t\t%u", seg->area_len);
-			log_print("  Mirror original:");
-			_display_stripe(seg, 0, "    ");
-			log_print("  Mirror destination:");
-			_display_stripe(seg, 1, "    ");
-			log_print(" ");
-			break;
-		}
+		if (seg->segtype->ops->display)
+			seg->segtype->ops->display(seg);
 	}
 
 	log_print(" ");
@@ -626,14 +558,12 @@ void vgdisplay_full(struct volume_group *vg)
 	log_print("Alloc PE / Size       %u / %s",
 		  vg->extent_count - vg->free_count, display_size(vg->cmd,
 								  ((uint64_t)
-								   vg->
-								   extent_count
+								   vg->extent_count
 								   -
-								   vg->
-								   free_count) *
-								  (vg->
-								   extent_size /
-								   2),
+								   vg->free_count)
+								  *
+								  (vg->extent_size
+								   / 2),
 								  SIZE_SHORT));
 
 	log_print("Free  PE / Size       %u / %s", vg->free_count,
@@ -714,8 +644,8 @@ void vgdisplay_short(struct volume_group *vg)
 			       ((uint64_t) vg->extent_count -
 				vg->free_count) * vg->extent_size / 2,
 			       SIZE_SHORT), display_size(vg->cmd,
-							 (uint64_t) vg->
-							 free_count *
+							 (uint64_t)
+							 vg->free_count *
 							 vg->extent_size / 2,
 							 SIZE_SHORT));
 	return;

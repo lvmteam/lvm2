@@ -1,5 +1,7 @@
 Version 2.00.16 - 
 =============================
+  Begin separating out segment code. There's a lot of change here.
+  Compress any (obsolete) long LVM1 pvids encountered.
   Support for tagged config files.
   Don't abort operations if selinux present but disabled.
   Fix typo in configure which left HAVE_LIBDL unset.

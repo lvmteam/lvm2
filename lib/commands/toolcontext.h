@@ -57,6 +57,7 @@ struct cmd_context {
 	struct format_type *fmt_backup;	/* Format to use for backups */
 
 	struct list formats;	/* Available formats */
+	struct list segtypes;	/* Available segment types */
 	const char *hostname;
 	const char *kernel_vsn;
 

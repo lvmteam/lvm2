@@ -309,7 +309,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=/usr
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 SNAPSHOTS MIRRORS OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -863,6 +863,10 @@ Optional Packages:
   --with-user=USER        Set the owner of installed files
   --with-group=GROUP      Set the group owner of installed files
   --with-lvm1=TYPE        LVM1 metadata support: internal/shared/none
+                          TYPE=internal
+  --with-snapshots=TYPE   Snapshot support: internal/shared/none
+                          TYPE=internal
+  --with-mirrors=TYPE     Mirror support: internal/shared/none
                           TYPE=internal
   --with-localedir=DIR    Translation files in DIR PREFIX/share/locale
   --with-confdir=DIR      Configuration files in DIR /etc
@@ -3974,6 +3978,50 @@ else
   JOBS=-j2
 fi;
 
+
+# Check whether --with-snapshots or --without-snapshots was given.
+if test "${with_snapshots+set}" = set; then
+  withval="$with_snapshots"
+   SNAPSHOTS="$withval"
+else
+   SNAPSHOTS="internal"
+fi;
+
+if [ "x$SNAPSHOTS" != xnone -a "x$SNAPSHOTS" != xinternal -a "x$SNAPSHOTS" != xshared ];
+ then  { { echo "$as_me:$LINENO: error: --with-snapshots parameter invalid
+" >&5
+echo "$as_me: error: --with-snapshots parameter invalid
+" >&2;}
+   { (exit 1); exit 1; }; }
+ exit
+fi;
+
+if test x$SNAPSHOTS = xinternal; then
+	CFLAGS="$CFLAGS -DSNAPSHOT_INTERNAL"
+fi
+
+
+# Check whether --with-mirrors or --without-mirrors was given.
+if test "${with_mirrors+set}" = set; then
+  withval="$with_mirrors"
+   MIRRORS="$withval"
+else
+   MIRRORS="internal"
+fi;
+
+if [ "x$MIRRORS" != xnone -a "x$MIRRORS" != xinternal -a "x$MIRRORS" != xshared ];
+ then  { { echo "$as_me:$LINENO: error: --with-mirrors parameter invalid
+" >&5
+echo "$as_me: error: --with-mirrors parameter invalid
+" >&2;}
+   { (exit 1); exit 1; }; }
+ exit
+fi;
+
+if test x$MIRRORS = xinternal; then
+	CFLAGS="$CFLAGS -DMIRRORED_INTERNAL"
+fi
+
 # Check whether --enable-static_link or --disable-static_link was given.
 if test "${enable_static_link+set}" = set; then
   enableval="$enable_static_link"
@@ -4614,7 +4662,9 @@ else
 	HAVE_LIBDL=no
 fi
 
-if [ "x$LVM1" = xshared -a "x$STATIC_LINK" = xyes ];
+if [ \( "x$LVM1" = xshared -o \
+      "x$SNAPSHOTS" = xshared -o "x$MIRRORS" = xshared \
+      \) -a "x$STATIC_LINK" = xyes ];
  then  { { echo "$as_me:$LINENO: error: Features cannot be 'shared' when building statically
 " >&5
 echo "$as_me: error: Features cannot be 'shared' when building statically
@@ -5117,7 +5167,9 @@ fi
 
 
 
-                                                                                                                                                      ac_config_files="$ac_config_files Makefile make.tmpl doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
+
+
+                                                                                                                                                                          ac_config_files="$ac_config_files Makefile make.tmpl doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -5674,6 +5726,8 @@ do
   "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "lib/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
   "lib/format1/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/format1/Makefile" ;;
+  "lib/mirror/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/mirror/Makefile" ;;
+  "lib/snapshot/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/snapshot/Makefile" ;;
   "man/Makefile" ) CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
   "po/Makefile" ) CONFIG_FILES="$CONFIG_FILES po/Makefile" ;;
   "tools/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
@@ -5799,6 +5853,8 @@ s,@MSGFMT@,$MSGFMT,;t t
 s,@JOBS@,$JOBS,;t t
 s,@STATIC_LINK@,$STATIC_LINK,;t t
 s,@LVM1@,$LVM1,;t t
+s,@SNAPSHOTS@,$SNAPSHOTS,;t t
+s,@MIRRORS@,$MIRRORS,;t t
 s,@OWNER@,$OWNER,;t t
 s,@GROUP@,$GROUP,;t t
 s,@CLDFLAGS@,$CLDFLAGS,;t t

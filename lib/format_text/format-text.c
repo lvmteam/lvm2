@@ -30,6 +30,7 @@
 #include "xlate.h"
 #include "label.h"
 #include "memlock.h"
+#include "lvmcache.h"
 
 #include <unistd.h>
 #include <sys/file.h>
@@ -928,8 +929,7 @@ static int _mda_setup(const struct format_type *fmt,
 	/* FIXME If creating new mdas, wipe them! */
 	if (mda_size1) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start1,
-			     mda_size1))
-			return 0;
+			     mda_size1)) return 0;
 
 		if (!dev_zero((struct device *) pv->dev, start1,
 			      (size_t) (mda_size1 >
@@ -976,8 +976,7 @@ static int _mda_setup(const struct format_type *fmt,
 
 	if (mda_size2) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start2,
-			     mda_size2))
-			return 0;
+			     mda_size2)) return 0;
 		if (!dev_zero(pv->dev, start2,
 			      (size_t) (mda_size1 >
 					wipe_size ? wipe_size : mda_size1))) {
@@ -1066,8 +1065,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		}
 	}
 	if (!add_da
-	    (fmt, NULL, &info->das, pv->pe_start << SECTOR_SHIFT,
-	     UINT64_C(0))) {
+	    (fmt, NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0))) {
 		stack;
 		return 0;
 	}
@@ -1139,8 +1137,7 @@ static int _add_raw(struct list *raw_list, struct device_area *dev_area)
 		rl = list_item(rlh, struct raw_list);
 		/* FIXME Check size/overlap consistency too */
 		if (rl->dev_area.dev == dev_area->dev &&
-		    rl->dev_area.start == dev_area->start)
-			return 1;
+		    rl->dev_area.start == dev_area->start) return 1;
 	}
 
 	if (!(rl = dbg_malloc(sizeof(struct raw_list)))) {
@@ -1334,11 +1331,10 @@ static int _pv_setup(const struct format_type *fmt,
 					    list_item(mdash,
 						      struct metadata_area);
 					if (mda2->ops !=
-					    &_metadata_text_raw_ops)
-						continue;
+					    &_metadata_text_raw_ops) continue;
 					mdac2 =
-					    (struct mda_context *) mda2->
-					    metadata_locn;
+					    (struct mda_context *)
+					    mda2->metadata_locn;
 					if (!memcmp
 					    (&mdac2->area, &mdac->area,
 					     sizeof(mdac->area))) {
@@ -1356,8 +1352,7 @@ static int _pv_setup(const struct format_type *fmt,
 				}
 
 				if (!(mdac_new = pool_alloc(fmt->cmd->mem,
-							    sizeof(*mdac_new))))
-				{
+							    sizeof(*mdac_new)))) {
 					stack;
 					return 0;
 				}
@@ -1486,8 +1481,7 @@ static struct format_instance *_create_text_instance(const struct format_type
 				}
 
 				if (!(mdac_new = pool_alloc(fmt->cmd->mem,
-							    sizeof(*mdac_new))))
-				{
+							    sizeof(*mdac_new)))) {
 					stack;
 					return NULL;
 				}

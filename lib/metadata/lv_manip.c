@@ -20,6 +20,8 @@
 #include "lvm-string.h"
 #include "toolcontext.h"
 #include "lv_alloc.h"
+#include "display.h"
+#include "segtypes.h"
 
 /*
  * These functions adjust the pe counts in pv's
@@ -76,6 +78,7 @@ struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t num_areas)
 
 static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 				uint32_t stripe_size,
+				struct segment_type *segtype,
 				struct pv_area **areas, uint32_t *ix)
 {
 	uint32_t count, area_len, smallest;
@@ -83,7 +86,9 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 	struct lv_segment *seg;
 	int striped = 0;
 
-	striped = 1;
+	/* Striped or mirrored? */
+	if (segtype->flags & SEG_AREAS_STRIPED)
+		striped = 1;
 
 	count = lv->le_count - *ix;
 	area_len = count / (striped ? area_count : 1);
@@ -98,7 +103,7 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 	}
 
 	seg->lv = lv;
-	seg->type = SEG_STRIPED;
+	seg->segtype = segtype;
 	seg->le = *ix;
 	seg->len = area_len * (striped ? area_count : 1);
 	seg->area_len = area_len;
@@ -116,6 +121,10 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 
 	list_add(&lv->segments, &seg->list);
 	*ix += seg->len;
+
+	if (!striped)
+		lv->status |= MIRRORED;
+
 	return 1;
 }
 
@@ -135,7 +144,8 @@ static int _comp_area(const void *l, const void *r)
 
 static int _alloc_parallel(struct logical_volume *lv,
 			   struct list *pvms, uint32_t allocated,
-			   uint32_t stripes, uint32_t stripe_size)
+			   uint32_t stripes, uint32_t stripe_size,
+			   uint32_t mirrors, struct segment_type *segtype)
 {
 	int r = 0;
 	struct list *pvmh;
@@ -145,7 +155,15 @@ static int _alloc_parallel(struct logical_volume *lv,
 	size_t len;
 	uint32_t area_count;
 
-	area_count = stripes;
+	if (stripes > 1 && mirrors > 1) {
+		log_error("striped mirrors are not supported yet");
+		return 0;
+	}
+
+	if (stripes > 1)
+		area_count = stripes;
+	else
+		area_count = mirrors;
 
 	list_iterate(pvmh, pvms)
 	    pv_count++;
@@ -179,8 +197,8 @@ static int _alloc_parallel(struct logical_volume *lv,
 		/* sort the areas so we allocate from the biggest */
 		qsort(areas, ix, sizeof(*areas), _comp_area);
 
-		if (!_alloc_parallel_area(lv, area_count, stripe_size, areas,
-					  &allocated)) {
+		if (!_alloc_parallel_area(lv, area_count, stripe_size, segtype,
+					  areas, &allocated)) {
 			stack;
 			goto out;
 		}
@@ -215,7 +233,11 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 	}
 
 	seg->lv = lv;
-	seg->type = SEG_STRIPED;
+	if (!(seg->segtype = get_segtype_from_string(lv->vg->cmd, "striped"))) {
+		stack;
+		return 0;
+	}
+	seg->le = *ix;
 	seg->le = *ix;
 	seg->len = count;
 	seg->area_len = count;
@@ -234,6 +256,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 
 static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 				struct pv_map *map, struct pv_area *pva,
+				struct segment_type *segtype,
 				struct physical_volume *mirrored_pv,
 				uint32_t mirrored_pe)
 {
@@ -251,7 +274,8 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	}
 
 	seg->lv = lv;
-	seg->type = SEG_MIRRORED;
+	seg->segtype = segtype;
+	seg->le = *ix;
 	seg->status = 0u;
 	seg->le = *ix;
 	seg->len = count;
@@ -321,6 +345,7 @@ static int _alloc_contiguous(struct logical_volume *lv,
 /* FIXME Contiguous depends on *segment* (i.e. stripe) not LV */
 static int _alloc_mirrored(struct logical_volume *lv,
 			   struct list *pvms, uint32_t allocated,
+			   struct segment_type *segtype,
 			   struct physical_volume *mirrored_pv,
 			   uint32_t mirrored_pe)
 {
@@ -343,7 +368,7 @@ static int _alloc_mirrored(struct logical_volume *lv,
 			continue;
 		}
 
-		if (!_alloc_mirrored_area(lv, &allocated, pvm, pva,
+		if (!_alloc_mirrored_area(lv, &allocated, pvm, pva, segtype,
 					  mirrored_pv, mirrored_pe)) {
 			stack;
 			return 0;
@@ -400,7 +425,8 @@ static int _alloc_next_free(struct logical_volume *lv,
  */
 static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		     struct list *allocatable_pvs, uint32_t allocated,
-		     uint32_t stripes, uint32_t stripe_size,
+		     struct segment_type *segtype,
+		     uint32_t stripes, uint32_t stripe_size, uint32_t mirrors,
 		     struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
 		     uint32_t status)
 {
@@ -420,11 +446,12 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	if (!(pvms = create_pv_maps(scratch, vg, allocatable_pvs)))
 		goto out;
 
-	if (stripes > 1)
-		r = _alloc_parallel(lv, pvms, allocated, stripes, stripe_size);
+	if (stripes > 1 || mirrors > 1)
+		r = _alloc_parallel(lv, pvms, allocated, stripes, stripe_size,
+				    mirrors, segtype);
 
 	else if (mirrored_pv)
-		r = _alloc_mirrored(lv, pvms, allocated, mirrored_pv,
+		r = _alloc_mirrored(lv, pvms, allocated, segtype, mirrored_pv,
 				    mirrored_pe);
 	else if (lv->alloc == ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
@@ -554,12 +581,51 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	return lv;
 }
 
-struct logical_volume *lv_create(struct format_instance *fi,
+int lv_extend(struct format_instance *fid,
+		      struct logical_volume *lv,
+		      struct segment_type *segtype,
+		      uint32_t stripes, uint32_t stripe_size,
+		      uint32_t mirrors, uint32_t extents,
+		      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
+		      uint32_t status, struct list *allocatable_pvs)
+{
+	uint32_t old_le_count = lv->le_count;
+	uint64_t old_size = lv->size;
+
+	lv->le_count += extents;
+	lv->size += (uint64_t) extents *lv->vg->extent_size;
+
+	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count, segtype,
+		       stripes, stripe_size, mirrors, mirrored_pv, mirrored_pe,
+		       status)) {
+		lv->le_count = old_le_count;
+		lv->size = old_size;
+		stack;
+		return 0;
+	}
+
+	if ((segtype->flags & SEG_CAN_SPLIT) && !lv_merge_segments(lv)) {
+		log_err("Couldn't merge segments after extending "
+			"logical volume.");
+		return 0;
+	}
+
+	if (fid->fmt->ops->lv_setup && !fid->fmt->ops->lv_setup(fid, lv)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+struct logical_volume *lv_create(struct format_instance *fid,
 				 const char *name,
 				 uint32_t status,
 				 alloc_policy_t alloc,
+				 struct segment_type *segtype,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
+				 uint32_t mirrors,
 				 uint32_t extents,
 				 struct volume_group *vg,
 				 struct list *allocatable_pvs)
@@ -585,21 +651,13 @@ struct logical_volume *lv_create(struct format_instance *fi,
 		return NULL;
 	}
 
-	if (!(lv = lv_create_empty(fi, name, "lvol%d", status, alloc, vg))) {
+	if (!(lv = lv_create_empty(fid, name, "lvol%d", status, alloc, vg))) {
 		stack;
 		return NULL;
 	}
 
-	lv->size = (uint64_t) extents *vg->extent_size;
-	lv->le_count = extents;
-
-	if (!_allocate(vg, lv, allocatable_pvs, 0u, stripes, stripe_size,
-		       NULL, 0u, 0u)) {
-		stack;
-		return NULL;
-	}
-
-	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
+	if (!lv_extend(fid, lv, segtype, stripes, stripe_size, mirrors,
+		       extents, NULL, 0u, 0u, allocatable_pvs)) {
 		stack;
 		return NULL;
 	}
@@ -628,7 +686,7 @@ int lv_reduce(struct format_instance *fi,
 			/* reduce this segment */
 			_put_extents(seg);
 			seg->len -= count;
-			striped = (seg->type == SEG_STRIPED);
+			striped = seg->segtype->flags & SEG_AREAS_STRIPED;
 			/* Caller must ensure exact divisibility */
 			if (striped && (count % seg->area_count)) {
 				log_error("Segment extent reduction %" PRIu32
@@ -648,68 +706,6 @@ int lv_reduce(struct format_instance *fi,
 	lv->vg->free_count += extents;
 
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
-
-int lv_extend(struct format_instance *fi,
-	      struct logical_volume *lv,
-	      uint32_t stripes, uint32_t stripe_size,
-	      uint32_t extents, struct list *allocatable_pvs)
-{
-	uint32_t old_le_count = lv->le_count;
-	uint64_t old_size = lv->size;
-
-	lv->le_count += extents;
-	lv->size += (uint64_t) extents *lv->vg->extent_size;
-
-	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count,
-		       stripes, stripe_size, NULL, 0u, 0u)) {
-		lv->le_count = old_le_count;
-		lv->size = old_size;
-		stack;
-		return 0;
-	}
-
-	if (!lv_merge_segments(lv)) {
-		log_err("Couldn't merge segments after extending "
-			"logical volume.");
-		return 0;
-	}
-
-	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
-
-int lv_extend_mirror(struct format_instance *fid,
-		     struct logical_volume *lv,
-		     struct physical_volume *mirrored_pv,
-		     uint32_t mirrored_pe,
-		     uint32_t extents, struct list *allocatable_pvs,
-		     uint32_t status)
-{
-	uint32_t old_le_count = lv->le_count;
-	uint64_t old_size = lv->size;
-
-	lv->le_count += extents;
-	lv->size += (uint64_t) extents *lv->vg->extent_size;
-
-	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count,
-		       1, extents, mirrored_pv, mirrored_pe, status)) {
-		lv->le_count = old_le_count;
-		lv->size = old_size;
-		stack;
-		return 0;
-	}
-
-	if (fid->fmt->ops->lv_setup && !fid->fmt->ops->lv_setup(fid, lv)) {
 		stack;
 		return 0;
 	}

@@ -16,17 +16,16 @@
 #ifndef _LVM_DEV_MANAGER_H
 #define _LVM_DEV_MANAGER_H
 
-#include "metadata.h"
-#include "config.h"
-
+struct logical_volume;
+struct cmd_context;
 struct dev_manager;
 struct dm_info;
 
 /*
  * Constructor and destructor.
  */
-struct dev_manager *dev_manager_create(const char *vg_name,
-				       struct config_tree *cf);
+struct dev_manager *dev_manager_create(struct cmd_context *cmd,
+				       const char *vg_name);
 void dev_manager_destroy(struct dev_manager *dm);
 void dev_manager_exit(void);
 

@@ -16,6 +16,8 @@
 #include "lib.h"
 #include "metadata.h"
 #include "toolcontext.h"
+#include "segtypes.h"
+#include "display.h"
 
 /* 
  * Replace any LV segments on given PV with temporary mirror.
@@ -33,6 +35,12 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	struct lv_list *lvl;
 	int lv_used = 0;
 	uint32_t s, start_le, extent_count = 0u;
+	struct segment_type *segtype;
+
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "mirror"))) {
+		stack;
+		return 0;
+	}
 
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
@@ -52,11 +60,11 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 			}
 
 			start_le = lv_mirr->le_count;
-			if (!lv_extend_mirror(lv->vg->fid, lv_mirr,
-					      seg->area[s].u.pv.pv,
-					      seg->area[s].u.pv.pe,
-					      seg->area_len, allocatable_pvs,
-					      PVMOVE)) {
+			if (!lv_extend(lv->vg->fid, lv_mirr, segtype, 1,
+				       seg->area_len, 0u, seg->area_len,
+				       seg->area[s].u.pv.pv,
+				       seg->area[s].u.pv.pe,
+				       PVMOVE, allocatable_pvs)) {
 				log_error("Allocation for temporary "
 					  "pvmove LV failed");
 				return 0;
@@ -98,13 +106,14 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 					continue;
 
 				if (!(mir_seg = find_seg_by_le(lv_mirr,
-							       seg->area[s].u.
-							       lv.le))) {
+							       seg->area[s].
+							       u.lv.le))) {
 					log_error("No segment found with LE");
 					return 0;
 				}
 
-				if (mir_seg->type != SEG_MIRRORED ||
+				if ((!(mir_seg->segtype->flags
+				       & SEG_AREAS_MIRRORED)) ||
 				    !(mir_seg->status & PVMOVE) ||
 				    mir_seg->le != seg->area[s].u.lv.le ||
 				    mir_seg->area_count != 2 ||
@@ -122,7 +131,13 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				seg->area[s].u.pv.pv = mir_seg->area[c].u.pv.pv;
 				seg->area[s].u.pv.pe = mir_seg->area[c].u.pv.pe;
 
-				mir_seg->type = SEG_STRIPED;
+				if (!
+				    (mir_seg->segtype =
+				     get_segtype_from_string(vg->cmd,
+							     "striped"))) {
+					log_error("Missing striped segtype");
+					return 0;
+				}
 				mir_seg->area_count = 1;
 
 				lv1->status &= ~LOCKED;
@@ -141,7 +156,7 @@ struct physical_volume *get_pvmove_pv_from_lv_mirr(struct logical_volume
 
 	list_iterate(segh, &lv_mirr->segments) {
 		seg = list_item(segh, struct lv_segment);
-		if (seg->type != SEG_MIRRORED)
+		if (!(seg->segtype->flags & SEG_AREAS_MIRRORED))
 			continue;
 		if (seg->area[0].type != AREA_PV)
 			continue;

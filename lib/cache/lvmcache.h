@@ -20,7 +20,6 @@
 #include "dev-cache.h"
 #include "uuid.h"
 #include "label.h"
-#include "metadata.h"
 
 #define ORPHAN ""
 
@@ -29,6 +28,10 @@
 
 /* LVM specific per-volume info */
 /* Eventual replacement for struct physical_volume perhaps? */
+
+struct cmd_context;
+struct format_type;
+struct volume_group;
 
 struct lvmcache_vginfo {
 	struct list list;	/* Join these vginfos together */

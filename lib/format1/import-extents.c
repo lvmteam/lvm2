@@ -19,6 +19,8 @@
 #include "pool.h"
 #include "disk-rep.h"
 #include "lv_alloc.h"
+#include "display.h"
+#include "segtypes.h"
 
 /*
  * After much thought I have decided it is easier,
@@ -201,16 +203,20 @@ static int _check_maps_are_complete(struct hash_table *maps)
 	return 1;
 }
 
-static int _read_linear(struct pool *mem, struct lv_map *lvm)
+static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 {
 	uint32_t le = 0;
 	struct lv_segment *seg;
 
 	while (le < lvm->lv->le_count) {
-		seg = alloc_lv_segment(mem, 1);
+		seg = alloc_lv_segment(cmd->mem, 1);
 
 		seg->lv = lvm->lv;
-		seg->type = SEG_STRIPED;
+		if (!(seg->segtype = get_segtype_from_string(cmd, "striped"))) {
+			stack;
+			return 0;
+		}
+
 		seg->le = le;
 		seg->len = 0;
 		seg->area_len = 0;
@@ -251,13 +257,12 @@ static int _check_stripe(struct lv_map *lvm, struct lv_segment *seg,
 		if ((lvm->map[le + st * len].pv != seg->area[st].u.pv.pv) ||
 		    (seg->area[st].u.pv.pv &&
 		     lvm->map[le + st * len].pe !=
-		     seg->area[st].u.pv.pe + seg->len))
-			return 0;
+		     seg->area[st].u.pv.pe + seg->len)) return 0;
 
 	return 1;
 }
 
-static int _read_stripes(struct pool *mem, struct lv_map *lvm)
+static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 {
 	uint32_t st, le = 0, len;
 	struct lv_segment *seg;
@@ -273,13 +278,16 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 	len = lvm->lv->le_count / lvm->stripes;
 
 	while (le < len) {
-		if (!(seg = alloc_lv_segment(mem, lvm->stripes))) {
+		if (!(seg = alloc_lv_segment(cmd->mem, lvm->stripes))) {
 			stack;
 			return 0;
 		}
 
 		seg->lv = lvm->lv;
-		seg->type = SEG_STRIPED;
+		if (!(seg->segtype = get_segtype_from_string(cmd, "striped"))) {
+			stack;
+			return 0;
+		}
 		seg->stripe_size = lvm->stripe_size;
 		seg->area_count = lvm->stripes;
 		seg->le = seg->area_count * le;
@@ -312,20 +320,20 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 	return 1;
 }
 
-static int _build_segments(struct pool *mem, struct lv_map *lvm)
+static int _build_segments(struct cmd_context *cmd, struct lv_map *lvm)
 {
-	return (lvm->stripes > 1 ? _read_stripes(mem, lvm) :
-		_read_linear(mem, lvm));
+	return (lvm->stripes > 1 ? _read_stripes(cmd, lvm) :
+		_read_linear(cmd, lvm));
 }
 
-static int _build_all_segments(struct pool *mem, struct hash_table *maps)
+static int _build_all_segments(struct cmd_context *cmd, struct hash_table *maps)
 {
 	struct hash_node *n;
 	struct lv_map *lvm;
 
 	for (n = hash_get_first(maps); n; n = hash_get_next(maps, n)) {
 		lvm = (struct lv_map *) hash_get_data(maps, n);
-		if (!_build_segments(mem, lvm)) {
+		if (!_build_segments(cmd, lvm)) {
 			stack;
 			return 0;
 		}
@@ -334,7 +342,8 @@ static int _build_all_segments(struct pool *mem, struct hash_table *maps)
 	return 1;
 }
 
-int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvds)
+int import_extents(struct cmd_context *cmd, struct volume_group *vg,
+		   struct list *pvds)
 {
 	int r = 0;
 	struct pool *scratch = pool_create(10 * 1024);
@@ -360,7 +369,7 @@ int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvds)
 		goto out;
 	}
 
-	if (!_build_all_segments(mem, maps)) {
+	if (!_build_all_segments(cmd, maps)) {
 		log_err("Couldn't build extent segments.");
 		goto out;
 	}

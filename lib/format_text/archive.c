@@ -380,4 +380,3 @@ int backup_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 
 	return 1;
 }
-
