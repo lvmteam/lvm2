@@ -477,7 +477,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	struct list *lvh, *sh;
 	struct lv_list *ll;
 	struct lvd_list *lvdl;
-	int lv_num = 0, len;
+	int lv_num, len;
 	struct hash_table *lvd_hash;
 
 	if (!(lvd_hash = hash_create(32))) {
@@ -504,9 +504,8 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 		export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
 
-		/* this isn't a real dev, more of an index for
-		 * snapshots to refer to, *HACK* */
-		lvdl->lvd.lv_dev = MKDEV(0, lv_num);
+		lv_num = lvnum_from_id(&ll->lv->id);
+
 		lvdl->lvd.lv_number = lv_num;
 
 		if (!hash_insert(lvd_hash, ll->lv->name, &lvdl->lvd)) {
@@ -521,7 +520,6 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 		list_add(&dl->lvds, &lvdl->list);
 		dl->pvd.lv_cur++;
-		lv_num++;
 	}
 
 	/*
@@ -547,7 +545,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 		org->lv_access |= LV_SNAPSHOT_ORG;
 		cow->lv_access |= LV_SNAPSHOT;
-		cow->lv_snapshot_minor = MINOR(org->lv_dev);
+		cow->lv_snapshot_minor = org->lv_number;
 	}
 
 	r = 1;
@@ -567,10 +565,10 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 	struct list *pvdh, *lvdh;
 	struct disk_list *dl;
 	struct lv_disk *lvd;
-	int minor;
+	int lvnum;
 	struct logical_volume *org, *cow;
 
-	/* build an array of minor->lv */
+	/* build an index of lv numbers */
 	memset(lvs, 0, sizeof(lvs));
 	list_iterate (pvdh, pvds) {
 		dl = list_item(pvdh, struct disk_list);
@@ -578,16 +576,16 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 		list_iterate (lvdh, &dl->lvds) {
 			lvd = &(list_item(lvdh, struct lvd_list)->lvd);
 
-			minor = MINOR(lvd->lv_dev);
+			lvnum = lvd->lv_number;
 
-			if (minor > MAX_LV) {
-				log_err("Logical volume minor number "
+			if (lvnum > MAX_LV) {
+				log_err("Logical volume number "
 					"out of bounds.");
 				return 0;
 			}
 
-			if (!lvs[minor] &&
-			    !(lvs[minor] = find_lv(vg, lvd->lv_name))) {
+			if (!lvs[lvnum] &&
+			    !(lvs[lvnum] = find_lv(vg, lvd->lv_name))) {
 				log_err("Couldn't find logical volume '%s'.",
 					lvd->lv_name);
 				return 0;
@@ -607,8 +605,8 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 			if (!(lvd->lv_access & LV_SNAPSHOT))
 				continue;
 
-			minor = MINOR(lvd->lv_dev);
-			cow = lvs[minor];
+			lvnum = lvd->lv_number;
+			cow = lvs[lvnum];
 			if (!(org = lvs[lvd->lv_snapshot_minor])) {
 				log_err("Couldn't find origin logical volume "
 					"for snapshot '%s'.", lvd->lv_name);
@@ -654,9 +652,8 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 }
 
 /*
- * This calculates the nasty pv_number and
- * lv_number fields used by LVM1.  Very
- * inefficient code.
+ * This calculates the nasty pv_number field
+ * used by LVM1.
  */
 void export_numbers(struct list *pvds, struct volume_group *vg)
 {
