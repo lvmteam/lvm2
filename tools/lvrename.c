@@ -24,23 +24,37 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	int maxlen;
 	char *lv_name_old, *lv_name_new;
-	char *vg_name, *vg_name_new;
+	char *vg_name, *vg_name_new, *vg_name_old;
 	char *st;
 
 	struct volume_group *vg;
 	struct logical_volume *lv;
 	struct lv_list *lvl;
 
-	if (argc != 2) {
-		log_error("Old and new logical volume required");
+	if (argc == 3) {
+		vg_name = argv[0];
+		if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
+			vg_name += strlen(cmd->dev_dir);
+		lv_name_old = argv[1];
+		lv_name_new = argv[2];
+		if (strchr(lv_name_old, '/') &&
+		    (vg_name_old = extract_vgname(cmd, lv_name_old)) &&
+		    strcmp(vg_name_old, vg_name)) {
+			log_error("Please use a single volume group name "
+				  "(\"%s\" or \"%s\")", vg_name, vg_name_old);
+			return EINVALID_CMD_LINE;
+		}
+	} else if (argc == 2) {
+		lv_name_old = argv[0];
+		lv_name_new = argv[1];
+		vg_name = extract_vgname(cmd, lv_name_old);
+	} else {
+		log_error("Old and new logical volume names required");
 		return EINVALID_CMD_LINE;
 	}
 
-	lv_name_old = argv[0];
-	lv_name_new = argv[1];
-
-	if (!(vg_name = extract_vgname(cmd, lv_name_old))) {
-		log_error("Please provide a volume group name");
+	if (!is_valid_chars(vg_name)) {
+		log_error("Please provide a valid volume group name");
 		return EINVALID_CMD_LINE;
 	}
 
