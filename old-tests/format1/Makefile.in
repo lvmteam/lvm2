@@ -1,0 +1,20 @@
+#
+# Copyright (C) 2001 Sistina Software (UK) Limited
+#
+# This file is released under the GPL.
+#
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+
+SOURCES=\
+	read_vg_t.c
+
+TARGETS=read_vg_t
+
+include ../../make.tmpl
+
+read_vg_t: read_vg_t.o
+	$(CC) -o read_vg_t read_vg_t.o -L$(top_srcdir)/lib -llvm
+

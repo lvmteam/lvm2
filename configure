@@ -2160,6 +2160,7 @@ lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
 test/mm/Makefile							\
+test/format1/Makefile							\
 " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -2256,6 +2257,7 @@ lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
 test/mm/Makefile							\
+test/format1/Makefile							\
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
