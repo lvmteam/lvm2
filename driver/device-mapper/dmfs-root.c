@@ -27,6 +27,8 @@
 
 #include "dm.h"
 
+extern struct inode *dmfs_create_lv(struct inode *dir, int mode, struct dentry *dentry);
+
 static int is_identifier(const char *str, int len)
 {
 	while(len--) {
@@ -39,17 +41,15 @@ static int is_identifier(const char *str, int len)
 
 static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
-	struct super_block *sb = dir->i_sb;
 	struct inode *inode;
-	struct mapped_device *md;
 
 	if (dentry->d_name.len >= DM_NAME_LEN)
 		return -EINVAL;
 
-	if (!is_identifier(name, dentry->d_name.len))
+	if (!is_identifier(dentry->d_name.name, dentry->d_name.len))
 		return -EPERM;
 
-	if (dentry->d_name[0] == '.')
+	if (dentry->d_name.name[0] == '.')
 		return -EINVAL;
 
 	inode = dmfs_create_lv(dir, mode, dentry);
@@ -66,7 +66,7 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
  * represents a table. If it is NULL then the inode is a virtual
  * file and should be deleted along with the directory.
  */
-static inline positive(struct dentry *dentry)
+static inline int positive(struct dentry *dentry)
 {
 	return dentry->d_inode && !d_unhashed(dentry);
 }
@@ -127,13 +127,13 @@ static int dmfs_root_sync(struct file *file, struct dentry *dentry, int datasync
 	return 0;
 }
 
-static struct dm_root_file_operations = {
+static struct file_operations dmfs_root_file_operations = {
 	read:		generic_read_dir,
 	readdir:	dcache_readdir,
 	fsync:		dmfs_root_sync,
 };
 
-static struct dm_root_inode_operations = {
+static struct inode_operations dmfs_root_inode_operations = {
 	lookup:		dmfs_root_lookup,
 	mkdir:		dmfs_root_mkdir,
 	rmdir:		dmfs_root_rmdir,
@@ -153,7 +153,7 @@ struct inode *dmfs_create_root(struct super_block *sb, int mode)
 		inode->i_rdev = NODEV;
 		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_root_file_operations;
-		inode->i_op = &dmfs_root_dir_operations;
+		inode->i_op = &dmfs_root_inode_operations;
 	}
 
 	return inode;

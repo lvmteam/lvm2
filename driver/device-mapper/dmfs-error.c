@@ -33,7 +33,7 @@ struct dmfs_error {
 
 void dmfs_add_error(struct dm_table *t, unsigned num, char *str)
 {
-	int len = strlen(str) + sizeof(dmfs_error) + 12;
+	int len = strlen(str) + sizeof(struct dmfs_error) + 12;
 	struct dmfs_error *e = kmalloc(len, GFP_KERNEL);
 	if (e) {
 		e->msg = (char *)(e + 1);
@@ -52,7 +52,7 @@ void dmfs_zap_errors(struct dm_table *t)
 	}
 }
 
-static struct dmfs_error find_initial_message(struct dn_table *t, loff_t *pos)
+static struct dmfs_error *find_initial_message(struct dm_table *t, loff_t *pos)
 {
 	struct dmfs_error *e;
 	struct list_head *tmp, *head;
@@ -105,7 +105,7 @@ static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t
 	int copied = 0;
 	loff_t offset = *pos;
 
-	if (!access_ok(VERIFY_WRITE, buf, count))
+	if (!access_ok(VERIFY_WRITE, buf, size))
 		return -EFAULT;
 
 	down(&dmi->sem);
@@ -126,15 +126,15 @@ static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasyn
 	return 0;
 }
 
-static struct dm_table_file_operations = {
+static struct file_operations dmfs_error_file_operations = {
 	read:		dmfs_error_read,
 	fsync:		dmfs_error_sync,
 };
 
-static struct dmfs_error_inode_operations = {
+static struct inode_operations dmfs_error_inode_operations = {
 };
 
-int dmfs_create_error(struct inode *dir, int mode)
+struct inode *dmfs_create_error(struct inode *dir, int mode)
 {
 	struct inode *inode = new_inode(dir->i_sb);
 

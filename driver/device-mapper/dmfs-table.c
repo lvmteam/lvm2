@@ -24,18 +24,6 @@
 
 #include "dm.h"
 
-static inline char *next_token(char **p)
-{
-	static const char *delim = " \t";
-	char *r;
-
-	do {
-		r = strsep(p, delim);
-	} while(r && *r == 0);
-
-	return r;
-}
-
 static offset_t start_of_next_range(struct dm_table *t)
 {
 	offset_t n = 0;
@@ -45,7 +33,7 @@ static offset_t start_of_next_range(struct dm_table *t)
 	return n;
 }
 
-static void dmfs_parse_line(struct dmfs_table *t, unsigned num, char *str)
+static void dmfs_parse_line(struct dm_table *t, unsigned num, char *str)
 {
 	char *p = str;
 	const char *tok;
@@ -82,7 +70,7 @@ static void dmfs_parse_line(struct dmfs_table *t, unsigned num, char *str)
 		msg = "This message should never appear (constructor error)";
 		rv = ttype->ctr(t, start, size, p, &context);
 		msg = context;
-		if (rv == 0)) {
+		if (rv == 0) {
 			printk(KERN_DEBUG "%ul %ul %s %s", start, size, 
 				ttype->name,
 				ttype->print(context));
@@ -150,7 +138,6 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 {
 	struct address_space *mapping = inode->i_mapping;
 	unsigned long index = 0;
-	unsigned long offset = 0;
 	unsigned long end_index, end_offset;
 	unsigned long page;
 	unsigned long rem = 0;
@@ -193,7 +180,7 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 				goto broken;
 
 			kaddr = kmap(pg);
-			rv = dmfs_parse_page(t, kaddr, end, (char *)page, &rem);
+			rv = dmfs_parse_page(t, kaddr, end, (char *)page, &rem, &num);
 			kunmap(pg);
 
 			if (rv)
@@ -224,23 +211,27 @@ parse_error:
 	return NULL;
 }
 
-static int dmfs_release(struct inode *inode, struct file *f)
+static int dmfs_table_release(struct inode *inode, struct file *f)
 {
-	struct dmfs_i *dmi = inode->u.generic_ip;
+	struct dentry *dentry = f->f_dentry;
+	struct inode *parent = dentry->d_parent->d_inode;
+	struct dmfs_i *dmi = DMFS_I(parent);
 	struct dm_table *table;
 
-	if (!(f->f_mode & S_IWUGO))
-		return 0;
+	if (f->f_mode & FMODE_WRITE) {
 
-	down(&dmi->sem);
-	table = dmfs_parse(inode);
+		down(&dmi->sem);
+		table = dmfs_parse(inode);
 
-	if (table) {
-		if (dmi->table)
-			dm_put_table(dmi->table);
-		dmi->table = table;
+		if (table) {
+			if (dmi->table)
+				dm_put_table(dmi->table);
+			dmi->table = table;
+		}
+		up(&dmi->sem);
+
+                put_write_access(parent);
 	}
-	up(&dmi->sem);
 
 	return 0;
 }
@@ -310,24 +301,14 @@ static int get_exclusive_write_access(struct inode *inode)
 static int dmfs_table_open(struct inode *inode, struct file *file)
 {
 	struct dentry *dentry = file->f_dentry;
-	struct inode *inode = dentry->d_parent->d_inode;
+	struct inode *parent = dentry->d_parent->d_inode;
 
 	if (file->f_mode & FMODE_WRITE) {
-		if (get_exclusive_write_access(inode))
+		if (get_exclusive_write_access(parent))
 			return -EPERM;
 	}
 
 	return 0;
-}
-
-static int dmfs_table_release(struct inode *inode, struct file *file)
-{
-	if (file->f_mode & FMODE_WRITE) {
-		struct dentry *dentry = file->f_dentry;
-		struct inode *inode = dentry->d_parent->d_inode;
-
-		put_write_access(inode);
-	}
 }
 
 static int dmfs_table_sync(struct file *file, struct dentry *dentry, int datasync)
@@ -335,24 +316,23 @@ static int dmfs_table_sync(struct file *file, struct dentry *dentry, int datasyn
 	return 0;
 }
 
-struct dmfs_address_space_operations = {
+struct address_space_operations dmfs_address_space_operations = {
 	readpage:	dmfs_readpage,
 	writepage:	dmfs_writepage,
 	prepare_write:	dmfs_prepare_write,
 	commit_write:	dmfs_commit_write,
 };
 
-static struct dmfs_table_file_operations = {
+static struct file_operations dmfs_table_file_operations = {
  	llseek:		generic_file_llseek,
 	read:		generic_file_read,
 	write:		generic_file_write, /* FIXME: Needs to hold dmi->sem */
 	open:		dmfs_table_open,
 	release:	dmfs_table_release,
 	fsync:		dmfs_table_sync,
-	release:	dmfs_release,
 };
 
-static struct dmfs_table_inode_operations = {
+static struct inode_operations dmfs_table_inode_operations = {
 };
 
 int dmfs_create_table(struct inode *dir, int mode)

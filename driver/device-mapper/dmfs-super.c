@@ -46,7 +46,7 @@ static void dmfs_delete_inode(struct inode *inode)
 		if (dmi->md)
 			dm_remove(dmi->md);
 		if (dmi->table)
-			dm_put_table(dmi->table):
+			dm_put_table(dmi->table);
 		if (dmi->dentry)
 			dm_unlock_tdir(dmi->dentry);
 		kfree(dmi);
@@ -70,7 +70,7 @@ struct super_block *dmfs_read_super(struct super_block *sb, void *data, int sile
 	sb->s_blocksize = PAGE_CACHE_SIZE;
 	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
 	sb->s_magic = DMFS_MAGIC;
-	sb->s_ops = &dmfs_super_operations;
+	sb->s_op = &dmfs_super_operations;
 	sb->s_maxbytes = MAX_NON_LFS;
 
 	inode = dmfs_create_root(sb, 0755);
@@ -107,7 +107,7 @@ struct inode *dmfs_new_inode(struct super_block *sb, int mode)
 		}
 		memset(dmi, sizeof(struct dmfs_i), 0);
 		init_MUTEX(&dmi->sem);
-		inode->generic_ip = dmi;
+		inode->u.generic_ip = dmi;
 	}
 	return inode;
 }
