@@ -95,24 +95,24 @@ static inline void _update_vg_lock_count(int flags)
 /*
  * Select a locking type
  */
-int init_locking(int type, struct config_tree *cf)
+int init_locking(int type, struct config_tree *cft)
 {
 	switch (type) {
 	case 0:
-		init_no_locking(&_locking, cf);
+		init_no_locking(&_locking, cft);
 		log_print("WARNING: Locking disabled. Be careful! "
 			  "This could corrupt your metadata.");
 		return 1;
 
 	case 1:
-		if (!init_file_locking(&_locking, cf))
+		if (!init_file_locking(&_locking, cft))
 			break;
 		log_very_verbose("File-based locking enabled.");
 		return 1;
 
 #ifdef HAVE_LIBDL
 	case 2:
-		if (!init_external_locking(&_locking, cf))
+		if (!init_external_locking(&_locking, cft))
 			break;
 		log_very_verbose("External locking enabled.");
 		return 1;
@@ -129,7 +129,7 @@ int init_locking(int type, struct config_tree *cf)
 	/* FIXME Ensure only read ops are permitted */
 	log_verbose("Locking disabled - only read operations permitted.");
 
-	init_no_locking(&_locking, cf);
+	init_no_locking(&_locking, cft);
 
 	return 1;
 }

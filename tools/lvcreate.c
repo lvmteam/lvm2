@@ -196,8 +196,8 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 	}
 
 	if (lp->stripes > 1 && !lp->stripe_size) {
-		lp->stripe_size = find_config_int(cmd->cf->root,
-						  "metadata/stripesize", '/',
+		lp->stripe_size = find_config_int(cmd->cft->root,
+						  "metadata/stripesize",
 						  DEFAULT_STRIPESIZE) * 2;
 		log_print("Using default stripesize %dKB", lp->stripe_size / 2);
 	}

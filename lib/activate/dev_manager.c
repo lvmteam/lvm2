@@ -108,7 +108,7 @@ static uint32_t mirror_region_size = 0;
 struct dev_manager {
 	struct pool *mem;
 
-	struct config_tree *cf;
+	struct config_tree *cft;
 	const char *stripe_filler;
 	uint32_t mirror_region_size;
 	uint32_t pvmove_mirror_count;
@@ -1015,7 +1015,7 @@ static int _populate_snapshot(struct dev_manager *dm,
  * dev_manager implementation.
  */
 struct dev_manager *dev_manager_create(const char *vg_name,
-				       struct config_tree *cf)
+				       struct config_tree *cft)
 {
 	struct pool *mem;
 	struct dev_manager *dm;
@@ -1031,18 +1031,17 @@ struct dev_manager *dev_manager_create(const char *vg_name,
 	}
 
 	dm->mem = mem;
-	dm->cf = cf;
+	dm->cft = cft;
 	if (!stripe_filler) {
-		stripe_filler = find_config_str(cf->root,
+		stripe_filler = find_config_str(cft->root,
 						"activation/missing_stripe_filler",
-						'/', DEFAULT_STRIPE_FILLER);
+						DEFAULT_STRIPE_FILLER);
 	}
 	dm->stripe_filler = stripe_filler;
 
 	if (!mirror_region_size) {
-		mirror_region_size = 2 * find_config_int(cf->root,
+		mirror_region_size = 2 * find_config_int(cft->root,
 							 "activation/mirror_region_size",
-							 '/',
 							 DEFAULT_MIRROR_REGION_SIZE);
 	}
 	dm->mirror_region_size = mirror_region_size;

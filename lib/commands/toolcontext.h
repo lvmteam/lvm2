@@ -59,7 +59,7 @@ struct cmd_context {
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
 
-	struct config_tree *cf;
+	struct config_tree *cft;
 	struct config_info default_settings;
 	struct config_info current_settings;
 

@@ -228,9 +228,8 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 					  "%dKB", seg_stripesize / 2);
 				ssize = seg_stripesize;
 			} else {
-				ssize = find_config_int(cmd->cf->root,
+				ssize = find_config_int(cmd->cft->root,
 							"metadata/stripesize",
-							'/',
 							DEFAULT_STRIPESIZE) * 2;
 				log_print("Using default stripesize %dKB",
 					  ssize / 2);

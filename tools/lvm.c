@@ -749,7 +749,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	set_cmd_name(cmd->command->name);
 
-	if (reload_config_file(&cmd->cf)) {
+	if (reload_config_file(&cmd->cft)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
 			log_error("Updated config file invalid. Aborting.");
@@ -764,9 +764,9 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	if ((ret = _process_common_commands(cmd)))
 		goto out;
 
-	locking_type = find_config_int(cmd->cf->root, "global/locking_type",
-				       '/', 1);
-	if (!init_locking(locking_type, cmd->cf)) {
+	locking_type = find_config_int(cmd->cft->root, "global/locking_type",
+				       1);
+	if (!init_locking(locking_type, cmd->cft)) {
 		log_error("Locking type %d initialisation failed.",
 			  locking_type);
 		ret = ECMD_FAILED;
@@ -830,7 +830,7 @@ static void _init_rand(void)
 	srand((unsigned int) time(NULL) + (unsigned int) getpid());
 }
 
-static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
+static int _init_backup(struct cmd_context *cmd, struct config_tree *cft)
 {
 	uint32_t days, min;
 	char default_dir[PATH_MAX];
@@ -845,14 +845,14 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
 
 	/* set up archiving */
 	cmd->default_settings.archive =
-	    find_config_bool(cmd->cf->root, "backup/archive", '/',
+	    find_config_bool(cmd->cft->root, "backup/archive",
 			     DEFAULT_ARCHIVE_ENABLED);
 
-	days = (uint32_t) find_config_int(cmd->cf->root, "backup/retain_days",
-					  '/', DEFAULT_ARCHIVE_DAYS);
+	days = (uint32_t) find_config_int(cmd->cft->root, "backup/retain_days",
+					  DEFAULT_ARCHIVE_DAYS);
 
-	min = (uint32_t) find_config_int(cmd->cf->root, "backup/retain_min",
-					 '/', DEFAULT_ARCHIVE_NUMBER);
+	min = (uint32_t) find_config_int(cmd->cft->root, "backup/retain_min",
+					 DEFAULT_ARCHIVE_NUMBER);
 
 	if (lvm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
@@ -862,7 +862,7 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
 		return 0;
 	}
 
-	dir = find_config_str(cmd->cf->root, "backup/archive_dir", '/',
+	dir = find_config_str(cmd->cft->root, "backup/archive_dir",
 			      default_dir);
 
 	if (!archive_init(dir, days, min)) {
@@ -872,7 +872,7 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
 
 	/* set up the backup */
 	cmd->default_settings.backup =
-	    find_config_bool(cmd->cf->root, "backup/backup", '/',
+	    find_config_bool(cmd->cft->root, "backup/backup",
 			     DEFAULT_BACKUP_ENABLED);
 
 	if (lvm_snprintf
@@ -883,7 +883,7 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
 		return 0;
 	}
 
-	dir = find_config_str(cmd->cf->root, "backup/backup_dir", '/',
+	dir = find_config_str(cmd->cft->root, "backup/backup_dir",
 			      default_dir);
 
 	if (!backup_init(dir)) {
@@ -905,7 +905,7 @@ static struct cmd_context *_init(void)
 
 	_init_rand();
 
-	if (!_init_backup(cmd, cmd->cf))
+	if (!_init_backup(cmd, cmd->cft))
 		return NULL;
 
 	_apply_settings(cmd);
@@ -1109,8 +1109,8 @@ static void _read_history(struct cmd_context *cmd)
 	if (read_history(hist_file))
 		log_very_verbose("Couldn't read history from %s.", hist_file);
 
-	stifle_history(find_config_int(cmd->cf->root, "shell/history_size",
-				       '/', DEFAULT_MAX_HISTORY));
+	stifle_history(find_config_int(cmd->cft->root, "shell/history_size",
+				       DEFAULT_MAX_HISTORY));
 
 }
 

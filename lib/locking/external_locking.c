@@ -14,7 +14,7 @@ static void *_locking_lib = NULL;
 static void (*_end_fn) (void) = NULL;
 static int (*_lock_fn) (struct cmd_context * cmd, const char *resource,
 			int flags) = NULL;
-static int (*_init_fn) (int type, struct config_tree * cf) = NULL;
+static int (*_init_fn) (int type, struct config_tree * cft) = NULL;
 
 static int _lock_resource(struct cmd_context *cmd, const char *resource,
 			  int flags)
@@ -38,7 +38,7 @@ static void _fin_external_locking(void)
 	_lock_fn = NULL;
 }
 
-int init_external_locking(struct locking_type *locking, struct config_tree *cf)
+int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 {
 	const char *libname;
 
@@ -50,10 +50,10 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cf)
 	locking->lock_resource = _lock_resource;
 	locking->fin_locking = _fin_external_locking;
 
-	libname = find_config_str(cf->root, "global/locking_library", '/',
+	libname = find_config_str(cft->root, "global/locking_library",
 				  DEFAULT_LOCKING_LIB);
 
-	if (!(_locking_lib = load_shared_library(cf, libname, "locking"))) {
+	if (!(_locking_lib = load_shared_library(cft, libname, "locking"))) {
 		stack;
 		return 0;
 	}
@@ -70,5 +70,5 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cf)
 	}
 
 	log_verbose("Loaded external locking library %s", libname);
-	return _init_fn(2, cf);
+	return _init_fn(2, cft);
 }

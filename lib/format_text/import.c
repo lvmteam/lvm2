@@ -26,7 +26,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 				       time_t *when, char **desc)
 {
 	struct volume_group *vg = NULL;
-	struct config_tree *cf;
+	struct config_tree *cft;
 	struct text_vg_version_ops **vsn;
 
 	static int _initialised = 0;
@@ -40,13 +40,13 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*desc = NULL;
 	*when = 0;
 
-	if (!(cf = create_config_tree())) {
+	if (!(cft = create_config_tree())) {
 		stack;
 		goto out;
 	}
 
-	if ((!dev && !read_config_file(cf, file)) ||
-	    (dev && !read_config_fd(cf, dev, offset, size,
+	if ((!dev && !read_config_file(cft, file)) ||
+	    (dev && !read_config_fd(cft, dev, offset, size,
 				    offset2, size2, checksum_fn, checksum))) {
 		log_error("Couldn't read volume group metadata.");
 		goto out;
@@ -56,20 +56,20 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	 * Find a set of version functions that can read this file
 	 */
 	for (vsn = &_text_vsn_list[0]; *vsn; vsn++) {
-		if (!(*vsn)->check_version(cf))
+		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vg = (*vsn)->read_vg(fid, cf))) {
+		if (!(vg = (*vsn)->read_vg(fid, cft))) {
 			stack;
 			goto out;
 		}
 
-		(*vsn)->read_desc(fid->fmt->cmd->mem, cf, when, desc);
+		(*vsn)->read_desc(fid->fmt->cmd->mem, cft, when, desc);
 		break;
 	}
 
       out:
-	destroy_config_tree(cf);
+	destroy_config_tree(cft);
 	return vg;
 }
 
