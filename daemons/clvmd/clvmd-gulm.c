@@ -224,7 +224,7 @@ static int _init_cluster(void)
 	exit(status);
     }
 
-    /* Request a list of nodes, we can;t really do anything until
+    /* Request a list of nodes, we can't really do anything until
        this comes back */
     status = lg_core_nodelist(gulm_if);
     if (status)
@@ -763,7 +763,7 @@ static int _sync_lock(const char *resource, int mode, int flags, int *lockid)
 	if (status)
 	    goto out;
 
-	/* If we can't get this lock then bail out */
+	/* If we can't get this lock too then bail out */
 	status = _lock_resource(lock2, lg_lock_state_Exclusive, LCK_NONBLOCK, lockid);
         if (status == lg_err_TryFailed)
         {
@@ -775,10 +775,16 @@ static int _sync_lock(const char *resource, int mode, int flags, int *lockid)
 
     case LCK_READ:
 	status = _lock_resource(lock1, lg_lock_state_Shared, flags, lockid);
+	if (status)
+		goto out;
+	status = _unlock_resource(lock2, *lockid);
 	break;
 
     case LCK_WRITE:
 	status = _lock_resource(lock2, lg_lock_state_Exclusive, flags, lockid);
+	if (status)
+		goto out;
+	status = _unlock_resource(lock1, *lockid);
 	break;
 
     default:
@@ -805,25 +811,10 @@ static int _sync_unlock(const char *resource, int lockid)
 	   lockid == LCK_READ ||
 	   lockid == LCK_WRITE);
 
-    switch (lockid)
-    {
-    case LCK_EXCL:
-	status = _unlock_resource(lock1, lockid);
-	if (status)
-	    goto out;
-	status = _unlock_resource(lock2, lockid);
-	break;
+    status = _unlock_resource(lock1, lockid);
+    if (!status)
+	    status = _unlock_resource(lock2, lockid);
 
-    case LCK_READ:
-	status = _unlock_resource(lock1, lockid);
-	break;
-
-    case LCK_WRITE:
-	status = _unlock_resource(lock2, lockid);
-	break;
-    }
-
- out:
     return status;
 }
 
