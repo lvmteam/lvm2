@@ -13,15 +13,12 @@
 
 LOCK_FILE="/var/lock/subsys/clvmd"
 
-#
-# FIXME -- the lvm2-cluster rpms put the lvm tools in a different location
-#
-lvdisplay=/usr/sbin/cluster/lvdisplay
-vgchange=/usr/sbin/cluster/vgchange
+lvdisplay="/sbin/lvm.static lvdisplay"
+vgchange="/sbin/lvm.static vgchange"
+vgscan="/sbin/lvm.static vgscan"
 
 start()
 {
-	modprobe dlm
 	for rtrn in 0
 	do
 		if ! pidof clvmd > /dev/null 
@@ -39,6 +36,9 @@ start()
 				break
 			fi
 		fi	
+		
+		# refresh cache
+		$vgscan  > /dev/null 2>&1
 		
 		if [ -n "$LVM_VGS" ]
 		then
@@ -124,7 +124,6 @@ stop()
 			echo
 		fi
 	done
-	modprobe -r dlm > /dev/null 2>&1 
 	
 	return $rtrn
 }
