@@ -90,14 +90,16 @@ ifeq ("@DEVMAPPER@", "yes")
 	LVMLIBS += -ldevmapper
 endif
 
+CFLAGS += -DLVM_SHARED_PATH=\"$(sbindir)/lvm\"
+
 include $(top_srcdir)/make.tmpl
 
 lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o $@ $(OBJECTS) lvm.o $(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
 
-lvm.static: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o $@ $(OBJECTS) lvm.o -static $(LDFLAGS) $(LVMLIBS) $(LIBS) \
-		-rdynamic
+lvm.static: $(OBJECTS) lvm-static.o $(top_srcdir)/lib/liblvm.a
+	$(CC) -o $@ $(OBJECTS) lvm-static.o -static $(LDFLAGS) $(LVMLIBS) \
+		$(LIBS) -rdynamic
 
 liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS)
 	cat $(top_srcdir)/lib/liblvm.a > $@

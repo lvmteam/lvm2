@@ -1,5 +1,6 @@
-Version 2.01.05 -
-===================================
+Version 2.01.05 - 18th February 2005
+====================================
+  Static binary invokes dynamic binary if appropriate.
   Make clvmd config check a little more tolerant.
   gulm clvmd can now cope with >1 message arriving in a TCP message.
 
