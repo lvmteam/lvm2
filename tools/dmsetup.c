@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <linux/kdev_t.h>
 
 #define LINE_SIZE 1024
 
@@ -171,7 +172,7 @@ static int _version(int argc, char **argv)
 	if (!dm_task_run(dmt))
 		goto out;
 
-	if (!dm_task_get_driver_version(dmt, (char *)&version, 
+	if (!dm_task_get_driver_version(dmt, (char *)&version,
 					sizeof(version)))
 		goto out;
 
@@ -264,6 +265,48 @@ static int _info(int argc, char **argv)
 	return r;
 }
 
+static int _deps(int argc, char **argv)
+{
+	int r = 0, i;
+	struct dm_deps *deps;
+
+	/* remove <dev_name> */
+	struct dm_task *dmt;
+	struct dm_info info;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_DEPS)))
+		return 0;
+
+	if (!dm_task_set_name(dmt, argv[1]))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	if (!(deps = dm_task_get_deps(dmt)))
+		goto out;
+
+	if (!info.exists) {
+		printf("Device does not exist.\n");
+		r = 1;
+		goto out;
+	}
+
+	printf("%d dependencies\t:", deps->count);
+
+	for (i = 0; i < deps->count; i++)
+		printf(" (%d, %d)",
+		       (int) MAJOR(deps->device[i]),
+		       (int) MINOR(deps->device[i]));
+	printf("\n");
+
+	r = 1;
+
+ out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
 
 /*
  * dispatch table
@@ -284,6 +327,7 @@ static struct command _commands[] = {
 	{"resume", "<dev_name>", 1, _resume},
 	{"reload", "<dev_name> <table_file>", 2, _reload},
 	{"info", "<dev_name>", 1, _info},
+	{"dependencies", "<dev_name>", 1, _deps},
 	{"rename", "<dev_name> <new_name>", 2, _rename},
 	{"version", "", 0, _version},
 	{NULL, NULL, 0, NULL}

@@ -39,6 +39,7 @@ enum {
 	DM_DEVICE_RESUME,
 
 	DM_DEVICE_INFO,
+	DM_DEVICE_DEPS,
 	DM_DEVICE_RENAME,
 
 	DM_DEVICE_VERSION,
@@ -66,9 +67,17 @@ struct dm_info {
 	unsigned int target_count;
 };
 
+struct dm_deps {
+	unsigned int count;
+	dev_t device[0];
+};
+
 int dm_get_library_version(char *version, size_t size);
-int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
+int dm_task_get_driver_version(struct dm_task *dmt, char *version,
+			       size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
+
+struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
