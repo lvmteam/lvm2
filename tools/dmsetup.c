@@ -423,7 +423,7 @@ static struct command *_find_command(const char *name)
 static int _process_switches(int *argc, char ***argv)
 {
 	int index;
-	char c;
+	int c;
 
 	static struct option long_options[] = {
 		{"read-only", 0, NULL, READ_ONLY},
