@@ -1,13 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# Copyright (C) YEAR Free Software Foundation, Inc.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-09-03 20:03+0100\n"
+"POT-Creation-Date: 2004-09-15 16:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -55,104 +54,104 @@ msgstr ""
 #: activate/activate.c:472 activate/activate.c:484 activate/activate.c:489
 #: activate/activate.c:501 activate/activate.c:506 activate/activate.c:570
 #: activate/activate.c:616 activate/activate.c:661 activate/activate.c:730
-#: activate/activate.c:769 activate/dev_manager.c:215
-#: activate/dev_manager.c:262 activate/dev_manager.c:280
-#: activate/dev_manager.c:307 activate/dev_manager.c:312
-#: activate/dev_manager.c:317 activate/dev_manager.c:323
+#: activate/activate.c:769 activate/dev_manager.c:179
+#: activate/dev_manager.c:197 activate/dev_manager.c:224
+#: activate/dev_manager.c:229 activate/dev_manager.c:234
+#: activate/dev_manager.c:240 activate/dev_manager.c:278
+#: activate/dev_manager.c:283 activate/dev_manager.c:356
 #: activate/dev_manager.c:361 activate/dev_manager.c:366
-#: activate/dev_manager.c:439 activate/dev_manager.c:444
-#: activate/dev_manager.c:449 activate/dev_manager.c:480
-#: activate/dev_manager.c:530 activate/dev_manager.c:535
-#: activate/dev_manager.c:562 activate/dev_manager.c:580
-#: activate/dev_manager.c:594 activate/dev_manager.c:610
-#: activate/dev_manager.c:667 activate/dev_manager.c:673
-#: activate/dev_manager.c:680 activate/dev_manager.c:709
-#: activate/dev_manager.c:763 activate/dev_manager.c:772
-#: activate/dev_manager.c:827 activate/dev_manager.c:852
-#: activate/dev_manager.c:895 activate/dev_manager.c:915
-#: activate/dev_manager.c:937 activate/dev_manager.c:942
-#: activate/dev_manager.c:973 activate/dev_manager.c:981
-#: activate/dev_manager.c:998 activate/dev_manager.c:1003
-#: activate/dev_manager.c:1018 activate/dev_manager.c:1023
-#: activate/dev_manager.c:1056 activate/dev_manager.c:1065
-#: activate/dev_manager.c:1081 activate/dev_manager.c:1091
-#: activate/dev_manager.c:1113 activate/dev_manager.c:1122
-#: activate/dev_manager.c:1136 activate/dev_manager.c:1144
-#: activate/dev_manager.c:1157 activate/dev_manager.c:1177
-#: activate/dev_manager.c:1182 activate/dev_manager.c:1188
-#: activate/dev_manager.c:1210 activate/dev_manager.c:1231
-#: activate/dev_manager.c:1253 activate/dev_manager.c:1265
-#: activate/dev_manager.c:1277 activate/dev_manager.c:1291
-#: activate/dev_manager.c:1304 activate/dev_manager.c:1314
-#: activate/dev_manager.c:1354 activate/dev_manager.c:1365
-#: activate/dev_manager.c:1375 activate/dev_manager.c:1382
-#: activate/dev_manager.c:1388 activate/dev_manager.c:1456
-#: activate/dev_manager.c:1475 activate/dev_manager.c:1497
-#: activate/dev_manager.c:1505 activate/dev_manager.c:1533
-#: activate/dev_manager.c:1538 activate/dev_manager.c:1567
-#: activate/dev_manager.c:1573 activate/dev_manager.c:1594
-#: activate/dev_manager.c:1612 activate/dev_manager.c:1626
-#: activate/dev_manager.c:1636 activate/dev_manager.c:1646
-#: activate/dev_manager.c:1664 activate/dev_manager.c:1687
-#: activate/dev_manager.c:1721 activate/dev_manager.c:1737
-#: activate/dev_manager.c:1795 activate/dev_manager.c:1804
-#: activate/dev_manager.c:1813 activate/dev_manager.c:1822
-#: activate/dev_manager.c:1827 activate/dev_manager.c:1832
-#: activate/dev_manager.c:1844 activate/dev_manager.c:1854
-#: activate/dev_manager.c:1860 activate/dev_manager.c:1896
-#: activate/dev_manager.c:1901 activate/dev_manager.c:1933
-#: activate/dev_manager.c:1951 activate/dev_manager.c:2126
-#: activate/dev_manager.c:2138 activate/dev_manager.c:2144
-#: activate/dev_manager.c:2158 activate/dev_manager.c:2163
-#: activate/dev_manager.c:2170 activate/dev_manager.c:2178
-#: activate/dev_manager.c:2186 activate/dev_manager.c:2192
-#: activate/dev_manager.c:2199 activate/dev_manager.c:2204
-#: activate/dev_manager.c:2232 activate/fs.c:234 activate/fs.c:241
-#: activate/fs.c:248 activate/fs.c:251 activate/fs.c:325 archiver.c:71
-#: archiver.c:78 archiver.c:90 archiver.c:166 archiver.c:236 archiver.c:286
-#: archiver.c:303 archiver.c:345 archiver.c:350 cache/lvmcache.c:454
-#: cache/lvmcache.c:495 cache/lvmcache.c:526 commands/toolcontext.c:268
-#: commands/toolcontext.c:287 commands/toolcontext.c:294
-#: commands/toolcontext.c:371 commands/toolcontext.c:386
-#: commands/toolcontext.c:410 commands/toolcontext.c:461 config/config.c:105
-#: config/config.c:110 config/config.c:140 config/config.c:161
-#: config/config.c:192 config/config.c:239 config/config.c:244
-#: config/config.c:406 config/config.c:424 config/config.c:429
-#: config/config.c:439 config/config.c:453 config/config.c:469
-#: config/config.c:525 config/config.c:708 datastruct/btree.c:90
-#: datastruct/hash.c:96 datastruct/hash.c:109 datastruct/str_list.c:24
-#: datastruct/str_list.c:38 datastruct/str_list.c:47 datastruct/str_list.c:77
-#: device/dev-cache.c:180 device/dev-cache.c:187 device/dev-cache.c:193
-#: device/dev-cache.c:227 device/dev-cache.c:298 device/dev-cache.c:346
-#: device/dev-cache.c:391 device/dev-cache.c:396 device/dev-io.c:160
-#: device/dev-io.c:190 device/dev-io.c:288 device/dev-io.c:468
-#: device/dev-io.c:496 display/display.c:211 display/display.c:242
-#: display/display.c:300 display/display.c:347 display/display.c:587
-#: display/display.c:623 error/errseg.c:90 filters/filter-composite.c:54
-#: filters/filter-md.c:35 filters/filter-md.c:47 filters/filter-md.c:59
-#: filters/filter-md.c:65 filters/filter-persistent.c:45
-#: filters/filter-persistent.c:103 filters/filter-persistent.c:108
-#: filters/filter-persistent.c:242 filters/filter-persistent.c:248
-#: filters/filter-persistent.c:260 filters/filter-regex.c:78
-#: filters/filter-regex.c:105 filters/filter-regex.c:126
-#: filters/filter-regex.c:151 filters/filter-regex.c:209
-#: filters/filter-regex.c:214 filters/filter-regex.c:221
-#: filters/filter-regex.c:226 filters/filter-sysfs.c:279 filters/filter.c:218
-#: format1/disk-rep.c:220 format1/disk-rep.c:232 format1/disk-rep.c:237
-#: format1/disk-rep.c:256 format1/disk-rep.c:259 format1/disk-rep.c:290
-#: format1/disk-rep.c:293 format1/disk-rep.c:312 format1/disk-rep.c:315
-#: format1/disk-rep.c:332 format1/disk-rep.c:342 format1/disk-rep.c:348
-#: format1/disk-rep.c:413 format1/disk-rep.c:420 format1/disk-rep.c:511
-#: format1/disk-rep.c:534 format1/disk-rep.c:546 format1/disk-rep.c:576
-#: format1/disk-rep.c:590 format1/disk-rep.c:623 format1/disk-rep.c:688
-#: format1/disk-rep.c:695 format1/disk-rep.c:713 format1/format1.c:176
-#: format1/format1.c:191 format1/format1.c:200 format1/format1.c:205
-#: format1/format1.c:222 format1/format1.c:236 format1/format1.c:257
-#: format1/format1.c:268 format1/format1.c:283 format1/format1.c:309
-#: format1/format1.c:314 format1/format1.c:319 format1/format1.c:324
-#: format1/format1.c:361 format1/format1.c:408 format1/format1.c:424
-#: format1/format1.c:429 format1/format1.c:436 format1/format1.c:448
-#: format1/format1.c:508 format1/format1.c:517 format1/format1.c:560
+#: activate/dev_manager.c:397 activate/dev_manager.c:453
+#: activate/dev_manager.c:458 activate/dev_manager.c:487
+#: activate/dev_manager.c:505 activate/dev_manager.c:519
+#: activate/dev_manager.c:535 activate/dev_manager.c:592
+#: activate/dev_manager.c:598 activate/dev_manager.c:605
+#: activate/dev_manager.c:634 activate/dev_manager.c:688
+#: activate/dev_manager.c:697 activate/dev_manager.c:752
+#: activate/dev_manager.c:777 activate/dev_manager.c:820
+#: activate/dev_manager.c:840 activate/dev_manager.c:862
+#: activate/dev_manager.c:867 activate/dev_manager.c:898
+#: activate/dev_manager.c:906 activate/dev_manager.c:923
+#: activate/dev_manager.c:928 activate/dev_manager.c:943
+#: activate/dev_manager.c:948 activate/dev_manager.c:981
+#: activate/dev_manager.c:990 activate/dev_manager.c:1006
+#: activate/dev_manager.c:1016 activate/dev_manager.c:1038
+#: activate/dev_manager.c:1047 activate/dev_manager.c:1061
+#: activate/dev_manager.c:1069 activate/dev_manager.c:1082
+#: activate/dev_manager.c:1102 activate/dev_manager.c:1107
+#: activate/dev_manager.c:1113 activate/dev_manager.c:1135
+#: activate/dev_manager.c:1156 activate/dev_manager.c:1178
+#: activate/dev_manager.c:1190 activate/dev_manager.c:1202
+#: activate/dev_manager.c:1216 activate/dev_manager.c:1229
+#: activate/dev_manager.c:1239 activate/dev_manager.c:1279
+#: activate/dev_manager.c:1290 activate/dev_manager.c:1300
+#: activate/dev_manager.c:1307 activate/dev_manager.c:1313
+#: activate/dev_manager.c:1381 activate/dev_manager.c:1400
+#: activate/dev_manager.c:1422 activate/dev_manager.c:1430
+#: activate/dev_manager.c:1458 activate/dev_manager.c:1463
+#: activate/dev_manager.c:1492 activate/dev_manager.c:1498
+#: activate/dev_manager.c:1519 activate/dev_manager.c:1537
+#: activate/dev_manager.c:1551 activate/dev_manager.c:1561
+#: activate/dev_manager.c:1571 activate/dev_manager.c:1589
+#: activate/dev_manager.c:1612 activate/dev_manager.c:1646
+#: activate/dev_manager.c:1662 activate/dev_manager.c:1720
+#: activate/dev_manager.c:1729 activate/dev_manager.c:1738
+#: activate/dev_manager.c:1747 activate/dev_manager.c:1752
+#: activate/dev_manager.c:1757 activate/dev_manager.c:1769
+#: activate/dev_manager.c:1779 activate/dev_manager.c:1785
+#: activate/dev_manager.c:1821 activate/dev_manager.c:1826
+#: activate/dev_manager.c:1858 activate/dev_manager.c:1876
+#: activate/dev_manager.c:2051 activate/dev_manager.c:2063
+#: activate/dev_manager.c:2069 activate/dev_manager.c:2083
+#: activate/dev_manager.c:2088 activate/dev_manager.c:2095
+#: activate/dev_manager.c:2103 activate/dev_manager.c:2111
+#: activate/dev_manager.c:2117 activate/dev_manager.c:2124
+#: activate/dev_manager.c:2129 activate/dev_manager.c:2157 activate/fs.c:234
+#: activate/fs.c:241 activate/fs.c:248 activate/fs.c:251 activate/fs.c:325
+#: archiver.c:71 archiver.c:78 archiver.c:90 archiver.c:166 archiver.c:236
+#: archiver.c:286 archiver.c:303 archiver.c:345 archiver.c:350
+#: cache/lvmcache.c:454 cache/lvmcache.c:495 cache/lvmcache.c:526
+#: commands/toolcontext.c:268 commands/toolcontext.c:287
+#: commands/toolcontext.c:294 commands/toolcontext.c:371
+#: commands/toolcontext.c:386 commands/toolcontext.c:410
+#: commands/toolcontext.c:461 config/config.c:105 config/config.c:110
+#: config/config.c:140 config/config.c:161 config/config.c:192
+#: config/config.c:239 config/config.c:244 config/config.c:406
+#: config/config.c:424 config/config.c:429 config/config.c:439
+#: config/config.c:453 config/config.c:469 config/config.c:525
+#: config/config.c:708 datastruct/btree.c:90 datastruct/hash.c:96
+#: datastruct/hash.c:109 datastruct/str_list.c:24 datastruct/str_list.c:38
+#: datastruct/str_list.c:47 datastruct/str_list.c:77 device/dev-cache.c:180
+#: device/dev-cache.c:187 device/dev-cache.c:193 device/dev-cache.c:227
+#: device/dev-cache.c:298 device/dev-cache.c:346 device/dev-cache.c:391
+#: device/dev-cache.c:396 device/dev-io.c:160 device/dev-io.c:190
+#: device/dev-io.c:288 device/dev-io.c:474 device/dev-io.c:502
+#: display/display.c:211 display/display.c:242 display/display.c:300
+#: display/display.c:347 display/display.c:587 display/display.c:623
+#: error/errseg.c:90 filters/filter-composite.c:54 filters/filter-md.c:35
+#: filters/filter-md.c:47 filters/filter-md.c:59 filters/filter-md.c:65
+#: filters/filter-persistent.c:45 filters/filter-persistent.c:103
+#: filters/filter-persistent.c:108 filters/filter-persistent.c:242
+#: filters/filter-persistent.c:248 filters/filter-persistent.c:260
+#: filters/filter-regex.c:78 filters/filter-regex.c:105
+#: filters/filter-regex.c:126 filters/filter-regex.c:151
+#: filters/filter-regex.c:209 filters/filter-regex.c:214
+#: filters/filter-regex.c:221 filters/filter-regex.c:226
+#: filters/filter-sysfs.c:279 filters/filter.c:218 format1/disk-rep.c:220
+#: format1/disk-rep.c:232 format1/disk-rep.c:237 format1/disk-rep.c:256
+#: format1/disk-rep.c:259 format1/disk-rep.c:290 format1/disk-rep.c:293
+#: format1/disk-rep.c:312 format1/disk-rep.c:315 format1/disk-rep.c:332
+#: format1/disk-rep.c:342 format1/disk-rep.c:348 format1/disk-rep.c:413
+#: format1/disk-rep.c:420 format1/disk-rep.c:511 format1/disk-rep.c:534
+#: format1/disk-rep.c:546 format1/disk-rep.c:576 format1/disk-rep.c:590
+#: format1/disk-rep.c:623 format1/disk-rep.c:688 format1/disk-rep.c:695
+#: format1/disk-rep.c:713 format1/format1.c:177 format1/format1.c:192
+#: format1/format1.c:201 format1/format1.c:206 format1/format1.c:223
+#: format1/format1.c:237 format1/format1.c:258 format1/format1.c:269
+#: format1/format1.c:284 format1/format1.c:310 format1/format1.c:315
+#: format1/format1.c:320 format1/format1.c:325 format1/format1.c:362
+#: format1/format1.c:409 format1/format1.c:425 format1/format1.c:430
+#: format1/format1.c:437 format1/format1.c:449 format1/format1.c:500
+#: format1/format1.c:520 format1/format1.c:529 format1/format1.c:573
 #: format1/import-export.c:61 format1/import-export.c:121
 #: format1/import-export.c:141 format1/import-export.c:158
 #: format1/import-export.c:166 format1/import-export.c:201
@@ -186,11 +185,11 @@ msgstr ""
 #: format_text/archive.c:142 format_text/archive.c:169
 #: format_text/archive.c:264 format_text/archive.c:374
 #: format_text/export.c:257 format_text/export.c:258 format_text/export.c:259
-#: format_text/export.c:262 format_text/export.c:264 format_text/export.c:267
+#: format_text/export.c:262 format_text/export.c:266 format_text/export.c:267
 #: format_text/export.c:277 format_text/export.c:281 format_text/export.c:283
 #: format_text/export.c:286 format_text/export.c:289 format_text/export.c:293
 #: format_text/export.c:296 format_text/export.c:300 format_text/export.c:304
-#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:313
+#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:314
 #: format_text/export.c:338 format_text/export.c:345 format_text/export.c:350
 #: format_text/export.c:354 format_text/export.c:358 format_text/export.c:360
 #: format_text/export.c:366 format_text/export.c:369 format_text/export.c:373
@@ -199,14 +198,14 @@ msgstr ""
 #: format_text/export.c:403 format_text/export.c:406 format_text/export.c:411
 #: format_text/export.c:415 format_text/export.c:418 format_text/export.c:423
 #: format_text/export.c:428 format_text/export.c:441 format_text/export.c:448
-#: format_text/export.c:452 format_text/export.c:457 format_text/export.c:465
+#: format_text/export.c:454 format_text/export.c:460 format_text/export.c:465
 #: format_text/export.c:488 format_text/export.c:492 format_text/export.c:496
 #: format_text/export.c:500 format_text/export.c:504 format_text/export.c:505
 #: format_text/export.c:511 format_text/export.c:533 format_text/export.c:538
 #: format_text/export.c:553 format_text/export.c:575 format_text/export.c:582
 #: format_text/export.c:587 format_text/export.c:591 format_text/export.c:594
 #: format_text/export.c:597 format_text/export.c:601 format_text/export.c:604
-#: format_text/export.c:608 format_text/export.c:612 format_text/export.c:614
+#: format_text/export.c:609 format_text/export.c:612 format_text/export.c:614
 #: format_text/export.c:616 format_text/export.c:617 format_text/export.c:623
 #: format_text/export.c:629 format_text/export.c:633 format_text/export.c:638
 #: format_text/export.c:656 format_text/export.c:661 format_text/export.c:670
@@ -266,8 +265,8 @@ msgstr ""
 #: lvresize.c:484 lvresize.c:509 metadata/lv_manip.c:70
 #: metadata/lv_manip.c:202 metadata/lv_manip.c:237 metadata/lv_manip.c:324
 #: metadata/lv_manip.c:369 metadata/lv_manip.c:462 metadata/lv_manip.c:599
-#: metadata/lv_manip.c:631 metadata/lv_manip.c:642 metadata/lv_manip.c:690
-#: metadata/lv_manip.c:704 metadata/merge.c:179 metadata/metadata.c:174
+#: metadata/lv_manip.c:641 metadata/lv_manip.c:652 metadata/lv_manip.c:700
+#: metadata/lv_manip.c:714 metadata/merge.c:179 metadata/metadata.c:174
 #: metadata/metadata.c:198 metadata/metadata.c:266 metadata/metadata.c:278
 #: metadata/metadata.c:468 metadata/metadata.c:509 metadata/metadata.c:515
 #: metadata/metadata.c:521 metadata/metadata.c:545 metadata/metadata.c:570
@@ -280,21 +279,21 @@ msgstr ""
 #: metadata/pv_map.c:217 metadata/pv_map.c:226 metadata/pv_map.c:244
 #: metadata/pv_map.c:258 metadata/snapshot_manip.c:124
 #: metadata/snapshot_manip.c:141 mirror/mirrored.c:96 mirror/mirrored.c:171
-#: mirror/mirrored.c:251 pvmove.c:96 pvmove.c:101 pvmove.c:170 pvmove.c:198
-#: pvmove.c:205 pvmove.c:266 pvmove.c:273 pvmove.c:282 pvmove.c:311
-#: pvmove.c:319 pvmove.c:326 pvmove.c:333 pvmove.c:341 pvmove.c:353
-#: pvmove.c:494 pvscan.c:54 regex/matcher.c:182 regex/matcher.c:203
-#: regex/matcher.c:208 regex/matcher.c:282 regex/matcher.c:287
-#: regex/matcher.c:300 regex/matcher.c:322 regex/parse_rx.c:229
-#: regex/parse_rx.c:280 regex/parse_rx.c:305 regex/parse_rx.c:328
-#: regex/parse_rx.c:340 regex/ttree.c:91 regex/ttree.c:111 report/report.c:522
-#: report/report.c:550 report/report.c:682 snapshot/snapshot.c:74
-#: snapshot/snapshot.c:83 snapshot/snapshot.c:84 snapshot/snapshot.c:85
-#: snapshot/snapshot.c:154 striped/striped.c:90 striped/striped.c:160
-#: striped/striped.c:209 toollib.c:739 toollib.c:789 toollib.c:836
-#: vgcfgbackup.c:65 vgcfgbackup.c:74 vgcfgbackup.c:81 vgreduce.c:28
-#: vgreduce.c:84 vgreduce.c:92 vgreduce.c:98 vgreduce.c:106 vgreduce.c:142
-#: vgreduce.c:158 zero/zero.c:90
+#: mirror/mirrored.c:251 misc/lvm-string.c:150 pvmove.c:98 pvmove.c:103
+#: pvmove.c:179 pvmove.c:207 pvmove.c:214 pvmove.c:278 pvmove.c:285
+#: pvmove.c:294 pvmove.c:323 pvmove.c:336 pvmove.c:343 pvmove.c:350
+#: pvmove.c:358 pvmove.c:370 pvmove.c:511 pvscan.c:54 regex/matcher.c:182
+#: regex/matcher.c:203 regex/matcher.c:208 regex/matcher.c:282
+#: regex/matcher.c:287 regex/matcher.c:300 regex/matcher.c:322
+#: regex/parse_rx.c:229 regex/parse_rx.c:280 regex/parse_rx.c:305
+#: regex/parse_rx.c:328 regex/parse_rx.c:340 regex/ttree.c:91
+#: regex/ttree.c:111 report/report.c:522 report/report.c:550
+#: report/report.c:682 snapshot/snapshot.c:74 snapshot/snapshot.c:83
+#: snapshot/snapshot.c:84 snapshot/snapshot.c:85 snapshot/snapshot.c:154
+#: striped/striped.c:91 striped/striped.c:160 striped/striped.c:209
+#: toollib.c:739 toollib.c:789 toollib.c:836 vgcfgbackup.c:65 vgcfgbackup.c:74
+#: vgcfgbackup.c:81 vgreduce.c:28 vgreduce.c:84 vgreduce.c:92 vgreduce.c:98
+#: vgreduce.c:106 vgreduce.c:142 vgreduce.c:158 zero/zero.c:90
 msgid "<backtrace>"
 msgstr ""
 
@@ -342,254 +341,259 @@ msgstr ""
 msgid "Skipping: Activating '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:461 activate/dev_manager.c:487
+#: activate/dev_manager.c:378 activate/dev_manager.c:404
 #, c-format
 msgid "Number of segments in active LV %s does not match metadata"
 msgstr ""
 
-#: activate/dev_manager.c:497
+#: activate/dev_manager.c:414
 #, c-format
 msgid "LV percent: %f"
 msgstr ""
 
-#: activate/dev_manager.c:527 format_text/format-text.c:637
+#: activate/dev_manager.c:446
+#, c-format
+msgid "Couldn't split up dm layer name %s"
+msgstr ""
+
+#: activate/dev_manager.c:450 format_text/format-text.c:637
 #: format_text/format-text.c:662 format_text/format-text.c:696
 #, c-format
 msgid "Renaming %s to %s"
 msgstr ""
 
-#: activate/dev_manager.c:541
+#: activate/dev_manager.c:464
 #, c-format
 msgid "Couldn't rename device '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:560
+#: activate/dev_manager.c:485
 #, c-format
 msgid "%s %s"
 msgstr ""
 
-#: activate/dev_manager.c:567
+#: activate/dev_manager.c:492
 #, c-format
 msgid "Couldn't %s device '%s'"
 msgstr ""
 
-#: activate/dev_manager.c:607
+#: activate/dev_manager.c:532
 #, c-format
 msgid "Loading %s"
 msgstr ""
 
-#: activate/dev_manager.c:618
+#: activate/dev_manager.c:543
 #, c-format
 msgid "Couldn't populate device '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:628
+#: activate/dev_manager.c:553
 #, c-format
 msgid "Failed to set major number for %s to %d during activation."
 msgstr ""
 
-#: activate/dev_manager.c:633
+#: activate/dev_manager.c:558
 #, c-format
 msgid "Set major number for %s to %d."
 msgstr ""
 
-#: activate/dev_manager.c:639
+#: activate/dev_manager.c:564
 #, c-format
 msgid "Failed to set minor number for %s to %d during activation."
 msgstr ""
 
-#: activate/dev_manager.c:644
+#: activate/dev_manager.c:569
 #, c-format
 msgid "Set minor number for %s to %d."
 msgstr ""
 
-#: activate/dev_manager.c:650
+#: activate/dev_manager.c:575
 #, c-format
 msgid "Failed to set %s read-only during activation."
 msgstr ""
 
-#: activate/dev_manager.c:654
+#: activate/dev_manager.c:579
 #, c-format
 msgid "Activating %s read-only"
 msgstr ""
 
-#: activate/dev_manager.c:658
+#: activate/dev_manager.c:583
 #, c-format
 msgid "Couldn't load device '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:661
+#: activate/dev_manager.c:586
 #, c-format
 msgid "Perhaps the persistent device number %d:%d is already in use?"
 msgstr ""
 
-#: activate/dev_manager.c:685
+#: activate/dev_manager.c:610
 #, c-format
 msgid "Activated %s %s %03u:%03u"
 msgstr ""
 
-#: activate/dev_manager.c:704 activate/dev_manager.c:706 activate/fs.c:103
+#: activate/dev_manager.c:629 activate/dev_manager.c:631 activate/fs.c:103
 #: activate/fs.c:156 activate/fs.c:169
 #, c-format
 msgid "Removing %s"
 msgstr ""
 
-#: activate/dev_manager.c:750
+#: activate/dev_manager.c:675
 #, c-format
 msgid "_emit_target: Internal error: Can't handle segment type %s"
 msgstr ""
 
-#: activate/dev_manager.c:767
+#: activate/dev_manager.c:692
 #, c-format
 msgid "Adding target: %llu %llu %s %s"
 msgstr ""
 
-#: activate/dev_manager.c:808
+#: activate/dev_manager.c:733
 #, c-format
 msgid "device layer %s missing from hash"
 msgstr ""
 
-#: activate/dev_manager.c:815
+#: activate/dev_manager.c:741
 #, c-format
 msgid "Failed to format device number as dm target (%u,%u)"
 msgstr ""
 
-#: activate/dev_manager.c:844
+#: activate/dev_manager.c:769
 msgid "Insufficient space for target parameters."
 msgstr ""
 
-#: activate/dev_manager.c:857
+#: activate/dev_manager.c:782
 #, c-format
 msgid "Insufficient space in params[%Zu] for target parameters."
 msgstr ""
 
-#: activate/dev_manager.c:863
+#: activate/dev_manager.c:788
 msgid "Target parameter size too big. Aborting."
 msgstr ""
 
-#: activate/dev_manager.c:879
+#: activate/dev_manager.c:804
 #, c-format
 msgid "Unable to build table for '%s'"
 msgstr ""
 
-#: activate/dev_manager.c:900
+#: activate/dev_manager.c:825
 #, c-format
 msgid "Couldn't find real device layer %s in hash"
 msgstr ""
 
-#: activate/dev_manager.c:906 activate/dev_manager.c:959
+#: activate/dev_manager.c:831 activate/dev_manager.c:884
 #, c-format
 msgid "Couldn't create origin device parameters for '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:911
+#: activate/dev_manager.c:836
 #, c-format
 msgid "Adding target: 0 %llu snapshot-origin %s"
 msgstr ""
 
-#: activate/dev_manager.c:932
+#: activate/dev_manager.c:857
 #, c-format
 msgid "Couldn't find snapshot for '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:947
+#: activate/dev_manager.c:872
 #, c-format
 msgid "Couldn't find origin device layer %s in hash"
 msgstr ""
 
-#: activate/dev_manager.c:953
+#: activate/dev_manager.c:878
 #, c-format
 msgid "Couldn't find cow device layer %s in hash"
 msgstr ""
 
-#: activate/dev_manager.c:966
+#: activate/dev_manager.c:891
 #, c-format
 msgid "Couldn't create cow device parameters for '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:977
+#: activate/dev_manager.c:902
 #, c-format
 msgid "Adding target: 0 %llu snapshot %s"
 msgstr ""
 
-#: activate/dev_manager.c:1063 activate/dev_manager.c:1142
+#: activate/dev_manager.c:988 activate/dev_manager.c:1067
 #, c-format
 msgid "Getting device info for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1088
+#: activate/dev_manager.c:1013
 #, c-format
 msgid "Getting device status percentage for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1119
+#: activate/dev_manager.c:1044
 #, c-format
 msgid "Getting device mirror status percentage for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1442 activate/dev_manager.c:1602
+#: activate/dev_manager.c:1367 activate/dev_manager.c:1527
 #, c-format
 msgid "Couldn't find device layer '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:1522
+#: activate/dev_manager.c:1447
 #, c-format
 msgid "_suspend_parents couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1528
+#: activate/dev_manager.c:1453
 #, c-format
 msgid "BUG: pre-suspend loop detected (%s)"
 msgstr ""
 
-#: activate/dev_manager.c:1556
+#: activate/dev_manager.c:1481
 #, c-format
 msgid "_resume_with_deps couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1562 activate/dev_manager.c:1607
+#: activate/dev_manager.c:1487 activate/dev_manager.c:1532
 #, c-format
 msgid "BUG: pre-create loop detected (%s)"
 msgstr ""
 
-#: activate/dev_manager.c:1714 activate/dev_manager.c:1730
+#: activate/dev_manager.c:1639 activate/dev_manager.c:1655
 #, c-format
 msgid ""
 "_populate_pre_suspend_lists: Couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1776
+#: activate/dev_manager.c:1701
 #, c-format
 msgid "Couldn't deactivate device %s"
 msgstr ""
 
-#: activate/dev_manager.c:1893
+#: activate/dev_manager.c:1818
 #, c-format
 msgid "Found existing layer '%s'"
 msgstr ""
 
-#: activate/dev_manager.c:2072
+#: activate/dev_manager.c:1997
 #, c-format
 msgid "Can't expand LV: %s target support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2084
+#: activate/dev_manager.c:2009
 msgid "Can't expand LV: Mirror support missing from tools?"
 msgstr ""
 
-#: activate/dev_manager.c:2091
+#: activate/dev_manager.c:2016
 msgid "Can't expand LV: Mirror support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2099
+#: activate/dev_manager.c:2024
 msgid "Can't expand LV: Snapshot support missing from tools?"
 msgstr ""
 
-#: activate/dev_manager.c:2106
+#: activate/dev_manager.c:2031
 msgid "Can't expand LV: Snapshot support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2134
+#: activate/dev_manager.c:2059
 #, c-format
 msgid "Found active lv %s%s"
 msgstr ""
@@ -611,7 +615,7 @@ msgstr ""
 #: device/dev-cache.c:320 device/dev-cache.c:327 device/dev-cache.c:488
 #: device/dev-cache.c:490 device/dev-io.c:84 device/dev-io.c:120
 #: device/dev-io.c:222 device/dev-io.c:227 device/dev-io.c:245
-#: device/dev-io.c:250 device/dev-io.c:304 device/dev-io.c:355
+#: device/dev-io.c:250 device/dev-io.c:310 device/dev-io.c:361
 #: filters/filter-persistent.c:184 filters/filter-sysfs.c:43
 #: filters/filter-sysfs.c:155 filters/filter-sysfs.c:179
 #: filters/filter-sysfs.c:220 filters/filter.c:122 format_text/archive.c:221
@@ -1200,32 +1204,32 @@ msgstr ""
 msgid "%s: stat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:313
+#: device/dev-io.c:319
 #, c-format
 msgid "%s: fstat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:329
+#: device/dev-io.c:335
 #, c-format
 msgid "Opened %s"
 msgstr ""
 
-#: device/dev-io.c:359
+#: device/dev-io.c:365
 #, c-format
 msgid "Closed %s"
 msgstr ""
 
-#: device/dev-io.c:372
+#: device/dev-io.c:378
 #, c-format
 msgid "Attempt to close device '%s' which is not open."
 msgstr ""
 
-#: device/dev-io.c:473
+#: device/dev-io.c:479
 #, c-format
 msgid "Wiping %s at %llu length %Zu"
 msgstr ""
 
-#: device/dev-io.c:476
+#: device/dev-io.c:482
 #, c-format
 msgid "Wiping %s at sector %llu length %Zu sectors"
 msgstr ""
@@ -1578,8 +1582,20 @@ msgstr ""
 msgid "\"%s\" %-9s [%-9s used / %s free]"
 msgstr ""
 
+#: display/display.c:671 display/display.c:680 pvscan.c:33
+#: report/report.c:1268 report/report.c:1423
+#, c-format
+msgid "%s"
+msgstr ""
+
 #: dumpconfig.c:26
 msgid "Please specify one file for output"
+msgstr ""
+
+#: error/errseg.c:100 mirror/mirrored.c:261 snapshot/snapshot.c:164
+#: striped/striped.c:220 zero/zero.c:100
+#, c-format
+msgid "Initialised segtype: %s"
 msgstr ""
 
 #: filters/filter-composite.c:31
@@ -1855,65 +1871,71 @@ msgstr ""
 msgid "Successfully wrote data to %s"
 msgstr ""
 
-#: format1/format1.c:76
+#: format1/format1.c:77
 #, c-format
 msgid "VG data differs between PVs %s and %s"
 msgstr ""
 
-#: format1/format1.c:78 format1/format1.c:93
+#: format1/format1.c:79 format1/format1.c:94
 #, c-format
 msgid "VG data on %s: %s %s %u %u  %u %u %u %u %u %u %u %u %u %u %u %u %u"
 msgstr ""
 
-#: format1/format1.c:119
+#: format1/format1.c:120
 #, c-format
 msgid "%d PV(s) found for VG %s: expected %d"
 msgstr ""
 
-#: format1/format1.c:306 format_pool/format_pool.c:235
+#: format1/format1.c:307 format_pool/format_pool.c:235
 #, c-format
 msgid "Reading physical volume data %s from disk"
 msgstr ""
 
-#: format1/format1.c:347
+#: format1/format1.c:348
 #, c-format
 msgid "Physical volumes cannot be bigger than %s"
 msgstr ""
 
-#: format1/format1.c:368
+#: format1/format1.c:369
 msgid "Metadata would overwrite physical extents"
 msgstr ""
 
-#: format1/format1.c:383
+#: format1/format1.c:384
 #, c-format
 msgid "logical volumes cannot contain more than %d extents."
 msgstr ""
 
-#: format1/format1.c:388
+#: format1/format1.c:389
 #, c-format
 msgid "logical volumes cannot be larger than %s"
 msgstr ""
 
-#: format1/format1.c:470
+#: format1/format1.c:471
 #, c-format
 msgid "Extent size must be between %s and %s"
 msgstr ""
 
-#: format1/format1.c:480
+#: format1/format1.c:481
 #, c-format
 msgid "Extent size must be multiple of %s"
 msgstr ""
 
-#: format1/format1.c:488 format_text/format-text.c:71
+#: format1/format1.c:489 format_text/format-text.c:71
 msgid "Extent size must be power of 2"
 msgstr ""
 
-#: format1/format1.c:572
+#: format1/format1.c:585
 msgid "Couldn't create lvm1 label handler."
 msgstr ""
 
-#: format1/format1.c:577
+#: format1/format1.c:590
 msgid "Couldn't register lvm1 label handler."
+msgstr ""
+
+#: format1/format1.c:594 format_pool/format_pool.c:360
+#: format_text/format-text.c:1692
+#, c-format
+msgid "Initialised format: %s"
 msgstr ""
 
 #: format1/import-export.c:71
@@ -2919,6 +2941,10 @@ msgstr ""
 msgid "Test mode: Metadata will NOT be updated."
 msgstr ""
 
+#: log/log.c:231
+msgid "vsnprintf failed: skipping external logging function"
+msgstr ""
+
 #: lvchange.c:26
 #, c-format
 msgid "Logical volume \"%s\" is already writable"
@@ -3268,26 +3294,26 @@ msgstr ""
 msgid "%s: not found: device not zeroed"
 msgstr ""
 
-#: lvcreate.c:393 pvmove.c:279 toollib.c:339 vgreduce.c:258
+#: lvcreate.c:393 pvmove.c:291 toollib.c:339 vgreduce.c:258
 #, c-format
 msgid "Finding volume group \"%s\""
 msgstr ""
 
-#: lvcreate.c:396 lvrename.c:112 pvmove.c:65 vgdisplay.c:24 vgmerge.c:38
+#: lvcreate.c:396 lvrename.c:112 pvmove.c:66 vgdisplay.c:24 vgmerge.c:38
 #: vgmerge.c:64 vgreduce.c:266 vgremove.c:27 vgrename.c:73 vgsplit.c:178
 #, c-format
 msgid "Volume group \"%s\" doesn't exist"
 msgstr ""
 
 #: lvcreate.c:401 lvrename.c:117 metadata/metadata.c:804 polldaemon.c:192
-#: pvchange.c:67 pvmove.c:71 toollib.c:39 vgchange.c:308 vgck.c:32
+#: pvchange.c:67 pvmove.c:72 toollib.c:39 vgchange.c:308 vgck.c:32
 #: vgconvert.c:54 vgextend.c:57 vgmerge.c:44 vgmerge.c:69 vgreduce.c:316
 #: vgremove.c:32 vgrename.c:80 vgsplit.c:184
 #, c-format
 msgid "Volume group \"%s\" is exported"
 msgstr ""
 
-#: lvcreate.c:406 lvremove.c:27 lvrename.c:122 pvchange.c:73 pvmove.c:77
+#: lvcreate.c:406 lvremove.c:27 lvrename.c:122 pvchange.c:73 pvmove.c:78
 #: vgchange.c:303 vgconvert.c:49 vgexport.c:38 vgextend.c:62 vgmerge.c:50
 #: vgmerge.c:74 vgreduce.c:322 vgrename.c:86 vgsplit.c:190
 #, c-format
@@ -3403,7 +3429,7 @@ msgstr ""
 msgid "Logical volume \"%s\" created"
 msgstr ""
 
-#: lvcreate.c:636 lvrename.c:107 lvresize.c:504 pvchange.c:54 pvmove.c:60
+#: lvcreate.c:636 lvrename.c:107 lvresize.c:504 pvchange.c:54 pvmove.c:61
 #: vgcreate.c:139 vgextend.c:47 vgmerge.c:33 vgmerge.c:57 vgreduce.c:260
 #: vgrename.c:68 vgrename.c:102 vgsplit.c:173 vgsplit.c:197
 #, c-format
@@ -3994,11 +4020,20 @@ msgstr ""
 msgid "lv name strdup failed"
 msgstr ""
 
-#: metadata/lv_manip.c:636
+#: metadata/lv_manip.c:628
+#, c-format
+msgid "Metadata format (%s) does not support required LV segment type (%s)."
+msgstr ""
+
+#: metadata/lv_manip.c:631
+msgid "Consider changing the metadata format by running vgconvert."
+msgstr ""
+
+#: metadata/lv_manip.c:646
 msgid "Couldn't merge segments after extending logical volume."
 msgstr ""
 
-#: metadata/lv_manip.c:673
+#: metadata/lv_manip.c:683
 #, c-format
 msgid "Segment extent reduction %unot divisible by #stripes %u"
 msgstr ""
@@ -4279,7 +4314,7 @@ msgid "Moving %s:%u-%u of %s/%s"
 msgstr ""
 
 #: metadata/mirror.c:152
-msgid "Allocation for temporary pvmove LV failed"
+msgid "Unable to allocate temporary LV for pvmove."
 msgstr ""
 
 #: metadata/mirror.c:169
@@ -4540,7 +4575,7 @@ msgstr ""
 msgid "Unable to find volume group of \"%s\""
 msgstr ""
 
-#: pvchange.c:79
+#: pvchange.c:80
 #, c-format
 msgid "Unable to find \"%s\" in volume group \"%s\""
 msgstr ""
@@ -4704,65 +4739,65 @@ msgstr ""
 
 #: pvcreate.c:152 pvremove.c:84
 #, c-format
-msgid "%s: Couldn't find device."
+msgid "%s: Couldn't find device.  Check your filters?"
 msgstr ""
 
-#: pvcreate.c:160 vgconvert.c:125
+#: pvcreate.c:161 vgconvert.c:125
 #, c-format
 msgid "Failed to setup physical volume \"%s\""
 msgstr ""
 
-#: pvcreate.c:164 vgconvert.c:136
+#: pvcreate.c:165 vgconvert.c:136
 #, c-format
 msgid "Set up physical volume for \"%s\" with %llu available sectors"
 msgstr ""
 
-#: pvcreate.c:169 vgconvert.c:141
+#: pvcreate.c:170 vgconvert.c:141
 #, c-format
 msgid "Failed to wipe existing label on %s"
 msgstr ""
 
-#: pvcreate.c:173 vgconvert.c:148
+#: pvcreate.c:174 vgconvert.c:148
 #, c-format
 msgid "Writing physical volume data to disk \"%s\""
 msgstr ""
 
-#: pvcreate.c:177 vgconvert.c:153
+#: pvcreate.c:178 vgconvert.c:153
 #, c-format
 msgid "Failed to write physical volume \"%s\""
 msgstr ""
 
-#: pvcreate.c:181 vgconvert.c:159
+#: pvcreate.c:182 vgconvert.c:159
 #, c-format
 msgid "Physical volume \"%s\" successfully created"
 msgstr ""
 
-#: pvcreate.c:197 pvremove.c:111
+#: pvcreate.c:198 pvremove.c:112
 msgid "Please enter a physical volume path"
 msgstr ""
 
-#: pvcreate.c:202
+#: pvcreate.c:203
 msgid "--uuid is required with --restorefile"
 msgstr ""
 
-#: pvcreate.c:207
+#: pvcreate.c:208
 msgid "Can only set uuid on one volume at once"
 msgstr ""
 
-#: pvcreate.c:212 pvremove.c:116
+#: pvcreate.c:213 pvremove.c:117
 msgid "Option y can only be given with option f"
 msgstr ""
 
-#: pvcreate.c:217 vgconvert.c:203
+#: pvcreate.c:218 vgconvert.c:203
 #, c-format
 msgid "labelsector must be less than %lu"
 msgstr ""
 
-#: pvcreate.c:225 vgconvert.c:211
+#: pvcreate.c:226 vgconvert.c:211
 msgid "Metadata parameters only apply to text format"
 msgstr ""
 
-#: pvcreate.c:231 vgconvert.c:217
+#: pvcreate.c:232 vgconvert.c:217
 msgid "Metadatacopies may only be 0, 1 or 2"
 msgstr ""
 
@@ -4785,127 +4820,127 @@ msgstr ""
 msgid "Option -v not allowed with option -c"
 msgstr ""
 
-#: pvmove.c:35
+#: pvmove.c:36
 msgid "--name takes a logical volume name"
 msgstr ""
 
-#: pvmove.c:40
+#: pvmove.c:41
 msgid "Named LV and old PV must be in the same VG"
 msgstr ""
 
-#: pvmove.c:46
+#: pvmove.c:47
 msgid "Incomplete LV name supplied with --name"
 msgstr ""
 
-#: pvmove.c:116
+#: pvmove.c:123
 msgid "No extents available for allocation"
 msgstr ""
 
-#: pvmove.c:138
+#: pvmove.c:147
 msgid "Creation of temporary pvmove LV failed"
 msgstr ""
 
-#: pvmove.c:145
+#: pvmove.c:154
 msgid "lvs_changed list struct allocation failed"
 msgstr ""
 
-#: pvmove.c:157
+#: pvmove.c:166
 #, c-format
 msgid "Skipping snapshot-related LV %s"
 msgstr ""
 
-#: pvmove.c:161
+#: pvmove.c:170
 #, c-format
 msgid "Skipping mirror LV %s"
 msgstr ""
 
-#: pvmove.c:165
+#: pvmove.c:174
 #, c-format
 msgid "Skipping locked LV %s"
 msgstr ""
 
-#: pvmove.c:177
+#: pvmove.c:186
 #, c-format
 msgid "No data to move for %s"
 msgstr ""
 
-#: pvmove.c:188
+#: pvmove.c:197
 msgid "Updating volume group metadata"
 msgstr ""
 
-#: pvmove.c:190 pvmove.c:214
+#: pvmove.c:199 pvmove.c:223
 msgid "ABORTING: Volume group metadata update failed."
 msgstr ""
 
-#: pvmove.c:225
+#: pvmove.c:235
 msgid "ABORTING: Temporary mirror activation failed.  Run pvmove --abort."
 msgstr ""
 
-#: pvmove.c:232 pvmove.c:408
+#: pvmove.c:243 pvmove.c:425
 #, c-format
 msgid "Unable to reactivate logical volume \"%s\""
 msgstr ""
 
-#: pvmove.c:240
+#: pvmove.c:251
 msgid "Unable to resume logical volumes"
 msgstr ""
 
-#: pvmove.c:287
+#: pvmove.c:299
 #, c-format
 msgid "Detected pvmove in progress for %s"
 msgstr ""
 
-#: pvmove.c:289
+#: pvmove.c:301
 msgid "Ignoring remaining command line arguments"
 msgstr ""
 
-#: pvmove.c:292
+#: pvmove.c:305
 msgid "ABORTING: Failed to generate list of moving LVs"
 msgstr ""
 
-#: pvmove.c:300
+#: pvmove.c:313
 msgid "ABORTING: Temporary mirror activation failed."
 msgstr ""
 
-#: pvmove.c:373
+#: pvmove.c:390
 msgid "ABORTING: Removal of temporary mirror failed"
 msgstr ""
 
-#: pvmove.c:379 pvmove.c:398 pvmove.c:432
+#: pvmove.c:396 pvmove.c:415 pvmove.c:449
 msgid "ABORTING: Failed to write new data locations to disk."
 msgstr ""
 
-#: pvmove.c:386
+#: pvmove.c:403
 msgid "Locking LVs to remove temporary mirror failed"
 msgstr ""
 
-#: pvmove.c:392
+#: pvmove.c:409
 msgid "Suspension of temporary mirror LV failed"
 msgstr ""
 
-#: pvmove.c:418
+#: pvmove.c:435
 #, c-format
 msgid "ABORTING: Unable to deactivate temporary logical volume \"%s\""
 msgstr ""
 
-#: pvmove.c:423
+#: pvmove.c:440
 msgid "Removing temporary pvmove LV"
 msgstr ""
 
-#: pvmove.c:425
+#: pvmove.c:442
 msgid "ABORTING: Removal of temporary pvmove LV failed"
 msgstr ""
 
-#: pvmove.c:430
+#: pvmove.c:447
 msgid "Writing out final volume group after pvmove"
 msgstr ""
 
-#: pvmove.c:450
+#: pvmove.c:467
 #, c-format
 msgid "ABORTING: Can't reread PV %s"
 msgstr ""
 
-#: pvmove.c:486 toollib.c:887
+#: pvmove.c:503 toollib.c:887
 msgid "Failed to clone PV name"
 msgstr ""
 
@@ -4925,19 +4960,14 @@ msgstr ""
 msgid "WARNING: Wiping physical volume label from %s%s%s%s"
 msgstr ""
 
-#: pvremove.c:90
+#: pvremove.c:91
 #, c-format
 msgid "Failed to wipe existing label(s) on %s"
 msgstr ""
 
-#: pvremove.c:94
+#: pvremove.c:95
 #, c-format
 msgid "Labels on physical volume \"%s\" successfully wiped"
-msgstr ""
-
-#: pvscan.c:33 report/report.c:1268 report/report.c:1423
-#, c-format
-msgid "%s"
 msgstr ""
 
 #: pvscan.c:65

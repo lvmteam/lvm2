@@ -1,5 +1,5 @@
-Version 2.00.23 - 
-====================================
+Version 2.00.23 - 15th September 2004
+=====================================
   Export dm name build & split functions.
   Use O_NOATIME on devices if available.
   Write log message when each segtype/format gets initialised.
