@@ -95,6 +95,8 @@ void print_log(int level, const char *file, int line, const char *format, ...) {
 	va_start(ap, format);
 	switch(level) {
 	  case _LOG_DEBUG:
+		if (!strcmp("<backtrace>", format))
+			break;
 		if (_verbose_level > 2) {
 			printf("%s%s", _cmd_name, _msg_prefix);
 			if (_indent)
