@@ -122,6 +122,8 @@ static int _get_int_arg(struct arg *a, char **ptr)
 
 	a->i_value = (int32_t) v;
 	a->ui_value = (uint32_t) v;
+	a->i64_value = (int64_t) v;
+	a->ui64_value = (uint64_t) v;
 
 	return 1;
 }
