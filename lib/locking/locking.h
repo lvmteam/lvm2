@@ -33,7 +33,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 /*
  * Lock type - these numbers are the same as VMS and the IBM DLM
  */
-#define LCK_TYPE_MASK	0x000000FF
+#define LCK_TYPE_MASK	0x00000007
 
 #define LCK_NULL	0x00000000	/* LCK$_NLMODE */
 #define LCK_READ	0x00000001	/* LCK$_CRMODE */
@@ -41,20 +41,20 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 					/* LCK$_PRMODE */
 #define LCK_WRITE	0x00000004	/* LCK$_PWMODE */
 #define LCK_EXCL	0x00000005	/* LCK$_EXMODE */
-#define LCK_UNLOCK      0x00000010	/* This is ours */
+#define LCK_UNLOCK      0x00000006	/* This is ours */
 
 /*
  * Lock scope
  */
-#define LCK_SCOPE_MASK	0x0000FF00
+#define LCK_SCOPE_MASK	0x00000008
 #define LCK_VG		0x00000000
-#define LCK_LV		0x00000100
+#define LCK_LV		0x00000008
 
 /*
  * Lock bits
  */
-#define LCK_NONBLOCK	0x00010000	/* Don't block waiting for lock? */
-#define LCK_HOLD	0x00020000	/* Hold lock when lock_vol returns? */
+#define LCK_NONBLOCK	0x00000010	/* Don't block waiting for lock? */
+#define LCK_HOLD	0x00000020	/* Hold lock when lock_vol returns? */
 
 /*
  * Common combinations
