@@ -14,6 +14,19 @@
 
 #include <stdio.h>
 
+/*
+ * Constants to help indentify which files this code can parse.
+ */
+#define CONTENTS_FIELD "contents"
+#define CONTENTS_VALUE "Text Format Volume Group"
+
+#define FORMAT_VERSION_FIELD "version"
+#define FORMAT_VERSION_VALUE 1
+
+/*
+ * VGs, PVs and LVs all have status bitsets, we gather together
+ * common code for reading and writing them.
+ */
 enum {
 	VG_FLAGS,
 	PV_FLAGS,
