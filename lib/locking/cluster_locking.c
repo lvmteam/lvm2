@@ -139,8 +139,7 @@ static int _send_request(char *inbuf, int inlen, char **retbuf)
 
 	/* Read the returned values */
 	off = 1;		/* we've already read the first byte */
-
-	while (off < outheader->arglen && len > 0) {
+	while (off <= outheader->arglen && len > 0) {
 		len = read(_clvmd_sock, outheader->args + off,
 			   buflen - off - offsetof(struct clvm_header, args));
 		if (len > 0)
@@ -150,7 +149,7 @@ static int _send_request(char *inbuf, int inlen, char **retbuf)
 	/* Was it an error ? */
 	if (outheader->status < 0) {
 		errno = -outheader->status;
-		log_error("cluster send request failed: %s", strerror(errno));
+		log_error("cluster request failed: %s", strerror(errno));
 		return 0;
 	}
 
