@@ -12,6 +12,7 @@
 int init_locking(int type, struct config_tree *cf);
 void fin_locking(void);
 void reset_locking(void);
+int vg_write_lock_held(void);
 
 /*
  * LCK_VG:

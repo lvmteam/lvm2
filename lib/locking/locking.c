@@ -20,7 +20,8 @@
 static struct locking_type _locking;
 static sigset_t _oldset;
 
-static int _lock_count = 0;	/* Number of locks held */
+static int _vg_lock_count = 0;		/* Number of locks held */
+static int _vg_write_lock_held = 0;	/* VG write lock held? */
 static int _signals_blocked = 0;
 
 static void _block_signals(int flags)
@@ -48,7 +49,7 @@ static void _block_signals(int flags)
 static void _unblock_signals(void)
 {
 	/* Don't unblock signals while any locks are held */
-	if (!_signals_blocked || _lock_count)
+	if (!_signals_blocked || _vg_lock_count)
 		return;
 
 	if (sigprocmask(SIG_SETMASK, &_oldset, NULL)) {
@@ -63,9 +64,10 @@ static void _unblock_signals(void)
 
 void reset_locking(void)
 {
-	int was_locked = _lock_count;
+	int was_locked = _vg_lock_count;
 
-	_lock_count = 0;
+	_vg_lock_count = 0;
+	_vg_write_lock_held = 0;
 
 	_locking.reset_locking();
 
@@ -73,12 +75,21 @@ void reset_locking(void)
 		_unblock_signals();
 }
 
-static inline void _update_lock_count(int flags)
+static inline void _update_vg_lock_count(int flags)
 {
+	if ((flags & LCK_SCOPE_MASK) != LCK_VG)
+		return;
+
 	if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
-		_lock_count--;
+		_vg_lock_count--;
 	else
-		_lock_count++;
+		_vg_lock_count++;
+
+	/* We don't bother to reset this until all VG locks are dropped */
+	if ((flags & LCK_TYPE_MASK) == LCK_WRITE)
+		_vg_write_lock_held = 1;
+	else if (!_vg_lock_count)
+		_vg_write_lock_held = 0;
 }
 
 /*
@@ -171,7 +182,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
 		return 0;
 	}
 
-	_update_lock_count(flags);
+	_update_vg_lock_count(flags);
 	_unblock_signals();
 
 	return 1;
@@ -208,4 +219,9 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 	}
 
 	return 1;
+}
+
+int vg_write_lock_held(void)
+{
+	return _vg_write_lock_held;
 }
