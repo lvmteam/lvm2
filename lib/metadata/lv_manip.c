@@ -50,10 +50,10 @@ static void _put_extents(struct lv_segment *seg)
 	}
 }
 
-struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t stripes)
+struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t num_areas)
 {
 	struct lv_segment *seg;
-	uint32_t len = sizeof(*seg) + (stripes * sizeof(seg->area[0]));
+	uint32_t len = sizeof(*seg) + (num_areas * sizeof(seg->area[0]));
 
 	if (!(seg = pool_zalloc(mem, len))) {
 		stack;
@@ -65,33 +65,39 @@ struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t stripes)
 	return seg;
 }
 
-static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
-			      uint32_t stripe_size,
-			      struct pv_area **areas, uint32_t *ix)
+static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
+				uint32_t stripe_size,
+				struct pv_area **areas, uint32_t *ix)
 {
-	uint32_t count = lv->le_count - *ix;
-	uint32_t area_len = count / stripes;
-	uint32_t smallest = areas[stripes - 1]->count;
+	uint32_t count, area_len, smallest;
 	uint32_t s;
 	struct lv_segment *seg;
+	int striped = 0;
+
+	striped = 1;
+
+	count = lv->le_count - *ix;
+	area_len = count / (striped ? area_count : 1);
+	smallest = areas[area_count - 1]->count;
 
 	if (smallest < area_len)
 		area_len = smallest;
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, stripes))) {
-		log_err("Couldn't allocate new stripe segment.");
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, area_count))) {
+		log_err("Couldn't allocate new parallel segment.");
 		return 0;
 	}
 
 	seg->lv = lv;
 	seg->type = SEG_STRIPED;
 	seg->le = *ix;
-	seg->len = area_len * stripes;
+	seg->len = area_len * (striped ? area_count : 1);
 	seg->area_len = area_len;
-	seg->area_count = stripes;
+	seg->area_count = area_count;
 	seg->stripe_size = stripe_size;
+	seg->extents_moved = 0u;
 
-	for (s = 0; s < stripes; s++) {
+	for (s = 0; s < area_count; s++) {
 		struct pv_area *pva = areas[s];
 		seg->area[s].type = AREA_PV;
 		seg->area[s].u.pv.pv = pva->map->pvl->pv;
@@ -118,9 +124,9 @@ static int _comp_area(const void *l, const void *r)
 	return 0;
 }
 
-static int _alloc_striped(struct logical_volume *lv,
-			  struct list *pvms, uint32_t allocated,
-			  uint32_t stripes, uint32_t stripe_size)
+static int _alloc_parallel(struct logical_volume *lv,
+			   struct list *pvms, uint32_t allocated,
+			   uint32_t stripes, uint32_t stripe_size)
 {
 	int r = 0;
 	struct list *pvmh;
@@ -128,6 +134,9 @@ static int _alloc_striped(struct logical_volume *lv,
 	unsigned int pv_count = 0, ix;
 	struct pv_map *pvm;
 	size_t len;
+	uint32_t area_count;
+
+	area_count = stripes;
 
 	list_iterate(pvmh, pvms)
 	    pv_count++;
@@ -151,9 +160,9 @@ static int _alloc_striped(struct logical_volume *lv,
 			areas[ix++] = list_item(pvm->areas.n, struct pv_area);
 		}
 
-		if (ix < stripes) {
+		if (ix < area_count) {
 			log_error("Insufficient allocatable extents suitable "
-				  "for striping for logical volume "
+				  "for parallel use for logical volume "
 				  "%s: %u required", lv->name, lv->le_count);
 			goto out;
 		}
@@ -161,8 +170,8 @@ static int _alloc_striped(struct logical_volume *lv,
 		/* sort the areas so we allocate from the biggest */
 		qsort(areas, ix, sizeof(*areas), _comp_area);
 
-		if (!_alloc_stripe_area(lv, stripes, stripe_size, areas,
-					&allocated)) {
+		if (!_alloc_parallel_area(lv, area_count, stripe_size, areas,
+					  &allocated)) {
 			stack;
 			goto out;
 		}
@@ -403,7 +412,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		goto out;
 
 	if (stripes > 1)
-		r = _alloc_striped(lv, pvms, allocated, stripes, stripe_size);
+		r = _alloc_parallel(lv, pvms, allocated, stripes, stripe_size);
 
 	else if (mirrored_pv)
 		r = _alloc_mirrored(lv, pvms, allocated, mirrored_pv,
