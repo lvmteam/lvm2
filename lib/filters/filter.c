@@ -28,6 +28,7 @@
 #define NUMBER_OF_MAJORS 4096
 
 /* FIXME Make this sparse */
+/* 0 means LVM won't use this major number. */
 static int _max_partitions_by_major[NUMBER_OF_MAJORS];
 
 typedef struct {
@@ -42,12 +43,19 @@ int md_major(void)
 	return _md_major;
 }
 
-/* This list can be supplemented with devices/types in the config file */
+/*
+ * Devices are only checked for partition tables if their minor number
+ * is a multiple of the number corresponding to their type below
+ * i.e. this gives the granularity of whole-device minor numbers.
+ * Use 1 if the device is not partitionable.
+ *
+ * The list can be supplemented with devices/types in the config file.
+ */
 static const device_info_t device_info[] = {
-	{"ide", 16},		/* IDE disk */
+	{"ide", 64},		/* IDE disk */
 	{"sd", 16},		/* SCSI disk */
-	{"md", 16},		/* Multiple Disk driver (SoftRAID) */
-	{"loop", 16},		/* Loop device */
+	{"md", 1},		/* Multiple Disk driver (SoftRAID) */
+	{"loop", 1},		/* Loop device */
 	{"dasd", 4},		/* DASD disk (IBM S/390, zSeries) */
 	{"dac960", 8},		/* DAC960 */
 	{"nbd", 16},		/* Network Block Device */
@@ -56,6 +64,7 @@ static const device_info_t device_info[] = {
 	{"ubd", 16},		/* User-mode virtual block device */
 	{"ataraid", 16},	/* ATA Raid */
 	{"drbd", 16},		/* Distributed Replicated Block Device */
+	{"emcpower", 16},	/* EMC Powerpath */
 	{"power2", 16},		/* EMC Powerpath */
 	{"i2o_block", 16},	/* i2o Block Disk */
 	{"iseries/vd", 8},	/* iSeries disks */
@@ -104,6 +113,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 	struct config_value *cv;
 	char *name;
 
+
 	if (!*proc) {
 		log_verbose("No proc filesystem found: using all block device "
 			    "types");
@@ -112,6 +122,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 		return 1;
 	}
 
+	/* All types unrecognised initially */
 	memset(_max_partitions_by_major, 0, sizeof(int) * NUMBER_OF_MAJORS);
 
 	if (lvm_snprintf(proc_devices, sizeof(proc_devices),
@@ -165,7 +176,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 			}
 		}
 
-		if (_max_partitions_by_major[line_maj] || !cn)
+		if (!cn)
 			continue;
 
 		/* Check devices/types for local variations */

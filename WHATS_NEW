@@ -1,5 +1,11 @@
 Version 2.00.30 - 
 ====================================
+  Additional device-handling debug messages.
+  Additional verbosity level -vvvv includes line numbers and backtraces.
+  Verbose messages now go to stderr not stdout.
+  Close any stray file descriptors before starting.
+  Refine partitionable checks for certain device types.
+  Allow devices/types to override built-ins.
   Fix lvreduce man page .i->.I
   Fix vgsplit man page title.
   Fix clvmd man makefile.

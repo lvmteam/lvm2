@@ -519,8 +519,8 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 	/* regex filter. Optional. */
 	if (!(cn = find_config_node(cmd->cft->root, "devices/filter")))
-		log_debug("devices/filter not found in config file: no regex "
-			  "filter installed");
+		log_very_verbose("devices/filter not found in config file: "
+				 "no regex filter installed");
 
 	else if (!(filters[nr_filt++] = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
