@@ -177,7 +177,8 @@ int lvresize(int argc, char **argv)
 	}
 
 	/* If extending, find stripes, stripesize & size of last segment */
-	if (extents > lv->le_count && (!stripes || !stripesize)) {
+	if (extents > lv->le_count && 
+	    !(stripes == 1 || stripes > 1 && stripesize)) {
 		list_iterate(segh, &lv->segments) {
 			struct stripe_segment *seg;
 			uint32_t sz, str;
@@ -198,7 +199,7 @@ int lvresize(int argc, char **argv)
 			seg_stripes = str;
 		}
 
-		if (!stripesize)
+		if (!stripesize && stripes > 1)
 			stripesize = seg_stripesize;
 
 		if (!stripes)
@@ -236,7 +237,7 @@ int lvresize(int argc, char **argv)
 		stripes = seg_stripes;
 	}
 
-	if ((size_rest = seg_size % (stripes * vg->extent_size))) {
+	if ((size_rest = seg_size % stripes)) {
 		log_print("Rounding size (%d extents) down to stripe boundary "
 			  "size of last segment (%d extents)", extents,
 			  extents - size_rest);
