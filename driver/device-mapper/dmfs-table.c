@@ -25,6 +25,18 @@
 #include "dm.h"
 
 
+static inline char *next_token(char **p)
+{
+	static const char *delim = " \t";
+	char *r;
+
+	do {
+		r = strsep(p, delim);
+	} while(r && *r == 0);
+
+	return r;
+}
+
 static int dmfs_parse_line(struct dmfs_table *t, char *str)
 {
 	char *p = str;
@@ -34,17 +46,17 @@ static int dmfs_parse_line(struct dmfs_table *t, char *str)
 	void *context;
 	struct target_type *ttype;
 
-	tok = strsep(&p, delim);
+	tok = next_token(&p);
 	if (!tok)
 		return -1;
 	start = simple_strtoul(tok, NULL, 10);
 
-	tok = strsep(&p, delim);
+	tok = next_token(&p);
 	if (!tok)
 		return -1;
 	size = simple_strtoul(tok, NULL, 10);
 
-	tok = strsep(&p, delim);
+	tok = next_token(&p);
 	if (!tok)
 		return -1;
 
