@@ -11,6 +11,7 @@
 #include "uuid.h"
 #include "hash.h"
 #include "toolcontext.h"
+#include "display.h"
 
 typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
 			   struct volume_group * vg, struct config_node * pvn,
@@ -436,6 +437,22 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 	    !_read_int32(lvn, "minor", &lv->minor)) {
 		log_error("Couldn't read 'minor' value for logical volume.");
 		return 0;
+	}
+
+	/*
+	 * allocation_policy is optional since it is meaning less
+	 * for things like mirrors and snapshots.  Where it isn't
+	 * specified we default to the next free policy.
+	 */
+	lv->alloc = ALLOC_NEXT_FREE;
+	if ((cn = find_config_node(lvn, "allocation_policy", '/'))) {
+		struct config_value *cv = cn->v;
+		if (!cv || !cv->v.str) {
+			log_err("allocation_policy must be a string.");
+			return 0;
+		}
+
+		lv->alloc = get_alloc_from_string(cv->v.str);
 	}
 
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead)) {

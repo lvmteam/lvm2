@@ -294,14 +294,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 {
 	uint32_t size_rest;
 	uint32_t status = 0;
+	alloc_policy_t alloc = ALLOC_NEXT_FREE;
 	struct volume_group *vg;
 	struct logical_volume *lv, *org;
 	struct list *pvh;
 
 	if (lp->contiguous)
-		status |= ALLOC_CONTIGUOUS;
-	else
-		status |= ALLOC_SIMPLE;
+		alloc = ALLOC_CONTIGUOUS;
 
 	status |= lp->permission;
 
@@ -379,7 +378,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!(lv = lv_create(vg->fid, lp->lv_name, status,
+	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc,
 			     lp->stripes, lp->stripe_size, lp->extents,
 			     vg, pvh))) return 0;
 

@@ -302,10 +302,10 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	if (stripes > 1)
 		r = _alloc_striped(lv, pvms, allocated, stripes, stripe_size);
 
-	else if (lv->status & ALLOC_CONTIGUOUS)
+	else if (lv->alloc == ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
 
-	else if (lv->status & ALLOC_SIMPLE)
+	else if (lv->alloc == ALLOC_NEXT_FREE)
 		r = _alloc_simple(lv, pvms, allocated);
 
 	else {
@@ -362,6 +362,7 @@ static char *_generate_lv_name(struct volume_group *vg,
 struct logical_volume *lv_create(struct format_instance *fi,
 				 const char *name,
 				 uint32_t status,
+				 alloc_policy_t alloc,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
 				 uint32_t extents,
@@ -422,6 +423,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 	}
 
 	lv->status = status;
+	lv->alloc = alloc;
 	lv->read_ahead = 0;
 	lv->minor = -1;
 	lv->size = (uint64_t) extents *vg->extent_size;

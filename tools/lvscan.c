@@ -86,10 +86,9 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv)
 ***********/
 	dummy = display_size(lv->size / 2, SIZE_SHORT);
 
-	log_print("%s%s '%s%s/%s' [%s]%s%s", active_str, snapshot_str,
+	log_print("%s%s '%s%s/%s' [%s]%s", active_str, snapshot_str,
 		  cmd->dev_dir, lv->vg->name, lv->name, dummy,
-		  (lv->status & ALLOC_STRICT) ? " strict" : "",
-		  (lv->status & ALLOC_CONTIGUOUS) ? " contiguous" : "");
+		  get_alloc_string(lv->alloc));
 
 	dbg_free(dummy);
 

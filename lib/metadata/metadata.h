@@ -46,16 +46,18 @@
 #define CLUSTERED         	0x00000400  /* VG */
 #define SHARED            	0x00000800  /* VG */
 
-/* FIXME: This should be an enum rather than a bitset,
-   remove from status - EJT */
-#define ALLOC_SIMPLE		0x00001000  /* LV */
-#define ALLOC_STRICT		0x00002000  /* LV */
-#define ALLOC_CONTIGUOUS	0x00004000  /* LV */
-
 #define FMT_SEGMENTS		0x00000001 /* Arbitrary segment parameters? */
 
 #define FMT_TEXT_NAME		"text"
 #define FMT_LVM1_NAME		"lvm1"
+
+
+typedef enum {
+	ALLOC_NEXT_FREE,
+	ALLOC_STRICT,
+	ALLOC_CONTIGUOUS
+
+} alloc_policy_t;
 
 struct physical_volume {
         struct id id;
@@ -147,6 +149,7 @@ struct logical_volume {
 	struct volume_group *vg;
 
         uint32_t status;
+	alloc_policy_t alloc;
 	uint32_t read_ahead;
 	int32_t minor;
 
@@ -320,6 +323,7 @@ int vg_extend(struct format_instance *fi,
 struct logical_volume *lv_create(struct format_instance *fi,
 				 const char *name,
 				 uint32_t status,
+				 alloc_policy_t alloc,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
 				 uint32_t extents,

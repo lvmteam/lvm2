@@ -212,39 +212,37 @@ static int lvchange_availability(struct cmd_context *cmd,
 static int lvchange_contiguous(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
-	int lv_allocation = 0;
+	int want_contiguous = 0;
 
 	if (strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n"))
-		lv_allocation |= ALLOC_CONTIGUOUS;
+		want_contiguous = 1;
 
-	if ((lv_allocation & ALLOC_CONTIGUOUS) &&
-	    (lv->status & ALLOC_CONTIGUOUS)) {
+	if (want_contiguous && lv->alloc == ALLOC_CONTIGUOUS) {
 		log_error("Allocation policy of logical volume \"%s\" is "
 			  "already contiguous", lv->name);
 		return 0;
 	}
 
-	if (!(lv_allocation & ALLOC_CONTIGUOUS) &&
-	    !(lv->status & ALLOC_CONTIGUOUS)) {
+	if (!want_contiguous && lv->alloc != ALLOC_CONTIGUOUS) {
 		log_error
 		    ("Allocation policy of logical volume \"%s\" is already"
 		     " not contiguous", lv->name);
 		return 0;
 	}
 
-/******** FIXME lv_check_contiguous? 
+/******** FIXME lv_check_contiguous?
 	if ((lv_allocation & ALLOC_CONTIGUOUS)
 		    && (ret = lv_check_contiguous(vg, lv_index + 1)) == FALSE) {
 			log_error("No contiguous logical volume \"%s\"", lv->name);
 			return 0;
 *********/
 
-	if (lv_allocation & ALLOC_CONTIGUOUS) {
-		lv->status |= ALLOC_CONTIGUOUS;
+	if (want_contiguous) {
+		lv->alloc = ALLOC_CONTIGUOUS;
 		log_verbose("Setting contiguous allocation policy for \"%s\"",
 			    lv->name);
 	} else {
-		lv->status &= ~ALLOC_CONTIGUOUS;
+		lv->alloc = ALLOC_NEXT_FREE;
 		log_verbose("Removing contiguous allocation policy for \"%s\"",
 			    lv->name);
 	}
@@ -279,7 +277,7 @@ static int lvchange_readahead(struct cmd_context *cmd,
 
 	read_ahead = arg_int_value(cmd, readahead_ARG, 0);
 
-/******* FIXME Ranges? 
+/******* FIXME Ranges?
 	if (read_ahead < LVM_MIN_READ_AHEAD || read_ahead > LVM_MAX_READ_AHEAD) {
 		log_error("read ahead sector argument is invalid");
 		return 0;

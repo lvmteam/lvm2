@@ -44,4 +44,15 @@ void vgdisplay_full(struct volume_group *vg);
 void vgdisplay_colons(struct volume_group *vg);
 void vgdisplay_short(struct volume_group *vg);
 
+/*
+ * Retrieve a text description of the allocation policy.  Only
+ * extern because it's used by lvscan.
+ */
+const char *get_alloc_string(alloc_policy_t alloc);
+
+/*
+ * FIXME: put this somewhere more sensible.
+ */
+alloc_policy_t get_alloc_from_string(const char *str);
+
 #endif
