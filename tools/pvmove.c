@@ -445,14 +445,15 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		r = 0;
 	}
 
+	unlock_lvs(cmd, lvs_changed);
+
 	if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_DEACTIVATE)) {
 		log_error("ABORTING: Unable to deactivate temporary logical "
 			  "volume \"%s\"", lv_mirr->name);
 		r = 0;
 	}
 
-	unlock_lvs(cmd, lvs_changed);
-
+	log_verbose("Removing temporary pvmove LV");
 	if (!lv_remove(vg, lv_mirr)) {
 		log_error("ABORTING: Removal of temporary pvmove LV failed");
 		return 0;
