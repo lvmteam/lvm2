@@ -24,16 +24,41 @@
 
 static ssize_t dmfs_suspend_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
-	down(&inode->i_sem);
+	struct inode *inode = file->f_dentry->d_parent->d_inode;
+	struct mapped_device *md = (struct mapped_device *)inode->u.generic_ip;
 
-	up(&inode->i_sem);
+	char content[2] = { '0', '\n' };
+
+	if (size > 2)
+		size = 2;
+
+	if (test_bit(DM_ACTIVE, &md->state))
+		content[0] = '1';
+
+	if (copy_to_user(buf, content, size))
+		return -EFAULT;
+
+	return size;
 }
 
 static ssize_t dmfs_suspend_write(struct file *file, const char *buf, size_t size, loff_t *pos)
 {
-	down(&inode->i_sem);
+	struct inode *inode = file->f_dentry->d_inode;
+	char cmd;
 
-	up(&inode->i_sem);
+	if (size == 0)
+		return 0;
+
+	size = 1;
+	if (copy_from_user(&cmd, buf, size))
+		return -EFAULT;
+
+	if (cmd != '0' && cmd != '1')
+		return -EINVAL;
+
+	/* do suspend or unsuspend */
+
+	return size;
 }
 
 static int dmfs_suspend_sync(struct file *file, struct dentry *dentry, int datasync)
@@ -42,10 +67,8 @@ static int dmfs_suspend_sync(struct file *file, struct dentry *dentry, int datas
 }
 
 static struct dm_table_file_operations = {
-/* 	llseek:		generic_file_llseek, */
 	read:		dmfs_suspend_read,
 	write:		dmfs_suspend_write,
-	open:		dmfs_suspend_open,
 	fsync:		dmfs_suspend_sync,
 };
 
