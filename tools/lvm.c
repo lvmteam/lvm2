@@ -434,7 +434,8 @@ static struct arg *_find_arg(struct command *com, int opt)
 		 * short arg, or the index into
 		 * 'the_args'.
 		 */
-		if ((a->short_arg && (opt == a->short_arg)) || (opt == arg))
+		if ((a->short_arg && (opt == a->short_arg)) ||
+		    (!a->short_arg && (opt == arg)))
 			return a;
 	}
 
