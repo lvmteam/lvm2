@@ -46,7 +46,8 @@ typedef int (*dm_ctr_fn)(struct dm_table *t,
 			 dm_error_fn fn, void *private);
 
 typedef void (*dm_dtr_fn)(struct dm_table *t, void *c);
-typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
+typedef int (*dm_map_fn)(struct buffer_head *bh, int rw, void *context);
+typedef int (*dm_err_fn)(struct buffer_head *bh, int rw, void *context);
 
 /*
  * information about a target type
@@ -59,6 +60,7 @@ struct target_type {
         dm_ctr_fn ctr;
         dm_dtr_fn dtr;
         dm_map_fn map;
+	dm_err_fn err;
 	unsigned long flags;
 };
 

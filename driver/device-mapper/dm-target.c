@@ -134,7 +134,7 @@ static void io_err_dtr(struct dm_table *t, void *c)
 	/* empty */
 }
 
-static int io_err_map(struct buffer_head *bh, void *context)
+static int io_err_map(struct buffer_head *bh, int rw, void *context)
 {
 	buffer_IO_error(bh);
 	return 0;
