@@ -537,6 +537,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	/* md component filter. Optional, non-critical. */
 	if (find_config_bool(cmd->cft->root, "devices/md_component_detection",
 			     DEFAULT_MD_COMPONENT_DETECTION)) {
+		init_md_filtering(1);
 		if ((filters[nr_filt] = md_filter_create()))
 			nr_filt++;
 	}
