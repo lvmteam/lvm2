@@ -204,7 +204,7 @@ static int process_control(const char *b, const char *e, int minor)
 static int process_table(const char *b, const char *e, int minor)
 {
 	const char *wb, *we;
-	struct mapped_device *md = dm_find_minor(minor);
+	struct mapped_device *md = dm_find_by_minor(minor);
 	void *context;
 	int r;
 
@@ -219,11 +219,11 @@ static int process_table(const char *b, const char *e, int minor)
 		dm_suspend(md);
 
 		/* start loading a table */
-		dm_start_table(md);
+		dm_table_start(md);
 
 	} else if (!tok_cmp("end", b, e)) {
 		/* activate the device ... <evil chuckle> ... */
-		dm_complete_table(md);
+		dm_table_complete(md);
 		dm_activate(md);
 
 	} else {
@@ -264,7 +264,7 @@ static int process_table(const char *b, const char *e, int minor)
 		if ((r = t->ctr(start, high, md, we, e, &context)))
 			return r;
 
-		if ((r = dm_add_entry(md, high, t->map, context)))
+		if ((r = dm_table_add_entry(md, high, t->map, context)))
 			return r;
 	}
 

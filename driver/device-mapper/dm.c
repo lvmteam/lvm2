@@ -119,7 +119,7 @@ static void fin(void)
 	blksize_size[MAJOR_NR] = 0;
 	hardsect_size[MAJOR_NR] = 0;
 
-	printk(KERN_INFO "%s %d.%d.%d finalised\n", _name,
+	printk(KERN_INFO "%s %d.%d.%d cleaned up\n", _name,
 	       _version[0], _version[1], _version[2]);
 }
 
@@ -285,9 +285,10 @@ inline static int __map_buffer(struct mapped_device *md,
 	void *context;
 	struct io_hook *ih = 0;
 	int r;
+	struct target_instance *ti = md->targets + node;
 
-	fn = md->targets[node];
-	context = md->contexts[node];
+	fn = ti->map;
+	context = ti->private;
 
 	if (!fn)
 		return 0;
@@ -321,12 +322,28 @@ inline static int __map_buffer(struct mapped_device *md,
 	return 1;
 }
 
+inline static int __find_node(struct mapped_device *md, struct buffer_head *bh)
+{
+	int i = 0, l, r = 0;
+	offset_t *node;
+
+	/* search the btree for the correct target */
+	for (l = 0; l < md->depth; l++) {
+		r = ((KEYS_PER_NODE + 1) * r) + i;
+		node = md->index[l] + (r * KEYS_PER_NODE);
+
+		for (i = 0; i < KEYS_PER_NODE; i++)
+			if (node[i] >= bh->b_rsector)
+				break;
+	}
+
+	return (KEYS_PER_NODE * r) + i;
+}
+
 static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 {
 	struct mapped_device *md;
-	offset_t *node;
-	int i = 0, l, next_node = 0, r;
-	int minor = MINOR(bh->b_rdev);
+	int r, minor = MINOR(bh->b_rdev);
 
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
@@ -352,18 +369,7 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 		rl;	/* FIXME: there's still a race here */
 	}
 
-	/* search the btree for the correct target */
-	for (l = 0; l < md->depth; l++) {
-		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
-		node = md->index[l] + (next_node * KEYS_PER_NODE);
-
-		for (i = 0; i < KEYS_PER_NODE; i++)
-			if (node[i] >= bh->b_rsector)
-				break;
-	}
-	next_node = (KEYS_PER_NODE * next_node) + i;
-
-	if (!__map_buffer(md, bh, next_node))
+	if (!__map_buffer(md, bh, __find_node(md, bh)))
 		goto bad;
 
 	ru;
@@ -472,7 +478,7 @@ static int __find_hardsect_size(struct mapped_device *md)
 	return r;
 }
 
-struct mapped_device *dm_find_name(const char *name)
+struct mapped_device *dm_find_by_name(const char *name)
 {
 	struct mapped_device *md;
 
@@ -483,7 +489,7 @@ struct mapped_device *dm_find_name(const char *name)
 	return md;
 }
 
-struct mapped_device *dm_find_minor(int minor)
+struct mapped_device *dm_find_by_minor(int minor)
 {
 	struct mapped_device *md;
 
