@@ -659,6 +659,53 @@ void vgdisplay_full(struct volume_group *vg)
 
 void vgdisplay_colons(struct volume_group *vg)
 {
+	uint32_t active_pvs;
+	const char *access;
+	char uuid[64];
+
+	if (vg->status & PARTIAL_VG)
+		active_pvs = list_size(&vg->pvs);
+	else
+		active_pvs = vg->pv_count;
+
+	switch (vg->status & (LVM_READ | LVM_WRITE)) {
+		case LVM_READ | LVM_WRITE:
+			access = "r/w";
+			break;
+		case LVM_READ:
+			access = "r";
+			break;
+		case LVM_WRITE:
+			access = "w";
+			break;
+		default:
+			access = "";
+	}
+
+	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
+		stack;
+		return;
+	}
+
+	log_print("%s:%s:%d:-1:%u:%u:%u:-1:%u:%u:%u:%" PRIu64 ":%" PRIu32
+		  ":%u:%u:%u:%s",
+		vg->name,
+		access,
+		vg->status,
+		/* internal volume group number; obsolete */
+		vg->max_lv,
+		vg->lv_count,
+		lvs_in_vg_opened(vg),
+		/* FIXME: maximum logical volume size */
+		vg->max_pv,
+		vg->pv_count,
+		active_pvs,
+		(uint64_t) vg->extent_count * (vg->extent_size / 2),
+		vg->extent_size / 2,
+		vg->extent_count,
+		vg->extent_count - vg->free_count, 
+		vg->free_count,
+		uuid[0] ? uuid : "none");
 	return;
 }
 
