@@ -1,3 +1,6 @@
+Version 2.01.09 - 
+=================================
+
 Version 2.01.08 - 22nd March 2005
 =================================
   Add clustered attribute so vgchange can identify clustered VGs w/o locking.
