@@ -10,5 +10,6 @@
 #include "pool.h"
 
 int str_list_add(struct pool *mem, struct list *sl, const char *str);
+int str_list_del(struct list *sl, const char *str);
 
 #endif
