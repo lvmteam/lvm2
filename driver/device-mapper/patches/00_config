@@ -1,10 +1,10 @@
---- linux/drivers/md/Config.in.orig	Tue Aug 21 14:18:30 2001
-+++ linux/drivers/md/Config.in	Tue Aug 21 14:19:08 2001
-@@ -14,4 +14,6 @@
+--- linux-2.4.9-ac5/drivers/md/Config.in	Sun Mar 11 13:33:24 2001
++++ linux/drivers/md/Config.in	Thu Sep 13 18:02:17 2001
+@@ -13,5 +13,7 @@
+ dep_tristate '  RAID-4/RAID-5 mode' CONFIG_MD_RAID5 $CONFIG_BLK_DEV_MD
  
  dep_tristate ' Logical volume manager (LVM) support' CONFIG_BLK_DEV_LVM $CONFIG_MD
- 
 +dep_tristate ' Device mapper support' CONFIG_BLK_DEV_DM $CONFIG_MD
-+
++dep_tristate '  Device mapper linear target' CONFIG_BLK_DEV_DM_LINEAR $CONFIG_BLK_DEV_DM
+ 
  endmenu
-
