@@ -53,7 +53,7 @@ static int lvremove_single(struct logical_volume *lv)
 	}
 
 	/* FIXME Force option? */
-	if (lv_open_count(lv)) {
+	if (lv_open_count(lv) > 0) {
 		log_error("Can't remove open logical volume %s", lv->name);
 		return ECMD_FAILED;
 	}
@@ -84,7 +84,7 @@ static int lvremove_single(struct logical_volume *lv)
 **********/
 
 	/* store it on disks */
-	if (fid->ops->vg_write(fid, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
 /******** FIXME

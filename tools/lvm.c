@@ -479,7 +479,10 @@ static int process_common_commands(struct command *com)
 
 	init_verbose(arg_count(verbose_ARG));
 
-	init_test(arg_count(test_ARG));
+	if ((l = arg_count(test_ARG))) {
+		log_error("Test mode. Metadata will NOT be updated.");
+		init_test(l);
+	}
 
 	if (arg_count(help_ARG)) {
 		usage(com->name);
