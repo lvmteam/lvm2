@@ -174,12 +174,12 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	return r;
 }
 
-static char *_make_up_lv_name(struct volume_group *vg,
+static char *_generate_lv_name(struct volume_group *vg,
 			      char *buffer, size_t len)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
-	int high = 1, i, s;
+	int high = -1, i, s;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
@@ -188,10 +188,10 @@ static char *_make_up_lv_name(struct volume_group *vg,
 			continue;
 
 		if (i > high)
-			high = i + 1;
+			high = i;
 	}
 
-	if ((s = snprintf(buffer, len, "lvol%d", high)) < 0 || s >= len)
+	if ((s = snprintf(buffer, len, "lvol%d", high + 1)) < 0 || s >= len)
 		return NULL;
 
 	return buffer;
@@ -230,7 +230,7 @@ struct logical_volume *lv_create(const char *name,
 	}
 
 	if (!name &&
-	    !(name = _make_up_lv_name(vg, dname, sizeof(dname)))) {
+	    !(name = _generate_lv_name(vg, dname, sizeof(dname)))) {
 		log_error("Failed to generate unique name for the new "
 			  "logical volume");
 		return NULL;
