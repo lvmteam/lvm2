@@ -81,8 +81,6 @@ static char *_build_desc(struct pool *mem, const char *line, int before)
 
 static int __archive(struct volume_group *vg)
 {
-	int r;
-	struct format_instance *archiver;
 	char *desc;
 
 	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 1))) {
@@ -90,20 +88,9 @@ static int __archive(struct volume_group *vg)
 		return 0;
 	}
 
-	if (!(archiver = archive_format_create(vg->cmd,
-					       _archive_params.dir,
-					       _archive_params.keep_days,
-					       _archive_params.keep_number,
-					       desc))) {
-		log_error("Couldn't create archiver object.");
-		return 0;
-	}
-
-	if (!(r = archiver->ops->vg_write(archiver, vg)))
-		stack;
-
-	archiver->ops->destroy(archiver);
-	return r;
+	return archive_vg(vg, _archive_params.dir, desc,
+			  _archive_params.keep_days,
+			  _archive_params.keep_number);
 }
 
 int archive(struct volume_group *vg)
