@@ -36,23 +36,22 @@ enum {
 static int _switches[NUM_SWITCHES];
 static int _values[NUM_SWITCHES];
 
-
 /*
  * Commands
  */
 static int _parse_file(struct dm_task *dmt, const char *file)
 {
-        char buffer[LINE_SIZE], *ttype, *ptr, *comment;
-        FILE *fp = fopen(file, "r");
-        unsigned long long start, size;
-        int r = 0, n, line = 0;
+	char buffer[LINE_SIZE], *ttype, *ptr, *comment;
+	FILE *fp = fopen(file, "r");
+	unsigned long long start, size;
+	int r = 0, n, line = 0;
 
-        if (!fp) {
-                err("Couldn't open '%s' for reading", file);
-                return 0;
-        }
+	if (!fp) {
+		err("Couldn't open '%s' for reading", file);
+		return 0;
+	}
 
-        while (fgets(buffer, sizeof(buffer), fp)) {
+	while (fgets(buffer, sizeof(buffer), fp)) {
 		line++;
 
 		/* trim trailing space */
@@ -63,32 +62,31 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 		*ptr = '\0';
 
 		/* trim leading space */
-                for (ptr = buffer; *ptr && isspace((int) *ptr); ptr++)
-                        ;
+		for (ptr = buffer; *ptr && isspace((int) *ptr); ptr++) ;
 
-                if (!*ptr || *ptr == '#')
-                        continue;
+		if (!*ptr || *ptr == '#')
+			continue;
 
-                if (sscanf(ptr, "%llu %llu %as %n",
-                           &start, &size, &ttype, &n) < 3) {
-                        err("%s:%d Invalid format", file, line);
-                        goto out;
-                }
+		if (sscanf(ptr, "%llu %llu %as %n",
+			   &start, &size, &ttype, &n) < 3) {
+			err("%s:%d Invalid format", file, line);
+			goto out;
+		}
 
 		ptr += n;
 		if ((comment = strchr(ptr, (int) '#')))
 			*comment = '\0';
 
-                if (!dm_task_add_target(dmt, start, size, ttype, ptr))
-                        goto out;
+		if (!dm_task_add_target(dmt, start, size, ttype, ptr))
+			goto out;
 
 		free(ttype);
-        }
-        r = 1;
+	}
+	r = 1;
 
- out:
-        fclose(fp);
-        return r;
+      out:
+	fclose(fp);
+	return r;
 }
 
 static int _load(int task, const char *name, const char *file)
@@ -116,7 +114,7 @@ static int _load(int task, const char *name, const char *file)
 
 	r = 1;
 
-out:
+      out:
 	dm_task_destroy(dmt);
 
 	return r;
@@ -137,24 +135,24 @@ static int _rename(int argc, char **argv)
 	int r = 0;
 	struct dm_task *dmt;
 
-        if (!(dmt = dm_task_create(DM_DEVICE_RENAME)))
-                return 0;
+	if (!(dmt = dm_task_create(DM_DEVICE_RENAME)))
+		return 0;
 
-        if (!dm_task_set_name(dmt, argv[1]))
-                goto out;
+	if (!dm_task_set_name(dmt, argv[1]))
+		goto out;
 
 	if (!dm_task_set_newname(dmt, argv[2]))
 		goto out;
 
-        if (!dm_task_run(dmt))
-                goto out;
+	if (!dm_task_run(dmt))
+		goto out;
 
-        r = 1;
+	r = 1;
 
-out:
-        dm_task_destroy(dmt);
+      out:
+	dm_task_destroy(dmt);
 
-        return r;
+	return r;
 }
 
 static int _version(int argc, char **argv)
@@ -172,7 +170,7 @@ static int _version(int argc, char **argv)
 	if (!dm_task_run(dmt))
 		goto out;
 
-	if (!dm_task_get_driver_version(dmt, (char *)&version,
+	if (!dm_task_get_driver_version(dmt, (char *) &version,
 					sizeof(version)))
 		goto out;
 
@@ -201,9 +199,14 @@ static int _simple(int task, const char *name)
 
 	r = dm_task_run(dmt);
 
- out:
+      out:
 	dm_task_destroy(dmt);
 	return r;
+}
+
+static int _remove_all(int argc, char **argv)
+{
+	return _simple(DM_DEVICE_REMOVE_ALL, "");
 }
 
 static int _remove(int argc, char **argv)
@@ -260,7 +263,7 @@ static int _info(int argc, char **argv)
 
 	r = 1;
 
- out:
+      out:
 	dm_task_destroy(dmt);
 	return r;
 }
@@ -305,16 +308,15 @@ static int _deps(int argc, char **argv)
 
 	r = 1;
 
- out:
+      out:
 	dm_task_destroy(dmt);
 	return r;
 }
 
-
 /*
  * dispatch table
  */
-typedef int (*command_fn)(int argc, char **argv);
+typedef int (*command_fn) (int argc, char **argv);
 
 struct command {
 	char *name;
@@ -326,6 +328,7 @@ struct command {
 static struct command _commands[] = {
 	{"create", "<dev_name> <table_file>", 2, _create},
 	{"remove", "<dev_name>", 1, _remove},
+	{"remove_all", "", 0, _remove_all},
 	{"suspend", "<dev_name>", 1, _suspend},
 	{"resume", "<dev_name>", 1, _resume},
 	{"reload", "<dev_name> <table_file>", 2, _reload},
@@ -336,14 +339,13 @@ static struct command _commands[] = {
 	{NULL, NULL, 0, NULL}
 };
 
-static void _usage(FILE *out)
+static void _usage(FILE * out)
 {
 	int i;
 
 	fprintf(out, "usage:\n");
 	for (i = 0; _commands[i].name; i++)
-		fprintf(out, "\t%s %s\n",
-			_commands[i].name, _commands[i].help);
+		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	return;
 }
 
@@ -423,4 +425,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-

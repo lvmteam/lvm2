@@ -43,8 +43,7 @@ void dm_task_destroy(struct dm_task *dmt)
 	free(dmt);
 }
 
-int dm_task_get_driver_version(struct dm_task *dmt, char *version,
-			       size_t size)
+int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 {
 	if (!dmt->dmi)
 		return 0;
@@ -97,13 +96,12 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 }
 
 struct target *create_target(uint64_t start,
-			     uint64_t len,
-			     const char *type, const char *params)
+			     uint64_t len, const char *type, const char *params)
 {
 	struct target *t = malloc(sizeof(*t));
 
 	if (!t) {
-                log_error("create_target: malloc(%d) failed", sizeof(*t));
+		log_error("create_target: malloc(%d) failed", sizeof(*t));
 		return NULL;
 	}
 
@@ -123,7 +121,7 @@ struct target *create_target(uint64_t start,
 	t->length = len;
 	return t;
 
- bad:
+      bad:
 	free(t->params);
 	free(t->type);
 	free(t);
@@ -241,7 +239,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	return dmi;
 
- bad:
+      bad:
 	free(dmi);
 	return NULL;
 }
@@ -278,6 +276,10 @@ int dm_task_run(struct dm_task *dmt)
 		command = DM_REMOVE;
 		break;
 
+	case DM_DEVICE_REMOVE_ALL:
+		command = DM_REMOVE_ALL;
+		break;
+
 	case DM_DEVICE_SUSPEND:
 		command = DM_SUSPEND;
 		break;
@@ -304,13 +306,13 @@ int dm_task_run(struct dm_task *dmt)
 
 	default:
 		log_error("Internal error: unknown device-mapper task %d",
-		    dmt->type);
+			  dmt->type);
 		goto bad;
 	}
 
 	if (ioctl(fd, command, dmi) < 0) {
 		log_error("device-mapper ioctl cmd %d failed: %s", dmt->type,
-		    strerror(errno));
+			  strerror(errno));
 		goto bad;
 	}
 
@@ -328,10 +330,9 @@ int dm_task_run(struct dm_task *dmt)
 	close(fd);
 	return 1;
 
- bad:
+      bad:
 	free(dmi);
 	if (fd >= 0)
 		close(fd);
 	return 0;
 }
-
