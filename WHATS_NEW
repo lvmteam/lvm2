@@ -5,6 +5,8 @@ Version 2.01.07 - 8th March 2005
   clvmd fixes: make FDs close-on-exec
                gulm unlocks VG & orphan locks at startup in case they are stale
                gulm now unlocks VG & orphan locks if client dies.
+               Don't take out lvm thread lock at startup, it only protects the 
+               jobs list.
 
 Version 2.01.06 - 1st March 2005
 ================================

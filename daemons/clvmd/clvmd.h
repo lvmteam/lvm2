@@ -95,7 +95,7 @@ struct local_client {
 };
 
 #ifdef DEBUG
-#define DEBUGLOG(fmt, args...) fprintf(stderr, "CLVMD[%d]: %ld ", getpid(), time(NULL) ); fprintf(stderr, fmt, ## args)
+#define DEBUGLOG(fmt, args...) fprintf(stderr, "CLVMD[%x]: %ld ", (int)pthread_self(), time(NULL) ); fprintf(stderr, fmt, ## args)
 #else
 #define DEBUGLOG(fmt, args...)
 #endif
