@@ -19,6 +19,7 @@
 ../lib/mm/dbg_malloc.h
 ../lib/mm/pool.h
 ../lib/mm/xlate.h
+../lib/misc/lvm-string.h
 ../lib/regex/matcher.h
 ../lib/uuid/uuid.h
 ../lib/vgcache/vgcache.h
