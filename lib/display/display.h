@@ -23,6 +23,14 @@
 
 #include "metadata.h"
 
+#include <stdint.h>
+
+#if (__WORDSIZE == 64)
+#define FMT_64 "l"
+#else
+#define FMT_64 "ll"
+#endif
+
 typedef	enum {SIZE_LONG=0, SIZE_SHORT=1} size_len_t;
 
 /* Specify size in KB */
