@@ -257,17 +257,18 @@ void add_up_node(char *csid)
 	int nodeid = nodeid_from_csid(csid);
 
 	if (nodeid >= max_updown_nodes) {
-		int *new_updown = realloc(node_updown, max_updown_nodes + 10);
+	        int new_size = nodeid + 10;
+		int *new_updown = realloc(node_updown, new_size);
 
 		if (new_updown) {
 			node_updown = new_updown;
-			max_updown_nodes += 10;
+			max_updown_nodes = new_size;
 			DEBUGLOG("realloced more space for nodes. now %d\n",
 				 max_updown_nodes);
 		} else {
 			log_error
-			    ("Realloc failed. Node status for clvmd will be wrong\n");
-			return;
+			    ("Realloc failed. Node status for clvmd will be wrong. quitting\n");
+			exit(999);
 		}
 	}
 	node_updown[nodeid] = 1;
