@@ -257,14 +257,14 @@ static int dmfs_table_sync(struct file *file, struct dentry *dentry, int datasyn
 	return 0;
 }
 
-static struct dm_table_address_space_operations = {
+struct dmfs_address_space_operations = {
 	readpage:	dmfs_readpage,
 	writepage:	dmfs_writepage,
 	prepare_write:	dmfs_prepare_write,
 	commit_write:	dmfs_commit_write,
 };
 
-static struct dm_table_file_operations = {
+static struct dmfs_table_file_operations = {
  	llseek:		generic_file_llseek,
 	read:		generic_file_read,
 	write:		generic_file_write,
@@ -287,7 +287,7 @@ int dmfs_create_table(struct inode *dir, int mode)
 		inode->i_blocks = 0;
 		inode->i_rdev = NODEV;
 		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
-		inode->i_mapping->a_ops = &dmfs_table_address_space_operations;
+		inode->i_mapping->a_ops = &dmfs_address_space_operations;
 		inode->i_fop = &dmfs_table_file_operations;
 		inode->i_op = &dmfs_table_inode_operations;
 	}
