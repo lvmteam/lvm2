@@ -203,6 +203,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	struct dm_info info;
 	int inkernel;
 	char uuid[64];
+	struct snapshot *snap;
 
 	if (!id_write_format(&lv->id, uuid, sizeof(uuid))) {
 		stack;
@@ -221,6 +222,9 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 
 	log_print("LV Write Access        %s",
 		  (lv->status & LVM_WRITE) ? "read/write" : "read only");
+
+	if ((snap = find_cow(lv)))
+		log_print("Snapshot of            %s", snap->origin->name);
 
 /******* FIXME Snapshot
     if (lv->status & (LVM_SNAPSHOT_ORG | LVM_SNAPSHOT)) {
