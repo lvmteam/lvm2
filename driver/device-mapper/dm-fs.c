@@ -116,6 +116,8 @@ int _process_control(const char *b, const char *e, int minor)
 	const char *wb, *we;
 	char name[64];
 	int create = 0;
+	struct pf_data *pfd;
+	struct proc_dir_entry *pde;
 
 	/*
 	 * create <name> [minor]
@@ -144,6 +146,20 @@ int _process_control(const char *b, const char *e, int minor)
 			if (we == wb)
 				return -EINVAL;
 		}
+
+		/* FIXME: quick hack */
+		pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
+
+		if (!pfd)
+			return -ENOMEM;
+		pfd->fn = _process_table;
+		pfd->minor = minor;
+
+		if (!(pde = create_proc_entry(name, 0, _proc_dir)))
+			return -ENOMEM;
+
+		pde->write_proc = _line_splitter;
+		pde->data = pfd;
 
 		return dm_create(name, minor);
 
