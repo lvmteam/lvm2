@@ -351,6 +351,8 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 
 		_out(f, "status = %s", buffer);
 		_out(f, "read_ahead = %u", lv->read_ahead);
+		if (lv->minor >= 0)
+			_out(f, "minor = %d", lv->minor);
 		_out(f, "segment_count = %u", _count_segments(lv));
 		_nl(f);
 

@@ -40,6 +40,7 @@
 /* logical volume */
 #define	LV_ACTIVE            0x01	/* lv_status */
 #define	LV_SPINDOWN          0x02	/*     "     */
+#define LV_PERSISTENT_MINOR  0x04	/*     "     */
 
 #define	LV_READ              0x01	/* lv_access */
 #define	LV_WRITE             0x02	/*     "     */

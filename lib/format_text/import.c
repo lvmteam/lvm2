@@ -371,6 +371,13 @@ static int _read_lv(struct pool *mem,
 		return 0;
 	}
 
+	lv->minor = -1;
+	if ((lv->status & FIXED_MINOR) && 
+	    !_read_int32(lvn, "minor", &lv->minor)) {
+		log_error("Couldn't read 'minor' value for logical volume.");
+		return 0;
+	}
+
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead)) {
 		log_err("Couldn't read 'read_ahead' value for "
 			"logical volume.");
@@ -440,7 +447,21 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 		goto bad;
 	}
 
+	if (!(vg->system_id = pool_zalloc(mem, NAME_LEN))) {
+		stack;
+		goto bad;
+	}
+
 	vgn = vgn->child;
+   
+	if ((cn = find_config_node(vgn, "system_id", '/')) && cn->v) {
+		if (!cn->v->v.str) {
+			log_error("system_id must be a string");
+			goto bad;
+		}
+		strncpy(vg->system_id, cn->v->v.str, NAME_LEN);
+	}
+
 	if (!_read_id(&vg->id, vgn, "id")) {
 		log_err("Couldn't read uuid for volume group %s.",
 			vg->name);

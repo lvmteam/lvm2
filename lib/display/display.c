@@ -353,6 +353,9 @@ int lvdisplay_full(struct logical_volume *lv)
 
 	log_print("Read ahead sectors     %u", lv->read_ahead);
 
+	if (lv->status & FIXED_MINOR)
+		log_print("Persistent minor       %d", lv->minor);
+
 /****************
 #ifdef LVM_FUTURE
     printf("IO Timeout (seconds)   ");

@@ -294,6 +294,21 @@ int int_arg_with_sign(struct arg *a)
 	return 1;
 }
 
+int minor_arg(struct arg *a)
+{
+	char *ptr;
+
+	if (!_get_int_arg(a, &ptr) || (*ptr) || (a->sign == SIGN_MINUS))
+		return 0;
+
+	if (a->i_value > 255) {
+		log_error("Minor number outside range 0-255");
+		return 0;
+	}
+
+	return 1;
+}
+
 int string_arg(struct arg *a)
 {
 	return 1;
