@@ -1,5 +1,6 @@
-Version 2.00.21 - 
-=============================
+Version 2.00.21 - 19th August 2004
+==================================
+  Update cnxman-socket.h from cman.
   Recognise iseries/vd devices.
   Use 'make install_cluster' to install cluster extensions only.
   Cope with DT_UNKNOWN in sysfs.
