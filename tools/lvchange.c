@@ -55,7 +55,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!(lv->vg)) {
+	if (!vg_write(lv->vg)) {
 		/* FIXME: Attempt reversion? */
 		unlock_lv(cmd, lv->lvid.s);
 		return 0;
