@@ -49,7 +49,7 @@ struct target *dm_get_target(const char *name)
 int register_map_target(const char *name, dm_ctr_fn ctr,
 			dm_dtr_fn dtr, dm_map_fn map)
 {
-	struct target *t = kmalloc(sizeof(*m) + strlen(name) + 1, GFP_KERNEL);
+	struct target *t = kmalloc(sizeof(*t) + strlen(name) + 1, GFP_KERNEL);
 
 	if (!t)
 		return -ENOMEM;
@@ -168,7 +168,7 @@ int dm_std_targets(void)
 	int ret;
 
 #define xx(n, fn) \
-	if ((ret = register_mapping_type(n, \
+	if ((ret = register_map_target(n, \
              fn ## _ctr, fn ## _dtr, fn ## _map) < 0)) return ret
 
 	xx("io-err", _io_err);

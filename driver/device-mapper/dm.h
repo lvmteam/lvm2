@@ -118,6 +118,9 @@ void dm_free_table(struct mapped_device *md);
 int dm_init_fs(void);
 int dm_fin_fs(void);
 
+
+#define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
+
 static inline int is_active(struct mapped_device *md)
 {
 	return test_bit(DM_ACTIVE, &md->state);
