@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
 #include <unistd.h>
 
 #ifdef HAVE_GETOPTLONG
@@ -172,7 +174,7 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 
 	if (!_switches[NOTABLE_ARG] && !_parse_file(dmt, file))
 		goto out;
-	
+
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
 		goto out;
 
@@ -209,7 +211,7 @@ static int _reload(int argc, char **argv, void *data)
 		return 0;
 	}
 
-	return _load(DM_DEVICE_RELOAD, argv[1], 
+	return _load(DM_DEVICE_RELOAD, argv[1],
 		     (argc == 3) ? argv[2] : NULL, NULL);
 }
 
@@ -320,25 +322,65 @@ static int _wait(int argc, char **argv, void *data)
 	return _simple(DM_DEVICE_WAITEVENT, argv[1], 2);
 }
 
-static int _process_all(int argc, char **argv,
-			int (*fn)(int argc, char **argv, void *data))
+static int _process_mapper_dir(int argc, char **argv,
+			       int (*fn) (int argc, char **argv, void *data))
 {
-	int r = 0;
+	struct dirent *dirent;
+	struct dm_names *names;
+	DIR *d;
+	const char *dir;
+	int r = 1;
+
+	dir = dm_dir();
+	if (!(d = opendir(dir))) {
+		fprintf(stderr, "opendir %s: %s", dir, strerror(errno));
+		return 0;
+	}
+
+	while ((dirent = readdir(d))) {
+		if (!strcmp(dirent->d_name, ".") ||
+		    !strcmp(dirent->d_name, "..") ||
+		    !strcmp(dirent->d_name, "control"))
+			continue;
+		/* Set up names->name for _info */
+		names = (void *) dirent->d_name -
+		    ((void *) &names->name - (void *) &names->dev);
+		if (!fn(argc, argv, names))
+			r = 0;
+	}
+
+	if (closedir(d)) {
+		fprintf(stderr, "closedir %s: %s", dir, strerror(errno));
+	}
+
+	return r;
+}
+
+static int _process_all(int argc, char **argv,
+			int (*fn) (int argc, char **argv, void *data))
+{
+	int r = 1;
 	struct dm_names *names;
 	unsigned next = 0;
 
 	struct dm_task *dmt;
 
+	if (!strcmp(argv[0], "mknodes"))
+		r = _process_mapper_dir(argc, argv, fn);
+
 	if (!(dmt = dm_task_create(DM_DEVICE_LIST)))
 		return 0;
 
-	if (!dm_task_run(dmt))
+	if (!dm_task_run(dmt)) {
+		r = 0;
 		goto out;
+	}
 
-	if (!(names = dm_task_get_names(dmt)))
+	if (!(names = dm_task_get_names(dmt))) {
+		r = 0;
 		goto out;
+	}
 
-	r = 1;
 	if (!names->dev) {
 		printf("No devices found\n");
 		goto out;
@@ -346,7 +388,7 @@ static int _process_all(int argc, char **argv,
 
 	do {
 		names = (void *) names + next;
-		if (!fn(argc, argv, (void *)names))
+		if (!fn(argc, argv, (void *) names))
 			r = 0;
 		next = names->next;
 	} while (next);
@@ -365,7 +407,7 @@ static int _status(int argc, char **argv, void *data)
 	char *target_type = NULL;
 	char *params;
 	int cmd;
-	struct dm_names *names = (struct dm_names *)data;
+	struct dm_names *names = (struct dm_names *) data;
 	char *name;
 
 	if (argc == 1 && !data)
@@ -376,10 +418,10 @@ static int _status(int argc, char **argv, void *data)
 	else
 		name = argv[1];
 
-	if (!strcmp(argv[0], "status"))
-		cmd = DM_DEVICE_STATUS;
-	else
+	if (!strcmp(argv[0], "table"))
 		cmd = DM_DEVICE_TABLE;
+	else
+		cmd = DM_DEVICE_STATUS;
 
 	if (!(dmt = dm_task_create(cmd)))
 		return 0;
@@ -421,8 +463,9 @@ static int _info(int argc, char **argv, void *data)
 	int r = 0;
 
 	struct dm_task *dmt;
-	struct dm_names *names = (struct dm_names *)data;
+	struct dm_names *names = (struct dm_names *) data;
 	char *name;
+	int taskno;
 
 	if (argc == 1 && !data)
 		return _process_all(argc, argv, _info);
@@ -432,7 +475,12 @@ static int _info(int argc, char **argv, void *data)
 	else
 		name = argv[1];
 
-	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
+	if (!strcmp(argv[0], "mknodes"))
+		taskno = DM_DEVICE_MKNODES;
+	else
+		taskno = DM_DEVICE_INFO;
+
+	if (!(dmt = dm_task_create(taskno)))
 		return 0;
 
 	if (!dm_task_set_name(dmt, name))
@@ -441,7 +489,8 @@ static int _info(int argc, char **argv, void *data)
 	if (!dm_task_run(dmt))
 		goto out;
 
-	_display_info(dmt);
+	if (taskno == DM_DEVICE_INFO)
+		_display_info(dmt);
 
 	r = 1;
 
@@ -457,7 +506,7 @@ static int _deps(int argc, char **argv, void *data)
 	struct dm_deps *deps;
 	struct dm_task *dmt;
 	struct dm_info info;
-	struct dm_names *names = (struct dm_names *)data;
+	struct dm_names *names = (struct dm_names *) data;
 	char *name;
 
 	if (argc == 1 && !data)
@@ -514,7 +563,7 @@ static int _deps(int argc, char **argv, void *data)
 
 static int _display_name(int argc, char **argv, void *data)
 {
-	struct dm_names *names = (struct dm_names *)data;
+	struct dm_names *names = (struct dm_names *) data;
 
 	printf("%s\t(%d, %d)\n", names->name,
 	       (int) MAJOR(names->dev), (int) MINOR(names->dev));
@@ -554,6 +603,7 @@ static struct command _commands[] = {
 	{"ls", "", 0, 0, _ls},
 	{"info", "[<dev_name>]", 0, 1, _info},
 	{"deps", "[<dev_name>]", 0, 1, _deps},
+	{"mknodes", "[<dev_name>]", 0, 1, _info},
 	{"status", "[<dev_name>]", 0, 1, _status},
 	{"table", "[<dev_name>]", 0, 1, _status},
 	{"wait", "<dev_name>", 1, 1, _wait},
@@ -567,7 +617,8 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		     "        [-r|--readonly] [-j|--major <major>] [-m|--minor <minor>]\n\n");
+		"        [-r|--readonly] [-j|--major <major>] "
+		"[-m|--minor <minor>]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	return;
@@ -613,7 +664,7 @@ static int _process_switches(int *argc, char ***argv)
 	optarg = 0;
 	optind = OPTIND_INIT;
 	while ((c = GETOPTLONG_FN(*argc, *argv, "j:m:nru:v",
-				long_options, &ind)) != -1) {
+				  long_options, &ind)) != -1) {
 		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
 		if (c == 'j' || ind == MAJOR_ARG) {

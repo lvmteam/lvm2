@@ -55,7 +55,9 @@ enum {
 
 	DM_DEVICE_LIST,
 
-	DM_DEVICE_CLEAR
+	DM_DEVICE_CLEAR,
+
+	DM_DEVICE_MKNODES
 };
 
 struct dm_task;

@@ -102,7 +102,9 @@ static struct cmd_data _cmd_data_v1[] = {
         { "status",	DM_TARGET_STATUS_V1,	{1, 0, 0} },
         { "table",	DM_TARGET_STATUS_V1,	{1, 0, 0} },
         { "waitevent",	DM_TARGET_WAIT_V1,	{1, 0, 0} },
-        { "names",	0,			{4, 0, 0} }
+        { "names",	0,			{4, 0, 0} },
+        { "clear",	0,			{4, 0, 0} },
+        { "mknodes",	0,			{4, 0, 0} },
 };
 /* *INDENT-ON* */
 
