@@ -109,7 +109,7 @@ liblvm2cmd.so: liblvm2cmd.a $(LDDEPS)
 
 .commands: commands.h cmdnames.h Makefile
 	$(CC) -E -P cmdnames.h 2> /dev/null | \
-		egrep -v '^ *(|#.*|dumpconfig|help|pvdata|version) *$$' > .commands
+		egrep -v '^ *(|#.*|dumpconfig|formats|help|pvdata|segtypes|version) *$$' > .commands
 
 .PHONY: install_cmdlib_dynamic install_cmdlib_static \
 	install_tools_dynamic install_tools_static

@@ -83,7 +83,7 @@ static void _append_block(struct pool *p, struct block *b)
 
 static struct block *_new_block(size_t s, unsigned alignment)
 {
-	static char *_oom = "Out of memory";
+	static const char *_oom = "Out of memory";
 
 	/* FIXME: I'm currently ignoring the alignment arg. */
 	size_t len = sizeof(struct block) + s;
@@ -180,9 +180,12 @@ int pool_grow_object(struct pool *p, const void *buffer, size_t delta)
 
 	if (p->object) {
 		memcpy(new->data, p->object->data, p->object->size);
+		dbg_free(p->object->data);
 		dbg_free(p->object);
 	}
 	p->object = new;
+
+	memcpy(new->data + size - delta, buffer, delta);
 
 	return 1;
 }
