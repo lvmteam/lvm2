@@ -35,11 +35,11 @@
 /* FIXME: Use value from local range for now, for co-existence with LVM 1 */
 #define DM_BLK_MAJOR 124
 
-struct mapped_device;
+struct dm_table;
 typedef unsigned int offset_t;
 
 /* constructor, destructor and map fn types */
-typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct mapped_device *md,
+typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct dm_table *t,
 			 const char *cb, const char *ce, void **result);
 typedef void (*dm_dtr_fn)(void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
@@ -47,9 +47,12 @@ typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
 int register_map_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
 			dm_map_fn map);
 
-/* contructors should call this to make sure any destination devices
-   are handled correctly (ie. opened/closed) */
-int dm_add_device(struct mapped_device *md, kdev_t dev);
+
+/* contructors should call this to make sure any
+ * destination devices are handled correctly
+ * (ie. opened/closed).
+ */
+int dm_table_add_device(struct dm_table *t, kdev_t dev);
 
 #endif
 #endif
