@@ -7524,7 +7524,7 @@ else
 fi
 
 
-if [ "x$HAVE_LIBDL" = xyes -a "x$STATIC_LINK" = xno ]; then
+if [ "x$HAVE_LIBDL" = xyes ]; then
 	CFLAGS="$CFLAGS -DHAVE_LIBDL"
 	LIBS="-ldl $LIBS"
 else
