@@ -132,7 +132,6 @@ static void _insert_area(struct list *head, struct pv_area *a)
 	}
 
 	list_add_h(&pva->list, &a->list);
-	return;
 }
 
 static int _create_single_area(struct pool *mem, struct pv_map *pvm,
