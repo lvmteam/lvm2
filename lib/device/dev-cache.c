@@ -194,6 +194,8 @@ int dev_cache_init(void)
 		return 0;
 	}
 
+	INIT_LIST_HEAD(&_cache.dirs);
+
 	return 1;
 }
 
@@ -227,6 +229,10 @@ struct device *_insert_new(const char *name)
 struct device *dev_cache_get(const char *name, struct dev_filter *f)
 {
 	struct device *d = (struct device *) hash_lookup(_cache.devices, name);
+
+	if (!d && (d = _create_dev(name)))
+		hash_insert(_cache.devices, name, d);
+
 	return (d && (!f || f->passes_filter(f, d))) ? d : NULL;
 }
 

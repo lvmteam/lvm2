@@ -15,6 +15,6 @@ TARGETS=read_vg_t
 
 include ../../make.tmpl
 
-read_vg_t: read_vg_t.o
+read_vg_t: read_vg_t.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o read_vg_t read_vg_t.o -L$(top_srcdir)/lib -llvm
 

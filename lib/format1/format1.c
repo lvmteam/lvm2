@@ -107,7 +107,7 @@ static struct logical_volume *_find_lv(struct volume_group *vg,
 	return NULL;
 }
 
-static struct physical_volume *_find_pv(struct volume_group *vg, 
+static struct physical_volume *_find_pv(struct volume_group *vg,
 					struct device *dev)
 {
 	struct list_head *tmp;
@@ -307,7 +307,7 @@ static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
 static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 				     struct physical_volume *pv)
 {
-	
+
 }
 
 static int _flatten_vg(struct pool *mem, struct volume_group *vg,
@@ -347,9 +347,38 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 }
 #endif
 
-struct io_space *create_lvm1_format(void)
+void _destroy(struct io_space *ios)
 {
-	return NULL;
+	dbg_free(ios->prefix);
+	dbg_free(ios);
+}
+
+struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
+				    struct dev_filter *filter)
+{
+	struct io_space *ios = dbg_malloc(sizeof(*ios));
+
+	ios->get_vgs = NULL;
+	ios->get_pvs = NULL;
+	ios->pv_read = NULL;
+	ios->pv_write = NULL;
+	ios->vg_read = _vg_read;
+	ios->vg_write = NULL;
+	ios->destroy = _destroy;
+
+	ios->prefix = dbg_malloc(strlen(prefix) + 1);
+	if (!ios->prefix) {
+		stack;
+		dbg_free(ios);
+		return 0;
+	}
+	strcpy(ios->prefix, prefix);
+
+	ios->mem = mem;
+	ios->filter = filter;
+	ios->private = NULL;
+
+	return ios;
 }
 
 
