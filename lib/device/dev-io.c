@@ -38,11 +38,43 @@ int dev_get_size(struct device *dev, uint64_t *size)
 	return 1;
 }
 
+int _read(int fd, void *buf, size_t count)
+{
+	size_t n = 0;
+	int tot = 0;
+
+	while (tot < count) {
+		n = read(fd, buf, count - tot);
+
+		if (n <= 0)
+			return tot ? tot : n;
+
+		tot += n;
+		buf += n;
+	}
+
+	return tot;
+}
+
 int64_t dev_read(struct device *dev, uint64_t offset,
 		 int64_t len, void *buffer)
 {
-	// FIXME: lazy programmer
-	return 0;
+	int64_t r;
+	int fd = open(dev->name, O_RDONLY);
+
+	if (fd < 0) {
+		log_sys_err("open");
+		return 0;
+	}
+
+	if (lseek(fd, offset, SEEK_SET) < 0) {
+		log_sys_err("lseek");
+		return 0;
+	}
+
+	r = _read(fd, buffer, len);
+	close(fd);
+	return r;
 }
 
 int64_t dev_write(struct device *dev, uint64_t offset,

@@ -15,7 +15,7 @@
 #define MAX_LV 256
 #define MAX_VG 99
 
-#define UNMAPPED_EXTENT ((uint16_t) -1)
+#define UNMAPPED_EXTENT 0
 
 struct data_area {
 	uint32_t base;
