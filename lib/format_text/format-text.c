@@ -183,27 +183,30 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 
 static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				       struct mda_header *mdah,
-				       const char *vgname)
+				       const char *vgname,
+				       int precommit)
 {
 	size_t len;
 	char vgnamebuf[NAME_LEN + 2];
 	struct raw_locn *rlocn;
 	struct lvmcache_info *info;
 
-	rlocn = mdah->raw_locns;
+	rlocn = mdah->raw_locns;	/* Slot 0 */
 
+	if (precommit)
+		rlocn++;		/* Slot 1 */
+
+	/* FIXME Loop through rlocns two-at-a-time.  List null-terminated. */
 	/* FIXME Ignore if checksum incorrect!!! */
-	while (rlocn->offset) {
-		if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-			      sizeof(vgnamebuf), vgnamebuf)) {
-			stack;
-			goto error;
-		}
-		if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
-		    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{')) {
-			return rlocn;
-		}
-		rlocn++;
+	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
+		      sizeof(vgnamebuf), vgnamebuf)) {
+		stack;
+		goto error;
+	}
+
+	if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
+	    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{')) {
+		return rlocn;
 	}
 
       error:
@@ -247,7 +250,7 @@ static int _raw_holds_vgname(struct format_instance *fid,
 		return 0;
 	}
 
-	if (_find_vg_rlocn(dev_area, mdah, vgname))
+	if (_find_vg_rlocn(dev_area, mdah, vgname, 0))
 		r = 1;
 
 	if (!dev_close(dev_area->dev))
@@ -258,7 +261,8 @@ static int _raw_holds_vgname(struct format_instance *fid,
 
 static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 					      const char *vgname,
-					      struct device_area *area)
+					      struct device_area *area,
+					      int precommit)
 {
 	struct volume_group *vg = NULL;
 	struct raw_locn *rlocn;
@@ -277,7 +281,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		goto out;
 	}
 
-	if (!(rlocn = _find_vg_rlocn(area, mdah, vgname))) {
+	if (!(rlocn = _find_vg_rlocn(area, mdah, vgname, precommit))) {
 		log_debug("VG %s not found on %s", vgname, dev_name(area->dev));
 		goto out;
 	}
@@ -301,8 +305,9 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		stack;
 		goto out;
 	}
-	log_debug("Read %s metadata (%u) from %s at %" PRIu64 " size %" PRIu64,
-		  vg->name, vg->seqno, dev_name(area->dev),
+	log_debug("Read %s %smetadata (%u) from %s at %" PRIu64 " size %"
+		  PRIu64, vg->name, precommit ? "pre-commit " : "",
+		  vg->seqno, dev_name(area->dev),
 		  area->start + rlocn->offset, rlocn->size);
 
       out:
@@ -318,7 +323,16 @@ static struct volume_group *_vg_read_raw(struct format_instance *fid,
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 
-	return _vg_read_raw_area(fid, vgname, &mdac->area);
+	return _vg_read_raw_area(fid, vgname, &mdac->area, 0);
+}
+
+static struct volume_group *_vg_read_precommit_raw(struct format_instance *fid,
+						   const char *vgname,
+						   struct metadata_area *mda)
+{
+	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+
+	return _vg_read_raw_area(fid, vgname, &mdac->area, 1);
 }
 
 static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
@@ -358,7 +372,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name);
+	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0);
 	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
 	if (!(mdac->rlocn.size = text_vg_export_raw(vg, "", buf, sizeof(buf)))) {
@@ -424,8 +438,10 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	return r;
 }
 
-static int _vg_commit_raw(struct format_instance *fid, struct volume_group *vg,
-			  struct metadata_area *mda)
+static int _vg_commit_raw_rlocn(struct format_instance *fid,
+				struct volume_group *vg,
+				struct metadata_area *mda,
+				int precommit)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct mda_header *mdah;
@@ -452,18 +468,23 @@ static int _vg_commit_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name))) {
-		rlocn = &mdah->raw_locns[0];
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0))) {
+		mdah->raw_locns[0].offset = 0;
 		mdah->raw_locns[1].offset = 0;
+		mdah->raw_locns[2].offset = 0;
+		rlocn = &mdah->raw_locns[0];
 	}
+
+	if (precommit)
+		rlocn++;
 
 	rlocn->offset = mdac->rlocn.offset;
 	rlocn->size = mdac->rlocn.size;
 	rlocn->checksum = mdac->rlocn.checksum;
 
-	log_debug("Committing %s metadata (%u) to %s header at %" PRIu64,
-		  vg->name, vg->seqno, dev_name(mdac->area.dev),
-		  mdac->area.start);
+	log_debug("%sCommitting %s metadata (%u) to %s header at %" PRIu64,
+		  precommit ? "Pre-" : "", vg->name, vg->seqno,
+		  dev_name(mdac->area.dev), mdac->area.start);
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
 				   mdah)) {
 		log_error("Failed to write metadata area header");
@@ -473,10 +494,23 @@ static int _vg_commit_raw(struct format_instance *fid, struct volume_group *vg,
 	r = 1;
 
       out:
-	if (!dev_close(mdac->area.dev))
+	if (!precommit && !dev_close(mdac->area.dev))
 		stack;
 
 	return r;
+}
+
+static int _vg_commit_raw(struct format_instance *fid, struct volume_group *vg,
+			  struct metadata_area *mda)
+{
+	return _vg_commit_raw_rlocn(fid, vg, mda, 0);
+}
+
+static int _vg_precommit_raw(struct format_instance *fid,
+			     struct volume_group *vg,
+			     struct metadata_area *mda)
+{
+	return _vg_commit_raw_rlocn(fid, vg, mda, 1);
 }
 
 /* Close metadata area devices */
@@ -524,7 +558,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name))) {
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0))) {
 		rlocn = &mdah->raw_locns[0];
 		mdah->raw_locns[1].offset = 0;
 	}
@@ -550,13 +584,13 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 
 static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 					       const char *vgname,
-					       const char *path_live)
+					       const char *read_path)
 {
 	struct volume_group *vg;
 	time_t when;
 	char *desc;
 
-	if (!(vg = text_vg_import_file(fid, path_live, &when, &desc))) {
+	if (!(vg = text_vg_import_file(fid, read_path, &when, &desc))) {
 		stack;
 		return NULL;
 	}
@@ -569,10 +603,10 @@ static struct volume_group *_vg_read_file_name(struct format_instance *fid,
 	if (vgname && strcmp(vgname, vg->name)) {
 		pool_free(fid->fmt->cmd->mem, vg);
 		log_err("'%s' does not contain volume group '%s'.",
-			path_live, vgname);
+			read_path, vgname);
 		return NULL;
 	} else
-		log_debug("Read volume group %s from %s", vg->name, path_live);
+		log_debug("Read volume group %s from %s", vg->name, read_path);
 
 	return vg;
 }
@@ -584,6 +618,15 @@ static struct volume_group *_vg_read_file(struct format_instance *fid,
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 
 	return _vg_read_file_name(fid, vgname, tc->path_live);
+}
+
+static struct volume_group *_vg_read_precommit_file(struct format_instance *fid,
+						    const char *vgname,
+						    struct metadata_area *mda)
+{
+	struct text_context *tc = (struct text_context *) mda->metadata_locn;
+
+	return _vg_read_file_name(fid, vgname, tc->path_edit);
 }
 
 static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
@@ -857,7 +900,7 @@ static int _scan_raw(const struct format_type *fmt)
 		if (vgname_from_mda(fmt, &rl->dev_area, vgnamebuf,
 				    sizeof(vgnamebuf))) {
 			if ((vg = _vg_read_raw_area(&fid, vgnamebuf,
-						    &rl->dev_area)))
+						    &rl->dev_area, 0)))
 				lvmcache_update_vg(vg);
 		}
 	}
@@ -1279,6 +1322,7 @@ static void _destroy(const struct format_type *fmt)
 
 static struct metadata_area_ops _metadata_text_file_ops = {
 	vg_read:_vg_read_file,
+	vg_read_precommit:_vg_read_precommit_file,
 	vg_write:_vg_write_file,
 	vg_remove:_vg_remove_file,
 	vg_commit:_vg_commit_file
@@ -1293,8 +1337,10 @@ static struct metadata_area_ops _metadata_text_file_backup_ops = {
 
 static struct metadata_area_ops _metadata_text_raw_ops = {
 	vg_read:_vg_read_raw,
+	vg_read_precommit:_vg_read_precommit_raw,
 	vg_write:_vg_write_raw,
 	vg_remove:_vg_remove_raw,
+	vg_precommit:_vg_precommit_raw,
 	vg_commit:_vg_commit_raw,
 	vg_revert:_vg_revert_raw
 };
@@ -1650,7 +1696,8 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	fmt->ops = &_text_handler;
 	fmt->name = FMT_TEXT_NAME;
 	fmt->alias = FMT_TEXT_ALIAS;
-	fmt->features = FMT_SEGMENTS | FMT_MDAS | FMT_TAGS | FMT_UNLIMITED_VOLS;
+	fmt->features = FMT_SEGMENTS | FMT_MDAS | FMT_TAGS | FMT_PRECOMMIT |
+			FMT_UNLIMITED_VOLS;
 
 	if (!(mda_lists = dbg_malloc(sizeof(struct mda_lists)))) {
 		log_error("Failed to allocate dir_list");

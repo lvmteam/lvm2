@@ -1,5 +1,6 @@
 Version 2.01.10 - 
 ================================
+  Move from 2-step to 3-step on-disk metadata commit.
   Scan ramdisks too.
   Annotate, tidy and extend list.h.
   Alignment tidying.

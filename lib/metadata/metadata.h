@@ -68,6 +68,7 @@
 #define FMT_UNLIMITED_VOLS	0x00000008	/* Unlimited PVs/LVs? */
 #define FMT_RESTRICTED_LVIDS	0x00000010	/* LVID <= 255 */
 #define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
+#define FMT_PRECOMMIT		0x00000040	/* Supports pre-commit? */
 
 typedef enum {
 	ALLOC_INVALID,
@@ -124,6 +125,9 @@ struct metadata_area_ops {
 	struct volume_group *(*vg_read) (struct format_instance * fi,
 					 const char *vg_name,
 					 struct metadata_area * mda);
+	struct volume_group *(*vg_read_precommit) (struct format_instance * fi,
+					 const char *vg_name,
+					 struct metadata_area * mda);
 	/*
 	 * Write out complete VG metadata.  You must ensure internal
 	 * consistency before calling. eg. PEs can't refer to PVs not
@@ -140,6 +144,9 @@ struct metadata_area_ops {
 	 */
 	int (*vg_write) (struct format_instance * fid, struct volume_group * vg,
 			 struct metadata_area * mda);
+	int (*vg_precommit) (struct format_instance * fid,
+			     struct volume_group * vg,
+			     struct metadata_area * mda);
 	int (*vg_commit) (struct format_instance * fid,
 			  struct volume_group * vg, struct metadata_area * mda);
 	int (*vg_revert) (struct format_instance * fid,
@@ -374,6 +381,9 @@ int vg_commit(struct volume_group *vg);
 int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 			     int *consistent);
+struct volume_group *vg_read_precommitted(struct cmd_context *cmd,
+					  const char *vg_name,
+					  int *consistent);
 struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct list *mdas, uint64_t *label_sector,
