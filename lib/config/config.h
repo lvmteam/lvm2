@@ -49,6 +49,7 @@ int read_config_fd(struct config_tree *cf, int fd, const char *file,
 int read_config_file(struct config_tree *cf, const char *file);
 int write_config_file(struct config_tree *cf, const char *file);
 int reload_config_file(struct config_tree **cf);
+time_t config_file_timestamp(struct config_tree *cf);
 
 struct config_node *find_config_node(struct config_node *cn,
 				     const char *path, const int separator);
