@@ -27,7 +27,12 @@ struct physical_volume *pv_create(struct io_space *ios, const char *name)
 		goto bad;
 	}
 
-	pv->vg_name = NULL;
+	if (!(pv->vg_name = pool_alloc(ios->mem, NAME_LEN))) {
+		stack;
+		goto bad;
+	}
+
+	*pv->vg_name = 0;
 	pv->exported = NULL;
         pv->status = 0;
 

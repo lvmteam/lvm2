@@ -20,33 +20,32 @@
 
 #include "tools.h"
 
+/* FIXME Temporarily to get at MAX_PV etc.  Move these tests elsewhere */
+/* FIXME Also PE_SIZE stuff */
+#include "../lib/format1/disk-rep.h"
+
 int vgcreate(int argc, char **argv)
 {
-	int count_sav = 0;
-	int np = 0;
 	int opt;
-	int p = 0;
-	int p1 = 0;
+
 	int max_lv = MAX_LV - 1;
 	int max_pv = MAX_PV - 1;
 	int min_pv_index = 0;
 	ulong max_pv_size = 0;
 	ulong min_pv_size = -1;
-	long pe_size = LVM_DEFAULT_PE_SIZE;
-	int ret = 0;
-	int size = 0;
-	int v = 0;
-	int vg_count = 0;
+
+	/* long pe_size = LVM_DEFAULT_PE_SIZE; */
 
 	char *dummy;
 	char *vg_name;
 
 	struct volume_group *vg;
-	struct physical_volume *pv, **pvp = NULL;
-	struct device pv_dev;
+	struct physical_volume *pv;
+
+	struct list_head *pvh;
+	struct pv_list *pvl;
 
 	char *pv_name = NULL;
-	char **vg_name_ptr = NULL;
 
 	if (arg_count(maxlogicalvolumes_ARG))
 		max_lv = arg_int_value(maxlogicalvolumes_ARG, 0);
@@ -55,50 +54,49 @@ int vgcreate(int argc, char **argv)
 		max_pv = arg_int_value(maxphysicalvolumes_ARG, 0);
 
 	if (arg_count(physicalextentsize_ARG)) {
+/* FIXME - Move?
 		pe_size = arg_int_value(physicalextentsize_ARG, 0);
 		pe_size = ((unsigned long long) pe_size * 1024) / SECTOR_SIZE;
 		if (vg_check_pe_size(pe_size) < 0) {
-			log_error("invalid physical extent size %s",
+			log_error("Invalid physical extent size %s",
 				  display_size(sectors_to_k(pe_size),
 					       SIZE_SHORT));
-			log_error("must be power of 2 and between %s and %s",
+			log_error("Must be power of 2 and between %s and %s",
 				  display_size(sectors_to_k(LVM_MIN_PE_SIZE),
 					       SIZE_SHORT),
 				  display_size(sectors_to_k(LVM_MAX_PE_SIZE),
 					       SIZE_SHORT));
 			return EINVALID_CMD_LINE;
 		}
+*/
 	}
 
-	if (argc == 0) {
-		log_error
-		    ("please enter a volume group name and physical volumes");
+	if (!argc) {
+		log_error("Please provide volume group name and "
+			  "physical volumes");
 		return EINVALID_CMD_LINE;
 	}
-	vg_name = argv[0];
 
 	if (argc == 1) {
-		log_error("please enter physical volume name(s)");
+		log_error("Please enter physical volume name(s)");
 		return EINVALID_CMD_LINE;
 	}
 
+	vg_name = argv[0];
+	argv++;
+	argc--;
+
 	if ((vg = ios->vg_read(ios, vg_name))) {
-		log_error
-		    ("Volume group already exists: please use a different name");
+		log_error("Volume group already exists: please use a "
+			  "different name");
 		return ECMD_FAILED;
 	}
 
-/***** FIXME: confirm we're now free of this restriction
-
-    log_verbose("counting all existing volume groups");
-    vg_name_ptr = lvm_tab_vg_check_exist_all_vg();
-    vg_count = 0;
-    if (vg_name_ptr != NULL)
-	for (v = 0; vg_name_ptr[v] != NULL && vg_count < MAX_VG; v++)
-	    vg_count++;
+/***** FIXME: Can we be free of this restriction?
+    log_verbose("Counting all existing volume groups");
     if (vg_count >= MAX_VG) {
-	log_error("maximum volume group count of %d reached", MAX_VG);
-	return LVM_E_MAX_VG;
+	log_error("Maximum volume group count of %d reached", MAX_VG);
+	return ECMD_FAILED;
     }
 *****/
 
@@ -106,100 +104,67 @@ int vgcreate(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	/* read all PVs */
-
 	/* check, if PVs are all defined and new */
-	log_verbose("Checking all physical volumes specified are new");
-	count_sav = argc - 1;
-	np = 0;
-	for (opt = 1; opt < argc; opt++) {
+	log_verbose("Ensuring all physical volumes specified are new");
+	for (; opt < argc; opt++) {
 		pv_name = argv[opt];
-
-		if (!(pv_dev = dev_cache_get(pv_name))) {
-			log_error("Device %s not found", pv_name);
-			return ECMD_FAILED;
-		}
-
-		if (!(pv = ios->pv_read(ios, pv_dev))) {
+		if (!(pv = ios->pv_read(ios, pv_name))) {
 			log_error("Physical volume %s not found", pv_name);
 			return ECMD_FAILED;
 		}
 
-		log_verbose("checking physical volume %s", pv_name);
-		log_verbose("getting size of physical volume %s", pv_name);
+		/* FIXME Must PV be ACTIVE & ALLOCATABLE? */
 
-		/* FIXME size should already be filled in pv structure?! */
-		if ((size = dev_get_size(pv_dev)) < 0) {
-			log_error("Unable to get size of %s", pv_name);
-			return ECMD_FAILED;
-		}
+		log_verbose("Checking physical volume %s", pv_name);
+		log_verbose("Getting size of physical volume %s", pv_name);
 
-		log_verbose("physical volume %s  is %d 512-byte sectors",
-			    pv_name, size);
+		log_verbose("Physical volume %s is %s 512-byte sectors",
+			    pv_name, pv->size);
 
-		log_verbose("checking physical volume %s is new", pv_name);
-		if (pv->vg_name[0]) {
+		log_verbose("Checking physical volume %s is new", pv_name);
+		if (*pv->vg_name) {
 			log_error("%s already belongs to volume group %s",
-				  pv_name pv->vg_name);
+				  pv_name, pv->vg_name);
 		}
 
-		log_verbose("checking for identical physical volumes "
+		log_verbose("Checking for identical physical volumes "
 			    "on command line");
-		for (p1 = 0; pvp != NULL && pvp[p1] != NULL; p1++) {
-			if (!strcmp(pv_name, pvp[p1]->dev->name)) {
-				log_error
-				    ("physical volume %s occurs multiple times",
-				     pv_name);
-				return ECMD_FAILED;
-			}
-		}
-
-		if ((pvp = dbg_realloc(pvp, (np + 2) * sizeof (pv *))) == NULL) {
-			log_error("realloc error in file \"%s\" [line %d]",
-				  __FILE__, __LINE__);
+		if ((pvh = find_pv_in_vg(vg, pv_name))) {
+			log_error("Physical volume %s listed multiple times",
+				  pv_name);
 			return ECMD_FAILED;
 		}
 
-		pvp[np] = pv;
-		if (max_pv_size < pvp[np]->size)
-			max_pv_size = pvp[np]->size;
-		if (min_pv_size > pvp[np]->size) {
-			min_pv_size = pvp[np]->size;
-			min_pv_index = np;
+		if (max_pv_size < pv->size)
+			max_pv_size = pv->size;
+		if (min_pv_size > pv->size) {
+			min_pv_size = pv->size;
+			min_pv_index = opt;
 		}
-		np++;
-		pvp[np] = NULL;
+
+		if (!(pvl = dbg_malloc(sizeof(struct pv_list)))) {
+			log_error("pv_list allocation failed");
+			return ECMD_FAILED;
+		}
+
+		pvl->pv = *pv;
+		list_add(&pvl->list, &vg->pvs);
+		vg->pv_count++;
 	}
 
-	if (np == 0) {
-		log_error("no valid physical volumes in command line");
-		return ECMD_FAILED;
-	}
+	log_verbose("%d physical volume(s) will be inserted into "
+		    "volume group %s", vg->pv_count, vg->name);
 
-	if (np != count_sav) {
-		log_error("some invalid physical volumes in command line");
-		return ECMD_FAILED;	/* Impossible to reach here? */
-	}
-
-	log_verbose("%d physical volume%s will be inserted into "
-		    "volume group %s", np, np > 1 ? "s" : "", vg_name);
-
-	vg->pv = pvp;
-
-	/* load volume group */
-	/* checking command line arguments */
-	log_verbose("checking command line arguments");
-
-	log_verbose("maximum of %d physical volumes", max_pv);
-	if (max_pv < 0 || max_pv <= np || max_pv > MAX_PV) {
-		log_error("invalid maximum physical volumes -p %d", max_pv);
+	log_verbose("Maximum of %d physical volumes", max_pv);
+	if (max_pv < 0 || max_pv <= vg->pv_count || max_pv > MAX_PV) {
+		log_error("Invalid maximum physical volumes -p %d", max_pv);
 		return EINVALID_CMD_LINE;
 	}
 	vg->max_pv = max_pv;
 
-	log_verbose("maximum of %d logical volumes", max_lv);
+	log_verbose("Maximum of %d logical volumes", max_lv);
 	if (max_lv < 0 || max_lv > MAX_LV) {
-		log_error("invalid maximum logical volumes -l %d", max_lv);
+		log_error("Invalid maximum logical volumes -l %d", max_lv);
 		return EINVALID_CMD_LINE;
 	}
 	vg->max_lv = max_lv;
@@ -207,14 +172,14 @@ int vgcreate(int argc, char **argv)
 /******** FIXME: Enforce these checks internally within vg_write?
     size = (LVM_PV_DISK_SIZE + LVM_VG_DISK_SIZE + max_pv * NAME_LEN + max_lv * sizeof(lv_t));
     if (size / SECTOR_SIZE > min_pv_size / 5) {
-	log_error("more than 20%% [%d KB] of physical volume %s with %u KB would be used", size,
+	log_error("More than 20%% [%d KB] of physical volume %s with %u KB would be used", size,
 		  pvp[min_pv_index]->pv_name, pvp[min_pv_index]->pv_size / 2);
 	return LVM_E_PV_TOO_SMALL;
     }
 ************/
 
-	/* FIXME More work required here */
-	/* Check extent sizes compatible and set up pe's? */
+/************ FIXME More work required here 
+ ************ Check extent sizes compatible and set up pe's? 
 	if (
 	    (ret =
 	     vg_setup_for_create(vg_name, &vg, pvp, pe_size, max_pv,
@@ -243,6 +208,7 @@ int vgcreate(int argc, char **argv)
 		}
 		return ECMD_FAILED;
 	}
+************/
 
 	if (arg_count(physicalextentsize_ARG) == 0) {
 		log_print("Using default physical extent size %s",
@@ -255,22 +221,26 @@ int vgcreate(int argc, char **argv)
 
 	vg_remove_dir_and_group_and_nodes(vg_name);
 
-	/* FIXME Set active flag */
+	vg->status |= ACTIVE;
 
 	/* store vg on disk(s) */
 	if (ios->vg_write(ios, vg)) {
 		return ECMD_FAILED;
 	}
 
-	log_verbose("creating volume group directory %s%s", prefix, vg_name);
+/******* FIXME /dev/vg???
+	log_verbose("Creating volume group directory %s%s", prefix, vg_name);
 	if (vg_create_dir_and_group(&vg)) {
 		return ECMD_FAILED;
 	}
+*********/
 
 	/* FIXME Activate it */
 
+/******* FIXME backups
 	if ((ret = do_autobackup(vg_name, &vg)))
 		return ret;
+******/
 	log_print("Volume group %s successfully created and activated",
 		  vg_name);
 	return 0;
