@@ -1,0 +1,1556 @@
+diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
+--- linux/drivers/md/dm-fs.c	Thu Jan  1 01:00:00 1970
++++ linux-dm/drivers/md/dm-fs.c	Fri Aug 24 10:44:33 2001
+@@ -0,0 +1,341 @@
++/*
++ * dm.c
++ *
++ * Copyright (C) 2001 Sistina Software
++ *
++ * This software is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2, or (at
++ * your option) any later version.
++ *
++ * This software is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with GNU CC; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * procfs and devfs handling for device mapper
++ *
++ * Changelog
++ *
++ *     16/08/2001 - First version [Joe Thornber]
++ */
++
++#include "dm.h"
++
++#include <linux/proc_fs.h>
++#include <linux/ctype.h>
++
++/*
++ * /dev/device-mapper/control is the control char device used to
++ * create/destroy mapping devices.
++ *
++ * When a mapping device called <name> is created it appears as
++ * /dev/device-mapper/<name>.  In addition the interface to control the
++ * mapping will appear in /proc/device-mapper/<name>.
++ */
++
++const char *_fs_dir = "device-mapper";
++const char *_control_name = "control";
++
++static struct proc_dir_entry *_proc_dir;
++static struct proc_dir_entry *_control;
++
++static devfs_handle_t _dev_dir;
++
++static int line_splitter(struct file *file, const char *buffer,
++			 unsigned long count, void *data);
++static int process_control(const char *b, const char *e, int minor);
++static int process_table(const char *b, const char *e, int minor);
++static int get_word(const char *b, const char *e,
++		    const char **wb, const char **we);
++static int tok_cmp(const char *str, const char *b, const char *e);
++static void tok_cpy(char *dest, size_t max,
++		    const char *b, const char *e);
++
++typedef int (*process_fn)(const char *b, const char *e, int minor);
++
++struct pf_data {
++	process_fn fn;
++	int minor;
++};
++
++int dm_init_fs()
++{
++	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
++
++	if (!pfd)
++		return 0;
++
++	_dev_dir = devfs_mk_dir(0, _fs_dir, NULL);
++
++	if (!(_proc_dir = create_proc_entry(_fs_dir, S_IFDIR, &proc_root)))
++		goto fail;
++
++	if (!(_control = create_proc_entry(_control_name, S_IWUSR, _proc_dir)))
++		goto fail;
++
++	_control->write_proc = line_splitter;
++
++	pfd->fn = process_control;
++	pfd->minor = -1;
++	_control->data = pfd;
++
++	return 0;
++
++ fail:
++	dm_fin_fs();
++	return -ENOMEM;
++}
++
++void dm_fin_fs(void)
++{
++	if (_control) {
++		remove_proc_entry(_control_name, _proc_dir);
++		_control = 0;
++	}
++
++	if (_proc_dir) {
++		remove_proc_entry(_fs_dir, &proc_root);
++		_proc_dir = 0;
++	}
++
++	if (_dev_dir)
++		devfs_unregister(_dev_dir);
++}
++
++int dm_fs_add(struct mapped_device *md)
++{
++	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
++
++	if (!pfd)
++		return -ENOMEM;
++
++	pfd->fn = process_table;
++	pfd->minor = MINOR(md->dev);
++
++	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR, 
++					_proc_dir))) {
++		kfree(pfd);
++		return -ENOMEM;
++	}
++
++	md->pde->write_proc = line_splitter;
++	md->pde->data = pfd;
++
++	md->devfs_entry =
++		devfs_register(_dev_dir, md->name, DEVFS_FL_CURRENT_OWNER,
++			       MAJOR(md->dev), MINOR(md->dev),
++			       S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
++			       &dm_blk_dops, NULL);
++
++	if (!md->devfs_entry) {
++		kfree(pfd);
++		remove_proc_entry(md->name, _proc_dir);
++		md->pde = 0;
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++int dm_fs_remove(struct mapped_device *md)
++{
++	if (md->pde) {
++		kfree(md->pde->data);
++		remove_proc_entry(md->name, _proc_dir);
++		md->pde = 0;
++	}
++
++	devfs_unregister(md->devfs_entry);
++	md->devfs_entry = 0;
++	return 0;
++}
++
++static int process_control(const char *b, const char *e, int minor)
++{
++	const char *wb, *we;
++	char name[64];
++	int create = 0;
++
++	/*
++	 * create <name> [minor]
++	 * remove <name>
++	 */
++	if (get_word(b, e, &wb, &we))
++		return -EINVAL;
++	b = we;
++
++	if (!tok_cmp("create", wb, we))
++		create = 1;
++
++	else if (tok_cmp("remove", wb, we))
++		return -EINVAL;
++
++	if (get_word(b, e, &wb, &we))
++		return -EINVAL;
++	b = we;
++
++	tok_cpy(name, sizeof(name), wb, we);
++
++	if (!create)
++		return dm_remove(name);
++
++	else {
++		if (!get_word(b, e, &wb, &we)) {
++			minor = simple_strtol(wb, (char **) &we, 10);
++
++			if (we == wb)
++				return -EINVAL;
++		}
++
++		return dm_create(name, minor);
++	}
++
++	return -EINVAL;
++}
++
++static int process_table(const char *b, const char *e, int minor)
++{
++	const char *wb, *we;
++	struct mapped_device *md = dm_find_minor(minor);
++	void *context;
++	int r;
++
++	if (!md)
++		return -ENXIO;
++
++	if (get_word(b, e, &wb, &we))
++		return -EINVAL;
++
++	if (!tok_cmp("begin", b, e)) {
++		/* suspend the device if it's active */
++		dm_suspend(md);
++
++		/* start loading a table */
++		dm_start_table(md);
++
++	} else if (!tok_cmp("end", b, e)) {
++		/* activate the device ... <evil chuckle> ... */
++		dm_complete_table(md);
++		dm_activate(md);
++
++	} else {
++		/* add the new entry */
++		int len = we - wb;
++		char high_s[64], *ptr;
++		char target[64];
++		struct target *t;
++		offset_t last = 0, high;
++
++		if (len > sizeof(high_s))
++			return -EINVAL;
++
++		strncpy(high_s, wb, we - wb);
++		high_s[len] = '\0';
++
++		high = simple_strtol(high_s, &ptr, 10);
++		if (ptr == high_s)
++			return -EINVAL;
++
++		b = we;
++		if (get_word(b, e, &wb, &we))
++			return -EINVAL;
++
++		len = we - wb;
++		if (len > sizeof(target))
++			return -EINVAL;
++
++		strncpy(target, wb, len);
++		target[len] = '\0';
++
++		if (!(t = dm_get_target(target)))
++			return -EINVAL;
++
++		if (md->num_targets)
++			last = md->highs[md->num_targets - 1] + 1;
++
++		if ((r = t->ctr(last, high, md, we, e, &context)))
++			return r;
++
++		if ((r = dm_add_entry(md, high, t->map, context)))
++			return r;
++	}
++
++	return 0;
++}
++
++static int get_word(const char *b, const char *e,
++		    const char **wb, const char **we)
++{
++	b = eat_space(b, e);
++
++	if (b == e)
++		return -EINVAL;
++
++	*wb = b;
++	while(b != e && !isspace((int) *b))
++		b++;
++	*we = b;
++	return 0;
++}
++
++static int line_splitter(struct file *file, const char *buffer,
++			 unsigned long count, void *data)
++{
++	int r;
++	const char *b = buffer, *e = buffer + count, *lb;
++	struct pf_data *pfd = (struct pf_data *) data;
++
++	while(b < e) {
++		b = eat_space(b, e);
++		if (b == e)
++			break;
++
++		lb = b;
++		while((b != e) && *b != '\n')
++			b++;
++
++		if ((r = pfd->fn(lb, b, pfd->minor)))
++			return r;
++	}
++
++	return count;
++}
++
++static int tok_cmp(const char *str, const char *b, const char *e)
++{
++	while (*str && b != e) {
++		if (*str < *b)
++			return -1;
++
++		if (*str > *b)
++			return 1;
++
++		str++, b++;
++	}
++
++	if (!*str && b == e)
++		return 0;
++
++	if (*str)
++		return 1;
++
++	return -1;
++}
++
++static void tok_cpy(char *dest, size_t max,
++		    const char *b, const char *e)
++{
++	size_t len = e - b;
++	if (len > --max)
++		len = max;
++	strncpy(dest, b, len);
++	dest[len] = '\0';
++}
+diff -ruN linux/drivers/md/dm-table.c linux-dm/drivers/md/dm-table.c
+--- linux/drivers/md/dm-table.c	Thu Jan  1 01:00:00 1970
++++ linux-dm/drivers/md/dm-table.c	Fri Aug 24 10:44:33 2001
+@@ -0,0 +1,192 @@
++/*
++ * dm-table.c
++ *
++ * Copyright (C) 2001 Sistina Software
++ *
++ * This software is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2, or (at
++ * your option) any later version.
++ *
++ * This software is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with GNU CC; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * Changelog
++ *
++ *     16/08/2001 - First version [Joe Thornber]
++ */
++
++#include "dm.h"
++
++static int alloc_targets(struct mapped_device *md, int num);
++
++static inline ulong round_up(ulong n, ulong size)
++{
++	ulong r = n % size;
++	return n + (r ? (size - r) : 0);
++}
++
++static inline ulong div_up(ulong n, ulong size)
++{
++	return round_up(n, size) / size;
++}
++
++static offset_t high(struct mapped_device *md, int l, int n)
++{
++	while (1) {
++		if (n >= md->counts[l])
++			return (offset_t) -1;
++
++		if (l == md->depth - 1)
++			return md->index[l][((n + 1) * KEYS_PER_NODE) - 1];
++
++		l++;
++		n = (n + 1) * (KEYS_PER_NODE + 1) - 1;
++	}
++}
++
++static int setup_btree_index(int l, struct mapped_device *md)
++{
++	int n, c, cn;
++
++	for (n = 0, cn = 0; n < md->counts[l]; n++) {
++		offset_t *k = md->index[l] + (n * KEYS_PER_NODE);
++
++		for (c = 0; c < KEYS_PER_NODE; c++)
++			k[c] = high(md, l + 1, cn++);
++		cn++;
++	}
++
++	return 0;
++}
++
++void dm_free_table(struct mapped_device *md)
++{
++	int i;
++	for (i = 0; i < md->depth; i++) {
++		vfree(md->index[i]);
++		md->index[i] = 0;
++	}
++
++	vfree(md->targets);
++	vfree(md->contexts);
++
++	md->highs = 0;
++	md->targets = 0;
++	md->contexts = 0;
++
++	md->num_targets = 0;
++	md->num_allocated = 0;
++}
++
++int dm_start_table(struct mapped_device *md)
++{
++	int r;
++	set_bit(DM_LOADING, &md->state);
++
++	dm_free_table(md);
++	if ((r = alloc_targets(md, 2)))	/* FIXME: increase once debugged 256 ? */
++		return r;
++
++	return 0;
++}
++
++int dm_add_entry(struct mapped_device *md, offset_t high,
++		 dm_map_fn target, void *context)
++{
++	if (md->num_targets >= md->num_targets &&
++	    alloc_targets(md, md->num_allocated * 2))
++		return -ENOMEM;
++
++	md->highs[md->num_targets] = high;
++	md->targets[md->num_targets] = target;
++	md->contexts[md->num_targets] = context;
++
++	md->num_targets++;
++	return 0;
++}
++
++int dm_complete_table(struct mapped_device *md)
++{
++	int n, i;
++
++	clear_bit(DM_LOADING, &md->state);
++
++	/* how many indexes will the btree have ? */
++	for (n = div_up(md->num_targets, KEYS_PER_NODE), i = 1; n != 1; i++)
++		n = div_up(n, KEYS_PER_NODE + 1);
++
++	md->depth = i;
++	md->counts[md->depth - 1] = div_up(md->num_targets, KEYS_PER_NODE);
++
++	while (--i)
++		md->counts[i - 1] = div_up(md->counts[i], KEYS_PER_NODE + 1);
++
++	for (i = 0; i < md->depth; i++) {
++		size_t s = NODE_SIZE * md->counts[i];
++		md->index[i] = vmalloc(s);
++		memset(md->index[i], -1, s);
++	}
++
++	/* bottom layer is easy */
++	md->index[md->depth - 1] = md->highs;
++
++	/* fill in higher levels */
++	for (i = md->depth - 1; i; i--)
++		setup_btree_index(i - 1, md);
++
++	set_bit(DM_LOADED, &md->state);
++	return 0;
++}
++
++static int alloc_targets(struct mapped_device *md, int num)
++{
++	offset_t *n_highs;
++	dm_map_fn *n_targets;
++	void **n_contexts;
++
++	if (!(n_highs = vmalloc(sizeof(*n_highs) * num)))
++		return -ENOMEM;
++
++	if (!(n_targets = vmalloc(sizeof(*n_targets) * num))) {
++		vfree(n_highs);
++		return -ENOMEM;
++	}
++
++	if (!(n_contexts = vmalloc(sizeof(*n_contexts) * num))) {
++		vfree(n_highs);
++		vfree(n_targets);
++		return -ENOMEM;
++	}
++
++	if (md->num_targets) {
++		memcpy(n_highs, md->highs,
++		       sizeof(*n_highs) * md->num_targets);
++
++		memcpy(n_targets, md->targets,
++		       sizeof(*n_targets) * md->num_targets);
++
++		memcpy(n_contexts, md->contexts,
++		       sizeof(*n_contexts) * md->num_targets);
++	}
++
++	vfree(md->highs);
++	vfree(md->targets);
++	vfree(md->contexts);
++
++	md->num_allocated = num;
++	md->highs = n_highs;
++	md->targets = n_targets;
++	md->contexts = n_contexts;
++
++	return 0;
++}
+diff -ruN linux/drivers/md/dm-target.c linux-dm/drivers/md/dm-target.c
+--- linux/drivers/md/dm-target.c	Thu Jan  1 01:00:00 1970
++++ linux-dm/drivers/md/dm-target.c	Fri Aug 24 10:44:33 2001
+@@ -0,0 +1,191 @@
++/*
++ * dm-target.c
++ *
++ * Copyright (C) 2001 Sistina Software
++ *
++ * This software is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2, or (at
++ * your option) any later version.
++ *
++ * This software is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with GNU CC; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * 16/08/2001 - First Version [Joe Thornber]
++ */
++
++#include "dm.h"
++
++static struct target *_targets;
++static spinlock_t _lock = SPIN_LOCK_UNLOCKED;
++
++struct target *__get_target(const char *name)
++{
++	struct target *t;
++	for (t = _targets; t && strcmp(t->name, name); t = t->next)
++		;
++	return t;
++}
++
++struct target *dm_get_target(const char *name)
++{
++	struct target *t;
++
++	spin_lock(&_lock);
++	t = __get_target(name);
++	spin_unlock(&_lock);
++
++	return t;
++}
++
++int register_map_target(const char *name, dm_ctr_fn ctr,
++			dm_dtr_fn dtr, dm_map_fn map)
++{
++	struct target *t = kmalloc(sizeof(*t) + strlen(name) + 1, GFP_KERNEL);
++
++	if (!t)
++		return -ENOMEM;
++
++	spin_lock(&_lock);
++	if (__get_target(name)) {
++		WARN("mapper(%s) already registered\n", name);
++		spin_unlock(&_lock);
++		return -1;	/* FIXME: what's a good return value ? */
++	}
++
++	t->name = (char *) (t + 1);
++	strcpy(t->name, name);
++
++	t->ctr = ctr;
++	t->dtr = dtr;
++	t->map = map;
++
++	t->next = _targets;
++	_targets = t;
++
++	spin_unlock(&_lock);
++	return 0;
++}
++
++
++/*
++ * now for a couple of simple targets:
++ *
++ * 'io-err' target always fails an io, useful for bringing up LV's
++ * that have holes in them.
++ *
++ * 'linear' target maps a linear range of a device
++ */
++int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
++		const char *cb, const char *ce, void **result)
++{
++	/* this takes no arguments */
++	*result = 0;
++	return 0;
++}
++
++void io_err_dtr(void *c)
++{
++	/* empty */
++}
++
++int io_err_map(struct buffer_head *bh, void *context)
++{
++	buffer_IO_error(bh);
++	return 0;
++}
++
++
++struct linear_c {
++	kdev_t dev;
++	int offset;		/* FIXME: we need a signed offset type */
++};
++
++static int get_number(const char **b, const char *e, unsigned int *n)
++{
++	char *ptr;
++	*b = eat_space(*b, e);
++	if (*b >= e)
++		return -EINVAL;
++
++	*n = simple_strtoul(*b, &ptr, 10);
++	if (ptr == *b)
++		return -EINVAL;
++	*b = ptr;
++
++	return 0;
++}
++
++int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
++	       const char *cb, const char *ce, void **result)
++{
++	/* context string should be of the form:
++	 *  <major> <minor> <offset>
++	 */
++	struct linear_c *lc;
++	unsigned int major, minor, start;
++	int r;
++
++	if ((r = get_number(&cb, ce, &major)))
++		return r;
++
++	if ((r = get_number(&cb, ce, &minor)))
++		return r;
++
++	if ((r = get_number(&cb, ce, &start)))
++		return r;
++
++	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
++		WARN("couldn't allocate memory for linear context\n");
++		return -EINVAL;
++	}
++
++	lc->dev = MKDEV((int) major, (int) minor);
++	lc->offset = (int) start - (int) low;
++
++	if ((r = dm_add_device(md, lc->dev))) {
++		kfree(lc);
++		return r;
++	}
++
++	*result = lc;
++	return 0;
++}
++
++void linear_dtr(void *c)
++{
++	kfree(c);
++}
++
++int linear_map(struct buffer_head *bh, void *context)
++{
++	struct linear_c *lc = (struct linear_c *) context;
++
++	bh->b_rdev = lc->dev;
++	bh->b_rsector = bh->b_rsector + lc->offset;
++	return 1;
++}
++
++int dm_std_targets(void)
++{
++	int ret;
++
++#define xx(n, fn) \
++	if ((ret = register_map_target(n, \
++             fn ## _ctr, fn ## _dtr, fn ## _map) < 0)) return ret
++
++	xx("io-err", io_err);
++	xx("linear", linear);
++#undef xx
++
++	return 0;
++}
+diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
+--- linux/drivers/md/dm.c	Thu Jan  1 01:00:00 1970
++++ linux-dm/drivers/md/dm.c	Fri Aug 24 10:44:33 2001
+@@ -0,0 +1,602 @@
++/*
++ * device-mapper.c
++ *
++ * Copyright (C) 2001 Sistina Software
++ *
++ * This software is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2, or (at
++ * your option) any later version.
++ *
++ * This software is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with GNU CC; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * Changelog
++ *
++ *    14/08/2001 - First Version [Joe Thornber]
++ */
++
++
++/* TODO:
++ *
++ * dm_ctr_fn should provide the sector sizes, and hardsector_sizes set
++ * to the smallest of these.
++ */
++
++#include "dm.h"
++
++/* defines for blk.h */
++#define MAJOR_NR DM_BLK_MAJOR
++#define DEVICE_NR(device) MINOR(device)  /* has no partition bits */
++#define DEVICE_NAME "device-mapper"      /* name for messaging */
++#define DEVICE_NO_RANDOM                 /* no entropy to contribute */
++#define DEVICE_OFF(d)                    /* do-nothing */
++
++#include <linux/blk.h>
++
++/*
++ * This driver attempts to provide a generic way of specifying logical
++ * devices which are mapped onto other devices.
++ *
++ * It does this by mapping sections of the logical device onto 'targets'.
++ *
++ * When the logical device is accessed the make_request function looks up
++ * the correct target for the given sector, and then asks this target
++ * to do the remapping.
++ *
++ * A btree like structure is used to hold the sector range -> target
++ * mapping.  Because we know all the entries in the btree in advance
++ * we can make a very compact tree, omitting pointers to child nodes,
++ * (child nodes locations can be calculated). Each node of the btree is
++ * 1 level cache line in size, this gives a small performance boost.
++ *
++ * A userland test program for the btree gave the following results on a
++ * 1 Gigahertz Athlon machine:
++ *
++ * entries in btree               lookups per second
++ * ----------------               ------------------
++ * 5                              25,000,000
++ * 1000                           7,700,000
++ * 10,000,000                     3,800,000
++ *
++ * Of course these results should be taken with a pinch of salt; the lookups
++ * were sequential and there were no other applications (other than X + emacs)
++ * running to give any pressure on the level 1 cache.
++ *
++ * Typically LVM users would find they have very few targets for each
++ * LV (probably less than 10).
++ *
++ * Target types are not hard coded, instead the
++ * register_mapping_type function should be called.  A target type
++ * is specified using three functions (see the header):
++ *
++ * dm_ctr_fn - takes a string and contructs a target specific piece of
++ *             context data.
++ * dm_dtr_fn - destroy contexts.
++ * dm_map_fn - function that takes a buffer_head and some previously
++ *             constructed context and performs the remapping.
++ *
++ * This file contains two trivial mappers, which are automatically
++ * registered: 'linear', and 'io_error'.  Linear alone is enough to
++ * implement most LVM features (omitting striped volumes and
++ * snapshots).
++ *
++ * The driver is controlled through a /proc interface...
++ * FIXME: finish
++ *
++ * At the moment the table assumes 32 bit keys (sectors), the move to
++ * 64 bits will involve no interface changes, since the tables will be
++ * read in as ascii data.  A different table implementation can
++ * therefor be provided at another time.  Either just by changing offset_t
++ * to 64 bits, or maybe implementing a structure which looks up the keys in
++ * stages (ie, 32 bits at a time).
++ *
++ * More interesting targets:
++ *
++ * striped mapping; given a stripe size and a number of device regions
++ * this would stripe data across the regions.  Especially useful, since
++ * we could limit each striped region to a 32 bit area and then avoid
++ * nasy 64 bit %'s.
++ *
++ * mirror mapping (reflector ?); would set off a kernel thread slowly
++ * copying data from one region to another, ensuring that any new
++ * writes got copied to both destinations correctly.  Great for
++ * implementing pvmove.  Not sure how userland would be notified that
++ * the copying process had completed.  Possibly by reading a /proc entry
++ * for the LV. Could also use poll() for this kind of thing.
++ */
++
++#define MAX_DEVICES 64
++#define DEFAULT_READ_AHEAD 64
++
++const char *_name = "device-mapper";
++int _version[3] = {0, 1, 0};
++
++#define rl down_read(&_dev_lock)
++#define ru up_read(&_dev_lock)
++#define wl down_write(&_dev_lock)
++#define wu up_write(&_dev_lock)
++
++struct rw_semaphore _dev_lock;
++static struct mapped_device *_devs[MAX_DEVICES];
++
++/* block device arrays */
++static int _block_size[MAX_DEVICES];
++static int _blksize_size[MAX_DEVICES];
++static int _hardsect_size[MAX_DEVICES];
++
++static int blk_open(struct inode *inode, struct file *file);
++static int blk_close(struct inode *inode, struct file *file);
++static int blk_ioctl(struct inode *inode, struct file *file,
++		     uint command, ulong a);
++
++struct block_device_operations dm_blk_dops = {
++	open:     blk_open,
++	release:  blk_close,
++	ioctl:    blk_ioctl
++};
++
++static int request(request_queue_t *q, int rw, struct buffer_head *bh);
++
++/*
++ * setup and teardown the driver
++ */
++static int init(void)
++{
++	int ret;
++
++	init_rwsem(&_dev_lock);
++
++	if ((ret = dm_init_fs()))
++		return ret;
++
++	if (dm_std_targets())
++		return -EIO;	/* FIXME: better error value */
++
++	/* set up the arrays */
++	read_ahead[MAJOR_NR] = DEFAULT_READ_AHEAD;
++	blk_size[MAJOR_NR] = _block_size;
++	blksize_size[MAJOR_NR] = _blksize_size;
++	hardsect_size[MAJOR_NR] = _hardsect_size;
++
++	if (devfs_register_blkdev(MAJOR_NR, _name, &dm_blk_dops) < 0) {
++		printk(KERN_ERR "%s -- register_blkdev failed\n", _name);
++		return -EIO;
++	}
++
++	blk_queue_make_request(BLK_DEFAULT_QUEUE(MAJOR_NR), request);
++
++	printk(KERN_INFO "%s %d.%d.%d initialised\n", _name,
++	       _version[0], _version[1], _version[2]);
++	return 0;
++}
++
++static void fin(void)
++{
++	dm_fin_fs();
++
++	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
++		printk(KERN_ERR "%s -- unregister_blkdev failed\n", _name);
++
++	read_ahead[MAJOR_NR] = 0;
++	blk_size[MAJOR_NR] = 0;
++	blksize_size[MAJOR_NR] = 0;
++	hardsect_size[MAJOR_NR] = 0;
++
++	printk(KERN_INFO "%s %d.%d.%d finalised\n", _name,
++	       _version[0], _version[1], _version[2]);
++}
++
++/*
++ * block device functions
++ */
++static int blk_open(struct inode *inode, struct file *file)
++{
++	int minor = MINOR(inode->i_rdev);
++	struct mapped_device *md;
++
++	if (minor >= MAX_DEVICES)
++		return -ENXIO;
++
++	wl;
++	md = _devs[minor];
++
++	if (!md || !is_active(md)) {
++		wu;
++		return -ENXIO;
++	}
++
++	md->use_count++;
++	wu;
++
++	MOD_INC_USE_COUNT;
++	return 0;
++}
++
++static int blk_close(struct inode *inode, struct file *file)
++{
++	int minor = MINOR(inode->i_rdev);
++	struct mapped_device *md;
++
++	if (minor >= MAX_DEVICES)
++		return -ENXIO;
++
++	wl;
++	md = _devs[minor];
++	if (!md || md->use_count < 1) {
++		WARN("reference count in mapped_device incorrect");
++		wu;
++		return -ENXIO;
++	}
++
++	md->use_count--;
++	wu;
++
++	MOD_DEC_USE_COUNT;
++	return 0;
++}
++
++static int blk_ioctl(struct inode *inode, struct file *file,
++		      uint command, ulong a)
++{
++	/* FIXME: check in the latest Rubini that all expected ioctl's
++	   are supported */
++
++	int minor = MINOR(inode->i_rdev);
++	long size;
++
++	switch (command) {
++	case BLKGETSIZE:
++		size = _block_size[minor] * 1024 / _hardsect_size[minor];
++		if (copy_to_user((void *) a, &size, sizeof(long)))
++			return -EFAULT;
++		break;
++
++	case BLKFLSBUF:
++		if (!capable(CAP_SYS_ADMIN))
++			return -EACCES;
++		fsync_dev(inode->i_rdev);
++		invalidate_buffers(inode->i_rdev);
++		return 0;
++
++	case BLKRAGET:
++		if (copy_to_user((void *) a, &read_ahead[MAJOR(inode->i_rdev)],
++				sizeof(long)))
++			return -EFAULT;
++		return 0;
++
++	case BLKRASET:
++		if (!capable(CAP_SYS_ADMIN))
++			return -EACCES;
++		read_ahead[MAJOR(inode->i_rdev)] = a;
++		return 0;
++
++	case BLKRRPART:
++		return -EINVAL;
++
++	default:
++		printk(KERN_WARNING "%s - unknown block ioctl %d",
++		       _name, command);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int request(request_queue_t *q, int rw, struct buffer_head *bh)
++{
++	struct mapped_device *md;
++	offset_t *node;
++	int i = 0, l, next_node = 0, ret = 0;
++	int minor = MINOR(bh->b_rdev);
++	dm_map_fn fn;
++	void *context;
++
++	if (minor >= MAX_DEVICES)
++		return -ENXIO;
++
++	rl;
++	md = _devs[minor];
++
++	if (!md) {
++		ret = -ENXIO;
++		goto out;
++	}
++
++	for (l = 0; l < md->depth; l++) {
++		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
++		node = md->index[l] + (next_node * KEYS_PER_NODE);
++
++		for (i = 0; i < KEYS_PER_NODE; i++)
++			if (node[i] >= bh->b_rsector)
++				break;
++	}
++
++	next_node = (KEYS_PER_NODE * next_node) + i;
++	fn = md->targets[next_node];
++	context = md->contexts[next_node];
++
++	if (fn) {
++		if ((ret = fn(bh, context)))
++			atomic_inc(&md->pending);
++	} else
++		buffer_IO_error(bh);
++
++ out:
++	ru;
++	return ret;
++}
++
++static inline int __specific_dev(int minor)
++{
++	if (minor > MAX_DEVICES) {
++		WARN("request for a mapped_device > than MAX_DEVICES");
++		return 0;
++	}
++
++	if (!_devs[minor])
++		return minor;
++
++	return -1;
++}
++
++static inline int __any_old_dev(void)
++{
++	int i;
++
++	for (i = 0; i < MAX_DEVICES; i++)
++		if (!_devs[i])
++			return i;
++
++	return -1;
++}
++
++static struct mapped_device *alloc_dev(int minor)
++{
++	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
++	memset(md, 0, sizeof(*md));
++
++	wl;
++	minor = (minor < 0) ? __any_old_dev() : __specific_dev(minor);
++
++	if (minor < 0) {
++		WARN("no free devices available");
++		wu;
++		kfree(md);
++		return 0;
++	}
++
++	md->dev = MKDEV(DM_BLK_MAJOR, minor);
++	md->name[0] = '\0';
++	md->state = 0;
++
++	_devs[minor] = md;
++	wu;
++
++	return md;
++}
++
++static inline struct mapped_device *__find_name(const char *name)
++{
++	int i;
++	for (i = 0; i < MAX_DEVICES; i++)
++		if (_devs[i] && !strcmp(_devs[i]->name, name))
++			return _devs[i];
++
++	return 0;
++}
++
++static int open_dev(struct dev_list *d)
++{
++	int err;
++
++	if (!(d->bd = bdget(kdev_t_to_nr(d->dev))))
++		return -ENOMEM;
++
++	if ((err = blkdev_get(d->bd, FMODE_READ|FMODE_WRITE, 0, BDEV_FILE))) {
++		bdput(d->bd);
++		return err;
++	}
++
++	return 0;
++}
++
++static void close_dev(struct dev_list *d)
++{
++	blkdev_put(d->bd, BDEV_FILE);
++	bdput(d->bd);
++	d->bd = 0;
++}
++
++static int __find_hardsect_size(struct mapped_device *md)
++{
++	int r = INT_MAX, s;
++	struct dev_list *dl;
++
++	for (dl = md->devices; dl; dl = dl->next) {
++		s = get_hardsect_size(dl->dev);
++		if (s < r)
++			r = s;
++	}
++
++	return r;
++}
++
++struct mapped_device *dm_find_name(const char *name)
++{
++	struct mapped_device *md;
++
++	rl;
++	md = __find_name(name);
++	ru;
++
++	return md;
++}
++
++struct mapped_device *dm_find_minor(int minor)
++{
++	struct mapped_device *md;
++
++	rl;
++	md = _devs[minor];
++	ru;
++
++	return md;
++}
++
++int dm_create(const char *name, int minor)
++{
++	int r;
++	struct mapped_device *md;
++
++	if (minor >= MAX_DEVICES)
++		return -ENXIO;
++
++	if (!(md = alloc_dev(minor)))
++		return -ENOMEM;
++
++	wl;
++	if (__find_name(name)) {
++		WARN("device with that name already exists");
++		kfree(md);
++		wu;
++		return -EINVAL;
++	}
++
++	strcpy(md->name, name);
++	_devs[minor] = md;
++
++	if ((r = dm_fs_add(md))) {
++		wu;
++		return r;
++	}
++	wu;
++
++	return 0;
++}
++
++int dm_remove(const char *name)
++{
++	struct mapped_device *md;
++	struct dev_list *d, *n;
++	int minor, r;
++
++	wl;
++	if (!(md = __find_name(name))) {
++		wu;
++		return -ENXIO;
++	}
++
++	if ((r = dm_fs_remove(md))) {
++		wu;
++		return r;
++	}
++
++	dm_free_table(md);
++	for (d = md->devices; d; d = n) {
++		n = d->next;
++		kfree(d);
++	}
++
++	minor = MINOR(md->dev);
++	kfree(md);
++	_devs[minor] = 0;
++	wu;
++
++	return 0;
++}
++
++int dm_add_device(struct mapped_device *md, kdev_t dev)
++{
++	struct dev_list *d = kmalloc(sizeof(*d), GFP_KERNEL);
++
++	if (!d)
++		return -EINVAL;
++
++	d->dev = dev;
++	d->next = md->devices;
++	md->devices = d;
++
++	return 0;
++}
++
++int dm_activate(struct mapped_device *md)
++{
++	int ret, minor;
++	struct dev_list *d, *od;
++
++	wl;
++
++	if (is_active(md)) {
++		wu;
++		return 0;
++	}
++
++	if (!md->num_targets) {
++		wu;
++		return -ENXIO;
++	}
++
++	/* open all the devices */
++	for (d = md->devices; d; d = d->next)
++		if ((ret = open_dev(d)))
++			goto bad;
++
++	minor = MINOR(md->dev);
++
++	_block_size[minor] = md->highs[md->num_targets - 1] + 1;
++	_blksize_size[minor] = BLOCK_SIZE; /* FIXME: this depends on
++                                              the mapping table */
++	_hardsect_size[minor] = __find_hardsect_size(md);
++
++	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
++
++	set_bit(DM_ACTIVE, &md->state);
++	wu;
++
++	return 0;
++
++ bad:
++
++	od = d;
++	for (d = md->devices; d != od; d = d->next)
++		close_dev(d);
++	ru;
++
++	return ret;
++}
++
++void dm_suspend(struct mapped_device *md)
++{
++	struct dev_list *d;
++	if (!is_active(md))
++		return;
++
++	/* close all the devices */
++	for (d = md->devices; d; d = d->next)
++		close_dev(d);
++
++	clear_bit(DM_ACTIVE, &md->state);
++}
++
++
++/*
++ * module hooks
++ */
++module_init(init);
++module_exit(fin);
++
++/*
++ * Local variables:
++ * c-file-style: "linux"
++ * End:
++ */
+diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
+--- linux/drivers/md/dm.h	Thu Jan  1 01:00:00 1970
++++ linux-dm/drivers/md/dm.h	Fri Aug 24 10:44:33 2001
+@@ -0,0 +1,146 @@
++/*
++ * dm.h
++ *
++ * Copyright (C) 2001 Sistina Software
++ *
++ * This software is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2, or (at
++ * your option) any later version.
++ *
++ * This software is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with GNU CC; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * Internal header file for device mapper
++ *
++ * Changelog
++ *
++ *     16/08/2001 - First version [Joe Thornber]
++ */
++
++#ifndef DM_INTERNAL_H
++#define DM_INTERNAL_H
++
++#include <linux/version.h>
++#include <linux/major.h>
++#include <linux/iobuf.h>
++#include <linux/module.h>
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/vmalloc.h>
++#include <linux/compatmac.h>
++#include <linux/cache.h>
++#include <linux/devfs_fs_kernel.h>
++#include <linux/ctype.h>
++#include <linux/device-mapper.h>
++
++#define MAX_DEPTH 16
++#define NODE_SIZE L1_CACHE_BYTES
++#define KEYS_PER_NODE (NODE_SIZE / sizeof(offset_t))
++#define DM_NAME_LEN 64
++
++enum {
++	DM_LOADED = 0,
++	DM_LOADING,
++	DM_ACTIVE,
++};
++
++struct dev_list {
++	kdev_t dev;
++	struct block_device *bd;
++	struct dev_list *next;
++};
++
++struct mapped_device {
++	kdev_t dev;
++	char name[DM_NAME_LEN];
++
++	int use_count;
++	int state;
++	atomic_t pending;
++
++	/* btree table */
++	int depth;
++	int counts[MAX_DEPTH];	/* in nodes */
++	offset_t *index[MAX_DEPTH];
++
++	int num_targets;
++	int num_allocated;
++	offset_t *highs;
++	dm_map_fn *targets;
++	void **contexts;
++
++	/* used by dm-fs.c */
++	devfs_handle_t devfs_entry;
++	struct proc_dir_entry *pde;
++
++	/* a list of devices used by this md */
++	struct dev_list *devices;
++};
++
++struct target {
++	char *name;
++	dm_ctr_fn ctr;
++	dm_dtr_fn dtr;
++	dm_map_fn map;
++
++	struct target *next;
++};
++
++extern struct block_device_operations dm_blk_dops;
++
++/* dm-target.c */
++struct target *dm_get_target(const char *name);
++int dm_std_targets(void);
++
++/* dm.c */
++struct mapped_device *dm_find_name(const char *name);
++struct mapped_device *dm_find_minor(int minor);
++
++int dm_create(const char *name, int minor);
++int dm_remove(const char *name);
++
++int dm_activate(struct mapped_device *md);
++void dm_suspend(struct mapped_device *md);
++
++/* dm-table.c */
++int dm_start_table(struct mapped_device *md);
++int dm_add_entry(struct mapped_device *md, offset_t high,
++		 dm_map_fn target, void *context);
++int dm_complete_table(struct mapped_device *md);
++void dm_free_table(struct mapped_device *md);
++
++
++/* dm-fs.c */
++int dm_init_fs(void);
++void dm_fin_fs(void);
++
++int dm_fs_add(struct mapped_device *md);
++int dm_fs_remove(struct mapped_device *md);
++
++
++#define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
++
++static inline int is_active(struct mapped_device *md)
++{
++	return test_bit(DM_ACTIVE, &md->state);
++}
++
++static inline const char *eat_space(const char *b, const char *e)
++{
++	while(b != e && isspace((int) *b))
++		b++;
++
++	return b;
++}
++
++#endif
+diff -ruN linux/include/linux/device-mapper.h linux-dm/include/linux/device-mapper.h
+--- linux/include/linux/device-mapper.h	Thu Jan  1 01:00:00 1970
++++ linux-dm/include/linux/device-mapper.h	Fri Aug 24 10:44:10 2001
+@@ -0,0 +1,60 @@
++/*
++ * device-mapper.h
++ *
++ * Copyright (C) 2001 Sistina Software
++ *
++ * This software is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2, or (at
++ * your option) any later version.
++ *
++ * This software is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with GNU CC; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * Changelog
++ *
++ *     14/08/2001 - First version [Joe Thornber]
++ */
++
++#ifndef DEVICE_MAPPER_H
++#define DEVICE_MAPPER_H
++
++#ifdef __KERNEL__
++
++#include <linux/major.h>
++
++/* FIXME: Use value from local range for now, for co-existence with LVM 1 */
++#define DM_BLK_MAJOR 124
++
++struct mapped_device;
++typedef unsigned int offset_t;
++
++typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct mapped_device *md,
++			 const char *cb, const char *ce, void **result);
++typedef void (*dm_dtr_fn)(void *c);
++typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
++
++int register_map_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
++			dm_map_fn map);
++
++/* contructors should call this to make sure any destination devices
++   are handled correctly (ie. opened/closed) */
++int dm_add_device(struct mapped_device *md, kdev_t dev);
++
++#endif
++#endif
++
++/*
++ * Local variables:
++ * c-file-style: "linux"
++ * End:
++ */
