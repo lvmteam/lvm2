@@ -510,7 +510,7 @@ static int _lv_suspend_lv(struct logical_volume *lv)
 }
 
 /*
- * These two functions return the number of LVs in the state,
+ * These two functions return the number of visible LVs in the state,
  * or -1 on error.
  */
 int lvs_in_vg_activated(struct volume_group *vg)
