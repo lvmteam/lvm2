@@ -150,7 +150,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 static int _accept_p(struct dev_filter *f, struct device *dev)
 {
 	struct list *ah;
-	int m, first = 1;
+	int m, first = 1, rejected = 0;
 	struct rfilter *rf = (struct rfilter *) f->private;
 	struct str_list *sl;
 
@@ -168,8 +168,9 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 
 				return 1;
 			}
-		} else
-			return 1;
+
+			rejected = 1;
+		}
 
 		first = 0;
 	}
@@ -178,7 +179,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 	 * pass everything that doesn't match
 	 * anything.
 	 */
-	return 1;
+	return !rejected;
 }
 
 static void _destroy(struct dev_filter *f)

@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 	}
 
 	while ((dev = dev_iter_get(iter)))
-		printf("%s\n", dev->name);
+		printf("%s\n", dev_name(dev));
 
 	dev_iter_destroy(iter);
 	pfilter->destroy(pfilter);
