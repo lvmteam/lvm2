@@ -113,7 +113,7 @@ int _get_int_arg(struct arg *a, char **ptr)
 	return 1;
 }
 
-int size_arg(struct cmd_context *cmd, struct arg *a)
+static int _size_arg(struct cmd_context *cmd, struct arg *a, int factor)
 {
 	char *ptr;
 	int i;
@@ -153,11 +153,23 @@ int size_arg(struct cmd_context *cmd, struct arg *a)
 
 		while (i-- > 0)
 			v *= 1024;
-	}
+	} else
+		v *= factor;
+
 	a->i_value = (uint32_t) v;
 	a->i64_value = (uint64_t) v;
 
 	return 1;
+}
+
+int size_kb_arg(struct cmd_context *cmd, struct arg *a)
+{
+	return _size_arg(cmd, a, 1);
+}
+
+int size_mb_arg(struct cmd_context *cmd, struct arg *a)
+{
+	return _size_arg(cmd, a, 1024);
 }
 
 int int_arg(struct cmd_context *cmd, struct arg *a)
