@@ -31,7 +31,7 @@ typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
 			   struct hash_table * pv_hash);
 
 #define _read_int32(root, path, result) \
-	get_config_uint32(root, path, result)
+	get_config_uint32(root, path, (uint32_t *) result)
 
 #define _read_uint32(root, path, result) \
 	get_config_uint32(root, path, result)

@@ -172,7 +172,7 @@ static int _read_devs(struct dev_set *ds, const char *dir)
 	unsigned char dtype;
 	struct stat info;
 	char path[PATH_MAX];
-	dev_t dev;
+	dev_t dev = { 0 };
 	int r = 1;
 
         if (!(dr = opendir(dir))) {

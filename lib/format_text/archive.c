@@ -53,7 +53,7 @@ struct archive_file {
 	struct list list;
 
 	char *path;
-	int index;
+	uint32_t index;
 };
 
 /*
@@ -132,7 +132,8 @@ static char *_join(struct pool *mem, const char *dir, const char *name)
 static struct list *_scan_archive(struct pool *mem,
 				  const char *vgname, const char *dir)
 {
-	int i, count, ix;
+	int i, count;
+	uint32_t ix;
 	char vgname_found[64], *path;
 	struct dirent **dirent;
 	struct archive_file *af;
@@ -240,7 +241,7 @@ int archive_vg(struct volume_group *vg,
 	       uint32_t retain_days, uint32_t min_archive)
 {
 	int i, fd, renamed = 0;
-	unsigned int ix = 0;
+	uint32_t ix = 0;
 	struct archive_file *last;
 	FILE *fp = NULL;
 	char temp_file[PATH_MAX], archive_name[PATH_MAX];
@@ -285,7 +286,7 @@ int archive_vg(struct volume_group *vg,
 
 	for (i = 0; i < 10; i++) {
 		if (lvm_snprintf(archive_name, sizeof(archive_name),
-				 "%s/%s_%05d.vg", dir, vg->name, ix) < 0) {
+				 "%s/%s_%05u.vg", dir, vg->name, ix) < 0) {
 			log_error("Archive file name too long.");
 			return 0;
 		}
