@@ -98,7 +98,7 @@ binary-arch: build install
 #	dh_installemacsen -a
 #	dh_installpam -a
 #	dh_installmime -a
-	dh_installinit --update-rcd-params="start 25 S . start 50 0 6 ."
+	dh_installinit --update-rcd-params="start 26 S . start 50 0 6 ."
 	dh_installcron
 	dh_installman
 	dh_installinfo 
