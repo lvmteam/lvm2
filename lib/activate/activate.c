@@ -428,6 +428,12 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	if (!info.exists)
 		return 1;
 
+	if (info.open_count) {
+		log_error("LV %s/%s in use: not removing", lv->vg->name,
+			  lv->name);
+		return 0;
+	}
+
 	memlock_inc();
 	r = _lv_deactivate(lv);
 	memlock_dec();
