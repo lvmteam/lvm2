@@ -48,25 +48,25 @@ int pvchange(int argc, char **argv)
 
 	if (arg_count(allocation_ARG) == 0) {
 		log_error("Please give the x option");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	ios = active_ios();
 
 	if (!(arg_count(all_ARG)) && !argc) {
 		log_error("Please give a physical volume path");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(all_ARG) && argc) {
 		log_error("Option a and PhysicalVolumePath are exclusive");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(all_ARG)) {
 		log_verbose("Scanning for physical volume names");
 		if (!(pvs_list = ios->get_pvs(ios))) {
-			return LVM_ECMD_FAILED;
+			return ECMD_FAILED;
 		}
 
 		list_for_each(pvh, &pvs_list->list) {

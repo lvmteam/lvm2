@@ -41,7 +41,7 @@ int vgrename(int argc, char **argv)
 
 	if (argc != 2) {
 		log_error("command line too short");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	ios = active_ios();
@@ -54,11 +54,11 @@ int vgrename(int argc, char **argv)
 	if (strlen(vg_name_new = argv[1]) > NAME_LEN - length - 2) {
 		log_error("New logical volume path exceeds maximum length "
 			  "of %d!", NAME_LEN - length - 2);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if (vg_check_name(vg_name_new) < 0) {
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	/* FIXME Handle prefix-related logic internally within ios functions? */
@@ -73,13 +73,13 @@ int vgrename(int argc, char **argv)
 
 	if (strcmp(vg_name_old, vg_name_new) == 0) {
 		log_error("volume group names must be different");
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	log_verbose("Checking existing volume group %s", vg_name_old);
 	if (!(vg_old = ios->vg_read(ios, vg_name_old))) {
 		log_error("volume group %s doesn't exist", vg_name_old);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 	if (vg_old->status & STATUS_ACTIVE) {
 		log_error("Volume group %s still active", vg_name_old);
@@ -88,7 +88,7 @@ int vgrename(int argc, char **argv)
 	log_verbose("Checking new volume group %s", vg_name_new);
 	if ((vg_new = ios->vg_read(ios, vg_name_new))) {
 		log_error("New volume group %s already exists", vg_name_new);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	/* change the volume name in all structures */
@@ -105,7 +105,7 @@ int vgrename(int argc, char **argv)
 		      lv_change_vgname(vg_name_new, vg_old->lv[l]->name))) {
 			log_error("A new logical volume path exceeds "
 				  "maximum of %d!", NAME_LEN - 2);
-			return LVM_ECMD_FAILED;
+			return ECMD_FAILED;
 		}
 		strcpy(vg_old->lv[l]->name, lv_name_ptr);
 	}
@@ -113,23 +113,23 @@ int vgrename(int argc, char **argv)
 	if (vg_remove_dir_and_group_and_nodes(vg_name_old) < 0) {
 		log_error("removing volume group nodes and directory of \"%s\"",
 			  vg_name_old);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	/* store it on disks */
 	log_verbose("updating volume group name");
 	if (ios->vg_write(ios, vg_old)) {
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	log_verbose("creating volume group directory %s%s", prefix,
 		    vg_name_new);
 	if (vg_create_dir_and_group_and_nodes(vg_old)) {
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if ((ret = do_autobackup(vg_name_new, vg_old)))
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 
 	log_print("Volume group %s successfully renamed to %s",
 		  vg_name_old, vg_name_new);

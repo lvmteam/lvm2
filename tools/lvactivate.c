@@ -35,7 +35,7 @@ int lvactivate(int argc, char **argv)
 
 	if (argc < 2) {
 		log_error("please enter logical volume & physical volume(s)");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	lv_name = argv[0];

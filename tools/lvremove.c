@@ -30,7 +30,7 @@ int lvremove(int argc, char **argv)
 
 	if (argc == 0) {
 		log_error("please enter a logical volume path");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	for (opt = 0; opt < argc; opt++) {
@@ -56,10 +56,6 @@ int lvremove_single(char *lv_name)
 
 	ios = active_ios();
 
-	if ((ret = lv_check_name(lv_name)) < 0) {
-		return LVM_ECMD_FAILED;
-	}
-
 	lv_name = lvm_check_default_vg_name(lv_name, buffer, sizeof (buffer));
 	/* does VG exist? */
 	vg_name = vg_name_of_lv(lv_name);
@@ -67,32 +63,32 @@ int lvremove_single(char *lv_name)
 	log_verbose("Finding volume group %s", vg_name);
 	if (!(vg = ios->vg_read(ios, vg_name))) {
 		log_error("volume group %s doesn't exist", vg_name);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & STATUS_ACTIVE)) {
 		log_error("volume group %s must be active before removing "
 			  "logical volume", vg_name);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if (!(lv = lv_find(vg, lv_name))) {
 		log_error("can't find logical volume %s in volume group %s",
 			  lv_name, vg_name);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if (lv->access & ACCESS_SNAPSHOT_ORG) {
 		log_error("can't remove logical volume %s under snapshot",
 			  lv_name);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if (lv->open) {
 		log_error("can't remove open %s logical volume %s",
 			  lv->access & ACCESS_SNAPSHOT ? "snapshot" : "",
 			  lv_name);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if (!arg_count(force_ARG)) {
@@ -107,7 +103,7 @@ int lvremove_single(char *lv_name)
 	log_verbose("releasing logical volume %s", lv_name);
 	if (lv_remove(vg, lv)) {
 		log_error("Error releasing logical volume %s", lv_name);
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	log_verbose("unlinking special file %s", lv_name);
@@ -116,7 +112,7 @@ int lvremove_single(char *lv_name)
 
 	/* store it on disks */
 	if (ios->vg_write(vg))
-		return LVM_ECMD_FAILED;
+		return ECMD_FAILED;
 
 	if ((ret = do_autobackup(vg_name, vg)))
 		return ret;
