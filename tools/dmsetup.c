@@ -207,18 +207,96 @@ static void _display_info(struct dm_task *dmt)
 		_display_info_long(dmt, &info);
 }
 
-static int _load(int task, const char *name, const char *file, const char *uuid)
+static int _set_task_device(struct dm_task *dmt, const char *name, int optional)
+{
+	if (name) {
+		if (!dm_task_set_name(dmt, name))
+			return 0;
+	} else if (_switches[UUID_ARG]) {
+		if (!dm_task_set_uuid(dmt, _uuid))
+			return 0;
+	} else if (_switches[MAJOR_ARG] && _switches[MINOR_ARG]) {
+		if (!dm_task_set_major(dmt, _values[MAJOR_ARG]) ||
+		    !dm_task_set_minor(dmt, _values[MINOR_ARG]))
+			return 0;
+	} else if (!optional) {
+		fprintf(stderr, "No device specified.\n");
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _load(int argc, char **argv, void *data)
 {
 	int r = 0;
 	struct dm_task *dmt;
+	const char *file = NULL;
+	const char *name = NULL;
 
-	if (!(dmt = dm_task_create(task)))
+	if (_switches[NOTABLE_ARG]) {
+		err("--notable only available when creating new device\n");
+		return 0;
+	}
+
+	if (!_switches[UUID_ARG] && !_switches[MAJOR_ARG]) {
+		if (argc == 1) {
+			err("Please specify device.\n");
+			return 0;
+		}
+		name = argv[1];
+		argc--;
+		argv++;
+	} else if (argc > 2) {
+		err("Too many command line arguments.\n");
+		return 0;
+	}
+
+	if (argc == 2)
+		file = argv[1];
+
+	if (!(dmt = dm_task_create(DM_DEVICE_RELOAD)))
 		return 0;
 
-	if (!dm_task_set_name(dmt, name))
+	if (!_set_task_device(dmt, name, 0))
 		goto out;
 
-	if (uuid && !dm_task_set_uuid(dmt, uuid))
+	if (!_switches[NOTABLE_ARG] && !_parse_file(dmt, file))
+		goto out;
+
+	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	r = 1;
+
+	if (_switches[VERBOSE_ARG])
+		_display_info(dmt);
+
+      out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _create(int argc, char **argv, void *data)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	const char *file = NULL;
+
+	if (argc == 3)
+		file = argv[2];
+ 
+	if (!(dmt = dm_task_create(DM_DEVICE_CREATE)))
+		return 0;
+
+	if (!dm_task_set_name(dmt, argv[1]))
+		goto out;
+
+	if (_switches[UUID_ARG] && !dm_task_set_uuid(dmt, _uuid))
 		goto out;
 
 	if (!_switches[NOTABLE_ARG] && !_parse_file(dmt, file))
@@ -247,23 +325,6 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 	return r;
 }
 
-static int _create(int argc, char **argv, void *data)
-{
-	return _load(DM_DEVICE_CREATE, argv[1], (argc == 3) ? argv[2] : NULL,
-		     _switches[UUID_ARG] ? _uuid : NULL);
-}
-
-static int _reload(int argc, char **argv, void *data)
-{
-	if (_switches[NOTABLE_ARG]) {
-		err("--notable only available when creating new device\n");
-		return 0;
-	}
-
-	return _load(DM_DEVICE_RELOAD, argv[1],
-		     (argc == 3) ? argv[2] : NULL, NULL);
-}
-
 static int _rename(int argc, char **argv, void *data)
 {
 	int r = 0;
@@ -272,10 +333,11 @@ static int _rename(int argc, char **argv, void *data)
 	if (!(dmt = dm_task_create(DM_DEVICE_RENAME)))
 		return 0;
 
-	if (!dm_task_set_name(dmt, argv[1]))
+	/* FIXME Kernel doesn't support uuid or device number here yet */
+	if (!_set_task_device(dmt, (argc == 3) ? argv[1] : NULL, 0))
 		goto out;
 
-	if (!dm_task_set_newname(dmt, argv[2]))
+	if (!dm_task_set_newname(dmt, argv[argc - 1]))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -298,14 +360,24 @@ static int _message(int argc, char **argv, void *data)
 	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
 		return 0;
 
-	if (!dm_task_set_name(dmt, argv[1]))
+	if (_switches[UUID_ARG] || _switches[MAJOR_ARG]) {
+		if (!_set_task_device(dmt, NULL, 0))
+			goto out;
+	} else {
+		if (!_set_task_device(dmt, argv[1], 0))
+			goto out;
+		argc--;
+		argv++;
+	}
+
+	if (!dm_task_set_sector(dmt, atoll(argv[1])))
 		goto out;
 
-	if (!dm_task_set_sector(dmt, atoll(argv[2])))
-		goto out;
+	argc -= 2;
+	argv += 2;
 
-	argc -= 3;
-	argv += 3;
+	if (argc <= 0)
+		err("No message supplied.\n");
 
 	for (i = 0; i < argc; i++)
 		sz += strlen(argv[i]) + 1;
@@ -369,13 +441,12 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 {
 	int r = 0;
 
-	/* remove <dev_name> */
 	struct dm_task *dmt;
 
 	if (!(dmt = dm_task_create(task)))
 		return 0;
 
-	if (!dm_task_set_name(dmt, name))
+	if (!_set_task_device(dmt, name, 0))
 		goto out;
 
 	if (event_nr && !dm_task_set_event_nr(dmt, event_nr))
@@ -398,28 +469,39 @@ static int _remove_all(int argc, char **argv, void *data)
 
 static int _remove(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_REMOVE, argv[1], 0, 0);
+	return _simple(DM_DEVICE_REMOVE, argc > 1 ? argv[1] : NULL, 0, 0);
 }
 
 static int _suspend(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_SUSPEND, argv[1], 0, 1);
+	return _simple(DM_DEVICE_SUSPEND, argc > 1 ? argv[1] : NULL, 0, 1);
 }
 
 static int _resume(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_RESUME, argv[1], 0, 1);
+	return _simple(DM_DEVICE_RESUME, argc > 1 ? argv[1] : NULL, 0, 1);
 }
 
 static int _clear(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_CLEAR, argv[1], 0, 1);
+	return _simple(DM_DEVICE_CLEAR, argc > 1 ? argv[1] : NULL, 0, 1);
 }
 
 static int _wait(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_WAITEVENT, argv[1],
-		       (argc == 3) ? atoi(argv[2]) : 0, 1);
+	const char *name = NULL;
+
+	if (!_switches[UUID_ARG] && !_switches[MAJOR_ARG]) {
+		if (argc == 1) {
+			err("No device specified.");
+			return 0;
+		}
+		name = argv[1];
+		argc--, argv++;
+	}
+
+	return _simple(DM_DEVICE_WAITEVENT, name,
+		       (argc > 1) ? atoi(argv[argc - 1]) : 0, 1);
 }
 
 static int _process_all(int argc, char **argv,
@@ -471,15 +553,16 @@ static int _status(int argc, char **argv, void *data)
 	char *params;
 	int cmd;
 	struct dm_names *names = (struct dm_names *) data;
-	char *name;
-
-	if (argc == 1 && !data)
-		return _process_all(argc, argv, _status);
+	char *name = NULL;
 
 	if (data)
 		name = names->name;
-	else
-		name = argv[1];
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(argc, argv, _status);
+		if (argc == 2)
+			name = argv[1];
+	}
 
 	if (!strcmp(argv[0], "table"))
 		cmd = DM_DEVICE_TABLE;
@@ -489,7 +572,7 @@ static int _status(int argc, char **argv, void *data)
 	if (!(dmt = dm_task_create(cmd)))
 		return 0;
 
-	if (!dm_task_set_name(dmt, name))
+	if (!_set_task_device(dmt, name, 0))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -564,7 +647,7 @@ static int _mknodes(int argc, char **argv, void *data)
 	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
 		return 0;
 
-	if (argc == 2 && !dm_task_set_name(dmt, argv[1]))
+	if (!_set_task_device(dmt, argc > 1 ? argv[1] : NULL, 1))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -585,18 +668,19 @@ static int _info(int argc, char **argv, void *data)
 	struct dm_names *names = (struct dm_names *) data;
 	char *name = NULL;
 
-	if (argc == 1 && !data)
-		return _process_all(argc, argv, _info);
-
 	if (data)
 		name = names->name;
-	else
-		name = argv[1];
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(argc, argv, _info);
+		if (argc == 2)
+			name = argv[1];
+	}
 
 	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
 		return 0;
 
-	if (name && !dm_task_set_name(dmt, name))
+	if (!_set_task_device(dmt, name, 0))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -619,20 +703,21 @@ static int _deps(int argc, char **argv, void *data)
 	struct dm_task *dmt;
 	struct dm_info info;
 	struct dm_names *names = (struct dm_names *) data;
-	char *name;
-
-	if (argc == 1 && !data)
-		return _process_all(argc, argv, _deps);
+	char *name = NULL;
 
 	if (data)
 		name = names->name;
-	else
-		name = argv[1];
+	else {
+		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(argc, argv, _deps);
+		if (argc == 2)
+			name = argv[1];
+	}
 
 	if (!(dmt = dm_task_create(DM_DEVICE_DEPS)))
 		return 0;
 
-	if (!dm_task_set_name(dmt, name))
+	if (!_set_task_device(dmt, name, 0))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -702,24 +787,25 @@ struct command {
 };
 
 static struct command _commands[] = {
-	{"create", "<dev_name> [-u <uuid>] [--notable] [<table_file>]",
+	{"create", "<dev_name> [-j|--major <major> -m|--minor <minor>]\n"
+	  "\t                  [-u|uuid <uuid>] [--notable] [<table_file>]",
 	 1, 2, _create},
-	{"remove", "<dev_name>", 1, 1, _remove},
+	{"remove", "<device>", 0, 1, _remove},
 	{"remove_all", "", 0, 0, _remove_all},
-	{"suspend", "<dev_name>", 1, 1, _suspend},
-	{"resume", "<dev_name>", 1, 1, _resume},
-	{"load", "<dev_name> [<table_file>]", 1, 2, _reload},
-	{"clear", "<dev_name>", 1, 1, _clear},
-	{"reload", "<dev_name> [<table_file>]", 1, 2, _reload},
-	{"rename", "<dev_name> <new_name>", 2, 2, _rename},
-	{"message", "<dev_name> <sector> <message>", 3, -1, _message},
+	{"suspend", "<device>", 0, 1, _suspend},
+	{"resume", "<device>", 0, 1, _resume},
+	{"load", "<device> [<table_file>]", 0, 2, _load},
+	{"clear", "<device>", 0, 1, _clear},
+	{"reload", "<device> [<table_file>]", 0, 2, _load},
+	{"rename", "<device> <new_name>", 1, 2, _rename},
+	{"message", "<device> <sector> <message>", 2, -1, _message},
 	{"ls", "", 0, 0, _ls},
-	{"info", "[<dev_name>]", 0, 1, _info},
-	{"deps", "[<dev_name>]", 0, 1, _deps},
-	{"status", "[<dev_name>]", 0, 1, _status},
-	{"table", "[<dev_name>]", 0, 1, _status},
-	{"wait", "<dev_name> [<event_nr>]", 1, 2, _wait},
-	{"mknodes", "[<dev_name>]", 0, 1, _mknodes},
+	{"info", "[<device>]", 0, 1, _info},
+	{"deps", "[<device>]", 0, 1, _deps},
+	{"status", "[<device>]", 0, 1, _status},
+	{"table", "[<device>]", 0, 1, _status},
+	{"wait", "<device> [<event_nr>]", 0, 2, _wait},
+	{"mknodes", "[<device>]", 0, 1, _mknodes},
 	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
 	{NULL, NULL, 0, 0, NULL}
@@ -731,10 +817,12 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly] [-j|--major <major>] "
-		"[-m|--minor <minor>]\n\n");
+		"        [-r|--readonly]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
+	fprintf(out, "\n<device> may be device name or -u <uuid> or "
+		     "-j <major> -m <minor>\n");
+	fprintf(out, "Table_file contents may be supplied on stdin.\n\n");
 	return;
 }
 
@@ -806,6 +894,13 @@ static int _process_switches(int *argc, char ***argv)
 
 	if (_switches[VERBOSE_ARG] > 1)
 		dm_log_init_verbose(_switches[VERBOSE_ARG] - 1);
+
+	if ((_switches[MAJOR_ARG] && !_switches[MINOR_ARG]) ||
+	    (!_switches[MAJOR_ARG] && _switches[MINOR_ARG])) {
+		fprintf(stderr, "Please specify both major number and "
+				"minor number.\n");
+		return 0;
+	}
 
 	*argv += optind;
 	*argc -= optind;

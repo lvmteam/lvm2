@@ -495,6 +495,10 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 		goto bad;
 	}
 
+	if (dmi->flags & DM_BUFFER_FULL_FLAG)
+		/* FIXME Increase buffer size and retry operation (if query) */
+		log_error("Warning: libdevmapper buffer too small for data");
+
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev));
@@ -1152,7 +1156,8 @@ int dm_task_run(struct dm_task *dmt)
 	if (dmt->type == DM_DEVICE_CREATE && dmt->head)
 		return _create_and_load_v4(dmt);
 
-	if (dmt->type == DM_DEVICE_MKNODES && !dmt->dev_name)
+	if (dmt->type == DM_DEVICE_MKNODES && !dmt->dev_name &&
+	    !dmt->uuid && dmt->major <= 0)
 		return _mknodes_v4(dmt);
 
 	if (!_open_control())
@@ -1193,18 +1198,22 @@ int dm_task_run(struct dm_task *dmt)
 		break;
 
 	case DM_DEVICE_REMOVE:
-		rm_dev_node(dmt->dev_name);
+		/* FIXME Kernel needs to fill in dmi->name */
+		if (dmt->dev_name)
+			rm_dev_node(dmt->dev_name);
 		break;
 
 	case DM_DEVICE_RENAME:
-		rename_dev_node(dmt->dev_name, dmt->newname);
+		/* FIXME Kernel needs to fill in dmi->name */
+		if (dmt->dev_name)
+			rename_dev_node(dmt->dev_name, dmt->newname);
 		break;
 
 	case DM_DEVICE_MKNODES:
 		if (dmi->flags & DM_EXISTS_FLAG)
-			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
+			add_dev_node(dmi->name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev));
-		else
+		else if (dmt->dev_name)
 			rm_dev_node(dmt->dev_name);
 		break;
 

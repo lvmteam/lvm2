@@ -1,5 +1,7 @@
 Version 1.00.20 -
 =============================
+  Support device referencing by uuid or major/minor.
+  Warn if kernel data didn't fit in buffer.
   Fix a printf.
 
 Version 1.00.19 - 3 July 2004
