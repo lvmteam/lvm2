@@ -5,6 +5,7 @@
  */
 
 #include "format-text.h"
+#include "import-export.h"
 
 #include "log.h"
 #include "pool.h"
@@ -43,19 +44,19 @@ int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 	      struct volume_group *vg)
 {
 	_not_written("_get_vgs");
-	return NULL;
+	return 0;
 }
 
 int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 {
 	_not_written("_get_vgs");
-	return NULL;
+	return 0;
 }
 
 int _vg_setup(struct format_instance *fi, struct volume_group *vg)
 {
 	_not_written("_get_vgs");
-	return NULL;
+	return 0;
 }
 
 struct volume_group *_vg_read(struct format_instance *fi,
@@ -86,7 +87,7 @@ int _vg_write(struct format_instance *fi, struct volume_group *vg)
 
 void _destroy(struct format_instance *fi)
 {
-	pool_free(cmd->mem, fi);
+	pool_free(fi->cmd->mem, fi);
 }
 
 static struct format_handler _text_handler = {
@@ -107,22 +108,22 @@ struct format_instance *text_format_create(struct cmd_context *cmd,
 	const char *no_alloc = "Couldn't allocate text format object.";
 
 	struct format_instance *fi;
-	char *file;
+	char *path;
 
 	if (!(fi = pool_alloc(cmd->mem, sizeof(*fi)))) {
 		log_err(no_alloc);
 		return NULL;
 	}
 
-	if (!(file = pool_strdup(cmd->mem, file))) {
-		pool_free(fi);
+	if (!(path = pool_strdup(cmd->mem, file))) {
+		pool_free(fi->cmd->mem, fi);
 		log_err(no_alloc);
 		return NULL;
 	}
 
 	fi->cmd = cmd;
-	fi->ops = _text_handler;
-	fi->private = file;
+	fi->ops = &_text_handler;
+	fi->private = path;
 
 	return fi;
 }

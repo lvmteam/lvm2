@@ -32,6 +32,7 @@ SOURCES=\
 	format_text/backup.c \
 	format_text/export.c \
 	format_text/flags.c \
+	format_text/format-text.c \
 	format_text/import.c \
 	label/label.c \
 	log/log.c \
