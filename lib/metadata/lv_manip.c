@@ -33,10 +33,12 @@ static void _put_extents(struct lv_segment *seg)
 
 	for (s = 0; s < seg->stripes; s++) {
 		pv = seg->area[s].pv;
-		count = seg->len / seg->stripes;
 
-		assert(pv->pe_alloc_count >= count);
-		pv->pe_alloc_count -= count;
+		if (pv) {
+			count = seg->len / seg->stripes;
+			assert(pv->pe_alloc_count >= count);
+			pv->pe_alloc_count -= count;
+		}
 	}
 }
 

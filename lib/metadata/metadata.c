@@ -318,6 +318,18 @@ struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 	return NULL;
 }
 
+int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
+{
+	struct list *pvh;
+
+	list_iterate(pvh, &vg->pvs) {
+		if (pv == list_item(pvh, struct pv_list)->pv)
+			 return 1;
+	}
+
+	return 0;
+}
+
 struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
 					      struct id *id)
 {

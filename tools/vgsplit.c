@@ -49,18 +49,6 @@ static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	return 1;
 }
 
-static int _pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
-{
-	struct list *pvh;
-
-	list_iterate(pvh, &vg->pvs) {
-		if (pv == list_item(pvh, struct pv_list)->pv)
-			 return 1;
-	}
-
-	return 0;
-}
-
 static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 {
 	struct list *lvh, *lvht, *segh;
@@ -81,7 +69,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 			for (s = 0; s < seg->stripes; s++) {
 				pv = seg->area[s].pv;
 				if (vg_with) {
-					if (!_pv_is_in_vg(vg_with, pv)) {
+					if (!pv_is_in_vg(vg_with, pv)) {
 						log_error("Logical Volume %s "
 							  "split between "
 							  "Volume Groups",
@@ -91,11 +79,11 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 					continue;
 				}
 
-				if (_pv_is_in_vg(vg_from, pv)) {
+				if (pv_is_in_vg(vg_from, pv)) {
 					vg_with = vg_from;
 					continue;
 				}
-				if (_pv_is_in_vg(vg_to, pv)) {
+				if (pv_is_in_vg(vg_to, pv)) {
 					vg_with = vg_to;
 					continue;
 				}
