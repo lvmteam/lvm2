@@ -7,7 +7,11 @@
 #ifndef _LVM_FORMAT_TEXT_H
 #define _LVM_FORMAT_TEXT_H
 
-struct format_instance *text_format_create(struct cmd_context,
-					   const char *dir);
+struct format_instance *backup_format_create(struct cmd_context,
+					     const char *dir,
+					     uint32_t retain_days,
+					     uint32_t min_backups);
+
+void backup_expire(struct format_instance *fi);
 
 #endif

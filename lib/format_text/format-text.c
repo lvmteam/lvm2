@@ -21,20 +21,22 @@
  *
  * The format instance is given a directory path
  * upon creation.  Each file in this directory
- * whose name is of the form '*.vg' is a config
+ * whose name is of the form '(.*)_[0-9]*.vg' is a config
  * file (see lib/config.[hc]), which contains a
  * description of a single volume group.
  *
- * The prefix of the config file gives the volume group
- * name.
+ * The prefix ($1 from the above regex) of the
+ * config file gives the volume group name.
+ *
+ * Backup files that have expired will be removed.
  */
 
-
 struct text_c {
+	uint32_t retain_days;
+	uint32_t min_retains;
+
 	char *dir;
 };
-
-
 
 /*
  * Returns a list of config files, one for each
@@ -47,7 +49,7 @@ struct config_list {
 
 struct list *_get_configs(struct pool *mem, const char *dir)
 {
-	
+
 }
 
 void _put_configs(struct pool *mem, struct list *configs)
@@ -66,6 +68,7 @@ void _put_configs(struct pool *mem, struct list *configs)
 
 /*
  * Just returns the vg->name fields
+ */
 struct list *get_vgs(struct format_instance *fi)
 {
 	struct text_c *tc = (struct text_c *) fi->private;
@@ -131,8 +134,11 @@ static struct format_handler _text_handler = {
 	destroy: _destroy
 };
 
-struct format_instance *text_format_create(struct cmd_context *cmd,
-					   const char *dir)
+
+struct format_instance *text_format_create(struct cmd_context,
+					   const char *dir,
+					   uint32_t retain_days,
+					   uint32_t min_retains)
 {
 	struct format_instance *fi;
 	struct text_c *tc = NULL;

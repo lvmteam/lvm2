@@ -15,7 +15,6 @@ before beta1
 
 autobackup/text format
 export/import
-striping
 64bit review
 LVM1 compatible tool exit codes
 
