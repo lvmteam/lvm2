@@ -47,7 +47,10 @@ static inline int list_empty(struct list *head) {
 }
 
 #define list_iterate(v, head) \
-    for (v = (head)->n; v != head; v = v->n)
+	for (v = (head)->n; v != head; v = v->n)
+
+#define list_iterate_safe(v, t, head) \
+	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
 
 static inline int list_size(struct list *head) {
 	int s = 0;
