@@ -1,3 +1,7 @@
+  Update copyright notices to Red Hat.
+  Move full mknodes functionality from dmsetup into libdevmapper.
+  Avoid sscanf %as for uClibc compatibility.
+
 Version 1.00.08 - 27 Feb 2004
 ============================
   Added 'dmsetup targets'.
