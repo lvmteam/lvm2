@@ -32,7 +32,7 @@
 #include <stdlib.h>
 
 #include "dbg_malloc.h"
-#include "log.h"
+#include "log/log.h"
 
 struct memblock {
 	struct memblock *prev, *next; /* All allocated blocks are linked */

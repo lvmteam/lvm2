@@ -22,7 +22,7 @@
 
 #include "pool.h"
 #include "dbg_malloc.h"
-#include "log.h"
+#include "log/log.h"
 
 #include <stdlib.h>
 

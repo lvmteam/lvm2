@@ -35,9 +35,13 @@
  *
  */
 
-#include "liblvm.h"
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "hash.h"
-#include "pool.h"
+#include "mm/pool.h"
+#include "log/log.h"
 #include "dev-manager.h"
 
 #define DEFAULT_BASE_DIR "/dev"
@@ -223,7 +227,7 @@ static int _dir_scan(struct dev_mgr *dm, const char *dirname)
 static struct dev_i *_add(struct dev_mgr *dm,
 			  const char *directory, const char *devname)
 {
-	char devpath[NAME_LEN];
+	char devpath[128];
 
 	if (!directory || !devname)
 		return 0;
@@ -239,7 +243,7 @@ static struct dev_i *_add_named_device(struct dev_mgr *dm, const char *devpath)
 	struct stat stat_b;
 
 	/* FIXME: move lvm_check_dev into this file */
-	if ((stat(devpath, &stat_b) == -1) || lvm_check_dev(&stat_b, TRUE))
+	if ((stat(devpath, &stat_b) == -1) || lvm_check_dev(&stat_b, 1))
 		goto out;
 
 	/* Check for directories and scan them if they aren't this directory
