@@ -61,11 +61,11 @@ CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-pr
 
 #CFLAGS += -W -Wconversion -Wpointer-arith -Wredundant-decls -Wbad-function-cast -Wcast-qual -Wmissing-noreturn
 
+CFLAGS += @COPTIMISE_FLAG@
+
 ifeq ("@DEBUG@", "yes")
   CFLAGS += -g -fno-omit-frame-pointer -DDEBUG
   CFLAGS += -DDEBUG_MEM
-else
-  CFLAGS += -O2
 endif
 
 ifeq ("@INTL@", "yes")
