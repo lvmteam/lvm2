@@ -323,5 +323,5 @@ struct list *create_pv_list(struct pool *mem,
 		list_add(r, &new_pvl->list);
 	}
 
-	return list_empty(r) ? r : NULL;
+	return list_empty(r) ? NULL: r;
 }
