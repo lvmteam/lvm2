@@ -287,7 +287,13 @@ static int connect_csid(char *csid, struct local_client **newclient)
     DEBUGLOG("Connecting socket %d\n", fd);
     if (connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in6)) < 0)
     {
-	syslog(LOG_ERR, "Unable to connect to remote node: %m");
+	/* "Connection refused" is "normal" because clvmd may not yet be running
+	 * on that node.
+	 */
+	if (errno != ECONNREFUSED)
+	{
+	    syslog(LOG_ERR, "Unable to connect to remote node: %m");
+	}
 	DEBUGLOG("Unable to connect to remote node: %s\n", strerror(errno));
 	close(fd);
 	return -1;
