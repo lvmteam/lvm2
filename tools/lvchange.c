@@ -67,13 +67,13 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (lv_is_origin(lv->vg, lv)) {
+	if (lv_is_origin(lv)) {
 		log_error("Can't change logical volume \"%s\" under snapshot",
 			  lv->name);
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_cow(lv->vg, lv)) {
+	if (lv_is_cow(lv)) {
 		log_error("Can't change snapshot logical volume \"%s\"",
 			  lv->name);
 		return ECMD_FAILED;

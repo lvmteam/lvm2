@@ -335,8 +335,8 @@ int lv_merge_segments(struct logical_volume *lv);
 /*
  * Useful functions for managing snapshots.
  */
-int lv_is_origin(struct volume_group *vg, struct logical_volume *lv);
-int lv_is_cow(struct volume_group *vg, struct logical_volume *lv);
+int lv_is_origin(struct logical_volume *lv);
+int lv_is_cow(struct logical_volume *lv);
 
 int vg_add_snapshot(struct volume_group *vg,
 		    struct logical_volume *origin,
