@@ -1,5 +1,6 @@
 Version 2.01.08 - 
 ================================
+  Additional rename failure error message.
   read/write may be macros.
 
 Version 2.01.07 - 8th March 2005
