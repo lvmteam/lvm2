@@ -9,13 +9,14 @@
 ### END INIT INFO
 
 . /etc/init.d/functions
+
+LVDISPLAY="/usr/sbin/lvdisplay"
+VGCHANGE="/usr/sbin/vgchange"
+VGSCAN="/usr/sbin/vgscan"
+
 [ -f /etc/sysconfig/cluster ] && . /etc/sysconfig/cluster
 
 LOCK_FILE="/var/lock/subsys/clvmd"
-
-lvdisplay="/sbin/lvm.static lvdisplay"
-vgchange="/sbin/lvm.static vgchange"
-vgscan="/sbin/lvm.static vgscan"
 
 start()
 {
@@ -38,14 +39,14 @@ start()
 		fi	
 		
 		# refresh cache
-		$vgscan  > /dev/null 2>&1
+		$VGSCAN  > /dev/null 2>&1
 		
 		if [ -n "$LVM_VGS" ]
 		then
 			for vg in $LVM_VGS
 			do
 				echo -n "Activating lvm $vg:"
-				if $vgchange -ayl $vg > /dev/null 2>&1
+				if $VGCHANGE -ayl $vg > /dev/null 2>&1
 				then
 					success
 					echo
@@ -57,7 +58,7 @@ start()
 			done
 		else
 			echo -n "Activating lvms:"
-			if $vgchange -ayl > /dev/null 2>&1
+			if $VGCHANGE -ayl > /dev/null 2>&1
 			then
 				success
 				echo
@@ -81,7 +82,7 @@ stop()
 			for vg in $LVM_VGS
 			do
 				echo -n "Deactivating lvm $vg:"
-				if $vgchange -anl $vg > /dev/null 2>&1
+				if $VGCHANGE -anl $vg > /dev/null 2>&1
 				then
 					success
 					echo
@@ -93,7 +94,7 @@ stop()
 			done
 		else
 			echo -n "Deactivating lvms:"
-			if $vgchange -anl > /dev/null 2>&1
+			if $VGCHANGE -anl > /dev/null 2>&1
 			then
 				success
 				echo
@@ -152,7 +153,7 @@ case "$1" in
 
   status)
 	status clvmd
-	vols=$( $lvdisplay -C --nohead 2> /dev/null | awk '($3 ~ /....a./) {print $1}' )
+	vols=$( $LVDISPLAY -C --nohead 2> /dev/null | awk '($3 ~ /....a./) {print $1}' )
 	echo active volumes: ${vols:-"(none)"}
 	rtrn=0
 	;;
