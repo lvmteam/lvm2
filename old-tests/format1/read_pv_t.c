@@ -50,12 +50,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (!(dev = dev_cache_get(argv[1], NULL))) {
-		fprintf(stderr, "couldn't get device %s\n", argv[1]);
-		exit(1);
-	}
-
-	pv = ios->pv_read(ios, dev);
+	pv = ios->pv_read(ios, argv[1]);
 
 	if (!pv) {
 		fprintf(stderr, "couldn't read pv %s\n", dev->name);
