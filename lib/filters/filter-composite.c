@@ -19,6 +19,8 @@ static int _and_p(struct dev_filter *f, struct device *dev)
 		filters++;
 	}
 
+	log_debug("Using %s", dev_name(dev));
+
 	return 1;
 }
 

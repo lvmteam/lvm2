@@ -68,12 +68,16 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f,
 	const char *name = dev_name(dev);
 
 	/* Is this a recognised device type? */
-	if (!(((int *) f->private)[MAJOR(dev->dev)]))
+	if (!(((int *) f->private)[MAJOR(dev->dev)])) {
+		log_debug("%s: Skipping: Unrecognised LVM device type %"
+			  PRIu64, name, (uint64_t) MAJOR(dev->dev));
 		return 0;
+	}
 
 	/* Check it's accessible */
 	if ((fd = open(name, O_RDONLY)) < 0) {
-		log_debug("Unable to open %s: %s", name, strerror(errno));
+		log_debug("%s: Skipping: open failed: %s", name,
+			  strerror(errno));
 		return 0;
 	}
 
@@ -203,8 +207,10 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 	f->passes_filter = _passes_lvm_type_device_filter;
 	f->destroy = lvm_type_filter_destroy;
 
-	if (!(f->private = _scan_proc_dev(proc, cn)))
+	if (!(f->private = _scan_proc_dev(proc, cn))) {
+		stack;
 		return NULL;
+	}
 
 	return f;
 }

@@ -32,8 +32,12 @@ static int _init_hash(struct pfilter *pf)
 	if (pf->devices)
 		hash_destroy(pf->devices);
 
-	pf->devices = hash_create(128);
-	return pf->devices ? 1 : 0;
+	if (!(pf->devices = hash_create(128))) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }
 
 int persistent_filter_wipe(struct dev_filter *f)
@@ -201,7 +205,11 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 		}
 	}
 
-	return l == PF_GOOD_DEVICE;
+	if (l == PF_BAD_DEVICE) {
+		log_debug("%s: Skipping (cached)", dev_name(dev));
+		return 0;
+	} else
+		return 1;
 }
 
 static void _destroy(struct dev_filter *f)

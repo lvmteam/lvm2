@@ -19,6 +19,7 @@
  */
 
 #include "tools.h"
+#include "lvm-types.h"
 
 int lvrename(struct cmd_context *cmd, int argc, char **argv)
 {
@@ -78,7 +79,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	maxlen = NAME_LEN - strlen(vg_name) - strlen(cmd->dev_dir) - 3;
 	if (strlen(lv_name_new) > maxlen) {
 		log_error("New logical volume path exceeds maximum length "
-			  "of %u!", maxlen);
+			  "of %" PRIsize_t "!", maxlen);
 		return ECMD_FAILED;
 	}
 
