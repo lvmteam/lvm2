@@ -1,23 +1,18 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * LVM is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * LVM is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LVM; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- *
+ * This file is released under the GPL.
  */
 
+/*
+ * Put all long args that don't have a
+ * corresponding short option first ...
+ */
+xx(version_ARG, '\0', "version", NULL)
+
+/*
+ * ... and now the short args.
+ */
 xx(available_ARG, 'a', "available", yes_no_arg)
 xx(all_ARG, 'a', "all", NULL)
 xx(autobackup_ARG, 'A', "autobackup", yes_no_arg)
@@ -63,7 +58,6 @@ xx(uuid_ARG, 'u', "uuid", NULL)
 xx(uuidlist_ARG, 'U', "uuidlist", NULL)
 xx(verbose_ARG, 'v', "verbose", NULL)
 xx(volumegroup_ARG, 'V', "volumegroup", NULL)
-xx(version_ARG, (char) 0x1, "version", NULL)
 xx(allocation_ARG, 'x', "allocation", yes_no_arg)
 xx(yes_ARG, 'y', "yes", NULL)
 xx(zero_ARG, 'Z', "zero", yes_no_arg)
