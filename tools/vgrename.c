@@ -95,13 +95,8 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	if (lvs_in_vg_activated(vg_old)) {
 		log_error("Volume group \"%s\" still has active LVs",
 			  vg_name_old);
-/***** FIXME Handle this with multiple LV renames!
-		if (!force_ARG) {
-			log_error("Use -f to force the rename");
-			unlock_vg(cmd, vg_name_old);
-			return ECMD_FAILED;
-		}
-*****/
+		/* FIXME Remove this restriction */
+		return ECMD_FAILED;
 	}
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_new);
