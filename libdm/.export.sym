@@ -1,6 +1,7 @@
-Base { 
+{
 	global:
 		dm_log_init;
+		dm_log_init_verbose;
 		dm_task_create;
 		dm_task_destroy;
 		dm_task_set_name;
@@ -21,4 +22,3 @@ Base {
 	local:
 		*;
 };
-

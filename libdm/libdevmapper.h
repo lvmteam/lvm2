@@ -29,6 +29,7 @@ typedef void (*dm_log_fn) (int level, const char *file, int line,
  * stderr.
  */
 void dm_log_init(dm_log_fn fn);
+void dm_log_init_verbose(int level);
 
 enum {
 	DM_DEVICE_CREATE,
