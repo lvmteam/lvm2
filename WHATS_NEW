@@ -1,5 +1,6 @@
 Version 2.00.16 - 
 =============================
+  Set area_count within alloc_lv_segment.
   Remove error labels from lvresize.
   Fix a pvs error path.
   xxchange -ae for exclusive activation.
