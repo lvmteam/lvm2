@@ -104,6 +104,11 @@ static int _init_cluster(void)
 	return 0;
 }
 
+static void _cluster_init_completed(void)
+{
+	clvmd_cluster_init_completed();
+}
+
 static int _get_main_cluster_fd()
 {
 	return cluster_sock;
@@ -507,7 +512,7 @@ static int _sync_unlock(const char *resource /* UNUSED */, int lockid)
 }
 
 static struct cluster_ops _cluster_cman_ops = {
-	.cluster_init_completed   = NULL,
+	.cluster_init_completed   = _cluster_init_completed,
 	.cluster_send_message     = _cluster_send_message,
 	.name_from_csid           = _name_from_csid,
 	.csid_from_name           = _csid_from_name,
