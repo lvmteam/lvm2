@@ -26,8 +26,6 @@ LIB_SHARED = liblvm2formatpool.so
 
 include $(top_srcdir)/make.tmpl
 
-.PHONY: install
-
 install: liblvm2formatpool.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2formatpool.so.$(LIB_VERSION)

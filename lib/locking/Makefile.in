@@ -22,9 +22,7 @@ LIB_SHARED = liblvm2clusterlock.so
 
 include $(top_srcdir)/make.tmpl
 
-.PHONY: install
-
-install: liblvm2clusterlock.so
+install install_cluster: liblvm2clusterlock.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2clusterlock.so.$(LIB_VERSION)
 	$(LN_S) -f liblvm2clusterlock.so.$(LIB_VERSION) \

@@ -29,8 +29,6 @@ LIB_SHARED = liblvm2format1.so
 
 include $(top_srcdir)/make.tmpl
 
-.PHONY: install
-
 install: liblvm2format1.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2format1.so.$(LIB_VERSION)

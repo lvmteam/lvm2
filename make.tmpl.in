@@ -99,26 +99,31 @@ DEPS = $(top_srcdir)/make.tmpl $(top_srcdir)/VERSION Makefile $(INC_LNS)
 OBJECTS = $(SOURCES:%.c=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
 
+.PHONY: all install install_cluster pofile distclean clean
+.PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
+.PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster)
+
 SUBDIRS.install := $(SUBDIRS:=.install)
+SUBDIRS.install_cluster := $(SUBDIRS:=.install_cluster)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
 SUBDIRS.distclean := $(SUBDIRS:=.distclean)
-
-.PHONY: all install pofile distclean clean
-.PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
-.PHONY: $(SUBDIRS.pofile)
 
 TARGETS += $(LIB_SHARED) $(LIB_STATIC)
 
 all: $(SUBDIRS) $(TARGETS)
 
 install: all $(SUBDIRS.install)
+install_cluster: all $(SUBDIRS.install_cluster)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
 
 $(SUBDIRS.install): $(SUBDIRS)
 	$(MAKE) -C $(@:.install=) install
+
+$(SUBDIRS.install_cluster): $(SUBDIRS)
+	$(MAKE) -C $(@:.install_cluster=) install_cluster
 
 $(SUBDIRS.clean):
 	-$(MAKE) -C $(@:.clean=) clean
