@@ -181,7 +181,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 
 #ifdef HAVE_SELINUX
         if (!set_selinux_context(lv_path)) {
-                log_sys_error("set_selinux_context", lv_path);
+                stack;
                 return 0;
         }
 #endif
