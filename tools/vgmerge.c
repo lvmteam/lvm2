@@ -70,7 +70,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 	}
 
 	if ((active = lvs_in_vg_activated(vg_from))) {
-		log_error("Logical volumes in %s must be inactive", 
+		log_error("Logical volumes in %s must be inactive",
 			  vg_name_from);
 		return ECMD_FAILED;
 	}
@@ -100,8 +100,11 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 	/* Check no conflicts with LV names */
 	list_iterate(lvh1, &vg_to->lvs) {
 		list_iterate(lvh2, &vg_from->lvs) {
-			char *name1 = list_item(lvh1, struct lv_list)->lv.name;
-			char *name2 = list_item(lvh2, struct lv_list)->lv.name;
+			char *name1 = list_item(lvh1,
+						struct lv_list)->lv->name;
+
+			char *name2 = list_item(lvh2,
+						struct lv_list)->lv->name;
 			if (!strcmp(name1, name2)) {
 				log_error("Duplicate logical volume name %s "
 					  "in %s and %s", name1, vg_to->name,

@@ -92,7 +92,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 
 	/* iterate through all the lv's setting bit's for used pe's */
 	list_iterate (lvh, &vg->lvs) {
-		lv = &(list_item(lvh, struct lv_list)->lv);
+		lv = list_item(lvh, struct lv_list)->lv;
 
 		list_iterate (segh, &lv->segments) {
 			seg = list_item(segh, struct stripe_segment);

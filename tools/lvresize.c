@@ -114,7 +114,7 @@ int lvresize(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	lv = &lvl->lv;
+	lv = lvl->lv;
 
 	if (size) {
 		/* No of 512-byte sectors */

@@ -345,7 +345,7 @@ static char *_generate_lv_name(struct volume_group *vg,
 	int high = -1, i;
 
 	list_iterate(lvh, &vg->lvs) {
-		lv = &(list_item(lvh, struct lv_list)->lv);
+		lv = (list_item(lvh, struct lv_list)->lv);
 
 		if (sscanf(lv->name, "lvol%d", &i) != 1)
 			continue;
@@ -413,7 +413,7 @@ struct logical_volume *lv_create(const char *name,
 
 	list_init(&ll->list);
 
-	lv = &ll->lv;
+	lv = ll->lv;
 
 	strcpy(lv->id.uuid, "");
 

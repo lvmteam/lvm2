@@ -341,16 +341,17 @@ static struct logical_volume *_add_lv(struct pool *mem,
 				      struct volume_group *vg,
 				      struct lv_disk *lvd)
 {
-	struct lv_list *ll = pool_zalloc(mem, sizeof(*ll));
+	struct lv_list *ll;
 	struct logical_volume *lv;
 
-	if (!ll) {
+	if (!(ll = pool_zalloc(mem, sizeof(*ll))) ||
+	    !(ll->lv = pool_zalloc(mem, sizeof(*ll->lv)))) {
 		stack;
 		return NULL;
 	}
-	lv = &ll->lv;
+	lv = ll->lv;
 
-	if (!import_lv(mem, &ll->lv, lvd)) {
+	if (!import_lv(mem, lv, lvd)) {
 		stack;
 		return NULL;
 	}
@@ -413,9 +414,9 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 			return 0;
 		}
 
-		export_lv(&lvdl->lvd, vg, &ll->lv, dev_dir);
+		export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
 		lvdl->lvd.lv_number = lv_num;
-		if (!export_extents(dl, lv_num + 1, &ll->lv, pv)) {
+		if (!export_extents(dl, lv_num + 1, ll->lv, pv)) {
 			stack;
 			return 0;
 		}

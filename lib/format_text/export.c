@@ -334,7 +334,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	_inc_indent(f);
 
 	list_iterate (lvh, &vg->lvs) {
-		lv = &list_item(lvh, struct lv_list)->lv;
+		lv = list_item(lvh, struct lv_list)->lv;
 
 		_out(f, "%s {", lv->name);
 		_inc_indent(f);

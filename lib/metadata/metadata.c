@@ -262,7 +262,7 @@ struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 
 	list_iterate(lvh, &vg->lvs) {
 		lvl = list_item(lvh, struct lv_list);
-		if (!strcmp(lvl->lv.name, ptr))
+		if (!strcmp(lvl->lv->name, ptr))
 			return lvl;
 	}
 
@@ -272,7 +272,7 @@ struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
 {
 	struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
-	return lvl ? &lvl->lv : NULL;
+	return lvl ? lvl->lv : NULL;
 }
 
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)

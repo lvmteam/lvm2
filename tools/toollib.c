@@ -46,7 +46,7 @@ int process_each_lv_in_vg(struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 	list_iterate(lvh, &vg->lvs) {
-		lv = &list_item(lvh, struct lv_list)->lv;
+		lv = list_item(lvh, struct lv_list)->lv;
 		ret = process_single(lv);
 		if (ret > ret_max)
 			ret_max = ret;
@@ -101,7 +101,7 @@ int process_each_lv(int argc, char **argv,
 				continue;
 			}
 
-			lv = &lvl->lv;
+			lv = lvl->lv;
 
 			if ((ret = process_single(lv)) > ret_max)
 				ret_max = ret;

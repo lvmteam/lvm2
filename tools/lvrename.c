@@ -102,7 +102,7 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	lv = &lvl->lv;
+	lv = lvl->lv;
 
 	if (!archive(lv->vg))
 		return ECMD_FAILED;

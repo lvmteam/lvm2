@@ -339,12 +339,13 @@ static int _read_lv(struct pool *mem,
 	struct lv_list *lvl;
 	struct config_node *cn;
 
-	if (!(lvl = pool_zalloc(mem, sizeof(*lvl)))) {
+	if (!(lvl = pool_zalloc(mem, sizeof(*lvl))) ||
+	    !(lvl->lv = pool_zalloc(mem, sizeof(*lvl->lv)))) {
 		stack;
 		return 0;
 	}
 
-	lv = &lvl->lv;
+	lv = lvl->lv;
 
 	if (!(lv->name = pool_strdup(mem, lvn->key))) {
 		stack;
