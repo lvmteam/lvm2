@@ -1,5 +1,6 @@
 Version 2.00.32 - 
 ====================================
+  Add clvmd init script for RHEL4.
   Skip devices that are too small to be PVs.
   Fix pvchange -x segfault with lvm2-format orphan.
   Cope with empty msdos partition tables.
