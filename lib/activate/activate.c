@@ -277,9 +277,13 @@ int _load(struct logical_volume *lv, int task)
 		}
 	}
 
-	if (!(lv->status & LVM_WRITE) && !dm_task_set_ro(dmt))
-		log_error("Failed to set %s read-only during activation.",
-			   lv->name);
+	if (!((lv->status & LVM_WRITE) && (lv->vg->status & LVM_WRITE))) {
+	    	if (!dm_task_set_ro(dmt))
+			log_error("Failed to set %s read-only during "
+				  "activation.", lv->name);
+		else 
+			log_very_verbose("Activating %s read-only", lv->name);
+	}
 
 
 	if (!(r = dm_task_run(dmt)))
