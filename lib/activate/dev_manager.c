@@ -66,7 +66,8 @@ enum {
 	SUSPENDED = 4,
 	NOPROPAGATE = 5,
 	TOPLEVEL = 6,
-	REMOVE = 7
+	REMOVE = 7,
+	RESUME_IMMEDIATE = 8
 };
 
 typedef enum {
@@ -549,6 +550,55 @@ static int _rename(struct dev_layer *dl, char *newname)
 	return r;
 }
 
+static int _suspend_or_resume(const char *name, action_t suspend)
+{
+	int r;
+	struct dm_task *dmt;
+	int sus = (suspend == SUSPEND) ? 1 : 0;
+	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
+
+	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
+	if (!(dmt = _setup_task(name, NULL, 0, task))) {
+		stack;
+		return 0;
+	}
+
+	if (!(r = dm_task_run(dmt)))
+		log_error("Couldn't %s device '%s'", sus ? "suspend" : "resume",
+			  name);
+
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _suspend(struct dev_layer *dl)
+{
+	if (!dl->info.exists || dl->info.suspended)
+		return 1;
+
+	if (!_suspend_or_resume(dl->name, SUSPEND)) {
+		stack;
+		return 0;
+	}
+
+	dl->info.suspended = 1;
+	return 1;
+}
+
+static int _resume(struct dev_layer *dl)
+{
+	if (!dl->info.exists || !dl->info.suspended)
+		return 1;
+
+	if (!_suspend_or_resume(dl->name, RESUME)) {
+		stack;
+		return 0;
+	}
+
+	dl->info.suspended = 0;
+	return 1;
+}
+
 static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 {
 	int r = 1;
@@ -625,6 +675,13 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 		goto out;
 	}
 
+	if (_get_flag(dl, RESUME_IMMEDIATE) && dl->info.suspended &&
+	    !_resume(dl)) {
+		stack;
+		r = 0;
+		goto out;
+	}
+
 	log_very_verbose("Activated %s %s %03u:%03u", dl->name,
 			 dl->dlid, dl->info.major, dl->info.minor);
 
@@ -669,55 +726,6 @@ static int _remove(struct dev_layer *dl)
 	_clear_flag(dl, ACTIVE);
 
 	return r;
-}
-
-static int _suspend_or_resume(const char *name, action_t suspend)
-{
-	int r;
-	struct dm_task *dmt;
-	int sus = (suspend == SUSPEND) ? 1 : 0;
-	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
-
-	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
-	if (!(dmt = _setup_task(name, NULL, 0, task))) {
-		stack;
-		return 0;
-	}
-
-	if (!(r = dm_task_run(dmt)))
-		log_error("Couldn't %s device '%s'", sus ? "suspend" : "resume",
-			  name);
-
-	dm_task_destroy(dmt);
-	return r;
-}
-
-static int _suspend(struct dev_layer *dl)
-{
-	if (!dl->info.exists || dl->info.suspended)
-		return 1;
-
-	if (!_suspend_or_resume(dl->name, SUSPEND)) {
-		stack;
-		return 0;
-	}
-
-	dl->info.suspended = 1;
-	return 1;
-}
-
-static int _resume(struct dev_layer *dl)
-{
-	if (!dl->info.exists || !dl->info.suspended)
-		return 1;
-
-	if (!_suspend_or_resume(dl->name, RESUME)) {
-		stack;
-		return 0;
-	}
-
-	dl->info.suspended = 0;
-	return 1;
 }
 
 /*
@@ -1286,6 +1294,9 @@ static int _expand_origin_real(struct dev_manager *dm,
 	dl->populate = _populate_vanilla;
 	_clear_flag(dl, VISIBLE);
 	_clear_flag(dl, TOPLEVEL);
+
+	/* Size changes must take effect before tables using it are reloaded */
+	_set_flag(dl, RESUME_IMMEDIATE);
 
 	real_dlid = dl->dlid;
 
