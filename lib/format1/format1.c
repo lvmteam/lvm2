@@ -110,6 +110,7 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 
 	if (!(vg = _build_vg(fi->cmd->mem, &pvs)))
 		stack;
+	vg->cmd = fi->cmd;
 
 	pool_destroy(mem);
 	return vg;
