@@ -18,12 +18,14 @@ autobackup/text format
 export/import
 striping
 64bit review
+LVM1 compatible tool exit codes
 
 before 2.0
 ----------
 
 partial activation
 atomic transactions
+bidirectional format1/format2 migration tool
 persistent minors
 stats
 snapshots
