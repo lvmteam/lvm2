@@ -12,6 +12,7 @@
 #include "fs.h"
 
 #include <libdevmapper.h>
+#include <limits.h>
 
 /* layer types */
 enum {
@@ -29,7 +30,8 @@ struct dev_layer {
 	 * Setup the dm_task.
 	 */
 	int type;
-	int (*populate)(struct dm_task *dmt, struct dev_layer *dl);
+	int (*populate)(struct dev_manager *dm,
+			struct dm_task *dmt, struct dev_layer *dl);
 	struct dm_info info;
 	struct logical_volume *lv;
 
@@ -93,7 +95,7 @@ static char *_build_name(struct pool *mem, const char *vg,
 	_count_colons(lv, &len, &colons);
 	_count_colons(layer, &len, &colons);
 
-	len += colons + 1;
+	len += colons + 2;
 
 	if (!(r = pool_alloc(mem, len))) {
 		stack;
@@ -126,7 +128,7 @@ static struct dm_task *_setup_task(const char *name, int task)
 }
 
 
-static int _load(struct dev_layer *dl, int task)
+static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 {
 	int r;
 	struct dm_task *dmt;
@@ -140,7 +142,7 @@ static int _load(struct dev_layer *dl, int task)
 	/*
 	 * Populate the table.
 	 */
-	if (!dl->populate(dmt, dl)) {
+	if (!dl->populate(dm, dmt, dl)) {
 		log_err("Couldn't populate device '%s'.", dl->name);
 		return 0;
 	}
@@ -332,7 +334,8 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	return 1;
 }
 
-static int _populate_vanilla(struct dm_task *dmt, struct dev_layer *dl)
+static int _populate_vanilla(struct dev_manager *dm,
+			     struct dm_task *dmt, struct dev_layer *dl)
 {
 	struct list *segh;
 	struct stripe_segment *seg;
@@ -349,50 +352,67 @@ static int _populate_vanilla(struct dm_task *dmt, struct dev_layer *dl)
 	return 1;
 }
 
-static int _populate_origin(struct dm_task *dmt, struct dev_layer *dl)
+static int _populate_origin(struct dev_manager *dm,
+			    struct dm_task *dmt, struct dev_layer *dl)
 {
-#if 0
-        char *org;
+        char params[PATH_MAX + 32];
+
+	if (lvm_snprintf(params, sizeof(params), "%s/%s 0",
+			 dm_dir(), dl->name) == -1) {
+		log_err("Couldn't create origin device parameters for '%s'.",
+			dl->name);
+		return 0;
+	}
 
 	log_very_verbose("Adding target: 0 %" PRIu64 " snapshot-origin %s",
-			 lv->size, buffer);
-        if (!dm_task_add_target(dmt, 0, lv->size, "snapshot-origin", buffer)) {
+			 dl->lv->size, params);
+        if (!dm_task_add_target(dmt, 0, dl->lv->size,
+				"snapshot-origin", params)) {
                 stack;
                 return 0;
         }
 
 	return 1;
-#else
-	return 0;
-#endif
 }
 
-static int _populate_snapshot(struct dm_task *dmt, struct dev_layer *dl)
+static int _populate_snapshot(struct dev_manager *dm,
+			      struct dm_task *dmt, struct dev_layer *dl)
 {
-#if 0
-        char buffer[PATH_MAX * 2];
+	char *origin, *cow;
+        char params[PATH_MAX * 2 + 32];
+	struct snapshot *s;
 
-        log_very_verbose("Generating devmapper parameters for %s "
-                         "(top layer)", lv->name);
+	if (!(s = find_cow(dl->lv))) {
+		log_err("Couldn't find snapshot for '%s'.", dl->name);
+		return 0;
+	}
 
-        if (snprintf(buffer, sizeof(buffer), "%s/%s %s/%s P %d 128",
-		     dm_dir(), origin, dm_dir(),
-		     cow_device, chunk_size) == -1) {
+	if (!(origin = _build_name(dm->mem, dm->vg_name,
+				   s->origin->name, "top"))) {
+		stack;
+		return 0;
+	}
+
+	if (!(cow = _build_name(dm->mem, dm->vg_name,
+				s->cow->name, "cow"))) {
+		stack;
+		return 0;
+	}
+
+        if (snprintf(params, sizeof(params), "%s/%s %s/%s P %d 128",
+		     dm_dir(), origin, dm_dir(), cow, s->chunk_size) == -1) {
                 stack;
                 return 0;
         }
 
 	log_very_verbose("Adding target: 0 %" PRIu64 " snapshot %s",
-			 lv->size, buffer);
-        if (!dm_task_add_target(dmt, 0, lv->size, "snapshot", buffer)) {
+			 s->origin->size, params);
+        if (!dm_task_add_target(dmt, 0, s->origin->size, "snapshot", params)) {
                 stack;
                 return 0;
         }
 
 	return 1;
-#else
-	return 0;
-#endif
 }
 
 /*
@@ -512,7 +532,7 @@ static struct dev_layer *_lookup(struct dev_manager *dm,
 
 
 /*
- * Inserts the dev_layers for a logical volume.
+ * Inserts the appropriate dev_layers for a logical volume.
  */
 static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 {
@@ -520,23 +540,101 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 
 	/*
 	 * FIXME: this doesn't cope with recursive snapshots yet.
+	 * FIXME: split this function up.
 	 */
 	if ((s = find_cow(lv))) {
 		/*
 		 * snapshot(org, cow)
 		 * cow
 		 */
-		log_err("Snapshot devices not supported yet.");
-		return 0;
+		struct dev_layer *dl;
+		char *cow_name;
+		struct str_list *sl;
 
+		if (!(dl = _create_layer(dm->mem, "cow", VANILLA, lv))) {
+			stack;
+			return 0;
+		}
+		dl->populate = _populate_vanilla;
+		dl->visible = 0;
+
+		if (!hash_insert(dm->layers, dl->name, dl)) {
+			stack;
+			return 0;
+		}
+		cow_name = dl->name;
+
+		if (!(dl = _create_layer(dm->mem, "top", SNAPSHOT, lv))) {
+			stack;
+			return 0;
+		}
+		dl->populate = _populate_snapshot;
+		dl->visible = 1;
+
+		/* add the dependency on the real device */
+		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+			stack;
+			return 0;
+		}
+
+		if (!(sl->str = pool_strdup(dm->mem, cow_name))) {
+			stack;
+			return 0;
+		}
+
+		list_add(&dl->pre_create, &sl->list);
+
+		if (!hash_insert(dm->layers,dl->name, dl)) {
+			stack;
+			return 0;
+		}
 
 	} else if (lv_is_origin(lv)) {
 		/*
 		 * origin(org)
 		 * org
 		 */
-		log_err("Origin devices not supported yet.");
-		return 0;
+		struct dev_layer *dl;
+		char *real_name;
+		struct str_list *sl;
+
+		if (!(dl = _create_layer(dm->mem, "real", VANILLA, lv))) {
+			stack;
+			return 0;
+		}
+		dl->populate = _populate_vanilla;
+		dl->visible = 0;
+
+		if (!hash_insert(dm->layers, dl->name, dl)) {
+			stack;
+			return 0;
+		}
+		real_name = dl->name;
+
+		if (!(dl = _create_layer(dm->mem, "top", ORIGIN, lv))) {
+			stack;
+			return 0;
+		}
+		dl->populate = _populate_origin;
+		dl->visible = 1;
+
+		/* add the dependency on the real device */
+		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+			stack;
+			return 0;
+		}
+
+		if (!(sl->str = pool_strdup(dm->mem, real_name))) {
+			stack;
+			return 0;
+		}
+
+		list_add(&dl->pre_create, &sl->list);
+
+		if (!hash_insert(dm->layers,dl->name, dl)) {
+			stack;
+			return 0;
+		}
 
 	} else {
 		/*
@@ -642,7 +740,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 
 	if (dl->info.exists) {
 		/* reload */
-		if (!_load(dl, DM_DEVICE_RELOAD)) {
+		if (!_load(dm, dl, DM_DEVICE_RELOAD)) {
 			stack;
 			return 0;
 		}
@@ -653,7 +751,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 		}
 	} else {
 		/* create */
-		if (!_load(dl, DM_DEVICE_CREATE)) {
+		if (!_load(dm, dl, DM_DEVICE_CREATE)) {
 			stack;
 			return 0;
 		}
@@ -732,11 +830,12 @@ static int _mark_dependants(struct dev_manager *dm)
  */
 static int _prune_unmarked(struct dev_manager *dm)
 {
-	struct hash_node *hn;
+	struct hash_node *hn, *next;
 	struct dev_layer *dl;
 
-	for (hn = hash_get_first(dm->layers); hn;
-	     hn = hash_get_next(dm->layers, hn)) {
+	for (hn = hash_get_first(dm->layers); hn; hn = next) {
+
+		next = hash_get_next(dm->layers, hn);
 		dl = hash_get_data(dm->layers, hn);
 
 		if (!dl->mark)
@@ -765,7 +864,11 @@ static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
 	/*
 	 * Mark the desired logical volume.
 	 */
-	dl = _lookup(dm, lv->name, "top");
+	if (!(dl = _lookup(dm, lv->name, "top"))) {
+		log_err("Couldn't find top layer of '%s'.", lv->name);
+		return 0;
+	}
+
 	dl->mark = 1;
 	if (!_mark_pre_create(dm, dl)) {
 		stack;
