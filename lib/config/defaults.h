@@ -22,6 +22,8 @@
 #define DEFAULT_DEV_DIR "/dev"
 #define DEFAULT_PROC_DIR "/proc"
 
+#define DEFAULT_LOCK_DIR "/var/lock/lvm"
+
 #define DEFAULT_UMASK 0077
 
 #ifdef READLINE_SUPPORT
