@@ -141,10 +141,8 @@ void _print(struct device *dev, uint64_t size, char *what)
 	char *dummy = display_size(size / 2, SIZE_SHORT);
 	const char *name = dev_name(dev);
 
-	if (!what) {
-
+	if (!what)
 		what = "";
-	}
 
 	log_print("%-*s [%15s] %s", max_len, name, dummy, what);
 	dbg_free(dummy);
