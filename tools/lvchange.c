@@ -263,7 +263,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			}
 			active = 1;
 		}
-		log_verbose("Ensuring %s is inactive. ", lv->name);
+		log_verbose("Ensuring %s is inactive.", lv->name);
 		if (!deactivate_lv(cmd, lv->lvid.s)) {
 			log_error("%s: deactivation failed", lv->name);
 			return 0;
