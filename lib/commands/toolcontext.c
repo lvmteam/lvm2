@@ -140,7 +140,6 @@ static int _process_config(struct cmd_context *cmd)
 		log_error("Device directory given in config file too long");
 		return 0;
 	}
-
 #ifdef DEVMAPPER_SUPPORT
 	dm_set_dev_dir(cmd->dev_dir);
 #endif
@@ -273,12 +272,12 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 	if (!(f1 = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
-		return f2;
+		return NULL;
 	}
 
 	if (!(f3 = composite_filter_create(2, f1, f2))) {
 		log_error("Failed to create composite device filter");
-		return f2;
+		return NULL;
 	}
 
 	return f3;
