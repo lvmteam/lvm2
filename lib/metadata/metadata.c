@@ -152,6 +152,8 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 	/* Strip dev_dir if present */
 	vg_name = strip_dir(vg_name, fi->cmd->dev_dir);
 
+	vg->cmd = fi->cmd;
+
 	if (!(vg->name = pool_strdup(mem, vg_name))) {
 		stack;
 		goto bad;
