@@ -34,24 +34,17 @@
 #define DM_BLK_MAJOR LVM_BLK_MAJOR
 #define DM_CTL_MAJOR LVM_CHAR_MAJOR
 
+#define DM_NAME_LEN 64
+
 typedef unsigned int offset_t;
 
-struct device_map {
-	offset_t high;
-	const char *type;
-	const char *context;
+struct dm_request {
+	int minor;		/* -1 indicates no preference */
+	char name[DM_NAME_LEN];
 };
 
-struct device_table {
-	unsigned int minor;
-	unsigned int major;
-
-	unsigned long count;
-	struct device_map *map;
-};
-
-#define	MAPPED_DEVICE_CREATE _IOWR(DM_CTL_MAJOR, 0, struct device_table)
-#define MAPPED_DEVICE_DESTROY _IOW(DM_CTL_MAJOR, 1, struct device_table)
+#define	MAPPED_DEVICE_CREATE _IOWR(DM_CTL_MAJOR, 0, struct dm_request)
+#define MAPPED_DEVICE_DESTROY _IOW(DM_CTL_MAJOR, 1, struct dm_request)
 
 #ifdef __KERNEL__
 typedef int (*dm_ctr_fn)(offset_t b, offset_t e,
@@ -59,8 +52,8 @@ typedef int (*dm_ctr_fn)(offset_t b, offset_t e,
 typedef void (*dm_dtr_fn)(void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
 
-int register_mapping_type(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
-			  dm_map_fn map);
+int register_map_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
+			dm_map_fn map);
 #endif
 
 #endif
