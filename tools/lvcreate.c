@@ -192,7 +192,8 @@ int lvcreate(int argc, char **argv)
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-	if (!(lv = lv_create(lv_name, status, stripes, stripesize, extents,
+	if (!(lv = lv_create(fid, lv_name, status,
+			     stripes, stripesize, extents,
 			     vg, pvh)))
 		return ECMD_FAILED;
 
