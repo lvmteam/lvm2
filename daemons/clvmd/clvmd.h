@@ -93,7 +93,7 @@ struct local_client {
 		struct netsock_bits net;
 	} bits;
 };
-#define DEBUG
+
 #ifdef DEBUG
 #define DEBUGLOG(fmt, args...) fprintf(stderr, "CLVMD[%d]: %ld ", getpid(), time(NULL) ); fprintf(stderr, fmt, ## args)
 #else
