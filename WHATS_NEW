@@ -1,5 +1,7 @@
 Version 2.01.09 - 
 =================================
+  clvmd: Don't allow user operations to start until the lvm thread is fully up.
+
 
 Version 2.01.08 - 22nd March 2005
 =================================

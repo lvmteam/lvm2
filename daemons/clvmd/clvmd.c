@@ -87,6 +87,7 @@ struct lvm_thread_cmd {
 static pthread_t lvm_thread;
 static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
+static pthread_mutex_t lvm_start_mutex;
 static struct list lvm_cmd_head;
 static volatile sig_atomic_t quit = 0;
 static int child_pipe[2];
@@ -234,6 +235,7 @@ int main(int argc, char *argv[])
 	list_init(&lvm_cmd_head);
 	pthread_mutex_init(&lvm_thread_mutex, NULL);
 	pthread_cond_init(&lvm_thread_cond, NULL);
+	pthread_mutex_init(&lvm_start_mutex, NULL);
 	init_lvhash();
 
 	/* Start the cluster interface */
@@ -1303,6 +1305,11 @@ static void *pre_and_post_thread(void *arg)
 
 	DEBUGLOG("in sub thread: client = %p\n", client);
 
+	/* Don't start until the LVM thread is ready */
+	pthread_mutex_lock(&lvm_start_mutex);
+	pthread_mutex_unlock(&lvm_start_mutex);
+	DEBUGLOG("Sub thread ready for work.\n");
+
 	/* Ignore SIGUSR1 (handled by master process) but enable
 	   SIGUSR2 (kills subthreads) */
 	sigemptyset(&ss);
@@ -1597,6 +1604,9 @@ static void *lvm_thread_fn(void *arg)
 	sigset_t ss;
 	int using_gulm = (int)arg;
 
+	/* Don't let anyone else to do work until we are started */
+	pthread_mutex_lock(&lvm_start_mutex);
+
 	DEBUGLOG("LVM thread function started\n");
 
 	/* Ignore SIGUSR1 & 2 */
@@ -1607,6 +1617,9 @@ static void *lvm_thread_fn(void *arg)
 
 	/* Initialise the interface to liblvm */
 	init_lvm(using_gulm);
+
+	/* Allow others to get moving */
+	pthread_mutex_unlock(&lvm_start_mutex);
 
 	/* Now wait for some actual work */
 	for (;;) {
