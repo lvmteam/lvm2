@@ -62,9 +62,6 @@ static void pvcreate_single(const char *name)
 {
 	struct physical_volume *pv;
 
-	if (!_check(name))
-		return;
-
 	if (arg_count(force_ARG)) {
 		log_print("WARNING: forcing physical volume creation on %s",
 			  name);
@@ -106,6 +103,10 @@ int pvcreate(int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
+
+		if (!_check(argv[i]))
+			continue;
+
 		pvcreate_single(argv[i]);
 		pool_empty(ios->mem);
 	}
