@@ -1,5 +1,7 @@
-Version 2.01.04 - 
+Version 2.01.04 - 9th February 2005
 ===================================
+  Add fixed offset to imported pool minor numbers.
+  Update binary pathnames in clvmd_init_rhel4.
   lvm2cmd.so should skip the check for open fds.
   Remove unused -f from pvmove.
   Gulm clvmd doesn't report "connection refused" errors.

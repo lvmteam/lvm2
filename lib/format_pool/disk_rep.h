@@ -20,6 +20,8 @@
 #include "metadata.h"
 #include "pool.h"
 
+#define MINOR_OFFSET 65536
+
 /* From NSP.cf */
 #define NSPMajorVersion	4
 #define NSPMinorVersion	1
