@@ -18,6 +18,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
+/*
+ * Metadata iteration functions
+ */
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct list *arg_lvnames, struct list *tags,
 			  void *handle,
@@ -591,6 +594,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	return ret_max;
 }
 
+/*
+ * Determine volume group name from a logical volume name
+ */
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 {
 	const char *vg_name = lv_name;
@@ -649,6 +655,9 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 	return vg_name;
 }
 
+/*
+ * Extract default volume group name from environment
+ */
 char *default_vgname(struct cmd_context *cmd)
 {
 	char *vg_path;
@@ -677,6 +686,9 @@ char *default_vgname(struct cmd_context *cmd)
 	return pool_strdup(cmd->mem, vg_path);
 }
 
+/*
+ * Process physical extent range specifiers
+ */
 static int _add_pe_range(struct pool *mem, struct list *pe_ranges,
 			 uint32_t start, uint32_t count)
 {
@@ -911,6 +923,9 @@ struct list *clone_pv_list(struct pool *mem, struct list *pvsl)
 	return r;
 }
 
+/*
+ * Attempt metadata recovery
+ */
 struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 				int lock_type)
 {
@@ -928,6 +943,9 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 	return vg_read(cmd, vgname, &consistent);
 }
 
+/*
+ * Execute and wait for external command
+ */
 int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
 	     const char *size)
 {
