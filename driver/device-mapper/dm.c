@@ -272,13 +272,13 @@ static int queue_io(struct mapped_device *md, struct buffer_head *bh, int rw)
 	di->rw = rw;
 	di->next = md->deferred;
 	md->deferred = di;
-
 	wu;
+
 	return 1;
 }
 
 
-inline static int __map_buffer(struct mapped_device *md, 
+inline static int __map_buffer(struct mapped_device *md,
 			       struct buffer_head *bh, int node)
 {
 	dm_map_fn fn;
@@ -616,7 +616,7 @@ int dm_activate(struct mapped_device *md)
 
 	minor = MINOR(md->dev);
 
-	_block_size[minor] = md->highs[md->num_targets - 1] + 1;
+	_block_size[minor] = (md->highs[md->num_targets - 1] + 1) >> 1;
 	_blksize_size[minor] = BLOCK_SIZE; /* FIXME: this depends on
                                               the mapping table */
 	_hardsect_size[minor] = __find_hardsect_size(md);

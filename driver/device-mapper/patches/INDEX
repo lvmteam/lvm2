@@ -1,4 +1,6 @@
-00_latest		Latest source.
+00_latest		Latest source - I only tend to update this before 
+                        making a release.  So if you got this from CVS copy
+                        or link the source files in by hand.
 
 00_config		Add device-mapper to the MD section
 
