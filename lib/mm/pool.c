@@ -19,12 +19,12 @@
  * Boston, MA 02111-1307, USA.
  *
  */
+#include <stdlib.h>
+#include <string.h>
 
 #include "pool.h"
 #include "dbg_malloc.h"
 #include "log/log.h"
-
-#include <stdlib.h>
 
 struct chunk {
 	char *begin, *end;
@@ -199,7 +199,7 @@ char *pool_strdup(struct pool *p, const char *str)
 
 void _align_chunk(struct chunk *c, unsigned alignment)
 {
-	c->begin += alignment - ((unsigned) c->begin & (alignment - 1));
+	c->begin += alignment - ((unsigned long) c->begin & (alignment - 1));
 }
 
 struct chunk *_new_chunk(struct pool *p, size_t s)

@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "dbg_malloc.h"
 #include "log/log.h"
