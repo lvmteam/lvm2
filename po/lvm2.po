@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-12-10 16:04+0000\n"
+"POT-Creation-Date: 2004-12-12 21:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -125,7 +125,7 @@ msgstr ""
 #: device/dev-cache.c:189 device/dev-cache.c:195 device/dev-cache.c:229
 #: device/dev-cache.c:300 device/dev-cache.c:348 device/dev-cache.c:393
 #: device/dev-cache.c:398 device/dev-io.c:174 device/dev-io.c:204
-#: device/dev-io.c:312 device/dev-io.c:504 device/dev-io.c:532
+#: device/dev-io.c:317 device/dev-io.c:509 device/dev-io.c:537
 #: device/dev-md.c:41 device/dev-md.c:49 device/dev-md.c:64 device/device.c:42
 #: device/device.c:51 display/display.c:211 display/display.c:242
 #: display/display.c:300 display/display.c:347 display/display.c:587
@@ -615,7 +615,7 @@ msgstr ""
 #: config/config.c:382 device/dev-cache.c:150 device/dev-cache.c:154
 #: device/dev-cache.c:322 device/dev-cache.c:329 device/dev-cache.c:490
 #: device/dev-cache.c:492 device/dev-io.c:131 device/dev-io.c:235
-#: device/dev-io.c:240 device/dev-io.c:334 device/dev-io.c:390
+#: device/dev-io.c:240 device/dev-io.c:339 device/dev-io.c:395
 #: filters/filter-persistent.c:184 filters/filter-sysfs.c:43
 #: filters/filter-sysfs.c:155 filters/filter-sysfs.c:179
 #: filters/filter-sysfs.c:220 filters/filter.c:135 format_text/archive.c:221
@@ -1209,47 +1209,47 @@ msgstr ""
 msgid "%s: size is %llu sectors"
 msgstr ""
 
-#: device/dev-io.c:299
+#: device/dev-io.c:304
 #, c-format
 msgid "WARNING: %s already opened read-only"
 msgstr ""
 
-#: device/dev-io.c:306
+#: device/dev-io.c:311
 #, c-format
 msgid "WARNING: dev_open(%s) called while suspended"
 msgstr ""
 
-#: device/dev-io.c:318
+#: device/dev-io.c:323
 #, c-format
 msgid "%s: stat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:347
+#: device/dev-io.c:352
 #, c-format
 msgid "%s: fstat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:363
+#: device/dev-io.c:368
 #, c-format
 msgid "Opened %s %s"
 msgstr ""
 
-#: device/dev-io.c:395
+#: device/dev-io.c:400
 #, c-format
 msgid "Closed %s"
 msgstr ""
 
-#: device/dev-io.c:408
+#: device/dev-io.c:413
 #, c-format
 msgid "Attempt to close device '%s' which is not open."
 msgstr ""
 
-#: device/dev-io.c:509
+#: device/dev-io.c:514
 #, c-format
 msgid "Wiping %s at %llu length %Zu"
 msgstr ""
 
-#: device/dev-io.c:512
+#: device/dev-io.c:517
 #, c-format
 msgid "Wiping %s at sector %llu length %Zu sectors"
 msgstr ""
