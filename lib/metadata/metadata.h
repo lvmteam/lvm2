@@ -29,22 +29,29 @@
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-#define EXPORTED_VG          	0x00000002  /* VG PV */
-#define RESIZEABLE_VG        	0x00000004  /* VG */
-#define PARTIAL_VG		0x00000040  /* VG */
+#define BIT(x) (1 << x)
+#define EXPORTED_VG    BIT(0)  /* VG PV */
+#define RESIZEABLE_VG  BIT(1)  /* VG */
+#define PARTIAL_VG     BIT(2)  /* VG */
 
-/* May any free extents on this PV be used or must they be left free? */
-#define ALLOCATABLE_PV         	0x00000008  /* PV */
+/*
+ * May any free extents on this PV be used or must they be left
+ * free?
+ */
+#define ALLOCATABLE_PV BIT(3)  /* PV */
 
-#define SPINDOWN_LV          	0x00000010  /* LV */
-#define BADBLOCK_ON       	0x00000020  /* LV */
-#define FIXED_MINOR		0x00000080  /* LV */
+#define SPINDOWN_LV    BIT(4)  /* LV */
+#define BADBLOCK_ON    BIT(5)  /* LV */
+#define FIXED_MINOR    BIT(6)  /* LV */
+#define VISIBLE_LV     BIT(7) /* LV */
 
-/* FIXME: do we really set read/write for a whole vg ? */
-#define LVM_READ              	0x00000100  /* LV VG */
-#define LVM_WRITE             	0x00000200  /* LV VG */
-#define CLUSTERED         	0x00000400  /* VG */
-#define SHARED            	0x00000800  /* VG */
+/*
+ * FIXME: do we really set read/write for a whole vg ?
+ */
+#define LVM_READ       BIT(8)  /* LV VG */
+#define LVM_WRITE      BIT(9)  /* LV VG */
+#define CLUSTERED      BIT(10)  /* VG */
+#define SHARED         BIT(11) /* VG */
 
 #define FMT_SEGMENTS		0x00000001 /* Arbitrary segment parameters? */
 
