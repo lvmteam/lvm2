@@ -84,6 +84,9 @@ int vgcreate(int argc, char **argv)
 		log_error("Warning: Setting maxphysicalvolumes to %d", 
 			  vg->max_pv);
 
+	if (!archive(vg))
+		return ECMD_FAILED;
+
 	/* Store VG on disk(s) */
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;

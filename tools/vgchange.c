@@ -56,22 +56,18 @@ static int vgchange_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-	if (vg->status & EXPORTED_VG) {
+	if (vg->status & EXPORTED_VG)
 		log_error("Volume group %s is exported", vg_name);
 		return ECMD_FAILED;
-	}
 
-	if (arg_count(available_ARG)) {
+	if (arg_count(available_ARG))
 		vgchange_available(vg);
-	}
 
-	if (arg_count(allocation_ARG)) {
+	if (arg_count(allocation_ARG))
 		vgchange_allocation(vg);
-	}
 
-	if (arg_count(logicalvolume_ARG)) {
+	if (arg_count(logicalvolume_ARG))
 		vgchange_logicalvolume(vg);
-	}
 
 	return 0;
 }
@@ -101,6 +97,9 @@ void vgchange_available(struct volume_group *vg)
 	if (available && (lv_active = lvs_in_vg_activated(vg)))
 		log_verbose("%d logical volume(s) in volume group %s "
 			    "already active", lv_active, vg->name);
+
+	if (!archive(vg))
+		return;
 
 	if (available) {
 		vg->status |= ACTIVE;
@@ -146,6 +145,9 @@ void vgchange_allocation(struct volume_group *vg)
 			  vg->name);
 		return;
 	}
+
+	if (!archive(vg))
+		return;
 
 	if (extendable)
 		vg->status |= EXTENDABLE_VG;
@@ -201,6 +203,9 @@ void vgchange_logicalvolume(struct volume_group *vg)
 		}
 	    }
 ****************/
+
+	if (!archive(vg))
+		return;
 
 	vg->max_lv = max_lv;
 

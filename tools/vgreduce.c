@@ -111,6 +111,9 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 
 	pvh = find_pv_in_vg(vg, name);
 
+	if (!archive(vg))
+		return ECMD_FAILED;
+
 	log_verbose("Removing %s from volume group %s", name, vg->name);
 	list_del(pvh);
 	*pv->vg_name = '\0';

@@ -87,6 +87,9 @@ int vgrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!archive(vg_old))
+		return ECMD_FAILED;
+
 	/* Change the volume group name */
 	strcpy(vg_old->name, vg_name_new);
 

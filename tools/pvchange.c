@@ -103,6 +103,8 @@ int pvchange_single(struct physical_volume *pv)
 			return 0;
 		}
 		pv = &list_item(pvh, struct pv_list)->pv;
+		if (!archive(vg))
+			return 0;
 	}
 
 	/* change allocatability for a PV */
