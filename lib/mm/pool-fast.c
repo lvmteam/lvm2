@@ -33,7 +33,7 @@ struct pool *pool_create(size_t chunk_hint)
 	struct pool *p = dbg_malloc(sizeof(*p));
 
 	if (!p) {
-		log_error("Couldn't create memory pool (size %" PRIuPTR ")",
+		log_error("Couldn't create memory pool (size %" PRIsize_t ")",
 			  sizeof(*p));
 		return 0;
 	}
@@ -221,8 +221,8 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 		p->spare_chunk = 0;
 	} else {
 		if (!(c = dbg_malloc(s))) {
-			log_err("Out of memory.  Requested %" PRIuPTR " bytes.",
-				s);
+			log_err("Out of memory.  Requested %" PRIsize_t
+				" bytes.", s);
 			return NULL;
 		}
 

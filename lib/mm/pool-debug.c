@@ -29,7 +29,7 @@ struct pool *pool_create(size_t chunk_hint)
 	struct pool *mem = dbg_malloc(sizeof(*mem));
 
 	if (!mem) {
-		log_error("Couldn't create memory pool (size %u)",
+		log_error("Couldn't create memory pool (size %" PRIsize_t ")",
 			  sizeof(*mem));
 		return NULL;
 	}

@@ -13,11 +13,7 @@
 #include <inttypes.h>
 
 /* Define some portable printing types */
-#if (SIZE_MAX == UINT64_MAX)
-#define PRIsize_t PRIu64
-#elif (SIZE_MAX == UINT32_MAX)
-#define PRIsize_t PRIu32
-#endif
+#define PRIsize_t "Zu"
 
 struct str_list {
 	struct list list;
