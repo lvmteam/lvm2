@@ -54,6 +54,7 @@ xx(lvchange,
    "\t[-a|--available y|n]\n"
    "\t[-C|--contiguous y|n]\n"
    "\t[-d|--debug]\n"
+   "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-M|--persistent y|n] [--major major] [--minor minor]\n"
@@ -65,7 +66,7 @@ xx(lvchange,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, available_ARG, contiguous_ARG,
+   autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
    ignorelockingfailure_ARG, major_ARG, minor_ARG, partial_ARG, permission_ARG,
    persistent_ARG, readahead_ARG, test_ARG)
 
