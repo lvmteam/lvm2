@@ -217,6 +217,7 @@ struct logical_volume *lv_create(struct io_space *ios,
 				 uint32_t status,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
+				 uint64_t extents,
 				 struct volume_group *vg,
 				 struct pv_list *acceptable_pvs);
 
@@ -243,7 +244,8 @@ struct physical_volume *pv_find(struct volume_group *vg,
 				const char *pv_name);
 
 /* Add an LV to a given VG */
-int lv_add(struct volume_group *vg, struct logical_volume *lv);
+int lv_add(struct io_space *ios, struct volume_group *vg, 
+	   struct logical_volume *lv);
 
 /* Remove an LV from a given VG */
 int lv_remove(struct volume_group *vg, struct list *lvh);
