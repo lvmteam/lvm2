@@ -23,6 +23,7 @@ endif
 SOURCES =\
 	archiver.c \
 	dumpconfig.c \
+	formats.c \
 	lvchange.c \
 	lvcreate.c \
 	lvdisplay.c \
@@ -43,6 +44,7 @@ SOURCES =\
 	pvremove.c \
 	pvscan.c \
 	reporter.c \
+	segtypes.c \
 	toollib.c \
 	vgcfgbackup.c \
 	vgcfgrestore.c \

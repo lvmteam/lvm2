@@ -32,6 +32,10 @@ xx(dumpconfig,
    "Dump active configuration",
    "dumpconfig <filename>\n")
 
+xx(formats,
+   "List available metadata formats",
+   "formats\n")
+
 xx(help,
    "Display help for commands",
    "help <command>" "\n")
@@ -512,6 +516,10 @@ xx(pvscan,
 
    exported_ARG, ignorelockingfailure_ARG, novolumegroup_ARG, partial_ARG,
    short_ARG, uuid_ARG)
+
+xx(segtypes,
+   "List available segment types",
+   "segtypes\n")
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
