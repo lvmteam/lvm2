@@ -90,7 +90,7 @@ ifeq ("@DEVMAPPER@", "yes")
 	LVMLIBS += -ldevmapper
 endif
 
-CFLAGS += -DLVM_SHARED_PATH=\"$(sbindir)/lvm\"
+CFLAGS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 
 include $(top_srcdir)/make.tmpl
 
