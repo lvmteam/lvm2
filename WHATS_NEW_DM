@@ -1,3 +1,7 @@
+Version 1.00.19 - 
+=============================
+  Fix device number handling for 2.6 kernels.
+
 Version 1.00.18 - 20 Jun 2004
 =============================
   Fix a uuid free in libdm-iface.

@@ -25,7 +25,7 @@
 #include <fcntl.h>
 #include <limits.h>
 
-#define NUMBER_OF_MAJORS 256
+#define NUMBER_OF_MAJORS 4096
 
 typedef struct {
 	const char *name;
@@ -96,6 +96,7 @@ static int *_scan_proc_dev(const char *proc, const struct config_node *cn)
 	int *max_partitions_by_major;
 	char *name;
 
+	/* FIXME Make this sparse */
 	if (!(max_partitions_by_major =
 	      dbg_malloc(sizeof(int) * NUMBER_OF_MAJORS))) {
 		log_error("Filter failed to allocate max_partitions_by_major");

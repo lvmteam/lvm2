@@ -17,6 +17,7 @@
 #include "libdm-common.h"
 #include "list.h"
 #include "log.h"
+#include "kdev_t.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +28,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <linux/dm-ioctl.h>
-#include <linux/kdev_t.h>
 
 #ifdef HAVE_SELINUX
 #  include <selinux/selinux.h>

@@ -1,5 +1,6 @@
 Version 2.00.20 -
 ==============================
+  Fix device number handling for 2.6 kernels.
 
 Version 2.00.19 - 29 June 2004
 ==============================

@@ -21,7 +21,9 @@
 #include <sys/stat.h>
 
 #ifdef linux
-#  include <linux/kdev_t.h>
+#  define MAJOR(dev)	((dev & 0xfff00) >> 8)
+#  define MINOR(dev)	((dev & 0xff) | ((dev >> 12) & 0xfff00))
+#  define MKDEV(ma,mi)	((mi & 0xff) | (ma << 8) | ((mi & ~0xff) << 12))
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))
