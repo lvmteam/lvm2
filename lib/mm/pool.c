@@ -27,8 +27,8 @@ struct pool {
 void _align_chunk(struct chunk *c, unsigned alignment);
 struct chunk *_new_chunk(struct pool *p, size_t s);
 
-/* Alignment needs to be 8 for Alpha */
-#define DEFAULT_ALIGNMENT 8
+/* by default things come out aligned for doubles */
+#define DEFAULT_ALIGNMENT __alignof__ (double)
 
 struct pool *create_pool(size_t chunk_hint)
 {
