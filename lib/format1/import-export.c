@@ -601,7 +601,7 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 		list_iterate (lvdh, &dl->lvds) {
 			lvd = &(list_item(lvdh, struct lvd_list)->lvd);
 
-			if (!(lvd->lv_status & LV_SNAPSHOT))
+			if (!(lvd->lv_access & LV_SNAPSHOT))
 				continue;
 
 			minor = MINOR(lvd->lv_dev);
