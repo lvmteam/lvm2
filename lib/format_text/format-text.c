@@ -158,6 +158,7 @@ static void _destroy(struct format_instance *fi)
 	struct text_c *tc = (struct text_c *) fi->private;
 
 	dbg_free(tc->path);
+	dbg_free(tc->desc);
 	dbg_free(tc);
 	dbg_free(fi);
 }
