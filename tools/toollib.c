@@ -14,15 +14,15 @@ static int _keep_days;		/* keep for at least this number of days */
 static int _keep_number;	/* keep at least this number of backups */
 
 /*
- * Determine whether or not to do autobackup.  
+ * Determine whether or not to do autobackup.
  * Cmd line overrides environment variable which in turn overrides config file
  */
-int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
-		    int autobackup)
+int archive_init(const char *backup_dir, int keep_days, int keep_number,
+		 int autobackup)
 {
 	char *lvm_autobackup;
 
-	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir), 
+	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir),
 			 "%s", backup_dir) < 0) {
 		log_error("Backup directory name too long.");
 		return 0;
@@ -33,7 +33,7 @@ int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 	_autobackup = autobackup;	/* Config file setting */
 
 	if (arg_count(autobackup_ARG)) {
-		_autobackup = !strcmp(arg_str_value(autobackup_ARG, "y"), "y");
+		_autobackup = arg_int_value(autobackup_ARG, 0);
 		return 1;
 	}
 
@@ -53,7 +53,7 @@ int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 	return 1;
 }
 
-static int __autobackup(struct volume_group *vg)
+static int __backup_old(struct volume_group *vg)
 {
 	int r;
 	struct pool *old;
@@ -62,7 +62,7 @@ static int __autobackup(struct volume_group *vg)
 	old = vg->cmd->mem;
 
 	/*
-	 * Create a temprary pool for this, I
+	 * Create a temporary pool for this, I
 	 * doubt it's used but the backup code has
 	 * the right to expect it.
 	 */
@@ -87,7 +87,10 @@ static int __autobackup(struct volume_group *vg)
 	return r;
 }
 
-int autobackup(struct volume_group *vg)
+/*
+ * This backs up a volume group that is about to have it's .
+ */
+int auto_backup(struct volume_group *vg)
 {
 	if (!_autobackup || !*_backup_dir) {
 		log_print("WARNING: You don't have an automatic backup of %s",
@@ -110,6 +113,8 @@ int autobackup(struct volume_group *vg)
 
 	return 1;
 }
+
+int backup_new
 
 
 int create_dir(const char *dir)

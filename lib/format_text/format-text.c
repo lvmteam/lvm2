@@ -12,115 +12,82 @@
 #include "hash.h"
 
 /*
- * The text format is a human readable metadata
- * format that will be used to store the metadata
- * backups from the LVM2 system.  By being human
- * readable it is hoped that people will be able
- * to recieve a lot more support when things go
- * wrong.
- *
- * The format instance is given a directory path
- * upon creation.  Each file in this directory
- * whose name is of the form '(.*)_[0-9]*.vg' is a config
- * file (see lib/config.[hc]), which contains a
- * description of a single volume group.
- *
- * The prefix ($1 from the above regex) of the
- * config file gives the volume group name.
- *
- * Backup files that have expired will be removed.
+ * NOTE: Currently there can be only one vg per file.
  */
 
-struct text_c {
-	uint32_t retain_days;
-	uint32_t min_retains;
-
-	char *dir;
-};
-
-/*
- * Returns a list of config files, one for each
- * .vg file in the given directory.
- */
-struct config_list {
-	struct list list;
-	struct config_file *cf;
-};
-
-struct list *_get_configs(struct pool *mem, const char *dir)
+static void _not_written(const char *cmd)
 {
-
+	log_err("The text format is lacking an implementation for '%s'", cmd);
 }
 
-void _put_configs(struct pool *mem, struct list *configs)
+struct list *_get_vgs(struct format_instance *fi)
 {
-	struct list *cfh;
-	struct config_list *cl;
+	_not_written("_get_vgs");
+	return NULL;
+}
 
-	list_iterate(cfh, configs) {
-		cl = list_item(cfh, struct config_file);
-		destroy_config_file(cl->cf);
+struct list *_get_pvs(struct format_instance *fi)
+{
+	_not_written("_get_vgs");
+	return NULL;
+}
+
+struct physical_volume *_pv_read(struct format_instance *fi,
+				 const char *pv_name)
+{
+	_not_written("_get_vgs");
+	return NULL;
+}
+
+int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
+	      struct volume_group *vg)
+{
+	_not_written("_get_vgs");
+	return NULL;
+}
+
+int _pv_write(struct format_instance *fi, struct physical_volume *pv)
+{
+	_not_written("_get_vgs");
+	return NULL;
+}
+
+int _vg_setup(struct format_instance *fi, struct volume_group *vg)
+{
+	_not_written("_get_vgs");
+	return NULL;
+}
+
+struct volume_group *_vg_read(struct format_instance *fi,
+			      const char *vg_name)
+{
+	_not_written("_get_vgs");
+	return NULL;
+}
+
+int _vg_write(struct format_instance *fi, struct volume_group *vg)
+{
+	FILE *fp;
+	char *file = (char *) fi->private;
+
+	/* FIXME: should be opened exclusively */
+	if (!(fp = fopen(file, "w"))) {
+		log_err("Couldn't open text file '%s'.", file);
+		return 0;
 	}
 
-	pool_free(mem, configs);
+	if (!text_vg_export(fp, vg)) {
+		log_err("Couldn't write text format file.");
+		return 0;
+	}
+
+	return 1;
 }
 
-
-/*
- * Just returns the vg->name fields
- */
-struct list *get_vgs(struct format_instance *fi)
+void _destroy(struct format_instance *fi)
 {
-	struct text_c *tc = (struct text_c *) fi->private;
-
-	
+	pool_free(cmd->mem, fi);
 }
-
-struct list *get_pvs(struct format_instance *fi)
-{
-
-}
-
-struct physical_volume *pv_read(struct format_instance *fi,
-				const char *pv_name)
-{
-
-}
-
-int pv_setup(struct format_instance *fi, struct physical_volume *pv,
-		struct volume_group *vg)
-{
-
-}
-
-int pv_write(struct format_instance *fi, struct physical_volume *pv)
-{
-
-}
-
-int vg_setup(struct format_instance *fi, struct volume_group *vg)
-{
-
-}
-
-struct volume_group *vg_read(struct format_instance *fi, const char *vg_name)
-{
-
-}
-
-int vg_write(struct format_instance *fi, struct volume_group *vg)
-{
-
-}
-
-void destroy(struct format_instance *fi)
-{
-	/*
-	 * We don't need to do anything here since
-	 * everything is allocated from the pool.
-	 */
-}
-
 
 static struct format_handler _text_handler = {
 	get_vgs: _get_vgs,
@@ -134,37 +101,28 @@ static struct format_handler _text_handler = {
 	destroy: _destroy
 };
 
-
-struct format_instance *text_format_create(struct cmd_context,
-					   const char *dir,
-					   uint32_t retain_days,
-					   uint32_t min_retains)
+struct format_instance *text_format_create(struct cmd_context *cmd,
+					   const char *file)
 {
-	struct format_instance *fi;
-	struct text_c *tc = NULL;
+	const char *no_alloc = "Couldn't allocate text format object.";
 
-	if (!(tc = pool_zalloc(cmd->mem, sizeof(*tc)))) {
-		stack;
+	struct format_instance *fi;
+	char *file;
+
+	if (!(fi = pool_alloc(cmd->mem, sizeof(*fi)))) {
+		log_err(no_alloc);
 		return NULL;
 	}
 
-	if (!(tc->dir = pool_strdup(cmd->mem, dir))) {
-		stack;
-		goto bad;
-	}
-
-	if (!(fi = pool_alloc(cmd->mem, sizeof(*fi)))) {
-		stack;
-		goto bad;
+	if (!(file = pool_strdup(cmd->mem, file))) {
+		pool_free(fi);
+		log_err(no_alloc);
+		return NULL;
 	}
 
 	fi->cmd = cmd;
 	fi->ops = _text_handler;
-	fi->private = tc;
+	fi->private = file;
 
 	return fi;
-
- bad:
-	pool_free(mem, tc);
-	return NULL;
 }

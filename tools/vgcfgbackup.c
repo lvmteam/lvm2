@@ -6,6 +6,25 @@
 
 #include "tools.h"
 
+#include <stdio.h>
+
+static int _backup_to_file(const char *file, struct volume_group *vg)
+{
+	int r;
+	struct format_instance *tf;
+
+	if (!(tf = text_format_create(vg->cmd, file))) {
+		log_error("Couldn't create backup object.");
+		return 0;
+	}
+
+	if (!(r = tf->ops->vg_write(tf, vg)))
+		stack;
+
+	tf->ops->destroy(tf);
+	return r;
+}
+
 static int vg_backup_single(const char *vg_name)
 {
 	struct volume_group *vg;
@@ -19,9 +38,16 @@ static int vg_backup_single(const char *vg_name)
 	log_print("Found %sactive volume group %s",
 		  (vg->status & ACTIVE) ? "" : "in", vg_name);
 
-	if (!autobackup(vg)) {
-		stack;
-		return ECMD_FAILED;
+	if (arg_count(file_ARG)) {
+		_backup_to_file(arg_value(file_ARG), vg);
+
+	} else {
+		/* just use the normal backup code */
+		backup_enable();	/* force a backup */
+		if (!backup(vg)) {
+			stack;
+			return ECMD_FAILED;
+		}
 	}
 
 	log_print("Volume group %s successfully backed up.", vg_name);

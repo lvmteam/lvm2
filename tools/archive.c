@@ -35,14 +35,9 @@ void archive_exit(void)
 	memset(&_archive_params, 0, sizeof(_archive_params));
 }
 
-void archive_disable(void)
+void archive_enable(int flag)
 {
-	_archive_params.enabled = 0;
-}
-
-void archive_enable(void)
-{
-	_archive_params.enabled = 1;
+	_archive_params.enabled = flag;
 }
 
 static int __archive(struct volume_group *vg)
@@ -106,6 +101,11 @@ void backup_exit(void)
 {
 	dbg_free(_backup_params.dir);
 	memset(&backup_params, 0, sizeof(_backup_params));
+}
+
+void backup_enable(int flag)
+{
+	_backup_params.enabled = flag;
 }
 
 static int __backup(struct volume_group *vg)
