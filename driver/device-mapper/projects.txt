@@ -1,0 +1,28 @@
+    List of projects, ideas and pending bug fixes
+   ===============================================
+
+ o Use devfs auto device allocation to get devices rather than a fixed
+   series of devices (which limits us to 256 volumes atm)
+
+   - Ought to have an option of using the old version for non-devfs systems
+   - Would be nice if the auto device allocation was independant of devfs
+
+ o Need to work out how to make module use counts work correctly. The existing
+   scheme does not allow us to unload the module. A reference is taken during
+   kern_mount() which does not allow us to rmmod() so even if the right
+   umount() functions were exported (which they aren't) we'd never get to
+   call them anyway. This could be tricky.
+
+ o Check tables are an integer multiple of the underlying block size at
+   table load time.
+
+ o Use Al Viro's new code for "proc files consisting of one line per entry"
+   for the error and status files. [This item waiting for the patches to
+   reach the kernel and for their suitability to be further investigated
+   and checked]
+
+ o Error code (as well as error list) so that "out of memory" errors can
+   result in messages which can be read from the error file.
+
+ o Further reduction of common code between the filesystem source files.
+
