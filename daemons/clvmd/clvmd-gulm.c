@@ -858,12 +858,12 @@ static int get_all_cluster_nodes()
 	char *clvmflagstr;
 	char key[256];
 
-	sprintf(nodekey, "//cluster/nodes/node[%d]/@name", i);
+	sprintf(nodekey, "//cluster/clusternodes/clusternode[%d]/@name", i);
 	error = ccs_get(ctree, nodekey, &nodename);
 	if (error)
 	    break;
 
-	sprintf(key, "//nodes/node[@name=\"%s\"]/clvm", nodename);
+	sprintf(key, "//cluster/clusternodes/clusternode[@name=\"%s\"]/clvm", nodename);
 	if (!ccs_get(ctree, key, &clvmflagstr))
 	{
 	    clvmflag = atoi(clvmflagstr);
@@ -897,7 +897,7 @@ static int get_all_cluster_nodes()
 	    DEBUGLOG("node %s has clvm disabled\n", nodename);
 	}
 	free(nodename);
-	error = ccs_get(ctree, "//nodes/node/@name", &nodename);
+	error = ccs_get(ctree, "//cluster/clusternodes/clusternode/@name", &nodename);
     }
 
     /* Finished with config file */

@@ -1,6 +1,9 @@
 Version 2.00.33 - 
 ====================================
 
+  gulm clvmd now uses new ccsd key names.
+
+
 Version 2.00.32 - 22nd December 2004
 ====================================
   Drop static/dl restriction for now.
