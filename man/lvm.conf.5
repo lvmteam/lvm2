@@ -1,0 +1,61 @@
+.TH LVM.CONF 5 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+lvm.conf \- Configuration file for LVM2
+.SH SYNOPSIS
+.B /etc/lvm/lvm.conf
+.SH DESCRIPTION
+lvm.conf is read during the initialisation phase of 
+\fBlvm\fP.
+.LP
+Syntax \(em To be written
+.LP
+The sections that may be present in the file are:
+.TP
+\fBdevices\fP \(em Device settings
+.IP
+\fBdir\fP \(em Directory in which to create volume group device nodes.
+Defaults to "/dev".
+.IP
+\fBscan\fP \(em List of directories to scan recursively for 
+LVM physical volumes.
+Devices in directories outside this hierarchy will be ignored.
+Defaults to "/dev".
+.IP
+\fBfilter\fP \(em List of patterns to apply to devices found by a scan.
+Patterns are regular expressions delimited by any character and preceded
+by \fBa\fP (for accept) or \fBr\fP (for reject).  The list is traversed
+in order, and the first regex that matches determines if the device
+will be accepted or rejected (ignored).  Devices that don't match
+any patterns are accepted.
+For example, to ignore /dev/cdrom you could use:
+\fBdevices { filter=["r|cdrom|"] }\fP 
+.TP
+\fBlog\fP \(em Default log settings
+.IP
+\fBfile\fP \(em Location of log file.  If this entry is not present, no
+log file is written.
+.IP
+\fBoverwrite\fP \(em Set to 1 to overwrite the log file each time a tool
+is invoked.  By default tools append messages to the log file.
+.IP
+\fBlevel\fP \(em Log level (0-9) of messages to write to the file.
+9 is the most verbose; 0 should produce no output.
+.IP
+\fBverbose\fP \(em Default level (0-3) of messages sent to stdout or stderr.
+3 is the most verbose; 0 should produce the least output.
+.TP
+\fBbackups\fP \(em Configuration for metadata backups
+.IP
+\fBdir\fP \(em Directory used for automatic metadata backups
+(defaults to "/etc/lvm")
+.TP
+\fBshell\fP \(em LVM2 built-in readline shell settings
+.IP
+\fBhistory_size\fP \(em Maximum number of lines of shell history to retain (default 100) in $HOME/.lvm_history
+.SH FILES
+.I /etc/lvm/lvm.conf
+.br
+.I $HOME/.lvm_history
+.fi
+.SH SEE ALSO
+.BR lvm(8)
