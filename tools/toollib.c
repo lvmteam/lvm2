@@ -16,6 +16,7 @@
 #include "tools.h"
 
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  struct list *arg_lvnames, struct list *tags,
@@ -121,7 +122,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	int consistent;
 
 	struct list *slh, *tags_arg;
-	struct list *vgnames;		/* VGs to process */
+	struct list *vgnames;	/* VGs to process */
 	struct str_list *sll;
 	struct volume_group *vg;
 	struct list tags, lvnames;
@@ -221,8 +222,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 					log_error("vg/lv string alloc failed");
 					return ECMD_FAILED;
 				}
-				if (!str_list_add(cmd->mem, &arg_lvnames,
-						  vglv)) {
+				if (!str_list_add(cmd->mem, &arg_lvnames, vglv)) {
 					log_error("strlist allocation failed");
 					return ECMD_FAILED;
 				}
@@ -882,4 +882,45 @@ struct list *clone_pv_list(struct pool *mem, struct list *pvsl)
 	}
 
 	return r;
+}
+
+int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
+	     const char *size)
+{
+	pid_t pid;
+	int status;
+
+	log_verbose("Executing: %s %s %s %s", command, fscmd, lv_path, size);
+
+	if ((pid = fork()) == -1) {
+		log_error("fork failed: %s", strerror(errno));
+		return 0;
+	}
+
+	if (!pid) {
+		/* Child */
+		/* FIXME Use execve directly */
+		execlp(command, command, fscmd, lv_path, size, NULL);
+		log_sys_error("execlp", command);
+		exit(errno);
+	}
+
+	/* Parent */
+	if (wait4(pid, &status, 0, NULL) != pid) {
+		log_error("wait4 child process %u failed: %s", pid,
+			  strerror(errno));
+		return 0;
+	}
+
+	if (!WIFEXITED(status)) {
+		log_error("Child %u exited abnormally", pid);
+		return 0;
+	}
+
+	if (WEXITSTATUS(status)) {
+		log_error("%s failed: %u", command, WEXITSTATUS(status));
+		return 0;
+	}
+
+	return 1;
 }

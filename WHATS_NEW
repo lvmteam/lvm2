@@ -1,5 +1,6 @@
 Version 2.00.17 -
 =============================
+  fsadm support for fsck and resizing - needs testing.
   Add read-only GFS pool support.
   Add lvm2create_initrd script from http://poochiereds.net/svn/lvm2/
   Fix rounding of large diplayed sizes.

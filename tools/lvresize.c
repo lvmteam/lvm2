@@ -15,6 +15,8 @@
 
 #include "tools.h"
 
+#define SIZE_BUF 128
+
 struct lvresize_params {
 	const char *vg_name;
 	const char *lv_name;
@@ -34,6 +36,9 @@ struct lvresize_params {
 		LV_REDUCE = 1,
 		LV_EXTEND = 2
 	} resize;
+
+	int resizefs;
+	int nofsck;
 
 	int argc;
 	char **argv;
@@ -80,6 +85,9 @@ static int _read_params(struct cmd_context *cmd, int argc, char **argv,
 		return 0;
 	}
 
+	lp->resizefs = arg_count(cmd, resizefs_ARG) ? 1 : 0;
+	lp->nofsck = arg_count(cmd, nofsck_ARG) ? 1 : 0;
+
 	if (!argc) {
 		log_error("Please provide the logical volume name");
 		return 0;
@@ -121,6 +129,8 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	uint32_t seg_extents;
 	uint32_t sz, str;
 	struct list *pvh = NULL;
+	char size_buf[SIZE_BUF];
+	char lv_path[PATH_MAX];
 
 	if (!(vg = vg_read(cmd, lp->vg_name, &consistent))) {
 		log_error("Volume group %s doesn't exist", lp->vg_name);
@@ -340,7 +350,13 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (lp->resize == LV_REDUCE) {
 		if (lp->argc)
 			log_print("Ignoring PVs on command line when reducing");
+	} else if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
+						     lp->argv) : &vg->pvs)) {
+		stack;
+		return ECMD_FAILED;
+	}
 
+	if (lp->resize == LV_REDUCE || lp->resizefs) {
 		memset(&info, 0, sizeof(info));
 
 		if (!lv_info(lv, &info) && driver_version(NULL, 0)) {
@@ -348,7 +364,13 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			return ECMD_FAILED;
 		}
 
-		if (info.exists) {
+		if (lp->resizefs && !info.exists) {
+			log_error("Logical volume %s must be activated "
+				  "before resizing filesystem", lp->lv_name);
+			return ECMD_FAILED;
+		}
+
+		if (info.exists && !lp->resizefs && (lp->resize == LV_REDUCE)) {
 			log_print("WARNING: Reducing active%s logical volume "
 				  "to %s", info.open_count ? " and open" : "",
 				  display_size(cmd, (uint64_t) lp->extents *
@@ -357,50 +379,71 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 			log_print("THIS MAY DESTROY YOUR DATA "
 				  "(filesystem etc.)");
+
+			if (!arg_count(cmd, force_ARG)) {
+				if (yes_no_prompt("Do you really want to "
+						  "reduce %s? [y/n]: ",
+						  lp->lv_name) == 'n') {
+					log_print("Logical volume %s NOT "
+						  "reduced", lp->lv_name);
+					return ECMD_FAILED;
+				}
+			}
+		}
+	}
+
+	if (lp->resizefs) {
+		if (lvm_snprintf(lv_path, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+				 lp->vg_name, lp->lv_name) < 0) {
+			log_error("Couldn't create LV path for %s",
+				  lp->lv_name);
+			return ECMD_FAILED;
 		}
 
-		if (!arg_count(cmd, force_ARG)) {
-			if (yes_no_prompt("Do you really want to reduce %s?"
-					  " [y/n]: ", lp->lv_name) == 'n') {
-				log_print("Logical volume %s NOT reduced",
-					  lp->lv_name);
+		if (lvm_snprintf(size_buf, SIZE_BUF, "%" PRIu64,
+				 (uint64_t) lp->extents * vg->extent_size / 2)
+				 < 0) {
+			log_error("Couldn't generate new LV size string");
+			return ECMD_FAILED;
+		}
+
+		if (!lp->nofsck) {
+			if (!exec_cmd("fsadm", "check", lv_path, NULL)) {
+				stack;
 				return ECMD_FAILED;
 			}
 		}
 
-		if (!archive(vg)) {
-			stack;
-			return ECMD_FAILED;
+		if (lp->resize == LV_REDUCE) {
+			if (!exec_cmd("fsadm", "resize", lv_path, size_buf)) {
+				stack;
+				return ECMD_FAILED;
+			}
 		}
-
-		if (!lv_reduce(vg->fid, lv, lv->le_count - lp->extents))
-			return ECMD_FAILED;
 	}
 
-	if (lp->resize == LV_EXTEND) {
-		if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
-						      lp->argv) : &vg->pvs)) {
+	if (!archive(vg)) {
+		stack;
+		return ECMD_FAILED;
+	}
+
+	log_print("%sing logical volume %s to %s",
+		  (lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
+		  lp->lv_name,
+		  display_size(cmd, (uint64_t) lp->extents * vg->extent_size,
+			       SIZE_SHORT));
+
+	if (lp->resize == LV_REDUCE) {
+		if (!lv_reduce(vg->fid, lv, lv->le_count - lp->extents)) {
 			stack;
 			return ECMD_FAILED;
 		}
-
-		if (!archive(vg)) {
-			stack;
-			return ECMD_FAILED;
-		}
-
-		log_print("Extending logical volume %s to %s", lp->lv_name,
-			  display_size(cmd, (uint64_t)
-				       lp->extents * vg->extent_size,
-				       SIZE_SHORT));
-
-		if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes,
+	} else if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes,
 			       lp->stripe_size, 0u,
 			       lp->extents - lv->le_count,
 			       NULL, 0u, 0u, pvh, alloc)) {
-			stack;
-			return ECMD_FAILED;
-		}
+		stack;
+		return ECMD_FAILED;
 	}
 
 	/* store vg on disk(s) */
@@ -435,6 +478,13 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	}
 
 	log_print("Logical volume %s successfully resized", lp->lv_name);
+
+	if (lp->resizefs && (lp->resize == LV_EXTEND)) {
+		if (!exec_cmd("fsadm", "resize", lv_path, size_buf)) {
+			stack;
+			return ECMD_FAILED;
+		}
+	}
 
 	return ECMD_PROCESSED;
 }
