@@ -219,6 +219,9 @@ void sync_dir(const char *file)
 		while (*c != '/' && c > dir)
 			c--;
 
+		if (c == dir)
+			*c++ = '.';
+
 		*c = '\0';
 	}
 

@@ -1,5 +1,6 @@
 Version 2.00.17 -
 =============================
+  Fix sync_dir() when no / in filename
   vgcfgbackup -f accepts template with %s for VG name.
   Extend hash functions to handle non-null-terminated data.
   Add local activation support.
