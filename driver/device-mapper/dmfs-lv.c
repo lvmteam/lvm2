@@ -160,8 +160,8 @@ static int is_identifier(const char *str, int len)
 static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
 	struct inode *inode;
+	int rv = -ENOSPC;
 
-	printk("lv mkdir\n");
 	if (dentry->d_name.len >= DM_NAME_LEN)
 		return -EINVAL;
 
@@ -174,14 +174,14 @@ static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 
 	if (dentry->d_name.name[0] == '.')
 		return -EINVAL;
-	printk("try create new tdir\n");
+
 	inode = dmfs_create_tdir(dir->i_sb, mode);
-	if (!IS_ERR(inode)) {
+	if (inode) {
 		d_instantiate(dentry, inode);
 		dget(dentry);
-		return 0;
+		rv = 0;
 	}
-	return PTR_ERR(inode);
+	return rv;
 }
 
 /*
@@ -271,7 +271,6 @@ struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *de
 			return NULL;
 		}
 		DMFS_I(inode)->md = md;
-		printk("created new lv\n");
 	}
 
 	return inode;

@@ -42,6 +42,7 @@ static int is_identifier(const char *str, int len)
 static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
 	struct inode *inode;
+	int rv = -ENOSPC;
 
 	if (dentry->d_name.len >= DM_NAME_LEN)
 		return -EINVAL;
@@ -53,12 +54,12 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 		return -EINVAL;
 
 	inode = dmfs_create_lv(dir->i_sb, mode, dentry);
-	if (!IS_ERR(inode)) {
+	if (inode) {
 		d_instantiate(dentry, inode);
 		dget(dentry);
-		return 0;
+		rv = 0;
 	}
-	return PTR_ERR(inode);
+	return rv;
 }
 
 /*
@@ -98,7 +99,6 @@ static int dmfs_root_rmdir(struct inode *dir, struct dentry *dentry)
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
 		ret = dm_deactivate(DMFS_I(inode)->md);
-		printk("ret=%d\n", ret);
 		if (ret == 0) {
 			inode->i_nlink--;
 			dput(dentry);
