@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <sys/param.h>
 #include <dirent.h>
+#include <linux/kdev_t.h>
 
 /*
  * FIXME: really need to seperate names from the devices since
@@ -303,9 +304,55 @@ int dev_cache_add_dir(const char *path)
 	return 1;
 }
 
+/* Check cached device name is still valid before returning it */
+/* This should be a rare occurrence */
+/* FIXME Make rest of code pass/cache struct device instead of dev_name */
+const char *dev_name_confirmed(struct device *dev)
+{
+	struct stat buf;
+	char *name;
+	int r;
+
+	while ((r = stat(name = list_item(dev->aliases.n, 
+					   struct str_list)->str, &buf)) || 
+	       (buf.st_rdev != dev->dev)) {
+		if (r < 0)
+			log_sys_error("stat", name);
+		log_error("Path %s no longer valid for device(%d,%d)",
+			  name, (int) MAJOR(dev->dev), (int) MINOR(dev->dev));
+
+		/* Remove the incorrect hash entry */
+		hash_remove(_cache.names, name);
+
+		/* Leave list alone if there isn't an alternative name */
+		/* so dev_name will always find something to return. */
+		/* Otherwise add the name to the correct device. */
+		if (list_size(&dev->aliases) > 1) {
+			list_del(dev->aliases.n);
+			if (!r)
+				_insert(name, 0);
+			continue;
+		}
+
+		log_error("Aborting - please provide new pathname for what "
+			  "used to be %s", name);
+		return NULL;
+	}
+
+	return dev_name(dev);
+}
+
+
 struct device *dev_cache_get(const char *name, struct dev_filter *f)
 {
+	struct stat buf;
 	struct device *d = (struct device *) hash_lookup(_cache.names, name);
+
+	/* If the entry's wrong, remove it */
+	if (d && (stat(name, &buf) || (buf.st_rdev != d->dev))) {
+		hash_remove(_cache.names, name);
+		d = NULL;
+	}
 
 	if (!d) {
 		_insert(name, 0);
@@ -352,6 +399,4 @@ struct device *dev_iter_get(struct dev_iter *iter)
 
 	return NULL;
 }
-
-
 

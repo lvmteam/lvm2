@@ -47,6 +47,8 @@ static inline const char *dev_name(struct device *dev) {
 	return list_item(dev->aliases.n, struct str_list)->str;
 }
 
+/* Return a valid device name from the alias list; NULL otherwise */
+const char *dev_name_confirmed(struct device *dev);
 
 static inline int is_lvm_partition(const char *name) {
 	return 1;
