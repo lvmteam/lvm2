@@ -52,17 +52,17 @@ static int vgchange_single(const char *vg_name)
 	struct volume_group *vg;
 
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Unable to find volume group %s", vg_name);
+		log_error("Unable to find volume group \"%s\"", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & LVM_WRITE) && !arg_count(available_ARG)) {
-		log_error("Volume group %s is read-only", vg->name);
+		log_error("Volume group \"%s\" is read-only", vg->name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group %s is exported", vg_name);
+		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -85,24 +85,24 @@ void vgchange_available(struct volume_group *vg)
 
 	/* FIXME: Force argument to deactivate them? */
 	if (!available && (lv_open = lvs_in_vg_opened(vg))) {
-		log_error("Can't deactivate volume group '%s' with %d open "
+		log_error("Can't deactivate volume group \"%s\" with %d open "
 			  "logical volume(s)", vg->name, lv_open);
 		return;
 	}
 
 	if (available && (lv_active = lvs_in_vg_activated(vg)))
-		log_verbose("%d logical volume(s) in volume group %s "
+		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", lv_active, vg->name);
 
 	if (available && (lv_open = activate_lvs_in_vg(vg)))
 		log_verbose("Activated %d logical volumes in "
-			    "volume group %s", lv_open, vg->name);
+			    "volume group \"%s\"", lv_open, vg->name);
 
 	if (!available && (lv_open = deactivate_lvs_in_vg(vg)))
 		log_verbose("Deactivated %d logical volumes in "
-			    "volume group %s", lv_open, vg->name);
+			    "volume group \"%s\"", lv_open, vg->name);
 
-	log_print("%d logical volume(s) in volume group %s now active",
+	log_print("%d logical volume(s) in volume group \"%s\" now active",
 		  lvs_in_vg_activated(vg), vg->name);
 	return;
 }
@@ -112,12 +112,12 @@ void vgchange_resizeable(struct volume_group *vg)
 	int resizeable = !strcmp(arg_str_value(resizeable_ARG, "n"), "y");
 
 	if (resizeable && (vg->status & RESIZEABLE_VG)) {
-		log_error("Volume group %s is already resizeable", vg->name);
+		log_error("Volume group \"%s\" is already resizeable", vg->name);
 		return;
 	}
 
 	if (!resizeable && !(vg->status & RESIZEABLE_VG)) {
-		log_error("Volume group %s is already not resizeable",
+		log_error("Volume group \"%s\" is already not resizeable",
 			  vg->name);
 		return;
 	}
@@ -135,7 +135,7 @@ void vgchange_resizeable(struct volume_group *vg)
 
 	backup(vg);
 
-	log_print("Volume group %s successfully changed", vg->name);
+	log_print("Volume group \"%s\" successfully changed", vg->name);
 
 	return;
 }
@@ -145,14 +145,14 @@ void vgchange_logicalvolume(struct volume_group *vg)
 	int max_lv = arg_int_value(logicalvolume_ARG, 0);
 
 	if (!(vg->status & RESIZEABLE_VG)) {
-		log_error("Volume group '%s' must be resizeable "
+		log_error("Volume group \"%s\" must be resizeable "
 			  "to change MaxLogicalVolume", vg->name);
 		return;
 	}
 
 	if (max_lv < vg->lv_count) {
 		log_error("MaxLogicalVolume is less than the current number "
-			  "%d of logical volume(s) for '%s'", vg->lv_count,
+			  "%d of logical volume(s) for \"%s\"", vg->lv_count,
 			  vg->name);
 		return;
 	}
@@ -184,7 +184,7 @@ void vgchange_logicalvolume(struct volume_group *vg)
 
 	backup(vg);
 
-	log_print("Volume group %s successfully changed", vg->name);
+	log_print("Volume group \"%s\" successfully changed", vg->name);
 
 	return;
 }

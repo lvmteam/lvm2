@@ -42,17 +42,18 @@ static int vgimport_single(const char *vg_name)
 	struct volume_group *vg;
 
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Unable to find exported volume group %s", vg_name);
+		log_error("Unable to find exported volume group \"%s\"",
+			  vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & EXPORTED_VG)) {
-		log_error("Volume group %s is not exported", vg_name);
+		log_error("Volume group \"%s\" is not exported", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & PARTIAL_VG) {
-		log_error("Volume group %s is partially missing", vg_name);
+		log_error("Volume group \"%s\" is partially missing", vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -66,7 +67,7 @@ static int vgimport_single(const char *vg_name)
 
 	backup(vg);
 
-	log_print("Volume group %s successfully imported", vg->name);
+	log_print("Volume group \"%s\" successfully imported", vg->name);
 	
 	return 0;
 }

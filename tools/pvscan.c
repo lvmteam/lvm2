@@ -184,7 +184,8 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	if (pv->status & EXPORTED_VG) {
 		strncpy(vg_name_this, pv->vg_name, vg_name_len);
-		log_print("PV %-*s  is in exported VG %s [%s / %s free]",
+		log_print("PV %-*s  is in exported VG %s "
+			  "[%s / %s free]",
 			  pv_max_name_len, pv_tmp_name,
 			  vg_name_this, (s1 =
 					 display_size(pv->pe_count *

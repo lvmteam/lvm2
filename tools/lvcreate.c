@@ -103,7 +103,8 @@ int lvcreate(int argc, char **argv)
 				return EINVALID_CMD_LINE;
 			if (strcmp(vg_name, argv[0])) {
 				log_error("Inconsistent volume group names "
-					  "given: %s and %s", vg_name, argv[0]);
+					  "given: \"%s\" and \"%s\"",
+					   vg_name, argv[0]);
 				return EINVALID_CMD_LINE;
 			}
 		}
@@ -116,25 +117,25 @@ int lvcreate(int argc, char **argv)
 		lv_name = st + 1;
 
 	/* does VG exist? */
-	log_verbose("Finding volume group %s", vg_name);
+	log_verbose("Finding volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s doesn't exist", vg_name);
+		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group %s is exported", vg_name);
+		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg_name);
+		log_error("Volume group \"%s\" is read-only", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (lv_name && find_lv_in_vg(vg, lv_name)) {
-		log_error("Logical volume %s already exists in "
-			  "volume group %s", lv_name, vg_name);
+		log_error("Logical volume \"%s\" already exists in "
+			  "volume group \"%s\"", lv_name, vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -218,7 +219,7 @@ int lvcreate(int argc, char **argv)
 
 	backup(vg);
 
-	log_print("Logical volume %s created", lv->name);
+	log_print("Logical volume \"%s\" created", lv->name);
 
 	if (!lv_activate(lv))
 		return ECMD_FAILED;
@@ -239,10 +240,10 @@ int lvcreate(int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
-		log_verbose("Zeroing start of logical volume %s", name);
+		log_verbose("Zeroing start of logical volume \"%s\"", name);
 
 		if (!(dev = dev_cache_get(name, NULL))) {
-			log_error("%s not found: device not zeroed", name);
+			log_error("\"%s\" not found: device not zeroed", name);
 			return ECMD_FAILED;
 		}
 		if (!(dev_open(dev, O_WRONLY)))
@@ -251,7 +252,7 @@ int lvcreate(int argc, char **argv)
 		dev_close(dev);
 
 	} else
-		log_print("WARNING: %s not zeroed", lv->name);
+		log_print("WARNING: \"%s\" not zeroed", lv->name);
 
 	return 0;
 }

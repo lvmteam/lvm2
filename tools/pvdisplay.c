@@ -39,7 +39,8 @@ int pvdisplay(int argc, char **argv)
 
 		for (; opt < argc; opt++) {
 			if (!(pv = fid->ops->pv_read(fid, argv[opt]))) {
-                                log_error("Failed to read physical volume %s",
+                                log_error("Failed to read physical "
+					  "volume \"%s\"",
                                           argv[opt]);
 				continue;
 			}
@@ -71,14 +72,13 @@ void pvdisplay_single(struct physical_volume *pv)
 
 	if (arg_count(short_ARG)) {
 		sz = display_size(size / 2, SIZE_SHORT);
-		log_print("Device '%s' has a capacity of %s", pv_name, sz);
-
+		log_print("Device \"%s\" has a capacity of %s", pv_name, sz);
 		dbg_free(sz);
 		return;
 	}
 
 	if (pv->status & EXPORTED_VG)
-        	log_print("Physical volume '%s' of volume group '%s' "
+        	log_print("Physical volume \"%s\" of volume group \"%s\" "
 			  "is exported" , pv_name, pv->vg_name);
 
 /********* FIXME
@@ -86,7 +86,7 @@ void pvdisplay_single(struct physical_volume *pv)
 *********/
 
 	if (!pv->vg_name) {
-        	log_print ( "'%s' is a new physical volume of %s",
+        	log_print ( "\"%s\" is a new physical volume of \"%s\"",
                   	     pv_name, ( sz = display_size ( size / 2,
 								SIZE_SHORT)));
 		dbg_free(sz);
@@ -118,12 +118,13 @@ void pvdisplay_single(struct physical_volume *pv)
 		if (!(pv->pe = pv_read_pe(pv_name, pv)))
 			goto pvdisplay_device_out;
 		if (!(lvs = pv_read_lvs(pv))) {
-			log_error("Failed to read LVs on %s", pv->pv_name);
+			log_error("Failed to read LVs on \"%s\"", pv->pv_name);
 			goto pvdisplay_device_out;
 		}
 		pv_display_pe_text(pv, pv->pe, lvs);
 	} else
-		log_print("no logical volume on physical volume %s", pv_name);
+		log_print("no logical volume on physical volume \"%s\"",
+			  pv_name);
 **********/
 
 	return;

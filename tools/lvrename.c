@@ -49,7 +49,7 @@ int lvrename(int argc, char **argv)
 	    (vg_name_new = extract_vgname(fid, lv_name_new)) &&
 	    strcmp(vg_name, vg_name_new)) {
 		log_error("Logical volume names must "
-			  "have the same volume group (%s or %s)",
+			  "have the same volume group (\"%s\" or \"%s\")",
 			  vg_name, vg_name_new);
 		return EINVALID_CMD_LINE;
 	}
@@ -74,7 +74,7 @@ int lvrename(int argc, char **argv)
 	}
 
 	if (!is_valid_chars(lv_name_new)) {
-		log_error("New logical volume name %s has invalid characters",
+		log_error("New logical volume name \"%s\" has invalid characters",
 			  lv_name_new);
 		return EINVALID_CMD_LINE;
 	}
@@ -84,31 +84,31 @@ int lvrename(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	log_verbose("Checking for existing volume group %s", vg_name);
+	log_verbose("Checking for existing volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s doesn't exist", vg_name);
+		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
 
         if (vg->status & EXPORTED_VG) {
-                log_error("Volume group %s is exported", vg->name);
+                log_error("Volume group \"%s\" is exported", vg->name);
                 return ECMD_FAILED;
         }
 
         if (!(vg->status & LVM_WRITE)) {
-                log_error("Volume group %s is read-only", vg_name);
+                log_error("Volume group \"%s\" is read-only", vg_name);
                 return ECMD_FAILED;
         }
 
 	if (find_lv_in_vg(vg, lv_name_new)) {
-		log_error("Logical volume %s already exists in "
-			  "volume group %s", lv_name_new, vg_name);
+		log_error("Logical volume \"%s\" already exists in "
+			  "volume group \"%s\"", lv_name_new, vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(lvl = find_lv_in_vg(vg, lv_name_old))) {
-		log_error("Existing logical volume %s not found in "
-			  "volume group %s", lv_name_old, vg_name);
+		log_error("Existing logical volume \"%s\" not found in "
+			  "volume group \"%s\"", lv_name_old, vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -118,12 +118,12 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 
 	if ((active = lv_active(lv)) < 0) {
-		log_error("Unable to determine status of %s", lv->name);
+		log_error("Unable to determine status of \"%s\"", lv->name);
 		return ECMD_FAILED;
 	}
 
 	if (active && !lv_suspend(lv)) {
-		log_error("Failed to suspend %s", lv->name);
+		log_error("Failed to suspend \"%s\"", lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -145,8 +145,8 @@ int lvrename(int argc, char **argv)
 
 	backup(lv->vg);
 
-	log_print("Renamed %s to %s in volume group %s%s",
-		  lv_name_old, lv_name_new, fid->cmd->dev_dir, vg_name);
+	log_print("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
+		  lv_name_old, lv_name_new, vg_name);
 
 	return 0;
 }

@@ -69,14 +69,14 @@ static int vgdisplay_single(const char *vg_name)
 
 	/* FIXME Do the active check here if activevolumegroups_ARG ? */
 
-	log_very_verbose("Finding volume group %s", vg_name);
+	log_very_verbose("Finding volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s doesn't exist", vg_name);
+		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG)
-		log_print("WARNING: volume group %s is exported", vg_name);
+		log_print("WARNING: volume group \"%s\" is exported", vg_name);
 
 	if (arg_count(colon_ARG)) {
 		vgdisplay_colons(vg);

@@ -53,7 +53,7 @@ int pvchange(int argc, char **argv)
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
 			if (!(pv = fid->ops->pv_read(fid, pv_name))) {
-				log_error("Failed to read physical volume %s",
+				log_error("Failed to read physical volume \"%s\"",
 					  pv_name);
 				continue;
 			}
@@ -73,8 +73,10 @@ int pvchange(int argc, char **argv)
 		}
 	}
 
-	log_print("%d physical volume(s) changed / %d physical volume(s) "
-		  "not changed", done, total - done);
+	log_print("%d physical volume%s changed / %d physical volume%s "
+		  "not changed",
+                  done, done > 1 ? "s" : "",
+                  total - done, total - done > 1 ? "s" : "");
 
 	return 0;
 }
@@ -90,25 +92,26 @@ int pvchange_single(struct physical_volume *pv)
 
 	/* If in a VG, must change using volume group. */
 	if (*pv->vg_name) {
-		log_verbose("Finding volume group of physical volume %s", 
+		log_verbose("Finding volume group of physical volume \"%s\"", 
 			    pv_name);
 		if (!(vg = fid->ops->vg_read(fid, pv->vg_name))) {
-			log_error("Unable to find volume group of %s", pv_name);
+			log_error("Unable to find volume group of \"%s\"",
+			pv_name);
 			return 0;
 		}
 
         	if (vg->status & EXPORTED_VG) {
-                	log_error("Volume group %s is exported", vg->name);
+                	log_error("Volume group \"%s\" is exported", vg->name);
                 	return ECMD_FAILED;
         	}
 
 	        if (!(vg->status & LVM_WRITE)) {
-			log_error("Volume group %s is read-only", vg->name);
+			log_error("Volume group \"%s\" is read-only", vg->name);
 			return ECMD_FAILED;
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			log_error("Unable to find %s in volume group %s",
+			log_error("Unable to find \"%s\" in volume group \"%s\"",
 				pv_name, vg->name);
 			return 0;
 		}
@@ -119,42 +122,42 @@ int pvchange_single(struct physical_volume *pv)
 
 	/* change allocatability for a PV */
 	if (allocatable && (pv->status & ALLOCATABLE_PV)) {
-		log_error("Physical volume %s is already allocatable", pv_name);
+		log_error("Physical volume \"%s\" is already allocatable", pv_name);
 		return 0;
 	}
 
 	if (!allocatable && !(pv->status & ALLOCATABLE_PV)) {
-		log_error("Physical volume %s is already unallocatable",
+		log_error("Physical volume \"%s\" is already unallocatable",
 			  pv_name);
 		return 0;
 	}
 
 	if (allocatable) {
-		log_verbose("Setting physical volume %s allocatable", pv_name);
+		log_verbose("Setting physical volume \"%s\" allocatable", pv_name);
 		pv->status |= ALLOCATABLE_PV;
 	} else {
-		log_verbose("Setting physical volume %s NOT allocatable",
+		log_verbose("Setting physical volume \"%s\" NOT allocatable",
 			    pv_name);
 		pv->status &= ~ALLOCATABLE_PV;
 	}
 
-	log_verbose("Updating physical volume %s", pv_name);
+	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
 		if (!(fid->ops->vg_write(fid,vg))) {
-			log_error("Failed to store physical volume %s in "
-				  "volume group %s", pv_name, vg->name);
+			log_error("Failed to store physical volume \"%s\" in "
+				  "volume group \"%s\"", pv_name, vg->name);
 			return 0;
 		}
 		backup(vg);
 	} else {
 		if (!(fid->ops->pv_write(fid, pv))) {
-			log_error("Failed to store physical volume %s", 
+			log_error("Failed to store physical volume \"%s\"", 
 				  pv_name);
 			return 0;
 		}
 	}
 
-	log_print("Physical volume %s changed", pv_name);
+	log_print("Physical volume \"%s\" changed", pv_name);
 
 	return 1;
 }

@@ -48,24 +48,24 @@ int vgreduce(int argc, char **argv)
 	argv++;
 	argc--;
 
-	log_verbose("Finding volume group %s", vg_name);
+	log_verbose("Finding volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s doesn't exist", vg_name);
+		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
 
         if (vg->status & EXPORTED_VG) {
-                log_error("Volume group %s is exported", vg->name);
+                log_error("Volume group \"%s\" is exported", vg->name);
                 return ECMD_FAILED;
         }
 
 	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg_name);
+		log_error("Volume group \"%s\" is read-only", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & RESIZEABLE_VG)) {
-		log_error("Volume group %s is not reducable", vg_name);
+		log_error("Volume group \"%s\" is not reducable", vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -79,7 +79,8 @@ int vgreduce(int argc, char **argv)
 	log_verbose
 	    ("volume group \"%s\" will be reduced by %d physical volume%s",
 	     vg_name, np, np > 1 ? "s" : "");
-	log_verbose ("reducing volume group \"%s\" by physical volume \"%s\"", vg_name, pv_names[p]);
+	log_verbose ("reducing volume group \"%s\" by physical volume \"%s\"",
+		     vg_name, pv_names[p]);
 
 	log_print
 	    ("volume group \"%s\" %ssuccessfully reduced by physical volume%s:",
@@ -96,7 +97,7 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 	const char *name = dev_name(pv->dev);
 
 	if (pv->pe_allocated) {
-		log_error("Physical volume %s still in use", name);
+		log_error("Physical volume \"%s\" still in use", name);
 		return ECMD_FAILED;
 	}
 
@@ -107,8 +108,8 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 *********/
 
 	if (vg->pv_count == 1) {
-		log_error("Can't remove final physical volume %s from "
-			  "volume group %s", name, vg->name);
+		log_error("Can't remove final physical volume \"%s\" from "
+			  "volume group \"%s\"", name, vg->name);
 		return ECMD_FAILED;
 	}
 
@@ -117,7 +118,7 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-	log_verbose("Removing %s from volume group %s", name, vg->name);
+	log_verbose("Removing \"%s\" from volume group \"%s\"", name, vg->name);
 
 	if (pvl)
 		list_del(&pvl->list);
@@ -128,20 +129,22 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 	vg->extent_count -= pv->pe_count;
 
 	if (!(fid->ops->vg_write(fid, vg))) {
-		log_error("Removal of physical volume %s from %s failed",
+		log_error("Removal of physical volume \"%s\" from "
+			  "\"%s\" failed",
 			  name, vg->name);
 		return ECMD_FAILED;
 	}
 
 	if (!fid->ops->pv_write(fid, pv)) {
-		log_error("Failed to clear metadata from physical volume %s "
-			  "after removal from %s", name, vg->name);
+		log_error("Failed to clear metadata from physical "
+			  "volume \"%s\" "
+			  "after removal from \"%s\"", name, vg->name);
 		return ECMD_FAILED;
 	}
 
 	backup(vg);
 
-	log_print("Removed %s from volume group %s", name, vg->name);
+	log_print("Removed \"%s\" from volume group \"%s\"", name, vg->name);
 
 	return 0;
 }

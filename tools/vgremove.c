@@ -34,24 +34,26 @@ static int vgremove_single(const char *vg_name)
 	struct list *pvh;
 	int ret = 0;
 
-	log_verbose("Checking for volume group %s", vg_name);
+	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s doesn't exist", vg_name);
+		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
 
         if (vg->status & EXPORTED_VG) {
-                log_error("Volume group %s is exported", vg->name);
+                log_error("Volume group \"%s\" is exported", vg->name);
                 return ECMD_FAILED;
         }
 
 	if (vg->status & PARTIAL_VG) {
-		log_error("Cannot remove partial volume group %s", vg->name);
+		log_error("Cannot remove partial volume group \"%s\"",
+			  vg->name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->lv_count) {
-		log_error("Volume group %s still contains %d logical volume(s)",
+		log_error("Volume group \"%s\" still contains %d "
+			  "logical volume(s)",
 			  vg_name, vg->lv_count);
 		return ECMD_FAILED;
 	}
@@ -61,7 +63,7 @@ static int vgremove_single(const char *vg_name)
 
 /************ FIXME
 	if (vg_remove_dir_and_group_and_nodes(vg_name) < 0) {
-		log_error("removing special files of volume group %s",
+		log_error("removing special files of volume group \"%s\"",
 			  vg_name);
 	}
 *************/
@@ -69,13 +71,14 @@ static int vgremove_single(const char *vg_name)
 	/* init physical volumes */
 	list_iterate(pvh, &vg->pvs) {
 		pv = list_item(pvh, struct pv_list)->pv;
-		log_verbose("Removing physical volume %s from volume group %s",
+		log_verbose("Removing physical volume \"%s\" from "
+			    "volume group \"%s\"",
 			    dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';
 		if (!(fid->ops->pv_write(fid, pv))) {
-			log_error("Failed to remove physical volume %s from "
-				  "volume group %s", dev_name(pv->dev), 
-				  vg_name);
+			log_error("Failed to remove physical volume \"%s\""
+				  " from volume group \"%s\"",
+				  dev_name(pv->dev), vg_name);
 			ret = ECMD_FAILED;
 		}
 	}
@@ -83,9 +86,9 @@ static int vgremove_single(const char *vg_name)
 	backup_remove(vg_name);
 
 	if (!ret)
-		log_print("Volume group %s successfully removed", vg_name);
+		log_print("Volume group \"%s\" successfully removed", vg_name);
 	else
-		log_error("Volume group %s not properly removed", vg_name);
+		log_error("Volume group \"%s\" not properly removed", vg_name);
 
 	return ret;
 }

@@ -31,21 +31,22 @@ static int vgck_single(const char *vg_name)
 {
 	struct volume_group *vg;
 
-	log_verbose("Checking volume group %s", vg_name);
+	log_verbose("Checking volume group \"%s\"", vg_name);
 
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s not found", vg_name);
+		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group %s is exported", vg_name);
+		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}
 
 /******* FIXME Must be caught and logged by vg_read
-	log_error("not all physical volumes of volume group %s online",
-	log_error("volume group %s has physical volumes with invalid version",
+	log_error("not all physical volumes of volume group \"%s\" online",
+	log_error("volume group \"%s\" has physical volumes with ",
+		  "invalid version",
 ********/			     
 
 	/* FIXME: free */
