@@ -166,3 +166,51 @@ int is_valid_chars(char *n)
 	return 1;
 }
 
+char *extract_vgname(struct io_space *ios, char *lv_name)
+{ 
+	char *vg_name = lv_name;
+	char *vg_path, *st;
+
+	/* Path supplied? */
+	if (strchr(vg_name, '/')) {
+		/* Strip prefix (optional) */
+		if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
+			vg_name += strlen(ios->prefix);
+
+		/* Require exactly one slash */
+		if (!(st = strchr(vg_name, '/')) || (strchr(st + 1, '/'))) {
+			log_error("%s: Invalid path for Logical Volume", lv_name);
+			return 0;
+		}
+
+		vg_name = pool_strdup(ios->mem, vg_name);
+		if (!vg_name) {
+			log_error("Allocation of vg_name failed");
+			return 0;
+		}
+
+		*strchr(vg_name, '/') = '\0';
+		return vg_name;
+	}
+	
+	/* Take default VG from environment? */
+	vg_path = getenv("LVM_VG_NAME"); 
+	if (!vg_path) {
+		log_error("Path required for Logical Volume %s", lv_name);
+		return 0;
+	}
+
+	/* Strip prefix (optional) */
+	if (!strncmp(vg_path, ios->prefix, strlen(ios->prefix)))
+		vg_path += strlen(ios->prefix);
+
+	if (strchr(vg_path, '/')) {
+		log_error("Environment Volume Group in LVM_VG_NAME invalid: %s", 
+			  vg_path);
+		return 0;
+	}
+
+	return pool_strdup(ios->mem, vg_path);
+
+}
+

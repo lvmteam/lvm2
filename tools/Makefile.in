@@ -23,6 +23,7 @@ VPATH = @srcdir@
 SOURCES=\
 	lvm.c \
 	lvmchange.c \
+	lvremove.c \
 	pvchange.c \
 	pvcreate.c \
 	pvdisplay.c \
@@ -33,8 +34,8 @@ SOURCES=\
 	vgcreate.c \
 	vgextend.c \
 	vgreduce.c \
-	vgrename.c \
 	vgremove.c \
+	vgrename.c \
 	vgscan.c
 
 TARGETS=\
