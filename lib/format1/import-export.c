@@ -222,9 +222,8 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 {
 	memset(vgd, 0, sizeof(*vgd));
 	memcpy(vgd->vg_uuid, vg->id.uuid, ID_LEN);
-	//vgd->vg_number = ??;
 
-	if (vg->status &= LVM_READ)
+	if (vg->status & LVM_READ)
 		vgd->vg_access |= VG_READ;
 
 	if (vg->status & LVM_WRITE)
