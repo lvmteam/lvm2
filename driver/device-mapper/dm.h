@@ -147,6 +147,8 @@ enum {
  */
 struct dev_list {
 	kdev_t dev;
+	atomic_t count;
+
 	struct block_device *bd;
 	struct dev_list *next;
 };
@@ -260,12 +262,12 @@ int dm_fs_remove(struct mapped_device *md);
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
 
-inline static int is_active(struct mapped_device *md)
+static inline int is_active(struct mapped_device *md)
 {
 	return test_bit(DM_ACTIVE, &md->state);
 }
 
-inline static const char *eat_space(const char *b, const char *e)
+static inline const char *eat_space(const char *b, const char *e)
 {
 	while(b != e && isspace((int) *b))
 		b++;
@@ -273,7 +275,7 @@ inline static const char *eat_space(const char *b, const char *e)
 	return b;
 }
 
-inline static int get_number(const char **b, const char *e, unsigned int *n)
+static inline int get_number(const char **b, const char *e, unsigned int *n)
 {
 	char *ptr;
 	*b = eat_space(*b, e);

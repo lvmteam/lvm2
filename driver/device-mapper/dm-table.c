@@ -147,7 +147,6 @@ struct dm_table *dm_table_create(void)
 
 void dm_table_destroy(struct dm_table *t)
 {
-	struct dev_list *d, *n;
 	int i;
 
 	if (!t)
@@ -164,9 +163,16 @@ void dm_table_destroy(struct dm_table *t)
 	kfree(t);
 
 	/* free the device list */
-	for (d = t->devices; d; d = n) {
-		n = d->next;
-		kfree(d);
+	if (t->devices) {
+		struct dev_list *d, *n;
+
+		WARN("there are still devices present, someone isn't "
+		     "calling dm_table_remove_device");
+
+		for (d = t->devices; d; d = n) {
+			n = d->next;
+			kfree(d);
+		}
 	}
 }
 
@@ -200,18 +206,60 @@ int dm_table_add_entry(struct dm_table *t, offset_t high,
 	return 0;
 }
 
+/*
+ * see if we've already got a device in the list.
+ */
+static struct dev_list *find_device(struct dev_list *d, kdev_t dev)
+{
+	while(d) {
+		if (d->dev == dev)
+			break;
+
+		d = d->next;
+	}
+
+	return d;
+}
+
+/*
+ * add a device to the list, or just increment the
+ * usage count if it's already present.
+ */
 int dm_table_add_device(struct dm_table *t, kdev_t dev)
 {
-	struct dev_list *d = kmalloc(sizeof(*d), GFP_KERNEL);
+	struct dev_list *d;
 
-	if (!d)
-		return -ENOMEM;
+	d = find_device(t->devices, dev);
+	if (!d) {
+		d = kmalloc(sizeof(*d), GFP_KERNEL);
+		if (!d)
+			return -ENOMEM;
 
-	d->dev = dev;
-	d->next = t->devices;
-	t->devices = d;
+		d->dev = dev;
+		atomic_set(&d->count, 0);
+		d->next = t->devices;
+		t->devices = d;
+	}
+	atomic_inc(&d->count);
 
 	return 0;
+}
+
+/*
+ * decrement a devices use count and remove it if
+ * neccessary.
+ */
+void dm_table_remove_device(struct dm_table *t, kdev_t dev)
+{
+	struct dev_list *d = find_device(t->devices, dev);
+
+	if (!d) {
+		WARN("asked to remove a device that isn't present");
+		return;
+	}
+
+	if (atomic_dec_and_test(&d->count))
+		kfree(d);
 }
 
 /*
