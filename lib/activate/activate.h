@@ -13,33 +13,18 @@ int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 
 /*
- * Status functions.  Return count (0 upwards) or else -1 on
- * error.
- */
-int lv_active(struct logical_volume *lv);
-int lv_suspended(struct logical_volume *lv);
-int lv_open_count(struct logical_volume *lv);
-
-/*
  * Returns 1 if info structure has been populated, else 0.
  */
 int lv_info(struct logical_volume *lv, struct dm_info *info);
 
 /*
- * Activation proper.
- */
-int lv_rename(const char *old_name, struct logical_volume *lv);
-
-
-/*
- * These should eventually replace some of the above and maybe
- * use config file to determine whether or not to activate
+ * These should eventually use config file
+ * to determine whether or not to activate
  */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s);
 int lv_activate(struct cmd_context *cmd, const char *lvid_s);
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s);
-
 
 /*
  * FIXME:

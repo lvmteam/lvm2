@@ -253,7 +253,6 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
         if (!unlock_lv(cmd, lv->lvid.s)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
@@ -302,7 +301,6 @@ static int lvchange_readahead(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
         if (!unlock_lv(cmd, lv->lvid.s)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
@@ -325,12 +323,13 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		lv->minor = -1;
 		log_verbose("Disabling persistent minor for \"%s\"", lv->name);
 	} else {
-		if (lv_active(lv) > 0) {
-			log_error("Cannot change minor number when active");
-			return 0;
-		}
 		if (!arg_count(cmd, minor_ARG)) {
 			log_error("Minor number must be specified with -My");
+			return 0;
+		}
+		log_verbose("Ensuring %s is inactive", lv->name);
+		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
+			log_error("%s: deactivation failed", lv->name);
 			return 0;
 		}
 		lv->status |= FIXED_MINOR;
@@ -353,7 +352,6 @@ static int lvchange_persistent(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
         if (!unlock_lv(cmd, lv->lvid.s)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;

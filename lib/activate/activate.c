@@ -75,8 +75,7 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 	return r;
 }
 
-/* FIXME Change these into query macros with lv_get_info() to fill struct? */
-int lv_active(struct logical_volume *lv)
+static int _lv_active(struct logical_volume *lv)
 {
 	struct dm_info info;
 
@@ -88,19 +87,7 @@ int lv_active(struct logical_volume *lv)
 	return info.exists;
 }
 
-int lv_suspended(struct logical_volume *lv)
-{
-	struct dm_info info;
-
-	if (!lv_info(lv, &info)) {
-		stack;
-		return -1;
-	}
-
-	return info.suspended;
-}
-
-int lv_open_count(struct logical_volume *lv)
+static int _lv_open_count(struct logical_volume *lv)
 {
 	struct dm_info info;
 
@@ -178,7 +165,7 @@ static int _lv_suspend(struct logical_volume *lv)
 #endif
 }
 
-int lv_rename(const char *old_name, struct logical_volume *lv)
+static int _lv_rename(const char *old_name, struct logical_volume *lv)
 {
 #if 0
 	int r = 0;
@@ -236,7 +223,7 @@ int lvs_in_vg_activated(struct volume_group *vg)
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		count += (lv_active(lv) == 1);
+		count += (_lv_active(lv) == 1);
 	}
 
 	return count;
@@ -250,7 +237,7 @@ int lvs_in_vg_opened(struct volume_group *vg)
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		count += (lv_open_count(lv) == 1);
+		count += (_lv_open_count(lv) == 1);
 	}
 
 	return count;
@@ -294,11 +281,17 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
+	struct dm_info info;
 
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
-	if (lv_active(lv) > 0)
+        if (!lv_info(lv, &info)) {
+                stack;
+                return 0;
+        }
+
+	if (info.exists && !info.suspended)
 		_lv_suspend(lv);
 
 	return 1;
@@ -308,11 +301,17 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
+	struct dm_info info;
 
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
-	if ((lv_active(lv) > 0) && lv_suspended(lv))
+        if (!lv_info(lv, &info)) {
+                stack;
+                return 0;
+        }
+
+	if (info.exists && info.suspended)
 		_lv_activate(lv);
 
 	return 1;
@@ -321,11 +320,17 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
+	struct dm_info info;
 
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
-	if (lv_active(lv) > 0)
+        if (!lv_info(lv, &info)) {
+                stack;
+                return 0;
+        }
+
+	if (info.exists)
 		_lv_deactivate(lv);
 
 	return 1;
@@ -334,14 +339,17 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
-	int active;
+	struct dm_info info;
 
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
-	active = lv_active(lv);
+        if (!lv_info(lv, &info)) {
+                stack;
+                return 0;
+        }
 
-	if (!active || ((active > 0) && lv_suspended(lv)))
+	if (!info.exists || info.suspended)
 		_lv_activate(lv);
 
 	return 1;

@@ -24,6 +24,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
+	struct dm_info info;
 	uint32_t extents = 0;
 	uint32_t size = 0;
 	uint32_t stripes = 0, stripesize = 0;
@@ -276,13 +277,18 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		if (argc)
 			log_print("Ignoring PVs on command line when reducing");
 
-		if (lv_active(lv) > 0) {
+		if (!lv_info(lv, &info)) {
+			stack;
+			goto error;
+		}
+
+		if (info.exists) {
 			dummy =
 			    display_size((uint64_t)
 					 extents * (vg->extent_size / 2),
 					 SIZE_SHORT);
 			log_print("WARNING: Reducing active%s logical volume "
-				  "to %s", lv_open_count(lv) ? " and open" : "",
+				  "to %s", info.open_count ? " and open" : "",
 				  dummy);
 
 			log_print("THIS MAY DESTROY YOUR DATA "
