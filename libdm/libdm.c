@@ -386,7 +386,7 @@ int dm_task_run(struct dm_task *dmt)
 
 int dm_set_dev_dir(const char *dir)
 {
-	snprintf(_dm_dir, sizeof(_dm_dir), "%s/%s", dir, DM_DIR);
+	snprintf(_dm_dir, sizeof(_dm_dir), "%s%s", dir, DM_DIR);
 	return 1;
 }
 
