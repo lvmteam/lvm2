@@ -25,17 +25,24 @@ static int lvchange_permission(struct logical_volume *lv);
 static int lvchange_availability(struct logical_volume *lv);
 static int lvchange_contiguous(struct logical_volume *lv);
 static int lvchange_readahead(struct logical_volume *lv);
+static int lvchange_persistent(struct logical_volume *lv);
 
 int lvchange(int argc, char **argv)
 {
 	if (!arg_count(available_ARG) && !arg_count(contiguous_ARG)
-	    && !arg_count(permission_ARG) && !arg_count(readahead_ARG)) {
-		log_error("One or more of -a, -C, -p or -r required");
+	    && !arg_count(permission_ARG) && !arg_count(readahead_ARG)
+	    && !arg_count(minor_ARG) && !arg_count(persistent_ARG)) {
+		log_error("One or more of -a, -C, -m, -M, -p or -r required");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (!argc) {
 		log_error("Please give logical volume path(s)");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(minor_ARG) && argc != 1) {
+		log_error("Only give one logical volume when specifying minor");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -49,9 +56,9 @@ static int lvchange_single(struct logical_volume *lv)
 
 	if (!(lv->vg->status & LVM_WRITE) && 
 	    (arg_count(contiguous_ARG) || arg_count(permission_ARG) ||
-	     arg_count(readahead_ARG))) {
-		log_error("Only -a permitted with read-only volume group \"%s\"",
-			  lv->vg->name);
+	     arg_count(readahead_ARG) || arg_count(persistent_ARG))) {
+		log_error("Only -a permitted with read-only volume "
+			  "group \"%s\"", lv->vg->name);
 		return EINVALID_CMD_LINE;
 	}
 
@@ -62,7 +69,8 @@ static int lvchange_single(struct logical_volume *lv)
 	}
 
 	if (lv->status & SNAPSHOT) {
-		log_error("Can't change snapshot logical volume \"%s\"", lv->name);
+		log_error("Can't change snapshot logical volume \"%s\"", 
+			  lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -88,6 +96,14 @@ static int lvchange_single(struct logical_volume *lv)
 			return ECMD_FAILED;
 		archived = 1;
 		doit += lvchange_readahead(lv);
+	}
+
+	/* read ahead sector change */
+	if (arg_count(persistent_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_persistent(lv);
 	}
 
 	if (doit)
@@ -147,18 +163,24 @@ static int lvchange_availability(struct logical_volume *lv)
 	if (strcmp(arg_str_value(available_ARG, "n"), "n"))
 		activate = 1;
 
+	if (arg_count(minor_ARG)) {
+		lv->minor = arg_int_value(minor_ARG, -1);
+	}
+
 	if ((active = lv_active(lv)) < 0) {
 		log_error("Unable to determine status of \"%s\"", lv->name);
 		return 0;
 	}
 
 	if (activate && active) {
-		log_verbose("Logical volume \"%s\" is already active", lv->name);
+		log_verbose("Logical volume \"%s\" is already active", 
+			    lv->name);
 		return 0;
 	}
 
 	if (!activate && !active) {
-		log_verbose("Logical volume \"%s\" is already inactive", lv->name);
+		log_verbose("Logical volume \"%s\" is already inactive", 
+			    lv->name);
 		return 0;
 	}
 	
@@ -261,3 +283,40 @@ static int lvchange_readahead(struct logical_volume *lv)
 
 	return 1;
 }
+
+static int lvchange_persistent(struct logical_volume *lv)
+{
+	if (!strcmp(arg_str_value(persistent_ARG, "n"), "n")) {
+		if (!(lv->status & FIXED_MINOR)) {
+			log_error("Minor number is already not persistent "
+				  "for \"%s\"", lv->name);
+			return 0;
+		}
+		lv->status &= ~FIXED_MINOR;
+		lv->minor = -1;
+		log_verbose("Disabling persistent minor for \"%s\"", lv->name);
+	} else {
+		if (lv_active(lv)) {
+			log_error("Cannot change minor number when active");
+			return 0;
+		}
+		if (!arg_count(minor_ARG)) {
+			log_error("Minor number must be specified with -My");
+			return 0;
+		}
+		lv->status |= FIXED_MINOR;
+		lv->minor = arg_int_value(minor_ARG, -1);
+		log_verbose("Setting persistent minor number to %d for \"%s\"",
+			    lv->minor, lv->name);
+	}
+
+	log_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
+
+	if (!fid->ops->vg_write(fid, lv->vg))
+		return 0;
+
+	backup(lv->vg);
+
+	return 1;
+}
+

@@ -43,6 +43,7 @@ static struct flag _lv_flags[] = {
 	{ALLOC_CONTIGUOUS, "ALLOC_CONTIGUOUS"},
 	{SNAPSHOT, "SNASHOT"},
 	{SNAPSHOT_ORG, "SNAPSHOT_ORIGIN"},
+	{FIXED_MINOR, "FIXED_MINOR"},
 	{0, NULL}
 };
 

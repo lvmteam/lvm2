@@ -13,6 +13,7 @@
 #include "names.h"
 
 #include <limits.h>
+#include <linux/kdev_t.h>
 
 
 int library_version(char *version, size_t size)
@@ -278,13 +279,23 @@ int _load(struct logical_volume *lv, int task)
 	}
 
 	if (!((lv->status & LVM_WRITE) && (lv->vg->status & LVM_WRITE))) {
-	    	if (!dm_task_set_ro(dmt))
+	    	if (!dm_task_set_ro(dmt)) {
 			log_error("Failed to set %s read-only during "
 				  "activation.", lv->name);
-		else 
+			goto out;
+		} else 
 			log_very_verbose("Activating %s read-only", lv->name);
 	}
 
+	if (lv->minor) {
+		if (!dm_task_set_minor(dmt, MINOR(lv->minor))) {
+			log_error("Failed to set minor number for %s to %d "
+				  "during activation.", lv->name, lv->minor);
+			goto out;
+		} else
+			log_very_verbose("Set minor number for %s to %d.",
+					 lv->name, lv->minor);
+	}
 
 	if (!(r = dm_task_run(dmt)))
 		stack;

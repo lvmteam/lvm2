@@ -213,6 +213,24 @@ int lvcreate(int argc, char **argv)
 		lv->read_ahead = read_ahead;
 	}
 
+	if (arg_count(minor_ARG)) {
+		lv->status |= FIXED_MINOR;
+		lv->minor = arg_int_value(minor_ARG, -1);
+		log_verbose("Setting minor number to %d", lv->minor);
+	}
+
+	if (arg_count(persistent_ARG)) {
+		if (!strcmp(arg_str_value(persistent_ARG, "n"), "n"))
+			lv->status &= ~FIXED_MINOR;
+		else
+			if (!arg_count(minor_ARG)) {
+				log_error("Please specify minor number with "
+					  "--minor when using -My");
+				return ECMD_FAILED;
+			}
+			lv->status |= FIXED_MINOR;
+	}
+
 	/* store vg on disk(s) */
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;

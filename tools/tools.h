@@ -109,6 +109,7 @@ int yes_no_arg(struct arg *a);
 int size_arg(struct arg *a);
 int int_arg(struct arg *a);
 int int_arg_with_sign(struct arg *a);
+int minor_arg(struct arg *a);
 int string_arg(struct arg *a);
 int permission_arg(struct arg *a);
 

@@ -16,6 +16,7 @@
 
 #include <time.h>
 #include <sys/utsname.h>
+#include <linux/kdev_t.h>
 
 static int _check_vg_name(const char *name)
 {
@@ -280,6 +281,12 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	if (lvd->lv_status & LV_SPINDOWN)
 		lv->status |= SPINDOWN_LV;
 
+	if (lvd->lv_status & LV_PERSISTENT_MINOR) {
+		lv->status |= FIXED_MINOR;
+		lv->minor = MINOR(lvd->lv_dev);
+	} else
+		lv->minor = -1;
+
 	if (lvd->lv_access & LV_READ)
 		lv->status |= LVM_READ;
 
@@ -337,6 +344,11 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 
 	if (lv->status & SPINDOWN_LV)
 		lvd->lv_status |= LV_SPINDOWN;
+
+	if (lv->status & FIXED_MINOR) {
+		lvd->lv_status |= LV_PERSISTENT_MINOR;
+		lvd->lv_dev = MKDEV(0, lv->minor);
+	}
 
 	lvd->lv_read_ahead = lv->read_ahead;
 	lvd->lv_stripes = list_item(lv->segments.n,

@@ -36,6 +36,7 @@
 
 #define SPINDOWN_LV          	0x00000010  /* LV */
 #define BADBLOCK_ON       	0x00000020  /* LV */
+#define FIXED_MINOR		0x00000080  /* LV */
 
 /* FIXME: do we really set read/write for a whole vg ? */
 #define LVM_READ              	0x00000100  /* LV VG */
@@ -119,6 +120,7 @@ struct logical_volume {
 
         uint32_t status;
 	uint32_t read_ahead;
+	int32_t minor;
 
         uint64_t size;
         uint32_t le_count;

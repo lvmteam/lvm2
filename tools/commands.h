@@ -53,6 +53,7 @@ xx(lvchange,
    "\t[-C/--contiguous y/n]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-M/--persistent y/n] [--minor minor]\n"
    "\t[-P/--partial] " "\n"
    "\t[-p/--permission r/rw]\n"
    "\t[-r/--readahead ReadAheadSectors]\n"
@@ -60,7 +61,8 @@ xx(lvchange,
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, available_ARG, contiguous_ARG, partial_ARG,
+   autobackup_ARG, available_ARG, contiguous_ARG, 
+   minor_ARG, persistent_ARG, partial_ARG,
    permission_ARG, readahead_ARG, test_ARG)
 
 xx(lvcreate,
@@ -73,6 +75,7 @@ xx(lvcreate,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]" "\n"
    "\t{-l|--extents LogicalExtentsNumber |" "\n"
    "\t -L|--size LogicalVolumeSize[kKmMgGtT]} " "\n"
+   "\t[-M|--persistent {y|n}] [--minor minor]\n"
    "\t[-n|--name LogicalVolumeName]"  "\n"
    "\t[-p|--permission {r|rw}] " "\n"
    "\t[-r|--readahead ReadAheadSectors]"  "\n"
@@ -96,8 +99,9 @@ chunksize_ARG,
 snapshot_ARG, 
 */
 
-   autobackup_ARG, contiguous_ARG, stripes_ARG, stripesize_ARG, 
+   autobackup_ARG, contiguous_ARG, stripes_ARG, stripesize_ARG,
    extents_ARG, size_ARG, name_ARG, permission_ARG, readahead_ARG, 
+   minor_ARG, persistent_ARG,
    test_ARG, zero_ARG)
 
 xx(lvdisplay,
