@@ -70,6 +70,7 @@ static const device_info_t device_info[] = {
 	{"i2o_block", 16},	/* i2o Block Disk */
 	{"iseries/vd", 8},	/* iSeries disks */
 	{"gnbd", 1},		/* Network block device */
+	{"ramdisk", 1},		/* RAM disk */
 	{NULL, 0}
 };
 
