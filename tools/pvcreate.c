@@ -93,7 +93,6 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 		return;
 
         size = arg_int_value(cmd, physicalvolumesize_ARG, 0) * 2;
-printf("%Ld\n", size);
 	if (!(pv = pv_create(cmd->fid, pv_name, idp, size))) {
 		log_err("Failed to setup physical volume \"%s\"", pv_name);
 		return;
