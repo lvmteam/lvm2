@@ -227,6 +227,7 @@ static int lvchange_readahead(struct cmd_context *cmd,
 static int lvchange_persistent(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
+	struct lvinfo info;
 
 	if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n")) {
 		if (!(lv->status & FIXED_MINOR)) {
@@ -248,8 +249,19 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			log_error("Major number must be specified with -My");
 			return 0;
 		}
-		log_verbose("Ensuring %s is inactive. Reactivate with -ay.",
-			    lv->name);
+		if (lv_info(lv, &info) && info.exists && 
+			!arg_count(cmd, force_ARG)) {
+			if (yes_no_prompt("Logical volume %s will be "
+					  "deactivated first. "
+					  "Continue? [y/n]: ",
+					  lv->name) == 'n') {
+				log_print("%s device number not changed.",
+					  lv->name);
+				return 0;
+			}
+		}
+		log_print("Ensuring %s is inactive. "
+			  "(Reactivate using lvchange -ay.)", lv->name);
 		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
 			log_error("%s: deactivation failed", lv->name);
 			return 0;
