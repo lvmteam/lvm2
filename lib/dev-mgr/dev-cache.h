@@ -32,7 +32,6 @@ void dev_cache_exit(void);
 
 int dev_cache_add_dir(const char *path);
 struct device *dev_cache_get(const char *name);
-void dev_cache_put(struct device *d);
 
 
 /*
@@ -41,12 +40,7 @@ void dev_cache_put(struct device *d);
 struct dev_iter;
 struct dev_iter *dev_iter_create(struct dev_filter *f);
 void dev_iter_destroy(struct dev_iter *iter);
-
-struct device *dev_cache_iter_get(struct dev_iter *iter);
-void dev_cache_iter_put(struct dev_iter *iter);
-
-/* returns 0 on eof */
-int dev_cache_next(struct dev_iter *iter);
+struct device *dev_iter_get(struct dev_iter *iter);
 
 
 /*
