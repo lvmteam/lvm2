@@ -62,6 +62,12 @@ enum {
 #undef xx
 };
 
+typedef enum {
+	SIGN_NONE = 0,
+	SIGN_PLUS = 1,
+	SIGN_MINUS = 2
+} sign_t;
+	
 /* a global table of possible arguments */
 struct arg {
 	char short_arg;
@@ -69,7 +75,8 @@ struct arg {
 	int (*fn)(struct arg *a);
 	int count;
 	char *value;
-	int i_value;
+	uint32_t i_value;
+	sign_t sign;
 };
 
 extern struct arg the_args[ARG_COUNT + 1];
@@ -80,6 +87,7 @@ void usage(const char *name);
 int yes_no_arg(struct arg *a);
 int size_arg(struct arg *a);
 int int_arg(struct arg *a);
+int int_arg_with_sign(struct arg *a);
 int string_arg(struct arg *a);
 int permission_arg(struct arg *a);
 
@@ -99,9 +107,14 @@ static inline char *arg_str_value(int a, char *def)
 	return arg_count(a) ? the_args[a].value : def;
 }
 
-static inline int arg_int_value(int a, int def)
+static inline uint32_t arg_int_value(int a, uint32_t def)
 {
 	return arg_count(a) ? the_args[a].i_value : def;
+}
+
+static inline sign_t arg_sign_value(int a, sign_t def)
+{
+	return arg_count(a) ? the_args[a].sign : def;
 }
 
 static inline int arg_count_increment(int a)

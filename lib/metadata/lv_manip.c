@@ -64,11 +64,11 @@ static int _alloc_contiguous(struct logical_volume *lv,
 	struct pv_map *pvm;
 	struct pv_area *pva, *biggest;
 
-	list_iterate (tmp1, pvms) {
+	list_iterate(tmp1, pvms) {
 		pvm = list_item(tmp1, struct pv_map);
 		biggest = NULL;
 
-		list_iterate (tmp2, &pvm->areas) {
+		list_iterate(tmp2, &pvm->areas) {
 			pva = list_item(tmp2, struct pv_area);
 
 			if (!biggest || (pva->count > biggest->count))
@@ -85,7 +85,7 @@ static int _alloc_contiguous(struct logical_volume *lv,
 
 	if (allocated != lv->le_count) {
 		log_error("Insufficient free extents to "
-			  "allocate logical volume %s: %u required", 
+			  "allocate logical volume %s: %u required",
 			  lv->name, lv->le_count);
 		return 0;
 	}
@@ -104,10 +104,10 @@ static int _alloc_simple(struct logical_volume *lv,
 	struct pv_map *pvm;
 	struct pv_area *pva;
 
-	list_iterate (tmp1, pvms) {
+	list_iterate(tmp1, pvms) {
 		pvm = list_item(tmp1, struct pv_map);
 
-		list_iterate (tmp2, &pvm->areas) {
+		list_iterate(tmp2, &pvm->areas) {
 			pva = list_item(tmp2, struct pv_area);
 			allocated += _alloc_area(lv, allocated, pvm->pv, pva);
 
@@ -115,13 +115,13 @@ static int _alloc_simple(struct logical_volume *lv,
 				break;
 		}
 
-		if (allocated == lv->le_count) /* FIXME: yuck, repeated test */
+		if (allocated == lv->le_count)	/* FIXME: yuck, repeated test */
 			break;
 	}
 
 	if (allocated != lv->le_count) {
 		log_error("Insufficient free logical extents to "
-			  "allocate logical volume %s: %u required", 
+			  "allocate logical volume %s: %u required",
 			  lv->name, lv->le_count);
 		return 0;
 	}
@@ -162,11 +162,10 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		r = _alloc_simple(lv, pvms, allocated);
 
 	if (r) {
-		vg->lv_count++;
 		vg->free_count -= lv->le_count - allocated;
 	}
 
- out:
+      out:
 	pool_destroy(scratch);
 	return r;
 }
@@ -182,6 +181,7 @@ struct logical_volume *lv_create(struct io_space *ios,
 {
 	struct lv_list *ll = NULL;
 	struct logical_volume *lv;
+	int i;
 
 	if (!extents) {
 		log_error("Unable to create logical volume %s with no extents",
@@ -217,7 +217,6 @@ struct logical_volume *lv_create(struct io_space *ios,
 		goto bad;
 	}
 
-	lv->vg = vg;
 	lv->status = status;
 	lv->read_ahead = 0;
 	lv->stripes = stripes;
@@ -234,18 +233,24 @@ struct logical_volume *lv_create(struct io_space *ios,
 		goto bad;
 	}
 
+	for (i = 0; i < lv->le_count; i++) {
+		lv->map[i].pv->pe_allocated++;
+	}
+
+	vg->lv_count++;
 	list_add(&vg->lvs, &ll->list);
+	lv->vg = vg;
+
 	return lv;
 
- bad:
+      bad:
 	if (ll)
 		pool_free(ios->mem, ll);
 
 	return NULL;
 }
 
-int lv_reduce(struct io_space *ios,
-	      struct logical_volume *lv, uint32_t extents)
+int lv_reduce(struct io_space *ios, struct logical_volume *lv, uint32_t extents)
 {
 	if (extents % lv->stripes) {
 		log_error("For a striped volume you must reduce by a "
@@ -270,6 +275,7 @@ int lv_extend(struct io_space *ios,
 {
 	struct pe_specifier *new_map;
 	struct logical_volume *new_lv;
+	int i;
 
 	if (!(new_map = pool_zalloc(ios->mem, sizeof(*new_map) *
 				    (extents + lv->le_count)))) {
@@ -289,9 +295,13 @@ int lv_extend(struct io_space *ios,
 	new_lv->map = new_map;
 	new_lv->le_count += extents;
 
-	if (!_allocate(new_lv->vg, new_lv, acceptable_pvs, new_lv->le_count)) {
+	if (!_allocate(new_lv->vg, new_lv, acceptable_pvs, lv->le_count)) {
 		stack;
 		goto bad;
+	}
+
+	for (i = lv->le_count; i < new_lv->le_count; i++) {
+		new_lv->map[i].pv->pe_allocated++;
 	}
 
 	memcpy(lv, new_lv, sizeof(*lv));
@@ -300,7 +310,7 @@ int lv_extend(struct io_space *ios,
 	pool_free(ios->mem, new_lv);
 	return 1;
 
- bad:
+      bad:
 	pool_free(ios->mem, new_map);
 	return 0;
 }

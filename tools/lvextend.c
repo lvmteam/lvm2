@@ -20,17 +20,18 @@
 
 #include "tools.h"
 
-int lvreduce(int argc, char **argv)
+int lvextend(int argc, char **argv)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
-	struct list *lvh;
 	uint32_t extents = 0;
 	uint32_t size = 0;
 	sign_t sign = SIGN_NONE;
 	char *lv_name, *vg_name;
 	char *st;
-	int i;
+	char *dummy;
+	struct list *lvh, *pvh, *pvl;
+	int opt = 0;
 
 	if (arg_count(extents_ARG) + arg_count(size_ARG) != 1) {
 		log_error("Please specify either size or extents (not both)");
@@ -47,8 +48,8 @@ int lvreduce(int argc, char **argv)
 		sign = arg_sign_value(extents_ARG, SIGN_NONE);
 	}
 
-	if (sign == SIGN_PLUS) {
-		log_error("Positive sign not permitted - use lvextend");
+	if (sign == SIGN_MINUS) {
+		log_error("Negative argument not permitted - use lvreduce");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -92,9 +93,37 @@ int lvreduce(int argc, char **argv)
 	lv = &list_item(lvh, struct lv_list)->lv;
 
 	if (!(lv->status & ACTIVE)) {
-		log_error("Logical volume %s must be active before reduction",
+		log_error("Logical volume %s must be active before change",
 			  lv_name);
 		return ECMD_FAILED;
+	}
+
+	if (argc) {
+		/* Build up list of PVs */
+		if (!(pvh = pool_alloc(ios->mem, sizeof (struct list)))) {
+			log_error("pvh list allocation failed");
+			return ECMD_FAILED;
+		}
+		list_init(pvh);
+		for (; opt < argc; opt++) {
+			if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
+				log_error("Physical Volume %s not found in "
+					  "Volume Group %s", argv[opt],
+					  vg->name);
+				return EINVALID_CMD_LINE;
+			}
+			if (list_item(pvl, struct pv_list)->pv.pe_count ==
+			    list_item(pvl, struct pv_list)->pv.pe_allocated) {
+				log_error("No free extents on physical volume"
+					  " %s", argv[opt]);
+				continue;
+				/* FIXME Buy check not empty at end! */
+			}
+			list_add(pvh, pvl);
+		}
+	} else {
+		/* Use full list from VG */
+		pvh = &vg->pvs;
 	}
 
 	if (size) {
@@ -104,12 +133,8 @@ int lvreduce(int argc, char **argv)
 		if (extents % vg->extent_size) {
 			char *s1;
 
-			if (sign == SIGN_NONE)
-				extents += vg->extent_size -
-				    (extents % vg->extent_size);
-			else
-				extents -= extents % vg->extent_size;
-
+			extents += vg->extent_size -
+			    (extents % vg->extent_size);
 			log_print("Rounding up size to full physical extent %s",
 				  (s1 = display_size(extents / 2, SIZE_SHORT)));
 			dbg_free(s1);
@@ -118,64 +143,27 @@ int lvreduce(int argc, char **argv)
 		extents /= vg->extent_size;
 	}
 
+	if (sign == SIGN_PLUS)
+		extents += lv->le_count;
+
+	if (extents <= lv->le_count) {
+		log_error("New size given (%d extents) not larger than "
+			  "existing size (%d extents)", extents, lv->le_count);
+		return EINVALID_CMD_LINE;
+	}
+
 	if (!extents) {
 		log_error("New size of 0 not permitted");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (sign == SIGN_MINUS) {
-		if (extents >= lv->le_count) {
-			log_error("Unable to reduce %s below 1 extent",
-				  lv_name);
-			return EINVALID_CMD_LINE;
-		}
+	log_print("Extending logical volume %s to %s", lv_name,
+		  (dummy =
+		   display_size(extents * vg->extent_size / 2, SIZE_SHORT)));
+	dbg_free(dummy);
 
-		extents = lv->le_count - extents;
-	} else {
-		if (extents >= lv->le_count) {
-			log_error("New size given (%d extents) not less than "
-				  "existing size (%d extents)", extents,
-				  lv->le_count);
-			return EINVALID_CMD_LINE;
-		}
-	}
-
-/************ FIXME Stripes
-		size_rest = new_size % (vg->lv[l]->lv_stripes * vg->pe_size);
-		if (size_rest != 0) {
-			log_print
-			    ("rounding size %ld KB to stripe boundary size ",
-			     new_size / 2);
-			new_size = new_size - size_rest;
-			printf("%ld KB\n", new_size / 2);
-		}
-***********************/
-
-	if (lv->status & ACTIVE || lv_active(lv) > 0) {
-		char *dummy;
-		log_print("WARNING: Reducing active%s logical volume to %s",
-			  (lv_open_count(lv) > 0) ? " and open" : "",
-			  (dummy =
-			   display_size(extents * vg->extent_size / 2,
-					SIZE_SHORT)));
-		log_print("THIS MAY DESTROY YOUR DATA (filesystem etc.)");
-		dbg_free(dummy);
-	}
-
-	if (!arg_count(force_ARG)) {
-		if (yes_no_prompt
-		    ("Do you really want to reduce %s? [y/n]: ", lv_name)
-		    == 'n') {
-			log_print("Logical volume %s NOT reduced", lv_name);
-			return ECMD_FAILED;
-		}
-	}
-
-	for (i = extents; i < lv->le_count; i++) {
-		lv->map[i].pv->pe_allocated--;
-	}
-
-	lv->le_count = extents;
+	lv_extend(ios, lv, extents - lv->le_count, pvh);
+	/* where parm is always *increase* not actual */
 
 /********* FIXME Suspend lv  ***********/
 
@@ -190,11 +178,11 @@ int lvreduce(int argc, char **argv)
 /********* FIXME Resume *********/
 
 /********* FIXME Backup 
-	if ((ret = do_autobackup(vg_name, vg)))
-		return ret;
+        if ((ret = do_autobackup(vg_name, vg)))
+                return ret;
 ************/
 
-	log_print("Logical volume %s reduced", lv_name);
+	log_print("Logical volume %s successfully extended", lv_name);
 
 	return 0;
 }

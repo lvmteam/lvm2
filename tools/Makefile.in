@@ -24,6 +24,7 @@ SOURCES=\
 	lvchange.c \
 	lvcreate.c \
 	lvdisplay.c \
+	lvextend.c \
 	lvm.c \
 	lvmchange.c \
 	lvreduce.c \

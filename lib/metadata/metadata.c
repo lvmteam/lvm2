@@ -19,7 +19,7 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 	struct physical_volume *pv;
 
 	log_verbose("Adding physical volume '%s' to volume group '%s'",
-		pv_name, vg->name);
+		    pv_name, vg->name);
 
 	if (!(pvl = pool_alloc(ios->mem, sizeof (*pvl)))) {
 		log_error("pv_list allocation for '%s' failed", pv_name);
@@ -100,7 +100,7 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 }
 
 int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
-	   char **pv_names)
+	      char **pv_names)
 {
 	int i;
 
@@ -133,14 +133,13 @@ struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
 	}
 
 	if (!id_create(&vg->id)) {
-		log_err("Couldn't create uuid for volume group '%s'.",
-			vg_name);
+		log_err("Couldn't create uuid for volume group '%s'.", vg_name);
 		goto bad;
 	}
 
-        /* Strip prefix if present */
-        if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
-                vg_name += strlen(ios->prefix);
+	/* Strip prefix if present */
+	if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
+		vg_name += strlen(ios->prefix);
 
 	if (!(vg->name = pool_strdup(ios->mem, vg_name))) {
 		stack;
@@ -246,11 +245,11 @@ struct list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 	else
 		ptr = lv_name;
 
-        list_iterate(lvh, &vg->lvs)
-                if (!strcmp(list_item(lvh, struct lv_list)->lv.name, ptr))
-                        return lvh;
+	list_iterate(lvh, &vg->lvs)
+	    if (!strcmp(list_item(lvh, struct lv_list)->lv.name, ptr))
+		 return lvh;
 
-        return NULL;
+	return NULL;
 }
 
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
@@ -266,23 +265,30 @@ struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
 struct physical_volume *_find_pv(struct volume_group *vg, struct device *dev)
 {
 	struct list *pvh;
-        struct physical_volume *pv;
-        struct pv_list *pl;
+	struct physical_volume *pv;
+	struct pv_list *pl;
 
-        list_iterate(pvh, &vg->pvs) {
-                pl = list_item(pvh, struct pv_list);
-                pv = &pl->pv;
-                if (dev == pv->dev)
-                        return pv;
-        }
-        return NULL;
+	list_iterate(pvh, &vg->pvs) {
+		pl = list_item(pvh, struct pv_list);
+		pv = &pl->pv;
+		if (dev == pv->dev)
+			return pv;
+	}
+	return NULL;
 }
 
 int lv_remove(struct volume_group *vg, struct list *lvh)
 {
+	int i;
+	struct logical_volume *lv;
+
+	lv = &list_item(lvh, struct lv_list)->lv;
+	for (i = 0; i < lv->le_count; i++) {
+		lv->map[i].pv->pe_allocated--;
+	}
+
 	list_del(lvh);
 	vg->lv_count--;
 
 	return 1;
 }
-

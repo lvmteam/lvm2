@@ -144,9 +144,9 @@ struct lvd_list {
 };
 
 struct disk_list {
+	struct list list;
 	struct pool *mem;
 	struct device *dev;
-	struct list list;
 
 	struct pv_disk pvd;
 	struct vg_disk vgd;
