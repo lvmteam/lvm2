@@ -108,7 +108,6 @@ static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t
 {
 	struct inode *inode = file->f_dentry->d_parent->d_inode;
 	struct dmfs_i *dmi = DMFS_I(inode);
-	struct dm_table *t = dmi->table;
 	int copied = 0;
 	loff_t offset = *pos;
 
