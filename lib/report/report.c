@@ -21,6 +21,7 @@
 #include "lvm-string.h"
 #include "display.h"
 #include "activate.h"
+#include "segtypes.h"
 
 /* 
  * For macro use
@@ -329,7 +330,7 @@ static int _segtype_disp(struct report_handle *rh, struct field *field,
 	if (seg->area_count == 1)
 		field->report_string = "linear";
 	else
-		field->report_string = get_segtype_string(seg->type);
+		field->report_string = seg->segtype->ops->name(seg);
 	field->sort_value = (const void *) field->report_string;
 
 	return 1;

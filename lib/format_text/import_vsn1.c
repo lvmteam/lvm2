@@ -22,6 +22,8 @@
 #include "toolcontext.h"
 #include "lvmcache.h"
 #include "lv_alloc.h"
+#include "segtypes.h"
+#include "text_import.h"
 
 typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
 			   struct volume_group * vg, struct config_node * pvn,
@@ -234,17 +236,13 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			 struct logical_volume *lv, struct config_node *sn,
 			 struct hash_table *pv_hash)
 {
-	unsigned int s;
-	uint32_t area_count = 0;
+	uint32_t area_count = 0u;
 	struct lv_segment *seg;
 	struct config_node *cn;
 	struct config_value *cv;
-	const char *seg_name = sn->key;
 	uint32_t start_extent, extent_count;
-	uint32_t chunk_size, extents_moved = 0u, seg_status = 0u;
-	const char *org_name, *cow_name;
-	struct logical_volume *org, *cow, *lv1;
-	segment_type_t segtype;
+	struct segment_type *segtype;
+	const char *segtype_str;
 
 	if (!(sn = sn->child)) {
 		log_error("Empty segment section.");
@@ -263,40 +261,26 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		return 0;
 	}
 
-	segtype = SEG_STRIPED;	/* Default */
+	segtype_str = "striped";
+
 	if ((cn = find_config_node(sn, "type"))) {
 		cv = cn->v;
 		if (!cv || !cv->v.str) {
 			log_error("Segment type must be a string.");
 			return 0;
 		}
-		segtype = get_segtype_from_string(cv->v.str);
+		segtype_str = cv->v.str;
 	}
 
-	if (segtype == SEG_STRIPED) {
-		if (!_read_int32(sn, "stripe_count", &area_count)) {
-			log_error("Couldn't read 'stripe_count' for "
-				  "segment '%s'.", sn->key);
-			return 0;
-		}
+	if (!(segtype = get_segtype_from_string(vg->cmd, segtype_str))) {
+		stack;
+		return 0;
 	}
 
-	if (segtype == SEG_MIRRORED) {
-		if (!_read_int32(sn, "mirror_count", &area_count)) {
-			log_error("Couldn't read 'mirror_count' for "
-				  "segment '%s'.", sn->key);
-			return 0;
-		}
-
-		if (find_config_node(sn, "extents_moved")) {
-			if (_read_uint32(sn, "extents_moved", &extents_moved))
-				seg_status |= PVMOVE;
-			else {
-				log_error("Couldn't read 'extents_moved' for "
-					  "segment '%s'.", sn->key);
-				return 0;
-			}
-		}
+	if (segtype->ops->text_import_area_count &&
+	    !segtype->ops->text_import_area_count(sn, &area_count)) {
+		stack;
+		return 0;
 	}
 
 	if (!(seg = alloc_lv_segment(mem, area_count))) {
@@ -308,9 +292,16 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->le = start_extent;
 	seg->len = extent_count;
 	seg->area_len = extent_count;
-	seg->type = segtype;
-	seg->status = seg_status;
-	seg->extents_moved = extents_moved;
+	seg->status = 0u;
+	seg->segtype = segtype;
+	seg->extents_moved = 0u;
+	seg->area_count = area_count;
+
+	if (seg->segtype->ops->text_import &&
+	    !seg->segtype->ops->text_import(seg, sn, pv_hash)) {
+		stack;
+		return 0;
+	}
 
 	/* Optional tags */
 	if ((cn = find_config_node(sn, "tags")) &&
@@ -320,145 +311,86 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		return 0;
 	}
 
-	switch (segtype) {
-	case SEG_SNAPSHOT:
-		lv->status |= SNAPSHOT;
-
-		if (!_read_uint32(sn, "chunk_size", &chunk_size)) {
-			log_error("Couldn't read chunk size for snapshot.");
-			return 0;
-		}
-
-		log_suppress(1);
-
-		if (!(cow_name = find_config_str(sn, "cow_store", NULL))) {
-			log_suppress(0);
-			log_error("Snapshot cow storage not specified.");
-			return 0;
-		}
-
-		if (!(org_name = find_config_str(sn, "origin", NULL))) {
-			log_suppress(0);
-			log_error("Snapshot origin not specified.");
-			return 0;
-		}
-
-		log_suppress(0);
-
-		if (!(cow = find_lv(vg, cow_name))) {
-			log_error("Unknown logical volume specified for "
-				  "snapshot cow store.");
-			return 0;
-		}
-
-		if (!(org = find_lv(vg, org_name))) {
-			log_error("Unknown logical volume specified for "
-				  "snapshot origin.");
-			return 0;
-		}
-
-		if (!vg_add_snapshot(org, cow, 1, &lv->lvid.id[1], chunk_size)) {
-			stack;
-			return 0;
-		}
-		break;
-
-	case SEG_STRIPED:
-		if ((area_count != 1) &&
-		    !_read_int32(sn, "stripe_size", &seg->stripe_size)) {
-			log_error("Couldn't read stripe_size for segment '%s'.",
-				  sn->key);
-			return 0;
-		}
-
-		if (!(cn = find_config_node(sn, "stripes"))) {
-			log_error("Couldn't find stripes array for segment "
-				  "'%s'.", sn->key);
-			return 0;
-		}
-
-		seg->area_len /= area_count;
-
-	case SEG_MIRRORED:
-		seg->area_count = area_count;
-
-		if (!seg->area_count) {
-			log_error("Zero areas not allowed for segment '%s'",
-				  sn->key);
-			return 0;
-		}
-
-		if ((seg->type == SEG_MIRRORED) &&
-		    !(cn = find_config_node(sn, "mirrors"))) {
-			log_error("Couldn't find mirrors array for segment "
-				  "'%s'.", sn->key);
-			return 0;
-		}
-
-		for (cv = cn->v, s = 0; cv && s < seg->area_count;
-		     s++, cv = cv->next) {
-
-			/* first we read the pv */
-			const char *bad = "Badly formed areas array for "
-			    "segment '%s'.";
-			struct physical_volume *pv;
-
-			if (cv->type != CFG_STRING) {
-				log_error(bad, sn->key);
-				return 0;
-			}
-
-			if (!cv->next) {
-				log_error(bad, sn->key);
-				return 0;
-			}
-
-			if (cv->next->type != CFG_INT) {
-				log_error(bad, sn->key);
-				return 0;
-			}
-
-			/* FIXME Cope if LV not yet read in */
-			if ((pv = hash_lookup(pv_hash, cv->v.str))) {
-				seg->area[s].type = AREA_PV;
-				seg->area[s].u.pv.pv = pv;
-				seg->area[s].u.pv.pe = cv->next->v.i;
-				/*
-				 * Adjust extent counts in the pv and vg.
-				 */
-				pv->pe_alloc_count += seg->area_len;
-				vg->free_count -= seg->area_len;
-
-			} else if ((lv1 = find_lv(vg, cv->v.str))) {
-				seg->area[s].type = AREA_LV;
-				seg->area[s].u.lv.lv = lv1;
-				seg->area[s].u.lv.le = cv->next->v.i;
-			} else {
-				log_error("Couldn't find volume '%s' "
-					  "for segment '%s'.",
-					  cv->v.str ? cv->v.str : "NULL",
-					  seg_name);
-				return 0;
-			}
-
-			cv = cv->next;
-		}
-
-		/*
-		 * Check we read the correct number of stripes.
-		 */
-		if (cv || (s < seg->area_count)) {
-			log_error("Incorrect number of areas in area array "
-				  "for segment '%s'.", seg_name);
-			return 0;
-		}
-
-	}
-
 	/*
 	 * Insert into correct part of segment list.
 	 */
 	_insert_segment(lv, seg);
+
+	if (seg->segtype->flags & SEG_AREAS_MIRRORED)
+		lv->status |= MIRRORED;
+
+	return 1;
+}
+
+int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
+		      const struct config_node *cn, struct hash_table *pv_hash)
+{
+	unsigned int s;
+	struct config_value *cv;
+	struct logical_volume *lv1;
+	const char *seg_name = sn->key;
+
+	if (!seg->area_count) {
+		log_error("Zero areas not allowed for segment '%s'", sn->key);
+		return 0;
+	}
+
+	for (cv = cn->v, s = 0; cv && s < seg->area_count; s++, cv = cv->next) {
+
+		/* first we read the pv */
+		const char *bad = "Badly formed areas array for "
+		    "segment '%s'.";
+		struct physical_volume *pv;
+
+		if (cv->type != CFG_STRING) {
+			log_error(bad, sn->key);
+			return 0;
+		}
+
+		if (!cv->next) {
+			log_error(bad, sn->key);
+			return 0;
+		}
+
+		if (cv->next->type != CFG_INT) {
+			log_error(bad, sn->key);
+			return 0;
+		}
+
+		/* FIXME Cope if LV not yet read in */
+		if ((pv = hash_lookup(pv_hash, cv->v.str))) {
+			seg->area[s].type = AREA_PV;
+			seg->area[s].u.pv.pv = pv;
+			seg->area[s].u.pv.pe = cv->next->v.i;
+			/*
+			 * Adjust extent counts in the pv and vg.
+			 */
+			pv->pe_alloc_count += seg->area_len;
+			seg->lv->vg->free_count -= seg->area_len;
+
+		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
+			seg->area[s].type = AREA_LV;
+			seg->area[s].u.lv.lv = lv1;
+			seg->area[s].u.lv.le = cv->next->v.i;
+		} else {
+			log_error("Couldn't find volume '%s' "
+				  "for segment '%s'.",
+				  cv->v.str ? cv->v.str : "NULL", seg_name);
+			return 0;
+		}
+
+		cv = cv->next;
+	}
+
+	/*
+	 * Check we read the correct number of stripes.
+	 */
+	if (cv || (s < seg->area_count)) {
+		log_error("Incorrect number of areas in area array "
+			  "for segment '%s'.", seg_name);
+		return 0;
+	}
+
 	return 1;
 }
 

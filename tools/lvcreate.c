@@ -33,6 +33,10 @@ struct lvcreate_params {
 	uint32_t stripe_size;
 	uint32_t chunk_size;
 
+	uint32_t mirrors;
+
+	struct segment_type *segtype;
+
 	/* size */
 	uint32_t extents;
 	uint64_t size;
@@ -188,6 +192,11 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 		lp->stripes = arg_uint_value(cmd, stripes_ARG, 1);
 		if (lp->stripes == 1)
 			log_print("Redundant stripes argument: default is 1");
+		else if (!(lp->segtype = get_segtype_from_string(cmd,
+								 "striped"))) {
+			stack;
+			return 0;
+		}
 	}
 
 	if (arg_count(cmd, stripesize_ARG)) {
@@ -466,8 +475,9 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		status |= LVM_WRITE;
 	}
 
-	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc, lp->stripes,
-			     lp->stripe_size, lp->extents, vg, pvh)))
+	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc, lp->segtype,
+			     lp->stripes, lp->stripe_size, lp->mirrors,
+			     lp->extents, vg, pvh)))
 		return 0;
 
 	if (lp->read_ahead) {

@@ -52,6 +52,7 @@ static struct flag _lv_flags[] = {
 	{VISIBLE_LV, "VISIBLE"},
 	{PVMOVE, "PVMOVE"},
 	{LOCKED, "LOCKED"},
+	{MIRRORED, NULL},
 	{0, NULL}
 };
 
@@ -99,7 +100,8 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 			} else
 				first = 0;
 
-			if (!emit_to_buffer(&buffer, &size, "\"%s\"",
+			if (flags[f].description &&
+			    !emit_to_buffer(&buffer, &size, "\"%s\"",
 					    flags[f].description))
 				return 0;
 

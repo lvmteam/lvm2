@@ -20,6 +20,14 @@ ifeq ("@LVM1@", "shared")
   SUBDIRS = format1
 endif
 
+ifeq ("@SNAPSHOTS@", "shared")
+  SUBDIRS += snapshot
+endif
+
+ifeq ("@MIRRORS@", "shared")
+  SUBDIRS += mirror
+endif
+
 SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
@@ -57,6 +65,7 @@ SOURCES =\
 	metadata/metadata.c \
 	metadata/mirror.c \
 	metadata/pv_map.c \
+	metadata/segtypes.c \
 	metadata/snapshot_manip.c \
 	misc/crc.c \
 	misc/lvm-file.c \
@@ -67,6 +76,7 @@ SOURCES =\
 	regex/parse_rx.c \
 	regex/ttree.c \
 	report/report.c \
+	striped/striped.c \
 	uuid/uuid.c 
 
 ifeq ("@LVM1@", "internal")
@@ -78,6 +88,14 @@ ifeq ("@LVM1@", "internal")
 	format1/layout.c \
 	format1/lvm1-label.c \
 	format1/vg_number.c
+endif
+
+ifeq ("@SNAPSHOTS@", "internal")
+  SOURCES += snapshot/snapshot.c
+endif
+
+ifeq ("@MIRRORS@", "internal")
+  SOURCES += mirror/mirrored.c
 endif
 
 ifeq ("@DEBUG@", "yes")

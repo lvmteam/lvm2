@@ -27,6 +27,7 @@ uint64_t units_to_bytes(const char *units, char *unit_type);
 /* Specify size in KB */
 const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl);
 char *display_uuid(char *uuidstr);
+void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre);
 
 void pvdisplay_colons(struct physical_volume *pv);
 void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
@@ -49,11 +50,5 @@ void vgdisplay_short(struct volume_group *vg);
  */
 const char *get_alloc_string(alloc_policy_t alloc);
 alloc_policy_t get_alloc_from_string(const char *str);
-
-/*
- * Segment type display conversion routines.
- */
-segment_type_t get_segtype_from_string(const char *str);
-const char *get_segtype_string(segment_type_t segtype);
 
 #endif

@@ -18,60 +18,20 @@
 #include "toolcontext.h"
 #include "lv_alloc.h"
 #include "str_list.h"
-
-/*
- * Test whether two segments could be merged by the current merging code
- */
-static int _segments_compatible(struct lv_segment *first,
-				struct lv_segment *second)
-{
-	uint32_t width;
-	unsigned s;
-
-	/* FIXME Relax the seg type restriction */
-	if (!first || !second ||
-	    (first->type != SEG_STRIPED) || (second->type != first->type) ||
-	    (first->area_count != second->area_count) ||
-	    (first->stripe_size != second->stripe_size))
-		return 0;
-
-	for (s = 0; s < first->area_count; s++) {
-
-		/* FIXME Relax this to first area type != second area type */
-		/*       plus the additional AREA_LV checks needed */
-		if ((first->area[s].type != AREA_PV) ||
-		    (second->area[s].type != AREA_PV))
-			return 0;
-
-		width = first->area_len;
-
-		if ((first->area[s].u.pv.pv != second->area[s].u.pv.pv) ||
-		    (first->area[s].u.pv.pe + width != second->area[s].u.pv.pe))
-			return 0;
-	}
-
-	if (!str_list_lists_equal(&first->tags, &second->tags))
-		return 0;
-
-	return 1;
-}
+#include "segtypes.h"
 
 /*
  * Attempt to merge two adjacent segments.
- * Currently only supports SEG_STRIPED on AREA_PV.
+ * Currently only supports striped segments on AREA_PV.
  * Returns success if successful, in which case 'first' 
  * gets adjusted to contain both areas.
  */
 static int _merge(struct lv_segment *first, struct lv_segment *second)
 {
+	if (!first || !second || first->segtype != second->segtype ||
+	    !first->segtype->ops->merge_segments) return 0;
 
-	if (!_segments_compatible(first, second))
-		return 0;
-
-	first->len += second->len;
-	first->area_len += second->area_len;
-
-	return 1;
+	return first->segtype->ops->merge_segments(first, second);
 }
 
 int lv_merge_segments(struct logical_volume *lv)
@@ -126,15 +86,14 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	uint32_t s;
 	uint32_t offset = le - seg->le;
 
-	if (seg->type == SEG_SNAPSHOT) {
-		log_error("Unable to split the snapshot segment at LE %" PRIu32
-			  " in LV %s", le, lv->name);
+	if (!(seg->segtype->flags & SEG_CAN_SPLIT)) {
+		log_error("Unable to split the %s segment at LE %" PRIu32
+			  " in LV %s", seg->segtype->name, le, lv->name);
 		return 0;
 	}
 
 	/* Clone the existing segment */
-	if (!(split_seg = alloc_lv_segment(lv->vg->cmd->mem,
-					   seg->area_count))) {
+	if (!(split_seg = alloc_lv_segment(lv->vg->cmd->mem, seg->area_count))) {
 		log_error("Couldn't allocate new LV segment.");
 		return 0;
 	}
@@ -148,7 +107,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	}
 
 	/* In case of a striped segment, the offset has to be / stripes */
-	if (seg->type == SEG_STRIPED)
+	if (seg->segtype->flags & SEG_AREAS_STRIPED)
 		offset /= seg->area_count;
 
 	/* Adjust the PV mapping */
@@ -205,4 +164,3 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le)
 
 	return 1;
 }
-

@@ -51,8 +51,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	return count;
 }
 
-static int _vgchange_available(struct cmd_context *cmd,
-			       struct volume_group *vg)
+static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
 	int lv_open, active;
 	int available = !strcmp(arg_str_value(cmd, available_ARG, "n"), "y");

@@ -21,7 +21,11 @@
 #include "lvm-string.h"
 #include "fs.h"
 #include "defaults.h"
+#include "segtypes.h"
+#include "display.h"
 #include "toolcontext.h"
+#include "targets.h"
+#include "config.h"
 
 #include <libdevmapper.h>
 #include <limits.h>
@@ -65,12 +69,6 @@ enum {
 	REMOVE = 7
 };
 
-enum {
-	MIRR_DISABLED,
-	MIRR_RUNNING,
-	MIRR_COMPLETED
-};
-
 typedef enum {
 	ACTIVATE,
 	DEACTIVATE,
@@ -112,14 +110,14 @@ struct dl_list {
 };
 
 static const char *stripe_filler = NULL;
-static uint32_t mirror_region_size = 0;
 
 struct dev_manager {
 	struct pool *mem;
 
-	struct config_tree *cft;
+	struct cmd_context *cmd;
+
 	const char *stripe_filler;
-	uint32_t mirror_region_size;
+	void *target_state;
 	uint32_t pvmove_mirror_count;
 
 	char *vg_name;
@@ -336,7 +334,7 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 static int _info(const char *name, const char *uuid, int mknodes,
 		 struct dm_info *info, struct pool *mem, char **uuid_out)
 {
-	if (!mknodes && uuid && *uuid && 
+	if (!mknodes && uuid && *uuid &&
 	    _info_run(NULL, uuid, info, 0, mem, uuid_out) && info->exists)
 		return 1;
 
@@ -427,18 +425,16 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	uint64_t start, length;
 	char *type = NULL;
 	char *params = NULL;
-	float percent2;
 	struct list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
+	struct segment_type *segtype;
 
-	uint64_t numerator, denominator;
 	uint64_t total_numerator = 0, total_denominator = 0;
 
 	*percent = -1;
 
 	if (!(dmt = _setup_task(name, uuid, event_nr,
-				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS)))
-	{
+				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS))) {
 		stack;
 		return 0;
 	}
@@ -471,40 +467,19 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		if (!type || !params || strcmp(type, target_type))
 			continue;
 
-		/* Mirror? */
-		if (!strcmp(type, "mirror")) {
-			log_debug("Mirror status: %s", params);
-			if (sscanf(params, "%*d %*x:%*x %*x:%*x %" PRIu64
-				   "/%" PRIu64, &numerator,
-				   &denominator) != 2) {
-				log_error("Failure parsing mirror status: %s",
-					  params);
-				goto out;
-			}
-			total_numerator += numerator;
-			total_denominator += denominator;
-
-			if (seg && (seg->status & PVMOVE))
-				seg->extents_moved = dm->mirror_region_size *
-				    numerator / lv->vg->extent_size;
+		if (!(segtype = get_segtype_from_string(dm->cmd, type)))
 			continue;
+
+		if (segtype->ops->target_percent &&
+		    !segtype->ops->target_percent(&dm->target_state, dm->mem,
+						  dm->cmd->cft, seg, params,
+						  &total_numerator,
+						  &total_denominator,
+						  percent)) {
+			stack;
+			goto out;
 		}
 
-		if (strcmp(type, "snapshot"))
-			continue;
-
-		/* Snapshot */
-		if (index(params, '/')) {
-			if (sscanf(params, "%" PRIu64 "/%" PRIu64,
-				   &numerator, &denominator) == 2) {
-				total_numerator += numerator;
-				total_denominator += denominator;
-			}
-			continue;
-		} else if (sscanf(params, "%f", &percent2) == 1) {
-			*percent += percent2;
-			*percent /= 2;
-		}
 	} while (next);
 
 	if (lv && (segh = list_next(&lv->segments, segh))) {
@@ -515,7 +490,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 	if (total_denominator)
 		*percent = (float) total_numerator *100 / total_denominator;
-	else
+	else if (*percent < 0)
 		*percent = 100;
 
 	log_debug("LV percent: %f", *percent);
@@ -633,9 +608,9 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 		log_error("Couldn't load device '%s'.", dl->name);
 		if ((dl->lv->minor >= 0 || dl->lv->major >= 0) &&
 		    _get_flag(dl, VISIBLE))
-			log_error("Perhaps the persistent device number "
-				  "%d:%d is already in use?",
-				  dl->lv->major, dl->lv->minor);
+			    log_error("Perhaps the persistent device number "
+				      "%d:%d is already in use?",
+				      dl->lv->major, dl->lv->minor);
 	}
 
 	if (!dm_task_get_info(dmt, &dl->info)) {
@@ -759,98 +734,26 @@ static int _emit_target_line(struct dev_manager *dm, struct dm_task *dmt,
 			     size_t paramsize)
 {
 	uint64_t esize = seg->lv->vg->extent_size;
-	uint32_t s, start_area = 0u, areas = seg->area_count;
-	int w = 0, tw = 0;
+	int w = 0;
 	const char *target = NULL;
-	const char *trailing_space;
-	int mirror_status;
-	struct dev_layer *dl;
-	char devbuf[10];
+	int r;
 
-	switch (seg->type) {
-	case SEG_SNAPSHOT:
+	if (!seg->segtype->ops->compose_target_line) {
 		log_error("_emit_target: Internal error: Can't handle "
-			  "SEG_SNAPSHOT");
+			  "segment type %s", seg->segtype->name);
 		return 0;
-		/* Target formats:
-		 *   linear [device offset]+
-		 *   striped #stripes stripe_size [device offset]+
-		 *   mirror  log_type #log_params [log_params]* 
-		 *           #mirrors [device offset]+
-		 */
-	case SEG_STRIPED:
-		if (areas == 1)
-			target = "linear";
-		else if (areas > 1) {
-			target = "striped";
-			if ((tw = lvm_snprintf(params, paramsize, "%u %u ",
-					       areas, seg->stripe_size)) < 0)
-				goto error;
-			w = tw;
-		} else {
-			log_error("_emit_target: Internal error: SEG_STRIPED "
-				  "with no stripes");
-			return 0;
-		}
-		break;
-	case SEG_MIRRORED:
-		mirror_status = MIRR_RUNNING;
-		if (seg->status & PVMOVE) {
-			if (seg->extents_moved == seg->area_len) {
-				mirror_status = MIRR_COMPLETED;
-				start_area = 1;
-			} else if (dm->pvmove_mirror_count++) {
-				mirror_status = MIRR_DISABLED;
-				areas = 1;
-			}
-		}
-		if (mirror_status != MIRR_RUNNING) {
-			target = "linear";
-			break;
-		}
-		target = "mirror";
-		if ((tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
-				       dm->mirror_region_size, areas)) < 0)
-			goto error;
-		w = tw;
-		break;
 	}
 
-	for (s = start_area; s < areas; s++, w += tw) {
-		trailing_space = (areas - s - 1) ? " " : "";
-		if ((seg->area[s].type == AREA_PV &&
-		     (!seg->area[s].u.pv.pv || !seg->area[s].u.pv.pv->dev)) ||
-		    (seg->area[s].type == AREA_LV && !seg->area[s].u.lv.lv))
-			tw = lvm_snprintf(params + w, paramsize - w,
-					  "%s 0%s", dm->stripe_filler,
-					  trailing_space);
-		else if (seg->area[s].type == AREA_PV)
-			tw = lvm_snprintf(params + w, paramsize - w,
-					  "%s %" PRIu64 "%s",
-					  dev_name(seg->area[s].u.pv.pv->dev),
-					  (seg->area[s].u.pv.pv->pe_start +
-					   (esize * seg->area[s].u.pv.pe)),
-					  trailing_space);
-		else {
-			if (!(dl = hash_lookup(dm->layers,
-					       seg->area[s].u.lv.lv->lvid.s))) {
-				log_error("device layer %s missing from hash",
-					  seg->area[s].u.lv.lv->lvid.s);
-				return 0;
-			}
-			if (!dm_format_dev(devbuf, sizeof(devbuf), dl->info.major, dl->info.minor)) {
-				log_error("Failed to format device number as dm target (%u,%u)",
-					  dl->info.major, dl->info.minor);
-				return 0;
-			}
-			tw = lvm_snprintf(params + w, paramsize - w,
-					  "%s %" PRIu64 "%s", devbuf,
-					  esize * seg->area[s].u.lv.le,
-					  trailing_space);
-		}
-
-		if (tw < 0)
-			goto error;
+	if ((r = seg->segtype->ops->compose_target_line(dm, dm->mem,
+							dm->cmd->cft,
+							&dm->target_state, seg,
+							params, paramsize,
+							&target, &w,
+							&dm->
+							pvmove_mirror_count)) <=
+	    0) {
+		stack;
+		return r;
 	}
 
 	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
@@ -863,11 +766,62 @@ static int _emit_target_line(struct dev_manager *dm, struct dm_task *dmt,
 	}
 
 	return 1;
+}
 
-      error:
-	log_debug("Insufficient space in params[%" PRIsize_t "] for target "
-		  "parameters.", paramsize);
-	return -1;
+int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
+		       char *params, size_t paramsize, int *pos, int start_area,
+		       int areas)
+{
+	uint32_t s;
+	int tw = 0;
+	const char *trailing_space;
+	uint64_t esize = seg->lv->vg->extent_size;
+	struct dev_layer *dl;
+	char devbuf[10];
+
+	for (s = start_area; s < areas; s++, *pos += tw) {
+		trailing_space = (areas - s - 1) ? " " : "";
+		if ((seg->area[s].type == AREA_PV &&
+		     (!seg->area[s].u.pv.pv || !seg->area[s].u.pv.pv->dev)) ||
+		    (seg->area[s].type == AREA_LV && !seg->area[s].u.lv.lv))
+			tw = lvm_snprintf(params + *pos, paramsize - *pos,
+					  "%s 0%s", dm->stripe_filler,
+					  trailing_space);
+		else if (seg->area[s].type == AREA_PV)
+			tw = lvm_snprintf(params + *pos, paramsize - *pos,
+					  "%s %" PRIu64 "%s",
+					  dev_name(seg->area[s].u.pv.pv->dev),
+					  (seg->area[s].u.pv.pv->pe_start +
+					   (esize * seg->area[s].u.pv.pe)),
+					  trailing_space);
+		else {
+			if (!(dl = hash_lookup(dm->layers,
+					       seg->area[s].u.lv.lv->lvid.s))) {
+				log_error("device layer %s missing from hash",
+					  seg->area[s].u.lv.lv->lvid.s);
+				return 0;
+			}
+			if (!dm_format_dev
+			    (devbuf, sizeof(devbuf), dl->info.major,
+			     dl->info.minor)) {
+				log_error
+				    ("Failed to format device number as dm target (%u,%u)",
+				     dl->info.major, dl->info.minor);
+				return 0;
+			}
+			tw = lvm_snprintf(params + *pos, paramsize - *pos,
+					  "%s %" PRIu64 "%s", devbuf,
+					  esize * seg->area[s].u.lv.le,
+					  trailing_space);
+		}
+
+		if (tw < 0) {
+			stack;
+			return -1;
+		}
+	}
+
+	return 1;
 }
 
 static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
@@ -891,6 +845,9 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 
 		if (ret >= 0)
 			return ret;
+
+		log_debug("Insufficient space in params[%" PRIsize_t
+			  "] for target parameters.", paramsize);
 
 		paramsize *= 2;
 	} while (paramsize < MAX_TARGET_PARAMSIZE);
@@ -1023,8 +980,8 @@ static int _populate_snapshot(struct dev_manager *dm,
 /*
  * dev_manager implementation.
  */
-struct dev_manager *dev_manager_create(const char *vg_name,
-				       struct config_tree *cft)
+struct dev_manager *dev_manager_create(struct cmd_context *cmd,
+				       const char *vg_name)
 {
 	struct pool *mem;
 	struct dev_manager *dm;
@@ -1039,21 +996,15 @@ struct dev_manager *dev_manager_create(const char *vg_name,
 		goto bad;
 	}
 
+	dm->cmd = cmd;
 	dm->mem = mem;
-	dm->cft = cft;
+
 	if (!stripe_filler) {
-		stripe_filler = find_config_str(cft->root,
+		stripe_filler = find_config_str(cmd->cft->root,
 						"activation/missing_stripe_filler",
 						DEFAULT_STRIPE_FILLER);
 	}
 	dm->stripe_filler = stripe_filler;
-
-	if (!mirror_region_size) {
-		mirror_region_size = 2 * find_config_int(cft->root,
-							 "activation/mirror_region_size",
-							 DEFAULT_MIRROR_REGION_SIZE);
-	}
-	dm->mirror_region_size = mirror_region_size;
 
 	if (!(dm->vg_name = pool_strdup(dm->mem, vg_name))) {
 		stack;
@@ -1069,6 +1020,8 @@ struct dev_manager *dev_manager_create(const char *vg_name,
 	list_init(&dm->reload_list);
 	list_init(&dm->remove_list);
 	list_init(&dm->suspend_list);
+
+	dm->target_state = NULL;
 
 	return dm;
 
@@ -1282,15 +1235,13 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 	/* Add dependencies for any LVs that segments refer to */
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
-		if (seg->type != SEG_STRIPED && seg->type != SEG_MIRRORED)
-			continue;
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg->area[s].type != AREA_LV)
 				continue;
 			if (!str_list_add(dm->mem, &dl->pre_create,
 					  _build_dlid(dm->mem,
-						      seg->area[s].u.lv.
-						      lv->lvid.s, NULL))) {
+						      seg->area[s].u.lv.lv->
+						      lvid.s, NULL))) {
 				stack;
 				return 0;
 			}
@@ -1311,7 +1262,7 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 	_clear_flag(dlr, VISIBLE);
 	_clear_flag(dlr, TOPLEVEL);
 	_set_flag(dlr, REMOVE);
-	
+
 	/* add the dependency on the real device */
 	if (!str_list_add(dm->mem, &dl->pre_create,
 			  pool_strdup(dm->mem, dlr->dlid))) {
@@ -1688,7 +1639,6 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	return 1;
 }
 
-
 static int _build_all_layers(struct dev_manager *dm, struct volume_group *vg)
 {
 	struct list *lvh;
@@ -1756,8 +1706,7 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 				continue;
 			}
 
-			if (!str_list_add(dm->mem, &dep->pre_create,
-					  dl->dlid)) {
+			if (!str_list_add(dm->mem, &dep->pre_create, dl->dlid)) {
 				stack;
 				return 0;
 			}
@@ -1773,8 +1722,7 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 				continue;
 			}
 
-			if (!str_list_add(dm->mem, &dep->pre_suspend,
-					  dl->dlid)) {
+			if (!str_list_add(dm->mem, &dep->pre_suspend, dl->dlid)) {
 				stack;
 				return 0;
 			}

@@ -33,6 +33,8 @@
 #include "display.h"
 #include "memlock.h"
 #include "str_list.h"
+#include "segtypes.h"
+#include "lvmcache.h"
 
 #ifdef HAVE_LIBDL
 #include "sharedlib.h"
@@ -662,6 +664,87 @@ static int _init_formats(struct cmd_context *cmd)
 	return 0;
 }
 
+static int _init_segtypes(struct cmd_context *cmd)
+{
+	struct segment_type *segtype;
+
+#ifdef HAVE_LIBDL
+	const struct config_node *cn;
+#endif
+
+	if (!(segtype = init_striped_segtype(cmd)))
+		return 0;
+	segtype->library = NULL;
+	list_add(&cmd->segtypes, &segtype->list);
+
+#ifdef SNAPSHOT_INTERNAL
+	if (!(segtype = init_snapshot_segtype(cmd)))
+		return 0;
+	segtype->library = NULL;
+	list_add(&cmd->segtypes, &segtype->list);
+#endif
+
+#ifdef MIRRORED_INTERNAL
+	if (!(segtype = init_mirrored_segtype(cmd)))
+		return 0;
+	segtype->library = NULL;
+	list_add(&cmd->segtypes, &segtype->list);
+#endif
+
+#ifdef HAVE_LIBDL
+	/* Load any formats in shared libs */
+	if ((cn = find_config_node(cmd->cft->root, "global/segment_libraries"))) {
+
+		struct config_value *cv;
+		struct segment_type *(*init_segtype_fn) (struct cmd_context *);
+		void *lib;
+		struct list *sgtl, *tmp;
+		struct segment_type *segtype2;
+
+		for (cv = cn->v; cv; cv = cv->next) {
+			if (cv->type != CFG_STRING) {
+				log_error("Invalid string in config file: "
+					  "global/segment_libraries");
+				return 0;
+			}
+			if (!(lib = load_shared_library(cmd->cft, cv->v.str,
+							"segment type"))) {
+				stack;
+				return 0;
+			}
+
+			if (!(init_segtype_fn = dlsym(lib, "init_segtype"))) {
+				log_error("Shared library %s does not contain "
+					  "segment type functions", cv->v.str);
+				dlclose(lib);
+				return 0;
+			}
+
+			if (!(segtype = init_segtype_fn(cmd)))
+				return 0;
+			segtype->library = lib;
+			list_add(&cmd->segtypes, &segtype->list);
+
+			list_iterate_safe(sgtl, tmp, &cmd->segtypes) {
+				segtype2 = list_item(sgtl, struct segment_type);
+				if (!strcmp(segtype2->name, segtype->name)) {
+					log_error("Duplicate segment type %s: "
+						  "unloading shared library %s",
+						  segtype->name, cv->v.str);
+					list_del(&segtype->list);
+					segtype->ops->destroy(segtype);
+					dlclose(lib);
+					break;
+				}
+
+			}
+		}
+	}
+#endif
+
+	return 1;
+}
+
 static int _init_hostname(struct cmd_context *cmd)
 {
 	struct utsname uts;
@@ -710,6 +793,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	cmd->args = the_args;
 	cmd->hosttags = 0;
 	list_init(&cmd->formats);
+	list_init(&cmd->segtypes);
 	list_init(&cmd->tags);
 	list_init(&cmd->config_files);
 
@@ -763,6 +847,9 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (!_init_formats(cmd))
 		goto error;
 
+	if (!_init_segtypes(cmd))
+		goto error;
+
 	cmd->current_settings = cmd->default_settings;
 
 	cmd->config_valid = 1;
@@ -791,6 +878,24 @@ static void _destroy_formats(struct list *formats)
 	}
 }
 
+static void _destroy_segtypes(struct list *segtypes)
+{
+	struct list *sgtl, *tmp;
+	struct segment_type *segtype;
+	void *lib;
+
+	list_iterate_safe(sgtl, tmp, segtypes) {
+		segtype = list_item(sgtl, struct segment_type);
+		list_del(&segtype->list);
+		lib = segtype->library;
+		segtype->ops->destroy(segtype);
+#ifdef HAVE_LIBDL
+		if (lib)
+			dlclose(lib);
+#endif
+	}
+}
+
 int refresh_toolcontext(struct cmd_context *cmd)
 {
 	log_verbose("Reloading config files");
@@ -803,6 +908,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	activation_exit();
 	lvmcache_destroy();
 	label_exit();
+	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(&cmd->formats);
 	if (cmd->filter) {
 		cmd->filter->destroy(cmd->filter);
@@ -842,6 +948,9 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_formats(cmd))
 		return 0;
 
+	if (!_init_segtypes(cmd))
+		return 0;
+
 	cmd->config_valid = 1;
 	return 1;
 }
@@ -854,6 +963,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	activation_exit();
 	lvmcache_destroy();
 	label_exit();
+	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(&cmd->formats);
 	cmd->filter->destroy(cmd->filter);
 	pool_destroy(cmd->mem);

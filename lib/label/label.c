@@ -19,6 +19,7 @@
 #include "crc.h"
 #include "xlate.h"
 #include "lvmcache.h"
+#include "metadata.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -78,6 +79,8 @@ void label_exit(void)
 		li->l->ops->destroy(li->l);
 		_free_li(li);
 	}
+
+	list_init(&_labellers);
 }
 
 int label_register_handler(const char *name, struct labeller *handler)

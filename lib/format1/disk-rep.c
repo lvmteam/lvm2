@@ -153,6 +153,10 @@ static int _munge_formats(struct pv_disk *pvd)
 		memset(&pvd->pv_uuid[ID_LEN], 0, sizeof(pvd->pv_uuid) - ID_LEN);
         }
 
+	/* If UUID is missing, create one */
+	if (pvd->pv_uuid[0] == '\0')
+		uuid_from_num(pvd->pv_uuid, pvd->pv_number);
+
 	return 1;
 }
 
@@ -192,10 +196,6 @@ int munge_pvd(struct device *dev, struct pv_disk *pvd)
 				 "found on %s", pvd->version, dev_name(dev));
 		return 0;
 	}
-
-	/* If UUID is missing, create one */
-	if (pvd->pv_uuid[0] == '\0')
-		uuid_from_num(pvd->pv_uuid, pvd->pv_number);
 
 	/* If VG is exported, set VG name back to the real name */
 	_munge_exported_vg(pvd);

@@ -53,6 +53,7 @@
 #define SNAPSHOT		0x00001000	/* LV - tmp internal use only */
 #define PVMOVE			0x00002000	/* VG LV SEG */
 #define LOCKED			0x00004000	/* LV */
+#define MIRRORED		0x00008000	/* LV - internal use only */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */
@@ -66,18 +67,12 @@
 #define FMT_UNLIMITED_VOLS	0x00000008	/* Unlimited PVs/LVs? */
 #define FMT_RESTRICTED_LVIDS	0x00000010	/* LVID <= 255 */
 #define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
-  
+
 typedef enum {
 	ALLOC_DEFAULT,
 	ALLOC_NEXT_FREE,
 	ALLOC_CONTIGUOUS
 } alloc_policy_t;
-
-typedef enum {
-	SEG_STRIPED,
-	SEG_SNAPSHOT,
-	SEG_MIRRORED
-} segment_type_t;
 
 typedef enum {
 	AREA_PV,
@@ -194,11 +189,12 @@ struct volume_group {
 	struct list tags;
 };
 
+struct segment_type;
 struct lv_segment {
 	struct list list;
 	struct logical_volume *lv;
 
-	segment_type_t type;
+	struct segment_type *segtype;
 	uint32_t le;
 	uint32_t len;
 
@@ -407,8 +403,10 @@ struct logical_volume *lv_create(struct format_instance *fi,
 				 const char *name,
 				 uint32_t status,
 				 alloc_policy_t alloc,
+				 struct segment_type *segtype,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
+				 uint32_t mirrors,
 				 uint32_t extents,
 				 struct volume_group *vg,
 				 struct list *allocatable_pvs);
@@ -424,18 +422,13 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 int lv_reduce(struct format_instance *fi,
 	      struct logical_volume *lv, uint32_t extents);
 
-int lv_extend(struct format_instance *fi,
+int lv_extend(struct format_instance *fid,
 	      struct logical_volume *lv,
-	      uint32_t stripes,
-	      uint32_t stripe_size,
-	      uint32_t extents, struct list *allocatable_pvs);
-
-int lv_extend_mirror(struct format_instance *fid,
-		     struct logical_volume *lv,
-		     struct physical_volume *mirrored_pv,
-		     uint32_t mirrored_pe,
-		     uint32_t extents, struct list *allocatable_pvs,
-		     uint32_t status);
+	      struct segment_type *segtype,
+	      uint32_t stripes, uint32_t stripe_size,
+	      uint32_t mirrors, uint32_t extents,
+	      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
+	      uint32_t status, struct list *allocatable_pvs);
 
 /* lv must be part of vg->lvs */
 int lv_remove(struct volume_group *vg, struct logical_volume *lv);
