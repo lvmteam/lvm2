@@ -39,6 +39,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 #include <linux/kdev_t.h>
 #include "hash.h"
 #include "mm/pool.h"

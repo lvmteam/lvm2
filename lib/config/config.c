@@ -28,10 +28,6 @@
  *
  */
 
-#include "config.h"
-#include "mm/pool.h"
-#include "log/log.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -40,6 +36,10 @@
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
+
+#include "config.h"
+#include "mm/pool.h"
+#include "log/log.h"
 
 enum {
         TOK_INT,
