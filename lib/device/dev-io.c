@@ -84,7 +84,7 @@ int dev_open(struct device *dev, int flags)
 
 	if ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev)) {
 		log_error("%s: fstat failed: Has device name changed?", name);
-		dev_close(dev->fd);
+		dev_close(dev);
 		return 0;
 	}
 
