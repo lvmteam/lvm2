@@ -104,6 +104,7 @@ static int linear_map(struct buffer_head *bh, void *context)
 
 static struct target_type linear_target = {
 	name: "linear",
+	module: &THIS_MODULE,
 	ctr: linear_ctr,
 	dtr: linear_dtr,
 	map: linear_map,
