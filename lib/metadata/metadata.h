@@ -195,6 +195,12 @@ struct format_handler {
 			struct physical_volume *pv);
 
 	/*
+	 * Tweak an already filled out a lv eg, check there
+	 * aren't too many extents.
+	 */
+	int (*lv_setup)(struct format_instance *fi, struct logical_volume *lv);
+
+	/*
 	 * Tweak an already filled out vg.  eg, max_pv is format
 	 * specific.
 	 */
@@ -252,7 +258,8 @@ int vg_extend(struct format_instance *fi,
  * Create a new LV within a given volume group.
  *
  */
-struct logical_volume *lv_create(const char *name,
+struct logical_volume *lv_create(struct format_instance *fi,
+				 const char *name,
 				 uint32_t status,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
@@ -260,9 +267,11 @@ struct logical_volume *lv_create(const char *name,
 				 struct volume_group *vg,
 				 struct list *acceptable_pvs);
 
-int lv_reduce(struct logical_volume *lv, uint32_t extents);
+int lv_reduce(struct format_instance *fi, 
+	      struct logical_volume *lv, uint32_t extents);
 
-int lv_extend(struct logical_volume *lv,
+int lv_extend(struct format_instance *fi,
+	      struct logical_volume *lv,
 	      uint32_t stripes,
 	      uint32_t stripe_size,
 	      uint32_t extents,
