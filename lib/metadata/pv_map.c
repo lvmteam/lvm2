@@ -103,6 +103,27 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	return r;
 }
 
+/*
+ * Areas are maintained in size order.
+ */
+static void _insert_area(struct list *head, struct pv_area *a)
+{
+	struct list *pvah;
+	struct pv_area *pva;
+
+	list_iterate (pvah, head) {
+		pva = list_item(pvah, struct pv_area);
+
+		if (pva->count < a->count)
+			break;
+	}
+
+	a->list.n = &pva->list;
+	a->list.p = pva->list.p;
+	pva->list.p->n = &a->list;
+	pva->list.p = &a->list;
+}
+
 static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 			       uint32_t *extent)
 {
@@ -127,9 +148,10 @@ static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 		return 0;
 	}
 
+	pva->map = pvm;
 	pva->start = b;
 	pva->count = e - b;
-	list_add(&pvm->areas, &pva->list);
+	_insert_area(&pvm->areas, pva);
 	*extent = e;
 
 	return 1;
@@ -199,4 +221,18 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
       bad:
 	pool_free(mem, maps);
 	return NULL;
+}
+
+void consume_pv_area(struct pv_area *pva, uint32_t to_go)
+{
+	list_del(&pva->list);
+
+	assert(to_go <= pva->count);
+
+	if (to_go < pva->count) {
+		/* split the area */
+		pva->start += to_go;
+		pva->count -= to_go;
+		_insert_area(&pva->map->areas, pva);
+	}
 }
