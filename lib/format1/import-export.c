@@ -274,9 +274,10 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	       struct logical_volume *lv, const char *prefix)
 {
 	memset(lvd, 0, sizeof(*lvd));
-	snprintf(lvd->lv_name, sizeof(lvd->lv_name), "%s/%s",
-		 prefix, lv->name);
+	snprintf(lvd->lv_name, sizeof(lvd->lv_name), "%s%s/%s",
+		 prefix, vg->name, lv->name);
 
+	/* FIXME: Add 'if' test */
 	_check_vg_name(vg->name);
 	strcpy(lvd->vg_name, vg->name);
 
@@ -406,7 +407,7 @@ static struct logical_volume *_add_lv(struct pool *mem,
 				      struct volume_group *vg,
 				      struct lv_disk *lvd)
 {
-	struct lv_list *ll = pool_alloc(mem, sizeof(*ll));
+	struct lv_list *ll = pool_zalloc(mem, sizeof(*ll));
 	struct logical_volume *lv;
 
 	if (!ll) {
