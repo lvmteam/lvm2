@@ -39,6 +39,9 @@ int lv_merge_segments(struct logical_volume *lv)
 	struct list *segh, *t;
 	struct lv_segment *current, *prev = NULL;
 
+	if (lv->status & LOCKED || lv->status & PVMOVE)
+		return 1;
+
 	list_iterate_safe(segh, t, &lv->segments) {
 		current = list_item(segh, struct lv_segment);
 
@@ -77,6 +80,7 @@ int lv_check_segments(struct logical_volume *lv)
 
 /*
  * Split the supplied segment at the supplied logical extent
+ * NB Use LE numbering that works across stripes PV1: 0,2,4 PV2: 1,3,5 etc.
  */
 static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 			     uint32_t le)
@@ -85,6 +89,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	struct lv_segment *split_seg;
 	uint32_t s;
 	uint32_t offset = le - seg->le;
+	uint32_t area_offset;
 
 	if (!(seg->segtype->flags & SEG_CAN_SPLIT)) {
 		log_error("Unable to split the %s segment at LE %" PRIu32
@@ -107,8 +112,9 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	}
 
 	/* In case of a striped segment, the offset has to be / stripes */
+	area_offset = offset;
 	if (seg->segtype->flags & SEG_AREAS_STRIPED)
-		offset /= seg->area_count;
+		area_offset /= seg->area_count;
 
 	/* Adjust the PV mapping */
 	for (s = 0; s < seg->area_count; s++) {
@@ -116,12 +122,19 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 		switch (seg->area[s].type) {
 		case AREA_LV:
 			split_seg->area[s].u.lv.le =
-			    seg->area[s].u.lv.le + offset;
+			    seg->area[s].u.lv.le + area_offset;
+			log_debug("Split %s:%u[%u] at %u: %s LE %u", lv->name,
+				  seg->le, s, le, seg->area[s].u.lv.lv->name,
+				  split_seg->area[s].u.lv.le);
 			break;
 
 		case AREA_PV:
 			split_seg->area[s].u.pv.pe =
-			    seg->area[s].u.pv.pe + offset;
+			    seg->area[s].u.pv.pe + area_offset;
+			log_debug("Split %s:%u[%u] at %u: %s PE %u", lv->name,
+				  seg->le, s, le,
+				  dev_name(seg->area[s].u.pv.pv->dev),
+				  split_seg->area[s].u.pv.pe);
 			break;
 
 		default:
@@ -131,8 +144,13 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 		}
 	}
 
-	split_seg->area_len = seg->area_len - offset;
-	seg->area_len = offset;
+	split_seg->area_len -= area_offset;
+	seg->area_len = area_offset;
+
+	split_seg->len -= offset;
+	seg->len = offset;
+
+	split_seg->le = seg->le + seg->len;
 
 	/* Add split off segment to the list _after_ the original one */
 	list_add_h(&seg->list, &split_seg->list);
