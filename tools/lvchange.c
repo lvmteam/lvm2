@@ -176,6 +176,12 @@ static int lvchange_availability(struct logical_volume *lv)
 		}
 	}
 
+	if (lv_suspended(lv)) {
+		log_verbose("Reactivating logical volume %s", lv->name); 
+		if (!lv_reactivate(lv))
+			return 0;
+	}
+
 	return 1;
 }
 
