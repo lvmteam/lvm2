@@ -1,3 +1,8 @@
+Version 2.00.11 - 8 Apr 2004
+============================
+  Set fallback_to_lvm1 in lvm.conf (or configure --enable-lvm1_fallback)
+  to run lvm1 binaries if running a 2.4 kernel without device-mapper.
+
 Version 2.00.10 - 7 Apr 2004
 ============================
   More fixes for static build.
