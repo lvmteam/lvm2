@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-11-23 18:26+0000\n"
+"POT-Creation-Date: 2004-11-24 21:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,17 +126,17 @@ msgstr ""
 #: device/dev-cache.c:396 device/dev-io.c:160 device/dev-io.c:190
 #: device/dev-io.c:288 device/dev-io.c:474 device/dev-io.c:502
 #: device/dev-md.c:40 device/dev-md.c:48 device/dev-md.c:63 device/device.c:41
-#: device/device.c:51 display/display.c:211 display/display.c:242
+#: device/device.c:50 display/display.c:211 display/display.c:242
 #: display/display.c:300 display/display.c:347 display/display.c:587
 #: display/display.c:623 error/errseg.c:90 filters/filter-composite.c:54
 #: filters/filter-persistent.c:45 filters/filter-persistent.c:103
-#: filters/filter-persistent.c:108 filters/filter-persistent.c:242
-#: filters/filter-persistent.c:248 filters/filter-persistent.c:260
+#: filters/filter-persistent.c:108 filters/filter-persistent.c:239
+#: filters/filter-persistent.c:245 filters/filter-persistent.c:257
 #: filters/filter-regex.c:78 filters/filter-regex.c:105
 #: filters/filter-regex.c:126 filters/filter-regex.c:151
-#: filters/filter-regex.c:209 filters/filter-regex.c:214
-#: filters/filter-regex.c:221 filters/filter-regex.c:226
-#: filters/filter-sysfs.c:279 filters/filter.c:225 format1/disk-rep.c:220
+#: filters/filter-regex.c:212 filters/filter-regex.c:217
+#: filters/filter-regex.c:224 filters/filter-regex.c:229
+#: filters/filter-sysfs.c:283 filters/filter.c:225 format1/disk-rep.c:220
 #: format1/disk-rep.c:232 format1/disk-rep.c:237 format1/disk-rep.c:256
 #: format1/disk-rep.c:259 format1/disk-rep.c:290 format1/disk-rep.c:293
 #: format1/disk-rep.c:312 format1/disk-rep.c:315 format1/disk-rep.c:332
@@ -1659,12 +1659,12 @@ msgstr ""
 msgid "Dumping persistent device cache to %s"
 msgstr ""
 
-#: filters/filter-persistent.c:218
+#: filters/filter-persistent.c:216
 #, c-format
 msgid "%s: Skipping (cached)"
 msgstr ""
 
-#: filters/filter-persistent.c:255
+#: filters/filter-persistent.c:252
 msgid "Couldn't create hash table for persistent filter."
 msgstr ""
 
@@ -1689,6 +1689,11 @@ msgstr ""
 msgid "%s: New preferred name"
 msgstr ""
 
+#: filters/filter-regex.c:190
+#, c-format
+msgid "%s: Skipping (regex)"
+msgstr ""
+
 #: filters/filter-sysfs.c:32
 msgid "No proc filesystem found: skipping sysfs filter"
 msgstr ""
@@ -1711,11 +1716,16 @@ msgstr ""
 msgid "sysfs path name too long: %s in %s"
 msgstr ""
 
-#: filters/filter-sysfs.c:269
+#: filters/filter-sysfs.c:250
+#, c-format
+msgid "%s: Skipping (sysfs)"
+msgstr ""
+
+#: filters/filter-sysfs.c:273
 msgid "sysfs pool creation failed"
 msgstr ""
 
-#: filters/filter-sysfs.c:274
+#: filters/filter-sysfs.c:278
 msgid "sysfs dev_set creation failed"
 msgstr ""
 
@@ -4476,6 +4486,11 @@ msgstr ""
 
 #: misc/lvm-file.c:213
 msgid "sync_dir failed in strdup"
+msgstr ""
+
+#: mm/dbg_malloc.c:223
+#, c-format
+msgid "Huge memory allocation (size %u) rejected - metadata corruption?"
 msgstr ""
 
 #: mm/memlock.c:100
