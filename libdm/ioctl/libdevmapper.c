@@ -25,6 +25,19 @@
 
 #define ALIGNMENT sizeof(int)
 
+static char *dm_cmd_list[] = {
+        "create",
+        "reload",
+        "remove",
+        "remove_all",
+        "suspend",
+        "resume",
+        "info",
+        "deps",
+        "rename",
+        "version"
+};
+
 void dm_task_destroy(struct dm_task *dmt)
 {
 	struct target *t, *n;
@@ -325,6 +338,8 @@ int dm_task_run(struct dm_task *dmt)
 		goto bad;
 	}
 
+	log_debug("dm %s %s %s %s", dm_cmd_list[dmt->type], dmi->name, 
+		  dmi->uuid, dmt->newname ? dmt->newname : "");
 	if (ioctl(fd, command, dmi) < 0) {
 		log_error("device-mapper ioctl cmd %d failed: %s", dmt->type,
 			  strerror(errno));

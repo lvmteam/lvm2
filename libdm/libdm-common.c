@@ -119,8 +119,6 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 		return 0;
 	}
 
-	log_debug("Setting name: %s", dmt->dev_name);
-
 	return 1;
 }
 
@@ -135,8 +133,6 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
 		return 0;
 	}
-
-	log_debug("Setting uuid: %s", dmt->uuid);
 
 	return 1;
 }
