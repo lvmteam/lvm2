@@ -19,16 +19,19 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 	struct physical_volume *pv = &pvl->pv;
 
 	if (!pv) {
-		stack;
+		log_error("pv_list allocation for '%s' failed", name);
 		return 0;
 	}
 
 	memset(pv, 0, sizeof(*pv));
 
-	pv->dev = dev_cache_get(name, ios->filter);
+	if (!(pv->dev = dev_cache_get(name, ios->filter))) {
+		log_error("Physical volume '%s' not found.", name);
+		return 0;
+	}
 
 	if (!(pv->vg_name = pool_strdup(ios->mem, vg->name))) {
-		stack;
+		log_error("vg->name allocation failed for '%s'", name);
 		return 0;
 	}
 
@@ -52,7 +55,7 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 	pv->pe_allocated = 0;
 
 	if (!ios->pv_setup(ios, pv, vg)) {
-		log_err("Format specific setup of physical volume '%s' "
+		log_error("Format specific setup of physical volume '%s' "
 			"failed.", name);
 		return 0;
 	}

@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 	if ((ret == ENO_SUCH_CMD) && (!alias))
 		ret = run_script(argc, argv);
 	if (ret == ENO_SUCH_CMD)
-		log_error("No such command");
+		log_error("No such command.  Try 'help'.");
 
       out:
 	fin();
@@ -810,14 +810,15 @@ static char *list_args(char *text, int state)
 
 static int shell(void)
 {
-	int argc;
-	char *input, *argv[MAX_ARGS];
+	int argc, ret;
+	char *input = NULL, *args[MAX_ARGS], **argv;
 
 	rl_readline_name = "lvm";
 	rl_attempted_completion_function = (CPPFunction *) lvm_completion;
 
 	_interactive = 1;
 	while (1) {
+		free(input);
 		input = readline("lvm> ");
 
 		/* EOF */
@@ -832,19 +833,30 @@ static int shell(void)
 
 		add_history(input);
 
+		argv = args;
+
 		if (split(input, &argc, argv, MAX_ARGS) == MAX_ARGS) {
 			log_error("Too many arguments, sorry.");
 			continue;
 		}
 
+		if (!strcmp(argv[0], "lvm")) {
+			argv++;
+			argc--;
+		}
+
 		if (!argc)
 			continue;
 
-		if (!strcmp(argv[0], "quit"))
+		if (!strcmp(argv[0], "quit")) {
+			log_error("Exiting.");
 			break;
+		}
 
-		run_command(argc, argv);
-		free(input);
+		ret = run_command(argc, argv);
+		if (ret == ENO_SUCH_CMD)
+			log_error("No such command '%s'.  Try 'help'.",
+				  argv[0]);
 	}
 
 	free(input);
