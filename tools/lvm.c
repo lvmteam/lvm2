@@ -15,6 +15,7 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "stub.h"
 
@@ -510,7 +511,7 @@ static int process_common_commands(struct command *com)
 		kill(getpid(), SIGSTOP);
 
 	if (arg_count(debug_ARG))
-		_current_settings.debug = LOG_FATAL + 
+		_current_settings.debug = _LOG_FATAL + 
 					  (arg_count(debug_ARG) - 1);
 
 	if (arg_count(verbose_ARG))
