@@ -1,0 +1,51 @@
+.TH PVMOVE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+pvmove \- move physical extents
+.SH SYNOPSIS
+.B pvmove
+[\-d/\-\-debug] [\-h/\-\-help] [\-i/\-\-interval Seconds] [\-v/\-\-verbose]
+[\-n/\-\-name LogicalVolume] SourcePhysicalVolume 
+[DestinationPhysicalVolume[:PE[-PE]...]...]
+.SH DESCRIPTION
+.B pvmove
+allows you to move the allocated physical extents (PEs) on
+.I SourcePhysicalVolume
+to one or more other physical volumes (PVs).
+You can optionally specify a source
+.I LogicalVolume
+in which case only extents used by that LV will be moved to 
+free (or specified) extents on
+.IR DestinationPhysicalVolume (s).
+If no
+.I DestinationPhysicalVolume
+is specifed, the normal allocation rules for the volume group are used.
+
+If \fBpvmove\fP gets interrupted for any reason, it will probably be 
+necessary to run \fBvgcfgrestore\fP to restore the volume group's metadata to
+the state it was before the \fBpvmove\fP began.
+
+\fBpvmove\fP locks the volume group and other LVM2 commands can't access
+the volume group metadata until \fBpvmove\fP has completed.
+
+.SH OPTIONS
+.TP
+.I \-i, \-\-interval Seconds
+Report progress as a percentage at regular intervals.
+.TP
+.I \-n, \-\-name " \fILogicalVolume\fR"
+Move only the extents belonging to
+.I LogicalVolume
+from
+.I SourcePhysicalVolume
+instead of all allocated extents to the destination physical volume(s).
+
+.SH EXAMPLES
+To move all logical extents of any logical volumes on
+.B /dev/hda4
+to free physical extents elsewhere in the volume group, giving verbose
+runtime information, use:
+.sp
+\	pvmove -v /dev/hda4
+
+.SH SEE ALSO
+.BR lvm (8)
