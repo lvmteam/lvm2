@@ -10,13 +10,13 @@
 /*
  * Only works with powers of 2.
  */
-static inline ulong _round_up(ulong n, ulong size)
+static inline uint32_t _round_up(uint32_t n, uint32_t size)
 {
 	size--;
 	return (n + size) & ~size;
 }
 
-static inline ulong _div_up(ulong n, ulong size)
+static inline uint32_t _div_up(uint32_t n, uint32_t size)
 {
 	return _round_up(n, size) / size;
 }

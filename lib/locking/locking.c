@@ -28,6 +28,8 @@ static void _block_signals(int flags)
 {
 	sigset_t set;
 
+	/* Stop process memory getting swapped out */
+#ifdef MCL_CURRENT
 	if (!_write_lock_held && (flags & LCK_SCOPE_MASK) == LCK_LV &&
 	    (flags & LCK_TYPE_MASK) == LCK_WRITE) {
 		if (mlockall(MCL_CURRENT | MCL_FUTURE))
@@ -37,6 +39,7 @@ static void _block_signals(int flags)
 			_write_lock_held = 1;
 		}
 	}
+#endif
 
 	if (_signals_blocked)
 		return;
@@ -58,6 +61,7 @@ static void _block_signals(int flags)
 
 static void _unblock_signals(void)
 {
+#ifdef MCL_CURRENT
 	if (!_lock_count && _write_lock_held) {
 		if (munlockall()) {
 			log_very_verbose("Unlocking memory");
@@ -66,6 +70,7 @@ static void _unblock_signals(void)
 
 		_write_lock_held = 0;
 	}
+#endif
 
 	/* Don't unblock signals while any locks are held */
 	if (!_signals_blocked || _lock_count)

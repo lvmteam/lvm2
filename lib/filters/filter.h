@@ -24,7 +24,14 @@
 #include "config.h"
 
 #include <sys/stat.h>
-#include <linux/kdev_t.h>
+
+#ifdef linux
+#  include <linux/kdev_t.h>
+#else
+#  define MAJOR(x) major((x))
+#  define MINOR(x) minor((x))
+#  define MKDEV(x,y) makedev((x),(y))
+#endif
 
 struct dev_filter *lvm_type_filter_create(const char *proc,
 					  struct config_node *cn);

@@ -46,6 +46,14 @@ AC_TYPE_SIZE_T
 AC_STRUCT_ST_RDEV
 AC_HEADER_TIME
 
+dnl Get system type
+AC_CANONICAL_SYSTEM
+
+case "$host_os" in
+	linux*)
+		CFLAGS= ;;
+esac
+
 dnl -- prefix is /usr by default, the exec_prefix default is setup later
 AC_PREFIX_DEFAULT(/usr)
 
@@ -75,6 +83,10 @@ if [[ "x$LVM1" != xnone -a "x$LVM1" != xinternal -a "x$LVM1" != xshared ]];
  exit
 fi;
 
+if test x$LVM1 = xinternal; then
+	CFLAGS="$CFLAGS -DLVM1_INTERNAL"
+fi
+
 AC_ARG_ENABLE(jobs, [  --enable-jobs=NUM       Number of jobs to run simultaneously], JOBS=-j$enableval, JOBS=-j2)
 
 dnl Enables staticly linked tools
@@ -85,6 +97,10 @@ dnl Enable readline
 AC_ARG_ENABLE(readline, [  --enable-readline       Enable readline support],  \
 READLINE=$enableval, READLINE=no)
 
+if test x$READLINE = xyes; then
+	CFLAGS="$CFLAGS -DREADLINE_SUPPORT"
+fi
+
 dnl Enable Debugging
 AC_ARG_ENABLE(debug,    [  --enable-debug          Enable debugging],  \
 DEBUG=yes, DEBUG=no)
@@ -92,6 +108,10 @@ DEBUG=yes, DEBUG=no)
 dnl Disable devmapper
 AC_ARG_ENABLE(devmapper, [  --disable-devmapper     Disable device-mapper interaction],  \
 DEVMAPPER=no, DEVMAPPER=yes)
+
+if test x$DEVMAPPER = xyes; then
+	CFLAGS="$CFLAGS -DDEVMAPPER_SUPPORT"
+fi
 
 dnl Mess with default exec_prefix
 if [[ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ]];
@@ -125,8 +145,12 @@ dnl Check for dlopen
 AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
 
 if test x$HAVE_LIBDL = xyes; then
+	CFLAGS="$CFLAGS -DHAVE_LIBDL"
 	LIBS="-ldl $LIBS"
 fi
+
+dnl Check for getopt
+AC_CHECK_HEADERS(getopt.h, CFLAGS="$CFLAGS -DHAVE_GETOPTLONG")
 
 dnl Check for readline (Shamelessly copied from parted 1.4.17)
 if test x$READLINE = xyes; then
@@ -141,8 +165,8 @@ package as well (which may be called readline-devel or something similar).
 )
 		exit
 	)
-	AC_CHECK_FUNC(rl_completion_matches, HAVE_RL_COMPLETION_MATCHES=yes,
-		HAVE_RL_COMPLETION_MATCHES=no)
+	AC_CHECK_FUNC(rl_completion_matches, CFLAGS="$CFLAGS -DHAVE_RL_COMPLETION_MATCHES")
+		
 fi
 
 if test "-f VERSION"; then
@@ -153,11 +177,10 @@ fi
 
 AC_SUBST(JOBS)
 AC_SUBST(STATIC_LINK)
-AC_SUBST(READLINE)
 AC_SUBST(LVM1)
-AC_SUBST(HAVE_RL_COMPLETION_MATCHES)
 AC_SUBST(OWNER)
 AC_SUBST(GROUP)
+AC_SUBST(CFLAGS)
 AC_SUBST(LIBS)
 AC_SUBST(LVM_VERSION)
 AC_SUBST(DEBUG)

@@ -26,9 +26,9 @@
 #define DEFAULT_UMASK 0077
 
 #ifdef LVM1_SUPPORT
-  #define DEFAULT_FORMAT "lvm1"
+#  define DEFAULT_FORMAT "lvm1"
 #else
-  #define DEFAULT_FORMAT "lvm2"
+#  define DEFAULT_FORMAT "lvm2"
 #endif
 
 #define DEFAULT_STRIPESIZE 64	/* KB */
@@ -41,7 +41,7 @@
 #define DEFAULT_OVERWRITE 0
 
 #ifndef DEFAULT_LOG_FACILITY
-  #define DEFAULT_LOG_FACILITY LOG_USER
+#  define DEFAULT_LOG_FACILITY LOG_USER
 #endif
 
 #define DEFAULT_SYSLOG 1
@@ -52,13 +52,13 @@
 #define DEFAULT_SUFFIX 1
 
 #ifdef DEVMAPPER_SUPPORT
-  #define DEFAULT_ACTIVATION 1
+#  define DEFAULT_ACTIVATION 1
 #else
-  #define DEFAULT_ACTIVATION 0
+#  define DEFAULT_ACTIVATION 0
 #endif
 
 #ifdef READLINE_SUPPORT
-  #define DEFAULT_MAX_HISTORY 100
+#  define DEFAULT_MAX_HISTORY 100
 #endif
 
 #define DEFAULT_REP_ALIGNED 1

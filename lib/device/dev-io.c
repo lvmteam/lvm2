@@ -5,17 +5,21 @@
  */
 
 #include "lib.h"
-#include "device.h"
 #include "lvm-types.h"
+#include "device.h"
 #include "metadata.h"
 
 #include <limits.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <linux/unistd.h>
 #include <sys/ioctl.h>
-#include <linux/fs.h>		// UGH!!! for BLKSSZGET
+
+#ifdef linux
+#  define u64 uint64_t		/* Missing without __KERNEL__ */
+#  include <linux/fs.h>		/* For block ioctl definitions */
+#  define BLKSIZE_SHIFT SECTOR_SHIFT
+#endif
 
 /* FIXME 64 bit offset!!!
 _syscall5(int,  _llseek,  uint,  fd, ulong, hi, ulong, lo, loff_t *, res, uint, wh);
@@ -24,7 +28,6 @@ _syscall5(int,  _llseek,  uint,  fd, ulong, hi, ulong, lo, loff_t *, res, uint, 
 int dev_get_size(struct device *dev, uint64_t *size)
 {
 	int fd;
-	long s;
 	const char *name = dev_name(dev);
 
 	log_very_verbose("Getting size of %s", name);
@@ -33,15 +36,14 @@ int dev_get_size(struct device *dev, uint64_t *size)
 		return 0;
 	}
 
-	/* FIXME: add 64 bit ioctl */
-	if (ioctl(fd, BLKGETSIZE, &s) < 0) {
-		log_sys_error("ioctl BLKGETSIZE", name);
+	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
+		log_sys_error("ioctl BLKGETSIZE64", name);
 		close(fd);
 		return 0;
 	}
 
+	*size >>= BLKSIZE_SHIFT;
 	close(fd);
-	*size = (uint64_t) s;
 	return 1;
 }
 

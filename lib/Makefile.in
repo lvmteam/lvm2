@@ -48,7 +48,6 @@ SOURCES=\
 	misc/crc.c \
 	misc/lvm-file.c \
 	misc/lvm-string.c \
-	misc/sharedlib.c \
 	mm/pool.c \
 	regex/matcher.c \
 	regex/parse_rx.c \
@@ -80,7 +79,8 @@ endif
 
 ifeq ("@HAVE_LIBDL@", "yes")
   SOURCES+=\
-	locking/external_locking.c
+	locking/external_locking.c \
+	misc/sharedlib.c
 endif
 
 TARGETS=liblvm.a

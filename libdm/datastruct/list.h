@@ -76,8 +76,11 @@ static inline unsigned int list_size(const struct list *head)
 #define list_item(v, t) \
     ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->list))
 
-/* Given a known element in a known structure, locate the struct list */
-#define list_head(v, t, e) \
-    (((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->e))->list)
+/* Given a known element in a known structure, locate another */
+#define struct_field(v, t, e, f) \
+    (((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->e))->f)
+
+/* Given a known element in a known structure, locate the list head */
+#define list_head(v, t, e) struct_field(v, t, e, list)
 
 #endif
