@@ -10,6 +10,7 @@
 #include "pv_map.h"
 #include "lvm-string.h"
 #include "toolcontext.h"
+#include "lv_alloc.h"
 
 /*
  * These functions adjust the pe counts in pv's
@@ -49,7 +50,7 @@ static void _put_extents(struct lv_segment *seg)
 	}
 }
 
-static struct lv_segment *_alloc_segment(struct pool *mem, uint32_t stripes)
+struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t stripes)
 {
 	struct lv_segment *seg;
 	uint32_t len = sizeof(*seg) + (stripes * sizeof(seg->area[0]));
@@ -75,7 +76,7 @@ static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 	if (smallest < area_len)
 		area_len = smallest;
 
-	if (!(seg = _alloc_segment(lv->vg->cmd->mem, stripes))) {
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, stripes))) {
 		log_err("Couldn't allocate new stripe segment.");
 		return 0;
 	}
@@ -188,7 +189,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 	if (count > remaining)
 		count = remaining;
 
-	if (!(seg = _alloc_segment(lv->vg->cmd->mem, 1))) {
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 1))) {
 		log_err("Couldn't allocate new stripe segment.");
 		return 0;
 	}
@@ -224,7 +225,7 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	if (count > remaining)
 		count = remaining;
 
-	if (!(seg = _alloc_segment(lv->vg->cmd->mem, 2))) {
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 2))) {
 		log_err("Couldn't allocate new mirrored segment.");
 		return 0;
 	}
@@ -731,8 +732,11 @@ int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
 		lv = list_item(lvh, struct lv_list)->lv;
 		if (!lock_vol(cmd, lv->lvid.s, flags)) {
 			log_error("Failed to lock %s", lv->name);
-			/* FIXME Only unlock the locked ones */
-			unlock_lvs(cmd, lvs);
+			list_uniterate(lvh, lvs, lvh) {
+				lv = list_item(lvh, struct lv_list)->lv;
+				unlock_lv(cmd, lv->lvid.s);
+			}
+
 			return 0;
 		}
 	}

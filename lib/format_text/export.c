@@ -321,7 +321,6 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 	_inc_indent(f);
 
 	list_iterate(pvh, &vg->pvs) {
-
 		pv = list_item(pvh, struct pv_list)->pv;
 
 		if (!(name = _get_pv_name(f, pv))) {
@@ -522,7 +521,7 @@ static int _print_snapshots(struct formatter *f, struct volume_group *vg)
 
 static int _print_lvs(struct formatter *f, struct volume_group *vg)
 {
-	struct list *lvh, *segh;
+	struct list *lvh;
 	struct logical_volume *lv;
 	struct lv_segment *seg;
 	char buffer[256];
@@ -571,9 +570,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 		f->nl(f);
 
 		seg_count = 1;
-		list_iterate(segh, &lv->segments) {
-			seg = list_item(segh, struct lv_segment);
-
+		list_iterate_items(seg, &lv->segments) {
 			if (!_print_segment(f, vg, seg_count++, seg)) {
 				stack;
 				return 0;

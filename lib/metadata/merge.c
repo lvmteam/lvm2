@@ -6,6 +6,8 @@
 
 #include "lib.h"
 #include "metadata.h"
+#include "toolcontext.h"
+#include "lv_alloc.h"
 
 /*
  * Test whether two segments could be merged by the current merging code
@@ -95,6 +97,92 @@ int lv_check_segments(struct logical_volume *lv)
 		}
 
 		le += seg->len;
+	}
+
+	return 1;
+}
+
+/*
+ * Split the supplied segment at the supplied logical extent
+ */
+static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
+			     uint32_t le)
+{
+	size_t len;
+	struct lv_segment *split_seg;
+	uint32_t s;
+	uint32_t offset = le - seg->le;
+
+	if (seg->type == SEG_SNAPSHOT) {
+		log_error("Unable to split the snapshot segment at LE %" PRIu32
+			  " in LV %s", le, lv->name);
+		return 0;
+	}
+
+	/* Clone the existing segment */
+	if (!(split_seg = alloc_lv_segment(lv->vg->cmd->mem,
+					   seg->area_count))) {
+		log_error("Couldn't allocate new LV segment.");
+		return 0;
+	}
+
+	len = sizeof(*seg) + (seg->area_count * sizeof(seg->area[0]));
+	memcpy(split_seg, seg, len);
+
+	/* In case of a striped segment, the offset has to be / stripes */
+	if (seg->type == SEG_STRIPED)
+		offset /= seg->area_count;
+
+	/* Adjust the PV mapping */
+	for (s = 0; s < seg->area_count; s++) {
+		/* Split area at the offset */
+		switch (seg->area[s].type) {
+		case AREA_LV:
+			split_seg->area[s].u.lv.le =
+			    seg->area[s].u.lv.le + offset;
+			break;
+
+		case AREA_PV:
+			split_seg->area[s].u.pv.pe =
+			    seg->area[s].u.pv.pe + offset;
+			break;
+
+		default:
+			log_error("Unrecognised segment type %u",
+				  seg->area[s].type);
+			return 0;
+		}
+	}
+
+	split_seg->area_len = seg->area_len - offset;
+	seg->area_len = offset;
+
+	/* Add split off segment to the list _after_ the original one */
+	list_add_h(&seg->list, &split_seg->list);
+
+	return 1;
+}
+
+/*
+ * Ensure there's a segment boundary at the given logical extent
+ */
+int lv_split_segment(struct logical_volume *lv, uint32_t le)
+{
+	struct lv_segment *seg;
+
+	if (!(seg = find_seg_by_le(lv, le))) {
+		log_error("Segment with extent %" PRIu32 " in LV %s not found",
+			  le, lv->name);
+		return 0;
+	}
+
+	/* This is a segment start already */
+	if (le == seg->le)
+		return 1;
+
+	if (!_lv_split_segment(lv, seg, le)) {
+		stack;
+		return 0;
 	}
 
 	return 1;

@@ -469,6 +469,11 @@ int lv_check_segments(struct logical_volume *lv);
 int lv_merge_segments(struct logical_volume *lv);
 
 /*
+ * Ensure there's a segment boundary at a given LE, splitting if necessary
+ */
+int lv_split_segment(struct logical_volume *lv, uint32_t le);
+
+/*
  * Useful functions for managing snapshots.
  */
 int lv_is_origin(const struct logical_volume *lv);
