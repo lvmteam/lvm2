@@ -103,6 +103,7 @@ static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 	pva->start = b;
 	pva->count = e - b;
 	list_add(&pvm->areas, &pva->list);
+	*extent = e;
 
 	return 1;
 }
