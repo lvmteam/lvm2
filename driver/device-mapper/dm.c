@@ -219,7 +219,7 @@ static int blk_ioctl(struct inode *inode, struct file *file,
 	return 0;
 }
 
-/* FIXME: should io_hooks come from their own slab ? */
+/* FIXME: These should have their own slab */
 inline static struct io_hook *alloc_io_hook(void)
 {
 	return kmalloc(sizeof(struct io_hook), GFP_NOIO);
@@ -228,6 +228,16 @@ inline static struct io_hook *alloc_io_hook(void)
 inline static void free_io_hook(struct io_hook *ih)
 {
 	kfree(ih);
+}
+
+inline static struct deferred_io *alloc_deferred(void)
+{
+	return kmalloc(sizeof(struct deferred_io), GFP_NOIO);
+}
+
+inline static void free_deferred(struct deferred_io *di)
+{
+	kfree(di);
 }
 
 static void dec_pending(struct buffer_head *bh, int uptodate)
@@ -245,46 +255,47 @@ static void dec_pending(struct buffer_head *bh, int uptodate)
 	bh->b_end_io(bh, uptodate);
 }
 
-static int request(request_queue_t *q, int rw, struct buffer_head *bh)
+static int queue_io(struct mapped_device *md, struct buffer_head *bh, int rw)
 {
-	struct mapped_device *md;
-	offset_t *node;
-	int i = 0, l, next_node = 0, r = 0;
-	int minor = MINOR(bh->b_rdev);
+	struct deferred_io *di = alloc_deferred();
+
+	if (!di)
+		return -ENOMEM;
+
+	wl;
+	if (test_bit(DM_ACTIVE, &md->state)) {
+		wu;
+		return 0;
+	}
+
+	di->bh = bh;
+	di->rw = rw;
+	di->next = md->deferred;
+	md->deferred = di;
+
+	wu;
+	return 1;
+}
+
+
+inline static int __map_buffer(struct mapped_device *md, 
+			       struct buffer_head *bh, int node)
+{
 	dm_map_fn fn;
 	void *context;
 	struct io_hook *ih = 0;
+	int r;
 
-	if (minor >= MAX_DEVICES)
-		return -ENXIO;
-
-	rl;
-	md = _devs[minor];
-
-	if (!md)
-		goto bad;
-
-	/* search the btree for the correct target */
-	for (l = 0; l < md->depth; l++) {
-		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
-		node = md->index[l] + (next_node * KEYS_PER_NODE);
-
-		for (i = 0; i < KEYS_PER_NODE; i++)
-			if (node[i] >= bh->b_rsector)
-				break;
-	}
-
-	next_node = (KEYS_PER_NODE * next_node) + i;
-	fn = md->targets[next_node];
-	context = md->contexts[next_node];
+	fn = md->targets[node];
+	context = md->contexts[node];
 
 	if (!fn)
-		goto bad;
+		return 0;
 
 	ih = alloc_io_hook();
 
 	if (!ih)
-		goto bad;
+		return 0;
 
 	ih->md = md;
 	ih->end_io = bh->b_end_io;
@@ -304,11 +315,59 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 
 	else if (r < 0) {
 		free_io_hook(ih);
-		goto bad;
+		return 0;
 	}
 
+	return 1;
+}
+
+static int request(request_queue_t *q, int rw, struct buffer_head *bh)
+{
+	struct mapped_device *md;
+	offset_t *node;
+	int i = 0, l, next_node = 0, r;
+	int minor = MINOR(bh->b_rdev);
+
+	if (minor >= MAX_DEVICES)
+		return -ENXIO;
+
+	rl;
+	md = _devs[minor];
+
+	if (!md || !test_bit(DM_LOADED, &md->state))
+		goto bad;
+
+	/* if we're suspended we have to queue this io for later */
+	if (!test_bit(DM_ACTIVE, &md->state)) {
+		ru;
+		r = queue_io(md, bh, rw);
+
+		if (r < 0) {
+			buffer_IO_error(bh);
+			return 0;
+
+		} else if (r > 0)
+			return 0; /* deferred successfully */
+
+		rl;	/* FIXME: there's still a race here */
+	}
+
+	/* search the btree for the correct target */
+	for (l = 0; l < md->depth; l++) {
+		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
+		node = md->index[l] + (next_node * KEYS_PER_NODE);
+
+		for (i = 0; i < KEYS_PER_NODE; i++)
+			if (node[i] >= bh->b_rsector)
+				break;
+	}
+	next_node = (KEYS_PER_NODE * next_node) + i;
+
+	if (!__map_buffer(md, bh, next_node))
+		goto bad;
+
 	ru;
-	return r;
+	return 1;
 
  bad:
 	ru;
@@ -478,7 +537,7 @@ int dm_remove(const char *name)
 		return -ENXIO;
 	}
 
-	if (md->in_use) {
+	if (md->use_count) {
 		wu;
 		return -EPERM;
 	}
@@ -516,6 +575,17 @@ int dm_add_device(struct mapped_device *md, kdev_t dev)
 	return 0;
 }
 
+static void __flush_deferred_io(struct mapped_device *md)
+{
+	struct deferred_io *c, *n;
+
+	for (c = md->deferred, md->deferred = 0; c; c = n) {
+		n = c->next;
+		generic_make_request(c->rw, c->bh);
+		free_deferred(c);
+	}
+}
+
 int dm_activate(struct mapped_device *md)
 {
 	int ret, minor;
@@ -548,6 +618,8 @@ int dm_activate(struct mapped_device *md)
 	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
 
 	set_bit(DM_ACTIVE, &md->state);
+
+	__flush_deferred_io(md);
 	wu;
 
 	return 0;
