@@ -29,7 +29,7 @@ static struct inode_operations dm_dir_inode_operations;
 
 struct vfsmount *_mnt;
 
-static int dmfs_unlink(struct inode *dir, struct dentry *dentry);
+static int _unlink(struct inode *dir, struct dentry *dentry);
 
 #define NOT_A_TABLE ((struct dm_table *) 1)
 
@@ -133,8 +133,9 @@ static void close_error_file(struct file *out)
 	fput(out);
 }
 
-static void parse_error(const char *message, struct line_c *lc)
+static void parse_error(const char *message, void *private)
 {
+	struct line_c *lc = (struct line_c *) private;
 	char buffer[32];
 
 #define emit(b, l) lc->out->f_op->write(lc->out, (b), (l), &lc->out->f_pos)
@@ -148,7 +149,7 @@ static void parse_error(const char *message, struct line_c *lc)
 #undef emit
 }
 
-static int dmfs_release(struct inode *inode, struct file *f)
+static int _release(struct inode *inode, struct file *f)
 {
 	/* FIXME: we should lock the inode to
 	   prevent someone else opening it while
@@ -166,7 +167,7 @@ static int dmfs_release(struct inode *inode, struct file *f)
 
 	/* free off the old table */
 	if (table) {
-		dm_put_table(table);
+		dm_table_destroy(table);
 		inode->u.generic_ip = 0;
 	}
 
@@ -179,10 +180,7 @@ static int dmfs_release(struct inode *inode, struct file *f)
 	if (!(lc->out = open_error_file(lc->in)))
 		return -ENOMEM;
 
-	table = dm_parse(extract_line, lc);
-	if (table && table->err_msg)
-		parse_error(table->err_msg, lc);
-
+	table = dm_parse(extract_line, lc, parse_error, lc);
 	close_error_file(lc->out);
 
 	kfree(lc);
@@ -191,9 +189,10 @@ static int dmfs_release(struct inode *inode, struct file *f)
 	return 0;
 }
 
-void dmfs_put_inode(struct inode *inode)
+void _put_inode(struct inode *inode)
 {
-	struct mapped_device *md = (struct mapped_device *) inode->u.generic_ip;
+	struct mapped_device *md = 
+		(struct mapped_device *) inode->u.generic_ip;
 	struct dm_table *table = (struct dm_table *) inode->u.generic_ip;
 
 	if (inode->i_mode & S_IFDIR) {
@@ -202,7 +201,7 @@ void dmfs_put_inode(struct inode *inode)
 
 	} else {
 		if (table)
-			dm_put_table(table);
+			dm_table_destroy(table);
 
 	}
 
@@ -210,7 +209,7 @@ void dmfs_put_inode(struct inode *inode)
 	force_delete(inode);
 }
 
-static int dmfs_statfs(struct super_block *sb, struct statfs *buf)
+static int _statfs(struct super_block *sb, struct statfs *buf)
 {
 	buf->f_type = DM_MAGIC;
 	buf->f_bsize = PAGE_CACHE_SIZE;
@@ -222,7 +221,7 @@ static int dmfs_statfs(struct super_block *sb, struct statfs *buf)
  * Lookup the data. This is trivial - if the dentry didn't already
  * exist, we know it is negative.
  */
-static struct dentry *dmfs_lookup(struct inode *dir, struct dentry *dentry)
+static struct dentry *_lookup(struct inode *dir, struct dentry *dentry)
 {
 	d_add(dentry, NULL);
 	return NULL;
@@ -232,7 +231,7 @@ static struct dentry *dmfs_lookup(struct inode *dir, struct dentry *dentry)
  * Read a page. Again trivial. If it didn't already exist
  * in the page cache, it is zero-filled.
  */
-static int dmfs_readpage(struct file *file, struct page *page)
+static int _readpage(struct file *file, struct page *page)
 {
 	if (!Page_Uptodate(page)) {
 		memset(kmap(page), 0, PAGE_CACHE_SIZE);
@@ -248,14 +247,14 @@ static int dmfs_readpage(struct file *file, struct page *page)
  * Writing: just make sure the page gets marked dirty, so that
  * the page stealer won't grab it.
  */
-static int dmfs_writepage(struct page *page)
+static int _writepage(struct page *page)
 {
 	SetPageDirty(page);
 	UnlockPage(page);
 	return 0;
 }
 
-static int dmfs_prepare_write(struct file *file, struct page *page,
+static int _prepare_write(struct file *file, struct page *page,
 			      unsigned offset, unsigned to)
 {
 	void *addr = kmap(page);
@@ -268,7 +267,7 @@ static int dmfs_prepare_write(struct file *file, struct page *page,
 	return 0;
 }
 
-static int dmfs_commit_write(struct file *file, struct page *page,
+static int _commit_write(struct file *file, struct page *page,
 			     unsigned offset, unsigned to)
 {
 	struct inode *inode = page->mapping->host;
@@ -280,7 +279,7 @@ static int dmfs_commit_write(struct file *file, struct page *page,
 	return 0;
 }
 
-struct inode *dmfs_get_inode(struct super_block *sb, int mode, int dev)
+struct inode *_get_inode(struct super_block *sb, int mode, int dev)
 {
 	struct inode *inode = new_inode(sb);
 
@@ -318,10 +317,10 @@ struct inode *dmfs_get_inode(struct super_block *sb, int mode, int dev)
 /*
  * File creation. Allocate an inode, and we're done..
  */
-static int dmfs_mknod(struct inode *dir, struct dentry *dentry, int mode)
+static int _mknod(struct inode *dir, struct dentry *dentry, int mode)
 {
 	int error = -ENOSPC;
-	struct inode *inode = dmfs_get_inode(dir->i_sb, mode, 0);
+	struct inode *inode = _get_inode(dir->i_sb, mode, 0);
 
 	if (inode) {
 		d_instantiate(dentry, inode);
@@ -332,7 +331,7 @@ static int dmfs_mknod(struct inode *dir, struct dentry *dentry, int mode)
 	return error;
 }
 
-static int dmfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
+static int _mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
 	int r;
 	const char *name = (const char *) dentry->d_name.name;
@@ -345,7 +344,7 @@ static int dmfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	if (IS_ERR(md))
 		return PTR_ERR(md);
 
-	r = dmfs_mknod(dir, dentry, mode | S_IFDIR);
+	r = _mknod(dir, dentry, mode | S_IFDIR);
 	if (r) {
 		dm_remove(md);
 		return r;
@@ -357,17 +356,17 @@ static int dmfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	return 0;
 }
 
-static int dmfs_rmdir(struct inode *dir, struct dentry *dentry)
+static int _rmdir(struct inode *dir, struct dentry *dentry)
 {
-	int r = dmfs_unlink(dir, dentry);
+	int r = _unlink(dir, dentry);
 	return r;
 }
 
-static int dmfs_create(struct inode *dir, struct dentry *dentry, int mode)
+static int _create(struct inode *dir, struct dentry *dentry, int mode)
 {
 	int r;
 
-	if ((r = dmfs_mknod(dir, dentry, mode | S_IFREG)))
+	if ((r = _mknod(dir, dentry, mode | S_IFREG)))
 		return r;
 
 	dentry->d_inode->u.generic_ip = 0;
@@ -411,7 +410,7 @@ static int _empty(struct dentry *dentry)
  * This works for both directories and regular files.
  * (non-directories will always have empty subdirs)
  */
-static int dmfs_unlink(struct inode *dir, struct dentry *dentry)
+static int _unlink(struct inode *dir, struct dentry *dentry)
 {
 	int retval = -ENOTEMPTY;
 
@@ -431,7 +430,7 @@ static int dmfs_unlink(struct inode *dir, struct dentry *dentry)
  * it exists so that the VFS layer correctly free's it when it
  * gets overwritten.
  */
-static int dmfs_rename(struct inode *old_dir, struct dentry *old_dentry,
+static int _rename(struct inode *old_dir, struct dentry *old_dentry,
 		       struct inode *new_dir, struct dentry *new_dentry)
 {
 	struct inode *inode = new_dentry->d_inode;
@@ -461,52 +460,52 @@ static int dmfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	return 0;
 }
 
-static int dmfs_sync_file(struct file *file, struct dentry *dentry,
+static int _sync_file(struct file *file, struct dentry *dentry,
 			  int datasync)
 {
 	return 0;
 }
 
 static struct address_space_operations dm_aops = {
-	readpage:	dmfs_readpage,
-	writepage:	dmfs_writepage,
-	prepare_write:	dmfs_prepare_write,
-	commit_write:	dmfs_commit_write
+	readpage:	_readpage,
+	writepage:	_writepage,
+	prepare_write:	_prepare_write,
+	commit_write:	_commit_write
 };
 
 static struct file_operations dm_file_operations = {
 	read:		generic_file_read,
 	write:		generic_file_write,
-	fsync:		dmfs_sync_file,
-	release:	dmfs_release,
+	fsync:		_sync_file,
+	release:	_release,
 };
 
 static struct file_operations dm_dir_operations = {
 	read:		generic_read_dir,
 	readdir:	dcache_readdir,
-	fsync:		dmfs_sync_file,
+	fsync:		_sync_file,
 };
 
 static struct inode_operations root_dir_inode_operations = {
-	lookup:		dmfs_lookup,
-	mkdir:		dmfs_mkdir,
-	rmdir:		dmfs_rmdir,
-	rename:		dmfs_rename,
+	lookup:		_lookup,
+	mkdir:		_mkdir,
+	rmdir:		_rmdir,
+	rename:		_rename,
 };
 
 static struct inode_operations dm_dir_inode_operations = {
-	create:		dmfs_create,
-	lookup:		dmfs_lookup,
-	unlink:		dmfs_unlink,
-	rename:		dmfs_rename,
+	create:		_create,
+	lookup:		_lookup,
+	unlink:		_unlink,
+	rename:		_rename,
 };
 
 static struct super_operations dm_ops = {
-	statfs:		dmfs_statfs,
-	put_inode:	dmfs_put_inode,
+	statfs:		_statfs,
+	put_inode:	_put_inode,
 };
 
-static struct super_block *dmfs_read_super(struct super_block *sb, void *data,
+static struct super_block *_read_super(struct super_block *sb, void *data,
 					   int silent)
 {
 	struct inode *inode;
@@ -516,7 +515,7 @@ static struct super_block *dmfs_read_super(struct super_block *sb, void *data,
 	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
 	sb->s_magic = DM_MAGIC;
 	sb->s_op = &dm_ops;
-	inode = dmfs_get_inode(sb, S_IFDIR | 0755, 0);
+	inode = _get_inode(sb, S_IFDIR | 0755, 0);
 	inode->i_op = &root_dir_inode_operations;
 	if (!inode)
 		return NULL;
@@ -530,9 +529,9 @@ static struct super_block *dmfs_read_super(struct super_block *sb, void *data,
 	return sb;
 }
 
-static DECLARE_FSTYPE(_fs_type, "dmfs", dmfs_read_super, FS_SINGLE);
+static DECLARE_FSTYPE(_fs_type, "dmfs", _read_super, FS_SINGLE);
 
-int __init dmfs_init(void)
+int __init dm_fs_init(void)
 {
 	int r;
 	if ((r = register_filesystem(&_fs_type)))
@@ -541,14 +540,14 @@ int __init dmfs_init(void)
 	_mnt = kern_mount(&_fs_type);
 
 	if (IS_ERR(_mnt)) {
-		dmfs_exit();
+		unregister_filesystem(&_fs_type);
 		return PTR_ERR(_mnt);
 	}
 
 	return 0;
 }
 
-void __exit dmfs_exit(void)
+void __exit dm_fs_exit(void)
 {
 	unregister_filesystem(&_fs_type);
 }

@@ -124,6 +124,17 @@ struct dm_table *dm_table_create(void)
 	return t;
 }
 
+static void free_devices(struct list_head *devices)
+{
+	struct list_head *tmp, *next;
+
+	for (tmp = devices->next; tmp != devices; tmp = next) {
+		struct dm_dev *dd = list_entry(tmp, struct dm_dev, list);
+		next = tmp->next;
+		kfree(dd);
+	}
+}
+
 void dm_table_destroy(struct dm_table *t)
 {
 	int i;
@@ -142,15 +153,10 @@ void dm_table_destroy(struct dm_table *t)
 
 	/* free the device list */
 	if (t->devices) {
-		struct dev_list *d, *n;
-
 		WARN("there are still devices present, someone isn't "
 		     "calling dm_table_remove_device");
 
-		for (d = t->devices; d; d = n) {
-			n = d->next;
-			kfree(d);
-		}
+		free_devices(t->devices);
 	}
 
 	kfree(t);
@@ -234,7 +240,7 @@ int dm_table_add_device(struct dm_table *t, const char *path,
 	if ((r = lookup_device(path, &dev)))
 		return r;
 
-	dd = find_device(t->devices, kd);
+	dd = find_device(t->devices, dev);
 	if (!dd) {
 		dd = kmalloc(sizeof(*dd), GFP_KERNEL);
 		if (!dd)
@@ -243,7 +249,7 @@ int dm_table_add_device(struct dm_table *t, const char *path,
 		dd->dev = dev;
 		dd->bd = 0;
 		atomic_set(&dd->count, 0);
-		list_add(&dd->list, &t->devices);
+		list_add(&dd->list, t->devices);
 	}
 	atomic_inc(&dd->count);
 	*result = dd;
@@ -262,6 +268,7 @@ void dm_table_remove_device(struct dm_table *t, struct dm_dev *dd)
        }
 }
 
+/*
  * adds a target to the map
  */
 int dm_table_add_target(struct dm_table *t, offset_t high,

@@ -34,7 +34,7 @@ static inline struct tt_internal *__find_target_type(const char *name)
 
 		ti = list_entry(tmp, struct tt_internal, list);
 		if (!strcmp(name, ti->tt.name))
-			return t;
+			return ti;
 	}
 
 	return 0;
@@ -45,13 +45,13 @@ static struct tt_internal *get_target_type(const char *name)
 	struct tt_internal *ti;
 
 	read_lock(&_lock);
-	ti = __get_target_type(name);
+	ti = __find_target_type(name);
 	if (ti->use == 0 && ti->tt.module)
 		__MOD_INC_USE_COUNT(ti->tt.module);
 	ti->use++;
 	read_unlock(&_lock);
 
-	return t;
+	return ti;
 }
 
 static void load_module(const char *name)
@@ -60,7 +60,7 @@ static void load_module(const char *name)
 
 	/* Length check for strcat() below */
 	if (strlen(name) > (DM_MOD_NAME_SIZE - 4))
-		return NULL;
+		return;
 
 	strcat(module_name, name);
 	request_module(module_name);
@@ -80,24 +80,24 @@ struct target_type *dm_get_target_type(const char *name)
 
 void dm_put_target_type(struct target_type *t)
 {
-	struct tt_internal *ti = (struct target_type *) t;
+	struct tt_internal *ti = (struct tt_internal *) t;
 
 	read_lock(&_lock);
 	if (--ti->use == 0 && ti->tt.module)
-		__MOD_DEC_USE_COUNT(t->tt.module);
+		__MOD_DEC_USE_COUNT(ti->tt.module);
 
 	if (ti->use < 0)
 		BUG();
 	read_unlock(&_lock);
 }
 
-static int alloc_target(struct target_type *t)
+static struct tt_internal *alloc_target(struct target_type *t)
 {
-	struct tt_internal *ti = kmalloc(sizeof(*ti));
+	struct tt_internal *ti = kmalloc(sizeof(*ti), GFP_KERNEL);
 
 	if (ti) {
 		memset(ti, 0, sizeof(*ti));
-		ti->tt = t;
+		ti->tt = *t;
 	}
 
 	return ti;
@@ -117,7 +117,6 @@ int dm_register_target(struct target_type *t)
 	else
 		list_add(&ti->list, &_targets);
 
- out:
 	write_unlock(&_lock);
 	return rv;
 }
@@ -143,7 +142,8 @@ int dm_unregister_target(struct target_type *t)
  * up LV's that have holes in them.
  */
 static int io_err_ctr(struct dm_table *t, offset_t b, offset_t l,
-		      struct text_region *args, void **context)
+		      struct text_region *args, void **context,
+		      dm_error_fn err, void *e_private)
 {
 	*context = 0;
 	return 0;
