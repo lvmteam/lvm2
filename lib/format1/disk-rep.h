@@ -11,6 +11,9 @@
 #include "metadata.h"
 #include "pool.h"
 
+
+#define SECTOR_SIZE 512
+
 #define MAX_PV 256
 #define MAX_LV 256
 #define MAX_VG 99

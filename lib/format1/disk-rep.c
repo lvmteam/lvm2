@@ -39,8 +39,6 @@ static void _xlate_pv(struct pv_disk *disk)
         xx32(pe_total);
         xx32(pe_allocated);
 	xx32(pe_start);
-
-	/* FIXME: put v1, v2 munging in here. */
 }
 
 static void _xlate_lv(struct lv_disk *disk)
@@ -95,14 +93,41 @@ static void _xlate_extents(struct pe_disk *extents, int count)
 	}
 }
 
+/*
+ * Handle both minor metadata formats.
+ */
+static int _munge_formats(struct pv_disk *pvd)
+{
+	uint32_t pe_start;
+
+	switch (pvd->version) {
+	case 1:
+		pe_start = (pvd->pe_on_disk.base + pvd->pe_on_disk.size) / 
+			SECTOR_SIZE;
+		break;
+
+	case 2:
+		pvd->version = 1;
+		pe_start = pvd->pe_start * SECTOR_SIZE;
+		pvd->pe_on_disk.size = pe_start - pvd->pe_on_disk.base;
+		break;
+
+	default:
+		log_err("unknown metadata version %d", pvd->version);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _read_pv(struct disk_list *data)
 {
 	struct pv_disk *pvd = &data->pv;
 	if (dev_read(data->dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd))
 		fail;
-
 	_xlate_pv(pvd);
-	return 1;
+
+	return _munge_formats(pvd);
 }
 
 static int _read_lv(struct device *dev, ulong pos, struct lv_disk *disk)
