@@ -34,17 +34,20 @@ int lv_deactivate(struct logical_volume *lv);
 int lv_suspend(struct logical_volume *lv);
 int lv_rename(const char *old_name, struct logical_volume *lv);
 
+
+
 /*
- * These should eventually replace some of the above
- * and maybe use config file to determine whether or not to activate
+ * These should eventually replace some of the above and maybe
+ * use config file to determine whether or not to activate
  */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid);
 
+
 /*
- * Snapshot volume need kernel specific initialisation.
+ * FIXME:
+ * I don't like the *lvs_in_vg* function names.
  */
-int lv_setup_cow_store(struct logical_volume *lv);
 
 /*
  * Return number of LVs in the VG that are active.
