@@ -1,5 +1,7 @@
 Version 2.00.30 - 
 ====================================
+  Extend dev_open logging.
+  Make clvmd_fix_conf.sh UNDOable.
 
 Version 2.00.29 - 27th November 2004
 ====================================

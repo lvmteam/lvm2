@@ -332,7 +332,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	}
 
 	list_add(&_open_devices, &dev->open_list);
-	log_debug("Opened %s", dev_name(dev));
+	log_debug("Opened %s %s", dev_name(dev),
+		  flags & O_RDONLY ? "RO" : "RW");
 
 	return 1;
 }
