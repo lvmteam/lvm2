@@ -20,6 +20,60 @@
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
 
+#ifndef DEVMAPPER_SUPPORT
+void set_activation(int act)
+{
+	if (act)
+		log_error("Compiled without libdevmapper support. "
+			  "Can't enable activation.");
+}
+int activation(void)
+{
+	return 0;
+}
+int library_version(char *version, size_t size)
+{
+	return 0;
+}
+int driver_version(char *version, size_t size)
+{
+	return 0;
+}
+int lv_info(const struct logical_volume *lv, struct lvinfo *info)
+{
+	return 0;
+}
+int lv_snapshot_percent(struct logical_volume *lv, float *percent)
+{
+	return 0;
+}
+int lvs_in_vg_activated(struct volume_group *vg)
+{
+	return 0;
+}
+int lvs_in_vg_opened(struct volume_group *vg)
+{
+	return 0;
+}
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
+{
+	return 1;
+}
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
+{
+	return 1;
+}
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
+{
+	return 1;
+}
+int lv_activate(struct cmd_context *cmd, const char *lvid_s)
+{
+	return 1;
+}
+
+#else				/* DEVMAPPER_SUPPORT */
+
 static int _activation = 1;
 
 void set_activation(int act)
@@ -82,10 +136,11 @@ int driver_version(char *version, size_t size)
 /*
  * Returns 1 if info structure populated, else 0 on failure.
  */
-int lv_info(const struct logical_volume *lv, struct dm_info *info)
+int lv_info(const struct logical_volume *lv, struct lvinfo *info)
 {
 	int r;
 	struct dev_manager *dm;
+	struct dm_info dminfo;
 
 	if (!activation())
 		return 0;
@@ -95,8 +150,15 @@ int lv_info(const struct logical_volume *lv, struct dm_info *info)
 		return 0;
 	}
 
-	if (!(r = dev_manager_info(dm, lv, info)))
+	if (!(r = dev_manager_info(dm, lv, &dminfo)))
 		stack;
+
+	info->exists = dminfo.exists;
+	info->suspended = dminfo.suspended;
+	info->open_count = dminfo.open_count;
+	info->major = dminfo.major;
+	info->minor = dminfo.minor;
+	info->read_only = dminfo.read_only;
 
 	dev_manager_destroy(dm);
 	return r;
@@ -128,7 +190,7 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 
 static int _lv_active(struct logical_volume *lv)
 {
-	struct dm_info info;
+	struct lvinfo info;
 
 	if (!lv_info(lv, &info)) {
 		stack;
@@ -140,7 +202,7 @@ static int _lv_active(struct logical_volume *lv)
 
 static int _lv_open_count(struct logical_volume *lv)
 {
-	struct dm_info info;
+	struct lvinfo info;
 
 	if (!lv_info(lv, &info)) {
 		stack;
@@ -244,7 +306,7 @@ int lvs_in_vg_opened(struct volume_group *vg)
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
-	struct dm_info info;
+	struct lvinfo info;
 
 	if (!activation())
 		return 1;
@@ -274,7 +336,7 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
-	struct dm_info info;
+	struct lvinfo info;
 
 	if (!activation())
 		return 1;
@@ -301,7 +363,7 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
-	struct dm_info info;
+	struct lvinfo info;
 
 	if (!activation())
 		return 1;
@@ -328,7 +390,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
-	struct dm_info info;
+	struct lvinfo info;
 
 	if (!activation())
 		return 1;
@@ -351,3 +413,5 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 
 	return 1;
 }
+
+#endif

@@ -24,7 +24,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle)
 {
 	struct volume_group *vg;
-	struct dm_info info;
+	struct lvinfo info;
 
 	vg = lv->vg;
 

@@ -163,7 +163,7 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct dm_info info;
+	struct lvinfo info;
 	char *repstr;
 
 	if (!(repstr = pool_zalloc(rh->mem, 7))) {

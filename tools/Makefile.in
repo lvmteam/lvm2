@@ -62,11 +62,17 @@ TARGETS=\
 	.commands \
 	lvm
 
+LVMLIBS=-llvm
+
+ifeq ("@DEVMAPPER@", "yes")
+	LVMLIBS += -ldevmapper
+endif
+
 include ../make.tmpl
 
 lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
 	$(CC) -o lvm $(OBJECTS) $(LD_FLAGS) -L$(top_srcdir)/lib \
-	      -L$(DESTDIR)/lib -llvm -ldevmapper $(LIBS) -ldl -rdynamic
+	      -L$(DESTDIR)/lib $(LVMLIBS) $(LIBS) -ldl -rdynamic
 
 .commands: commands.h cmdnames.h Makefile
 	$(CC) -E -P cmdnames.h | egrep -v '(help|version)' > .commands

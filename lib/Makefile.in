@@ -14,8 +14,6 @@ endif
 
 SOURCES=\
 	activate/activate.c \
-	activate/dev_manager.c \
-	activate/fs.c \
 	cache/cache.c \
 	commands/toolcontext.c \
 	config/config.c \
@@ -73,6 +71,12 @@ endif
 ifeq ("@DEBUG@", "yes")
   SOURCES+=\
 	mm/dbg_malloc.c
+endif
+
+ifeq ("@DEVMAPPER@", "yes")
+  SOURCES+=\
+	activate/dev_manager.c \
+	activate/fs.c
 endif
 
 TARGETS=liblvm.a

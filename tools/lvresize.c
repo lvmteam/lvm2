@@ -24,7 +24,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
-	struct dm_info info;
+	struct lvinfo info;
 	uint32_t extents = 0;
 	uint32_t size = 0;
 	uint32_t stripes = 0, ssize = 0, stripesize_extents = 0;

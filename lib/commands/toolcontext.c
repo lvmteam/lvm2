@@ -113,7 +113,9 @@ static void _init_logging(struct cmd_context *cmd)
 	log_verbose("Logging initialised at %s", ctime(&t));
 
 	/* Tell device-mapper about our logging */
+#ifdef DEVMAPPER_SUPPORT
 	dm_log_init(print_log);
+#endif
 }
 
 static int _process_config(struct cmd_context *cmd)
@@ -137,7 +139,9 @@ static int _process_config(struct cmd_context *cmd)
 		return 0;
 	}
 
+#ifdef DEVMAPPER_SUPPORT
 	dm_set_dev_dir(cmd->dev_dir);
+#endif
 
 	/* proc dir */
 	if (lvm_snprintf(cmd->proc_dir, sizeof(cmd->proc_dir), "%s",
