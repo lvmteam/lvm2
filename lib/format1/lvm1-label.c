@@ -60,7 +60,8 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	struct pv_disk *pvd = (struct pv_disk *) buf;
 	struct lvmcache_info *info;
 
-	munge_exported_vg(pvd);
+	munge_pvd(dev, pvd);
+
 	if (!(info = lvmcache_add(l, pvd->pv_uuid, dev, pvd->vg_name, NULL))) {
 		stack;
 		return 0;

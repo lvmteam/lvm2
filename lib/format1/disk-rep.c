@@ -117,6 +117,7 @@ static void _xlate_extents(struct pe_disk *extents, uint32_t count)
 static int _munge_formats(struct pv_disk *pvd)
 {
 	uint32_t pe_start;
+	int b, e;
 
 	switch (pvd->version) {
 	case 1:
@@ -134,17 +135,50 @@ static int _munge_formats(struct pv_disk *pvd)
 		return 0;
 	}
 
+        /* UUID too long? */
+        if (pvd->pv_uuid[ID_LEN]) {
+		/* Retain ID_LEN chars from end */
+                for (e = ID_LEN; e < sizeof(pvd->pv_uuid); e++) {
+                        if (!pvd->pv_uuid[e]) {
+                                e--;
+                                break;
+                        }
+                }
+		for (b = 0; b < ID_LEN; b++) {
+			pvd->pv_uuid[b] = pvd->pv_uuid[++e - ID_LEN];
+			/* FIXME Remove all invalid chars */
+			if (pvd->pv_uuid[b] == '/')
+				pvd->pv_uuid[b] = '#';
+		}
+		memset(&pvd->pv_uuid[ID_LEN], 0, sizeof(pvd->pv_uuid) - ID_LEN);
+        }
+
 	return 1;
 }
 
-static int _read_pvd(struct device *dev, struct pv_disk *pvd)
+/* 
+ * If exported, remove "PV_EXP" from end of VG name 
+ */
+static void _munge_exported_vg(struct pv_disk *pvd)
 {
-	if (!dev_read(dev, UINT64_C(0), sizeof(*pvd), pvd)) {
-		log_very_verbose("Failed to read PV data from %s",
-				 dev_name(dev));
-		return 0;
-	}
+	int l;
+	size_t s;
 
+	/* Return if PV not in a VG */
+	if ((!*pvd->vg_name))
+		return;
+	/* FIXME also check vgd->status & VG_EXPORTED? */
+
+	l = strlen(pvd->vg_name);
+	s = sizeof(EXPORTED_TAG);
+	if (!strncmp(pvd->vg_name + l - s + 1, EXPORTED_TAG, s)) {
+		pvd->vg_name[l - s + 1] = '\0';
+                pvd->pv_status |= VG_EXPORTED;
+        }
+}
+
+int munge_pvd(struct device *dev, struct pv_disk *pvd)
+{
 	_xlate_pvd(pvd);
 
 	if (pvd->id[0] != 'H' || pvd->id[1] != 'M') {
@@ -163,7 +197,21 @@ static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 	if (pvd->pv_uuid[0] == '\0')
 		uuid_from_num(pvd->pv_uuid, pvd->pv_number);
 
+	/* If VG is exported, set VG name back to the real name */
+	_munge_exported_vg(pvd);
+
 	return 1;
+}
+
+static int _read_pvd(struct device *dev, struct pv_disk *pvd)
+{
+	if (!dev_read(dev, UINT64_C(0), sizeof(*pvd), pvd)) {
+		log_very_verbose("Failed to read PV data from %s",
+				 dev_name(dev));
+		return 0;
+	}
+
+	return munge_pvd(dev, pvd);
 }
 
 static int _read_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
@@ -269,26 +317,6 @@ static int _read_extents(struct disk_list *data)
 	return 1;
 }
 
-/* 
- * If exported, remove "PV_EXP" from end of VG name 
- */
-void munge_exported_vg(struct pv_disk *pvd)
-{
-	int l;
-	size_t s;
-
-	/* Return if PV not in a VG */
-	if ((!*pvd->vg_name))
-		return;
-
-	l = strlen(pvd->vg_name);
-	s = sizeof(EXPORTED_TAG);
-	if (!strncmp(pvd->vg_name + l - s + 1, EXPORTED_TAG, s)) {
-		pvd->vg_name[l - s + 1] = '\0'; 
-		pvd->pv_status |= VG_EXPORTED;
-	}
-}
-
 static struct disk_list *__read_disk(const struct format_type *fmt,
 				     struct device *dev, struct pool *mem,
 				     const char *vg_name)
@@ -311,9 +339,6 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 		stack;
 		goto bad;
 	}
-
-	/* If VG is exported, set VG name back to the real name */
-	munge_exported_vg(&dl->pvd);
 
 	if (!(info = lvmcache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
 				  dl->pvd.vg_name, NULL)))
