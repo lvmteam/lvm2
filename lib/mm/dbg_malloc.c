@@ -155,7 +155,7 @@ int dump_memory(void)
 	unsigned long tot = 0;
 	struct memblock *mb;
 	if (_head)
-		log_info("you have a memory leak:");
+		log_very_verbose("You have a memory leak:");
 
 	for (mb = _head; mb; mb = mb->next) {
 		print_log(_LOG_INFO, mb->file, mb->line, 
@@ -165,7 +165,7 @@ int dump_memory(void)
 	}
 
 	if (_head)
-		log_info("%ld bytes leaked in total", tot);
+		log_very_verbose("%ld bytes leaked in total", tot);
 
 	return 1;
 }

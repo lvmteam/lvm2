@@ -9,6 +9,7 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES=\
+	activate/activate.c \
 	config/config.c \
 	datastruct/hash.c \
 	device/dev-cache.c \

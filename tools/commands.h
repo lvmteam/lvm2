@@ -325,15 +325,16 @@ xx(vgcfgrestore,
 
 xx(vgchange,
    "Change volume group attributes",
-   "vgchange "
+   "vgchange\n\t"
    "[-A|--autobackup {y|n}] "
    "[-d|--debug] "
    "[-h|--help]\n\t"
-   "{-a|--available {y|n} [VolumeGroupName...] |\n\t "
-   " -x|--allocation {y|n} [VolumeGroupName...]\n\t"
-   " -l|--logicalvolume MaxLogicalVolumes}\n\t"
    "[-v|--verbose] "
-   "[--version]\n",
+   "[--version]\n\t"
+   "{-a|--available {y|n} |\n\t"
+   " -x|--allocation {y|n} |\n\t"
+   " -l|--logicalvolume MaxLogicalVolumes}\n\t"
+   "[VolumeGroupName...]\n",
 
    autobackup_ARG, available_ARG, logicalvolume_ARG, allocation_ARG )
 

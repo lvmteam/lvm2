@@ -40,6 +40,7 @@
 #include "filter.h"
 #include "format1.h"
 #include "toollib.h"
+#include "activate.h"
 
 #define CMD_LEN 256
 #define MAX_ARGS 64
