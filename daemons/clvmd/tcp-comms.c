@@ -69,6 +69,7 @@ int init_comms(unsigned short port)
     {
 	int one = 1;
 	setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+	setsockopt(listen_fd, SOL_SOCKET, SO_KEEPALIVE, &one, sizeof(int));
     }
 
     memset(&addr, 0, sizeof(addr)); // Bind to INADDR_ANY
@@ -286,7 +287,7 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
     else {
 	    gulm_add_up_node(csid);
 	    /* Send it back to clvmd */
-	    process_message(client, buf, len, csid);
+	    process_message(client, buf, status, csid);
     }
     return status;
 }
@@ -296,6 +297,7 @@ int gulm_connect_csid(char *csid, struct local_client **newclient)
     int fd;
     struct sockaddr_in6 addr;
     int status;
+    int one = 1;
 
     DEBUGLOG("Connecting socket\n");
     fd = socket(PF_INET6, SOCK_STREAM, 0);
@@ -327,6 +329,7 @@ int gulm_connect_csid(char *csid, struct local_client **newclient)
 
     /* Set Close-on-exec */
     fcntl(fd, F_SETFD, 1);
+    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &one, sizeof(int));
 
     status = alloc_client(fd, csid, newclient);
     if (status)
