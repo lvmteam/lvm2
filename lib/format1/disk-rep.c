@@ -234,13 +234,13 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 	}
 
 	if (data->pv.id[0] != 'H' || data->pv.id[1] != 'M') {
-		log_debug("%s does not have a valid PV identifier.",
+		log_very_verbose("%s does not have a valid PV identifier",
 			 dev->name);
 		goto bad;
 	}
 
 	if (!_munge_formats(&data->pv)) {
-		log_verbose("Unknown metadata version %d found on %s", 
+		log_very_verbose("Unknown metadata version %d found on %s", 
 			    data->pv.version, dev->name);
 		goto bad;
 	}
@@ -249,8 +249,7 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 	 * is it an orphan ?
 	 */
 	if (data->pv.vg_name == '\0') {
-		log_very_verbose("%s is not a member of any VG",
-				 dev->name);
+		log_very_verbose("%s is not a member of any VG", dev->name);
 		return data;
 	}
 

@@ -106,7 +106,7 @@ int vgrename(int argc, char **argv)
 	sprintf(new_path, "%s%s", prefix, vg_name_new);
 
 	log_verbose("Renaming %s to %s", old_path, new_path);
-	if (!(rename(old_path, new_path))) {
+	if (rename(old_path, new_path)) {
 		log_error("Renaming %s to %s failed: %s",
 			  old_path, new_path, strerror(errno));
 		return ECMD_FAILED;

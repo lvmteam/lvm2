@@ -115,18 +115,18 @@ int read_config(struct config_file *cf, const char *file)
 
         /* memory map the file */
         if (stat(file, &info) || S_ISDIR(info.st_mode)) {
-                log_sys_err("stat");
+                log_sys_error("stat", file);
                 return 0;
         }
 
         if ((fd = open(file, O_RDONLY)) < 0) {
-                log_sys_err("open");
+                log_sys_error("open", file);
                 return 0;
         }
 
         p->fb = mmap((caddr_t) 0, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
         if (p->fb == MAP_FAILED) {
-                log_sys_err("mmap");
+                log_sys_error("mmap", file);
                 close(fd);
                 return 0;
         }
@@ -143,7 +143,7 @@ int read_config(struct config_file *cf, const char *file)
 
         /* unmap the file */
         if (munmap((char *) p->fb, info.st_size)) {
-                log_sys_err("munmap failed");
+                log_sys_error("munmap", file);
                 r = 0;
         }
 
@@ -216,7 +216,7 @@ int write_config(struct config_file *cf, const char *file)
 	int r = 1;
         FILE *fp = fopen(file, "w");
         if (!fp) {
-                log_sys_err("open");
+                log_sys_error("open", file);
                 return 0;
         }
 
