@@ -176,6 +176,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 
 	if (!consistent) {
 		unlock_vg(cmd, vg_name);
+		dev_close_all();
 		log_error("Volume group \"%s\" inconsistent", vg_name);
 		if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE)))
 			return ECMD_FAILED;

@@ -10,6 +10,7 @@
 #include "metadata.h"
 #include "lvmcache.h"
 #include "memlock.h"
+#include "locking.h"
 
 #include <limits.h>
 #include <sys/stat.h>
@@ -326,14 +327,20 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 int dev_open_quiet(struct device *dev)
 {
-	/* FIXME Open O_RDONLY if vg read lock? */
-	return dev_open_flags(dev, O_RDWR, 1, 1);
+	int flags;
+
+	flags = vg_write_lock_held() ? O_RDWR : O_RDONLY;
+
+	return dev_open_flags(dev, flags, 1, 1);
 }
 
 int dev_open(struct device *dev)
 {
-	/* FIXME Open O_RDONLY if vg read lock? */
-	return dev_open_flags(dev, O_RDWR, 1, 0);
+	int flags;
+
+	flags = vg_write_lock_held() ? O_RDWR : O_RDONLY;
+
+	return dev_open_flags(dev, flags, 1, 0);
 }
 
 static void _close(struct device *dev)
