@@ -140,7 +140,7 @@ struct pv_list {
 
 struct lv_list {
 	struct list list;
-	struct logical_volume lv;
+	struct logical_volume *lv;
 };
 
 struct cmd_context {

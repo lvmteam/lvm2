@@ -374,8 +374,7 @@ int activate_lvs_in_vg(struct volume_group *vg)
 	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
-		lv = &(list_item(lvh, struct lv_list)->lv);
-
+		lv = list_item(lvh, struct lv_list)->lv;
 		count += (!lv_active(lv) && lv_activate(lv));
 	}
 
@@ -405,8 +404,7 @@ int deactivate_lvs_in_vg(struct volume_group *vg)
 	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
-		lv = &(list_item(lvh, struct lv_list)->lv);
-
+		lv = list_item(lvh, struct lv_list)->lv;
 		count += ((lv_active(lv) == 1) && lv_deactivate(lv));
 	}
 
@@ -420,8 +418,7 @@ int lvs_in_vg_activated(struct volume_group *vg)
 	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
-		lv = &(list_item(lvh, struct lv_list)->lv);
-
+		lv = list_item(lvh, struct lv_list)->lv;
 		count += (lv_active(lv) == 1);
 	}
 
@@ -435,8 +432,7 @@ int lvs_in_vg_opened(struct volume_group *vg)
 	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
-		lv = &(list_item(lvh, struct lv_list)->lv);
-
+		lv = list_item(lvh, struct lv_list)->lv;
 		count += (lv_open_count(lv) == 1);
 	}
 

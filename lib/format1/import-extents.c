@@ -55,14 +55,14 @@ static struct hash_table *_create_lv_maps(struct pool *mem,
 			goto bad;
 		}
 
-		lvm->lv = &ll->lv;
+		lvm->lv = ll->lv;
 		if (!(lvm->map = pool_zalloc(mem, sizeof(*lvm->map)
-					     * ll->lv.le_count))) {
+					     * ll->lv->le_count))) {
 			stack;
 			goto bad;
 		}
 
-		if (!hash_insert(maps, ll->lv.name, lvm)) {
+		if (!hash_insert(maps, ll->lv->name, lvm)) {
 			stack;
 			goto bad;
 		}

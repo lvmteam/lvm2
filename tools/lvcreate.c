@@ -24,7 +24,6 @@ int lvcreate(int argc, char **argv)
 	struct volume_group *vg;
 	struct logical_volume *lv;
 	struct list *pvh;
-	struct pv_list *pvl;
 	char *lv_name = NULL;
 	char *vg_name;
 	char *st;
