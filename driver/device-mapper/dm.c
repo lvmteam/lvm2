@@ -116,8 +116,6 @@
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
 
-#define WARN(f, x...) printk(KERN_WARNING "%s " f "\n", _name , ## x)
-
 const char *_name = "device-mapper";
 int _version[3] = {1, 0, 0};
 
@@ -478,7 +476,7 @@ int dm_remove(const char *name, int minor)
 		return -ENXIO;
 	}
 
-	dm_clear_table(md);
+	dm_free_table(md);
 	for (d = md->devices; d; d = n) {
 		n = d->next;
 		kfree(d);
