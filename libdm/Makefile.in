@@ -18,10 +18,11 @@ TARGETS=$(interface)/libdevmapper.so
 include ../make.tmpl
 
 install: @interface@/libdevmapper.so
-	$(INSTALL) -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)
-	$(INSTALL) -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
-		$(includedir)
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+		$(libdir)/libdevmapper.so.$(VERSION)
+	$(LN_S) -f libdevmapper.so.$(VERSION) $(libdir)/libdevmapper.so
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
+		$(includedir)/libdevmapper.h
 
 .PHONY: install 
 
