@@ -1,5 +1,6 @@
 ../lib/activate/activate.h
 ../lib/config/config.h
+../lib/config/defaults.h
 ../lib/datastruct/bitset.h
 ../lib/datastruct/btree.h
 ../lib/datastruct/hash.h
@@ -17,6 +18,7 @@
 ../lib/format_text/format-text.h
 ../lib/label/label.h
 ../lib/label/uuid-map.h
+../lib/locking/locking.h
 ../lib/log/log.h
 ../lib/metadata/metadata.h
 ../lib/mm/dbg_malloc.h
