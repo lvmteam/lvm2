@@ -67,6 +67,7 @@ xx(lvchange,
    "\t[-P|--partial] " "\n"
    "\t[-p|--permission r|rw]\n"
    "\t[-r|--readahead ReadAheadSectors]\n"
+   "\t[--refresh]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
@@ -74,7 +75,7 @@ xx(lvchange,
 
    autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
    ignorelockingfailure_ARG, major_ARG, minor_ARG, partial_ARG, permission_ARG,
-   persistent_ARG, readahead_ARG, addtag_ARG, deltag_ARG,
+   persistent_ARG, readahead_ARG, refresh_ARG, addtag_ARG, deltag_ARG,
    test_ARG)
 
 xx(lvcreate,

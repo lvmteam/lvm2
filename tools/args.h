@@ -29,6 +29,7 @@ arg(removemissing_ARG, '\0', "removemissing", NULL)
 arg(abort_ARG, '\0', "abort", NULL)
 arg(addtag_ARG, '\0', "addtag", tag_arg)
 arg(deltag_ARG, '\0', "deltag", tag_arg)
+arg(refresh_ARG, '\0', "refresh", NULL)
 arg(mknodes_ARG, '\0', "mknodes", NULL)
 arg(minor_ARG, '\0', "minor", minor_arg)
 
