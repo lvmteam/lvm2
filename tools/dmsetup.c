@@ -229,21 +229,7 @@ static int _resume(int argc, char **argv)
 
 static int _wait(int argc, char **argv)
 {
-	struct dm_task *dmt;
-
-        if (!(dmt = dm_task_create(DM_DEVICE_WAITEVENT)))
-		return 0;
-
-	if (!dm_task_set_name(dmt, argv[1]))
-		goto out;
-
-	if (!dm_task_run(dmt))
-		goto out;
-
-	dm_task_destroy(dmt);
-
- out:
-	return 1;
+	return _simple(DM_DEVICE_WAITEVENT, argv[1]);
 }
 
 static int _status(int argc, char **argv)
@@ -251,15 +237,15 @@ static int _status(int argc, char **argv)
 	int r = 0;
 	struct dm_task *dmt;
 	void *next = NULL;
-	unsigned long long start, length;
+	uint64_t start, length;
 	char *target_type = NULL;
 	char *params;
 	int cmd;
 
-	if (strcmp(argv[0], "status") == 0)
-	    cmd = DM_DEVICE_STATUS;
+	if (!strcmp(argv[0], "status"))
+		cmd = DM_DEVICE_STATUS;
 	else
-	    cmd = DM_DEVICE_TABLE;
+		cmd = DM_DEVICE_TABLE;
 
 	if (!(dmt = dm_task_create(cmd)))
 		return 0;
@@ -272,12 +258,12 @@ static int _status(int argc, char **argv)
 
 	/* Fetch targets and print 'em */
 	do {
-	    next = dm_get_next_target(dmt, next, &start, &length,
-				      &target_type, &params);
-	    if (target_type) {
-		printf("%lld %lld %s %s\n",
-		       start, length, target_type, params);
-	    }
+		next = dm_get_next_target(dmt, next, &start, &length,
+					  &target_type, &params);
+		if (target_type) {
+			printf("%"PRIu64" %"PRIu64" %s %s\n",
+			       start, length, target_type, params);
+		}
 	} while (next);
 
 	r = 1;
