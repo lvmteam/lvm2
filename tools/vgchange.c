@@ -20,7 +20,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
-	struct physical_volume *pv;
+	const char *pvname;
 	int count = 0;
 
 	list_iterate_items(lvl, &vg->lvs) {
@@ -44,10 +44,10 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			continue;
 
 		if ((lv->status & PVMOVE) &&
-		    (pv = get_pvmove_pv_from_lv_mirr(lv))) {
+		    (pvname = get_pvmove_pvname_from_lv_mirr(lv))) {
 			log_verbose("Spawning background process for %s %s",
-				    lv->name, dev_name(pv->dev));
-			pvmove_poll(cmd, dev_name(pv->dev), 1);
+				    lv->name, pvname);
+			pvmove_poll(cmd, pvname, 1);
 			continue;
 		}
 

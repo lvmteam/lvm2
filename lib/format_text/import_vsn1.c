@@ -294,7 +294,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->area_len = extent_count;
 	seg->status = 0u;
 	seg->segtype = segtype;
-	seg->extents_moved = 0u;
+	seg->extents_copied = 0u;
 	seg->area_count = area_count;
 
 	if (seg->segtype->ops->text_import &&

@@ -76,20 +76,26 @@ static int lvchange_availability(struct cmd_context *cmd,
 				 struct logical_volume *lv)
 {
 	int activate = 0;
-	struct physical_volume *pv;
+	const char *pvname;
 
 	if (strcmp(arg_str_value(cmd, available_ARG, "n"), "n"))
 		activate = 1;
 
 	if (activate) {
-		/* FIXME Tighter locking if lv_is_origin() */
 		log_verbose("Activating logical volume \"%s\"", lv->name);
-		if (!activate_lv(cmd, lv->lvid.s))
+		if (lv_is_origin(lv)) {
+			if (!activate_lv_excl(cmd, lv->lvid.s)) {
+				stack;
+				return 0;
+			}
+		} else if (!activate_lv(cmd, lv->lvid.s)) {
+			stack;
 			return 0;
-		if ((lv->status & LOCKED) && (pv = get_pvmove_pv_from_lv(lv))) {
+		}
+		if ((lv->status & LOCKED) && (pvname = get_pvmove_pvname_from_lv(lv))) {
 			log_verbose("Spawning background pvmove process for %s",
-				    dev_name(pv->dev));
-			pvmove_poll(cmd, dev_name(pv->dev), 1);
+				    pvname);
+			pvmove_poll(cmd, pvname, 1);
 		}
 	} else {
 		log_verbose("Deactivating logical volume \"%s\"", lv->name);
@@ -257,7 +263,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			}
 			active = 1;
 		}
-		log_print("Ensuring %s is inactive. ", lv->name);
+		log_verbose("Ensuring %s is inactive. ", lv->name);
 		if (!deactivate_lv(cmd, lv->lvid.s)) {
 			log_error("%s: deactivation failed", lv->name);
 			return 0;

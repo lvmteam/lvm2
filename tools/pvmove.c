@@ -14,60 +14,7 @@
  */
 
 #include "tools.h"
-#include <signal.h>
-#include <sys/wait.h>
-
-struct pvmove_parms {
-	unsigned interval;
-	unsigned aborting;
-	unsigned background;
-	unsigned outstanding_count;
-	unsigned progress_display;
-};
-
-static void _sigchld_handler(int sig)
-{
-	while (wait4(-1, NULL, WNOHANG | WUNTRACED, NULL) > 0) ;
-}
-
-static int _become_daemon(struct cmd_context *cmd)
-{
-	pid_t pid;
-	struct sigaction act = {
-		{_sigchld_handler},
-		.sa_flags = SA_NOCLDSTOP,
-	};
-
-	log_verbose("Forking background process");
-
-	sigaction(SIGCHLD, &act, NULL);
-
-	if ((pid = fork()) == -1) {
-		log_error("fork failed: %s", strerror(errno));
-		return 1;
-	}
-
-	/* Parent */
-	if (pid > 0)
-		return 0;
-
-	/* Child */
-	if (setsid() == -1)
-		log_error("Background process failed to setsid: %s",
-			  strerror(errno));
-	init_verbose(VERBOSE_BASE_LEVEL);
-
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
-
-	strncpy(*cmd->argv, "(pvmove)", strlen(*cmd->argv));
-
-	reset_locking();
-	dev_close_all();
-
-	return 1;
-}
+#include "polldaemon.h"
 
 /* Allow /dev/vgname/lvname, vgname/lvname or lvname */
 static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
@@ -173,7 +120,7 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 	return allocatable_pvs;
 }
 
-/* Create new LV with mirror segments for the required moves */
+/* Create new LV with mirror segments for the required copies */
 static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						struct volume_group *vg,
 						struct physical_volume *pv,
@@ -265,8 +212,9 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (first_time) {
 		if (!activate_lv(cmd, lv_mirr->lvid.s)) {
-			log_error
-			    ("ABORTING: Temporary mirror activation failed.");
+			log_error("ABORTING: Temporary mirror activation "
+				  "failed.  Run pvmove --abort.");
+			/* FIXME Resume using *original* metadata here! */
 			resume_lvs(cmd, lvs_changed);
 			return 0;
 		}
@@ -318,7 +266,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		return ECMD_FAILED;
 	}
 
-	if ((lv_mirr = find_pvmove_lv(vg, pv->dev))) {
+	if ((lv_mirr = find_pvmove_lv(vg, pv->dev, PVMOVE))) {
 		log_print("Detected pvmove in progress for %s", pv_name);
 		if (argc || lv_name)
 			log_error("Ignoring remaining command line arguments");
@@ -452,194 +400,33 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 	return r;
 }
 
-static int _check_pvmove_status(struct cmd_context *cmd,
-				struct volume_group *vg,
-				struct logical_volume *lv_mirr,
-				const char *pv_name, struct pvmove_parms *parms,
-				int *finished)
+static struct volume_group *_get_move_vg(struct cmd_context *cmd,
+					 const char *name)
 {
-	struct list *lvs_changed;
-	float segment_percent = 0.0, overall_percent = 0.0;
-	uint32_t event_nr = 0;
-
-	*finished = 1;
-
-	if (parms->aborting) {
-		if (!(lvs_changed = lvs_using_lv(cmd, vg, lv_mirr))) {
-			log_error("Failed to generate list of moved LVs: "
-				  "can't abort.");
-			return 0;
-		}
-		_finish_pvmove(cmd, vg, lv_mirr, lvs_changed);
-		return 0;
-	}
-
-	if (!lv_mirror_percent(lv_mirr, !parms->interval, &segment_percent,
-			       &event_nr)) {
-		log_error("ABORTING: Mirror percentage check failed.");
-		return 0;
-	}
-
-	overall_percent = pvmove_percent(lv_mirr);
-	if (parms->progress_display)
-		log_print("%s: Moved: %.1f%%", pv_name, overall_percent);
-	else
-		log_verbose("%s: Moved: %.1f%%", pv_name, overall_percent);
-
-	if (segment_percent < 100.0) {
-		*finished = 0;
-		return 1;
-	}
-
-	if (!(lvs_changed = lvs_using_lv(cmd, vg, lv_mirr))) {
-		log_error("ABORTING: Failed to generate list of moved LVs");
-		return 0;
-	}
-
-	if (overall_percent >= 100.0) {
-		if (!_finish_pvmove(cmd, vg, lv_mirr, lvs_changed))
-			return 0;
-	} else {
-		if (!_update_metadata(cmd, vg, lv_mirr, lvs_changed, 0)) {
-			log_error("ABORTING: Segment progression failed.");
-			_finish_pvmove(cmd, vg, lv_mirr, lvs_changed);
-			return 0;
-		}
-		*finished = 0;	/* Another segment */
-	}
-
-	return 1;
-}
-
-static int _wait_for_single_pvmove(struct cmd_context *cmd, const char *pv_name,
-				   struct pvmove_parms *parms)
-{
-	struct volume_group *vg;
-	struct logical_volume *lv_mirr;
 	struct physical_volume *pv;
-	int finished = 0;
 
-	while (!finished) {
-		if (parms->interval && !parms->aborting)
-			sleep(parms->interval);
-
-		if (!(pv = find_pv_by_name(cmd, pv_name))) {
-			log_error("ABORTING: Can't reread PV %s", pv_name);
-			return 0;
-		}
-
-		if (!(vg = _get_vg(cmd, pv->vg_name))) {
-			log_error("ABORTING: Can't reread VG %s", pv->vg_name);
-			return 0;
-		}
-
-		if (!(lv_mirr = find_pvmove_lv(vg, pv->dev))) {
-			log_error("ABORTING: Can't reread mirror LV in %s",
-				  vg->name);
-			unlock_vg(cmd, pv->vg_name);
-			return 0;
-		}
-
-		if (!_check_pvmove_status(cmd, vg, lv_mirr, pv_name, parms,
-					  &finished)) {
-			unlock_vg(cmd, pv->vg_name);
-			return 0;
-		}
-
-		unlock_vg(cmd, pv->vg_name);
+	/* Reread all metadata in case it got changed */
+	if (!(pv = find_pv_by_name(cmd, name))) {
+		log_error("ABORTING: Can't reread PV %s", name);
+		/* What more could we do here? */
+		return NULL;
 	}
 
-	return 1;
+	return _get_vg(cmd, pv->vg_name);
 }
 
-static int _poll_pvmove_vgs(struct cmd_context *cmd, const char *vgname,
-			    struct volume_group *vg, int consistent,
-			    void *handle)
-{
-	struct pvmove_parms *parms = (struct pvmove_parms *) handle;
-	struct lv_list *lvl;
-	struct logical_volume *lv_mirr;
-	struct physical_volume *pv;
-	int finished;
-
-	if (!vg) {
-		log_error("Couldn't read volume group %s", vgname);
-		return ECMD_FAILED;
-	}
-
-	if (!consistent) {
-		log_error("Volume Group %s inconsistent - skipping", vgname);
-		/* FIXME Should we silently recover it here or not? */
-		return ECMD_FAILED;
-	}
-
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg->name);
-		return ECMD_FAILED;
-	}
-
-	list_iterate_items(lvl, &vg->lvs) {
-		lv_mirr = lvl->lv;
-		if (!(lv_mirr->status & PVMOVE))
-			continue;
-		if (!(pv = get_pvmove_pv_from_lv_mirr(lv_mirr)))
-			continue;
-		if (_check_pvmove_status(cmd, vg, lv_mirr, dev_name(pv->dev),
-					 parms, &finished) && !finished)
-			parms->outstanding_count++;
-	}
-
-	return ECMD_PROCESSED;
-
-}
-
-static void _poll_for_all_pvmoves(struct cmd_context *cmd,
-				  struct pvmove_parms *parms)
-{
-	while (1) {
-		parms->outstanding_count = 0;
-		process_each_vg(cmd, 0, NULL, LCK_VG_WRITE, 1,
-				parms, _poll_pvmove_vgs);
-		if (!parms->outstanding_count)
-			break;
-		sleep(parms->interval);
-	}
-}
+static struct poll_functions _pvmove_fns = {
+	get_copy_name_from_lv:get_pvmove_pvname_from_lv_mirr,
+	get_copy_vg:_get_move_vg,
+	get_copy_lv:find_pvmove_lv_from_pvname,
+	update_metadata:_update_metadata,
+	finish_copy:_finish_pvmove,
+};
 
 int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		unsigned background)
 {
-	struct pvmove_parms parms;
-
-	parms.aborting = arg_count(cmd, abort_ARG) ? 1 : 0;
-	parms.background = background;
-	parms.interval = arg_uint_value(cmd, interval_ARG, DEFAULT_INTERVAL);
-	parms.progress_display = 1;
-
-	if (parms.interval && !parms.aborting)
-		log_verbose("Checking progress every %u seconds",
-			    parms.interval);
-
-	if (!parms.interval) {
-		parms.progress_display = 0;
-
-		if (!pv_name)
-			parms.interval = DEFAULT_INTERVAL;
-	}
-
-	if (parms.background) {
-		if (!_become_daemon(cmd))
-			return ECMD_PROCESSED;	/* Parent */
-		parms.progress_display = 0;
-	}
-
-	if (pv_name) {
-		if (!_wait_for_single_pvmove(cmd, pv_name, &parms))
-			return ECMD_FAILED;
-	} else
-		_poll_for_all_pvmoves(cmd, &parms);
-
-	return ECMD_PROCESSED;
+	return poll_daemon(cmd, pv_name, background, PVMOVE, &_pvmove_fns);
 }
 
 int pvmove(struct cmd_context *cmd, int argc, char **argv)
@@ -654,7 +441,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 
 		if (!arg_count(cmd, abort_ARG) &&
 		    (ret = _set_up_pvmove(cmd, pv_name, argc, argv)) !=
-		     ECMD_PROCESSED) {
+		    ECMD_PROCESSED) {
 			stack;
 			return ret;
 		}
