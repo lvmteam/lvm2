@@ -425,7 +425,7 @@ static int _alloc_next_free(struct logical_volume *lv,
  */
 static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		     struct list *allocatable_pvs, uint32_t allocated,
-		     struct segment_type *segtype,
+		     alloc_policy_t alloc, struct segment_type *segtype,
 		     uint32_t stripes, uint32_t stripe_size, uint32_t mirrors,
 		     struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
 		     uint32_t status)
@@ -453,10 +453,10 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	else if (mirrored_pv)
 		r = _alloc_mirrored(lv, pvms, allocated, segtype, mirrored_pv,
 				    mirrored_pe);
-	else if (lv->alloc == ALLOC_CONTIGUOUS)
+	else if (alloc == ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
 
-	else if (lv->alloc == ALLOC_NEXT_FREE || lv->alloc == ALLOC_DEFAULT)
+	else if (alloc == ALLOC_NEXT_FREE || alloc == ALLOC_DEFAULT)
 		r = _alloc_next_free(lv, pvms, allocated);
 
 	else {
@@ -587,7 +587,8 @@ int lv_extend(struct format_instance *fid,
 		      uint32_t stripes, uint32_t stripe_size,
 		      uint32_t mirrors, uint32_t extents,
 		      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
-		      uint32_t status, struct list *allocatable_pvs)
+		      uint32_t status, struct list *allocatable_pvs,
+		      alloc_policy_t alloc)
 {
 	uint32_t old_le_count = lv->le_count;
 	uint64_t old_size = lv->size;
@@ -595,9 +596,9 @@ int lv_extend(struct format_instance *fid,
 	lv->le_count += extents;
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
 
-	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count, segtype,
-		       stripes, stripe_size, mirrors, mirrored_pv, mirrored_pe,
-		       status)) {
+	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count, alloc,
+		       segtype, stripes, stripe_size, mirrors, mirrored_pv,
+		       mirrored_pe, status)) {
 		lv->le_count = old_le_count;
 		lv->size = old_size;
 		stack;
@@ -616,53 +617,6 @@ int lv_extend(struct format_instance *fid,
 	}
 
 	return 1;
-}
-
-struct logical_volume *lv_create(struct format_instance *fid,
-				 const char *name,
-				 uint32_t status,
-				 alloc_policy_t alloc,
-				 struct segment_type *segtype,
-				 uint32_t stripes,
-				 uint32_t stripe_size,
-				 uint32_t mirrors,
-				 uint32_t extents,
-				 struct volume_group *vg,
-				 struct list *allocatable_pvs)
-{
-	struct logical_volume *lv;
-
-	if (!extents) {
-		log_error("Unable to create logical volume %s with no extents",
-			  name);
-		return NULL;
-	}
-
-	if (vg->free_count < extents) {
-		log_error("Insufficient free extents (%u) in volume group %s: "
-			  "%u required", vg->free_count, vg->name, extents);
-		return NULL;
-	}
-
-	if (stripes > list_size(allocatable_pvs)) {
-		log_error("Number of stripes (%u) must not exceed "
-			  "number of physical volumes (%d)", stripes,
-			  list_size(allocatable_pvs));
-		return NULL;
-	}
-
-	if (!(lv = lv_create_empty(fid, name, "lvol%d", status, alloc, vg))) {
-		stack;
-		return NULL;
-	}
-
-	if (!lv_extend(fid, lv, segtype, stripes, stripe_size, mirrors,
-		       extents, NULL, 0u, 0u, allocatable_pvs)) {
-		stack;
-		return NULL;
-	}
-
-	return lv;
 }
 
 int lv_reduce(struct format_instance *fi,

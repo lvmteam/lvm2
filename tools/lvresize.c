@@ -362,7 +362,8 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (!lv_extend(vg->fid, lv, segtype, stripes, ssize, 0u,
-			       extents - lv->le_count, NULL, 0u, 0u, pvh))
+			       extents - lv->le_count, NULL, 0u, 0u, pvh,
+			       lv->alloc))
 			goto error;
 	}
 
