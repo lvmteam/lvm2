@@ -1,139 +1,181 @@
 /*
- * Copyright (C) 2001, 2002 Sistina Software (UK) Limited.
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
  * This file is released under the LGPL.
+ *
  */
 
 #include <stdlib.h>
-
 #include "vgcache.h"
-#include "label.h"
+#include "hash.h"
 #include "dbg_malloc.h"
 #include "log.h"
-#include "lvm1_label.h"
 
+static struct hash_table *_vghash;
+static struct hash_table *_pvhash;
 
-/*
- * Non-caching implementation.
- * FIXME: write caching version, when thought about it a bit more.
- */
-struct vg_cache {
-	struct dev_filter *filter;
-};
+const char *all_devices = "\0";
 
-struct vg_cache *vg_cache_create(struct dev_filter *devices)
+int vgcache_init()
 {
-	struct vg_cache *vgc;
+	if (!(_vghash = hash_create(128)))
+		return 0;
 
-	if (!(vgc = dbg_malloc(sizeof(*vgc)))) {
-		log_err("Couldn't allocate vg_cache object.");
+	if (!(_pvhash = hash_create(128)))
+		return 0;
+
+	return 1;
+}
+
+/* A vg_name of NULL returns all_devices */
+struct list *vgcache_find(const char *vg_name)
+{
+	struct vgname_entry *vgn;
+
+	if (!_vghash)
 		return NULL;
-	}
 
-	vgc->filter = devices;
+	if (!vg_name)
+		vg_name = all_devices;
 
-	return vgc;
-}
-
-void vg_cache_destroy(struct vg_cache *vgc)
-{
-	dbg_free(vgc);
-}
-
-struct device *vg_cache_find_uuid(struct vg_cache *vgc, struct id *id)
-{
-	struct dev_iter *iter;
-	struct device *dev;
-	struct label *lab;
-
-	if (!(iter = dev_iter_create(vgc->filter))) {
-		stack;
+	if (!(vgn = hash_lookup(_vghash, vg_name)))
 		return NULL;
-	}
 
-	while ((dev = dev_iter_get(iter))) {
-
-		if (label_read(dev, &lab))
-			continue;
-
-		if (!strcmp(lab->volume_type, "lvm") && id_equal(id, &lab->id))
-			break;
-
-		label_destroy(lab);
-	}
-
-	dev_iter_destroy(iter);
-	return dev;
+	return &vgn->pvdevs;
 }
 
-static void _find_pvs_in_vg(struct vg_cache *vgc, struct pool *mem,
-			    const char *vg, struct dev_iter *iter,
-			    struct list *results)
+void vgcache_del_orphan(struct device *dev)
 {
-	struct device *dev;
-	struct label *lab;
-	struct device_list *dev_list;
-	struct lvm_label_info *info;
+	struct pvdev_list *pvdev;
 
-	while ((dev = dev_iter_get(iter))) {
+	if (_pvhash && ((pvdev = hash_lookup(_pvhash, dev_name(dev))))) {
+		list_del(&pvdev->list);
+		hash_remove(_pvhash, dev_name(pvdev->dev));
+		dbg_free(pvdev);
+	}
+}
 
-		if (!label_read(dev, &lab))
-			continue;
+int vgcache_add_entry(const char *vg_name, struct device *dev)
+{
+	const char *pv_name;
+	struct vgname_entry *vgn;
+	struct pvdev_list *pvdev;
+	struct list *pvdh, *pvdevs;
 
-		if (strcmp(lab->volume_type, "lvm"))
-			continue;
-
-		info = (struct lvm_label_info *) lab->extra_info;
-
-		if (!vg || strcmp(info->volume_group, vg)) {
-
-			/* add dev to the result list */
-			if (!(dev_list = pool_alloc(mem, sizeof(*dev_list)))) {
-				stack;
-				label_destroy(lab);
-				return;
-			}
-
-			dev_list->dev = dev;
-			list_add(results, &dev_list->list);
+	if (!(pvdevs = vgcache_find(vg_name))) {
+		if (!(vgn = dbg_malloc(sizeof(struct vgname_entry)))) {
+			log_error("struct vgname_entry allocation failed");
+			return 0;
 		}
 
-		label_destroy(lab);
-	}
-}
+		pvdevs = &vgn->pvdevs;
+		list_init(pvdevs);
 
-struct list *vg_cache_find_vg(struct vg_cache *vgc, struct pool *mem,
-			      const char *vg)
-{
-	struct dev_iter *iter;
-	struct list *r;
+		if (!(vgn->vgname = dbg_strdup(vg_name))) {
+			log_error("vgcache_add: strdup vg_name failed");
+			return 0;
+		}
 
-	if (!(r = pool_alloc(mem, sizeof(r)))) {
-		stack;
-		return NULL;
-	}
-	list_init(r);
-
-	if (!(iter = dev_iter_create(vgc->filter))) {
-		stack;
-		pool_free(mem, r);
-		return NULL;
+		if (!hash_insert(_vghash, vg_name, vgn)) {
+			log_error("vgcache_add: VG hash insertion failed");
+			return 0;
+		}
 	}
 
-	_find_pvs_in_vg(vgc, mem, vg, iter, r);
+	list_iterate(pvdh, pvdevs) {
+		pvdev = list_item(pvdh, struct pvdev_list);
+		if (dev == pvdev->dev)
+			return 1;
+	}
 
-	dev_iter_destroy(iter);
-	return r;
-}
+	/* Remove PV from any existing VG unless an all_devices request */
+	pvdev = NULL;
+	pv_name = dev_name(dev);
+	if (*vg_name && _pvhash && ((pvdev = hash_lookup(_pvhash, pv_name)))) {
+		list_del(&pvdev->list);
+		hash_remove(_pvhash, dev_name(pvdev->dev));
+	}
 
-int vg_cache_update_vg(struct volume_group *vg)
-{
-	/* no-ops in a non caching version */
+	/* Allocate new pvdev_list if there isn't an existing one to reuse */
+	if (!pvdev && !(pvdev = dbg_malloc(sizeof(struct pvdev_list)))) {
+		log_error("struct pvdev_list allocation failed");
+		return 0;
+	}
+
+	pvdev->dev = dev;
+	list_add(pvdevs, &pvdev->list);
+
+	if (*vg_name && _pvhash && !hash_insert(_pvhash, pv_name, pvdev)) {
+		log_error("vgcache_add: PV hash insertion for %s "
+			  "failed", pv_name);
+		return 0;
+	}
+
 	return 1;
 }
 
-int vg_cache_update_device(struct device *dev)
+/* vg_name of "\0" is an orphan PV; NULL means only add to all_devices */
+int vgcache_add(const char *vg_name, struct device *dev)
 {
-	/* no-ops in a non caching version */
-	return 1;
+	if (!_vghash && !vgcache_init())
+		return 0;
+
+	/* If orphan PV remove it */
+	if (vg_name && !*vg_name)
+		vgcache_del_orphan(dev);
+
+	/* Add PV if vg_name supplied */
+	if (vg_name && *vg_name && !vgcache_add_entry(vg_name, dev))
+		return 0;
+
+	/* Always add to all_devices */
+	return vgcache_add_entry(all_devices, dev);
+}
+
+void vgcache_destroy_entry(struct vgname_entry *vgn)
+{
+	struct list *pvdh;
+	struct pvdev_list *pvdev;
+
+	if (vgn) {
+		pvdh = vgn->pvdevs.n;
+		while (pvdh != &vgn->pvdevs) {
+			pvdev = list_item(pvdh, struct pvdev_list);
+			pvdh = pvdh->n;
+			dbg_free(pvdev);
+		}
+		dbg_free(vgn->vgname);
+	}
+	dbg_free(vgn);
+}
+
+void vgcache_del(const char *vg_name)
+{
+	struct vgname_entry *vgn;
+
+	if (!_vghash)
+		return;
+
+	if (!vg_name)
+		vg_name = all_devices;
+
+	if (!(vgn = hash_lookup(_vghash, vg_name)))
+		return;
+
+	hash_remove(_vghash, vg_name);
+	vgcache_destroy_entry(vgn);
+}
+
+void vgcache_destroy()
+{
+	if (_vghash) {
+		hash_iterate(_vghash, (iterate_fn)vgcache_destroy_entry);
+		hash_destroy(_vghash);
+		_vghash = NULL;
+	}
+
+	if (_pvhash) {
+		hash_destroy(_pvhash);
+		_pvhash = NULL;
+	}
 }

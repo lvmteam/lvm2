@@ -17,7 +17,7 @@ struct id {
 
 int id_create(struct id *id);
 int id_valid(struct id *id);
-int id_cmp(struct id *lhs, struct id *rhs);
+int id_equal(struct id *lhs, struct id *rhs);
 
 /*
  * Fills 'buffer' with a more human readable form

@@ -121,13 +121,17 @@ int label_remove(struct device *dev)
 int label_read(struct device *dev, struct label **result)
 {
 	struct labeller *l;
+	int r;
 
 	if (!(l = _find_labeller(dev))) {
 		stack;
 		return 0;
 	}
 
-	return l->ops->read(l, dev, result);
+	if ((r = l->ops->read(l, dev, result)))
+		*result->labeller = l;
+
+	return r;
 }
 
 int label_verify(struct device *dev)

@@ -75,9 +75,9 @@ int id_valid(struct id *id)
 	return 1;
 }
 
-int id_cmp(struct id *lhs, struct id *rhs)
+int id_equal(struct id *lhs, struct id *rhs)
 {
-	return memcmp(lhs->uuid, rhs->uuid, sizeof(lhs->uuid));
+	return !memcmp(lhs->uuid, rhs->uuid, sizeof(lhs->uuid));
 }
 
 #define GROUPS (ID_LEN / 4)

@@ -43,20 +43,25 @@ static int _remove(struct labeller *l, struct device *dev)
 static struct label *_to_label(struct disk_list *dl)
 {
 	struct label *l;
+	struct lvm_label_info *info;
 
 	if (!(l = dbg_malloc(sizeof(*l)))) {
 		log_err("Couldn't allocate label.");
 		return NULL;
 	}
 
+	if (!(info = (struct lvm_label_info *) dbg_strdup(dl->pv.vg_name))) {
+		dbg_free(l);
+		return NULL;
+	}
+
 	memcpy(&l->id, &dl->pvd.pv_uuid, sizeof(l->id));
-	strcpy(l->volume_type, "lvm1");
+	strcpy(l->volume_type, "lvm");
 	l->version[0] = 1;
 	l->version[0] = 0;
 	l->version[0] = 0;
+	l->extra_info = info;
 
-	l->extra_len = 0;
-	l->extra_info = NULL;
 	return l;
 }
 
@@ -82,6 +87,12 @@ static int _read(struct labeller *l,
 
 	pool_empty(mem);
 	return r;
+}
+
+static int _destroy_label(struct labeller *l, struct label *label)
+{
+	dbg_free(label->extra_info);
+	dbg_free(label);
 }
 
 static void _destroy(struct labeller *l)
