@@ -233,6 +233,148 @@ static int _info(const char *name, struct dm_info *info)
 
 
 /*
+ * The functions that populate the table in a dm_task as part of
+ * a create/reload.
+ */
+
+
+/*
+ * Emit a target for a given segment.
+ * FIXME: tidy this function.
+ */
+static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
+{
+	char params[1024];
+	uint64_t esize = seg->lv->vg->extent_size;
+	uint32_t s, stripes = seg->stripes;
+	int w = 0, tw = 0, error = 0;
+	const char *no_space =
+		"Insufficient space to write target parameters.";
+	char *filler = "/dev/ioerror";
+	char *target;
+
+	if (stripes == 1) {
+		if (!seg->area[0].pv) {
+			target = "error";
+			error = 1;
+		}
+		else
+			target = "linear";
+	}
+
+	if (stripes > 1) {
+		target = "striped";
+		tw = lvm_snprintf(params, sizeof(params), "%u %u ",
+			      stripes, seg->stripe_size);
+
+		if (tw < 0) {
+			log_err(no_space);
+			return 0;
+		}
+
+		w = tw;
+	}
+
+	if (!error) {
+		for (s = 0; s < stripes; s++, w += tw) {
+			if (!seg->area[s].pv)
+				tw = lvm_snprintf(
+					params + w, sizeof(params) - w,
+			      		"%s 0%s", filler,
+			      		s == (stripes - 1) ? "" : " ");
+			else
+				tw = lvm_snprintf(
+					params + w, sizeof(params) - w,
+			      		"%s %" PRIu64 "%s",
+					dev_name(seg->area[s].pv->dev),
+			      		(seg->area[s].pv->pe_start +
+			         	 (esize * seg->area[s].pe)),
+			      		s == (stripes - 1) ? "" : " ");
+
+			if (tw < 0) {
+				log_err(no_space);
+				return 0;
+			}
+		}
+	}
+
+	log_very_verbose("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
+		   esize * seg->le, esize * seg->len,
+		   target, params);
+
+	if (!dm_task_add_target(dmt, esize * seg->le, esize * seg->len,
+				target, params)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _populate_vanilla(struct dm_task *dmt, struct dev_layer *dl)
+{
+	struct list *segh;
+	struct stripe_segment *seg;
+	struct logical_volume *lv = dl->lv;
+
+	list_iterate(segh, &lv->segments) {
+		seg = list_item(segh, struct stripe_segment);
+		if (!_emit_target(dmt, seg)) {
+			log_error("Unable to build table for '%s'", lv->name);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _populate_origin(struct dm_task *dmt, struct dev_layer *dl)
+{
+#if 0
+        char *org;
+
+	log_very_verbose("Adding target: 0 %" PRIu64 " snapshot-origin %s",
+			 lv->size, buffer);
+        if (!dm_task_add_target(dmt, 0, lv->size, "snapshot-origin", buffer)) {
+                stack;
+                return 0;
+        }
+
+	return 1;
+#else
+	return 0;
+#endif
+}
+
+static int _populate_snapshot(struct dm_task *dmt, struct dev_layer *dl)
+{
+#if 0
+        char buffer[PATH_MAX * 2];
+
+        log_very_verbose("Generating devmapper parameters for %s "
+                         "(top layer)", lv->name);
+
+        if (snprintf(buffer, sizeof(buffer), "%s/%s %s/%s P %d 128",
+		     dm_dir(), origin, dm_dir(),
+		     cow_device, chunk_size) == -1) {
+                stack;
+                return 0;
+        }
+
+	log_very_verbose("Adding target: 0 %" PRIu64 " snapshot %s",
+			 lv->size, buffer);
+        if (!dm_task_add_target(dmt, 0, lv->size, "snapshot", buffer)) {
+                stack;
+                return 0;
+        }
+
+	return 1;
+#else
+	return 0;
+#endif
+}
+
+/*
  * dev_manager implementation.
  */
 struct dev_manager *dev_manager_create(const char *vg_name)
@@ -382,6 +524,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 			stack;
 			return 0;
 		}
+		dl->populate = _populate_vanilla;
 
 		if (!hash_insert(dm->layers, dl->name, dl)) {
 			stack;
