@@ -31,6 +31,7 @@
 
 #include "stub.h"
 #include "vgcache.h"
+#include "lvm-string.h"
 
 #ifdef READLINE_SUPPORT
 #include <readline/readline.h>
@@ -720,8 +721,8 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 	if (!(f3 = filter_components_setup(cmd->cf)))
 		return 0;
 
-	if (snprintf(cache_file, sizeof(cache_file),
-		     "%s/.cache", _system_dir) < 0) {
+	if (lvm_snprintf(cache_file, sizeof(cache_file),
+			 "%s/.cache", _system_dir) < 0) {
 		log_err("Persistent cache filename too long ('%s/.cache').",
 			_system_dir);
 		return 0;
