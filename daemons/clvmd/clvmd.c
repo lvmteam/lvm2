@@ -55,9 +55,9 @@
 
 /* The maximum size of a message that will fit into a packet. Anything bigger
    than this is sent via the system LV */
-#define MAX_INLINE_MESSAGE (MAX_CLUSTER_MESSAGE-sizeof(struct clvm_header))
+#define MAX_INLINE_MESSAGE (max_cluster_message-sizeof(struct clvm_header))
 
-#define ISLOCAL_CSID(c) (memcmp(c, our_csid, MAX_CSID_LEN) == 0)
+#define ISLOCAL_CSID(c) (memcmp(c, our_csid, max_csid_len) == 0)
 
 /* Head of the fd list. Also contains
    the cluster_socket details */
@@ -65,7 +65,12 @@ static struct local_client local_client_head;
 
 static unsigned short global_xid = 0;	/* Last transaction ID issued */
 
+static struct cluster_ops *clops = NULL;
+
 static char our_csid[MAX_CSID_LEN];
+static unsigned max_csid_len;
+static unsigned max_cluster_message;
+static unsigned max_cluster_member_name_len;
 
 /* Structure of items on the LVM thread list */
 struct lvm_thread_cmd {
@@ -230,7 +235,23 @@ int main(int argc, char *argv[])
 	init_lvhash();
 
 	/* Start the cluster interface */
-	if (init_cluster()) {
+#ifdef USE_CMAN
+	if ((clops = init_cman_cluster())) {
+		max_csid_len = CMAN_MAX_CSID_LEN;
+		max_cluster_message = CMAN_MAX_CLUSTER_MESSAGE;
+		max_cluster_member_name_len = CMAN_MAX_CLUSTER_MEMBER_NAME_LEN;
+	}
+#endif
+#ifdef USE_GULM
+	if (!clops)
+		if ((clops = init_gulm_cluster())) {
+			max_csid_len = GULM_MAX_CSID_LEN;
+			max_cluster_message = GULM_MAX_CLUSTER_MESSAGE;
+			max_cluster_member_name_len = GULM_MAX_CLUSTER_MEMBER_NAME_LEN;
+		}
+#endif
+
+	if (!clops) {
 		DEBUGLOG("Can't initialise cluster interface\n");
 		log_error("Can't initialise cluster interface\n");
 		child_init_signal(DFAIL_CLUSTER_IF);
@@ -239,12 +260,12 @@ int main(int argc, char *argv[])
 
 	/* Save our CSID */
 	uname(&nodeinfo);
-	get_our_csid(our_csid);
+	clops->get_our_csid(our_csid);
 
 	/* Initialise the FD list head */
-	local_client_head.fd = get_main_cluster_fd();
+	local_client_head.fd = clops->get_main_cluster_fd();
 	local_client_head.type = CLUSTER_MAIN_SOCK;
-	local_client_head.callback = cluster_fd_callback;
+	local_client_head.callback = clops->cluster_fd_callback;
 
 	/* Add the local socket to the list */
 	newfd = malloc(sizeof(struct local_client));
@@ -262,13 +283,12 @@ int main(int argc, char *argv[])
 	DEBUGLOG("starting LVM thread\n");
 	pthread_create(&lvm_thread, NULL, lvm_thread_fn, nodeinfo.nodename);
 
-#ifndef USE_GULM
 	/* Tell the rest of the cluster our version number */
 	/* CMAN can do this immediately, gulm needs to wait until
 	   the core initialisation has finished and the node list
 	   has been gathered */
-	send_version_message();
-#endif
+	if (clops->cluster_init_completed)
+		clops->cluster_init_completed();
 
 	DEBUGLOG("clvmd ready for work\n");
 	child_init_signal(SUCCESS);
@@ -417,9 +437,9 @@ static void timedout_callback(struct local_client *client, char *csid,
 {
 	if (node_up) {
 		struct node_reply *reply;
-		char nodename[MAX_CLUSTER_MEMBER_NAME_LEN];
+		char nodename[max_cluster_member_name_len];
 
-		name_from_csid(csid, nodename);
+		clops->name_from_csid(csid, nodename);
 		DEBUGLOG("PJC: checking for a reply from %s\n", nodename);
 		pthread_mutex_lock(&client->bits.localsock.reply_mutex);
 
@@ -448,7 +468,7 @@ static void timedout_callback(struct local_client *client, char *csid,
 static void request_timed_out(struct local_client *client)
 {
 	DEBUGLOG("Request timed-out. padding\n");
-	cluster_do_node_callback(client, timedout_callback);
+	clops->cluster_do_node_callback(client, timedout_callback);
 
 	if (client->bits.localsock.num_replies !=
 	    client->bits.localsock.expected_replies) {
@@ -473,7 +493,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 		int select_status;
 		struct local_client *thisfd;
 		struct timeval tv = { cmd_timeout, 0 };
-		int quorate = is_quorate();
+		int quorate = clops->is_quorate();
 
 		/* Wait on the cluster FD and all local sockets/pipes */
 		FD_ZERO(&in);
@@ -488,7 +508,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 		if ((select_status = select(FD_SETSIZE, &in, NULL, NULL, &tv)) > 0) {
 			struct local_client *lastfd = NULL;
 			char csid[MAX_CSID_LEN];
-			char buf[MAX_CLUSTER_MESSAGE];
+			char buf[max_cluster_message];
 
 			for (thisfd = &local_client_head; thisfd != NULL;
 			     thisfd = thisfd->next) {
@@ -573,7 +593,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 	}
 
       closedown:
-	cluster_closedown();
+	clops->cluster_closedown();
 	close(local_sock);
 }
 
@@ -829,7 +849,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		}
 
 		/* Check the node name for validity */
-		if (inheader->node[0] && csid_from_name(csid, inheader->node)) {
+		if (inheader->node[0] && clops->csid_from_name(csid, inheader->node)) {
 			/* Error, node is not in the cluster */
 			struct clvm_header reply;
 			DEBUGLOG("Unknown node: '%s'\n", inheader->node);
@@ -961,7 +981,7 @@ static int distribute_command(struct local_client *thisfd)
 		/* if node is empty then do it on the whole cluster */
 		if (inheader->node[0] == '\0') {
 			thisfd->bits.localsock.expected_replies =
-			    get_num_nodes();
+			    clops->get_num_nodes();
 			thisfd->bits.localsock.num_replies = 0;
 			thisfd->bits.localsock.sent_time = time(NULL);
 			thisfd->bits.localsock.in_progress = TRUE;
@@ -982,7 +1002,7 @@ static int distribute_command(struct local_client *thisfd)
                         /* Do it on a single node */
 			char csid[MAX_CSID_LEN];
 
-			if (csid_from_name(csid, inheader->node)) {
+			if (clops->csid_from_name(csid, inheader->node)) {
 				/* This has already been checked so should not happen */
 				return 0;
 			} else {
@@ -992,7 +1012,7 @@ static int distribute_command(struct local_client *thisfd)
 				thisfd->bits.localsock.in_progress = TRUE;
 
 				/* Are we the requested node ?? */
-				if (memcmp(csid, our_csid, MAX_CSID_LEN) == 0) {
+				if (memcmp(csid, our_csid, max_csid_len) == 0) {
 					DEBUGLOG("Doing command on local node only\n");
 					add_to_lvmqueue(thisfd, inheader, len, NULL);
 				} else {
@@ -1024,14 +1044,14 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 			    char *csid)
 {
 	char *replyargs;
-	char nodename[MAX_CLUSTER_MEMBER_NAME_LEN];
+	char nodename[max_cluster_member_name_len];
 	int replylen = 0;
-	int buflen = MAX_CLUSTER_MESSAGE - sizeof(struct clvm_header) - 1;
+	int buflen = max_cluster_message - sizeof(struct clvm_header) - 1;
 	int status;
 	int msg_malloced = 0;
 
 	/* Get the node name as we /may/ need it later */
-	name_from_csid(csid, nodename);
+	clops->name_from_csid(csid, nodename);
 
 	DEBUGLOG("process_remote_command %d for clientid 0x%x on node %s\n",
 		 msg->cmd, msg->clientid, nodename);
@@ -1097,7 +1117,7 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 	if (msg->cmd == CLVMD_CMD_VERSION) {
 		int *version_nums = (int *) msg->args;
 		char node[256];
-		name_from_csid(csid, node);
+		clops->name_from_csid(csid, node);
 		DEBUGLOG("Remote node %s is version %d.%d.%d\n",
 			 node,
 			 ntohl(version_nums[0]),
@@ -1118,17 +1138,17 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 			byebyemsg.flags = 0;
 			byebyemsg.arglen = 0;
 			byebyemsg.clientid = 0;
-			cluster_send_message(&byebyemsg, sizeof(byebyemsg),
+			clops->cluster_send_message(&byebyemsg, sizeof(byebyemsg),
 					     our_csid,
 					     "Error Sending GOAWAY message");
 		} else {
-			add_up_node(csid);
+			clops->add_up_node(csid);
 		}
 		return;
 	}
 
 	/* Allocate a default reply buffer */
-	replyargs = malloc(MAX_CLUSTER_MESSAGE - sizeof(struct clvm_header));
+	replyargs = malloc(max_cluster_message - sizeof(struct clvm_header));
 
 	if (replyargs != NULL) {
 		/* Run the command */
@@ -1228,7 +1248,7 @@ static void add_reply_to_list(struct local_client *client, int status,
 	reply = malloc(sizeof(struct node_reply));
 	if (reply) {
 		reply->status = status;
-		name_from_csid(csid, reply->node);
+		clops->name_from_csid(csid, reply->node);
 		DEBUGLOG("Reply from node %s: %d bytes\n", reply->node, len);
 
 		if (len > 0) {
@@ -1342,8 +1362,8 @@ static int process_local_command(struct clvm_header *msg, int msglen,
 				 struct local_client *client,
 				 unsigned short xid)
 {
-	char *replybuf = malloc(MAX_CLUSTER_MESSAGE);
-	int buflen = MAX_CLUSTER_MESSAGE - sizeof(struct clvm_header) - 1;
+	char *replybuf = malloc(max_cluster_message);
+	int buflen = max_cluster_message - sizeof(struct clvm_header) - 1;
 	int replylen = 0;
 	int status;
 
@@ -1507,7 +1527,7 @@ static void send_version_message()
 	version_nums[1] = htonl(CLVMD_MINOR_VERSION);
 	version_nums[2] = htonl(CLVMD_PATCH_VERSION);
 
-	cluster_send_message(message, sizeof(message), NULL,
+	clops->cluster_send_message(message, sizeof(message), NULL,
 			     "Error Sending version number");
 }
 
@@ -1520,7 +1540,7 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 	/* Send remote messages down the cluster socket */
 	if (csid == NULL || !ISLOCAL_CSID(csid)) {
 		hton_clvm((struct clvm_header *) buf);	/* Byte swap if necessary */
-		return cluster_send_message(buf, msglen, csid, errtext);
+		return clops->cluster_send_message(buf, msglen, csid, errtext);
 	} else {
 		int ptr = 0;
 
@@ -1621,7 +1641,7 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 	cmd->xid = client->xid;
 	memcpy(cmd->msg, msg, msglen);
 	if (csid) {
-		memcpy(cmd->csid, csid, MAX_CSID_LEN);
+		memcpy(cmd->csid, csid, max_csid_len);
 		cmd->remote = 1;
 	} else {
 		cmd->remote = 0;
@@ -1699,7 +1719,7 @@ static void check_all_callback(struct local_client *client, char *csid,
 static int check_all_clvmds_running(struct local_client *client)
 {
 	DEBUGLOG("check_all_clvmds_running\n");
-	return cluster_do_node_callback(client, check_all_callback);
+	return clops->cluster_do_node_callback(client, check_all_callback);
 }
 
 /* Return a local_client struct given a client ID.
@@ -1745,3 +1765,14 @@ static void sigterm_handler(int sig)
 	quit = 1;
 	return;
 }
+
+int sync_lock(const char *resource, int mode, int flags, int *lockid)
+{
+	return clops->sync_lock(resource, mode, flags, lockid);
+}
+
+int sync_unlock(const char *resource, int lockid)
+{
+	return clops->sync_unlock(resource, lockid);
+}
+

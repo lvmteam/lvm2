@@ -93,7 +93,7 @@ struct local_client {
 		struct netsock_bits net;
 	} bits;
 };
-
+#define DEBUG
 #ifdef DEBUG
 #define DEBUGLOG(fmt, args...) fprintf(stderr, "CLVMD[%d]: %ld ", getpid(), time(NULL) ); fprintf(stderr, fmt, ## args)
 #else
@@ -116,4 +116,8 @@ extern int add_client(struct local_client *new_client);
 
 extern void clvmd_cluster_init_completed(void);
 extern void process_message(struct local_client *client, char *buf, int len, char *csid);
+
+int sync_lock(const char *resource, int mode, int flags, int *lockid);
+int sync_unlock(const char *resource, int lockid);
+
 #endif

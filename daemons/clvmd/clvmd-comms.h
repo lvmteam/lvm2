@@ -22,33 +22,47 @@
 
 struct local_client;
 
-extern int cluster_send_message(void *buf, int msglen, char *csid,
+struct cluster_ops {
+	void (*cluster_init_completed) (void);
+
+	int (*cluster_send_message) (void *buf, int msglen, char *csid,
 				const char *errtext);
-extern int name_from_csid(char *csid, char *name);
-extern int csid_from_name(char *csid, char *name);
-extern int get_num_nodes(void);
-extern int cluster_fd_callback(struct local_client *fd, char *buf, int len,
+	int (*name_from_csid) (char *csid, char *name);
+	int (*csid_from_name) (char *csid, char *name);
+	int (*get_num_nodes) (void);
+	int (*cluster_fd_callback) (struct local_client *fd, char *buf, int len,
 			       char *csid, struct local_client **new_client);
-extern int init_cluster(void);
-extern int get_main_cluster_fd(void);	/* gets accept FD or cman cluster socket */
-extern int cluster_do_node_callback(struct local_client *client,
+	int (*get_main_cluster_fd) (void);	/* gets accept FD or cman cluster socket */
+	int (*cluster_do_node_callback) (struct local_client *client,
 				    void (*callback) (struct local_client *,
 						      char *csid, int node_up));
-extern int is_quorate(void);
+	int (*is_quorate) (void);
 
-extern void get_our_csid(char *csid);
-extern void add_up_node(char *csid);
-extern void cluster_closedown(void);
+	void (*get_our_csid) (char *csid);
+	void (*add_up_node) (char *csid);
+	void (*cluster_closedown) (void);
 
-extern int sync_lock(const char *resource, int mode, int flags, int *lockid);
-extern int sync_unlock(const char *resource, int lockid);
+	int (*sync_lock) (const char *resource, int mode, int flags, int *lockid);
+	int (*sync_unlock) (const char *resource, int lockid);
+
+};
 
 #ifdef USE_GULM
-#include "tcp-comms.h"
-#else
-/* cman */
-#include "cnxman-socket.h"
-#define MAX_CSID_LEN 4
+#  include "tcp-comms.h"
+struct cluster_ops *init_gulm_cluster(void);
+#define MAX_CSID_LEN 			GULM_MAX_CSID_LEN
+#define MAX_CLUSTER_MEMBER_NAME_LEN	GULM_MAX_CLUSTER_MEMBER_NAME_LEN
+#endif
+
+#ifdef USE_CMAN
+#  include "cnxman-socket.h"
+#  define CMAN_MAX_CSID_LEN 4
+#  ifndef MAX_CSID_LEN
+#    define MAX_CSID_LEN CMAN_MAX_CSID_LEN
+#  endif
+#  undef MAX_CLUSTER_MEMBER_NAME_LEN
+#  define MAX_CLUSTER_MEMBER_NAME_LEN	CMAN_MAX_CLUSTER_MEMBER_NAME_LEN
+struct cluster_ops *init_cman_cluster(void);
 #endif
 
 

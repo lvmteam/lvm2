@@ -72,7 +72,7 @@ static volatile int lock_start_flag;
 struct node_info
 {
     enum {NODE_UNKNOWN, NODE_DOWN, NODE_UP, NODE_CLVMD} state;
-    char name[MAX_CLUSTER_MEMBER_NAME_LEN];
+    char name[GULM_MAX_CLUSTER_MEMBER_NAME_LEN];
 };
 
 struct lock_wait
@@ -88,6 +88,8 @@ static int read_from_core_sock(struct local_client *client, char *buf, int len, 
 static int read_from_lock_sock(struct local_client *client, char *buf, int len, char *csid,
 			       struct local_client **new_client);
 static int get_all_cluster_nodes(void);
+static int _csid_from_name(char *csid, char *name);
+static void _cluster_closedown(void);
 
 /* In tcp-comms.c */
 extern struct hash_table *sock_hash;
@@ -123,7 +125,7 @@ static lg_lockspace_callbacks_t lock_callbacks;
 static void badsig_handler(int sig)
 {
     DEBUGLOG("got sig %d\n", sig);
-    cluster_closedown();
+    _cluster_closedown();
     exit(0);
 }
 
@@ -135,7 +137,7 @@ static void sighup_handler(int sig)
     get_all_cluster_nodes();
 }
 
-int init_cluster()
+static int _init_cluster(void)
 {
     int status;
     int ccs_h;
@@ -241,7 +243,7 @@ int init_cluster()
     return 0;
 }
 
-void cluster_closedown()
+static void _cluster_closedown(void)
 {
     DEBUGLOG("cluster_closedown\n");
     lg_lock_logout(gulm_if);
@@ -339,7 +341,7 @@ static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, (char *)ip, MAX_CSID_LEN);
+    ninfo = hash_lookup_binary(node_hash, (char *)ip, GULM_MAX_CSID_LEN);
     if (!ninfo)
     {
 	/* If we can't find that node then re-read the config file in case it
@@ -348,7 +350,7 @@ static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_
 	get_all_cluster_nodes();
 
 	/* Now try again */
-	ninfo = hash_lookup_binary(node_hash, (char *)ip, MAX_CSID_LEN);
+	ninfo = hash_lookup_binary(node_hash, (char *)ip, GULM_MAX_CSID_LEN);
 	if (!ninfo)
 	{
 	    DEBUGLOG("Ignoring node %s, not part of the SAN cluster\n", name);
@@ -359,6 +361,11 @@ static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_
     set_node_state(ninfo, (char *)&ip, state);
 
     return ninfo;
+}
+
+static void _get_our_csid(char *csid)
+{
+	get_our_gulm_csid(csid);
 }
 
 static int core_nodelist(void *misc, lglcb_t type, char *name, struct in6_addr *ip, uint8_t state)
@@ -381,14 +388,14 @@ static int core_nodelist(void *misc, lglcb_t type, char *name, struct in6_addr *
 	{
 	    if (type == lglcb_stop)
 	    {
-		char ourcsid[MAX_CSID_LEN];
+		char ourcsid[GULM_MAX_CSID_LEN];
 
 		DEBUGLOG("Got Nodelist, stop\n");
 		clvmd_cluster_init_completed();
 
 		/* Mark ourself as up */
-		get_our_csid(ourcsid);
-		add_up_node(ourcsid);
+		_get_our_csid(ourcsid);
+		gulm_add_up_node(ourcsid);
 	    }
 	    else
 	    {
@@ -417,7 +424,7 @@ static int core_nodechange(void *misc, char *nodename, struct in6_addr *nodeip, 
 
     /* If we don't get nodeip here, try a lookup by name */
     if (!nodeip)
-	csid_from_name((char *)nodeip, nodename);
+	_csid_from_name((char *)nodeip, nodename);
     if (!nodeip)
 	return 0;
 
@@ -540,15 +547,15 @@ int get_next_node_csid(void **context, char *csid)
 	return 0;
     }
 
-    memcpy(csid, hash_get_key(node_hash, *context), MAX_CSID_LEN);
+    memcpy(csid, hash_get_key(node_hash, *context), GULM_MAX_CSID_LEN);
     return 1;
 }
 
-int name_from_csid(char *csid, char *name)
+int gulm_name_from_csid(char *csid, char *name)
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, csid, MAX_CSID_LEN);
+    ninfo = hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
     if (!ninfo)
     {
         sprintf(name, "UNKNOWN %s", print_csid(csid));
@@ -560,7 +567,7 @@ int name_from_csid(char *csid, char *name)
 }
 
 
-int csid_from_name(char *csid, char *name)
+static int _csid_from_name(char *csid, char *name)
 {
     struct hash_node *hn;
     struct node_info *ninfo;
@@ -570,25 +577,25 @@ int csid_from_name(char *csid, char *name)
 	ninfo = hash_get_data(node_hash, hn);
 	if (strcmp(ninfo->name, name) == 0)
 	{
-	    memcpy(csid, hash_get_key(node_hash, hn), MAX_CSID_LEN);
+	    memcpy(csid, hash_get_key(node_hash, hn), GULM_MAX_CSID_LEN);
 	    return 0;
 	}
     }
     return -1;
 }
 
-int get_num_nodes()
+static int _get_num_nodes()
 {
     DEBUGLOG("num_nodes = %d\n", num_nodes);
     return num_nodes;
 }
 
 /* Node is now known to be running a clvmd */
-void add_up_node(char *csid)
+void gulm_add_up_node(char *csid)
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, csid, MAX_CSID_LEN);
+    ninfo = hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
     if (!ninfo)
 	return;
 
@@ -601,7 +608,7 @@ void add_down_node(char *csid)
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, csid, MAX_CSID_LEN);
+    ninfo = hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
     if (!ninfo)
 	return;
 
@@ -614,7 +621,7 @@ void add_down_node(char *csid)
 }
 
 /* Call a callback for each node, so the caller knows whether it's up or down */
-int cluster_do_node_callback(struct local_client *master_client,
+static int _cluster_do_node_callback(struct local_client *master_client,
 			     void (*callback)(struct local_client *, char *csid, int node_up))
 {
     struct hash_node *hn;
@@ -622,15 +629,15 @@ int cluster_do_node_callback(struct local_client *master_client,
 
     hash_iterate(hn, node_hash)
     {
-	char csid[MAX_CSID_LEN];
+	char csid[GULM_MAX_CSID_LEN];
 	struct local_client *client;
 
 	ninfo = hash_get_data(node_hash, hn);
-	memcpy(csid, hash_get_key(node_hash, hn), MAX_CSID_LEN);
+	memcpy(csid, hash_get_key(node_hash, hn), GULM_MAX_CSID_LEN);
 
 	DEBUGLOG("down_callback. node %s, state = %d\n", ninfo->name, ninfo->state);
 
-	client = hash_lookup_binary(sock_hash, csid, MAX_CSID_LEN);
+	client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 	if (client)
 	    callback(master_client, csid, ninfo->state == NODE_CLVMD);
     }
@@ -742,7 +749,7 @@ static int _unlock_resource(char *resource, int lockid)
    To aid unlocking, we store the lock mode in the lockid (as GULM
    doesn't use this).
 */
-int sync_lock(const char *resource, int mode, int flags, int *lockid)
+static int _sync_lock(const char *resource, int mode, int flags, int *lockid)
 {
     int status;
     char lock1[strlen(resource)+3];
@@ -786,7 +793,7 @@ int sync_lock(const char *resource, int mode, int flags, int *lockid)
     return status;
 }
 
-int sync_unlock(const char *resource, int lockid)
+static int _sync_unlock(const char *resource, int lockid)
 {
     int status = 0;
     char lock1[strlen(resource)+3];
@@ -822,7 +829,7 @@ int sync_unlock(const char *resource, int lockid)
     return status;
 }
 
-int is_quorate()
+static int _is_quorate()
 {
     if (current_corestate == lg_core_Slave ||
 	current_corestate == lg_core_Master ||
@@ -854,7 +861,7 @@ static int get_all_cluster_nodes()
     for (i=1;;i++)
     {
 	char nodekey[256];
-	char nodeip[MAX_CSID_LEN];
+	char nodeip[GULM_MAX_CSID_LEN];
 	int  clvmflag = 1;
 	char *clvmflagstr;
 	char key[256];
@@ -877,7 +884,7 @@ static int get_all_cluster_nodes()
 	    struct node_info *ninfo;
 
 	    /* If it's not in the list, then add it */
-	    ninfo = hash_lookup_binary(node_hash, nodeip, MAX_CSID_LEN);
+	    ninfo = hash_lookup_binary(node_hash, nodeip, GULM_MAX_CSID_LEN);
 	    if (!ninfo)
 	    {
 		ninfo = malloc(sizeof(struct node_info));
@@ -890,7 +897,7 @@ static int get_all_cluster_nodes()
 		strcpy(ninfo->name, nodename);
 
 		ninfo->state = NODE_DOWN;
-		hash_insert_binary(node_hash, nodeip, MAX_CSID_LEN, ninfo);
+		hash_insert_binary(node_hash, nodeip, GULM_MAX_CSID_LEN, ninfo);
 	    }
 	}
 	else
@@ -906,3 +913,47 @@ static int get_all_cluster_nodes()
     return 0;
 }
 
+static void _cluster_init_completed(void)
+{
+	clvmd_cluster_init_completed();
+}
+
+static int _get_main_cluster_fd(void)
+{
+	return get_main_gulm_cluster_fd();
+}
+
+static int _cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid, struct local_client **new_client)
+{
+	return cluster_fd_gulm_callback(fd, buf, len, csid, new_client);
+}
+
+static int _cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
+{
+	return gulm_cluster_send_message(buf, msglen, csid, errtext);
+}
+
+static struct cluster_ops _cluster_gulm_ops = {
+	.cluster_init_completed   = _cluster_init_completed,
+	.cluster_send_message     = _cluster_send_message,
+	.name_from_csid           = gulm_name_from_csid,
+	.csid_from_name           = _csid_from_name,
+	.get_num_nodes            = _get_num_nodes,
+	.cluster_fd_callback      = _cluster_fd_callback,
+	.get_main_cluster_fd      = _get_main_cluster_fd,
+	.cluster_do_node_callback = _cluster_do_node_callback,
+	.is_quorate               = _is_quorate,
+	.get_our_csid             = _get_our_csid,
+	.add_up_node              = gulm_add_up_node,
+	.cluster_closedown        = _cluster_closedown,
+	.sync_lock                = _sync_lock,
+	.sync_unlock              = _sync_unlock,
+};
+
+struct cluster_ops *init_gulm_cluster(void)
+{
+	if (!_init_cluster())
+		return &_cluster_gulm_ops;
+	else
+		return NULL;
+}

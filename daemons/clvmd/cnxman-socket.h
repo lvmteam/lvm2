@@ -63,8 +63,8 @@
 
 
 /* Maximum size of a cluster message */
-#define MAX_CLUSTER_MESSAGE          1500
-#define MAX_CLUSTER_MEMBER_NAME_LEN   255
+#define CMAN_MAX_CLUSTER_MESSAGE          1500
+#define CMAN_MAX_CLUSTER_MEMBER_NAME_LEN   255
 #define MAX_BARRIER_NAME_LEN           33
 #define MAX_SA_ADDR_LEN                12
 #define MAX_CLUSTER_NAME_LEN           16
@@ -147,7 +147,7 @@ struct cl_cluster_node {
 	unsigned int leave_reason;
 	unsigned int incarnation;
 	nodestate_t state;
-	char name[MAX_CLUSTER_MEMBER_NAME_LEN];
+	char name[CMAN_MAX_CLUSTER_MEMBER_NAME_LEN];
 	unsigned char votes;
 };
 
