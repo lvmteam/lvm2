@@ -19,9 +19,14 @@
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
 #  define GETOPTLONG_FN(a, b, c, d, e) getopt_long((a), (b), (c), (d), (e))
+#  define OPTIND_INIT 0
 #else
-struct option {};
+struct option {
+};
+extern int optind;
+extern char *optarg;
 #  define GETOPTLONG_FN(a, b, c, d, e) getopt((a), (b), (c))
+#  define OPTIND_INIT 1
 #endif
 
 #ifdef READLINE_SUPPORT
@@ -402,7 +407,6 @@ static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 		if (a->fn)
 			*(*ptr)++ = ':';
 	}
-
 #ifdef HAVE_GETOPTLONG
 	if (*(a->long_arg + 2)) {
 		(*o)->name = a->long_arg + 2;
@@ -467,7 +471,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 
 	/* initialise getopt_long & scan for command line switches */
 	optarg = 0;
-	optind = 1;
+	optind = OPTIND_INIT;
 	while ((opt = GETOPTLONG_FN(*argc, *argv, str, opts, NULL)) >= 0) {
 
 		if (opt == '?')
