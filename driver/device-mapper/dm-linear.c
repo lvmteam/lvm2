@@ -103,7 +103,7 @@ static void linear_dtr(struct dm_table *t, void *c)
 	kfree(c);
 }
 
-static int linear_map(struct buffer_head *bh, void *context)
+static int linear_map(struct buffer_head *bh, int rw, void *context)
 {
 	struct linear_c *lc = (struct linear_c *) context;
 

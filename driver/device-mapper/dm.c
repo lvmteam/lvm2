@@ -48,6 +48,8 @@ int _version[3] = { 0, 1, 0 };
 
 struct io_hook {
 	struct mapped_device *md;
+	struct target *target;
+	int rw;
 	void (*end_io) (struct buffer_head * bh, int uptodate);
 	void *context;
 };
@@ -297,6 +299,11 @@ static void dec_pending(struct buffer_head *bh, int uptodate)
 {
 	struct io_hook *ih = bh->b_private;
 
+	if (!uptodate && ih->target->type->err) {
+		if (ih->target->type->err(bh, ih->rw, ih->target->private))
+			return;
+	}
+
 	if (atomic_dec_and_test(&ih->md->pending))
 		/* nudge anyone waiting on suspend queue */
 		wake_up(&ih->md->wait);
@@ -337,11 +344,11 @@ static int queue_io(struct mapped_device *md, struct buffer_head *bh, int rw)
  * do the bh mapping for a given leaf
  */
 static inline int __map_buffer(struct mapped_device *md,
-			       struct buffer_head *bh, int leaf)
+			       struct buffer_head *bh, int rw, int leaf)
 {
 	dm_map_fn fn;
 	void *context;
-	struct io_hook *ih = 0;
+	struct io_hook *ih = NULL;
 	int r;
 	struct target *ti = md->map->targets + leaf;
 
@@ -357,10 +364,12 @@ static inline int __map_buffer(struct mapped_device *md,
 		return 0;
 
 	ih->md = md;
+	ih->rw = rw;
+	ih->target = ti;
 	ih->end_io = bh->b_end_io;
 	ih->context = bh->b_private;
 
-	r = fn(bh, context);
+	r = fn(bh, rw, context);
 
 	if (r > 0) {
 		/* hook the end io request fn */
@@ -430,7 +439,7 @@ static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb)
 		struct target *t = md->map->targets + __find_node(md->map, &bh);
 		struct target_type *target = t->type;
 		if (target->flags & TF_BMAP) {
-			err = target->map(&bh, t->private);
+			err = target->map(&bh, READ, t->private);
 		}
 	}
 	up_read(&_dev_lock);
@@ -473,7 +482,7 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 		down_read(&_dev_lock);	/* FIXME: there's still a race here */
 	}
 
-	if (!__map_buffer(md, bh, __find_node(md->map, bh)))
+	if (!__map_buffer(md, bh, rw, __find_node(md->map, bh)))
 		goto bad;
 
 	up_read(&_dev_lock);
