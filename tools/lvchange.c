@@ -349,7 +349,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		lv->minor = -1;
 		log_verbose("Disabling persistent minor for \"%s\"", lv->name);
 	} else {
-		if (lv_active(lv)) {
+		if (lv_active(lv) > 0) {
 			log_error("Cannot change minor number when active");
 			return 0;
 		}

@@ -14,6 +14,7 @@ struct lvcreate_params {
 	int snapshot;
 	int zero;
 	int contiguous;
+	int minor;
 
 	char *origin;
 	char *vg_name;
@@ -227,20 +228,23 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	else
 		lp->permission = LVM_READ | LVM_WRITE;
 
+	lp->minor = arg_int_value(cmd, minor_ARG, -1);
 
-#if 0
-	/* persistent minor */
+	/* Persistent minor */
 	if (arg_count(cmd, persistent_ARG)) {
-		if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n"))
-			lv->status &= ~FIXED_MINOR;
-		else if (!arg_count(cmd, minor_ARG)) {
-			log_error("Please specify minor number with "
-				  "--minor when using -My");
-			return 0;
+		if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "y")) {
+			if (lp->minor == -1) {
+				log_error("Please specify minor number with "
+					  "--minor when using -My");
+				return 0;
+			}
+		} else {
+			if (lp->minor != -1) {
+				log_error("--minor not possible with -Mn");
+				return 0;
+			}
 		}
-		lv->status |= FIXED_MINOR;
 	}
-#endif
 
 	lp->pv_count = argc;
 	lp->pvs = argv;
@@ -252,7 +256,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		     struct logical_volume **plv)
 {
 	uint32_t size_rest;
-	uint32_t status;
+	uint32_t status = 0;
 	struct volume_group *vg;
 	struct logical_volume *lv, *org;
 	struct list *pvh;
@@ -362,13 +366,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		lv->read_ahead = lp->read_ahead;
 	}
 
-#if 0
 	if (lp->minor >= 0) {
-		lv->status |= FIXED_MINOR;
 		lv->minor = lp->minor;
+		lv->status |= FIXED_MINOR;
 		log_verbose("Setting minor number to %d", lv->minor);
 	}
-#endif
 
 	/* store vg on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
@@ -429,6 +431,8 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	int r = ECMD_FAILED;
 	struct lvcreate_params lp;
 	struct logical_volume *lv;
+
+	memset(&lp, 0, sizeof(lp));
 
 	if (!_read_params(&lp, cmd, argc, argv))
 		return -EINVALID_CMD_LINE;

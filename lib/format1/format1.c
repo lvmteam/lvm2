@@ -418,9 +418,31 @@ static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 	return 1;
 }
 
+static int _find_free_lvnum(struct logical_volume *lv)
+{
+	int lvnum_used[MAX_LV];
+	int i = 0;
+	struct list *lvh;
+	struct lv_list *lvl;
+
+	memset(&lvnum_used, 0, sizeof(lvnum_used));
+
+	list_iterate(lvh, &lv->vg->lvs) {
+		lvl = list_item(lvh, struct lv_list);
+		lvnum_used[lvnum_from_id(&lvl->lv->id)] = 1;
+	}
+
+	while (lvnum_used[i])
+		i++;
+
+	return i;
+}
+
 static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
 {
 	uint64_t max_size = UINT_MAX;
+
+	id_from_lvnum(&lv->id, _find_free_lvnum(lv));
 
 	if (lv->le_count > MAX_LE_TOTAL) {
 		log_error("logical volumes cannot contain more than "
