@@ -21,14 +21,24 @@
 
 /* Heavily based upon ramfs */
 
-static int dmfs_create(struct inode *dir, struct dentry *dentry, int mode)
-{
-	return dmfs_create_file(dir, dentry, mode);
-}
-
 static int dmfs_unlink(struct inode *dir, struct dentry *dentry)
 {
 
+}
+
+static int dmfs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *dentry)
+{
+	struct inode *inode = old_dentry->d_inode;
+
+	if (!S_ISREG(inode->i_mode))
+		return -EPERM;
+
+	if (dentry->d_parent != old_dentry->d_parent)
+		return -EPERM;
+
+	inode->i_ctime = CURRENT_TIME;
+
+	return 0;
 }
 
 static struct dentry *dmfs_lookup(struct inode *dir, struct dentry *dentry)
@@ -46,6 +56,7 @@ static int dmfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	return 0;
 }
 
+
 static int dmfs_dir_sync(struct file *file, struct dentry *dentry, int datasync)
 {
 	return 0;
@@ -57,9 +68,10 @@ static struct dm_dir_file_operations = {
 	fsync:		dmfs_dir_sync,
 };
 
-static struct dm_root_inode_operations = {
-	create:		dmfs_dir_create,
+static struct dm_dir_inode_operations = {
+	create:		dmfs_create_file,
 	lookup:		dmfs_dir_lookup,
+	link:		dmfs_dir_link,
 	unlink:		dmfs_dir_unlink,
 	rename:		dmfs_dir_rename,
 };
@@ -75,7 +87,7 @@ struct inode *dmfs_create_dir(struct inode *dir, struct dentry *dentry, int mode
 		inode->i_blksize = PAGE_CACHE_SIZE;
 		inode->i_blocks = 0;
 		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_ctime = CURRENT_TIME;
+		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_dir_file_operations;
 		inode->i_op = &dmfs_dir_dir_operations;
 	}
