@@ -1,5 +1,6 @@
 Version 2.00.21 - 
 =============================
+  Cope with DT_UNKNOWN in sysfs.
   Fix extents_moved metadata size comment.
   Remove duplicate line in pvremove help text.
   Support variable mirror region size.
