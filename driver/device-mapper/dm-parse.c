@@ -92,9 +92,10 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 		}
 
 		/* build the target */
-		if (ttype->ctr(table, start, size, &line, &context,
-			       err_fn, e_private))
+		if (ttype->ctr(table, start, size, &line, &context)) {
+			err_fn(table->err_msg, e_private);
 			PARSE_ERROR;
+		}
 
 		/* no point registering the target
                    if there was an error. */
