@@ -24,7 +24,7 @@ enum {
  * start and end of a string.
  */
 #define HAT_CHAR 0x2
-#define DOLLAR_CHAR 0x2
+#define DOLLAR_CHAR 0x3
 
 struct rx_node {
 	int type;
