@@ -2,6 +2,7 @@
 *******************************************************************************
 **
 **  Copyright (C) Sistina Software, Inc.  2002-2003  All rights reserved.
+**  Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
 **
 *******************************************************************************
 ******************************************************************************/
@@ -46,6 +47,7 @@
 #include "log.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
+#include "lvm-functions.h"
 #include "clvmd.h"
 #include "hash.h"
 #include "clvmd-gulm.h"
@@ -65,6 +67,7 @@ static uint8_t current_corestate;
 static int num_nodes;
 
 static char *cluster_name;
+static int in_shutdown = 0;
 
 static pthread_mutex_t lock_start_mutex;
 static volatile int lock_start_flag;
@@ -246,6 +249,8 @@ static int _init_cluster(void)
 static void _cluster_closedown(void)
 {
     DEBUGLOG("cluster_closedown\n");
+    in_shutdown = 1;
+    unlock_all();
     lg_lock_logout(gulm_if);
     lg_core_logout(gulm_if);
     lg_release(gulm_if);
@@ -258,6 +263,7 @@ static void drop_expired_locks(char *nodename)
     struct utsname nodeinfo;
     uint8_t mask[GIO_KEY_SIZE];
 
+    DEBUGLOG("Dropping expired locks for %s\n", nodename?nodename:"(null)");
     memset(mask, 0xff, GIO_KEY_SIZE);
 
     if (!nodename)
@@ -478,6 +484,10 @@ static int lock_lock_state(void *misc, uint8_t *key, uint16_t keylen,
 
     DEBUGLOG("LOCK lock state: %s, error = %d\n", key, error);
 
+    /* No waiting process to wake up when we are shutting down */
+    if (in_shutdown)
+	    return;
+
     lwait = hash_lookup(lock_hash, key);
     if (!lwait)
     {
@@ -596,9 +606,12 @@ void gulm_add_up_node(char *csid)
     struct node_info *ninfo;
 
     ninfo = hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
-    if (!ninfo)
+    if (!ninfo) {
+	    DEBUGLOG("gulm_add_up_node no node_hash entry for csid %s\n", print_csid(csid));
 	return;
+    }
 
+    DEBUGLOG("gulm_add_up_node %s\n", ninfo->name);
     ninfo->state = NODE_CLVMD;
     return;
 
@@ -616,13 +629,14 @@ void add_down_node(char *csid)
        running clvmd - gulm may set it DOWN quite soon */
     if (ninfo->state == NODE_CLVMD)
 	ninfo->state = NODE_UP;
+    drop_expired_locks(ninfo->name);
     return;
 
 }
 
 /* Call a callback for each node, so the caller knows whether it's up or down */
 static int _cluster_do_node_callback(struct local_client *master_client,
-			     void (*callback)(struct local_client *, char *csid, int node_up))
+				     void (*callback)(struct local_client *, char *csid, int node_up))
 {
     struct hash_node *hn;
     struct node_info *ninfo;
@@ -638,8 +652,19 @@ static int _cluster_do_node_callback(struct local_client *master_client,
 	DEBUGLOG("down_callback. node %s, state = %d\n", ninfo->name, ninfo->state);
 
 	client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
-	if (client)
-	    callback(master_client, csid, ninfo->state == NODE_CLVMD);
+	if (!client)
+	{
+	    /* If it's up but not connected, try to make contact */
+	    if (ninfo->state == NODE_UP)
+		    gulm_connect_csid(csid, &client);
+
+	    client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+
+	}
+	if (ninfo->state != NODE_DOWN)
+		callback(master_client, csid, ninfo->state == NODE_CLVMD);
+
+
     }
     return 0;
 }
@@ -726,6 +751,11 @@ static int _unlock_resource(char *resource, int lockid)
 	DEBUGLOG("lg_lock_state(unlock) returned %d\n", status);
 	return status;
     }
+
+    /* When we are shutting down, don't wait for unlocks
+       to be acknowledged, just do it. */
+    if (in_shutdown)
+	    return status;
 
     /* Wait for it to complete */
 
