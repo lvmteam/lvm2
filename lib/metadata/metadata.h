@@ -20,31 +20,27 @@
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-/* Status bits */
-#define ST_ACTIVE               0x01  /* PV VG LV */
-#define ST_EXPORTED_VG          0x02  /* VG */  /* And PV too perhaps? */
-#define ST_EXTENDABLE_VG        0x04  /* VG */
-#define ST_ALLOCATED_PV         0x08  /* PV */
-#define ST_SPINDOWN_LV          0x10  /* LV */
+#define ACTIVE               	0x00000001  /* PV VG LV */
+#define EXPORTED_VG          	0x00000002  /* VG */  /* And PV too perhaps? */
+#define EXTENDABLE_VG        	0x00000004  /* VG */
+#define ALLOCATED_PV         	0x00000008  /* PV */
 
-/* Access bits */
-#define AC_READ              0x01  /* LV VG */
-#define AC_WRITE             0x02  /* LV VG */
-#define AC_CLUSTERED         0x04  /* VG */
-#define AC_SHARED            0x08  /* VG */
+#define SPINDOWN_LV          	0x00000010  /* LV */
+#define BADBLOCK_ON       	0x00000020  /* LV */
 
-/* LV Flags */
-#define LV_ALLOC_STRICT      0x01  /* LV */
-#define LV_ALLOC_CONTIGUOUS  0x02  /* LV */
-#define LV_SNAPSHOT          0x04  /* LV */
-#define LV_SNAPSHOT_ORG      0x08  /* LV */
-#define LV_BADBLOCK_ON       0x10  /* LV */
+#define LVM_READ              	0x00000100  /* LV VG */
+#define LVM_WRITE             	0x00000200  /* LV VG */
+#define CLUSTERED         	0x00000400  /* VG */
+#define SHARED            	0x00000800  /* VG */
 
+#define ALLOC_STRICT      	0x00001000  /* LV */
+#define ALLOC_CONTIGUOUS  	0x00002000  /* LV */
+#define SNAPSHOT          	0x00004000  /* LV */
+#define SNAPSHOT_ORG      	0x00008000  /* LV */
 
 
 #define EXPORTED_TAG "PV_EXP"  /* Identifier of exported PV */
 #define IMPORTED_TAG "PV_IMP"  /* Identifier of imported PV */
-
 
 
 struct id {
@@ -54,7 +50,7 @@ struct id {
 struct physical_volume {
         struct id *id;
 	struct device *dev;
-	char *vg_name;
+	char *vg_name;		/* VG component of name only - not full path */
 	char *exported;
 
         uint32_t status;
@@ -75,11 +71,9 @@ struct pe_specifier {
 struct logical_volume {
         /* disk */
 	struct id *id;
-        char *name;
+        char *name;		/* LV component of name only - not full path */
 
         uint32_t status;
-        uint32_t access;
-        uint32_t flags;
         uint32_t open;
 
         uint64_t size;
@@ -91,10 +85,9 @@ struct logical_volume {
 
 struct volume_group {
 	struct id *id;
-	char *name;
+	char *name;		/* VG component of name only - not full path */
 
         uint32_t status;
-        uint32_t access;
 
         uint64_t extent_size;
         uint32_t extent_count;
@@ -124,7 +117,7 @@ struct pv_list {
 
 /* ownership of returned objects passes */
 struct io_space {
-	/* Returns list of names of all vgs */
+	/* Returns list of names of all vgs - vg component only, not full path*/
 	struct name_list *(*get_vgs)(struct io_space *is);
 
 	/* Returns list of fully-populated pv structures */
@@ -135,43 +128,33 @@ struct io_space {
 					const char *pv_name);
 
 	/* Write a PV structure to disk. */
-	/* Fails if the PV is in a VG ie vg_name filled on the disk or in *pv */
+	/* Fails if the PV is in a VG ie pv->vg_name must be null */
 	int (*pv_write)(struct io_space *is, struct physical_volume *pv);
 
-	/* vg_name may contain slash(es) - if not, this function adds prefix */
-	/* Default prefix is '/dev/' but can be changed from config file? */
-	/* (via a prefix_set() ?) */
+	/* if vg_name doesn't contain any slash, this function adds prefix */
 	struct volume_group *(*vg_read)(struct io_space *is,
 					const char *vg_name);
 
 	/* Write out complete VG metadata. */
-	/* Ensure (& impose?) consistency before writing anything. 
+	/* Ensure *internal* consistency before writing anything. 
 	 *   eg. PEs can't refer to PVs not part of the VG 
 	 * Order write sequence to aid recovery if process is aborted 
-	 *   (eg flush entire set of changes to each disk in turn?)
-	 * If overwriting existing VG data, needs to check for any PVs 
-	 * removed from the VG and update those PVs too. If those PVs 
-	 * are no longer in use, blank out vg_name on them.  Otherwise 
-	 * set vg_name to something temporary and unique - this must be 
-	 * a vgsplit with another vg_write() about to follow (or set a new
-	 * status flag?)
-	 *    OR  Should all consistency checks on the *_write* 
-	 * functions here be handled by a wrapper around them, so that they
-	 * *are* capable of leaving the system in an unusable state? 
-	 *    OR  Should vgsplit set flags to modify vg_write behaviour,
-	 * even specifying the new vg_name to insert?
+	 *   (eg flush entire set of changes to each disk in turn)
+	 * It is the responsibility of the caller to ensure external
+ 	 * consistency, eg by calling pv_write() if removing PVs from a VG
+	 * or calling vg_write() a second time if splitting a VG into two.
+	 * vg_write() must not read or write from any PVs not included
+	 * in the volume_group structure it is handed.
 	 */
 	int (*vg_write)(struct io_space *is, struct volume_group *vg);
 
 	void (*destroy)(struct io_space *is);
 
+	/* Current volume group prefix. */
+	char *prefix = '/dev/';
+
 	struct dev_filter *filter;
 	void *private;
-	/* Something here to allow repair tools & --force options to */
-	/* set flags to override certain consistency checks */
-	/*   eg. in _write functions to allow restoration of metadata */
-	/*       & in _read functions to allow "gaps" and specify which of */
-	/*       conflicting copies of metadata to use (device restriction?) */
 };
 
 /* FIXME: Move to other files */
@@ -205,7 +188,7 @@ int lv_add(struct volume_group *vg, struct logical_volume *lv);
 /* Remove an LV from a given VG */
 int lv_remove(struct volume_group *vg, struct logical_volume *lv);
 
-/* Return the VG that contains a given LV (based on path given in lv_name) */
+/* ? Return the VG that contains a given LV (based on path given in lv_name) */
 /* (or environment var?) */
 struct volume_group *vg_find(const char *lv_name);
 
