@@ -138,4 +138,5 @@ tools/Makefile							 	\
 test/mm/Makefile							\
 test/device/Makefile							\
 test/format1/Makefile							\
+test/regex/Makefile                                                     \
 )
