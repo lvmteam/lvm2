@@ -22,11 +22,13 @@ ifeq ("@INTL@", "yes")
   SUBDIRS += po
 endif
 
-SUBDIRS += lib tools
+SUBDIRS += lib tools daemons
 
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS += lib/format1 \
+  SUBDIRS += daemons/clvmd \
+	     lib/format1 \
 	     lib/format_pool \
+	     lib/locking \
 	     lib/mirror \
 	     lib/snapshot \
 	     po \
@@ -35,14 +37,16 @@ endif
 
 include make.tmpl
 
+daemons: lib
 lib: include
 tools: lib
-po: lib tools
+po: tools daemons
 
 ifeq ("@INTL@", "yes")
 lib.pofile: include.pofile
 tools.pofile: lib.pofile
-po.pofile: lib.pofile tools.pofile
+daemons.pofile: lib.pofile
+po.pofile: tools.pofile daemons.pofile
 pofile: po.pofile
 endif
 

@@ -59,6 +59,7 @@ case "$host_os" in
 		SOFLAG="-shared"
 		DEVMAPPER=yes
 		ODIRECT=yes
+		CLUSTER=internal
 		FSADM=no ;;
 	darwin*)
 		CFLAGS="-no-cpp-precomp -fno-common"
@@ -70,6 +71,7 @@ case "$host_os" in
 		SOFLAG="-dynamiclib"
 		DEVMAPPER=no
 		ODIRECT=no
+		CLUSTER=none
 		FSADM=no ;;
 esac
 
@@ -141,6 +143,22 @@ if test x$POOL = xinternal; then
 	CFLAGS="$CFLAGS -DPOOL_INTERNAL"
 fi
 
+dnl -- cluster_locking inclusion type
+AC_ARG_WITH(cluster,
+  [  --with-cluster=TYPE     Cluster LVM locking support: internal/shared/none
+                          [TYPE=internal] ],
+  [ CLUSTER="$withval" ])
+
+if [[ "x$CLUSTER" != xnone -a "x$CLUSTER" != xinternal -a "x$CLUSTER" != xshared ]];
+ then  AC_MSG_ERROR(
+--with-cluster parameter invalid
+)
+ exit
+fi;
+
+if test x$CLUSTER = xinternal; then
+	CFLAGS="$CFLAGS -DCLUSTER_LOCKING_INTERNAL"
+fi
 
 AC_ARG_ENABLE(jobs, [  --enable-jobs=NUM       Number of jobs to run simultaneously], JOBS=-j$enableval, JOBS=-j2)
 
@@ -191,6 +209,15 @@ READLINE=$enableval, READLINE=no)
 if test x$READLINE = xyes; then
 	CFLAGS="$CFLAGS -DREADLINE_SUPPORT"
 fi
+
+dnl Build cluster LVM daemon
+AC_ARG_WITH(clvmd, [  --with-clvmd            Build cluster LVM Daemon],  \
+CLVMD=$withval, CLVMD=no)
+dnl If clvmd enabled and not cluster locking, automgically include the locking.
+if  test x$CLVMD = xyes && test x$CLUSTER = xnone; then
+	CLUSTER=internal
+fi
+echo "$ac_t""$CLVMD" 1>&6
 
 echo $ac_n "checking whether to enable debugging""... $ac_c" 1>&6
 dnl Enable Debugging
@@ -272,7 +299,7 @@ else
 fi
 
 dnl Check for shared/static conflicts
-if [[ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o \
+if [[ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o "x$CLUSTER" = xshared -o \
       "x$SNAPSHOTS" = xshared -o "x$MIRRORS" = xshared \
       \) -a "x$STATIC_LINK" = xyes ]];
  then  AC_MSG_ERROR(
@@ -377,6 +404,8 @@ AC_SUBST(CONFDIR)
 AC_SUBST(STATICDIR)
 AC_SUBST(INTL_PACKAGE)
 AC_SUBST(INTL)
+AC_SUBST(CLVMD)
+AC_SUBST(CLUSTER)
 AC_SUBST(FSADM)
 
 dnl First and last lines should not contain files to generate in order to 
@@ -384,11 +413,14 @@ dnl keep utility scripts running properly
 AC_OUTPUT( 								\
 Makefile								\
 make.tmpl                                                               \
+daemons/Makefile							\
+daemons/clvmd/Makefile							\
 doc/Makefile								\
 include/Makefile						 	\
 lib/Makefile							 	\
 lib/format1/Makefile						 	\
 lib/format_pool/Makefile						\
+lib/locking/Makefile							\
 lib/mirror/Makefile							\
 lib/snapshot/Makefile							\
 man/Makefile							 	\

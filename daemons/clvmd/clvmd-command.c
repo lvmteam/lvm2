@@ -1,0 +1,219 @@
+/*
+ * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
+ * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ *
+ * This file is part of LVM2.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU General Public License v.2.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+/*
+
+  CLVMD Cluster LVM daemon command processor.
+
+  To add commands to the daemon simply add a processor in do_command and return
+  and messages back in buf and the length in *retlen. The initial value of
+  buflen is the maximum size of the buffer. if buf is not large enough then it
+  may be reallocated by the functions in here to a suitable size bearing in
+  mind that anything larger than the passed-in size will have to be returned
+  using the system LV and so performance will suffer.
+
+  The status return will be negated and passed back to the originating node.
+
+  pre- and post- command routines are called only on the local node. The
+  purpose is primarily to get and release locks, though the pre- routine should
+  also do any other local setups required by the command (if any) and can
+  return a failure code that prevents the command from being distributed around
+  the cluster
+
+  The pre- and post- routines are run in their own thread so can block as long
+  they like, do_command is run in the main clvmd thread so should not block for
+  too long. If the pre-command returns an error code (!=0) then the command
+  will not be propogated around the cluster but the post-command WILL be called
+
+  Also note that the pre and post routine are *always* called on the local
+  node, even if the command to be executed was only requested to run on a
+  remote node. It may peek inside the client structure to check the status of
+  the command.
+
+  The clients of the daemon must, naturally, understand the return messages and
+  codes.
+
+  Routines in here may only READ the values in the client structure passed in
+  apart from client->private which they are free to do what they like with.
+
+*/
+
+#include <pthread.h>
+#include <sys/types.h>
+#include <sys/utsname.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stddef.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include "list.h"
+#include "locking.h"
+#include "log.h"
+#include "lvm-functions.h"
+#include "clvmd-comms.h"
+#include "clvm.h"
+#include "clvmd.h"
+#include "libdlm.h"
+
+/* This is where all the real work happens:
+   NOTE: client will be NULL when this is executed on a remote node */
+int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
+	       char **buf, int buflen, int *retlen)
+{
+	char *args = msg->node + strlen(msg->node) + 1;
+	int arglen = msglen - sizeof(struct clvm_header) - strlen(msg->node);
+	int status = 0;
+	char *lockname;
+	struct utsname nodeinfo;
+	unsigned char lock_cmd;
+	unsigned char lock_flags;
+
+	/* Do the command */
+	switch (msg->cmd) {
+		/* Just a test message */
+	case CLVMD_CMD_TEST:
+		if (arglen > buflen) {
+			buflen = arglen + 200;
+			*buf = realloc(*buf, buflen);
+		}
+		uname(&nodeinfo);
+		*retlen = 1 + snprintf(*buf, buflen, "TEST from %s: %s v%s",
+				       nodeinfo.nodename, args,
+				       nodeinfo.release);
+		break;
+
+	case CLVMD_CMD_LOCK_VG:
+		/* Check to see if the VG is in use by LVM1 */
+		status = do_check_lvm1(&args[2]);
+		break;
+
+	case CLVMD_CMD_LOCK_LV:
+		/* This is the biggie */
+		lock_cmd = args[0];
+		lock_flags = args[1];
+		lockname = &args[2];
+		status = do_lock_lv(lock_cmd, lock_flags, lockname);
+		/* Replace EIO with something less scary */
+		if (status == EIO) {
+			*retlen =
+			    1 + snprintf(*buf, buflen,
+					 "Internal lvm error, check syslog");
+			return EIO;
+		}
+		break;
+
+	default:
+		/* Won't get here because command is validated in pre_command */
+		break;
+	}
+
+	/* Check the status of the command and return the error text */
+	if (status) {
+		*retlen = 1 + snprintf(*buf, buflen, strerror(status));
+	}
+
+	return status;
+
+}
+
+/* Pre-command is a good place to get locks that are needed only for the duration
+   of the commands around the cluster (don't forget to free them in post-command),
+   and to sanity check the command arguments */
+int do_pre_command(struct local_client *client)
+{
+	struct clvm_header *header =
+	    (struct clvm_header *) client->bits.localsock.cmd;
+	unsigned char lock_cmd;
+	unsigned char lock_flags;
+	char *args = header->node + strlen(header->node) + 1;
+	int lockid;
+	int status = 0;
+	char *lockname;
+
+	switch (header->cmd) {
+	case CLVMD_CMD_TEST:
+		status = sync_lock("CLVMD_TEST", LKM_EXMODE, 0, &lockid);
+		client->bits.localsock.private = (void *) lockid;
+		break;
+
+	case CLVMD_CMD_LOCK_VG:
+		lock_cmd = args[0];
+		lock_flags = args[1];
+		lockname = &args[2];
+		DEBUGLOG("doing PRE command LOCK_VG %s at %x\n", lockname,
+			 lock_cmd);
+		if (lock_cmd == LCK_UNLOCK) {
+			hold_unlock(lockname);
+		} else {
+			status =
+			    hold_lock(lockname, (int) lock_cmd,
+				      (int) lock_flags);
+			if (status)
+				status = errno;
+		}
+		break;
+
+	case CLVMD_CMD_LOCK_LV:
+		lock_cmd = args[0];
+		lock_flags = args[1];
+		lockname = &args[2];
+		status = pre_lock_lv(lock_cmd, lock_flags, lockname);
+		break;
+
+	default:
+		log_error("Unknown command %d received\n", header->cmd);
+		status = EINVAL;
+	}
+	return status;
+}
+
+/* Note that the post-command routine is called even if the pre-command or the real command
+   failed */
+int do_post_command(struct local_client *client)
+{
+	struct clvm_header *header =
+	    (struct clvm_header *) client->bits.localsock.cmd;
+	int status = 0;
+	unsigned char lock_cmd;
+	unsigned char lock_flags;
+	char *args = header->node + strlen(header->node) + 1;
+	char *lockname;
+
+	switch (header->cmd) {
+	case CLVMD_CMD_TEST:
+		status =
+		    sync_unlock("CLVMD_TEST", (int) (long) client->bits.localsock.private);
+		break;
+
+	case CLVMD_CMD_LOCK_VG:
+		/* Nothing to do here */
+		break;
+
+	case CLVMD_CMD_LOCK_LV:
+		lock_cmd = args[0];
+		lock_flags = args[1];
+		lockname = &args[2];
+		status = post_lock_lv(lock_cmd, lock_flags, lockname);
+		break;
+	}
+	return status;
+}

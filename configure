@@ -309,7 +309,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=/usr
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL FSADM LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL CLVMD CLUSTER FSADM LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -867,10 +867,13 @@ Optional Packages:
                           TYPE=internal
   --with-pool=TYPE        GFS pool read-only support: internal/shared/none
                           TYPE=internal
+  --with-cluster=TYPE     Cluster LVM locking support: internal/shared/none
+                          TYPE=internal
   --with-snapshots=TYPE   Snapshot support: internal/shared/none
                           TYPE=internal
   --with-mirrors=TYPE     Mirror support: internal/shared/none
                           TYPE=internal
+  --with-clvmd            Build cluster LVM Daemon
   --with-localedir=DIR    Translation files in DIR PREFIX/share/locale
   --with-confdir=DIR      Configuration files in DIR /etc
   --with-staticdir=DIR    Static binary in DIR EXEC_PREFIX/sbin
@@ -3900,6 +3903,7 @@ case "$host_os" in
 		SOFLAG="-shared"
 		DEVMAPPER=yes
 		ODIRECT=yes
+		CLUSTER=internal
 		FSADM=no ;;
 	darwin*)
 		CFLAGS="-no-cpp-precomp -fno-common"
@@ -3911,6 +3915,7 @@ case "$host_os" in
 		SOFLAG="-dynamiclib"
 		DEVMAPPER=no
 		ODIRECT=no
+		CLUSTER=none
 		FSADM=no ;;
 esac
 
@@ -3998,6 +4003,25 @@ if test x$POOL = xinternal; then
 fi
 
 
+# Check whether --with-cluster or --without-cluster was given.
+if test "${with_cluster+set}" = set; then
+  withval="$with_cluster"
+   CLUSTER="$withval"
+fi;
+
+if [ "x$CLUSTER" != xnone -a "x$CLUSTER" != xinternal -a "x$CLUSTER" != xshared ];
+ then  { { echo "$as_me:$LINENO: error: --with-cluster parameter invalid
+" >&5
+echo "$as_me: error: --with-cluster parameter invalid
+" >&2;}
+   { (exit 1); exit 1; }; }
+ exit
+fi;
+
+if test x$CLUSTER = xinternal; then
+	CFLAGS="$CFLAGS -DCLUSTER_LOCKING_INTERNAL"
+fi
+
 # Check whether --enable-jobs or --disable-jobs was given.
 if test "${enable_jobs+set}" = set; then
   enableval="$enable_jobs"
@@ -4070,6 +4094,20 @@ fi;
 if test x$READLINE = xyes; then
 	CFLAGS="$CFLAGS -DREADLINE_SUPPORT"
 fi
+
+
+# Check whether --with-clvmd or --without-clvmd was given.
+if test "${with_clvmd+set}" = set; then
+  withval="$with_clvmd"
+  \
+CLVMD=$withval
+else
+  CLVMD=no
+fi;
+if  test x$CLVMD = xyes && test x$CLUSTER = xnone; then
+	CLUSTER=internal
+fi
+echo "$ac_t""$CLVMD" 1>&6
 
 echo $ac_n "checking whether to enable debugging""... $ac_c" 1>&6
 # Check whether --enable-debug or --disable-debug was given.
@@ -4698,7 +4736,7 @@ else
 	HAVE_LIBDL=no
 fi
 
-if [ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o \
+if [ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o "x$CLUSTER" = xshared -o \
       "x$SNAPSHOTS" = xshared -o "x$MIRRORS" = xshared \
       \) -a "x$STATIC_LINK" = xyes ];
  then  { { echo "$as_me:$LINENO: error: Features cannot be 'shared' when building statically
@@ -5207,7 +5245,9 @@ fi
 
 
 
-                                                                                                                                                                                              ac_config_files="$ac_config_files Makefile make.tmpl doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h tools/fsadm/Makefile test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
+
+
+                                                                                                                                                                                                                            ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h tools/fsadm/Makefile test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -5760,11 +5800,14 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "make.tmpl" ) CONFIG_FILES="$CONFIG_FILES make.tmpl" ;;
+  "daemons/Makefile" ) CONFIG_FILES="$CONFIG_FILES daemons/Makefile" ;;
+  "daemons/clvmd/Makefile" ) CONFIG_FILES="$CONFIG_FILES daemons/clvmd/Makefile" ;;
   "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
   "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "lib/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
   "lib/format1/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/format1/Makefile" ;;
   "lib/format_pool/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/format_pool/Makefile" ;;
+  "lib/locking/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/locking/Makefile" ;;
   "lib/mirror/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/mirror/Makefile" ;;
   "lib/snapshot/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/snapshot/Makefile" ;;
   "man/Makefile" ) CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
@@ -5916,6 +5959,8 @@ s,@CONFDIR@,$CONFDIR,;t t
 s,@STATICDIR@,$STATICDIR,;t t
 s,@INTL_PACKAGE@,$INTL_PACKAGE,;t t
 s,@INTL@,$INTL,;t t
+s,@CLVMD@,$CLVMD,;t t
+s,@CLUSTER@,$CLUSTER,;t t
 s,@FSADM@,$FSADM,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t

@@ -1,3 +1,7 @@
+Version 2.00.18 - 24 June 2004
+==============================
+  Add cluster support.
+
 Version 2.00.17 - 20 June 2004
 ==============================
   configure --enable-fsadm to try out fsadm.  fsadm is not tested yet.

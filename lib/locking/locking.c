@@ -145,6 +145,14 @@ int init_locking(int type, struct config_tree *cft)
 		return 1;
 #endif
 
+#ifdef CLUSTER_LOCKING_INTERNAL
+	case 3:
+		if (!init_cluster_locking(&_locking, cft))
+			break;
+		log_very_verbose("Cluster locking enabled.");
+		return 1;
+#endif
+
 	default:
 		log_error("Unknown locking type requested.");
 		return 0;

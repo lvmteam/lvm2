@@ -104,6 +104,14 @@ ifeq ("@POOL@", "internal")
 	format_pool/pool_label.c
 endif
 
+ifeq ("@CLUSTER@", "internal")
+  SOURCES += locking/cluster_locking.c
+endif
+
+ifeq ("@CLUSTER@", "shared")
+  SUBDIRS += locking
+endif
+
 ifeq ("@SNAPSHOTS@", "internal")
   SOURCES += snapshot/snapshot.c
 endif
