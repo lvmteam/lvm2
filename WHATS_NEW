@@ -1,5 +1,6 @@
-Version 2.00.17 -
-=============================
+Version 2.00.17 - 20 June 2004
+==============================
+  configure --enable-fsadm to try out fsadm.  fsadm is not tested yet.
   Display all filtered devices, not just PVs, with pvs -a.
   Fix sync_dir() when no / in filename
   vgcfgbackup -f accepts template with %s for VG name.

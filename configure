@@ -855,6 +855,7 @@ Optional Features:
   --disable-devmapper     Disable device-mapper interaction
   --disable-o_direct      Disable O_DIRECT
   --enable-cmdlib         Build shared command library
+  --enable-fsadm          Enable fsadm
   --enable-nls            Enable Native Language Support
 
 Optional Packages:
@@ -3899,7 +3900,7 @@ case "$host_os" in
 		SOFLAG="-shared"
 		DEVMAPPER=yes
 		ODIRECT=yes
-		FSADM=yes ;;
+		FSADM=no ;;
 	darwin*)
 		CFLAGS="-no-cpp-precomp -fno-common"
 		CLDFLAGS=
@@ -4121,6 +4122,14 @@ echo "$ac_t""$CMDLIB" 1>&6
 if test x$CMDLIB = xyes; then
 	CFLAGS="$CFLAGS -DCMDLIB"
 fi
+
+echo $ac_n "checking whether to enable fsadm""... $ac_c" 1>&6
+# Check whether --enable-fsadm or --disable-fsadm was given.
+if test "${enable_fsadm+set}" = set; then
+  enableval="$enable_fsadm"
+  FSADM=yes
+fi;
+echo "$ac_t""$FSADM" 1>&6
 
 if [ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ];
  then  exec_prefix="";
@@ -6150,5 +6159,11 @@ if test x$ODIRECT != xyes; then
   echo
   echo Warning: O_DIRECT disabled.
   echo Use of pvmove may cause machine to lock up under low memory conditions.
+  echo
+fi
+
+if test x$FSADM == xyes; then
+  echo
+  echo Warning: fsadm support is untested.
   echo
 fi
