@@ -62,7 +62,7 @@ struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
 		goto err_out;
 
 	dentry = nd.dentry;
-	file.f_dentry = nd.dentry->d_parent;
+	file.f_dentry = nd.dentry;
 	err = deny_write_access(&file);
 	if (err)
 		goto err_out;
@@ -90,13 +90,15 @@ struct inode *dmfs_create_symlink(struct inode *dir, int mode)
 static int dmfs_lv_unlink(struct inode *dir, struct dentry *dentry)
 {
 	struct inode *inode = dentry->d_inode;
-	struct file file = { f_dentry: dentry->d_parent };
+	struct file file = { f_dentry: DMFS_I(inode)->dentry };
 
 	if (!(inode->i_mode & S_IFLNK))
 		return -EINVAL;
 
 	dm_suspend(DMFS_I(dir)->md);
 	allow_write_access(&file);
+	dput(DMFS_I(inode)->dentry);
+	DMFS_I(inode)->dentry = NULL;
 	inode->i_nlink--;
 	dput(dentry);
 	return 0;
@@ -140,10 +142,11 @@ static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry,
 	return rv;
 
 out_dput:
+	dput(dentry);
 	DMFS_I(inode)->dentry = NULL;
 out_allow_write:
 	{
-		struct file file = { f_dentry: de->d_parent };
+		struct file file = { f_dentry: de };
 		allow_write_access(&file);
 		dput(de);
 	}
