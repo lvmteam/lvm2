@@ -125,7 +125,7 @@ static int _lock_file(const char *file, int flags)
 	case LCK_WRITE:
 		operation = LOCK_EX;
 		break;
-	case LCK_NONE:
+	case LCK_UNLOCK:
 		return _release_lock(file);
 	default:
 		log_error("Unrecognised lock type: %d", flags & LCK_TYPE_MASK);
@@ -198,7 +198,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 		break;
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {
-		case LCK_NONE:
+		case LCK_UNLOCK:
 			if (!lv_resume_if_active(cmd, resource))
 				return 0;
 			break;
