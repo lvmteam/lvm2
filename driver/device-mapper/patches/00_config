@@ -1,7 +1,7 @@
---- linux-2.4.9-ac5/drivers/md/Config.in	Sun Mar 11 13:33:24 2001
-+++ linux/drivers/md/Config.in	Thu Sep 13 18:02:17 2001
-@@ -13,5 +13,7 @@
- dep_tristate '  RAID-4/RAID-5 mode' CONFIG_MD_RAID5 $CONFIG_BLK_DEV_MD
+--- linux-2.4.14/drivers/md/Config.in	Mon Sep 24 16:29:14 2001
++++ linux/drivers/md/Config.in	Tue Nov  6 11:25:35 2001
+@@ -14,5 +14,7 @@
+ dep_tristate '  Multipath I/O support' CONFIG_MD_MULTIPATH $CONFIG_BLK_DEV_MD
  
  dep_tristate ' Logical volume manager (LVM) support' CONFIG_BLK_DEV_LVM $CONFIG_MD
 +dep_tristate ' Device mapper support' CONFIG_BLK_DEV_DM $CONFIG_MD

@@ -24,6 +24,7 @@
 #include <linux/mm.h>
 
 #include "dm.h"
+#include "dmfs.h"
 
 static offset_t start_of_next_range(struct dm_table *t)
 {
@@ -246,13 +247,6 @@ static int dmfs_readpage(struct file *file, struct page *page)
 	return 0;
 }
 
-static int dmfs_writepage(struct page *page)
-{
-	SetPageDirty(page);
-	UnlockPage(page);
-	return 0;
-}
-
 static int dmfs_prepare_write(struct file *file, struct page *page,
 			      unsigned offset, unsigned to)
 {
@@ -325,7 +319,7 @@ static int dmfs_table_revalidate(struct dentry *dentry)
 
 struct address_space_operations dmfs_address_space_operations = {
 	readpage:	dmfs_readpage,
-	writepage:	dmfs_writepage,
+	writepage:	fail_writepage,
 	prepare_write:	dmfs_prepare_write,
 	commit_write:	dmfs_commit_write,
 };
@@ -345,16 +339,9 @@ static struct inode_operations dmfs_table_inode_operations = {
 
 struct inode *dmfs_create_table(struct inode *dir, int mode)
 {
-	struct inode *inode = new_inode(dir->i_sb);
+	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFREG);
 
 	if (inode) {
-		inode->i_mode = mode | S_IFREG;
-		inode->i_uid = current->fsuid;
-		inode->i_gid = current->fsgid;
-		inode->i_blksize = PAGE_CACHE_SIZE;
-		inode->i_blocks = 0;
-		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_mapping = dir->i_mapping;
 		inode->i_mapping->a_ops = &dmfs_address_space_operations;
 		inode->i_fop = &dmfs_table_file_operations;

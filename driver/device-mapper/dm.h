@@ -201,16 +201,6 @@ struct mapped_device {
 	devfs_handle_t devfs_entry;
 };
 
-struct dmfs_i {
-	struct semaphore sem;
-	struct dm_table *table;
-	struct mapped_device *md;
-	struct dentry *dentry;
-	struct list_head errors;
-};
-
-#define DMFS_I(inode) ((struct dmfs_i *)(inode)->u.generic_ip)
-
 extern struct block_device_operations dm_blk_dops;
 
 
@@ -238,14 +228,6 @@ void dm_table_destroy(struct dm_table *t);
 int dm_table_add_target(struct dm_table *t, offset_t high,
 			struct target_type *type, void *private);
 int dm_table_complete(struct dm_table *t);
-
-/* dmfs-error.c */
-void dmfs_add_error(struct inode *inode, unsigned num, char *str);
-void dmfs_zap_errors(struct inode *inode);
-
-/* dmfs-super.c */
-struct super_block *dmfs_read_super(struct super_block *, void *, int);
-struct inode *dmfs_new_inode(struct super_block *sb, int mode);
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
 

@@ -23,6 +23,7 @@
 #include <linux/fs.h>
 
 #include "dm.h"
+#include "dmfs.h"
 
 static ssize_t dmfs_status_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
@@ -44,16 +45,9 @@ static struct inode_operations dmfs_status_inode_operations = {
 
 struct inode *dmfs_create_status(struct inode *dir, int mode)
 {
-	struct inode *inode = new_inode(dir->i_sb);
+	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFREG);
 
 	if (inode) {
-		inode->i_mode = mode | S_IFREG;
-		inode->i_uid = current->fsuid;
-		inode->i_gid = current->fsgid;
-		inode->i_blksize = PAGE_CACHE_SIZE;
-		inode->i_blocks = 0;
-		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_status_file_operations;
 		inode->i_op = &dmfs_status_inode_operations;
 	}
