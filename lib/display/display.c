@@ -105,7 +105,8 @@ void pvdisplay_full(struct physical_volume *pv)
 
 	log_print("--- %sPhysical volume ---", pv->pe_size ? "" : "NEW ");
 	log_print("PV Name               %s", dev_name(pv->dev));
-	log_print("VG Name               %s", pv->vg_name);
+	log_print("VG Name               %s%s", pv->vg_name,
+		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
 	size = display_size(pv->size / 2, SIZE_SHORT);
 	if (pv->pe_size && pv->pe_count) {
@@ -431,14 +432,15 @@ void vgdisplay_full(struct volume_group *vg)
 
 	log_print("--- Volume group ---");
 	log_print("VG Name               %s", vg->name);
+	log_print("System ID             %s", vg->system_id);
 	access = vg->status & (LVM_READ | LVM_WRITE);
 	log_print("VG Access             %s%s%s%s",
 		  access == (LVM_READ | LVM_WRITE) ? "read/write" : "",
 		  access == LVM_READ ? "read" : "",
 		  access == LVM_WRITE ? "write" : "",
 		  access == 0 ? "error" : "");
-	log_print("VG Status             %s/%sresizable",
-		  vg->status & EXPORTED_VG ? "exported" : "",
+	log_print("VG Status             %s%sresizable",
+		  vg->status & EXPORTED_VG ? "exported/" : "",
 		  vg->status & RESIZEABLE_VG ? "" : "NOT ");
 /******* FIXME vg number
 	log_print ("VG #                  %u\n", vg->vg_number);
