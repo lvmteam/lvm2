@@ -34,7 +34,7 @@ static offset_t start_of_next_range(struct dm_table *t)
 	return n;
 }
 
-static void dmfs_parse_line(struct dm_table *t, unsigned num, char *str)
+static char *dmfs_parse_line(struct dm_table *t, char *str)
 {
 	offset_t start, size, high;
 	void *context;
@@ -77,13 +77,13 @@ static char *err_table[] = {
 			msg = "Error adding target to table";
 			high = start + (size - 1);
 			if (dm_table_add_target(t, high, ttype, context) == 0)
-				return;
+				return NULL;
 			ttype->dtr(t, context);
 		}
 		dm_put_target_type(ttype);
 	}
 out:
-	dmfs_add_error(t, num, msg);
+	return msg;
 }
 
 
@@ -128,7 +128,7 @@ struct dmfs_desc {
 
 static int dmfs_read_actor(read_descriptor_t *desc, struct page *page, unsigned long offset, unsigned long size)
 {
-	char *buf;
+	char *buf, *msg;
 	unsigned long count = desc->count, len, copied;
 	struct dmfs_desc *d = (struct dmfs_desc *)desc->buf;
 	
@@ -148,8 +148,12 @@ static int dmfs_read_actor(read_descriptor_t *desc, struct page *page, unsigned 
 		d->tmpl += copied;
 		if (flag || (len == 0 && count == size)) {
 			*(d->tmp + d->tmpl) = 0;
-			if (dmfs_line_is_not_comment(d->tmp))
-				dmfs_parse_line(d->table, d->lnum, d->tmp);
+			if (dmfs_line_is_not_comment(d->tmp)) {
+				msg = dmfs_parse_line(d->table, d->tmp);
+				if (msg) {
+					dmfs_add_error(t, d->lnum, msg);
+				}
+			}
 			d->lnum++;
 			d->tmpl = 0;
 		}
@@ -212,6 +216,7 @@ static int dmfs_table_release(struct inode *inode, struct file *f)
 	if (f->f_mode & FMODE_WRITE) {
 
 		down(&dmi->sem);
+		dmfs_zap_errors(dentry->d_parent->d_inode);
 		table = dmfs_parse(dentry->d_parent->d_inode, f);
 
 		if (table) {

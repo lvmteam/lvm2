@@ -58,7 +58,7 @@ struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
 	    DMFS_I(nd.dentry->d_inode)->table == NULL)
 		goto err_out;
 
-	if (!list_empty(&(DMFS_I(nd.dentry->d_inode)->table->errors)))
+	if (!list_empty(&(DMFS_I(nd.dentry->d_inode)->errors)))
 		goto err_out;
 
 	dentry = nd.dentry;
