@@ -221,7 +221,6 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 		seg->len = 0;
 		seg->area_len = 0;
 		seg->stripe_size = 0;
-		seg->area_count = 1;
 
 		seg->area[0].type = AREA_PV;
 		seg->area[0].u.pv.pv = lvm->map[le].pv;
@@ -289,7 +288,6 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 			return 0;
 		}
 		seg->stripe_size = lvm->stripe_size;
-		seg->area_count = lvm->stripes;
 		seg->le = seg->area_count * le;
 		seg->len = 1;
 		seg->area_len = 1;

@@ -71,6 +71,7 @@ struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t num_areas)
 		return NULL;
 	}
 
+	seg->area_count = num_areas;
 	list_init(&seg->tags);
 
 	return seg;
@@ -107,7 +108,6 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 	seg->le = *ix;
 	seg->len = area_len * (striped ? area_count : 1);
 	seg->area_len = area_len;
-	seg->area_count = area_count;
 	seg->stripe_size = stripe_size;
 	seg->extents_copied = 0u;
 
@@ -241,7 +241,6 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 	seg->len = count;
 	seg->area_len = count;
 	seg->stripe_size = 0;
-	seg->area_count = 1;
 	seg->area[0].type = AREA_PV;
 	seg->area[0].u.pv.pv = map->pvl->pv;
 	seg->area[0].u.pv.pe = pva->start;
@@ -279,7 +278,6 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	seg->len = count;
 	seg->area_len = count;
 	seg->stripe_size = 0;
-	seg->area_count = 2;
 	seg->extents_copied = 0u;
 	/* FIXME Remove AREA_PV restriction here? */
 	seg->area[0].type = AREA_PV;
@@ -435,7 +433,6 @@ static int _alloc_virtual(struct logical_volume *lv,
 	seg->len = lv->le_count - allocated;
 	seg->area_len = seg->len;
 	seg->stripe_size = 0;
-	seg->area_count = 0;
 	seg->extents_copied = 0u;
 	list_add(&lv->segments, &seg->list);
 	lv->status |= VIRTUAL;

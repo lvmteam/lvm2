@@ -295,7 +295,6 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->status = 0u;
 	seg->segtype = segtype;
 	seg->extents_copied = 0u;
-	seg->area_count = area_count;
 
 	if (seg->segtype->ops->text_import &&
 	    !seg->segtype->ops->text_import(seg, sn, pv_hash)) {
