@@ -23,10 +23,10 @@
 int lvrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	int maxlen;
-	int active;
 	char *lv_name_old, *lv_name_new;
 	char *vg_name, *vg_name_new;
 	char *st;
+	char lvidbuf[128];
 
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -121,34 +121,25 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	lv = lvl->lv;
 
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		goto error;
+
 	if (!archive(lv->vg))
 		goto error;
 
-	if ((active = lv_active(lv)) < 0) {
-		log_error("Unable to determine status of \"%s\"", lv->name);
+	if (!lock_vol(cmd, lvidbuf, LCK_LV_SUSPEND | LCK_NONBLOCK))
 		goto error;
-	}
-
-	if (active && !lv_suspend(lv)) {
-		log_error("Failed to suspend \"%s\"", lv->name);
-		goto error;
-	}
 
 	if (!(lv->name = pool_strdup(cmd->mem, lv_name_new))) {
 		log_error("Failed to allocate space for new name");
-		goto error;
+		goto lverror;
 	}
 
-	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
-		goto error;
-	}
+	if (!(cmd->fid->ops->vg_write(cmd->fid, vg)))
+		goto lverror;
 
-	if (active) {
-		lv_rename(lv_name_old, lv);
-		lv_reactivate(lv);
-	}
+	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
 
 	backup(lv->vg);
 
@@ -158,6 +149,10 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		  lv_name_old, lv_name_new, vg_name);
 
 	return 0;
+
+
+      lverror:
+	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
 
       error:
 	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);

@@ -57,19 +57,6 @@ int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid);
 int lvs_in_vg_activated(struct volume_group *vg);
 int lvs_in_vg_opened(struct volume_group *vg);
 
-/*
- * Activate all LVs in the VG.  Ignore any that are already
- * active.  Return number actually activated.
- */
-int activate_lvs_in_vg(struct volume_group *vg);
-
-/*
- * Deactivate all LVs in the VG.  Return number actually deactivated.
- */
-int deactivate_lvs_in_vg(struct volume_group *vg);
-
-
-
 int lv_setup_cow_store(struct logical_volume *lv);
 
 #endif
