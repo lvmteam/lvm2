@@ -343,7 +343,7 @@ int import_extents(struct pool *mem, struct volume_group *vg,
 			lv_num = e[i].lv_num;
 
 			if (lv_num == UNMAPPED_EXTENT)
-				lv->map[le].pv = NULL;
+				continue;
 
 			else if(lv_num > dl->pv.lv_cur) {
 				log_err("invalid lv in extent map\n");
