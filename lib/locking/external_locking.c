@@ -19,6 +19,7 @@
 #include "sharedlib.h"
 
 static void *_locking_lib = NULL;
+static void (*_reset_fn) (void) = NULL;
 static void (*_end_fn) (void) = NULL;
 static int (*_lock_fn) (struct cmd_context * cmd, const char *resource,
 			int flags) = NULL;
@@ -45,6 +46,13 @@ static void _fin_external_locking(void)
 	_init_fn = NULL;
 	_end_fn = NULL;
 	_lock_fn = NULL;
+	_reset_fn = NULL;
+}
+
+static void _reset_external_locking(void)
+{
+	if (_reset_fn)
+		_reset_fn();
 }
 
 int init_external_locking(struct locking_type *locking, struct config_tree *cft)
@@ -58,6 +66,7 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 
 	locking->lock_resource = _lock_resource;
 	locking->fin_locking = _fin_external_locking;
+	locking->reset_locking = _reset_external_locking;
 	locking->flags = 0;
 
 	libname = find_config_str(cft->root, "global/locking_library",
@@ -71,6 +80,7 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 	/* Get the functions we need */
 	if (!(_init_fn = dlsym(_locking_lib, "locking_init")) ||
 	    !(_lock_fn = dlsym(_locking_lib, "lock_resource")) ||
+	    !(_reset_fn = dlsym(_locking_lib, "reset_locking")) ||
 	    !(_end_fn = dlsym(_locking_lib, "locking_end"))) {
 		log_error("Shared library %s does not contain locking "
 			  "functions", libname);
