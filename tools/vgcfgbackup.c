@@ -13,7 +13,7 @@ static int _backup_to_file(const char *file, struct volume_group *vg)
 	int r;
 	struct format_instance *tf;
 
-	if (!(tf = text_format_create(vg->cmd, file))) {
+	if (!(tf = text_format_create(vg->cmd, file, the_um))) {
 		log_error("Couldn't create backup object.");
 		return 0;
 	}

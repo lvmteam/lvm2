@@ -9,6 +9,7 @@
 
 #include "lvm-types.h"
 #include "metadata.h"
+#include "uuid-map.h"
 
 /*
  * The archive format is used to maintain a set of metadata backup files
@@ -30,6 +31,7 @@ void backup_expire(struct format_instance *fi);
  * The text format can read and write a volume_group to a file.
  */
 struct format_instance *text_format_create(struct cmd_context *cmd,
-					   const char *file);
+					   const char *file,
+					   struct uuid_map *um);
 
 #endif

@@ -371,13 +371,11 @@ static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 
 	/* Ensure any residual PE structure is gone */
 	pv->pe_size = pv->pe_count = pv->pe_start = 0;
-	pv->status &= ~ALLOCATABLE_PV;
 
 	if (!(mem = pool_create(1024))) {
 		stack;
 		return 0;
 	}
-
 
 	if (!(dl = pool_alloc(mem, sizeof(*dl)))) {
 		stack;

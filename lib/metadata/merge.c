@@ -53,7 +53,6 @@ int lv_merge_segments(struct logical_volume *lv)
 	return 1;
 }
 
-/**** FIXME Dummy ****/
 int lv_check_segments(struct logical_volume *lv)
 {
 	return 1;

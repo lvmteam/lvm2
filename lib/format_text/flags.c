@@ -21,6 +21,8 @@ struct flag {
 static struct flag _vg_flags[] = {
 	{EXPORTED_VG, "EXPORTED"},
 	{RESIZEABLE_VG, "RESIZEABLE"},
+	{LVM_READ, "READ"},
+	{LVM_WRITE, "WRITE"},
 	{CLUSTERED, "CLUSTERED"},
 	{SHARED, "SHARED"},
 	{0, NULL}
@@ -134,19 +136,19 @@ int read_flags(uint32_t *status, int type, struct config_value *cv)
 	}
 
 	while (cv) {
-		if (cv != CFG_STRING) {
+		if (cv->type != CFG_STRING) {
 			log_err("Status value is not a string.");
 			return 0;
 		}
 
 		for (f = 0; flags[f].description; f++)
 			if (!strcmp(flags[f].description, cv->v.str)) {
-				(*status) &= flags[f].mask;
+				s |= flags[f].mask;
 				break;
 			}
 
 		if (!flags[f].description) {
-			log_err("Unknown status flag.");
+			log_err("Unknown status flag '%s'.", cv->v.str);
 			return 0;
 		}
 

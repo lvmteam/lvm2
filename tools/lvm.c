@@ -7,6 +7,8 @@
 #include "tools.h"
 #include "archive.h"
 #include "defaults.h"
+#include "lvm1_label.h"
+#include "label.h"
 
 #include "stub.h"
 
@@ -43,6 +45,9 @@ static struct command *_commands;
 /* Exported LVM1 disk format */
 struct format_instance *fid;
 
+/* Map of uuid -> device */
+struct uuid_map *the_um;
+
 /* Export command being processed */
 struct command *the_command;
 
@@ -53,6 +58,10 @@ static int _dump_filter;
 
 static int _interactive;
 static FILE *_log;
+
+/* lvm1 label handler */
+static struct labeller *_lvm1_label;
+
 
 /*
  * This structure only contains those options that
@@ -508,7 +517,7 @@ static int merge_synonym(int oldarg, int newarg)
 
 	if (arg_count(oldarg) && arg_count(newarg)) {
 		log_error("%s and %s are synonyms.  Please only supply one.",
-			  the_args[oldarg].long_arg, 
+			  the_args[oldarg].long_arg,
 			  the_args[newarg].long_arg);
 		return 0;
 	}
@@ -535,7 +544,7 @@ static int process_common_commands(struct command *com)
 		kill(getpid(), SIGSTOP);
 
 	if (arg_count(debug_ARG))
-		_current_settings.debug = _LOG_FATAL + 
+		_current_settings.debug = _LOG_FATAL +
 					  (arg_count(debug_ARG) - 1);
 
 	if (arg_count(verbose_ARG))
@@ -880,6 +889,31 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 	return f4;
 }
 
+static int _init_uuid_map(struct dev_filter *filter)
+{
+	label_init();
+
+	/* add in the lvm1 labeller */
+	if (!(_lvm1_label = lvm1_labeller_create())) {
+		log_err("Couldn't create lvm1 label handler.");
+		return 0;
+	}
+
+	if (!(label_register_handler("lvm1", _lvm1_label))) {
+		log_err("Couldn't register lvm1 label handler.");
+		return 0;
+	}
+
+	return (the_um = uuid_map_create(filter)) ? 1 : 0;
+}
+
+static void _exit_uuid_map(void)
+{
+	uuid_map_destroy(the_um);
+	label_exit();
+	_lvm1_label->ops->destroy(_lvm1_label);
+}
+
 static int _get_env_vars(void)
 {
 	const char *e;
@@ -944,8 +978,8 @@ static int init(void)
 		__init_log(cmd->cf);
 	}
 
-	_default_settings.umask = find_config_int(cmd->cf->root, 
-						 "global/umask", '/', 
+	_default_settings.umask = find_config_int(cmd->cf->root,
+						 "global/umask", '/',
 						 DEFAULT_UMASK);
 
 	if ((old_umask = umask((mode_t)_default_settings.umask)) !=
@@ -972,6 +1006,12 @@ static int init(void)
 
 	if (!(cmd->filter = filter_setup(cmd->cf))) {
 		log_error("Failed to set up internal device filters");
+		return 0;
+	}
+
+	/* the uuid map uses the filter */
+	if (!_init_uuid_map(cmd->filter)) {
+		log_err("Failed to set up the uuid map.");
 		return 0;
 	}
 
@@ -1014,6 +1054,7 @@ static void fin(void)
 	__fin_commands();
 	dump_memory();
 	fin_log();
+	_exit_uuid_map();
 
 	if (_log)
 		fclose(_log);

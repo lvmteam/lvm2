@@ -151,7 +151,7 @@ static int __backup(struct volume_group *vg)
 
 	log_verbose("Creating volume group backup %s", name);
 
-	if (!(tf = text_format_create(vg->cmd, name))) {
+	if (!(tf = text_format_create(vg->cmd, name, the_um))) {
 		stack;
 		return 0;
 	}
@@ -207,7 +207,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	struct volume_group *vg;
 	struct format_instance *tf;
 
-	if (!(tf = text_format_create(cmd, file))) {
+	if (!(tf = text_format_create(cmd, file, the_um))) {
 		log_error("Couldn't create text format object.");
 		return 0;
 	}
@@ -226,7 +226,7 @@ int backup_restore_from_file(const char *vg_name, const char *file)
 	/*
 	 * Read in the volume group.
 	 */
-	if (!(vg = _read_vg(vg->cmd, vg_name, file))) {
+	if (!(vg = _read_vg(fid->cmd, vg_name, file))) {
 		stack;
 		return 0;
 	}

@@ -54,7 +54,7 @@ struct label_ops {
 	/*
 	 * Destroy a previously read label.
 	 */
-	int (*destroy_label)(struct labeller *l, struct label *label);
+	void (*destroy_label)(struct labeller *l, struct label *label);
 
 	/*
 	 * Destructor.

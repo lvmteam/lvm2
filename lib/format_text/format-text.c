@@ -23,6 +23,11 @@
  * NOTE: Currently there can be only one vg per file.
  */
 
+struct text_c {
+	char *path;
+	struct uuid_map *um;
+};
+
 static void _not_written(const char *cmd)
 {
 	log_err("The text format is lacking an implementation for '%s'", cmd);
@@ -69,10 +74,10 @@ static int _vg_setup(struct format_instance *fi, struct volume_group *vg)
 static struct volume_group *_vg_read(struct format_instance *fi,
 				     const char *vg_name)
 {
-	char *file = (char *) fi->private;
+	struct text_c *tc = (struct text_c *) fi->private;
 	struct volume_group *vg;
 
-	if (!(vg = text_vg_import(fi->cmd, file))) {
+	if (!(vg = text_vg_import(fi->cmd, tc->path, tc->um))) {
 		stack;
 		return NULL;
 	}
@@ -85,7 +90,7 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 	if (strcmp(vg_name, vg->name)) {
 		pool_free(fi->cmd->mem, vg);
 		log_err("'%s' does not contain volume group '%s'.",
-			file, vg_name);
+			tc->path, vg_name);
 		return NULL;
 	}
 
@@ -94,19 +99,20 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 
 static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
+	struct text_c *tc = (struct text_c *) fi->private;
+
 	FILE *fp;
 	int fd;
 	char *slash;
-	char *file = (char *) fi->private;
 	char temp_file[PATH_MAX], temp_dir[PATH_MAX];
 
-	slash = rindex(file, '/');
+	slash = rindex(tc->path, '/');
 
 	if (slash == 0)
 		strcpy(temp_dir, ".");
-	else if (slash - file < PATH_MAX) {
-		strncpy(temp_dir, file, slash - file);
-		temp_dir[slash - file] = '\0';
+	else if (slash - tc->path < PATH_MAX) {
+		strncpy(temp_dir, tc->path, slash - tc->path);
+		temp_dir[slash - tc->path] = '\0';
 
 	} else {
 		log_error("Text format failed to determine directory.");
@@ -131,12 +137,12 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 	}
 
 	if (fclose(fp)) {
-		log_sys_error("fclose", file);
+		log_sys_error("fclose", tc->path);
 		return 0;
 	}
 
-	if (rename(temp_file, file)) {
-		log_error("%s: rename to %s failed: %s", temp_file, file,
+	if (rename(temp_file, tc->path)) {
+		log_error("%s: rename to %s failed: %s", temp_file, tc->path,
 			  strerror(errno));
 		return 0;
 	}
@@ -146,7 +152,10 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 
 static void _destroy(struct format_instance *fi)
 {
-	dbg_free(fi->private);
+	struct text_c *tc = (struct text_c *) fi->private;
+
+	dbg_free(tc->path);
+	dbg_free(tc);
 	dbg_free(fi);
 }
 
@@ -163,12 +172,14 @@ static struct format_handler _text_handler = {
 };
 
 struct format_instance *text_format_create(struct cmd_context *cmd,
-					   const char *file)
+					   const char *file,
+					   struct uuid_map *um)
 {
 	const char *no_alloc = "Couldn't allocate text format object.";
 
 	struct format_instance *fi;
 	char *path;
+	struct text_c *tc;
 
 	if (!(fi = dbg_malloc(sizeof(*fi)))) {
 		log_err(no_alloc);
@@ -181,9 +192,19 @@ struct format_instance *text_format_create(struct cmd_context *cmd,
 		return NULL;
 	}
 
+	if (!(tc = dbg_malloc(sizeof(*tc)))) {
+		dbg_free(fi);
+		dbg_free(path);
+		log_err(no_alloc);
+		return NULL;
+	}
+
+	tc->path = path;
+	tc->um = um;
+
 	fi->cmd = cmd;
 	fi->ops = &_text_handler;
-	fi->private = path;
+	fi->private = tc;
 
 	return fi;
 }

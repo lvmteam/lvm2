@@ -14,7 +14,8 @@
 
 typedef int (*section_fn)(struct pool *mem,
 			  struct volume_group *vg, struct config_node *pvn,
-			  struct config_node *vgn, struct hash_table *pv_hash);
+			  struct config_node *vgn, struct hash_table *pv_hash,
+			  struct uuid_map *um);
 
 #define _read_int32(root, path, result) \
 	get_config_uint32(root, path, '/', result)
@@ -48,7 +49,8 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 static int _read_pv(struct pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
 		    struct config_node *vgn,
-		    struct hash_table *pv_hash)
+		    struct hash_table *pv_hash,
+		    struct uuid_map *um)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -61,22 +63,46 @@ static int _read_pv(struct pool *mem,
 
 	pv = &pvl->pv;
 
-	if (!_read_id(&pv->id, vgn, "id")) {
+	/*
+	 * Add the pv to the pv hash for quick lookup when we read
+	 * the lv segments.
+	 */
+	if (!hash_insert(pv_hash, pvn->key, pv)) {
+		stack;
+		return 0;
+	}
+
+	if (!(pvn = pvn->child)) {
+		log_err("Empty pv section.");
+		return 0;
+	}
+
+	if (!_read_id(&pv->id, pvn, "id")) {
 		log_err("Couldn't read uuid for volume group.");
 		return 0;
 	}
 
 	/*
-	 * FIXME: need label/vgcache code to convert the uuid
-	 * into a device.
+	 * Use the uuid map to convert the uuid into a device.
 	 */
+	if (!(pv->dev = uuid_map_lookup(um, &pv->id))) {
+		char buffer[64];
+
+		if (!id_write_format(&pv->id, buffer, sizeof(buffer))) {
+			log_err("Couldn't find device.");
+			return 0;
+		}
+
+		log_err("Couldn't find device with uuid '%s'.", buffer);
+		return 0;
+	}
 
 	if (!(pv->vg_name = pool_strdup(mem, vg->name))) {
 		stack;
 		return 0;
 	}
 
-	if (!(cn = find_config_node(vgn, "status", '/'))) {
+	if (!(cn = find_config_node(pvn, "status", '/'))) {
 		log_err("Couldn't find status flags for physical volume.");
 		return 0;
 	}
@@ -104,16 +130,8 @@ static int _read_pv(struct pool *mem,
 	pv->size = pv->pe_size * (uint64_t) pv->pe_count;
 	pv->pe_allocated = 0;
 
+	vg->pv_count++;
 	list_add(&vg->pvs, &pvl->list);
-
-	/*
-	 * Add the pv to the pv hash for quick lookup when we read
-	 * the lv segments.
-	 */
-	if (!hash_insert(pv_hash, pvn->key, pv)) {
-		stack;
-		return 0;
-	}
 
 	return 1;
 }
@@ -133,6 +151,7 @@ static void _insert_segment(struct logical_volume *lv,
 		}
 	}
 
+	lv->le_count += seg->len;
 	list_add(&lv->segments, &seg->list);
 }
 
@@ -141,14 +160,29 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			 struct hash_table *pv_hash)
 {
 	int s;
+	uint32_t stripes;
 	struct stripe_segment *seg;
 	struct config_node *cn;
 	struct config_value *cv;
+	const char *seg_name = sn->key;
 
-	if (!(seg = pool_zalloc(mem, sizeof(*seg)))) {
+	if (!(sn = sn->child)) {
+		log_err("Empty segment section.");
+		return 0;
+	}
+
+	if (!_read_int32(sn, "stripes", &stripes)) {
+		log_err("Couldn't read 'stripes' for segment '%s'.",
+			sn->key);
+		return 0;
+	}
+
+	if (!(seg = pool_zalloc(mem, sizeof(*seg) +
+				(sizeof(seg->area[0]) * stripes)))) {
 		stack;
 		return 0;
 	}
+	seg->stripes = stripes;
 
 	if (!_read_int32(sn, "start_extent", &seg->le)) {
 		log_err("Couldn't read 'start_extent' for segment '%s'.",
@@ -158,12 +192,6 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 
 	if (!_read_int32(sn, "extent_count", &seg->len)) {
 		log_err("Couldn't read 'extent_count' for segment '%s'.",
-			sn->key);
-		return 0;
-	}
-
-	if (!_read_int32(sn, "stripes", &seg->stripes)) {
-		log_err("Couldn't read 'stripes' for segment '%s'.",
 			sn->key);
 		return 0;
 	}
@@ -204,9 +232,10 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		}
 
 		if (!(pv = hash_lookup(pv_hash, cv->v.str))) {
-			log_err("Couldn't find physical volume (%s) for "
+			log_err("Couldn't find physical volume '%s' for "
 				"segment '%s'.",
-				cn->v->v.str ? cn->v->v.str : "NULL", sn->key);
+				cn->v->v.str ? cn->v->v.str : "NULL",
+				seg_name);
 				return 0;
 		}
 
@@ -237,7 +266,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	 */
 	if (cv || (s < seg->stripes)) {
 		log_err("Incorrect number of stripes in 'area' array "
-			"for segment '%s'.", sn->key);
+			"for segment '%s'.", seg_name);
 		return 0;
 	}
 
@@ -255,12 +284,12 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 	struct config_node *sn;
 	int count = 0, seg_count;
 
-	for (sn = lvn->child; sn; sn = sn->sib) {
+	for (sn = lvn; sn; sn = sn->sib) {
 
 		/*
 		 * All sub-sections are assumed to be segments.
 		 */
-		if (sn->v) {
+		if (!sn->v) {
 			if (!_read_segment(mem, vg, lv, sn, pv_hash)) {
 				stack;
 				return 0;
@@ -302,7 +331,8 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 
 static int _read_lv(struct pool *mem,
 		    struct volume_group *vg, struct config_node *lvn,
-		    struct config_node *vgn, struct hash_table *pv_hash)
+		    struct config_node *vgn, struct hash_table *pv_hash,
+		    struct uuid_map *um)
 {
 	struct logical_volume *lv;
 	struct lv_list *lvl;
@@ -320,7 +350,13 @@ static int _read_lv(struct pool *mem,
 		return 0;
 	}
 
+	if (!(lvn = lvn->child)) {
+		log_err("Empty logical volume section.");
+		return 0;
+	}
+
 	lv->vg = vg;
+
 
 	if (!(cn = find_config_node(lvn, "status", '/'))) {
 		log_err("Couldn't find status flags for logical volume.");
@@ -343,7 +379,9 @@ static int _read_lv(struct pool *mem,
 		stack;
 		return 0;
 	}
+	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
 
+	vg->lv_count++;
 	list_add(&vg->lvs, &lvl->list);
 
 	return 1;
@@ -352,7 +390,8 @@ static int _read_lv(struct pool *mem,
 static int _read_sections(const char *section, section_fn fn,
 			  struct pool *mem,
 			  struct volume_group *vg, struct config_node *vgn,
-			  struct hash_table *pv_hash)
+			  struct hash_table *pv_hash,
+			  struct uuid_map *um)
 {
 	struct config_node *n;
 
@@ -362,7 +401,7 @@ static int _read_sections(const char *section, section_fn fn,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(mem, vg, vgn, n, pv_hash)) {
+		if (!fn(mem, vg, n, vgn, pv_hash, um)) {
 			stack;
 			return 0;
 		}
@@ -371,19 +410,20 @@ static int _read_sections(const char *section, section_fn fn,
 	return 1;
 }
 
-static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
+static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
+				     struct uuid_map *um)
 {
 	struct config_node *vgn = cf->root, *cn;
 	struct volume_group *vg;
 	struct hash_table *pv_hash = NULL;
 
 	if (!vgn) {
-		log_err("Couldn't not find volume group.");
+		log_err("Couldn't find volume group.");
 		return NULL;
 	}
 
-	if (!(vgn = find_config_node(cf->root, "volume_group", '/'))) {
-		log_err("Couldn't find volume_group section.");
+	if (!(vgn = cf->root)) {
+		log_err("Couldn't find volume group in file.");
 		return NULL;
 	}
 
@@ -392,13 +432,14 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 		return NULL;
 	}
 
-	if (!_read_id(&vg->id, vgn, "id")) {
-		log_err("Couldn't read uuid for volume group.");
+	if (!(vg->name = pool_strdup(mem, vgn->key))) {
+		stack;
 		goto bad;
 	}
 
-	if (!(vg->name = pool_strdup(mem, vgn->key))) {
-		stack;
+	vgn = vgn->child;
+	if (!_read_id(&vg->id, vgn, "id")) {
+		log_err("Couldn't read uuid for volume group.");
 		goto bad;
 	}
 
@@ -443,7 +484,7 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 
 	list_init(&vg->pvs);
 	if (!_read_sections("physical_volumes", _read_pv, mem, vg,
-			    vgn, pv_hash)) {
+			    vgn, pv_hash, um)) {
 		log_err("Couldn't read all physical volumes for volume "
 			"group.");
 		goto bad;
@@ -451,7 +492,7 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 
 	list_init(&vg->lvs);
 	if (!_read_sections("logical_volumes", _read_lv, mem, vg,
-			    vgn, pv_hash)) {
+			    vgn, pv_hash, um)) {
 		log_err("Couldn't read all logical volumes for volume "
 			"group.");
 		goto bad;
@@ -473,7 +514,8 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 }
 
 struct volume_group *text_vg_import(struct cmd_context *cmd,
-				    const char *file)
+				    const char *file,
+				    struct uuid_map *um)
 {
 	struct volume_group *vg = NULL;
 	struct config_file *cf;
@@ -488,8 +530,10 @@ struct volume_group *text_vg_import(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (!(vg = _read_vg(cmd->mem, cf)))
+	if (!(vg = _read_vg(cmd->mem, cf, um)))
 		stack;
+
+	vg->cmd = cmd;
 
  out:
 	destroy_config_file(cf);
