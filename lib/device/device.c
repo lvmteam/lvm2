@@ -43,7 +43,7 @@ static int _has_partition_table(struct device *dev)
 	}
 
 	if (dev_read(dev, PART_OFFSET, sizeof(part_magic), &part_magic) &&
-	    (part_magic == PART_MAGIC))
+	    (part_magic == xlate16(PART_MAGIC)))
 		ret = 1;
 
 	if (!dev_close(dev))
