@@ -159,13 +159,26 @@ int dump_memory(void)
 {
 	unsigned long tot = 0;
 	struct memblock *mb;
+	char str[32];
+	size_t c;
+
 	if (_head)
 		log_very_verbose("You have a memory leak:");
 
 	for (mb = _head; mb; mb = mb->next) {
+		for (c = 0; c < sizeof(str) - 1; c++) {
+			if (c >= mb->length)
+				str[c] = ' ';
+			else if (*(char *)(mb->magic + c) < ' ')
+				str[c] = '?';
+			else
+				str[c] = *(char *)(mb->magic + c);
+		}
+		str[sizeof(str) - 1] = '\0';
+
 		print_log(_LOG_INFO, mb->file, mb->line,
-			  "block %d at %p, size %" PRIdPTR,
-			  mb->id, mb->magic, mb->length);
+			  "block %d at %p, size %" PRIdPTR "\t [%s]",
+			  mb->id, mb->magic, mb->length, str);
 		tot += mb->length;
 	}
 
