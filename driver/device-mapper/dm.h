@@ -53,6 +53,7 @@ struct mapped_device {
 
 	int num_targets;
 	int num_allocated;
+	offset_t *highs;
 	dm_map_fn *targets;
 	void **contexts;
 
@@ -91,17 +92,5 @@ int dm_complete_table(struct mapped_device *md);
 /* dm-fs.c */
 int dm_init_fs(void);
 int dm_fin_fs(void);
-
-
-/* misc. inlines */
-static inline void *__aligned(size_t s, unsigned int align)
-{
-	return vmalloc(s);
-}
-
-static inline void __free_aligned(void *ptr)
-{
-	vfree(ptr);
-}
 
 #endif
