@@ -29,7 +29,6 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 		}
 
 		list_init(&pvm->areas);
-
 		list_add(maps, &pvm->list);
 	}
 

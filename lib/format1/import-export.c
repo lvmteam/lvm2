@@ -476,7 +476,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	struct list *lvh;
 	struct lv_list *ll;
 	struct lvd_list *lvdl;
-	int lv_num = 1, len;
+	int lv_num = 0, len;
 
 	/*
 	 * setup the pv's extents array
@@ -498,13 +498,14 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 		export_lv(&lvdl->lvd, vg, &ll->lv, prefix);
 		lvdl->lvd.lv_number = lv_num;
-		if (!export_extents(dl, lv_num++, &ll->lv, pv)) {
+		if (!export_extents(dl, lv_num + 1, &ll->lv, pv)) {
 			stack;
 			return 0;
 		}
 
 		list_add(&dl->lvds, &lvdl->list);
 		dl->pvd.lv_cur++;
+		lv_num++;
 	}
 	return 1;
 }

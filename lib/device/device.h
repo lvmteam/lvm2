@@ -29,6 +29,7 @@ int64_t dev_read(struct device *dev,
 		 uint64_t offset, int64_t len, void *buffer);
 int64_t dev_write(struct device *dev,
 		  uint64_t offset, int64_t len, void *buffer);
+int dev_zero(struct device *dev, uint64_t offset, int64_t len);
 
 static inline const char *dev_name(struct device *dev) {
 	return list_item(dev->aliases.n, struct str_list)->str;
