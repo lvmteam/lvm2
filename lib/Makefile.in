@@ -20,6 +20,7 @@ SOURCES=\
 	datastruct/bitset.c \
 	datastruct/btree.c \
 	datastruct/hash.c \
+	datastruct/str_list.c \
 	device/dev-cache.c \
 	device/dev-io.c \
 	device/device.c \

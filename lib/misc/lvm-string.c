@@ -29,3 +29,20 @@ int lvm_snprintf(char *buf, size_t bufsize, const char *format, ...)
 
 	return n;
 }
+
+int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
+{
+	int n;
+	va_list ap;
+
+	va_start(ap, fmt);
+	n = vsnprintf(*buffer, *size, fmt, ap);
+	va_end(ap);
+
+	if (n < 0 || (n == *size))
+		return 0;
+
+	*buffer += n;
+	*size -= n;
+	return 1;
+}
