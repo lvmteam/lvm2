@@ -58,5 +58,8 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name)
 
 int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 {
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	return process_each_vg(cmd, argc, argv, LCK_VG_READ, &vg_backup_single);
 }

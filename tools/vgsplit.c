@@ -180,6 +180,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 	if (!lock_vol(cmd, vg_name_from, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", vg_name_from);

@@ -13,6 +13,9 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	/*
 	 * FIXME: overloading the -l arg for now to display a
 	 * list of archive files for a particular vg

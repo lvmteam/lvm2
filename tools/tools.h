@@ -151,4 +151,13 @@ static inline const char *command_name(struct cmd_context *cmd)
 	return cmd->command->name;
 }
 
+static inline int driver_is_loaded(void)
+{
+	int i = driver_version(NULL, 0);
+
+	if (!i)
+		log_error("device-mapper driver/module not loaded?");
+	return i;
+}
+
 #endif

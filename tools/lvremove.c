@@ -29,6 +29,9 @@ int lvremove(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;
+
 	return process_each_lv(cmd, argc, argv, LCK_VG_READ, &lvremove_single);
 }
 

@@ -34,6 +34,9 @@ int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	vg_name_to = argv[0];
 	argc--;
 	argv++;

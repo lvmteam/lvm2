@@ -79,6 +79,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	/* Create the new VG */
 	if (!(vg = vg_create(cmd, vg_name, extent_size, max_pv, max_lv,
 			     argc - 1, argv + 1)))
