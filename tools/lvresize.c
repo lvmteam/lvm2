@@ -27,7 +27,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct dm_info info;
 	uint32_t extents = 0;
 	uint32_t size = 0;
-	uint32_t stripes = 0, stripesize = 0;
+	uint32_t stripes = 0, stripesize = 0, stripesize_extents = 0;
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size = 0;
 	uint32_t extents_used = 0;
 	uint32_t size_rest;
@@ -256,12 +256,19 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	if (stripes > 1 && !stripesize) {
 		log_error("Stripesize for striped segment should not be 0!");
-	} else if ((stripes > 1) &&
-		   (size_rest = seg_size % (stripes * stripesize))) {
-		log_print("Rounding size (%d extents) down to stripe boundary "
-			  "size for segment (%d extents)", extents,
-			  extents - size_rest);
-		extents = extents - size_rest;
+		goto error_cmdline;
+	}
+	
+	if ((stripes > 1)) {
+		if (!(stripesize_extents = stripesize / vg->extent_size))
+			stripesize_extents = 1;
+
+		if ((size_rest = seg_size % (stripes * stripesize_extents))) {
+			log_print("Rounding size (%d extents) down to stripe "
+				  "boundary size for segment (%d extents)",
+				  extents, extents - size_rest);
+			extents = extents - size_rest;
+		}
 	}
 
 	if (extents == lv->le_count) {
