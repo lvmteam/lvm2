@@ -50,44 +50,52 @@ static int _import_vg(struct pool *mem,
 	return first ? 1 : 0;
 }
 
+static int _import_pv(struct pool *mem,
+		      struct disk_list *dl, struct physical_volume *pv)
+{
+	memset(pv, 0, sizeof(*pv));
+	memcpy(&pv->id, &dl->pv.pv_uuid, ID_LEN);
+
+	pv->dev = dl->dev;
+	pv->vg_name = pool_strdup(mem, dl->pv.vg_name);
+
+	if (!pv->vg_name) {
+		stack;
+		return 0;
+	}
+
+	// FIXME: finish
+	//pv->exported = ??;
+	pv->status = dl->pv.pv_status;
+	pv->size = dl->pv.pv_size;
+	pv->pe_size = dl->pv.pv_size;
+	pv->pe_start = dl->pv.pe_start;
+	pv->pe_count = dl->pv.pe_total;
+	pv->pe_allocated = dl->pv.pe_allocated;
+	return 1;
+}
+
 static int _import_pvs(struct pool *mem, struct list_head *pvs,
 		       struct list_head *results, int *count)
 {
 	struct list_head *tmp;
 	struct disk_list *dl;
 	struct pv_list *pvl;
-	struct physical_volume *pv;
 
 	*count = 0;
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
 		pvl = pool_alloc(mem, sizeof(*pvl));
-		memset(pvl, 0, sizeof(*pvl));
 
 		if (!pvl) {
 			stack;
 			return 0;
 		}
 
-		pv = &pvl->pv;
-		memcpy(&pv->id, &dl->pv.pv_uuid, ID_LEN);
-
-		pv->dev = dl->dev;
-		pv->vg_name = pool_strdup(mem, dl->pv.vg_name);
-
-		if (!pv->vg_name) {
+		if (!_import_pv(mem, dl, &pvl->pv)) {
 			stack;
 			return 0;
 		}
-
-		// FIXME: finish
-		//pv->exported = ??;
-		pv->status = dl->pv.pv_status;
-		pv->size = dl->pv.pv_size;
-		pv->pe_size = dl->pv.pv_size;
-		pv->pe_start = dl->pv.pe_start;
-		pv->pe_count = dl->pv.pe_total;
-		pv->pe_allocated = dl->pv.pe_allocated;
 
 		list_add(&pvl->list, results);
 		(*count)++;
@@ -362,6 +370,41 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 }
 #endif
 
+static struct physical_volume *_pv_read(struct io_space *is,
+					struct device *dev)
+{
+	struct pool *mem = pool_create(1024);
+	struct physical_volume *pv;
+	struct disk_list *dl;
+
+	if (!mem) {
+		stack;
+		return NULL;
+	}
+
+	if (!(dl = read_pv(dev, mem, NULL))) {
+		stack;
+		goto bad;
+	}
+
+	if (!(pv = pool_alloc(is->mem, sizeof(*pv)))) {
+		stack;
+		goto bad;
+	}
+
+	if (!_import_pv(is->mem, dl, pv)) {
+		stack;
+		goto bad;
+	}
+
+	pool_destroy(mem);
+	return pv;
+
+ bad:
+	pool_destroy(mem);
+	return NULL;
+}
+
 static struct list_head *_get_pvs(struct io_space *is)
 {
 	struct pool *mem = pool_create(1024 * 10);
@@ -413,7 +456,7 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 
 	ios->get_vgs = NULL;
 	ios->get_pvs = _get_pvs;
-	ios->pv_read = NULL;
+	ios->pv_read = _pv_read;
 	ios->pv_write = NULL;
 	ios->vg_read = _vg_read;
 	ios->vg_write = NULL;
