@@ -111,6 +111,16 @@ Turn off by setting to 0.  If you set to an integer greater than one,
 this is used - unvalidated - as the facility.  The default is LOG_USER.  
 See /usr/include/sys/syslog.h for safe facility values to use.
 For example, LOG_LOCAL0 might be 128.
+.IP
+\fBindent\fP \(em When set to 1 (the default) messages are indented 
+according to their severity.  Set to 0 to turn off indentation.
+.IP
+\fBcommand_names\fP \(em When set to 1, the command name is used as a
+prefix for each message.
+Default is 0 (off).
+.IP
+\fBprefix\fP \(em Prefix used for all messages (after the command name).
+Default is two spaces.
 .TP
 \fBbackup\fP \(em Configuration for metadata backups.
 .IP
