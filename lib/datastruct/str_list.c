@@ -33,3 +33,16 @@ int str_list_add(struct pool *mem, struct list *sl, const char *str)
 
 	return 1;
 }
+
+int str_list_del(struct list *sl, const char *str)
+{
+	struct list *slh, *slht;
+
+	list_iterate_safe(slh, slht, sl) {
+		if (!strcmp(str, list_item(slh, struct str_list)->str))
+			 list_del(slh);
+	}
+
+	return 1;
+}
+
