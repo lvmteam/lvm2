@@ -26,6 +26,7 @@ SUBDIRS += lib tools
 
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += lib/format1 \
+	     lib/format_pool \
 	     lib/mirror \
 	     lib/snapshot \
 	     po \
