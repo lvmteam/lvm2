@@ -80,6 +80,7 @@ static struct cmd_data _cmd_data_v4[] = {
 	{"names",	DM_LIST_DEVICES,	{4, 0, 0}},
 	{"clear",	DM_TABLE_CLEAR,		{4, 0, 0}},
 	{"mknodes",	DM_DEV_STATUS,		{4, 0, 0}},
+	{"versions",	DM_LIST_VERSIONS,	{4, 1, 0}},
 };
 /* *INDENT-ON* */
 
@@ -383,6 +384,10 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 	void *end = (void *) dmi + dmi->data_size;
 	struct stat buf;
 	char path[PATH_MAX];
+
+	log_print("Warning: Device list may be incomplete with interface "
+		  "version 1.");
+	log_print("Please upgrade your kernel device-mapper driver.");
 
 	if (!(d = opendir(dev_dir))) {
 		log_error("%s: opendir failed: %s", dev_dir, strerror(errno));
@@ -734,6 +739,12 @@ struct dm_names *dm_task_get_names(struct dm_task *dmt)
 
 	return (struct dm_names *) (((void *) dmt->dmi.v4) +
 				    dmt->dmi.v4->data_start);
+}
+
+struct dm_versions *dm_task_get_versions(struct dm_task *dmt)
+{
+	return (struct dm_versions *) (((void *) dmt->dmi.v4) +
+				       dmt->dmi.v4->data_start);
 }
 
 int dm_task_set_ro(struct dm_task *dmt)

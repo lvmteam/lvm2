@@ -57,7 +57,9 @@ enum {
 
 	DM_DEVICE_CLEAR,
 
-	DM_DEVICE_MKNODES
+	DM_DEVICE_MKNODES,
+
+	DM_DEVICE_LIST_VERSIONS
 };
 
 struct dm_task;
@@ -97,6 +99,13 @@ struct dm_names {
 	char name[0];
 };
 
+struct dm_versions {
+        uint32_t next;		/* Offset to next struct from start of this struct */
+        uint32_t version[3];
+
+        char name[0];
+};
+
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
@@ -105,6 +114,7 @@ const char *dm_task_get_uuid(struct dm_task *dmt);
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 struct dm_names *dm_task_get_names(struct dm_task *dmt);
+struct dm_versions *dm_task_get_versions(struct dm_task *dmt);
 
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
