@@ -40,35 +40,6 @@
 
 int _get_partition_type(struct dev_mgr *dm, struct device *d);
 
-int do_ioctl(const char *file, int mode, unsigned long cmd, void *req)
-{
-	int ret, fd;
-
-	if ((fd = open(file, mode)) < 0) {
-		log_sys_err("open");
-		return fd;
-	}
-
-	if ((ret = ioctl(fd, cmd, req)) < 0) {
-		log_sys_err("ioctl");
-	}
-
-	close(fd);
-	return ret;
-}
-
-long device_get_size(const char *dev_name)
-{
-	int ret;
-	long size;
-
-	log_verbose("Getting device size");
-	if ((ret = do_ioctl(dev_name, O_RDONLY, BLKGETSIZE, &size)) < 0)
-		return ret;
-
-	return size;
-}
-
 #define MINOR_PART(dm, d) (MINOR((d)->dev) % dev_max_partitions(dm, (d)->dev))
 
 int is_whole_disk(struct dev_mgr *dm, struct device *d)
