@@ -35,12 +35,15 @@ static int _check_vgs(struct list_head *pvs)
 static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 {
 	struct volume_group *vg = pool_alloc(mem, sizeof(*vg));
-	struct disk_list *dl = list_entry(pvs->next, struct disk_list, list);
+	struct disk_list *dl;
 
-	if (!dl) {
+
+	if (list_empty(pvs)) {
 		log_err("no pv's in volume group");
 		return NULL;
 	}
+
+	dl = list_entry(pvs->next, struct disk_list, list);
 
 	if (!vg) {
 		stack;

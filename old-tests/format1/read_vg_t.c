@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (!dev_cache_add_dir("/dev/")) {
+	if (!dev_cache_add_dir("/dev/loop")) {
 		fprintf(stderr, "couldn't add /dev to dir-cache\n");
 		exit(1);
 	}
