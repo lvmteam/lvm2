@@ -119,7 +119,7 @@ static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
 		count++;
 	}
 
-	snprintf(params, sizeof(params), "%s %" FMT_64 "u",
+	snprintf(params, sizeof(params), "%s %" PRIu64,
 		 dev_name(first->pv->dev),
 		 first->pv->pe_start + (esize * first->pe));
 

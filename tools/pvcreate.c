@@ -91,7 +91,7 @@ static void pvcreate_single(const char *pv_name)
 		return;
 	}
 
-	log_verbose("Set up physical volume for %s with %llu sectors",
+	log_verbose("Set up physical volume for %s with %" PRIu64 " sectors",
 		    pv_name, pv->size);
 
 	log_verbose("Writing physical volume data to disk %s", pv_name);
