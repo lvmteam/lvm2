@@ -20,30 +20,29 @@
 #include "filter.h"
 
 #define PART_MAGIC 0xAA55
+#define PART_OFFSET UINT64_C(510)
 
-static int _is_whole_disk(struct device *dev)
+static int _is_partitionable(struct device *dev)
 {
-	int parts = max_partitions(MINOR(dev->dev));
+	int parts = max_partitions(MAJOR(dev->dev));
 
-	if (!parts || !(MINOR(dev->dev) % parts))
-		return 1;
+	if (!parts || (MINOR(dev->dev) % parts))
+		return 0;
 
-	return 0;
+	return 1;
 }
 
 static int _has_partition_table(struct device *dev)
 {
 	int ret = 0;
 	uint32_t part_magic;
-	uint64_t part_offset;
 
 	if (!dev_open(dev)) {
 		stack;
 		return -1;
 	}
 
-	part_offset = sizeof(unsigned short) * 255;
-	if (dev_read(dev, part_offset, sizeof(part_magic), &part_magic) &&
+	if (dev_read(dev, PART_OFFSET, sizeof(part_magic), &part_magic) &&
 	    (part_magic == PART_MAGIC))
 		ret = 1;
 
@@ -55,7 +54,7 @@ static int _has_partition_table(struct device *dev)
 
 int is_partitioned_dev(struct device *dev)
 {
-	if (_is_whole_disk(dev))
+	if (!_is_partitionable(dev))
 		return 0;
 
 	return _has_partition_table(dev);
