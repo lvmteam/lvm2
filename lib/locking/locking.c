@@ -93,7 +93,7 @@ int init_locking(int type, struct config_file *cf)
 	switch (type) {
 	case 0:
 		_init_no_locking(&_locking, cf);
-		log_print("WARNING: Locking disabled. Be carefui! "
+		log_print("WARNING: Locking disabled. Be careful! "
 			  "This could corrupt your metadata.");
 		break;
 	case 1:
