@@ -240,6 +240,11 @@ struct disk_list *read_disk(struct device *dev, struct pool *mem,
 	struct disk_list *data = pool_alloc(mem, sizeof(*data));
 	const char *name = dev_name(dev);
 
+	if (!data) {
+		stack;
+		return NULL;
+	}
+
 	data->dev = dev;
 	data->mem = mem;
 	list_init(&data->uuids);
