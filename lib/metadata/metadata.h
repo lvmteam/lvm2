@@ -193,7 +193,7 @@ struct io_space {
 /*
  * Utility functions
  */
-struct physical_volume *pv_create(const char *name, struct io_space *ios);
+struct physical_volume *pv_create(struct io_space *ios, const char *name);
 
 
 

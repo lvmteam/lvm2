@@ -12,7 +12,7 @@
 
 #include <string.h>
 
-struct physical_volume *pv_create(const char *name, struct io_space *ios)
+struct physical_volume *pv_create(struct io_space *ios, const char *name)
 {
 	struct physical_volume *pv = pool_alloc(ios->mem, sizeof(*pv));
 
