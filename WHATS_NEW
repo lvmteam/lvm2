@@ -1,5 +1,6 @@
 Version 2.00.17 -
 =============================
+  Extend hash functions to handle non-null-terminated data.
   Add local activation support.
   Tidy relative paths in makefile includes.
   fsadm support for fsck and resizing - needs testing.
