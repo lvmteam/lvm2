@@ -57,7 +57,7 @@ struct dm_info {
 	unsigned int open_count;
 	int major;
 	int minor;		/* minor device number */
-	int read_only;
+	int read_only;		/* 0:read-write; 1:read-only */
 
 	unsigned int target_count;
 };
