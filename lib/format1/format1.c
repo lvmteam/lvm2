@@ -451,6 +451,11 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 {
 	struct io_space *ios = dbg_malloc(sizeof(*ios));
 
+	if (!ios) {
+		stack;
+		return NULL;
+	}
+
 	ios->get_vgs = _get_vgs;
 	ios->get_pvs = _get_pvs;
 	ios->pv_read = _pv_read;

@@ -72,7 +72,7 @@ static int _tok_match(const char *str, const char *b, const char *e);
 /*
  * public interface
  */
-struct config_file *create_config_file()
+struct config_file *create_config_file(void)
 {
         struct cs *c;
         struct pool *mem = pool_create(10 * 1024);
