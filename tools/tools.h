@@ -57,9 +57,9 @@ typedef int (*command_fn)(int argc, char **argv);
 
 /* define the enums for the command line switches */
 enum {
-#define xx(a, b, c, d) a ,
+#define arg(a, b, c, d) a ,
 #include "args.h"
-#undef xx
+#undef arg
 };
 
 typedef enum {
@@ -67,7 +67,7 @@ typedef enum {
 	SIGN_PLUS = 1,
 	SIGN_MINUS = 2
 } sign_t;
-	
+
 /* a global table of possible arguments */
 struct arg {
 	char short_arg;
