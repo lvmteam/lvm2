@@ -49,6 +49,15 @@ void dm_log_init(dm_log_fn fn)
         _log = fn;
 }
 
+void _build_dev_path(char *buffer, size_t len, const char *dev_name)
+{
+	/* If there's a /, assume caller knows what they're doing */
+	if (strchr(dev_name, '/'))
+		snprintf(buffer, len, "%s", dev_name);
+	else
+        	snprintf(buffer, len, "/dev/%s/%s", DM_DIR, dev_name);
+}
+
 struct dm_task *dm_task_create(int type)
 {
         struct dm_task *dmt = malloc(sizeof(*dmt));
@@ -66,10 +75,34 @@ struct dm_task *dm_task_create(int type)
 
 int dm_task_set_name(struct dm_task *dmt, const char *name)
 {
+	char *pos;
+	char path[PATH_MAX];
+	struct stat st1, st2;
+
         if (dmt->dev_name)
                 free(dmt->dev_name);
 
-        return (dmt->dev_name = strdup(name)) ? 1 : 0;
+	/* If path was supplied, remove it if it points to the same device
+	 * as its last component.
+	 */
+	if ((pos = strrchr(name, '/'))) {
+		snprintf(path, sizeof(path), "/dev/%s/%s", DM_DIR, pos + 1);
+
+		if (stat(name, &st1) || stat(path, &st2) ||
+		    !(st1.st_dev == st2.st_dev)) {
+			log("dm_task_set_name: Device %s not found", name);
+			return 0;
+		}
+
+		name = pos + 1;
+	}
+
+        if (!(dmt->dev_name = strdup(name))) {
+		log("dm_task_set_name: strdup(%s) failed", name);
+		return 0;
+	}
+
+        return 1;
 }
 
 int dm_task_add_target(struct dm_task *dmt,
@@ -91,11 +124,6 @@ int dm_task_add_target(struct dm_task *dmt,
         }
 
         return 1;
-}
-
-void _build_dev_path(char *buffer, size_t len, const char *dev_name)
-{
-        snprintf(buffer, len, "/dev/%s/%s", DM_DIR, dev_name);
 }
 
 int add_dev_node(const char *dev_name, dev_t dev)
