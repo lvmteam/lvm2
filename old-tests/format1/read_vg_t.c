@@ -7,6 +7,7 @@
 #include "log.h"
 #include "format1.h"
 #include "dbg_malloc.h"
+#include "pool.h"
 
 #include <stdio.h>
 
@@ -14,6 +15,7 @@ int main(int argc, char **argv)
 {
 	struct io_space *ios;
 	struct volume_group *vg;
+	struct pool *mem;
 
 	if (argc != 2) {
 		fprintf(stderr, "usage: read_vg_t <vg_name>\n");
@@ -33,7 +35,18 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	ios = create_lvm1_format(NULL);
+	if (!(mem = pool_create(10 * 1024))) {
+		fprintf(stderr, "couldn't create pool\n");
+		exit(1);
+	}
+
+	ios = create_lvm1_format("/dev", mem, NULL);
+
+	if (!ios) {
+		fprintf(stderr, "failed to create io_space for format1\n");
+		exit(1);
+	}
+
 	vg = ios->vg_read(ios, argv[1]);
 
 	if (!vg) {

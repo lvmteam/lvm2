@@ -162,7 +162,6 @@ struct io_space {
 	/* Current volume group prefix. */
 	/* Default to "/dev/" */
 	char *prefix;
-
 	struct pool *mem;
 	struct dev_filter *filter;
 	void *private;
