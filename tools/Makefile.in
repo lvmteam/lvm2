@@ -39,6 +39,7 @@ SOURCES=\
 	pvscan.c \
 	toollib.c \
 	vgcfgbackup.c \
+	vgcfgrestore.c \
 	vgchange.c \
 	vgck.c \
 	vgcreate.c \

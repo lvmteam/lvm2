@@ -129,7 +129,7 @@ int label_read(struct device *dev, struct label **result)
 	}
 
 	if ((r = l->ops->read(l, dev, result)))
-		*result->labeller = l;
+		(*result)->labeller = l;
 
 	return r;
 }
@@ -146,9 +146,7 @@ int label_verify(struct device *dev)
 	return l->ops->verify(l, dev);
 }
 
-void label_free(struct label *l)
+void label_destroy(struct label *lab)
 {
-	dbg_free(l->extra_info);
-	dbg_free(l);
+	lab->labeller->ops->destroy_label(lab->labeller, lab);
 }
-

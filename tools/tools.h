@@ -100,6 +100,7 @@ struct command {
 };
 
 extern struct command *the_command;
+extern struct uuid_map *the_um;
 
 void usage(const char *name);
 

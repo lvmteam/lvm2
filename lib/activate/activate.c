@@ -17,7 +17,7 @@ static void _build_lv_name(char *buffer, size_t s, const char *vg_name,
 	snprintf(buffer, s, "%s_%s", vg_name, lv_name);
 }
 
-static struct dm_task *_setup_task_with_name(struct logical_volume *lv, 
+static struct dm_task *_setup_task_with_name(struct logical_volume *lv,
 				   	     const char *lv_name, int task)
 {
 	char name[128];
@@ -98,7 +98,6 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
 
       end:
 	dm_task_destroy(dmt);
-
 	return r;
 }
 
@@ -126,7 +125,7 @@ int lv_suspended(struct logical_volume *lv)
 		return r;
 	}
 
-	log_very_verbose("%s is%s suspended", lv->name, 
+	log_very_verbose("%s is%s suspended", lv->name,
 			 info.suspended ? "":" not");
 	return info.suspended;
 }
@@ -169,7 +168,7 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 		w = tw;
 	}
 
-	
+
 	for (s = 0; s < stripes; s++, w += tw) {
 /******
 		log_debug("stripes: %d", stripes);

@@ -37,6 +37,7 @@ struct pool *pool_create(size_t chunk_hint)
 		return NULL;
 	}
 
+	mem->begun = 0;
 	mem->object = 0;
 	mem->blocks = mem->tail = NULL;
 	return mem;
@@ -143,10 +144,14 @@ int pool_begin_object(struct pool *p, size_t init_size)
 int pool_grow_object(struct pool *p, const void *buffer, size_t delta)
 {
 	struct block *new;
+	size_t size = delta;
 
 	assert(p->begun);
 
-	if (!(new = _new_block(p->object->size + delta, DEFAULT_ALIGNMENT))) {
+	if (p->object)
+		size += p->object->size;
+
+	if (!(new = _new_block(size, DEFAULT_ALIGNMENT))) {
 		log_err("Couldn't extend object.");
 		return 0;
 	}

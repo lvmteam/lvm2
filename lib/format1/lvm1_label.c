@@ -50,7 +50,7 @@ static struct label *_to_label(struct disk_list *dl)
 		return NULL;
 	}
 
-	if (!(info = (struct lvm_label_info *) dbg_strdup(dl->pv.vg_name))) {
+	if (!(info = (struct lvm_label_info *) dbg_strdup(dl->pvd.vg_name))) {
 		dbg_free(l);
 		return NULL;
 	}
@@ -89,7 +89,7 @@ static int _read(struct labeller *l,
 	return r;
 }
 
-static int _destroy_label(struct labeller *l, struct label *label)
+static void _destroy_label(struct labeller *l, struct label *label)
 {
 	dbg_free(label->extra_info);
 	dbg_free(label);
@@ -99,7 +99,6 @@ static void _destroy(struct labeller *l)
 {
 	struct pool *mem = (struct pool *) l->private;
 	pool_destroy(mem);
-	dbg_free(l->private);
 }
 
 
@@ -109,6 +108,7 @@ struct label_ops _lvm1_ops = {
 	remove: _remove,
 	read: _read,
 	verify: _can_handle,
+	destroy_label: _destroy_label,
 	destroy: _destroy
 };
 
