@@ -1,6 +1,7 @@
 Version 1.00.17 - 17 Apr 2004
 =============================
   configure --with-owner= --with-group= to avoid -o and -g args to 'install'
+  Fix library selinux linking.
 
 Version 1.00.16 - 16 Apr 2004
 =============================
