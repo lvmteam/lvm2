@@ -160,7 +160,7 @@ static int _version(int argc, char **argv)
 {
 	int r = 0;
 	struct dm_task *dmt;
-	char version[16];
+	char version[80];
 
 	if (!(dmt = dm_task_create(DM_DEVICE_VERSION)))
 		return 0;

@@ -55,7 +55,7 @@ void _build_dev_path(char *buffer, size_t len, const char *dev_name)
 	if (strchr(dev_name, '/'))
 		snprintf(buffer, len, "%s", dev_name);
 	else
-        	snprintf(buffer, len, "/dev/%s/%s", DM_DIR, dev_name);
+        	snprintf(buffer, len, "%s/%s", _dm_dir, dev_name);
 }
 
 struct dm_task *dm_task_create(int type)
@@ -87,7 +87,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	 * as its last component.
 	 */
 	if ((pos = strrchr(name, '/'))) {
-		snprintf(path, sizeof(path), "/dev/%s/%s", DM_DIR, pos + 1);
+		snprintf(path, sizeof(path), "%s/%s", _dm_dir, pos + 1);
 
 		if (stat(name, &st1) || stat(path, &st2) ||
 		    !(st1.st_dev == st2.st_dev)) {
