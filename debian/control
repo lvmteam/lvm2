@@ -2,7 +2,7 @@ Source: lvm2
 Section: admin
 Priority: optional
 Maintainer: Andres Salomon <dilinger@mp3revolution.net>
-Build-Depends: debhelper (>> 3.0.0), libdevmapper-dev, libreadline4-dev
+Build-Depends: debhelper (>> 3.0.0), libdevmapper-dev (>= 0.96.04), libreadline4-dev
 Standards-Version: 3.5.2
 
 Package: lvm2
