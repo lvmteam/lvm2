@@ -1,10 +1,10 @@
 Version 2.00.26 - 
 =====================================
+  Fix dm_name string size calculation.
   Improve clvmd error reporting during startup.
   Make clvmd cope with large gaps in node numbers IDs.
   Make clvmd initialisation cope better with debugging output.
   clvmd -V now displays lvm version too.
-  
 
 Version 2.00.25 - 29th September 2004
 =====================================
