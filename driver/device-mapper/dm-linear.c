@@ -29,44 +29,43 @@ struct linear_c {
  * <dev_path> <offset>
  */
 static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
-		      struct text_region *args, void **context,
-		      dm_error_fn err, void *e_private)
+		      char *args, void **context)
 {
 	struct linear_c *lc;
 	unsigned int start;
-	struct text_region word;
-	char path[256];		/* FIXME: magic */
 	int r = -EINVAL;
+	char *tok;
+	char *path;
+	char *p = args;
 
-	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
-		err("couldn't allocate memory for linear context", e_private);
-		return -ENOMEM;
-	}
-
-	if (!dm_get_word(args, &word)) {
-		err("couldn't get device path", e_private);
+	*context = "No device path given";
+	path = next_token(&p);
+	if (!path)
 		goto bad;
-	}
 
-	dm_txt_copy(path, sizeof(path) - 1, &word);
-
-	if (!dm_get_number(args, &start)) {
-		err("destination start not given", e_private);
+	*context = "No initial offset given";
+	tok = next_token(&p);
+	if (!tok)
 		goto bad;
-	}
+	start = simple_strtoul(tok, NULL, 10);
 
-	if ((r = dm_table_get_device(t, path, &lc->dev))) {
-		err("couldn't lookup device", e_private);
-		r = -ENXIO;
+	*context = "Cannot allocate linear context private structure";
+	lc = kmalloc(sizeof(lc), GFP_KERNEL);
+	if (lc == NULL)
 		goto bad;
-	}
+
+	*context = "Cannot get target device";
+	r = dm_table_get_device(t, path, &lc->dev);
+	if (r)
+		goto bad_free;
 
 	lc->delta = (int) start - (int) b;
 	*context = lc;
 	return 0;
 
- bad:
+bad_free:
 	kfree(lc);
+bad:
 	return r;
 }
 
@@ -86,12 +85,24 @@ static int linear_map(struct buffer_head *bh, int rw, void *context)
 	return 1;
 }
 
+/*
+ * Debugging use only.
+ */
+static char *linear_print(void *context)
+{
+	struct linear_c *lc = (struct linear_c *)context;
+static char buf[256];
+	sprintf(buf, " %lu", lc->delta);
+	return buf;
+}
+
 static struct target_type linear_target = {
 	name: "linear",
 	module: THIS_MODULE,
 	ctr: linear_ctr,
 	dtr: linear_dtr,
 	map: linear_map,
+	print: linear_print,
 };
 
 static int __init linear_init(void)
@@ -119,7 +130,5 @@ module_exit(linear_exit);
 
 MODULE_AUTHOR("Joe Thornber <thornber@uk.sistina.com>");
 MODULE_DESCRIPTION("Device Mapper: Linear mapping");
-#ifdef MODULE_LICENSE
 MODULE_LICENSE("GPL");
-#endif
 

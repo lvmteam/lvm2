@@ -22,7 +22,6 @@
 
 struct dm_table;
 struct dm_dev;
-struct text_region;
 typedef unsigned int offset_t;
 
 typedef void (*dm_error_fn)(const char *message, void *private);
@@ -31,13 +30,12 @@ typedef void (*dm_error_fn)(const char *message, void *private);
  * constructor, destructor and map fn types
  */
 typedef int (*dm_ctr_fn)(struct dm_table *t, offset_t b, offset_t l,
-			 struct text_region *args, void **context,
-			 dm_error_fn err, void *e_private);
+			 char *args, void **context);
 
 typedef void (*dm_dtr_fn)(struct dm_table *t, void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, int rw, void *context);
 typedef int (*dm_err_fn)(struct buffer_head *bh, int rw, void *context);
-
+typedef char *(*dm_print_fn)(void *context);
 
 /*
  * Contructors should call this to make sure any
@@ -58,25 +56,23 @@ struct target_type {
         dm_dtr_fn dtr;
         dm_map_fn map;
 	dm_err_fn err;
+	dm_print_fn print;
 };
 
 int dm_register_target(struct target_type *t);
 int dm_unregister_target(struct target_type *t);
 
-/*
- * These may be useful for people writing target
- * types.
- */
-struct text_region {
-        const char *b;
-        const char *e;
-};
+static inline char *next_token(char **p)
+{
+        static const char *delim = " \t";
+        char *r;
 
-int dm_get_number(struct text_region *txt, unsigned int *n);
-int dm_get_line(struct text_region *txt, struct text_region *line);
-int dm_get_word(struct text_region *txt, struct text_region *word);
-void dm_txt_copy(char *dest, size_t max, struct text_region *txt);
-void dm_eat_space(struct text_region *txt);
+        do {
+                r = strsep(p, delim);
+        } while(r && *r == 0);
+
+        return r;
+}
 
 
 #endif /* DEVICE_MAPPER_H */
