@@ -7,7 +7,7 @@
 #ifndef LVM_MEMLOCK_H
 #define LVM_MEMLOCK_H
 
-#include "toolcontext.h"
+struct cmd_context;
 
 void memlock_inc(void);
 void memlock_dec(void);

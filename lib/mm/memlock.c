@@ -8,6 +8,8 @@
 #include "memlock.h"
 #include "pool.h"
 #include "defaults.h"
+#include "config.h"
+#include "toolcontext.h"
 
 #include <limits.h>
 #include <fcntl.h>
