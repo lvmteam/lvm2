@@ -51,6 +51,11 @@ int lv_info(const struct logical_volume *lv, struct lvinfo *info)
 {
 	return 0;
 }
+int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
+		    struct lvinfo *info)
+{
+	return 0;
+}
 int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 {
 	return 0;
@@ -287,6 +292,17 @@ static int _lv_info(const struct logical_volume *lv, int mknodes,
 
 int lv_info(const struct logical_volume *lv, struct lvinfo *info)
 {
+	return _lv_info(lv, 0, info);
+}
+
+int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
+		    struct lvinfo *info)
+{
+	struct logical_volume *lv;
+
+	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+		return 0;
+
 	return _lv_info(lv, 0, info);
 }
 
