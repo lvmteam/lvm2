@@ -58,6 +58,9 @@ static uint32_t calc_checksum(struct label *label)
     return csum;
 }
 
+/* Read a label off disk - the data area is allocated
+   from the pool in label->pool and should be freed by
+   the caller */
 int label_read(struct device *dev, struct label *label)
 {
     uint64_t size;
@@ -73,7 +76,7 @@ int label_read(struct device *dev, struct label *label)
     if (!dev_get_sectsize(dev, &sectsize))
 	return 0;
 
-    if (dev_open(dev, O_RDWR))
+    if (!dev_open(dev, O_RDWR))
 	return 0;
 
     if (label_pool == NULL)
@@ -97,12 +100,13 @@ int label_read(struct device *dev, struct label *label)
 	else
 	    status = dev_read(dev, size*512 - sectsize, sizeof(struct label_ondisk) + label->datalen, block);
 
-	if (!status)
+	if (status)
 	{
 	    struct label incore;
 
 	    /* Copy and convert endianness */
 	    incore.magic = xlate32(ondisk->magic);
+	    incore.format_type = xlate32(ondisk->format_type);
 	    incore.checksum = xlate32(ondisk->checksum);
 	    incore.datalen = xlate16(ondisk->datalen);
 	    incore.data = block + sizeof(struct label_ondisk);
@@ -113,9 +117,11 @@ int label_read(struct device *dev, struct label *label)
 	    /* Check Checksum */
 	    if (incore.checksum != calc_checksum(&incore))
 	    {
-		log_error("Checksum %d does not match\n", iter);
+		log_error("Checksum %d on device %s does not match. got %x, need %x", iter, dev_name(dev), incore.checksum, calc_checksum(&incore));
 		continue;
 	    }
+
+	    /* Copy to user's data area */
 	    *label = incore;
 	    label->data = pool_alloc(label_pool, incore.datalen);
 	    if (!label->data)
@@ -123,8 +129,9 @@ int label_read(struct device *dev, struct label *label)
 		stack;
 		return 1;
 	    }
+	    memcpy(label->data, incore.data, incore.datalen);
 	    label->pool = label_pool;
-	    if (label->data) memcpy(label->data, incore.data, incore.datalen);
+
 	    pool_free(label_pool, block);
 	    dev_close(dev);
 	    return 1;
@@ -137,6 +144,7 @@ int label_read(struct device *dev, struct label *label)
     return 0;
 }
 
+/* Write a label to a device */
 int label_write(struct device *dev, struct label *label)
 {
     uint64_t size;
@@ -168,6 +176,7 @@ int label_write(struct device *dev, struct label *label)
     ondisk = (struct label_ondisk *)block;
 
     /* Make into ondisk format */
+    label->magic = LABEL_MAGIC;
     ondisk->magic = xlate32(LABEL_MAGIC);
     ondisk->format_type = xlate32(label->format_type);
     ondisk->datalen = xlate16(label->datalen);
@@ -201,9 +210,9 @@ int is_labelled(struct device *dev)
     int status;
 
     status = label_read(dev, &l);
-    pool_free(l.pool, l.data);
+    if (status) pool_free(l.pool, l.data);
 
-    return 1-status;
+    return status;
 }
 
 /* Check the device is labelled and has the right format_type */
@@ -213,7 +222,7 @@ static int _accept_format(struct dev_filter *f, struct device *dev)
     int status;
 
     status = label_read(dev, &l);
-    pool_free(l.pool, l.data);
+    if (status) pool_free(l.pool, l.data);
 
     if (status && l.format_type == (uint32_t)f->private)
 	return 1;
