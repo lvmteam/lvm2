@@ -30,6 +30,7 @@ static int _test = 0;
 static int _partial = 0;
 static int _md_filtering = 0;
 static int _pvmove = 0;
+static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
 static int _debug_level = 0;
 static int _syslog = 0;
 static int _log_to_file = 0;
@@ -149,6 +150,11 @@ void init_pvmove(int level)
 	_pvmove = level;
 }
 
+void init_full_scan_done(int level)
+{
+	_full_scan_done = level;
+}
+
 void init_ignorelockingfailure(int level)
 {
 	_ignorelockingfailure = level;
@@ -201,6 +207,11 @@ int md_filtering()
 int pvmove_mode()
 {
 	return _pvmove;
+}
+
+int full_scan_done()
+{
+	return _full_scan_done;
 }
 
 int ignorelockingfailure()

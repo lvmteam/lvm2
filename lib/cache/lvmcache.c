@@ -104,9 +104,29 @@ struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname)
 const struct format_type *fmt_from_vgname(const char *vgname)
 {
 	struct lvmcache_vginfo *vginfo;
+	struct label *label;
+	struct list *ih, *devh, *tmp;
+	struct list devs;
+	struct device_list *devl;
 
 	if (!(vginfo = vginfo_from_vgname(vgname)))
 		return NULL;
+
+	/* This function is normally called before reading metadata so
+ 	 * we check cached labels here. Unfortunately vginfo is volatile. */
+	list_init(&devs);
+	list_iterate(ih, &vginfo->infos) {
+		devl = malloc(sizeof(*devl));
+		devl->dev = list_item(ih, struct lvmcache_info)->dev;
+		list_add(&devs, &devl->list);
+	}
+
+	list_iterate_safe(devh, tmp, &devs) {
+		devl = list_item(devh, struct device_list);
+		label_read(devl->dev, &label);
+		list_del(&devl->list);
+		free(devl);
+	}
 
 	return vginfo->fmt;
 }
@@ -403,6 +423,9 @@ int lvmcache_update_vgname(struct lvmcache_info *info, const char *vgname)
 	/* FIXME Check consistency of list! */
 	vginfo->fmt = info->fmt;
 
+	log_debug("lvmcache: %s now %s%s", dev_name(info->dev),
+		  *vgname ? "in VG " : "orphaned", vgname);
+
 	return 1;
 }
 
@@ -551,6 +574,8 @@ static void _lvmcache_destroy_lockname(int present)
 
 void lvmcache_destroy(void)
 {
+	log_verbose("Wiping internal VG cache");
+
 	_has_scanned = 0;
 
 	if (_vgid_hash) {

@@ -21,6 +21,7 @@
 #include "lvm-types.h"
 #include "btree.h"
 #include "filter.h"
+#include "filter-persistent.h"
 
 #include <unistd.h>
 #include <sys/param.h>
@@ -368,6 +369,7 @@ static void _full_scan(int dev_scan)
 	};
 
 	_cache.has_scanned = 1;
+	init_full_scan_done(1);
 }
 
 int dev_cache_has_scanned(void)
@@ -379,15 +381,14 @@ void dev_cache_scan(int do_scan)
 {
 	if (!do_scan)
 		_cache.has_scanned = 1;
-	else {
-		_cache.has_scanned = 0;
+	else
 		_full_scan(1);
-	}
 }
 
 int dev_cache_init(void)
 {
 	_cache.names = NULL;
+	_cache.has_scanned = 0;
 
 	if (!(_cache.mem = pool_create("dev_cache", 10 * 1024))) {
 		stack;
@@ -549,7 +550,14 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 		return NULL;
 	}
 
-	_full_scan(dev_scan);
+
+	if (dev_scan) {
+		/* Flag gets reset between each command */
+		if (!full_scan_done())
+			persistent_filter_wipe(f); /* Calls _full_scan(1) */
+	} else
+		_full_scan(0);
+
 	di->current = btree_first(_cache.devices);
 	di->filter = f;
 

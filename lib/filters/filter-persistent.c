@@ -53,7 +53,9 @@ int persistent_filter_wipe(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
+	log_verbose("Wiping cache of LVM-capable devices");
 	hash_wipe(pf->devices);
+
 	/* Trigger complete device scan */
 	dev_cache_scan(1);
 

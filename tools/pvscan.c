@@ -123,10 +123,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 			  arg_count(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 
-	log_verbose("Wiping cache of LVM-capable devices");
 	persistent_filter_wipe(cmd->filter);
-
-	log_verbose("Wiping internal cache");
 	lvmcache_destroy();
 
 	log_verbose("Walking through all physical volumes");

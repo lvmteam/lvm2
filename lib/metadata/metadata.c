@@ -687,10 +687,46 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 		}
 	}
 
-	/* Failed to find VG */
+	/* Failed to find VG where we expected it - full scan and retry */
 	if (!correct_vg) {
-		stack;
-		return NULL;
+		inconsistent = 0;
+
+		lvmcache_label_scan(cmd, 2);
+		if (!(fmt = fmt_from_vgname(vgname))) {
+			stack;
+			return NULL;
+		}
+
+		/* create format instance with appropriate metadata area */
+		if (!(fid = fmt->ops->create_instance(fmt, vgname, NULL))) {
+			log_error("Failed to create format instance");
+			return NULL;
+		}
+
+		/* Ensure contents of all metadata areas match - else recover */
+		list_iterate(mdah, &fid->metadata_areas) {
+			mda = list_item(mdah, struct metadata_area);
+			if (!(vg = mda->ops->vg_read(fid, vgname, mda))) {
+				inconsistent = 1;
+				continue;
+			}
+			if (!correct_vg) {
+				correct_vg = vg;
+				continue;
+			}
+			/* FIXME Also ensure contents same - checksums same? */
+			if (correct_vg->seqno != vg->seqno) {
+				inconsistent = 1;
+				if (vg->seqno > correct_vg->seqno)
+					correct_vg = vg;
+			}
+		}
+
+		/* Give up looking */
+		if (!correct_vg) {
+			stack;
+			return NULL;
+		}
 	}
 
 	lvmcache_update_vg(correct_vg);

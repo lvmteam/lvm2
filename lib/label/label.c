@@ -117,12 +117,17 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	struct labeller_i *li;
 	struct labeller *r = NULL;
 	struct label_header *lh;
+	struct lvmcache_info *info;
 	uint64_t sector;
 	int found = 0;
 	char readbuf[LABEL_SCAN_SIZE];
 
 	if (!dev_open(dev)) {
 		stack;
+
+		if ((info = info_from_pvid(dev->pvid)))
+			lvmcache_update_vgname(info, ORPHAN);
+
 		return NULL;
 	}
 
@@ -182,10 +187,13 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 		}
 	}
 
-	if (!found)
-		log_very_verbose("%s: No label detected", dev_name(dev));
-
       out:
+	if (!found) {
+		if ((info = info_from_pvid(dev->pvid)))
+			lvmcache_update_vgname(info, ORPHAN);
+		log_very_verbose("%s: No label detected", dev_name(dev));
+	}
+
 	if (!dev_close(dev))
 		stack;
 
