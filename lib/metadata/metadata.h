@@ -64,22 +64,6 @@ struct pe_specifier {
         uint32_t pe;
 };
 
-struct logical_volume {
-        /* disk */
-	struct id id;
-        char *name;
-
-        uint32_t status;
-	uint32_t read_ahead;
-	uint32_t stripes;
-
-        uint64_t size;
-        uint32_t le_count;
-
-        /* le -> pe mapping array */
-        struct pe_specifier *map;
-};
-
 struct volume_group {
 	struct id id;
 	char *name;
@@ -100,6 +84,24 @@ struct volume_group {
         /* logical volumes */
         uint32_t lv_count;
 	struct list lvs;
+};
+
+struct logical_volume {
+        /* disk */
+	struct id id;
+        char *name;
+
+	struct volume_group *vg;
+
+        uint32_t status;
+	uint32_t read_ahead;
+	uint32_t stripes;
+
+        uint64_t size;
+        uint32_t le_count;
+
+        /* le -> pe mapping array */
+        struct pe_specifier *map;
 };
 
 struct name_list {
