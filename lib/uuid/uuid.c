@@ -15,6 +15,9 @@
 static unsigned char _c[] =
     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+static int _built_inverse;
+static unsigned char _inverse_c[256];
+
 int id_create(struct id *id)
 {
 	int random, i, len = sizeof(id->uuid);
@@ -37,13 +40,72 @@ int id_create(struct id *id)
 	return 1;
 }
 
+/*
+ * The only validity check we have is that
+ * the uuid just contains characters from
+ * '_c'.  A checksum would have been nice :(
+ */
+void _build_inverse(void)
+{
+	char *ptr;
+
+	if (_built_inverse)
+		return;
+
+	memset(_inverse_c, 0, sizeof(_inverse_c));
+
+	for (ptr = _c; *ptr; ptr++)
+		_inverse_c[(int) *ptr] = (char) 0x1;
+}
+
 int id_valid(struct id *id)
 {
-	log_err("Joe hasn't written id_valid yet");
+	int i;
+	char lookup[256];
+
+	_build_inverse();
+
+	for (i = 0; i < ID_LEN; i++)
+		if (!_inverse_c[id->uuid[i]]) {
+			log_err("UUID contains invalid character");
+			return 0;
+		}
+
 	return 1;
 }
 
 int id_cmp(struct id *lhs, struct id *rhs)
 {
 	return memcmp(lhs->uuid, rhs->uuid, sizeof(lhs->uuid));
+}
+
+#define GROUPS (ID_LEN / 4)
+int id_format(struct id *id, char *buffer, size_t size)
+{
+	int i;
+
+	/* split into 8 groups of four, with dashes in between */
+	if (size < (GROUPS * 5))
+		return 0;
+
+	for (i = 0; i < GROUPS; i++) {
+		memcpy(buffer + (i * 5), id.uuid + (i * 4), 4);
+		buffer[(i * 5) + 4] = '-';
+	}
+
+	buffer[GROUPS * 5] = '\0';
+	return 1;
+}
+
+int id_read_format(struct id *id, char *buffer)
+{
+	if (strlen(buffer) < (GROUPS * 5)) {
+		log_err("Insufficient characters to be a proper uuid.");
+		return 0;
+	}
+
+	for (i = 0; i < ID_LEN; i++)
+		id->uuid[i] = buffer[((i / 4) * 5) + (i % 4)];
+
+	return id_valid(id);
 }
