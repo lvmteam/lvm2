@@ -23,7 +23,8 @@
 
 #include "dm.h"
 
-struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private)
+struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
+			  dm_error_fn err_fn, void *e_private)
 {
 	struct text_region line, word;
 	struct dm_table *table = dm_table_create();
@@ -33,10 +34,14 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private)
 	void *context;
 	int last_line_good = 1, was_error = 0;
 
-	if (table == NULL)
-		return NULL;
+	if (!table)
+		return 0;
 
-#define PARSE_ERROR {last_line_good = 0; was_error = 1; continue;}
+#define PARSE_ERROR(msg) {\
+  last_line_good = 0;\
+  was_error = 1;\
+  err_fn(msg, e_private);\
+  continue;}
 
 	while (line_fn(&line, l_private)) {
 
@@ -51,31 +56,23 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private)
 			continue;
 
 		/* sector start */
-		if (!dm_get_number(&line, &start)) {
-			table->err_msg = "expecting a number for sector start";
-			PARSE_ERROR;
-		}
+		if (!dm_get_number(&line, &start))
+			PARSE_ERROR("expecting a number for sector start");
 
 		/* length */
-		if (!dm_get_number(&line, &size)) {
-			table->err_msg = "expecting a number for region length";
-			PARSE_ERROR;
-		}
+		if (!dm_get_number(&line, &size))
+			PARSE_ERROR("expecting a number for region length");
 
 		/* target type */
-		if (!dm_get_word(&line, &word)) {
-			table->err_msg = "target type missing";
-			PARSE_ERROR;
-		}
+		if (!dm_get_word(&line, &word))
+			PARSE_ERROR("target type missing");
 
 		/* we have to copy the target type to a C str */
 		dm_txt_copy(target_name, sizeof(target_name), &word);
 
 		/* lookup the target type */
-		if (!(ttype = dm_get_target_type(target_name))) {
-			table->err_msg = "unable to find target type";
-			PARSE_ERROR;
-		}
+		if (!(ttype = dm_get_target_type(target_name)))
+			PARSE_ERROR("unable to find target type");
 
 		/* check there isn't a gap, but only if the last target
 		   parsed ok. */
@@ -83,46 +80,35 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private)
 
 		    ((table->num_targets &&
 		      start != table->highs[table->num_targets - 1] + 1) ||
-		     (!table->num_targets && start))) {
-			table->err_msg = "gap in target ranges";
-			PARSE_ERROR;
-		}
+		     (!table->num_targets && start)))
+			PARSE_ERROR("gap in target ranges");
 
 		/* build the target */
-		context = ttype->ctr(table, start, size, &line);
-		if (IS_ERR(context)) {
-			PARSE_ERROR;
-		}
+		if (ttype->ctr(table, start, size, &line, &context,
+			       err_fn, e_private))
+			PARSE_ERROR("target constructor failed");
 
 		/* no point registering the target
                    if there was an error. */
-		if (was_error)
+		if (was_error) {
+			ttype->dtr(table, context);
 			continue;
+		}
 
 		/* add the target to the table */
 		high = start + (size - 1);
-		if (dm_table_add_target(table, high, ttype, context)) {
-			table->err_msg = "internal error adding target to table";
-			PARSE_ERROR;
-		}
-
-		/* Ensure sane block size */
-		if (table->blksize_size < table->hardsect_size) {
-			table->err_msg = "block size smaller than hardsect size";
-			PARSE_ERROR;
-		}
-
+		if (dm_table_add_target(table, high, ttype, context))
+			PARSE_ERROR("internal error adding target to table");
 	}
 
 #undef PARSE_ERROR
 
-	if (!was_error) {
-		if (dm_table_complete(table) == 0)
-			return table;
+	if (was_error || dm_table_complete(table)) {
+		dm_table_destroy(table);
+		return 0;
 	}
 
-	dm_put_table(table);
-	return 0;
+	return table;
 }
 
 /*

@@ -3,20 +3,7 @@
  *
  * Copyright (C) 2001 Sistina Software
  *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2, or (at
- * your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU CC; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * This file is released under the GPL.
  */
 
 /*
@@ -118,7 +105,6 @@
 #ifndef DM_INTERNAL_H
 #define DM_INTERNAL_H
 
-#include <linux/config.h>
 #include <linux/version.h>
 #include <linux/major.h>
 #include <linux/iobuf.h>
@@ -145,6 +131,19 @@ enum {
 	DM_ACTIVE,		/* device is running */
 };
 
+
+/*
+ * list of devices that a metadevice uses
+ * and hence should open/close.
+ */
+struct dm_dev {
+	atomic_t count;
+	struct list_head list;
+
+	kdev_t dev;
+	struct block_device *bd;
+};
+
 /*
  * io that had to be deferred while we were
  * suspended
@@ -167,23 +166,18 @@ struct target {
  * the btree
  */
 struct dm_table {
-	atomic_t refcnt;
-
-	char *err_msg;
 	/* btree table */
 	int depth;
 	int counts[MAX_DEPTH];	/* in nodes */
 	offset_t *index[MAX_DEPTH];
 
-	int blksize_size;
-	int hardsect_size;
 	int num_targets;
 	int num_allocated;
 	offset_t *highs;
 	struct target *targets;
 
-	atomic_t pending;
-	wait_queue_head_t wait;
+	/* a list of devices used by this table */
+	struct list_head *devices;
 };
 
 /*
@@ -198,25 +192,25 @@ struct mapped_device {
 	int state;
 
 	/* a list of io's that arrived while we were suspended */
+	atomic_t pending;
+	wait_queue_head_t wait;
 	struct deferred_io *deferred;
 
 	struct dm_table *map;
 
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
-	struct proc_dir_entry *pde;
 };
 
 extern struct block_device_operations dm_blk_dops;
 
 
 /* dm-target.c */
+int dm_target_init(void);
 struct target_type *dm_get_target_type(const char *name);
 void dm_put_target_type(struct target_type *t);
-int dm_target_init(void);
 
 /* dm.c */
-struct mapped_device *dm_find_by_name(const char *name);
 struct mapped_device *dm_find_by_minor(int minor);
 
 struct mapped_device *dm_create(const char *name, int minor);
@@ -230,7 +224,7 @@ void dm_suspend(struct mapped_device *md);
 
 /* dm-table.c */
 struct dm_table *dm_table_create(void);
-void dm_put_table(struct dm_table *t);
+void dm_table_destroy(struct dm_table *t);
 
 int dm_table_add_target(struct dm_table *t, offset_t high,
 			struct target_type *type, void *private);
@@ -240,7 +234,8 @@ int dm_table_complete(struct dm_table *t);
 typedef int (*extract_line_fn)(struct text_region *line,
 			       void *private);
 
-struct dm_table *dm_parse(extract_line_fn line_fn, void *line_private);
+struct dm_table *dm_parse(extract_line_fn line_fn, void *line_private,
+			  dm_error_fn err_fn, void *err_private);
 
 
 static inline int dm_empty_tok(struct text_region *txt)
@@ -248,13 +243,9 @@ static inline int dm_empty_tok(struct text_region *txt)
 	return txt->b >= txt->e;
 }
 
-/* dm-blkdev.c */
-int dm_init_blkdev(void);
-void dm_cleanup_blkdev(void);
-
 /* dm-fs.c */
-int dmfs_init(void);
-void dmfs_exit(void);
+int dm_fs_init(void);
+void dm_fs_exit(void);
 
 
 
@@ -281,9 +272,5 @@ static inline int is_active(struct mapped_device *md)
 {
 	return test_bit(DM_ACTIVE, &md->state);
 }
-
-/*
- * FIXME: these are too big to be inlines
- */
 
 #endif

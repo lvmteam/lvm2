@@ -1,22 +1,9 @@
 /*
  * dm-linear.c
  *
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2, or (at
- * your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU CC; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * This file is released under the GPL.
  */
 
 #include <linux/config.h>
@@ -33,80 +20,59 @@
  * linear: maps a linear range of a device.
  */
 struct linear_c {
-	kdev_t rdev;
 	long delta;		/* FIXME: we need a signed offset type */
-	struct block_device *bdev;
+	struct dm_dev *dev;
 };
 
 /*
  * construct a linear mapping.
  * <dev_path> <offset>
  */
-static void *linear_ctr(struct dm_table *t, offset_t b, offset_t l,
-		      struct text_region *args)
+static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
+		      struct text_region *args, void **context,
+		      dm_error_fn err, void *e_private)
 {
 	struct linear_c *lc;
 	unsigned int start;
-	char path[256];
 	struct text_region word;
-	struct block_device *bdev;
-	int rv = 0;
-	int hardsect_size;
-
-	if (!dm_get_word(args, &word)) {
-		t->err_msg = "couldn't get device path";
-		return ERR_PTR(-EINVAL);
-	}
-
-	dm_txt_copy(path, sizeof(path) - 1, &word);
-
-	bdev = dm_blkdev_get(path);
-	if (IS_ERR(bdev)) {
-		switch (PTR_ERR(bdev)) {
-			case -ENOTBLK:
-				t->err_msg = "not a block device";
-				break;
-			case -EACCES:
-				t->err_msg = "nodev mount option";
-				break;
-			case -ENOENT:
-			default:
-				t->err_msg = "no such device";
-		}
-		return bdev;
-	}
-
-	if (!dm_get_number(args, &start)) {
-		t->err_msg = "destination start not given";
-		rv = -EINVAL;
-		goto out_bdev_put;
-	}
+	int r = -EINVAL;
 
 	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
-		t->err_msg = "couldn't allocate memory for linear context\n";
-		rv = -ENOMEM;
-		goto out_bdev_put;
+		err("couldn't allocate memory for linear context", e_private);
+		return -ENOMEM;
 	}
 
-	lc->rdev = to_kdev_t(bdev->bd_dev);
-	lc->bdev = bdev;
+	if (!dm_get_word(args, &word)) {
+		err("couldn't get device path", e_private);
+		goto bad;
+	}
+
+	dm_txt_copy(lc->path, sizeof(lc->path) - 1, &word);
+
+	if (!dm_get_number(args, &start)) {
+		err("destination start not given", e_private);
+		goto bad;
+	}
+
+	if ((r = dm_table_add_device(t, lc->path, &lc->dev))) {
+		err("couldn't lookup device", e_private);
+		r = -ENXIO;
+		goto bad;
+	}
+
 	lc->delta = (int) start - (int) b;
+	*context = lc;
+	return 0;
 
-	hardsect_size = get_hardsect_size(lc->rdev);
-	if (t->hardsect_size > hardsect_size)
-		t->hardsect_size = hardsect_size;
-
-	return lc;
-
-out_bdev_put:
-	dm_blkdev_put(bdev);
-	return ERR_PTR(rv);
+ bad:
+	kfree(lc);
+	return r;
 }
 
 static void linear_dtr(struct dm_table *t, void *c)
 {
 	struct linear_c *lc = (struct linear_c *) c;
-	dm_blkdev_put(lc->bdev);
+	dm_table_remove_device(t, lc->dev);
 	kfree(c);
 }
 
@@ -125,30 +91,26 @@ static struct target_type linear_target = {
 	ctr: linear_ctr,
 	dtr: linear_dtr,
 	map: linear_map,
-	flags: TF_BMAP,
 };
 
 static int __init linear_init(void)
 {
-	int rv;
+	int r = dm_register_target(&linear_target);
 
-	rv = dm_register_target(&linear_target);
-	if (rv < 0) {
-		printk(KERN_ERR "Device mapper: Linear: register failed %d\n", rv);
-	}
+	if (r < 0)
+		printk(KERN_ERR
+		       "Device mapper: Linear: register failed %d\n", r);
 
-	return rv;
+	return r;
 }
 
 static void __exit linear_exit(void)
 {
-	int rv;
+	int r = dm_unregister_target(&linear_target);
 
-	rv = dm_unregister_target(&linear_target);
-
-	if (rv < 0) {
-		printk(KERN_ERR "Device mapper: Linear: unregister failed %d\n", rv);
-	}
+	if (r < 0)
+		printk(KERN_ERR
+		       "Device mapper: Linear: unregister failed %d\n", r);
 }
 
 module_init(linear_init);
