@@ -97,6 +97,7 @@ static int dmfs_root_rmdir(struct inode *dir, struct dentry *dentry)
 
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
+		ret = dm_deactivate(DMFS_I(inode)->md);
 		if (ret == 0) {
 			inode->i_nlink--;
 			dput(dentry);

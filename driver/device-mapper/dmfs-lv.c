@@ -34,6 +34,10 @@ struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
 {
 	struct nameidata nd;
 	int err = -ENOENT;
+	struct file file;
+	struct dentry *dentry;
+
+	memset(&file, 0, sizeof(struct file));
 
 	if (path_init(name, LOOKUP_FOLLOW, &nd))
 		return ERR_PTR(-EINVAL);
@@ -49,9 +53,19 @@ struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
 	if (nd.dentry->d_parent->d_inode != dir)
 		goto err_out;
 
-	dget(nd.dentry);
+	if (DMFS_I(nd.dentry->d_inode) == NULL || 
+	    DMFS_I(nd.dentry->d_inode)->table == NULL)
+		goto err_out;
+
+	dentry = nd.dentry;
+	file.f_dentry = nd.dentry->d_parent;
+	err = deny_write_access(&file);
+	if (err)
+		goto err_out;
+
+	dget(dentry);
 	path_release(&nd);
-	return nd.dentry;
+	return dentry;
 err_out:
 	path_release(&nd);
 	return ERR_PTR(err);
@@ -59,16 +73,9 @@ err_out:
 
 struct inode *dmfs_create_symlink(struct inode *dir, int mode)
 {
-	struct inode *inode = new_inode(dir->i_sb);
+	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFLNK);
 
 	if (inode) {
-		inode->i_mode = mode | S_IFLNK;
-		inode->i_uid = current->fsuid;
-		inode->i_gid = current->fsgid;
-		inode->i_blksize = PAGE_CACHE_SIZE;
-		inode->i_blocks = 0;
-		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_mapping->a_ops = &dmfs_address_space_operations;
 		inode->i_op = &page_symlink_inode_operations;
 	}
@@ -79,10 +86,13 @@ struct inode *dmfs_create_symlink(struct inode *dir, int mode)
 static int dmfs_lv_unlink(struct inode *dir, struct dentry *dentry)
 {
 	struct inode *inode = dentry->d_inode;
+	struct file file = { f_dentry: dentry->d_parent };
 
 	if (!(inode->i_mode & S_IFLNK))
 		return -EINVAL;
 
+	dm_suspend(DMFS_I(dir)->md);
+	allow_write_access(&file);
 	inode->i_nlink--;
 	dput(dentry);
 	return 0;
@@ -96,29 +106,44 @@ static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry,
 	int rv;
 	int l;
 
-	if (dentry->d_name.len != 6 || memcmp(dentry->d_name.name, "ACTIVE", 6) != 0)
+	if (dentry->d_name.len != 6 || 
+	    memcmp(dentry->d_name.name, "ACTIVE", 6) != 0)
 		return -EINVAL;
 
 	de = dmfs_verify_name(dir, symname);
 	if (IS_ERR(de))
 		return PTR_ERR(de);
 
-	dput(de);
-
 	inode = dmfs_create_symlink(dir, S_IRWXUGO);
 	if (IS_ERR(inode)) {
-		return PTR_ERR(inode);
+		rv = PTR_ERR(inode);
+		goto out_allow_write;
 	}
 
+	DMFS_I(inode)->dentry = de;
 	d_instantiate(dentry, inode);
 	dget(dentry);
 
 	l = strlen(symname) + 1;
 	rv = block_symlink(inode, symname, l);
-	if (rv) {
-		dput(dentry);
-	}
+	if (rv)
+		goto out_dput;
 
+	rv = dm_activate(DMFS_I(dir)->md, DMFS_I(de->d_inode)->table);
+	if (rv)
+		goto out_dput;
+
+	return rv;
+
+out_dput:
+	dput(DMFS_I(inode)->dentry);
+	DMFS_I(inode)->dentry = NULL;
+out_allow_write:
+	{
+		struct file file = { f_dentry: de->d_parent };
+		allow_write_access(&file);
+		dput(de);
+	}
 	return rv;
 }
 
@@ -142,7 +167,8 @@ static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	if (!is_identifier(dentry->d_name.name, dentry->d_name.len))
 		return -EPERM;
 
-	if (dentry->d_name.len == 6 && memcmp(dentry->d_name.name, "ACTIVE", 6) == 0)
+	if (dentry->d_name.len == 6 && 
+	    memcmp(dentry->d_name.name, "ACTIVE", 6) == 0)
 		return -EINVAL;
 
 	if (dentry->d_name.name[0] == '.')
@@ -193,10 +219,8 @@ static int dmfs_lv_rmdir(struct inode *dir, struct dentry *dentry)
 
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
-		if (ret == 0) {
-			inode->i_nlink--;
-			dput(dentry);
-		}
+		inode->i_nlink--;
+		dput(dentry);
 	}
 
 	return ret;
