@@ -53,8 +53,12 @@ struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
 	if (nd.dentry->d_parent->d_inode != dir)
 		goto err_out;
 
+	err = -ENODATA;
 	if (DMFS_I(nd.dentry->d_inode) == NULL || 
 	    DMFS_I(nd.dentry->d_inode)->table == NULL)
+		goto err_out;
+
+	if (!list_empty(&(DMFS_I(nd.dentry->d_inode)->table->errors)))
 		goto err_out;
 
 	dentry = nd.dentry;
