@@ -133,24 +133,29 @@ int read_flags(uint32_t * status, int type, struct config_value *cv)
 		return 0;
 	}
 
-	while (cv) {
-		if (cv->type != CFG_STRING) {
-			log_err("Status value is not a string.");
-			return 0;
-		}
-
-		for (f = 0; flags[f].description; f++)
-			if (!strcmp(flags[f].description, cv->v.str)) {
-				s |= flags[f].mask;
-				break;
+	/*
+	 * Only scan the flags if it wasn't an empty array.
+	 */
+	if (cv->type != CFG_EMPTY_ARRAY) {
+		while (cv) {
+			if (cv->type != CFG_STRING) {
+				log_err("Status value is not a string.");
+				return 0;
 			}
 
-		if (!flags[f].description) {
-			log_err("Unknown status flag '%s'.", cv->v.str);
-			return 0;
-		}
+			for (f = 0; flags[f].description; f++)
+				if (!strcmp(flags[f].description, cv->v.str)) {
+					s |= flags[f].mask;
+					break;
+				}
 
-		cv = cv->next;
+			if (!flags[f].description) {
+				log_err("Unknown status flag '%s'.", cv->v.str);
+				return 0;
+			}
+
+			cv = cv->next;
+		}
 	}
 
 	*status = s;
