@@ -25,7 +25,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct lvinfo info;
 	int lv_total = 0;
-	ulong lv_capacity_total = 0;
+	uint64_t lv_capacity_total = 0;
 
 	const char *active_str, *snapshot_str;
 

@@ -533,6 +533,7 @@ static struct format_handler _format1_ops = {
 #ifdef LVM1_INTERNAL
 struct format_type *init_lvm1_format(struct cmd_context *cmd)
 #else				/* Shared */
+struct format_type *init_format(struct cmd_context *cmd);
 struct format_type *init_format(struct cmd_context *cmd)
 #endif
 {

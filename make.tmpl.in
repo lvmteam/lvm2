@@ -27,6 +27,7 @@ SHELL = /bin/sh
 INSTALL = @INSTALL@
 LN_S = @LN_S@
 LIBS = @LIBS@
+CFLAGS = @CFLAGS@
 
 # Setup directory variables
 prefix = $(DESTDIR)@prefix@
@@ -80,26 +81,6 @@ STRIP=
 #STRIP=-s
 
 DEPS=$(top_srcdir)/make.tmpl Makefile $(INC_LNS)
-
-ifeq ("@READLINE@", "yes")
-  CFLAGS += -DREADLINE_SUPPORT
-endif
-
-ifeq ("@DEVMAPPER@", "yes")
-  CFLAGS += -DDEVMAPPER_SUPPORT
-endif
-
-ifeq ("@HAVE_RL_COMPLETION_MATCHES@", "yes")
-  CFLAGS += -DHAVE_RL_COMPLETION_MATCHES
-endif
-
-ifeq ("@HAVE_LIBDL@", "yes")
-  CFLAGS += -DHAVE_LIBDL
-endif
-
-ifeq ("@LVM1@", "internal")
-  CFLAGS += -DLVM1_INTERNAL
-endif
 
 OBJECTS=$(SOURCES:%.c=%.o)
 

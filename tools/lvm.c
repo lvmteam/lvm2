@@ -10,19 +10,26 @@
 
 #include "stub.h"
 
-#include <getopt.h>
 #include <signal.h>
 #include <syslog.h>
 #include <libgen.h>
 #include <sys/stat.h>
 #include <time.h>
 
-#ifdef READLINE_SUPPORT
-#include <readline/readline.h>
-#include <readline/history.h>
-#ifndef HAVE_RL_COMPLETION_MATCHES
-#define rl_completion_matches(a, b) completion_matches((char *)a, b)
+#ifdef HAVE_GETOPTLONG
+#  include <getopt.h>
+#  define GETOPTLONG_FN(a, b, c, d, e) getopt_long((a), (b), (c), (d), (e))
+#else
+struct option {};
+#  define GETOPTLONG_FN(a, b, c, d, e) getopt((a), (b), (c))
 #endif
+
+#ifdef READLINE_SUPPORT
+#  include <readline/readline.h>
+#  include <readline/history.h>
+#  ifndef HAVE_RL_COMPLETION_MATCHES
+#    define rl_completion_matches(a, b) completion_matches((char *)a, b)
+#  endif
 #endif
 
 /*
@@ -396,6 +403,7 @@ static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 			*(*ptr)++ = ':';
 	}
 
+#ifdef HAVE_GETOPTLONG
 	if (*(a->long_arg + 2)) {
 		(*o)->name = a->long_arg + 2;
 		(*o)->has_arg = a->fn ? 1 : 0;
@@ -406,6 +414,7 @@ static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 			(*o)->val = arg;
 		(*o)++;
 	}
+#endif
 }
 
 static struct arg *_find_arg(struct command *com, int opt)
@@ -458,8 +467,8 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 
 	/* initialise getopt_long & scan for command line switches */
 	optarg = 0;
-	optind = 0;
-	while ((opt = getopt_long(*argc, *argv, str, opts, NULL)) >= 0) {
+	optind = 1;
+	while ((opt = GETOPTLONG_FN(*argc, *argv, str, opts, NULL)) >= 0) {
 
 		if (opt == '?')
 			return 0;
