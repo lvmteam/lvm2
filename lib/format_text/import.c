@@ -49,12 +49,12 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*desc = NULL;
 	*when = 0;
 
-	if (!(cft = create_config_tree())) {
+	if (!(cft = create_config_tree(file))) {
 		stack;
 		goto out;
 	}
 
-	if ((!dev && !read_config_file(cft, file)) ||
+	if ((!dev && !read_config_file(cft)) ||
 	    (dev && !read_config_fd(cft, dev, offset, size,
 				    offset2, size2, checksum_fn, checksum))) {
 		log_error("Couldn't read volume group metadata.");

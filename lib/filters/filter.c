@@ -82,7 +82,7 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f,
 	return 1;
 }
 
-static int *_scan_proc_dev(const char *proc, struct config_node *cn)
+static int *_scan_proc_dev(const char *proc, const struct config_node *cn)
 {
 	char line[80];
 	char proc_devices[PATH_MAX];
@@ -199,7 +199,7 @@ static int *_scan_proc_dev(const char *proc, struct config_node *cn)
 }
 
 struct dev_filter *lvm_type_filter_create(const char *proc,
-					  struct config_node *cn)
+					  const struct config_node *cn)
 {
 	struct dev_filter *f;
 

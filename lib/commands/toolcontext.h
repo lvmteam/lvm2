@@ -17,9 +17,7 @@
 #define _LVM_TOOLCONTEXT_H
 
 #include "dev-cache.h"
-#include "config.h"
 #include "pool.h"
-#include "metadata.h"
 
 #include <stdio.h>
 #include <limits.h>
@@ -47,6 +45,8 @@ struct config_info {
 	mode_t umask;
 };
 
+struct config_tree;
+
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
 struct cmd_context {
@@ -68,12 +68,15 @@ struct cmd_context {
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
 
+	struct list config_files;
+	int config_valid;
 	struct config_tree *cft;
 	struct config_info default_settings;
 	struct config_info current_settings;
 
 	/* List of defined tags */
 	struct list tags;
+	int hosttags;
 
 	char sys_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
@@ -83,5 +86,6 @@ struct cmd_context {
 struct cmd_context *create_toolcontext(struct arg *the_args);
 void destroy_toolcontext(struct cmd_context *cmd);
 int refresh_toolcontext(struct cmd_context *cmd);
+int config_files_changed(struct cmd_context *cmd);
 
 #endif

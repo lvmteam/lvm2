@@ -758,7 +758,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	set_cmd_name(cmd->command->name);
 
-	if (reload_config_file(&cmd->cft)) {
+	if (!cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
 			log_error("Updated config file invalid. Aborting.");
@@ -1054,7 +1054,7 @@ static char *_list_args(const char *text, int state)
 			char c;
 			if (!(c = (the_args +
 				   com->valid_args[match_no++])->short_arg))
-				    continue;
+				continue;
 
 			sprintf(s, "-%c", c);
 			if (!strncmp(text, s, len))

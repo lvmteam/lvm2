@@ -18,6 +18,8 @@
 #include "crc.h"
 #include "pool.h"
 #include "device.h"
+#include "str_list.h"
+#include "toolcontext.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -56,6 +58,7 @@ struct cs {
 	struct pool *mem;
 	time_t timestamp;
 	char *filename;
+	int exists;
 };
 
 static void _get_token(struct parser *p, int tok_prev);
@@ -93,7 +96,7 @@ static int _tok_match(const char *str, const char *b, const char *e)
 /*
  * public interface
  */
-struct config_tree *create_config_tree(void)
+struct config_tree *create_config_tree(const char *filename)
 {
 	struct cs *c;
 	struct pool *mem = pool_create(10 * 1024);
@@ -103,7 +106,7 @@ struct config_tree *create_config_tree(void)
 		return 0;
 	}
 
-	if (!(c = pool_alloc(mem, sizeof(*c)))) {
+	if (!(c = pool_zalloc(mem, sizeof(*c)))) {
 		stack;
 		pool_destroy(mem);
 		return 0;
@@ -112,7 +115,9 @@ struct config_tree *create_config_tree(void)
 	c->mem = mem;
 	c->cft.root = (struct config_node *) NULL;
 	c->timestamp = 0;
-	c->filename = NULL;
+	c->exists = 0;
+	if (filename)
+		c->filename = pool_strdup(c->mem, filename);
 	return &c->cft;
 }
 
@@ -204,29 +209,33 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 	return r;
 }
 
-int read_config_file(struct config_tree *cft, const char *file)
+int read_config_file(struct config_tree *cft)
 {
 	struct cs *c = (struct cs *) cft;
 	struct stat info;
 	struct device *dev;
 	int r = 1;
 
-	if (stat(file, &info)) {
-		log_sys_error("stat", file);
+	if (stat(c->filename, &info)) {
+		log_sys_error("stat", c->filename);
+		c->exists = 0;
 		return 0;
 	}
 
 	if (!S_ISREG(info.st_mode)) {
-		log_error("%s is not a regular file", file);
+		log_error("%s is not a regular file", c->filename);
+		c->exists = 0;
 		return 0;
 	}
 
+	c->exists = 1;
+
 	if (info.st_size == 0) {
-		log_verbose("%s is empty", file);
+		log_verbose("%s is empty", c->filename);
 		return 1;
 	}
 
-	if (!(dev = dev_create_file(file, NULL, NULL))) {
+	if (!(dev = dev_create_file(c->filename, NULL, NULL))) {
 		stack;
 		return 0;
 	}
@@ -242,7 +251,6 @@ int read_config_file(struct config_tree *cft, const char *file)
 	dev_close(dev);
 
 	c->timestamp = info.st_mtime;
-	c->filename = pool_strdup(c->mem, file);
 
 	return r;
 }
@@ -255,74 +263,43 @@ time_t config_file_timestamp(struct config_tree *cft)
 }
 
 /*
- * Returns 1 if config file reloaded
+ * Return 1 if config files ought to be reloaded
  */
-int reload_config_file(struct config_tree **cft)
+int config_file_changed(struct config_tree *cft)
 {
-	struct config_tree *new_cft;
-	struct cs *c = (struct cs *) *cft;
-	struct cs *new_cs;
+	struct cs *c = (struct cs *) cft;
 	struct stat info;
-	struct device *dev;
-	int r;
 
 	if (!c->filename)
 		return 0;
 
 	if (stat(c->filename, &info) == -1) {
-		if (errno == ENOENT)
-			return 1;
+		/* Ignore a deleted config file: still use original data */
+		if (errno == ENOENT) {
+			if (!c->exists)
+				return 0;
+			log_very_verbose("Config file %s has disappeared!",
+					 c->filename);
+			goto reload;
+		}
 		log_sys_error("stat", c->filename);
-		log_error("Failed to reload configuration file");
+		log_error("Failed to reload configuration files");
 		return 0;
 	}
 
 	if (!S_ISREG(info.st_mode)) {
 		log_error("Configuration file %s is not a regular file",
 			  c->filename);
-		return 0;
+		goto reload;
 	}
 
 	/* Unchanged? */
 	if (c->timestamp == info.st_mtime)
 		return 0;
 
-	log_verbose("Detected config file change: Reloading %s", c->filename);
-
-	if (info.st_size == 0) {
-		log_verbose("Config file reload: %s is empty", c->filename);
-		return 0;
-	}
-
-	if (!(new_cft = create_config_tree())) {
-		log_error("Allocation of new config_tree failed");
-		return 0;
-	}
-
-	if (!(dev = dev_create_file(c->filename, NULL, NULL))) {
-		stack;
-		return 0;
-	}
-
-	if (!dev_open_flags(dev, O_RDONLY, 0, 0)) {
-		stack;
-		return 0;
-	}
-
-	r = read_config_fd(new_cft, dev, 0, (size_t) info.st_size,
-			   0, 0, (checksum_fn_t) NULL, 0);
-
-	dev_close(dev);
-
-	if (r) {
-		new_cs = (struct cs *) new_cft;
-		new_cs->filename = pool_strdup(new_cs->mem, c->filename);
-		new_cs->timestamp = info.st_mtime;
-		destroy_config_tree(*cft);
-		*cft = new_cft;
-	}
-
-	return r;
+      reload:
+	log_verbose("Detected config file change to %s", c->filename);
+	return 1;
 }
 
 static void _write_value(FILE *fp, struct config_value *v)
@@ -739,7 +716,8 @@ static char *_dup_tok(struct parser *p)
 /*
  * utility functions
  */
-struct config_node *find_config_node(struct config_node *cn, const char *path)
+struct config_node *find_config_node(const struct config_node *cn,
+				     const char *path)
 {
 	const char *e;
 
@@ -767,13 +745,13 @@ struct config_node *find_config_node(struct config_node *cn, const char *path)
 		path = e;
 	}
 
-	return cn;
+	return (struct config_node *) cn;
 }
 
-const char *find_config_str(struct config_node *cn,
+const char *find_config_str(const struct config_node *cn,
 			    const char *path, const char *fail)
 {
-	struct config_node *n = find_config_node(cn, path);
+	const struct config_node *n = find_config_node(cn, path);
 
 	if (n && n->v->type == CFG_STRING) {
 		if (*n->v->v.str)
@@ -787,9 +765,9 @@ const char *find_config_str(struct config_node *cn,
 	return fail;
 }
 
-int find_config_int(struct config_node *cn, const char *path, int fail)
+int find_config_int(const struct config_node *cn, const char *path, int fail)
 {
-	struct config_node *n = find_config_node(cn, path);
+	const struct config_node *n = find_config_node(cn, path);
 
 	if (n && n->v->type == CFG_INT) {
 		log_very_verbose("Setting %s to %d", path, n->v->v.i);
@@ -801,9 +779,10 @@ int find_config_int(struct config_node *cn, const char *path, int fail)
 	return fail;
 }
 
-float find_config_float(struct config_node *cn, const char *path, float fail)
+float find_config_float(const struct config_node *cn, const char *path,
+			float fail)
 {
-	struct config_node *n = find_config_node(cn, path);
+	const struct config_node *n = find_config_node(cn, path);
 
 	if (n && n->v->type == CFG_FLOAT) {
 		log_very_verbose("Setting %s to %f", path, n->v->v.r);
@@ -843,9 +822,9 @@ static int _str_to_bool(const char *str, int fail)
 	return fail;
 }
 
-int find_config_bool(struct config_node *cn, const char *path, int fail)
+int find_config_bool(const struct config_node *cn, const char *path, int fail)
 {
-	struct config_node *n = find_config_node(cn, path);
+	const struct config_node *n = find_config_node(cn, path);
 	struct config_value *v;
 
 	if (!n)
@@ -864,10 +843,10 @@ int find_config_bool(struct config_node *cn, const char *path, int fail)
 	return fail;
 }
 
-int get_config_uint32(struct config_node *cn, const char *path,
+int get_config_uint32(const struct config_node *cn, const char *path,
 		      uint32_t *result)
 {
-	struct config_node *n;
+	const struct config_node *n;
 
 	n = find_config_node(cn, path);
 
@@ -878,10 +857,10 @@ int get_config_uint32(struct config_node *cn, const char *path,
 	return 1;
 }
 
-int get_config_uint64(struct config_node *cn, const char *path,
+int get_config_uint64(const struct config_node *cn, const char *path,
 		      uint64_t *result)
 {
-	struct config_node *n;
+	const struct config_node *n;
 
 	n = find_config_node(cn, path);
 
@@ -893,9 +872,10 @@ int get_config_uint64(struct config_node *cn, const char *path,
 	return 1;
 }
 
-int get_config_str(struct config_node *cn, const char *path, char **result)
+int get_config_str(const struct config_node *cn, const char *path,
+		   char **result)
 {
-	struct config_node *n;
+	const struct config_node *n;
 
 	n = find_config_node(cn, path);
 
@@ -903,5 +883,117 @@ int get_config_str(struct config_node *cn, const char *path, char **result)
 		return 0;
 
 	*result = n->v->v.str;
+	return 1;
+}
+
+/* Insert cn2 after cn1 */
+static void _insert_config_node(struct config_node **cn1,
+				struct config_node *cn2)
+{
+	if (!*cn1) {
+		*cn1 = cn2;
+		cn2->sib = NULL;
+	} else {
+		cn2->sib = (*cn1)->sib;
+		(*cn1)->sib = cn2;
+	}
+}
+
+/*
+ * Merge section cn2 into section cn1 (which has the same name)
+ * overwriting any existing cn1 nodes with matching names.
+ */
+static void _merge_section(struct config_node *cn1, struct config_node *cn2)
+{
+	struct config_node *cn, *nextn, *oldn;
+	struct config_value *cv;
+
+	for (cn = cn2->child; cn; cn = nextn) {
+		nextn = cn->sib;
+
+		/* Skip "tags" */
+		if (!strcmp(cn->key, "tags"))
+			continue;
+
+		/* Subsection? */
+		if (!cn->v)
+			/* Ignore - we don't have any of these yet */
+			continue;
+		/* Not already present? */
+		if (!(oldn = find_config_node(cn1->child, cn->key))) {
+			_insert_config_node(&cn1->child, cn);
+			continue;
+		}
+		/* Merge certain value lists */
+		if ((!strcmp(cn1->key, "activation") &&
+		     !strcmp(cn->key, "volume_list")) ||
+		    (!strcmp(cn1->key, "devices") &&
+		     (!strcmp(cn->key, "filter") || !strcmp(cn->key, "types")))) {
+			cv = cn->v;
+			while (cv->next)
+				cv = cv->next;
+			cv->next = oldn->v;
+		}
+
+		/* Replace values */
+		oldn->v = cn->v;
+	}
+}
+
+static int _match_host_tags(struct list *tags, struct config_node *tn)
+{
+	struct config_value *tv;
+	const char *str;
+
+	for (tv = tn->v; tv; tv = tv->next) {
+		if (tv->type != CFG_STRING)
+			continue;
+		str = tv->v.str;
+		if (*str == '@')
+			str++;
+		if (!*str)
+			continue;
+		if (str_list_match_item(tags, str))
+			return 1;
+	}
+
+	return 0;
+}
+
+/* Destructively merge a new config tree into an existing one */
+int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
+		      struct config_tree *newdata)
+{
+	struct config_node *root = cft->root;
+	struct config_node *cn, *nextn, *oldn, *tn, *cn2;
+
+	for (cn = newdata->root; cn; cn = nextn) {
+		nextn = cn->sib;
+		/* Ignore tags section */
+		if (!strcmp(cn->key, "tags"))
+			continue;
+		/* If there's a tags node, skip if host tags don't match */
+		if ((tn = find_config_node(cn->child, "tags"))) {
+			if (!_match_host_tags(&cmd->tags, tn))
+				continue;
+		}
+		if (!(oldn = find_config_node(root, cn->key))) {
+			_insert_config_node(&cft->root, cn);
+			/* Remove any "tags" nodes */
+			for (cn2 = cn->child; cn2; cn2 = cn2->sib) {
+				if (!strcmp(cn2->key, "tags")) {
+					cn->child = cn2->sib;
+					continue;
+				}
+				if (cn2->sib && !strcmp(cn2->sib->key, "tags")) {
+					cn2->sib = cn2->sib->sib;
+					continue;
+				}
+			}
+			continue;
+		}
+		_merge_section(oldn, cn);
+	}
+
 	return 1;
 }

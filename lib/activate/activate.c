@@ -173,13 +173,13 @@ int activation(void)
 static int _passes_activation_filter(struct cmd_context *cmd,
 				     struct logical_volume *lv)
 {
-	struct config_node *cn;
+	const struct config_node *cn;
 	struct config_value *cv;
 	char *str;
 	char path[PATH_MAX];
 
 	if (!(cn = find_config_node(cmd->cft->root, "activation/volume_list"))) {
-		/* If no hosts tags defined, activate */
+		/* If no host tags defined, activate */
 		if (list_empty(&cmd->tags))
 			return 1;
 

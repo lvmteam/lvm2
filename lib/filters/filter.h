@@ -29,7 +29,7 @@
 #endif
 
 struct dev_filter *lvm_type_filter_create(const char *proc,
-					  struct config_node *cn);
+					  const struct config_node *cn);
 
 void lvm_type_filter_destroy(struct dev_filter *f);
 
