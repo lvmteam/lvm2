@@ -88,11 +88,11 @@ int dm_init_fs()
 	pfd->minor = -1;
 	_control->data = pfd;
 
-	return 1;
+	return 0;
 
  fail:
 	dm_fin_fs();
-	return 0;
+	return -ENOMEM;
 }
 
 void dm_fin_fs(void)
