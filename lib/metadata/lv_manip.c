@@ -94,10 +94,10 @@ static int _comp_area(const void *l, const void *r)
 	struct pv_area *rhs = *((struct pv_area **) r);
 
 	if (lhs->count < rhs->count)
-		return -1;
+		return 1;
 
 	else if (lhs->count > rhs->count)
-		return 1;
+		return -1;
 
 	return 0;
 }
@@ -106,6 +106,7 @@ static int _alloc_striped(struct logical_volume *lv,
 			  struct list *pvms, uint32_t allocated,
 			  uint32_t stripes, uint32_t stripe_size)
 {
+	int r = 0;
 	struct list *pvmh;
 	struct pv_area **areas;
 	int pv_count = 0, index;
@@ -135,26 +136,27 @@ static int _alloc_striped(struct logical_volume *lv,
 						   struct pv_area);
 		}
 
-		if (index < stripes)
-			goto no_space;
+		if (index < stripes) {
+			log_error("Insufficient free extents (suitable for "
+				  "striping) to allocate logical volume "
+				  "%s: %u required",
+				  lv->name, lv->le_count);
+			goto out;
+		}
 
 		/* sort the areas so we allocate from the biggest */
 		qsort(areas, index, sizeof(*areas), _comp_area);
 
 		if (!_alloc_stripe_area(lv, stripes, areas, &allocated)) {
 			stack;
-			return 0;
+			goto out;
 		}
 	}
+	r = 1;
 
-	return 1;
-
- no_space:
-
-	log_error("Insufficient free extents (suitable for striping) to "
-		  "allocate logical volume %s: %u required",
-			  lv->name, lv->le_count);
-	return 0;
+ out:
+	dbg_free(areas);
+	return r;
 }
 
 
