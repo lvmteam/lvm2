@@ -15,6 +15,7 @@ SOURCES=\
 	device/dev-io.c \
 	format1/disk-rep.c \
 	format1/format1.c \
+	format1/import-export.c \
 	log/log.c \
 	mm/dbg_malloc.c \
 	mm/pool.c

@@ -17,6 +17,35 @@
 
 #define UNMAPPED_EXTENT 0
 
+/* volume group */
+#define	VG_ACTIVE            0x01	/* vg_status */
+#define	VG_EXPORTED          0x02	/*     "     */
+#define	VG_EXTENDABLE        0x04	/*     "     */
+
+#define	VG_READ              0x01	/* vg_access */
+#define	VG_WRITE             0x02	/*     "     */
+#define	VG_CLUSTERED         0x04	/*     "     */
+#define	VG_SHARED            0x08	/*     "     */
+
+/* logical volume */
+#define	LV_ACTIVE            0x01	/* lv_status */
+#define	LV_SPINDOWN          0x02	/*     "     */
+
+#define	LV_READ              0x01	/* lv_access */
+#define	LV_WRITE             0x02	/*     "     */
+#define	LV_SNAPSHOT          0x04	/*     "     */
+#define	LV_SNAPSHOT_ORG      0x08	/*     "     */
+
+#define	LV_BADBLOCK_ON       0x01	/* lv_badblock */
+
+#define	LV_STRICT            0x01	/* lv_allocation */
+#define	LV_CONTIGUOUS        0x02	/*       "       */
+
+/* physical volume */
+#define	PV_ACTIVE            0x01	/* pv_status */
+#define	PV_ALLOCATABLE       0x02	/* pv_allocatable */
+
+
 struct data_area {
 	uint32_t base;
 	uint32_t size;
@@ -126,5 +155,40 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		   struct pool *mem, struct list_head *results);
 
 int write_pvs(struct list_head *pvs);
+
+
+/*
+ * Functions to translate to betweendisk and in
+ * core structures.
+ */
+int import_pv(struct pool *mem, struct device *dev,
+	      struct physical_volume *pv, struct pv_disk *pvd);
+int export_pv(struct pv_disk *pvd, struct physical_volume *pv);
+
+int import_vg(struct pool *mem,
+	      struct volume_group *vg, struct disk_list *dl);
+int export_vg(struct vg_disk *vgd, struct volume_group *vg);
+
+int import_lv(struct pool *mem, struct logical_volume *lv,
+	      struct lv_disk *lvd);
+void export_lv(struct lv_disk *lvd, struct volume_group *vg,
+	       struct logical_volume *lv, const char *prefix);
+
+int import_extents(struct pool *mem, struct volume_group *vg,
+		   struct list_head *pvs);
+int export_extents(struct disk_list *dl, int lv_num,
+		   struct logical_volume *lv,
+		   struct physical_volume *pv);
+
+int import_pvs(struct pool *mem, struct list_head *pvs,
+	       struct list_head *results, int *count);
+
+int import_lvs(struct pool *mem, struct volume_group *vg,
+	       struct list_head *pvs);
+int export_lvs(struct disk_list *dl, struct volume_group *vg,
+	       struct physical_volume *pv, const char *prefix);
+
+int export_uuids(struct disk_list *dl, struct volume_group *vg);
+
 
 #endif
