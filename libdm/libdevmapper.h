@@ -97,10 +97,8 @@ int dm_task_add_target(struct dm_task *dmt,
 
 /* Use this to retrive target information returned from a STATUS call */
 void *dm_get_next_target(struct dm_task *dmt,
-			 void *next, unsigned long long *start,
-			 unsigned long long *length,
-			 char **target_type,
-			 char **params);
+			 void *next, uint64_t *start, uint64_t *length,
+			 char **target_type, char **params);
 
 /*
  * Call this to actually run the ioctl.
