@@ -81,21 +81,16 @@ int lvcreate(int argc, char **argv)
 
 	if (arg_count(name_ARG))
 		lv_name = arg_value(name_ARG);
-	else {
-		log_error("LVM2 currently requires you to give a name "
-			  "using -n");
-		return EINVALID_CMD_LINE;
-	}
 
 	/* If VG not on command line, try -n arg and then environment */
 	if (!argc) {
-		if (!(vg_name = extract_vgname(fid, lv_name))) {
+		if (!lv_name || !(vg_name = extract_vgname(fid, lv_name))) {
 			log_error("Please provide a volume group name");
 			return EINVALID_CMD_LINE;
 		}
 	} else {
 		/* Ensure lv_name doesn't contain a different VG! */
-		if (strchr(lv_name, '/')) {
+		if (lv_name && strchr(lv_name, '/')) {
 			if (!(vg_name = extract_vgname(fid, lv_name)))
 				return EINVALID_CMD_LINE;
 			if (strcmp(vg_name, argv[0])) {
@@ -109,7 +104,7 @@ int lvcreate(int argc, char **argv)
 		argc--;
 	}
 
-	if ((st = strrchr(lv_name, '/')))
+	if (lv_name && (st = strrchr(lv_name, '/')))
 		lv_name = st + 1;
 
 	/* does VG exist? */
@@ -126,8 +121,8 @@ int lvcreate(int argc, char **argv)
 	}
 
 	if (lv_name && (lvh = find_lv_in_vg(vg, lv_name))) {
-		log_error("Logical volume %s already exists in volume group %s",
-			  lv_name, vg_name);
+		log_error("Logical volume %s already exists in "
+			  "volume group %s", lv_name, vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -225,8 +220,6 @@ int lvcreate(int argc, char **argv)
 	}
 *************/
 
-	log_verbose("Creating logical volume %s", lv_name);
-
 	if (!(lv = lv_create(lv_name, status, stripes, stripesize,
 			     extents, vg, pvh)))
 		return ECMD_FAILED;
@@ -243,30 +236,31 @@ int lvcreate(int argc, char **argv)
 	if (!lv_activate(lv))
 		return ECMD_FAILED;
 
-	if (zero) {
+	if (0) {
 		struct device *dev;
 		/* FIXME 2 blocks */
 		char buf[4096];
 
 		memset(buf, 0, sizeof(buf));
 
-		log_verbose("Zeroing start of logical volume %s", lv_name);
+		log_verbose("Zeroing start of logical volume %s", lv->name);
 
 		/* FIXME get dev = dev_cache_get(lv_name, fid->cmd->filter); */
 		/* FIXME Add fsync! */
 		if (!(dev_write(dev, 0, sizeof(buf), &buf) == sizeof(buf))) {
-			log_error("Initialisation of %s failed", dev_name(dev));
+			log_error("Initialisation of %s failed",
+				  dev_name(dev));
 			return ECMD_FAILED;
 		}
 	} else
-		log_print("WARNING: %s not zeroed", lv_name);
+		log_print("WARNING: %s not zeroed", lv->name);
 
 /******** FIXME backup
 	if ((ret = do_autobackup(vg_name, vg)))
 		return ret;
 ***********/
 
-	log_print("Logical volume %s created", lv_name);
+	log_print("Logical volume %s created", lv->name);
 
 	return 0;
 }

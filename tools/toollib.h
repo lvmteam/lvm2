@@ -29,8 +29,8 @@ int process_each_vg(int argc, char **argv,
 		    int (*process_single) (const char *vg_name));
 
 int process_each_pv(int argc, char **argv, struct volume_group *vg,
-		    int (*process_single) (struct volume_group * vg,
-					   struct physical_volume * pv));
+		    int (*process_single) (struct volume_group *vg,
+					   struct physical_volume *pv));
 
 int is_valid_chars(char *n);
 
