@@ -216,5 +216,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 int export_uuids(struct disk_list *dl, struct volume_group *vg);
 
+void export_numbers(struct list_head *pvs, struct volume_group *vg);
+
 
 #endif
