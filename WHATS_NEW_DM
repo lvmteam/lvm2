@@ -1,5 +1,6 @@
-Version 1.01.01 -
+Version 1.01.01 - 29 Mar 2005
 =============================
+  Update dmsetup man page.
   Drop-in devmap_name replacement.
   Add option to compile without ioctl for testing.
   Fix DM_LIB_VERSION sed.
