@@ -46,44 +46,44 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
 	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
 
- 	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
- 		if (!max_lv)
- 			max_lv = 255;
- 		if (!max_pv)
- 			max_pv = 255;
- 		if (max_lv > 255 || max_pv > 255) {
- 			log_error("Number of volumes may not exceed 255");
- 			return EINVALID_CMD_LINE;
- 		}
- 	}
-  
-  	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
-  		log_error("Physical extent size may not be negative");
-  		return EINVALID_CMD_LINE;
-  	}
-  
- 	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, 0) == SIGN_MINUS) {
- 		log_error("Max Logical Volumes may not be negative");
-  		return EINVALID_CMD_LINE;
-  	}
-  
- 	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, 0) == SIGN_MINUS) {
- 		log_error("Max Physical Volumes may not be negative");
-  		return EINVALID_CMD_LINE;
-  	}
-  
- 	/* Units of 512-byte sectors */
- 	extent_size =
- 	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
+	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
+		if (!max_lv)
+			max_lv = 255;
+		if (!max_pv)
+			max_pv = 255;
+		if (max_lv > 255 || max_pv > 255) {
+			log_error("Number of volumes may not exceed 255");
+			return EINVALID_CMD_LINE;
+		}
+	}
+
+	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
+		log_error("Physical extent size may not be negative");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, 0) == SIGN_MINUS) {
+		log_error("Max Logical Volumes may not be negative");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, 0) == SIGN_MINUS) {
+		log_error("Max Physical Volumes may not be negative");
+		return EINVALID_CMD_LINE;
+	}
+
+	/* Units of 512-byte sectors */
+	extent_size =
+	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
 
 	if (!extent_size) {
 		log_error("Physical extent size may not be zero");
 		return EINVALID_CMD_LINE;
 	}
 
-  	/* Strip dev_dir if present */
-  	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
-  		vg_name += strlen(cmd->dev_dir);
+	/* Strip dev_dir if present */
+	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
+		vg_name += strlen(cmd->dev_dir);
 
 	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
 	if (path_exists(vg_path)) {
@@ -109,24 +109,24 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Warning: Setting maxphysicalvolumes to %d "
 			  "(0 means unlimited)", vg->max_pv);
 
- 	if (arg_count(cmd, addtag_ARG)) {
- 		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
- 			log_error("Failed to get tag");
- 			return ECMD_FAILED;
- 		}
-  
-  		if (!(vg->fid->fmt->features & FMT_TAGS)) {
-  			log_error("Volume group format does not support tags");
-  			return ECMD_FAILED;
-  		}
-  
- 		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
- 			log_error("Failed to add tag %s to volume group %s",
- 				  tag, vg_name);
- 			return ECMD_FAILED;
- 		}
- 	}
- 
+	if (arg_count(cmd, addtag_ARG)) {
+		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
+			log_error("Failed to get tag");
+			return ECMD_FAILED;
+		}
+
+		if (!(vg->fid->fmt->features & FMT_TAGS)) {
+			log_error("Volume group format does not support tags");
+			return ECMD_FAILED;
+		}
+
+		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
+			log_error("Failed to add tag %s to volume group %s",
+				  tag, vg_name);
+			return ECMD_FAILED;
+		}
+	}
+
 	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
