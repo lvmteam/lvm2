@@ -6,6 +6,7 @@
  */
 
 #include "tools.h"
+#include <fcntl.h>
 
 int lvcreate(int argc, char **argv)
 {
@@ -220,9 +221,8 @@ int lvcreate(int argc, char **argv)
 	}
 *************/
 
-	if (!(lv = lv_create(lv_name, status, stripes, stripesize, extents, 
-			     vg, pvh))) 
-		return ECMD_FAILED;
+	if (!(lv = lv_create(lv_name, status, stripes, stripesize, extents,
+			     vg, pvh))) return ECMD_FAILED;
 
 	if (arg_count(readahead_ARG)) {
 		log_verbose("Setting read ahead sectors");
@@ -240,23 +240,27 @@ int lvcreate(int argc, char **argv)
 
 	if (zero) {
 		struct device *dev;
-		/* FIXME 2 blocks */
-		char buf[4096];
+		char *name;
 
-		memset(buf, 0, sizeof(buf));
-
-		log_verbose("Zeroing start of logical volume %s", lv->name);
-
-		log_print("WARNING: %s not zeroed", lv->name);
-		/* FIXME get dev = dev_cache_get(lv->name, fid->cmd->filter); */
-		/* FIXME Add fsync! */
-/******** FIXME Really zero it 
-		if (!(dev_write(dev, 0, sizeof(buf), &buf) == sizeof(buf))) {
-			log_error("Initialisation of %s failed",
-				  dev_name(dev));
+		if (!(name = dbg_malloc(NAME_LEN))) {
+			log_error("Name allocation failed - device not zeroed");
 			return ECMD_FAILED;
 		}
-**************/
+
+		snprintf(name, NAME_LEN, "%s%s/%s", fid->cmd->dev_dir,
+			 lv->vg->name, lv->name);
+
+		log_verbose("Zeroing start of logical volume %s", name);
+
+		if (!(dev = dev_cache_get(name, NULL))) {
+			log_error("%s not found: device not zeroed", name);
+			return ECMD_FAILED;
+		}
+		if (!(dev_open(dev, O_WRONLY)))
+			return ECMD_FAILED;
+		dev_zero(dev, 0, 4096);
+		dev_close(dev);
+
 	} else
 		log_print("WARNING: %s not zeroed", lv->name);
 
