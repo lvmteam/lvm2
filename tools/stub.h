@@ -30,7 +30,6 @@ int lvmsar(int argc, char **argv) {return 1;}
 int lvreduce(int argc, char **argv) {return 1;}
 int lvrename(int argc, char **argv) {return 1;}
 int lvscan(int argc, char **argv) {return 1;}
-int pvchange(int argc, char **argv) {return 1;}
 int pvdata(int argc, char **argv) {return 1;}
 int vgcfgbackup(int argc, char **argv) {return 1;}
 int vgcfgrestore(int argc, char **argv) {return 1;}
@@ -44,7 +43,6 @@ int vgimport(int argc, char **argv) {return 1;}
 int vgmerge(int argc, char **argv) {return 1;}
 int vgmknodes(int argc, char **argv) {return 1;}
 int vgreduce(int argc, char **argv) {return 1;}
-int vgrename(int argc, char **argv) {return 1;}
 int vgremove(int argc, char **argv) {return 1;}
 int vgscan(int argc, char **argv) {return 1;}
 int vgsplit(int argc, char **argv) {return 1;}

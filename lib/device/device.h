@@ -32,5 +32,9 @@ int64_t dev_write(struct device *dev,
 /* FIXME: Alasdair lets add more query functions here for accessing
    the partition information, this can then be used by your filter. */
 
+#define LVM_DEFAULT_DIR_PREFIX "/dev/"
+/* FIXME Allow config file override */
+static inline char *lvm_dir_prefix(void) { return LVM_DEFAULT_DIR_PREFIX; }
+
 #endif
 

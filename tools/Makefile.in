@@ -24,8 +24,10 @@ SOURCES=\
 	lvm.c\
 	lvremove.c\
 	pvcreate.c\
+	pvchange.c\
 	pvdisplay.c\
 	pvscan.c\
+	vgrename.c\
 	lvactivate.c
 
 TARGETS=\

@@ -35,7 +35,7 @@ clean:
 
 distclean:
 	find . -maxdepth 1 -type l -exec $(RM) \{\} \;
-	$(RM) Makefile .include_symlinks
+	$(RM) Makefile .include_symlinks .symlinks_created
 
 .PHONY: clean distclean all
 
