@@ -20,6 +20,10 @@ ifeq ("@LVM1@", "shared")
   SUBDIRS = format1
 endif
 
+ifeq ("@POOL@", "shared")
+  SUBDIRS += format_pool
+endif
+
 ifeq ("@SNAPSHOTS@", "shared")
   SUBDIRS += snapshot
 endif
@@ -90,6 +94,14 @@ ifeq ("@LVM1@", "internal")
 	format1/layout.c \
 	format1/lvm1-label.c \
 	format1/vg_number.c
+endif
+
+ifeq ("@POOL@", "internal")
+  SOURCES +=\
+	format_pool/disk_rep.c \
+	format_pool/format_pool.c \
+	format_pool/import_export.c \
+	format_pool/pool_label.c
 endif
 
 ifeq ("@SNAPSHOTS@", "internal")

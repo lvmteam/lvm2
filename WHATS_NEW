@@ -1,5 +1,6 @@
 Version 2.00.17 -
 =============================
+  Add read-only GFS pool support.
   Add lvm2create_initrd script from http://poochiereds.net/svn/lvm2/
   Fix rounding of large diplayed sizes.
   Suppress decimal point when using units of sectors/bytes.

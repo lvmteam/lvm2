@@ -121,6 +121,25 @@ if test x$LVM1 = xinternal; then
 	CFLAGS="$CFLAGS -DLVM1_INTERNAL"
 fi
 
+dnl -- format_pool inclusion type
+AC_ARG_WITH(pool,
+  [  --with-pool=TYPE        GFS pool metadata support: internal/shared/none
+                          [TYPE=internal] ],
+  [ POOL="$withval" ],
+  [ POOL="internal" ])
+
+if [[ "x$POOL" != xnone -a "x$POOL" != xinternal -a "x$POOL" != xshared ]];
+ then  AC_MSG_ERROR(
+--with-pool parameter invalid
+)
+ exit
+fi;
+
+if test x$POOL = xinternal; then
+	CFLAGS="$CFLAGS -DPOOL_INTERNAL"
+fi
+
+
 AC_ARG_ENABLE(jobs, [  --enable-jobs=NUM       Number of jobs to run simultaneously], JOBS=-j$enableval, JOBS=-j2)
 
 dnl -- snapshots inclusion type
@@ -246,7 +265,7 @@ else
 fi
 
 dnl Check for shared/static conflicts
-if [[ \( "x$LVM1" = xshared -o \
+if [[ \( "x$LVM1" = xshared -o "x$POOL" = xshared -o \
       "x$SNAPSHOTS" = xshared -o "x$MIRRORS" = xshared \
       \) -a "x$STATIC_LINK" = xyes ]];
  then  AC_MSG_ERROR(
@@ -325,6 +344,7 @@ fi
 AC_SUBST(JOBS)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(LVM1)
+AC_SUBST(POOL)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(MIRRORS)
 AC_SUBST(OWNER)
@@ -360,6 +380,7 @@ doc/Makefile								\
 include/Makefile						 	\
 lib/Makefile							 	\
 lib/format1/Makefile						 	\
+lib/format_pool/Makefile						\
 lib/mirror/Makefile							\
 lib/snapshot/Makefile							\
 man/Makefile							 	\
