@@ -18,19 +18,6 @@
  *
  */
 
-xx(e2fsadm,
-   "Resize logical volume and ext2 filesystem",
-   "e2fsadm "
-   "[-d|--debug] " "[-h|--help] " "[-n|--nofsck]" "\n"
-   "\t{[-l|--extents] [+|-]LogicalExtentsNumber |" "\n"
-   "\t [-L|--size] [+|-]LogicalVolumeSize[kKmMgGtT]}" "\n"
-   "\t[-t|--test] "  "\n"
-   "\t[-v|--verbose] "  "\n"
-   "\t[--version] " "\n"
-   "\tLogicalVolumePath" "\n",
-
-    extents_ARG, size_ARG, nofsck_ARG, test_ARG)
-
 xx(help,
    "Display help for commands",
    "help <command>" "\n")
