@@ -94,6 +94,7 @@ struct dm_task *dm_task_create(int type)
 
 	dmt->type = type;
 	dmt->minor = -1;
+	dmt->major = -1;
 
 	return dmt;
 }
@@ -144,6 +145,14 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
 		return 0;
 	}
+
+	return 1;
+}
+
+int dm_task_set_major(struct dm_task *dmt, int major)
+{
+	dmt->major = major;
+	log_debug("Setting major: %d", dmt->major);
 
 	return 1;
 }

@@ -238,7 +238,7 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 
 	if (dmt->minor >= 0) {
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
-		dmi->dev = MKDEV(0, dmt->minor);
+		dmi->dev = MKDEV((dmt->major >= 0) ? : 0, dmt->minor);
 	}
 
 	if (dmt->uuid)

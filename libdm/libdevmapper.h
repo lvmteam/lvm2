@@ -89,6 +89,7 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
 int dm_task_set_minor(struct dm_task *dmt, int minor);
+int dm_task_set_major(struct dm_task *dmt, int major);
 
 /*
  * Use these to prepare for a create or reload.

@@ -28,6 +28,7 @@ struct dm_task {
 	struct target *head, *tail;
 
 	int read_only;
+	int major;
 	int minor;
 	union {
 		struct dm_ioctl *v3;
