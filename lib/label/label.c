@@ -7,6 +7,7 @@
 #include "label.h"
 #include "list.h"
 #include "dbg_malloc.h"
+#include "log.h"
 
 /*
  * Internal labeller struct.
@@ -39,7 +40,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 	return li;
 }
 
-static void _free_li(struct labeller_i *li)
+static void _free_li(struct list *li)
 {
 	dbg_free(li);
 }
@@ -48,6 +49,7 @@ static void _free_li(struct labeller_i *li)
 int label_init(void)
 {
 	list_init(&_labellers);
+	return 1;
 }
 
 void label_exit(void)

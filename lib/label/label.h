@@ -11,7 +11,7 @@
 #include "device.h"
 
 struct label {
-	struct uuid id;
+	struct id id;
 
 	char volume_type[32];
 	uint32_t version[3];
