@@ -46,7 +46,7 @@ struct line_c {
 	struct file *out;
 };
 
-static int is_identifier(char *str, int len)
+static int is_identifier(const char *str, int len)
 {
 	while(len--) {
 		if (!isalnum(*str) || *str != '_')
