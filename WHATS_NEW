@@ -1,6 +1,8 @@
-Version 2.00.10 - 6 Apr 2004
+Version 2.00.10 - 7 Apr 2004
 ============================
   More fixes for static build.
+  Add basic selinux support.
+  Fix sysfs detection.
 
 Version 2.00.09 - 31 Mar 2004
 =============================
