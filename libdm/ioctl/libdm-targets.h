@@ -51,6 +51,7 @@ struct dm_task {
 	char *newname;
 	char *message;
 	uint64_t sector;
+	int no_open_count;
 
 	char *uuid;
 };
