@@ -124,11 +124,11 @@ struct lv_list {
 struct io_space {
 	/* Returns list of names of all vgs - vg
            component only, not full path*/
-	struct name_list *(*get_vgs)(struct io_space *is);
+	struct list_head *(*get_vgs)(struct io_space *is);
 
-	/* Returns list of fully-populated pv
+	/* Returns list of fully-populated pv_list
            structures */
-	struct pv_list *(*get_pvs)(struct io_space *is);
+	struct list_head *(*get_pvs)(struct io_space *is);
 
 	/* Return PV with given name (may be full
            or relative path) */
