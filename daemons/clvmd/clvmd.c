@@ -216,8 +216,6 @@ int main(int argc, char *argv[])
 	   USR2 causes child threads to exit.
 	   PIPE should be ignored */
 	signal(SIGUSR2, sigusr2_handler);
-	signal(SIGTERM, sigterm_handler);
-	signal(SIGINT, sigterm_handler);
 	signal(SIGPIPE, SIG_IGN);
 
 	/* Block SIGUSR2 in the main process */
@@ -274,6 +272,10 @@ int main(int argc, char *argv[])
 
 	DEBUGLOG("clvmd ready for work\n");
 	child_init_signal(SUCCESS);
+
+	/* Try to shutdown neatly */
+	signal(SIGTERM, sigterm_handler);
+	signal(SIGINT, sigterm_handler);
 
 	/* Do some work */
 	main_loop(local_sock, cmd_timeout);
@@ -619,6 +621,7 @@ static void be_daemon()
 				break;
 			case DFAIL_LOCAL_SOCK:
 			        fprintf(stderr, "clvmd could not create local socket\n");
+				fprintf(stderr, "Another clvmd is probably already running\n");
 				break;
 			case DFAIL_CLUSTER_IF:
 			        fprintf(stderr, "clvmd could not connect to cluster manager\n");
