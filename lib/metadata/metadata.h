@@ -196,6 +196,7 @@ struct logical_volume {
 	uint32_t status;
 	alloc_policy_t alloc;
 	uint32_t read_ahead;
+	int32_t major;
 	int32_t minor;
 
 	uint64_t size;

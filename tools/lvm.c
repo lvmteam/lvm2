@@ -213,6 +213,23 @@ int minor_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
+int major_arg(struct cmd_context *cmd, struct arg *a)
+{
+	char *ptr;
+
+	if (!_get_int_arg(a, &ptr) || (*ptr) || (a->sign == SIGN_MINUS))
+		return 0;
+
+	if (a->i_value > 255) {
+		log_error("Major number outside range 0-255");
+		return 0;
+	}
+
+	/* FIXME Also Check against /proc/devices */
+
+	return 1;
+}
+
 int string_arg(struct cmd_context *cmd, struct arg *a)
 {
 	return 1;

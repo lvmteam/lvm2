@@ -80,10 +80,6 @@ static int lvchange_availability(struct cmd_context *cmd,
 	if (strcmp(arg_str_value(cmd, available_ARG, "n"), "n"))
 		activate = 1;
 
-	if (arg_count(cmd, minor_ARG)) {
-		lv->minor = arg_int_value(cmd, minor_ARG, -1);
-	}
-
 	if (activate) {
 		/* FIXME Tighter locking if lv_is_origin() */
 		log_verbose("Activating logical volume \"%s\"", lv->name);
@@ -218,10 +214,16 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		}
 		lv->status &= ~FIXED_MINOR;
 		lv->minor = -1;
-		log_verbose("Disabling persistent minor for \"%s\"", lv->name);
+		lv->major = -1;
+		log_verbose("Disabling persistent device number for \"%s\"",
+			    lv->name);
 	} else {
-		if (!arg_count(cmd, minor_ARG)) {
+		if (!arg_count(cmd, minor_ARG) && lv->minor < 0) {
 			log_error("Minor number must be specified with -My");
+			return 0;
+		}
+		if (!arg_count(cmd, major_ARG) && lv->major < 0) {
+			log_error("Major number must be specified with -My");
 			return 0;
 		}
 		log_verbose("Ensuring %s is inactive. Reactivate with -ay.",
@@ -231,9 +233,10 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			return 0;
 		}
 		lv->status |= FIXED_MINOR;
-		lv->minor = arg_int_value(cmd, minor_ARG, -1);
-		log_verbose("Setting persistent minor number to %d for \"%s\"",
-			    lv->minor, lv->name);
+		lv->minor = arg_int_value(cmd, minor_ARG, lv->minor);
+		lv->major = arg_int_value(cmd, major_ARG, lv->major);
+		log_verbose("Setting persistent device number to (%d, %d) "
+			    "for \"%s\"", lv->major, lv->minor, lv->name);
 	}
 
 	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
@@ -333,8 +336,10 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!arg_count(cmd, available_ARG) && !arg_count(cmd, contiguous_ARG)
 	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
-	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, persistent_ARG)) {
-		log_error("One or more of -a, -C, -m, -M, -p or -r required");
+	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)
+	    && !arg_count(cmd, persistent_ARG)) {
+		log_error
+		    ("One or more of -a, -C, -j, -m, -M, -p or -r required");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -347,6 +352,12 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!argc) {
 		log_error("Please give logical volume path(s)");
+		return EINVALID_CMD_LINE;
+	}
+
+	if ((arg_count(cmd, minor_ARG) || arg_count(cmd, major_ARG)) &&
+	    !arg_count(cmd, persistent_ARG)) {
+		log_error("--major and --minor require -My");
 		return EINVALID_CMD_LINE;
 	}
 

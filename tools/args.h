@@ -8,6 +8,7 @@
  * Put all long args that don't have a
  * corresponding short option first ...
  */
+/* *INDENT-OFF* */
 arg(version_ARG, '\0', "version", NULL)
 arg(quiet_ARG, '\0', "quiet", NULL)
 arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", size_mb_arg)
@@ -61,6 +62,7 @@ arg(list_ARG, 'l', "list", NULL)
 arg(size_ARG, 'L', "size", size_mb_arg)
 arg(logicalextent_ARG, 'L', "logicalextent", int_arg_with_sign)
 arg(persistent_ARG, 'M', "persistent", yes_no_arg)
+arg(major_ARG, 'j', "major", major_arg)
 arg(metadatatype_ARG, 'M', "metadatatype", metadatatype_arg)
 arg(minor_ARG, 'm', "minor", minor_arg)
 arg(maps_ARG, 'm', "maps", NULL)
@@ -94,3 +96,4 @@ arg(zero_ARG, 'Z', "zero", yes_no_arg)
 
 /* this should always be last */
 arg(ARG_COUNT, '-', "", NULL)
+/* *INDENT-ON* */

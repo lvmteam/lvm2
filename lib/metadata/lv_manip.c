@@ -425,6 +425,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 	lv->status = status;
 	lv->alloc = alloc;
 	lv->read_ahead = 0;
+	lv->major = -1;
 	lv->minor = -1;
 	lv->size = (uint64_t) extents *vg->extent_size;
 	lv->le_count = extents;

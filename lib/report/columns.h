@@ -7,9 +7,12 @@
 /* Report type, Containing struct, Field type, Report heading,
  * Data field with struct to pass to display function, Minimum display width,
  * Display Fn, Unique format identifier */
+
+/* *INDENT-OFF* */
 FIELD(LVS, lv, STR, "LV UUID", lvid.id[1], 38, uuid, "lv_uuid")
 FIELD(LVS, lv, STR, "LV", name, 4, string, "lv_name")
 FIELD(LVS, lv, STR, "Attr", lvid, 4, lvstatus, "lv_attr")
+FIELD(LVS, lv, NUM, "Maj", major, 3, int32, "lv_major")
 FIELD(LVS, lv, NUM, "Min", minor, 3, int32, "lv_minor")
 FIELD(LVS, lv, NUM, "LSize", size, 5, size64, "lv_size")
 FIELD(LVS, lv, NUM, "#Seg", lvid, 4, lvsegcount, "seg_count")
@@ -49,4 +52,4 @@ FIELD(SEGS, seg, NUM, "Stripe", stripe_size, 6, size32, "stripesize")
 FIELD(SEGS, seg, NUM, "Chunk", chunk_size, 5, size32, "chunksize")
 FIELD(SEGS, seg, NUM, "Start", list, 5, segstart, "seg_start")
 FIELD(SEGS, seg, NUM, "SSize", list, 5, segsize, "seg_size")
-
+/* *INDENT-ON* */

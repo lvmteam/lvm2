@@ -532,8 +532,14 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 		if ((lv->status & FIXED_MINOR) &&
 		    !_read_int32(lvn, "minor", &lv->minor)) {
 			log_error("Couldn't read minor number for logical "
-				  "volume.");
+				  "volume %s.", lv->name);
 			return 0;
+		}
+		lv->major = -1;
+		if ((lv->status & FIXED_MINOR) &&
+		    !_read_int32(lvn, "major", &lv->major)) {
+			log_error("Couldn't read major number for logical "
+				  "volume %s.", lv->name);
 		}
 
 		vg->lv_count++;

@@ -14,6 +14,7 @@ struct lvcreate_params {
 	int snapshot;
 	int zero;
 	int contiguous;
+	int major;
 	int minor;
 
 	char *origin;
@@ -258,6 +259,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 		lp->permission = LVM_READ | LVM_WRITE;
 
 	lp->minor = arg_int_value(cmd, minor_ARG, -1);
+	lp->major = arg_int_value(cmd, major_ARG, -1);
 
 	/* Persistent minor */
 	if (arg_count(cmd, persistent_ARG)) {
@@ -267,9 +269,15 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 					  "--minor when using -My");
 				return 0;
 			}
+			if (lp->major == -1) {
+				log_error("Please specify major number with "
+					  "--major when using -My");
+				return 0;
+			}
 		} else {
-			if (lp->minor != -1) {
-				log_error("--minor not possible with -Mn");
+			if ((lp->minor != -1) || (lp->major != -1)) {
+				log_error
+				    ("--major and --minor incompatible with -Mn");
 				return 0;
 			}
 		}
@@ -432,9 +440,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if (lp->minor >= 0) {
+		lv->major = lp->major;
 		lv->minor = lp->minor;
 		lv->status |= FIXED_MINOR;
-		log_verbose("Setting minor number to %d", lv->minor);
+		log_verbose("Setting device number to (%d, %d)", lv->major,
+			    lv->minor);
 	}
 
 	if (!archive(vg))

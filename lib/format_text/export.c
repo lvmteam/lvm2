@@ -547,6 +547,8 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 			      get_alloc_string(lv->alloc));
 		if (lv->read_ahead)
 			_outf(f, "read_ahead = %u", lv->read_ahead);
+		if (lv->major >= 0)
+			_outf(f, "major = %d", lv->major);
 		if (lv->minor >= 0)
 			_outf(f, "minor = %d", lv->minor);
 		_outf(f, "segment_count = %u", _count_segments(lv));

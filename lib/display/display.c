@@ -461,8 +461,11 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 	log_print("Allocation             %s", get_alloc_string(lv->alloc));
 	log_print("Read ahead sectors     %u", lv->read_ahead);
 
-	if (lv->status & FIXED_MINOR)
+	if (lv->status & FIXED_MINOR) {
+		if (lv->major >= 0)
+			log_print("Persistent major       %d", lv->major);
 		log_print("Persistent minor       %d", lv->minor);
+	}
 
 	if (inkernel)
 		log_print("Block device           %d:%d", info.major,

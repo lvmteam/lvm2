@@ -288,8 +288,11 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	if (lvd->lv_status & LV_PERSISTENT_MINOR) {
 		lv->status |= FIXED_MINOR;
 		lv->minor = MINOR(lvd->lv_dev);
-	} else
+		lv->major = MAJOR(lvd->lv_dev);
+	} else {
+		lv->major = -1;
 		lv->minor = -1;
+	}
 
 	if (lvd->lv_access & LV_READ)
 		lv->status |= LVM_READ;
@@ -335,7 +338,7 @@ static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
 
 	if (lv->status & FIXED_MINOR) {
 		lvd->lv_status |= LV_PERSISTENT_MINOR;
-		lvd->lv_dev = MKDEV(0, lv->minor);
+		lvd->lv_dev = MKDEV(lv->major, lv->minor);
 	}
 
 	lvd->lv_read_ahead = lv->read_ahead;
