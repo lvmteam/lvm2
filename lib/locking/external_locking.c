@@ -92,7 +92,7 @@ int init_external_locking(struct locking_type *locking, struct config_file *cf)
 	    }
 	}
 
-	log_very_verbose("Opening locking library %s\n", _lock_lib);
+	log_very_verbose("Opening locking library %s", _lock_lib);
 
 	locking_module = dlopen(_lock_lib, RTLD_LAZY);
 	if (!locking_module)
@@ -114,6 +114,6 @@ int init_external_locking(struct locking_type *locking, struct config_file *cf)
 	    return 0;
 	}
 
-	log_verbose("Opened external locking module %s\n", _lock_lib);
+	log_verbose("Opened external locking module %s", _lock_lib);
 	return init_fn(2, cf);
 }
