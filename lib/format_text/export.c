@@ -217,7 +217,9 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 static inline const char *
 _get_pv_name(struct formatter *f, struct physical_volume *pv)
 {
-	return (const char *) hash_lookup(f->pv_names, dev_name(pv->dev));
+	return (pv) ? (const char *) 
+		      hash_lookup(f->pv_names, dev_name(pv->dev)) :
+		      "Missing";
 }
 
 static int _print_pvs(struct formatter *f, struct volume_group *vg)

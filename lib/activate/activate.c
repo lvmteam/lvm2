@@ -191,11 +191,23 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	char params[1024];
 	uint64_t esize = seg->lv->vg->extent_size;
 	uint32_t s, stripes = seg->stripes;
-	int w = 0, tw = 0;
+	int w = 0, tw = 0, error = 0;
 	const char *no_space =
 		"Insufficient space to write target parameters.";
+	char *filler = "/dev/ioerror";
+	char *target;
+
+	if (stripes == 1) {
+		if (!seg->area[0].pv) {
+			target = "error";
+			error = 1;
+		}
+		else 
+			target = "linear";
+	}
 
 	if (stripes > 1) {
+		target = "striped";
 		tw = lvm_snprintf(params, sizeof(params), "%u %u ",
 			      stripes, seg->stripe_size);
 
@@ -207,39 +219,35 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 		w = tw;
 	}
 
+	if (!error) {
+		for (s = 0; s < stripes; s++, w += tw) {
+			if (!seg->area[s].pv)
+				tw = lvm_snprintf(
+					params + w, sizeof(params) - w,
+			      		"%s 0%s", filler,
+			      		s == (stripes - 1) ? "" : " ");
+			else
+				tw = lvm_snprintf(
+					params + w, sizeof(params) - w,
+			      		"%s %" PRIu64 "%s",
+					dev_name(seg->area[s].pv->dev),
+			      		(seg->area[s].pv->pe_start +
+			         	 (esize * seg->area[s].pe)),
+			      		s == (stripes - 1) ? "" : " ");
 
-	for (s = 0; s < stripes; s++, w += tw) {
-/******
-		log_debug("stripes: %d", stripes);
-		log_debug("dev_name(seg->area[s].pv->dev): %s",
-				dev_name(seg->area[s].pv->dev));
-		log_debug("esize: %" PRIu64, esize);
-		log_debug("seg->area[s].pe: %" PRIu64, seg->area[s].pe);
-		log_debug("seg->area[s].pv->pe_start: %" PRIu64,
-				seg->area[s].pv->pe_start);
-*******/
-
-		tw = lvm_snprintf(params + w, sizeof(params) - w,
-			      "%s %" PRIu64 "%s",
-			      dev_name(seg->area[s].pv->dev),
-			      (seg->area[s].pv->pe_start +
-			       (esize * seg->area[s].pe)),
-			      s == (stripes - 1) ? "" : " ");
-
-		if (tw < 0) {
-			log_err(no_space);
-			return 0;
+			if (tw < 0) {
+				log_err(no_space);
+				return 0;
+			}
 		}
 	}
 
-	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
+	log_very_verbose("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
 		   esize * seg->le, esize * seg->len,
-		   stripes == 1 ? "linear" : "striped",
-		   params);
+		   target, params);
 
 	if (!dm_task_add_target(dmt, esize * seg->le, esize * seg->len,
-				stripes == 1 ? "linear" : "striped",
-				params)) {
+				target, params)) {
 		stack;
 		return 0;
 	}

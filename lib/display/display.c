@@ -377,11 +377,11 @@ void _display_stripe(struct stripe_segment *seg, int s, const char *pre)
 	uint32_t len = seg->len / seg->stripes;
 
 	log_print("%sphysical volume\t%s", pre,
-		  dev_name(seg->area[s].pv->dev));
+		  seg->area[s].pv ? dev_name(seg->area[s].pv->dev) : "Missing");
 
-	log_print("%sphysical extents\t%d to %d",
-		  pre,
-		  seg->area[s].pe, seg->area[s].pe + len - 1);
+	if (seg->area[s].pv)
+		log_print("%sphysical extents\t%d to %d", pre,
+			   seg->area[s].pe, seg->area[s].pe + len - 1);
 }
 
 int lvdisplay_segments(struct logical_volume *lv)

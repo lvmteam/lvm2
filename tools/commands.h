@@ -108,10 +108,11 @@ xx(lvdisplay,
    "\t[-D/--disk]\n"
    "\t[-h/-?/--help]\n"
    "\t[-m/--maps]\n"
+   "\t[-P/--partial] " "\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-    colon_ARG, disk_ARG, maps_ARG)
+    colon_ARG, disk_ARG, maps_ARG, partial_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -405,11 +406,12 @@ xx(vgdisplay,
    "\t[-c|--colon | -s|--short | -v|--verbose]" "\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
-   "\t[--version]" "\n"
+   "\t[-P|--partial] " "\n"
    "\t[-A|--activevolumegroups | [-D|--disk]" "\n"
+   "\t[--version]" "\n"
    "\t[VolumeGroupName...] ]\n",
 
-   activevolumegroups_ARG, colon_ARG, disk_ARG, short_ARG)
+   activevolumegroups_ARG, colon_ARG, disk_ARG, short_ARG, partial_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
