@@ -7413,8 +7413,7 @@ fi;
 echo "$as_me:$LINENO: result: $CMDLIB" >&5
 echo "${ECHO_T}$CMDLIB" >&6
 
-if test x$CMDLIB = xyes -o x$CLVMD != none; then
-	CMDLIB="yes"
+if test x$CMDLIB = xyes; then
 	CFLAGS="$CFLAGS -DCMDLIB"
 fi
 
