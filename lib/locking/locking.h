@@ -21,12 +21,12 @@ void fin_locking(void);
  * LCK_LV:
  *   Lock/unlock an individual logical volume
  *   Also suspends/resumes the LV if it's active.
- *   struct logical_volume *vol
+ *   char *vol holds "VG_name/LV_uuid"
  *
- * FIXME: Change to
- *   int lock_vol(const struct id *id, int flags);
+ * FIXME: Change to something like
+ *   int lock_vol(struct cmd_context *cmd, const struct id *id, int flags);
  */
-int lock_vol(const void *vol, int flags);
+int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
 
 /*
  * Lock type

@@ -437,7 +437,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!_read_params(&lp, cmd, argc, argv))
 		return -EINVALID_CMD_LINE;
 
-	if (!lock_vol(lp.vg_name, LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, lp.vg_name, LCK_VG | LCK_WRITE)) {
 		log_error("Can't get lock for %s", lp.vg_name);
 		return 0;
 	}
@@ -473,6 +473,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	r = 0;
 
  out:
-	lock_vol(lp.vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, lp.vg_name, LCK_VG | LCK_NONE);
 	return r;
 }

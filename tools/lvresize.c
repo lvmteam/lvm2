@@ -31,6 +31,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	uint32_t size_rest;
 	sign_t sign = SIGN_NONE;
 	char *lv_name, *vg_name;
+	char lvidbuf[128];
 	char *st;
 	char *dummy;
 	const char *cmd_name;
@@ -104,7 +105,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	/* does VG exist? */
 	log_verbose("Finding volume group %s", vg_name);
-	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, vg_name, LCK_VG | LCK_WRITE)) {
 		log_error("Can't get lock for %s", vg_name);
 		return ECMD_FAILED;
 	}
@@ -331,7 +332,10 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			goto error;
 	}
 
-	if (!lock_vol(lv, LCK_LV | LCK_WRITE)) {
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		goto error;
+
+	if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_WRITE)) {
 		log_error("Can't get lock for %s", lv_name);
 		goto error;
 	}
@@ -339,28 +343,28 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	/* store vg on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
 		/* FIXME: Attempt reversion? */
-		lock_vol(lv, LCK_LV | LCK_NONE);
+		lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE);
 		goto error;
 	}
 
 	backup(vg);
 
-	if (!lock_vol(lv, LCK_LV | LCK_NONE)) {
+	if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE)) {
 		log_error("Problem reactivating %s", lv_name);
 		goto error;
 	}
 
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 
 	log_print("Logical volume %s successfully resized", lv_name);
 
 	return 0;
 
       error:
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 	return ECMD_FAILED;
 
       error_cmdline:
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 	return EINVALID_CMD_LINE;
 }

@@ -87,7 +87,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
 
-	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, vg_name, LCK_VG | LCK_WRITE)) {
 		log_error("Can't get lock for %s", vg_name);
 		return ECMD_FAILED;
 	}
@@ -152,7 +152,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(lv->vg);
 
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 
 	log_print("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
 		  lv_name_old, lv_name_new, vg_name);
@@ -160,6 +160,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	return 0;
 
       error:
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 	return ECMD_FAILED;
 }

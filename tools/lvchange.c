@@ -126,6 +126,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
 	int lv_access;
+	char lvidbuf[128];
 
 	lv_access = arg_int_value(cmd, permission_ARG, 0);
 
@@ -151,7 +152,10 @@ static int lvchange_permission(struct cmd_context *cmd,
 			    lv->name);
 	}
 
-	if (!lock_vol(lv, LCK_LV | LCK_WRITE)) {
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		return 0;
+
+	if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_WRITE)) {
 		log_error("Failed to lock %s", lv->name);
 		return 0;
 	}
@@ -159,14 +163,14 @@ static int lvchange_permission(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(lv, LCK_LV | LCK_NONE);
+                lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-        if (!lock_vol(lv, LCK_LV | LCK_NONE)) {
+        if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }
@@ -228,6 +232,7 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
 	int lv_allocation = 0;
+	char lvidbuf[128];
 
 	if (strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n"))
 		lv_allocation |= ALLOC_CONTIGUOUS;
@@ -264,7 +269,10 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 			    lv->name);
 	}
 
-	if (!lock_vol(lv, LCK_LV | LCK_WRITE)) {
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		return 0;
+
+	if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_WRITE)) {
 		log_error("Failed to lock %s", lv->name);
 		return 0;
 	}
@@ -272,14 +280,14 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(lv, LCK_LV | LCK_NONE);
+                lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
-        if (!lock_vol(lv, LCK_LV | LCK_NONE)) {
+        if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }
@@ -292,6 +300,7 @@ static int lvchange_readahead(struct cmd_context *cmd,
 			      struct logical_volume *lv)
 {
 	int read_ahead = 0;
+	char lvidbuf[128];
 
 	read_ahead = arg_int_value(cmd, readahead_ARG, 0);
 
@@ -313,7 +322,10 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	log_verbose("Setting read ahead to %u for \"%s\"", read_ahead,
 		    lv->name);
 
-	if (!lock_vol(lv, LCK_LV | LCK_WRITE)) {
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		return 0;
+
+	if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_WRITE)) {
 		log_error("Failed to lock %s", lv->name);
 		return 0;
 	}
@@ -321,14 +333,14 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(lv, LCK_LV | LCK_NONE);
+                lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
-        if (!lock_vol(lv, LCK_LV | LCK_NONE)) {
+        if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }
@@ -339,6 +351,8 @@ static int lvchange_readahead(struct cmd_context *cmd,
 static int lvchange_persistent(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
+	char lvidbuf[128];
+
 	if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n")) {
 		if (!(lv->status & FIXED_MINOR)) {
 			log_error("Minor number is already not persistent "
@@ -363,7 +377,10 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			    lv->minor, lv->name);
 	}
 
-	if (!lock_vol(lv, LCK_LV | LCK_WRITE)) {
+	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		return 0;
+
+	if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_WRITE)) {
 		log_error("Failed to lock %s", lv->name);
 		return 0;
 	}
@@ -371,14 +388,14 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(lv, LCK_LV | LCK_NONE);
+                lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
-        if (!lock_vol(lv, LCK_LV | LCK_NONE)) {
+        if (!lock_vol(cmd, lvidbuf, LCK_LV | LCK_NONE)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }
