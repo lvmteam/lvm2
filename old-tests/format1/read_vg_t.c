@@ -23,14 +23,14 @@ int main(int argc, char **argv)
 	}
 
 	init_log(stderr);
-	init_debug(_LOG_DEBUG);
+	init_debug(_LOG_INFO);
 
 	if (!dev_cache_init()) {
 		fprintf(stderr, "init of dev-cache failed\n");
 		exit(1);
 	}
 
-	if (!dev_cache_add_dir("/dev")) {
+	if (!dev_cache_add_dir("/dev/loop")) {
 		fprintf(stderr, "couldn't add /dev to dir-cache\n");
 		exit(1);
 	}
@@ -56,6 +56,8 @@ int main(int argc, char **argv)
 
 	ios->destroy(ios);
 
+	pool_destroy(mem);
+	dev_cache_exit();
 	dump_memory();
 	fin_log();
 	return 0;

@@ -25,7 +25,7 @@ static int _import_vg(struct volume_group *vg, struct list_head *pvs)
 		if (!first) {
 			first = &dl->vg;
 
-			memcpy(vg->id, &first->vg_uuid, ID_LEN);
+			memcpy(&vg->id.uuid, &first->vg_uuid, ID_LEN);
 			vg->name = NULL;
 
 			// FIXME: encode flags
@@ -58,6 +58,7 @@ static int _import_pvs(struct pool *mem, struct volume_group *vg,
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
 		pvl = pool_alloc(mem, sizeof(*pvl));
+		memset(pvl, 0, sizeof(*pvl));
 
 		if (!pvl) {
 			stack;
@@ -66,8 +67,8 @@ static int _import_pvs(struct pool *mem, struct volume_group *vg,
 
 		pv = &pvl->pv;
 		memcpy(&pv->id, &dl->pv.pv_uuid, ID_LEN);
-		// FIXME: finish
-		//pv->dev = ??;
+
+		pv->dev = dl->dev;
 		pv->vg_name = pool_strdup(mem, dl->pv.vg_name);
 
 		if (!pv->vg_name) {
@@ -114,7 +115,7 @@ static struct physical_volume *_find_pv(struct volume_group *vg,
 	struct physical_volume *pv;
 	struct pv_list *pl;
 
-	list_for_each(tmp, &vg->lvs) {
+	list_for_each(tmp, &vg->pvs) {
 		pl = list_entry(tmp, struct pv_list, list);
 		pv = &pl->pv;
 		if (dev == pv->dev)
@@ -127,14 +128,16 @@ static struct logical_volume *_add_lv(struct pool *mem,
 				      struct volume_group *vg,
 				      struct lv_disk *lvd)
 {
-	struct logical_volume *lv = pool_alloc(mem, sizeof(*lv));
+	struct lv_list *ll = pool_alloc(mem, sizeof(*ll));
+	struct logical_volume *lv;
 
-	if (!lv) {
+	if (!ll) {
 		stack;
 		return 0;
 	}
+	lv = &ll->lv;
 
-	memset(lv->id, 0, sizeof(lv->id));
+	memset(&lv->id.uuid, 0, sizeof(lv->id));
         if (!(lv->name = pool_strdup(mem, lvd->lv_name))) {
 		stack;
 		return 0;
@@ -152,6 +155,8 @@ static struct logical_volume *_add_lv(struct pool *mem,
 		stack;
 		return 0;
 	}
+
+	list_add(&ll->list, &vg->lvs);
 
 	return lv;
 }
@@ -231,11 +236,12 @@ static int _import_extents(struct pool *mem, struct volume_group *vg,
 			if (lv_num == UNMAPPED_EXTENT)
 				lv->map[le].pv = NULL;
 
-			else if(lv_num >= dl->pv.lv_cur) {
+			else if(lv_num > dl->pv.lv_cur) {
 				log_err("invalid lv in extent map\n");
 				return 0;
 
 			} else {
+				lv_num--;
 				lv = lvs[lv_num];
 				le = e[i].le_num;
 
@@ -258,6 +264,9 @@ static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 	}
 
 	memset(vg, 0, sizeof(*vg));
+
+	INIT_LIST_HEAD(&vg->pvs);
+	INIT_LIST_HEAD(&vg->lvs);
 
 	if (!_import_vg(vg, pvs))
 		goto bad;
@@ -284,6 +293,7 @@ static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
 	struct pool *mem = pool_create(1024 * 10);
 	struct list_head pvs;
 	struct volume_group *vg;
+	INIT_LIST_HEAD(&pvs);
 
 	if (!mem) {
 		stack;

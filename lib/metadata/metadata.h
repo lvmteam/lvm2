@@ -48,7 +48,7 @@ struct id {
 };
 
 struct physical_volume {
-        struct id *id;
+        struct id id;
 	struct device *dev;
 	char *vg_name;		/* VG component of name only - not full path */
 	char *exported;
@@ -70,7 +70,7 @@ struct pe_specifier {
 
 struct logical_volume {
         /* disk */
-	struct id *id;
+	struct id id;
         char *name;		/* LV component of name only - not full path */
 
         uint32_t status;
@@ -84,7 +84,7 @@ struct logical_volume {
 };
 
 struct volume_group {
-	struct id *id;
+	struct id id;
 	char *name;		/* VG component of name only - not full path */
 
         uint32_t status;
@@ -107,7 +107,7 @@ struct volume_group {
 
 struct name_list {
 	struct list_head list;
-	char * name;
+	char *name;
 };
 
 struct pv_list {

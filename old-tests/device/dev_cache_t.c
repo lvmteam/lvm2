@@ -17,22 +17,22 @@ int main(int argc, char **argv)
 	struct dev_iter *iter;
 
 	init_log(stderr);
-	init_debug(_LOG_DEBUG);
+	init_debug(_LOG_INFO);
 
 	if (!dev_cache_init()) {
-		log_error("couldn't initialise dev_cache_init failed\n");
+		log_err("couldn't initialise dev_cache_init failed");
 		exit(1);
 	}
 
 	for (i = 1; i < argc; i++) {
 		if (!dev_cache_add_dir(argv[i])) {
-			log_error("couldn't add '%s' to dev_cache\n", argv[i]);
+			log_err("couldn't add '%s' to dev_cache", argv[i]);
 			exit(1);
 		}
 	}
 
 	if (!(iter = dev_iter_create(NULL))) {
-		log_error("couldn't create iterator\n");
+		log_err("couldn't create iterator");
 		exit(1);
 	}
 
