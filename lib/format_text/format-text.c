@@ -12,6 +12,7 @@
 #include "pool.h"
 #include "config.h"
 #include "hash.h"
+#include "dbg_malloc.h"
 
 #include <unistd.h>
 #include <sys/types.h>
