@@ -12,8 +12,8 @@ SOURCES=\
 	activate/activate.c \
 	config/config.c \
 	datastruct/bitset.c \
+	datastruct/btree.c \
 	datastruct/hash.c \
-	device/btree.c \
 	device/dev-cache.c \
 	device/dev-io.c \
 	device/device.c \
