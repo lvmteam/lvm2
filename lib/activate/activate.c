@@ -136,33 +136,19 @@ static int _lv_deactivate(struct logical_volume *lv)
 
 static int _lv_suspend(struct logical_volume *lv)
 {
-#if 0
-	char buffer[128];
+	int r;
+	struct dev_manager *dm;
 
-	log_very_verbose("Suspending %s", lv->name);
-	if (test_mode()) {
-		_skip("Suspending '%s'.", lv->name);
-		return 0;
-	}
-
-	if (!build_dm_name(buffer, sizeof(buffer), "",
-			   lv->vg->name, lv->name)) {
+	if (!(dm = dev_manager_create(lv->vg->name))) {
 		stack;
 		return 0;
 	}
 
-	if (!device_suspend(buffer)) {
+	if (!(r = dev_manager_suspend(dm, lv)))
 		stack;
-		return 0;
-	}
 
-	fs_del_lv(lv);
-
-	return 1;
-#else
-	log_err("lv_suspend not implemented.");
-	return 1;
-#endif
+	dev_manager_destroy(dm);
+	return r;
 }
 
 static int _lv_rename(const char *old_name, struct logical_volume *lv)
@@ -278,6 +264,7 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 	return lvl->lv;
 }
 
+/* These return success if the device is not active */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
@@ -285,6 +272,11 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
+
+	if (test_mode()) {
+		_skip("Suspending '%s'.", lv->name);
+		return 0;
+	}
 
         if (!lv_info(lv, &info)) {
                 stack;
@@ -306,6 +298,11 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
+	if (test_mode()) {
+		_skip("Resuming '%s'.", lv->name);
+		return 0;
+	}
+
         if (!lv_info(lv, &info)) {
                 stack;
                 return 0;
@@ -325,6 +322,11 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
+	if (test_mode()) {
+		_skip("Deactivating '%s'.", lv->name);
+		return 0;
+	}
+
         if (!lv_info(lv, &info)) {
                 stack;
                 return 0;
@@ -343,6 +345,11 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 
 	if (!(lv = _lv_from_lvid(cmd, lvid_s)))
 		return 0;
+
+	if (test_mode()) {
+		_skip("Activating '%s'.", lv->name);
+		return 0;
+	}
 
         if (!lv_info(lv, &info)) {
                 stack;
