@@ -1,8 +1,5 @@
 /*
- * tools/lib/config.h
- *
  * Copyright (C) 2001  Sistina Software
- *
  *
  * This LVM library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,8 +17,9 @@
  * MA 02111-1307, USA
  */
 
-#ifndef LVM_CONFIG_H
-#define LVM_CONFIG_H
+#ifndef _LVM_CONFIG_H
+#define _LVM_CONFIG_H
+
 
 enum {
         CFG_STRING,

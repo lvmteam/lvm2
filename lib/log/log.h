@@ -1,8 +1,5 @@
 /*
- * tools/lib/lvm_log.h
- *
  * Copyright (C) 2001  Sistina Software
- *
  *
  * This LVM library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,16 +18,8 @@
  *
  */
 
-/*
- * Changelog
- *
- *   22/01/2001 - First version (Joe Thornber)
- *   25/04/2001 - Remove some spurious ##s that annoyed newer gcc versions.
- *
- */
-
-#ifndef LVM_LOG_H
-#define LVM_LOG_H
+#ifndef _LVM_LOG_H
+#define _LVM_LOG_H
 
 #include <stdio.h>
 

@@ -1,7 +1,5 @@
 /*
- * debug.h - what a wonderfully original name for a file.
- *
- * Copyright (C) 2000, 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software
  *
  * lvm is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +16,10 @@
  * the Free Software Foundation, 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * Changelog
- *
- *    9/11/2000 - First version by Joe Thornber
- *
- * TODO:
- *
  */
 
-#ifndef DBG_MALLOC_H
-#define DBG_MALLOC_H
+#ifndef _LVM_DBG_MALLOC_H
+#define _LVM_DBG_MALLOC_H
 
 #ifdef DEBUG_MEM
 void *malloc_aux(unsigned int s, const char *file, int line);

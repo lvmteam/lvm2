@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001  Sistina Software
  *
  * This LVM library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,27 +15,14 @@
  * License along with this LVM library; if not, write to the Free
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
  * MA 02111-1307, USA
+ *
  */
 
-#ifndef _LVM_HASH_H
-#define _LVM_HASH_H
+#ifndef LVM_TOOLLIB_H
+#define LVM_TOOLLIB_H
 
-extern unsigned char hash_nums[256];
-
-static inline unsigned hash(const char *str)
-{
-	unsigned long int h = 0, g;
-	while (*str) {
-		h <<= 4;
-		h += hash_nums[(int) *str++];
-		g = h & ((unsigned long) 0xf << 16u);
-		if (g) {
-			h ^= g >> 16u;
-			h ^= g >> 5u;
-		}
-	}
-	return h;
-};
+int autobackup_set (void);
+int init_autobackup (void);
+int do_autobackup(char *vg_name, vg_t * vg);
 
 #endif
-

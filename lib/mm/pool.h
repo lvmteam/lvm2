@@ -1,6 +1,4 @@
 /*
- * tools/lib/pool.h
- *
  * Copyright (C) 2001 Sistina Software
  *
  * LVM is free software; you can redistribute it and/or modify
@@ -19,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef POOL_H
-#define POOL_H
+#ifndef _LVM_POOL_H
+#define _LVM_POOL_H
 
 #include <stdlib.h>
 

@@ -19,9 +19,10 @@
  * MA 02111-1307, USA
  */
 
-#ifndef DEV_MANAGER_H
-#define DEV_MANAGER_H
+#ifndef _LVM_DEV_MANAGER_H
+#define _LVM_DEV_MANAGER_H
 
+#include <sys/types.h>
 #include "config/config.h"
 
 struct device {

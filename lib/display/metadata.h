@@ -15,27 +15,24 @@
  * License along with this LVM library; if not, write to the Free
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
  * MA 02111-1307, USA
+ *
  */
 
-#ifndef _LVM_HASH_H
-#define _LVM_HASH_H
+#ifndef _LVM_DISPLAY_METADATA_H
+#define _LVM_DISPLAY_METADATA_H
 
-extern unsigned char hash_nums[256];
+#include "metadata/metadata.h"
 
-static inline unsigned hash(const char *str)
+void pv_display_colons(pv_t * pv);
+void pv_display_full(pv_t * pv);
+void pv_show_short(pv_t * pv);
+void pv_display_pe(pv_t * pv, pe_disk_t * pe);
+void pv_display_pe_free(int pe_free, int p);
+void pv_display_pe_text(pv_t * pv, pe_disk_t * pe, lv_disk_t * lvs);
+
+static inline unsigned long get_pe_offset(ulong p, pv_t *pv)
 {
-	unsigned long int h = 0, g;
-	while (*str) {
-		h <<= 4;
-		h += hash_nums[(int) *str++];
-		g = h & ((unsigned long) 0xf << 16u);
-		if (g) {
-			h ^= g >> 16u;
-			h ^= g >> 5u;
-		}
-	}
-	return h;
-};
+        return pv->pe_start + (p * pv->pe_size);
+}
 
 #endif
-
