@@ -28,6 +28,8 @@ int activation(void);
 int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 
+int target_present(const char *target_name);
+
 void activation_exit(void);
 
 int lv_suspend(struct cmd_context *cmd, const char *lvid_s);
@@ -51,7 +53,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
  * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.
  */
 int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
-                         int *activate_lv);
+			 int *activate_lv);
 
 /*
  * Returns 1 if percent has been set, else 0.

@@ -47,6 +47,10 @@ int driver_version(char *version, size_t size)
 {
 	return 0;
 }
+int target_present(const char *target_name)
+{
+	return 0;
+}
 int lv_info(const struct logical_volume *lv, struct lvinfo *info)
 {
 	return 0;
@@ -251,6 +255,46 @@ int driver_version(char *version, size_t size)
 		goto out;
 
 	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+int target_present(const char *target_name)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	struct dm_versions *target, *last_target;
+
+	if (!activation())
+		return 0;
+
+	log_very_verbose("Getting target version for %s", target_name);
+	if (!(dmt = dm_task_create(DM_DEVICE_LIST_VERSIONS))) {
+		stack;
+		return 0;
+	}
+
+	if (!dm_task_run(dmt)) {
+		log_debug("Failed to get %s target version", target_name);
+		/* Assume this was because LIST_VERSIONS isn't supported */
+		return 1;
+	}
+
+	target = dm_task_get_versions(dmt);
+
+	do {
+		last_target = target;
+
+		if (!strcmp(target_name, target->name)) {
+			r = 1;
+			goto out;
+		}
+
+		target = (void *) target + target->next;
+	} while (last_target != target);
 
       out:
 	dm_task_destroy(dmt);
