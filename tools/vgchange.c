@@ -163,6 +163,34 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 	return ECMD_PROCESSED;
 }
 
+static int _vgchange_uuid(struct cmd_context *cmd, struct volume_group *vg)
+{
+	struct lv_list *lvl;
+
+	if (lvs_in_vg_activated(vg)) {
+		log_error("Volume group has active logical volumes");
+		return ECMD_FAILED;
+	}
+
+	if (!archive(vg))
+		return ECMD_FAILED;
+
+	id_create(&vg->id);
+
+	list_iterate_items(lvl, &vg->lvs) {
+		memcpy(&lvl->lv->lvid, &vg->id, sizeof(vg->id));
+	}
+
+	if (!vg_write(vg) || !vg_commit(vg))
+		return ECMD_FAILED;
+
+	backup(vg);
+
+	log_print("Volume group \"%s\" successfully changed", vg->name);
+
+	return ECMD_PROCESSED;
+}
+
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg, int consistent,
 			   void *handle)
@@ -201,6 +229,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	else if (arg_count(cmd, logicalvolume_ARG))
 		r = _vgchange_logicalvolume(cmd, vg);
 
+	else if (arg_count(cmd, uuid_ARG))
+		r = _vgchange_uuid(cmd, vg);
+
 	return r;
 }
 
@@ -208,14 +239,14 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!
 	    (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
-	     arg_count(cmd, resizeable_ARG))) {
-		log_error("One of -a, -l or -x options required");
+	     arg_count(cmd, resizeable_ARG) + arg_count(cmd, uuid_ARG))) {
+		log_error("One of -a, -l, --uuid or -x options required");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
-	    arg_count(cmd, resizeable_ARG) > 1) {
-		log_error("Only one of -a, -l or -x options allowed");
+	    arg_count(cmd, resizeable_ARG) + arg_count(cmd, uuid_ARG) > 1) {
+		log_error("Only one of -a, -l, --uuid or -x options allowed");
 		return EINVALID_CMD_LINE;
 	}
 
