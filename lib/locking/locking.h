@@ -71,16 +71,23 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
 #define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
 
-#define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE)
+#define LCK_LV_EXCLUSIVE	(LCK_LV | LCK_EXCL | LCK_NONBLOCK)
+#define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE | LCK_NONBLOCK)
 #define LCK_LV_RESUME		(LCK_LV | LCK_UNLOCK | LCK_NONBLOCK)
-#define LCK_LV_UNLOCK		(LCK_LV | LCK_UNLOCK)
-#define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ)
-#define LCK_LV_DEACTIVATE	(LCK_LV | LCK_EXCL)
+#define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ | LCK_NONBLOCK)
+#define LCK_LV_DEACTIVATE	(LCK_LV | LCK_NULL | LCK_NONBLOCK)
 
-#define unlock_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_UNLOCK)
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
 
+#define resume_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_RESUME)
+#define suspend_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_SUSPEND | LCK_HOLD)
+#define deactivate_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_DEACTIVATE)
+#define activate_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_ACTIVATE | LCK_HOLD)
+#define activate_lv_excl(cmd, vol)	\
+				lock_vol(cmd, vol, LCK_LV_EXCLUSIVE | LCK_HOLD)
+
 /* Process list of LVs */
-int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags);
-int unlock_lvs(struct cmd_context *cmd, struct list *lvs);
+int suspend_lvs(struct cmd_context *cmd, struct list *lvs);
+int resume_lvs(struct cmd_context *cmd, struct list *lvs);
+int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs);
 

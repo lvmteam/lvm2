@@ -252,32 +252,54 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 }
 
 /* Unlock list of LVs */
-int unlock_lvs(struct cmd_context *cmd, struct list *lvs)
+int resume_lvs(struct cmd_context *cmd, struct list *lvs)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
 
 	list_iterate(lvh, lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		unlock_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv->lvid.s);
 	}
 
 	return 1;
 }
 
 /* Lock a list of LVs */
-int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
+int suspend_lvs(struct cmd_context *cmd, struct list *lvs)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
 
 	list_iterate(lvh, lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		if (!lock_vol(cmd, lv->lvid.s, flags)) {
+		if (!suspend_lv(cmd, lv->lvid.s)) {
 			log_error("Failed to suspend %s", lv->name);
 			list_uniterate(lvh, lvs, lvh) {
 				lv = list_item(lvh, struct lv_list)->lv;
-				unlock_lv(cmd, lv->lvid.s);
+				resume_lv(cmd, lv->lvid.s);
+			}
+
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/* Lock a list of LVs */
+int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	list_iterate(lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		if (!activate_lv_excl(cmd, lv->lvid.s)) {
+			log_error("Failed to activate %s", lv->name);
+			list_uniterate(lvh, lvs, lvh) {
+				lv = list_item(lvh, struct lv_list)->lv;
+				activate_lv(cmd, lv->lvid.s);
 			}
 
 			return 0;

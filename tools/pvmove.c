@@ -241,15 +241,15 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 
 	backup(vg);
 
-	if (!lock_lvs(cmd, lvs_changed, LCK_LV_SUSPEND | LCK_HOLD)) {
+	if (!suspend_lvs(cmd, lvs_changed)) {
 		stack;
 		return 0;
 	}
 
 	if (!first_time) {
-		if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
+		if (!suspend_lv(cmd, lv_mirr->lvid.s)) {
 			stack;
-			unlock_lvs(cmd, lvs_changed);
+			resume_lvs(cmd, lvs_changed);
 			vg_revert(vg);
 			return 0;
 		}
@@ -258,27 +258,27 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
 		if (!first_time)
-			unlock_lv(cmd, lv_mirr->lvid.s);
-		unlock_lvs(cmd, lvs_changed);
+			resume_lv(cmd, lv_mirr->lvid.s);
+		resume_lvs(cmd, lvs_changed);
 		return 0;
 	}
 
 	if (first_time) {
-		if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_ACTIVATE)) {
+		if (!activate_lv(cmd, lv_mirr->lvid.s)) {
 			log_error
 			    ("ABORTING: Temporary mirror activation failed.");
-			unlock_lvs(cmd, lvs_changed);
+			resume_lvs(cmd, lvs_changed);
 			return 0;
 		}
-	} else if (!unlock_lv(cmd, lv_mirr->lvid.s)) {
-		log_error("Unable to unlock logical volume \"%s\"",
+	} else if (!resume_lv(cmd, lv_mirr->lvid.s)) {
+		log_error("Unable to reactivate logical volume \"%s\"",
 			  lv_mirr->name);
-		unlock_lvs(cmd, lvs_changed);
+		resume_lvs(cmd, lvs_changed);
 		return 0;
 	}
 
-	if (!unlock_lvs(cmd, lvs_changed)) {
-		log_error("Unable to unlock logical volumes");
+	if (!resume_lvs(cmd, lvs_changed)) {
+		log_error("Unable to resume logical volumes");
 		return 0;
 	}
 
@@ -331,7 +331,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		}
 
 		/* Ensure mirror LV is active */
-		if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_ACTIVATE)) {
+		if (!activate_lv(cmd, lv_mirr->lvid.s)) {
 			log_error
 			    ("ABORTING: Temporary mirror activation failed.");
 			unlock_vg(cmd, pv->vg_name);
@@ -363,7 +363,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		}
 	}
 
-	if (!lock_lvs(cmd, lvs_changed, LCK_LV_ACTIVATE)) {
+	if (!activate_lvs_excl(cmd, lvs_changed)) {
 		stack;
 		unlock_vg(cmd, pv->vg_name);
 		return ECMD_FAILED;
@@ -400,12 +400,12 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	if (!lock_lvs(cmd, lvs_changed, LCK_LV_SUSPEND | LCK_HOLD)) {
+	if (!suspend_lvs(cmd, lvs_changed)) {
 		log_error("Locking LVs to remove temporary mirror failed");
 		r = 0;
 	}
 
-	if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
+	if (!suspend_lv(cmd, lv_mirr->lvid.s)) {
 		log_error("Suspension of temporary mirror LV failed");
 		r = 0;
 	}
@@ -414,20 +414,20 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
 		vg_revert(vg);
-		unlock_lv(cmd, lv_mirr->lvid.s);
-		unlock_lvs(cmd, lvs_changed);
+		resume_lv(cmd, lv_mirr->lvid.s);
+		resume_lvs(cmd, lvs_changed);
 		return 0;
 	}
 
-	if (!unlock_lv(cmd, lv_mirr->lvid.s)) {
-		log_error("Unable to unlock logical volume \"%s\"",
+	if (!resume_lv(cmd, lv_mirr->lvid.s)) {
+		log_error("Unable to reactivate logical volume \"%s\"",
 			  lv_mirr->name);
 		r = 0;
 	}
 
-	unlock_lvs(cmd, lvs_changed);
+	resume_lvs(cmd, lvs_changed);
 
-	if (!lock_vol(cmd, lv_mirr->lvid.s, LCK_LV_DEACTIVATE)) {
+	if (!deactivate_lv(cmd, lv_mirr->lvid.s)) {
 		log_error("ABORTING: Unable to deactivate temporary logical "
 			  "volume \"%s\"", lv_mirr->name);
 		r = 0;

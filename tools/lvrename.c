@@ -160,19 +160,18 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(lv->vg);
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD |
-		      LCK_NONBLOCK)) {
+	if (!suspend_lv(cmd, lv->lvid.s)) {
 		stack;
 		goto error;
 	}
 
 	if (!vg_commit(vg)) {
 		stack;
-		unlock_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv->lvid.s);
 		goto error;
 	}
 
-	unlock_lv(cmd, lv->lvid.s);
+	resume_lv(cmd, lv->lvid.s);
 
 	unlock_vg(cmd, vg_name);
 

@@ -61,8 +61,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		log_verbose("Deactivating (if active) logical volume %s",
 			    lv->name);
 
-		if (!lock_vol(cmd, lv->lvid.s,
-			      LCK_LV_DEACTIVATE | LCK_NONBLOCK)) {
+		if (!deactivate_lv(cmd, lv->lvid.s)) {
 			log_error("Failed to deactivate LV %s", lv->name);
 			return 0;
 		}
@@ -70,8 +69,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		log_verbose("Deactivating (if active) logical volume %s "
 			    "(origin of %s)", snap->origin->name, lv->name);
 
-		if (!lock_vol(cmd, snap->origin->lvid.s,
-			      LCK_LV_DEACTIVATE | LCK_NONBLOCK)) {
+		if (!deactivate_lv(cmd, snap->origin->lvid.s)) {
 			log_error("Failed to deactivate LV %s",
 				  snap->origin->name);
 			return 0;

@@ -52,19 +52,19 @@ static int lvchange_permission(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
+	if (!suspend_lv(cmd, lv->lvid.s)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
 		return 0;
 	}
 
 	if (!vg_commit(lv->vg)) {
-		unlock_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv->lvid.s);
 		return 0;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!unlock_lv(cmd, lv->lvid.s)) {
+	if (!resume_lv(cmd, lv->lvid.s)) {
 		log_error("Problem reactivating %s", lv->name);
 		return 0;
 	}
@@ -84,7 +84,7 @@ static int lvchange_availability(struct cmd_context *cmd,
 	if (activate) {
 		/* FIXME Tighter locking if lv_is_origin() */
 		log_verbose("Activating logical volume \"%s\"", lv->name);
-		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE))
+		if (!activate_lv(cmd, lv->lvid.s))
 			return 0;
 		if ((lv->status & LOCKED) && (pv = get_pvmove_pv_from_lv(lv))) {
 			log_verbose("Spawning background pvmove process for %s",
@@ -93,8 +93,10 @@ static int lvchange_availability(struct cmd_context *cmd,
 		}
 	} else {
 		log_verbose("Deactivating logical volume \"%s\"", lv->name);
-		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE))
+		if (!deactivate_lv(cmd, lv->lvid.s)) {
+			stack;
 			return 0;
+		}
 	}
 
 	return 1;
@@ -103,8 +105,7 @@ static int lvchange_availability(struct cmd_context *cmd,
 static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	log_verbose("Refreshing logical volume \"%s\" (if active)", lv->name);
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD) ||
-	    !unlock_lv(cmd, lv->lvid.s))
+	if (!suspend_lv(cmd, lv->lvid.s) || !resume_lv(cmd, lv->lvid.s))
 		return 0;
 
 	return 1;
@@ -199,19 +200,19 @@ static int lvchange_readahead(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
+	if (!suspend_lv(cmd, lv->lvid.s)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
 		return 0;
 	}
 
 	if (!vg_commit(lv->vg)) {
-		unlock_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv->lvid.s);
 		return 0;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!unlock_lv(cmd, lv->lvid.s)) {
+	if (!resume_lv(cmd, lv->lvid.s)) {
 		log_error("Problem reactivating %s", lv->name);
 		return 0;
 	}
@@ -223,6 +224,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
 	struct lvinfo info;
+	int active = 0;
 
 	if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n")) {
 		if (!(lv->status & FIXED_MINOR)) {
@@ -247,17 +249,16 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		if (lv_info(lv, &info) && info.exists &&
 		    !arg_count(cmd, force_ARG)) {
 			if (yes_no_prompt("Logical volume %s will be "
-					  "deactivated first. "
-					  "Continue? [y/n]: ",
-					  lv->name) == 'n') {
+					  "deactivated temporarily. "
+					  "Continue? [y/n]: ", lv->name) == 'n') {
 				log_print("%s device number not changed.",
 					  lv->name);
 				return 0;
 			}
+			active = 1;
 		}
-		log_print("Ensuring %s is inactive. "
-			  "(Reactivate using lvchange -ay.)", lv->name);
-		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
+		log_print("Ensuring %s is inactive. ", lv->name);
+		if (!deactivate_lv(cmd, lv->lvid.s)) {
 			log_error("%s: deactivation failed", lv->name);
 			return 0;
 		}
@@ -266,6 +267,14 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		lv->major = arg_int_value(cmd, major_ARG, lv->major);
 		log_verbose("Setting persistent device number to (%d, %d) "
 			    "for \"%s\"", lv->major, lv->minor, lv->name);
+		if (active) {
+			log_verbose("Re-activating logical volume \"%s\"",
+				    lv->name);
+			if (!activate_lv(cmd, lv->lvid.s)) {
+				log_error("%s: reactivation failed", lv->name);
+				return 0;
+			}
+		}
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
@@ -276,19 +285,19 @@ static int lvchange_persistent(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
+	if (!suspend_lv(cmd, lv->lvid.s)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
 		return 0;
 	}
 
 	if (!vg_commit(lv->vg)) {
-		unlock_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv->lvid.s);
 		return 0;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!unlock_lv(cmd, lv->lvid.s)) {
+	if (!resume_lv(cmd, lv->lvid.s)) {
 		log_error("Problem reactivating %s", lv->name);
 		return 0;
 	}

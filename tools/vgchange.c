@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int _activate_lvs_in_vg(struct cmd_context *cmd,
-			       struct volume_group *vg, int lock)
+			       struct volume_group *vg, int activate)
 {
 	struct lv_list *lvl;
 	struct logical_volume *lv;
@@ -31,10 +31,16 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			continue;
 
 		/* Can't deactive a pvmove LV */
-		if ((lock == LCK_LV_DEACTIVATE) && (lv->status & PVMOVE))
+		if (!activate && (lv->status & PVMOVE))
 			continue;
 
-		if (!lock_vol(cmd, lv->lvid.s, lock | LCK_NONBLOCK))
+		if (!activate) {
+			if (!deactivate_lv(cmd, lv->lvid.s))
+				continue;
+		} else if (lv_is_origin(lv)) {
+			if (!activate_lv_excl(cmd, lv->lvid.s))
+				continue;
+		} else if (!activate_lv(cmd, lv->lvid.s))
 			continue;
 
 		if ((lv->status & PVMOVE) &&
@@ -67,11 +73,11 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
 
-	if (available && _activate_lvs_in_vg(cmd, vg, LCK_LV_ACTIVATE))
+	if (available && _activate_lvs_in_vg(cmd, vg, 1))
 		log_verbose("Activated logical volumes in "
 			    "volume group \"%s\"", vg->name);
 
-	if (!available && _activate_lvs_in_vg(cmd, vg, LCK_LV_DEACTIVATE))
+	if (!available && _activate_lvs_in_vg(cmd, vg, 0))
 		log_verbose("Deactivated logical volumes in "
 			    "volume group \"%s\"", vg->name);
 
