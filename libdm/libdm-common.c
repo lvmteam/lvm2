@@ -69,7 +69,7 @@ struct dm_task *dm_task_create(int type)
         struct dm_task *dmt = malloc(sizeof(*dmt));
 
         if (!dmt) {
-                log("dm_task_create: malloc(%d) failed", sizeof(*dmt));
+                log_error("dm_task_create: malloc(%d) failed", sizeof(*dmt));
                 return NULL;
         }
 
@@ -97,7 +97,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 
 		if (stat(name, &st1) || stat(path, &st2) ||
 		    !(st1.st_dev == st2.st_dev)) {
-			log("dm_task_set_name: Device %s not found", name);
+			log_error("dm_task_set_name: Device %s not found", name);
 			return 0;
 		}
 
@@ -105,7 +105,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	}
 
         if (!(dmt->dev_name = strdup(name))) {
-		log("dm_task_set_name: strdup(%s) failed", name);
+		log_error("dm_task_set_name: strdup(%s) failed", name);
 		return 0;
 	}
 
@@ -149,7 +149,7 @@ int add_dev_node(const char *dev_name, dev_t dev)
 
         if (stat(path, &info) >= 0) {
                 if (!S_ISBLK(info.st_mode)) {
-                        log("A non-block device file at '%s' "
+                        log_error("A non-block device file at '%s' "
                             "is already present", path);
                         return 0;
                 }
@@ -158,13 +158,13 @@ int add_dev_node(const char *dev_name, dev_t dev)
                         return 1;
 
                 if (unlink(path) < 0) {
-                        log("Unable to unlink device node for '%s'", dev_name);
+                        log_error("Unable to unlink device node for '%s'", dev_name);
                         return 0;
                 }
         }
 
         if (mknod(path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
-                log("Unable to make device node for '%s'", dev_name);
+                log_error("Unable to make device node for '%s'", dev_name);
                 return 0;
         }
 
@@ -182,7 +182,7 @@ int rm_dev_node(const char *dev_name)
                 return 1;
 
         if (unlink(path) < 0) {
-                log("Unable to unlink device node for '%s'", dev_name);
+                log_error("Unable to unlink device node for '%s'", dev_name);
                 return 0;
         }
 

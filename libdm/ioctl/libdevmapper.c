@@ -84,7 +84,7 @@ int dm_task_set_ro(struct dm_task *dmt)
 int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 {
 	if (!(dmt->newname = strdup(newname))) {
-		log("dm_task_set_newname: strdup(%s) failed", newname);
+		log_error("dm_task_set_newname: strdup(%s) failed", newname);
 		return 0;
 	}
 
@@ -98,19 +98,19 @@ struct target *create_target(uint64_t start,
 	struct target *t = malloc(sizeof(*t));
 
 	if (!t) {
-                log("create_target: malloc(%d) failed", sizeof(*t));
+                log_error("create_target: malloc(%d) failed", sizeof(*t));
 		return NULL;
 	}
 
 	memset(t, 0, sizeof(*t));
 
 	if (!(t->params = strdup(params))) {
-		log("create_target: strdup(params) failed");
+		log_error("create_target: strdup(params) failed");
 		goto bad;
 	}
 
 	if (!(t->type = strdup(type))) {
-		log("create_target: strdup(type) failed");
+		log_error("create_target: strdup(type) failed");
 		goto bad;
 	}
 
@@ -140,7 +140,7 @@ static void *_add_target(struct target *t, void *out, void *end)
 
 	out += sizeof(struct dm_target_spec);
 	if (out >= end) {
-		log(no_space);
+		log_error(no_space);
 		return NULL;
 	}
 
@@ -152,9 +152,9 @@ static void *_add_target(struct target *t, void *out, void *end)
 	len = strlen(t->params);
 
 	if ((out + len + 1) >= end) {
-		log(no_space);
+		log_error(no_space);
 
-		log("t->params= '%s'", t->params);
+		log_error("t->params= '%s'", t->params);
 		return NULL;
 	}
 	strcpy((char *) out, t->params);
@@ -184,7 +184,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	}
 
 	if (count && dmt->newname) {
-		log("targets and newname are incompatible");
+		log_error("targets and newname are incompatible");
 		return NULL;
 	}
 
@@ -240,14 +240,14 @@ int dm_task_run(struct dm_task *dmt)
 	char control[PATH_MAX];
 
 	if (!dmi) {
-		log("Couldn't create ioctl argument");
+		log_error("Couldn't create ioctl argument");
 		return 0;
 	}
 
 	snprintf(control, sizeof(control), "%s/control", dm_dir());
 
 	if ((fd = open(control, O_RDWR)) < 0) {
-		log("Couldn't open device-mapper control device");
+		log_error("Couldn't open device-mapper control device");
 		goto bad;
 	}
 
@@ -285,13 +285,13 @@ int dm_task_run(struct dm_task *dmt)
 		break;
 
 	default:
-		log("Internal error: unknown device-mapper task %d",
+		log_error("Internal error: unknown device-mapper task %d",
 		    dmt->type);
 		goto bad;
 	}
 
 	if (ioctl(fd, command, dmi) < 0) {
-		log("device-mapper ioctl cmd %d failed: %s", dmt->type,
+		log_error("device-mapper ioctl cmd %d failed: %s", dmt->type,
 		    strerror(errno));
 		goto bad;
 	}

@@ -4,8 +4,20 @@
  * This file is released under the LGPL.
  */
 
+#define _LOG_DEBUG 7
+#define _LOG_INFO 6
+#define _LOG_NOTICE 5
+#define _LOG_WARN 4
+#define _LOG_ERR 3
+#define _LOG_FATAL 2
+
 extern dm_log_fn _log;
-#define log(msg, x...) _log(1, __FILE__, __LINE__, msg, ## x)
+
+#define log_error(msg, x...) _log(_LOG_ERR, __FILE__, __LINE__, msg, ## x)
+#define log_print(msg, x...) _log(_LOG_WARN, __FILE__, __LINE__, msg, ## x)
+#define log_verbose(msg, x...) _log(_LOG_NOTICE, __FILE__, __LINE__, msg, ## x)
+#define log_very_verbose(msg, x...) _log(_LOG_INFO, __FILE__, __LINE__, msg, ## x)
+#define log_debug(msg, x...) _log(_LOG_DEBUG, __FILE__, __LINE__, msg, ## x)
 
 extern struct target *create_target(uint64_t start,
                                      uint64_t len,
