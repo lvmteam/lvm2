@@ -83,7 +83,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 	}
 
-	if (vg->pv_count == vg->max_pv) {
+	if (vg->pv_count && (vg->pv_count == vg->max_pv)) {
 		log_error("No space for '%s' - volume group '%s' "
 			  "holds max %d physical volume(s).", pv_name,
 			  vg->name, vg->max_pv);

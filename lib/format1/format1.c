@@ -422,10 +422,10 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 {
 	/* just check max_pv and max_lv */
-	if (vg->max_lv >= MAX_LV)
+	if (!vg->max_lv || vg->max_lv >= MAX_LV)
 		vg->max_lv = MAX_LV - 1;
 
-	if (vg->max_pv >= MAX_PV)
+	if (!vg->max_pv || vg->max_pv >= MAX_PV)
 		vg->max_pv = MAX_PV - 1;
 
 	if (vg->extent_size > MAX_PE_SIZE || vg->extent_size < MIN_PE_SIZE) {

@@ -94,14 +94,16 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		goto error;
 	}
 
-	if (vg_to->max_pv < vg_to->pv_count + vg_from->pv_count) {
+	if (vg_to->max_pv &&
+	    (vg_to->max_pv < vg_to->pv_count + vg_from->pv_count)) {
 		log_error("Maximum number of physical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_pv, vg_to->name,
 			  vg_from->name);
 		goto error;
 	}
 
-	if (vg_to->max_lv < vg_to->lv_count + vg_from->lv_count) {
+	if (vg_to->max_lv &&
+	    (vg_to->max_lv < vg_to->lv_count + vg_from->lv_count)) {
 		log_error("Maximum number of logical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_lv, vg_to->name,
 			  vg_from->name);

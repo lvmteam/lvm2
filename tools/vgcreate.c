@@ -20,10 +20,6 @@
 
 #include "tools.h"
 
-/* FIXME From config file? */
-#define DEFAULT_PV 256
-#define DEFAULT_LV 256
-
 #define DEFAULT_EXTENT 4096	/* In KB */
 
 int vgcreate(struct cmd_context *cmd, int argc, char **argv)
@@ -46,36 +42,47 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	vg_name = argv[0];
-	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, DEFAULT_LV);
-	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, DEFAULT_PV);
+	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
+	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
 
-	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
-		log_error("Physical extent size may not be negative");
-		return EINVALID_CMD_LINE;
-	}
-
-	/* Units of 512-byte sectors */
-	extent_size =
-	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
-
-	if (max_lv < 1) {
-		log_error("maxlogicalvolumes too low");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (max_pv < 1) {
-		log_error("maxphysicalvolumes too low");
-		return EINVALID_CMD_LINE;
-	}
+ 	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
+ 		if (!max_lv)
+ 			max_lv = 255;
+ 		if (!max_pv)
+ 			max_pv = 255;
+ 		if (max_lv > 255 || max_pv > 255) {
+ 			log_error("Number of volumes may not exceed 255");
+ 			return EINVALID_CMD_LINE;
+ 		}
+ 	}
+  
+  	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
+  		log_error("Physical extent size may not be negative");
+  		return EINVALID_CMD_LINE;
+  	}
+  
+ 	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, 0) == SIGN_MINUS) {
+ 		log_error("Max Logical Volumes may not be negative");
+  		return EINVALID_CMD_LINE;
+  	}
+  
+ 	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, 0) == SIGN_MINUS) {
+ 		log_error("Max Physical Volumes may not be negative");
+  		return EINVALID_CMD_LINE;
+  	}
+  
+ 	/* Units of 512-byte sectors */
+ 	extent_size =
+ 	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
 
 	if (!extent_size) {
 		log_error("Physical extent size may not be zero");
 		return EINVALID_CMD_LINE;
 	}
 
-	/* Strip dev_dir if present */
-	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
-		vg_name += strlen(cmd->dev_dir);
+  	/* Strip dev_dir if present */
+  	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
+  		vg_name += strlen(cmd->dev_dir);
 
 	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
 	if (path_exists(vg_path)) {
@@ -94,12 +101,12 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 
 	if (max_lv != vg->max_lv)
-		log_error("Warning: Setting maxlogicalvolumes to %d",
-			  vg->max_lv);
+		log_error("Warning: Setting maxlogicalvolumes to %d "
+			  "(0 means unlimited)", vg->max_lv);
 
 	if (max_pv != vg->max_pv)
-		log_error("Warning: Setting maxphysicalvolumes to %d",
-			  vg->max_pv);
+		log_error("Warning: Setting maxphysicalvolumes to %d "
+			  "(0 means unlimited)", vg->max_pv);
 
 	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");

@@ -132,7 +132,16 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 		return ECMD_FAILED;
 	}
 
-	if (max_lv < vg->lv_count) {
+	if (!(vg->fid->fmt->features & FMT_UNLIMITED_VOLS)) {
+		if (!max_lv)
+			max_lv = 255;
+		else if (max_lv > 255) {
+			log_error("MaxLogicalVolume limit is 255");
+			return ECMD_FAILED;
+		}
+	}
+
+	if (max_lv && max_lv < vg->lv_count) {
 		log_error("MaxLogicalVolume is less than the current number "
 			  "%d of logical volume(s) for \"%s\"", vg->lv_count,
 			  vg->name);
