@@ -51,7 +51,7 @@ static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 
 static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 {
-	struct list *lvh, *lvht, *segh;
+	struct list *lvh, *lvht;
 	struct logical_volume *lv;
 	struct lv_segment *seg;
 	struct physical_volume *pv;
@@ -64,8 +64,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		/* Ensure all the PVs used by this LV remain in the same */
 		/* VG as each other */
 		vg_with = NULL;
-		list_iterate(segh, &lv->segments) {
-			seg = list_item(segh, struct lv_segment);
+		list_iterate_items(seg, &lv->segments) {
 			for (s = 0; s < seg->area_count; s++) {
 				/* FIXME Check AREA_LV too */
 				if (seg->area[s].type != AREA_PV)
@@ -115,12 +114,11 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 
 static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 {
-	struct list *lvh;
+	struct lv_list *lvl;
 
-	list_iterate(lvh, &vg->lvs) {
-		if (lv == list_item(lvh, struct lv_list)->lv)
+	list_iterate_items(lvl, &vg->lvs)
+		if (lv == lvl->lv)
 			 return 1;
-	}
 
 	return 0;
 }

@@ -77,14 +77,11 @@ int yes_no_arg(struct cmd_context *cmd, struct arg *a)
 int metadatatype_arg(struct cmd_context *cmd, struct arg *a)
 {
 	struct format_type *fmt;
-	struct list *fmth;
-
 	char *format;
 
 	format = a->value;
 
-	list_iterate(fmth, &cmd->formats) {
-		fmt = list_item(fmth, struct format_type);
+	list_iterate_items(fmt, &cmd->formats) {
 		if (!strcasecmp(fmt->name, format) ||
 		    !strcasecmp(fmt->name + 3, format) ||
 		    (fmt->alias && !strcasecmp(fmt->alias, format))) {

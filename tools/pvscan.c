@@ -109,7 +109,6 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	int pvs_found = 0;
 
 	struct list *pvslist;
-	struct list *pvh;
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 
@@ -141,8 +140,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 
 	/* eliminate exported/new if required */
-	list_iterate(pvh, pvslist) {
-		pvl = list_item(pvh, struct pv_list);
+	list_iterate_items(pvl, pvslist) {
 		pv = pvl->pv;
 
 		if ((arg_count(cmd, exported_ARG)
@@ -175,8 +173,8 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	/* find maximum pv name length */
 	pv_max_name_len = vg_max_name_len = 0;
-	list_iterate(pvh, pvslist) {
-		pv = list_item(pvh, struct pv_list)->pv;
+	list_iterate_items(pvl, pvslist) {
+		pv = pvl->pv;
 		len = strlen(dev_name(pv->dev));
 		if (pv_max_name_len < len)
 			pv_max_name_len = len;
@@ -187,9 +185,8 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	pv_max_name_len += 2;
 	vg_max_name_len += 2;
 
-	list_iterate(pvh, pvslist)
-	    _pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv,
-				   NULL);
+	list_iterate_items(pvl, pvslist)
+	    _pvscan_display_single(cmd, pvl->pv, NULL);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");

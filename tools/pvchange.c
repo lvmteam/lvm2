@@ -154,7 +154,8 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	struct physical_volume *pv;
 	char *pv_name;
 
-	struct list *pvh, *pvslist;
+	struct pv_list *pvl;
+	struct list *pvslist;
 	struct list mdas;
 
 	list_init(&mdas);
@@ -194,12 +195,9 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
-		list_iterate(pvh, pvslist) {
+		list_iterate_items(pvl, pvslist) {
 			total++;
-			done += _pvchange_single(cmd,
-						 list_item(pvh,
-							   struct pv_list)->pv,
-						 NULL);
+			done += _pvchange_single(cmd, pvl->pv, NULL);
 		}
 	}
 

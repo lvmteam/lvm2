@@ -30,7 +30,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	int pvmetadatacopies = 0;
 	uint64_t pvmetadatasize = 0;
 	uint64_t pe_end = 0, pe_start = 0;
-	struct list *pvh;
+	struct pv_list *pvl;
 	int change_made = 0;
 
 	if (!vg) {
@@ -88,8 +88,8 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	list_iterate(pvh, &vg->pvs) {
-		existing_pv = list_item(pvh, struct pv_list)->pv;
+	list_iterate_items(pvl, &vg->pvs) {
+		existing_pv = pvl->pv;
 
 		pe_start = existing_pv->pe_start;
 		pe_end = existing_pv->pe_count * existing_pv->pe_size

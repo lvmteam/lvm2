@@ -17,17 +17,15 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	int ret_max = 0;
 	int ret = 0;
 
-	struct list *lvh;
-	struct logical_volume *lv;
+	struct lv_list *lvl;
 
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg->name);
 		return ECMD_FAILED;
 	}
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		ret = process_single(cmd, lv, handle);
+	list_iterate_items(lvl, &vg->lvs) {
+		ret = process_single(cmd, lvl->lv, handle);
 		if (ret > ret_max)
 			ret_max = ret;
 	}
@@ -233,13 +231,11 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 						      struct lv_segment * seg,
 						      void *handle))
 {
-	struct list *segh;
 	struct lv_segment *seg;
 	int ret_max = 0;
 	int ret;
 
-	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct lv_segment);
+	list_iterate_items(seg, &lv->segments) {
 		ret = process_single(cmd, seg, handle);
 		if (ret > ret_max)
 			ret_max = ret;
@@ -328,15 +324,11 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int ret_max = 0;
 	int ret = 0;
-	struct list *pvh;
-	struct physical_volume *pv;
+	struct pv_list *pvl;
 
-	list_iterate(pvh, &vg->pvs) {
-		pv = list_item(pvh, struct pv_list)->pv;
-
-		if ((ret = process_single(cmd, vg, pv, handle)) > ret_max)
+	list_iterate_items(pvl, &vg->pvs)
+		if ((ret = process_single(cmd, vg, pvl->pv, handle)) > ret_max)
 			ret_max = ret;
-	}
 
 	return ret_max;
 }
@@ -354,7 +346,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 
 	struct pv_list *pvl;
 	struct physical_volume *pv;
-	struct list *pvslist, *pvh;
+	struct list *pvslist;
 
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
@@ -390,9 +382,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (!(pvslist = get_pvs(cmd)))
 				return ECMD_FAILED;
 
-			list_iterate(pvh, pvslist) {
-				pv = list_item(pvh, struct pv_list)->pv;
-				ret = process_single(cmd, NULL, pv, handle);
+			list_iterate_items(pvl, pvslist) {
+				ret = process_single(cmd, NULL, pvl->pv,
+						     handle);
 				if (ret > ret_max)
 					ret_max = ret;
 			}
@@ -492,14 +484,12 @@ static int _add_alloc_area(struct pool *mem, struct list *alloc_areas,
 			   uint32_t start, uint32_t count)
 {
 	struct alloc_area *aa;
-	struct list *aah;
 
 	log_debug("Adding alloc area: start PE %" PRIu32 " length %" PRIu32,
 		  start, count);
 
 	/* Ensure no overlap with existing areas */
-	list_iterate(aah, alloc_areas) {
-		aa = list_item(aah, struct alloc_area);
+	list_iterate_items(aa, alloc_areas) {
 		if (((start < aa->start) && (start + count - 1 >= aa->start)) ||
 		    ((start >= aa->start) &&
 		     (aa->start + aa->count - 1) >= start)) {
@@ -666,7 +656,7 @@ struct list *create_pv_list(struct pool *mem,
 
 struct list *clone_pv_list(struct pool *mem, struct list *pvsl)
 {
-	struct list *r, *pvh;
+	struct list *r;
 	struct pv_list *pvl, *new_pvl;
 
 	/* Build up list of PVs */
@@ -676,9 +666,7 @@ struct list *clone_pv_list(struct pool *mem, struct list *pvsl)
 	}
 	list_init(r);
 
-	list_iterate(pvh, pvsl) {
-		pvl = list_item(pvh, struct pv_list);
-
+	list_iterate_items(pvl, pvsl) {
 		if (!(new_pvl = pool_zalloc(mem, sizeof(*new_pvl)))) {
 			log_error("Unable to allocate physical volume list.");
 			return NULL;
