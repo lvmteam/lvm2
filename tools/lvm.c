@@ -556,12 +556,17 @@ struct dev_filter *active_filter(void)
 
 static void __init_log(struct config_file *cf)
 {
+	char *open_mode = "a";
+
 	const char *log_file = find_config_str(cf->root, "log/file", '/', 0);
 	int verbose_level;
 
+	if (find_config_int(cf->root, "log/overwrite", '/', 0))
+		open_mode = "w";
+
 	if (log_file) {
 		/* set up the logging */
-		if (!(_log = fopen(log_file, "a")))
+		if (!(_log = fopen(log_file, open_mode)))
 			log_error("Couldn't open log file %s", log_file);
 		else
 			init_log(_log);
