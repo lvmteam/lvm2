@@ -58,9 +58,9 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 	active = lv_active(lv);
 
 	if (active && !arg_count(cmd, force_ARG)) {
-		if (yes_no_prompt
-		    ("Do you really want to remove active logical volume \"%s\"? "
-		     "[y/n]: ", lv->name) == 'n') {
+		if (yes_no_prompt("Do you really want to remove active "
+				  "logical volume \"%s\"? [y/n]: ",
+				  lv->name) == 'n') {
 			log_print("Logical volume \"%s\" not removed",
 				  lv->name);
 			return 0;
@@ -73,6 +73,12 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 	if (active && !lv_deactivate(lv)) {
 		log_error("Unable to deactivate logical volume \"%s\"",
 			  lv->name);
+	}
+
+	log_verbose("Removing snapshot.");
+	if (lv_is_cow(lv->vg, lv) && !vg_remove_snapshot(lv->vg, lv)) {
+		stack;
+		return ECMD_FAILED;
 	}
 
 	log_verbose("Releasing logical volume \"%s\"", lv->name);
