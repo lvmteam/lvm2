@@ -84,40 +84,33 @@ int lv_open_count(struct logical_volume *lv)
 }
 
 /*
- * Creates a target for the next contiguous run of
- * extents.
+ * Emit a target for a given segment.
  */
-static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
-			unsigned int *ple)
+static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 {
 	char params[1024];
-	unsigned int le = *ple;
 	uint64_t esize = lv->vg->extent_size;
-	int i, count = 0;
-	struct pe_specifier *pes, *first = NULL;
+	uint32_t s, stripes = seg->stripes;
+	int w, tw;
 
-	for (i = le; i < lv->le_count; i++) {
-		pes = lv->map + i;
+	for (w = 0, s = 0; s < stripes; s++, w += tw) {
+		tw = snprintf(params + w, sizeof(params) - w,
+			      "%s %" PRIu64 "%s",
+			      dev_name(seg->area[s].pv->dev),
+			      (seg->area[s].pv->pe_start +
+			       (esize * seg->area[s].pe)),
+			      s == (stripes - 1) ? "" : " ");
 
-		if (!first)
-			first = pes;
-
-		/*
-		 * check that we're still contiguous.
-		 */
-		else if ((pes->pv != first->pv) ||
-			 (pes->pe != first->pe + count))
-				break;
-
-		count++;
+		if (tw < 0) {
+			log_err("Insufficient space to write target "
+				"parameters.");
+			return 0;
+		}
 	}
 
-	snprintf(params, sizeof(params), "%s %" PRIu64,
-		 dev_name(first->pv->dev),
-		 first->pv->pe_start + (esize * first->pe));
-
-	if (!dm_task_add_target(dmt, esize * le, esize * count,
-				"linear", params)) {
+	if (!dm_task_add_target(dmt, esize * le, esize * seg->len,
+				stripes == 1 ? "linear" : "striped",
+				params)) {
 		stack;
 		return 0;
 	}
@@ -129,19 +122,18 @@ static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
 int _load(struct logical_volume *lv, int task)
 {
 	int r = 0;
-	uint32_t le = 0;
 	struct dm_task *dmt;
+	struct list *segh;
+	struct stripe_segment *seg;
 
 	if (!(dmt = _setup_task(lv, task))) {
 		stack;
 		return 0;
 	}
 
-	/*
-	 * Merge adjacent extents.
-	 */
-	while (le < lv->le_count) {
-		if (!_emit_target(dmt, lv, &le)) {
+	list_iterate(segh, &lv->segments) {
+		seg = list_item(segh, struct stripe_segment);
+		if (!_emit_target(dmt, seg)) {
 			log_error("Unable to activate logical volume '%s'",
 				lv->name);
 			goto out;
@@ -285,4 +277,3 @@ int lvs_in_vg_opened(struct volume_group *vg)
 
 	return count;
 }
-

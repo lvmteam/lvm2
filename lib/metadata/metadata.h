@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  *
  * This is the in core representation of a volume group and its
  * associated physical and logical volumes.
@@ -46,7 +46,6 @@
 #define EXPORTED_TAG "PV_EXP"  /* Identifier of exported PV */
 #define IMPORTED_TAG "PV_IMP"  /* Identifier of imported PV */
 
-
 struct physical_volume {
         struct id id;
 	struct device *dev;
@@ -60,23 +59,7 @@ struct physical_volume {
         uint64_t pe_size;
         uint64_t pe_start;
         uint32_t pe_count;
-        uint32_t pe_allocated;
-};
-
-struct pv_area {
-        struct physical_volume *pv;
-        uint32_t start;		/* in extents */
-	uint32_t len;		/* in extents */
-};
-
-struct stripe_segment {
-	struct list list;
-
-	uint32_t stripe_size;
-	uint32_t stripes;
-
-	/* There will be one pv_area for each stripe */
-        struct pv_area areas[0];
+        uint32_t pe_allocated;	/* FIXME: change the name to alloc_count ? */
 };
 
 struct cmd_context;
@@ -105,8 +88,23 @@ struct volume_group {
 	struct list lvs;
 };
 
+struct stripe_segment {
+	struct list list;
+
+	struct logical_volume *lv;
+	uint32_t le;
+	uint32_t len;
+	uint32_t stripe_size;
+	uint32_t stripes;
+
+	/* There will be one area for each stripe */
+        struct {
+		struct physical_volume *pv;
+		uint32_t pe;
+	} area[0];
+};
+
 struct logical_volume {
-        /* disk */
 	struct id id;
         char *name;
 
@@ -118,7 +116,6 @@ struct logical_volume {
         uint64_t size;
         uint32_t le_count;
 
-        /* the segment array */
 	struct list segments;
 };
 
@@ -287,7 +284,7 @@ struct volume_group *find_vg_with_lv(const char *lv_name);
 
 
 /* FIXME Merge these functions with ones above */
-struct physical_volume *_find_pv(struct volume_group *vg, struct device *dev);
+struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
 
 /*

@@ -8,7 +8,6 @@ vg {
 
 	extent_size = 8192 	# 4M
 	extent_count = 1024
-	free_count = 430
 
 	max_lv = 99
         max_pv = 255
@@ -20,15 +19,12 @@ vg {
 pv1 {
 	id = "lksjdflksdlsk"
 
-	major = 123
-	minor = 23
+	device = "/dev/hda1"
 
 	status = [???]
-        size = ??
 
 	pe_start = 8192
-        pe_count = 300
-        pe_allocated = 30
+        pe_count = 300   # ???M
 }
 
 lv1 {
