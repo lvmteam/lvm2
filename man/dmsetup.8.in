@@ -54,7 +54,7 @@ dmsetup \- low level logical volume management
 .SH DESCRIPTION
 dmsetup manages logical devices that use the device-mapper driver.  
 Devices are created by loading a table that specifies a target for
-each sector in the logical device.
+each sector (512 bytes) in the logical device.
 
 The first argument to dmsetup is a command. 
 The second argument is the logical device name or uuid.
@@ -165,6 +165,7 @@ Each line of the table specifies a single target and is of the form:
     logical_start_sector num_sectors target_type target_args
 .br
 .br
+
 There are currently three simple target types available together 
 with more complex optional ones that implement snapshots and mirrors.
 
