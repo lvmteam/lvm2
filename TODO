@@ -1,33 +1,21 @@
-before alpha
-------------
-
-FIXME review
-extra validation in format1 (must be done before alpha)
-status flag review (confirm all use of ->status is consistent)
-file system handling (being done)
-error message review
-correct handling of *existing* snapshots
-review statics
-review consistency checks for full compatibility with LVM1
-
-before beta1
+before 2.0
 -----------
 
-autobackup/text format
-export/import
-64bit review
-LVM1 compatible tool exit codes
-
-before 2.0
-----------
-
+vgexport
+vgimport
+snapshots
+device-mapper support for 2.5 kernel series
+review FIXMEs
+extra validation & full consistency checks in format1 with LVM1
 partial activation
-atomic transactions
+error message review
+locking during metadata changes
+format2 with atomic transactions
 bidirectional format1/format2 migration tool
 persistent minors
 stats
-snapshots
 pvmove
+review tool exit codes for LVM1 compatibility
 
 before 2.1
 ----------
@@ -37,7 +25,5 @@ lvmdiskscan
 lvmsadc
 lvmsar
 pvdata
-vgexport
-vgimport
 vgsplit
 vgmknodes
