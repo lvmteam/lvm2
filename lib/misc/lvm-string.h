@@ -10,19 +10,23 @@
 #include <stdarg.h>
 
 /*
- * Different versions of glibc have different
- * return values for over full buffers.
+ * On error, up to glibc 2.0.6, snprintf returned -1 if buffer was too small;
+ * From glibc 2.1 it returns number of chars (excl. trailing null) that would 
+ * have been written had there been room.
+ *
+ * lvm_snprintf reverts to the old behaviour.
  */
-static inline int lvm_snprintf(char *str, size_t size, const char *format, ...)
+static inline int lvm_snprintf(char *buf, size_t bufsize, 
+			       const char *format, ...)
 {
 	int n;
 	va_list ap;
 
 	va_start(ap, format);
-	n = vsnprintf(str, size, format, ap);
+	n = vsnprintf(buf, bufsize, format, ap);
 	va_end(ap);
 
-	if (n < 0 || (n == size))
+	if (n < 0 || (n > bufsize - 1))
 		return -1;
 
 	return n;
