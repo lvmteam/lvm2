@@ -59,6 +59,9 @@ int test_mode(void);
 int partial_mode(void);
 int debug_level(void);
 
+/* Suppress messages to stdout/stderr */
+void log_suppress(int suppress);
+
 void print_log(int level, const char *file, int line, const char *format, ...)
      __attribute__ (( format (printf, 4, 5) ));
 
