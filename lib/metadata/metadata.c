@@ -170,6 +170,9 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 	vg->lv_count = 0;
 	list_init(&vg->lvs);
 
+	vg->snapshot_count = 0;
+	list_init(&vg->snapshots);
+
 	if (!fi->ops->vg_setup(fi, vg)) {
 		log_error("Format specific setup of volume group '%s' failed.",
 			  vg_name);
