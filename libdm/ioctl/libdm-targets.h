@@ -4,6 +4,11 @@
  * This file is released under the LGPL.
  */
 
+#ifndef LIB_DMTARGETS_H
+#define LIB_DMTARGETS_H
+
+#include "libdevmapper.h"
+
 struct target {
 	uint64_t start;
 	uint64_t length;
@@ -26,4 +31,6 @@ struct dm_task {
 
 	char *uuid;
 };
+
+#endif
 

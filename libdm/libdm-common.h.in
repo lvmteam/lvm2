@@ -4,6 +4,9 @@
  * This file is released under the LGPL.
  */
 
+#ifndef LIB_DMCOMMON_H
+#define LIB_DMCOMMON_H
+
 #define _LOG_DEBUG 7
 #define _LOG_INFO 6
 #define _LOG_NOTICE 5
@@ -29,3 +32,4 @@ int rename_dev_node(const char *old_name, const char *new_name);
 
 #define DM_LIB_VERSION @DM_LIB_VERSION@
 
+#endif
