@@ -428,6 +428,7 @@ xx(pvmove,
    "pvmove " "\n"
    "\t[--abort]\n"
    "\t[-A|--autobackup {y|n}]\n"
+   "\t[--alloc AllocationType]\n"
    "\t[-b|--background]\n"
    "\t[-d|--debug]\n "
    "\t[-f|--force]\n"
@@ -441,8 +442,8 @@ xx(pvmove,
    "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n"
    "\t[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
 
-   abort_ARG, autobackup_ARG, background_ARG, force_ARG, interval_ARG, name_ARG,
-   test_ARG)
+   abort_ARG, alloc_ARG, autobackup_ARG, background_ARG, force_ARG,
+   interval_ARG, name_ARG, test_ARG)
 
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",

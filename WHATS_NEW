@@ -1,5 +1,6 @@
 Version 2.00.23 - 
 ====================================
+  Allow pvmove to move data within the same PV.
   Describe how pvmove works on man page.
   Test for incompatible format/segtype combinations in lv_extend.
   Fix lvchange example on man page.
