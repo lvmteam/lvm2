@@ -567,7 +567,7 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 	int minor;
 	struct logical_volume *org, *cow;
 
-	/* build an array of minor->lv* */
+	/* build an array of minor->lv */
 	memset(lvs, 0, sizeof(lvs));
 	list_iterate (pvdh, pvds) {
 		dl = list_item(pvdh, struct disk_list);
