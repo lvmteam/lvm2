@@ -1,4 +1,4 @@
-{ 
+Base { 
 	global:
 		dm_log_init;
 		dm_task_create;
