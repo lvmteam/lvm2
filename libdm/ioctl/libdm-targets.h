@@ -7,7 +7,10 @@
 #ifndef LIB_DMTARGETS_H
 #define LIB_DMTARGETS_H
 
-#include "libdevmapper.h"
+#include <inttypes.h>
+
+struct dm_ioctl;
+struct dm_ioctl_v1;
 
 struct target {
 	uint64_t start;
@@ -26,11 +29,21 @@ struct dm_task {
 
 	int read_only;
 	int minor;
-	struct dm_ioctl *dmi;
+	union {
+		struct dm_ioctl *v2;
+		struct dm_ioctl_v1 *v1;
+	} dmi;
 	char *newname;
 
 	char *uuid;
 };
 
-#endif
+struct cmd_data {
+	const char *name;
+	const int cmd;
+	const int version[3];
+};
 
+int dm_check_version(void);
+
+#endif
