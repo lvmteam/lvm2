@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <syslog.h>
 #include <errno.h>
 
 #include "clvmd-comms.h"
@@ -240,6 +241,7 @@ int main(int argc, char *argv[])
 		max_csid_len = CMAN_MAX_CSID_LEN;
 		max_cluster_message = CMAN_MAX_CLUSTER_MESSAGE;
 		max_cluster_member_name_len = CMAN_MAX_CLUSTER_MEMBER_NAME_LEN;
+		syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to CMAN");
 	}
 #endif
 #ifdef USE_GULM
@@ -248,6 +250,7 @@ int main(int argc, char *argv[])
 			max_csid_len = GULM_MAX_CSID_LEN;
 			max_cluster_message = GULM_MAX_CLUSTER_MESSAGE;
 			max_cluster_member_name_len = GULM_MAX_CLUSTER_MEMBER_NAME_LEN;
+			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to GULM");
 		}
 #endif
 
