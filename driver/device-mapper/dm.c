@@ -35,6 +35,7 @@
 #define DEVICE_OFF(d)			/* do-nothing */
 
 #include <linux/blk.h>
+#include <linux/blkpg.h>
 
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
@@ -44,6 +45,7 @@ int _version[3] = {0, 1, 0};
 
 struct io_hook {
 	struct mapped_device *md;
+	struct target *target;
 	int rw;
 
 	void (*end_io)(struct buffer_head * bh, int uptodate);
@@ -69,7 +71,9 @@ const char *_fs_dir = "device-mapper";
 static devfs_handle_t _dev_dir;
 
 static int request(request_queue_t *q, int rw, struct buffer_head *bh);
+#if 0
 static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb);
+#endif
 
 /*
  * setup and teardown the driver
@@ -203,30 +207,6 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 		return blk_ioctl(inode->i_dev, command, a);
 		break;
 
-	case HDIO_GETGEO:
-		{
-			struct hd_geometry tmp = { heads:64, sectors:32 };
-
-			tmp.cylinders = VOLUME_SIZE(minor) / tmp.heads /
-			    tmp.sectors;
-
-			if (copy_to_user((char *) a, &tmp, sizeof (tmp)))
-				return -EFAULT;
-			break;
-		}
-
-	case HDIO_GETGEO_BIG:
-		{
-			struct hd_big_geometry tmp = { heads:64, sectors:32 };
-
-			tmp.cylinders = VOLUME_SIZE(minor) / tmp.heads /
-			    tmp.sectors;
-
-			if (copy_to_user((char *) a, &tmp, sizeof (tmp)))
-				return -EFAULT;
-			break;
-		}
-
 	case BLKGETSIZE:
 		size = VOLUME_SIZE(minor);
 		if (copy_to_user((void *) a, &size, sizeof (long)))
@@ -256,8 +236,10 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 	case BLKRRPART:
 		return -EINVAL;
 
+#if 0
 	case LV_BMAP:
 		return dm_user_bmap(inode, (struct lv_bmap *)a);
+#endif
 
 	default:
 		WARN("unknown block ioctl %d", command);
@@ -419,12 +401,10 @@ static inline int __find_node(struct dm_table *t, struct buffer_head *bh)
 	return (KEYS_PER_NODE * n) + k;
 }
 
+#if 0
 /* FIXME: Break this up! */
 static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb)
 {
-#if 1
-	return -EINVAL;
-#else
 	struct buffer_head bh;
 	struct mapped_device *md;
 	unsigned long block;
@@ -469,8 +449,8 @@ static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb)
 	}
 
 	return err;
-#endif
 }
+#endif
 
 static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 {
@@ -615,6 +595,19 @@ static void close_dev(struct dm_dev *d)
 }
 
 /*
+ * Close a list of devices.
+ */
+static void close_devices(struct list_head *devices)
+{
+	struct list_head *tmp;
+
+	for (tmp = devices->next; tmp != devices; tmp = tmp->next) {
+		struct dm_dev *dd = list_entry(tmp, struct dm_dev, list);
+		close_dev(dd);
+	}
+}
+
+/*
  * Open a list of devices.
  */
 static int open_devices(struct list_head *devices)
@@ -632,19 +625,6 @@ static int open_devices(struct list_head *devices)
  bad:
 	close_devices(devices);
 	return r;
-}
-
-/*
- * Close a list of devices.
- */
-static void close_devices(struct dm_list *devices)
-{
-	struct list_head *tmp;
-
-	for (tmp = devices->next; tmp != devices; tmp = tmp->next) {
-		struct dm_dev *dd = list_entry(tmp, struct dm_dev, list);
-		close_dev(dd);
-	}
 }
 
 
@@ -739,17 +719,18 @@ int dm_remove(struct mapped_device *md)
  * smallest hard sect size from the devices it
  * maps onto.
  */
-static int __find_hardsect_size(struct dev_list *dl)
+static int __find_hardsect_size(struct list_head *devices)
 {
-       int result = INT_MAX, size;
+	int result = INT_MAX, size;
+	struct list_head *tmp;
 
-       while(dl) {
-               size = get_hardsect_size(dl->dev);
-               if (size < result)
-                       result = size;
-               dl = dl->next;
-       }
-       return result;
+	for (tmp = devices->next; tmp != devices; tmp = tmp->next) {
+		struct dm_dev *dd = list_entry(tmp, struct dm_dev, list);
+		size = get_hardsect_size(dd->dev);
+		if (size < result)
+			result = size;
+	}
+	return result;
 }
 
 /*
@@ -886,7 +867,7 @@ void dm_suspend(struct mapped_device *md)
 	} while (1);
 
 	current->state = TASK_RUNNING;
-	remove_wait_queue(&md->map->wait, &wait);
+	remove_wait_queue(&md->wait, &wait);
 	close_devices(md->map->devices);
 
 	md->map = 0;

@@ -45,7 +45,7 @@ typedef int (*dm_err_fn)(struct buffer_head *bh, int rw, void *context);
  * (ie. opened/closed).
  */
 struct dm_dev *dm_table_get_device(struct dm_table *table, const char *path);
-void dm_table_put_device(struct dm_table *table, struct dm_dev d);
+void dm_table_put_device(struct dm_table *table, struct dm_dev *d);
 
 /*
  * information about a target type
