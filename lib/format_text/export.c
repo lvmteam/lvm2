@@ -516,7 +516,7 @@ static int _print_snapshot(struct formatter *f, struct snapshot *snap,
 	seg.stripe_size = 0;
 	seg.area_count = 0;
 	seg.area_len = 0;
-	seg.extents_moved = 0;
+	seg.extents_copied = 0;
 
 	/* Can't tag a snapshot independently of its origin */
 	list_init(&seg.tags);

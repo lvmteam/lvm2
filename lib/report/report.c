@@ -129,7 +129,7 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 	unsigned int s;
-	const char *devname;
+	const char *name;
 	uint32_t extent;
 	char extent_str[32];
 
@@ -141,19 +141,19 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 	for (s = 0; s < seg->area_count; s++) {
 		switch (seg->area[s].type) {
 		case AREA_LV:
-			devname = seg->area[s].u.lv.lv->name;
+			name = seg->area[s].u.lv.lv->name;
 			extent = seg->area[s].u.lv.le;
 			break;
 		case AREA_PV:
-			devname = dev_name(seg->area[s].u.pv.pv->dev);
+			name = dev_name(seg->area[s].u.pv.pv->dev);
 			extent = seg->area[s].u.pv.pe;
 			break;
 		default:
-			devname = "unknown";
+			name = "unknown";
 			extent = 0;
 		}
 
-		if (!pool_grow_object(rh->mem, devname, strlen(devname))) {
+		if (!pool_grow_object(rh->mem, name, strlen(name))) {
 			log_error("pool_grow_object failed");
 			return 0;
 		}
@@ -738,7 +738,7 @@ static int _copypercent_disp(struct report_handle *rh, struct field *field,
 		return 1;
 	}
 
-	percent = pvmove_percent(lv);
+	percent = copy_percent(lv);
 
 	if (!(repstr = pool_zalloc(rh->mem, 8))) {
 		log_error("pool_alloc failed");

@@ -11,7 +11,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
  */
 
 #include "lib.h"
@@ -72,7 +71,8 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 	const struct config_node *cn;
 
 	if (find_config_node(sn, "extents_moved")) {
-		if (get_config_uint32(sn, "extents_moved", &seg->extents_moved))
+		if (get_config_uint32(sn, "extents_moved",
+				      &seg->extents_copied))
 			seg->status |= PVMOVE;
 		else {
 			log_error("Couldn't read 'extents_moved' for "
@@ -94,8 +94,8 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "mirror_count = %u", seg->area_count);
 	if (seg->status & PVMOVE)
-		out_size(f, (uint64_t) seg->extents_moved,
-			 "extents_moved = %u", seg->extents_moved);
+		out_size(f, (uint64_t) seg->extents_copied,
+			 "extents_moved = %u", seg->extents_copied);
 
 	return out_areas(f, seg, "mirror");
 }
@@ -139,7 +139,7 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 	 *           #mirrors [device offset]+
 	 */
 	if (seg->status & PVMOVE) {
-		if (seg->extents_moved == seg->area_len) {
+		if (seg->extents_copied == seg->area_len) {
 			mirror_status = MIRR_COMPLETED;
 			start_area = 1;
 		} else if (*pvmove_mirror_count++) {
@@ -186,8 +186,8 @@ static int _target_percent(void **target_state, struct pool *mem,
 	*total_numerator += numerator;
 	*total_denominator += denominator;
 
-	if (seg && (seg->status & PVMOVE))
-		seg->extents_moved = mirr_state->region_size *
+	if (seg)
+		seg->extents_copied = mirr_state->region_size *
 		    numerator / seg->lv->vg->extent_size;
 
 	return 1;
@@ -230,7 +230,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->ops = &_mirrored_ops;
 	segtype->name = "mirror";
 	segtype->private = NULL;
-	segtype->flags = SEG_CAN_SPLIT | SEG_AREAS_MIRRORED;
+	segtype->flags = SEG_AREAS_MIRRORED;
 
 	return segtype;
 }

@@ -207,7 +207,7 @@ struct lv_segment {
 	struct logical_volume *origin;
 	struct logical_volume *cow;
 	uint32_t chunk_size;
-	uint32_t extents_moved;
+	uint32_t extents_copied;
 
 	struct list tags;
 
@@ -517,11 +517,14 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 int remove_pvmove_mirrors(struct volume_group *vg,
 			  struct logical_volume *lv_mirr);
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
-				      struct device *dev);
-struct physical_volume *get_pvmove_pv_from_lv(struct logical_volume *lv);
-struct physical_volume *get_pvmove_pv_from_lv_mirr(struct logical_volume
-						   *lv_mirr);
-float pvmove_percent(struct logical_volume *lv_mirr);
+				      struct device *dev, uint32_t lv_type);
+struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
+						  struct volume_group *vg,
+						  const char *name,
+						  uint32_t lv_type);
+const char *get_pvmove_pvname_from_lv(struct logical_volume *lv);
+const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr);
+float copy_percent(struct logical_volume *lv_mirr);
 struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
 

@@ -109,7 +109,7 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 	seg->area_len = area_len;
 	seg->area_count = area_count;
 	seg->stripe_size = stripe_size;
-	seg->extents_moved = 0u;
+	seg->extents_copied = 0u;
 
 	for (s = 0; s < area_count; s++) {
 		struct pv_area *pva = areas[s];
@@ -282,7 +282,7 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	seg->area_len = count;
 	seg->stripe_size = 0;
 	seg->area_count = 2;
-	seg->extents_moved = 0u;
+	seg->extents_copied = 0u;
 	/* FIXME Remove AREA_PV restriction here? */
 	seg->area[0].type = AREA_PV;
 	seg->area[0].u.pv.pv = mirrored_pv;

@@ -122,7 +122,8 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 					return 0;
 				}
 
-				if (mir_seg->extents_moved == mir_seg->area_len)
+				if (mir_seg->extents_copied ==
+					mir_seg->area_len)
 					c = 1;
 				else
 					c = 0;
@@ -148,8 +149,7 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 	return 1;
 }
 
-struct physical_volume *get_pvmove_pv_from_lv_mirr(struct logical_volume
-						   *lv_mirr)
+const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
 {
 	struct list *segh;
 	struct lv_segment *seg;
@@ -160,13 +160,13 @@ struct physical_volume *get_pvmove_pv_from_lv_mirr(struct logical_volume
 			continue;
 		if (seg->area[0].type != AREA_PV)
 			continue;
-		return seg->area[0].u.pv.pv;
+		return dev_name(seg->area[0].u.pv.pv->dev);
 	}
 
 	return NULL;
 }
 
-struct physical_volume *get_pvmove_pv_from_lv(struct logical_volume *lv)
+const char *get_pvmove_pvname_from_lv(struct logical_volume *lv)
 {
 	struct list *segh;
 	struct lv_segment *seg;
@@ -177,7 +177,7 @@ struct physical_volume *get_pvmove_pv_from_lv(struct logical_volume *lv)
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg->area[s].type != AREA_LV)
 				continue;
-			return get_pvmove_pv_from_lv_mirr(seg->area[s].u.lv.lv);
+			return get_pvmove_pvname_from_lv_mirr(seg->area[s].u.lv.lv);
 		}
 	}
 
@@ -185,7 +185,8 @@ struct physical_volume *get_pvmove_pv_from_lv(struct logical_volume *lv)
 }
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
-				      struct device *dev)
+				      struct device *dev,
+				      uint32_t lv_type)
 {
 	struct list *lvh, *segh;
 	struct logical_volume *lv;
@@ -195,7 +196,7 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
-		if (!(lv->status & PVMOVE))
+		if (!(lv->status & lv_type))
 			continue;
 
 		list_iterate(segh, &lv->segments) {
@@ -209,6 +210,21 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 	}
 
 	return NULL;
+}
+
+struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
+					 	  struct volume_group *vg,
+				      		  const char *name,
+				      		  uint32_t lv_type)
+{
+	struct physical_volume *pv;
+
+	if (!(pv = find_pv_by_name(cmd, name))) {
+		stack;
+		return NULL;
+	}
+
+	return find_pvmove_lv(vg, pv->dev, lv_type);
 }
 
 struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
@@ -255,7 +271,7 @@ struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 	return lvs;
 }
 
-float pvmove_percent(struct logical_volume *lv_mirr)
+float copy_percent(struct logical_volume *lv_mirr)
 {
 	uint32_t numerator = 0u, denominator = 0u;
 	struct list *segh;
@@ -263,11 +279,13 @@ float pvmove_percent(struct logical_volume *lv_mirr)
 
 	list_iterate(segh, &lv_mirr->segments) {
 		seg = list_item(segh, struct lv_segment);
-		if (!(seg->status & PVMOVE))
-			continue;
 
-		numerator += seg->extents_moved;
 		denominator += seg->area_len;
+
+		if (seg->segtype->flags & SEG_AREAS_MIRRORED)
+			numerator += seg->extents_copied;
+		else
+			numerator += seg->area_len;
 	}
 
 	return denominator ? (float) numerator *100 / denominator : 100.0;
