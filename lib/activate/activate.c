@@ -12,6 +12,8 @@
 #include "fs.h"
 #include "lvm-string.h"
 #include "names.h"
+#include "pool.h"
+#include "toolcontext.h"
 
 #include <limits.h>
 #include <linux/kdev_t.h>
@@ -468,3 +470,65 @@ int lvs_in_vg_opened(struct volume_group *vg)
 
 	return count;
 }
+
+/* FIXME Currently lvid is "vgname/lv_uuid". Needs to be vg_uuid/lv_uuid. */
+static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd, 
+					    const char *lvid)
+{
+	struct lv_list *lvl;
+	struct volume_group *vg;
+	char *vgname;
+	char *slash;
+
+	if (!(slash = strchr(lvid, '/'))) {
+		log_error("Invalid VG/LV identifier: %s", lvid);
+		return NULL;
+	}
+
+	vgname = pool_strdup(cmd->mem, lvid);
+	*strchr(vgname, '/') = '\0';
+
+	log_verbose("Finding volume group \"%s\"", vgname);
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vgname))) {
+		log_error("Volume group \"%s\" doesn't exist", vgname);
+		return NULL;
+	}
+
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", vgname);
+		return NULL;
+	}
+
+	if (!(lvl = find_lv_in_vg_by_uuid(vg, slash + 1))) {
+		log_error("Can't find logical volume id %s", lvid);
+		return NULL;
+	}
+
+	return lvl->lv;
+}
+
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid)
+{
+	struct logical_volume *lv;
+
+	if (!(lv = _lv_from_lvid(cmd, lvid)))
+		return 0;
+
+	if (lv_active(lv))
+		lv_suspend(lv);
+	return 1;
+}
+
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid)
+{
+	struct logical_volume *lv;
+
+	if (!(lv = _lv_from_lvid(cmd, lvid)))
+		return 0;
+
+	if (lv_active(lv))
+		lv_reactivate(lv);
+
+	return 1;
+}
+

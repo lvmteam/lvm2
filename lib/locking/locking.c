@@ -60,7 +60,7 @@ static inline void _update_lock_count(int flags)
 /*
  * No locking - currently does nothing.
  */
-int no_lock_resource(const char *resource, int flags)
+int no_lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 {
 	return 1;
 }
@@ -115,31 +115,17 @@ void fin_locking(void)
 
 /*
  * VG locking is by name
- * LV locking is by struct logical_volume
- * FIXME This should take a unique name or id for an LV
+ * LV locking is by VG_name/LV_uuid
+ * FIXME This should take a VG_uuid instead of VG_name
  */
-int lock_vol(const void *vol, int flags)
+int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 {
-	struct logical_volume *lv;
 	char resource[258];
 
 	switch (flags & LCK_SCOPE_MASK) {
-	case LCK_VG:
-		/*
-		 *  Lock a volume group before changing on-disk metadata. 
-		 */
+	case LCK_VG: /* Lock volume group before changing on-disk metadata. */
+	case LCK_LV: /* Suspends LV if it's active. */
 		strncpy(resource, (char *) vol, sizeof(resource));
-		break;
-	case LCK_LV:
-		/* 
-		 * Suspends LV if it's active. 
-		 */
-		lv = (struct logical_volume *) vol;
-		if (lvm_snprintf(resource, sizeof(resource), "%s/%s",
-			         lv->vg->name, lv->name) < 0) {
-			log_error("Lock resource name too long: %s", resource);
-			return 0;
-		}
 		break;
 	default:
 		log_error("Unrecognised lock scope: %d",
@@ -149,29 +135,9 @@ int lock_vol(const void *vol, int flags)
 
 	_ignore_signals();
 
-	if (!(_locking.lock_resource(resource, flags))) {
+	if (!(_locking.lock_resource(cmd, resource, flags))) {
 		_enable_signals();
 		return 0;
-	}
-
-/****** FIXME
-	This should move down into lock_resource when the activation calls
-        can handle struct ids and read their own metadata. 
-******/
-
-	if ((flags & LCK_SCOPE_MASK) == LCK_LV) {
-		switch (flags & LCK_TYPE_MASK) {
-		case LCK_NONE:
-			if (lv_active(lv))
-				lv_reactivate(lv);
-			break;
-		case LCK_WRITE:
-			if (lv_active(lv))
-				lv_suspend(lv);
-			break;
-		default:
-			break;
-		}
 	}
 
 	_update_lock_count(flags);

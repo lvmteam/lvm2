@@ -51,32 +51,32 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
-	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, vg_name, LCK_VG | LCK_WRITE)) {
 		log_error("Can't get lock for %s", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
-		lock_vol(vg_name, LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg->name);
-		lock_vol(vg_name, LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
-		lock_vol(vg_name, LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" is not reducable", vg_name);
-		lock_vol(vg_name, LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
@@ -84,7 +84,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	/* and update in batch here? */
 	ret = process_each_pv(cmd, argc, argv, vg, vgreduce_single);
 
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
 
 	return ret;
 

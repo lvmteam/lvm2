@@ -69,25 +69,25 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 
-	if (!lock_vol(vg_name_old, LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, vg_name_old, LCK_VG | LCK_WRITE)) {
 		log_error("Can't get lock for %s", vg_name_old);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg_old = cmd->fid->ops->vg_read(cmd->fid, vg_name_old))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
-		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name_old, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
 	if (vg_old->status & EXPORTED_VG) {
-		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name_old, LCK_VG | LCK_NONE);
 		log_error("Volume group \"%s\" is exported", vg_old->name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg_old->status & LVM_WRITE)) {
-		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+		lock_vol(cmd, vg_name_old, LCK_VG | LCK_NONE);
 		log_error("Volume group \"%s\" is read-only", vg_old->name);
 		return ECMD_FAILED;
 	}
@@ -98,7 +98,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 /***** FIXME Handle this with multiple LV renames!
 		if (!force_ARG) {
 			log_error("Use -f to force the rename");
-			lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+			lock_vol(cmd, vg_name_old, LCK_VG | LCK_NONE);
 			return ECMD_FAILED;
 		}
 *****/
@@ -106,8 +106,8 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_new);
 
-	if (!lock_vol(vg_name_new, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
-		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+	if (!lock_vol(cmd, vg_name_new, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+		lock_vol(cmd, vg_name_old, LCK_VG | LCK_NONE);
 		log_error("Can't get lock for %s", vg_name_new);
 		return ECMD_FAILED;
 	}
@@ -158,8 +158,8 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg_old);
 
-	lock_vol(vg_name_new, LCK_VG | LCK_NONE);
-	lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name_new, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name_old, LCK_VG | LCK_NONE);
 
 	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
 		  vg_name_old, vg_name_new);
@@ -167,8 +167,8 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	return 0;
 
       error:
-	lock_vol(vg_name_new, LCK_VG | LCK_NONE);
-	lock_vol(vg_name_old, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name_new, LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name_old, LCK_VG | LCK_NONE);
 	return ECMD_FAILED;
 }
 

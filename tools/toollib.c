@@ -134,13 +134,13 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		log_verbose("Using volume group(s) on command line");
 		for (; opt < argc; opt++) {
 			vg_name = argv[opt];
-			if (!lock_vol((void *) vg_name, LCK_VG | lock_type)) {
+			if (!lock_vol(cmd, (void *) vg_name, LCK_VG | lock_type)) {
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
 			if ((ret = process_single(cmd, vg_name)) > ret_max)
 				ret_max = ret;
-			lock_vol((void *) vg_name, LCK_VG | LCK_NONE);
+			lock_vol(cmd, (void *) vg_name, LCK_VG | LCK_NONE);
 		}
 	} else {
 		log_verbose("Finding all volume groups");
@@ -150,7 +150,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		}
 		list_iterate(vgh, vgs) {
 			vg_name = list_item(vgh, struct name_list)->name;
-			if (!lock_vol((void *) vg_name, LCK_VG | lock_type)) {
+			if (!lock_vol(cmd, (void *) vg_name, LCK_VG | lock_type)) {
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
@@ -158,7 +158,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 			if (ret > ret_max)
 				ret_max = ret;
-			lock_vol((void *) vg_name, LCK_VG | LCK_NONE);
+			lock_vol(cmd, (void *) vg_name, LCK_VG | LCK_NONE);
 		}
 	}
 

@@ -8,7 +8,8 @@
 #include "metadata.h"
 #include "config.h"
 
-typedef int (*lock_resource_fn)(const char *resource, int flags);
+typedef int (*lock_resource_fn)(struct cmd_context *cmd, const char *resource, 
+				int flags);
 
 typedef void (*fin_lock_fn)(void);
 

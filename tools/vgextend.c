@@ -40,14 +40,14 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	if (!lock_vol("", LCK_VG | LCK_WRITE)) {
+	if (!lock_vol(cmd, "", LCK_VG | LCK_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
-	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
-		lock_vol("", LCK_VG | LCK_NONE);
+	if (!lock_vol(cmd, vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+		lock_vol(cmd, "", LCK_VG | LCK_NONE);
 		log_error("Can't get lock for %s", vg_name);
 		goto error;
 	}
@@ -96,15 +96,15 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg);
 
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
-	lock_vol("", LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, "", LCK_VG | LCK_NONE);
 
 	log_print("Volume group \"%s\" successfully extended", vg_name);
 
 	return 0;
 
       error:
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
-	lock_vol("", LCK_VG | LCK_NONE);
+	lock_vol(cmd, vg_name, LCK_VG | LCK_NONE);
+	lock_vol(cmd, "", LCK_VG | LCK_NONE);
 	return ECMD_FAILED;
 }

@@ -145,7 +145,7 @@ static int _lock_file(const char *file, int flags)
 	return r;
 }
 
-int lock_resource(const char *resource, int flags)
+int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 {
 	char lockfile[PATH_MAX];
 
@@ -157,40 +157,32 @@ int lock_resource(const char *resource, int flags)
 		else
 			lvm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/V_%s", _lock_dir, resource);
+		if (!_lock_file(lockfile, flags))
+			return 0;
 		break;
 	case LCK_LV:
-		/* No-op: see FIXME below */
-		return 1;
+		switch (flags & LCK_TYPE_MASK) {
+		case LCK_NONE:
+			if (!lv_resume_if_active(cmd, resource))
+				return 0;
+			break;
+		case LCK_WRITE:
+			if (!lv_suspend_if_active(cmd, resource))
+				return 0;
+			break;
+		default:
+			break;
+		}
+		break;
 	default:
 		log_error("Unrecognised lock scope: %d",
 			  flags & LCK_SCOPE_MASK);
 		return 0;
 	}
 
-	if (!_lock_file(lockfile, flags))
-		return 0;
-
 	return 1;
 }
 
-/****** FIXME  This is stuck a layer above until activate unit 
-		can take labels and read its own metadata
-
-	if ((flags & LCK_SCOPE_MASK) == LCK_LV)	{
-		switch (flags & LCK_TYPE_MASK) {
-		case LCK_NONE:
-			if (lv_active_by_id(resource))
-				lv_resume_by_id(resource);
-			break;
-		case LCK_WRITE:
-			if (lv_active_by_id(resource))
-				lv_suspend_by_id(resource);
-			break;
-		default:
-			break;
-		}
-	}
-*******/
 
 int init_file_locking(struct locking_type *locking, struct config_file *cf)
 {
