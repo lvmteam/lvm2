@@ -48,6 +48,9 @@ int device_info(const char *name, struct dm_info *info)
 	return r;
 }
 
+/*
+ * The next three functions return -1 on error.
+ */
 int device_active(const char *name)
 {
 	struct dm_info info;
