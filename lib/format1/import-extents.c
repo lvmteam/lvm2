@@ -260,10 +260,8 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 {
 	uint32_t st, le = 0, flag_warning = 0;
 	struct stripe_segment *seg;
-	size_t seg_size;
 
 	while (le < lvm->lv->le_count) {
-		seg_size = sizeof(*seg) + sizeof(seg->area[0]);
 
 		if (!(seg = _alloc_seg(mem, lvm->stripes))) {
 			stack;
