@@ -119,11 +119,6 @@ static int lvchange_single(char *lv_name)
 		return 0;
 	}
 
-	log_verbose("Updating logical volume %s on disk(s)", lv->name);
-
-	if (!ios->vg_write(ios, vg))
-		return ECMD_FAILED;
-
 	/* FIXME activate change */
 
 	log_print("Logical volume %s changed", lv->name);
@@ -157,6 +152,14 @@ static int lvchange_permission(struct logical_volume *lv)
 		log_verbose("Setting logical volume %s read-only", lv->name);
 	}
 
+	log_very_verbose("Updating logical volume %s on disk(s)", lv->name);
+	if (!ios->vg_write(ios, lv->vg))
+		return 0;
+
+	log_very_verbose("Updating permissions for %s in kernel", lv->name);
+	if (!lv_update_write_access(lv))
+		return 0;
+
 	return 1;
 }
 
@@ -184,6 +187,18 @@ static int lvchange_availability(struct logical_volume *lv)
 		lv->status &= ~ACTIVE;
 		log_verbose("Deactivating logical volume %s", lv->name);
 	}
+
+	log_very_verbose("Updating logical volume %s on disk(s)", lv->name);
+	if (!ios->vg_write(ios, lv->vg))
+		return 0;
+
+	log_very_verbose("Updating %s in kernel", lv->name);
+	if (lv_stat & ACTIVE) {
+		if (!lv_activate(lv))
+			return 0;
+	} else
+		if (!lv_deactivate(lv))
+			return 0;
 
 	return 1;
 }
@@ -226,6 +241,11 @@ static int lvchange_contiguous(struct logical_volume *lv)
 			    lv->name);
 	}
 
+	log_verbose("Updating logical volume %s on disk(s)", lv->name);
+
+	if (!ios->vg_write(ios, lv->vg))
+		return 0;
+
 	return 1;
 }
 
@@ -250,6 +270,11 @@ static int lvchange_readahead(struct logical_volume *lv)
 
 	lv->read_ahead = read_ahead;
 	log_verbose("Setting read ahead to %u for %s", read_ahead, lv->name);
+
+	log_verbose("Updating logical volume %s on disk(s)", lv->name);
+
+	if (!ios->vg_write(ios, lv->vg))
+		return 0;
 
 	return 1;
 }

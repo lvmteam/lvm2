@@ -140,7 +140,7 @@ struct uuid_list {
 
 struct lvd_list {
 	struct list list;
-	struct lv_disk lv;
+	struct lv_disk lvd;
 };
 
 struct disk_list {
@@ -148,10 +148,10 @@ struct disk_list {
 	struct device *dev;
 	struct list list;
 
-	struct pv_disk pv;
-	struct vg_disk vg;
+	struct pv_disk pvd;
+	struct vg_disk vgd;
 	struct list uuids;
-	struct list lvs;
+	struct list lvds;
 	struct pe_disk *extents;
 };
 
@@ -178,13 +178,13 @@ int calculate_extent_count(struct physical_volume *pv);
  * Low level io routines which read/write
  * disk_lists.
  */
-struct disk_list *read_pv(struct device *dev, struct pool *mem,
+struct disk_list *read_pvd(struct device *dev, struct pool *mem,
 			  const char *vg_name);
 
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		   struct pool *mem, struct list *results);
 
-int write_pvs(struct list *pvs);
+int write_pvds(struct list *pvs);
 
 
 /*

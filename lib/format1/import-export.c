@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
+ * Translates between disk and in-core formats.
+ *
  * This file is released under the LGPL.
  */
 
@@ -41,10 +43,10 @@ static int _fill_lv_array(struct logical_volume **lvs,
 	struct logical_volume *lv;
 	int i = 0;
 
-	list_iterate(lvh, &dl->lvs) {
+	list_iterate(lvh, &dl->lvds) {
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 
-		if (!(lv = find_lv(vg, ll->lv.lv_name))) {
+		if (!(lv = find_lv(vg, ll->lvd.lv_name))) {
 			stack;
 			return 0;
 		}
@@ -141,15 +143,15 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 int import_vg(struct pool *mem,
 	      struct volume_group *vg, struct disk_list *dl)
 {
-	struct vg_disk *vgd = &dl->vg;
+	struct vg_disk *vgd = &dl->vgd;
 	memcpy(vg->id.uuid, vgd->vg_uuid, ID_LEN);
 
-	if (!_check_vg_name(dl->pv.vg_name)) {
+	if (!_check_vg_name(dl->pvd.vg_name)) {
 		stack;
 		return 0;
 	}
 
-	if (!(vg->name = pool_strdup(mem, dl->pv.vg_name))) {
+	if (!(vg->name = pool_strdup(mem, dl->pvd.vg_name))) {
 		stack;
 		return 0;
 	}
@@ -338,13 +340,13 @@ int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvs)
 			return 0;
 		}
 
-		for (i = 0; i < dl->pv.pe_total; i++) {
+		for (i = 0; i < dl->pvd.pe_total; i++) {
 			lv_num = e[i].lv_num;
 
 			if (lv_num == UNMAPPED_EXTENT)
 				continue;
 
-			else if(lv_num > dl->pv.lv_cur) {
+			else if(lv_num > dl->pvd.lv_cur) {
 				log_err("invalid lv in extent map\n");
 				return 0;
 
@@ -396,7 +398,7 @@ int import_pvs(struct pool *mem, struct list *pvs,
 			return 0;
 		}
 
-		if (!import_pv(mem, dl->dev, &pvl->pv, &dl->pv)) {
+		if (!import_pv(mem, dl->dev, &pvl->pv, &dl->pvd)) {
 			stack;
 			return 0;
 		}
@@ -427,6 +429,7 @@ static struct logical_volume *_add_lv(struct pool *mem,
 	}
 
 	list_add(&vg->lvs, &ll->list);
+	lv->vg = vg;
 	vg->lv_count++;
 
 	return lv;
@@ -442,9 +445,9 @@ int import_lvs(struct pool *mem, struct volume_group *vg,
 
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
-		list_iterate(lvh, &dl->lvs) {
+		list_iterate(lvh, &dl->lvds) {
 			ll = list_item(lvh, struct lvd_list);
-			lvd = &ll->lv;
+			lvd = &ll->lvd;
 
 			if (!find_lv(vg, lvd->lv_name) &&
 			    !_add_lv(mem, vg, lvd)) {
@@ -468,7 +471,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	/*
 	 * setup the pv's extents array
 	 */
-	len = sizeof(struct pe_disk) * dl->pv.pe_total;
+	len = sizeof(struct pe_disk) * dl->pvd.pe_total;
 	if (!(dl->extents = pool_alloc(dl->mem, len))) {
 		stack;
 		return 0;
@@ -483,14 +486,14 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 			return 0;
 		}
 
-		export_lv(&lvdl->lv, vg, &ll->lv, prefix);
+		export_lv(&lvdl->lvd, vg, &ll->lv, prefix);
 		if (!export_extents(dl, lv_num++, &ll->lv, pv)) {
 			stack;
 			return 0;
 		}
 
-		list_add(&dl->lvs, &lvdl->list);
-		dl->pv.lv_cur++;
+		list_add(&dl->lvds, &lvdl->list);
+		dl->pvd.lv_cur++;
 	}
 	return 1;
 }
@@ -546,11 +549,11 @@ void export_numbers(struct list *pvs, struct volume_group *vg)
 
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
-		dl->pv.pv_number = pv_num++;
+		dl->pvd.pv_number = pv_num++;
 
-		list_iterate(lvh, &dl->lvs) {
+		list_iterate(lvh, &dl->lvds) {
 			ll = list_item(lvh, struct lvd_list);
-			ll->lv.lv_number = _get_lv_number(vg, ll->lv.lv_name);
+			ll->lvd.lv_number = _get_lv_number(vg, ll->lvd.lv_name);
 		}
 	}
 }
@@ -566,13 +569,13 @@ void export_pv_act(struct list *pvs)
 
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
-		if (dl->pv.pv_status & PV_ACTIVE)
+		if (dl->pvd.pv_status & PV_ACTIVE)
 			act++;
 	}
 
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
-		dl->vg.pv_act = act;
+		dl->vgd.pv_act = act;
 	}
 }
 
@@ -590,7 +593,7 @@ int export_vg_number(struct list *pvs, const char *vg_name,
 
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
-		dl->vg.vg_number = vg_num;
+		dl->vgd.vg_number = vg_num;
 	}
 
 	return 1;

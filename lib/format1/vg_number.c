@@ -40,10 +40,10 @@ int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 
 	list_iterate(pvh, &all_pvs) {
 		dl = list_item(pvh, struct disk_list);
-		if (!strcmp(dl->pv.vg_name, candidate_vg))
+		if (!strcmp(dl->pvd.vg_name, candidate_vg))
 			continue;
 
-		numbers[dl->vg.vg_number] = 1;
+		numbers[dl->vgd.vg_number] = 1;
 	}
 
 	for (i = 0; i < MAX_VG; i++) {

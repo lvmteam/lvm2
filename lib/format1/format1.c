@@ -27,7 +27,7 @@ static int _check_vgs(struct list *pvs)
 
 		if (!first)
 			first = dl;
-		else if (memcmp(&first->vg, &dl->vg, sizeof(first->vg))) {
+		else if (memcmp(&first->vgd, &dl->vgd, sizeof(first->vgd))) {
 			log_err("VG data differs between PVs %s and %s",
 				dev_name(first->dev), dev_name(dl->dev));
 			return 0;
@@ -36,9 +36,9 @@ static int _check_vgs(struct list *pvs)
 	}
 
 	/* On entry to fn, list known to be non-empty */
-	if (!(pv_count == dl->vg.pv_cur)) {
+	if (!(pv_count == dl->vgd.pv_cur)) {
 		log_error("Only %d out of %d PV(s) found for VG %s",
-			  pv_count, dl->vg.pv_cur, dl->pv.vg_name);
+			  pv_count, dl->vgd.pv_cur, dl->pvd.vg_name);
 		return 0;
 	}
 
@@ -129,10 +129,10 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	dl->dev = pv->dev;
 
 	list_init(&dl->uuids);
-	list_init(&dl->lvs);
+	list_init(&dl->lvds);
 
-	if (!export_pv(&dl->pv, pv) ||
-	    !export_vg(&dl->vg, vg) ||
+	if (!export_pv(&dl->pvd, pv) ||
+	    !export_vg(&dl->vgd, vg) ||
 	    !export_uuids(dl, vg) ||
 	    !export_lvs(dl, vg, pv, prefix) ||
 	    !calculate_layout(dl)) {
@@ -188,7 +188,7 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 	list_init(&pvs);
 
 	r = (_flatten_vg(mem, vg, &pvs, is->prefix, is->filter) &&
-	     write_pvs(&pvs));
+	     write_pvds(&pvs));
 	pool_destroy(mem);
 	return r;
 }
@@ -213,7 +213,7 @@ static struct physical_volume *_pv_read(struct io_space *is,
 		goto bad;
 	}
 
-	if (!(dl = read_pv(dev, mem, NULL))) {
+	if (!(dl = read_pvd(dev, mem, NULL))) {
 		stack;
 		goto bad;
 	}
@@ -223,7 +223,7 @@ static struct physical_volume *_pv_read(struct io_space *is,
 		goto bad;
 	}
 
-	if (!import_pv(is->mem, dl->dev, pv, &dl->pv)) {
+	if (!import_pv(is->mem, dl->dev, pv, &dl->pvd)) {
 		stack;
 		goto bad;
 	}
@@ -382,13 +382,13 @@ static int _pv_write(struct io_space *is, struct physical_volume *pv)
 	dl->mem = mem;
 	dl->dev = pv->dev;
 
-	if (!export_pv(&dl->pv, pv)) {
+	if (!export_pv(&dl->pvd, pv)) {
 		stack;
 		goto bad;
 	}
 
 	list_add(&pvs, &dl->list);
-	if (!write_pvs(&pvs)) {
+	if (!write_pvds(&pvs)) {
 		stack;
 		goto bad;
 	}
