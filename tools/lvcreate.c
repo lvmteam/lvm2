@@ -399,14 +399,12 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
-	if (!activation()) {
-		if (lp->snapshot)
+	if (lp->snapshot) {
+		if (!activation()) {
 			log_error("Can't create snapshot without using "
 				  "device-mapper kernel driver");
-		return 0;
-	}
-
-	if (lp->snapshot) {
+			return 0;
+		}
 		if (!(org = find_lv(vg, lp->origin))) {
 			log_err("Couldn't find origin volume '%s'.",
 				lp->origin);
