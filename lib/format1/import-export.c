@@ -157,7 +157,7 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 		pvd->pv_status |= PV_ACTIVE;
 
 	if (pv->status & ALLOCATED_PV)
-		pvd->pv_allocatable = ALLOCATED_PV;
+		pvd->pv_allocatable = PV_ALLOCATABLE;
 
 	pvd->pv_size = pv->size;
 	pvd->lv_cur = 0;	/* this is set when exporting the lv list */
