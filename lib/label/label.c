@@ -21,6 +21,9 @@
 /* Label Magic is "LnXl" - error: imagination failure */
 #define LABEL_MAGIC 0x6c586e4c
 
+/* Size of blocks that dev_get_size() returns the number of */
+#define BLOCK_SIZE 512
+
 /* Our memory pool */
 static void *label_pool = NULL;
 
@@ -108,7 +111,7 @@ int label_read(struct device *dev, struct label *label)
 	return 0;
 
     if (label_pool == NULL)
-	label_pool = pool_create(512);
+	label_pool = pool_create(BLOCK_SIZE);
 
     block = pool_alloc(label_pool, sectsize);
     if (!block)
@@ -124,7 +127,7 @@ int label_read(struct device *dev, struct label *label)
 	if (iter == 0)
 	    status = dev_read(dev, sectsize, sectsize, block);
 	else
-	    status = dev_read(dev, size*512 - sectsize, sectsize, block);
+	    status = dev_read(dev, size*BLOCK_SIZE - sectsize, sectsize, block);
 
 	if (status)
 	{
@@ -211,7 +214,7 @@ int label_write(struct device *dev, struct label *label)
 	return 0;
 
     if (label_pool == NULL)
-	label_pool = pool_create(512);
+	label_pool = pool_create(BLOCK_SIZE);
 
     block = pool_alloc(label_pool, sizeof(struct label_ondisk) + label->datalen);
     if (!block)
@@ -242,9 +245,13 @@ int label_write(struct device *dev, struct label *label)
     }
 
     status1 = dev_write(dev, sectsize, sizeof(struct label_ondisk) + label->datalen, block);
+    if (!status1)
+	log_error("Error writing label 1\n");
 
     /* Write another at the end of the device */
-    status2 = dev_write(dev, size*512 - sectsize, sizeof(struct label_ondisk) + label->datalen, block);
+    status2 = dev_write(dev, size*BLOCK_SIZE - sectsize, sizeof(struct label_ondisk) + label->datalen, block);
+    if (!status1)
+	log_error("Error writing label 2\n");
 
     pool_free(label_pool, block);
     dev_close(dev);
@@ -420,9 +427,9 @@ int labels_match(struct device *dev)
 	return 0;
 
     if (label_pool == NULL)
-	label_pool = pool_create(512);
+	label_pool = pool_create(BLOCK_SIZE);
 
-    /* Allocate some space for the blocks we are going to read in */
+/* Allocate some space for the blocks we are going to read in */
     block1 = pool_alloc(label_pool, sectsize);
     if (!block1)
     {
@@ -447,7 +454,7 @@ int labels_match(struct device *dev)
     if (!dev_read(dev, sectsize, sectsize, block1))
 	goto finish;
 
-    if (!dev_read(dev, size*512 - sectsize, sectsize, block2))
+    if (!dev_read(dev, size*BLOCK_SIZE - sectsize, sectsize, block2))
 	goto finish;
 
     dev_close(dev);
