@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <fcntl.h>
 
 
@@ -131,15 +132,38 @@ static void _destroy(struct format_instance *fi)
 /*
  * vg_write implementation starts here.
  */
+
+/*
+ * Extract vg name and version number from a filename
+ */
 static int _split_vg(const char *filename, char *vg, size_t vg_size,
 		     uint32_t *index)
 {
-	char buffer[64];
-	int n;
+	int len, vg_len;
+	char *dot, *underscore;
 
-	snprintf(buffer, sizeof(buffer), "\%%ds_\%u.vg%n", vg_size, &n);
-	return (sscanf(filename, buffer, vg, index) == 2) &&
-		(filename + n == '\0');
+	len = strlen(filename);
+	if (len < 7)
+		return 0;
+
+	dot = (char *) (filename + len - 3);
+	if (strcmp(".vg", dot))
+		return 0;
+
+	if (!(underscore = rindex(filename, '_')))
+		return 0;
+
+	if (sscanf(underscore + 1, "%u", index) != 1)
+		return 0;
+
+	vg_len = underscore - filename;
+	if (vg_len + 1 > vg_size)
+		return 0;
+
+	strncpy(vg, filename, vg_len);
+	vg[vg_len] = '\0';
+
+	return 1;
 }
 
 static void _insert_file(struct list *head, struct backup_file *b)
@@ -152,11 +176,14 @@ static void _insert_file(struct list *head, struct backup_file *b)
 		return;
 	}
 
+	/* index increases through list */
 	list_iterate (bh, head) {
 		bf = list_item(bh, struct backup_file);
 
-		if (bf->index < b->index)
-			break;
+		if (bf->index > b->index) {
+			list_add(&bf->list, &b->list);
+			return;
+		}
 	}
 
 	list_add_h(&bf->list, &b->list);
@@ -193,6 +220,10 @@ static int _scan_vg(struct backup_c *bc, const char *file,
 		log_err("Couldn't create new backup file.");
 		return 0;
 	}
+
+	b->index = index;
+	b->path = (char *)file;
+	b->vg = (char *)vg_name;
 
 	/*
 	 * Insert it to the correct part of the
@@ -276,44 +307,86 @@ static int _scan_backups(struct backup_c *bc)
  * descriptor to the file.  Both the filename and
  * descriptor are needed so we can rename the file
  * after successfully writing it.
+ * Grab NFS-supported exclusive fcntl discretionary lock.
  */
 static int _create_temp_name(const char *dir, char *buffer, size_t len,
 			     int *fd)
 {
 	int i, num;
+	pid_t pid;
+	char hostname[255];
+	struct flock lock = {
+		l_type: F_WRLCK,
+		l_whence: 0,
+		l_start: 0,
+		l_len: 0
+	};
 
 	num = rand();
+	pid = getpid();
+	if (gethostname(hostname, sizeof(hostname)) < 0) {
+		log_sys_error("gethostname", "");
+		strcpy(hostname, "nohostname");
+	}
 	for (i = 0; i < 20; i++, num++) {
-		if (lvm_snprintf(buffer, len, "%s/lvm_%d", dir, num) == -1) {
+		if (lvm_snprintf(buffer, len, "%s/.lvm_%s_%d_%d", 
+				 dir, hostname, pid, num) == -1) {
 			log_err("Not enough space to build temporary file "
 				"string.");
 			return 0;
 		}
 
-		*fd = open(buffer, O_CREAT | O_EXCL | O_WRONLY);
-		if (*fd != -1)
-			return 1;
+		*fd = open(buffer, O_CREAT | O_EXCL | O_WRONLY | O_APPEND, 
+			   S_IRUSR | S_IWUSR);
+		if (*fd < 0)
+			continue;
+
+		if (!fcntl(*fd, F_SETLK, &lock))
+			return 1;	
+
+		close(*fd);
 	}
 
 	return 0;
 }
 
-static int _valid_destination(char *file)
+/*
+ * NFS-safe rename of a temporary file to a common name, designed to
+ * avoid race conditions and not overwrite the destination if it exists.
+ *
+ * Try to create the new filename as a hard link to the original.
+ * Check the link count of the original file to see if it worked.
+ * (Assumes nothing else touches our temporary file!)
+ * If it worked, unlink the old filename.
+ */
+static int _rename(const char *old, const char *new)
 {
-	int fd;
+	struct stat buf;
 
-	fd = open(file, O_WRONLY | O_CREAT | O_EXCL);
+	link(old, new);
 
-	if (fd == -1)
+	if (stat(old, &buf)) {
+		log_sys_error("stat", old);
 		return 0;
+	}
 
-	close(fd);
+	if (buf.st_nlink != 2) {
+		log_error("%s: rename to %s failed", old, new);
+		return 0;
+	}
+
+	if (unlink(old)) {
+		log_sys_error("unlink", old);
+		return 0;
+	}
+
 	return 1;
 }
 
 static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
-	int r = 0, index = 0, i, fd;
+	int r = 0, i, fd;
+	unsigned int index = 0;
 	struct backup_c *bc = (struct backup_c *) fi->private;
 	struct backup_file *last;
 	FILE *fp = NULL;
@@ -364,13 +437,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 			goto out;
 		}
 
-		if (!_valid_destination(backup_name))
-			continue;
-
-		if (rename(temp_file, backup_name) < 0) {
-			log_err("couldn't rename backup file to %s.",
-				backup_name);
-		} else {
+		if (_rename(temp_file, backup_name)) {
 			r = 1;
 			break;
 		}
