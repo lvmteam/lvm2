@@ -46,7 +46,7 @@ static int _check(const char *name)
 	/* prompt */
 	if (!arg_count(yes_ARG) &&
 	    yes_no_prompt(_really_init, name, pv->vg_name) == 'n') {
-		log_print("physical volume %s not initialized", name);
+		log_print("Physical volume %s not initialized", name);
 		return 0;
 	}
 
@@ -68,24 +68,24 @@ static void pvcreate_single(const char *name)
 
 		if (pv->vg_name[0])
 			log_print(" of volume group %s", pv->vg_name);
-		printf("\n");
+		log_print(" ");
 	}
 
-	if (!(pv = pv_create(name, ios))) {
+	if (!(pv = pv_create(ios, name))) {
 		log_err("Failed to setup physical volume %s", name);
 		return;
 	}
-	log_verbose("set up physical volume for %s with %llu sectors",
+	log_verbose("Set up physical volume for %s with %llu sectors",
 		    name, pv->size);
 
 
-	log_verbose("writing physical volume data to disk %s", name);
+	log_verbose("Writing physical volume data to disk %s", name);
 	if (!(ios->pv_write(ios, pv))) {
 		log_error("Failed to write physical volume %s", name);
 		return;
 	}
 
-	log_print("physical volume %s successfully created", name);
+	log_print("Physical volume %s successfully created", name);
 }
 
 int pvcreate(int argc, char **argv)
@@ -98,7 +98,7 @@ int pvcreate(int argc, char **argv)
 	}
 
 	if (arg_count(yes_ARG) && !arg_count(force_ARG)) {
-		log_error("option y can only be given with option f");
+		log_error("Option y can only be given with option f");
 		return EINVALID_CMD_LINE;
 	}
 

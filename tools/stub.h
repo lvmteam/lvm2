@@ -36,7 +36,6 @@ int pvdata(int argc, char **argv) {return 1;}
 int pvscan(int argc, char **argv) {return 1;}
 int vgcfgbackup(int argc, char **argv) {return 1;}
 int vgchange(int argc, char **argv) {return 1;}
-int vgcreate(int argc, char **argv) {return 1;}
 int vgcfgrestore(int argc, char **argv) {return 1;}
 int vgdisplay(int argc, char **argv) {return 1;}
 int vgexport(int argc, char **argv) {return 1;}
