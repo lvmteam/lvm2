@@ -3,9 +3,10 @@
 pvmove \- move physical extents
 .SH SYNOPSIS
 .B pvmove
+[\-\-abort]
 [\-d/\-\-debug] [\-h/\-\-help] [\-i/\-\-interval Seconds] [\-v/\-\-verbose]
-[\-n/\-\-name LogicalVolume] SourcePhysicalVolume 
-[DestinationPhysicalVolume[:PE[-PE]...]...]
+[\-n/\-\-name LogicalVolume] 
+[SourcePhysicalVolume [DestinationPhysicalVolume[:PE[-PE]...]...]]
 .SH DESCRIPTION
 .B pvmove
 allows you to move the allocated physical extents (PEs) on
@@ -20,14 +21,15 @@ If no
 .I DestinationPhysicalVolume
 is specifed, the normal allocation rules for the volume group are used.
 
-If \fBpvmove\fP gets interrupted for any reason, it will probably be 
-necessary to run \fBvgcfgrestore\fP to restore the volume group's metadata to
-the state it was before the \fBpvmove\fP began.
-
-\fBpvmove\fP locks the volume group and other LVM2 commands can't access
-the volume group metadata until \fBpvmove\fP has completed.
+If \fBpvmove\fP gets interrupted for any reason (e.g. the machine crashes)
+then run \fBpvmove\fP again without any PhysicalVolume arguments to
+continue with any moves that were in progress or use \fBpvmove --abort\fP to 
+abort them.
 
 .SH OPTIONS
+.TP
+.I \-\-abort
+Abort any moves currently in progress.
 .TP
 .I \-i, \-\-interval Seconds
 Report progress as a percentage at regular intervals.
