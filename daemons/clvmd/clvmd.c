@@ -1598,7 +1598,6 @@ static void *lvm_thread_fn(void *arg)
 	int using_gulm = (int)arg;
 
 	DEBUGLOG("LVM thread function started\n");
-	pthread_mutex_lock(&lvm_thread_mutex);
 
 	/* Ignore SIGUSR1 & 2 */
 	sigemptyset(&ss);
@@ -1608,7 +1607,6 @@ static void *lvm_thread_fn(void *arg)
 
 	/* Initialise the interface to liblvm */
 	init_lvm(using_gulm);
-	pthread_mutex_unlock(&lvm_thread_mutex);
 
 	/* Now wait for some actual work */
 	for (;;) {
