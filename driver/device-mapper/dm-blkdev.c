@@ -105,10 +105,10 @@ static struct block_device *dm_get_device(struct block_device *bdev)
 
 	
 	if (!d) {
-		rv = blkdev_get(d->bdev, FMODE_READ | FMODE_WRITE, 0, BDEV_FILE);
+		rv = blkdev_get(bdev, FMODE_READ | FMODE_WRITE, 0, BDEV_FILE);
 		if (rv == 0) {
 			write_lock(&bdev_lock);
-			list_add(&bdev_hash[hash], &n->list);
+			list_add(&n->list, &bdev_hash[hash]);
 			d = n;
 			n = NULL;
 			write_unlock(&bdev_lock);
@@ -152,7 +152,12 @@ struct block_device *dm_blkdev_get(const char *path)
 		goto out;
 	}
 
+/* Versions? */
+#ifdef MNT_NODEV
 	if (nd.mnt->mnt_flags & MNT_NODEV) {
+#else
+	if (IS_NODEV(inode)) {
+#endif
 		bdev = ERR_PTR(-EACCES);
 		goto out;
 	}
