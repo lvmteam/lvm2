@@ -21,7 +21,7 @@
 #define MIN_PE_SIZE	( 8192L / SECTOR_SIZE)     /* 8 KB in sectors */
 #define MAX_PE_SIZE	( 16L * 1024L * 1024L / SECTOR_SIZE * 1024)
 #define PE_SIZE_PV_SIZE_REL 5   /* PV size must be at least 5 times PE size */
-#define	MAX_PE_TOTAL	( ( 1 << ( sizeof ( uint16_t) * 8)) - 2)
+#define	MAX_LE_TOTAL	( ( 1 << ( sizeof ( uint16_t) * 8)) - 2)
 
 #define UNMAPPED_EXTENT 0
 

@@ -358,9 +358,9 @@ static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 
 static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
 {
-	if (lv->le_count > 65534UL) {
+	if (lv->le_count > MAX_LE_TOTAL) {
 		log_err("Format 1 logical volumes cannot contain more than "
-			"65534 extents.");
+			"%d extents.", MAX_LE_TOTAL);
 		return 0;
 	}
 
