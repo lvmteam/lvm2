@@ -25,6 +25,31 @@ void vgchange_available(struct cmd_context *cmd, struct volume_group *vg);
 void vgchange_resizeable(struct cmd_context *cmd, struct volume_group *vg);
 void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg);
 
+static int _activate_lvs_in_vg(struct cmd_context *cmd,
+			       struct volume_group *vg, int lock)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+	int count = 0;
+	char lvidbuf[128];
+
+	list_iterate(lvh, &vg->lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+
+		if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+			continue;
+
+		if (!lock_vol(cmd, lvidbuf, lock | LCK_NONBLOCK))
+			continue;
+
+		lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
+
+		count++;
+	}
+
+	return count;
+}
+
 int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!
@@ -84,7 +109,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name)
 
 void vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
-	int lv_open, lv_active;
+	int lv_open, active;
 	int available = !strcmp(arg_str_value(cmd, available_ARG, "n"), "y");
 
 	/* FIXME: Force argument to deactivate them? */
@@ -94,17 +119,17 @@ void vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		return;
 	}
 
-	if (available && (lv_active = lvs_in_vg_activated(vg)))
+	if (available && (active = lvs_in_vg_activated(vg)))
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
-			    "already active", lv_active, vg->name);
+			    "already active", active, vg->name);
 
-	if (available && (lv_open = activate_lvs_in_vg(vg)))
-		log_verbose("Activated %d logical volumes in "
-			    "volume group \"%s\"", lv_open, vg->name);
+	if (available && _activate_lvs_in_vg(cmd, vg, LCK_LV_ACTIVATE))
+		log_verbose("Activated logical volumes in "
+			    "volume group \"%s\"", vg->name);
 
-	if (!available && (lv_open = deactivate_lvs_in_vg(vg)))
-		log_verbose("Deactivated %d logical volumes in "
-			    "volume group \"%s\"", lv_open, vg->name);
+	if (!available && _activate_lvs_in_vg(cmd, vg, LCK_LV_DEACTIVATE))
+		log_verbose("Deactivated logical volumes in "
+			    "volume group \"%s\"", vg->name);
 
 	log_print("%d logical volume(s) in volume group \"%s\" now active",
 		  lvs_in_vg_activated(vg), vg->name);
@@ -161,23 +186,6 @@ void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg)
 			  vg->name);
 		return;
 	}
-
-/************** FIXME  To be handled within vg_write
-	    for (p = 0, pp = *vg->pv; p < vg->pv_max; p++, pp++) {
-		if (pp != NULL) {
-		    pp->lv_on_disk.size =
-			round_up((max_lv + 1) * sizeof(lv_disk_t), LVM_VGDA_ALIGN);
-		    pe_on_disk_base_sav = pp->pe_on_disk.base;
-		    pp->pe_on_disk.base = pp->lv_on_disk.base + pp->lv_on_disk.size;
-		    pp->pe_on_disk.size -= pp->pe_on_disk.base - pe_on_disk_base_sav;
-		    if (LVM_VGDA_SIZE(pp) / SECTOR_SIZE >
-			(pp->pv_size & ~LVM_PE_ALIGN) - pp->pe_total * pp->pe_size) {
-			log_error("extended VGDA would overlap first physical extent");
-			return LVM_E_PE_OVERLAP;
-		    }
-		}
-	    }
-****************/
 
 	if (!archive(vg))
 		return;

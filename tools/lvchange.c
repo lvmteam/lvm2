@@ -192,30 +192,6 @@ static int lvchange_availability(struct cmd_context *cmd,
 		lv->minor = arg_int_value(cmd, minor_ARG, -1);
 	}
 
-	if ((active = lv_active(lv)) < 0) {
-		log_error("Unable to determine status of \"%s\"", lv->name);
-		return 0;
-	}
-
-	if (activate && active) {
-		log_verbose("Logical volume \"%s\" is already active",
-			    lv->name);
-		return 0;
-	}
-
-	if (!activate && !active) {
-		log_verbose("Logical volume \"%s\" is already inactive",
-			    lv->name);
-		return 0;
-	}
-
-	if (activate & lv_suspended(lv)) {
-		log_verbose("Reactivating logical volume \"%s\"", lv->name);
-		if (!lv_reactivate(lv))
-			return 0;
-		return 1;
-	}
-
 	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
 		return 0;
 

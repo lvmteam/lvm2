@@ -72,10 +72,7 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 	return r;
 }
 
-/*
- * These three functions return the number of LVs in the state,
- * or -1 on error.
- */
+/* FIXME Change these into query macros with lv_get_info() to fill struct? */
 int lv_active(struct logical_volume *lv)
 {
 	struct dm_info info;
@@ -129,6 +126,7 @@ int lv_activate(struct logical_volume *lv)
 	return r;
 }
 
+/* FIXME Need to detect and handle an lv rename */
 int lv_reactivate(struct logical_volume *lv)
 {
 	int r;
@@ -291,34 +289,10 @@ int lv_setup_cow_store(struct logical_volume *lv)
 }
 
 
-int activate_lvs_in_vg(struct volume_group *vg)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-	int count = 0;
-
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		count += (!lv_active(lv) && lv_activate(lv));
-	}
-
-	return count;
-}
-
-int deactivate_lvs_in_vg(struct volume_group *vg)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-	int count = 0;
-
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		count += ((lv_active(lv) == 1) && lv_deactivate(lv));
-	}
-
-	return count;
-}
-
+/*
+ * These two functions return the number of LVs in the state,
+ * or -1 on error.
+ */
 int lvs_in_vg_activated(struct volume_group *vg)
 {
 	struct list *lvh;
@@ -383,6 +357,8 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 	return lvl->lv;
 }
 
+/* These functions should become the new interface and the _if_active
+ * bits then disappear */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid)
 {
 	struct logical_volume *lv;
@@ -392,8 +368,10 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid)
 
 	if (lv_active(lv) > 0)
 		lv_suspend(lv);
+
 	return 1;
 }
+
 
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid)
 {
@@ -424,11 +402,16 @@ int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid)
 int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid)
 {
 	struct logical_volume *lv;
+	int active;
 
 	if (!(lv = _lv_from_lvid(cmd, lvid)))
 		return 0;
 
-	if (!lv_active(lv))
+	active = lv_active(lv);
+
+	if ((active > 0) && lv_suspended(lv)) {
+		lv_reactivate(lv);
+	} else if (!active)
 		lv_activate(lv);
 
 	return 1;
