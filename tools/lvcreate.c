@@ -465,6 +465,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	r = 0;
 
       out:
-	lock_vol(cmd, lp.vg_name, LCK_VG_UNLOCK);
+	unlock_vg(cmd, lp.vg_name);
 	return r;
 }

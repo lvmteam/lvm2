@@ -104,26 +104,26 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		}
 
 		if (!(vg = cmd->fid->ops->vg_read(cmd->fid, pv->vg_name))) {
-			lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+			unlock_vg(cmd, pv->vg_name);
 			log_error("Unable to find volume group of \"%s\"",
 				  pv_name);
 			return 0;
 		}
 
 		if (vg->status & EXPORTED_VG) {
-			lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+			unlock_vg(cmd, pv->vg_name);
 			log_error("Volume group \"%s\" is exported", vg->name);
 			return ECMD_FAILED;
 		}
 
 		if (!(vg->status & LVM_WRITE)) {
-			lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+			unlock_vg(cmd, pv->vg_name);
 			log_error("Volume group \"%s\" is read-only", vg->name);
 			return ECMD_FAILED;
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+			unlock_vg(cmd, pv->vg_name);
 			log_error
 			    ("Unable to find \"%s\" in volume group \"%s\"",
 			     pv_name, vg->name);
@@ -139,7 +139,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		log_error("Physical volume \"%s\" is already allocatable",
 			  pv_name);
 		if (*pv->vg_name)
-			lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+			unlock_vg(cmd, pv->vg_name);
 		return 0;
 	}
 
@@ -147,7 +147,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		log_error("Physical volume \"%s\" is already unallocatable",
 			  pv_name);
 		if (*pv->vg_name)
-			lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+			unlock_vg(cmd, pv->vg_name);
 		return 0;
 	}
 
@@ -164,13 +164,13 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
 		if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
-			lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+			unlock_vg(cmd, pv->vg_name);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
 			return 0;
 		}
 		backup(vg);
-		lock_vol(cmd, pv->vg_name, LCK_VG_UNLOCK);
+		unlock_vg(cmd, pv->vg_name);
 	} else {
 		if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
 			log_error("Failed to store physical volume \"%s\"",

@@ -67,26 +67,26 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	if (!(vg_to = cmd->fid->ops->vg_read(cmd->fid, vg_name_to))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_to);
-		lock_vol(cmd, vg_name_to, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
 	}
 
 	if (vg_to->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg_to->name);
-		lock_vol(cmd, vg_name_to, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg_to->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_to->name);
-		lock_vol(cmd, vg_name_to, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 	if (!lock_vol(cmd, vg_name_from, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		log_error("Can't get lock for %s", vg_name_from);
-		lock_vol(cmd, vg_name_to, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
 	}
 
@@ -190,15 +190,15 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	backup(vg_to);
 
-	lock_vol(cmd, vg_name_from, LCK_VG_UNLOCK);
-	lock_vol(cmd, vg_name_to, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name_from);
+	unlock_vg(cmd, vg_name_to);
 
 	log_print("Volume group \"%s\" successfully merged into \"%s\"",
 		  vg_from->name, vg_to->name);
 	return 0;
 
       error:
-	lock_vol(cmd, vg_name_from, LCK_VG_UNLOCK);
-	lock_vol(cmd, vg_name_to, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name_from);
+	unlock_vg(cmd, vg_name_to);
 	return ECMD_FAILED;
 }

@@ -28,12 +28,7 @@ int lv_info(struct logical_volume *lv, struct dm_info *info);
 /*
  * Activation proper.
  */
-int lv_activate(struct logical_volume *lv);
-int lv_reactivate(struct logical_volume *lv);
-int lv_deactivate(struct logical_volume *lv);
-int lv_suspend(struct logical_volume *lv);
 int lv_rename(const char *old_name, struct logical_volume *lv);
-
 
 
 /*
@@ -42,8 +37,8 @@ int lv_rename(const char *old_name, struct logical_volume *lv);
  */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s);
-int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid_s);
-int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid_s);
+int lv_activate(struct cmd_context *cmd, const char *lvid_s);
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s);
 
 
 /*

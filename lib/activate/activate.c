@@ -112,25 +112,8 @@ int lv_open_count(struct logical_volume *lv)
 	return info.open_count;
 }
 
-int lv_activate(struct logical_volume *lv)
-{
-	int r;
-	struct dev_manager *dm;
-
-	if (!(dm = dev_manager_create(lv->vg->name))) {
-		stack;
-		return 0;
-	}
-
-	if (!(r = dev_manager_activate(dm, lv)))
-		stack;
-
-	dev_manager_destroy(dm);
-	return r;
-}
-
 /* FIXME Need to detect and handle an lv rename */
-int lv_reactivate(struct logical_volume *lv)
+static int _lv_activate(struct logical_volume *lv)
 {
 	int r;
 	struct dev_manager *dm;
@@ -147,7 +130,7 @@ int lv_reactivate(struct logical_volume *lv)
 	return r;
 }
 
-int lv_deactivate(struct logical_volume *lv)
+static int _lv_deactivate(struct logical_volume *lv)
 {
 	int r;
 	struct dev_manager *dm;
@@ -164,7 +147,7 @@ int lv_deactivate(struct logical_volume *lv)
 	return r;
 }
 
-int lv_suspend(struct logical_volume *lv)
+static int _lv_suspend(struct logical_volume *lv)
 {
 #if 0
 	char buffer[128];
@@ -308,8 +291,6 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 	return lvl->lv;
 }
 
-/* These functions should become the new interface and the _if_active
- * bits then disappear */
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
@@ -318,7 +299,7 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 
 	if (lv_active(lv) > 0)
-		lv_suspend(lv);
+		_lv_suspend(lv);
 
 	return 1;
 }
@@ -332,12 +313,12 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 
 	if ((lv_active(lv) > 0) && lv_suspended(lv))
-		lv_reactivate(lv);
+		_lv_activate(lv);
 
 	return 1;
 }
 
-int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid_s)
+int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 
@@ -345,12 +326,12 @@ int lv_deactivate_if_active(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 
 	if (lv_active(lv) > 0)
-		lv_deactivate(lv);
+		_lv_deactivate(lv);
 
 	return 1;
 }
 
-int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid_s)
+int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct logical_volume *lv;
 	int active;
@@ -360,10 +341,8 @@ int lv_activate_if_inactive(struct cmd_context *cmd, const char *lvid_s)
 
 	active = lv_active(lv);
 
-	if ((active > 0) && lv_suspended(lv)) {
-		lv_reactivate(lv);
-	} else if (!active)
-		lv_activate(lv);
+	if (!active || ((active > 0) && lv_suspended(lv)))
+		_lv_activate(lv);
 
 	return 1;
 }

@@ -159,14 +159,14 @@ static int lvchange_permission(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
+                unlock_lv(cmd, lv->lvid.s);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-        if (!lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK)) {
+        if (!unlock_lv(cmd, lv->lvid.s)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }
@@ -247,14 +247,14 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
+                unlock_lv(cmd, lv->lvid.s);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
-        if (!lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK)) {
+        if (!unlock_lv(cmd, lv->lvid.s)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }
@@ -296,14 +296,14 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
+                unlock_lv(cmd, lv->lvid.s);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
-        if (!lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK)) {
+        if (!unlock_lv(cmd, lv->lvid.s)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }
@@ -347,14 +347,14 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!cmd->fid->ops->vg_write(cmd->fid, lv->vg)) {
                 /* FIXME: Attempt reversion? */
-                lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
+                unlock_lv(cmd, lv->lvid.s);
 		return 0;
 	}
 
 	backup(lv->vg);
 
 	log_very_verbose("Reactivating \"%s\" in kernel", lv->name);
-        if (!lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK)) {
+        if (!unlock_lv(cmd, lv->lvid.s)) {
                 log_error("Problem reactivating %s", lv->name);
                 return 0;
         }

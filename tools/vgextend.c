@@ -47,7 +47,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
-		lock_vol(cmd, "", LCK_VG_UNLOCK);
+		unlock_vg(cmd, "");
 		log_error("Can't get lock for %s", vg_name);
 		goto error;
 	}
@@ -96,15 +96,15 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg);
 
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
-	lock_vol(cmd, "", LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
+	unlock_vg(cmd, "");
 
 	log_print("Volume group \"%s\" successfully extended", vg_name);
 
 	return 0;
 
       error:
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
-	lock_vol(cmd, "", LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
+	unlock_vg(cmd, "");
 	return ECMD_FAILED;
 }
