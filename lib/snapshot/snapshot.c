@@ -21,6 +21,7 @@
 #include "segtypes.h"
 #include "text_export.h"
 #include "config.h"
+#include "activate.h"
 
 static const char *_name(const struct lv_segment *seg)
 {
@@ -86,6 +87,7 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 	return 1;
 }
 
+#ifdef DEVMAPPER_SUPPORT
 static int _target_percent(void **target_state, struct pool *mem,
 			   struct config_tree *cft, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
@@ -108,6 +110,21 @@ static int _target_percent(void **target_state, struct pool *mem,
 	return 1;
 }
 
+static int _target_present(void)
+{
+	static int checked = 0;
+	static int present = 0;
+
+	if (!checked)
+		present = target_present("snapshot") &&
+		    target_present("snapshot-origin");
+
+	checked = 1;
+
+	return present;
+}
+#endif
+
 static void _destroy(const struct segment_type *segtype)
 {
 	dbg_free((void *) segtype);
@@ -117,7 +134,10 @@ static struct segtype_handler _snapshot_ops = {
 	name:_name,
 	text_import:_text_import,
 	text_export:_text_export,
+#ifdef DEVMAPPER_SUPPORT
 	target_percent:_target_percent,
+	target_present:_target_present,
+#endif
 	destroy:_destroy,
 };
 

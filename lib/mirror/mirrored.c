@@ -26,6 +26,7 @@
 #include "defaults.h"
 #include "lvm-string.h"
 #include "targets.h"
+#include "activate.h"
 
 enum {
 	MIRR_DISABLED,
@@ -192,6 +193,19 @@ static int _target_percent(void **target_state, struct pool *mem,
 
 	return 1;
 }
+
+static int _target_present(void)
+{
+	static int checked = 0;
+	static int present = 0;
+
+	if (!checked)
+		present = target_present("mirror");
+
+	checked = 1;
+
+	return present;
+}
 #endif
 
 static void _destroy(const struct segment_type *segtype)
@@ -208,6 +222,7 @@ static struct segtype_handler _mirrored_ops = {
 #ifdef DEVMAPPER_SUPPORT
 	compose_target_line:_compose_target_line,
 	target_percent:_target_percent,
+	target_present:_target_present,
 #endif
 	destroy:_destroy,
 };

@@ -25,6 +25,7 @@
 #include "str_list.h"
 #include "targets.h"
 #include "lvm-string.h"
+#include "activate.h"
 
 static const char *_name(const struct lv_segment *seg)
 {
@@ -167,6 +168,18 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 	return compose_areas_line(dm, seg, params, paramsize, pos, 0u,
 				  seg->area_count);
 }
+
+static int _target_present(void)
+{
+	static int checked = 0;
+	static int present = 0;
+
+	if (!checked)
+		present = target_present("linear") && target_present("striped");
+
+	checked = 1;
+	return present;
+}
 #endif
 
 static void _destroy(const struct segment_type *segtype)
@@ -183,6 +196,7 @@ static struct segtype_handler _striped_ops = {
 	merge_segments:_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
 	compose_target_line:_compose_target_line,
+	target_present:_target_present,
 #endif
 	destroy:_destroy,
 };
