@@ -27,7 +27,7 @@ SOURCES=\
 	lvcreate.c \
 	lvdisplay.c \
 	lvextend.c \
-	lvm.c \
+	lvmcmdline.c \
 	lvmchange.c \
 	lvmdiskscan.c \
 	lvreduce.c \
@@ -77,8 +77,8 @@ ifeq ("@STATIC_LINK@", "no")
 	LVMLIBS += -rdynamic
 endif
 
-lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
-	$(CC) -o lvm $(OBJECTS) $(LD_FLAGS) -L$(top_srcdir)/lib \
+lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
+	$(CC) -o lvm $(OBJECTS) lvm.o $(LD_FLAGS) -L$(top_srcdir)/lib \
 	      -L$(DESTDIR)/lib $(LVMLIBS) $(LIBS)
 
 .commands: commands.h cmdnames.h Makefile
