@@ -330,7 +330,8 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			log_error("Minor number must be specified with -My");
 			return 0;
 		}
-		log_verbose("Ensuring %s is inactive", lv->name);
+		log_verbose("Ensuring %s is inactive. Reactivate with -ay.",
+			    lv->name);
 		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
 			log_error("%s: deactivation failed", lv->name);
 			return 0;
