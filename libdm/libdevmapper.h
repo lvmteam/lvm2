@@ -28,8 +28,8 @@ typedef void (*dm_log_fn) (int level, const char *file, int line,
 
 /*
  * The library user may wish to register their own
- * logging function, by default errors go to
- * stderr.
+ * logging function, by default errors go to stderr.
+ * Use dm_log_init(NULL) to restore the default log fn.
  */
 void dm_log_init(dm_log_fn fn);
 void dm_log_init_verbose(int level);
