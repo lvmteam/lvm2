@@ -855,9 +855,9 @@ static int _copypercent_disp(struct report_handle *rh, struct field *field,
 
 static struct {
 	report_type_t type;
-	const char id[30];
+	const char id[32];
 	off_t offset;
-	const char heading[30];
+	const char heading[32];
 	int width;
 	uint32_t flags;
 	field_report_fn report_fn;

@@ -41,6 +41,7 @@ struct device {
 	struct list open_list;
 
 	char pvid[ID_LEN + 1];
+	char _padding[7];
 };
 
 struct device_list {

@@ -32,17 +32,15 @@ struct config_info {
 	int syslog;
 	int activation;
 	int suffix;
-	uint64_t unit_factor;
-	char unit_type;
-	const char *msg_prefix;
-	int cmd_name;		/* Show command name? */
-
 	int archive;		/* should we archive ? */
 	int backup;		/* should we backup ? */
-
+	const char *msg_prefix;
 	struct format_type *fmt;
-
+	uint64_t unit_factor;
+	int cmd_name;		/* Show command name? */
 	mode_t umask;
+	char unit_type;
+	char _padding[1];
 };
 
 struct config_tree;
