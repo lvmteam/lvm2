@@ -148,6 +148,7 @@ struct cmd_context {
 	struct pool *mem;
 
 	/* misc. vars needed by format handler */
+	char *cmd_line;
 	char *dev_dir;
 	struct dev_filter *filter;
 	struct config_file *cf;
@@ -267,7 +268,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 				 struct volume_group *vg,
 				 struct list *acceptable_pvs);
 
-int lv_reduce(struct format_instance *fi, 
+int lv_reduce(struct format_instance *fi,
 	      struct logical_volume *lv, uint32_t extents);
 
 int lv_extend(struct format_instance *fi,

@@ -25,6 +25,7 @@
 
 struct text_c {
 	char *path;
+	char *desc;
 	struct uuid_map *um;
 };
 
@@ -130,7 +131,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 		return 0;
 	}
 
-	if (!text_vg_export(fp, vg)) {
+	if (!text_vg_export(fp, vg, tc->desc)) {
 		log_error("Failed to write metadata to %s.", temp_file);
 		fclose(fp);
 		return 0;
@@ -173,33 +174,35 @@ static struct format_handler _text_handler = {
 
 struct format_instance *text_format_create(struct cmd_context *cmd,
 					   const char *file,
-					   struct uuid_map *um)
+					   struct uuid_map *um,
+					   const char *desc)
 {
-	const char *no_alloc = "Couldn't allocate text format object.";
-
 	struct format_instance *fi;
-	char *path;
+	char *path, *d;
 	struct text_c *tc;
 
 	if (!(fi = dbg_malloc(sizeof(*fi)))) {
-		log_err(no_alloc);
-		return NULL;
+		stack;
+		goto no_mem;
 	}
 
 	if (!(path = dbg_strdup(file))) {
-		dbg_free(fi);
-		log_err(no_alloc);
-		return NULL;
+		stack;
+		goto no_mem;
+	}
+
+	if (!(d = dbg_strdup(desc))) {
+		stack;
+		goto no_mem;
 	}
 
 	if (!(tc = dbg_malloc(sizeof(*tc)))) {
-		dbg_free(fi);
-		dbg_free(path);
-		log_err(no_alloc);
-		return NULL;
+		stack;
+		goto no_mem;
 	}
 
 	tc->path = path;
+	tc->desc = d;
 	tc->um = um;
 
 	fi->cmd = cmd;
@@ -207,4 +210,17 @@ struct format_instance *text_format_create(struct cmd_context *cmd,
 	fi->private = tc;
 
 	return fi;
+
+ no_mem:
+	if (fi)
+		dbg_free(fi);
+
+	if (path)
+		dbg_free(path);
+
+	if (d)
+		dbg_free(path);
+
+	log_err("Couldn't allocate text format object.");
+	return NULL;
 }

@@ -39,6 +39,7 @@ struct archive_c {
 	uint32_t min_retains;
 
 	char *dir;
+	char *desc;
 
 	/*
 	 * An ordered list of previous archives.  Each list
@@ -296,9 +297,10 @@ static int _scan_archives(struct archive_c *bc)
 
 static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
+	struct archive_c *bc = (struct archive_c *) fi->private;
+
 	int r = 0, i, fd;
 	unsigned int index = 0;
-	struct archive_c *bc = (struct archive_c *) fi->private;
 	struct archive_file *last;
 	FILE *fp = NULL;
 	char temp_file[PATH_MAX], archive_name[PATH_MAX];
@@ -314,7 +316,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 		return 0;
 	}
 
-	if (!text_vg_export(fp, vg)) {
+	if (!text_vg_export(fp, vg, bc->desc)) {
 		stack;
 		fclose(fp);
 		return 0;
@@ -374,10 +376,14 @@ static struct format_handler _archive_handler = {
 	destroy: _destroy
 };
 
+/*
+ * FIXME: format_instances shouldn't be allocated from the pool.
+ */
 struct format_instance *archive_format_create(struct cmd_context *cmd,
-					     const char *dir,
-					     uint32_t retain_days,
-					     uint32_t min_retains)
+					      const char *dir,
+					      uint32_t retain_days,
+					      uint32_t min_retains,
+					      const char *desc)
 {
 	struct format_instance *fi;
 	struct archive_c *bc = NULL;
@@ -394,6 +400,11 @@ struct format_instance *archive_format_create(struct cmd_context *cmd,
 	}
 
 	if (!(bc->dir = pool_strdup(mem, dir))) {
+		stack;
+		goto bad;
+	}
+
+	if (!(bc->desc = pool_strdup(mem, desc))) {
 		stack;
 		goto bad;
 	}

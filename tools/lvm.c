@@ -684,9 +684,45 @@ static void _use_settings(struct config_info *settings)
 	backup_enable(settings->backup);
 }
 
+static char *_copy_command_line(struct pool *mem, int argc, char **argv)
+{
+	int i;
+
+	/*
+	 * Build up the complete command line, used as a
+	 * description for backups.
+	 */
+	if (!pool_begin_object(cmd->mem, 128))
+		goto bad;
+
+	for (i = 0; i < argc; i++) {
+		if (!pool_grow_object(cmd->mem, argv[i], strlen(argv[i])))
+			goto bad;
+
+		if (i < (argc - 1))
+			if (!pool_grow_object(cmd->mem, " ", 1));
+	}
+
+	/*
+	 * Terminate.
+	 */
+	if (!pool_grow_object(mem, "\0", 1))
+              goto bad;
+
+	return pool_end_object(mem);
+
+ bad:
+	log_err("Couldn't copy command line.");
+	pool_abandon_object(mem);
+	return NULL;
+}
+
 static int run_command(int argc, char **argv)
 {
 	int ret = 0;
+
+	if (!(cmd->cmd_line = _copy_command_line(cmd->mem, argc, argv)))
+		return ECMD_FAILED;
 
 	if (!(the_command = find_command(argv[0])))
 		return ENO_SUCH_CMD;
@@ -787,7 +823,7 @@ static void __init_log(struct config_file *cf)
 
 	init_cmd_name(find_config_int(cf->root, "log/command_names", '/', 0));
 
-	_default_settings.test = find_config_int(cf->root, "global/test", 
+	_default_settings.test = find_config_int(cf->root, "global/test",
 						 '/', 0);
 	if (find_config_int(cf->root, "log/overwrite", '/', 0))
 		open_mode = "w";
