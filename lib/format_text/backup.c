@@ -22,14 +22,13 @@
 
 
 /*
- * The format instance is given a directory path
- * upon creation.  Each file in this directory
- * whose name is of the form '(.*)_[0-9]*.vg' is a config
- * file (see lib/config.[hc]), which contains a
- * description of a single volume group.
+ * The format instance is given a directory path upon creation.
+ * Each file in this directory whose name is of the form
+ * '(.*)_[0-9]*.vg' is a config file (see lib/config.[hc]), which
+ * contains a description of a single volume group.
  *
- * The prefix ($1 from the above regex) of the
- * config file gives the volume group name.
+ * The prefix ($1 from the above regex) of the config file gives
+ * the volume group name.
  *
  * Backup files that have expired will be removed.
  */
@@ -41,23 +40,20 @@ struct backup_c {
 	char *dir;
 
 	/*
-	 * An ordered list of previous backups.
-	 * Each list entered against the vg name.
-	 * Most recent first.
+	 * An ordered list of previous backups.  Each list
+	 * entered against the vg name.  Most recent first.
 	 */
 	struct hash_table *vg_backups;
 
 	/*
-	 * Scratch pool.  Contents of vg_backups
-	 * come from here.
+	 * Scratch pool.  Contents of vg_backups come from here.
 	 */
 	struct pool *mem;
 };
 
 /*
- * A list of these is built up for each volume
- * group.  Ordered with the least recent at the
- * head.
+ * A list of these is built up for each volume group.  Ordered
+ * with the least recent at the head.
  */
 struct backup_file {
 	struct list list;
@@ -130,8 +126,7 @@ static void _destroy(struct format_instance *fi)
 
 
 /*
- * Extract vg name and version number from a
- * filename
+ * Extract vg name and version number from a filename.
  */
 static int _split_vg(const char *filename, char *vg, size_t vg_size,
 		     uint32_t *index)
@@ -193,8 +188,8 @@ static int _scan_vg(struct backup_c *bc, const char *file,
 	struct list *files;
 
 	/*
-	 * Do we need to create a new list of
-	 * backup files for this vg ?
+	 * Do we need to create a new list of backup files for
+	 * this vg ?
 	 */
 	if (!(files = hash_lookup(bc->vg_backups, vg_name))) {
 		if (!(files = pool_alloc(bc->mem, sizeof(*files)))) {
@@ -223,8 +218,7 @@ static int _scan_vg(struct backup_c *bc, const char *file,
 	b->vg = (char *)vg_name;
 
 	/*
-	 * Insert it to the correct part of the
-	 * list.
+	 * Insert it to the correct part of the list.
 	 */
 	_insert_file(files, b);
 
@@ -300,12 +294,10 @@ static int _scan_backups(struct backup_c *bc)
 }
 
 /*
- * Creates a temporary filename, and opens a
- * descriptor to the file.  Both the filename and
- * descriptor are needed so we can rename the file
- * after successfully writing it.  Grab
- * NFS-supported exclusive fcntl discretionary
- * lock.
+ * Creates a temporary filename, and opens a descriptor to the
+ * file.  Both the filename and descriptor are needed so we can
+ * rename the file after successfully writing it.  Grab
+ * NFS-supported exclusive fcntl discretionary lock.
  */
 static int _create_temp_name(const char *dir, char *buffer, size_t len,
 			     int *fd)
@@ -351,15 +343,14 @@ static int _create_temp_name(const char *dir, char *buffer, size_t len,
 }
 
 /*
- * NFS-safe rename of a temporary file to a common
- * name, designed to avoid race conditions and not
- * overwrite the destination if it exists.
+ * NFS-safe rename of a temporary file to a common name, designed
+ * to avoid race conditions and not overwrite the destination if
+ * it exists.
  *
- * Try to create the new filename as a hard link
- * to the original.  Check the link count of the
- * original file to see if it worked.  (Assumes
- * nothing else touches our temporary file!)  If
- * it worked, unlink the old filename.
+ * Try to create the new filename as a hard link to the original.
+ * Check the link count of the original file to see if it worked.
+ * (Assumes nothing else touches our temporary file!)  If it
+ * worked, unlink the old filename.
  */
 static int _rename(const char *old, const char *new)
 {
