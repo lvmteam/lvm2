@@ -108,6 +108,14 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 			       e_private);
 			PARSE_ERROR;
 		}
+
+		/* Ensure sane block size */
+		if (table->blksize_size < table->hardsect_size) {
+			err_fn("block size smaller than hardsect size", 
+			       e_private);
+			PARSE_ERROR;
+		}
+
 	}
 
 #undef PARSE_ERROR

@@ -177,8 +177,8 @@ static int dm_blk_close(struct inode *inode, struct file *file)
 	return 0;
 }
 
-#define VOLUME_SIZE(minor) ((_block_size[(minor)] << 10) / \
-			    _hardsect_size[(minor)])
+/* In 512-byte units */
+#define VOLUME_SIZE(minor) (_block_size[(minor)] >> 1)
 
 static int dm_blk_ioctl(struct inode *inode, struct file *file,
 			uint command, ulong a)
@@ -692,10 +692,10 @@ void __bind(struct mapped_device *md, struct dm_table *t)
 
 	md->map = t;
 
+	/* In 1024-byte units */
 	_block_size[minor] = (t->highs[t->num_targets - 1] + 1) >> 1;
 
-	/* FIXME: block size depends on the mapping table */
-	_blksize_size[minor] = BLOCK_SIZE;
+	_blksize_size[minor] = t->blksize_size;
 	_hardsect_size[minor] = t->hardsect_size;
 	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
 }

@@ -94,7 +94,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 	lc->delta = (int) start - (int) b;
 
 	hardsect_size = get_hardsect_size(lc->rdev);
-	if (t->hardsect_size > hardsect_size);
+	if (t->hardsect_size > hardsect_size)
 		t->hardsect_size = hardsect_size;
 
 	*result = lc;

@@ -174,6 +174,7 @@ struct dm_table {
 	int counts[MAX_DEPTH];	/* in nodes */
 	offset_t *index[MAX_DEPTH];
 
+	int blksize_size;
 	int hardsect_size;
 	int num_targets;
 	int num_allocated;
