@@ -1,4 +1,4 @@
-{
+Base {
 	global:
 		dm_log_init;
 		dm_log_init_verbose;
