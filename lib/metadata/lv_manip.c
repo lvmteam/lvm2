@@ -342,7 +342,7 @@ static char *_generate_lv_name(struct volume_group *vg,
 {
 	struct list *lvh;
 	struct logical_volume *lv;
-	int high = -1, i, s;
+	int high = -1, i;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
