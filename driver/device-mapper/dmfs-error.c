@@ -70,11 +70,11 @@ void dmfs_zap_errors(struct inode *inode)
 	}
 }
 
-static void *e_start(void *context, loff_t *pos)
+static void *e_start(struct seq_file *e, loff_t *pos)
 {
 	struct list_head *p;
 	loff_t n = *pos;
-	struct dmfs_i *dmi = context;
+	struct dmfs_i *dmi = e->context;
 
 	down(&dmi->sem);
 	if (dmi->status) {
@@ -90,18 +90,18 @@ static void *e_start(void *context, loff_t *pos)
 	return NULL;
 }
 
-static void *e_next(void *context, void *v, loff_t *pos)
+static void *e_next(struct seq_file *e, void *v, loff_t *pos)
 {
-	struct dmfs_i *dmi = context;
+	struct dmfs_i *dmi = e->context;
 	struct list_head *p = ((struct dmfs_error *)v)->list.next;
 	(*pos)++;
 	return (p == &dmi->errors) || (p == &oom_list) ? NULL 
 				   : list_entry(p, struct dmfs_error, list);
 }
 
-static void e_stop(void *context, void *v)
+static void e_stop(struct seq_file *e, void *v)
 {
-	struct dmfs_i *dmi = context;
+	struct dmfs_i *dmi = e->context;
 	up(&dmi->sem);
 }
 
@@ -121,7 +121,12 @@ static struct seq_operations error_op = {
 
 static int dmfs_error_open(struct inode *inode, struct file *file)
 {
-	return seq_open(file, &error_op, DMFS_I(file->f_dentry->d_parent->d_inode));
+	int ret = seq_open(file, &error_op);
+	if (ret >=0) {
+		struct seq_file *seq = file->private_data;
+		seq->context = DMFS_I(file->f_dentry->d_parent->d_inode);
+	}
+	return ret;
 }
 
 static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasync)
