@@ -20,10 +20,9 @@
 
 #include "tools.h"
 
-void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv,
-		      void *handle)
+int pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
+		     struct physical_volume *pv, void *handle)
 {
-	char *sz;
 	uint64_t size;
 
 	const char *pv_name = dev_name(pv->dev);
@@ -34,67 +33,56 @@ void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv,
 		size = (pv->pe_count - pv->pe_alloc_count) * pv->pe_size;
 
 	if (arg_count(cmd, short_ARG)) {
-		sz = display_size(size / 2, SIZE_SHORT);
-		log_print("Device \"%s\" has a capacity of %s", pv_name, sz);
-		dbg_free(sz);
-		return;
+		log_print("Device \"%s\" has a capacity of %s", pv_name,
+			  display_size(cmd, size / 2, SIZE_SHORT));
+		return 0;
 	}
 
 	if (pv->status & EXPORTED_VG)
 		log_print("Physical volume \"%s\" of volume group \"%s\" "
 			  "is exported", pv_name, pv->vg_name);
 
-	if (!pv->vg_name) {
+	if (!pv->vg_name)
 		log_print("\"%s\" is a new physical volume of \"%s\"",
-			  pv_name, (sz = display_size(size / 2, SIZE_SHORT)));
-		dbg_free(sz);
-	}
+			  pv_name, display_size(cmd, size / 2, SIZE_SHORT));
 
 	if (arg_count(cmd, colon_ARG)) {
 		pvdisplay_colons(pv);
-		return;
+		return 0;
 	}
 
-	pvdisplay_full(pv, handle);
+	pvdisplay_full(cmd, pv, handle);
 
 	if (!arg_count(cmd, maps_ARG))
-		return;
+		return 0;
 
-	return;
+	return 0;
 }
 
 int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
-	int opt = 0;
-
-	struct list *pvh, *pvs;
-	struct physical_volume *pv;
+	if (arg_count(cmd, columns_ARG)) {
+		if (arg_count(cmd, colon_ARG) || arg_count(cmd, maps_ARG) ||
+		    arg_count(cmd, short_ARG)) {
+			log_error("Incompatible options selected");
+			return EINVALID_CMD_LINE;
+		}
+		return pvs(cmd, argc, argv);
+	} else if (arg_count(cmd, aligned_ARG) ||
+		   arg_count(cmd, noheadings_ARG) ||
+		   arg_count(cmd, options_ARG) ||
+		   arg_count(cmd, separator_ARG) ||
+		   arg_count(cmd, sort_ARG) || arg_count(cmd, unbuffered_ARG)) {
+		log_error("Incompatible options selected");
+		return EINVALID_CMD_LINE;
+	}
 
 	if (arg_count(cmd, colon_ARG) && arg_count(cmd, maps_ARG)) {
 		log_error("Option -v not allowed with option -c");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc) {
-		log_very_verbose("Using physical volume(s) on command line");
-
-		for (; opt < argc; opt++) {
-			if (!(pv = pv_read(cmd, argv[opt], NULL, NULL))) {
-				log_error("Failed to read physical "
-					  "volume \"%s\"", argv[opt]);
-				continue;
-			}
-			pvdisplay_single(cmd, pv, NULL);
-		}
-	} else {
-		log_verbose("Scanning for physical volume names");
-		if (!(pvs = get_pvs(cmd)))
-			return ECMD_FAILED;
-
-		list_iterate(pvh, pvs)
-		    pvdisplay_single(cmd, list_item(pvh, struct pv_list)->pv,
-				     NULL);
-	}
+	process_each_pv(cmd, argc, argv, NULL, NULL, pvdisplay_single);
 
 	return 0;
 }

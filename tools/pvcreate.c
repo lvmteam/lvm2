@@ -130,9 +130,9 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	if (!pvcreate_check(cmd, pv_name))
 		goto error;
 
-	size = arg_int64_value(cmd, physicalvolumesize_ARG, 0) * 2;
+	size = arg_uint64_value(cmd, physicalvolumesize_ARG, 0) * 2;
 
-	pvmetadatasize = arg_int64_value(cmd, metadatasize_ARG, 0) * 2;
+	pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, 0) * 2;
 	if (!pvmetadatasize)
 		pvmetadatasize = find_config_int(cmd->cf->root,
 						 "metadata/pvmetadatasize",

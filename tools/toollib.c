@@ -202,6 +202,28 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	return ret_max;
 }
 
+int process_each_segment_in_lv(struct cmd_context *cmd,
+			       struct logical_volume *lv,
+			       void *handle,
+			       int (*process_single) (struct cmd_context * cmd,
+						      struct lv_segment * seg,
+						      void *handle))
+{
+	struct list *segh;
+	struct lv_segment *seg;
+	int ret_max = 0;
+	int ret;
+
+	list_iterate(segh, &lv->segments) {
+		seg = list_item(segh, struct lv_segment);
+		ret = process_single(cmd, seg, handle);
+		if (ret > ret_max)
+			ret_max = ret;
+	}
+
+	return ret_max;
+}
+
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		    int lock_type, int consistent, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
@@ -303,23 +325,50 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	int ret = 0;
 
 	struct pv_list *pvl;
+	struct physical_volume *pv;
+	struct list *pvs, *pvh;
 
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
-			if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
-				log_error("Physical Volume \"%s\" not found in "
-					  "Volume Group \"%s\"", argv[opt],
-					  vg->name);
-				continue;
+			if (vg) {
+				if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
+					log_error("Physical Volume \"%s\" not "
+						  "found in Volume Group "
+						  "\"%s\"", argv[opt],
+						  vg->name);
+					continue;
+				}
+				pv = pvl->pv;
+			} else {
+				if (!(pv = pv_read(cmd, argv[opt], NULL, NULL))) {
+					log_error("Failed to read physical "
+						  "volume \"%s\"", argv[opt]);
+					continue;
+				}
 			}
-			ret = process_single(cmd, vg, pvl->pv, handle);
+
+			ret = process_single(cmd, vg, pv, handle);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
 	} else {
-		log_verbose("Using all physical volume(s) in volume group");
-		process_each_pv_in_vg(cmd, vg, handle, process_single);
+		if (vg) {
+			log_verbose("Using all physical volume(s) in "
+				    "volume group");
+			process_each_pv_in_vg(cmd, vg, handle, process_single);
+		} else {
+			log_verbose("Scanning for physical volume names");
+			if (!(pvs = get_pvs(cmd)))
+				return ECMD_FAILED;
+
+			list_iterate(pvh, pvs) {
+				pv = list_item(pvh, struct pv_list)->pv;
+				ret = process_single(cmd, NULL, pv, handle);
+				if (ret > ret_max)
+					ret_max = ret;
+			}
+		}
 	}
 
 	return ret_max;

@@ -35,10 +35,9 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		    int lock_type, int consistent, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
-			    		   const char *vg_name,
-					   struct volume_group *vg,
-					   int consistent,
-					   void *handle));
+					   const char *vg_name,
+					   struct volume_group * vg,
+					   int consistent, void *handle));
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		    struct volume_group *vg, void *handle,
@@ -52,6 +51,12 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct logical_volume * lv,
 					   void *handle));
+
+int process_each_segment_in_lv(struct cmd_context *cmd,
+			       struct logical_volume *lv, void *handle,
+			       int (*process_single) (struct cmd_context * cmd,
+						      struct lv_segment * seg,
+						      void *handle));
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  void *handle,

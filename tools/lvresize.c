@@ -34,7 +34,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	sign_t sign = SIGN_NONE;
 	char *lv_name, *vg_name;
 	char *st;
-	char *dummy;
 	const char *cmd_name;
 	struct list *pvh, *segh;
 	struct lv_list *lvl;
@@ -145,8 +144,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		extents = size * 2;
 
 		if (extents % vg->extent_size) {
-			char *s1;
-
 			if (sign == SIGN_MINUS)
 				extents -= extents % vg->extent_size;
 			else
@@ -154,8 +151,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 				    (extents % vg->extent_size);
 
 			log_print("Rounding up size to full physical extent %s",
-				  (s1 = display_size(extents / 2, SIZE_SHORT)));
-			dbg_free(s1);
+				  display_size(cmd, extents / 2, SIZE_SHORT));
 		}
 
 		extents /= vg->extent_size;
@@ -310,16 +306,14 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (info.exists) {
-			dummy = display_size((uint64_t)
-					     extents * (vg->extent_size / 2),
-					     SIZE_SHORT);
 			log_print("WARNING: Reducing active%s logical volume "
 				  "to %s", info.open_count ? " and open" : "",
-				  dummy);
+				  display_size(cmd, (uint64_t)
+					       extents * (vg->extent_size / 2),
+					       SIZE_SHORT));
 
 			log_print("THIS MAY DESTROY YOUR DATA "
 				  "(filesystem etc.)");
-			dbg_free(dummy);
 		}
 
 		if (!arg_count(cmd, force_ARG)) {
@@ -352,11 +346,10 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			/* Use full list from VG */
 			pvh = &vg->pvs;
 		}
-		dummy = display_size((uint64_t)
-				     extents * (vg->extent_size / 2),
-				     SIZE_SHORT);
-		log_print("Extending logical volume %s to %s", lv_name, dummy);
-		dbg_free(dummy);
+		log_print("Extending logical volume %s to %s", lv_name,
+			  display_size(cmd, (uint64_t)
+				       extents * (vg->extent_size / 2),
+				       SIZE_SHORT));
 
 		if (!lv_extend(vg->fid, lv, stripes, stripesize,
 			       extents - lv->le_count, pvh))

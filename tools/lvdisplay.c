@@ -36,7 +36,20 @@ int lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
-	/* FIXME Allow VG args via process_each */
+	if (arg_count(cmd, columns_ARG)) {
+		if (arg_count(cmd, colon_ARG) || arg_count(cmd, maps_ARG)) {
+			log_error("Incompatible options selected");
+			return EINVALID_CMD_LINE;
+		}
+		return lvs(cmd, argc, argv);
+	} else if (arg_count(cmd, aligned_ARG) ||
+		   arg_count(cmd, noheadings_ARG) ||
+		   arg_count(cmd, options_ARG) ||
+		   arg_count(cmd, separator_ARG) ||
+		   arg_count(cmd, sort_ARG) || arg_count(cmd, unbuffered_ARG)) {
+		log_error("Incompatible options selected");
+		return EINVALID_CMD_LINE;
+	}
 
 	if (arg_count(cmd, colon_ARG) && arg_count(cmd, verbose_ARG)) {
 		log_error("Options -v and -c are incompatible");

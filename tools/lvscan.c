@@ -27,7 +27,6 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	int lv_total = 0;
 	ulong lv_capacity_total = 0;
 
-	char *dummy;
 	const char *active_str, *snapshot_str;
 
 	if (lv_info(lv, &info) && info.exists)
@@ -42,13 +41,10 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	else
 		snapshot_str = "        ";
 
-	dummy = display_size(lv->size / 2, SIZE_SHORT);
-
 	log_print("%s%s '%s%s/%s' [%s] %s", active_str, snapshot_str,
-		  cmd->dev_dir, lv->vg->name, lv->name, dummy,
+		  cmd->dev_dir, lv->vg->name, lv->name,
+		  display_size(cmd, lv->size / 2, SIZE_SHORT),
 		  get_alloc_string(lv->alloc));
-
-	dbg_free(dummy);
 
 	lv_total++;
 
@@ -66,4 +62,5 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	return process_each_lv(cmd, argc, argv, LCK_VG_READ, NULL,
 			       &lvscan_single);
+
 }

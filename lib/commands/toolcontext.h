@@ -25,6 +25,9 @@ struct config_info {
 	int test;
 	int syslog;
 	int activation;
+	int suffix;
+	uint64_t unit_factor;
+	char unit_type;
 	const char *msg_prefix;
 	int cmd_name;		/* Show command name? */
 

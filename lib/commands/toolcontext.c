@@ -20,6 +20,7 @@
 #include "lvm-file.h"
 #include "format-text.h"
 #include "sharedlib.h"
+#include "display.h"
 
 #ifdef LVM1_INTERNAL
 #include "format1.h"
@@ -152,6 +153,20 @@ static int _process_config(struct cmd_context *cmd)
 							   '/',
 							   DEFAULT_ACTIVATION);
 	set_activation(cmd->default_settings.activation);
+
+	cmd->default_settings.suffix = find_config_int(cmd->cf->root,
+						       "global/suffix",
+						       '/', DEFAULT_SUFFIX);
+
+	if (!(cmd->default_settings.unit_factor =
+	      units_to_bytes(find_config_str(cmd->cf->root,
+					     "global/units",
+					     '/',
+					     DEFAULT_UNITS),
+			     &cmd->default_settings.unit_type))) {
+		log_error("Invalid units specification");
+		return 0;
+	}
 
 	return 1;
 }

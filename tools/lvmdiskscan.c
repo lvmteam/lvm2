@@ -52,19 +52,14 @@ static void _count(struct device *dev, int *disks, int *parts)
 		(*parts)++;
 }
 
-static void _print(struct device *dev, uint64_t size, char *what)
+static void _print(struct cmd_context *cmd, struct device *dev, uint64_t size,
+		   char *what)
 {
-	char *dummy = display_size(size / 2, SIZE_SHORT);
-	const char *name = dev_name(dev);
-
-	if (!what)
-		what = "";
-
-	log_print("%-*s [%15s] %s", max_len, name, dummy, what);
-	dbg_free(dummy);
+	log_print("%-*s [%15s] %s", max_len, dev_name(dev),
+		  display_size(cmd, size / 2, SIZE_SHORT), what ? : "");
 }
 
-static int _check_device(struct device *dev)
+static int _check_device(struct cmd_context *cmd, struct device *dev)
 {
 	char buffer;
 	uint64_t size;
@@ -79,7 +74,7 @@ static int _check_device(struct device *dev)
 	if (!dev_get_size(dev, &size)) {
 		log_error("Couldn't get size of \"%s\"", dev_name(dev));
 	}
-	_print(dev, size, NULL);
+	_print(cmd, dev, size, NULL);
 	_count(dev, &disks_found, &parts_found);
 	if (!dev_close(dev)) {
 		log_error("dev_close on \"%s\" failed", dev_name(dev));
@@ -114,7 +109,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 					  dev_name(dev));
 				continue;
 			}
-			_print(dev, size, "LVM physical volume");
+			_print(cmd, dev, size, "LVM physical volume");
 			_count(dev, &pv_disks_found, &pv_parts_found);
 			continue;
 		}
@@ -123,7 +118,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 			continue;
 
 		/* What other device is it? */
-		if (!_check_device(dev))
+		if (!_check_device(cmd, dev))
 			continue;
 	}
 	dev_iter_destroy(iter);
