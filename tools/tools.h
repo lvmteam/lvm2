@@ -13,7 +13,7 @@
 
 #include "log.h"
 #include "activate.h"
-#include "archive.h"
+#include "archiver.h"
 #include "lvmcache.h"
 #include "config.h"
 #include "defaults.h"

@@ -21,7 +21,7 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES=\
-	archive.c \
+	archiver.c \
 	dumpconfig.c \
 	lvchange.c \
 	lvcreate.c \
@@ -41,7 +41,7 @@ SOURCES=\
 	pvmove.c \
 	pvremove.c \
 	pvscan.c \
-	report.c \
+	reporter.c \
 	toollib.c \
 	vgcfgbackup.c \
 	vgcfgrestore.c \
