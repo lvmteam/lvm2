@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# chkconfig: 345 23 77
+# chkconfig: 345 24 76
 # description: Starts and stops clvmd
 #
 #	       
