@@ -18,17 +18,30 @@
 
 #include <assert.h>
 
+/*
+ * A list consists of a list head plus elements.
+ * Each element has 'next' and 'previous' pointers.
+ * The list head's pointers point to the first and the last element.
+ */
+
 struct list {
 	struct list *n, *p;
 };
 
+/*
+ * Initialise a list before use.
+ * The list head's next and previous pointers point back to itself.
+ */
 #define LIST_INIT(name)	struct list name = { &(name), &(name) }
-
 static inline void list_init(struct list *head)
 {
 	head->n = head->p = head;
 }
 
+/*
+ * Insert an element before 'head'.
+ * If 'head' is the list head, this adds an element to the end of the list.
+ */
 static inline void list_add(struct list *head, struct list *elem)
 {
 	assert(head->n);
@@ -40,6 +53,10 @@ static inline void list_add(struct list *head, struct list *elem)
 	head->p = elem;
 }
 
+/*
+ * Insert an element after 'head'.
+ * If 'head' is the list head, this adds an element to the front of the list.
+ */
 static inline void list_add_h(struct list *head, struct list *elem)
 {
 	assert(head->n);
@@ -51,53 +68,126 @@ static inline void list_add_h(struct list *head, struct list *elem)
 	head->n = elem;
 }
 
+/*
+ * Delete an element from its list.
+ * Note that this doesn't change the element itself - it may still be safe
+ * to follow its pointers.
+ */
 static inline void list_del(struct list *elem)
 {
 	elem->n->p = elem->p;
 	elem->p->n = elem->n;
 }
 
+/*
+ * Is the list empty?
+ */
 static inline int list_empty(struct list *head)
 {
 	return head->n == head;
 }
 
+/*
+ * Is this the first element of the list?
+ */
+static inline int list_start(struct list *head, struct list *elem)
+{
+	return elem->p == head;
+}
+
+/*
+ * Is this the last element of the list?
+ */
 static inline int list_end(struct list *head, struct list *elem)
 {
 	return elem->n == head;
 }
 
+/*
+ * Return the previous element of the list, or NULL if we've reached the start.
+ */
+static inline struct list *list_prev(struct list *head, struct list *elem)
+{
+	return (list_start(head, elem) ? NULL : elem->p);
+}
+
+/*
+ * Return the next element of the list, or NULL if we've reached the end.
+ */
 static inline struct list *list_next(struct list *head, struct list *elem)
 {
 	return (list_end(head, elem) ? NULL : elem->n);
 }
 
-#define list_item(v, t) \
-    ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->list))
-
+/*
+ * Given the address v of an instance of 'struct list h' contained in
+ * a structure of type t, return the containing structure.
+ */
 #define list_struct_base(v, t, h) \
     ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->h))
 
-/* Given a known element in a known structure, locate another */
+/*
+ * Given the address v of an instance of 'struct list list' contained in
+ * a structure of type t, return the containing structure.
+ */
+#define list_item(v, t) list_struct_base((v), t, list)
+
+/*
+ * Given the address v of one known element e in a known structure of type t,
+ * return another element f.
+ */
 #define struct_field(v, t, e, f) \
     (((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->e))->f)
 
-/* Given a known element in a known structure, locate the list head */
+/*
+ * Given the address v of a known element e in a known structure of type t,
+ * return the list head 'list'
+ */
 #define list_head(v, t, e) struct_field(v, t, e, list)
 
+/*
+ * Set v to each element of a list in turn.
+ */
 #define list_iterate(v, head) \
 	for (v = (head)->n; v != head; v = v->n)
 
+/*
+ * Set v to each element in a list in turn, starting from the element 
+ * in front of 'start'.
+ * You can use this to 'unwind' a list_iterate and back out actions on
+ * already-processed elements.
+ * If 'start' is 'head' it walks the list backwards.
+ */
 #define list_uniterate(v, head, start) \
 	for (v = (start)->p; v != head; v = v->p)
 
+/*
+ * A safe way to walk a list and delete and free some elements along
+ * the way.
+ * t must be defined as a temporary variable of the same type as v.
+ */
 #define list_iterate_safe(v, t, head) \
 	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
 
-#define list_iterate_items(v, head) \
-	for (v = list_item((head)->n, typeof(*v)); &v->list != (head); \
-	     v = list_item(v->list.n, typeof(*v)))
+/*
+ * Walk a list, setting 'v' in turn to the containing structure of each item.
+ * The containing structure should be the same type as 'v'.
+ * The 'struct list' variable within the containing structure is 'l'.
+ */
+#define list_iterate_items_head(v, head, l) \
+	for (v = list_struct_base((head)->n, typeof(*v), l); &v->l != (head); \
+	     v = list_struct_base(v->l.n, typeof(*v), l))
 
+/*
+ * Walk a list, setting 'v' in turn to the containing structure of each item.
+ * The containing structure should be the same type as 'v'.
+ * The list should be 'struct list list' within the containing structure.
+ */
+#define list_iterate_items(v, head) list_iterate_items_head(v, (head), list)
+
+/*
+ * Return the number of elements in a list by walking it.
+ */
 static inline unsigned int list_size(const struct list *head)
 {
 	unsigned int s = 0;
