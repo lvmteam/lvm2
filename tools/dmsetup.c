@@ -327,7 +327,7 @@ static struct command _commands[] = {
 	{"resume", "<dev_name>", 1, _resume},
 	{"reload", "<dev_name> <table_file>", 2, _reload},
 	{"info", "<dev_name>", 1, _info},
-	{"dependencies", "<dev_name>", 1, _deps},
+	{"deps", "<dev_name>", 1, _deps},
 	{"rename", "<dev_name> <new_name>", 2, _rename},
 	{"version", "", 0, _version},
 	{NULL, NULL, 0, NULL}
