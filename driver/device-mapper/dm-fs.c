@@ -49,7 +49,7 @@ static int is_identifier(const char *str, int len)
 {
 	if (len > DM_NAME_LEN - 1)
 		return 0;
-	
+
 	while(len--) {
 		if (!isalnum(*str) && *str != '_')
 			return 0;
@@ -119,7 +119,7 @@ static struct file *open_error_file(struct file *table)
 	/* Create error file */
 	strcat(name, ".err");
 	f = filp_open(name, O_WRONLY | O_TRUNC | O_CREAT, S_IRUGO);
-	
+
 	kfree(buffer);
 
 	if (f)
@@ -477,7 +477,6 @@ static struct address_space_operations dm_aops = {
 static struct file_operations dm_file_operations = {
 	read:		generic_file_read,
 	write:		generic_file_write,
-	mmap:		generic_file_mmap,
 	fsync:		dmfs_sync_file,
 	release:	dmfs_release,
 };

@@ -172,7 +172,7 @@ static inline int check_space(struct dm_table *t)
 /*
  * convert a device path to a kdev_t.
  */
-int lookup_device(const char *path, kdev_t dev)
+int lookup_device(const char *path, kdev_t *dev)
 {
        int r;
        struct nameidata nd;
@@ -195,7 +195,7 @@ int lookup_device(const char *path, kdev_t dev)
                goto bad;
        }
 
-       dev = inode->i_bdev->bd_dev;
+       *dev = inode->i_bdev->bd_dev;
 
  bad:
        path_release(&nd);
