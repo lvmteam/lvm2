@@ -7,7 +7,12 @@
 #ifndef ACTIVATE_H
 #define ACTIVATE_H
 
-int vg_activate(struct volume_group *vg);
-int lv_activate(struct volume_group *vg, struct logical_volume *lv);
+#include "dmfs-driver.h"
+
+int lv_activate(struct dmfs *dm,
+		struct volume_group *vg, struct logical_volume *lv);
+
+int lv_deactivate(struct dmfs *dm, struct volume_group *vg,
+		  struct logical_volume *lv);
 
 #endif
