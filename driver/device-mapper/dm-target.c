@@ -85,20 +85,20 @@ int register_map_target(const char *name, dm_ctr_fn ctr,
  *
  * 'linear' target maps a linear range of a device
  */
-int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
-		const char *cb, const char *ce, void **result)
+static int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
+		      const char *cb, const char *ce, void **result)
 {
 	/* this takes no arguments */
 	*result = 0;
 	return 0;
 }
 
-void io_err_dtr(void *c)
+static void io_err_dtr(void *c)
 {
 	/* empty */
 }
 
-int io_err_map(struct buffer_head *bh, void *context)
+static int io_err_map(struct buffer_head *bh, void *context)
 {
 	buffer_IO_error(bh);
 	return 0;
@@ -110,8 +110,8 @@ struct linear_c {
 	int offset;		/* FIXME: we need a signed offset type */
 };
 
-int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
-	       const char *cb, const char *ce, void **result)
+static int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
+		      const char *cb, const char *ce, void **result)
 {
 	/* context string should be of the form:
 	 *  <major> <minor> <offset>
@@ -146,12 +146,12 @@ int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
 	return 0;
 }
 
-void linear_dtr(void *c)
+static void linear_dtr(void *c)
 {
 	kfree(c);
 }
 
-int linear_map(struct buffer_head *bh, void *context)
+static int linear_map(struct buffer_head *bh, void *context)
 {
 	struct linear_c *lc = (struct linear_c *) context;
 

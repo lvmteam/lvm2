@@ -78,17 +78,15 @@ void dm_free_table(struct mapped_device *md)
 	}
 
 	vfree(md->targets);
-	vfree(md->contexts);
 
 	md->highs = 0;
 	md->targets = 0;
-	md->contexts = 0;
 
 	md->num_targets = 0;
 	md->num_allocated = 0;
 }
 
-int dm_start_table(struct mapped_device *md)
+int dm_table_start(struct mapped_device *md)
 {
 	int r;
 	set_bit(DM_LOADING, &md->state);
@@ -100,7 +98,7 @@ int dm_start_table(struct mapped_device *md)
 	return 0;
 }
 
-int dm_add_entry(struct mapped_device *md, offset_t high,
+int dm_table_add_entry(struct mapped_device *md, offset_t high,
 		 dm_map_fn target, void *context)
 {
 	if (md->num_targets >= md->num_targets &&
@@ -108,14 +106,14 @@ int dm_add_entry(struct mapped_device *md, offset_t high,
 		return -ENOMEM;
 
 	md->highs[md->num_targets] = high;
-	md->targets[md->num_targets] = target;
-	md->contexts[md->num_targets] = context;
+	md->targets[md->num_targets].map = target;
+	md->targets[md->num_targets].private = context;
 
 	md->num_targets++;
 	return 0;
 }
 
-int dm_complete_table(struct mapped_device *md)
+int dm_table_complete(struct mapped_device *md)
 {
 	int n, i;
 
@@ -151,8 +149,7 @@ int dm_complete_table(struct mapped_device *md)
 static int alloc_targets(struct mapped_device *md, int num)
 {
 	offset_t *n_highs;
-	dm_map_fn *n_targets;
-	void **n_contexts;
+	struct target_instance *n_targets;
 
 	if (!(n_highs = vmalloc(sizeof(*n_highs) * num)))
 		return -ENOMEM;
@@ -162,31 +159,20 @@ static int alloc_targets(struct mapped_device *md, int num)
 		return -ENOMEM;
 	}
 
-	if (!(n_contexts = vmalloc(sizeof(*n_contexts) * num))) {
-		vfree(n_highs);
-		vfree(n_targets);
-		return -ENOMEM;
-	}
-
 	if (md->num_targets) {
 		memcpy(n_highs, md->highs,
 		       sizeof(*n_highs) * md->num_targets);
 
 		memcpy(n_targets, md->targets,
 		       sizeof(*n_targets) * md->num_targets);
-
-		memcpy(n_contexts, md->contexts,
-		       sizeof(*n_contexts) * md->num_targets);
 	}
 
 	vfree(md->highs);
 	vfree(md->targets);
-	vfree(md->contexts);
 
 	md->num_allocated = num;
 	md->highs = n_highs;
 	md->targets = n_targets;
-	md->contexts = n_contexts;
 
 	return 0;
 }

@@ -142,16 +142,24 @@ enum {
 	DM_ACTIVE,
 };
 
+/* devices that a metadevice should uses and hence open/close */
 struct dev_list {
 	kdev_t dev;
 	struct block_device *bd;
 	struct dev_list *next;
 };
 
+/* io that had to be deferred while we were suspended */
 struct deferred_io {
 	int rw;
 	struct buffer_head *bh;
 	struct deferred_io *next;
+};
+
+/* btree leaf, these do the actual mapping */
+struct target_instance {
+	dm_map_fn map;
+	void *private;
 };
 
 struct mapped_device {
@@ -175,8 +183,7 @@ struct mapped_device {
 	int num_targets;
 	int num_allocated;
 	offset_t *highs;
-	dm_map_fn *targets;
-	void **contexts;
+	struct target_instance *targets;
 
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
@@ -186,6 +193,7 @@ struct mapped_device {
 	struct dev_list *devices;
 };
 
+/* information about a target type */
 struct target {
 	char *name;
 	dm_ctr_fn ctr;
@@ -202,8 +210,8 @@ struct target *dm_get_target(const char *name);
 int dm_std_targets(void);
 
 /* dm.c */
-struct mapped_device *dm_find_name(const char *name);
-struct mapped_device *dm_find_minor(int minor);
+struct mapped_device *dm_find_by_name(const char *name);
+struct mapped_device *dm_find_by_minor(int minor);
 
 int dm_create(const char *name, int minor);
 int dm_remove(const char *name);
@@ -212,10 +220,10 @@ int dm_activate(struct mapped_device *md);
 void dm_suspend(struct mapped_device *md);
 
 /* dm-table.c */
-int dm_start_table(struct mapped_device *md);
-int dm_add_entry(struct mapped_device *md, offset_t high,
-		 dm_map_fn target, void *context);
-int dm_complete_table(struct mapped_device *md);
+int dm_table_start(struct mapped_device *md);
+int dm_table_add_entry(struct mapped_device *md, offset_t high,
+		       dm_map_fn target, void *context);
+int dm_table_complete(struct mapped_device *md);
 void dm_free_table(struct mapped_device *md);
 
 
@@ -256,6 +264,5 @@ inline static int get_number(const char **b, const char *e, unsigned int *n)
 
 	return 0;
 }
-
 
 #endif
