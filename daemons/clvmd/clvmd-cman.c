@@ -74,7 +74,7 @@ int init_cluster()
 	/* Open the cluster communication socket */
 	cluster_sock = socket(AF_CLUSTER, SOCK_DGRAM, CLPROTO_CLIENT);
 	if (cluster_sock == -1) {
-		log_error("Can't open cluster socket");
+		syslog(LOG_ERR, "Can't open cluster manager socket: %m");
 		return -1;
 	}
 
@@ -86,7 +86,7 @@ int init_cluster()
 	if (bind
 	    (cluster_sock, (struct sockaddr *) &saddr,
 	     sizeof(struct sockaddr_cl))) {
-		log_error("Can't bind cluster socket: %m");
+		syslog(LOG_ERR, "Can't bind cluster socket: %m");
 		return -1;
 	}
 
@@ -97,7 +97,7 @@ int init_cluster()
 	/* Create a lockspace for LV & VG locks to live in */
 	lockspace = dlm_create_lockspace(LOCKSPACE_NAME, 0600);
 	if (!lockspace) {
-		log_error("Unable to create lockspace for CLVM\n");
+		syslog(LOG_ERR, "Unable to create lockspace for CLVM: %m");
 		return -1;
 	}
 	dlm_ls_pthread_init(lockspace);
