@@ -280,6 +280,11 @@ int label_write(struct device *dev, struct label *label)
 	struct label_header *lh = (struct label_header *) buf;
 	int r = 1;
 
+	if (!label->labeller->ops->write) {
+		log_err("Label handler does not support label writes");
+		return 0;
+	}
+
 	if ((LABEL_SIZE + (label->sector << SECTOR_SHIFT)) > LABEL_SCAN_SIZE) {
 		log_error("Label sector %" PRIu64 " beyond range (%ld)",
 			  label->sector, LABEL_SCAN_SECTORS);
@@ -292,8 +297,10 @@ int label_write(struct device *dev, struct label *label)
 	lh->sector_xl = xlate64(label->sector);
 	lh->offset_xl = xlate32(sizeof(*lh));
 
-	if (!label->labeller->ops->write(label, buf))
+	if (!label->labeller->ops->write(label, buf)) {
+		stack;
 		return 0;
+	}
 
 	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
 				      ((void *) &lh->offset_xl - (void *) lh)));
@@ -327,7 +334,7 @@ int label_verify(struct device *dev)
 		return 0;
 	}
 
-	return l->ops->verify(l, buf, sector);
+	return ((l->ops->verify) ? l->ops->verify(l, buf, sector) : 1);
 }
 
 void label_destroy(struct label *label)
