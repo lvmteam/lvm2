@@ -100,7 +100,7 @@ struct hash_table *hash_create(unsigned size_hint)
 	return 0;
 }
 
-void hash_destroy(struct hash_table *t)
+static void _free_nodes(struct hash_table *t)
 {
 	struct hash_node *c, *n;
 	int i;
@@ -110,7 +110,11 @@ void hash_destroy(struct hash_table *t)
 			n = c->next;
 			dbg_free(c);
 		}
+}
 
+void hash_destroy(struct hash_table *t)
+{
+	_free_nodes(t);
 	dbg_free(t->slots);
 	dbg_free(t);
 }
@@ -183,18 +187,9 @@ void hash_iterate(struct hash_table *t, iterate_fn f)
 
 void hash_wipe(struct hash_table *t)
 {
-	struct hash_node **c, *old;
-	int i;
-
-	for (i = 0; i < t->num_slots; i++) {
-		c = &t->slots[i];
-		while (*c) {
-			old = *c;
-			*c = (*c)->next;
-			dbg_free(old);
-			t->num_nodes--;
-		}
-	}
+	_free_nodes(t);
+	memset(t->slots, 0, sizeof(struct hash_node *) * t->num_slots);
+	t->num_nodes = 0;
 }
 
 char *hash_get_key(struct hash_table *t, struct hash_node *n)
