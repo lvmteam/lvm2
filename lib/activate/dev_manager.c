@@ -59,6 +59,16 @@ enum {
 	VISIBLE = 2
 };
 
+typedef enum {
+	ACTIVATE,
+	DEACTIVATE
+} activate_t;
+
+typedef enum {
+	SUSPEND,
+	RESUME
+} suspend_t;
+
 struct dev_layer {
 	char *name;
 
@@ -276,6 +286,8 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	if (_get_flag(dl, VISIBLE))
 		fs_add_lv(dl->lv, dl->name);
 
+	_clear_flag(dl, DIRTY);
+
 	return r;
 }
 
@@ -284,29 +296,39 @@ static int _remove(struct dev_layer *dl)
 	int r;
 	struct dm_task *dmt;
 
-	log_verbose("Removing %s", dl->name);
+	if (_get_flag(dl, VISIBLE))
+		log_verbose("Removing %s", dl->name);
+	else
+		log_very_verbose("Removing %s", dl->name);
+
 	if (!(dmt = _setup_task(dl->name, DM_DEVICE_REMOVE))) {
 		stack;
 		return 0;
 	}
 
-	if (!(r = dm_task_run(dmt)))
-		log_error("Couldn't remove device '%s'", dl->name);
-	else
+	/* Suppress error message if it's still in use - we'll log it later */
+	log_suppress(1);
+
+	if ((r = dm_task_run(dmt)))
 		dl->info.exists = 0;
+
+	log_suppress(0);
 
 	dm_task_destroy(dmt);
 
 	if (_get_flag(dl, VISIBLE))
 		fs_del_lv(dl->lv);
 
+	_clear_flag(dl, ACTIVE);
+
 	return r;
 }
 
-static int _suspend_or_resume(const char *name, int sus)
+static int _suspend_or_resume(const char *name, suspend_t suspend)
 {
 	int r;
 	struct dm_task *dmt;
+	int sus = (suspend == SUSPEND) ? 1 : 0;
 	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
 
 	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
@@ -328,7 +350,7 @@ static int _suspend(struct dev_layer *dl)
 	if (dl->info.suspended)
 		return 1;
 
-	if (!_suspend_or_resume(dl->name, 1)) {
+	if (!_suspend_or_resume(dl->name, SUSPEND)) {
 		stack;
 		return 0;
 	}
@@ -342,7 +364,7 @@ static int _resume(struct dev_layer *dl)
 	if (!dl->info.suspended)
 		return 1;
 
-	if (!_suspend_or_resume(dl->name, 0)) {
+	if (!_suspend_or_resume(dl->name, RESUME)) {
 		stack;
 		return 0;
 	}
@@ -595,7 +617,7 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!_suspend_or_resume(name, 1)) {
+	if (!_suspend_or_resume(name, SUSPEND)) {
 		stack;
 		return 0;
 	}
@@ -926,11 +948,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	struct list *sh;
 	struct dev_layer *dep;
 	char *name;
-
-	if (dl->info.exists && !_suspend(dl)) {
-		stack;
-		return 0;
-	}
+	int suspended = 0;
 
 	list_iterate(sh, &dl->pre_create) {
 		name = list_item(sh, struct str_list)->str;
@@ -940,30 +958,40 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 			return 0;
 		}
 
+		if (dl->info.exists && !suspended && !_suspend(dl)) {
+			stack;
+			return 0;
+		}
+		suspended = 1;
+
 		if (!_create_rec(dm, dep)) {
 			stack;
 			return 0;
 		}
 	}
 
-	if (dl->info.exists) {
-		/* reload */
-		if (!_load(dm, dl, DM_DEVICE_RELOAD)) {
-			stack;
-			return 0;
-		}
-
-		if (!_resume(dl)) {
-			stack;
-			return 0;
-		}
-
-	} else {
-		/* create */
+	/* Create? */
+	if (!dl->info.exists) {
 		if (!_load(dm, dl, DM_DEVICE_CREATE)) {
 			stack;
 			return 0;
 		}
+		return 1;
+	}
+
+	/* We didn't suspend it - nothing to do */
+	if (!suspended)
+		return 1;
+
+	/* Reload */
+	if (_get_flag(dl, DIRTY) && !_load(dm, dl, DM_DEVICE_RELOAD)) {
+		stack;
+		return 0;
+	}
+
+	if (!_resume(dl)) {
+		stack;
+		return 0;
 	}
 
 	return 1;
@@ -1018,35 +1046,20 @@ static int _fill_in_remove_list(struct dev_manager *dm)
 int _remove_old_layers(struct dev_manager *dm)
 {
 	int change;
+	struct list *rh, *n;
+	struct dev_layer *dl;
 
-	/*
-	 * FIXME: quick hack.  We just loop round removing
-	 * unopened devices, until we run out of things to close.
-	 */
 	do {
-		struct list *rh, *n;
-		struct dev_layer *dl;
-
 		change = 0;
 		list_iterate_safe(rh, n, &dm->remove_list) {
 			dl = list_item(rh, struct dl_list)->dl;
-
-			if (!_info(dl->name, &dl->info)) {
-				stack;
-				return 0;
-			}
 
 			if (!dl->info.exists) {
 				list_del(rh);
 				continue;
 			}
 
-			if (!dl->info.open_count) {
-				if (!_remove(dl)) {
-					stack;
-					continue;
-				}
-
+			if (_remove(dl)) {
 				change = 1;
 				list_del(rh);
 			}
@@ -1055,7 +1068,10 @@ int _remove_old_layers(struct dev_manager *dm)
 	} while (change);
 
 	if (!list_empty(&dm->remove_list)) {
-		log_error("Couldn't remove all redundant layers.");
+		list_iterate(rh, &dm->remove_list) {
+			dl = list_item(rh, struct dl_list)->dl;
+			log_error("Couldn't deactivate device %s", dl->name);
+		}
 		return 0;
 	}
 
@@ -1155,29 +1171,19 @@ static int _scan_existing_devices(struct dev_manager *dm)
 {
 	const char *dev_dir = dm_dir();
 
-	int i, count, r = 1;
-	struct dirent **dirent;
+	int r = 1;
 	const char *name;
+	struct dirent *dirent;
+	DIR *d;
 
-	count = scandir(dev_dir, &dirent, NULL, alphasort);
-	if (!count)
-		return 1;
-
-	if (count < 0) {
-		log_error("Couldn't scan device-mapper directory '%s'.",
-			  dev_dir);
+	if (!(d = opendir(dev_dir))) {
+		log_sys_error("opendir", dev_dir);
 		return 0;
 	}
 
-	/*
-	 * Scan the devices.
-	 */
-	for (i = 0; i < count; i++) {
-		name = dirent[i]->d_name;
+	while ((dirent = readdir(d))) {
+		name = dirent->d_name;
 
-		/*
-		 * Ignore dot files.
-		 */
 		if (name[0] == '.')
 			continue;
 
@@ -1192,12 +1198,8 @@ static int _scan_existing_devices(struct dev_manager *dm)
 		}
 	}
 
-	/*
-	 * Free the directory entries.
-	 */
-	for (i = 0; i < count; i++)
-		free(dirent[i]);
-	free(dirent);
+	if (closedir(d))
+		log_sys_error("closedir", dev_dir);
 
 	return r;
 }
@@ -1252,7 +1254,7 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 		pool_free(dm->mem, name);
 
 		if (found) {
-			log_debug("Active lv '%s' found.", lv->name);
+			log_debug("Found active lv %s", lv->name);
 
 			if (!_add_lv(dm->mem, &dm->active_list, lv)) {
 				stack;
@@ -1264,11 +1266,8 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 	return 1;
 }
 
-/*
- * FIXME: There's a lot of common code between activate and
- *        deactivate.
- */
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+static int _activate(struct dev_manager *dm, struct logical_volume *lv,
+		     activate_t activate)
 {
 	if (!_scan_existing_devices(dm)) {
 		stack;
@@ -1280,14 +1279,16 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
-	/*
-	 * Remove it so we don't add it twice.
-	 */
+	/* Remove from active list if present */
 	_remove_lv(&dm->active_list, lv);
-	if (!_add_lv(dm->mem, &dm->dirty_list, lv) ||
-	    !_add_lv(dm->mem, &dm->active_list, lv)) {
-		stack;
-		return 0;
+
+	if (activate == ACTIVATE) {
+		/* Add to active and dirty lists */
+		if (!_add_lv(dm->mem, &dm->dirty_list, lv) ||
+		    !_add_lv(dm->mem, &dm->active_list, lv)) {
+			stack;
+			return 0;
+		}
 	}
 
 	if (!_execute(dm, lv->vg)) {
@@ -1298,24 +1299,13 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 	return 1;
 }
 
+int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+{
+	return _activate(dm, lv, ACTIVATE);
+}
+
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	if (!_scan_existing_devices(dm)) {
-		stack;
-		return 0;
-	}
-
-	if (!_fill_in_active_list(dm, lv->vg)) {
-		stack;
-		return 0;
-	}
-
-	_remove_lv(&dm->active_list, lv);
-
-	if (!_execute(dm, lv->vg)) {
-		stack;
-		return 0;
-	}
-
-	return 0;
+	return _activate(dm, lv, DEACTIVATE);
 }
+
