@@ -50,7 +50,7 @@ struct cs {
 	char *filename;
 };
 
-static void _get_token(struct parser *p);
+static void _get_token(struct parser *p, int tok_prev);
 static void _eat_space(struct parser *p);
 static struct config_node *_file(struct parser *p);
 static struct config_node *_section(struct parser *p);
@@ -175,7 +175,7 @@ int read_config_fd(struct config_tree *cf, int fd, const char *file,
 	/* parse */
 	p->tb = p->te = p->fb;
 	p->line = 1;
-	_get_token(p);
+	_get_token(p, TOK_SECTION_E);
 	if (!(cf->root = _file(p))) {
 		stack;
 		goto out;
@@ -536,21 +536,28 @@ static int _match_aux(struct parser *p, int t)
 	if (p->t != t)
 		return 0;
 
-	_get_token(p);
+	_get_token(p, t);
 	return 1;
 }
 
 /*
  * tokeniser
  */
-static void _get_token(struct parser *p)
+static void _get_token(struct parser *p, int tok_prev)
 {
+	int values_allowed = 0;
+
 	p->tb = p->te;
 	_eat_space(p);
 	if (p->tb == p->fe || !*p->tb) {
 		p->t = TOK_EOF;
 		return;
 	}
+
+	/* Should next token be interpreted as value instead of identifier? */
+	if (tok_prev == TOK_EQ || tok_prev == TOK_ARRAY_B ||
+	    tok_prev == TOK_COMMA)
+		values_allowed = 1;
 
 	p->t = TOK_INT;		/* fudge so the fall through for
 				   floats works */
@@ -621,17 +628,19 @@ static void _get_token(struct parser *p)
 	case '7':
 	case '8':
 	case '9':
-		p->te++;
-		while ((p->te != p->fe) && (*p->te)) {
-			if (*p->te == '.') {
-				if (p->t == TOK_FLOAT)
-					break;
-				p->t = TOK_FLOAT;
-			} else if (!isdigit((int) *p->te))
-				break;
+		if (values_allowed) {
 			p->te++;
+			while ((p->te != p->fe) && (*p->te)) {
+				if (*p->te == '.') {
+					if (p->t == TOK_FLOAT)
+						break;
+					p->t = TOK_FLOAT;
+				} else if (!isdigit((int) *p->te))
+					break;
+				p->te++;
+			}
+			break;
 		}
-		break;
 
 	default:
 		p->t = TOK_IDENTIFIER;
