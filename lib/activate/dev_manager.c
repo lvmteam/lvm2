@@ -2048,8 +2048,9 @@ static int _remove_suspended_lvs(struct dev_manager *dm,
 static int _targets_present(struct dev_manager *dm, struct list *lvs)
 {
 	struct logical_volume *lv;
-	struct list *lvh;
+	struct list *lvh, *segh;
 	struct segment_type *segtype;
+	struct lv_segment *seg;
 	int snapshots = 0, mirrors = 0;
 
 	list_iterate(lvh, lvs) {
@@ -2062,6 +2063,20 @@ static int _targets_present(struct dev_manager *dm, struct list *lvs)
 		if (!mirrors)
 			if (lv->status & PVMOVE)
 				mirrors = 1;
+
+		if (lv->status & VIRTUAL) {
+			list_iterate(segh, &lv->segments) {
+				seg = list_item(segh, struct lv_segment);
+				if (seg->segtype->ops->target_present &&
+		    		    !seg->segtype->ops->target_present()) {
+					log_error("Can't expand LV: %s target "
+						  "support missing "
+				  	  	  "from kernel?",
+						  seg->segtype->name);
+					return 0;
+				}
+			}
+		}
 	}
 
 	if (mirrors) {
