@@ -59,7 +59,7 @@ int lv_active(struct logical_volume *lv, int *result)
 
 	if (!(dmt = _info(lv))) {
 		stack;
-		goto out;
+		return 0;
 	}
 
 	if (!dm_task_exists(dmt, result)) {
@@ -81,7 +81,7 @@ int lv_open_count(struct logical_volume *lv, int *result)
 
 	if (!(dmt = _info(lv))) {
 		stack;
-		goto out;
+		return 0;
 	}
 
 	if (!dm_task_open_count(dmt, result)) {
