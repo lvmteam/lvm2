@@ -53,9 +53,9 @@
  * 1000                           7,700,000
  * 10,000,000                     3,800,000
  *
- * Of course these results should be taken with a pinch of salt; the lookups
- * were sequential and there were no other applications (other than X + emacs)
- * running to give any pressure on the level 1 cache.
+ * Of course these results should be taken with a pinch of salt; the
+ * lookups were sequential and there were no other applications (other
+ * than X + emacs) running to give any pressure on the level 1 cache.
  *
  * Typical LVM users would find they have very few targets for each
  * LV (probably less than 10).
@@ -142,26 +142,49 @@ enum {
 	DM_ACTIVE,
 };
 
-/* devices that a metadevice should uses and hence open/close */
+/*
+ * devices that a metadevice uses and hence should
+ * open/close
+ */
 struct dev_list {
 	kdev_t dev;
 	struct block_device *bd;
 	struct dev_list *next;
 };
 
-/* io that had to be deferred while we were suspended */
+/*
+ * io that had to be deferred while we were
+ * suspended
+ */
 struct deferred_io {
 	int rw;
 	struct buffer_head *bh;
 	struct deferred_io *next;
 };
 
-/* btree leaf, these do the actual mapping */
-struct target_instance {
+/*
+ * information about a target type
+ */
+struct target_type {
+	char *name;
+	dm_ctr_fn ctr;
+	dm_dtr_fn dtr;
+	dm_map_fn map;
+
+	struct target_type *next;
+};
+
+/*
+ * btree leaf, these do the actual mapping
+ */
+struct target {
 	dm_map_fn map;
 	void *private;
 };
 
+/*
+ * the actual device struct
+ */
 struct mapped_device {
 	kdev_t dev;
 	char name[DM_NAME_LEN];
@@ -183,7 +206,7 @@ struct mapped_device {
 	int num_targets;
 	int num_allocated;
 	offset_t *highs;
-	struct target_instance *targets;
+	struct target *targets;
 
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
@@ -193,21 +216,11 @@ struct mapped_device {
 	struct dev_list *devices;
 };
 
-/* information about a target type */
-struct target {
-	char *name;
-	dm_ctr_fn ctr;
-	dm_dtr_fn dtr;
-	dm_map_fn map;
-
-	struct target *next;
-};
-
 extern struct block_device_operations dm_blk_dops;
 
 /* dm-target.c */
-struct target *dm_get_target(const char *name);
-int dm_std_targets(void);
+int dm_target_init(void);
+struct target_type *dm_get_target(const char *name);
 
 /* dm.c */
 struct mapped_device *dm_find_by_name(const char *name);
@@ -224,12 +237,11 @@ int dm_table_start(struct mapped_device *md);
 int dm_table_add_entry(struct mapped_device *md, offset_t high,
 		       dm_map_fn target, void *context);
 int dm_table_complete(struct mapped_device *md);
-void dm_free_table(struct mapped_device *md);
-
+void dm_table_free(struct mapped_device *md);
 
 /* dm-fs.c */
-int dm_init_fs(void);
-void dm_fin_fs(void);
+int dm_fs_init(void);
+void dm_fs_exit(void);
 
 int dm_fs_add(struct mapped_device *md);
 int dm_fs_remove(struct mapped_device *md);

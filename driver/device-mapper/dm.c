@@ -79,7 +79,7 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh);
 /*
  * setup and teardown the driver
  */
-static int init(void)
+static int init_dm(void)
 {
 	int ret;
 
@@ -91,11 +91,8 @@ static int init(void)
 				0, 0, NULL, NULL)))
 		return -ENOMEM;
 
-	if ((ret = dm_init_fs()))
+	if ((ret = dm_fs_init()) || (ret = dm_target_init()))
 		return ret;
-
-	if (dm_std_targets())
-		return -EIO;	/* FIXME: better error value */
 
 	/* set up the arrays */
 	read_ahead[MAJOR_NR] = DEFAULT_READ_AHEAD;
@@ -115,12 +112,12 @@ static int init(void)
 	return 0;
 }
 
-static void fin(void)
+static void exit_dm(void)
 {
 	if(kmem_cache_shrink(_io_hook_cache))
 		WARN("it looks like there are still some io_hooks allocated");
 
-	dm_fin_fs();
+	dm_fs_exit();
 
 	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
 		printk(KERN_ERR "%s -- unregister_blkdev failed\n", _name);
@@ -240,9 +237,11 @@ inline static void free_io_hook(struct io_hook *ih)
 	kmem_cache_free(_io_hook_cache, ih);
 }
 
-/* FIXME: need to decide if deferred_io's need their own slab, I say
-   no for now since they are only used when the device is
-   suspended. */
+/*
+ * FIXME: need to decide if deferred_io's need
+ * their own slab, I say no for now since they are
+ * only used when the device is suspended.
+ */
 inline static struct deferred_io *alloc_deferred(void)
 {
 	return kmalloc(sizeof(struct deferred_io), GFP_NOIO);
@@ -298,7 +297,7 @@ inline static int __map_buffer(struct mapped_device *md,
 	void *context;
 	struct io_hook *ih = 0;
 	int r;
-	struct target_instance *ti = md->targets + node;
+	struct target *ti = md->targets + node;
 
 	fn = ti->map;
 	context = ti->private;
@@ -446,7 +445,7 @@ static struct mapped_device *alloc_dev(int minor)
 	return md;
 }
 
-static inline struct mapped_device *__find_name(const char *name)
+static inline struct mapped_device *__find_by_name(const char *name)
 {
 	int i;
 	for (i = 0; i < MAX_DEVICES; i++)
@@ -497,7 +496,7 @@ struct mapped_device *dm_find_by_name(const char *name)
 	struct mapped_device *md;
 
 	rl;
-	md = __find_name(name);
+	md = __find_by_name(name);
 	ru;
 
 	return md;
@@ -526,7 +525,7 @@ int dm_create(const char *name, int minor)
 		return -ENOMEM;
 
 	wl;
-	if (__find_name(name)) {
+	if (__find_by_name(name)) {
 		WARN("device with that name already exists");
 		kfree(md);
 		wu;
@@ -552,7 +551,7 @@ int dm_remove(const char *name)
 	int minor, r;
 
 	wl;
-	if (!(md = __find_name(name))) {
+	if (!(md = __find_by_name(name))) {
 		wu;
 		return -ENXIO;
 	}
@@ -567,7 +566,7 @@ int dm_remove(const char *name)
 		return r;
 	}
 
-	dm_free_table(md);
+	dm_table_free(md);
 	for (d = md->devices; d; d = n) {
 		n = d->next;
 		kfree(d);
@@ -688,8 +687,8 @@ void dm_suspend(struct mapped_device *md)
 /*
  * module hooks
  */
-module_init(init);
-module_exit(fin);
+module_init(init_dm);
+module_exit(exit_dm);
 
 /*
  * Local variables:
