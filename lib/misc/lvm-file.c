@@ -128,7 +128,37 @@ int dir_exists(const char *path)
 	return 1;
 }
 
-/* FIXME: Make this create directories recursively */
+static int _create_dir_recursive(const char *dir)
+{
+	char *orig, *s;
+	int rc;
+	
+	/* create parent directories */
+	orig = s = dbg_strdup(dir);
+	while ((s = strchr(s, '/')) != NULL) {
+		*s = '\0';
+		if (*orig) {
+			rc = mkdir(orig, 0777);
+			if (rc < 0 && errno != EEXIST) {
+				log_sys_error("mkdir", orig);
+				dbg_free(orig);
+				return 0;
+			}
+		}
+		*s++ = '/';
+	}
+	dbg_free(orig);
+
+	/* done w/ parents, create final directory */
+	log_verbose("Creating directory \"%s\"", dir);
+	rc = mkdir(dir, 0777);
+	if (rc < 0 && errno != EEXIST) {
+		log_sys_error("mkdir", dir);
+		return 0;
+	}
+	return 1;
+}
+
 int create_dir(const char *dir)
 {
 	struct stat info;
@@ -136,13 +166,8 @@ int create_dir(const char *dir)
 	if (!*dir)
 		return 1;
 
-	if (stat(dir, &info) < 0) {
-		log_verbose("Creating directory \"%s\"", dir);
-		if (!mkdir(dir, 0777))
-			return 1;
-		log_sys_error("mkdir", dir);
-		return 0;
-	}
+	if (stat(dir, &info) < 0)
+		return _create_dir_recursive(dir);
 
 	if (S_ISDIR(info.st_mode))
 		return 1;
