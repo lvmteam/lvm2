@@ -131,7 +131,7 @@ struct pe_disk {
 
 struct uuid_list {
 	struct list_head list;
-	char uuid[ID_LEN + 1];
+	char uuid[NAME_LEN];
 };
 
 struct lvd_list {
