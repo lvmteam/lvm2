@@ -71,3 +71,8 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define unlock_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_UNLOCK)
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
+
+/* Process list of LVs */
+int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags);
+int unlock_lvs(struct cmd_context *cmd, struct list *lvs);
+
