@@ -8,7 +8,10 @@ VolumeGroupName [VolumeGroupName...]
 .SH DESCRIPTION
 vgremove allows you to remove one or more volume groups.
 The volume group(s) must not have any logical volumes allocated:
-Remove them first with \fBlvremove\fP.
+Remove them first with \fBlvremove\fP. If one or more physical
+volumes in the volume group are lost, consider 
+\fBvgreduce --removemissing\fP to make the volume group
+metadata consistent again.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .SH SEE ALSO
