@@ -9,8 +9,8 @@ Installation instructions are in INSTALL.
 There is no warranty - see COPYING and COPYING.LIB.
 
 Tarballs are available from:
-  ftp://ftp.sistina.com/pub/LVM2/tools/
-  ftp://ftp.sistina.com/pub/LVM2/device-mapper/
+  ftp://sources.redhat.com/pub/lvm2/
+  ftp://sources.redhat.com/pub/dm/
 
 To access the CVS tree use:
   cvs -d :pserver:cvs@sources.redhat.com:/cvs/lvm2 login
