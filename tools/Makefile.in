@@ -37,8 +37,9 @@ SOURCES=\
 	pvdisplay.c \
 	pvscan.c \
 	toollib.c \
-	vgck.c \
+	vgcfgbackup.c \
 	vgchange.c \
+	vgck.c \
 	vgcreate.c \
 	vgdisplay.c \
 	vgextend.c \

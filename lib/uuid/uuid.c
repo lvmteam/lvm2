@@ -79,6 +79,7 @@ int id_cmp(struct id *lhs, struct id *rhs)
 }
 
 #define GROUPS (ID_LEN / 4)
+
 int id_write_format(struct id *id, char *buffer, size_t size)
 {
 	int i;
@@ -92,7 +93,7 @@ int id_write_format(struct id *id, char *buffer, size_t size)
 		buffer[(i * 5) + 4] = '-';
 	}
 
-	buffer[GROUPS * 5] = '\0';
+	buffer[(GROUPS * 5) - 1] = '\0';
 	return 1;
 }
 

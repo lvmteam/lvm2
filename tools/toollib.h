@@ -22,7 +22,7 @@
 #define _LVM_TOOLLIB_H
 
 int autobackup_set(void);
-int autobackup_init(const char *dir);
+int autobackup_init(const char *system_dir);
 int autobackup(struct volume_group *vg);
 
 int process_each_vg(int argc, char **argv,
