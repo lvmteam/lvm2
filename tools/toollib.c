@@ -178,6 +178,7 @@ char *extract_vgname(struct io_space *ios, char *lv_name)
 			vg_name += strlen(ios->prefix);
 
 		/* Require exactly one slash */
+		/* FIXME But allow for consecutive slashes */
 		if (!(st = strchr(vg_name, '/')) || (strchr(st + 1, '/'))) {
 			log_error("%s: Invalid path for Logical Volume", lv_name);
 			return 0;
