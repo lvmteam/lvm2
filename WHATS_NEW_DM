@@ -1,9 +1,14 @@
+Version 1.00.09 - 31 Mar 2004
+=============================
   Update copyright notices to Red Hat.
   Move full mknodes functionality from dmsetup into libdevmapper.
   Avoid sscanf %as for uClibc compatibility.
+  Cope if DM_LIST_VERSIONS is not defined.
+  Add DM_LIST_VERSIONS functionality to kernel patches.
+  Generate new kernel patches for 2.4.26-rc1.
 
 Version 1.00.08 - 27 Feb 2004
-============================
+=============================
   Added 'dmsetup targets'.
   Added event_nr support to 'dmsetup wait'.
   Updated dmsetup man page.
