@@ -92,7 +92,7 @@ static int _import_pvs(struct pool *mem, struct volume_group *vg,
 	return 1;
 }
 
-static struct logical_volume *_find_lv(struct volume_group *vg, 
+static struct logical_volume *_find_lv(struct volume_group *vg,
 				       const char *name)
 {
 	struct list_head *tmp;
@@ -142,6 +142,7 @@ static int _import_lvs(struct pool *mem, struct volume_group *vg,
 {
 	struct list_head *tmp, tmp2;
 	struct disk_list *dl;
+	struct lv_list *ll;
 	struct lv_disk *lvd;
 	struct logical_volume *lv;
 	int i;
@@ -149,7 +150,9 @@ static int _import_lvs(struct pool *mem, struct volume_group *vg,
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
 		list_for_each(tmp2, &dl->lvs) {
-			lvd = list_entry(tmp2, struct lv_disk, list);
+			ll = list_entry(tmp2, struct lv_list, list);
+			lvd = &ll->lv;
+
 			if (!_find_lv(vg, lvd->lvname) && !_add_lv(vg, lvd)) {
 				stack;
 				return 0;
@@ -160,29 +163,66 @@ static int _import_lvs(struct pool *mem, struct volume_group *vg,
 	return 1;
 }
 
+static int _fill_lv_array(struct logical_volume *lvs,
+			  struct volume_group *vg, struct disk_list *dl)
+{
+	struct list_head *tmp;
+	struct pv_disk *pvd = &dl->pv;
+	struct logical_volume *lv;
+	int i = 0;
+
+	list_for_each(tmp, &dl->lvs) {
+		struct lv_list *ll = list_entry(tmp, struct lv_disk, list);
+
+		if (!(lv = _find_lv(vg, ll->lv.name))) {
+			stack;
+			return 0;
+		}
+
+		lvs[i] = lv;
+		i++;
+	}
+
+	return 1;
+}
+
 static int _import_extents(struct pool *mem, struct volume_group *vg,
 			   struct list_head *pvs)
 {
 	struct list_head *tmp;
 	struct disk_list *dl;
-	struct logical_volume *lv;
+	struct logical_volume *lv, lvs[MAX_LV];
 	struct physical_volume *pv;
 	struct pe_disk *e;
 	int i, le;
+	uint32_t lv_num, le_num;
 
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
 		pv = _find_pv(vg, dl->pv.pv_name);
 		e = dl->extents;
 
-		for (i = 0; i < dl->pv.pe_total; i++) {
-			if (e[i].lv_num) {
-				if (!(lv = _find_lv_num(vg, e[i].lv_num))) {
-					stack;
-					return 0;
-				}
+		/* build an array of lv's for this pv */
+		if (!_fill_lv_array(lvs, vg, dl)) {
+			stack;
+			return 0;
+		}
 
+		for (i = 0; i < dl->pv.pe_total; i++) {
+			lv_num = e[i].lv_num;
+			le_num = e[i].le_num;
+
+			if (lv_num == UNMAPPED_EXTENT)
+				lv->map[le].pv = NULL;
+
+			else if(lv_num >= dl->pv.lv_cur) {
+				log_err("invalid lv in extent map\n");
+				return 0;
+
+			else {
+				lv = lvs[e[i].lv_num];
 				le = e[i].le_num;
+
 				lv->map[le].pv = pv;
 				lv->map[le].pe = i;
 			}
