@@ -477,6 +477,7 @@ int lv_reduce(struct format_instance *fi,
 
 	lv->le_count -= extents;
 	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
+	lv->vg->free_count += extents;
 
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
 		stack;
