@@ -96,6 +96,12 @@ int dev_open(struct device *dev, int flags)
 	return 1;
 }
 
+static void _flush(int fd)
+{
+	if (ioctl(fd, BLKFLSBUF, 0))
+		log_error("couldn't flush device.");
+}
+
 int dev_close(struct device *dev)
 {
 	if (dev->fd < 0) {
@@ -103,6 +109,8 @@ int dev_close(struct device *dev)
 			  "which is not open.", dev_name(dev));
 		return 0;
 	}
+
+	_flush(dev->fd);
 
 	if (close(dev->fd))
 		log_sys_error("close", dev_name(dev));
