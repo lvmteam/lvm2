@@ -13,11 +13,15 @@ int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 
 /*
- * Status functions.
+ * Status functions.  Return count (0 upwards) or else -1 on error.
  */
 int lv_active(struct logical_volume *lv);
 int lv_suspended(struct logical_volume *lv);
 int lv_open_count(struct logical_volume *lv);
+
+/*
+ * Returns 1 if info structure has been populated, else 0.
+ */
 int lv_info(struct logical_volume *lv, struct dm_info *info);
 
 /*
@@ -42,12 +46,12 @@ int lv_update_write_access(struct logical_volume *lv);
 
 /*
  * Activate all LVs in the VG.  Ignore any that are already
- * active.  Return number activated.
+ * active.  Return number actually activated.
  */
 int activate_lvs_in_vg(struct volume_group *vg);
 
 /*
- * Deactivate all LVs in the VG
+ * Deactivate all LVs in the VG.  Return number actually deactivated.
  */
 int deactivate_lvs_in_vg(struct volume_group *vg);
 

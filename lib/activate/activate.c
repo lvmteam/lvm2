@@ -62,6 +62,11 @@ static int _query(struct logical_volume *lv, int (*fn)(const char *))
 	return fn(buffer);
 }
 
+
+/*
+ * These three functions return the number of LVs in the state, 
+ * or -1 on error.
+ */
 int lv_active(struct logical_volume *lv)
 {
 	return _query(lv, device_active);
@@ -77,6 +82,10 @@ int lv_open_count(struct logical_volume *lv)
 	return _query(lv, device_open_count);
 }
 
+
+/*
+ * Returns 1 if info structure populated, else 0 on failure.
+ */
 int lv_info(struct logical_volume *lv, struct dm_info *info)
 {
 	char buffer[128];
@@ -84,7 +93,7 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 	if (!build_dm_name(buffer, sizeof(buffer), "",
 			   lv->vg->name, lv->name)) {
 		stack;
-		return -1;
+		return 0;
 	}
 
 	return device_info(buffer, info);
