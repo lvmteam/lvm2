@@ -26,16 +26,11 @@
  */
 
 #include "dm.h"
+#include "dmfs.h"
 
-/* defines for blk.h */
-#define MAJOR_NR DM_BLK_MAJOR
-#define DEVICE_NR(device) MINOR(device)	/* has no partition bits */
-#define DEVICE_NAME "device-mapper"	/* name for messaging */
-#define DEVICE_NO_RANDOM		/* no entropy to contribute */
-#define DEVICE_OFF(d)			/* do-nothing */
-
-#include <linux/blk.h>
 #include <linux/blkpg.h>
+#include <linux/blkdev.h>
+#include <linux/kmod.h>
 
 /* we only need this for the lv_bmap struct definition, not happy */
 #include <linux/lvm.h>
@@ -43,6 +38,7 @@
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
 
+static int major = 0;
 const char *_name = "device-mapper";
 int _version[3] = {0, 1, 0};
 
@@ -75,13 +71,11 @@ static devfs_handle_t _dev_dir;
 
 static int request(request_queue_t *q, int rw, struct buffer_head *bh);
 static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb);
-static DECLARE_FSTYPE(dmfs_fstype, "dmfs", dmfs_read_super, FS_SINGLE);
-static struct vfsmount *dmfs_mnt;
 
 /*
  * setup and teardown the driver
  */
-static int dm_init(void)
+static int __init dm_init(void)
 {
 	int ret = -ENOMEM;
 
@@ -94,31 +88,30 @@ static int dm_init(void)
 	if (!_io_hook_cache)
 		goto err;
 
-	ret = register_filesystem(&dmfs_fstype);
+	ret = dmfs_init();
 	if (ret < 0)
 		goto err_kmem_cache_destroy;
 
-	dmfs_mnt = kern_mount(&dmfs_fstype);
-	if (IS_ERR(dmfs_mnt)) {
-		ret = PTR_ERR(dmfs_mnt);
-		goto err_unregister;
-	}
-
 	ret = dm_target_init();
 	if (ret)
-		goto err_umount;
+		goto err_kmem_cache_destroy;
 
-	/* set up the arrays */
-	read_ahead[MAJOR_NR] = DEFAULT_READ_AHEAD;
-	blk_size[MAJOR_NR] = _block_size;
-	blksize_size[MAJOR_NR] = _blksize_size;
-	hardsect_size[MAJOR_NR] = _hardsect_size;
-
-	ret = -EIO;
-	if (devfs_register_blkdev(MAJOR_NR, _name, &dm_blk_dops) < 0)
+	ret = devfs_register_blkdev(major, _name, &dm_blk_dops);
+	if (ret < 0)
 		goto err_blkdev;
 
-	blk_queue_make_request(BLK_DEFAULT_QUEUE(MAJOR_NR), request);
+	if (major == 0)
+		major = ret;
+
+	/* set up the arrays */
+	read_ahead[major] = DEFAULT_READ_AHEAD;
+	blk_size[major] = _block_size;
+	blksize_size[major] = _blksize_size;
+	hardsect_size[major] = _hardsect_size;
+
+	ret = -EIO;
+
+	blk_queue_make_request(BLK_DEFAULT_QUEUE(major), request);
 
 	_dev_dir = devfs_mk_dir(0, _fs_dir, NULL);
 
@@ -128,37 +121,70 @@ static int dm_init(void)
 
 err_blkdev:
 	printk(KERN_ERR "%s -- register_blkdev failed\n", _name);
-err_umount:
-	/* kern_umount(&dmfs_mnt); */
-err_unregister:
-	unregister_filesystem(&dmfs_fstype);
 err_kmem_cache_destroy:
 	kmem_cache_destroy(_io_hook_cache);
 err:
 	return ret;
 }
 
-static void dm_exit(void)
+static void __exit dm_exit(void)
 {
-	/* kern_umount(&dmfs_mnt); */
-
-	unregister_filesystem(&dmfs_fstype);
+	dmfs_exit();
 
 	if (kmem_cache_destroy(_io_hook_cache))
 		WARN("it looks like there are still some io_hooks allocated");
 
 
-	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
+	if (devfs_unregister_blkdev(major, _name) < 0)
 		printk(KERN_ERR "%s -- unregister_blkdev failed\n", _name);
 
-	read_ahead[MAJOR_NR] = 0;
-	blk_size[MAJOR_NR] = 0;
-	blksize_size[MAJOR_NR] = 0;
-	hardsect_size[MAJOR_NR] = 0;
+	read_ahead[major] = 0;
+	blk_size[major] = NULL;
+	blksize_size[major] = NULL;
+	hardsect_size[major] = NULL;
 
 	printk(KERN_INFO "%s %d.%d.%d cleaned up\n", _name,
 	       _version[0], _version[1], _version[2]);
 }
+
+#ifdef CONFIG_HOTPLUG
+static void dm_sbin_hotplug(struct mapped_device *md, char *action, int minor)
+{
+	int i;
+	char *argv[3];
+	char *envp[7];
+	char name[DM_NAME_LEN + 16];
+	char dev_major[16], dev_minor[16];
+
+	if (!hotplug_path[0])
+		return;
+
+	if (!current->fs->root)
+		return;
+
+	sprintf(name, "DMNAME=%s\n", md->name);
+	sprintf(dev_major, "MAJOR=%d", major);
+	sprintf(dev_minor, "MINOR=%d", minor);
+
+	i = 0;
+	argv[i++] = hotplug_path;
+	argv[i++] = "devmap";
+	argv[i] = 0;
+
+	i = 0;
+	envp[i++] = "HOME=/";
+	envp[i++] = "PATH=/sbin:/bin:/usr/sbin:/usr/bin";
+	envp[i++] = name;
+	envp[i++] = action;
+	envp[i++] = dev_minor;
+	envp[i++] = dev_major;
+	envp[i] = 0;
+
+	call_usermodehelper(argv[0], argv, envp);
+}
+#else
+#define dm_sbin_hotplug(md, action, minor) do { } while(0)
+#endif /* CONFIG_HOTPLUG */
 
 /*
  * block device functions
@@ -182,7 +208,6 @@ static int dm_blk_open(struct inode *inode, struct file *file)
 	md->use_count++;
 	wu;
 
-	MOD_INC_USE_COUNT;
 	return 0;
 }
 
@@ -205,7 +230,6 @@ static int dm_blk_close(struct inode *inode, struct file *file)
 	md->use_count--;
 	wu;
 
-	MOD_DEC_USE_COUNT;
 	return 0;
 }
 
@@ -223,13 +247,17 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 
 	switch (command) {
 	case BLKSSZGET:
+	case BLKBSZGET:
 	case BLKROGET:
 	case BLKROSET:
+	case BLKRASET:
+	case BLKRAGET:
+	case BLKFLSBUF:
 #if 0
 	case BLKELVSET:
 	case BLKELVGET:
 #endif
-		return blk_ioctl(inode->i_dev, command, a);
+		return blk_ioctl(inode->i_rdev, command, a);
 		break;
 
 	case BLKGETSIZE:
@@ -238,25 +266,11 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 			return -EFAULT;
 		break;
 
-	case BLKFLSBUF:
-		if (!capable(CAP_SYS_ADMIN))
-			return -EACCES;
-		fsync_dev(inode->i_rdev);
-		invalidate_buffers(inode->i_rdev);
-		return 0;
-
-	case BLKRAGET:
-		if (copy_to_user
-		    ((void *) a, &read_ahead[MAJOR(inode->i_rdev)],
-		     sizeof (long)))
+	case BLKGETSIZE64:
+		size = VOLUME_SIZE(minor);
+		if (put_user((u64)size, (u64 *)a))
 			return -EFAULT;
-		return 0;
-
-	case BLKRASET:
-		if (!capable(CAP_SYS_ADMIN))
-			return -EACCES;
-		read_ahead[MAJOR(inode->i_rdev)] = a;
-		return 0;
+		break;
 
 	case BLKRRPART:
 		return -EINVAL;
@@ -687,7 +701,6 @@ struct mapped_device *dm_find_by_minor(int minor)
 	return md;
 }
 
-#ifdef CONFIG_DEVFS_FS
 static int register_device(struct mapped_device *md)
 {
 	md->devfs_entry =
@@ -696,17 +709,8 @@ static int register_device(struct mapped_device *md)
 			       S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
 			       &dm_blk_dops, NULL);
 
-	if (!md->devfs_entry)
-		return -ENOMEM;
-
 	return 0;
 }
-#else
-static int register_device(struct mapped_device *md)
-{
-	return 0;
-}
-#endif
 
 static int unregister_device(struct mapped_device *md)
 {
@@ -737,6 +741,8 @@ struct mapped_device *dm_create(const char *name, int minor)
 	}
 	wu;
 
+	dm_sbin_hotplug(md, "ACTION=create", minor);
+
 	return md;
 }
 
@@ -764,6 +770,7 @@ int dm_remove(struct mapped_device *md)
 	_devs[minor] = 0;
 	wu;
 
+	dm_sbin_hotplug(md, "ACTION=remove", minor);
 	kfree(md);
 
 	return 0;
@@ -933,7 +940,8 @@ void dm_suspend(struct mapped_device *md)
 struct block_device_operations dm_blk_dops = {
 	open:	  dm_blk_open,
 	release:  dm_blk_close,
-	ioctl:	  dm_blk_ioctl
+	ioctl:	  dm_blk_ioctl,
+	owner:    THIS_MODULE,
 };
 
 /*
@@ -942,8 +950,11 @@ struct block_device_operations dm_blk_dops = {
 module_init(dm_init);
 module_exit(dm_exit);
 
+MODULE_PARM(major, "i");
+MODULE_PARM_DESC(major, "The major device number of the device-mapper");
 MODULE_DESCRIPTION("device-mapper driver");
 MODULE_AUTHOR("Joe Thornber <thornber@btconnect.com>");
+MODULE_LICENSE("GPL");
 
 /*
  * Local variables:
