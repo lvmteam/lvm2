@@ -162,6 +162,8 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 			if (bit(rf->accept, m)) {
 
 				if (!first) {
+					log_debug("%s: New preferred name",
+						  sl->str);
 					list_del(&sl->list);
 					list_add_h(&dev->aliases, &sl->list);
 				}

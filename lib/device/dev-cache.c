@@ -18,11 +18,6 @@
 #include <dirent.h>
 #include <linux/kdev_t.h>
 
-/*
- * FIXME: really need to seperate names from the devices since
- * multiple names can point to the same device.
- */
-
 struct dev_iter {
 	struct btree_iter *current;
 	struct dev_filter *filter;
@@ -53,7 +48,7 @@ static struct device *_create_dev(dev_t d)
 	struct device *dev;
 
 	if (!(dev = _alloc(sizeof(*dev)))) {
-		stack;
+		log_error("struct device allocation failed");
 		return NULL;
 	}
 
@@ -62,6 +57,7 @@ static struct device *_create_dev(dev_t d)
 	dev->fd = -1;
 	dev->flags = 0;
 	memset(dev->pvid, 0, sizeof(dev->pvid));
+
 	return dev;
 }
 
@@ -129,12 +125,21 @@ static int _compare_paths(const char *path0, const char *path1)
 static int _add_alias(struct device *dev, const char *path)
 {
 	struct str_list *sl = _alloc(sizeof(*sl));
+	struct list *ah;
 	const char *oldpath;
 	int prefer_old = 1;
 
 	if (!sl) {
 		stack;
 		return 0;
+	}
+
+	/* Is name already there? */
+	list_iterate(ah, &dev->aliases) {
+		if (!strcmp(list_item(ah, struct str_list)->str, path)) {
+			stack;
+			return 1;
+		}
 	}
 
 	if (!(sl->str = pool_strdup(_cache.mem, path))) {
@@ -145,7 +150,11 @@ static int _add_alias(struct device *dev, const char *path)
 	if (!list_empty(&dev->aliases)) {
 		oldpath = list_item(dev->aliases.n, struct str_list)->str;
 		prefer_old = _compare_paths(path, oldpath);
-	}
+		log_debug("%s: Aliased to %s in device cache%s",
+			  path, oldpath, prefer_old ? "" : " (preferred name)");
+
+	} else
+		log_debug("%s: Added to device cache", path);
 
 	if (prefer_old)
 		list_add(&dev->aliases, &sl->list);
@@ -382,8 +391,10 @@ int dev_cache_add_dir(const char *path)
 		return 1;
 	}
 
-	if (!(dl = _alloc(sizeof(*dl) + strlen(path) + 1)))
+	if (!(dl = _alloc(sizeof(*dl) + strlen(path) + 1))) {
+		log_error("dir_list allocation failed");
 		return 0;
+	}
 
 	strcpy(dl->dir, path);
 	list_add(&_cache.dirs, &dl->list);
@@ -451,8 +462,10 @@ struct dev_iter *dev_iter_create(struct dev_filter *f)
 {
 	struct dev_iter *di = dbg_malloc(sizeof(*di));
 
-	if (!di)
+	if (!di) {
+		log_error("dev_iter allocation failed");
 		return NULL;
+	}
 
 	_full_scan();
 	di->current = btree_first(_cache.devices);

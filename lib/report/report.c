@@ -744,7 +744,7 @@ static int _parse_options(struct report_handle *rh, const char *format)
 		while (*we && *we != ',')
 			we++;
 		if (!_field_match(rh, ws, (size_t) (we - ws))) {
-			log_error("Unrecognised field: %.*s", we - ws, ws);
+			log_error("Unrecognised field: %.*s", (int) (we - ws), ws);
 			return 0;
 		}
 	}
@@ -765,7 +765,7 @@ static int _parse_keys(struct report_handle *rh, const char *keys)
 		while (*we && *we != ',')
 			we++;
 		if (!_key_match(rh, ws, (size_t) (we - ws))) {
-			log_error("Unrecognised field: %.*s", we - ws, ws);
+			log_error("Unrecognised field: %.*s", (int) (we - ws), ws);
 			return 0;
 		}
 	}

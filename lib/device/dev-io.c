@@ -238,10 +238,10 @@ int dev_zero(struct device *dev, uint64_t offset, size_t len)
 	}
 
 	if ((offset % SECTOR_SIZE) || (len % SECTOR_SIZE))
-		log_debug("Wiping %s at %" PRIu64 " length %u",
+		log_debug("Wiping %s at %" PRIu64 " length %" PRIsize_t,
 			  dev_name(dev), offset, len);
 	else
-		log_debug("Wiping %s at sector %" PRIu64 " length %u"
+		log_debug("Wiping %s at sector %" PRIu64 " length %" PRIsize_t
 			  " sectors", dev_name(dev), offset >> SECTOR_SHIFT,
 			  len >> SECTOR_SHIFT);
 
