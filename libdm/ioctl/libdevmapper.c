@@ -131,9 +131,10 @@ struct target *create_target(uint64_t start,
 	return NULL;
 }
 
-static void *_align(void *ptr, unsigned int align)
+static void *_align(void *ptr, unsigned int a)
 {
-	align--;
+	register unsigned long align = --a;
+
 	return (void *) (((unsigned long) ptr + align) & ~align);
 }
 
