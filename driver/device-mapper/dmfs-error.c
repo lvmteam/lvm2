@@ -28,13 +28,6 @@ static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t
 	return size;
 }
 
-static ssize_t dmfs_error_write(struct file *file, const char *buf, size_t size, loff_t *pos)
-{
-	struct inode *inode = file->f_dentry->d_inode;
-
-	return size;
-}
-
 static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasync)
 {
 	return 0;
@@ -42,7 +35,6 @@ static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasyn
 
 static struct dm_table_file_operations = {
 	read:		dmfs_error_read,
-	write:		dmfs_error_write,
 	fsync:		dmfs_error_sync,
 };
 
