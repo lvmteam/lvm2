@@ -122,7 +122,7 @@ int _version[3] = {1, 0, 0};
 #define rl down_read(&_dev_lock)
 #define ru up_read(&_dev_lock)
 #define wl down_write(&_dev_lock)
-#define wu up_read(&_dev_lock)
+#define wu up_write(&_dev_lock)
 
 struct rw_semaphore _dev_lock;
 static struct mapped_device *_devs[MAX_DEVICES];
@@ -361,6 +361,7 @@ static inline int __any_old_dev(void)
 static struct mapped_device *_alloc_dev(int minor)
 {
 	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
+	memset(md, 0, sizeof(*md));
 
 	wl;
 	minor = (minor < 0) ? __any_old_dev() : __specific_dev(minor);
@@ -449,6 +450,7 @@ struct mapped_device *dm_find_minor(int minor)
 
 int dm_create(const char *name, int minor)
 {
+	int r;
 	struct mapped_device *md;
 
 	if (minor >= MAX_DEVICES)
@@ -467,6 +469,11 @@ int dm_create(const char *name, int minor)
 
 	strcpy(md->name, name);
 	_devs[minor] = md;
+
+	if ((r = dm_fs_add(md))) {
+		wu;
+		return r;
+	}
 	wu;
 
 	return 0;
@@ -476,7 +483,7 @@ int dm_remove(const char *name)
 {
 	struct mapped_device *md;
 	struct dev_list *d, *n;
-	int minor;
+	int minor, r;
 
 	wl;
 	if (!(md = __find_name(name))) {
@@ -484,7 +491,12 @@ int dm_remove(const char *name)
 		return -ENXIO;
 	}
 
-	dm_free_table(md);
+	if ((r = dm_fs_remove(md))) {
+		wu;
+		return r;
+	}
+
+	//dm_free_table(md);
 	for (d = md->devices; d; d = n) {
 		n = d->next;
 		kfree(d);
