@@ -38,6 +38,9 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);
 
+int dev_manager_mknodes(const struct logical_volume *lv);
+int dev_manager_rmnodes(const struct logical_volume *lv);
+
 /*
  * Put the desired changes into effect.
  */

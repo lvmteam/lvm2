@@ -182,7 +182,9 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 	}
 
 	if (lstat(lv_path, &buf) || !S_ISLNK(buf.st_mode)) {
-		log_error("%s not symbolic link - not removing", lv_path);
+		if (errno != ENOENT)
+			log_error("%s not symbolic link - not removing",
+				  lv_path);
 		return 0;
 	}
 
@@ -309,13 +311,13 @@ static int _fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 	return _do_fs_op(type, dev_dir, vg_name, lv_name, dev, old_lv_name);
 }
 
-int fs_add_lv(struct logical_volume *lv, const char *dev)
+int fs_add_lv(const struct logical_volume *lv, const char *dev)
 {
 	return _fs_op(FS_ADD, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
 		      dev, "");
 }
 
-int fs_del_lv(struct logical_volume *lv)
+int fs_del_lv(const struct logical_volume *lv)
 {
 	return _fs_op(FS_DEL, lv->vg->cmd->dev_dir, lv->vg->name, lv->name,
 		      "", "");
