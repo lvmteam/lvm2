@@ -36,8 +36,10 @@
 
 /* defines for blk.h */
 #define MAJOR_NR DM_BLK_MAJOR
-#define DEVICE_OFF(device)
-#define LOCAL_END_REQUEST
+#define DEVICE_NR(device) MINOR(device)  /* has no partition bits */
+#define DEVICE_NAME "device-mapper"      /* name for messaging */
+#define DEVICE_NO_RANDOM                 /* no entropy to contribute */
+#define DEVICE_OFF(d)                    /* do-nothing */
 
 #include <linux/blk.h>
 
@@ -117,7 +119,7 @@
 #define DEFAULT_READ_AHEAD 64
 
 const char *_name = "device-mapper";
-int _version[3] = {1, 0, 0};
+int _version[3] = {0, 1, 0};
 
 #define rl down_read(&_dev_lock)
 #define ru up_read(&_dev_lock)
@@ -132,23 +134,23 @@ static int _block_size[MAX_DEVICES];
 static int _blksize_size[MAX_DEVICES];
 static int _hardsect_size[MAX_DEVICES];
 
-static int _blk_open(struct inode *inode, struct file *file);
-static int _blk_close(struct inode *inode, struct file *file);
-static int _blk_ioctl(struct inode *inode, struct file *file,
-		      uint command, ulong a);
+static int blk_open(struct inode *inode, struct file *file);
+static int blk_close(struct inode *inode, struct file *file);
+static int blk_ioctl(struct inode *inode, struct file *file,
+		     uint command, ulong a);
 
 struct block_device_operations dm_blk_dops = {
-	open:     _blk_open,
-	release:  _blk_close,
-	ioctl:    _blk_ioctl
+	open:     blk_open,
+	release:  blk_close,
+	ioctl:    blk_ioctl
 };
 
-static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh);
+static int request(request_queue_t *q, int rw, struct buffer_head *bh);
 
 /*
  * setup and teardown the driver
  */
-static int _init(void)
+static int init(void)
 {
 	int ret;
 
@@ -171,14 +173,14 @@ static int _init(void)
 		return -EIO;
 	}
 
-	blk_queue_make_request(BLK_DEFAULT_QUEUE(MAJOR_NR), _request_fn);
+	blk_queue_make_request(BLK_DEFAULT_QUEUE(MAJOR_NR), request);
 
-	printk(KERN_INFO "%s(%d, %d, %d) successfully initialised\n", _name,
+	printk(KERN_INFO "%s %d.%d.%d initialised\n", _name,
 	       _version[0], _version[1], _version[2]);
 	return 0;
 }
 
-static void _fin(void)
+static void fin(void)
 {
 	dm_fin_fs();
 
@@ -190,14 +192,14 @@ static void _fin(void)
 	blksize_size[MAJOR_NR] = 0;
 	hardsect_size[MAJOR_NR] = 0;
 
-	printk(KERN_INFO "%s(%d, %d, %d) successfully finalised\n", _name,
+	printk(KERN_INFO "%s %d.%d.%d finalised\n", _name,
 	       _version[0], _version[1], _version[2]);
 }
 
 /*
  * block device functions
  */
-static int _blk_open(struct inode *inode, struct file *file)
+static int blk_open(struct inode *inode, struct file *file)
 {
 	int minor = MINOR(inode->i_rdev);
 	struct mapped_device *md;
@@ -220,7 +222,7 @@ static int _blk_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int _blk_close(struct inode *inode, struct file *file)
+static int blk_close(struct inode *inode, struct file *file)
 {
 	int minor = MINOR(inode->i_rdev);
 	struct mapped_device *md;
@@ -243,7 +245,7 @@ static int _blk_close(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int _blk_ioctl(struct inode *inode, struct file *file,
+static int blk_ioctl(struct inode *inode, struct file *file,
 		      uint command, ulong a)
 {
 	/* FIXME: check in the latest Rubini that all expected ioctl's
@@ -290,7 +292,7 @@ static int _blk_ioctl(struct inode *inode, struct file *file,
 	return 0;
 }
 
-static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh)
+static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 {
 	struct mapped_device *md;
 	offset_t *node;
@@ -358,7 +360,7 @@ static inline int __any_old_dev(void)
 	return -1;
 }
 
-static struct mapped_device *_alloc_dev(int minor)
+static struct mapped_device *alloc_dev(int minor)
 {
 	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
 	memset(md, 0, sizeof(*md));
@@ -393,7 +395,7 @@ static inline struct mapped_device *__find_name(const char *name)
 	return 0;
 }
 
-static int _open_dev(struct dev_list *d)
+static int open_dev(struct dev_list *d)
 {
 	int err;
 
@@ -408,11 +410,25 @@ static int _open_dev(struct dev_list *d)
 	return 0;
 }
 
-static void _close_dev(struct dev_list *d)
+static void close_dev(struct dev_list *d)
 {
 	blkdev_put(d->bd, BDEV_FILE);
 	bdput(d->bd);
 	d->bd = 0;
+}
+
+static int __find_hardsect_size(struct mapped_device *md)
+{
+	int r = INT_MAX, s;
+	struct dev_list *dl;
+
+	for (dl = md->devices; dl; dl = dl->next) {
+		s = get_hardsect_size(dl->dev);
+		if (s < r)
+			r = s;
+	}
+
+	return r;
 }
 
 struct mapped_device *dm_find_name(const char *name)
@@ -445,7 +461,7 @@ int dm_create(const char *name, int minor)
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
 
-	if (!(md = _alloc_dev(minor)))
+	if (!(md = alloc_dev(minor)))
 		return -ENOMEM;
 
 	wl;
@@ -485,7 +501,7 @@ int dm_remove(const char *name)
 		return r;
 	}
 
-	//dm_free_table(md);
+	dm_free_table(md);
 	for (d = md->devices; d; d = n) {
 		n = d->next;
 		kfree(d);
@@ -504,29 +520,48 @@ int dm_add_device(struct mapped_device *md, kdev_t dev)
 	struct dev_list *d = kmalloc(sizeof(*d), GFP_KERNEL);
 
 	if (!d)
-		return 0;
+		return -EINVAL;
 
 	d->dev = dev;
 	d->next = md->devices;
 	md->devices = d;
 
-	return 1;
+	return 0;
 }
 
 int dm_activate(struct mapped_device *md)
 {
-	int ret;
+	int ret, minor;
 	struct dev_list *d, *od;
 
-	if (is_active(md))
-		return 1;
+	wl;
 
-	rl;
+	if (is_active(md)) {
+		wu;
+		return 0;
+	}
+
+	if (!md->num_targets) {
+		wu;
+		return -ENXIO;
+	}
+
 	/* open all the devices */
 	for (d = md->devices; d; d = d->next)
-		if ((ret = _open_dev(d)))
+		if ((ret = open_dev(d)))
 			goto bad;
-	ru;
+
+	minor = MINOR(md->dev);
+
+	_block_size[minor] = md->highs[md->num_targets - 1] + 1;
+	_blksize_size[minor] = BLOCK_SIZE; /* FIXME: this depends on
+                                              the mapping table */
+	_hardsect_size[minor] = __find_hardsect_size(md);
+
+	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
+
+	set_bit(DM_ACTIVE, &md->state);
+	wu;
 
 	return 0;
 
@@ -534,7 +569,7 @@ int dm_activate(struct mapped_device *md)
 
 	od = d;
 	for (d = md->devices; d != od; d = d->next)
-		_close_dev(d);
+		close_dev(d);
 	ru;
 
 	return ret;
@@ -548,17 +583,17 @@ void dm_suspend(struct mapped_device *md)
 
 	/* close all the devices */
 	for (d = md->devices; d; d = d->next)
-		_close_dev(d);
+		close_dev(d);
 
-	set_active(md, 0);
+	clear_bit(DM_ACTIVE, &md->state);
 }
 
 
 /*
  * module hooks
  */
-module_init(_init);
-module_exit(_fin);
+module_init(init);
+module_exit(fin);
 
 /*
  * Local variables:

@@ -25,6 +25,8 @@
 
 #include "dm.h"
 
+#include <linux/ctype.h>
+
 static struct target *_targets;
 static spinlock_t _lock = SPIN_LOCK_UNLOCKED;
 
@@ -84,20 +86,20 @@ int register_map_target(const char *name, dm_ctr_fn ctr,
  *
  * 'linear' target maps a linear range of a device
  */
-int _io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
-		const char *context, void **result)
+int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
+		const char *cb, const char *ce, void **result)
 {
 	/* this takes no arguments */
 	*result = 0;
-	return 1;
+	return 0;
 }
 
-void _io_err_dtr(void *c)
+void io_err_dtr(void *c)
 {
 	/* empty */
 }
 
-int _io_err_map(struct buffer_head *bh, void *context)
+int io_err_map(struct buffer_head *bh, void *context)
 {
 	buffer_IO_error(bh);
 	return 0;
@@ -109,38 +111,47 @@ struct linear_c {
 	int offset;		/* FIXME: we need a signed offset type */
 };
 
-int _linear_ctr(offset_t b, offset_t e, struct mapped_device *md,
-		const char *context, void **result)
+static int get_number(const char **b, const char *e, unsigned int *n)
+{
+	char *ptr;
+	*b = eat_space(*b, e);
+	if (*b >= e)
+		return -EINVAL;
+
+	*n = simple_strtoul(*b, &ptr, 10);
+	if (ptr == *b)
+		return -EINVAL;
+	*b = ptr;
+
+	return 0;
+}
+
+int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
+	       const char *cb, const char *ce, void **result)
 {
 	/* context string should be of the form:
 	 *  <major> <minor> <offset>
 	 */
-	char *ptr = (char *) context;
 	struct linear_c *lc;
-	int major, minor, start;
+	unsigned int major, minor, start;
+	int r;
 
-	/* FIXME: somewhat verbose */
-	major = simple_strtol(context, &ptr, 10);
-	if (ptr == context)
-		return 0;
+	if ((r = get_number(&cb, ce, &major)))
+		return r;
 
-	context = ptr;
-	minor = simple_strtol(context, &ptr, 10);
-	if (ptr == context)
-		return 0;
+	if ((r = get_number(&cb, ce, &minor)))
+		return r;
 
-	context = ptr;
-	start = simple_strtoul(context, &ptr, 10);
-	if (ptr == context)
-		return 0;
+	if ((r = get_number(&cb, ce, &start)))
+		return r;
 
 	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
 		WARN("couldn't allocate memory for linear context\n");
-		return 0;
+		return -EINVAL;
 	}
 
-	lc->dev = MKDEV(major, minor);
-	lc->offset = start - b;
+	lc->dev = MKDEV((int) major, (int) minor);
+	lc->offset = (int) start - (int) low;
 
 	if (!dm_add_device(md, lc->dev)) {
 		kfree(lc);
@@ -148,15 +159,15 @@ int _linear_ctr(offset_t b, offset_t e, struct mapped_device *md,
 	}
 
 	*result = lc;
-	return 1;
+	return 0;
 }
 
-void _linear_dtr(void *c)
+void linear_dtr(void *c)
 {
 	kfree(c);
 }
 
-int _linear_map(struct buffer_head *bh, void *context)
+int linear_map(struct buffer_head *bh, void *context)
 {
 	struct linear_c *lc = (struct linear_c *) context;
 
@@ -173,8 +184,8 @@ int dm_std_targets(void)
 	if ((ret = register_map_target(n, \
              fn ## _ctr, fn ## _dtr, fn ## _map) < 0)) return ret
 
-	xx("io-err", _io_err);
-	xx("linear", _linear);
+	xx("io-err", io_err);
+	xx("linear", linear);
 #undef xx
 
 	return 0;
