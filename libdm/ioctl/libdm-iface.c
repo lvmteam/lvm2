@@ -1121,8 +1121,8 @@ static int _create_and_load_v4(struct dm_task *dmt)
 
 	/* Use the original structure last so the info will be correct */
 	dmt->type = DM_DEVICE_RESUME;
-	dmt->uuid = NULL;
 	free(dmt->uuid);
+	dmt->uuid = NULL;
 
 	r = dm_task_run(dmt);
 

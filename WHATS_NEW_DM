@@ -1,5 +1,7 @@
-Version 1.00.18
+Version 1.00.18 - 20 Jun 2004
 =============================
+  Fix a uuid free in libdm-iface.
+  Fix a targets string size calc in driver.
   Add -c to dmsetup for column-based output.
   Add target message-passing ioctl.
 
