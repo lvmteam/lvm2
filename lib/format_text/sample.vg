@@ -1,5 +1,8 @@
 # An example volume group
 
+# YYYY-MM-DD HH:MM:SS
+output_date = "2001-12-11 11:35:12"
+
 sample_volume_group {
 
 	id = "ksjdlfksjldskjlsk"
