@@ -427,22 +427,6 @@ int activate_lvs_in_vg(struct volume_group *vg)
 	return count;
 }
 
-int lv_update_write_access(struct logical_volume *lv)
-{
-        struct dm_info info;
-
-        if (!lv_info(lv, &info)) {
-                stack;
-                return 0;
-        }
-
-        if (!info.exists || info.suspended)
-		/* Noop */
-		return 1;
-
-	return lv_reactivate(lv);
-}
-
 int deactivate_lvs_in_vg(struct volume_group *vg)
 {
 	struct list *lvh;

@@ -46,11 +46,6 @@ int lvs_in_vg_activated(struct volume_group *vg);
 int lvs_in_vg_opened(struct volume_group *vg);
 
 /*
- * Test for (lv->status & LVM_WRITE)
- */
-int lv_update_write_access(struct logical_volume *lv);
-
-/*
  * Activate all LVs in the VG.  Ignore any that are already
  * active.  Return number actually activated.
  */
