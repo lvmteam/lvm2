@@ -14,7 +14,8 @@
 
 int vgcreate(int argc, char **argv)
 {
-	int max_lv, max_pv, extent_size;
+	int max_lv, max_pv;
+	uint32_t extent_size;
 	char *vg_name;
 	struct volume_group *vg;
 

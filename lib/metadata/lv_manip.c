@@ -48,7 +48,7 @@ static int _alloc_striped(struct logical_volume *lv,
 			  struct list *pvms, uint32_t allocated)
 {
 	/* FIXME: finish */
-	log_err("striped allocation not implemented yet.");
+	log_error("Striped allocation not implemented yet in LVM2.");
 	return 0;
 }
 
@@ -84,8 +84,9 @@ static int _alloc_contiguous(struct logical_volume *lv,
 	}
 
 	if (allocated != lv->le_count) {
-		log_err("insufficient free extents to "
-			"allocate logical volume");
+		log_error("Insufficient free extents to "
+			  "allocate logical volume %s: %u required", 
+			  lv->name, lv->le_count);
 		return 0;
 	}
 
@@ -119,8 +120,9 @@ static int _alloc_simple(struct logical_volume *lv,
 	}
 
 	if (allocated != lv->le_count) {
-		log_err("insufficient free extents to "
-			"allocate logical volume");
+		log_error("Insufficient free logical extents to "
+			  "allocate logical volume %s: %u required", 
+			  lv->name, lv->le_count);
 		return 0;
 	}
 
@@ -147,7 +149,6 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	 * the pv's.
 	 */
 	if (!(pvms = create_pv_maps(scratch, vg, acceptable_pvs))) {
-		log_err("couldn't create extent mappings");
 		goto out;
 	}
 
@@ -183,25 +184,29 @@ struct logical_volume *lv_create(struct io_space *ios,
 	struct logical_volume *lv;
 
 	if (!extents) {
-		log_err("Attempt to create an lv with zero extents");
+		log_error("Unable to create logical volume %s with no extents",
+			  name);
 		return NULL;
 	}
 
 	if (vg->free_count < extents) {
-		log_err("Insufficient free extents in volume group");
-		goto bad;
+		log_error("Insufficient free extents (%u) in volume group %s: "
+			  "%u required", vg->free_count, vg->name, extents);
+		return NULL;
 	}
 
 	if (vg->max_lv == vg->lv_count) {
-		log_err("Maximum logical volumes already reached "
-			"for this volume group.");
-		goto bad;
+		log_error("Maximum number of logical volumes (%u) reached "
+			  "in volume group %s", vg->max_lv, vg->name);
+		return NULL;
 	}
 
 	if (!(ll = pool_zalloc(ios->mem, sizeof(*ll)))) {
 		stack;
 		return NULL;
 	}
+
+	list_init(&ll->list);
 
 	lv = &ll->lv;
 
@@ -229,7 +234,7 @@ struct logical_volume *lv_create(struct io_space *ios,
 		goto bad;
 	}
 
-	list_add(&ll->list, &vg->lvs);
+	list_add(&vg->lvs, &ll->list);
 	return lv;
 
  bad:
@@ -243,14 +248,14 @@ int lv_reduce(struct io_space *ios,
 	      struct logical_volume *lv, uint32_t extents)
 {
 	if (extents % lv->stripes) {
-		log_err("For a striped volume you must reduce by a "
-			"multiple of the number of stripes");
+		log_error("For a striped volume you must reduce by a "
+			  "multiple of the number of stripes");
 		return 0;
 	}
 
 	if (lv->le_count <= extents) {
-		log_err("Attempt to reduce by too many extents, "
-			"there would be nothing left of the logical volume.");
+		log_error("Attempt to reduce by so many extents there would "
+			  "be nothing left of the logical volume.");
 		return 0;
 	}
 

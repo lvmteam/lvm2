@@ -33,7 +33,7 @@
 #define CLUSTERED         	0x00000400  /* VG */
 #define SHARED            	0x00000800  /* VG */
 
-#define ALLOC_STRICT            0x00001000  /* LV */
+#define ALLOC_STRICT		0x00001000  /* LV */
 #define ALLOC_CONTIGUOUS  	0x00002000  /* LV */
 #define SNAPSHOT          	0x00004000  /* LV */
 #define SNAPSHOT_ORG      	0x00008000  /* LV */
@@ -70,7 +70,7 @@ struct volume_group {
 
         uint32_t status;
 
-        uint64_t extent_size;
+        uint32_t extent_size;
         uint32_t extent_count;
         uint32_t free_count;
 
@@ -204,13 +204,13 @@ struct io_space {
  * Utility functions
  */
 struct volume_group *vg_create(struct io_space *ios, const char *name,
-			       uint64_t extent_size, int max_pv, int max_lv,
+			       uint32_t extent_size, int max_pv, int max_lv,
 			       int pv_count, char **pv_names);
 struct physical_volume *pv_create(struct io_space *ios, const char *name);
 
 /*
- * This will insert the new lv into the
- * volume_group.
+ * Create a new LV within a given volume group.
+ *
  */
 struct logical_volume *lv_create(struct io_space *ios,
 				 const char *name,
@@ -228,8 +228,9 @@ int lv_reduce(struct io_space *ios,
 int lv_extend(struct io_space *ios, struct logical_volume *lv,
 	      uint32_t extents, struct list *allocatable_pvs);
 
+
 int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
-              char **pv_names);
+	      char **pv_names);
 
 
 
@@ -249,10 +250,6 @@ int pv_add(struct volume_group *vg, struct physical_volume *pv);
 int pv_remove(struct volume_group *vg, struct physical_volume *pv);
 struct physical_volume *pv_find(struct volume_group *vg,
 				const char *pv_name);
-
-/* Add an LV to a given VG */
-int lv_add(struct io_space *ios, struct volume_group *vg, 
-	   struct logical_volume *lv);
 
 /* Remove an LV from a given VG */
 int lv_remove(struct volume_group *vg, struct list *lvh);
