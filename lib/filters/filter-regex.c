@@ -17,8 +17,8 @@ struct rfilter {
 	struct matcher *engine;
 };
 
-int _extract_pattern(struct pool *mem, const char *pat,
-		     char **regex, bitset_t accept, int index)
+static int _extract_pattern(struct pool *mem, const char *pat,
+			    char **regex, bitset_t accept, int index)
 {
 	char sep, *r, *ptr;
 
@@ -83,7 +83,7 @@ int _extract_pattern(struct pool *mem, const char *pat,
 	return 1;
 }
 
-int _build_matcher(struct rfilter *rf, struct config_value *val)
+static int _build_matcher(struct rfilter *rf, struct config_value *val)
 {
 	struct pool *scratch;
 	struct config_value *v;
@@ -136,7 +136,7 @@ int _build_matcher(struct rfilter *rf, struct config_value *val)
 	/*
 	 * build the matcher.
 	 */
-	if (!(rf->engine = matcher_create(rf->mem, 
+	if (!(rf->engine = matcher_create(rf->mem,
 					  (const char **) regex, count)))
 		stack;
 	r = 1;

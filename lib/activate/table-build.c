@@ -6,7 +6,12 @@
 
 #include "table-build.c"
 
-/* FIXME: optimise linear runs */
+static void _print_run(FILE *fp, struct logical_volume *lv)
+{
+
+}
+
+
 int build_table(struct volume_group *vg, struct logical_volume *lv,
 		const char *file)
 {

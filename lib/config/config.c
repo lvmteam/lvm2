@@ -317,7 +317,8 @@ static struct config_value *_value(struct parser *p)
         return h;
 }
 
-static struct config_value *_type(struct parser *p) {
+static struct config_value *_type(struct parser *p)
+{
         /* [0-9]+ | [0-9]*\.[0-9]* | ".*" */
 	struct config_value *v = _create_value(p);
 
@@ -536,7 +537,7 @@ struct config_node *find_config_node(struct config_node *cn,
 }
 
 const char *
-find_config_str(struct config_node *cn, 
+find_config_str(struct config_node *cn,
 		const char *path, char sep, const char *fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
@@ -550,7 +551,7 @@ find_config_str(struct config_node *cn,
 	return fail;
 }
 
-int find_config_int(struct config_node *cn, const char *path, 
+int find_config_int(struct config_node *cn, const char *path,
 		    char sep, int fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
