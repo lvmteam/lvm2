@@ -131,6 +131,7 @@
 #include <linux/devfs_fs_kernel.h>
 #include <linux/ctype.h>
 #include <linux/device-mapper.h>
+#include <linux/list.h>
 
 #define MAX_DEPTH 16
 #define NODE_SIZE L1_CACHE_BYTES
@@ -164,18 +165,6 @@ struct deferred_io {
 	int rw;
 	struct buffer_head *bh;
 	struct deferred_io *next;
-};
-
-/*
- * information about a target type
- */
-struct target_type {
-	char *name;
-	dm_ctr_fn ctr;
-	dm_dtr_fn dtr;
-	dm_map_fn map;
-
-	struct target_type *next;
 };
 
 /*
@@ -231,9 +220,9 @@ extern struct block_device_operations dm_blk_dops;
 
 
 /* dm-target.c */
-int dm_target_init(void);
 struct target_type *dm_get_target_type(const char *name);
-
+void dm_put_target_type(struct target_type *t);
+int dm_target_init(void);
 
 /* dm.c */
 struct mapped_device *dm_find_by_name(const char *name);

@@ -28,8 +28,6 @@
 #ifndef DEVICE_MAPPER_H
 #define DEVICE_MAPPER_H
 
-#ifdef __KERNEL__
-
 #include <linux/major.h>
 
 /* FIXME: Use value from local range for now, for co-existence with LVM 1 */
@@ -50,8 +48,21 @@ typedef int (*dm_ctr_fn)(struct dm_table *t,
 typedef void (*dm_dtr_fn)(struct dm_table *t, void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
 
-int dm_register_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
-		       dm_map_fn map);
+/*
+ * information about a target type
+ */
+struct target_type {
+        struct list_head list;
+        const char *name;
+        long use;
+        struct module *module;
+        dm_ctr_fn ctr;
+        dm_dtr_fn dtr;
+        dm_map_fn map;
+};
+
+int dm_register_target(struct target_type *t);
+int dm_unregister_target(struct target_type *t);
 
 
 /* contructors should call this to make sure any
@@ -62,8 +73,7 @@ int dm_table_lookup_device(const char *path, kdev_t *d);
 int dm_table_add_device(struct dm_table *t, kdev_t dev);
 void dm_table_remove_device(struct dm_table *t, kdev_t dev);
 
-#endif
-#endif
+#endif /* DEVICE_MAPPER_H */
 
 /*
  * Local variables:
