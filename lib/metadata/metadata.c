@@ -507,6 +507,7 @@ int vg_write(struct volume_group *vg)
 			/* Revert */
 			list_uniterate(mdah2, &vg->fid->metadata_areas, mdah) {
 				mda = list_item(mdah2, struct metadata_area);
+
 				if (mda->ops->vg_revert &&
 				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
 					stack;
@@ -518,6 +519,24 @@ int vg_write(struct volume_group *vg)
 			stack;
 			/* Revert */
 			list_uniterate(mdah2, &vg->fid->metadata_areas, mdah) {
+				mda = list_item(mdah2, struct metadata_area);
+				if (mda->ops->vg_revert &&
+				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
+					stack;
+				}
+			}
+			return 0;
+		}
+	}
+
+	/* Now pre-commit each copy of the new metadata */
+	list_iterate(mdah, &vg->fid->metadata_areas) {
+		mda = list_item(mdah, struct metadata_area);
+		if (mda->ops->vg_precommit &&
+		    !mda->ops->vg_precommit(vg->fid, vg, mda)) {
+			stack;
+			/* Revert */
+			list_iterate(mdah2, &vg->fid->metadata_areas) {
 				mda = list_item(mdah2, struct metadata_area);
 				if (mda->ops->vg_revert &&
 				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
@@ -630,8 +649,9 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
  * and take appropriate action if it isn't (e.g. abort; get write lock 
  * and call vg_read again).
  */
-struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
-			     int *consistent)
+static struct volume_group *_vg_read(struct cmd_context *cmd,
+				     const char *vgname,
+				     int *consistent, int precommitted)
 {
 	struct format_instance *fid;
 	const struct format_type *fmt;
@@ -641,6 +661,11 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	int inconsistent = 0;
 
 	if (!*vgname) {
+		if (precommitted) {
+			log_error("Internal error: vg_read requires vgname "
+				  "with pre-commit.");
+			return NULL;
+		}
 		*consistent = 1;
 		return _vg_read_orphans(cmd);
 	}
@@ -662,6 +687,12 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 		}
 	}
 
+	if (precommitted && !(fmt->features & FMT_PRECOMMIT)) {
+		log_error("Internal error: %s doesn't support "
+			  "pre-commit", fmt->name);
+		return NULL;
+	}
+
 	/* create format instance with appropriate metadata area */
 	if (!(fid = fmt->ops->create_instance(fmt, vgname, NULL))) {
 		log_error("Failed to create format instance");
@@ -671,7 +702,10 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	/* Ensure contents of all metadata areas match - else do recovery */
 	list_iterate(mdah, &fid->metadata_areas) {
 		mda = list_item(mdah, struct metadata_area);
-		if (!(vg = mda->ops->vg_read(fid, vgname, mda))) {
+		if ((precommitted &&
+		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
+		    (!precommitted &&
+		     !(vg = mda->ops->vg_read(fid, vgname, mda)))) {
 			inconsistent = 1;
 			continue;
 		}
@@ -697,6 +731,12 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 			return NULL;
 		}
 
+		if (precommitted && !(fmt->features & FMT_PRECOMMIT)) {
+			log_error("Internal error: %s doesn't support "
+				  "pre-commit", fmt->name);
+			return NULL;
+		}
+
 		/* create format instance with appropriate metadata area */
 		if (!(fid = fmt->ops->create_instance(fmt, vgname, NULL))) {
 			log_error("Failed to create format instance");
@@ -706,7 +746,11 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 		/* Ensure contents of all metadata areas match - else recover */
 		list_iterate(mdah, &fid->metadata_areas) {
 			mda = list_item(mdah, struct metadata_area);
-			if (!(vg = mda->ops->vg_read(fid, vgname, mda))) {
+			if ((precommitted &&
+			     !(vg = mda->ops->vg_read_precommit(fid, vgname,
+								mda))) ||
+			    (!precommitted &&
+			     !(vg = mda->ops->vg_read(fid, vgname, mda)))) {
 				inconsistent = 1;
 				continue;
 			}
@@ -732,6 +776,12 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	lvmcache_update_vg(correct_vg);
 
 	if (inconsistent) {
+		if (precommitted) {
+			log_error("Inconsistent pre-commit metadata copies "
+				  "for volume group %s", vgname);
+			return NULL;
+		}
+
 		if (!*consistent)
 			return correct_vg;
 
@@ -767,6 +817,19 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 
 	*consistent = 1;
 	return correct_vg;
+}
+
+struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
+			     int *consistent)
+{
+	return _vg_read(cmd, vgname, consistent, 0);
+}
+
+struct volume_group *vg_read_precommitted(struct cmd_context *cmd,
+					  const char *vgname,
+					  int *consistent)
+{
+	return _vg_read(cmd, vgname, consistent, 1);
 }
 
 /* This is only called by lv_from_lvid, which is only called from 
