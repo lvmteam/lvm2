@@ -296,7 +296,8 @@ int lvresize(int argc, char **argv)
 			}
 		}
 
-		lv_reduce(lv, lv->le_count - extents);
+		if (!lv_reduce(lv, lv->le_count - extents))
+			return ECMD_FAILED;
 	}
 
 	if (resize == LV_EXTEND && argc) {
@@ -333,7 +334,9 @@ int lvresize(int argc, char **argv)
 		log_print("Extending logical volume %s to %s", lv_name, dummy);
 		dbg_free(dummy);
 
-		lv_extend(lv, stripes, stripesize, extents - lv->le_count, pvh);
+		if (!lv_extend(lv, stripes, stripesize, extents - lv->le_count,
+			       pvh))
+			return ECMD_FAILED;
 	}
 
 /********* FIXME Suspend lv  ***********/

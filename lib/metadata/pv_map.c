@@ -49,7 +49,11 @@ static int _set_allocated(struct hash_table *hash,
 	}
 
 	/* sanity check */
-	assert(!bit(pvm->allocated_extents, pe));
+	if (bit(pvm->allocated_extents, pe)) {
+		log_error("Physical extent %d of %s referenced by more than "
+			  "one logical volume", pe, dev_name(pv->dev));
+		return 0;
+	}
 
 	bit_set(pvm->allocated_extents, pe);
 	return 1;
@@ -60,9 +64,10 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	struct list *lvh, *pvmh, *segh;
 	struct logical_volume *lv;
 	struct pv_map *pvm;
-	uint32_t i, r = 0;
+	uint32_t s, pe;
 	struct hash_table *hash;
 	struct stripe_segment *seg;
+	int r = 0;
 
 	if (!(hash = hash_create(128))) {
 		log_err("Couldn't create hash table for pv maps.");
@@ -85,13 +90,16 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 		list_iterate (segh, &lv->segments) {
 			seg = list_item(segh, struct stripe_segment);
 
-			for (i = 0; i < seg->len; i++) {
-				if (!_set_allocated(hash,
-					    seg->area[i % seg->stripes].pv,
-					    seg->area[i % seg->stripes].pe +
-						    (i / seg->stripes))) {
-					stack;
-					goto out;
+			for (s = 0; s < seg->stripes; s++) {
+				for (pe = 0; pe < (seg->len / seg->stripes);
+				     pe++) {
+					if (!_set_allocated(hash,
+					    		    seg->area[s].pv,
+					    		    seg->area[s].pe
+							    + pe)) {
+						stack;
+						goto out;
+					}
 				}
 			}
 		}
