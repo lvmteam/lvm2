@@ -85,4 +85,8 @@ struct segment_type *init_snapshot_segtype(struct cmd_context *cmd);
 struct segment_type *init_mirrored_segtype(struct cmd_context *cmd);
 #endif
 
+#ifdef CRYPT_INTERNAL
+struct segment_type *init_crypt_segtype(struct cmd_context *cmd);
+#endif
+
 #endif

@@ -21,7 +21,7 @@
 #include "toolcontext.h"
 #include "lv_alloc.h"
 #include "display.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 /*
  * These functions adjust the pe counts in pv's

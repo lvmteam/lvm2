@@ -70,7 +70,7 @@ SOURCES =\
 	metadata/metadata.c \
 	metadata/mirror.c \
 	metadata/pv_map.c \
-	metadata/segtypes.c \
+	metadata/segtype.c \
 	metadata/snapshot_manip.c \
 	misc/crc.c \
 	misc/lvm-file.c \

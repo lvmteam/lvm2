@@ -21,7 +21,7 @@
 #include "lvm-string.h"
 #include "display.h"
 #include "activate.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 /* 
  * For macro use

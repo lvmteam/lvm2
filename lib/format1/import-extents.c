@@ -20,7 +20,7 @@
 #include "disk-rep.h"
 #include "lv_alloc.h"
 #include "display.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 /*
  * After much thought I have decided it is easier,

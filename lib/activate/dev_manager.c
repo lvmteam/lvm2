@@ -21,7 +21,7 @@
 #include "lvm-string.h"
 #include "fs.h"
 #include "defaults.h"
-#include "segtypes.h"
+#include "segtype.h"
 #include "display.h"
 #include "toolcontext.h"
 #include "targets.h"

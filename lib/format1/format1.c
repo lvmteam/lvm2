@@ -24,7 +24,7 @@
 #include "lvmcache.h"
 #include "lvm1-label.h"
 #include "format1.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 #define FMT_LVM1_NAME "lvm1"
 

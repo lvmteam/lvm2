@@ -22,7 +22,7 @@
 #include "lv_alloc.h"
 #include "str_list.h"
 #include "display.h"
-#include "segtypes.h"
+#include "segtype.h"
 
 /* This file contains only imports at the moment... */
 
