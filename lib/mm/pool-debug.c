@@ -79,7 +79,7 @@ static struct block *_new_block(size_t s, unsigned alignment)
 	struct block *b = dbg_malloc(len);
 
 	if (!b) {
-		stack;
+		log_err("Out of memory.");
 		return NULL;
 	}
 

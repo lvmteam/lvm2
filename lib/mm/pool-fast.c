@@ -222,8 +222,10 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 		c = p->spare_chunk;
 		p->spare_chunk = 0;
 	} else {
-		if (!(c = dbg_malloc(s)))
+		if (!(c = dbg_malloc(s))) {
+			log_err("Out of memory.");
 			return NULL;
+		}
 
 		c->end = (char *) c + s;
 	}
