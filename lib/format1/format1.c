@@ -66,6 +66,35 @@ static int _check_vgs(struct list *pvs, int *partial)
 		else if (memcmp(&first->vgd, &dl->vgd, sizeof(first->vgd))) {
 			log_error("VG data differs between PVs %s and %s",
 				  dev_name(first->dev), dev_name(dl->dev));
+			log_debug("VG data on %s: %s %s %" PRIu32 " %" PRIu32
+				  "  %" PRIu32 " %" PRIu32 " %" PRIu32 " %"
+				  PRIu32 " %" PRIu32 " %" PRIu32 " %" PRIu32
+				  " %" PRIu32 " %" PRIu32 " %" PRIu32 " %"
+				  PRIu32 " %" PRIu32 " %" PRIu32,
+				  dev_name(first->dev), first->vgd.vg_uuid,
+				  first->vgd.vg_name_dummy,
+				  first->vgd.vg_number, first->vgd.vg_access,
+				  first->vgd.vg_status, first->vgd.lv_max,
+				  first->vgd.lv_cur, first->vgd.lv_open,
+				  first->vgd.pv_max, first->vgd.pv_cur,
+				  first->vgd.pv_act, first->vgd.dummy,
+				  first->vgd.vgda, first->vgd.pe_size,
+				  first->vgd.pe_total, first->vgd.pe_allocated,
+				  first->vgd.pvg_total);
+			log_debug("VG data on %s: %s %s %" PRIu32 " %" PRIu32
+				  "  %" PRIu32 " %" PRIu32 " %" PRIu32 " %"
+				  PRIu32 " %" PRIu32 " %" PRIu32 " %" PRIu32
+				  " %" PRIu32 " %" PRIu32 " %" PRIu32 " %"
+				  PRIu32 " %" PRIu32 " %" PRIu32,
+				  dev_name(dl->dev), dl->vgd.vg_uuid,
+				  dl->vgd.vg_name_dummy, dl->vgd.vg_number,
+				  dl->vgd.vg_access, dl->vgd.vg_status,
+				  dl->vgd.lv_max, dl->vgd.lv_cur,
+				  dl->vgd.lv_open, dl->vgd.pv_max,
+				  dl->vgd.pv_cur, dl->vgd.pv_act, dl->vgd.dummy,
+				  dl->vgd.vgda, dl->vgd.pe_size,
+				  dl->vgd.pe_total, dl->vgd.pe_allocated,
+				  dl->vgd.pvg_total);
 			list_del(pvh);
 			if (partial_mode()) {
 				*partial = 1;
