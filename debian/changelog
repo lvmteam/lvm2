@@ -1,3 +1,9 @@
+lvm2 (0.95.05-1) unstable; urgency=low
+
+  * New release (Beta2).
+
+ -- Andres Salomon <dilinger@mp3revolution.net>  Thu, 25 Apr 2002 00:37:41 -0500
+
 lvm2 (0.95.04cvs20020306-1) unstable; urgency=low
 
   * CVS updated.
