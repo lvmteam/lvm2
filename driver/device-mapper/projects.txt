@@ -1,15 +1,6 @@
     List of projects, ideas and pending bug fixes
    ===============================================
 
- o Need to work out how to make module use counts work correctly. The existing
-   scheme does not allow us to unload the module. A reference is taken during
-   kern_mount() which does not allow us to rmmod() so even if the right
-   umount() functions were exported (which they aren't) we'd never get to
-   call them anyway. This could be tricky.
-
  o Check tables are an integer multiple of the underlying block size at
    table load time.
-
- o Error code (as well as error list) so that "out of memory" errors can
-   result in messages which can be read from the error file.
 
