@@ -56,7 +56,10 @@ dm_log_fn _log = _default_log;
 
 void dm_log_init(dm_log_fn fn)
 {
-	_log = fn;
+	if (fn)
+		_log = fn;
+	else
+		_log = _default_log;
 }
 
 void dm_log_init_verbose(int level)
