@@ -37,6 +37,9 @@
 #include <linux/blk.h>
 #include <linux/blkpg.h>
 
+/* we only need this for the lv_bmap struct definition, not happy */
+#include <linux/lvm.h>
+
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
 
@@ -71,9 +74,7 @@ const char *_fs_dir = "device-mapper";
 static devfs_handle_t _dev_dir;
 
 static int request(request_queue_t *q, int rw, struct buffer_head *bh);
-#if 0
 static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb);
-#endif
 
 /*
  * setup and teardown the driver
@@ -236,10 +237,8 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 	case BLKRRPART:
 		return -EINVAL;
 
-#if 0
 	case LV_BMAP:
-		return dm_user_bmap(inode, (struct lv_bmap *)a);
-#endif
+		return dm_user_bmap(inode, (struct lv_bmap *) a);
 
 	default:
 		WARN("unknown block ioctl %d", command);
@@ -401,57 +400,6 @@ static inline int __find_node(struct dm_table *t, struct buffer_head *bh)
 	return (KEYS_PER_NODE * n) + k;
 }
 
-#if 0
-/* FIXME: Break this up! */
-static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb)
-{
-	struct buffer_head bh;
-	struct mapped_device *md;
-	unsigned long block;
-	int minor = MINOR(inode->i_rdev);
-	int err;
-
-	if (minor >= MAX_DEVICES)
-		return -ENXIO;
-
-	md = _devs[minor];
-	if (md == NULL)
-		return -ENXIO;
-
-	if (get_user(block, &lvb->lv_block))
-		return -EFAULT;
-
-	memset(&bh, 0, sizeof(bh));
-	bh.b_blocknr = block;
-	bh.b_dev = bh.b_rdev = inode->i_rdev;
-	bh.b_size = _blksize_size[minor];
-	bh.b_rsector = block * (bh.b_size >> 9);
-
-	err = -EINVAL;
-	rl;
-	if (test_bit(DM_ACTIVE, &md->state)) {
-		struct target *t = md->map->targets + __find_node(md->map, &bh);
-		struct target_type *target = t->type;
-		err = target->map(&bh, READ, t->private);
-		if (bh.b_private) {
-			struct io_hook *ih = (struct io_hook *)bh.b_private;
-			free_io_hook(ih);
-		}
-		err = (err == 0) ? -EINVAL : 0;
-	}
-	ru;
-
-	if (err == 0) {
-		if (put_user(kdev_t_to_nr(bh.b_rdev), &lvb->lv_dev))
-			return -EFAULT;
-		if (put_user(bh.b_rsector / (bh.b_size >> 9), &lvb->lv_dev))
-			return -EFAULT;
-	}
-
-	return err;
-}
-#endif
-
 static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 {
 	struct mapped_device *md;
@@ -491,6 +439,82 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 
  bad_no_lock:
 	buffer_IO_error(bh);
+	return 0;
+}
+
+static int check_dev_size(int minor, unsigned long block)
+{
+	/* FIXME: check this */
+	unsigned long max_sector = (_block_size[minor] << 1) + 1;
+	unsigned long sector = (block + 1) * (_blksize_size[minor] >> 9);
+
+	return (sector > max_sector) ? 0 : 1;
+}
+
+/*
+ * creates a dummy buffer head and maps it (for lilo).
+ */
+static int do_bmap(kdev_t dev, unsigned long block,
+		   kdev_t *r_dev, unsigned long *r_block)
+{
+	struct mapped_device *md;
+	struct buffer_head bh;
+	int minor = MINOR(dev), r;
+	struct target *t;
+
+	rl;
+	if ((minor >= MAX_DEVICES) || !(md = _devs[minor]) ||
+	    !test_bit(DM_ACTIVE, &md->state)) {
+		r = -ENXIO;
+		goto out;
+	}
+
+	if (!check_dev_size(minor, block)) {
+		r = -EINVAL;
+		goto out;
+	}
+
+	/* setup dummy bh */
+	memset(&bh, 0, sizeof(bh));
+	bh.b_blocknr = block;
+	bh.b_dev = bh.b_rdev = dev;
+	bh.b_size = _blksize_size[minor];
+	bh.b_rsector = block * (bh.b_size >> 9);
+
+	/* find target */
+	t = md->map->targets + __find_node(md->map, &bh);
+
+	/* do the mapping */
+	r = t->type->map(&bh, READ, t->private);
+
+	*r_dev = bh.b_rdev;
+	*r_block = bh.b_rsector / (bh.b_size >> 9);
+
+ out:
+	ru;
+	return r;
+}
+
+/*
+ * marshals arguments and results between user and
+ * kernel space.
+ */
+static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb)
+{
+	unsigned long block, r_block;
+	kdev_t r_dev;
+	int r;
+
+	if (get_user(block, &lvb->lv_block))
+		return -EFAULT;
+
+	if ((r = do_bmap(inode->i_rdev, block, &r_dev, &r_block)))
+		return r;
+
+	if (put_user(kdev_t_to_nr(r_dev), &lvb->lv_dev) ||
+	    put_user(r_block, &lvb->lv_block))
+		return -EFAULT;
+
 	return 0;
 }
 
