@@ -929,6 +929,81 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	return NULL;
 }
 
+static int _process_mapper_dir(struct dm_task *dmt)
+{
+	struct dirent *dirent;
+	DIR *d;
+	const char *dir;
+	int r = 1;
+
+	dir = dm_dir();
+	if (!(d = opendir(dir))) {
+		fprintf(stderr, "opendir %s: %s", dir, strerror(errno));
+		return 0;
+	}
+
+	while ((dirent = readdir(d))) {
+		if (!strcmp(dirent->d_name, ".") ||
+		    !strcmp(dirent->d_name, "..") ||
+		    !strcmp(dirent->d_name, "control"))
+			continue;
+		dm_task_set_name(dmt, dirent->d_name);
+		dm_task_run(dmt);
+	}
+
+	if (closedir(d)) {
+		fprintf(stderr, "closedir %s: %s", dir, strerror(errno));
+	}
+
+	return r;
+}
+
+static int _process_all_v4(struct dm_task *dmt)
+{
+	struct dm_task *task;
+	struct dm_names *names;
+	unsigned next = 0;
+	int r = 1;
+
+	if (!(task = dm_task_create(DM_DEVICE_LIST)))
+		return 0;
+
+	if (!dm_task_run(task)) {
+		r = 0;
+		goto out;
+	}
+
+	if (!(names = dm_task_get_names(task))) {
+		r = 0;
+		goto out;
+	}
+
+	if (!names->dev)
+		goto out;
+
+	do {
+		names = (void *) names + next;
+		if (!dm_task_set_name(dmt, names->name)) {
+			r = 0;
+			goto out;
+		}
+		if (!dm_task_run(dmt))
+			r = 0;
+		next = names->next;
+	} while (next);
+
+      out:
+	dm_task_destroy(task);
+	return r;
+}
+
+static int _mknodes_v4(struct dm_task *dmt)
+{
+	(void) _process_mapper_dir(dmt);
+
+	return _process_all_v4(dmt);
+}
+
 static int _create_and_load_v4(struct dm_task *dmt)
 {
 	struct dm_task *task;
@@ -1015,6 +1090,9 @@ int dm_task_run(struct dm_task *dmt)
 	/* Old-style creation had a table supplied */
 	if (dmt->type == DM_DEVICE_CREATE && dmt->head)
 		return _create_and_load_v4(dmt);
+
+	if (dmt->type == DM_DEVICE_MKNODES && !dmt->dev_name)
+		return _mknodes_v4(dmt);
 
 	if (!_open_control())
 		return 0;
