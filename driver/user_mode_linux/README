@@ -1,0 +1,30 @@
+FILES
+-----
+
+setup-uml - script to build a user mode linux system, with the lvm driver
+            symbolically linked back to the LVM dir so I can work from CVS.
+
+uml-lvm.patch - patch to enable lvm in the uml configuration
+
+uml.patch.bz2 - uml patch from 
+                http://sourceforge.net/project/showfiles.php?group_id=429
+
+config-uml - .config which turns on LVM
+
+
+RUNNING 
+-------
+
+o checkout an LVM dir for use with uml
+  make sure you've got a copy of a root filesystem kicking about
+
+o edit the variables at the top of 'setup'
+
+o run setup-uml
+
+o move to your uml dir and run lvm-install as root
+
+o then run the 'up' script to run uml
+
+o if you want to rebuild uml after changing the LVM driver just change into
+  the linux directory and do a 'make linux ARCH=um'.  Don't forget the ARCH=um.
