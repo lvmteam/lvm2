@@ -8,6 +8,7 @@
 #define LIB_DEVICE_MAPPER_H
 
 #include <inttypes.h>
+#include <sys/types.h>
 
 /*
  * Since it is quite laborious to build the ioctl
@@ -39,6 +40,8 @@ enum {
 
 	DM_DEVICE_INFO,
 	DM_DEVICE_RENAME,
+
+	DM_DEVICE_VERSION,
 };
 
 
@@ -63,6 +66,7 @@ struct dm_info {
 	unsigned int target_count;
 };
 
+int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 
 int dm_task_set_ro(struct dm_task *dmt);

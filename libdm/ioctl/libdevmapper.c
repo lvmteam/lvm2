@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <errno.h>
 #include <linux/kdev_t.h>
 
@@ -44,6 +43,17 @@ void dm_task_destroy(struct dm_task *dmt)
 	free(dmt);
 }
 
+int dm_task_get_driver_version(struct dm_task *dmt, char *version, 
+			       size_t size)
+{
+	if (!dmt->dmi)
+		return 0;
+
+	strncpy(version, dmt->dmi->version, size);
+
+	return 1;
+}
+
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 {
 	if (!dmt->dmi)
@@ -51,12 +61,12 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 
 	memset(info, 0, sizeof(*info));
 
-	info->exists = dmt->dmi->status & DM_EXISTS_FLAG ? 1 : 0;
+	info->exists = dmt->dmi->flags & DM_EXISTS_FLAG ? 1 : 0;
 	if (!info->exists)
 		return 1;
 
-	info->suspended = dmt->dmi->status & DM_SUSPEND_FLAG ? 1 : 0;
-	info->read_only = dmt->dmi->status & DM_READONLY_FLAG ? 1 : 0;
+	info->suspended = dmt->dmi->flags & DM_SUSPEND_FLAG ? 1 : 0;
+	info->read_only = dmt->dmi->flags & DM_READONLY_FLAG ? 1 : 0;
 	info->target_count = dmt->dmi->target_count;
 	info->open_count = dmt->dmi->open_count;
 	info->major = MAJOR(dmt->dmi->dev);
@@ -188,15 +198,18 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	strncpy(dmi->version, DM_IOCTL_VERSION, sizeof(dmi->version));
 	dmi->data_size = len;
-	strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
+	dmi->data_start = sizeof(struct dm_ioctl);
+
+	if (dmt->dev_name)
+		strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
 
 	if (dmt->type == DM_DEVICE_SUSPEND)
-		dmi->status |= DM_SUSPEND_FLAG;
+		dmi->flags |= DM_SUSPEND_FLAG;
 	if (dmt->read_only)
-		dmi->status |= DM_READONLY_FLAG;
+		dmi->flags |= DM_READONLY_FLAG;
 
 	if (dmt->minor > 0) {
-		dmi->status |= DM_PERSISTENT_DEV_FLAG;
+		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
 		dmi->dev = MKDEV(0, dmt->minor);
 	}
 
@@ -265,6 +278,10 @@ int dm_task_run(struct dm_task *dmt)
 
 	case DM_DEVICE_RENAME:
 		command = DM_RENAME;
+		break;
+
+	case DM_DEVICE_VERSION:
+		command = DM_VERSION;
 		break;
 
 	default:
