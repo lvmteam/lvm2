@@ -231,8 +231,10 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	/* Only the first mirror segment gets activated as a mirror */
 	if (first_time) {
 		if (!activate_lv(cmd, lv_mirr->lvid.s)) {
-			log_error("ABORTING: Temporary mirror activation "
-				  "failed.  Run pvmove --abort.");
+			if (!test_mode())
+				log_error("ABORTING: Temporary mirror "
+					  "activation failed.  "
+					  "Run pvmove --abort.");
 			/* FIXME Resume using *original* metadata here! */
 			resume_lvs(cmd, lvs_changed);
 			return 0;
