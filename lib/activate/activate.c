@@ -165,6 +165,9 @@ int _load(struct logical_volume *lv, int task)
 /* FIXME: Always display error msg */
 int lv_activate(struct logical_volume *lv)
 {
+	if (test_mode())
+		return 0;
+
 	return _load(lv, DM_DEVICE_CREATE) && fs_add_lv(lv);
 }
 
@@ -190,6 +193,10 @@ int _suspend(struct logical_volume *lv, int sus)
 int lv_reactivate(struct logical_volume *lv)
 {
 	int r;
+
+	if (test_mode())
+		return 0;
+
 	if (!_suspend(lv, 1)) {
 		stack;
 		return 0;
@@ -209,6 +216,9 @@ int lv_deactivate(struct logical_volume *lv)
 {
 	int r;
 	struct dm_task *dmt;
+
+	if (test_mode())
+		return 0;
 
 	if (!(dmt = _setup_task(lv, DM_DEVICE_REMOVE))) {
 		stack;

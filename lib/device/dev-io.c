@@ -121,6 +121,10 @@ int _write(int fd, const void *buf, size_t count)
 	size_t n = 0;
 	int tot = 0;
 
+	/* Skip all writes */
+	if (test_mode())
+		return count;
+
 	while (tot < count) {
 		do
 			n = write(fd, buf, count - tot);

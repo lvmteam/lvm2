@@ -57,11 +57,12 @@ xx(lvchange,
    "\t[-h/-?/--help]\n"
    "\t[-p/--permission r/rw]\n"
    "\t[-r/--readahead ReadAheadSectors]\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    autobackup_ARG, available_ARG, contiguous_ARG,
-   permission_ARG, readahead_ARG)
+   permission_ARG, readahead_ARG, test_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
@@ -76,6 +77,7 @@ xx(lvcreate,
    "[-n|--name LogicalVolumeName]\n\t"
    "[-p|--permission {r|rw}] "
    "[-r|--readahead ReadAheadSectors]\n\t"
+   "[-t|--test] "
    "[-v|--verbose] "
    "[-Z|--zero {y|n}] "
    "[--version]\n\t"
@@ -86,11 +88,12 @@ xx(lvcreate,
    "{-l|--extents LogicalExtentsNumber |\n\t"
    " -L|--size LogicalVolumeSize[kKmMgGtT]}\n\t"
    "-n|--name SnapshotLogicalVolumeName\n\t"
+   "[-t|--test]\n\t"
    "LogicalVolume[Path] [PhysicalVolumePath...]\n",
 
    autobackup_ARG, chunksize_ARG, contiguous_ARG,
    stripes_ARG, stripesize_ARG, extents_ARG, size_ARG, name_ARG,
-   permission_ARG, readahead_ARG, snapshot_ARG, zero_ARG)
+   permission_ARG, readahead_ARG, snapshot_ARG, test_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -113,10 +116,12 @@ xx(lvextend,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l/--extents [+]LogicalExtentsNumber |\n"
    "\t -L/--size [+]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG)
+   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG,
+   test_ARG)
 
 xx(lvmchange,
    "With the device mapper, lvmchange is obsolete and does nothing.",
@@ -169,11 +174,12 @@ xx(lvreduce,
    "\t[-h/-?/--help]\n"
    "\t{-l/--extents [-]LogicalExtentsNumber |\n"
    "\t -L/--size [-]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path]\n",
 
    autobackup_ARG, force_ARG,  extents_ARG,
-   size_ARG, yes_ARG)
+   size_ARG, test_ARG, yes_ARG)
 
 xx(lvremove,
    "Remove logical volume(s) from the system",
@@ -182,10 +188,11 @@ xx(lvremove,
    "\t[-d/--debug]\n"
    "\t[-f/--force]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, force_ARG)
+   autobackup_ARG, force_ARG, test_ARG)
 
 xx(lvrename,
    "Rename a logical volume",
@@ -193,12 +200,13 @@ xx(lvrename,
    "[-A|--autobackup {y|n}] "
    "[-d|--debug] "
    "[-h|--help] "
+   "[-t|--test] "
    "[-v|--verbose]\n\t"
    "[--version] "
    "{ OldLogicalVolumePath NewLogicalVolumePath |\n\t"
    "  VolumeGroupName OldLogicalVolumeName NewLogicalVolumeName }\n",
 
-   autobackup_ARG)
+   autobackup_ARG, test_ARG)
 
 xx(lvresize,
    "Resize a logical volume",
@@ -209,10 +217,12 @@ xx(lvresize,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l/--extents [+/-]LogicalExtentsNumber |\n"
    "\t -L/--size [+/-]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-t|--test]\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG)
+   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG,
+   test_ARG)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
@@ -234,10 +244,11 @@ xx(pvchange,
    "\t[-h/-?/--help]\n"
    "\t[-v/--verbose]\n"
    "\t[-a/--all]\n"
+   "\t[-t|--test]\n"
    "\t[-x/--allocation y/n]\n"
    "\t[PhysicalVolumePath...]\n",
 
-   all_ARG, autobackup_ARG, allocation_ARG)
+   all_ARG, autobackup_ARG, allocation_ARG, test_ARG)
 
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
@@ -246,11 +257,12 @@ xx(pvcreate,
    "[-f[f]|--force [--force]] "
    "[-h|--help] "
    "[-y|--yes]\n\t"
+   "[-t|--test] "
    "[-v|--verbose] "
    "[--version] "
    "PhysicalVolume [PhysicalVolume...]\n",
 
-   force_ARG, yes_ARG)
+   force_ARG, test_ARG, yes_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
@@ -343,7 +355,8 @@ xx(vgchange,
    "vgchange\n\t"
    "[-A|--autobackup {y|n}] "
    "[-d|--debug] "
-   "[-h|--help]\n\t"
+   "[-h|--help] "
+   "[-t|--test]\n\t"
    "[-v|--verbose] "
    "[--version]\n\t"
    "{-a|--available {y|n} |\n\t"
@@ -351,7 +364,8 @@ xx(vgchange,
    " -l|--logicalvolume MaxLogicalVolumes}\n\t"
    "[VolumeGroupName...]\n",
 
-   autobackup_ARG, available_ARG, logicalvolume_ARG, allocation_ARG )
+   autobackup_ARG, available_ARG, logicalvolume_ARG, allocation_ARG,
+   test_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
@@ -370,13 +384,14 @@ xx(vgcreate,
    "[-p|--maxphysicalvolumes MaxPhysicalVolumes] "
    "[-h|--help]\n\t"
    "[-s|--physicalextentsize PhysicalExtentSize[kKmMgGtT]] "
+   "[-t|--test] "
    "[-v|--verbose]\n\t"
    "[--version] "
    "VolumeGroupName "
    "PhysicalVolume [PhysicalVolume...]\n",
 
    autobackup_ARG, maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
-   physicalextentsize_ARG)
+   physicalextentsize_ARG, test_ARG)
 
 xx(vgdisplay,
    "Display volume group information",
@@ -399,7 +414,7 @@ xx(vgexport,
    "[--version] "
    "VolumeGroupName [VolumeGroupName...]\n",
 
-   all_ARG)
+   all_ARG, test_ARG)
 
 xx(vgextend,
    "Add physical volumes to a volume group",
@@ -407,11 +422,12 @@ xx(vgextend,
    "\t[-A/--autobackup y/n]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tVolumeGroupName\n"
    "\tPhysicalDevicePath [PhysicalDevicePath...]\n",
 
-   autobackup_ARG)
+   autobackup_ARG, test_ARG)
 
 xx(vgimport,
    "Register exported volume group with system",
@@ -419,11 +435,12 @@ xx(vgimport,
    "[-d|--debug] "
    "[-f|--force] "
    "[-h|--help] "
+   "[-t|--test] "
    "[-v|--verbose]\n\t"
    "VolumeGroupName PhysicalVolumePath "
    "[PhysicalVolumePath...]\n",
 
-   force_ARG)
+   force_ARG, test_ARG)
 
 xx(vgmerge,
    "Merge volume groups",
@@ -453,19 +470,23 @@ xx(vgreduce,
    "\t[-A/--autobackup y/n]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tVolumeGroupName\n"
    "\t[PhysicalVolumePath...]\n",
 
-   all_ARG, autobackup_ARG)
+   all_ARG, autobackup_ARG, test_ARG)
 
 xx(vgremove,
    "Remove volume group(s)",
    "vgremove\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
-   "\tVolumeGroupName [VolumeGroupName...]\n" )
+   "\tVolumeGroupName [VolumeGroupName...]\n",
+
+   test_ARG)
 
 xx(vgrename,
    "Rename a volume group",
@@ -474,11 +495,12 @@ xx(vgrename,
    "\t[-d/--debug]\n"
    "\t[-f/--force]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tOldVolumeGroupPath NewVolumeGroupPath /\n"
    "\tOldVolumeGroupName NewVolumeGroupName\n",
 
-   autobackup_ARG, force_ARG)
+   autobackup_ARG, force_ARG, test_ARG)
 
 xx(vgscan,
    "Search for all volume groups",
