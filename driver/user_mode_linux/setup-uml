@@ -1,0 +1,195 @@
+#! /usr/bin/perl -w
+
+use Cwd;
+
+##############################
+# Start user configurable bit
+##############################
+
+# Please use absolute paths too.
+# you can't use ~'s in your paths here.
+
+# the directory where you've checked out lvm, keep a seperate copy for uml,
+# the uml kernel will have links to these files
+$lvm_src="/home/joe/sistina/LVM-thin";
+
+
+# the debian root image, get it from here:
+# http://prdownloads.sourceforge.net/user-mode-linux/root_fs_debian2.2_small.bz2
+# unzip it once you've downloaded it
+$root_fs="/home/joe/uml/root_fs";
+
+# these are 100 Meg files created with dd
+# these become our PV's /dev/ubd/[1-4]
+# I sometimes use ubd/1 as swap though.
+@block_devices = ("/home/joe/uml/block_devices/scratch1",
+		  "/home/joe/uml/block_devices/scratch2",
+		  "/home/joe/uml/block_devices/scratch3",
+		  "/home/joe/uml/block_devices/scratch4");
+
+# directory where uml will be built, and the up, lvm-install scripts will
+# be placed
+$dest_dir="/home/joe/builds/uml-thin";
+
+# It must be 2.4.8, can be .gz or .bz2
+$kernel_tarball="/home/joe/packages/2.4/linux-2.4.8.tar";
+
+###############################
+# end of user configurable bit
+###############################
+
+
+$wd = cwd;
+$uml_patch = $wd . "/uml.patch.bz2";
+$lvm_uml_patch = $wd . "/uml-lvm.patch";
+
+
+# check we've got everything we need
+&check_file($root_fs);
+&check_dir($lvm_src);
+&check_file($kernel_tarball);
+&check_dir($dest_dir);
+&check_file($uml_patch);
+&check_file($lvm_uml_patch);
+
+
+chdir($dest_dir);
+&extract_kernel($dest_dir, $kernel_tarball);
+chdir("linux");
+&run_command("bzip2 -dc $uml_patch | patch -p1", "patching kernel with uml");
+&run_command("patch -p1 < $lvm_uml_patch", "enabling LVM driver");
+
+#chdir($lvm_src);
+#&run_command("make clean; rm -f config.cache", "cleaning lvm src");
+#&run_command("./configure --prefix=$dest_dir/root_fs_mnt " .
+#	     "--with-kernel_dir=$dest_dir/linux",
+#	     "configuring lvm");
+
+chdir("$dest_dir/linux");
+
+#&run_command("patch -p1 < $lvm_src/PATCHES/lvm--2.4.6.patch",
+#	     "patching lvm driver");
+
+&run_command("cd include/linux; rm -f lvm.h", "removing lvm.h");
+
+&run_command("cd drivers/md; rm -f lvm*",
+	     "removing the rest of the lvm files");
+
+&run_command("cd include/linux; ln -s $lvm_src/kernel/device-mapper.h",
+	     "creating symbolic link to device-mapper.h");
+
+&run_command("cd drivers/md; ln -s $lvm_src/kernel/device-mapper.c",
+	     "creating symbolic link to device-mapper.c");
+
+&run_command("cp $wd/config-uml $dest_dir/linux/.config",
+	     "copying linux config file");
+
+chdir("$dest_dir/linux");
+&run_command("make oldconfig ARCH=um", "making oldconfig ARCH=um");
+&run_command("make dep ARCH=um", "making dependencies");
+&run_command("make linux ARCH=um", "building linux uml");
+
+chdir($dest_dir);
+&run_command("ln -s $dest_dir/linux/linux uml", "creating link for linux");
+
+chdir("$lvm_src");
+&run_command("make",
+	     "building lvm tools - you will need to install them as root");
+
+chdir($dest_dir);
+&run_command("ln -s $root_fs ./root_fs", "linking root filesystem");
+
+chdir($dest_dir);
+&link_devices();
+&write_up();
+mkdir "root_fs_mnt";
+&write_lvm_install();
+
+print "Dont forget to run $dest_dir/lvm-install as root\n";
+
+
+sub write_lvm_install {
+    open(OUT, "> lvm-install");
+    print OUT "#! /bin/sh\n\n";
+    print OUT <<"end";
+mount root_fs root_fs_mnt -o loop
+cd $lvm_src; make install; cd $dest_dir
+umount root_fs_mnt
+end
+
+    close OUT;
+    system "chmod +x lvm-install";
+}
+
+
+sub write_up {
+    open(UP, "> up");
+    print UP "#! /bin/sh\n\n./uml ";
+    $count = 1;
+    for $d (@block_devices) {
+	print UP "ubd$count=ubd$count ";
+	$count++;
+    }
+    print UP "\n";
+    close UP;
+    system("chmod +x up");
+}
+
+sub link_devices {
+    $count = 1;
+    foreach $d (@block_devices) {
+	&run_command("ln -s $d ubd$count",
+		     "linking block device ubd$count");
+	$count++;
+    }
+}
+
+sub extract_kernel {
+    my($dest, $tb) = @_;
+    my($cmd);
+    if($tb =~ m/\.bz2/) {
+	$cmd = "tar Ixf $tb";
+
+    } elsif($tb =~ m/\.gz/) {
+	$cmd = "tar zxf $tb";
+
+    } else {
+	$cmd = "tar xf $tb";
+    }
+
+    &run_command($cmd, "extracting kernel");
+}
+
+sub run_command {
+    my($cmd) = shift;
+    my($desc) = shift;
+    my($r);
+    print STDERR $desc, " ... ";
+    $r = system("$cmd > /dev/null");
+    if(!$r) {
+	print STDERR "done.\n";
+	return;
+    } else {
+	print STDERR "failed.\n";
+	exit(1);
+    }
+}
+
+sub check_file {
+    $f = shift;
+    if(! -e $f) {
+	print STDERR "couldn't find $f\n";
+	exit;
+    }
+}
+
+sub check_dir {
+    $f = shift;
+    if(! -e $f || ! -d $f) {
+	print STDERR "couldn't find a directory called $f\n";
+	exit;
+    }
+}
+
+
+
