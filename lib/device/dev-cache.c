@@ -238,7 +238,7 @@ static int _insert(const char *path, int rec)
 
 	} else {		/* add a device */
 		if (!S_ISBLK(info.st_mode)) {
-			log_debug("%s: Not a block device", path);
+			//log_debug("%s: Not a block device", path);
 			return 0;
 		}
 
