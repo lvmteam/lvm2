@@ -230,6 +230,9 @@ int import_lvs(struct pool *mem, struct volume_group *vg,
 int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	       struct physical_volume *pv, const char *dev_dir);
 
+int import_snapshots(struct pool *mem, struct volume_group *vg,
+		     struct list *pvds);
+
 int export_uuids(struct disk_list *dl, struct volume_group *vg);
 
 void export_numbers(struct list *pvds, struct volume_group *vg);

@@ -82,8 +82,10 @@ static int _check_vgs(struct list *pvs, int *partial)
 	return 1;
 }
 
-static struct volume_group *_build_vg(struct pool *mem, struct list *pvs)
+static struct volume_group *_build_vg(struct cmd_context *cmd,
+				      struct list *pvs)
 {
+	struct pool *mem = cmd->mem;
 	struct volume_group *vg = pool_alloc(mem, sizeof(*vg));
 	struct disk_list *dl;
 	int partial;
@@ -96,8 +98,10 @@ static struct volume_group *_build_vg(struct pool *mem, struct list *pvs)
 
 	memset(vg, 0, sizeof(*vg));
 
+	vg->cmd = cmd;
 	list_init(&vg->pvs);
 	list_init(&vg->lvs);
+	list_init(&vg->snapshots);
 
 	if (!_check_vgs(pvs, &partial))
 		goto bad;
@@ -114,6 +118,9 @@ static struct volume_group *_build_vg(struct pool *mem, struct list *pvs)
 		goto bad;
 
 	if (!import_extents(mem, vg, pvs))
+		goto bad;
+
+	if (!import_snapshots(mem, vg, pvs))
 		goto bad;
 
 	return vg;
@@ -145,12 +152,10 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 		goto bad;
 	}
 
-	if (!(vg = _build_vg(fi->cmd->mem, &pvs))) {
+	if (!(vg = _build_vg(fi->cmd, &pvs))) {
 		stack;
 		goto bad;
 	}
-
-	vg->cmd = fi->cmd;
 
  bad:
 	pool_destroy(mem);

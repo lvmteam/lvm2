@@ -293,12 +293,6 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	if (lvd->lv_access & LV_WRITE)
 		lv->status |= LVM_WRITE;
 
-	if (lvd->lv_access & LV_SNAPSHOT)
-		lv->status |= SNAPSHOT;
-
-	if (lvd->lv_access & LV_SNAPSHOT_ORG)
-		lv->status |= SNAPSHOT_ORG;
-
 	if (lvd->lv_badblock)
 		lv->status |= BADBLOCK_ON;
 
@@ -335,12 +329,6 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 
 	if (lv->status & LVM_WRITE)
 		lvd->lv_access |= LV_WRITE;
-
-	if (lv->status & SNAPSHOT)
-		lvd->lv_access |= LV_SNAPSHOT;
-
-	if (lv->status & SNAPSHOT_ORG)
-		lvd->lv_access |= LV_SNAPSHOT_ORG;
 
 	if (lv->status & SPINDOWN_LV)
 		lvd->lv_status |= LV_SPINDOWN;
@@ -478,13 +466,21 @@ int import_lvs(struct pool *mem, struct volume_group *vg,
 	return 1;
 }
 
+/* FIXME: tidy */
 int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	       struct physical_volume *pv, const char *dev_dir)
 {
-	struct list *lvh;
+	int r = 0;
+	struct list *lvh, *sh;
 	struct lv_list *ll;
 	struct lvd_list *lvdl;
 	int lv_num = 0, len;
+	struct hash_table *lvd_hash;
+
+	if (!(lvd_hash = hash_create(32))) {
+		stack;
+		return 0;
+	}
 
 	/*
 	 * setup the pv's extents array
@@ -492,31 +488,145 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	len = sizeof(struct pe_disk) * dl->pvd.pe_total;
 	if (!(dl->extents = pool_alloc(dl->mem, len))) {
 		stack;
-		return 0;
+		goto out;
 	}
 	memset(dl->extents, 0, len);
 
-
-	list_iterate(lvh, &vg->lvs) {
+	list_iterate (lvh, &vg->lvs) {
 		ll = list_item(lvh, struct lv_list);
 		if (!(lvdl = pool_alloc(dl->mem, sizeof(*lvdl)))) {
 			stack;
-			return 0;
+			goto out;
 		}
 
 		export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
+
+		/* this isn't a real dev, more of an index for
+		 * snapshots to refer to, *HACK* */
+		lvdl->lvd.lv_dev = MKDEV(0, lv_num);
 		lvdl->lvd.lv_number = lv_num;
+
+		if (!hash_insert(lvd_hash, lvdl->lvd.lv_name, &lvdl->lvd)) {
+			stack;
+			goto out;
+		}
+
 		if (!export_extents(dl, lv_num + 1, ll->lv, pv)) {
 			stack;
-			return 0;
+			goto out;
 		}
 
 		list_add(&dl->lvds, &lvdl->list);
 		dl->pvd.lv_cur++;
 		lv_num++;
 	}
+
+	/*
+	 * Now we need to run through the snapshots, exporting
+	 * the SNAPSHOT_ORG flags etc.
+	 */
+	list_iterate (sh, &vg->snapshots) {
+		struct lv_disk *org, *cow;
+		struct snapshot *s = list_item(sh,
+					       struct snapshot_list)->snapshot;
+
+		if (!(org = hash_lookup(lvd_hash, s->origin->name))) {
+			stack;
+			goto out;
+		}
+
+		if (!(cow = hash_lookup(lvd_hash, s->cow->name))) {
+			stack;
+			goto out;
+		}
+
+		org->lv_access |= LV_SNAPSHOT_ORG;
+		cow->lv_access |= LV_SNAPSHOT;
+		cow->lv_snapshot_minor = MINOR(org->lv_dev);
+	}
+
+	r = 1;
+
+ out:
+	hash_destroy(lvd_hash);
+	return r;
+}
+
+/*
+ * FIXME: More inefficient code.
+ */
+int import_snapshots(struct pool *mem, struct volume_group *vg,
+		     struct list *pvds)
+{
+	struct logical_volume *lvs[MAX_LV];
+	struct list *pvdh, *lvdh;
+	struct disk_list *dl;
+	struct lv_disk *lvd;
+	int minor;
+	struct logical_volume *org, *cow;
+
+	/* build an array of minor->lv* */
+	memset(lvs, 0, sizeof(lvs));
+	list_iterate (pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
+
+		list_iterate (lvdh, &dl->lvds) {
+			lvd = &(list_item(lvdh, struct lvd_list)->lvd);
+
+			minor = MINOR(lvd->lv_dev);
+
+			if (minor > MAX_LV) {
+				log_err("Logical volume minor number "
+					"out of bounds.");
+				return 0;
+			}
+
+			if (!lvs[minor] &&
+			    !(lvs[minor] = find_lv(vg, lvd->lv_name))) {
+				log_err("Couldn't find logical volume '%s'.",
+					lvd->lv_name);
+				return 0;
+			}
+		}
+	}
+
+	/*
+	 * Now iterate through yet again adding the snapshots.
+	 */
+	list_iterate (pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
+
+		list_iterate (lvdh, &dl->lvds) {
+			lvd = &(list_item(lvdh, struct lvd_list)->lvd);
+
+			if (!(lvd->lv_status & LV_SNAPSHOT))
+				continue;
+
+			minor = MINOR(lvd->lv_dev);
+			cow = lvs[minor];
+			if (!(org = lvs[lvd->lv_snapshot_minor])) {
+				log_err("Couldn't find origin logical volume "
+					"for snapshot '%s'.", lvd->lv_name);
+				return 0;
+			}
+
+			/* we may have already added this snapshot */
+			if (lv_is_cow(vg, cow))
+				continue;
+
+			/* insert the snapshot */
+			if (!vg_add_snapshot(vg, org, cow, 1,
+					     lvd->lv_chunk_size)) {
+				log_err("Couldn't add snapshot.");
+				return 0;
+			}
+		}
+	}
+
 	return 1;
 }
+
+
 
 int export_uuids(struct disk_list *dl, struct volume_group *vg)
 {
