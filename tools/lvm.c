@@ -1168,7 +1168,7 @@ static int run_script(int argc, char **argv)
 		}
 		if (!argc)
 			continue;
-		if (!strcmp(argv[0], "quit"))
+		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit"))
 			break;
 		run_command(argc, argv);
 	}
@@ -1370,7 +1370,7 @@ static int shell(void)
 		if (!argc)
 			continue;
 
-		if (!strcmp(argv[0], "quit")) {
+		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit")) {
 			remove_history(history_length - 1);
 			log_error("Exiting.");
 			break;
