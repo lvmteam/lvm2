@@ -39,7 +39,7 @@ struct mapped_device;
 typedef unsigned int offset_t;
 
 typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct mapped_device *md,
-			 const char *context, void **result);
+			 const char *cb, const char *ce, void **result);
 typedef void (*dm_dtr_fn)(void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
 

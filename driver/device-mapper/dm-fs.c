@@ -49,16 +49,15 @@ static struct proc_dir_entry *_control;
 
 static devfs_handle_t _dev_dir;
 
-static int _line_splitter(struct file *file, const char *buffer,
-			  unsigned long count, void *data);
-int _process_control(const char *b, const char *e, int minor);
-static int _process_table(const char *b, const char *e, int minor);
-static const char *_eat_space(const char *b, const char *e);
-static int _get_word(const char *b, const char *e,
-		     const char **wb, const char **we);
-static int _tok_cmp(const char *str, const char *b, const char *e);
-static void _tok_cpy(char *dest, size_t max,
-		     const char *b, const char *e);
+static int line_splitter(struct file *file, const char *buffer,
+			 unsigned long count, void *data);
+static int process_control(const char *b, const char *e, int minor);
+static int process_table(const char *b, const char *e, int minor);
+static int get_word(const char *b, const char *e,
+		    const char **wb, const char **we);
+static int tok_cmp(const char *str, const char *b, const char *e);
+static void tok_cpy(char *dest, size_t max,
+		    const char *b, const char *e);
 
 typedef int (*process_fn)(const char *b, const char *e, int minor);
 
@@ -82,9 +81,9 @@ int dm_init_fs()
 	if (!(_control = create_proc_entry(_control_name, S_IWUSR, _proc_dir)))
 		goto fail;
 
-	_control->write_proc = _line_splitter;
+	_control->write_proc = line_splitter;
 
-	pfd->fn = _process_control;
+	pfd->fn = process_control;
 	pfd->minor = -1;
 	_control->data = pfd;
 
@@ -118,7 +117,7 @@ int dm_fs_add(struct mapped_device *md)
 	if (!pfd)
 		return -ENOMEM;
 
-	pfd->fn = _process_table;
+	pfd->fn = process_table;
 	pfd->minor = MINOR(md->dev);
 
 	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR, 
@@ -127,7 +126,7 @@ int dm_fs_add(struct mapped_device *md)
 		return -ENOMEM;
 	}
 
-	md->pde->write_proc = _line_splitter;
+	md->pde->write_proc = line_splitter;
 	md->pde->data = pfd;
 
 	md->devfs_entry =
@@ -140,7 +139,7 @@ int dm_fs_add(struct mapped_device *md)
 		kfree(pfd);
 		remove_proc_entry(md->name, _proc_dir);
 		md->pde = 0;
-		return -ENOMEM;	/* FIXME: better error ? */
+		return -ENOMEM;
 	}
 
 	return 0;
@@ -159,7 +158,7 @@ int dm_fs_remove(struct mapped_device *md)
 	return 0;
 }
 
-int _process_control(const char *b, const char *e, int minor)
+static int process_control(const char *b, const char *e, int minor)
 {
 	const char *wb, *we;
 	char name[64];
@@ -169,27 +168,27 @@ int _process_control(const char *b, const char *e, int minor)
 	 * create <name> [minor]
 	 * remove <name>
 	 */
-	if (!_get_word(b, e, &wb, &we))
+	if (get_word(b, e, &wb, &we))
 		return -EINVAL;
 	b = we;
 
-	if (!_tok_cmp("create", wb, we))
+	if (!tok_cmp("create", wb, we))
 		create = 1;
 
-	else if (_tok_cmp("remove", wb, we))
+	else if (tok_cmp("remove", wb, we))
 		return -EINVAL;
 
-	if (!_get_word(b, e, &wb, &we))
+	if (get_word(b, e, &wb, &we))
 		return -EINVAL;
 	b = we;
 
-	_tok_cpy(name, sizeof(name), wb, we);
+	tok_cpy(name, sizeof(name), wb, we);
 
 	if (!create)
 		return dm_remove(name);
 
 	else {
-		if (_get_word(b, e, &wb, &we)) {
+		if (!get_word(b, e, &wb, &we)) {
 			minor = simple_strtol(wb, (char **) &we, 10);
 
 			if (we == wb)
@@ -202,27 +201,27 @@ int _process_control(const char *b, const char *e, int minor)
 	return -EINVAL;
 }
 
-static int _process_table(const char *b, const char *e, int minor)
+static int process_table(const char *b, const char *e, int minor)
 {
 	const char *wb, *we;
 	struct mapped_device *md = dm_find_minor(minor);
 	void *context;
-	int ret;
+	int r;
 
 	if (!md)
 		return -ENXIO;
 
-	if (!_get_word(b, e, &wb, &we))
+	if (get_word(b, e, &wb, &we))
 		return -EINVAL;
 
-	if (!_tok_cmp("begin", b, e)) {
+	if (!tok_cmp("begin", b, e)) {
 		/* suspend the device if it's active */
 		dm_suspend(md);
 
 		/* start loading a table */
 		dm_start_table(md);
 
-	} else if (!_tok_cmp("end", b, e)) {
+	} else if (!tok_cmp("end", b, e)) {
 		/* activate the device ... <evil chuckle> ... */
 		dm_complete_table(md);
 		dm_activate(md);
@@ -233,74 +232,69 @@ static int _process_table(const char *b, const char *e, int minor)
 		char high_s[64], *ptr;
 		char target[64];
 		struct target *t;
-		offset_t high;
+		offset_t last = 0, high;
 
 		if (len > sizeof(high_s))
-			return 0;
+			return -EINVAL;
 
 		strncpy(high_s, wb, we - wb);
 		high_s[len] = '\0';
 
 		high = simple_strtol(high_s, &ptr, 10);
 		if (ptr == high_s)
-			return 0;
+			return -EINVAL;
 
 		b = we;
-		if (!_get_word(b, e, &wb, &we))
-			return 0;
+		if (get_word(b, e, &wb, &we))
+			return -EINVAL;
 
 		len = we - wb;
 		if (len > sizeof(target))
-			return 0;
+			return -EINVAL;
 
 		strncpy(target, wb, len);
 		target[len] = '\0';
 
 		if (!(t = dm_get_target(target)))
-			return 0;
+			return -EINVAL;
 
-		if ((ret = t->ctr(md->highs[md->num_targets - 1],
-				  high, md, we, &context)))
-			return ret;
+		if (md->num_targets)
+			last = md->highs[md->num_targets - 1] + 1;
 
-		dm_add_entry(md, high, t->map, context);
+		if ((r = t->ctr(last, high, md, we, e, &context)))
+			return r;
+
+		if ((r = dm_add_entry(md, high, t->map, context)))
+			return r;
 	}
 
-	return 1;
+	return 0;
 }
 
-static const char *_eat_space(const char *b, const char *e)
+static int get_word(const char *b, const char *e,
+		    const char **wb, const char **we)
 {
-	while(b != e && isspace((int) *b))
-		b++;
-
-	return b;
-}
-
-static int _get_word(const char *b, const char *e,
-		     const char **wb, const char **we)
-{
-	b = _eat_space(b, e);
+	b = eat_space(b, e);
 
 	if (b == e)
-		return 0;
+		return -EINVAL;
 
 	*wb = b;
 	while(b != e && !isspace((int) *b))
 		b++;
 	*we = b;
-	return 1;
+	return 0;
 }
 
-static int _line_splitter(struct file *file, const char *buffer,
-			  unsigned long count, void *data)
+static int line_splitter(struct file *file, const char *buffer,
+			 unsigned long count, void *data)
 {
 	int r;
 	const char *b = buffer, *e = buffer + count, *lb;
 	struct pf_data *pfd = (struct pf_data *) data;
 
 	while(b < e) {
-		b = _eat_space(b, e);
+		b = eat_space(b, e);
 		if (b == e)
 			break;
 
@@ -315,7 +309,7 @@ static int _line_splitter(struct file *file, const char *buffer,
 	return count;
 }
 
-static int _tok_cmp(const char *str, const char *b, const char *e)
+static int tok_cmp(const char *str, const char *b, const char *e)
 {
 	while (*str && b != e) {
 		if (*str < *b)
@@ -336,8 +330,8 @@ static int _tok_cmp(const char *str, const char *b, const char *e)
 	return -1;
 }
 
-static void _tok_cpy(char *dest, size_t max,
-		     const char *b, const char *e)
+static void tok_cpy(char *dest, size_t max,
+		    const char *b, const char *e)
 {
 	size_t len = e - b;
 	if (len > --max)

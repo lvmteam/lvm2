@@ -40,6 +40,7 @@
 #include <linux/compatmac.h>
 #include <linux/cache.h>
 #include <linux/devfs_fs_kernel.h>
+#include <linux/ctype.h>
 #include <linux/device-mapper.h>
 
 #define MAX_DEPTH 16
@@ -134,12 +135,12 @@ static inline int is_active(struct mapped_device *md)
 	return test_bit(DM_ACTIVE, &md->state);
 }
 
-static inline void set_active(struct mapped_device *md, int set)
+static inline const char *eat_space(const char *b, const char *e)
 {
-	if (set)
-		set_bit(DM_ACTIVE, &md->state);
-	else
-		clear_bit(DM_ACTIVE,& md->state);
+	while(b != e && isspace((int) *b))
+		b++;
+
+	return b;
 }
 
 #endif
