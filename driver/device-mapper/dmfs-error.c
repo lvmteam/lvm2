@@ -20,33 +20,102 @@
  */
 
 #include <linux/config.h>
+#include <linux/list.h>
 #include <linux/fs.h>
 
 #include "dm.h"
 
+struct dmfs_error {
+	struct list_head list;
+	unsigned len;
+	char *msg;
+};
+
 void dmfs_add_error(struct dm_table *t, unsigned num, char *str)
 {
-
+	int len = strlen(str) + sizeof(dmfs_error) + 12;
+	struct dmfs_error *e = kmalloc(len, GFP_KERNEL);
+	if (e) {
+		e->msg = (char *)(e + 1);
+		e->len = sprintf(e->msg, "%8u: %s\n", num, str);
+		list_add(&e->list, &t->errors);
+	}
 }
 
-/* 
- * Assuming that we allow modules to call this rather than passing the message
- * back. Not sure which approach to take yet.
- */
-EXPORT_SYMBOL(dmfs_add_error);
+void dmfs_zap_errors(struct dm_table *t)
+{
+	struct dmfs_error *e;
+
+	while(!list_empty(&t->errors)) {
+		e = list_entry(t->errors.next, struct dmfs_error, list);
+		kfree(e);
+	}
+}
+
+static struct dmfs_error find_initial_message(struct dn_table *t, loff_t *pos)
+{
+	struct dmfs_error *e;
+	struct list_head *tmp, *head;
+
+	tmp = head = &t->errors;
+	for(;;) {
+		tmp = tmp->next;
+		if (tmp == head)
+			break;
+		e = list_entry(tmp, struct dmfs_error, list);
+		if (*pos < e->len)
+			return e;
+		(*pos) -= e->len;
+	}
+
+	return NULL;
+}
+
+static int copy_sequence(struct dm_table *t, struct dmfs_error *e, char *buf,
+			size_t size, loff_t offset)
+{
+	char *from;
+	int amount;
+	int copied = 0;
+
+	do {
+		from = e->msg + offset;
+		amount = e->len - offset;
+
+		if (copy_to_user(buf, from, amount))
+			return -EFAULT;
+
+		buf += amount;
+		copied += amount;
+		size -= amount;
+		offset = 0;
+
+		if (e->list.next == &t->errors)
+			break;
+		e = list_entry(e->list.next, struct dmfs_error, list);
+	} while(size > 0);
+
+	return amount;
+}
 
 static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
 	struct dmfs_i *dmi = DMFS_I(file->f_dentry->d_parent->d_inode);
 	struct dm_table *t = dmi->table;
 	int copied = 0;
+	loff_t offset = *pos;
 
 	if (!access_ok(VERIFY_WRITE, buf, count))
 		return -EFAULT;
 
 	down(&dmi->sem);
 	if (dmi->table) {
-
+		struct dmfs_error *e = find_initial_message(t, &offset);
+		if (e) {
+			copied = copy_sequence(t, e, buf, size, offset);
+			if (copied > 0)
+				(*pos) += copied;
+		}
 	}
 	up(&dmi->sem);
 	return copied;

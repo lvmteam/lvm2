@@ -52,18 +52,11 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	if (dentry->d_name[0] == '.')
 		return -EINVAL;
 
-	inode = dmfs_create_lv(dir, dentry, mode);
+	inode = dmfs_create_lv(dir, mode, dentry);
 	if (!IS_ERR(inode)) {
-		md = dm_create(name, -1);
-		if (!IS_ERR(md)) {
-			inode->u.generic_ip = md;
-			md->inode = inode;
-			d_instantiate(dentry, inode);
-			dget(dentry);
-			return 0;
-		}
-		iput(inode);
-		return PTR_ERR(md);
+		d_instantiate(dentry, inode);
+		dget(dentry);
+		return 0;
 	}
 	return PTR_ERR(inode);
 }
