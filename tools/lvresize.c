@@ -180,6 +180,11 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		return ECMD_FAILED;
 	}
 
+	if (lv_is_origin(lv)) {
+		log_error("Snapshot origin volumes cannot be resized yet.");
+		return ECMD_FAILED;
+	}
+
 	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lv->alloc);
 
 	if (lp->size) {

@@ -1,5 +1,7 @@
 Version 2.00.26 - 
 =====================================
+  Prevent snapshot origin resizing.
+  Improve a vgremove error message.
   Update some man pages.
   Allow y/n with -ae args (exclusive activation).
   Fixes to lvcreate vgname parsing.
