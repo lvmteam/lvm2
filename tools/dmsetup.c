@@ -505,9 +505,10 @@ static int _status(int argc, char **argv, void *data)
 		if (data && !_switches[VERBOSE_ARG])
 			printf("%s: ", name);
 		if (target_type) {
-			printf("%" PRIu64 " %" PRIu64 " %s %s\n",
+			printf("%" PRIu64 " %" PRIu64 " %s %s",
 			       start, length, target_type, params);
 		}
+		printf("\n");
 	} while (next);
 
 	if (data && _switches[VERBOSE_ARG])
