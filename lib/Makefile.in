@@ -16,6 +16,7 @@ SOURCES=\
 	device/dev-cache.c \
 	device/dev-io.c \
 	device/device.c \
+	display/display.c \
 	filters/filter.c \
 	filters/filter-regex.c \
 	format1/disk-rep.c \
