@@ -20,6 +20,8 @@ VPATH = @srcdir@
 
 LN_S = @LN_S@
 
+.PHONY: clean distclean all install pofile install_cluster
+
 all: .symlinks_created
 
 .symlinks_created: .symlinks
@@ -37,5 +39,5 @@ clean:
 
 install:
 
-.PHONY: clean distclean all install pofile
+install_cluster:
 

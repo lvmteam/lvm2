@@ -24,10 +24,15 @@ MAN8=lvchange.8 lvcreate.8 lvdisplay.8 lvextend.8 lvm.8 lvmchange.8 \
 	vgconvert.8 vgdisplay.8 vgexport.8 vgextend.8 vgimport.8 \
 	vgmerge.8 vgmknodes.8 vgreduce.8 vgremove.8 vgrename.8 \
 	vgs.8 vgscan.8 vgsplit.8
+MAN8CLUSTER=clvmd.8
 MAN5DIR=${mandir}/man5
 MAN8DIR=${mandir}/man8
 
 include $(top_srcdir)/make.tmpl
+
+ifeq ("@CLVMD@", "yes")
+  install: install_cluster
+endif
 
 install:
 	@echo "Installing $(MAN8) in $(MAN8DIR)"
@@ -42,4 +47,12 @@ install:
 	do \
 	   $(RM) $(MAN5DIR)/$$f; \
 	   @INSTALL@ -D $(OWNER) $(GROUP) -m 444 $$f $(MAN5DIR)/$$f; \
+	done
+
+install_cluster:
+	@echo "Installing $(MAN8CLUSTER) in $(MAN8DIR)"
+	@for f in $(MAN8CLUSTER); \
+	do \
+	   $(RM) $(MAN8DIR)/$$f; \
+	   @INSTALL@ -D $(OWNER) $(GROUP) -m 444 $$f $(MAN8DIR)/$$f; \
 	done

@@ -22,8 +22,6 @@ LIB_SHARED = liblvm2snapshot.so
 
 include $(top_srcdir)/make.tmpl
 
-.PHONY: install
-
 install: liblvm2snapshot.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2snapshot.so.$(LIB_VERSION)

@@ -22,8 +22,6 @@ LIB_SHARED = liblvm2mirror.so
 
 include $(top_srcdir)/make.tmpl
 
-.PHONY: install
-
 install: liblvm2mirror.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2mirror.so.$(LIB_VERSION)

@@ -1,5 +1,6 @@
 Version 2.00.21 - 
 =============================
+  Use 'make install_cluster' to install cluster extensions only.
   Cope with DT_UNKNOWN in sysfs.
   Fix extents_moved metadata size comment.
   Remove duplicate line in pvremove help text.

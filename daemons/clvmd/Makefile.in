@@ -44,3 +44,6 @@ install_clvmd: $(TARGETS)
 		$(sbindir)/clvmd
 
 install: $(INSTALL_TARGETS)
+
+install_cluster: $(INSTALL_TARGETS)
+
