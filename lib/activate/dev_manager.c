@@ -47,7 +47,14 @@ enum {
 	VISIBLE = 2,
 	READWRITE = 3,
 	SUSPENDED = 4,
-	NOPROPAGATE = 5
+	NOPROPAGATE = 5,
+	TOPLEVEL = 6
+};
+
+enum {
+	MIRR_DISABLED,
+	MIRR_RUNNING,
+	MIRR_COMPLETED
 };
 
 typedef enum {
@@ -96,6 +103,7 @@ struct dev_manager {
 	struct config_tree *cf;
 	const char *stripe_filler;
 	uint32_t mirror_region_size;
+	uint32_t pvmove_mirror_count;
 
 	char *vg_name;
 
@@ -271,7 +279,7 @@ static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
 /*
  * Low level device-layer operations.
  */
-static struct dm_task *_setup_task(const char *name, const char *uuid, 
+static struct dm_task *_setup_task(const char *name, const char *uuid,
 				   uint32_t *event_nr, int task)
 {
 	struct dm_task *dmt;
@@ -410,8 +418,10 @@ static int _status(const char *name, const char *uuid,
 	return 0;
 }
 
-static int _percent_run(const char *name, const char *uuid,
-			const char *target_type, int wait, float *percent,
+static int _percent_run(struct dev_manager *dm, const char *name,
+			const char *uuid,
+			const char *target_type, int wait,
+			struct logical_volume *lv, float *percent,
 			uint32_t *event_nr)
 {
 	int r = 0;
@@ -422,6 +432,8 @@ static int _percent_run(const char *name, const char *uuid,
 	char *type = NULL;
 	char *params = NULL;
 	float percent2;
+	struct list *segh = &lv->segments;
+	struct lv_segment *seg = NULL;
 
 	uint64_t numerator, denominator;
 	uint64_t total_numerator = 0, total_denominator = 0;
@@ -451,16 +463,34 @@ static int _percent_run(const char *name, const char *uuid,
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length, &type,
 					  &params);
+		if (lv) {
+			if (!(segh = list_next(&lv->segments, segh))) {
+				log_error("Number of segments in active LV %s "
+					  "does not match metadata", lv->name);
+				goto out;
+			}
+			seg = list_item(segh, struct lv_segment);
+		}
 
 		if (!type || !params || strcmp(type, target_type))
 			continue;
 
 		/* Mirror? */
-		if (!strcmp(type, "mirror") &&
-		    sscanf(params, "%*d %*d:%*d %*d:%*d %" PRIu64 "/%" PRIu64,
-			   &numerator, &denominator) == 2) {
+		if (!strcmp(type, "mirror")) {
+			log_debug("Mirror status: %s", params);
+			if (sscanf(params, "%*d %*x:%*x %*x:%*x %" PRIu64
+				   "/%" PRIu64, &numerator,
+				   &denominator) != 2) {
+				log_error("Failure parsing mirror status: %s",
+					  params);
+				goto out;
+			}
 			total_numerator += numerator;
 			total_denominator += denominator;
+
+			if (seg && (seg->status & PVMOVE))
+				seg->extents_moved = dm->mirror_region_size *
+				    numerator / lv->vg->extent_size;
 			continue;
 		}
 
@@ -481,11 +511,18 @@ static int _percent_run(const char *name, const char *uuid,
 		}
 	} while (next);
 
+	if (lv && (segh = list_next(&lv->segments, segh))) {
+		log_error("Number of segments in active LV %s does not "
+			  "match metadata", lv->name);
+		goto out;
+	}
+
 	if (total_denominator)
-		*percent = (float) total_numerator * 100 / total_denominator;
+		*percent = (float) total_numerator *100 / total_denominator;
 	else
 		*percent = 100;
 
+	log_debug("Mirror percent: %f", *percent);
 	r = 1;
 
       out:
@@ -493,14 +530,17 @@ static int _percent_run(const char *name, const char *uuid,
 	return r;
 }
 
-static int _percent(const char *name, const char *uuid, const char *target_type,
-		    int wait, float *percent, uint32_t *event_nr)
+static int _percent(struct dev_manager *dm, const char *name, const char *uuid,
+		    const char *target_type, int wait,
+		    struct logical_volume *lv, float *percent,
+		    uint32_t *event_nr)
 {
 	if (uuid && *uuid
-	    && _percent_run(NULL, uuid, target_type, wait, percent, event_nr))
+	    && _percent_run(dm, NULL, uuid, target_type, wait, lv, percent,
+			    event_nr))
 		return 1;
 
-	if (name && _percent_run(name, NULL, target_type, wait, percent,
+	if (name && _percent_run(dm, name, NULL, target_type, wait, lv, percent,
 				 event_nr))
 		return 1;
 
@@ -708,10 +748,11 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 {
 	char params[1024];
 	uint64_t esize = seg->lv->vg->extent_size;
-	uint32_t s, areas = seg->area_count;
+	uint32_t s, start_area = 0u, areas = seg->area_count;
 	int w = 0, tw = 0;
 	const char *target = NULL;
 	const char *trailing_space;
+	int mirror_status;
 
 	switch (seg->type) {
 	case SEG_SNAPSHOT:
@@ -721,8 +762,8 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 		/* Target formats:
 		 *   linear [device offset]+
 		 *   striped #stripes stripe_size [device offset]+
-		 *   mirror  #logs [log_type #log_params [log_params]*]+ 
-		 *           #mirrors [device offset log_number]+
+		 *   mirror  log_type #log_params [log_params]* 
+		 *           #mirrors [device offset]+
 		 */
 	case SEG_STRIPED:
 		if (areas == 1)
@@ -740,6 +781,20 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 		}
 		break;
 	case SEG_MIRRORED:
+		mirror_status = MIRR_RUNNING;
+		if (seg->status & PVMOVE) {
+			if (seg->extents_moved == seg->area_len) {
+				mirror_status = MIRR_COMPLETED;
+				start_area = 1;
+			} else if (dm->pvmove_mirror_count++) {
+				mirror_status = MIRR_DISABLED;
+				areas = 1;
+			}
+		}
+		if (mirror_status != MIRR_RUNNING) {
+			target = "linear";
+			break;
+		}
 		target = "mirror";
 		if ((tw = lvm_snprintf(params, sizeof(params),
 				       "core 1 %u %u ",
@@ -749,7 +804,7 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 		break;
 	}
 
-	for (s = 0; s < areas; s++, w += tw) {
+	for (s = start_area; s < areas; s++, w += tw) {
 		trailing_space = (areas - s - 1) ? " " : "";
 		if ((seg->area[s].type == AREA_PV &&
 		     (!seg->area[s].u.pv.pv || !seg->area[s].u.pv.pv->dev)) ||
@@ -800,6 +855,8 @@ static int _populate_vanilla(struct dev_manager *dm,
 	struct list *segh;
 	struct lv_segment *seg;
 	struct logical_volume *lv = dl->lv;
+
+	dm->pvmove_mirror_count = 0u;
 
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
@@ -986,7 +1043,8 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device status percentage for %s", name);
-	if (!(_percent(name, lv->lvid.s, "snapshot", 0, percent, NULL))) {
+	if (!(_percent(dm, name, lv->lvid.s, "snapshot", 0, NULL, percent,
+		       NULL))) {
 		stack;
 		return 0;
 	}
@@ -1016,7 +1074,8 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	/* FIXME pool_free ? */
 
 	log_debug("Getting device mirror status percentage for %s", name);
-	if (!(_percent(name, lv->lvid.s, "mirror", wait, percent, event_nr))) {
+	if (!(_percent(dm, name, lv->lvid.s, "mirror", wait, lv, percent,
+		       event_nr))) {
 		stack;
 		return 0;
 	}
@@ -1128,8 +1187,13 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 	dl->populate = _populate_vanilla;
-	if (lv->status & VISIBLE_LV)
+	if (lv->status & VISIBLE_LV) {
 		_set_flag(dl, VISIBLE);
+		_set_flag(dl, TOPLEVEL);
+	}
+
+	if (lv->status & PVMOVE)
+		_set_flag(dl, TOPLEVEL);
 
 	/* Add dependencies for any LVs that segments refer to */
 	list_iterate(segh, &lv->segments) {
@@ -1165,6 +1229,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 	}
 	dl->populate = _populate_vanilla;
 	_clear_flag(dl, VISIBLE);
+	_clear_flag(dl, TOPLEVEL);
 
 	real_dlid = dl->dlid;
 
@@ -1174,6 +1239,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 	}
 	dl->populate = _populate_origin;
 	_set_flag(dl, VISIBLE);
+	_set_flag(dl, TOPLEVEL);
 
 	/* add the dependency on the real device */
 	if (!_pre_list_add(dm->mem, &dl->pre_create,
@@ -1220,6 +1286,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	}
 	dl->populate = _populate_vanilla;
 	_clear_flag(dl, VISIBLE);
+	_clear_flag(dl, TOPLEVEL);
 
 	cow_dlid = dl->dlid;
 
@@ -1229,6 +1296,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	}
 	dl->populate = _populate_snapshot;
 	_set_flag(dl, VISIBLE);
+	_set_flag(dl, TOPLEVEL);
 
 	/* add the dependency on the real device */
 	if (!_pre_list_add(dm->mem, &dl->pre_create,
@@ -1301,7 +1369,7 @@ static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
 		if (_get_flag(dep, flag))
 			continue;
 
-		/* Only propagate LV ACTIVE dependencies for now */
+		/* FIXME Only propagate LV ACTIVE dependencies for now */
 		if ((flag != ACTIVE) && _get_flag(dl, NOPROPAGATE))
 			continue;
 
@@ -1587,7 +1655,7 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
 	hash_iterate(hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
 
-		if (_get_flag(dl, ACTIVE) && _get_flag(dl, VISIBLE))
+		if (_get_flag(dl, ACTIVE) && _get_flag(dl, TOPLEVEL))
 			_create_rec(dm, dl, NULL);
 	}
 
