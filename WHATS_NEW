@@ -1,5 +1,6 @@
 Version 2.00.32 - 
 ====================================
+  Fix pvchange -x segfault with lvm2-format orphan.
   Cope with empty msdos partition tables.
 
 Version 2.00.31 - 12th December 2004
