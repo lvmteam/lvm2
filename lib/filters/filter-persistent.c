@@ -93,8 +93,10 @@ int persistent_filter_load(struct dev_filter *f)
 		goto out;
 	}
 
-	_read_array(pf, cf, "persistent_filter_cache/valid_devices", PF_GOOD_DEVICE);
-	_read_array(pf, cf, "persistent_filter_cache/invalid_devices", PF_BAD_DEVICE);
+	_read_array(pf, cf, "persistent_filter_cache/valid_devices",
+		    PF_GOOD_DEVICE);
+	_read_array(pf, cf, "persistent_filter_cache/invalid_devices",
+		    PF_BAD_DEVICE);
 
 	if (hash_get_num_entries(pf->devices))
 		r = 1;
@@ -111,7 +113,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 	int first = 1;
 	struct hash_node *n;
 
-	for (n = hash_get_first(pf->devices); n; 
+	for (n = hash_get_first(pf->devices); n;
 	     n = hash_get_next(pf->devices, n)) {
 		d = hash_get_data(pf->devices, n);
 
