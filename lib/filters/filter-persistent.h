@@ -5,7 +5,7 @@
  */
 
 #ifndef _LVM_FILTER_PERSISTENT_H
-#define _LVM_FILTER_PERSISTENT_h
+#define _LVM_FILTER_PERSISTENT_H
 
 #include "dev-cache.h"
 

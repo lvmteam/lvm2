@@ -28,7 +28,7 @@ struct pfilter {
 #define PF_UNCHECKED ((void *) 1)
 #define PF_CHECKED ((void *) 2)
 
-int _init_hash(struct pfilter *pf)
+static int _init_hash(struct pfilter *pf)
 {
 	if (pf->devices)
 		hash_destroy(pf->devices);
@@ -37,7 +37,7 @@ int _init_hash(struct pfilter *pf)
 	return pf ? 1 : 0;
 }
 
-int _load(struct pfilter *pf)
+static int _load(struct pfilter *pf)
 {
 	int r = 0;
 	struct config_file *cf;
@@ -82,7 +82,7 @@ int _load(struct pfilter *pf)
 	return r;
 }
 
-int _dump(struct pfilter *pf)
+static int _dump(struct pfilter *pf)
 {
 	int first = 1;
 	struct hash_node *n;
@@ -112,7 +112,7 @@ int _dump(struct pfilter *pf)
 	return 1;
 }
 
-int _check(const char *path)
+static int _check(const char *path)
 {
 	int fd = open(path, O_RDONLY), r = 0;
 
@@ -123,7 +123,7 @@ int _check(const char *path)
 	return r;
 }
 
-int _init_valid_p(struct dev_filter *f, struct device *dev)
+static int _init_valid_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l = hash_lookup(pf->devices, dev->name);
@@ -139,7 +139,7 @@ int _init_valid_p(struct dev_filter *f, struct device *dev)
 	return 0;
 }
 
-int _valid_p(struct dev_filter *f, struct device *dev)
+static int _valid_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l = hash_lookup(pf->devices, dev->name);
@@ -155,7 +155,7 @@ int _valid_p(struct dev_filter *f, struct device *dev)
 	return 1;
 }
 
-void _destroy(struct dev_filter *f)
+static void _destroy(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
