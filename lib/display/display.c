@@ -109,7 +109,7 @@ void pvdisplay_full(struct physical_volume *pv)
 	log_print("VG Name               %s%s", pv->vg_name,
 		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
-	size = display_size( ( unsigned long long) pv->size / 2, SIZE_SHORT);
+	size = display_size((unsigned long long) pv->size / 2, SIZE_SHORT);
 	if (pv->pe_size && pv->pe_count) {
 		size1 = display_size((pv->size - pv->pe_count * pv->pe_size)
 				     / 2, SIZE_SHORT);
