@@ -61,15 +61,29 @@ AC_ARG_WITH(group,
   [ GROUP="$withval" ],
   [ GROUP="root" ])
 
+dnl -- format1 inclusion type
+AC_ARG_WITH(lvm1,
+  [  --with-lvm1=TYPE        LVM1 metadata support: internal/shared/none
+                          [TYPE=internal] ],
+  [ LVM1="$withval" ],
+  [ LVM1="internal" ])
+
+if [[ "x$LVM1" != xnone -a "x$LVM1" != xinternal -a "x$LVM1" != xshared ]];
+ then  AC_MSG_ERROR(
+--with-lvm1 parameter invalid
+)
+ exit
+fi;
+
 AC_ARG_ENABLE(jobs, [  --enable-jobs=NUM       Number of jobs to run simultaneously], JOBS=-j$enableval, JOBS=)
 
 dnl Enables staticly linked tools
 AC_ARG_ENABLE(static_link, [  --enable-static_link    Use this to link the tools to the liblvm library
                           statically.  Default is dynamic linking],  STATIC_LINK=$enableval, STATIC_LINK=no)
 
-dnl Disable readline
-AC_ARG_ENABLE(readline, [  --disable-readline      Disable readline support],  \
-READLINE=$enableval, READLINE=yes)
+dnl Enable readline
+AC_ARG_ENABLE(readline, [  --enable-readline       Enable readline support],  \
+READLINE=$enableval, READLINE=no)
 
 dnl Mess with default exec_prefix
 if [[ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ]];
@@ -125,6 +139,7 @@ fi
 AC_SUBST(JOBS)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(READLINE)
+AC_SUBST(LVM1)
 AC_SUBST(HAVE_RL_COMPLETION_MATCHES)
 AC_SUBST(OWNER)
 AC_SUBST(GROUP)
@@ -137,6 +152,7 @@ Makefile								\
 make.tmpl                                                               \
 include/Makefile						 	\
 lib/Makefile							 	\
+lib/format1/Makefile						 	\
 man/Makefile							 	\
 tools/Makefile							 	\
 tools/version.h								\

@@ -21,41 +21,12 @@
 #include "tools.h"
 
 int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
-		   const char *vg_name_from);
-
-int vgmerge(struct cmd_context *cmd, int argc, char **argv)
-{
-	char *vg_name_to;
-	int opt = 0;
-	int ret = 0, ret_max = 0;
-
-	if (argc < 2) {
-		log_error("Please enter 2 or more volume groups to merge");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;     
-
-	vg_name_to = argv[0];
-	argc--;
-	argv++;
-
-	for (; opt < argc; opt++) {
-		ret = vgmerge_single(cmd, vg_name_to, argv[opt]);
-		if (ret > ret_max)
-			ret_max = ret;
-	}
-
-	return ret_max;
-}
-
-int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		   const char *vg_name_from)
 {
 	struct volume_group *vg_to, *vg_from;
 	struct list *lvh1, *lvh2;
 	int active;
+	int consistent = 1;
 
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name \"%s\"", vg_name_from);
@@ -68,7 +39,7 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_to = vg_read(cmd, vg_name_to))) {
+	if (!(vg_to = vg_read(cmd, vg_name_to, &consistent)) || !consistent) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_to);
 		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
@@ -93,7 +64,8 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_from = vg_read(cmd, vg_name_from))) {
+	consistent = 1;
+	if (!(vg_from = vg_read(cmd, vg_name_from, &consistent)) || !consistent) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
 		goto error;
 	}
@@ -178,6 +150,14 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		list_del(lvh);
 		list_add(&vg_to->lvs, lvh);
 	}
+
+	while (!list_empty(&vg_from->fid->metadata_areas)) {
+		struct list *mdah = vg_from->fid->metadata_areas.n;
+
+		list_del(mdah);
+		list_add(&vg_to->fid->metadata_areas, mdah);
+	}
+
 	vg_to->lv_count += vg_from->lv_count;
 
 	vg_to->extent_count += vg_from->extent_count;
@@ -204,4 +184,28 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	unlock_vg(cmd, vg_name_from);
 	unlock_vg(cmd, vg_name_to);
 	return ECMD_FAILED;
+}
+
+int vgmerge(struct cmd_context *cmd, int argc, char **argv)
+{
+	char *vg_name_to;
+	int opt = 0;
+	int ret = 0, ret_max = 0;
+
+	if (argc < 2) {
+		log_error("Please enter 2 or more volume groups to merge");
+		return EINVALID_CMD_LINE;
+	}
+
+	vg_name_to = argv[0];
+	argc--;
+	argv++;
+
+	for (; opt < argc; opt++) {
+		ret = vgmerge_single(cmd, vg_name_to, argv[opt]);
+		if (ret > ret_max)
+			ret_max = ret;
+	}
+
+	return ret_max;
 }

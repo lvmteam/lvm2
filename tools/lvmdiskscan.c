@@ -29,7 +29,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 	uint64_t size;
 	struct dev_iter *iter;
 	struct device *dev;
-	struct physical_volume *pv;
+	struct label *label;
 
 	if (arg_count(cmd, lvmpartition_ARG))
 		log_print("WARNING: only considering LVM devices");
@@ -44,7 +44,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 	/* Do scan */
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		/* Try if it is a PV first */
-		if ((pv = pv_read(cmd, dev_name(dev)))) {
+		if ((label_read(dev, &label))) {
 			if (!dev_get_size(dev, &size)) {
 				log_error("Couldn't get size of \"%s\"",
 					  dev_name(dev));

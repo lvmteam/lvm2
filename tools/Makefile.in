@@ -37,6 +37,7 @@ SOURCES=\
 	pvchange.c \
 	pvcreate.c \
 	pvdisplay.c \
+	pvremove.c \
 	pvscan.c \
 	toollib.c \
 	vgcfgbackup.c \
@@ -44,6 +45,7 @@ SOURCES=\
 	vgchange.c \
 	vgck.c \
 	vgcreate.c \
+	vgconvert.c \
 	vgdisplay.c \
 	vgexport.c \
 	vgextend.c \

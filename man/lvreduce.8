@@ -6,7 +6,8 @@ lvreduce \- reduce the size of a logical volume
 [\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-f/\-\-force]
 [\-h/\-?/\-\-help] {\-l/\-\-extents [\-]LogicalExtentsNumber |
 \-L/\-\-size [\-]LogicalVolumeSize[kKmMgGtT]}
-[\-v/\-\-verbose] LogicalVolumePath
+[\-t/\-\-test]
+[\-v/\-\-verbose] LogicalVolume[Path]
 .SH DESCRIPTION
 lvreduce allows you to reduce the size of a logical volume.
 Be careful when reducing a logical volume's size, because data in the
@@ -25,11 +26,6 @@ Shrinking snapshot logical volumes (see
 for information to create snapshots) is supported as well.
 .SH OPTIONS
 See \fBlvm\fP for common options.
-.TP
-.I \-A, \-\-autobackup y/n
-Controls automatic backup of VG metadata after the change ( see
-.B vgcfgbackup(8)
-). Default is yes.
 .TP
 .I \-f, \-\-force
 Force size reduction without any question.

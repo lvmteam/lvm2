@@ -8,8 +8,10 @@ lvcreate \- create a logical volume in an existing volume group
 [\-i/\-\-stripes Stripes [\-I/\-\-stripesize StripeSize]]
 {\-l/\-\-extents LogicalExtentsNumber |
  \-L/\-\-size LogicalVolumeSize[kKmMgGtT]}
+[\-M/\-\-persistent y/n] [\-\-minor minor]
 [\-n/\-\-name LogicalVolumeName]
 [\-p/\-\-permission r/rw] [\-r/\-\-readahead ReadAheadSectors]
+[\-t/\-\-test]
 [\-v/\-\-verbose] [\-Z/\-\-zero y/n]
 VolumeGroupName [PhysicalVolumePath...]
 .br
@@ -36,13 +38,6 @@ The second form supports the creation of snapshot logical volumes which
 keep the contents of the original logical volume for backup purposes.
 .SH OPTIONS
 See \fBlvm\fP for common options.
-.TP
-.I \-A, \-\-autobackup y/n
-Controls automatic backup of VG metadata after the change ( see
-.B vgcfgbackup(8)
-).
-.br
-Default is yes.
 .TP
 .I \-c, \-\-chunksize ChunkSize
 Power of 2 chunk size for the snapshot logical volume between 4k and 1024k.
@@ -73,6 +68,12 @@ G for gigabytes or T for terabytes is optional.
 .br
 Default unit is megabytes.
 .TP
+.I \-\-minor minor
+Set the minor number.
+.TP
+.I \-M, \-\-persistent y/n
+Set to y to make the minor number specified persistent.
+.TP
 .I \-n, \-\-name LogicalVolumeName
 The name for the new logical volume.
 .br
@@ -86,6 +87,7 @@ Default is read and write.
 .TP
 .I \-r, \-\-readahead ReadAheadSectors
 Set read ahead sector count of this logical volume to a value between 2 and 120.
+Ignored by device-mapper.
 .TP
 .I \-s, \-\-snapshot
 Create a snapshot logical volume (or snapshot) for an existing, so called
@@ -122,7 +124,7 @@ contents of the original logical volume named /dev/vg00/lvol1
 at snapshot logical volume creation time. If the original logical volume
 contains a file system, you can mount the snapshot logical volume on an
 arbitrary directory in order to access the contents of the filesystem to run
-a backup while the original filesystem is updated.
+a backup while the original filesystem continues to get updated.
 
 .SH SEE ALSO
 .BR lvm (8), 

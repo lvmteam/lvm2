@@ -48,7 +48,7 @@ MAKEFLAGS = @JOBS@
 endif
 
 SUFFIXES=
-SUFFIXES=.c .d .o
+SUFFIXES=.c .d .o .so
 
 CFLAGS+=-Wall 
 #CFLAGS+=-O2
@@ -57,9 +57,12 @@ CFLAGS+=-g -fno-omit-frame-pointer
 #CFLAGS+=-pg
 #LD_FLAGS=-pg
 
-CFLAGS+=-D_REENTRANT -DDEBUG_MEM -DDEBUG -D_GNU_SOURCE
+CFLAGS+=-DDEBUG_MEM -DDEBUG
 #CFLAGS+=-DDEBUG_POOL
 #CFLAGS+=-DBOUNDS_CHECK
+
+LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
+		 awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
 INCLUDES+=-I. -I$(top_srcdir)/include
 INC_LNS=$(top_srcdir)/include/.symlinks_created
@@ -79,6 +82,10 @@ endif
 
 ifeq ("@HAVE_RL_COMPLETION_MATCHES@", "yes")
   CFLAGS += -DHAVE_RL_COMPLETION_MATCHES
+endif
+
+ifeq ("@LVM1@", "internal")
+  CFLAGS += -DLVM1_INTERNAL
 endif
 
 OBJECTS=$(SOURCES:%.c=%.o)
@@ -101,13 +108,20 @@ $(SUBDIRS.install):
 	$(MAKE) -C $(@:.install=) install
 
 $(SUBDIRS.clean):
-	$(MAKE) -C $(@:.clean=) clean
+	-$(MAKE) -C $(@:.clean=) clean
 
 $(SUBDIRS.distclean):
-	$(MAKE) -C $(@:.distclean=) distclean
+	-$(MAKE) -C $(@:.distclean=) distclean
 
 %.o: %.c
 	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
+
+%.so: %.o
+	$(CC) -c $(INCLUDES) $(CFLAGS) %< -o $@
+
+%.so: $(OBJECTS)
+	$(CC) -shared -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
+	-Wl,--version-script,.export.sym $(OBJECTS) -o $@
 
 %.d: %.c
 	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \

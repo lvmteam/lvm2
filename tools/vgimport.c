@@ -20,31 +20,11 @@
 
 #include "tools.h"
 
-static int vgimport_single(struct cmd_context *cmd, const char *vg_name);
-
-int vgimport(struct cmd_context *cmd, int argc, char **argv)
+static int vgimport_single(struct cmd_context *cmd, const char *vg_name,
+			   struct volume_group *vg, int consistent,
+			   void *handle)
 {
-	if (!argc && !arg_count(cmd, all_ARG)) {
-		log_error("Please supply volume groups or use -a for all.");
-		return ECMD_FAILED;
-	}
-
-	if (argc && arg_count(cmd, all_ARG)) {
-		log_error("No arguments permitted when using -a for all.");
-		return ECMD_FAILED;
-	}
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;     
-
-	return process_each_vg(cmd, argc, argv, LCK_VG_WRITE, &vgimport_single);
-}
-
-static int vgimport_single(struct cmd_context *cmd, const char *vg_name)
-{
-	struct volume_group *vg;
-
-	if (!(vg = vg_read(cmd, vg_name))) {
+	if (!vg || !consistent) {
 		log_error("Unable to find exported volume group \"%s\"",
 			  vg_name);
 		goto error;
@@ -76,4 +56,20 @@ static int vgimport_single(struct cmd_context *cmd, const char *vg_name)
 
       error:
 	return ECMD_FAILED;
+}
+
+int vgimport(struct cmd_context *cmd, int argc, char **argv)
+{
+	if (!argc && !arg_count(cmd, all_ARG)) {
+		log_error("Please supply volume groups or use -a for all.");
+		return ECMD_FAILED;
+	}
+
+	if (argc && arg_count(cmd, all_ARG)) {
+		log_error("No arguments permitted when using -a for all.");
+		return ECMD_FAILED;
+	}
+
+	return process_each_vg(cmd, argc, argv, LCK_VG_WRITE, 1, NULL,
+			       &vgimport_single);
 }

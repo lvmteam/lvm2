@@ -4,10 +4,18 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "label.h"
 #include "list.h"
-#include "dbg_malloc.h"
-#include "log.h"
+#include "crc.h"
+#include "xlate.h"
+#include "cache.h"
+
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+/* FIXME Allow for larger labels?  Restricted to single sector currently */
 
 /*
  * Internal labeller struct.
@@ -58,6 +66,7 @@ void label_exit(void)
 	for (c = _labellers.n; c != &_labellers; c = n) {
 		n = c->n;
 		li = list_item(c, struct labeller_i);
+		li->l->ops->destroy(li->l);
 		_free_li(li);
 	}
 }
@@ -89,64 +98,257 @@ struct labeller *label_get_handler(const char *name)
 	return NULL;
 }
 
-static struct labeller *_find_labeller(struct device *dev)
+static struct labeller *_find_labeller(struct device *dev, char *buf,
+				       uint64_t *label_sector)
 {
 	struct list *lih;
 	struct labeller_i *li;
+	struct labeller *r = NULL;
+	int already_open;
+	struct label_header *lh;
+	uint64_t sector;
+	int found = 0;
+	char readbuf[LABEL_SCAN_SIZE];
 
-	list_iterate(lih, &_labellers) {
-		li = list_item(lih, struct labeller_i);
-		if (li->l->ops->can_handle(li->l, dev))
-			return li->l;
+	already_open = dev_is_open(dev);
+
+	if (!already_open && !dev_open(dev, O_RDONLY)) {
+		stack;
+		return NULL;
 	}
 
-	log_debug("No label on device '%s'.", dev_name(dev));
-	return NULL;
+	if (dev_read(dev, 0, LABEL_SCAN_SIZE, readbuf) != LABEL_SCAN_SIZE) {
+		log_debug("%s: Failed to read label area", dev_name(dev));
+		goto out;
+	}
+
+	/* Scan first few sectors for a valid label */
+	for (sector = 0; sector < LABEL_SCAN_SECTORS;
+	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
+		lh = (struct label_header *) (readbuf +
+					      (sector << SECTOR_SHIFT));
+
+		if (!strncmp(lh->id, LABEL_ID, sizeof(lh->id))) {
+			if (found) {
+				log_error("Ignoring additional label on %s at "
+					  "sector %" PRIu64, dev_name(dev),
+					  sector);
+			}
+			if (xlate64(lh->sector_xl) != sector) {
+				log_info("%s: Label for sector %" PRIu64
+					 " found at sector %" PRIu64
+					 " - ignoring", dev_name(dev),
+					 xlate64(lh->sector_xl), sector);
+				continue;
+			}
+			if (calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
+				     ((void *) &lh->offset_xl - (void *) lh)) !=
+			    xlate32(lh->crc_xl)) {
+				log_info("Label checksum incorrect on %s - "
+					 "ignoring", dev_name(dev));
+				continue;
+			}
+			if (found)
+				continue;
+		}
+
+		list_iterate(lih, &_labellers) {
+			li = list_item(lih, struct labeller_i);
+			if (li->l->ops->can_handle(li->l, (char *) lh, sector)) {
+				log_very_verbose("%s: %s label detected",
+						 dev_name(dev), li->name);
+				if (found) {
+					log_error("Ignoring additional label "
+						  "on %s at sector %" PRIu64,
+						  dev_name(dev), sector);
+					continue;
+				}
+				r = li->l;
+				memcpy(buf, lh, LABEL_SIZE);
+				if (label_sector)
+					*label_sector = sector;
+				found = 1;
+				break;
+			}
+		}
+	}
+
+	if (!found)
+		log_very_verbose("%s: No label detected", dev_name(dev));
+
+      out:
+	if (!already_open && !dev_close(dev))
+		stack;
+
+	return r;
 }
 
+/* FIXME Also wipe associated metadata area headers? */
 int label_remove(struct device *dev)
 {
-	struct labeller *l;
+	char buf[LABEL_SIZE];
+	char readbuf[LABEL_SCAN_SIZE];
+	int r = 1;
+	uint64_t sector;
+	int wipe;
+	struct list *lih;
+	struct labeller_i *li;
+	struct label_header *lh;
 
-	if (!(l = _find_labeller(dev))) {
+	memset(buf, 0, LABEL_SIZE);
+
+	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
+
+	if (!dev_open(dev, O_RDWR)) {
 		stack;
 		return 0;
 	}
 
-	return l->ops->remove(l, dev);
-}
+	if (dev_read(dev, 0, LABEL_SCAN_SIZE, readbuf) != LABEL_SCAN_SIZE) {
+		log_debug("%s: Failed to read label area", dev_name(dev));
+		goto out;
+	}
 
-int label_read(struct device *dev, struct label **result)
-{
-	int r;
-	struct list *lih;
-	struct labeller_i *li;
+	/* Scan first few sectors for anything looking like a label */
+	for (sector = 0; sector < LABEL_SCAN_SECTORS;
+	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
+		lh = (struct label_header *) (readbuf +
+					      (sector << SECTOR_SHIFT));
 
-	list_iterate(lih, &_labellers) {
-		li = list_item(lih, struct labeller_i);
-		if ((r = li->l->ops->read(li->l, dev, result))) {
-			(*result)->labeller = li->l;
-			return r;
+		wipe = 0;
+
+		if (!strncmp(lh->id, LABEL_ID, sizeof(lh->id))) {
+			if (xlate64(lh->sector_xl) == sector)
+				wipe = 1;
+		} else {
+			list_iterate(lih, &_labellers) {
+				li = list_item(lih, struct labeller_i);
+				if (li->l->ops->can_handle(li->l, (char *) lh,
+							   sector)) {
+					wipe = 1;
+					break;
+				}
+			}
+		}
+
+		if (wipe) {
+			log_info("%s: Wiping label at sector %" PRIu64,
+				 dev_name(dev), sector);
+			if (dev_write(dev, sector << SECTOR_SHIFT, LABEL_SIZE,
+				      buf) != LABEL_SIZE) {
+				log_error("Failed to remove label from %s at "
+					  "sector %" PRIu64, dev_name(dev),
+					  sector);
+				r = 0;
+			}
 		}
 	}
 
-	log_debug("No label on device '%s'.", dev_name(dev));
-	return 0;
+      out:
+	if (!dev_close(dev))
+		stack;
+
+	return r;
+}
+
+/* FIXME Avoid repeated re-reading if cache lock held */
+int label_read(struct device *dev, struct label **result)
+{
+	char buf[LABEL_SIZE];
+	struct labeller *l;
+	uint64_t sector;
+	int r;
+
+	if (!(l = _find_labeller(dev, buf, &sector))) {
+		stack;
+		return 0;
+	}
+
+	if ((r = l->ops->read(l, dev, buf, result)) && result && *result)
+		(*result)->sector = sector;
+
+	return r;
+}
+
+/* Caller may need to use label_get_handler to create label struct! */
+int label_write(struct device *dev, struct label *label)
+{
+	char buf[LABEL_SIZE];
+	struct label_header *lh = (struct label_header *) buf;
+	int r = 1;
+	int already_open;
+
+	if ((LABEL_SIZE + (label->sector << SECTOR_SHIFT)) > LABEL_SCAN_SIZE) {
+		log_error("Label sector %" PRIu64 " beyond range (%ld)",
+			  label->sector, LABEL_SCAN_SECTORS);
+		return 0;
+	}
+
+	memset(buf, 0, LABEL_SIZE);
+
+	strncpy(lh->id, LABEL_ID, sizeof(lh->id));
+	lh->sector_xl = xlate64(label->sector);
+	lh->offset_xl = xlate32(sizeof(*lh));
+
+	if (!label->labeller->ops->write(label, buf))
+		return 0;
+
+	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
+				      ((void *) &lh->offset_xl - (void *) lh)));
+
+	already_open = dev_is_open(dev);
+	if (!already_open && dev_open(dev, O_RDWR)) {
+		stack;
+		return 0;
+	}
+
+	log_info("%s: Writing label to sector %" PRIu64, dev_name(dev),
+		 label->sector);
+	if (dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf) !=
+	    LABEL_SIZE) {
+		log_debug("Failed to write label to %s", dev_name(dev));
+		r = 0;
+	}
+
+	if (!already_open && dev_close(dev))
+		stack;
+
+	return r;
 }
 
 int label_verify(struct device *dev)
 {
 	struct labeller *l;
+	char buf[LABEL_SIZE];
+	uint64_t sector;
 
-	if (!(l = _find_labeller(dev))) {
+	if (!(l = _find_labeller(dev, buf, &sector))) {
 		stack;
 		return 0;
 	}
 
-	return l->ops->verify(l, dev);
+	return l->ops->verify(l, buf, sector);
 }
 
-void label_destroy(struct label *lab)
+void label_destroy(struct label *label)
 {
-	lab->labeller->ops->destroy_label(lab->labeller, lab);
+	label->labeller->ops->destroy_label(label->labeller, label);
+	dbg_free(label);
+}
+
+struct label *label_create(struct labeller *labeller)
+{
+	struct label *label;
+
+	if (!(label = dbg_malloc(sizeof(*label)))) {
+		log_error("label allocaction failed");
+		return NULL;
+	}
+	memset(label, 0, sizeof(*label));
+
+	label->labeller = labeller;
+
+	labeller->ops->initialise_label(labeller, label);
+
+	return label;
 }

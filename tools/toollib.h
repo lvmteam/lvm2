@@ -29,30 +29,42 @@ int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 		    int autobackup);
 int autobackup(struct volume_group *vg);
 
+struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
+				int lock_type);
+
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    int lock_type,
+		    int lock_type, int consistent, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
-					   const char *vg_name));
+			    		   const char *vg_name,
+					   struct volume_group *vg,
+					   int consistent,
+					   void *handle));
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    struct volume_group *vg,
+		    struct volume_group *vg, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct volume_group * vg,
-					   struct physical_volume * pv));
+					   struct physical_volume * pv,
+					   void *handle));
+
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
-		    int lock_type,
+		    int lock_type, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
-					   struct logical_volume * lv));
+					   struct logical_volume * lv,
+					   void *handle));
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  void *handle,
 			  int (*process_single) (struct cmd_context * cmd,
 						 struct volume_group * vg,
-						 struct physical_volume * pv));
-int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  int (*process_single) (struct cmd_context * cmd,
-						 struct logical_volume * lv));
+						 struct physical_volume * pv,
+						 void *handle));
 
-int is_valid_chars(char *n);
+int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  void *handle,
+			  int (*process_single) (struct cmd_context * cmd,
+						 struct logical_volume * lv,
+						 void *handle));
 
 char *default_vgname(struct cmd_context *cmd);
 char *extract_vgname(struct cmd_context *cmd, char *lv_name);

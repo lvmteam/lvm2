@@ -4,17 +4,7 @@
  * This file is released under the GPL.
  */
 
-#include "log.h"
-#include "archive.h"
-#include "dbg_malloc.h"
-#include "format-text.h"
-#include "lvm-string.h"
-#include "toollib.h"
-
 #include "tools.h"
-
-#include <unistd.h>
-#include <limits.h>
 
 static struct {
 	int enabled;
@@ -97,7 +87,7 @@ int archive(struct volume_group *vg)
 		return 1;
 
 	if (test_mode()) {
-		log_print("Test mode: Skipping archiving of volume group.");
+		log_verbose("Test mode: Skipping archiving of volume group.");
 		return 1;
 	}
 
@@ -113,7 +103,7 @@ int archive(struct volume_group *vg)
 
 int archive_display(struct cmd_context *cmd, const char *vg_name)
 {
-	return archive_list(cmd, cmd->um, _archive_params.dir, vg_name);
+	return archive_list(cmd, _archive_params.dir, vg_name);
 }
 
 static struct {
@@ -153,11 +143,8 @@ void backup_enable(int flag)
 
 static int __backup(struct volume_group *vg)
 {
-	int r;
-	struct format_instance *tf;
 	char name[PATH_MAX];
 	char *desc;
-	void *context;
 
 	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 0))) {
 		stack;
@@ -173,20 +160,7 @@ static int __backup(struct volume_group *vg)
 
 	log_verbose("Creating volume group backup \"%s\"", name);
 
-	if (!(context = create_text_context(vg->cmd->fmtt, name, desc)) ||
-	    !(tf = vg->cmd->fmtt->ops->create_instance(vg->cmd->fmtt, NULL,
-						       context))) {
-		stack;
-		return 0;
-	}
-
-	if (!(r = tf->fmt->ops->vg_write(tf, vg, context)) ||
-	    !(r = tf->fmt->ops->vg_commit(tf, vg, context)))
-		stack;
-
-	tf->fmt->ops->destroy_instance(tf);
-
-	return r;
+	return backup_to_file(name, desc, vg);
 }
 
 int backup(struct volume_group *vg)
@@ -197,7 +171,7 @@ int backup(struct volume_group *vg)
 	}
 
 	if (test_mode()) {
-		log_print("Test mode: Skipping volume group backup.");
+		log_verbose("Test mode: Skipping volume group backup.");
 		return 1;
 	}
 
@@ -227,57 +201,73 @@ int backup_remove(const char *vg_name)
 	return 1;
 }
 
-static struct volume_group *_read_vg(struct cmd_context *cmd,
-				     const char *vg_name, const char *file)
+struct volume_group *backup_read_vg(struct cmd_context *cmd,
+				    const char *vg_name, const char *file)
 {
 	struct volume_group *vg;
 	struct format_instance *tf;
+	struct list *mdah;
+	struct metadata_area *mda;
 	void *context;
 
-	if (!(context = create_text_context(cmd->fmtt, file,
+	if (!(context = create_text_context(cmd, file,
 					    cmd->cmd_line)) ||
-	    !(tf = cmd->fmtt->ops->create_instance(cmd->fmtt, NULL, context))) {
+	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
+							 context))) {
 		log_error("Couldn't create text format object.");
 		return NULL;
 	}
 
-	if (!(vg = tf->fmt->ops->vg_read(tf, vg_name, context)))
-		stack;
+	list_iterate(mdah, &tf->metadata_areas) {
+		mda = list_item(mdah, struct metadata_area);
+		if (!(vg = mda->ops->vg_read(tf, vg_name, mda)))
+			stack;
+		break;
+	}
 
 	tf->fmt->ops->destroy_instance(tf);
 	return vg;
 }
 
-int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
-			     const char *file)
+/* ORPHAN and VG locks held before calling this */
+int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
-	struct volume_group *vg;
+	struct list *pvh;
+	struct physical_volume *pv;
+	struct cache_info *info;
 
 	/*
-	 * Read in the volume group.
+	 * FIXME: Check that the PVs referenced in the backup are
+	 * not members of other existing VGs.
 	 */
-	if (!(vg = _read_vg(cmd, vg_name, file))) {
-		stack;
+
+	/* Attempt to write out using currently active format */
+	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, vg->name,
+						       NULL))) {
+		log_error("Failed to allocate format instance");
 		return 0;
 	}
 
-	/*
-	 * Check that those pv's referenced in the backup are
-	 * currently orphans or members of the vg.s
-	 */
-	/*
-	 * FIXME: waiting for label code.
-	 */
-
-	/*
-	 * Write the vg.
-	 */
-
-	/* FIXME How do I find what format to write out the VG in? */
-	/* Must store the format type inside the backup? */
-	if (!(vg->fid = cmd->fmt1->ops->create_instance(cmd->fmt1, NULL, NULL))) {
-		log_error("Failed to allocate format1 instance");
-		return 0;
+	/* Add any metadata areas on the PVs */
+	list_iterate(pvh, &vg->pvs) {
+		pv = list_item(pvh, struct pv_list)->pv;
+		if (!(info = info_from_pvid(pv->dev->pvid))) {
+			log_error("PV %s missing from cache",
+				  dev_name(pv->dev));
+			return 0;
+		}
+		if (cmd->fmt != info->fmt) {
+			log_error("PV %s is a different format (%s)",
+				  dev_name(pv->dev), info->fmt->name);
+			return 0;
+		}
+		if (!vg->fid->fmt->ops->
+		    pv_setup(vg->fid->fmt, 0, 0, 0, 0, 0,
+			     &vg->fid->metadata_areas, pv, vg)) {
+			log_error("Format-specific setup for %s failed",
+				  dev_name(pv->dev));
+			return 0;
+		}
 	}
 
 	if (!vg_write(vg)) {
@@ -286,6 +276,23 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	return 1;
+}
+
+/* ORPHAN and VG locks held before calling this */
+int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
+			     const char *file)
+{
+	struct volume_group *vg;
+
+	/*
+	 * Read in the volume group from the text file.
+	 */
+	if (!(vg = backup_read_vg(cmd, vg_name, file))) {
+		stack;
+		return 0;
+	}
+
+	return backup_restore_vg(cmd, vg);
 }
 
 int backup_restore(struct cmd_context *cmd, const char *vg_name)
@@ -299,4 +306,39 @@ int backup_restore(struct cmd_context *cmd, const char *vg_name)
 	}
 
 	return backup_restore_from_file(cmd, vg_name, path);
+}
+
+int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
+{
+	int r;
+	struct format_instance *tf;
+	struct list *mdah;
+	struct metadata_area *mda;
+	void *context;
+	struct cmd_context *cmd;
+
+	cmd = vg->cmd;
+
+	if (!(context = create_text_context(cmd, file, desc)) ||
+	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
+							 context))) {
+		log_error("Couldn't create backup object.");
+		return 0;
+	}
+
+	/* Write and commit the metadata area */
+	list_iterate(mdah, &tf->metadata_areas) {
+		mda = list_item(mdah, struct metadata_area);
+		if (!(r = mda->ops->vg_write(tf, vg, mda))) {
+			stack;
+			continue;
+		}
+		if (mda->ops->vg_commit &&
+		    !(r = mda->ops->vg_commit(tf, vg, mda))) {
+			stack;
+		}
+	}
+
+	tf->fmt->ops->destroy_instance(tf);
+	return r;
 }

@@ -7,18 +7,31 @@
 #ifndef _LVM_LABEL_H
 #define _LVM_LABEL_H
 
+#include "cache.h"
+#include "lvm-types.h"
 #include "uuid.h"
 #include "device.h"
 
+#define LABEL_ID "LABELONE"
+#define LABEL_SIZE SECTOR_SIZE	/* Think very carefully before changing this */
+#define LABEL_SCAN_SECTORS 4L
+#define LABEL_SCAN_SIZE (LABEL_SCAN_SECTORS << SECTOR_SHIFT)
+
+/* On disk - 32 bytes */
+struct label_header {
+	uint8_t id[8];		/* LABELONE */
+	uint64_t sector_xl;	/* Sector number of this label */
+	uint32_t crc_xl;	/* From next field to end of sector */
+	uint32_t offset_xl;	/* Offset from start of struct to contents */
+	uint8_t type[8];	/* LVM2 001 */
+} __attribute__ ((packed));
+
+/* In core */
 struct label {
-	struct id id;
-
-	char volume_type[32];
-	uint32_t version[3];
-
-	void *extra_info;
-
+	char type[8];
+	uint64_t sector;
 	struct labeller *labeller;
+	void *info;
 };
 
 struct labeller;
@@ -27,46 +40,44 @@ struct label_ops {
 	/*
 	 * Is the device labelled with this format ?
 	 */
-	int (*can_handle)(struct labeller *l, struct device *dev);
+	int (*can_handle) (struct labeller * l, char *buf, uint64_t sector);
 
 	/*
 	 * Write a label to a volume.
 	 */
-	int (*write)(struct labeller *l,
-		     struct device *dev, struct label *label);
-
-	/*
-	 * Remove a label from a device.
-	 */
-	int (*remove)(struct labeller *l, struct device *dev);
+	int (*write) (struct label * label, char *buf);
 
 	/*
 	 * Read a label from a volume.
 	 */
-	int (*read)(struct labeller *l,
-		    struct device *dev, struct label **label);
+	int (*read) (struct labeller * l, struct device * dev,
+		     char *buf, struct label ** label);
 
 	/*
 	 * Additional consistency checks for the paranoid.
 	 */
-	int (*verify)(struct labeller *l, struct device *dev);
+	int (*verify) (struct labeller * l, char *buf, uint64_t sector);
+
+	/*
+	 * Populate label_type etc.
+	 */
+	int (*initialise_label) (struct labeller * l, struct label * label);
 
 	/*
 	 * Destroy a previously read label.
 	 */
-	void (*destroy_label)(struct labeller *l, struct label *label);
+	void (*destroy_label) (struct labeller * l, struct label * label);
 
 	/*
 	 * Destructor.
 	 */
-	void (*destroy)(struct labeller *l);
+	void (*destroy) (struct labeller * l);
 };
 
 struct labeller {
 	struct label_ops *ops;
 	void *private;
 };
-
 
 int label_init(void);
 void label_exit(void);
@@ -77,14 +88,9 @@ struct labeller *label_get_handler(const char *name);
 
 int label_remove(struct device *dev);
 int label_read(struct device *dev, struct label **result);
+int label_write(struct device *dev, struct label *label);
 int label_verify(struct device *dev);
-void label_destroy(struct label *lab);
-
-/*
- * We'll support two label types: the 'pretend the
- * LVM1 pv structure at the begining of the disk
- * is a label' hack, and pjc's 1 sector labels at
- * the front and back of the device.
- */
+struct label *label_create(struct labeller *labeller);
+void label_destroy(struct label *label);
 
 #endif

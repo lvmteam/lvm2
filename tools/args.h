@@ -12,6 +12,11 @@ arg(version_ARG, '\0', "version", NULL)
 arg(quiet_ARG, '\0', "quiet", NULL)
 arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", size_arg)
 arg(ignorelockingfailure_ARG, '\0', "ignorelockingfailure", NULL)
+arg(metadatacopies_ARG, '\0', "metadatacopies", int_arg)
+arg(metadatasize_ARG, '\0', "metadatasize", size_arg)
+arg(restorefile_ARG, '\0', "restorefile", string_arg)
+arg(labelsector_ARG, '\0', "labelsector", int_arg)
+arg(driverloaded_ARG, '\0', "driverloaded", yes_no_arg)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg)
@@ -77,4 +82,3 @@ arg(zero_ARG, 'Z', "zero", yes_no_arg)
 
 /* this should always be last */
 arg(ARG_COUNT, '-', "", NULL)
-

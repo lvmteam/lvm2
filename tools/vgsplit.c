@@ -65,7 +65,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 {
 	struct list *lvh, *lvht, *segh;
 	struct logical_volume *lv;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 	struct physical_volume *pv;
 	struct volume_group *vg_with;
 	int s;
@@ -77,7 +77,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		/* VG as each other */
 		vg_with = NULL;
 		list_iterate(segh, &lv->segments) {
-			seg = list_item(segh, struct stripe_segment);
+			seg = list_item(segh, struct lv_segment);
 			for (s = 0; s < seg->stripes; s++) {
 				pv = seg->area[s].pv;
 				if (vg_with) {
@@ -164,6 +164,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	struct volume_group *vg_to, *vg_from;
 	int opt;
 	int active;
+	int consistent = 1;
 
 	if (argc < 3) {
 		log_error("Existing VG, new VG and physical volumes required.");
@@ -180,16 +181,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!driver_is_loaded())
-		return ECMD_FAILED;     
-
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 	if (!lock_vol(cmd, vg_name_from, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", vg_name_from);
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_from = vg_read(cmd, vg_name_from))) {
+	if (!(vg_from = vg_read(cmd, vg_name_from, &consistent)) || !consistent) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
 		unlock_vg(cmd, vg_name_from);
 		return ECMD_FAILED;
@@ -214,7 +212,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((vg_to = vg_read(cmd, vg_name_to))) {
+	consistent = 0;
+	if ((vg_to = vg_read(cmd, vg_name_to, &consistent))) {
 		/* FIXME Remove this restriction */
 		log_error("Volume group \"%s\" already exists", vg_name_to);
 		goto error;
@@ -250,6 +249,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!(_move_snapshots(vg_from, vg_to)))
 		goto error;
 
+	/* FIXME Split mdas properly somehow too! */
+	/* Currently we cheat by sharing the format instance and relying on 
+	 * vg_write to ignore mdas outside the VG!  Done this way, with text 
+	 * format, vg_from disappears for a short time. */
+	vg_to->fid = vg_from->fid;
+
 	/* store it on disks */
 	log_verbose("Writing out updated volume groups");
 
@@ -271,6 +276,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	backup(vg_from);
 
 	/* Remove EXPORTED flag from new VG */
+	consistent = 1;
+	if (!(vg_to = vg_read(cmd, vg_name_to, &consistent)) || !consistent) {
+		log_error("Volume group \"%s\" became inconsistent: please "
+			  "fix manually", vg_name_to);
+		goto error;
+	}
+
 	vg_to->status &= ~EXPORTED_VG;
 
 	if (!vg_write(vg_to))

@@ -25,26 +25,61 @@ A file containing a simple script with one command per line
 can also be given on the command line.  The script can also be
 executed directly if the first line is #! followed by the absolute
 path of \fBlvm\fP.
+.LP
+Where commands take VG or LV names as arguments, the full path name is
+optional.  An LV called "lvol0" in a VG called "vg0" can be specified
+as "vg0/lvol0".  If a list of VGs is required but is left empty, a list of
+all VGs will be substituted.  If a list of LVs is required
+but a VG is given, a list of all the LVs in that VG will be substituted.
+So "lvdisplay vg0" will display all the LVs in "vg0".
 .SH OPTIONS
-The following options can be used with every command and are not documented
-on individual manual pages.
+The following options are available for many of the commands and are 
+not documented on individual manual pages.
 .TP
 \fB-h | --help\fP \(em Display the help text.
 .TP
-\fB--version\fP \(em Display the version.
-Not implemented yet.
+\fB--version\fP \(em Display version information.
 .TP
 \fB-v | --verbose\fP \(em Set verbose level.
-Repeat from 1 to 3 times to determine the detail of messages 
+Repeat from 1 to 3 times to increase the detail of messages 
 sent to stdout and stderr.  Overrides config file setting.
 .TP
 \fB-d | --debug\fP \(em Set debug level.
-Repeat from 1 to 6 times to determine the detail of messages sent 
+Repeat from 1 to 6 times to increase the detail of messages sent 
 to the log file and/or syslog (if configured).
 Overrides config file setting.
 .TP
 \fB--quiet\fP \(em Suppress output and log messages.
 Overrides -d and -v.
+.TP
+\fB-t | --test\fP \(em Run in test mode.
+Commands will not update metadata.
+.TP
+\fB--driverloaded\fP { \fBy\fP | \fBn\fP }
+Whether or not the device-mapper kernel driver is loaded.
+If you set this to \fBn\fP, no attempt will be made to contact the driver.
+.TP
+\fB-A | --autobackup\fP { \fBy\fP | \fBn\fP }
+Whether or not to metadata should be backed up automatically after a change.  
+You are strongly advised not to disable this!
+See
+.B vgcfgbackup (8).
+.TP
+\fB-P | --partial\fP
+When set, the tools will do their best to provide access to volume groups
+that are only partially available.  Where part of a logical volume is 
+missing, \fB/dev/ioerror\fP will be substituted, and you could use
+\fBdmsetup (8)\fP to set this up to return I/O errors when accessed,
+or create it as a large block device of nulls.  Metadata may not be
+changed with this option. To insert a replacement physical volume
+of the same or large size use \fBpvcreate -u\fP to set the uuid to 
+match the original followed by \fBvgcfgrestore (8)\fP.
+.TP
+\fB--ignorelockingfailure\fP
+This lets you proceed with read-only metadata operations such as
+\fBlvchange -ay\fP and \fBvgchange -ay\fP even if the locking module fails.
+One use for this is in a system init script if the lock directory 
+is mounted read-only when the script runs.
 .SH ENVIRONMENT VARIABLES
 .TP
 \fBLVM_SYSTEM_DIR\fP 
@@ -53,13 +88,8 @@ system files.
 Defaults to "/etc/lvm".
 .TP
 \fBHOME\fP 
-Directory containing .lvm_history if the internal shell
+Directory containing .lvm_history if the internal readline shell
 is invoked.
-.TP
-\fBLVM_AUTOBACKUP\fP 
-Set to "no" to disable automatic metadata
-backups and archiving.  Not recommended.
-Defaults to "yes".
 .TP
 \fBLVM_VG_NAME\fP 
 The volume group name that is assumed for 

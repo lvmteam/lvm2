@@ -9,7 +9,10 @@
 
 #include "lvm-types.h"
 #include "metadata.h"
-#include "uuid-map.h"
+#include "pool.h"
+
+#define FMT_TEXT_NAME "lvm2"
+#define FMT_TEXT_ALIAS "text"
 
 /*
  * Archives a vg config.  'retain_days' is the minimum number of
@@ -19,21 +22,33 @@
  */
 int archive_vg(struct volume_group *vg,
 	       const char *dir,
-	       const char *desc,
-	       uint32_t retain_days,
-	       uint32_t min_archive);
+	       const char *desc, uint32_t retain_days, uint32_t min_archive);
 
 /*
  * Displays a list of vg backups in a particular archive directory.
  */
-int archive_list(struct cmd_context *cmd, struct uuid_map *um,
-		 const char *dir, const char *vg);
+int archive_list(struct cmd_context *cmd, const char *dir, const char *vg);
 
 /*
  * The text format can read and write a volume_group to a file.
  */
 struct format_type *create_text_format(struct cmd_context *cmd);
-void *create_text_context(struct format_type *fmt, const char *path, 
+void *create_text_context(struct cmd_context *cmd, const char *path,
 			  const char *desc);
+
+struct labeller *text_labeller_create(struct format_type *fmt);
+
+int pvhdr_read(struct device *dev, char *buf);
+
+int add_da(struct format_type *fmt, struct pool *mem, struct list *das,
+	   uint64_t start, uint64_t size);
+void del_das(struct list *das);
+
+int add_mda(struct format_type *fmt, struct pool *mem, struct list *mdas,
+	    struct device *dev, uint64_t start, uint64_t size);
+void del_mdas(struct list *mdas);
+
+int vgname_from_mda(struct format_type *fmt, struct device_area *dev_area,
+		    char *buf, uint32_t size);
 
 #endif

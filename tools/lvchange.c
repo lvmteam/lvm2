@@ -20,120 +20,6 @@
 
 #include "tools.h"
 
-static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv);
-static int lvchange_permission(struct cmd_context *cmd,
-			       struct logical_volume *lv);
-static int lvchange_availability(struct cmd_context *cmd,
-				 struct logical_volume *lv);
-static int lvchange_contiguous(struct cmd_context *cmd,
-			       struct logical_volume *lv);
-static int lvchange_readahead(struct cmd_context *cmd,
-			      struct logical_volume *lv);
-static int lvchange_persistent(struct cmd_context *cmd,
-			       struct logical_volume *lv);
-
-int lvchange(struct cmd_context *cmd, int argc, char **argv)
-{
-	if (!arg_count(cmd, available_ARG) && !arg_count(cmd, contiguous_ARG)
-	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
-	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, persistent_ARG)) {
-		log_error("One or more of -a, -C, -m, -M, -p or -r required");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_count(cmd, ignorelockingfailure_ARG) &&
-	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
-		log_error("Only -a permitted with --ignorelockingfailure");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!argc) {
-		log_error("Please give logical volume path(s)");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_count(cmd, minor_ARG) && argc != 1) {
-		log_error("Only give one logical volume when specifying minor");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;
-
-	return process_each_lv(cmd, argc, argv, LCK_VG_WRITE, &lvchange_single);
-}
-
-static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	int doit = 0;
-	int archived = 0;
-
-	if (!(lv->vg->status & LVM_WRITE) &&
-	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
-		log_error("Only -a permitted with read-only volume "
-			  "group \"%s\"", lv->vg->name);
-		return EINVALID_CMD_LINE;
-	}
-
-	if (lv_is_origin(lv) &&
-	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
-		log_error("Can't change logical volume \"%s\" under snapshot",
-			  lv->name);
-		return ECMD_FAILED;
-	}
-
-	if (lv_is_cow(lv)) {
-		log_error("Can't change snapshot logical volume \"%s\"",
-			  lv->name);
-		return ECMD_FAILED;
-	}
-
-	/* access permission change */
-	if (arg_count(cmd, permission_ARG)) {
-		if (!archive(lv->vg))
-			return ECMD_FAILED;
-		archived = 1;
-		doit += lvchange_permission(cmd, lv);
-	}
-
-	/* allocation policy change */
-	if (arg_count(cmd, contiguous_ARG)) {
-		if (!archived && !archive(lv->vg))
-			return ECMD_FAILED;
-		archived = 1;
-		doit += lvchange_contiguous(cmd, lv);
-	}
-
-	/* read ahead sector change */
-	if (arg_count(cmd, readahead_ARG)) {
-		if (!archived && !archive(lv->vg))
-			return ECMD_FAILED;
-		archived = 1;
-		doit += lvchange_readahead(cmd, lv);
-	}
-
-	/* read ahead sector change */
-	if (arg_count(cmd, persistent_ARG)) {
-		if (!archived && !archive(lv->vg))
-			return ECMD_FAILED;
-		archived = 1;
-		doit += lvchange_persistent(cmd, lv);
-	}
-
-	if (doit)
-		log_print("Logical volume \"%s\" changed", lv->name);
-
-	/* availability change */
-	if (arg_count(cmd, available_ARG))
-		if (!lvchange_availability(cmd, lv))
-			return ECMD_FAILED;
-
-	return 0;
-}
-
 static int lvchange_permission(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
@@ -234,7 +120,7 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 	}
 
 /******** FIXME lv_check_contiguous?
-	if ((lv_allocation & ALLOC_CONTIGUOUS)
+	if (want_contiguous)
 		    && (ret = lv_check_contiguous(vg, lv_index + 1)) == FALSE) {
 			log_error("No contiguous logical volume \"%s\"", lv->name);
 			return 0;
@@ -245,8 +131,8 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 		log_verbose("Setting contiguous allocation policy for \"%s\"",
 			    lv->name);
 	} else {
-		lv->alloc = ALLOC_NEXT_FREE;
-		log_verbose("Removing contiguous allocation policy for \"%s\"",
+		lv->alloc = ALLOC_DEFAULT;
+		log_verbose("Reverting to default allocation policy for \"%s\"",
 			    lv->name);
 	}
 
@@ -370,4 +256,105 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	}
 
 	return 1;
+}
+
+static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
+			   void *handle)
+{
+	int doit = 0;
+	int archived = 0;
+
+	if (!(lv->vg->status & LVM_WRITE) &&
+	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
+		log_error("Only -a permitted with read-only volume "
+			  "group \"%s\"", lv->vg->name);
+		return EINVALID_CMD_LINE;
+	}
+
+	if (lv_is_origin(lv) &&
+	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
+		log_error("Can't change logical volume \"%s\" under snapshot",
+			  lv->name);
+		return ECMD_FAILED;
+	}
+
+	if (lv_is_cow(lv)) {
+		log_error("Can't change snapshot logical volume \"%s\"",
+			  lv->name);
+		return ECMD_FAILED;
+	}
+
+	/* access permission change */
+	if (arg_count(cmd, permission_ARG)) {
+		if (!archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_permission(cmd, lv);
+	}
+
+	/* allocation policy change */
+	if (arg_count(cmd, contiguous_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_contiguous(cmd, lv);
+	}
+
+	/* read ahead sector change */
+	if (arg_count(cmd, readahead_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_readahead(cmd, lv);
+	}
+
+	/* read ahead sector change */
+	if (arg_count(cmd, persistent_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_persistent(cmd, lv);
+	}
+
+	if (doit)
+		log_print("Logical volume \"%s\" changed", lv->name);
+
+	/* availability change */
+	if (arg_count(cmd, available_ARG))
+		if (!lvchange_availability(cmd, lv))
+			return ECMD_FAILED;
+
+	return 0;
+}
+
+int lvchange(struct cmd_context *cmd, int argc, char **argv)
+{
+	if (!arg_count(cmd, available_ARG) && !arg_count(cmd, contiguous_ARG)
+	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
+	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, persistent_ARG)) {
+		log_error("One or more of -a, -C, -m, -M, -p or -r required");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, ignorelockingfailure_ARG) &&
+	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
+		log_error("Only -a permitted with --ignorelockingfailure");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!argc) {
+		log_error("Please give logical volume path(s)");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, minor_ARG) && argc != 1) {
+		log_error("Only give one logical volume when specifying minor");
+		return EINVALID_CMD_LINE;
+	}
+
+	return process_each_lv(cmd, argc, argv, LCK_VG_WRITE, NULL,
+			       &lvchange_single);
 }

@@ -1,0 +1,23 @@
+.TH VGCFGRESTORE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgcfgrestore \- restore volume group descriptor area
+.SH SYNOPSIS
+.B vgcfgrestore
+.RB [ \-d | \-\-debug ]
+.RB [ \-f | \-\-file " filename" ]
+.RB [ \-l[l] | \-\-list [--list] ]
+.RB [ \-h | \-\-help ]
+.RB [ \-M | \-\-Metadatatype 1|2]
+.RB [ \-n | \-\-name " VolumeGroupName" ]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
+.RI [ VolumeGroupName ...]
+.SH DESCRIPTION
+.B vgcfgrestore
+allows you to restore the metadata 
+of your volume groups from a text backup file produced by \fBvgcfgbackup\fP.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.SH SEE ALSO
+.BR lvm (8),
+.BR vgcreate (8)

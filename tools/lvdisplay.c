@@ -20,12 +20,13 @@
 
 #include "tools.h"
 
-int lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv)
+int lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
+		     void *handle)
 {
 	if (arg_count(cmd, colon_ARG))
 		lvdisplay_colons(lv);
 	else {
-		lvdisplay_full(cmd, lv);
+		lvdisplay_full(cmd, lv, handle);
 		if (arg_count(cmd, maps_ARG))
 			lvdisplay_segments(lv);
 	}
@@ -42,8 +43,6 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!driver_is_loaded())
-		return ECMD_FAILED;
-
-	return process_each_lv(cmd, argc, argv, LCK_VG_READ, &lvdisplay_single);
+	return process_each_lv(cmd, argc, argv, LCK_VG_READ, NULL,
+			       &lvdisplay_single);
 }

@@ -20,10 +20,94 @@
 
 #include "tools.h"
 
-void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv);
-
 int pv_max_name_len = 0;
 int vg_max_name_len = 0;
+
+void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
+			   void *handle)
+{
+	char uuid[64];
+	int vg_name_len = 0;
+
+	char *s1, *s2;
+
+	char pv_tmp_name[NAME_LEN] = { 0, };
+	char vg_tmp_name[NAME_LEN] = { 0, };
+	char vg_name_this[NAME_LEN] = { 0, };
+
+	/* short listing? */
+	if (arg_count(cmd, short_ARG) > 0) {
+		log_print("%s", dev_name(pv->dev));
+		return;
+	}
+
+	if (arg_count(cmd, verbose_ARG) > 1) {
+		/* FIXME As per pv_display! Drop through for now. */
+		/* pv_show(pv); */
+
+		/* FIXME - Moved to Volume Group structure */
+		/* log_print("System Id             %s", pv->vg->system_id); */
+
+		/* log_print(" "); */
+		/* return; */
+	}
+
+	memset(pv_tmp_name, 0, sizeof(pv_tmp_name));
+
+	vg_name_len = strlen(pv->vg_name) + 1;
+
+	if (arg_count(cmd, uuid_ARG)) {
+		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+			stack;
+			return;
+		}
+
+		sprintf(pv_tmp_name, "%-*s with UUID %s",
+			pv_max_name_len - 2, dev_name(pv->dev), uuid);
+	} else {
+		sprintf(pv_tmp_name, "%s", dev_name(pv->dev));
+	}
+
+	if (!*pv->vg_name) {
+		log_print("PV %-*s    %-*s %s [%s]",
+			  pv_max_name_len, pv_tmp_name,
+			  vg_max_name_len, " ",
+			  pv->fmt ? pv->fmt->name : "    ",
+			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));
+		dbg_free(s1);
+		return;
+	}
+
+	if (pv->status & EXPORTED_VG) {
+		strncpy(vg_name_this, pv->vg_name, vg_name_len);
+		log_print("PV %-*s  is in exported VG %s "
+			  "[%s / %s free]",
+			  pv_max_name_len, pv_tmp_name,
+			  vg_name_this, (s1 =
+					 display_size(pv->pe_count *
+						      pv->pe_size / 2,
+						      SIZE_SHORT)),
+			  (s2 = display_size((pv->pe_count - pv->pe_alloc_count)
+					     * pv->pe_size / 2, SIZE_SHORT)));
+		dbg_free(s1);
+		dbg_free(s2);
+		return;
+	}
+
+	sprintf(vg_tmp_name, "%s", pv->vg_name);
+	log_print
+	    ("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
+	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
+	     pv->fmt ? pv->fmt->name : "    ",
+	     (s1 = display_size(pv->pe_count * pv->pe_size / 2, SIZE_SHORT)),
+	     (s2 =
+	      display_size((pv->pe_count - pv->pe_alloc_count) * pv->pe_size /
+			   2, SIZE_SHORT)));
+	dbg_free(s1);
+	dbg_free(s2);
+
+	return;
+}
 
 int pvscan(struct cmd_context *cmd, int argc, char **argv)
 {
@@ -55,6 +139,9 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Wiping cache of LVM-capable devices");
 	persistent_filter_wipe(cmd->filter);
+
+	log_verbose("Wiping internal cache");
+	cache_destroy();
 
 	log_verbose("Walking through all physical volumes");
 	if (!(pvs = get_pvs(cmd)))
@@ -108,7 +195,8 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	vg_max_name_len += 2;
 
 	list_iterate(pvh, pvs)
-	    pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv);
+	    pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv,
+				  NULL);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");
@@ -127,88 +215,4 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	dbg_free(s3);
 
 	return 0;
-}
-
-void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
-{
-	char uuid[64];
-	int vg_name_len = 0;
-
-	char *s1, *s2;
-
-	char pv_tmp_name[NAME_LEN] = { 0, };
-	char vg_tmp_name[NAME_LEN] = { 0, };
-	char vg_name_this[NAME_LEN] = { 0, };
-
-	/* short listing? */
-	if (arg_count(cmd, short_ARG) > 0) {
-		log_print("%s", dev_name(pv->dev));
-		return;
-	}
-
-	if (arg_count(cmd, verbose_ARG) > 1) {
-		/* FIXME As per pv_display! Drop through for now. */
-		/* pv_show(pv); */
-
-		/* FIXME - Moved to Volume Group structure */
-		/* log_print("System Id             %s", pv->vg->system_id); */
-
-		/* log_print(" "); */
-		/* return; */
-	}
-
-	memset(pv_tmp_name, 0, sizeof(pv_tmp_name));
-
-	vg_name_len = strlen(pv->vg_name) + 1;
-
-	if (arg_count(cmd, uuid_ARG)) {
-		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
-			stack;
-			return;
-		}
-
-		sprintf(pv_tmp_name, "%-*s with UUID %s",
-			pv_max_name_len - 2, dev_name(pv->dev), uuid);
-	} else {
-		sprintf(pv_tmp_name, "%s", dev_name(pv->dev));
-	}
-
-	if (!*pv->vg_name) {
-		log_print("PV %-*s         %-*s [%s]",
-			  pv_max_name_len, pv_tmp_name,
-			  vg_max_name_len, " ",
-			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));
-		dbg_free(s1);
-		return;
-	}
-
-	if (pv->status & EXPORTED_VG) {
-		strncpy(vg_name_this, pv->vg_name, vg_name_len);
-		log_print("PV %-*s  is in exported VG %s "
-			  "[%s / %s free]",
-			  pv_max_name_len, pv_tmp_name,
-			  vg_name_this, (s1 =
-					 display_size(pv->pe_count *
-						      pv->pe_size / 2,
-						      SIZE_SHORT)),
-			  (s2 = display_size((pv->pe_count - pv->pe_alloc_count)
-					     * pv->pe_size / 2, SIZE_SHORT)));
-		dbg_free(s1);
-		dbg_free(s2);
-		return;
-	}
-
-	sprintf(vg_tmp_name, "%s", pv->vg_name);
-	log_print
-	    ("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
-	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
-	     pv->fid ? pv->fid->fmt->name : "    ",
-	     (s1 = display_size(pv->pe_count * pv->pe_size / 2, SIZE_SHORT)),
-	     (s2 =
-	      display_size((pv->pe_count - pv->pe_alloc_count) * pv->pe_size /
-			   2, SIZE_SHORT)));
-	dbg_free(s1);
-	dbg_free(s2);
-
-	return;
 }

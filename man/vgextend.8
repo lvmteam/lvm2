@@ -3,7 +3,9 @@
 vgextend \- add physical volumes to a volume group
 .SH SYNOPSIS
 .B vgextend
-[\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-h/\-?/\-\-help] [\-v/\-\-verbose]
+[\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-h/\-?/\-\-help] 
+[\-t/\-\-test]
+[\-v/\-\-verbose]
 VolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]
 .SH DESCRIPTION
 vgextend allows you to add one or more initialized physical volumes ( see
@@ -11,11 +13,6 @@ vgextend allows you to add one or more initialized physical volumes ( see
 ) to an existing volume group to extend it in size.
 .SH OPTIONS
 See \fBlvm\fP for common options.
-.TP
-.I \-A, \-\-autobackup y/n
-Controls automatic backup of VG metadata after the change ( see
-.B vgcfgbackup(8)
-). Default is yes.
 .SH Examples
 "vgextend vg00 /dev/sda4 /dev/sdn1" tries to extend the existing volume
 group "vg00" by the new physical volumes (see

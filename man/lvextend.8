@@ -4,8 +4,10 @@ lvextend \- extend the size of a logical volume
 .SH SYNOPSIS
 .B lvextend
 [\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-h/\-?/\-\-help]
+[\-i/\-\-stripes Stripes [\-I/\-\-stripesize StripeSize]]
 {\-l/\-\-extents [+]LogicalExtentsNumber |
 \-L/\-\-size [+]LogicalVolumeSize[kKmMgGtT]}
+[\-t/\-\-test]
 [\-v/\-\-verbose] LogicalVolumePath [PhysicalVolumePath...]
 .SH DESCRIPTION
 lvextend allows you to extend the size of a logical volume.
@@ -14,11 +16,6 @@ Extension of snapshot logical volumes (see
 for information to create snapshots) is supprted as well.
 .SH OPTIONS
 See \fBlvm\fP for common options.
-.TP
-.I \-A, \-\-autobackup y/n
-Controls automatic backup of VG metadata after the change ( see
-.B vgcfgbackup(8)
-). Default is yes.
 .TP
 .I \-l, \-\-extents [+]LogicalExtentsNumber
 Extend or set the logical volume size in units of logical extents.
@@ -30,6 +27,18 @@ Extend or set the logical volume size in units in units of megabytes.
 A size suffix of M for megabytes, G for gigabytes or T for terabytes is
 optional.  With the + sign the value is added to the actual size
 of the logical volume and without it, the value is taken as an absolute one.
+.TP
+.I \-i, \-\-stripes Stripes
+Gives the number of stripes for the extension.
+Not applicable to PVs using the original metadata LVM format.
+This is equal to the number of physical volumes to scatter
+the logical volume.
+.TP
+.I \-I, \-\-stripesize StripeSize
+Gives the number of kilobytes for the granularity of the stripes.
+Not applicable to PVs using the original metadata LVM format.
+.br
+StripeSize must be 2^n (n = 2 to 9)
 .SH Examples
 "lvextend -L +54 /dev/vg01/lvol10 /dev/sdk3" tries to extend the size of
 that logical volume by 54MB on physical volume /dev/sdk3.

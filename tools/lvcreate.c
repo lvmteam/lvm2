@@ -90,7 +90,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 			if (lp->lv_name && strchr(lp->lv_name, '/')) {
 				if (!(lp->vg_name =
 				      extract_vgname(cmd, lp->lv_name)))
-					    return 0;
+					return 0;
 
 				if (strcmp(lp->vg_name, argv[0])) {
 					log_error("Inconsistent volume group "
@@ -108,6 +108,13 @@ static int _read_name_params(struct lvcreate_params *lp,
 
 	if (lp->lv_name && (ptr = strrchr(lp->lv_name, '/')))
 		lp->lv_name = ptr + 1;
+
+	/* FIXME Remove this restriction eventually */
+	if (lp->lv_name && !strncmp(lp->lv_name, "snapshot", 8)) {
+		log_error("Names starting \"snapshot\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
 
 	return 1;
 }
@@ -312,20 +319,21 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 {
 	uint32_t size_rest;
 	uint32_t status = 0;
-	alloc_policy_t alloc = ALLOC_NEXT_FREE;
+	alloc_policy_t alloc = ALLOC_DEFAULT;
 	struct volume_group *vg;
 	struct logical_volume *lv, *org;
 	struct list *pvh;
+	int consistent = 1;
 
 	if (lp->contiguous)
 		alloc = ALLOC_CONTIGUOUS;
 
-	status |= lp->permission;
+	status |= lp->permission | VISIBLE_LV;
 
 	/* does VG exist? */
 	log_verbose("Finding volume group \"%s\"", lp->vg_name);
 
-	if (!(vg = vg_read(cmd, lp->vg_name))) {
+	if (!(vg = vg_read(cmd, lp->vg_name, &consistent))) {
 		log_error("Volume group \"%s\" doesn't exist", lp->vg_name);
 		return 0;
 	}
@@ -391,20 +399,30 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
-	if (lp->snapshot && !(org = find_lv(vg, lp->origin))) {
-		log_err("Couldn't find origin volume '%s'.", lp->origin);
+	if (!activation()) {
+		if (lp->snapshot)
+			log_error("Can't create snapshot without using "
+				  "device-mapper kernel driver");
 		return 0;
 	}
 
-	/*
-	 * For now all logical volumes are visible.
-	 */
-	status |= VISIBLE_LV;
-
+	if (lp->snapshot) {
+		if (!(org = find_lv(vg, lp->origin))) {
+			log_err("Couldn't find origin volume '%s'.",
+				lp->origin);
+			return 0;
+		}
+		if (lv_is_cow(org)) {
+			log_error("Snapshots of snapshots are not supported "
+				  "yet.");
+			return 0;
+		}
+	}
 
 	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc,
 			     lp->stripes, lp->stripe_size, lp->extents,
-			     vg, pvh))) return 0;
+			     vg, pvh)))
+		return 0;
 
 	if (lp->read_ahead) {
 		log_verbose("Setting read ahead sectors");
@@ -421,16 +439,28 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg))
+	if (!vg_write(vg)) {
 		return 0;
+	}
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE))
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE)) {
+		/* FIXME Remove the failed lv we just added */
+		log_error("Aborting. Failed to wipe snapshot "
+			  "exception store. Remove new LV and retry.");
 		return 0;
+	}
 
-	if (lp->zero || lp->snapshot)
-		_zero_lv(cmd, lv);
-	else
-		log_print("WARNING: \"%s\" not zeroed", lv->name);
+	if ((lp->zero || lp->snapshot) && activation()) {
+		if (!_zero_lv(cmd, lv) && lp->snapshot) {
+			/* FIXME Remove the failed lv we just added */
+			log_error("Aborting. Failed to wipe snapshot "
+				  "exception store. Remove new LV and retry.");
+			return 0;
+		}
+	} else {
+		log_error("WARNING: \"%s\" not zeroed", lv->name);
+		/* FIXME Remove the failed lv we just added */
+	}
 
 	if (lp->snapshot) {
 		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
@@ -443,7 +473,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			return 0;
 		}
 
-		if (!vg_add_snapshot(org, lv, 1, lp->chunk_size)) {
+		if (!vg_add_snapshot(org, lv, 1, NULL, lp->chunk_size)) {
 			log_err("Couldn't create snapshot.");
 			return 0;
 		}
@@ -479,9 +509,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!_read_params(&lp, cmd, argc, argv))
 		return -EINVALID_CMD_LINE;
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;
 
 	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", lp.vg_name);

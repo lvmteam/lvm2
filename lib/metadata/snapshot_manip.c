@@ -4,7 +4,7 @@
  * This file is released under the LGPL.
  */
 
-#include "log.h"
+#include "lib.h"
 #include "metadata.h"
 #include "toolcontext.h"
 
@@ -97,7 +97,7 @@ struct list *find_snapshots(struct logical_volume *lv)
 
 int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow,
-		    int persistent, uint32_t chunk_size)
+		    int persistent, struct id *id, uint32_t chunk_size)
 {
 	struct snapshot *s;
 	struct snapshot_list *sl;
@@ -121,12 +121,20 @@ int vg_add_snapshot(struct logical_volume *origin,
 	s->origin = origin;
 	s->cow = cow;
 
+	if (id)
+		s->id = *id;
+	else if (!id_create(&s->id)) {
+		log_error("Snapshot UUID creation failed");
+		return 0;
+	}
+
 	if (!(sl = pool_alloc(mem, sizeof(*sl)))) {
 		stack;
 		pool_free(mem, s);
 		return 0;
 	}
 
+	cow->status &= ~VISIBLE_LV;
 	sl->snapshot = s;
 	list_add(&origin->vg->snapshots, &sl->list);
 

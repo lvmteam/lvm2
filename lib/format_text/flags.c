@@ -4,7 +4,7 @@
  * This file is released under the LGPL.
  */
 
-#include "log.h"
+#include "lib.h"
 #include "metadata.h"
 #include "import-export.h"
 #include "lvm-string.h"
@@ -60,7 +60,7 @@ static struct flag *_get_flags(int type)
 	return NULL;
 }
 
-static int _emit(char **buffer, size_t * size, const char *fmt, ...)
+static int _emit(char **buffer, size_t *size, const char *fmt, ...)
 {
 	size_t n;
 	va_list ap;
@@ -122,7 +122,7 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 	return 1;
 }
 
-int read_flags(uint32_t * status, int type, struct config_value *cv)
+int read_flags(uint32_t *status, int type, struct config_value *cv)
 {
 	int f;
 	uint32_t s = 0;
@@ -133,31 +133,30 @@ int read_flags(uint32_t * status, int type, struct config_value *cv)
 		return 0;
 	}
 
-	/*
-	 * Only scan the flags if it wasn't an empty array.
-	 */
-	if (cv->type != CFG_EMPTY_ARRAY) {
-		while (cv) {
-			if (cv->type != CFG_STRING) {
-				log_err("Status value is not a string.");
-				return 0;
-			}
+	if (cv->type == CFG_EMPTY_ARRAY)
+		goto out;
 
-			for (f = 0; flags[f].description; f++)
-				if (!strcmp(flags[f].description, cv->v.str)) {
-					s |= flags[f].mask;
-					break;
-				}
-
-			if (!flags[f].description) {
-				log_err("Unknown status flag '%s'.", cv->v.str);
-				return 0;
-			}
-
-			cv = cv->next;
+	while (cv) {
+		if (cv->type != CFG_STRING) {
+			log_err("Status value is not a string.");
+			return 0;
 		}
+
+		for (f = 0; flags[f].description; f++)
+			if (!strcmp(flags[f].description, cv->v.str)) {
+				s |= flags[f].mask;
+				break;
+			}
+
+		if (!flags[f].description) {
+			log_err("Unknown status flag '%s'.", cv->v.str);
+			return 0;
+		}
+
+		cv = cv->next;
 	}
 
+      out:
 	*status = s;
 	return 1;
 }

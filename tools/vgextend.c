@@ -24,6 +24,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *vg_name;
 	struct volume_group *vg = NULL;
+	int consistent = 1;
 
 	if (!argc) {
 		log_error("Please enter volume group name and "
@@ -35,9 +36,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Please enter physical volume(s)");
 		return EINVALID_CMD_LINE;
 	}
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;     
 
 	vg_name = argv[0];
 	argc--;
@@ -55,7 +53,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name, &consistent)) || !consistent) {
 		log_error("Volume group \"%s\" not found.", vg_name);
 		goto error;
 	}

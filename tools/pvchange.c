@@ -20,76 +20,19 @@
 
 #include "tools.h"
 
-int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv);
+/* FIXME Locking.  PVs in VG. */
 
-int pvchange(struct cmd_context *cmd, int argc, char **argv)
-{
-	int opt = 0;
-	int done = 0;
-	int total = 0;
-
-	struct physical_volume *pv;
-	char *pv_name;
-
-	struct list *pvh, *pvs;
-
-	if (arg_count(cmd, allocatable_ARG) == 0) {
-		log_error("Please give the x option");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!(arg_count(cmd, all_ARG)) && !argc) {
-		log_error("Please give a physical volume path");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_count(cmd, all_ARG) && argc) {
-		log_error("Option a and PhysicalVolumePath are exclusive");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (argc) {
-		log_verbose("Using physical volume(s) on command line");
-		for (; opt < argc; opt++) {
-			pv_name = argv[opt];
-			if (!(pv = pv_read(cmd, pv_name))) {
-				log_error
-				    ("Failed to read physical volume \"%s\"",
-				     pv_name);
-				continue;
-			}
-			total++;
-			done += pvchange_single(cmd, pv);
-		}
-	} else {
-		log_verbose("Scanning for physical volume names");
-		if (!(pvs = get_pvs(cmd))) {
-			return ECMD_FAILED;
-		}
-
-		list_iterate(pvh, pvs) {
-			total++;
-			done += pvchange_single(cmd,
-						list_item(pvh,
-							  struct pv_list)->pv);
-		}
-	}
-
-	log_print("%d physical volume%s changed / %d physical volume%s "
-		  "not changed",
-		  done, done > 1 ? "s" : "",
-		  total - done, total - done > 1 ? "s" : "");
-
-	return 0;
-}
-
-int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
+int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
+		    void *handle)
 {
 	struct volume_group *vg = NULL;
 	struct pv_list *pvl;
+	struct list mdas;
+	uint64_t sector;
 
 	const char *pv_name = dev_name(pv->dev);
 
+	int consistent = 1;
 	int allocatable =
 	    !strcmp(arg_str_value(cmd, allocatable_ARG, "n"), "y");
 
@@ -103,7 +46,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 			return ECMD_FAILED;
 		}
 
-		if (!(vg = vg_read(cmd, pv->vg_name))) {
+		if (!(vg = vg_read(cmd, pv->vg_name, &consistent))) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Unable to find volume group of \"%s\"",
 				  pv_name);
@@ -132,6 +75,18 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		pv = pvl->pv;
 		if (!archive(vg))
 			return 0;
+	} else {
+		if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+			log_error("Can't get lock for orphans");
+			return ECMD_FAILED;
+		}
+
+		if (!(pv = pv_read(cmd, pv_name, &mdas, &sector))) {
+			unlock_vg(cmd, ORPHAN);
+			log_error("Unable to read PV \"%s\"", pv_name);
+			return 0;
+		}
+
 	}
 
 	/* change allocatability for a PV */
@@ -140,6 +95,8 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 			  pv_name);
 		if (*pv->vg_name)
 			unlock_vg(cmd, pv->vg_name);
+		else
+			unlock_vg(cmd, ORPHAN);
 		return 0;
 	}
 
@@ -148,6 +105,8 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 			  pv_name);
 		if (*pv->vg_name)
 			unlock_vg(cmd, pv->vg_name);
+		else
+			unlock_vg(cmd, ORPHAN);
 		return 0;
 	}
 
@@ -172,14 +131,82 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		backup(vg);
 		unlock_vg(cmd, pv->vg_name);
 	} else {
-		if (!(pv_write(cmd, pv))) {
+		if (!(pv_write(cmd, pv, &mdas, sector))) {
+			unlock_vg(cmd, ORPHAN);
 			log_error("Failed to store physical volume \"%s\"",
 				  pv_name);
 			return 0;
 		}
+		unlock_vg(cmd, ORPHAN);
 	}
 
 	log_print("Physical volume \"%s\" changed", pv_name);
 
 	return 1;
+}
+
+int pvchange(struct cmd_context *cmd, int argc, char **argv)
+{
+	int opt = 0;
+	int done = 0;
+	int total = 0;
+
+	struct physical_volume *pv;
+	char *pv_name;
+
+	struct list *pvh, *pvs;
+	struct list mdas;
+
+	list_init(&mdas);
+
+	if (arg_count(cmd, allocatable_ARG) == 0) {
+		log_error("Please give the x option");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!(arg_count(cmd, all_ARG)) && !argc) {
+		log_error("Please give a physical volume path");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, all_ARG) && argc) {
+		log_error("Option a and PhysicalVolumePath are exclusive");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (argc) {
+		log_verbose("Using physical volume(s) on command line");
+		for (; opt < argc; opt++) {
+			pv_name = argv[opt];
+			/* FIXME Read VG instead - pv_read will fail */
+			if (!(pv = pv_read(cmd, pv_name, &mdas, NULL))) {
+				log_error
+				    ("Failed to read physical volume \"%s\"",
+				     pv_name);
+				continue;
+			}
+			total++;
+			done += pvchange_single(cmd, pv, NULL);
+		}
+	} else {
+		log_verbose("Scanning for physical volume names");
+		if (!(pvs = get_pvs(cmd))) {
+			return ECMD_FAILED;
+		}
+
+		list_iterate(pvh, pvs) {
+			total++;
+			done += pvchange_single(cmd,
+						list_item(pvh,
+							  struct pv_list)->pv,
+						NULL);
+		}
+	}
+
+	log_print("%d physical volume%s changed / %d physical volume%s "
+		  "not changed",
+		  done, done > 1 ? "s" : "",
+		  total - done, total - done > 1 ? "s" : "");
+
+	return 0;
 }

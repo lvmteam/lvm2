@@ -9,8 +9,10 @@
 #include <sys/stat.h>
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  void *handle,
 			  int (*process_single) (struct cmd_context * cmd,
-						 struct logical_volume * lv))
+						 struct logical_volume * lv,
+						 void *handle))
 {
 	int ret_max = 0;
 	int ret = 0;
@@ -25,7 +27,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		ret = process_single(cmd, lv);
+		ret = process_single(cmd, lv, handle);
 		if (ret > ret_max)
 			ret_max = ret;
 	}
@@ -34,94 +36,163 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 }
 
+struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
+				int lock_type)
+{
+	int consistent = 1;
+
+	lock_type &= ~LCK_TYPE_MASK;
+	lock_type |= LCK_WRITE;
+
+	if (!lock_vol(cmd, vgname, lock_type)) {
+		log_error("Can't lock %s for metadata recovery: skipping",
+			  vgname);
+		return NULL;
+	}
+
+	return vg_read(cmd, vgname, &consistent);
+}
+
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
-		    int lock_type,
+		    int lock_type, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
-					   struct logical_volume * lv))
+					   struct logical_volume * lv,
+					   void *handle))
 {
 	int opt = 0;
 	int ret_max = 0;
 	int ret = 0;
 	int vg_count = 0;
+	int consistent;
 
-	struct list *vgh, *vgs;
+	struct list *slh, *vgnames;
 	struct volume_group *vg;
 	struct logical_volume *lv;
 	struct lv_list *lvl;
 
-	char *vg_name;
+	char *vgname;
 
 	if (argc) {
 		log_verbose("Using logical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			char *lv_name = argv[opt];
+			int vgname_provided = 1;
 
-			/* does VG exist? */
-			if (!(vg_name = extract_vgname(cmd, lv_name))) {
-				if (ret_max < ECMD_FAILED)
-					ret_max = ECMD_FAILED;
-				continue;
+			/* Do we have a vgname or lvname? */
+			vgname = lv_name;
+			if (!strncmp(vgname, cmd->dev_dir,
+				     strlen(cmd->dev_dir)))
+				vgname += strlen(cmd->dev_dir);
+			if (strchr(vgname, '/')) {
+				/* Must be an LV */
+				vgname_provided = 0;
+				if (!(vgname = extract_vgname(cmd, lv_name))) {
+					if (ret_max < ECMD_FAILED)
+						ret_max = ECMD_FAILED;
+					continue;
+				}
 			}
 
-			log_verbose("Finding volume group \"%s\"", vg_name);
-			if (!lock_vol(cmd, vg_name, lock_type)) {
-				log_error("Can't lock %s: skipping", vg_name);
+			log_verbose("Finding volume group \"%s\"", vgname);
+			if (!lock_vol(cmd, vgname, lock_type)) {
+				log_error("Can't lock %s: skipping", vgname);
 				continue;
 			}
-			if (!(vg = vg_read(cmd, vg_name))) {
-				log_error("Volume group \"%s\" doesn't exist",
-					  vg_name);
-				if (ret_max < ECMD_FAILED)
-					ret_max = ECMD_FAILED;
-				unlock_vg(cmd, vg_name);
-				continue;
+			if (lock_type & LCK_WRITE)
+				consistent = 1;
+			else
+				consistent = 0;
+			if (!(vg = vg_read(cmd, vgname, &consistent)) ||
+			    !consistent) {
+				unlock_vg(cmd, vgname);
+				if (!vg)
+					log_error("Volume group \"%s\" "
+						  "not found", vgname);
+				else
+					log_error("Volume group \"%s\" "
+						  "inconsistent", vgname);
+				if (!vg || !(vg =
+					     recover_vg(cmd, vgname,
+							lock_type))) {
+					unlock_vg(cmd, vgname);
+					if (ret_max < ECMD_FAILED)
+						ret_max = ECMD_FAILED;
+					continue;
+				}
 			}
 
 			if (vg->status & EXPORTED_VG) {
 				log_error("Volume group \"%s\" is exported",
 					  vg->name);
-				unlock_vg(cmd, vg_name);
+				unlock_vg(cmd, vgname);
 				return ECMD_FAILED;
+			}
+
+			if (vgname_provided) {
+				if ((ret =
+				     process_each_lv_in_vg(cmd, vg, handle,
+							   process_single)) >
+				    ret_max)
+					ret_max = ret;
+				unlock_vg(cmd, vgname);
+				continue;
 			}
 
 			if (!(lvl = find_lv_in_vg(vg, lv_name))) {
 				log_error("Can't find logical volume \"%s\" "
 					  "in volume group \"%s\"",
-					  lv_name, vg_name);
+					  lv_name, vgname);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
-				unlock_vg(cmd, vg_name);
+				unlock_vg(cmd, vgname);
 				continue;
 			}
 
 			lv = lvl->lv;
 
-			if ((ret = process_single(cmd, lv)) > ret_max)
+			if ((ret = process_single(cmd, lv, handle)) > ret_max)
 				ret_max = ret;
-			unlock_vg(cmd, vg_name);
+			unlock_vg(cmd, vgname);
 		}
 	} else {
 		log_verbose("Finding all logical volumes");
-		if (!(vgs = get_vgs(cmd))) {
+		if (!(vgnames = get_vgs(cmd, 0))) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
-		list_iterate(vgh, vgs) {
-			vg_name = list_item(vgh, struct name_list)->name;
-			if (!lock_vol(cmd, vg_name, lock_type)) {
-				log_error("Can't lock %s: skipping", vg_name);
+		list_iterate(slh, vgnames) {
+			vgname = list_item(slh, struct str_list)->str;
+			if (!vgname || !*vgname)
+				continue;	/* FIXME Unnecessary? */
+			if (!lock_vol(cmd, vgname, lock_type)) {
+				log_error("Can't lock %s: skipping", vgname);
 				continue;
 			}
-			if (!(vg = vg_read(cmd, vg_name))) {
-				log_error("Volume group \"%s\" not found",
-					  vg_name);
-				if (ret_max < ECMD_FAILED)
-					ret_max = ECMD_FAILED;
-				unlock_vg(cmd, vg_name);
-				continue;
+			if (lock_type & LCK_WRITE)
+				consistent = 1;
+			else
+				consistent = 0;
+			if (!(vg = vg_read(cmd, vgname, &consistent)) ||
+			    !consistent) {
+				unlock_vg(cmd, vgname);
+				if (!vg)
+					log_error("Volume group \"%s\" "
+						  "not found", vgname);
+				else
+					log_error("Volume group \"%s\" "
+						  "inconsistent", vgname);
+				if (!vg || !(vg =
+					     recover_vg(cmd, vgname,
+							lock_type))) {
+					unlock_vg(cmd, vgname);
+					if (ret_max < ECMD_FAILED)
+						ret_max = ECMD_FAILED;
+					continue;
+				}
 			}
-			ret = process_each_lv_in_vg(cmd, vg, process_single);
-			unlock_vg(cmd, vg_name);
+			ret = process_each_lv_in_vg(cmd, vg, handle,
+						    process_single);
+			unlock_vg(cmd, vgname);
 			if (ret > ret_max)
 				ret_max = ret;
 			vg_count++;
@@ -132,16 +203,18 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 }
 
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    int lock_type,
+		    int lock_type, int consistent, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
-					   const char *vg_name))
+					   const char *vg_name,
+					   struct volume_group * vg,
+					   int consistent, void *handle))
 {
 	int opt = 0;
 	int ret_max = 0;
 	int ret = 0;
 
-	struct list *vgh;
-	struct list *vgs;
+	struct list *slh, *vgnames;
+	struct volume_group *vg;
 
 	char *vg_name;
 	char *dev_dir = cmd->dev_dir;
@@ -161,24 +234,32 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
-			if ((ret = process_single(cmd, vg_name)) > ret_max)
+			log_verbose("Finding volume group \"%s\"", vg_name);
+			vg = vg_read(cmd, vg_name, &consistent);
+			if ((ret = process_single(cmd, vg_name, vg, consistent,
+						  handle))
+			    > ret_max)
 				ret_max = ret;
 			unlock_vg(cmd, vg_name);
 		}
 	} else {
 		log_verbose("Finding all volume groups");
-		if (!(vgs = get_vgs(cmd))) {
+		if (!(vgnames = get_vgs(cmd, 0)) || list_empty(vgnames)) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
-		list_iterate(vgh, vgs) {
-			vg_name = list_item(vgh, struct name_list)->name;
+		list_iterate(slh, vgnames) {
+			vg_name = list_item(slh, struct str_list)->str;
+			if (!vg_name || !*vg_name)
+				continue;	/* FIXME Unnecessary? */
 			if (!lock_vol(cmd, vg_name, lock_type)) {
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
-			ret = process_single(cmd, vg_name);
-
+			log_verbose("Finding volume group \"%s\"", vg_name);
+			vg = vg_read(cmd, vg_name, &consistent);
+			ret = process_single(cmd, vg_name, vg, consistent,
+					     handle);
 			if (ret > ret_max)
 				ret_max = ret;
 			unlock_vg(cmd, vg_name);
@@ -189,9 +270,11 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 }
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  void *handle,
 			  int (*process_single) (struct cmd_context * cmd,
 						 struct volume_group * vg,
-						 struct physical_volume * pv))
+						 struct physical_volume * pv,
+						 void *handle))
 {
 	int ret_max = 0;
 	int ret = 0;
@@ -201,7 +284,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	list_iterate(pvh, &vg->pvs) {
 		pv = list_item(pvh, struct pv_list)->pv;
 
-		if ((ret = process_single(cmd, vg, pv)) > ret_max)
+		if ((ret = process_single(cmd, vg, pv, handle)) > ret_max)
 			ret_max = ret;
 	}
 
@@ -209,10 +292,11 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 }
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    struct volume_group *vg,
+		    struct volume_group *vg, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct volume_group * vg,
-					   struct physical_volume * pv))
+					   struct physical_volume * pv,
+					   void *handle))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -229,30 +313,16 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					  vg->name);
 				continue;
 			}
-			ret = process_single(cmd, vg, pvl->pv);
+			ret = process_single(cmd, vg, pvl->pv, handle);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
 	} else {
 		log_verbose("Using all physical volume(s) in volume group");
-		process_each_pv_in_vg(cmd, vg, process_single);
+		process_each_pv_in_vg(cmd, vg, handle, process_single);
 	}
 
 	return ret_max;
-}
-
-int is_valid_chars(char *n)
-{
-	register char c;
-
-	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
-	if (*n == '-')
-		return 0;
-
-	while ((c = *n++))
-		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
-			return 0;
-	return 1;
 }
 
 char *extract_vgname(struct cmd_context *cmd, char *lv_name)

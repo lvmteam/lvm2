@@ -26,6 +26,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *lv_name_old, *lv_name_new;
 	char *vg_name, *vg_name_new, *vg_name_old;
 	char *st;
+	int consistent = 1;
 
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -53,7 +54,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!is_valid_chars(vg_name)) {
+	if (!validate_vgname(vg_name)) {
 		log_error("Please provide a valid volume group name");
 		return EINVALID_CMD_LINE;
 	}
@@ -86,7 +87,14 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!is_valid_chars(lv_name_new)) {
+	/* FIXME Remove this restriction eventually */
+	if (!strncmp(lv_name_new, "snapshot", 8)) {
+		log_error("Names starting \"snapshot\" are reserved. "
+			  "Please choose a different LV name.");
+		return ECMD_FAILED;
+	}
+
+	if (!validate_vgname(lv_name_new)) {
 		log_error
 		    ("New logical volume name \"%s\" has invalid characters",
 		     lv_name_new);
@@ -98,9 +106,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!driver_is_loaded())
-		return ECMD_FAILED;
-
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
@@ -108,7 +113,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name, &consistent))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		goto error;
 	}
