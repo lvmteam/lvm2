@@ -1,18 +1,13 @@
 /*
- * dm-table.c
- *
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
  */
 
-/*
- * Changelog
- *
- *     16/08/2001 - First version [Joe Thornber]
- */
-
 #include "dm.h"
+
+#include <linux/blkdev.h>
+
 
 /* ceiling(n / size) * size */
 static inline ulong round_up(ulong n, ulong size)
@@ -96,6 +91,7 @@ static int alloc_targets(struct dm_table *t, int num)
 		memcpy(n_targets, t->targets, sizeof(*n_targets) * n);
 	}
 
+	memset(n_highs + n , -1, sizeof(*n_highs) * (num - n));
 	vfree(t->highs);
 
 	t->num_allocated = num;
@@ -110,7 +106,7 @@ struct dm_table *dm_table_create(void)
 	struct dm_table *t = kmalloc(sizeof(struct dm_table), GFP_NOIO);
 
 	if (!t)
-		return 0;
+		return ERR_PTR(-ENOMEM);
 
 	memset(t, 0, sizeof(*t));
 	INIT_LIST_HEAD(&t->devices);
@@ -119,7 +115,7 @@ struct dm_table *dm_table_create(void)
 	   begin with */
 	if (alloc_targets(t, KEYS_PER_NODE)) {
 		kfree(t);
-		t = 0;
+		t = ERR_PTR(-ENOMEM);
 	}
 
 	return t;
@@ -144,12 +140,14 @@ void dm_table_destroy(struct dm_table *t)
 	if (t->depth >= 2)
 		vfree(t->index[t->depth - 2]);
 
-
 	/* free the targets */
 	for (i = 0; i < t->num_targets; i++) {
 		struct target *tgt = &t->targets[i];
+
 		if (tgt->type->dtr)
 			tgt->type->dtr(t, tgt->private);
+
+		dm_put_target_type(t->targets[i].type);
 	}
 
 	vfree(t->highs);
@@ -218,14 +216,66 @@ static struct dm_dev *find_device(struct list_head *l, kdev_t dev)
 {
 	struct list_head *tmp;
 
-	for (tmp = l->next; tmp != l; tmp = tmp->next) {
-
+	list_for_each(tmp, l) {
 		struct dm_dev *dd = list_entry(tmp, struct dm_dev, list);
 		if (dd->dev == dev)
 			return dd;
 	}
 
+       return NULL;
+}
+
+/*
+ * open a device so we can use it as a map
+ * destination.
+ */
+static int open_dev(struct dm_dev *d)
+{
+       int err;
+
+       if (d->bd)
+	       BUG();
+
+       if (!(d->bd = bdget(kdev_t_to_nr(d->dev))))
+               return -ENOMEM;
+
+       if ((err = blkdev_get(d->bd, FMODE_READ|FMODE_WRITE, 0, BDEV_FILE)))
+               return err;
+
        return 0;
+}
+
+/*
+ * close a device that we've been using.
+ */
+static void close_dev(struct dm_dev *d)
+{
+	if (!d->bd)
+		return;
+
+	blkdev_put(d->bd, BDEV_FILE);
+	d->bd = NULL;
+}
+
+/*
+ * If possible (ie. blk_size[major] is set), this
+ * checks an area of a destination device is
+ * valid.
+ */
+static int check_device_area(kdev_t dev, offset_t start, offset_t len)
+{
+	int *sizes;
+	offset_t dev_size;
+
+	if (!(sizes = blk_size[MAJOR(dev)]) || !(dev_size = sizes[MINOR(dev)]))
+		/* we don't know the device details,
+		 * so give the benefit of the doubt */
+		return 1;
+
+	 /* convert to 512-byte sectors */
+	dev_size <<= 1;
+
+	return ((start < dev_size) && (len <= (dev_size - start)));
 }
 
 /*
@@ -233,6 +283,7 @@ static struct dm_dev *find_device(struct list_head *l, kdev_t dev)
  * usage count if it's already present.
  */
 int dm_table_get_device(struct dm_table *t, const char *path,
+			offset_t start, offset_t len,
 			struct dm_dev **result)
 {
 	int r;
@@ -251,14 +302,28 @@ int dm_table_get_device(struct dm_table *t, const char *path,
 
 		dd->dev = dev;
 		dd->bd = 0;
+
+		if ((r = open_dev(dd))) {
+			kfree(dd);
+			return r;
+		}
+
 		atomic_set(&dd->count, 0);
 		list_add(&dd->list, &t->devices);
 	}
 	atomic_inc(&dd->count);
+
+	if (!check_device_area(dd->dev, start, len)) {
+		WARN("device '%s' not large enough for target", path);
+		dm_table_put_device(t, dd);
+		return -EINVAL;
+	}
+
 	*result = dd;
 
 	return 0;
 }
+
 /*
  * decrement a devices use count and remove it if
  * neccessary.
@@ -266,6 +331,7 @@ int dm_table_get_device(struct dm_table *t, const char *path,
 void dm_table_put_device(struct dm_table *t, struct dm_dev *dd)
 {
        if (atomic_dec_and_test(&dd->count)) {
+	       close_dev(dd);
 	       list_del(&dd->list);
                kfree(dd);
        }
@@ -307,7 +373,8 @@ static int setup_indexes(struct dm_table *t)
 
 	/* set up internal nodes, bottom-up */
 	for (i = t->depth - 2, total = 0; i >= 0; i--) {
-		t->index[i] = indexes + (KEYS_PER_NODE * t->counts[i]);
+		t->index[i] = indexes;
+		indexes += (KEYS_PER_NODE * t->counts[i]);
 		setup_btree_index(i, t);
 	}
 

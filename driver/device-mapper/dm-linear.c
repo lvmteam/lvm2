@@ -24,6 +24,18 @@ struct linear_c {
 	struct dm_dev *dev;
 };
 
+static inline char *next_token(char **p)
+{
+        static const char *delim = " \t";
+        char *r;
+
+        do {
+                r = strsep(p, delim);
+        } while(r && *r == 0);
+
+        return r;
+}
+
 /*
  * construct a linear mapping.
  * <dev_path> <offset>
@@ -55,7 +67,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 		goto bad;
 
 	*context = "Cannot get target device";
-	r = dm_table_get_device(t, path, &lc->dev);
+	r = dm_table_get_device(t, path, start, l, &lc->dev);
 	if (r)
 		goto bad_free;
 

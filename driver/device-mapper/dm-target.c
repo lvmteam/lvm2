@@ -1,13 +1,7 @@
 /*
- * dm-target.c
- *
  * Copyright (C) 2001 Sistina Software (UK) Limited
  *
  * This file is released under the GPL.
- */
-
-/*
- * 16/08/2001 - First Version [Joe Thornber]
  */
 
 #include "dm.h"
@@ -30,14 +24,14 @@ static inline struct tt_internal *__find_target_type(const char *name)
 	struct list_head *tmp;
 	struct tt_internal *ti;
 
-	for(tmp = _targets.next; tmp != &_targets; tmp = tmp->next) {
-
+	list_for_each(tmp, &_targets) {
 		ti = list_entry(tmp, struct tt_internal, list);
+
 		if (!strcmp(name, ti->tt.name))
 			return ti;
 	}
 
-	return 0;
+	return NULL;
 }
 
 static struct tt_internal *get_target_type(const char *name)
@@ -78,7 +72,7 @@ struct target_type *dm_get_target_type(const char *name)
 		ti = get_target_type(name);
 	}
 
-	return ti ? &ti->tt : 0;
+	return ti ? &ti->tt : NULL;
 }
 
 void dm_put_target_type(struct target_type *t)
@@ -126,18 +120,24 @@ int dm_register_target(struct target_type *t)
 
 int dm_unregister_target(struct target_type *t)
 {
-	struct tt_internal *ti = (struct tt_internal *) t;
-	int rv = -ETXTBSY;
+	struct tt_internal *ti;
 
 	write_lock(&_lock);
-	if (ti->use == 0) {
-		list_del(&ti->list);
-		kfree(ti);
-		rv = 0;
+	if (!(ti = __find_target_type(t->name))) {
+		write_unlock(&_lock);
+		return -EINVAL;
 	}
-	write_unlock(&_lock);
 
-	return rv;
+	if (ti->use) {
+		write_unlock(&_lock);
+		return -ETXTBSY;
+	}
+
+	list_del(&ti->list);
+	kfree(ti);
+
+	write_unlock(&_lock);
+	return 0;
 }
 
 /*
@@ -147,7 +147,7 @@ int dm_unregister_target(struct target_type *t)
 static int io_err_ctr(struct dm_table *t, offset_t b, offset_t l,
 		      char *args, void **context)
 {
-	*context = 0;
+	*context = NULL;
 	return 0;
 }
 

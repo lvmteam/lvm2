@@ -22,6 +22,7 @@
 #include <linux/config.h>
 #include <linux/fs.h>
 #include <linux/init.h>
+#include <linux/kmod.h>
 
 #include "dmfs.h"
 #include "dm.h"
@@ -46,9 +47,7 @@ static void dmfs_delete_inode(struct inode *inode)
 
 		if (dmi) {
 			if (dmi->md)
-				dm_remove(dmi->md);
-			if (dmi->dentry)
-				dput(dmi->dentry);
+				BUG();
 			if (!list_empty(&dmi->errors))
 				dmfs_zap_errors(inode);
 			kfree(dmi);
@@ -130,7 +129,7 @@ struct inode *dmfs_new_private_inode(struct super_block *sb, int mode)
 static DECLARE_FSTYPE(dmfs_fstype, "dmfs", dmfs_read_super, FS_SINGLE);
 static struct vfsmount *dmfs_mnt;
 
-int __init dmfs_init(void)
+int __init dm_interface_init(void)
 {
 	int ret;
 
@@ -149,7 +148,7 @@ out:
 	return ret;
 }
 
-int __exit dmfs_exit(void)
+void __exit dm_interface_exit(void)
 {
 	MOD_INC_USE_COUNT; /* So that it lands up being zero */
 
@@ -157,6 +156,5 @@ int __exit dmfs_exit(void)
 
 	unregister_filesystem(&dmfs_fstype);
 
-	return 0;
 }
 

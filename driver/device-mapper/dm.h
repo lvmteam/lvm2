@@ -124,13 +124,6 @@
 #define KEYS_PER_NODE (NODE_SIZE / sizeof(offset_t))
 #define CHILDREN_PER_NODE (KEYS_PER_NODE + 1)
 #define DM_NAME_LEN 128
-#define MAX_TARGET_LINE 256
-
-enum {
-	DM_BOUND = 0,		/* device has been bound to a table */
-	DM_ACTIVE,		/* device is running */
-};
-
 
 /*
  * list of devices that a metadevice uses
@@ -188,7 +181,7 @@ struct mapped_device {
 	char name[DM_NAME_LEN];
 
 	int use_count;
-	int state;
+	int suspended;
 
 	/* a list of io's that arrived while we were suspended */
 	atomic_t pending;
@@ -211,15 +204,11 @@ void dm_put_target_type(struct target_type *t);
 
 /* dm.c */
 struct mapped_device *dm_find_by_minor(int minor);
-
-struct mapped_device *dm_create(const char *name, int minor);
-int dm_remove(struct mapped_device *md);
-
-int dm_activate(struct mapped_device *md, struct dm_table *t);
-int dm_deactivate(struct mapped_device *md);
-
-void dm_suspend(struct mapped_device *md);
-
+struct mapped_device *dm_get(const char *name);
+struct mapped_device *dm_create(const char *name, int minor, struct dm_table *);int dm_destroy(struct mapped_device *md);
+int dm_swap_table(struct mapped_device *md, struct dm_table *t);
+int dm_suspend(struct mapped_device *md);
+int dm_resume(struct mapped_device *md);
 
 /* dm-table.c */
 struct dm_table *dm_table_create(void);
@@ -248,9 +237,7 @@ static inline offset_t *get_node(struct dm_table *t, int l, int n)
 	return t->index[l] + (n * KEYS_PER_NODE);
 }
 
-static inline int is_active(struct mapped_device *md)
-{
-	return test_bit(DM_ACTIVE, &md->state);
-}
+int dm_interface_init(void) __init;
+void dm_interface_exit(void) __exit;
 
 #endif

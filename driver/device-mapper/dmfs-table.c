@@ -50,7 +50,7 @@ static char *err_table[] = {
 	"Missing/Invalid size argument",
 	"Missing target type"
 };
-	printk("dmfs_parse_line: (%s)\n", str);
+	/* printk("dmfs_parse_line: (%s)\n", str); */
 
 	rv = sscanf(str, "%d %d %32s%n", &start, &size, target, &pos);
 	if (rv < 3) {
@@ -72,9 +72,11 @@ static char *err_table[] = {
 		rv = ttype->ctr(t, start, size, str, &context);
 		msg = context;
 		if (rv == 0) {
+#if 0
 			printk("dmfs_parse: %u %u %s %s\n", start, size, 
 				ttype->name,
 				ttype->print ? ttype->print(context) : "-");
+#endif
 			msg = "Error adding target to table";
 			high = start + (size - 1);
 			if (dm_table_add_target(t, high, ttype, context) == 0)
@@ -228,17 +230,15 @@ static int dmfs_table_release(struct inode *inode, struct file *f)
 
 		if (table) {
 			struct mapped_device *md = dmi->md;
-			int need_activate = 0;
+			int need_resume = 0;
 
-			if (is_active(md)) {
-				dm_deactivate(md);
-				need_activate = 1;
+			if (md->suspended == 0) {
+				dm_suspend(md);
+				need_resume = 1;
 			}
-			if (md->map) {
-				dm_table_destroy(md->map);
-			}
-			if (need_activate) {
-				dm_activate(md, table);
+			dm_swap_table(md, table);
+			if (need_resume) {
+				dm_resume(md);
 			}
 		}
 		up(&dmi->sem);
