@@ -5,6 +5,7 @@ Version 2.00.33 -
   gulm clvmd now doesn't ignore the first node in cluster.conf
   Improve clvmd failure message if it's already running.
   Allow user to kill clvmd during initialisation.
+  Fix off-by-one error in cluster_locking that could cause read hangs.
 
 Version 2.00.32 - 22nd December 2004
 ====================================

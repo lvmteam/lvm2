@@ -1313,6 +1313,7 @@ static void *pre_and_post_thread(void *arg)
 
 		DEBUGLOG("Got post command condition...\n");
 
+		status = 0;
 		do_post_command(client);
 
 		write(pipe_fd, &status, sizeof(int));
