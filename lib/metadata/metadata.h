@@ -424,6 +424,8 @@ int lv_merge_segments(struct logical_volume *lv);
 int lv_is_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
 
+int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv);
+
 struct snapshot *find_cow(const struct logical_volume *lv);
 struct snapshot *find_origin(const struct logical_volume *lv);
 struct list *find_snapshots(const struct logical_volume *lv);
