@@ -73,7 +73,7 @@ struct stripe_segment {
 	uint32_t pe_count;
 
 	/* variable sized pe array */
-        struct pe_specifier pes[1];
+        struct pe_specifier pes[0];
 };
 
 struct cmd_context;
@@ -111,7 +111,6 @@ struct logical_volume {
 
         uint32_t status;
 	uint32_t read_ahead;
-	uint32_t stripes;
 
         uint64_t size;
         uint32_t le_count;
@@ -255,7 +254,10 @@ struct logical_volume *lv_create(const char *name,
 int lv_reduce(struct logical_volume *lv, uint32_t extents);
 
 int lv_extend(struct logical_volume *lv,
-	      uint32_t extents, struct list *allocatable_pvs);
+	      uint32_t stripes,
+	      uint32_t stripe_size,
+	      uint32_t extents, 
+	      struct list *allocatable_pvs);
 
 /* lv must be part of vg->lvs */
 int lv_remove(struct volume_group *vg, struct logical_volume *lv);
