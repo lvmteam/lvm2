@@ -58,7 +58,7 @@ static int _check(const char *name)
 	return 1;
 }
 
-static void _single(const char *name)
+static void pvcreate_single(const char *name)
 {
 	struct physical_volume *pv;
 
@@ -106,7 +106,7 @@ int pvcreate(int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
-		_single(argv[i]);
+		pvcreate_single(argv[i]);
 		pool_empty(ios->mem);
 	}
 
