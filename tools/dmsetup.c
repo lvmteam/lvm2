@@ -23,6 +23,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -60,6 +61,7 @@ enum {
 	NOHEADINGS_ARG,
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
+	OPTIONS_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
 	VERSION_ARG,
@@ -69,6 +71,7 @@ enum {
 static int _switches[NUM_SWITCHES];
 static int _values[NUM_SWITCHES];
 static char *_uuid;
+static char *_fields;
 
 /*
  * Commands
@@ -137,15 +140,18 @@ static void _display_info_cols_noheadings(struct dm_task *dmt,
 
 	uuid = dm_task_get_uuid(dmt);
 
-	printf("%s:%d:%d:%s%s%s%s:%d:%d:%" PRIu32 ":%s\n",
-	       dm_task_get_name(dmt),
-	       info->major, info->minor,
-	       info->live_table ? "L" : "-",
-	       info->inactive_table ? "I" : "-",
-	       info->suspended ? "s" : "-",
-	       info->read_only ? "r" : "w",
-	       info->open_count, info->target_count, info->event_nr,
-	       uuid && *uuid ? uuid : "");
+	if (_switches[OPTIONS_ARG])
+		printf("%s\n", dm_task_get_name(dmt));
+	else
+		printf("%s:%d:%d:%s%s%s%s:%d:%d:%" PRIu32 ":%s\n",
+		       dm_task_get_name(dmt),
+		       info->major, info->minor,
+		       info->live_table ? "L" : "-",
+		       info->inactive_table ? "I" : "-",
+		       info->suspended ? "s" : "-",
+		       info->read_only ? "r" : "w",
+		       info->open_count, info->target_count, info->event_nr,
+		       uuid && *uuid ? uuid : "");
 }
 
 static void _display_info_cols(struct dm_task *dmt, struct dm_info *info)
@@ -159,24 +165,31 @@ static void _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 	}
 
 	if (!_headings) {
-		printf("Name             Maj Min Stat Open Targ Event  UUID\n");
+		if (_switches[OPTIONS_ARG])
+			printf("Name\n");
+		else
+			printf("Name             Maj Min Stat Open Targ "
+			       "Event  UUID\n");
 		_headings = 1;
 	}
 
-	printf("%-16s ", dm_task_get_name(dmt));
+	if (_switches[OPTIONS_ARG])
+		printf("%s\n", dm_task_get_name(dmt));
+	else {
+		printf("%-16s %3d %3d %s%s%s%s %4d %4d %6" PRIu32 " ",
+		       dm_task_get_name(dmt),
+		       info->major, info->minor,
+		       info->live_table ? "L" : "-",
+		       info->inactive_table ? "I" : "-",
+		       info->suspended ? "s" : "-",
+		       info->read_only ? "r" : "w",
+		       info->open_count, info->target_count, info->event_nr);
 
-	printf("%3d %3d %s%s%s%s %4d %4d %6" PRIu32 " ",
-	       info->major, info->minor,
-	       info->live_table ? "L" : "-",
-	       info->inactive_table ? "I" : "-",
-	       info->suspended ? "s" : "-",
-	       info->read_only ? "r" : "w",
-	       info->open_count, info->target_count, info->event_nr);
+		if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
+			printf("%s", uuid);
 
-	if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
-		printf("%s", uuid);
-
-	printf("\n");
+		printf("\n");
+	}
 }
 
 static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
@@ -217,12 +230,12 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 	printf("\n");
 }
 
-static void _display_info(struct dm_task *dmt)
+static int _display_info(struct dm_task *dmt)
 {
 	struct dm_info info;
 
 	if (!dm_task_get_info(dmt, &info))
-		return;
+		return 0;
 
 	if (!_switches[COLS_ARG])
 		_display_info_long(dmt, &info);
@@ -230,6 +243,8 @@ static void _display_info(struct dm_task *dmt)
 		_display_info_cols_noheadings(dmt, &info);
 	else
 		_display_info_cols(dmt, &info);
+
+	return info.exists ? 1 : 0;
 }
 
 static int _set_task_device(struct dm_task *dmt, const char *name, int optional)
@@ -301,7 +316,7 @@ static int _load(int argc, char **argv, void *data)
 	r = 1;
 
 	if (_switches[VERBOSE_ARG])
-		_display_info(dmt);
+		r = _display_info(dmt);
 
       out:
 	dm_task_destroy(dmt);
@@ -348,7 +363,7 @@ static int _create(int argc, char **argv, void *data)
 	r = 1;
 
 	if (_switches[VERBOSE_ARG])
-		_display_info(dmt);
+		r = _display_info(dmt);
 
       out:
 	dm_task_destroy(dmt);
@@ -495,7 +510,7 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	r = dm_task_run(dmt);
 
 	if (r && display && _switches[VERBOSE_ARG])
-		_display_info(dmt);
+		r = _display_info(dmt);
 
       out:
 	dm_task_destroy(dmt);
@@ -735,9 +750,7 @@ static int _info(int argc, char **argv, void *data)
 	if (!dm_task_run(dmt))
 		goto out;
 
-	_display_info(dmt);
-
-	r = 1;
+	r = _display_info(dmt);
 
       out:
 	dm_task_destroy(dmt);
@@ -891,6 +904,7 @@ static struct command *_find_command(const char *name)
 
 static int _process_switches(int *argc, char ***argv)
 {
+	char *base, *namebase;
 	int ind;
 	int c;
 
@@ -903,6 +917,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"noheadings", 0, NULL, NOHEADINGS_ARG},
 		{"noopencount", 0, NULL, NOOPENCOUNT_ARG},
 		{"notable", 0, NULL, NOTABLE_ARG},
+		{"options", 1, NULL, OPTIONS_ARG},
 		{"uuid", 1, NULL, UUID_ARG},
 		{"verbose", 1, NULL, VERBOSE_ARG},
 		{"version", 0, NULL, VERSION_ARG},
@@ -918,9 +933,43 @@ static int _process_switches(int *argc, char ***argv)
 	memset(&_switches, 0, sizeof(_switches));
 	memset(&_values, 0, sizeof(_values));
 
+	namebase = strdup((*argv)[0]);
+	base = basename(namebase);
+
+	if (!strcmp(base, "devmap_name")) {
+		free(namebase);
+		_switches[COLS_ARG]++;
+		_switches[NOHEADINGS_ARG]++;
+		_switches[OPTIONS_ARG]++;
+		_switches[MAJOR_ARG]++;
+		_switches[MINOR_ARG]++;
+		_fields = (char *) "name";
+
+		if (*argc == 3) {
+			_values[MAJOR_ARG] = atoi((*argv)[1]);
+			_values[MINOR_ARG] = atoi((*argv)[2]);
+			*argc -= 2;
+			*argv += 2;
+		} else if ((*argc == 2) && 
+			   (2 == sscanf((*argv)[1], "%i:%i",
+					&_values[MAJOR_ARG],
+					&_values[MINOR_ARG]))) {
+			*argc -= 1;
+			*argv += 1;
+		} else {
+			fprintf(stderr, "Usage: devmap_name <major> <minor>\n");
+			return 0;
+		}
+
+		(*argv)[0] = (char *) "info";
+		return 1;
+	}
+
+	free(namebase);
+
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((c = GETOPTLONG_FN(*argc, *argv, "cCj:m:nru:v",
+	while ((c = GETOPTLONG_FN(*argc, *argv, "cCj:m:no:ru:v",
 				  long_options, &ind)) != -1) {
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
@@ -936,6 +985,10 @@ static int _process_switches(int *argc, char ***argv)
 		}
 		if (c == 'n' || ind == NOTABLE_ARG)
 			_switches[NOTABLE_ARG]++;
+		if (c == 'o' || ind == OPTIONS_ARG) {
+			_switches[OPTIONS_ARG]++;
+			_fields = optarg;
+		}
 		if (c == 'v' || ind == VERBOSE_ARG)
 			_switches[VERBOSE_ARG]++;
 		if (c == 'u' || ind == UUID_ARG) {
@@ -960,6 +1013,11 @@ static int _process_switches(int *argc, char ***argv)
 		return 0;
 	}
 
+	if (_switches[OPTIONS_ARG] && strcmp(_fields, "name")) {
+		fprintf(stderr, "Only -o name is supported so far.\n");
+		return 0;
+	}
+
 	*argv += optind;
 	*argc -= optind;
 	return 1;
@@ -970,7 +1028,7 @@ int main(int argc, char **argv)
 	struct command *c;
 
 	if (!_process_switches(&argc, &argv)) {
-		fprintf(stderr, "Couldn't process command line switches.\n");
+		fprintf(stderr, "Couldn't process command line.\n");
 		exit(1);
 	}
 
