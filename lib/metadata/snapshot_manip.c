@@ -50,15 +50,14 @@ struct snapshot *find_cow(struct volume_group *vg, struct logical_volume *lv)
 	return NULL;
 }
 
-int vg_add_snapshot(struct volume_group *vg,
-		    struct logical_volume *origin,
+int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow,
 		    int persistent,
 		    uint32_t chunk_size)
 {
 	struct snapshot *s;
 	struct snapshot_list *sl;
-	struct pool *mem = vg->cmd->mem;
+	struct pool *mem = origin->vg->cmd->mem;
 
 	/*
 	 * Is the cow device already being used ?
@@ -85,7 +84,7 @@ int vg_add_snapshot(struct volume_group *vg,
 	}
 
 	sl->snapshot = s;
-	list_add(&vg->snapshots, &sl->list);
+	list_add(&origin->vg->snapshots, &sl->list);
 
 	return 1;
 }
