@@ -68,5 +68,8 @@ int get_config_uint32(struct config_node *cn, const char *path,
 int get_config_uint64(struct config_node *cn, const char *path,
 		      char sep, uint64_t *result);
 
+int get_config_str(struct config_node *cn, const char *path,
+		   char sep, char **result);
+
 #endif
 

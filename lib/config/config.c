@@ -682,3 +682,18 @@ int get_config_uint64(struct config_node *cn, const char *path,
 	*result = (uint64_t) n->v->v.i;
 	return 1;
 }
+
+int get_config_str(struct config_node *cn, const char *path,
+		   char sep, char **result)
+{
+	struct config_node *n;
+
+	n = find_config_node(cn, path, sep);
+
+	if (!n || !n->v || n->v->type != CFG_STRING)
+		return 0;
+
+	*result = n->v->v.str;
+	return 1;
+}
+
