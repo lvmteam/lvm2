@@ -33,12 +33,6 @@ case "$1" in
 	echo -n "Initializing $DESC: "
 	create_devfiles
 	vgchange -a y
-
-#	# Mount all LVM devices
-#	for vg in $( vgchange -a y 2>/dev/null | grep active | awk -F\" '{print $2}' ); do
-#		MTPT=$( grep $vg /etc/fstab | awk '{print $2}' )
-#		mount $MTPT
-#	done
 	echo "$NAME."
 	;;
   stop)
