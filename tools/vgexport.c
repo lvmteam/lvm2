@@ -24,6 +24,16 @@ static int vgexport_single(const char *vg_name);
 
 int vgexport(int argc, char **argv)
 {
+	if (!argc && !arg_count(all_ARG)) {
+		log_error("Please supply volume groups or use -a for all.");
+		return ECMD_FAILED;
+	}
+
+	if (argc && arg_count(all_ARG)) {
+		log_error("No arguments permitted when using -a for all.");
+		return ECMD_FAILED;
+	}
+
 	return process_each_vg(argc, argv, &vgexport_single);
 }
 

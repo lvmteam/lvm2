@@ -613,8 +613,11 @@ static int process_common_commands(struct command *com)
 		_current_settings.backup = 1;
 	}
 
-	if (arg_count(partial_ARG))
+	if (arg_count(partial_ARG)) {
 		init_partial(1);
+		log_print("Partial mode. Incomplete volume groups will "
+			  "be activated read-only.");
+	}
 	else
 		init_partial(0);
 

@@ -438,14 +438,15 @@ xx(vgextend,
 xx(vgimport,
    "Register exported volume group with system",
    "vgimport " "\n"
+   "\t[-a/--all]\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--force] " "\n"
    "\t[-h|--help] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose]" "\n"
-   "\tVolumeGroupName PhysicalVolumePath " "[PhysicalVolumePath...]\n",
+   "\tVolumeGroupName..." "\n",
 
-   force_ARG, test_ARG)
+   all_ARG, force_ARG, test_ARG)
 
 xx(vgmerge,
    "Merge volume groups",

@@ -43,13 +43,7 @@ static int pvcreate_check(const char *name)
 	if (!pv->vg_name[0])
 		return 1;
 
-	/* never overwrite exported pv's */
-	if (pv->status & EXPORTED_VG) {
-		log_error("Physical volume %s belongs to exported volume"
-			  " group %s", name, pv->vg_name);
-		return 0;
-	}
-
+	/* Allow partial & exported VGs to be destroyed. */
 	/* we must have -ff to overwrite a non orphan */
 	if (arg_count(force_ARG) < 2) {
 		log_error("Can't initialize physical volume %s of "
