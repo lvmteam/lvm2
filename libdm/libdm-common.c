@@ -204,7 +204,7 @@ int rename_dev_node(const char *old_name, const char *new_name)
 	_build_dev_path(oldpath, sizeof(oldpath), old_name);
 	_build_dev_path(newpath, sizeof(newpath), new_name);
 
-	if (stat(newpath, &info) >= 0) {
+	if (stat(newpath, &info) == 0) {
 		if (!S_ISBLK(info.st_mode)) {
 			log_error("A non-block device file at '%s' "
 				  "is already present", newpath);
@@ -212,8 +212,9 @@ int rename_dev_node(const char *old_name, const char *new_name)
 		}
 
 		if (unlink(newpath) < 0) {
-		        if (errno == EPERM) { /* devfs, entry has already been renamed */
-			      return 1;
+			if (errno == EPERM) {	
+				/* devfs, entry has already been renamed */
+				return 1;
 			}
 			log_error("Unable to unlink device node for '%s'",
 				  new_name);
@@ -222,7 +223,8 @@ int rename_dev_node(const char *old_name, const char *new_name)
 	}
 
 	if (rename(oldpath, newpath) < 0) {
-		log_error("Unable to rename device node from '%s' to '%s'", old_name, new_name);
+		log_error("Unable to rename device node from '%s' to '%s'",
+			  old_name, new_name);
 		return 0;
 	}
 

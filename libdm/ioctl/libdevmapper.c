@@ -26,16 +26,16 @@
 #define ALIGNMENT sizeof(int)
 
 static char *dm_cmd_list[] = {
-        "create",
-        "reload",
-        "remove",
-        "remove_all",
-        "suspend",
-        "resume",
-        "info",
-        "deps",
-        "rename",
-        "version"
+	"create",
+	"reload",
+	"remove",
+	"remove_all",
+	"suspend",
+	"resume",
+	"info",
+	"deps",
+	"rename",
+	"version"
 };
 
 void dm_task_destroy(struct dm_task *dmt)
@@ -358,10 +358,9 @@ int dm_task_run(struct dm_task *dmt)
 		break;
 
 	case DM_DEVICE_RENAME:
-	        rename_dev_node(dmt->dev_name, dmt->newname);
+		rename_dev_node(dmt->dev_name, dmt->newname);
 		break;
 	}
-
 
 	dmt->dmi = dmi;
 	close(fd);
