@@ -1,1 +1,2 @@
-LVM2's device-mapper driver and ext3 are incompatible at the moment.
+Snapshots under 2.4.18 can deadlock due to a bug in the VM system.
+2.4.19-pre8 is fine.
