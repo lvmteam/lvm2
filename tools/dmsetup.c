@@ -164,15 +164,16 @@ static int _info(int argc, char **argv)
 		goto out;
 
 	if (!info.exists) {
-		printf("No such device.\n");
+		printf("Device does not exist.\n");
 		r = 1;
 		goto out;
 	}
 
-	printf("%s\t", info.suspended ? "SUSPENDED" : "ACTIVE");
-	printf("%d\t", info.open_count);
-	printf("%d\t", info.minor);
-	printf("%d\n", info.target_count);
+	printf("state:             %s\n",
+	       info.suspended ? "SUSPENDED" : "ACTIVE");
+	printf("open count:        %d\n", info.open_count);
+	printf("major, minor:      %d, %d\n", info.major, info.minor);
+	printf("number of targets: %d\n", info.target_count);
 	r = 1;
 
  out:
