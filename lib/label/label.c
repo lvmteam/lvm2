@@ -279,7 +279,7 @@ int label_read(struct device *dev, struct label **result)
 		return 0;
 	}
 
-	if ((r = l->ops->read(l, dev, buf, result)) && result && *result)
+	if ((r = (l->ops->read)(l, dev, buf, result)) && result && *result)
 		(*result)->sector = sector;
 
 	return r;
@@ -309,7 +309,7 @@ int label_write(struct device *dev, struct label *label)
 	lh->sector_xl = xlate64(label->sector);
 	lh->offset_xl = xlate32(sizeof(*lh));
 
-	if (!label->labeller->ops->write(label, buf)) {
+	if (!(label->labeller->ops->write)(label, buf)) {
 		stack;
 		return 0;
 	}
