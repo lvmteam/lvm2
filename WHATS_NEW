@@ -1,5 +1,5 @@
-Version 2.00.26 - 
-=====================================
+Version 2.00.26 - 23rd November 2004
+====================================
   Detect partition table signature.
   pvcreate wipes md superblocks. (With --uuid or --restorefile it prompts.)
   Separate out md superblock detection code.
