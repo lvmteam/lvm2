@@ -29,6 +29,9 @@
 
 #include "dm.h"
 
+#include <linux/proc_fs.h>
+#include <linux/ctype.h>
+
 /*
  * /dev/device-mapper/control is the control char device used to
  * create/destroy mapping devices.
@@ -47,12 +50,20 @@ static struct proc_dir_entry *_control;
 static devfs_handle_t _dev_dir;
 
 static int _line_splitter(struct file *file, const char *buffer,
-			  unsigned long *count, void *data)
+			  unsigned long count, void *data);
+int _process_control(const char *b, const char *e, int minor);
+static int _process_table(const char *b, const char *e, int minor);
+static const char *_eat_space(const char *b, const char *e);
+static int _get_word(const char *b, const char *e,
+		     const char **wb, const char **we);
+static int _tok_cmp(const char *str, const char *b, const char *e);
+static void _tok_cpy(char *dest, size_t max,
+		     const char *b, const char *e);
 
-typedef int (process_fn)(const char *b, const char *e);
+typedef int (*process_fn)(const char *b, const char *e, int minor);
 
 struct pf_data {
-	process_fn data;
+	process_fn fn;
 	int minor;
 };
 
@@ -103,8 +114,7 @@ void dm_fin_fs(void)
 int _process_control(const char *b, const char *e, int minor)
 {
 	const char *wb, *we;
-	char *name[64];
-	long minor = -1;
+	char name[64];
 	int create = 0;
 
 	/*
@@ -125,23 +135,24 @@ int _process_control(const char *b, const char *e, int minor)
 		return -EINVAL;
 	b = we;
 
-	_tok_cpy(name, sizeof(buffer), wb, we);
+	_tok_cpy(name, sizeof(name), wb, we);
 
 	if (create) {
 		if (_get_word(b, e, &wb, &we)) {
-			minor = simple_strtol(wb, &we, 10);
+			minor = simple_strtol(wb, (char **) &we, 10);
 
 			if (we == wb)
 				return -EINVAL;
 		}
-		_create_dm(name, minor);
+
+		return dm_create(name, minor);
 
 	} else {
 		if (!_get_word(b, e, &wb, &we))
 			return -EINVAL;
 
-		_tok_cpy(name, sizeof(buffer), wb, we);
-		_remove_dm(name, minor);
+		_tok_cpy(name, sizeof(name), wb, we);
+		return dm_remove(name);
 	}
 
 	return -EINVAL;
@@ -149,32 +160,10 @@ int _process_control(const char *b, const char *e, int minor)
 
 static int _process_table(const char *b, const char *e, int minor)
 {
-	struct target *t;
 	const char *wb, *we;
-	char buffer[64];
-	int len;
-
-	/*
-	 * format of a line is:
-	 * <highest valid sector> <target name> <target args>
-	 */
-	if (!_get_word(b, e, &wb, &we) || (we - wb) > sizeof(buffer))
-		return -EPARAM;
-
-	len = we - wb;
-	strncpy(buffer, wb, we - wb);
-	buffer[len] = '\0';
-
-	if (!(t = get_target(buffer))) {
-		/* FIXME: add module loading here */
-		return -EPARAM;
-	}
-}
-
-static int _process_table(const char *b, const char *e, int minor)
-{
-	const char *wb, *we;
-	struct mapped_device *md = dm_get_dev(minor);
+	struct mapped_device *md = dm_find_minor(minor);
+	void *context;
+	int ret;
 
 	if (!md)
 		return -ENXIO;
@@ -208,7 +197,7 @@ static int _process_table(const char *b, const char *e, int minor)
 		strncpy(high_s, wb, we - wb);
 		high_s[len] = '\0';
 
-		high = strtol(high_s, &ptr, 10);
+		high = simple_strtol(high_s, &ptr, 10);
 		if (ptr == high_s)
 			return 0;
 
@@ -226,7 +215,11 @@ static int _process_table(const char *b, const char *e, int minor)
 		if (!(t = dm_get_target(target)))
 			return 0;
 
-		dm_add_entry(md, high, t, context);
+		if ((ret = t->ctr(md->highs[md->num_targets - 1],
+				  high, md, we, &context)))
+			return ret;
+
+		dm_add_entry(md, high, t->map, context);
 	}
 
 	return 1;
@@ -241,7 +234,7 @@ static const char *_eat_space(const char *b, const char *e)
 }
 
 static int _get_word(const char *b, const char *e,
-		     const char **wb, const char *we)
+		     const char **wb, const char **we)
 {
 	b = _eat_space(b, e);
 
@@ -256,7 +249,7 @@ static int _get_word(const char *b, const char *e,
 }
 
 static int _line_splitter(struct file *file, const char *buffer,
-			  unsigned long *count, void *data)
+			  unsigned long count, void *data)
 {
 	const char *b = buffer, *e = buffer + count, *lb;
 	struct pf_data *pfd = (struct pf_data *) data;
@@ -296,4 +289,14 @@ static int _tok_cmp(const char *str, const char *b, const char *e)
 		return 1;
 
 	return -1;
+}
+
+static void _tok_cpy(char *dest, size_t max,
+		     const char *b, const char *e)
+{
+	size_t len = e - b;
+	if (len > --max)
+		len = max;
+	strncpy(dest, b, len);
+	dest[len] = '0';
 }

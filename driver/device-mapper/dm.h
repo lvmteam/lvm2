@@ -103,6 +103,9 @@ int dm_std_targets(void);
 struct mapped_device *dm_find_name(const char *name);
 struct mapped_device *dm_find_minor(int minor);
 
+int dm_create(const char *name, int minor);
+int dm_remove(const char *name);
+
 int dm_activate(struct mapped_device *md);
 void dm_suspend(struct mapped_device *md);
 
@@ -116,7 +119,7 @@ void dm_free_table(struct mapped_device *md);
 
 /* dm-fs.c */
 int dm_init_fs(void);
-int dm_fin_fs(void);
+void dm_fin_fs(void);
 
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
