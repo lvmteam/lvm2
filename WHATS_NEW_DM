@@ -1,5 +1,7 @@
-Version 1.00.19 - 
+Version 1.00.19 - 3 July 2004
 =============================
+  More autoconf fixes.
+  Fix a dmsetup newline.
   Fix device number handling for 2.6 kernels.
 
 Version 1.00.18 - 20 Jun 2004
