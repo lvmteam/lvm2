@@ -249,8 +249,8 @@ int dm_init_blkdev(void);
 void dm_cleanup_blkdev(void);
 
 /* dm-fs.c */
-int dm_fs_init(void);
-void dm_fs_exit(void);
+int dmfs_init(void);
+void dmfs_exit(void);
 
 
 
