@@ -512,7 +512,8 @@ struct list *get_vgs(struct cmd_context *cmd)
 	list_init(names);
 
 	if (!cmd->fmt1->ops->get_vgs(cmd->fmt1, names) ||
-	    !cmd->fmtt->ops->get_vgs(cmd->fmtt, names)) {
+	    !cmd->fmtt->ops->get_vgs(cmd->fmtt, names) ||
+	    list_empty(names)) {
 		pool_free(cmd->mem, names);
 		return NULL;
 	}
