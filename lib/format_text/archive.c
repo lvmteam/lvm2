@@ -50,7 +50,7 @@ struct archive_file {
 /*
  * Extract vg name and version number from a filename.
  */
-static int _split_vg(const char *filename, char *vg, size_t vg_size,
+static int _split_vg(const char *filename, char *vgname, size_t vg_size,
 		     uint32_t *ix)
 {
 	size_t len, vg_len;
@@ -74,8 +74,8 @@ static int _split_vg(const char *filename, char *vg, size_t vg_size,
 	if (vg_len + 1 > vg_size)
 		return 0;
 
-	strncpy(vg, filename, vg_len);
-	vg[vg_len] = '\0';
+	strncpy(vgname, filename, vg_len);
+	vgname[vg_len] = '\0';
 
 	return 1;
 }
@@ -121,10 +121,10 @@ static char *_join(struct pool *mem, const char *dir, const char *name)
  * Returns a list of archive_files.
  */
 static struct list *_scan_archive(struct pool *mem,
-				  const char *vg, const char *dir)
+				  const char *vgname, const char *dir)
 {
 	int i, count, ix;
-	char vg_name[64], *path;
+	char vgname_found[64], *path;
 	struct dirent **dirent;
 	struct archive_file *af;
 	struct list *results;
@@ -148,12 +148,12 @@ static struct list *_scan_archive(struct pool *mem,
 			continue;
 
 		/* check the name is the correct format */
-		if (!_split_vg(dirent[i]->d_name, vg_name, sizeof(vg_name),
-			       &ix))
+		if (!_split_vg(dirent[i]->d_name, vgname_found,
+			       sizeof(vgname_found), &ix))
 			continue;
 
 		/* is it the vg we're interested in ? */
-		if (strcmp(vg, vg_name))
+		if (strcmp(vgname, vgname_found))
 			continue;
 
 		if (!(path = _join(mem, dir, dirent[i]->d_name))) {
@@ -304,7 +304,8 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	char *desc;
 	void *context;
 
-	log_print("path:\t\t%s", af->path);
+	log_print(" ");
+	log_print("File:\t\t%s", af->path);
 
 	if (!(context = create_text_context(cmd, af->path, NULL)) ||
 	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
@@ -324,34 +325,50 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 		return;
 	}
 
-	log_print("description:\t%s", desc ? desc : "<No description>");
-	log_print("time:\t\t%s", ctime(&when));
+	log_print("VG name:    \t%s", vg->name);
+	log_print("Description:\t%s", desc ? desc : "<No description>");
+	log_print("Backup Time:\t%s", ctime(&when));
 
 	pool_free(cmd->mem, vg);
 	tf->fmt->ops->destroy_instance(tf);
 }
 
-int archive_list(struct cmd_context *cmd, const char *dir, const char *vg)
+int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 {
 	struct list *archives, *ah;
 	struct archive_file *af;
 
-	if (!(archives = _scan_archive(cmd->mem, vg, dir))) {
+	if (!(archives = _scan_archive(cmd->mem, vgname, dir))) {
 		log_err("Couldn't scan the archive directory (%s).", dir);
 		return 0;
 	}
 
 	if (list_empty(archives))
-		log_print("No archives found.");
+		log_print("No archives found in %s.", dir);
 
 	list_iterate(ah, archives) {
 		af = list_item(ah, struct archive_file);
 
 		_display_archive(cmd, af);
-		log_print(" ");
 	}
 
 	pool_free(cmd->mem, archives);
 
 	return 1;
 }
+
+int backup_list(struct cmd_context *cmd, const char *dir, const char *vgname)
+{
+	struct archive_file af;
+
+	if (!(af.path = _join(cmd->mem, dir, vgname))) {
+		stack;
+		return 0;
+	}
+
+	if (path_exists(af.path))
+		_display_archive(cmd, &af);
+
+	return 1;
+}
+

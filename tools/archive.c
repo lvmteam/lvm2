@@ -14,6 +14,12 @@ static struct {
 
 } _archive_params;
 
+static struct {
+	int enabled;
+	char *dir;
+
+} _backup_params;
+
 int archive_init(const char *dir, unsigned int keep_days, unsigned int keep_min)
 {
 	_archive_params.dir = NULL;
@@ -103,14 +109,15 @@ int archive(struct volume_group *vg)
 
 int archive_display(struct cmd_context *cmd, const char *vg_name)
 {
-	return archive_list(cmd, _archive_params.dir, vg_name);
+	int r1, r2;
+
+	init_partial(1);
+	r1 = archive_list(cmd, _archive_params.dir, vg_name);
+	r2 = backup_list(cmd, _backup_params.dir, vg_name);
+	init_partial(0);
+
+	return r1 && r2;
 }
-
-static struct {
-	int enabled;
-	char *dir;
-
-} _backup_params;
 
 int backup_init(const char *dir)
 {
