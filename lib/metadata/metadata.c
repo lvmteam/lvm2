@@ -616,7 +616,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 		}
 	}
 
-	if ((correct_vg->status & PVMOVE_VG) && !pvmove_mode()) {
+	if ((correct_vg->status & PVMOVE) && !pvmove_mode()) {
 		log_error("WARNING: Interrupted pvmove detected in "
 			  "volume group %s", vg->name);
 		log_error("Please restore the metadata by running "

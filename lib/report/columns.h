@@ -18,6 +18,8 @@ FIELD(LVS, lv, NUM, "LSize", size, 5, size64, "lv_size")
 FIELD(LVS, lv, NUM, "#Seg", lvid, 4, lvsegcount, "seg_count")
 FIELD(LVS, lv, STR, "Origin", lvid, 6, origin, "origin")
 FIELD(LVS, lv, NUM, "Snap%", lvid, 6, snpercent, "snap_percent")
+FIELD(LVS, lv, NUM, "Move%", lvid, 6, movepercent, "move_percent")
+FIELD(LVS, lv, STR, "Move", lvid, 4, movepv, "move_pv")
 
 FIELD(PVS, pv, STR, "Fmt", id, 3, pvfmt, "pv_fmt")
 FIELD(PVS, pv, STR, "PV UUID", id, 38, uuid, "pv_uuid")

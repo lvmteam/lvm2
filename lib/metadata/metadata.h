@@ -39,7 +39,8 @@
 #define FIXED_MINOR		0x00000080	/* LV */
 /* FIXME Remove when metadata restructuring is completed */
 #define SNAPSHOT		0x00001000	/* LV - tmp internal use only */
-#define PVMOVE_VG		0x00002000	/* VG - tmp use only */
+#define PVMOVE			0x00002000	/* VG LV SEG */
+#define LOCKED			0x00004000	/* LV */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */
@@ -179,6 +180,8 @@ struct lv_segment {
 	uint32_t le;
 	uint32_t len;
 
+	uint32_t status;
+
 	/* FIXME Fields depend on segment type */
 	uint32_t stripe_size;
 	uint32_t area_count;
@@ -186,6 +189,7 @@ struct lv_segment {
 	struct logical_volume *origin;
 	struct logical_volume *cow;
 	uint32_t chunk_size;
+	uint32_t extents_moved;
 
 	/* There will be one area for each stripe */
 	struct {
@@ -384,6 +388,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 
 struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       const char *name,
+				       const char *name_format,
 				       uint32_t status,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg);
@@ -402,7 +407,8 @@ int lv_extend_mirror(struct format_instance *fid,
 		     struct logical_volume *lv,
 		     struct physical_volume *mirrored_pv,
 		     uint32_t mirrored_pe,
-		     uint32_t extents, struct list *allocatable_pvs);
+		     uint32_t extents, struct list *allocatable_pvs,
+		     uint32_t status);
 
 /* Lock list of LVs */
 int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags);
@@ -485,8 +491,16 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv,
 			  struct list *allocatable_pvs,
 			  struct list *lvs_changed);
-int remove_pvmove_mirrors(struct cmd_context *cmd, struct volume_group *vg,
-			  struct logical_volume *lv_mirr, int commit);
+int remove_pvmove_mirrors(struct volume_group *vg,
+			  struct logical_volume *lv_mirr);
+struct logical_volume *find_pvmove_lv(struct volume_group *vg,
+				      struct device *dev);
+struct physical_volume *get_pvmove_pv_from_lv(struct logical_volume *lv);
+struct physical_volume *get_pvmove_pv_from_lv_mirr(struct logical_volume
+						   *lv_mirr);
+float pvmove_percent(struct logical_volume *lv_mirr);
+struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
+			  struct logical_volume *lv);
 
 static inline int validate_name(const char *n)
 {

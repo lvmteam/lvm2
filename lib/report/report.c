@@ -171,14 +171,18 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (lv_is_origin(lv))
+	if (lv->status & PVMOVE)
+		repstr[0] = 'p';
+	else if (lv_is_origin(lv))
 		repstr[0] = 'o';
 	else if (find_cow(lv))
 		repstr[0] = 's';
 	else
 		repstr[0] = '-';
 
-	if (lv->status & LVM_WRITE)
+	if (lv->status & PVMOVE)
+		repstr[1] = '-';
+	else if (lv->status & LVM_WRITE)
 		repstr[1] = 'w';
 	else
 		repstr[1] = 'r';
@@ -187,6 +191,9 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 		repstr[2] = 'c';
 	else
 		repstr[2] = 'n';
+
+	if (lv->status & LOCKED)
+		repstr[2] = toupper(repstr[2]);
 
 	if (lv->status & FIXED_MINOR)
 		repstr[3] = 'm';	/* Fixed Minor */
@@ -306,6 +313,28 @@ static int _origin_disp(struct report_handle *rh, struct field *field,
 
 	if ((snap = find_cow(lv)))
 		return _string_disp(rh, field, &snap->origin->name);
+
+	field->report_string = "";
+	field->sort_value = (const void *) field->report_string;
+
+	return 1;
+}
+
+static int _movepv_disp(struct report_handle *rh, struct field *field,
+			const void *data)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *name;
+	struct list *segh;
+	struct lv_segment *seg;
+
+	list_iterate(segh, &lv->segments) {
+		seg = list_item(segh, struct lv_segment);
+		if (!(seg->status & PVMOVE))
+			continue;
+		name = dev_name(seg->area[0].u.pv.pv->dev);
+		return _string_disp(rh, field, &name);
+	}
 
 	field->report_string = "";
 	field->sort_value = (const void *) field->report_string;
@@ -581,15 +610,54 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (snap_percent == -1)
-		snap_percent = 100;
-
 	if (lvm_snprintf(repstr, 7, "%.2f", snap_percent) < 0) {
 		log_error("snapshot percentage too large");
 		return 0;
 	}
 
 	*sortval = snap_percent * UINT64_C(1000);
+	field->sort_value = sortval;
+	field->report_string = repstr;
+
+	return 1;
+}
+
+static int _movepercent_disp(struct report_handle *rh, struct field *field,
+			     const void *data)
+{
+	struct logical_volume *lv = (struct logical_volume *) data;
+	float move_percent;
+	uint64_t *sortval;
+	char *repstr;
+
+	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
+		log_error("pool_alloc failed");
+		return 0;
+	}
+
+	if (!(lv->status & PVMOVE)) {
+		field->report_string = "";
+		*sortval = UINT64_C(0);
+		field->sort_value = sortval;
+		return 1;
+	}
+
+	/* Update percentage done in lv metadata in core */
+	lv_mirror_percent(lv, 0, &move_percent, NULL);
+
+	move_percent = pvmove_percent(lv);
+
+	if (!(repstr = pool_zalloc(rh->mem, 8))) {
+		log_error("pool_alloc failed");
+		return 0;
+	}
+
+	if (lvm_snprintf(repstr, 7, "%.2f", move_percent) < 0) {
+		log_error("move percentage too large");
+		return 0;
+	}
+
+	*sortval = move_percent * UINT64_C(1000);
 	field->sort_value = sortval;
 	field->report_string = repstr;
 
