@@ -68,7 +68,8 @@ struct list *find_snapshots(struct logical_volume *lv)
 {
 	struct list *slh;
 	struct list *snaplist;
-	struct snapshot_list *sl, *newsl;
+	struct snapshot *s;
+	struct snapshot_list *newsl;
 	struct pool *mem = lv->vg->cmd->mem;
 
 	if (!(snaplist = pool_alloc(mem, sizeof(*snaplist)))) {
@@ -79,15 +80,15 @@ struct list *find_snapshots(struct logical_volume *lv)
 	list_init(snaplist);
 
 	list_iterate(slh, &lv->vg->snapshots) {
-		sl = list_item(slh, struct snapshot_list);
-		if (!(sl->snapshot->origin == lv))
+		s = list_item(slh, struct snapshot_list)->snapshot;
+		if (!(s->origin == lv))
 			continue;
 		if (!(newsl = pool_alloc(mem, sizeof(*newsl)))) {
 			log_error("snapshot_list structure allocation failed");
 			pool_free(mem, snaplist);
 			return NULL;
 		}
-		newsl->snapshot = sl->snapshot;
+		newsl->snapshot = s;
 		list_add(snaplist, &newsl->list);
 	}
 
