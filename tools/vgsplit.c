@@ -279,7 +279,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	vg_to->status &= ~EXPORTED_VG;
 
-	if (!vg_write(vg_to) || !vg_write(vg_to))
+	if (!vg_write(vg_to) || !vg_commit(vg_to))
 		goto error;
 
 	backup(vg_to);
