@@ -62,6 +62,12 @@ int dev_get_sectsize(struct device *dev, uint32_t * size)
 	return 1;
 }
 
+
+static void _flush(int fd)
+{
+	ioctl(fd, BLKFLSBUF, 0);
+}
+
 int dev_open(struct device *dev, int flags)
 {
 	struct stat buf;
@@ -92,15 +98,10 @@ int dev_open(struct device *dev, int flags)
 		dev_close(dev);
 		return 0;
 	}
-
+	_flush(dev->fd);
 	dev->flags = 0;
 
 	return 1;
-}
-
-static void _flush(int fd)
-{
-	ioctl(fd, BLKFLSBUF, 0);
 }
 
 int dev_close(struct device *dev)
