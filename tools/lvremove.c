@@ -66,7 +66,7 @@ int lvremove_single(char *lv_name)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg->status & STATUS_ACTIVE)) {
+	if (!(vg->status & ACTIVE)) {
 		log_error("volume group %s must be active before removing "
 			  "logical volume", vg_name);
 		return ECMD_FAILED;
@@ -78,7 +78,7 @@ int lvremove_single(char *lv_name)
 		return ECMD_FAILED;
 	}
 
-	if (lv->access & ACCESS_SNAPSHOT_ORG) {
+	if (lv->status & SNAPSHOT_ORG) {
 		log_error("can't remove logical volume %s under snapshot",
 			  lv_name);
 		return ECMD_FAILED;
@@ -86,7 +86,7 @@ int lvremove_single(char *lv_name)
 
 	if (lv->open) {
 		log_error("can't remove open %s logical volume %s",
-			  lv->access & ACCESS_SNAPSHOT ? "snapshot" : "",
+			  lv->status & SNAPSHOT ? "snapshot" : "",
 			  lv_name);
 		return ECMD_FAILED;
 	}

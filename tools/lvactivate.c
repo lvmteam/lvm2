@@ -55,7 +55,7 @@ int lvactivate(int argc, char **argv)
 			return -1;
 		}
 
-		if (pv->status & STATUS_ALLOCATED) {
+		if (pv->status & ALLOCATED_PV) {
 			if (!(pv->pe = pv_read_pe(pv_name, pv)))
 				goto pvdisplay_device_out;
 			if (!(lvs = pv_read_lvs(pv))) {

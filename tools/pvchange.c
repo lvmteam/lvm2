@@ -130,14 +130,14 @@ void pvchange_single_volume(struct physical_volume *pv)
 
 	/* change allocatability for a PV */
 	if (arg_count(allocation_ARG) > 0) {
-		if (allocation && (pv->status & STATUS_ALLOCATED)) {
+		if (allocation && (pv->status & ALLOCATED_PV)) {
 			log_error("physical volume %s is allocatable", pv_name);
 			not_done++;
 			return;
 		} else
 			change_msg = 1;
 
-		if (!allocation && !(pv->status & STATUS_ALLOCATED)) {
+		if (!allocation && !(pv->status & ALLOCATED_PV)) {
 			log_error("physical volume %s is unallocatable",
 				  pv_name);
 			not_done++;
@@ -148,12 +148,12 @@ void pvchange_single_volume(struct physical_volume *pv)
 		if (allocation) {
 			log_verbose
 			    ("setting physical volume %s allocatable", pv_name);
-			pv->status |= STATUS_ALLOCATED;
+			pv->status |= ALLOCATED_PV;
 		} else {
 			log_verbose
 			    ("setting physical volume %s NOT allocatable",
 			     pv_name);
-			pv->status &= ~STATUS_ALLOCATED;
+			pv->status &= ~ALLOCATED_PV;
 		}
 	}
 
@@ -162,7 +162,7 @@ void pvchange_single_volume(struct physical_volume *pv)
 	if (doit == 1) {
 		log_verbose("checking physical volume %s is activite",
 			    pv->dev->name);
-		if (!(pv->status & STATUS_ACTIVE)) {
+		if (!(pv->status & ACTIVE)) {
 			log_verbose("Physical volume %s inactive", pv_name);
 		}
 

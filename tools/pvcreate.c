@@ -94,7 +94,7 @@ void pvcreate_single(const char *pv_name)
 
 	}
 
-	if (pv && (pv->status & STATUS_ACTIVE)) {
+	if (pv && (pv->status & ACTIVE)) {
 		log_error("Can't create on active physical volume %s", pv_name);
 		return;
 	}

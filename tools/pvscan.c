@@ -83,7 +83,7 @@ int pvscan(int argc, char **argv)
 			continue;
 ********/
 		pvs_found++;
-		
+
 		size = dev_get_size(pv->dev);
 		size_total += size;
 
@@ -126,9 +126,7 @@ int pvscan(int argc, char **argv)
 		  pvs_found - new_pvs_found,
 		  (s2 =
 		   display_size((size_total - size_new) / 2, SIZE_SHORT)),
-		  new_pvs_found, (s3 =
-					 display_size(size_new / 2,
-						      SIZE_SHORT)));
+		  new_pvs_found, (s3 = display_size(size_new / 2, SIZE_SHORT)));
 	dbg_free(s1);
 	dbg_free(s2);
 	dbg_free(s3);
@@ -163,7 +161,7 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	memset(pv_tmp_name, 0, sizeof (pv_tmp_name));
 
-	active_str = (pv->status & STATUS_ACTIVE) ? "ACTIVE   " : "inactive ";
+	active_str = (pv->status & ACTIVE) ? "ACTIVE   " : "inactive ";
 
 	vg_name_len = strlen(pv->vg_name) - sizeof (EXPORTED) + 1;
 

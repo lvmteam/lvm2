@@ -151,7 +151,8 @@ struct io_space {
 	void (*destroy)(struct io_space *is);
 
 	/* Current volume group prefix. */
-	char *prefix = '/dev/';
+	/* Default to "/dev/" */
+	char *prefix;
 
 	struct dev_filter *filter;
 	void *private;
