@@ -1,5 +1,7 @@
 Version 2.00.25 - 
 =====================================
+  Fix return code from rm_link for vgmknodes.
+  Make clvmd LV hash table thread-safe.
 
 Version 2.00.24 - 16th September 2004
 =====================================
