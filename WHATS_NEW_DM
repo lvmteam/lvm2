@@ -1,0 +1,13 @@
+Version 1.00.08 - 27 Feb 2004
+============================
+  Added 'dmsetup targets'.
+  Added event_nr support to 'dmsetup wait'.
+  Updated dmsetup man page.
+  Allow logging function to be reset to use internal one.
+  Bring log macros in line with LVM2 ones.
+  Added 'make install_static_lib' which installs libdevmapper.a.
+  Made configure/makefiles closer to LVM2 versions.
+  Fixed DESTDIR for make install/install_static_lib.
+  Updated README/INSTALL to reflect move to sources.redhat.com.
+  Updated autoconf files to 2003-06-17.
+
