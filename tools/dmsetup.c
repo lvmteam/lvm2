@@ -308,6 +308,7 @@ static int _info(int argc, char **argv)
 	if (info.open_count != -1)
 		printf("Open count:        %d\n", info.open_count);
 
+	printf("Event number:      %" PRIu32 "\n", info.event_nr);
 	printf("Major, minor:      %d, %d\n", info.major, info.minor);
 
 	if (info.target_count != -1)
