@@ -207,6 +207,37 @@ int dm_table_add_entry(struct dm_table *t, offset_t high,
 }
 
 /*
+ * convert a device path to a kdev_t.  I've not
+ * looked at vfs stuff before so could someone
+ * more knowledgeable please check this.
+ */
+int dm_table_lookup_device(const char *path, kdev_t *d)
+{
+	int r;
+	struct nameidata nd;
+	struct inode *inode;
+
+	if (!path_init(path, LOOKUP_FOLLOW, &nd))
+		return 0;
+
+	if ((r = path_walk(path, &nd)))
+		goto bad;
+
+	inode = nd.dentry->d_inode;
+
+	if (!S_ISBLK(inode->i_mode)) {
+		r = -EINVAL;
+		goto bad;
+	}
+
+	*d = inode->i_bdev->bd_dev;
+
+ bad:
+	path_release(&nd);
+	return r;
+}
+
+/*
  * see if we've already got a device in the list.
  */
 static struct dev_list *find_device(struct dev_list *d, kdev_t dev)

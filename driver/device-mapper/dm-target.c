@@ -115,20 +115,25 @@ struct linear_c {
 
 /*
  * construct a linear mapping.
- * <major> <minor> <offset>
+ * <dev_path> <offset>
  */
 static int linear_ctr(struct dm_table *t,
 		      offset_t low, offset_t high,
 		      const char *cb, const char *ce, void **result)
 {
 	struct linear_c *lc;
-	unsigned int major, minor, start;
+	unsigned int start;
+	kdev_t dev;
 	int r;
+	char path[256];
+	const char *wb, *we;
 
-	if ((r = get_number(&cb, ce, &major)))
+	if ((r = get_word(cb, ce, &wb, &we)))
 		return r;
+	cb = we;
 
-	if ((r = get_number(&cb, ce, &minor)))
+	tok_cpy(path, sizeof(path) - 1, wb, we);
+	if ((r = dm_table_lookup_device(path, &dev)))
 		return r;
 
 	if ((r = get_number(&cb, ce, &start)))
@@ -139,7 +144,7 @@ static int linear_ctr(struct dm_table *t,
 		return -EINVAL;
 	}
 
-	lc->dev = MKDEV((int) major, (int) minor);
+	lc->dev = dev;
 	lc->offset = (int) start - (int) low;
 
 	if ((r = dm_table_add_device(t, lc->dev))) {

@@ -55,11 +55,7 @@ static int process_table(const char *b, const char *e, int minor,
 			 struct dm_table **map);
 static int line_splitter(struct file *file, const char *buffer,
 			 unsigned long count, void *data);
-static int get_word(const char *b, const char *e,
-		    const char **wb, const char **we);
 static int tok_cmp(const char *str, const char *b, const char *e);
-static void tok_cpy(char *dest, size_t max,
-		    const char *b, const char *e);
 
 typedef int (*process_fn)(const char *b, const char *e, int minor,
 			  struct dm_table **map);
@@ -289,21 +285,6 @@ static int process_table(const char *b, const char *e, int minor,
 	return 0;
 }
 
-static int get_word(const char *b, const char *e,
-		    const char **wb, const char **we)
-{
-	b = eat_space(b, e);
-
-	if (b == e)
-		return -EINVAL;
-
-	*wb = b;
-	while(b != e && !isspace((int) *b))
-		b++;
-	*we = b;
-	return 0;
-}
-
 static int line_splitter(struct file *file, const char *buffer,
 			 unsigned long count, void *data)
 {
@@ -348,12 +329,3 @@ static int tok_cmp(const char *str, const char *b, const char *e)
 	return -1;
 }
 
-static void tok_cpy(char *dest, size_t max,
-		    const char *b, const char *e)
-{
-	size_t len = e - b;
-	if (len > --max)
-		len = max;
-	strncpy(dest, b, len);
-	dest[len] = '\0';
-}
