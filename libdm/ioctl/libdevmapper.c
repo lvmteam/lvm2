@@ -6,7 +6,10 @@
 
 #include "libdm-targets.h"
 #include "libdm-common.h"
-#include "libdm-compat.h"
+
+#ifdef DM_COMPAT
+#  include "libdm-compat.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,8 +19,11 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <limits.h>
 #include <linux/limits.h>
+#include <linux/kdev_t.h>
+#include <linux/dm-ioctl.h>
 
 /*
  * Ensure build compatibility.  
@@ -84,6 +90,56 @@ static void *_align(void *ptr, unsigned int a)
 	return (void *) (((unsigned long) ptr + agn) & ~agn);
 }
 
+static int _open_control(void)
+{
+	char control[PATH_MAX];
+
+	if (_control_fd != -1)
+		return 1;
+
+	snprintf(control, sizeof(control), "%s/control", dm_dir());
+
+	if ((_control_fd = open(control, O_RDWR)) < 0) {
+		log_error("%s: open failed: %s", control, strerror(errno));
+		log_error("Is device-mapper driver missing from kernel?");
+		return 0;
+	}
+
+	return 1;
+}
+
+void dm_task_destroy(struct dm_task *dmt)
+{
+	struct target *t, *n;
+
+	for (t = dmt->head; t; t = n) {
+		n = t->next;
+		free(t->params);
+		free(t->type);
+		free(t);
+	}
+
+	if (dmt->dev_name)
+		free(dmt->dev_name);
+
+	if (dmt->newname)
+		free(dmt->newname);
+
+	if (dmt->dmi.v4)
+		free(dmt->dmi.v4);
+
+	if (dmt->uuid)
+		free(dmt->uuid);
+
+	free(dmt);
+}
+
+/*
+ * Protocol Version 1 compatibility functions.
+ */
+
+#ifdef DM_COMPAT
+
 static int _dm_task_get_driver_version_v1(struct dm_task *dmt, char *version,
 					  size_t size)
 {
@@ -122,7 +178,8 @@ static int _unmarshal_status_v1(struct dm_task *dmt, struct dm_ioctl_v1 *dmi)
 	return 1;
 }
 
-static int _dm_format_dev_v1(char *buf, int bufsize, uint32_t dev_major, uint32_t dev_minor)
+static int _dm_format_dev_v1(char *buf, int bufsize, uint32_t dev_major,
+			     uint32_t dev_minor)
 {
 	int r;
 
@@ -365,24 +422,6 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 	return r;
 }
 
-static int _open_control(void)
-{
-	char control[PATH_MAX];
-
-	if (_control_fd != -1)
-		return 1;
-
-	snprintf(control, sizeof(control), "%s/control", dm_dir());
-
-	if ((_control_fd = open(control, O_RDWR)) < 0) {
-		log_error("%s: open failed: %s", control, strerror(errno));
-		log_error("Is device-mapper driver missing from kernel?");
-		return 0;
-	}
-
-	return 1;
-}
-
 static int _dm_task_run_v1(struct dm_task *dmt)
 {
 	struct dm_ioctl_v1 *dmi;
@@ -460,38 +499,20 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	return 0;
 }
 
-void dm_task_destroy(struct dm_task *dmt)
-{
-	struct target *t, *n;
+#endif
 
-	for (t = dmt->head; t; t = n) {
-		n = t->next;
-		free(t->params);
-		free(t->type);
-		free(t);
-	}
-
-	if (dmt->dev_name)
-		free(dmt->dev_name);
-
-	if (dmt->newname)
-		free(dmt->newname);
-
-	if (dmt->dmi.v4)
-		free(dmt->dmi.v4);
-
-	if (dmt->uuid)
-		free(dmt->uuid);
-
-	free(dmt);
-}
+/*
+ * Protocol Version 4 functions.
+ */
 
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 {
 	unsigned int *v;
 
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_task_get_driver_version_v1(dmt, version, size);
+#endif
 
 	if (!dmt->dmi.v4) {
 		version[0] = '\0';
@@ -607,12 +628,15 @@ static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 	return 1;
 }
 
-int dm_format_dev(char *buf, int bufsize, uint32_t dev_major, uint32_t dev_minor)
+int dm_format_dev(char *buf, int bufsize, uint32_t dev_major,
+		  uint32_t dev_minor)
 {
 	int r;
 
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_format_dev_v1(buf, bufsize, dev_major, dev_minor);
+#endif
 
 	if (bufsize < 8)
 		return 0;
@@ -626,8 +650,10 @@ int dm_format_dev(char *buf, int bufsize, uint32_t dev_major, uint32_t dev_minor
 
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 {
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_task_get_info_v1(dmt, info);
+#endif
 
 	if (!dmt->dmi.v4)
 		return 0;
@@ -654,24 +680,30 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 
 const char *dm_task_get_name(struct dm_task *dmt)
 {
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_task_get_name_v1(dmt);
+#endif
 
 	return (dmt->dmi.v4->name);
 }
 
 const char *dm_task_get_uuid(struct dm_task *dmt)
 {
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_task_get_uuid_v1(dmt);
+#endif
 
 	return (dmt->dmi.v4->uuid);
 }
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 {
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_task_get_deps_v1(dmt);
+#endif
 
 	return (struct dm_deps *) (((void *) dmt->dmi.v4) +
 				   dmt->dmi.v4->data_start);
@@ -679,8 +711,10 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 
 struct dm_names *dm_task_get_names(struct dm_task *dmt)
 {
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_task_get_names_v1(dmt);
+#endif
 
 	return (struct dm_names *) (((void *) dmt->dmi.v4) +
 				    dmt->dmi.v4->data_start);
@@ -936,8 +970,10 @@ int dm_task_run(struct dm_task *dmt)
 	struct dm_ioctl *dmi;
 	unsigned int command;
 
+#ifdef DM_COMPAT
 	if (_dm_version == 1)
 		return _dm_task_run_v1(dmt);
+#endif
 
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
