@@ -34,7 +34,7 @@ static sig_t _oldhandler;
 static sigset_t _fullsigset, _intsigset;
 static int _handler_installed;
 
-static int _release_lock(const char *file)
+static int _release_lock(const char *file, int unlock)
 {
 	struct lock_list *ll;
 	struct list *llh, *llt;
@@ -46,10 +46,11 @@ static int _release_lock(const char *file)
 
 		if (!file || !strcmp(ll->res, file)) {
 			list_del(llh);
-			log_very_verbose("Unlocking %s", ll->res);
-
-			if (flock(ll->lf, LOCK_NB | LOCK_UN))
-				log_sys_error("flock", ll->res);
+			if (unlock) {
+				log_very_verbose("Unlocking %s", ll->res);
+				if (flock(ll->lf, LOCK_NB | LOCK_UN))
+					log_sys_error("flock", ll->res);
+			}
 
 			if (!flock(ll->lf, LOCK_NB | LOCK_EX) &&
 			    !stat(ll->res, &buf1) &&
@@ -74,7 +75,12 @@ static int _release_lock(const char *file)
 
 static void _fin_file_locking(void)
 {
-	_release_lock(NULL);
+	_release_lock(NULL, 1);
+}
+
+static void _reset_file_locking(void)
+{
+	_release_lock(NULL, 0);
 }
 
 static void _remove_ctrl_c_handler()
@@ -127,7 +133,7 @@ static int _lock_file(const char *file, int flags)
 		state = 'W';
 		break;
 	case LCK_UNLOCK:
-		return _release_lock(file);
+		return _release_lock(file, 1);
 	default:
 		log_error("Unrecognised lock type: %d", flags & LCK_TYPE_MASK);
 		return 0;
@@ -233,6 +239,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 int init_file_locking(struct locking_type *locking, struct config_tree *cf)
 {
 	locking->lock_resource = _file_lock_resource;
+	locking->reset_locking = _reset_file_locking;
 	locking->fin_locking = _fin_file_locking;
 
 	/* Get lockfile directory from config file */

@@ -12,10 +12,12 @@ typedef int (*lock_resource_fn) (struct cmd_context * cmd, const char *resource,
 				 int flags);
 
 typedef void (*fin_lock_fn) (void);
+typedef void (*reset_lock_fn) (void);
 
 struct locking_type {
 	lock_resource_fn lock_resource;
 
+	reset_lock_fn reset_locking;
 	fin_lock_fn fin_locking;
 };
 

@@ -22,6 +22,11 @@ static void _no_fin_locking(void)
 	return;
 }
 
+static void _no_reset_locking(void)
+{
+	return;
+}
+
 static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 			     int flags)
 {
@@ -54,6 +59,7 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 int init_no_locking(struct locking_type *locking, struct config_tree *cf)
 {
 	locking->lock_resource = _no_lock_resource;
+	locking->reset_locking = _no_reset_locking;
 	locking->fin_locking = _no_fin_locking;
 
 	return 1;
