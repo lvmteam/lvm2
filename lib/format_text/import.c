@@ -21,6 +21,9 @@ typedef int (*section_fn)(struct pool *mem,
 #define _read_int32(root, path, result) \
 	get_config_uint32(root, path, '/', result)
 
+#define _read_uint32(root, path, result) \
+	get_config_uint32(root, path, '/', result)
+
 #define _read_int64(root, path, result) \
 	get_config_uint64(root, path, '/', result)
 
