@@ -72,7 +72,13 @@ int dev_get_sectsize(struct device *dev, uint32_t *size)
 
 static void _flush(int fd)
 {
-	ioctl(fd, BLKFLSBUF, 0);
+	if (ioctl(fd, BLKFLSBUF, 0) >= 0)
+		return;
+
+	if (fsync(fd) >= 0)
+		return;
+
+	sync();
 }
 
 int dev_open(struct device *dev, int flags)
