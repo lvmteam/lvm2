@@ -78,6 +78,7 @@ install: build
 
 	# Add here commands to install the package into debian/lvm2.
 	$(MAKE) install prefix=$(CURDIR)/debian/lvm2
+	install -m 0644 doc/example.conf debian/lvm2/etc/lvm/lvm.conf
 
 
 # Build architecture-independent files here.
@@ -97,11 +98,11 @@ binary-arch: build install
 #	dh_installemacsen -a
 #	dh_installpam -a
 #	dh_installmime -a
-	dh_installinit
+	dh_installinit -n
 	dh_installcron
 	dh_installman
 	dh_installinfo 
-#	dh_undocumented -a
+	dh_undocumented
 	dh_installchangelogs
 	dh_strip
 	dh_link

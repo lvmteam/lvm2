@@ -9,34 +9,50 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 NAME=lvm2
 DESC=LVM
 
-test -f $DAEMON || exit 0
+test -x /sbin/vgchange || exit 0
+modprobe dm-mod >/dev/null 2>&1
+
+# Create necessary files in /dev for device-mapper
+create_devfiles() {
+	DIR="/dev/device-mapper"
+	FILE="$DIR/control"
+	major=$(awk '$2 ~ /^misc$/ {print $1}' /proc/devices)
+	minor=$(awk "\$2 ~ /^$DM_NAME\$/ {print \$1}" /proc/misc)
+
+	if test ! -d $DIR; then
+		mkdir --mode=755 $DIR >/dev/null 2>&1
+	fi
+
+	if test ! -c $FILE -a ! -z "$minor"; then
+		mknod --mode=600 $FILE c $major $minor >/dev/null 2>&1
+	fi
+}
 
 case "$1" in
   start)
 	echo -n "Initializing $DESC: "
-	modprobe dm-mod >/dev/null 2>&1
-	vgchange -a y 2>/dev/null
-	# TODO: attempt to mount all lvm devices; mount -a?
+	create_devfiles
+	vgchange -a y
+
+#	# Mount all LVM devices
+#	for vg in $( vgchange -a y 2>/dev/null | grep active | awk -F\" '{print $2}' ); do
+#		MTPT=$( grep $vg /etc/fstab | awk '{print $2}' )
+#		mount $MTPT
+#	done
 	echo "$NAME."
 	;;
   stop)
 	echo -n "Shutting down $DESC: "
-	# TODO: attempt to umount all lvm devices; umount -a?
-	vgchange -a n 2>/dev/null
-	rmmod dm-mod >/dev/null 2>&1
+	# We don't really try all that hard to shut it down; far too many
+	# things that can keep it from successfully shutting down.
+	vgchange -a n
 	echo "$NAME."
 	;;
   restart|force-reload)
 	echo -n "Restarting $DESC: "
-	# TODO: attempt to umount all lvm devices; umount -a?
-	vgchange -a n 2>/dev/null
-	rmmod dm-mod >/dev/null 2>&1
-
+	vgchange -a n
 	sleep 1
-	modprobe dm-mod >/dev/null 2>&1
-	vgchange -a y 2>/dev/null
-	# TODO: attempt to mount all lvm devices; mount -a?
-
+	vgchange -a y
 	echo "$NAME."
 	;;
   *)
