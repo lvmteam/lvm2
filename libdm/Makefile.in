@@ -9,7 +9,7 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 interface = @interface@
 
-SOURCES=$(interface)/libdevmapper.c libdm-common.c
+SOURCES=libdm-common.c $(interface)/libdevmapper.c
 
 INCLUDES=-I$(interface)
 
