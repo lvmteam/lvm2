@@ -1190,9 +1190,8 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 
 				/* If System LV operation failed then report it as EFBIG but only do it
 				   if the data buffer has something in it. */
-				if (system_lv_write_data
-				    (aggreply,
-				     replylen + sizeof(struct clvm_header)) < 0
+				if (system_lv_write_data(aggreply,
+							 replylen + sizeof(struct clvm_header)) < 0
 				    && replylen > 0)
 					agghead->status = EFBIG;
 
@@ -1210,7 +1209,7 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 				agghead->node[0] = '\0';
 				send_message(aggreply,
 					     sizeof(struct clvm_header) +
-					     replylen + 2, csid, fd,
+					     replylen, csid, fd,
 					     "Error sending command reply");
 			}
 		} else {
@@ -1532,6 +1531,7 @@ static void send_version_message()
 	version_nums[1] = htonl(CLVMD_MINOR_VERSION);
 	version_nums[2] = htonl(CLVMD_PATCH_VERSION);
 
+	hton_clvm(msg);
 	clops->cluster_send_message(message, sizeof(message), NULL,
 			     "Error Sending version number");
 }
@@ -1544,7 +1544,7 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 
 	/* Send remote messages down the cluster socket */
 	if (csid == NULL || !ISLOCAL_CSID(csid)) {
-		hton_clvm((struct clvm_header *) buf);	/* Byte swap if necessary */
+		hton_clvm((struct clvm_header *) buf);
 		return clops->cluster_send_message(buf, msglen, csid, errtext);
 	} else {
 		int ptr = 0;

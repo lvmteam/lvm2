@@ -227,7 +227,9 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
 {
     struct sockaddr_in6 addr;
     socklen_t slen = sizeof(addr);
+    struct clvm_header *header = (struct clvm_header *)buf;
     int status;
+    uint32_t arglen;
 
     DEBUGLOG("read_from_tcpsock fd %d\n", client->fd);
     *new_client = NULL;
@@ -236,7 +238,26 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
     getpeername(client->fd, (struct sockaddr *)&addr, &slen);
     memcpy(csid, &addr.sin6_addr, GULM_MAX_CSID_LEN);
 
-    status = read(client->fd, buf, len);
+    /* Read just the header first, then get the rest if there is any.
+     * Stream sockets, sigh.
+     */
+    status = read(client->fd, buf, sizeof(struct clvm_header));
+    if (status > 0)
+    {
+	    int status2;
+
+	    arglen = ntohl(header->arglen);
+
+	    /* Get the rest */
+	    if (arglen && arglen < GULM_MAX_CLUSTER_MESSAGE)
+	    {
+		    status2 = read(client->fd, buf+status, arglen);
+		    if (status2 > 0)
+			    status += status2;
+		    else
+			    status = status2;
+	    }
+    }
 
     DEBUGLOG("read_from_tcpsock, status = %d(errno = %d)\n", status, errno);
 
