@@ -18,7 +18,7 @@ static struct hash_table *_vgname_hash = NULL;
 static struct list _vginfos;
 int _has_scanned = 0;
 
-int cache_init()
+int cache_init(void)
 {
 	list_init(&_vginfos);
 
@@ -47,7 +47,7 @@ struct cache_vginfo *vginfo_from_vgname(const char *vgname)
 	return vginfo;
 }
 
-struct format_type *fmt_from_vgname(const char *vgname)
+const struct format_type *fmt_from_vgname(const char *vgname)
 {
 	struct cache_vginfo *vginfo;
 
@@ -91,7 +91,7 @@ static void _rescan_entry(struct cache_info *info)
 		label_read(info->dev, &label);
 }
 
-static int _scan_invalid(struct cmd_context *cmd)
+static int _scan_invalid(void)
 {
 	hash_iter(_pvid_hash, (iterate_fn) _rescan_entry);
 
@@ -121,7 +121,7 @@ int cache_label_scan(struct cmd_context *cmd, int full_scan)
 	}
 
 	if (_has_scanned && !full_scan) {
-		r = _scan_invalid(cmd);
+		r = _scan_invalid();
 		goto out;
 	}
 
@@ -223,7 +223,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	return NULL;
 }
 
-void _drop_vginfo(struct cache_info *info)
+static void _drop_vginfo(struct cache_info *info)
 {
 	if (!list_empty(&info->list)) {
 		list_del(&info->list);
@@ -423,7 +423,7 @@ struct cache_info *cache_add(struct labeller *labeller, const char *pvid,
 		label = info->label;
 	}
 
-	info->fmt = (struct format_type *) labeller->private;
+	info->fmt = (const struct format_type *) labeller->private;
 	info->status |= CACHE_INVALID;
 
 	if (!_cache_update_pvid(info, pvid_s)) {
@@ -467,7 +467,7 @@ static void _cache_destroy_vgnamelist(struct cache_vginfo *vginfo)
 	dbg_free(vginfo);
 }
 
-void cache_destroy()
+void cache_destroy(void)
 {
 	_has_scanned = 0;
 

@@ -23,9 +23,9 @@
 static int lvchange_permission(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
-	int lv_access;
+	uint32_t lv_access;
 
-	lv_access = arg_int_value(cmd, permission_ARG, 0);
+	lv_access = arg_uint_value(cmd, permission_ARG, 0);
 
 	if ((lv_access & LVM_WRITE) && (lv->status & LVM_WRITE)) {
 		log_error("Logical volume \"%s\" is already writable",
@@ -162,9 +162,9 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 static int lvchange_readahead(struct cmd_context *cmd,
 			      struct logical_volume *lv)
 {
-	int read_ahead = 0;
+	unsigned int read_ahead = 0;
 
-	read_ahead = arg_int_value(cmd, readahead_ARG, 0);
+	read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
 
 /******* FIXME Ranges?
 	if (read_ahead < LVM_MIN_READ_AHEAD || read_ahead > LVM_MAX_READ_AHEAD) {

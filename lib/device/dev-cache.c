@@ -92,14 +92,15 @@ static int _insert_dev(const char *path, dev_t d)
 	struct device *dev;
 
 	/* is this device already registered ? */
-	if (!(dev = (struct device *) btree_lookup(_cache.devices, d))) {
+	if (!(dev = (struct device *) btree_lookup(_cache.devices,
+						   (uint32_t) d))) {
 		/* create new device */
 		if (!(dev = _create_dev(d))) {
 			stack;
 			return 0;
 		}
 
-		if (!(btree_insert(_cache.devices, d, dev))) {
+		if (!(btree_insert(_cache.devices, (uint32_t) d, dev))) {
 			log_err("Couldn't insert device into binary tree.");
 			_free(dev);
 			return 0;
@@ -121,7 +122,7 @@ static int _insert_dev(const char *path, dev_t d)
 
 static char *_join(const char *dir, const char *name)
 {
-	int len = strlen(dir) + strlen(name) + 2;
+	size_t len = strlen(dir) + strlen(name) + 2;
 	char *r = dbg_malloc(len);
 	if (r)
 		snprintf(r, len, "%s/%s", dir, name);
@@ -273,7 +274,7 @@ int dev_cache_init(void)
 	return 0;
 }
 
-void _check_closed(struct device *dev)
+static void _check_closed(struct device *dev)
 {
 	if (dev->fd >= 0)
 		log_err("Device '%s' has been left open.", dev_name(dev));

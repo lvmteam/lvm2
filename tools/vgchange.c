@@ -43,7 +43,8 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	return count;
 }
 
-void vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
+static void _vgchange_available(struct cmd_context *cmd,
+				struct volume_group *vg)
 {
 	int lv_open, active;
 	int available = !strcmp(arg_str_value(cmd, available_ARG, "n"), "y");
@@ -72,7 +73,8 @@ void vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 	return;
 }
 
-void vgchange_resizeable(struct cmd_context *cmd, struct volume_group *vg)
+static void _vgchange_resizeable(struct cmd_context *cmd,
+				 struct volume_group *vg)
 {
 	int resizeable = !strcmp(arg_str_value(cmd, resizeable_ARG, "n"), "y");
 
@@ -106,9 +108,10 @@ void vgchange_resizeable(struct cmd_context *cmd, struct volume_group *vg)
 	return;
 }
 
-void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg)
+static void _vgchange_logicalvolume(struct cmd_context *cmd,
+				    struct volume_group *vg)
 {
-	int max_lv = arg_int_value(cmd, logicalvolume_ARG, 0);
+	uint32_t max_lv = arg_uint_value(cmd, logicalvolume_ARG, 0);
 
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" must be resizeable "
@@ -165,13 +168,13 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (arg_count(cmd, available_ARG))
-		vgchange_available(cmd, vg);
+		_vgchange_available(cmd, vg);
 
 	if (arg_count(cmd, resizeable_ARG))
-		vgchange_resizeable(cmd, vg);
+		_vgchange_resizeable(cmd, vg);
 
 	if (arg_count(cmd, logicalvolume_ARG))
-		vgchange_logicalvolume(cmd, vg);
+		_vgchange_logicalvolume(cmd, vg);
 
 	return 0;
 }

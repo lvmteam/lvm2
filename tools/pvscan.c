@@ -23,11 +23,11 @@
 int pv_max_name_len = 0;
 int vg_max_name_len = 0;
 
-void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
-			   void *handle)
+static void _pvscan_display_single(struct cmd_context *cmd,
+				   struct physical_volume *pv, void *handle)
 {
 	char uuid[64];
-	int vg_name_len = 0;
+	unsigned int vg_name_len = 0;
 
 	char pv_tmp_name[NAME_LEN] = { 0, };
 	char vg_tmp_name[NAME_LEN] = { 0, };
@@ -81,10 +81,10 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
 			  "[%s / %s free]",
 			  pv_max_name_len, pv_tmp_name,
 			  vg_name_this,
-			  display_size(cmd, pv->pe_count *
-				       pv->pe_size / 2,
-				       SIZE_SHORT),
-			  display_size(cmd, (pv->pe_count - pv->pe_alloc_count)
+			  display_size(cmd, (uint64_t) pv->pe_count *
+				       pv->pe_size / 2, SIZE_SHORT),
+			  display_size(cmd, (uint64_t) (pv->pe_count -
+							pv->pe_alloc_count)
 				       * pv->pe_size / 2, SIZE_SHORT));
 		return;
 	}
@@ -94,10 +94,12 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
 	    ("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
 	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
 	     pv->fmt ? pv->fmt->name : "    ",
-	     display_size(cmd, pv->pe_count * pv->pe_size / 2, SIZE_SHORT),
-	     display_size(cmd,
-			  (pv->pe_count - pv->pe_alloc_count) * pv->pe_size / 2,
-			  SIZE_SHORT));
+	     display_size(cmd, (uint64_t) pv->pe_count * pv->pe_size / 2,
+			  SIZE_SHORT), display_size(cmd, (uint64_t)
+						    (pv->pe_count -
+						     pv->pe_alloc_count) *
+						    pv->pe_size / 2,
+						    SIZE_SHORT));
 	return;
 }
 
@@ -106,7 +108,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	int new_pvs_found = 0;
 	int pvs_found = 0;
 
-	struct list *pvs;
+	struct list *pvslist;
 	struct list *pvh;
 	struct pv_list *pvl;
 	struct physical_volume *pv;
@@ -135,11 +137,11 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	cache_destroy();
 
 	log_verbose("Walking through all physical volumes");
-	if (!(pvs = get_pvs(cmd)))
+	if (!(pvslist = get_pvs(cmd)))
 		return ECMD_FAILED;
 
 	/* eliminate exported/new if required */
-	list_iterate(pvh, pvs) {
+	list_iterate(pvh, pvslist) {
 		pvl = list_item(pvh, struct pv_list);
 		pv = pvl->pv;
 
@@ -173,7 +175,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	/* find maximum pv name length */
 	pv_max_name_len = vg_max_name_len = 0;
-	list_iterate(pvh, pvs) {
+	list_iterate(pvh, pvslist) {
 		pv = list_item(pvh, struct pv_list)->pv;
 		len = strlen(dev_name(pv->dev));
 		if (pv_max_name_len < len)
@@ -185,9 +187,9 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	pv_max_name_len += 2;
 	vg_max_name_len += 2;
 
-	list_iterate(pvh, pvs)
-	    pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv,
-				  NULL);
+	list_iterate(pvh, pvslist)
+	    _pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv,
+				   NULL);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");

@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <assert.h>
 
 static unsigned char _c[] =
     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -26,7 +25,7 @@ int lvid_create(union lvid *lvid, struct id *vgid)
 	return 1;
 }
 
-int lvid_from_lvnum(union lvid *lvid, struct id *vgid, int lv_num)
+int lvid_from_lvnum(union lvid *lvid, struct id *vgid, uint32_t lv_num)
 {
 	int i;
 
@@ -58,20 +57,21 @@ int lvnum_from_lvid(union lvid *lvid)
 
 int id_create(struct id *id)
 {
-	int random, i, len = sizeof(id->uuid);
+	int randomfile, i;
+	size_t len = sizeof(id->uuid);
 
 	memset(id->uuid, 0, len);
-	if ((random = open("/dev/urandom", O_RDONLY)) < 0) {
+	if ((randomfile = open("/dev/urandom", O_RDONLY)) < 0) {
 		log_sys_error("open", "id_create");
 		return 0;
 	}
 
-	if (read(random, id->uuid, len) != len) {
+	if (read(randomfile, id->uuid, len) != len) {
 		log_sys_error("read", "id_create");
-		close(random);
+		close(randomfile);
 		return 0;
 	}
-	close(random);
+	close(randomfile);
 
 	for (i = 0; i < len; i++)
 		id->uuid[i] = _c[id->uuid[i] % (sizeof(_c) - 1)];
@@ -84,7 +84,7 @@ int id_create(struct id *id)
  * the uuid just contains characters from
  * '_c'.  A checksum would have been nice :(
  */
-void _build_inverse(void)
+static void _build_inverse(void)
 {
 	char *ptr;
 
@@ -112,18 +112,18 @@ int id_valid(struct id *id)
 	return 1;
 }
 
-int id_equal(struct id *lhs, struct id *rhs)
+int id_equal(const struct id *lhs, const struct id *rhs)
 {
 	return !memcmp(lhs->uuid, rhs->uuid, sizeof(lhs->uuid));
 }
 
 #define GROUPS (ID_LEN / 4)
 
-int id_write_format(struct id *id, char *buffer, size_t size)
+int id_write_format(const struct id *id, char *buffer, size_t size)
 {
 	int i, tot;
 
-	static int group_size[] = { 6, 4, 4, 4, 4, 4, 6 };
+	static unsigned group_size[] = { 6, 4, 4, 4, 4, 4, 6 };
 
 	assert(ID_LEN == 32);
 
@@ -144,7 +144,7 @@ int id_write_format(struct id *id, char *buffer, size_t size)
 	return 1;
 }
 
-int id_read_format(struct id *id, char *buffer)
+int id_read_format(struct id *id, const char *buffer)
 {
 	int out = 0;
 

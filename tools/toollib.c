@@ -70,7 +70,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	struct logical_volume *lv;
 	struct lv_list *lvl;
 
-	char *vgname;
+	const char *vgname;
 
 	if (argc) {
 		log_verbose("Using logical volume(s) on command line");
@@ -326,7 +326,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 
 	struct pv_list *pvl;
 	struct physical_volume *pv;
-	struct list *pvs, *pvh;
+	struct list *pvslist, *pvh;
 
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
@@ -359,10 +359,10 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			process_each_pv_in_vg(cmd, vg, handle, process_single);
 		} else {
 			log_verbose("Scanning for physical volume names");
-			if (!(pvs = get_pvs(cmd)))
+			if (!(pvslist = get_pvs(cmd)))
 				return ECMD_FAILED;
 
-			list_iterate(pvh, pvs) {
+			list_iterate(pvh, pvslist) {
 				pv = list_item(pvh, struct pv_list)->pv;
 				ret = process_single(cmd, NULL, pv, handle);
 				if (ret > ret_max)
@@ -374,9 +374,9 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	return ret_max;
 }
 
-char *extract_vgname(struct cmd_context *cmd, char *lv_name)
+const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 {
-	char *vg_name = lv_name;
+	const char *vg_name = lv_name;
 	char *st;
 	char *dev_dir = cmd->dev_dir;
 

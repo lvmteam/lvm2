@@ -22,7 +22,7 @@ int max_len;
 static int _get_max_dev_name_len(struct dev_filter *filter)
 {
 	int len = 0;
-	int max_len = 0;
+	int maxlen = 0;
 	struct dev_iter *iter;
 	struct device *dev;
 
@@ -34,12 +34,12 @@ static int _get_max_dev_name_len(struct dev_filter *filter)
 	/* Do scan */
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		len = strlen(dev_name(dev));
-		if (len > max_len)
-			max_len = len;
+		if (len > maxlen)
+			maxlen = len;
 	}
 	dev_iter_destroy(iter);
 
-	return max_len;
+	return maxlen;
 }
 
 static void _count(struct device *dev, int *disks, int *parts)
@@ -52,8 +52,8 @@ static void _count(struct device *dev, int *disks, int *parts)
 		(*parts)++;
 }
 
-static void _print(struct cmd_context *cmd, struct device *dev, uint64_t size,
-		   char *what)
+static void _print(struct cmd_context *cmd, const struct device *dev,
+		   uint64_t size, const char *what)
 {
 	log_print("%-*s [%15s] %s", max_len, dev_name(dev),
 		  display_size(cmd, size / 2, SIZE_SHORT), what ? : "");
@@ -67,7 +67,7 @@ static int _check_device(struct cmd_context *cmd, struct device *dev)
 	if (!dev_open(dev, 0)) {
 		return 0;
 	}
-	if (dev_read(dev, 0, 1, &buffer) != 1) {
+	if (dev_read(dev, __UINT64_C(0), (size_t) 1, &buffer) != 1) {
 		dev_close(dev);
 		return 0;
 	}

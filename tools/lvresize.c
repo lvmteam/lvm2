@@ -27,12 +27,13 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct dm_info info;
 	uint32_t extents = 0;
 	uint32_t size = 0;
-	uint32_t stripes = 0, stripesize = 0, stripesize_extents = 0;
+	uint32_t stripes = 0, ssize = 0, stripesize_extents = 0;
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size = 0;
 	uint32_t extents_used = 0;
 	uint32_t size_rest;
 	sign_t sign = SIGN_NONE;
-	char *lv_name, *vg_name;
+	char *lv_name;
+	const char *vg_name;
 	char *st;
 	const char *cmd_name;
 	struct list *pvh, *segh;
@@ -58,12 +59,12 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_count(cmd, extents_ARG)) {
-		extents = arg_int_value(cmd, extents_ARG, 0);
+		extents = arg_uint_value(cmd, extents_ARG, 0);
 		sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
 	}
 
 	if (arg_count(cmd, size_ARG)) {
-		size = arg_int_value(cmd, size_ARG, 0);
+		size = arg_uint_value(cmd, size_ARG, 0);
 		sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
 	}
 
@@ -125,14 +126,14 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_count(cmd, stripes_ARG)) {
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
-			stripes = arg_int_value(cmd, stripes_ARG, 1);
+			stripes = arg_uint_value(cmd, stripes_ARG, 1);
 		else
 			log_print("Varied striping not supported. Ignoring.");
 	}
 
 	if (arg_count(cmd, stripesize_ARG)) {
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
-			stripesize = 2 * arg_int_value(cmd, stripesize_ARG, 0);
+			ssize = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
 		else
 			log_print("Varied stripesize not supported. Ignoring.");
 	}
@@ -151,7 +152,8 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 				    (extents % vg->extent_size);
 
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, extents / 2, SIZE_SHORT));
+				  display_size(cmd, (uint64_t) extents / 2,
+					       SIZE_SHORT));
 		}
 
 		extents /= vg->extent_size;
@@ -184,8 +186,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	seg_size = extents - lv->le_count;
 
 	/* If extending, find stripes, stripesize & size of last segment */
-	if (extents > lv->le_count &&
-	    !(stripes == 1 || (stripes > 1 && stripesize))) {
+	if (extents > lv->le_count && !(stripes == 1 || (stripes > 1 && ssize))) {
 		list_iterate(segh, &lv->segments) {
 			struct lv_segment *seg;
 			uint32_t sz, str;
@@ -195,7 +196,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			str = seg->stripes;
 
 			if ((seg_stripesize && seg_stripesize != sz
-			     && !stripesize) ||
+			     && !ssize) ||
 			    (seg_stripes && seg_stripes != str && !stripes)) {
 				log_error("Please specify number of "
 					  "stripes (-i) and stripesize (-I)");
@@ -209,15 +210,18 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		if (!stripes)
 			stripes = seg_stripes;
 
-		if (!stripesize && stripes > 1) {
+		if (!ssize && stripes > 1) {
 			if (seg_stripesize) {
 				log_print("Using stripesize of last segment "
 					  "%dKB", seg_stripesize / 2);
-				stripesize = seg_stripesize;
+				ssize = seg_stripesize;
 			} else {
+				ssize = find_config_int(cmd->cf->root,
+							"metadata/stripesize",
+							'/',
+							DEFAULT_STRIPESIZE) * 2;
 				log_print("Using default stripesize %dKB",
-					  STRIPE_SIZE_DEFAULT);
-				stripesize = 2 * STRIPE_SIZE_DEFAULT;
+					  ssize / 2);
 			}
 		}
 	}
@@ -226,7 +230,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if (extents < lv->le_count) {
 		extents_used = 0;
 
-		if (stripes || stripesize)
+		if (stripes || ssize)
 			log_error("Ignoring stripes and stripesize arguments "
 				  "when reducing");
 
@@ -247,17 +251,17 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		seg_size = extents - extents_used;
-		stripesize = seg_stripesize;
+		ssize = seg_stripesize;
 		stripes = seg_stripes;
 	}
 
-	if (stripes > 1 && !stripesize) {
+	if (stripes > 1 && !ssize) {
 		log_error("Stripesize for striped segment should not be 0!");
 		goto error_cmdline;
 	}
 
 	if ((stripes > 1)) {
-		if (!(stripesize_extents = stripesize / vg->extent_size))
+		if (!(stripesize_extents = ssize / vg->extent_size))
 			stripesize_extents = 1;
 
 		if ((size_rest = seg_size % (stripes * stripesize_extents))) {
@@ -332,26 +336,22 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			goto error;
 	}
 
-	if ((resize == LV_EXTEND && argc) &&
-	    !(pvh = create_pv_list(cmd->mem, vg, argc - opt, argv + opt))) {
-		stack;
-		goto error;
-	}
-
 	if (resize == LV_EXTEND) {
+		if (!(pvh = argc ? create_pv_list(cmd->mem, vg, argc - opt,
+						  argv + opt) : &vg->pvs)) {
+			stack;
+			goto error;
+		}
+
 		if (!archive(vg))
 			goto error;
 
-		if (!argc) {
-			/* Use full list from VG */
-			pvh = &vg->pvs;
-		}
 		log_print("Extending logical volume %s to %s", lv_name,
 			  display_size(cmd, (uint64_t)
 				       extents * (vg->extent_size / 2),
 				       SIZE_SHORT));
 
-		if (!lv_extend(vg->fid, lv, stripes, stripesize,
+		if (!lv_extend(vg->fid, lv, stripes, ssize,
 			       extents - lv->le_count, pvh))
 			goto error;
 	}

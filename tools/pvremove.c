@@ -19,7 +19,6 @@
  */
 
 #include "tools.h"
-#include "defaults.h"
 
 const char _really_wipe[] =
     "Really WIPE LABELS from physical volume \"%s\" of volume group \"%s\" [y/n]? ";

@@ -12,8 +12,8 @@
 
 bitset_t bitset_create(struct pool *mem, unsigned num_bits)
 {
-	int n = (num_bits / BITS_PER_INT) + 2;
-	int size = sizeof(int) * n;
+	unsigned n = (num_bits / BITS_PER_INT) + 2;
+	size_t size = sizeof(int) * n;
 	unsigned *bs = pool_zalloc(mem, size);
 
 	if (!bs)

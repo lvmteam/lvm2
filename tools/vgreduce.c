@@ -48,7 +48,7 @@ static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	if (pvl)
 		list_del(&pvl->list);
 
-	*pv->vg_name = '\0';
+	pv->vg_name = ORPHAN;
 	vg->pv_count--;
 	vg->free_count -= pv->pe_count - pv->pe_alloc_count;
 	vg->extent_count -= pv->pe_count;
@@ -59,7 +59,7 @@ static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	if (!pv_write(cmd, pv, NULL, -1)) {
+	if (!pv_write(cmd, pv, NULL, __INT64_C(-1))) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" "
 			  "after removal from \"%s\"", name, vg->name);

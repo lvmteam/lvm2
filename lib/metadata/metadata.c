@@ -12,8 +12,8 @@
 #include "lvm-string.h"
 #include "cache.h"
 
-int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
-		  const char *pv_name)
+static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
+			 const char *pv_name)
 {
 	struct pv_list *pvl;
 	struct physical_volume *pv;
@@ -68,7 +68,8 @@ int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 
 	pv->pe_alloc_count = 0;
 
-	if (!fid->fmt->ops->pv_setup(fid->fmt, 0, 0, vg->extent_size, 0, 0,
+	if (!fid->fmt->ops->pv_setup(fid->fmt, __UINT64_C(0), 0,
+				     vg->extent_size, 0, __UINT64_C(0),
 				     &fid->metadata_areas, pv, vg)) {
 		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);
@@ -98,6 +99,30 @@ int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	return 1;
 }
 
+int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
+	      const char *new_name)
+{
+	struct pool *mem = cmd->mem;
+	struct physical_volume *pv;
+	struct list *pvh;
+
+	if (!(vg->name = pool_strdup(mem, new_name))) {
+		log_error("vg->name allocation failed for '%s'", new_name);
+		return 0;
+	}
+
+	list_iterate(pvh, &vg->pvs) {
+		pv = list_item(pvh, struct pv_list)->pv;
+		if (!(pv->vg_name = pool_strdup(mem, new_name))) {
+			log_error("pv->vg_name allocation failed for '%s'",
+				  dev_name(pv->dev));
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 int vg_extend(struct format_instance *fid,
 	      struct volume_group *vg, int pv_count, char **pv_names)
 {
@@ -118,7 +143,7 @@ int vg_extend(struct format_instance *fid,
 
 const char *strip_dir(const char *vg_name, const char *dev_dir)
 {
-	int len = strlen(dev_dir);
+	size_t len = strlen(dev_dir);
 	if (!strncmp(vg_name, dev_dir, len))
 		vg_name += len;
 
@@ -126,8 +151,8 @@ const char *strip_dir(const char *vg_name, const char *dev_dir)
 }
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
-			       uint32_t extent_size, int max_pv, int max_lv,
-			       int pv_count, char **pv_names)
+			       uint32_t extent_size, uint32_t max_pv,
+			       uint32_t max_lv, int pv_count, char **pv_names)
 {
 	struct volume_group *vg;
 	struct pool *mem = cmd->mem;
@@ -207,7 +232,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 }
 
 /* Sizes in sectors */
-struct physical_volume *pv_create(struct format_type *fmt,
+struct physical_volume *pv_create(const struct format_type *fmt,
 				  struct device *dev,
 				  struct id *id, uint64_t size,
 				  uint64_t pe_start,
@@ -231,12 +256,11 @@ struct physical_volume *pv_create(struct format_type *fmt,
 
 	pv->dev = dev;
 
-	if (!(pv->vg_name = pool_alloc(mem, NAME_LEN))) {
+	if (!(pv->vg_name = pool_zalloc(mem, NAME_LEN))) {
 		stack;
 		goto bad;
 	}
 
-	*pv->vg_name = 0;
 	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
@@ -330,7 +354,8 @@ struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 	return NULL;
 }
 
-struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg, union lvid *lvid)
+struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg,
+				      const union lvid *lvid)
 {
 	struct list *lvh;
 	struct lv_list *lvl;
@@ -429,7 +454,7 @@ int vg_write(struct volume_group *vg)
 }
 
 /* Make orphan PVs look like a VG */
-struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
+static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 {
 	struct cache_vginfo *vginfo;
 	struct list *ih;
@@ -484,11 +509,11 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 			     int *consistent)
 {
 	struct format_instance *fid;
-	struct format_type *fmt;
-	struct volume_group *vg, *correct_vg;
+	const struct format_type *fmt;
+	struct volume_group *vg, *correct_vg = NULL;
 	struct list *mdah;
 	struct metadata_area *mda;
-	int inconsistent = 0, first_time = 1;
+	int inconsistent = 0;
 
 	if (!*vgname) {
 		*consistent = 1;
@@ -521,9 +546,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 			inconsistent = 1;
 			continue;
 		}
-		if (first_time) {
+		if (!correct_vg) {
 			correct_vg = vg;
-			first_time = 0;
 			continue;
 		}
 		/* FIXME Also ensure contents same - checksum compare? */
@@ -535,7 +559,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	}
 
 	/* Failed to find VG */
-	if (first_time) {
+	if (!correct_vg) {
 		stack;
 		return NULL;
 	}
@@ -624,9 +648,9 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s)
 {
 	struct lv_list *lvl;
 	struct volume_group *vg;
-	union lvid *lvid;
+	const union lvid *lvid;
 
-	lvid = (union lvid *) lvid_s;
+	lvid = (const union lvid *) lvid_s;
 
 	log_very_verbose("Finding volume group for uuid %s", lvid_s);
 	if (!(vg = vg_read_by_vgid(cmd, lvid->id[0].uuid))) {

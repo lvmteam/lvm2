@@ -147,7 +147,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
  * VG locking is by VG name.
  * FIXME This should become VG uuid.
  */
-int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
+static int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
 {
 	_block_signals();
 
@@ -174,7 +174,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 			return 0;
 	case LCK_LV:
 		/* Suspend LV if it's active. */
-		strncpy(resource, (char *) vol, sizeof(resource));
+		strncpy(resource, vol, sizeof(resource));
 		break;
 	default:
 		log_error("Unrecognised lock scope: %d",

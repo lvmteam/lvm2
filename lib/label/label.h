@@ -76,7 +76,7 @@ struct label_ops {
 
 struct labeller {
 	struct label_ops *ops;
-	void *private;
+	const void *private;
 };
 
 int label_init(void);

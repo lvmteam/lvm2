@@ -17,8 +17,8 @@ struct lvcreate_params {
 	int minor;
 
 	char *origin;
-	char *vg_name;
-	char *lv_name;
+	const char *vg_name;
+	const char *lv_name;
 
 	uint32_t stripes;
 	uint32_t stripe_size;
@@ -140,11 +140,11 @@ static int _read_size_params(struct lvcreate_params *lp,
 	}
 
 	if (arg_count(cmd, extents_ARG))
-		lp->extents = arg_int_value(cmd, extents_ARG, 0);
+		lp->extents = arg_uint_value(cmd, extents_ARG, 0);
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG))
-		lp->size = arg_uint64_value(cmd, size_ARG, 0) * 2ull;
+		lp->size = arg_uint64_value(cmd, size_ARG, __UINT64_C(0)) * 2;
 
 	return 1;
 }
@@ -158,13 +158,13 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 	lp->stripes = 1;
 
 	if (arg_count(cmd, stripes_ARG)) {
-		lp->stripes = arg_int_value(cmd, stripes_ARG, 1);
+		lp->stripes = arg_uint_value(cmd, stripes_ARG, 1);
 		if (lp->stripes == 1)
 			log_print("Redundant stripes argument: default is 1");
 	}
 
 	if (arg_count(cmd, stripesize_ARG))
-		lp->stripe_size = 2 * arg_int_value(cmd, stripesize_ARG, 0);
+		lp->stripe_size = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
 
 	if (lp->stripes == 1 && lp->stripe_size) {
 		log_print("Ignoring stripesize argument with single stripe");
@@ -172,7 +172,9 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 	}
 
 	if (lp->stripes > 1 && !lp->stripe_size) {
-		lp->stripe_size = 2 * STRIPE_SIZE_DEFAULT;
+		lp->stripe_size = find_config_int(cmd->cf->root,
+						  "metadata/stripesize", '/',
+						  DEFAULT_STRIPESIZE) * 2;
 		log_print("Using default stripesize %dKB", lp->stripe_size / 2);
 	}
 
@@ -211,7 +213,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			log_error("-s and -Z are incompatible");
 			return 0;
 		}
-		lp->chunk_size = 2 * arg_int_value(cmd, chunksize_ARG, 8);
+		lp->chunk_size = 2 * arg_uint_value(cmd, chunksize_ARG, 8);
 		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
 	} else {
 		if (arg_count(cmd, chunksize_ARG)) {
@@ -239,13 +241,13 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	 * Read ahead.
 	 */
 	if (arg_count(cmd, readahead_ARG))
-		lp->read_ahead = arg_int_value(cmd, readahead_ARG, 0);
+		lp->read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
 
 	/*
 	 * Permissions.
 	 */
 	if (arg_count(cmd, permission_ARG))
-		lp->permission = arg_int_value(cmd, permission_ARG, 0);
+		lp->permission = arg_uint_value(cmd, permission_ARG, 0);
 	else
 		lp->permission = LVM_READ | LVM_WRITE;
 
@@ -309,7 +311,7 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 	if (!(dev_open(dev, O_WRONLY)))
 		return 0;
 
-	dev_zero(dev, 0, 4096);
+	dev_zero(dev, __UINT64_C(0), (size_t) 4096);
 	dev_close(dev);
 
 	return 1;
@@ -321,7 +323,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	uint32_t status = 0;
 	alloc_policy_t alloc = ALLOC_DEFAULT;
 	struct volume_group *vg;
-	struct logical_volume *lv, *org;
+	struct logical_volume *lv, *org = NULL;
 	struct list *pvh;
 	int consistent = 1;
 
@@ -381,7 +383,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			lp->extents += vg->extent_size - lp->extents %
 			    vg->extent_size;
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, lp->extents / 2,
+				  display_size(cmd, (uint64_t) lp->extents / 2,
 					       SIZE_SHORT));
 		}
 

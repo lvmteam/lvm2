@@ -20,7 +20,7 @@ struct ttree {
 	struct node *root;
 };
 
-struct node **_lookup_single(struct node **c, unsigned int k)
+static struct node **_lookup_single(struct node **c, unsigned int k)
 {
 	while (*c) {
 		if (k < (*c)->k)

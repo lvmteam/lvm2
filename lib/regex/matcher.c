@@ -10,8 +10,6 @@
 #include "ttree.h"
 #include "bitset.h"
 
-#include <assert.h>
-
 struct dfa_state {
 	int final;
 	struct dfa_state *lookup[256];
@@ -25,7 +23,8 @@ struct state_queue {
 
 struct matcher {		/* Instance variables for the lexer */
 	struct dfa_state *start;
-	int num_nodes, nodes_entered;
+	unsigned num_nodes;
+	int nodes_entered;
 	struct rx_node **nodes;
 	struct pool *scratch, *mem;
 };
@@ -184,7 +183,7 @@ static struct state_queue *_create_state_queue(struct pool *mem,
 
 static int _calc_states(struct matcher *m, struct rx_node *rx)
 {
-	int iwidth = (m->num_nodes / BITS_PER_INT) + 1;
+	unsigned iwidth = (m->num_nodes / BITS_PER_INT) + 1;
 	struct ttree *tt = ttree_create(m->scratch, iwidth);
 	struct state_queue *h, *t, *tmp;
 	struct dfa_state *dfa, *ldfa;
@@ -260,10 +259,12 @@ static int _calc_states(struct matcher *m, struct rx_node *rx)
 	return 1;
 }
 
-struct matcher *matcher_create(struct pool *mem, const char **patterns, int num)
+struct matcher *matcher_create(struct pool *mem, const char **patterns,
+			       unsigned num)
 {
 	char *all, *ptr;
-	int i, len = 0;
+	int i;
+	size_t len = 0;
 	struct rx_node *rx;
 	struct pool *scratch = pool_create(10 * 1024);
 	struct matcher *m;
@@ -328,10 +329,10 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns, int num)
 	return NULL;
 }
 
-static inline struct dfa_state *_step_matcher(unsigned char c,
+static inline struct dfa_state *_step_matcher(int c,
 					      struct dfa_state *cs, int *r)
 {
-	if (!(cs = cs->lookup[c]))
+	if (!(cs = cs->lookup[(unsigned char) c]))
 		return NULL;
 
 	if (cs->final && (cs->final > *r))

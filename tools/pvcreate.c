@@ -19,7 +19,6 @@
  */
 
 #include "tools.h"
-#include "defaults.h"
 
 const char _really_init[] =
     "Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ";
@@ -78,14 +77,14 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 {
 	struct physical_volume *pv, *existing_pv;
 	struct id id, *idp = NULL;
-	char *uuid;
+	const char *uuid = NULL;
 	uint64_t size = 0;
 	struct device *dev;
 	struct list mdas;
 	int pvmetadatacopies;
 	uint64_t pvmetadatasize;
 	struct volume_group *vg;
-	char *restorefile;
+	const char *restorefile;
 	uint64_t pe_start = 0;
 	uint32_t extent_count = 0, extent_size = 0;
 
@@ -130,9 +129,10 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	if (!pvcreate_check(cmd, pv_name))
 		goto error;
 
-	size = arg_uint64_value(cmd, physicalvolumesize_ARG, 0) * 2;
+	size = arg_uint64_value(cmd, physicalvolumesize_ARG, __UINT64_C(0)) * 2;
 
-	pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, 0) * 2;
+	pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, __UINT64_C(0))
+	    * 2;
 	if (!pvmetadatasize)
 		pvmetadatasize = find_config_int(cmd->cf->root,
 						 "metadata/pvmetadatasize",
@@ -169,8 +169,8 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
-	if (!(pv_write(cmd, pv, &mdas, arg_int_value(cmd, labelsector_ARG,
-						     DEFAULT_LABELSECTOR)))) {
+	if (!(pv_write(cmd, pv, &mdas, arg_int64_value(cmd, labelsector_ARG,
+						       DEFAULT_LABELSECTOR)))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		goto error;
 	}

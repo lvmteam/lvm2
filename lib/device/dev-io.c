@@ -9,11 +9,17 @@
 #include "lvm-types.h"
 #include "metadata.h"
 
+#include <limits.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <linux/unistd.h>
 #include <sys/ioctl.h>
 #include <linux/fs.h>		// UGH!!! for BLKSSZGET
+
+/* FIXME 64 bit offset!!!
+_syscall5(int,  _llseek,  uint,  fd, ulong, hi, ulong, lo, loff_t *, res, uint, wh);
+*/
 
 int dev_get_size(struct device *dev, uint64_t *size)
 {
@@ -123,15 +129,14 @@ int dev_close(struct device *dev)
 	return 1;
 }
 
-/*
- *  FIXME: factor common code out.
- */
-int raw_read(int fd, void *buf, size_t count)
+ssize_t raw_read(int fd, void *buf, size_t count)
 {
-	size_t n = 0;
-	int tot = 0;
+	ssize_t n = 0, tot = 0;
 
-	while (tot < count) {
+	if (count > SSIZE_MAX)
+		return -1;
+
+	while (tot < (signed) count) {
 		do
 			n = read(fd, buf, count - tot);
 		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
@@ -146,18 +151,19 @@ int raw_read(int fd, void *buf, size_t count)
 	return tot;
 }
 
-int64_t dev_read(struct device * dev, uint64_t offset,
-		 int64_t len, void *buffer)
+ssize_t dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
 	const char *name = dev_name(dev);
 	int fd = dev->fd;
+	/* loff_t pos; */
 
 	if (fd < 0) {
 		log_err("Attempt to read an unopened device (%s).", name);
 		return 0;
 	}
 
-	if (lseek(fd, offset, SEEK_SET) < 0) {
+	/* if (_llseek((unsigned) fd, (ulong) (offset >> 32), (ulong) (offset & 0xFFFFFFFF), &pos, SEEK_SET) < 0) { */
+	if (lseek(fd, (off_t) offset, SEEK_SET) < 0) {
 		log_sys_error("lseek", name);
 		return 0;
 	}
@@ -165,7 +171,7 @@ int64_t dev_read(struct device * dev, uint64_t offset,
 	return raw_read(fd, buffer, len);
 }
 
-int _write(int fd, const void *buf, size_t count)
+static int _write(int fd, const void *buf, size_t count)
 {
 	ssize_t n = 0;
 	int tot = 0;
@@ -189,8 +195,8 @@ int _write(int fd, const void *buf, size_t count)
 	return tot;
 }
 
-int64_t dev_write(struct device * dev, uint64_t offset,
-		  int64_t len, void *buffer)
+int64_t dev_write(struct device * dev, uint64_t offset, size_t len,
+		  void *buffer)
 {
 	const char *name = dev_name(dev);
 	int fd = dev->fd;
@@ -200,7 +206,7 @@ int64_t dev_write(struct device * dev, uint64_t offset,
 		return 0;
 	}
 
-	if (lseek(fd, offset, SEEK_SET) < 0) {
+	if (lseek(fd, (off_t) offset, SEEK_SET) < 0) {
 		log_sys_error("lseek", name);
 		return 0;
 	}
@@ -210,9 +216,10 @@ int64_t dev_write(struct device * dev, uint64_t offset,
 	return _write(fd, buffer, len);
 }
 
-int dev_zero(struct device *dev, uint64_t offset, int64_t len)
+int dev_zero(struct device *dev, uint64_t offset, size_t len)
 {
-	int64_t r, s;
+	int64_t r;
+	size_t s;
 	char buffer[4096];
 	int already_open;
 
@@ -223,7 +230,7 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 		return 0;
 	}
 
-	if (lseek(dev->fd, offset, SEEK_SET) < 0) {
+	if (lseek(dev->fd, (off_t) offset, SEEK_SET) < 0) {
 		log_sys_error("lseek", dev_name(dev));
 		if (!already_open && !dev_close(dev))
 			stack;
@@ -231,10 +238,10 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 	}
 
 	if ((offset % SECTOR_SIZE) || (len % SECTOR_SIZE))
-		log_debug("Wiping %s at %" PRIu64 " length %" PRId64,
+		log_debug("Wiping %s at %" PRIu64 " length %u",
 			  dev_name(dev), offset, len);
 	else
-		log_debug("Wiping %s at sector %" PRIu64 " length %" PRId64
+		log_debug("Wiping %s at sector %" PRIu64 " length %u"
 			  " sectors", dev_name(dev), offset >> SECTOR_SHIFT,
 			  len >> SECTOR_SHIFT);
 

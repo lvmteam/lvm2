@@ -68,7 +68,7 @@ struct dev_layer {
 	struct dm_info info;
 
 	/* lvid plus layer */
-	char *dlid;
+	const char *dlid;
 
 	struct logical_volume *lv;
 
@@ -242,7 +242,7 @@ static char *_find_lv_name(char *vg)
 static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
 {
 	char *dlid;
-	int len;
+	size_t len;
 
 	if (!layer)
 		layer = "";
@@ -392,7 +392,7 @@ static int _status(const char *name, const char *uuid,
 	return 0;
 }
 
-static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
+static int _rename(struct dev_layer *dl, char *newname)
 {
 	int r = 1;
 	struct dm_task *dmt;
@@ -583,8 +583,8 @@ static int _emit_target(struct dm_task *dmt, struct lv_segment *seg)
 	uint64_t esize = seg->lv->vg->extent_size;
 	uint32_t s, stripes = seg->stripes;
 	int w = 0, tw = 0;
-	char *filler = "/dev/ioerror";
-	char *target;
+	const char *filler = "/dev/ioerror";
+	const char *target = NULL;
 
 	if (stripes == 1) {
 		if (!seg->area[0].pv) {
@@ -671,7 +671,7 @@ static int _populate_origin(struct dev_manager *dm,
 
 	log_debug("Adding target: 0 %" PRIu64 " snapshot-origin %s",
 		  dl->lv->size, params);
-	if (!dm_task_add_target(dmt, 0, dl->lv->size,
+	if (!dm_task_add_target(dmt, __UINT64_C(0), dl->lv->size,
 				"snapshot-origin", params)) {
 		stack;
 		return 0;
@@ -711,7 +711,8 @@ static int _populate_snapshot(struct dev_manager *dm,
 
 	log_debug("Adding target: 0 %" PRIu64 " snapshot %s",
 		  s->origin->size, params);
-	if (!dm_task_add_target(dmt, 0, s->origin->size, "snapshot", params)) {
+	if (!dm_task_add_target
+	    (dmt, __UINT64_C(0), s->origin->size, "snapshot", params)) {
 		stack;
 		return 0;
 	}
@@ -767,7 +768,7 @@ void dev_manager_destroy(struct dev_manager *dm)
 	pool_destroy(dm->mem);
 }
 
-int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
+int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
 		     struct dm_info *info)
 {
 	char *name;
@@ -843,7 +844,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 }
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
-				     char *dlid)
+				     const char *dlid)
 {
 	struct dev_layer *dl;
 	char *uuid;
@@ -952,7 +953,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 			       struct logical_volume *lv)
 {
 	struct dev_layer *dl;
-	char *real_dlid;
+	const char *real_dlid;
 
 	if (!(dl = _create_layer(dm, "real", lv))) {
 		stack;
@@ -1007,7 +1008,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	 * cow
 	 */
 	struct dev_layer *dl;
-	char *cow_dlid;
+	const char *cow_dlid;
 
 	if (!(dl = _create_layer(dm, "cow", lv))) {
 		stack;
@@ -1164,8 +1165,8 @@ static inline int _suspend_parent(struct dev_layer *parent)
  * Recurses through the tree, ensuring that devices are created
  * in correct order.
  */
-int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
-		struct dev_layer *parent)
+static int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
+		       struct dev_layer *parent)
 {
 	struct list *sh;
 	struct dev_layer *dep;
@@ -1210,7 +1211,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 				      suffix);
 		if (strcmp(newname, dl->name)) {
 			if (!_suspend_parent(parent) ||
-			    !_suspend(dl) || !_rename(dm, dl, newname)) {
+			    !_suspend(dl) || !_rename(dl, newname)) {
 				stack;
 				return 0;
 			}
@@ -1290,7 +1291,7 @@ static int _fill_in_remove_list(struct dev_manager *dm)
 /*
  * Layers are removed in a top-down manner.
  */
-int _remove_old_layers(struct dev_manager *dm)
+static int _remove_old_layers(struct dev_manager *dm)
 {
 	int change;
 	struct list *rh, *n;

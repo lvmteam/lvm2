@@ -63,9 +63,9 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		pv = list_item(pvh, struct pv_list)->pv;
 		log_verbose("Removing physical volume \"%s\" from "
 			    "volume group \"%s\"", dev_name(pv->dev), vg_name);
-		*pv->vg_name = '\0';
+		pv->vg_name = ORPHAN;
 		/* FIXME Write to same sector label was read from */
-		if (!pv_write(cmd, pv, NULL, -1)) {
+		if (!pv_write(cmd, pv, NULL, __INT64_C(-1))) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
 				  dev_name(pv->dev), vg_name);

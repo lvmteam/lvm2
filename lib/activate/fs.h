@@ -19,5 +19,4 @@ int fs_del_lv(struct logical_volume *lv);
 int fs_rename_lv(struct logical_volume *lv,
 		 const char *dev, const char *old_name);
 
-
 #endif

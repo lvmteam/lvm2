@@ -53,7 +53,7 @@ struct report_handle {
 	struct pool *mem;
 
 	report_type_t type;
-	char *field_prefix;
+	const char *field_prefix;
 	uint32_t flags;
 	const char *separator;
 
@@ -93,8 +93,8 @@ struct field {
 	struct list list;
 	struct field_properties *props;
 
-	char *report_string;	/* Formatted ready for display */
-	void *sort_value;	/* Raw value for sorting */
+	const char *report_string;	/* Formatted ready for display */
+	const void *sort_value;	/* Raw value for sorting */
 };
 
 struct row {
@@ -110,12 +110,14 @@ struct row {
 static int _string_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	if (!(field->report_string = pool_strdup(rh->mem, *(char **) data))) {
+	if (!
+	    (field->report_string =
+	     pool_strdup(rh->mem, *(const char **) data))) {
 		log_error("pool_strdup failed");
 		return 0;
 	}
 
-	field->sort_value = (void *) field->report_string;
+	field->sort_value = (const void *) field->report_string;
 
 	return 1;
 }
@@ -123,7 +125,7 @@ static int _string_disp(struct report_handle *rh, struct field *field,
 static int _dev_name_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
-	const char *name = dev_name(*(struct device **) data);
+	const char *name = dev_name(*(const struct device **) data);
 
 	return _string_disp(rh, field, &name);
 }
@@ -131,11 +133,11 @@ static int _dev_name_disp(struct report_handle *rh, struct field *field,
 static int _vgfmt_disp(struct report_handle *rh, struct field *field,
 		       const void *data)
 {
-	struct volume_group *vg = (struct volume_group *) data;
+	const struct volume_group *vg = (const struct volume_group *) data;
 
 	if (!vg->fid) {
 		field->report_string = "";
-		field->sort_value = (void *) field->report_string;
+		field->sort_value = (const void *) field->report_string;
 		return 1;
 	}
 
@@ -145,11 +147,12 @@ static int _vgfmt_disp(struct report_handle *rh, struct field *field,
 static int _pvfmt_disp(struct report_handle *rh, struct field *field,
 		       const void *data)
 {
-	struct physical_volume *pv = (struct physical_volume *) data;
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
 
 	if (!pv->fmt) {
 		field->report_string = "";
-		field->sort_value = (void *) field->report_string;
+		field->sort_value = (const void *) field->report_string;
 		return 1;
 	}
 
@@ -159,51 +162,53 @@ static int _pvfmt_disp(struct report_handle *rh, struct field *field,
 static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
-	struct logical_volume *lv = (struct logical_volume *) data;
+	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct dm_info info;
+	char *repstr;
 
-	if (!(field->report_string = pool_zalloc(rh->mem, 7))) {
+	if (!(repstr = pool_zalloc(rh->mem, 7))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
 	if (lv_is_origin(lv))
-		field->report_string[0] = 'o';
+		repstr[0] = 'o';
 	else if (find_cow(lv))
-		field->report_string[0] = 's';
+		repstr[0] = 's';
 	else
-		field->report_string[0] = '-';
+		repstr[0] = '-';
 
 	if (lv->status & LVM_WRITE)
-		field->report_string[1] = 'w';
+		repstr[1] = 'w';
 	else
-		field->report_string[1] = 'r';
+		repstr[1] = 'r';
 
 	if (lv->alloc == ALLOC_CONTIGUOUS)
-		field->report_string[2] = 'c';
+		repstr[2] = 'c';
 	else
-		field->report_string[2] = 'n';
+		repstr[2] = 'n';
 
 	if (lv->status & FIXED_MINOR)
-		field->report_string[3] = 'm';	/* Fixed Minor */
+		repstr[3] = 'm';	/* Fixed Minor */
 	else
-		field->report_string[3] = '-';
+		repstr[3] = '-';
 
 	if (lv_info(lv, &info) && info.exists) {
 		if (info.suspended)
-			field->report_string[4] = 's';	/* Suspended */
+			repstr[4] = 's';	/* Suspended */
 		else
-			field->report_string[4] = 'a';	/* Active */
+			repstr[4] = 'a';	/* Active */
 		if (info.open_count)
-			field->report_string[5] = 'o';	/* Open */
+			repstr[5] = 'o';	/* Open */
 		else
-			field->report_string[5] = '-';
+			repstr[5] = '-';
 	} else {
-		field->report_string[4] = '-';
-		field->report_string[5] = '-';
+		repstr[4] = '-';
+		repstr[5] = '-';
 	}
 
-	field->sort_value = (void *) field->report_string;
+	field->report_string = repstr;
+	field->sort_value = (const void *) field->report_string;
 
 	return 1;
 }
@@ -211,24 +216,26 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 static int _pvstatus_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
-	uint32_t status = *(uint32_t *) data;
+	const uint32_t status = *(const uint32_t *) data;
+	char *repstr;
 
-	if (!(field->report_string = pool_zalloc(rh->mem, 4))) {
+	if (!(repstr = pool_zalloc(rh->mem, 4))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
 	if (status & ALLOCATABLE_PV)
-		field->report_string[0] = 'a';
+		repstr[0] = 'a';
 	else
-		field->report_string[0] = '-';
+		repstr[0] = '-';
 
 	if (status & EXPORTED_VG)
-		field->report_string[1] = 'x';
+		repstr[1] = 'x';
 	else
-		field->report_string[1] = '-';
+		repstr[1] = '-';
 
-	field->sort_value = (void *) field->report_string;
+	field->report_string = repstr;
+	field->sort_value = (const void *) field->report_string;
 
 	return 1;
 }
@@ -236,34 +243,36 @@ static int _pvstatus_disp(struct report_handle *rh, struct field *field,
 static int _vgstatus_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
-	uint32_t status = *(uint32_t *) data;
+	const uint32_t status = *(const uint32_t *) data;
+	char *repstr;
 
-	if (!(field->report_string = pool_zalloc(rh->mem, 5))) {
+	if (!(repstr = pool_zalloc(rh->mem, 5))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
 	if (status & LVM_WRITE)
-		field->report_string[0] = 'w';
+		repstr[0] = 'w';
 	else
-		field->report_string[0] = 'r';
+		repstr[0] = 'r';
 
 	if (status & RESIZEABLE_VG)
-		field->report_string[1] = 'z';
+		repstr[1] = 'z';
 	else
-		field->report_string[1] = '-';
+		repstr[1] = '-';
 
 	if (status & EXPORTED_VG)
-		field->report_string[2] = 'x';
+		repstr[2] = 'x';
 	else
-		field->report_string[2] = '-';
+		repstr[2] = '-';
 
 	if (status & PARTIAL_VG)
-		field->report_string[3] = 'p';
+		repstr[3] = 'p';
 	else
-		field->report_string[3] = '-';
+		repstr[3] = '-';
 
-	field->sort_value = (void *) field->report_string;
+	field->report_string = repstr;
+	field->sort_value = (const void *) field->report_string;
 
 	return 1;
 }
@@ -271,13 +280,13 @@ static int _vgstatus_disp(struct report_handle *rh, struct field *field,
 static int _segtype_disp(struct report_handle *rh, struct field *field,
 			 const void *data)
 {
-	struct lv_segment *seg = (struct lv_segment *) data;
+	const struct lv_segment *seg = (const struct lv_segment *) data;
 
 	if (seg->stripes == 1)
 		field->report_string = "linear";
 	else
-		field->report_string = (char *) get_segtype_string(seg->type);
-	field->sort_value = (void *) field->report_string;
+		field->report_string = get_segtype_string(seg->type);
+	field->sort_value = (const void *) field->report_string;
 
 	return 1;
 }
@@ -285,14 +294,14 @@ static int _segtype_disp(struct report_handle *rh, struct field *field,
 static int _origin_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	struct logical_volume *lv = (struct logical_volume *) data;
+	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct snapshot *snap;
 
 	if ((snap = find_cow(lv)))
 		return _string_disp(rh, field, &snap->origin->name);
 
 	field->report_string = "";
-	field->sort_value = (void *) field->report_string;
+	field->sort_value = (const void *) field->report_string;
 
 	return 1;
 }
@@ -300,8 +309,9 @@ static int _origin_disp(struct report_handle *rh, struct field *field,
 static int _size32_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	uint32_t size = *(uint32_t *) data;
+	const uint32_t size = *(const uint32_t *) data;
 	const char *disp;
+	uint64_t *sortval;
 
 	if (!*(disp = display_size(rh->cmd, (uint64_t) size / 2, SIZE_UNIT))) {
 		stack;
@@ -313,12 +323,13 @@ static int _size32_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(field->sort_value = pool_alloc(rh->mem, sizeof(uint64_t)))) {
+	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	*(uint64_t *) field->sort_value = (uint64_t) size;
+	*sortval = (const uint64_t) size;
+	field->sort_value = (const void *) sortval;
 
 	return 1;
 }
@@ -326,8 +337,9 @@ static int _size32_disp(struct report_handle *rh, struct field *field,
 static int _size64_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	uint64_t size = *(uint64_t *) data;
+	const uint64_t size = *(const uint64_t *) data;
 	const char *disp;
+	uint64_t *sortval;
 
 	if (!*(disp = display_size(rh->cmd, size / 2, SIZE_UNIT))) {
 		stack;
@@ -339,12 +351,13 @@ static int _size64_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(field->sort_value = pool_alloc(rh->mem, sizeof(uint64_t)))) {
+	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	*(uint64_t *) field->sort_value = size;
+	*sortval = size;
+	field->sort_value = sortval;
 
 	return 1;
 }
@@ -352,7 +365,7 @@ static int _size64_disp(struct report_handle *rh, struct field *field,
 static int _vgsize_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	struct volume_group *vg = (struct volume_group *) data;
+	const struct volume_group *vg = (const struct volume_group *) data;
 	uint64_t size;
 
 	size = vg->extent_count * vg->extent_size;
@@ -363,7 +376,7 @@ static int _vgsize_disp(struct report_handle *rh, struct field *field,
 static int _segstart_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
-	struct lv_segment *seg = (struct lv_segment *) data;
+	const struct lv_segment *seg = (const struct lv_segment *) data;
 	uint64_t start;
 
 	start = seg->le * seg->lv->vg->extent_size;
@@ -374,7 +387,7 @@ static int _segstart_disp(struct report_handle *rh, struct field *field,
 static int _segsize_disp(struct report_handle *rh, struct field *field,
 			 const void *data)
 {
-	struct lv_segment *seg = (struct lv_segment *) data;
+	const struct lv_segment *seg = (const struct lv_segment *) data;
 	uint64_t size;
 
 	size = seg->len * seg->lv->vg->extent_size;
@@ -385,7 +398,8 @@ static int _segsize_disp(struct report_handle *rh, struct field *field,
 static int _pvused_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	struct physical_volume *pv = (struct physical_volume *) data;
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
 	uint64_t used;
 
 	if (!pv->pe_count)
@@ -399,21 +413,23 @@ static int _pvused_disp(struct report_handle *rh, struct field *field,
 static int _pvfree_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	struct physical_volume *pv = (struct physical_volume *) data;
-	uint64_t free;
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
+	uint64_t freespace;
 
 	if (!pv->pe_count)
-		free = pv->size;
+		freespace = pv->size;
 	else
-		free = (pv->pe_count - pv->pe_alloc_count) * pv->pe_size;
+		freespace = (pv->pe_count - pv->pe_alloc_count) * pv->pe_size;
 
-	return _size64_disp(rh, field, &free);
+	return _size64_disp(rh, field, &freespace);
 }
 
 static int _pvsize_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	struct physical_volume *pv = (struct physical_volume *) data;
+	const struct physical_volume *pv =
+	    (const struct physical_volume *) data;
 	uint64_t size;
 
 	if (!pv->pe_count)
@@ -427,28 +443,31 @@ static int _pvsize_disp(struct report_handle *rh, struct field *field,
 static int _vgfree_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	struct volume_group *vg = (struct volume_group *) data;
-	uint64_t free;
+	const struct volume_group *vg = (const struct volume_group *) data;
+	uint64_t freespace;
 
-	free = vg->free_count * vg->extent_size;
+	freespace = vg->free_count * vg->extent_size;
 
-	return _size64_disp(rh, field, &free);
+	return _size64_disp(rh, field, &freespace);
 }
 
 static int _uuid_disp(struct report_handle *rh, struct field *field,
 		      const void *data)
 {
+	char *repstr = NULL;
+
 	if (!(field->report_string = pool_alloc(rh->mem, 40))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	if (!id_write_format((struct id *) data, field->report_string, 40)) {
+	if (!id_write_format((const struct id *) data, repstr, 40)) {
 		stack;
 		return 0;
 	}
 
-	field->sort_value = (void *) field->report_string;
+	field->report_string = repstr;
+	field->sort_value = (const void *) field->report_string;
 
 	return 1;
 }
@@ -456,24 +475,28 @@ static int _uuid_disp(struct report_handle *rh, struct field *field,
 static int _uint32_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
-	uint32_t value = *(uint32_t *) data;
+	const uint32_t value = *(const uint32_t *) data;
+	uint64_t *sortval;
+	char *repstr;
 
-	if (!(field->report_string = pool_zalloc(rh->mem, 12))) {
+	if (!(repstr = pool_zalloc(rh->mem, 12))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	if (!(field->sort_value = pool_alloc(rh->mem, sizeof(uint64_t)))) {
+	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	*(uint64_t *) field->sort_value = value;
-
-	if (lvm_snprintf(field->report_string, 11, "%u", value) < 0) {
+	if (lvm_snprintf(repstr, 11, "%u", value) < 0) {
 		log_error("uint32 too big: %u", value);
 		return 0;
 	}
+
+	*sortval = (const uint64_t) value;
+	field->sort_value = sortval;
+	field->report_string = repstr;
 
 	return 1;
 }
@@ -481,24 +504,28 @@ static int _uint32_disp(struct report_handle *rh, struct field *field,
 static int _int32_disp(struct report_handle *rh, struct field *field,
 		       const void *data)
 {
-	int32_t value = *(int32_t *) data;
+	const int32_t value = *(const int32_t *) data;
+	uint64_t *sortval;
+	char *repstr;
 
-	if (!(field->report_string = pool_zalloc(rh->mem, 13))) {
+	if (!(repstr = pool_zalloc(rh->mem, 13))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	if (!(field->sort_value = pool_alloc(rh->mem, sizeof(int64_t)))) {
+	if (!(sortval = pool_alloc(rh->mem, sizeof(int64_t)))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	*(int64_t *) field->sort_value = value;
-
-	if (lvm_snprintf(field->report_string, 12, "%d", value) < 0) {
+	if (lvm_snprintf(repstr, 12, "%d", value) < 0) {
 		log_error("int32 too big: %d", value);
 		return 0;
 	}
+
+	*sortval = (const uint64_t) value;
+	field->sort_value = sortval;
+	field->report_string = repstr;
 
 	return 1;
 }
@@ -506,7 +533,7 @@ static int _int32_disp(struct report_handle *rh, struct field *field,
 static int _lvsegcount_disp(struct report_handle *rh, struct field *field,
 			    const void *data)
 {
-	struct logical_volume *lv = (struct logical_volume *) data;
+	const struct logical_volume *lv = (const struct logical_volume *) data;
 	uint32_t count;
 
 	count = list_size(&lv->segments);
@@ -517,11 +544,13 @@ static int _lvsegcount_disp(struct report_handle *rh, struct field *field,
 static int _snpercent_disp(struct report_handle *rh, struct field *field,
 			   const void *data)
 {
-	struct logical_volume *lv = (struct logical_volume *) data;
+	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct snapshot *snap;
 	float snap_percent;
+	uint64_t *sortval;
+	char *repstr;
 
-	if (!(field->sort_value = pool_alloc(rh->mem, sizeof(uint64_t)))) {
+	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
@@ -529,11 +558,12 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 	if (!(snap = find_cow(lv))
 	    || !lv_snapshot_percent(snap->cow, &snap_percent)) {
 		field->report_string = "";
-		*(uint64_t *) field->sort_value = 0LL;
+		*sortval = __UINT64_C(0);
+		field->sort_value = sortval;
 		return 1;
 	}
 
-	if (!(field->report_string = pool_zalloc(rh->mem, 8))) {
+	if (!(repstr = pool_zalloc(rh->mem, 8))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
@@ -541,12 +571,14 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 	if (snap_percent == -1)
 		snap_percent = 100;
 
-	*(uint64_t *) field->sort_value = snap_percent * 1000;
-
-	if (lvm_snprintf(field->report_string, 7, "%.2f", snap_percent) < 0) {
+	if (lvm_snprintf(repstr, 7, "%.2f", snap_percent) < 0) {
 		log_error("snapshot percentage too large");
 		return 0;
 	}
+
+	*sortval = snap_percent * __UINT64_C(1000);
+	field->sort_value = sortval;
+	field->report_string = repstr;
 
 	return 1;
 }
@@ -575,12 +607,12 @@ static struct {
 #undef NUM
 #undef FIELD
 
-const int _num_fields = sizeof(_fields) / sizeof(_fields[0]);
+const unsigned int _num_fields = sizeof(_fields) / sizeof(_fields[0]);
 
 /*
  * Initialise report handle
  */
-static int _field_match(struct report_handle *rh, const char *field, int len)
+static int _field_match(struct report_handle *rh, const char *field, size_t len)
 {
 	uint32_t f, l;
 	struct field_properties *fp;
@@ -635,33 +667,33 @@ static int _add_sort_key(struct report_handle *rh, uint32_t field_num,
 
 	if (!found) {
 		/* Add as a non-display field */
-		if (!(fp = pool_zalloc(rh->mem, sizeof(*fp)))) {
+		if (!(found = pool_zalloc(rh->mem, sizeof(*found)))) {
 			log_error("struct field_properties allocation failed");
 			return 0;
 		}
 
 		rh->type |= _fields[field_num].type;
-		fp->field_num = field_num;
-		fp->width = _fields[field_num].width;
-		fp->flags = _fields[field_num].flags | FLD_HIDDEN;
+		found->field_num = field_num;
+		found->width = _fields[field_num].width;
+		found->flags = _fields[field_num].flags | FLD_HIDDEN;
 
-		list_add(&rh->field_props, &fp->list);
+		list_add(&rh->field_props, &found->list);
 	}
 
-	if (fp->flags & FLD_SORT_KEY) {
+	if (found->flags & FLD_SORT_KEY) {
 		log_error("Ignoring duplicate sort field: %s",
 			  _fields[field_num].id);
 		return 1;
 	}
 
-	fp->flags |= FLD_SORT_KEY;
-	fp->sort_posn = rh->keys_count++;
-	fp->flags |= flags;
+	found->flags |= FLD_SORT_KEY;
+	found->sort_posn = rh->keys_count++;
+	found->flags |= flags;
 
 	return 1;
 }
 
-static int _key_match(struct report_handle *rh, const char *key, int len)
+static int _key_match(struct report_handle *rh, const char *key, size_t len)
 {
 	uint32_t f, l;
 	uint32_t flags = 0;
@@ -711,7 +743,7 @@ static int _parse_options(struct report_handle *rh, const char *format)
 		ws = we;
 		while (*we && *we != ',')
 			we++;
-		if (!_field_match(rh, ws, we - ws)) {
+		if (!_field_match(rh, ws, (size_t) (we - ws))) {
 			log_error("Unrecognised field: %.*s", we - ws, ws);
 			return 0;
 		}
@@ -732,7 +764,7 @@ static int _parse_keys(struct report_handle *rh, const char *keys)
 		ws = we;
 		while (*we && *we != ',')
 			we++;
-		if (!_key_match(rh, ws, we - ws)) {
+		if (!_key_match(rh, ws, (size_t) (we - ws))) {
 			log_error("Unrecognised field: %.*s", we - ws, ws);
 			return 0;
 		}
@@ -837,7 +869,7 @@ int report_object(void *handle, struct volume_group *vg,
 	struct field_properties *fp;
 	struct row *row;
 	struct field *field;
-	void *data;
+	void *data = NULL;
 
 	if (lv && pv) {
 		log_error("report_object: One of *lv and *pv must be NULL!");
@@ -910,7 +942,7 @@ int report_object(void *handle, struct volume_group *vg,
 /* 
  * Print row of headings 
  */
-int report_headings(void *handle)
+static int _report_headings(void *handle)
 {
 	struct report_handle *rh = handle;
 	struct list *fh;
@@ -948,17 +980,19 @@ int report_headings(void *handle)
  */
 static int _row_compare(const void *a, const void *b)
 {
-	struct row *rowa = *(struct row **) a;
-	struct row *rowb = *(struct row **) b;
-	struct field *sfa, *sfb;
+	const struct row *rowa = *(const struct row **) a;
+	const struct row *rowb = *(const struct row **) b;
+	const struct field *sfa, *sfb;
 	int32_t cnt = -1;
 
 	for (cnt = 0; cnt < rowa->rh->keys_count; cnt++) {
 		sfa = (*rowa->sort_fields)[cnt];
 		sfb = (*rowb->sort_fields)[cnt];
 		if (sfa->props->flags & FLD_NUMBER) {
-			uint64_t numa = *(uint64_t *) sfa->sort_value;
-			uint64_t numb = *(uint64_t *) sfb->sort_value;
+			const uint64_t numa =
+			    *(const uint64_t *) sfa->sort_value;
+			const uint64_t numb =
+			    *(const uint64_t *) sfb->sort_value;
 
 			if (numa == numb)
 				continue;
@@ -969,8 +1003,8 @@ static int _row_compare(const void *a, const void *b)
 				return (numa < numb) ? 1 : -1;
 			}
 		} else {	/* FLD_STRING */
-			char *stra = (char *) sfa->sort_value;
-			char *strb = (char *) sfb->sort_value;
+			const char *stra = (const char *) sfa->sort_value;
+			const char *strb = (const char *) sfb->sort_value;
 			int cmp = strcmp(stra, strb);
 
 			if (!cmp)
@@ -1033,7 +1067,7 @@ int report_output(void *handle)
 
 	/* If headings not printed yet, calculate field widths and print them */
 	if (!(rh->flags & RH_HEADINGS_PRINTED))
-		report_headings(rh);
+		_report_headings(rh);
 
 	/* Print and clear buffer */
 	list_iterate_safe(rowh, rtmp, &rh->rows) {

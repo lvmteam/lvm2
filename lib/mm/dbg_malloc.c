@@ -6,8 +6,8 @@
 
 #include "lib.h"
 #include "lvm-types.h"
+#include "dbg_malloc.h"
 
-#include <assert.h>
 #include <stdarg.h>
 
 struct memblock {
@@ -66,7 +66,7 @@ void *malloc_aux(size_t s, const char *file, int line)
 	   and fill in the boundary bytes */
 	{
 		char *ptr = (char *) (nb + 1);
-		int i;
+		size_t i;
 		for (i = 0; i < s; i++)
 			*ptr++ = i & 0x1 ? (char) 0xba : (char) 0xbe;
 
@@ -87,7 +87,7 @@ void *malloc_aux(size_t s, const char *file, int line)
 void free_aux(void *p)
 {
 	char *ptr;
-	int i;
+	size_t i;
 	struct memblock *mb = ((struct memblock *) p) - 1;
 	if (!p)
 		return;
@@ -173,7 +173,7 @@ void bounds_check(void)
 {
 	struct memblock *mb = _head;
 	while (mb) {
-		int i;
+		size_t i;
 		char *ptr = ((char *) (mb + 1)) + mb->length;
 		for (i = 0; i < sizeof(unsigned long); i++)
 			if (*ptr++ != (char) mb->id)

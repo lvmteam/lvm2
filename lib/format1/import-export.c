@@ -79,7 +79,7 @@ int import_pv(struct pool *mem, struct device *dev,
 	return 1;
 }
 
-int _system_id(char *s, const char *prefix)
+static int _system_id(char *s, const char *prefix)
 {
 	struct utsname uts;
 
@@ -353,7 +353,7 @@ static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
 		lvd->lv_allocation |= LV_CONTIGUOUS;
 }
 
-int export_extents(struct disk_list *dl, int lv_num,
+int export_extents(struct disk_list *dl, uint32_t lv_num,
 		   struct logical_volume *lv, struct physical_volume *pv)
 {
 	struct list *segh;
@@ -380,7 +380,7 @@ int export_extents(struct disk_list *dl, int lv_num,
 	return 1;
 }
 
-int import_pvs(struct format_type *fmt, struct pool *mem,
+int import_pvs(const struct format_type *fmt, struct pool *mem,
 	       struct volume_group *vg,
 	       struct list *pvds, struct list *results, int *count)
 {
@@ -470,7 +470,8 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	struct list *lvh, *sh;
 	struct lv_list *ll;
 	struct lvd_list *lvdl;
-	int lv_num, len;
+	size_t len;
+	uint32_t lv_num;
 	struct hash_table *lvd_hash;
 
 	if (!_check_vg_name(vg->name)) {

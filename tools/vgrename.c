@@ -23,7 +23,7 @@
 int vgrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *dev_dir;
-	int length;
+	unsigned int length;
 	int consistent = 1;
 
 	char *vg_name_old, *vg_name_new;
@@ -31,7 +31,6 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	char old_path[NAME_LEN], new_path[NAME_LEN];
 
 	struct volume_group *vg_old, *vg_new;
-	struct list *pvh;
 
 	if (argc != 2) {
 		log_error("Old and new volume group names need specifying");
@@ -124,13 +123,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 
 	/* Change the volume group name */
-	strcpy(vg_old->name, vg_name_new);
-
-	/* FIXME Should vg_write fix these implicitly? It has to check them. */
-	list_iterate(pvh, &vg_old->pvs) {
-		strcpy(list_item(pvh, struct pv_list)->pv->vg_name,
-		       vg_name_new);
-	}
+	vg_rename(cmd, vg_old, vg_name_new);
 
 	sprintf(old_path, "%s%s", dev_dir, vg_name_old);
 	sprintf(new_path, "%s%s", dev_dir, vg_name_new);

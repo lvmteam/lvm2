@@ -80,7 +80,7 @@ static int _write(struct label *label, char *buf)
 	return 1;
 }
 
-int add_da(struct format_type *fmt, struct pool *mem, struct list *das,
+int add_da(const struct format_type *fmt, struct pool *mem, struct list *das,
 	   uint64_t start, uint64_t size)
 {
 	struct data_area_list *dal;
@@ -117,7 +117,7 @@ void del_das(struct list *das)
 	}
 }
 
-int add_mda(struct format_type *fmt, struct pool *mem, struct list *mdas,
+int add_mda(const struct format_type *fmt, struct pool *mem, struct list *mdas,
 	    struct device *dev, uint64_t start, uint64_t size)
 {
 /* FIXME List size restricted by pv_header SECTOR_SIZE */
@@ -264,7 +264,7 @@ struct label_ops _text_ops = {
 	destroy:_destroy
 };
 
-struct labeller *text_labeller_create(struct format_type *fmt)
+struct labeller *text_labeller_create(const struct format_type *fmt)
 {
 	struct labeller *l;
 
@@ -274,7 +274,7 @@ struct labeller *text_labeller_create(struct format_type *fmt)
 	}
 
 	l->ops = &_text_ops;
-	l->private = (void *) fmt;
+	l->private = (const void *) fmt;
 
 	return l;
 }

@@ -173,7 +173,7 @@ static int _out_with_comment_raw(struct formatter *f, const char *comment,
  */
 static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 {
-	static char *_units[] = {
+	static const char *_units[] = {
 		"Kilobytes",
 		"Megabytes",
 		"Gigabytes",
@@ -288,7 +288,8 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	_outf(f, "status = %s", buffer);
 	if (vg->system_id && *vg->system_id)
 		_outf(f, "system_id = \"%s\"", vg->system_id);
-	if (!_out_size(f, vg->extent_size, "extent_size = %u", vg->extent_size)) {
+	if (!_out_size(f, (uint64_t) vg->extent_size, "extent_size = %u",
+		       vg->extent_size)) {
 		stack;
 		return 0;
 	}
@@ -369,15 +370,15 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 static int _print_segment(struct formatter *f, struct volume_group *vg,
 			  int count, struct lv_segment *seg)
 {
-	int s;
+	unsigned int s;
 	const char *name;
 
 	_outf(f, "segment%u {", count);
 	_inc_indent(f);
 
 	_outf(f, "start_extent = %u", seg->le);
-	if (!_out_size(f, seg->len * vg->extent_size, "extent_count = %u",
-		       seg->len)) {
+	if (!_out_size(f, (uint64_t) seg->len * vg->extent_size,
+		       "extent_count = %u", seg->len)) {
 		stack;
 		return 0;
 	}
@@ -391,7 +392,7 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 		      (seg->stripes == 1) ? "\t# linear" : "");
 
 		if (seg->stripes > 1)
-			_out_size(f, seg->stripe_size,
+			_out_size(f, (uint64_t) seg->stripe_size,
 				  "stripe_size = %u", seg->stripe_size);
 
 		f->nl(f);

@@ -50,8 +50,8 @@ SOURCES=\
 	metadata/snapshot_manip.c \
 	misc/crc.c \
 	misc/lvm-file.c \
+	misc/lvm-string.c \
 	misc/sharedlib.c \
-	mm/dbg_malloc.c \
 	mm/pool.c \
 	regex/matcher.c \
 	regex/parse_rx.c \
@@ -68,6 +68,11 @@ ifeq ("@LVM1@", "internal")
 	format1/layout.c \
 	format1/lvm1-label.c \
 	format1/vg_number.c
+endif
+
+ifeq ("@DEBUG@", "yes")
+  SOURCES+=\
+	mm/dbg_malloc.c
 endif
 
 TARGETS=liblvm.a

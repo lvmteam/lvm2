@@ -72,7 +72,7 @@ static int _release_lock(const char *file)
 	return 0;
 }
 
-void fin_file_locking(void)
+static void _fin_file_locking(void)
 {
 	_release_lock(NULL);
 }
@@ -90,7 +90,7 @@ static void _remove_ctrl_c_handler()
 	_handler_installed = 0;
 }
 
-void _trap_ctrl_c(int signal)
+static void _trap_ctrl_c(int sig)
 {
 	_remove_ctrl_c_handler();
 	log_error("CTRL-c detected: giving up waiting for lock");
@@ -183,7 +183,8 @@ static int _lock_file(const char *file, int flags)
 	return 0;
 }
 
-int file_lock_resource(struct cmd_context *cmd, const char *resource, int flags)
+static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
+			       int flags)
 {
 	char lockfile[PATH_MAX];
 
@@ -231,8 +232,8 @@ int file_lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 
 int init_file_locking(struct locking_type *locking, struct config_tree *cf)
 {
-	locking->lock_resource = file_lock_resource;
-	locking->fin_locking = fin_file_locking;
+	locking->lock_resource = _file_lock_resource;
+	locking->fin_locking = _fin_file_locking;
 
 	/* Get lockfile directory from config file */
 	strncpy(_lock_dir, find_config_str(cf->root, "global/locking_dir",

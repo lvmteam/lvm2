@@ -20,7 +20,6 @@
 
 #include "tools.h"
 #include "report.h"
-#include "defaults.h"
 
 static int _vgs_single(struct cmd_context *cmd, const char *vg_name,
 		       struct volume_group *vg, int consistent, void *handle)
@@ -83,8 +82,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		   report_type_t report_type)
 {
 	void *report_handle;
-	char *opts, *str;
-	const char *keys, *options, *separator;
+	const char *opts;
+	char *str;
+	const char *keys = NULL, *options = NULL, *separator;
 
 	int aligned, buffered, headings;
 
@@ -156,12 +156,11 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			return 0;
 		}
 		if (*opts == '+') {
-			*opts = ',';
-			str =
-			    pool_alloc(cmd->mem,
-				       strlen(options) + strlen(opts) + 1);
+			str = pool_alloc(cmd->mem,
+					 strlen(options) + strlen(opts) + 1);
 			strcpy(str, options);
-			strcat(str, opts);
+			strcat(str, ",");
+			strcat(str, opts + 1);
 			options = str;
 		} else
 			options = opts;

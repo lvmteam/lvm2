@@ -9,10 +9,14 @@
 
 #define _GNU_SOURCE
 
+#include <assert.h>
+
+#include "log.h"
 #include "activate.h"
 #include "archive.h"
 #include "cache.h"
 #include "config.h"
+#include "defaults.h"
 #include "dbg_malloc.h"
 #include "dev-cache.h"
 #include "device.h"
@@ -26,20 +30,17 @@
 #include "metadata.h"
 #include "list.h"
 #include "locking.h"
-#include "log.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
 #include "pool.h"
 #include "toolcontext.h"
 #include "toollib.h"
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
 
 #define CMD_LEN 256
@@ -67,13 +68,14 @@ typedef enum {
 
 /* a global table of possible arguments */
 struct arg {
-	char short_arg;
-	char *long_arg;
+	const char short_arg;
+	const char *long_arg;
 	int (*fn) (struct cmd_context * cmd, struct arg * a);
 
 	int count;
 	char *value;
-	uint32_t i_value;
+	int32_t i_value;
+	uint32_t ui_value;
 	int64_t i64_value;
 	uint64_t ui64_value;
 	sign_t sign;
@@ -108,50 +110,59 @@ int units_arg(struct cmd_context *cmd, struct arg *a);
 char yes_no_prompt(const char *prompt, ...);
 
 /* we use the enums to access the switches */
-static inline int arg_count(struct cmd_context *cmd, int a)
+static inline const int arg_count(struct cmd_context *cmd, int a)
 {
 	return cmd->args[a].count;
 }
 
-static inline char *arg_value(struct cmd_context *cmd, int a)
+static inline const char *arg_value(struct cmd_context *cmd, int a)
 {
 	return cmd->args[a].value;
 }
 
-static inline char *arg_str_value(struct cmd_context *cmd, int a, char *def)
+static inline const char *arg_str_value(struct cmd_context *cmd, int a,
+					const char *def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].value : def;
 }
 
-static inline uint32_t arg_int_value(struct cmd_context *cmd, int a,
-				     uint32_t def)
+static inline const int32_t arg_int_value(struct cmd_context *cmd, int a,
+					  const int32_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].i_value : def;
 }
 
-static inline int64_t arg_int64_value(struct cmd_context *cmd, int a,
-				      uint64_t def)
+static inline const uint32_t arg_uint_value(struct cmd_context *cmd, int a,
+					    const uint32_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].ui_value : def;
+}
+
+static inline const int64_t arg_int64_value(struct cmd_context *cmd, int a,
+					    const uint64_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].i64_value : def;
 }
 
-static inline uint64_t arg_uint64_value(struct cmd_context *cmd, int a,
-					uint64_t def)
+static inline const uint64_t arg_uint64_value(struct cmd_context *cmd, int a,
+					      const uint64_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].ui64_value : def;
 }
 
-static inline void *arg_ptr_value(struct cmd_context *cmd, int a, void *def)
+static inline const void *arg_ptr_value(struct cmd_context *cmd, int a,
+					const void *def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].ptr : def;
 }
 
-static inline sign_t arg_sign_value(struct cmd_context *cmd, int a, sign_t def)
+static inline const sign_t arg_sign_value(struct cmd_context *cmd, int a,
+					  const sign_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].sign : def;
 }
 
-static inline int arg_count_increment(struct cmd_context *cmd, int a)
+static inline const int arg_count_increment(struct cmd_context *cmd, int a)
 {
 	return cmd->args[a].count++;
 }

@@ -8,8 +8,6 @@
 #include "pv_map.h"
 #include "hash.h"
 
-#include <assert.h>
-
 static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 {
 	struct list *tmp;
@@ -42,7 +40,7 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 }
 
 static int _set_allocated(struct hash_table *hash,
-			  struct physical_volume *pv, int pe)
+			  struct physical_volume *pv, uint32_t pe)
 {
 	struct pv_map *pvm;
 
@@ -124,7 +122,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 static void _insert_area(struct list *head, struct pv_area *a)
 {
 	struct list *pvah;
-	struct pv_area *pva;
+	struct pv_area *pva = NULL;
 
 	if (list_empty(head)) {
 		list_add(head, &a->list);

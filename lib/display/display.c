@@ -51,65 +51,66 @@ static int _num_segtypes = sizeof(_segtypes) / sizeof(*_segtypes);
 
 uint64_t units_to_bytes(const char *units, char *unit_type)
 {
-
-	char *ptr;
+	char *ptr = NULL;
 	uint64_t v;
-
-	ptr = (char *) units;
 
 	if (isdigit(*units)) {
 		v = (uint64_t) strtod(units, &ptr);
 		if (ptr == units)
 			return 0;
+		units = ptr;
 	} else
 		v = 1;
 
 	if (v == 1)
-		*unit_type = *ptr;
+		*unit_type = *units;
 	else
 		*unit_type = 'U';
 
-	switch (*ptr) {
+	switch (*units) {
 	case 'h':
 	case 'H':
-		v = 1ULL;
-		*unit_type = *ptr;
+		v = __UINT64_C(1);
+		*unit_type = *units;
 		break;
 	case 's':
 		v *= SECTOR_SIZE;
 	case 'b':
 	case 'B':
-		v *= 1ULL;
+		v *= __UINT64_C(1);
 		break;
+#define KILO __UINT64_C(1024)
 	case 'k':
-		v *= 1024ULL;
-		break;
+		v *= KILO;
 	case 'm':
-		v *= 1024ULL * 1024ULL;
+		v *= KILO * KILO;
 		break;
 	case 'g':
-		v *= 1024ULL * 1024ULL * 1024ULL;
+		v *= KILO * KILO * KILO;
 		break;
 	case 't':
-		v *= 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+		v *= KILO * KILO * KILO * KILO;
 		break;
+#undef KILO
+#define KILO __UINT64_C(1000)
 	case 'K':
-		v *= 1000ULL;
+		v *= KILO;
 		break;
 	case 'M':
-		v *= 1000ULL * 1000ULL;
+		v *= KILO * KILO;
 		break;
 	case 'G':
-		v *= 1000ULL * 1000ULL * 1000ULL;
+		v *= KILO * KILO * KILO;
 		break;
 	case 'T':
-		v *= 1000ULL * 1000ULL * 1000ULL * 1000ULL;
+		v *= KILO * KILO * KILO * KILO;
 		break;
+#undef KILO
 	default:
 		return 0;
 	}
 
-	if (*(ptr + 1))
+	if (*(units + 1))
 		return 0;
 
 	return v;
@@ -166,9 +167,9 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 	int s;
 	int suffix = 1;
 	uint64_t byte;
-	uint64_t units = 1024ULL;
+	uint64_t units = __UINT64_C(1024);
 	char *size_buf = NULL;
-	char *size_str[][3] = {
+	const char *size_str[][3] = {
 		{" Terabyte", " TB", "T"},
 		{" Gigabyte", " GB", "G"},
 		{" Megabyte", " MB", "M"},
@@ -192,20 +193,20 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 		    *size_str[s][2])
 			break;
 
-	if (size == 0ULL) {
+	if (size == __UINT64_C(0)) {
 		sprintf(size_buf, "0%s", suffix ? size_str[s][sl] : "");
 		return size_buf;
 	}
 
 	if (s < 8) {
 		byte = cmd->current_settings.unit_factor;
-		size *= 1024ULL;
+		size *= __UINT64_C(1024);
 	} else {
 		suffix = 1;
 		if (cmd->current_settings.unit_type == 'H')
-			units = 1000ULL;
+			units = __UINT64_C(1000);
 		else
-			units = 1024ULL;
+			units = __UINT64_C(1024);
 		byte = units * units * units;
 		s = 0;
 		while (size_str[s] && size < byte)
@@ -230,7 +231,7 @@ void pvdisplay_colons(struct physical_volume *pv)
 		return;
 	}
 
-	log_print("%s:%s:%" PRIu64 ":-1:%u:%u:-1:%" PRIu64 ":%u:%u:%u:%s",
+	log_print("%s:%s:%" PRIu64 ":-1:%u:%u:-1:%" PRIu32 ":%u:%u:%u:%s",
 		  dev_name(pv->dev), pv->vg_name, pv->size,
 		  /* FIXME pv->pv_number, Derive or remove? */
 		  pv->status,	/* FIXME Support old or new format here? */
@@ -251,7 +252,7 @@ void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 	char uuid[64];
 	const char *size;
 
-	uint64_t pe_free;
+	uint32_t pe_free;
 
 	if (!pv)
 		return;
@@ -296,9 +297,9 @@ void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 	/* LV count is no longer available when displaying PV
 	   log_print("Cur LV                %u", vg->lv_count);
 	 */
-	log_print("PE Size (KByte)       %" PRIu64, pv->pe_size / 2);
+	log_print("PE Size (KByte)       %" PRIu32, pv->pe_size / 2);
 	log_print("Total PE              %u", pv->pe_count);
-	log_print("Free PE               %" PRIu64, pe_free);
+	log_print("Free PE               %" PRIu32, pe_free);
 	log_print("Allocated PE          %u", pv->pe_alloc_count);
 	log_print("PV UUID               %s", *uuid ? uuid : "none");
 	log_print(" ");
@@ -437,7 +438,8 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 			snap_percent = 100;
 
 		log_print("Snapshot chunk size    %s",
-			  display_size(cmd, snap->chunk_size / 2, SIZE_SHORT));
+			  display_size(cmd, (uint64_t) snap->chunk_size / 2,
+				       SIZE_SHORT));
 
 /*
 	size = display_size(lv->size / 2, SIZE_SHORT);
@@ -471,7 +473,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 	return 0;
 }
 
-void _display_stripe(struct lv_segment *seg, int s, const char *pre)
+static void _display_stripe(struct lv_segment *seg, uint32_t s, const char *pre)
 {
 	uint32_t len = seg->len / seg->stripes;
 
@@ -485,7 +487,7 @@ void _display_stripe(struct lv_segment *seg, int s, const char *pre)
 
 int lvdisplay_segments(struct logical_volume *lv)
 {
-	int s;
+	uint32_t s;
 	struct list *segh;
 	struct lv_segment *seg;
 
@@ -589,7 +591,8 @@ void vgdisplay_full(struct volume_group *vg)
 							      2), SIZE_SHORT));
 
 	log_print("PE Size               %s",
-		  display_size(vg->cmd, vg->extent_size / 2, SIZE_SHORT));
+		  display_size(vg->cmd, (uint64_t) vg->extent_size / 2,
+			       SIZE_SHORT));
 
 	log_print("Total PE              %u", vg->extent_count);
 
@@ -631,13 +634,15 @@ void vgdisplay_short(struct volume_group *vg)
 {
 	log_print("\"%s\" %-9s [%-9s used / %s free]", vg->name,
 /********* FIXME if "open" print "/used" else print "/idle"???  ******/
-		  display_size(vg->cmd, vg->extent_count * vg->extent_size / 2,
+		  display_size(vg->cmd, (uint64_t) vg->extent_count *
+			       vg->extent_size / 2, SIZE_SHORT),
+		  display_size(vg->cmd,
+			       ((uint64_t) vg->extent_count -
+				vg->free_count) * vg->extent_size / 2,
 			       SIZE_SHORT), display_size(vg->cmd,
-							 (vg->extent_count -
-							  vg->free_count) *
+							 (uint64_t) vg->
+							 free_count *
 							 vg->extent_size / 2,
-							 SIZE_SHORT),
-		  display_size(vg->cmd, vg->free_count * vg->extent_size / 2,
-			       SIZE_SHORT));
+							 SIZE_SHORT));
 	return;
 }

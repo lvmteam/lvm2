@@ -68,7 +68,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 	struct lv_segment *seg;
 	struct physical_volume *pv;
 	struct volume_group *vg_with;
-	int s;
+	unsigned int s;
 
 	list_iterate_safe(lvh, lvht, &vg_from->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;

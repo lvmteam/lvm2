@@ -36,19 +36,19 @@ struct format_type *create_text_format(struct cmd_context *cmd);
 void *create_text_context(struct cmd_context *cmd, const char *path,
 			  const char *desc);
 
-struct labeller *text_labeller_create(struct format_type *fmt);
+struct labeller *text_labeller_create(const struct format_type *fmt);
 
 int pvhdr_read(struct device *dev, char *buf);
 
-int add_da(struct format_type *fmt, struct pool *mem, struct list *das,
+int add_da(const struct format_type *fmt, struct pool *mem, struct list *das,
 	   uint64_t start, uint64_t size);
 void del_das(struct list *das);
 
-int add_mda(struct format_type *fmt, struct pool *mem, struct list *mdas,
+int add_mda(const struct format_type *fmt, struct pool *mem, struct list *mdas,
 	    struct device *dev, uint64_t start, uint64_t size);
 void del_mdas(struct list *mdas);
 
-int vgname_from_mda(struct format_type *fmt, struct device_area *dev_area,
+int vgname_from_mda(const struct format_type *fmt, struct device_area *dev_area,
 		    char *buf, uint32_t size);
 
 #endif
