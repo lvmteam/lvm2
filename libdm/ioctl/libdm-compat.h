@@ -16,9 +16,9 @@
 #ifndef _LINUX_LIBDM_COMPAT_H
 #define _LINUX_LIBDM_COMPAT_H
 
+#include "kdev_t.h"
 #include <inttypes.h>
 #include <linux/dm-ioctl.h>
-#include <linux/kdev_t.h>
 #include <sys/ioctl.h>
 
 struct dm_task;

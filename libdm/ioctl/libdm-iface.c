@@ -33,8 +33,8 @@
 #include <limits.h>
 
 #ifdef linux
+#  include "kdev_t.h"
 #  include <linux/limits.h>
-#  include <linux/kdev_t.h>
 #  include <linux/dm-ioctl.h>
 #else
 #  define MAJOR(x) major((x))

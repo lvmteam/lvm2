@@ -38,7 +38,7 @@ extern char *optarg;
 #endif
 
 #ifdef linux
-#  include <linux/kdev_t.h>
+#  include "kdev_t.h"
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))
