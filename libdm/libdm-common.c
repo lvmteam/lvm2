@@ -63,7 +63,7 @@ static void _default_log(int level, const char *file, int line,
 	if (level < _LOG_WARN)
 		fprintf(stderr, "\n");
 	else
-		printf("\n");
+		fprintf(stdout, "\n");
 }
 
 dm_log_fn _log = _default_log;
