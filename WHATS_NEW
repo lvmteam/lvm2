@@ -1,5 +1,6 @@
 Version 2.01.03 - 
 ===================================
+  Fix snapshot device size bug (since 2.01.01).
   clvmd announces startup and cluster connection in syslog.
   Gulm clvmd doesn't hang trying to talk to a rebooted node.
   Gulm clvmd doesn't print cman error on startup.

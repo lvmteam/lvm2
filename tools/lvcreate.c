@@ -609,7 +609,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			return 0;
 		}
 
-		if (!vg_add_snapshot(org, lv, 1, NULL, lv->le_count,
+		if (!vg_add_snapshot(org, lv, 1, NULL, org->le_count,
 				     lp->chunk_size)) {
 			log_err("Couldn't create snapshot.");
 			return 0;
