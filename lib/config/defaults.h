@@ -58,6 +58,8 @@
 #endif
 
 #define DEFAULT_STRIPE_FILLER "/dev/ioerror"
+#define DEFAULT_MIRROR_REGION_SIZE 512 /* KB */
+#define DEFAULT_INTERVAL 15
 
 #ifdef READLINE_SUPPORT
 #  define DEFAULT_MAX_HISTORY 100
