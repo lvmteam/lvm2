@@ -30,12 +30,13 @@
 #ifdef linux
 #  include "kdev_t.h"
 #  include <linux/limits.h>
-#  include <linux/dm-ioctl.h>
 #else
 #  define MAJOR(x) major((x))
 #  define MINOR(x) minor((x))
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
+
+#include <linux/dm-ioctl.h>
 
 /*
  * Ensure build compatibility.  
@@ -228,6 +229,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 
 static int _open_control(void)
 {
+#ifdef DM_IOCTLS
 	char control[PATH_MAX];
 	uint32_t major = 0, minor;
 
@@ -253,6 +255,9 @@ static int _open_control(void)
 error:
 	log_error("Failure to communicate with kernel device-mapper driver.");
 	return 0;
+#else
+	return 1;
+#endif
 }
 
 void dm_task_destroy(struct dm_task *dmt)
@@ -608,7 +613,9 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	if (dmt->type == DM_DEVICE_LIST) {
 		if (!_dm_names_v1(dmi))
 			goto bad;
-	} else if (ioctl(_control_fd, command, dmi) < 0) {
+	} 
+#ifdef DM_IOCTLS
+	else if (ioctl(_control_fd, command, dmi) < 0) {
 		if (_log_suppress)
 			log_verbose("device-mapper ioctl cmd %d failed: %s",
 				    _IOC_NR(command), strerror(errno));
@@ -617,6 +624,8 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 				  _IOC_NR(command), strerror(errno));
 		goto bad;
 	}
+#else /* Userspace alternative for testing */
+#endif
 
 	if (dmi->flags & DM_BUFFER_FULL_FLAG)
 		/* FIXME Increase buffer size and retry operation (if query) */
@@ -1313,22 +1322,26 @@ int dm_task_run(struct dm_task *dmt)
 		  dmi->name, dmi->uuid, dmt->newname ? dmt->newname : "",
 		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->sector, dmt->message ? dmt->message : "");
+#ifdef DM_IOCTLS
 	if (ioctl(_control_fd, command, dmi) < 0) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
-				       (dmt->type == DM_DEVICE_MKNODES))) {
+				       (dmt->type == DM_DEVICE_MKNODES)))
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
-			goto ignore_error;
+		else {
+			if (_log_suppress)
+				log_verbose("device-mapper ioctl "
+					    "cmd %d failed: %s",
+					    _IOC_NR(command), strerror(errno));
+			else
+				log_error("device-mapper ioctl "
+					  "cmd %d failed: %s",
+					  _IOC_NR(command), strerror(errno));
+			goto bad;
 		}
-		if (_log_suppress)
-			log_verbose("device-mapper ioctl cmd %d failed: %s",
-				    _IOC_NR(command), strerror(errno));
-		else
-			log_error("device-mapper ioctl cmd %d failed: %s",
-				  _IOC_NR(command), strerror(errno));
-		goto bad;
 	}
+#else /* Userspace alternative for testing */
+#endif
 
-      ignore_error:
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev),
