@@ -44,8 +44,9 @@ Change access permission to read-only or read/write.
 Change read ahead sector count per logical between 2 and 120.
 Not used by device-mapper.
 .SH Examples
-"lvchange -x n vg00/lvol1" prevents the allocation of any physical
-extents on logical volume lvol1 in volume group vg00.
+"lvchange -p r vg00/lvol1" changes the permission on 
+volume lvol1 in volume group vg00 to be read-only.
+
 .SH SEE ALSO
 .BR lvm (8), 
 .BR lvcreate (8)
