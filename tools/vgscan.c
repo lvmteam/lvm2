@@ -35,7 +35,7 @@ int vgscan(int argc, char **argv)
 	log_verbose("Wiping internal cache of PVs in VGs");
 	vgcache_destroy();
 
-	log_print("Reading all physical volumes (this may take a while...)");
+	log_print("Reading all physical volumes.  This may take a while...");
 
 	return process_each_vg(argc, argv, &vgscan_single);
 }

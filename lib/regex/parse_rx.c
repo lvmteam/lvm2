@@ -70,7 +70,7 @@ static int _get_token(struct parse_sp *ps)
 				range = 1;
 				ptr++;
 				if(ptr == ps->rx_end) {
-					log_info("incomplete charset "
+					log_error("Incomplete range"
 						 "specification");
 					return -1;
 				}
@@ -142,8 +142,8 @@ static int _get_token(struct parse_sp *ps)
 		/* escaped character */
 		ptr++;
 		if(ptr >= ps->rx_end) {
-			log_info("badly quoted character at end "
-				 "of expression");
+			log_error("Badly quoted character at end "
+				  "of expression");
 			ps->type = -1;
 			return -1;
 		}
@@ -210,7 +210,7 @@ static struct rx_node *_term(struct parse_sp *ps)
 		_get_token(ps);           /* match '(' */
 		n = _or_term(ps);
 		if(ps->type != ')') {
-			log_debug("missing ')' in regular expression");
+			log_error("missing ')' in regular expression");
 			return 0;
 		}
 		_get_token(ps);           /* match ')' */
@@ -292,7 +292,7 @@ static struct rx_node *_or_term(struct parse_sp *ps)
 	_get_token(ps);       /* match '|' */
 
 	if (!(r = _or_term(ps))) {
-		log_info("badly formed 'or' expression");
+		log_error("Badly formed 'or' expression");
 		return NULL;
 	}
 
@@ -320,7 +320,7 @@ struct rx_node *rx_parse_tok(struct pool *mem,
 	_get_token(ps);               /* load the first token */
 
 	if (!(r = _or_term(ps))) {
-		log_err("parse error in regex");
+		log_error("Parse error in regex");
 		pool_free(mem, ps);
 	}
 

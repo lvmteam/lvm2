@@ -46,7 +46,8 @@ static int _rm_dir(struct volume_group *vg)
 
 	if (!build_vg_path(vg_path, sizeof(vg_path),
 			   vg->cmd->dev_dir, vg->name)) {
-		log_err("Couldn't remove volume group directory.");
+		log_error("Couldn't construct name of volume group dir for %s",
+			  vg->name);
 		return 0;
 	}
 
@@ -62,16 +63,16 @@ static int _mk_link(struct logical_volume *lv)
 	struct stat buf;
 
 	if (!build_dm_path(lv_path, sizeof(lv_path), lv->vg->name, lv->name)) {
-		log_err("Couldn't create destination path for "
-			"logical volume link.");
+		log_error("Couldn't create destination pathname for "
+			  "logical volume link for %s", lv->name);
 		return 0;
 	}
 
 	if (!build_lv_link_path(link_path, sizeof(link_path),
 				lv->vg->cmd->dev_dir,
 				lv->vg->name, lv->name)) {
-		log_err("Couldn't create source path for "
-			"logical volume link.");
+		log_error("Couldn't create source pathname for "
+			  "logical volume link %s", lv->name);
 		return 0;
 	}
 
@@ -107,7 +108,7 @@ static int _rm_link(struct logical_volume *lv, const char *lv_name)
 	if (!build_lv_link_path(link_path, sizeof(link_path),
 				lv->vg->cmd->dev_dir,
 				lv->vg->name, lv->name)) {
-		log_err("Couldn't create link path (in order to remove it.");
+		log_error("Couldn't determine link pathname.");
 		return 0;
 	}
 

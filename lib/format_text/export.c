@@ -55,7 +55,7 @@ static void _inc_indent(struct formatter *f)
 static void _dec_indent(struct formatter *f)
 {
 	if (!f->indent--) {
-		log_debug("Indenting seems to have messed up\n");
+		log_error("Internal error tracking indentation");
 		f->indent = 0;
 	}
 }

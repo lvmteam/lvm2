@@ -70,7 +70,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 #define log_err(x...) plog(_LOG_ERR, x)
 #define log_fatal(x...) plog(_LOG_FATAL, x)
 
-#define stack log_debug( "s" )
+#define stack log_debug( "s" )	/* Backtrace on error */
 
 #define log_error(fmt, args...) log_err(fmt , ## args)
 #define log_print(fmt, args...) log_warn(fmt , ## args)

@@ -554,12 +554,12 @@ find_config_str(struct config_node *cn,
 	struct config_node *n = find_config_node(cn, path, sep);
 
 	if (n && n->v->type == CFG_STRING) {
-		log_debug("Setting %s to %s", path, n->v->v.str);
+		log_very_verbose("Setting %s to %s", path, n->v->v.str);
 		return n->v->v.str;
 	}
 
 	if (fail)
-		log_debug("%s not found in config: defaulting to %s",
+		log_very_verbose("%s not found in config: defaulting to %s",
 			  path, fail);
 	return fail;
 }
@@ -570,11 +570,12 @@ int find_config_int(struct config_node *cn, const char *path,
 	struct config_node *n = find_config_node(cn, path, sep);
 
 	if (n && n->v->type == CFG_INT) {
-		log_debug("Setting %s to %d", path, n->v->v.i);
+		log_very_verbose("Setting %s to %d", path, n->v->v.i);
 		return n->v->v.i;
 	}
 
-	log_debug("%s not found in config: defaulting to %d", path, fail);
+	log_very_verbose("%s not found in config: defaulting to %d", 
+			 path, fail);
 	return fail;
 }
 
@@ -584,11 +585,11 @@ float find_config_float(struct config_node *cn, const char *path,
 	struct config_node *n = find_config_node(cn, path, sep);
 
 	if (n && n->v->type == CFG_FLOAT) {
-		log_debug("Setting %s to %f", path, n->v->v.r);
+		log_very_verbose("Setting %s to %f", path, n->v->v.r);
 		return n->v->v.r;
 	}
 
-	log_debug("%s not found in config: defaulting to %f",
+	log_very_verbose("%s not found in config: defaulting to %f",
 		  path, fail);
 
 	return fail;

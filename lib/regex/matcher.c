@@ -128,7 +128,7 @@ static void _calc_functions(struct matcher *m)
 			break;
 
 		default:
-			log_debug("unknown node type");
+			log_error("Internal error: Unknown calc node type");
 		}
 
 		/*
@@ -301,7 +301,7 @@ struct matcher *matcher_create(struct pool *mem,
 
 	/* parse this expression */
 	if(!(rx = rx_parse_tok(scratch, all, ptr))) {
-		log_debug("Couldn't parse the regex");
+		log_error("Couldn't parse regex");
 		goto bad;
 	}
 
