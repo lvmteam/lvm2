@@ -19,6 +19,7 @@
 #define DEFAULT_SYS_DIR "/etc/lvm"
 #define DEFAULT_DEV_DIR "/dev"
 #define DEFAULT_PROC_DIR "/proc"
+#define DEFAULT_SYSFS_SCAN 1
 
 #define DEFAULT_LOCK_DIR "/var/lock/lvm"
 #define DEFAULT_LOCKING_LIB "lvm2_locking.so"

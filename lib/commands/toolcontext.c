@@ -16,6 +16,7 @@
 #include "filter-composite.h"
 #include "filter-persistent.h"
 #include "filter-regex.h"
+#include "filter-sysfs.h"
 #include "label.h"
 #include "lvm-file.h"
 #include "format-text.h"
@@ -261,33 +262,43 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
+#define MAX_FILTERS 3
+
 static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 {
+	unsigned nr_filt = 0;
 	struct config_node *cn;
-	struct dev_filter *f1, *f2, *f3;
+	struct dev_filter *filters[MAX_FILTERS];
 
-	cn = find_config_node(cmd->cf->root, "devices/types", '/');
+	memset(filters, 0, sizeof(filters));
 
-	if (!(f2 = lvm_type_filter_create(cmd->proc_dir, cn)))
-		return NULL;
-
-	if (!(cn = find_config_node(cmd->cf->root, "devices/filter", '/'))) {
-		log_debug("devices/filter not found in config file: no regex "
-			  "filter installed");
-		return f2;
+	/* sysfs filter */
+	if (find_config_bool(cmd->cf->root, "devices/sysfs_scan", '/',
+			     DEFAULT_SYSFS_SCAN)) {
+		if ((filters[nr_filt] = sysfs_filter_create(cmd->proc_dir)))
+			nr_filt++;
 	}
 
-	if (!(f1 = regex_filter_create(cn->v))) {
+	/* regex filter */
+	if (!(cn = find_config_node(cmd->cf->root, "devices/filter", '/')))
+		log_debug("devices/filter not found in config file: no regex "
+			  "filter installed");
+
+	else if (!(filters[nr_filt++] = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
 		return NULL;
 	}
 
-	if (!(f3 = composite_filter_create(2, f1, f2))) {
-		log_error("Failed to create composite device filter");
+	/* device type filter */
+	cn = find_config_node(cmd->cf->root, "devices/types", '/');
+	if (!(filters[nr_filt++] = lvm_type_filter_create(cmd->proc_dir, cn))) {
+		log_error("Failed to create lvm type filter");
 		return NULL;
 	}
 
-	return f3;
+	/* only build a composite filter if we really need it */
+	return (nr_filt == 1) ?
+	    filters[0] : composite_filter_create(nr_filt, filters);
 }
 
 static int _init_filters(struct cmd_context *cmd)

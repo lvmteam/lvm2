@@ -9,6 +9,6 @@
 
 #include "dev-cache.h"
 
-struct dev_filter *composite_filter_create(int n, ...);
+struct dev_filter *composite_filter_create(int n, struct dev_filter **filters);
 
 #endif
