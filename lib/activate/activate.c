@@ -77,6 +77,12 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 {
 	return 1;
 }
+
+int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	return 1;
+}
+
 void activation_exit(void)
 {
 	return;
@@ -470,6 +476,26 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 	memlock_inc();
 	r = _lv_activate(lv);
 	memlock_dec();
+	fs_unlock();
+
+	return r;
+}
+
+int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
+{
+	struct lvinfo info;
+	int r = 1;
+
+	if (!lv_info(lv, &info)) {
+		stack;
+		return 0;
+	}
+
+	if (info.exists)
+		r = dev_manager_mknodes(lv);
+	else
+		r = dev_manager_rmnodes(lv);
+
 	fs_unlock();
 
 	return r;

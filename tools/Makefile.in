@@ -54,6 +54,7 @@ SOURCES=\
 	vgextend.c \
 	vgimport.c \
 	vgmerge.c \
+	vgmknodes.c \
 	vgreduce.c \
 	vgremove.c \
 	vgrename.c \
