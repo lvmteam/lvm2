@@ -401,6 +401,11 @@ static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 		goto bad;
 	}
 
+	/* must be set to be able to zero gap after PV structure in
+	   dev_write in order to make other disk tools happy */
+	dl->pvd.pv_on_disk.base = METADATA_BASE;
+	dl->pvd.pv_on_disk.size = PV_SIZE;
+
 	list_add(&pvs, &dl->list);
 	if (!write_disks(&pvs)) {
 		stack;
