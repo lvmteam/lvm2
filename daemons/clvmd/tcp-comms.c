@@ -85,6 +85,9 @@ int init_comms(unsigned short port)
 
     listen(listen_fd, 5);
 
+    /* Set Close-on-exec */
+    fcntl(listen_fd, F_SETFD, 1);
+
     return 0;
 }
 
@@ -321,6 +324,9 @@ int gulm_connect_csid(char *csid, struct local_client **newclient)
 	close(fd);
 	return -1;
     }
+
+    /* Set Close-on-exec */
+    fcntl(fd, F_SETFD, 1);
 
     status = alloc_client(fd, csid, newclient);
     if (status)

@@ -388,6 +388,44 @@ int do_check_lvm1(char *vgname)
 	return status == 1 ? 0 : EBUSY;
 }
 
+
+/* Only called at gulm startup. Drop any leftover VG or P_orphan locks
+   that might be hanging around if we died for any reason
+*/
+static void drop_vg_locks()
+{
+	char vg[128];
+	char line[255];
+	FILE *vgs =
+	    popen
+	    ("lvm pvs --nolocking --noheadings -o vg_name", "r");
+
+	sync_unlock("P_orphans", LCK_EXCL);
+
+	if (!vgs)
+		return;
+
+	while (fgets(line, sizeof(line), vgs)) {
+		char *vgend;
+		char *vgstart;
+
+		if (line[strlen(line)-1] == '\n')
+			line[strlen(line)-1] = '\0';
+
+		vgstart = line + strspn(line, " ");
+		vgend = vgstart + strcspn(vgstart, " ");
+		*vgend = '\0';
+
+		if (strncmp(vgstart, "WARNING:", 8) == 0)
+			continue;
+
+		sprintf(vg, "V_%s", vgstart);
+		sync_unlock(vg, LCK_EXCL);
+
+	}
+	fclose(vgs);
+}
+
 /*
  * Ideally, clvmd should be started before any LVs are active
  * but this may not be the case...
@@ -470,7 +508,7 @@ void init_lvhash()
 }
 
 /* Called to initialise the LVM context of the daemon */
-int init_lvm(void)
+int init_lvm(int using_gulm)
 {
 	if (!(cmd = create_toolcontext(NULL))) {
 		log_error("Failed to allocate command context");
@@ -483,6 +521,10 @@ int init_lvm(void)
 
 	/* Check lvm.conf is setup for cluster-LVM */
 	check_config();
+
+	/* Remove any non-LV locks that may have been left around */
+	if (using_gulm)
+		drop_vg_locks();
 
 	get_initial_state();
 

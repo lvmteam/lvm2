@@ -77,6 +77,8 @@ static int _init_cluster(void)
 		/* Don't print an error here because we could be just probing for CMAN */
 		return -1;
 	}
+	/* Set Close-on-exec */
+	fcntl(cluster_sock, F_SETFD, 1);
 
 	/* Bind to our port number on the cluster.
 	   Writes to this will block if the cluster loses quorum */
@@ -101,6 +103,7 @@ static int _init_cluster(void)
 		return -1;
 	}
 	dlm_ls_pthread_init(lockspace);
+
 	return 0;
 }
 

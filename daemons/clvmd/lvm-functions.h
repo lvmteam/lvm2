@@ -25,7 +25,7 @@ extern int do_lock_lv(unsigned char lock_cmd, unsigned char lock_flags,
 extern int post_lock_lv(unsigned char lock_cmd, unsigned char lock_flags,
 			char *resource);
 extern int do_check_lvm1(char *vgname);
-extern int init_lvm(void);
+extern int init_lvm(int using_gulm);
 extern void init_lvhash(void);
 
 extern int hold_unlock(char *resource);

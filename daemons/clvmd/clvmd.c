@@ -165,6 +165,7 @@ int main(int argc, char *argv[])
 	int debug = 0;
 	int cmd_timeout = DEFAULT_CMD_TIMEOUT;
 	sigset_t ss;
+	int using_gulm = 0;
 
 	/* Deal with command-line arguments */
 	opterr = 0;
@@ -250,6 +251,7 @@ int main(int argc, char *argv[])
 			max_csid_len = GULM_MAX_CSID_LEN;
 			max_cluster_message = GULM_MAX_CLUSTER_MESSAGE;
 			max_cluster_member_name_len = GULM_MAX_CLUSTER_MEMBER_NAME_LEN;
+			using_gulm = 1;
 			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to GULM");
 		}
 #endif
@@ -284,7 +286,7 @@ int main(int argc, char *argv[])
 	/* This needs to be started after cluster initialisation
 	   as it may need to take out locks */
 	DEBUGLOG("starting LVM thread\n");
-	pthread_create(&lvm_thread, NULL, lvm_thread_fn, nodeinfo.nodename);
+	pthread_create(&lvm_thread, NULL, lvm_thread_fn, (void *)using_gulm);
 
 	/* Tell the rest of the cluster our version number */
 	/* CMAN can do this immediately, gulm needs to wait until
@@ -543,8 +545,9 @@ static void main_loop(int local_sock, int cmd_timeout)
 						lastfd->next = thisfd->next;
 						free_fd = thisfd;
 						thisfd = lastfd;
-						cmd_client_cleanup(free_fd);
-						free(free_fd);
+
+						/* Queue cleanup, this also frees the client struct */
+						add_to_lvmqueue(free_fd, NULL, 0, NULL);
 						break;
 					}
 
@@ -1565,6 +1568,14 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 
 static int process_work_item(struct lvm_thread_cmd *cmd)
 {
+
+	/* If msg is NULL then this is a cleanup request */
+	if (cmd->msg == NULL) {
+		cmd_client_cleanup(cmd->client);
+		free(cmd->client);
+		return 0;
+	}
+
 	if (!cmd->remote) {
 		DEBUGLOG("process_work_item: local\n");
 		process_local_command(cmd->msg, cmd->msglen, cmd->client,
@@ -1584,6 +1595,7 @@ static void *lvm_thread_fn(void *arg)
 {
 	struct list *cmdl, *tmp;
 	sigset_t ss;
+	int using_gulm = (int)arg;
 
 	DEBUGLOG("LVM thread function started\n");
 	pthread_mutex_lock(&lvm_thread_mutex);
@@ -1595,7 +1607,7 @@ static void *lvm_thread_fn(void *arg)
 	pthread_sigmask(SIG_BLOCK, &ss, NULL);
 
 	/* Initialise the interface to liblvm */
-	init_lvm();
+	init_lvm(using_gulm);
 	pthread_mutex_unlock(&lvm_thread_mutex);
 
 	/* Now wait for some actual work */
@@ -1634,17 +1646,22 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 	if (!cmd)
 		return ENOMEM;
 
-	cmd->msg = malloc(msglen);
-	if (!cmd->msg) {
-		log_error("Unable to allocate buffer space\n");
-		free(cmd);
-		return -1;
+	if (msglen) {
+		cmd->msg = malloc(msglen);
+		if (!cmd->msg) {
+			log_error("Unable to allocate buffer space\n");
+			free(cmd);
+			return -1;
+		}
+		memcpy(cmd->msg, msg, msglen);
 	}
-
+	else {
+		cmd->msg = NULL;
+	}
 	cmd->client = client;
 	cmd->msglen = msglen;
 	cmd->xid = client->xid;
-	memcpy(cmd->msg, msg, msglen);
+
 	if (csid) {
 		memcpy(cmd->csid, csid, max_csid_len);
 		cmd->remote = 1;
@@ -1677,6 +1694,8 @@ static int open_local_sock()
 		log_error("Can't create local socket: %m");
 		return -1;
 	}
+	/* Set Close-on-exec */
+	fcntl(local_socket, F_SETFD, 1);
 
 	memset(&sockaddr, 0, sizeof(sockaddr));
 	memcpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(CLVMD_SOCKNAME));
