@@ -22,13 +22,14 @@ VPATH = @srcdir@
 
 SOURCES=\
 	lvm.c\
+	lvmchange.c\
 	lvremove.c\
 	pvcreate.c\
 	pvchange.c\
 	pvdisplay.c\
 	pvscan.c\
-	vgrename.c\
-	lvactivate.c
+	vgcreate.c\
+	vgrename.c
 
 TARGETS=\
 	lvm

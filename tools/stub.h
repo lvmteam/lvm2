@@ -23,7 +23,6 @@ int lvchange(int argc, char **argv) {return 1;}
 int lvcreate(int argc, char **argv) {return 1;}
 int lvdisplay(int argc, char **argv) {return 1;}
 int lvextend(int argc, char **argv) {return 1;}
-int lvmchange(int argc, char **argv) {return 1;}
 int lvmdiskscan(int argc, char **argv) {return 1;}
 int lvmsadc(int argc, char **argv) {return 1;}
 int lvmsar(int argc, char **argv) {return 1;}
@@ -35,7 +34,6 @@ int vgcfgbackup(int argc, char **argv) {return 1;}
 int vgcfgrestore(int argc, char **argv) {return 1;}
 int vgchange(int argc, char **argv) {return 1;}
 int vgck(int argc, char **argv) {return 1;}
-int vgcreate(int argc, char **argv) {return 1;}
 int vgdisplay(int argc, char **argv) {return 1;}
 int vgexport(int argc, char **argv) {return 1;}
 int vgextend(int argc, char **argv) {return 1;}
