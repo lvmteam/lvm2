@@ -48,13 +48,14 @@ void *malloc_aux(size_t s, const char *file, int line)
 	size_t tsize = s + sizeof(*nb) + sizeof(unsigned long);
 
 	if (s > 50000000) {
-		log_error("Huge memory allocation (size %" PRIuPTR
+		log_error("Huge memory allocation (size %" PRIsize_t
 			  ") rejected - metadata corruption?", s);
 		return 0;
 	}
 
 	if (!(nb = malloc(tsize))) {
-		log_error("couldn't allocate any memory, size = %" PRIuPTR, s);
+		log_error("couldn't allocate any memory, size = %" PRIsize_t,
+			  s);
 		return 0;
 	}
 
@@ -190,7 +191,7 @@ int dump_memory(void)
 		str[sizeof(str) - 1] = '\0';
 
 		print_log(_LOG_INFO, mb->file, mb->line,
-			  "block %d at %p, size %" PRIdPTR "\t [%s]",
+			  "block %d at %p, size %" PRIsize_t "\t [%s]",
 			  mb->id, mb->magic, mb->length, str);
 		tot += mb->length;
 	}
@@ -220,7 +221,7 @@ void bounds_check(void)
 void *malloc_aux(size_t s, const char *file, int line)
 {
 	if (s > 50000000) {
-		log_error("Huge memory allocation (size %" PRIuPTR
+		log_error("Huge memory allocation (size %" PRIsize_t
 			  ") rejected - metadata corruption?", s);
 		return 0;
 	}
