@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
+#include <time.h>
 
 
 /*
@@ -248,6 +249,56 @@ int archive_vg(struct volume_group *vg,
 
 		index++;
 	}
+
+	return 1;
+}
+
+static void _display_archive(struct cmd_context *cmd, struct uuid_map *um,
+			     struct archive_file *af)
+{
+	struct volume_group *vg;
+	time_t when;
+	char *desc;
+
+	log_print("path:\t\t%s", af->path);
+
+	/*
+	 * Read the archive file to ensure that it is valid, and
+	 * retrieve the archive time and description.
+	 */
+	if (!(vg = text_vg_import(cmd, af->path, um, &when, &desc))) {
+		log_print("Unable to read archive file.");
+		return;
+	}
+
+	log_print("description:\t%s", desc ? desc : "<No description>");
+	log_print("time:\t\t%s", ctime(&when));
+
+	pool_free(cmd->mem, vg);
+}
+
+int archive_list(struct cmd_context *cmd, struct uuid_map *um,
+		 const char *dir, const char *vg)
+{
+	struct list *archives, *ah;
+	struct archive_file *af;
+
+	if (!(archives = _scan_archive(cmd->mem, vg, dir))) {
+		log_err("Couldn't scan the archive directory (%s).", dir);
+		return 0;
+	}
+
+	if (list_empty(archives))
+		log_print("No archives found.");
+
+	list_iterate (ah, archives) {
+		af = list_item(ah, struct archive_file);
+
+		_display_archive(cmd, um, af);
+		log_print(" ");
+	}
+
+	pool_free(cmd->mem, archives);
 
 	return 1;
 }

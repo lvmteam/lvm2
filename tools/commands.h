@@ -61,13 +61,13 @@ xx(lvchange,
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, available_ARG, contiguous_ARG, 
+   autobackup_ARG, available_ARG, contiguous_ARG,
    minor_ARG, persistent_ARG, partial_ARG,
    permission_ARG, readahead_ARG, test_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
-   "lvcreate " "\n" 
+   "lvcreate " "\n"
    "\t[-A|--autobackup {y|n}] "  "\n"
    "\t[-C|--contiguous {y|n}] " "\n"
    "\t[-d|--debug]" "\n"
@@ -95,12 +95,12 @@ xx(lvcreate,
    "\t-n|--name SnapshotLogicalVolumeName" "\n"
    "\t[-t|--test]" "\n"
    "\tLogicalVolume[Path] [PhysicalVolumePath...]" "\n",
-chunksize_ARG, 
-snapshot_ARG, 
+chunksize_ARG,
+snapshot_ARG,
 */
 
    autobackup_ARG, contiguous_ARG, stripes_ARG, stripesize_ARG,
-   extents_ARG, size_ARG, name_ARG, permission_ARG, readahead_ARG, 
+   extents_ARG, size_ARG, name_ARG, permission_ARG, readahead_ARG,
    minor_ARG, persistent_ARG,
    test_ARG, zero_ARG)
 
@@ -136,7 +136,7 @@ xx(lvextend,
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
-   "lvmchange\n" 
+   "lvmchange\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
    "\t[-R/--reset]\n"
@@ -375,7 +375,7 @@ xx(vgchange,
    "\t[VolumeGroupName...]\n",
 
    autobackup_ARG, available_ARG, logicalvolume_ARG, partial_ARG,
-   resizeable_ARG, resizable_ARG, allocation_ARG, 
+   resizeable_ARG, resizable_ARG, allocation_ARG,
    test_ARG)
 
 xx(vgck,

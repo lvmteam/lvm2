@@ -10,19 +10,21 @@
 #include "metadata.h"
 
 /*
- * There are two operations that come under the
- * general area of backups.  'Archiving' occurs
- * just before a volume group configuration is
- * changed.  The user may configure when archived
- * files are expired.  Typically archives will be
- * stored in /etc/lvm/archive.
+ * FIXME: This file is going to merge with the archiving code in
+ * lib/format_text at some point.
+ */
+
+/*
+ * There are two operations that come under the general area of
+ * backups.  'Archiving' occurs just before a volume group
+ * configuration is changed.  The user may configure when
+ * archived files are expired.  Typically archives will be stored
+ * in /etc/lvm/archive.
  *
- * A 'backup' is a redundant copy of the *current*
- * volume group configuration.  As such it should
- * be taken just after the volume group is
- * changed.  Only 1 backup file will exist.
- * Typically backups will be stored in
- * /etc/lvm/backups.
+ * A 'backup' is a redundant copy of the *current* volume group
+ * configuration.  As such it should be taken just after the
+ * volume group is changed.  Only 1 backup file will exist.
+ * Typically backups will be stored in /etc/lvm/backups.
  */
 
 int archive_init(const char *dir,
@@ -31,6 +33,7 @@ void archive_exit(void);
 
 void archive_enable(int flag);
 int archive(struct volume_group *vg);
+int archive_display(const char *vg_name);
 
 int backup_init(const char *dir);
 void backup_exit(void);

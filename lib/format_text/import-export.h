@@ -26,6 +26,7 @@ int read_flags(uint32_t *status, int type, struct config_value *cv);
 
 int text_vg_export(FILE *fp, struct volume_group *vg, const char *desc);
 struct volume_group *text_vg_import(struct cmd_context *cmd, const char *file,
-				    struct uuid_map *um);
+				    struct uuid_map *um,
+				    time_t *when, char **desc);
 
 #endif

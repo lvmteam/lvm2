@@ -113,6 +113,11 @@ int archive(struct volume_group *vg)
 	return 1;
 }
 
+int archive_display(const char *vg_name)
+{
+	return archive_list(fid->cmd, the_um, _archive_params.dir, vg_name);
+}
+
 
 
 static struct {
