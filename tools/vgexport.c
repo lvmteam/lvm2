@@ -41,7 +41,7 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
 		goto error;
 	}
@@ -67,7 +67,7 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name)
 
 	vg->status |= EXPORTED_VG;
 
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+	if (!vg_write(vg))
 		goto error;
 
 	backup(vg);

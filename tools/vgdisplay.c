@@ -70,7 +70,7 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name)
 	/* FIXME Do the active check here if activevolumegroups_ARG ? */
 
 	log_very_verbose("Finding volume group \"%s\"", vg_name);
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}

@@ -70,6 +70,8 @@ struct config_info {
 	int archive;		/* should we archive ? */
 	int backup;		/* should we backup ? */
 
+	struct format_type *fmt;
+
 	mode_t umask;
 };
 
@@ -118,7 +120,6 @@ int main(int argc, char **argv)
 	char *namebase, *base;
 	int ret, alias = 0;
 
-	setlocale(LC_ALL, "");
 	if (!init())
 		return -1;
 
@@ -181,6 +182,20 @@ int yes_no_arg(struct arg *a)
 
 	else if (!strcmp(a->value, "n"))
 		a->i_value = 0;
+
+	else
+		return 0;
+
+	return 1;
+}
+
+int metadatatype_arg(struct arg *a)
+{
+	if (!strcasecmp(a->value, cmd->fmtt->name))
+		a->ptr = cmd->fmtt;
+
+	else if (!strcasecmp(a->value, cmd->fmt1->name))
+		a->ptr = cmd->fmt1;
 
 	else
 		return 0;
@@ -574,11 +589,11 @@ int version(struct cmd_context *cmd, int argc, char **argv)
 {
 	char version[80];
 
-	log_error("LVM version:     %s", LVM_VERSION);
+	log_print("LVM version:     %s", LVM_VERSION);
 	if (library_version(version, sizeof(version)))
-		log_error("Library version: %s", version);
+		log_print("Library version: %s", version);
 	if (driver_version(version, sizeof(version)))
-		log_error("Driver version:  %s", version);
+		log_print("Driver version:  %s", version);
 
 	return ECMD_PROCESSED;
 }
@@ -669,6 +684,8 @@ static void _use_settings(struct config_info *settings)
 
 	archive_enable(settings->archive);
 	backup_enable(settings->backup);
+
+	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG, settings->fmt);
 }
 
 static char *_copy_command_line(struct pool *mem, int argc, char **argv)
@@ -1048,7 +1065,11 @@ static int init(void)
 {
 	struct stat info;
 	char config_file[PATH_MAX] = "";
+	const char *format;
 	mode_t old_umask;
+
+	if (!setlocale(LC_ALL, ""))
+		log_error("setlocale failed");
 
 	if (!_get_env_vars())
 		return 0;
@@ -1139,8 +1160,19 @@ static int init(void)
 		return 0;
 	}
 
-	if (!(cmd->fid = create_lvm1_format(cmd)))
+	/* FIXME Replace with list, dynamic libs etc. */
+	if (!(cmd->fmt1 = create_lvm1_format(cmd)))
 		return 0;
+
+	if (!(cmd->fmtt = create_text_format(cmd)))
+		return 0;
+
+	format = find_config_str(cmd->cf->root, "global/format", '/',
+				 DEFAULT_FORMAT);
+	if (!strcasecmp(format, "text"))
+		_default_settings.fmt = cmd->fmtt;
+	else			/* "lvm1" */
+		_default_settings.fmt = cmd->fmt1;
 
 	_use_settings(&_default_settings);
 	return 1;
@@ -1161,7 +1193,8 @@ static void fin(void)
 	if (_dump_filter)
 		persistent_filter_dump(cmd->filter);
 
-	cmd->fid->ops->destroy(cmd->fid);
+	cmd->fmt1->ops->destroy(cmd->fmt1);
+	cmd->fmtt->ops->destroy(cmd->fmtt);
 	cmd->filter->destroy(cmd->filter);
 	pool_destroy(cmd->mem);
 	vgcache_destroy();

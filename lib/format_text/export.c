@@ -16,14 +16,13 @@
 #include <stdarg.h>
 #include <time.h>
 
-
 /*
  * The first half of this file deals with
  * exporting the vg, ie. writing it to a file.
  */
 struct formatter {
 	struct pool *mem;	/* pv names allocated from here */
-	struct hash_table *pv_names; /* dev_name -> pv_name (eg, pv1) */
+	struct hash_table *pv_names;	/* dev_name -> pv_name (eg, pv1) */
 
 	FILE *fp;		/* where we're writing to */
 	int indent;		/* current level of indentation */
@@ -34,16 +33,14 @@ struct formatter {
 /*
  * Formatting functions.
  */
-static void _out_size(struct formatter *f, uint64_t size,
-		      const char *fmt, ...)
-            __attribute__ (( format (printf, 3, 4) ));
+static void _out_size(struct formatter *f, uint64_t size, const char *fmt, ...)
+    __attribute__ ((format(printf, 3, 4)));
 
 static void _out_hint(struct formatter *f, const char *fmt, ...)
-            __attribute__ (( format (printf, 2, 3) ));
+    __attribute__ ((format(printf, 2, 3)));
 
 static void _out(struct formatter *f, const char *fmt, ...)
-            __attribute__ (( format (printf, 2, 3) ));
-
+    __attribute__ ((format(printf, 2, 3)));
 
 #define MAX_INDENT 5
 static void _inc_indent(struct formatter *f)
@@ -116,7 +113,7 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 		"Gigabytes",
 		"Terrabytes",
 		NULL
-		};
+	};
 
 	int i;
 	double d = (double) sectors;
@@ -124,7 +121,7 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 	/* to convert to K */
 	d /= 2.0;
 
-	for (i = 0; (d > 1024.0)  && _units[i]; i++)
+	for (i = 0; (d > 1024.0) && _units[i]; i++)
 		d /= 1024.0;
 
 	return lvm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
@@ -134,8 +131,7 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
  * Appends a comment giving a size in more easily
  * readable form (eg, 4M instead of 8096).
  */
-static void _out_size(struct formatter *f, uint64_t size,
-		      const char *fmt, ...)
+static void _out_size(struct formatter *f, uint64_t size, const char *fmt, ...)
 {
 	char buffer[64];
 	va_list ap;
@@ -200,6 +196,7 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 
 	_out(f, "id = \"%s\"", buffer);
 
+	_out(f, "seqno = %u", vg->seqno);
 	if (!print_flags(vg->status, VG_FLAGS, buffer, sizeof(buffer))) {
 		stack;
 		return 0;
@@ -219,12 +216,11 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
  * Get the pv%d name from the formatters hash
  * table.
  */
-static inline const char *
-_get_pv_name(struct formatter *f, struct physical_volume *pv)
+static inline const char *_get_pv_name(struct formatter *f,
+				       struct physical_volume *pv)
 {
 	return (pv) ? (const char *)
-		      hash_lookup(f->pv_names, dev_name(pv->dev)) :
-		      "Missing";
+	    hash_lookup(f->pv_names, dev_name(pv->dev)) : "Missing";
 }
 
 static int _print_pvs(struct formatter *f, struct volume_group *vg)
@@ -237,7 +233,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 	_out(f, "physical_volumes {");
 	_inc_indent(f);
 
-	list_iterate (pvh, &vg->pvs) {
+	list_iterate(pvh, &vg->pvs) {
 
 		pv = list_item(pvh, struct pv_list)->pv;
 
@@ -259,8 +255,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		_out_hint(f, "device = \"%s\"", dev_name(pv->dev));
 		_nl(f);
 
-		if (!print_flags(pv->status, PV_FLAGS,
-				 buffer, sizeof(buffer))) {
+		if (!print_flags(pv->status, PV_FLAGS, buffer, sizeof(buffer))) {
 			stack;
 			return 0;
 		}
@@ -324,8 +319,8 @@ static int _count_segments(struct logical_volume *lv)
 	int r = 0;
 	struct list *segh;
 
-	list_iterate (segh, &lv->segments)
-		r++;
+	list_iterate(segh, &lv->segments)
+	    r++;
 
 	return r;
 }
@@ -347,7 +342,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	_out(f, "logical_volumes {");
 	_inc_indent(f);
 
-	list_iterate (lvh, &vg->lvs) {
+	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
 		_nl(f);
@@ -362,8 +357,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 
 		_out(f, "id = \"%s\"", buffer);
 
-		if (!print_flags(lv->status, LV_FLAGS,
-				 buffer, sizeof(buffer))) {
+		if (!print_flags(lv->status, LV_FLAGS, buffer, sizeof(buffer))) {
 			stack;
 			return 0;
 		}
@@ -376,7 +370,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 		_nl(f);
 
 		seg_count = 1;
-		list_iterate (segh, &lv->segments) {
+		list_iterate(segh, &lv->segments) {
 			seg = list_item(segh, struct stripe_segment);
 
 			if (!_print_segment(f, vg, seg_count++, seg)) {
@@ -428,7 +422,7 @@ static int _print_snapshots(struct formatter *f, struct volume_group *vg)
 	_out(f, "snapshots {");
 	_inc_indent(f);
 
-	list_iterate (sh, &vg->snapshots) {
+	list_iterate(sh, &vg->snapshots) {
 		s = list_item(sh, struct snapshot_list)->snapshot;
 
 		if (!_print_snapshot(f, s, count++)) {
@@ -448,8 +442,7 @@ static int _print_snapshots(struct formatter *f, struct volume_group *vg)
  * 'pv2' etc.  This function builds a hash table
  * to enable a quick lookup from device -> name.
  */
-static int _build_pv_names(struct formatter *f,
-			   struct volume_group *vg)
+static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 {
 	int count = 0;
 	struct list *pvh;
@@ -466,11 +459,10 @@ static int _build_pv_names(struct formatter *f,
 		goto bad;
 	}
 
-	list_iterate (pvh, &vg->pvs) {
+	list_iterate(pvh, &vg->pvs) {
 		pv = list_item(pvh, struct pv_list)->pv;
 
-		if (lvm_snprintf(buffer, sizeof(buffer),
-				 "pv%d", count++) < 0) {
+		if (lvm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0) {
 			stack;
 			goto bad;
 		}
@@ -488,7 +480,7 @@ static int _build_pv_names(struct formatter *f,
 
 	return 1;
 
- bad:
+      bad:
 	if (f->mem)
 		pool_destroy(f->mem);
 
@@ -498,7 +490,7 @@ static int _build_pv_names(struct formatter *f,
 	return 0;
 }
 
-int text_vg_export(FILE *fp, struct volume_group *vg, const char *desc)
+int text_vg_export(FILE * fp, struct volume_group *vg, const char *desc)
 {
 	int r = 0;
 	struct formatter *f;
@@ -516,7 +508,6 @@ int text_vg_export(FILE *fp, struct volume_group *vg, const char *desc)
 		stack;
 		goto out;
 	}
-
 #define fail do {stack; goto out;} while(0)
 
 	if (!_print_header(f, vg, desc))
@@ -546,7 +537,7 @@ int text_vg_export(FILE *fp, struct volume_group *vg, const char *desc)
 	_out(f, "}");
 	r = !ferror(f->fp);
 
- out:
+      out:
 	if (f->mem)
 		pool_destroy(f->mem);
 

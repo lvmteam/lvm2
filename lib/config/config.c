@@ -18,34 +18,34 @@
 #include "log.h"
 
 enum {
-        TOK_INT,
-        TOK_FLOAT,
-        TOK_STRING,
-        TOK_EQ,
-        TOK_SECTION_B,
-        TOK_SECTION_E,
-        TOK_ARRAY_B,
-        TOK_ARRAY_E,
-        TOK_IDENTIFIER,
+	TOK_INT,
+	TOK_FLOAT,
+	TOK_STRING,
+	TOK_EQ,
+	TOK_SECTION_B,
+	TOK_SECTION_E,
+	TOK_ARRAY_B,
+	TOK_ARRAY_E,
+	TOK_IDENTIFIER,
 	TOK_COMMA,
 	TOK_EOF
 };
 
 struct parser {
-        const char *fb, *fe;    /* file limits */
+	const char *fb, *fe;	/* file limits */
 
-        int t;                  /* token limits and type */
-        const char *tb, *te;
+	int t;			/* token limits and type */
+	const char *tb, *te;
 
-        int fd;                 /* descriptor for file being parsed */
+	int fd;			/* descriptor for file being parsed */
 	int line;		/* line number we are on */
 
-        struct pool *mem;
+	struct pool *mem;
 };
 
 struct cs {
-        struct config_file cf;
-        struct pool *mem;
+	struct config_file cf;
+	struct pool *mem;
 };
 
 static void _get_token(struct parser *p);
@@ -68,7 +68,6 @@ static char *_dup_tok(struct parser *p);
    } \
 } while(0);
 
-
 static int _tok_match(const char *str, const char *b, const char *e)
 {
 	while (*str && (b != e)) {
@@ -79,88 +78,92 @@ static int _tok_match(const char *str, const char *b, const char *e)
 	return !(*str || (b != e));
 }
 
-
 /*
  * public interface
  */
 struct config_file *create_config_file(void)
 {
-        struct cs *c;
-        struct pool *mem = pool_create(10 * 1024);
+	struct cs *c;
+	struct pool *mem = pool_create(10 * 1024);
 
-        if (!mem) {
-                stack;
-                return 0;
-        }
+	if (!mem) {
+		stack;
+		return 0;
+	}
 
-        if (!(c = pool_alloc(mem, sizeof(*c)))) {
-                stack;
-                pool_destroy(mem);
-                return 0;
-        }
+	if (!(c = pool_alloc(mem, sizeof(*c)))) {
+		stack;
+		pool_destroy(mem);
+		return 0;
+	}
 
-        c->mem = mem;
-	c->cf.root = (struct config_node *)NULL;
-        return &c->cf;
+	c->mem = mem;
+	c->cf.root = (struct config_node *) NULL;
+	return &c->cf;
 }
 
 void destroy_config_file(struct config_file *cf)
 {
-        pool_destroy(((struct cs *) cf)->mem);
+	pool_destroy(((struct cs *) cf)->mem);
 }
 
 int read_config(struct config_file *cf, const char *file)
 {
 	struct cs *c = (struct cs *) cf;
-        struct parser *p;
-        struct stat info;
-        int r = 1, fd;
+	struct parser *p;
+	struct stat info;
+	int r = 1, fd;
 
-        if (!(p = pool_alloc(c->mem, sizeof(*p)))) {
-                stack;
-                return 0;
-        }
+	if (!(p = pool_alloc(c->mem, sizeof(*p)))) {
+		stack;
+		return 0;
+	}
 	p->mem = c->mem;
 
-        /* memory map the file */
-        if (stat(file, &info) || S_ISDIR(info.st_mode)) {
-                log_sys_error("stat", file);
-                return 0;
-        }
+	/* memory map the file */
+	if (stat(file, &info) || S_ISDIR(info.st_mode)) {
+		log_sys_error("stat", file);
+		return 0;
+	}
 
-        if ((fd = open(file, O_RDONLY)) < 0) {
-                log_sys_error("open", file);
-                return 0;
-        }
+	if (info.st_size == 0) {
+		log_verbose("%s is empty", file);
+		return 1;
+	}
 
-        p->fb = mmap((caddr_t) 0, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-        if (p->fb == MAP_FAILED) {
-                log_sys_error("mmap", file);
-                close(fd);
-                return 0;
-        }
-        p->fe = p->fb + info.st_size;
+	if ((fd = open(file, O_RDONLY)) < 0) {
+		log_sys_error("open", file);
+		return 0;
+	}
 
-        /* parse */
-        p->tb = p->te = p->fb;
+	p->fb = mmap((caddr_t) 0, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (p->fb == (caddr_t) (-1)) {
+		log_sys_error("mmap", file);
+		close(fd);
+		return 0;
+	}
+	p->fe = p->fb + info.st_size;
+
+	/* parse */
+	p->tb = p->te = p->fb;
 	p->line = 1;
 	_get_token(p);
-        if (!(cf->root = _file(p))) {
-                stack;
-                r = 0;
-        }
+	if (!(cf->root = _file(p))) {
+		stack;
+		r = 0;
+	}
 
-        /* unmap the file */
-        if (munmap((char *) p->fb, info.st_size)) {
-                log_sys_error("munmap", file);
-                r = 0;
-        }
+	/* unmap the file */
+	if (munmap((char *) p->fb, info.st_size)) {
+		log_sys_error("munmap", file);
+		r = 0;
+	}
 
-        close(fd);
-        return r;
+	close(fd);
+	return r;
 }
 
-static void _write_value(FILE *fp, struct config_value *v)
+static void _write_value(FILE * fp, struct config_value *v)
 {
 	switch (v->type) {
 	case CFG_STRING:
@@ -177,21 +180,21 @@ static void _write_value(FILE *fp, struct config_value *v)
 	}
 }
 
-static int _write_config(struct config_node *n, FILE *fp, int level)
+static int _write_config(struct config_node *n, FILE * fp, int level)
 {
-        char space[MAX_INDENT + 1];
-        int l = (level < MAX_INDENT) ? level : MAX_INDENT;
-        int i;
+	char space[MAX_INDENT + 1];
+	int l = (level < MAX_INDENT) ? level : MAX_INDENT;
+	int i;
 
 	if (!n)
 		return 1;
 
-        for (i = 0; i < l; i++)
-                space[i] = ' ';
-        space[i] = '\0';
+	for (i = 0; i < l; i++)
+		space[i] = ' ';
+	space[i] = '\0';
 
-        while (n) {
-                fprintf(fp, "%s%s", space, n->key);
+	while (n) {
+		fprintf(fp, "%s%s", space, n->key);
 		if (!n->v) {
 			/* it's a sub section */
 			fprintf(fp, " {\n");
@@ -214,8 +217,8 @@ static int _write_config(struct config_node *n, FILE *fp, int level)
 				_write_value(fp, v);
 		}
 		fprintf(fp, "\n");
-                n = n->sib;
-        }
+		n = n->sib;
+	}
 	/* FIXME: add error checking */
 	return 1;
 }
@@ -223,17 +226,17 @@ static int _write_config(struct config_node *n, FILE *fp, int level)
 int write_config(struct config_file *cf, const char *file)
 {
 	int r = 1;
-        FILE *fp = fopen(file, "w");
-        if (!fp) {
-                log_sys_error("open", file);
-                return 0;
-        }
+	FILE *fp = fopen(file, "w");
+	if (!fp) {
+		log_sys_error("open", file);
+		return 0;
+	}
 
-        if (!_write_config(cf->root, fp, 0)) {
+	if (!_write_config(cf->root, fp, 0)) {
 		stack;
 		r = 0;
 	}
-        fclose(fp);
+	fclose(fp);
 	return r;
 }
 
@@ -260,7 +263,7 @@ static struct config_node *_file(struct parser *p)
 
 static struct config_node *_section(struct parser *p)
 {
-        /* IDENTIFIER '{' VALUE* '}' */
+	/* IDENTIFIER '{' VALUE* '}' */
 	struct config_node *root, *n, *l = NULL;
 	if (!(root = _create_node(p))) {
 		stack;
@@ -272,7 +275,7 @@ static struct config_node *_section(struct parser *p)
 		return 0;
 	}
 
-        match (TOK_IDENTIFIER);
+	match(TOK_IDENTIFIER);
 
 	if (p->t == TOK_SECTION_B) {
 		match(TOK_SECTION_B);
@@ -297,17 +300,17 @@ static struct config_node *_section(struct parser *p)
 		}
 	}
 
-        return root;
+	return root;
 }
 
 static struct config_value *_value(struct parser *p)
 {
-        /* '[' TYPE* ']' | TYPE */
+	/* '[' TYPE* ']' | TYPE */
 	struct config_value *h = 0, *l, *ll = 0;
-        if (p->t == TOK_ARRAY_B) {
-                match (TOK_ARRAY_B);
-                while (p->t != TOK_ARRAY_E) {
-                        if (!(l = _type(p))) {
+	if (p->t == TOK_ARRAY_B) {
+		match(TOK_ARRAY_B);
+		while (p->t != TOK_ARRAY_E) {
+			if (!(l = _type(p))) {
 				stack;
 				return 0;
 			}
@@ -321,48 +324,48 @@ static struct config_value *_value(struct parser *p)
 			if (p->t == TOK_COMMA)
 				match(TOK_COMMA);
 		}
-                match(TOK_ARRAY_E);
-        } else
+		match(TOK_ARRAY_E);
+	} else
 		h = _type(p);
 
-        return h;
+	return h;
 }
 
 static struct config_value *_type(struct parser *p)
 {
-        /* [0-9]+ | [0-9]*\.[0-9]* | ".*" */
+	/* [0-9]+ | [0-9]*\.[0-9]* | ".*" */
 	struct config_value *v = _create_value(p);
 
-        switch (p->t) {
-        case TOK_INT:
+	switch (p->t) {
+	case TOK_INT:
 		v->type = CFG_INT;
-		v->v.i = strtol(p->tb, 0, 0); /* FIXME: check error */
-                match(TOK_INT);
-                break;
+		v->v.i = strtol(p->tb, 0, 0);	/* FIXME: check error */
+		match(TOK_INT);
+		break;
 
-        case TOK_FLOAT:
+	case TOK_FLOAT:
 		v->type = CFG_FLOAT;
-		v->v.r = strtod(p->tb, 0); /* FIXME: check error */
-                match(TOK_FLOAT);
-                break;
+		v->v.r = strtod(p->tb, 0);	/* FIXME: check error */
+		match(TOK_FLOAT);
+		break;
 
-        case TOK_STRING:
+	case TOK_STRING:
 		v->type = CFG_STRING;
 
-		p->tb++, p->te--; /* strip "'s */
+		p->tb++, p->te--;	/* strip "'s */
 		if (!(v->v.str = _dup_tok(p))) {
 			stack;
 			return 0;
 		}
 		p->te++;
-                match(TOK_STRING);
-                break;
+		match(TOK_STRING);
+		break;
 
-        default:
+	default:
 		log_error("Parse error at line %d: expected a value", p->line);
-                return 0;
-        }
-        return v;
+		return 0;
+	}
+	return v;
 }
 
 static int _match_aux(struct parser *p, int t)
@@ -379,106 +382,114 @@ static int _match_aux(struct parser *p, int t)
  */
 static void _get_token(struct parser *p)
 {
-        p->tb = p->te;
-        _eat_space(p);
-        if (p->tb == p->fe) {
+	p->tb = p->te;
+	_eat_space(p);
+	if (p->tb == p->fe) {
 		p->t = TOK_EOF;
 		return;
 	}
 
-        p->t = TOK_INT;         /* fudge so the fall through for
-                                   floats works */
-        switch (*p->te) {
-        case '{':
-                p->t = TOK_SECTION_B;
-                p->te++;
-                break;
-
-        case '}':
-                p->t = TOK_SECTION_E;
-                p->te++;
-                break;
-
-        case '[':
-                p->t = TOK_ARRAY_B;
-                p->te++;
-                break;
-
-        case ']':
-                p->t = TOK_ARRAY_E;
-                p->te++;
-                break;
-
-        case ',':
-                p->t = TOK_COMMA;
-                p->te++;
-                break;
-
-        case '=':
-                p->t = TOK_EQ;
-                p->te++;
-                break;
-
-        case '"':
-                p->t = TOK_STRING;
+	p->t = TOK_INT;		/* fudge so the fall through for
+				   floats works */
+	switch (*p->te) {
+	case '{':
+		p->t = TOK_SECTION_B;
 		p->te++;
-                while ((p->te != p->fe) && (*p->te != '"')) {
-                        if ((*p->te == '\\') && (p->te + 1 != p->fe))
-                                p->te++;
-                        p->te++;
-                }
+		break;
 
-                if (p->te != p->fe)
-                        p->te++;
-                break;
+	case '}':
+		p->t = TOK_SECTION_E;
+		p->te++;
+		break;
 
-        case '.':
-                p->t = TOK_FLOAT;
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
-                p->te++;
-                while (p->te != p->fe) {
-                        if (*p->te == '.') {
-                                if (p->t == TOK_FLOAT)
-                                        break;
-                                p->t = TOK_FLOAT;
-                        } else if (!isdigit((int) *p->te))
-                                break;
-                        p->te++;
-                }
-                break;
+	case '[':
+		p->t = TOK_ARRAY_B;
+		p->te++;
+		break;
 
-        default:
-                p->t = TOK_IDENTIFIER;
-                while ((p->te != p->fe) && !isspace(*p->te) &&
-		      (*p->te != '#') && (*p->te != '='))
-                        p->te++;
-                break;
-        }
+	case ']':
+		p->t = TOK_ARRAY_E;
+		p->te++;
+		break;
+
+	case ',':
+		p->t = TOK_COMMA;
+		p->te++;
+		break;
+
+	case '=':
+		p->t = TOK_EQ;
+		p->te++;
+		break;
+
+	case '"':
+		p->t = TOK_STRING;
+		p->te++;
+		while ((p->te != p->fe) && (*p->te != '"')) {
+			if ((*p->te == '\\') && (p->te + 1 != p->fe))
+				p->te++;
+			p->te++;
+		}
+
+		if (p->te != p->fe)
+			p->te++;
+		break;
+
+	case '.':
+		p->t = TOK_FLOAT;
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		p->te++;
+		while (p->te != p->fe) {
+			if (*p->te == '.') {
+				if (p->t == TOK_FLOAT)
+					break;
+				p->t = TOK_FLOAT;
+			} else if (!isdigit((int) *p->te))
+				break;
+			p->te++;
+		}
+		break;
+
+	default:
+		p->t = TOK_IDENTIFIER;
+		while ((p->te != p->fe) && !isspace(*p->te) &&
+		       (*p->te != '#') && (*p->te != '='))
+			p->te++;
+		break;
+	}
 }
 
 static void _eat_space(struct parser *p)
 {
-        while (p->tb != p->fe) {
-                if (*p->te == '#') {
-                        while ((p->te != p->fe) && (*p->te != '\n'))
-                                p->te++;
+	while (p->tb != p->fe) {
+		if (*p->te == '#') {
+			while ((p->te != p->fe) && (*p->te != '\n'))
+				p->te++;
 			p->line++;
 		}
 
 		else if (isspace(*p->te)) {
-                        while ((p->te != p->fe) && isspace(*p->te)) {
+			while ((p->te != p->fe) && isspace(*p->te)) {
 				if (*p->te == '\n')
 					p->line++;
-                                p->te++;
+				p->te++;
 			}
 		}
 
-                else
-                        return;
+		else
+			return;
 
-                p->tb = p->te;
-        }
+		p->tb = p->te;
+	}
 }
 
 /*
@@ -525,8 +536,7 @@ struct config_node *find_config_node(struct config_node *cn,
 			path++;
 
 		/* find the end of this segment */
-		for (e = path; *e && (*e != sep); e++)
-			;
+		for (e = path; *e && (*e != sep); e++) ;
 
 		/* hunt for the node */
 		while (cn) {
@@ -547,20 +557,20 @@ struct config_node *find_config_node(struct config_node *cn,
 	return cn;
 }
 
-const char *
-find_config_str(struct config_node *cn,
-		const char *path, char sep, const char *fail)
+const char *find_config_str(struct config_node *cn,
+			    const char *path, char sep, const char *fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
 
 	if (n && n->v->type == CFG_STRING) {
-		log_very_verbose("Setting %s to %s", path, n->v->v.str);
+		if (*n->v->v.str)
+			log_very_verbose("Setting %s to %s", path, n->v->v.str);
 		return n->v->v.str;
 	}
 
 	if (fail)
 		log_very_verbose("%s not found in config: defaulting to %s",
-			  path, fail);
+				 path, fail);
 	return fail;
 }
 
@@ -574,7 +584,7 @@ int find_config_int(struct config_node *cn, const char *path,
 		return n->v->v.i;
 	}
 
-	log_very_verbose("%s not found in config: defaulting to %d", 
+	log_very_verbose("%s not found in config: defaulting to %d",
 			 path, fail);
 	return fail;
 }
@@ -590,7 +600,7 @@ float find_config_float(struct config_node *cn, const char *path,
 	}
 
 	log_very_verbose("%s not found in config: defaulting to %f",
-		  path, fail);
+			 path, fail);
 
 	return fail;
 
@@ -609,8 +619,9 @@ static int _str_in_array(const char *str, const char *values[])
 
 static int _str_to_bool(const char *str, int fail)
 {
-	static const char *_true_values[] = {"y", "yes", "on", "true", NULL};
-	static const char *_false_values[] = {"n", "no", "off", "false", NULL};
+	static const char *_true_values[] = { "y", "yes", "on", "true", NULL };
+	static const char *_false_values[] =
+	    { "n", "no", "off", "false", NULL };
 
 	if (_str_in_array(str, _true_values))
 		return 1;
@@ -622,7 +633,7 @@ static int _str_to_bool(const char *str, int fail)
 }
 
 int find_config_bool(struct config_node *cn, const char *path,
-		    char sep, int fail)
+		     char sep, int fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
 	struct config_value *v;
@@ -644,7 +655,7 @@ int find_config_bool(struct config_node *cn, const char *path,
 }
 
 int get_config_uint32(struct config_node *cn, const char *path,
-		    char sep, uint32_t *result)
+		      char sep, uint32_t * result)
 {
 	struct config_node *n;
 
@@ -658,7 +669,7 @@ int get_config_uint32(struct config_node *cn, const char *path,
 }
 
 int get_config_uint64(struct config_node *cn, const char *path,
-		    char sep, uint64_t *result)
+		      char sep, uint64_t * result)
 {
 	struct config_node *n;
 
@@ -671,4 +682,3 @@ int get_config_uint64(struct config_node *cn, const char *path,
 	*result = (uint64_t) n->v->v.i;
 	return 1;
 }
-

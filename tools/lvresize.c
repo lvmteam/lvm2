@@ -29,6 +29,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	uint32_t size = 0;
 	uint32_t stripes = 0, stripesize = 0;
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size = 0;
+	uint32_t extents_used = 0;
 	uint32_t size_rest;
 	sign_t sign = SIGN_NONE;
 	char *lv_name, *vg_name;
@@ -76,16 +77,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, stripes_ARG)) {
-		log_print("Varied striping not yet supported. Ignoring.");
-		/* FUTURE stripes = arg_int_value(cmd,stripes_ARG, 1); */
-	}
-
-	if (arg_count(cmd, stripesize_ARG)) {
-		log_print("Varied stripesize not yet supported. Ignoring.");
-		/* FUTURE stripesize = 2 * arg_int_value(cmd,stripesize_ARG, 0); */
-	}
-
 	if (!argc) {
 		log_error("Please provide the logical volume name");
 		return EINVALID_CMD_LINE;
@@ -95,7 +86,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 	argc--;
 
-	if (!(vg_name = extract_vgname(cmd->fid, lv_name))) {
+	if (!(vg_name = extract_vgname(cmd, lv_name))) {
 		log_error("Please provide a volume group name");
 		return EINVALID_CMD_LINE;
 	}
@@ -110,7 +101,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		goto error;
 	}
@@ -130,6 +121,20 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Logical volume %s not found in volume group %s",
 			  lv_name, vg_name);
 		goto error;
+	}
+
+	if (arg_count(cmd, stripes_ARG)) {
+		if (vg->fid->fmt->features & FMT_SEGMENTS)
+			stripes = arg_int_value(cmd, stripes_ARG, 1);
+		else
+			log_print("Varied striping not supported. Ignoring.");
+	}
+
+	if (arg_count(cmd, stripesize_ARG)) {
+		if (vg->fid->fmt->features & FMT_SEGMENTS)
+			stripesize = 2 * arg_int_value(cmd, stripesize_ARG, 0);
+		else
+			log_print("Varied stripesize not supported. Ignoring.");
 	}
 
 	lv = lvl->lv;
@@ -179,6 +184,8 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		goto error_cmdline;
 	}
 
+	seg_size = extents - lv->le_count;
+
 	/* If extending, find stripes, stripesize & size of last segment */
 	if (extents > lv->le_count &&
 	    !(stripes == 1 || (stripes > 1 && stripesize))) {
@@ -205,15 +212,22 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		if (!stripes)
 			stripes = seg_stripes;
 
-		if (!stripesize && stripes > 1)
-			stripesize = seg_stripesize;
-
-		seg_size = extents - lv->le_count;
+		if (!stripesize && stripes > 1) {
+			if (seg_stripesize) {
+				log_print("Using stripesize of last segment "
+					  "%dKB", seg_stripesize / 2);
+				stripesize = seg_stripesize;
+			} else {
+				log_print("Using default stripesize %dKB",
+					  STRIPE_SIZE_DEFAULT);
+				stripesize = 2 * STRIPE_SIZE_DEFAULT;
+			}
+		}
 	}
 
 	/* If reducing, find stripes, stripesize & size of last segment */
 	if (extents < lv->le_count) {
-		uint32_t extents_used = 0;
+		extents_used = 0;
 
 		if (stripes || stripesize)
 			log_error("Ignoring stripes and stripesize arguments "
@@ -240,9 +254,12 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		stripes = seg_stripes;
 	}
 
-	if ((size_rest = seg_size % stripes)) {
+	if (stripes > 1 && !stripesize) {
+		log_error("Stripesize for striped segment should not be 0!");
+	} else if ((stripes > 1) &&
+		   (size_rest = seg_size % (stripes * stripesize))) {
 		log_print("Rounding size (%d extents) down to stripe boundary "
-			  "size of last segment (%d extents)", extents,
+			  "size for segment (%d extents)", extents,
 			  extents - size_rest);
 		extents = extents - size_rest;
 	}
@@ -277,16 +294,17 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		if (argc)
 			log_print("Ignoring PVs on command line when reducing");
 
-		if (!lv_info(lv, &info)) {
-			stack;
+		memset(&info, 0, sizeof(info));
+
+		if (!lv_info(lv, &info) && driver_version(NULL, 0)) {
+			log_error("lv_info failed: aborting");
 			goto error;
 		}
 
 		if (info.exists) {
-			dummy =
-			    display_size((uint64_t)
-					 extents * (vg->extent_size / 2),
-					 SIZE_SHORT);
+			dummy = display_size((uint64_t)
+					     extents * (vg->extent_size / 2),
+					     SIZE_SHORT);
 			log_print("WARNING: Reducing active%s logical volume "
 				  "to %s", info.open_count ? " and open" : "",
 				  dummy);
@@ -308,7 +326,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		if (!archive(vg))
 			goto error;
 
-		if (!lv_reduce(cmd->fid, lv, lv->le_count - extents))
+		if (!lv_reduce(vg->fid, lv, lv->le_count - extents))
 			goto error;
 	}
 
@@ -332,7 +350,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		log_print("Extending logical volume %s to %s", lv_name, dummy);
 		dbg_free(dummy);
 
-		if (!lv_extend(cmd->fid, lv, stripes, stripesize,
+		if (!lv_extend(vg->fid, lv, stripes, stripesize,
 			       extents - lv->le_count, pvh))
 			goto error;
 	}
@@ -343,7 +361,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* store vg on disk(s) */
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
+	if (!vg_write(vg)) {
 		/* FIXME: Attempt reversion? */
 		unlock_lv(cmd, lv->lvid.s);
 		goto error;

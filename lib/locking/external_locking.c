@@ -25,39 +25,39 @@
 #include <signal.h>
 
 static void *locking_module = NULL;
-static void (*end_fn)(void) = NULL;
-static int  (*lock_fn)(struct cmd_context *cmd, const char *resource, int flags) = NULL;
-static int  (*init_fn)(int type, struct config_file *cf) = NULL;
+static void (*end_fn) (void) = NULL;
+static int (*lock_fn) (struct cmd_context * cmd, const char *resource,
+		       int flags) = NULL;
+static int (*init_fn) (int type, struct config_file * cf) = NULL;
 
-static int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
+static int lock_resource(struct cmd_context *cmd, const char *resource,
+			 int flags)
 {
-    if (lock_fn)
-	return lock_fn(cmd, resource, flags);
-    else
-	return 0;
+	if (lock_fn)
+		return lock_fn(cmd, resource, flags);
+	else
+		return 0;
 }
-
 
 static void fin_external_locking(void)
 {
-    if (end_fn)
-	end_fn();
+	if (end_fn)
+		end_fn();
 
-    dlclose(locking_module);
+	dlclose(locking_module);
 
-    locking_module = NULL;
-    end_fn = NULL;
-    lock_fn = NULL;
+	locking_module = NULL;
+	end_fn = NULL;
+	lock_fn = NULL;
 }
 
 int init_external_locking(struct locking_type *locking, struct config_file *cf)
 {
-        char _lock_lib[PATH_MAX];
+	char _lock_lib[PATH_MAX];
 
-	if (locking_module)
-	{
-	    log_error("External locking already initialised\n");
-	    return 1;
+	if (locking_module) {
+		log_error("External locking already initialised");
+		return 1;
 	}
 	locking->lock_resource = lock_resource;
 	locking->fin_locking = fin_external_locking;
@@ -67,51 +67,47 @@ int init_external_locking(struct locking_type *locking, struct config_file *cf)
 					   '/', "lvm2_locking.so"),
 		sizeof(_lock_lib));
 
-
 	/* If there is a module_dir in the config file then
 	   look for the locking module in there first and then
 	   using the normal dlopen(3) mechanism of looking
 	   down LD_LIBRARY_PATH and /lib, /usr/lib.
 	   If course, if the library name starts with a slash then
 	   just use the name... */
-	if (_lock_lib[0] != '/')
-	{
-	    struct stat st;
-	    char _lock_lib1[PATH_MAX];
+	if (_lock_lib[0] != '/') {
+		struct stat st;
+		char _lock_lib1[PATH_MAX];
 
-	    lvm_snprintf(_lock_lib1, sizeof(_lock_lib1),
-			 "%s/%s",
-			 find_config_str(cf->root, "global/module_dir",
-					 '/', "RUBBISH"),
-			 _lock_lib);
+		lvm_snprintf(_lock_lib1, sizeof(_lock_lib1),
+			     "%s/%s",
+			     find_config_str(cf->root, "global/module_dir",
+					     '/', "RUBBISH"), _lock_lib);
 
-	    /* Does it exist ? */
-	    if (stat(_lock_lib1, &st) == 0)
-	    {
-		strcpy(_lock_lib, _lock_lib1);
-	    }
+		/* Does it exist ? */
+		if (stat(_lock_lib1, &st) == 0) {
+			strcpy(_lock_lib, _lock_lib1);
+		}
 	}
 
 	log_very_verbose("Opening locking library %s", _lock_lib);
 
 	locking_module = dlopen(_lock_lib, RTLD_LAZY);
-	if (!locking_module)
-	{
-	    log_error("Unable to open external locking module %s\n", _lock_lib);
-	    return 0;
+	if (!locking_module) {
+		log_error("Unable to open external locking module %s",
+			  _lock_lib);
+		return 0;
 	}
 
 	/* Get the functions we need */
 	init_fn = dlsym(locking_module, "init_locking");
 	lock_fn = dlsym(locking_module, "lock_resource");
-	end_fn  = dlsym(locking_module, "end_locking");
+	end_fn = dlsym(locking_module, "end_locking");
 
 	/* Are they all there ? */
-	if (!end_fn || !init_fn || !lock_fn)
-	{
-	    log_error("shared library %s does not contain locking functions\n", _lock_lib);
-	    dlclose(locking_module);
-	    return 0;
+	if (!end_fn || !init_fn || !lock_fn) {
+		log_error ("Shared library %s does not contain locking "
+			   "functions", _lock_lib);
+		dlclose(locking_module);
+		return 0;
 	}
 
 	log_verbose("Opened external locking module %s", _lock_lib);

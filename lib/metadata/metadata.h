@@ -23,6 +23,7 @@
 #define STRIPE_SIZE_MIN ( PAGE_SIZE/SECTOR_SIZE)     /* PAGESIZE in sectors */
 #define STRIPE_SIZE_MAX ( 512L * 1024 / SECTOR_SIZE) /* 512 KB in sectors */
 #define PV_MIN_SIZE ( 512L * 1024 / SECTOR_SIZE) /* 512 KB in sectors */
+#define PE_ALIGN (65536UL / SECTOR_SIZE) /* PE alignment */
 
 
 /* Various flags */
@@ -51,10 +52,15 @@
 #define ALLOC_STRICT		0x00002000  /* LV */
 #define ALLOC_CONTIGUOUS	0x00004000  /* LV */
 
+#define FMT_SEGMENTS		0x00000001 /* Arbitrary segment parameters? */
+
+#define FMT_TEXT_NAME		"text"
+#define FMT_LVM1_NAME		"lvm1"
 
 struct physical_volume {
         struct id id;
 	struct device *dev;
+	struct format_instance *fid;
 	char *vg_name;
 
         uint32_t status;
@@ -64,13 +70,33 @@ struct physical_volume {
         uint64_t pe_size;
         uint64_t pe_start;
         uint32_t pe_count;
-        uint32_t pe_allocated;	/* FIXME: change the name to alloc_count ? */
+        uint32_t pe_alloc_count;
 };
 
 struct cmd_context;
 
+struct format_type {
+	struct cmd_context *cmd;
+	struct format_handler *ops;
+	const char *name;
+	uint32_t features;
+	void *private;
+};
+
+struct metadata_area {
+	struct list list;
+	void *metadata_locn;
+};
+
+struct format_instance {
+	struct format_type *fmt;
+	struct list metadata_areas;	/* e.g. metadata locations */
+};
+
 struct volume_group {
 	struct cmd_context *cmd;
+	struct format_instance *fid;
+	uint32_t seqno;			/* Metadata sequence number */
 
 	struct id id;
 	char *name;
@@ -159,11 +185,6 @@ struct snapshot_list {
 	struct snapshot *snapshot;
 };
 
-struct format_instance {
-	struct cmd_context *cmd;
-	struct format_handler *ops;
-	void *private;
-};
 
 
 /*
@@ -173,18 +194,19 @@ struct format_handler {
 	/*
 	 * Returns a name_list of vg's.
 	 */
-	struct list *(*get_vgs)(struct format_instance *fi);
+	struct list *(*get_vgs)(struct format_type *fmt, struct list *names);
 
 	/*
 	 * Returns pv_list of fully-populated pv structures.
 	 */
-	struct list *(*get_pvs)(struct format_instance *fi);
+	struct list *(*get_pvs)(struct format_type *fmt, struct list *results);
 
 	/*
 	 * Return PV with given path.
 	 */
-	struct physical_volume *(*pv_read)(struct format_instance *fi,
-					   const char *pv_name);
+	int (*pv_read)(struct format_type *fmt,
+					   const char *pv_name,
+					   struct physical_volume *pv);
 
 	/*
 	 * Tweak an already filled out a pv ready for importing into a
@@ -197,8 +219,10 @@ struct format_handler {
 	 * Write a PV structure to disk. Fails if the PV is in a VG ie
 	 * pv->vg_name must be null.
 	 */
-	int (*pv_write)(struct format_instance *fi,
-			struct physical_volume *pv);
+	int (*pv_write)(struct format_instance *fi, struct physical_volume *pv,
+			void *mdl);
+	int (*pv_commit)(struct format_instance *fid,
+			 struct physical_volume *pv, void *mdl);
 
 	/*
 	 * Tweak an already filled out a lv eg, check there
@@ -211,13 +235,16 @@ struct format_handler {
 	 * specific.
 	 */
 	int (*vg_setup)(struct format_instance *fi, struct volume_group *vg);
+	int (*vg_remove)(struct format_instance *fi, struct volume_group *vg,
+			 void *mdl);
 
 	/*
 	 * The name may be prefixed with the dev_dir from the
 	 * job_context.
+	 * mdl is the metadata location to use
 	 */
 	struct volume_group *(*vg_read)(struct format_instance *fi,
-					const char *vg_name);
+					const char *vg_name, void *mdl);
 
 	/*
 	 * Write out complete VG metadata.  You must ensure internal
@@ -233,25 +260,50 @@ struct format_handler {
 	 * in the volume_group structure it is handed. Note: format1
 	 * does read all pv's currently.
 	 */
-	int (*vg_write)(struct format_instance *fi, struct volume_group *vg);
+	int (*vg_write)(struct format_instance *fid, struct volume_group *vg,
+			void *mdl);
+
+	int (*vg_commit)(struct format_instance *fid, struct volume_group *vg,
+			void *mdl);
+	/*
+	 * Create format instance with a particular metadata area
+	 */
+	struct format_instance *(*create_instance)(struct format_type *fmt,
+						   const char *vgname,
+						   void *context);
 
 	/*
-	 * Destructor for this object.
+	 * Destructor for format instance
 	 */
-	void (*destroy)(struct format_instance *fi);
+	void (*destroy_instance)(struct format_instance *fid);
+
+	/*
+	 * Destructor for format type
+	 */
+	void (*destroy)(struct format_type *fmt);
 };
 
 /*
  * Utility functions
  */
+int vg_write(struct volume_group *vg);
+struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name);
+struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid);
+struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name);
+struct list *get_pvs(struct cmd_context *cmd);
+struct list *get_vgs(struct cmd_context *cmd);
+int pv_write(struct cmd_context *cmd, struct physical_volume *pv);
+
+
 struct physical_volume *pv_create(struct format_instance *fi,
 				  const char *name,
 				  struct id *id,
 				  uint64_t size);
 
-struct volume_group *vg_create(struct format_instance *fi, const char *name,
+struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t extent_size, int max_pv, int max_lv,
 			       int pv_count, char **pv_names);
+int vg_remove(struct volume_group *vg);
 
 /*
  * This needs the format instance to check the
@@ -341,6 +393,7 @@ int lv_is_origin(struct logical_volume *lv);
 int lv_is_cow(struct logical_volume *lv);
 
 struct snapshot *find_cow(struct logical_volume *lv);
+struct snapshot *find_origin(struct logical_volume *lv);
 
 int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow,

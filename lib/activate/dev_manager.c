@@ -1413,8 +1413,9 @@ static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 	/* Remove any snapshots with given origin */
 	list_iterate(sh, active_head) {
 		active = list_item(sh, struct lv_list)->lv;
-		if ((s = find_cow(active)) && s->origin == lv)
+		if ((s = find_cow(active)) && s->origin == lv) {
 			_remove_lv(active_head, active);
+		}
 	}
 
 	_remove_lv(active_head, lv);
@@ -1427,8 +1428,9 @@ static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 	/* Was this the last active snapshot with this origin? */
 	list_iterate(sh, active_head) {
 		active = list_item(sh, struct lv_list)->lv;
-		if ((s = find_cow(active)) && s->origin == old_origin)
+		if ((s = find_cow(active)) && s->origin == old_origin) {
 			return 1;
+		}
 	}
 
 	return _add_lvs(dm->mem, &dm->reload_list, old_origin);

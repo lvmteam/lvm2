@@ -10,6 +10,8 @@
 #include "lvm-types.h"
 #include "list.h"
 
+#define DEV_ACCESSED_W		0x00000001	/* Device written to? */
+
 /*
  * All devices in LVM will be represented by one of these.
  * pointer comparisons are valid.
@@ -20,6 +22,7 @@ struct device {
 
 	/* private */
 	int fd;
+	uint32_t flags;
 };
 
 struct device_list {

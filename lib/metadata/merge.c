@@ -41,7 +41,7 @@ int lv_merge_segments(struct logical_volume *lv)
 	struct list *segh;
 	struct stripe_segment *current, *prev = NULL;
 
-	list_iterate (segh, &lv->segments) {
+	list_iterate(segh, &lv->segments) {
 		current = list_item(segh, struct stripe_segment);
 
 		if (_merge(prev, current))

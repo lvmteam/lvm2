@@ -168,7 +168,6 @@ struct disk_list {
  * Layout constants.
  */
 #define METADATA_ALIGN 4096UL
-#define	PE_ALIGN (65536UL / SECTOR_SIZE)
 
 #define	METADATA_BASE 0UL
 #define	PV_SIZE 1024UL
@@ -188,13 +187,14 @@ int calculate_extent_count(struct physical_volume *pv);
  */
 int read_pvd(struct device *dev, struct pv_disk *pvd);
 
-struct disk_list *read_disk(struct device *dev, struct pool *mem,
-			    const char *vg_name);
+struct disk_list *read_disk(struct format_type *fmt, struct device *dev,
+			    struct pool *mem, const char *vg_name);
 
-int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
+int read_pvs_in_vg(struct format_type *fmt, const char *vg_name,
+		   struct dev_filter *filter,
 		   struct pool *mem, struct list *results);
 
-int write_disks(struct list *pvds);
+int write_disks(struct format_type *fmt, struct list *pvds);
 
 
 /*
@@ -223,7 +223,8 @@ int export_extents(struct disk_list *dl, int lv_num,
 		   struct logical_volume *lv,
 		   struct physical_volume *pv);
 
-int import_pvs(struct pool *mem, struct volume_group *vg,
+int import_pvs(struct format_instance *fid, struct pool *mem,
+	       struct volume_group *vg,
 	       struct list *pvds, struct list *results, int *count);
 
 int import_lvs(struct pool *mem, struct volume_group *vg,
@@ -241,10 +242,10 @@ void export_numbers(struct list *pvds, struct volume_group *vg);
 void export_pv_act(struct list *pvds);
 
 /* blech */
-int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
-		       int *result);
-int export_vg_number(struct list *pvds, const char *vg_name,
-		     struct dev_filter *filter);
+int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
+		       const char *candidate_vg, int *result);
+int export_vg_number(struct format_instance *fid, struct list *pvds,
+		     const char *vg_name, struct dev_filter *filter);
 
 
 #endif

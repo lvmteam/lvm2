@@ -128,8 +128,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	 * the matcher gives.
 	 */
 	for (v = val, i = count - 1; v; v = v->next, i--)
-		if (!_extract_pattern(scratch, v->v.str,
-				      regex, rf->accept, i)) {
+		if (!_extract_pattern(scratch, v->v.str, regex, rf->accept, i)) {
 			log_info("invalid filter pattern");
 			goto out;
 		}
@@ -137,12 +136,12 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	/*
 	 * build the matcher.
 	 */
-	if (!(rf->engine = matcher_create(rf->mem,
-					  (const char **) regex, count)))
+	if (!(rf->engine = matcher_create(rf->mem, (const char **) regex,
+					  count))) 
 		stack;
 	r = 1;
 
- out:
+      out:
 	pool_destroy(scratch);
 	return r;
 }
@@ -221,8 +220,7 @@ struct dev_filter *regex_filter_create(struct config_value *patterns)
 	f->private = rf;
 	return f;
 
- bad:
+      bad:
 	pool_destroy(mem);
 	return NULL;
 }
-

@@ -157,6 +157,7 @@ static int __backup(struct volume_group *vg)
 	struct format_instance *tf;
 	char name[PATH_MAX];
 	char *desc;
+	void *context;
 
 	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 0))) {
 		stack;
@@ -172,15 +173,19 @@ static int __backup(struct volume_group *vg)
 
 	log_verbose("Creating volume group backup \"%s\"", name);
 
-	if (!(tf = text_format_create(vg->cmd, name, vg->cmd->um, desc))) {
+	if (!(context = create_text_context(vg->cmd->fmtt, name, desc)) ||
+	    !(tf = vg->cmd->fmtt->ops->create_instance(vg->cmd->fmtt, NULL,
+						       context))) {
 		stack;
 		return 0;
 	}
 
-	if (!(r = tf->ops->vg_write(tf, vg)))
+	if (!(r = tf->fmt->ops->vg_write(tf, vg, context)) ||
+	    !(r = tf->fmt->ops->vg_commit(tf, vg, context)))
 		stack;
 
-	tf->ops->destroy(tf);
+	tf->fmt->ops->destroy_instance(tf);
+
 	return r;
 }
 
@@ -227,16 +232,20 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 {
 	struct volume_group *vg;
 	struct format_instance *tf;
+	void *context;
 
-	if (!(tf = text_format_create(cmd, file, cmd->um, cmd->cmd_line))) {
+	if (!(context = create_text_context(vg->cmd->fmtt, file,
+					    cmd->cmd_line)) ||
+	    !(tf = vg->cmd->fmtt->ops->create_instance(cmd->fmtt, NULL,
+						       context))) {
 		log_error("Couldn't create text format object.");
 		return NULL;
 	}
 
-	if (!(vg = tf->ops->vg_read(tf, vg_name)))
+	if (!(vg = tf->fmt->ops->vg_read(tf, vg_name, context)))
 		stack;
 
-	tf->ops->destroy(tf);
+	tf->fmt->ops->destroy_instance(tf);
 	return vg;
 }
 
@@ -264,7 +273,15 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 	/*
 	 * Write the vg.
 	 */
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
+
+	/* FIXME How do I find what format to write out the VG in? */
+	/* Must store the format type inside the backup? */
+	if (!(vg->fid = cmd->fmt1->ops->create_instance(cmd->fmt1, NULL, NULL))) {
+		log_error("Failed to allocate format1 instance");
+		return 0;
+	}
+
+	if (!vg_write(vg)) {
 		stack;
 		return 0;
 	}

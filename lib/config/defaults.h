@@ -26,6 +26,8 @@
 
 #define DEFAULT_UMASK 0077
 
+#define DEFAULT_FORMAT "lvm1"
+
 #ifdef READLINE_SUPPORT
   #define DEFAULT_MAX_HISTORY 100
 #endif

@@ -62,7 +62,7 @@ static struct flag *_get_flags(int type)
 	return NULL;
 }
 
-static int _emit(char **buffer, size_t *size, const char *fmt, ...)
+static int _emit(char **buffer, size_t * size, const char *fmt, ...)
 {
 	size_t n;
 	va_list ap;
@@ -124,7 +124,7 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 	return 1;
 }
 
-int read_flags(uint32_t *status, int type, struct config_value *cv)
+int read_flags(uint32_t * status, int type, struct config_value *cv)
 {
 	int f;
 	uint32_t s = 0;

@@ -13,9 +13,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <linux/fs.h> // UGH!!! for BLKSSZGET
+#include <linux/fs.h>		// UGH!!! for BLKSSZGET
 
-int dev_get_size(struct device *dev, uint64_t *size)
+int dev_get_size(struct device *dev, uint64_t * size)
 {
 	int fd;
 	long s;
@@ -39,7 +39,7 @@ int dev_get_size(struct device *dev, uint64_t *size)
 	return 1;
 }
 
-int dev_get_sectsize(struct device *dev, uint32_t *size)
+int dev_get_sectsize(struct device *dev, uint32_t * size)
 {
 	int fd;
 	int s;
@@ -93,6 +93,8 @@ int dev_open(struct device *dev, int flags)
 		return 0;
 	}
 
+	dev->flags = 0;
+
 	return 1;
 }
 
@@ -109,7 +111,8 @@ int dev_close(struct device *dev)
 		return 0;
 	}
 
-	_flush(dev->fd);
+	if (dev->flags & DEV_ACCESSED_W)
+		_flush(dev->fd);
 
 	if (close(dev->fd))
 		log_sys_error("close", dev_name(dev));
@@ -142,7 +145,7 @@ int _read(int fd, void *buf, size_t count)
 	return tot;
 }
 
-int64_t dev_read(struct device *dev, uint64_t offset,
+int64_t dev_read(struct device * dev, uint64_t offset,
 		 int64_t len, void *buffer)
 {
 	const char *name = dev_name(dev);
@@ -185,7 +188,7 @@ int _write(int fd, const void *buf, size_t count)
 	return tot;
 }
 
-int64_t dev_write(struct device *dev, uint64_t offset,
+int64_t dev_write(struct device * dev, uint64_t offset,
 		  int64_t len, void *buffer)
 {
 	const char *name = dev_name(dev);
@@ -200,6 +203,8 @@ int64_t dev_write(struct device *dev, uint64_t offset,
 		log_sys_error("lseek", name);
 		return 0;
 	}
+
+	dev->flags |= DEV_ACCESSED_W;
 
 	return _write(fd, buffer, len);
 }
@@ -236,6 +241,8 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 			break;
 		}
 	}
+
+	dev->flags |= DEV_ACCESSED_W;
 
 	/* FIXME: Always display error */
 	return (len == 0);

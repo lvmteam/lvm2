@@ -38,7 +38,7 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		log_very_verbose("Using physical volume(s) on command line");
 
 		for (; opt < argc; opt++) {
-			if (!(pv = cmd->fid->ops->pv_read(cmd->fid, argv[opt]))) {
+			if (!(pv = pv_read(cmd, argv[opt]))) {
 				log_error("Failed to read physical "
 					  "volume \"%s\"", argv[opt]);
 				continue;
@@ -47,7 +47,7 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		}
 	} else {
 		log_verbose("Scanning for physical volume names");
-		if (!(pvs = cmd->fid->ops->get_pvs(cmd->fid)))
+		if (!(pvs = get_pvs(cmd)))
 			return ECMD_FAILED;
 
 		list_iterate(pvh, pvs)
@@ -67,7 +67,7 @@ void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv)
 	if (!*pv->vg_name)
 		size = pv->size;
 	else
-		size = (pv->pe_count - pv->pe_allocated) * pv->pe_size;
+		size = (pv->pe_count - pv->pe_alloc_count) * pv->pe_size;
 
 	if (arg_count(cmd, short_ARG)) {
 		sz = display_size(size / 2, SIZE_SHORT);
@@ -112,7 +112,7 @@ void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv)
 		return;
 
 /******* FIXME
-	if (pv->pe_allocated) {
+	if (pv->pe_alloc_count) {
 		if (!(pv->pe = pv_read_pe(pv_name, pv)))
 			goto pvdisplay_device_out;
 		if (!(lvs = pv_read_lvs(pv))) {

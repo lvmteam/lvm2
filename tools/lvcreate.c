@@ -36,8 +36,7 @@ struct lvcreate_params {
 };
 
 static int _read_name_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc,
-			     char ***pargv)
+			     struct cmd_context *cmd, int *pargc, char ***pargv)
 {
 	int argc = *pargc;
 	char **argv = *pargv, *ptr;
@@ -56,7 +55,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 
 		lp->origin = argv[0];
 		(*pargv)++, (*pargc)--;
-		if (!(lp->vg_name = extract_vgname(cmd->fid, lp->origin))) {
+		if (!(lp->vg_name = extract_vgname(cmd, lp->origin))) {
 			log_err("The origin name should include the "
 				"volume group.");
 			return 0;
@@ -72,8 +71,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 		 * environment.
 		 */
 		if (!argc) {
-			if (!(lp->vg_name =
-			      extract_vgname(cmd->fid, lp->lv_name))) {
+			if (!(lp->vg_name = extract_vgname(cmd, lp->lv_name))) {
 				log_err("Please provide a volume group name");
 				return 0;
 			}
@@ -85,7 +83,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 			 */
 			if (lp->lv_name && strchr(lp->lv_name, '/')) {
 				if (!(lp->vg_name =
-				      extract_vgname(cmd->fid, lp->lv_name)))
+				      extract_vgname(cmd, lp->lv_name)))
 					    return 0;
 
 				if (strcmp(lp->vg_name, argv[0])) {
@@ -109,8 +107,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 }
 
 static int _read_size_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc,
-			     char ***pargv)
+			     struct cmd_context *cmd, int *pargc, char ***pargv)
 {
 	/*
 	 * There are two mutually exclusive ways of specifying
@@ -311,7 +308,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	/* does VG exist? */
 	log_verbose("Finding volume group \"%s\"", lp->vg_name);
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, lp->vg_name))) {
+	if (!(vg = vg_read(cmd, lp->vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", lp->vg_name);
 		return 0;
 	}
@@ -382,7 +379,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!(lv = lv_create(cmd->fid, lp->lv_name, status,
+	if (!(lv = lv_create(vg->fid, lp->lv_name, status,
 			     lp->stripes, lp->stripe_size, lp->extents,
 			     vg, pvh))) return 0;
 
@@ -401,7 +398,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 
 	/* store vg on disk(s) */
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+	if (!vg_write(vg))
 		return 0;
 
 	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE))
@@ -429,7 +426,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		}
 
 		/* store vg on disk(s) */
-		if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+		if (!vg_write(vg))
 			return 0;
 
 		if (!unlock_lv(cmd, org->lvid.s)) {

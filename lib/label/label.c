@@ -21,7 +21,6 @@ struct labeller_i {
 
 static struct list _labellers;
 
-
 static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 {
 	struct labeller_i *li;
@@ -44,7 +43,6 @@ static void _free_li(struct labeller_i *li)
 {
 	dbg_free(li);
 }
-
 
 int label_init(void)
 {
@@ -82,7 +80,7 @@ struct labeller *label_get_handler(const char *name)
 	struct list *lih;
 	struct labeller_i *li;
 
-	list_iterate (lih, &_labellers) {
+	list_iterate(lih, &_labellers) {
 		li = list_item(lih, struct labeller_i);
 		if (!strcmp(li->name, name))
 			return li->l;
@@ -96,7 +94,7 @@ static struct labeller *_find_labeller(struct device *dev)
 	struct list *lih;
 	struct labeller_i *li;
 
-	list_iterate (lih, &_labellers) {
+	list_iterate(lih, &_labellers) {
 		li = list_item(lih, struct labeller_i);
 		if (li->l->ops->can_handle(li->l, dev))
 			return li->l;
@@ -124,7 +122,7 @@ int label_read(struct device *dev, struct label **result)
 	struct list *lih;
 	struct labeller_i *li;
 
-	list_iterate (lih, &_labellers) {
+	list_iterate(lih, &_labellers) {
 		li = list_item(lih, struct labeller_i);
 		if ((r = li->l->ops->read(li->l, dev, result))) {
 			(*result)->labeller = li->l;

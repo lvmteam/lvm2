@@ -65,7 +65,7 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_to = cmd->fid->ops->vg_read(cmd->fid, vg_name_to))) {
+	if (!(vg_to = vg_read(cmd, vg_name_to))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_to);
 		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
@@ -90,7 +90,7 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_from = cmd->fid->ops->vg_read(cmd->fid, vg_name_from))) {
+	if (!(vg_from = vg_read(cmd, vg_name_from))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
 		goto error;
 	}
@@ -182,7 +182,7 @@ int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!(cmd->fid->ops->vg_write(cmd->fid, vg_to))) {
+	if (!vg_write(vg_to)) {
 		goto error;
 	}
 

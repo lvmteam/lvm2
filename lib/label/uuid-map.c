@@ -12,11 +12,11 @@
 #include "dbg_malloc.h"
 #include "log.h"
 #include "label.h"
+#include "pool.h"
 
 struct uuid_map {
 	struct dev_filter *filter;
 };
-
 
 struct uuid_map *uuid_map_create(struct dev_filter *devices)
 {
@@ -65,6 +65,35 @@ struct device *uuid_map_lookup(struct uuid_map *um, struct id *id)
 
 	dev_iter_destroy(iter);
 	return dev;
+}
+
+struct id *uuid_map_lookup_label(struct pool *mem, struct uuid_map *um,
+				 const char *name)
+{
+	struct device *dev;
+	struct label *lab;
+	struct id *id;
+
+	if (!(dev = dev_cache_get(name, um->filter))) {
+		stack;
+		return NULL;
+	}
+
+	if (!label_read(dev, &lab)) {
+		stack;
+		return NULL;
+	}
+
+	if (!(id = pool_alloc(mem, sizeof(*id)))) {
+		stack;
+		label_destroy(lab);
+		return NULL;
+	}
+	memcpy(id, &lab->id, sizeof(*id));
+
+	label_destroy(lab);
+
+	return id;
 }
 
 #endif

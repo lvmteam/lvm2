@@ -46,7 +46,6 @@ static struct {
 
 } _cache;
 
-
 #define _alloc(x) pool_alloc(_cache.mem, (x))
 #define _free(x) pool_free(_cache.mem, (x))
 
@@ -194,7 +193,7 @@ static int _insert(const char *path, int rec)
 		return 0;
 	}
 
-	if (S_ISDIR(info.st_mode)) { /* add a directory */
+	if (S_ISDIR(info.st_mode)) {	/* add a directory */
 		if (rec)
 			r = _insert_dir(path);
 
@@ -255,7 +254,7 @@ int dev_cache_init(void)
 
 	return 1;
 
- bad:
+      bad:
 	dev_cache_exit();
 	return 0;
 }
@@ -268,7 +267,7 @@ void _check_closed(struct device *dev)
 
 static inline void _check_for_open_devices(void)
 {
-	hash_iter(_cache.names, (iterate_fn)_check_closed);
+	hash_iter(_cache.names, (iterate_fn) _check_closed);
 }
 
 void dev_cache_exit(void)
@@ -313,8 +312,8 @@ const char *dev_name_confirmed(struct device *dev)
 	char *name;
 	int r;
 
-	while ((r = stat(name = list_item(dev->aliases.n, 
-					   struct str_list)->str, &buf)) || 
+	while ((r = stat(name = list_item(dev->aliases.n,
+					  struct str_list)->str, &buf)) ||
 	       (buf.st_rdev != dev->dev)) {
 		if (r < 0)
 			log_sys_error("stat", name);
@@ -341,7 +340,6 @@ const char *dev_name_confirmed(struct device *dev)
 
 	return dev_name(dev);
 }
-
 
 struct device *dev_cache_get(const char *name, struct dev_filter *f)
 {
@@ -399,4 +397,3 @@ struct device *dev_iter_get(struct dev_iter *iter)
 
 	return NULL;
 }
-

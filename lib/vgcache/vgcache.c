@@ -50,6 +50,22 @@ struct list *vgcache_find(const char *vg_name)
 	return &vgn->pvdevs;
 }
 
+struct format_type *vgcache_find_format(const char *vg_name)
+{
+	struct vgname_entry *vgn;
+
+	if (!_vghash)
+		return NULL;
+
+	if (!vg_name)
+		vg_name = all_devices;
+
+	if (!(vgn = hash_lookup(_vghash, vg_name)))
+		return NULL;
+
+	return vgn->fmt;
+}
+
 struct list *vgcache_find_by_vgid(const char *vgid)
 {
 	struct vgname_entry *vgn;
@@ -78,7 +94,8 @@ void vgcache_del_orphan(struct device *dev)
 	}
 }
 
-int vgcache_add_entry(const char *vg_name, const char *vgid, struct device *dev)
+int vgcache_add_entry(const char *vg_name, const char *vgid, struct device *dev,
+		      struct format_type *fmt)
 {
 	const char *pv_name;
 	struct vgname_entry *vgn;
@@ -92,6 +109,7 @@ int vgcache_add_entry(const char *vg_name, const char *vgid, struct device *dev)
 		}
 		memset(vgn, 0, sizeof(struct vgname_entry));
 
+		vgn->fmt = fmt;
 		pvdevs = &vgn->pvdevs;
 		list_init(pvdevs);
 
@@ -104,18 +122,25 @@ int vgcache_add_entry(const char *vg_name, const char *vgid, struct device *dev)
 			log_error("vgcache_add: VG hash insertion failed");
 			return 0;
 		}
+	} else if (!(vgn = hash_lookup(_vghash, vg_name))) {
+		log_error("vgcache_add: VG name entry %s not found", vg_name);
+		return 0;
+	}
 
-		if (vgid) {
-			memcpy(vgn->vgid, vgid, ID_LEN);
-			vgn->vgid[ID_LEN] = '\0';
+	if (vgid && strncmp(vgid, vgn->vgid, ID_LEN)) {
+		hash_remove(_vgidhash, vgn->vgid);
 
-			if (!hash_insert(_vgidhash, vgn->vgid, vgn)) {
-				log_error("vgcache_add: vgid hash insertion "
-					  "failed");
-				return 0;
-			}
+		memcpy(vgn->vgid, vgid, ID_LEN);
+		vgn->vgid[ID_LEN] = '\0';
+
+		if (!hash_insert(_vgidhash, vgn->vgid, vgn)) {
+			log_error("vgcache_add: vgid hash insertion " "failed");
+			return 0;
 		}
 	}
+
+	if (!dev)
+		return 1;
 
 	list_iterate(pvdh, pvdevs) {
 		pvdev = list_item(pvdh, struct pvdev_list);
@@ -150,21 +175,25 @@ int vgcache_add_entry(const char *vg_name, const char *vgid, struct device *dev)
 }
 
 /* vg_name of "\0" is an orphan PV; NULL means only add to all_devices */
-int vgcache_add(const char *vg_name, const char *vgid, struct device *dev)
+int vgcache_add(const char *vg_name, const char *vgid, struct device *dev,
+		struct format_type *fmt)
 {
 	if (!_vghash && !vgcache_init())
 		return 0;
 
 	/* If orphan PV remove it */
-	if (vg_name && !*vg_name)
+	if (dev && vg_name && !*vg_name)
 		vgcache_del_orphan(dev);
 
 	/* Add PV if vg_name supplied */
-	if (vg_name && *vg_name && !vgcache_add_entry(vg_name, vgid, dev))
+	if (vg_name && *vg_name && !vgcache_add_entry(vg_name, vgid, dev, fmt))
 		return 0;
 
-	/* Always add to all_devices */
-	return vgcache_add_entry(all_devices, NULL, dev);
+	/* Add to all_devices */
+	if (dev)
+		return vgcache_add_entry(all_devices, NULL, dev, fmt);
+
+	return 1;
 }
 
 void vgcache_destroy_entry(struct vgname_entry *vgn)
@@ -208,7 +237,6 @@ void vgcache_del(const char *vg_name)
 	vgcache_destroy_entry(vgn);
 }
 
-
 void vgcache_del_by_vgid(const char *vgid)
 {
 	struct vgname_entry *vgn;
@@ -230,11 +258,10 @@ void vgcache_del_by_vgid(const char *vgid)
 	vgcache_destroy_entry(vgn);
 }
 
-
 void vgcache_destroy()
 {
 	if (_vghash) {
-		hash_iter(_vghash, (iterate_fn)vgcache_destroy_entry);
+		hash_iter(_vghash, (iterate_fn) vgcache_destroy_entry);
 		hash_destroy(_vghash);
 		_vghash = NULL;
 	}
@@ -266,4 +293,3 @@ char *vgname_from_vgid(struct cmd_context *cmd, struct id *vgid)
 
 	return pool_strdup(cmd->mem, vgn->vgname);
 }
-

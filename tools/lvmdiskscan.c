@@ -44,7 +44,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 	/* Do scan */
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		/* Try if it is a PV first */
-		if ((pv = cmd->fid->ops->pv_read(cmd->fid, dev_name(dev)))) {
+		if ((pv = pv_read(cmd, dev_name(dev)))) {
 			if (!dev_get_size(dev, &size)) {
 				log_error("Couldn't get size of \"%s\"",
 					  dev_name(dev));

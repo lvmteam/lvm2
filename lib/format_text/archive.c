@@ -23,7 +23,6 @@
 #include <fcntl.h>
 #include <time.h>
 
-
 /*
  * The format instance is given a directory path upon creation.
  * Each file in this directory whose name is of the form
@@ -36,7 +35,6 @@
  * Backup files that have expired will be removed.
  */
 
-
 /*
  * A list of these is built up for our volume group.  Ordered
  * with the least recent at the head.
@@ -48,12 +46,11 @@ struct archive_file {
 	int index;
 };
 
-
 /*
  * Extract vg name and version number from a filename.
  */
 static int _split_vg(const char *filename, char *vg, size_t vg_size,
-		     uint32_t *index)
+		     uint32_t * index)
 {
 	int len, vg_len;
 	char *dot, *underscore;
@@ -93,7 +90,7 @@ static void _insert_file(struct list *head, struct archive_file *b)
 	}
 
 	/* index increases through list */
-	list_iterate (bh, head) {
+	list_iterate(bh, head) {
 		bf = list_item(bh, struct archive_file);
 
 		if (bf->index > b->index) {
@@ -180,7 +177,7 @@ static struct list *_scan_archive(struct pool *mem,
 		_insert_file(results, af);
 	}
 
- out:
+      out:
 	for (i = 0; i < count; i++)
 		free(dirent[i]);
 	free(dirent);
@@ -239,8 +236,7 @@ int archive_vg(struct volume_group *vg,
 
 	for (i = 0; i < 10; i++) {
 		if (lvm_snprintf(archive_name, sizeof(archive_name),
-				 "%s/%s_%05d.vg",
-				 dir, vg->name, index) < 0) {
+				 "%s/%s_%05d.vg", dir, vg->name, index) < 0) {
 			log_err("archive file name too long.");
 			return 0;
 		}
@@ -257,18 +253,28 @@ int archive_vg(struct volume_group *vg,
 static void _display_archive(struct cmd_context *cmd, struct uuid_map *um,
 			     struct archive_file *af)
 {
-	struct volume_group *vg;
+	struct volume_group *vg = NULL;
+	struct format_instance *tf;
 	time_t when;
 	char *desc;
+	void *context;
 
 	log_print("path:\t\t%s", af->path);
+
+	if (!(context = create_text_context(cmd->fmtt, af->path, NULL)) ||
+	    !(tf = cmd->fmtt->ops->create_instance(cmd->fmtt, NULL, context))) {
+		log_error("Couldn't create text instance object.");
+		return;
+	}
 
 	/*
 	 * Read the archive file to ensure that it is valid, and
 	 * retrieve the archive time and description.
 	 */
-	if (!(vg = text_vg_import(cmd, af->path, um, &when, &desc))) {
+	/* FIXME Use variation on _vg_read */
+	if (!(vg = text_vg_import(tf, af->path, um, &when, &desc))) {
 		log_print("Unable to read archive file.");
+		tf->fmt->ops->destroy_instance(tf);
 		return;
 	}
 
@@ -276,6 +282,7 @@ static void _display_archive(struct cmd_context *cmd, struct uuid_map *um,
 	log_print("time:\t\t%s", ctime(&when));
 
 	pool_free(cmd->mem, vg);
+	tf->fmt->ops->destroy_instance(tf);
 }
 
 int archive_list(struct cmd_context *cmd, struct uuid_map *um,
@@ -292,7 +299,7 @@ int archive_list(struct cmd_context *cmd, struct uuid_map *um,
 	if (list_empty(archives))
 		log_print("No archives found.");
 
-	list_iterate (ah, archives) {
+	list_iterate(ah, archives) {
 		af = list_item(ah, struct archive_file);
 
 		_display_archive(cmd, um, af);

@@ -249,7 +249,7 @@ static int _check_stripe(struct lv_map *lvm, struct stripe_segment *seg,
 	 */
 	for (st = 0; st < seg->stripes; st++)
 		if ((lvm->map[le + st * len].pv != seg->area[st].pv) ||
-	       	    (lvm->map[le + st * len].pe != seg->area[st].pe + seg->len))
+		    (lvm->map[le + st * len].pe != seg->area[st].pe + seg->len))
 			return 0;
 
 	return 1;
@@ -266,8 +266,7 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 	if (lvm->lv->le_count % lvm->stripes) {
 		log_error("Number of stripes (%u) incompatible "
 			  "with logical extent count (%u) for %s",
-			  lvm->stripes, lvm->lv->le_count,
-			  lvm->lv->name);
+			  lvm->stripes, lvm->lv->le_count, lvm->lv->name);
 	}
 	len = lvm->lv->le_count / lvm->stripes;
 

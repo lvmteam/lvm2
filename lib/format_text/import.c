@@ -12,11 +12,10 @@
 #include "hash.h"
 #include "toolcontext.h"
 
-
-typedef int (*section_fn)(struct pool *mem,
-			  struct volume_group *vg, struct config_node *pvn,
-			  struct config_node *vgn, struct hash_table *pv_hash,
-			  struct uuid_map *um);
+typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
+			   struct volume_group * vg, struct config_node * pvn,
+			   struct config_node * vgn,
+			   struct hash_table * pv_hash, struct uuid_map * um);
 
 #define _read_int32(root, path, result) \
 	get_config_uint32(root, path, '/', result)
@@ -50,11 +49,10 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 	return 1;
 }
 
-static int _read_pv(struct pool *mem,
+static int _read_pv(struct format_instance *fid, struct pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
 		    struct config_node *vgn,
-		    struct hash_table *pv_hash,
-		    struct uuid_map *um)
+		    struct hash_table *pv_hash, struct uuid_map *um)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -134,7 +132,8 @@ static int _read_pv(struct pool *mem,
 
 	pv->pe_size = vg->extent_size;
 	pv->size = pv->pe_size * (uint64_t) pv->pe_count;
-	pv->pe_allocated = 0;
+	pv->pe_alloc_count = 0;
+	pv->fid = fid;
 
 	vg->pv_count++;
 	list_add(&vg->pvs, &pvl->list);
@@ -148,7 +147,7 @@ static void _insert_segment(struct logical_volume *lv,
 	struct list *segh;
 	struct stripe_segment *comp;
 
-	list_iterate (segh, &lv->segments) {
+	list_iterate(segh, &lv->segments) {
 		comp = list_item(segh, struct stripe_segment);
 
 		if (comp->le > seg->le) {
@@ -178,8 +177,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	}
 
 	if (!_read_int32(sn, "stripes", &stripes)) {
-		log_err("Couldn't read 'stripes' for segment '%s'.",
-			sn->key);
+		log_err("Couldn't read 'stripes' for segment '%s'.", sn->key);
 		return 0;
 	}
 
@@ -241,9 +239,8 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		if (!(pv = hash_lookup(pv_hash, cv->v.str))) {
 			log_err("Couldn't find physical volume '%s' for "
 				"segment '%s'.",
-				cn->v->v.str ? cn->v->v.str : "NULL",
-				seg_name);
-				return 0;
+				cn->v->v.str ? cn->v->v.str : "NULL", seg_name);
+			return 0;
 		}
 
 		seg->area[s].pv = pv;
@@ -264,7 +261,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		 * Adjust the extent counts in the pv and vg.
 		 */
 		allocated = seg->len / seg->stripes;
-		pv->pe_allocated += allocated;
+		pv->pe_alloc_count += allocated;
 		vg->free_count -= allocated;
 	}
 
@@ -336,7 +333,7 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 	return 1;
 }
 
-static int _read_lv(struct pool *mem,
+static int _read_lv(struct format_instance *fid, struct pool *mem,
 		    struct volume_group *vg, struct config_node *lvn,
 		    struct config_node *vgn, struct hash_table *pv_hash,
 		    struct uuid_map *um)
@@ -367,8 +364,7 @@ static int _read_lv(struct pool *mem,
 
 	/* FIXME: read full lvid */
 	if (!_read_id(&lv->lvid.id[1], lvn, "id")) {
-		log_err("Couldn't read uuid for logical volume %s.",
-			lv->name);
+		log_err("Couldn't read uuid for logical volume %s.", lv->name);
 		return 0;
 	}
 
@@ -410,7 +406,7 @@ static int _read_lv(struct pool *mem,
 	return 1;
 }
 
-static int _read_snapshot(struct pool *mem,
+static int _read_snapshot(struct format_instance *fid, struct pool *mem,
 			  struct volume_group *vg, struct config_node *sn,
 			  struct config_node *vgn, struct hash_table *pv_hash,
 			  struct uuid_map *um)
@@ -459,12 +455,12 @@ static int _read_snapshot(struct pool *mem,
 	return 1;
 }
 
-static int _read_sections(const char *section, section_fn fn,
+static int _read_sections(struct format_instance *fid,
+			  const char *section, section_fn fn,
 			  struct pool *mem,
 			  struct volume_group *vg, struct config_node *vgn,
 			  struct hash_table *pv_hash,
-			  struct uuid_map *um,
-			  int optional)
+			  struct uuid_map *um, int optional)
 {
 	struct config_node *n;
 
@@ -478,7 +474,7 @@ static int _read_sections(const char *section, section_fn fn,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(mem, vg, n, vgn, pv_hash, um)) {
+		if (!fn(fid, mem, vg, n, vgn, pv_hash, um)) {
 			stack;
 			return 0;
 		}
@@ -487,18 +483,17 @@ static int _read_sections(const char *section, section_fn fn,
 	return 1;
 }
 
-static struct volume_group *_read_vg(struct cmd_context *cmd,
+static struct volume_group *_read_vg(struct format_instance *fid,
 				     struct config_file *cf,
 				     struct uuid_map *um)
 {
 	struct config_node *vgn, *cn;
 	struct volume_group *vg;
 	struct hash_table *pv_hash = NULL;
-	struct pool *mem = cmd->mem;
+	struct pool *mem = fid->fmt->cmd->mem;
 
 	/* skip any top-level values */
-	for (vgn = cf->root; (vgn && vgn->v); vgn = vgn->sib)
-		;
+	for (vgn = cf->root; (vgn && vgn->v); vgn = vgn->sib) ;
 
 	if (!vgn) {
 		log_err("Couldn't find volume group in file.");
@@ -509,7 +504,11 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 		stack;
 		return NULL;
 	}
-	vg->cmd = cmd;
+	vg->cmd = fid->fmt->cmd;
+
+	/* FIXME Determine format type from file contents */
+	/* eg Set to instance of fmt1 here if reading a format1 backup? */
+	vg->fid = fid;
 
 	if (!(vg->name = pool_strdup(mem, vgn->key))) {
 		stack;
@@ -532,8 +531,12 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	}
 
 	if (!_read_id(&vg->id, vgn, "id")) {
-		log_err("Couldn't read uuid for volume group %s.",
-			vg->name);
+		log_err("Couldn't read uuid for volume group %s.", vg->name);
+		goto bad;
+	}
+
+	if (!_read_int32(vgn, "seqno", &vg->seqno)) {
+		log_err("Couldn't read 'seqno' for volume group %s.", vg->name);
 		goto bad;
 	}
 
@@ -582,7 +585,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	}
 
 	list_init(&vg->pvs);
-	if (!_read_sections("physical_volumes", _read_pv, mem, vg,
+	if (!_read_sections(fid, "physical_volumes", _read_pv, mem, vg,
 			    vgn, pv_hash, um, 0)) {
 		log_err("Couldn't find all physical volumes for volume "
 			"group %s.", vg->name);
@@ -590,7 +593,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	}
 
 	list_init(&vg->lvs);
-	if (!_read_sections("logical_volumes", _read_lv, mem, vg,
+	if (!_read_sections(fid, "logical_volumes", _read_lv, mem, vg,
 			    vgn, pv_hash, um, 1)) {
 		log_err("Couldn't read all logical volumes for volume "
 			"group %s.", vg->name);
@@ -598,7 +601,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	}
 
 	list_init(&vg->snapshots);
-	if (!_read_sections("snapshots", _read_snapshot, mem, vg,
+	if (!_read_sections(fid, "snapshots", _read_snapshot, mem, vg,
 			    vgn, pv_hash, um, 1)) {
 		log_err("Couldn't read all snapshots for volume group %s.",
 			vg->name);
@@ -612,7 +615,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	 */
 	return vg;
 
- bad:
+      bad:
 	if (pv_hash)
 		hash_destroy(pv_hash);
 
@@ -621,7 +624,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 }
 
 static void _read_desc(struct pool *mem,
-		       struct config_file *cf, time_t *when, char **desc)
+		       struct config_file *cf, time_t * when, char **desc)
 {
 	const char *d;
 	unsigned int u = 0u;
@@ -633,10 +636,10 @@ static void _read_desc(struct pool *mem,
 	*when = u;
 }
 
-struct volume_group *text_vg_import(struct cmd_context *cmd,
+struct volume_group *text_vg_import(struct format_instance *fid,
 				    const char *file,
 				    struct uuid_map *um,
-				    time_t *when, char **desc)
+				    time_t * when, char **desc)
 {
 	struct volume_group *vg = NULL;
 	struct config_file *cf;
@@ -654,16 +657,14 @@ struct volume_group *text_vg_import(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (!(vg = _read_vg(cmd, cf, um))) {
+	if (!(vg = _read_vg(fid, cf, um))) {
 		stack;
 		goto out;
 	}
 
-	vg->cmd = cmd;
+	_read_desc(fid->fmt->cmd->mem, cf, when, desc);
 
-	_read_desc(cmd->mem, cf, when, desc);
-
- out:
+      out:
 	destroy_config_file(cf);
 	return vg;
 }

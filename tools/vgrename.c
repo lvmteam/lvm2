@@ -74,7 +74,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_old = cmd->fid->ops->vg_read(cmd->fid, vg_name_old))) {
+	if (!(vg_old = vg_read(cmd, vg_name_old))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
 		unlock_vg(cmd, vg_name_old);
 		return ECMD_FAILED;
@@ -112,7 +112,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((vg_new = cmd->fid->ops->vg_read(cmd->fid, vg_name_new))) {
+	if ((vg_new = vg_read(cmd, vg_name_new))) {
 		log_error("New volume group \"%s\" already exists",
 			  vg_name_new);
 		goto error;
@@ -150,7 +150,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!(cmd->fid->ops->vg_write(cmd->fid, vg_old))) {
+	if (!vg_write(vg_old)) {
 		goto error;
 	}
 

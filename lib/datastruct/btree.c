@@ -40,8 +40,7 @@ static uint32_t _shuffle(uint32_t k)
 #if 1
 	return ((k & 0xff) << 24 |
 		(k & 0xff00) << 8 |
-		(k & 0xff0000) >> 8 |
-		(k & 0xff000000) >> 24);
+		(k & 0xff0000) >> 8 | (k & 0xff000000) >> 24);
 #else
 	return k;
 #endif

@@ -13,7 +13,7 @@ int lv_is_origin(struct logical_volume *lv)
 	struct list *slh;
 	struct snapshot *s;
 
-	list_iterate (slh, &lv->vg->snapshots) {
+	list_iterate(slh, &lv->vg->snapshots) {
 		s = list_item(slh, struct snapshot_list)->snapshot;
 		if (s->origin == lv)
 			return 1;
@@ -27,7 +27,7 @@ int lv_is_cow(struct logical_volume *lv)
 	struct list *slh;
 	struct snapshot *s;
 
-	list_iterate (slh, &lv->vg->snapshots) {
+	list_iterate(slh, &lv->vg->snapshots) {
 		s = list_item(slh, struct snapshot_list)->snapshot;
 		if (s->cow == lv)
 			return 1;
@@ -36,12 +36,26 @@ int lv_is_cow(struct logical_volume *lv)
 	return 0;
 }
 
+struct snapshot *find_origin(struct logical_volume *lv)
+{
+	struct list *slh;
+	struct snapshot *s;
+
+	list_iterate(slh, &lv->vg->snapshots) {
+		s = list_item(slh, struct snapshot_list)->snapshot;
+		if (s->origin == lv)
+			return s;
+	}
+
+	return NULL;
+}
+
 struct snapshot *find_cow(struct logical_volume *lv)
 {
 	struct list *slh;
 	struct snapshot *s;
 
-	list_iterate (slh, &lv->vg->snapshots) {
+	list_iterate(slh, &lv->vg->snapshots) {
 		s = list_item(slh, struct snapshot_list)->snapshot;
 		if (s->cow == lv)
 			return s;
@@ -52,8 +66,7 @@ struct snapshot *find_cow(struct logical_volume *lv)
 
 int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow,
-		    int persistent,
-		    uint32_t chunk_size)
+		    int persistent, uint32_t chunk_size)
 {
 	struct snapshot *s;
 	struct snapshot_list *sl;
@@ -94,7 +107,7 @@ int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow)
 	struct list *slh;
 	struct snapshot_list *sl;
 
-	list_iterate (slh, &vg->snapshots) {
+	list_iterate(slh, &vg->snapshots) {
 		sl = list_item(slh, struct snapshot_list);
 
 		if (sl->snapshot->cow == cow) {

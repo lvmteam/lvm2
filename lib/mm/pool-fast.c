@@ -18,11 +18,11 @@ struct chunk {
 };
 
 struct pool {
-	struct chunk *chunk, *spare_chunk; /* spare_chunk is a one entry free
-					      list to stop 'bobbling' */
+	struct chunk *chunk, *spare_chunk;	/* spare_chunk is a one entry free
+						   list to stop 'bobbling' */
 	size_t chunk_size;
 	size_t object_len;
-	unsigned  object_alignment;
+	unsigned object_alignment;
 };
 
 void _align_chunk(struct chunk *c, unsigned alignment);
@@ -75,12 +75,12 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 	struct chunk *c = p->chunk;
 	void *r;
 
-        /* realign begin */
+	/* realign begin */
 	if (c)
 		_align_chunk(c, alignment);
 
 	/* have we got room ? */
-	if(!c || (c->begin > c->end) || (c->end - c->begin < s)) {
+	if (!c || (c->begin > c->end) || (c->end - c->begin < s)) {
 		/* allocate new chunk */
 		int needed = s + alignment + sizeof(struct chunk);
 		c = _new_chunk(p, (needed > p->chunk_size) ?
@@ -225,7 +225,8 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 		p->spare_chunk = 0;
 	} else {
 		if (!(c = dbg_malloc(s))) {
-			log_err("Out of memory.  Requested %" PRIuPTR " bytes.", s);
+			log_err("Out of memory.  Requested %" PRIuPTR " bytes.",
+				s);
 			return NULL;
 		}
 
@@ -238,4 +239,3 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 
 	return c;
 }
-

@@ -87,8 +87,7 @@ xx(lvcreate,
    "\t[--version]\n"
    "\tVolumeGroupName [PhysicalVolumePath...]\n\n",
 
-   autobackup_ARG, chunksize_ARG,
-   contiguous_ARG, extents_ARG, minor_ARG, name_ARG,
+   autobackup_ARG, contiguous_ARG, extents_ARG, minor_ARG, name_ARG,
    permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
    snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, zero_ARG)
 
@@ -393,9 +392,10 @@ xx(vgcreate,
    "vgcreate" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[-d|--debug]" "\n"
-   "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
-   "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
    "\t[-h|--help]" "\n"
+   "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
+   "\t[-M|--metadatatype lvm1/text] " "\n"
+   "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
    "\t[-s|--physicalextentsize PhysicalExtentSize[kKmMgGtT]] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose]" "\n"
@@ -403,7 +403,7 @@ xx(vgcreate,
    "\tVolumeGroupName PhysicalVolume [PhysicalVolume...]\n",
 
    autobackup_ARG, maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
-   physicalextentsize_ARG, test_ARG)
+   metadatatype_ARG, physicalextentsize_ARG, test_ARG)
 
 xx(vgdisplay,
    "Display volume group information",

@@ -14,19 +14,20 @@
 #include "log.h"
 
 struct memblock {
-	struct memblock *prev, *next; /* All allocated blocks are linked */
-	size_t length;                /* Size of the requested block */
-	int id;                       /* Index of the block */
-	const char *file;             /* File that allocated */
-	int line;                     /* Line that allocated */
-	void *magic;                  /* Address of this block */
+	struct memblock *prev, *next;	/* All allocated blocks are linked */
+	size_t length;		/* Size of the requested block */
+	int id;			/* Index of the block */
+	const char *file;	/* File that allocated */
+	int line;		/* Line that allocated */
+	void *magic;		/* Address of this block */
 };
 
 static struct {
 	unsigned int blocks, mblocks;
 	unsigned int bytes, mbytes;
 
-} _mem_stats = {0, 0, 0, 0};
+} _mem_stats = {
+0, 0, 0, 0};
 
 static struct memblock *_head = 0;
 static struct memblock *_tail = 0;
@@ -104,7 +105,7 @@ void free_aux(void *p)
 	/* check data at the far boundary */
 	ptr = ((char *) mb) + sizeof(struct memblock) + mb->length;
 	for (i = 0; i < sizeof(unsigned long); i++)
-		if(*ptr++ != (char) mb->id)
+		if (*ptr++ != (char) mb->id)
 			assert(!"Damage at far end of block");
 
 	/* have we freed this before ? */
@@ -159,7 +160,7 @@ int dump_memory(void)
 		log_very_verbose("You have a memory leak:");
 
 	for (mb = _head; mb; mb = mb->next) {
-		print_log(_LOG_INFO, mb->file, mb->line, 
+		print_log(_LOG_INFO, mb->file, mb->line,
 			  "block %d at %p, size %" PRIdPTR,
 			  mb->id, mb->magic, mb->length);
 		tot += mb->length;

@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 struct parse_sp {		/* scratch pad for the parsing process */
 	struct pool *mem;
 	int type;		/* token type, 0 indicates a charset */
@@ -21,9 +20,7 @@ struct parse_sp {		/* scratch pad for the parsing process */
 	const char *rx_end;	/* 1pte for the expression being parsed */
 };
 
-
 static struct rx_node *_or_term(struct parse_sp *ps);
-
 
 /*
  * Get the next token from the regular expression.
@@ -34,16 +31,16 @@ static int _get_token(struct parse_sp *ps)
 	int neg = 0, range = 0;
 	char c, lc = 0;
 	const char *ptr = ps->cursor;
-	if(ptr == ps->rx_end) {       /* end of input ? */
+	if (ptr == ps->rx_end) {	/* end of input ? */
 		ps->type = -1;
 		return 0;
 	}
 
-	switch(*ptr) {
-	/* charsets and ncharsets */
+	switch (*ptr) {
+		/* charsets and ncharsets */
 	case '[':
 		ptr++;
-		if(*ptr == '^') {
+		if (*ptr == '^') {
 			bit_set_all(ps->charset);
 
 			/* never transition on zero */
@@ -54,40 +51,46 @@ static int _get_token(struct parse_sp *ps)
 		} else
 			bit_clear_all(ps->charset);
 
-		while((ptr < ps->rx_end) && (*ptr != ']')) {
-			if(*ptr == '\\') {
+		while ((ptr < ps->rx_end) && (*ptr != ']')) {
+			if (*ptr == '\\') {
 				/* an escaped character */
 				ptr++;
-				switch(*ptr) {
-				case 'n': c = '\n'; break;
-				case 'r': c = '\r'; break;
-				case 't': c = '\t'; break;
+				switch (*ptr) {
+				case 'n':
+					c = '\n';
+					break;
+				case 'r':
+					c = '\r';
+					break;
+				case 't':
+					c = '\t';
+					break;
 				default:
 					c = *ptr;
 				}
-			} else if(*ptr == '-' && lc) {
+			} else if (*ptr == '-' && lc) {
 				/* we've got a range on our hands */
 				range = 1;
 				ptr++;
-				if(ptr == ps->rx_end) {
+				if (ptr == ps->rx_end) {
 					log_error("Incomplete range"
-						 "specification");
+						  "specification");
 					return -1;
 				}
 				c = *ptr;
 			} else
 				c = *ptr;
 
-			if(range) {
+			if (range) {
 				/* add lc - c into the bitset */
-				if(lc > c) {
+				if (lc > c) {
 					char tmp = c;
 					c = lc;
 					lc = tmp;
 				}
 
-				for(; lc <= c; lc++) {
-					if(neg)
+				for (; lc <= c; lc++) {
+					if (neg)
 						bit_clear(ps->charset, lc);
 					else
 						bit_set(ps->charset, lc);
@@ -95,7 +98,7 @@ static int _get_token(struct parse_sp *ps)
 				range = 0;
 			} else {
 				/* add c into the bitset */
-				if(neg)
+				if (neg)
 					bit_clear(ps->charset, c);
 				else
 					bit_set(ps->charset, c);
@@ -104,7 +107,7 @@ static int _get_token(struct parse_sp *ps)
 			lc = c;
 		}
 
-		if(ptr >= ps->rx_end) {
+		if (ptr >= ps->rx_end) {
 			ps->type = -1;
 			return -1;
 		}
@@ -141,7 +144,7 @@ static int _get_token(struct parse_sp *ps)
 	case '\\':
 		/* escaped character */
 		ptr++;
-		if(ptr >= ps->rx_end) {
+		if (ptr >= ps->rx_end) {
 			log_error("Badly quoted character at end "
 				  "of expression");
 			ps->type = -1;
@@ -151,10 +154,16 @@ static int _get_token(struct parse_sp *ps)
 		ps->type = 0;
 		ps->cursor = ptr + 1;
 		bit_clear_all(ps->charset);
-		switch(*ptr) {
-		case 'n': bit_set(ps->charset, (int) '\n'); break;
-		case 'r': bit_set(ps->charset, (int) '\r'); break;
-		case 't': bit_set(ps->charset, (int) '\t'); break;
+		switch (*ptr) {
+		case 'n':
+			bit_set(ps->charset, (int) '\n');
+			break;
+		case 'r':
+			bit_set(ps->charset, (int) '\r');
+			break;
+		case 't':
+			bit_set(ps->charset, (int) '\t');
+			break;
 		default:
 			bit_set(ps->charset, (int) *ptr);
 		}
@@ -195,7 +204,7 @@ static struct rx_node *_term(struct parse_sp *ps)
 {
 	struct rx_node *n;
 
-	switch(ps->type) {
+	switch (ps->type) {
 	case 0:
 		if (!(n = _node(ps->mem, CHARSET, NULL, NULL))) {
 			stack;
@@ -203,17 +212,17 @@ static struct rx_node *_term(struct parse_sp *ps)
 		}
 
 		bit_copy(n->charset, ps->charset);
-		_get_token(ps);           /* match charset */
+		_get_token(ps);	/* match charset */
 		break;
 
 	case '(':
-		_get_token(ps);           /* match '(' */
+		_get_token(ps);	/* match '(' */
 		n = _or_term(ps);
-		if(ps->type != ')') {
+		if (ps->type != ')') {
 			log_error("missing ')' in regular expression");
 			return 0;
 		}
-		_get_token(ps);           /* match ')' */
+		_get_token(ps);	/* match ')' */
 		break;
 
 	default:
@@ -227,11 +236,11 @@ static struct rx_node *_closure_term(struct parse_sp *ps)
 {
 	struct rx_node *l, *n;
 
-	if(!(l = _term(ps)))
+	if (!(l = _term(ps)))
 		return NULL;
 
 	for (;;) {
-		switch(ps->type) {
+		switch (ps->type) {
 		case '*':
 			n = _node(ps->mem, STAR, l, NULL);
 			break;
@@ -289,7 +298,7 @@ static struct rx_node *_or_term(struct parse_sp *ps)
 	if (ps->type != '|')
 		return l;
 
-	_get_token(ps);       /* match '|' */
+	_get_token(ps);		/* match '|' */
 
 	if (!(r = _or_term(ps))) {
 		log_error("Badly formed 'or' expression");
@@ -317,7 +326,7 @@ struct rx_node *rx_parse_tok(struct pool *mem,
 	ps->charset = bitset_create(mem, 256);
 	ps->cursor = begin;
 	ps->rx_end = end;
-	_get_token(ps);               /* load the first token */
+	_get_token(ps);		/* load the first token */
 
 	if (!(r = _or_term(ps))) {
 		log_error("Parse error in regex");

@@ -57,7 +57,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	persistent_filter_wipe(cmd->filter);
 
 	log_verbose("Walking through all physical volumes");
-	if (!(pvs = cmd->fid->ops->get_pvs(cmd->fid)))
+	if (!(pvs = get_pvs(cmd)))
 		return ECMD_FAILED;
 
 	/* eliminate exported/new if required */
@@ -65,8 +65,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		pvl = list_item(pvh, struct pv_list);
 		pv = pvl->pv;
 
-		if (
-		    (arg_count(cmd, exported_ARG)
+		if ((arg_count(cmd, exported_ARG)
 		     && !(pv->status & EXPORTED_VG))
 		    || (arg_count(cmd, novolumegroup_ARG) && (*pv->vg_name))) {
 			list_del(&pvl->list);
@@ -90,7 +89,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 			size_new += pv->size;
 			size_total += pv->size;
 		} else
-			size_total += (pv->pe_count - pv->pe_allocated)
+			size_total += (pv->pe_count - pv->pe_alloc_count)
 			    * pv->pe_size;
 	}
 
@@ -175,7 +174,7 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
 	}
 
 	if (!*pv->vg_name) {
-		log_print("PV %-*s    %-*s [%s]",
+		log_print("PV %-*s         %-*s [%s]",
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
 			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));
@@ -192,7 +191,7 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
 					 display_size(pv->pe_count *
 						      pv->pe_size / 2,
 						      SIZE_SHORT)),
-			  (s2 = display_size((pv->pe_count - pv->pe_allocated)
+			  (s2 = display_size((pv->pe_count - pv->pe_alloc_count)
 					     * pv->pe_size / 2, SIZE_SHORT)));
 		dbg_free(s1);
 		dbg_free(s2);
@@ -201,12 +200,13 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
 
 	sprintf(vg_tmp_name, "%s", pv->vg_name);
 	log_print
-	    ("PV %-*s VG %-*s [%s / %s free]", pv_max_name_len,
+	    ("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
 	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
+	     pv->fid ? pv->fid->fmt->name : "    ",
 	     (s1 = display_size(pv->pe_count * pv->pe_size / 2, SIZE_SHORT)),
 	     (s2 =
-	      display_size((pv->pe_count - pv->pe_allocated) * pv->pe_size / 2,
-			   SIZE_SHORT)));
+	      display_size((pv->pe_count - pv->pe_alloc_count) * pv->pe_size /
+			   2, SIZE_SHORT)));
 	dbg_free(s1);
 	dbg_free(s2);
 

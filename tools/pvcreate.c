@@ -39,7 +39,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	}
 
 	/* is there a pv here already */
-	if (!(pv = cmd->fid->ops->pv_read(cmd->fid, name)))
+	if (!(pv = pv_read(cmd, name)))
 		return 1;
 
 	/* orphan ? */
@@ -75,6 +75,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 {
 	struct physical_volume *pv;
+	struct format_instance *fid;
 	struct id id, *idp = NULL;
 	char *uuid;
 	uint64_t size = 0;
@@ -95,8 +96,14 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 	if (!pvcreate_check(cmd, pv_name))
 		return;
 
-        size = arg_int64_value(cmd, physicalvolumesize_ARG, 0) * 2;
-	if (!(pv = pv_create(cmd->fid, pv_name, idp, size))) {
+	size = arg_int64_value(cmd, physicalvolumesize_ARG, 0) * 2;
+
+	/* FIXME Use config file/cmd line to specify format */
+	if (!(fid = cmd->fmt1->ops->create_instance(cmd->fmt1, NULL, NULL))) {
+		log_error("Failed to create format1 instance");
+		return;
+	}
+	if (!(pv = pv_create(fid, pv_name, idp, size))) {
 		log_error("Failed to setup physical volume \"%s\"", pv_name);
 		return;
 	}
@@ -106,7 +113,7 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
-	if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
+	if (!(pv_write(cmd, pv))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		return;
 	}

@@ -53,13 +53,13 @@ int import_pv(struct pool *mem, struct device *dev,
 
 	/* Store system_id from first PV if PV belongs to a VG */
 	if (vg && !*vg->system_id)
-	    strncpy(vg->system_id, pvd->system_id, NAME_LEN);
+		strncpy(vg->system_id, pvd->system_id, NAME_LEN);
 
 	if (vg &&
 	    strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))
-		log_very_verbose("System ID %s on %s differs from %s for "
-				 "volume group", pvd->system_id,
-				 dev_name(pv->dev), vg->system_id);
+		    log_very_verbose("System ID %s on %s differs from %s for "
+				     "volume group", pvd->system_id,
+				     dev_name(pv->dev), vg->system_id);
 
 	/*
 	 * If exported, we still need to flag in pv->status too because
@@ -75,7 +75,7 @@ int import_pv(struct pool *mem, struct device *dev,
 	pv->pe_size = pvd->pe_size;
 	pv->pe_start = pvd->pe_start;
 	pv->pe_count = pvd->pe_total;
-	pv->pe_allocated = pvd->pe_allocated;
+	pv->pe_alloc_count = pvd->pe_allocated;
 
 	return 1;
 }
@@ -163,7 +163,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 	if (vg &&
 	    (!*vg->system_id ||
 	     strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id))))
-		strncpy(vg->system_id, pvd->system_id, NAME_LEN);
+		    strncpy(vg->system_id, pvd->system_id, NAME_LEN);
 
 	//pvd->pv_major = MAJOR(pv->dev);
 
@@ -174,15 +174,14 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 	pvd->lv_cur = 0;	/* this is set when exporting the lv list */
 	pvd->pe_size = pv->pe_size;
 	pvd->pe_total = pv->pe_count;
-	pvd->pe_allocated = pv->pe_allocated;
+	pvd->pe_allocated = pv->pe_alloc_count;
 	pvd->pe_start = pv->pe_start;
 
 	return 1;
 }
 
 int import_vg(struct pool *mem,
-	      struct volume_group *vg, struct disk_list *dl,
-	      int partial)
+	      struct volume_group *vg, struct disk_list *dl, int partial)
 {
 	struct vg_disk *vgd = &dl->vgd;
 	memcpy(vg->id.uuid, vgd->vg_uuid, ID_LEN);
@@ -274,7 +273,7 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 {
 	lvid_from_lvnum(&lv->lvid, &lv->vg->id, lvd->lv_number);
 
-        if (!(lv->name = _create_lv_name(mem, lvd->lv_name))) {
+	if (!(lv->name = _create_lv_name(mem, lvd->lv_name))) {
 		stack;
 		return 0;
 	}
@@ -306,8 +305,8 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 		lv->status |= ALLOC_SIMPLE;
 
 	lv->read_ahead = lvd->lv_read_ahead;
-        lv->size = lvd->lv_size;
-        lv->le_count = lvd->lv_allocated_le;
+	lv->size = lvd->lv_size;
+	lv->le_count = lvd->lv_allocated_le;
 
 	list_init(&lv->segments);
 
@@ -343,10 +342,10 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	lvd->lv_stripes = list_item(lv->segments.n,
 				    struct stripe_segment)->stripes;
 	lvd->lv_stripesize = list_item(lv->segments.n,
-				    struct stripe_segment)->stripe_size;
+				       struct stripe_segment)->stripe_size;
 
-        lvd->lv_size = lv->size;
-        lvd->lv_allocated_le = lv->le_count;
+	lvd->lv_size = lv->size;
+	lvd->lv_allocated_le = lv->le_count;
 
 	if (lv->status & BADBLOCK_ON)
 		lvd->lv_badblock = LV_BADBLOCK_ON;
@@ -359,26 +358,25 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 }
 
 int export_extents(struct disk_list *dl, int lv_num,
-		   struct logical_volume *lv,
-		   struct physical_volume *pv)
+		   struct logical_volume *lv, struct physical_volume *pv)
 {
 	struct list *segh;
 	struct pe_disk *ped;
 	struct stripe_segment *seg;
 	uint32_t pe, s;
 
-	list_iterate (segh, &lv->segments) {
+	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct stripe_segment);
 
 		for (s = 0; s < seg->stripes; s++) {
 			if (seg->area[s].pv != pv)
-				continue; /* not our pv */
+				continue;	/* not our pv */
 
 			for (pe = 0; pe < (seg->len / seg->stripes); pe++) {
 				ped = &dl->extents[pe + seg->area[s].pe];
 				ped->lv_num = lv_num;
 				ped->le_num = (seg->le / seg->stripes) + pe +
-					      s * (lv->le_count / seg->stripes);
+				    s * (lv->le_count / seg->stripes);
 			}
 		}
 	}
@@ -386,7 +384,8 @@ int export_extents(struct disk_list *dl, int lv_num,
 	return 1;
 }
 
-int import_pvs(struct pool *mem, struct volume_group *vg,
+int import_pvs(struct format_instance *fid, struct pool *mem,
+	       struct volume_group *vg,
 	       struct list *pvds, struct list *results, int *count)
 {
 	struct list *pvdh;
@@ -409,6 +408,7 @@ int import_pvs(struct pool *mem, struct volume_group *vg,
 			return 0;
 		}
 
+		pvl->pv->fid = fid;
 		list_add(results, &pvl->list);
 		(*count)++;
 	}
@@ -442,8 +442,7 @@ static struct logical_volume *_add_lv(struct pool *mem,
 	return lv;
 }
 
-int import_lvs(struct pool *mem, struct volume_group *vg,
-	       struct list *pvds)
+int import_lvs(struct pool *mem, struct volume_group *vg, struct list *pvds)
 {
 	struct disk_list *dl;
 	struct lvd_list *ll;
@@ -493,7 +492,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	}
 	memset(dl->extents, 0, len);
 
-	list_iterate (lvh, &vg->lvs) {
+	list_iterate(lvh, &vg->lvs) {
 		ll = list_item(lvh, struct lv_list);
 		if (!(lvdl = pool_alloc(dl->mem, sizeof(*lvdl)))) {
 			stack;
@@ -524,7 +523,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	 * Now we need to run through the snapshots, exporting
 	 * the SNAPSHOT_ORG flags etc.
 	 */
-	list_iterate (sh, &vg->snapshots) {
+	list_iterate(sh, &vg->snapshots) {
 		struct lv_disk *org, *cow;
 		struct snapshot *s = list_item(sh,
 					       struct snapshot_list)->snapshot;
@@ -549,7 +548,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 	r = 1;
 
- out:
+      out:
 	hash_destroy(lvd_hash);
 	return r;
 }
@@ -569,10 +568,10 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 
 	/* build an index of lv numbers */
 	memset(lvs, 0, sizeof(lvs));
-	list_iterate (pvdh, pvds) {
+	list_iterate(pvdh, pvds) {
 		dl = list_item(pvdh, struct disk_list);
 
-		list_iterate (lvdh, &dl->lvds) {
+		list_iterate(lvdh, &dl->lvds) {
 			lvd = &(list_item(lvdh, struct lvd_list)->lvd);
 
 			lvnum = lvd->lv_number;
@@ -595,10 +594,10 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 	/*
 	 * Now iterate through yet again adding the snapshots.
 	 */
-	list_iterate (pvdh, pvds) {
+	list_iterate(pvdh, pvds) {
 		dl = list_item(pvdh, struct disk_list);
 
-		list_iterate (lvdh, &dl->lvds) {
+		list_iterate(lvdh, &dl->lvds) {
 			lvd = &(list_item(lvdh, struct lvd_list)->lvd);
 
 			if (!(lvd->lv_access & LV_SNAPSHOT))
@@ -617,8 +616,7 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 				continue;
 
 			/* insert the snapshot */
-			if (!vg_add_snapshot(org, cow, 1,
-					     lvd->lv_chunk_size)) {
+			if (!vg_add_snapshot(org, cow, 1, lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");
 				return 0;
 			}
@@ -627,8 +625,6 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 
 	return 1;
 }
-
-
 
 int export_uuids(struct disk_list *dl, struct volume_group *vg)
 {
@@ -688,14 +684,14 @@ void export_pv_act(struct list *pvds)
 	}
 }
 
-int export_vg_number(struct list *pvds, const char *vg_name,
-		     struct dev_filter *filter)
+int export_vg_number(struct format_instance *fid, struct list *pvds,
+		     const char *vg_name, struct dev_filter *filter)
 {
 	struct list *pvdh;
 	struct disk_list *dl;
 	int vg_num;
 
-	if (!get_free_vg_number(filter, vg_name, &vg_num)) {
+	if (!get_free_vg_number(fid, filter, vg_name, &vg_num)) {
 		stack;
 		return 0;
 	}
@@ -707,4 +703,3 @@ int export_vg_number(struct list *pvds, const char *vg_name,
 
 	return 1;
 }
-

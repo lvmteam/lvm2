@@ -8,7 +8,6 @@
 #include "log.h"
 #include "dbg_malloc.h"
 
-
 /*
  * Only works with powers of 2.
  */
@@ -51,17 +50,17 @@ static void _calc_simple_layout(struct pv_disk *pvd)
 	pvd->pv_on_disk.base = METADATA_BASE;
 	pvd->pv_on_disk.size = PV_SIZE;
 
-        pvd->vg_on_disk.base = _next_base(&pvd->pv_on_disk);
-        pvd->vg_on_disk.size = VG_SIZE;
+	pvd->vg_on_disk.base = _next_base(&pvd->pv_on_disk);
+	pvd->vg_on_disk.size = VG_SIZE;
 
-        pvd->pv_uuidlist_on_disk.base = _next_base(&pvd->vg_on_disk);
-        pvd->pv_uuidlist_on_disk.size = MAX_PV * NAME_LEN;
+	pvd->pv_uuidlist_on_disk.base = _next_base(&pvd->vg_on_disk);
+	pvd->pv_uuidlist_on_disk.size = MAX_PV * NAME_LEN;
 
-        pvd->lv_on_disk.base = _next_base(&pvd->pv_uuidlist_on_disk);
-        pvd->lv_on_disk.size = MAX_LV * sizeof(struct lv_disk);
+	pvd->lv_on_disk.base = _next_base(&pvd->pv_uuidlist_on_disk);
+	pvd->lv_on_disk.size = MAX_LV * sizeof(struct lv_disk);
 
-        pvd->pe_on_disk.base = _next_base(&pvd->lv_on_disk);
-        pvd->pe_on_disk.size = pvd->pe_total * sizeof(struct pe_disk);
+	pvd->pe_on_disk.base = _next_base(&pvd->lv_on_disk);
+	pvd->pe_on_disk.size = pvd->pe_total * sizeof(struct pe_disk);
 }
 
 int _check_vg_limits(struct disk_list *dl)
@@ -103,7 +102,6 @@ int calculate_layout(struct disk_list *dl)
 	return 1;
 }
 
-
 /*
  * It may seem strange to have a struct physical_volume in here,
  * but the number of extents that can fit on a disk *is* metadata
@@ -133,16 +131,15 @@ int calculate_extent_count(struct physical_volume *pv)
 		return 0;
 	}
 
-
 	do {
 		pvd->pe_total--;
 		_calc_simple_layout(pvd);
-		end = ((pvd->pe_on_disk.base + pvd->pe_on_disk.size + \
-			SECTOR_SIZE - 1) / SECTOR_SIZE);
+		end = ((pvd->pe_on_disk.base + pvd->pe_on_disk.size +
+		        SECTOR_SIZE - 1) / SECTOR_SIZE);
 
 		pvd->pe_start = _round_up(end, PE_ALIGN);
 
-	} while((pvd->pe_start + (pvd->pe_total * pv->pe_size)) > pv->size);
+	} while ((pvd->pe_start + (pvd->pe_total * pv->pe_size)) > pv->size);
 
 	if (pvd->pe_total > MAX_PE_TOTAL) {
 		log_error("Metadata extent limit (%u) exceeded for %s - "
