@@ -30,6 +30,7 @@
 enum {
 	READ_ONLY = 0,
 	MINOR_ARG,
+	VERBOSE_ARG,
 	NUM_SWITCHES
 };
 
@@ -375,8 +376,8 @@ static int _deps(int argc, char **argv)
 typedef int (*command_fn) (int argc, char **argv);
 
 struct command {
-	char *name;
-	char *help;
+	const char *name;
+	const char *help;
 	int min_args;
 	int max_args;
 	command_fn fn;
@@ -422,12 +423,13 @@ static struct command *_find_command(const char *name)
 
 static int _process_switches(int *argc, char ***argv)
 {
-	int index;
+	int ind;
 	int c;
 
 	static struct option long_options[] = {
 		{"read-only", 0, NULL, READ_ONLY},
 		{"minor", 1, NULL, MINOR_ARG},
+		{"verbose", 1, NULL, VERBOSE_ARG},
 		{"", 0, NULL, 0}
 	};
 
@@ -437,15 +439,19 @@ static int _process_switches(int *argc, char ***argv)
 	memset(&_switches, 0, sizeof(_switches));
 	memset(&_values, 0, sizeof(_values));
 
-	while ((c = getopt_long(*argc, *argv, "m:r",
-				long_options, &index)) != -1) {
-		if (c == 'r' || index == READ_ONLY)
+	while ((c = getopt_long(*argc, *argv, "m:rv",
+				long_options, &ind)) != -1) {
+		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
-		if (c == 'm' || index == MINOR_ARG) {
+		if (c == 'm' || ind == MINOR_ARG) {
 			_switches[MINOR_ARG]++;
 			_values[MINOR_ARG] = atoi(optarg);
 		}
+		if (c == 'v' || ind == VERBOSE_ARG)
+			_switches[VERBOSE_ARG]++;
 	}
+
+	dm_log_init_verbose(_switches[VERBOSE_ARG]);
 
 	*argv += optind;
 	*argc -= optind;
