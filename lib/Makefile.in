@@ -28,6 +28,7 @@ SOURCES=\
 	filters/filter-composite.c \
 	filters/filter-persistent.c \
 	filters/filter-regex.c \
+	filters/filter-sysfs.c \
 	filters/filter.c \
 	format_text/archive.c \
 	format_text/export.c \
