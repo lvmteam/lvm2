@@ -4,24 +4,23 @@ before 2.0
 vgexport
 vgimport
 snapshots
+pvmove
 device-mapper support for 2.5 kernel series
 review FIXMEs
 extra validation & full consistency checks in format1 with LVM1
-partial activation
+partial activation (aka VG quorum)
 error message review
 locking during metadata changes
 format2 with atomic transactions
 bidirectional format1/format2 migration tool
 persistent minors
-stats
-pvmove
+statistics target and tool support
 review tool exit codes for LVM1 compatibility
 
 before 2.1
 ----------
 
 e2fsadm
-lvmdiskscan
 lvmsadc
 lvmsar
 pvdata
