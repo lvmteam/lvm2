@@ -29,6 +29,7 @@ CLDFLAGS += @CLDFLAGS@
 CLDWHOLEARCHIVE += @CLDWHOLEARCHIVE@
 CLDNOWHOLEARCHIVE += @CLDNOWHOLEARCHIVE@
 LD_DEPS += @LD_DEPS@
+LD_FLAGS += @LD_FLAGS@
 SOFLAG += @SOFLAG@
 
 # Setup directory variables
@@ -108,6 +109,8 @@ SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 .PHONY: all install pofile distclean clean
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile)
+
+TARGETS += $(LIB_SHARED) $(LIB_STATIC)
 
 all: $(SUBDIRS) $(TARGETS)
 
