@@ -39,7 +39,7 @@
 #include "clvmd-comms.h"
 #include "lvm-functions.h"
 #include "clvm.h"
-#include "../../tools/version.h"
+#include "version.h"
 #include "clvmd.h"
 #include "libdlm.h"
 #include "system-lv.h"

@@ -15,27 +15,22 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-ifeq ("@CLVMD@", "gulm")
 SOURCES = \
-	clvmd-gulm.c     \
-	tcp-comms.c	 \
-        clvmd-command.c  \
-        clvmd.c          \
-        libclvm.c        \
-        lvm-functions.c  \
-        system-lv.c
-LM_LIBS = -lccs -lgulm
-LM_FLAGS= -DUSE_GULM
-else
-SOURCES = \
-	clvmd-cman.c     \
 	clvmd-command.c  \
 	clvmd.c          \
 	libclvm.c        \
 	lvm-functions.c  \
 	system-lv.c
-LM_LIBS = -ldlm
-LM_FLAGS=
+
+ifeq ("@CLVMD@", "gulm")
+	SOURCES += clvmd-gulm.c tcp-comms.c
+	LMLIBS += -lccs -lgulm
+	CFLAGS += -DUSE_GULM
+endif
+
+ifeq ("@CLVMD@", "cman")
+	SOURCES += clvmd-cman.c
+	LMLIBS += -ldlm
 endif
 
 TARGETS = \
@@ -43,15 +38,14 @@ TARGETS = \
 
 include $(top_srcdir)/make.tmpl
 
-CFLAGS += -D_REENTRANT -fno-strict-aliasing $(LM_FLAGS)
+CFLAGS += -D_REENTRANT -fno-strict-aliasing
 LIBS += -ldevmapper -llvm -lpthread
-
 
 INSTALL_TARGETS = \
 	install_clvmd
 
 clvmd: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
-	$(CC) -o clvmd $(OBJECTS) $(LDFLAGS) $(LVMLIBS) $(LM_LIBS) $(LIBS)
+	$(CC) -o clvmd $(OBJECTS) $(LDFLAGS) $(LVMLIBS) $(LMLIBS) $(LIBS)
 
 .PHONY: install_clvmd
 
