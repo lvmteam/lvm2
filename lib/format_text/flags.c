@@ -22,6 +22,7 @@ static struct flag _vg_flags[] = {
 	{EXPORTED_VG, "EXPORTED"},
 	{RESIZEABLE_VG, "RESIZEABLE"},
 	{PARTIAL_VG, "PARTIAL"},
+	{PVMOVE_VG, "PVMOVE"},
 	{LVM_READ, "READ"},
 	{LVM_WRITE, "WRITE"},
 	{CLUSTERED, "CLUSTERED"},

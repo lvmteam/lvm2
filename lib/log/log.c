@@ -14,6 +14,7 @@ static FILE *_log = 0;
 static int _verbose_level = 0;
 static int _test = 0;
 static int _partial = 0;
+static int _pvmove = 0;
 static int _debug_level = 0;
 static int _syslog = 0;
 static int _indent = 1;
@@ -68,6 +69,11 @@ void init_partial(int level)
 	_partial = level;
 }
 
+void init_pvmove(int level)
+{
+	_pvmove = level;
+}
+
 void init_ignorelockingfailure(int level)
 {
 	_ignorelockingfailure = level;
@@ -105,6 +111,11 @@ int test_mode()
 int partial_mode()
 {
 	return _partial;
+}
+
+int pvmove_mode()
+{
+	return _pvmove;
 }
 
 int ignorelockingfailure()
