@@ -31,7 +31,7 @@ static const char *_name(const struct lv_segment *seg)
 static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 			struct hash_table *pv_hash)
 {
-	uint32_t chunk_size;
+	uint32_t chunk_size, extent_count;
 	const char *org_name, *cow_name;
 	struct logical_volume *org, *cow;
 
@@ -70,7 +70,11 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 		return 0;
 	}
 
-	if (!vg_add_snapshot(org, cow, 1, &seg->lv->lvid.id[1], chunk_size)) {
+	if (!get_config_uint32(sn, "extent_count", &extent_count))
+		extent_count = org->le_count;
+
+	if (!vg_add_snapshot(org, cow, 1, &seg->lv->lvid.id[1], extent_count,
+			     chunk_size)) {
 		stack;
 		return 0;
 	}
@@ -81,6 +85,8 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 static int _text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "chunk_size = %u", seg->chunk_size);
+	if (seg->len != seg->origin->le_count)
+		outf(f, "extent_count = %u", seg->len);
 	outf(f, "origin = \"%s\"", seg->origin->name);
 	outf(f, "cow_store = \"%s\"", seg->cow->name);
 

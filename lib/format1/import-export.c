@@ -646,7 +646,7 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 				continue;
 
 			/* insert the snapshot */
-			if (!vg_add_snapshot(org, cow, 1, NULL,
+			if (!vg_add_snapshot(org, cow, 1, NULL, org->le_count, 
 					     lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");
 				return 0;
