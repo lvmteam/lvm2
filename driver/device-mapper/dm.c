@@ -578,7 +578,6 @@ int dm_create(const char *name, int minor)
 	}
 
 	strcpy(md->name, name);
-	_devs[minor] = md;
 
 	if ((r = register_device(md))) {
 		up_write(&_dev_lock);
