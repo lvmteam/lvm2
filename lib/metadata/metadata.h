@@ -43,7 +43,7 @@
 #define SPINDOWN_LV    BIT(4)  /* LV */
 #define BADBLOCK_ON    BIT(5)  /* LV */
 #define FIXED_MINOR    BIT(6)  /* LV */
-#define VISIBLE_LV     BIT(7) /* LV */
+#define VISIBLE_LV     BIT(7)  /* LV */
 
 /*
  * FIXME: do we really set read/write for a whole vg ?
