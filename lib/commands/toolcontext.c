@@ -239,7 +239,9 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	struct config_node *cn;
 	struct dev_filter *f1, *f2, *f3;
 
-	if (!(f2 = lvm_type_filter_create(cmd->proc_dir)))
+	cn = find_config_node(cmd->cf->root, "devices/types", '/');
+
+	if (!(f2 = lvm_type_filter_create(cmd->proc_dir, cn)))
 		return NULL;
 
 	if (!(cn = find_config_node(cmd->cf->root, "devices/filter", '/'))) {
