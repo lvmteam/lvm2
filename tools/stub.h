@@ -4,12 +4,14 @@
  * This file is released under the GPL.
  */
 
-int e2fsadm(int argc, char **argv) {return 1;}
-int lvmdiskscan(int argc, char **argv) {return 1;}
-int lvmsadc(int argc, char **argv) {return 1;}
-int lvmsar(int argc, char **argv) {return 1;}
-int pvdata(int argc, char **argv) {return 1;}
-int pvmove(int argc, char **argv) {return 1;}
-int vgmknodes(int argc, char **argv) {return 1;}
-int vgsplit(int argc, char **argv) {return 1;}
+#define unimplemented \
+	{ log_error("Command not implemented yet."); return ECMD_FAILED;}
+int e2fsadm(int argc, char **argv) unimplemented
+int lvmdiskscan(int argc, char **argv) unimplemented
+int lvmsadc(int argc, char **argv) unimplemented
+int lvmsar(int argc, char **argv) unimplemented
+int pvdata(int argc, char **argv) unimplemented
+int pvmove(int argc, char **argv) unimplemented
+int vgmknodes(int argc, char **argv) unimplemented
+int vgsplit(int argc, char **argv) unimplemented
 
