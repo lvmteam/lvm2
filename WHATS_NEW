@@ -1,5 +1,6 @@
 Version 2.00.23 - 
 ====================================
+  Write log message when each segtype/format gets initialised.
   New commands 'segtypes' and 'formats'.
   Suppress pvmove abort message in test mode.
   Improve pvcreate/remove device not found error message.

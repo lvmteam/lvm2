@@ -258,5 +258,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->private = NULL;
 	segtype->flags = SEG_AREAS_MIRRORED;
 
+	log_very_verbose("Initialised segtype: %s", segtype->name);
+
 	return segtype;
 }

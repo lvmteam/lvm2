@@ -217,5 +217,7 @@ struct segment_type *init_striped_segtype(struct cmd_context *cmd)
 	segtype->flags =
 	    SEG_CAN_SPLIT | SEG_AREAS_STRIPED | SEG_FORMAT1_SUPPORT;
 
+	log_very_verbose("Initialised segtype: %s", segtype->name);
+
 	return segtype;
 }
