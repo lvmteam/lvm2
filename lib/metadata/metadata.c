@@ -217,7 +217,8 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 		goto bad;
 	}
 
-	if (!vg->fid->fmt->ops->vg_setup(vg->fid, vg)) {
+	if (vg->fid->fmt->ops->vg_setup &&
+	    !vg->fid->fmt->ops->vg_setup(vg->fid, vg)) {
 		log_error("Format specific setup of volume group '%s' failed.",
 			  vg_name);
 		goto bad;
@@ -463,6 +464,19 @@ int vg_write(struct volume_group *vg)
 	/* Write to each copy of the metadata area */
 	list_iterate(mdah, &vg->fid->metadata_areas) {
 		mda = list_item(mdah, struct metadata_area);
+		if(!mda->ops->vg_write) {
+			log_error("Format does not support writing volume"
+				  "group metadata areas");
+			/* Revert */
+			list_uniterate(mdah2, &vg->fid->metadata_areas, mdah) {
+				mda = list_item(mdah2, struct metadata_area);
+				if (mda->ops->vg_revert &&
+				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
+					stack;
+				}
+			}
+			return 0;
+		}
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
 			stack;
 			/* Revert */
@@ -869,6 +883,11 @@ struct list *get_pvs(struct cmd_context *cmd)
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector)
 {
+	if (!pv->fmt->ops->pv_write) {
+		log_error("Format does not support writing physical volumes");
+		return 0;
+	}
+
 	if (*pv->vg_name || pv->pe_alloc_count) {
 		log_error("Assertion failed: can't _pv_write non-orphan PV "
 			  "(in VG %s)", pv->vg_name);
