@@ -717,9 +717,12 @@ xx(vgmknodes,
    "vgmknodes\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
+   "\t[--ignorelockingfailure]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
-   "\t[VolumeGroupName...]\n" )
+   "\t[VolumeGroupName...]\n",
+
+   ignorelockingfailure_ARG)
 
 xx(vgreduce,
    "Remove physical volume(s) from a volume group",
