@@ -155,7 +155,7 @@ static int _aligned_io(struct device_area *where, void *buffer,
 	}
 
 	if (!block_size)
-		block_size = SECTOR_SIZE * 2;
+		block_size = getpagesize();
 
 	_widen_region(block_size, where, &widened);
 
@@ -353,7 +353,7 @@ static void _close(struct device *dev)
 	}
 }
 
-int dev_close(struct device *dev)
+static int _dev_close(struct device *dev, int immediate)
 {
 	if (dev->fd < 0) {
 		log_error("Attempt to close device '%s' "
@@ -367,10 +367,20 @@ int dev_close(struct device *dev)
 #endif
 
 	/* FIXME lookup device in cache to get vgname and see if it's locked? */
-	if (--dev->open_count < 1 && !vgs_locked())
+	if (--dev->open_count < 1 && (immediate || !vgs_locked()))
 		_close(dev);
 
 	return 1;
+}
+
+int dev_close(struct device *dev)
+{
+	return _dev_close(dev, 0);
+}
+
+int dev_close_immediate(struct device *dev)
+{
+	return _dev_close(dev, 1);
 }
 
 void dev_close_all(void)

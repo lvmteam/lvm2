@@ -406,11 +406,22 @@ static inline void _check_for_open_devices(void)
 
 void dev_cache_exit(void)
 {
-	_check_for_open_devices();
-
-	pool_destroy(_cache.mem);
 	if (_cache.names)
+		_check_for_open_devices();
+
+	if (_cache.mem) {
+		pool_destroy(_cache.mem);
+		_cache.mem = NULL;
+	}
+
+	if (_cache.names) {
 		hash_destroy(_cache.names);
+		_cache.names = NULL;
+	}
+
+	_cache.devices = NULL;
+	_cache.has_scanned = 0;
+	list_init(&_cache.dirs);
 }
 
 int dev_cache_add_dir(const char *path)
