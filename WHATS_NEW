@@ -1,3 +1,6 @@
+Version 2.00.20 -
+==============================
+
 Version 2.00.19 - 29 June 2004
 ==============================
   Reduce severity of setlocale failure message.
