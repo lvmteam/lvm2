@@ -133,8 +133,9 @@ static int _create_dir_recursive(const char *dir)
 {
 	char *orig, *s;
 	int rc;
-	
-	/* create parent directories */
+
+	log_verbose("Creating directory \"%s\"", dir);
+	/* Create parent directories */
 	orig = s = dbg_strdup(dir);
 	while ((s = strchr(s, '/')) != NULL) {
 		*s = '\0';
@@ -150,8 +151,7 @@ static int _create_dir_recursive(const char *dir)
 	}
 	dbg_free(orig);
 
-	/* done w/ parents, create final directory */
-	log_verbose("Creating directory \"%s\"", dir);
+	/* Create final directory */
 	rc = mkdir(dir, 0777);
 	if (rc < 0 && errno != EEXIST) {
 		log_sys_error("mkdir", dir);
