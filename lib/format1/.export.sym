@@ -1,7 +1,0 @@
-Base { 
-	global:
-		init_format;
-	local:
-		*;
-};
-
