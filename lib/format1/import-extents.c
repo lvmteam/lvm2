@@ -82,6 +82,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 	struct lv_map *lvm;
 	int i = 0;
 
+	memset(lvs, 0, sizeof(*lvs) * MAX_LV);
 	list_iterate(lvh, &dl->lvds) {
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 
@@ -95,7 +96,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 		lvm->stripes = ll->lvd.lv_stripes;
 		lvm->stripe_size = ll->lvd.lv_stripesize;
 
-		lvs[i++] = lvm;
+		lvs[ll->lvd.lv_number] = lvm;
 	}
 
 	return 1;
@@ -128,18 +129,26 @@ static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
 			if (lv_num == UNMAPPED_EXTENT)
 				continue;
 
-			else if(lv_num > dl->pvd.lv_cur) {
-				log_err("invalid lv in extent map");
-				return 0;
-
 			} else {
 				lv_num--;
 				lvm = lvms[lv_num];
+
+				if(!lvm) {
+					log_err("invalid lv in extent map");
+					return 0;
+				}
+
 				le = e[i].le_num;
 
 				if (le >= lvm->lv->le_count) {
 					log_err("logical extent number "
 						"out of bounds");
+					return 0;
+				}
+
+				if (lvm->map[le].pv) {
+					log_err("logical extent (%u) "
+						"already mapped.", le);
 					return 0;
 				}
 
@@ -205,7 +214,8 @@ static int _build_segments(struct pool *mem, struct lv_map *lvm)
 
 	len = sizeof(*seg) * (stripes * sizeof(seg->area[0]));
 
-	for (le = 0; le < lvm->lv->le_count;) {
+	le = 0;
+	while (le < lvm->lv->le_count) {
 		if (!(seg = pool_zalloc(mem, len))) {
 			stack;
 			return 0;
