@@ -257,6 +257,9 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	else
 		lv->status |= ALLOC_CONTIGUOUS;
 
+	lv->read_ahead = lvd->lv_read_ahead;
+	lv->stripes = lvd->lv_stripes;
+
         lv->size = lvd->lv_size;
         lv->le_count = lvd->lv_allocated_le;
 
@@ -298,6 +301,9 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 
 	if (lv->status & SPINDOWN_LV)
 		lvd->lv_status |= LV_SPINDOWN;
+
+	lvd->lv_read_ahead = lv->read_ahead;
+	lvd->lv_stripes = lv->stripes;
 
         lvd->lv_size = lv->size;
         lvd->lv_allocated_le = lv->le_count;

@@ -70,6 +70,8 @@ struct logical_volume {
         char *name;
 
         uint32_t status;
+	uint32_t read_ahead;
+	uint32_t stripes;
 
         uint64_t size;
         uint32_t le_count;
