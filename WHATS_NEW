@@ -1,5 +1,6 @@
 Version 2.00.16 - 
 =============================
+  Restructure lvresize, bringing it closer to lvcreate.
   A quick sanity check on vg_disk struct when read in.  More checks needed.
   Only include visible LVs in active/open counts.
   Add virtual segment types, zero and error.  A large sparse device can be
