@@ -476,7 +476,7 @@ void *dm_get_next_target(struct dm_task *dmt, void *next,
 /* Unmarshall the target info returned from a status call */
 static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 {
-	char *outbuf = (char *) dmi + dmi->data_offset;
+	char *outbuf = (char *) dmi + dmi->data_start;
 	char *outptr = outbuf;
 	uint32_t i;
 	struct dm_target_spec *spec;
@@ -533,7 +533,7 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 		return _dm_task_get_deps_v1(dmt);
 
 	return (struct dm_deps *) (((void *) dmt->dmi.v3) +
-				   dmt->dmi.v3->data_offset);
+				   dmt->dmi.v3->data_start);
 }
 
 int dm_task_set_ro(struct dm_task *dmt)
@@ -668,7 +668,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	dmi->version[2] = (*version)[2];
 
 	dmi->data_size = len;
-	dmi->data_offset = sizeof(struct dm_ioctl);
+	dmi->data_start = sizeof(struct dm_ioctl);
 
 	if (dmt->dev_name)
 		strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
@@ -778,6 +778,7 @@ int dm_task_run(struct dm_task *dmt)
 
 	case DM_DEVICE_STATUS:
 	case DM_DEVICE_TABLE:
+	case DM_DEVICE_WAITEVENT:
 		if (!_unmarshal_status(dmt, dmi))
 			goto bad;
 		break;
