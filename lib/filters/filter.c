@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #define NUMBER_OF_MAJORS 256
 
@@ -101,6 +102,14 @@ static int *_scan_proc_dev(const char *proc, struct config_node *cn)
 	      dbg_malloc(sizeof(int) * NUMBER_OF_MAJORS))) {
 		log_error("Filter failed to allocate max_partitions_by_major");
 		return NULL;
+	}
+
+	if (!*proc) {
+		log_verbose("No proc filesystem found: using all block device "
+			    "types");
+		for (i = 0; i < NUMBER_OF_MAJORS; i++)
+			max_partitions_by_major[i] = 1;
+		return max_partitions_by_major;
 	}
 
 	if (lvm_snprintf(proc_devices, sizeof(proc_devices),
