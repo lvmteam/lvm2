@@ -3,6 +3,7 @@ lvm2 (0.95.05-2) unstable; urgency=low
   * Use ${shlibs:Depends} in Depends.
   * Get rid of postinst/postrm scripts, use debhelper's init script instead.
   * Add Conflicts against lvm10, lvm-common.
+  * Fix endian issues on big-endian machines.
     
  -- Andres Salomon <dilinger@mp3revolution.net>  Thu,  2 May 2002 23:53:53 -0500
 
