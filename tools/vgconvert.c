@@ -32,6 +32,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	uint64_t pvmetadatasize = 0;
 	uint64_t pe_end = 0, pe_start = 0;
 	struct list *pvh;
+	int change_made = 0;
 
 	if (!vg) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
@@ -97,10 +98,14 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 				     pvmetadatasize, &mdas))) {
 			log_error("Failed to setup physical volume \"%s\"",
 				  dev_name(existing_pv->dev));
-			log_error("Use pvcreate and vgcfgrestore to repair "
-				  "from archived metadata.");
+			if (change_made)
+				log_error("Use pvcreate and vgcfgrestore to "
+					  "repair from archived metadata.");
 			return ECMD_FAILED;
 		}
+
+		/* Need to revert manually if it fails after this point */
+		change_made = 1;
 
 		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
 			    " available sectors", dev_name(pv->dev), pv->size);
