@@ -8,8 +8,6 @@
 #include "log.h"
 
 
-#define SECTOR_SIZE 512
-
 /*
  * Only works with powers of 2.
  */
