@@ -1,5 +1,6 @@
-Version 2.00.20 -
-==============================
+Version 2.00.20 - 3 July 2004
+=============================
+  More autoconf fixes.
   Fix device number handling for 2.6 kernels.
 
 Version 2.00.19 - 29 June 2004
