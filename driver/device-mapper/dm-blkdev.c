@@ -107,6 +107,7 @@ static struct block_device *dm_get_device(struct block_device *bdev)
 	if (!d) {
 		rv = blkdev_get(bdev, FMODE_READ | FMODE_WRITE, 0, BDEV_FILE);
 		if (rv == 0) {
+			atomic_inc(&bdev->bd_count);
 			write_lock(&bdev_lock);
 			list_add(&n->list, &bdev_hash[hash]);
 			d = n;
@@ -181,6 +182,7 @@ static void dm_blkdev_drop(struct dm_bdev *d)
 	write_unlock(&bdev_lock);
 	if (d) {
 		blkdev_put(d->bdev, BDEV_FILE);
+		bdput(d->bdev);
 		kmem_cache_free(bdev_cachep, d);
 	}
 	up(&bdev_sem);
