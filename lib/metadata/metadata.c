@@ -426,8 +426,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name)
 	list_iterate(mdah, &fid->metadata_areas) {
 		mdl = list_item(mdah, struct metadata_area)->metadata_locn;
 		if (!(vg = fid->fmt->ops->vg_read(fid, vg_name, mdl))) {
-			stack;
-			return NULL;
+ 			inconsistent = 1;
+ 			continue;
 		}
 		if (first_time) {
 			correct_vg = vg;
@@ -441,6 +441,12 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name)
 		}
 	}
 
+	/* Failed to find VG */
+	if (first_time) {
+		stack;
+		return NULL;
+	}
+
 	if (inconsistent) {
 		log_print("Inconsistent metadata copies found - updating "
 			  "to use version %u", correct_vg->seqno);
@@ -452,7 +458,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name)
 
 	vgcache_add(vg_name, correct_vg->id.uuid, NULL, fmt);
 
-	return vg;
+	return correct_vg;
 }
 
 struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
