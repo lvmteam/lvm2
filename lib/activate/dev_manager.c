@@ -587,7 +587,6 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 {
 	char *name;
-	struct dm_info info;
 
 	/*
 	 * Build a name for the top layer.
@@ -597,20 +596,7 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
-	/*
-	 * Try and get some info on this device.
-	 */
-	if (!_info(name, &info)) {
-		stack;
-		return 0;
-	}
-
-	if (!info.exists) {
-		log_warn("No such device '%s'.", lv->name);
-		return 0;
-	}
-
-	if (!info.suspended && !_suspend_or_resume(name, 1)) {
+	if (!_suspend_or_resume(name, 1)) {
 		stack;
 		return 0;
 	}
