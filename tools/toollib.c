@@ -7,6 +7,7 @@
 #include "tools.h"
 #include "format-text.h"
 #include "metadata.h"
+#include "lvm-string.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -15,23 +16,22 @@ static int _autobackup = 1;
 static char _backup_dir[PATH_MAX];
 static int _period = 7;		/* backups will be kept for at least 7 days */
 static int _min_backups = 10;	/* always have at least ten backups, even
-				 * if they're old than the period */
+				 * if they're older than the period */
 
 /*
  * Work out by looking at command line, config
  * file and environment variable whether we should
  * do an autobackup.
  */
-int autobackup_init(const char *dir)
+int autobackup_init(const char *system_dir)
 {
 	char *lvm_autobackup;
 
-	if (strlen(dir) > sizeof(_backup_dir) - 1) {
-		log_err("Backup directory (%s) too long.", dir);
+	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir), 
+			 "%s/backup", system_dir) < 0) {
+		log_err("Backup directory (%s/backup) too long.", system_dir);
 		return 0;
 	}
-
-	strcpy(_backup_dir, dir);
 
 	if (arg_count(autobackup_ARG)) {
 		_autobackup = !strcmp(arg_str_value(autobackup_ARG, "y"), "y");
@@ -94,7 +94,7 @@ static int __autobackup(struct volume_group *vg)
 
 int autobackup(struct volume_group *vg)
 {
-	if (!__autobackup) {
+	if (!_autobackup) {
 		log_print("WARNING: You don't have an automatic backup of %s",
 			  vg->name);
 		return 1;

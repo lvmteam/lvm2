@@ -336,7 +336,8 @@ xx(vgcfgbackup,
    "\t[-h|--help] " "\n"
    "\t[-v|--verbose]" "\n"
    "\t[-V|--version] " "\n"
-   "\t[VolumeGroupName...]\n" )
+   "\t[VolumeGroupName...]\n",
+   autobackup_ARG)
 
 xx(vgcfgrestore,
    "Restore volume group configuration",

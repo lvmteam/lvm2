@@ -62,6 +62,23 @@ static struct flag *_get_flags(int type)
 	return NULL;
 }
 
+static int _emit(char **buffer, size_t *size, const char *fmt, ...)
+{
+	size_t n;
+	va_list ap;
+
+	va_start(ap, fmt);
+	n = vsnprintf(*buffer, *size, fmt, ap);
+	va_end(ap);
+
+	if (n < 0 || (n == size))
+		return 0;
+
+	*buffer += n;
+	*size -= n;
+	return 1;
+}
+
 /*
  * Converts a bitset to an array of string values,
  * using one of the tables defined at the top of
@@ -77,31 +94,27 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 		return 0;
 	}
 
-	if ((n = lvm_snprintf(buffer, size, "[")) < 0)
+	if (!_emit(&buffer, &size, "["))
 		return 0;
-	size -= n;
 
 	for (f = 0; flags[f].mask; f++) {
 		if (status & flags[f].mask) {
 			if (!first) {
-				if ((n = lvm_snprintf(buffer, size, ", ")) < 0)
+				if (!_emit(&buffer, &size, ", "))
 					return 0;
-				size -= n;
 
 			} else
 				first = 0;
 
-			n = lvm_snprintf(buffer, size, "\"%s\"",
-					 flags[f].description);
-			if (n < 0)
+			if (!_emit(&buffer, &size, "\"%s\"",
+				   flags[f].description))
 				return 0;
-			size -= n;
 
 			status &= ~flags[f].mask;
 		}
 	}
 
-	if ((n = lvm_snprintf(buffer, size, "]")) < 0)
+	if (!_emit(&buffer, &size, "]"))
 		return 0;
 
 	if (status)

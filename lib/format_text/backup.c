@@ -289,7 +289,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 	/*
 	 * Write the backup, to a temporary file.
 	 */
-	if ((fd = mkstemp(backup_name))) {
+	if ((fd = mkstemp(backup_name)) == -1) {
 		log_err("Couldn't create temporary file for backup.");
 		return 0;
 	}
@@ -327,7 +327,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 			log_err("backup file name too long.");
 			goto out;
 		}
-
+#if 0
 		if (rename(tmp_name, backup_name) < 0) {
 			log_err("couldn't rename backup file to %s.",
 				backup_name);
@@ -335,6 +335,10 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 			r = 1;
 			break;
 		}
+#else
+		r = 1;
+		break;
+#endif
 
 		index++;
 	}

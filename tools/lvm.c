@@ -543,18 +543,9 @@ static int process_common_commands(struct command *com)
 
 	/* Set autobackup if command takes this option */
 	for (l = 0; l < com->num_args; l++)
-		if (com->valid_args[l] == autobackup_ARG) {
-			if (snprintf(backup_dir, sizeof(backup_dir),
-				     "%s/backup", _system_dir) < 0) {
-				log_err("Backup path too long.");
-				return ECMD_FAILED;
-			}
-
-			if (autobackup_init("/etc/lvm/backup"))
+		if (com->valid_args[l] == autobackup_ARG)
+			if (!autobackup_init(_system_dir))
 				return EINVALID_CMD_LINE;
-			else
-				break;
-		}
 
 	return 0;
 }
