@@ -319,7 +319,7 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 
 	if (test_mode()) {
 		_skip("Suspending '%s'.", lv->name);
-		return 0;
+		return 1;
 	}
 
 	if (!lv_info(lv, &info)) {
@@ -346,7 +346,7 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 
 	if (test_mode()) {
 		_skip("Resuming '%s'.", lv->name);
-		return 0;
+		return 1;
 	}
 
 	if (!lv_info(lv, &info)) {
@@ -373,7 +373,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 
 	if (test_mode()) {
 		_skip("Deactivating '%s'.", lv->name);
-		return 0;
+		return 1;
 	}
 
 	if (!lv_info(lv, &info)) {
@@ -400,7 +400,7 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 
 	if (test_mode()) {
 		_skip("Activating '%s'.", lv->name);
-		return 0;
+		return 1;
 	}
 
 	if (!lv_info(lv, &info)) {
