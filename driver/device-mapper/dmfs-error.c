@@ -83,6 +83,9 @@ static int copy_sequence(struct dm_table *t, struct dmfs_error *e, char *buf,
 		from = e->msg + offset;
 		amount = e->len - offset;
 
+		if (size < amount)
+			amount = size;
+
 		if (copy_to_user(buf, from, amount))
 			return -EFAULT;
 

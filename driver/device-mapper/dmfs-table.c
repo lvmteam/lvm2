@@ -36,45 +36,42 @@ static offset_t start_of_next_range(struct dm_table *t)
 
 static void dmfs_parse_line(struct dm_table *t, unsigned num, char *str)
 {
-	char *p = str;
-	const char *tok;
 	offset_t start, size, high;
 	void *context;
 	struct target_type *ttype;
 	int rv = 0;
 	char *msg;
+	int pos = 0;
+	char target[33];
 
+static char *err_table[] = {
+	"Missing/Invalid start argument",
+	"Missing/Invalid size argument",
+	"Missing target type"
+};
 	printk("dmfs_parse_line: (%s)\n", str);
 
-	msg = "No start argument";
-	tok = next_token(&p);
-	if (!tok)
+	rv = sscanf(str, "%d %d %32s%n", &start, &size, target, &pos);
+	if (rv < 3) {
+		msg = err_table[rv];
 		goto out;
-	start = simple_strtoul(tok, NULL, 10);
-
-	msg = "No size argument";
-	tok = next_token(&p);
-	if (!tok)
-		goto out;
-	size = simple_strtoul(tok, NULL, 10);
+	}
+	str += pos;
+	while(*str && isspace(*str))
+		str++;
 
 	msg = "Gap in table";
 	if (start != start_of_next_range(t))
 		goto out;
 
-	msg = "No target type";
-	tok = next_token(&p);
-	if (!tok)
-		goto out;
-
 	msg = "Target type unknown";
-	ttype = dm_get_target_type(tok);
+	ttype = dm_get_target_type(target);
 	if (ttype) {
 		msg = "This message should never appear (constructor error)";
-		rv = ttype->ctr(t, start, size, p, &context);
+		rv = ttype->ctr(t, start, size, str, &context);
 		msg = context;
 		if (rv == 0) {
-			printk("dmfs_parse: %ul %ul %s %s\n", start, size, 
+			printk("dmfs_parse: %lu %lu %s %s\n", start, size, 
 				ttype->name,
 				ttype->print ? ttype->print(context) : "-");
 			msg = "Error adding target to table";
@@ -122,104 +119,87 @@ static int dmfs_line_is_not_comment(char *str)
 	return 0;
 }
 
-static int dmfs_parse_page(struct dm_table *t, char *buf, int end, unsigned long end_index, char *tmp, unsigned long *tmpl, int *num)
-{
-	int copied;
-	unsigned long len = end ? end_index : PAGE_CACHE_SIZE - 1;
+struct dmfs_desc {
+	struct dm_table *table;
+	char *tmp;
+	loff_t tmpl;
+	unsigned long lnum;
+};
 
-	do {
+static int dmfs_read_actor(read_descriptor_t *desc, struct page *page, unsigned long offset, unsigned long size)
+{
+	char *buf;
+	unsigned long count = desc->count, len, copied;
+	struct dmfs_desc *d = (struct dmfs_desc *)desc->buf;
+	
+	if (size > count)
+		size = count;
+
+	len = size;
+	buf = kmap(page);
+	do { 
 		int flag = 0;
-		copied = dmfs_copy(tmp + *tmpl, PAGE_SIZE - *tmpl - 1, buf, len, &flag);
-		buf += copied;
+		copied = dmfs_copy(d->tmp + d->tmpl, PAGE_SIZE - d->tmpl - 1,
+				   buf + offset, len, &flag);
+		offset += copied;
 		len -= copied;
-		if (*tmpl + copied == PAGE_SIZE - 1)
+		if (d->tmpl + copied == PAGE_SIZE - 1)
 			goto line_too_long;
-		(*tmpl) += copied;
-		if (flag || (len == 0 && end)) {
-			*(tmp + *tmpl) = 0;
-			if (dmfs_line_is_not_comment(tmp))
-				dmfs_parse_line(t, *num, tmp);
-			(*num)++;
-			*tmpl = 0;
+		d->tmpl += copied;
+		if (flag || (len == 0 && count == size)) {
+			*(d->tmp + d->tmpl) = 0;
+			if (dmfs_line_is_not_comment(d->tmp))
+				dmfs_parse_line(d->table, d->lnum, d->tmp);
+			d->lnum++;
+			d->tmpl = 0;
 		}
 	} while(len > 0);
-	return 0;
+	kunmap(page);
+
+	desc->count = count - size;
+	desc->written += size;
+
+	return size;
 
 line_too_long:
-	dmfs_add_error(t, *num, "Line too long");
-	/* FIXME: Add code to recover from this */
-	return -1;
+	printk(KERN_INFO "dmfs_read_actor: Line %lu too long\n", d->lnum);
+	kunmap(page);
+	return 0;
 }
 
-static struct dm_table *dmfs_parse(struct inode *inode)
+static struct dm_table *dmfs_parse(struct inode *inode, struct file *filp)
 {
-	struct address_space *mapping = inode->i_mapping;
-	unsigned long index = 0;
-	unsigned long end_index, end_offset;
+	struct dm_table *t = NULL;
 	unsigned long page;
-	unsigned long rem = 0;
-	struct dm_table *t;
-	struct page *pg;
-	int num = 0;
+	struct dmfs_desc d;
+	loff_t pos = 0;
 
 	if (inode->i_size == 0)
 		return NULL;
 
-	page = __get_free_page(GFP_KERNEL);
+	page = __get_free_page(GFP_NOFS);
+	if (page) {
+		t = dm_table_create();
+		if (t) {
+			read_descriptor_t desc;
 
-	if (!page)
-		return NULL;
+			desc.written = 0;
+			desc.count = inode->i_size;
+			desc.buf = (char *)&d;
+			d.table = t;
+			d.tmp = (char *)page;
+			d.tmpl = 0;
+			d.lnum = 1;
 
-	t = dm_table_create();
-	if (!t) {
-		free_page(page);
-		return NULL;
-	}
-
-	end_index = inode->i_size >> PAGE_CACHE_SHIFT;
-	end_offset = inode->i_size & (PAGE_CACHE_SIZE - 1);
-
-	do {
-		pg = find_get_page(mapping, index);
-
-		if (pg) {
-			char *kaddr;
-			int rv;
-
-			if (!Page_Uptodate(pg))
-				goto broken;
-
-			kaddr = kmap(pg);
-			rv = dmfs_parse_page(t, kaddr, (index == end_index), end_offset, (char *)page, &rem, &num);
-			kunmap(pg);
-			page_cache_release(pg);
-
-			if (rv)
-				goto parse_error;
+			do_generic_file_read(filp, &pos, &desc, dmfs_read_actor);
+			if (desc.written != inode->i_size) {
+				dm_table_destroy(t);
+				t = NULL;
+			}
 		}
-
-		index++;
-	} while(index <= end_index);
-
-	free_page(page);
-	if (list_empty(&t->errors)) {
-		dm_table_complete(t);
+		free_page(page);
 	}
-
 	return t;
-
-broken:
-	printk(KERN_ERR "dmfs_parse: Page not uptodate\n");
-	page_cache_release(pg);
-	free_page(page);
-	dm_table_destroy(t);
-	return NULL;
-
-parse_error:
-	printk(KERN_ERR "dmfs_parse: Parse error\n");
-	free_page(page);
-	dm_table_destroy(t);
-	return NULL;
 }
 
 static int dmfs_table_release(struct inode *inode, struct file *f)
@@ -232,7 +212,7 @@ static int dmfs_table_release(struct inode *inode, struct file *f)
 	if (f->f_mode & FMODE_WRITE) {
 
 		down(&dmi->sem);
-		table = dmfs_parse(dentry->d_parent->d_inode);
+		table = dmfs_parse(dentry->d_parent->d_inode, f);
 
 		if (table) {
 			if (dmi->table)
