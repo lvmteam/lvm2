@@ -418,6 +418,24 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 	return NULL;
 }
 
+struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
+					const char *pv_name)
+{
+	struct physical_volume *pv;
+
+	if (!(pv = pv_read(cmd, pv_name, NULL, NULL))) {
+		log_error("Physical volume %s not found", pv_name);
+		return NULL;
+	}
+
+	if (!pv->vg_name[0]) {
+		log_error("Physical volume %s not in a volume group", pv_name);
+		return NULL;
+	}
+
+	return pv;
+}
+
 /* Find segment at a given logical extent in an LV */
 struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le)
 {
