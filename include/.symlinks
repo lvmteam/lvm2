@@ -30,6 +30,7 @@
 ../lib/mm/pool.h
 ../lib/mm/xlate.h
 ../lib/misc/crc.h
+../lib/misc/intl.h
 ../lib/misc/lib.h
 ../lib/misc/lvm-file.h
 ../lib/misc/lvm-string.h
@@ -37,3 +38,4 @@
 ../lib/regex/matcher.h
 ../lib/report/report.h
 ../lib/uuid/uuid.h
+../po/pogen.h

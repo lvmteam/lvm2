@@ -101,21 +101,27 @@ if test x$READLINE = xyes; then
 	CFLAGS="$CFLAGS -DREADLINE_SUPPORT"
 fi
 
+echo $ac_n "checking whether to enable debugging""... $ac_c" 1>&6
 dnl Enable Debugging
 AC_ARG_ENABLE(debug,    [  --enable-debug          Enable debugging],  \
 DEBUG=yes, DEBUG=no)
+echo "$ac_t""$DEBUG" 1>&6
 
+echo $ac_n "checking whether to enable device-mapper""... $ac_c" 1>&6
 dnl Disable devmapper
 AC_ARG_ENABLE(devmapper, [  --disable-devmapper     Disable device-mapper interaction],  \
 DEVMAPPER=no, DEVMAPPER=yes)
+echo "$ac_t""$DEVMAPPER" 1>&6
 
 if test x$DEVMAPPER = xyes; then
 	CFLAGS="$CFLAGS -DDEVMAPPER_SUPPORT"
 fi
 
+echo $ac_n "checking whether to enable O_DIRECT""... $ac_c" 1>&6
 dnl Disable O_DIRECT
 AC_ARG_ENABLE(o_direct, [  --disable-o_direct      Disable O_DIRECT],  \
 ODIRECT=no, ODIRECT=yes)
+echo "$ac_t""$ODIRECT" 1>&6
 
 if test x$ODIRECT = xyes; then
 	CFLAGS="$CFLAGS -DO_DIRECT_SUPPORT"
@@ -177,6 +183,28 @@ package as well (which may be called readline-devel or something similar).
 		
 fi
 
+echo $ac_n "checking whether to enable internationalisation""... $ac_c" 1>&6
+dnl Internationalisation stuff
+AC_ARG_ENABLE(nls, [  --enable-nls            Enable Native Language Support],\
+		INTL=yes, INTL=no)
+echo "$ac_t""$INTL" 1>&6
+
+if test x$INTL = xyes; then
+	INTL_PACKAGE="lvm2"
+	AC_PATH_PROG(MSGFMT, msgfmt)
+	if [[ "x$MSGFMT" == x ]];
+		then  AC_MSG_ERROR(
+		msgfmt not found in path $PATH
+		)
+		exit  
+	fi;
+
+	AC_ARG_WITH(localedir,
+  		    [  --with-localedir=DIR    Translation files in DIR [PREFIX/share/locale]],
+  		    [ LOCALEDIR="$withval" ],
+  		    [ LOCALEDIR='${prefix}/share/locale' ])
+fi
+
 if test "-f VERSION"; then
   LVM_VERSION="\"`cat VERSION`\""
 else
@@ -194,6 +222,10 @@ AC_SUBST(LVM_VERSION)
 AC_SUBST(DEBUG)
 AC_SUBST(DEVMAPPER)
 AC_SUBST(HAVE_LIBDL)
+AC_SUBST(MSGFMT)
+AC_SUBST(LOCALEDIR)
+AC_SUBST(INTL_PACKAGE)
+AC_SUBST(INTL)
 dnl First and last lines should not contain files to generate in order to 
 dnl keep utility scripts running properly
 AC_OUTPUT( 								\
@@ -203,6 +235,7 @@ include/Makefile						 	\
 lib/Makefile							 	\
 lib/format1/Makefile						 	\
 man/Makefile							 	\
+po/Makefile								\
 tools/Makefile							 	\
 tools/version.h								\
 test/mm/Makefile							\

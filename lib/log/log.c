@@ -186,6 +186,9 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 	va_list ap;
 	char buf[1024];
 	int bufused, n;
+	char *trformat;		/* Translated format string */
+
+	trformat = _(format);
 
 	if (!_log_suppress) {
 		va_start(ap, format);
@@ -197,7 +200,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 				printf("%s%s", _cmd_name, _msg_prefix);
 				if (_indent)
 					printf("      ");
-				vprintf(format, ap);
+				vprintf(trformat, ap);
 				putchar('\n');
 			}
 			break;
@@ -207,7 +210,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 				printf("%s%s", _cmd_name, _msg_prefix);
 				if (_indent)
 					printf("    ");
-				vprintf(format, ap);
+				vprintf(trformat, ap);
 				putchar('\n');
 			}
 			break;
@@ -216,24 +219,24 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 				printf("%s%s", _cmd_name, _msg_prefix);
 				if (_indent)
 					printf("  ");
-				vprintf(format, ap);
+				vprintf(trformat, ap);
 				putchar('\n');
 			}
 			break;
 		case _LOG_WARN:
 			printf("%s%s", _cmd_name, _msg_prefix);
-			vprintf(format, ap);
+			vprintf(trformat, ap);
 			putchar('\n');
 			break;
 		case _LOG_ERR:
 			fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
-			vfprintf(stderr, format, ap);
+			vfprintf(stderr, trformat, ap);
 			fputc('\n', stderr);
 			break;
 		case _LOG_FATAL:
 		default:
 			fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
-			vfprintf(stderr, format, ap);
+			vfprintf(stderr, trformat, ap);
 			fputc('\n', stderr);
 			break;
 			;
@@ -249,7 +252,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			_msg_prefix);
 
 		va_start(ap, format);
-		vfprintf(_log_file, format, ap);
+		vfprintf(_log_file, trformat, ap);
 		va_end(ap);
 
 		fprintf(_log_file, "\n");
@@ -258,7 +261,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 
 	if (_syslog && (_log_while_suspended || !memlock())) {
 		va_start(ap, format);
-		vsyslog(level, format, ap);
+		vsyslog(level, trformat, ap);
 		va_end(ap);
 	}
 
@@ -276,7 +279,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 
 		va_start(ap, format);
 		n = vsnprintf(buf + bufused - 1, sizeof(buf) - bufused - 1,
-			      format, ap);
+			      trformat, ap);
 		va_end(ap);
 		bufused += n;
 

@@ -1,0 +1,5670 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2004-02-13 22:41+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../lib/activate/activate.pot:11708
+msgid "Activation enabled. Device-mapper kernel driver will be used."
+msgstr ""
+
+#: ../lib/activate/activate.pot:11711
+msgid "Activation disabled. No device-mapper interaction will be attempted."
+msgstr ""
+
+#: ../lib/activate/activate.pot:11738
+msgid "Getting driver version"
+msgstr ""
+
+#: ../lib/activate/activate.pot:11740 ../lib/activate/activate.pot:11772
+#: ../lib/activate/activate.pot:11777 ../lib/activate/activate.pot:11807
+#: ../lib/activate/activate.pot:11812 ../lib/activate/activate.pot:11830
+#: ../lib/activate/activate.pot:11835 ../lib/activate/activate.pot:11847
+#: ../lib/activate/activate.pot:11859 ../lib/activate/activate.pot:11873
+#: ../lib/activate/activate.pot:11878 ../lib/activate/activate.pot:11890
+#: ../lib/activate/activate.pot:11895 ../lib/activate/activate.pot:11907
+#: ../lib/activate/activate.pot:11912 ../lib/activate/activate.pot:11974
+#: ../lib/activate/activate.pot:12008 ../lib/activate/activate.pot:12042
+#: ../lib/activate/activate.pot:12081 ../lib/activate/activate.pot:12102
+#: ../lib/activate/dev_manager.pot:10408 ../lib/activate/dev_manager.pot:10455
+#: ../lib/activate/dev_manager.pot:10473 ../lib/activate/dev_manager.pot:10500
+#: ../lib/activate/dev_manager.pot:10505 ../lib/activate/dev_manager.pot:10510
+#: ../lib/activate/dev_manager.pot:10516 ../lib/activate/dev_manager.pot:10554
+#: ../lib/activate/dev_manager.pot:10559 ../lib/activate/dev_manager.pot:10634
+#: ../lib/activate/dev_manager.pot:10639 ../lib/activate/dev_manager.pot:10644
+#: ../lib/activate/dev_manager.pot:10746 ../lib/activate/dev_manager.pot:10751
+#: ../lib/activate/dev_manager.pot:10777 ../lib/activate/dev_manager.pot:10834
+#: ../lib/activate/dev_manager.pot:10840 ../lib/activate/dev_manager.pot:10869
+#: ../lib/activate/dev_manager.pot:10900 ../lib/activate/dev_manager.pot:10918
+#: ../lib/activate/dev_manager.pot:10932 ../lib/activate/dev_manager.pot:11053
+#: ../lib/activate/dev_manager.pot:11082 ../lib/activate/dev_manager.pot:11122
+#: ../lib/activate/dev_manager.pot:11142 ../lib/activate/dev_manager.pot:11164
+#: ../lib/activate/dev_manager.pot:11169 ../lib/activate/dev_manager.pot:11200
+#: ../lib/activate/dev_manager.pot:11208 ../lib/activate/dev_manager.pot:11225
+#: ../lib/activate/dev_manager.pot:11230 ../lib/activate/dev_manager.pot:11252
+#: ../lib/activate/dev_manager.pot:11257 ../lib/activate/dev_manager.pot:11288
+#: ../lib/activate/dev_manager.pot:11297 ../lib/activate/dev_manager.pot:11313
+#: ../lib/activate/dev_manager.pot:11323 ../lib/activate/dev_manager.pot:11345
+#: ../lib/activate/dev_manager.pot:11354 ../lib/activate/dev_manager.pot:11368
+#: ../lib/activate/dev_manager.pot:11376 ../lib/activate/dev_manager.pot:11389
+#: ../lib/activate/dev_manager.pot:11409 ../lib/activate/dev_manager.pot:11414
+#: ../lib/activate/dev_manager.pot:11420 ../lib/activate/dev_manager.pot:11442
+#: ../lib/activate/dev_manager.pot:11463 ../lib/activate/dev_manager.pot:11487
+#: ../lib/activate/dev_manager.pot:11499 ../lib/activate/dev_manager.pot:11511
+#: ../lib/activate/dev_manager.pot:11525 ../lib/activate/dev_manager.pot:11535
+#: ../lib/activate/dev_manager.pot:11545 ../lib/activate/dev_manager.pot:11585
+#: ../lib/activate/dev_manager.pot:11596 ../lib/activate/dev_manager.pot:11606
+#: ../lib/activate/dev_manager.pot:11613 ../lib/activate/dev_manager.pot:11619
+#: ../lib/activate/dev_manager.pot:11687 ../lib/activate/dev_manager.pot:11706
+#: ../lib/activate/dev_manager.pot:11728 ../lib/activate/dev_manager.pot:11736
+#: ../lib/activate/dev_manager.pot:11764 ../lib/activate/dev_manager.pot:11769
+#: ../lib/activate/dev_manager.pot:11798 ../lib/activate/dev_manager.pot:11804
+#: ../lib/activate/dev_manager.pot:11825 ../lib/activate/dev_manager.pot:11843
+#: ../lib/activate/dev_manager.pot:11857 ../lib/activate/dev_manager.pot:11867
+#: ../lib/activate/dev_manager.pot:11877 ../lib/activate/dev_manager.pot:11896
+#: ../lib/activate/dev_manager.pot:11919 ../lib/activate/dev_manager.pot:11954
+#: ../lib/activate/dev_manager.pot:11971 ../lib/activate/dev_manager.pot:12029
+#: ../lib/activate/dev_manager.pot:12038 ../lib/activate/dev_manager.pot:12047
+#: ../lib/activate/dev_manager.pot:12056 ../lib/activate/dev_manager.pot:12061
+#: ../lib/activate/dev_manager.pot:12066 ../lib/activate/dev_manager.pot:12078
+#: ../lib/activate/dev_manager.pot:12088 ../lib/activate/dev_manager.pot:12094
+#: ../lib/activate/dev_manager.pot:12130 ../lib/activate/dev_manager.pot:12135
+#: ../lib/activate/dev_manager.pot:12168 ../lib/activate/dev_manager.pot:12186
+#: ../lib/activate/dev_manager.pot:12294 ../lib/activate/dev_manager.pot:12306
+#: ../lib/activate/dev_manager.pot:12312 ../lib/activate/dev_manager.pot:12326
+#: ../lib/activate/dev_manager.pot:12331 ../lib/activate/dev_manager.pot:12338
+#: ../lib/activate/dev_manager.pot:12346 ../lib/activate/dev_manager.pot:12354
+#: ../lib/activate/dev_manager.pot:12360 ../lib/activate/dev_manager.pot:12366
+#: ../lib/activate/dev_manager.pot:12394 ../lib/activate/fs.pot:12131
+#: ../lib/activate/fs.pot:12138 ../lib/activate/fs.pot:12145
+#: ../lib/activate/fs.pot:12148 ../lib/activate/fs.pot:12222
+#: ../lib/cache/lvmcache.pot:9878 ../lib/cache/lvmcache.pot:9919
+#: ../lib/cache/lvmcache.pot:9950 ../lib/commands/toolcontext.pot:11799
+#: ../lib/commands/toolcontext.pot:11838 ../lib/commands/toolcontext.pot:11990
+#: ../lib/config/config.pot:10045 ../lib/config/config.pot:10050
+#: ../lib/config/config.pot:10078 ../lib/config/config.pot:10099
+#: ../lib/config/config.pot:10130 ../lib/config/config.pot:10173
+#: ../lib/config/config.pot:10178 ../lib/config/config.pot:10246
+#: ../lib/config/config.pot:10251 ../lib/config/config.pot:10372
+#: ../lib/config/config.pot:10390 ../lib/config/config.pot:10395
+#: ../lib/config/config.pot:10405 ../lib/config/config.pot:10419
+#: ../lib/config/config.pot:10435 ../lib/config/config.pot:10491
+#: ../lib/config/config.pot:10674 ../lib/datastruct/btree.pot:6660
+#: ../lib/datastruct/hash.pot:6562 ../lib/datastruct/hash.pot:6575
+#: ../lib/datastruct/str_list.pot:6589 ../lib/datastruct/str_list.pot:6603
+#: ../lib/datastruct/str_list.pot:6612 ../lib/device/dev-cache.pot:10883
+#: ../lib/device/dev-cache.pot:10890 ../lib/device/dev-cache.pot:10896
+#: ../lib/device/dev-cache.pot:10930 ../lib/device/dev-cache.pot:11001
+#: ../lib/device/dev-cache.pot:11049 ../lib/device/dev-cache.pot:11094
+#: ../lib/device/dev-cache.pot:11099 ../lib/device/dev-io.pot:13824
+#: ../lib/device/dev-io.pot:13854 ../lib/device/dev-io.pot:13952
+#: ../lib/device/dev-io.pot:14124 ../lib/device/dev-io.pot:14152
+#: ../lib/display/display.pot:9806 ../lib/display/display.pot:9837
+#: ../lib/display/display.pot:9895 ../lib/display/display.pot:9942
+#: ../lib/display/display.pot:10224 ../lib/filters/filter-composite.pot:7594
+#: ../lib/filters/filter-persistent.pot:9433
+#: ../lib/filters/filter-persistent.pot:9491
+#: ../lib/filters/filter-persistent.pot:9496
+#: ../lib/filters/filter-persistent.pot:9630
+#: ../lib/filters/filter-persistent.pot:9636
+#: ../lib/filters/filter-persistent.pot:9648
+#: ../lib/filters/filter-regex.pot:8426 ../lib/filters/filter-regex.pot:8453
+#: ../lib/filters/filter-regex.pot:8474 ../lib/filters/filter-regex.pot:8499
+#: ../lib/filters/filter-regex.pot:8557 ../lib/filters/filter-regex.pot:8562
+#: ../lib/filters/filter-regex.pot:8569 ../lib/filters/filter-regex.pot:8574
+#: ../lib/filters/filter-sysfs.pot:9174 ../lib/filters/filter.pot:11056
+#: ../lib/format1/disk-rep.pot:9411 ../lib/format1/disk-rep.pot:9423
+#: ../lib/format1/disk-rep.pot:9444 ../lib/format1/disk-rep.pot:9447
+#: ../lib/format1/disk-rep.pot:9478 ../lib/format1/disk-rep.pot:9481
+#: ../lib/format1/disk-rep.pot:9500 ../lib/format1/disk-rep.pot:9503
+#: ../lib/format1/disk-rep.pot:9540 ../lib/format1/disk-rep.pot:9550
+#: ../lib/format1/disk-rep.pot:9559 ../lib/format1/disk-rep.pot:9624
+#: ../lib/format1/disk-rep.pot:9631 ../lib/format1/disk-rep.pot:9722
+#: ../lib/format1/disk-rep.pot:9745 ../lib/format1/disk-rep.pot:9757
+#: ../lib/format1/disk-rep.pot:9787 ../lib/format1/disk-rep.pot:9801
+#: ../lib/format1/disk-rep.pot:9834 ../lib/format1/disk-rep.pot:9899
+#: ../lib/format1/disk-rep.pot:9906 ../lib/format1/disk-rep.pot:9924
+#: ../lib/format1/format1.pot:9853 ../lib/format1/format1.pot:9868
+#: ../lib/format1/format1.pot:9877 ../lib/format1/format1.pot:9882
+#: ../lib/format1/format1.pot:9898 ../lib/format1/format1.pot:9912
+#: ../lib/format1/format1.pot:9933 ../lib/format1/format1.pot:9944
+#: ../lib/format1/format1.pot:9959 ../lib/format1/format1.pot:9985
+#: ../lib/format1/format1.pot:9990 ../lib/format1/format1.pot:9995
+#: ../lib/format1/format1.pot:10000 ../lib/format1/format1.pot:10037
+#: ../lib/format1/format1.pot:10084 ../lib/format1/format1.pot:10100
+#: ../lib/format1/format1.pot:10105 ../lib/format1/format1.pot:10112
+#: ../lib/format1/format1.pot:10124 ../lib/format1/format1.pot:10187
+#: ../lib/format1/format1.pot:10196 ../lib/format1/format1.pot:10236
+#: ../lib/format1/import-export.pot:9456 ../lib/format1/import-export.pot:9519
+#: ../lib/format1/import-export.pot:9539 ../lib/format1/import-export.pot:9556
+#: ../lib/format1/import-export.pot:9564 ../lib/format1/import-export.pot:9599
+#: ../lib/format1/import-export.pot:9604 ../lib/format1/import-export.pot:9609
+#: ../lib/format1/import-export.pot:9686 ../lib/format1/import-export.pot:9821
+#: ../lib/format1/import-export.pot:9826 ../lib/format1/import-export.pot:9847
+#: ../lib/format1/import-export.pot:9854 ../lib/format1/import-export.pot:9879
+#: ../lib/format1/import-export.pot:9901 ../lib/format1/import-export.pot:9906
+#: ../lib/format1/import-export.pot:9915 ../lib/format1/import-export.pot:9923
+#: ../lib/format1/import-export.pot:9934 ../lib/format1/import-export.pot:9939
+#: ../lib/format1/import-export.pot:10064
+#: ../lib/format1/import-export.pot:10121
+#: ../lib/format1/import-extents.pot:8642
+#: ../lib/format1/import-extents.pot:8649
+#: ../lib/format1/import-extents.pot:8654
+#: ../lib/format1/import-extents.pot:8710
+#: ../lib/format1/import-extents.pot:8776
+#: ../lib/format1/import-extents.pot:8856
+#: ../lib/format1/import-extents.pot:8908
+#: ../lib/format1/import-extents.pot:8923
+#: ../lib/format1/import-extents.pot:8938 ../lib/format1/layout.pot:8658
+#: ../lib/format1/lvm1-label.pot:9184 ../lib/format1/vg_number.pot:8573
+#: ../lib/format1/vg_number.pot:8578 ../lib/format_text/archive.pot:12312
+#: ../lib/format_text/archive.pot:12332 ../lib/format_text/archive.pot:12359
+#: ../lib/format_text/archive.pot:12454 ../lib/format_text/archive.pot:12564
+#: ../lib/format_text/export.pot:9502 ../lib/format_text/export.pot:9503
+#: ../lib/format_text/export.pot:9504 ../lib/format_text/export.pot:9507
+#: ../lib/format_text/export.pot:9511 ../lib/format_text/export.pot:9512
+#: ../lib/format_text/export.pot:9522 ../lib/format_text/export.pot:9526
+#: ../lib/format_text/export.pot:9528 ../lib/format_text/export.pot:9530
+#: ../lib/format_text/export.pot:9534 ../lib/format_text/export.pot:9536
+#: ../lib/format_text/export.pot:9539 ../lib/format_text/export.pot:9542
+#: ../lib/format_text/export.pot:9543 ../lib/format_text/export.pot:9566
+#: ../lib/format_text/export.pot:9573 ../lib/format_text/export.pot:9578
+#: ../lib/format_text/export.pot:9582 ../lib/format_text/export.pot:9586
+#: ../lib/format_text/export.pot:9588 ../lib/format_text/export.pot:9594
+#: ../lib/format_text/export.pot:9598 ../lib/format_text/export.pot:9599
+#: ../lib/format_text/export.pot:9602 ../lib/format_text/export.pot:9607
+#: ../lib/format_text/export.pot:9611 ../lib/format_text/export.pot:9622
+#: ../lib/format_text/export.pot:9625 ../lib/format_text/export.pot:9628
+#: ../lib/format_text/export.pot:9633 ../lib/format_text/export.pot:9637
+#: ../lib/format_text/export.pot:9638 ../lib/format_text/export.pot:9639
+#: ../lib/format_text/export.pot:9646 ../lib/format_text/export.pot:9658
+#: ../lib/format_text/export.pot:9666 ../lib/format_text/export.pot:9672
+#: ../lib/format_text/export.pot:9678 ../lib/format_text/export.pot:9683
+#: ../lib/format_text/export.pot:9688 ../lib/format_text/export.pot:9712
+#: ../lib/format_text/export.pot:9716 ../lib/format_text/export.pot:9720
+#: ../lib/format_text/export.pot:9723 ../lib/format_text/export.pot:9727
+#: ../lib/format_text/export.pot:9728 ../lib/format_text/export.pot:9740
+#: ../lib/format_text/export.pot:9745 ../lib/format_text/export.pot:9760
+#: ../lib/format_text/export.pot:9782 ../lib/format_text/export.pot:9789
+#: ../lib/format_text/export.pot:9794 ../lib/format_text/export.pot:9798
+#: ../lib/format_text/export.pot:9801 ../lib/format_text/export.pot:9805
+#: ../lib/format_text/export.pot:9808 ../lib/format_text/export.pot:9810
+#: ../lib/format_text/export.pot:9812 ../lib/format_text/export.pot:9814
+#: ../lib/format_text/export.pot:9815 ../lib/format_text/export.pot:9821
+#: ../lib/format_text/export.pot:9827 ../lib/format_text/export.pot:9831
+#: ../lib/format_text/export.pot:9836 ../lib/format_text/export.pot:9854
+#: ../lib/format_text/export.pot:9859 ../lib/format_text/export.pot:9868
+#: ../lib/format_text/export.pot:9873 ../lib/format_text/export.pot:9878
+#: ../lib/format_text/export.pot:9901 ../lib/format_text/export.pot:9907
+#: ../lib/format_text/export.pot:9910 ../lib/format_text/export.pot:9915
+#: ../lib/format_text/export.pot:9919 ../lib/format_text/export.pot:9923
+#: ../lib/format_text/export.pot:9927 ../lib/format_text/export.pot:9930
+#: ../lib/format_text/export.pot:9953 ../lib/format_text/export.pot:9981
+#: ../lib/format_text/export.pot:9994 ../lib/format_text/flags.pot:8677
+#: ../lib/format_text/flags.pot:8718 ../lib/format_text/format-text.pot:12617
+#: ../lib/format_text/format-text.pot:12665
+#: ../lib/format_text/format-text.pot:12687
+#: ../lib/format_text/format-text.pot:12708
+#: ../lib/format_text/format-text.pot:12721
+#: ../lib/format_text/format-text.pot:12729
+#: ../lib/format_text/format-text.pot:12746
+#: ../lib/format_text/format-text.pot:12751
+#: ../lib/format_text/format-text.pot:12756
+#: ../lib/format_text/format-text.pot:12776
+#: ../lib/format_text/format-text.pot:12785
+#: ../lib/format_text/format-text.pot:12827
+#: ../lib/format_text/format-text.pot:12832
+#: ../lib/format_text/format-text.pot:12877
+#: ../lib/format_text/format-text.pot:12890
+#: ../lib/format_text/format-text.pot:12907
+#: ../lib/format_text/format-text.pot:12936
+#: ../lib/format_text/format-text.pot:12962
+#: ../lib/format_text/format-text.pot:12989
+#: ../lib/format_text/format-text.pot:13003
+#: ../lib/format_text/format-text.pot:13008
+#: ../lib/format_text/format-text.pot:13031
+#: ../lib/format_text/format-text.pot:13045
+#: ../lib/format_text/format-text.pot:13282
+#: ../lib/format_text/format-text.pot:13287
+#: ../lib/format_text/format-text.pot:13296
+#: ../lib/format_text/format-text.pot:13307
+#: ../lib/format_text/format-text.pot:13320
+#: ../lib/format_text/format-text.pot:13505
+#: ../lib/format_text/format-text.pot:13564
+#: ../lib/format_text/format-text.pot:13569
+#: ../lib/format_text/format-text.pot:13580
+#: ../lib/format_text/format-text.pot:13582
+#: ../lib/format_text/format-text.pot:13590
+#: ../lib/format_text/format-text.pot:13661
+#: ../lib/format_text/format-text.pot:13667
+#: ../lib/format_text/format-text.pot:13847
+#: ../lib/format_text/format-text.pot:13854
+#: ../lib/format_text/format-text.pot:13873
+#: ../lib/format_text/format-text.pot:13907
+#: ../lib/format_text/format-text.pot:13927
+#: ../lib/format_text/format-text.pot:13945
+#: ../lib/format_text/format-text.pot:13950
+#: ../lib/format_text/format-text.pot:13964
+#: ../lib/format_text/format-text.pot:13977
+#: ../lib/format_text/format-text.pot:13984
+#: ../lib/format_text/format-text.pot:14015
+#: ../lib/format_text/format-text.pot:14020
+#: ../lib/format_text/format-text.pot:14025
+#: ../lib/format_text/format-text.pot:14034
+#: ../lib/format_text/format-text.pot:14137 ../lib/format_text/import.pot:9518
+#: ../lib/format_text/import.pot:9537 ../lib/format_text/import_vsn1.pot:9594
+#: ../lib/format_text/import_vsn1.pot:9605
+#: ../lib/format_text/import_vsn1.pot:9638
+#: ../lib/format_text/import_vsn1.pot:9816
+#: ../lib/format_text/import_vsn1.pot:9934
+#: ../lib/format_text/import_vsn1.pot:9962
+#: ../lib/format_text/import_vsn1.pot:9970
+#: ../lib/format_text/import_vsn1.pot:9987
+#: ../lib/format_text/import_vsn1.pot:9994
+#: ../lib/format_text/import_vsn1.pot:10066
+#: ../lib/format_text/import_vsn1.pot:10114
+#: ../lib/format_text/import_vsn1.pot:10139
+#: ../lib/format_text/import_vsn1.pot:10149
+#: ../lib/format_text/import_vsn1.pot:10154 ../lib/label/label.pot:10709
+#: ../lib/label/label.pot:10743 ../lib/label/label.pot:10808
+#: ../lib/label/label.pot:10830 ../lib/label/label.pot:10882
+#: ../lib/label/label.pot:10896 ../lib/label/label.pot:10931
+#: ../lib/label/label.pot:10939 ../lib/label/label.pot:10951
+#: ../lib/label/label.pot:10963 ../lib/locking/external_locking.pot:8614
+#: ../lib/metadata/lv_manip.pot:9516 ../lib/metadata/lv_manip.pot:9621
+#: ../lib/metadata/lv_manip.pot:9741 ../lib/metadata/lv_manip.pot:9785
+#: ../lib/metadata/lv_manip.pot:9850 ../lib/metadata/lv_manip.pot:9981
+#: ../lib/metadata/lv_manip.pot:10025 ../lib/metadata/lv_manip.pot:10034
+#: ../lib/metadata/lv_manip.pot:10039 ../lib/metadata/lv_manip.pot:10076
+#: ../lib/metadata/lv_manip.pot:10098 ../lib/metadata/lv_manip.pot:10109
+#: ../lib/metadata/lv_manip.pot:10133 ../lib/metadata/lv_manip.pot:10138
+#: ../lib/metadata/lv_manip.pot:10152 ../lib/metadata/merge.pot:9329
+#: ../lib/metadata/metadata.pot:9642 ../lib/metadata/metadata.pot:9666
+#: ../lib/metadata/metadata.pot:9730 ../lib/metadata/metadata.pot:9742
+#: ../lib/metadata/metadata.pot:9912 ../lib/metadata/metadata.pot:9953
+#: ../lib/metadata/metadata.pot:9959 ../lib/metadata/metadata.pot:9965
+#: ../lib/metadata/metadata.pot:9989 ../lib/metadata/metadata.pot:10014
+#: ../lib/metadata/metadata.pot:10032 ../lib/metadata/metadata.pot:10094
+#: ../lib/metadata/metadata.pot:10099 ../lib/metadata/metadata.pot:10132
+#: ../lib/metadata/metadata.pot:10268 ../lib/metadata/metadata.pot:10343
+#: ../lib/metadata/metadata.pot:10376 ../lib/metadata/pv_map.pot:9118
+#: ../lib/metadata/pv_map.pot:9125 ../lib/metadata/pv_map.pot:9180
+#: ../lib/metadata/pv_map.pot:9200 ../lib/metadata/pv_map.pot:9257
+#: ../lib/metadata/pv_map.pot:9284 ../lib/metadata/pv_map.pot:9302
+#: ../lib/metadata/pv_map.pot:9311 ../lib/metadata/pv_map.pot:9329
+#: ../lib/metadata/pv_map.pot:9343 ../lib/metadata/snapshot_manip.pot:9249
+#: ../lib/metadata/snapshot_manip.pot:9266 ../lib/regex/matcher.pot:7522
+#: ../lib/regex/matcher.pot:7543 ../lib/regex/matcher.pot:7548
+#: ../lib/regex/matcher.pot:7622 ../lib/regex/matcher.pot:7627
+#: ../lib/regex/matcher.pot:7640 ../lib/regex/matcher.pot:7662
+#: ../lib/regex/parse_rx.pot:7532 ../lib/regex/parse_rx.pot:7583
+#: ../lib/regex/parse_rx.pot:7608 ../lib/regex/parse_rx.pot:7631
+#: ../lib/regex/parse_rx.pot:7643 ../lib/regex/ttree.pot:6657
+#: ../lib/regex/ttree.pot:6677 ../lib/report/report.pot:10124
+#: ../lib/report/report.pot:10152 ../lib/report/report.pot:10272
+#: ../tools/archive.pot:12706 ../tools/archive.pot:12713
+#: ../tools/archive.pot:12725 ../tools/archive.pot:12801
+#: ../tools/archive.pot:12873 ../tools/archive.pot:12923
+#: ../tools/archive.pot:12940 ../tools/archive.pot:12980
+#: ../tools/archive.pot:12985 ../tools/lvchange.pot:12698
+#: ../tools/lvchange.pot:12792 ../tools/lvchange.pot:12845
+#: ../tools/lvchange.pot:12922 ../tools/lvcreate.pot:13045
+#: ../tools/lvcreate.pot:13127 ../tools/lvcreate.pot:13134
+#: ../tools/lvcreate.pot:13218 ../tools/lvm.pot:17914
+#: ../tools/lvremove.pot:12723 ../tools/lvrename.pot:12795
+#: ../tools/lvrename.pot:12806 ../tools/lvrename.pot:12814
+#: ../tools/lvrename.pot:12819 ../tools/lvresize.pot:12996
+#: ../tools/lvresize.pot:13015 ../tools/lvresize.pot:13034
+#: ../tools/pvmove.pot:14643 ../tools/pvmove.pot:14648
+#: ../tools/pvmove.pot:14713 ../tools/pvmove.pot:14739
+#: ../tools/pvmove.pot:14745 ../tools/pvmove.pot:14795
+#: ../tools/pvmove.pot:14802 ../tools/pvmove.pot:14811
+#: ../tools/pvmove.pot:14840 ../tools/pvmove.pot:14847
+#: ../tools/pvmove.pot:14854 ../tools/pvmove.pot:14861
+#: ../tools/pvmove.pot:14869 ../tools/pvmove.pot:15152
+#: ../tools/pvscan.pot:12703 ../tools/toollib.pot:13173
+#: ../tools/toollib.pot:13223 ../tools/toollib.pot:13296
+#: ../tools/vgcfgbackup.pot:12672 ../tools/vgcfgbackup.pot:12679
+#: ../tools/vgreduce.pot:12677 ../tools/vgreduce.pot:12735
+#: ../tools/vgreduce.pot:12743 ../tools/vgreduce.pot:12749
+#: ../tools/vgreduce.pot:12757 ../tools/vgreduce.pot:12793
+#: ../tools/vgreduce.pot:12809
+msgid "<backtrace>"
+msgstr ""
+
+#: ../lib/activate/activate.pot:11745
+msgid "Failed to get driver version"
+msgstr ""
+
+#: ../lib/activate/activate.pot:11969
+#, c-format
+msgid "Skipping: Suspending '%s'."
+msgstr ""
+
+#: ../lib/activate/activate.pot:12003
+#, c-format
+msgid "Skipping: Resuming '%s'."
+msgstr ""
+
+#: ../lib/activate/activate.pot:12037
+#, c-format
+msgid "Skipping: Deactivating '%s'."
+msgstr ""
+
+#: ../lib/activate/activate.pot:12050
+#, c-format
+msgid "LV %s/%s in use: not removing"
+msgstr ""
+
+#: ../lib/activate/activate.pot:12076
+#, c-format
+msgid "Skipping: Activating '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10656 ../lib/activate/dev_manager.pot:10703
+#, c-format
+msgid "Number of segments in active LV %s does not match metadata"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10668
+#, c-format
+msgid "Mirror status: %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10672
+#, c-format
+msgid "Failure parsing mirror status: %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10713
+#, c-format
+msgid "LV percent: %f"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10743
+#: ../lib/format_text/format-text.pot:13129
+#: ../lib/format_text/format-text.pot:13154
+#: ../lib/format_text/format-text.pot:13188
+#, c-format
+msgid "Renaming %s to %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10757
+#, c-format
+msgid "Couldn't rename device '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10774
+#, c-format
+msgid "Loading %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10785
+#, c-format
+msgid "Couldn't populate device '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10795
+#, c-format
+msgid "Failed to set major number for %s to %d during activation."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10800
+#, c-format
+msgid "Set major number for %s to %d."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10806
+#, c-format
+msgid "Failed to set minor number for %s to %d during activation."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10811
+#, c-format
+msgid "Set minor number for %s to %d."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10817
+#, c-format
+msgid "Failed to set %s read-only during activation."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10821
+#, c-format
+msgid "Activating %s read-only"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10825
+#, c-format
+msgid "Couldn't load device '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10828
+#, c-format
+msgid "Perhaps the persistent device number %d:%d is already in use?"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10845
+#, c-format
+msgid "Activated %s %s %03u:%03u"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10864 ../lib/activate/dev_manager.pot:10866
+#: ../lib/activate/fs.pot:12007 ../lib/activate/fs.pot:12060
+#: ../lib/activate/fs.pot:12073
+#, c-format
+msgid "Removing %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10898
+#, c-format
+msgid "%s %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10905
+#, c-format
+msgid "Couldn't %s device '%s'"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10964
+msgid "_emit_target: Internal error: Can't handle SEG_SNAPSHOT"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:10983
+msgid "_emit_target: Internal error: SEG_STRIPED with no stripes"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11029
+#, c-format
+msgid "device layer %s missing from hash"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11034
+#, c-format
+msgid "Failed to format device number as dm target (%u,%u)"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11048
+#, c-format
+msgid "Adding target: %llu %llu %s %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11060
+#, c-format
+msgid "Insufficient space in params[%Zu] for target parameters."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11074
+msgid "Insufficient space for target parameters."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11090
+msgid "Target parameter size too big. Aborting."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11106
+#, c-format
+msgid "Unable to build table for '%s'"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11127
+#, c-format
+msgid "Couldn't find real device layer %s in hash"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11133 ../lib/activate/dev_manager.pot:11186
+#, c-format
+msgid "Couldn't create origin device parameters for '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11138
+#, c-format
+msgid "Adding target: 0 %llu snapshot-origin %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11159
+#, c-format
+msgid "Couldn't find snapshot for '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11174
+#, c-format
+msgid "Couldn't find origin device layer %s in hash"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11180
+#, c-format
+msgid "Couldn't find cow device layer %s in hash"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11193
+#, c-format
+msgid "Couldn't create cow device parameters for '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11204
+#, c-format
+msgid "Adding target: 0 %llu snapshot %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11295 ../lib/activate/dev_manager.pot:11374
+#, c-format
+msgid "Getting device info for %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11320
+#, c-format
+msgid "Getting device status percentage for %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11351
+#, c-format
+msgid "Getting device mirror status percentage for %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11673 ../lib/activate/dev_manager.pot:11833
+#, c-format
+msgid "Couldn't find device layer '%s'."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11753
+#, c-format
+msgid "_suspend_parents couldn't find device layer '%s' - skipping."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11759
+#, c-format
+msgid "BUG: pre-suspend loop detected (%s)"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11787
+#, c-format
+msgid "_resume_with_deps couldn't find device layer '%s' - skipping."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11793 ../lib/activate/dev_manager.pot:11838
+#, c-format
+msgid "BUG: pre-create loop detected (%s)"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:11946 ../lib/activate/dev_manager.pot:11963
+#, c-format
+msgid ""
+"_populate_pre_suspend_lists: Couldn't find device layer '%s' - skipping."
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:12010
+#, c-format
+msgid "Couldn't deactivate device %s"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:12127
+#, c-format
+msgid "Found existing layer '%s'"
+msgstr ""
+
+#: ../lib/activate/dev_manager.pot:12302
+#, c-format
+msgid "Found active lv %s%s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:11944 ../lib/activate/fs.pot:11967
+msgid "Couldn't construct name of volume group directory."
+msgstr ""
+
+#: ../lib/activate/fs.pot:11952
+#, c-format
+msgid "Creating directory %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:11954 ../lib/activate/fs.pot:11989
+#: ../lib/activate/fs.pot:12009 ../lib/activate/fs.pot:12062
+#: ../lib/activate/fs.pot:12075 ../lib/activate/fs.pot:12082
+#: ../lib/activate/fs.pot:12110 ../lib/commands/toolcontext.pot:11818
+#: ../lib/config/config.pot:10093 ../lib/config/config.pot:10142
+#: ../lib/config/config.pot:10158 ../lib/config/config.pot:10218
+#: ../lib/config/config.pot:10348 ../lib/device/dev-cache.pot:10851
+#: ../lib/device/dev-cache.pot:10855 ../lib/device/dev-cache.pot:11023
+#: ../lib/device/dev-cache.pot:11030 ../lib/device/dev-cache.pot:11191
+#: ../lib/device/dev-cache.pot:11193 ../lib/device/dev-io.pot:13748
+#: ../lib/device/dev-io.pot:13784 ../lib/device/dev-io.pot:13886
+#: ../lib/device/dev-io.pot:13891 ../lib/device/dev-io.pot:13909
+#: ../lib/device/dev-io.pot:13914 ../lib/device/dev-io.pot:13968
+#: ../lib/device/dev-io.pot:14016 ../lib/filters/filter-persistent.pot:9572
+#: ../lib/filters/filter-sysfs.pot:8950 ../lib/filters/filter-sysfs.pot:9062
+#: ../lib/filters/filter-sysfs.pot:9084 ../lib/filters/filter-sysfs.pot:9115
+#: ../lib/filters/filter.pot:10960 ../lib/format1/import-export.pot:9494
+#: ../lib/format_text/archive.pot:12411 ../lib/format_text/archive.pot:12420
+#: ../lib/format_text/format-text.pot:13104
+#: ../lib/format_text/format-text.pot:13118
+#: ../lib/format_text/format-text.pot:13124
+#: ../lib/format_text/format-text.pot:13149
+#: ../lib/format_text/format-text.pot:13211
+#: ../lib/format_text/format-text.pot:13216
+#: ../lib/format_text/format-text.pot:13242
+#: ../lib/format_text/format-text.pot:13267
+#: ../lib/locking/file_locking.pot:13184 ../lib/locking/file_locking.pot:13192
+#: ../lib/locking/file_locking.pot:13195 ../lib/locking/file_locking.pot:13226
+#: ../lib/locking/file_locking.pot:13292 ../lib/locking/file_locking.pot:13306
+#: ../lib/locking/file_locking.pot:13407 ../lib/locking/file_locking.pot:13412
+#: ../lib/locking/locking.pot:13008 ../lib/locking/locking.pot:13013
+#: ../lib/locking/locking.pot:13029 ../lib/locking/locking.pot:13138
+#: ../lib/log/log.pot:9483 ../lib/misc/lvm-file.pot:9962
+#: ../lib/misc/lvm-file.pot:10007 ../lib/misc/lvm-file.pot:10017
+#: ../lib/misc/lvm-file.pot:10066 ../lib/misc/lvm-file.pot:10078
+#: ../lib/misc/lvm-file.pot:10107 ../lib/misc/lvm-file.pot:10116
+#: ../lib/misc/lvm-file.pot:10141 ../lib/misc/lvm-file.pot:10146
+#: ../lib/mm/memlock.pot:11991 ../lib/mm/memlock.pot:11999
+#: ../lib/mm/memlock.pot:12010 ../lib/uuid/uuid.pot:9203
+#: ../lib/uuid/uuid.pot:9208
+#, c-format
+msgid "%s: %s failed: %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:11972
+#, c-format
+msgid "Removing directory %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12000
+#, c-format
+msgid "Couldn't create path for %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12023
+#, c-format
+msgid "Couldn't create path for volume group dir %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12030
+#, c-format
+msgid "Couldn't create source pathname for logical volume link %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12037
+#, c-format
+msgid "Couldn't create destination pathname for logical volume link for %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12044
+#, c-format
+msgid "Couldn't create pathname for LVM1 group file for %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12055
+#, c-format
+msgid "Non-LVM1 character device found at %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12068
+#, c-format
+msgid "Symbolic link %s not created: file exists"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12080
+#, c-format
+msgid "Linking %s -> %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12097
+msgid "Couldn't determine link pathname."
+msgstr ""
+
+#: ../lib/activate/fs.pot:12103
+#, c-format
+msgid "%s not symbolic link - not removing"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12108
+#, c-format
+msgid "Removing link %s"
+msgstr ""
+
+#: ../lib/activate/fs.pot:12184
+msgid "No space to stack fs operation"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9481 ../lib/cache/lvmcache.pot:9606
+#: ../lib/cache/lvmcache.pot:9868
+msgid "Internal cache initialisation failed"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9486
+#, c-format
+msgid "Cache locking failure for %s"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9616
+msgid "dev_iter creation failed"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9650
+msgid "vgnames list allocation failed"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9657
+msgid "strlist allocation failed"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9751
+#, c-format
+msgid "_lvmcache_update: pvid insertion failed: %s"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9772
+#, c-format
+msgid "_lvmcache_update: vgid hash insertion failed: %s"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9800
+msgid "lvmcache_update_vgname: list alloc failed"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9806
+#, c-format
+msgid "cache vgname alloc failed for %s"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9811
+#, c-format
+msgid "cache_update: vg hash insertion failed: %s"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9882
+msgid "lvmcache_info allocation failed"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9897
+#, c-format
+msgid "Ignoring duplicate PV %s on %s - using md %s"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9904
+#, c-format
+msgid "Duplicate PV %s on %s - using md %s"
+msgstr ""
+
+#: ../lib/cache/lvmcache.pot:9909
+#, c-format
+msgid "Found duplicate PV %s: using %s not %s"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11658
+msgid "LVM_SYSTEM_DIR environment variable is too long."
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11728
+#, c-format
+msgid "Logging initialised at %s"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11747
+#, c-format
+msgid "Set umask to %04o"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11753 ../lib/commands/toolcontext.pot:11764
+msgid "Device directory given in config file too long"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11785 ../tools/lvm.pot:17638
+msgid "Invalid units specification"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11809
+msgid "LVM_SYSTEM_DIR was too long"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11824
+#, c-format
+msgid "Failed to load config file %s"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11844
+msgid "Failed to add /dev to internal device cache"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11848
+msgid "device/scan not in config file: Defaulting to /dev"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11855
+msgid "Invalid string in config file: devices/scan"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11861
+#: ../lib/format_text/format-text.pot:14177
+#, c-format
+msgid "Failed to add %s to internal device cache"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11889
+msgid "devices/filter not found in config file: no regex filter installed"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11893
+msgid "Failed to create regex device filter"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11900
+msgid "Failed to create lvm type filter"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11923
+#, c-format
+msgid "Persistent cache filename too long ('%s/.cache')."
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11931
+msgid "Failed to create persistent device filter"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11945
+#, c-format
+msgid "Failed to load existing device cache from %s"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11984
+msgid "Invalid string in config file: global/format_libraries"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:11995
+#, c-format
+msgid "Shared library %s does not contain format functions"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:12028
+#, c-format
+msgid "_init_formats: Default format (%s) not found"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:12042
+msgid "setlocale failed"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:12051
+msgid "Failed to allocate command context"
+msgstr ""
+
+#: ../lib/commands/toolcontext.pot:12082
+msgid "Command memory pool creation failed"
+msgstr ""
+
+#: ../lib/config/config.pot:10103
+#, c-format
+msgid "Read from %s failed"
+msgstr ""
+
+#: ../lib/config/config.pot:10109
+#, c-format
+msgid "Circular read from %s failed"
+msgstr ""
+
+#: ../lib/config/config.pot:10119
+#, c-format
+msgid "%s: Checksum error"
+msgstr ""
+
+#: ../lib/config/config.pot:10163
+#, c-format
+msgid "%s is not a regular file"
+msgstr ""
+
+#: ../lib/config/config.pot:10168
+#, c-format
+msgid "%s is empty"
+msgstr ""
+
+#: ../lib/config/config.pot:10219
+msgid "Failed to reload configuration file"
+msgstr ""
+
+#: ../lib/config/config.pot:10224
+#, c-format
+msgid "Configuration file %s is not a regular file"
+msgstr ""
+
+#: ../lib/config/config.pot:10233
+#, c-format
+msgid "Detected config file change: Reloading %s"
+msgstr ""
+
+#: ../lib/config/config.pot:10236
+#, c-format
+msgid "Config file reload: %s is empty"
+msgstr ""
+
+#: ../lib/config/config.pot:10241
+msgid "Allocation of new config_tree failed"
+msgstr ""
+
+#: ../lib/config/config.pot:10291
+#, c-format
+msgid "_write_value: Unknown value type: %d"
+msgstr ""
+
+#: ../lib/config/config.pot:10352
+#, c-format
+msgid "Dumping configuration to %s"
+msgstr ""
+
+#: ../lib/config/config.pot:10354
+msgid "Failure while writing configuration"
+msgstr ""
+
+#: ../lib/config/config.pot:10399 ../lib/config/config.pot:10402
+#: ../lib/config/config.pot:10415 ../lib/config/config.pot:10417
+#: ../lib/config/config.pot:10432 ../lib/config/config.pot:10446
+#: ../lib/config/config.pot:10448 ../lib/config/config.pot:10477
+#: ../lib/config/config.pot:10483 ../lib/config/config.pot:10495
+#, c-format
+msgid "Parse error at line %d: unexpected token"
+msgstr ""
+
+#: ../lib/config/config.pot:10499
+#, c-format
+msgid "Parse error at line %d: expected a value"
+msgstr ""
+
+#: ../lib/config/config.pot:10724
+#, c-format
+msgid "Setting %s to %s"
+msgstr ""
+
+#: ../lib/config/config.pot:10729
+#, c-format
+msgid "%s not found in config: defaulting to %s"
+msgstr ""
+
+#: ../lib/config/config.pot:10740
+#, c-format
+msgid "Setting %s to %d"
+msgstr ""
+
+#: ../lib/config/config.pot:10744
+#, c-format
+msgid "%s not found in config: defaulting to %d"
+msgstr ""
+
+#: ../lib/config/config.pot:10755
+#, c-format
+msgid "Setting %s to %f"
+msgstr ""
+
+#: ../lib/config/config.pot:10759
+#, c-format
+msgid "%s not found in config: defaulting to %f"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10763 ../lib/device/dev-cache.pot:10799
+msgid "struct device allocation failed"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10767
+msgid "struct str_list allocation failed"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10772
+msgid "filename strdup failed"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10903
+#, c-format
+msgid "%s: Aliased to %s in device cache%s"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10907
+#, c-format
+msgid "%s: Added to device cache"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10935
+msgid "Couldn't insert device into binary tree."
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10942
+msgid "Couldn't add alias to dev cache."
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:10947
+msgid "Couldn't add name to hash in dev cache."
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11035
+#, c-format
+msgid "%s: Symbolic link to directory"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11044
+#, c-format
+msgid "%s: Not a block device"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11106
+msgid "Couldn't create binary tree for dev-cache."
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11122
+#, c-format
+msgid "Device '%s' has been left open."
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11156
+#, c-format
+msgid "Ignoring %s: %s"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11162
+#, c-format
+msgid "Ignoring %s: Not a directory"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11167
+msgid "dir_list allocation failed"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11196 ../lib/device/dev-cache.pot:11200
+#, c-format
+msgid "Path %s no longer valid for device(%d,%d)"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11217
+#, c-format
+msgid "Aborting - please provide new pathname for what used to be %s"
+msgstr ""
+
+#: ../lib/device/dev-cache.pot:11249
+msgid "dev_iter allocation failed"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13731
+#, c-format
+msgid "Attempt to read an unopened device (%s)."
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13743
+#, c-format
+msgid "Read size too large: %llu"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13841
+msgid "Bounce buffer alloca failed"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13884 ../lib/device/dev-io.pot:13907
+#, c-format
+msgid "Getting size of %s"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13946
+#, c-format
+msgid "WARNING: dev_open(%s) called while suspended"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13958
+#, c-format
+msgid "%s: stat failed: Has device name changed?"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13977
+#, c-format
+msgid "%s: fstat failed: Has device name changed?"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:13990
+#, c-format
+msgid "Opened %s"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:14020
+#, c-format
+msgid "Closed %s"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:14033
+#, c-format
+msgid "Attempt to close device '%s' which is not open."
+msgstr ""
+
+#: ../lib/device/dev-io.pot:14129
+#, c-format
+msgid "Wiping %s at %llu length %Zu"
+msgstr ""
+
+#: ../lib/device/dev-io.pot:14132
+#, c-format
+msgid "Wiping %s at sector %llu length %Zu sectors"
+msgstr ""
+
+#: ../lib/display/display.pot:9725
+msgid "Unrecognised allocation policy - using default"
+msgstr ""
+
+#: ../lib/display/display.pot:9737
+msgid "Unrecognised segment type - using default (striped)"
+msgstr ""
+
+#: ../lib/display/display.pot:9761
+msgid "no memory for size display buffer"
+msgstr ""
+
+#: ../lib/display/display.pot:9810
+#, c-format
+msgid "%s:%s:%llu:-1:%u:%u:-1:%u:%u:%u:%u:%s"
+msgstr ""
+
+#: ../lib/display/display.pot:9841
+#, c-format
+msgid "--- %sPhysical volume ---"
+msgstr ""
+
+#: ../lib/display/display.pot:9842
+#, c-format
+msgid "PV Name               %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9843
+#, c-format
+msgid "VG Name               %s%s"
+msgstr ""
+
+#: ../lib/display/display.pot:9853
+#, c-format
+msgid "PV Size               %s / not usable %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9860
+#, c-format
+msgid "PV Size               %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9868
+#, c-format
+msgid "Allocatable           yes %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9871
+msgid "Allocatable           NO"
+msgstr ""
+
+#: ../lib/display/display.pot:9876
+#, c-format
+msgid "PE Size (KByte)       %u"
+msgstr ""
+
+#: ../lib/display/display.pot:9877 ../lib/display/display.pot:10203
+#, c-format
+msgid "Total PE              %u"
+msgstr ""
+
+#: ../lib/display/display.pot:9878
+#, c-format
+msgid "Free PE               %u"
+msgstr ""
+
+#: ../lib/display/display.pot:9879
+#, c-format
+msgid "Allocated PE          %u"
+msgstr ""
+
+#: ../lib/display/display.pot:9880 ../lib/display/display.pot:9901
+#, c-format
+msgid "PV UUID               %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9881 ../lib/display/display.pot:9907
+#: ../lib/display/display.pot:10055 ../lib/display/display.pot:10120
+#: ../lib/display/display.pot:10131 ../lib/display/display.pot:10136
+#: ../lib/display/display.pot:10229 ../lib/format_text/archive.pot:12506
+#: ../tools/lvm.pot:17673
+msgid " "
+msgstr ""
+
+#: ../lib/display/display.pot:9899
+#, c-format
+msgid "PV Name               %s     "
+msgstr ""
+
+#: ../lib/display/display.pot:9902
+#, c-format
+msgid "PV Status             %sallocatable"
+msgstr ""
+
+#: ../lib/display/display.pot:9904
+#, c-format
+msgid "Total PE / Free PE    %u / %u"
+msgstr ""
+
+#: ../lib/display/display.pot:9917
+#, c-format
+msgid "%s%s/%s:%s:%d:%d:-1:%d:%llu:%d:-1:%d:%d:%d:%d"
+msgstr ""
+
+#: ../lib/display/display.pot:9948
+msgid "--- Logical volume ---"
+msgstr ""
+
+#: ../lib/display/display.pot:9950
+#, c-format
+msgid "LV Name                %s%s/%s"
+msgstr ""
+
+#: ../lib/display/display.pot:9952
+#, c-format
+msgid "VG Name                %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9954
+#, c-format
+msgid "LV UUID                %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9956
+#, c-format
+msgid "LV Write Access        %s"
+msgstr ""
+
+#: ../lib/display/display.pot:9960
+msgid "LV snapshot status     source of"
+msgstr ""
+
+#: ../lib/display/display.pot:9970
+#, c-format
+msgid "                       %s%s/%s [%s]"
+msgstr ""
+
+#: ../lib/display/display.pot:9980
+#, c-format
+msgid "LV snapshot status     %s destination for %s%s/%s"
+msgstr ""
+
+#: ../lib/display/display.pot:9987
+msgid "LV Status              suspended"
+msgstr ""
+
+#: ../lib/display/display.pot:9989
+#, c-format
+msgid "LV Status              %savailable"
+msgstr ""
+
+#: ../lib/display/display.pot:9997
+#, c-format
+msgid "# open                 %u"
+msgstr ""
+
+#: ../lib/display/display.pot:9999
+#, c-format
+msgid "LV Size                %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10004
+#, c-format
+msgid "Current LE             %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10011
+#, c-format
+msgid "Segments               %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10021
+#, c-format
+msgid "Snapshot chunk size    %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10030
+#, c-format
+msgid "Allocated to snapshot  %.2f%% "
+msgstr ""
+
+#: ../lib/display/display.pot:10042
+#, c-format
+msgid "Allocation             %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10043
+#, c-format
+msgid "Read ahead sectors     %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10047
+#, c-format
+msgid "Persistent major       %d"
+msgstr ""
+
+#: ../lib/display/display.pot:10048
+#, c-format
+msgid "Persistent minor       %d"
+msgstr ""
+
+#: ../lib/display/display.pot:10052
+#, c-format
+msgid "Block device           %d:%d"
+msgstr ""
+
+#: ../lib/display/display.pot:10064
+#, c-format
+msgid "%sPhysical volume\t%s"
+msgstr ""
+
+#: ../lib/display/display.pot:10069
+#, c-format
+msgid "%sPhysical extents\t%d to %d"
+msgstr ""
+
+#: ../lib/display/display.pot:10074
+#, c-format
+msgid "%sLogical volume\t%s"
+msgstr ""
+
+#: ../lib/display/display.pot:10079
+#, c-format
+msgid "%sLogical extents\t%d to %d"
+msgstr ""
+
+#: ../lib/display/display.pot:10092
+msgid "--- Segments ---"
+msgstr ""
+
+#: ../lib/display/display.pot:10097
+#, c-format
+msgid "Logical extent %u to %u:"
+msgstr ""
+
+#: ../lib/display/display.pot:10101
+msgid "  Type\t\tlinear"
+msgstr ""
+
+#: ../lib/display/display.pot:10103
+#, c-format
+msgid "  Type\t\t%s"
+msgstr ""
+
+#: ../lib/display/display.pot:10111
+#, c-format
+msgid "  Stripes\t\t%u"
+msgstr ""
+
+#: ../lib/display/display.pot:10112
+#, c-format
+msgid "  Stripe size\t\t%u KB"
+msgstr ""
+
+#: ../lib/display/display.pot:10116
+#, c-format
+msgid "  Stripe %d:"
+msgstr ""
+
+#: ../lib/display/display.pot:10125
+#, c-format
+msgid "  Mirrors\t\t%u"
+msgstr ""
+
+#: ../lib/display/display.pot:10126
+#, c-format
+msgid "  Mirror size\t\t%u"
+msgstr ""
+
+#: ../lib/display/display.pot:10127
+msgid "  Mirror original:"
+msgstr ""
+
+#: ../lib/display/display.pot:10129
+msgid "  Mirror destination:"
+msgstr ""
+
+#: ../lib/display/display.pot:10156
+msgid "--- Volume group ---"
+msgstr ""
+
+#: ../lib/display/display.pot:10157
+#, c-format
+msgid "VG Name               %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10158
+#, c-format
+msgid "System ID             %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10159
+#, c-format
+msgid "Format                %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10161
+#, c-format
+msgid "Metadata Areas        %d"
+msgstr ""
+
+#: ../lib/display/display.pot:10163
+#, c-format
+msgid "Metadata Sequence No  %d"
+msgstr ""
+
+#: ../lib/display/display.pot:10166
+#, c-format
+msgid "VG Access             %s%s%s%s"
+msgstr ""
+
+#: ../lib/display/display.pot:10171
+#, c-format
+msgid "VG Status             %s%sresizable"
+msgstr ""
+
+#: ../lib/display/display.pot:10178
+msgid "Clustered             yes"
+msgstr ""
+
+#: ../lib/display/display.pot:10179
+#, c-format
+msgid "Shared                %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10182
+#, c-format
+msgid "MAX LV                %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10183
+#, c-format
+msgid "Cur LV                %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10184
+#, c-format
+msgid "Open LV               %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10190
+#, c-format
+msgid "Max PV                %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10191
+#, c-format
+msgid "Cur PV                %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10192
+#, c-format
+msgid "Act PV                %u"
+msgstr ""
+
+#: ../lib/display/display.pot:10194
+#, c-format
+msgid "VG Size               %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10199
+#, c-format
+msgid "PE Size               %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10205
+#, c-format
+msgid "Alloc PE / Size       %u / %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10218
+#, c-format
+msgid "Free  PE / Size       %u / %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10228
+#, c-format
+msgid "VG UUID               %s"
+msgstr ""
+
+#: ../lib/display/display.pot:10241
+#, c-format
+msgid "\"%s\" %-9s [%-9s used / %s free]"
+msgstr ""
+
+#: ../lib/filters/filter-composite.pot:7571
+#, c-format
+msgid "Using %s"
+msgstr ""
+
+#: ../lib/filters/filter-composite.pot:7599
+msgid "composite filters allocation failed"
+msgstr ""
+
+#: ../lib/filters/filter-composite.pot:7607
+msgid "compsoite filters allocation failed"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9458
+#, c-format
+msgid "Couldn't find %s array in '%s'"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9469
+msgid "Devices array contains a value which is not a string ... ignoring"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9475
+#, c-format
+msgid "Couldn't add '%s' to filter ... ignoring"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9513
+#, c-format
+msgid "Loaded persistent filter cache from %s"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9557
+#, c-format
+msgid "Internal persistent device cache empty - not writing to %s"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9562
+#, c-format
+msgid "Device cache incomplete - not writing to %s"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9567
+#, c-format
+msgid "Dumping persistent device cache to %s"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9606
+#, c-format
+msgid "%s: Skipping (cached)"
+msgstr ""
+
+#: ../lib/filters/filter-persistent.pot:9643
+msgid "Couldn't create hash table for persistent filter."
+msgstr ""
+
+#: ../lib/filters/filter-regex.pot:8396
+msgid "pattern must begin with 'a' or 'r'"
+msgstr ""
+
+#: ../lib/filters/filter-regex.pot:8435
+msgid "invalid seperator at end of regex"
+msgstr ""
+
+#: ../lib/filters/filter-regex.pot:8463
+msgid "filter patterns must be enclosed in quotes"
+msgstr ""
+
+#: ../lib/filters/filter-regex.pot:8490
+msgid "invalid filter pattern"
+msgstr ""
+
+#: ../lib/filters/filter-regex.pot:8522
+#, c-format
+msgid "%s: New preferred name"
+msgstr ""
+
+#: ../lib/filters/filter-sysfs.pot:8939
+msgid "No proc filesystem found: skipping sysfs filter"
+msgstr ""
+
+#: ../lib/filters/filter-sysfs.pot:8945
+msgid "Failed to create /proc/mounts string"
+msgstr ""
+
+#: ../lib/filters/filter-sysfs.pot:9043
+#, c-format
+msgid "Empty sysfs device file: %s"
+msgstr ""
+
+#: ../lib/filters/filter-sysfs.pot:9048
+msgid "sysfs device file not correct format"
+msgstr ""
+
+#: ../lib/filters/filter-sysfs.pot:9094
+#, c-format
+msgid "sysfs path name too long: %s in %s"
+msgstr ""
+
+#: ../lib/filters/filter-sysfs.pot:9164
+msgid "sysfs pool creation failed"
+msgstr ""
+
+#: ../lib/filters/filter-sysfs.pot:9169
+msgid "sysfs dev_set creation failed"
+msgstr ""
+
+#: ../lib/filters/filter.pot:10909
+#, c-format
+msgid "%s: Skipping: Unrecognised LVM device type %llu"
+msgstr ""
+
+#: ../lib/filters/filter.pot:10916
+#, c-format
+msgid "%s: Skipping: open failed: %s"
+msgstr ""
+
+#: ../lib/filters/filter.pot:10941
+msgid "Filter failed to allocate max_partitions_by_major"
+msgstr ""
+
+#: ../lib/filters/filter.pot:10946
+msgid "No proc filesystem found: using all block device types"
+msgstr ""
+
+#: ../lib/filters/filter.pot:10955
+msgid "Failed to create /proc/devices string"
+msgstr ""
+
+#: ../lib/filters/filter.pot:11011
+msgid "Expecting string in devices/types in config file"
+msgstr ""
+
+#: ../lib/filters/filter.pot:11019
+#, c-format
+msgid "Max partition count missing for %s in devices/types in config file"
+msgstr ""
+
+#: ../lib/filters/filter.pot:11025
+#, c-format
+msgid "Zero partition count invalid for %s in devices/types in config file"
+msgstr ""
+
+#: ../lib/filters/filter.pot:11048
+msgid "LVM type filter allocation failed"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9382
+#, c-format
+msgid "Failed to read PV data from %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9390
+#, c-format
+msgid "%s does not have a valid LVM1 PV identifier"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9396
+#, c-format
+msgid "format1: Unknown metadata version %d found on %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9570
+#, c-format
+msgid "%s is not a member of any format1 VG"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9579
+#, c-format
+msgid "Failed to read VG data from PV (%s)"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9587
+#, c-format
+msgid "%s is not a member of the VG %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9593
+#, c-format
+msgid "Failed to read PV uuid list from %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9598
+#, c-format
+msgid "Failed to read LV's from %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9603
+#, c-format
+msgid "Failed to read extents from %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9607
+#, c-format
+msgid "Found %s in %sVG %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9646
+#, c-format
+msgid "Ignoring duplicate PV %s on %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9651
+#, c-format
+msgid "Duplicate PV %s - using md %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9697
+msgid "read_pvs_in_vg: dev_iter_create failed"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9738
+#, c-format
+msgid "Too many uuids to fit on %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9772
+#, c-format
+msgid "Couldn't zero lv area on device '%s'"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9782
+#, c-format
+msgid "lv_number %d too large"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9815
+msgid "Invalid PV structure size."
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9824
+msgid "Couldn't allocate temporary PV buffer."
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9850
+#, c-format
+msgid "Failed to write PV structure onto %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9869
+#, c-format
+msgid "Failed to write VG data to %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9874
+#, c-format
+msgid "Failed to write PV uuid list to %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9879
+#, c-format
+msgid "Failed to write LV's to %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9884
+#, c-format
+msgid "Failed to write extents to %s"
+msgstr ""
+
+#: ../lib/format1/disk-rep.pot:9926
+#, c-format
+msgid "Successfully wrote data to %s"
+msgstr ""
+
+#: ../lib/format1/format1.pot:9754
+#, c-format
+msgid "VG data differs between PVs %s and %s"
+msgstr ""
+
+#: ../lib/format1/format1.pot:9756 ../lib/format1/format1.pot:9771
+#, c-format
+msgid "VG data on %s: %s %s %u %u  %u %u %u %u %u %u %u %u %u %u %u %u %u"
+msgstr ""
+
+#: ../lib/format1/format1.pot:9797
+#, c-format
+msgid "%d PV(s) found for VG %s: expected %d"
+msgstr ""
+
+#: ../lib/format1/format1.pot:9982
+#, c-format
+msgid "Reading physical volume data %s from disk"
+msgstr ""
+
+#: ../lib/format1/format1.pot:10023
+#, c-format
+msgid "Physical volumes cannot be bigger than %s"
+msgstr ""
+
+#: ../lib/format1/format1.pot:10044
+msgid "Metadata would overwrite physical extents"
+msgstr ""
+
+#: ../lib/format1/format1.pot:10059
+#, c-format
+msgid "logical volumes cannot contain more than %d extents."
+msgstr ""
+
+#: ../lib/format1/format1.pot:10064
+#, c-format
+msgid "logical volumes cannot be larger than %s"
+msgstr ""
+
+#: ../lib/format1/format1.pot:10146
+#, c-format
+msgid "Extent size must be between %s and %s"
+msgstr ""
+
+#: ../lib/format1/format1.pot:10159
+#, c-format
+msgid "Extent size must be multiple of %s"
+msgstr ""
+
+#: ../lib/format1/format1.pot:10167 ../lib/format_text/format-text.pot:12563
+msgid "Extent size must be power of 2"
+msgstr ""
+
+#: ../lib/format1/format1.pot:10248
+msgid "Couldn't create lvm1 label handler."
+msgstr ""
+
+#: ../lib/format1/format1.pot:10253
+msgid "Couldn't register lvm1 label handler."
+msgstr ""
+
+#: ../lib/format1/import-export.pot:9466
+#, c-format
+msgid "System ID %s on %s differs from %s for volume group"
+msgstr ""
+
+#: ../lib/format1/import-export.pot:9500
+msgid "Generated system_id too long"
+msgstr ""
+
+#: ../lib/format1/import-export.pot:9545
+#, c-format
+msgid "Volume group name %s too long to export"
+msgstr ""
+
+#: ../lib/format1/import-export.pot:9782
+#, c-format
+msgid "Non-striped segment type in LV %s: unsupported by format1"
+msgstr ""
+
+#: ../lib/format1/import-export.pot:9787
+#, c-format
+msgid "LV stripe found in LV %s: unsupported by format1"
+msgstr ""
+
+#: ../lib/format1/import-export.pot:9957
+#, c-format
+msgid "Couldn't find snapshot origin '%s'."
+msgstr ""
+
+#: ../lib/format1/import-export.pot:9963
+#, c-format
+msgid "Couldn't find snapshot cow store '%s'."
+msgstr ""
+
+#: ../lib/format1/import-export.pot:10005
+msgid "Logical volume number out of bounds."
+msgstr ""
+
+#: ../lib/format1/import-export.pot:10012
+#, c-format
+msgid "Couldn't find logical volume '%s'."
+msgstr ""
+
+#: ../lib/format1/import-export.pot:10034
+#, c-format
+msgid "Couldn't find origin logical volume for snapshot '%s'."
+msgstr ""
+
+#: ../lib/format1/import-export.pot:10046
+msgid "Couldn't add snapshot."
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8633
+msgid "Unable to create hash table for holding extent maps."
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8678
+#, c-format
+msgid "Physical volume (%s) contains an unknown logical volume (%s)."
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8725
+msgid "invalid lv in extent map"
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8732
+msgid "logical extent number out of bounds"
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8738
+#, c-format
+msgid "logical extent (%u) already mapped."
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8758
+#, c-format
+msgid "Logical volume (%s) contains an incomplete mapping table."
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8848
+#, c-format
+msgid ""
+"Number of stripes (%u) incompatible with logical extent count (%u) for %s"
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8928
+msgid "Couldn't allocate logical volume maps."
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8933
+msgid "Couldn't fill logical volume maps."
+msgstr ""
+
+#: ../lib/format1/import-extents.pot:8943
+msgid "Couldn't build extent segments."
+msgstr ""
+
+#: ../lib/format1/layout.pot:8611
+#, c-format
+msgid "MaxLogicalVolumes of %d exceeds format limit of %d for VG '%s'"
+msgstr ""
+
+#: ../lib/format1/layout.pot:8618
+#, c-format
+msgid "MaxPhysicalVolumes of %d exceeds format limit of %d for VG '%s'"
+msgstr ""
+
+#: ../lib/format1/layout.pot:8637
+msgid "Insufficient space for metadata and PE's."
+msgstr ""
+
+#: ../lib/format1/layout.pot:8673
+#, c-format
+msgid "Too few extents on %s.  Try smaller extent size."
+msgstr ""
+
+#: ../lib/format1/layout.pot:8694
+#, c-format
+msgid "Metadata extent limit (%u) exceeded for %s - %u required"
+msgstr ""
+
+#: ../lib/format1/lvm1-label.pot:9148
+#, c-format
+msgid "The '%s' operation is not supported for the lvm1 labeller."
+msgstr ""
+
+#: ../lib/format1/lvm1-label.pot:9229 ../lib/format_text/text_label.pot:9358
+msgid "Couldn't allocate labeller object."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12340
+msgid "Couldn't scan archive directory."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12367
+msgid "Couldn't create new archive file."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12418
+#, c-format
+msgid "Expiring archive %s"
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12443
+msgid "Couldn't create temporary archive name."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12448
+msgid "Couldn't create FILE object for archive."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12465 ../lib/format_text/archive.pot:12541
+#, c-format
+msgid "Couldn't scan the archive directory (%s)."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12479
+msgid "Archive file name too long."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12490
+#, c-format
+msgid "Archive rename failed for %s"
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12507
+#, c-format
+msgid "File:\t\t%s"
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12512
+msgid "Couldn't create text instance object."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12522
+msgid "Unable to read archive file."
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12527
+#, c-format
+msgid "VG name:    \t%s"
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12528
+#, c-format
+msgid "Description:\t%s"
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12529
+#, c-format
+msgid "Backup Time:\t%s"
+msgstr ""
+
+#: ../lib/format_text/archive.pot:12546
+#, c-format
+msgid "No archives found in %s."
+msgstr ""
+
+#: ../lib/format_text/export.pot:9304
+#, c-format
+msgid "uname failed: %s"
+msgstr ""
+
+#: ../lib/format_text/export.pot:9333
+msgid "Internal error tracking indentation"
+msgstr ""
+
+#: ../lib/format_text/flags.pot:8662
+msgid "Unknown flag set requested."
+msgstr ""
+
+#: ../lib/format_text/flags.pot:8705
+msgid "Metadata inconsistency: Not all flags successfully exported."
+msgstr ""
+
+#: ../lib/format_text/flags.pot:8727
+msgid "Status value is not a string."
+msgstr ""
+
+#: ../lib/format_text/flags.pot:8738
+#, c-format
+msgid "Unknown status flag '%s'."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12612
+msgid "struct mda_header allocation failed"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12625
+msgid "Incorrect metadata area header checksum"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12632
+msgid "Wrong magic number in metadata area header"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12637
+#, c-format
+msgid "Incompatible metadata area header version: %d"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12643
+#, c-format
+msgid "Incorrect start sector in metadata area header: %llu"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12764
+#: ../lib/format_text/format-text.pot:12865
+#, c-format
+msgid "VG %s metadata too large for circular buffer"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12779
+#, c-format
+msgid "Read %s metadata (%u) from %s at %llu size %llu"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12850
+#, c-format
+msgid "VG %s metadata writing failed"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12870
+#, c-format
+msgid "Writing %s metadata to %s at %llu len %llu"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12882
+#, c-format
+msgid "Writing metadata to %s at %llu len %u"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12949
+#, c-format
+msgid "Committing %s metadata (%u) to %s header at %llu"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:12954
+#: ../lib/format_text/format-text.pot:13023
+msgid "Failed to write metadata area header"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13056
+#, c-format
+msgid "'%s' does not contain volume group '%s'."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13060
+#, c-format
+msgid "Read volume group %s from %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13094
+msgid "Text format failed to determine directory."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13099
+msgid "Couldn't create temporary text file name."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13109
+#, c-format
+msgid "Writing %s metadata to %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13112
+#, c-format
+msgid "Failed to write metadata to %s."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13130
+#: ../lib/format_text/format-text.pot:13156
+#: ../lib/format_text/format-text.pot:13193
+#, c-format
+msgid "%s: rename to %s failed: %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13145
+#, c-format
+msgid "Test mode: Skipping committing %s metadata (%u)"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13148
+#, c-format
+msgid "Unlinking %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13153
+#, c-format
+msgid "Committing %s metadata (%u)"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13190
+msgid "Test mode: Skipping rename"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13254
+#: ../lib/format_text/format-text.pot:13920
+#, c-format
+msgid "Name too long %s/%s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13383
+#, c-format
+msgid "Physical extents end beyond end of device %s!"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13399
+#, c-format
+msgid "Warning: metadata area fills disk %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13430
+#: ../lib/format_text/format-text.pot:13477
+msgid "Failed to wipe new metadata area"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13526
+#, c-format
+msgid "Creating metadata area on %s at sector %llu size %llu sectors"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13606
+#, c-format
+msgid "format_text: _vg_read failed to read VG %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13612
+#, c-format
+msgid "Warning: Volume group %s is not consistent"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13640
+msgid "_add_raw allocation failed"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13700
+#, c-format
+msgid "Must be exactly one data area (found %d) on PV %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13717
+#: ../lib/format_text/format-text.pot:13721
+msgid "metadata_area allocation failed"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:13897
+msgid "Couldn't allocate format instance object."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14009
+#, c-format
+msgid "%s: Volume group filename may not end in .tmp"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14043
+msgid "Couldn't allocate text format context object."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14065
+msgid "_add_dir allocation failed"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14068
+#, c-format
+msgid "Adding text format metadata dir: %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14085
+msgid "Empty metadata disk_area section of config file"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14090
+msgid "Missing start_sector in metadata disk_area section of config file"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14097
+msgid "Missing size in metadata disk_area section of config file"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14104
+msgid "Missing uuid in metadata disk_area section of config file"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14110
+#, c-format
+msgid "Invalid uuid in metadata disk_area section of config file: %s"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14119
+#: ../lib/format_text/import_vsn1.pot:9626
+msgid "Couldn't find device."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14121
+#: ../lib/format_text/import_vsn1.pot:9628
+#, c-format
+msgid "Couldn't find device with uuid '%s'."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14148
+msgid "Failed to allocate dir_list"
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14159
+msgid "Couldn't create text label handler."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14164
+msgid "Couldn't register text label handler."
+msgstr ""
+
+#: ../lib/format_text/format-text.pot:14171
+msgid "Invalid string in config file: metadata/dirs"
+msgstr ""
+
+#: ../lib/format_text/import.pot:9525
+msgid "Couldn't read volume group metadata."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9518
+#, c-format
+msgid "Can't process text format file - %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9566
+msgid "Couldn't find uuid."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9572
+msgid "uuid must be a string."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9577
+msgid "Invalid uuid."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9610
+msgid "Empty pv section."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9615
+msgid "Couldn't read uuid for volume group."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9643
+msgid "Couldn't find status flags for physical volume."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9648
+msgid "Couldn't read status flags for physical volume."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9653
+msgid "Couldn't read extent size for volume group."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9658
+msgid "Couldn't find extent count (pe_count) for physical volume."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9713
+msgid "Empty segment section."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9718
+#, c-format
+msgid "Couldn't read 'start_extent' for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9724
+#, c-format
+msgid "Couldn't read 'extent_count' for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9733
+msgid "Segment type must be a string."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9741
+#, c-format
+msgid "Couldn't read 'stripe_count' for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9749
+#, c-format
+msgid "Couldn't read 'mirror_count' for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9758
+#, c-format
+msgid "Couldn't read 'extents_moved' for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9766
+msgid "Segment allocation failed"
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9783
+msgid "Couldn't read chunk size for snapshot."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9791
+msgid "Snapshot cow storage not specified."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9797
+msgid "Snapshot origin not specified."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9804
+msgid "Unknown logical volume specified for snapshot cow store."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9810
+msgid "Unknown logical volume specified for snapshot origin."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9824
+#, c-format
+msgid "Couldn't read stripe_size for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9830
+#, c-format
+msgid "Couldn't find stripes array for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9841
+#, c-format
+msgid "Zero areas not allowed for segment '%s'"
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9848
+#, c-format
+msgid "Couldn't find mirrors array for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9892
+#, c-format
+msgid "Couldn't find volume '%s' for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9906
+#, c-format
+msgid "Incorrect number of areas in area array for segment '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9942
+msgid "Only one segment permitted for snapshot"
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9948
+msgid "Couldn't read segment count for logical volume."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9953
+msgid "segment_count and actual number of segments disagree."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:9999
+#: ../lib/format_text/import_vsn1.pot:10052
+msgid "Empty logical volume section."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10004
+msgid "Couldn't find status flags for logical volume."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10009
+msgid "Couldn't read status flags for logical volume."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10017
+msgid "allocation_policy must be a string."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10045
+#, c-format
+msgid "Lost logical volume reference %s"
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10058
+#, c-format
+msgid "Couldn't read uuid for logical volume %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10077
+#, c-format
+msgid "Couldn't read minor number for logical volume %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10084
+#, c-format
+msgid "Couldn't read major number for logical volume %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10105
+#, c-format
+msgid "Couldn't find section '%s'."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10134
+msgid "Couldn't find volume group in file."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10162
+msgid "system_id must be a string"
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10169
+#, c-format
+msgid "Couldn't read uuid for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10174
+#, c-format
+msgid "Couldn't read 'seqno' for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10180
+#, c-format
+msgid "Couldn't find status flags for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10186
+#, c-format
+msgid "Couldn't read status flags for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10192
+#, c-format
+msgid "Couldn't read extent size for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10203
+#, c-format
+msgid "Couldn't read 'max_lv' for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10209
+#, c-format
+msgid "Couldn't read 'max_pv' for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10219
+msgid "Couldn't create hash table."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10226
+#, c-format
+msgid "Couldn't find all physical volumes for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10236
+#, c-format
+msgid "Couldn't read all logical volume names for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/import_vsn1.pot:10243
+#, c-format
+msgid "Couldn't read all logical volumes for volume group %s."
+msgstr ""
+
+#: ../lib/format_text/text_label.pot:9176
+#: ../lib/format_text/text_label.pot:9181
+msgid "struct data_area_list allocation failed"
+msgstr ""
+
+#: ../lib/format_text/text_label.pot:9216
+#: ../lib/format_text/text_label.pot:9227
+msgid "struct mda_list allocation failed"
+msgstr ""
+
+#: ../lib/format_text/text_label.pot:9221
+#: ../lib/format_text/text_label.pot:9232
+msgid "struct mda_context allocation failed"
+msgstr ""
+
+#: ../lib/label/label.pot:10670
+msgid "Couldn't allocate memory for labeller list object."
+msgstr ""
+
+#: ../lib/label/label.pot:10748 ../lib/label/label.pot:10841
+#, c-format
+msgid "%s: Failed to read label area"
+msgstr ""
+
+#: ../lib/label/label.pot:10760 ../lib/label/label.pot:10788
+#, c-format
+msgid "Ignoring additional label on %s at sector %llu"
+msgstr ""
+
+#: ../lib/label/label.pot:10765
+#, c-format
+msgid "%s: Label for sector %llu found at sector %llu - ignoring"
+msgstr ""
+
+#: ../lib/label/label.pot:10774
+#, c-format
+msgid "Label checksum incorrect on %s - ignoring"
+msgstr ""
+
+#: ../lib/label/label.pot:10785
+#, c-format
+msgid "%s: %s label detected"
+msgstr ""
+
+#: ../lib/label/label.pot:10804
+#, c-format
+msgid "%s: No label detected"
+msgstr ""
+
+#: ../lib/label/label.pot:10827
+#, c-format
+msgid "Scanning for labels to wipe from %s"
+msgstr ""
+
+#: ../lib/label/label.pot:10868
+#, c-format
+msgid "%s: Wiping label at sector %llu"
+msgstr ""
+
+#: ../lib/label/label.pot:10872
+#, c-format
+msgid "Failed to remove label from %s at sector %llu"
+msgstr ""
+
+#: ../lib/label/label.pot:10914
+msgid "Label handler does not support label writes"
+msgstr ""
+
+#: ../lib/label/label.pot:10919
+#, c-format
+msgid "Label sector %llu beyond range (%ld)"
+msgstr ""
+
+#: ../lib/label/label.pot:10943
+#, c-format
+msgid "%s: Writing label to sector %llu"
+msgstr ""
+
+#: ../lib/label/label.pot:10946
+#, c-format
+msgid "Failed to write label to %s"
+msgstr ""
+
+#: ../lib/label/label.pot:10981
+msgid "label allocaction failed"
+msgstr ""
+
+#: ../lib/locking/external_locking.pot:8603
+msgid "External locking already initialised"
+msgstr ""
+
+#: ../lib/locking/external_locking.pot:8622
+#, c-format
+msgid "Shared library %s does not contain locking functions"
+msgstr ""
+
+#: ../lib/locking/external_locking.pot:8629
+#, c-format
+msgid "Loaded external locking library %s"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13182
+#, c-format
+msgid "Unlocking %s"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13234
+msgid "CTRL-c detected: giving up waiting for lock"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13270
+#, c-format
+msgid "Unrecognised lock type: %d"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13284
+#, c-format
+msgid "Locking %s %c%c"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13354
+#, c-format
+msgid "Unlocking LV %s"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13359
+#, c-format
+msgid "Locking LV %s (R)"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13364
+#, c-format
+msgid "Locking LV %s (W)"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13369
+#, c-format
+msgid "Locking LV %s (EX)"
+msgstr ""
+
+#: ../lib/locking/file_locking.pot:13378 ../lib/locking/locking.pot:13179
+#: ../lib/locking/no_locking.pot:10492
+#, c-format
+msgid "Unrecognised lock scope: %d"
+msgstr ""
+
+#: ../lib/locking/locking.pot:13076
+msgid ""
+"WARNING: Locking disabled. Be careful! This could corrupt your metadata."
+msgstr ""
+
+#: ../lib/locking/locking.pot:13083
+msgid "File-based locking enabled."
+msgstr ""
+
+#: ../lib/locking/locking.pot:13090
+msgid "External locking enabled."
+msgstr ""
+
+#: ../lib/locking/locking.pot:13095
+msgid "Unknown locking type requested."
+msgstr ""
+
+#: ../lib/locking/locking.pot:13103
+msgid "Locking disabled - only read operations permitted."
+msgstr ""
+
+#: ../lib/locking/locking.pot:13129
+#, c-format
+msgid "LVM1 proc VG pathname too long for %s"
+msgstr ""
+
+#: ../lib/locking/locking.pot:13134
+#, c-format
+msgid "%s exists: Is the original LVM driver using this volume group?"
+msgstr ""
+
+#: ../lib/log/log.pot:9553
+msgid "Test mode: Metadata will NOT be updated."
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9537 ../lib/metadata/lv_manip.pot:9650
+msgid "Couldn't allocate new stripe segment."
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9593
+msgid "Couldn't allocate areas array."
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9610
+#, c-format
+msgid ""
+"Insufficient allocatable extents suitable for striping for logical volume %"
+"s: %u required"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9686
+msgid "Couldn't allocate new mirrored segment."
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9749
+#, c-format
+msgid ""
+"Insufficient allocatable extents (%u) for logical volume %s: %u required"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9793
+#, c-format
+msgid ""
+"Insufficient contiguous allocatable extents (%u) for logical volume %s: %u "
+"required"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9826
+#, c-format
+msgid ""
+"Insufficient allocatable logical extents (%u) for logical volume %s: %u "
+"required"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9873
+msgid "Unknown allocation policy: unable to setup logical volume."
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9939
+#, c-format
+msgid "Maximum number of logical volumes (%u) reached in volume group %s"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9946
+msgid "Failed to generate unique name for the new logical volume"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9951
+#, c-format
+msgid "Creating logical volume %s"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9955
+msgid "lv_list allocation failed"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:9965
+msgid "lv name strdup failed"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:10006
+#, c-format
+msgid "Unable to create logical volume %s with no extents"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:10012
+#, c-format
+msgid "Insufficient free extents (%u) in volume group %s: %u required"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:10018
+#, c-format
+msgid "Number of stripes (%u) must not exceed number of physical volumes (%d)"
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:10103
+msgid "Couldn't merge segments after extending logical volume."
+msgstr ""
+
+#: ../lib/metadata/lv_manip.pot:10191 ../tools/lvchange.pot:12705
+#: ../tools/lvchange.pot:12799 ../tools/lvchange.pot:12852
+#: ../tools/lvchange.pot:12929
+#, c-format
+msgid "Failed to lock %s"
+msgstr ""
+
+#: ../lib/metadata/merge.pot:9238
+#, c-format
+msgid "LV %s invalid: segment %u should begin at LE %u (found %u)."
+msgstr ""
+
+#: ../lib/metadata/merge.pot:9262
+#, c-format
+msgid "Unable to split the snapshot segment at LE %u in LV %s"
+msgstr ""
+
+#: ../lib/metadata/merge.pot:9270
+msgid "Couldn't allocate new LV segment."
+msgstr ""
+
+#: ../lib/metadata/merge.pot:9296
+#, c-format
+msgid "Unrecognised segment type %u"
+msgstr ""
+
+#: ../lib/metadata/merge.pot:9319
+#, c-format
+msgid "Segment with extent %u in LV %s not found"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9502
+#, c-format
+msgid "Adding physical volume '%s' to volume group '%s'"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9506
+#, c-format
+msgid "pv_list allocation for '%s' failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9512
+#, c-format
+msgid "%s not identified as an existing physical volume"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9518
+#, c-format
+msgid "Physical volume '%s' is already in volume group '%s'"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9524
+#, c-format
+msgid "Physical volume %s is of different format type (%s)"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9530 ../lib/metadata/metadata.pot:9589
+#, c-format
+msgid "vg->name allocation failed for '%s'"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9553
+#, c-format
+msgid "Format-specific setup of physical volume '%s' failed."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9559
+#, c-format
+msgid "Physical volume '%s' listed more than once."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9565
+#, c-format
+msgid "No space for '%s' - volume group '%s' holds max %d physical volume(s)."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9596
+#, c-format
+msgid "pv->vg_name allocation failed for '%s'"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9613
+#, c-format
+msgid "Unable to add physical volume '%s' to volume group '%s'."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9650
+#, c-format
+msgid "A volume group called '%s' already exists."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9656
+#, c-format
+msgid "Couldn't create uuid for volume group '%s'."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9694 ../lib/metadata/metadata.pot:10107
+msgid "Failed to create format instance"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9700
+#, c-format
+msgid "Format specific setup of volume group '%s' failed."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9749
+#, c-format
+msgid "%s: Couldn't get size."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9755
+#, c-format
+msgid "WARNING: %s: Overriding real size. You could lose data."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9757
+#, c-format
+msgid "%s: Pretending size is %llu sectors."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9763
+#, c-format
+msgid "%s: Size must exceed minimum of %ld sectors."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9778
+#, c-format
+msgid "%s: Format-specific setup of physical volume failed."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9930
+#, c-format
+msgid "Cannot change metadata for partial volume group %s"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9936
+msgid "Aborting vg_write: No metadata areas to write to!"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:9946
+msgid "Format does not support writing volumegroup metadata areas"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10037
+msgid "vg allocation failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10045
+msgid "vg name allocation failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10055
+msgid "pv_list allocation failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10145
+#, c-format
+msgid "Inconsistent metadata copies found for partial volume group %s"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10151
+#, c-format
+msgid "Inconsistent metadata copies found - updating to use version %u"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10154
+msgid "Automatic metadata correction failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10160
+#, c-format
+msgid "WARNING: Interrupted pvmove detected in volume group %s"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10162
+msgid "Please restore the metadata by running vgcfgrestore."
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10189 ../lib/metadata/metadata.pot:10219
+#, c-format
+msgid "Volume group %s metadata is inconsistent"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10207
+msgid "vg_read_by_vgid: get_vgs failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10239
+#, c-format
+msgid "Finding volume group for uuid %s"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10241
+#, c-format
+msgid "Volume group for uuid not found: %s"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10245
+#, c-format
+msgid "Found volume group \"%s\""
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10247 ../tools/lvcreate.pot:13024
+#: ../tools/lvrename.pot:12766 ../tools/pvchange.pot:12705
+#: ../tools/pvmove.pot:14618 ../tools/pvmove.pot:15071
+#: ../tools/toollib.pot:12667 ../tools/toollib.pot:12791
+#: ../tools/vgchange.pot:12863 ../tools/vgck.pot:12681
+#: ../tools/vgconvert.pot:12703 ../tools/vgextend.pot:12706
+#: ../tools/vgmerge.pot:12693 ../tools/vgmerge.pot:12718
+#: ../tools/vgreduce.pot:12967 ../tools/vgremove.pot:12681
+#: ../tools/vgrename.pot:12729 ../tools/vgsplit.pot:12833
+#, c-format
+msgid "Volume group \"%s\" is exported"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10251
+#, c-format
+msgid "Can't find logical volume id %s"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10273
+#, c-format
+msgid "No physical volume label read from %s"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10282
+#, c-format
+msgid "pv allocation for '%s' failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10288
+#, c-format
+msgid "Failed to read existing physical volume '%s'"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10319
+msgid "PV list allocation failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10327
+msgid "get_pvs: get_vgs failed"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10347
+#, c-format
+msgid "Warning: Volume Group %s is not consistent"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10365
+msgid "Format does not support writing physical volumes"
+msgstr ""
+
+#: ../lib/metadata/metadata.pot:10370
+#, c-format
+msgid "Assertion failed: can't _pv_write non-orphan PV (in VG %s)"
+msgstr ""
+
+#: ../lib/metadata/mirror.pot:9171 ../lib/metadata/mirror.pot:9353
+msgid "lv_list alloc failed"
+msgstr ""
+
+#: ../lib/metadata/mirror.pot:9185
+msgid "Allocation for temporary pvmove LV failed"
+msgstr ""
+
+#: ../lib/metadata/mirror.pot:9199
+#, c-format
+msgid "Moving %u extents of logical volume %s/%s"
+msgstr ""
+
+#: ../lib/metadata/mirror.pot:9228
+msgid "No segment found with LE"
+msgstr ""
+
+#: ../lib/metadata/mirror.pot:9237
+msgid "Incompatible segments"
+msgstr ""
+
+#: ../lib/metadata/mirror.pot:9334
+msgid "lvs list alloc failed"
+msgstr ""
+
+#: ../lib/metadata/pv_map.pot:9152
+#, c-format
+msgid "Physical extent %d of %s referenced by more than one logical volume"
+msgstr ""
+
+#: ../lib/metadata/pv_map.pot:9172
+msgid "Couldn't create hash table for pv maps."
+msgstr ""
+
+#: ../lib/metadata/pv_map.pot:9261
+#, c-format
+msgid "Allowing allocation on %s start PE %u length %u"
+msgstr ""
+
+#: ../lib/metadata/pv_map.pot:9350
+#, c-format
+msgid "Couldn't create physical volume maps in %s"
+msgstr ""
+
+#: ../lib/metadata/pv_map.pot:9356
+#, c-format
+msgid "Couldn't fill extent allocation bitmaps in %s"
+msgstr ""
+
+#: ../lib/metadata/pv_map.pot:9362
+#, c-format
+msgid "Couldn't create area maps in %s"
+msgstr ""
+
+#: ../lib/metadata/snapshot_manip.pot:9210
+msgid "snapshot name list allocation failed"
+msgstr ""
+
+#: ../lib/metadata/snapshot_manip.pot:9221
+msgid "snapshot_list structure allocation failed"
+msgstr ""
+
+#: ../lib/metadata/snapshot_manip.pot:9244
+#, c-format
+msgid "'%s' is already in use as a snapshot."
+msgstr ""
+
+#: ../lib/metadata/snapshot_manip.pot:9261
+msgid "Snapshot UUID creation failed"
+msgstr ""
+
+#: ../lib/metadata/snapshot_manip.pot:9295
+msgid "Asked to remove an unknown snapshot."
+msgstr ""
+
+#: ../lib/misc/lvm-file.pot:9970
+msgid "Not enough space to build temporary file string."
+msgstr ""
+
+#: ../lib/misc/lvm-file.pot:10012
+#, c-format
+msgid "%s: rename to %s failed"
+msgstr ""
+
+#: ../lib/misc/lvm-file.pot:10058
+#, c-format
+msgid "Creating directory \"%s\""
+msgstr ""
+
+#: ../lib/misc/lvm-file.pot:10097
+#, c-format
+msgid "Directory \"%s\" not found"
+msgstr ""
+
+#: ../lib/misc/lvm-file.pot:10128
+msgid "sync_dir failed in strdup"
+msgstr ""
+
+#: ../lib/misc/sharedlib.pot:8470
+#, c-format
+msgid "Opening shared %s library %s"
+msgstr ""
+
+#: ../lib/misc/sharedlib.pot:8473
+#, c-format
+msgid "Unable to open external %s library %s"
+msgstr ""
+
+#: ../lib/mm/dbg_malloc.pot:6605
+#, c-format
+msgid "Huge memory allocation (size %u) rejected - bug?"
+msgstr ""
+
+#: ../lib/mm/dbg_malloc.pot:6611
+#, c-format
+msgid "couldn't allocate any memory, size = %u"
+msgstr ""
+
+#: ../lib/mm/dbg_malloc.pot:6726
+msgid "You have a memory leak:"
+msgstr ""
+
+#: ../lib/mm/dbg_malloc.pot:6730
+#, c-format
+msgid "block %d at %p, size %d"
+msgstr ""
+
+#: ../lib/mm/dbg_malloc.pot:6736
+#, c-format
+msgid "%ld bytes leaked in total"
+msgstr ""
+
+#: ../lib/mm/memlock.pot:11993
+msgid "Locking memory"
+msgstr ""
+
+#: ../lib/mm/memlock.pot:12002 ../lib/mm/memlock.pot:12016
+#, c-format
+msgid "setpriority %u failed: %s"
+msgstr ""
+
+#: ../lib/mm/memlock.pot:12012
+msgid "Unlocking memory"
+msgstr ""
+
+#: ../lib/mm/memlock.pot:12024
+#, c-format
+msgid "memlock_count inc to %d"
+msgstr ""
+
+#: ../lib/mm/memlock.pot:12031
+#, c-format
+msgid "memlock_count dec to %d"
+msgstr ""
+
+#: ../lib/mm/pool.pot:6599
+#, c-format
+msgid "Couldn't create memory pool (size %Zu)"
+msgstr ""
+
+#: ../lib/mm/pool.pot:6688
+msgid "Internal error: pool_free asked to free pointer not in pool"
+msgstr ""
+
+#: ../lib/mm/pool.pot:6777
+#, c-format
+msgid "Out of memory.  Requested %Zu bytes."
+msgstr ""
+
+#: ../lib/regex/matcher.pot:7477
+msgid "Internal error: Unknown calc node type"
+msgstr ""
+
+#: ../lib/regex/matcher.pot:7607
+#, c-format
+msgid "Matcher built with %d dfa states"
+msgstr ""
+
+#: ../lib/regex/matcher.pot:7652
+msgid "Couldn't parse regex"
+msgstr ""
+
+#: ../lib/regex/parse_rx.pot:7392
+msgid "Incomplete rangespecification"
+msgstr ""
+
+#: ../lib/regex/parse_rx.pot:7470
+msgid "Badly quoted character at end of expression"
+msgstr ""
+
+#: ../lib/regex/parse_rx.pot:7544
+msgid "missing ')' in regular expression"
+msgstr ""
+
+#: ../lib/regex/parse_rx.pot:7626
+msgid "Badly formed 'or' expression"
+msgstr ""
+
+#: ../lib/regex/parse_rx.pot:7654
+msgid "Parse error in regex"
+msgstr ""
+
+#: ../lib/report/report.pot:9880 ../lib/report/report.pot:10129
+#: ../lib/report/report.pot:10157
+msgid "pool_strdup failed"
+msgstr ""
+
+#: ../lib/report/report.pot:9936 ../lib/report/report.pot:10008
+#: ../lib/report/report.pot:10035 ../lib/report/report.pot:10134
+#: ../lib/report/report.pot:10162 ../lib/report/report.pot:10267
+#: ../lib/report/report.pot:10290 ../lib/report/report.pot:10295
+#: ../lib/report/report.pot:10319 ../lib/report/report.pot:10324
+#: ../lib/report/report.pot:10362 ../lib/report/report.pot:10382
+#: ../lib/report/report.pot:10407 ../lib/report/report.pot:10424
+msgid "pool_alloc failed"
+msgstr ""
+
+#: ../lib/report/report.pot:10300
+#, c-format
+msgid "uint32 too big: %u"
+msgstr ""
+
+#: ../lib/report/report.pot:10329
+#, c-format
+msgid "int32 too big: %d"
+msgstr ""
+
+#: ../lib/report/report.pot:10387
+msgid "snapshot percentage too large"
+msgstr ""
+
+#: ../lib/report/report.pot:10429
+msgid "move percentage too large"
+msgstr ""
+
+#: ../lib/report/report.pot:10543 ../lib/report/report.pot:10582
+msgid "struct field_properties allocation failed"
+msgstr ""
+
+#: ../lib/report/report.pot:10595
+#, c-format
+msgid "Ignoring duplicate sort field: %s"
+msgstr ""
+
+#: ../lib/report/report.pot:10627
+msgid "Missing sort field name"
+msgstr ""
+
+#: ../lib/report/report.pot:10658 ../lib/report/report.pot:10680
+#, c-format
+msgid "Unrecognised field: %.*s"
+msgstr ""
+
+#: ../lib/report/report.pot:10696
+msgid "report_handle pool_zalloc failed"
+msgstr ""
+
+#: ../lib/report/report.pot:10734
+msgid "Allocation of memory pool for report failed"
+msgstr ""
+
+#: ../lib/report/report.pot:10749
+msgid "Can't report LV and PV fields at the same time"
+msgstr ""
+
+#: ../lib/report/report.pot:10788
+msgid "report_object: One of *lv and *pv must be NULL!"
+msgstr ""
+
+#: ../lib/report/report.pot:10793
+msgid "struct row allocation failed"
+msgstr ""
+
+#: ../lib/report/report.pot:10802
+msgid "row sort value structure allocation failed"
+msgstr ""
+
+#: ../lib/report/report.pot:10814
+msgid "struct field allocation failed"
+msgstr ""
+
+#: ../lib/report/report.pot:10834
+#, c-format
+msgid "report function failed for field %s"
+msgstr ""
+
+#: ../lib/report/report.pot:10946
+msgid "sort array allocation failed"
+msgstr ""
+
+#: ../lib/uuid/uuid.pot:9250
+msgid "UUID contains invalid character"
+msgstr ""
+
+#: ../lib/uuid/uuid.pot:9274
+msgid "Couldn't write uuid, buffer too small."
+msgstr ""
+
+#: ../lib/uuid/uuid.pot:9302
+msgid "Too many characters to be uuid."
+msgstr ""
+
+#: ../lib/uuid/uuid.pot:9310
+msgid "Couldn't read uuid, incorrect number of characters."
+msgstr ""
+
+#: ../tools/archive.pot:12678
+msgid "Couldn't copy archive directory name."
+msgstr ""
+
+#: ../tools/archive.pot:12740
+msgid "Test mode: Skipping archiving of volume group."
+msgstr ""
+
+#: ../tools/archive.pot:12744
+#, c-format
+msgid "Archiving volume group \"%s\" metadata."
+msgstr ""
+
+#: ../tools/archive.pot:12746
+#, c-format
+msgid "Volume group \"%s\" metadata archive failed."
+msgstr ""
+
+#: ../tools/archive.pot:12776
+msgid "Couldn't copy backup directory name."
+msgstr ""
+
+#: ../tools/archive.pot:12807
+msgid "Failed to generate volume group metadata backup filename."
+msgstr ""
+
+#: ../tools/archive.pot:12812
+#, c-format
+msgid "Creating volume group backup \"%s\""
+msgstr ""
+
+#: ../tools/archive.pot:12820
+msgid "WARNING: This metadata update is NOT backed up"
+msgstr ""
+
+#: ../tools/archive.pot:12825
+msgid "Test mode: Skipping volume group backup."
+msgstr ""
+
+#: ../tools/archive.pot:12830
+#, c-format
+msgid "Backup of volume group %s metadata failed."
+msgstr ""
+
+#: ../tools/archive.pot:12844
+msgid "Failed to generate backup filename (for removal)."
+msgstr ""
+
+#: ../tools/archive.pot:12867
+msgid "Couldn't create text format object."
+msgstr ""
+
+#: ../tools/archive.pot:12896
+msgid "Failed to allocate format instance"
+msgstr ""
+
+#: ../tools/archive.pot:12904
+#, c-format
+msgid "PV %s missing from cache"
+msgstr ""
+
+#: ../tools/archive.pot:12909
+#, c-format
+msgid "PV %s is a different format (%s)"
+msgstr ""
+
+#: ../tools/archive.pot:12916
+#, c-format
+msgid "Format-specific setup for %s failed"
+msgstr ""
+
+#: ../tools/archive.pot:12953
+msgid "Failed to generate backup filename (for restore)."
+msgstr ""
+
+#: ../tools/archive.pot:12973
+msgid "Couldn't create backup object."
+msgstr ""
+
+#: ../tools/dumpconfig.pot:12675
+msgid "Please specify one file for output"
+msgstr ""
+
+#: ../tools/lvchange.pot:12675
+#, c-format
+msgid "Logical volume \"%s\" is already writable"
+msgstr ""
+
+#: ../tools/lvchange.pot:12681
+#, c-format
+msgid "Logical volume \"%s\" is already read only"
+msgstr ""
+
+#: ../tools/lvchange.pot:12688
+#, c-format
+msgid "Setting logical volume \"%s\" read/write"
+msgstr ""
+
+#: ../tools/lvchange.pot:12692
+#, c-format
+msgid "Setting logical volume \"%s\" read-only"
+msgstr ""
+
+#: ../tools/lvchange.pot:12696 ../tools/lvchange.pot:12790
+#: ../tools/lvchange.pot:12843 ../tools/lvchange.pot:12920
+#, c-format
+msgid "Updating logical volume \"%s\" on disk(s)"
+msgstr ""
+
+#: ../tools/lvchange.pot:12715 ../tools/lvchange.pot:12862
+#: ../tools/lvchange.pot:12939
+#, c-format
+msgid "Updating permissions for \"%s\" in kernel"
+msgstr ""
+
+#: ../tools/lvchange.pot:12717 ../tools/lvchange.pot:12810
+#: ../tools/lvchange.pot:12864 ../tools/lvchange.pot:12941
+#: ../tools/lvresize.pot:13040
+#, c-format
+msgid "Problem reactivating %s"
+msgstr ""
+
+#: ../tools/lvchange.pot:12735
+#, c-format
+msgid "Activating logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12739
+#, c-format
+msgid "Spawning background pvmove process for %s"
+msgstr ""
+
+#: ../tools/lvchange.pot:12744
+#, c-format
+msgid "Deactivating logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12761
+#, c-format
+msgid "Allocation policy of logical volume \"%s\" is already contiguous"
+msgstr ""
+
+#: ../tools/lvchange.pot:12768
+#, c-format
+msgid "Allocation policy of logical volume \"%s\" is already not contiguous"
+msgstr ""
+
+#: ../tools/lvchange.pot:12782
+#, c-format
+msgid "Setting contiguous allocation policy for \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12786
+#, c-format
+msgid "Reverting to default allocation policy for \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12833
+#, c-format
+msgid "Read ahead is already %u for \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12840
+#, c-format
+msgid "Setting read ahead to %u for \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12878
+#, c-format
+msgid "Minor number is already not persistent for \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12885
+#, c-format
+msgid "Disabling persistent device number for \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12889
+msgid "Minor number must be specified with -My"
+msgstr ""
+
+#: ../tools/lvchange.pot:12893
+msgid "Major number must be specified with -My"
+msgstr ""
+
+#: ../tools/lvchange.pot:12902
+#, c-format
+msgid "%s device number not changed."
+msgstr ""
+
+#: ../tools/lvchange.pot:12907
+#, c-format
+msgid "Ensuring %s is inactive. (Reactivate using lvchange -ay.)"
+msgstr ""
+
+#: ../tools/lvchange.pot:12910
+#, c-format
+msgid "%s: deactivation failed"
+msgstr ""
+
+#: ../tools/lvchange.pot:12916
+#, c-format
+msgid "Setting persistent device number to (%d, %d) for \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12957
+#, c-format
+msgid "Only -a permitted with read-only volume group \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12965
+#, c-format
+msgid "Can't change logical volume \"%s\" under snapshot"
+msgstr ""
+
+#: ../tools/lvchange.pot:12971
+#, c-format
+msgid "Can't change snapshot logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvchange.pot:12977
+#, c-format
+msgid "Unable to change pvmove LV %s"
+msgstr ""
+
+#: ../tools/lvchange.pot:12979
+msgid "Use 'pvmove --abort' to abandon a pvmove"
+msgstr ""
+
+#: ../tools/lvchange.pot:13016
+#, c-format
+msgid "Logical volume \"%s\" changed"
+msgstr ""
+
+#: ../tools/lvchange.pot:13032
+msgid "One or more of -a, -C, -j, -m, -M, -p or -r required"
+msgstr ""
+
+#: ../tools/lvchange.pot:13040
+msgid "Only -a permitted with --ignorelockingfailure"
+msgstr ""
+
+#: ../tools/lvchange.pot:13045
+msgid "Please give logical volume path(s)"
+msgstr ""
+
+#: ../tools/lvchange.pot:13051
+msgid "--major and --minor require -My"
+msgstr ""
+
+#: ../tools/lvchange.pot:13056
+msgid "Only give one logical volume when specifying minor"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12696
+msgid "Please specify a logical volume to act as the snapshot origin."
+msgstr ""
+
+#: ../tools/lvcreate.pot:12704
+msgid "The origin name should include the volume group."
+msgstr ""
+
+#: ../tools/lvcreate.pot:12720 ../tools/lvresize.pot:12739
+msgid "Please provide a volume group name"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12726
+msgid "Volume group name expected (no slash)"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12741
+#, c-format
+msgid "Inconsistent volume group names given: \"%s\" and \"%s\""
+msgstr ""
+
+#: ../tools/lvcreate.pot:12760 ../tools/lvrename.pot:12737
+msgid ""
+"Names starting \"snapshot\" are reserved. Please choose a different LV name."
+msgstr ""
+
+#: ../tools/lvcreate.pot:12766
+#, c-format
+msgid "Logical volume name \"%s\" is invalid"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12783
+msgid "Invalid combination of arguments"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12791
+msgid "Please indicate size using option -l or -L"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12797
+msgid "Negative number of extents is invalid"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12806
+msgid "Negative size is invalid"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12826
+msgid "Redundant stripes argument: default is 1"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12831
+msgid "Negative stripesize is invalid"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12838
+msgid "Ignoring stripesize argument with single stripe"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12846 ../tools/lvresize.pot:12879
+#, c-format
+msgid "Using default stripesize %dKB"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12850
+#, c-format
+msgid "Too few physical volumes on command line for %d-way striping"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12856
+#, c-format
+msgid "Number of stripes (%d) must be between %d and %d"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12864
+#, c-format
+msgid "Invalid stripe size %d"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12881
+msgid "-s and -Z are incompatible"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12885
+msgid "Negative chunk size is invalid"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12889
+#, c-format
+msgid "Setting chunksize to %d sectors."
+msgstr ""
+
+#: ../tools/lvcreate.pot:12892
+msgid "-c is only available with -s"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12933
+msgid "Please specify minor number with --minor when using -My"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12938
+msgid "Please specify major number with --major when using -My"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12944
+msgid "--major and --minor incompatible with -Mn"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12973
+msgid "Name allocation failed - device not zeroed"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12979
+#, c-format
+msgid "Name too long - device not zeroed (%s)"
+msgstr ""
+
+#: ../tools/lvcreate.pot:12983
+#, c-format
+msgid "Zeroing start of logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvcreate.pot:12986
+#, c-format
+msgid "%s: not found: device not zeroed"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13016 ../tools/pvmove.pot:14808
+#: ../tools/toollib.pot:12762 ../tools/toollib.pot:12928
+#: ../tools/toollib.pot:12949 ../tools/vgreduce.pot:12909
+#, c-format
+msgid "Finding volume group \"%s\""
+msgstr ""
+
+#: ../tools/lvcreate.pot:13019 ../tools/lvrename.pot:12761
+#: ../tools/pvmove.pot:14612 ../tools/vgdisplay.pot:12673
+#: ../tools/vgmerge.pot:12687 ../tools/vgmerge.pot:12713
+#: ../tools/vgreduce.pot:12917 ../tools/vgremove.pot:12676
+#: ../tools/vgrename.pot:12722 ../tools/vgsplit.pot:12827
+#, c-format
+msgid "Volume group \"%s\" doesn't exist"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13029 ../tools/lvremove.pot:12676
+#: ../tools/lvrename.pot:12771 ../tools/pvchange.pot:12711
+#: ../tools/pvmove.pot:14624 ../tools/vgchange.pot:12858
+#: ../tools/vgconvert.pot:12698 ../tools/vgexport.pot:12687
+#: ../tools/vgextend.pot:12711 ../tools/vgmerge.pot:12699
+#: ../tools/vgmerge.pot:12723 ../tools/vgreduce.pot:12973
+#: ../tools/vgrename.pot:12735 ../tools/vgsplit.pot:12839
+#, c-format
+msgid "Volume group \"%s\" is read-only"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13034 ../tools/lvrename.pot:12776
+#, c-format
+msgid "Logical volume \"%s\" already exists in volume group \"%s\""
+msgstr ""
+
+#: ../tools/lvcreate.pot:13052
+#, c-format
+msgid "Setting stripe size %d KB to physical extent size %u KB"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13065 ../tools/lvresize.pot:12811
+#, c-format
+msgid "Rounding up size to full physical extent %s"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13073
+#, c-format
+msgid "Rounding size (%d extents) up to stripe boundary size (%d extents)"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13081
+msgid "Can't create snapshot without using device-mapper kernel driver"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13086
+#, c-format
+msgid "Couldn't find origin volume '%s'."
+msgstr ""
+
+#: ../tools/lvcreate.pot:13091
+msgid "Snapshots of snapshots are not supported yet."
+msgstr ""
+
+#: ../tools/lvcreate.pot:13096
+msgid "Snapshots of locked devices are not supported yet"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13110
+msgid "Setting read ahead sectors"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13118
+#, c-format
+msgid "Setting device number to (%d, %d)"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13141
+msgid ""
+"Aborting. Failed to activate snapshot exception store. Remove new LV and "
+"retry."
+msgstr ""
+
+#: ../tools/lvcreate.pot:13144
+msgid "Failed to activate new LV."
+msgstr ""
+
+#: ../tools/lvcreate.pot:13151
+msgid ""
+"Aborting. Failed to wipe snapshot exception store. Remove new LV and retry."
+msgstr ""
+
+#: ../tools/lvcreate.pot:13156
+#, c-format
+msgid "WARNING: \"%s\" not zeroed"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13165
+msgid "Couldn't unlock snapshot."
+msgstr ""
+
+#: ../tools/lvcreate.pot:13171
+#, c-format
+msgid "Failed to lock origin %s"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13176
+msgid "Couldn't create snapshot."
+msgstr ""
+
+#: ../tools/lvcreate.pot:13185
+#, c-format
+msgid "Problem reactivating origin %s"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13192
+#, c-format
+msgid "Logical volume \"%s\" created"
+msgstr ""
+
+#: ../tools/lvcreate.pot:13213 ../tools/lvrename.pot:12756
+#: ../tools/lvresize.pot:12749 ../tools/lvresize.pot:13028
+#: ../tools/pvchange.pot:12692 ../tools/pvmove.pot:14607
+#: ../tools/vgcreate.pot:12761 ../tools/vgextend.pot:12696
+#: ../tools/vgmerge.pot:12682 ../tools/vgmerge.pot:12706
+#: ../tools/vgreduce.pot:12911 ../tools/vgrename.pot:12717
+#: ../tools/vgrename.pot:12751 ../tools/vgsplit.pot:12822
+#: ../tools/vgsplit.pot:12846
+#, c-format
+msgid "Can't get lock for %s"
+msgstr ""
+
+#: ../tools/lvdisplay.pot:12685 ../tools/lvdisplay.pot:12694
+#: ../tools/pvdisplay.pot:12711 ../tools/pvdisplay.pot:12720
+#: ../tools/vgdisplay.pot:12713 ../tools/vgdisplay.pot:12722
+msgid "Incompatible options selected"
+msgstr ""
+
+#: ../tools/lvdisplay.pot:12699
+msgid "Options -v and -c are incompatible"
+msgstr ""
+
+#: ../tools/lvm.pot:12665 ../tools/lvm.pot:12666 ../tools/lvm.pot:12667
+msgid "Command not implemented yet."
+msgstr ""
+
+#: ../tools/lvm.pot:12670
+msgid "There's no 'pvdata' command in LVM2."
+msgstr ""
+
+#: ../tools/lvm.pot:12671
+msgid ""
+"Use lvs, pvs, vgs instead; or use vgcfgbackup and read the text file backup."
+msgstr ""
+
+#: ../tools/lvm.pot:12672
+msgid ""
+"Metadata in LVM1 format can still be displayed using LVM1's pvdata command."
+msgstr ""
+
+#: ../tools/lvm.pot:16523
+msgid "Minor number outside range 0-255"
+msgstr ""
+
+#: ../tools/lvm.pot:16538
+msgid "Major number outside range 0-255"
+msgstr ""
+
+#: ../tools/lvm.pot:16590
+msgid "Couldn't allocate memory."
+msgstr ""
+
+#: ../tools/lvm.pot:16639
+msgid "Out of memory."
+msgstr ""
+
+#: ../tools/lvm.pot:17419
+#, c-format
+msgid ""
+"%s: %s\n"
+"\n"
+"%s"
+msgstr ""
+
+#: ../tools/lvm.pot:17512
+msgid "Unrecognised option."
+msgstr ""
+
+#: ../tools/lvm.pot:17518
+#, c-format
+msgid "Option%s%c%s%s may not be repeated"
+msgstr ""
+
+#: ../tools/lvm.pot:17528
+msgid "Option requires argument."
+msgstr ""
+
+#: ../tools/lvm.pot:17535
+#, c-format
+msgid "Invalid argument %s"
+msgstr ""
+
+#: ../tools/lvm.pot:17554
+#, c-format
+msgid "%s and %s are synonyms.  Please only supply one."
+msgstr ""
+
+#: ../tools/lvm.pot:17580
+#, c-format
+msgid "LVM version:     %s"
+msgstr ""
+
+#: ../tools/lvm.pot:17582
+#, c-format
+msgid "Library version: %s"
+msgstr ""
+
+#: ../tools/lvm.pot:17584
+#, c-format
+msgid "Driver version:  %s"
+msgstr ""
+
+#: ../tools/lvm.pot:17621
+msgid "Partial mode. Incomplete volume groups will be activated read-only."
+msgstr ""
+
+#: ../tools/lvm.pot:17671
+msgid "Available lvm commands:"
+msgstr ""
+
+#: ../tools/lvm.pot:17672
+msgid "Use 'lvm help <command>' for more information"
+msgstr ""
+
+#: ../tools/lvm.pot:17678
+#, c-format
+msgid "%-16.16s%s"
+msgstr ""
+
+#: ../tools/lvm.pot:17742
+msgid "Couldn't copy command line."
+msgstr ""
+
+#: ../tools/lvm.pot:17755
+#, c-format
+msgid "Processing: %s"
+msgstr ""
+
+#: ../tools/lvm.pot:17761
+msgid "Error during parsing of command line."
+msgstr ""
+
+#: ../tools/lvm.pot:17782
+#, c-format
+msgid "Locking type %d initialisation failed."
+msgstr ""
+
+#: ../tools/lvm.pot:17794
+msgid "Test mode: Wiping internal cache"
+msgstr ""
+
+#: ../tools/lvm.pot:17852
+msgid "WARNING: Metadata changes will NOT be backed up"
+msgstr ""
+
+#: ../tools/lvm.pot:17872
+#, c-format
+msgid "Couldn't create default archive path '%s/%s'."
+msgstr ""
+
+#: ../tools/lvm.pot:17881 ../tools/lvm.pot:17902
+msgid "backup_init failed."
+msgstr ""
+
+#: ../tools/lvm.pot:17893
+#, c-format
+msgid "Couldn't create default backup path '%s/%s'."
+msgstr ""
+
+#: ../tools/lvm.pot:17968
+#, c-format
+msgid "Line too long (max 255) beginning: %s"
+msgstr ""
+
+#: ../tools/lvm.pot:17975
+#, c-format
+msgid "Too many arguments: %s"
+msgstr ""
+
+#: ../tools/lvm.pot:18107
+msgid "$HOME/.lvm_history: path too long"
+msgstr ""
+
+#: ../tools/lvm.pot:18122
+#, c-format
+msgid "Couldn't read history from %s."
+msgstr ""
+
+#: ../tools/lvm.pot:18137
+#, c-format
+msgid "Couldn't write history to %s."
+msgstr ""
+
+#: ../tools/lvm.pot:18170
+msgid "Too many arguments, sorry."
+msgstr ""
+
+#: ../tools/lvm.pot:18184
+msgid "Exiting."
+msgstr ""
+
+#: ../tools/lvm.pot:18190
+#, c-format
+msgid "No such command '%s'.  Try 'help'."
+msgstr ""
+
+#: ../tools/lvm.pot:18231
+msgid "Please supply an LVM command."
+msgstr ""
+
+#: ../tools/lvm.pot:18245
+msgid "No such command.  Try 'help'."
+msgstr ""
+
+#: ../tools/lvmchange.pot:12669
+msgid "With LVM2 and the device mapper, this program is obsolete."
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12674 ../tools/lvmdiskscan.pot:12743
+msgid "dev_iter_create failed"
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12702
+#, c-format
+msgid "%-*s [%15s] %s"
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12719 ../tools/lvmdiskscan.pot:12752
+#, c-format
+msgid "Couldn't get size of \"%s\""
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12724
+#, c-format
+msgid "dev_close on \"%s\" failed"
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12738
+msgid "WARNING: only considering LVM devices"
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12772
+#, c-format
+msgid "%d disk%s"
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12774
+#, c-format
+msgid "%d partition%s"
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12777
+#, c-format
+msgid "%d LVM physical volume whole disk%s"
+msgstr ""
+
+#: ../tools/lvmdiskscan.pot:12779
+#, c-format
+msgid "%d LVM physical volume%s"
+msgstr ""
+
+#: ../tools/lvremove.pot:12681
+#, c-format
+msgid "Can't remove logical volume \"%s\" under snapshot"
+msgstr ""
+
+#: ../tools/lvremove.pot:12687
+#, c-format
+msgid "Can't remove locked LV %s"
+msgstr ""
+
+#: ../tools/lvremove.pot:12695
+#, c-format
+msgid "Can't remove open logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvremove.pot:12704
+#, c-format
+msgid "Logical volume \"%s\" not removed"
+msgstr ""
+
+#: ../tools/lvremove.pot:12715
+#, c-format
+msgid "Unable to deactivate logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvremove.pot:12721
+#, c-format
+msgid "Removing snapshot %s"
+msgstr ""
+
+#: ../tools/lvremove.pot:12728
+#, c-format
+msgid "Releasing logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvremove.pot:12730
+#, c-format
+msgid "Error releasing logical volume \"%s\""
+msgstr ""
+
+#: ../tools/lvremove.pot:12743
+#, c-format
+msgid "Logical volume \"%s\" successfully removed"
+msgstr ""
+
+#: ../tools/lvremove.pot:12750
+msgid "Please enter one or more logical volume paths"
+msgstr ""
+
+#: ../tools/lvrename.pot:12689
+#, c-format
+msgid "Please use a single volume group name (\"%s\" or \"%s\")"
+msgstr ""
+
+#: ../tools/lvrename.pot:12698
+msgid "Old and new logical volume names required"
+msgstr ""
+
+#: ../tools/lvrename.pot:12703
+msgid "Please provide a valid volume group name"
+msgstr ""
+
+#: ../tools/lvrename.pot:12710
+#, c-format
+msgid "Logical volume names must have the same volume group (\"%s\" or \"%s\")"
+msgstr ""
+
+#: ../tools/lvrename.pot:12725
+#, c-format
+msgid "New logical volume path exceeds maximum length of %Zu!"
+msgstr ""
+
+#: ../tools/lvrename.pot:12731
+msgid "New logical volume name may not be blank"
+msgstr ""
+
+#: ../tools/lvrename.pot:12743
+#, c-format
+msgid "New logical volume name \"%s\" is invalid"
+msgstr ""
+
+#: ../tools/lvrename.pot:12749
+msgid "Old and new logical volume names must differ"
+msgstr ""
+
+#: ../tools/lvrename.pot:12753 ../tools/vgrename.pot:12714
+#, c-format
+msgid "Checking for existing volume group \"%s\""
+msgstr ""
+
+#: ../tools/lvrename.pot:12782
+#, c-format
+msgid "Existing logical volume \"%s\" not found in volume group \"%s\""
+msgstr ""
+
+#: ../tools/lvrename.pot:12790
+#, c-format
+msgid "Cannot rename locked LV %s"
+msgstr ""
+
+#: ../tools/lvrename.pot:12800
+msgid "Failed to allocate space for new name"
+msgstr ""
+
+#: ../tools/lvrename.pot:12804 ../tools/vgmerge.pot:12812
+#: ../tools/vgrename.pot:12783
+msgid "Writing out updated volume group"
+msgstr ""
+
+#: ../tools/lvrename.pot:12828
+#, c-format
+msgid "Renamed \"%s\" to \"%s\" in volume group \"%s\""
+msgstr ""
+
+#: ../tools/lvresize.pot:12705
+msgid "Please specify either size or extents (not both)"
+msgstr ""
+
+#: ../tools/lvresize.pot:12720
+msgid "Negative argument not permitted - use lvreduce"
+msgstr ""
+
+#: ../tools/lvresize.pot:12725
+msgid "Positive sign not permitted - use lvextend"
+msgstr ""
+
+#: ../tools/lvresize.pot:12730
+msgid "Please provide the logical volume name"
+msgstr ""
+
+#: ../tools/lvresize.pot:12747
+#, c-format
+msgid "Finding volume group %s"
+msgstr ""
+
+#: ../tools/lvresize.pot:12754
+#, c-format
+msgid "Volume group %s doesn't exist"
+msgstr ""
+
+#: ../tools/lvresize.pot:12759
+#, c-format
+msgid "Volume group %s is exported"
+msgstr ""
+
+#: ../tools/lvresize.pot:12764
+#, c-format
+msgid "Volume group %s is read-only"
+msgstr ""
+
+#: ../tools/lvresize.pot:12770
+#, c-format
+msgid "Logical volume %s not found in volume group %s"
+msgstr ""
+
+#: ../tools/lvresize.pot:12779
+msgid "Varied striping not supported. Ignoring."
+msgstr ""
+
+#: ../tools/lvresize.pot:12784
+msgid "Stripesize may not be negative."
+msgstr ""
+
+#: ../tools/lvresize.pot:12790
+msgid "Varied stripesize not supported. Ignoring."
+msgstr ""
+
+#: ../tools/lvresize.pot:12796
+#, c-format
+msgid "Can't resize locked LV %s"
+msgstr ""
+
+#: ../tools/lvresize.pot:12824
+#, c-format
+msgid "Unable to reduce %s below 1 extent"
+msgstr ""
+
+#: ../tools/lvresize.pot:12833
+msgid "New size of 0 not permitted"
+msgstr ""
+
+#: ../tools/lvresize.pot:12838 ../tools/lvresize.pot:12930
+#, c-format
+msgid "New size (%d extents) matches existing size (%d extents)"
+msgstr ""
+
+#: ../tools/lvresize.pot:12857
+msgid "Please specify number of stripes (-i) and stripesize (-I)"
+msgstr ""
+
+#: ../tools/lvresize.pot:12871
+#, c-format
+msgid "Using stripesize of last segment %dKB"
+msgstr ""
+
+#: ../tools/lvresize.pot:12890
+msgid "Ignoring stripes and stripesize arguments when reducing"
+msgstr ""
+
+#: ../tools/lvresize.pot:12913
+msgid "Stripesize for striped segment should not be 0!"
+msgstr ""
+
+#: ../tools/lvresize.pot:12922
+#, c-format
+msgid ""
+"Rounding size (%d extents) down to stripe boundary size for segment (%d "
+"extents)"
+msgstr ""
+
+#: ../tools/lvresize.pot:12937
+#, c-format
+msgid "New size given (%d extents) not larger than existing size (%d extents)"
+msgstr ""
+
+#: ../tools/lvresize.pot:12947
+#, c-format
+msgid "New size given (%d extents) not less than existing size (%d extents)"
+msgstr ""
+
+#: ../tools/lvresize.pot:12957
+msgid "Ignoring PVs on command line when reducing"
+msgstr ""
+
+#: ../tools/lvresize.pot:12962
+msgid "lv_info failed: aborting"
+msgstr ""
+
+#: ../tools/lvresize.pot:12967
+#, c-format
+msgid "WARNING: Reducing active%s logical volume to %s"
+msgstr ""
+
+#: ../tools/lvresize.pot:12973
+msgid "THIS MAY DESTROY YOUR DATA (filesystem etc.)"
+msgstr ""
+
+#: ../tools/lvresize.pot:12980
+#, c-format
+msgid "Logical volume %s NOT reduced"
+msgstr ""
+
+#: ../tools/lvresize.pot:13003
+#, c-format
+msgid "Extending logical volume %s to %s"
+msgstr ""
+
+#: ../tools/lvresize.pot:13046
+#, c-format
+msgid "Logical volume %s successfully resized"
+msgstr ""
+
+#: ../tools/lvscan.pot:12689
+#, c-format
+msgid "%s%s '%s%s/%s' [%s] %s"
+msgstr ""
+
+#: ../tools/lvscan.pot:12704
+msgid "No additional command line arguments allowed"
+msgstr ""
+
+#: ../tools/pvchange.pot:12688
+#, c-format
+msgid "Finding volume group of physical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12698
+#, c-format
+msgid "Unable to find volume group of \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12718
+#, c-format
+msgid "Unable to find \"%s\" in volume group \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12724
+#, c-format
+msgid "Volume group containing %s has active logical volumes"
+msgstr ""
+
+#: ../tools/pvchange.pot:12733
+msgid "Can't get lock for orphans"
+msgstr ""
+
+#: ../tools/pvchange.pot:12739
+#, c-format
+msgid "Unable to read PV \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12748
+#, c-format
+msgid "Allocatability not supported by orphan %s format PV %s"
+msgstr ""
+
+#: ../tools/pvchange.pot:12756
+#, c-format
+msgid "Physical volume \"%s\" is already allocatable"
+msgstr ""
+
+#: ../tools/pvchange.pot:12766
+#, c-format
+msgid "Physical volume \"%s\" is already unallocatable"
+msgstr ""
+
+#: ../tools/pvchange.pot:12776
+#, c-format
+msgid "Setting physical volume \"%s\" allocatable"
+msgstr ""
+
+#: ../tools/pvchange.pot:12780
+#, c-format
+msgid "Setting physical volume \"%s\" NOT allocatable"
+msgstr ""
+
+#: ../tools/pvchange.pot:12789
+#, c-format
+msgid "Updating physical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12793
+#, c-format
+msgid "Failed to store physical volume \"%s\" in volume group \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12802
+#, c-format
+msgid "Failed to store physical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12809
+#, c-format
+msgid "Physical volume \"%s\" changed"
+msgstr ""
+
+#: ../tools/pvchange.pot:12831
+msgid "Please give exactly one option of -x or --uuid"
+msgstr ""
+
+#: ../tools/pvchange.pot:12836
+msgid "Please give a physical volume path"
+msgstr ""
+
+#: ../tools/pvchange.pot:12841
+msgid "Option a and PhysicalVolumePath are exclusive"
+msgstr ""
+
+#: ../tools/pvchange.pot:12846 ../tools/toollib.pot:12996
+msgid "Using physical volume(s) on command line"
+msgstr ""
+
+#: ../tools/pvchange.pot:12852 ../tools/toollib.pot:13010
+#, c-format
+msgid "Failed to read physical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvchange.pot:12860 ../tools/toollib.pot:13029
+msgid "Scanning for physical volume names"
+msgstr ""
+
+#: ../tools/pvchange.pot:12871
+#, c-format
+msgid "%d physical volume%s changed / %d physical volume%s not changed"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12680 ../tools/pvremove.pot:12680
+#, c-format
+msgid "%s: Not LVM partition type: use -f to override"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12697
+#, c-format
+msgid ""
+"Can't initialize physical volume \"%s\" of volume group \"%s\" without -ff"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12705
+#, c-format
+msgid "%s: physical volume not initialized"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12710
+#, c-format
+msgid "WARNING: Forcing physical volume creation on %s%s%s%s"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12742
+#, c-format
+msgid "uuid %s already in use on \"%s\""
+msgstr ""
+
+#: ../tools/pvcreate.pot:12754
+#, c-format
+msgid "Unable to read volume group from %s"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12760
+#, c-format
+msgid "Can't find uuid %s in backup file %s"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12770 ../tools/pvremove.pot:12725
+#: ../tools/vgcreate.pot:12756 ../tools/vgextend.pot:12689
+#: ../tools/vgremove.pot:12735
+msgid "Can't get lock for orphan PVs"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12778
+msgid "Physical volume size may not be negative"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12784 ../tools/vgconvert.pot:12715
+msgid "Metadata size may not be negative"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12802 ../tools/pvremove.pot:12733
+#, c-format
+msgid "%s: Couldn't find device."
+msgstr ""
+
+#: ../tools/pvcreate.pot:12810 ../tools/vgconvert.pot:12774
+#, c-format
+msgid "Failed to setup physical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvcreate.pot:12814 ../tools/vgconvert.pot:12785
+#, c-format
+msgid "Set up physical volume for \"%s\" with %llu available sectors"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12819 ../tools/vgconvert.pot:12790
+#, c-format
+msgid "Failed to wipe existing label on %s"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12823 ../tools/vgconvert.pot:12797
+#, c-format
+msgid "Writing physical volume data to disk \"%s\""
+msgstr ""
+
+#: ../tools/pvcreate.pot:12827 ../tools/vgconvert.pot:12802
+#, c-format
+msgid "Failed to write physical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvcreate.pot:12831 ../tools/vgconvert.pot:12808
+#, c-format
+msgid "Physical volume \"%s\" successfully created"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12847 ../tools/pvremove.pot:12760
+msgid "Please enter a physical volume path"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12852
+msgid "--uuid is required with --restorefile"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12857
+msgid "Can only set uuid on one volume at once"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12862 ../tools/pvremove.pot:12765
+msgid "Option y can only be given with option f"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12867 ../tools/vgconvert.pot:12852
+#, c-format
+msgid "labelsector must be less than %lu"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12875 ../tools/vgconvert.pot:12860
+msgid "Metadata parameters only apply to text format"
+msgstr ""
+
+#: ../tools/pvcreate.pot:12881 ../tools/vgconvert.pot:12866
+msgid "Metadatacopies may only be 0, 1 or 2"
+msgstr ""
+
+#: ../tools/pvdisplay.pot:12680
+#, c-format
+msgid "Device \"%s\" has a capacity of %s"
+msgstr ""
+
+#: ../tools/pvdisplay.pot:12686
+#, c-format
+msgid "Physical volume \"%s\" of volume group \"%s\" is exported"
+msgstr ""
+
+#: ../tools/pvdisplay.pot:12690
+#, c-format
+msgid "\"%s\" is a new physical volume of \"%s\""
+msgstr ""
+
+#: ../tools/pvdisplay.pot:12725
+msgid "Option -v not allowed with option -c"
+msgstr ""
+
+#: ../tools/pvmove.pot:14520
+msgid "Forking background process"
+msgstr ""
+
+#: ../tools/pvmove.pot:14525
+#, c-format
+msgid "fork failed: %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:14535
+#, c-format
+msgid "Background process failed to setsid: %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:14566
+msgid "--name takes a logical volume name"
+msgstr ""
+
+#: ../tools/pvmove.pot:14571
+msgid "Named LV and old PV must be in the same VG"
+msgstr ""
+
+#: ../tools/pvmove.pot:14577
+msgid "Incomplete LV name supplied with --name"
+msgstr ""
+
+#: ../tools/pvmove.pot:14589
+#, c-format
+msgid "Physical volume %s not found"
+msgstr ""
+
+#: ../tools/pvmove.pot:14594
+#, c-format
+msgid "Physical volume %s not in a volume group"
+msgstr ""
+
+#: ../tools/pvmove.pot:14663
+msgid "No extents available for allocation"
+msgstr ""
+
+#: ../tools/pvmove.pot:14685
+msgid "Creation of temporary pvmove LV failed"
+msgstr ""
+
+#: ../tools/pvmove.pot:14692
+msgid "lvs_changed list struct allocation failed"
+msgstr ""
+
+#: ../tools/pvmove.pot:14704
+#, c-format
+msgid "Skipping snapshot-related LV %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:14708
+#, c-format
+msgid "Skipping locked LV %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:14719
+#, c-format
+msgid "No data to move for %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:14730
+msgid "Updating volume group metadata"
+msgstr ""
+
+#: ../tools/pvmove.pot:14732 ../tools/pvmove.pot:14753
+msgid "ABORTING: Volume group metadata update failed."
+msgstr ""
+
+#: ../tools/pvmove.pot:14763 ../tools/pvmove.pot:14830
+msgid "ABORTING: Temporary mirror activation failed."
+msgstr ""
+
+#: ../tools/pvmove.pot:14768 ../tools/pvmove.pot:14917
+#, c-format
+msgid "Unable to unlock logical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvmove.pot:14775
+msgid "Unable to unlock logical volumes"
+msgstr ""
+
+#: ../tools/pvmove.pot:14816
+#, c-format
+msgid "Detected pvmove in progress for %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:14818
+msgid "Ignoring remaining command line arguments"
+msgstr ""
+
+#: ../tools/pvmove.pot:14822
+msgid "ABORTING: Failed to generate list of moving LVs"
+msgstr ""
+
+#: ../tools/pvmove.pot:14887
+msgid "ABORTING: Removal of temporary mirror failed"
+msgstr ""
+
+#: ../tools/pvmove.pot:14892 ../tools/pvmove.pot:14908
+#: ../tools/pvmove.pot:14938
+msgid "ABORTING: Failed to write new data locations to disk."
+msgstr ""
+
+#: ../tools/pvmove.pot:14898
+msgid "Locking LVs to remove temporary mirror failed"
+msgstr ""
+
+#: ../tools/pvmove.pot:14903
+msgid "Suspension of temporary mirror LV failed"
+msgstr ""
+
+#: ../tools/pvmove.pot:14925
+#, c-format
+msgid "ABORTING: Unable to deactivate temporary logical volume \"%s\""
+msgstr ""
+
+#: ../tools/pvmove.pot:14930
+msgid "Removing temporary pvmove LV"
+msgstr ""
+
+#: ../tools/pvmove.pot:14932
+msgid "ABORTING: Removal of temporary pvmove LV failed"
+msgstr ""
+
+#: ../tools/pvmove.pot:14936
+msgid "Writing out final volume group after pvmove"
+msgstr ""
+
+#: ../tools/pvmove.pot:14963
+msgid "Failed to generate list of moved LVs: can't abort."
+msgstr ""
+
+#: ../tools/pvmove.pot:14973
+msgid "ABORTING: Mirror percentage check failed."
+msgstr ""
+
+#: ../tools/pvmove.pot:14979 ../tools/pvmove.pot:14981
+#, c-format
+msgid "%s: Moved: %.1f%%"
+msgstr ""
+
+#: ../tools/pvmove.pot:14989
+msgid "ABORTING: Failed to generate list of moved LVs"
+msgstr ""
+
+#: ../tools/pvmove.pot:14998
+msgid "ABORTING: Segment progression failed."
+msgstr ""
+
+#: ../tools/pvmove.pot:15021
+#, c-format
+msgid "ABORTING: Can't reread PV %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:15026
+#, c-format
+msgid "ABORTING: Can't reread VG %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:15031
+#, c-format
+msgid "ABORTING: Can't reread mirror LV in %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:15060
+#, c-format
+msgid "Couldn't read volume group %s"
+msgstr ""
+
+#: ../tools/pvmove.pot:15065
+#, c-format
+msgid "Volume Group %s inconsistent - skipping"
+msgstr ""
+
+#: ../tools/pvmove.pot:15114
+#, c-format
+msgid "Checking progress every %u seconds"
+msgstr ""
+
+#: ../tools/pvremove.pot:12696
+#, c-format
+msgid ""
+"Can't pvremove physical volume \"%s\" of volume group \"%s\" without -ff"
+msgstr ""
+
+#: ../tools/pvremove.pot:12704
+#, c-format
+msgid "%s: physical volume label not removed"
+msgstr ""
+
+#: ../tools/pvremove.pot:12709
+#, c-format
+msgid "WARNING: Wiping physical volume label from %s%s%s%s"
+msgstr ""
+
+#: ../tools/pvremove.pot:12739
+#, c-format
+msgid "Failed to wipe existing label(s) on %s"
+msgstr ""
+
+#: ../tools/pvremove.pot:12743
+#, c-format
+msgid "Labels on physical volume \"%s\" successfully wiped"
+msgstr ""
+
+#: ../tools/pvscan.pot:12682
+#, c-format
+msgid "%s"
+msgstr ""
+
+#: ../tools/pvscan.pot:12714
+#, c-format
+msgid "PV %-*s    %-*s %s [%s]"
+msgstr ""
+
+#: ../tools/pvscan.pot:12724
+#, c-format
+msgid "PV %-*s  is in exported VG %s [%s / %s free]"
+msgstr ""
+
+#: ../tools/pvscan.pot:12738
+#, c-format
+msgid "PV %-*s VG %-*s %s [%s / %s free]"
+msgstr ""
+
+#: ../tools/pvscan.pot:12767
+msgid "Options -e and -n are incompatible"
+msgstr ""
+
+#: ../tools/pvscan.pot:12772
+#, c-format
+msgid "WARNING: only considering physical volumes %s"
+msgstr ""
+
+#: ../tools/pvscan.pot:12776 ../tools/vgscan.pot:12700
+msgid "Wiping cache of LVM-capable devices"
+msgstr ""
+
+#: ../tools/pvscan.pot:12779 ../tools/vgscan.pot:12703
+msgid "Wiping internal cache"
+msgstr ""
+
+#: ../tools/pvscan.pot:12782
+msgid "Walking through all physical volumes"
+msgstr ""
+
+#: ../tools/pvscan.pot:12835
+msgid "No matching physical volumes found"
+msgstr ""
+
+#: ../tools/pvscan.pot:12839
+#, c-format
+msgid "Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]"
+msgstr ""
+
+#: ../tools/report.pot:12715
+#, c-format
+msgid "Volume group %s not found"
+msgstr ""
+
+#: ../tools/report.pot:12755 ../tools/toollib.pot:12764
+#: ../tools/toollib.pot:12834 ../tools/toollib.pot:12925
+#: ../tools/toollib.pot:12946
+#, c-format
+msgid "Can't lock %s: skipping"
+msgstr ""
+
+#: ../tools/report.pot:12759
+#, c-format
+msgid "Can't read %s: skipping"
+msgstr ""
+
+#: ../tools/report.pot:12847
+#, c-format
+msgid "Invalid options string: %s"
+msgstr ""
+
+#: ../tools/toollib.pot:12690
+#, c-format
+msgid "Can't lock %s for metadata recovery: skipping"
+msgstr ""
+
+#: ../tools/toollib.pot:12718
+msgid "Using logical volume(s) on command line"
+msgstr ""
+
+#: ../tools/toollib.pot:12740 ../tools/toollib.pot:13067
+#: ../tools/toollib.pot:13078
+#, c-format
+msgid "\"%s\": Invalid path for Logical Volume"
+msgstr ""
+
+#: ../tools/toollib.pot:12775 ../tools/toollib.pot:12845
+#: ../tools/vgcfgbackup.pot:12658 ../tools/vgck.pot:12671
+#: ../tools/vgreduce.pot:12933 ../tools/vgscan.pot:12671
+#, c-format
+msgid "Volume group \"%s\" not found"
+msgstr ""
+
+#: ../tools/toollib.pot:12778 ../tools/toollib.pot:12848
+#: ../tools/vgchange.pot:12852 ../tools/vgck.pot:12676
+#: ../tools/vgconvert.pot:12692 ../tools/vgscan.pot:12678
+#, c-format
+msgid "Volume group \"%s\" inconsistent"
+msgstr ""
+
+#: ../tools/toollib.pot:12808
+#, c-format
+msgid "Can't find logical volume \"%s\" in volume group \"%s\""
+msgstr ""
+
+#: ../tools/toollib.pot:12824
+msgid "Finding all logical volumes"
+msgstr ""
+
+#: ../tools/toollib.pot:12826 ../tools/toollib.pot:12938
+msgid "No volume groups found"
+msgstr ""
+
+#: ../tools/toollib.pot:12909
+msgid "Using volume group(s) on command line"
+msgstr ""
+
+#: ../tools/toollib.pot:12920
+#, c-format
+msgid "Invalid volume group name: %s"
+msgstr ""
+
+#: ../tools/toollib.pot:12936
+msgid "Finding all volume groups"
+msgstr ""
+
+#: ../tools/toollib.pot:13000 ../tools/toollib.pot:13264
+#, c-format
+msgid "Physical Volume \"%s\" not found in Volume Group \"%s\""
+msgstr ""
+
+#: ../tools/toollib.pot:13023
+msgid "Using all physical volume(s) in volume group"
+msgstr ""
+
+#: ../tools/toollib.pot:13085
+msgid "Allocation of vg_name failed"
+msgstr ""
+
+#: ../tools/toollib.pot:13095
+#, c-format
+msgid "Path required for Logical Volume \"%s\""
+msgstr ""
+
+#: ../tools/toollib.pot:13123
+#, c-format
+msgid "Environment Volume Group in LVM_VG_NAME invalid: \"%s\""
+msgstr ""
+
+#: ../tools/toollib.pot:13136
+#, c-format
+msgid "Adding alloc area: start PE %u length %u"
+msgstr ""
+
+#: ../tools/toollib.pot:13144
+#, c-format
+msgid "Overlapping PE ranges detected (%u-%u, %u-%u)"
+msgstr ""
+
+#: ../tools/toollib.pot:13153 ../tools/toollib.pot:13247
+#: ../tools/toollib.pot:13312
+msgid "Allocation of list failed"
+msgstr ""
+
+#: ../tools/toollib.pot:13217
+#, c-format
+msgid "PE range error: start extent %u to end extent %u"
+msgstr ""
+
+#: ../tools/toollib.pot:13232
+#, c-format
+msgid "Physical extent parsing error at %s"
+msgstr ""
+
+#: ../tools/toollib.pot:13257
+msgid "Failed to clone PV name"
+msgstr ""
+
+#: ../tools/toollib.pot:13270
+#, c-format
+msgid "Physical volume %s not allocatable"
+msgstr ""
+
+#: ../tools/toollib.pot:13275
+#, c-format
+msgid "No free extents on physical volume \"%s\""
+msgstr ""
+
+#: ../tools/toollib.pot:13281 ../tools/toollib.pot:13319
+msgid "Unable to allocate physical volume list."
+msgstr ""
+
+#: ../tools/toollib.pot:13289
+msgid "Allocation of alloc_areas list failed"
+msgstr ""
+
+#: ../tools/vgcfgbackup.pot:12663
+#, c-format
+msgid "Warning: Volume group \"%s\" inconsistent"
+msgstr ""
+
+#: ../tools/vgcfgbackup.pot:12670
+msgid "No backup taken: specify filename with -f to backup an inconsistent VG"
+msgstr ""
+
+#: ../tools/vgcfgbackup.pot:12684
+#, c-format
+msgid "Volume group \"%s\" successfully backed up."
+msgstr ""
+
+#: ../tools/vgcfgrestore.pot:12658
+msgid "Please specify a *single* volume group to restore."
+msgstr ""
+
+#: ../tools/vgcfgrestore.pot:12668
+#, c-format
+msgid "Volume group name \"%s\" is invalid"
+msgstr ""
+
+#: ../tools/vgcfgrestore.pot:12684
+msgid "Unable to lock orphans"
+msgstr ""
+
+#: ../tools/vgcfgrestore.pot:12689
+#, c-format
+msgid "Unable to lock volume group %s"
+msgstr ""
+
+#: ../tools/vgcfgrestore.pot:12700
+msgid "Restore failed."
+msgstr ""
+
+#: ../tools/vgcfgrestore.pot:12704
+#, c-format
+msgid "Restored volume group %s"
+msgstr ""
+
+#: ../tools/vgchange.pot:12691
+#, c-format
+msgid "Spawning background process for %s %s"
+msgstr ""
+
+#: ../tools/vgchange.pot:12711
+#, c-format
+msgid "Can't deactivate volume group \"%s\" with %d open logical volume(s)"
+msgstr ""
+
+#: ../tools/vgchange.pot:12717
+#, c-format
+msgid "%d logical volume(s) in volume group \"%s\" already active"
+msgstr ""
+
+#: ../tools/vgchange.pot:12721
+#, c-format
+msgid "Activated logical volumes in volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgchange.pot:12725
+#, c-format
+msgid "Deactivated logical volumes in volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgchange.pot:12728
+#, c-format
+msgid "%d logical volume(s) in volume group \"%s\" now active"
+msgstr ""
+
+#: ../tools/vgchange.pot:12739
+#, c-format
+msgid "Volume group \"%s\" is already resizeable"
+msgstr ""
+
+#: ../tools/vgchange.pot:12745
+#, c-format
+msgid "Volume group \"%s\" is already not resizeable"
+msgstr ""
+
+#: ../tools/vgchange.pot:12763 ../tools/vgchange.pot:12805
+#: ../tools/vgchange.pot:12833
+#, c-format
+msgid "Volume group \"%s\" successfully changed"
+msgstr ""
+
+#: ../tools/vgchange.pot:12774
+#, c-format
+msgid "Volume group \"%s\" must be resizeable to change MaxLogicalVolume"
+msgstr ""
+
+#: ../tools/vgchange.pot:12783
+msgid "MaxLogicalVolume limit is 255"
+msgstr ""
+
+#: ../tools/vgchange.pot:12789
+#, c-format
+msgid ""
+"MaxLogicalVolume is less than the current number %d of logical volume(s) for "
+"\"%s\""
+msgstr ""
+
+#: ../tools/vgchange.pot:12815
+msgid "Volume group has active logical volumes"
+msgstr ""
+
+#: ../tools/vgchange.pot:12845 ../tools/vgconvert.pot:12685
+#: ../tools/vgexport.pot:12672
+#, c-format
+msgid "Unable to find volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgchange.pot:12887
+msgid "One of -a, -l, --uuid or -x options required"
+msgstr ""
+
+#: ../tools/vgchange.pot:12893
+msgid "Only one of -a, -l, --uuid or -x options allowed"
+msgstr ""
+
+#: ../tools/vgchange.pot:12899
+msgid "--ignorelockingfailure only available with -a"
+msgstr ""
+
+#: ../tools/vgchange.pot:12905
+msgid "-A option not necessary with -a option"
+msgstr ""
+
+#: ../tools/vgconvert.pot:12708
+#, c-format
+msgid "Volume group \"%s\" already uses format %s"
+msgstr ""
+
+#: ../tools/vgconvert.pot:12736
+#, c-format
+msgid "Archive of \"%s\" metadata failed."
+msgstr ""
+
+#: ../tools/vgconvert.pot:12747
+#, c-format
+msgid "Logical volume %s must be deactivated before conversion."
+msgstr ""
+
+#: ../tools/vgconvert.pot:12777 ../tools/vgconvert.pot:12792
+#: ../tools/vgconvert.pot:12804 ../tools/vgconvert.pot:12817
+#: ../tools/vgconvert.pot:12833
+msgid "Use pvcreate and vgcfgrestore to repair from archived metadata."
+msgstr ""
+
+#: ../tools/vgconvert.pot:12813
+#, c-format
+msgid "Deleting existing metadata for VG %s"
+msgstr ""
+
+#: ../tools/vgconvert.pot:12815
+#, c-format
+msgid "Removal of existing metadata for %s failed."
+msgstr ""
+
+#: ../tools/vgconvert.pot:12824
+#, c-format
+msgid "Test mode: Skipping metadata writing for VG %s in format %s"
+msgstr ""
+
+#: ../tools/vgconvert.pot:12829
+#, c-format
+msgid "Writing metadata for VG %s using format %s"
+msgstr ""
+
+#: ../tools/vgconvert.pot:12832
+#, c-format
+msgid "Conversion failed for volume group %s."
+msgstr ""
+
+#: ../tools/vgconvert.pot:12837
+#, c-format
+msgid "Volume group %s successfully converted"
+msgstr ""
+
+#: ../tools/vgconvert.pot:12847
+msgid "Please enter volume group(s)"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12678
+msgid "Please provide volume group name and physical volumes"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12684
+msgid "Please enter physical volume name(s)"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12698
+msgid "Number of volumes may not exceed 255"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12704
+msgid "Physical extent size may not be negative"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12709
+msgid "Max Logical Volumes may not be negative"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12714
+msgid "Max Physical Volumes may not be negative"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12723
+msgid "Physical extent size may not be zero"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12733
+#, c-format
+msgid "%s: already exists in filesystem"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12738 ../tools/vgrename.pot:12704
+#, c-format
+msgid "New volume group name \"%s\" is invalid"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12748
+#, c-format
+msgid "Warning: Setting maxlogicalvolumes to %d (0 means unlimited)"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12752
+#, c-format
+msgid "Warning: Setting maxphysicalvolumes to %d (0 means unlimited)"
+msgstr ""
+
+#: ../tools/vgcreate.pot:12784
+#, c-format
+msgid "Volume group \"%s\" successfully created"
+msgstr ""
+
+#: ../tools/vgdisplay.pot:12678
+#, c-format
+msgid "WARNING: Volume group \"%s\" inconsistent"
+msgstr ""
+
+#: ../tools/vgdisplay.pot:12681
+#, c-format
+msgid "WARNING: volume group \"%s\" is exported"
+msgstr ""
+
+#: ../tools/vgdisplay.pot:12700
+msgid "--- Physical volumes ---"
+msgstr ""
+
+#: ../tools/vgdisplay.pot:12727
+msgid "Option -c is not allowed with option -s"
+msgstr ""
+
+#: ../tools/vgdisplay.pot:12732
+msgid "Option -A is not allowed with volume group names"
+msgstr ""
+
+#: ../tools/vgexport.pot:12677
+#, c-format
+msgid "Volume group %s inconsistent"
+msgstr ""
+
+#: ../tools/vgexport.pot:12682
+#, c-format
+msgid "Volume group \"%s\" is already exported"
+msgstr ""
+
+#: ../tools/vgexport.pot:12692
+#, c-format
+msgid "Volume group \"%s\" has active logical volumes"
+msgstr ""
+
+#: ../tools/vgexport.pot:12707
+#, c-format
+msgid "Volume group \"%s\" successfully exported"
+msgstr ""
+
+#: ../tools/vgexport.pot:12718 ../tools/vgimport.pot:12708
+msgid "Please supply volume groups or use -a for all."
+msgstr ""
+
+#: ../tools/vgexport.pot:12723 ../tools/vgimport.pot:12713
+msgid "No arguments permitted when using -a for all."
+msgstr ""
+
+#: ../tools/vgextend.pot:12674
+msgid "Please enter volume group name and physical volume(s)"
+msgstr ""
+
+#: ../tools/vgextend.pot:12680
+msgid "Please enter physical volume(s)"
+msgstr ""
+
+#: ../tools/vgextend.pot:12693 ../tools/vgmerge.pot:12680
+#: ../tools/vgmerge.pot:12704 ../tools/vgsplit.pot:12820
+#: ../tools/vgsplit.pot:12844
+#, c-format
+msgid "Checking for volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgextend.pot:12701
+#, c-format
+msgid "Volume group \"%s\" not found."
+msgstr ""
+
+#: ../tools/vgextend.pot:12716
+#, c-format
+msgid "Volume group \"%s\" is not resizeable."
+msgstr ""
+
+#: ../tools/vgextend.pot:12735
+#, c-format
+msgid "Volume group \"%s\" will be extended by %d new physical volumes"
+msgstr ""
+
+#: ../tools/vgextend.pot:12747
+#, c-format
+msgid "Volume group \"%s\" successfully extended"
+msgstr ""
+
+#: ../tools/vgimport.pot:12672
+#, c-format
+msgid "Unable to find exported volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgimport.pot:12678
+#, c-format
+msgid "Volume group \"%s\" is not exported"
+msgstr ""
+
+#: ../tools/vgimport.pot:12683
+#, c-format
+msgid "Volume group \"%s\" is partially missing"
+msgstr ""
+
+#: ../tools/vgimport.pot:12697
+#, c-format
+msgid "Volume group \"%s\" successfully imported"
+msgstr ""
+
+#: ../tools/vgmerge.pot:12676 ../tools/vgsplit.pot:12816
+#, c-format
+msgid "Duplicate volume group name \"%s\""
+msgstr ""
+
+#: ../tools/vgmerge.pot:12728 ../tools/vgsplit.pot:12860
+#, c-format
+msgid "Logical volumes in \"%s\" must be inactive"
+msgstr ""
+
+#: ../tools/vgmerge.pot:12735
+#, c-format
+msgid "Extent sizes differ: %d (%s) and %d (%s)"
+msgstr ""
+
+#: ../tools/vgmerge.pot:12743
+#, c-format
+msgid "Maximum number of physical volumes (%d) exceeded  for \"%s\" and \"%s\""
+msgstr ""
+
+#: ../tools/vgmerge.pot:12751
+#, c-format
+msgid "Maximum number of logical volumes (%d) exceeded  for \"%s\" and \"%s\""
+msgstr ""
+
+#: ../tools/vgmerge.pot:12765
+#, c-format
+msgid "Duplicate logical volume name \"%s\" in \"%s\" and \"%s\""
+msgstr ""
+
+#: ../tools/vgmerge.pot:12824
+#, c-format
+msgid "Volume group \"%s\" successfully merged into \"%s\""
+msgstr ""
+
+#: ../tools/vgmerge.pot:12841
+msgid "Please enter 2 or more volume groups to merge"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12672
+msgid "Volume Groups must always contain at least one PV"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12681
+#, c-format
+msgid "Removing PV with UUID %s from VG %s"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12684
+#, c-format
+msgid "LVs still present on PV with UUID %s: Can't remove from VG %s"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12705
+#, c-format
+msgid "%s/%s has missing extents: removing (including dependencies)"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12710
+#, c-format
+msgid "Deactivating (if active) logical volume %s"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12715 ../tools/vgreduce.pot:12724
+#, c-format
+msgid "Failed to deactivate LV %s"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12719
+#, c-format
+msgid "Deactivating (if active) logical volume %s (origin of %s)"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12746 ../tools/vgreduce.pot:12755
+#, c-format
+msgid "Removing LV %s from VG %s"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12825
+#, c-format
+msgid "Physical volume \"%s\" still in use"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12830
+#, c-format
+msgid "Can't remove final physical volume \"%s\" from volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgreduce.pot:12840
+#, c-format
+msgid "Removing \"%s\" from volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgreduce.pot:12851
+#, c-format
+msgid "Removal of physical volume \"%s\" from \"%s\" failed"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12857
+#, c-format
+msgid ""
+"Failed to clear metadata from physical volume \"%s\" after removal from \"%s"
+"\""
+msgstr ""
+
+#: ../tools/vgreduce.pot:12865
+#, c-format
+msgid "Removed \"%s\" from volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgreduce.pot:12878
+msgid "Please give volume group name and physical volume paths"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12884
+msgid "Please give volume group name"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12890
+msgid "Please enter physical volume paths or option -a"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12895
+msgid "Option -a and physical volume paths mutually exclusive"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12901
+msgid "Please only specify the volume group"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12924
+#, c-format
+msgid "Volume group \"%s\" is already consistent"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12955
+#, c-format
+msgid "Failed to write out a consistent VG for %s"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12963
+#, c-format
+msgid "Wrote out consistent volume group %s"
+msgstr ""
+
+#: ../tools/vgreduce.pot:12979
+#, c-format
+msgid "Volume group \"%s\" is not reducible"
+msgstr ""
+
+#: ../tools/vgremove.pot:12686
+#, c-format
+msgid "Cannot remove partial volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgremove.pot:12692
+#, c-format
+msgid "Volume group \"%s\" still contains %d logical volume(s)"
+msgstr ""
+
+#: ../tools/vgremove.pot:12701
+#, c-format
+msgid "vg_remove %s failed"
+msgstr ""
+
+#: ../tools/vgremove.pot:12708
+#, c-format
+msgid "Removing physical volume \"%s\" from volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgremove.pot:12713
+#, c-format
+msgid "Failed to remove physical volume \"%s\" from volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgremove.pot:12723
+#, c-format
+msgid "Volume group \"%s\" successfully removed"
+msgstr ""
+
+#: ../tools/vgremove.pot:12725
+#, c-format
+msgid "Volume group \"%s\" not properly removed"
+msgstr ""
+
+#: ../tools/vgrename.pot:12680
+msgid "Old and new volume group names need specifying"
+msgstr ""
+
+#: ../tools/vgrename.pot:12698
+#, c-format
+msgid "New volume group path exceeds maximum length of %d!"
+msgstr ""
+
+#: ../tools/vgrename.pot:12710
+msgid "Old and new volume group names must differ"
+msgstr ""
+
+#: ../tools/vgrename.pot:12741
+#, c-format
+msgid "Volume group \"%s\" still has active LVs"
+msgstr ""
+
+#: ../tools/vgrename.pot:12747
+#, c-format
+msgid "Checking for new volume group \"%s\""
+msgstr ""
+
+#: ../tools/vgrename.pot:12757
+#, c-format
+msgid "New volume group \"%s\" already exists"
+msgstr ""
+
+#: ../tools/vgrename.pot:12772
+#, c-format
+msgid "Renaming \"%s\" to \"%s\""
+msgstr ""
+
+#: ../tools/vgrename.pot:12774
+msgid "Test mode: Skipping rename."
+msgstr ""
+
+#: ../tools/vgrename.pot:12776
+#, c-format
+msgid "Renaming \"%s\" to \"%s\" failed: %s"
+msgstr ""
+
+#: ../tools/vgrename.pot:12795
+#, c-format
+msgid "Volume group \"%s\" successfully renamed to \"%s\""
+msgstr ""
+
+#: ../tools/vgscan.pot:12684
+#, c-format
+msgid "Found %svolume group \"%s\" using metadata type %s"
+msgstr ""
+
+#: ../tools/vgscan.pot:12696
+msgid "Too many parameters on command line"
+msgstr ""
+
+#: ../tools/vgscan.pot:12706
+msgid "Reading all physical volumes.  This may take a while..."
+msgstr ""
+
+#: ../tools/vgsplit.pot:12674
+#, c-format
+msgid "Physical volume %s not in volume group %s"
+msgstr ""
+
+#: ../tools/vgsplit.pot:12720
+#, c-format
+msgid "Logical Volume %s split between Volume Groups"
+msgstr ""
+
+#: ../tools/vgsplit.pot:12737
+#, c-format
+msgid "Physical Volume %s not found"
+msgstr ""
+
+#: ../tools/vgsplit.pot:12784
+#, c-format
+msgid "Snapshot %s split"
+msgstr ""
+
+#: ../tools/vgsplit.pot:12806
+msgid "Existing VG, new VG and physical volumes required."
+msgstr ""
+
+#: ../tools/vgsplit.pot:12854
+#, c-format
+msgid "Volume group \"%s\" already exists"
+msgstr ""
+
+#: ../tools/vgsplit.pot:12895
+msgid "Writing out updated volume groups"
+msgstr ""
+
+#: ../tools/vgsplit.pot:12917
+#, c-format
+msgid "Volume group \"%s\" became inconsistent: please fix manually"
+msgstr ""
+
+#: ../tools/vgsplit.pot:12932
+#, c-format
+msgid "Volume group \"%s\" successfully split from \"%s\""
+msgstr ""

@@ -25,6 +25,7 @@ CC = @CC@
 RANLIB = @RANLIB@
 SHELL = /bin/sh
 INSTALL = @INSTALL@
+MSGFMT = @MSGFMT@
 LN_S = @LN_S@
 LIBS = @LIBS@
 CFLAGS += @CFLAGS@
@@ -37,6 +38,7 @@ libdir = @libdir@
 sbindir = @sbindir@
 infodir = @infodir@
 mandir = @mandir@
+localedir = @LOCALEDIR@
 
 # setup misc variables
 # define the ownership variables for the binaries and man pages
@@ -49,7 +51,7 @@ MAKEFLAGS = @JOBS@
 endif
 
 SUFFIXES=
-SUFFIXES=.c .d .o .so
+SUFFIXES=.c .d .o .so .po .pot .mo
 
 CFLAGS+=-fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline
 
@@ -59,6 +61,10 @@ ifeq ("@DEBUG@", "yes")
   CFLAGS+=-g -fno-omit-frame-pointer -DDEBUG_MEM -DDEBUG
 else
   CFLAGS+=-O2
+endif
+
+ifeq ("@INTL@", "yes")
+  CFLAGS+=-DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
 endif
 
 #CFLAGS+=-DDEBUG_POOL
@@ -83,13 +89,16 @@ STRIP=
 DEPS=$(top_srcdir)/make.tmpl Makefile $(INC_LNS)
 
 OBJECTS=$(SOURCES:%.c=%.o)
+POTFILES=$(SOURCES:%.c=%.pot)
 
 SUBDIRS.install := $(SUBDIRS:=.install)
+SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
 SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 
-.PHONY: all install distclean clean 
+.PHONY: all install pofile distclean clean 
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
+.PHONY: $(SUBDIRS.pofile)
 
 all: $(SUBDIRS) $(TARGETS)
 
@@ -107,9 +116,22 @@ $(SUBDIRS.clean):
 $(SUBDIRS.distclean):
 	-$(MAKE) -C $(@:.distclean=) distclean
 
+ifeq ("@INTL@", "yes")
+pofile: $(SUBDIRS.pofile) $(POTFILES)
+
+$(SUBDIRS.pofile):
+	$(MAKE) -C $(@:.pofile=) pofile
+endif
+
 %.o: %.c
 	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
 
+%.pot: %.c
+	$(CC) -E -P $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
+		$(CFLAGS) $< > $@
+
+%.pot: Makefile
+	
 %.so: %.o
 	$(CC) -c $(INCLUDES) $(CFLAGS) %< -o $@
 
@@ -121,16 +143,22 @@ $(SUBDIRS.distclean):
 	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 		DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
 		$(CC) -MM $(INCLUDES) $(CFLAGS) $< | \
-		sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d : $$DEPS /g" > $@; \
+		sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" \
+			> $@; \
 		[ -s $@ ] || $(RM) $@
 
+%.mo: %.po
+	$(MSGFMT) -o $@ $<
+
 clean: $(SUBDIRS.clean)
-	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d)
+	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d) \
+	$(SOURCES:%.c=%.pot)
 
 distclean: $(SUBDIRS.distclean)
 	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d)
+	$(RM) $(SOURCES:%.c=%.pot)
 	$(RM) config.cache config.log config.status
-	$(RM) Makefile make.tmpl version.h core
+	$(RM) Makefile make.tmpl version.h core lvm2.po
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),distclean)
