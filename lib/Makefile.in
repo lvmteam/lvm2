@@ -12,7 +12,7 @@ ifeq ("@LVM1@", "shared")
   SUBDIRS = format1
 endif
 
-SOURCES=\
+SOURCES =\
 	activate/activate.c \
 	cache/lvmcache.c \
 	commands/toolcontext.c \
@@ -61,7 +61,7 @@ SOURCES=\
 	uuid/uuid.c 
 
 ifeq ("@LVM1@", "internal")
-  SOURCES+=\
+  SOURCES +=\
 	format1/disk-rep.c \
 	format1/format1.c \
 	format1/import-export.c \
@@ -72,28 +72,24 @@ ifeq ("@LVM1@", "internal")
 endif
 
 ifeq ("@DEBUG@", "yes")
-  SOURCES+=\
-	mm/dbg_malloc.c
+  SOURCES += mm/dbg_malloc.c
 endif
 
 ifeq ("@DEVMAPPER@", "yes")
-  SOURCES+=\
+  SOURCES +=\
 	activate/dev_manager.c \
 	activate/fs.c
 endif
 
 ifeq ("@HAVE_LIBDL@", "yes")
-  SOURCES+=\
+  SOURCES +=\
 	locking/external_locking.c \
 	misc/sharedlib.c
 endif
 
-TARGETS=liblvm.a
+LIB_STATIC = liblvm.a
+
+TARGETS = $(LIB_STATIC)
 
 include ../make.tmpl
-
-liblvm.a: $(OBJECTS)
-	$(RM) $@
-	$(AR) r $@ $(OBJECTS)
-	$(RANLIB) $@
 
