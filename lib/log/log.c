@@ -14,6 +14,10 @@ static int _verbose_level = 0;
 static int _test = 0;
 static int _debug_level = 0;
 static int _syslog = 0;
+static int _indent = 1;
+static int _log_cmd_name = 0;
+static char _cmd_name[30] = "";
+static char _msg_prefix[30] = "  ";
 
 void init_log(FILE *fp) {
 	_log = fp;
@@ -44,6 +48,26 @@ void init_test(int level) {
 		log_print("Test mode. Metadata will NOT be updated.");
 }
 
+void init_cmd_name(int status) {
+	_log_cmd_name = status;
+}
+
+void set_cmd_name(const char *cmd) {
+	if (!_log_cmd_name)
+		return;
+	strncpy(_cmd_name, cmd, sizeof(_cmd_name));
+	_cmd_name[sizeof(_cmd_name) - 1] = '\0';
+}
+
+void init_msg_prefix(const char *prefix) {
+	strncpy(_msg_prefix, prefix, sizeof(_msg_prefix));
+	_msg_prefix[sizeof(_msg_prefix) - 1] = '\0';
+}
+
+void init_indent(int indent) {
+	_indent = indent;
+}
+
 int test_mode() {
 	return _test;
 }
@@ -63,7 +87,9 @@ void print_log(int level, const char *file, int line, const char *format, ...) {
 	switch(level) {
 	  case _LOG_DEBUG:
 		if (_verbose_level > 2 && format[1]) {
-			printf("        ");
+			printf("%s%s", _cmd_name, _msg_prefix);
+			if (_indent)
+				printf("      ");
 			vprintf(format, ap);
 			putchar('\n');
 		}
@@ -71,30 +97,35 @@ void print_log(int level, const char *file, int line, const char *format, ...) {
 
 	  case _LOG_INFO:
 		if (_verbose_level > 1) {
-			printf("      ");
+			printf("%s%s", _cmd_name, _msg_prefix);
+			if (_indent)
+				printf("    ");
 			vprintf(format, ap);
 			putchar('\n');
 		}
 		break;
 	  case _LOG_NOTICE:
 		if (_verbose_level) {
-			printf("    ");
+			printf("%s%s", _cmd_name, _msg_prefix);
+			if (_indent)
+				printf("  ");
 			vprintf(format, ap);
 			putchar('\n');
 		}
 		break;
 	  case _LOG_WARN:
-		printf("  ");
+		printf("%s%s", _cmd_name, _msg_prefix);
 		vprintf(format, ap);
 		putchar('\n');
 		break;
 	  case _LOG_ERR:
-		fprintf(stderr, "  ");
+		fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
 		vfprintf(stderr, format, ap);
 		fputc('\n',stderr);
 		break;
 	  case _LOG_FATAL:
 	  default:
+		fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
 		vfprintf(stderr, format, ap);
 		fputc('\n',stderr);
 		break;
@@ -106,7 +137,8 @@ void print_log(int level, const char *file, int line, const char *format, ...) {
 		return;
 
 	if (_log) {
-		fprintf(_log, "%s:%d ", file, line);
+		fprintf(_log, "%s:%d %s%s", file, line, _cmd_name, 
+			_msg_prefix);
 
 		va_start(ap, format);
 		vfprintf(_log, format, ap);
@@ -122,10 +154,4 @@ void print_log(int level, const char *file, int line, const char *format, ...) {
 		va_end(ap);
 	}
 }
-
-/*
- * Local variables:
- * c-file-style: "linux"
- * End:
- */
 

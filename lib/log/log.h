@@ -49,6 +49,11 @@ void fin_syslog(void);
 void init_verbose(int level);
 void init_test(int level);
 void init_debug(int level);
+void init_cmd_name(int status);
+void init_msg_prefix(const char *prefix);
+void init_indent(int indent);
+
+void set_cmd_name(const char *cmd_name);
 
 int test_mode(void);
 int debug_level(void);
