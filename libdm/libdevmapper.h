@@ -53,6 +53,7 @@ struct dm_info {
 	int exists;
 	int suspended;
 	unsigned int open_count;
+	int major;
 	int minor;		/* minor device number */
 	unsigned int target_count;
 };

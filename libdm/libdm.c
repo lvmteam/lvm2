@@ -115,6 +115,7 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	info->exists = dmt->dmi->exists;
 	info->suspended = dmt->dmi->suspend;
 	info->open_count = dmt->dmi->open_count;
+	info->major = dmt->dmi->major;
 	info->minor = dmt->dmi->minor;
 	info->target_count = dmt->dmi->target_count;
 	return 1;
@@ -367,7 +368,7 @@ int dm_task_run(struct dm_task *dmt)
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		_add_dev_node(dmt->dev_name, MKDEV(DM_BLK_MAJOR, dmi->minor));
+		_add_dev_node(dmt->dev_name, MKDEV(dmi->major, dmi->minor));
 		break;
 
 	case DM_DEVICE_REMOVE:
