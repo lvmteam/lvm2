@@ -10,9 +10,11 @@
 #include "dmfs-driver.h"
 
 int lv_activate(struct dmfs *dm,
-		struct volume_group *vg, struct logical_volume *lv);
+		struct volume_group *vg,
+		struct logical_volume *lv);
 
-int lv_deactivate(struct dmfs *dm, struct volume_group *vg,
+int lv_deactivate(struct dmfs *dm,
+		  struct volume_group *vg,
 		  struct logical_volume *lv);
 
 #endif
