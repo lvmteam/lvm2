@@ -28,6 +28,7 @@ SOURCES=\
 	lvextend.c \
 	lvm.c \
 	lvmchange.c \
+	lvmdiskscan.c \
 	lvreduce.c \
 	lvremove.c \
 	lvrename.c \
