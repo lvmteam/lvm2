@@ -59,7 +59,7 @@ static void _unblock_signals(void)
 
 static inline void _update_lock_count(int flags)
 {
-	if ((flags & LCK_TYPE_MASK) == LCK_NONE)
+	if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
 		_lock_count--;
 	else
 		_lock_count++;
@@ -159,9 +159,9 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 		return 0;
 
 	/* Perform immediate unlock unless LCK_HOLD set */
-	if (!(flags & LCK_HOLD) && ((flags & LCK_TYPE_MASK) != LCK_NONE)) {
+	if (!(flags & LCK_HOLD) && ((flags & LCK_TYPE_MASK) != LCK_UNLOCK)) {
 		if (!_lock_vol(cmd, resource,
-			       (flags & ~LCK_TYPE_MASK) | LCK_NONE))
+			       (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK))
 			return 0;
 	}
 

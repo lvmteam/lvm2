@@ -28,7 +28,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
  * Lock type
  */
 #define LCK_TYPE_MASK	0x000000FF
-#define LCK_NONE	0x00000000
+#define LCK_UNLOCK	0x00000000
 #define LCK_READ	0x00000001
 #define LCK_WRITE	0x00000002
 #define LCK_EXCL	0x00000003
@@ -51,12 +51,12 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
  */
 #define LCK_VG_READ		(LCK_VG | LCK_READ | LCK_HOLD)
 #define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
-#define LCK_VG_UNLOCK		(LCK_VG | LCK_NONE)
+#define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
 
 #define LCK_LV_DEACTIVATE	(LCK_LV | LCK_EXCL)
 #define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE)
 #define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ)
-#define LCK_LV_UNLOCK		(LCK_LV | LCK_NONE)
+#define LCK_LV_UNLOCK		(LCK_LV | LCK_UNLOCK)
 
 #define unlock_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_UNLOCK)
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
