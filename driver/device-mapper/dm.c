@@ -150,7 +150,12 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh);
  */
 static int _init(void)
 {
+	int ret;
+
 	init_rwsem(&_dev_lock);
+
+	if ((ret = dm_init_fs()))
+		return ret;
 
 	if (!dm_std_targets())
 		return -EIO;	/* FIXME: better error value */
@@ -161,7 +166,7 @@ static int _init(void)
 	blksize_size[MAJOR_NR] = _blksize_size;
 	hardsect_size[MAJOR_NR] = _hardsect_size;
 
-	if (register_blkdev(MAJOR_NR, _name, &_blk_dops) < 0) {
+	if (devfs_register_blkdev(MAJOR_NR, _name, &_blk_dops) < 0) {
 		printk(KERN_ERR "%s -- register_blkdev failed\n", _name);
 		return -EIO;
 	}
@@ -175,7 +180,9 @@ static int _init(void)
 
 static void _fin(void)
 {
-	if (unregister_blkdev(MAJOR_NR, _name) < 0)
+	dm_fin_fs();
+
+	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
 		printk(KERN_ERR "%s -- unregister_blkdev failed\n", _name);
 
 	read_ahead[MAJOR_NR] = 0;

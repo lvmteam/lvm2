@@ -79,7 +79,7 @@ int dm_init_fs()
 	if (!(_proc_dir = create_proc_entry(_fs_dir, S_IFDIR, &proc_root)))
 		goto fail;
 
-	if (!(_control = create_proc_entry(_control_name, 0, _proc_dir)))
+	if (!(_control = create_proc_entry(_control_name, S_IFREG, _proc_dir)))
 		goto fail;
 
 	_control->write_proc = _line_splitter;
