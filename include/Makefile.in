@@ -16,11 +16,26 @@
 # Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 # MA 02111-1307, USA
 
+SHELL = /bin/sh
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-SUBDIRS = include man lib tools
+LN_S = @LN_S@
 
-include make.tmpl
+all: .symlinks_created
+
+.symlinks_created: .symlinks
+	find . -maxdepth 1 -type l -exec $(RM) \{\} \;
+	for i in `cat .symlinks`; do $(LN_S) $$i ; done
+	touch $@
+
+clean:
+
+distclean:
+	find . -maxdepth 1 -type l -exec $(RM) \{\} \;
+	$(RM) Makefile .include_symlinks
+
+.PHONY: clean distclean all
 
