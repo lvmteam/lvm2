@@ -61,7 +61,7 @@ int vgcreate(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 		
-        /* Strip prefix if present */
+        /* Strip dev_dir if present */
         if (!strncmp(vg_name, fid->cmd->dev_dir, strlen(fid->cmd->dev_dir)))
                 vg_name += strlen(fid->cmd->dev_dir);
 

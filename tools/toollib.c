@@ -262,7 +262,7 @@ char *extract_vgname(struct format_instance *fi, char *lv_name)
 
 	/* Path supplied? */
 	if (vg_name && strchr(vg_name, '/')) {
-		/* Strip prefix (optional) */
+		/* Strip dev_dir (optional) */
 		if (!strncmp(vg_name, dev_dir, strlen(dev_dir)))
 			vg_name += strlen(dev_dir);
 
@@ -304,7 +304,7 @@ char *default_vgname(struct format_instance *fi)
 	if (!vg_path)
 		return 0;
 
-	/* Strip prefix (optional) */
+	/* Strip dev_dir (optional) */
 	if (!strncmp(vg_path, dev_dir, strlen(dev_dir)))
 		vg_path += strlen(dev_dir);
 

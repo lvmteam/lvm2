@@ -229,7 +229,7 @@ void lvdisplay_full(struct logical_volume *lv)
 
 	log_print("--- Logical volume ---");
 
-	/* FIXME prefix */
+	/* FIXME Add dev_dir */
 	log_print("LV Name                %s/%s", lv->vg->name, lv->name);
 	log_print("VG Name                %s", lv->vg->name);
 

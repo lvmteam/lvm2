@@ -23,7 +23,7 @@
  * This should run through /proc/mounts once only,
  * storing devfs mount points in a hash table.
  */
-static int _check_devfs(const char *dev_prefix)
+static int _check_devfs(const char *dev_dir)
 {
 	int r = 0, len;
 	char dir[PATH_MAX], line[512];
@@ -33,9 +33,9 @@ static int _check_devfs(const char *dev_prefix)
 	if (!(mounts = fopen("/proc/mounts", "r")))
 		goto out;
 
-	/* trim the trailing slash off the dir prefix, yuck */
-	len = strlen(dev_prefix) - 1;
-	while(len && dev_prefix[len] == '/')
+	/* trim the trailing slash off dev_dir, yuck */
+	len = strlen(dev_dir) - 1;
+	while(len && dev_dir[len] == '/')
 		len--;
 
 	while (!feof(mounts)) {
@@ -43,7 +43,7 @@ static int _check_devfs(const char *dev_prefix)
 		if (sscanf(line, "%*s %s %s %*s", dir, type) != 2)
 			continue;
 
-		if (!strcmp(type, "devfs") && !strncmp(dir, dev_prefix, len)) {
+		if (!strcmp(type, "devfs") && !strncmp(dir, dev_dir, len)) {
 			r = 1;
 			break;
 		}
