@@ -195,7 +195,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	 * Set the defaults.
 	 */
 	memset(lp, 0, sizeof(*lp));
-	lp->chunk_size = 256;
+	lp->chunk_size = 32;
 
 	if (!_read_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, cmd, &argc, &argv) ||
