@@ -4,82 +4,63 @@ lvm.conf \- Configuration file for LVM2
 .SH SYNOPSIS
 .B /etc/lvm/lvm.conf
 .SH DESCRIPTION
-lvm.conf is read during the initialisation phase of 
+lvm.conf is loaded once, during the initialisation phase of 
 \fBlvm\fP.
 .LP
 .SH SYNTAX
-
-The configuration file uses a simple syntax which this sections
-attempts to describe.
-
-The first thing to note is that whitespace is not significant (except
-within strings values).  This means that you can format your config
-file however you wish, eg, use whatever indentation style suits you,
-or split arrays of values across seperate lines.
-
-Comments are treated as whitespace, following the normal unix
-convention they begin with a '#' and continue to the end of the
-current line.
-
-An informal grammar follows:
-
-.IP
+.LP
+This section describes the configuration file syntax.
+.LP
+Whitespace is not significant unless it is within quotes. 
+This provides a wide choice of acceptable indentation styles.
+Comments begin with # and continue to the end of the line.
+They are treated as whitespace.
+.LP
+Here is an informal grammar:
+.TP
 \fBfile = value*\fP
 .br
-A config file consists of a set of values.
-
-.IP
+A configuration file consists of a set of values.
+.TP
 \fBvalue = section | assignment\fP
 .br
 A value can either be a new section, or an assignment.
-
-.IP
+.TP
 \fBsection = identifier '{' value* '}'\fP
 .br
-A section is used to group associated values together.  It is denoted
-by a name and some delimiting curly braces.
+A section is groups associated values together.  
 .br
-eg,
+It is denoted by a name and delimited by curly brackets.
 .br
-backups {
+e.g.	backups {
 .br
-	...
+		...
 .br
-}
-.IP
+	}
+.TP
 \fBassignment = identifier '=' (array | type)\fP
 .br
-An assignment is where a name and a type are associated.
+An assignment associates a type with an identifier.
 .br
-eg,
+e.g.	max_backups = 42
 .br
-	max_backups = 42
-.br
-.IP
+.TP
 \fBarray = '[' (type ',')* type ']' | '[' ']'\fP
 .br
-Inhomogeneous arrays are supported, elements must be seperated by
-commas.  An empty array is acceptable.
-.IP
+Inhomogeneous arrays are supported. 
+.br
+Elements must be separated by commas.  
+.br
+An empty array is acceptable.
+.TP
 \fBtype = integer | float | string\fP
-.br
-There are three basic types:
-.br
-.IP
 \fBinteger = [0-9]*\fP
 .br
-Integers are denoted by a series of digits.
-.IP
 \fBfloat = [0-9]*\.[0-9]*\fP
 .br
-Floating point numbers are denoted by a series of digits, a decimal
-point, and then more digits.
-.IP
 \fBstring = '"' .* '"'\fP
-.br
+.IP
 Strings must be enclosed in double quotes.
-.LP
-See the example configurations at the end of this man page.
 
 .SH SECTIONS
 .LP
