@@ -1111,15 +1111,13 @@ static int init(void)
 		return 0;
 	}
 
-	if (stat(config_file, &info) != -1) {
-		/* we've found a config file */
-		if (!read_config(cmd->cf, config_file)) {
-			log_error("Failed to load config file %s", config_file);
-			return 0;
-		}
-
-		__init_log(cmd->cf);
+	if (stat(config_file, &info) != -1 &&
+	    !read_config(cmd->cf, config_file)) {
+		log_error("Failed to load config file %s", config_file);
+		return 0;
 	}
+
+	__init_log(cmd->cf);
 
 	_default_settings.umask = find_config_int(cmd->cf->root,
 						  "global/umask", '/',
