@@ -13,8 +13,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <sys/mount.h>
-
+#include <linux/fs.h> // UGH!!! for BLKSSZGET
 
 int dev_get_size(struct device *dev, uint64_t *size)
 {
@@ -37,6 +36,29 @@ int dev_get_size(struct device *dev, uint64_t *size)
 
 	close(fd);
 	*size = (uint64_t) s;
+	return 1;
+}
+
+int dev_get_sectsize(struct device *dev, uint32_t *size)
+{
+	int fd;
+	int s;
+	const char *name = dev_name(dev);
+
+	log_very_verbose("Getting size of %s", name);
+	if ((fd = open(name, O_RDONLY)) < 0) {
+		log_sys_error("open", name);
+		return 0;
+	}
+
+	if (ioctl(fd, BLKSSZGET, &s) < 0) {
+		log_sys_error("ioctl BLKSSZGET", name);
+		close(fd);
+		return 0;
+	}
+
+	close(fd);
+	*size = (uint32_t) s;
 	return 1;
 }
 
@@ -167,7 +189,7 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 	int fd = dev->fd;
 
 	if (fd < 0) {
-		log_error("Attempt to zero part of an unopened device %s", 
+		log_error("Attempt to zero part of an unopened device %s",
 			  name);
 		return 0;
 	}
