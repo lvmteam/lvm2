@@ -1,5 +1,5 @@
-Version 1.00.20 -
-=============================
+Version 1.00.20 - 6 Jan 2005
+============================
   Attempt to fix /dev/mapper/control transparently if it's wrong.
   Configuration-time option for setting uid/gid/mode for /dev/mapper nodes.
   Update kernel patches for 2.4.27/2.4.28-pre-4 (includes minor fixes).
