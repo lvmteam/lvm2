@@ -16,59 +16,44 @@
 #include <dirent.h>
 
 /*
- * activate(dirty lvs)
- * -------------------
+ * Algorithm
+ * ---------
  *
- * 1) Examine dm directory, and build up a list of active lv's, *include*
- *    dirty lvs.  All vg layers go into tree.
+ * 1) Examine dm directory, and store details of active mapped devices
+ *    in the VG.  Indexed by lvid-layer. (_scan_existing_devices)
  *
- * 2) Build complete tree for vg, marking lv's stack as dirty.  Note this
- *    tree is a function of the active_list (eg, no origin layer needed
- *    if snapshot not active).
+ * 2) Build lists of visible devices that need to be left in each state:
+ *    active, reloaded, suspended.
  *
- * 3) Query layers to see which exist.
+ * 3) Run through these lists and set the appropriate marks on each device
+ *    and its dependencies.
  *
- * 4) Mark active_list.
+ * 4) Add layers not marked active to remove_list for removal at the end.
  *
- * 5) Propagate marks.
+ * 5) Remove unmarked layers from core.
  *
- * 6) Any unmarked, but existing layers get added to the remove_list.
+ * 6) Activate remaining layers, recursing to handle dependedncies and
+ *    skipping any that already exist unless they are marked as needing
+ *    reloading.
  *
- * 7) Remove unmarked layers from core.
+ * 7) Remove layers in the remove_list.  (_remove_old_layers)
  *
- * 8) Activate remaining layers (in order), skipping any that already
- *    exist, unless they are marked dirty.
- *
- * 9) remove layers in the remove_list (Requires examination of deps).
- *
- *
- * deactivate(dirty lvs)
- * ---------------------
- *
- * 1) Examine dm directory, create active_list *excluding*
- *    dirty_list.  All vg layers go into tree.
- *
- * 2) Build vg tree given active_list, no dirty layers.
- *
- * ... same as activate.
  */
 
 enum {
 	ACTIVE = 0,
-	DIRTY = 1,
+	RELOAD = 1,
 	VISIBLE = 2,
-	READWRITE = 3
+	READWRITE = 3,
+	SUSPENDED = 4
 };
 
 typedef enum {
 	ACTIVATE,
-	DEACTIVATE
-} activate_t;
-
-typedef enum {
+	DEACTIVATE,
 	SUSPEND,
 	RESUME
-} suspend_t;
+} action_t;
 
 struct dev_layer {
 	char *name;
@@ -119,7 +104,12 @@ struct dev_manager {
 	/*
 	 * Layers that need reloading.
 	 */
-	struct list dirty_list;
+	struct list reload_list;
+
+	/*
+	 * Layers that need suspending.
+	 */
+	struct list suspend_list;
 
 	/*
 	 * Layers that will need removing after activation.
@@ -407,7 +397,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	if (r && _get_flag(dl, VISIBLE))
 		fs_add_lv(dl->lv, dl->name);
 
-	_clear_flag(dl, DIRTY);
+	_clear_flag(dl, RELOAD);
 
       out:
 	dm_task_destroy(dmt);
@@ -447,7 +437,7 @@ static int _remove(struct dev_layer *dl)
 	return r;
 }
 
-static int _suspend_or_resume(const char *name, suspend_t suspend)
+static int _suspend_or_resume(const char *name, action_t suspend)
 {
 	int r;
 	struct dm_task *dmt;
@@ -510,56 +500,42 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	char params[1024];
 	uint64_t esize = seg->lv->vg->extent_size;
 	uint32_t s, stripes = seg->stripes;
-	int w = 0, tw = 0, error = 0;
-	const char *no_space = "Insufficient space to write target parameters.";
+	int w = 0, tw = 0;
 	char *filler = "/dev/ioerror";
 	char *target;
 
 	if (stripes == 1) {
 		if (!seg->area[0].pv) {
 			target = "error";
-			error = 1;
+			goto add_target;
 		} else
 			target = "linear";
-	}
-
-	if (stripes > 1) {
+	} else if (stripes > 1) {
 		target = "striped";
-		tw = lvm_snprintf(params, sizeof(params), "%u %u ",
-				  stripes, seg->stripe_size);
-
-		if (tw < 0) {
-			log_error(no_space);
-			return 0;
-		}
-
+		if ((tw = lvm_snprintf(params, sizeof(params), "%u %u ",
+				       stripes, seg->stripe_size)) < 0)
+			goto error;
 		w = tw;
 	}
 
-	if (!error) {
-		for (s = 0; s < stripes; s++, w += tw) {
-			if (!seg->area[s].pv)
-				tw = lvm_snprintf(params + w,
-						  sizeof(params) - w,
-						  "%s 0%s", filler,
-						  s ==
-						  (stripes - 1) ? "" : " ");
-			else
-				tw =
-				    lvm_snprintf(params + w, sizeof(params) - w,
-						 "%s %" PRIu64 "%s",
-						 dev_name(seg->area[s].pv->dev),
-						 (seg->area[s].pv->pe_start +
-						  (esize * seg->area[s].pe)),
-						 s == (stripes - 1) ? "" : " ");
+	for (s = 0; s < stripes; s++, w += tw) {
+		if (!seg->area[s].pv)
+			tw = lvm_snprintf(params + w, sizeof(params) - w,
+					  "%s 0%s", filler,
+					  s == (stripes - 1) ? "" : " ");
+		else
+			tw = lvm_snprintf(params + w, sizeof(params) - w,
+					 "%s %" PRIu64 "%s",
+					 dev_name(seg->area[s].pv->dev),
+					 (seg->area[s].pv->pe_start +
+					  (esize * seg->area[s].pe)),
+					 s == (stripes - 1) ? "" : " ");
 
-			if (tw < 0) {
-				log_error(no_space);
-				return 0;
-			}
-		}
+		if (tw < 0)
+			goto error;
 	}
 
+      add_target:
 	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
 		  esize * seg->le, esize * seg->len, target, params);
 
@@ -570,6 +546,10 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	}
 
 	return 1;
+
+      error:
+	log_error("Insufficient space to write target parameters.");
+	return 0;
 }
 
 static int _populate_vanilla(struct dev_manager *dm,
@@ -688,8 +668,9 @@ struct dev_manager *dev_manager_create(const char *vg_name)
 	}
 
 	list_init(&dm->active_list);
-	list_init(&dm->dirty_list);
+	list_init(&dm->reload_list);
 	list_init(&dm->remove_list);
+	list_init(&dm->suspend_list);
 
 	return dm;
 
@@ -729,26 +710,6 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	return 1;
 }
 
-int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
-{
-	char *name;
-
-	/*
-	 * Build a name for the top layer.
-	 */
-	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
-		stack;
-		return 0;
-	}
-
-	/* FIXME Recurse */
-	if (!_suspend_or_resume(name, SUSPEND)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 				     char *dlid)
@@ -1084,15 +1045,29 @@ static int _mark_lvs(struct dev_manager *dm, struct list *lvs, int flag)
 	return 1;
 }
 
+static inline int _suspend_parent(struct dev_layer *parent)
+{
+	return (!parent || !parent->info.exists || _suspend(parent));
+}
+
 /*
  * Recurses through the tree, ensuring that devices are created
  * in correct order.
  */
-int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
+int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
+		struct dev_layer *parent)
 {
 	struct list *sh;
 	struct dev_layer *dep;
 	char *dlid, *newname, *suffix;
+
+	/* FIXME Create and use a _suspend_parents() function instead */
+	/* Suspend? */
+	if (_get_flag(dl, SUSPENDED) && 
+	    (!_suspend_parent || !_suspend(dl))) {
+		stack;
+		return 0;
+	}
 
 	list_iterate(sh, &dl->pre_create) {
 		dlid = list_item(sh, struct str_list)->str;
@@ -1102,7 +1077,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 			return 0;
 		}
 
-		if (dl->info.exists && !_suspend(dl)) {
+		if (!_suspend_parent(parent)) {
 			stack;
 			return 0;
 		}
@@ -1112,7 +1087,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 			return 0;
 		}
 
-		if (!_create_rec(dm, dep)) {
+		if (!_create_rec(dm, dep, dl)) {
 			stack;
 			return 0;
 		}
@@ -1125,7 +1100,9 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 		newname = _build_name(dm->mem, dm->vg_name, dl->lv->name,
 				      suffix);
 		if (strcmp(newname, dl->name)) {
-			if (!_rename(dm, dl, newname)) {
+			if (!_suspend_parent(parent) || 
+			    !_suspend(dl) ||
+			    !_rename(dm, dl, newname)) {
 				stack;
 				return 0;
 			}
@@ -1134,20 +1111,25 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 
 	/* Create? */
 	if (!dl->info.exists) {
-		if (!_load(dm, dl, DM_DEVICE_CREATE)) {
+		if (!_suspend_parent(parent) || 
+		    !_load(dm, dl, DM_DEVICE_CREATE)) {
 			stack;
 			return 0;
 		}
 		return 1;
 	}
 
-	/* Reload */
-	if (_get_flag(dl, DIRTY) && !_load(dm, dl, DM_DEVICE_RELOAD)) {
+	/* Reload? */
+	if (_get_flag(dl, RELOAD) &&
+	    (!_suspend_parent(parent) || !_suspend(dl) || 
+	     !_load(dm, dl, DM_DEVICE_RELOAD))) {
 		stack;
 		return 0;
 	}
 
-	if (!_resume(dl)) {
+	/* Resume? */
+	if (!_get_flag(dl, SUSPENDED) && 
+	    (!_suspend_parent || !_resume(dl))) {
 		stack;
 		return 0;
 	}
@@ -1252,19 +1234,28 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
 	}
 
 	/*
-	 * Mark all dirty layers.
+	 * Mark all layer that need reloading.
 	 */
-	_clear_marks(dm, DIRTY);
-	if (!_mark_lvs(dm, &dm->dirty_list, DIRTY)) {
+	_clear_marks(dm, RELOAD);
+	if (!_mark_lvs(dm, &dm->reload_list, RELOAD)) {
 		stack;
 		return 0;
 	}
 
 	/*
-	 * Mark all active layers.
+	 * Mark all layers that should be active.
 	 */
 	_clear_marks(dm, ACTIVE);
 	if (!_mark_lvs(dm, &dm->active_list, ACTIVE)) {
+		stack;
+		return 0;
+	}
+
+	/* 
+	 * Mark all layers that should be left suspended.
+	 */
+	_clear_marks(dm, SUSPENDED);
+	if (!_mark_lvs(dm, &dm->suspend_list, SUSPENDED)) {
 		stack;
 		return 0;
 	}
@@ -1281,7 +1272,7 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
 		dl = hash_get_data(dm->layers, hn);
 
 		if (_get_flag(dl, ACTIVE) && _get_flag(dl, VISIBLE))
-			_create_rec(dm, dl);
+			_create_rec(dm, dl, NULL);
 	}
 
 	if (!_remove_old_layers(dm)) {
@@ -1464,8 +1455,8 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 	return 1;
 }
 
-static int _activate(struct dev_manager *dm, struct logical_volume *lv,
-		     activate_t activate)
+static int _action(struct dev_manager *dm, struct logical_volume *lv,
+		   action_t action)
 {
 	if (!_scan_existing_devices(dm)) {
 		stack;
@@ -1477,13 +1468,21 @@ static int _activate(struct dev_manager *dm, struct logical_volume *lv,
 		return 0;
 	}
 
-	/* Remove from active list if present */
-	_remove_lvs(&dm->active_list, lv);
+	if (action == ACTIVATE || action == DEACTIVATE)
+		/* Get into known state - remove from active list if present */
+		_remove_lvs(&dm->active_list, lv);
 
-	if (activate == ACTIVATE) {
-		/* Add to active and dirty lists */
-		if (!_add_lvs(dm->mem, &dm->dirty_list, lv) ||
+	if (action == ACTIVATE) {
+		/* Add to active & reload lists */
+		if (!_add_lvs(dm->mem, &dm->reload_list, lv) ||
 		    !_add_lvs(dm->mem, &dm->active_list, lv)) {
+			stack;
+			return 0;
+		}
+	}
+
+	if (action == SUSPEND) {
+		if (!_add_lvs(dm->mem, &dm->suspend_list, lv)) {
 			stack;
 			return 0;
 		}
@@ -1499,10 +1498,16 @@ static int _activate(struct dev_manager *dm, struct logical_volume *lv,
 
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	return _activate(dm, lv, ACTIVATE);
+	return _action(dm, lv, ACTIVATE);
 }
 
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	return _activate(dm, lv, DEACTIVATE);
+	return _action(dm, lv, DEACTIVATE);
 }
+
+int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
+{
+	return _action(dm, lv, SUSPEND);
+}
+

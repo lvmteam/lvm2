@@ -36,7 +36,8 @@ struct lvcreate_params {
 };
 
 static int _read_name_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc, char ***pargv)
+			     struct cmd_context *cmd, int *pargc,
+			     char ***pargv)
 {
 	int argc = *pargc;
 	char **argv = *pargv, *ptr;
@@ -85,7 +86,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 			if (lp->lv_name && strchr(lp->lv_name, '/')) {
 				if (!(lp->vg_name =
 				      extract_vgname(cmd->fid, lp->lv_name)))
-					return 0;
+					    return 0;
 
 				if (strcmp(lp->vg_name, argv[0])) {
 					log_error("Inconsistent volume group "
@@ -108,7 +109,8 @@ static int _read_name_params(struct lvcreate_params *lp,
 }
 
 static int _read_size_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc, char ***pargv)
+			     struct cmd_context *cmd, int *pargc,
+			     char ***pargv)
 {
 	/*
 	 * There are two mutually exclusive ways of specifying
@@ -381,8 +383,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 	if (!(lv = lv_create(cmd->fid, lp->lv_name, status,
 			     lp->stripes, lp->stripe_size, lp->extents,
-			     vg, pvh)))
-		return 0;
+			     vg, pvh))) return 0;
 
 	if (lp->read_ahead) {
 		log_verbose("Setting read ahead sectors");
