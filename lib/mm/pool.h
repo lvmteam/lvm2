@@ -24,7 +24,7 @@ void pool_free(struct pool *p, void *ptr);
 
 /* object building routines */
 void *pool_begin_object(struct pool *p, size_t init_size);
-void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t delta);
+void *pool_grow_object(struct pool *p, void *buffer, size_t delta);
 void *pool_end_object(struct pool *p);
 void pool_abandon_object(struct pool *p);
 
@@ -41,11 +41,4 @@ static inline void *pool_zalloc(struct pool *p, size_t s) {
 }
 
 #endif
-
-/*
- * Local variables:
- * c-file-style: "linux"
- * End:
- * vim:ai cin ts=4
- */
 
