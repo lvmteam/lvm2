@@ -1,0 +1,41 @@
+/*
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
+ *
+ * This file is released under the GPL.
+ */
+
+#ifndef _LVM_DEV_CACHE_H
+#define _LVM_DEV_CACHE_H
+
+#include <sys/types.h>
+#include "lvm-types.h"
+#include "device.h"
+
+/*
+ * predicate for devices.
+ */
+struct dev_filter {
+	int (*passes_filter)(struct dev_filter *f, struct device *dev);
+	void *private;
+};
+
+
+/*
+ * The global device cache.
+ */
+int dev_cache_init(void);
+void dev_cache_exit(void);
+
+int dev_cache_add_dir(const char *path);
+struct device *dev_cache_get(const char *name, struct dev_filter *f);
+
+
+/*
+ * Object for iterating through the cache.
+ */
+struct dev_iter;
+struct dev_iter *dev_iter_create(struct dev_filter *f);
+void dev_iter_destroy(struct dev_iter *iter);
+struct device *dev_iter_get(struct dev_iter *iter);
+
+#endif
