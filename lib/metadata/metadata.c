@@ -46,10 +46,12 @@ int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 	}
 
 	/* Units of 512-byte sectors */
+/*
 	if (!dev_get_size(pv->dev, &pv->size)) {
 		stack;
 		return 0;
 	}
+*/
 
 	/* Units of 512-byte sectors */
 	pv->pe_size = vg->extent_size;
@@ -192,7 +194,8 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 
 struct physical_volume *pv_create(struct format_instance *fi, 
 				  const char *name,
-				  struct id *id)
+				  struct id *id,
+				  uint64_t size)
 {
 	struct pool *mem = fi->cmd->mem;
 	struct physical_volume *pv = pool_alloc(mem, sizeof (*pv));
@@ -220,7 +223,13 @@ struct physical_volume *pv_create(struct format_instance *fi,
 	*pv->vg_name = 0;
 	pv->status = ALLOCATABLE_PV;
 
-	if (!dev_get_size(pv->dev, &pv->size)) {
+        if (size) {
+		if (size < PV_MIN_SIZE) {
+			log_err("Given size for '%s' is too small", name);
+			goto bad;
+		}
+        	pv->size = size;
+        } else if (!dev_get_size(pv->dev, &pv->size)) {
 		log_err("Couldn't get size of device '%s'", name);
 		goto bad;
 	}

@@ -74,6 +74,7 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 	struct physical_volume *pv;
 	struct id id, *idp = NULL;
 	char *uuid;
+	uint64_t size = 0;
 	struct device *dev;
 
 	if (arg_count(cmd, uuidstr_ARG)) {
@@ -91,7 +92,9 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 	if (!pvcreate_check(cmd, pv_name))
 		return;
 
-	if (!(pv = pv_create(cmd->fid, pv_name, idp))) {
+        size = arg_int_value(cmd, physicalvolumesize_ARG, 0) * 2;
+printf("%Ld\n", size);
+	if (!(pv = pv_create(cmd->fid, pv_name, idp, size))) {
 		log_err("Failed to setup physical volume \"%s\"", pv_name);
 		return;
 	}

@@ -426,7 +426,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 	lv->status = status;
 	lv->read_ahead = 0;
 	lv->minor = -1;
-	lv->size = extents * vg->extent_size;
+	lv->size = (uint64_t) extents * vg->extent_size;
 	lv->le_count = extents;
 	lv->vg = vg;
 	list_init(&lv->segments);
@@ -480,7 +480,7 @@ int lv_reduce(struct format_instance *fi,
 	}
 
 	lv->le_count -= extents;
-	lv->size = lv->le_count * lv->vg->extent_size;
+	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
 
 	if (fi->ops->lv_setup && !fi->ops->lv_setup(fi, lv)) {
 		stack;
@@ -500,7 +500,7 @@ int lv_extend(struct format_instance *fi,
 	uint64_t old_size = lv->size;
 
 	lv->le_count += extents;
-	lv->size += extents * lv->vg->extent_size;
+	lv->size += (uint64_t) extents * lv->vg->extent_size;
 
 	/* FIXME: Format1 must ensure stripes is consistent with 1st seg */
 

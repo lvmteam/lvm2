@@ -22,6 +22,7 @@
 #define STRIPE_SIZE_DEFAULT 16    /* 16KB */
 #define STRIPE_SIZE_MIN ( PAGE_SIZE/SECTOR_SIZE)     /* PAGESIZE in sectors */
 #define STRIPE_SIZE_MAX ( 512L * 1024 / SECTOR_SIZE) /* 512 KB in sectors */
+#define PV_MIN_SIZE ( 512L * 1024 / SECTOR_SIZE) /* 512 KB in sectors */
 
 
 /* Various flags */
@@ -245,7 +246,8 @@ struct format_handler {
  */
 struct physical_volume *pv_create(struct format_instance *fi,
 				  const char *name,
-				  struct id *id);
+				  struct id *id,
+				  uint64_t size);
 
 struct volume_group *vg_create(struct format_instance *fi, const char *name,
 			       uint32_t extent_size, int max_pv, int max_lv,

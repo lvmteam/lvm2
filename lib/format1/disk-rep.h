@@ -18,6 +18,7 @@
 #define MAX_LV 256
 #define MAX_VG 99
 
+#define MAX_PV_SIZE	((uint32_t) -1) /* 2TB in sectors - 1 */
 #define MIN_PE_SIZE	(8192L / SECTOR_SIZE)     /* 8 KB in sectors */
 #define MAX_PE_SIZE	(16L * 1024L * 1024L / SECTOR_SIZE * 1024)
 #define PE_SIZE_PV_SIZE_REL 5   /* PV size must be at least 5 times PE size */
