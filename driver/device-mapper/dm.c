@@ -50,11 +50,6 @@ struct io_hook {
 
 kmem_cache_t *_io_hook_cache;
 
-#define rl down_read(&_dev_lock)
-#define ru up_read(&_dev_lock)
-#define wl down_write(&_dev_lock)
-#define wu up_write(&_dev_lock)
-
 struct rw_semaphore _dev_lock;
 static struct mapped_device *_devs[MAX_DEVICES];
 
@@ -136,16 +131,16 @@ static int blk_open(struct inode *inode, struct file *file)
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
 
-	wl;
+	down_write(&_dev_lock);
 	md = _devs[minor];
 
 	if (!md || !is_active(md)) {
-		wu;
+		up_write(&_dev_lock);
 		return -ENXIO;
 	}
 
 	md->use_count++;
-	wu;
+	up_write(&_dev_lock);
 
 	MOD_INC_USE_COUNT;
 	return 0;
@@ -159,16 +154,16 @@ static int blk_close(struct inode *inode, struct file *file)
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
 
-	wl;
+	down_write(&_dev_lock);
 	md = _devs[minor];
 	if (!md || md->use_count < 1) {
 		WARN("reference count in mapped_device incorrect");
-		wu;
+		up_write(&_dev_lock);
 		return -ENXIO;
 	}
 
 	md->use_count--;
-	wu;
+	up_write(&_dev_lock);
 
 	MOD_DEC_USE_COUNT;
 	return 0;
@@ -276,9 +271,9 @@ static int queue_io(struct mapped_device *md, struct buffer_head *bh, int rw)
 	if (!di)
 		return -ENOMEM;
 
-	wl;
+	down_write(&_dev_lock);
 	if (test_bit(DM_ACTIVE, &md->state)) {
-		wu;
+		up_write(&_dev_lock);
 		return 0;
 	}
 
@@ -286,7 +281,7 @@ static int queue_io(struct mapped_device *md, struct buffer_head *bh, int rw)
 	di->rw = rw;
 	di->next = md->deferred;
 	md->deferred = di;
-	wu;
+	up_write(&_dev_lock);
 
 	return 1;
 }
@@ -366,7 +361,7 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 	if (minor >= MAX_DEVICES)
 		goto bad_no_lock;
 
-	rl;
+	down_read(&_dev_lock);
 	md = _devs[minor];
 
 	if (!md || !md->map)
@@ -374,7 +369,7 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 
 	/* if we're suspended we have to queue this io for later */
 	if (!test_bit(DM_ACTIVE, &md->state)) {
-		ru;
+		up_read(&_dev_lock);
 		r = queue_io(md, bh, rw);
 
 		if (r < 0)
@@ -383,17 +378,17 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 		else if (r > 0)
 			return 0; /* deferred successfully */
 
-		rl;	/* FIXME: there's still a race here */
+		down_read(&_dev_lock);	/* FIXME: there's still a race here */
 	}
 
 	if (!__map_buffer(md, bh, __find_node(md->map, bh)))
 		goto bad;
 
-	ru;
+	up_read(&_dev_lock);
 	return 1;
 
  bad:
-	ru;
+	up_read(&_dev_lock);
 
  bad_no_lock:
 	buffer_IO_error(bh);
@@ -439,12 +434,12 @@ static struct mapped_device *alloc_dev(int minor)
 	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
 	memset(md, 0, sizeof(*md));
 
-	wl;
+	down_write(&_dev_lock);
 	minor = (minor < 0) ? __any_old_dev() : __specific_dev(minor);
 
 	if (minor < 0) {
 		WARN("no free devices available");
-		wu;
+		up_write(&_dev_lock);
 		kfree(md);
 		return 0;
 	}
@@ -456,7 +451,7 @@ static struct mapped_device *alloc_dev(int minor)
 	init_waitqueue_head(&md->wait);
 
 	_devs[minor] = md;
-	wu;
+	up_write(&_dev_lock);
 
 	return md;
 }
@@ -538,9 +533,9 @@ struct mapped_device *dm_find_by_name(const char *name)
 {
 	struct mapped_device *md;
 
-	rl;
+	down_read(&_dev_lock);
 	md = __find_by_name(name);
-	ru;
+	up_read(&_dev_lock);
 
 	return md;
 }
@@ -549,9 +544,9 @@ struct mapped_device *dm_find_by_minor(int minor)
 {
 	struct mapped_device *md;
 
-	rl;
+	down_read(&_dev_lock);
 	md = _devs[minor];
-	ru;
+	up_read(&_dev_lock);
 
 	return md;
 }
@@ -590,11 +585,11 @@ int dm_create(const char *name, int minor)
 	if (!(md = alloc_dev(minor)))
 		return -ENOMEM;
 
-	wl;
+	down_write(&_dev_lock);
 	if (__find_by_name(name)) {
 		WARN("device with that name already exists");
 		kfree(md);
-		wu;
+		up_write(&_dev_lock);
 		return -EINVAL;
 	}
 
@@ -602,10 +597,10 @@ int dm_create(const char *name, int minor)
 	_devs[minor] = md;
 
 	if ((r = register_device(md))) {
-		wu;
+		up_write(&_dev_lock);
 		return r;
 	}
-	wu;
+	up_write(&_dev_lock);
 
 	return 0;
 }
@@ -620,26 +615,26 @@ int dm_remove(const char *name)
 	struct mapped_device *md;
 	int minor, r;
 
-	wl;
+	down_write(&_dev_lock);
 	if (!(md = __find_by_name(name))) {
-		wu;
+		up_write(&_dev_lock);
 		return -ENXIO;
 	}
 
 	if (md->use_count) {
-		wu;
+		up_write(&_dev_lock);
 		return -EPERM;
 	}
 
 	if ((r = unregister_device(md))) {
-		wu;
+		up_write(&_dev_lock);
 		return r;
 	}
 
 	minor = MINOR(md->dev);
 	kfree(md);
 	_devs[minor] = 0;
-	wu;
+	up_write(&_dev_lock);
 
 	return 0;
 }
@@ -708,24 +703,24 @@ int dm_activate(struct mapped_device *md, struct dm_table *table)
 	if (!table->num_targets)
 		return -EINVAL;
 
-	wl;
+	down_write(&_dev_lock);
 
 	/* you must be deactivated first */
 	if (is_active(md)) {
-		wu;
+		up_write(&_dev_lock);
 		return -EPERM;
 	}
 
 	__bind(md, table);
 
 	if ((r = open_devices(md->map->devices))) {
-		wu;
+		up_write(&_dev_lock);
 		return r;
 	}
 
 	set_bit(DM_ACTIVE, &md->state);
 	__flush_deferred_io(md);
-	wu;
+	up_write(&_dev_lock);
 
 	return 0;
 }
@@ -736,27 +731,27 @@ int dm_activate(struct mapped_device *md, struct dm_table *table)
  */
 int dm_deactivate(struct mapped_device *md)
 {
-	rl;
+	down_read(&_dev_lock);
 	if (md->use_count) {
-		ru;
+		up_read(&_dev_lock);
 		return -EPERM;
 	}
 
 	fsync_dev(md->dev);
 
-	ru;
+	up_read(&_dev_lock);
 
-	wl;
+	down_write(&_dev_lock);
 	if (md->use_count) {
 		/* drat, somebody got in quick ... */
-		wu;
+		up_write(&_dev_lock);
 		return -EPERM;
 	}
 
         close_devices(md->map->devices);
 	md->map = 0;
 	clear_bit(DM_ACTIVE, &md->state);
-	wu;
+	up_write(&_dev_lock);
 
 	return 0;
 }
@@ -774,24 +769,24 @@ void dm_suspend(struct mapped_device *md)
 {
 	DECLARE_WAITQUEUE(wait, current);
 
-	wl;
+	down_write(&_dev_lock);
 	if (!is_active(md)) {
-		wu;
+		up_write(&_dev_lock);
 		return;
 	}
 
 	clear_bit(DM_ACTIVE, &md->state);
-	wu;
+	up_write(&_dev_lock);
 
 	/* wait for all the pending io to flush */
 	add_wait_queue(&md->wait, &wait);
 	current->state = TASK_INTERRUPTIBLE;
 	do {
-		wl;
+		down_write(&_dev_lock);
 		if (!atomic_read(&md->pending))
 			break;
 
-		wu;
+		up_write(&_dev_lock);
 		schedule();
 
 	} while (1);
@@ -802,7 +797,7 @@ void dm_suspend(struct mapped_device *md)
 	close_devices(md->map->devices);
 
 	md->map = 0;
-	wu;
+	up_write(&_dev_lock);
 }
 
 
