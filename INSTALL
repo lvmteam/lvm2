@@ -29,3 +29,8 @@ LVM2 installation
 
 4) Create a configuration file
 
+   The tools will work fine without a configuration file being
+   present, but you ought to review the example file in doc/example.conf.
+   For example, specifying the devices that LVM2 is to use should
+   make the tools run more efficiently - and avoid scanning /dev/cdrom!
+
