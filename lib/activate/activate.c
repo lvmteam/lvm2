@@ -89,7 +89,7 @@ int lv_open_count(struct logical_volume *lv)
 static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 {
 	char params[1024];
-	uint64_t esize = lv->vg->extent_size;
+	uint64_t esize = seg->lv->vg->extent_size;
 	uint32_t s, stripes = seg->stripes;
 	int w, tw;
 
@@ -108,14 +108,13 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 		}
 	}
 
-	if (!dm_task_add_target(dmt, esize * le, esize * seg->len,
+	if (!dm_task_add_target(dmt, esize * seg->le, esize * seg->len,
 				stripes == 1 ? "linear" : "striped",
 				params)) {
 		stack;
 		return 0;
 	}
 
-	*ple = i;
 	return 1;
 }
 

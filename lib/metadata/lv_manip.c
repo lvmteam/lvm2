@@ -19,8 +19,8 @@ static void _get_extents(struct stripe_segment *seg)
 	int s, count;
 	struct physical_volume *pv;
 
-	for (s = 0; i < seg->stripes; s++) {
-		pv = seg->area[i % seg->stripes].pv;
+	for (s = 0; s < seg->stripes; s++) {
+		pv = seg->area[s % seg->stripes].pv;
 		count = seg->len / seg->stripes;
 		pv->pe_allocated += count;
 	}
@@ -31,8 +31,8 @@ static void _put_extents(struct stripe_segment *seg)
 	int s, count;
 	struct physical_volume *pv;
 
-	for (s = 0; i < seg->stripes; s++) {
-		pv = seg->area[i % seg->stripes].pv;
+	for (s = 0; s < seg->stripes; s++) {
+		pv = seg->area[s % seg->stripes].pv;
 		count = seg->len / seg->stripes;
 
 		assert(pv->pe_allocated >= count);
@@ -50,7 +50,7 @@ static void _put_extents(struct stripe_segment *seg)
 static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
 			      struct physical_volume *pv, struct pv_area *pva)
 {
-	uint32_t count, remaining, i, start;
+	uint32_t count, remaining, start;
 	struct stripe_segment *seg;
 
 	start = pva->start;
@@ -93,7 +93,8 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
 }
 
 static int _alloc_striped(struct logical_volume *lv,
-			  struct list *pvms, uint32_t allocated)
+			  struct list *pvms, uint32_t allocated,
+			  uint32_t stripes, uint32_t stripe_size)
 {
 	/* FIXME: finish */
 	log_error("Striped allocation not implemented yet in LVM2.");
@@ -182,11 +183,12 @@ static int _alloc_simple(struct logical_volume *lv,
  * Chooses a correct allocation policy.
  */
 static int _allocate(struct volume_group *vg, struct logical_volume *lv,
-		     struct list *acceptable_pvs, uint32_t allocated)
+		     struct list *acceptable_pvs, uint32_t allocated,
+		     uint32_t stripes, uint32_t stripe_size)
 {
 	int r = 0;
 	struct pool *scratch;
-	struct list *pvms, *old_tail = lv->segments->p;
+	struct list *pvms, *old_tail = lv->segments.p, *segh;
 
 	if (!(scratch = pool_create(1024))) {
 		stack;
@@ -201,8 +203,8 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		goto out;
 	}
 
-	if (lv->stripes > 1)
-		r = _alloc_striped(lv, pvms, allocated);
+	if (stripes > 1)
+		r = _alloc_striped(lv, pvms, allocated, stripes, stripe_size);
 
 	else if (lv->status & ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
@@ -270,7 +272,6 @@ struct logical_volume *lv_create(const char *name,
 	struct lv_list *ll = NULL;
 	struct logical_volume *lv;
 	char dname[32];
-	int i;
 
 	if (!extents) {
 		log_error("Unable to create logical volume %s with no extents",
@@ -316,12 +317,11 @@ struct logical_volume *lv_create(const char *name,
 
 	lv->status = status;
 	lv->read_ahead = 0;
-	lv->stripes = stripes;
 	lv->size = extents * vg->extent_size;
 	lv->le_count = extents;
 	list_init(&lv->segments);
 
-	if (!_allocate(vg, lv, acceptable_pvs, 0u)) {
+	if (!_allocate(vg, lv, acceptable_pvs, 0u, stripes, stripe_size)) {
 		stack;
 		goto bad;
 	}
@@ -370,7 +370,9 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	return 1;
 }
 
-int lv_extend(struct logical_volume *lv, uint32_t extents,
+int lv_extend(struct logical_volume *lv,
+	      uint32_t stripes, uint32_t stripe_size,
+	      uint32_t extents,
 	      struct list *acceptable_pvs)
 {
 	uint32_t old_le_count = lv->le_count;
@@ -379,9 +381,10 @@ int lv_extend(struct logical_volume *lv, uint32_t extents,
 	lv->le_count += extents;
 	lv->size += extents * lv->vg->extent_size;
 
-	if (!_allocate(lv->vg, lv, acceptable_pvs, old_le_count)) {
+	if (!_allocate(lv->vg, lv, acceptable_pvs, old_le_count,
+		       stripes, stripe_size)) {
 		lv->le_count = old_le_count;
-		lv->size = old_lv_size;
+		lv->size = old_size;
 		return 0;
 	}
 
@@ -390,9 +393,7 @@ int lv_extend(struct logical_volume *lv, uint32_t extents,
 
 int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 {
-	int i;
 	struct list *segh;
-	struct stripe_segment *seg;
 
 	/* iterate through the lv's segments freeing off the pe's */
 	list_iterate (segh, &lv->segments)

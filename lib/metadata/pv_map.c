@@ -6,6 +6,7 @@
 
 #include "pv_map.h"
 #include "log.h"
+#include "hash.h"
 
 #include <assert.h>
 
@@ -56,13 +57,14 @@ static int _set_allocated(struct hash_table *hash,
 
 static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 {
-	struct list *lvh, *pvmh;
+	struct list *lvh, *pvmh, *segh;
 	struct logical_volume *lv;
 	struct pv_map *pvm;
 	uint32_t i, r = 0;
 	struct hash_table *hash;
+	struct stripe_segment *seg;
 
-	if (!(hash = hash_table_create(128))) {
+	if (!(hash = hash_create(128))) {
 		log_err("Couldn't create hash table for pv maps.");
 		return 0;
 	}
@@ -87,7 +89,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 				if (!_set_allocated(hash,
 					    seg->area[i % seg->stripes].pv,
 					    seg->area[i % seg->stripes].pe +
-						    (i / stripes))) {
+						    (i / seg->stripes))) {
 					stack;
 					goto out;
 				}
@@ -97,7 +99,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	r = 1;
 
  out:
-	hash_table_destroy(hash);
+	hash_destroy(hash);
 	return r;
 }
 
