@@ -105,6 +105,12 @@ is invoked.  By default tools append messages to the log file.
 .IP
 \fBverbose\fP \(em Default level (0-3) of messages sent to stdout or stderr.
 3 is the most verbose; 0 should produce the least output.
+.IP
+\fBsyslog\fP \(em Set to 1 (the default) to send log messages through syslog.
+Turn off by setting to 0.  If you set to an integer greater than one,
+this is used - unvalidated - as the facility.  The default is LOG_USER.  
+See /usr/include/sys/syslog.h for safe facility values to use.
+For example, LOG_LOCAL0 might be 128.
 .TP
 \fBbackup\fP \(em Configuration for metadata backups.
 .IP
@@ -159,3 +165,5 @@ Use 022 to allow other users to read the files by default.
 .SH SEE ALSO
 .BR lvm (8)
 .BR umask (2)
+.BR syslog (3)
+.BR syslog.conf (5)

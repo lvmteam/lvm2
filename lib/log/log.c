@@ -29,7 +29,8 @@ void fin_log() {
 }
 
 void fin_syslog() {
-	closelog();
+	if (_syslog)
+		closelog();
 	_syslog = 0;
 }
 
