@@ -76,12 +76,14 @@ int lvresize(int argc, char **argv)
 	}
 
 	if (arg_count(stripes_ARG)) {
-		log_print("Stripes not yet implemented in LVM2. Ignoring.");
-		stripes = arg_int_value(stripes_ARG, 1);
+		log_print("Varied striping not yet supported. Ignoring.");
+		/* FUTURE stripes = arg_int_value(stripes_ARG, 1); */
 	}
 
-	if (arg_count(stripesize_ARG))
-		stripesize = 2 * arg_int_value(stripesize_ARG, 0);
+	if (arg_count(stripesize_ARG)) {
+		log_print("Varied stripesize not yet supported. Ignoring.");
+		/* FUTURE stripesize = 2 * arg_int_value(stripesize_ARG, 0); */
+	}
 
 	if (!argc) {
 		log_error("Please provide the logical volume name");
