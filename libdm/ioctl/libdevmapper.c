@@ -63,6 +63,11 @@ static struct cmd_data _cmd_data_v3[] = {
 #define ALIGNMENT_V1 sizeof(int)
 #define ALIGNMENT 8
 
+/* FIXME Rejig library to record & use errno instead */
+#ifndef DM_EXISTS_FLAG
+#  define DM_EXISTS_FLAG 0x00000004
+#endif
+
 static void *_align(void *ptr, unsigned int a)
 {
 	register unsigned long agn = --a;
@@ -740,9 +745,14 @@ int dm_task_run(struct dm_task *dmt)
 	if (dmt->type == DM_DEVICE_TABLE)
 		dmi->flags |= DM_STATUS_TABLE_FLAG;
 
+	dmi->flags |= DM_EXISTS_FLAG;	/* FIXME */
 	log_debug("dm %s %s %s %s", _cmd_data_v3[dmt->type].name, dmi->name,
 		  dmi->uuid, dmt->newname ? dmt->newname : "");
 	if (ioctl(fd, command, dmi) < 0) {
+		if (errno == ENXIO && dmt->type == DM_DEVICE_INFO) {
+			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
+			goto ignore_error;
+		}
 		if (_log_suppress)
 			log_verbose("device-mapper ioctl cmd %d failed: %s",
 				    _IOC_NR(command), strerror(errno));
@@ -752,6 +762,7 @@ int dm_task_run(struct dm_task *dmt)
 		goto bad;
 	}
 
+      ignore_error:
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev));
