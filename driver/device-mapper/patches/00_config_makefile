@@ -1,0 +1,30 @@
+--- uml_build/arch/um/config.in.orig	Tue Jan  2 14:33:42 2001
++++ uml_build/arch/um/config.in	Tue Jan  2 14:35:42 2001
+@@ -15,6 +15,8 @@
+ bool 'Prompt for development and/or incomplete code/drivers' CONFIG_EXPERIMENTAL
+ endmenu
+ 
++source drivers/md/Config.in
++
+ mainmenu_option next_comment
+ comment 'Processor features'
+ bool 'Symmetric multi-processing support' CONFIG_SMP
+--- linux/drivers/md/Config.in.orig	Tue Aug 21 14:18:30 2001
++++ linux/drivers/md/Config.in	Tue Aug 21 14:19:08 2001
+@@ -14,4 +14,6 @@
+ 
+ dep_tristate ' Logical volume manager (LVM) support' CONFIG_BLK_DEV_LVM $CONFIG_MD
+ 
++dep_tristate ' Device mapper support' CONFIG_BLK_DEV_DM $CONFIG_MD
++
+ endmenu
+--- linux/drivers/md/Makefile.orig	Tue Aug 21 14:19:14 2001
++++ linux/drivers/md/Makefile	Tue Aug 21 14:20:06 2001
+@@ -19,6 +19,7 @@
+ obj-$(CONFIG_MD_RAID5)		+= raid5.o xor.o
+ obj-$(CONFIG_BLK_DEV_MD)	+= md.o
+ obj-$(CONFIG_BLK_DEV_LVM)	+= lvm-mod.o
++obj-$(CONFIG_BLK_DEV_DM)	+= dm.o dm-table.o dm-target.o dm-fs.o
+ 
+ include $(TOPDIR)/Rules.make
+ 
