@@ -24,8 +24,6 @@ INCLUDES = -I$(interface)
 LIB_STATIC = $(interface)/libdevmapper.a
 LIB_SHARED = $(interface)/libdevmapper.so
 
-TARGETS = $(LIB_STATIC) $(LIB_SHARED)
-
 include ../make.tmpl
 
 .PHONY: install_dynamic install_static \
