@@ -181,6 +181,22 @@ void hash_iterate(struct hash_table *t, iterate_fn f)
 			f(c->data);
 }
 
+void hash_wipe(struct hash_table *t)
+{
+	struct hash_node **c, *old;
+	int i;
+
+	for (i = 0; i < t->num_slots; i++) {
+		c = &t->slots[i];
+		while (*c) {
+			old = *c;
+			*c = (*c)->next;
+			dbg_free(old);
+			t->num_nodes--;
+		}
+	}
+}
+
 char *hash_get_key(struct hash_table *t, struct hash_node *n)
 {
 	return n->key;

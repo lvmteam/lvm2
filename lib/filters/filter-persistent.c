@@ -42,8 +42,8 @@ int persistent_filter_wipe(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
-	hash_destroy(pf->devices);
-	return _init_hash(pf);
+	hash_wipe(pf->devices);
+	return 1;
 }
 
 static int _read_array(struct pfilter *pf, struct config_file *cf,
@@ -53,8 +53,8 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 	struct config_value *cv;
 
 	if (!(cn = find_config_node(cf->root, path, '/'))) {
-		log_verbose("Couldn't find 'valid_devices' array in '%s'",
-			 pf->file);
+		log_very_verbose("Couldn't find %s array in '%s'",
+			 path, pf->file);
 		return 0;
 	}
 
@@ -64,7 +64,7 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 	 */
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type != CFG_STRING) {
-			log_verbose("Valid_devices array contains a value "
+			log_verbose("Devices array contains a value "
 				 "which is not a string ... ignoring");
 			continue;
 		}
@@ -93,8 +93,10 @@ int persistent_filter_load(struct dev_filter *f)
 		goto out;
 	}
 
-	if (_read_array(pf, cf, "/valid_devices", PF_GOOD_DEVICE) &&
-	    _read_array(pf, cf, "/invalid_devices", PF_BAD_DEVICE))
+	_read_array(pf, cf, "persistent_filter_cache/valid_devices", PF_GOOD_DEVICE);
+	_read_array(pf, cf, "persistent_filter_cache/invalid_devices", PF_BAD_DEVICE);
+
+	if (hash_get_num_entries(pf->devices))
 		r = 1;
 
  out:
@@ -109,8 +111,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 	int first = 1;
 	struct hash_node *n;
 
-	fprintf(fp, "%s=[\n", path);
-	for (n = hash_get_first(pf->devices); n;
+	for (n = hash_get_first(pf->devices); n; 
 	     n = hash_get_next(pf->devices, n)) {
 		d = hash_get_data(pf->devices, n);
 
@@ -119,13 +120,18 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 
 		if (!first)
 			fprintf(fp, ",\n");
-		else
+		else {
+			fprintf(fp, "\t%s=[\n", path);
 			first = 0;
+		}
 
-		fprintf(fp, "\t\"%s\"", hash_get_key(pf->devices, n));
+		fprintf(fp, "\t\t\"%s\"", hash_get_key(pf->devices, n));
 	}
 
-	fprintf(fp, "\n]\n");
+	if (!first)
+		fprintf(fp, "\n\t]\n");
+
+	return;
 }
 
 int persistent_filter_dump(struct dev_filter *f)
@@ -143,10 +149,12 @@ int persistent_filter_dump(struct dev_filter *f)
 	}
 
 	fprintf(fp, "# This file is automatically maintained by lvm.\n\n");
+	fprintf(fp, "persistent_filter_cache {\n");
 
 	_write_array(pf, fp, "valid_devices", PF_GOOD_DEVICE);
 	_write_array(pf, fp, "invalid_devices", PF_BAD_DEVICE);
 
+	fprintf(fp, "}\n");
 	fclose(fp);
 	return 1;
 }
