@@ -49,7 +49,7 @@ int driver_version(char *version, size_t size)
 
 	r = 1;
 
- out:
+      out:
 	dm_task_destroy(dmt);
 
 	return r;
@@ -151,52 +151,6 @@ static int _lv_suspend(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_rename(const char *old_name, struct logical_volume *lv)
-{
-#if 0
-	int r = 0;
-	char new_name[PATH_MAX];
-	struct dm_task *dmt;
-
-	if (test_mode()) {
-		_skip("Rename '%s' to '%s'.", old_name, lv->name);
-		return 0;
-	}
-
-	if (!(dmt = setup_dm_task(old_name, DM_DEVICE_RENAME))) {
-		stack;
-		return 0;
-	}
-
-	if (!build_dm_name(new_name, sizeof(new_name), "",
-			   lv->vg->name, lv->name)) {
-		stack;
-		return 0;
-	}
-
-	if (!dm_task_set_newname(dmt, new_name)) {
-		stack;
-		r = 0;
-		goto end;
-	}
-
-	if (!dm_task_run(dmt)) {
-		stack;
-		r = 0;
-		goto end;
-	}
-
-	fs_rename_lv(old_name, lv);
-
- end:
-	dm_task_destroy(dmt);
-	return r;
-#else
-	log_err("lv_rename not implemented yet.");
-	return 1;
-#endif
-}
-
 /*
  * These two functions return the number of LVs in the state,
  * or -1 on error.
@@ -278,17 +232,16 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-        if (!lv_info(lv, &info)) {
-                stack;
-                return 0;
-        }
+	if (!lv_info(lv, &info)) {
+		stack;
+		return 0;
+	}
 
 	if (info.exists && !info.suspended)
 		_lv_suspend(lv);
 
 	return 1;
 }
-
 
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 {
@@ -303,10 +256,10 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-        if (!lv_info(lv, &info)) {
-                stack;
-                return 0;
-        }
+	if (!lv_info(lv, &info)) {
+		stack;
+		return 0;
+	}
 
 	if (info.exists && info.suspended)
 		_lv_activate(lv);
@@ -327,10 +280,10 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-        if (!lv_info(lv, &info)) {
-                stack;
-                return 0;
-        }
+	if (!lv_info(lv, &info)) {
+		stack;
+		return 0;
+	}
 
 	if (info.exists)
 		_lv_deactivate(lv);
@@ -351,14 +304,13 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-        if (!lv_info(lv, &info)) {
-                stack;
-                return 0;
-        }
+	if (!lv_info(lv, &info)) {
+		stack;
+		return 0;
+	}
 
 	if (!info.exists || info.suspended)
 		_lv_activate(lv);
 
 	return 1;
 }
-

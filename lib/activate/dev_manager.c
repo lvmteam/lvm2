@@ -77,9 +77,13 @@ struct dev_layer {
 	/*
 	 * Setup the dm_task.
 	 */
-	int (*populate)(struct dev_manager * dm,
-			struct dm_task * dmt, struct dev_layer * dl);
+	int (*populate) (struct dev_manager * dm,
+			 struct dm_task * dmt, struct dev_layer * dl);
 	struct dm_info info;
+
+	/* lvid plus layer */
+	char *dlid;
+
 	struct logical_volume *lv;
 
 	/*
@@ -183,7 +187,7 @@ static char *_build_name(struct pool *mem, const char *vg,
 	_count_hyphens(vg, &len, &hyphens);
 	_count_hyphens(lv, &len, &hyphens);
 
-	if (layer)
+	if (layer && *layer)
 		_count_hyphens(layer, &len, &hyphens);
 
 	len += hyphens + 2;
@@ -198,13 +202,51 @@ static char *_build_name(struct pool *mem, const char *vg,
 	*out++ = '-';
 	_quote_hyphens(&out, lv);
 
-	if (layer) {
+	if (layer && *layer) {
 		*out++ = '-';
 		_quote_hyphens(&out, layer);
 	}
 	*out = '\0';
 
 	return r;
+}
+
+/* Find start of LV component in hyphenated name */
+static char *_find_lv_name(char *vg)
+{
+	char *c = vg;
+
+	while (*c && *(c + 1)) {
+		if (*c == '-') {
+			if (*(c + 1) == '-')
+				c++;
+			else
+				return (c + 1);
+		}
+		c++;
+	}
+
+	return NULL;
+}
+
+static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
+{
+	char *dlid;
+	int len;
+
+	if (!layer)
+		layer = "";
+
+	len = strlen(lvid) + strlen(layer) + 2;
+
+	if (!(dlid = pool_alloc(mem, len))) {
+		stack;
+		return NULL;
+	}
+
+	sprintf(dlid, "%s%s%s", lvid, (*layer) ? "-" : "", layer);
+
+	return dlid;
 }
 
 /*
@@ -223,16 +265,21 @@ static struct dm_task *_setup_task(const char *name, int task)
 	return dmt;
 }
 
-static int _info(const char *name, struct dm_info *info)
+static int _info(const char *name, const char *uuid, struct dm_info *info,
+		 struct pool *mem, char **uuid_out)
 {
 	int r = 0;
 	struct dm_task *dmt;
+	const char *u;
 
 	log_debug("Getting device info for %s", name);
 	if (!(dmt = _setup_task(name, DM_DEVICE_INFO))) {
 		stack;
 		return 0;
 	}
+
+	if (uuid)
+		dm_task_set_uuid(dmt, uuid);
 
 	if (!dm_task_run(dmt)) {
 		stack;
@@ -243,7 +290,46 @@ static int _info(const char *name, struct dm_info *info)
 		stack;
 		goto out;
 	}
+
+	if (info->exists && uuid_out) {
+		if (!(u = dm_task_get_uuid(dmt))) {
+			stack;
+			goto out;
+		}
+		*uuid_out = pool_strdup(mem, u);
+	}
 	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
+{
+	int r = 1;
+	struct dm_task *dmt;
+
+	log_verbose("Renaming %s to %s", dl->name, newname);
+
+	if (!(dmt = _setup_task(dl->name, DM_DEVICE_RENAME))) {
+		stack;
+		return 0;
+	}
+
+	if (!dm_task_set_newname(dmt, newname)) {
+		stack;
+		r = 0;
+		goto out;
+	}
+
+	if (!(r = dm_task_run(dmt)))
+		log_error("Couldn't rename device '%s'.", dl->name);
+
+	if (r && _get_flag(dl, VISIBLE))
+		fs_rename_lv(dl->lv, newname, _find_lv_name(dl->name));
+
+	dl->name = newname;
 
       out:
 	dm_task_destroy(dmt);
@@ -252,7 +338,7 @@ static int _info(const char *name, struct dm_info *info)
 
 static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 {
-	int r;
+	int r = 1;
 	struct dm_task *dmt;
 
 	log_verbose("Loading %s", dl->name);
@@ -266,28 +352,28 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	 */
 	if (!dl->populate(dm, dmt, dl)) {
 		log_error("Couldn't populate device '%s'.", dl->name);
-		return 0;
+		r = 0;
+		goto out;
 	}
 
-	if (_get_flag(dl, VISIBLE)) {
-		dm_task_set_uuid(dmt, dl->lv->lvid.s);
-	}
+	dm_task_set_uuid(dmt, dl->dlid);
 
 	if (!(r = dm_task_run(dmt)))
 		log_error("Couldn't load device '%s'.", dl->name);
 
 	if (!dm_task_get_info(dmt, &dl->info)) {
 		stack;
-		return 0;
+		r = 0;
+		goto out;
 	}
-
-	dm_task_destroy(dmt);
 
 	if (r && _get_flag(dl, VISIBLE))
 		fs_add_lv(dl->lv, dl->name);
 
 	_clear_flag(dl, DIRTY);
 
+      out:
+	dm_task_destroy(dmt);
 	return r;
 }
 
@@ -480,7 +566,7 @@ static int _populate_origin(struct dev_manager *dm,
 
 	if (lvm_snprintf(params, sizeof(params), "%s/%s", dm_dir(), real) == -1) {
 		log_error("Couldn't create origin device parameters for '%s'.",
-			  dl->name);
+			  real);
 		return 0;
 	}
 
@@ -503,7 +589,7 @@ static int _populate_snapshot(struct dev_manager *dm,
 	struct snapshot *s;
 
 	if (!(s = find_cow(dl->lv))) {
-		log_error("Couldn't find snapshot for '%s'.", dl->name);
+		log_error("Couldn't find snapshot for '%s'.", dl->lv->name);
 		return 0;
 	}
 
@@ -597,7 +683,7 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	/*
 	 * Try and get some info on this device.
 	 */
-	if (!_info(name, info)) {
+	if (!_info(name, lv->lvid.s, info, NULL, NULL)) {
 		stack;
 		return 0;
 	}
@@ -617,6 +703,7 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
+	/* FIXME Recurse */
 	if (!_suspend_or_resume(name, SUSPEND)) {
 		stack;
 		return 0;
@@ -625,9 +712,11 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 	return 1;
 }
 
-static struct dev_layer *_create_dev(struct dev_manager *dm, char *name)
+static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
+				     char *dlid)
 {
 	struct dev_layer *dl;
+	char *uuid;
 
 	if (!(dl = pool_zalloc(dm->mem, sizeof(*dl)))) {
 		stack;
@@ -636,15 +725,20 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name)
 
 	dl->name = name;
 
-	if (!_info(dl->name, &dl->info)) {
+	if (!_info(dl->name, dlid, &dl->info, dm->mem, &uuid)) {
 		stack;
 		return NULL;
 	}
 
+	if (dl->info.exists)
+		dl->dlid = uuid;
+	else
+		dl->dlid = dlid;
+
 	list_init(&dl->pre_create);
 	list_init(&dl->pre_active);
 
-	if (!hash_insert(dm->layers, dl->name, dl)) {
+	if (!hash_insert(dm->layers, dl->dlid, dl)) {
 		stack;
 		return NULL;
 	}
@@ -656,7 +750,7 @@ static struct dev_layer *_create_layer(struct dev_manager *dm,
 				       const char *layer,
 				       struct logical_volume *lv)
 {
-	char *name;
+	char *name, *dlid;
 	struct dev_layer *dl;
 
 	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, layer))) {
@@ -664,8 +758,13 @@ static struct dev_layer *_create_layer(struct dev_manager *dm,
 		return NULL;
 	}
 
-	if (!(dl = hash_lookup(dm->layers, name)) &&
-	    !(dl = _create_dev(dm, name))) {
+	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, layer))) {
+		stack;
+		return NULL;
+	}
+
+	if (!(dl = hash_lookup(dm->layers, dlid)) &&
+	    !(dl = _create_dev(dm, name, dlid))) {
 		stack;
 		return NULL;
 	}
@@ -679,18 +778,18 @@ static struct dev_layer *_create_layer(struct dev_manager *dm,
  * Finds the specified layer.
  */
 static struct dev_layer *_lookup(struct dev_manager *dm,
-				 const char *lv, const char *layer)
+				 const char *lvid, const char *layer)
 {
-	char *name;
+	char *dlid;
 	struct dev_layer *dl;
 
-	if (!(name = _build_name(dm->mem, dm->vg_name, lv, layer))) {
+	if (!(dlid = _build_dlid(dm->mem, lvid, layer))) {
 		stack;
 		return NULL;
 	}
 
-	dl = hash_lookup(dm->layers, name);
-	pool_free(dm->mem, name);
+	dl = hash_lookup(dm->layers, dlid);
+	pool_free(dm->mem, dlid);
 	return dl;
 }
 
@@ -715,7 +814,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 			       struct logical_volume *lv)
 {
 	struct dev_layer *dl;
-	char *real_name;
+	char *real_dlid;
 	struct str_list *sl;
 
 	if (!(dl = _create_layer(dm, "real", lv))) {
@@ -725,7 +824,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 	dl->populate = _populate_vanilla;
 	_clear_flag(dl, VISIBLE);
 
-	real_name = dl->name;
+	real_dlid = dl->dlid;
 
 	if (!(dl = _create_layer(dm, NULL, lv))) {
 		stack;
@@ -740,7 +839,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!(sl->str = pool_strdup(dm->mem, real_name))) {
+	if (!(sl->str = pool_strdup(dm->mem, real_dlid))) {
 		stack;
 		return 0;
 	}
@@ -777,7 +876,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	 * cow
 	 */
 	struct dev_layer *dl;
-	char *cow_name;
+	char *cow_dlid;
 	struct str_list *sl;
 
 	if (!(dl = _create_layer(dm, "cow", lv))) {
@@ -787,7 +886,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	dl->populate = _populate_vanilla;
 	_clear_flag(dl, VISIBLE);
 
-	cow_name = dl->name;
+	cow_dlid = dl->dlid;
 
 	if (!(dl = _create_layer(dm, NULL, lv))) {
 		stack;
@@ -802,7 +901,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!(sl->str = pool_strdup(dm->mem, cow_name))) {
+	if (!(sl->str = pool_strdup(dm->mem, cow_dlid))) {
 		stack;
 		return 0;
 	}
@@ -815,8 +914,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!(sl->str = _build_name(dm->mem, dm->vg_name,
-				    s->origin->name, "real"))) {
+	if (!(sl->str = _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
 		stack;
 		return 0;
 	}
@@ -866,14 +964,14 @@ static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
 			      int flag)
 {
 	struct list *sh;
-	char *name;
+	char *dlid;
 	struct dev_layer *dep;
 
 	list_iterate(sh, &dl->pre_create) {
-		name = list_item(sh, struct str_list)->str;
+		dlid = list_item(sh, struct str_list)->str;
 
-		if (!(dep = hash_lookup(dm->layers, name))) {
-			log_error("Couldn't find device layer '%s'.", name);
+		if (!(dep = hash_lookup(dm->layers, dlid))) {
+			log_error("Couldn't find device layer '%s'.", dlid);
 			return 0;
 		}
 
@@ -923,7 +1021,7 @@ static int _mark_lvs(struct dev_manager *dm, struct list *lvs, int flag)
 	list_iterate(lvh, lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
-		if (!(dl = _lookup(dm, lv->name, NULL))) {
+		if (!(dl = _lookup(dm, lv->lvid.s, NULL))) {
 			stack;
 			return 0;
 		}
@@ -947,14 +1045,15 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 {
 	struct list *sh;
 	struct dev_layer *dep;
-	char *name;
+	char *dlid, *newname, *suffix;
+	int len;
 	int suspended = 0;
 
 	list_iterate(sh, &dl->pre_create) {
-		name = list_item(sh, struct str_list)->str;
+		dlid = list_item(sh, struct str_list)->str;
 
-		if (!(dep = hash_lookup(dm->layers, name))) {
-			log_error("Couldn't find device layer '%s'.", name);
+		if (!(dep = hash_lookup(dm->layers, dlid))) {
+			log_error("Couldn't find device layer '%s'.", dlid);
 			return 0;
 		}
 
@@ -964,9 +1063,30 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 		}
 		suspended = 1;
 
+		if (!strcmp(dep->dlid, dl->dlid)) {
+			log_error("BUG: pre-create loop detected (%s)", dlid);
+			return 0;
+		}
+
 		if (!_create_rec(dm, dep)) {
 			stack;
 			return 0;
+		}
+	}
+
+	/* Rename? */
+	if (dl->info.exists) {
+		newname = _build_name(dm->mem, dm->vg_name, dl->lv->name, NULL);
+		len = strlen(newname);
+		if (strncmp(newname, dl->name, len)) {
+			if ((suffix = rindex(dl->dlid, '-')))
+				suffix++;
+			newname = _build_name(dm->mem, dm->vg_name,
+					      dl->lv->name, suffix);
+			if (!_rename(dm, dl, newname)) {
+				stack;
+				return 0;
+			}
 		}
 	}
 
@@ -1159,7 +1279,7 @@ static int _add_existing_layer(struct dev_manager *dm, const char *name)
 		return 0;
 	}
 
-	if (!(dl = _create_dev(dm, copy))) {
+	if (!(dl = _create_dev(dm, copy, ""))) {
 		stack;
 		return 0;
 	}
@@ -1270,21 +1390,20 @@ static void _remove_lvs(struct list *head, struct logical_volume *origin)
 static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 {
 	int found;
-	char *name;
+	char *dlid;
 	struct list *lvh;
 	struct logical_volume *lv;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
-		name = _build_name(dm->mem, dm->vg_name, lv->name, NULL);
-		if (!name) {
+		if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, NULL))) {
 			stack;
 			return 0;
 		}
 
-		found = hash_lookup(dm->layers, name) ? 1 : 0;
-		pool_free(dm->mem, name);
+		found = hash_lookup(dm->layers, dlid) ? 1 : 0;
+		pool_free(dm->mem, dlid);
 
 		if (found) {
 			log_debug("Found active lv %s", lv->name);
@@ -1299,7 +1418,7 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 	return 1;
 }
 
-static int _activate(struct dev_manager *dm, struct logical_volume *lv, 
+static int _activate(struct dev_manager *dm, struct logical_volume *lv,
 		     activate_t activate)
 {
 	if (!_scan_existing_devices(dm)) {
@@ -1341,4 +1460,3 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	return _activate(dm, lv, DEACTIVATE);
 }
-
