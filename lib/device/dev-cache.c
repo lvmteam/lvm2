@@ -313,6 +313,17 @@ static int _insert(const char *path, int rec)
 	}
 
 	if (S_ISDIR(info.st_mode)) {	/* add a directory */
+		/* check it's not a symbolic link */
+		if (lstat(path, &info) < 0) {
+			log_sys_very_verbose("lstat", path);
+			return 0;
+		}
+
+		if (S_ISLNK(info.st_mode)) {
+			log_debug("%s: Symbolic link to directory", path);
+			return 0;
+		}
+
 		if (rec)
 			r = _insert_dir(path);
 
@@ -471,7 +482,7 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 		}
 		if (quiet)
 			log_debug("Path %s no longer valid for device(%d,%d)",
-			  	  name, (int) MAJOR(dev->dev),
+				  name, (int) MAJOR(dev->dev),
 				  (int) MINOR(dev->dev));
 		else
 			log_error("Path %s no longer valid for device(%d,%d)",
