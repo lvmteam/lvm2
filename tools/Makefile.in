@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2001 Sistina Software
+# Copyright (C) 2001-2003 Sistina Software
 #
 # This LVM library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
@@ -27,8 +27,8 @@ SOURCES=\
 	lvcreate.c \
 	lvdisplay.c \
 	lvextend.c \
-	lvmcmdline.c \
 	lvmchange.c \
+	lvmcmdline.c \
 	lvmdiskscan.c \
 	lvreduce.c \
 	lvremove.c \
@@ -67,25 +67,47 @@ TARGETS=\
 
 LVMLIBS=-llvm
 
+INSTALL_TARGETS=\
+	install_lvm_tools
+
+CLEAN_TARGETS = liblvm2cmd.so liblvm2cmd.a
+
+ifeq ("@CMDLIB@", "yes")
+	TARGETS += liblvm2cmd.so
+	INSTALL_TARGETS += install_cmdlib
+endif
+
 ifeq ("@DEVMAPPER@", "yes")
 	LVMLIBS += -ldevmapper
 endif
 
 include ../make.tmpl
 
-ifeq ("@STATIC_LINK@", "no")
-	LVMLIBS += -rdynamic
-endif
-
 lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o lvm $(OBJECTS) lvm.o $(LD_FLAGS) -L$(top_srcdir)/lib \
-	      -L$(DESTDIR)/lib $(LVMLIBS) $(LIBS)
+	$(CC) -o lvm $(OBJECTS) lvm.o $(LD_FLAGS) $(LVMLIBS) $(LIBS)
+
+liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS)
+	cat $(top_srcdir)/lib/liblvm.a > $@
+	$(AR) rs $@ $(OBJECTS)
+
+liblvm2cmd.so: liblvm2cmd.a $(LD_DEPS)
+	$(CC) -o liblvm2cmd.so $(SOFLAG) $(CLDFLAGS) \
+		$(CLDWHOLEARCHIVE) liblvm2cmd.a $(CLDNOWHOLEARCHIVE)
 
 .commands: commands.h cmdnames.h Makefile
 	$(CC) -E -P cmdnames.h 2> /dev/null | \
 		egrep -v '^ *(|#.*|dumpconfig|help|pvdata|version) *$$' > .commands
 
-install: $(TARGETS)
+.PHONY: install_lvm_tools install_cmdlib
+
+install_cmdlib: $(TARGETS)
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) liblvm2cmd.so \
+		$(libdir)/liblvm2cmd.so.$(LIB_VERSION)
+	$(LN_S) -f liblvm2cmd.so.$(LIB_VERSION) $(libdir)/liblvm2cmd.so
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 lvm2cmd.h \
+		$(includedir)/lvm2cmd.h
+
+install_lvm_tools: $(TARGETS)
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm \
 		$(sbindir)/lvm
 	@echo Creating symbolic links for individual commands in $(sbindir)
@@ -95,4 +117,6 @@ install: $(TARGETS)
 			$(LN_S) -f lvm $$v; \
 		done; \
 	)
+
+install: $(INSTALL_TARGETS)
 

@@ -29,11 +29,17 @@ MSGFMT = @MSGFMT@
 LN_S = @LN_S@
 LIBS = @LIBS@
 CFLAGS += @CFLAGS@
+CLDFLAGS += @CLDFLAGS@
+CLDWHOLEARCHIVE += @CLDWHOLEARCHIVE@
+CLDNOWHOLEARCHIVE += @CLDNOWHOLEARCHIVE@
+LD_DEPS += @LD_DEPS@
+SOFLAG += @SOFLAG@
 
 # Setup directory variables
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = $(DESTDIR)@bindir@
+includedir = $(DESTDIR)@includedir@
 libdir = $(DESTDIR)@libdir@
 sbindir = $(DESTDIR)@sbindir@
 infodir = $(DESTDIR)@infodir@
@@ -42,61 +48,68 @@ localedir = $(DESTDIR)@LOCALEDIR@
 
 # setup misc variables
 # define the ownership variables for the binaries and man pages
-OWNER=@OWNER@
-GROUP=@GROUP@
+OWNER = @OWNER@
+GROUP = @GROUP@
 
 # The number of jobs to run, if blank, defaults to the make standard
 ifndef MAKEFLAGS
 MAKEFLAGS = @JOBS@
 endif
 
-SUFFIXES=
-SUFFIXES=.c .d .o .so .po .pot .mo
+SUFFIXES = .c .d .o .so .a .po .pot .mo
 
-CFLAGS+=-fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline
+CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline
 
-#CFLAGS+=-W -Wconversion -Wpointer-arith -Wredundant-decls -Wbad-function-cast -Wcast-qual -Wmissing-noreturn
+#CFLAGS += -W -Wconversion -Wpointer-arith -Wredundant-decls -Wbad-function-cast -Wcast-qual -Wmissing-noreturn
 
 ifeq ("@DEBUG@", "yes")
-  CFLAGS+=-g -fno-omit-frame-pointer -DDEBUG_MEM -DDEBUG
+  CFLAGS += -g -fno-omit-frame-pointer -DDEBUG
+  CFLAGS += -DDEBUG_MEM
 else
-  CFLAGS+=-O2
+  CFLAGS += -O2
 endif
 
 ifeq ("@INTL@", "yes")
-  CFLAGS+=-DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
+  CFLAGS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
 endif
 
-#CFLAGS+=-DDEBUG_POOL
-#CFLAGS+=-DBOUNDS_CHECK
+LD_FLAGS += -L$(top_srcdir)/lib -L$(libdir)
 
-#CFLAGS+=-pg
-#LD_FLAGS=-pg
+ifeq ("@STATIC_LINK@", "yes")
+  LD_FLAGS += -static
+endif
+
+#CFLAGS += -DDEBUG_POOL
+#CFLAGS += -DBOUNDS_CHECK
+
+#CFLAGS += -pg
+#LD_FLAGS += -pg
+
+STRIP=
+#STRIP = -s
 
 LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
 		 awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
-INCLUDES+=-I. -I$(top_srcdir)/include
-INC_LNS=$(top_srcdir)/include/.symlinks_created
+INCLUDES += -I. -I$(top_srcdir)/include
 
 ifdef DESTDIR
-  INCLUDES+=-I$(DESTDIR)/usr/include
+  INCLUDES += -I$(DESTDIR)/usr/include
 endif
 
-STRIP=
-#STRIP=-s
+INC_LNS = $(top_srcdir)/include/.symlinks_created
 
-DEPS=$(top_srcdir)/make.tmpl Makefile $(INC_LNS)
+DEPS = $(top_srcdir)/make.tmpl $(top_srcdir)/VERSION Makefile $(INC_LNS)
 
-OBJECTS=$(SOURCES:%.c=%.o)
-POTFILES=$(SOURCES:%.c=%.pot)
+OBJECTS = $(SOURCES:%.c=%.o)
+POTFILES = $(SOURCES:%.c=%.pot)
 
 SUBDIRS.install := $(SUBDIRS:=.install)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
 SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 
-.PHONY: all install pofile distclean clean 
+.PHONY: all install pofile distclean clean
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile)
 
@@ -123,11 +136,13 @@ $(SUBDIRS.pofile):
 	$(MAKE) -C $(@:.pofile=) pofile
 endif
 
+$(TARGETS): $(OBJECTS)
+
 %.o: %.c
 	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
 
 %.pot: %.c
-	$(CC) -E -P $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
+	$(CC) -E $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
 		$(CFLAGS) $< > $@
 
 %.pot: Makefile
@@ -135,30 +150,40 @@ endif
 %.so: %.o
 	$(CC) -c $(INCLUDES) $(CFLAGS) %< -o $@
 
-%.so: $(OBJECTS)
-	$(CC) -shared -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
-	-Wl,--version-script,.export.sym $(OBJECTS) -o $@
+%.so: $(OBJECTS) $(LD_DEPS)
+	$(CC) $(SOFLAG) -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
+	$(CLDFLAGS) $(OBJECTS) -o $@
+
+$(LIB_STATIC): $(OBJECTS)
+	$(RM) $@
+	$(AR) rs $@ $(OBJECTS)
 
 %.d: %.c
-	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
-		DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
-		$(CC) -MM $(INCLUDES) $(CFLAGS) $< | \
-		sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" \
-			> $@; \
-		[ -s $@ ] || $(RM) $@
+	set -e; \
+	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
+	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
+	$(CC) -MM $(INCLUDES) $(CFLAGS) $< | \
+	sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" > $@; \
+	[ -s $@ ] || $(RM) $@
 
 %.mo: %.po
 	$(MSGFMT) -o $@ $<
 
 clean: $(SUBDIRS.clean)
-	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d) \
-	$(SOURCES:%.c=%.pot)
+	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
+	      $(SOURCES:%.c=%.pot) $(LD_DEPS)
 
 distclean: $(SUBDIRS.distclean)
-	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d)
-	$(RM) $(SOURCES:%.c=%.pot)
-	$(RM) config.cache config.log config.status
-	$(RM) Makefile make.tmpl version.h core lvm2.po
+	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
+	      $(SOURCES:%.c=%.pot) $(LD_DEPS) \
+	      config.cache config.log config.status \
+	      Makefile make.tmpl core \
+	      version.h lvm2.po
+
+.export.sym: .exported_symbols
+	set -e; (echo "Base {"; echo "	global:"; \
+		 sed "s/^/		/;s/$$/;/" < $<; \
+		 echo "	local:"; echo "		*;"; echo "};") > $@
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),distclean)
