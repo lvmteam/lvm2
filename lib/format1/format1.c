@@ -8,6 +8,7 @@
 #include "dbg_malloc.h"
 #include "pool.h"
 #include "hash.h"
+#include "limits.h"
 #include "list.h"
 #include "log.h"
 #include "display.h"
@@ -406,9 +407,18 @@ static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 
 static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
 {
+	uint64_t max_size = UINT_MAX;
+
 	if (lv->le_count > MAX_LE_TOTAL) {
 		log_error("logical volumes cannot contain more than "
 			  "%d extents.", MAX_LE_TOTAL);
+		return 0;
+	}
+printf ( "lv->size: %" PRIu64 "  max_size: %" PRIu64 "\n", lv->size, max_size);
+	if (lv->size > max_size) {
+                char *dummy = display_size(max_size, SIZE_SHORT);
+		log_error("logical volumes cannot be larger than %s", dummy);
+		dbg_free(dummy);
 		return 0;
 	}
 
