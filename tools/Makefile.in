@@ -29,7 +29,7 @@ TARGETS=\
 
 include ../make.tmpl
 
-lvm: $(OBJECTS) 
+lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
 	$(CC) -o lvm $(OBJECTS) -L$(top_srcdir)/lib -llvm $(EXTRA_LIBS)
 
 install:
