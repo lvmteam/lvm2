@@ -111,6 +111,11 @@ static int _insert_dev(const char *path, dev_t d)
 		return 0;
 	}
 
+	if (!hash_insert(_cache.names, path, dev)) {
+		log_err("Couldn't add name to hash in dir cache.");
+		return 0;
+	}
+
 	return 1;
 }
 
