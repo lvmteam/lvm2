@@ -65,7 +65,12 @@ int dev_get_sectsize(struct device *dev, uint32_t *size)
 int dev_open(struct device *dev, int flags)
 {
 	struct stat buf;
-	const char *name = dev_name(dev);
+	const char *name = dev_name_confirmed(dev);
+
+	if (!name) {
+		stack;
+		return 0;
+	}
 
 	if (dev->fd >= 0) {
 		log_error("Device '%s' has already been opened", name);
