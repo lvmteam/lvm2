@@ -435,7 +435,6 @@ static int _check_dev(struct dev_mgr *dm, struct stat *stat_b)
 {
 	int ret = 1;
 	int seek_major = MAJOR(stat_b->st_rdev);
-	struct dev_n *node;
 
 	if (stat_b == NULL)
 		ret = -LOCAL_EPARAM;
@@ -459,7 +458,6 @@ static int _scan_proc_dev(struct dev_mgr *dm)
 	int i, j = 0;
 	int line_maj = 0;
 	int blocksection = 0;
-	struct dev_n * dev_node= NULL;
 	int dev_len = 0;
 
 	if ((procdevices = fopen("/proc/devices", "r")) != NULL) {
