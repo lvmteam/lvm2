@@ -25,6 +25,104 @@
 #include <linux/ctype.h>
 #include <linux/fs.h>
 
+extern struct dmfs_address_space_operations;
+
+struct dentry *dmfs_verify_name(struct inode *dir, char *name)
+{
+	struct nameidata nd;
+	int err = -ENOENT;
+
+	if (path_init(name, LOOKUP_FOLLOW, &nd))
+		err = path_walk(path, &nd);
+
+	if (err)
+		return ERR_PTR(err);
+
+	if (nd.mnt->mnt->sb != dir->i_sb)
+		goto err;
+
+	if (nd.dentry->d_parent != dir)
+		goto err;
+
+	dget(nd.dentry);
+	path_release(nd);
+	return nd.dentry;
+err:
+	path_release(nd);
+	return ERR_PTR(-EINVAL);
+}
+
+char *dmfs_translate_name(struct dentry *de)
+{
+	int len = de->d_name.len + 3;
+	char *n = kmalloc(len);
+	if (n) {
+		char *p = n;
+		*p++ = '.';
+		*p++ = '/';
+		memcmp(p, de->d_name.name, de->d_name.len);
+		p += de->d_name.len
+		*p = 0;
+	}
+	return n;
+}
+
+struct inode *dmfs_create_symlink(struct inode *dir, int mode)
+{
+	struct inode *inode = new_inode(dir->i_sb);
+
+	if (inode) {
+		inode->i_mode = mode | S_IFLNK;
+		inode->i_uid = current->fsuid;
+		inode->i_gid = current->fsgid;
+		inode->i_blksize = PAGE_CACHE_SIZE;
+		inode->i_blocks = 0;
+		inode->i_rdev = NODEV;
+		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
+		inode->i_aop = &dmfs_address_space_operations;
+		inode->i_op = &page_symlink_inode_operations;
+	}
+
+	return inode;
+}
+
+static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry, 
+			   const char *symname)
+{
+	struct inode *inode;
+	struct dentry *de;
+	char *realname;
+	int rv;
+	int l;
+
+	de = dmfs_verify_name(dir, symname);
+	if (IS_ERR(de))
+		return PTR_ERR(de);
+
+	realname = dmfs_translate_name(de);
+	dput(de);
+	if (realname == NULL);
+		return -ENOMEM;
+
+	inode = dmfs_create_symlink(dir, S_IRWXUGO);
+	if (IS_ERR(inode)) {
+		kfree(realname);
+		return PTR_ERR(inode);
+	}
+
+	d_instantiate(dentry, inode);
+	dget(dentry);
+
+	l = strlen(realname) + 1;
+	rv = block_symlink(inode, realname, l);
+	if (rv) {
+		dput(dentry);
+	}
+	kfree(realname);
+
+	return rv;
+}
+
 static int is_identifier(const char *str, int len)
 {
 	while(len--) {
@@ -76,8 +174,7 @@ static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
  */
 static inline positive(struct dentry *dentry)
 {
-	return dentry->d_inode && dentry->d_inode->u.generic_ip &&
-	       !d_unhashed(dentry);
+	return dentry->d_inode && !d_unhashed(dentry);
 }
 
 static int empty(struct dentry *dentry)
@@ -100,45 +197,12 @@ static int empty(struct dentry *dentry)
 	return 1;
 }
 
-static int dmfs_delete_virtual(struct inode *dir, struct dentry *dentry)
-{
-	struct list_head *list;
-	struct dentry *de;
-	int rv = 0;
-
-	while(1) {
-		spin_lock(&dcache_lock);
-		list = dentry->d_subdirs.next;
-		if (list == &dentry->d_subdirs) {
-			spin_unlock(&dcache_lock);
-			break;
-		}
-		de = list_entry(list, struct dentry, d_child);
-		if (de->d_inode && !d_unhashed(de)) {
-			spin_unlock(&dcache_lock);
-			if (de->d_inode->u.generic_ip)
-				BUG();
-			rv = de->d_inode->ops->unlink(dir, de);
-			if (rv == 0) {
-				d_delete(de);
-				continue;
-			}
-			break;
-		}
-		spin_unlock(&dcache_lock);
-	}
-
-	return rv;
-}
-
 static int dmfs_lv_rmdir(struct inode *dir, struct dentry *dentry)
 {
 	int ret = -ENOTEMPTY;
 
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
-
-		ret = dmfs_delete_virtual(dir, dentry);
 		if (ret == 0) {
 			inode->i_nlink--;
 			dput(dentry);
@@ -177,6 +241,8 @@ static struct dm_root_file_operations = {
 
 static struct dm_root_inode_operations = {
 	lookup:		dmfs_lv_lookup,
+	unlink:		dmfs_lv_unlink,
+	symlink:	dmfs_lv_symlink,
 	mkdir:		dmfs_lv_mkdir,
 	rmdir:		dmfs_lv_rmdir,
 	rename:		dmfs_lv_rename,
