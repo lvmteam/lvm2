@@ -30,9 +30,12 @@ int library_version(char *version, size_t size);
 
 void activation_exit(void);
 
+int lv_suspend(struct cmd_context *cmd, const char *lvid_s);
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s);
+int lv_resume(struct cmd_context *cmd, const char *lvid_s);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s);
 int lv_activate(struct cmd_context *cmd, const char *lvid_s);
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s);
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s);
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
@@ -41,6 +44,13 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
  * Returns 1 if info structure has been populated, else 0.
  */
 int lv_info(const struct logical_volume *lv, struct lvinfo *info);
+
+/*
+ * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.
+ */
+int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
+                         int *activate_lv);
+
 /*
  * Returns 1 if percent has been set, else 0.
  */
