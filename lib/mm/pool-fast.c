@@ -126,19 +126,20 @@ void pool_free(struct pool *p, void *ptr)
 		p->chunk = c;
 }
 
-void *pool_begin_object(struct pool *p, size_t hint, unsigned align)
+void *pool_begin_object(struct pool *p, size_t init_size)
 {
 	struct chunk *c = p->chunk;
+	const size_t align = DEFAULT_ALIGNMENT;
 
 	p->object_len = 0;
 	p->object_alignment = align;
 
 	_align_chunk(c, align);
-	if (c->end - c->begin < hint) {
+	if (c->end - c->begin < init_size) {
 		/* allocate a new chunk */
 		c = _new_chunk(p,
-			       hint > (p->chunk_size - sizeof(struct chunk)) ?
-			       hint + sizeof(struct chunk) + align :
+		       init_size > (p->chunk_size - sizeof(struct chunk)) ?
+			       init_size + sizeof(struct chunk) + align :
 			       p->chunk_size);
 		_align_chunk(c, align);
 	}

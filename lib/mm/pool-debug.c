@@ -12,10 +12,12 @@
 
 struct block {
 	struct block *next;
+	size_t size;
 	char data[0];
 };
 
 struct pool {
+	int object;
 	struct block *blocks;
 	struct block *tail;
 };
@@ -32,6 +34,7 @@ struct pool *pool_create(size_t chunk_hint)
 		return NULL;
 	}
 
+	mem->object = 0;
 	mem->blocks = mem->tail = NULL;
 	return mem;
 }
@@ -58,6 +61,15 @@ void *pool_alloc(struct pool *p, size_t s)
 	return pool_alloc_aligned(p, s, DEFAULT_ALIGNMENT);
 }
 
+static void _append_block(struct pool *p, struct block *b)
+{
+	if (p->tail) {
+		p->tail->next = b;
+		p->tail = b;
+	} else
+		p->blocks = p->tail = b;
+}
+
 void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 {
 	/* FIXME: I'm currently ignoring the alignment arg. */
@@ -70,13 +82,9 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 	}
 
 	b->next = NULL;
+	b->size = s;
 
-	if (p->tail) {
-		p->tail->next = b;
-		p->tail = b;
-	} else
-		p->blocks = p->tail = b;
-
+	_append_block(p, b);
 	return &b->data[0];
 }
 
@@ -112,27 +120,44 @@ void pool_free(struct pool *p, void *ptr)
 		p->blocks = p->tail = NULL;
 }
 
-void *pool_begin_object(struct pool *p, size_t hint, unsigned align)
+void *pool_begin_object(struct pool *p, size_t init_size)
 {
-	log_err("pool_begin_object not implemented for pool-debug");
-	assert(0);
+	assert(!p->object);
+	pool_alloc_aligned(p, hint);
+	p->object = 1;
 }
 
-void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t n)
+void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t delta)
 {
-	log_err("pool_grow_object not implemented for pool-debug");
-	assert(0);
+	struct block *old = p->tail, *new;
+
+	assert(buffer == &old->data);
+
+	if (!pool_alloc(p, old->size + n))
+		return NULL;
+
+	new = p->tail;
+
+	memcpy(&new->data, &old->data, old->size);
+
+	old->next = NULL;
+	pool_free(p, buffer);
+
+	_append_block(p, new);
+	return &new->data;
 }
 
 void *pool_end_object(struct pool *p)
 {
-	log_err("pool_end_object not implemented for pool-debug");
-	assert(0);
+	assert(p->object);
+	p->object = 0;
 }
 
 void pool_abandon_object(struct pool *p)
 {
-	log_err("pool_abandon_object not implemented for pool-debug");
+	assert(p->object);
+	pool_free(p, &p->tail->data);
+	p->object = 0;
 }
 
 char *pool_strdup(struct pool *p, const char *str)
