@@ -22,6 +22,7 @@
 #include "log.h"
 #include "dev-cache.h"
 #include "filter.h"
+#include "lvm-string.h"
 
 #include <stdlib.h>
 #include <dirent.h>
@@ -53,7 +54,7 @@ static device_info_t device_info[] = {
 	{NULL, 0}
 };
 
-static int *scan_proc_dev(void);
+static int *scan_proc_dev(const char *proc);
 
 static int passes_lvm_type_device_filter(struct dev_filter *f,
 					 struct device *dev)
@@ -76,7 +77,7 @@ static int passes_lvm_type_device_filter(struct dev_filter *f,
 	return 1;
 }
 
-struct dev_filter *lvm_type_filter_create()
+struct dev_filter *lvm_type_filter_create(const char *proc)
 {
 	struct dev_filter *f;
 
@@ -88,7 +89,7 @@ struct dev_filter *lvm_type_filter_create()
 	f->passes_filter = passes_lvm_type_device_filter;
 	f->destroy = lvm_type_filter_destroy;
 
-	if (!(f->private = scan_proc_dev()))
+	if (!(f->private = scan_proc_dev(proc)))
 		return NULL;
 
 	return f;
@@ -101,10 +102,11 @@ void lvm_type_filter_destroy(struct dev_filter *f)
 	return;
 }
 
-static int *scan_proc_dev(void)
+static int *scan_proc_dev(const char *proc)
 {
 	char line[80];
-	FILE *procdevices = NULL;
+	char proc_devices[PATH_MAX];
+	FILE *pd = NULL;
 	int ret = 0;
 	int i, j = 0;
 	int line_maj = 0;
@@ -118,13 +120,19 @@ static int *scan_proc_dev(void)
 		return NULL;
 	}
 
-	if (!(procdevices = fopen("/proc/devices", "r"))) {
-		log_error("Failed to open /proc/devices: %s", strerror(errno));
+	if (lvm_snprintf(proc_devices, sizeof(proc_devices), 
+			 "%s/devices", proc) < 0) {
+		log_error("Failed to create /proc/devices string");
+		return NULL;
+	}
+
+	if (!(pd = fopen(proc_devices, "r"))) {
+		log_sys_error("fopen", proc_devices);
 		return NULL;
 	}
 
 	memset(max_partitions_by_major, 0, sizeof (int) * NUMBER_OF_MAJORS);
-	while (fgets(line, 80, procdevices) != NULL) {
+	while (fgets(line, 80, pd) != NULL) {
 		i = 0;
 		while (line[i] == ' ' && line[i] != '\0')
 			i++;
@@ -161,6 +169,6 @@ static int *scan_proc_dev(void)
 			}
 		}
 	}
-	fclose(procdevices);
+	fclose(pd);
 	return max_partitions_by_major;
 }
