@@ -10,6 +10,7 @@ VPATH = @srcdir@
 
 SOURCES=\
 	activate/activate.c \
+	activate/fs.c \
 	config/config.c \
 	datastruct/bitset.c \
 	datastruct/btree.c \
