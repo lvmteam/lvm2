@@ -32,7 +32,7 @@ int pvcreate(int argc, char **argv)
 	}
 
 	if (arg_count(yes_ARG) && !arg_count(force_ARG)) {
-		log_error("option y can only be given with option f");
+		log_error("Option y can only be used with option f");
 		return EINVALID_CMD_LINE;
 	}
 
@@ -83,7 +83,7 @@ void pvcreate_single(const char *pv_name)
 			    ("Really INITIALIZE physical volume %s"
 			     " of volume group %s [y/n]? ", pv_name,
 			     pv->vg_name) == 'n') {
-				log_print("physical volume %s not initialized",
+				log_print("Physical volume %s not initialized",
 					  pv_name);
 				return;
 			}
@@ -104,7 +104,7 @@ void pvcreate_single(const char *pv_name)
 
 	if (arg_count(force_ARG)) {
 		/* FIXME: Change to log_print */
-		printf("WARNING: forcing physical volume creation on %s",
+		printf("Warning: Forcing physical volume creation on %s",
 		       pv_name);
 		if (pv->vg_name[0])
 			printf(" of volume group %s", pv->vg_name);
@@ -113,18 +113,18 @@ void pvcreate_single(const char *pv_name)
 
 	/* FIXME: If PV is in VG, remove it.  NoOp?  Or cache? */
 
-	log_verbose("creating new physical volume");
-	log_verbose("setting up physical volume for %s with %u sectors",
+	log_verbose("Creating new physical volume");
+	log_verbose("Setting up physical volume for %s with %u sectors",
 		    pv_name, size);
 
-	log_verbose("writing physical volume data to disk %s", pv_name);
+	log_verbose("Writing physical volume data to disk %s", pv_name);
 
 	if (!(pv_write(ios, pv))) {
 		log_error("Failed to create physical volume %s", pv_name);
 		return;
 	}
 
-	printf("physical volume %s successfully created\n", pv_name);
+	log_print("Physical volume %s successfully created", pv_name);
 
 /* FIXME: Add the dbg_frees throughout! */
 	return;
