@@ -187,10 +187,10 @@ void pvdisplay_full(struct physical_volume *pv)
 	return;
 }
 
-void pv_display_short(struct physical_volume *pv)
+int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv)
 {
 	if (!pv)
-		return;
+		return 0;
 
 	log_print("PV Name               %s     ", dev_name(pv->dev));
 	/* FIXME  pv->pv_number); */
@@ -200,8 +200,10 @@ void pv_display_short(struct physical_volume *pv)
 	log_print("Total PE / Free PE    %u / %u",
 		  pv->pe_count, pv->pe_count - pv->pe_allocated);
 
-	return;
+	log_print(" ");
+	return 0;
 }
+
 
 void lvdisplay_colons(struct logical_volume *lv)
 {
@@ -222,7 +224,7 @@ void lvdisplay_colons(struct logical_volume *lv)
 	return;
 }
 
-void lvdisplay_full(struct logical_volume *lv)
+int lvdisplay_full(struct logical_volume *lv)
 {
 	char *size;
 	uint32_t alloc;
@@ -389,7 +391,7 @@ void lvdisplay_full(struct logical_volume *lv)
 	   MAJOR(lv->lv_dev), MINOR(lv->lv_dev));
 *************/
 
-	return;
+	return 0;
 }
 
 
@@ -430,5 +432,112 @@ void lvdisplay_extents(struct logical_volume *lv)
 			    dev_name(lv->map[le].pv->dev), lv->map[le].pe);
 	}
 
+	log_verbose(" ");
+
+	return;
+}
+
+void vgdisplay_extents(struct volume_group *vg)
+{
+	return;
+}
+
+void vgdisplay_full(struct volume_group *vg)
+{
+	uint32_t access;
+	char *s1;
+
+	log_print("--- Volume group ---");
+	log_print("VG Name               %s", vg->name);
+	access = vg->status & (LVM_READ | LVM_WRITE);
+	log_print("VG Access             %s%s%s%s",
+		  access == (LVM_READ | LVM_WRITE) ? "read/write" : "",
+		  access == LVM_READ ? "read" : "",
+		  access == LVM_WRITE ? "write" : "",
+		  access == 0 ? "error" : "");
+	log_print("VG Status             %savailable%s/%sresizable",
+		  vg->status & ACTIVE ? "" : "NOT ",
+		  vg->status & EXPORTED_VG ? "/exported" : "",
+		  vg->status & EXTENDABLE_VG ? "" : "NOT ");
+/******* FIXME vg number
+	log_print ("VG #                  %u\n", vg->vg_number);
+********/
+	if (vg->status & CLUSTERED) {
+		log_print("Clustered             yes");
+		log_print("Shared                %s",
+			  vg->status & SHARED ? "yes" : "no");
+	}
+	log_print("MAX LV                %u", vg->max_lv);
+	log_print("Cur LV                %u", vg->lv_count);
+/****** FIXME Open LVs
+      log_print ( "Open LV               %u", vg->lv_open);
+*******/
+/****** FIXME Max LV Size
+      log_print ( "MAX LV Size           %s",
+               ( s1 = display_size ( LVM_LV_SIZE_MAX(vg) / 2, SIZE_SHORT)));
+      free ( s1);
+*********/
+	log_print("Max PV                %u", vg->max_pv);
+	log_print("Cur PV                %u", vg->pv_count);
+/******* FIXME act PVs
+      log_print ( "Act PV                %u", vg->pv_act);
+*********/
+
+	s1 = display_size(vg->extent_count * vg->extent_size / 2, SIZE_SHORT);
+	log_print("VG Size               %s", s1);
+	dbg_free(s1);
+
+	s1 = display_size(vg->extent_size / 2, SIZE_SHORT);
+	log_print("PE Size               %s", s1);
+	dbg_free(s1);
+
+	log_print("Total PE              %u", vg->extent_count);
+
+	s1 =
+	    display_size((vg->extent_count - vg->free_count) *
+			 vg->extent_size / 2, SIZE_SHORT);
+	log_print("Alloc PE / Size       %u / %s",
+		  vg->extent_count - vg->free_count, s1);
+	dbg_free(s1);
+
+	s1 = display_size(vg->free_count * vg->extent_size / 2, SIZE_SHORT);
+	log_print("Free  PE / Size       %u / %s", vg->free_count, s1);
+	dbg_free(s1);
+
+	if (strlen(vg->id.uuid))
+		s1 = display_uuid(vg->id.uuid);
+	else
+		s1 = "none";
+
+	log_print("VG UUID               %s", s1);
+
+	if (strlen(vg->id.uuid))
+		dbg_free(s1);
+
+	log_print(" ");
+
+	return;
+}
+
+void vgdisplay_colons(struct volume_group *vg)
+{
+	return;
+}
+
+void vgdisplay_short(struct volume_group *vg)
+{
+	char *s1, *s2, *s3;
+	s1 = display_size(vg->extent_count * vg->extent_size / 2, SIZE_SHORT);
+	s2 =
+	    display_size((vg->extent_count - vg->free_count) * vg->extent_size /
+			 2, SIZE_SHORT);
+	s3 = display_size(vg->free_count * vg->extent_size / 2, SIZE_SHORT);
+	log_print("%s (%s) %-9s [%-9s used / %s free]", vg->name,
+		  (vg->status & ACTIVE) ? "active" : "inactive",
+/********* FIXME if "open" print "/used" else print "/idle"???  ******/
+		  s1, s2, s3);
+	dbg_free(s1);
+	dbg_free(s2);
+	dbg_free(s3);
 	return;
 }

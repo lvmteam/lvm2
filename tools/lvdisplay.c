@@ -20,8 +20,6 @@
 
 #include "tools.h"
 
-static int lvdisplay_single(struct volume_group *vg, struct logical_volume *lv);
-
 int lvdisplay(int argc, char **argv)
 {
 	/* FIXME Allow VG args via process_each */
@@ -34,7 +32,7 @@ int lvdisplay(int argc, char **argv)
 	return process_each_lv(argc, argv, &lvdisplay_single);
 }
 
-static int lvdisplay_single(struct volume_group *vg, struct logical_volume *lv)
+int lvdisplay_single(struct logical_volume *lv)
 {
 	if (arg_count(colon_ARG))
 		lvdisplay_colons(lv);

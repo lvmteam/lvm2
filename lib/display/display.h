@@ -33,21 +33,15 @@ char *display_uuid(char *uuidstr);
 
 void pvdisplay_colons(struct physical_volume *pv);
 void pvdisplay_full(struct physical_volume *pv);
+int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv);
 
 void lvdisplay_colons(struct logical_volume *lv);
 void lvdisplay_extents(struct logical_volume *lv);
-void lvdisplay_full(struct logical_volume *lv);
+int lvdisplay_full(struct logical_volume *lv);
 
-#if 0
-void pv_show_short(pv_t * pv);
-void pv_display_pe(pv_t * pv, pe_disk_t * pe);
-void pv_display_pe_free(int pe_free, int p);
-void pv_display_pe_text(pv_t * pv, pe_disk_t * pe, lv_disk_t * lvs);
+void vgdisplay_extents(struct volume_group *vg);
+void vgdisplay_full(struct volume_group *vg);
+void vgdisplay_colons(struct volume_group *vg);
+void vgdisplay_short(struct volume_group *vg);
 
-static inline unsigned long get_pe_offset(ulong p, pv_t *pv)
-{
-        return pv->pe_start + (p * pv->pe_size);
-}
-
-#endif
 #endif

@@ -142,4 +142,6 @@ static inline const char *command_name(void)
 
 extern struct format_instance *fid;
 
+extern int lvdisplay_single(struct logical_volume *lv);
+
 #endif

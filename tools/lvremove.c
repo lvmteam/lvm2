@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-static int lvremove_single(struct volume_group *vg, struct logical_volume *lv);
+static int lvremove_single(struct logical_volume *lv);
 
 int lvremove(int argc, char **argv)
 {
@@ -32,8 +32,11 @@ int lvremove(int argc, char **argv)
 	return process_each_lv(argc, argv, &lvremove_single);
 }
 
-static int lvremove_single(struct volume_group *vg, struct logical_volume *lv)
+static int lvremove_single(struct logical_volume *lv)
 {
+	struct volume_group *vg;
+
+	vg = lv->vg;
 	if (!(vg->status & ACTIVE)) {
 		log_error("Volume group %s must be active before removing a "
 			  "logical volume", vg->name);

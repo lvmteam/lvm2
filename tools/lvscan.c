@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-static int lvscan_single(struct volume_group *vg, struct logical_volume *lv);
+static int lvscan_single(struct logical_volume *lv);
 
 int lvscan(int argc, char **argv)
 {
@@ -54,7 +54,7 @@ int lvscan(int argc, char **argv)
 
 }
 
-static int lvscan_single(struct volume_group *vg, struct logical_volume *lv)
+static int lvscan_single(struct logical_volume *lv)
 {
 	int lv_active = 0;
 	int lv_total = 0;
@@ -87,7 +87,7 @@ static int lvscan_single(struct volume_group *vg, struct logical_volume *lv)
 	dummy = display_size(lv->size / 2, SIZE_SHORT);
 
 	log_print("%s%s '%s%s/%s' [%s]%s%s", active_str, snapshot_str,
-		  fid->cmd->dev_dir, vg->name, lv->name, dummy,
+		  fid->cmd->dev_dir, lv->vg->name, lv->name, dummy,
 		  (lv->status & ALLOC_STRICT) ? " strict" : "",
 		  (lv->status & ALLOC_CONTIGUOUS) ? " contiguous" : "");
 
