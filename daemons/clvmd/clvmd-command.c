@@ -162,13 +162,15 @@ int do_pre_command(struct local_client *client)
 		DEBUGLOG("doing PRE command LOCK_VG %s at %x\n", lockname,
 			 lock_cmd);
 		if (lock_cmd == LCK_UNLOCK) {
-			hold_unlock(lockname);
-		} else {
-			status =
-			    hold_lock(lockname, (int) lock_cmd,
-				      (int) lock_flags);
+		        status = sync_unlock(lockname, (int) (long) client->bits.localsock.private);
 			if (status)
 				status = errno;
+		} else {
+			status = sync_lock(lockname, (int) lock_cmd, (int) lock_flags, &lockid);
+			if (status)
+				status = errno;
+			else
+			        client->bits.localsock.private = (void *) lockid;
 		}
 		break;
 
