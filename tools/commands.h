@@ -68,41 +68,28 @@ xx(lvchange,
 xx(lvcreate,
    "Create a logical volume",
    "lvcreate " "\n"
-   "\t[-A|--autobackup {y|n}] "  "\n"
-   "\t[-C|--contiguous {y|n}] " "\n"
-   "\t[-d|--debug]" "\n"
-   "\t[-h|--help] " "\n"
-   "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]" "\n"
-   "\t{-l|--extents LogicalExtentsNumber |" "\n"
-   "\t -L|--size LogicalVolumeSize[kKmMgGtT]} " "\n"
+   "\t[-A|--autobackup {y|n}]\n"
+   "\t[-c|--chunksize]\n"
+   "\t[-C|--contiguous {y|n}]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
+   "\t{-l|--extents LogicalExtentsNumber |\n"
+   "\t -L|--size LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-M|--persistent {y|n}] [--minor minor]\n"
-   "\t[-n|--name LogicalVolumeName]"  "\n"
-   "\t[-p|--permission {r|rw}] " "\n"
-   "\t[-r|--readahead ReadAheadSectors]"  "\n"
-   "\t[-t|--test] " "\n"
-   "\t[-v|--verbose] "  "\n"
-   "\t[-Z|--zero {y|n}] "  "\n"
-   "\t[--version]" "\n"
-   "\tVolumeGroupName [PhysicalVolumePath...]" "\n\n"
+   "\t[-n|--name LogicalVolumeName]\n"
+   "\t[-p|--permission {r|rw}]\n"
+   "\t[-r|--readahead ReadAheadSectors]\n"
+   "\t[-s|--snapshot]\n"
+   "\t[-t|--test]\n"
+   "\t[-v|--verbose]\n"
+   "\t[-Z|--zero {y|n}]\n"
+   "\t[--version]\n"
+   "\tVolumeGroupName [PhysicalVolumePath...]\n\n",
 
-   ,
-/*
-   "lvcreate "
-   "\t-s|--snapshot "
-   "\t[-c|--chunksize ChunkSize]" "\n"
-   "\t{-l|--extents LogicalExtentsNumber |" "\n"
-   "\t -L|--size LogicalVolumeSize[kKmMgGtT]}" "\n"
-   "\t-n|--name SnapshotLogicalVolumeName" "\n"
-   "\t[-t|--test]" "\n"
-   "\tLogicalVolume[Path] [PhysicalVolumePath...]" "\n",
-chunksize_ARG,
-snapshot_ARG,
-*/
-
-   autobackup_ARG, contiguous_ARG, stripes_ARG, stripesize_ARG,
-   extents_ARG, size_ARG, name_ARG, permission_ARG, readahead_ARG,
-   minor_ARG, persistent_ARG,
-   test_ARG, zero_ARG)
+   autobackup_ARG, contiguous_ARG, extents_ARG, minor_ARG, name_ARG,
+   permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
+   snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",

@@ -62,6 +62,10 @@ static int _read_name_params(struct lvcreate_params *lp,
 			return 0;
 		}
 
+		/* Strip the volume group from the origin */
+		if ((ptr = strrchr(lp->origin, (int) '/')))
+			lp->origin = ptr + 1;
+
 	} else {
 		/*
 		 * If VG not on command line, try -n arg and then
@@ -130,7 +134,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG))
-		lp->size = arg_int_value(cmd, size_ARG, 0);
+		lp->size = arg_int64_value(cmd, size_ARG, 0) * 2ull;
 
 	return 1;
 }
@@ -251,7 +255,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 	uint32_t size_rest;
 	uint32_t status;
 	struct volume_group *vg;
-	struct logical_volume *lv;
+	struct logical_volume *lv, *org;
 	struct list *pvh;
 
 
@@ -312,7 +316,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 
 	if (lp->size) {
 		/* No of 512-byte sectors */
-		lp->extents = lp->size * 2;
+		lp->extents = lp->size;
 
 		if (lp->extents % vg->extent_size) {
 			char *s1;
@@ -336,6 +340,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
+	if (lp->snapshot && !(org = find_lv(vg, lp->origin))) {
+		log_err("Couldn't find origin volume '%s'.", lp->origin);
+		return 0;
+	}
+
 	if (!archive(vg))
 		return 0;
 
@@ -343,6 +352,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 			     lp->stripes, lp->stripe_size, lp->extents,
 			     vg, pvh)))
 		return 0;
+
+	if (lp->snapshot && !vg_add_snapshot(vg, org, lv, 1, lp->chunk_size)) {
+		log_err("Couldn't create snapshot.");
+		return 0;
+	}
 
 	if (lp->read_ahead) {
 		log_verbose("Setting read ahead sectors");
