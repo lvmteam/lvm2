@@ -151,8 +151,8 @@ int persistent_filter_dump(struct dev_filter *f)
 
 	fp = fopen(pf->file, "w");
 	if (!fp) {
- 		if (errno != EROFS)
-		    log_sys_error("fopen", pf->file);
+		if (errno != EROFS)
+			log_sys_error("fopen", pf->file);
 		return 0;
 	}
 

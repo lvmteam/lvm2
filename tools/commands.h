@@ -344,6 +344,7 @@ xx(vgcfgbackup,
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
    "\t[-h|--help] " "\n"
+   "\t[-P|--partial] " "\n"
    "\t[-v|--verbose]" "\n"
    "\t[-V|--version] " "\n"
    "\t[VolumeGroupName...]\n",

@@ -15,7 +15,7 @@
 #include <stdio.h>
 
 /*
- * Constants to help indentify which files this code can parse.
+ * Constants to identify files this code can parse.
  */
 #define CONTENTS_FIELD "contents"
 #define CONTENTS_VALUE "Text Format Volume Group"
