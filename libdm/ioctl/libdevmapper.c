@@ -307,6 +307,7 @@ int dm_task_run(struct dm_task *dmt)
 	}
 
 	dmt->dmi = dmi;
+	close(fd);
 	return 1;
 
  bad:
