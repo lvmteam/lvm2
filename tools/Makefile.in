@@ -81,7 +81,7 @@ lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
 
 .commands: commands.h cmdnames.h Makefile
 	$(CC) -E -P cmdnames.h 2> /dev/null | \
-		egrep -v '^ *(|#.*|help|version) *$$' > .commands
+		egrep -v '^ *(|#.*|help|pvdata|version) *$$' > .commands
 
 install: $(TARGETS)
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm \
