@@ -123,17 +123,19 @@ void pool_free(struct pool *p, void *ptr)
 void *pool_begin_object(struct pool *p, size_t init_size)
 {
 	assert(!p->object);
-	pool_alloc_aligned(p, hint);
+	pool_alloc_aligned(p, init_size, DEFAULT_ALIGNMENT);
 	p->object = 1;
+
+	return &p->tail->data;
 }
 
-void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t delta)
+void *pool_grow_object(struct pool *p, void *buffer, size_t delta)
 {
 	struct block *old = p->tail, *new;
 
 	assert(buffer == &old->data);
 
-	if (!pool_alloc(p, old->size + n))
+	if (!pool_alloc(p, old->size + delta))
 		return NULL;
 
 	new = p->tail;

@@ -155,7 +155,7 @@ void *pool_begin_object(struct pool *p, size_t init_size)
 	return c->begin;
 }
 
-void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t n)
+void *pool_grow_object(struct pool *p, void *buffer, size_t n)
 {
 	struct chunk *c = p->chunk, *nc;
 
@@ -233,9 +233,3 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 	return c;
 }
 
-/*
- * Local variables:
- * c-file-style: "linux"
- * End:
- * vim:ai cin ts=8
- */

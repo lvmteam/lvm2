@@ -7,6 +7,7 @@
 #ifndef _LVM_DBG_MALLOC_H
 #define _LVM_DBG_MALLOC_H
 
+#include <stdlib.h>
 #include <sys/types.h>
 
 #ifdef DEBUG_MEM
@@ -29,8 +30,3 @@ void bounds_check(void);
 
 #endif
 
-/*
- * Local variables:
- * c-file-style: "linux"
- * End:
- */
