@@ -18,6 +18,7 @@
 #include "filter.h"
 #include "lvm-string.h"
 #include "config.h"
+#include "metadata.h"
 
 #include <dirent.h>
 #include <unistd.h>
@@ -75,7 +76,8 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f,
 					  struct device *dev)
 {
 	const char *name = dev_name(dev);
-	int ret = 1;
+	int ret = 0;
+	uint64_t size;
 
 	/* Is this a recognised device type? */
 	if (!_max_partitions_by_major[MAJOR(dev->dev)]) {
@@ -90,12 +92,26 @@ static int _passes_lvm_type_device_filter(struct dev_filter *f,
 		return 0;
 	}
 	
-	if (is_partitioned_dev(dev)) {
-		log_debug("%s: Skipping: partition table signature found",
-			  name);
-		ret = 0;
+	/* Check it's not too small */
+	if (!dev_get_size(dev, &size)) {
+		log_debug("%s: Skipping: dev_get_size failed", name);
+		goto out;
 	}
 
+	if (size < PV_MIN_SIZE) {
+		log_debug("%s: Skipping: Too small to hold a PV", name);
+		goto out;
+	}
+
+	if (is_partitioned_dev(dev)) {
+		log_debug("%s: Skipping: Partition table signature found",
+			  name);
+		goto out;
+	}
+
+	ret = 1;
+
+      out:
 	dev_close(dev);
 
 	return ret;

@@ -238,12 +238,14 @@ int dev_get_size(const struct device *dev, uint64_t *size)
 
 	if (ioctl(fd, BLKGETSIZE64, size) < 0) {
 		log_sys_error("ioctl BLKGETSIZE64", name);
-		close(fd);
+		if (close(fd))
+			log_sys_error("close", name);
 		return 0;
 	}
 
 	*size >>= BLKSIZE_SHIFT;	/* Convert to sectors */
-	close(fd);
+	if (close(fd))
+		log_sys_error("close", name);
 
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
