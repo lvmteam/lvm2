@@ -22,9 +22,9 @@
 
 int lvrename(struct cmd_context *cmd, int argc, char **argv)
 {
-	int maxlen;
+	size_t maxlen;
 	char *lv_name_old, *lv_name_new;
-	char *vg_name, *vg_name_new, *vg_name_old;
+	const char *vg_name, *vg_name_new, *vg_name_old;
 	char *st;
 	int consistent = 1;
 
@@ -78,7 +78,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	maxlen = NAME_LEN - strlen(vg_name) - strlen(cmd->dev_dir) - 3;
 	if (strlen(lv_name_new) > maxlen) {
 		log_error("New logical volume path exceeds maximum length "
-			  "of %d!", maxlen);
+			  "of %u!", maxlen);
 		return ECMD_FAILED;
 	}
 

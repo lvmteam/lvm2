@@ -10,8 +10,8 @@
 #include "pool.h"
 
 struct matcher;
-struct matcher *matcher_create(struct pool *mem,
-			       const char **patterns, int num);
+struct matcher *matcher_create(struct pool *mem, const char **patterns,
+			       unsigned num);
 
 int matcher_run(struct matcher *m, const char *begin);
 

@@ -10,7 +10,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
 /*
  * The pool allocator is useful when you are going to allocate
  * lots of memory, use the memory for a bit, and then free the
@@ -108,7 +107,8 @@ void pool_abandon_object(struct pool *p);
 /* utilities */
 char *pool_strdup(struct pool *p, const char *str);
 
-static inline void *pool_zalloc(struct pool *p, size_t s) {
+static inline void *pool_zalloc(struct pool *p, size_t s)
+{
 	void *ptr = pool_alloc(p, s);
 
 	if (ptr)
@@ -118,4 +118,3 @@ static inline void *pool_zalloc(struct pool *p, size_t s) {
 }
 
 #endif
-

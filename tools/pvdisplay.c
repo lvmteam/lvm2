@@ -20,8 +20,8 @@
 
 #include "tools.h"
 
-int pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
-		     struct physical_volume *pv, void *handle)
+static int _pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
+			     struct physical_volume *pv, void *handle)
 {
 	uint64_t size;
 
@@ -82,7 +82,7 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	process_each_pv(cmd, argc, argv, NULL, NULL, pvdisplay_single);
+	process_each_pv(cmd, argc, argv, NULL, NULL, _pvdisplay_single);
 
 	return 0;
 }

@@ -8,7 +8,7 @@
 #include "metadata.h"
 #include "toolcontext.h"
 
-int lv_is_origin(struct logical_volume *lv)
+int lv_is_origin(const struct logical_volume *lv)
 {
 	struct list *slh;
 	struct snapshot *s;
@@ -22,7 +22,7 @@ int lv_is_origin(struct logical_volume *lv)
 	return 0;
 }
 
-int lv_is_cow(struct logical_volume *lv)
+int lv_is_cow(const struct logical_volume *lv)
 {
 	struct list *slh;
 	struct snapshot *s;
@@ -36,7 +36,7 @@ int lv_is_cow(struct logical_volume *lv)
 	return 0;
 }
 
-struct snapshot *find_origin(struct logical_volume *lv)
+struct snapshot *find_origin(const struct logical_volume *lv)
 {
 	struct list *slh;
 	struct snapshot *s;
@@ -50,7 +50,7 @@ struct snapshot *find_origin(struct logical_volume *lv)
 	return NULL;
 }
 
-struct snapshot *find_cow(struct logical_volume *lv)
+struct snapshot *find_cow(const struct logical_volume *lv)
 {
 	struct list *slh;
 	struct snapshot *s;
@@ -64,7 +64,7 @@ struct snapshot *find_cow(struct logical_volume *lv)
 	return NULL;
 }
 
-struct list *find_snapshots(struct logical_volume *lv)
+struct list *find_snapshots(const struct logical_volume *lv)
 {
 	struct list *slh;
 	struct list *snaplist;

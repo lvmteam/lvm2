@@ -15,11 +15,10 @@
  * predicate for devices.
  */
 struct dev_filter {
-	int (*passes_filter)(struct dev_filter *f, struct device *dev);
-	void (*destroy)(struct dev_filter *f);
+	int (*passes_filter) (struct dev_filter * f, struct device * dev);
+	void (*destroy) (struct dev_filter * f);
 	void *private;
 };
-
 
 /*
  * The global device cache.
@@ -33,7 +32,6 @@ int dev_cache_has_scanned(void);
 
 int dev_cache_add_dir(const char *path);
 struct device *dev_cache_get(const char *name, struct dev_filter *f);
-
 
 /*
  * Object for iterating through the cache.

@@ -112,12 +112,12 @@ void destroy_config_tree(struct config_tree *cf)
 }
 
 int read_config_fd(struct config_tree *cf, int fd, const char *file,
-		   off_t offset, uint32_t size, off_t offset2, uint32_t size2,
+		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum)
 {
 	struct cs *c = (struct cs *) cf;
 	struct parser *p;
-	off_t mmap_offset;
+	off_t mmap_offset = 0;
 	int r = 0;
 
 	if (!(p = pool_alloc(c->mem, sizeof(*p)))) {
@@ -223,7 +223,7 @@ int read_config_file(struct config_tree *cf, const char *file)
 		return 0;
 	}
 
-	r = read_config_fd(cf, fd, file, 0, info.st_size, 0, 0,
+	r = read_config_fd(cf, fd, file, 0, (size_t) info.st_size, 0, 0,
 			   (checksum_fn_t) NULL, 0);
 
 	close(fd);
@@ -283,8 +283,8 @@ int reload_config_file(struct config_tree **cf)
 		return 0;
 	}
 
-	r = read_config_fd(new_cf, fd, c->filename, 0, info.st_size, 0, 0,
-			   (checksum_fn_t) NULL, 0);
+	r = read_config_fd(new_cf, fd, c->filename, 0, (size_t) info.st_size,
+			   0, 0, (checksum_fn_t) NULL, 0);
 	close(fd);
 
 	if (r) {
@@ -668,7 +668,7 @@ static struct config_node *_create_node(struct parser *p)
 
 static char *_dup_tok(struct parser *p)
 {
-	int len = p->te - p->tb;
+	size_t len = p->te - p->tb;
 	char *str = pool_alloc(p->mem, len + 1);
 	if (!str) {
 		stack;
@@ -683,7 +683,7 @@ static char *_dup_tok(struct parser *p)
  * utility functions
  */
 struct config_node *find_config_node(struct config_node *cn,
-				     const char *path, char sep)
+				     const char *path, const int sep)
 {
 	const char *e;
 
@@ -715,7 +715,7 @@ struct config_node *find_config_node(struct config_node *cn,
 }
 
 const char *find_config_str(struct config_node *cn,
-			    const char *path, const char sep, const char *fail)
+			    const char *path, const int sep, const char *fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
 
@@ -732,7 +732,7 @@ const char *find_config_str(struct config_node *cn,
 }
 
 int find_config_int(struct config_node *cn, const char *path,
-		    char sep, int fail)
+		    const int sep, int fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
 
@@ -747,7 +747,7 @@ int find_config_int(struct config_node *cn, const char *path,
 }
 
 float find_config_float(struct config_node *cn, const char *path,
-			char sep, float fail)
+			const int sep, float fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
 
@@ -790,7 +790,7 @@ static int _str_to_bool(const char *str, int fail)
 }
 
 int find_config_bool(struct config_node *cn, const char *path,
-		     char sep, int fail)
+		     const int sep, int fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
 	struct config_value *v;
@@ -812,7 +812,7 @@ int find_config_bool(struct config_node *cn, const char *path,
 }
 
 int get_config_uint32(struct config_node *cn, const char *path,
-		      char sep, uint32_t *result)
+		      const int sep, uint32_t *result)
 {
 	struct config_node *n;
 
@@ -826,7 +826,7 @@ int get_config_uint32(struct config_node *cn, const char *path,
 }
 
 int get_config_uint64(struct config_node *cn, const char *path,
-		      char sep, uint64_t *result)
+		      const int sep, uint64_t *result)
 {
 	struct config_node *n;
 
@@ -841,7 +841,7 @@ int get_config_uint64(struct config_node *cn, const char *path,
 }
 
 int get_config_str(struct config_node *cn, const char *path,
-		   char sep, char **result)
+		   const int sep, char **result)
 {
 	struct config_node *n;
 

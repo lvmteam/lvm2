@@ -19,7 +19,7 @@ struct rfilter {
 };
 
 static int _extract_pattern(struct pool *mem, const char *pat,
-			    char **regex, bitset_t accept, int index)
+			    char **regex, bitset_t accept, int ix)
 {
 	char sep, *r, *ptr;
 
@@ -28,11 +28,11 @@ static int _extract_pattern(struct pool *mem, const char *pat,
 	 */
 	switch (*pat) {
 	case 'a':
-		bit_set(accept, index);
+		bit_set(accept, ix);
 		break;
 
 	case 'r':
-		bit_clear(accept, index);
+		bit_clear(accept, ix);
 		break;
 
 	default:
@@ -80,7 +80,7 @@ static int _extract_pattern(struct pool *mem, const char *pat,
 	}
 	*ptr = '\0';
 
-	regex[index] = r;
+	regex[ix] = r;
 	return 1;
 }
 
@@ -89,7 +89,8 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	struct pool *scratch;
 	struct config_value *v;
 	char **regex;
-	int count = 0, i, r = 0;
+	unsigned count = 0;
+	int i, r = 0;
 
 	if (!(scratch = pool_create(1024))) {
 		stack;

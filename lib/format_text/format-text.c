@@ -27,8 +27,8 @@
 #include <dirent.h>
 #include <ctype.h>
 
-static struct format_instance *_create_text_instance(struct format_type *fmt,
-						     const char *vgname,
+static struct format_instance *_create_text_instance(const struct format_type
+						     *fmt, const char *vgname,
 						     void *context);
 
 struct dir_list {
@@ -48,9 +48,7 @@ struct text_context {
 };
 
 /*
- * NOTE: Currently there can be only one vg per text file, and locking
- *       assumes VG's metadata is only held in metadata areas on PVs
- *       inside the VG.
+ * NOTE: Currently there can be only one vg per text file.
  */
 
 static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
@@ -99,7 +97,7 @@ static void _xlate_mdah(struct mda_header *mdah)
 	}
 }
 
-static struct mda_header *_raw_read_mda_header(struct format_type *fmt,
+static struct mda_header *_raw_read_mda_header(const struct format_type *fmt,
 					       struct device_area *dev_area)
 {
 	struct mda_header *mdah;
@@ -145,7 +143,7 @@ static struct mda_header *_raw_read_mda_header(struct format_type *fmt,
 	return mdah;
 }
 
-static int _raw_write_mda_header(struct format_type *fmt,
+static int _raw_write_mda_header(const struct format_type *fmt,
 				 struct device *dev,
 				 uint64_t start_byte, struct mda_header *mdah)
 {
@@ -172,7 +170,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				       struct mda_header *mdah,
 				       const char *vgname)
 {
-	int len;
+	size_t len;
 	char vgnamebuf[NAME_LEN + 2];
 	struct raw_locn *rlocn;
 
@@ -239,7 +237,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	struct mda_header *mdah;
 	time_t when;
 	char *desc;
-	uint64_t wrap = 0;
+	uint32_t wrap = 0;
 
 	if (!dev_open(area->dev, O_RDONLY)) {
 		stack;
@@ -257,7 +255,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	}
 
 	if (rlocn->offset + rlocn->size > mdah->size)
-		wrap = (rlocn->offset + rlocn->size) - mdah->size;
+		wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
 
 	if (wrap > rlocn->offset) {
 		log_error("VG %s metadata too large for circular buffer",
@@ -265,12 +263,13 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		goto out;
 	}
 
+	/* FIXME 64-bit */
 	if (!(vg = text_vg_import_fd(fid, dev_name(area->dev),
 				     dev_fd(area->dev),
-				     area->start + rlocn->offset,
-				     rlocn->size - wrap,
-				     area->start + MDA_HEADER_SIZE, wrap,
-				     calc_crc, rlocn->checksum, &when,
+				     (off_t) (area->start + rlocn->offset),
+				     (uint32_t) (rlocn->size - wrap),
+				     (off_t) (area->start + MDA_HEADER_SIZE),
+				     wrap, calc_crc, rlocn->checksum, &when,
 				     &desc))) {
 		stack;
 		goto out;
@@ -301,7 +300,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	struct physical_volume *pv;
 	struct list *pvh;
 	int r = 0;
-	uint64_t new_wrap = 0, old_wrap = 0;
+	uint32_t new_wrap = 0, old_wrap = 0;
 
 	/* FIXME Essential fix! Make dynamic (realloc? pool?) */
 	char buf[65536];
@@ -369,20 +368,21 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	/* Write text out, circularly */
 	if (dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
-		      mdac->rlocn.size - new_wrap,
+		      (size_t) (mdac->rlocn.size - new_wrap),
 		      buf) != mdac->rlocn.size - new_wrap) {
 		stack;
 		goto out;
 	}
 
 	if (new_wrap) {
-		log_debug("Writing metadata to %s at %" PRIu64 " len %" PRIu64,
+		log_debug("Writing metadata to %s at %" PRIu64 " len %" PRIu32,
 			  dev_name(mdac->area.dev), mdac->area.start +
 			  MDA_HEADER_SIZE, new_wrap);
 
 		if (dev_write(mdac->area.dev,
 			      mdac->area.start + MDA_HEADER_SIZE,
-			      new_wrap, buf + mdac->rlocn.size - new_wrap)
+			      (size_t) new_wrap,
+			      buf + mdac->rlocn.size - new_wrap)
 		    != new_wrap) {
 			stack;
 			goto out;
@@ -390,7 +390,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	}
 
 	mdac->rlocn.checksum = calc_crc(INITIAL_CRC, buf,
-					mdac->rlocn.size - new_wrap);
+					(uint32_t) (mdac->rlocn.size -
+						    new_wrap));
 	if (new_wrap)
 		mdac->rlocn.checksum = calc_crc(mdac->rlocn.checksum,
 						buf + mdac->rlocn.size -
@@ -560,7 +561,8 @@ static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
 	if (slash == 0)
 		strcpy(temp_dir, ".");
 	else if (slash - tc->path_edit < PATH_MAX) {
-		strncpy(temp_dir, tc->path_edit, slash - tc->path_edit);
+		strncpy(temp_dir, tc->path_edit,
+			(size_t) (slash - tc->path_edit));
 		temp_dir[slash - tc->path_edit] = '\0';
 
 	} else {
@@ -643,7 +645,7 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 	char *slash;
 	char newname[PATH_MAX];
-	int len;
+	size_t len;
 
 	if (!_vg_commit_file_backup(fid, vg, mda))
 		return 0;
@@ -695,7 +697,7 @@ static int _vg_remove_file(struct format_instance *fid, struct volume_group *vg,
 	return 1;
 }
 
-static int _scan_file(struct format_type *fmt)
+static int _scan_file(const struct format_type *fmt)
 {
 	struct dirent *dirent;
 	struct dir_list *dl;
@@ -743,13 +745,13 @@ static int _scan_file(struct format_type *fmt)
 	return 1;
 }
 
-int vgname_from_mda(struct format_type *fmt, struct device_area *dev_area,
+int vgname_from_mda(const struct format_type *fmt, struct device_area *dev_area,
 		    char *buf, uint32_t size)
 {
 	struct raw_locn *rlocn;
 	struct mda_header *mdah;
 	int already_open;
-	int len;
+	unsigned int len;
 	int r = 0;
 
 	already_open = dev_is_open(dev_area->dev);
@@ -768,13 +770,13 @@ int vgname_from_mda(struct format_type *fmt, struct device_area *dev_area,
 
 	while (rlocn->offset) {
 		if (dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-			     size, buf) != size) {
+			     size, buf) != (signed) size) {
 			stack;
 			goto out;
 		}
 		len = 0;
 		while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
-		       len < size - 1)
+		       len < (size - 1))
 			len++;
 		buf[len] = '\0';
 
@@ -798,7 +800,7 @@ int vgname_from_mda(struct format_type *fmt, struct device_area *dev_area,
 	return r;
 }
 
-static int _scan_raw(struct format_type *fmt)
+static int _scan_raw(const struct format_type *fmt)
 {
 	struct raw_list *rl;
 	struct list *rlh, *raw_list;
@@ -826,14 +828,14 @@ static int _scan_raw(struct format_type *fmt)
 	return 1;
 }
 
-static int _scan(struct format_type *fmt)
+static int _scan(const struct format_type *fmt)
 {
 	return (_scan_file(fmt) & _scan_raw(fmt));
 }
 
 /* For orphan, creates new mdas according to policy.
    Always have an mda between end-of-label and PE_ALIGN boundary */
-static int _mda_setup(struct format_type *fmt,
+static int _mda_setup(const struct format_type *fmt,
 		      uint64_t pe_start, uint64_t pe_end,
 		      int pvmetadatacopies,
 		      uint64_t pvmetadatasize, struct list *mdas,
@@ -889,8 +891,9 @@ static int _mda_setup(struct format_type *fmt,
 			     mda_size1))
 			return 0;
 
-		if (!dev_zero(pv->dev, start1,
-			      mda_size1 > wipe_size ? wipe_size : mda_size1)) {
+		if (!dev_zero((struct device *) pv->dev, start1,
+			      (size_t) (mda_size1 >
+					wipe_size ? wipe_size : mda_size1))) {
 			log_error("Failed to wipe new metadata area");
 			return 0;
 		}
@@ -936,7 +939,8 @@ static int _mda_setup(struct format_type *fmt,
 			     mda_size2))
 			return 0;
 		if (!dev_zero(pv->dev, start2,
-			      mda_size1 > wipe_size ? wipe_size : mda_size1)) {
+			      (size_t) (mda_size1 >
+					wipe_size ? wipe_size : mda_size1))) {
 			log_error("Failed to wipe new metadata area");
 			return 0;
 		}
@@ -949,7 +953,7 @@ static int _mda_setup(struct format_type *fmt,
 
 /* Only for orphans */
 /* Set label_sector to -1 if rewriting existing label into same sector */
-static int _pv_write(struct format_type *fmt, struct physical_volume *pv,
+static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		     struct list *mdas, int64_t label_sector)
 {
 	struct label *label;
@@ -960,6 +964,8 @@ static int _pv_write(struct format_type *fmt, struct physical_volume *pv,
 	char buf[MDA_HEADER_SIZE];
 	struct mda_header *mdah = (struct mda_header *) buf;
 	uint64_t adjustment;
+
+	/* FIXME Test mode don't update cache? */
 
 	if (!(info = cache_add(fmt->labeller, (char *) &pv->id, pv->dev,
 			       ORPHAN, NULL))) {
@@ -1019,7 +1025,9 @@ static int _pv_write(struct format_type *fmt, struct physical_volume *pv,
 				pv->pe_start += (PE_ALIGN - adjustment);
 		}
 	}
-	if (!add_da(fmt, NULL, &info->das, pv->pe_start << SECTOR_SHIFT, 0)) {
+	if (!add_da
+	    (fmt, NULL, &info->das, pv->pe_start << SECTOR_SHIFT,
+	     __UINT64_C(0))) {
 		stack;
 		return 0;
 	}
@@ -1053,7 +1061,7 @@ static int _pv_write(struct format_type *fmt, struct physical_volume *pv,
 	return 1;
 }
 
-static int _get_pv_from_vg(struct format_type *fmt, const char *vg_name,
+static int _get_pv_from_vg(const struct format_type *fmt, const char *vg_name,
 			   const char *id, struct physical_volume *pv)
 {
 	struct volume_group *vg;
@@ -1073,7 +1081,7 @@ static int _get_pv_from_vg(struct format_type *fmt, const char *vg_name,
 
 	list_iterate(pvh, &vg->pvs) {
 		pvl = list_item(pvh, struct pv_list);
-		if (id_equal(&pvl->pv->id, (struct id *) id)) {
+		if (id_equal(&pvl->pv->id, (const struct id *) id)) {
 			memcpy(pv, pvl->pv, sizeof(*pv));
 			return 1;
 		}
@@ -1105,7 +1113,7 @@ static int _add_raw(struct list *raw_list, struct device_area *dev_area)
 	return 1;
 }
 
-static int _pv_read(struct format_type *fmt, const char *pv_name,
+static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
 	struct label *label;
@@ -1121,6 +1129,7 @@ static int _pv_read(struct format_type *fmt, const char *pv_name,
 		return 0;
 	}
 
+	/* FIXME Optimise out repeated reading when cache lock held */
 	if (!(label_read(dev, &label))) {
 		stack;
 		return 0;
@@ -1210,7 +1219,7 @@ static void _free_raws(struct list *raw_list)
 	}
 }
 
-static void _destroy(struct format_type *fmt)
+static void _destroy(const struct format_type *fmt)
 {
 	if (fmt->private) {
 		_free_dirs(&((struct mda_lists *) fmt->private)->dirs);
@@ -1218,7 +1227,7 @@ static void _destroy(struct format_type *fmt)
 		dbg_free(fmt->private);
 	}
 
-	dbg_free(fmt);
+	dbg_free((void *) fmt);
 }
 
 static struct metadata_area_ops _metadata_text_file_ops = {
@@ -1243,7 +1252,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 };
 
 /* pvmetadatasize in sectors */
-static int _pv_setup(struct format_type *fmt,
+static int _pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size,
 		     int pvmetadatacopies,
@@ -1334,8 +1343,8 @@ static int _pv_setup(struct format_type *fmt,
 }
 
 /* NULL vgname means use only the supplied context e.g. an archive file */
-static struct format_instance *_create_text_instance(struct format_type *fmt,
-						     const char *vgname,
+static struct format_instance *_create_text_instance(const struct format_type
+						     *fmt, const char *vgname,
 						     void *context)
 {
 	struct format_instance *fid;
@@ -1408,6 +1417,7 @@ static struct format_instance *_create_text_instance(struct format_type *fmt,
 			/* FIXME Allow multiple dev_areas inside area */
 			memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
 			mda->ops = &_metadata_text_raw_ops;
+			/* FIXME MISTAKE? mda->metadata_locn = context; */
 			list_add(&fid->metadata_areas, &mda->list);
 		}
 

@@ -19,7 +19,6 @@
  */
 
 #include "tools.h"
-#include "defaults.h"
 
 static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, int consistent,
@@ -63,7 +62,8 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (cmd->fmt->features & FMT_MDAS) {
-		pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, 0) * 2;
+		pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG,
+						  __UINT64_C(0)) * 2;
 		if (!pvmetadatasize)
 			pvmetadatasize =
 			    find_config_int(cmd->cf->root,
@@ -122,8 +122,8 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		log_very_verbose("Writing physical volume data to disk \"%s\"",
 				 dev_name(pv->dev));
 		if (!(pv_write(cmd, pv, &mdas,
-			       arg_int_value(cmd, labelsector_ARG,
-					     DEFAULT_LABELSECTOR)))) {
+			       arg_int64_value(cmd, labelsector_ARG,
+					       DEFAULT_LABELSECTOR)))) {
 			log_error("Failed to write physical volume \"%s\"",
 				  dev_name(pv->dev));
 			log_error("Use pvcreate and vgcfgrestore to repair "

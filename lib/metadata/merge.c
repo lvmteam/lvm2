@@ -14,7 +14,7 @@
  */
 static int _merge(struct lv_segment *first, struct lv_segment *second)
 {
-	int s;
+	unsigned int s;
 	uint32_t width;
 
 	if (!first ||

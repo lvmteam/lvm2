@@ -14,6 +14,7 @@
 #include "dev-cache.h"
 #include "list.h"
 #include "uuid.h"
+
 #include <sys/types.h>
 #include <asm/page.h>
 
@@ -21,7 +22,6 @@
 #define MAX_STRIPES 128
 #define SECTOR_SHIFT 9L
 #define SECTOR_SIZE ( 1L << SECTOR_SHIFT )
-#define STRIPE_SIZE_DEFAULT 16	/* 16KB */
 #define STRIPE_SIZE_MIN ( PAGE_SIZE >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
@@ -84,14 +84,14 @@ struct format_type {
 struct physical_volume {
 	struct id id;
 	struct device *dev;
-	struct format_type *fmt;
-	char *vg_name;
+	const struct format_type *fmt;
+	const char *vg_name;
 
 	uint32_t status;
 	uint64_t size;
 
 	/* physical extents */
-	uint64_t pe_size;
+	uint32_t pe_size;
 	uint64_t pe_start;
 	uint32_t pe_count;
 	uint32_t pe_alloc_count;
@@ -134,7 +134,7 @@ struct metadata_area {
 };
 
 struct format_instance {
-	struct format_type *fmt;
+	const struct format_type *fmt;
 	struct list metadata_areas;	/* e.g. metadata locations */
 };
 
@@ -252,19 +252,19 @@ struct format_handler {
 	/*
 	 * Scan any metadata areas that aren't referenced in PV labels
 	 */
-	int (*scan) (struct format_type * fmt);
+	int (*scan) (const struct format_type * fmt);
 
 	/*
 	 * Return PV with given path.
 	 */
-	int (*pv_read) (struct format_type * fmt, const char *pv_name,
+	int (*pv_read) (const struct format_type * fmt, const char *pv_name,
 			struct physical_volume * pv, struct list * mdas);
 
 	/*
 	 * Tweak an already filled out a pv ready for importing into a
 	 * vg.  eg. pe_count is format specific.
 	 */
-	int (*pv_setup) (struct format_type * fmt,
+	int (*pv_setup) (const struct format_type * fmt,
 			 uint64_t pe_start, uint32_t extent_count,
 			 uint32_t extent_size,
 			 int pvmetadatacopies,
@@ -275,8 +275,9 @@ struct format_handler {
 	 * Write a PV structure to disk. Fails if the PV is in a VG ie
 	 * pv->vg_name must be null.
 	 */
-	int (*pv_write) (struct format_type * fmt, struct physical_volume * pv,
-			 struct list * mdas, int64_t label_sector);
+	int (*pv_write) (const struct format_type * fmt,
+			 struct physical_volume * pv, struct list * mdas,
+			 int64_t label_sector);
 
 	/*
 	 * Tweak an already filled out a lv eg, check there
@@ -294,8 +295,8 @@ struct format_handler {
 	/*
 	 * Create format instance with a particular metadata area
 	 */
-	struct format_instance *(*create_instance) (struct format_type * fmt,
-						    const char *vgname,
+	struct format_instance *(*create_instance) (const struct format_type *
+						    fmt, const char *vgname,
 						    void *context);
 
 	/*
@@ -306,7 +307,7 @@ struct format_handler {
 	/*
 	 * Destructor for format type
 	 */
-	void (*destroy) (struct format_type * fmt);
+	void (*destroy) (const struct format_type * fmt);
 };
 
 /*
@@ -328,7 +329,7 @@ int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 
 /* pe_start and pe_end relate to any existing data so that new metadata
  * areas can avoid overlap */
-struct physical_volume *pv_create(struct format_type *fmt,
+struct physical_volume *pv_create(const struct format_type *fmt,
 				  struct device *dev,
 				  struct id *id,
 				  uint64_t size,
@@ -339,10 +340,11 @@ struct physical_volume *pv_create(struct format_type *fmt,
 				  uint64_t pvmetadatasize, struct list *mdas);
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
-			       uint32_t extent_size, int max_pv, int max_lv,
-			       int pv_count, char **pv_names);
+			       uint32_t extent_size, uint32_t max_pv,
+			       uint32_t max_lv, int pv_count, char **pv_names);
 int vg_remove(struct volume_group *vg);
-
+int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
+	      const char *new_name);
 int vg_extend(struct format_instance *fi, struct volume_group *vg,
 	      int pv_count, char **pv_names);
 
@@ -385,7 +387,7 @@ struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
 /* Find an LV within a given VG */
 struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
 struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg,
-				      union lvid *lvid);
+				      const union lvid *lvid);
 
 /* Return the VG that contains a given LV (based on path given in lv_name) */
 /* or environment var */
@@ -419,12 +421,12 @@ int lv_merge_segments(struct logical_volume *lv);
 /*
  * Useful functions for managing snapshots.
  */
-int lv_is_origin(struct logical_volume *lv);
-int lv_is_cow(struct logical_volume *lv);
+int lv_is_origin(const struct logical_volume *lv);
+int lv_is_cow(const struct logical_volume *lv);
 
-struct snapshot *find_cow(struct logical_volume *lv);
-struct snapshot *find_origin(struct logical_volume *lv);
-struct list *find_snapshots(struct logical_volume *lv);
+struct snapshot *find_cow(const struct logical_volume *lv);
+struct snapshot *find_origin(const struct logical_volume *lv);
+struct list *find_snapshots(const struct logical_volume *lv);
 
 int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow,

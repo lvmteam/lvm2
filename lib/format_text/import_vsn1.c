@@ -214,7 +214,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			 struct logical_volume *lv, struct config_node *sn,
 			 struct hash_table *pv_hash)
 {
-	int s;
+	unsigned int s;
 	uint32_t stripes = 0;
 	struct lv_segment *seg;
 	struct config_node *cn;

@@ -204,7 +204,7 @@ int backup_remove(const char *vg_name)
 struct volume_group *backup_read_vg(struct cmd_context *cmd,
 				    const char *vg_name, const char *file)
 {
-	struct volume_group *vg;
+	struct volume_group *vg = NULL;
 	struct format_instance *tf;
 	struct list *mdah;
 	struct metadata_area *mda;
@@ -262,8 +262,8 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 			return 0;
 		}
 		if (!vg->fid->fmt->ops->
-		    pv_setup(vg->fid->fmt, 0, 0, 0, 0, 0,
-			     &vg->fid->metadata_areas, pv, vg)) {
+		    pv_setup(vg->fid->fmt, __UINT64_C(0), 0, 0, 0,
+			     __UINT64_C(0), &vg->fid->metadata_areas, pv, vg)) {
 			log_error("Format-specific setup for %s failed",
 				  dev_name(pv->dev));
 			return 0;
@@ -310,7 +310,7 @@ int backup_restore(struct cmd_context *cmd, const char *vg_name)
 
 int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 {
-	int r;
+	int r = 0;
 	struct format_instance *tf;
 	struct list *mdah;
 	struct metadata_area *mda;

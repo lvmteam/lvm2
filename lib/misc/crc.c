@@ -5,7 +5,8 @@
  */
 
 #include "lib.h"
-#include "lvm-types.h"
+
+#include "crc.h"
 
 /* Calculate an endian-independent CRC of supplied buffer */
 uint32_t calc_crc(uint32_t initial, void *buf, uint32_t size)

@@ -22,12 +22,12 @@
 
 static int _activation = 1;
 
-void set_activation(int activation)
+void set_activation(int act)
 {
-	if (activation == _activation)
+	if (act == _activation)
 		return;
 
-	_activation = activation;
+	_activation = act;
 	if (_activation)
 		log_verbose("Activation enabled. Device-mapper kernel "
 			    "driver will be used.");
@@ -36,7 +36,7 @@ void set_activation(int activation)
 			    "interaction will be attempted.");
 }
 
-int activation()
+int activation(void)
 {
 	return _activation;
 }
@@ -82,7 +82,7 @@ int driver_version(char *version, size_t size)
 /*
  * Returns 1 if info structure populated, else 0 on failure.
  */
-int lv_info(struct logical_volume *lv, struct dm_info *info)
+int lv_info(const struct logical_volume *lv, struct dm_info *info)
 {
 	int r;
 	struct dev_manager *dm;

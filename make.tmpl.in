@@ -50,16 +50,21 @@ endif
 SUFFIXES=
 SUFFIXES=.c .d .o .so
 
-CFLAGS+=-Wall 
-#CFLAGS+=-O2
-CFLAGS+=-g -fno-omit-frame-pointer
+CFLAGS+=-fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline
+
+#CFLAGS+=-W -Wconversion -Wpointer-arith -Wredundant-decls -Wbad-function-cast -Wcast-qual -Wmissing-noreturn
+
+ifeq ("@DEBUG@", "yes")
+  CFLAGS+=-g -fno-omit-frame-pointer -DDEBUG_MEM -DDEBUG
+else
+  CFLAGS+=-O2
+endif
+
+#CFLAGS+=-DDEBUG_POOL
+#CFLAGS+=-DBOUNDS_CHECK
 
 #CFLAGS+=-pg
 #LD_FLAGS=-pg
-
-CFLAGS+=-DDEBUG_MEM -DDEBUG
-#CFLAGS+=-DDEBUG_POOL
-#CFLAGS+=-DBOUNDS_CHECK
 
 LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
 		 awk -F '.' '{printf "%s.%s",$$1,$$2}')

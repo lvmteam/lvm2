@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	while ((dev = dev_iter_next(iter)))
 		printf("%s\n", dev->name);
 
-	dev_iter_destroy(iter):
+      dev_iter_destroy(iter):
 	dev_cache_exit();
 
 	dump_memory();

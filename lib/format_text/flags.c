@@ -14,8 +14,8 @@
  * converted into arrays of strings.
  */
 struct flag {
-	int mask;
-	char *description;
+	const int mask;
+	const char *description;
 };
 
 static struct flag _vg_flags[] = {
@@ -62,7 +62,7 @@ static struct flag *_get_flags(int type)
 
 static int _emit(char **buffer, size_t *size, const char *fmt, ...)
 {
-	size_t n;
+	int n;
 	va_list ap;
 
 	va_start(ap, fmt);

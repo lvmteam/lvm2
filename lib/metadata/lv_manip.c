@@ -10,15 +10,13 @@
 #include "lvm-string.h"
 #include "toolcontext.h"
 
-#include <assert.h>
-
 /*
  * These functions adjust the pe counts in pv's
  * after we've added or removed segments.
  */
 static void _get_extents(struct lv_segment *seg)
 {
-	int s, count;
+	unsigned int s, count;
 	struct physical_volume *pv;
 
 	for (s = 0; s < seg->stripes; s++) {
@@ -30,7 +28,7 @@ static void _get_extents(struct lv_segment *seg)
 
 static void _put_extents(struct lv_segment *seg)
 {
-	int s, count;
+	unsigned int s, count;
 	struct physical_volume *pv;
 
 	for (s = 0; s < seg->stripes; s++) {
@@ -42,7 +40,7 @@ static void _put_extents(struct lv_segment *seg)
 	}
 }
 
-static struct lv_segment *_alloc_segment(struct pool *mem, int stripes)
+static struct lv_segment *_alloc_segment(struct pool *mem, uint32_t stripes)
 {
 	struct lv_segment *seg;
 	uint32_t len = sizeof(*seg) + (stripes * sizeof(seg->area[0]));
@@ -57,9 +55,9 @@ static struct lv_segment *_alloc_segment(struct pool *mem, int stripes)
 
 static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 			      uint32_t stripe_size,
-			      struct pv_area **areas, uint32_t *index)
+			      struct pv_area **areas, uint32_t *ix)
 {
-	uint32_t count = lv->le_count - *index;
+	uint32_t count = lv->le_count - *ix;
 	uint32_t per_area = count / stripes;
 	uint32_t smallest = areas[stripes - 1]->count;
 	uint32_t s;
@@ -75,7 +73,7 @@ static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 
 	seg->lv = lv;
 	seg->type = SEG_STRIPED;
-	seg->le = *index;
+	seg->le = *ix;
 	seg->len = per_area * stripes;
 	seg->stripes = stripes;
 	seg->stripe_size = stripe_size;
@@ -88,14 +86,14 @@ static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 	}
 
 	list_add(&lv->segments, &seg->list);
-	*index += seg->len;
+	*ix += seg->len;
 	return 1;
 }
 
 static int _comp_area(const void *l, const void *r)
 {
-	struct pv_area *lhs = *((struct pv_area **) l);
-	struct pv_area *rhs = *((struct pv_area **) r);
+	const struct pv_area *lhs = *((const struct pv_area **) l);
+	const struct pv_area *rhs = *((const struct pv_area **) r);
 
 	if (lhs->count < rhs->count)
 		return 1;
@@ -113,7 +111,7 @@ static int _alloc_striped(struct logical_volume *lv,
 	int r = 0;
 	struct list *pvmh;
 	struct pv_area **areas;
-	int pv_count = 0, index;
+	unsigned int pv_count = 0, ix;
 	struct pv_map *pvm;
 	size_t len;
 
@@ -129,18 +127,17 @@ static int _alloc_striped(struct logical_volume *lv,
 
 	while (allocated != lv->le_count) {
 
-		index = 0;
+		ix = 0;
 		list_iterate(pvmh, pvms) {
 			pvm = list_item(pvmh, struct pv_map);
 
 			if (list_empty(&pvm->areas))
 				continue;
 
-			areas[index++] = list_item(pvm->areas.n,
-						   struct pv_area);
+			areas[ix++] = list_item(pvm->areas.n, struct pv_area);
 		}
 
-		if (index < stripes) {
+		if (ix < stripes) {
 			log_error("Insufficient allocatable extents suitable "
 				  "for striping for logical volume "
 				  "%s: %u required", lv->name, lv->le_count);
@@ -148,7 +145,7 @@ static int _alloc_striped(struct logical_volume *lv,
 		}
 
 		/* sort the areas so we allocate from the biggest */
-		qsort(areas, index, sizeof(*areas), _comp_area);
+		qsort(areas, ix, sizeof(*areas), _comp_area);
 
 		if (!_alloc_stripe_area(lv, stripes, stripe_size, areas,
 					&allocated)) {
@@ -169,14 +166,14 @@ static int _alloc_striped(struct logical_volume *lv,
  * the complete area then the area is split, otherwise the area
  * is unlinked from the pv_map.
  */
-static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
+static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 			      struct pv_map *map, struct pv_area *pva)
 {
 	uint32_t count, remaining;
 	struct lv_segment *seg;
 
 	count = pva->count;
-	remaining = lv->le_count - *index;
+	remaining = lv->le_count - *ix;
 	if (count > remaining)
 		count = remaining;
 
@@ -187,7 +184,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
 
 	seg->lv = lv;
 	seg->type = SEG_STRIPED;
-	seg->le = *index;
+	seg->le = *ix;
 	seg->len = count;
 	seg->stripe_size = 0;
 	seg->stripes = 1;
@@ -197,7 +194,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
 	list_add(&lv->segments, &seg->list);
 
 	consume_pv_area(pva, count);
-	*index += count;
+	*ix += count;
 	return 1;
 }
 

@@ -20,8 +20,8 @@
 
 #include "tools.h"
 
-int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
-		   const char *vg_name_from)
+static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
+			   const char *vg_name_from)
 {
 	struct volume_group *vg_to, *vg_from;
 	struct list *lvh1, *lvh2;
@@ -202,7 +202,7 @@ int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 
 	for (; opt < argc; opt++) {
-		ret = vgmerge_single(cmd, vg_name_to, argv[opt]);
+		ret = _vgmerge_single(cmd, vg_name_to, argv[opt]);
 		if (ret > ret_max)
 			ret_max = ret;
 	}

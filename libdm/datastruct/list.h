@@ -7,8 +7,6 @@
 #ifndef _LVM_LIST_H
 #define _LVM_LIST_H
 
-#include <assert.h>
-
 struct list {
 	struct list *n, *p;
 };
@@ -62,10 +60,10 @@ static inline int list_end(struct list *head, struct list *elem)
 #define list_iterate_safe(v, t, head) \
 	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
 
-static inline int list_size(struct list *head)
+static inline unsigned int list_size(const struct list *head)
 {
-	int s = 0;
-	struct list *v;
+	unsigned int s = 0;
+	const struct list *v;
 
 	list_iterate(v, head)
 	    s++;

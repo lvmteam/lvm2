@@ -28,7 +28,7 @@
 
 int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 {
-	int max_lv, max_pv;
+	size_t max_lv, max_pv;
 	uint32_t extent_size;
 	char *vg_name;
 	char vg_path[PATH_MAX];
@@ -46,12 +46,12 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	vg_name = argv[0];
-	max_lv = arg_int_value(cmd, maxlogicalvolumes_ARG, DEFAULT_LV);
-	max_pv = arg_int_value(cmd, maxphysicalvolumes_ARG, DEFAULT_PV);
+	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, DEFAULT_LV);
+	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, DEFAULT_PV);
 
 	/* Units of 512-byte sectors */
 	extent_size =
-	    arg_int_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
+	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
 
 	if (max_lv < 1) {
 		log_error("maxlogicalvolumes too low");

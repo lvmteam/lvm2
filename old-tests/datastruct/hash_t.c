@@ -75,7 +75,7 @@ static void _do_test(int table_size, int num_entries)
 		}
 	}
 
-	for (key = all; key; key = tmp)	{
+	for (key = all; key; key = tmp) {
 		tmp = key->next;
 		dbg_free(key);
 	}

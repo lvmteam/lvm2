@@ -15,11 +15,11 @@
 typedef uint32_t *bitset_t;
 
 bitset_t bitset_create(struct pool *mem, unsigned num_bits);
+void bitset_destroy(bitset_t bs);
 
 void bit_union(bitset_t out, bitset_t in1, bitset_t in2);
 int bit_get_first(bitset_t bs);
 int bit_get_next(bitset_t bs, int last_bit);
-
 
 #define BITS_PER_INT (sizeof(int) * CHAR_BIT)
 

@@ -94,7 +94,7 @@ static void _xlate_vgd(struct vg_disk *disk)
 	xx32(pvg_total);
 }
 
-static void _xlate_extents(struct pe_disk *extents, int count)
+static void _xlate_extents(struct pe_disk *extents, uint32_t count)
 {
 	int i;
 
@@ -132,7 +132,7 @@ static int _munge_formats(struct pv_disk *pvd)
 
 static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 {
-	if (dev_read(dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd)) {
+	if (dev_read(dev, __UINT64_C(0), sizeof(*pvd), pvd) != sizeof(*pvd)) {
 		log_very_verbose("Failed to read PV data from %s",
 				 dev_name(dev));
 		return 0;
@@ -155,7 +155,7 @@ static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 	return 1;
 }
 
-static int _read_lvd(struct device *dev, ulong pos, struct lv_disk *disk)
+static int _read_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 {
 	if (dev_read(dev, pos, sizeof(*disk), disk) != sizeof(*disk))
 		fail;
@@ -168,7 +168,7 @@ static int _read_lvd(struct device *dev, ulong pos, struct lv_disk *disk)
 static int _read_vgd(struct disk_list *data)
 {
 	struct vg_disk *vgd = &data->vgd;
-	ulong pos = data->pvd.vg_on_disk.base;
+	uint64_t pos = data->pvd.vg_on_disk.base;
 	if (dev_read(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
 		fail;
 
@@ -182,8 +182,8 @@ static int _read_uuids(struct disk_list *data)
 	int num_read = 0;
 	struct uuid_list *ul;
 	char buffer[NAME_LEN];
-	ulong pos = data->pvd.pv_uuidlist_on_disk.base;
-	ulong end = pos + data->pvd.pv_uuidlist_on_disk.size;
+	uint64_t pos = data->pvd.pv_uuidlist_on_disk.base;
+	uint64_t end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
 	while (pos < end && num_read < data->vgd.pv_cur) {
 		if (dev_read(data->dev, pos, sizeof(buffer), buffer) !=
@@ -212,8 +212,8 @@ static inline int _check_lvd(struct lv_disk *lvd)
 
 static int _read_lvs(struct disk_list *data)
 {
-	int i, read = 0;
-	ulong pos;
+	unsigned int i, read = 0;
+	uint64_t pos;
 	struct lvd_list *ll;
 	struct vg_disk *vgd = &data->vgd;
 
@@ -241,7 +241,7 @@ static int _read_extents(struct disk_list *data)
 {
 	size_t len = sizeof(struct pe_disk) * data->pvd.pe_total;
 	struct pe_disk *extents = pool_alloc(data->mem, len);
-	ulong pos = data->pvd.pe_on_disk.base;
+	uint64_t pos = data->pvd.pe_on_disk.base;
 
 	if (!extents)
 		fail;
@@ -260,7 +260,8 @@ static int _read_extents(struct disk_list *data)
  */
 static void _munge_exported_vg(struct disk_list *data)
 {
-	int l, s;
+	int l;
+	size_t s;
 
 	/* Return if PV not in a VG or VG not exported */
 	if ((!*data->pvd.vg_name) || !(data->vgd.vg_status & VG_EXPORTED))
@@ -274,7 +275,7 @@ static void _munge_exported_vg(struct disk_list *data)
 	data->pvd.pv_status |= VG_EXPORTED;
 }
 
-static struct disk_list *__read_disk(struct format_type *fmt,
+static struct disk_list *__read_disk(const struct format_type *fmt,
 				     struct device *dev, struct pool *mem,
 				     const char *vg_name)
 {
@@ -361,7 +362,7 @@ static struct disk_list *__read_disk(struct format_type *fmt,
 	return NULL;
 }
 
-struct disk_list *read_disk(struct format_type *fmt, struct device *dev,
+struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 			    struct pool *mem, const char *vg_name)
 {
 	struct disk_list *r;
@@ -408,7 +409,7 @@ static void _add_pv_to_list(struct list *head, struct disk_list *data)
  * We keep track of the first object allocated form the pool
  * so we can free off all the memory if something goes wrong.
  */
-int read_pvs_in_vg(struct format_type *fmt, const char *vg_name,
+int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 		   struct dev_filter *filter, struct pool *mem,
 		   struct list *head)
 {
@@ -461,7 +462,7 @@ int read_pvs_in_vg(struct format_type *fmt, const char *vg_name,
 static int _write_vgd(struct disk_list *data)
 {
 	struct vg_disk *vgd = &data->vgd;
-	ulong pos = data->pvd.vg_on_disk.base;
+	uint64_t pos = data->pvd.vg_on_disk.base;
 
 	_xlate_vgd(vgd);
 	if (dev_write(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
@@ -476,8 +477,8 @@ static int _write_uuids(struct disk_list *data)
 {
 	struct uuid_list *ul;
 	struct list *uh;
-	ulong pos = data->pvd.pv_uuidlist_on_disk.base;
-	ulong end = pos + data->pvd.pv_uuidlist_on_disk.size;
+	uint64_t pos = data->pvd.pv_uuidlist_on_disk.base;
+	uint64_t end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
 	list_iterate(uh, &data->uuids) {
 		if (pos >= end) {
@@ -496,7 +497,7 @@ static int _write_uuids(struct disk_list *data)
 	return 1;
 }
 
-static int _write_lvd(struct device *dev, ulong pos, struct lv_disk *disk)
+static int _write_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 {
 	_xlate_lvd(disk);
 	if (dev_write(dev, pos, sizeof(*disk), disk) != sizeof(*disk))
@@ -510,7 +511,7 @@ static int _write_lvd(struct device *dev, ulong pos, struct lv_disk *disk)
 static int _write_lvs(struct disk_list *data)
 {
 	struct list *lvh;
-	ulong pos, offset;
+	uint64_t pos, offset;
 
 	pos = data->pvd.lv_on_disk.base;
 
@@ -540,7 +541,7 @@ static int _write_extents(struct disk_list *data)
 {
 	size_t len = sizeof(struct pe_disk) * data->pvd.pe_total;
 	struct pe_disk *extents = data->extents;
-	ulong pos = data->pvd.pe_on_disk.base;
+	uint64_t pos = data->pvd.pe_on_disk.base;
 
 	_xlate_extents(extents, data->pvd.pe_total);
 	if (dev_write(data->dev, pos, len, extents) != len)
@@ -554,8 +555,8 @@ static int _write_extents(struct disk_list *data)
 static int _write_pvd(struct disk_list *data)
 {
 	char *buf;
-	ulong pos = data->pvd.pv_on_disk.base;
-	ulong size = data->pvd.pv_on_disk.size;
+	uint64_t pos = data->pvd.pv_on_disk.base;
+	size_t size = data->pvd.pv_on_disk.size;
 
 	if (size < sizeof(struct pv_disk)) {
 		log_error("Invalid PV structure size.");
@@ -587,7 +588,8 @@ static int _write_pvd(struct disk_list *data)
 /*
  * assumes the device has been opened.
  */
-static int __write_all_pvd(struct format_type *fmt, struct disk_list *data)
+static int __write_all_pvd(const struct format_type *fmt,
+			   struct disk_list *data)
 {
 	const char *pv_name = dev_name(data->dev);
 
@@ -636,7 +638,7 @@ static int __write_all_pvd(struct format_type *fmt, struct disk_list *data)
 /*
  * opens the device and hands to the above fn.
  */
-static int _write_all_pvd(struct format_type *fmt, struct disk_list *data)
+static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data)
 {
 	int r;
 
@@ -658,7 +660,7 @@ static int _write_all_pvd(struct format_type *fmt, struct disk_list *data)
  * little sanity checking, so make sure correct
  * data is passed to here.
  */
-int write_disks(struct format_type *fmt, struct list *pvs)
+int write_disks(const struct format_type *fmt, struct list *pvs)
 {
 	struct list *pvh;
 	struct disk_list *dl;

@@ -72,7 +72,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 						 void *handle));
 
 char *default_vgname(struct cmd_context *cmd);
-char *extract_vgname(struct cmd_context *cmd, char *lv_name);
+const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
 
 /*
  * Builds a list of pv's from the names in argv.  Used in

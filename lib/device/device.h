@@ -53,15 +53,14 @@ static inline int dev_fd(struct device *dev)
 	return dev->fd;
 }
 
-int raw_read(int fd, void *buf, size_t count);
+ssize_t raw_read(int fd, void *buf, size_t count);
 
-int64_t dev_read(struct device *dev,
-		 uint64_t offset, int64_t len, void *buffer);
-int64_t dev_write(struct device *dev,
-		  uint64_t offset, int64_t len, void *buffer);
-int dev_zero(struct device *dev, uint64_t offset, int64_t len);
+ssize_t dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer);
+int64_t dev_write(struct device *dev, uint64_t offset, size_t len,
+		  void *buffer);
+int dev_zero(struct device *dev, uint64_t offset, size_t len);
 
-static inline const char *dev_name(struct device *dev)
+static inline const char *dev_name(const struct device *dev)
 {
 	return (dev) ? list_item(dev->aliases.n, struct str_list)->str :
 	    "unknown device";
@@ -70,14 +69,20 @@ static inline const char *dev_name(struct device *dev)
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev);
 
-static inline int is_lvm_partition(const char *name)
-{
-	return 1;
-}
-
 static inline int dev_is_open(struct device *dev)
 {
 	return dev->fd >= 0 ? 1 : 0;
 }
+
+/* FIXME Check partition type if appropriate */
+
+#define is_lvm_partition(a) 1
+
+/*
+static inline int is_lvm_partition(const char *name)
+{
+	return 1;
+}
+*/
 
 #endif

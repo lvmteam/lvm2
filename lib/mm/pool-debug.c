@@ -7,8 +7,6 @@
 #include "lib.h"
 #include "pool.h"
 
-#include <assert.h>
-
 struct block {
 	struct block *next;
 	size_t size;

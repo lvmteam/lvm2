@@ -51,23 +51,23 @@ struct archive_file {
  * Extract vg name and version number from a filename.
  */
 static int _split_vg(const char *filename, char *vg, size_t vg_size,
-		     uint32_t *index)
+		     uint32_t *ix)
 {
-	int len, vg_len;
-	char *dot, *underscore;
+	size_t len, vg_len;
+	const char *dot, *underscore;
 
 	len = strlen(filename);
 	if (len < 7)
 		return 0;
 
-	dot = (char *) (filename + len - 3);
+	dot = (filename + len - 3);
 	if (strcmp(".vg", dot))
 		return 0;
 
 	if (!(underscore = rindex(filename, '_')))
 		return 0;
 
-	if (sscanf(underscore + 1, "%u", index) != 1)
+	if (sscanf(underscore + 1, "%u", ix) != 1)
 		return 0;
 
 	vg_len = underscore - filename;
@@ -83,7 +83,7 @@ static int _split_vg(const char *filename, char *vg, size_t vg_size,
 static void _insert_file(struct list *head, struct archive_file *b)
 {
 	struct list *bh;
-	struct archive_file *bf;
+	struct archive_file *bf = NULL;
 
 	if (list_empty(head)) {
 		list_add(head, &b->list);
@@ -123,7 +123,7 @@ static char *_join(struct pool *mem, const char *dir, const char *name)
 static struct list *_scan_archive(struct pool *mem,
 				  const char *vg, const char *dir)
 {
-	int i, count, index;
+	int i, count, ix;
 	char vg_name[64], *path;
 	struct dirent **dirent;
 	struct archive_file *af;
@@ -149,7 +149,7 @@ static struct list *_scan_archive(struct pool *mem,
 
 		/* check the name is the correct format */
 		if (!_split_vg(dirent[i]->d_name, vg_name, sizeof(vg_name),
-			       &index))
+			       &ix))
 			continue;
 
 		/* is it the vg we're interested in ? */
@@ -170,7 +170,7 @@ static struct list *_scan_archive(struct pool *mem,
 			goto out;
 		}
 
-		af->index = index;
+		af->index = ix;
 		af->path = path;
 
 		/*
@@ -231,7 +231,7 @@ int archive_vg(struct volume_group *vg,
 	       uint32_t retain_days, uint32_t min_archive)
 {
 	int i, fd, renamed = 0;
-	unsigned int index = 0;
+	unsigned int ix = 0;
 	struct archive_file *last;
 	FILE *fp = NULL;
 	char temp_file[PATH_MAX], archive_name[PATH_MAX];
@@ -268,15 +268,15 @@ int archive_vg(struct volume_group *vg,
 	}
 
 	if (list_empty(archives))
-		index = 0;
+		ix = 0;
 	else {
 		last = list_item(archives->p, struct archive_file);
-		index = last->index + 1;
+		ix = last->index + 1;
 	}
 
 	for (i = 0; i < 10; i++) {
 		if (lvm_snprintf(archive_name, sizeof(archive_name),
-				 "%s/%s_%05d.vg", dir, vg->name, index) < 0) {
+				 "%s/%s_%05d.vg", dir, vg->name, ix) < 0) {
 			log_error("Archive file name too long.");
 			return 0;
 		}
@@ -284,7 +284,7 @@ int archive_vg(struct volume_group *vg,
 		if ((renamed = lvm_rename(temp_file, archive_name)))
 			break;
 
-		index++;
+		ix++;
 	}
 
 	if (!renamed)

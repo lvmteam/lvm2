@@ -25,23 +25,23 @@ union lvid {
 	char s[2 * sizeof(struct id) + 1];
 };
 
-int lvid_from_lvnum(union lvid *lvid, struct id *vgid, int lv_num);
+int lvid_from_lvnum(union lvid *lvid, struct id *vgid, uint32_t lv_num);
 int lvnum_from_lvid(union lvid *lvid);
 
 int lvid_create(union lvid *lvid, struct id *vgid);
 int id_create(struct id *id);
 int id_valid(struct id *id);
-int id_equal(struct id *lhs, struct id *rhs);
+int id_equal(const struct id *lhs, const struct id *rhs);
 
 /*
  * Fills 'buffer' with a more human readable form
  * of the uuid.
  */
-int id_write_format(struct id *id, char *buffer, size_t size);
+int id_write_format(const struct id *id, char *buffer, size_t size);
 
 /*
  * Reads a formatted uuid.
  */
-int id_read_format(struct id *id, char *buffer);
+int id_read_format(struct id *id, const char *buffer);
 
 #endif

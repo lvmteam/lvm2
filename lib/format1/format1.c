@@ -23,8 +23,9 @@ static int _check_vgs(struct list *pvs, int *partial)
 	struct disk_list *dl = NULL;
 	struct disk_list *first = NULL;
 
-	int pv_count = 0;
-	int exported = -1;
+	uint32_t pv_count = 0;
+	uint32_t exported = 0;
+	int first_time = 1;
 
 	*partial = 0;
 
@@ -36,8 +37,9 @@ static int _check_vgs(struct list *pvs, int *partial)
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
 
-		if (exported < 0) {
+		if (first_time) {
 			exported = dl->pvd.pv_status & VG_EXPORTED;
+			first_time = 0;
 			continue;
 		}
 
@@ -251,8 +253,8 @@ static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 	return r;
 }
 
-int _pv_read(struct format_type *fmt, const char *pv_name,
-	     struct physical_volume *pv, struct list *mdas)
+static int _pv_read(const struct format_type *fmt, const char *pv_name,
+		    struct physical_volume *pv, struct list *mdas)
 {
 	struct pool *mem = pool_create(1024);
 	struct disk_list *dl;
@@ -290,7 +292,7 @@ int _pv_read(struct format_type *fmt, const char *pv_name,
 	return r;
 }
 
-static int _pv_setup(struct format_type *fmt,
+static int _pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size,
 		     int pvmetadatacopies,
@@ -301,7 +303,8 @@ static int _pv_setup(struct format_type *fmt,
 		pv->size--;
 	if (pv->size > MAX_PV_SIZE) {
 		log_error("Physical volumes cannot be bigger than %s",
-			  display_size(fmt->cmd, MAX_PV_SIZE / 2, SIZE_SHORT));
+			  display_size(fmt->cmd, (uint64_t) MAX_PV_SIZE / 2,
+				       SIZE_SHORT));
 		return 0;
 	}
 
@@ -329,10 +332,10 @@ static int _pv_setup(struct format_type *fmt,
 	return 1;
 }
 
-static int _find_free_lvnum(struct logical_volume *lv)
+static uint32_t _find_free_lvnum(struct logical_volume *lv)
 {
 	int lvnum_used[MAX_LV];
-	int i = 0;
+	uint32_t i = 0;
 	struct list *lvh;
 	struct lv_list *lvl;
 
@@ -371,7 +374,7 @@ static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 	return 1;
 }
 
-static int _pv_write(struct format_type *fmt, struct physical_volume *pv,
+static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		     struct list *mdas, int64_t sector)
 {
 	struct pool *mem;
@@ -434,7 +437,7 @@ static int _pv_write(struct format_type *fmt, struct physical_volume *pv,
 	return 0;
 }
 
-int _vg_setup(struct format_instance *fid, struct volume_group *vg)
+static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 {
 	/* just check max_pv and max_lv */
 	if (vg->max_lv >= MAX_LV)
@@ -445,10 +448,12 @@ int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 
 	if (vg->extent_size > MAX_PE_SIZE || vg->extent_size < MIN_PE_SIZE) {
 		log_error("Extent size must be between %s and %s",
-			  display_size(fid->fmt->cmd, MIN_PE_SIZE / 2,
+			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE
+				       / 2,
 				       SIZE_SHORT), display_size(fid->fmt->cmd,
-								 MAX_PE_SIZE /
-								 2,
+								 (uint64_t)
+								 MAX_PE_SIZE
+								 / 2,
 								 SIZE_SHORT));
 
 		return 0;
@@ -456,8 +461,8 @@ int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 
 	if (vg->extent_size % MIN_PE_SIZE) {
 		log_error("Extent size must be multiple of %s",
-			  display_size(fid->fmt->cmd, MIN_PE_SIZE / 2,
-				       SIZE_SHORT));
+			  display_size(fid->fmt->cmd,
+				       (uint64_t) MIN_PE_SIZE / 2, SIZE_SHORT));
 		return 0;
 	}
 
@@ -475,8 +480,9 @@ static struct metadata_area_ops _metadata_format1_ops = {
 	vg_write:_vg_write,
 };
 
-struct format_instance *_create_instance(struct format_type *fmt,
-					 const char *vgname, void *private)
+static struct format_instance *_create_instance(const struct format_type *fmt,
+						const char *vgname,
+						void *private)
 {
 	struct format_instance *fid;
 	struct metadata_area *mda;
@@ -503,14 +509,14 @@ struct format_instance *_create_instance(struct format_type *fmt,
 	return fid;
 }
 
-void _destroy_instance(struct format_instance *fid)
+static void _destroy_instance(struct format_instance *fid)
 {
 	return;
 }
 
-void _destroy(struct format_type *fmt)
+static void _destroy(const struct format_type *fmt)
 {
-	dbg_free(fmt);
+	dbg_free((void *) fmt);
 }
 
 static struct format_handler _format1_ops = {

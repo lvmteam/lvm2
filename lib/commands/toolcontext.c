@@ -53,7 +53,7 @@ static int _get_env_vars(struct cmd_context *cmd)
 
 static void _init_logging(struct cmd_context *cmd)
 {
-	char *open_mode = "a";
+	const char *open_mode = "a";
 	time_t t;
 
 	const char *log_file;
@@ -329,7 +329,7 @@ static int _init_formats(struct cmd_context *cmd)
 	struct config_node *cn;
 	struct config_value *cv;
 
-	struct format_type *(*init_format_fn) (struct cmd_context * cmd);
+	struct format_type *(*init_format_fn) (struct cmd_context *);
 
 	void *lib;
 
@@ -452,7 +452,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	return NULL;
 }
 
-void destroy_formats(struct list *formats)
+static void _destroy_formats(struct list *formats)
 {
 	struct list *fmtl, *tmp;
 	struct format_type *fmt;
@@ -475,7 +475,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	cache_destroy();
 	label_exit();
-	destroy_formats(&cmd->formats);
+	_destroy_formats(&cmd->formats);
 	cmd->filter->destroy(cmd->filter);
 	pool_destroy(cmd->mem);
 	dev_cache_exit();

@@ -12,7 +12,7 @@
 struct hash_table;
 struct hash_node;
 
-typedef void (*iterate_fn)(void *data);
+typedef void (*iterate_fn) (void *data);
 
 struct hash_table *hash_create(unsigned size_hint);
 void hash_destroy(struct hash_table *t);
@@ -36,4 +36,3 @@ struct hash_node *hash_get_next(struct hash_table *t, struct hash_node *n);
 	     v = hash_get_next(h, v))
 
 #endif
-

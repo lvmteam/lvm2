@@ -5,13 +5,11 @@
  */
 
 #include "tools.h"
-#include "defaults.h"
 #include "label.h"
 #include "version.h"
 
 #include "stub.h"
 
-#include <assert.h>
 #include <getopt.h>
 #include <signal.h>
 #include <syslog.h>
@@ -32,7 +30,7 @@
  */
 struct arg the_args[ARG_COUNT + 1] = {
 
-#define arg(a, b, c, d) {b, "--" c, d, 0, NULL},
+#define arg(a, b, c, d) {b, "--" c, d, 0, NULL, 0, 0, __INT64_C(0), __UINT64_C(0), 0, NULL},
 #include "args.h"
 #undef arg
 
@@ -48,11 +46,15 @@ int yes_no_arg(struct cmd_context *cmd, struct arg *a)
 {
 	a->sign = SIGN_NONE;
 
-	if (!strcmp(a->value, "y"))
+	if (!strcmp(a->value, "y")) {
 		a->i_value = 1;
+		a->ui_value = 1;
+	}
 
-	else if (!strcmp(a->value, "n"))
+	else if (!strcmp(a->value, "n")) {
 		a->i_value = 0;
+		a->ui_value = 0;
+	}
 
 	else
 		return 0;
@@ -82,7 +84,7 @@ int metadatatype_arg(struct cmd_context *cmd, struct arg *a)
 	return 0;
 }
 
-int _get_int_arg(struct arg *a, char **ptr)
+static int _get_int_arg(struct arg *a, char **ptr)
 {
 	char *val;
 	long v;
@@ -109,7 +111,9 @@ int _get_int_arg(struct arg *a, char **ptr)
 	if (*ptr == val)
 		return 0;
 
-	a->i_value = (uint32_t) v;
+	a->i_value = (int32_t) v;
+	a->ui_value = (uint32_t) v;
+
 	return 1;
 }
 
@@ -117,7 +121,7 @@ static int _size_arg(struct cmd_context *cmd, struct arg *a, int factor)
 {
 	char *ptr;
 	int i;
-	static char *suffixes = "kmgt";
+	static const char *suffixes = "kmgt";
 	char *val;
 	double v;
 
@@ -156,7 +160,8 @@ static int _size_arg(struct cmd_context *cmd, struct arg *a, int factor)
 	} else
 		v *= factor;
 
-	a->i_value = (uint32_t) v;
+	a->i_value = (int32_t) v;
+	a->ui_value = (uint32_t) v;
 	a->i64_value = (int64_t) v;
 	a->ui64_value = (uint64_t) v;
 
@@ -218,10 +223,10 @@ int permission_arg(struct cmd_context *cmd, struct arg *a)
 	a->sign = SIGN_NONE;
 
 	if ((!strcmp(a->value, "rw")) || (!strcmp(a->value, "wr")))
-		a->i_value = LVM_READ | LVM_WRITE;
+		a->ui_value = LVM_READ | LVM_WRITE;
 
 	else if (!strcmp(a->value, "r"))
-		a->i_value = LVM_READ;
+		a->ui_value = LVM_READ;
 
 	else
 		return 0;
@@ -268,7 +273,7 @@ static void _alloc_command(void)
 }
 
 static void _create_new_command(const char *name, command_fn command,
-				const char *desc, const char *usage,
+				const char *desc, const char *usagestr,
 				int nargs, int *args)
 {
 	struct command *nc;
@@ -279,21 +284,21 @@ static void _create_new_command(const char *name, command_fn command,
 
 	nc->name = name;
 	nc->desc = desc;
-	nc->usage = usage;
+	nc->usage = usagestr;
 	nc->fn = command;
 	nc->num_args = nargs;
 	nc->valid_args = args;
 }
 
 static void _register_command(const char *name, command_fn fn,
-			      const char *desc, const char *usage, ...)
+			      const char *desc, const char *usagestr, ...)
 {
 	int nargs = 0, i;
 	int *args;
 	va_list ap;
 
 	/* count how many arguments we have */
-	va_start(ap, usage);
+	va_start(ap, usagestr);
 	while (va_arg(ap, int) >= 0)
 		 nargs++;
 	va_end(ap);
@@ -305,13 +310,13 @@ static void _register_command(const char *name, command_fn fn,
 	}
 
 	/* fill them in */
-	va_start(ap, usage);
+	va_start(ap, usagestr);
 	for (i = 0; i < nargs; i++)
 		args[i] = va_arg(ap, int);
 	va_end(ap);
 
 	/* enter the command in the register */
-	_create_new_command(name, fn, desc, usage, nargs, args);
+	_create_new_command(name, fn, desc, usagestr, nargs, args);
 }
 
 static void _register_commands()
@@ -346,7 +351,7 @@ static struct command *_find_command(const char *name)
 	return _commands + i;
 }
 
-void usage(const char *name)
+static void _usage(const char *name)
 {
 	struct command *com = _find_command(name);
 
@@ -416,12 +421,15 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 	struct arg *a;
 
 	for (i = 0; i < ARG_COUNT; i++) {
-		struct arg *a = the_args + i;
+		a = the_args + i;
 
 		/* zero the count and arg */
 		a->count = 0;
 		a->value = 0;
 		a->i_value = 0;
+		a->ui_value = 0;
+		a->i64_value = 0;
+		a->ui64_value = 0;
 	}
 
 	/* fill in the short and long opts */
@@ -471,7 +479,8 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 
 static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 {
-	struct arg *old, *new;
+	const struct arg *old;
+	struct arg *new;
 
 	if (arg_count(cmd, oldarg) && arg_count(cmd, newarg)) {
 		log_error("%s and %s are synonyms.  Please only supply one.",
@@ -488,6 +497,9 @@ static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 	new->count = old->count;
 	new->value = old->value;
 	new->i_value = old->i_value;
+	new->ui_value = old->ui_value;
+	new->i64_value = old->i64_value;
+	new->ui64_value = old->ui64_value;
 	new->sign = old->sign;
 
 	return 1;
@@ -495,13 +507,13 @@ static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 
 int version(struct cmd_context *cmd, int argc, char **argv)
 {
-	char version[80];
+	char vsn[80];
 
 	log_print("LVM version:     %s", LVM_VERSION);
-	if (library_version(version, sizeof(version)))
-		log_print("Library version: %s", version);
-	if (driver_version(version, sizeof(version)))
-		log_print("Driver version:  %s", version);
+	if (library_version(vsn, sizeof(vsn)))
+		log_print("Library version: %s", vsn);
+	if (driver_version(vsn, sizeof(vsn)))
+		log_print("Driver version:  %s", vsn);
 
 	return ECMD_PROCESSED;
 }
@@ -572,7 +584,7 @@ static int _get_settings(struct cmd_context *cmd)
 static int _process_common_commands(struct cmd_context *cmd)
 {
 	if (arg_count(cmd, help_ARG) || arg_count(cmd, help2_ARG)) {
-		usage(cmd->command->name);
+		_usage(cmd->command->name);
 		return ECMD_PROCESSED;
 	}
 
@@ -606,7 +618,7 @@ int help(struct cmd_context *cmd, int argc, char **argv)
 	else {
 		int i;
 		for (i = 0; i < argc; i++)
-			usage(argv[i]);
+			_usage(argv[i]);
 	}
 
 	return 0;
@@ -646,7 +658,8 @@ static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 			goto bad;
 
 		if (i < (argc - 1))
-			if (!pool_grow_object(cmd->mem, " ", 1)) ;
+			if (!pool_grow_object(cmd->mem, " ", 1))
+				goto bad;
 	}
 
 	/*
@@ -721,7 +734,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	pool_empty(cmd->mem);
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
-		usage(cmd->command->name);
+		_usage(cmd->command->name);
 
 	return ret;
 }
@@ -761,7 +774,7 @@ static void _init_rand(void)
 
 static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
 {
-	int days, min;
+	uint32_t days, min;
 	char default_dir[PATH_MAX];
 	const char *dir;
 
@@ -777,11 +790,11 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
 	    find_config_bool(cmd->cf->root, "backup/archive", '/',
 			     DEFAULT_ARCHIVE_ENABLED);
 
-	days = find_config_int(cmd->cf->root, "backup/retain_days", '/',
-			       DEFAULT_ARCHIVE_DAYS);
+	days = (uint32_t) find_config_int(cmd->cf->root, "backup/retain_days",
+					  '/', DEFAULT_ARCHIVE_DAYS);
 
-	min = find_config_int(cmd->cf->root, "backup/retain_min", '/',
-			      DEFAULT_ARCHIVE_NUMBER);
+	min = (uint32_t) find_config_int(cmd->cf->root, "backup/retain_min",
+					 '/', DEFAULT_ARCHIVE_NUMBER);
 
 	if (lvm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
@@ -909,7 +922,7 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 static char *_list_cmds(const char *text, int state)
 {
 	static int i = 0;
-	static int len = 0;
+	static size_t len = 0;
 
 	/* Initialise if this is a new completion attempt */
 	if (!state) {
@@ -928,7 +941,7 @@ static char *_list_cmds(const char *text, int state)
 static char *_list_args(const char *text, int state)
 {
 	static int match_no = 0;
-	static int len = 0;
+	static size_t len = 0;
 	static struct command *com;
 
 	/* Initialise if this is a new completion attempt */
@@ -946,10 +959,10 @@ static char *_list_args(const char *text, int state)
 
 		/* Look for word in list of commands */
 		for (j = 0; j < _num_commands; j++) {
-			char *p;
+			const char *p;
 			char *q = s;
 
-			p = (char *) _commands[j].name;
+			p = _commands[j].name;
 			while (*p == *q) {
 				p++;
 				q++;
@@ -984,7 +997,7 @@ static char *_list_args(const char *text, int state)
 		match_no = com->num_args;
 
 	while (match_no - com->num_args < com->num_args) {
-		char *l;
+		const char *l;
 		l = (the_args +
 		     com->valid_args[match_no++ - com->num_args])->long_arg;
 		if (*(l + 2) && !strncmp(text, l, len))

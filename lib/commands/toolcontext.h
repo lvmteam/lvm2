@@ -45,7 +45,7 @@ struct cmd_context {
 	/* format handler allocates all objects from here */
 	struct pool *mem;
 
-	struct format_type *fmt;	/* Current format to use by default */
+	const struct format_type *fmt;	/* Current format to use by default */
 	struct format_type *fmt_backup;	/* Format to use for backups */
 
 	struct list formats;	/* Available formats */

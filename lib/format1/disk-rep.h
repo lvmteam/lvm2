@@ -178,14 +178,14 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
  * disk_lists.
  */
 
-struct disk_list *read_disk(struct format_type *fmt, struct device *dev,
+struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 			    struct pool *mem, const char *vg_name);
 
-int read_pvs_in_vg(struct format_type *fmt, const char *vg_name,
+int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 		   struct dev_filter *filter,
 		   struct pool *mem, struct list *results);
 
-int write_disks(struct format_type *fmt, struct list *pvds);
+int write_disks(const struct format_type *fmt, struct list *pvds);
 
 /*
  * Functions to translate to between disk and in
@@ -205,10 +205,10 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd);
 
 int import_extents(struct pool *mem, struct volume_group *vg,
 		   struct list *pvds);
-int export_extents(struct disk_list *dl, int lv_num,
+int export_extents(struct disk_list *dl, uint32_t lv_num,
 		   struct logical_volume *lv, struct physical_volume *pv);
 
-int import_pvs(struct format_type *fmt, struct pool *mem,
+int import_pvs(const struct format_type *fmt, struct pool *mem,
 	       struct volume_group *vg,
 	       struct list *pvds, struct list *results, int *count);
 

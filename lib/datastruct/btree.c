@@ -46,7 +46,7 @@ static uint32_t _shuffle(uint32_t k)
 #endif
 }
 
-struct node **_lookup(struct node **c, uint32_t key, struct node **p)
+static struct node **_lookup(struct node **c, uint32_t key, struct node **p)
 {
 	*p = NULL;
 	while (*c) {

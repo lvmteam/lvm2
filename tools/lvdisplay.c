@@ -20,8 +20,8 @@
 
 #include "tools.h"
 
-int lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
-		     void *handle)
+static int _lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
+			     void *handle)
 {
 	if (arg_count(cmd, colon_ARG))
 		lvdisplay_colons(lv);
@@ -57,5 +57,5 @@ int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	return process_each_lv(cmd, argc, argv, LCK_VG_READ, NULL,
-			       &lvdisplay_single);
+			       &_lvdisplay_single);
 }

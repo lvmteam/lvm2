@@ -22,8 +22,8 @@
 
 /* FIXME Locking.  PVs in VG. */
 
-int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
-		    void *handle)
+static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
+			    void *handle)
 {
 	struct volume_group *vg = NULL;
 	struct pv_list *pvl;
@@ -131,7 +131,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		backup(vg);
 		unlock_vg(cmd, pv->vg_name);
 	} else {
-		if (!(pv_write(cmd, pv, &mdas, sector))) {
+		if (!(pv_write(cmd, pv, &mdas, (int64_t) sector))) {
 			unlock_vg(cmd, ORPHAN);
 			log_error("Failed to store physical volume \"%s\"",
 				  pv_name);
@@ -154,7 +154,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	struct physical_volume *pv;
 	char *pv_name;
 
-	struct list *pvh, *pvs;
+	struct list *pvh, *pvslist;
 	struct list mdas;
 
 	list_init(&mdas);
@@ -186,20 +186,20 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 				continue;
 			}
 			total++;
-			done += pvchange_single(cmd, pv, NULL);
+			done += _pvchange_single(cmd, pv, NULL);
 		}
 	} else {
 		log_verbose("Scanning for physical volume names");
-		if (!(pvs = get_pvs(cmd))) {
+		if (!(pvslist = get_pvs(cmd))) {
 			return ECMD_FAILED;
 		}
 
-		list_iterate(pvh, pvs) {
+		list_iterate(pvh, pvslist) {
 			total++;
-			done += pvchange_single(cmd,
-						list_item(pvh,
-							  struct pv_list)->pv,
-						NULL);
+			done += _pvchange_single(cmd,
+						 list_item(pvh,
+							   struct pv_list)->pv,
+						 NULL);
 		}
 	}
 

@@ -29,6 +29,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	const char *active_str, *snapshot_str;
 
+/* FIXME Add -D arg to skip this! */
 	if (lv_info(lv, &info) && info.exists)
 		active_str = "ACTIVE   ";
 	else
@@ -45,6 +46,8 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 		  cmd->dev_dir, lv->vg->name, lv->name,
 		  display_size(cmd, lv->size / 2, SIZE_SHORT),
 		  get_alloc_string(lv->alloc));
+
+	/* FIXME sprintf? */
 
 	lv_total++;
 

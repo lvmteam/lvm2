@@ -28,7 +28,7 @@ struct cache_vginfo {
 	struct list infos;	/* List head for cache_infos */
 	char *vgname;		/* "" == orphan */
 	char vgid[ID_LEN + 1];
-	struct format_type *fmt;
+	const struct format_type *fmt;
 };
 
 struct cache_info {
@@ -37,14 +37,14 @@ struct cache_info {
 	struct list das;	/* list head for data areas */
 	struct cache_vginfo *vginfo;	/* NULL == unknown */
 	struct label *label;
-	struct format_type *fmt;
+	const struct format_type *fmt;
 	struct device *dev;
 	uint64_t device_size;	/* Bytes */
 	uint32_t status;
 };
 
-int cache_init();
-void cache_destroy();
+int cache_init(void);
+void cache_destroy(void);
 
 /* Set full_scan to 1 to reread every filtered device label */
 int cache_label_scan(struct cmd_context *cmd, int full_scan);
@@ -60,7 +60,7 @@ int cache_update_vgname(struct cache_info *info, const char *vgname);
 int cache_update_vg(struct volume_group *vg);
 
 /* Queries */
-struct format_type *fmt_from_vgname(const char *vgname);
+const struct format_type *fmt_from_vgname(const char *vgname);
 struct cache_vginfo *vginfo_from_vgname(const char *vgname);
 struct cache_vginfo *vginfo_from_vgid(const char *vgid);
 struct cache_info *info_from_pvid(const char *pvid);

@@ -62,7 +62,7 @@ static void _calc_simple_layout(struct pv_disk *pvd)
 	pvd->pe_on_disk.size = pvd->pe_total * sizeof(struct pe_disk);
 }
 
-int _check_vg_limits(struct disk_list *dl)
+static int _check_vg_limits(struct disk_list *dl)
 {
 	if (dl->vgd.lv_max > MAX_LV) {
 		log_error("MaxLogicalVolumes of %d exceeds format limit of %d "

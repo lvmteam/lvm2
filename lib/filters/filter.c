@@ -34,8 +34,8 @@
 #define NUMBER_OF_MAJORS 256
 
 typedef struct {
-	char *name;
-	int max_partitions;
+	const char *name;
+	const int max_partitions;
 } device_info_t;
 
 static int _md_major = -1;
@@ -46,7 +46,7 @@ int md_major(void)
 }
 
 /* This list can be supplemented with devices/types in the config file */
-static device_info_t device_info[] = {
+static const device_info_t device_info[] = {
 	{"ide", 16},		/* IDE disk */
 	{"sd", 16},		/* SCSI disk */
 	{"md", 16},		/* Multiple Disk driver (SoftRAID) */
@@ -90,7 +90,7 @@ static int *_scan_proc_dev(const char *proc, struct config_node *cn)
 	int i, j = 0;
 	int line_maj = 0;
 	int blocksection = 0;
-	int dev_len = 0;
+	size_t dev_len = 0;
 	struct config_value *cv;
 	int *max_partitions_by_major;
 	char *name;
