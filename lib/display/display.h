@@ -15,27 +15,17 @@
  * License along with this LVM library; if not, write to the Free
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
  * MA 02111-1307, USA
+ *
  */
 
-#ifndef _LVM_HASH_H
-#define _LVM_HASH_H
+#ifndef _LVM_DISPLAY_H
+#define _LVM_DISPLAY_H
 
-extern unsigned char hash_nums[256];
+typedef	enum {SIZE_LONG=0, SIZE_SHORT=1} size_len_t;
 
-static inline unsigned hash(const char *str)
-{
-	unsigned long int h = 0, g;
-	while (*str) {
-		h <<= 4;
-		h += hash_nums[(int) *str++];
-		g = h & ((unsigned long) 0xf << 16u);
-		if (g) {
-			h ^= g >> 16u;
-			h ^= g >> 5u;
-		}
-	}
-	return h;
-};
+/* Specify size in KB */
+char *display_size(unsigned long long size, size_len_t sl);
+
+char *display_uuid(char *uuidstr);
 
 #endif
-

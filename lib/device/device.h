@@ -17,25 +17,11 @@
  * MA 02111-1307, USA
  */
 
-#ifndef _LVM_HASH_H
-#define _LVM_HASH_H
+#ifndef _LVM_DEVICE_H
+#define _LVM_DEVICE_H
 
-extern unsigned char hash_nums[256];
-
-static inline unsigned hash(const char *str)
-{
-	unsigned long int h = 0, g;
-	while (*str) {
-		h <<= 4;
-		h += hash_nums[(int) *str++];
-		g = h & ((unsigned long) 0xf << 16u);
-		if (g) {
-			h ^= g >> 16u;
-			h ^= g >> 5u;
-		}
-	}
-	return h;
-};
+int do_ioctl(const char *file, int mode, unsigned long cmd, void *req);
+int device_get_size(const char *dev_name);
 
 #endif
 
