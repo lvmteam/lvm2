@@ -1,7 +1,7 @@
 Version 2.00.23 - 
 ====================================
+  Test for incompatible format/segtype combinations in lv_extend.
   Fix lvchange example on man page.
-
 
 Version 2.00.22 - 3rd September 2004
 ====================================

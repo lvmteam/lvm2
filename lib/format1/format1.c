@@ -24,6 +24,7 @@
 #include "lvmcache.h"
 #include "lvm1-label.h"
 #include "format1.h"
+#include "segtypes.h"
 
 #define FMT_LVM1_NAME "lvm1"
 
@@ -492,6 +493,17 @@ static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 	return 1;
 }
 
+static int _segtype_supported (struct format_instance *fid, 
+			       struct segment_type *segtype)
+{
+	if (!(segtype->flags & SEG_FORMAT1_SUPPORT)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
 static struct metadata_area_ops _metadata_format1_ops = {
 	vg_read:_vg_read,
 	vg_write:_vg_write,
@@ -542,6 +554,7 @@ static struct format_handler _format1_ops = {
 	pv_write:_pv_write,
 	lv_setup:_lv_setup,
 	vg_setup:_vg_setup,
+	segtype_supported:_segtype_supported,
 	create_instance:_create_instance,
 	destroy_instance:_destroy_instance,
 	destroy:_destroy,
