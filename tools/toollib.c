@@ -107,7 +107,7 @@ int process_each_lv(int argc, char **argv,
 				ret_max = ret;
 		}
 	} else {
-		log_verbose("Finding all logical volume(s)");
+		log_verbose("Finding all logical volumes");
 		if (!(vgs = fid->ops->get_vgs(fid))) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
@@ -146,7 +146,7 @@ int process_each_vg(int argc, char **argv,
 			if ((ret = process_single(argv[opt])) > ret_max)
 				ret_max = ret;
 	} else {
-		log_verbose("Finding all volume group(s)");
+		log_verbose("Finding all volume groups");
 		if (!(vgs = fid->ops->get_vgs(fid))) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
