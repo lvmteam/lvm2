@@ -33,10 +33,11 @@
 #define CLUSTERED         	0x00000400  /* VG */
 #define SHARED            	0x00000800  /* VG */
 
-#define ALLOC_STRICT		0x00001000  /* LV */
-#define ALLOC_CONTIGUOUS  	0x00002000  /* LV */
-#define SNAPSHOT          	0x00004000  /* LV */
-#define SNAPSHOT_ORG      	0x00008000  /* LV */
+#define ALLOC_SIMPLE            0x00001000  /* LVM */
+#define ALLOC_STRICT		0x00002000  /* LV */
+#define ALLOC_CONTIGUOUS  	0x00004000  /* LV */
+#define SNAPSHOT          	0x00008000  /* LV */
+#define SNAPSHOT_ORG      	0x00010000  /* LV */
 
 
 #define EXPORTED_TAG "PV_EXP"  /* Identifier of exported PV */
