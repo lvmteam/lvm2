@@ -20,30 +20,18 @@
 
 #include "tools.h"
 
-void pvchange_single_volume(struct physical_volume *pv);
+int pvchange_single(struct physical_volume *pv);
 
 int pvchange(int argc, char **argv)
 {
-	int back_it_up = 0;
-	int change_msg = 0;
-	int done = 0;
-	int doit = 0;
-	int not_done = 0;
-	int allocation;
-
 	int opt = 0;
-	int ret = 0;
+	int done = 0;
+	int total = 0;
 
+	struct physical_volume *pv;
 	char *pv_name;
-	char *vg_name;
 
-	struct physical_volume *pv = NULL;
-	struct volume_group *vg = NULL;
-	struct device *pv_dev;
-	struct list_head *pvh;
-	struct pv_list *pvl, *pvs_list;
-
-	allocation = !strcmp(arg_str_value(allocation_ARG, "n"), "y");
+	struct list_head *pvh, *pvs;
 
 	if (arg_count(allocation_ARG) == 0) {
 		log_error("Please give the x option");
@@ -60,119 +48,109 @@ int pvchange(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(all_ARG)) {
-		log_verbose("Scanning for physical volume names");
-		if (!(pvs_list = ios->get_pvs(ios))) {
-			return ECMD_FAILED;
-		}
-
-		list_for_each(pvh, &pvs_list->list) {
-			pvl = list_entry(pvh, struct pv_list, list);
-			pv = &pvl->pv;
-			pvchange_single_volume(pv);
-		}
-	} else {
+	if (argc) {
+		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
-			if (!(pv_dev = dev_cache_get(pv_name))) {
-				log_error("Device %s not found", pv_name);
-				continue;
-			}
-			if (!(pv = ios->pv_read(ios, pv_dev))) {
+			if (!(pv = ios->pv_read(ios, pv_name))) {
 				log_error("Failed to read physical volume %s",
 					  pv_name);
 				continue;
 			}
-			pvchange_single_volume(pv);
+			total++;
+			done += pvchange_single(pv);
+		}
+	} else {
+		log_verbose("Scanning for physical volume names");
+		if (!(pvs = ios->get_pvs(ios))) {
+			return ECMD_FAILED;
+		}
+
+		list_for_each(pvh, pvs) {
+			total++;
+			done += pvchange_single(&list_entry(pvh, struct pv_list,
+							    list)->pv);
 		}
 	}
 
-	if (back_it_up)
-		if ((ret = do_autobackup(vg_name, vg)))
-			return ret;
+/******* FIXME Backup
+	if ((ret = do_autobackup(vg_name, vg)))
+		return ret;
+*********/
 
-	log_print("%d physical volume%s changed / %d physical volume%s "
-		  "already o.k.", done, done != 1 ? "s" : "", not_done,
-		  not_done != 1 ? "s" : "");
+	log_print("%d physical volume(s) changed / %d physical volume(s) "
+		  "not changed", done, total - done);
 
 	return 0;
 }
 
-void pvchange_single_volume(struct physical_volume *pv)
+int pvchange_single(struct physical_volume *pv)
 {
-	struct volume_group *vg;
+	struct volume_group *vg = NULL;
+	struct list_head *pvh;
 
-	change_msg = 0;
+	char *pv_name = pv->dev->name;
 
-	/* FIXME: Check these verbose messages appear in the library now */
-	/* log_verbose("reading physical volume data %s from disk", pv_name); */
+	int allocation = !strcmp(arg_str_value(allocation_ARG, "n"), "y");
 
-	/* FIXME: Ensure these are tested in the library */
-	/* log_error("physical volume %s has an invalid version", pv_name); */
-	/* log_error("physical volume %s has invalid identity", pv_name); */
-
-	/* FIXME: Where do consistency checks fit? */
-	/* log_verbose("checking physical volume %s consistency", pv_name); */
-
-	/* FIXME: Does the VG really have to be active to proceed? */
-	log_verbose("finding volume group of physical volume %s", pv_name);
-	if (!(vg = ios->vg_read(ios, pv->vg_name))) {
-		log_print("unable to find volume group of %s (VG not active?)",
-			  pv->dev->name);
-		doit = 0;
-		return;
+	/* If in a VG, must change using volume group.  Pointless. */
+	/* FIXME: Provide a direct pv_write_pv that *only* touches PV structs*/
+	if (*pv->vg_name) {
+		log_verbose("Finding volume group of physical volume %s", 
+			    pv_name);
+		if (!(vg = ios->vg_read(ios, pv->vg_name))) {
+			log_error("Unable to find volume group of %s", pv_name);
+			return 0;
+		}
+		if (!(pvh = find_pv_in_vg(vg, pv_name))) {
+			log_error("Unable to find %s in volume group %s",
+				pv_name, vg->name);
+			return 0;
+		}
+		pv = &list_entry(pvh, struct pv_list, list)->pv;
 	}
-
-	back_it_up = doit = 1;
 
 	/* change allocatability for a PV */
-	if (arg_count(allocation_ARG) > 0) {
-		if (allocation && (pv->status & ALLOCATED_PV)) {
-			log_error("physical volume %s is allocatable", pv_name);
-			not_done++;
-			return;
-		} else
-			change_msg = 1;
-
-		if (!allocation && !(pv->status & ALLOCATED_PV)) {
-			log_error("physical volume %s is unallocatable",
-				  pv_name);
-			not_done++;
-			return;
-		} else
-			change_msg = 1;
-
-		if (allocation) {
-			log_verbose
-			    ("setting physical volume %s allocatable", pv_name);
-			pv->status |= ALLOCATED_PV;
-		} else {
-			log_verbose
-			    ("setting physical volume %s NOT allocatable",
-			     pv_name);
-			pv->status &= ~ALLOCATED_PV;
-		}
+	if (allocation && (pv->status & ALLOCATED_PV)) {
+		log_error("Physical volume %s is already allocatable", pv_name);
+		return 0;
 	}
 
-	done++;
+	if (!allocation && !(pv->status & ALLOCATED_PV)) {
+		log_error("Physical volume %s is already unallocatable",
+			  pv_name);
+		return 0;
+	}
 
-	if (doit == 1) {
-		log_verbose("checking physical volume %s is activite",
-			    pv->dev->name);
-		if (!(pv->status & ACTIVE)) {
-			log_verbose("Physical volume %s inactive", pv_name);
+	if (allocation) {
+		log_verbose("Setting physical volume %s allocatable", pv_name);
+		pv->status |= ALLOCATED_PV;
+	} else {
+		log_verbose("Setting physical volume %s NOT allocatable",
+			    pv_name);
+		pv->status &= ~ALLOCATED_PV;
+	}
+
+	if (!(pv->status & ACTIVE)) {
+		log_verbose("Physical volume %s inactive", pv_name);
+	}
+
+	log_verbose("Updating physical volume %s", pv->dev->name);
+	if (*pv->vg_name) {
+		if (!(ios->vg_write(ios,vg))) {
+			log_error("Failed to store physical volume %s in "
+				  "volume group %s", pv_name, vg->name);
+			return 0;
 		}
-
-		log_verbose("Updating physical volume %s", pv->dev->name);
+	} else {
 		if (!(ios->pv_write(ios, pv))) {
-			log_error
-			    ("Failed to store physical volume %s",
-			     pv->dev->name);
-			/* Abort completely here? */
-			return LVM_E_PV_WRITE;
+			log_error("Failed to store physical volume %s", 
+				  pv_name);
+			return 0;
 		}
-
-		log_print("physical volume %s %s changed", pv_name,
-			  (change_msg) ? "" : "not ");
 	}
+
+	log_print("Physical volume %s changed", pv_name);
+
+	return 1;
 }

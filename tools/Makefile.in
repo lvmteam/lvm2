@@ -23,6 +23,7 @@ VPATH = @srcdir@
 SOURCES=\
 	lvm.c \
 	lvmchange.c \
+	pvchange.c \
 	pvcreate.c \
 	pvscan.c \
 	toollib.c \
