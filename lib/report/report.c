@@ -456,7 +456,7 @@ static int _uuid_disp(struct report_handle *rh, struct field *field,
 {
 	char *repstr = NULL;
 
-	if (!(field->report_string = pool_alloc(rh->mem, 40))) {
+	if (!(repstr = pool_alloc(rh->mem, 40))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
