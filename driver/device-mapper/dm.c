@@ -603,6 +603,9 @@ static void dm_sbin_hotplug(struct mapped_device *md, int create)
 	if (!hotplug_path[0])
 		return;
 
+	if (!current->fs->root)
+		return;
+
 	sprintf(name, "DMNAME=%s\n", md->name);
 
 	i = 0;
