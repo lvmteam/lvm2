@@ -55,10 +55,10 @@ static void _calc_simple_layout(struct pv_disk *pvd)
         pvd->vg_on_disk.size = VG_SIZE;
 
         pvd->pv_uuidlist_on_disk.base = _next_base(&pvd->vg_on_disk);
-        pvd->pv_uuidlist_on_disk.size = (MAX_PV + 1) * NAME_LEN;
+        pvd->pv_uuidlist_on_disk.size = MAX_PV * NAME_LEN;
 
         pvd->lv_on_disk.base = _next_base(&pvd->pv_uuidlist_on_disk);
-        pvd->lv_on_disk.size = (MAX_LV + 1) * sizeof(struct lv_disk);
+        pvd->lv_on_disk.size = MAX_LV * sizeof(struct lv_disk);
 
         pvd->pe_on_disk.base = _next_base(&pvd->lv_on_disk);
         pvd->pe_on_disk.size = pvd->pe_total * sizeof(struct pe_disk);
