@@ -305,7 +305,7 @@ static void _register_commands()
 {
 #define xx(a, b, c...) _register_command(# a, a, b, ## c, \
 					driverloaded_ARG, \
-                                        debug_ARG, help_ARG, \
+                                        debug_ARG, help_ARG, help2_ARG, \
                                         version_ARG, verbose_ARG, \
 					quiet_ARG, -1);
 #include "commands.h"
@@ -543,7 +543,7 @@ static int _get_settings(struct cmd_context *cmd)
 
 static int _process_common_commands(struct cmd_context *cmd)
 {
-	if (arg_count(cmd, help_ARG)) {
+	if (arg_count(cmd, help_ARG) || arg_count(cmd, help2_ARG)) {
 		usage(cmd->command->name);
 		return ECMD_PROCESSED;
 	}
@@ -959,7 +959,7 @@ static char *_list_args(const char *text, int state)
 		char *l;
 		l = (the_args +
 		     com->valid_args[match_no++ - com->num_args])->long_arg;
-		if (!strncmp(text, l, len))
+		if (*(l + 2) && !strncmp(text, l, len))
 			return strdup(l);
 	}
 
