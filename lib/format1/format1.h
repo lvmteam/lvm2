@@ -9,7 +9,6 @@
 
 #include "metadata.h"
 
-struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
-				    struct dev_filter *filter);
+struct filter_instance *create_lvm1_format(struct cmd_context *cmd);
 
 #endif
