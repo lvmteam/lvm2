@@ -27,7 +27,7 @@ LIB_SHARED = $(interface)/libdevmapper.so
 include ../make.tmpl
 
 .PHONY: install_dynamic install_static \
-	install_@interface@ install_@interface@_static
+	install_fs install_ioctl install_ioctl_static
 
 INSTALL_TYPE = install_dynamic
 
