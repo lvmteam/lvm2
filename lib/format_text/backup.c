@@ -130,11 +130,8 @@ static void _destroy(struct format_instance *fi)
 
 
 /*
- * vg_write implementation starts here.
- */
-
-/*
- * Extract vg name and version number from a filename
+ * Extract vg name and version number from a
+ * filename
  */
 static int _split_vg(const char *filename, char *vg, size_t vg_size,
 		     uint32_t *index)
@@ -306,8 +303,9 @@ static int _scan_backups(struct backup_c *bc)
  * Creates a temporary filename, and opens a
  * descriptor to the file.  Both the filename and
  * descriptor are needed so we can rename the file
- * after successfully writing it.
- * Grab NFS-supported exclusive fcntl discretionary lock.
+ * after successfully writing it.  Grab
+ * NFS-supported exclusive fcntl discretionary
+ * lock.
  */
 static int _create_temp_name(const char *dir, char *buffer, size_t len,
 			     int *fd)
@@ -328,21 +326,23 @@ static int _create_temp_name(const char *dir, char *buffer, size_t len,
 		log_sys_error("gethostname", "");
 		strcpy(hostname, "nohostname");
 	}
+
 	for (i = 0; i < 20; i++, num++) {
-		if (lvm_snprintf(buffer, len, "%s/.lvm_%s_%d_%d", 
+
+		if (lvm_snprintf(buffer, len, "%s/.lvm_%s_%d_%d",
 				 dir, hostname, pid, num) == -1) {
 			log_err("Not enough space to build temporary file "
 				"string.");
 			return 0;
 		}
 
-		*fd = open(buffer, O_CREAT | O_EXCL | O_WRONLY | O_APPEND, 
+		*fd = open(buffer, O_CREAT | O_EXCL | O_WRONLY | O_APPEND,
 			   S_IRUSR | S_IWUSR);
 		if (*fd < 0)
 			continue;
 
 		if (!fcntl(*fd, F_SETLK, &lock))
-			return 1;	
+			return 1;
 
 		close(*fd);
 	}
@@ -351,13 +351,15 @@ static int _create_temp_name(const char *dir, char *buffer, size_t len,
 }
 
 /*
- * NFS-safe rename of a temporary file to a common name, designed to
- * avoid race conditions and not overwrite the destination if it exists.
+ * NFS-safe rename of a temporary file to a common
+ * name, designed to avoid race conditions and not
+ * overwrite the destination if it exists.
  *
- * Try to create the new filename as a hard link to the original.
- * Check the link count of the original file to see if it worked.
- * (Assumes nothing else touches our temporary file!)
- * If it worked, unlink the old filename.
+ * Try to create the new filename as a hard link
+ * to the original.  Check the link count of the
+ * original file to see if it worked.  (Assumes
+ * nothing else touches our temporary file!)  If
+ * it worked, unlink the old filename.
  */
 static int _rename(const char *old, const char *new)
 {
