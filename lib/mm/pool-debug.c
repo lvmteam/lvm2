@@ -17,7 +17,9 @@ struct block {
 };
 
 struct pool {
-	int object;
+	int begun;
+	struct block *object;
+
 	struct block *blocks;
 	struct block *tail;
 };
@@ -70,7 +72,7 @@ static void _append_block(struct pool *p, struct block *b)
 		p->blocks = p->tail = b;
 }
 
-void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
+static struct block *_new_block(size_t s, unsigned alignment)
 {
 	/* FIXME: I'm currently ignoring the alignment arg. */
 	size_t len = sizeof(struct block) + s;
@@ -83,6 +85,16 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 
 	b->next = NULL;
 	b->size = s;
+
+	return b;
+}
+
+void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
+{
+	struct block *b = _new_block(s, alignment);
+
+	if (!b)
+		return NULL;
 
 	_append_block(p, b);
 	return &b->data[0];
@@ -120,47 +132,49 @@ void pool_free(struct pool *p, void *ptr)
 		p->blocks = p->tail = NULL;
 }
 
-void *pool_begin_object(struct pool *p, size_t init_size)
+int pool_begin_object(struct pool *p, size_t init_size)
 {
-	assert(!p->object);
-	pool_alloc_aligned(p, init_size, DEFAULT_ALIGNMENT);
-	p->object = 1;
-
-	return &p->tail->data;
+	assert(!p->begun);
+	p->begun = 1;
+	return 1;
 }
 
-void *pool_grow_object(struct pool *p, void *buffer, size_t delta)
+int pool_grow_object(struct pool *p, const void *buffer, size_t delta)
 {
-	struct block *old = p->tail, *new;
+	struct block *new;
 
-	assert(buffer == &old->data);
+	assert(p->begun);
 
-	if (!pool_alloc(p, old->size + delta))
-		return NULL;
+	if (!(new = _new_block(p->object->size + delta, DEFAULT_ALIGNMENT))) {
+		log_err("Couldn't extend object.");
+		return 0;
+	}
 
-	new = p->tail;
+	if (p->object) {
+		memcpy(&new->data, &p->object->data, p->object->size);
+		dbg_free(p->object);
+	}
+	p->object = new;
 
-	memcpy(&new->data, &old->data, old->size);
-
-	old->next = NULL;
-	pool_free(p, buffer);
-
-	_append_block(p, new);
-	return &new->data;
+	return 1;
 }
 
 void *pool_end_object(struct pool *p)
 {
-	assert(p->object);
-	p->object = 0;
+	assert(p->begun);
+	_append_block(p, p->object);
+
+	p->begun = 0;
+	p->object = NULL;
 	return &p->tail->data;
 }
 
 void pool_abandon_object(struct pool *p)
 {
-	assert(p->object);
-	pool_free(p, &p->tail->data);
-	p->object = 0;
+	assert(p->begun);
+	dbg_free(p->object);
+	p->begun = 0;
+	p->object = NULL;
 }
 
 char *pool_strdup(struct pool *p, const char *str)
