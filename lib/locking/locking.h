@@ -13,12 +13,12 @@ int init_locking(int type, struct config_file *cf);
 void fin_locking(void);
 
 /*
- * LCK_VG: 
+ * LCK_VG:
  *   Lock/unlock on-disk volume group data
  *   Use "" to lock orphan PVs
  *   char *vol holds volume group name
  *
- * LCK_LV: 
+ * LCK_LV:
  *   Lock/unlock an individual logical volume
  *   Also suspends/resumes the LV if it's active.
  *   struct logical_volume *vol

@@ -372,7 +372,7 @@ static int _read_lv(struct pool *mem,
 	}
 
 	lv->minor = -1;
-	if ((lv->status & FIXED_MINOR) && 
+	if ((lv->status & FIXED_MINOR) &&
 	    !_read_int32(lvn, "minor", &lv->minor)) {
 		log_error("Couldn't read 'minor' value for logical volume.");
 		return 0;
@@ -423,16 +423,15 @@ static int _read_sections(const char *section, section_fn fn,
 static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 				     struct uuid_map *um)
 {
-	struct config_node *vgn = cf->root, *cn;
+	struct config_node *vgn, *cn;
 	struct volume_group *vg;
 	struct hash_table *pv_hash = NULL;
 
-	if (!vgn) {
-		log_err("Couldn't find volume group.");
-		return NULL;
-	}
+	/* skip any top-level values */
+	for (vgn = cf->root; (vgn && vgn->v); vgn = vgn->sib)
+		;
 
-	if (!(vgn = cf->root)) {
+	if (!vgn) {
 		log_err("Couldn't find volume group in file.");
 		return NULL;
 	}
@@ -453,7 +452,7 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 	}
 
 	vgn = vgn->child;
-   
+
 	if ((cn = find_config_node(vgn, "system_id", '/')) && cn->v) {
 		if (!cn->v->v.str) {
 			log_error("system_id must be a string");
@@ -543,12 +542,29 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 	return NULL;
 }
 
+static void _read_desc(struct pool *mem,
+		       struct config_file *cf, time_t *when, char **desc)
+{
+	const char *d;
+	unsigned int u = 0u;
+
+	d = find_config_str(cf->root, "description", '/', "");
+	*desc = pool_strdup(mem, d);
+
+	get_config_uint32(cf->root, "creation_time", '/', &u);
+	*when = u;
+}
+
 struct volume_group *text_vg_import(struct cmd_context *cmd,
 				    const char *file,
-				    struct uuid_map *um)
+				    struct uuid_map *um,
+				    time_t *when, char **desc)
 {
 	struct volume_group *vg = NULL;
 	struct config_file *cf;
+
+	*desc = NULL;
+	*when = 0;
 
 	if (!(cf = create_config_file())) {
 		stack;
@@ -566,6 +582,8 @@ struct volume_group *text_vg_import(struct cmd_context *cmd,
 	}
 
 	vg->cmd = cmd;
+
+	_read_desc(cmd->mem, cf, when, desc);
 
  out:
 	destroy_config_file(cf);

@@ -77,8 +77,10 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 {
 	struct text_c *tc = (struct text_c *) fi->private;
 	struct volume_group *vg;
+	time_t when;
+	char *desc;
 
-	if (!(vg = text_vg_import(fi->cmd, tc->path, tc->um))) {
+	if (!(vg = text_vg_import(fi->cmd, tc->path, tc->um, &when, &desc))) {
 		stack;
 		return NULL;
 	}

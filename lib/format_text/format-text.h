@@ -23,6 +23,11 @@ int archive_vg(struct volume_group *vg,
 	       uint32_t retain_days,
 	       uint32_t min_archive);
 
+/*
+ * Displays a list of vg backups in a particular archive directory.
+ */
+int archive_list(struct cmd_context *cmd, struct uuid_map *um,
+		 const char *dir, const char *vg);
 
 /*
  * The text format can read and write a volume_group to a file.

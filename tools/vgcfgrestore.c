@@ -15,6 +15,17 @@ int vgcfgrestore(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	/*
+	 * FIXME: overloading the -l arg for now to display a
+	 * list of archive files for a particular vg
+	 */
+	if (arg_count(list_ARG)) {
+		if (!archive_display(argv[0]))
+			return ECMD_FAILED;
+
+		return 0;
+	}
+
 	if (!(arg_count(file_ARG) ?
 	      backup_restore_from_file(argv[0], arg_str_value(file_ARG, "")) :
 	      backup_restore(argv[0]))) {
