@@ -650,15 +650,13 @@ static int gulm_to_errno(int gulm_ret)
     switch (gulm_ret)
     {
     case lg_err_TryFailed:
-	errno = EAGAIN;
-	break;
-
     case lg_err_AlreadyPend:
-	errno = EBUSY;
+	    errno = EAGAIN;
+	    break;
 
 	/* More?? */
     default:
-	errno = EINVAL;
+	    errno = EINVAL;
     }
 
     return gulm_ret ? -1 : 0;
