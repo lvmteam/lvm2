@@ -1,5 +1,6 @@
 Version 2.01.03 - 
 ===================================
+  More 64-bit display/report fixes.
   More informative startup mesg if can't create /etc/lvm.
   Fix snapshot device size bug (since 2.01.01).
   clvmd announces startup and cluster connection in syslog.
