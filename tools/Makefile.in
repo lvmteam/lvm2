@@ -22,8 +22,9 @@ VPATH = @srcdir@
 
 SOURCES=\
 	lvm.c\
-	lvactivate.c\
-	pvdisplay.c
+	pvcreate.c\
+	pvdisplay.c\
+	lvactivate.c
 
 TARGETS=\
 	lvm

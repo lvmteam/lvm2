@@ -22,7 +22,8 @@ VPATH = @srcdir@
 
 SOURCES=\
 	config/config.c \
-	dev-mgr/dev-manager.c \
+	datastruct/hash.c \
+	dev-mgr/dev-cache.c \
 	device/device.c \
 	display/display.c \
 	display/metadata.c \
