@@ -13,7 +13,7 @@
 struct block {
 	struct block *next;
 	size_t size;
-	char data[0];
+	void *data;
 };
 
 struct pool {
@@ -49,6 +49,7 @@ static void _free_blocks(struct block *b)
 
 	while (b) {
 		n = b->next;
+		dbg_free(b->data);
 		dbg_free(b);
 		b = n;
 	}
@@ -76,12 +77,27 @@ static void _append_block(struct pool *p, struct block *b)
 
 static struct block *_new_block(size_t s, unsigned alignment)
 {
+	static char *_oom = "Out of memory";
+
 	/* FIXME: I'm currently ignoring the alignment arg. */
 	size_t len = sizeof(struct block) + s;
 	struct block *b = dbg_malloc(len);
 
+	/*
+	 * Too lazy to implement alignment for debug version, and
+	 * I don't think LVM will use anything but default
+	 * align.
+	 */
+	assert(alignment == DEFAULT_ALIGNMENT);
+
 	if (!b) {
-		log_err("Out of memory.  Requested %u bytes.", len);
+		log_err(_oom);
+		return NULL;
+	}
+
+	if (!(b->data = dbg_malloc(s))) {
+		log_err(_oom);
+		dbg_free(b);
 		return NULL;
 	}
 
@@ -99,7 +115,7 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 		return NULL;
 
 	_append_block(p, b);
-	return &b->data[0];
+	return b->data;
 }
 
 void pool_empty(struct pool *p)
@@ -113,7 +129,7 @@ void pool_free(struct pool *p, void *ptr)
 	struct block *b, *prev = NULL;
 
 	for (b = p->blocks; b; b = b->next) {
-		if ((void *) &b->data[0] == ptr)
+		if (b->data == ptr)
 			break;
 		prev = b;
 	}
@@ -157,7 +173,7 @@ int pool_grow_object(struct pool *p, const void *buffer, size_t delta)
 	}
 
 	if (p->object) {
-		memcpy(&new->data, &p->object->data, p->object->size);
+		memcpy(new->data, p->object->data, p->object->size);
 		dbg_free(p->object);
 	}
 	p->object = new;
@@ -172,7 +188,7 @@ void *pool_end_object(struct pool *p)
 
 	p->begun = 0;
 	p->object = NULL;
-	return &p->tail->data;
+	return p->tail->data;
 }
 
 void pool_abandon_object(struct pool *p)
