@@ -30,7 +30,7 @@ static int _mk_dir(struct volume_group *vg)
 
 	if (!build_vg_path(vg_path, sizeof(vg_path),
 			   vg->cmd->dev_dir, vg->name)) {
-		log_err("Couldn't create volume group directory.");
+		log_error("Couldn't construct name of volume group directory.");
 		return 0;
 	}
 
@@ -59,6 +59,7 @@ static int _rm_dir(struct volume_group *vg)
 static int _mk_link(struct logical_volume *lv)
 {
 	char lv_path[PATH_MAX], link_path[PATH_MAX];
+	struct stat buf;
 
 	if (!build_dm_path(lv_path, sizeof(lv_path), lv->vg->name, lv->name)) {
 		log_err("Couldn't create destination path for "
@@ -72,6 +73,18 @@ static int _mk_link(struct logical_volume *lv)
 		log_err("Couldn't create source path for "
 			"logical volume link.");
 		return 0;
+	}
+
+	if (!lstat(link_path, &buf)) {
+		if (!S_ISLNK(buf.st_mode)) {
+			log_error("Symbolic link %s not created: file exists",
+				  link_path);
+			return 0;
+		}
+		if (unlink(link_path) < 0) {
+			log_sys_error("unlink", link_path);
+			return 0;
+		}
 	}
 
 	log_very_verbose("Linking %s to %s", link_path, lv_path);

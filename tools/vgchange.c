@@ -97,8 +97,8 @@ void vgchange_available(struct volume_group *vg)
 		log_verbose("Deactivated %d logical volumes in "
 			    "volume group %s", lv_open, vg->name);
 
-	log_print("Volume group %s updated", vg->name);
-
+	log_print("%d logical volume(s) in volume group %s now active",
+		  lvs_in_vg_activated(vg), vg->name);
 	return;
 }
 
