@@ -40,13 +40,14 @@ SOURCES=\
 	format_text/import.c \
 	label/label.c \
 	label/uuid-map.c \
-	locking/locking.c \
 	locking/file_locking.c \
+	locking/locking.c \
 	log/log.c \
 	metadata/lv_manip.c \
 	metadata/merge.c \
 	metadata/metadata.c \
 	metadata/pv_map.c \
+	metadata/snapshot_manip.c \
 	misc/lvm-file.c \
 	mm/dbg_malloc.c \
 	mm/pool.c \

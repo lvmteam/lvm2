@@ -29,7 +29,7 @@ static int _check_vgs(struct list *pvs, int *partial)
 	 * If there are exported and unexported PVs, ignore exported ones.
 	 * This means an active VG won't be affected if disks are inserted
 	 * bearing an exported VG with the same name.
-	 */ 
+	 */
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
 
