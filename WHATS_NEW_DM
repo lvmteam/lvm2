@@ -1,3 +1,7 @@
+Version 1.00.18
+=============================
+  Add target message-passing ioctl.
+
 Version 1.00.17 - 17 Apr 2004
 =============================
   configure --with-owner= --with-group= to avoid -o and -g args to 'install'
