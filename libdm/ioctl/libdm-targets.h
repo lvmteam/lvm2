@@ -32,7 +32,7 @@ struct dm_task {
 	int major;
 	int minor;
 	union {
-		struct dm_ioctl *v3;
+		struct dm_ioctl *v4;
 		struct dm_ioctl_v1 *v1;
 	} dmi;
 	char *newname;
