@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001 Sistina Software (UK) Limited.
+ * Copyright (C) 2001-2002 Sistina Software (UK) Limited.
  *
  * This file is released under the LGPL.
  */
 
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "pool.h"
 #include "dbg_malloc.h"
@@ -36,7 +37,7 @@ struct pool *pool_create(size_t chunk_hint)
 	struct pool *p = dbg_malloc(sizeof(*p));
 
 	if (!p) {
-		log_error("Couldn't create memory pool (size %u)",
+		log_error("Couldn't create memory pool (size %" PRIuPTR ")",
 			  sizeof(*p));
 		return 0;
 	}
@@ -224,7 +225,7 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 		p->spare_chunk = 0;
 	} else {
 		if (!(c = dbg_malloc(s))) {
-			log_err("Out of memory.  Requested %u bytes.", s);
+			log_err("Out of memory.  Requested %" PRIuPTR " bytes.", s);
 			return NULL;
 		}
 
