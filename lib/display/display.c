@@ -205,6 +205,7 @@ int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv)
 }
 
 
+
 void lvdisplay_colons(struct logical_volume *lv)
 {
 	int inkernel;
@@ -412,9 +413,9 @@ void lvdisplay_extents(struct logical_volume *lv)
 	struct list *pvh;
 	struct physical_volume *pv;
 
-	log_verbose("--- Distribution of logical volume on physical "
+	log_print("--- Distribution of logical volume on physical "
 		    "volumes  ---");
-	log_verbose("PV Name                  PE on PV     ");
+	log_print("PV Name                  PE on PV     ");
 
 /********* FIXME Segments & Stripes
 	list_iterate(pvh, &lv->vg->pvs) {
@@ -424,7 +425,7 @@ void lvdisplay_extents(struct logical_volume *lv)
 			if (lv->map[le].pv->dev == pv->dev)
 				count++;
 		if (count)
-			log_verbose("%-25s %d", dev_name(pv->dev), count);
+			log_print("%-25s %d", dev_name(pv->dev), count);
 	}
 
 **********/
@@ -436,18 +437,18 @@ void lvdisplay_extents(struct logical_volume *lv)
 
 ******* */
 
-	log_verbose(" ");
-	log_verbose("--- Logical extents ---");
-	log_verbose("LE    PV                        PE");
+	log_print(" ");
+	log_print("--- Logical extents ---");
+	log_print("LE    PV                        PE");
 
 /******** FIXME Segments & Stripes
 	for (le = 0; le < lv->le_count; le++) {
-		log_verbose("%05d %-25s %05u  ", le,
+		log_print("%05d %-25s %05u  ", le,
 			    dev_name(lv->map[le].pv->dev), lv->map[le].pe);
 	}
 ******/
 
-	log_verbose(" ");
+	log_print(" ");
 
 	return;
 }

@@ -32,7 +32,6 @@ LIBS = @LIBS@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
-staticlibdir = ${prefix}/lib
 libdir = @libdir@
 sbindir = @sbindir@
 infodir = @infodir@
@@ -64,6 +63,9 @@ CFLAGS+=-DDEBUG_MEM -DDEBUG
 
 INCLUDES+=-I. -I$(top_srcdir)/include
 INC_LNS=$(top_srcdir)/include/.symlinks_created
+
+STRIP=
+#STRIP=-s
 
 DEPS=$(top_srcdir)/make.tmpl Makefile $(INC_LNS)
 
