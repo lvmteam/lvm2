@@ -38,6 +38,7 @@ enum {
 	DM_DEVICE_RESUME,
 
 	DM_DEVICE_INFO,
+	DM_DEVICE_RENAME,
 };
 
 
@@ -65,6 +66,8 @@ struct dm_info {
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 
 int dm_task_set_ro(struct dm_task *dmt);
+
+int dm_task_set_newname(struct dm_task *dmt, const char *newname);
 
 /*
  * Use these to prepare for a create or reload.

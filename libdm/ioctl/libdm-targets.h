@@ -21,5 +21,6 @@ struct dm_task {
 
 	int read_only;
 	struct dm_ioctl *dmi;
+	char *newname;
 };
 
