@@ -337,7 +337,7 @@ static int _status_run(const char *name, const char *uuid,
 	int r = 0;
 	struct dm_task *dmt;
 	void *next = NULL;
-	unsigned long long start, length;
+	uint64_t start, length;
 	char *type = NULL;
 	char *params = NULL;
 
