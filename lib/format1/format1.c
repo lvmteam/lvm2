@@ -27,6 +27,7 @@ static int _check_vgs(struct list *pvs)
 
 		if (!first)
 			first = dl;
+
 		else if (memcmp(&first->vgd, &dl->vgd, sizeof(first->vgd))) {
 			log_err("VG data differs between PVs %s and %s",
 				dev_name(first->dev), dev_name(dl->dev));
@@ -86,7 +87,8 @@ static struct volume_group *_build_vg(struct pool *mem, struct list *pvs)
 	return NULL;
 }
 
-static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
+static struct volume_group *_vg_read(struct format_instance *fi,
+				     const char *vg_name)
 {
 	struct pool *mem = pool_create(1024 * 10);
 	struct list pvs;
@@ -99,15 +101,14 @@ static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
 	}
 
         /* Strip prefix if present */
-        if (!strncmp(vg_name, is->prefix, strlen(is->prefix)))
-                vg_name += strlen(is->prefix);
+	vg_name = strip_dir(vg_name, fi->cmd->dev_dir);
 
-	if (!read_pvs_in_vg(vg_name, is->filter, mem, &pvs)) {
+	if (!read_pvs_in_vg(vg_name, fi->cmd->filter, mem, &pvs)) {
 		stack;
 		return NULL;
 	}
 
-	if (!(vg = _build_vg(is->mem, &pvs)))
+	if (!(vg = _build_vg(fi->cmd->mem, &pvs)))
 		stack;
 
 	pool_destroy(mem);
@@ -174,7 +175,7 @@ static int _flatten_vg(struct pool *mem, struct volume_group *vg,
 	return 1;
 }
 
-static int _vg_write(struct io_space *is, struct volume_group *vg)
+static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
 	struct pool *mem = pool_create(1024 * 10);
 	struct list pvs;
@@ -187,17 +188,17 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 
 	list_init(&pvs);
 
-	r = (_flatten_vg(mem, vg, &pvs, is->prefix, is->filter) &&
+	r = (_flatten_vg(mem, vg, &pvs, fi->cmd->dev_dir, fi->cmd->filter) &&
 	     write_pvds(&pvs));
 	pool_destroy(mem);
 	return r;
 }
 
-static struct physical_volume *_pv_read(struct io_space *is,
+static struct physical_volume *_pv_read(struct format_instance *fi,
 					const char *name)
 {
 	struct pool *mem = pool_create(1024);
-	struct physical_volume *pv;
+	struct physical_volume *pv = NULL;
 	struct disk_list *dl;
 	struct device *dev;
 
@@ -208,35 +209,33 @@ static struct physical_volume *_pv_read(struct io_space *is,
 		return NULL;
 	}
 
-	if (!(dev = dev_cache_get(name, is->filter))) {
+	if (!(dev = dev_cache_get(name, fi->cmd->filter))) {
 		stack;
-		goto bad;
+		goto out;
 	}
 
 	if (!(dl = read_disk(dev, mem, NULL))) {
 		stack;
-		goto bad;
+		goto out;
 	}
 
-	if (!(pv = pool_alloc(is->mem, sizeof(*pv)))) {
+	if (!(pv = pool_alloc(fi->cmd->mem, sizeof(*pv)))) {
 		stack;
-		goto bad;
+		goto out;
 	}
 
-	if (!import_pv(is->mem, dl->dev, pv, &dl->pvd)) {
+	if (!import_pv(fi->cmd->mem, dl->dev, pv, &dl->pvd)) {
 		stack;
-		goto bad;
+		pool_free(fi->cmd->mem, pv);
+		pv = NULL;
 	}
 
+ out:
 	pool_destroy(mem);
 	return pv;
-
- bad:
-	pool_destroy(mem);
-	return NULL;
 }
 
-static struct list *_get_pvs(struct io_space *is)
+static struct list *_get_pvs(struct format_instance *fi)
 {
 	struct pool *mem = pool_create(1024 * 10);
 	struct list pvs, *results;
@@ -247,7 +246,7 @@ static struct list *_get_pvs(struct io_space *is)
 		return NULL;
 	}
 
-	if (!(results = pool_alloc(is->mem, sizeof(*results)))) {
+	if (!(results = pool_alloc(fi->cmd->mem, sizeof(*results)))) {
 		stack;
 		pool_destroy(mem);
 		return NULL;
@@ -256,12 +255,12 @@ static struct list *_get_pvs(struct io_space *is)
 	list_init(&pvs);
 	list_init(results);
 
-	if (!read_pvs_in_vg(NULL, is->filter, mem, &pvs)) {
+	if (!read_pvs_in_vg(NULL, fi->cmd->filter, mem, &pvs)) {
 		stack;
 		goto bad;
 	}
 
-	if (!import_pvs(is->mem, &pvs, results, &count)) {
+	if (!import_pvs(fi->cmd->mem, &pvs, results, &count)) {
 		stack;
 		goto bad;
 	}
@@ -270,7 +269,7 @@ static struct list *_get_pvs(struct io_space *is)
 	return results;
 
  bad:
-	pool_free(is->mem, results);
+	pool_free(fi->cmd->mem, results);
 	pool_destroy(mem);
 	return NULL;
 }
@@ -289,10 +288,10 @@ static int _find_vg_name(struct list *names, const char *vg)
 	return 0;
 }
 
-static struct list *_get_vgs(struct io_space *is)
+static struct list *_get_vgs(struct format_instance *fi)
 {
 	struct list *pvh;
-	struct list *pvs, *names = pool_alloc(is->mem, sizeof(*names));
+	struct list *pvs, *names = pool_alloc(fi->cmd->mem, sizeof(*names));
 	struct name_list *nl;
 
 	if (!names) {
@@ -302,7 +301,7 @@ static struct list *_get_vgs(struct io_space *is)
 
 	list_init(names);
 
-	if (!(pvs = _get_pvs(is))) {
+	if (!(pvs = _get_pvs(fi))) {
 		stack;
 		goto bad;
 	}
@@ -314,12 +313,12 @@ static struct list *_get_vgs(struct io_space *is)
 	 	     _find_vg_name(names, pvl->pv.vg_name))
 			continue;
 
-		if (!(nl = pool_alloc(is->mem, sizeof(*nl)))) {
+		if (!(nl = pool_alloc(fi->cmd->mem, sizeof(*nl)))) {
 			stack;
 			goto bad;
 		}
 
-		if (!(nl->name = pool_strdup(is->mem, pvl->pv.vg_name))) {
+		if (!(nl->name = pool_strdup(fi->cmd->mem, pvl->pv.vg_name))) {
 			stack;
 			goto bad;
 		}
@@ -333,11 +332,11 @@ static struct list *_get_vgs(struct io_space *is)
 	return names;
 
  bad:
-	pool_free(is->mem, names);
+	pool_free(fi->cmd->mem, names);
 	return NULL;
 }
 
-static int _pv_setup(struct io_space *is, struct physical_volume *pv,
+static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 		     struct volume_group *vg)
 {
 	/*
@@ -351,7 +350,7 @@ static int _pv_setup(struct io_space *is, struct physical_volume *pv,
 	return 1;
 }
 
-static int _pv_write(struct io_space *is, struct physical_volume *pv)
+static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 {
 	struct pool *mem;
 	struct disk_list *dl;
@@ -401,7 +400,7 @@ static int _pv_write(struct io_space *is, struct physical_volume *pv)
 	return 0;
 }
 
-int _vg_setup(struct io_space *is, struct volume_group *vg)
+int _vg_setup(struct format_instance *fi, struct volume_group *vg)
 {
 	/* just check max_pv and max_lv */
 	if (vg->max_lv >= MAX_LV)
@@ -439,44 +438,36 @@ int _vg_setup(struct io_space *is, struct volume_group *vg)
 	return 1;
 }
 
-void _destroy(struct io_space *ios)
+void _destroy(struct format_instance *fi)
 {
-	dbg_free(ios->prefix);
-	pool_destroy(ios->mem);
-	dbg_free(ios);
+	dbg_free(fi);
 }
 
-struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
-				    struct dev_filter *filter)
-{
-	struct io_space *ios = dbg_malloc(sizeof(*ios));
 
-	if (!ios) {
+static struct format_handler _format1_ops = {
+	get_vgs: _get_vgs,
+	get_pvs: _get_pvs,
+	pv_read: _pv_read,
+	pv_setup: _pv_setup,
+	pv_write: _pv_write,
+	vg_read: _vg_read,
+	vg_setup: _vg_setup,
+	vg_write: _vg_write,
+	destroy: _destroy,
+};
+
+struct format_instance *create_lvm1_format(struct cmd_context *cmd)
+{
+	struct format_instance *fi = dbg_malloc(sizeof(*fi));
+
+	if (!fi) {
 		stack;
 		return NULL;
 	}
 
-	ios->get_vgs = _get_vgs;
-	ios->get_pvs = _get_pvs;
-	ios->pv_read = _pv_read;
-	ios->pv_setup = _pv_setup;
-	ios->pv_write = _pv_write;
-	ios->vg_read = _vg_read;
-	ios->vg_setup = _vg_setup;
-	ios->vg_write = _vg_write;
-	ios->destroy = _destroy;
+	fi->cmd = cmd;
+	fi->ops = &_format1_ops;
+	fi->private = NULL;
 
-	ios->prefix = dbg_malloc(strlen(prefix) + 1);
-	if (!ios->prefix) {
-		stack;
-		dbg_free(ios);
-		return 0;
-	}
-	strcpy(ios->prefix, prefix);
-
-	ios->mem = mem;
-	ios->filter = filter;
-	ios->private = NULL;
-
-	return ios;
+	return fi;
 }

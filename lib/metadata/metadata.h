@@ -64,7 +64,11 @@ struct pe_specifier {
         uint32_t pe;
 };
 
+struct cmd_context;
+
 struct volume_group {
+	struct cmd_context *cmd;
+
 	struct id id;
 	char *name;
 
@@ -119,101 +123,114 @@ struct lv_list {
 	struct logical_volume lv;
 };
 
+struct cmd_context {
+	/* format handler allocates all objects from here */
+	struct pool *mem;
+
+	/* misc. vars needed by format handler */
+	char *dev_dir;
+	struct dev_filter *filter;
+};
+
+struct format_instance {
+	struct cmd_context *cmd;
+	struct format_handler *ops;
+	void *private;
+};
+
+
 /*
  * Ownership of objects passes to caller.
  */
-struct io_space {
+struct format_handler {
 	/*
 	 * Returns a name_list of vg's.
 	 */
-	struct list *(*get_vgs)(struct io_space *is);
+	struct list *(*get_vgs)(struct format_instance *fi);
 
 	/*
 	 * Returns pv_list of fully-populated pv structures.
 	 */
-	struct list *(*get_pvs)(struct io_space *is);
+	struct list *(*get_pvs)(struct format_instance *fi);
 
 	/*
 	 * Return PV with given path.
 	 */
-	struct physical_volume *(*pv_read)(struct io_space *is,
+	struct physical_volume *(*pv_read)(struct format_instance *fi,
 					   const char *pv_name);
 
 	/*
-	 * Tweak an already filled out a pv ready
-	 * for importing into a vg.  eg. pe_count
-	 * is format specific.
+	 * Tweak an already filled out a pv ready for importing into a
+	 * vg.  eg. pe_count is format specific.
 	 */
-	int (*pv_setup)(struct io_space *is, struct physical_volume *pv,
+	int (*pv_setup)(struct format_instance *fi, struct physical_volume *pv,
 			struct volume_group *vg);
 
 	/*
-	 * Write a PV structure to disk. Fails if
-	 * the PV is in a VG ie pv->vg_name must
-	 * be null.
+	 * Write a PV structure to disk. Fails if the PV is in a VG ie
+	 * pv->vg_name must be null.
 	 */
-	int (*pv_write)(struct io_space *is, struct physical_volume *pv);
+	int (*pv_write)(struct format_instance *fi,
+			struct physical_volume *pv);
 
 	/*
-	 * Tweak an already filled out vg.  eg,
-	 * max_pv is format specific.
+	 * Tweak an already filled out vg.  eg, max_pv is format
+	 * specific.
 	 */
-	int (*vg_setup)(struct io_space *is, struct volume_group *vg);
+	int (*vg_setup)(struct format_instance *fi, struct volume_group *vg);
 
 	/*
-	 * If vg_name doesn't contain any slash,
-	 * this function adds prefix.
+	 * The name may be prefixed with the dev_dir from the
+	 * job_context.
 	 */
-	struct volume_group *(*vg_read)(struct io_space *is,
+	struct volume_group *(*vg_read)(struct format_instance *fi,
 					const char *vg_name);
 
 	/*
-	 * Write out complete VG metadata.  Ensure
-	 * *internal* consistency before writing
-	 * anything.  eg. PEs can't refer to PVs
-	 * not part of the VG.  Order write sequence
-	 * to aid recovery if process is aborted
-	 * (eg flush entire set of changes to each
-	 * disk in turn) It is the responsibility
-	 * of the caller to ensure external
-	 * consistency, eg by calling pv_write()
-	 * if removing PVs from a VG or calling
-	 * vg_write() a second time if splitting a
-	 * VG into two.  vg_write() must not read
-	 * or write from any PVs not included in
-	 * the volume_group structure it is
-	 * handed.
+	 * Write out complete VG metadata.  You must ensure internal
+	 * consistency before calling. eg. PEs can't refer to PVs not
+	 * part of the VG.
+	 *
+	 * It is also the responsibility of the caller to ensure external
+	 * consistency, eg by calling pv_write() if removing PVs from
+	 * a VG or calling vg_write() a second time if splitting a VG
+	 * into two.
+	 *
+	 * vg_write() must not read or write from any PVs not included
+	 * in the volume_group structure it is handed. Note: format1
+	 * does read all pv's currently.
 	 */
-	int (*vg_write)(struct io_space *is, struct volume_group *vg);
+	int (*vg_write)(struct format_instance *fi, struct volume_group *vg);
 
 	/*
 	 * Destructor for this object.
 	 */
-	void (*destroy)(struct io_space *is);
-
-	/*
-	 * Current volume group prefix.
-	 */
-	char *prefix;
-	struct pool *mem;
-	struct dev_filter *filter;
-	void *private;
+	void (*destroy)(struct format_instance *fi);
 };
 
 /*
  * Utility functions
  */
-struct volume_group *vg_create(struct io_space *ios, const char *name,
+struct physical_volume *pv_create(struct format_instance *fi,
+				  const char *name);
+
+struct volume_group *vg_create(struct format_instance *fi, const char *name,
 			       uint32_t extent_size, int max_pv, int max_lv,
 			       int pv_count, char **pv_names);
-struct physical_volume *pv_create(struct io_space *ios, const char *name);
+
+/*
+ * This needs the format instance to check the
+ * pv's are orphaned.
+ */
+int vg_extend(struct format_instance *fi,
+	      struct volume_group *vg, int pv_count, char **pv_names);
+
 
 /*
  * Create a new LV within a given volume group.
  *
  */
-struct logical_volume *lv_create(struct io_space *ios,
-				 const char *name,
+struct logical_volume *lv_create(const char *name,
 				 uint32_t status,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
@@ -221,29 +238,14 @@ struct logical_volume *lv_create(struct io_space *ios,
 				 struct volume_group *vg,
 				 struct list *acceptable_pvs);
 
-int lv_reduce(struct io_space *ios,
-	      struct logical_volume *lv,
-	      uint32_t extents);
+int lv_reduce(struct logical_volume *lv, uint32_t extents);
 
-int lv_extend(struct io_space *ios, struct logical_volume *lv,
+int lv_extend(struct logical_volume *lv,
 	      uint32_t extents, struct list *allocatable_pvs);
 
 
-int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
-	      char **pv_names);
-
-
-
 /* FIXME: Move to other files */
-struct io_space *create_text_format(struct dev_filter *filter,
-				    const char *text_file);
-
 int id_eq(struct id *op1, struct id *op2);
-
-/* Create consistent new empty structures, populated with defaults */
-struct volume_group *vg_create();
-
-int vg_destroy(struct volume_group *vg);
 
 /* Manipulate PV structures */
 int pv_add(struct volume_group *vg, struct physical_volume *pv);
@@ -269,5 +271,9 @@ struct volume_group *find_vg_with_lv(const char *lv_name);
 struct physical_volume *_find_pv(struct volume_group *vg, struct device *dev);
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
 
+/*
+ * Remove a prefix directory if present.
+ */
+const char *strip_dir(const char *vg_name, const char *dir);
 
 #endif

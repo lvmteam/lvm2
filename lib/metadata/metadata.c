@@ -12,21 +12,22 @@
 
 #include <string.h>
 
-int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
+int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 		  const char *pv_name)
 {
 	struct pv_list *pvl;
 	struct physical_volume *pv;
+	struct pool *mem = fi->cmd->mem;
 
 	log_verbose("Adding physical volume '%s' to volume group '%s'",
 		    pv_name, vg->name);
 
-	if (!(pvl = pool_alloc(ios->mem, sizeof (*pvl)))) {
+	if (!(pvl = pool_alloc(mem, sizeof (*pvl)))) {
 		log_error("pv_list allocation for '%s' failed", pv_name);
 		return 0;
 	}
 
-	if (!(pv = ios->pv_read(ios, pv_name))) {
+	if (!(pv = fi->ops->pv_read(fi, pv_name))) {
 		log_error("Failed to read existing physical volume '%s'",
 			  pv_name);
 		return 0;
@@ -44,7 +45,7 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 	/* FIXME check this */
 	pv->exported = NULL;
 
-	if (!(pv->vg_name = pool_strdup(ios->mem, vg->name))) {
+	if (!(pv->vg_name = pool_strdup(mem, vg->name))) {
 		log_error("vg->name allocation failed for '%s'", pv_name);
 		return 0;
 	}
@@ -63,14 +64,14 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 
 	/*
 	 * The next two fields should be corrected
-	 * by ios->pv_setup.
+	 * by fi->pv_setup.
 	 */
 	pv->pe_start = 0;
 	pv->pe_count = pv->size / pv->pe_size;
 
 	pv->pe_allocated = 0;
 
-	if (!ios->pv_setup(ios, pv, vg)) {
+	if (!fi->ops->pv_setup(fi, pv, vg)) {
 		log_debug("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);
 		return 0;
@@ -89,7 +90,7 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 		return 0;
 	}
 
-	memcpy(&pvl->pv, pv, sizeof (struct physical_volume));
+	memcpy(&pvl->pv, pv, sizeof(*pv));
 
 	list_add(&vg->pvs, &pvl->list);
 	vg->pv_count++;
@@ -99,14 +100,14 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 	return 1;
 }
 
-int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
-	      char **pv_names)
+int vg_extend(struct format_instance *fi,
+	      struct volume_group *vg, int pv_count, char **pv_names)
 {
 	int i;
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++)
-		if (!_add_pv_to_vg(ios, vg, pv_names[i])) {
+		if (!_add_pv_to_vg(fi, vg, pv_names[i])) {
 			log_error("Unable to add physical volume '%s' to "
 				  "volume group '%s'.", pv_names[i], vg->name);
 			return 0;
@@ -115,33 +116,43 @@ int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
 	return 1;
 }
 
-struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
+const char *strip_prefix(const char *vg_name, const char *dev_dir)
+{
+	int len = strlen(dev_dir);
+	if (!strncmp(vg_name, dev_dir, len))
+		vg_name += len;
+
+	return vg_name;
+}
+
+struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 			       uint32_t extent_size, int max_pv, int max_lv,
 			       int pv_count, char **pv_names)
 {
 	struct volume_group *vg;
+	struct pool *mem = fi->cmd->mem;
 
-	if (!(vg = pool_alloc(ios->mem, sizeof (*vg)))) {
+	if (!(vg = pool_alloc(mem, sizeof (*vg)))) {
 		stack;
 		return NULL;
 	}
 
 	/* is this vg name already in use ? */
-	if (ios->vg_read(ios, vg_name)) {
+	if (fi->ops->vg_read(fi, vg_name)) {
 		log_err("A volume group called '%s' already exists.", vg_name);
 		goto bad;
 	}
 
 	if (!id_create(&vg->id)) {
-		log_err("Couldn't create uuid for volume group '%s'.", vg_name);
+		log_err("Couldn't create uuid for volume group '%s'.",
+			vg_name);
 		goto bad;
 	}
 
 	/* Strip prefix if present */
-	if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
-		vg_name += strlen(ios->prefix);
+	vg_name = strip_dir(vg_name, fi->cmd->dev_dir);
 
-	if (!(vg->name = pool_strdup(ios->mem, vg_name))) {
+	if (!(vg->name = pool_strdup(mem, vg_name))) {
 		stack;
 		goto bad;
 	}
@@ -161,26 +172,27 @@ struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
 	vg->lv_count = 0;
 	list_init(&vg->lvs);
 
-	if (!ios->vg_setup(ios, vg)) {
+	if (!fi->ops->vg_setup(fi, vg)) {
 		log_error("Format specific setup of volume group '%s' failed.",
 			  vg_name);
 		goto bad;
 	}
 
 	/* attach the pv's */
-	if (!vg_extend(ios, vg, pv_count, pv_names))
+	if (!vg_extend(fi, vg, pv_count, pv_names))
 		goto bad;
 
 	return vg;
 
-      bad:
-	pool_free(ios->mem, vg);
+ bad:
+	pool_free(mem, vg);
 	return NULL;
 }
 
-struct physical_volume *pv_create(struct io_space *ios, const char *name)
+struct physical_volume *pv_create(struct format_instance *fi, const char *name)
 {
-	struct physical_volume *pv = pool_alloc(ios->mem, sizeof (*pv));
+	struct pool *mem = fi->cmd->mem;
+	struct physical_volume *pv = pool_alloc(mem, sizeof (*pv));
 
 	if (!pv) {
 		stack;
@@ -188,12 +200,12 @@ struct physical_volume *pv_create(struct io_space *ios, const char *name)
 	}
 
 	id_create(&pv->id);
-	if (!(pv->dev = dev_cache_get(name, ios->filter))) {
+	if (!(pv->dev = dev_cache_get(name, fi->cmd->filter))) {
 		log_err("Couldn't find device '%s'", name);
 		goto bad;
 	}
 
-	if (!(pv->vg_name = pool_alloc(ios->mem, NAME_LEN))) {
+	if (!(pv->vg_name = pool_alloc(mem, NAME_LEN))) {
 		stack;
 		goto bad;
 	}
@@ -214,7 +226,7 @@ struct physical_volume *pv_create(struct io_space *ios, const char *name)
 	return pv;
 
       bad:
-	pool_free(ios->mem, pv);
+	pool_free(mem, pv);
 	return NULL;
 }
 
