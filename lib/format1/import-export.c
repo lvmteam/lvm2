@@ -546,6 +546,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		org->lv_access |= LV_SNAPSHOT_ORG;
 		cow->lv_access |= LV_SNAPSHOT;
 		cow->lv_snapshot_minor = org->lv_number;
+		cow->lv_chunk_size = s->chunk_size;
 	}
 
 	r = 1;
@@ -618,7 +619,8 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 				continue;
 
 			/* insert the snapshot */
-			if (!vg_add_snapshot(org, cow, 1, lvd->lv_chunk_size)) {
+			if (!vg_add_snapshot(org, cow, 1,
+					     lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");
 				return 0;
 			}

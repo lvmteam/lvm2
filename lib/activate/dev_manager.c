@@ -355,10 +355,17 @@ static int _populate_vanilla(struct dev_manager *dm,
 static int _populate_origin(struct dev_manager *dm,
 			    struct dm_task *dmt, struct dev_layer *dl)
 {
+	char *real;
         char params[PATH_MAX + 32];
 
+	if (!(real = _build_name(dm->mem, dm->vg_name,
+				 dl->lv->name, "real"))) {
+		stack;
+		return 0;
+	}
+
 	if (lvm_snprintf(params, sizeof(params), "%s/%s 0",
-			 dm_dir(), dl->name) == -1) {
+			 dm_dir(), real) == -1) {
 		log_err("Couldn't create origin device parameters for '%s'.",
 			dl->name);
 		return 0;
@@ -558,6 +565,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 		dl->populate = _populate_vanilla;
 		dl->visible = 0;
 
+		/* insert the cow layer */
 		if (!hash_insert(dm->layers, dl->name, dl)) {
 			stack;
 			return 0;
@@ -584,6 +592,21 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 
 		list_add(&dl->pre_create, &sl->list);
 
+		/* add the dependency on the org device */
+		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+			stack;
+			return 0;
+		}
+
+		if (!(sl->str = _build_name(dm->mem, dm->vg_name,
+					    s->origin->name, "top"))) {
+			stack;
+			return 0;
+		}
+
+		list_add(&dl->pre_create, &sl->list);
+
+		/* insert the snapshot layer */
 		if (!hash_insert(dm->layers,dl->name, dl)) {
 			stack;
 			return 0;

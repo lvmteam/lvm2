@@ -484,12 +484,14 @@ static int _read_sections(const char *section, section_fn fn,
 	return 1;
 }
 
-static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
+static struct volume_group *_read_vg(struct cmd_context *cmd,
+				     struct config_file *cf,
 				     struct uuid_map *um)
 {
 	struct config_node *vgn, *cn;
 	struct volume_group *vg;
 	struct hash_table *pv_hash = NULL;
+	struct pool *mem = cmd->mem;
 
 	/* skip any top-level values */
 	for (vgn = cf->root; (vgn && vgn->v); vgn = vgn->sib)
@@ -504,6 +506,7 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 		stack;
 		return NULL;
 	}
+	vg->cmd = cmd;
 
 	if (!(vg->name = pool_strdup(mem, vgn->key))) {
 		stack;
@@ -648,7 +651,7 @@ struct volume_group *text_vg_import(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (!(vg = _read_vg(cmd->mem, cf, um))) {
+	if (!(vg = _read_vg(cmd, cf, um))) {
 		stack;
 		goto out;
 	}
