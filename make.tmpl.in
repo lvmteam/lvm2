@@ -87,9 +87,9 @@ $(SUBDIRS.distclean):
 	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
 
 %.d: %.c
-	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g'`; \
+	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 		$(CC) -MM $(INCLUDES) $< \
-		| sed "s/\($$FILE\)\.o[ :]*/\1.o $$FILE : /g" > $@; \
+		| sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d : /g" > $@; \
 		[ -s $@ ] || $(RM) $@
 
 clean: $(SUBDIRS.clean)
