@@ -8,6 +8,7 @@
 #include "pool.h"
 #include "hash.h"
 #include "log.h"
+#include "lvm-string.h"
 
 #include <libdevmapper.h>
 
@@ -591,7 +592,7 @@ void _emit(struct dev_layer *dl)
  * Recurses through the tree, ensuring that devices are created
  * in correct order.
  */
-int _create(struct dev_manager *dm, struct dev_layer *dl)
+int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 {
 	struct list *sh;
 	struct dev_layer *dep;
@@ -610,7 +611,7 @@ int _create(struct dev_manager *dm, struct dev_layer *dl)
 			return 0;
 		}
 
-		if (!_create(dm, dep)) {
+		if (!_create_rec(dm, dep)) {
 			stack;
 			return 0;
 		}
@@ -638,24 +639,48 @@ int _create(struct dev_manager *dm, struct dev_layer *dl)
 	return 1;
 }
 
-/*
- * The guts of the activation unit, this examines the device
- * layers in the manager, and tries to issue the correct
- * instructions to activate them in order.
- */
-static int _execute(struct dev_manager *dm)
+int _remove_rec(struct dev_manager *dm, struct dev_layer *dl)
+{
+	struct list *sh;
+	struct dev_layer *dep;
+	char *name;
+
+	if (dl->info.exists && !_suspend(dl)) {
+		stack;
+		return 0;
+	}
+
+	list_iterate (sh, &dl->pre_create) {
+		name = list_item(sh, struct str_list)->str;
+
+		if (!(dep = hash_lookup(dm->layers, name))) {
+			log_err("Couldn't find device layer '%s'.", name);
+			return 0;
+		}
+
+		if (!_remove_rec(dm, dep)) {
+			stack;
+			return 0;
+		}
+	}
+
+	if (dl->info.exists && !_remove(dl)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _mark_dependants(struct dev_manager *dm)
 {
 	struct hash_node *hn;
 	struct dev_layer *dl;
 
-	/*
-	 * We need to make a list of top level devices, ie. those
-	 * that have no entries in 'pre_create'.
-	 */
 	_clear_marks(dm);
 
 	/*
-	 * Mark any dependents.
+	 * Mark any dependants.
 	 */
 	hash_iterate (hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
@@ -675,6 +700,29 @@ static int _execute(struct dev_manager *dm)
 		}
 	}
 
+	return 1;
+}
+
+/*
+ * The guts of the activation unit, this examines the device
+ * layers in the manager, and tries to issue the correct
+ * instructions to activate them in order.
+ */
+static int _execute(struct dev_manager *dm,
+		    int (*cmd)(struct dev_manager *dm, struct dev_layer *dl))
+{
+	struct hash_node *hn;
+	struct dev_layer *dl;
+
+	/*
+	 * We need to make a list of top level devices, ie. those
+	 * that have no entries in 'pre_create'.
+	 */
+	if (!_mark_dependants(dm)) {
+		stack;
+		return 0;
+	}
+
 	/*
 	 * Now only top level devices will be unmarked.
 	 */
@@ -682,7 +730,7 @@ static int _execute(struct dev_manager *dm)
 		dl = hash_get_data(dm->layers, hn);
 
 		if (!dl->mark)
-			_emit(dl);
+			cmd(dm, dl);
 	}
 
 	return 1;
@@ -745,7 +793,7 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!_execute(dm)) {
+	if (!_execute(dm, _create_rec)) {
 		stack;
 		return 0;
 	}
@@ -755,8 +803,17 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 
 int dev_manager_reactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	log_err("dev_manager_reactivate not implemented.");
-	return 0;
+	if (!_select_lv(dm, lv)) {
+		stack;
+		return 0;
+	}
+
+	if (!_execute(dm, _create_rec)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }
 
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
@@ -766,11 +823,10 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!_execute(dm)) {
+	if (!_execute(dm, _remove_rec)) {
 		stack;
 		return 0;
 	}
 
 	return 0;
 }
-
