@@ -134,7 +134,7 @@ alloc_policy_t get_alloc_from_string(const char *str)
 const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 {
 	int s;
-	int suffix = 1;
+	int suffix = 1, precision;
 	uint64_t byte = UINT64_C(0);
 	uint64_t units = UINT64_C(1024);
 	char *size_buf = NULL;
@@ -182,8 +182,18 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 			s++, byte /= units;
 	}
 
-	snprintf(size_buf, SIZE_BUF - 1, "%.2f%s", (float) size / byte,
-		 suffix ? size_str[s][sl] : "");
+	/* FIXME Make precision configurable */
+	switch(toupper((int) cmd->current_settings.unit_type)) {
+	case 'B':
+	case 'S':
+		precision = 0;
+		break;
+	default:
+		precision = 2;
+	}
+
+	snprintf(size_buf, SIZE_BUF - 1, "%.*f%s", precision,
+		 (float) size / byte, suffix ? size_str[s][sl] : "");
 
 	return size_buf;
 }
