@@ -56,8 +56,7 @@ case "$1" in
 	echo "$NAME."
 	;;
   *)
-	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	echo "Usage: /etc/init.d/$NAME {start|stop|restart|force-reload}" >&2
 	exit 1
 	;;
 esac

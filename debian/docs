@@ -3,6 +3,4 @@ INTRO
 README
 TODO
 VERSION
-doc/example.conf
-doc/pvmove_outline.txt
-doc/testing.txt
+doc/*

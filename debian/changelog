@@ -1,3 +1,10 @@
+lvm2 (0.95.05-2) unstable; urgency=low
+
+  * Use ${shlibs:Depends} in Depends.
+  * Get rid of postinst/postrm scripts, use debhelper's init script instead.
+    
+ -- Andres Salomon <dilinger@mp3revolution.net>  Thu,  2 May 2002 23:53:53 -0500
+
 lvm2 (0.95.05-1) unstable; urgency=low
 
   * New release (Beta2).

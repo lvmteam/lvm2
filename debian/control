@@ -7,7 +7,7 @@ Standards-Version: 3.5.2
 
 Package: lvm2
 Architecture: any
-Depends: libdevmapper0
+Depends: ${shlibs:Depends}
 Replaces: lvm10, lvm-common
 Provides: lvm-binaries
 Suggests: dmsetup
