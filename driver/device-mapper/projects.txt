@@ -1,9 +1,6 @@
     List of projects, ideas and pending bug fixes (no particular order)
    ===============================================
 
- o Odd crash needs fixing when doing lookup in dmfs-lv.c (doesn't seem to
-   occur on first logical volume)
-
  o Verify that table parsing code is still doing the right thing.
 
  o Verify ioctl() interface is still working the same way as it used to
