@@ -120,13 +120,60 @@ int process_each_vg(int argc, char **argv,
 	return ret_max;
 }
 
+int process_each_pv(int argc, char **argv, struct volume_group *vg,
+		    int (*process_single) (struct volume_group * vg,
+					   struct physical_volume * pv))
+{
+	int opt = 0;
+	int ret_max = 0;
+	int ret = 0;
+
+	struct list_head *pvh;
+
+	if (argc) {
+		log_verbose("Using physical volume(s) on command line");
+		for (; opt < argc; opt++) {
+			if (!(pvh = find_pv_in_vg(vg, argv[opt]))) {
+				log_error("Physical Volume %s not found in "
+					  "Volume Group %s", argv[opt],
+					  vg->name);
+				continue;
+			}
+			ret = process_single(vg, &list_entry
+					     (pvh, struct pv_list, list)->pv);
+			if (ret > ret_max)
+				ret_max = ret;
+		}
+	} else {
+		log_verbose("Using all physical volume(s) in volume group");
+		list_for_each(pvh, &vg->pvs) {
+			ret = process_single(vg, &list_entry
+					     (pvh, struct pv_list, list)->pv);
+			if (ret > ret_max)
+				ret_max = ret;
+		}
+	}
+
+	return ret_max;
+}
+
 int is_valid_chars(char *n)
 {
 	register char c;
 	while ((c = *n++))
-		if (!isalnum(c) && c != '.' && c != '_' && c != '-' &&
-			c != '+')
+		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
 			return 0;
 	return 1;
 }
 
+struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
+{
+	struct list_head *pvh;
+	list_for_each(pvh, &vg->pvs) {
+		if (!strcmp(list_entry(pvh, struct pv_list, list)->pv.dev->name,
+			    pv_name)) return pvh;
+	}
+
+	return NULL;
+
+}

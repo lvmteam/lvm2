@@ -19,7 +19,7 @@
  */
 
 xx(available_ARG, 'a', "available", yes_no_arg)
-xx(all_ARG, 'a', "all", yes_no_arg)
+xx(all_ARG, 'a', "all", NULL)
 xx(autobackup_ARG, 'A', "autobackup", yes_no_arg)
 xx(activevolumegroups_ARG, 'A', "activevolumegroups", NULL)
 xx(blockdevice_ARG, 'b', "blockdevice", NULL)
