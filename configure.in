@@ -202,7 +202,7 @@ fi
 dnl Check for dlopen
 AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
 
-if [[ "x$HAVE_LIBDL" = xyes -a "xSTATIC_LINK" = xno ]]; then
+if [[ "x$HAVE_LIBDL" = xyes -a "x$STATIC_LINK" = xno ]]; then
 	CFLAGS="$CFLAGS -DHAVE_LIBDL"
 	LIBS="-ldl $LIBS"
 else
