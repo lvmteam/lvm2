@@ -148,6 +148,12 @@ struct dev_list {
 	struct dev_list *next;
 };
 
+struct deferred_io {
+	int rw;
+	struct buffer_head *bh;
+	struct deferred_io *next;
+};
+
 struct mapped_device {
 	kdev_t dev;
 	char name[DM_NAME_LEN];
@@ -157,6 +163,9 @@ struct mapped_device {
 
 	wait_queue_head_t wait;
 	atomic_t pending;	/* # of 'in flight' buffers */
+
+	/* a list of io's that arrived while we were suspended */
+	struct deferred_io *deferred;
 
 	/* btree table */
 	int depth;
