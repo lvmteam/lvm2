@@ -978,6 +978,7 @@ static void _close_stray_fds(void)
 {
 	struct rlimit rlim;
 	int fd;
+	char *suppress_warnings = NULL;
 
 	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
 		fprintf(stderr, "getrlimit(RLIMIT_NOFILE) failed: %s\n",
@@ -985,8 +986,13 @@ static void _close_stray_fds(void)
 		return;
 	}
 
+	if (getenv("LVM_SUPPRESS_FD_WARNINGS"))
+		suppress_warnings = 1;
+
 	for (fd = 3; fd < rlim.rlim_cur; fd++) {
-		if (!close(fd))
+		if (suppress_warnings)
+			close(fd);
+		else if (!close(fd))
 			fprintf(stderr, "File descriptor %d left open\n", fd);
 		else if (errno != EBADF)
 			fprintf(stderr, "Close failed on stray file "
