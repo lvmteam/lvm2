@@ -93,23 +93,6 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	return ret_max;
 }
 
-struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
-				int lock_type)
-{
-	int consistent = 1;
-
-	lock_type &= ~LCK_TYPE_MASK;
-	lock_type |= LCK_WRITE;
-
-	if (!lock_vol(cmd, vgname, lock_type)) {
-		log_error("Can't lock %s for metadata recovery: skipping",
-			  vgname);
-		return NULL;
-	}
-
-	return vg_read(cmd, vgname, &consistent);
-}
-
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		    int lock_type, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
@@ -926,6 +909,23 @@ struct list *clone_pv_list(struct pool *mem, struct list *pvsl)
 	}
 
 	return r;
+}
+
+struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
+				int lock_type)
+{
+	int consistent = 1;
+
+	lock_type &= ~LCK_TYPE_MASK;
+	lock_type |= LCK_WRITE;
+
+	if (!lock_vol(cmd, vgname, lock_type)) {
+		log_error("Can't lock %s for metadata recovery: skipping",
+			  vgname);
+		return NULL;
+	}
+
+	return vg_read(cmd, vgname, &consistent);
 }
 
 int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
