@@ -438,6 +438,30 @@ static void *get_initial_state()
 	return NULL;
 }
 
+/* This checks some basic cluster-LVM configuration stuff */
+static void check_config()
+{
+	int locking_type;
+
+	locking_type = find_config_int(cmd->cft->root, "global/locking_type", 1);
+
+	if (locking_type == 3) /* compiled-in cluster support */
+		return;
+
+	if (locking_type == 2) { /* External library, check name */
+		char *libname;
+
+		libname = find_config_str(cmd->cft->root, "global/locking_library",
+					  "");
+		if (!strcmp(libname, "liblvm2clusterlock.so"))
+			return;
+
+		log_error("Incorrect LVM locking library specified in lvm.conf, cluster operations may not work.");
+		return;
+	}
+	log_error("locking_type not set correctly in lvm.conf, cluster operations will not work.");
+}
+
 void init_lvhash()
 {
 	/* Create hash table for keeping LV locks & status */
@@ -456,6 +480,9 @@ int init_lvm(void)
 	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
 	init_syslog(LOG_DAEMON);
 	init_debug(_LOG_ERR);
+
+	/* Check lvm.conf is setup for cluster-LVM */
+	check_config();
 
 	get_initial_state();
 
