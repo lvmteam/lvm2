@@ -246,6 +246,11 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 		}
 		lp->chunk_size = 2 * arg_uint_value(cmd, chunksize_ARG, 8);
 		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
+
+		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot"))) {
+			stack;
+			return 0;
+		}
 	} else {
 		if (arg_count(cmd, chunksize_ARG)) {
 			log_error("-c is only available with snapshots");

@@ -18,6 +18,7 @@
 #include "toolcontext.h"
 #include "segtypes.h"
 #include "display.h"
+#include "activate.h"
 
 /* 
  * Replace any LV segments on given PV with temporary mirror.
@@ -41,6 +42,13 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 		stack;
 		return 0;
 	}
+
+        if (activation() && segtype->ops->target_present &&
+            !segtype->ops->target_present()) {
+                log_error("%s: Required device-mapper target(s) not "
+                          "detected in your kernel", segtype->name);
+                return 0;
+        }
 
 	/* Work through all segments on the supplied PV */
 	list_iterate(segh, &lv->segments) {

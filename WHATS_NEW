@@ -1,3 +1,7 @@
+Version 2.00.17 -
+=============================
+  Additional kernel target checks before pvmove & snapshot creation.
+
 Version 2.00.16 - 24 May 2004
 =============================
   Set area_count within alloc_lv_segment.
