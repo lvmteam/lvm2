@@ -59,18 +59,13 @@ static uint int_log(ulong n, ulong base)
  */
 static offset_t high(struct dm_table *t, int l, int n)
 {
-	while (1) {
-		if (n >= t->counts[l])
-			return (offset_t) -1;
-
-		if (l == t->depth - 1)
-			return get_node(t, l, n)[KEYS_PER_NODE - 1];
-
-		l++;
+	for (; l < t->depth - 1; l++)
 		n = get_child(n, CHILDREN_PER_NODE - 1);
-	}
 
-	return -1;
+	if (n >= t->counts[l])
+		return (offset_t) -1;
+
+	return get_node(t, l, n)[KEYS_PER_NODE - 1];
 }
 
 /*
@@ -79,17 +74,14 @@ static offset_t high(struct dm_table *t, int l, int n)
  */
 static int setup_btree_index(int l, struct dm_table *t)
 {
-	int n, c, cn;
+	int n, k;
+	offset_t *node;
 
-	for (n = 0, cn = 0; n < t->counts[l]; n++) {
-		offset_t *node = get_node(t, l, n);
+	for (n = 0; n < t->counts[l]; n++) {
+		node = get_node(t, l, n);
 
-		for (c = 0; c < KEYS_PER_NODE; c++)
-			node[c] = high(t, l + 1, cn++);
-
-		/* one extra for the child that's greater
-                   than all keys in the node */
-		cn++;
+		for (k = 0; k < KEYS_PER_NODE; k++)
+			node[k] = high(t, l + 1, get_child(n, k));
 	}
 
 	return 0;
