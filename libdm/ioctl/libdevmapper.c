@@ -16,7 +16,6 @@
 #include <errno.h>
 #include <linux/limits.h>
 
-
 /*
  * Ensure build compatibility.  
  * The hard-coded versions here are the highest present 
@@ -91,17 +90,18 @@ static int _unmarshal_status_v1(struct dm_task *dmt, struct dm_ioctl_v1 *dmi)
 	char *outbuf = (char *) dmi + sizeof(struct dm_ioctl_v1);
 	char *outptr = outbuf;
 	uint32_t i;
-	struct dm_target_spec_v1 *spec = (struct dm_target_spec_v1 *) outptr;
-	size_t spec_size = sizeof(struct dm_target_spec_v1);
+	struct dm_target_spec_v1 *spec;
 
 	for (i = 0; i < dmi->target_count; i++) {
+		spec = (struct dm_target_spec_v1 *) outptr;
 
 		if (!dm_task_add_target(dmt, spec->sector_start,
 					(uint64_t) spec->length,
-					spec->target_type, outptr + spec_size))
+					spec->target_type,
+					outptr + sizeof(*spec)))
 			return 0;
 
-		outptr += spec_size;
+		outptr += sizeof(*spec);
 		outptr += strlen(outptr) + 1;
 
 		_align(outptr, ALIGNMENT);
@@ -472,16 +472,17 @@ static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 	char *outbuf = (char *) dmi + sizeof(struct dm_ioctl);
 	char *outptr = outbuf;
 	uint32_t i;
-	struct dm_target_spec *spec = (struct dm_target_spec *) outptr;
-	size_t spec_size = sizeof(struct dm_target_spec);
+	struct dm_target_spec *spec;
 
 	for (i = 0; i < dmi->target_count; i++) {
+		spec = (struct dm_target_spec *) outptr;
 		if (!dm_task_add_target(dmt, spec->sector_start,
 					spec->length,
-					spec->target_type, outptr + spec_size))
+					spec->target_type,
+					outptr + sizeof(*spec)))
 			return 0;
 
-		outptr += spec_size;
+		outptr += sizeof(*spec);
 		outptr += strlen(outptr) + 1;
 
 		_align(outptr, ALIGNMENT);
