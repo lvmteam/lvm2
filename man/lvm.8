@@ -75,11 +75,40 @@ changed with this option. To insert a replacement physical volume
 of the same or large size use \fBpvcreate -u\fP to set the uuid to 
 match the original followed by \fBvgcfgrestore (8)\fP.
 .TP
+\fB-M | --metadatatype type\fP
+Specifies which type of on-disk metadata to use, such as \fBlvm1\fP 
+or \fBlvm2\fP, which can be abbreviated to \fB1\fP or \fB2\fP respectively.
+The default (lvm2) can be changed by setting \fBformat\fP in the \fBglobal\fP
+section of the config file.
+.TP
 \fB--ignorelockingfailure\fP
 This lets you proceed with read-only metadata operations such as
 \fBlvchange -ay\fP and \fBvgchange -ay\fP even if the locking module fails.
 One use for this is in a system init script if the lock directory 
 is mounted read-only when the script runs.
+.TP
+\fB--addtag tag\fP
+Add the tag \fBtag\fP to a PV, VG or LV.  
+A tag is a word that can be used to group LVM2 objects of the same type 
+together. 
+Tags can be given on the command line in place of PV, VG or LV 
+arguments.  Tags should be prefixed with @ to avoid ambiguity.
+Each tag is expanded by replacing it with all objects possessing
+that tag which are of the type expected by its position on the command line.
+PVs can only possess tags while they are part of a Volume Group:
+PV tags are discarded if the PV is removed from the VG.
+As an example, you could tag some LVs as \fBdatabase\fP and others 
+as \fBuserdata\fP and then activate the database ones 
+with \fBlvchange -ay @database\fP.
+Objects can possess multiple tags simultaneously.
+Only the new LVM2 metadata format supports tagging: objects using the
+LVM1 metadata format cannot be tagged because the on-disk format does not
+support it.
+Snapshots cannot be tagged.
+Characters allowed in tags are: A-Z a-z 0-9 _ + . -
+.TP
+\fB--deltag tag\fP
+Delete the tag \fBtag\fP from a PV, VG or LV, if it's present.
 .SH ENVIRONMENT VARIABLES
 .TP
 \fBLVM_SYSTEM_DIR\fP 
