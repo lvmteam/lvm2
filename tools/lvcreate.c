@@ -144,9 +144,12 @@ int lvcreate(int argc, char **argv)
 				return EINVALID_CMD_LINE;
 			}
 			if (list_item(pvl, struct pv_list)->pv.pe_count ==
-			    list_item(pvl, struct pv_list)->pv.pe_allocated)
+			    list_item(pvl, struct pv_list)->pv.pe_allocated) {
 				 log_error("No free extents on physical volume"
 					   " %s", argv[opt]);
+				continue;
+				/* FIXME But check not null at end! */
+			}
 			list_add(pvh, pvl);
 		}
 	} else {

@@ -157,6 +157,8 @@ void usage(const char *name)
 
 int yes_no_arg(struct arg *a)
 {
+	a->sign = SIGN_NONE;
+
 	if (!strcmp(a->value, "y"))
 		a->i_value = 1;
 
@@ -169,15 +171,44 @@ int yes_no_arg(struct arg *a)
 	return 1;
 }
 
+int _get_int_arg(struct arg *a, char **ptr)
+{
+	char *val;
+	long v;
+
+	val = a->value;
+	switch (*val) {
+	case '+':
+		a->sign = SIGN_PLUS;
+		val++;
+		break;
+	case '-':
+		a->sign = SIGN_MINUS;
+		val++;
+		break;
+	default:
+		a->sign = SIGN_NONE;
+	}
+
+	if (!isdigit(*val))
+		return 0;
+
+	v = strtol(val, ptr, 10);
+
+	if (*ptr == val)
+		return 0;
+
+	a->i_value = (uint32_t) v;
+	return 1;
+}
+
 int size_arg(struct arg *a)
 {
-	static char *suffixes = "kmgt";
-
 	char *ptr;
 	int i;
-	long v = strtol(a->value, &ptr, 10);
+	static char *suffixes = "kmgt";
 
-	if (ptr == a->value)
+	if (!_get_int_arg(a, &ptr))
 		return 0;
 
 	if (*ptr) {
@@ -189,10 +220,9 @@ int size_arg(struct arg *a)
 			return 0;
 
 		while (i-- > 0)
-			v *= 1024;
+			a->i_value *= 1024;
 	}
 
-	a->i_value = (int) v;
 	return 1;
 
 }
@@ -200,12 +230,20 @@ int size_arg(struct arg *a)
 int int_arg(struct arg *a)
 {
 	char *ptr;
-	long v = strtol(a->value, &ptr, 10);
 
-	if (ptr == a->value || *ptr)
+	if (!_get_int_arg(a, &ptr) || (*ptr) || (a->sign == SIGN_MINUS))
 		return 0;
 
-	a->i_value = (int) v;
+	return 1;
+}
+
+int int_arg_with_sign(struct arg *a)
+{
+	char *ptr;
+
+	if (!_get_int_arg(a, &ptr) || (*ptr))
+		return 0;
+
 	return 1;
 }
 
@@ -216,6 +254,8 @@ int string_arg(struct arg *a)
 
 int permission_arg(struct arg *a)
 {
+	a->sign = SIGN_NONE;
+
 	if ((!strcmp(a->value, "rw")) || (!strcmp(a->value, "wr")))
 		a->i_value = LVM_READ | LVM_WRITE;
 
@@ -242,8 +282,7 @@ char yes_no_prompt(const char *prompt, ...)
 		c = tolower(getchar());
 	}
 
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n') ;
 
 	return c;
 }
@@ -271,7 +310,7 @@ static void register_command(const char *name, command_fn fn,
 	va_end(ap);
 
 	/* allocate space for them */
-	if (!(args = dbg_malloc(sizeof (*args) * nargs))) {
+	if (!(args = dbg_malloc(sizeof(*args) * nargs))) {
 		log_fatal("Out of memory.");
 		exit(ECMD_FAILED);
 	}
@@ -327,7 +366,7 @@ static void create_new_command(const char *name, command_fn command,
 
 static void __alloc(int size)
 {
-	if (!(_commands = dbg_realloc(_commands, sizeof (*_commands) * size))) {
+	if (!(_commands = dbg_realloc(_commands, sizeof(*_commands) * size))) {
 		log_fatal("Couldn't allocate memory.");
 		exit(ECMD_FAILED);
 	}
@@ -385,7 +424,7 @@ static int process_command_line(struct command *com, int *argc, char ***argv)
 		add_getopt_arg(com->valid_args[i], &ptr, &o);
 
 	*ptr = '\0';
-	memset(o, 0, sizeof (*o));
+	memset(o, 0, sizeof(*o));
 
 	/* initialise getopt_long & scan for command line switches */
 	optarg = 0;
@@ -609,7 +648,8 @@ static int dev_cache_setup(void)
 				  "device cache");
 			return 0;
 		}
-		log_verbose("device/scan not in config file: Defaulting to /dev");
+		log_verbose
+		    ("device/scan not in config file: Defaulting to /dev");
 		return 1;
 	}
 
@@ -619,14 +659,14 @@ static int dev_cache_setup(void)
 				  "devices/scan");
 			return 0;
 		}
-	
+
 		if (!dev_cache_add_dir(cv->v.str)) {
-			log_error("Failed to add %s to internal device cache", 
+			log_error("Failed to add %s to internal device cache",
 				  cv->v.str);
 			return 0;
 		}
-	} 
-		
+	}
+
 	return 1;
 }
 
@@ -669,7 +709,7 @@ static struct dev_filter *filter_setup(void)
 		return 0;
 
 	lvm_cache = find_config_str(_cf->root, "devices/cache", '/',
-					"/etc/lvm/.cache");
+				    "/etc/lvm/.cache");
 
 	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
 		log_error("Failed to create persistent device filter");
@@ -679,7 +719,7 @@ static struct dev_filter *filter_setup(void)
 	/* Should we ever dump persistent filter state? */
 	if (find_config_int(_cf->root, "devices/write_cache_state", '/', 1))
 		dump_filter = 1;
-	
+
 	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
 		log_verbose("Failed to load existing device cache from %s",
 			    lvm_cache);
@@ -694,7 +734,7 @@ static int init(void)
 	struct stat info;
 	struct pool *ios_pool;
 
-	/* FIXME: Override from config file. (Append trailing slash if reqd)*/
+	/* FIXME: Override from config file. (Append trailing slash if reqd) */
 	char *prefix = "/dev/";
 
 	if (!(_cf = create_config_file())) {
@@ -781,15 +821,15 @@ static int run_script(int argc, char **argv)
 	if ((script = fopen(argv[0], "r")) == NULL)
 		return ENO_SUCH_CMD;
 
-	while (fgets(buffer, sizeof (buffer), script) != NULL) {
+	while (fgets(buffer, sizeof(buffer), script) != NULL) {
 		if (!magic_number) {
 			if (buffer[0] == '#' && buffer[1] == '!')
 				magic_number = 1;
 			else
 				return ENO_SUCH_CMD;
 		}
-		if ((strlen(buffer) == sizeof (buffer) - 1)
-		    && (buffer[sizeof (buffer) - 1] - 2 != '\n')) {
+		if ((strlen(buffer) == sizeof(buffer) - 1)
+		    && (buffer[sizeof(buffer) - 1] - 2 != '\n')) {
 			buffer[50] = '\0';
 			log_error("Line too long (max 255) beginning: %s",
 				  buffer);
@@ -901,7 +941,7 @@ static char *list_args(char *text, int state)
 			char c;
 			if (!(c = (the_args +
 				   com->valid_args[match_no++])->short_arg))
-				    continue;
+				continue;
 
 			sprintf(s, "-%c", c);
 			if (!strncmp(text, s, len))

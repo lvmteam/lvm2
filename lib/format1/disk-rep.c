@@ -196,6 +196,7 @@ static int _read_lvs(struct disk_list *data)
 	unsigned long pos;
 	struct lvd_list *ll;
 
+	/* FIXME May be gaps - use lv_max */
 	for(i = 0; i < data->vgd.lv_cur; i++) {
 		pos = data->pvd.lv_on_disk.base + (i * sizeof(struct lv_disk));
 		ll = pool_alloc(data->mem, sizeof(*ll));
@@ -384,9 +385,9 @@ static int _write_lvs(struct disk_list *data)
 	struct list *lvh;
 	unsigned long pos;
 
+	pos = data->pvd.lv_on_disk.base;
 	list_iterate(lvh, &data->lvds) {
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
-		pos = data->pvd.lv_on_disk.base;
 
 		if (!_write_lvd(data->dev, pos, &ll->lvd))
 			fail;

@@ -19,7 +19,6 @@
  */
 
 int e2fsadm(int argc, char **argv) {return 1;}
-int lvextend(int argc, char **argv) {return 1;}
 int lvmdiskscan(int argc, char **argv) {return 1;}
 int lvmsadc(int argc, char **argv) {return 1;}
 int lvmsar(int argc, char **argv) {return 1;}

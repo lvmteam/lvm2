@@ -121,4 +121,3 @@ int lvremove_single(char *lv_name)
 	log_print("logical volume %s successfully removed", lv_name);
 	return 0;
 }
-

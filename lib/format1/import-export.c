@@ -493,6 +493,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		}
 
 		export_lv(&lvdl->lvd, vg, &ll->lv, prefix);
+		lvdl->lvd.lv_number = lv_num;
 		if (!export_extents(dl, lv_num++, &ll->lv, pv)) {
 			stack;
 			return 0;
@@ -556,11 +557,6 @@ void export_numbers(struct list *pvs, struct volume_group *vg)
 	list_iterate(pvh, pvs) {
 		dl = list_item(pvh, struct disk_list);
 		dl->pvd.pv_number = pv_num++;
-
-		list_iterate(lvh, &dl->lvds) {
-			ll = list_item(lvh, struct lvd_list);
-			ll->lvd.lv_number = _get_lv_number(vg, ll->lvd.lv_name);
-		}
 	}
 }
 
