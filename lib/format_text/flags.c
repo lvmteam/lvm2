@@ -19,7 +19,6 @@ struct flag {
 };
 
 static struct flag _vg_flags[] = {
-	{ACTIVE, "ACTIVE"},
 	{EXPORTED_VG, "EXPORTED"},
 	{RESIZEABLE_VG, "RESIZEABLE"},
 	{CLUSTERED, "CLUSTERED"},
@@ -28,13 +27,11 @@ static struct flag _vg_flags[] = {
 };
 
 static struct flag _pv_flags[] = {
-	{ACTIVE, "ACTIVE"},
 	{ALLOCATABLE_PV, "ALLOCATABLE"},
 	{0, NULL}
 };
 
 static struct flag _lv_flags[] = {
-	{ACTIVE, "ACTIVE"},
 	{LVM_READ, "READ"},
 	{LVM_WRITE, "WRITE"},
 	{ALLOC_SIMPLE, "ALLOC_SIMPLE"},

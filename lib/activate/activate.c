@@ -11,12 +11,14 @@
 #include "fs.h"
 #include "lvm-string.h"
 
-static void _build_lv_name(char *buffer, size_t s, struct logical_volume *lv)
+static void _build_lv_name(char *buffer, size_t s, const char *vg_name,
+			   const char *lv_name)
 {
-	snprintf(buffer, s, "%s_%s", lv->vg->name, lv->name);
+	snprintf(buffer, s, "%s_%s", vg_name, lv_name);
 }
 
-static struct dm_task *_setup_task(struct logical_volume *lv, int task)
+static struct dm_task *_setup_task_with_name(struct logical_volume *lv, 
+				   	     const char *lv_name, int task)
 {
 	char name[128];
 	struct dm_task *dmt;
@@ -26,10 +28,15 @@ static struct dm_task *_setup_task(struct logical_volume *lv, int task)
 		return NULL;
 	}
 
-	_build_lv_name(name, sizeof(name), lv);
+	_build_lv_name(name, sizeof(name), lv->vg->name, lv_name);
 	dm_task_set_name(dmt, name);
 
 	return dmt;
+}
+
+static struct dm_task *_setup_task(struct logical_volume *lv, int task)
+{
+	return _setup_task_with_name(lv, lv->name, task);
 }
 
 int lv_info(struct logical_volume *lv, struct dm_info *info)
@@ -56,6 +63,42 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 
  out:
 	dm_task_destroy(dmt);
+	return r;
+}
+
+int lv_rename(const char *old_name, struct logical_volume *lv)
+{
+	int r = 0;
+	char new_name[128];
+	struct dm_task *dmt;
+
+	if (test_mode())
+		return 0;
+
+	if (!(dmt = _setup_task_with_name(lv, old_name, DM_DEVICE_RENAME))) {
+		stack;
+		return 0;
+	}
+
+	_build_lv_name(new_name, sizeof(new_name), lv->vg->name, lv->name);
+
+	if (!dm_task_set_newname(dmt, new_name)) {
+		stack;
+		r = 0;
+		goto end;
+	}
+
+	if (!dm_task_run(dmt)) {
+		stack;
+		r = 0;
+		goto end;
+	}
+
+	fs_rename_lv(old_name, lv);
+
+      end:
+	dm_task_destroy(dmt);
+
 	return r;
 }
 
@@ -128,6 +171,16 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 
 	
 	for (s = 0; s < stripes; s++, w += tw) {
+/******
+		log_debug("stripes: %d", stripes);
+		log_debug("dev_name(seg->area[s].pv->dev): %s",
+				dev_name(seg->area[s].pv->dev));
+		log_debug("esize: %" PRIu64, esize);
+		log_debug("seg->area[s].pe: %" PRIu64, seg->area[s].pe);
+		log_debug("seg->area[s].pv->pe_start: %" PRIu64,
+				seg->area[s].pv->pe_start);
+*******/
+
 		tw = lvm_snprintf(params + w, sizeof(params) - w,
 			      "%s %" PRIu64 "%s",
 			      dev_name(seg->area[s].pv->dev),
@@ -224,6 +277,11 @@ int _suspend(struct logical_volume *lv, int sus)
 	return r;
 }
 
+int lv_suspend(struct logical_volume *lv)
+{
+	return _suspend(lv, 1);
+}
+
 int lv_reactivate(struct logical_volume *lv)
 {
 	int r;
@@ -245,6 +303,7 @@ int lv_reactivate(struct logical_volume *lv)
 
 	return r;
 }
+
 
 int lv_deactivate(struct logical_volume *lv)
 {

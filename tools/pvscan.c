@@ -133,7 +133,6 @@ void pvscan_display_single(struct physical_volume *pv)
 {
 
 	int vg_name_len = 0;
-	const char *active_str;
 
 	char *s1, *s2;
 
@@ -159,8 +158,6 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	memset(pv_tmp_name, 0, sizeof (pv_tmp_name));
 
-	active_str = (pv->status & ACTIVE) ? "ACTIVE  " : "Inactive";
-
 	vg_name_len = strlen(pv->vg_name) - sizeof (EXPORTED_TAG) + 1;
 
 	if (arg_count(uuid_ARG)) {
@@ -173,7 +170,7 @@ void pvscan_display_single(struct physical_volume *pv)
 	}
 
 	if (!*pv->vg_name) {
-		log_print("%s PV %-*s is in no VG %-*s [%s]", active_str,
+		log_print("PV %-*s is in no VG %-*s [%s]", 
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len - 6, " ",
 			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));
@@ -183,8 +180,8 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	if (strcmp(&pv->vg_name[vg_name_len], EXPORTED_TAG) == 0) {
 		strncpy(vg_name_this, pv->vg_name, vg_name_len);
-		log_print("%s PV %-*s  is in EXPORTED VG %s [%s / %s free]",
-			  active_str, pv_max_name_len, pv_tmp_name,
+		log_print("PV %-*s  is in EXPORTED VG %s [%s / %s free]",
+			  pv_max_name_len, pv_tmp_name,
 			  vg_name_this, (s1 =
 					 display_size(pv->pe_count *
 						      pv->pe_size / 2,
@@ -198,7 +195,7 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	sprintf(vg_tmp_name, "%s", pv->vg_name);
 	log_print
-	    ("%s PV %-*s of VG %-*s [%s / %s free]", active_str, pv_max_name_len,
+	    ("PV %-*s of VG %-*s [%s / %s free]", pv_max_name_len,
 	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
 	     (s1 = display_size(pv->pe_count * pv->pe_size / 2, SIZE_SHORT)),
 	     (s2 =

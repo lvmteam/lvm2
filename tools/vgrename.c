@@ -73,12 +73,14 @@ int vgrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (vg_old->status & ACTIVE) {
-		log_error("Volume group %s still active", vg_name_old);
+	if (lvs_in_vg_activated(vg_old)) {
+		log_error("Volume group %s still has active LVs", vg_name_old);
+/***** FIXME Handle this with multiple LV renames!
 		if (!force_ARG) {
 			log_error("Use -f to force the rename");
 			return ECMD_FAILED;
 		}
+*****/
 	}
 
 	log_verbose("Checking for new volume group %s", vg_name_new);

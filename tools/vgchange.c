@@ -76,17 +76,7 @@ static int vgchange_single(const char *vg_name)
 void vgchange_available(struct volume_group *vg)
 {
 	int lv_open, lv_active;
-	struct list *lvh;
 	int available = !strcmp(arg_str_value(available_ARG, "n"), "y");
-
-	/* Ignore existing disk status */
-	if (available && (vg->status & ACTIVE))
-		log_verbose("Volume group %s is already active on disk", 
-			    vg->name);
-
-	if (!available && !(vg->status & ACTIVE))
-		log_verbose("Volume group %s is already inactive on disk", 
-			    vg->name);
 
 	/* FIXME: Force argument to deactivate them? */
 	if (!available && (lv_open = lvs_in_vg_opened(vg))) {
@@ -98,26 +88,6 @@ void vgchange_available(struct volume_group *vg)
 	if (available && (lv_active = lvs_in_vg_activated(vg)))
 		log_verbose("%d logical volume(s) in volume group %s "
 			    "already active", lv_active, vg->name);
-
-	if (!archive(vg))
-		return;
-
-	if (available) {
-		vg->status |= ACTIVE;
-		list_iterate(lvh, &vg->lvs)
-			list_item(lvh, struct lv_list)->lv.status 
-				  |= ACTIVE;
-	} else {
-		vg->status &= ~ACTIVE;
-		list_iterate(lvh, &vg->lvs)
-			list_item(lvh, struct lv_list)->lv.status 
-				  &= ~ACTIVE;
-	}
-
-	if (!fid->ops->vg_write(fid, vg))
-		return;
-
-	backup(vg);
 
 	if (available && (lv_open = activate_lvs_in_vg(vg)))
 		log_verbose("Activated %d logical volumes in "
@@ -168,12 +138,6 @@ void vgchange_resizeable(struct volume_group *vg)
 void vgchange_logicalvolume(struct volume_group *vg)
 {
 	int max_lv = arg_int_value(logicalvolume_ARG, 0);
-
-	if (vg->status & ACTIVE) {
-		log_error("MaxLogicalVolume can't be changed in "
-			  "active volume group '%s'", vg->name);
-		return;
-	}
 
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group '%s' must be resizeable "

@@ -47,9 +47,6 @@ int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 		return 0;
 	}
 
-	/* FIXME Tie this to activation or not? */
-	pv->status |= ACTIVE;
-
 	/* Units of 512-byte sectors */
 	if (!dev_get_size(pv->dev, &pv->size)) {
 		stack;
@@ -156,7 +153,7 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 		goto bad;
 	}
 
-	vg->status = (ACTIVE | RESIZEABLE_VG | LVM_READ | LVM_WRITE);
+	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
 
 	vg->extent_size = extent_size;
 	vg->extent_count = 0;

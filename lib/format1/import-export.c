@@ -48,9 +48,6 @@ int import_pv(struct pool *mem, struct device *dev,
 		return 0;
 	}
 
-	if (pvd->pv_status & PV_ACTIVE)
-		pv->status |= ACTIVE;
-
 	if (pvd->pv_allocatable)
 		pv->status |= ALLOCATABLE_PV;
 
@@ -98,9 +95,6 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 
 	//pvd->pv_major = MAJOR(pv->dev);
 
-	if (pv->status & ACTIVE)
-		pvd->pv_status |= PV_ACTIVE;
-
 	if (pv->status & ALLOCATABLE_PV)
 		pvd->pv_allocatable = PV_ALLOCATABLE;
 
@@ -134,9 +128,6 @@ int import_vg(struct pool *mem,
 		stack;
 		return 0;
 	}
-
-	if (vgd->vg_status & VG_ACTIVE)
-		vg->status |= ACTIVE;
 
 	if (vgd->vg_status & VG_EXPORTED)
 		vg->status |= EXPORTED_VG;
@@ -181,9 +172,6 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	if (vg->status & SHARED)
 		vgd->vg_access |= VG_SHARED;
 
-	if (vg->status & ACTIVE)
-		vgd->vg_status |= VG_ACTIVE;
-
 	if (vg->status & EXPORTED_VG)
 		vgd->vg_status |= VG_EXPORTED;
 
@@ -210,9 +198,6 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 		stack;
 		return 0;
 	}
-
-	if (lvd->lv_status & LV_ACTIVE)
-		lv->status |= ACTIVE;
 
 	if (lvd->lv_status & LV_SPINDOWN)
 		lv->status |= SPINDOWN_LV;
@@ -271,9 +256,6 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 
 	if (lv->status & SNAPSHOT_ORG)
 		lvd->lv_access |= LV_SNAPSHOT_ORG;
-
-	if (lv->status & ACTIVE)
-		lvd->lv_status |= LV_ACTIVE;
 
 	if (lv->status & SPINDOWN_LV)
 		lvd->lv_status |= LV_SPINDOWN;

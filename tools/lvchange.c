@@ -45,16 +45,7 @@ int lvchange(int argc, char **argv)
 static int lvchange_single(struct logical_volume *lv)
 {
 	int doit = 0;
-
-/******* Removed requirement for VG to be active before making changes
-	if (!(lv->vg->status & ACTIVE) && 
-	    !(arg_count(available_ARG) && 
-	      strcmp(arg_str_value(available_ARG, "n"), "n"))) {
-		log_error("Volume group %s must be active before changing a "
-			  "logical volume", vg->name);
-		return ECMD_FAILED;
-	}
-********/
+	int archived = 0;
 
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't change logical volume %s under snapshot",
@@ -67,30 +58,37 @@ static int lvchange_single(struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
-	if (!archive(lv->vg))
-		return 0;
-
 	/* access permission change */
-	if (arg_count(permission_ARG))
+	if (arg_count(permission_ARG)) {
+		if (!archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
 		doit += lvchange_permission(lv);
+	}
+
+	/* allocation policy change */
+	if (arg_count(contiguous_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_contiguous(lv);
+	}
+
+	/* read ahead sector change */
+	if (arg_count(readahead_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_readahead(lv);
+	}
+
+	if (doit)
+		log_print("Logical volume %s changed", lv->name);
 
 	/* availability change */
 	if (arg_count(available_ARG))
-		doit += lvchange_availability(lv);
-
-	/* allocation policy change */
-	if (arg_count(contiguous_ARG))
-		doit += lvchange_contiguous(lv);
-
-	/* read ahead sector change */
-	if (arg_count(readahead_ARG))
-		doit += lvchange_readahead(lv);
-
-	if (!doit) {
-		return 0;
-	}
-
-	log_print("Logical volume %s changed", lv->name);
+		if (!lvchange_availability(lv))
+			return ECMD_FAILED;
 
 	return 0;
 }
@@ -135,54 +133,38 @@ static int lvchange_permission(struct logical_volume *lv)
 
 static int lvchange_availability(struct logical_volume *lv)
 {
-	int lv_stat = 0;
+	int activate = 0;
 	int active;
 
 	if (strcmp(arg_str_value(available_ARG, "n"), "n"))
-		lv_stat |= ACTIVE;
+		activate = 1;
 
 	active = lv_active(lv);
 
-	if (lv_stat & ACTIVE) {
-		lv->status |= ACTIVE;
-		log_verbose("Activating logical volume %s", lv->name);
-	} else {
-		lv->status &= ~ACTIVE;
-		log_verbose("Deactivating logical volume %s", lv->name);
-	}
-
-	if ((lv_stat & ACTIVE) && (lv->status & ACTIVE))
-		log_verbose("Logical volume %s is already active on disk", 
-			    lv->name);
-	else if (!(lv_stat & ACTIVE) && !(lv->status & ACTIVE))
-		log_verbose("Logical volume %s is already inactive on disk", 
-			    lv->name);
-	else {
-		log_very_verbose("Updating logical volume %s on disk(s)", 
-				 lv->name);
-		if (!fid->ops->vg_write(fid, lv->vg))
-			return 0;
-		backup(lv->vg);
-	}
-
-	if ((lv_stat & ACTIVE) && (active & ACTIVE))
+	if (activate && active) {
 		log_verbose("Logical volume %s is already active", lv->name);
-	else if (!(lv_stat & ACTIVE) && !(active & ACTIVE))
-		log_verbose("Logical volume %s is already inactive", lv->name);
-	else {
-		log_very_verbose("Updating %s in kernel", lv->name);
-		if (lv_stat & ACTIVE) {
-			if (!lv_activate(lv))
-				return 0;
-		} else {
-			if (!lv_deactivate(lv))
-				return 0;
-		}
+		return 0;
 	}
 
-	if (lv_suspended(lv)) {
+	if (!activate && !active) {
+		log_verbose("Logical volume %s is already inactive", lv->name);
+		return 0;
+	}
+	
+	if (activate & lv_suspended(lv)) {
 		log_verbose("Reactivating logical volume %s", lv->name); 
 		if (!lv_reactivate(lv))
+			return 0;
+		return 1;
+	}
+	
+	if (activate) {
+		log_verbose("Activating logical volume %s", lv->name);
+		if (!lv_activate(lv))
+			return 0;
+	} else {
+		log_verbose("Deactivating logical volume %s", lv->name);
+		if (!lv_deactivate(lv))
 			return 0;
 	}
 

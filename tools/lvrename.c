@@ -23,6 +23,7 @@
 int lvrename(int argc, char **argv)
 {
 	int maxlen;
+	int active;
 	char *lv_name_old, *lv_name_new;
 	char *vg_name, *vg_name_new;
 	char *st;
@@ -89,14 +90,6 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-/******* Removed requirement
-	if (!(vg->status & ACTIVE)) {
-		log_error("Volume group %s must be active before changing a "
-			  "logical volume", vg_name);
-		return ECMD_FAILED;
-	}
-*******/
-
 	if ((lvh = find_lv_in_vg(vg, lv_name_new))) {
 		log_error("Logical volume %s already exists in "
 			  "volume group %s", lv_name_new, vg_name);
@@ -114,6 +107,13 @@ int lvrename(int argc, char **argv)
 	if (!archive(lv->vg))
 		return ECMD_FAILED;
 
+	active = lv_active(lv);
+
+	if (active && !lv_suspend(lv)) {
+		log_error("Failed to suspend %s", lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (!(lv->name = pool_strdup(fid->cmd->mem, lv_name_new))) {
 		log_error("Failed to allocate space for new name");
 		return ECMD_FAILED;
@@ -125,10 +125,12 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	backup(lv->vg);
+	if (active) {
+		lv_rename(lv_name_old, lv);
+		lv_reactivate(lv);
+	}
 
-	/* FIXME Update symlink. */
-	lv_reactivate(lv);
+	backup(lv->vg);
 
 	log_print("Renamed %s to %s in volume group %s%s",
 		  lv_name_old, lv_name_new, fid->cmd->dev_dir, vg_name);

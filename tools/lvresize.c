@@ -106,14 +106,6 @@ int lvresize(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-/******* Remove requirement 
-	if (!(vg->status & ACTIVE)) {
-		log_error("Volume group %s must be active before changing a "
-			  "logical volume", vg_name);
-		return ECMD_FAILED;
-	}
-********/
-
 	/* does LV exist? */
 	if (!(lvh = find_lv_in_vg(vg, lv_name))) {
 		log_error("Logical volume %s not found in volume group %s",
@@ -122,14 +114,6 @@ int lvresize(int argc, char **argv)
 	}
 
 	lv = &list_item(lvh, struct lv_list)->lv;
-
-/******* Remove requirement
-	if (!(lv->status & ACTIVE)) {
-		log_error("Logical volume %s must be active before change",
-			  lv_name);
-		return ECMD_FAILED;
-	}
-********/
 
 	if (size) {
 		/* No of 512-byte sectors */

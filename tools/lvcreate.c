@@ -121,14 +121,6 @@ int lvcreate(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-/******* Removed check
-	if (!(vg->status & ACTIVE)) {
-		log_error("Volume group %s must be active before changing a "
-			  "logical volume", vg_name);
-		return ECMD_FAILED;
-	}
-********/
-
 	if (lv_name && (lvh = find_lv_in_vg(vg, lv_name))) {
 		log_error("Logical volume %s already exists in "
 			  "volume group %s", lv_name, vg_name);

@@ -56,16 +56,17 @@ int lvscan(int argc, char **argv)
 
 static int lvscan_single(struct logical_volume *lv)
 {
-	int lv_active = 0;
+	int active = 0;
 	int lv_total = 0;
 	ulong lv_capacity_total = 0;
 
 	char *dummy;
 	const char *active_str, *snapshot_str;
 
-	if (lv->status & ACTIVE) {
+/* FIXME Add -D arg to skip this! */
+	if (lv_active(lv)) {
 		active_str = "ACTIVE   ";
-		lv_active++;
+		active++;
 	} else
 		active_str = "inactive ";
 

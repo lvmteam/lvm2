@@ -11,8 +11,11 @@
 #include "lvm-string.h"
 #include "toollib.h"
 
+#include "tools.h"
+
 #include <unistd.h>
 #include <limits.h>
+
 
 static struct {
 	int enabled;
@@ -198,10 +201,10 @@ int backup_remove(const char *vg_name)
 	return 1;
 }
 
-static int _read_vg(struct command_context *cmd,
-		    const char *vg_name, const char *file)
+static struct volume_group *_read_vg(struct cmd_context *cmd,
+		    		     const char *vg_name, const char *file)
 {
-	int r;
+	struct volume_group *vg;
 	struct format_instance *tf;
 
 	if (!(tf = text_format_create(cmd, file))) {
@@ -209,11 +212,11 @@ static int _read_vg(struct command_context *cmd,
 		return 0;
 	}
 
-	if (!(r = tf->ops->vg_read(tf, vg_name)))
+	if (!(vg = tf->ops->vg_read(tf, vg_name)))
 		stack;
 
 	tf->ops->destroy(tf);
-	return r;
+	return vg;
 }
 
 int backup_restore_from_file(const char *vg_name, const char *file)
@@ -223,7 +226,7 @@ int backup_restore_from_file(const char *vg_name, const char *file)
 	/*
 	 * Read in the volume group.
 	 */
-	if (!(vg = _read_vg(vg_name, file))) {
+	if (!(vg = _read_vg(vg->cmd, vg_name, file))) {
 		stack;
 		return 0;
 	}

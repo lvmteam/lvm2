@@ -27,8 +27,7 @@
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-#define ACTIVE               	0x00000001  /* PV VG LV */
-#define EXPORTED_VG          	0x00000002  /* VG */  /* And PV too perhaps? */
+#define EXPORTED_VG          	0x00000002  /* VG */
 #define RESIZEABLE_VG        	0x00000004  /* VG */
 
 /* May any free extents on this PV be used or must they be left free? */
