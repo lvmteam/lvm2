@@ -76,6 +76,7 @@ SOURCES =\
 	misc/crc.c \
 	misc/lvm-file.c \
 	misc/lvm-string.c \
+	mm/dbg_malloc.c \
 	mm/memlock.c \
 	mm/pool.c \
 	regex/matcher.c \
@@ -119,10 +120,6 @@ endif
 
 ifeq ("@MIRRORS@", "internal")
   SOURCES += mirror/mirrored.c
-endif
-
-ifeq ("@DEBUG@", "yes")
-  SOURCES += mm/dbg_malloc.c
 endif
 
 ifeq ("@DEVMAPPER@", "yes")
