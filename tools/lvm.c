@@ -608,22 +608,22 @@ static struct dev_filter *filter_setup(void)
 	struct config_node *cn;
 	struct dev_filter *f1, *f2, *f3, *f4;
 
-	if (!(f1 = lvm_type_filter_create()))
+	if (!(f2 = lvm_type_filter_create()))
 		return 0;
 
 	if (!(cn = find_config_node(_cf->root, "devices/filter", '/'))) {
 		log_debug("devices/filter not found in config file");
-		return f1;
+		return f2;
 	}
 
-	if (!(f2 = regex_filter_create(cn->v))) {
+	if (!(f1 = regex_filter_create(cn->v))) {
 		log_error("Failed to create regex device filter");
-		return f1;
+		return f2;
 	}
 
 	if (!(f4 = composite_filter_create(2, f1, f2))) {
 		log_error("Failed to create composite device filter");
-		return f1;
+		return f2;
 	}
 
 	return f4;
@@ -699,7 +699,7 @@ static void __fin_commands(void)
 static void fin(void)
 {
 	ios->destroy(ios);
-	lvm_type_filter_destroy(_filter);
+	_filter->destroy(_filter);
 	dev_cache_exit();
 	destroy_config_file(_cf);
 	__fin_commands();
