@@ -197,11 +197,11 @@ int lvresize(int argc, char **argv)
 			seg_stripes = str;
 		}
 
-		if (!stripesize && stripes > 1)
-			stripesize = seg_stripesize;
-
 		if (!stripes)
 			stripes = seg_stripes;
+
+		if (!stripesize && stripes > 1)
+			stripesize = seg_stripesize;
 
 		seg_size = extents - lv->le_count;
 	}
