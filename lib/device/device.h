@@ -55,7 +55,7 @@ struct device_area {
 /*
  * All io should use these routines.
  */
-int dev_get_size(struct device *dev, uint64_t *size);
+int dev_get_size(const struct device *dev, uint64_t *size);
 int dev_get_sectsize(struct device *dev, uint32_t *size);
 
 /* Use quiet version if device number could change e.g. when opening LV */

@@ -212,7 +212,7 @@ static int _aligned_io(struct device_area *where, void *buffer,
  * Public functions
  *---------------------------------------------------------------*/
 
-int dev_get_size(struct device *dev, uint64_t *size)
+int dev_get_size(const struct device *dev, uint64_t *size)
 {
 	int fd;
 	const char *name = dev_name(dev);
