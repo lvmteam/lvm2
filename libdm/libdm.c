@@ -34,8 +34,6 @@ static void _default_log(int level, const char *file, int line,
 {
 	va_list ap;
 
-	//fprintf(stderr, "%s:%d ", file, line);
-
 	va_start(ap, f);
 	vfprintf(stderr, f, ap);
 	va_end(ap);
