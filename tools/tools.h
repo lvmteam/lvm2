@@ -89,7 +89,9 @@ enum {
 /* a global table of possible arguments */
 struct arg {
 	const char short_arg;
+	char _padding[7];
 	const char *long_arg;
+
 	int (*fn) (struct cmd_context * cmd, struct arg * a);
 
 	unsigned int count;

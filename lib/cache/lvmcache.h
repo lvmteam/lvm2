@@ -36,9 +36,10 @@ struct volume_group;
 struct lvmcache_vginfo {
 	struct list list;	/* Join these vginfos together */
 	struct list infos;	/* List head for lvmcache_infos */
+	const struct format_type *fmt;
 	char *vgname;		/* "" == orphan */
 	char vgid[ID_LEN + 1];
-	const struct format_type *fmt;
+	char _padding[7];
 };
 
 struct lvmcache_info {

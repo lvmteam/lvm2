@@ -25,11 +25,11 @@ struct id {
 
 /*
  * Unique logical volume identifier
- * With format1 this is VG uuid + LV uuid + '\0'
+ * With format1 this is VG uuid + LV uuid + '\0' + padding
  */
 union lvid {
 	struct id id[2];
-	char s[2 * sizeof(struct id) + 1];
+	char s[2 * sizeof(struct id) + 1 + 7];
 };
 
 int lvid_from_lvnum(union lvid *lvid, struct id *vgid, uint32_t lv_num);
