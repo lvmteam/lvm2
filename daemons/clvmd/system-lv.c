@@ -42,7 +42,9 @@
 #include "list.h"
 #include "locking.h"
 #include "system-lv.h"
+#include "clvm.h"
 #include "clvmd-comms.h"
+#include "clvmd.h"
 #ifdef HAVE_CCS
 #include "ccs.h"
 #endif

@@ -66,7 +66,7 @@ struct lock_wait {
 	struct dlm_lksb lksb;
 };
 
-int init_cluster()
+static int _init_cluster(void)
 {
 	struct sockaddr_cl saddr;
 	int port = CLUSTER_PORT_CLVMD;
@@ -74,7 +74,7 @@ int init_cluster()
 	/* Open the cluster communication socket */
 	cluster_sock = socket(AF_CLUSTER, SOCK_DGRAM, CLPROTO_CLIENT);
 	if (cluster_sock == -1) {
-		syslog(LOG_ERR, "Can't open cluster manager socket: %m");
+		syslog(LOG_ERR, "Can't open cman cluster manager socket: %m");
 		return -1;
 	}
 
@@ -104,18 +104,18 @@ int init_cluster()
 	return 0;
 }
 
-int get_main_cluster_fd()
+static int _get_main_cluster_fd()
 {
 	return cluster_sock;
 }
 
-int get_num_nodes()
+static int _get_num_nodes()
 {
 	return num_nodes;
 }
 
 /* send_message with the fd check removed */
-int cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
+static int _cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
 {
 	struct iovec iov[2];
 	struct msghdr msg;
@@ -135,7 +135,7 @@ int cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
 	if (csid) {
 		msg.msg_name = &saddr;
 		msg.msg_namelen = sizeof(saddr);
-		memcpy(&saddr.scl_nodeid, csid, MAX_CSID_LEN);
+		memcpy(&saddr.scl_nodeid, csid, CMAN_MAX_CSID_LEN);
 	} else {		/* Cluster broadcast */
 
 		msg.msg_name = NULL;
@@ -151,26 +151,26 @@ int cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
 	return len;
 }
 
-void get_our_csid(char *csid)
+static void _get_our_csid(char *csid)
 {
 	int i;
-	memset(csid, 0, MAX_CSID_LEN);
+	memset(csid, 0, CMAN_MAX_CSID_LEN);
 
 	for (i = 0; i < num_nodes; i++) {
 		if (nodes[i].us)
-			memcpy(csid, &nodes[i].node_id, MAX_CSID_LEN);
+			memcpy(csid, &nodes[i].node_id, CMAN_MAX_CSID_LEN);
 	}
 }
 
 /* Call a callback routine for each node that known (down mean not running a clvmd) */
-int cluster_do_node_callback(struct local_client *client,
+static int _cluster_do_node_callback(struct local_client *client,
 			     void (*callback) (struct local_client *, char *,
 					       int))
 {
 	int i;
 	int somedown = 0;
 
-	for (i = 0; i < get_num_nodes(); i++) {
+	for (i = 0; i < _get_num_nodes(); i++) {
 		callback(client, (char *)&nodes[i].node_id, node_updown[nodes[i].node_id]);
 		if (!node_updown[nodes[i].node_id])
 			somedown = -1;
@@ -202,7 +202,7 @@ static void process_oob_msg(char *buf, int len, int nodeid)
 	}
 }
 
-int cluster_fd_callback(struct local_client *client, char *buf, int len, char *csid,
+static int _cluster_fd_callback(struct local_client *client, char *buf, int len, char *csid,
 			struct local_client **new_client)
 {
 	struct iovec iov[2];
@@ -254,7 +254,7 @@ int cluster_fd_callback(struct local_client *client, char *buf, int len, char *c
 	return len;
 }
 
-void add_up_node(char *csid)
+static void _add_up_node(char *csid)
 {
 	/* It's up ! */
 	int nodeid = nodeid_from_csid(csid);
@@ -278,7 +278,7 @@ void add_up_node(char *csid)
 	DEBUGLOG("Added new node %d to updown list\n", nodeid);
 }
 
-void cluster_closedown()
+static void _cluster_closedown()
 {
 	unlock_all();
 	dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
@@ -307,7 +307,7 @@ static int is_listening(int nodeid)
 
 /* Populate the list of CLVMDs running.
    called only at startup time */
-void count_clvmds_running(void)
+static void count_clvmds_running(void)
 {
 	int i;
 
@@ -366,13 +366,13 @@ static void get_members()
 }
 
 /* Convert a node name to a CSID */
-int csid_from_name(char *csid, char *name)
+static int _csid_from_name(char *csid, char *name)
 {
 	int i;
 
 	for (i = 0; i < num_nodes; i++) {
 		if (strcmp(name, nodes[i].name) == 0) {
-			memcpy(csid, &nodes[i].node_id, MAX_CSID_LEN);
+			memcpy(csid, &nodes[i].node_id, CMAN_MAX_CSID_LEN);
 			return 0;
 		}
 	}
@@ -380,12 +380,12 @@ int csid_from_name(char *csid, char *name)
 }
 
 /* Convert a CSID to a node name */
-int name_from_csid(char *csid, char *name)
+static int _name_from_csid(char *csid, char *name)
 {
 	int i;
 
 	for (i = 0; i < num_nodes; i++) {
-		if (memcmp(csid, &nodes[i].node_id, MAX_CSID_LEN) == 0) {
+		if (memcmp(csid, &nodes[i].node_id, CMAN_MAX_CSID_LEN) == 0) {
 			strcpy(name, nodes[i].name);
 			return 0;
 		}
@@ -396,7 +396,7 @@ int name_from_csid(char *csid, char *name)
 }
 
 /* Convert a node ID to a node name */
-int name_from_nodeid(int nodeid, char *name)
+static int name_from_nodeid(int nodeid, char *name)
 {
 	int i;
 
@@ -416,12 +416,12 @@ static int nodeid_from_csid(char *csid)
 {
         int nodeid;
 
-	memcpy(&nodeid, csid, MAX_CSID_LEN);
+	memcpy(&nodeid, csid, CMAN_MAX_CSID_LEN);
 
 	return nodeid;
 }
 
-int is_quorate()
+static int _is_quorate()
 {
 	return ioctl(cluster_sock, SIOCCLUSTER_ISQUORATE, 0);
 }
@@ -435,7 +435,7 @@ static void sync_ast_routine(void *arg)
 	pthread_mutex_unlock(&lwait->mutex);
 }
 
-int sync_lock(const char *resource, int mode, int flags, int *lockid)
+static int _sync_lock(const char *resource, int mode, int flags, int *lockid)
 {
 	int status;
 	struct lock_wait lwait;
@@ -478,7 +478,7 @@ int sync_lock(const char *resource, int mode, int flags, int *lockid)
 		return 0;
 }
 
-int sync_unlock(const char *resource /* UNUSED */, int lockid)
+static int _sync_unlock(const char *resource /* UNUSED */, int lockid)
 {
 	int status;
 	struct lock_wait lwait;
@@ -504,4 +504,29 @@ int sync_unlock(const char *resource /* UNUSED */, int lockid)
 	else
 		return 0;
 
+}
+
+static struct cluster_ops _cluster_cman_ops = {
+	.cluster_init_completed   = NULL,
+	.cluster_send_message     = _cluster_send_message,
+	.name_from_csid           = _name_from_csid,
+	.csid_from_name           = _csid_from_name,
+	.get_num_nodes            = _get_num_nodes,
+	.cluster_fd_callback      = _cluster_fd_callback,
+	.get_main_cluster_fd      = _get_main_cluster_fd,
+	.cluster_do_node_callback = _cluster_do_node_callback,
+	.is_quorate               = _is_quorate,
+	.get_our_csid             = _get_our_csid,
+	.add_up_node              = _add_up_node,
+	.cluster_closedown        = _cluster_closedown,
+	.sync_lock                = _sync_lock,
+	.sync_unlock              = _sync_unlock,
+};
+
+struct cluster_ops *init_cman_cluster(void)
+{
+	if (!_init_cluster())
+		return &_cluster_cman_ops;
+	else
+		return NULL;
 }

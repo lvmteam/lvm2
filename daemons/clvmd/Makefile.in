@@ -23,14 +23,28 @@ SOURCES = \
 	system-lv.c
 
 ifeq ("@CLVMD@", "gulm")
+	GULM = yes
+endif
+
+ifeq ("@CLVMD@", "cman")
+	CMAN = yes
+endif
+
+ifeq ("@CLVMD@", "all")
+	GULM = yes
+	CMAN = yes
+endif
+
+ifeq ("$(GULM)", "yes")
 	SOURCES += clvmd-gulm.c tcp-comms.c
 	LMLIBS += -lccs -lgulm
 	CFLAGS += -DUSE_GULM
 endif
 
-ifeq ("@CLVMD@", "cman")
+ifeq ("$(CMAN)", "yes")
 	SOURCES += clvmd-cman.c
 	LMLIBS += -ldlm
+	CFLAGS += -DUSE_CMAN
 endif
 
 TARGETS = \

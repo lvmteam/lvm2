@@ -7,3 +7,6 @@ extern int gulm_fd(void);
 extern int get_ip_address(char *node, char *addr);
 extern void tcp_remove_client(char *csid);
 extern int alloc_client(int fd, char *csid, struct local_client **new_client);
+
+void gulm_add_up_node(char *csid);
+int gulm_name_from_csid(char *csid, char *name);
