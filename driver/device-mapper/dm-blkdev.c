@@ -20,6 +20,7 @@
  */
 
 #include <linux/config.h>
+#include <linux/fs.h>
 #include <linux/slab.h>
 #include <linux/list.h>
 #include <asm/atomic.h>
@@ -129,20 +130,35 @@ struct block_device *dm_blkdev_get(const char *path)
 	struct nameidata nd;
 	struct inode *inode;
 	struct block_device *bdev;
+	int err = -ENOENT;
 
-	if (!path_init(path, LOOKUP_FOLLOW, &nd))
-		return ERR_PTR(-EINVAL);
+	if (path_init(path, LOOKUP_FOLLOW, &nd))
+		err = path_walk(path, &nd);
 
-	if (path_walk(path, &nd))
-		return ERR_PTR(-EINVAL);
-
+	if (err) {
+		bdev = ERR_PTR(err);
+		goto out;
+	}
+		
 	inode = nd.dentry->d_inode;
+
 	if (!inode) {
 		bdev = ERR_PTR(-ENOENT);
 		goto out;
 	}
 
+	if (!S_ISBLK(inode->i_mode)) {
+		bdev = ERR_PTR(-ENOTBLK);
+		goto out;
+	}
+
+	if (nd.mnt->mnt_flags & MNT_NODEV) {
+		bdev = ERR_PTR(-EACCES);
+		goto out;
+	}
+
 	bdev = dm_get_device(inode->i_bdev);
+
 out:
 	path_release(&nd);
 	return bdev;

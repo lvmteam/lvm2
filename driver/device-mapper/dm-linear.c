@@ -61,10 +61,19 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 
 	dm_txt_copy(path, sizeof(path) - 1, &word);
 
-
 	bdev = dm_blkdev_get(path);
 	if (IS_ERR(bdev)) {
-		fn("no such device", private);
+		switch (PTR_ERR(bdev)) {
+			case -ENOTBLK:
+				fn("not a block device", private);
+				break;
+			case -EACCES:
+				fn("nodev mount option", private);
+				break;
+			case -ENOENT:
+			default:
+				fn("no such device", private);
+		}
 		return PTR_ERR(bdev);
 	}
 
