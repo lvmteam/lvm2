@@ -40,7 +40,6 @@ struct line_c {
 	unsigned int line_num;
 	loff_t next_read;
 	char data[MAX_TARGET_LINE];
-	int error;
 
 	struct file *in;
 	struct file *out;
@@ -119,11 +118,6 @@ static void parse_error(const char *message, void *private)
 	char buffer[32];
 	struct line_c *lc = (struct line_c *) private;
 
-	if (!lc->error) {
-		lc->out = open_error_file(lc->in);
-		lc->error = 1;
-	}
-
 #define emit(b, l) lc->out->f_op->write(lc->out, (b), (l), &lc->out->f_pos)
 
 	emit(lc->in->f_dentry->d_name.name, lc->in->f_dentry->d_name.len);
@@ -163,12 +157,12 @@ static int _release_file(struct inode *inode, struct file *f)
 	memset(lc, 0, sizeof(*lc));
 	lc->in = f;
 
+	if (!(lc->out = open_error_file(lc->in)))
+		return -ENOMEM;
+
 	table = dm_parse(extract_line, lc, parse_error, lc);
 
-	/* if there was an error we have to close
-           the .err file */
-	if (lc->out)
-		close_error_file(lc->out);
+	close_error_file(lc->out);
 
 	kfree(lc);
 	inode->u.generic_ip = table;
