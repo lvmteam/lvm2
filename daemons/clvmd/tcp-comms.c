@@ -258,6 +258,10 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
 	/* Tell cluster manager layer */
 	add_down_node(remcsid);
     }
+    else {
+	    /* Send it back to clvmd */
+	    process_message(client, buf, len, csid);
+    }
     return status;
 }
 

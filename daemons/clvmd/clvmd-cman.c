@@ -202,7 +202,7 @@ static void process_oob_msg(char *buf, int len, int nodeid)
 	}
 }
 
-int cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid,
+int cluster_fd_callback(struct local_client *client, char *buf, int len, char *csid,
 			struct local_client **new_client)
 {
 	struct iovec iov[2];
@@ -246,7 +246,11 @@ int cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid,
 		len = -1;
 		errno = EAGAIN;
 	}
-	memcpy(csid, &saddr.scl_nodeid, sizeof(saddr.scl_nodeid));
+	else {
+		memcpy(csid, &saddr.scl_nodeid, sizeof(saddr.scl_nodeid));
+		/* Send it back to clvmd */
+		process_message(client, buf, len, csid);
+	}
 	return len;
 }
 
