@@ -60,7 +60,8 @@ static struct cmd_data _cmd_data_v3[] = {
 };
 /* *INDENT-ON* */
 
-#define ALIGNMENT sizeof(int)
+#define ALIGNMENT_V1 sizeof(int)
+#define ALIGNMENT 8
 
 static void *_align(void *ptr, unsigned int a)
 {
@@ -87,7 +88,7 @@ static int _dm_task_get_driver_version_v1(struct dm_task *dmt, char *version,
 /* Unmarshall the target info returned from a status call */
 static int _unmarshal_status_v1(struct dm_task *dmt, struct dm_ioctl_v1 *dmi)
 {
-	char *outbuf = (char *) dmi + sizeof(struct dm_ioctl_v1);
+	char *outbuf = (char *) dmi + dmi->data_start;
 	char *outptr = outbuf;
 	int32_t i;
 	struct dm_target_spec_v1 *spec;
@@ -101,10 +102,7 @@ static int _unmarshal_status_v1(struct dm_task *dmt, struct dm_ioctl_v1 *dmi)
 					outptr + sizeof(*spec)))
 			return 0;
 
-		outptr += sizeof(*spec);
-		outptr += strlen(outptr) + 1;
-
-		_align(outptr, ALIGNMENT);
+		outptr = outbuf + spec->next;
 	}
 
 	return 1;
@@ -173,7 +171,7 @@ static void *_add_target_v1(struct target *t, void *out, void *end)
 	out += len + 1;
 
 	/* align next block */
-	out = _align(out, ALIGNMENT);
+	out = _align(out, ALIGNMENT_V1);
 
 	sp.next = out - out_sp;
 
@@ -195,7 +193,7 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 
 	for (t = dmt->head; t; t = t->next) {
 		len += sizeof(struct dm_target_spec_v1);
-		len += strlen(t->params) + 1 + ALIGNMENT;
+		len += strlen(t->params) + 1 + ALIGNMENT_V1;
 		count++;
 	}
 
@@ -237,8 +235,12 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 		dmi->flags |= DM_READONLY_FLAG;
 
 	if (dmt->minor >= 0) {
+		if (dmt->major <= 0) {
+			log_error("Missing major number for persistent device");
+			return NULL;
+		}
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
-		dmi->dev = MKDEV((dmt->major >= 0) ? : 0, dmt->minor);
+		dmi->dev = MKDEV(dmt->major, dmt->minor);
 	}
 
 	if (dmt->uuid)
@@ -469,7 +471,7 @@ void *dm_get_next_target(struct dm_task *dmt, void *next,
 /* Unmarshall the target info returned from a status call */
 static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 {
-	char *outbuf = (char *) dmi + sizeof(struct dm_ioctl);
+	char *outbuf = (char *) dmi + dmi->data_start;
 	char *outptr = outbuf;
 	uint32_t i;
 	struct dm_target_spec *spec;
@@ -482,10 +484,7 @@ static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 					outptr + sizeof(*spec)))
 			return 0;
 
-		outptr += sizeof(*spec);
-		outptr += strlen(outptr) + 1;
-
-		_align(outptr, ALIGNMENT);
+		outptr = outbuf + spec->next;
 	}
 
 	return 1;
@@ -675,8 +674,12 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 		dmi->flags |= DM_READONLY_FLAG;
 
 	if (dmt->minor >= 0) {
+		if (dmt->major <= 0) {
+			log_error("Missing major number for persistent device");
+			return NULL;
+		}
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
-		dmi->dev = MKDEV(0, dmt->minor);
+		dmi->dev = MKDEV(dmt->major, dmt->minor);
 	}
 
 	if (dmt->uuid)
