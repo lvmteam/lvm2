@@ -671,10 +671,13 @@ static int run_command(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	set_cmd_name(the_command->name);
+
 	if ((ret = process_common_commands(the_command)))
 		return ret;
 
 	_use_settings(&_current_settings);
+
 	ret = the_command->fn(argc, argv);
 
 	/*
@@ -734,7 +737,7 @@ static void __init_log(struct config_file *cf)
 {
 	char *open_mode = "a";
 
-	const char *log_file;
+	const char *log_file, *prefix;
 
 
 	_default_settings.syslog =
@@ -752,6 +755,12 @@ static void __init_log(struct config_file *cf)
 	_default_settings.verbose =
 		find_config_int(cf->root, "log/verbose", '/', 0);
 	init_verbose(_default_settings.verbose);
+
+	init_indent(find_config_int(cf->root, "log/indent", '/', 1));
+	if ((prefix = find_config_str(cf->root, "log/prefix", '/', 0)))
+		init_msg_prefix(prefix);
+
+	init_cmd_name(find_config_int(cf->root, "log/command_names", '/', 0));
 
 	_default_settings.test = find_config_int(cf->root, "global/test", 
 						 '/', 0);
