@@ -63,7 +63,8 @@ xx(lvchange,
 
    autobackup_ARG, available_ARG, contiguous_ARG,
    minor_ARG, persistent_ARG, partial_ARG,
-   permission_ARG, readahead_ARG, test_ARG)
+   permission_ARG, readahead_ARG, test_ARG,
+   ignorelockingfailure_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
@@ -103,7 +104,7 @@ xx(lvdisplay,
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-    colon_ARG, disk_ARG, maps_ARG, partial_ARG)
+    colon_ARG, disk_ARG, maps_ARG, partial_ARG, ignorelockingfailure_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -230,7 +231,7 @@ xx(lvscan,
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   blockdevice_ARG, disk_ARG, partial_ARG)
+   blockdevice_ARG, disk_ARG, partial_ARG, ignorelockingfailure_ARG);
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
@@ -291,7 +292,7 @@ xx(pvdisplay,
    "\t[-v/--verbose]\n"
    "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
 
-   colon_ARG, maps_ARG, short_ARG)
+   colon_ARG, maps_ARG, short_ARG, ignorelockingfailure_ARG)
 
 xx(pvmove,
    "Move extents from one physical volume to another",
@@ -334,7 +335,8 @@ xx(pvscan,
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   exported_ARG,  novolumegroup_ARG, partial_ARG, short_ARG, uuid_ARG)
+   exported_ARG,  novolumegroup_ARG, partial_ARG, short_ARG, uuid_ARG,
+   ignorelockingfailure_ARG)
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
@@ -345,7 +347,7 @@ xx(vgcfgbackup,
    "\t[-v|--verbose]" "\n"
    "\t[-V|--version] " "\n"
    "\t[VolumeGroupName...]\n",
-   file_ARG)
+   file_ARG, partial_ARG, ignorelockingfailure_ARG)
 
 xx(vgcfgrestore,
    "Restore volume group configuration",
@@ -379,7 +381,7 @@ xx(vgchange,
 
    autobackup_ARG, available_ARG, logicalvolume_ARG, partial_ARG,
    resizeable_ARG, resizable_ARG, allocation_ARG,
-   test_ARG)
+   test_ARG, ignorelockingfailure_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
@@ -418,7 +420,8 @@ xx(vgdisplay,
    "\t[--version]" "\n"
    "\t[VolumeGroupName...] ]\n",
 
-   activevolumegroups_ARG, colon_ARG, disk_ARG, short_ARG, partial_ARG)
+   activevolumegroups_ARG, colon_ARG, disk_ARG, short_ARG, partial_ARG,
+   ignorelockingfailure_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
@@ -524,7 +527,7 @@ xx(vgscan,
    "\t[-h/-?/--help]\n"
    "\t[-P/--partial] " "\n"
    "\t[-v/--verbose]\n" ,
-   partial_ARG)
+   partial_ARG, ignorelockingfailure_ARG)
 
 xx(vgsplit,
    "Move physical volumes into a new volume group",

@@ -11,6 +11,7 @@
 arg(version_ARG, '\0', "version", NULL)
 arg(quiet_ARG, '\0', "quiet", NULL)
 arg(physicalvolumesize_ARG, '\0', "setphysicalvolumesize", size_arg)
+arg(ignorelockingfailure_ARG, '\0', "ignorelockingfailure", NULL)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg)

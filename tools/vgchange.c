@@ -63,6 +63,12 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, ignorelockingfailure_ARG) &&
+	    !arg_count(cmd, available_ARG)) {
+		log_error("--ignorelockingfailure only available with -a");
+		return EINVALID_CMD_LINE;
+	}
+
 	if (arg_count(cmd, available_ARG) == 1
 	    && arg_count(cmd, autobackup_ARG)) {
 		log_error("-A option not necessary with -a option");

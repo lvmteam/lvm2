@@ -18,6 +18,7 @@ static int _syslog = 0;
 static int _indent = 1;
 static int _log_cmd_name = 0;
 static int _log_suppress = 0;
+static int _ignorelockingfailure = 0;
 static char _cmd_name[30] = "";
 static char _msg_prefix[30] = "  ";
 
@@ -66,6 +67,11 @@ void init_partial(int level)
 	_partial = level;
 }
 
+void init_ignorelockingfailure(int level)
+{
+	_ignorelockingfailure = level;
+}
+
 void init_cmd_name(int status)
 {
 	_log_cmd_name = status;
@@ -98,6 +104,11 @@ int test_mode()
 int partial_mode()
 {
 	return _partial;
+}
+
+int ignorelockingfailure()
+{
+	return _ignorelockingfailure;
 }
 
 void init_debug(int level)

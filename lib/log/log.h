@@ -52,12 +52,14 @@ void init_debug(int level);
 void init_cmd_name(int status);
 void init_msg_prefix(const char *prefix);
 void init_indent(int indent);
+void init_ignorelockingfailure(int level);
 
 void set_cmd_name(const char *cmd_name);
 
 int test_mode(void);
 int partial_mode(void);
 int debug_level(void);
+int ignorelockingfailure(void);
 
 /* Suppress messages to stdout/stderr */
 void log_suppress(int suppress);

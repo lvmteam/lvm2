@@ -640,6 +640,11 @@ static int process_common_commands(struct command *com)
 	} else
 		init_partial(0);
 
+	if (arg_count(cmd, ignorelockingfailure_ARG))
+		init_ignorelockingfailure(1);
+	else
+		init_ignorelockingfailure(0);
+
 	/* Handle synonyms */
 	if (!merge_synonym(resizable_ARG, resizeable_ARG) ||
 	    !merge_synonym(allocation_ARG, allocatable_ARG) ||

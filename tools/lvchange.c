@@ -41,6 +41,13 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (arg_count(cmd, ignorelockingfailure_ARG) &&
+	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
+		log_error("Only -a permitted with --ignorelockingfailure");
+		return EINVALID_CMD_LINE;
+	}
+
 	if (!argc) {
 		log_error("Please give logical volume path(s)");
 		return EINVALID_CMD_LINE;

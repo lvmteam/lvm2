@@ -75,23 +75,31 @@ int init_locking(int type, struct config_file *cf)
 		init_no_locking(&_locking, cf);
 		log_print("WARNING: Locking disabled. Be careful! "
 			  "This could corrupt your metadata.");
-		break;
+		return 1;
+
 	case 1:
 		if (!init_file_locking(&_locking, cf))
-			return 0;
+			break;
 		log_very_verbose("File-based locking enabled.");
-		break;
+		return 1;
 
 	case 2:
 		if (!init_external_locking(&_locking, cf))
-			return 0;
+			break;
 		log_very_verbose("External locking enabled.");
-		break;
+		return 1;
 
 	default:
 		log_error("Unknown locking type requested.");
 		return 0;
 	}
+
+	if (!ignorelockingfailure())
+		return 0;
+
+	log_verbose("Locking disabled - only read operations permitted.");
+
+	init_no_locking(&_locking, cf);
 
 	return 1;
 }
