@@ -50,11 +50,9 @@ int lvremove_single(char *lv_name)
 	char *vg_name = NULL;
 	char buffer[NAME_LEN];
 
-	struct io_space *ios;
 	struct volume_group *vg;
 	struct logical_volume *lv;
 
-	ios = active_ios();
 
 	lv_name = lvm_check_default_vg_name(lv_name, buffer, sizeof (buffer));
 	/* does VG exist? */
@@ -84,12 +82,14 @@ int lvremove_single(char *lv_name)
 		return ECMD_FAILED;
 	}
 
+/********** FIXME  Ensure logical volume is not open on *any* machine
 	if (lv->open) {
 		log_error("can't remove open %s logical volume %s",
 			  lv->status & SNAPSHOT ? "snapshot" : "",
 			  lv_name);
 		return ECMD_FAILED;
 	}
+************/
 
 	if (!arg_count(force_ARG)) {
 		if (yes_no_prompt

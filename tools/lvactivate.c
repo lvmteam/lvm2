@@ -24,7 +24,6 @@ int lvactivate(int argc, char **argv)
 {
 	int p;
 
-	struct io_space *ios;
 	struct device *pv_dev;
 
 	char *lv_name;
@@ -41,8 +40,6 @@ int lvactivate(int argc, char **argv)
 	lv_name = argv[0];
 	argc--;
 	argv++;
-
-	ios = active_ios();
 
 	while (argc--) {
 		pv_name = argv[argc];

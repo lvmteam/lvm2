@@ -23,27 +23,64 @@
 #include "dev-cache.h"
 #include "filter.h"
 
-static int passes_config_device_filter (struct dev_cache_filter *f, 
-		                        struct device *dev)
+#include <stdlib.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string.h>
+#include <linux/kdev_t.h>
+
+#define NUMBER_OF_MAJORS 256
+
+typedef struct {
+	char *name;
+	int max_partitions;
+} device_info_t;
+
+static device_info_t device_info[] = {
+	{"ide", 16},		/* IDE disk */
+	{"sd", 16},		/* SCSI disk */
+	{"md", 16},		/* Multiple Disk driver (SoftRAID) */
+	{"loop", 16},		/* Loop device */
+	{"dasd", 4},		/* DASD disk (IBM S/390, zSeries) */
+	{"dac960", 8},		/* DAC960 */
+	{"nbd", 16},		/* Network Block Device */
+	{"ida", 16},		/* Compaq SMART2 */
+	{"cciss", 16},		/* Compaq CCISS array */
+	{"ubd", 16},		/* User-mode virtual block device */
+	{NULL, 0}
+};
+
+static int *scan_proc_dev(void);
+
+static int passes_config_device_filter(struct dev_filter *f, struct device *dev)
 {
 	/* FIXME Check against config file scan/reject entries */
-	return 1;
+
+	/* Is this a recognised device type? */
+	if (!(((int *) f->private)[MAJOR(dev->dev)]))
+		return 0;
+	else
+		return 1;
 }
 
 struct dev_filter *config_filter_create()
 {
 	struct dev_filter *f;
 
-	if (!(f = dbg_malloc(sizeof(struct dev_filter)))) {
+	if (!(f = dbg_malloc(sizeof (struct dev_filter)))) {
 		log_error("lvm_v1_filter allocation failed");
 		return NULL;
 	}
 
-	f->is_available = &passes_config_device_filter();
+	f->passes_filter = passes_config_device_filter;
+
+	if (!(f->private = scan_proc_dev()))
+		return NULL;
 
 	return f;
 }
-
 
 void config_filter_destroy(struct dev_filter *f)
 {
@@ -51,3 +88,66 @@ void config_filter_destroy(struct dev_filter *f)
 	return;
 }
 
+static int *scan_proc_dev(void)
+{
+	char line[80];
+	FILE *procdevices = NULL;
+	int ret = 0;
+	int i, j = 0;
+	int line_maj = 0;
+	int blocksection = 0;
+	int dev_len = 0;
+
+	int *max_partitions_by_major;
+
+	if (!(max_partitions_by_major = dbg_malloc(sizeof (int) * NUMBER_OF_MAJORS))) {
+		log_error("Filter failed to allocate max_partitions_by_major");
+		return NULL;
+	}
+
+	if (!(procdevices = fopen("/proc/devices", "r"))) {
+		log_error("Failed to open /proc/devices: %s", strerror(errno));
+		return NULL;
+	}
+
+	memset(max_partitions_by_major, 0, sizeof (int) * NUMBER_OF_MAJORS);
+	while (fgets(line, 80, procdevices) != NULL) {
+		i = 0;
+		while (line[i] == ' ' && line[i] != '\0')
+			i++;
+
+		/* If it's not a number it may be name of section */
+		line_maj = atoi(((char *) (line + i)));
+		if (!line_maj) {
+			blocksection = (line[i] == 'B') ? 1 : 0;
+			continue;
+		}
+
+		/* We only want block devices ... */
+		if (!blocksection)
+			continue;
+
+		/* Find the start of the device major name */
+		while (line[i] != ' ' && line[i] != '\0')
+			i++;
+		while (line[i] == ' ' && line[i] != '\0')
+			i++;
+
+		/* Go through the valid device names and if there is a
+   			match store max number of partitions */
+		for (j = 0; device_info[j].name != NULL; j++) {
+
+			dev_len = strlen(device_info[j].name);
+			if (dev_len <= strlen(line + i)
+			    && !strncmp(device_info[j].name, line + i, dev_len)
+			    && (line_maj < NUMBER_OF_MAJORS)) {
+				max_partitions_by_major[line_maj] =
+				    device_info[j].max_partitions;
+				ret++;
+				break;
+			}
+		}
+	}
+	fclose(procdevices);
+	return max_partitions_by_major;
+}

@@ -609,7 +609,7 @@ static int init(void)
 		goto out;
 	}
 
-	if (!dev_cache_add_dir(prefix)) {
+	if (!dev_cache_add_dir("/dev")) {
 		log_error("Failed to add %s to internal device cache", prefix);
 		goto out;
 	}
