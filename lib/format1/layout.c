@@ -117,6 +117,7 @@ int calculate_extent_count(struct physical_volume *pv)
 
 	if (!pvd) {
 		stack;
+		dbg_free(pvd);
 		return 0;
 	}
 
@@ -131,8 +132,10 @@ int calculate_extent_count(struct physical_volume *pv)
 	if (pvd->pe_total < PE_SIZE_PV_SIZE_REL) {
 		log_error("Insufficient space for extents on %s",
 			  dev_name(pv->dev));
+		dbg_free(pvd);
 		return 0;
 	}
+
 
 	do {
 		pvd->pe_total--;
@@ -143,6 +146,14 @@ int calculate_extent_count(struct physical_volume *pv)
 		pvd->pe_start = _round_up(end, PE_ALIGN);
 
 	} while((pvd->pe_start + (pvd->pe_total * pv->pe_size)) > pv->size);
+
+	if (pvd->pe_total > MAX_PE_TOTAL) {
+		log_error("Metadata extent limit (%u) exceeded for %s - "
+			  "%u required", MAX_PE_TOTAL, dev_name(pv->dev),
+			  pvd->pe_total);
+		dbg_free(pvd);
+		return 0;
+	}
 
 	pv->pe_count = pvd->pe_total;
 	pv->pe_start = pvd->pe_start;
