@@ -37,7 +37,7 @@
  * 7) Remove unmarked layers from core.
  *
  * 8) Activate remaining layers (in order), skipping any that already
-      exist, unless they are marked dirty.
+ *    exist, unless they are marked dirty.
  *
  * 9) remove layers in the remove_list (Requires examination of deps).
  *
@@ -46,7 +46,7 @@
  * ---------------------
  *
  * 1) Examine dm directory, create active_list *excluding*
-      dirty_list.  All vg layers go into tree.
+ *    dirty_list.  All vg layers go into tree.
  *
  * 2) Build vg tree given active_list, no dirty layers.
  *
@@ -89,6 +89,8 @@ struct dev_manager {
 	struct pool *mem;
 
 	char *vg_name;
+	struct list active_list;
+
 	struct hash_table *layers;
 };
 
@@ -209,6 +211,12 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	if (!dl->populate(dm, dmt, dl)) {
 		log_err("Couldn't populate device '%s'.", dl->name);
 		return 0;
+	}
+
+	if (_get_flag(dl, VISIBLE)) {
+		/*
+		 * FIXME: set the uuid.
+		 */
 	}
 
 	if (!(r = dm_task_run(dmt)))
@@ -516,6 +524,8 @@ struct dev_manager *dev_manager_create(const char *vg_name)
 		goto bad;
 	}
 
+	list_init(&dm->active_list);
+
 	return dm;
 
  bad:
@@ -633,12 +643,9 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv)
 	return 1;
 }
 
-static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
+static int _expand_origin_real(struct dev_manager *dm,
+			       struct logical_volume *lv)
 {
-	/*
-	 * origin(org)
-	 * org
-	 */
 	struct dev_layer *dl;
 	char *real_name;
 	struct str_list *sl;
@@ -682,6 +689,26 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 	}
 
 	return 1;
+}
+
+
+static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
+{
+	struct logical_volume *active;
+	struct snapshot *s;
+	struct list *sh;
+
+	/*
+	 * We only need to create an origin layer if one of our
+	 * snapshots is in the active list.
+	 */
+	list_iterate (sh, &dm->active_list) {
+		active = list_item(sh, struct lv_list)->lv;
+		if ((s = find_cow(active)) && (s->origin == lv))
+			return _expand_origin_real(dm, lv);
+	}
+
+	return _expand_vanilla(dm, lv);
 }
 
 static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
@@ -761,7 +788,6 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 
 	/*
 	 * FIXME: this doesn't cope with recursive snapshots yet.
-	 * FIXME: split this function up.
 	 */
 	if ((s = find_cow(lv)))
 		return _expand_snapshot(dm, lv, s);
@@ -864,6 +890,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 			stack;
 			return 0;
 		}
+
 	} else {
 		/* create */
 		if (!_load(dm, dl, DM_DEVICE_CREATE)) {
