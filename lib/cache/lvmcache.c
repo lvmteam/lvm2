@@ -13,6 +13,7 @@
 #include "metadata.h"
 #include "filter.h"
 #include "memlock.h"
+#include "str_list.h"
 
 static struct hash_table *_pvid_hash = NULL;
 static struct hash_table *_vgid_hash = NULL;
@@ -207,31 +208,22 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 
 struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 {
-	struct list *vgih, *vgnames;
-	struct str_list *sl;
+	struct list *vgnames;
+	struct lvmcache_vginfo *vgi;
 
 	lvmcache_label_scan(cmd, full_scan);
 
-	if (!(vgnames = pool_alloc(cmd->mem, sizeof(struct list)))) {
+	if (!(vgnames = str_list_create(cmd->mem))) {
 		log_error("vgnames list allocation failed");
 		return NULL;
 	}
 
-	list_init(vgnames);
-
-	list_iterate(vgih, &_vginfos) {
-		if (!(sl = pool_alloc(cmd->mem, sizeof(*sl)))) {
+	list_iterate_items(vgi, &_vginfos) {
+		if (!str_list_add(cmd->mem, vgnames, 
+				  pool_strdup(cmd->mem, vgi->vgname))) {
 			log_error("strlist allocation failed");
 			return NULL;
 		}
-		if (!(sl->str = pool_strdup(cmd->mem,
-					    list_item(vgih,
-						      struct lvmcache_vginfo)->
-					    vgname))) {
-			log_error("vgname allocation failed");
-			return NULL;
-		}
-		list_add(vgnames, &sl->list);
 	}
 
 	return vgnames;
