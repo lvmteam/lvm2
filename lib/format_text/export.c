@@ -4,7 +4,7 @@
  * This file is released under the LGPL.
  */
 
-#include "text-rep.h"
+#include "import-export.h"
 #include "metadata.h"
 #include "log.h"
 #include "hash.h"
