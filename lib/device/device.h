@@ -17,19 +17,25 @@
 struct device {
 	struct list aliases; /* struct str_list from lvm-types.h */
 	dev_t dev;
+
+	/* private */
+	int fd;
 };
 
 /*
- * All io should use these routines, rather than opening the devices
- * by hand.  You do not have to call an open routine.  ATM all io is
- * immediately flushed.
+ * All io should use these routines.
  */
 int dev_get_size(struct device *dev, uint64_t *size);
+
+int dev_open(struct device *dev, int flags);
+int dev_close(struct device *dev);
+
 int64_t dev_read(struct device *dev,
 		 uint64_t offset, int64_t len, void *buffer);
 int64_t dev_write(struct device *dev,
 		  uint64_t offset, int64_t len, void *buffer);
 int dev_zero(struct device *dev, uint64_t offset, int64_t len);
+
 
 static inline const char *dev_name(struct device *dev) {
 	return list_item(dev->aliases.n, struct str_list)->str;

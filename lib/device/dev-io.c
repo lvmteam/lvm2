@@ -15,10 +15,6 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
-/*
- * FIXME: all this opening and closing devices is
- * killing performance.
- */
 
 int dev_get_size(struct device *dev, uint64_t *size)
 {
@@ -44,10 +40,40 @@ int dev_get_size(struct device *dev, uint64_t *size)
 	return 1;
 }
 
+int dev_open(struct device *dev, int flags)
+{
+	const char *name = dev_name(dev);
+
+	if (dev->fd >= 0) {
+		log_err("Device '%s' has already been opened", name);
+		return 0;
+	}
+
+	if ((dev->fd = open(name, flags)) < 0) {
+		log_sys_error("open", "opening device");
+		return 0;
+	}
+
+	return 1;
+}
+
+int dev_close(struct device *dev)
+{
+	if (dev->fd < 0) {
+		log_err("Request to close device '%s', "
+			"which has not been opened.", dev_name(dev));
+		return 0;
+	}
+
+	close(dev->fd);
+	dev->fd = -1;
+
+	return 1;
+}
+
 /*
  *  FIXME: factor common code out.
  */
-
 int _read(int fd, void *buf, size_t count)
 {
 	size_t n = 0;
@@ -71,12 +97,11 @@ int _read(int fd, void *buf, size_t count)
 int64_t dev_read(struct device *dev, uint64_t offset,
 		 int64_t len, void *buffer)
 {
-	int64_t r;
 	const char *name = dev_name(dev);
-	int fd = open(name, O_RDONLY);
+	int fd = dev->fd;
 
 	if (fd < 0) {
-		log_sys_very_verbose("open", name);
+		log_err("Attempt to read an unopened device (%s).", name);
 		return 0;
 	}
 
@@ -85,9 +110,7 @@ int64_t dev_read(struct device *dev, uint64_t offset,
 		return 0;
 	}
 
-	r = _read(fd, buffer, len);
-	close(fd);
-	return r;
+	return _read(fd, buffer, len);
 }
 
 int _write(int fd, const void *buf, size_t count)
@@ -113,12 +136,11 @@ int _write(int fd, const void *buf, size_t count)
 int64_t dev_write(struct device *dev, uint64_t offset,
 		  int64_t len, void *buffer)
 {
-	int64_t r;
 	const char *name = dev_name(dev);
-	int fd = open(name, O_WRONLY);
+	int fd = dev->fd;
 
 	if (fd < 0) {
-		log_sys_error("open", name);
+		log_err("Attempt to write to an unopened device (%s).", name);
 		return 0;
 	}
 
@@ -127,9 +149,7 @@ int64_t dev_write(struct device *dev, uint64_t offset,
 		return 0;
 	}
 
-	r = _write(fd, buffer, len);
-	close(fd);
-	return r;
+	return _write(fd, buffer, len);
 }
 
 int dev_zero(struct device *dev, uint64_t offset, int64_t len)
@@ -137,10 +157,10 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 	int64_t r, s;
 	char buffer[4096];
 	const char *name = dev_name(dev);
-	int fd = open(name, O_WRONLY);
+	int fd = dev->fd;
 
 	if (fd < 0) {
-		log_sys_error("open", name);
+		log_err("Attempt to zero an unopened device (%s).", name);
 		return 0;
 	}
 
@@ -164,6 +184,5 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len)
 		}
 	}
 
-	close(fd);
-	return r;
+	return (len == 0);
 }

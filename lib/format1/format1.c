@@ -194,7 +194,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 	list_init(&pvs);
 
 	r = (_flatten_vg(mem, vg, &pvs, fi->cmd->dev_dir, fi->cmd->filter) &&
-	     write_pvds(&pvs));
+	     write_disks(&pvs));
 	pool_destroy(mem);
 	return r;
 }
@@ -392,7 +392,7 @@ static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 	}
 
 	list_add(&pvs, &dl->list);
-	if (!write_pvds(&pvs)) {
+	if (!write_disks(&pvs)) {
 		stack;
 		goto bad;
 	}
