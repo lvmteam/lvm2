@@ -16,8 +16,8 @@ modprobe dm-mod >/dev/null 2>&1
 create_devfiles() {
 	DIR="/dev/device-mapper"
 	FILE="$DIR/control"
-	major=$(awk '$2 ~ /^misc$/ {print $1}' /proc/devices)
-	minor=$(awk "\$2 ~ /^$DM_NAME\$/ {print \$1}" /proc/misc)
+	major=$(grep "[0-9] misc$" /proc/devices | sed 's/[ ]\+misc//')
+	minor=$(grep "[0-9] device-mapper$" /proc/misc | sed 's/[ ]\+device-mapper//')
 
 	if test ! -d $DIR; then
 		mkdir --mode=755 $DIR >/dev/null 2>&1
