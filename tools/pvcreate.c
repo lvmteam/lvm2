@@ -69,8 +69,8 @@ void pvcreate_single(const char *pv_name)
 	pv = ios->pv_read(ios, pv_dev);
 
 	if (pv && (pv->status & STATUS_EXPORTED)) {
-		log_error ("Physical volume %s belongs to exported volume"
-			   " group %s", pv_name, pv->vg_name);
+		log_error("Physical volume %s belongs to exported volume"
+			  " group %s", pv_name, pv->vg_name);
 		return;
 	}
 
@@ -95,18 +95,15 @@ void pvcreate_single(const char *pv_name)
 	}
 
 	if (pv && (pv->status & STATUS_ACTIVE)) {
-		log_error("Can't create on active physical volume %s",
-			  pv_name);
+		log_error("Can't create on active physical volume %s", pv_name);
 		return;
 	}
-
 
 	if (!pv) {
 		if (!(pv = pv_create()))
 			return;
 		/* FIXME: Set up initial size & PEs here */
 	}
-	
 
 	if (arg_count(force_ARG)) {
 		/* FIXME: Change to log_print */
@@ -122,7 +119,6 @@ void pvcreate_single(const char *pv_name)
 	log_verbose("creating new physical volume");
 	log_verbose("setting up physical volume for %s with %u sectors",
 		    pv_name, size);
-
 
 	log_verbose("writing physical volume data to disk %s", pv_name);
 

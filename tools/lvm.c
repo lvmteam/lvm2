@@ -42,7 +42,6 @@ struct arg the_args[ARG_COUNT + 1] = {
 
 };
 
-
 /* a register of the lvm commands */
 struct command {
 	const char *name;
@@ -236,7 +235,7 @@ char yes_no_prompt(char *prompt, ...)
 		}
 		c = tolower(getchar());
 	}
-	while (getchar() != '\n');
+	while (getchar() != '\n') ;
 	return c;
 }
 
@@ -263,7 +262,7 @@ static void register_command(const char *name, command_fn fn,
 	va_end(ap);
 
 	/* allocate space for them */
-	if (!(args = dbg_malloc(sizeof(*args) * nargs))) {
+	if (!(args = dbg_malloc(sizeof (*args) * nargs))) {
 		log_fatal("Out of memory.");
 		exit(LVM_ENOMEM);
 	}
@@ -319,7 +318,7 @@ static void create_new_command(const char *name, command_fn command,
 
 static void __alloc(int size)
 {
-	if (!(_commands = dbg_realloc(_commands, sizeof(*_commands) * size))) {
+	if (!(_commands = dbg_realloc(_commands, sizeof (*_commands) * size))) {
 		log_fatal("Couldn't allocate memory.");
 		exit(LVM_ENOMEM);
 	}
@@ -377,7 +376,7 @@ static int process_command_line(struct command *com, int *argc, char ***argv)
 		add_getopt_arg(com->valid_args[i], &ptr, &o);
 
 	*ptr = '\0';
-	memset(o, 0, sizeof(*o));
+	memset(o, 0, sizeof (*o));
 
 	/* initialise getopt_long & scan for command line switches */
 	optarg = 0;
@@ -545,15 +544,18 @@ static int split(char *str, int *argc, char **argv, int max)
 	return *argc;
 }
 
-struct config_file *active_config_file(void) {
+struct config_file *active_config_file(void)
+{
 	return _cf;
 }
 
-struct dev_filter *active_filter(void) {
+struct dev_filter *active_filter(void)
+{
 	return _filter;
 }
 
-struct io_space *active_ios(void) {
+struct io_space *active_ios(void)
+{
 	return _ios;
 }
 
@@ -579,7 +581,7 @@ static int init(void)
 	const char *e = getenv("LVM_CONFIG_FILE");
 	struct stat info;
 
-	if (!(_cf=create_config_file())) {
+	if (!(_cf = create_config_file())) {
 		stack;
 		goto out;
 	}
@@ -644,7 +646,6 @@ static void fin(void)
 		fclose(_log);
 }
 
-
 static int run_script(int argc, char **argv)
 {
 	FILE *script;
@@ -656,15 +657,15 @@ static int run_script(int argc, char **argv)
 	if ((script = fopen(argv[0], "r")) == NULL)
 		return LVM_ENO_SUCH_CMD;
 
-	while (fgets(buffer, sizeof(buffer), script) != NULL) {
+	while (fgets(buffer, sizeof (buffer), script) != NULL) {
 		if (!magic_number) {
 			if (buffer[0] == '#' && buffer[1] == '!')
 				magic_number = 1;
 			else
 				return LVM_ENO_SUCH_CMD;
 		}
-		if ((strlen(buffer) == sizeof(buffer) - 1)
-		    && (buffer[sizeof(buffer) - 1] - 2 != '\n')) {
+		if ((strlen(buffer) == sizeof (buffer) - 1)
+		    && (buffer[sizeof (buffer) - 1] - 2 != '\n')) {
 			buffer[50] = '\0';
 			log_error("Line too long (max 255) beginning: %s",
 				  buffer);
@@ -776,7 +777,7 @@ static char *list_args(char *text, int state)
 			char c;
 			if (!(c = (the_args +
 				   com->valid_args[match_no++])->short_arg))
-				continue;
+				    continue;
 
 			sprintf(s, "-%c", c);
 			if (!strncmp(text, s, len))

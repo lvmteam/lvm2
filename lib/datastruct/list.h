@@ -3,8 +3,6 @@
 #ifndef _LVM_LIST_H
 #define _LVM_LIST_H
 
-#ifdef __KERNEL__
-
 /*
  * Simple doubly linked list implementation.
  *
@@ -108,7 +106,5 @@ static __inline__ void list_splice(struct list_head *list, struct list_head *hea
 
 #define list_for_each(pos, head) \
         for (pos = (head)->next; pos != (head); pos = pos->next)
-
-#endif /* __KERNEL__ */
 
 #endif

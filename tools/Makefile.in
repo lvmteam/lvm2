@@ -24,6 +24,7 @@ SOURCES=\
 	lvm.c\
 	pvcreate.c\
 	pvdisplay.c\
+	pvscan.c\
 	lvactivate.c
 
 TARGETS=\

@@ -70,8 +70,7 @@ void pvdisplay_device(const char *pv_name)
 		}
 
 		sz = display_size(size / 2, SIZE_SHORT);
-		log_print("Device \"%s\" has a capacity of %s",
-			  pv_name, sz);
+		log_print("Device \"%s\" has a capacity of %s", pv_name, sz);
 
 		dbg_free(sz);
 	}
@@ -114,21 +113,21 @@ void pvdisplay_device(const char *pv_name)
 		goto pvdisplay_device_out;
 	}
 
-        pv_display_full(pv);
+	pv_display_full(pv);
 
-	if (!arg_count(verbose_ARG)) 
+	if (!arg_count(verbose_ARG))
 		goto pvdisplay_device_out;
 
 	if (pv->pe_allocated) {
-		if (!(pv->pe = pv_read_pe (pv_name, pv)))
-                  	goto pvdisplay_device_out;
+		if (!(pv->pe = pv_read_pe(pv_name, pv)))
+			goto pvdisplay_device_out;
 		if (!(lvs = pv_read_lvs(pv))) {
-	                log_error("Failed to read LVs on %s", pv->pv_name);
+			log_error("Failed to read LVs on %s", pv->pv_name);
 			goto pvdisplay_device_out;
 		}
-               	pv_display_pe_text(pv, pv->pe, lvs);
+		pv_display_pe_text(pv, pv->pe, lvs);
 	} else
-               	log_print ("no logical volume on physical volume %s", pv_name);
+		log_print("no logical volume on physical volume %s", pv_name);
 
       pvdisplay_device_out:
 	if (pv)
@@ -138,6 +137,3 @@ void pvdisplay_device(const char *pv_name)
 
 	return;
 }
-
-
-

@@ -70,15 +70,14 @@ int lvactivate(int argc, char **argv)
 		for (p = 0; p < pv->pe_total; p++) {
 			int l = pv->pe[p].lv_num;
 			int le = pv->pe[p].le_num;
-			long pe_size_guess = lvs[l - 1].lv_size / 
-				            lvs[l - 1].lv_allocated_le;
-			
+			long pe_size_guess = lvs[l - 1].lv_size /
+			    lvs[l - 1].lv_allocated_le;
+
 			if (l && !strcmp(lv, lvs[l - 1].lv_name))
-				printf("%012ld %ld linear %s %012ld\n", 
-					pe_size_guess * le,
-					pe_size_guess,
-				        pv_name,
-				        get_pe_offset(p, pv));
+				printf("%012ld %ld linear %s %012ld\n",
+				       pe_size_guess * le,
+				       pe_size_guess,
+				       pv_name, get_pe_offset(p, pv));
 		}
 
 		if (pv)

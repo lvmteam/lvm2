@@ -33,7 +33,6 @@ int lvrename(int argc, char **argv) {return 1;}
 int lvscan(int argc, char **argv) {return 1;}
 int pvchange(int argc, char **argv) {return 1;}
 int pvdata(int argc, char **argv) {return 1;}
-int pvscan(int argc, char **argv) {return 1;}
 int vgcfgbackup(int argc, char **argv) {return 1;}
 int vgcfgrestore(int argc, char **argv) {return 1;}
 int vgchange(int argc, char **argv) {return 1;}
