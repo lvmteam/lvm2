@@ -74,6 +74,11 @@ void log_suppress(int suppress);
 /* Suppress messages to syslog */
 void syslog_suppress(int suppress);
 
+typedef void (*lvm2_log_fn_t) (int level, const char *file, int line,
+			       const char *message);
+
+void init_log_fn(lvm2_log_fn_t log_fn);
+
 void print_log(int level, const char *file, int line, const char *format, ...)
     __attribute__ ((format(printf, 4, 5)));
 

@@ -33,6 +33,16 @@ static char _cmd_name[30] = "";
 static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
 
+static lvm2_log_fn_t _lvm2_log_fn = NULL;
+
+void init_log_fn(lvm2_log_fn_t log_fn)
+{
+	if (log_fn)
+		_lvm2_log_fn = log_fn;
+	else
+		_lvm2_log_fn = NULL;
+}
+
 void init_log_file(const char *log_file, int append)
 {
 	const char *open_mode = append ? "a" : "w";
@@ -185,12 +195,33 @@ int debug_level()
 void print_log(int level, const char *file, int line, const char *format, ...)
 {
 	va_list ap;
-	char buf[1024];
+	char buf[1024], buf2[4096];
 	int bufused, n;
-	char *trformat;		/* Translated format string */
+	const char *message;
+	const char *trformat;		/* Translated format string */
 
 	trformat = _(format);
 
+	if (_lvm2_log_fn) {
+		va_start(ap, format);
+		n = vsnprintf(buf2, sizeof(buf2) - 1, trformat, ap);
+		va_end(ap);
+
+		if (n < 0) {
+			fprintf(stderr, _("vsnprintf failed: skipping external "
+					"logging function"));
+			goto log_it;
+		}
+
+		buf2[sizeof(buf2) - 1] = '\0';
+		message = &buf2[0];
+
+		_lvm2_log_fn(level, file, line, message);
+
+		return;
+	}
+
+      log_it:
 	if (!_log_suppress) {
 		va_start(ap, format);
 		switch (level) {
