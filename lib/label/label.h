@@ -1,33 +1,84 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
-struct label
-{
-    uint32_t magic;
-    uint32_t crc;
-    uint64_t label1_loc;
-    uint64_t label2_loc;
-    uint16_t datalen;
+#ifndef _LVM_LABEL_H
+#define _LVM_LABEL_H
 
-    char     disk_type[32];
-    uint32_t version[3];
+#include "uuid.h"
+#include "device.h"
 
-    char    *data; /* Should be freed with label_free() */
+struct label {
+	struct uuid id;
+
+	char volume_type[32];
+	uint32_t version[3];
+
+	size_t extra_len;
+	char *extra_info;
 };
 
-#define VERSION_MATCH_EQUAL     1
-#define VERSION_MATCH_LESSTHAN  2
-#define VERSION_MATCH_LESSEQUAL 3
-#define VERSION_MATCH_ANY       4
+struct labeller;
 
-extern int  label_write(struct device *dev, struct label *label);
-extern int  label_read(struct device *dev, struct label *label);
-extern void label_free(struct label *label);
-extern int  is_labelled(struct device *dev);
-extern int  labels_match(struct device *dev);
+struct label_ops {
+	/*
+	 * Is the device labelled with this format ?
+	 */
+	int (*can_handle)(struct labeller *l, struct device *dev);
 
-extern struct dev_filter *label_filter_create();
-extern struct dev_filter *label_format_filter_create(char *disk_type, uint32_t version[3], int match_type);
+	/*
+	 * Write a label to a volume.
+	 */
+	int (*write)(struct labeller *l,
+		     struct device *dev, struct label *label);
+
+	/*
+	 * Remove a label from a device.
+	 */
+	int (*remove)(struct labeller *l, struct device *dev);
+
+	/*
+	 * Read a label from a volume.
+	 */
+	int (*read)(struct labeller *l,
+		    struct device *dev, struct label **label);
+
+	/*
+	 * Additional consistency checks for the paranoid.
+	 */
+	int (*verify)(struct labeller *l, struct device *dev);
+
+	/*
+	 * Destructor.
+	 */
+	void (*destroy)(struct labeller *l);
+};
+
+struct labeller {
+	struct label_ops *ops;
+	void *private;
+};
+
+
+int label_init(void);
+void label_exit(void);
+
+int label_register_handler(const char *name, struct labeller *handler);
+
+struct labeller *label_get_handler(const char *name);
+
+int label_remove(const char *path);
+int label_read(const char *path, struct label **result);
+int label_verify(const char *path);
+void label_free(struct label *l);
+
+/*
+ * We'll support two label types: the 'pretend the
+ * LVM1 pv structure at the begining of the disk
+ * is a label' hack, and pjc's 1 sector labels at
+ * the front and back of the device.
+ */
+
+#endif
