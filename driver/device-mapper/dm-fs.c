@@ -66,8 +66,14 @@ int extract_line(struct text_region *line, void *private)
 	ssize_t n;
 	loff_t off = lc->next_read;
 	const char *read_begin;
+	mm_segment_t fs;
+
+	fs = get_fs();
+	set_fs(get_ds());
 
 	n = lc->in->f_op->read(lc->in, lc->data, sizeof(lc->data), &off);
+
+	set_fs(fs);
 
 	if (n <= 0)
 		return 0;
@@ -95,7 +101,7 @@ static struct file *open_error_file(struct file *table)
 		return 0;
 
 	/* FIXME: Assumes path depth; avoid filp_open.  */
-	sprintf(name, "/%s/%s/%s.err", 
+	sprintf(name, "/%s/%s/%s.err",
 		table->f_vfsmnt->mnt_mountpoint->d_name.name,
 		table->f_dentry->d_parent->d_name.name,
 		table->f_dentry->d_name.name);
