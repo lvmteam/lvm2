@@ -105,9 +105,6 @@ is invoked.  By default tools append messages to the log file.
 .IP
 \fBverbose\fP \(em Default level (0-3) of messages sent to stdout or stderr.
 3 is the most verbose; 0 should produce the least output.
-.IP
-\fBtest\fP \(em If set to 1, run tools in test mode i.e. no metadata
-gets updated.
 .TP
 \fBbackup\fP \(em Configuration for metadata backups.
 .IP
@@ -144,6 +141,9 @@ Defaults to 30.
 \fBhistory_size\fP \(em Maximum number of lines of shell history to retain (default 100) in $HOME/.lvm_history
 .TP
 \fBglobal\fP \(em Global settings
+.IP
+\fBtest\fP \(em If set to 1, run tools in test mode i.e. no metadata
+gets updated.
 .IP
 \fBproc\fP \(em Mount point of proc filesystem.
 Defaults to /proc.
