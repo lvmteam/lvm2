@@ -231,7 +231,7 @@ int write_config(struct config_file *cf, const char *file)
  */
 static struct config_node *_file(struct parser *p)
 {
-	struct config_node *root = 0, *n, *l;
+	struct config_node *root = NULL, *n, *l = NULL;
 	while (p->t != TOK_EOF) {
 		if (!(n = _section(p))) {
 			stack;
@@ -250,7 +250,7 @@ static struct config_node *_file(struct parser *p)
 static struct config_node *_section(struct parser *p)
 {
         /* IDENTIFIER '{' VALUE* '}' */
-	struct config_node *root, *n, *l;
+	struct config_node *root, *n, *l = NULL;
 	if (!(root = _create_node(p))) {
 		stack;
 		return 0;
