@@ -11,6 +11,7 @@
 #include "list.h"
 #include "log.h"
 #include "display.h"
+#include "toolcontext.h"
 
 /* VG consistency checks */
 static int _check_vgs(struct list *pvs, int *partial)

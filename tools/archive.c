@@ -113,9 +113,9 @@ int archive(struct volume_group *vg)
 	return 1;
 }
 
-int archive_display(const char *vg_name)
+int archive_display(struct cmd_context *cmd, const char *vg_name)
 {
-	return archive_list(fid->cmd, the_um, _archive_params.dir, vg_name);
+	return archive_list(cmd, cmd->um, _archive_params.dir, vg_name);
 }
 
 
@@ -176,7 +176,7 @@ static int __backup(struct volume_group *vg)
 
 	log_verbose("Creating volume group backup \"%s\"", name);
 
-	if (!(tf = text_format_create(vg->cmd, name, the_um, desc))) {
+	if (!(tf = text_format_create(vg->cmd, name, vg->cmd->um, desc))) {
 		stack;
 		return 0;
 	}
@@ -232,7 +232,8 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	struct volume_group *vg;
 	struct format_instance *tf;
 
-	if (!(tf = text_format_create(cmd, file, the_um, cmd->cmd_line))) {
+	if (!(tf = text_format_create(cmd, file, cmd->um, 
+				      cmd->cmd_line))) {
 		log_error("Couldn't create text format object.");
 		return NULL;
 	}
@@ -244,14 +245,14 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	return vg;
 }
 
-int backup_restore_from_file(const char *vg_name, const char *file)
+int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name, const char *file)
 {
 	struct volume_group *vg;
 
 	/*
 	 * Read in the volume group.
 	 */
-	if (!(vg = _read_vg(fid->cmd, vg_name, file))) {
+	if (!(vg = _read_vg(cmd, vg_name, file))) {
 		stack;
 		return 0;
 	}
@@ -267,7 +268,7 @@ int backup_restore_from_file(const char *vg_name, const char *file)
 	/*
 	 * Write the vg.
 	 */
-	if (!fid->ops->vg_write(fid, vg)) {
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
 		stack;
 		return 0;
 	}
@@ -275,7 +276,7 @@ int backup_restore_from_file(const char *vg_name, const char *file)
 	return 1;
 }
 
-int backup_restore(const char *vg_name)
+int backup_restore(struct cmd_context *cmd, const char *vg_name)
 {
 	char path[PATH_MAX];
 
@@ -285,5 +286,5 @@ int backup_restore(const char *vg_name)
 		return 0;
 	}
 
-	return backup_restore_from_file(vg_name, path);
+	return backup_restore_from_file(cmd, vg_name, path);
 }

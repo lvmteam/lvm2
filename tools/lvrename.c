@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-int lvrename(int argc, char **argv)
+int lvrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	int maxlen;
 	int active;
@@ -40,13 +40,13 @@ int lvrename(int argc, char **argv)
 	lv_name_old = argv[0];
 	lv_name_new = argv[1];
 
-	if (!(vg_name = extract_vgname(fid, lv_name_old))) {
+	if (!(vg_name = extract_vgname(cmd->fid, lv_name_old))) {
 		log_error("Please provide a volume group name");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (strchr(lv_name_new, '/') &&
-	    (vg_name_new = extract_vgname(fid, lv_name_new)) &&
+	    (vg_name_new = extract_vgname(cmd->fid, lv_name_new)) &&
 	    strcmp(vg_name, vg_name_new)) {
 		log_error("Logical volume names must "
 			  "have the same volume group (\"%s\" or \"%s\")",
@@ -61,7 +61,7 @@ int lvrename(int argc, char **argv)
 		lv_name_new = st + 1;
 
 	/* Check sanity of new name */
-	maxlen = NAME_LEN - strlen(vg_name) - strlen(fid->cmd->dev_dir) - 3;
+	maxlen = NAME_LEN - strlen(vg_name) - strlen(cmd->dev_dir) - 3;
 	if (strlen(lv_name_new) > maxlen) {
 		log_error("New logical volume path exceeds maximum length "
 			  "of %d!", maxlen);
@@ -91,7 +91,7 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		goto error;
 	}
@@ -133,14 +133,14 @@ int lvrename(int argc, char **argv)
 		goto error;
 	}
 
-	if (!(lv->name = pool_strdup(fid->cmd->mem, lv_name_new))) {
+	if (!(lv->name = pool_strdup(cmd->mem, lv_name_new))) {
 		log_error("Failed to allocate space for new name");
 		goto error;
 	}
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!(fid->ops->vg_write(fid, vg))) {
+	if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
 		goto error;
 	}
 

@@ -1,4 +1,6 @@
 ../lib/activate/activate.h
+../lib/commands/errors.h
+../lib/commands/toolcontext.h
 ../lib/config/config.h
 ../lib/config/defaults.h
 ../lib/datastruct/bitset.h

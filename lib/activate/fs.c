@@ -4,6 +4,11 @@
  * This file is released under the LGPL.
  */
 
+#include "fs.h"
+#include "log.h"
+#include "names.h"
+#include "toolcontext.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -11,10 +16,6 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "fs.h"
-#include "log.h"
-#include "names.h"
 
 #include <libdevmapper.h>
 

@@ -8,8 +8,8 @@
 
 #include <sys/stat.h>
 
-int process_each_lv_in_vg(struct volume_group *vg,
-			  int (*process_single) (struct logical_volume *lv))
+int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  int (*process_single) (struct cmd_context *cmd, struct logical_volume *lv))
 {
 	int ret_max = 0;
 	int ret = 0;
@@ -24,7 +24,7 @@ int process_each_lv_in_vg(struct volume_group *vg,
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		ret = process_single(lv);
+		ret = process_single(cmd, lv);
 		if (ret > ret_max)
 			ret_max = ret;
 	}
@@ -33,8 +33,8 @@ int process_each_lv_in_vg(struct volume_group *vg,
 
 }
 
-int process_each_lv(int argc, char **argv,
-		    int (*process_single) (struct logical_volume *lv))
+int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
+		    int (*process_single) (struct cmd_context *cmd, struct logical_volume *lv))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -54,14 +54,14 @@ int process_each_lv(int argc, char **argv,
 			char *lv_name = argv[opt];
 
 			/* does VG exist? */
-			if (!(vg_name = extract_vgname(fid, lv_name))) {
+			if (!(vg_name = extract_vgname(cmd->fid, lv_name))) {
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
 				continue;
 			}
 
 			log_verbose("Finding volume group \"%s\"", vg_name);
-			if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+			if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 				log_error("Volume group \"%s\" doesn't exist",
 					  vg_name);
 				if (ret_max < ECMD_FAILED)
@@ -86,25 +86,25 @@ int process_each_lv(int argc, char **argv,
 
 			lv = lvl->lv;
 
-			if ((ret = process_single(lv)) > ret_max)
+			if ((ret = process_single(cmd, lv)) > ret_max)
 				ret_max = ret;
 		}
 	} else {
 		log_verbose("Finding all logical volumes");
-		if (!(vgs = fid->ops->get_vgs(fid))) {
+		if (!(vgs = cmd->fid->ops->get_vgs(cmd->fid))) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
 		list_iterate(vgh, vgs) {
 			vg_name = list_item(vgh, struct name_list)->name;
-			if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+			if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 				log_error("Volume group \"%s\" not found",
 					  vg_name);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
 				continue;
 			}
-			ret = process_each_lv_in_vg(vg, process_single);
+			ret = process_each_lv_in_vg(cmd, vg, process_single);
 			if (ret > ret_max)
 				ret_max = ret;
 			vg_count++;
@@ -114,8 +114,8 @@ int process_each_lv(int argc, char **argv,
 	return ret_max;
 }
 
-int process_each_vg(int argc, char **argv, int lock_type,
-		    int (*process_single) (const char *vg_name))
+int process_each_vg(struct cmd_context *cmd, int argc, char **argv, int lock_type,
+		    int (*process_single) (struct cmd_context *cmd, const char *vg_name))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -134,13 +134,13 @@ int process_each_vg(int argc, char **argv, int lock_type,
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
-			if ((ret = process_single(vg_name)) > ret_max)
+			if ((ret = process_single(cmd, vg_name)) > ret_max)
 				ret_max = ret;
 			lock_vol((void *)vg_name,  LCK_VG | LCK_NONE);
 		}
 	} else {
 		log_verbose("Finding all volume groups");
-		if (!(vgs = fid->ops->get_vgs(fid))) {
+		if (!(vgs = cmd->fid->ops->get_vgs(cmd->fid))) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
@@ -150,7 +150,7 @@ int process_each_vg(int argc, char **argv, int lock_type,
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
-			ret = process_single(vg_name);
+			ret = process_single(cmd, vg_name);
 					   
 			if (ret > ret_max)
 				ret_max = ret;
@@ -161,8 +161,8 @@ int process_each_vg(int argc, char **argv, int lock_type,
 	return ret_max;
 }
 
-int process_each_pv_in_vg(struct volume_group *vg,
-			  int (*process_single) (struct volume_group *vg,
+int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  int (*process_single) (struct cmd_context *cmd, struct volume_group *vg,
 						 struct physical_volume *pv))
 {
 	int ret_max = 0;
@@ -173,15 +173,15 @@ int process_each_pv_in_vg(struct volume_group *vg,
 	list_iterate(pvh, &vg->pvs) {
 		pv = list_item(pvh, struct pv_list)->pv;
 
-		if ((ret = process_single(vg, pv)) > ret_max)
+		if ((ret = process_single(cmd, vg, pv)) > ret_max)
 			ret_max = ret;
 	}
 
 	return ret_max;
 }
 
-int process_each_pv(int argc, char **argv, struct volume_group *vg,
-		    int (*process_single) (struct volume_group *vg,
+int process_each_pv(struct cmd_context *cmd, int argc, char **argv, struct volume_group *vg,
+		    int (*process_single) (struct cmd_context *cmd, struct volume_group *vg,
 					   struct physical_volume *pv))
 {
 	int opt = 0;
@@ -199,13 +199,13 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 					  vg->name);
 				continue;
 			}
-			ret = process_single(vg, pvl->pv);
+			ret = process_single(cmd, vg, pvl->pv);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
 	} else {
 		log_verbose("Using all physical volume(s) in volume group");
-		process_each_pv_in_vg(vg, process_single);
+		process_each_pv_in_vg(cmd, vg, process_single);
 	}
 
 	return ret_max;
@@ -240,7 +240,7 @@ char *extract_vgname(struct format_instance *fi, char *lv_name)
 			return 0;
 		}
 
-		vg_name = pool_strdup(fid->cmd->mem, vg_name);
+		vg_name = pool_strdup(fi->cmd->mem, vg_name);
 		if (!vg_name) {
 			log_error("Allocation of vg_name failed");
 			return 0;
@@ -250,7 +250,7 @@ char *extract_vgname(struct format_instance *fi, char *lv_name)
 		return vg_name;
 	}
 
-	if (!(vg_name = default_vgname(fid))) {
+	if (!(vg_name = default_vgname(fi))) {
 		if (lv_name)
 			log_error("Path required for Logical Volume \"%s\"",
 				  lv_name);
@@ -280,7 +280,7 @@ char *default_vgname(struct format_instance *fi)
 		return 0;
 	}
 
-	return pool_strdup(fid->cmd->mem, vg_path);
+	return pool_strdup(fi->cmd->mem, vg_path);
 }
 
 struct list *create_pv_list(struct pool *mem,

@@ -20,19 +20,19 @@
 
 #include "tools.h"
 
-static int lvremove_single(struct logical_volume *lv);
+static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv);
 
-int lvremove(int argc, char **argv)
+int lvremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!argc) {
 		log_error("Please enter one or more logical volume paths");
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(argc, argv, &lvremove_single);
+	return process_each_lv(cmd, argc, argv, &lvremove_single);
 }
 
-static int lvremove_single(struct logical_volume *lv)
+static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct volume_group *vg;
 	int active;
@@ -57,7 +57,7 @@ static int lvremove_single(struct logical_volume *lv)
 
 	active = lv_active(lv);
 
-	if (active && !arg_count(force_ARG)) {
+	if (active && !arg_count(cmd,force_ARG)) {
 		if (yes_no_prompt
 		    ("Do you really want to remove active logical volume \"%s\"? "
 		     "[y/n]: ", lv->name) == 'n') {
@@ -80,7 +80,7 @@ static int lvremove_single(struct logical_volume *lv)
 	}
 
 	/* store it on disks */
-	if (!fid->ops->vg_write(fid, vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		return ECMD_FAILED;
 
 	backup(vg);

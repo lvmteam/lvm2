@@ -33,7 +33,7 @@ void archive_exit(void);
 
 void archive_enable(int flag);
 int archive(struct volume_group *vg);
-int archive_display(const char *vg_name);
+int archive_display(struct cmd_context *cmd, const char *vg_name);
 
 int backup_init(const char *dir);
 void backup_exit(void);
@@ -42,7 +42,7 @@ void backup_enable(int flag);
 int backup(struct volume_group *vg);
 int backup_remove(const char *vg_name);
 
-int backup_restore_from_file(const char *vg_name, const char *file);
-int backup_restore(const char *vg_name);
+int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name, const char *file);
+int backup_restore(struct cmd_context *cmd, const char *vg_name);
 
 #endif

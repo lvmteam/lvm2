@@ -21,26 +21,29 @@
 #ifndef _LVM_TOOLLIB_H
 #define _LVM_TOOLLIB_H
 
+#include "metadata.h"
+#include "pool.h"
+
 int autobackup_set(void);
 int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 		    int autobackup);
 int autobackup(struct volume_group *vg);
 
-int process_each_vg(int argc, char **argv, int lock_type,
-		    int (*process_single) (const char *vg_name));
+int process_each_vg(struct cmd_context *cmd, int argc, char **argv, int lock_type,
+		    int (*process_single) (struct cmd_context *cmd, const char *vg_name));
 
-int process_each_pv(int argc, char **argv, struct volume_group *vg,
-		    int (*process_single) (struct volume_group * vg,
+int process_each_pv(struct cmd_context *cmd, int argc, char **argv, struct volume_group *vg,
+		    int (*process_single) (struct cmd_context *cmd, struct volume_group * vg,
 					   struct physical_volume * pv));
-int process_each_lv(int argc, char **argv,
-		    int (*process_single) (struct logical_volume * lv));
+int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
+		    int (*process_single) (struct cmd_context *cmd, struct logical_volume * lv));
 
 
-int process_each_pv_in_vg(struct volume_group *vg,
-		    int (*process_single) (struct volume_group * vg,
+int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+		    int (*process_single) (struct cmd_context *cmd, struct volume_group * vg,
 					   struct physical_volume * pv));
-int process_each_lv_in_vg(struct volume_group *vg,
-			  int (*process_single) (struct logical_volume * lv));
+int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  int (*process_single) (struct cmd_context *cmd, struct logical_volume * lv));
 
 int is_valid_chars(char *n);
 

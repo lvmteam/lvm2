@@ -9,7 +9,7 @@
 
 #include <fcntl.h>
 
-int lvcreate(int argc, char **argv)
+int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int zero;
 	uint32_t read_ahead = 0;
@@ -28,38 +28,38 @@ int lvcreate(int argc, char **argv)
 	char *vg_name;
 	char *st;
 
-	if (arg_count(snapshot_ARG) || arg_count(chunksize_ARG)) {
+	if (arg_count(cmd,snapshot_ARG) || arg_count(cmd,chunksize_ARG)) {
 		log_error("Snapshots are not yet supported in LVM2.");
 		return EINVALID_CMD_LINE;
 	}
 
 	/* mutually exclusive */
-	if ((arg_count(zero_ARG) && arg_count(snapshot_ARG)) ||
-	    (arg_count(extents_ARG) && arg_count(size_ARG))) {
+	if ((arg_count(cmd,zero_ARG) && arg_count(cmd,snapshot_ARG)) ||
+	    (arg_count(cmd,extents_ARG) && arg_count(cmd,size_ARG))) {
 		log_error("Invalid combination of arguments");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(size_ARG) + arg_count(extents_ARG) == 0) {
+	if (arg_count(cmd,size_ARG) + arg_count(cmd,extents_ARG) == 0) {
 		log_error("Please indicate size using option -l or -L");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (strcmp(arg_str_value(contiguous_ARG, "n"), "n"))
+	if (strcmp(arg_str_value(cmd,contiguous_ARG, "n"), "n"))
 		status |= ALLOC_CONTIGUOUS;
 	else
 		status |= ALLOC_SIMPLE;
 
-	zero = strcmp(arg_str_value(zero_ARG, "y"), "n");
+	zero = strcmp(arg_str_value(cmd,zero_ARG, "y"), "n");
 
-	if (arg_count(stripes_ARG)) {
-		stripes = arg_int_value(stripes_ARG, 1);
+	if (arg_count(cmd,stripes_ARG)) {
+		stripes = arg_int_value(cmd,stripes_ARG, 1);
 		if (stripes == 1)
 			log_print("Redundant stripes argument: default is 1");
 	}
 
-	if (arg_count(stripesize_ARG))
-		stripesize = 2 * arg_int_value(stripesize_ARG, 0);
+	if (arg_count(cmd,stripesize_ARG))
+		stripesize = 2 * arg_int_value(cmd,stripesize_ARG, 0);
 
 	if (stripes == 1 && stripesize) {
 		log_print("Ignoring stripesize argument with single stripe");
@@ -71,27 +71,27 @@ int lvcreate(int argc, char **argv)
 		log_print("Using default stripesize %dKB", stripesize / 2);
 	}
 
-	if (arg_count(permission_ARG))
-		status |= arg_int_value(permission_ARG, 0);
+	if (arg_count(cmd,permission_ARG))
+		status |= arg_int_value(cmd,permission_ARG, 0);
 	else
 		status |= LVM_READ | LVM_WRITE;
 
-	if (arg_count(readahead_ARG))
-		read_ahead = arg_int_value(readahead_ARG, 0);
+	if (arg_count(cmd,readahead_ARG))
+		read_ahead = arg_int_value(cmd,readahead_ARG, 0);
 
-	if (arg_count(extents_ARG))
-		extents = arg_int_value(extents_ARG, 0);
+	if (arg_count(cmd,extents_ARG))
+		extents = arg_int_value(cmd,extents_ARG, 0);
 
 	/* Size returned in kilobyte units; held in sectors */
-	if (arg_count(size_ARG))
-		size = arg_int_value(size_ARG, 0);
+	if (arg_count(cmd,size_ARG))
+		size = arg_int_value(cmd,size_ARG, 0);
 
-	if (arg_count(name_ARG))
-		lv_name = arg_value(name_ARG);
+	if (arg_count(cmd,name_ARG))
+		lv_name = arg_value(cmd,name_ARG);
 
 	/* If VG not on command line, try -n arg and then environment */
 	if (!argc) {
-		if (!(vg_name = extract_vgname(fid, lv_name))) {
+		if (!(vg_name = extract_vgname(cmd->fid, lv_name))) {
 			log_error("Please provide a volume group name");
 			return EINVALID_CMD_LINE;
 		}
@@ -99,7 +99,7 @@ int lvcreate(int argc, char **argv)
 	} else {
 		/* Ensure lv_name doesn't contain a different VG! */
 		if (lv_name && strchr(lv_name, '/')) {
-			if (!(vg_name = extract_vgname(fid, lv_name)))
+			if (!(vg_name = extract_vgname(cmd->fid, lv_name)))
 				return EINVALID_CMD_LINE;
 			if (strcmp(vg_name, argv[0])) {
 				log_error("Inconsistent volume group names "
@@ -124,7 +124,7 @@ int lvcreate(int argc, char **argv)
                 return ECMD_FAILED;
         }
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		goto error;
 	}
@@ -150,7 +150,7 @@ int lvcreate(int argc, char **argv)
 		pvh = &vg->pvs;
 
 	else {
-		if (!(pvh = create_pv_list(fid->cmd->mem, vg,
+		if (!(pvh = create_pv_list(cmd->mem, vg,
 					   argc - opt, argv + opt))) {
 			stack;
 			goto error;
@@ -209,27 +209,27 @@ int lvcreate(int argc, char **argv)
 	if (!archive(vg))
 		goto error;
 
-	if (!(lv = lv_create(fid, lv_name, status,
+	if (!(lv = lv_create(cmd->fid, lv_name, status,
 			     stripes, stripesize, extents,
 			     vg, pvh)))
 		goto error;
 
-	if (arg_count(readahead_ARG)) {
+	if (arg_count(cmd,readahead_ARG)) {
 		log_verbose("Setting read ahead sectors");
 		lv->read_ahead = read_ahead;
 	}
 
-	if (arg_count(minor_ARG)) {
+	if (arg_count(cmd,minor_ARG)) {
 		lv->status |= FIXED_MINOR;
-		lv->minor = arg_int_value(minor_ARG, -1);
+		lv->minor = arg_int_value(cmd,minor_ARG, -1);
 		log_verbose("Setting minor number to %d", lv->minor);
 	}
 
-	if (arg_count(persistent_ARG)) {
-		if (!strcmp(arg_str_value(persistent_ARG, "n"), "n"))
+	if (arg_count(cmd,persistent_ARG)) {
+		if (!strcmp(arg_str_value(cmd,persistent_ARG, "n"), "n"))
 			lv->status &= ~FIXED_MINOR;
 		else
-			if (!arg_count(minor_ARG)) {
+			if (!arg_count(cmd,minor_ARG)) {
 				log_error("Please specify minor number with "
 					  "--minor when using -My");
 				goto error;
@@ -238,7 +238,7 @@ int lvcreate(int argc, char **argv)
 	}
 
 	/* store vg on disk(s) */
-	if (!fid->ops->vg_write(fid, vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		goto error;
 
 	backup(vg);
@@ -252,12 +252,12 @@ int lvcreate(int argc, char **argv)
 		struct device *dev;
 		char *name;
 
-		if (!(name = pool_alloc(fid->cmd->mem, PATH_MAX))) {
+		if (!(name = pool_alloc(cmd->mem, PATH_MAX))) {
 			log_error("Name allocation failed - device not zeroed");
 			goto error;
 		}
 
-		if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", fid->cmd->dev_dir,
+		if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
 				 lv->vg->name, lv->name) < 0) {
 			log_error("Name too long - device not zeroed (%s)",
 				  lv->name);

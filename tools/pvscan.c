@@ -20,12 +20,12 @@
 
 #include "tools.h"
 
-void pvscan_display_single(struct physical_volume *pv);
+void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv);
 
 int pv_max_name_len = 0;
 int vg_max_name_len = 0;
 
-int pvscan(int argc, char **argv)
+int pvscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	int new_pvs_found = 0;
 	int pvs_found = 0;
@@ -43,21 +43,21 @@ int pvscan(int argc, char **argv)
 	pv_max_name_len = 0;
 	vg_max_name_len = 0;
 
-	if (arg_count(novolumegroup_ARG) && arg_count(exported_ARG)) {
+	if (arg_count(cmd,novolumegroup_ARG) && arg_count(cmd,exported_ARG)) {
 		log_error("Options -e and -n are incompatible");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(exported_ARG) || arg_count(novolumegroup_ARG))
+	if (arg_count(cmd,exported_ARG) || arg_count(cmd,novolumegroup_ARG))
 		log_print("WARNING: only considering physical volumes %s",
-			  arg_count(exported_ARG) ?
+			  arg_count(cmd,exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 
 	log_verbose("Wiping cache of LVM-capable devices");
-	persistent_filter_wipe(fid->cmd->filter);
+	persistent_filter_wipe(cmd->filter);
 
 	log_verbose("Walking through all physical volumes");
-	if (!(pvs = fid->ops->get_pvs(fid)))
+	if (!(pvs = cmd->fid->ops->get_pvs(cmd->fid)))
 		return ECMD_FAILED;
 
 	/* eliminate exported/new if required */
@@ -65,8 +65,8 @@ int pvscan(int argc, char **argv)
 		pvl = list_item(pvh, struct pv_list);
 		pv = pvl->pv;
 
-		if ((arg_count(exported_ARG) && !(pv->status & EXPORTED_VG))
-		    || (arg_count(novolumegroup_ARG) && (*pv->vg_name))) {
+		if ((arg_count(cmd,exported_ARG) && !(pv->status & EXPORTED_VG))
+		    || (arg_count(cmd,novolumegroup_ARG) && (*pv->vg_name))) {
 			list_del(&pvl->list);
 			continue;
 		}
@@ -108,7 +108,7 @@ int pvscan(int argc, char **argv)
 	vg_max_name_len += 2;
 
 	list_iterate(pvh, pvs)
-		pvscan_display_single(list_item(pvh, struct pv_list)->pv);
+		pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");
@@ -129,7 +129,7 @@ int pvscan(int argc, char **argv)
 	return 0;
 }
 
-void pvscan_display_single(struct physical_volume *pv)
+void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
 {
 	char uuid[64];
 	int vg_name_len = 0;
@@ -141,12 +141,12 @@ void pvscan_display_single(struct physical_volume *pv)
 	char vg_name_this[NAME_LEN] = { 0, };
 
 	/* short listing? */
-	if (arg_count(short_ARG) > 0) {
+	if (arg_count(cmd,short_ARG) > 0) {
 		log_print("%s", dev_name(pv->dev));
 		return;
 	}
 
-	if (arg_count(verbose_ARG) > 1) {
+	if (arg_count(cmd,verbose_ARG) > 1) {
 		/* FIXME As per pv_display! Drop through for now. */
 		/* pv_show(pv); */
 
@@ -161,7 +161,7 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	vg_name_len = strlen(pv->vg_name) + 1;
 
-	if (arg_count(uuid_ARG)) {
+	if (arg_count(cmd,uuid_ARG)) {
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
 			stack;
 			return;

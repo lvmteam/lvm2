@@ -20,9 +20,9 @@
 
 #include "tools.h"
 
-static int vgremove_single(const char *vg_name);
+static int vgremove_single(struct cmd_context *cmd, const char *vg_name);
 
-int vgremove(int argc, char **argv)
+int vgremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 
@@ -31,7 +31,7 @@ int vgremove(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 		
-	ret = process_each_vg(argc, argv, LCK_WRITE | LCK_NONBLOCK, 
+	ret = process_each_vg(cmd, argc, argv, LCK_WRITE | LCK_NONBLOCK, 
 			      &vgremove_single);
 
 	lock_vol("", LCK_VG | LCK_NONE);
@@ -39,7 +39,7 @@ int vgremove(int argc, char **argv)
 	return ret;
 }
 
-static int vgremove_single(const char *vg_name)
+static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 	struct physical_volume *pv;
@@ -47,7 +47,7 @@ static int vgremove_single(const char *vg_name)
 	int ret = 0;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -87,7 +87,7 @@ static int vgremove_single(const char *vg_name)
 			    "volume group \"%s\"",
 			    dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';
-		if (!(fid->ops->pv_write(fid, pv))) {
+		if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
 				  dev_name(pv->dev), vg_name);

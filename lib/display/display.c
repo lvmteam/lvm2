@@ -24,6 +24,7 @@
 #include "display.h"
 #include "activate.h"
 #include "uuid.h"
+#include "toolcontext.h"
 
 #include <sys/types.h>
 #include <string.h>
@@ -155,7 +156,7 @@ void pvdisplay_full(struct physical_volume *pv)
 	return;
 }
 
-int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv)
+int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv)
 {
 	if (!pv)
 		return 0;
@@ -195,7 +196,7 @@ void lvdisplay_colons(struct logical_volume *lv)
 	return;
 }
 
-int lvdisplay_full(struct logical_volume *lv)
+int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	char *size;
 	uint32_t alloc;

@@ -20,9 +20,9 @@
 
 #include "tools.h"
 
-int vgmerge_single(const char *vg_name_to, const char *vg_name_from);
+int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to, const char *vg_name_from);
 
-int vgmerge(int argc, char **argv)
+int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *vg_name_to;
 	int opt = 0;
@@ -38,7 +38,7 @@ int vgmerge(int argc, char **argv)
 	argv++;
 
 	for (; opt < argc; opt++) {
-		ret = vgmerge_single(vg_name_to, argv[opt]);
+		ret = vgmerge_single(cmd, vg_name_to, argv[opt]);
 		if (ret > ret_max)
 			ret_max = ret;
 	}
@@ -46,7 +46,7 @@ int vgmerge(int argc, char **argv)
 	return ret_max;
 }
 
-int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
+int vgmerge_single(struct cmd_context *cmd, const char *vg_name_to, const char *vg_name_from)
 {
 	struct volume_group *vg_to, *vg_from;
 	struct list *lvh1, *lvh2;
@@ -63,7 +63,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_to = fid->ops->vg_read(fid, vg_name_to))) {
+	if (!(vg_to = cmd->fid->ops->vg_read(cmd->fid, vg_name_to))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_to);
 		lock_vol(vg_name_to, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
@@ -88,7 +88,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_from = fid->ops->vg_read(fid, vg_name_from))) {
+	if (!(vg_from = cmd->fid->ops->vg_read(cmd->fid, vg_name_from))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
 		goto error;
 	}
@@ -164,7 +164,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 		list_add(&vg_to->pvs, pvh);
 
 		pv = list_item(pvh, struct pv_list)->pv;
-		pv->vg_name = pool_strdup(fid->cmd->mem, vg_to->name);
+		pv->vg_name = pool_strdup(cmd->mem, vg_to->name);
 	}
 	vg_to->pv_count += vg_from->pv_count;
 
@@ -181,7 +181,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!(fid->ops->vg_write(fid, vg_to))) {
+	if (!(cmd->fid->ops->vg_write(cmd->fid, vg_to))) {
 		goto error;
 	}
 

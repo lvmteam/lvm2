@@ -20,20 +20,20 @@
 
 #include "tools.h"
 
-static int vgck_single(const char *vg_name);
+static int vgck_single(struct cmd_context *cmd, const char *vg_name);
 
-int vgck(int argc, char **argv)
+int vgck(struct cmd_context *cmd, int argc, char **argv)
 {
-	return process_each_vg(argc, argv, LCK_READ, &vgck_single);
+	return process_each_vg(cmd, argc, argv, LCK_READ, &vgck_single);
 }
 
-static int vgck_single(const char *vg_name)
+static int vgck_single(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 
 	log_verbose("Checking volume group \"%s\"", vg_name);
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}

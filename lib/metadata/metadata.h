@@ -143,17 +143,6 @@ struct lv_list {
 	struct logical_volume *lv;
 };
 
-struct cmd_context {
-	/* format handler allocates all objects from here */
-	struct pool *mem;
-
-	/* misc. vars needed by format handler */
-	char *cmd_line;
-	char *dev_dir;
-	struct dev_filter *filter;
-	struct config_file *cf;
-};
-
 struct format_instance {
 	struct cmd_context *cmd;
 	struct format_handler *ops;

@@ -13,6 +13,7 @@
 #include "config.h"
 #include "hash.h"
 #include "dbg_malloc.h"
+#include "toolcontext.h"
 
 #include <unistd.h>
 #include <sys/types.h>

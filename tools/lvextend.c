@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-int lvextend(int argc, char **argv)
+int lvextend(struct cmd_context *cmd, int argc, char **argv)
 {
-	return lvresize(argc, argv);
+	return lvresize(cmd, argc, argv);
 }

@@ -20,46 +20,46 @@
 
 #include "tools.h"
 
-static int vgchange_single(const char *vg_name);
-void vgchange_available(struct volume_group *vg);
-void vgchange_resizeable(struct volume_group *vg);
-void vgchange_logicalvolume(struct volume_group *vg);
+static int vgchange_single(struct cmd_context *cmd, const char *vg_name);
+void vgchange_available(struct cmd_context *cmd, struct volume_group *vg);
+void vgchange_resizeable(struct cmd_context *cmd, struct volume_group *vg);
+void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg);
 
-int vgchange(int argc, char **argv)
+int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (!(arg_count(available_ARG) + arg_count(logicalvolume_ARG) +
-	      arg_count(resizeable_ARG))) {
+	if (!(arg_count(cmd,available_ARG) + arg_count(cmd,logicalvolume_ARG) +
+	      arg_count(cmd,resizeable_ARG))) {
 		log_error("One of -a, -l or -x options required");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(available_ARG) + arg_count(logicalvolume_ARG) +
-	    arg_count(resizeable_ARG) > 1) {
+	if (arg_count(cmd,available_ARG) + arg_count(cmd,logicalvolume_ARG) +
+	    arg_count(cmd,resizeable_ARG) > 1) {
 		log_error("Only one of -a, -l or -x options allowed");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(available_ARG) == 1 && arg_count(autobackup_ARG)) {
+	if (arg_count(cmd,available_ARG) == 1 && arg_count(cmd,autobackup_ARG)) {
 		log_error("-A option not necessary with -a option");
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_vg(argc, argv, 
-			       (arg_count(available_ARG)) ? 
+	return process_each_vg(cmd, argc, argv, 
+			       (arg_count(cmd,available_ARG)) ? 
 						LCK_READ : LCK_WRITE,
 			       &vgchange_single);
 }
 
-static int vgchange_single(const char *vg_name)
+static int vgchange_single(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
 		return ECMD_FAILED;
 	}
 
-	if (!(vg->status & LVM_WRITE) && !arg_count(available_ARG)) {
+	if (!(vg->status & LVM_WRITE) && !arg_count(cmd,available_ARG)) {
 		log_error("Volume group \"%s\" is read-only", vg->name);
 		return ECMD_FAILED;
 	}
@@ -69,22 +69,22 @@ static int vgchange_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-	if (arg_count(available_ARG))
-		vgchange_available(vg);
+	if (arg_count(cmd,available_ARG))
+		vgchange_available(cmd, vg);
 
-	if (arg_count(resizeable_ARG))
-		vgchange_resizeable(vg);
+	if (arg_count(cmd,resizeable_ARG))
+		vgchange_resizeable(cmd, vg);
 
-	if (arg_count(logicalvolume_ARG))
-		vgchange_logicalvolume(vg);
+	if (arg_count(cmd,logicalvolume_ARG))
+		vgchange_logicalvolume(cmd, vg);
 
 	return 0;
 }
 
-void vgchange_available(struct volume_group *vg)
+void vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
 	int lv_open, lv_active;
-	int available = !strcmp(arg_str_value(available_ARG, "n"), "y");
+	int available = !strcmp(arg_str_value(cmd,available_ARG, "n"), "y");
 
 	/* FIXME: Force argument to deactivate them? */
 	if (!available && (lv_open = lvs_in_vg_opened(vg))) {
@@ -110,9 +110,9 @@ void vgchange_available(struct volume_group *vg)
 	return;
 }
 
-void vgchange_resizeable(struct volume_group *vg)
+void vgchange_resizeable(struct cmd_context *cmd, struct volume_group *vg)
 {
-	int resizeable = !strcmp(arg_str_value(resizeable_ARG, "n"), "y");
+	int resizeable = !strcmp(arg_str_value(cmd,resizeable_ARG, "n"), "y");
 
 	if (resizeable && (vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" is already resizeable", vg->name);
@@ -133,7 +133,7 @@ void vgchange_resizeable(struct volume_group *vg)
 	else
 		vg->status &= ~RESIZEABLE_VG;
 
-	if (!fid->ops->vg_write(fid, vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		return;
 
 	backup(vg);
@@ -143,9 +143,9 @@ void vgchange_resizeable(struct volume_group *vg)
 	return;
 }
 
-void vgchange_logicalvolume(struct volume_group *vg)
+void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg)
 {
-	int max_lv = arg_int_value(logicalvolume_ARG, 0);
+	int max_lv = arg_int_value(cmd,logicalvolume_ARG, 0);
 
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" must be resizeable "
@@ -182,7 +182,7 @@ void vgchange_logicalvolume(struct volume_group *vg)
 
 	vg->max_lv = max_lv;
 
-	if (!fid->ops->vg_write(fid, vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		return;
 
 	backup(vg);

@@ -20,9 +20,9 @@
 
 #include "tools.h"
 
-static int vgscan_single(const char *vg_name);
+static int vgscan_single(struct cmd_context *cmd, const char *vg_name);
 
-int vgscan(int argc, char **argv)
+int vgscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (argc) {
 		log_error("Too many parameters on command line");
@@ -30,23 +30,23 @@ int vgscan(int argc, char **argv)
 	}
 
 	log_verbose("Wiping cache of LVM-capable devices");
-	persistent_filter_wipe(fid->cmd->filter);
+	persistent_filter_wipe(cmd->filter);
 
 	log_verbose("Wiping internal cache of PVs in VGs");
 	vgcache_destroy();
 
 	log_print("Reading all physical volumes.  This may take a while...");
 
-	return process_each_vg(argc, argv, LCK_READ, &vgscan_single);
+	return process_each_vg(cmd, argc, argv, LCK_READ, &vgscan_single);
 }
 
-static int vgscan_single(const char *vg_name)
+static int vgscan_single(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}

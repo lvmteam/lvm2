@@ -9,6 +9,7 @@
 #include "log.h"
 #include "dbg_malloc.h"
 #include "lvm-string.h"
+#include "toolcontext.h"
 
 #include <assert.h>
 

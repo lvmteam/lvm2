@@ -9,6 +9,7 @@
 #include "device.h"
 #include "dev-cache.h"
 #include "metadata.h"
+#include "toolcontext.h"
 
 #include <string.h>
 

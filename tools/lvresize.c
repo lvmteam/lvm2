@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-int lvresize(int argc, char **argv)
+int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -45,25 +45,25 @@ int lvresize(int argc, char **argv)
 		LV_EXTEND = 2
 	} resize = LV_ANY;
 
-	cmd_name = command_name();
+	cmd_name = command_name(cmd);
 	if (!strcmp(cmd_name, "lvreduce"))
 		resize = LV_REDUCE;
 	if (!strcmp(cmd_name, "lvextend"))
 		resize = LV_EXTEND;
 
-	if (arg_count(extents_ARG) + arg_count(size_ARG) != 1) {
+	if (arg_count(cmd,extents_ARG) + arg_count(cmd,size_ARG) != 1) {
 		log_error("Please specify either size or extents (not both)");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(extents_ARG)) {
-		extents = arg_int_value(extents_ARG, 0);
-		sign = arg_sign_value(extents_ARG, SIGN_NONE);
+	if (arg_count(cmd,extents_ARG)) {
+		extents = arg_int_value(cmd,extents_ARG, 0);
+		sign = arg_sign_value(cmd,extents_ARG, SIGN_NONE);
 	}
 
-	if (arg_count(size_ARG)) {
-		size = arg_int_value(size_ARG, 0);
-		sign = arg_sign_value(size_ARG, SIGN_NONE);
+	if (arg_count(cmd,size_ARG)) {
+		size = arg_int_value(cmd,size_ARG, 0);
+		sign = arg_sign_value(cmd,size_ARG, SIGN_NONE);
 	}
 
 	if (resize == LV_EXTEND && sign == SIGN_MINUS) {
@@ -76,14 +76,14 @@ int lvresize(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(stripes_ARG)) {
+	if (arg_count(cmd,stripes_ARG)) {
 		log_print("Varied striping not yet supported. Ignoring.");
-		/* FUTURE stripes = arg_int_value(stripes_ARG, 1); */
+		/* FUTURE stripes = arg_int_value(cmd,stripes_ARG, 1); */
 	}
 
-	if (arg_count(stripesize_ARG)) {
+	if (arg_count(cmd,stripesize_ARG)) {
 		log_print("Varied stripesize not yet supported. Ignoring.");
-		/* FUTURE stripesize = 2 * arg_int_value(stripesize_ARG, 0); */
+		/* FUTURE stripesize = 2 * arg_int_value(cmd,stripesize_ARG, 0); */
 	}
 
 	if (!argc) {
@@ -95,7 +95,7 @@ int lvresize(int argc, char **argv)
 	argv++;
 	argc--;
 
-	if (!(vg_name = extract_vgname(fid, lv_name))) {
+	if (!(vg_name = extract_vgname(cmd->fid, lv_name))) {
 		log_error("Please provide a volume group name");
 		return EINVALID_CMD_LINE;
 	}
@@ -110,7 +110,7 @@ int lvresize(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		goto error;
 	}
@@ -290,7 +290,7 @@ int lvresize(int argc, char **argv)
 			dbg_free(dummy);
 		}
 
-		if (!arg_count(force_ARG)) {
+		if (!arg_count(cmd,force_ARG)) {
 			if (yes_no_prompt("Do you really want to reduce %s?"
 					  " [y/n]: ", lv_name) == 'n') {
 				log_print("Logical volume %s NOT reduced",
@@ -302,12 +302,12 @@ int lvresize(int argc, char **argv)
 		if (!archive(vg))
 			goto error;
 
-		if (!lv_reduce(fid, lv, lv->le_count - extents))
+		if (!lv_reduce(cmd->fid, lv, lv->le_count - extents))
 			goto error;
 	}
 
 	if ((resize == LV_EXTEND && argc) &&
-	    !(pvh = create_pv_list(fid->cmd->mem, vg,
+	    !(pvh = create_pv_list(cmd->mem, vg,
 				    argc - opt, argv + opt))) {
 		stack;
 		goto error;
@@ -325,7 +325,7 @@ int lvresize(int argc, char **argv)
 		log_print("Extending logical volume %s to %s", lv_name, dummy);
 		dbg_free(dummy);
 
-		if (!lv_extend(fid, lv, stripes, stripesize,
+		if (!lv_extend(cmd->fid, lv, stripes, stripesize,
 			       extents - lv->le_count, pvh))
 			goto error;
 	}
@@ -336,7 +336,7 @@ int lvresize(int argc, char **argv)
 /********* FIXME Suspend lv  ***********/
 
 	/* store vg on disk(s) */
-	if (!fid->ops->vg_write(fid, vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		goto error;
 
         backup(vg);
