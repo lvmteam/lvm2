@@ -9,6 +9,11 @@
 
 #include "dev-cache.h"
 
-struct dev_filter *persistent_filter_create(const char *file, int init);
+struct dev_filter *persistent_filter_create(struct dev_filter *f,
+					    const char *file);
+
+int persistent_filter_wipe(struct dev_filter *f);
+int persistent_filter_load(struct dev_filter *f);
+int persistent_filter_dump(struct dev_filter *f);
 
 #endif
