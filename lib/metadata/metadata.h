@@ -54,6 +54,7 @@
 #define FMT_TAGS		0x00000004	/* Tagging? */
 #define FMT_UNLIMITED_VOLS	0x00000008	/* Unlimited PVs/LVs? */
 #define FMT_RESTRICTED_LVIDS	0x00000010	/* LVID <= 255 */
+#define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
   
 typedef enum {
 	ALLOC_DEFAULT,
