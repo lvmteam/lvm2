@@ -1,0 +1,31 @@
+LVM2 installation
+=================
+
+1) Install device-mapper
+
+   Ensure the device-mapper has been installed on the machine.
+
+   The device-mapper should be in the kernel (look for 'device-mapper'
+   messages in the kernel logs) and /usr/include/libdevmapper.h should 
+   be present.
+
+   The device-mapper is available from:
+     ftp://ftp.sistina.com/pub/LVM2/device-mapper/
+
+
+2) Generate custom makefiles.
+
+   Run the 'configure' script from the top directory.
+
+   If you do not have GNU readline (http://www.gnu.org/directory/readline.html)
+   installed use
+     ./configure --disable-readline
+
+
+3) Build and install LVM2.
+
+   Run 'make install' from the top directory.
+
+
+4) Create a configuration file
+

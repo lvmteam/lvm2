@@ -1,2 +1,25 @@
-This is pretty much empty so far...if you can't see subdirectories,
-try 'cvs -f update'
+This directory contains an alpha release of LMV2, the new version of 
+the userland LVM tools designed for the new device-mapper for 
+the Linux kernel.
+
+The device-mapper needs to be installed before compiling these LVM2 tools.
+
+For more information about LVM2 read the INTRO file.
+Installation instructions are in INSTALL.
+
+This is alpha-quality software, released for testing purposes only.
+There is no warranty - see COPYING and COPYING.LIB.
+
+Tarballs are available from:
+  ftp://ftp.sistina.com/pub/LVM2/tools/
+  ftp://ftp.sistina.com/pub/LVM2/device-mapper/
+
+To access the CVS tree use:
+  cvs -d :pserver:cvs@tech.sistina.com:/data/cvs login
+  CVS password: cvs1
+  cvs -d :pserver:cvs@tech.sistina.com:/data/cvs checkout LVM2
+
+Mailing list for discussion/bug reports etc.
+  lvm-devel@sistina.com
+  Subscribe from http://lists.sistina.com/mailman/listinfo/lvm-devel
+
