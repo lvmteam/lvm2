@@ -96,9 +96,6 @@ static int run_script(int argc, char **argv);
 
 #ifdef READLINE_SUPPORT
 static int shell(void);
-static char **lvm_completion(char *text, int start_pos, int end_pos);
-static char *list_cmds(char *text, int state);
-static char *list_args(char *text, int state);
 #endif
 
 static void display_help(void);
@@ -931,29 +928,8 @@ static int run_script(int argc, char **argv)
 }
 
 #ifdef READLINE_SUPPORT
-/* Custom completion function */
-static char **lvm_completion(char *text, int start_pos, int end_pos)
-{
-	char **match_list = NULL;
-	int p = 0;
-
-	while (isspace((int) *(rl_line_buffer + p)))
-		p++;
-
-	/* First word should be one of our commands */
-	if (start_pos == p)
-		match_list = completion_matches(text, list_cmds);
-	else if (*text == '-')
-		match_list = completion_matches(text, list_args);
-	/* else other args */
-
-	/* No further completion */
-	rl_attempted_completion_over = 1;
-	return match_list;
-}
-
 /* List matching commands */
-static char *list_cmds(char *text, int state)
+static char *_list_cmds(const char *text, int state)
 {
 	static int i = 0;
 	static int len = 0;
@@ -972,7 +948,7 @@ static char *list_cmds(char *text, int state)
 }
 
 /* List matching arguments */
-static char *list_args(char *text, int state)
+static char *_list_args(const char *text, int state)
 {
 	static int match_no = 0;
 	static int len = 0;
@@ -1041,13 +1017,35 @@ static char *list_args(char *text, int state)
 	return NULL;
 }
 
+/* Custom completion function */
+static char **_completion(const char *text, int start_pos, int end_pos)
+{
+	char **match_list = NULL;
+	int p = 0;
+
+	while (isspace((int) *(rl_line_buffer + p)))
+		p++;
+
+	/* First word should be one of our commands */
+	if (start_pos == p)
+		match_list = rl_completion_matches(text, _list_cmds);
+
+	else if (*text == '-')
+		match_list = rl_completion_matches(text, _list_args);
+	/* else other args */
+
+	/* No further completion */
+	rl_attempted_completion_over = 1;
+	return match_list;
+}
+
 static int shell(void)
 {
 	int argc, ret;
 	char *input = NULL, *args[MAX_ARGS], **argv;
 
 	rl_readline_name = "lvm";
-	rl_attempted_completion_function = (CPPFunction *) lvm_completion;
+	rl_attempted_completion_function = (CPPFunction *) _completion;
 
 	_interactive = 1;
 	while (1) {
