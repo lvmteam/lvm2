@@ -8,14 +8,13 @@
 #include "log.h"
 
 
-static int _create_maps(struct pool *mem, struct volume_group *vg,
-			struct list *maps)
+static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 {
 	struct list *tmp;
 	struct physical_volume *pv;
 	struct pv_map *pvm;
 
-	list_iterate(tmp, &vg->pvs) {
+	list_iterate(tmp, pvs) {
 		pv = &(list_item(tmp, struct pv_list)->pv);
 
 		if (!(pvm = pool_zalloc(mem, sizeof(*pvm)))) {
@@ -63,11 +62,9 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 					break;
 			}
 
-			if (pvmh == maps) {
-				log_err("couldn't find pv specified "
-					"in extent map !");
-				return 0;
-			}
+			/* not all pvs are necc. in the list */
+			if (pvmh == maps)
+				continue;
 
 			bit_set(pvm->allocated_extents, pes->pe);
 		}
@@ -138,7 +135,8 @@ static int _create_all_areas(struct pool *mem, struct list *maps)
 	return 1;
 }
 
-struct list *create_pv_maps(struct pool *mem, struct volume_group *vg)
+struct list *create_pv_maps(struct pool *mem, struct volume_group *vg, 
+			    struct list *pvs)
 {
 	struct list *maps = pool_zalloc(mem, sizeof(*maps));
 
@@ -149,7 +147,7 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg)
 
 	list_init(maps);
 
-	if (!_create_maps(mem, vg, maps)) {
+	if (!_create_maps(mem, pvs, maps)) {
 		log_err("couldn't create pv maps.");
 		goto bad;
 	}
