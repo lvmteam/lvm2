@@ -463,6 +463,8 @@ int dev_zero(struct device *dev, uint64_t offset, size_t len)
 		len -= s;
 		if (!len)
 			break;
+
+		offset += s;
 	}
 
 	dev->flags |= DEV_ACCESSED_W;
