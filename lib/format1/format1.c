@@ -166,15 +166,21 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 }
 
 static struct physical_volume *_pv_read(struct io_space *is,
-					struct device *dev)
+					const char *name)
 {
 	struct pool *mem = pool_create(1024);
 	struct physical_volume *pv;
 	struct disk_list *dl;
+	struct device *dev;
 
 	if (!mem) {
 		stack;
 		return NULL;
+	}
+
+	if (!(dev = dev_cache_get(name, is->filter))) {
+		stack;
+		goto bad;
 	}
 
 	if (!(dl = read_pv(dev, mem, NULL))) {
