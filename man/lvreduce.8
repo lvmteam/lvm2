@@ -13,7 +13,7 @@ lvreduce allows you to reduce the size of a logical volume.
 Be careful when reducing a logical volume's size, because data in the
 reduced part is lost!!! 
 .br 
-You should therefore ensure that the (eg) filesystem on the volume is 
+You should therefore ensure that any filesystem on the volume is 
 resized
 .i before
 running lvreduce so that the extents that are to be removed are not in use.
@@ -38,7 +38,7 @@ Reduce or set the logical volume size in units of megabyte by default.
 A size suffix of k for kilobyte, m for megabyte, g for gigabyte or
 t for terabyte is optional.
 With the - sign the value will be subtracted from
-the logical volume's actual size and without it the will be taken as
+the logical volume's actual size and without it it will be taken as
 an absolute size.
 .SH Example
 "lvreduce -l -3 /dev/vg00/lvol1" reduces the size of logical volume lvol1
@@ -47,4 +47,5 @@ in volume group vg00 by 3 logical extents.
 .BR lvm (8), 
 .BR lvcreate (8), 
 .BR lvextend (8), 
+.BR lvresize (8), 
 .BR lvchange (8)

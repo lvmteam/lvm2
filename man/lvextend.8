@@ -13,7 +13,7 @@ lvextend \- extend the size of a logical volume
 lvextend allows you to extend the size of a logical volume.
 Extension of snapshot logical volumes (see
 .B lvcreate(8)
-for information to create snapshots) is supprted as well.
+for information to create snapshots) is supported as well.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -30,13 +30,13 @@ of the logical volume and without it, the value is taken as an absolute one.
 .TP
 .I \-i, \-\-stripes Stripes
 Gives the number of stripes for the extension.
-Not applicable to PVs using the original metadata LVM format.
-This is equal to the number of physical volumes to scatter
-the logical volume.
+Not applicable to LVs using the original metadata LVM format, which must
+use a single value throughout.
 .TP
 .I \-I, \-\-stripesize StripeSize
 Gives the number of kilobytes for the granularity of the stripes.
-Not applicable to PVs using the original metadata LVM format.
+Not applicable to LVs using the original metadata LVM format, which must
+use a single value throughout.
 .br
 StripeSize must be 2^n (n = 2 to 9)
 .SH Examples
@@ -48,4 +48,5 @@ there are enough free physical extents in it.
 .BR lvm (8), 
 .BR lvcreate (8), 
 .BR lvreduce (8), 
+.BR lvresize (8), 
 .BR lvchange (8)
