@@ -2034,6 +2034,58 @@ static int _remove_suspended_lvs(struct dev_manager *dm,
 	return 1;
 }
 
+static int _targets_present(struct dev_manager *dm, struct list *lvs)
+{
+	struct logical_volume *lv;
+	struct list *lvh;
+	struct segment_type *segtype;
+	int snapshots = 0, mirrors = 0;
+
+	list_iterate(lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+
+		if (!snapshots)
+			if (lv_is_cow(lv) || lv_is_origin(lv))
+				snapshots = 1;
+
+		if (!mirrors)
+			if (lv->status & PVMOVE)
+				mirrors = 1;
+	}
+
+	if (mirrors) {
+		if (!(segtype = get_segtype_from_string(dm->cmd, "mirror"))) {
+			log_error("Can't expand LV: Mirror support "
+				  "missing from tools?");
+			return 0;
+		}
+
+		if (!segtype->ops->target_present ||
+		    !segtype->ops->target_present()) {
+			log_error("Can't expand LV: Mirror support missing "
+				  "from kernel?");
+			return 0;
+		}
+	}
+
+	if (snapshots) {
+		if (!(segtype = get_segtype_from_string(dm->cmd, "snapshot"))) {
+			log_error("Can't expand LV: Snapshot support "
+				  "missing from tools?");
+			return 0;
+		}
+
+		if (!segtype->ops->target_present ||
+		    !segtype->ops->target_present()) {
+			log_error("Can't expand LV: Snapshot support missing "
+				  "from kernel?");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 {
 	char *dlid;
@@ -2114,6 +2166,12 @@ static int _action(struct dev_manager *dm, struct logical_volume *lv,
 			stack;
 			return 0;
 		}
+	}
+
+	if (!_targets_present(dm, &dm->active_list) ||
+	    !_targets_present(dm, &dm->reload_list)) {
+		stack;
+		return 0;
 	}
 
 	if (!_execute(dm, lv->vg)) {
