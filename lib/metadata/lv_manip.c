@@ -127,6 +127,50 @@ static int _alloc_simple(struct logical_volume *lv,
 	return 1;
 }
 
+/*
+ * Chooses a correct allocation policy.
+ */
+static int _allocate(struct volume_group *vg, struct logical_volume *lv,
+		     struct list *acceptable_pvs,
+		     uint32_t allocated, uint32_t extents)
+{
+	int r = 0;
+	struct pool *scratch;
+	struct list *pvms;
+
+	if (!(scratch = pool_create(1024))) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Build the sets of available areas on
+	 * the pv's.
+	 */
+	if (!(pvms = create_pv_maps(scratch, vg, acceptable_pvs))) {
+		log_err("couldn't create extent mappings");
+		goto out;
+	}
+
+	if (lv->stripes > 1)
+		r = _alloc_striped(lv, pvms, allocated);
+
+	else if (lv->status & ALLOC_CONTIGUOUS)
+		r = _alloc_contiguous(lv, pvms, allocated);
+
+	else
+		r = _alloc_simple(lv, pvms, allocated);
+
+	if (r) {
+		vg->lv_count++;
+		vg->free_count -= extents;
+	}
+
+ out:
+	pool_destroy(scratch);
+	return r;
+}
+
 struct logical_volume *lv_create(struct io_space *ios,
 				 const char *name,
 				 uint32_t status,
@@ -138,14 +182,6 @@ struct logical_volume *lv_create(struct io_space *ios,
 {
 	struct lv_list *ll = NULL;
 	struct logical_volume *lv;
-	struct list *pvms;
-	struct pool *scratch;
-	int r;
-
-	if (!(scratch = pool_create(1024))) {
-		stack;
-		return NULL;
-	}
 
 	if (!extents) {
 		log_err("Attempt to create an lv with zero extents");
@@ -189,41 +225,18 @@ struct logical_volume *lv_create(struct io_space *ios,
 		goto bad;
 	}
 
-	/*
-	 * Build the sets of available areas on
-	 * the pv's.
-	 */
-	if (!(pvms = create_pv_maps(scratch, vg, acceptable_pvs))) {
-		log_err("couldn't create extent mappings");
-		goto bad;
-	}
-
-	if (stripes > 1)
-		r = _alloc_striped(lv, pvms, 0u);
-
-	else if (status & ALLOC_CONTIGUOUS)
-		r = _alloc_contiguous(lv, pvms, 0u);
-
-	else
-		r = _alloc_simple(lv, pvms, 0u);
-
-	if (!r) {
-		log_err("Extent allocation failed.");
+	if (!_allocate(vg, lv, acceptable_pvs, 0u, extents)) {
+		stack;
 		goto bad;
 	}
 
 	list_add(&ll->list, &vg->lvs);
-	vg->lv_count++;
-	vg->free_count -= extents;
-
-	pool_destroy(scratch);
 	return lv;
 
  bad:
 	if (ll)
 		pool_free(ios->mem, ll);
 
-	pool_destroy(scratch);
 	return NULL;
 }
 
