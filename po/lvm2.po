@@ -1,12 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Free Software Foundation, Inc.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-11-24 21:37+0000\n"
+"POT-Creation-Date: 2004-12-10 16:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -120,13 +121,13 @@ msgstr ""
 #: config/config.c:453 config/config.c:469 config/config.c:525
 #: config/config.c:708 datastruct/btree.c:90 datastruct/hash.c:96
 #: datastruct/hash.c:109 datastruct/str_list.c:24 datastruct/str_list.c:38
-#: datastruct/str_list.c:47 datastruct/str_list.c:77 device/dev-cache.c:180
-#: device/dev-cache.c:187 device/dev-cache.c:193 device/dev-cache.c:227
-#: device/dev-cache.c:298 device/dev-cache.c:346 device/dev-cache.c:391
-#: device/dev-cache.c:396 device/dev-io.c:160 device/dev-io.c:190
-#: device/dev-io.c:288 device/dev-io.c:474 device/dev-io.c:502
-#: device/dev-md.c:40 device/dev-md.c:48 device/dev-md.c:63 device/device.c:41
-#: device/device.c:50 display/display.c:211 display/display.c:242
+#: datastruct/str_list.c:47 datastruct/str_list.c:77 device/dev-cache.c:182
+#: device/dev-cache.c:189 device/dev-cache.c:195 device/dev-cache.c:229
+#: device/dev-cache.c:300 device/dev-cache.c:348 device/dev-cache.c:393
+#: device/dev-cache.c:398 device/dev-io.c:174 device/dev-io.c:204
+#: device/dev-io.c:312 device/dev-io.c:504 device/dev-io.c:532
+#: device/dev-md.c:41 device/dev-md.c:49 device/dev-md.c:64 device/device.c:42
+#: device/device.c:51 display/display.c:211 display/display.c:242
 #: display/display.c:300 display/display.c:347 display/display.c:587
 #: display/display.c:623 error/errseg.c:90 filters/filter-composite.c:54
 #: filters/filter-persistent.c:45 filters/filter-persistent.c:103
@@ -136,7 +137,7 @@ msgstr ""
 #: filters/filter-regex.c:126 filters/filter-regex.c:151
 #: filters/filter-regex.c:212 filters/filter-regex.c:217
 #: filters/filter-regex.c:224 filters/filter-regex.c:229
-#: filters/filter-sysfs.c:283 filters/filter.c:225 format1/disk-rep.c:220
+#: filters/filter-sysfs.c:283 filters/filter.c:236 format1/disk-rep.c:220
 #: format1/disk-rep.c:232 format1/disk-rep.c:237 format1/disk-rep.c:256
 #: format1/disk-rep.c:259 format1/disk-rep.c:290 format1/disk-rep.c:293
 #: format1/disk-rep.c:312 format1/disk-rep.c:315 format1/disk-rep.c:332
@@ -185,11 +186,11 @@ msgstr ""
 #: format_text/archive.c:142 format_text/archive.c:169
 #: format_text/archive.c:264 format_text/archive.c:374
 #: format_text/export.c:257 format_text/export.c:258 format_text/export.c:259
-#: format_text/export.c:262 format_text/export.c:266 format_text/export.c:267
+#: format_text/export.c:262 format_text/export.c:264 format_text/export.c:267
 #: format_text/export.c:277 format_text/export.c:281 format_text/export.c:283
 #: format_text/export.c:286 format_text/export.c:289 format_text/export.c:293
 #: format_text/export.c:296 format_text/export.c:300 format_text/export.c:304
-#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:314
+#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:313
 #: format_text/export.c:338 format_text/export.c:345 format_text/export.c:350
 #: format_text/export.c:354 format_text/export.c:358 format_text/export.c:360
 #: format_text/export.c:366 format_text/export.c:369 format_text/export.c:373
@@ -198,14 +199,14 @@ msgstr ""
 #: format_text/export.c:403 format_text/export.c:406 format_text/export.c:411
 #: format_text/export.c:415 format_text/export.c:418 format_text/export.c:423
 #: format_text/export.c:428 format_text/export.c:441 format_text/export.c:448
-#: format_text/export.c:454 format_text/export.c:460 format_text/export.c:465
+#: format_text/export.c:452 format_text/export.c:457 format_text/export.c:465
 #: format_text/export.c:488 format_text/export.c:492 format_text/export.c:496
 #: format_text/export.c:500 format_text/export.c:504 format_text/export.c:505
 #: format_text/export.c:511 format_text/export.c:533 format_text/export.c:538
 #: format_text/export.c:553 format_text/export.c:575 format_text/export.c:582
 #: format_text/export.c:587 format_text/export.c:591 format_text/export.c:594
 #: format_text/export.c:597 format_text/export.c:601 format_text/export.c:604
-#: format_text/export.c:609 format_text/export.c:612 format_text/export.c:614
+#: format_text/export.c:608 format_text/export.c:612 format_text/export.c:614
 #: format_text/export.c:616 format_text/export.c:617 format_text/export.c:623
 #: format_text/export.c:629 format_text/export.c:633 format_text/export.c:638
 #: format_text/export.c:656 format_text/export.c:661 format_text/export.c:670
@@ -259,10 +260,10 @@ msgstr ""
 #: lvchange.c:101 lvchange.c:108 lvchange.c:115 lvchange.c:165 lvchange.c:173
 #: lvchange.c:207 lvchange.c:292 lvchange.c:350 lvchange.c:358 lvcreate.c:265
 #: lvcreate.c:436 lvcreate.c:517 lvcreate.c:523 lvcreate.c:564 lvcreate.c:571
-#: lvcreate.c:655 lvmcmdline.c:975 lvremove.c:74 lvrename.c:146 lvrename.c:157
-#: lvrename.c:164 lvrename.c:169 lvresize.c:360 lvresize.c:417 lvresize.c:424
-#: lvresize.c:431 lvresize.c:443 lvresize.c:450 lvresize.c:456 lvresize.c:475
-#: lvresize.c:489 lvresize.c:514 metadata/lv_manip.c:70
+#: lvcreate.c:655 lvmcmdline.c:1004 lvremove.c:74 lvrename.c:146
+#: lvrename.c:157 lvrename.c:164 lvrename.c:169 lvresize.c:360 lvresize.c:417
+#: lvresize.c:424 lvresize.c:431 lvresize.c:443 lvresize.c:450 lvresize.c:456
+#: lvresize.c:475 lvresize.c:489 lvresize.c:514 metadata/lv_manip.c:70
 #: metadata/lv_manip.c:202 metadata/lv_manip.c:237 metadata/lv_manip.c:324
 #: metadata/lv_manip.c:369 metadata/lv_manip.c:462 metadata/lv_manip.c:599
 #: metadata/lv_manip.c:641 metadata/lv_manip.c:652 metadata/lv_manip.c:700
@@ -290,7 +291,7 @@ msgstr ""
 #: regex/ttree.c:111 report/report.c:522 report/report.c:550
 #: report/report.c:682 snapshot/snapshot.c:74 snapshot/snapshot.c:83
 #: snapshot/snapshot.c:84 snapshot/snapshot.c:85 snapshot/snapshot.c:154
-#: striped/striped.c:91 striped/striped.c:160 striped/striped.c:209
+#: striped/striped.c:90 striped/striped.c:160 striped/striped.c:209
 #: toollib.c:739 toollib.c:789 toollib.c:836 vgcfgbackup.c:65 vgcfgbackup.c:74
 #: vgcfgbackup.c:81 vgreduce.c:28 vgreduce.c:84 vgreduce.c:92 vgreduce.c:98
 #: vgreduce.c:106 vgreduce.c:142 vgreduce.c:158 zero/zero.c:90
@@ -453,7 +454,7 @@ msgstr ""
 msgid "device layer %s missing from hash"
 msgstr ""
 
-#: activate/dev_manager.c:741
+#: activate/dev_manager.c:740
 #, c-format
 msgid "Failed to format device number as dm target (%u,%u)"
 msgstr ""
@@ -611,14 +612,13 @@ msgstr ""
 #: activate/fs.c:171 activate/fs.c:178 activate/fs.c:213
 #: commands/toolcontext.c:334 commands/toolcontext.c:775 config/config.c:155
 #: config/config.c:204 config/config.c:220 config/config.c:285
-#: config/config.c:382 device/dev-cache.c:148 device/dev-cache.c:152
-#: device/dev-cache.c:320 device/dev-cache.c:327 device/dev-cache.c:488
-#: device/dev-cache.c:490 device/dev-io.c:84 device/dev-io.c:120
-#: device/dev-io.c:222 device/dev-io.c:227 device/dev-io.c:245
-#: device/dev-io.c:250 device/dev-io.c:310 device/dev-io.c:361
+#: config/config.c:382 device/dev-cache.c:150 device/dev-cache.c:154
+#: device/dev-cache.c:322 device/dev-cache.c:329 device/dev-cache.c:490
+#: device/dev-cache.c:492 device/dev-io.c:131 device/dev-io.c:235
+#: device/dev-io.c:240 device/dev-io.c:334 device/dev-io.c:390
 #: filters/filter-persistent.c:184 filters/filter-sysfs.c:43
 #: filters/filter-sysfs.c:155 filters/filter-sysfs.c:179
-#: filters/filter-sysfs.c:220 filters/filter.c:124 format_text/archive.c:221
+#: filters/filter-sysfs.c:220 filters/filter.c:135 format_text/archive.c:221
 #: format_text/archive.c:230 format_text/format-text.c:612
 #: format_text/format-text.c:626 format_text/format-text.c:632
 #: format_text/format-text.c:657 format_text/format-text.c:719
@@ -628,7 +628,7 @@ msgstr ""
 #: locking/file_locking.c:103 locking/file_locking.c:169
 #: locking/file_locking.c:183 locking/file_locking.c:290
 #: locking/file_locking.c:295 locking/locking.c:44 locking/locking.c:49
-#: locking/locking.c:65 locking/locking.c:200 log/log.c:62 lvmcmdline.c:1382
+#: locking/locking.c:65 locking/locking.c:200 log/log.c:62 lvmcmdline.c:1411
 #: misc/lvm-file.c:47 misc/lvm-file.c:92 misc/lvm-file.c:102
 #: misc/lvm-file.c:151 misc/lvm-file.c:163 misc/lvm-file.c:192
 #: misc/lvm-file.c:201 misc/lvm-file.c:229 misc/lvm-file.c:234 mm/memlock.c:98
@@ -863,7 +863,7 @@ msgstr ""
 msgid "Device directory given in config file too long"
 msgstr ""
 
-#: commands/toolcontext.c:199 lvmcmdline.c:693
+#: commands/toolcontext.c:199 lvmcmdline.c:694
 msgid "Invalid units specification"
 msgstr ""
 
@@ -1094,7 +1094,7 @@ msgstr ""
 msgid "%s not found in config: defaulting to %f"
 msgstr ""
 
-#: device/dev-cache.c:60 device/dev-cache.c:96
+#: device/dev-cache.c:60 device/dev-cache.c:97
 msgid "struct device allocation failed"
 msgstr ""
 
@@ -1106,72 +1106,72 @@ msgstr ""
 msgid "filename strdup failed"
 msgstr ""
 
-#: device/dev-cache.c:200
+#: device/dev-cache.c:202
 #, c-format
 msgid "%s: Aliased to %s in device cache%s"
 msgstr ""
 
-#: device/dev-cache.c:204
+#: device/dev-cache.c:206
 #, c-format
 msgid "%s: Added to device cache"
 msgstr ""
 
-#: device/dev-cache.c:232
+#: device/dev-cache.c:234
 msgid "Couldn't insert device into binary tree."
 msgstr ""
 
-#: device/dev-cache.c:239
+#: device/dev-cache.c:241
 msgid "Couldn't add alias to dev cache."
 msgstr ""
 
-#: device/dev-cache.c:244
+#: device/dev-cache.c:246
 msgid "Couldn't add name to hash in dev cache."
 msgstr ""
 
-#: device/dev-cache.c:332
+#: device/dev-cache.c:334
 #, c-format
 msgid "%s: Symbolic link to directory"
 msgstr ""
 
-#: device/dev-cache.c:341
+#: device/dev-cache.c:343
 #, c-format
 msgid "%s: Not a block device"
 msgstr ""
 
-#: device/dev-cache.c:403
+#: device/dev-cache.c:405
 msgid "Couldn't create binary tree for dev-cache."
 msgstr ""
 
-#: device/dev-cache.c:419
+#: device/dev-cache.c:421
 #, c-format
 msgid "Device '%s' has been left open."
 msgstr ""
 
-#: device/dev-cache.c:453
+#: device/dev-cache.c:455
 #, c-format
 msgid "Ignoring %s: %s"
 msgstr ""
 
-#: device/dev-cache.c:459
+#: device/dev-cache.c:461
 #, c-format
 msgid "Ignoring %s: Not a directory"
 msgstr ""
 
-#: device/dev-cache.c:464
+#: device/dev-cache.c:466
 msgid "dir_list allocation failed"
 msgstr ""
 
-#: device/dev-cache.c:493 device/dev-cache.c:497
+#: device/dev-cache.c:495 device/dev-cache.c:499
 #, c-format
 msgid "Path %s no longer valid for device(%d,%d)"
 msgstr ""
 
-#: device/dev-cache.c:514
+#: device/dev-cache.c:516
 #, c-format
 msgid "Aborting - please provide new pathname for what used to be %s"
 msgstr ""
 
-#: device/dev-cache.c:546
+#: device/dev-cache.c:548
 msgid "dev_iter allocation failed"
 msgstr ""
 
@@ -1185,51 +1185,71 @@ msgstr ""
 msgid "Read size too large: %llu"
 msgstr ""
 
-#: device/dev-io.c:177
+#: device/dev-io.c:84
+#, c-format
+msgid "%s: lseek %llu failed: %s"
+msgstr ""
+
+#: device/dev-io.c:98
+#, c-format
+msgid "%s: %s failed after %llu of %llu at %llu: %s"
+msgstr ""
+
+#: device/dev-io.c:134
+#, c-format
+msgid "%s: block size is %u bytes"
+msgstr ""
+
+#: device/dev-io.c:191
 msgid "Bounce buffer alloca failed"
 msgstr ""
 
-#: device/dev-io.c:220 device/dev-io.c:243
+#: device/dev-io.c:248
 #, c-format
-msgid "Getting size of %s"
+msgid "%s: size is %llu sectors"
 msgstr ""
 
-#: device/dev-io.c:282
+#: device/dev-io.c:299
+#, c-format
+msgid "WARNING: %s already opened read-only"
+msgstr ""
+
+#: device/dev-io.c:306
 #, c-format
 msgid "WARNING: dev_open(%s) called while suspended"
 msgstr ""
 
-#: device/dev-io.c:294
+#: device/dev-io.c:318
 #, c-format
 msgid "%s: stat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:319
+#: device/dev-io.c:347
 #, c-format
 msgid "%s: fstat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:335
+#: device/dev-io.c:363
 #, c-format
-msgid "Opened %s"
+msgid "Opened %s %s"
 msgstr ""
 
-#: device/dev-io.c:365
+#: device/dev-io.c:395
 #, c-format
 msgid "Closed %s"
 msgstr ""
 
-#: device/dev-io.c:378
+#: device/dev-io.c:408
 #, c-format
 msgid "Attempt to close device '%s' which is not open."
 msgstr ""
 
-#: device/dev-io.c:479
+#: device/dev-io.c:509
 #, c-format
 msgid "Wiping %s at %llu length %Zu"
 msgstr ""
 
-#: device/dev-io.c:482
+#: device/dev-io.c:512
 #, c-format
 msgid "Wiping %s at sector %llu length %Zu sectors"
 msgstr ""
@@ -1309,7 +1329,7 @@ msgstr ""
 
 #: display/display.c:286 display/display.c:312 display/display.c:459
 #: display/display.c:506 display/display.c:592 format_text/archive.c:316
-#: lvmcmdline.c:728 mirror/mirrored.c:54 striped/striped.c:50
+#: lvmcmdline.c:729 mirror/mirrored.c:54 striped/striped.c:50
 msgid " "
 msgstr ""
 
@@ -1729,44 +1749,44 @@ msgstr ""
 msgid "sysfs dev_set creation failed"
 msgstr ""
 
-#: filters/filter.c:73
+#: filters/filter.c:82
 #, c-format
 msgid "%s: Skipping: Unrecognised LVM device type %llu"
 msgstr ""
 
-#: filters/filter.c:80
+#: filters/filter.c:89
 #, c-format
 msgid "%s: Skipping: open failed"
 msgstr ""
 
-#: filters/filter.c:85
+#: filters/filter.c:94
 #, c-format
 msgid "%s: Skipping: partition table signature found"
 msgstr ""
 
-#: filters/filter.c:108
+#: filters/filter.c:118
 msgid "No proc filesystem found: using all block device types"
 msgstr ""
 
-#: filters/filter.c:119
+#: filters/filter.c:130
 msgid "Failed to create /proc/devices string"
 msgstr ""
 
-#: filters/filter.c:174
+#: filters/filter.c:185
 msgid "Expecting string in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:182
+#: filters/filter.c:193
 #, c-format
 msgid "Max partition count missing for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:188
+#: filters/filter.c:199
 #, c-format
 msgid "Zero partition count invalid for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:216
+#: filters/filter.c:227
 msgid "LVM type filter allocation failed"
 msgstr ""
 
@@ -2957,10 +2977,6 @@ msgstr ""
 msgid "Test mode: Metadata will NOT be updated."
 msgstr ""
 
-#: log/log.c:242
-msgid "vsnprintf failed: skipping external logging function"
-msgstr ""
-
 #: lvchange.c:26
 #, c-format
 msgid "Logical volume \"%s\" is already writable"
@@ -3465,23 +3481,23 @@ msgstr ""
 msgid "With LVM2 and the device mapper, this program is obsolete."
 msgstr ""
 
-#: lvmcmdline.c:268
+#: lvmcmdline.c:269
 msgid "Minor number outside range 0-255"
 msgstr ""
 
-#: lvmcmdline.c:283
+#: lvmcmdline.c:284
 msgid "Major number outside range 0-255"
 msgstr ""
 
-#: lvmcmdline.c:372
+#: lvmcmdline.c:373
 msgid "Couldn't allocate memory."
 msgstr ""
 
-#: lvmcmdline.c:421
+#: lvmcmdline.c:422
 msgid "Out of memory."
 msgstr ""
 
-#: lvmcmdline.c:474
+#: lvmcmdline.c:475
 #, c-format
 msgid ""
 "%s: %s\n"
@@ -3489,155 +3505,164 @@ msgid ""
 "%s"
 msgstr ""
 
-#: lvmcmdline.c:568
+#: lvmcmdline.c:569
 msgid "Unrecognised option."
 msgstr ""
 
-#: lvmcmdline.c:574
+#: lvmcmdline.c:575
 #, c-format
 msgid "Option%s%c%s%s may not be repeated"
 msgstr ""
 
-#: lvmcmdline.c:583
+#: lvmcmdline.c:584
 msgid "Option requires argument."
 msgstr ""
 
-#: lvmcmdline.c:590
+#: lvmcmdline.c:591
 #, c-format
 msgid "Invalid argument %s"
 msgstr ""
 
-#: lvmcmdline.c:609
+#: lvmcmdline.c:610
 #, c-format
 msgid "%s and %s are synonyms.  Please only supply one."
 msgstr ""
 
-#: lvmcmdline.c:635
+#: lvmcmdline.c:636
 #, c-format
 msgid "LVM version:     %s"
 msgstr ""
 
-#: lvmcmdline.c:637
+#: lvmcmdline.c:638
 #, c-format
 msgid "Library version: %s"
 msgstr ""
 
-#: lvmcmdline.c:639
+#: lvmcmdline.c:640
 #, c-format
 msgid "Driver version:  %s"
 msgstr ""
 
-#: lvmcmdline.c:676
+#: lvmcmdline.c:677
 msgid "Partial mode. Incomplete volume groups will be activated read-only."
 msgstr ""
 
-#: lvmcmdline.c:726
+#: lvmcmdline.c:727
 msgid "Available lvm commands:"
 msgstr ""
 
-#: lvmcmdline.c:727
+#: lvmcmdline.c:728
 msgid "Use 'lvm help <command>' for more information"
 msgstr ""
 
-#: lvmcmdline.c:733
+#: lvmcmdline.c:734
 #, c-format
 msgid "%-16.16s%s"
 msgstr ""
 
-#: lvmcmdline.c:797
+#: lvmcmdline.c:798
 msgid "Couldn't copy command line."
 msgstr ""
 
-#: lvmcmdline.c:810
+#: lvmcmdline.c:811
+#, c-format
+msgid "Parsing: %s"
+msgstr ""
+
+#: lvmcmdline.c:817
+msgid "Error during parsing of command line."
+msgstr ""
+
+#: lvmcmdline.c:826
+msgid "Updated config file invalid. Aborting."
+msgstr ""
+
+#: lvmcmdline.c:835
 #, c-format
 msgid "Processing: %s"
 msgstr ""
 
-#: lvmcmdline.c:816
-msgid "Error during parsing of command line."
+#: lvmcmdline.c:838
+msgid "O_DIRECT will be used"
 msgstr ""
 
-#: lvmcmdline.c:825
-msgid "Updated config file invalid. Aborting."
-msgstr ""
-
-#: lvmcmdline.c:844
+#: lvmcmdline.c:851
 #, c-format
 msgid "Locking type %d initialisation failed."
 msgstr ""
 
-#: lvmcmdline.c:856
+#: lvmcmdline.c:863
 msgid "Test mode: Wiping internal cache"
 msgstr ""
 
-#: lvmcmdline.c:914
+#: lvmcmdline.c:921
 msgid "WARNING: Metadata changes will NOT be backed up"
 msgstr ""
 
-#: lvmcmdline.c:934
+#: lvmcmdline.c:941
 #, c-format
 msgid "Couldn't create default archive path '%s/%s'."
 msgstr ""
 
-#: lvmcmdline.c:943 lvmcmdline.c:963
+#: lvmcmdline.c:950 lvmcmdline.c:970
 msgid "backup_init failed."
 msgstr ""
 
-#: lvmcmdline.c:955
+#: lvmcmdline.c:962
 #, c-format
 msgid "Couldn't create default backup path '%s/%s'."
 msgstr ""
 
-#: lvmcmdline.c:1029
+#: lvmcmdline.c:1058
 #, c-format
 msgid "Line too long (max 255) beginning: %s"
 msgstr ""
 
-#: lvmcmdline.c:1036
+#: lvmcmdline.c:1065
 #, c-format
 msgid "Too many arguments: %s"
 msgstr ""
 
-#: lvmcmdline.c:1168
+#: lvmcmdline.c:1197
 msgid "$HOME/.lvm_history: path too long"
 msgstr ""
 
-#: lvmcmdline.c:1183
+#: lvmcmdline.c:1212
 #, c-format
 msgid "Couldn't read history from %s."
 msgstr ""
 
-#: lvmcmdline.c:1198
+#: lvmcmdline.c:1227
 #, c-format
 msgid "Couldn't write history to %s."
 msgstr ""
 
-#: lvmcmdline.c:1231
+#: lvmcmdline.c:1260
 msgid "Too many arguments, sorry."
 msgstr ""
 
-#: lvmcmdline.c:1245
+#: lvmcmdline.c:1274
 msgid "Exiting."
 msgstr ""
 
-#: lvmcmdline.c:1251
+#: lvmcmdline.c:1280
 #, c-format
 msgid "No such command '%s'.  Try 'help'."
 msgstr ""
 
-#: lvmcmdline.c:1377
+#: lvmcmdline.c:1406
 msgid "Failed to create LVM1 tool pathname"
 msgstr ""
 
-#: lvmcmdline.c:1414
+#: lvmcmdline.c:1443
 msgid "Falling back to LVM1 tools, but no command specified."
 msgstr ""
 
-#: lvmcmdline.c:1430
+#: lvmcmdline.c:1459
 msgid "Please supply an LVM command."
 msgstr ""
 
-#: lvmcmdline.c:1444
+#: lvmcmdline.c:1473
 msgid "No such command.  Try 'help'."
 msgstr ""
 
@@ -4600,7 +4625,7 @@ msgstr ""
 msgid "Unable to find volume group of \"%s\""
 msgstr ""
 
-#: pvchange.c:80
+#: pvchange.c:79
 #, c-format
 msgid "Unable to find \"%s\" in volume group \"%s\""
 msgstr ""
@@ -4943,11 +4968,11 @@ msgstr ""
 msgid "Ignoring remaining command line arguments"
 msgstr ""
 
-#: pvmove.c:305
+#: pvmove.c:304
 msgid "ABORTING: Failed to generate list of moving LVs"
 msgstr ""
 
-#: pvmove.c:313
+#: pvmove.c:312
 msgid "ABORTING: Temporary mirror activation failed."
 msgstr ""
 
