@@ -120,11 +120,11 @@ static inline struct list *list_next(struct list *head, struct list *elem)
 }
 
 /*
- * Given the address v of an instance of 'struct list h' contained in
- * a structure of type t, return the containing structure.
+ * Given the address v of an instance of 'struct list' called 'head' 
+ * contained in a structure of type t, return the containing structure.
  */
-#define list_struct_base(v, t, h) \
-    ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->h))
+#define list_struct_base(v, t, head) \
+    ((t *)((uintptr_t)(v) - (uintptr_t)&((t *) 0)->head))
 
 /*
  * Given the address v of an instance of 'struct list list' contained in
@@ -172,18 +172,19 @@ static inline struct list *list_next(struct list *head, struct list *elem)
 /*
  * Walk a list, setting 'v' in turn to the containing structure of each item.
  * The containing structure should be the same type as 'v'.
- * The 'struct list' variable within the containing structure is 'l'.
+ * The 'struct list' variable within the containing structure is 'field'.
  */
-#define list_iterate_items_head(v, head, l) \
-	for (v = list_struct_base((head)->n, typeof(*v), l); &v->l != (head); \
-	     v = list_struct_base(v->l.n, typeof(*v), l))
+#define list_iterate_items_gen(v, head, field) \
+	for (v = list_struct_base((head)->n, typeof(*v), field); \
+	     &v->field != (head); \
+	     v = list_struct_base(v->field.n, typeof(*v), field))
 
 /*
  * Walk a list, setting 'v' in turn to the containing structure of each item.
  * The containing structure should be the same type as 'v'.
  * The list should be 'struct list list' within the containing structure.
  */
-#define list_iterate_items(v, head) list_iterate_items_head(v, (head), list)
+#define list_iterate_items(v, head) list_iterate_items_gen(v, (head), list)
 
 /*
  * Return the number of elements in a list by walking it.
