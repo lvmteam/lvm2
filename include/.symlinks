@@ -12,3 +12,4 @@
 ../lib/mm/dbg_malloc.h
 ../lib/mm/pool.h
 ../lib/mm/xlate.h
+../lib/uuid/uuid.h

@@ -18,6 +18,7 @@ void pool_destroy(struct pool *p);
 /* simple allocation/free routines */
 void *pool_alloc(struct pool *p, size_t s);
 void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment);
+void pool_empty(struct pool *p);
 void pool_free(struct pool *p, void *ptr);
 
 /* object building routines */

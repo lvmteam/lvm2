@@ -1,30 +1,99 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * LVM is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * LVM is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LVM; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- *
+ * This file is released under the GPL.
  */
 
 #include "tools.h"
 
-void pvcreate_single(const char *pv_name);
+const char _really_init[] =
+    "Really INITIALIZE physical volume %s of volume group %s [y/n]? ";
+
+/*
+ * See if we may pvcreate on this device.
+ * 0 indicates we may not.
+ */
+static int _check(const char *name)
+{
+	struct physical_volume *pv;
+
+	/* is the partition type set correctly ? */
+	if ((arg_count(force_ARG) < 1) && !is_lvm_partition(name))
+		return 0;
+
+	/* is there a pv here already */
+	if (!(pv = ios->pv_read(ios, name)))
+		return 1;
+
+	/* orphan ? */
+	if (!pv->vg_name[0])
+		return 1;
+
+	/* never overwrite exported pv's */
+	if (pv->status & EXPORTED_VG) {
+		log_error("Physical volume %s belongs to exported volume"
+			  " group %s", name, pv->vg_name);
+		return 0;
+	}
+
+	/* we must have -ff to overwrite a non orphan */
+	if (arg_count(force_ARG) < 2) {
+		log_error("Can't initialize physical volume %s of "
+			  "volume group %s without -ff", name, pv->vg_name);
+		return 0;
+	}
+
+	/* prompt */
+	if (!arg_count(yes_ARG) &&
+	    yes_no_prompt(_really_init, name, pv->vg_name) == 'n') {
+		log_print("physical volume %s not initialized", name);
+		return 0;
+	}
+
+	if (pv->status & ACTIVE) {
+		log_error("Can't create on active physical volume %s", name);
+		return 0;
+	}
+
+	return 1;
+}
+
+void _single(const char *name)
+{
+	struct physical_volume *pv;
+
+	if (!_check(name))
+		return;
+
+	if (arg_count(force_ARG)) {
+		log_print("WARNING: forcing physical volume creation on %s",
+			  name);
+
+		if (pv->vg_name[0])
+			log_print(" of volume group %s", pv->vg_name);
+		printf("\n");
+	}
+
+	if (!(pv = pv_create(name, ios))) {
+		log_err("Failed to setup physical volume %s", name);
+		return;
+	}
+	log_verbose("set up physical volume for %s with %llu sectors",
+		    name, pv->size);
+
+
+	log_verbose("writing physical volume data to disk %s", name);
+	if (!(ios->pv_write(ios, pv))) {
+		log_error("Failed to write physical volume %s", name);
+		return;
+	}
+
+	log_print("physical volume %s successfully created", name);
+}
 
 int pvcreate(int argc, char **argv)
 {
-	int opt;
+	int i;
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
@@ -32,100 +101,14 @@ int pvcreate(int argc, char **argv)
 	}
 
 	if (arg_count(yes_ARG) && !arg_count(force_ARG)) {
-		log_error("Option y can only be used with option f");
+		log_error("option y can only be given with option f");
 		return EINVALID_CMD_LINE;
 	}
 
-	for (opt = 0; opt < argc; opt++)
-		pvcreate_single(argv[opt]);
+	for (i = 0; i < argc; i++) {
+		_single(argv[i]);
+		pool_empty(ios->mem);
+	}
 
 	return 0;
-}
-
-void pvcreate_single(const char *pv_name)
-{
-	int size;
-	struct physical_volume *pv = NULL;
-
-	struct device *pv_dev;
-
-	if (!(pv_dev = dev_cache_get(pv_name))) {
-		log_error("Device %s not found", pv_name);
-		return;
-	}
-
-	if ((size = dev_get_size(pv_dev)) < 0) {
-		log_error("Unable to get size of %s", pv_name);
-		return;
-	}
-
-	if (arg_count(force_ARG) < 1 && !partition_type_is_lvm(ios, pv_dev)) {
-		return;
-	}
-
-	pv = ios->pv_read(ios, pv_dev);
-
-	if (pv && (pv->status & STATUS_EXPORTED)) {
-		log_error("Physical volume %s belongs to exported volume"
-			  " group %s", pv_name, pv->vg_name);
-		return;
-	}
-
-	if (pv && pv->vg_name[0]) {
-		if (arg_count(force_ARG) < 2) {
-			log_error("Can't initialize physical volume %s of "
-				  "volume group %s without -ff", pv_name,
-				  pv->vg_name);
-			return;
-		}
-		if (!arg_count(yes_ARG)) {
-			if (yes_no_prompt
-			    ("Really INITIALIZE physical volume %s"
-			     " of volume group %s [y/n]? ", pv_name,
-			     pv->vg_name) == 'n') {
-				log_print("Physical volume %s not initialized",
-					  pv_name);
-				return;
-			}
-		}
-
-	}
-
-	if (pv && (pv->status & ACTIVE)) {
-		log_error("Can't create on active physical volume %s", pv_name);
-		return;
-	}
-
-	if (!pv) {
-		if (!(pv = pv_create()))
-			return;
-		/* FIXME: Set up initial size & PEs here */
-	}
-
-	if (arg_count(force_ARG)) {
-		/* FIXME: Change to log_print */
-		printf("Warning: Forcing physical volume creation on %s",
-		       pv_name);
-		if (pv->vg_name[0])
-			printf(" of volume group %s", pv->vg_name);
-		printf("\n");
-	}
-
-	/* FIXME: If PV is in VG, remove it.  NoOp?  Or cache? */
-
-	log_verbose("Creating new physical volume");
-	log_verbose("Setting up physical volume for %s with %u sectors",
-		    pv_name, size);
-
-	log_verbose("Writing physical volume data to disk %s", pv_name);
-
-	if (!(pv_write(ios, pv))) {
-		log_error("Failed to create physical volume %s", pv_name);
-		return;
-	}
-
-	log_print("Physical volume %s successfully created", pv_name);
-
-/* FIXME: Add the dbg_frees throughout! */
-	return;
 }

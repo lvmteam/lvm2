@@ -21,13 +21,14 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES=\
-	lvm.c\
-	lvmchange.c\
-	toollib.c\
-	vgck.c\
-	vgreduce.c\
-	vgrename.c\
-	vgremove.c\
+	lvm.c \
+	lvmchange.c \
+	pvcreate.c \
+	toollib.c \
+	vgck.c \
+	vgreduce.c \
+	vgrename.c \
+	vgremove.c \
 	vgscan.c
 
 TARGETS=\
