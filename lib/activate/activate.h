@@ -36,6 +36,7 @@ int activation(void);
 
 int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
+int lvm1_present(struct cmd_context *cmd);
 
 int target_present(const char *target_name);
 

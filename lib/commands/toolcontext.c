@@ -462,6 +462,11 @@ static int _set_tag(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
+	if (!(cmd->kernel_vsn = pool_strdup(cmd->libmem, uts.release))) {
+		log_error("_init_hostname: pool_strdup kernel_vsn failed");
+		return 0;
+	}
+
 	return 1;
 }
 
