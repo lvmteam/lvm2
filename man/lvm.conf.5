@@ -46,8 +46,17 @@ is invoked.  By default tools append messages to the log file.
 .TP
 \fBbackups\fP \(em Configuration for metadata backups
 .IP
-\fBdir\fP \(em Directory used for automatic metadata backups
-(defaults to "/etc/lvm")
+\fBdir\fP \(em Directory used for automatic metadata backups.
+Defaults to "/etc/lvm/backup".
+.IP
+\fBkeep\fP \(em Minimum number of backups to keep.
+Defaults to 10.
+.IP
+\fBdays\fP \(em Minimum number of days to keep backup files.
+Defaults to 14.
+.IP
+\fBauto\fP \(em Whether or not tools make automatic backups after changing
+metadata.  Default is 1 (automatic backups enabled).  Set to 0 to disable.
 .TP
 \fBshell\fP \(em LVM2 built-in readline shell settings
 .IP

@@ -131,7 +131,7 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 	/* FIXME: arrange so this doesn't print a
 	 * decimal point unless we have a
 	 * fractional part. */
-	return snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
+	return lvm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
 }
 
 /*

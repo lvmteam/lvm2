@@ -233,13 +233,17 @@ int lvcreate(int argc, char **argv)
 		struct device *dev;
 		char *name;
 
-		if (!(name = dbg_malloc(NAME_LEN))) {
+		if (!(name = dbg_malloc(PATH_MAX))) {
 			log_error("Name allocation failed - device not zeroed");
 			return ECMD_FAILED;
 		}
 
-		snprintf(name, NAME_LEN, "%s%s/%s", fid->cmd->dev_dir,
-			 lv->vg->name, lv->name);
+		if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", fid->cmd->dev_dir,
+				 lv->vg->name, lv->name) < 0) {
+			log_error("Name too long - device not zeroed (%s)", 
+				  lv->name);
+			return ECMD_FAILED;
+		}
 
 		log_verbose("Zeroing start of logical volume %s", name);
 

@@ -9,6 +9,7 @@
 #include "display.h"
 #include "log.h"
 #include "fs.h"
+#include "lvm-string.h"
 
 static void _build_lv_name(char *buffer, size_t s, struct logical_volume *lv)
 {
@@ -99,7 +100,7 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 		"Insufficient space to write target parameters.";
 
 	if (stripes > 1) {
-		tw = snprintf(params, sizeof(params), "%u %u ",
+		tw = lvm_snprintf(params, sizeof(params), "%u %u ",
 			      stripes, seg->stripe_size);
 
 		if (tw < 0) {
@@ -112,7 +113,7 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 
 	
 	for (s = 0; s < stripes; s++, w += tw) {
-		tw = snprintf(params + w, sizeof(params) - w,
+		tw = lvm_snprintf(params + w, sizeof(params) - w,
 			      "%s %" PRIu64 "%s",
 			      dev_name(seg->area[s].pv->dev),
 			      (seg->area[s].pv->pe_start +
