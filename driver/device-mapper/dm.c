@@ -48,6 +48,8 @@ struct io_hook {
 	void *context;
 };
 
+kmem_cache_t *_io_hook_cache;
+
 #define rl down_read(&_dev_lock)
 #define ru up_read(&_dev_lock)
 #define wl down_write(&_dev_lock)
@@ -83,6 +85,12 @@ static int init(void)
 
 	init_rwsem(&_dev_lock);
 
+	if (!_io_hook_cache &&
+	    !(_io_hook_cache =
+	      kmem_cache_create("dm io hooks", sizeof(struct io_hook),
+				0, 0, NULL, NULL)))
+		return -ENOMEM;
+
 	if ((ret = dm_init_fs()))
 		return ret;
 
@@ -109,6 +117,9 @@ static int init(void)
 
 static void fin(void)
 {
+	if(kmem_cache_shrink(_io_hook_cache))
+		WARN("it looks like there are still some io_hooks allocated");
+
 	dm_fin_fs();
 
 	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
@@ -219,17 +230,19 @@ static int blk_ioctl(struct inode *inode, struct file *file,
 	return 0;
 }
 
-/* FIXME: These should have their own slab */
 inline static struct io_hook *alloc_io_hook(void)
 {
-	return kmalloc(sizeof(struct io_hook), GFP_NOIO);
+	return kmem_cache_alloc(_io_hook_cache, GFP_NOIO);
 }
 
 inline static void free_io_hook(struct io_hook *ih)
 {
-	kfree(ih);
+	kmem_cache_free(_io_hook_cache, ih);
 }
 
+/* FIXME: need to decide if deferred_io's need their own slab, I say
+   no for now since they are only used when the device is
+   suspended. */
 inline static struct deferred_io *alloc_deferred(void)
 {
 	return kmalloc(sizeof(struct deferred_io), GFP_NOIO);
