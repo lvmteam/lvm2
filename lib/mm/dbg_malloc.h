@@ -22,7 +22,7 @@
 #define _LVM_DBG_MALLOC_H
 
 #ifdef DEBUG_MEM
-void *malloc_aux(unsigned int s, const char *file, int line);
+void *malloc_aux(size_t s, const char *file, int line);
 void free_aux(void *p);
 void *realloc_aux(void *p, unsigned int s, const char *file, int line);
 int dump_memory(void);
