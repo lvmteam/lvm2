@@ -437,9 +437,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg)) {
+	if (!vg_write(vg))
 		return 0;
-	}
 
 	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE)) {
 		/* FIXME Remove the failed lv we just added */
