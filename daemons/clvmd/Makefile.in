@@ -34,6 +34,10 @@ ifeq ("@CLVMD@", "all")
 	CMAN = yes
 endif
 
+ifeq ("@DEBUG@", "yes")
+	CFLAGS += -DDEBUG
+endif
+
 ifeq ("$(GULM)", "yes")
 	SOURCES += clvmd-gulm.c tcp-comms.c
 	LMLIBS += -lccs -lgulm
