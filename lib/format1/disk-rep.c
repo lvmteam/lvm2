@@ -318,7 +318,7 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 	struct disk_list *data = NULL;
 
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
-		if ((data = read_pvd(dev, mem, vg_name)))
+		if ((data = read_disk(dev, mem, vg_name)))
 			list_add(head, &data->list);
 	}
 	dev_iter_destroy(iter);

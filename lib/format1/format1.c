@@ -213,7 +213,7 @@ static struct physical_volume *_pv_read(struct io_space *is,
 		goto bad;
 	}
 
-	if (!(dl = read_pvd(dev, mem, NULL))) {
+	if (!(dl = read_disk(dev, mem, NULL))) {
 		stack;
 		goto bad;
 	}
