@@ -76,7 +76,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	log_verbose("Removing snapshot.");
-	if (lv_is_cow(lv->vg, lv) && !vg_remove_snapshot(lv->vg, lv)) {
+	if (lv_is_cow(lv) && !vg_remove_snapshot(lv->vg, lv)) {
 		stack;
 		return ECMD_FAILED;
 	}
