@@ -73,8 +73,12 @@ int id_create(struct id *id)
 	}
 	close(randomfile);
 
+        /*
+         * Skip out the last 2 chars in randomized creation for LVM1
+         * backwards compatibility.
+         */
 	for (i = 0; i < len; i++)
-		id->uuid[i] = _c[id->uuid[i] % (sizeof(_c) - 1)];
+		id->uuid[i] = _c[id->uuid[i] % (sizeof(_c) - 3)];
 
 	return 1;
 }
