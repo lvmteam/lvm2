@@ -24,24 +24,44 @@
 #include <linux/list.h>
 #include "dm.h"
 
+struct dm_bdev {
+        struct list_head list;
+        struct block_device *bdev;
+        int use;
+};
+
+#define DMB_HASH_SHIFT 8
+#define DMB_HASH_SIZE (1 << DMB_HASH_SHIFT)
+#define DMB_HASH_MASK (DMB_HASH_SIZE - 1)
+
 /* 
  * Lock ordering: Always get bdev_sem before bdev_lock if you need both locks.
  *
- * bdev_lock: A spinlock which protects the list
+ * bdev_lock: A spinlock which protects the hash table
  * bdev_sem: A semaphore which protects blkdev_get / blkdev_put so that we
  *           are certain to hold only a single reference at any point in time.
  */
 static kmem_cache_t *bdev_cachep;
-static LIST_HEAD(bdev_list);
+struct list_head bdev_hash[DMB_HASH_SIZE];
 static rwlock_t bdev_lock = RW_LOCK_UNLOCKED;
 static DECLARE_MUTEX(bdev_sem);
 
-static struct dm_bdev *__dm_find_device(struct block_device *bdev)
+/*
+ * Subject to change... seems the best solution for now though...
+ */
+static inline unsigned dm_hash_bdev(struct block_device *bdev)
+{
+	unsigned hash = (unsigned)bdev->bd_dev;
+	hash ^= (hash >> DMB_HASH_SHIFT);
+	return hash & DMB_HASH_MASK;
+}
+
+static struct dm_bdev *__dm_get_device(struct block_device *bdev, unsigned hash)
 {
 	struct list_head *tmp, *head;
 	struct dm_bdev *b;
-
-	tmp = head = &bdev_list;
+	
+	tmp = head = &bdev_hash[hash];
 	for(;;) {
 		tmp = tmp->next;
 		if (tmp == head)
@@ -56,17 +76,18 @@ static struct dm_bdev *__dm_find_device(struct block_device *bdev)
 	return NULL;
 }
 
-static struct dm_bdev *dm_get_device(struct block_device *bdev)
+static struct block_device *dm_get_device(struct block_device *bdev)
 {
 	struct dm_bdev *d, *n;
 	int rv = 0;
+	unsigned hash = dm_hash_bdev(bdev);
 
 	read_lock(&bdev_lock);
-	d = __dm_find_device(bdev);
+	d = __dm_get_device(bdev, hash);
 	read_unlock(&bdev_lock);
 
 	if (d)
-		return d;
+		return d->bdev;
 
 	n = kmem_cache_alloc(bdev_cachep, GFP_KERNEL);
 	if (!n)
@@ -77,7 +98,7 @@ static struct dm_bdev *dm_get_device(struct block_device *bdev)
 
 	down(&bdev_sem);
 	read_lock(&bdev_lock);
-	d = __dm_find_device(bdev);
+	d = __dm_get_device(bdev, hash);
 	read_unlock(&bdev_lock);
 
 	
@@ -85,7 +106,7 @@ static struct dm_bdev *dm_get_device(struct block_device *bdev)
 		rv = blkdev_get(d->bdev, FMODE_READ | FMODE_WRITE, 0, BDEV_FILE);
 		if (rv == 0) {
 			write_lock(&bdev_lock);
-			list_add(&bdev_list, &n->list);
+			list_add(&bdev_hash[hash], &n->list);
 			d = n;
 			n = NULL;
 			write_unlock(&bdev_lock);
@@ -99,14 +120,14 @@ static struct dm_bdev *dm_get_device(struct block_device *bdev)
 	}
 	up(&bdev_sem);
 
-	return d;
+	return d->bdev;
 }
 
-struct dm_bdev *dm_blkdev_get(const char *path)
+struct block_device *dm_blkdev_get(const char *path)
 {
-	struct dm_bdev *d;
 	struct nameidata nd;
 	struct inode *inode;
+	struct block_device *bdev;
 
 	if (!path_init(path, LOOKUP_FOLLOW, &nd))
 		return ERR_PTR(-EINVAL);
@@ -116,15 +137,14 @@ struct dm_bdev *dm_blkdev_get(const char *path)
 
 	inode = nd.dentry->d_inode;
 	if (!inode) {
-		d = ERR_PTR(-ENOENT);
+		bdev = ERR_PTR(-ENOENT);
 		goto out;
 	}
 
-	d = dm_get_device(inode->i_bdev);
-
+	bdev = dm_get_device(inode->i_bdev);
 out:
 	path_release(&nd);
-	return d;
+	return bdev;
 }
 
 static void dm_blkdev_drop(struct dm_bdev *d)
@@ -144,17 +164,25 @@ static void dm_blkdev_drop(struct dm_bdev *d)
 	up(&bdev_sem);
 }
 
-void dm_blkdev_put(struct dm_bdev *d)
+int dm_blkdev_put(struct block_device *bdev)
 {
+	struct dm_bdev *d;
 	int do_drop = 0;
+	unsigned hash = dm_hash_bdev(bdev);
 
 	read_lock(&bdev_lock);
-	if (--d->use == 0)
-		do_drop = 1;
+	d = __dm_get_device(bdev, hash);
+	if (d) {
+		--d->use; /* Drop count from __dm_get_device */
+		if (--d->use == 0)
+			do_drop = 1;
+	}
 	read_unlock(&bdev_lock);
 
 	if (do_drop)
 		dm_blkdev_drop(d);
+
+	return (d != NULL) ? 0 : -ENOENT;
 }
 
 EXPORT_SYMBOL(dm_blkdev_get);
@@ -162,6 +190,11 @@ EXPORT_SYMBOL(dm_blkdev_put);
 
 int dm_init_blkdev(void)
 {
+	int i;
+
+	for(i = 0; i < DMB_HASH_SIZE; i++)
+		INIT_LIST_HEAD(&bdev_hash[i]);
+
 	bdev_cachep = kmem_cache_create("dm_bdev", sizeof(struct dm_bdev),
 					0, 0, NULL, NULL);
 	if (bdev_cachep == NULL)

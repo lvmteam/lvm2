@@ -35,7 +35,7 @@
 struct linear_c {
 	kdev_t rdev;
 	long delta;		/* FIXME: we need a signed offset type */
-	struct dm_bdev *bdev;
+	struct block_device *bdev;
 };
 
 /*
@@ -50,7 +50,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 	unsigned int start;
 	char path[256];
 	struct text_region word;
-	struct dm_bdev *bdev;
+	struct block_device *bdev;
 	int rv = 0;
 	int hardsect_size;
 
@@ -80,7 +80,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 		goto out_bdev_put;
 	}
 
-	lc->rdev = dm_bdev2rdev(bdev);
+	lc->rdev = to_kdev_t(bdev->bd_dev);
 	lc->bdev = bdev;
 	lc->delta = (int) start - (int) b;
 
