@@ -49,13 +49,19 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	if (!dmt->dmi)
 		return 0;
 
-	info->exists = dmt->dmi->exists;
-	info->suspended = dmt->dmi->suspend;
-	info->open_count = dmt->dmi->open_count;
-	info->major = dmt->dmi->major;
-	info->minor = dmt->dmi->minor;
-	info->read_only = dmt->dmi->read_only;
+	memset(info, 0, sizeof(*info));
+
+	info->exists = dmt->dmi->status & DM_EXISTS_FLAG ? 1 : 0;
+	if (!info->exists)
+		return 1;
+
+	info->suspended = dmt->dmi->status & DM_SUSPEND_FLAG ? 1 : 0;
+	info->read_only = dmt->dmi->status & DM_READONLY_FLAG ? 1 : 0;
 	info->target_count = dmt->dmi->target_count;
+	info->open_count = dmt->dmi->open_count;
+	info->major = MAJOR(dmt->dmi->dev);
+	info->minor = MINOR(dmt->dmi->dev);
+
 	return 1;
 }
 
@@ -183,10 +189,16 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	strncpy(dmi->version, DM_IOCTL_VERSION, sizeof(dmi->version));
 	dmi->data_size = len;
 	strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
-	dmi->suspend = (dmt->type == DM_DEVICE_SUSPEND) ? 1 : 0;
-	dmi->open_count = 0;
-	dmi->minor = dmt->minor;
-	dmi->read_only = dmt->read_only;
+
+	if (dmt->type == DM_DEVICE_SUSPEND)
+		dmi->status |= DM_SUSPEND_FLAG;
+	if (dmt->read_only)
+		dmi->status |= DM_READONLY_FLAG;
+
+	if (dmt->minor > 0) {
+		dmi->status |= DM_PERSISTENT_DEV_FLAG;
+		dmi->dev = MKDEV(0, dmt->minor);
+	}
 
 	dmi->target_count = count;
 
@@ -269,7 +281,7 @@ int dm_task_run(struct dm_task *dmt)
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		add_dev_node(dmt->dev_name, MKDEV(dmi->major, dmi->minor));
+		add_dev_node(dmt->dev_name, dmi->dev);
 		break;
 
 	case DM_DEVICE_REMOVE:
