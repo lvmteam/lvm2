@@ -329,15 +329,16 @@ static int _info(const char *name, const char *uuid, struct dm_info *info,
 	return 0;
 }
 
-static int _status_run(const char *name, const char *uuid, char **status,
-		       int *size)
+static int _status_run(const char *name, const char *uuid,
+		       unsigned long long *s, unsigned long long *l,
+		       char **t, uint32_t t_size, char **p, uint32_t p_size)
 {
 	int r = 0;
 	struct dm_task *dmt;
 	void *next = NULL;
 	unsigned long long start, length;
 	char *type = NULL;
-	char *params;
+	char *params = NULL;
 
 	if (!(dmt = _setup_task(name, uuid, DM_DEVICE_STATUS))) {
 		stack;
@@ -353,13 +354,20 @@ static int _status_run(const char *name, const char *uuid, char **status,
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &type, &params);
 		if(type) {
-		       snprintf(*status, *size, "%lld %lld %s %s\n",
-				start, length, type, params);
+			*s = start;
+			*l = length;
+			/* Make sure things are null terminated */
+			strncpy(*t, type, t_size);
+			(*t)[t_size-1] = '\0'; 
+			strncpy(*p, params, p_size);
+ 			(*p)[p_size-1] = '\0';
+
+			r = 1;
+			break;
 		}
 		
 	} while (next);
 
-	r = 1;
 
       out:
 	dm_task_destroy(dmt);
@@ -367,17 +375,19 @@ static int _status_run(const char *name, const char *uuid, char **status,
 }
 
 
-static int _status(const char *name, const char *uuid, char **status,
-		   uint32_t *size)
+static int _status(const char *name, const char *uuid,
+		   unsigned long long *start, unsigned long long *length,
+		   char **type, uint32_t type_size, char **params,
+		   uint32_t param_size)
 {
-	if (uuid && *uuid && _status_run(NULL, uuid, status, size)
-	    && *status) {
+	if (uuid && *uuid && _status_run(NULL, uuid, start, length, type,
+					 type_size, params, param_size)
+	    && *params)
 		return 1;
-	}
 
-	if (name && _status_run(name, NULL, status, size)) {
+	if (name && _status_run(name, NULL, start, length, type, type_size,
+			        params, param_size))
 		return 1;
-	}
 	
 	return 0;
 }
@@ -786,10 +796,20 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 int dev_manager_get_snapshot_use(struct dev_manager *dm, 
  		                 struct logical_volume *lv, float *percent)
 {
-	char *name, *status, *tmpstr;
-	uint32_t size = 127;
+	char *name, *type, *params;
+	unsigned long long start, length;
+	/* FIXME: Hard coded numbers can be bad, but not really sure what to
+	 * use here...we don't really care about the type and the parameter
+	 * should be a percentage */
+	uint32_t type_size = 2;
+	uint32_t param_size = 7;
 
-	if(!(status = pool_alloc(dm->mem, sizeof(*status) * size+1))) {
+	if(!(type = pool_alloc(dm->mem, sizeof(*type) * type_size))) {
+		stack;
+		return 0;
+	}
+
+	if(!(params = pool_alloc(dm->mem, sizeof(*params) * param_size))) {
 		stack;
 		return 0;
 	}
@@ -806,7 +826,8 @@ int dev_manager_get_snapshot_use(struct dev_manager *dm,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device status for %s", name);
-	if(!_status(name, lv->lvid.s, &status, &size)) {
+	if(!(_status(name, lv->lvid.s, &start, &length, &type, type_size, 
+		     &params, param_size))) {
 	       stack;
 	       return 0;
 	}
@@ -814,17 +835,10 @@ int dev_manager_get_snapshot_use(struct dev_manager *dm,
 	/* If the snapshot isn't available, percent will be -1 */
 	*percent = -1;
 
-	/* FIXME: is there a simpler way to do this? */
-	tmpstr = strstr(status, "snapshot");
-	if(!tmpstr) 
-		return 0;
-	
-	tmpstr = strstr(tmpstr, " ");
-	if(!tmpstr)
+	if(!params)
 		return 0;
 
-	return sscanf(tmpstr, "%f", percent);
-
+	return sscanf(params, "%f", percent);
 }
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
