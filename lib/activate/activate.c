@@ -15,7 +15,7 @@ static void _build_lv_name(char *buffer, size_t s, struct logical_volume *lv)
 	snprintf(buffer, s, "%s_%s", lv->vg->name, lv->name);
 }
 
-struct dm_task *_setup_task(struct logical_volume *lv, int task)
+static struct dm_task *_setup_task(struct logical_volume *lv, int task)
 {
 	char name[128];
 	struct dm_task *dmt;
@@ -31,9 +31,8 @@ struct dm_task *_setup_task(struct logical_volume *lv, int task)
 	return dmt;
 }
 
-int lv_active(struct logical_volume *lv, int *result)
+static struct dm_task *_info(struct logical_volume *lv)
 {
-	int r = 0;
 	struct dm_task *dmt;
 
 	if (!(dmt = _setup_task(lv, DM_DEVICE_INFO))) {
@@ -43,10 +42,49 @@ int lv_active(struct logical_volume *lv, int *result)
 
 	if (!dm_task_run(dmt)) {
 		stack;
+		goto bad;
+	}
+
+	return dmt;
+
+ bad:
+	dm_task_destroy(dmt);
+	return NULL;
+}
+
+int lv_active(struct logical_volume *lv, int *result)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	if (!(dmt = _info(lv))) {
+		stack;
 		goto out;
 	}
 
 	if (!dm_task_exists(dmt, result)) {
+		stack;
+		goto out;
+	}
+
+	r = 1;
+
+ out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+int lv_open_count(struct logical_volume *lv, int *result)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	if (!(dmt = _info(lv))) {
+		stack;
+		goto out;
+	}
+
+	if (!dm_task_open_count(dmt, result)) {
 		stack;
 		goto out;
 	}
@@ -220,7 +258,7 @@ int deactivate_lvs_in_vg(struct volume_group *vg)
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
 
-		if (!lv_active(lv, &exists) || exists)
+		if (!lv_active(lv, &exists) || !exists)
 			continue;
 
 		count += lv_activate(lv);
@@ -248,3 +286,24 @@ int lvs_in_vg_activated(struct volume_group *vg)
 
 	return count;
 }
+
+int lvs_in_vg_opened(struct volume_group *vg)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+	int open, count = 0;
+
+	list_iterate(lvh, &vg->lvs) {
+		lv = &(list_item(lvh, struct lv_list)->lv);
+
+		if (!lv_open_count(lv, &open)) {
+			stack;
+			continue; /* FIXME: what is the right thing here ? */
+		}
+
+		count += open ? 1 : 0;
+	}
+
+	return count;
+}
+

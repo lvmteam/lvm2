@@ -23,7 +23,6 @@
 int lvcreate(int argc, char **argv)
 {
 	int zero;
-	int size_rest = 0;
 	uint32_t read_ahead = 0;
 	int stripes = 1;
 	int stripesize = 0;

@@ -133,7 +133,8 @@ struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
 	}
 
 	if (!id_create(&vg->id)) {
-		log_err("Couldn't create uuid for volume group '%s'.", vg_name);
+		log_err("Couldn't create uuid for volume group '%s'.",
+			vg_name);
 		goto bad;
 	}
 

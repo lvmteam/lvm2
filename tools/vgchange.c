@@ -94,8 +94,8 @@ void vgchange_available(struct volume_group *vg)
 	}
 
 	/* FIXME: Force argument to deactivate them? */
-	if (!available && (lv_open = lvs_in_vg_activated(vg))) {
-		log_error("Can't deactivate volume group '%s' with %d active "
+	if (!available && (lv_open = lvs_in_vg_opened(vg))) {
+		log_error("Can't deactivate volume group '%s' with %d open "
 			  "logical volume(s)", vg->name, lv_open);
 		return;
 	}
