@@ -252,6 +252,49 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	return 1;
 }
 
+/*
+ * Volumes may be zeroed to remove old application data.
+ */
+static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct device *dev;
+	char *name;
+
+	/*
+	 * FIXME:
+	 * <clausen> also, more than 4k
+	 * <clausen> say, reiserfs puts it's superblock 32k in, IIRC
+	 * <ejt_> k, I'll drop a fixme to that effect
+	 *           (I know the device is at least 4k, but not 32k)
+	 */
+	if (!(name = pool_alloc(cmd->mem, PATH_MAX))) {
+		log_error("Name allocation failed - device not zeroed");
+		return 0;
+	}
+
+	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+			 lv->vg->name, lv->name) < 0) {
+		log_error("Name too long - device not zeroed (%s)",
+			  lv->name);
+		return 0;
+	}
+
+	log_verbose("Zeroing start of logical volume \"%s\"", lv->name);
+
+	if (!(dev = dev_cache_get(name, NULL))) {
+		log_error("\"%s\" not found: device not zeroed", name);
+		return 0;
+	}
+
+	if (!(dev_open(dev, O_WRONLY)))
+		return 0;
+
+	dev_zero(dev, 0, 4096);
+	dev_close(dev);
+
+	return 1;
+}
+
 static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		     struct logical_volume **plv)
 {
@@ -356,6 +399,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 			     vg, pvh)))
 		return 0;
 
+	if (lp->zero)
+		_zero_lv(cmd, lv);
+	else
+		log_print("WARNING: \"%s\" not zeroed", lv->name);
+
 	if (lp->snapshot && !vg_add_snapshot(org, lv, 1, lp->chunk_size)) {
 		log_err("Couldn't create snapshot.");
 		return 0;
@@ -383,49 +431,6 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 	return 1;
 }
 
-/*
- * Non-snapshot volumes may be zeroed to remove old filesystems.
- */
-static int _zero(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	struct device *dev;
-	char *name;
-
-	/*
-	 * FIXME:
-	 * <clausen> also, more than 4k
-	 * <clausen> say, reiserfs puts it's superblock 32k in, IIRC
-	 * <ejt_> k, I'll drop a fixme to that effect
-	 *           (I know the device is at least 4k, but not 32k)
-	 */
-	if (!(name = pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Name allocation failed - device not zeroed");
-		return 0;
-	}
-
-	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
-			 lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - device not zeroed (%s)",
-			  lv->name);
-		return 0;
-	}
-
-	log_verbose("Zeroing start of logical volume \"%s\"", lv->name);
-
-	if (!(dev = dev_cache_get(name, NULL))) {
-		log_error("\"%s\" not found: device not zeroed", name);
-		return 0;
-	}
-
-	if (!(dev_open(dev, O_WRONLY)))
-		return 0;
-
-	dev_zero(dev, 0, 4096);
-	dev_close(dev);
-
-	return 1;
-}
-
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int r = ECMD_FAILED;
@@ -448,26 +453,12 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (lp.snapshot && !lv_setup_cow_store(lv)) {
-		stack;
-		goto out;
-	}
-
 	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
 		return 0;
 
 	if (!lock_vol(cmd, lvidbuf, LCK_LV_ACTIVATE))
 		goto out;
-
-	if (!lp.snapshot) {
-		if (!lp.zero)
-			log_print("WARNING: \"%s\" not zeroed", lv->name);
-
-		else if (!_zero(cmd, lv)) {
-			stack;
-			goto out_lv;
-		}
-	}
+	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
 
 	/*
 	 * FIXME: as a sanity check we could try reading the
@@ -476,8 +467,6 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	r = 0;
 
- out_lv:
-	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
  out:
 	lock_vol(cmd, lp.vg_name, LCK_VG_UNLOCK);
 	return r;
