@@ -400,19 +400,22 @@ xx(pvdisplay,
 
 xx(pvmove,
    "Move extents from one physical volume to another",
-   "pvmove "
-   "[-A|--autobackup {y|n}] "
-   "[-d|--debug] "
-   "[-f|--force]"
-   "[-h|-?|--help]\n\t"
-   "[-t|--test] "
-   "[-v|--verbose] "
-   "[--version]\n\t"
-   "[{-n|--name} LogicalVolume[:LogicalExtent[-LogicalExtent]...]]\n\t"
-   "SourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n\t"
-   "[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
+   "pvmove " "\n"
+   "\t[-A|--autobackup {y|n}]\n"
+   "\t[-d|--debug]\n "
+   "\t[-f|--force]\n"
+   "\t[-h|-?|--help]\n"
+   "\t[-i|--interval seconds]\n"
+   "\t[-t|--test]\n "
+   "\t[-v|--verbose]\n "
+   "\t[--version]\n"
+   "\t[{-n|--name} LogicalVolume\n"
+/* "\t[{-n|--name} LogicalVolume[:LogicalExtent[-LogicalExtent]...]]\n" */
+   "\tSourcePhysicalVolume\n"
+/* "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n" */
+   "\t[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
 
-   autobackup_ARG, force_ARG, name_ARG, test_ARG)
+   autobackup_ARG, force_ARG, interval_ARG, name_ARG, test_ARG)
 
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
@@ -536,7 +539,7 @@ xx(vgck,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-v|--verbose]\n"
-   "\t[--version]" "\n",
+   "\t[--version]" "\n"
    "\t[VolumeGroupName...]\n" )
 
 xx(vgconvert,
