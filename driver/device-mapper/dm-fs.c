@@ -18,8 +18,8 @@
 
 #include "dm.h"
 
-/* some random number */
-#define DM_MAGIC	0x211271
+/* some magic number */
+#define DM_MAGIC	0x444D4653
 
 static struct super_operations dm_ops;
 static struct address_space_operations dm_aops;
@@ -45,6 +45,17 @@ struct line_c {
 	struct file *in;
 	struct file *out;
 };
+
+static int is_identifier(char *str, int len)
+{
+	while(len--) {
+		if (!isalnum(*str) || *str != '_')
+			return 0;
+		str++;
+	}
+
+	return 1;
+}
 
 /*
  * Grabs lines one at a time from the table file.
@@ -269,7 +280,8 @@ struct inode *_get_inode(struct super_block *sb, int mode, int dev)
 		inode->i_atime = inode->i_mtime =
 			inode->i_ctime = CURRENT_TIME;
 		switch (mode & S_IFMT) {
-		default:
+		case S_IFBLK:
+		case S_IFCHR:
 			init_special_inode(inode, mode, dev);
 			break;
 		case S_IFREG:
@@ -282,6 +294,8 @@ struct inode *_get_inode(struct super_block *sb, int mode, int dev)
 		case S_IFLNK:
 			inode->i_op = &page_symlink_inode_operations;
 			break;
+		default:
+			make_bad_inode(inode);
 		}
 	}
 	return inode;
@@ -308,6 +322,9 @@ static int _mkdir(struct inode * dir, struct dentry * dentry, int mode)
 {
 	int r;
 	const char *name = (const char *) dentry->d_name.name;
+
+	if (!is_identifier(name, dentry->d_name.len))
+		return -EPERM; /* or EINVAL ? */
 
 	r = dm_create(name, -1);
 	if (r)
@@ -346,7 +363,7 @@ static int _create(struct inode *dir, struct dentry *dentry, int mode)
 	return 0;
 }
 
-static inline int _positive(struct dentry *dentry)
+static inline int positive(struct dentry *dentry)
 {
 	return dentry->d_inode && !d_unhashed(dentry);
 }
@@ -369,7 +386,7 @@ static int _empty(struct dentry *dentry)
 	while (list != &dentry->d_subdirs) {
 		struct dentry *de = list_entry(list, struct dentry, d_child);
 
-		if (_positive(de)) {
+		if (positive(de)) {
 			spin_unlock(&dcache_lock);
 			return 0;
 		}
