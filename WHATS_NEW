@@ -1,5 +1,6 @@
 Version 2.00.16 - 
 =============================
+  Add reset_fn to external_locking.
   Ensure presence of virtual targets before attempting activating.
   Attempt to fix resizing of snapshot origins.
   Restructure lvresize, bringing it closer to lvcreate.
