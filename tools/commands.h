@@ -412,7 +412,7 @@ xx(pvmove,
    "\t[-t|--test]\n "
    "\t[-v|--verbose]\n "
    "\t[--version]\n"
-   "\t[{-n|--name} LogicalVolume\n"
+   "\t[{-n|--name} LogicalVolume]\n"
 /* "\t[{-n|--name} LogicalVolume[:LogicalExtent[-LogicalExtent]...]]\n" */
    "\tSourcePhysicalVolume\n"
 /* "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n" */
