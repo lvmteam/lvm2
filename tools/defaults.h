@@ -21,6 +21,8 @@
 
 #define DEFAULT_DEV_DIR "/dev"
 
+#define DEFAULT_UMASK 0077
+
 #ifdef READLINE_SUPPORT
   #define DEFAULT_MAX_HISTORY 100
 #endif

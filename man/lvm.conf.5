@@ -42,7 +42,7 @@ e.g.	backup {
 .br
 An assignment associates a type with an identifier.
 .br
-e.g.	max_backups = 42
+e.g.	max_archives = 42
 .br
 .TP
 \fBarray = '[' (type ',')* type ']' | '[' ']'\fP
@@ -109,26 +109,50 @@ is invoked.  By default tools append messages to the log file.
 \fBtest\fP \(em If set to 1, run tools in test mode i.e. no metadata
 gets updated.
 .TP
-\fBbackup\fP \(em Configuration for metadata backups
+\fBbackup\fP \(em Configuration for metadata backups.
 .IP
-\fBdir\fP \(em Directory used for automatic metadata backups.
+\fBarchive_dir\fP \(em Directory used for automatic metadata archives.
+Backup copies of former metadata for each volume group are archived here.
+Defaults to "/etc/lvm/archive".
+.IP
+\fBbackup_dir\fP \(em Directory used for automatic metadata backups.
+A single backup copy of the current metadata for each volume group 
+is stored here.
 Defaults to "/etc/lvm/backup".
 .IP
-\fBkeep\fP \(em Minimum number of backups to keep.
+\fBarchive\fP \(em Whether or not tools automatically archive existing
+metadata into \fBarchive_dir\fP before making changes to it.
+Default is 1 (automatic archives enabled).  
+Set to 0 to disable.  
+Disabling this might make metadata recovery difficult or impossible 
+if something goes wrong.
+.IP
+\fBbackup\fP \(em Whether or not tools make an automatic backup 
+into \fBbackup_dir\fP after changing metadata.  
+Default is 1 (automatic backups enabled).  Set to 0 to disable.
+Disabling this might make metadata recovery difficult or impossible 
+if something goes wrong.
+.IP
+\fBretain_min\fP \(em Minimum number of archives to keep.
 Defaults to 10.
 .IP
-\fBdays\fP \(em Minimum number of days to keep backup files.
-Defaults to 14.
-.IP
-\fBauto\fP \(em Whether or not tools make automatic backups after changing
-metadata.  Default is 1 (automatic backups enabled).  Set to 0 to disable.
+\fBretain_days\fP \(em Minimum number of days to keep archive files.
+Defaults to 30.
 .TP
 \fBshell\fP \(em LVM2 built-in readline shell settings
 .IP
 \fBhistory_size\fP \(em Maximum number of lines of shell history to retain (default 100) in $HOME/.lvm_history
+.TP
+\fBglobal\fP \(em Global settings
+.IP
+\fBumask\fP \(em File creation mask for any files and directories created.
+Interpreted as octal if the first digit is zero.
+Defaults to 077.  
+Use 022 to allow other users to read the files by default.
 .SH FILES
 .I /etc/lvm/lvm.conf
 .br
 .I $HOME/.lvm_history
 .SH SEE ALSO
 .BR lvm (8)
+.BR umask (2)
