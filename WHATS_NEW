@@ -25,6 +25,7 @@ to provide us with diagnostic information:
   log {
         file="/tmp/lvm2.log"
 	level=7
+	activation=1
   }
 
 You should schedule regular backups of your configuration file and

@@ -1,13 +1,11 @@
-This directory contains a beta release of LVM2, the new version of 
-the userland LVM tools designed for the new device-mapper for 
-the Linux kernel.
+This directory contains LVM2, the new version of the userland LVM
+tools designed for the new device-mapper for the Linux kernel.
 
 The device-mapper needs to be installed before compiling these LVM2 tools.
 
 For more information about LVM2 read the WHATS_NEW file.
 Installation instructions are in INSTALL.
 
-This is beta-quality software, released for testing purposes only.
 There is no warranty - see COPYING and COPYING.LIB.
 
 Tarballs are available from:
@@ -20,6 +18,6 @@ To access the CVS tree use:
   cvs -d :pserver:cvs@tech.sistina.com:/data/cvs checkout LVM2
 
 Mailing list for discussion/bug reports etc.
-  lvm-devel@sistina.com
-  Subscribe from http://lists.sistina.com/mailman/listinfo/lvm-devel
+  linux-lvm@sistina.com
+  Subscribe from http://lists.sistina.com/mailman/listinfo/linux-lvm
 
