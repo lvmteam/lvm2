@@ -14,10 +14,10 @@
  * up the volume group directory in /dev and the
  * symbolic links to the dm device.
  */
-
-int fs_add_lv(struct logical_volume *lv, int minor);
+int fs_add_lv(struct logical_volume *lv, const char *dev);
 int fs_del_lv(struct logical_volume *lv);
-int fs_rename_lv(const char *old_name, struct logical_volume *lv);
+int fs_rename_lv(struct logical_volume *lv,
+		 const char *dev, const char *old_name);
 
 
 #endif

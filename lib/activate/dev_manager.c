@@ -9,6 +9,7 @@
 #include "hash.h"
 #include "log.h"
 #include "lvm-string.h"
+#include "fs.h"
 
 #include <libdevmapper.h>
 
@@ -22,6 +23,7 @@ enum {
 struct dev_layer {
 	char *name;
 	int mark;
+	int visible;
 
 	/*
 	 * Setup the dm_task.
@@ -99,10 +101,9 @@ static char *_build_name(struct pool *mem, const char *vg,
 	}
 
 	out = r;
-	_quote_colons(&out, vg);
-	_quote_colons(&out, lv);
-	_quote_colons(&out, layer);
-	*out = '\0';
+	_quote_colons(&out, vg); *out++ = ':';
+	_quote_colons(&out, lv); *out++ = ':';
+	_quote_colons(&out, layer); *out = '\0';
 
 	return r;
 }
@@ -148,6 +149,9 @@ static int _load(struct dev_layer *dl, int task)
 		log_err("Couldn't create device '%s'.", dl->name);
 	dm_task_destroy(dmt);
 
+	if (dl->visible)
+		fs_add_lv(dl->lv, dl->name);
+
 	return r;
 }
 
@@ -166,6 +170,10 @@ static int _remove(struct dev_layer *dl)
 		log_err("Couldn't remove device '%s'", dl->name);
 
 	dm_task_destroy(dmt);
+
+	if (dl->visible)
+		fs_del_lv(dl->lv);
+
 	return r;
 }
 
@@ -194,7 +202,13 @@ static int _suspend(struct dev_layer *dl)
 	if (dl->info.suspended)
 		return 1;
 
-	return _suspend_or_resume(dl->name, 1);
+	if (!_suspend_or_resume(dl->name, 1)) {
+		stack;
+		return 0;
+	}
+
+	dl->info.suspended = 1;
+	return 1;
 }
 
 static int _resume(struct dev_layer *dl)
@@ -202,7 +216,13 @@ static int _resume(struct dev_layer *dl)
 	if (!dl->info.suspended)
 		return 1;
 
-	return _suspend_or_resume(dl->name, 0);
+	if (!_suspend_or_resume(dl->name, 0)) {
+		stack;
+		return 0;
+	}
+
+	dl->info.suspended = 0;
+	return 1;
 }
 
 static int _info(const char *name, struct dm_info *info)
@@ -465,6 +485,8 @@ _create_layer(struct pool *mem, const char *layer,
 
 	dl->type = type;
 	dl->lv = lv;
+	list_init(&dl->pre_create);
+	list_init(&dl->pre_active);
 
 	return dl;
 }
@@ -526,6 +548,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 			return 0;
 		}
 		dl->populate = _populate_vanilla;
+		dl->visible = 1;
 
 		if (!hash_insert(dm->layers, dl->name, dl)) {
 			stack;
@@ -664,7 +687,7 @@ int _remove_rec(struct dev_manager *dm, struct dev_layer *dl)
 		}
 	}
 
-	if (dl->info.exists && !_remove(dl)) {
+	if (dl->info.exists && (!_resume(dl) || !_remove(dl))) {
 		stack;
 		return 0;
 	}
@@ -702,40 +725,6 @@ static int _mark_dependants(struct dev_manager *dm)
 
 	return 1;
 }
-
-/*
- * The guts of the activation unit, this examines the device
- * layers in the manager, and tries to issue the correct
- * instructions to activate them in order.
- */
-static int _execute(struct dev_manager *dm,
-		    int (*cmd)(struct dev_manager *dm, struct dev_layer *dl))
-{
-	struct hash_node *hn;
-	struct dev_layer *dl;
-
-	/*
-	 * We need to make a list of top level devices, ie. those
-	 * that have no entries in 'pre_create'.
-	 */
-	if (!_mark_dependants(dm)) {
-		stack;
-		return 0;
-	}
-
-	/*
-	 * Now only top level devices will be unmarked.
-	 */
-	hash_iterate (hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
-
-		if (!dl->mark)
-			cmd(dm, dl);
-	}
-
-	return 1;
-}
-
 
 /*
  * Remove all layers from the hash table that do not have their
@@ -786,14 +775,50 @@ static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
 	_prune_unmarked(dm);
 	return 1;
 }
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+
+/*
+ * The guts of the activation unit, this examines the device
+ * layers in the manager, and tries to issue the correct
+ * instructions to activate them in order.
+ */
+static int _execute(struct dev_manager *dm, struct logical_volume *lv,
+		    int (*cmd)(struct dev_manager *dm, struct dev_layer *dl))
 {
+	struct hash_node *hn;
+	struct dev_layer *dl;
+
 	if (!_select_lv(dm, lv)) {
 		stack;
 		return 0;
 	}
 
-	if (!_execute(dm, _create_rec)) {
+	/*
+	 * We need to make a list of top level devices, ie. those
+	 * that have no entries in 'pre_create'.
+	 */
+	if (!_mark_dependants(dm)) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Now only top level devices will be unmarked.
+	 */
+	hash_iterate (hn, dm->layers) {
+		dl = hash_get_data(dm->layers, hn);
+
+		if (!dl->mark)
+			cmd(dm, dl);
+	}
+
+	return 1;
+}
+
+
+
+int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+{
+	if (!_execute(dm, lv, _create_rec)) {
 		stack;
 		return 0;
 	}
@@ -803,12 +828,7 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 
 int dev_manager_reactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	if (!_select_lv(dm, lv)) {
-		stack;
-		return 0;
-	}
-
-	if (!_execute(dm, _create_rec)) {
+	if (!_execute(dm, lv, _create_rec)) {
 		stack;
 		return 0;
 	}
@@ -818,12 +838,7 @@ int dev_manager_reactivate(struct dev_manager *dm, struct logical_volume *lv)
 
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	if (!_select_lv(dm, lv)) {
-		stack;
-		return 0;
-	}
-
-	if (!_execute(dm, _remove_rec)) {
+	if (!_execute(dm, lv, _remove_rec)) {
 		stack;
 		return 0;
 	}
