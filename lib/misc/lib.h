@@ -21,6 +21,7 @@
 
 #define _REENTRANT
 #define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
 
 #include "log.h"
 #include "dbg_malloc.h"
