@@ -11,11 +11,11 @@ VPATH = @srcdir@
 SOURCES=\
 	activate/activate.c \
 	config/config.c \
+	datastruct/bitset.c \
 	datastruct/hash.c \
 	device/dev-cache.c \
 	device/dev-io.c \
 	device/device.c \
-	display/display.c \
 	filters/filter.c \
 	format1/disk-rep.c \
 	format1/format1.c \
@@ -26,6 +26,9 @@ SOURCES=\
 	metadata/metadata.c \
 	mm/dbg_malloc.c \
 	mm/pool.c \
+	regex/parse_rx.c \
+	regex/matcher.c \
+	regex/ttree.c \
 	uuid/uuid.c
 
 TARGETS=liblvm.a
