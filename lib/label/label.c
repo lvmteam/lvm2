@@ -28,11 +28,12 @@ static void *label_pool = NULL;
 struct label_ondisk
 {
     uint32_t magic;
-    uint32_t checksum;
+    uint32_t crc;
     uint16_t datalen;
+    uint16_t pad;
 
-    char     disk_type[32];
     uint32_t version[3];
+    char     disk_type[32];
 };
 
 struct filter_private
@@ -44,29 +45,45 @@ struct filter_private
 };
 
 
-/* Calculate checksum */
-static uint32_t calc_checksum(struct label *label)
+/* CRC32 code taken from Linux kernel */
+static int crc32( int initial, char * s, int length )
 {
-    uint32_t csum = 0;
-    int i;
+        /* indices */
+        int perByte;
+        int perBit;
 
-    csum += label->magic;
-    csum += label->version[0];
-    csum += label->version[1];
-    csum += label->version[2];
-    csum += label->datalen;
+        /* crc polynomial for Ethernet */
+        const unsigned long poly = 0xedb88320;
 
-    for (i=0; i<label->datalen; i++)
-    {
-	csum += label->data[i];
-    }
+        /* crc value - carry over */
+        unsigned long crc_value = initial;
 
-    for (i=0; i<strlen(label->disk_type); i++)
-    {
-	csum += label->disk_type[i];
-    }
+        for ( perByte = 0; perByte < length; perByte ++ ) {
+                unsigned char   c;
 
-    return csum;
+                c = *(s++);
+                for ( perBit = 0; perBit < 8; perBit++ ) {
+                        crc_value = (crc_value>>1)^
+                                (((crc_value^c)&0x01)?poly:0);
+                        c >>= 1;
+                }
+        }
+        return  crc_value;
+}
+
+
+/* Calculate crc */
+static uint32_t calc_crc(struct label *label)
+{
+    uint32_t crcval = 0xffffffff;
+
+    crcval = crc32(crcval, (char *)&label->magic, sizeof(label->magic));
+    crcval = crc32(crcval, (char *)&label->datalen, sizeof(label->datalen));
+    crcval = crc32(crcval, (char *)label->disk_type, strlen(label->disk_type));
+    crcval = crc32(crcval, (char *)&label->version, sizeof(label->version));
+    crcval = crc32(crcval, (char *)label->data, label->datalen);
+
+    return crcval;
 }
 
 /* Read a label off disk - the data area is allocated
@@ -131,25 +148,24 @@ int label_read(struct device *dev, struct label *label)
 		continue;
 
             /* Copy and convert endianness */
+	    strncpy(incore.disk_type, ondisk->disk_type, sizeof(incore.disk_type));
 	    incore.magic = xlate32(ondisk->magic);
 	    incore.version[0] = xlate32(ondisk->version[0]);
 	    incore.version[1] = xlate32(ondisk->version[1]);
 	    incore.version[2] = xlate32(ondisk->version[2]);
-	    for (i=0; i<strlen(ondisk->disk_type)+1; i++)
-		incore.disk_type[i] = ondisk->disk_type[i];
-	    incore.checksum = xlate32(ondisk->checksum);
 	    incore.datalen = xlate16(ondisk->datalen);
 	    incore.data = block + sizeof(struct label_ondisk);
+	    incore.crc = xlate32(ondisk->crc);
 
 	    /* Make sure datalen is a sensible size too */
 	    if (incore.datalen > sectsize)
 		continue;
 
-	    /* Check Checksum */
-	    if (incore.checksum != calc_checksum(&incore))
+	    /* Check Crc */
+	    if (incore.crc != calc_crc(&incore))
 	    {
-		log_error("Checksum %d on device %s does not match. got %x, expected %x",
-			  iter, dev_name(dev), incore.checksum, calc_checksum(&incore));
+		log_error("Crc %d on device %s does not match. got %x, expected %x",
+			  iter, dev_name(dev), incore.crc, calc_crc(&incore));
 		continue;
 	    }
 
@@ -183,7 +199,6 @@ int label_write(struct device *dev, struct label *label)
     char     *block;
     struct label_ondisk *ondisk;
     int       status1, status2;
-    int       i;
 
     if (!dev_get_size(dev, &size))
 	return 0;
@@ -204,21 +219,20 @@ int label_write(struct device *dev, struct label *label)
 	stack;
 	return 0;
     }
-
     ondisk = (struct label_ondisk *)block;
 
-    /* Make into ondisk format */
+    /* Make sure the label has the right magic number in it */
     label->magic = LABEL_MAGIC;
-    ondisk->magic = xlate32(LABEL_MAGIC);
 
+    /* Make into ondisk format */
+    ondisk->magic = xlate32(LABEL_MAGIC);
     ondisk->version[0] = xlate32(label->version[0]);
     ondisk->version[1] = xlate32(label->version[1]);
     ondisk->version[2] = xlate32(label->version[2]);
-    for (i=0; i<strlen(label->disk_type)+1; i++)
-	ondisk->disk_type[i] = label->disk_type[i];
     ondisk->datalen = xlate16(label->datalen);
-    ondisk->checksum = xlate32(calc_checksum(label));
+    strncpy(ondisk->disk_type, label->disk_type, sizeof(ondisk->disk_type));
     memcpy(block+sizeof(struct label_ondisk), label->data, label->datalen);
+    ondisk->crc = xlate32(calc_crc(label));
 
     /* Write metadata to disk */
     if (!dev_open(dev, O_RDWR))
@@ -408,7 +422,7 @@ int labels_match(struct device *dev)
     if (label_pool == NULL)
 	label_pool = pool_create(512);
 
-    /* ALlocate some space for the blocks we are going to read in */
+    /* Allocate some space for the blocks we are going to read in */
     block1 = pool_alloc(label_pool, sectsize);
     if (!block1)
     {

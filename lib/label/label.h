@@ -7,7 +7,7 @@
 struct label
 {
     uint32_t magic;
-    uint32_t checksum;
+    uint32_t crc;
     uint16_t datalen;
 
     char     disk_type[32];
