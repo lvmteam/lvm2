@@ -109,8 +109,8 @@ void pool_empty(struct pool *p)
 	for (c = p->chunk; c && c->prev; c = c->prev)
 		;
 
-	if (p->chunk)
-		pool_free(p, (char *) (p->chunk + 1));
+	if (c)
+		pool_free(p, (char *) (c + 1));
 }
 
 void pool_free(struct pool *p, void *ptr)

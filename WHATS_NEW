@@ -1,5 +1,6 @@
 Version 2.00.24 - 
 =====================================
+  Fix pool_empty so it really does empty the memory pool.
   Rename old segtypes files to segtype.
   Some fixes to memory debugging code.
   Exclude internal commands formats & segtypes from install.
