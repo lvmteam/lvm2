@@ -80,6 +80,7 @@ struct mapped_device {
 
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
+	struct proc_dir_entry *pde;
 
 	/* a list of devices used by this md */
 	struct dev_list *devices;
@@ -120,6 +121,9 @@ void dm_free_table(struct mapped_device *md);
 /* dm-fs.c */
 int dm_init_fs(void);
 void dm_fin_fs(void);
+
+int dm_fs_add(struct mapped_device *md);
+int dm_fs_remove(struct mapped_device *md);
 
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)

@@ -111,13 +111,41 @@ void dm_fin_fs(void)
 		devfs_unregister(_dev_dir);
 }
 
+int dm_fs_add(struct mapped_device *md)
+{
+	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
+
+	if (!pfd)
+		return -ENOMEM;
+
+	pfd->fn = _process_table;
+	pfd->minor = MINOR(md->dev);
+
+	if (!(md->pde = create_proc_entry(md->name, 0, _proc_dir))) {
+		kfree(pfd);
+		return -ENOMEM;
+	}
+
+	md->pde->write_proc = _line_splitter;
+	md->pde->data = pfd;
+
+	return 0;
+}
+
+int dm_fs_remove(struct mapped_device *md)
+{
+	if (md->pde) {
+		kfree(md->pde->data);
+		remove_proc_entry(md->name, _proc_dir);
+	}
+	return 0;
+}
+
 int _process_control(const char *b, const char *e, int minor)
 {
 	const char *wb, *we;
 	char name[64];
 	int create = 0;
-	struct pf_data *pfd;
-	struct proc_dir_entry *pde;
 
 	/*
 	 * create <name> [minor]
@@ -139,7 +167,10 @@ int _process_control(const char *b, const char *e, int minor)
 
 	_tok_cpy(name, sizeof(name), wb, we);
 
-	if (create) {
+	if (!create)
+		return dm_remove(name);
+
+	else {
 		if (_get_word(b, e, &wb, &we)) {
 			minor = simple_strtol(wb, (char **) &we, 10);
 
@@ -147,28 +178,7 @@ int _process_control(const char *b, const char *e, int minor)
 				return -EINVAL;
 		}
 
-		/* FIXME: quick hack */
-		pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
-
-		if (!pfd)
-			return -ENOMEM;
-		pfd->fn = _process_table;
-		pfd->minor = minor;
-
-		if (!(pde = create_proc_entry(name, 0, _proc_dir)))
-			return -ENOMEM;
-
-		pde->write_proc = _line_splitter;
-		pde->data = pfd;
-
 		return dm_create(name, minor);
-
-	} else {
-		if (!_get_word(b, e, &wb, &we))
-			return -EINVAL;
-
-		_tok_cpy(name, sizeof(name), wb, we);
-		return dm_remove(name);
 	}
 
 	return -EINVAL;
