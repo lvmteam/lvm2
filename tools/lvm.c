@@ -1,21 +1,7 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * LVM is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * LVM is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LVM; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- *
+ * This file is released under the GPL.
  */
 
 #include "tools.h"
@@ -41,9 +27,9 @@
 /* define exported table of valid switches */
 struct arg the_args[ARG_COUNT + 1] = {
 
-#define xx(a, b, c, d) {b, "--" c, d, 0, NULL},
+#define arg(a, b, c, d) {b, "--" c, d, 0, NULL},
 #include "args.h"
-#undef xx
+#undef arg
 
 };
 
@@ -64,7 +50,20 @@ static int _dump_filter;
 
 static int _interactive;
 static FILE *_log;
-static int _debug_level;
+
+/*
+ * Both verbose have a global setting which comes
+ * from the command line that invoked the shell,
+ * or the config file.  These are the 'default'
+ * variables.  In addition people may set a level
+ * for a single command.
+ */
+static int _default_debug;
+static int _debug;
+
+static int _default_verbose;
+static int _verbose;
+
 
 /*
  * The lvm_system_dir contains:
@@ -296,7 +295,8 @@ static void register_commands()
 {
 #define xx(a, b, c...) register_command(# a, a, b, ## c, \
                                         debug_ARG, help_ARG, suspend_ARG, \
-                                        version_ARG, verbose_ARG, -1);
+                                        version_ARG, verbose_ARG, \
+					quiet_ARG, -1);
 #include "commands.h"
 #undef xx
 }
@@ -453,6 +453,7 @@ static int process_command_line(struct command *com, int *argc, char ***argv)
 		}
 
 		if (a->fn) {
+
 			if (!optarg) {
 				log_error("Option requires argument.");
 				return 0;
@@ -461,7 +462,8 @@ static int process_command_line(struct command *com, int *argc, char ***argv)
 			a->value = optarg;
 
 			if (!a->fn(a)) {
-				log_error("Invalid argument %s", optarg);
+				log_error("Invalid argument %s",
+					  optarg);
 				return 0;
 			}
 		}
@@ -502,10 +504,27 @@ static int process_common_commands(struct command *com)
 	if (arg_count(suspend_ARG))
 		kill(getpid(), SIGSTOP);
 
-	l = arg_count(debug_ARG);
-	init_debug(l ? l : _debug_level);
+	/*
+	 * debug
+	 */
+	_debug = _default_debug;
+	if (arg_count(debug_ARG))
+		_debug = arg_count(debug_ARG);
 
-	init_verbose(arg_count(verbose_ARG));
+
+	/*
+	 * verbose
+	 */
+	_verbose = _default_verbose;
+	if (arg_count(verbose_ARG))
+		_verbose = arg_count(verbose_ARG);
+
+
+	if (arg_count(quiet_ARG)) {
+		_debug = 0;
+		_verbose = 0;
+	}
+
 
 	if ((l = arg_count(test_ARG))) {
 		log_error("Test mode. Metadata will NOT be updated.");
@@ -578,7 +597,17 @@ static int run_command(int argc, char **argv)
 	if ((ret = process_common_commands(the_command)))
 		return ret;
 
+	init_debug(_debug);
+	init_verbose(_verbose);
+
 	ret = the_command->fn(argc, argv);
+
+	/*
+	 * set the debug and verbose levels back
+	 * to the global default.
+	 */
+	init_debug(_default_debug);
+	init_verbose(_default_verbose);
 
 	/*
 	 * free off any memory the command used.
@@ -587,6 +616,7 @@ static int run_command(int argc, char **argv)
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
 		usage(the_command->name);
+
 
 	return ret;
 }
@@ -624,7 +654,6 @@ static void __init_log(struct config_file *cf)
 	char *open_mode = "a";
 
 	const char *log_file = find_config_str(cf->root, "log/file", '/', 0);
-	int verbose_level;
 
 	if (find_config_int(cf->root, "log/overwrite", '/', 0))
 		open_mode = "w";
@@ -637,11 +666,11 @@ static void __init_log(struct config_file *cf)
 			init_log(_log);
 	}
 
-	_debug_level = find_config_int(cf->root, "log/level", '/', 0);
-	init_debug(_debug_level);
+	_default_debug = find_config_int(cf->root, "log/level", '/', 0);
+	init_debug(_default_debug);
 
-	verbose_level = find_config_int(cf->root, "log/verbose", '/', 0);
-	init_verbose(verbose_level);
+	_default_verbose = find_config_int(cf->root, "log/verbose", '/', 0);
+	init_verbose(_default_verbose);
 }
 
 static int dev_cache_setup(struct config_file *cf)
