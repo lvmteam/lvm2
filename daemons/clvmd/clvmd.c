@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -719,7 +719,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		if (thisfd->bits.localsock.threadid) {
 			DEBUGLOG("Waiting for child thread\n");
 			pthread_mutex_lock(&thisfd->bits.localsock.mutex);
-			thisfd->bits.localsock.state = POST_COMMAND;
+			thisfd->bits.localsock.state = PRE_COMMAND;
 			pthread_cond_signal(&thisfd->bits.localsock.cond);
 			pthread_mutex_unlock(&thisfd->bits.localsock.mutex);
 			pthread_kill(thisfd->bits.localsock.threadid, SIGUSR2);
@@ -1336,13 +1336,11 @@ static void *pre_and_post_thread(void *arg)
 
 		DEBUGLOG("Got post command condition...\n");
 
+		/* POST function must always run, even if the client aborts */
 		status = 0;
 		do_post_command(client);
 
 		write(pipe_fd, &status, sizeof(int));
-
-		if (client->bits.localsock.finished)
-			break;
 
 		DEBUGLOG("Waiting for next pre command\n");
 
