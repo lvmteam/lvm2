@@ -96,8 +96,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!validate_name(lv_name_new)) {
-		log_error
-		    ("New logical volume name \"%s\" has invalid characters",
+		log_error("New logical volume name \"%s\" is invalid",
 		     lv_name_new);
 		return EINVALID_CMD_LINE;
 	}
