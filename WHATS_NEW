@@ -1,5 +1,8 @@
 Version 2.00.26 - 
 =====================================
+  Make clvmd fork later so it can return more error codes.
+  Make clvmd cope with large gaps in node numbers IDs.
+  
 
 Version 2.00.25 - 29th September 2004
 =====================================
