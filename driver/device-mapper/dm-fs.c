@@ -167,7 +167,7 @@ static int dmfs_release(struct inode *inode, struct file *f)
 
 	/* free off the old table */
 	if (table) {
-		dm_table_destroy(table);
+		dm_put_table(table);
 		inode->u.generic_ip = 0;
 	}
 
@@ -201,7 +201,7 @@ void dmfs_put_inode(struct inode *inode)
 
 	} else {
 		if (table)
-			dm_table_destroy(table);
+			dm_put_table(table);
 
 	}
 

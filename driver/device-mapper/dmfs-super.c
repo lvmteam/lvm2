@@ -41,13 +41,16 @@ static void dmfs_delete_inode(struct inode *inode)
 		case S_IFDIR:
 			if (inode->u.generic_ip) {
 				dm_remove((struct mapped_device *)inode->u.generic_ip);
-				inode->u.generic_ip = NULL;
 			}
 			break;
 		case S_IFREG:
+			if (inode->u.generic_ip) {
+				dm_put_table((struct dm_table *)inode->u.generic_ip);
+			}
 			break;
 	}
 
+	inode->u.generic_ip = NULL;
 	clear_inode(inode);
 }
 

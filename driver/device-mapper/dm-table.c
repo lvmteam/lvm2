@@ -127,6 +127,7 @@ struct dm_table *dm_table_create(void)
 
 	memset(t, 0, sizeof(*t));
 
+	atomic_set(&t->refcnt, 1);
 	atomic_set(&t->pending, 0);
 	init_waitqueue_head(&t->wait);
 
@@ -141,12 +142,12 @@ struct dm_table *dm_table_create(void)
 	return t;
 }
 
-void dm_table_destroy(struct dm_table *t)
+static void dm_table_destroy(struct dm_table *t)
 {
 	int i;
 
-	if (!t)
-		return;
+	if (atomic_read(&t->pending))
+		BUG();
 
 	/* free the indexes */
 	for (i = 0; i < t->depth - 1; i++) {
@@ -163,6 +164,12 @@ void dm_table_destroy(struct dm_table *t)
 	vfree(t->highs);
 
 	kfree(t);
+}
+
+void dm_put_table(struct dm_table *t)
+{
+	if (atomic_dec_and_test(&t->refcnt))
+		dm_table_destroy(t);
 }
 
 /*

@@ -27,6 +27,7 @@
 static int dmfs_lv_create(struct inode *dir, struct dentry *dentry, int mode)
 {
 	struct inode *inode;
+	struct dm_table *table;
 
 	if (dentry->d_name.name[0] == '.')
 		return -EPERM;
@@ -37,16 +38,23 @@ static int dmfs_lv_create(struct inode *dir, struct dentry *dentry, int mode)
 
 	inode = dmfs_create_table(dir, dentry, mode)
 	if (!IS_ERR(inode)) {
-		d_instantiate(dentry, inode);
-		dget(dentry);
-		return 0;
+		table = dm_table_create();
+		if (table) {
+			d_instantiate(dentry, inode);
+			dget(dentry);
+			return 0;
+		}
+		iput(inode);
+		return -ENOMEM;
 	}
 	return PTR_ERR(inode);
 }
 
 static int dmfs_lv_unlink(struct inode *dir, struct dentry *dentry)
 {
-
+	inode->i_nlink--;
+	dput(dentry);
+	return 0;
 }
 
 static int dmfs_lv_link(struct dentry *old_dentry, struct inode *dir, struct dentry *dentry)
@@ -57,6 +65,9 @@ static int dmfs_lv_link(struct dentry *old_dentry, struct inode *dir, struct den
 		return -EPERM;
 
 	if (dentry->d_parent != old_dentry->d_parent)
+		return -EPERM;
+
+	if (dentry->d_name[0] == '.')
 		return -EPERM;
 
 	inode->i_ctime = CURRENT_TIME;
