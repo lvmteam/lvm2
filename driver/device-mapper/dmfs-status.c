@@ -1,5 +1,5 @@
 /*
- * dmfs-suspend.c
+ * dmfs-status.c
  *
  * Copyright (C) 2001 Sistina Software
  *
@@ -22,60 +22,31 @@
 #include <linux/config.h>
 #include <linux/fs.h>
 
-static ssize_t dmfs_suspend_read(struct file *file, char *buf, size_t size, loff_t *pos)
+static ssize_t dmfs_status_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
-	struct inode *inode = file->f_dentry->d_parent->d_inode;
-	struct mapped_device *md = (struct mapped_device *)inode->u.generic_ip;
-
-	char content[2] = { '0', '\n' };
-
-	if (size > 2)
-		size = 2;
-
-	if (test_bit(DM_ACTIVE, &md->state))
-		content[0] = '1';
-
-	if (copy_to_user(buf, content, size))
-		return -EFAULT;
-
 	return size;
 }
 
-static ssize_t dmfs_suspend_write(struct file *file, const char *buf, size_t size, loff_t *pos)
+static ssize_t dmfs_status_write(struct file *file, const char *buf, size_t size, loff_t *pos)
 {
-	struct inode *inode = file->f_dentry->d_inode;
-	char cmd;
-
-	if (size == 0)
-		return 0;
-
-	size = 1;
-	if (copy_from_user(&cmd, buf, size))
-		return -EFAULT;
-
-	if (cmd != '0' && cmd != '1')
-		return -EINVAL;
-
-	/* do suspend or unsuspend */
-
 	return size;
 }
 
-static int dmfs_suspend_sync(struct file *file, struct dentry *dentry, int datasync)
+static int dmfs_status_sync(struct file *file, struct dentry *dentry, int datasync)
 {
 	return 0;
 }
 
 static struct dm_table_file_operations = {
-	read:		dmfs_suspend_read,
-	write:		dmfs_suspend_write,
-	fsync:		dmfs_suspend_sync,
+	read:		dmfs_status_read,
+	write:		dmfs_status_write,
+	fsync:		dmfs_status_sync,
 };
 
-static struct dmfs_suspend_inode_operations = {
+static struct dmfs_status_inode_operations = {
 };
 
-int dmfs_create_suspend(struct inode *dir, int mode)
+int dmfs_create_status(struct inode *dir, int mode)
 {
 	struct inode *inode = new_inode(dir->i_sb);
 
@@ -87,8 +58,8 @@ int dmfs_create_suspend(struct inode *dir, int mode)
 		inode->i_blocks = 0;
 		inode->i_rdev = NODEV;
 		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
-		inode->i_fop = &dmfs_suspend_file_operations;
-		inode->i_op = &dmfs_suspend_inode_operations;
+		inode->i_fop = &dmfs_status_file_operations;
+		inode->i_op = &dmfs_status_inode_operations;
 	}
 
 	return inode;

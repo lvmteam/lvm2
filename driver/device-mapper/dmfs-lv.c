@@ -22,88 +22,167 @@
 /* Heavily based upon ramfs */
 
 #include <linux/config.h>
+#include <linux/ctype.h>
 #include <linux/fs.h>
 
-static int dmfs_lv_unlink(struct inode *dir, struct dentry *dentry)
+static int is_identifier(const char *str, int len)
 {
-	inode->i_nlink--;
-	dput(dentry);
-	return 0;
+	while(len--) {
+		if (!isalnum(*str) && *str != '_')
+			return 0;
+		str++;
+	}
+	return 1;
+}
+
+static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
+{
+	struct super_block *sb = dir->i_sb;
+	struct inode *inode;
+	struct mapped_device *md;
+
+	if (dentry->d_name.len >= DM_NAME_LEN)
+		return -EINVAL;
+
+	if (!is_identifier(name, dentry->d_name.len))
+		return -EPERM;
+
+	if (dentry->d_name.len == 6 && memcmp(dentry->d_name.name, "ACTIVE", 6) == 0)
+		return -EINVAL;
+
+	if (dentry->d_name[0] == '.')
+		return -EINVAL;
+
+	inode = dmfs_create_lv(dir, dentry, mode);
+	if (!IS_ERR(inode)) {
+		md = dm_create(name, -1);
+		if (!IS_ERR(md)) {
+			inode->u.generic_ip = md;
+			md->inode = inode;
+			d_instantiate(dentry, inode);
+			dget(dentry);
+			return 0;
+		}
+		iput(inode);
+		return PTR_ERR(md);
+	}
+	return PTR_ERR(inode);
+}
+
+/*
+ * if u.generic_ip is not NULL, then it indicates an inode which
+ * represents a table. If it is NULL then the inode is a virtual
+ * file and should be deleted along with the directory.
+ */
+static inline positive(struct dentry *dentry)
+{
+	return dentry->d_inode && dentry->d_inode->u.generic_ip &&
+	       !d_unhashed(dentry);
+}
+
+static int empty(struct dentry *dentry)
+{
+	struct list_head *list;
+
+	spin_lock(&dcache_lock);
+	list = dentry->d_subdirs.next;
+
+	while(list != &dentry->d_subdirs) {
+		struct dentry *de = list_entry(list, struct dentry, d_child);
+
+		if (positive(de)) {
+			spin_unlock(&dcache_lock);
+			return 0;
+		}
+		list = list->next;
+	}
+	spin_unlock(&dcache_lock);
+	return 1;
+}
+
+static int dmfs_delete_virtual(struct inode *dir, struct dentry *dentry)
+{
+	struct list_head *list;
+	struct dentry *de;
+	int rv = 0;
+
+	while(1) {
+		spin_lock(&dcache_lock);
+		list = dentry->d_subdirs.next;
+		if (list == &dentry->d_subdirs) {
+			spin_unlock(&dcache_lock);
+			break;
+		}
+		de = list_entry(list, struct dentry, d_child);
+		if (de->d_inode && !d_unhashed(de)) {
+			spin_unlock(&dcache_lock);
+			if (de->d_inode->u.generic_ip)
+				BUG();
+			rv = de->d_inode->ops->unlink(dir, de);
+			if (rv == 0) {
+				d_delete(de);
+				continue;
+			}
+			break;
+		}
+		spin_unlock(&dcache_lock);
+	}
+
+	return rv;
+}
+
+static int dmfs_lv_rmdir(struct inode *dir, struct dentry *dentry)
+{
+	int ret = -ENOTEMPTY;
+
+	if (empty(dentry)) {
+		struct inode *inode = dentry->d_inode;
+
+		ret = dmfs_delete_virtual(dir, dentry);
+		if (ret == 0) {
+			inode->i_nlink--;
+			dput(dentry);
+		}
+	}
+
+	return ret;
 }
 
 static struct dentry *dmfs_lv_lookup(struct inode *dir, struct dentry *dentry)
 {
-	struct inode *inode = NULL;
-	char *name = dentry->d_name.name;
-
-	switch(dentry->d_name.len) {
-		case 5:
-			if (memcmp("table", name, 5) == 0)
-				inode = dmfs_create_table(dir, 0600);
-			break;
-		case 10:
-			if (memcmp("suspend_IO", name, 10) == 0)
-				inode = dmfs_create_suspend(dir, 0600);
-			break;
-	}
-
-	d_add(dentry, inode);
+	d_add(dentry, NULL);
 	return NULL;
 }
 
-static int dmfs_lv_readdir(struct file *filp, void *dirent, filldir_t filldir)
+static int dmfs_lv_rename(struct inode *old_dir, struct dentry *old_dentry,
+			struct inode *new_dir, struct dentry *new_dentry)
 {
-	int i;
-	struct dentry *dentry = filp->f_dentry;
+	/* Can only rename - not move between directories! */
+	if (old_dir != new_dir)
+		return -EPERM;
 
-	i = flip->f_pos;
-	switch(i) {
-		case 0:
-			if (filldir(dirent, ".", 1, i, dentry->d_inode->i_ino, DT_DIR) < 0)
-				break;
-			i++;
-			flip->f_pos++;
-			/* fallthrough */
-		case 1:
-			if (filldir(dirent, "..", 2, i, dentry->d_parent->d_inode->i_ino, DT_DIR) < 0
-				break;
-			i++;
-			filp->f_pos++;
-			/* fallthrough */
-		case 2:
-			if (filldir(dirent, "table", 5, i, 2, DT_REG) < 0)
-				break;
-			i++;
-			filp->f_pos++;
-			/* fallthrough */
-		case 3:
-			if (filldir(dirent, "suspend_IO", 10, i, 3, DT_REG) < 0)
-				break;
-			i++;
-			filp->f_pos++;
-			/* fallthrough */
-	}
-	return 0;
+	return -EINVAL; /* FIXME: a change of LV name here */
 }
-
 
 static int dmfs_lv_sync(struct file *file, struct dentry *dentry, int datasync)
 {
 	return 0;
 }
 
-static struct dmfs_lv_file_operations = {
+static struct dm_root_file_operations = {
 	read:		generic_read_dir,
-	readdir:	dmfs_lv_readdir,
+	readdir:	dcache_readdir,
 	fsync:		dmfs_lv_sync,
 };
 
-static struct dmfs_lv_inode_operations = {
+static struct dm_root_inode_operations = {
 	lookup:		dmfs_lv_lookup,
-	unlink:		dmfs_lv_unlink,
+	mkdir:		dmfs_lv_mkdir,
+	rmdir:		dmfs_lv_rmdir,
+	rename:		dmfs_lv_rename,
 };
 
-struct inode *dmfs_create_lv(struct inode *dir, struct dentry *dentry, int mode)
+struct inode *dmfs_create_lv(struct super_block *sb, int mode)
 {
 	struct inode *inode = new_inode(sb);
 
