@@ -3,11 +3,79 @@
 lvm \- LVM2 tools
 .SH SYNOPSIS
 .B lvm
+[command | file]
 .SH DESCRIPTION
+\fBlvm\fP provides the command-line tools for LVM2.  A separate
+manual page describes each command in detail.
+.LP
+If \fBlvm\fP is invoked with no arguments it presents a readline prompt
+(assuming it was compiled with readline support).
+LVM commands may be entered interactively at this prompt with 
+readline facilities including history and command name and option 
+completion.  Refer to \fBreadline\fP(3) for details.
+.LP
+If \fBlvm\fP is invoked with argv[0] set to the name of a specific
+LVM command (for example by using a hard or soft link) it acts as 
+that command.  
+.LP
+One advantage of using the built-in shell is that configuration 
+information is cached internally between commands.  
+.LP
+A file containing a simple script with one command per line 
+can also be given on the command line.  The script can also be
+executed directly if the first line is #! followed by the absolute
+path of \fBlvm\fP.
+.SH ENVIRONMENT VARIABLES
+.TP
+\fBLVM_SYSTEM_DIR\fP 
+Directory containing lvm.conf and other LVM
+system files.
+Defaults to "/etc/lvm".
+.TP
+\fBHOME\fP 
+Directory containing .lvm_history if the internal shell
+is invoked.
+.TP
+\fBLVM_AUTOBACKUP\fP 
+Set to "no" to disable automatic metadata
+backups and archiving.  Not recommended.
+Defaults to "yes".
+.TP
+\fBLVM_VG_NAME\fP 
+The volume group name that is assumed for 
+any reference to a logical volume that doesn't specify a path.
+Not set by default.
 .SH FILES
 .I /etc/lvm/lvm.conf
 .br
 .I $HOME/.lvm_history
 .fi
 .SH SEE ALSO
-.BR lvm.conf(5)
+.BR lvchange (1),
+.BR lvcreate (1),
+.BR lvdisplay (1),
+.BR lvextend (1),
+.BR lvmchange (1),
+.BR lvreduce (1),
+.BR lvremove (1),
+.BR lvrename (1),
+.BR lvresize (1),
+.BR lvscan (1),
+.BR pvchange (1),
+.BR pvcreate (1),
+.BR pvdisplay (1),
+.BR pvscan (1),
+.BR vgcfgbackup (1),
+.BR vgchange  (1),
+.BR vgck (1),
+.BR vgcreate (1),
+.BR vgdisplay (1),
+.BR vgextend (1),
+.BR vgmerge (1),
+.BR vgreduce (1),
+.BR vgremove (1),
+.BR vgrename (1),
+.BR vgscan (1),
+.BR readline (3),
+.BR lvm.conf (5)
+
