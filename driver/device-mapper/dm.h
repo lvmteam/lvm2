@@ -27,6 +27,94 @@
  *     16/08/2001 - First version [Joe Thornber]
  */
 
+/*
+ * This driver attempts to provide a generic way of specifying logical
+ * devices which are mapped onto other devices.
+ *
+ * It does this by mapping sections of the logical device onto 'targets'.
+ *
+ * When the logical device is accessed the make_request function looks up
+ * the correct target for the given sector, and then asks this target
+ * to do the remapping.
+ *
+ * (dm-table.c) A btree like structure is used to hold the sector
+ * range -> target mapping.  Because we know all the entries in the
+ * btree in advance we can make a very compact tree, omitting pointers
+ * to child nodes, (child nodes locations can be calculated). Each
+ * node of the btree is 1 level cache line in size, this gives a small
+ * performance boost.
+ *
+ * A userland test program for the btree gave the following results on a
+ * 1 Gigahertz Athlon machine:
+ *
+ * entries in btree               lookups per second
+ * ----------------               ------------------
+ * 5                              25,000,000
+ * 1000                           7,700,000
+ * 10,000,000                     3,800,000
+ *
+ * Of course these results should be taken with a pinch of salt; the lookups
+ * were sequential and there were no other applications (other than X + emacs)
+ * running to give any pressure on the level 1 cache.
+ *
+ * Typical LVM users would find they have very few targets for each
+ * LV (probably less than 10).
+ *
+ * (dm-target.c) Target types are not hard coded, instead the
+ * register_mapping_type function should be called.  A target type is
+ * specified using three functions (see the header):
+ *
+ * dm_ctr_fn - takes a string and contructs a target specific piece of
+ *             context data.
+ * dm_dtr_fn - destroy contexts.
+ * dm_map_fn - function that takes a buffer_head and some previously
+ *             constructed context and performs the remapping.
+ *
+ * Currently there are two two trivial mappers, which are
+ * automatically registered: 'linear', and 'io_error'.  Linear alone
+ * is enough to implement most LVM features (omitting striped volumes
+ * and snapshots).
+ *
+ * (dm-fs.c) The driver is controlled through a /proc interface:
+ * /proc/device-mapper/control allows you to create and remove devices
+ * by 'cat'ing a line of the following format:
+ *
+ * create <device name> [minor no]
+ * remove <device name>
+ *
+ * /proc/device-mapper/<device name> accepts the mapping table:
+ *
+ * begin
+ * <sector start> <length> <target name> <target args>...
+ * ...
+ * end
+ *
+ * The begin/end lines are nasty, they should be handled by open/close
+ * for the file.
+ *
+ * At the moment the table assumes 32 bit keys (sectors), the move to
+ * 64 bits will involve no interface changes, since the tables will be
+ * read in as ascii data.  A different table implementation can
+ * therefor be provided at another time.  Either just by changing offset_t
+ * to 64 bits, or maybe implementing a structure which looks up the keys in
+ * stages (ie, 32 bits at a time).
+ *
+ * More interesting targets:
+ *
+ * striped mapping; given a stripe size and a number of device regions
+ * this would stripe data across the regions.  Especially useful, since
+ * we could limit each striped region to a 32 bit area and then avoid
+ * nasty 64 bit %'s.
+ *
+ * mirror mapping (reflector ?); would set off a kernel thread slowly
+ * copying data from one region to another, ensuring that any new
+ * writes got copied to both destinations correctly.  Great for
+ * implementing pvmove.  Not sure how userland would be notified that
+ * the copying process had completed.  Possibly by reading a /proc entry
+ * for the LV.  Could also use poll() for this kind of thing.
+ */
+
+
 #ifndef DM_INTERNAL_H
 #define DM_INTERNAL_H
 
@@ -66,7 +154,9 @@ struct mapped_device {
 
 	int use_count;
 	int state;
-	atomic_t pending;
+
+	wait_queue_head_t wait;
+	atomic_t pending;	/* # of 'in flight' buffers */
 
 	/* btree table */
 	int depth;

@@ -38,6 +38,7 @@
 struct mapped_device;
 typedef unsigned int offset_t;
 
+/* constructor, destructor and map fn types */
 typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct mapped_device *md,
 			 const char *cb, const char *ce, void **result);
 typedef void (*dm_dtr_fn)(void *c);

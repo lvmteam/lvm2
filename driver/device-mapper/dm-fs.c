@@ -66,7 +66,7 @@ struct pf_data {
 	int minor;
 };
 
-int dm_init_fs()
+int dm_init_fs(void)
 {
 	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
 

@@ -25,13 +25,6 @@
  *    14/08/2001 - First Version [Joe Thornber]
  */
 
-
-/* TODO:
- *
- * dm_ctr_fn should provide the sector sizes, and hardsector_sizes set
- * to the smallest of these.
- */
-
 #include "dm.h"
 
 /* defines for blk.h */
@@ -43,83 +36,17 @@
 
 #include <linux/blk.h>
 
-/*
- * This driver attempts to provide a generic way of specifying logical
- * devices which are mapped onto other devices.
- *
- * It does this by mapping sections of the logical device onto 'targets'.
- *
- * When the logical device is accessed the make_request function looks up
- * the correct target for the given sector, and then asks this target
- * to do the remapping.
- *
- * A btree like structure is used to hold the sector range -> target
- * mapping.  Because we know all the entries in the btree in advance
- * we can make a very compact tree, omitting pointers to child nodes,
- * (child nodes locations can be calculated). Each node of the btree is
- * 1 level cache line in size, this gives a small performance boost.
- *
- * A userland test program for the btree gave the following results on a
- * 1 Gigahertz Athlon machine:
- *
- * entries in btree               lookups per second
- * ----------------               ------------------
- * 5                              25,000,000
- * 1000                           7,700,000
- * 10,000,000                     3,800,000
- *
- * Of course these results should be taken with a pinch of salt; the lookups
- * were sequential and there were no other applications (other than X + emacs)
- * running to give any pressure on the level 1 cache.
- *
- * Typically LVM users would find they have very few targets for each
- * LV (probably less than 10).
- *
- * Target types are not hard coded, instead the
- * register_mapping_type function should be called.  A target type
- * is specified using three functions (see the header):
- *
- * dm_ctr_fn - takes a string and contructs a target specific piece of
- *             context data.
- * dm_dtr_fn - destroy contexts.
- * dm_map_fn - function that takes a buffer_head and some previously
- *             constructed context and performs the remapping.
- *
- * This file contains two trivial mappers, which are automatically
- * registered: 'linear', and 'io_error'.  Linear alone is enough to
- * implement most LVM features (omitting striped volumes and
- * snapshots).
- *
- * The driver is controlled through a /proc interface...
- * FIXME: finish
- *
- * At the moment the table assumes 32 bit keys (sectors), the move to
- * 64 bits will involve no interface changes, since the tables will be
- * read in as ascii data.  A different table implementation can
- * therefor be provided at another time.  Either just by changing offset_t
- * to 64 bits, or maybe implementing a structure which looks up the keys in
- * stages (ie, 32 bits at a time).
- *
- * More interesting targets:
- *
- * striped mapping; given a stripe size and a number of device regions
- * this would stripe data across the regions.  Especially useful, since
- * we could limit each striped region to a 32 bit area and then avoid
- * nasy 64 bit %'s.
- *
- * mirror mapping (reflector ?); would set off a kernel thread slowly
- * copying data from one region to another, ensuring that any new
- * writes got copied to both destinations correctly.  Great for
- * implementing pvmove.  Not sure how userland would be notified that
- * the copying process had completed.  Possibly by reading a /proc entry
- * for the LV. Could also use poll() for this kind of thing.
- */
-
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
 
 const char *_name = "device-mapper";
 int _version[3] = {0, 1, 0};
+
+struct io_hook {
+	struct mapped_device *md;
+	void (*end_io)(struct buffer_head *bh, int uptodate);
+	void *context;
+};
 
 #define rl down_read(&_dev_lock)
 #define ru up_read(&_dev_lock)
@@ -292,14 +219,41 @@ static int blk_ioctl(struct inode *inode, struct file *file,
 	return 0;
 }
 
+/* FIXME: should io_hooks come from their own slab ? */
+inline static struct io_hook *alloc_io_hook(void)
+{
+	return kmalloc(sizeof(struct io_hook), GFP_NOIO);
+}
+
+inline static void free_io_hook(struct io_hook *ih)
+{
+	kfree(ih);
+}
+
+static void dec_pending(struct buffer_head *bh, int uptodate)
+{
+	struct io_hook *ih = bh->b_private;
+
+	if (atomic_dec_and_test(&ih->md->pending))
+		/* nudge anyone waiting on suspend queue */
+		wake_up_interruptible(&ih->md->wait);
+
+	bh->b_end_io = ih->end_io;
+	bh->b_private = ih->context;
+	free_io_hook(ih);
+
+	bh->b_end_io(bh, uptodate);
+}
+
 static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 {
 	struct mapped_device *md;
 	offset_t *node;
-	int i = 0, l, next_node = 0, ret = 0;
+	int i = 0, l, next_node = 0, r = 0;
 	int minor = MINOR(bh->b_rdev);
 	dm_map_fn fn;
 	void *context;
+	struct io_hook *ih = 0;
 
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
@@ -307,11 +261,10 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 	rl;
 	md = _devs[minor];
 
-	if (!md) {
-		ret = -ENXIO;
-		goto out;
-	}
+	if (!md)
+		goto bad;
 
+	/* search the btree for the correct target */
 	for (l = 0; l < md->depth; l++) {
 		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
 		node = md->index[l] + (next_node * KEYS_PER_NODE);
@@ -325,15 +278,42 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 	fn = md->targets[next_node];
 	context = md->contexts[next_node];
 
-	if (fn) {
-		if ((ret = fn(bh, context)))
-			atomic_inc(&md->pending);
-	} else
-		buffer_IO_error(bh);
+	if (!fn)
+		goto bad;
 
- out:
+	ih = alloc_io_hook();
+
+	if (!ih)
+		goto bad;
+
+	ih->md = md;
+	ih->end_io = bh->b_end_io;
+	ih->context = bh->b_private;
+
+	r = fn(bh, context);
+
+	if (r > 0) {
+		/* hook the end io request fn */
+		atomic_inc(&md->pending);
+		bh->b_end_io = dec_pending;
+		bh->b_private = ih;
+
+	} else if (r == 0)
+		/* we don't need to hook */
+		free_io_hook(ih);
+
+	else if (r < 0) {
+		free_io_hook(ih);
+		goto bad;
+	}
+
 	ru;
-	return ret;
+	return r;
+
+ bad:
+	ru;
+	buffer_IO_error(bh);
+	return 0;
 }
 
 static inline int __specific_dev(int minor)
@@ -378,6 +358,8 @@ static struct mapped_device *alloc_dev(int minor)
 	md->dev = MKDEV(DM_BLK_MAJOR, minor);
 	md->name[0] = '\0';
 	md->state = 0;
+
+	init_waitqueue_head(&md->wait);
 
 	_devs[minor] = md;
 	wu;
@@ -496,6 +478,11 @@ int dm_remove(const char *name)
 		return -ENXIO;
 	}
 
+	if (md->in_use) {
+		wu;
+		return -EPERM;
+	}
+
 	if ((r = dm_fs_remove(md))) {
 		wu;
 		return r;
@@ -566,7 +553,6 @@ int dm_activate(struct mapped_device *md)
 	return 0;
 
  bad:
-
 	od = d;
 	for (d = md->devices; d != od; d = d->next)
 		close_dev(d);
@@ -577,15 +563,33 @@ int dm_activate(struct mapped_device *md)
 
 void dm_suspend(struct mapped_device *md)
 {
+	DECLARE_WAITQUEUE(wait, current);
 	struct dev_list *d;
 	if (!is_active(md))
 		return;
+
+	/* wait for all the pending io to flush */
+	add_wait_queue(&md->wait, &wait);
+	current->state = TASK_INTERRUPTIBLE;
+	do {
+		wl;
+		if (!atomic_read(&md->pending))
+			break;
+
+		wu;
+		schedule();
+
+	} while (1);
+
+	current->state = TASK_RUNNING;
+	remove_wait_queue(&md->wait, &wait);
 
 	/* close all the devices */
 	for (d = md->devices; d; d = d->next)
 		close_dev(d);
 
 	clear_bit(DM_ACTIVE, &md->state);
+	wu;
 }
 
 

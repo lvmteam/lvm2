@@ -94,7 +94,7 @@ int dm_start_table(struct mapped_device *md)
 	set_bit(DM_LOADING, &md->state);
 
 	dm_free_table(md);
-	if ((r = alloc_targets(md, 2)))	/* FIXME: increase once debugged 256 ? */
+	if ((r = alloc_targets(md, 64)))
 		return r;
 
 	return 0;
