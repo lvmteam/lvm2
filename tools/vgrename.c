@@ -57,7 +57,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!validate_name(vg_name_new)) {
-		log_error("New volume group name \"%s\" has invalid characters",
+		log_error("New volume group name \"%s\" is invalid",
 			  vg_name_new);
 		return ECMD_FAILED;
 	}

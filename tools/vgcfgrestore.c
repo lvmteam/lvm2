@@ -21,8 +21,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		vg_name += strlen(cmd->dev_dir);
 
 	if (!validate_name(vg_name)) {
-		log_error("Volume group name \"%s\" has invalid characters",
-			  vg_name);
+		log_error("Volume group name \"%s\" is invalid", vg_name);
 		return ECMD_FAILED;
 	}
 
