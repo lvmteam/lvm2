@@ -500,7 +500,7 @@ static int _write_lvd(struct device *dev, ulong pos, struct lv_disk *disk)
 static int _write_lvs(struct disk_list *data)
 {
 	struct list *lvh;
-	ulong pos;
+	ulong pos, offset;
 
 	pos = data->pvd.lv_on_disk.base;
 
@@ -513,10 +513,15 @@ static int _write_lvs(struct disk_list *data)
 	list_iterate(lvh, &data->lvds) {
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 
-		if (!_write_lvd(data->dev, pos, &ll->lvd))
-			fail;
+		offset = sizeof(struct lv_disk) * ll->lvd.lv_number;
+		if (offset + sizeof(struct lv_disk) >
+		    data->pvd.lv_on_disk.size) {
+			log_error("lv_number %d too large", ll->lvd.lv_number);
+			return 0;
+		}
 
-		pos += sizeof(struct lv_disk);
+		if (!_write_lvd(data->dev, pos + offset, &ll->lvd))
+			fail;
 	}
 
 	return 1;
