@@ -37,9 +37,9 @@ struct btree *btree_create(struct pool *mem)
  */
 static uint32_t _shuffle(uint32_t k)
 {
-#if 0
+#if 1
 	return ((k & 0xff) << 24 |
-		(k & 0xff00) << 16 |
+		(k & 0xff00) << 8 |
 		(k & 0xff0000) >> 8 |
 		(k & 0xff000000) >> 24);
 #else
