@@ -82,6 +82,14 @@ static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
 static struct list lvm_cmd_head;
 static int quit = 0;
+static int child_pipe[2];
+
+/* Reasons the daemon failed initialisation */
+#define DFAIL_INIT       1
+#define DFAIL_LOCAL_SOCK 2
+#define DFAIL_CLUSTER_IF 3
+#define DFAIL_MALLOC     4
+#define SUCCESS          0
 
 /* Prototypes for code further down */
 static void sigusr2_handler(int sig);
@@ -129,6 +137,16 @@ static void usage(char *prog, FILE *file)
 	fprintf(file, "\n");
 }
 
+/* Called to signal the parent how well we got on during initialisation */
+static void child_init_signal(int status)
+{
+	write(child_pipe[1], &status, sizeof(status));
+	close(child_pipe[1]);
+	if (status)
+	        exit(status);
+}
+
+
 int main(int argc, char *argv[])
 {
 	int local_sock;
@@ -175,6 +193,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* Fork into the background (unless requested not to) */
+	if (!debug) {
+		be_daemon();
+	}
+
 	DEBUGLOG("CLVMD started\n");
 
 	/* Open the Unix socket we listen for commands on.
@@ -183,7 +206,7 @@ int main(int argc, char *argv[])
 	   but the cluster is not ready yet */
 	local_sock = open_local_sock();
 	if (local_sock < 0)
-		exit(2);
+		child_init_signal(DFAIL_LOCAL_SOCK);
 
 	/* Set up signal handlers, USR1 is for cluster change notifications (in cman)
 	   USR2 causes child threads to exit.
@@ -208,14 +231,8 @@ int main(int argc, char *argv[])
 	if (init_cluster()) {
 		DEBUGLOG("Can't initialise cluster interface\n");
 		log_error("Can't initialise cluster interface\n");
-		exit(5);
+		child_init_signal(DFAIL_CLUSTER_IF);
 	}
-
-	/* Fork into the background (unless requested not to) */
-	if (!debug) {
-		be_daemon();
-	}
-
 	DEBUGLOG("Cluster ready, doing some more initialisation\n");
 
 	/* Save our CSID */
@@ -229,10 +246,8 @@ int main(int argc, char *argv[])
 
 	/* Add the local socket to the list */
 	newfd = malloc(sizeof(struct local_client));
-	if (!newfd) {
-	        log_error("Can't allocate memory for socket structures. shutting down\n");
-		exit(2);
-	}
+	if (!newfd)
+	        child_init_signal(DFAIL_MALLOC);
 
 	newfd->fd = local_sock;
 	newfd->type = LOCAL_RENDEZVOUS;
@@ -254,6 +269,7 @@ int main(int argc, char *argv[])
 #endif
 
 	DEBUGLOG("clvmd ready for work\n");
+	child_init_signal(SUCCESS);
 
 	/* Do some work */
 	main_loop(local_sock, cmd_timeout);
@@ -584,26 +600,63 @@ static void main_loop(int local_sock, int cmd_timeout)
 	close(local_sock);
 }
 
-/* Fork into the background and detach from our parent process */
+/*
+ * Fork into the background and detach from our parent process.
+ * In the interests of user-friendliness we wait for the daemon
+ * to complete initialisation before returning its status
+ * the the user.
+ */
 static void be_daemon()
 {
-	pid_t pid;
+        pid_t pid;
+	int child_status;
 	int devnull = open("/dev/null", O_RDWR);
 	if (devnull == -1) {
 		perror("Can't open /dev/null");
 		exit(3);
 	}
 
+	pipe(child_pipe);
+
 	switch (pid = fork()) {
 	case -1:
 		perror("clvmd: can't fork");
 		exit(2);
 
-	case 0:		/* child */
+	case 0:		/* Child */
+	        close(child_pipe[0]);
 		break;
 
-	default:		/* Parent */
-		exit(0);
+	default:       /* Parent */
+		close(child_pipe[1]);
+		if (read(child_pipe[0], &child_status, sizeof(child_status)) !=
+		    sizeof(child_status)) {
+
+		        fprintf(stderr, "clvmd failed in initialisation\n");
+		        exit(DFAIL_INIT);
+		}
+		else {
+		        switch (child_status) {
+			case SUCCESS:
+			        break;
+			case DFAIL_INIT:
+			        fprintf(stderr, "clvmd failed in initialisation\n");
+				break;
+			case DFAIL_LOCAL_SOCK:
+			        fprintf(stderr, "clvmd could not create local socket\n");
+				break;
+			case DFAIL_CLUSTER_IF:
+			        fprintf(stderr, "clvmd could not connect to cluster\n");
+				break;
+			case DFAIL_MALLOC:
+			        fprintf(stderr, "clvmd failed, not enough memory\n");
+				break;
+			default:
+			        fprintf(stderr, "clvmd failed, error was %d\n", child_status);
+				break;
+			}
+			exit(child_status);
+		}
 	}
 
 	/* Detach ourself from the calling environment */
