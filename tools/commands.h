@@ -56,7 +56,7 @@ xx(lvchange,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
-   "\t[-M|--persistent y|n] [--minor minor]\n"
+   "\t[-M|--persistent y|n] [--major major] [--minor minor]\n"
    "\t[-P|--partial] " "\n"
    "\t[-p|--permission r|rw]\n"
    "\t[-r|--readahead ReadAheadSectors]\n"
@@ -66,7 +66,7 @@ xx(lvchange,
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    autobackup_ARG, available_ARG, contiguous_ARG,
-   ignorelockingfailure_ARG, minor_ARG, partial_ARG, permission_ARG,
+   ignorelockingfailure_ARG, major_ARG, minor_ARG, partial_ARG, permission_ARG,
    persistent_ARG, readahead_ARG, test_ARG)
 
 xx(lvcreate,
@@ -79,7 +79,7 @@ xx(lvcreate,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents LogicalExtentsNumber |\n"
    "\t -L|--size LogicalVolumeSize[kKmMgGtT]}\n"
-   "\t[-M|--persistent {y|n}] [--minor minor]\n"
+   "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[-p|--permission {r|rw}]\n"
    "\t[-r|--readahead ReadAheadSectors]\n"
@@ -98,7 +98,7 @@ xx(lvcreate,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents LogicalExtentsNumber |\n"
    "\t -L|--size LogicalVolumeSize[kKmMgGtT]}\n"
-   "\t[-M|--persistent {y|n}] [--minor minor]\n"
+   "\t[-M|--persistent {y|n}] [--major major] [--minor minor]\n"
    "\t[-n|--name LogicalVolumeName]\n"
    "\t[-p|--permission {r|rw}]\n"
    "\t[-r|--readahead ReadAheadSectors]\n"
@@ -107,7 +107,7 @@ xx(lvcreate,
    "\t[--version]\n"
    "\tOriginalLogicalVolume[Path] [PhysicalVolumePath...]\n\n",
 
-   autobackup_ARG, chunksize_ARG, contiguous_ARG, extents_ARG, minor_ARG, 
+   autobackup_ARG, chunksize_ARG, contiguous_ARG, extents_ARG, major_ARG, minor_ARG, 
    name_ARG, permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
    snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, zero_ARG)
 

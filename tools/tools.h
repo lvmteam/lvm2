@@ -101,6 +101,7 @@ int size_kb_arg(struct cmd_context *cmd, struct arg *a);
 int size_mb_arg(struct cmd_context *cmd, struct arg *a);
 int int_arg(struct cmd_context *cmd, struct arg *a);
 int int_arg_with_sign(struct cmd_context *cmd, struct arg *a);
+int major_arg(struct cmd_context *cmd, struct arg *a);
 int minor_arg(struct cmd_context *cmd, struct arg *a);
 int string_arg(struct cmd_context *cmd, struct arg *a);
 int permission_arg(struct cmd_context *cmd, struct arg *a);

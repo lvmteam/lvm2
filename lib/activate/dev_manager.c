@@ -445,8 +445,19 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	}
 
 	/*
-	 * Do we want a specific minor number ?
+	 * Do we want a specific device number ?
 	 */
+	if (dl->lv->major >= 0 && _get_flag(dl, VISIBLE)) {
+		if (!dm_task_set_major(dmt, dl->lv->major)) {
+			log_error("Failed to set major number for %s to %d "
+				  "during activation.", dl->name,
+				  dl->lv->major);
+			goto out;
+		} else
+			log_very_verbose("Set major number for %s to %d.",
+					 dl->name, dl->lv->major);
+	}
+
 	if (dl->lv->minor >= 0 && _get_flag(dl, VISIBLE)) {
 		if (!dm_task_set_minor(dmt, dl->lv->minor)) {
 			log_error("Failed to set minor number for %s to %d "
