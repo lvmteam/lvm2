@@ -58,7 +58,6 @@ static int _match_aux(struct parser *p, int t);
 static struct config_value *_create_value(struct parser *p);
 static struct config_node *_create_node(struct parser *p);
 static char *_dup_tok(struct parser *p);
-static int _tok_match(const char *str, const char *b, const char *e);
 
 #define MAX_INDENT 32
 
@@ -68,6 +67,18 @@ static int _tok_match(const char *str, const char *b, const char *e);
       return 0;\
    } \
 } while(0);
+
+
+static int _tok_match(const char *str, const char *b, const char *e)
+{
+	while (*str && (b != e)) {
+		if (*str++ != *b++)
+			return 0;
+	}
+
+	return !(*str || (b != e));
+}
+
 
 /*
  * public interface
@@ -574,14 +585,51 @@ float find_config_float(struct config_node *cn, const char *path,
 
 }
 
-static int _tok_match(const char *str, const char *b, const char *e)
+static int _str_in_array(const char *str, const char *values[])
 {
-	while (*str && (b != e)) {
-		if (*str++ != *b++)
-			return 0;
+	int i;
+
+	for (i = 0; values[i]; i++)
+		if (!strcasecmp(str, values[i]))
+			return 1;
+
+	return 0;
+}
+
+static int _str_to_bool(const char *str, int fail)
+{
+	static const char *_true_values[] = {"y", "yes", "on", "true", NULL};
+	static const char *_false_values[] = {"n", "no", "off", "false", NULL};
+
+	if (_str_in_array(str, _true_values))
+		return 1;
+
+	if (_str_in_array(str, _false_values))
+		return 0;
+
+	return fail;
+}
+
+int find_config_bool(struct config_node *cn, const char *path,
+		    char sep, int fail)
+{
+	struct config_node *n = find_config_node(cn, path, sep);
+	struct config_value *v;
+
+	if (!n)
+		return fail;
+
+	v = n->v;
+
+	switch (v->type) {
+	case CFG_INT:
+		return v->v.i ? 1 : 0;
+
+	case CFG_STRING:
+		return _str_to_bool(v->v.str, fail);
 	}
 
-	return !(*str || (b != e));
+	return fail;
 }
 
 /*

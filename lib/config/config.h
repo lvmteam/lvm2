@@ -52,6 +52,13 @@ int find_config_int(struct config_node *cn, const char *path,
 float find_config_float(struct config_node *cn, const char *path,
 			char sep, float fail);
 
+/*
+ * Understands (0, ~0), (y, n), (yes, no), (on,
+ * off), (true, false).
+ */
+int find_config_bool(struct config_node *cn, const char *path,
+		    char sep, int fail);
+
 #endif
 
 /*
