@@ -47,7 +47,7 @@ const char *_name = "device-mapper";
 int _version[3] = { 0, 1, 0 };
 
 struct io_hook {
-	struct mapped_device *md;
+	struct dm_table *table;
 	struct target *target;
 	int rw;
 	void (*end_io) (struct buffer_head * bh, int uptodate);
@@ -304,9 +304,9 @@ static void dec_pending(struct buffer_head *bh, int uptodate)
 			return;
 	}
 
-	if (atomic_dec_and_test(&ih->md->pending))
+	if (atomic_dec_and_test(&ih->table->pending))
 		/* nudge anyone waiting on suspend queue */
-		wake_up(&ih->md->wait);
+		wake_up(&ih->table->wait);
 
 	bh->b_end_io = ih->end_io;
 	bh->b_private = ih->context;
@@ -355,15 +355,12 @@ static inline int __map_buffer(struct mapped_device *md,
 	fn = ti->type->map;
 	context = ti->private;
 
-	if (!fn)
-		return 0;
-
 	ih = alloc_io_hook();
 
 	if (!ih)
 		return 0;
 
-	ih->md = md;
+	ih->table = md->map;
 	ih->rw = rw;
 	ih->target = ti;
 	ih->end_io = bh->b_end_io;
@@ -373,7 +370,7 @@ static inline int __map_buffer(struct mapped_device *md,
 
 	if (r > 0) {
 		/* hook the end io request fn */
-		atomic_inc(&md->pending);
+		atomic_inc(&md->map->pending);
 		bh->b_end_io = dec_pending;
 		bh->b_private = ih;
 
@@ -435,16 +432,21 @@ static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb)
 
 	err = -EINVAL;
 	down_read(&_dev_lock);
-	if (test_bit(DM_ACTIVE, &md->state) && md->map) {
+	if (test_bit(DM_ACTIVE, &md->state)) {
 		struct target *t = md->map->targets + __find_node(md->map, &bh);
 		struct target_type *target = t->type;
 		if (target->flags & TF_BMAP) {
 			err = target->map(&bh, READ, t->private);
+			if (bh.b_private) {
+				struct io_hook *ih = (struct io_hook *)bh.b_private;
+				free_io_hook(ih);
+			}
+			err = (err == 0) ? -EINVAL : 0;
 		}
 	}
 	up_read(&_dev_lock);
 
-	if (err >= 0) {
+	if (err == 0) {
 		if (put_user(kdev_t_to_nr(bh.b_rdev), &lvb->lv_dev))
 			return -EFAULT;
 		if (put_user(bh.b_rsector / (bh.b_size >> 9), &lvb->lv_dev))
@@ -552,8 +554,6 @@ static struct mapped_device *alloc_dev(int minor)
 	md->dev = MKDEV(DM_BLK_MAJOR, minor);
 	md->name[0] = '\0';
 	md->state = 0;
-
-	init_waitqueue_head(&md->wait);
 
 	_devs[minor] = md;
 	up_write(&_dev_lock);
@@ -796,11 +796,11 @@ void dm_suspend(struct mapped_device *md)
 	up_write(&_dev_lock);
 
 	/* wait for all the pending io to flush */
-	add_wait_queue(&md->wait, &wait);
+	add_wait_queue(&md->map->wait, &wait);
 	current->state = TASK_UNINTERRUPTIBLE;
 	do {
 		down_write(&_dev_lock);
-		if (!atomic_read(&md->pending))
+		if (!atomic_read(&md->map->pending))
 			break;
 
 		up_write(&_dev_lock);
@@ -809,7 +809,7 @@ void dm_suspend(struct mapped_device *md)
 	} while (1);
 
 	current->state = TASK_RUNNING;
-	remove_wait_queue(&md->wait, &wait);
+	remove_wait_queue(&md->map->wait, &wait);
 
 	md->map = 0;
 	up_write(&_dev_lock);
