@@ -208,7 +208,7 @@ static int _set_selinux_context(const char *path)
 
 	log_debug("Setting SELinux context for %s", path);
 	if (is_selinux_enabled() <= 0)
-		return 0;
+		return 1;
 
 	if (matchpathcon(path, 0, &scontext) < 0) {
 		log_error("%s: matchpathcon failed: %s", path, strerror(errno));
