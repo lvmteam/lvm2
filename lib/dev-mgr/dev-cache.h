@@ -39,7 +39,7 @@ void dev_cache_put(struct device *d);
  * Object for iterating through the cache.
  */
 struct dev_iter;
-struct dev_iter dev_iter_create(struct dev_filter *f);
+struct dev_iter *dev_iter_create(struct dev_filter *f);
 void dev_iter_destroy(struct dev_iter *iter);
 
 struct device *dev_cache_iter_get(struct dev_iter *iter);
