@@ -20,7 +20,7 @@
 #include <linux/dm-ioctl.h>
 #include <linux/kdev_t.h>
 
-#define DEVICE_MAPPER_CONTROL "/dev/device-mapper/control"
+#define DEV_DIR "/dev/"
 #define ALIGNMENT sizeof(int)
 
 /*
@@ -354,7 +354,7 @@ int dm_task_run(struct dm_task *dmt)
 		return 0;
 	}
 
-	if ((fd = open(DEVICE_MAPPER_CONTROL, O_RDWR)) < 0) {
+	if ((fd = open(DEV_DIR DM_DIR "/control", O_RDWR)) < 0) {
 		log("Couldn't open device-mapper control device");
 		goto bad;
 	}
