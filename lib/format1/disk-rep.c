@@ -240,6 +240,12 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 		goto bad;
 	}
 
+	/*
+	 * is it an orphan ?
+	 */
+	if (data->pv.vg_name == '\0')
+		return 1;
+
 	if (vg_name && strcmp(vg_name, data->pv.vg_name)) {
 		log_info("%s is not a member of the vg '%s'",
 			 dev->name, vg_name);
