@@ -152,7 +152,8 @@ int driver_version(char *version, size_t size)
 /*
  * Returns 1 if info structure populated, else 0 on failure.
  */
-int lv_info(const struct logical_volume *lv, struct lvinfo *info)
+static int _lv_info(const struct logical_volume *lv, int mknodes,
+		    struct lvinfo *info)
 {
 	int r;
 	struct dev_manager *dm;
@@ -166,7 +167,7 @@ int lv_info(const struct logical_volume *lv, struct lvinfo *info)
 		return 0;
 	}
 
-	if (!(r = dev_manager_info(dm, lv, &dminfo)))
+	if (!(r = dev_manager_info(dm, lv, mknodes, &dminfo)))
 		stack;
 
 	info->exists = dminfo.exists;
@@ -178,6 +179,11 @@ int lv_info(const struct logical_volume *lv, struct lvinfo *info)
 
 	dev_manager_destroy(dm);
 	return r;
+}
+
+int lv_info(const struct logical_volume *lv, struct lvinfo *info)
+{
+	return _lv_info(lv, 0, info);
 }
 
 /*
@@ -486,7 +492,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	struct lvinfo info;
 	int r = 1;
 
-	if (!lv_info(lv, &info)) {
+	if (!_lv_info(lv, 1, &info)) {
 		stack;
 		return 0;
 	}

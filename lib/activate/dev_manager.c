@@ -285,13 +285,16 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 }
 
 static int _info_run(const char *name, const char *uuid, struct dm_info *info,
-		     struct pool *mem, char **uuid_out)
+		     int mknodes, struct pool *mem, char **uuid_out)
 {
 	int r = 0;
 	struct dm_task *dmt;
 	const char *u;
+	int dmtask;
 
-	if (!(dmt = _setup_task(name, uuid, 0, DM_DEVICE_INFO))) {
+	dmtask = mknodes ? DM_DEVICE_MKNODES : DM_DEVICE_INFO;
+
+	if (!(dmt = _setup_task(name, uuid, 0, dmtask))) {
 		stack;
 		return 0;
 	}
@@ -320,15 +323,15 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 	return r;
 }
 
-static int _info(const char *name, const char *uuid, struct dm_info *info,
-		 struct pool *mem, char **uuid_out)
+static int _info(const char *name, const char *uuid, int mknodes,
+		 struct dm_info *info, struct pool *mem, char **uuid_out)
 {
-	if (uuid && *uuid && _info_run(NULL, uuid, info, mem, uuid_out)
-	    && info->exists)
+	if (!mknodes && uuid && *uuid && 
+	    _info_run(NULL, uuid, info, 0, mem, uuid_out) && info->exists)
 		return 1;
 
 	if (name)
-		return _info_run(name, NULL, info, mem, uuid_out);
+		return _info_run(name, NULL, info, mknodes, mem, uuid_out);
 
 	return 0;
 }
@@ -1072,7 +1075,7 @@ void dev_manager_destroy(struct dev_manager *dm)
 }
 
 int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
-		     struct dm_info *info)
+		     int mknodes, struct dm_info *info)
 {
 	char *name;
 
@@ -1088,7 +1091,7 @@ int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device info for %s", name);
-	if (!_info(name, lv->lvid.s, info, NULL, NULL)) {
+	if (!_info(name, lv->lvid.s, mknodes, info, NULL, NULL)) {
 		stack;
 		return 0;
 	}
@@ -1167,7 +1170,7 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 	dl->name = name;
 
 	log_debug("Getting device info for %s", dl->name);
-	if (!_info(dl->name, dlid, &dl->info, dm->mem, &uuid)) {
+	if (!_info(dl->name, dlid, 0, &dl->info, dm->mem, &uuid)) {
 		stack;
 		return NULL;
 	}
