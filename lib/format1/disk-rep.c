@@ -150,6 +150,10 @@ static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 		return 0;
 	}
 
+	/* If UUID is missing, create one */
+	if (pvd->pv_uuid[0] == '\0')
+		uuid_from_num(pvd->pv_uuid, pvd->pv_number);
+
 	return 1;
 }
 
@@ -171,6 +175,10 @@ static int _read_vgd(struct disk_list *data)
 		fail;
 
 	_xlate_vgd(vgd);
+
+	/* If UUID is missing, create one */
+	if (vgd->vg_uuid[0] == '\0')
+		uuid_from_num(vgd->vg_uuid, vgd->vg_number);
 
 	return 1;
 }
