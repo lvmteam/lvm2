@@ -62,7 +62,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
+	if (!deactivate_lv(cmd, lv->lvid.s)) {
 		log_error("Unable to deactivate logical volume \"%s\"",
 			  lv->name);
 		return ECMD_FAILED;

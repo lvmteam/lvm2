@@ -1,5 +1,7 @@
 Version 2.00.16 - 
 =============================
+  Revise internal locking semantics.
+  Move find_pv_by_name to library.
   Rename move->copy.
   Add devices to segments report.
   Begin separating out segment code. There's a lot of change here.

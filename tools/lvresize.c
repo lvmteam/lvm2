@@ -380,19 +380,19 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	else
 		lock_lvid = lv->lvid.s;
 
-	if (!lock_vol(cmd, lock_lvid, LCK_LV_SUSPEND | LCK_HOLD)) {
-		log_error("Can't get lock for %s", lv_name);
+	if (!suspend_lv(cmd, lock_lvid)) {
+		log_error("Failed to suspend %s", lv_name);
 		vg_revert(vg);
 		goto error;
 	}
 
 	if (!vg_commit(vg)) {
 		stack;
-		unlock_lv(cmd, lock_lvid);
+		resume_lv(cmd, lock_lvid);
 		goto error;
 	}
 
-	if (!unlock_lv(cmd, lock_lvid)) {
+	if (!resume_lv(cmd, lock_lvid)) {
 		log_error("Problem reactivating %s", lv_name);
 		goto error;
 	}

@@ -53,14 +53,16 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 		break;
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {
+		case LCK_NULL:
+			return lv_deactivate(cmd, resource);
 		case LCK_UNLOCK:
 			return lv_resume_if_active(cmd, resource);
 		case LCK_READ:
-			return lv_activate(cmd, resource);
+			return lv_activate_with_filter(cmd, resource);
 		case LCK_WRITE:
 			return lv_suspend_if_active(cmd, resource);
 		case LCK_EXCL:
-			return lv_deactivate(cmd, resource);
+			return lv_activate_with_filter(cmd, resource);
 		default:
 			break;
 		}

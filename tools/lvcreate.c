@@ -528,7 +528,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE)) {
+	if (!activate_lv(cmd, lv->lvid.s)) {
 		if (lp->snapshot)
 			/* FIXME Remove the failed lv we just added */
 			log_error("Aborting. Failed to activate snapshot "
@@ -554,14 +554,14 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
-		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
-			log_err("Couldn't unlock snapshot.");
+		if (!deactivate_lv(cmd, lv->lvid.s)) {
+			log_err("Couldn't deactivate new snapshot.");
 			return 0;
 		}
 
 		/* FIXME write/commit/backup sequence issue */
-		if (!lock_vol(cmd, org->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
-			log_error("Failed to lock origin %s", org->name);
+		if (!suspend_lv(cmd, org->lvid.s)) {
+			log_error("Failed to suspend origin %s", org->name);
 			return 0;
 		}
 
@@ -574,7 +574,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		if (!vg_write(vg) || !vg_commit(vg))
 			return 0;
 
-		if (!unlock_lv(cmd, org->lvid.s)) {
+		if (!resume_lv(cmd, org->lvid.s)) {
 			log_error("Problem reactivating origin %s", org->name);
 			return 0;
 		}
