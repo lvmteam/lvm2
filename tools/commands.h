@@ -110,12 +110,13 @@ xx(lvextend,
    "\t[-A/--autobackup y/n]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l/--extents [+]LogicalExtentsNumber |\n"
    "\t -L/--size [+]LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   autobackup_ARG, extents_ARG, size_ARG)
+   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG)
 
 xx(lvmchange,
    "With the device mapper, lvmchange is obsolete and does nothing.",
@@ -205,12 +206,13 @@ xx(lvresize,
    "\t[-A/--autobackup y/n]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l/--extents [+/-]LogicalExtentsNumber |\n"
    "\t -L/--size [+/-]LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   autobackup_ARG, extents_ARG, size_ARG)
+   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
