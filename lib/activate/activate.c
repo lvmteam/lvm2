@@ -6,14 +6,13 @@
 
 #include "metadata.h"
 #include "activate.h"
-#include "ll-activate.h"
 #include "display.h"
 #include "log.h"
 #include "fs.h"
 #include "lvm-string.h"
-#include "names.h"
 #include "pool.h"
 #include "toolcontext.h"
+#include "dev_manager.h"
 
 #include <limits.h>
 #include <linux/kdev_t.h>
@@ -47,25 +46,31 @@ int driver_version(char *version, size_t size)
 
 	r = 1;
 
-      out:
+ out:
 	dm_task_destroy(dmt);
 
 	return r;
 }
 
-static int _query(struct logical_volume *lv, int (*fn)(const char *))
+/*
+ * Returns 1 if info structure populated, else 0 on failure.
+ */
+int lv_info(struct logical_volume *lv, struct dm_info *info)
 {
-	char buffer[128];
+	int r;
+	struct dev_manager *dm;
 
-	if (!build_dm_name(buffer, sizeof(buffer), "",
-			   lv->vg->name, lv->name)) {
+	if (!(dm = dev_manager_create(lv->vg->name))) {
 		stack;
-		return -1;
+		return 0;
 	}
 
-	return fn(buffer);
-}
+	if (!(r = dev_manager_info(dm, lv, info)))
+		stack;
 
+	dev_manager_destroy(dm);
+	return r;
+}
 
 /*
  * These three functions return the number of LVs in the state,
@@ -73,236 +78,94 @@ static int _query(struct logical_volume *lv, int (*fn)(const char *))
  */
 int lv_active(struct logical_volume *lv)
 {
-	return _query(lv, device_active);
+	struct dm_info info;
+
+	if (!lv_info(lv, &info)) {
+		stack;
+		return -1;
+	}
+
+	return info.exists;
 }
 
 int lv_suspended(struct logical_volume *lv)
 {
-	return _query(lv, device_suspended);
+	struct dm_info info;
+
+	if (!lv_info(lv, &info)) {
+		stack;
+		return -1;
+	}
+
+	return info.suspended;
 }
 
 int lv_open_count(struct logical_volume *lv)
 {
-	return _query(lv, device_open_count);
-}
+	struct dm_info info;
 
-
-/*
- * Returns 1 if info structure populated, else 0 on failure.
- */
-int lv_info(struct logical_volume *lv, struct dm_info *info)
-{
-	char buffer[128];
-
-	if (!build_dm_name(buffer, sizeof(buffer), "",
-			   lv->vg->name, lv->name)) {
+	if (!lv_info(lv, &info)) {
 		stack;
-		return 0;
+		return -1;
 	}
 
-	return device_info(buffer, info);
-}
-
-static inline int _read_only_lv(struct logical_volume *lv)
-{
-	return (lv->status & LVM_WRITE) && (lv->vg->status & LVM_WRITE);
-}
-
-int _lv_activate_named(struct logical_volume *lv, const char *name)
-{
-	int r = 0;
-	struct dm_task *dmt;
-
-	if (test_mode()) {
-		_skip("Activation of '%s'.", lv->name);
-		return 0;
-	}
-
-	/*
-	 * Create a task.
-	 */
-	if (!(dmt = setup_dm_task(name, DM_DEVICE_CREATE))) {
-		stack;
-		return 0;
-	}
-
-	/*
-	 * Populate it.
-	 */
-	if (!device_populate_lv(dmt, lv)) {
-		stack;
-		return 0;
-	}
-
-	/*
-	 * Do we want a specific minor number ?
-	 */
-	if (lv->minor >= 0) {
-		if (!dm_task_set_minor(dmt, MINOR(lv->minor))) {
-			log_error("Failed to set minor number for %s to %d "
-				  "during activation.", lv->name, lv->minor);
-			goto out;
-		} else
-			log_very_verbose("Set minor number for %s to %d.",
-					 lv->name, lv->minor);
-	}
-
-	/*
-	 * Read only ?
-	 */
-	if (!_read_only_lv(lv)) {
-	    	if (!dm_task_set_ro(dmt)) {
-			log_error("Failed to set %s read-only during "
-				  "activation.", lv->name);
-			goto out;
-		} else
-			log_very_verbose("Activating %s read-only", lv->name);
-	}
-
-	/*
-	 * Load this into the kernel.
-	 */
-	if (!(r = dm_task_run(dmt))) {
-		log_err("Activation failed.");
-		goto out;
-	}
-
- out:
-	dm_task_destroy(dmt);
-	log_verbose("Logical volume %s%s activated", lv->name,
-		    r == 1 ? "" : " not");
-	return r;
+	return info.open_count;
 }
 
 int lv_activate(struct logical_volume *lv)
 {
-	char buffer[128];
+	int r;
+	struct dev_manager *dm;
 
-	/*
-	 * Decide what we're going to call this device.
-	 */
-	if (!build_dm_name(buffer, sizeof(buffer), "",
-			   lv->vg->name, lv->name)) {
+	if (!(dm = dev_manager_create(lv->vg->name))) {
 		stack;
 		return 0;
 	}
 
-	if (!_lv_activate_named(lv, buffer) ||
-	    !fs_add_lv(lv, lv->minor)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
-
-static int _reload(const char *name, struct logical_volume *lv)
-{
-	int r = 0;
-	struct dm_task *dmt;
-
-	/*
-	 * Create a task.
-	 */
-	if (!(dmt = setup_dm_task(name, DM_DEVICE_RELOAD))) {
-		stack;
-		return 0;
-	}
-
-	/*
-	 * Populate it.
-	 */
-	if (!device_populate_lv(dmt, lv)) {
-		stack;
-		return 0;
-	}
-
-	/*
-	 * Load this into the kernel.
-	 */
-	if (!(r = dm_task_run(dmt))) {
-		log_err("Activation failed.");
-		goto out;
-	}
-
-	/*
-	 * Create device nodes and symbolic links.
-	 */
-	if (!fs_add_lv(lv, lv->minor))
+	if (!(r = dev_manager_activate(dm, lv)))
 		stack;
 
- out:
-	dm_task_destroy(dmt);
-	log_verbose("Logical volume %s%s re-activated", lv->name,
-		    r == 1 ? "" : " not");
+	dev_manager_destroy(dm);
 	return r;
 }
 
 int lv_reactivate(struct logical_volume *lv)
 {
 	int r;
-	char buffer[128];
+	struct dev_manager *dm;
 
-	if (test_mode()) {
-		_skip("Reactivation of '%s'.", lv->name);
-		return 0;
-	}
-
-	/*
-	 * Decide what we're going to call this device.
-	 */
-	if (!build_dm_name(buffer, sizeof(buffer), "",
-			   lv->vg->name, lv->name)) {
+	if (!(dm = dev_manager_create(lv->vg->name))) {
 		stack;
 		return 0;
 	}
 
-	/*
-	 * Suspend the device if it isn't already.
-	 */
-	if (!device_suspended(buffer) && !device_suspend(buffer)) {
+	if (!(r = dev_manager_reactivate(dm, lv)))
 		stack;
-		return 0;
-	}
 
-	r = _reload(buffer, lv);
-
-	if (!device_resume(buffer)) {
-		stack;
-		return 0;
-	}
-
+	dev_manager_destroy(dm);
 	return r;
 }
 
 int lv_deactivate(struct logical_volume *lv)
 {
-	char buffer[128];
+	int r;
+	struct dev_manager *dm;
 
-	log_very_verbose("Deactivating %s", lv->name);
-	if (test_mode()) {
-		_skip("Deactivating '%s'.", lv->name);
-		return 0;
-	}
-
-	if (!build_dm_name(buffer, sizeof(buffer), "",
-			   lv->vg->name, lv->name)) {
+	if (!(dm = dev_manager_create(lv->vg->name))) {
 		stack;
 		return 0;
 	}
 
-	if (!device_deactivate(buffer)) {
+	if (!(r = dev_manager_deactivate(dm, lv)))
 		stack;
-		return 0;
-	}
 
-	fs_del_lv(lv);
-
-	return 1;
+	dev_manager_destroy(dm);
+	return r;
 }
 
 int lv_suspend(struct logical_volume *lv)
 {
+#if 0
 	char buffer[128];
 
 	log_very_verbose("Suspending %s", lv->name);
@@ -325,10 +188,15 @@ int lv_suspend(struct logical_volume *lv)
 	fs_del_lv(lv);
 
 	return 1;
+#else
+	log_err("lv_suspend not implemented.");
+	return 1;
+#endif
 }
 
 int lv_rename(const char *old_name, struct logical_volume *lv)
 {
+#if 0
 	int r = 0;
 	char new_name[PATH_MAX];
 	struct dm_task *dmt;
@@ -366,6 +234,10 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
  end:
 	dm_task_destroy(dmt);
 	return r;
+#else
+	log_err("lv_rename not implemented yet.");
+	return 1;
+#endif
 }
 
 /*
@@ -374,6 +246,7 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
  */
 int lv_setup_cow_store(struct logical_volume *lv)
 {
+#if 0
 	char buffer[128];
 	char path[PATH_MAX];
 	struct device *dev;
@@ -412,6 +285,9 @@ int lv_setup_cow_store(struct logical_volume *lv)
 	dev_close(dev);
 
 	return 1;
+#else
+	return 0;
+#endif
 }
 
 
@@ -472,7 +348,7 @@ int lvs_in_vg_opened(struct volume_group *vg)
 }
 
 /* FIXME Currently lvid is "vgname/lv_uuid". Needs to be vg_uuid/lv_uuid. */
-static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd, 
+static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 					    const char *lvid)
 {
 	struct lv_list *lvl;
