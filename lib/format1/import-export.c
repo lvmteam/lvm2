@@ -254,10 +254,13 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	if (lvd->lv_badblock)
 		lv->status |= BADBLOCK_ON;
 
-	if (lvd->lv_allocation == LV_STRICT)
+	if (lvd->lv_allocation & LV_STRICT)
 		lv->status |= ALLOC_STRICT;
-	else
+
+	if (lvd->lv_allocation & LV_CONTIGUOUS)
 		lv->status |= ALLOC_CONTIGUOUS;
+	else
+		lv->status |= ALLOC_SIMPLE;
 
 	lv->read_ahead = lvd->lv_read_ahead;
 	lv->stripes = lvd->lv_stripes;
@@ -314,9 +317,10 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 		lvd->lv_badblock = LV_BADBLOCK_ON;
 
 	if (lv->status & ALLOC_STRICT)
-		lvd->lv_allocation = LV_STRICT;
-	else
-		lvd->lv_allocation = LV_CONTIGUOUS;
+		lvd->lv_allocation |= LV_STRICT;
+
+	if (lv->status & ALLOC_CONTIGUOUS)
+		lvd->lv_allocation |= LV_CONTIGUOUS;
 }
 
 int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvs)

@@ -156,8 +156,14 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	else if (lv->status & ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
 
-	else
+	else if (lv->status & ALLOC_SIMPLE)
 		r = _alloc_simple(lv, pvms, allocated);
+
+	else {
+		log_err("Unknown allocation policy, "
+			"unable to setup logical volume.");
+		goto out;
+	}
 
 	if (r) {
 		vg->free_count -= lv->le_count - allocated;
