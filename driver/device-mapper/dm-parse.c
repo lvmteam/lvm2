@@ -89,7 +89,8 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private)
 		}
 
 		/* build the target */
-		if (ttype->ctr(table, start, size, &line, &context)) {
+		context = ttype->ctr(table, start, size, &line);
+		if (IS_ERR(context)) {
 			PARSE_ERROR;
 		}
 
