@@ -259,9 +259,15 @@ if test x$INTL = xyes; then
 fi
 
 AC_ARG_WITH(confdir,
-	    [  --with-confdir=DIR      Configuration files in DIR [EXEC_PREFIX/etc]],
+	    [  --with-confdir=DIR      Configuration files in DIR [/etc]],
   	    [ CONFDIR="$withval" ],
- 	    [ CONFDIR='${exec_prefix}/etc' ])
+ 	    [ CONFDIR='/etc' ])
+
+AC_ARG_WITH(staticdir,
+	    [  --with-staticdir=DIR    Static binary in DIR [EXEC_PREFIX/sbin]],
+  	    [ STATICDIR="$withval" ],
+ 	    [ STATICDIR='${exec_prefix}/sbin' ])
+
 
 if test "-f VERSION"; then
   LVM_VERSION="\"`cat VERSION`\""
@@ -292,6 +298,7 @@ AC_SUBST(CMDLIB)
 AC_SUBST(MSGFMT)
 AC_SUBST(LOCALEDIR)
 AC_SUBST(CONFDIR)
+AC_SUBST(STATICDIR)
 AC_SUBST(INTL_PACKAGE)
 AC_SUBST(INTL)
 
