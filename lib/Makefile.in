@@ -39,6 +39,7 @@ SOURCES=\
 	label/label.c \
 	label/uuid-map.c \
 	locking/file_locking.c \
+	locking/external_locking.c \
 	locking/locking.c \
 	log/log.c \
 	metadata/lv_manip.c \

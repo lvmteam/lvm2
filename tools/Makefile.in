@@ -62,7 +62,7 @@ include ../make.tmpl
 
 lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
 	$(CC) -o lvm $(OBJECTS) $(LD_FLAGS) -L$(top_srcdir)/lib \
-	      -L$(DESTDIR)/lib -llvm -ldevmapper $(LIBS)
+	      -L$(DESTDIR)/lib -llvm -ldevmapper $(LIBS) -ldl -rdynamic
 
 .commands: commands.h cmdnames.h
 	$(CC) -E -P cmdnames.h | grep -v help > .commands
