@@ -46,8 +46,6 @@ static struct dentry *dmfs_tdir_lookup(struct inode *dir, struct dentry *dentry)
 	struct inode *inode = NULL;
 	const char *name = dentry->d_name.name;
 
-	printk("tdir lookup\n");
-
 	switch(dentry->d_name.len) {
 		case 5:
 			if (memcmp("table", name, 5) == 0) {
@@ -71,8 +69,6 @@ static int dmfs_tdir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 {
 	int i;
 	struct dentry *dentry = filp->f_dentry;
-
-	printk("tdir readdir\n");
 
 	i = filp->f_pos;
 	switch(i) {
