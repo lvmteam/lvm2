@@ -54,6 +54,7 @@ extern char *optarg;
  */
 enum {
 	READ_ONLY = 0,
+	COLS_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
 	NOTABLE_ARG,
@@ -124,15 +125,42 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	return r;
 }
 
-static void _display_info(struct dm_task *dmt)
+static void _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 {
-	struct dm_info info;
+	static int _headings = 0;
 	const char *uuid;
 
-	if (!dm_task_get_info(dmt, &info))
+	if (!info->exists) {
+		printf("Device does not exist.\n");
 		return;
+	}
 
-	if (!info.exists) {
+	if (!_headings) {
+		printf("Name             Maj Min Stat Open Targ Event  UUID\n");
+		_headings = 1;
+	}
+
+	printf("%-16s ", dm_task_get_name(dmt));
+
+	printf("%3d %3d %s%s%s%s %4d %4d %6" PRIu32 " ",
+	       info->major, info->minor,
+	       info->live_table ? "L" : "-",
+	       info->inactive_table ? "I" : "-",
+	       info->suspended ? "s" : "-",
+	       info->read_only ? "r" : "w",
+	       info->open_count, info->target_count, info->event_nr);
+
+	if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
+		printf("%s", uuid);
+
+	printf("\n");
+}
+
+static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
+{
+	const char *uuid;
+
+	if (!info->exists) {
 		printf("Device does not exist.\n");
 		return;
 	}
@@ -140,30 +168,43 @@ static void _display_info(struct dm_task *dmt)
 	printf("Name:              %s\n", dm_task_get_name(dmt));
 
 	printf("State:             %s%s\n",
-	       info.suspended ? "SUSPENDED" : "ACTIVE",
-	       info.read_only ? " (READ-ONLY)" : "");
+	       info->suspended ? "SUSPENDED" : "ACTIVE",
+	       info->read_only ? " (READ-ONLY)" : "");
 
-	if (!info.live_table && !info.inactive_table)
+	if (!info->live_table && !info->inactive_table)
 		printf("Tables present:    None\n");
 	else
 		printf("Tables present:    %s%s%s\n",
-		       info.live_table ? "LIVE" : "",
-		       info.live_table && info.inactive_table ? " & " : "",
-		       info.inactive_table ? "INACTIVE" : "");
+		       info->live_table ? "LIVE" : "",
+		       info->live_table && info->inactive_table ? " & " : "",
+		       info->inactive_table ? "INACTIVE" : "");
 
-	if (info.open_count != -1)
-		printf("Open count:        %d\n", info.open_count);
+	if (info->open_count != -1)
+		printf("Open count:        %d\n", info->open_count);
 
-	printf("Event number:      %" PRIu32 "\n", info.event_nr);
-	printf("Major, minor:      %d, %d\n", info.major, info.minor);
+	printf("Event number:      %" PRIu32 "\n", info->event_nr);
+	printf("Major, minor:      %d, %d\n", info->major, info->minor);
 
-	if (info.target_count != -1)
-		printf("Number of targets: %d\n", info.target_count);
+	if (info->target_count != -1)
+		printf("Number of targets: %d\n", info->target_count);
 
 	if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
 		printf("UUID: %s\n", uuid);
 
 	printf("\n");
+}
+
+static void _display_info(struct dm_task *dmt)
+{
+	struct dm_info info;
+
+	if (!dm_task_get_info(dmt, &info))
+		return;
+
+	if (_switches[COLS_ARG])
+		_display_info_cols(dmt, &info);
+	else
+		_display_info_long(dmt, &info);
 }
 
 static int _load(int task, const char *name, const char *file, const char *uuid)
@@ -714,6 +755,7 @@ static int _process_switches(int *argc, char ***argv)
 
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
+		{"columns", 0, NULL, COLS_ARG},
 		{"readonly", 0, NULL, READ_ONLY},
 		{"major", 1, NULL, MAJOR_ARG},
 		{"minor", 1, NULL, MINOR_ARG},
@@ -735,8 +777,10 @@ static int _process_switches(int *argc, char ***argv)
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((c = GETOPTLONG_FN(*argc, *argv, "j:m:nru:v",
+	while ((c = GETOPTLONG_FN(*argc, *argv, "cCj:m:nru:v",
 				  long_options, &ind)) != -1) {
+		if (c == 'c' || c == 'C' || ind == COLS_ARG)
+			_switches[COLS_ARG]++;
 		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
 		if (c == 'j' || ind == MAJOR_ARG) {
