@@ -14,7 +14,7 @@
 #define _LOG_ERR 3
 #define _LOG_FATAL 2
 
-extern dm_log_fn _log;
+dm_log_fn _log;
 
 #define log_error(msg, x...) _log(_LOG_ERR, __FILE__, __LINE__, msg, ## x)
 #define log_print(msg, x...) _log(_LOG_WARN, __FILE__, __LINE__, msg, ## x)
@@ -22,9 +22,9 @@ extern dm_log_fn _log;
 #define log_very_verbose(msg, x...) _log(_LOG_INFO, __FILE__, __LINE__, msg, ## x)
 #define log_debug(msg, x...) _log(_LOG_DEBUG, __FILE__, __LINE__, msg, ## x)
 
-extern struct target *create_target(uint64_t start,
-                                     uint64_t len,
-                                     const char *type, const char *params);
+struct target *create_target(uint64_t start,
+                             uint64_t len,
+                             const char *type, const char *params);
 
 int add_dev_node(const char *dev_name, dev_t dev);
 int rm_dev_node(const char *dev_name);

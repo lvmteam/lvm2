@@ -29,7 +29,8 @@ static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
  * Library users can provide their own logging
  * function.
  */
-void _default_log(int level, const char *file, int line, const char *f, ...)
+static void _default_log(int level, const char *file, int line,
+			 const char *f, ...)
 {
 	va_list ap;
 
@@ -55,7 +56,7 @@ void dm_log_init(dm_log_fn fn)
 	_log = fn;
 }
 
-void _build_dev_path(char *buffer, size_t len, const char *dev_name)
+static void _build_dev_path(char *buffer, size_t len, const char *dev_name)
 {
 	/* If there's a /, assume caller knows what they're doing */
 	if (strchr(dev_name, '/'))
