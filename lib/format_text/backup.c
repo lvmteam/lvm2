@@ -10,6 +10,12 @@
 #include "pool.h"
 #include "config.h"
 #include "hash.h"
+#include "import-export.h"
+#include "lvm-string.h"
+
+#include <dirent.h>
+#include <unistd.h>
+
 
 /*
  * The format instance is given a directory path
@@ -29,11 +35,24 @@ struct backup_c {
 	uint32_t min_retains;
 
 	char *dir;
+
+	/*
+	 * An ordered list of previous backups.
+	 * Each list entered against the vg name.
+	 * Most recent first.
+	 */
+	struct hash_table *vg_backups;
+
+	/*
+	 * Scratch pool.  Contents of vg_backups
+	 * come from here.
+	 */
+	struct pool *mem;
 };
 
 /*
  * A list of these is built up for each volume
- * group.  Ordered with the most recent at the
+ * group.  Ordered with the least recent at the
  * head.
  */
 struct backup_file {
@@ -52,71 +71,70 @@ static void _unsupported(const char *cmd)
 	log_err("The backup format doesn't support '%s'", cmd);
 }
 
-struct list *get_vgs(struct format_instance *fi)
+static struct list *_get_vgs(struct format_instance *fi)
 {
 	_unsupported("get_vgs");
 	return NULL;
 }
 
-struct list *get_pvs(struct format_instance *fi)
+static struct list *_get_pvs(struct format_instance *fi)
 {
 	_unsupported("get_pvs");
 	return NULL;
 }
 
-struct physical_volume *pv_read(struct format_instance *fi,
-				const char *pv_name)
+static struct physical_volume *_pv_read(struct format_instance *fi,
+					const char *pv_name)
 {
 	_unsupported("pv_read");
 	return NULL;
 }
 
-int pv_setup(struct format_instance *fi, struct physical_volume *pv,
+static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 	     struct volume_group *vg)
 {
 	_unsupported("pv_setup");
-	return 1;
+	return 0;
 }
 
-int pv_write(struct format_instance *fi, struct physical_volume *pv)
+static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 {
 	_unsupported("pv_write");
-	return 1;
+	return 0;
 }
 
-int vg_setup(struct format_instance *fi, struct volume_group *vg)
+static int _vg_setup(struct format_instance *fi, struct volume_group *vg)
 {
 	_unsupported("vg_setup");
-	return 1;
+	return 0;
 }
 
-struct volume_group *vg_read(struct format_instance *fi, const char *vg_name)
+static struct volume_group *_vg_read(struct format_instance *fi,
+				     const char *vg_name)
 {
 	_unsupported("vg_read");
-	return 1;
+	return NULL;
 }
 
-int vg_write(struct format_instance *fi, struct volume_group *vg)
+static void _destroy(struct format_instance *fi)
 {
 	struct backup_c *bc = (struct backup_c *) fi->private;
-
+	if (bc->vg_backups)
+		hash_destroy(bc->vg_backups);
+	pool_destroy(bc->mem);
 }
 
-void destroy(struct format_instance *fi)
-{
-	/*
-	 * We don't need to do anything here since
-	 * everything is allocated from the pool.
-	 */
-}
 
+/*
+ * vg_write implementation starts here.
+ */
 static int _split_vg(const char *filename, char *vg, size_t vg_size,
 		     uint32_t *index)
 {
 	char buffer[64];
 	int n;
 
-	snprintf(buffer, sizeof(buffer), "\%%ds_\%u.vg%n", vg, index, &n);
+	snprintf(buffer, sizeof(buffer), "\%%ds_\%u.vg%n", vg_size, &n);
 	return (sscanf(filename, buffer, vg, index) == 2) &&
 		(filename + n == '\0');
 }
@@ -141,25 +159,24 @@ static void _insert_file(struct list *head, struct backup_file *b)
 	list_add_h(&bf->list, &b->list);
 }
 
-static int _scan_vg(struct pool *mem, struct hash_table *vgs, const char *file)
+static int _scan_vg(struct backup_c *bc, const char *file,
+		    const char *vg_name, int index)
 {
 	struct backup_file *b;
 	struct list *files;
-	char vg_name[256];
-	int index;
 
 	/*
 	 * Do we need to create a new list of
 	 * backup files for this vg ?
 	 */
-	if (!(files = hash_lookup(vgs, vg_name))) {
-		if (!(files = pool_alloc(mem, sizeof(*files)))) {
+	if (!(files = hash_lookup(bc->vg_backups, vg_name))) {
+		if (!(files = pool_alloc(bc->mem, sizeof(*files)))) {
 			stack;
 			return 0;
 		}
 
 		list_init(files);
-		if (!hash_insert(vgs, vg_name, files)) {
+		if (!hash_insert(bc->vg_backups, vg_name, files)) {
 			log_err("Couldn't insert backup file "
 				"into hash table.");
 			return 0;
@@ -169,7 +186,7 @@ static int _scan_vg(struct pool *mem, struct hash_table *vgs, const char *file)
 	/*
 	 * Create a new backup file.
 	 */
-	if (!(b = pool_alloc(mem, sizeof(*b)))) {
+	if (!(b = pool_alloc(bc->mem, sizeof(*b)))) {
 		log_err("Couldn't create new backup file.");
 		return 0;
 	}
@@ -183,26 +200,43 @@ static int _scan_vg(struct pool *mem, struct hash_table *vgs, const char *file)
 	return 1;
 }
 
-static int _scan_dir(struct pool *mem, struct hash_table *vgs, const char *dir)
+static char *_join(struct pool *mem, const char *dir, const char *name)
 {
-	int r = 0;
-
-	if ((count = scandir(dir, &dirent, NULL, alphasort)) < 0) {
-		log_err("Couldn't scan backup directory.");
+	if (!pool_begin_object(mem, 32) ||
+	    !pool_grow_object(mem, dir, strlen(dir)) ||
+	    !pool_grow_object(mem, "/", 1) ||
+	    !pool_grow_object(mem, name, strlen(name)) ||
+	    !pool_grow_object(mem, "\0", 1)) {
+		stack;
 		return NULL;
+	}
+
+	return pool_end_object(mem);
+}
+
+static int _scan_dir(struct backup_c *bc)
+{
+	int r = 0, i, count, index;
+	char vg_name[64], *path;
+	struct dirent **dirent;
+
+	if ((count = scandir(bc->dir, &dirent, NULL, alphasort)) < 0) {
+		log_err("Couldn't scan backup directory.");
+		return 0;
 	}
 
 	for (i = 0; i < count; i++) {
 		if ((dirent[i]->d_name[0] == '.') ||
-		    !_split_vg(dirent[i]->d_name))
+		    !_split_vg(dirent[i]->d_name, vg_name,
+			       sizeof(vg_name), &index))
 			continue;
 
-		if (!(path = _join(mem, dir, dirent[i]->d_name))) {
+		if (!(path = _join(bc->mem, bc->dir, dirent[i]->d_name))) {
 			stack;
 			goto out;
 		}
 
-		_scan_vg(path);
+		_scan_vg(bc, path, vg_name, index);
 	}
 	r = 1;
 
@@ -214,32 +248,107 @@ static int _scan_dir(struct pool *mem, struct hash_table *vgs, const char *dir)
 	return r;
 }
 
-struct hash_table *_scan_backups(const char *dir)
+static int _scan_backups(struct backup_c *bc)
 {
-	int count;
-	struct dirent **dirent;
-	struct hash_table *h = NULL;
+	pool_empty(bc->mem);
 
-	if (!(h = hash_create(128))) {
+	if (bc->vg_backups)
+		hash_destroy(bc->vg_backups);
+
+	if (!(bc->vg_backups = hash_create(128))) {
 		log_err("Couldn't create hash table for scanning backups.");
-		return NULL;
+		return 0;
 	}
 
-	if (!_scan_vgs(mem, h, dir)) {
+	if (!_scan_dir(bc)) {
 		stack;
-		hash_destroy(h);
-		return NULL;
+		return 0;
 	}
 
-	return h;
+	return 1;
+}
+
+static int _vg_write(struct format_instance *fi, struct volume_group *vg)
+{
+	int r = 0, index = 0, i, fd;
+	struct backup_c *bc = (struct backup_c *) fi->private;
+	struct backup_file *last;
+	char *tmp_name;
+	FILE *fp = NULL;
+	char backup_name[PATH_MAX];
+
+	/*
+	 * Build a format string for mkstemp.
+	 */
+	if (lvm_snprintf(backup_name, sizeof(backup_name), "%s/lvm_XXXXXX",
+			 bc->dir) < 0) {
+		log_err("Couldn't generate template for backup name.");
+		return 0;
+	}
+
+	/*
+	 * Write the backup, to a temporary file.
+	 */
+	if ((fd = mkstemp(backup_name))) {
+		log_err("Couldn't create temporary file for backup.");
+		return 0;
+	}
+
+	if (!(fp = fdopen(fd, "w"))) {
+		log_err("Couldn't create FILE object for backup.");
+		close(fd);
+		return 0;
+	}
+
+	if (!text_vg_export(fp, vg)) {
+		stack;
+		goto out;
+	}
+
+	/*
+	 * Now we want to rename this file to <vg>_index.vg.
+	 */
+	if (!_scan_backups(bc)) {
+		log_err("Couldn't scan the backup directory (%s).", bc->dir);
+		goto out;
+	}
+
+	if ((last = (struct backup_file *) hash_lookup(bc->vg_backups,
+						       vg->name))) {
+		/* move to the last in the list */
+		last = list_item(last->list.p, struct backup_file);
+		index = last->index + 1;
+	}
+
+	for (i = 0; i < 10; i++) {
+		if (lvm_snprintf(backup_name, sizeof(backup_name),
+				 "%s/%s_%d.vg",
+				 bc->dir, vg->name, index) < 0) {
+			log_err("backup file name too long.");
+			goto out;
+		}
+
+		if (rename(tmp_name, backup_name) < 0) {
+			log_err("couldn't rename backup file to %s.",
+				backup_name);
+		} else {
+			r = 1;
+			break;
+		}
+
+		index++;
+	}
+
+ out:
+	if (fp)
+		fclose(fp);
+	free(tmp_name);
+	return r;
 }
 
 void backup_expire(struct format_instance *fi)
 {
-	struct backup_c *bc = (struct backup_c *) fi->private;
-	struct hash_table *vgs;
-
-	
+	/* FIXME: finish */
 }
 
 static struct format_handler _backup_handler = {
@@ -254,7 +363,7 @@ static struct format_handler _backup_handler = {
 	destroy: _destroy
 };
 
-struct format_instance *backup_format_create(struct cmd_context,
+struct format_instance *backup_format_create(struct cmd_context *cmd,
 					     const char *dir,
 					     uint32_t retain_days,
 					     uint32_t min_retains)
@@ -266,6 +375,11 @@ struct format_instance *backup_format_create(struct cmd_context,
 	if (!(bc = pool_zalloc(mem, sizeof(*bc)))) {
 		stack;
 		return NULL;
+	}
+
+	if (!(bc->mem = pool_create(1024))) {
+		stack;
+		goto bad;
 	}
 
 	if (!(bc->dir = pool_strdup(mem, dir))) {
@@ -282,12 +396,15 @@ struct format_instance *backup_format_create(struct cmd_context,
 	}
 
 	fi->cmd = cmd;
-	fi->ops = _backup_handler;
+	fi->ops = &_backup_handler;
 	fi->private = bc;
 
 	return fi;
 
  bad:
+	if (bc->mem)
+		pool_destroy(bc->mem);
+
 	pool_free(mem, bc);
 	return NULL;
 }

@@ -22,7 +22,7 @@ static inline int lvm_snprintf(char *str, size_t size, const char *format, ...)
 	n = vsnprintf(str, size, format, ap);
 	va_end(ap);
 
-	if (n < 0 || n == size)
+	if (n < 0 || (n == size))
 		return -1;
 
 	return n;

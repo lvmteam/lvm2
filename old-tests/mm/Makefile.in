@@ -16,5 +16,9 @@ TARGETS=dbg_malloc_t
 include ../../make.tmpl
 
 dbg_malloc_t: dbg_malloc_t.o
-	$(CC) -o dbg_malloc_t dbg_malloc_t.o -L$(top_srcdir)/lib -llvm
+	$(CC) $(CFLAGS) -o dbg_malloc_t dbg_malloc_t.o \
+		-L$(top_srcdir)/lib -llvm
+
+pool_t: pool_t.o
+	$(CC) $(CFLAGS) -o pool_t pool_t.o -L$(top_srcdir)/lib -llvm
 

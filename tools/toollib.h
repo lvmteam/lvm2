@@ -22,8 +22,8 @@
 #define _LVM_TOOLLIB_H
 
 int autobackup_set(void);
-int init_autobackup(void);
-int do_autobackup(struct volume_group *vg);
+int autobackup_init(const char *dir);
+int autobackup(struct volume_group *vg);
 
 int process_each_vg(int argc, char **argv,
 		    int (*process_single) (const char *vg_name));

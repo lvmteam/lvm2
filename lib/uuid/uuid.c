@@ -79,7 +79,7 @@ int id_cmp(struct id *lhs, struct id *rhs)
 }
 
 #define GROUPS (ID_LEN / 4)
-int id_format(struct id *id, char *buffer, size_t size)
+int id_write_format(struct id *id, char *buffer, size_t size)
 {
 	int i;
 

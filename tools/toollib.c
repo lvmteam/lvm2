@@ -1,91 +1,117 @@
 /*
- * Copyright (C) 2001  Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This LVM library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This LVM library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this LVM library; if not, write to the Free
- * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
- * MA 02111-1307, USA
- *
+ * This file is released under the GPL.
  */
 
 #include "tools.h"
+#include "format-text.h"
+#include "metadata.h"
 
 #include <ctype.h>
+#include <limits.h>
 
 static int _autobackup = 1;
+static char _backup_dir[PATH_MAX];
+static int _period = 7;		/* backups will be kept for at least 7 days */
+static int _min_backups = 10;	/* always have at least ten backups, even
+				 * if they're old than the period */
 
-int autobackup_set()
-{
-	return _autobackup;
-}
-
-int init_autobackup()
+/*
+ * Work out by looking at command line, config
+ * file and environment variable whether we should
+ * do an autobackup.
+ */
+int autobackup_init(const char *dir)
 {
 	char *lvm_autobackup;
 
-	if (arg_count(autobackup_ARG)) {
-		_autobackup = strcmp(arg_str_value(autobackup_ARG, "y"), "n");
+	if (strlen(dir) > sizeof(_backup_dir) - 1) {
+		log_err("Backup directory (%s) too long.", dir);
 		return 0;
+	}
+
+	strcpy(_backup_dir, dir);
+
+	if (arg_count(autobackup_ARG)) {
+		_autobackup = !strcmp(arg_str_value(autobackup_ARG, "y"), "y");
+		return 1;
 	}
 
 	_autobackup = 1;	/* default */
 
 	lvm_autobackup = getenv("LVM_AUTOBACKUP");
 	if (!lvm_autobackup)
-		return 0;
+		return 1;
 
 	log_print("using environment variable LVM_AUTOBACKUP "
 		  "to set option A");
 	if (!strcasecmp(lvm_autobackup, "no"))
 		_autobackup = 0;
+
 	else if (strcasecmp(lvm_autobackup, "yes")) {
 		log_error("environment variable LVM_AUTOBACKUP has "
 			  "invalid value \"%s\"!", lvm_autobackup);
-		return -1;
-	}
-
-	return 0;
-}
-
-int do_autobackup(struct volume_group *vg)
-{
-
-/***************
-	log_verbose("Changing lvmtab");
-	if ((vg_cfgbackup(vg_name, LVMTAB_DIR, vg))) {
-		log_error("\"%s\" writing \"%s\"", lvm_error(ret), LVMTAB);
-		return LVM_E_VG_CFGBACKUP;
-	}
-**************/
-
-	if (!autobackup_set()) {
-		log_print
-		    ("WARNING: You don't have an automatic backup of %s",
-		     vg->name);
 		return 0;
 	}
 
-/***************
-	log_print("Creating automatic backup of volume group \"%s\"", vg_name);
-	if ((vg_cfgbackup(vg_name, VG_BACKUP_DIR, vg))) {
-		log_error("\"%s\" writing VG backup of \"%s\"", lvm_error(ret),
-			  vg_name);
-		return LVM_E_VG_CFGBACKUP;
-	}
-***************/
-
-	return 0;
+	return 1;
 }
+
+static int __autobackup(struct volume_group *vg)
+{
+	int r;
+	struct pool *old;
+	struct format_instance *backer;
+
+	old = vg->cmd->mem;
+
+	/*
+	 * Create a temprary pool for this, I
+	 * doubt it's used but the backup code has
+	 * the right to expect it.
+	 */
+	if (!(vg->cmd->mem = pool_create(1024))) {
+		stack;
+		vg->cmd->mem = old;
+		return 0;
+	}
+
+	if (!(backer = backup_format_create(vg->cmd, _backup_dir,
+					    _period, _min_backups))) {
+		log_err("Couldn't create backup object.");
+		return 0;
+	}
+
+	if (!(r = backer->ops->vg_write(backer, vg)))
+		stack;
+
+	pool_destroy(vg->cmd->mem);
+	vg->cmd->mem = old;
+
+	return r;
+}
+
+int autobackup(struct volume_group *vg)
+{
+	if (!__autobackup) {
+		log_print("WARNING: You don't have an automatic backup of %s",
+			  vg->name);
+		return 1;
+	}
+
+	log_print("Creating automatic backup of volume group \"%s\" ...",
+		  vg->name);
+
+	if (!__autobackup(vg)) {
+		log_err("Autobackup failed.");
+		return 0;
+	}
+
+	log_err("Autobackup not implemented yet.");
+	return 1;
+}
+
 
 int process_each_lv_in_vg(struct volume_group *vg,
 			  int (*process_single) (struct logical_volume *lv))

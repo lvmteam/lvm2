@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #ifndef _LVM_POOL_H
@@ -66,8 +66,8 @@ void pool_free(struct pool *p, void *ptr);
  * a call to pool_end_object.
  *
  */
-void *pool_begin_object(struct pool *p, size_t hint);
-void *pool_grow_object(struct pool *p, void *extra, size_t delta);
+int pool_begin_object(struct pool *p, size_t hint);
+int pool_grow_object(struct pool *p, const void *extra, size_t delta);
 void *pool_end_object(struct pool *p);
 void pool_abandon_object(struct pool *p);
 
