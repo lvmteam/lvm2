@@ -23,6 +23,8 @@
 #include <fcntl.h>
 #include <time.h>
 
+#define SECS_PER_DAY 86400
+
 /*
  * The format instance is given a directory path upon creation.
  * Each file in this directory whose name is of the form
@@ -185,6 +187,53 @@ static struct list *_scan_archive(struct pool *mem,
 	return results;
 }
 
+/* Gets rid of those expired archive files! */
+void _remove_expired(struct list *archives, uint32_t retain_days,
+		     uint32_t min_archive)
+{
+	struct list *bh;
+	struct archive_file *bf;
+	struct stat sb;
+	uint32_t size;
+	time_t retain_secs;
+
+	/* Add one to the list size because we've just created a new archive
+	   file before calling this.  FIXME: Can we really assume this? */
+	size = list_size(archives) + 1;
+
+	/* Make sure there are enough archives to even bother looking for
+	 * expired ones... */
+	if(size > min_archive) {
+
+		/* Calculate now minus the retain_days (in seconds) since
+		   the epoch */
+		retain_secs = time(NULL) - (time_t) retain_days * SECS_PER_DAY;
+
+		list_iterate(bh, archives) {
+
+			bf = list_item(bh, struct archive_file);
+
+			/* Get the mtime of the file and unlink if too old */
+			if(stat(bf->path, &sb)) {
+				log_sys_error("stat", bf->path);
+				break;
+			}
+			if(sb.st_mtime < retain_secs) {
+
+				if(unlink(bf->path))
+					log_sys_error("unlink", bf->path);
+				
+				size--;
+				/* Don't delete any more if we've reached the
+				 * minimum */
+				if(size <= min_archive)
+					break;
+
+			}
+		}
+	}
+}
+
 int archive_vg(struct volume_group *vg,
 	       const char *dir, const char *desc,
 	       uint32_t retain_days, uint32_t min_archive)
@@ -246,6 +295,9 @@ int archive_vg(struct volume_group *vg,
 
 		index++;
 	}
+
+	/* Now remove expired files */
+	_remove_expired(archives, retain_days, min_archive);
 
 	return 1;
 }
