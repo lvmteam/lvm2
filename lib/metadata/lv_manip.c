@@ -165,10 +165,9 @@ static int _alloc_striped(struct logical_volume *lv,
 
 
 /*
- * The heart of the allocation code.  This
- * function takes a pv_area and allocates it to
- * the lv.  If the lv doesn't need the complete
- * area then the area is split, otherwise the area
+ * The heart of the allocation code.  This function takes a
+ * pv_area and allocates it to the lv.  If the lv doesn't need
+ * the complete area then the area is split, otherwise the area
  * is unlinked from the pv_map.
  */
 static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
@@ -296,12 +295,10 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	}
 
 	/*
-	 * Build the sets of available areas on
-	 * the pv's.
+	 * Build the sets of available areas on the pv's.
 	 */
-	if (!(pvms = create_pv_maps(scratch, vg, acceptable_pvs))) {
+	if (!(pvms = create_pv_maps(scratch, vg, acceptable_pvs)))
 		goto out;
-	}
 
 	if (stripes > 1)
 		r = _alloc_striped(lv, pvms, allocated, stripes, stripe_size);
@@ -321,13 +318,16 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	if (r) {
 		vg->free_count -= lv->le_count - allocated;
 
-		/* Iterate through the new segments,
-		 * updating pe counts in pv's. */
+		/*
+		 * Iterate through the new segments, updating pe
+		 * counts in pv's.
+		 */
 		for (segh = lv->segments.p; segh != old_tail; segh = segh->p)
 			_get_extents(list_item(segh, struct stripe_segment));
 	} else {
-		/* Put the segment list back how
-		 * we found it. */
+		/*
+		 * Put the segment list back how we found it.
+		 */
 		old_tail->n = &lv->segments;
 		lv->segments.p = old_tail;
 	}
@@ -360,7 +360,8 @@ static char *_generate_lv_name(struct volume_group *vg,
 	return buffer;
 }
 
-struct logical_volume *lv_create(const char *name,
+struct logical_volume *lv_create(struct format_instance *fi,
+				 const char *name,
 				 uint32_t status,
 				 uint32_t stripes,
 				 uint32_t stripe_size,
@@ -433,6 +434,11 @@ struct logical_volume *lv_create(const char *name,
 		goto bad;
 	}
 
+	if (fi->ops->lv_setup && !fi->ops->lv_setup(fi, lv)) {
+		stack;
+		goto bad;
+	}
+
 	vg->lv_count++;
 	list_add(&vg->lvs, &ll->list);
 
@@ -445,7 +451,8 @@ struct logical_volume *lv_create(const char *name,
 	return NULL;
 }
 
-int lv_reduce(struct logical_volume *lv, uint32_t extents)
+int lv_reduce(struct format_instance *fi,
+	      struct logical_volume *lv, uint32_t extents)
 {
 	struct list *segh;
 	struct stripe_segment *seg;
@@ -473,10 +480,16 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	lv->le_count -= extents;
 	lv->size = lv->le_count * lv->vg->extent_size;
 
+	if (fi->ops->lv_setup && !fi->ops->lv_setup(fi, lv)) {
+		stack;
+		return 0;
+	}
+
 	return 1;
 }
 
-int lv_extend(struct logical_volume *lv,
+int lv_extend(struct format_instance *fi,
+	      struct logical_volume *lv,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t extents,
 	      struct list *acceptable_pvs)
@@ -499,6 +512,11 @@ int lv_extend(struct logical_volume *lv,
 	if (!lv_merge_segments(lv)) {
 		log_err("Couldn't merge segments after extending "
 			"logical volume.");
+		return 0;
+	}
+
+	if (fi->ops->lv_setup && !fi->ops->lv_setup(fi, lv)) {
+		stack;
 		return 0;
 	}
 
