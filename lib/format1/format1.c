@@ -11,9 +11,7 @@
 #include "list.h"
 #include "log.h"
 
-
-static int _import_vg(struct pool *mem,
-		      struct volume_group *vg, struct list_head *pvs)
+static int _check_vgs(struct list_head *pvs)
 {
 	struct list_head *tmp;
 	struct disk_list *dl;
@@ -23,244 +21,11 @@ static int _import_vg(struct pool *mem,
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
 
-		if (!first) {
+		if (!first)
 			first = &dl->vg;
-
-			memcpy(&vg->id.uuid, &first->vg_uuid, ID_LEN);
-			if (!(vg->name = pool_strdup(mem, dl->pv.vg_name))) {
-				stack;
-				return 0;
-			}
-
-			// FIXME: encode flags
-			//vg->status = first->vg_status;
-			//vg->access = first->vg_access;
-			vg->extent_size = first->pe_size;
-			vg->extent_count = first->pe_total;
-			vg->free_count = first->pe_total - first->pe_allocated;
-			vg->max_lv = first->lv_max;
-			vg->max_pv = first->pv_max;
-
-		} else if (memcmp(first, &dl->vg, sizeof(*first))) {
+		else if (memcmp(first, &dl->vg, sizeof(*first))) {
 			log_err("vg data differs on pvs\n");
 			return 0;
-		}
-	}
-
-	return first ? 1 : 0;
-}
-
-static int _import_pv(struct pool *mem,
-		      struct disk_list *dl, struct physical_volume *pv)
-{
-	memset(pv, 0, sizeof(*pv));
-	memcpy(&pv->id, &dl->pv.pv_uuid, ID_LEN);
-
-	pv->dev = dl->dev;
-	pv->vg_name = pool_strdup(mem, dl->pv.vg_name);
-
-	if (!pv->vg_name) {
-		stack;
-		return 0;
-	}
-
-	// FIXME: finish
-	//pv->exported = ??;
-	pv->status = dl->pv.pv_status;
-	pv->size = dl->pv.pv_size;
-	pv->pe_size = dl->pv.pe_size;
-	pv->pe_start = dl->pv.pe_start;
-	pv->pe_count = dl->pv.pe_total;
-	pv->pe_allocated = dl->pv.pe_allocated;
-	return 1;
-}
-
-static int _import_pvs(struct pool *mem, struct list_head *pvs,
-		       struct list_head *results, int *count)
-{
-	struct list_head *tmp;
-	struct disk_list *dl;
-	struct pv_list *pvl;
-
-	*count = 0;
-	list_for_each(tmp, pvs) {
-		dl = list_entry(tmp, struct disk_list, list);
-		pvl = pool_alloc(mem, sizeof(*pvl));
-
-		if (!pvl) {
-			stack;
-			return 0;
-		}
-
-		if (!_import_pv(mem, dl, &pvl->pv)) {
-			stack;
-			return 0;
-		}
-
-		list_add(&pvl->list, results);
-		(*count)++;
-	}
-
-	return 1;
-}
-
-static struct logical_volume *_find_lv(struct volume_group *vg,
-				       const char *name)
-{
-	struct list_head *tmp;
-	struct logical_volume *lv;
-	struct lv_list *ll;
-
-	list_for_each(tmp, &vg->lvs) {
-		ll = list_entry(tmp, struct lv_list, list);
-		lv = &ll->lv;
-		if (!strcmp(name, lv->name))
-			return lv;
-	}
-	return NULL;
-}
-
-static struct physical_volume *_find_pv(struct volume_group *vg,
-					struct device *dev)
-{
-	struct list_head *tmp;
-	struct physical_volume *pv;
-	struct pv_list *pl;
-
-	list_for_each(tmp, &vg->pvs) {
-		pl = list_entry(tmp, struct pv_list, list);
-		pv = &pl->pv;
-		if (dev == pv->dev)
-			return pv;
-	}
-	return NULL;
-}
-
-static struct logical_volume *_add_lv(struct pool *mem,
-				      struct volume_group *vg,
-				      struct lv_disk *lvd)
-{
-	struct lv_list *ll = pool_alloc(mem, sizeof(*ll));
-	struct logical_volume *lv;
-
-	if (!ll) {
-		stack;
-		return 0;
-	}
-	lv = &ll->lv;
-
-	memset(&lv->id.uuid, 0, sizeof(lv->id));
-        if (!(lv->name = pool_strdup(mem, lvd->lv_name))) {
-		stack;
-		return 0;
-	}
-
-	// FIXME: finish
-        //lv->access = lvd->lv_access;
-        //lv->status = lvd->lv_status;
-        lv->open = lvd->lv_open;
-        lv->size = lvd->lv_size;
-        lv->le_count = lvd->lv_allocated_le;
-	lv->map = pool_alloc(mem, sizeof(struct pe_specifier) * lv->le_count);
-
-	if (!lv->map) {
-		stack;
-		return 0;
-	}
-
-	list_add(&ll->list, &vg->lvs);
-	vg->lv_count++;
-
-	return lv;
-}
-
-static int _import_lvs(struct pool *mem, struct volume_group *vg,
-		       struct list_head *pvs)
-{
-	struct list_head *tmp, *tmp2;
-	struct disk_list *dl;
-	struct lvd_list *ll;
-	struct lv_disk *lvd;
-
-	list_for_each(tmp, pvs) {
-		dl = list_entry(tmp, struct disk_list, list);
-		list_for_each(tmp2, &dl->lvs) {
-			ll = list_entry(tmp2, struct lvd_list, list);
-			lvd = &ll->lv;
-
-			if (!_find_lv(vg, lvd->lv_name) &&
-			    !_add_lv(mem, vg, lvd)) {
-				stack;
-				return 0;
-			}
-		}
-	}
-
-	return 1;
-}
-
-static int _fill_lv_array(struct logical_volume **lvs,
-			  struct volume_group *vg, struct disk_list *dl)
-{
-	struct list_head *tmp;
-	struct logical_volume *lv;
-	int i = 0;
-
-	list_for_each(tmp, &dl->lvs) {
-		struct lvd_list *ll = list_entry(tmp, struct lvd_list, list);
-
-		if (!(lv = _find_lv(vg, ll->lv.lv_name))) {
-			stack;
-			return 0;
-		}
-
-		lvs[i] = lv;
-		i++;
-	}
-
-	return 1;
-}
-
-static int _import_extents(struct pool *mem, struct volume_group *vg,
-			   struct list_head *pvs)
-{
-	struct list_head *tmp;
-	struct disk_list *dl;
-	struct logical_volume *lv, *lvs[MAX_LV];
-	struct physical_volume *pv;
-	struct pe_disk *e;
-	int i;
-	uint32_t lv_num, le;
-
-	list_for_each(tmp, pvs) {
-		dl = list_entry(tmp, struct disk_list, list);
-		pv = _find_pv(vg, dl->dev);
-		e = dl->extents;
-
-		/* build an array of lv's for this pv */
-		if (!_fill_lv_array(lvs, vg, dl)) {
-			stack;
-			return 0;
-		}
-
-		for (i = 0; i < dl->pv.pe_total; i++) {
-			lv_num = e[i].lv_num;
-
-			if (lv_num == UNMAPPED_EXTENT)
-				lv->map[le].pv = NULL;
-
-			else if(lv_num > dl->pv.lv_cur) {
-				log_err("invalid lv in extent map\n");
-				return 0;
-
-			} else {
-				lv_num--;
-				lv = lvs[lv_num];
-				le = e[i].le_num;
-
-				lv->map[le].pv = pv;
-				lv->map[le].pe = i;
-			}
 		}
 	}
 
@@ -270,10 +35,16 @@ static int _import_extents(struct pool *mem, struct volume_group *vg,
 static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 {
 	struct volume_group *vg = pool_alloc(mem, sizeof(*vg));
+	struct disk_list *dl = list_entry(pvs->next, struct disk_list, list);
+
+	if (!dl) {
+		log_err("no pv's in volume group");
+		return NULL;
+	}
 
 	if (!vg) {
 		stack;
-		return 0;
+		return NULL;
 	}
 
 	memset(vg, 0, sizeof(*vg));
@@ -281,16 +52,21 @@ static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 	INIT_LIST_HEAD(&vg->pvs);
 	INIT_LIST_HEAD(&vg->lvs);
 
-	if (!_import_vg(mem, vg, pvs))
+	if (!_check_vgs(pvs)) {
+		stack;
+		return NULL;
+	}
+
+	if (!import_vg(mem, vg, dl))
 		goto bad;
 
-	if (!_import_pvs(mem, pvs, &vg->pvs, &vg->pv_count))
+	if (!import_pvs(mem, pvs, &vg->pvs, &vg->pv_count))
 		goto bad;
 
-	if (!_import_lvs(mem, vg, pvs))
+	if (!import_lvs(mem, vg, pvs))
 		goto bad;
 
-	if (!_import_extents(mem, vg, pvs))
+	if (!import_extents(mem, vg, pvs))
 		goto bad;
 
 	return vg;
@@ -325,128 +101,9 @@ static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
 	return vg;
 }
 
-static int _export_pv(struct disk_list *dl,
-		      struct volume_group *vg, struct physical_volume *pv)
-{
-	struct pv_disk *pvd = &dl->pv;
-
-	memcpy(&pvd->pv_uuid, &pv->id.uuid, ID_LEN);
-	strcpy(pvd->vg_name, pv->vg_name);
-
-	// FIXME: finish
-	//pv->exported = ??;
-	pvd->pv_status = pv->status;
-	pvd->pv_size = pv->size;
-	pvd->pe_size = pv->pe_size;
-	pvd->pe_start = pv->pe_start;
-	pvd->pe_total = pv->pe_count;
-	pvd->pe_allocated = pv->pe_allocated;
-	return 1;
-}
-
-static int _export_vg(struct disk_list *dl,
-		      struct volume_group *vg, struct physical_volume *pv)
-{
-	struct vg_disk *vgd = &dl->vg;
-	memcpy(vgd->vg_uuid, &vg->id.uuid, ID_LEN);
-
-	// FIXME: encode flags
-	//vg->status = first->vg_status;
-	//vg->access = first->vg_access;
-	vgd->pe_size = vg->extent_size;
-	vgd->pe_total = vg->extent_count;
-	vgd->pe_allocated = vg->extent_count - vg->free_count;
-	vgd->lv_max = vg->max_lv;
-	vgd->pv_max = vg->max_pv;
-	return 1;
-}
-
-static int _export_uuids(struct disk_list *dl, struct volume_group *vg)
-{
-	struct list_head *tmp;
-	struct uuid_list *ul;
-	struct pv_list *pvl;
-
-	list_for_each(tmp, &vg->pvs) {
-		pvl = list_entry(tmp, struct pv_list, list);
-		if (!(ul = pool_alloc(dl->mem, sizeof(*ul)))) {
-			stack;
-			return 0;
-		}
-
-		memcpy(&ul->uuid, &pvl->pv.id.uuid, ID_LEN);
-		ul->uuid[ID_LEN] = '\0';
-
-		list_add(&ul->list, &dl->uuids);
-	}
-	return 1;
-}
-
-static void _export_lv(struct lv_disk *lvd, struct logical_volume *lv)
-{
-	// FIXME: check space
-	strcpy(lvd->lv_name, lv->name);
-
-	// FIXME: finish
-        //lv->access = lvd->lv_access;
-        //lv->status = lvd->lv_status;
-        lvd->lv_open = lv->open;
-        lvd->lv_size = lv->size;
-        lvd->lv_allocated_le = lv->le_count;
-}
-
-static int _export_extents(struct disk_list *dl, int lv_num,
-			   struct logical_volume *lv, 
-			   struct physical_volume *pv)
-{
-	struct pe_disk *ped;
-	int len = sizeof(struct pe_disk) * lv->le_count, le;
-
-	if (!(dl->extents = pool_alloc(dl->mem, len))) {
-		stack;
-		return 0;
-	}
-	memset(&dl->extents, 0, len);
-
-	for (le = 0; le < lv->le_count; le++) {
-		if (lv->map[le].pv == pv) {
-			ped = &dl->extents[lv->map[le].pe];
-			ped->lv_num = lv_num;
-			ped->le_num = le;
-		}
-	}
-	return 1;
-}
-
-
-static int _export_lvs(struct disk_list *dl,
-		       struct volume_group *vg, struct physical_volume *pv)
-{
-	struct list_head *tmp;
-	struct lv_list *ll;
-	struct lvd_list *lvdl;
-	int lv_num = 1;
-
-	list_for_each(tmp, &dl->lvs) {
-		ll = list_entry(tmp, struct lv_list, list);
-		if (!(lvdl = pool_alloc(dl->mem, sizeof(*lvdl)))) {
-			stack;
-			return 0;
-		}
-
-		_export_lv(&lvdl->lv, &ll->lv);
-		if (!_export_extents(dl, lv_num++, &ll->lv, pv)) {
-			stack;
-			return 0;
-		}
-
-		list_add(&lvdl->list, &dl->lvs);
-	}
-	return 1;
-}
-
 static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
-				     struct physical_volume *pv)
+				     struct physical_volume *pv,
+				     const char *prefix)
 {
 	struct disk_list *dl = pool_alloc(mem, sizeof(*dl));
 
@@ -461,10 +118,10 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	INIT_LIST_HEAD(&dl->uuids);
 	INIT_LIST_HEAD(&dl->lvs);
 
-	if (!_export_pv(dl, vg, pv) ||
-	    !_export_vg(dl, vg, pv) ||
-	    !_export_uuids(dl, vg) ||
-	    !_export_lvs(dl, vg, pv)) {
+	if (!export_pv(&dl->pv, pv) ||
+	    !export_vg(&dl->vg, vg) ||
+	    !export_uuids(dl, vg) ||
+	    !export_lvs(dl, vg, pv, prefix)) {
 		stack;
 		return NULL;
 	}
@@ -473,7 +130,7 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 }
 
 static int _flatten_vg(struct pool *mem, struct volume_group *vg,
-		       struct list_head *pvs)
+		       struct list_head *pvs, const char *prefix)
 {
 	struct list_head *tmp;
 	struct pv_list *pvl;
@@ -482,7 +139,7 @@ static int _flatten_vg(struct pool *mem, struct volume_group *vg,
 	list_for_each(tmp, &vg->pvs) {
 		pvl = list_entry(tmp, struct pv_list, list);
 
-		if (!(data = _flatten_pv(mem, vg, &pvl->pv))) {
+		if (!(data = _flatten_pv(mem, vg, &pvl->pv, prefix))) {
 			stack;
 			return 0;
 		}
@@ -503,7 +160,7 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 		return 0;
 	}
 
-	r = _flatten_vg(mem, vg, &pvs) && write_pvs(&pvs);
+	r = _flatten_vg(mem, vg, &pvs, is->prefix) && write_pvs(&pvs);
 	pool_destroy(mem);
 	return r;
 }
@@ -530,7 +187,7 @@ static struct physical_volume *_pv_read(struct io_space *is,
 		goto bad;
 	}
 
-	if (!_import_pv(is->mem, dl, pv)) {
+	if (!import_pv(is->mem, dl->dev, pv, &dl->pv)) {
 		stack;
 		goto bad;
 	}
@@ -567,7 +224,7 @@ static struct list_head *_get_pvs(struct io_space *is)
 		goto bad;
 	}
 
-	if (!_import_pvs(is->mem, &pvs, results, &count)) {
+	if (!import_pvs(is->mem, &pvs, results, &count)) {
 		stack;
 		goto bad;
 	}
@@ -672,5 +329,3 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 
 	return ios;
 }
-
-
