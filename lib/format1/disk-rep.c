@@ -9,10 +9,12 @@
 #include "xlate.h"
 #include "log.h"
 #include "vgcache.h"
+#include "filter.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <linux/kdev_t.h>
 
 #define fail do {stack; return 0;} while(0)
 #define xx16(v) disk->v = xlate16(disk->v)
@@ -338,6 +340,29 @@ struct disk_list *read_disk(struct device *dev, struct pool *mem,
 	return r;
 }
 
+static void _add_pv_to_list(struct list *head, struct disk_list *data)
+{
+	struct list *pvdh;
+	struct pv_disk *pvd;
+
+	list_iterate(pvdh, head) {
+		pvd = &list_item(pvdh, struct disk_list)->pvd;
+		if (!strncmp(data->pvd.pv_uuid, pvd->pv_uuid, 
+			     sizeof(pvd->pv_uuid))) {
+			if (MAJOR(data->dev->dev) != md_major()) {
+				log_debug("Ignoring duplicate PV %s on %s", 
+					  pvd->pv_uuid, dev_name(data->dev));
+				return;
+			}
+			log_debug("Duplicate PV %s - using md %s", 
+				  pvd->pv_uuid, dev_name(data->dev));
+			list_del(pvdh);
+			break;
+		}
+	}
+	list_add(head, &data->list);
+}
+
 /*
  * Build a list of pv_d's structures, allocated from mem.
  * We keep track of the first object allocated form the pool
@@ -358,7 +383,7 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 			dev = list_item(pvdh2, struct pvdev_list)->dev;
 			if (!(data = read_disk(dev, mem, vg_name)))
 				break;
-			list_add(head, &data->list);
+			_add_pv_to_list(head, data);
 		}
 
 		/* Did we find the whole VG? */
@@ -380,7 +405,7 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 	/* Otherwise do a complete scan */
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		if ((data = read_disk(dev, mem, vg_name))) {
-			list_add(head, &data->list);
+			_add_pv_to_list(head, data);
 		}
 	}
 	dev_iter_destroy(iter);

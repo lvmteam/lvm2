@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <linux/kdev_t.h>
 
@@ -39,6 +40,8 @@ typedef struct {
 	char *name;
 	int max_partitions;
 } device_info_t;
+
+static int _md_major = -1;
 
 static device_info_t device_info[] = {
 	{"ide", 16},		/* IDE disk */
@@ -94,6 +97,11 @@ struct dev_filter *lvm_type_filter_create(const char *proc)
 		return NULL;
 
 	return f;
+}
+
+int md_major(void)
+{
+	return _md_major;
 }
 
 void lvm_type_filter_destroy(struct dev_filter *f)
@@ -154,6 +162,10 @@ static int *scan_proc_dev(const char *proc)
 			i++;
 		while (line[i] == ' ' && line[i] != '\0')
 			i++;
+
+		/* Look for md device */
+		if (!strncmp("md", line + i, 2) && isspace(*(line + i + 2)))
+			_md_major = line_maj;
 
 		/* Go through the valid device names and if there is a
    			match store max number of partitions */
