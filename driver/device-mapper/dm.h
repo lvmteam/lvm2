@@ -33,14 +33,17 @@
 #define MAX_DEPTH 16
 #define NODE_SIZE L1_CACHE_BYTES
 #define KEYS_PER_NODE (NODE_SIZE / sizeof(offset_t))
+#define DM_NAME_LEN 64
 
 enum {
+	DM_LOADED = 0,
 	DM_LOADING,
 	DM_ACTIVE,
 };
 
 struct dev_list {
 	kdev_t dev;
+	struct block_device *bd;
 	struct dev_list *next;
 };
 
@@ -48,6 +51,7 @@ struct mapped_device {
 	kdev_t dev;
 	char name[DM_NAME_LEN];
 
+	int use_count;
 	int state;
 	atomic_t pending;
 
@@ -69,7 +73,6 @@ struct mapped_device {
 	struct dev_list *devices;
 };
 
-/* dm-target.c */
 struct target {
 	char *name;
 	dm_ctr_fn ctr;
@@ -79,6 +82,8 @@ struct target {
 	struct target *next;
 };
 
+
+/* dm-target.c */
 struct target *dm_get_target(const char *name);
 int dm_std_targets(void);
 
@@ -86,7 +91,7 @@ int dm_std_targets(void);
 struct mapped_device *dm_find_name(const char *name);
 struct mapped_device *dm_find_minor(int minor);
 
-void dm_activate(struct mapped_device *md);
+int dm_activate(struct mapped_device *md);
 void dm_suspend(struct mapped_device *md);
 
 /* dm-table.c */
@@ -94,10 +99,24 @@ int dm_start_table(struct mapped_device *md);
 int dm_add_entry(struct mapped_device *md, offset_t high,
 		 dm_map_fn target, void *context);
 int dm_complete_table(struct mapped_device *md);
+int dm_clear_table(struct mapped_device *md);
 
 
 /* dm-fs.c */
 int dm_init_fs(void);
 int dm_fin_fs(void);
+
+static int is_active(struct mapped_device *md)
+{
+	return test_bit(DM_ACTIVE, &md->state);
+}
+
+static void set_active(struct mapped_device *md, int set)
+{
+	if (set)
+		set_bit(DM_ACTIVE, &md->state);
+	else
+		clear_bit(DM_ACTIVE,& md->state);
+}
 
 #endif
