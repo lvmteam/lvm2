@@ -25,14 +25,17 @@
 
 #include <stdint.h>
 
-typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1 } size_len_t;
+typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1, SIZE_UNIT = 2 } size_len_t;
+
+uint64_t units_to_bytes(const char *units, char *unit_type);
 
 /* Specify size in KB */
-char *display_size(uint64_t size, size_len_t sl);
+const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl);
 char *display_uuid(char *uuidstr);
 
 void pvdisplay_colons(struct physical_volume *pv);
-void pvdisplay_full(struct physical_volume *pv, void *handle);
+void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
+		    void *handle);
 int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
 		    struct physical_volume *pv, void *handle);
 

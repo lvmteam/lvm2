@@ -74,7 +74,8 @@ struct arg {
 	int count;
 	char *value;
 	uint32_t i_value;
-	uint64_t i64_value;
+	int64_t i64_value;
+	uint64_t ui64_value;
 	sign_t sign;
 	void *ptr;
 };
@@ -102,6 +103,7 @@ int minor_arg(struct cmd_context *cmd, struct arg *a);
 int string_arg(struct cmd_context *cmd, struct arg *a);
 int permission_arg(struct cmd_context *cmd, struct arg *a);
 int metadatatype_arg(struct cmd_context *cmd, struct arg *a);
+int units_arg(struct cmd_context *cmd, struct arg *a);
 
 char yes_no_prompt(const char *prompt, ...);
 
@@ -127,10 +129,16 @@ static inline uint32_t arg_int_value(struct cmd_context *cmd, int a,
 	return arg_count(cmd, a) ? cmd->args[a].i_value : def;
 }
 
-static inline uint64_t arg_int64_value(struct cmd_context *cmd, int a,
-				       uint64_t def)
+static inline int64_t arg_int64_value(struct cmd_context *cmd, int a,
+				      uint64_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].i64_value : def;
+}
+
+static inline uint64_t arg_uint64_value(struct cmd_context *cmd, int a,
+					uint64_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].ui64_value : def;
 }
 
 static inline void *arg_ptr_value(struct cmd_context *cmd, int a, void *def)

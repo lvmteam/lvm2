@@ -62,6 +62,7 @@ xx(lvchange,
    "\t[-r|--readahead ReadAheadSectors]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    autobackup_ARG, available_ARG, contiguous_ARG,
@@ -118,11 +119,34 @@ xx(lvdisplay,
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-m|--maps]\n"
+   "\t[--nosuffix]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--units hsbkmgtHKMGT]\n"
    "\t[-v|--verbose]\n"
-   "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
+   "\t[--version]" "\n"
+   "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n"
+   "\n"
+   "lvdisplay --columns|-C\n"
+   "\t[--aligned]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[--ignorelockingfailure]\n"
+   "\t[--noheadings]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[-P|--partial] " "\n"
+   "\t[--segments]\n"
+   "\t[--separator Separator]\n"
+   "\t[--unbuffered]\n"
+   "\t[--units hsbkmgtHKMGT]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
+   "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-    colon_ARG, disk_ARG, ignorelockingfailure_ARG, maps_ARG, partial_ARG)
+    aligned_ARG, colon_ARG, columns_ARG, disk_ARG, ignorelockingfailure_ARG,
+    maps_ARG, noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG,
+    partial_ARG, segments_ARG, separator_ARG, unbuffered_ARG, units_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -135,6 +159,7 @@ xx(lvextend,
    "\t -L|--size [+]LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
    autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
@@ -146,7 +171,8 @@ xx(lvmchange,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-R|--reset]\n"
-   "\t[-v|--verbose]\n",
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n",
 
     reset_ARG)
 
@@ -155,7 +181,8 @@ xx(lvmdiskscan,
    "lvmdiskscan\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
-   "\t[-l|--lvmpartition]\n",
+   "\t[-l|--lvmpartition]\n"
+   "\t[--version]" "\n",
 
    lvmpartition_ARG)
 
@@ -165,6 +192,7 @@ xx(lvmsadc,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\t[LogFilePath]\n" )
 
 xx(lvmsar,
@@ -175,6 +203,7 @@ xx(lvmsar,
    "\t[-h|--help]\n"
    "\t[-s|--stdin]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tLogFilePath\n",
 
    full_ARG, stdin_ARG)
@@ -190,6 +219,7 @@ xx(lvreduce,
    "\t -L|--size [-]LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tLogicalVolume[Path]\n",
 
    autobackup_ARG, force_ARG,  extents_ARG,
@@ -204,6 +234,7 @@ xx(lvremove,
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    autobackup_ARG, force_ARG, test_ARG)
@@ -233,10 +264,35 @@ xx(lvresize,
    "\t -L|--size [+|-]LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
    autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG,
    test_ARG)
+
+xx(lvs,
+   "Display information about logical volumes",
+   "lvs" "\n"
+   "\t[--aligned]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[--ignorelockingfailure]\n"
+   "\t[--noheadings]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[-P|--partial] " "\n"
+   "\t[--segments]\n"
+   "\t[--separator Separator]\n"
+   "\t[--unbuffered]\n"
+   "\t[--units hsbkmgtHKMGT]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
+   "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
+   
+   aligned_ARG, ignorelockingfailure_ARG, noheadings_ARG, nosuffix_ARG,
+   options_ARG, partial_ARG, segments_ARG, separator_ARG, sort_ARG,
+   unbuffered_ARG, units_ARG)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
@@ -258,6 +314,7 @@ xx(pvchange,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\t[-a|--all]\n"
    "\t[-t|--test]\n"
    "\t[-x|--allocatable y|n]\n"
@@ -307,18 +364,39 @@ xx(pvdata,
    physicalvolume_ARG, uuidlist_ARG, volumegroup_ARG)
 
 xx(pvdisplay,
-   "Display various attributes of logical volume(s)",
+   "Display various attributes of physical volume(s)",
    "pvdisplay\n"
    "\t[-c|--colon]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-m|--maps]\n"
+   "\t[--nosuffix]\n"
    "\t[-s|--short]\n"
+   "\t[--units hsbkmgtHKMGT]\n"
    "\t[-v|--verbose]\n"
-   "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
+   "\t[--version]" "\n"
+   "\t[PhysicalVolumePath [PhysicalVolumePath...]]\n"
+   "\n"
+   "pvdisplay --columns|-C\n"
+   "\t[--aligned]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[--ignorelockingfailure]\n"
+   "\t[--noheadings]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[--separator Separator]\n"
+   "\t[--unbuffered]\n"
+   "\t[--units hsbkmgtHKMGT]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
+   "\t[PhysicalVolumePath [PhysicalVolumePath...]]\n",
 
-   colon_ARG, ignorelockingfailure_ARG, maps_ARG, short_ARG)
+   aligned_ARG, colon_ARG, columns_ARG, ignorelockingfailure_ARG, maps_ARG,
+   noheadings_ARG, nosuffix_ARG, options_ARG, separator_ARG, short_ARG,
+   sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(pvmove,
    "Move extents from one physical volume to another",
@@ -366,6 +444,27 @@ xx(pvresize,
 ***/
    autobackup_ARG, physicalvolumesize_ARG)
 
+xx(pvs,
+   "Display information about physical volumes",
+   "pvs" "\n"
+   "\t[--aligned]\n"
+   "\t[-d|--debug]" "\n"
+   "\t[-h|-?|--help] " "\n"
+   "\t[--noheadings]\n"
+   "\t[--ignorelockingfailure]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[--separator Separator]\n"
+   "\t[--unbuffered]\n"
+   "\t[--units hsbkmgtHKMGT]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]\n"
+   "\t[PhysicalVolume [PhysicalVolume...]]\n",
+   
+   aligned_ARG, ignorelockingfailure_ARG, noheadings_ARG, nosuffix_ARG,
+   options_ARG, separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
+
 xx(pvscan,
    "List all physical volumes",
    "pvscan " "\n"
@@ -391,7 +490,7 @@ xx(vgcfgbackup,
    "\t[--ignorelockingfailure]\n"
    "\t[-P|--partial] " "\n"
    "\t[-v|--verbose]" "\n"
-   "\t[-V|--version] " "\n"
+   "\t[--version] " "\n"
    "\t[VolumeGroupName...]\n",
 
    file_ARG, ignorelockingfailure_ARG, partial_ARG)
@@ -437,6 +536,7 @@ xx(vgck,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n",
    "\t[VolumeGroupName...]\n" )
 
 xx(vgconvert,
@@ -481,13 +581,33 @@ xx(vgdisplay,
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[--ignorelockingfailure]" "\n"
+   "\t[--nosuffix]\n"
    "\t[-P|--partial] " "\n"
+   "\t[--units hsbkmgtHKMGT]\n"
    "\t[-A|--activevolumegroups | [-D|--disk]" "\n"
    "\t[--version]" "\n"
-   "\t[VolumeGroupName...] ]\n",
+   "\t[VolumeGroupName [VolumeGroupName...]]\n"
+   "\n"
+   "vgdisplay --columns|-C\n"
+   "\t[--aligned]\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[--ignorelockingfailure]" "\n"
+   "\t[--noheadings]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[-P|--partial] " "\n"
+   "\t[--separator Separator]\n"
+   "\t[--unbuffered]\n"
+   "\t[--units hsbkmgtHKMGT]\n"
+   "\t[--verbose]" "\n"
+   "\t[--version]" "\n"
+   "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
-   activevolumegroups_ARG, colon_ARG, disk_ARG, ignorelockingfailure_ARG,
-   short_ARG, partial_ARG)
+   activevolumegroups_ARG, aligned_ARG, colon_ARG, columns_ARG, disk_ARG,
+   ignorelockingfailure_ARG, noheadings_ARG, nosuffix_ARG, options_ARG,
+   partial_ARG, separator_ARG, short_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
@@ -509,6 +629,7 @@ xx(vgextend,
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tVolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]\n",
 
    autobackup_ARG, test_ARG)
@@ -522,6 +643,7 @@ xx(vgimport,
    "\t[-h|--help] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose]" "\n"
+   "\t[--version]" "\n"
    "\tVolumeGroupName..." "\n",
 
    all_ARG, force_ARG, test_ARG)
@@ -535,6 +657,7 @@ xx(vgmerge,
    "\t[-l|--list]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tDestinationVolumeGroupName SourceVolumeGroupName\n",
 
    autobackup_ARG, list_ARG, test_ARG)
@@ -545,6 +668,7 @@ xx(vgmknodes,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\t[VolumeGroupName...]\n" )
 
 xx(vgreduce,
@@ -556,6 +680,7 @@ xx(vgreduce,
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tVolumeGroupName\n"
    "\t[PhysicalVolumePath...]\n",
 
@@ -568,6 +693,7 @@ xx(vgremove,
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tVolumeGroupName [VolumeGroupName...]\n",
 
    test_ARG)
@@ -580,10 +706,33 @@ xx(vgrename,
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
    "\tOldVolumeGroupPath NewVolumeGroupPath |\n"
    "\tOldVolumeGroupName NewVolumeGroupName\n",
 
    autobackup_ARG, force_ARG, test_ARG)
+
+xx(vgs,
+   "Display information about volume groups",
+   "vgs" "\n"
+   "\t[--aligned]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[--ignorelockingfailure]\n"
+   "\t[--noheadings]\n"
+   "\t[--nosuffix]\n"
+   "\t[-o|--options [+]Field[,Field]]\n"
+   "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
+   "\t[-P|--partial] " "\n"
+   "\t[--separator Separator]\n"
+   "\t[--unbuffered]\n"
+   "\t[--units hsbkmgtHKMGT]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]\n"
+   "\t[VolumeGroupName [VolumeGroupName...]]\n",
+   
+   aligned_ARG, ignorelockingfailure_ARG, noheadings_ARG, nosuffix_ARG,
+   options_ARG, partial_ARG, separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgscan,
    "Search for all volume groups",
@@ -592,7 +741,8 @@ xx(vgscan,
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[-P|--partial] " "\n"
-   "\t[-v|--verbose]\n" ,
+   "\t[-v|--verbose]\n" 
+   "\t[--version]" "\n",
 
    ignorelockingfailure_ARG, partial_ARG)
 

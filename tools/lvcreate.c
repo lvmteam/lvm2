@@ -144,7 +144,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG))
-		lp->size = arg_int64_value(cmd, size_ARG, 0) * 2ull;
+		lp->size = arg_uint64_value(cmd, size_ARG, 0) * 2ull;
 
 	return 1;
 }
@@ -378,15 +378,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		lp->extents = lp->size;
 
 		if (lp->extents % vg->extent_size) {
-			char *s1;
-
 			lp->extents += vg->extent_size - lp->extents %
 			    vg->extent_size;
-			log_print("Rounding up size to full physical "
-				  "extent %s",
-				  (s1 = display_size(lp->extents / 2,
-						     SIZE_SHORT)));
-			dbg_free(s1);
+			log_print("Rounding up size to full physical extent %s",
+				  display_size(cmd, lp->extents / 2,
+					       SIZE_SHORT));
 		}
 
 		lp->extents /= vg->extent_size;

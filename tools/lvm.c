@@ -157,7 +157,8 @@ static int _size_arg(struct cmd_context *cmd, struct arg *a, int factor)
 		v *= factor;
 
 	a->i_value = (uint32_t) v;
-	a->i64_value = (uint64_t) v;
+	a->i64_value = (int64_t) v;
+	a->ui64_value = (uint64_t) v;
 
 	return 1;
 }
@@ -546,6 +547,17 @@ static int _get_settings(struct cmd_context *cmd)
 		init_ignorelockingfailure(1);
 	else
 		init_ignorelockingfailure(0);
+
+	if (arg_count(cmd, nosuffix_ARG))
+		cmd->current_settings.suffix = 0;
+
+	if (arg_count(cmd, units_ARG))
+		if (!(cmd->current_settings.unit_factor =
+		      units_to_bytes(arg_str_value(cmd, units_ARG, ""),
+				     &cmd->current_settings.unit_type))) {
+			log_error("Invalid units specification");
+			return EINVALID_CMD_LINE;
+		}
 
 	/* Handle synonyms */
 	if (!_merge_synonym(cmd, resizable_ARG, resizeable_ARG) ||

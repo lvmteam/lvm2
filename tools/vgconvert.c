@@ -63,7 +63,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (cmd->fmt->features & FMT_MDAS) {
-		pvmetadatasize = arg_int64_value(cmd, metadatasize_ARG, 0) * 2;
+		pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, 0) * 2;
 		if (!pvmetadatasize)
 			pvmetadatasize =
 			    find_config_int(cmd->cf->root,

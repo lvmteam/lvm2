@@ -62,6 +62,23 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 
 int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
+	if (arg_count(cmd, columns_ARG)) {
+		if (arg_count(cmd, colon_ARG) ||
+		    arg_count(cmd, activevolumegroups_ARG) ||
+		    arg_count(cmd, short_ARG)) {
+			log_error("Incompatible options selected");
+			return EINVALID_CMD_LINE;
+		}
+		return vgs(cmd, argc, argv);
+	} else if (arg_count(cmd, aligned_ARG) ||
+		   arg_count(cmd, noheadings_ARG) ||
+		   arg_count(cmd, options_ARG) ||
+		   arg_count(cmd, separator_ARG) ||
+		   arg_count(cmd, sort_ARG) || arg_count(cmd, unbuffered_ARG)) {
+		log_error("Incompatible options selected");
+		return EINVALID_CMD_LINE;
+	}
+
 	if (arg_count(cmd, colon_ARG) && arg_count(cmd, short_ARG)) {
 		log_error("Option -c is not allowed with option -s");
 		return EINVALID_CMD_LINE;

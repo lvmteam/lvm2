@@ -13,11 +13,13 @@ struct list {
 	struct list *n, *p;
 };
 
-static inline void list_init(struct list *head) {
+static inline void list_init(struct list *head)
+{
 	head->n = head->p = head;
 }
 
-static inline void list_add(struct list *head, struct list *elem) {
+static inline void list_add(struct list *head, struct list *elem)
+{
 	assert(head->n);
 
 	elem->n = head;
@@ -27,7 +29,8 @@ static inline void list_add(struct list *head, struct list *elem) {
 	head->p = elem;
 }
 
-static inline void list_add_h(struct list *head, struct list *elem) {
+static inline void list_add_h(struct list *head, struct list *elem)
+{
 	assert(head->n);
 
 	elem->n = head->n;
@@ -37,13 +40,20 @@ static inline void list_add_h(struct list *head, struct list *elem) {
 	head->n = elem;
 }
 
-static inline void list_del(struct list *elem) {
+static inline void list_del(struct list *elem)
+{
 	elem->n->p = elem->p;
 	elem->p->n = elem->n;
 }
 
-static inline int list_empty(struct list *head) {
+static inline int list_empty(struct list *head)
+{
 	return head->n == head;
+}
+
+static inline int list_end(struct list *head, struct list *elem)
+{
+	return elem->n == head;
 }
 
 #define list_iterate(v, head) \
@@ -52,12 +62,13 @@ static inline int list_empty(struct list *head) {
 #define list_iterate_safe(v, t, head) \
 	for (v = (head)->n, t = v->n; v != head; v = t, t = v->n)
 
-static inline int list_size(struct list *head) {
+static inline int list_size(struct list *head)
+{
 	int s = 0;
 	struct list *v;
 
 	list_iterate(v, head)
-		s++;
+	    s++;
 
 	return s;
 }

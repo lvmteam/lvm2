@@ -51,10 +51,10 @@ int write_config_file(struct config_tree *cf, const char *file);
 int reload_config_file(struct config_tree **cf);
 
 struct config_node *find_config_node(struct config_node *cn,
-				     const char *path, char seperator);
+				     const char *path, char separator);
 
 const char *find_config_str(struct config_node *cn,
-			    const char *path, char sep, const char *fail);
+			    const char *path, const char sep, const char *fail);
 
 int find_config_int(struct config_node *cn, const char *path,
 		    char sep, int fail);

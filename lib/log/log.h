@@ -28,8 +28,8 @@
  *
  */
 
-#include <stdio.h>   /* FILE */
-#include <string.h>  /* strerror() */
+#include <stdio.h>		/* FILE */
+#include <string.h>		/* strerror() */
 #include <errno.h>
 
 #define _LOG_DEBUG 7
@@ -65,7 +65,7 @@ int ignorelockingfailure(void);
 void log_suppress(int suppress);
 
 void print_log(int level, const char *file, int line, const char *format, ...)
-     __attribute__ (( format (printf, 4, 5) ));
+    __attribute__ ((format(printf, 4, 5)));
 
 #define plog(l, x...) print_log(l, __FILE__, __LINE__ , ## x)
 
@@ -90,4 +90,3 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 		log_info("%s: %s failed: %s", y, x, strerror(errno))
 
 #endif
-

@@ -29,8 +29,6 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
 	char uuid[64];
 	int vg_name_len = 0;
 
-	char *s1, *s2;
-
 	char pv_tmp_name[NAME_LEN] = { 0, };
 	char vg_tmp_name[NAME_LEN] = { 0, };
 	char vg_name_this[NAME_LEN] = { 0, };
@@ -73,8 +71,7 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
 			  pv->fmt ? pv->fmt->name : "    ",
-			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));
-		dbg_free(s1);
+			  display_size(cmd, pv->size / 2, SIZE_SHORT));
 		return;
 	}
 
@@ -83,14 +80,12 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
 		log_print("PV %-*s  is in exported VG %s "
 			  "[%s / %s free]",
 			  pv_max_name_len, pv_tmp_name,
-			  vg_name_this, (s1 =
-					 display_size(pv->pe_count *
-						      pv->pe_size / 2,
-						      SIZE_SHORT)),
-			  (s2 = display_size((pv->pe_count - pv->pe_alloc_count)
-					     * pv->pe_size / 2, SIZE_SHORT)));
-		dbg_free(s1);
-		dbg_free(s2);
+			  vg_name_this,
+			  display_size(cmd, pv->pe_count *
+				       pv->pe_size / 2,
+				       SIZE_SHORT),
+			  display_size(cmd, (pv->pe_count - pv->pe_alloc_count)
+				       * pv->pe_size / 2, SIZE_SHORT));
 		return;
 	}
 
@@ -99,13 +94,10 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv,
 	    ("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
 	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
 	     pv->fmt ? pv->fmt->name : "    ",
-	     (s1 = display_size(pv->pe_count * pv->pe_size / 2, SIZE_SHORT)),
-	     (s2 =
-	      display_size((pv->pe_count - pv->pe_alloc_count) * pv->pe_size /
-			   2, SIZE_SHORT)));
-	dbg_free(s1);
-	dbg_free(s2);
-
+	     display_size(cmd, pv->pe_count * pv->pe_size / 2, SIZE_SHORT),
+	     display_size(cmd,
+			  (pv->pe_count - pv->pe_alloc_count) * pv->pe_size / 2,
+			  SIZE_SHORT));
 	return;
 }
 
@@ -113,7 +105,6 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	int new_pvs_found = 0;
 	int pvs_found = 0;
-	char *s1, *s2, *s3;
 
 	struct list *pvs;
 	struct list *pvh;
@@ -205,14 +196,10 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
 		  pvs_found,
-		  (s1 = display_size(size_total / 2, SIZE_SHORT)),
+		  display_size(cmd, size_total / 2, SIZE_SHORT),
 		  pvs_found - new_pvs_found,
-		  (s2 =
-		   display_size((size_total - size_new) / 2, SIZE_SHORT)),
-		  new_pvs_found, (s3 = display_size(size_new / 2, SIZE_SHORT)));
-	dbg_free(s1);
-	dbg_free(s2);
-	dbg_free(s3);
+		  display_size(cmd, (size_total - size_new) / 2, SIZE_SHORT),
+		  new_pvs_found, display_size(cmd, size_new / 2, SIZE_SHORT));
 
 	return 0;
 }

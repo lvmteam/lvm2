@@ -49,6 +49,72 @@ static struct {
 static int _num_policies = sizeof(_policies) / sizeof(*_policies);
 static int _num_segtypes = sizeof(_segtypes) / sizeof(*_segtypes);
 
+uint64_t units_to_bytes(const char *units, char *unit_type)
+{
+
+	char *ptr;
+	uint64_t v;
+
+	ptr = (char *) units;
+
+	if (isdigit(*units)) {
+		v = (uint64_t) strtod(units, &ptr);
+		if (ptr == units)
+			return 0;
+	} else
+		v = 1;
+
+	if (v == 1)
+		*unit_type = *ptr;
+	else
+		*unit_type = 'U';
+
+	switch (*ptr) {
+	case 'h':
+	case 'H':
+		v = 1ULL;
+		*unit_type = *ptr;
+		break;
+	case 's':
+		v *= SECTOR_SIZE;
+	case 'b':
+	case 'B':
+		v *= 1ULL;
+		break;
+	case 'k':
+		v *= 1024ULL;
+		break;
+	case 'm':
+		v *= 1024ULL * 1024ULL;
+		break;
+	case 'g':
+		v *= 1024ULL * 1024ULL * 1024ULL;
+		break;
+	case 't':
+		v *= 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+		break;
+	case 'K':
+		v *= 1000ULL;
+		break;
+	case 'M':
+		v *= 1000ULL * 1000ULL;
+		break;
+	case 'G':
+		v *= 1000ULL * 1000ULL * 1000ULL;
+		break;
+	case 'T':
+		v *= 1000ULL * 1000ULL * 1000ULL * 1000ULL;
+		break;
+	default:
+		return 0;
+	}
+
+	if (*(ptr + 1))
+		return 0;
+
+	return v;
+}
+
 const char *get_alloc_string(alloc_policy_t alloc)
 {
 	int i;
@@ -68,7 +134,7 @@ const char *get_segtype_string(segment_type_t segtype)
 		if (_segtypes[i].segtype == segtype)
 			return _segtypes[i].str;
 
-	return NULL;
+	return "unknown";
 }
 
 alloc_policy_t get_alloc_from_string(const char *str)
@@ -95,36 +161,60 @@ segment_type_t get_segtype_from_string(const char *str)
 	return SEG_STRIPED;
 }
 
-char *display_size(uint64_t size, size_len_t sl)
+const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 {
 	int s;
-	ulong byte = 1024 * 1024 * 1024;
+	int suffix = 1;
+	uint64_t byte;
+	uint64_t units = 1024ULL;
 	char *size_buf = NULL;
-	char *size_str[][2] = {
-		{" Terabyte", "TB"},
-		{" Gigabyte", "GB"},
-		{" Megabyte", "MB"},
-		{" Kilobyte", "KB"},
-		{"", ""},
-		{"         ", "  "}
+	char *size_str[][3] = {
+		{" Terabyte", " TB", "T"},
+		{" Gigabyte", " GB", "G"},
+		{" Megabyte", " MB", "M"},
+		{" Kilobyte", " KB", "K"},
+		{"", "", ""},
+		{" Byte    ", " B ", "B"},
+		{" Units   ", " Un", "U"},
+		{" Sectors ", " Se", "S"},
+		{"         ", "   ", " "},
 	};
 
-	if (!(size_buf = dbg_malloc(SIZE_BUF))) {
+	if (!(size_buf = pool_alloc(cmd->mem, SIZE_BUF))) {
 		log_error("no memory for size display buffer");
-		return NULL;
+		return "";
 	}
 
-	if (size == 0LL)
-		sprintf(size_buf, "0%s", size_str[5][sl]);
-	else {
+	suffix = cmd->current_settings.suffix;
+
+	for (s = 0; s < 8; s++)
+		if (toupper((int) cmd->current_settings.unit_type) ==
+		    *size_str[s][2])
+			break;
+
+	if (size == 0ULL) {
+		sprintf(size_buf, "0%s", suffix ? size_str[s][sl] : "");
+		return size_buf;
+	}
+
+	if (s < 8) {
+		byte = cmd->current_settings.unit_factor;
+		size *= 1024ULL;
+	} else {
+		suffix = 1;
+		if (cmd->current_settings.unit_type == 'H')
+			units = 1000ULL;
+		else
+			units = 1024ULL;
+		byte = units * units * units;
 		s = 0;
 		while (size_str[s] && size < byte)
-			s++, byte /= 1024;
-		snprintf(size_buf, SIZE_BUF - 1,
-			 "%.2f%s", (float) size / byte, size_str[s][sl]);
+			s++, byte /= units;
 	}
 
-	/* Caller to deallocate */
+	snprintf(size_buf, SIZE_BUF - 1, "%.2f%s", (float) size / byte,
+		 suffix ? size_str[s][sl] : "");
+
 	return size_buf;
 }
 
@@ -155,10 +245,11 @@ void pvdisplay_colons(struct physical_volume *pv)
 }
 
 /* FIXME Include label fields */
-void pvdisplay_full(struct physical_volume *pv, void *handle)
+void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
+		    void *handle)
 {
 	char uuid[64];
-	char *size, *size1;	/*, *size2; */
+	const char *size;
 
 	uint64_t pe_free;
 
@@ -175,23 +266,21 @@ void pvdisplay_full(struct physical_volume *pv, void *handle)
 	log_print("VG Name               %s%s", pv->vg_name,
 		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
-	size = display_size((uint64_t) pv->size / 2, SIZE_SHORT);
+	size = display_size(cmd, (uint64_t) pv->size / 2, SIZE_SHORT);
 	if (pv->pe_size && pv->pe_count) {
-		size1 = display_size((pv->size - pv->pe_count * pv->pe_size)
-				     / 2, SIZE_SHORT);
 
 /******** FIXME display LVM on-disk data size
 		size2 = display_size(pv->size / 2, SIZE_SHORT);
 ********/
 
 		log_print("PV Size               %s" " / not usable %s",	/*  [LVM: %s]", */
-			  size, size1);	/* , size2);    */
+			  size, display_size(cmd,
+					     (pv->size -
+					      pv->pe_count * pv->pe_size) / 2,
+					     SIZE_SHORT));
 
-		dbg_free(size1);
-		/* dbg_free(size2); */
 	} else
 		log_print("PV Size               %s", size);
-	dbg_free(size);
 
 	/* PV number not part of LVM2 design
 	   log_print("PV#                   %u", pv->pv_number);
@@ -265,7 +354,6 @@ void lvdisplay_colons(struct logical_volume *lv)
 int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 		   void *handle)
 {
-	char *size;
 	struct dm_info info;
 	int inkernel, snap_active;
 	char uuid[64];
@@ -326,10 +414,10 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 	if (inkernel)
 		log_print("# open                 %u", info.open_count);
 
-	size = display_size(snap ? snap->origin->size / 2 : lv->size / 2,
-			    SIZE_SHORT);
-	log_print("LV Size                %s", size);
-	dbg_free(size);
+	log_print("LV Size                %s",
+		  display_size(cmd,
+			       snap ? snap->origin->size / 2 : lv->size / 2,
+			       SIZE_SHORT));
 
 	log_print("Current LE             %u",
 		  snap ? snap->origin->le_count : lv->le_count);
@@ -348,9 +436,8 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 		if (snap_percent == -1)
 			snap_percent = 100;
 
-		size = display_size(snap->chunk_size / 2, SIZE_SHORT);
-		log_print("Snapshot chunk size    %s", size);
-		dbg_free(size);
+		log_print("Snapshot chunk size    %s",
+			  display_size(cmd, snap->chunk_size / 2, SIZE_SHORT));
 
 /*
 	size = display_size(lv->size / 2, SIZE_SHORT);
@@ -451,7 +538,6 @@ void vgdisplay_full(struct volume_group *vg)
 {
 	uint32_t access;
 	uint32_t active_pvs;
-	char *s1;
 	char uuid[64];
 
 	if (vg->status & PARTIAL_VG)
@@ -497,28 +583,33 @@ void vgdisplay_full(struct volume_group *vg)
 	log_print("Cur PV                %u", vg->pv_count);
 	log_print("Act PV                %u", active_pvs);
 
-	s1 = display_size((uint64_t) vg->extent_count * (vg->extent_size / 2),
-			  SIZE_SHORT);
-	log_print("VG Size               %s", s1);
-	dbg_free(s1);
+	log_print("VG Size               %s",
+		  display_size(vg->cmd,
+			       (uint64_t) vg->extent_count * (vg->extent_size /
+							      2), SIZE_SHORT));
 
-	s1 = display_size(vg->extent_size / 2, SIZE_SHORT);
-	log_print("PE Size               %s", s1);
-	dbg_free(s1);
+	log_print("PE Size               %s",
+		  display_size(vg->cmd, vg->extent_size / 2, SIZE_SHORT));
 
 	log_print("Total PE              %u", vg->extent_count);
 
-	s1 = display_size(((uint64_t)
-			   vg->extent_count - vg->free_count) *
-			  (vg->extent_size / 2), SIZE_SHORT);
 	log_print("Alloc PE / Size       %u / %s",
-		  vg->extent_count - vg->free_count, s1);
-	dbg_free(s1);
+		  vg->extent_count - vg->free_count, display_size(vg->cmd,
+								  ((uint64_t)
+								   vg->
+								   extent_count
+								   -
+								   vg->
+								   free_count) *
+								  (vg->
+								   extent_size /
+								   2),
+								  SIZE_SHORT));
 
-	s1 = display_size((uint64_t) vg->free_count * (vg->extent_size / 2),
-			  SIZE_SHORT);
-	log_print("Free  PE / Size       %u / %s", vg->free_count, s1);
-	dbg_free(s1);
+	log_print("Free  PE / Size       %u / %s", vg->free_count,
+		  display_size(vg->cmd,
+			       (uint64_t) vg->free_count * (vg->extent_size /
+							    2), SIZE_SHORT));
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
 		stack;
@@ -538,16 +629,15 @@ void vgdisplay_colons(struct volume_group *vg)
 
 void vgdisplay_short(struct volume_group *vg)
 {
-	char *s1, *s2, *s3;
-	s1 = display_size(vg->extent_count * vg->extent_size / 2, SIZE_SHORT);
-	s2 = display_size((vg->extent_count -
-			   vg->free_count) * vg->extent_size / 2, SIZE_SHORT);
-	s3 = display_size(vg->free_count * vg->extent_size / 2, SIZE_SHORT);
 	log_print("\"%s\" %-9s [%-9s used / %s free]", vg->name,
 /********* FIXME if "open" print "/used" else print "/idle"???  ******/
-		  s1, s2, s3);
-	dbg_free(s1);
-	dbg_free(s2);
-	dbg_free(s3);
+		  display_size(vg->cmd, vg->extent_count * vg->extent_size / 2,
+			       SIZE_SHORT), display_size(vg->cmd,
+							 (vg->extent_count -
+							  vg->free_count) *
+							 vg->extent_size / 2,
+							 SIZE_SHORT),
+		  display_size(vg->cmd, vg->free_count * vg->extent_size / 2,
+			       SIZE_SHORT));
 	return;
 }

@@ -1,0 +1,64 @@
+.TH LVS 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+lvs \- report information about logical volumes
+.SH SYNOPSIS
+.B lvs
+[\-\-aligned] [\-d/\-\-debug] [\-h/\-?/\-\-help]
+[\-\-ignorelockingfailure] [\-\-noheadings] [\-\-nosuffix]
+[\-o/\-\-options [+]Field[,Field]]
+[\-O/\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
+[\-P/\-\-partial] [\-\-segments]
+[\-\-separator Separator] [\-\-unbuffered]
+[\-\-units hsbkmgtHKMGT]
+[\-v/\-\-verbose] 
+[\-\-version] [VolumeGroupName [VolumeGroupName...]]
+.SH DESCRIPTION
+vgs produces formatted output about volume groups
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.I \-\-aligned
+Use with \-\-separator to align the output columns.
+.TP
+.I \-\-noheadings
+Suppress the headings line that is normally the first line of output.
+Useful if grepping the output.
+.TP
+.I \-\-nosuffix
+Suppress the suffix on output sizes.  Use with \-\-units (except h and H)
+if processing the output.
+.TP
+.I \-o, \-\-options
+Comma-separated ordered list of columns.  Precede the list with '+' to append
+to the default selection of columns.  Column names are: 
+lv_uuid, lv_name, lv_attr, lv_minor, lv_size, seg_count, origin,
+snap_percent (suppressed if no kernel driver), segtype, stripes,
+stripesize, chunksize, seg_start, seg_size.
+With \-\-segments, any "seg_" prefixes are optional; otherwise any "lv_"
+prefixes are optional.  Columns mentioned in \fBvgs (8)\fP 
+can also be chosen
+The lv_attr bits are: (o)rigin, (s)napshot, (w)riteable, (r)eadonly,
+(c)ontiguous allocation, (n)ext free allocation, fixed (m)inor, (s)uspended,
+(a)ctive, device (o)pen.
+.TP
+.I \-\-segments
+Use default columns that emphasize segment information.
+.TP
+.I \-O, \-\-sort
+Comma-separated ordered list of columns to sort by.  Replaces the default
+selection. Precede any column with - for a reverse sort on that column.
+.TP
+.I \-\-separator Separator
+String to use to separate each column.  Useful if grepping the output.
+.TP
+.I \-\-unbuffered
+Produce output immediately without sorting or aligning the columns properly.
+.TP
+.I \-\-units hsbkmgtHKMGT
+All sizes are output in these units: (h)uman-readable, (s)ectors, (b)ytes,
+(k)ilobytes, (m)egabytes, (g)igabytes, (t)erabytes.  Capitalise to use multiples
+of 1000 (S.I.) instead of 1024.  Can also specify custom (u)nits e.g.
+\-\-units 3M
+.SH SEE ALSO
+.BR pvs (8),
+.BR vgs (8)

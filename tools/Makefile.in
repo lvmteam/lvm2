@@ -39,6 +39,7 @@ SOURCES=\
 	pvdisplay.c \
 	pvremove.c \
 	pvscan.c \
+	report.c \
 	toollib.c \
 	vgcfgbackup.c \
 	vgcfgrestore.c \
@@ -67,8 +68,8 @@ lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
 	$(CC) -o lvm $(OBJECTS) $(LD_FLAGS) -L$(top_srcdir)/lib \
 	      -L$(DESTDIR)/lib -llvm -ldevmapper $(LIBS) -ldl -rdynamic
 
-.commands: commands.h cmdnames.h
-	$(CC) -E -P cmdnames.h | grep -v help > .commands
+.commands: commands.h cmdnames.h Makefile
+	$(CC) -E -P cmdnames.h | egrep -v '(help|version)' > .commands
 
 install: $(TARGETS)
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm \

@@ -715,7 +715,7 @@ struct config_node *find_config_node(struct config_node *cn,
 }
 
 const char *find_config_str(struct config_node *cn,
-			    const char *path, char sep, const char *fail)
+			    const char *path, const char sep, const char *fail)
 {
 	struct config_node *n = find_config_node(cn, path, sep);
 
