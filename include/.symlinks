@@ -1,3 +1,4 @@
+../daemons/clvmd/clvm.h
 ../lib/activate/activate.h
 ../lib/activate/targets.h
 ../lib/cache/lvmcache.h
