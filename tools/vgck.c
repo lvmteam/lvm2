@@ -23,13 +23,13 @@
 static int vgck_single(struct cmd_context *cmd, const char *vg_name,
 		       struct volume_group *vg, int consistent, void *handle)
 {
-	if (!consistent) {
-		log_error("Volume group \"%s\" inconsistent", vg_name);
+	if (!vg) {
+		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}
 
-	if (!vg) {
-		log_error("Volume group \"%s\" not found", vg_name);
+	if (!consistent) {
+		log_error("Volume group \"%s\" inconsistent", vg_name);
 		return ECMD_FAILED;
 	}
 
