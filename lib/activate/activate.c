@@ -92,8 +92,22 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	uint64_t esize = seg->lv->vg->extent_size;
 	uint32_t s, stripes = seg->stripes;
 	int w, tw;
+	const char *no_space =
+		"Insufficient space to write target parameters.";
 
-	for (w = 0, s = 0; s < stripes; s++, w += tw) {
+	if (stripes > 1) {
+		tw = snprintf(params, sizeof(params), "%u %u ",
+			      stripes, seg->stripe_size);
+
+		if (tw < 0) {
+			log_err(no_space);
+			return 0;
+		}
+
+		w = tw;
+	}
+
+	for (s = 0; s < stripes; s++, w += tw) {
 		tw = snprintf(params + w, sizeof(params) - w,
 			      "%s %" PRIu64 "%s",
 			      dev_name(seg->area[s].pv->dev),
@@ -102,8 +116,7 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 			      s == (stripes - 1) ? "" : " ");
 
 		if (tw < 0) {
-			log_err("Insufficient space to write target "
-				"parameters.");
+			log_err(no_space);
 			return 0;
 		}
 	}
