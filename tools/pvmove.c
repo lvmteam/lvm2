@@ -483,6 +483,16 @@ static int _check_pvmove_status(struct cmd_context *cmd,
 
 	*finished = 1;
 
+	if (parms->aborting) {
+		if (!(lvs_changed = lvs_using_lv(cmd, vg, lv_mirr))) {
+			log_error("Failed to generate list of moved LVs: "
+				  "can't abort.");
+			return 0;
+		}
+		_finish_pvmove(cmd, vg, lv_mirr, lvs_changed);
+		return 0;
+	}
+
 	if (!lv_mirror_percent(lv_mirr, !parms->interval, &segment_percent,
 			       &event_nr)) {
 		log_error("ABORTING: Mirror percentage check failed.");
@@ -495,18 +505,13 @@ static int _check_pvmove_status(struct cmd_context *cmd,
 	else
 		log_verbose("%s: Moved: %.1f%%", pv_name, overall_percent);
 
-	if (segment_percent < 100.0 && !parms->aborting) {
+	if (segment_percent < 100.0) {
 		*finished = 0;
 		return 1;
 	}
 
 	if (!(lvs_changed = lvs_using_lv(cmd, vg, lv_mirr))) {
 		log_error("ABORTING: Failed to generate list of moved LVs");
-		return 0;
-	}
-
-	if (parms->aborting) {
-		_finish_pvmove(cmd, vg, lv_mirr, lvs_changed);
 		return 0;
 	}
 
