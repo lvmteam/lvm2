@@ -47,18 +47,18 @@ static int _import_vg(struct pool *mem,
 		}
 	}
 
-	return 1;
+	return first ? 1 : 0;
 }
 
-static int _import_pvs(struct pool *mem, struct volume_group *vg,
-		       struct list_head *pvs)
+static int _import_pvs(struct pool *mem, struct list_head *pvs,
+		       struct list_head *results, int *count)
 {
 	struct list_head *tmp;
 	struct disk_list *dl;
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 
-	vg->pv_count = 0;
+	*count = 0;
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
 		pvl = pool_alloc(mem, sizeof(*pvl));
@@ -89,8 +89,8 @@ static int _import_pvs(struct pool *mem, struct volume_group *vg,
 		pv->pe_count = dl->pv.pe_total;
 		pv->pe_allocated = dl->pv.pe_allocated;
 
-		list_add(&pvl->list, &vg->pvs);
-		vg->pv_count++;
+		list_add(&pvl->list, results);
+		(*count)++;
 	}
 
 	return 1;
@@ -276,7 +276,7 @@ static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 	if (!_import_vg(mem, vg, pvs))
 		goto bad;
 
-	if (!_import_pvs(mem, vg, pvs))
+	if (!_import_pvs(mem, pvs, &vg->pvs, &vg->pv_count))
 		goto bad;
 
 	if (!_import_lvs(mem, vg, pvs))
@@ -362,6 +362,44 @@ static int _vg_write(struct io_space *is, struct volume_group *vg)
 }
 #endif
 
+static struct list_head *_get_pvs(struct io_space *is)
+{
+	struct pool *mem = pool_create(1024 * 10);
+	struct list_head pvs, *results;
+	uint32_t count;
+
+	if (!mem) {
+		stack;
+		return NULL;
+	}
+
+	if (!(results = pool_alloc(is->mem, sizeof(*results)))) {
+		stack;
+		return NULL;
+	}
+
+	INIT_LIST_HEAD(&pvs);
+	INIT_LIST_HEAD(results);
+
+	if (!read_pvs_in_vg(NULL, is->filter, mem, &pvs)) {
+		stack;
+		goto bad;
+	}
+
+	if (!_import_pvs(mem, &pvs, results, &count)) {
+		stack;
+		goto bad;
+	}
+
+	pool_destroy(mem);
+	return results;
+
+ bad:
+	pool_destroy(mem);
+	pool_free(mem, results);
+	return NULL;
+}
+
 void _destroy(struct io_space *ios)
 {
 	dbg_free(ios->prefix);
@@ -373,7 +411,7 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 {
 	struct io_space *ios = dbg_malloc(sizeof(*ios));
 
-	ios->get_vgs = NULL;
+	ios->get_vgs = _get_pvs;
 	ios->get_pvs = NULL;
 	ios->pv_read = NULL;
 	ios->pv_write = NULL;

@@ -37,7 +37,8 @@ static void _dump_lv(struct logical_volume *lv, FILE *fp)
 	for (i = 0; i < lv->le_count; i++) {
 		struct physical_volume *pv = lv->map[i].pv;
 
-		fprintf(fp, "\t\tpv = '%s', ", pv ? pv->dev->name : "null ???");
+		fprintf(fp, "\t\tpv = '%s', ",
+			pv ? pv->dev->name : "null ???");
 		fprintf(fp, "\textent = %u\n", lv->map[i].pe);
 	}
 	fprintf(fp, "\t}\n}\n\n");
