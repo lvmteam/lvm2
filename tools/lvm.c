@@ -262,7 +262,6 @@ int size_arg(struct arg *a)
 	a->i64_value = (uint64_t) v;
 
 	return 1;
-
 }
 
 int int_arg(struct arg *a)
