@@ -114,7 +114,7 @@ int vgrename(int argc, char **argv)
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (ios->vg_write(ios, vg_old)) {
+	if (!(ios->vg_write(ios, vg_old))) {
 		return ECMD_FAILED;
 	}
 

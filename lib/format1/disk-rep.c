@@ -113,7 +113,6 @@ static int _munge_formats(struct pv_disk *pvd)
 		break;
 
 	default:
-		log_err("unknown metadata version %d", pvd->version);
 		return 0;
 	}
 
@@ -127,7 +126,7 @@ static int _read_pv(struct disk_list *data)
 		fail;
 	_xlate_pv(pvd);
 
-	return _munge_formats(pvd);
+	return 1;
 }
 
 static int _read_lv(struct device *dev, ulong pos, struct lv_disk *disk)
@@ -230,7 +229,7 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 	INIT_LIST_HEAD(&data->lvs);
 
 	if (!_read_pv(data)) {
-		log_debug("failed to read pv data from %s", dev->name);
+		log_debug("Failed to read PV data from %s", dev->name);
 		goto bad;
 	}
 
@@ -240,35 +239,44 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 		goto bad;
 	}
 
+	if (!(_munge_formats(&data->pv))) {
+		log_verbose("Unknown metadata version %d found on %s", 
+			data->pv.version, dev->name);
+		goto bad;
+	}
+
 	/*
 	 * is it an orphan ?
 	 */
-	if (data->pv.vg_name == '\0')
+	if (data->pv.vg_name == '\0') {
+		log_very_verbose("%s is not a member of any VG",
+			dev->name);
 		return data;
+	}
 
 	if (vg_name && strcmp(vg_name, data->pv.vg_name)) {
-		log_info("%s is not a member of the vg '%s'",
+		log_very_verbose("%s is not a member of the VG %s",
 			 dev->name, vg_name);
 		goto bad;
 	}
 
 	if (!_read_vg(data)) {
-		log_err("failed to read vg data from pv (%s)", dev->name);
+		log_error("Failed to read VG data from PV (%s)", dev->name);
 		goto bad;
 	}
 
 	if (!_read_uuids(data)) {
-		log_err("failed to read pv uuid list from %s", dev->name);
+		log_error("Failed to read PV uuid list from %s", dev->name);
 		goto bad;
 	}
 
 	if (!_read_lvs(data)) {
-		log_err("failed to read lv's from %s", dev->name);
+		log_error("Failed to read LV's from %s", dev->name);
 		goto bad;
 	}
 
 	if (!_read_extents(data)) {
-		log_err("failed to read extents from %s", dev->name);
+		log_error("Failed to read extents from %s", dev->name);
 		goto bad;
 	}
 
@@ -325,7 +333,7 @@ static int _write_uuids(struct disk_list *data)
 
 	list_for_each(tmp, &data->uuids) {
 		if (pos >= end) {
-			log_err("too many uuids to fit on %s",
+			log_error("Too many uuids to fit on %s",
 				data->dev->name);
 			return 0;
 		}
@@ -389,7 +397,7 @@ static int _write_pv(struct disk_list *data)
 	struct pv_disk *disk = &data->pv;
 
 	_xlate_pv(disk);
-	if (dev_write(data->dev, 0, sizeof(*disk), disk) != sizeof(&disk))
+	if (dev_write(data->dev, 0, sizeof(*disk), disk) != sizeof(*disk))
 		fail;
 
 	_xlate_pv(disk);
@@ -402,7 +410,7 @@ static int _write_all_pv(struct disk_list *data)
 	const char *pv_name = data->dev->name;
 
 	if (!_write_pv(data)) {
-		log_err("failed to write pv struct to %s", pv_name);
+		log_error("Failed to write PV structure onto %s", pv_name);
 		return 0;
 	}
 
@@ -413,22 +421,22 @@ static int _write_all_pv(struct disk_list *data)
 		return 1;
 
 	if (!_write_vg(data)) {
-		log_err("failed to write vg data to %s", pv_name);
+		log_error("Failed to write VG data to %s", pv_name);
 		return 0;
 	}
 
 	if (!_write_uuids(data)) {
-		log_err("failed to write pv uuid list to %s", pv_name);
+		log_error("Failed to write PV uuid list to %s", pv_name);
 		return 0;
 	}
 
 	if (!_write_lvs(data)) {
-		log_err("failed to write lv's to %s", pv_name);
+		log_error("Failed to write LV's to %s", pv_name);
 		return 0;
 	}
 
 	if (!_write_extents(data)) {
-		log_err("failed to write extents to %s", pv_name);
+		log_error("Failed to write extents to %s", pv_name);
 		return 0;
 	}
 
@@ -450,7 +458,7 @@ int write_pvs(struct list_head *pvs)
 		if (!(_write_all_pv(dl)))
 			fail;
 
-		log_debug("successfully wrote data to %s", dl->dev->name);
+		log_debug("Successfully wrote data to %s", dl->dev->name);
 	}
 
 	return 1;
