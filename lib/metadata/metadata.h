@@ -95,25 +95,25 @@ struct volume_group {
 
         /* physical volumes */
         uint32_t pv_count;
-	struct list_head pvs;
+	struct list pvs;
 
         /* logical volumes */
         uint32_t lv_count;
-	struct list_head lvs;
+	struct list lvs;
 };
 
 struct name_list {
-	struct list_head list;
+	struct list list;
 	char *name;
 };
 
 struct pv_list {
-	struct list_head list;
+	struct list list;
 	struct physical_volume pv;
 };
 
 struct lv_list {
-	struct list_head list;
+	struct list list;
 	struct logical_volume lv;
 };
 
@@ -124,12 +124,12 @@ struct io_space {
 	/*
 	 * Returns a name_list of vg's.
 	 */
-	struct list_head *(*get_vgs)(struct io_space *is);
+	struct list *(*get_vgs)(struct io_space *is);
 
 	/*
 	 * Returns pv_list of fully-populated pv structures.
 	 */
-	struct list_head *(*get_pvs)(struct io_space *is);
+	struct list *(*get_pvs)(struct io_space *is);
 
 	/*
 	 * Return PV with given path.
@@ -234,13 +234,13 @@ struct physical_volume *pv_find(struct volume_group *vg,
 int lv_add(struct volume_group *vg, struct logical_volume *lv);
 
 /* Remove an LV from a given VG */
-int lv_remove(struct volume_group *vg, struct list_head *lvh);
+int lv_remove(struct volume_group *vg, struct list *lvh);
 
 /* Find a PV within a given VG */
-struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
+struct list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
 
 /* Find an LV within a given VG */
-struct list_head *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
+struct list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
 
 /* Return the VG that contains a given LV (based on path given in lv_name) */
 /* or environment var */

@@ -30,7 +30,7 @@ int vgrename(int argc, char **argv)
 	char old_path[NAME_LEN], new_path[NAME_LEN];
 
 	struct volume_group *vg_old, *vg_new;
-	struct list_head *pvh;
+	struct list *pvh;
 
 	if (argc != 2) {
 		log_error("old and new volume group names need specifying");
@@ -91,8 +91,8 @@ int vgrename(int argc, char **argv)
 	strcpy(vg_old->name, vg_name_new);
 
 	/* FIXME Should vg_write fix these implicitly? It has to check them. */
-	list_for_each(pvh, &vg_old->pvs) {
-		strcpy(list_entry(pvh, struct pv_list, list)->pv.vg_name,
+	list_iterate(pvh, &vg_old->pvs) {
+		strcpy(list_item(pvh, struct pv_list)->pv.vg_name,
 		       vg_name_new);
 	}
 

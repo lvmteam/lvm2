@@ -25,7 +25,7 @@ typedef __int64_t int64_t;
 
 
 struct str_list {
-	struct list_head list;
+	struct list list;
 	char *str;
 };
 

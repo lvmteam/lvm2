@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "pool.h"
@@ -149,13 +149,13 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 
 static int _accept_p(struct dev_filter *f, struct device *dev)
 {
+	struct list *ah;
 	int m, first = 1;
 	struct rfilter *rf = (struct rfilter *) f->private;
-	struct list_head *tmp;
 	struct str_list *sl;
 
-	list_for_each(tmp, &dev->aliases) {
-		sl = list_entry(tmp, struct str_list, list);
+	list_iterate(ah, &dev->aliases) {
+		sl = list_item(ah, struct str_list);
 		m = matcher_run(rf->engine, sl->str);
 
 		if (m >= 0) {
@@ -163,7 +163,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 
 				if (!first) {
 					list_del(&sl->list);
-					list_add(&sl->list, &dev->aliases);
+					list_add_h(&dev->aliases, &sl->list);
 				}
 
 				return 1;

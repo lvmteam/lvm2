@@ -31,8 +31,8 @@ int pvscan(int argc, char **argv)
 	int pvs_found = 0;
 	char *s1, *s2, *s3;
 
-	struct list_head *pvs;
-	struct list_head *pvh;
+	struct list *pvs;
+	struct list *pvh;
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 
@@ -61,13 +61,13 @@ int pvscan(int argc, char **argv)
 		return ECMD_FAILED;
 
 	/* eliminate exported/new if required */
-	list_for_each(pvh, pvs) {
-		pvl = list_entry(pvh, struct pv_list, list);
+	list_iterate(pvh, pvs) {
+		pvl = list_item(pvh, struct pv_list);
 		pv = &pvl->pv;
 
 		if ((arg_count(exported_ARG) && !(pv->status & EXPORTED_VG))
 		    || (arg_count(novolumegroup_ARG) && (*pv->vg_name))) {
-			list_del(&pvl->list);	
+			list_del(&pvl->list);
 			continue;
 		}
 
@@ -88,15 +88,15 @@ int pvscan(int argc, char **argv)
 			new_pvs_found++;
 			size_new += pv->size;
 			size_total += pv->size;
-		} else 
-			size_total += (pv->pe_count - pv->pe_allocated) 
+		} else
+			size_total += (pv->pe_count - pv->pe_allocated)
 				      * pv->pe_size;
 	}
 
 	/* find maximum pv name length */
 	pv_max_name_len = vg_max_name_len = 0;
-	list_for_each(pvh, pvs) {
-		pv = &list_entry(pvh, struct pv_list, list)->pv;
+	list_iterate(pvh, pvs) {
+		pv = &list_item(pvh, struct pv_list)->pv;
 		len = strlen(dev_name(pv->dev));
 		if (pv_max_name_len < len)
 			pv_max_name_len = len;
@@ -107,8 +107,8 @@ int pvscan(int argc, char **argv)
 	pv_max_name_len += 2;
 	vg_max_name_len += 2;
 
-	list_for_each(pvh, pvs)
-		pvscan_display_single(&list_entry(pvh, struct pv_list, list)->pv);
+	list_iterate(pvh, pvs)
+		pvscan_display_single(&list_item(pvh, struct pv_list)->pv);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");

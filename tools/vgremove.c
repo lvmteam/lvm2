@@ -31,7 +31,7 @@ static int vgremove_single(const char *vg_name)
 {
 	struct volume_group *vg;
 	struct physical_volume *pv;
-	struct list_head *pvh;
+	struct list *pvh;
 	int ret = 0;
 
 	log_verbose("Checking for volume group %s", vg_name);
@@ -59,8 +59,8 @@ static int vgremove_single(const char *vg_name)
 *************/
 
 	/* init physical volumes */
-	list_for_each(pvh, &vg->pvs) {
-		pv = &list_entry(pvh, struct pv_list, list)->pv;
+	list_iterate(pvh, &vg->pvs) {
+		pv = &list_item(pvh, struct pv_list)->pv;
 		log_verbose("Removing physical volume %s from volume group %s",
 			    dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';

@@ -45,7 +45,7 @@ int lvremove_single(char *lv_name)
 	char *vg_name = NULL;
 
 	struct volume_group *vg;
-	struct list_head *lvh;
+	struct list *lvh;
 	struct logical_volume *lv;
 
 	/* does VG exist? */
@@ -71,7 +71,7 @@ int lvremove_single(char *lv_name)
 		return ECMD_FAILED;
 	}
 
-	lv = &list_entry(lvh, struct lv_list, list)->lv;
+	lv = &list_item(lvh, struct lv_list)->lv;
 
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't remove logical volume %s under snapshot",

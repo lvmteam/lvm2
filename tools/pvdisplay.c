@@ -26,7 +26,7 @@ int pvdisplay(int argc, char **argv)
 {
 	int opt=0;
 
-	struct list_head *pvh, *pvs;
+	struct list *pvh, *pvs;
 	struct physical_volume *pv;
 
 	if (arg_count(colon_ARG) && arg_count(verbose_ARG)) {
@@ -50,8 +50,8 @@ int pvdisplay(int argc, char **argv)
                 if (!(pvs = ios->get_pvs(ios)))
                         return ECMD_FAILED;
 
-                list_for_each(pvh, pvs)
-                        pvdisplay_single(&list_entry(pvh, struct pv_list,                                                            list)->pv);
+                list_iterate(pvh, pvs)
+                        pvdisplay_single(&list_item(pvh, struct pv_list)->pv);
 	}
 
 	return 0;

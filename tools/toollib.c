@@ -94,8 +94,8 @@ int process_each_vg(int argc, char **argv,
 	int ret_max = 0;
 	int ret = 0;
 
-	struct list_head *vgh;
-	struct list_head *vgs_list;
+	struct list *vgh;
+	struct list *vgs_list;
 
 	if (argc) {
 		log_verbose("Using volume group(s) on command line");
@@ -108,10 +108,9 @@ int process_each_vg(int argc, char **argv,
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
-		list_for_each(vgh, vgs_list) {
-			ret =
-			    process_single(list_entry
-					   (vgh, struct name_list, list)->name);
+		list_iterate(vgh, vgs_list) {
+			ret = process_single(
+				list_item(vgh, struct name_list)->name);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
@@ -128,7 +127,7 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 	int ret_max = 0;
 	int ret = 0;
 
-	struct list_head *pvh;
+	struct list *pvh;
 
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
@@ -139,16 +138,16 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 					  vg->name);
 				continue;
 			}
-			ret = process_single(vg, &list_entry
-					     (pvh, struct pv_list, list)->pv);
+			ret = process_single(vg, 
+				     &list_item(pvh, struct pv_list)->pv);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
 	} else {
 		log_verbose("Using all physical volume(s) in volume group");
-		list_for_each(pvh, &vg->pvs) {
-			ret = process_single(vg, &list_entry
-					     (pvh, struct pv_list, list)->pv);
+		list_iterate(pvh, &vg->pvs) {
+			ret = process_single(vg, 
+				    &list_item(pvh, struct pv_list)->pv);
 			if (ret > ret_max)
 				ret_max = ret;
 		}

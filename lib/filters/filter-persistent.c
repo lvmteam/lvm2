@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "config.h"
@@ -165,15 +165,15 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l = hash_lookup(pf->devices, dev_name(dev));
-	struct list_head *tmp;
 	struct str_list *sl;
+	struct list *ah;
 
 	if (!l) {
 		l = pf->real->passes_filter(pf->real, dev) ?
 			PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
-		list_for_each(tmp, &dev->aliases) {
-			sl = list_entry(tmp, struct str_list, list);
+		list_iterate(ah, &dev->aliases) {
+			sl = list_item(ah, struct str_list);
 			hash_insert(pf->devices, sl->str, l);
 		}
 	}

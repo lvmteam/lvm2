@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "log.h"
@@ -91,7 +91,7 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 
 	memcpy(&pvl->pv, pv, sizeof (struct physical_volume));
 
-	list_add(&pvl->list, &vg->pvs);
+	list_add(&vg->pvs, &pvl->list);
 	vg->pv_count++;
 
 	return 1;
@@ -154,10 +154,10 @@ struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
 	vg->max_pv = max_pv;
 
 	vg->pv_count = 0;
-	INIT_LIST_HEAD(&vg->pvs);
+	list_init(&vg->pvs);
 
 	vg->lv_count = 0;
-	INIT_LIST_HEAD(&vg->lvs);
+	list_init(&vg->lvs);
 
 	if (!ios->vg_setup(ios, vg)) {
 		log_error("Format specific setup of volume group '%s' failed.",
@@ -216,13 +216,13 @@ struct physical_volume *pv_create(struct io_space *ios, const char *name)
 	return NULL;
 }
 
-struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
+struct list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 {
-	struct list_head *pvh;
+	struct list *pvh;
 	struct pv_list *pv;
 
-	list_for_each(pvh, &vg->pvs) {
-		pv = list_entry(pvh, struct pv_list, list);
+	list_iterate(pvh, &vg->pvs) {
+		pv = list_item(pvh, struct pv_list);
 		/* FIXME check dev not name */
 		if (!strcmp(dev_name(pv->pv.dev), pv_name))
 			return pvh;
@@ -232,10 +232,9 @@ struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 
 }
 
-struct list_head *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
+struct list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 {
-        struct list_head *lvh;
-
+	struct list *lvh;
 	const char *ptr;
 
 	/* Use last component */
@@ -243,10 +242,9 @@ struct list_head *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 		ptr++;
 	else
 		ptr = lv_name;
-		
-        list_for_each(lvh, &vg->lvs)
-                if (!strcmp(list_entry(lvh, struct lv_list, list)->lv.name, 
-			    ptr))
+
+        list_iterate(lvh, &vg->lvs)
+                if (!strcmp(list_item(lvh, struct lv_list)->lv.name, ptr))
                         return lvh;
 
         return NULL;
@@ -254,23 +252,22 @@ struct list_head *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
 {
-	struct list_head *lvh;
+	struct list *lvh;
 
 	if ((lvh = find_lv_in_vg(vg, lv_name)))
-		return &list_entry(lvh, struct lv_list, list)->lv;
+		return &list_item(lvh, struct lv_list)->lv;
 	else
 		return NULL;
 }
 
-struct physical_volume *_find_pv(struct volume_group *vg,
-                                        struct device *dev)
+struct physical_volume *_find_pv(struct volume_group *vg, struct device *dev)
 {
-        struct list_head *tmp;
+	struct list *pvh;
         struct physical_volume *pv;
         struct pv_list *pl;
 
-        list_for_each(tmp, &vg->pvs) {
-                pl = list_entry(tmp, struct pv_list, list);
+        list_iterate(pvh, &vg->pvs) {
+                pl = list_item(pvh, struct pv_list);
                 pv = &pl->pv;
                 if (dev == pv->dev)
                         return pv;
@@ -278,7 +275,7 @@ struct physical_volume *_find_pv(struct volume_group *vg,
         return NULL;
 }
 
-int lv_remove(struct volume_group *vg, struct list_head *lvh)
+int lv_remove(struct volume_group *vg, struct list *lvh)
 {
 	list_del(lvh);
 	vg->lv_count--;

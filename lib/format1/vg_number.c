@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "log.h"
@@ -18,12 +18,13 @@
 int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 		       int *result)
 {
-	struct list_head all_pvs, *tmp;
+	struct list *pvh;
+	struct list all_pvs;
 	struct disk_list *dl;
 	struct pool *mem = pool_create(10 * 1024);
 	int numbers[MAX_VG], i, r = 0;
 
-	INIT_LIST_HEAD(&all_pvs);
+	list_init(&all_pvs);
 
 	if (!mem) {
 		stack;
@@ -37,8 +38,8 @@ int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 
 	memset(numbers, 0, sizeof(numbers));
 
-	list_for_each (tmp, &all_pvs) {
-		dl = list_entry(tmp, struct disk_list, list);
+	list_iterate(pvh, &all_pvs) {
+		dl = list_item(pvh, struct disk_list);
 		if (!strcmp(dl->pv.vg_name, candidate_vg))
 			continue;
 
