@@ -171,7 +171,7 @@ void vgcache_del(const char *vg_name)
 void vgcache_destroy()
 {
 	if (_vghash) {
-		hash_iterate(_vghash, (iterate_fn)vgcache_destroy_entry);
+		hash_iter(_vghash, (iterate_fn)vgcache_destroy_entry);
 		hash_destroy(_vghash);
 		_vghash = NULL;
 	}
