@@ -89,11 +89,13 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+/******* Removed requirement
 	if (!(vg->status & ACTIVE)) {
 		log_error("Volume group %s must be active before changing a "
 			  "logical volume", vg_name);
 		return ECMD_FAILED;
 	}
+*******/
 
 	if ((lvh = find_lv_in_vg(vg, lv_name_new))) {
 		log_error("Logical volume %s already exists in "
@@ -120,7 +122,8 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	/* FIXME Update symlink.  lv_reactivate? */
+	/* FIXME Update symlink. */
+	lv_reactivate(lv);
 
 	/* FIXME backup */
 

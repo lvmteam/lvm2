@@ -15,7 +15,7 @@
 #include "fs.h"
 #include "log.h"
 
-#include <devmapper/libdevmapper.h>
+#include <libdevmapper.h>
 
 void _build_lv_path(char *buffer, size_t len, struct logical_volume *lv)
 {

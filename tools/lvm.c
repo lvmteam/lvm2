@@ -721,6 +721,7 @@ static int init(void)
 
 	/* FIXME: Override from config file. (Append trailing slash if reqd) */
 	cmd->dev_dir = "/dev/";
+	dm_set_dev_dir(cmd->dev_dir);
 
 	if (!(cmd->cf = create_config_file())) {
 		stack;
@@ -743,6 +744,8 @@ static int init(void)
 
 		__init_log(cmd->cf);
 	}
+
+	dm_log_init(print_log);
 
 	if (!dev_cache_setup(cmd->cf)) {
 		goto out;

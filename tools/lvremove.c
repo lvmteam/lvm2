@@ -37,11 +37,14 @@ static int lvremove_single(struct logical_volume *lv)
 	struct volume_group *vg;
 
 	vg = lv->vg;
+
+/******* Removed requirement
 	if (!(vg->status & ACTIVE)) {
 		log_error("Volume group %s must be active before removing a "
 			  "logical volume", vg->name);
 		return ECMD_FAILED;
 	}
+********/
 
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't remove logical volume %s under snapshot",
@@ -49,14 +52,11 @@ static int lvremove_single(struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
-/********** FIXME  Ensure logical volume is not open on *any* machine
-	if (lv->open) {
-		log_error("can't remove open %s logical volume %s",
-			  lv->status & SNAPSHOT ? "snapshot" : "",
-			  lv->name);
+	/* FIXME Force option? */
+	if (lv_open_count(lv)) {
+		log_error("Can't remove open logical volume %s", lv->name);
 		return ECMD_FAILED;
 	}
-************/
 
 	if (!arg_count(force_ARG)) {
 		if (yes_no_prompt
@@ -65,6 +65,10 @@ static int lvremove_single(struct logical_volume *lv)
 			log_print("Logical volume %s not removed", lv->name);
 			return 0;
 		}
+	}
+
+	if (!lv_deactivate(lv)) {
+		log_error("Unable to deactivate logical volume %s", lv->name);
 	}
 
 	log_verbose("Releasing logical volume %s", lv->name);

@@ -40,10 +40,12 @@ static int vgremove_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
+/******* Ignore active status
 	if (vg->status & ACTIVE) {
 		log_error("Volume group %s is still active", vg_name);
 		return ECMD_FAILED;
 	}
+********/
 
 	if (vg->lv_count) {
 		log_error("Volume group %s still contains %d logical volume(s)",

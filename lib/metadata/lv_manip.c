@@ -296,6 +296,7 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	}
 
 	lv->le_count = extents;
+	lv->size = extents * lv->vg->extent_size;
 
 	return 1;
 }
@@ -325,6 +326,7 @@ int lv_extend(struct logical_volume *lv, uint32_t extents,
 	memcpy(new_lv, lv, sizeof(*lv));
 	new_lv->map = new_map;
 	new_lv->le_count += extents;
+	new_lv->size += extents * lv->vg->extent_size;
 
 	if (!_allocate(new_lv->vg, new_lv, acceptable_pvs, lv->le_count)) {
 		stack;

@@ -50,20 +50,22 @@ static int vgscan_single(const char *vg_name)
 	log_print("Found %sactive volume group %s",
 		  (vg->status & ACTIVE) ? "" : "in", vg_name);
 
+/******* Ignore active flag
 	if (!(vg->status & ACTIVE)) {
+		return 0;
 		vg->status |= ACTIVE;
 		if (!(fid->ops->vg_write(fid, vg))) {
 			log_error("Failed to activate volume group %s",
 				  vg_name);
 			return ECMD_FAILED;
 		}
-
 	}
+*********/
 
-	/* FIXME: Creates /dev/vg */
-	activate_lvs_in_vg(vg);
+	
 
-	log_print("Volume Group %s activated", vg_name);
+	log_print("%d logical volumes in volume group %s activated", 
+		  activate_lvs_in_vg(vg), vg_name);
 
 	return 0;
 }

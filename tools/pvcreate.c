@@ -50,10 +50,12 @@ static int pvcreate_check(const char *name)
 		return 0;
 	}
 
+/******* Removed check
 	if (pv->status & ACTIVE) {
 		log_error("Can't create on active physical volume %s", name);
 		return 0;
 	}
+********/
 
 	/* we must have -ff to overwrite a non orphan */
 	if (arg_count(force_ARG) < 2) {
