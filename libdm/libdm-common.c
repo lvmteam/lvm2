@@ -6,24 +6,23 @@
 
 #include "libdm-targets.h"
 #include "libdm-common.h"
-#include "libdevmapper.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <sys/types.h>
+#include <unistd.h>
 #include <errno.h>
-#include <linux/kdev_t.h>
 #include <linux/dm-ioctl.h>
+#include <linux/kdev_t.h>
 
 #define DEV_DIR "/dev/"
 
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
+
+static int _verbose = 0;
 
 /*
  * Library users can provide their own logging
@@ -34,19 +33,22 @@ static void _default_log(int level, const char *file, int line,
 {
 	va_list ap;
 
-	if (level > _LOG_WARN)
+	if (level > _LOG_WARN && !_verbose)
 		return;
 
 	va_start(ap, f);
 
-	if (level == _LOG_WARN)
-		vprintf(f, ap);
-	else
+	if (level < _LOG_WARN)
 		vfprintf(stderr, f, ap);
+	else
+		vprintf(f, ap);
 
 	va_end(ap);
 
-	fprintf(stderr, "\n");
+	if (level < _LOG_WARN)
+		fprintf(stderr, "\n");
+	else
+		printf("\n");
 }
 
 dm_log_fn _log = _default_log;
@@ -54,6 +56,11 @@ dm_log_fn _log = _default_log;
 void dm_log_init(dm_log_fn fn)
 {
 	_log = fn;
+}
+
+void dm_log_init_verbose(int level)
+{
+	_verbose = level;
 }
 
 static void _build_dev_path(char *buffer, size_t len, const char *dev_name)
@@ -75,6 +82,9 @@ struct dm_task *dm_task_create(int type)
 {
 	struct dm_task *dmt = malloc(sizeof(*dmt));
 
+	if (!dm_check_version())
+		return NULL;
+
 	if (!dmt) {
 		log_error("dm_task_create: malloc(%d) failed", sizeof(*dmt));
 		return NULL;
@@ -84,6 +94,7 @@ struct dm_task *dm_task_create(int type)
 
 	dmt->type = type;
 	dmt->minor = -1;
+
 	return dmt;
 }
 
@@ -163,10 +174,11 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 	return 1;
 }
 
-int add_dev_node(const char *dev_name, dev_t dev)
+int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
 {
 	char path[PATH_MAX];
 	struct stat info;
+	dev_t dev = MKDEV(major, minor);
 
 	_build_dev_path(path, sizeof(path), dev_name);
 
@@ -212,7 +224,7 @@ int rename_dev_node(const char *old_name, const char *new_name)
 		}
 
 		if (unlink(newpath) < 0) {
-			if (errno == EPERM) {	
+			if (errno == EPERM) {
 				/* devfs, entry has already been renamed */
 				return 1;
 			}
