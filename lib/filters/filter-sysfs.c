@@ -26,7 +26,7 @@ static int _locate_sysfs_blocks(const char *proc, char *path, size_t len)
 	char proc_mounts[PATH_MAX];
 	int r = 0;
 	FILE *fp;
-	char *split[2], buffer[PATH_MAX + 16];
+	char *split[4], buffer[PATH_MAX + 16];
 
 	if (!*proc) {
 		log_verbose("No proc filesystem found: skipping sysfs filter");
@@ -45,8 +45,8 @@ static int _locate_sysfs_blocks(const char *proc, char *path, size_t len)
 	}
 
 	while (fgets(buffer, sizeof(buffer), fp)) {
-		if (split_words(buffer, 2, split) == 2 &&
-		    !strcmp(split[0], "sysfs")) {
+		if (split_words(buffer, 4, split) == 4 &&
+		    !strcmp(split[2], "sysfs")) {
 			if (lvm_snprintf(path, len, "%s/%s", split[1],
 					 "block") >= 0) {
 				r = 1;
