@@ -140,13 +140,13 @@ int persistent_filter_dump(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
-	FILE *fp = fopen(pf->file, "w");
-
+	FILE *fp;
+	
 	log_very_verbose("Dumping persistent device cache to %s", pf->file);
 
+	fp = fopen(pf->file, "w");
 	if (!fp) {
-		log_error("Couldn't open '%s' for to hold valid devices.",
-			 pf->file);
+		log_sys_error("fopen", pf->file);
 		return 0;
 	}
 

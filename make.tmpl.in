@@ -50,11 +50,15 @@ endif
 SUFFIXES=
 SUFFIXES=.c .d .o
 
-CFLAGS+=-g -Wall 
+CFLAGS+=-Wall 
+CFLAGS+=-O2
+CFLAGS+=-g -fno-omit-frame-pointer
+#CFLAGS+=-pg
 CFLAGS+=-DDEBUG_MEM -DDEBUG
 #CFLAGS+=-DBOUNDS_CHECK
 INCLUDES+=-I. -I$(top_srcdir)/include
 INC_LNS=$(top_srcdir)/include/.symlinks_created
+LD_FLAGS=-pg
 
 ifeq ("@READLINE@", "yes")
   CFLAGS += -DREADLINE_SUPPORT
