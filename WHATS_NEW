@@ -1,3 +1,7 @@
+Version 2.00.34 - 
+==================================
+
+
 Version 2.00.33 - 7th January 2005
 ==================================
   pvcreate wipes first 4 sectors unless given --zero n.
