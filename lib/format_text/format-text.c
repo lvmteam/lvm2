@@ -274,6 +274,9 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		stack;
 		goto out;
 	}
+	log_debug("Read %s metadata (%u) from %s at %" PRIu64 " size %" PRIu64,
+		  vg->name, vg->seqno, dev_name(area->dev),
+		  area->start + rlocn->offset, rlocn->size);
 
       out:
 	if (!dev_close(area->dev))
