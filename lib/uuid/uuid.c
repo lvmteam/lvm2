@@ -61,7 +61,6 @@ void _build_inverse(void)
 int id_valid(struct id *id)
 {
 	int i;
-	char lookup[256];
 
 	_build_inverse();
 
@@ -89,7 +88,7 @@ int id_format(struct id *id, char *buffer, size_t size)
 		return 0;
 
 	for (i = 0; i < GROUPS; i++) {
-		memcpy(buffer + (i * 5), id.uuid + (i * 4), 4);
+		memcpy(buffer + (i * 5), id->uuid + (i * 4), 4);
 		buffer[(i * 5) + 4] = '-';
 	}
 
@@ -99,6 +98,8 @@ int id_format(struct id *id, char *buffer, size_t size)
 
 int id_read_format(struct id *id, char *buffer)
 {
+	int i;
+
 	if (strlen(buffer) < (GROUPS * 5)) {
 		log_err("Insufficient characters to be a proper uuid.");
 		return 0;
