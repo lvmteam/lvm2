@@ -93,8 +93,13 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 
 void pool_empty(struct pool *p)
 {
+	struct chunk *c;
+
+	for (c = p->chunk; c && c->prev; c = c->prev)
+		;
+
 	if (p->chunk)
-		pool_free(p, p->chunk->begin);
+		pool_free(p, (char *) (p->chunk + 1));
 }
 
 void pool_free(struct pool *p, void *ptr)
