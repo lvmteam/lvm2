@@ -219,11 +219,19 @@ void pvdisplay_full(struct physical_volume *pv, void *handle)
 int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
 		    struct physical_volume *pv, void *handle)
 {
+	char uuid[64];
+
 	if (!pv)
 		return 0;
 
+	if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+		stack;
+		return 0;
+	}
+
 	log_print("PV Name               %s     ", dev_name(pv->dev));
 	/* FIXME  pv->pv_number); */
+	log_print("PV UUID               %s", *uuid ? uuid : "none");
 	log_print("PV Status             %sallocatable",
 		  (pv->status & ALLOCATABLE_PV) ? "" : "NOT ");
 	log_print("Total PE / Free PE    %u / %u",
@@ -295,6 +303,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 				  snap->cow->name,
 				  (snap_active > 0) ? "active" : "INACTIVE");
 		}
+		snap = NULL;
 	} else if ((snap = find_cow(lv))) {
 		snap_active = lv_snapshot_percent(lv, &snap_percent);
 		log_print("LV snapshot status     %s destination for %s%s/%s",
@@ -400,7 +409,11 @@ int lvdisplay_segments(struct logical_volume *lv)
 		log_print("Logical extent %u to %u:",
 			  seg->le, seg->le + seg->len - 1);
 
-		log_print("  Type\t\t%s", get_segtype_string(seg->type));
+		if (seg->type == SEG_STRIPED && seg->stripes == 1)
+			log_print("  Type\t\tlinear");
+		else
+			log_print("  Type\t\t%s",
+				  get_segtype_string(seg->type));
 
 		switch (seg->type) {
 		case SEG_STRIPED:
