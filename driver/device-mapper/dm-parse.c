@@ -34,6 +34,9 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 	void *context;
 	int last_line_good = 1, was_error = 0;
 
+	if (table == NULL)
+		return NULL;
+
 #define PARSE_ERROR {last_line_good = 0; was_error = 1; continue;}
 
 	while (line_fn(&line, l_private)) {
@@ -114,7 +117,7 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 			return table;
 	}
 
-	dm_table_destroy(table);
+	dm_put_table(table);
 	return 0;
 }
 

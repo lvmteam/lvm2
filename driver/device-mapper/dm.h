@@ -167,6 +167,8 @@ struct target {
  * the btree
  */
 struct dm_table {
+	atomic_t refcnt;
+
 	/* btree table */
 	int depth;
 	int counts[MAX_DEPTH];	/* in nodes */
@@ -226,7 +228,7 @@ void dm_suspend(struct mapped_device *md);
 
 /* dm-table.c */
 struct dm_table *dm_table_create(void);
-void dm_table_destroy(struct dm_table *t);
+void dm_put_table(struct dm_table *t);
 
 int dm_table_add_target(struct dm_table *t, offset_t high,
 			struct target_type *type, void *private);
