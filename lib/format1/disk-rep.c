@@ -255,21 +255,21 @@ static int _read_extents(struct disk_list *data)
 /* 
  * If exported, remove "PV_EXP" from end of VG name 
  */
-static void _munge_exported_vg(struct disk_list *data)
+void munge_exported_vg(struct pv_disk *pvd, struct vg_disk *vgd)
 {
 	int l;
 	size_t s;
 
 	/* Return if PV not in a VG or VG not exported */
-	if ((!*data->pvd.vg_name) || !(data->vgd.vg_status & VG_EXPORTED))
+	if ((!*pvd->vg_name) || (vgd && !(vgd->vg_status & VG_EXPORTED)))
 		return;
 
-	l = strlen(data->pvd.vg_name);
+	l = strlen(pvd->vg_name);
 	s = sizeof(EXPORTED_TAG);
-	if (!strncmp(data->pvd.vg_name + l - s + 1, EXPORTED_TAG, s))
-		data->pvd.vg_name[l - s + 1] = '\0';
+	if (!strncmp(pvd->vg_name + l - s + 1, EXPORTED_TAG, s))
+		pvd->vg_name[l - s + 1] = '\0';
 
-	data->pvd.pv_status |= VG_EXPORTED;
+	pvd->pv_status |= VG_EXPORTED;
 }
 
 static struct disk_list *__read_disk(const struct format_type *fmt,
@@ -294,6 +294,9 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 		stack;
 		goto bad;
 	}
+
+	/* If VG is exported, set VG name back to the real name */
+	munge_exported_vg(&dl->pvd, &dl->vgd);
 
 	if (!(info = lvmcache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
 				  dl->pvd.vg_name, NULL)))
@@ -320,9 +323,6 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 		log_error("Failed to read VG data from PV (%s)", name);
 		goto bad;
 	}
-
-	/* If VG is exported, set VG name back to the real name */
-	_munge_exported_vg(dl);
 
 	/* Update VG cache with what we found */
 	/* vgcache_add(dl->pvd.vg_name, dl->vgd.vg_uuid, dev, fmt); */
