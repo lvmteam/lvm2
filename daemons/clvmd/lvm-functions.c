@@ -43,6 +43,7 @@
 #include "activate.h"
 #include "hash.h"
 #include "locking.h"
+#include "../tools/lvm2cmd.h"
 
 static struct cmd_context *cmd = NULL;
 static struct hash_table *lv_hash = NULL;
@@ -388,29 +389,19 @@ int do_check_lvm1(char *vgname)
 	return status == 1 ? 0 : EBUSY;
 }
 
-/*
- * Ideally, clvmd should be started before any LVs are active
- * but this may not be the case...
- * I suppose this also comes in handy if clvmd crashes, not that it would!
- */
-static void *get_initial_state()
+static void cmdline_output(int level, const char *file, int line,
+			   const char *message)
 {
-	char lv[64], vg[64], flags[25];
-	char uuid[65];
-	char line[255];
-	FILE *lvs =
-	    popen
-	    ("/sbin/lvm lvs --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr",
-	     "r");
+	DEBUGLOG("lvm2output: %d: %s\n", level, message);
+	if (level == LVM2_LOG_PRINT)
+	{
+		char lv[64], vg[64], flags[25];
+		char uuid[65];
 
-	if (!lvs)
-		return NULL;
-
-	while (fgets(line, sizeof(line), lvs)) {
-	        if (sscanf(line, "%s %s %s\n", vg, lv, flags) == 3) {
+		if (sscanf(message, "%s %s %s\n", vg, lv, flags) == 3) {
 
 			/* States: s:suspended a:active S:dropped snapshot I:invalid snapshot */
-		        if (strlen(vg) == 38 &&                         /* is is a valid UUID ? */
+			if (strlen(vg) == 38 &&                         /* is is a valid UUID ? */
 			    (flags[4] == 'a' || flags[4] == 's')) {	/* is it active or suspended? */
 				/* Convert hyphen-separated UUIDs into one */
 				memcpy(&uuid[0], &vg[0], 6);
@@ -434,8 +425,32 @@ static void *get_initial_state()
 			}
 		}
 	}
-	fclose(lvs);
-	return NULL;
+}
+
+/*
+ * Ideally, clvmd should be started before any LVs are active
+ * but this may not be the case...
+ * I suppose this also comes in handy if clvmd crashes, not that it would!
+ */
+static void get_initial_state()
+{
+	void *lvm2_handle;
+
+	lvm2_handle = lvm2_init();
+	if (!lvm2_handle) {
+		syslog(LOG_ERR, "Cannot get lvm2 context to initialise lock state\n");
+		return;
+	}
+
+	lvm2_log_fn(cmdline_output);
+
+	/* This doesn't seem to do what I think it does */
+	lvm2_log_level(lvm2_handle, LVM2_LOG_PRINT);
+
+	DEBUGLOG("Getting currently active LVs for lock state\n");
+	lvm2_run(lvm2_handle, "lvs --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr");
+
+	lvm2_exit(lvm2_handle);
 }
 
 /* This checks some basic cluster-LVM configuration stuff */
