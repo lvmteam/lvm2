@@ -8,6 +8,8 @@ struct label
 {
     uint32_t magic;
     uint32_t crc;
+    uint64_t label1_loc;
+    uint64_t label2_loc;
     uint16_t datalen;
 
     char     disk_type[32];
