@@ -42,7 +42,8 @@ void backup_enable(int flag);
 int backup(struct volume_group *vg);
 int backup_remove(const char *vg_name);
 
-int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name, const char *file);
+int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
+			     const char *file);
 int backup_restore(struct cmd_context *cmd, const char *vg_name);
 
 #endif

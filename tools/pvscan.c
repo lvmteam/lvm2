@@ -43,14 +43,14 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	pv_max_name_len = 0;
 	vg_max_name_len = 0;
 
-	if (arg_count(cmd,novolumegroup_ARG) && arg_count(cmd,exported_ARG)) {
+	if (arg_count(cmd, novolumegroup_ARG) && arg_count(cmd, exported_ARG)) {
 		log_error("Options -e and -n are incompatible");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,exported_ARG) || arg_count(cmd,novolumegroup_ARG))
+	if (arg_count(cmd, exported_ARG) || arg_count(cmd, novolumegroup_ARG))
 		log_print("WARNING: only considering physical volumes %s",
-			  arg_count(cmd,exported_ARG) ?
+			  arg_count(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 
 	log_verbose("Wiping cache of LVM-capable devices");
@@ -65,8 +65,10 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		pvl = list_item(pvh, struct pv_list);
 		pv = pvl->pv;
 
-		if ((arg_count(cmd,exported_ARG) && !(pv->status & EXPORTED_VG))
-		    || (arg_count(cmd,novolumegroup_ARG) && (*pv->vg_name))) {
+		if (
+		    (arg_count(cmd, exported_ARG)
+		     && !(pv->status & EXPORTED_VG))
+		    || (arg_count(cmd, novolumegroup_ARG) && (*pv->vg_name))) {
 			list_del(&pvl->list);
 			continue;
 		}
@@ -83,14 +85,13 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 ********/
 		pvs_found++;
 
-
 		if (!*pv->vg_name) {
 			new_pvs_found++;
 			size_new += pv->size;
 			size_total += pv->size;
 		} else
 			size_total += (pv->pe_count - pv->pe_allocated)
-				      * pv->pe_size;
+			    * pv->pe_size;
 	}
 
 	/* find maximum pv name length */
@@ -108,7 +109,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 	vg_max_name_len += 2;
 
 	list_iterate(pvh, pvs)
-		pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv);
+	    pvscan_display_single(cmd, list_item(pvh, struct pv_list)->pv);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");
@@ -141,12 +142,12 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
 	char vg_name_this[NAME_LEN] = { 0, };
 
 	/* short listing? */
-	if (arg_count(cmd,short_ARG) > 0) {
+	if (arg_count(cmd, short_ARG) > 0) {
 		log_print("%s", dev_name(pv->dev));
 		return;
 	}
 
-	if (arg_count(cmd,verbose_ARG) > 1) {
+	if (arg_count(cmd, verbose_ARG) > 1) {
 		/* FIXME As per pv_display! Drop through for now. */
 		/* pv_show(pv); */
 
@@ -157,11 +158,11 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
 		/* return; */
 	}
 
-	memset(pv_tmp_name, 0, sizeof (pv_tmp_name));
+	memset(pv_tmp_name, 0, sizeof(pv_tmp_name));
 
 	vg_name_len = strlen(pv->vg_name) + 1;
 
-	if (arg_count(cmd,uuid_ARG)) {
+	if (arg_count(cmd, uuid_ARG)) {
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
 			stack;
 			return;
@@ -174,7 +175,7 @@ void pvscan_display_single(struct cmd_context *cmd, struct physical_volume *pv)
 	}
 
 	if (!*pv->vg_name) {
-		log_print("PV %-*s    %-*s [%s]", 
+		log_print("PV %-*s    %-*s [%s]",
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
 			  (s1 = display_size(pv->size / 2, SIZE_SHORT)));

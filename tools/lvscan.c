@@ -95,7 +95,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv)
 	dbg_free(dummy);
 
 	/* FIXME sprintf? */
-	
+
 /*********** FIXME Handle segments?
 	if (lv->segments[0]->stripes > 1 && !(lv->status & SNAPSHOT))
 		log_print(" striped[%u]", lv->segments[0]->stripes);

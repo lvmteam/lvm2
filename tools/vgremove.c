@@ -30,8 +30,8 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
-		
-	ret = process_each_vg(cmd, argc, argv, LCK_WRITE | LCK_NONBLOCK, 
+
+	ret = process_each_vg(cmd, argc, argv, LCK_WRITE | LCK_NONBLOCK,
 			      &vgremove_single);
 
 	lock_vol("", LCK_VG | LCK_NONE);
@@ -52,10 +52,10 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-        if (vg->status & EXPORTED_VG) {
-                log_error("Volume group \"%s\" is exported", vg->name);
-                return ECMD_FAILED;
-        }
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", vg->name);
+		return ECMD_FAILED;
+	}
 
 	if (vg->status & PARTIAL_VG) {
 		log_error("Cannot remove partial volume group \"%s\"",
@@ -65,8 +65,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 
 	if (vg->lv_count) {
 		log_error("Volume group \"%s\" still contains %d "
-			  "logical volume(s)",
-			  vg_name, vg->lv_count);
+			  "logical volume(s)", vg_name, vg->lv_count);
 		return ECMD_FAILED;
 	}
 
@@ -84,8 +83,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 	list_iterate(pvh, &vg->pvs) {
 		pv = list_item(pvh, struct pv_list)->pv;
 		log_verbose("Removing physical volume \"%s\" from "
-			    "volume group \"%s\"",
-			    dev_name(pv->dev), vg_name);
+			    "volume group \"%s\"", dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';
 		if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
 			log_error("Failed to remove physical volume \"%s\""

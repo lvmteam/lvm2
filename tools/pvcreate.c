@@ -32,7 +32,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	struct physical_volume *pv;
 
 	/* is the partition type set correctly ? */
-	if ((arg_count(cmd,force_ARG) < 1) && !is_lvm_partition(name))
+	if ((arg_count(cmd, force_ARG) < 1) && !is_lvm_partition(name))
 		return 0;
 
 	/* is there a pv here already */
@@ -45,20 +45,20 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* we must have -ff to overwrite a non orphan */
-	if (arg_count(cmd,force_ARG) < 2) {
+	if (arg_count(cmd, force_ARG) < 2) {
 		log_error("Can't initialize physical volume \"%s\" of "
 			  "volume group \"%s\" without -ff", name, pv->vg_name);
 		return 0;
 	}
 
 	/* prompt */
-	if (!arg_count(cmd,yes_ARG) &&
+	if (!arg_count(cmd, yes_ARG) &&
 	    yes_no_prompt(_really_init, name, pv->vg_name) == 'n') {
 		log_print("Physical volume \"%s\" not initialized", name);
 		return 0;
 	}
 
-	if (arg_count(cmd,force_ARG)) {
+	if (arg_count(cmd, force_ARG)) {
 		log_print("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
 			  pv->vg_name[0] ? " of volume group \"" : "",
@@ -76,8 +76,8 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 	char *uuid;
 	struct device *dev;
 
-	if (arg_count(cmd,uuidstr_ARG)) {
-		uuid = arg_str_value(cmd,uuidstr_ARG,"");
+	if (arg_count(cmd, uuidstr_ARG)) {
+		uuid = arg_str_value(cmd, uuidstr_ARG, "");
 		if (!id_read_format(&id, uuid))
 			return;
 		if ((dev = uuid_map_lookup(cmd->um, &id))) {
@@ -97,8 +97,7 @@ static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 	}
 
 	log_verbose("Set up physical volume for \"%s\" with %" PRIu64
-		    " sectors",
-		    pv_name, pv->size);
+		    " sectors", pv_name, pv->size);
 
 	log_verbose("Writing physical volume data to disk \"%s\"", pv_name);
 	if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
@@ -118,12 +117,12 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,uuidstr_ARG) && argc != 1) {
+	if (arg_count(cmd, uuidstr_ARG) && argc != 1) {
 		log_error("Can only set uuid on one volume at once");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,yes_ARG) && !arg_count(cmd,force_ARG)) {
+	if (arg_count(cmd, yes_ARG) && !arg_count(cmd, force_ARG)) {
 		log_error("Option y can only be given with option f");
 		return EINVALID_CMD_LINE;
 	}

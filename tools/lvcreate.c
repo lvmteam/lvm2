@@ -28,38 +28,38 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	char *vg_name;
 	char *st;
 
-	if (arg_count(cmd,snapshot_ARG) || arg_count(cmd,chunksize_ARG)) {
+	if (arg_count(cmd, snapshot_ARG) || arg_count(cmd, chunksize_ARG)) {
 		log_error("Snapshots are not yet supported in LVM2.");
 		return EINVALID_CMD_LINE;
 	}
 
 	/* mutually exclusive */
-	if ((arg_count(cmd,zero_ARG) && arg_count(cmd,snapshot_ARG)) ||
-	    (arg_count(cmd,extents_ARG) && arg_count(cmd,size_ARG))) {
+	if ((arg_count(cmd, zero_ARG) && arg_count(cmd, snapshot_ARG)) ||
+	    (arg_count(cmd, extents_ARG) && arg_count(cmd, size_ARG))) {
 		log_error("Invalid combination of arguments");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd,size_ARG) + arg_count(cmd,extents_ARG) == 0) {
+	if (arg_count(cmd, size_ARG) + arg_count(cmd, extents_ARG) == 0) {
 		log_error("Please indicate size using option -l or -L");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (strcmp(arg_str_value(cmd,contiguous_ARG, "n"), "n"))
+	if (strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n"))
 		status |= ALLOC_CONTIGUOUS;
 	else
 		status |= ALLOC_SIMPLE;
 
-	zero = strcmp(arg_str_value(cmd,zero_ARG, "y"), "n");
+	zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 
-	if (arg_count(cmd,stripes_ARG)) {
-		stripes = arg_int_value(cmd,stripes_ARG, 1);
+	if (arg_count(cmd, stripes_ARG)) {
+		stripes = arg_int_value(cmd, stripes_ARG, 1);
 		if (stripes == 1)
 			log_print("Redundant stripes argument: default is 1");
 	}
 
-	if (arg_count(cmd,stripesize_ARG))
-		stripesize = 2 * arg_int_value(cmd,stripesize_ARG, 0);
+	if (arg_count(cmd, stripesize_ARG))
+		stripesize = 2 * arg_int_value(cmd, stripesize_ARG, 0);
 
 	if (stripes == 1 && stripesize) {
 		log_print("Ignoring stripesize argument with single stripe");
@@ -71,23 +71,23 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		log_print("Using default stripesize %dKB", stripesize / 2);
 	}
 
-	if (arg_count(cmd,permission_ARG))
-		status |= arg_int_value(cmd,permission_ARG, 0);
+	if (arg_count(cmd, permission_ARG))
+		status |= arg_int_value(cmd, permission_ARG, 0);
 	else
 		status |= LVM_READ | LVM_WRITE;
 
-	if (arg_count(cmd,readahead_ARG))
-		read_ahead = arg_int_value(cmd,readahead_ARG, 0);
+	if (arg_count(cmd, readahead_ARG))
+		read_ahead = arg_int_value(cmd, readahead_ARG, 0);
 
-	if (arg_count(cmd,extents_ARG))
-		extents = arg_int_value(cmd,extents_ARG, 0);
+	if (arg_count(cmd, extents_ARG))
+		extents = arg_int_value(cmd, extents_ARG, 0);
 
 	/* Size returned in kilobyte units; held in sectors */
-	if (arg_count(cmd,size_ARG))
-		size = arg_int_value(cmd,size_ARG, 0);
+	if (arg_count(cmd, size_ARG))
+		size = arg_int_value(cmd, size_ARG, 0);
 
-	if (arg_count(cmd,name_ARG))
-		lv_name = arg_value(cmd,name_ARG);
+	if (arg_count(cmd, name_ARG))
+		lv_name = arg_value(cmd, name_ARG);
 
 	/* If VG not on command line, try -n arg and then environment */
 	if (!argc) {
@@ -104,7 +104,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 			if (strcmp(vg_name, argv[0])) {
 				log_error("Inconsistent volume group names "
 					  "given: \"%s\" and \"%s\"",
-					   vg_name, argv[0]);
+					  vg_name, argv[0]);
 				return EINVALID_CMD_LINE;
 			}
 		}
@@ -119,10 +119,10 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	/* does VG exist? */
 	log_verbose("Finding volume group \"%s\"", vg_name);
 
-        if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
-                log_error("Can't get lock for %s", vg_name);
-                return ECMD_FAILED;
-        }
+	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for %s", vg_name);
+		return ECMD_FAILED;
+	}
 
 	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
@@ -157,7 +157,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (argc && argc < stripes ) {
+	if (argc && argc < stripes) {
 		log_error("Too few physical volumes on "
 			  "command line for %d-way striping", stripes);
 		goto error_cmdline;
@@ -178,8 +178,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	if (stripesize > vg->extent_size) {
 		log_error("Setting stripe size %d KB to physical extent "
-			  "size %u KB",
-		     	  stripesize / 2, vg->extent_size / 2);
+			  "size %u KB", stripesize / 2, vg->extent_size / 2);
 		stripesize = vg->extent_size;
 	}
 
@@ -199,42 +198,40 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		extents /= vg->extent_size;
 	}
 
-        if ((size_rest = extents % stripes)) {
-                log_print("Rounding size (%d extents) up to stripe boundary "
-                          "size (%d extents)", extents,
-                          extents - size_rest + stripes);
-                extents = extents - size_rest + stripes;
-        }
+	if ((size_rest = extents % stripes)) {
+		log_print("Rounding size (%d extents) up to stripe boundary "
+			  "size (%d extents)", extents,
+			  extents - size_rest + stripes);
+		extents = extents - size_rest + stripes;
+	}
 
 	if (!archive(vg))
 		goto error;
 
 	if (!(lv = lv_create(cmd->fid, lv_name, status,
-			     stripes, stripesize, extents,
-			     vg, pvh)))
+			     stripes, stripesize, extents, vg, pvh)))
 		goto error;
 
-	if (arg_count(cmd,readahead_ARG)) {
+	if (arg_count(cmd, readahead_ARG)) {
 		log_verbose("Setting read ahead sectors");
 		lv->read_ahead = read_ahead;
 	}
 
-	if (arg_count(cmd,minor_ARG)) {
+	if (arg_count(cmd, minor_ARG)) {
 		lv->status |= FIXED_MINOR;
-		lv->minor = arg_int_value(cmd,minor_ARG, -1);
+		lv->minor = arg_int_value(cmd, minor_ARG, -1);
 		log_verbose("Setting minor number to %d", lv->minor);
 	}
 
-	if (arg_count(cmd,persistent_ARG)) {
-		if (!strcmp(arg_str_value(cmd,persistent_ARG, "n"), "n"))
+	if (arg_count(cmd, persistent_ARG)) {
+		if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n"))
 			lv->status &= ~FIXED_MINOR;
-		else
-			if (!arg_count(cmd,minor_ARG)) {
-				log_error("Please specify minor number with "
-					  "--minor when using -My");
-				goto error;
-			}
-			lv->status |= FIXED_MINOR;
+		else if (!arg_count(cmd, minor_ARG)) {
+			log_error("Please specify minor number with "
+				  "--minor when using -My");
+			goto error;
+		}
+		lv->status |= FIXED_MINOR;
 	}
 
 	/* store vg on disk(s) */

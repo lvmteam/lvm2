@@ -24,12 +24,12 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name);
 
 int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (arg_count(cmd,colon_ARG) && arg_count(cmd,short_ARG)) {
+	if (arg_count(cmd, colon_ARG) && arg_count(cmd, short_ARG)) {
 		log_error("Option -c is not allowed with option -s");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc && arg_count(cmd,activevolumegroups_ARG)) {
+	if (argc && arg_count(cmd, activevolumegroups_ARG)) {
 		log_error("Option -A is not allowed with volume group names");
 		return EINVALID_CMD_LINE;
 	}
@@ -78,19 +78,19 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name)
 	if (vg->status & EXPORTED_VG)
 		log_print("WARNING: volume group \"%s\" is exported", vg_name);
 
-	if (arg_count(cmd,colon_ARG)) {
+	if (arg_count(cmd, colon_ARG)) {
 		vgdisplay_colons(vg);
 		return 0;
 	}
 
-	if (arg_count(cmd,short_ARG)) {
+	if (arg_count(cmd, short_ARG)) {
 		vgdisplay_short(vg);
 		return 0;
 	}
 
 	vgdisplay_full(vg);	/* was vg_show */
 
-	if (arg_count(cmd,verbose_ARG)) {
+	if (arg_count(cmd, verbose_ARG)) {
 		vgdisplay_extents(vg);
 
 		process_each_lv_in_vg(cmd, vg, &lvdisplay_full);
@@ -101,4 +101,3 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name)
 
 	return 0;
 }
-

@@ -9,7 +9,8 @@
 #include <sys/stat.h>
 
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  int (*process_single) (struct cmd_context *cmd, struct logical_volume *lv))
+			  int (*process_single) (struct cmd_context * cmd,
+						 struct logical_volume * lv))
 {
 	int ret_max = 0;
 	int ret = 0;
@@ -34,7 +35,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 }
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
-		    int (*process_single) (struct cmd_context *cmd, struct logical_volume *lv))
+		    int (*process_single) (struct cmd_context * cmd,
+					   struct logical_volume * lv))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -114,8 +116,10 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	return ret_max;
 }
 
-int process_each_vg(struct cmd_context *cmd, int argc, char **argv, int lock_type,
-		    int (*process_single) (struct cmd_context *cmd, const char *vg_name))
+int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
+		    int lock_type,
+		    int (*process_single) (struct cmd_context * cmd,
+					   const char *vg_name))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -130,13 +134,13 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv, int lock_typ
 		log_verbose("Using volume group(s) on command line");
 		for (; opt < argc; opt++) {
 			vg_name = argv[opt];
-			if (!lock_vol((void *)vg_name,  LCK_VG | lock_type)) {
+			if (!lock_vol((void *) vg_name, LCK_VG | lock_type)) {
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
 			if ((ret = process_single(cmd, vg_name)) > ret_max)
 				ret_max = ret;
-			lock_vol((void *)vg_name,  LCK_VG | LCK_NONE);
+			lock_vol((void *) vg_name, LCK_VG | LCK_NONE);
 		}
 	} else {
 		log_verbose("Finding all volume groups");
@@ -145,16 +149,16 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv, int lock_typ
 			return ECMD_FAILED;
 		}
 		list_iterate(vgh, vgs) {
-			vg_name = list_item (vgh, struct name_list)->name;
-			if (!lock_vol((void *)vg_name,  LCK_VG | lock_type)) {
+			vg_name = list_item(vgh, struct name_list)->name;
+			if (!lock_vol((void *) vg_name, LCK_VG | lock_type)) {
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
 			ret = process_single(cmd, vg_name);
-					   
+
 			if (ret > ret_max)
 				ret_max = ret;
-			lock_vol((void *)vg_name,  LCK_VG | LCK_NONE);
+			lock_vol((void *) vg_name, LCK_VG | LCK_NONE);
 		}
 	}
 
@@ -162,8 +166,9 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv, int lock_typ
 }
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  int (*process_single) (struct cmd_context *cmd, struct volume_group *vg,
-						 struct physical_volume *pv))
+			  int (*process_single) (struct cmd_context * cmd,
+						 struct volume_group * vg,
+						 struct physical_volume * pv))
 {
 	int ret_max = 0;
 	int ret = 0;
@@ -180,9 +185,11 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	return ret_max;
 }
 
-int process_each_pv(struct cmd_context *cmd, int argc, char **argv, struct volume_group *vg,
-		    int (*process_single) (struct cmd_context *cmd, struct volume_group *vg,
-					   struct physical_volume *pv))
+int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
+		    struct volume_group *vg,
+		    int (*process_single) (struct cmd_context * cmd,
+					   struct volume_group * vg,
+					   struct physical_volume * pv))
 {
 	int opt = 0;
 	int ret_max = 0;

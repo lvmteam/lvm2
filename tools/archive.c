@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include <limits.h>
 
-
 static struct {
 	int enabled;
 	char *dir;
@@ -25,8 +24,7 @@ static struct {
 
 } _archive_params;
 
-int archive_init(const char *dir,
-		 unsigned int keep_days, unsigned int keep_min)
+int archive_init(const char *dir, unsigned int keep_days, unsigned int keep_min)
 {
 	_archive_params.dir = NULL;
 
@@ -117,8 +115,6 @@ int archive_display(struct cmd_context *cmd, const char *vg_name)
 {
 	return archive_list(cmd, cmd->um, _archive_params.dir, vg_name);
 }
-
-
 
 static struct {
 	int enabled;
@@ -227,13 +223,12 @@ int backup_remove(const char *vg_name)
 }
 
 static struct volume_group *_read_vg(struct cmd_context *cmd,
-		    		     const char *vg_name, const char *file)
+				     const char *vg_name, const char *file)
 {
 	struct volume_group *vg;
 	struct format_instance *tf;
 
-	if (!(tf = text_format_create(cmd, file, cmd->um, 
-				      cmd->cmd_line))) {
+	if (!(tf = text_format_create(cmd, file, cmd->um, cmd->cmd_line))) {
 		log_error("Couldn't create text format object.");
 		return NULL;
 	}
@@ -245,7 +240,8 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	return vg;
 }
 
-int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name, const char *file)
+int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
+			     const char *file)
 {
 	struct volume_group *vg;
 
