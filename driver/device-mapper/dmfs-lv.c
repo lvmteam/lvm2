@@ -95,13 +95,17 @@ static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry,
 	int rv;
 	int l;
 
+	if (dentry->d_name.len != 6 || memcmp(dentry->d_name, "ACTIVE", 6) != 0)
+		return -EINVAL;
+
 	de = dmfs_verify_name(dir, symname);
 	if (IS_ERR(de))
 		return PTR_ERR(de);
 
+	dput(de);
+
 	inode = dmfs_create_symlink(dir, S_IRWXUGO);
 	if (IS_ERR(inode)) {
-		kfree(realname);
 		return PTR_ERR(inode);
 	}
 
@@ -145,18 +149,11 @@ static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	if (dentry->d_name[0] == '.')
 		return -EINVAL;
 
-	inode = dmfs_create_lv(dir, dentry, mode);
+	inode = dmfs_create_tdir(dir, mode);
 	if (!IS_ERR(inode)) {
-		md = dm_create(name, -1);
-		if (!IS_ERR(md)) {
-			inode->u.generic_ip = md;
-			md->inode = inode;
-			d_instantiate(dentry, inode);
-			dget(dentry);
-			return 0;
-		}
-		iput(inode);
-		return PTR_ERR(md);
+		d_instantiate(dentry, inode);
+		dget(dentry);
+		return 0;
 	}
 	return PTR_ERR(inode);
 }
@@ -231,13 +228,21 @@ static struct dm_root_inode_operations = {
 	rmdir:		dmfs_lv_rmdir,
 };
 
-struct inode *dmfs_create_lv(struct super_block *sb, int mode)
+struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *dentry)
 {
 	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
+	struct mapped_device *md;
+	char *name = dentry->d_name.name;
 
 	if (inode) {
 		inode->i_fop = &dmfs_lv_file_operations;
 		inode->i_op = &dmfs_lv_dir_operations;
+		md = dm_create(name, -1);
+		if (md == NULL) {
+			iput(inode);
+			return NULL;
+		}
+		DMFS_I(inode)->md = md;
 	}
 
 	return inode;

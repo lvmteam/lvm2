@@ -81,7 +81,11 @@ static void dmfs_parse_line(struct dmfs_table *t, unsigned num, char *str)
 	if (ttype) {
 		msg = "This message should never appear (constructor error)";
 		rv = ttype->ctr(t, start, size, p, &context);
+		msg = context;
 		if (rv == 0)) {
+			printk(KERN_DEBUG "%ul %ul %s %s", start, size, 
+				ttype->name,
+				ttype->print(context));
 			msg = "Error adding target to table";
 			high = start + (size - 1);
 			if (dm_table_add_target(t, high, ttype, context) == 0)
@@ -285,13 +289,31 @@ static int dmfs_commit_write(struct file *file, struct page *page,
 	return 0;
 }
 
+/*
+ * There is a small race here in that two processes might call this at
+ * the same time and both fail. So its a fail safe race :-) This should
+ * move into namei.c (and thus use the spinlock and do this properly)
+ * at some stage if we continue to use this set of functions for ensuring
+ * exclusive write access to the file
+ */
+static int get_exclusive_write_access(struct inode *inode)
+{
+	if (get_write_access(inode))
+		return -1;
+	if (atomic_read(&inode->i_writecount) != 1) {
+		put_write_access(inode);
+		return -1;
+	}
+	return 0;
+}
+
 static int dmfs_table_open(struct inode *inode, struct file *file)
 {
 	struct dentry *dentry = file->f_dentry;
 	struct inode *inode = dentry->d_parent->d_inode;
 
 	if (file->f_mode & FMODE_WRITE) {
-		if (get_write_access(inode))
+		if (get_exclusive_write_access(inode))
 			return -EPERM;
 	}
 
