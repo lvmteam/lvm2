@@ -149,8 +149,7 @@ xx(lvmdiskscan,
    "lvmdiskscan\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
-   "\t[-l/--lvmpartition]\n"
-   "\t[-v/--verbose]\n",
+   "\t[-l/--lvmpartition]\n",
 
    lvmpartition_ARG)
 

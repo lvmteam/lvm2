@@ -7,7 +7,6 @@
 #define unimplemented \
 	{ log_error("Command not implemented yet."); return ECMD_FAILED;}
 int e2fsadm(int argc, char **argv) unimplemented
-int lvmdiskscan(int argc, char **argv) unimplemented
 int lvmsadc(int argc, char **argv) unimplemented
 int lvmsar(int argc, char **argv) unimplemented
 int pvdata(int argc, char **argv) unimplemented
