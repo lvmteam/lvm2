@@ -156,7 +156,7 @@ struct disk_list {
  * Layout constants.
  */
 #define METADATA_ALIGN 4096UL
-#define	PE_ALIGN 65536UL
+#define	PE_ALIGN (65536UL / SECTOR_SIZE)
 
 #define	METADATA_BASE 0UL
 #define	PV_SIZE 1024UL
@@ -167,6 +167,7 @@ struct disk_list {
  * Functions to calculate layout info.
  */
 int calculate_layout(struct disk_list *dl);
+int calculate_extent_count(struct physical_volume *pv);
 
 
 /*

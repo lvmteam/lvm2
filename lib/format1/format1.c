@@ -308,7 +308,32 @@ static struct list_head *_get_vgs(struct io_space *is)
 static int _pv_setup(struct io_space *is, struct physical_volume *pv,
 		     struct volume_group *vg)
 {
-	log_err("format1:pv_setup not implemented.");
+	if (!(pv->vg_name = pool_strdup(is->mem, vg->name))) {
+		stack;
+		return 0;
+	}
+
+	pv->exported = NULL;
+
+        pv->status = ACTIVE;
+
+	if (!dev_get_size(pv->dev, &pv->size)) {
+		stack;
+		return 0;
+	}
+
+	pv->pe_size = vg->extent_size;
+
+	/*
+	 * This works out pe_start and pe_count.
+	 */
+	if (!calculate_extent_count(pv)) {
+		stack;
+		return 0;
+	}
+
+	pv->pe_allocated = 0;
+
 	return 1;
 }
 
