@@ -485,7 +485,6 @@ static void main_loop(int local_sock, int cmd_timeout)
 
 		if ((select_status = select(FD_SETSIZE, &in, NULL, NULL, &tv)) > 0) {
 			struct local_client *lastfd = NULL;
-			struct clvm_header *inheader;
 			char csid[MAX_CSID_LEN];
 			char buf[MAX_CLUSTER_MESSAGE];
 
@@ -514,9 +513,8 @@ static void main_loop(int local_sock, int cmd_timeout)
 						    type == CLUSTER_INTERNAL)
 							goto closedown;
 
-						DEBUGLOG
-						    ("ret == %d, errno = %d. removing client\n",
-						     ret, errno);
+						DEBUGLOG("ret == %d, errno = %d. removing client\n",
+							 ret, errno);
 						lastfd->next = thisfd->next;
 						free_fd = thisfd;
 						thisfd = lastfd;
@@ -529,33 +527,6 @@ static void main_loop(int local_sock, int cmd_timeout)
 					if (newfd) {
 						newfd->next = thisfd->next;
 						thisfd->next = newfd;
-						break;
-					}
-
-					switch (thisfd->type) {
-					case CLUSTER_MAIN_SOCK:
-					case CLUSTER_DATA_SOCK:
-						inheader =
-						    (struct clvm_header *) buf;
-						ntoh_clvm(inheader);	/* Byteswap fields */
-						if (inheader->cmd ==
-						    CLVMD_CMD_REPLY)
-							    process_reply
-							    (inheader, ret,
-							     csid);
-						else
-							add_to_lvmqueue(thisfd,
-									inheader,
-									ret,
-									csid);
-						break;
-
-						/* All the work for these is done in the callback
-						   rightly or wrongly... */
-					case LOCAL_RENDEZVOUS:
-					case LOCAL_SOCK:
-					case THREAD_PIPE:
-					case CLUSTER_INTERNAL:
 						break;
 					}
 				}
@@ -1696,6 +1667,19 @@ static int open_local_sock()
 
 	return local_socket;
 }
+
+void process_message(struct local_client *client, char *buf, int len, char *csid)
+{
+	struct clvm_header *inheader;
+
+	inheader = (struct clvm_header *) buf;
+	ntoh_clvm(inheader);	/* Byteswap fields */
+	if (inheader->cmd == CLVMD_CMD_REPLY)
+		process_reply(inheader, len, csid);
+	else
+		add_to_lvmqueue(client, inheader, len, csid);
+}
+
 
 static void check_all_callback(struct local_client *client, char *csid,
 			       int node_up)
