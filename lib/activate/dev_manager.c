@@ -14,10 +14,53 @@
 #include <libdevmapper.h>
 #include <limits.h>
 
+/*
+ * activate(dirty lvs)
+ * -------------------
+ *
+ * 1) Examine dm directory, and build up a list of active lv's, *include*
+ *    dirty lvs.  All vg layers go into tree.
+ *
+ * 2) Build complete tree for vg, marking lv's stack as dirty.  Note this
+ *    tree is a function of the active_list (eg, no origin layer needed
+ *    if snapshot not active).
+ *
+ * 3) Query layers to see which exist.
+ *
+ * 4) Mark active_list.
+ *
+ * 5) Propagate marks.
+ *
+ * 6) Any unmarked, but existing layers get added to the remove_list.
+ *
+ * 7) Remove unmarked layers from core.
+ *
+ * 8) Activate remaining layers (in order), skipping any that already
+      exist, unless they are marked dirty.
+ *
+ * 9) remove layers in the remove_list (Requires examination of deps).
+ *
+ *
+ * deactivate(dirty lvs)
+ * ---------------------
+ *
+ * 1) Examine dm directory, create active_list *excluding* dirty_list
+ *
+ * 2) Build vg tree given active_list, no dirty layers.
+ *
+ * ... same as activate.
+ */
+
+enum {
+	MARK = 0,
+	DIRTY = 1,
+	VISIBLE = 2
+};
+
 struct dev_layer {
 	char *name;
-	int mark;
-	int visible;
+
+	int flags;
 
 	/*
 	 * Setup the dm_task.
@@ -46,6 +89,22 @@ struct dev_manager {
 	char *vg_name;
 	struct hash_table *layers;
 };
+
+
+/*
+ * Functions to manage the flags.
+ */
+static inline int _get_flag(struct dev_layer *dl, int bit) {
+	return (dl->flags & (1 << bit)) ? 1 : 0;
+}
+
+static inline void _set_flag(struct dev_layer *dl, int bit) {
+	dl->flags |= (1 << bit);
+}
+
+static inline void _clear_flag(struct dev_layer *dl, int bit) {
+	dl->flags &= ~(1 << bit);
+}
 
 
 /*
@@ -154,7 +213,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 		log_err("Couldn't load device '%s'.", dl->name);
 	dm_task_destroy(dmt);
 
-	if (dl->visible)
+	if (_get_flag(dl, VISIBLE))
 		fs_add_lv(dl->lv, dl->name);
 
 	return r;
@@ -176,7 +235,7 @@ static int _remove(struct dev_layer *dl)
 
 	dm_task_destroy(dmt);
 
-	if (dl->visible)
+	if (_get_flag(dl, VISIBLE))
 		fs_del_lv(dl->lv);
 
 	return r;
@@ -564,7 +623,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 			return 0;
 		}
 		dl->populate = _populate_vanilla;
-		dl->visible = 0;
+		_clear_flag(dl, VISIBLE);
 
 		/* insert the cow layer */
 		if (!hash_insert(dm->layers, dl->name, dl)) {
@@ -578,7 +637,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 			return 0;
 		}
 		dl->populate = _populate_snapshot;
-		dl->visible = 1;
+		_set_flag(dl, VISIBLE);
 
 		/* add the dependency on the real device */
 		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
@@ -627,7 +686,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 			return 0;
 		}
 		dl->populate = _populate_vanilla;
-		dl->visible = 0;
+		_clear_flag(dl, VISIBLE);
 
 		if (!hash_insert(dm->layers, dl->name, dl)) {
 			stack;
@@ -640,7 +699,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 			return 0;
 		}
 		dl->populate = _populate_origin;
-		dl->visible = 1;
+		_set_flag(dl, VISIBLE);
 
 		/* add the dependency on the real device */
 		if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
@@ -670,7 +729,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 			return 0;
 		}
 		dl->populate = _populate_vanilla;
-		dl->visible = 1;
+		_set_flag(dl, VISIBLE);
 
 		if (!hash_insert(dm->layers, dl->name, dl)) {
 			stack;
@@ -691,7 +750,7 @@ static void _clear_marks(struct dev_manager *dm)
 
 	hash_iterate (hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
-		dl->mark = 0;
+		_clear_flag(dl, MARK);
 	}
 }
 
@@ -714,10 +773,10 @@ static int _mark_pre_create(struct dev_manager *dm, struct dev_layer *dl)
 			return 0;
 		}
 
-		if (dep->mark)
+		if (_get_flag(dep, MARK))
 			continue;
 
-		dep->mark = 1;
+		_set_flag(dep, MARK);
 
 		if (!_mark_pre_create(dm, dep)) {
 			stack;
@@ -833,13 +892,13 @@ static int _mark_dependants(struct dev_manager *dm)
 	hash_iterate (hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
 
-		if (!dl->mark) {
+		if (!_get_flag(dl, MARK)) {
 			if (!_mark_pre_create(dm, dl)) {
 				stack;
 				return 0;
 			}
 
-			if (dl->mark) {
+			if (_get_flag(dl, MARK)) {
 				log_err("Circular device dependency found for "
 					"'%s'.",
 					dl->name);
@@ -865,7 +924,7 @@ static int _prune_unmarked(struct dev_manager *dm)
 		next = hash_get_next(dm->layers, hn);
 		dl = hash_get_data(dm->layers, hn);
 
-		if (!dl->mark)
+		if (!_get_flag(dl, MARK))
 			hash_remove(dm->layers, dl->name);
 	}
 
@@ -897,7 +956,7 @@ static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
-	dl->mark = 1;
+	_set_flag(dl, MARK);
 	if (!_mark_pre_create(dm, dl)) {
 		stack;
 		return 0;
@@ -938,7 +997,7 @@ static int _execute(struct dev_manager *dm, struct logical_volume *lv,
 	hash_iterate (hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
 
-		if (!dl->mark)
+		if (!_get_flag(dl, MARK))
 			cmd(dm, dl);
 	}
 
@@ -948,16 +1007,6 @@ static int _execute(struct dev_manager *dm, struct logical_volume *lv,
 
 
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
-{
-	if (!_execute(dm, lv, _create_rec)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
-
-int dev_manager_reactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	if (!_execute(dm, lv, _create_rec)) {
 		stack;

@@ -140,7 +140,7 @@ int lv_reactivate(struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!(r = dev_manager_reactivate(dm, lv)))
+	if (!(r = dev_manager_activate(dm, lv)))
 		stack;
 
 	dev_manager_destroy(dm);
