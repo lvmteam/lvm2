@@ -38,9 +38,10 @@ SOURCES=\
 	format_text/import.c \
 	label/label.c \
 	label/uuid-map.c \
-	locking/file_locking.c \
 	locking/external_locking.c \
+	locking/file_locking.c \
 	locking/locking.c \
+	locking/no_locking.c \
 	log/log.c \
 	metadata/lv_manip.c \
 	metadata/merge.c \

@@ -24,6 +24,8 @@ struct locking_type {
 /*
  * Locking types
  */
+int init_no_locking(struct locking_type *locking, struct config_file *cf);
+
 int init_file_locking(struct locking_type *locking, struct config_file *cf);
 
 int init_external_locking(struct locking_type *locking, struct config_file *cf);

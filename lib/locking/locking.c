@@ -66,33 +66,13 @@ static inline void _update_lock_count(int flags)
 }
 
 /*
- * No locking - currently does nothing.
- */
-int no_lock_resource(struct cmd_context *cmd, const char *resource, int flags)
-{
-	return 1;
-}
-
-void no_fin_locking(void)
-{
-	return;
-}
-
-static void _init_no_locking(struct locking_type *locking,
-			     struct config_file *cf)
-{
-	locking->lock_resource = no_lock_resource;
-	locking->fin_locking = no_fin_locking;
-}
-
-/*
  * Select a locking type
  */
 int init_locking(int type, struct config_file *cf)
 {
 	switch (type) {
 	case 0:
-		_init_no_locking(&_locking, cf);
+		init_no_locking(&_locking, cf);
 		log_print("WARNING: Locking disabled. Be careful! "
 			  "This could corrupt your metadata.");
 		break;
