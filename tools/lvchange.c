@@ -67,7 +67,9 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (lv_is_origin(lv)) {
+	if (lv_is_origin(lv) &&
+	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
 		log_error("Can't change logical volume \"%s\" under snapshot",
 			  lv->name);
 		return ECMD_FAILED;
@@ -187,6 +189,7 @@ static int lvchange_availability(struct cmd_context *cmd,
 	}
 
 	if (activate) {
+		/* FIXME Tighter locking if lv_is_origin() */
 		log_verbose("Activating logical volume \"%s\"", lv->name);
 		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE))
 			return 0;
