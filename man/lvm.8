@@ -25,6 +25,26 @@ A file containing a simple script with one command per line
 can also be given on the command line.  The script can also be
 executed directly if the first line is #! followed by the absolute
 path of \fBlvm\fP.
+.SH OPTIONS
+The following options can be used with every command and are not documented
+on individual manual pages.
+.TP
+\fB-h | --help\fP \(em Display the help text.
+.TP
+\fB--version\fP \(em Display the version.
+Not implemented yet.
+.TP
+\fB-v | --verbose\fP \(em Set verbose level.
+Repeat from 1 to 3 times to determine the detail of messages 
+sent to stdout and stderr.  Overrides config file setting.
+.TP
+\fB-d | --debug\fP \(em Set debug level.
+Repeat from 1 to 6 times to determine the detail of messages sent 
+to the log file and/or syslog (if configured).
+Overrides config file setting.
+.TP
+\fB--quiet\fP \(em Suppress output and log messages.
+Overrides -d and -v.
 .SH ENVIRONMENT VARIABLES
 .TP
 \fBLVM_SYSTEM_DIR\fP 
@@ -45,37 +65,38 @@ Defaults to "yes".
 The volume group name that is assumed for 
 any reference to a logical volume that doesn't specify a path.
 Not set by default.
+.SH DIAGNOSTICS
+All tools return a status code of zero on success or non-zero on failure.
 .SH FILES
 .I /etc/lvm/lvm.conf
 .br
 .I $HOME/.lvm_history
-.fi
 .SH SEE ALSO
-.BR lvchange (1),
-.BR lvcreate (1),
-.BR lvdisplay (1),
-.BR lvextend (1),
-.BR lvmchange (1),
-.BR lvreduce (1),
-.BR lvremove (1),
-.BR lvrename (1),
-.BR lvresize (1),
-.BR lvscan (1),
-.BR pvchange (1),
-.BR pvcreate (1),
-.BR pvdisplay (1),
-.BR pvscan (1),
-.BR vgcfgbackup (1),
-.BR vgchange  (1),
-.BR vgck (1),
-.BR vgcreate (1),
-.BR vgdisplay (1),
-.BR vgextend (1),
-.BR vgmerge (1),
-.BR vgreduce (1),
-.BR vgremove (1),
-.BR vgrename (1),
-.BR vgscan (1),
+.BR lvchange (8),
+.BR lvcreate (8),
+.BR lvdisplay (8),
+.BR lvextend (8),
+.BR lvmchange (8),
+.BR lvreduce (8),
+.BR lvremove (8),
+.BR lvrename (8),
+.BR lvresize (8),
+.BR lvscan (8),
+.BR pvchange (8),
+.BR pvcreate (8),
+.BR pvdisplay (8),
+.BR pvscan (8),
+.BR vgcfgbackup (8),
+.BR vgchange  (8),
+.BR vgck (8),
+.BR vgcreate (8),
+.BR vgdisplay (8),
+.BR vgextend (8),
+.BR vgmerge (8),
+.BR vgreduce (8),
+.BR vgremove (8),
+.BR vgrename (8),
+.BR vgscan (8),
 .BR readline (3),
 .BR lvm.conf (5)
 

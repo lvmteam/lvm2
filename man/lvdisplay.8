@@ -1,0 +1,58 @@
+.TH LVDISPLAY 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+lvdisplay \- display attributes of a logical volume
+.SH SYNOPSIS
+.B lvdisplay
+[\-c/\-\-colon] [\-d/\-\-debug] [\-D/\-\-disk] [\-h/\-?/\-\-help]
+[\-v[v]/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
+.SH DESCRIPTION
+lvdisplay allows you to see the attributes of a logical volume
+like size, read/write status, snapshot information etc.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.I \-c, \-\-colon
+Generate colon seperated output for easier parsing in scripts or programs.
+.nf
+
+The values are:
+
+* logical volume name
+* volume group name
+* logical volume access
+* logical volume status
+* internal logical volume number
+* open count of logical volume
+* logical volume size in kilobytes
+* current logical extents associated to logical volume
+* allocated logical extents of logical volume
+* allocation policy of logical volume
+* read ahead sectors of logical volume
+* major device number of logical volume
+* minor device number of logical volume
+
+.fi
+.TP
+.I \-D, \-\-disk
+Show attributes of the volume group descriptor array on disk(s).
+Without this switch they are derived from kernel space.
+Useful, if the volume group isn't active.
+.TP
+.I \-m, \-\-maps
+Display the mapping of logical extents to physical volumes and
+physical extents.
+.SH Examples
+"lvdisplay -v /dev/vg00/lvol2" shows attributes of that logical volume
+and its mapping of logical to physical extents. In case snapshot
+logical volumes have been created for this original logical volume,
+this command shows a list of all snapshot logical volumes and their
+status (active or inactive) as well.
+
+"lvdisplay /dev/vg00/snapshot" shows the attributes of this snapshot
+logical volume and also which original logical volume
+it is associated with.
+
+.SH SEE ALSO
+.BR lvm (8), 
+.BR lvcreate (8), 
+.BR lvscan (8)

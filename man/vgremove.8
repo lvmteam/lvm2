@@ -1,0 +1,19 @@
+.TH VGREMOVE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgremove \- remove a volume group
+.SH SYNOPSIS
+.B vgremove
+[\-d/\-\-debug] [\-h/\-?/\-\-help] [\-v/\-\-verbose]
+VolumeGroupName [VolumeGroupName...]
+.SH DESCRIPTION
+vgremove allows you to remove one or more volume groups.
+The volume group(s) must not have any logical volumes allocated
+and must also be inactive (see
+.B vgchange(8)
+).
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.SH SEE ALSO
+.BR lvm (8), 
+.BR vgcreate (8), 
+.BR vgreduce (8)

@@ -1,0 +1,65 @@
+.TH VGCHANGE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgchange \- change attributes of a volume group
+.SH SYNOPSIS
+.B vgchange
+.RB [ \-A | \-\-autobackup " {" y | n }]
+.RB [\-a | \-\-available " {" y | n }]
+.RB [\-d | \-\-debug]
+.RB [ \-h | \-\-help]
+.RB [\-l | \-\-logicalvolume
+.IR MaxLogicalVolumes ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.RB [\-x | \-\-allocation " {" y | n }]
+.RI [ VolumeGroupName ...]
+.SH DESCRIPTION
+.B vgchange
+allows you to change the attributes of one or more volume groups.
+Its main purpose is to activate and deactivate
+.IR VolumeGroupName ,
+or all volume groups if none is specified.  Only active volume groups
+are subject to changes and allow access to their logical volumes.
+During volume group activation, if
+.B vgchange
+recognizes snapshot logical volumes which were dropped because they ran
+out of space, it displays a message informing the administrator that such
+snapshots should be removed (see
+.BR lvremove (8)).
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.BR \-A ", " \-\-autobackup { y | n }
+Controls automatic backup of metadata after the change.  See
+.B vgcfgbackup (8).
+Default is yes.
+.TP
+.BR \-a ", " \-\-available { y | n }
+Controls the availability of the volume group for input/output.
+In other words: makes a volume group known/unknown to the kernel.
+.TP
+.BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes\fR
+Changes the maximum logical volume number of an existing inactive
+volume group.
+.TP
+.BR \-x ", " \-\-allocation { y | n }
+Enables or disables the extension/reduction of this volume group
+with/by physical volumes.
+.SH EXAMPLES
+To activate all known volume groups in the system:
+.nf
+
+\	vgchange -a y
+
+.fi
+To change the maximum number of logical volumes of inactive volume group
+.B vg00
+to 128.
+.nf
+
+\	vgchange -l 128 /dev/vg00
+
+.fi
+.SH SEE ALSO
+.BR lvm (8),
+.BR vgcreate (8)

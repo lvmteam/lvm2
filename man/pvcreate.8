@@ -1,0 +1,57 @@
+.TH PVCREATE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+pvcreate \- initialize a disk or partition for use by LVM
+.SH SYNOPSIS
+.B pvcreate
+.RB [ \-d | \-\-debug ]
+.RB [ \-f [ f ]| \-\-force " [" \-\-force ]]
+.RB [ \-y | \-\-yes ]
+.RB [ \-h | \-\-help ]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-V | \-\-version ]
+.IR PhysicalVolume " [" PhysicalVolume ...]
+.SH DESCRIPTION
+.B pvcreate
+initializes
+.I PhysicalVolume
+for later use by the Logical Volume Manager (LVM).  Each
+.I PhysicalVolume
+can be a disk partition, whole disk, meta device, or loopback file.
+For DOS disk partitions, the partition id must be set to 0x8e using
+.BR fdisk "(8), " cfdisk "(8), "
+or a equivalent.  For
+.B whole disk devices only
+the partition table must be erased, which will effectively destroy all
+data on that disk.  This can be done by zeroing the first sector with:
+.sp
+.BI "dd if=/dev/zero of=" PhysicalVolume " bs=512 count=1"
+.sp
+Continue with
+.BR vgcreate (8)
+to create a new volume group on
+.IR PhysicalVolume ,
+or
+.BR vgextend (8)
+to add
+.I PhysicalVolume
+to an existing volume group.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.BR \-f ", " \-\-force
+Force the creation without any confirmation.  You can not recreate
+(reinitialize) a physical volume belonging to an existing volume group.
+In an emergency you can override this behaviour with -ff.  In no case
+case can you initialize an active physical volume with this command.
+.TP
+.BR \-y ", " \-\-yes
+Answer yes to all questions.
+.SH Example
+Initialize partition #4 on the third SCSI disk and the entire fifth
+SCSI disk for later use by LVM:
+.sp
+.B pvcreate /dev/sdc4 /dev/sde
+.sp
+.SH SEE ALSO
+.BR lvm "(8), " vgcreate "(8), " vgextend "(8), " lvcreate "(8), "
+.BR cfdisk "(8), " fdisk "(8), " losetup "(8), " mdadd "(8)"
