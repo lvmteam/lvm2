@@ -141,17 +141,6 @@ static int _block_size[MAX_DEVICES];
 static int _blksize_size[MAX_DEVICES];
 static int _hardsect_size[MAX_DEVICES];
 
-static int _ctl_open(struct inode *inode, struct file *file);
-static int _ctl_close(struct inode *inode, struct file *file);
-static int _ctl_ioctl(struct inode *inode, struct file *file,
-		      uint command, ulong a);
-
-static struct file_operations _ctl_fops = {
-	open:     _ctl_open,
-	release:  _ctl_close,
-	ioctl:    _ctl_ioctl,
-};
-
 static int _blk_open(struct inode *inode, struct file *file);
 static int _blk_close(struct inode *inode, struct file *file);
 static int _blk_ioctl(struct inode *inode, struct file *file,
@@ -328,12 +317,12 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh)
 
 	down_read(&_dev_lock);
 	md = _devs[minor];
-	up_read(&_dev_lock);
 
-	if (!md)
-		return -ENXIO;
+	if (!md) {
+		ret = -ENXIO;
+		goto out;
+	}
 
-	down_read(&md->lock);
 	for (l = 0; l < md->depth; l++) {
 		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
 		node = md->index[l] + (next_node * KEYS_PER_NODE);
@@ -353,11 +342,10 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh)
 	} else
 		buffer_IO_error(bh);
 
-
+ out:
 	up_read(&md->lock);
 	return ret;
 }
-
 
 static inline int __specific_dev(int minor)
 {
@@ -419,36 +407,47 @@ static void _free_dev(struct mapped_device *md)
 	kfree(md);
 }
 
-static inline struct mapped_device *__find_dev(const char *name)
+static inline struct mapped_device *__find_name(const char *name)
 {
 	int i;
+	for (i = 0; i < MAX_DEVICES; i++)
+		if (_devs[i] && !strcmp(_devs[i]->name, name))
+			return _devs[i];
+
 	return 0;
 }
 
 struct mapped_device *dm_find_name(const char *name)
 {
-	int i;
 	struct mapped_device *md;
 
 	down_read(&_dev_lock);
-	for (i = 0; i < MAX_DEVICES; i++)
-		if (_devs[i] && !strcmp(_devs[i]->name, name))
-			return _devs[i];
-
+	md = __find_name(name);
 	up_read(&_dev_lock);
+
+	return md;
 }
 
 struct mapped_device *dm_find_minor(int minor)
 {
+	struct mapped_device *md;
 
+	down_read(&_dev_lock);
+	md = _devs[minor];
+	up_read(&_dev_lock);
+
+	return md;
 }
 
 static int dm_create(int minor, const char *name)
 {
-	struct mapped_device *md = _alloc_dev(minor);
+	struct mapped_device *md;
 
-	if (!md)
+	if (minor >= MAX_DEVICES)
 		return -ENXIO;
+
+	if (!(md = _alloc_dev(minor)))
+		return -ENOMEM;
 
 	down_write(&_dev_lock);
 	if (__find_dev(name)) {
@@ -459,6 +458,7 @@ static int dm_create(int minor, const char *name)
 	}
 
 	strcpy(md->name, name);
+	_devs[minor] = md;
 	up_write(&_dev_lock);
 }
 
@@ -473,11 +473,9 @@ static int dm_remove(const char *name, int minor)
 		return -ENXIO;
 	}
 
-	minor = MINOR(md->dev);
-	clear_bit(md->status, CREATED);
-
 	dm_clear_table(md);
 
+	minor = MINOR(md->dev);
 	_free_dev(md);
 	_devs[minor] = 0;
 	up_write(&_dev_lock);

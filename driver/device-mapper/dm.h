@@ -40,8 +40,6 @@ enum {
 };
 
 struct mapped_device {
-	struct rw_semaphore lock;
-
 	kdev_t dev;
 	char name[DM_NAME_LEN];
 
