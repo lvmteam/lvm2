@@ -376,7 +376,7 @@ static struct list *_get_vgs(struct format_type *fmt, struct list *names)
 	}
 
 	if (list_empty(names))
-		goto err;
+		pool_free(fmt->cmd->mem, pvs);
 
 	return names;
 
