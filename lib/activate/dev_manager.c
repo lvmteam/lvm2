@@ -211,7 +211,8 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 }
 
 static int _info_run(const char *name, const char *uuid, struct dm_info *info,
-		     int mknodes, struct pool *mem, char **uuid_out)
+		     int mknodes, int with_open_count, struct pool *mem,
+		     char **uuid_out)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -224,6 +225,10 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 		stack;
 		return 0;
 	}
+
+	if (!with_open_count)
+		if (!dm_task_no_open_count(dmt))
+			log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt)) {
 		stack;
@@ -250,14 +255,17 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 }
 
 static int _info(const char *name, const char *uuid, int mknodes,
-		 struct dm_info *info, struct pool *mem, char **uuid_out)
+		 int with_open_count, struct dm_info *info,
+		 struct pool *mem, char **uuid_out)
 {
 	if (!mknodes && uuid && *uuid &&
-	    _info_run(NULL, uuid, info, 0, mem, uuid_out) && info->exists)
+	    _info_run(NULL, uuid, info, 0, with_open_count, mem, uuid_out) &&
+	    	      info->exists)
 		return 1;
 
 	if (name)
-		return _info_run(name, NULL, info, mknodes, mem, uuid_out);
+		return _info_run(name, NULL, info, mknodes, with_open_count,
+				 mem, uuid_out);
 
 	return 0;
 }
@@ -278,6 +286,9 @@ static int _status_run(const char *name, const char *uuid,
 		stack;
 		return 0;
 	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt)) {
 		stack;
@@ -356,6 +367,9 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		stack;
 		return 0;
 	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt)) {
 		stack;
@@ -460,6 +474,9 @@ static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
 		goto out;
 	}
 
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
 	if (!(r = dm_task_run(dmt))) {
 		log_error("Couldn't rename device '%s'.", dl->name);
 		goto out;
@@ -487,6 +504,9 @@ static int _suspend_or_resume(const char *name, action_t suspend)
 		stack;
 		return 0;
 	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
 
 	if (!(r = dm_task_run(dmt)))
 		log_error("Couldn't %s device '%s'", sus ? "suspend" : "resume",
@@ -579,6 +599,9 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 			log_very_verbose("Activating %s read-only", dl->name);
 	}
 
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
 	if (!(r = dm_task_run(dmt))) {
 		log_error("Couldn't load device '%s'.", dl->name);
 		if ((dl->lv->minor >= 0 || dl->lv->major >= 0) &&
@@ -634,6 +657,9 @@ static int _remove(struct dev_layer *dl)
 		stack;
 		return 0;
 	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
 
 	/* Suppress error message if it's still in use - we'll log it later */
 	log_suppress(1);
@@ -970,7 +996,7 @@ void dev_manager_destroy(struct dev_manager *dm)
 }
 
 int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
-		     int mknodes, struct dm_info *info)
+		     int mknodes, int with_open_count, struct dm_info *info)
 {
 	char *name;
 
@@ -986,7 +1012,8 @@ int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device info for %s", name);
-	if (!_info(name, lv->lvid.s, mknodes, info, NULL, NULL)) {
+	if (!_info(name, lv->lvid.s, mknodes, with_open_count, info, NULL,
+		   NULL)) {
 		stack;
 		return 0;
 	}
@@ -1065,7 +1092,7 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 	dl->name = name;
 
 	log_debug("Getting device info for %s", dl->name);
-	if (!_info(dl->name, dlid, 0, &dl->info, dm->mem, &uuid)) {
+	if (!_info(dl->name, dlid, 0, 0, &dl->info, dm->mem, &uuid)) {
 		stack;
 		return NULL;
 	}

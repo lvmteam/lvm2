@@ -295,7 +295,7 @@ static int _lvkmaj_disp(struct report_handle *rh, struct field *field,
 	struct lvinfo info;
 	uint64_t minusone = UINT64_C(-1);
 
-	if (lv_info(lv, &info) && info.exists)
+	if (lv_info(lv, &info, 0) && info.exists)
 		return _int_disp(rh, field, &info.major);
 	else
 		return _int_disp(rh, field, &minusone);
@@ -310,7 +310,7 @@ static int _lvkmin_disp(struct report_handle *rh, struct field *field,
 	struct lvinfo info;
 	uint64_t minusone = UINT64_C(-1);
 
-	if (lv_info(lv, &info) && info.exists)
+	if (lv_info(lv, &info, 0) && info.exists)
 		return _int_disp(rh, field, &info.minor);
 	else
 		return _int_disp(rh, field, &minusone);
@@ -362,7 +362,7 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 	else
 		repstr[3] = '-';
 
-	if (lv_info(lv, &info) && info.exists) {
+	if (lv_info(lv, &info, 1) && info.exists) {
 		if (info.suspended)
 			repstr[4] = 's';	/* Suspended */
 		else
@@ -774,7 +774,7 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 	}
 
 	if (!(snap = find_cow(lv)) ||
-	    (lv_info(snap->cow, &info) && !info.exists)) {
+	    (lv_info(snap->cow, &info, 0) && !info.exists)) {
 		field->report_string = "";
 		*sortval = UINT64_C(0);
 		field->sort_value = sortval;

@@ -78,12 +78,13 @@ int target_present(const char *target_name)
 {
 	return 0;
 }
-int lv_info(const struct logical_volume *lv, struct lvinfo *info)
+int lv_info(const struct logical_volume *lv, struct lvinfo *info,
+	    int with_open_count)
 {
 	return 0;
 }
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
-		    struct lvinfo *info)
+		    struct lvinfo *info, int with_open_count)
 {
 	return 0;
 }
@@ -333,7 +334,7 @@ int target_present(const char *target_name)
  * Returns 1 if info structure populated, else 0 on failure.
  */
 static int _lv_info(const struct logical_volume *lv, int mknodes,
-		    struct lvinfo *info)
+		    struct lvinfo *info, int with_open_count)
 {
 	int r;
 	struct dev_manager *dm;
@@ -347,7 +348,7 @@ static int _lv_info(const struct logical_volume *lv, int mknodes,
 		return 0;
 	}
 
-	if (!(r = dev_manager_info(dm, lv, mknodes, &dminfo)))
+	if (!(r = dev_manager_info(dm, lv, mknodes, with_open_count, &dminfo)))
 		stack;
 
 	info->exists = dminfo.exists;
@@ -361,20 +362,21 @@ static int _lv_info(const struct logical_volume *lv, int mknodes,
 	return r;
 }
 
-int lv_info(const struct logical_volume *lv, struct lvinfo *info)
+int lv_info(const struct logical_volume *lv, struct lvinfo *info,
+	    int with_open_count)
 {
-	return _lv_info(lv, 0, info);
+	return _lv_info(lv, 0, info, with_open_count);
 }
 
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
-		    struct lvinfo *info)
+		    struct lvinfo *info, int with_open_count)
 {
 	struct logical_volume *lv;
 
 	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
-	return _lv_info(lv, 0, info);
+	return _lv_info(lv, 0, info, with_open_count);
 }
 
 /*
@@ -412,7 +414,7 @@ int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
 	if (!activation())
 		return 0;
 
-	if (!lv_info(lv, &info)) {
+	if (!lv_info(lv, &info, 0)) {
 		stack;
 		return 0;
 	}
@@ -437,7 +439,7 @@ static int _lv_active(struct logical_volume *lv)
 {
 	struct lvinfo info;
 
-	if (!lv_info(lv, &info)) {
+	if (!lv_info(lv, &info, 0)) {
 		stack;
 		return -1;
 	}
@@ -449,7 +451,7 @@ static int _lv_open_count(struct logical_volume *lv)
 {
 	struct lvinfo info;
 
-	if (!lv_info(lv, &info)) {
+	if (!lv_info(lv, &info, 1)) {
 		stack;
 		return -1;
 	}
@@ -566,7 +568,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		return 1;
 	}
 
-	if (!lv_info(lv, &info)) {
+	if (!lv_info(lv, &info, 0)) {
 		stack;
 		return 0;
 	}
@@ -612,7 +614,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 		return 1;
 	}
 
-	if (!lv_info(lv, &info)) {
+	if (!lv_info(lv, &info, 0)) {
 		stack;
 		return 0;
 	}
@@ -657,7 +659,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		return 1;
 	}
 
-	if (!lv_info(lv, &info)) {
+	if (!lv_info(lv, &info, 1)) {
 		stack;
 		return 0;
 	}
@@ -726,7 +728,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s, int filter)
 		return 1;
 	}
 
-	if (!lv_info(lv, &info)) {
+	if (!lv_info(lv, &info, 0)) {
 		stack;
 		return 0;
 	}
@@ -765,7 +767,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 		return r;
 	}
 
-	if (!_lv_info(lv, 1, &info)) {
+	if (!_lv_info(lv, 1, &info, 0)) {
 		stack;
 		return 0;
 	}

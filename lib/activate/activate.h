@@ -55,9 +55,10 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 /*
  * Returns 1 if info structure has been populated, else 0.
  */
-int lv_info(const struct logical_volume *lv, struct lvinfo *info);
+int lv_info(const struct logical_volume *lv, struct lvinfo *info,
+	    int with_open_count);
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
-		    struct lvinfo *info);
+		    struct lvinfo *info, int with_open_count);
 
 /*
  * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.
