@@ -194,8 +194,8 @@ static int _import_extents(struct pool *mem, struct volume_group *vg,
 	struct logical_volume *lv, lvs[MAX_LV];
 	struct physical_volume *pv;
 	struct pe_disk *e;
-	int i, le;
-	uint32_t lv_num, le_num;
+	int i;
+	uint32_t lv_num, le;
 
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
@@ -210,7 +210,6 @@ static int _import_extents(struct pool *mem, struct volume_group *vg,
 
 		for (i = 0; i < dl->pv.pe_total; i++) {
 			lv_num = e[i].lv_num;
-			le_num = e[i].le_num;
 
 			if (lv_num == UNMAPPED_EXTENT)
 				lv->map[le].pv = NULL;
@@ -220,7 +219,7 @@ static int _import_extents(struct pool *mem, struct volume_group *vg,
 				return 0;
 
 			else {
-				lv = lvs[e[i].lv_num];
+				lv = lvs[lv_num];
 				le = e[i].le_num;
 
 				lv->map[le].pv = pv;
@@ -284,6 +283,47 @@ static struct volume_group _vg_read(struct io_space *is, const char *vg_name)
 	return vg;
 }
 
+static struct disk_list _flatten_pv(struct pool *mem, struct volume_group *vg, 
+				    struct physical_volume *pv)
+{
+	
+}
+
+static int _flatten_vg(struct pool *mem, struct volume_group *vg,
+		       struct list_head *pvs)
+{
+	struct list_head *tmp;
+	struct physical_volume *pv;
+	struct disk_list *data;
+
+	list_for_each(tmp, &vg->pvs) {
+		pv = list_entry(tmp, struct physical_volume, list);
+
+		if (!(data = _flatten_pv(vg, pv))) {
+			stack;
+			return 0;
+		}
+
+		list_add(&data->list, pvs);
+	}
+	return 1;
+}
+
+static int _vg_write(struct io_space *is, struct volume_group *vg)
+{
+	struct pool *mem = pool_create(1024 * 10);
+	struct list_head pvs;
+	int r = 0;
+
+	if (!mem) {
+		stack;
+		return 0;
+	}
+
+	r = _flatten_vg(mem, vg, &pvs) && write_pvs(&pvs);
+	pool_destroy(mem);
+	return r;
+}
 
 struct io_space *create_lvm1_format(struct device_manager *mgr)
 {
