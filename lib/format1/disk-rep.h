@@ -101,6 +101,7 @@ struct lv_list {
 struct disk_list {
 	struct device *dev;
 	struct list_head list;
+
 	struct pv_disk pv;
 	struct vg_disk vg;
 	struct list_head uuids;

@@ -117,18 +117,22 @@ struct pv_list {
 
 /* ownership of returned objects passes */
 struct io_space {
-	/* Returns list of names of all vgs - vg component only, not full path*/
+	/* Returns list of names of all vgs - vg
+           component only, not full path*/
 	struct name_list *(*get_vgs)(struct io_space *is);
 
-	/* Returns list of fully-populated pv structures */
+	/* Returns list of fully-populated pv
+           structures */
 	struct pv_list *(*get_pvs)(struct io_space *is);
 
-	/* Return PV with given name (may be full or relative path) */
+	/* Return PV with given name (may be full
+           or relative path) */
 	struct physical_volume *(*pv_read)(struct io_space *is,
-					const char *pv_name);
+					   const char *pv_name);
 
 	/* Write a PV structure to disk. */
-	/* Fails if the PV is in a VG ie pv->vg_name must be null */
+	/* Fails if the PV is in a VG ie
+           pv->vg_name must be null */
 	int (*pv_write)(struct io_space *is, struct physical_volume *pv);
 
 	/* if vg_name doesn't contain any slash, this function adds prefix */
@@ -136,9 +140,9 @@ struct io_space {
 					const char *vg_name);
 
 	/* Write out complete VG metadata. */
-	/* Ensure *internal* consistency before writing anything. 
-	 *   eg. PEs can't refer to PVs not part of the VG 
-	 * Order write sequence to aid recovery if process is aborted 
+	/* Ensure *internal* consistency before writing anything.
+	 *   eg. PEs can't refer to PVs not part of the VG
+	 * Order write sequence to aid recovery if process is aborted
 	 *   (eg flush entire set of changes to each disk in turn)
 	 * It is the responsibility of the caller to ensure external
  	 * consistency, eg by calling pv_write() if removing PVs from a VG
