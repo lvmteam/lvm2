@@ -1,5 +1,6 @@
 Version 2.00.26 - 
 =====================================
+  Fixes to lvcreate vgname parsing.
   Fix dm_name string size calculation.
   Improve clvmd error reporting during startup.
   Make clvmd cope with large gaps in node numbers IDs.

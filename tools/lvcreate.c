@@ -53,6 +53,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 {
 	int argc = *pargc;
 	char **argv = *pargv, *ptr;
+	char *vg_name;
 
 	if (arg_count(cmd, name_ARG))
 		lp->lv_name = arg_value(cmd, name_ARG);
@@ -88,7 +89,20 @@ static int _read_name_params(struct lvcreate_params *lp,
 			}
 
 		} else {
-			if (strrchr(argv[0], '/')) {
+			vg_name = argv[0];
+			/* Strip dev_dir (optional) */
+			if (*vg_name == '/') {
+				while (*vg_name == '/')
+					vg_name++;
+				vg_name--;
+			}
+			if (!strncmp(vg_name, cmd->dev_dir,
+				     strlen(cmd->dev_dir))) {
+				vg_name += strlen(cmd->dev_dir);
+				while (*vg_name == '/')
+					vg_name++;
+			}
+			if (strrchr(vg_name, '/')) {
 				log_error("Volume group name expected "
 					  "(no slash)");
 				return 0;
@@ -103,16 +117,16 @@ static int _read_name_params(struct lvcreate_params *lp,
 				      extract_vgname(cmd, lp->lv_name)))
 					return 0;
 
-				if (strcmp(lp->vg_name, argv[0])) {
+				if (strcmp(lp->vg_name, vg_name)) {
 					log_error("Inconsistent volume group "
 						  "names "
 						  "given: \"%s\" and \"%s\"",
-						  lp->vg_name, argv[0]);
+						  lp->vg_name, vg_name);
 					return 0;
 				}
 			}
 
-			lp->vg_name = argv[0];
+			lp->vg_name = vg_name;
 			(*pargv)++, (*pargc)--;
 		}
 	}
