@@ -28,7 +28,7 @@ int dir_exists(const char *path);
 int is_empty_dir(const char *dir);
 
 /*
- * Create directory (but not recursively) if necessary
- * Return 1 if directory exists on return, else 0
+ * Create directory (recursively) if necessary.  Return 1
+ * if directory was successfully created (or already exists), else 0.
  */
 int create_dir(const char *dir);
