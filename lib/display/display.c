@@ -390,6 +390,9 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 			snap = list_item(slh, struct snapshot_list)->snapshot;
 			snap_active = lv_snapshot_percent(snap->cow,
 							  &snap_percent);
+			if (!snap_active || snap_percent < 0 ||
+			    snap_percent >= 100)
+				snap_active = 0;
 			log_print("                       %s%s/%s [%s]",
 				  lv->vg->cmd->dev_dir, lv->vg->name,
 				  snap->cow->name,
@@ -398,6 +401,8 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 		snap = NULL;
 	} else if ((snap = find_cow(lv))) {
 		snap_active = lv_snapshot_percent(lv, &snap_percent);
+		if (!snap_active || snap_percent < 0 || snap_percent >= 100)
+			snap_active = 0;
 		log_print("LV snapshot status     %s destination for %s%s/%s",
 			  (snap_active > 0) ? "active" : "INACTIVE",
 			  lv->vg->cmd->dev_dir, lv->vg->name,
