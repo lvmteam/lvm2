@@ -4,6 +4,8 @@
  * This file is released under the LGPL.
  */
 
+#include "libdm-targets.h"
+#include "libdm-common.h"
 #include "libdevmapper.h"
 
 #include <stdio.h>
@@ -17,10 +19,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <linux/kdev_t.h>
-#include <linux/device-mapper.h>
-
-#include "libdm-targets.h"
-#include "libdm-common.h"
+#include <linux/dm-ioctl.h>
 
 #define DEV_DIR "/dev/"
 
