@@ -148,6 +148,28 @@ struct disk_list {
 	struct pe_disk *extents;
 };
 
+
+/*
+ * Layout constants.
+ */
+#define METADATA_ALIGN 4096UL
+#define	PE_ALIGN 65536UL
+
+#define	METADATA_BASE 0UL
+#define	PV_SIZE 1024UL
+#define	VG_SIZE 4096UL
+
+
+/*
+ * Functions to calculate layout info.
+ */
+int calculate_layout(struct disk_list *dl);
+
+
+/*
+ * Low level io routines which read/write
+ * disk_lists.
+ */
 struct disk_list *read_pv(struct device *dev, struct pool *mem,
 			  const char *vg_name);
 
@@ -158,7 +180,7 @@ int write_pvs(struct list_head *pvs);
 
 
 /*
- * Functions to translate to betweendisk and in
+ * Functions to translate to between disk and in
  * core structures.
  */
 int import_pv(struct pool *mem, struct device *dev,

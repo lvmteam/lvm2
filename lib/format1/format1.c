@@ -103,25 +103,6 @@ static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
 	return vg;
 }
 
-#if 0
-static int _calculate_disk_sizes(struct disk_list *dl)
-{
-	pvd->pv_on_disk.base = ??;
-	pvd->pv_on_disk.size = ??;
-
-        pvd->vg_on_disk.base = ??;
-        pvd->vg_on_disk.size = ??;
-
-        pvd->pv_uuidlist_on_disk.base = ??;
-        pvd->pv_uuidlist_on_disk.size = ??;
-
-        pvd->lv_on_disk.base = ??;
-        pvd->lv_on_disk.size = ??;
-
-        pvd->pe_on_disk.base = ??;
-        pvd->pe_on_disk.size = ??;
-}
-#endif
 static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 				     struct physical_volume *pv,
 				     const char *prefix)
@@ -142,7 +123,8 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	if (!export_pv(&dl->pv, pv) ||
 	    !export_vg(&dl->vg, vg) ||
 	    !export_uuids(dl, vg) ||
-	    !export_lvs(dl, vg, pv, prefix)) {
+	    !export_lvs(dl, vg, pv, prefix) ||
+	    !calculate_layout(dl)) {
 		stack;
 		return NULL;
 	}
@@ -323,6 +305,13 @@ static struct list_head *_get_vgs(struct io_space *is)
 	return NULL;
 }
 
+static int _pv_setup(struct io_space *is, struct physical_volume *pv,
+		     struct volume_group *vg)
+{
+	log_err("format1:pv_setup not implemented.");
+	return 1;
+}
+
 static int _pv_write(struct io_space *is, struct physical_volume *pv)
 {
 	log_err("format1:pv_write not implemented.");
@@ -344,6 +333,7 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 	ios->get_vgs = _get_vgs;
 	ios->get_pvs = _get_pvs;
 	ios->pv_read = _pv_read;
+	ios->pv_setup = _pv_setup;
 	ios->pv_write = _pv_write;
 	ios->vg_read = _vg_read;
 	ios->vg_write = _vg_write;

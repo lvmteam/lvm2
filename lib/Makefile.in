@@ -17,6 +17,7 @@ SOURCES=\
 	format1/disk-rep.c \
 	format1/format1.c \
 	format1/import-export.c \
+	format1/layout.c \
 	log/log.c \
 	mm/dbg_malloc.c \
 	mm/pool.c
