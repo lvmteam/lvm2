@@ -21,9 +21,16 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <limits.h>
-#include <linux/limits.h>
-#include <linux/kdev_t.h>
-#include <linux/dm-ioctl.h>
+
+#ifdef linux
+#  include <linux/limits.h>
+#  include <linux/kdev_t.h>
+#  include <linux/dm-ioctl.h>
+#else
+#  define MAJOR(x) major((x))
+#  define MINOR(x) minor((x))
+#  define MKDEV(x,y) makedev((x),(y))
+#endif
 
 /*
  * Ensure build compatibility.  
@@ -967,7 +974,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 
 int dm_task_run(struct dm_task *dmt)
 {
-	struct dm_ioctl *dmi;
+	struct dm_ioctl *dmi = NULL;
 	unsigned int command;
 
 #ifdef DM_COMPAT

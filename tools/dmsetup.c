@@ -10,8 +10,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <getopt.h>
-#include <linux/kdev_t.h>
+#include <unistd.h>
+
+#ifdef HAVE_GETOPTLONG
+#  include <getopt.h>
+#  define GETOPTLONG_FN(a, b, c, d, e) getopt_long((a), (b), (c), (d), (e))
+#  define OPTIND_INIT 0
+#else
+struct option {
+};
+extern int optind;
+extern char *optarg;
+#  define GETOPTLONG_FN(a, b, c, d, e) getopt((a), (b), (c))
+#  define OPTIND_INIT 1
+#endif
+
+#ifdef linux
+#  include <linux/kdev_t.h>
+#else
+#  define MAJOR(x) major((x))
+#  define MINOR(x) minor((x))
+#  define MKDEV(x,y) makedev((x),(y))
+#endif
 
 #define LINE_SIZE 1024
 
@@ -24,6 +44,8 @@ enum {
 	READ_ONLY = 0,
 	MAJOR_ARG,
 	MINOR_ARG,
+	NOTABLE_ARG,
+	UUID_ARG,
 	VERBOSE_ARG,
 	VERSION_ARG,
 	NUM_SWITCHES
@@ -31,6 +53,7 @@ enum {
 
 static int _switches[NUM_SWITCHES];
 static int _values[NUM_SWITCHES];
+static char *_uuid;
 
 /*
  * Commands
@@ -38,14 +61,19 @@ static int _values[NUM_SWITCHES];
 static int _parse_file(struct dm_task *dmt, const char *file)
 {
 	char buffer[LINE_SIZE], *ttype, *ptr, *comment;
-	FILE *fp = fopen(file, "r");
+	FILE *fp;
 	unsigned long long start, size;
 	int r = 0, n, line = 0;
 
-	if (!fp) {
-		err("Couldn't open '%s' for reading", file);
-		return 0;
-	}
+	/* OK for empty stdin */
+
+	if (file) {
+		if (!(fp = fopen(file, "r"))) {
+			err("Couldn't open '%s' for reading", file);
+			return 0;
+		}
+	} else
+		fp = stdin;
 
 	while (fgets(buffer, sizeof(buffer), fp)) {
 		line++;
@@ -81,7 +109,8 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	r = 1;
 
       out:
-	fclose(fp);
+	if (file)
+		fclose(fp);
 	return r;
 }
 
@@ -141,9 +170,9 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 	if (uuid && !dm_task_set_uuid(dmt, uuid))
 		goto out;
 
-	if (file && !_parse_file(dmt, file))
+	if (!_switches[NOTABLE_ARG] && !_parse_file(dmt, file))
 		goto out;
-
+	
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
 		goto out;
 
@@ -169,16 +198,19 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 
 static int _create(int argc, char **argv, void *data)
 {
-	if (argc == 1)
-		return _load(DM_DEVICE_CREATE, argv[1], NULL, NULL);
-
-	return _load(DM_DEVICE_CREATE, argv[1], argv[2],
-		     (argc == 3) ? argv[3] : NULL);
+	return _load(DM_DEVICE_CREATE, argv[1], (argc == 3) ? argv[2] : NULL,
+		     _switches[UUID_ARG] ? _uuid : NULL);
 }
 
 static int _reload(int argc, char **argv, void *data)
 {
-	return _load(DM_DEVICE_RELOAD, argv[1], argv[2], NULL);
+	if (_switches[NOTABLE_ARG]) {
+		err("--notable only available when creating new device\n");
+		return 0;
+	}
+
+	return _load(DM_DEVICE_RELOAD, argv[1], 
+		     (argc == 3) ? argv[2] : NULL, NULL);
 }
 
 static int _rename(int argc, char **argv, void *data)
@@ -509,14 +541,15 @@ struct command {
 };
 
 static struct command _commands[] = {
-	{"create", "<dev_name> <table_file> [<uuid>]", 1, 3, _create},
+	{"create", "<dev_name> [-u <uuid>] [--notable] [<table_file>]",
+	 1, 2, _create},
 	{"remove", "<dev_name>", 1, 1, _remove},
 	{"remove_all", "", 0, 0, _remove_all},
 	{"suspend", "<dev_name>", 1, 1, _suspend},
 	{"resume", "<dev_name>", 1, 1, _resume},
-	{"load", "<dev_name> <table_file>", 2, 2, _reload},
+	{"load", "<dev_name> [<table_file>]", 1, 2, _reload},
 	{"clear", "<dev_name>", 1, 1, _clear},
-	{"reload", "<dev_name> <table_file>", 2, 2, _reload},
+	{"reload", "<dev_name> [<table_file>]", 1, 2, _reload},
 	{"rename", "<dev_name> <new_name>", 2, 2, _rename},
 	{"ls", "", 0, 0, _ls},
 	{"info", "[<dev_name>]", 0, 1, _info},
@@ -556,14 +589,20 @@ static int _process_switches(int *argc, char ***argv)
 	int ind;
 	int c;
 
+#ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
 		{"readonly", 0, NULL, READ_ONLY},
 		{"major", 1, NULL, MAJOR_ARG},
 		{"minor", 1, NULL, MINOR_ARG},
+		{"notable", 0, NULL, NOTABLE_ARG},
+		{"uuid", 1, NULL, UUID_ARG},
 		{"verbose", 1, NULL, VERBOSE_ARG},
 		{"version", 0, NULL, VERSION_ARG},
 		{"", 0, NULL, 0}
 	};
+#else
+	struct option long_options;
+#endif
 
 	/*
 	 * Zero all the index counts.
@@ -571,7 +610,9 @@ static int _process_switches(int *argc, char ***argv)
 	memset(&_switches, 0, sizeof(_switches));
 	memset(&_values, 0, sizeof(_values));
 
-	while ((c = getopt_long(*argc, *argv, "j:m:rv",
+	optarg = 0;
+	optind = OPTIND_INIT;
+	while ((c = GETOPTLONG_FN(*argc, *argv, "j:m:nru:v",
 				long_options, &ind)) != -1) {
 		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
@@ -583,8 +624,14 @@ static int _process_switches(int *argc, char ***argv)
 			_switches[MINOR_ARG]++;
 			_values[MINOR_ARG] = atoi(optarg);
 		}
+		if (c == 'n' || ind == NOTABLE_ARG)
+			_switches[NOTABLE_ARG]++;
 		if (c == 'v' || ind == VERBOSE_ARG)
 			_switches[VERBOSE_ARG]++;
+		if (c == 'u' || ind == UUID_ARG) {
+			_switches[UUID_ARG]++;
+			_uuid = optarg;
+		}
 		if ((ind == VERSION_ARG))
 			_switches[VERSION_ARG]++;
 	}
