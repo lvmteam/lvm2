@@ -22,6 +22,14 @@ struct parse_sp {		/* scratch pad for the parsing process */
 
 static struct rx_node *_or_term(struct parse_sp *ps);
 
+static void _single_char(struct parse_sp *ps, unsigned int c, const char *ptr)
+{
+	ps->type = 0;
+	ps->cursor = ptr + 1;
+	bit_clear_all(ps->charset);
+	bit_set(ps->charset, c);
+}
+
 /*
  * Get the next token from the regular expression.
  * Returns: 1 success, 0 end of input, -1 error.
@@ -125,10 +133,16 @@ static int _get_token(struct parse_sp *ps)
 	case '+':
 	case '?':
 	case '|':
-	case '^':
-	case '$':
 		ps->type = (int) *ptr;
 		ps->cursor = ptr + 1;
+		break;
+
+	case '^':
+		_single_char(ps, HAT_CHAR, ptr);
+		break;
+
+	case '$':
+		_single_char(ps, DOLLAR_CHAR, ptr);
 		break;
 
 	case '.':
