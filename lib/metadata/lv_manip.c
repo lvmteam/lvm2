@@ -116,7 +116,7 @@ static int _alloc_simple(struct logical_volume *lv,
 		}
 	}
 
- done:
+      done:
 	if (allocated != lv->le_count) {
 		log_error("Insufficient free logical extents to "
 			  "allocate logical volume %s: %u required",
@@ -169,7 +169,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		vg->free_count -= lv->le_count - allocated;
 	}
 
- out:
+      out:
 	pool_destroy(scratch);
 	return r;
 }
@@ -227,8 +227,7 @@ struct logical_volume *lv_create(const char *name,
 	lv->size = extents * vg->extent_size;
 	lv->le_count = extents;
 
-	if (!(lv->map = pool_zalloc(cmd->mem,
-				    sizeof(*lv->map) * extents))) {
+	if (!(lv->map = pool_zalloc(cmd->mem, sizeof(*lv->map) * extents))) {
 		stack;
 		goto bad;
 	}
@@ -247,7 +246,7 @@ struct logical_volume *lv_create(const char *name,
 
 	return lv;
 
- bad:
+      bad:
 	if (ll)
 		pool_free(cmd->mem, ll);
 
@@ -256,21 +255,16 @@ struct logical_volume *lv_create(const char *name,
 
 int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
-	// FIXME: merge with Alasdair's version in tools
-	if (extents % lv->stripes) {
-		log_error("For a striped volume you must reduce by a "
-			  "multiple of the number of stripes");
-		return 0;
+	int i;
+
+	extents = lv->le_count - extents;
+
+	for (i = extents; i < lv->le_count; i++) {
+		lv->map[i].pv->pe_allocated--;
 	}
 
-	if (lv->le_count <= extents) {
-		log_error("Attempt to reduce by so many extents there would "
-			  "be nothing left of the logical volume.");
-		return 0;
-	}
+	lv->le_count = extents;
 
-	/* Hmmm ... I think all we need to do is ... */
-	lv->le_count -= extents;
 	return 1;
 }
 
@@ -318,12 +312,11 @@ int lv_extend(struct logical_volume *lv, uint32_t extents,
 	pool_free(cmd->mem, new_lv);
 	return 1;
 
- bad:
+      bad:
 	pool_free(cmd->mem, new_map);
 	return 0;
 }
 
-/* FIXME: I don't like the way the lvh is passed in here - EJT */
 int lv_remove(struct volume_group *vg, struct list *lvh)
 {
 	int i;

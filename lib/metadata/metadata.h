@@ -134,6 +134,7 @@ struct cmd_context {
 	/* misc. vars needed by format handler */
 	char *dev_dir;
 	struct dev_filter *filter;
+	struct config_file *cf;
 };
 
 struct format_instance {

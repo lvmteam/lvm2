@@ -199,6 +199,19 @@ xx(lvrename,
 
    autobackup_ARG)
 
+xx(lvresize,
+   "Resize a logical volume",
+   "lvresize\n"
+   "\t[-A/--autobackup y/n]\n"
+   "\t[-d/--debug]\n"
+   "\t[-h/-?/--help]\n"
+   "\t{-l/--extents [+/-]LogicalExtentsNumber |\n"
+   "\t -L/--size [+/-]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-v/--verbose]\n"
+   "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
+
+   autobackup_ARG, extents_ARG, size_ARG)
+
 xx(lvscan,
    "List all logical volumes in all volume groups",
    "lvscan "

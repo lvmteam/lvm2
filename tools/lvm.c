@@ -35,24 +35,13 @@
 #include <readline/history.h>
 #endif
 
-/* define the table of valid switches */
+/* define exported table of valid switches */
 struct arg the_args[ARG_COUNT + 1] = {
 
 #define xx(a, b, c, d) {b, "--" c, d, 0, NULL},
 #include "args.h"
 #undef xx
 
-};
-
-/* a register of the lvm commands */
-struct command {
-	const char *name;
-	const char *desc;
-	const char *usage;
-	command_fn fn;
-
-	int num_args;
-	int *valid_args;
 };
 
 static int _array_size;
@@ -62,11 +51,13 @@ static struct command *_commands;
 /* Exported LVM1 disk format */
 struct format_instance *fid;
 
+/* Export command being processed */
+struct command *the_command;
+
 struct cmd_context *cmd;
 
 /* Whether or not to dump persistent filter state */
 static int dump_filter;
-static struct config_file *_cf;
 
 static int _interactive;
 static FILE *_log;
@@ -544,20 +535,19 @@ static void display_help()
 static int run_command(int argc, char **argv)
 {
 	int ret = 0;
-	struct command *com;
 
-	if (!(com = find_command(argv[0])))
+	if (!(the_command = find_command(argv[0])))
 		return ENO_SUCH_CMD;
 
-	if (!process_command_line(com, &argc, &argv)) {
+	if (!process_command_line(the_command, &argc, &argv)) {
 		log_error("Error during parsing of command line.");
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((ret = process_common_commands(com)))
+	if ((ret = process_common_commands(the_command)))
 		return ret;
 
-	ret = com->fn(argc, argv);
+	ret = the_command->fn(argc, argv);
 
 	/*
 	 * free off any memory the command used.
@@ -565,7 +555,7 @@ static int run_command(int argc, char **argv)
 	pool_empty(cmd->mem);
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
-		usage(com->name);
+		usage(the_command->name);
 
 	return ret;
 }
@@ -598,11 +588,6 @@ static int split(char *str, int *argc, char **argv, int max)
 	return *argc;
 }
 
-struct config_file *active_config_file(void)
-{
-	return _cf;
-}
-
 static void __init_log(struct config_file *cf)
 {
 	char *open_mode = "a";
@@ -628,7 +613,7 @@ static void __init_log(struct config_file *cf)
 	init_verbose(verbose_level);
 }
 
-static int dev_cache_setup(void)
+static int dev_cache_setup(struct config_file *cf)
 {
 	struct config_node *cn;
 	struct config_value *cv;
@@ -638,7 +623,7 @@ static int dev_cache_setup(void)
 		return 0;
 	}
 
-	if (!(cn = find_config_node(_cf->root, "devices/scan", '/'))) {
+	if (!(cn = find_config_node(cf->root, "devices/scan", '/'))) {
 		if (!dev_cache_add_dir("/dev")) {
 			log_error("Failed to add /dev to internal "
 				  "device cache");
@@ -666,7 +651,7 @@ static int dev_cache_setup(void)
 	return 1;
 }
 
-static struct dev_filter *filter_components_setup(void)
+static struct dev_filter *filter_components_setup(struct config_file *cf)
 {
 	struct config_node *cn;
 	struct dev_filter *f1, *f2, *f3;
@@ -674,7 +659,7 @@ static struct dev_filter *filter_components_setup(void)
 	if (!(f2 = lvm_type_filter_create()))
 		return 0;
 
-	if (!(cn = find_config_node(_cf->root, "devices/filter", '/'))) {
+	if (!(cn = find_config_node(cf->root, "devices/filter", '/'))) {
 		log_debug("devices/filter not found in config file: no regex "
 			  "filter installed");
 		return f2;
@@ -693,7 +678,7 @@ static struct dev_filter *filter_components_setup(void)
 	return f3;
 }
 
-static struct dev_filter *filter_setup(void)
+static struct dev_filter *filter_setup(struct config_file *cf)
 {
 	const char *lvm_cache;
 	struct dev_filter *f3, *f4;
@@ -701,10 +686,10 @@ static struct dev_filter *filter_setup(void)
 
 	dump_filter = 0;
 
-	if (!(f3 = filter_components_setup()))
+	if (!(f3 = filter_components_setup(cmd->cf)))
 		return 0;
 
-	lvm_cache = find_config_str(_cf->root, "devices/cache", '/',
+	lvm_cache = find_config_str(cf->root, "devices/cache", '/',
 				    "/etc/lvm/.cache");
 
 	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
@@ -713,7 +698,7 @@ static struct dev_filter *filter_setup(void)
 	}
 
 	/* Should we ever dump persistent filter state? */
-	if (find_config_int(_cf->root, "devices/write_cache_state", '/', 1))
+	if (find_config_int(cf->root, "devices/write_cache_state", '/', 1))
 		dump_filter = 1;
 
 	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
@@ -737,7 +722,7 @@ static int init(void)
 	/* FIXME: Override from config file. (Append trailing slash if reqd) */
 	cmd->dev_dir = "/dev/";
 
-	if (!(_cf = create_config_file())) {
+	if (!(cmd->cf = create_config_file())) {
 		stack;
 		goto out;
 	}
@@ -751,19 +736,19 @@ static int init(void)
 	e = e ? e : "/etc/lvm/lvm.conf";
 	if (stat(e, &info) != -1) {
 		/* we've found a config file */
-		if (!read_config(_cf, e)) {
+		if (!read_config(cmd->cf, e)) {
 			log_error("Failed to load config file %s", e);
 			goto out;
 		}
 
-		__init_log(_cf);
+		__init_log(cmd->cf);
 	}
 
-	if (!dev_cache_setup()) {
+	if (!dev_cache_setup(cmd->cf)) {
 		goto out;
 	}
 
-	if (!(cmd->filter = filter_setup())) {
+	if (!(cmd->filter = filter_setup(cmd->cf))) {
 		log_error("Failed to set up internal device filters");
 		goto out;
 	}
@@ -802,7 +787,7 @@ static void fin(void)
 	cmd->filter->destroy(cmd->filter);
 	pool_destroy(cmd->mem);
 	dev_cache_exit();
-	destroy_config_file(_cf);
+	destroy_config_file(cmd->cf);
 	dbg_free(cmd);
 	__fin_commands();
 	dump_memory();

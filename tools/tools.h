@@ -81,6 +81,19 @@ struct arg {
 
 extern struct arg the_args[ARG_COUNT + 1];
 
+/* a register of the lvm commands */
+struct command {
+        const char *name;
+        const char *desc;
+        const char *usage;
+        command_fn fn;
+
+        int num_args;
+        int *valid_args;
+};
+
+extern struct command *the_command;
+
 void usage(const char *name);
 
 /* the argument verify/normalise functions */
@@ -122,7 +135,10 @@ static inline int arg_count_increment(int a)
 	return the_args[a].count++;
 }
 
-struct config_file *active_config_file(void);
+static inline const char *command_name(void)
+{
+	return the_command->name;
+}
 
 extern struct format_instance *fid;
 
