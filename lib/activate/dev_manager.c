@@ -544,11 +544,11 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 					  s == (stripes - 1) ? "" : " ");
 		else
 			tw = lvm_snprintf(params + w, sizeof(params) - w,
-					 "%s %" PRIu64 "%s",
-					 dev_name(seg->area[s].pv->dev),
-					 (seg->area[s].pv->pe_start +
-					  (esize * seg->area[s].pe)),
-					 s == (stripes - 1) ? "" : " ");
+					  "%s %" PRIu64 "%s",
+					  dev_name(seg->area[s].pv->dev),
+					  (seg->area[s].pv->pe_start +
+					   (esize * seg->area[s].pe)),
+					  s == (stripes - 1) ? "" : " ");
 
 		if (tw < 0)
 			goto error;
@@ -728,7 +728,6 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 
 	return 1;
 }
-
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 				     char *dlid)
@@ -1061,8 +1060,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 
 	/* FIXME Create and use a _suspend_parents() function instead */
 	/* Suspend? */
-	if (_get_flag(dl, SUSPENDED) && 
-	    (!_suspend_parent || !_suspend(dl))) {
+	if (_get_flag(dl, SUSPENDED) && (!_suspend_parent || !_suspend(dl))) {
 		stack;
 		return 0;
 	}
@@ -1098,9 +1096,8 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 		newname = _build_name(dm->mem, dm->vg_name, dl->lv->name,
 				      suffix);
 		if (strcmp(newname, dl->name)) {
-			if (!_suspend_parent(parent) || 
-			    !_suspend(dl) ||
-			    !_rename(dm, dl, newname)) {
+			if (!_suspend_parent(parent) ||
+			    !_suspend(dl) || !_rename(dm, dl, newname)) {
 				stack;
 				return 0;
 			}
@@ -1109,7 +1106,7 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 
 	/* Create? */
 	if (!dl->info.exists) {
-		if (!_suspend_parent(parent) || 
+		if (!_suspend_parent(parent) ||
 		    !_load(dm, dl, DM_DEVICE_CREATE)) {
 			stack;
 			return 0;
@@ -1119,15 +1116,14 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl,
 
 	/* Reload? */
 	if (_get_flag(dl, RELOAD) &&
-	    (!_suspend_parent(parent) || !_suspend(dl) || 
+	    (!_suspend_parent(parent) || !_suspend(dl) ||
 	     !_load(dm, dl, DM_DEVICE_RELOAD))) {
 		stack;
 		return 0;
 	}
 
 	/* Resume? */
-	if (!_get_flag(dl, SUSPENDED) && 
-	    (!_suspend_parent || !_resume(dl))) {
+	if (!_get_flag(dl, SUSPENDED) && (!_suspend_parent || !_resume(dl))) {
 		stack;
 		return 0;
 	}
@@ -1406,20 +1402,36 @@ static void _remove_lv(struct list *head, struct logical_volume *lv)
 	}
 }
 
-/* Remove any snapshots with given origin */
-static void _remove_lvs(struct list *head, struct logical_volume *origin)
+static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 {
-	struct logical_volume *active;
+	struct logical_volume *active, *old_origin;
 	struct snapshot *s;
-	struct list *sh;
+	struct list *sh, *active_head;
 
-	list_iterate(sh, head) {
+	active_head = &dm->active_list;
+
+	/* Remove any snapshots with given origin */
+	list_iterate(sh, active_head) {
 		active = list_item(sh, struct lv_list)->lv;
-		if ((s = find_cow(active)) && s->origin == origin)
-			_remove_lv(head, active);
+		if ((s = find_cow(active)) && s->origin == lv)
+			_remove_lv(active_head, active);
 	}
 
-	_remove_lv(head, origin);
+	_remove_lv(active_head, lv);
+
+	if (!(s = find_cow(lv)))
+		return 1;
+
+	old_origin = s->origin;
+
+	/* Was this the last active snapshot with this origin? */
+	list_iterate(sh, active_head) {
+		active = list_item(sh, struct lv_list)->lv;
+		if ((s = find_cow(active)) && s->origin == old_origin)
+			return 1;
+	}
+
+	return _add_lvs(dm->mem, &dm->reload_list, old_origin);
 }
 
 static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
@@ -1468,7 +1480,10 @@ static int _action(struct dev_manager *dm, struct logical_volume *lv,
 
 	if (action == ACTIVATE || action == DEACTIVATE)
 		/* Get into known state - remove from active list if present */
-		_remove_lvs(&dm->active_list, lv);
+		if (!_remove_lvs(dm, lv)) {
+			stack;
+			return 0;
+		}
 
 	if (action == ACTIVATE) {
 		/* Add to active & reload lists */
@@ -1508,4 +1523,3 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 {
 	return _action(dm, lv, SUSPEND);
 }
-
