@@ -69,25 +69,29 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
 	int lv_open, active;
 	int available;
+	int activate = 1;
 
 	available = arg_uint_value(cmd, available_ARG, 0);
 
+	if ((available == CHANGE_AN) || (available == CHANGE_ALN))
+		activate = 0;
+
 	/* FIXME: Force argument to deactivate them? */
-	if (!available && (lv_open = lvs_in_vg_opened(vg))) {
+	if (!activate && (lv_open = lvs_in_vg_opened(vg))) {
 		log_error("Can't deactivate volume group \"%s\" with %d open "
 			  "logical volume(s)", vg->name, lv_open);
 		return ECMD_FAILED;
 	}
 
-	if (available && (active = lvs_in_vg_activated(vg)))
+	if (activate && (active = lvs_in_vg_activated(vg)))
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
 
-	if (available && _activate_lvs_in_vg(cmd, vg, available))
+	if (activate && _activate_lvs_in_vg(cmd, vg, available))
 		log_verbose("Activated logical volumes in "
 			    "volume group \"%s\"", vg->name);
 
-	if (!available && _activate_lvs_in_vg(cmd, vg, 0))
+	if (!activate && _activate_lvs_in_vg(cmd, vg, available))
 		log_verbose("Deactivated logical volumes in "
 			    "volume group \"%s\"", vg->name);
 

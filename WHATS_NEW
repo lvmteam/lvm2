@@ -1,5 +1,6 @@
 Version 2.00.18 - 24 June 2004
 ==============================
+  Fix vgchange activation.
   Add cluster support.
 
 Version 2.00.17 - 20 June 2004
