@@ -110,8 +110,8 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 #undef PARSE_ERROR
 
 	if (!was_error) {
-		dm_table_complete(table);
-		return table;
+		if (dm_table_complete(table) == 0)
+			return table;
 	}
 
 	dm_table_destroy(table);
