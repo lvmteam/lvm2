@@ -131,9 +131,13 @@ struct dm_table *dm_table_create(void)
 	atomic_set(&t->pending, 0);
 	init_waitqueue_head(&t->wait);
 
+	t->hardsect_size = PAGE_CACHE_SIZE;
+
+	/* FIXME: Let this be specified/changed */
+	t->blksize_size = BLOCK_SIZE;
+
 	/* allocate a single nodes worth of targets to
 	   begin with */
-	t->hardsect_size = PAGE_CACHE_SIZE;
 	if (alloc_targets(t, KEYS_PER_NODE)) {
 		kfree(t);
 		t = 0;
