@@ -58,25 +58,25 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
-		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg->name);
-		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
-		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" is not reducable", vg_name);
-		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -84,7 +84,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	/* and update in batch here? */
 	ret = process_each_pv(cmd, argc, argv, vg, vgreduce_single);
 
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
 
 	return ret;
 

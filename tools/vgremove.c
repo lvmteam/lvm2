@@ -34,7 +34,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	ret = process_each_vg(cmd, argc, argv, LCK_WRITE | LCK_NONBLOCK,
 			      &vgremove_single);
 
-	lock_vol(cmd, "", LCK_VG_UNLOCK);
+	unlock_vg(cmd, "");
 
 	return ret;
 }

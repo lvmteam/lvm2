@@ -339,28 +339,28 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	/* store vg on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
 		/* FIXME: Attempt reversion? */
-		lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
+		unlock_lv(cmd, lv->lvid.s);
 		goto error;
 	}
 
 	backup(vg);
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK)) {
+	if (!unlock_lv(cmd, lv->lvid.s)) {
 		log_error("Problem reactivating %s", lv_name);
 		goto error;
 	}
 
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
 
 	log_print("Logical volume %s successfully resized", lv_name);
 
 	return 0;
 
       error:
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
 	return ECMD_FAILED;
 
       error_cmdline:
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
 	return EINVALID_CMD_LINE;
 }

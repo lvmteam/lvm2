@@ -136,11 +136,11 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!(cmd->fid->ops->vg_write(cmd->fid, vg)))
 		goto lverror;
 
-	lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
+	unlock_lv(cmd, lv->lvid.s);
 
 	backup(lv->vg);
 
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
 
 	log_print("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
 		  lv_name_old, lv_name_new, vg_name);
@@ -149,9 +149,9 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 
       lverror:
-	lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
+	unlock_lv(cmd, lv->lvid.s);
 
       error:
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
 	return ECMD_FAILED;
 }

@@ -99,25 +99,25 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		log_error("Can't get lock for %s", vg_name);
-		lock_vol(cmd, "", LCK_VG_UNLOCK);
+		unlock_vg(cmd, "");
 		return ECMD_FAILED;
 	}
 
 	if (!archive(vg)) {
-		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
-		lock_vol(cmd, "", LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name);
+		unlock_vg(cmd, "");
 		return ECMD_FAILED;
 	}
 
 	/* Store VG on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
-		lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
-		lock_vol(cmd, "", LCK_VG_UNLOCK);
+		unlock_vg(cmd, vg_name);
+		unlock_vg(cmd, "");
 		return ECMD_FAILED;
 	}
 
-	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);
-	lock_vol(cmd, "", LCK_VG_UNLOCK);
+	unlock_vg(cmd, vg_name);
+	unlock_vg(cmd, "");
 
 	backup(vg);
 
