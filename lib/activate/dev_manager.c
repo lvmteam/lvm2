@@ -329,6 +329,7 @@ static int _info(const char *name, const char *uuid, struct dm_info *info,
 	return 0;
 }
 
+/* FIXME Interface must cope with multiple targets */
 static int _status_run(const char *name, const char *uuid,
 		       unsigned long long *s, unsigned long long *l,
 		       char **t, uint32_t t_size, char **p, uint32_t p_size)
@@ -353,27 +354,26 @@ static int _status_run(const char *name, const char *uuid,
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &type, &params);
-		if(type) {
+		if (type) {
 			*s = start;
 			*l = length;
 			/* Make sure things are null terminated */
 			strncpy(*t, type, t_size);
-			(*t)[t_size-1] = '\0'; 
+			(*t)[t_size - 1] = '\0';
 			strncpy(*p, params, p_size);
- 			(*p)[p_size-1] = '\0';
+			(*p)[p_size - 1] = '\0';
 
 			r = 1;
+			/* FIXME Cope with multiple targets! */
 			break;
 		}
-		
-	} while (next);
 
+	} while (next);
 
       out:
 	dm_task_destroy(dmt);
 	return r;
 }
-
 
 static int _status(const char *name, const char *uuid,
 		   unsigned long long *start, unsigned long long *length,
@@ -386,12 +386,11 @@ static int _status(const char *name, const char *uuid,
 		return 1;
 
 	if (name && _status_run(name, NULL, start, length, type, type_size,
-			        params, param_size))
+				params, param_size))
 		return 1;
-	
+
 	return 0;
 }
-
 
 static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
 {
@@ -793,23 +792,22 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	return 1;
 }
 
-int dev_manager_get_snapshot_use(struct dev_manager *dm, 
- 		                 struct logical_volume *lv, float *percent)
+int dev_manager_snapshot_percent(struct dev_manager *dm,
+				 struct logical_volume *lv, float *percent)
 {
 	char *name, *type, *params;
 	unsigned long long start, length;
-	/* FIXME: Hard coded numbers can be bad, but not really sure what to
-	 * use here...we don't really care about the type and the parameter
-	 * should be a percentage */
-	uint32_t type_size = 2;
-	uint32_t param_size = 7;
 
-	if(!(type = pool_alloc(dm->mem, sizeof(*type) * type_size))) {
+	/* FIXME: Use #defines - & move allocations into _status_run ? */
+	uint32_t type_size = 32;
+	uint32_t param_size = 32;
+
+	if (!(type = pool_alloc(dm->mem, sizeof(*type) * type_size))) {
 		stack;
 		return 0;
 	}
 
-	if(!(params = pool_alloc(dm->mem, sizeof(*params) * param_size))) {
+	if (!(params = pool_alloc(dm->mem, sizeof(*params) * param_size))) {
 		stack;
 		return 0;
 	}
@@ -817,7 +815,7 @@ int dev_manager_get_snapshot_use(struct dev_manager *dm,
 	/*
 	 * Build a name for the top layer.
 	 */
-	if(!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
+	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
 		stack;
 		return 0;
 	}
@@ -826,16 +824,19 @@ int dev_manager_get_snapshot_use(struct dev_manager *dm,
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device status for %s", name);
-	if(!(_status(name, lv->lvid.s, &start, &length, &type, type_size, 
-		     &params, param_size))) {
-	       stack;
-	       return 0;
+	if (!(_status(name, lv->lvid.s, &start, &length, &type, type_size,
+		      &params, param_size))) {
+		stack;
+		return 0;
 	}
+
+	/* FIXME Ensure this is a *snapshot* target with percentage! */
+	/* FIXME pool_free ? */
 
 	/* If the snapshot isn't available, percent will be -1 */
 	*percent = -1;
 
-	if(!params)
+	if (!params)
 		return 0;
 
 	return sscanf(params, "%f", percent);
