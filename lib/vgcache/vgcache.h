@@ -8,29 +8,39 @@
 #ifndef _LVM_VGCACHE_H
 #define _LVM_VGCACHE_H
 
-#include <sys/types.h>
-#include <asm/page.h>
-#include "dev-cache.h"
+#include "vgcache.h"
 #include "list.h"
+#include "uuid.h"
+#include "pool.h"
+#include "dev-cache.h"
+#include "metadata.h"
 
-struct vgname_entry {
-	struct list pvdevs;
-	char *vgname;
-};
 
-struct pvdev_list {
-	struct list list;
-	struct device *dev;
-};
+/*
+ * Maintains a register of LVM specific information about
+ * devices.  Makes use of the label code.
+ */
+struct vg_cache;
 
-int vgcache_init();
-void vgcache_destroy();
+struct vg_cache *vg_cache_create(struct dev_filter *devices);
+void vg_cache_destroy(struct vg_cache *vgc);
 
-/* Return list of PVs in named VG */
-struct list *vgcache_find(const char *vg_name);
+/*
+ * Find the device with a particular uuid.
+ */
+struct device *vg_cache_find_uuid(struct vg_cache *vgc, struct id *id);
 
-/* Add/delete a device */
-int vgcache_add(const char *vg_name, struct device *dev);
-void vgcache_del(const char *vg_name);
+/*
+ * Find all devices in a particular volume group.
+ */
+struct list *vg_cache_find_vg(struct vg_cache *vgc, struct pool *mem,
+			      const char *vg);
+
+/*
+ * Tell the cache about any changes occuring on disk.
+ * FIXME: it would be nice to do without these.
+ */
+int vg_cache_update_vg(struct volume_group *vg);
+int vg_cache_update_device(struct device *dev);
 
 #endif
