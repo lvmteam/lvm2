@@ -79,6 +79,7 @@ static struct cmd_data _cmd_data_v4[] = {
 	{"waitevent",	DM_DEV_WAIT,		{4, 0, 0}},
 	{"names",	DM_LIST_DEVICES,	{4, 0, 0}},
 	{"clear",	DM_TABLE_CLEAR,		{4, 0, 0}},
+	{"mknodes",	DM_DEV_STATUS,		{4, 0, 0}},
 };
 /* *INDENT-ON* */
 
@@ -481,6 +482,14 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 
 	case DM_DEVICE_RENAME:
 		rename_dev_node(dmt->dev_name, dmt->newname);
+		break;
+
+	case DM_DEVICE_MKNODES:
+		if (dmi->flags & DM_EXISTS_FLAG)
+			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
+				     MINOR(dmi->dev));
+		else
+			rm_dev_node(dmt->dev_name);
 		break;
 
 	case DM_DEVICE_STATUS:
@@ -1011,7 +1020,8 @@ int dm_task_run(struct dm_task *dmt)
 	log_debug("dm %s %s %s %s", _cmd_data_v4[dmt->type].name, dmi->name,
 		  dmi->uuid, dmt->newname ? dmt->newname : "");
 	if (ioctl(_control_fd, command, dmi) < 0) {
-		if (errno == ENXIO && dmt->type == DM_DEVICE_INFO) {
+		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
+				       (dmt->type == DM_DEVICE_MKNODES))) {
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
 			goto ignore_error;
 		}
@@ -1036,6 +1046,14 @@ int dm_task_run(struct dm_task *dmt)
 
 	case DM_DEVICE_RENAME:
 		rename_dev_node(dmt->dev_name, dmt->newname);
+		break;
+
+	case DM_DEVICE_MKNODES:
+		if (dmi->flags & DM_EXISTS_FLAG)
+			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
+				     MINOR(dmi->dev));
+		else
+			rm_dev_node(dmt->dev_name);
 		break;
 
 	case DM_DEVICE_STATUS:
