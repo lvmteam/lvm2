@@ -8,6 +8,8 @@
 #include "archive.h"
 #include "defaults.h"
 
+#include "stub.h"
+
 #include <assert.h>
 #include <getopt.h>
 #include <signal.h>
@@ -17,15 +19,12 @@
 #include <ctype.h>
 #include <time.h>
 
-#include "stub.h"
-
 #ifdef READLINE_SUPPORT
-#include <readline/readline.h>
-#include <readline/history.h>
-#define MAX_HISTORY 100
-#ifndef rl_completion_matches
-#define rl_completion_matches(a, b) completion_matches((char *)a, b)
-#endif
+  #include <readline/readline.h>
+  #include <readline/history.h>
+  #ifndef HAVE_RL_COMPLETION_MATCHES
+    #define rl_completion_matches(a, b) completion_matches((char *)a, b)
+  #endif
 #endif
 
 /* define exported table of valid switches */
@@ -694,7 +693,7 @@ static int _init_backup(struct config_file *cf)
 	/* set up archiving */
 	_default_settings.archive =
 		find_config_bool(cmd->cf->root, "backup/archive", '/',
-				 DEFAULT_ARCHIVE_FLAG);
+				 DEFAULT_ARCHIVE_ENABLED);
 
 	days = find_config_int(cmd->cf->root, "backup/retain_days", '/',
 			       DEFAULT_ARCHIVE_DAYS);
@@ -720,7 +719,7 @@ static int _init_backup(struct config_file *cf)
 	/* set up the backup */
 	_default_settings.backup =
 		find_config_bool(cmd->cf->root, "backup/backup", '/',
-				 DEFAULT_BACKUP_FLAG);
+				 DEFAULT_BACKUP_ENABLED);
 
 	if (lvm_snprintf(default_dir, sizeof(default_dir), "%s/%s", _sys_dir,
 			 DEFAULT_BACKUP_SUBDIR) == -1) {
@@ -1155,7 +1154,7 @@ static void _read_history(void)
 		log_very_verbose("Couldn't read history from %s.", hist_file);
 
         stifle_history(find_config_int(cmd->cf->root, "shell/history_size",
-				       '/', MAX_HISTORY));
+				       '/', DEFAULT_MAX_HISTORY));
 
 }
 
