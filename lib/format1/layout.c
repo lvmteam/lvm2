@@ -106,6 +106,12 @@ int calculate_extent_count(struct physical_volume *pv)
 	 */
 	pvd->pe_total = (pv->size / pv->pe_size);
 
+	if (pvd->pe_total < PE_SIZE_PV_SIZE_REL) {
+		log_error("Insufficient space for extents on %s",
+			  pv->dev->name);
+		return 0;
+	}
+
 	do {
 		pvd->pe_total--;
 		_calc_simple_layout(pvd);
