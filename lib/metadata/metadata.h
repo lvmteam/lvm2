@@ -116,7 +116,7 @@ struct logical_volume {
 
         /* the segment array */
 	uint32_t segment_count;
-        struct stripe_segment *segments;
+        struct stripe_segment **segments;
 };
 
 struct name_list {
