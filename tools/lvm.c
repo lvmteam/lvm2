@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <time.h>
+#include <stdlib.h>
 
 #ifdef READLINE_SUPPORT
   #include <readline/readline.h>
@@ -229,8 +230,29 @@ int size_arg(struct arg *a)
 	char *ptr;
 	int i;
 	static char *suffixes = "kmgt";
+	char *val;
+	double v;
 
-	if (!_get_int_arg(a, &ptr))
+	val = a->value;
+	switch (*val) {
+	case '+':
+		a->sign = SIGN_PLUS;
+		val++;
+		break;
+	case '-':
+		a->sign = SIGN_MINUS;
+		val++;
+		break;
+	default:
+		a->sign = SIGN_NONE;
+	}
+
+	if (!isdigit(*val))
+		return 0;
+
+	v = strtod(val, &ptr);
+
+	if (ptr == val)
 		return 0;
 
 	if (*ptr) {
@@ -242,8 +264,9 @@ int size_arg(struct arg *a)
 			return 0;
 
 		while (i-- > 0)
-			a->i_value *= 1024;
+			v *= 1024;
 	}
+	a->i_value = (uint32_t) v;
 
 	return 1;
 
