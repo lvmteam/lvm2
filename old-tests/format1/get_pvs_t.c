@@ -9,19 +9,15 @@
 #include "dbg_malloc.h"
 #include "pool.h"
 #include "pretty_print.h"
+#include "list.h"
 
 #include <stdio.h>
 
 int main(int argc, char **argv)
 {
 	struct io_space *ios;
-	struct volume_group *vg;
+	struct list_head *pvs, *tmp;
 	struct pool *mem;
-
-	if (argc != 2) {
-		fprintf(stderr, "usage: read_vg_t <vg_name>\n");
-		exit(1);
-	}
 
 	init_log(stderr);
 	init_debug(_LOG_INFO);
@@ -48,14 +44,17 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	vg = ios->vg_read(ios, argv[1]);
+	pvs = ios->get_pvs(ios);
 
-	if (!vg) {
+	if (!pvs) {
 		fprintf(stderr, "couldn't read vg %s\n", argv[1]);
 		exit(1);
 	}
 
-	dump_vg(vg, stdout);
+	list_for_each(tmp, pvs) {
+		struct pv_list *pvl = list_entry(tmp, struct pv_list, list);
+		dump_pv(&pvl->pv, stdout);
+	}
 
 	ios->destroy(ios);
 
