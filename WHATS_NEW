@@ -1,5 +1,6 @@
-Version 2.00.31 - 
+Version 2.00.31 - 12th December 2004
 ====================================
+  Reopen RO file descriptors RW if necessary.
 
 Version 2.00.30 - 10th December 2004
 ====================================
