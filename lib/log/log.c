@@ -93,10 +93,10 @@ void print_log(int level, const char *file, int line, const char *format, ...) {
 		fputc('\n',stderr);
 		break;
 	  case _LOG_FATAL:
+	  default:
 		vfprintf(stderr, format, ap);
 		fputc('\n',stderr);
 		break;
-	  default:
 		;
 	}
 	va_end(ap);

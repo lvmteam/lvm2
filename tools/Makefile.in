@@ -58,8 +58,8 @@ TARGETS=\
 include ../make.tmpl
 
 lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
-	$(CC) -o lvm $(OBJECTS) $(LD_FLAGS) -L$(top_srcdir)/lib -llvm \
-	      -ldevmapper $(LIBS)
+	$(CC) -o lvm $(OBJECTS) $(LD_FLAGS) -L$(top_srcdir)/lib \
+	      -L$(DESTDIR)/lib -llvm -ldevmapper $(LIBS)
 
 .commands: commands.h
 	$(CC) -E -P -Dxx\(a\)=a commands.h 2>/dev/null | \
