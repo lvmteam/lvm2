@@ -35,7 +35,7 @@ static int _is_partitionable(struct device *dev)
 static int _has_partition_table(struct device *dev)
 {
 	int ret = 0;
-	uint32_t part_magic;
+	uint16_t part_magic;
 
 	if (!dev_open(dev)) {
 		stack;
