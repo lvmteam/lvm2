@@ -39,6 +39,7 @@
 #include "clvmd-comms.h"
 #include "lvm-functions.h"
 #include "clvm.h"
+#include "../../tools/version.h"
 #include "clvmd.h"
 #include "libdlm.h"
 #include "system-lv.h"
@@ -140,8 +141,10 @@ static void usage(char *prog, FILE *file)
 /* Called to signal the parent how well we got on during initialisation */
 static void child_init_signal(int status)
 {
-	write(child_pipe[1], &status, sizeof(status));
-	close(child_pipe[1]);
+        if (child_pipe[1]) {
+	        write(child_pipe[1], &status, sizeof(status));
+		close(child_pipe[1]);
+	}
 	if (status)
 	        exit(status);
 }
@@ -184,7 +187,8 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'V':
-			printf("\nCluster LVM Daemon version %d.%d.%d\n\n",
+		        printf("Cluster LVM daemon version: %s\n", LVM_VERSION);
+			printf("Protocol version:           %d.%d.%d\n",
 			       CLVMD_MAJOR_VERSION, CLVMD_MINOR_VERSION,
 			       CLVMD_PATCH_VERSION);
 			exit(1);
