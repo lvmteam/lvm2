@@ -85,6 +85,10 @@ ifeq ("@READLINE@", "yes")
   CFLAGS += -DREADLINE_SUPPORT
 endif
 
+ifeq ("@DEVMAPPER@", "yes")
+  CFLAGS += -DDEVMAPPER_SUPPORT
+endif
+
 ifeq ("@HAVE_RL_COMPLETION_MATCHES@", "yes")
   CFLAGS += -DHAVE_RL_COMPLETION_MATCHES
 endif

@@ -8,7 +8,19 @@
 #define LVM_ACTIVATE_H
 
 #include "metadata.h"
+
+#ifdef DEVMAPPER_SUPPORT
 #include <libdevmapper.h>
+#endif
+
+struct lvinfo {
+	int exists;
+	int suspended;
+	unsigned int open_count;
+	int major;
+	int minor;
+	int read_only;
+};
 
 void set_activation(int activation);
 int activation(void);
@@ -19,7 +31,7 @@ int library_version(char *version, size_t size);
 /*
  * Returns 1 if info structure has been populated, else 0.
  */
-int lv_info(const struct logical_volume *lv, struct dm_info *info);
+int lv_info(const struct logical_volume *lv, struct lvinfo *info);
 /*
  * Returns 1 if percent has been set, else 0.
  */

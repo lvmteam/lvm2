@@ -335,7 +335,7 @@ int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
 void lvdisplay_colons(struct logical_volume *lv)
 {
 	int inkernel;
-	struct dm_info info;
+	struct lvinfo info;
 	inkernel = lv_info(lv, &info) && info.exists;
 
 	log_print("%s%s/%s:%s:%d:%d:-1:%d:%" PRIu64 ":%d:-1:%d:%d:%d:%d",
@@ -355,7 +355,7 @@ void lvdisplay_colons(struct logical_volume *lv)
 int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 		   void *handle)
 {
-	struct dm_info info;
+	struct lvinfo info;
 	int inkernel, snap_active;
 	char uuid[64];
 	struct snapshot *snap = NULL;
