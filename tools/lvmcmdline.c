@@ -764,8 +764,12 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	if ((ret = _process_common_commands(cmd)))
 		goto out;
 
-	locking_type = find_config_int(cmd->cft->root, "global/locking_type",
-				       1);
+	if (arg_count(cmd, nolocking_ARG))
+		locking_type = 0;
+	else
+		locking_type = find_config_int(cmd->cft->root,
+					       "global/locking_type", 1);
+
 	if (!init_locking(locking_type, cmd->cft)) {
 		log_error("Locking type %d initialisation failed.",
 			  locking_type);
