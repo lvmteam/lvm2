@@ -133,7 +133,7 @@ int lvcreate(int argc, char **argv)
 
 	if (argc) {
 		/* Build up list of PVs */
-		if (!(pvh = pool_alloc(fid->cmd->mem, sizeof (struct list)))) {
+		if (!(pvh = pool_alloc(fid->cmd->mem, sizeof(struct list)))) {
 			log_error("pvh list allocation failed");
 			return ECMD_FAILED;
 		}
@@ -147,8 +147,8 @@ int lvcreate(int argc, char **argv)
 			}
 			if (list_item(pvl, struct pv_list)->pv.pe_count ==
 			    list_item(pvl, struct pv_list)->pv.pe_allocated) {
-				 log_error("No free extents on physical volume"
-					   " %s", argv[opt]);
+				log_error("No free extents on physical volume"
+					  " %s", argv[opt]);
 				continue;
 				/* FIXME But check not null at end! */
 			}
@@ -207,7 +207,7 @@ int lvcreate(int argc, char **argv)
 
 			extents += vg->extent_size - extents % vg->extent_size;
 			log_print("Rounding up size to full physical extent %s",
-			  	  (s1 = display_size(extents / 2, SIZE_SHORT)));
+				  (s1 = display_size(extents / 2, SIZE_SHORT)));
 			dbg_free(s1);
 		}
 
@@ -248,13 +248,13 @@ int lvcreate(int argc, char **argv)
 		/* FIXME 2 blocks */
 		char buf[4096];
 
-		memset(buf, 0, sizeof (buf));
+		memset(buf, 0, sizeof(buf));
 
 		log_verbose("Zeroing start of logical volume %s", lv_name);
 
 		/* FIXME get dev = dev_cache_get(lv_name, fid->cmd->filter); */
 		/* FIXME Add fsync! */
-		if (!(dev_write(dev, 0, sizeof (buf), &buf) == sizeof (buf))) {
+		if (!(dev_write(dev, 0, sizeof(buf), &buf) == sizeof(buf))) {
 			log_error("Initialisation of %s failed", dev_name(dev));
 			return ECMD_FAILED;
 		}

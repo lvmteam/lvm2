@@ -7,7 +7,6 @@
 #include "pv_map.h"
 #include "log.h"
 
-
 static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 {
 	struct list *tmp;
@@ -28,6 +27,8 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 			stack;
 			return 0;
 		}
+
+		list_init(&pvm->areas);
 
 		list_add(maps, &pvm->list);
 	}
@@ -97,7 +98,6 @@ static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 		return 0;
 	}
 
-	list_init(&pvm->areas);
 	pva->start = b;
 	pva->count = e - b;
 	list_add(&pvm->areas, &pva->list);
@@ -136,7 +136,7 @@ static int _create_all_areas(struct pool *mem, struct list *maps)
 	return 1;
 }
 
-struct list *create_pv_maps(struct pool *mem, struct volume_group *vg, 
+struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
 			    struct list *pvs)
 {
 	struct list *maps = pool_zalloc(mem, sizeof(*maps));
@@ -149,7 +149,7 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
 	list_init(maps);
 
 	if (!_create_maps(mem, pvs, maps)) {
-		log_error("Couldn't create physical volume maps in %s", 
+		log_error("Couldn't create physical volume maps in %s",
 			  vg->name);
 		goto bad;
 	}
@@ -167,8 +167,7 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
 
 	return maps;
 
- bad:
+      bad:
 	pool_free(mem, maps);
 	return NULL;
 }
-

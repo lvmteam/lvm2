@@ -35,9 +35,9 @@
 
 /* FIXME: This should be an enum rather than a bitset,
    remove from status - EJT */
-#define ALLOC_SIMPLE            0x00001000  /* LV */
+#define ALLOC_SIMPLE		0x00001000  /* LV */
 #define ALLOC_STRICT		0x00002000  /* LV */
-#define ALLOC_CONTIGUOUS  	0x00004000  /* LV */
+#define ALLOC_CONTIGUOUS	0x00004000  /* LV */
 
 #define SNAPSHOT          	0x00010000  /* LV */
 #define SNAPSHOT_ORG      	0x00020000  /* LV */
