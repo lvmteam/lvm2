@@ -9,14 +9,22 @@
  mainmenu_option next_comment
  comment 'Processor features'
  bool 'Symmetric multi-processing support' CONFIG_SMP
---- linux/drivers/md/Makefile.orig	Thu Jul 26 14:58:21 2001
-+++ linux/drivers/md/Makefile	Thu Jul 26 14:58:40 2001
-@@ -6,7 +6,7 @@
+--- linux/drivers/md/Config.in.orig	Tue Aug 21 14:18:30 2001
++++ linux/drivers/md/Config.in	Tue Aug 21 14:19:08 2001
+@@ -14,4 +14,6 @@
  
- export-objs	:= md.o xor.o
- list-multi	:= lvm-mod.o
--lvm-mod-objs	:= lvm.o lvm-snap.o
-+lvm-mod-objs	:= device-mapper.o
+ dep_tristate ' Logical volume manager (LVM) support' CONFIG_BLK_DEV_LVM $CONFIG_MD
  
- # Note: link order is important.  All raid personalities
- # and xor.o must come before md.o, as they each initialise 
++dep_tristate ' Device mapper support' CONFIG_BLK_DEV_DM $CONFIG_MD
++
+ endmenu
+--- linux/drivers/md/Makefile.orig	Tue Aug 21 14:19:14 2001
++++ linux/drivers/md/Makefile	Tue Aug 21 14:20:06 2001
+@@ -19,6 +19,7 @@
+ obj-$(CONFIG_MD_RAID5)		+= raid5.o xor.o
+ obj-$(CONFIG_BLK_DEV_MD)	+= md.o
+ obj-$(CONFIG_BLK_DEV_LVM)	+= lvm-mod.o
++obj-$(CONFIG_BLK_DEV_DM)	+= dm.o dm-table.o dm-target.o dm.o
+ 
+ include $(TOPDIR)/Rules.make
+ 
