@@ -71,7 +71,7 @@ static int _emit(char **buffer, size_t *size, const char *fmt, ...)
 	n = vsnprintf(*buffer, *size, fmt, ap);
 	va_end(ap);
 
-	if (n < 0 || (n == size))
+	if (n < 0 || (n == *size))
 		return 0;
 
 	*buffer += n;
@@ -86,7 +86,7 @@ static int _emit(char **buffer, size_t *size, const char *fmt, ...)
  */
 int print_flags(uint32_t status, int type, char *buffer, size_t size)
 {
-	int f, first = 1, n;
+	int f, first = 1;
 	struct flag *flags;
 
 	if (!(flags = _get_flags(type))) {

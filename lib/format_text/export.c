@@ -464,7 +464,7 @@ int text_vg_export(FILE *fp, struct volume_group *vg)
 	if (!_print_vg(f, vg))
 		fail;
 
-	_nl(f):
+	_nl(f);
 
 	if (!_print_pvs(f, vg))
 		fail;
