@@ -13,11 +13,11 @@ Tarballs are available from:
   ftp://ftp.sistina.com/pub/LVM2/device-mapper/
 
 To access the CVS tree use:
-  cvs -d :pserver:cvs@tech.sistina.com:/data/cvs login
-  CVS password: cvs1
-  cvs -d :pserver:cvs@tech.sistina.com:/data/cvs checkout LVM2
+  cvs -d :pserver:cvs@sources.redhat.com:/cvs/lvm2 login
+  CVS password: cvs
+  cvs -d :pserver:cvs@sources.redhat.com:/cvs/lvm2 co LVM2
 
 Mailing list for discussion/bug reports etc.
-  linux-lvm@sistina.com
-  Subscribe from http://lists.sistina.com/mailman/listinfo/linux-lvm
+  linux-lvm@redhat.com
+  Subscribe from https://www.redhat.com/mailman/listinfo/linux-lvm
 
