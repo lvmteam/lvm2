@@ -26,9 +26,7 @@ int autobackup_init(const char *backup_dir, int keep_days, int keep_number,
 		    int autobackup);
 int autobackup(struct volume_group *vg);
 
-int create_dir(const char *dir);
-
-int process_each_vg(int argc, char **argv,
+int process_each_vg(int argc, char **argv, int lock_type,
 		    int (*process_single) (const char *vg_name));
 
 int process_each_pv(int argc, char **argv, struct volume_group *vg,
@@ -45,8 +43,6 @@ int process_each_lv_in_vg(struct volume_group *vg,
 			  int (*process_single) (struct logical_volume * lv));
 
 int is_valid_chars(char *n);
-int dir_exists(const char *dir);
-
 
 char *default_vgname(struct format_instance *fi);
 char *extract_vgname(struct format_instance *fi, char *lv_name);

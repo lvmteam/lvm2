@@ -94,23 +94,33 @@ int pvchange_single(struct physical_volume *pv)
 	if (*pv->vg_name) {
 		log_verbose("Finding volume group of physical volume \"%s\"", 
 			    pv_name);
+
+		if (!lock_vol(pv->vg_name, LCK_VG | LCK_WRITE)) {
+			log_error("Can't get lock for %s", pv->vg_name);
+			return ECMD_FAILED;
+		}
+
 		if (!(vg = fid->ops->vg_read(fid, pv->vg_name))) {
+			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Unable to find volume group of \"%s\"",
 			pv_name);
 			return 0;
 		}
 
         	if (vg->status & EXPORTED_VG) {
+			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
                 	log_error("Volume group \"%s\" is exported", vg->name);
                 	return ECMD_FAILED;
         	}
 
 	        if (!(vg->status & LVM_WRITE)) {
+			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Volume group \"%s\" is read-only", vg->name);
 			return ECMD_FAILED;
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
+			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Unable to find \"%s\" in volume group \"%s\"",
 				pv_name, vg->name);
 			return 0;
@@ -123,12 +133,16 @@ int pvchange_single(struct physical_volume *pv)
 	/* change allocatability for a PV */
 	if (allocatable && (pv->status & ALLOCATABLE_PV)) {
 		log_error("Physical volume \"%s\" is already allocatable", pv_name);
+		if (*pv->vg_name)
+			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 		return 0;
 	}
 
 	if (!allocatable && !(pv->status & ALLOCATABLE_PV)) {
 		log_error("Physical volume \"%s\" is already unallocatable",
 			  pv_name);
+		if (*pv->vg_name)
+			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 		return 0;
 	}
 
@@ -144,11 +158,13 @@ int pvchange_single(struct physical_volume *pv)
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
 		if (!(fid->ops->vg_write(fid,vg))) {
+			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
 			return 0;
 		}
 		backup(vg);
+		lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 	} else {
 		if (!(fid->ops->pv_write(fid, pv))) {
 			log_error("Failed to store physical volume \"%s\"", 

@@ -720,6 +720,7 @@ static char *_copy_command_line(struct pool *mem, int argc, char **argv)
 static int run_command(int argc, char **argv)
 {
 	int ret = 0;
+	int locking_type;
 
 	if (!(cmd->cmd_line = _copy_command_line(cmd->mem, argc, argv)))
 		return ECMD_FAILED;
@@ -739,7 +740,17 @@ static int run_command(int argc, char **argv)
 
 	_use_settings(&_current_settings);
 
+	locking_type = find_config_int(cmd->cf->root, "global/locking_type", 
+				       '/', 1);
+	if (!init_locking(locking_type, cmd->cf)) {
+		log_error("Locking type %d initialisation failed.",
+			  locking_type);
+		return 0;
+	}
+
 	ret = the_command->fn(argc, argv);
+
+	fin_locking();
 
 	/*
 	 * set the debug and verbose levels back

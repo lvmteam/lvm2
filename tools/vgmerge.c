@@ -58,41 +58,55 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_to);
+	if (!lock_vol(vg_name_to, LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for %s", vg_name_to);
+		return ECMD_FAILED;
+	}
+
 	if (!(vg_to = fid->ops->vg_read(fid, vg_name_to))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_to);
+		lock_vol(vg_name_to, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
         if (vg_to->status & EXPORTED_VG) {
                 log_error("Volume group \"%s\" is exported", vg_to->name);
+		lock_vol(vg_name_to, LCK_VG | LCK_NONE);
                 return ECMD_FAILED;
         }
 
 	if (!(vg_to->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_to->name);
+		lock_vol(vg_name_to, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
+	if (!lock_vol(vg_name_from, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+		log_error("Can't get lock for %s", vg_name_from);
+		lock_vol(vg_name_to, LCK_VG | LCK_NONE);
+		return ECMD_FAILED;
+	}
+
 	if (!(vg_from = fid->ops->vg_read(fid, vg_name_from))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
-		return ECMD_FAILED;
+		goto error;
 	}
 
         if (vg_from->status & EXPORTED_VG) {
                 log_error("Volume group \"%s\" is exported", vg_from->name);
-                return ECMD_FAILED;
+                goto error;
         }
 
 	if (!(vg_from->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_from->name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if ((active = lvs_in_vg_activated(vg_from))) {
 		log_error("Logical volumes in \"%s\" must be inactive",
 			  vg_name_from);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	/* Check compatibility */
@@ -100,21 +114,21 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 		log_error("Extent sizes differ: %d (%s) and %d (%s)",
 			  vg_to->extent_size, vg_to->name,
 			  vg_from->extent_size, vg_from->name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (vg_to->max_pv < vg_to->pv_count + vg_from->pv_count) {
 		log_error("Maximum number of physical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_pv, vg_to->name,
 			  vg_from->name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (vg_to->max_lv < vg_to->lv_count + vg_from->lv_count) {
 		log_error("Maximum number of logical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_lv, vg_to->name,
 			  vg_from->name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	/* Check no conflicts with LV names */
@@ -131,7 +145,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 					  "in \"%s\" and \"%s\"",
 					  name1, vg_to->name,
 					  vg_from->name);
-				return ECMD_FAILED;
+				goto error;
 			}
 		}
 	}
@@ -139,7 +153,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 	/* FIXME List arg: vg_show_with_pv_and_lv(vg_to); */
 
 	if (!archive(vg_from) || !archive(vg_to))
-		return ECMD_FAILED;
+		goto error;
 
 	/* Merge volume groups */
 	while (!list_empty(&vg_from->pvs)) {
@@ -168,14 +182,22 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
 	if (!(fid->ops->vg_write(fid, vg_to))) {
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	/* FIXME Remove /dev/vgfrom */
 
 	backup(vg_to);
 
+	lock_vol(vg_name_from, LCK_VG | LCK_NONE);
+	lock_vol(vg_name_to, LCK_VG | LCK_NONE);
+
 	log_print("Volume group \"%s\" successfully merged into \"%s\"",
 		  vg_from->name, vg_to->name);
 	return 0;
+
+      error:
+	lock_vol(vg_name_from, LCK_VG | LCK_NONE);
+	lock_vol(vg_name_to, LCK_VG | LCK_NONE);
+	return ECMD_FAILED;
 }

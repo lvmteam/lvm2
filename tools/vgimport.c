@@ -34,7 +34,7 @@ int vgimport(int argc, char **argv)
                 return ECMD_FAILED;
         }
 
-	return process_each_vg(argc, argv, &vgimport_single);
+	return process_each_vg(argc, argv, LCK_WRITE, &vgimport_single);
 }
 
 static int vgimport_single(const char *vg_name)
@@ -44,30 +44,33 @@ static int vgimport_single(const char *vg_name)
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Unable to find exported volume group \"%s\"",
 			  vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!(vg->status & EXPORTED_VG)) {
 		log_error("Volume group \"%s\" is not exported", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (vg->status & PARTIAL_VG) {
 		log_error("Volume group \"%s\" is partially missing", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!archive(vg))
-		return ECMD_FAILED;
+		goto error;
 
 	vg->status &= ~EXPORTED_VG;
 
 	if (!fid->ops->vg_write(fid,vg))
-		return ECMD_FAILED;
+		goto error;
 
 	backup(vg);
 
 	log_print("Volume group \"%s\" successfully imported", vg->name);
 	
 	return 0;
+
+      error:
+	return ECMD_FAILED;
 }

@@ -24,9 +24,9 @@ void fin_locking(void);
  *   struct logical_volume *vol
  *
  * FIXME: Change to
- *   int lock_vol(struct id *id, int flags);
+ *   int lock_vol(const struct id *id, int flags);
  */
-int lock_vol(void *vol, int flags);
+int lock_vol(const void *vol, int flags);
 
 /*
  * Lock type

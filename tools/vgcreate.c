@@ -67,7 +67,10 @@ int vgcreate(int argc, char **argv)
                 vg_name += strlen(fid->cmd->dev_dir);
 
         snprintf(vg_path, PATH_MAX, "%s%s", fid->cmd->dev_dir, vg_name);
-        if (!dir_exists(vg_path)) return ECMD_FAILED;
+        if (path_exists(vg_path)) {
+		log_error("%s: already exists in filesystem", vg_path);
+		return ECMD_FAILED;
+	}
 
         if (!is_valid_chars(vg_name)) {
                 log_error("New volume group name \"%s\" has invalid characters",
@@ -88,12 +91,32 @@ int vgcreate(int argc, char **argv)
 		log_error("Warning: Setting maxphysicalvolumes to %d",
 			  vg->max_pv);
 
-	if (!archive(vg))
+        if (!lock_vol("", LCK_VG | LCK_WRITE)) {
+                log_error("Can't get lock for orphan PVs");
+                return ECMD_FAILED;
+        }
+
+        if (!lock_vol(vg_name, LCK_VG | LCK_WRITE | LCK_NONBLOCK)) {
+                log_error("Can't get lock for %s", vg_name);
+		lock_vol("", LCK_VG | LCK_NONE);
+                return ECMD_FAILED;
+        }
+
+	if (!archive(vg)) {
+		lock_vol(vg_name, LCK_VG | LCK_NONE);
+		lock_vol("", LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
+	}
 
 	/* Store VG on disk(s) */
-	if (!fid->ops->vg_write(fid, vg))
+	if (!fid->ops->vg_write(fid, vg)) {
+		lock_vol(vg_name, LCK_VG | LCK_NONE);
+		lock_vol("", LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
+	}
+
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	lock_vol("", LCK_VG | LCK_NONE);
 
 	backup(vg);
 

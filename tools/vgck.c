@@ -24,7 +24,7 @@ static int vgck_single(const char *vg_name);
 
 int vgck(int argc, char **argv)
 {
-	return process_each_vg(argc, argv, &vgck_single);
+	return process_each_vg(argc, argv, LCK_READ, &vgck_single);
 }
 
 static int vgck_single(const char *vg_name)

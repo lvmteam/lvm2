@@ -118,25 +118,31 @@ int lvcreate(int argc, char **argv)
 
 	/* does VG exist? */
 	log_verbose("Finding volume group \"%s\"", vg_name);
+
+        if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
+                log_error("Can't get lock for %s", vg_name);
+                return ECMD_FAILED;
+        }
+
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (lv_name && find_lv_in_vg(vg, lv_name)) {
 		log_error("Logical volume \"%s\" already exists in "
 			  "volume group \"%s\"", lv_name, vg_name);
-		return ECMD_FAILED;
+		goto error;
 	}
 
 	if (!argc)
@@ -147,27 +153,27 @@ int lvcreate(int argc, char **argv)
 		if (!(pvh = create_pv_list(fid->cmd->mem, vg,
 					   argc - opt, argv + opt))) {
 			stack;
-			return ECMD_FAILED;
+			goto error;
 		}
 	}
 
 	if (argc && argc < stripes ) {
 		log_error("Too few physical volumes on "
 			  "command line for %d-way striping", stripes);
-		return EINVALID_CMD_LINE;
+		goto error_cmdline;
 	}
 
 	if (stripes < 1 || stripes > MAX_STRIPES) {
 		log_error("Number of stripes (%d) must be between %d and %d",
 			  stripes, 1, MAX_STRIPES);
-		return EINVALID_CMD_LINE;
+		goto error_cmdline;
 	}
 
 	if (stripes > 1 && (stripesize < STRIPE_SIZE_MIN ||
 			    stripesize > STRIPE_SIZE_MAX ||
 			    stripesize & (stripesize - 1))) {
 		log_error("Invalid stripe size %d", stripesize);
-		return EINVALID_CMD_LINE;
+		goto error_cmdline;
 	}
 
 	if (stripesize > vg->extent_size) {
@@ -201,12 +207,12 @@ int lvcreate(int argc, char **argv)
         }
 
 	if (!archive(vg))
-		return ECMD_FAILED;
+		goto error;
 
 	if (!(lv = lv_create(fid, lv_name, status,
 			     stripes, stripesize, extents,
 			     vg, pvh)))
-		return ECMD_FAILED;
+		goto error;
 
 	if (arg_count(readahead_ARG)) {
 		log_verbose("Setting read ahead sectors");
@@ -226,21 +232,21 @@ int lvcreate(int argc, char **argv)
 			if (!arg_count(minor_ARG)) {
 				log_error("Please specify minor number with "
 					  "--minor when using -My");
-				return ECMD_FAILED;
+				goto error;
 			}
 			lv->status |= FIXED_MINOR;
 	}
 
 	/* store vg on disk(s) */
 	if (!fid->ops->vg_write(fid, vg))
-		return ECMD_FAILED;
+		goto error;
 
 	backup(vg);
 
 	log_print("Logical volume \"%s\" created", lv->name);
 
 	if (!lv_activate(lv))
-		return ECMD_FAILED;
+		goto error;
 
 	if (zero) {
 		struct device *dev;
@@ -248,29 +254,39 @@ int lvcreate(int argc, char **argv)
 
 		if (!(name = pool_alloc(fid->cmd->mem, PATH_MAX))) {
 			log_error("Name allocation failed - device not zeroed");
-			return ECMD_FAILED;
+			goto error;
 		}
 
 		if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", fid->cmd->dev_dir,
 				 lv->vg->name, lv->name) < 0) {
 			log_error("Name too long - device not zeroed (%s)",
 				  lv->name);
-			return ECMD_FAILED;
+			goto error;
 		}
 
 		log_verbose("Zeroing start of logical volume \"%s\"", name);
 
 		if (!(dev = dev_cache_get(name, NULL))) {
 			log_error("\"%s\" not found: device not zeroed", name);
-			return ECMD_FAILED;
+			goto error;
 		}
 		if (!(dev_open(dev, O_WRONLY)))
-			return ECMD_FAILED;
+			goto error;
 		dev_zero(dev, 0, 4096);
 		dev_close(dev);
 
 	} else
 		log_print("WARNING: \"%s\" not zeroed", lv->name);
 
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+
 	return 0;
+
+      error:
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	return ECMD_FAILED;
+
+      error_cmdline:
+	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	return EINVALID_CMD_LINE;
 }

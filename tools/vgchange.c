@@ -44,7 +44,10 @@ int vgchange(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_vg(argc, argv, &vgchange_single);
+	return process_each_vg(argc, argv, 
+			       (arg_count(available_ARG)) ? 
+						LCK_READ : LCK_WRITE,
+			       &vgchange_single);
 }
 
 static int vgchange_single(const char *vg_name)

@@ -45,7 +45,7 @@ int vgdisplay(int argc, char **argv)
 	}
 **********/
 
-	process_each_vg(argc, argv, &vgdisplay_single);
+	process_each_vg(argc, argv, LCK_READ, &vgdisplay_single);
 
 /******** FIXME Need to count number processed 
 	  Add this to process_each_vg if arg_count(activevolumegroups_ARG) ? 
