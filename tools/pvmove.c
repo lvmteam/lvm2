@@ -157,6 +157,10 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			log_print("Skipping snapshot-related LV %s", lv->name);
 			continue;
 		}
+		if (lv->status & MIRRORED) {
+			log_print("Skipping mirror LV %s", lv->name);
+			continue;
+		}
 		if (lv->status & LOCKED) {
 			log_print("Skipping locked LV %s", lv->name);
 			continue;
@@ -168,6 +172,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		}
 	}
 
+	/* Is temporary mirror empty? */
 	if (!lv_mirr->le_count) {
 		log_error("No data to move for %s", vg->name);
 		return NULL;
@@ -188,11 +193,13 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 
 	backup(vg);
 
+	/* Suspend lvs_changed */
 	if (!suspend_lvs(cmd, lvs_changed)) {
 		stack;
 		return 0;
 	}
 
+	/* Suspend mirrors on subsequent calls */
 	if (!first_time) {
 		if (!suspend_lv(cmd, lv_mirr->lvid.s)) {
 			stack;
@@ -202,6 +209,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
+	/* Commit on-disk metadata */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Volume group metadata update failed.");
 		if (!first_time)
@@ -210,6 +218,8 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	/* Activate the temporary mirror LV */
+	/* Only the first mirror segment gets activated as a mirror */
 	if (first_time) {
 		if (!activate_lv(cmd, lv_mirr->lvid.s)) {
 			log_error("ABORTING: Temporary mirror activation "
@@ -225,6 +235,7 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	/* Unsuspend LVs */
 	if (!resume_lvs(cmd, lvs_changed)) {
 		log_error("Unable to resume logical volumes");
 		return 0;
@@ -289,6 +300,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		first_time = 0;
 	} else {
 
+		/* Get PVs we can use for allocation */
 		if (!(allocatable_pvs = _get_allocatable_pvs(cmd, argc, argv,
 							     vg, pv))) {
 			stack;
@@ -311,11 +323,16 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		}
 	}
 
+	/* Lock lvs_changed for exclusive use and activate (with old metadata) */
 	if (!activate_lvs_excl(cmd, lvs_changed)) {
 		stack;
 		unlock_vg(cmd, pv->vg_name);
 		return ECMD_FAILED;
 	}
+
+	/* FIXME Presence of a mirror once set PVMOVE - now remove associated logic */
+	/* init_pvmove(1); */
+	/* vg->status |= PVMOVE; */
 
 	if (first_time) {
 		if (!_update_metadata
@@ -326,6 +343,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		}
 	}
 
+	/* LVs are all in status LOCKED */
 	unlock_vg(cmd, pv->vg_name);
 
 	return ECMD_PROCESSED;
@@ -337,27 +355,32 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int r = 1;
 
+	/* Update metadata to remove mirror segments and break dependencies */
 	if (!remove_pvmove_mirrors(vg, lv_mirr)) {
 		log_error("ABORTING: Removal of temporary mirror failed");
 		return 0;
 	}
 
+	/* Store metadata without dependencies on mirror segments */
 	if (!vg_write(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
 		return 0;
 	}
 
+	/* Suspend LVs changed */
 	if (!suspend_lvs(cmd, lvs_changed)) {
 		log_error("Locking LVs to remove temporary mirror failed");
 		r = 0;
 	}
 
+	/* Suspend mirror LV to flush pending I/O */
 	if (!suspend_lv(cmd, lv_mirr->lvid.s)) {
 		log_error("Suspension of temporary mirror LV failed");
 		r = 0;
 	}
 
+	/* Store metadata without dependencies on mirror segments */
 	if (!vg_commit(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
 			  "to disk.");
@@ -367,14 +390,17 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	/* Release mirror LV.  (No pending I/O because it's been suspended.) */
 	if (!resume_lv(cmd, lv_mirr->lvid.s)) {
 		log_error("Unable to reactivate logical volume \"%s\"",
 			  lv_mirr->name);
 		r = 0;
 	}
 
+	/* Unsuspend LVs */
 	resume_lvs(cmd, lvs_changed);
 
+	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr->lvid.s)) {
 		log_error("ABORTING: Unable to deactivate temporary logical "
 			  "volume \"%s\"", lv_mirr->name);
@@ -387,6 +413,7 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
+	/* Store it on disks */
 	log_verbose("Writing out final volume group after pvmove");
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("ABORTING: Failed to write new data locations "
