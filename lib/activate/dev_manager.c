@@ -395,7 +395,7 @@ static int _populate_snapshot(struct dev_manager *dm,
 	}
 
 	if (!(origin = _build_name(dm->mem, dm->vg_name,
-				   s->origin->name, "top"))) {
+				   s->origin->name, "real"))) {
 		stack;
 		return 0;
 	}
