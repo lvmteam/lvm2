@@ -319,6 +319,9 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 	}
 	dev_iter_destroy(iter);
 
+	if (list_empty(head))
+		return 0;
+
 	return 1;
 }
 

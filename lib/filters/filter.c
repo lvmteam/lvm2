@@ -84,6 +84,7 @@ struct dev_filter *config_filter_create()
 
 void config_filter_destroy(struct dev_filter *f)
 {
+	dbg_free(f->private);
 	dbg_free(f);
 	return;
 }

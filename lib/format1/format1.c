@@ -12,22 +12,34 @@
 #include "log.h"
 #include "display.h"
 
+/* VG consistency checks */
 static int _check_vgs(struct list_head *pvs)
 {
 	struct list_head *tmp;
 	struct disk_list *dl;
-	struct vg_disk *first = NULL;
+	struct disk_list *first = NULL;
+
+	int pv_count = 0;
 
 	/* check all the vg's are the same */
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
 
 		if (!first)
-			first = &dl->vg;
-		else if (memcmp(first, &dl->vg, sizeof(*first))) {
-			log_err("vg data differs on pvs\n");
+			first = dl;
+		else if (memcmp(&first->vg, &dl->vg, sizeof(first->vg))) {
+			log_err("VG data differs between PVs %s and %s",
+				first->dev->name, dl->dev->name);
 			return 0;
 		}
+		pv_count++;
+	}
+
+	/* On entry to fn, list known to be non-empty */
+	if (!(pv_count == dl->vg.pv_cur)) {
+		log_error("Only %d out of %d PV(s) found for VG %s",
+			  pv_count, dl->vg.pv_cur, dl->pv.vg_name);
+		return 0;
 	}
 
 	return 1;
@@ -312,6 +324,9 @@ static struct list_head *_get_vgs(struct io_space *is)
 
 		list_add(&nl->list, names);
 	}
+
+	if (list_empty(names))
+		goto bad;
 
 	return names;
 

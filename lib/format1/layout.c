@@ -64,6 +64,25 @@ static void _calc_simple_layout(struct pv_disk *pvd)
         pvd->pe_on_disk.size = pvd->pe_total * sizeof(struct pe_disk);
 }
 
+int _check_vg_limits(struct disk_list *dl)
+{
+	if (dl->vg.lv_max >= MAX_LV) {
+		log_error("MaxLogicalVolumes of %d exceeds format limit of %d "
+			  "for VG '%s'", dl->vg.lv_max, MAX_LV - 1, 
+			  dl->pv.vg_name);
+		return 0;
+	}
+
+	if (dl->vg.pv_max >= MAX_PV) {
+		log_error("MaxPhysicalVolumes of %d exceeds format limit of %d "
+			  "for VG '%s'", dl->vg.pv_max, MAX_PV - 1, 
+			  dl->pv.vg_name);
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * This assumes pe_count and pe_start have already
  * been calculated correctly.
@@ -74,9 +93,12 @@ int calculate_layout(struct disk_list *dl)
 
 	_calc_simple_layout(pvd);
 	if (!_adjust_pe_on_disk(pvd)) {
-		log_err("insufficient space for metadata and PE's.");
+		log_error("Insufficient space for metadata and PE's.");
 		return 0;
 	}
+
+	if (!_check_vg_limits(dl))
+		return 0;
 
 	return 1;
 }

@@ -26,6 +26,7 @@ SOURCES=\
 	pvcreate.c \
 	toollib.c \
 	vgck.c \
+	vgchange.c \
 	vgcreate.c \
 	vgextend.c \
 	vgreduce.c \
