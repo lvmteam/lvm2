@@ -30,7 +30,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 
 	list_init(&mdas);
 	if (!(pv = pv_read(fid->fmt->cmd, pv_name, &mdas, NULL))) {
-		log_error("Failed to read existing physical volume '%s'",
+		log_error("%s not identified as an existing physical volume",
 			  pv_name);
 		return 0;
 	}
@@ -698,8 +698,7 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	if (!(label_read(dev, &label))) {
-		log_error("Failed to read label on physical volume %s",
-			  pv_name);
+		log_error("No physical volume label read from %s", pv_name);
 		return 0;
 	}
 
