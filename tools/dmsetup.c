@@ -25,6 +25,7 @@ enum {
 	MAJOR_ARG,
 	MINOR_ARG,
 	VERBOSE_ARG,
+	VERSION_ARG,
 	NUM_SWITCHES
 };
 
@@ -123,6 +124,7 @@ static void _display_info(struct dm_task *dmt)
 	if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
 		printf("UUID: %s\n", uuid);
 
+	printf("\n");
 }
 
 static int _load(int task, const char *name, const char *file, const char *uuid)
@@ -156,7 +158,8 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 
 	r = 1;
 
-	_display_info(dmt);
+	if (_switches[VERBOSE_ARG])
+		_display_info(dmt);
 
       out:
 	dm_task_destroy(dmt);
@@ -247,7 +250,7 @@ static int _simple(int task, const char *name, int display)
 
 	r = dm_task_run(dmt);
 
-	if (r && display)
+	if (r && display && _switches[VERBOSE_ARG])
 		_display_info(dmt);
 
       out:
@@ -309,10 +312,8 @@ static int _status(int argc, char **argv)
 	if (!dm_task_run(dmt))
 		goto out;
 
-	if (cmd == DM_DEVICE_STATUS) {
+	if (_switches[VERBOSE_ARG])
 		_display_info(dmt);
-		printf("\n");
-	}
 
 	/* Fetch targets and print 'em */
 	do {
@@ -387,7 +388,8 @@ static int _deps(int argc, char **argv)
 		goto out;
 	}
 
-	_display_info(dmt);
+	if (_switches[VERBOSE_ARG])
+		_display_info(dmt);
 
 	printf("%d dependencies\t:", deps->count);
 
@@ -476,7 +478,9 @@ static void _usage(FILE *out)
 {
 	int i;
 
-	fprintf(out, "usage:\n");
+	fprintf(out, "Usage:\n\n");
+	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
+		     "        [-r|--readonly] [-j|--major <major>] [-m|--minor <minor>]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	return;
@@ -499,10 +503,11 @@ static int _process_switches(int *argc, char ***argv)
 	int c;
 
 	static struct option long_options[] = {
-		{"read-only", 0, NULL, READ_ONLY},
+		{"readonly", 0, NULL, READ_ONLY},
 		{"major", 1, NULL, MAJOR_ARG},
 		{"minor", 1, NULL, MINOR_ARG},
 		{"verbose", 1, NULL, VERBOSE_ARG},
+		{"version", 0, NULL, VERSION_ARG},
 		{"", 0, NULL, 0}
 	};
 
@@ -526,9 +531,12 @@ static int _process_switches(int *argc, char ***argv)
 		}
 		if (c == 'v' || ind == VERBOSE_ARG)
 			_switches[VERBOSE_ARG]++;
+		if ((ind == VERSION_ARG))
+			_switches[VERSION_ARG]++;
 	}
 
-	dm_log_init_verbose(_switches[VERBOSE_ARG]);
+	if (_switches[VERBOSE_ARG] > 1)
+		dm_log_init_verbose(_switches[VERBOSE_ARG] - 1);
 
 	*argv += optind;
 	*argc -= optind;
@@ -542,6 +550,11 @@ int main(int argc, char **argv)
 	if (!_process_switches(&argc, &argv)) {
 		fprintf(stderr, "Couldn't process command line switches.\n");
 		exit(1);
+	}
+
+	if (_switches[VERSION_ARG]) {
+		c = _find_command("version");
+		goto doit;
 	}
 
 	if (argc == 0) {
@@ -561,6 +574,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+      doit:
 	if (!c->fn(argc, argv)) {
 		fprintf(stderr, "Command failed\n");
 		exit(1);
