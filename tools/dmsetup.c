@@ -89,7 +89,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	return r;
 }
 
-static int _load(int task, const char *name, const char *file)
+static int _load(int task, const char *name, const char *file, const char *uuid)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -98,6 +98,9 @@ static int _load(int task, const char *name, const char *file)
 		return 0;
 
 	if (!dm_task_set_name(dmt, name))
+		goto out;
+
+	if (uuid && !dm_task_set_uuid(dmt, uuid))
 		goto out;
 
 	if (!_parse_file(dmt, file))
@@ -122,12 +125,12 @@ static int _load(int task, const char *name, const char *file)
 
 static int _create(int argc, char **argv)
 {
-	return _load(DM_DEVICE_CREATE, argv[1], argv[2]);
+	return _load(DM_DEVICE_CREATE, argv[1], argv[2], argv[3]);
 }
 
 static int _reload(int argc, char **argv)
 {
-	return _load(DM_DEVICE_RELOAD, argv[1], argv[2]);
+	return _load(DM_DEVICE_RELOAD, argv[1], argv[2], NULL);
 }
 
 static int _rename(int argc, char **argv)
@@ -321,22 +324,23 @@ typedef int (*command_fn) (int argc, char **argv);
 struct command {
 	char *name;
 	char *help;
-	int num_args;
+	int min_args;
+	int max_args;
 	command_fn fn;
 };
 
 static struct command _commands[] = {
-	{"create", "<dev_name> <table_file>", 2, _create},
-	{"remove", "<dev_name>", 1, _remove},
-	{"remove_all", "", 0, _remove_all},
-	{"suspend", "<dev_name>", 1, _suspend},
-	{"resume", "<dev_name>", 1, _resume},
-	{"reload", "<dev_name> <table_file>", 2, _reload},
-	{"info", "<dev_name>", 1, _info},
-	{"deps", "<dev_name>", 1, _deps},
-	{"rename", "<dev_name> <new_name>", 2, _rename},
-	{"version", "", 0, _version},
-	{NULL, NULL, 0, NULL}
+	{"create", "<dev_name> <table_file> [<uuid>]", 2, 3, _create},
+	{"remove", "<dev_name>", 1, 1, _remove},
+	{"remove_all", "", 0, 0, _remove_all},
+	{"suspend", "<dev_name>", 1, 1, _suspend},
+	{"resume", "<dev_name>", 1, 1, _resume},
+	{"reload", "<dev_name> <table_file>", 2, 2, _reload},
+	{"info", "<dev_name>", 1, 1, _info},
+	{"deps", "<dev_name>", 1, 1, _deps},
+	{"rename", "<dev_name> <new_name>", 2, 2, _rename},
+	{"version", "", 0, 0, _version},
+	{NULL, NULL, 0, 0, NULL}
 };
 
 static void _usage(FILE * out)
@@ -412,7 +416,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (argc != c->num_args + 1) {
+	if (argc < c->min_args + 1 || argc > c->max_args + 1) {
 		fprintf(stderr, "Incorrect number of arguments\n");
 		_usage(stderr);
 		exit(1);

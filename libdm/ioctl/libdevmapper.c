@@ -40,6 +40,9 @@ void dm_task_destroy(struct dm_task *dmt)
 	if (dmt->dmi)
 		free(dmt->dmi);
 
+	if (dmt->uuid)
+		free(dmt->uuid);
+
 	free(dmt);
 }
 
@@ -224,6 +227,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
 		dmi->dev = MKDEV(0, dmt->minor);
 	}
+
+	if (dmt->uuid)
+		strncpy(dmi->uuid, dmt->uuid, sizeof(dmi->uuid));
 
 	dmi->target_count = count;
 

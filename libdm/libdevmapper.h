@@ -52,6 +52,7 @@ struct dm_task *dm_task_create(int type);
 void dm_task_destroy(struct dm_task *dmt);
 
 int dm_task_set_name(struct dm_task *dmt, const char *name);
+int dm_task_set_uuid(struct dm_task *dmt, const char *uuid);
 
 /*
  * Retrieve attributes after an info.
