@@ -301,8 +301,9 @@ static int _info(int argc, char **argv)
 
 	printf("Name:              %s\n", argv[1]);
 
-	printf("State:             %s\n",
-	       info.suspended ? "SUSPENDED" : "ACTIVE");
+	printf("State:             %s%s\n",
+	       info.suspended ? "SUSPENDED" : "ACTIVE",
+	       info.read_only ? " (READ-ONLY)" : "");
 
 	if (info.open_count != -1)
 		printf("Open count:        %d\n", info.open_count);
