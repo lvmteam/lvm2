@@ -31,7 +31,7 @@
 #endif
 #endif
 
-/* 
+/*
  * Exported table of valid switches
  */
 struct arg the_args[ARG_COUNT + 1] = {
@@ -584,9 +584,6 @@ int version(struct cmd_context *cmd, int argc, char **argv)
 static int process_common_commands(struct command *com)
 {
 	_current_settings = _default_settings;
-
-	if (arg_count(cmd, suspend_ARG))
-		kill(getpid(), SIGSTOP);
 
 	if (arg_count(cmd, debug_ARG))
 		_current_settings.debug = _LOG_FATAL +

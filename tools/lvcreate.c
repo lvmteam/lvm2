@@ -201,7 +201,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	if (!_read_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, cmd, &argc, &argv) ||
 	    !_read_stripe_params(lp, cmd, &argc, &argv))
-		return EINVALID_CMD_LINE;
+		return 0;
 
 	/*
 	 * Should we zero the lv.

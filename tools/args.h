@@ -72,7 +72,6 @@ arg(allocatable_ARG, 'x', "allocatable", yes_no_arg)
 arg(resizeable_ARG, 'x', "resizeable", yes_no_arg)
 arg(yes_ARG, 'y', "yes", NULL)
 arg(zero_ARG, 'Z', "zero", yes_no_arg)
-arg(suspend_ARG, 'z', "suspend", NULL)
 
 /* this should always be last */
 arg(ARG_COUNT, '-', "", NULL)
