@@ -46,14 +46,6 @@ int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 	}
 
 	/* Units of 512-byte sectors */
-/*
-	if (!dev_get_size(pv->dev, &pv->size)) {
-		stack;
-		return 0;
-	}
-*/
-
-	/* Units of 512-byte sectors */
 	pv->pe_size = vg->extent_size;
 
 	/*
@@ -238,6 +230,12 @@ struct physical_volume *pv_create(struct format_instance *fi,
 	pv->pe_start = 0;
 	pv->pe_count = 0;
 	pv->pe_allocated = 0;
+
+	if (!fi->ops->pv_setup(fi, pv, NULL)) {
+		log_error("Format-specific setup of physical volume '%s' "
+			  "failed.", name);
+		goto bad;
+	}
 	return pv;
 
       bad:

@@ -259,6 +259,7 @@ int size_arg(struct arg *a)
 			v *= 1024;
 	}
 	a->i_value = (uint32_t) v;
+	a->i64_value = (uint64_t) v;
 
 	return 1;
 
