@@ -13,4 +13,5 @@ int vgexport(int argc, char **argv) {return 1;}
 int vgimport(int argc, char **argv) {return 1;}
 int vgmknodes(int argc, char **argv) {return 1;}
 int vgsplit(int argc, char **argv) {return 1;}
+int vgcfgrestore(int argc, char **argv) {return 1;}
 

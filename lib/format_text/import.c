@@ -4,6 +4,7 @@
  * This file is released under the LGPL.
  */
 
+#include "metadata.h"
 #include "import-export.h"
 #include "pool.h"
 #include "log.h"

@@ -497,7 +497,7 @@ int lv_extend(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!merge_segments(lv)) {
+	if (!lv_merge_segments(lv)) {
 		log_err("Couldn't merge segments after extending "
 			"logical volume.");
 		return 0;

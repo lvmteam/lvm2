@@ -17,20 +17,23 @@
 
 #include <libdevmapper.h>
 
-void _build_lv_path(char *buffer, size_t len, struct logical_volume *lv)
+
+void _build_lv_path(char *buffer, size_t len, struct logical_volume *lv,
+		    const char *lv_name)
 {
-	snprintf(buffer, len, "%s/%s_%s", dm_dir(), lv->vg->name, lv->name);
+	snprintf(buffer, len, "%s/%s_%s", dm_dir(), lv->vg->name, lv_name);
 }
 
 void _build_vg_path(char *buffer, size_t len, struct volume_group *vg)
 {
-	snprintf(buffer, len, "%s/%s", vg->cmd->dev_dir, vg->name);
+	snprintf(buffer, len, "%s%s", vg->cmd->dev_dir, vg->name);
 }
 
-void _build_link_path(char *buffer, size_t len, struct logical_volume *lv)
+void _build_link_path(char *buffer, size_t len, struct logical_volume *lv,
+		      const char *lv_name)
 {
-	snprintf(buffer, len, "%s/%s/%s", lv->vg->cmd->dev_dir,
-		 lv->vg->name, lv->name);
+	snprintf(buffer, len, "%s%s/%s", lv->vg->cmd->dev_dir,
+		 lv->vg->name, lv_name);
 }
 
 /*
@@ -62,8 +65,8 @@ static int _mk_link(struct logical_volume *lv)
 {
 	char lv_path[PATH_MAX], link_path[PATH_MAX];
 
-	_build_lv_path(lv_path, sizeof(lv_path), lv);
-	_build_link_path(link_path, sizeof(link_path), lv);
+	_build_lv_path(lv_path, sizeof(lv_path), lv, lv->name);
+	_build_link_path(link_path, sizeof(link_path), lv, lv->name);
 
 	log_very_verbose("Linking %s to %s", link_path, lv_path);
 	if (symlink(lv_path, link_path) < 0) {
@@ -74,11 +77,14 @@ static int _mk_link(struct logical_volume *lv)
 	return 1;
 }
 
-static int _rm_link(struct logical_volume *lv)
+static int _rm_link(struct logical_volume *lv, const char *lv_name)
 {
 	char link_path[PATH_MAX];
 
-	_build_link_path(link_path, sizeof(link_path), lv);
+	if (!lv_name)
+		lv_name = lv->name;
+
+	_build_link_path(link_path, sizeof(link_path), lv, lv_name);
 
 	log_very_verbose("Removing link %s", link_path);
 	if (unlink(link_path) < 0) {
@@ -103,7 +109,7 @@ int fs_add_lv(struct logical_volume *lv)
 
 int fs_del_lv(struct logical_volume *lv)
 {
-	if (!_rm_link(lv)) {
+	if (!_rm_link(lv, NULL)) {
 		stack;
 		return 0;
 	}
@@ -113,3 +119,13 @@ int fs_del_lv(struct logical_volume *lv)
 	return 1;
 }
 
+int fs_rename_lv(const char *old_name, struct logical_volume *lv)
+{
+	if (!_rm_link(lv, old_name))
+		stack;
+
+	if (!_mk_link(lv))
+		stack;
+
+	return 1;
+}

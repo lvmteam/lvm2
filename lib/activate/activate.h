@@ -15,10 +15,12 @@ int lv_active(struct logical_volume *lv);
 int lv_suspended(struct logical_volume *lv);
 int lv_open_count(struct logical_volume *lv);
 int lv_info(struct logical_volume *lv, struct dm_info *info);
+int lv_rename(const char *old_name, struct logical_volume *lv);
 
 int lv_activate(struct logical_volume *lv);
 int lv_reactivate(struct logical_volume *lv);
 int lv_deactivate(struct logical_volume *lv);
+int lv_suspend(struct logical_volume *lv);
 
 /*
  * Return number of LVs in the VG that are

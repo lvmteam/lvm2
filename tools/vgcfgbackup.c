@@ -35,9 +35,6 @@ static int vg_backup_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-	log_print("Found %sactive volume group %s",
-		  (vg->status & ACTIVE) ? "" : "in", vg_name);
-
 	if (arg_count(file_ARG)) {
 		_backup_to_file(arg_value(file_ARG), vg);
 

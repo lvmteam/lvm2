@@ -50,6 +50,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 {
 	struct volume_group *vg_to, *vg_from;
 	struct list *lvh1, *lvh2;
+	int active;
 
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name %s", vg_name_from);
@@ -68,9 +69,9 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 		return ECMD_FAILED;
 	}
 
-	/* FIXME status - confirm no active LVs? */
-	if (vg_from->status & ACTIVE) {
-		log_error("Volume group %s must be inactive", vg_name_from);
+	if ((active = lvs_in_vg_activated(vg_from))) {
+		log_error("Logical volumes in %s must be inactive", 
+			  vg_name_from);
 		return ECMD_FAILED;
 	}
 

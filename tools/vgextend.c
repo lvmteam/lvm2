@@ -46,11 +46,6 @@ int vgextend(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-/******* Ignore active
-	if (!(vg->status & ACTIVE))
-		log_error("Volume group '%s' is not active.", vg_name);
-********/
-
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group '%s' is not resizeable.", vg_name);
 		return ECMD_FAILED;

@@ -157,9 +157,6 @@ void pvdisplay_full(struct physical_volume *pv)
 	log_print("PV#                   %u", pv->pv_number);
 **********/
 
-	log_print("PV Status             %savailable",
-		  (pv->status & ACTIVE) ? "" : "NOT ");
-
 	pe_free = pv->pe_count - pv->pe_allocated;
 	if (pv->pe_count && (pv->status & ALLOCATABLE_PV))
 		log_print("Allocatable           yes %s",
@@ -194,8 +191,7 @@ int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv)
 
 	log_print("PV Name               %s     ", dev_name(pv->dev));
 	/* FIXME  pv->pv_number); */
-	log_print("PV Status             %savailable / %sallocatable",
-		  (pv->status & ACTIVE) ? "" : "NOT ",
+	log_print("PV Status             %sallocatable",
 		  (pv->status & ALLOCATABLE_PV) ? "" : "NOT ");
 	log_print("Total PE / Free PE    %u / %u",
 		  pv->pe_count, pv->pe_count - pv->pe_allocated);
@@ -203,7 +199,6 @@ int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv)
 	log_print(" ");
 	return 0;
 }
-
 
 void lvdisplay_colons(struct logical_volume *lv)
 {
@@ -470,9 +465,8 @@ void vgdisplay_full(struct volume_group *vg)
 		  access == LVM_READ ? "read" : "",
 		  access == LVM_WRITE ? "write" : "",
 		  access == 0 ? "error" : "");
-	log_print("VG Status             %savailable%s/%sresizable",
-		  vg->status & ACTIVE ? "" : "NOT ",
-		  vg->status & EXPORTED_VG ? "/exported" : "",
+	log_print("VG Status             %s/%sresizable",
+		  vg->status & EXPORTED_VG ? "exported" : "",
 		  vg->status & RESIZEABLE_VG ? "" : "NOT ");
 /******* FIXME vg number
 	log_print ("VG #                  %u\n", vg->vg_number);
@@ -547,8 +541,7 @@ void vgdisplay_short(struct volume_group *vg)
 	    display_size((vg->extent_count - vg->free_count) * vg->extent_size /
 			 2, SIZE_SHORT);
 	s3 = display_size(vg->free_count * vg->extent_size / 2, SIZE_SHORT);
-	log_print("%s (%s) %-9s [%-9s used / %s free]", vg->name,
-		  (vg->status & ACTIVE) ? "active" : "inactive",
+	log_print("%s %-9s [%-9s used / %s free]", vg->name,
 /********* FIXME if "open" print "/used" else print "/idle"???  ******/
 		  s1, s2, s3);
 	dbg_free(s1);
