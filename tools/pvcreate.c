@@ -58,7 +58,7 @@ static int _check(const char *name)
 	return 1;
 }
 
-void _single(const char *name)
+static void _single(const char *name)
 {
 	struct physical_volume *pv;
 
