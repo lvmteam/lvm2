@@ -35,6 +35,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 	struct linear_c *lc;
 	unsigned int start;
 	struct text_region word;
+	char path[256];		/* FIXME: magic */
 	int r = -EINVAL;
 
 	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
@@ -47,14 +48,14 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 		goto bad;
 	}
 
-	dm_txt_copy(lc->path, sizeof(lc->path) - 1, &word);
+	dm_txt_copy(path, sizeof(path) - 1, &word);
 
 	if (!dm_get_number(args, &start)) {
 		err("destination start not given", e_private);
 		goto bad;
 	}
 
-	if ((r = dm_table_add_device(t, lc->path, &lc->dev))) {
+	if ((r = dm_table_get_device(t, path, &lc->dev))) {
 		err("couldn't lookup device", e_private);
 		r = -ENXIO;
 		goto bad;
@@ -72,7 +73,7 @@ static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
 static void linear_dtr(struct dm_table *t, void *c)
 {
 	struct linear_c *lc = (struct linear_c *) c;
-	dm_table_remove_device(t, lc->dev);
+	dm_table_put_device(t, lc->dev);
 	kfree(c);
 }
 
@@ -80,7 +81,7 @@ static int linear_map(struct buffer_head *bh, int rw, void *context)
 {
 	struct linear_c *lc = (struct linear_c *) context;
 
-	bh->b_rdev = lc->rdev;
+	bh->b_rdev = lc->dev->dev;
 	bh->b_rsector = bh->b_rsector + lc->delta;
 	return 1;
 }

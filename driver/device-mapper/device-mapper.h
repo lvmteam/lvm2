@@ -44,7 +44,8 @@ typedef int (*dm_err_fn)(struct buffer_head *bh, int rw, void *context);
  * destination devices are handled correctly
  * (ie. opened/closed).
  */
-struct dm_dev *dm_table_get_device(struct dm_table *table, const char *path);
+int dm_table_get_device(struct dm_table *t, const char *path,
+			struct dm_dev **result);
 void dm_table_put_device(struct dm_table *table, struct dm_dev *d);
 
 /*

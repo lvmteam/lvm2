@@ -177,7 +177,7 @@ struct dm_table {
 	struct target *targets;
 
 	/* a list of devices used by this table */
-	struct list_head *devices;
+	struct list_head devices;
 };
 
 /*
