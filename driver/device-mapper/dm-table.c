@@ -80,6 +80,7 @@ void dm_free_table(struct mapped_device *md)
 	vfree(md->targets);
 	vfree(md->contexts);
 
+	md->highs = 0;
 	md->targets = 0;
 	md->contexts = 0;
 
@@ -167,10 +168,16 @@ static int alloc_targets(struct mapped_device *md, int num)
 		return -ENOMEM;
 	}
 
-	memcpy(n_highs, md->highs, sizeof(*n_highs) * md->num_targets);
-	memcpy(n_targets, md->targets, sizeof(*n_targets) * md->num_targets);
-	memcpy(n_contexts, md->contexts,
-	       sizeof(*n_contexts) * md->num_targets);
+	if (md->num_targets) {
+		memcpy(n_highs, md->highs,
+		       sizeof(*n_highs) * md->num_targets);
+
+		memcpy(n_targets, md->targets,
+		       sizeof(*n_targets) * md->num_targets);
+
+		memcpy(n_contexts, md->contexts,
+		       sizeof(*n_contexts) * md->num_targets);
+	}
 
 	vfree(md->highs);
 	vfree(md->targets);
