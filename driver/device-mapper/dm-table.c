@@ -114,6 +114,7 @@ struct dm_table *dm_table_create(void)
 
 	memset(t, 0, sizeof(*t));
 	INIT_LIST_HEAD(&t->devices);
+	INIT_LIST_HEAD(&t->errors);
 
 	/* allocate a single nodes worth of targets to
 	   begin with */
@@ -140,17 +141,21 @@ void dm_table_destroy(struct dm_table *t)
 {
 	int i;
 
+	dmfs_zap_errors(t);
+
 	/* free the indexes (see dm_table_complete) */
 	if (t->depth >= 2)
 		vfree(t->index[t->depth - 2]);
-	vfree(t->highs);
+
 
 	/* free the targets */
 	for (i = 0; i < t->num_targets; i++) {
 		struct target *tgt = &t->targets[i];
-		if (tgt->private)
+		if (tgt->type->dtr)
 			tgt->type->dtr(t, tgt->private);
 	}
+
+	vfree(t->highs);
 
 	/* free the device list */
 	if (t->devices.next != &t->devices) {
@@ -202,7 +207,7 @@ int lookup_device(const char *path, kdev_t *dev)
                goto bad;
        }
 
-       *dev = inode->i_bdev->bd_dev;
+       *dev = inode->i_rdev;
 
  bad:
        path_release(&nd);

@@ -75,26 +75,38 @@ static devfs_handle_t _dev_dir;
 
 static int request(request_queue_t *q, int rw, struct buffer_head *bh);
 static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb);
+static DECLARE_FSTYPE(dmfs_fstype, "dmfs", dmfs_read_super, FS_SINGLE);
+static struct vfsmount *dmfs_mnt;
 
 /*
  * setup and teardown the driver
  */
 static int dm_init(void)
 {
-	int ret;
+	int ret = -ENOMEM;
 
 	init_rwsem(&_dev_lock);
 
-	if (!_io_hook_cache)
-		_io_hook_cache = kmem_cache_create("dm io hooks",
-						   sizeof(struct io_hook),
-						   0, 0, NULL, NULL);
+	_io_hook_cache = kmem_cache_create("dm io hooks",
+					   sizeof(struct io_hook),
+					   0, 0, NULL, NULL);
 
 	if (!_io_hook_cache)
-		return -ENOMEM;
+		goto err;
 
-	if ((ret = dm_fs_init()) || (ret = dm_target_init()))
-		return ret;
+	ret = register_filesystem(&dmfs_fstype);
+	if (ret < 0)
+		goto err_kmem_cache_destroy;
+
+	dmfs_mnt = kern_mount(&dmfs_fstype);
+	if (IS_ERR(dmfs_mnt)) {
+		ret = PTR_ERR(dmfs_mnt);
+		goto err_unregister;
+	}
+
+	ret = dm_target_init();
+	if (ret)
+		goto err_umount;
 
 	/* set up the arrays */
 	read_ahead[MAJOR_NR] = DEFAULT_READ_AHEAD;
@@ -102,10 +114,9 @@ static int dm_init(void)
 	blksize_size[MAJOR_NR] = _blksize_size;
 	hardsect_size[MAJOR_NR] = _hardsect_size;
 
-	if (devfs_register_blkdev(MAJOR_NR, _name, &dm_blk_dops) < 0) {
-		printk(KERN_ERR "%s -- register_blkdev failed\n", _name);
-		return -EIO;
-	}
+	ret = -EIO;
+	if (devfs_register_blkdev(MAJOR_NR, _name, &dm_blk_dops) < 0)
+		goto err_blkdev;
 
 	blk_queue_make_request(BLK_DEFAULT_QUEUE(MAJOR_NR), request);
 
@@ -114,15 +125,28 @@ static int dm_init(void)
 	printk(KERN_INFO "%s %d.%d.%d initialised\n", _name,
 	       _version[0], _version[1], _version[2]);
 	return 0;
+
+err_blkdev:
+	printk(KERN_ERR "%s -- register_blkdev failed\n", _name);
+err_umount:
+	/* kern_umount(&dmfs_mnt); */
+err_unregister:
+	unregister_filesystem(&dmfs_fstype);
+err_kmem_cache_destroy:
+	kmem_cache_destroy(_io_hook_cache);
+err:
+	return ret;
 }
 
 static void dm_exit(void)
 {
+	/* kern_umount(&dmfs_mnt); */
+
+	unregister_filesystem(&dmfs_fstype);
+
 	if (kmem_cache_destroy(_io_hook_cache))
 		WARN("it looks like there are still some io_hooks allocated");
-	_io_hook_cache = 0;
 
-	dm_fs_exit();
 
 	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
 		printk(KERN_ERR "%s -- unregister_blkdev failed\n", _name);
@@ -663,6 +687,7 @@ struct mapped_device *dm_find_by_minor(int minor)
 	return md;
 }
 
+#ifdef CONFIG_DEVFS
 static int register_device(struct mapped_device *md)
 {
 	md->devfs_entry =
@@ -676,6 +701,12 @@ static int register_device(struct mapped_device *md)
 
 	return 0;
 }
+#else
+static int register_device(struct mapped_device *md)
+{
+	return 0;
+}
+#endif
 
 static int unregister_device(struct mapped_device *md)
 {

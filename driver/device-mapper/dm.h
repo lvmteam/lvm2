@@ -178,6 +178,8 @@ struct dm_table {
 
 	/* a list of devices used by this table */
 	struct list_head devices;
+
+	struct list_head errors;
 };
 
 /*
@@ -201,6 +203,15 @@ struct mapped_device {
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
 };
+
+struct dmfs_i {
+	struct semaphore sem;
+	struct dm_table *table;
+	struct mapped_device *md;
+	struct dentry *dentry;
+};
+
+#define DMFS_I(inode) ((struct dmfs_i *)(inode)->u.generic_ip)
 
 extern struct block_device_operations dm_blk_dops;
 
@@ -230,24 +241,13 @@ int dm_table_add_target(struct dm_table *t, offset_t high,
 			struct target_type *type, void *private);
 int dm_table_complete(struct dm_table *t);
 
-/* dm-parse.c */
-typedef int (*extract_line_fn)(struct text_region *line,
-			       void *private);
+/* dmfs-error.c */
+void dmfs_add_error(struct dm_table *t, unsigned num, char *str);
+void dmfs_zap_errors(struct dm_table *t);
 
-struct dm_table *dm_parse(extract_line_fn line_fn, void *line_private,
-			  dm_error_fn err_fn, void *err_private);
-
-
-static inline int dm_empty_tok(struct text_region *txt)
-{
-	return txt->b >= txt->e;
-}
-
-/* dm-fs.c */
-int dm_fs_init(void);
-void dm_fs_exit(void);
-
-
+/* dmfs-super.c */
+struct super_block *dmfs_read_super(struct super_block *, void *, int);
+struct inode *dmfs_new_inode(struct super_block *sb, int mode);
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
 
