@@ -57,6 +57,8 @@
 #  define DEFAULT_ACTIVATION 0
 #endif
 
+#define DEFAULT_STRIPE_FILLER "/dev/ioerror"
+
 #ifdef READLINE_SUPPORT
 #  define DEFAULT_MAX_HISTORY 100
 #endif
