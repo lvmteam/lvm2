@@ -4,7 +4,7 @@ lvm2 (1.95.11-1) unstable; urgency=low
   * Removed TODO and INTRO from debian/docs; added WHATS_NEW.
   * Remove vgcfgrestore.8 undocumented symlink.
   * Added a README.Debian, mentioning the device-mapper kernel module
-    requirement that lvm2 has.  (Closes: #171674)
+    requirement that lvm2 has.  (Closes: #171674, #163020)
   * Get rid of debian/conffiles (debhelper's smart enough to figure that out).
   * debian/copyright fix to appease lintian.
   * Fix typo in tools/commands.h that caused /usr/sbin/; to be created.
