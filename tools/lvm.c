@@ -22,6 +22,10 @@
 #ifdef READLINE_SUPPORT
 #include <readline/readline.h>
 #include <readline/history.h>
+#define MAX_HISTORY 100
+#ifndef rl_completion_matches
+#define rl_completion_matches(a, b) completion_matches((char *)a, b)
+#endif
 #endif
 
 /* define exported table of valid switches */
@@ -66,14 +70,18 @@ static int _verbose;
 
 
 /*
- * The lvm_system_dir contains:
+ * The lvm_sys_dir contains:
  *
  * o  The lvm configuration (lvm.conf)
  * o  The persistent filter cache (.cache)
  * o  Volume group backups (backups)
  *
  */
-static char _system_dir[PATH_MAX] = "/etc/lvm";
+static char _sys_dir[PATH_MAX] = "/etc/lvm";
+static char _backup_dir[PATH_MAX];
+static char _dev_dir[PATH_MAX];
+
+#define DEFAULT_DEV_DIR "/dev"
 
 /* static functions */
 static void register_commands(void);
@@ -459,8 +467,7 @@ static int process_command_line(struct command *com, int *argc, char ***argv)
 			a->value = optarg;
 
 			if (!a->fn(a)) {
-				log_error("Invalid argument %s",
-					  optarg);
+				log_error("Invalid argument %s", optarg);
 				return 0;
 			}
 		}
@@ -494,11 +501,9 @@ static struct arg *find_arg(struct command *com, int opt)
 	return 0;
 }
 
-/* FIXME: define CMD_SUCCEEDED, and return this instead of zero. */
 static int process_common_commands(struct command *com)
 {
 	int l;
-	char backup_dir[PATH_MAX];
 
 	if (arg_count(suspend_ARG))
 		kill(getpid(), SIGSTOP);
@@ -509,7 +514,6 @@ static int process_common_commands(struct command *com)
 	_debug = _default_debug;
 	if (arg_count(debug_ARG))
 		_debug = arg_count(debug_ARG);
-
 
 	/*
 	 * verbose
@@ -544,9 +548,10 @@ static int process_common_commands(struct command *com)
 	/* Set autobackup if command takes this option */
 	for (l = 0; l < com->num_args; l++)
 		if (com->valid_args[l] == autobackup_ARG)
-			if (!autobackup_init(_system_dir))
+			if (!autobackup_init(_backup_dir))
 				return EINVALID_CMD_LINE;
 
+	/* Zero indicates it's OK to continue processing this command */
 	return 0;
 }
 
@@ -747,9 +752,9 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 		return 0;
 
 	if (lvm_snprintf(cache_file, sizeof(cache_file),
-			 "%s/.cache", _system_dir) < 0) {
-		log_err("Persistent cache filename too long ('%s/.cache').",
-			_system_dir);
+			 "%s/.cache", _sys_dir) < 0) {
+		log_error("Persistent cache filename too long ('%s/.cache').",
+			  _sys_dir);
 		return 0;
 	}
 
@@ -777,9 +782,9 @@ static int _get_env_vars(void)
 	const char *e;
 
 	if ((e = getenv("LVM_SYSTEM_DIR"))) {
-		if (snprintf(_system_dir, sizeof(_system_dir), "%s", e) < 0) {
-			log_err("LVM_SYSTEM_DIR environment variable "
-				"is too long.");
+		if (lvm_snprintf(_sys_dir, sizeof(_sys_dir), "%s", e) < 0) {
+			log_error("LVM_SYSTEM_DIR environment variable "
+				  "is too long.");
 			return 0;
 		}
 	}
@@ -800,10 +805,6 @@ static int init(void)
 		return 0;
 	}
 
-	/* FIXME: Override from config file. (Append trailing slash if reqd) */
-	cmd->dev_dir = "/dev/";
-	dm_set_dev_dir(cmd->dev_dir);
-
 	if (!(cmd->cf = create_config_file())) {
 		stack;
 		return 0;
@@ -815,9 +816,9 @@ static int init(void)
 	/* send log messages to stderr for now */
 	init_log(stderr);
 
-	if (snprintf(config_file, sizeof(config_file),
-		     "%s/lvm.conf", _system_dir) < 0) {
-		log_err("lvm_system_dir was too long");
+	if (lvm_snprintf(config_file, sizeof(config_file),
+			 "%s/lvm.conf", _sys_dir) < 0) {
+		log_error("lvm_sys_dir was too long");
 		return 0;
 	}
 
@@ -832,7 +833,24 @@ static int init(void)
 		__init_log(cmd->cf);
 	}
 
+	if (lvm_snprintf(_dev_dir, sizeof(_dev_dir), "%s/",
+        		 find_config_str(cmd->cf->root, "devices/dir", 
+					 '/', DEFAULT_DEV_DIR)) < 0) {
+		log_error("Device directory given in config file too long");
+		return 0;
+	}
+
+	cmd->dev_dir = _dev_dir;
+	dm_set_dev_dir(cmd->dev_dir);
+
 	dm_log_init(print_log);
+
+	if (lvm_snprintf(_backup_dir, sizeof(_backup_dir), "%s",
+        		 find_config_str(cmd->cf->root, "backup/dir", 
+					 '/', _sys_dir)) < 0) {
+		log_error("Backup directory given in config file too long");
+		return 0;
+	}
 
 	if (!dev_cache_setup(cmd->cf))
 		return 0;
@@ -1043,14 +1061,14 @@ static int _hist_file(char *buffer, size_t size)
 	char *e = getenv("HOME");
 
 	if (lvm_snprintf(buffer, size, "%s/.lvm_history", e) < 0) {
-		log_err("History file path too long (%s/.lvm_history).", e);
+		log_error("$HOME/.lvm_history: path too long");
 		return 0;
 	}
 
 	return 1;
 }
 
-#define MAX_HISTORY 100
+
 static void _read_history(void)
 {
 	char hist_file[PATH_MAX];
@@ -1061,7 +1079,9 @@ static void _read_history(void)
 	if (read_history(hist_file))
 		log_very_verbose("Couldn't read history from %s.", hist_file);
 
-	stifle_history(MAX_HISTORY);
+        stifle_history(find_config_int(cmd->cf->root, "shell/history_size", 
+				       '/', MAX_HISTORY));
+
 }
 
 static void _write_history(void)

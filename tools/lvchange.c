@@ -89,7 +89,7 @@ static int lvchange_single(struct logical_volume *lv)
 
 	log_print("Logical volume %s changed", lv->name);
 
-	//autobackup();
+	/* FIXME autobackup */
 
 	return 0;
 }
