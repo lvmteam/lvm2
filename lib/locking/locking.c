@@ -11,6 +11,7 @@
 #include "lvm-string.h"
 #include "activate.h"
 #include "toolcontext.h"
+#include "memlock.h"
 
 #include <signal.h>
 #include <sys/stat.h>
@@ -60,6 +61,24 @@ static void _unblock_signals(void)
 	_signals_blocked = 0;
 
 	return;
+}
+
+static void _lock_memory(int flags)
+{
+	if (!(_locking.flags & LCK_PRE_MEMLOCK))
+		return;
+
+	if ((flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_SUSPEND)
+		memlock_inc();
+}
+
+static void _unlock_memory(int flags)
+{
+	if (!(_locking.flags & LCK_PRE_MEMLOCK))
+		return;
+
+	if ((flags & (LCK_SCOPE_MASK | LCK_TYPE_MASK)) == LCK_LV_RESUME)
+		memlock_dec();
 }
 
 void reset_locking(void)
@@ -176,13 +195,16 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
 static int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
 {
 	_block_signals(flags);
+	_lock_memory(flags);
 
 	if (!(_locking.lock_resource(cmd, resource, flags))) {
+		_unlock_memory(flags);
 		_unblock_signals();
 		return 0;
 	}
 
 	_update_vg_lock_count(flags);
+	_unlock_memory(flags);
 	_unblock_signals();
 
 	return 1;
@@ -216,6 +238,42 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 		if (!_lock_vol(cmd, resource,
 			       (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK))
 			return 0;
+	}
+
+	return 1;
+}
+
+/* Unlock list of LVs */
+int unlock_lvs(struct cmd_context *cmd, struct list *lvs)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	list_iterate(lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		unlock_lv(cmd, lv->lvid.s);
+	}
+
+	return 1;
+}
+
+/* Lock a list of LVs */
+int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	list_iterate(lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		if (!lock_vol(cmd, lv->lvid.s, flags)) {
+			log_error("Failed to suspend %s", lv->name);
+			list_uniterate(lvh, lvs, lvh) {
+				lv = list_item(lvh, struct lv_list)->lv;
+				unlock_lv(cmd, lv->lvid.s);
+			}
+
+			return 0;
+		}
 	}
 
 	return 1;

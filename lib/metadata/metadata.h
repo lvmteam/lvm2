@@ -426,10 +426,6 @@ int lv_extend_mirror(struct format_instance *fid,
 		     uint32_t extents, struct list *allocatable_pvs,
 		     uint32_t status);
 
-/* Lock list of LVs */
-int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags);
-int unlock_lvs(struct cmd_context *cmd, struct list *lvs);
-
 /* lv must be part of vg->lvs */
 int lv_remove(struct volume_group *vg, struct logical_volume *lv);
 

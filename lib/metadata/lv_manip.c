@@ -731,42 +731,6 @@ int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 	return 1;
 }
 
-/* Unlock list of LVs */
-int unlock_lvs(struct cmd_context *cmd, struct list *lvs)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-
-	list_iterate(lvh, lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		unlock_lv(cmd, lv->lvid.s);
-	}
-
-	return 1;
-}
-
-/* Lock a list of LVs */
-int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-
-	list_iterate(lvh, lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (!lock_vol(cmd, lv->lvid.s, flags)) {
-			log_error("Failed to lock %s", lv->name);
-			list_uniterate(lvh, lvs, lvh) {
-				lv = list_item(lvh, struct lv_list)->lv;
-				unlock_lv(cmd, lv->lvid.s);
-			}
-
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
 uint32_t find_free_lvnum(struct logical_volume *lv)
 {
 	int lvnum_used[MAX_RESTRICTED_LVS + 1];
