@@ -279,11 +279,11 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 }
 
 void export_lv(struct lv_disk *lvd, struct volume_group *vg,
-	       struct logical_volume *lv, const char *prefix)
+	       struct logical_volume *lv, const char *dev_dir)
 {
 	memset(lvd, 0, sizeof(*lvd));
 	snprintf(lvd->lv_name, sizeof(lvd->lv_name), "%s%s/%s",
-		 prefix, vg->name, lv->name);
+		 dev_dir, vg->name, lv->name);
 
 	/* FIXME: Add 'if' test */
 	_check_vg_name(vg->name);
@@ -323,7 +323,7 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 		lvd->lv_allocation |= LV_CONTIGUOUS;
 }
 
-int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvs)
+int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvds)
 {
 	struct disk_list *dl;
 	struct logical_volume *lv, *lvs[MAX_LV];
@@ -331,10 +331,10 @@ int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvs)
 	struct pe_disk *e;
 	int i;
 	uint32_t lv_num, le;
-	struct list *pvh;
+	struct list *pvdh;
 
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate(pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
 		pv = _find_pv(vg, dl->dev);
 		e = dl->extents;
 
@@ -391,16 +391,16 @@ int export_extents(struct disk_list *dl, int lv_num,
 	return 1;
 }
 
-int import_pvs(struct pool *mem, struct list *pvs,
+int import_pvs(struct pool *mem, struct list *pvds,
 	       struct list *results, int *count)
 {
-	struct list *pvh;
+	struct list *pvdh;
 	struct disk_list *dl;
 	struct pv_list *pvl;
 
 	*count = 0;
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate(pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
 		pvl = pool_alloc(mem, sizeof(*pvl));
 
 		if (!pvl) {
@@ -446,17 +446,17 @@ static struct logical_volume *_add_lv(struct pool *mem,
 }
 
 int import_lvs(struct pool *mem, struct volume_group *vg,
-	       struct list *pvs)
+	       struct list *pvds)
 {
 	struct disk_list *dl;
 	struct lvd_list *ll;
 	struct lv_disk *lvd;
-	struct list *pvh, *lvh;
+	struct list *pvdh, *lvdh;
 
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
-		list_iterate(lvh, &dl->lvds) {
-			ll = list_item(lvh, struct lvd_list);
+	list_iterate(pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
+		list_iterate(lvdh, &dl->lvds) {
+			ll = list_item(lvdh, struct lvd_list);
 			lvd = &ll->lvd;
 
 			if (!find_lv(vg, lvd->lv_name) &&
@@ -471,7 +471,7 @@ int import_lvs(struct pool *mem, struct volume_group *vg,
 }
 
 int export_lvs(struct disk_list *dl, struct volume_group *vg,
-	       struct physical_volume *pv, const char *prefix)
+	       struct physical_volume *pv, const char *dev_dir)
 {
 	struct list *lvh;
 	struct lv_list *ll;
@@ -496,7 +496,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 			return 0;
 		}
 
-		export_lv(&lvdl->lvd, vg, &ll->lv, prefix);
+		export_lv(&lvdl->lvd, vg, &ll->lv, dev_dir);
 		lvdl->lvd.lv_number = lv_num;
 		if (!export_extents(dl, lv_num + 1, &ll->lv, pv)) {
 			stack;
@@ -536,14 +536,14 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
  * lv_number fields used by LVM1.  Very
  * inefficient code.
  */
-void export_numbers(struct list *pvs, struct volume_group *vg)
+void export_numbers(struct list *pvds, struct volume_group *vg)
 {
-	struct list *pvh;
+	struct list *pvdh;
 	struct disk_list *dl;
 	int pv_num = 1;
 
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate(pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
 		dl->pvd.pv_number = pv_num++;
 	}
 }
@@ -551,28 +551,28 @@ void export_numbers(struct list *pvs, struct volume_group *vg)
 /*
  * Calculate vg_disk->pv_act.
  */
-void export_pv_act(struct list *pvs)
+void export_pv_act(struct list *pvds)
 {
-	struct list *pvh;
+	struct list *pvdh;
 	struct disk_list *dl;
 	int act = 0;
 
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate(pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
 		if (dl->pvd.pv_status & PV_ACTIVE)
 			act++;
 	}
 
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate(pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
 		dl->vgd.pv_act = act;
 	}
 }
 
-int export_vg_number(struct list *pvs, const char *vg_name,
+int export_vg_number(struct list *pvds, const char *vg_name,
 		     struct dev_filter *filter)
 {
-	struct list *pvh;
+	struct list *pvdh;
 	struct disk_list *dl;
 	int vg_num;
 
@@ -581,8 +581,8 @@ int export_vg_number(struct list *pvs, const char *vg_name,
 		return 0;
 	}
 
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate(pvdh, pvds) {
+		dl = list_item(pvdh, struct disk_list);
 		dl->vgd.vg_number = vg_num;
 	}
 

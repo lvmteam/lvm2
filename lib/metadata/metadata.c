@@ -149,7 +149,7 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 		goto bad;
 	}
 
-	/* Strip prefix if present */
+	/* Strip dev_dir if present */
 	vg_name = strip_dir(vg_name, fi->cmd->dev_dir);
 
 	if (!(vg->name = pool_strdup(mem, vg_name))) {

@@ -84,7 +84,7 @@ int lvcreate(int argc, char **argv)
 
 	/* If VG not on command line, try -n arg and then environment */
 	if (!argc) {
-		if (!lv_name || !(vg_name = extract_vgname(fid, lv_name))) {
+		if (!(vg_name = extract_vgname(fid, lv_name))) {
 			log_error("Please provide a volume group name");
 			return EINVALID_CMD_LINE;
 		}
@@ -236,7 +236,7 @@ int lvcreate(int argc, char **argv)
 	if (!lv_activate(lv))
 		return ECMD_FAILED;
 
-	if (0) {
+	if (zero) {
 		struct device *dev;
 		/* FIXME 2 blocks */
 		char buf[4096];
@@ -245,13 +245,16 @@ int lvcreate(int argc, char **argv)
 
 		log_verbose("Zeroing start of logical volume %s", lv->name);
 
-		/* FIXME get dev = dev_cache_get(lv_name, fid->cmd->filter); */
+		log_print("WARNING: %s not zeroed", lv->name);
+		/* FIXME get dev = dev_cache_get(lv->name, fid->cmd->filter); */
 		/* FIXME Add fsync! */
+/******** FIXME Really zero it 
 		if (!(dev_write(dev, 0, sizeof(buf), &buf) == sizeof(buf))) {
 			log_error("Initialisation of %s failed",
 				  dev_name(dev));
 			return ECMD_FAILED;
 		}
+**************/
 	} else
 		log_print("WARNING: %s not zeroed", lv->name);
 

@@ -184,7 +184,7 @@ struct disk_list *read_disk(struct device *dev, struct pool *mem,
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		   struct pool *mem, struct list *results);
 
-int write_disks(struct list *pvs);
+int write_disks(struct list *pvds);
 
 
 /*
@@ -202,31 +202,32 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg);
 int import_lv(struct pool *mem, struct logical_volume *lv,
 	      struct lv_disk *lvd);
 void export_lv(struct lv_disk *lvd, struct volume_group *vg,
-	       struct logical_volume *lv, const char *prefix);
+	       struct logical_volume *lv, const char *dev_dir);
 
-int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvs);
+int import_extents(struct pool *mem, struct volume_group *vg, 
+		   struct list *pvds);
 int export_extents(struct disk_list *dl, int lv_num,
 		   struct logical_volume *lv,
 		   struct physical_volume *pv);
 
-int import_pvs(struct pool *mem, struct list *pvs,
+int import_pvs(struct pool *mem, struct list *pvds,
 	       struct list *results, int *count);
 
 int import_lvs(struct pool *mem, struct volume_group *vg,
-	       struct list *pvs);
+	       struct list *pvds);
 int export_lvs(struct disk_list *dl, struct volume_group *vg,
-	       struct physical_volume *pv, const char *prefix);
+	       struct physical_volume *pv, const char *dev_dir);
 
 int export_uuids(struct disk_list *dl, struct volume_group *vg);
 
-void export_numbers(struct list *pvs, struct volume_group *vg);
+void export_numbers(struct list *pvds, struct volume_group *vg);
 
-void export_pv_act(struct list *pvs);
+void export_pv_act(struct list *pvds);
 
 /* blech */
 int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 		       int *result);
-int export_vg_number(struct list *pvs, const char *vg_name,
+int export_vg_number(struct list *pvds, const char *vg_name,
 		     struct dev_filter *filter);
 
 
