@@ -9,7 +9,6 @@ error message review
 correct handling of *existing* snapshots
 review statics
 review consistency checks for full compatibility with LVM1
-iospace split/rename
 
 before beta1
 -----------

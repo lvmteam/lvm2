@@ -89,6 +89,7 @@ static int _mk_node(struct logical_volume *lv)
 
 	_build_lv_path(lv_path, sizeof(lv_path), lv);
 
+	// FIXME: dev never get's initialised !
 	if (mknod(lv_path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
 		log_sys_error("mknod", lv_path);
 		return 0;
