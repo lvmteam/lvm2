@@ -238,56 +238,33 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
 #endif
 }
 
-/*
- * Zero the start of a cow store so the driver spots that it is a
- * new store.
- */
-int lv_setup_cow_store(struct logical_volume *lv)
+int activate_lvs_in_vg(struct volume_group *vg)
 {
-#if 0
-	char buffer[128];
-	char path[PATH_MAX];
-	struct device *dev;
+	struct list *lvh;
+	struct logical_volume *lv;
+	int count = 0;
 
-	/*
-	 * Decide what we're going to call this device.
-	 */
-	if (!build_dm_name(buffer, sizeof(buffer), "cow_init",
-			   lv->vg->name, lv->name)) {
-		stack;
-		return 0;
+	list_iterate(lvh, &vg->lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		count += (!lv_active(lv) && lv_activate(lv));
 	}
 
-	if (!_lv_activate_named(lv, buffer)) {
-		log_err("Unable to activate cow store logical volume.");
-		return 0;
-	}
-
-	/* FIXME: hard coded dir */
-	if (lvm_snprintf(path, sizeof(path), "/dev/device-mapper/%s",
-			 buffer) < 0) {
-		log_error("Name too long - device not zeroed (%s)",
-			  lv->name);
-		return 0;
-	}
-
-	if (!(dev = dev_cache_get(path, NULL))) {
-		log_error("\"%s\" not found: device not zeroed", path);
-		return 0;
-	}
-
-	if (!(dev_open(dev, O_WRONLY)))
-		return 0;
-
-	dev_zero(dev, 0, 4096);
-	dev_close(dev);
-
-	return 1;
-#else
-	return 0;
-#endif
+	return count;
 }
 
+int deactivate_lvs_in_vg(struct volume_group *vg)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+	int count = 0;
+
+	list_iterate(lvh, &vg->lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		count += ((lv_active(lv) == 1) && lv_deactivate(lv));
+	}
+
+	return count;
+}
 
 /*
  * These two functions return the number of LVs in the state,

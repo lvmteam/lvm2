@@ -182,7 +182,6 @@ static int lvchange_availability(struct cmd_context *cmd,
 				 struct logical_volume *lv)
 {
 	int activate = 0;
-	int active;
 	char lvidbuf[128];
 
 	if (strcmp(arg_str_value(cmd, available_ARG, "n"), "n"))
