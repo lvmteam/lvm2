@@ -267,7 +267,15 @@ int label_write(struct device *dev, struct label *label)
     /* Write another at the end of the device */
     status2 = dev_write(dev, offset[1], sizeof(struct label_ondisk) + label->datalen, block);
     if (!status2)
+    {
+	char zerobuf[sizeof(struct label_ondisk)];
 	log_error("Error writing label 2\n");
+
+	/* Wipe the first label so it doesn't get confusing */
+	memset(zerobuf, 0, sizeof(struct label_ondisk));
+	if (!dev_write(dev, offset[0], sizeof(struct label_ondisk), zerobuf))
+	    log_error("Error erasing label 1\n");
+    }
 
     pool_free(label_pool, block);
     dev_close(dev);
