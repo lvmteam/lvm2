@@ -244,6 +244,10 @@ int init_file_locking(struct locking_type *locking, struct config_file *cf)
 	if (!create_dir(_lock_dir))
 		return 0;
 
+	/* Trap a read-only file system */
+	if ((access(_lock_dir, R_OK | W_OK | X_OK) == -1) && (errno == EROFS))
+		return 0;
+
 	list_init(&_lock_list);
 
 	if (sigfillset(&_intsigset) || sigfillset(&_fullsigset)) {
