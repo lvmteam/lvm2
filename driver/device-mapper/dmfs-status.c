@@ -22,6 +22,8 @@
 #include <linux/config.h>
 #include <linux/fs.h>
 
+#include "dm.h"
+
 static ssize_t dmfs_status_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
 	return 0;
@@ -32,15 +34,15 @@ static int dmfs_status_sync(struct file *file, struct dentry *dentry, int datasy
 	return 0;
 }
 
-static struct dm_table_file_operations = {
+static struct file_operations dmfs_status_file_operations = {
 	read:		dmfs_status_read,
 	fsync:		dmfs_status_sync,
 };
 
-static struct dmfs_status_inode_operations = {
+static struct inode_operations dmfs_status_inode_operations = {
 };
 
-int dmfs_create_status(struct inode *dir, int mode)
+struct inode *dmfs_create_status(struct inode *dir, int mode)
 {
 	struct inode *inode = new_inode(dir->i_sb);
 

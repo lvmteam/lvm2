@@ -58,7 +58,7 @@ static int dmfs_tdir_unlink(struct inode *dir, struct dentry *dentry)
 static struct dentry *dmfs_tdir_lookup(struct inode *dir, struct dentry *dentry)
 {
 	struct inode *inode = NULL;
-	char *name = dentry->d_name.name;
+	const char *name = dentry->d_name.name;
 
 	switch(dentry->d_name.len) {
 		case 5:
@@ -82,16 +82,16 @@ static int dmfs_tdir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 	int i;
 	struct dentry *dentry = filp->f_dentry;
 
-	i = flip->f_pos;
+	i = filp->f_pos;
 	switch(i) {
 		case 0:
 			if (filldir(dirent, ".", 1, i, dentry->d_inode->i_ino, DT_DIR) < 0)
 				break;
 			i++;
-			flip->f_pos++;
+			filp->f_pos++;
 			/* fallthrough */
 		case 1:
-			if (filldir(dirent, "..", 2, i, dentry->d_parent->d_inode->i_ino, DT_DIR) < 0
+			if (filldir(dirent, "..", 2, i, dentry->d_parent->d_inode->i_ino, DT_DIR) < 0)
 				break;
 			i++;
 			filp->f_pos++;
@@ -123,24 +123,24 @@ static int dmfs_tdir_sync(struct file *file, struct dentry *dentry, int datasync
 	return 0;
 }
 
-static struct dmfs_tdir_file_operations = {
+static struct file_operations dmfs_tdir_file_operations = {
 	read:		generic_read_dir,
 	readdir:	dmfs_tdir_readdir,
 	fsync:		dmfs_tdir_sync,
 };
 
-static struct dmfs_tdir_inode_operations = {
+static struct inode_operations dmfs_tdir_inode_operations = {
 	lookup:		dmfs_tdir_lookup,
 	unlink:		dmfs_tdir_unlink,
 };
 
 struct inode *dmfs_create_tdir(struct inode *dir, struct dentry *dentry, int mode)
 {
-	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
+	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFDIR);
 
 	if (inode) {
 		inode->i_fop = &dmfs_tdir_file_operations;
-		inode->i_op = &dmfs_tdir_dir_operations;
+		inode->i_op = &dmfs_tdir_inode_operations;
 	}
 
 	return inode;
