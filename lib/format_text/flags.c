@@ -93,19 +93,21 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 
 	for (f = 0; flags[f].mask; f++) {
 		if (status & flags[f].mask) {
+			status &= ~flags[f].mask;
+
+			/* Internal-only flag? */
+			if (!flags[f].description)
+				continue;
+
 			if (!first) {
 				if (!emit_to_buffer(&buffer, &size, ", "))
 					return 0;
-
 			} else
 				first = 0;
-
-			if (flags[f].description &&
-			    !emit_to_buffer(&buffer, &size, "\"%s\"",
-					    flags[f].description))
+	
+			if (!emit_to_buffer(&buffer, &size, "\"%s\"",
+			    flags[f].description))
 				return 0;
-
-			status &= ~flags[f].mask;
 		}
 	}
 

@@ -1,5 +1,7 @@
 Version 2.00.16 - 
 =============================
+  Internal-only metadata flag support.
+  Basic checking for presence of device-mapper targets.
   Separate out polldaemon.
   Revise internal locking semantics.
   Move find_pv_by_name to library.
