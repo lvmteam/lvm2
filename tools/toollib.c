@@ -30,6 +30,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	int process_lv = 0;
 	int tags_supplied = 0;
 	int lvargs_supplied = 0;
+	int lvargs_matched = 0;
 
 	struct lv_list *lvl;
 
@@ -66,9 +67,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			process_lv = 1;
 
 		/* LV name match? */
-		if (!process_lv && lvargs_supplied &&
-		    str_list_match_item(arg_lvnames, lvl->lv->name))
+		if (lvargs_supplied &&
+		    str_list_match_item(arg_lvnames, lvl->lv->name)) {
 			process_lv = 1;
+			lvargs_matched++;
+		}
 
 		if (!process_lv)
 			continue;
@@ -76,6 +79,12 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		ret = process_single(cmd, lvl->lv, handle);
 		if (ret > ret_max)
 			ret_max = ret;
+	}
+
+	if (lvargs_supplied && lvargs_matched != list_size(arg_lvnames)) {
+		log_error("One or more specified logical volume(s) not found.");
+		if (ret_max < ECMD_FAILED)
+			ret_max = ECMD_FAILED;
 	}
 
 	return ret_max;
@@ -482,6 +491,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				if (!validate_name(tagname)) {
 					log_error("Skipping invalid tag %s",
 						  tagname);
+					if (ret_max < EINVALID_CMD_LINE)
+						ret_max = EINVALID_CMD_LINE;
 					continue;
 				}
 				if (!str_list_add(cmd->mem, &tags,

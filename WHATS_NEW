@@ -1,5 +1,6 @@
 Version 2.00.16 - 
 =============================
+  Detect invalid LV names in arg lists.
   Reporting uses line-at-a-time output.
   lvm2 format sets unlimited_vols format flag.
   Internal-only metadata flag support.
