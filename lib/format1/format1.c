@@ -412,6 +412,7 @@ struct io_space *create_lvm1_format(const char *prefix, struct pool *mem,
 	ios->pv_setup = _pv_setup;
 	ios->pv_write = _pv_write;
 	ios->vg_read = _vg_read;
+	ios->vg_setup = _vg_setup;
 	ios->vg_write = _vg_write;
 	ios->destroy = _destroy;
 
