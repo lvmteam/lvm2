@@ -88,8 +88,11 @@ static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 	}
 */
 
-	if (!*lv->lvid.s)
-		lvid_create(&lv->lvid, &lv->vg->id);
+	if (!*lv->lvid.s && !lvid_create(&lv->lvid, &lv->vg->id)) {
+		log_error("Random lvid creation failed for %s/%s.",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
 
 	return 1;
 }

@@ -29,9 +29,7 @@ static unsigned char _inverse_c[256];
 int lvid_create(union lvid *lvid, struct id *vgid)
 {
 	memcpy(lvid->id, vgid, sizeof(*lvid->id));
-	id_create(&lvid->id[1]);
-
-	return 1;
+	return id_create(&lvid->id[1]);
 }
 
 void uuid_from_num(char *uuid, uint32_t num)
@@ -83,16 +81,18 @@ int id_create(struct id *id)
 
 	memset(id->uuid, 0, len);
 	if ((randomfile = open("/dev/urandom", O_RDONLY)) < 0) {
-		log_sys_error("open", "id_create");
+		log_sys_error("open", "id_create: /dev/urandom");
 		return 0;
 	}
 
 	if (read(randomfile, id->uuid, len) != len) {
-		log_sys_error("read", "id_create");
-		close(randomfile);
+		log_sys_error("read", "id_create: /dev/urandom");
+		if (close(randomfile))
+			stack;
 		return 0;
 	}
-	close(randomfile);
+	if (close(randomfile))
+		stack;
 
         /*
          * Skip out the last 2 chars in randomized creation for LVM1

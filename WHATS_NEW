@@ -1,5 +1,6 @@
 Version 2.01.02 - 
 ===================================
+  Always fail if random id generation fails.
   Recognise gnbd devices.
 
 Version 2.01.01 - 19th January 2005

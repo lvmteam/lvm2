@@ -173,7 +173,11 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		}
 	} else {
 		/* --uuid: Change PV ID randomly */
-		id_create(&pv->id);
+		if (!id_create(&pv->id)) {
+			log_error("Failed to generate new random UUID for %s.",
+				  pv_name);
+			return 0;
+		}
 	}
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);

@@ -264,7 +264,11 @@ static int _vgchange_uuid(struct cmd_context *cmd, struct volume_group *vg)
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-	id_create(&vg->id);
+	if (!id_create(&vg->id)) {
+		log_error("Failed to generate new random UUID for VG %s.",
+			  vg->name);
+		return ECMD_FAILED;
+	}
 
 	list_iterate_items(lvl, &vg->lvs) {
 		memcpy(&lvl->lv->lvid, &vg->id, sizeof(vg->id));

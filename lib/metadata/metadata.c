@@ -267,10 +267,13 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 		return NULL;
 	}
 
-	if (!id)
-		id_create(&pv->id);
-	else
+	if (id)
 		memcpy(&pv->id, id, sizeof(*id));
+	else if (!id_create(&pv->id)) {
+		log_error("Failed to create random uuid for %s.",
+			  dev_name(dev));
+		return NULL;
+	}
 
 	pv->dev = dev;
 
