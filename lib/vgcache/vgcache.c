@@ -142,6 +142,8 @@ void vgcache_destroy_entry(struct vgname_entry *vgn)
 		while (pvdh != &vgn->pvdevs) {
 			pvdev = list_item(pvdh, struct pvdev_list);
 			pvdh = pvdh->n;
+			if (_pvhash)
+				hash_remove(_pvhash, dev_name(pvdev->dev));
 			dbg_free(pvdev);
 		}
 		dbg_free(vgn->vgname);
