@@ -66,8 +66,12 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		vg_with = NULL;
 		list_iterate(segh, &lv->segments) {
 			seg = list_item(segh, struct lv_segment);
-			for (s = 0; s < seg->stripes; s++) {
-				pv = seg->area[s].pv;
+			for (s = 0; s < seg->area_count; s++) {
+				/* FIXME Check AREA_LV too */
+				if (seg->area[s].type != AREA_PV)
+					continue;
+
+				pv = seg->area[s].u.pv.pv;
 				if (vg_with) {
 					if (!pv_is_in_vg(vg_with, pv)) {
 						log_error("Logical Volume %s "
@@ -103,6 +107,8 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		vg_from->lv_count--;
 		vg_to->lv_count++;
 	}
+
+	/* FIXME Ensure no LVs contain segs pointing at LVs in the other VG */
 
 	return 1;
 }

@@ -23,7 +23,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	log_verbose("Adding physical volume '%s' to volume group '%s'",
 		    pv_name, vg->name);
 
-	if (!(pvl = pool_alloc(mem, sizeof(*pvl)))) {
+	if (!(pvl = pool_zalloc(mem, sizeof(*pvl)))) {
 		log_error("pv_list allocation for '%s' failed", pv_name);
 		return 0;
 	}
@@ -401,6 +401,21 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 	return NULL;
 }
 
+/* Find segment at a given logical extent in an LV */
+struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le)
+{
+	struct list *segh;
+	struct lv_segment *seg;
+
+	list_iterate(segh, &lv->segments) {
+		seg = list_item(segh, struct lv_segment);
+		if (le >= seg->le && le < seg->le + seg->len)
+			return seg;
+	}
+
+	return NULL;
+}
+
 int vg_remove(struct volume_group *vg)
 {
 	struct list *mdah;
@@ -707,7 +722,7 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 		*label_sector = label->sector;
 
 	if (!(pv = pool_zalloc(cmd->mem, sizeof(*pv)))) {
-		log_error("pv_list allocation for '%s' failed", pv_name);
+		log_error("pv allocation for '%s' failed", pv_name);
 		return 0;
 	}
 

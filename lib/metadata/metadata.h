@@ -58,8 +58,13 @@ typedef enum {
 typedef enum {
 	SEG_STRIPED,
 	SEG_SNAPSHOT,
-	SEG_MIRROR
+	SEG_MIRRORED
 } segment_type_t;
+
+typedef enum {
+	AREA_PV,
+	AREA_LV
+} area_type_t;
 
 struct cmd_context;
 struct format_handler;
@@ -175,15 +180,25 @@ struct lv_segment {
 
 	/* FIXME Fields depend on segment type */
 	uint32_t stripe_size;
-	uint32_t stripes;
+	uint32_t area_count;
+	uint32_t area_len;
 	struct logical_volume *origin;
 	struct logical_volume *cow;
 	uint32_t chunk_size;
 
 	/* There will be one area for each stripe */
 	struct {
-		struct physical_volume *pv;
-		uint32_t pe;
+		area_type_t type;
+		union {
+			struct {
+				struct physical_volume *pv;
+				uint32_t pe;
+			} pv;
+			struct {
+				struct logical_volume *lv;
+				uint32_t le;
+			} lv;
+		} u;
 	} area[0];
 };
 
@@ -220,10 +235,17 @@ struct name_list {
 	char *name;
 };
 
+struct alloc_area {
+	struct list list;
+	uint32_t start;		/* PEs */
+	uint32_t count;		/* PEs */
+};
+
 struct pv_list {
 	struct list list;
 	struct physical_volume *pv;
-	struct list *mdas;
+	struct list *mdas;	/* Metadata areas */
+	struct list *alloc_areas;	/* Areas we may allocate from */
 };
 
 struct lv_list {
@@ -357,8 +379,15 @@ struct logical_volume *lv_create(struct format_instance *fi,
 				 uint32_t stripe_size,
 				 uint32_t extents,
 				 struct volume_group *vg,
-				 struct list *acceptable_pvs);
+				 struct list *allocatable_pvs);
 
+struct logical_volume *lv_create_empty(struct format_instance *fi,
+				       const char *name,
+				       uint32_t status,
+				       alloc_policy_t alloc,
+				       struct volume_group *vg);
+
+/* Manipulate LVs */
 int lv_reduce(struct format_instance *fi,
 	      struct logical_volume *lv, uint32_t extents);
 
@@ -367,6 +396,10 @@ int lv_extend(struct format_instance *fi,
 	      uint32_t stripes,
 	      uint32_t stripe_size,
 	      uint32_t extents, struct list *allocatable_pvs);
+
+/* Lock list of LVs */
+int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags);
+int unlock_lvs(struct cmd_context *cmd, struct list *lvs);
 
 /* lv must be part of vg->lvs */
 int lv_remove(struct volume_group *vg, struct logical_volume *lv);
@@ -397,6 +430,9 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd,
 /* FIXME Merge these functions with ones above */
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
+
+/* Find LV segment containing given LE */
+struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le);
 
 /*
  * Remove a dev_dir if present.

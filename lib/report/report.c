@@ -289,7 +289,7 @@ static int _segtype_disp(struct report_handle *rh, struct field *field,
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 
-	if (seg->stripes == 1)
+	if (seg->area_count == 1)
 		field->report_string = "linear";
 	else
 		field->report_string = get_segtype_string(seg->type);

@@ -20,15 +20,20 @@ static int _merge(struct lv_segment *first, struct lv_segment *second)
 	if (!first ||
 	    (first->type != SEG_STRIPED) ||
 	    (first->type != second->type) ||
-	    (first->stripes != second->stripes) ||
+	    (first->area_count != second->area_count) ||
 	    (first->stripe_size != second->stripe_size))
 		return 0;
 
-	for (s = 0; s < first->stripes; s++) {
-		width = first->len / first->stripes;
+	for (s = 0; s < first->area_count; s++) {
+		width = first->area_len;
 
-		if ((first->area[s].pv != second->area[s].pv) ||
-		    (first->area[s].pe + width != second->area[s].pe))
+		/* FIXME Relax this to first type != second type ? */
+		if (first->area[s].type != AREA_PV ||
+		    second->area[s].type != AREA_PV)
+			return 0;
+
+		if ((first->area[s].u.pv.pv != second->area[s].u.pv.pv) ||
+		    (first->area[s].u.pv.pe + width != second->area[s].u.pv.pe))
 			return 0;
 	}
 

@@ -42,7 +42,7 @@ static struct {
 } _segtypes[] = {
 	{
 	SEG_STRIPED, "striped"}, {
-	SEG_MIRROR, "mirror"}, {
+	SEG_MIRRORED, "mirror"}, {
 	SEG_SNAPSHOT, "snapshot"}
 };
 
@@ -478,14 +478,28 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 
 static void _display_stripe(struct lv_segment *seg, uint32_t s, const char *pre)
 {
-	uint32_t len = seg->len / seg->stripes;
+	switch (seg->area[s].type) {
+	case AREA_PV:
+		log_print("%sPhysical volume\t%s", pre,
+			  seg->area[s].u.pv.pv ?
+			  dev_name(seg->area[s].u.pv.pv->dev) : "Missing");
 
-	log_print("%sPhysical volume\t%s", pre,
-		  seg->area[s].pv ? dev_name(seg->area[s].pv->dev) : "Missing");
+		if (seg->area[s].u.pv.pv)
+			log_print("%sPhysical extents\t%d to %d", pre,
+				  seg->area[s].u.pv.pe,
+				  seg->area[s].u.pv.pe + seg->area_len - 1);
+		break;
+	case AREA_LV:
+		log_print("%sLogical volume\t%s", pre,
+			  seg->area[s].u.lv.lv ?
+			  seg->area[s].u.lv.lv->name : "Missing");
 
-	if (seg->area[s].pv)
-		log_print("%sPhysical extents\t%d to %d", pre,
-			  seg->area[s].pe, seg->area[s].pe + len - 1);
+		if (seg->area[s].u.lv.lv)
+			log_print("%sLogical extents\t%d to %d", pre,
+				  seg->area[s].u.lv.le,
+				  seg->area[s].u.lv.le + seg->area_len - 1);
+
+	}
 }
 
 int lvdisplay_segments(struct logical_volume *lv)
@@ -502,7 +516,7 @@ int lvdisplay_segments(struct logical_volume *lv)
 		log_print("Logical extent %u to %u:",
 			  seg->le, seg->le + seg->len - 1);
 
-		if (seg->type == SEG_STRIPED && seg->stripes == 1)
+		if (seg->type == SEG_STRIPED && seg->area_count == 1)
 			log_print("  Type\t\tlinear");
 		else
 			log_print("  Type\t\t%s",
@@ -510,14 +524,14 @@ int lvdisplay_segments(struct logical_volume *lv)
 
 		switch (seg->type) {
 		case SEG_STRIPED:
-			if (seg->stripes == 1)
+			if (seg->area_count == 1)
 				_display_stripe(seg, 0, "  ");
 			else {
-				log_print("  Stripes\t\t%u", seg->stripes);
+				log_print("  Stripes\t\t%u", seg->area_count);
 				log_print("  Stripe size\t\t%u KB",
 					  seg->stripe_size / 2);
 
-				for (s = 0; s < seg->stripes; s++) {
+				for (s = 0; s < seg->area_count; s++) {
 					log_print("  Stripe %d:", s);
 					_display_stripe(seg, s, "    ");
 				}
@@ -525,8 +539,9 @@ int lvdisplay_segments(struct logical_volume *lv)
 			log_print(" ");
 			break;
 		case SEG_SNAPSHOT:
-		case SEG_MIRROR:
-			;
+			break;
+		case SEG_MIRRORED:
+			break;
 		}
 	}
 

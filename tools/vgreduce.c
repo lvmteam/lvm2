@@ -138,8 +138,13 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		/* Are any segments of this LV on missing PVs? */
 		list_iterate(segh, &lv->segments) {
 			seg = list_item(segh, struct lv_segment);
-			for (s = 0; s < seg->stripes; s++) {
-				pv = seg->area[s].pv;
+			for (s = 0; s < seg->area_count; s++) {
+				if (seg->area[s].type != AREA_PV)
+					continue;
+
+				/* FIXME Also check for segs on deleted LVs */
+
+				pv = seg->area[s].u.pv.pv;
 				if (!pv || !pv->dev) {
 					if (!_remove_lv(cmd, lv, &list_unsafe)) {
 						stack;

@@ -372,6 +372,7 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 {
 	unsigned int s;
 	const char *name;
+	const char *type;
 
 	_outf(f, "segment%u {", count);
 	_inc_indent(f);
@@ -387,40 +388,51 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 	_outf(f, "type = \"%s\"", get_segtype_string(seg->type));
 
 	switch (seg->type) {
-	case SEG_STRIPED:
-		_outf(f, "stripe_count = %u%s", seg->stripes,
-		      (seg->stripes == 1) ? "\t# linear" : "");
-
-		if (seg->stripes > 1)
-			_out_size(f, (uint64_t) seg->stripe_size,
-				  "stripe_size = %u", seg->stripe_size);
-
-		f->nl(f);
-		_outf(f, "stripes = [");
-		_inc_indent(f);
-
-		for (s = 0; s < seg->stripes; s++) {
-			if (!(name = _get_pv_name(f, seg->area[s].pv))) {
-				stack;
-				return 0;
-			}
-
-			_outf(f, "\"%s\", %u%s", name, seg->area[s].pe,
-			      (s == seg->stripes - 1) ? "" : ",");
-		}
-
-		_dec_indent(f);
-		_outf(f, "]");
-		break;
-
 	case SEG_SNAPSHOT:
 		_outf(f, "chunk_size = %u", seg->chunk_size);
 		_outf(f, "origin = \"%s\"", seg->origin->name);
 		_outf(f, "cow_store = \"%s\"", seg->cow->name);
 		break;
-	case SEG_MIRROR:
-		/* mirrors = [ "lvol1", 10, ... ] */
-		;
+
+	case SEG_MIRRORED:
+	case SEG_STRIPED:
+		type = (seg->type == SEG_MIRRORED) ? "mirror" : "stripe";
+		_outf(f, "%s_count = %u%s", type, seg->area_count,
+		      (seg->area_count == 1) ? "\t# linear" : "");
+
+		if ((seg->type == SEG_STRIPED) && (seg->area_count > 1))
+			_out_size(f, (uint64_t) seg->stripe_size,
+				  "stripe_size = %u", seg->stripe_size);
+
+		f->nl(f);
+
+		_outf(f, "%ss = [", type);
+		_inc_indent(f);
+
+		for (s = 0; s < seg->area_count; s++) {
+			switch (seg->area[s].type) {
+			case AREA_PV:
+				if (!(name = _get_pv_name(f, seg->
+							  area[s].u.pv.pv))) {
+					stack;
+					return 0;
+				}
+
+				_outf(f, "\"%s\", %u%s", name,
+				      seg->area[s].u.pv.pe,
+				      (s == seg->area_count - 1) ? "" : ",");
+				break;
+			case AREA_LV:
+				_outf(f, "\"%s\", %u%s",
+				      seg->area[s].u.lv.lv->name,
+				      seg->area[s].u.lv.le,
+				      (s == seg->area_count - 1) ? "" : ",");
+			}
+		}
+
+		_dec_indent(f);
+		_outf(f, "]");
+		break;
 	}
 
 	_dec_indent(f);
@@ -604,6 +616,7 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 	list_iterate(pvh, &vg->pvs) {
 		pv = list_item(pvh, struct pv_list)->pv;
 
+		/* FIXME But skip if there's already an LV called pv%d ! */
 		if (lvm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0) {
 			stack;
 			goto bad;
