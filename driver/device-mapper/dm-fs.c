@@ -190,7 +190,7 @@ void dmfs_put_inode(struct inode *inode)
 
 	if (inode->i_mode & S_IFDIR) {
 		if (md)
-			dm_remove(md->name);
+			dm_remove(md);
 
 	} else {
 		if (table)
@@ -328,21 +328,23 @@ static int dmfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
 	int r;
 	const char *name = (const char *) dentry->d_name.name;
+	struct mapped_device *md;
 
 	if (!is_identifier(name, dentry->d_name.len))
 		return -EPERM;	/* or EINVAL ? */
 
-	r = dm_create(name, -1);
-	if (r)
-		return r;
+	md = dm_create(name, -1);
+	if (IS_ERR(md))
+		return PTR_ERR(md);
 
 	r = dmfs_mknod(dir, dentry, mode | S_IFDIR);
 	if (r) {
-		dm_remove(name);
+		dm_remove(md);
 		return r;
 	}
 
-	dentry->d_inode->u.generic_ip = dm_find_by_name(name);
+	dentry->d_inode->u.generic_ip = md;
+	md->inode = dentry->d_inode;
 
 	return 0;
 }
@@ -350,12 +352,7 @@ static int dmfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 static int dmfs_rmdir(struct inode *dir, struct dentry *dentry)
 {
 	int r = dmfs_unlink(dir, dentry);
-	if (r)
-		return r;
-
-	dm_remove(dentry->d_name.name);
-
-	return 0;
+	return r;
 }
 
 static int dmfs_create(struct inode *dir, struct dentry *dentry, int mode)

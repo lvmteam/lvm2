@@ -185,6 +185,7 @@ struct dm_table {
 struct mapped_device {
 	kdev_t dev;
 	char name[DM_NAME_LEN];
+	struct inode *inode;
 
 	int use_count;
 	int state;
@@ -214,8 +215,8 @@ int dm_target_init(void);
 struct mapped_device *dm_find_by_name(const char *name);
 struct mapped_device *dm_find_by_minor(int minor);
 
-int dm_create(const char *name, int minor);
-int dm_remove(const char *name);
+struct mapped_device *dm_create(const char *name, int minor);
+int dm_remove(struct mapped_device *md);
 
 int dm_activate(struct mapped_device *md, struct dm_table *t);
 int dm_deactivate(struct mapped_device *md);
