@@ -65,6 +65,8 @@ struct config_info {
 
 	int archive;		/* should we archive ? */
 	int backup;		/* should we backup ? */
+
+	mode_t umask;
 };
 
 static struct config_info _default_settings;
@@ -661,6 +663,15 @@ static void __init_log(struct config_file *cf)
 
 	const char *log_file = find_config_str(cf->root, "log/file", '/', 0);
 
+	_default_settings.debug =
+		find_config_int(cf->root, "log/level", '/', 0);
+	_default_settings.verbose =
+		find_config_int(cf->root, "log/verbose", '/', 0);
+	_default_settings.test = find_config_int(cf->root, "log/test", '/', 0);
+
+	init_debug(_default_settings.debug);
+	init_verbose(_default_settings.verbose);
+
 	if (find_config_int(cf->root, "log/overwrite", '/', 0))
 		open_mode = "w";
 
@@ -672,13 +683,6 @@ static void __init_log(struct config_file *cf)
 			init_log(_log);
 	}
 
-	_default_settings.debug =
-		find_config_int(cf->root, "log/level", '/', 0);
-
-	_default_settings.verbose =
-		find_config_int(cf->root, "log/verbose", '/', 0);
-
-	_default_settings.test = find_config_int(cf->root, "log/test", '/', 0);
 }
 
 static int _init_backup(struct config_file *cf)
@@ -869,6 +873,7 @@ static int init(void)
 {
 	struct stat info;
 	char config_file[PATH_MAX] = "";
+	mode_t old_umask;
 
 	if (!_get_env_vars())
 		return 0;
@@ -890,10 +895,10 @@ static int init(void)
 	/* Use LOG_USER for syslog messages by default */
 	init_syslog(LOG_USER);
 
-	_init_rand();
-
 	/* send log messages to stderr for now */
 	init_log(stderr);
+
+	_init_rand();
 
 	if (*_sys_dir && lvm_snprintf(config_file, sizeof(config_file),
 				      "%s/lvm.conf", _sys_dir) < 0) {
@@ -911,6 +916,14 @@ static int init(void)
 
 		__init_log(cmd->cf);
 	}
+
+	_default_settings.umask = find_config_int(cmd->cf->root, 
+						 "global/umask", '/', 
+						 DEFAULT_UMASK);
+
+	if ((old_umask = umask((mode_t)_default_settings.umask)) !=
+	    (mode_t)_default_settings.umask)
+		log_verbose("Set umask to %04o", _default_settings.umask);
 
 	if (lvm_snprintf(_dev_dir, sizeof(_dev_dir), "%s/",
         		 find_config_str(cmd->cf->root, "devices/dir",

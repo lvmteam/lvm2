@@ -17,7 +17,7 @@ int create_dir(const char *dir)
 
         if (stat(dir, &info) < 0 ) {
                 log_verbose("Creating directory %s", dir);
-                if (!mkdir(dir, S_IRWXU))
+                if (!mkdir(dir, 0777));
                         return 1;
                 log_sys_error("mkdir", dir);
                 return 0;

@@ -11,6 +11,7 @@
 #include "lvm-string.h"
 #include "toollib.h"
 
+#include <unistd.h>
 #include <limits.h>
 
 static struct {
@@ -60,7 +61,7 @@ static int __archive(struct volume_group *vg)
 	int r;
 	struct format_instance *archiver;
 
-	if (!(archiver = backup_format_create(vg->cmd,
+	if (!(archiver = archive_format_create(vg->cmd,
 					      _archive_params.dir,
 					      _archive_params.keep_days,
 					      _archive_params.keep_number))) {

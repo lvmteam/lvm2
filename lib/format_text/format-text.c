@@ -7,10 +7,16 @@
 #include "format-text.h"
 #include "import-export.h"
 
+#include "lvm-file.h"
 #include "log.h"
 #include "pool.h"
 #include "config.h"
 #include "hash.h"
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/file.h>
+#include <limits.h>
 
 /*
  * NOTE: Currently there can be only one vg per file.
@@ -69,22 +75,48 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
 	FILE *fp;
+	int fd; 
+	char *slash;
 	char *file = (char *) fi->private;
+	char temp_file[PATH_MAX], temp_dir[PATH_MAX];
 
-	/* FIXME: should be opened exclusively */
-	if (!(fp = fopen(file, "w"))) {
-		log_sys_error("fopen", file);
+	slash = rindex(file, '/');
+
+	if (slash == 0)
+		strcpy(temp_dir, ".");
+	else if (slash - file < PATH_MAX) {
+		strncpy(temp_dir, file, slash - file);
+		temp_dir[slash - file] = '\0';
+	} else {
+		log_error("Text format failed to determine directory.");
+		return 0;
+	}
+
+        if (!create_temp_name(temp_dir, temp_file, sizeof(temp_file), &fd)) {
+                log_err("Couldn't create temporary text file name.");
+                return 0;
+        }
+
+	if (!(fp = fdopen(fd, "w"))) {
+		log_sys_error("fdopen", temp_file);
+		close(fd);
 		return 0;
 	}
 
 	if (!text_vg_export(fp, vg)) {
-		log_error("Failed to write metadata to %s.", file);
+		log_error("Failed to write metadata to %s.", temp_file);
 		fclose(fp);
 		return 0;
 	}
 
-	if (!fclose(fp)) {
+	if (fclose(fp)) {
 		log_sys_error("fclose", file);
+		return 0;
+	}
+
+	if (rename(temp_file, file)) {
+		log_error("%s: rename to %s failed: %s", temp_file, file,
+			  strerror(errno));
 		return 0;
 	}
 

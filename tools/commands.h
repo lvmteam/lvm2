@@ -333,6 +333,7 @@ xx(vgcfgbackup,
    "Backup volume group configuration(s)",
    "vgcfgbackup " "\n"
    "\t[-d|--debug] " "\n"
+   "\t[-f|--file filename] " "\n"
    "\t[-h|--help] " "\n"
    "\t[-v|--verbose]" "\n"
    "\t[-V|--version] " "\n"
@@ -343,7 +344,7 @@ xx(vgcfgrestore,
    "Restore volume group configuration",
    "vgcfgrestore " "\n"
    "\t[-d|--debug] " "\n"
-   "\t[-f|--file VGConfPath] " "\n"
+   "\t[-f|--file filename] " "\n"
    "\t[-l[l]|--list [--list]]" "\n"
    "\t[-n|--name VolumeGroupName] " "\n"
    "\t[-h|--help]" "\n"
