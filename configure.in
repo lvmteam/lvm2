@@ -136,4 +136,5 @@ lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
 test/mm/Makefile							\
+test/format1/Makefile							\
 )
