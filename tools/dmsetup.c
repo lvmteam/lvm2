@@ -63,7 +63,7 @@ static char *_uuid;
  */
 static int _parse_file(struct dm_task *dmt, const char *file)
 {
-	char buffer[LINE_SIZE], *ttype, *ptr, *comment;
+	char buffer[LINE_SIZE], ttype[LINE_SIZE], *ptr, *comment;
 	FILE *fp;
 	unsigned long long start, size;
 	int r = 0, n, line = 0;
@@ -94,8 +94,8 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 		if (!*ptr || *ptr == '#')
 			continue;
 
-		if (sscanf(ptr, "%llu %llu %as %n",
-			   &start, &size, &ttype, &n) < 3) {
+		if (sscanf(ptr, "%llu %llu %s %n",
+			   &start, &size, ttype, &n) < 3) {
 			err("%s:%d Invalid format", file, line);
 			goto out;
 		}
@@ -106,8 +106,6 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 
 		if (!dm_task_add_target(dmt, start, size, ttype, ptr))
 			goto out;
-
-		free(ttype);
 	}
 	r = 1;
 
