@@ -1,28 +1,28 @@
 .TH CLVMD 8 "LVM TOOLS" "Red Hat Inc" \" -*- nroff -*-
 .SH NAME
-clvmd \- cluster lvm daemon
+clvmd \- cluster LVM daemon
 .SH SYNOPSIS
 .B clvmd
 [\-d] [\-h]
 [\-t <timeout>]
 [\-V]
 .SH DESCRIPTION
-clvmd is the daemon that distributes lvm metadata updates around a cluster. It must
-be running on all nodes in the cluster and will give an error if a node is in the
-cluster that does not have this daemon running.
+clvmd is the daemon that distributes LVM metadata updates around a cluster.
+It must be running on all nodes in the cluster and will give an error 
+if a node in the cluster does not have this daemon running.
 .SH OPTIONS
 .TP
 .I \-d
-Runs in the forgeround and prints debugging information (if compiled in) to
+Runs in the foreground and prints debugging information (if compiled in) to
 stderr. By default, clvmd will fork into the background when invoked.
 .TP
 .I \-t <timeout>
 Specifies the timeout for commands to run around the cluster. This should not
 be so small that commands with many disk updates to do will fail, so you
-mayneed to increase this on systems with very large disk farms. The default is 30
-seconds.
+may need to increase this on systems with very large disk farms. 
+The default is 30 seconds.
 .TP
 .I \-V
-Print the version of the cluster LVM daemon.
+Display the version of the cluster LVM daemon.
 .SH SEE ALSO
 .BR lvm (8)
