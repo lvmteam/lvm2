@@ -1,5 +1,7 @@
 Version 2.00.26 - 
 =====================================
+  Update some man pages.
+  Allow y/n with -ae args (exclusive activation).
   Fixes to lvcreate vgname parsing.
   Fix dm_name string size calculation.
   Improve clvmd error reporting during startup.
