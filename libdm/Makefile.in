@@ -17,9 +17,9 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 interface = @interface@
 
-SOURCES=libdm-common.c $(interface)/libdevmapper.c
+SOURCES = libdm-common.c $(interface)/libdm-iface.c
 
-INCLUDES=-I$(interface)
+INCLUDES = -I$(interface)
 
 LIB_STATIC = $(interface)/libdevmapper.a
 LIB_SHARED = $(interface)/libdevmapper.so
@@ -28,8 +28,18 @@ TARGETS = $(LIB_STATIC) $(LIB_SHARED)
 
 include ../make.tmpl
 
+.PHONY: install_dynamic install_static \
+	install_@interface@ install_@interface@_static
 
-install: install_@interface@
+ifeq ("@STATIC_LINK@", "yes")
+  INSTALL_TYPE = install_static
+else
+  INSTALL_TYPE = install_dynamic
+endif
+
+install: $(INSTALL_TYPE)
+
+install_dynamic: install_@interface@
 	$(LN_S) -f libdevmapper.so.$(LIB_VERSION) $(libdir)/libdevmapper.so
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
 		$(includedir)/libdevmapper.h
@@ -38,9 +48,6 @@ install_static: install_@interface@_static
 	$(LN_S) -f libdevmapper.a.$(LIB_VERSION) $(libdir)/libdevmapper.a
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
 		$(includedir)/libdevmapper.h
-
-
-.PHONY: install install_@interface@ install_static install_@interface@_static
 
 install_fs: fs/libdevmapper.so
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
@@ -54,10 +61,10 @@ install_ioctl_static: ioctl/libdevmapper.a
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper.a.$(LIB_VERSION)
 
+.PHONY: distclean_lib distclean
+
 distclean_lib: 
 	$(RM) libdm-common.h
 
 distclean: distclean_lib
-
-.PHONY: distclean_lib distclean
 
