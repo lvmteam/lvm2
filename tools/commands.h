@@ -232,7 +232,7 @@ xx(lvscan,
    "lvscan " "\n"
    "\t[-b|--blockdevice] " "\n"
    "\t[-d|--debug] " "\n"
-   "\t[-D|--disk]" "\n" 
+   "\t[-D|--disk]" "\n"
    "\t[-h|--help] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
@@ -337,7 +337,7 @@ xx(vgcfgbackup,
    "\t[-v|--verbose]" "\n"
    "\t[-V|--version] " "\n"
    "\t[VolumeGroupName...]\n",
-   autobackup_ARG)
+   file_ARG)
 
 xx(vgcfgrestore,
    "Restore volume group configuration",

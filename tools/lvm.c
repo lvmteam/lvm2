@@ -52,21 +52,18 @@ static int _dump_filter;
 static int _interactive;
 static FILE *_log;
 
-/*
- * Both verbose have a global setting which comes
- * from the command line that invoked the shell,
- * or the config file.  These are the 'default'
- * variables.  In addition people may set a level
- * for a single command.
- */
-static int _default_debug;
-static int _debug;
+struct config_info {
+	int debug;
+	int verbose;
+	int test;
 
-static int _default_verbose;
-static int _verbose;
+	int archive;		/* should we archive ? */
+	int backup;		/* should we backup ? */
+};
 
-static int _default_test;
-static int _test;
+static struct config_info _default_settings;
+static struct config_info _current_settings;
+
 
 /*
  * The lvm_sys_dir contains:
@@ -74,15 +71,10 @@ static int _test;
  * o  The lvm configuration (lvm.conf)
  * o  The persistent filter cache (.cache)
  * o  Volume group backups (backup/)
- *
  */
 static char _sys_dir[PATH_MAX] = "/etc/lvm";
 static char _backup_dir[PATH_MAX];
 static char _dev_dir[PATH_MAX];
-
-static int _backup_days = 14; 		/* Keep at least 14 days */
-static int _backup_number = 10;		/* Keep at least 10 backups */
-static int _backup_auto = 1;		/* Autobackups enabled by default */
 
 #define DEFAULT_DEV_DIR "/dev"
 
@@ -509,25 +501,24 @@ static int process_common_commands(struct command *com)
 {
 	int l;
 
+	_current_settings = _default_settings;
+
 	if (arg_count(suspend_ARG))
 		kill(getpid(), SIGSTOP);
 
-	_debug = _default_debug;
 	if (arg_count(debug_ARG))
-		_debug = arg_count(debug_ARG);
+		_current_settings.debug = arg_count(debug_ARG);
 
-	_verbose = _default_verbose;
 	if (arg_count(verbose_ARG))
-		_verbose = arg_count(verbose_ARG);
+		_current_settings.verbose = arg_count(verbose_ARG);
 
 	if (arg_count(quiet_ARG)) {
-		_debug = 0;
-		_verbose = 0;
+		_current_settings.debug = 0;
+		_current_settings.verbose = 0;
 	}
 
-	_test = _default_test;
 	if (arg_count(test_ARG))
-		_test = arg_count(test_ARG);
+		_current_settings.test = arg_count(test_ARG);
 
 	if (arg_count(help_ARG)) {
 		usage(com->name);
@@ -542,10 +533,10 @@ static int process_common_commands(struct command *com)
 
 	/* Set autobackup if command takes this option */
 	for (l = 0; l < com->num_args; l++)
-		if (com->valid_args[l] == autobackup_ARG)
-			if (!autobackup_init(_backup_dir, _backup_days,
-					     _backup_number, _backup_auto))
-				return EINVALID_CMD_LINE;
+		if (arg_count(autobackup_ARG)) {
+			_current_settings.archive = 1;
+			_current_settings.backup = 1;
+		}
 
 	/* Zero indicates it's OK to continue processing this command */
 	return 0;
@@ -579,6 +570,16 @@ static void display_help(void)
 	}
 }
 
+static void _use_settings(struct config_info *settings)
+{
+	init_debug(settings->debug);
+	init_verbose(settings->verbose);
+	init_test(settings->test);
+
+	archive_enable(settings->archive);
+	backup_enable(settings->backup);
+}
+
 static int run_command(int argc, char **argv)
 {
 	int ret = 0;
@@ -594,19 +595,16 @@ static int run_command(int argc, char **argv)
 	if ((ret = process_common_commands(the_command)))
 		return ret;
 
-	init_debug(_debug);
-	init_verbose(_verbose);
-	init_test(_test);
-
+	_use_settings(&_current_settings);
 	ret = the_command->fn(argc, argv);
 
 	/*
 	 * set the debug and verbose levels back
-	 * to the global default.
+	 * to the global default.  We have to do
+	 * this so the logging levels get set
+	 * correctly for program exit.
 	 */
-	init_debug(_default_debug);
-	init_verbose(_default_verbose);
-	init_test(_default_test);
+	_use_settings(&_default_settings);
 
 	/*
 	 * free off any memory the command used.
@@ -665,14 +663,13 @@ static void __init_log(struct config_file *cf)
 			init_log(_log);
 	}
 
-	_default_debug = find_config_int(cf->root, "log/level", '/', 0);
-	init_debug(_default_debug);
+	_default_settings.debug =
+		find_config_int(cf->root, "log/level", '/', 0);
 
-	_default_verbose = find_config_int(cf->root, "log/verbose", '/', 0);
-	init_verbose(_default_verbose);
+	_default_settings.verbose =
+		find_config_int(cf->root, "log/verbose", '/', 0);
 
-	_default_test = find_config_int(cf->root, "log/test", '/', 0);
-	init_test(_default_test);
+	_default_settings.test = find_config_int(cf->root, "log/test", '/', 0);
 }
 
 static int dev_cache_setup(struct config_file *cf)
@@ -843,7 +840,7 @@ static int init(void)
 	}
 
 	if (lvm_snprintf(_dev_dir, sizeof(_dev_dir), "%s/",
-        		 find_config_str(cmd->cf->root, "devices/dir", 
+        		 find_config_str(cmd->cf->root, "devices/dir",
 					 '/', DEFAULT_DEV_DIR)) < 0) {
 		log_error("Device directory given in config file too long");
 		return 0;
@@ -854,8 +851,8 @@ static int init(void)
 
 	dm_log_init(print_log);
 
-	if (!*strncpy(_backup_dir, 
-		      find_config_str(cmd->cf->root, "backup/dir", '/', ""), 
+	if (!*strncpy(_backup_dir,
+		      find_config_str(cmd->cf->root, "backup/dir", '/', ""),
 		      sizeof(_backup_dir)) &&
 	    *_sys_dir &&
 	    lvm_snprintf(_backup_dir, sizeof(_backup_dir), "%s/backup",
@@ -867,13 +864,13 @@ static int init(void)
 	if (!create_dir(_backup_dir))
 		return 0;
 
-	_backup_days = find_config_int(cmd->cf->root, "backup/days", '/', 
+	_backup_days = find_config_int(cmd->cf->root, "backup/days", '/',
 				       _backup_days);
 
-	_backup_number = find_config_int(cmd->cf->root, "backup/keep", '/', 
+	_backup_number = find_config_int(cmd->cf->root, "backup/keep", '/',
 					 _backup_number);
 
-	_backup_auto = find_config_int(cmd->cf->root, "backup/auto", '/', 
+	_backup_auto = find_config_int(cmd->cf->root, "backup/auto", '/',
 					 _backup_auto);
 
 	if (!dev_cache_setup(cmd->cf))
@@ -892,6 +889,7 @@ static int init(void)
 	if (!(fid = create_lvm1_format(cmd)))
 		return 0;
 
+	use_settings(_default_settings);
 	return 1;
 }
 
@@ -1103,7 +1101,7 @@ static void _read_history(void)
 	if (read_history(hist_file))
 		log_very_verbose("Couldn't read history from %s.", hist_file);
 
-        stifle_history(find_config_int(cmd->cf->root, "shell/history_size", 
+        stifle_history(find_config_int(cmd->cf->root, "shell/history_size",
 				       '/', MAX_HISTORY));
 
 }

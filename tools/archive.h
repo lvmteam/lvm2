@@ -25,8 +25,7 @@ int archive_init(const char *dir,
 		 unsigned int keep_days, unsigned int keep_min);
 void archive_exit(void);
 
-void archive_disable(void);
-void archive_enable(void);
+void archive_enable(int flag);
 int archive(struct volume_group *vg);
 
 int backup_init(const char *dir);
