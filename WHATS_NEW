@@ -1,5 +1,6 @@
 Version 2.01.08 - 
 ================================
+  Tighten signal handlers.
   Avoid some compiler warnings.
   Additional rename failure error message.
   read/write may be macros.

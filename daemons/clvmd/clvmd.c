@@ -88,7 +88,7 @@ static pthread_t lvm_thread;
 static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
 static struct list lvm_cmd_head;
-static int quit = 0;
+static volatile sig_atomic_t quit = 0;
 static int child_pipe[2];
 
 /* Reasons the daemon failed initialisation */

@@ -41,7 +41,7 @@ static char _lock_dir[NAME_LEN];
 
 static sig_t _oldhandler;
 static sigset_t _fullsigset, _intsigset;
-static int _handler_installed;
+static volatile sig_atomic_t _handler_installed;
 
 static int _release_lock(const char *file, int unlock)
 {
@@ -95,38 +95,40 @@ static void _reset_file_locking(void)
 static void _remove_ctrl_c_handler()
 {
 	siginterrupt(SIGINT, 0);
-	if (!_handler_installed || _oldhandler == SIG_ERR)
+	if (!_handler_installed)
 		return;
+
+	_handler_installed = 0;
 
 	sigprocmask(SIG_SETMASK, &_fullsigset, NULL);
 	if (signal(SIGINT, _oldhandler) == SIG_ERR)
 		log_sys_error("signal", "_remove_ctrl_c_handler");
-
-	_handler_installed = 0;
 }
 
 static void _trap_ctrl_c(int sig)
 {
 	_remove_ctrl_c_handler();
 	log_error("CTRL-c detected: giving up waiting for lock");
-	return;
 }
 
 static void _install_ctrl_c_handler()
 {
-	if ((_oldhandler = signal(SIGINT, _trap_ctrl_c)) == SIG_ERR)
+	_handler_installed = 1;
+
+	if ((_oldhandler = signal(SIGINT, _trap_ctrl_c)) == SIG_ERR) {
+		_handler_installed = 0;
 		return;
+	}
 
 	sigprocmask(SIG_SETMASK, &_intsigset, NULL);
 	siginterrupt(SIGINT, 1);
-
-	_handler_installed = 1;
 }
 
 static int _lock_file(const char *file, int flags)
 {
 	int operation;
 	int r = 1;
+	int old_errno;
 
 	struct lock_list *ll;
 	struct stat buf1, buf2;
@@ -176,10 +178,12 @@ static int _lock_file(const char *file, int flags)
 			_install_ctrl_c_handler();
 
 		r = flock(ll->lf, operation);
+		old_errno = errno;
 		if (!(flags & LCK_NONBLOCK))
 			_remove_ctrl_c_handler();
 
 		if (r) {
+			errno = old_errno;
 			log_sys_error("flock", ll->res);
 			goto err;
 		}
