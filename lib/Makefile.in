@@ -23,12 +23,11 @@ VPATH = @srcdir@
 SOURCES=\
 	config/config.c \
 	dev-mgr/dev-manager.c \
-	dev-mgr/hash.c \
 	device/device.c \
 	display/display.c \
 	display/metadata.c \
+	filters/filter.c \
 	log/log.c \
-	metadata/lvm_v1.c \
 	metadata/metadata.c \
 	mm/pool.c \
 	mm/dbg_malloc.c 

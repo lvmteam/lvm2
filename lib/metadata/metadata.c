@@ -19,13 +19,9 @@
 
 #include <string.h>
 #include "dbg_malloc.h"
-#include "dev-manager.h"
+#include "dev-cache.h"
 #include "log.h"
 #include "metadata.h"
-
-/* FIXME: Use registered fn ptrs to avoid including this? */
-/*        Split into external/internal hdr files? */
-#include "lvm_v1.h"
 
 pv_t *pv_read(struct dev_mgr *dm, const char *pv_name)
 {

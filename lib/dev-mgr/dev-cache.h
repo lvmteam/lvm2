@@ -1,6 +1,4 @@
 /*
- * tools/lib/dev-manager.h
- *
  * Copyright (C) 2001 Sistina Software
  *
  * This file is released under the GPL.
@@ -19,7 +17,7 @@ struct device {
 };
 
 struct dev_filter {
-	int (*fn)(struct device *dev, struct dev_cache_filter *f);
+	int (*passes_filter)(struct dev_cache_filter *f, struct device *dev);
 	void *private;
 };
 
