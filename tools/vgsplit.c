@@ -287,7 +287,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Volume group \"%s\" successfully split from \"%s\"",
 		  vg_to->name, vg_from->name);
-	return 0;
+	return ECMD_PROCESSED;
 
       error:
 	unlock_vg(cmd, vg_name_from);

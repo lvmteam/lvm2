@@ -51,7 +51,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	lv_capacity_total += lv->size;
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int lvscan(struct cmd_context *cmd, int argc, char **argv)

@@ -38,8 +38,7 @@ static int vgck_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	/* FIXME: free */
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int vgck(struct cmd_context *cmd, int argc, char **argv)

@@ -184,7 +184,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	log_print("Renamed \"%s\" to \"%s\" in volume group \"%s\"",
 		  lv_name_old, lv_name_new, vg_name);
 
-	return 0;
+	return ECMD_PROCESSED;
 
       error:
 	unlock_vg(cmd, vg_name);

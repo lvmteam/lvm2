@@ -190,7 +190,7 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");
-		return 0;
+		return ECMD_PROCESSED;
 	}
 
 	log_print("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
@@ -200,5 +200,5 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 		  display_size(cmd, (size_total - size_new) / 2, SIZE_SHORT),
 		  new_pvs_found, display_size(cmd, size_new / 2, SIZE_SHORT));
 
-	return 0;
+	return ECMD_PROCESSED;
 }

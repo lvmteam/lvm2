@@ -31,7 +31,7 @@ static int _lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
 			lvdisplay_segments(lv);
 	}
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int lvdisplay(struct cmd_context *cmd, int argc, char **argv)

@@ -206,5 +206,5 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		  done, done > 1 ? "s" : "",
 		  total - done, total - done > 1 ? "s" : "");
 
-	return 0;
+	return (total == done) ? ECMD_PROCESSED : ECMD_FAILED;
 }

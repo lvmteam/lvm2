@@ -26,7 +26,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
-	int ret = 0;
+	int ret = ECMD_PROCESSED;
 
 	if (!vg || !consistent) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);

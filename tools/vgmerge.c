@@ -177,7 +177,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	log_print("Volume group \"%s\" successfully merged into \"%s\"",
 		  vg_from->name, vg_to->name);
-	return 0;
+	return ECMD_PROCESSED;
 
       error:
 	unlock_vg(cmd, vg_name_from);

@@ -72,14 +72,14 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	return 1;
 }
 
-static void pvremove_single(struct cmd_context *cmd, const char *pv_name,
-			    void *handle)
+static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
+			   void *handle)
 {
 	struct device *dev;
 
 	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
-		return;
+		return ECMD_FAILED;
 	}
 
 	if (!pvremove_check(cmd, pv_name))
@@ -99,14 +99,18 @@ static void pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	log_print("Labels on physical volume \"%s\" successfully wiped",
 		  pv_name);
 
+	unlock_vg(cmd, "");
+	return ECMD_PROCESSED;
+
       error:
 	unlock_vg(cmd, "");
-	return;
+	return ECMD_FAILED;
 }
 
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
 {
-	int i;
+	int i, r;
+	int ret = ECMD_PROCESSED;
 
 	if (!argc) {
 		log_error("Please enter a physical volume path");
@@ -119,9 +123,10 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
-		pvremove_single(cmd, argv[i], NULL);
-		pool_empty(cmd->mem);
+		r = pvremove_single(cmd, argv[i], NULL);
+		if (r > ret)
+			ret = r;
 	}
 
-	return 0;
+	return ret;
 }

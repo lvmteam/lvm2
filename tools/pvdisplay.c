@@ -35,7 +35,7 @@ static int _pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
 	if (arg_count(cmd, short_ARG)) {
 		log_print("Device \"%s\" has a capacity of %s", pv_name,
 			  display_size(cmd, size / 2, SIZE_SHORT));
-		return 0;
+		return ECMD_PROCESSED;
 	}
 
 	if (pv->status & EXPORTED_VG)
@@ -48,13 +48,13 @@ static int _pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (arg_count(cmd, colon_ARG)) {
 		pvdisplay_colons(pv);
-		return 0;
+		return ECMD_PROCESSED;
 	}
 
 	pvdisplay_full(cmd, pv, handle);
 
 	if (!arg_count(cmd, maps_ARG))
-		return 0;
+		return ECMD_PROCESSED;
 
 	return 0;
 }
@@ -82,7 +82,5 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	process_each_pv(cmd, argc, argv, NULL, NULL, _pvdisplay_single);
-
-	return 0;
+	return process_each_pv(cmd, argc, argv, NULL, NULL, _pvdisplay_single);
 }

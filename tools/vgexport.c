@@ -62,7 +62,7 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name,
 
 	log_print("Volume group \"%s\" successfully exported", vg->name);
 
-	return 0;
+	return ECMD_PROCESSED;
 
       error:
 	return ECMD_FAILED;

@@ -33,7 +33,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		if (!archive_display(cmd, vg_name))
 			return ECMD_FAILED;
 
-		return 0;
+		return ECMD_PROCESSED;
 	}
 
 	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
@@ -61,5 +61,5 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 
 	unlock_vg(cmd, vg_name);
 	unlock_vg(cmd, ORPHAN);
-	return 0;
+	return ECMD_PROCESSED;
 }

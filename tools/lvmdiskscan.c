@@ -97,7 +97,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!(iter = dev_iter_create(cmd->filter))) {
 		log_error("dev_iter_create failed");
-		return 0;
+		return ECMD_FAILED;
 	}
 
 	/* Do scan */
@@ -135,5 +135,5 @@ int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 	log_print("%d LVM physical volume%s",
 		  pv_parts_found, pv_parts_found == 1 ? "" : "s");
 
-	return 0;
+	return ECMD_PROCESSED;
 }
