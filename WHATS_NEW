@@ -1,5 +1,6 @@
-Version 2.00.34 - 
+Version 2.01.00 - 
 ==================================
+  Fix vgscan metadata auto-correction.
   Only ask libdevmapper for open_count when we need it.
   Adjust RHEL4 clvmd init script priority.
   Enable building of CMAN & GULM versions of clvmd into a single binary

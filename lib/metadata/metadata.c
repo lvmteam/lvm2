@@ -711,6 +711,11 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 			log_error("Automatic metadata correction failed");
 			return NULL;
 		}
+		if (!vg_commit(correct_vg)) {
+			log_error("Automatic metadata correction commit "
+				  "failed");
+			return NULL;
+		}
 	}
 
 	if ((correct_vg->status & PVMOVE) && !pvmove_mode()) {
