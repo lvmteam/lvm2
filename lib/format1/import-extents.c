@@ -344,7 +344,7 @@ int import_extents(struct cmd_context *cmd, struct volume_group *vg,
 		   struct list *pvds)
 {
 	int r = 0;
-	struct pool *scratch = pool_create(10 * 1024);
+	struct pool *scratch = pool_create("lvm1 import_extents", 10 * 1024);
 	struct hash_table *maps;
 
 	if (!scratch) {

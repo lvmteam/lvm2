@@ -828,7 +828,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (*cmd->sys_dir && !create_dir(cmd->sys_dir))
 		goto error;
 
-	if (!(cmd->libmem = pool_create(4 * 1024))) {
+	if (!(cmd->libmem = pool_create("library", 4 * 1024))) {
 		log_error("Library memory pool creation failed");
 		return 0;
 	}
@@ -859,7 +859,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (!_init_filters(cmd))
 		goto error;
 
-	if (!(cmd->mem = pool_create(4 * 1024))) {
+	if (!(cmd->mem = pool_create("command", 4 * 1024))) {
 		log_error("Command memory pool creation failed");
 		return 0;
 	}

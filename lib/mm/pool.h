@@ -55,7 +55,7 @@
 struct pool;
 
 /* constructor and destructor */
-struct pool *pool_create(size_t chunk_hint);
+struct pool *pool_create(const char *name, size_t chunk_hint);
 void pool_destroy(struct pool *p);
 
 /* simple allocation/free routines */

@@ -458,7 +458,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	if (segtype->flags & SEG_VIRTUAL)
 		return _alloc_virtual(lv, allocated, segtype);
 
-	if (!(scratch = pool_create(1024))) {
+	if (!(scratch = pool_create("allocation", 1024))) {
 		stack;
 		return 0;
 	}

@@ -181,7 +181,7 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda)
 {
-	struct pool *mem = pool_create(1024);
+	struct pool *mem = pool_create("pool vg_read", 1024);
 	struct list pds;
 	struct volume_group *vg = NULL;
 
@@ -227,7 +227,7 @@ static int _pv_setup(const struct format_type *fmt,
 static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
-	struct pool *mem = pool_create(1024);
+	struct pool *mem = pool_create("pool pv_read", 1024);
 	struct pool_list *pl;
 	struct device *dev;
 	int r = 0;
