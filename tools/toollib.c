@@ -35,6 +35,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 }
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
+		    int lock_type,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct logical_volume * lv))
 {
@@ -63,17 +64,23 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			}
 
 			log_verbose("Finding volume group \"%s\"", vg_name);
+ 			if (!lock_vol(cmd, vg_name, lock_type)) {
+ 				log_error("Can't lock %s: skipping", vg_name);
+ 				continue;
+ 			}
 			if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 				log_error("Volume group \"%s\" doesn't exist",
 					  vg_name);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
+ 				unlock_vg(cmd, vg_name);
 				continue;
 			}
 
 			if (vg->status & EXPORTED_VG) {
 				log_error("Volume group \"%s\" is exported",
 					  vg->name);
+ 				unlock_vg(cmd, vg_name);
 				return ECMD_FAILED;
 			}
 
@@ -83,6 +90,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 					  lv_name, vg_name);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
+				unlock_vg(cmd, vg_name);
 				continue;
 			}
 
@@ -90,6 +98,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 			if ((ret = process_single(cmd, lv)) > ret_max)
 				ret_max = ret;
+			unlock_vg(cmd, vg_name);
 		}
 	} else {
 		log_verbose("Finding all logical volumes");
@@ -99,14 +108,20 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		}
 		list_iterate(vgh, vgs) {
 			vg_name = list_item(vgh, struct name_list)->name;
+ 			if (!lock_vol(cmd, vg_name, lock_type)) {
+ 				log_error("Can't lock %s: skipping", vg_name);
+ 				continue;
+ 			}
 			if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 				log_error("Volume group \"%s\" not found",
 					  vg_name);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
+	 			unlock_vg(cmd, vg_name);
 				continue;
 			}
 			ret = process_each_lv_in_vg(cmd, vg, process_single);
+ 			unlock_vg(cmd, vg_name);
 			if (ret > ret_max)
 				ret_max = ret;
 			vg_count++;
