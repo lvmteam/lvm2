@@ -81,6 +81,8 @@ int lvactivate(int argc, char **argv)
 				        get_pe_offset(p, pv));
 		}
 
+		if (pv)
+			dbg_free(pv->pe);
 		dbg_free(pv);
 		dbg_free(lvs);
 	}
@@ -88,6 +90,8 @@ int lvactivate(int argc, char **argv)
 	return 0;
 
       pvdisplay_device_out:
+	if (pv)
+		dbg_free(pv->pe);
 	dbg_free(pv);
 	dbg_free(lvs);
 
