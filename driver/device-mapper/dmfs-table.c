@@ -22,30 +22,60 @@
 #include <linux/config.h>
 #include <linux/fs.h>
 
-static ssize_t dmfs_table_read(struct file *file, char *buf, size_t size, loff_t *pos)
+static int dmfs_release(struct inode *inode, struct file *f)
 {
-	down(&inode->i_sem);
+	struct dm_table *table;
 
-	up(&inode->i_sem);
+       /* FIXME: we should lock the inode to
+           prevent someone else opening it while
+           we are parsing */
+
+	if (!(f->f_mode & S_IWUGO))
+		return 0;
+
 }
 
-static ssize_t dmfs_table_write(struct file *file, const char *buf, size_t size, loff_t *pos)
+static int dmfs_readpage(struct file *file, struct page *page)
 {
-	down(&inode->i_sem);
-
-	up(&inode->i_sem);
+	if (!PageUptodate(page)) {
+		memset(kmap(page), 0, PAGE_CACHE_SIZE);
+		kunmap(page);
+		flush_dcache_page(page);
+		SetPageUptodate(page);
+	}
+	UnlockPage(page);
+	return 0;
 }
 
-static int dmfs_table_open(struct inode *inode, struct file *file)
+static int dmfs_writepage(struct page *page)
 {
-	struct dentry *dentry = file->f_dentry;
+	SetPageDirty(page);
+	UnlockPage(page);
+	return 0;
+}
 
-	if (dentry->name[0] == '.')
-		return -EPERM;
+static int dmfs_prepare_write(struct file *file, struct page *page,
+			      unsigned offset, unsigned to)
+{
+	void *addr = kmap(page);
+	if (!Page_Uptodate(page)) {
+		memset(addr, 0, PAGE_CACHE_SIZE);
+		flush_dcache_page(page);
+		SetPageUptodate(page);
+	}
+	SetPageDirty(page);
+	return 0;
+}
 
-	if (dentry->name.len == 6 && memcmp("ACTIVE", dentry->name.name, 6) == 0)
-		return -EPERM;
+static int dmfs_commit_write(struct file *file, struct page *page,
+			     unsigned offset, unsigned to)
+{
+	struct inode *inode = page->mapping->host;
+	loff_t pos = ((loff_t) page->index << PAGE_CACHE_SHIFT) + to;
 
+	kunmap(page);
+	if (pos > inode->i_size)
+		inode->i_size = pos;
 	return 0;
 }
 
@@ -54,18 +84,26 @@ static int dmfs_table_sync(struct file *file, struct dentry *dentry, int datasyn
 	return 0;
 }
 
+static struct dm_table_address_space_operations = {
+	readpage:	dmfs_readpage,
+	writepage:	dmfs_writepage,
+	prepare_write:	dmfs_prepare_write,
+	commit_write:	dmfs_commit_write,
+};
+
 static struct dm_table_file_operations = {
-/* 	llseek:		generic_file_llseek, */
-	read:		dmfs_read,
-	write:		dmfs_write,
-	open:		dmfs_open,
+ 	llseek:		generic_file_llseek,
+	read:		generic_file_read,
+	write:		generic_file_write,
+	mmap:		generic_file_mmap,
 	fsync:		dmfs_table_sync,
+	release:	dmfs_release,
 };
 
 static struct dmfs_table_inode_operations = {
 };
 
-int dmfs_create_file(struct inode *dir, struct dentry *dentry, int mode)
+int dmfs_create_table(struct inode *dir, int mode)
 {
 	struct inode *inode = new_inode(dir->i_sb);
 
@@ -77,6 +115,7 @@ int dmfs_create_file(struct inode *dir, struct dentry *dentry, int mode)
 		inode->i_blocks = 0;
 		inode->i_rdev = NODEV;
 		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
+		inode->i_mapping->a_ops = &dmfs_table_address_space_operations;
 		inode->i_fop = &dmfs_table_file_operations;
 		inode->i_op = &dmfs_table_inode_operations;
 	}
