@@ -5,6 +5,7 @@
  */
 
 #include "libdevmapper.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
