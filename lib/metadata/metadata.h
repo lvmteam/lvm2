@@ -63,17 +63,20 @@ struct physical_volume {
         uint32_t pe_allocated;
 };
 
-struct pe_specifier {
+struct pv_area {
         struct physical_volume *pv;
-        uint32_t pe;
+        uint32_t start;		/* in extents */
+	uint32_t len;		/* in extents */
 };
 
 struct stripe_segment {
-	uint32_t chunk_size;
-	uint32_t pe_count;
+	struct list list;
 
-	/* variable sized pe array */
-        struct pe_specifier pes[0];
+	uint32_t chunk_size;
+	uint32_t stripes;
+
+	/* There will be one pv_area for each stripe */
+        struct pv_area areas[0];
 };
 
 struct cmd_context;
@@ -116,8 +119,7 @@ struct logical_volume {
         uint32_t le_count;
 
         /* the segment array */
-	uint32_t segment_count;
-        struct stripe_segment **segments;
+	struct list segments;
 };
 
 struct name_list {
