@@ -13,7 +13,10 @@ SOURCES=libdm-common.c $(interface)/libdevmapper.c
 
 INCLUDES=-I$(interface)
 
-TARGETS=$(interface)/libdevmapper.so $(interface)/libdevmapper.a
+LIB_STATIC = $(interface)/libdevmapper.a
+LIB_SHARED = $(interface)/libdevmapper.so
+
+TARGETS = $(LIB_STATIC) $(LIB_SHARED)
 
 include ../make.tmpl
 
