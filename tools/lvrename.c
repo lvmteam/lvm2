@@ -55,7 +55,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!validate_vgname(vg_name)) {
+	if (!validate_name(vg_name)) {
 		log_error("Please provide a valid volume group name");
 		return EINVALID_CMD_LINE;
 	}
@@ -95,7 +95,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!validate_vgname(lv_name_new)) {
+	if (!validate_name(lv_name_new)) {
 		log_error
 		    ("New logical volume name \"%s\" has invalid characters",
 		     lv_name_new);

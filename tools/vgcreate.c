@@ -73,7 +73,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!validate_vgname(vg_name)) {
+	if (!validate_name(vg_name)) {
 		log_error("New volume group name \"%s\" has invalid characters",
 			  vg_name);
 		return ECMD_FAILED;

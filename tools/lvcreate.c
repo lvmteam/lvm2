@@ -116,6 +116,12 @@ static int _read_name_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
+	if (!validate_name(lp->lv_name)) {
+		log_error("Logical volume name \"%s\" has invalid characters",
+			  lp->lv_name);
+		return 0;
+	}
+
 	return 1;
 }
 
