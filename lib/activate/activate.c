@@ -10,6 +10,11 @@
 
 #include <devmapper/libdevmapper.h>
 
+static void _build_lv_name(char *buffer, size_t s, struct logical_volume *lv)
+{
+	snprintf(buffer, s, "%s_%s", lv->vg->name, lv->name);
+}
+
 int lv_activate(struct logical_volume *lv)
 {
 	int r = 0;
@@ -18,6 +23,7 @@ int lv_activate(struct logical_volume *lv)
 	uint64_t esize = lv->vg->extent_size;
 	uint64_t start = 0ull;
 	char params[1024];
+	char name[128];
 	struct pe_specifier *pes;
 	struct dm_task *dmt;
 
@@ -26,7 +32,8 @@ int lv_activate(struct logical_volume *lv)
 		return 0;
 	}
 
-	dm_task_set_name(dmt, lv->id.uuid);
+	_build_lv_name(name, sizeof(name), lv);
+	dm_task_set_name(dmt, name);
 
 	for (i = 0; i < lv->le_count; i++) {
 		pes = lv->map + i;
@@ -65,13 +72,17 @@ int activate_lvs_in_vg(struct volume_group *vg)
 int lv_deactivate(struct logical_volume *lv)
 {
 	int r;
-	struct dm_task *dmt = dm_task_create(DM_DEVICE_REMOVE);
-	if (!dmt) {
+	char name[128];
+	struct dm_task *dmt;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE))) {
 		stack;
 		return 0;
 	}
 
-	dm_task_set_name(dmt, lv->id.uuid);
+	_build_lv_name(name, sizeof(name), lv);
+	dm_task_set_name(dmt, name);
+
 	if (!(r = dm_task_run(dmt)))
 		stack;
 
