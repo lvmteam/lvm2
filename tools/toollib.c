@@ -18,7 +18,7 @@
  *
  */
 
-#include "lvm_user.h"
+#include "tools.h"
 
 static int _autobackup = 1;
 
@@ -55,29 +55,68 @@ int init_autobackup()
 	return 0;
 }
 
-int do_autobackup(char *vg_name, vg_t * vg)
+int do_autobackup(struct volume_group *vg)
 {
-	int ret;
 
+/***************
 	log_verbose("Changing lvmtab");
-	if ((ret = vg_cfgbackup(vg_name, LVMTAB_DIR, vg))) {
+	if ((vg_cfgbackup(vg_name, LVMTAB_DIR, vg))) {
 		log_error("\"%s\" writing \"%s\"", lvm_error(ret), LVMTAB);
 		return LVM_E_VG_CFGBACKUP;
 	}
+**************/
 
 	if (!autobackup_set()) {
 		log_print
-		    ("WARNING: You don't have an automatic backup of \"%s\"",
-		     vg_name);
+		    ("WARNING: You don't have an automatic backup of %s",
+		     vg->name);
 		return 0;
 	}
 
+/***************
 	log_print("Creating automatic backup of volume group \"%s\"", vg_name);
-	if ((ret = vg_cfgbackup(vg_name, VG_BACKUP_DIR, vg))) {
+	if ((vg_cfgbackup(vg_name, VG_BACKUP_DIR, vg))) {
 		log_error("\"%s\" writing VG backup of \"%s\"", lvm_error(ret),
 			  vg_name);
 		return LVM_E_VG_CFGBACKUP;
 	}
+***************/
 
 	return 0;
+}
+
+int process_each_vg(int argc, char **argv,
+		    int (*process_single) (const char *vg_name))
+{
+	int opt = 0;
+	int ret_max = 0;
+	int ret = 0;
+
+	struct io_space *ios;
+	struct list_head *vgh;
+	struct name_list *vgs_list;
+
+	ios = active_ios();
+
+	if (argc) {
+		log_verbose("Using volume group(s) on command line");
+		for (; opt < argc; opt++)
+			if ((ret = process_single(argv[opt])) > ret_max)
+				ret_max = ret;
+	} else {
+		log_verbose("Finding all volume group(s)");
+		if (!(vgs_list = ios->get_vgs(ios))) {
+			log_error("No volume groups found");
+			return ECMD_FAILED;
+		}
+		list_for_each(vgh, &vgs_list->list) {
+			ret =
+			    process_single(list_entry
+					   (vgh, struct name_list, list)->name);
+			if (ret > ret_max)
+				ret_max = ret;
+		}
+	}
+
+	return ret_max;
 }

@@ -20,8 +20,8 @@
 
 #include "tools.h"
 
-int lvmchange(int argc, char **argv) {
+int lvmchange(int argc, char **argv)
+{
 	log_print("With the device mapper, this program is obsolete.");
 	return 0;
 }
-

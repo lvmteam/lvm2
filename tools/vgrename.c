@@ -81,7 +81,7 @@ int vgrename(int argc, char **argv)
 		log_error("volume group %s doesn't exist", vg_name_old);
 		return ECMD_FAILED;
 	}
-	if (vg_old->status & STATUS_ACTIVE) {
+	if (vg_old->status & ACTIVE) {
 		log_error("Volume group %s still active", vg_name_old);
 	}
 

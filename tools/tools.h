@@ -103,7 +103,7 @@ static inline int arg_count_increment(int a)
 	return the_args[a].count++;
 }
 
-#endif
 struct config_file *active_config_file(void);
 struct dev_filter *active_filter(void);
 struct io_space *active_ios(void);
+#endif

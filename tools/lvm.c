@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 		if (argc < 2) {
 			log_fatal("Please supply an LVM command.");
 			display_help();
-			ret = LVM_EINVALID_CMD_LINE;
+			ret = EINVALID_CMD_LINE;
 			goto out;
 		}
 
@@ -129,9 +129,9 @@ int main(int argc, char **argv)
 	}
 
 	ret = run_command(argc, argv);
-	if ((ret == LVM_ENO_SUCH_CMD) && (!alias))
+	if ((ret == ENO_SUCH_CMD) && (!alias))
 		ret = run_script(argc, argv);
-	if (ret == LVM_ENO_SUCH_CMD)
+	if (ret == ENO_SUCH_CMD)
 		log_error("No such command");
 
       out:
@@ -211,10 +211,10 @@ int string_arg(struct arg *a)
 int permission_arg(struct arg *a)
 {
 	if ((!strcmp(a->value, "rw")) || (!strcmp(a->value, "wr")))
-		a->i_value = ACCESS_READ | ACCESS_WRITE;
+		a->i_value = LVM_READ | LVM_WRITE;
 
 	else if (!strcmp(a->value, "r"))
-		a->i_value = ACCESS_READ;
+		a->i_value = LVM_READ;
 
 	else
 		return 0;
@@ -264,7 +264,7 @@ static void register_command(const char *name, command_fn fn,
 	/* allocate space for them */
 	if (!(args = dbg_malloc(sizeof (*args) * nargs))) {
 		log_fatal("Out of memory.");
-		exit(LVM_ENOMEM);
+		exit(ECMD_FAILED);
 	}
 
 	/* fill them in */
@@ -320,7 +320,7 @@ static void __alloc(int size)
 {
 	if (!(_commands = dbg_realloc(_commands, sizeof (*_commands) * size))) {
 		log_fatal("Couldn't allocate memory.");
-		exit(LVM_ENOMEM);
+		exit(ECMD_FAILED);
 	}
 
 	_array_size = size;
@@ -443,20 +443,20 @@ static int process_common_commands(struct command *com)
 
 	if (arg_count(help_ARG)) {
 		usage(com->name);
-		return LVM_ECMD_PROCESSED;
+		return ECMD_PROCESSED;
 	}
 
 	if (arg_count(version_ARG)) {
 		/* FIXME: Add driver and software version */
 		log_error("%s: ", com->name);
-		return LVM_ECMD_PROCESSED;
+		return ECMD_PROCESSED;
 	}
 
 	/* Set autobackup if command takes this option */
 	for (l = 0; l < com->num_args; l++)
 		if (com->valid_args[l] == autobackup_ARG) {
 			if (init_autobackup())
-				return LVM_EINVALID_CMD_LINE;
+				return EINVALID_CMD_LINE;
 			else
 				break;
 		}
@@ -498,11 +498,11 @@ static int run_command(int argc, char **argv)
 	struct command *com;
 
 	if (!(com = find_command(argv[0])))
-		return LVM_ENO_SUCH_CMD;
+		return ENO_SUCH_CMD;
 
 	if (!process_command_line(com, &argc, &argv)) {
 		log_error("Error during parsing of command line.");
-		return LVM_EINVALID_CMD_LINE;
+		return EINVALID_CMD_LINE;
 	}
 
 	if ((ret = process_common_commands(com)))
@@ -510,7 +510,7 @@ static int run_command(int argc, char **argv)
 
 	ret = com->fn(argc, argv);
 
-	if (ret == LVM_EINVALID_CMD_LINE && !_interactive)
+	if (ret == EINVALID_CMD_LINE && !_interactive)
 		usage(com->name);
 
 	return ret;
@@ -655,27 +655,27 @@ static int run_script(int argc, char **argv)
 	int magic_number = 0;
 
 	if ((script = fopen(argv[0], "r")) == NULL)
-		return LVM_ENO_SUCH_CMD;
+		return ENO_SUCH_CMD;
 
 	while (fgets(buffer, sizeof (buffer), script) != NULL) {
 		if (!magic_number) {
 			if (buffer[0] == '#' && buffer[1] == '!')
 				magic_number = 1;
 			else
-				return LVM_ENO_SUCH_CMD;
+				return ENO_SUCH_CMD;
 		}
 		if ((strlen(buffer) == sizeof (buffer) - 1)
 		    && (buffer[sizeof (buffer) - 1] - 2 != '\n')) {
 			buffer[50] = '\0';
 			log_error("Line too long (max 255) beginning: %s",
 				  buffer);
-			ret = LVM_EINVALID_CMD_LINE;
+			ret = EINVALID_CMD_LINE;
 			break;
 		}
 		if (split(buffer, &argc, argv, MAX_ARGS) == MAX_ARGS) {
 			buffer[50] = '\0';
 			log_error("Too many arguments: %s", buffer);
-			ret = LVM_EINVALID_CMD_LINE;
+			ret = EINVALID_CMD_LINE;
 			break;
 		}
 		if (!argc)
