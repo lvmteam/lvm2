@@ -177,6 +177,9 @@ struct dm_table {
 	int num_allocated;
 	offset_t *highs;
 	struct target *targets;
+
+	atomic_t pending;
+	wait_queue_head_t wait;
 };
 
 /*
@@ -189,9 +192,6 @@ struct mapped_device {
 
 	int use_count;
 	int state;
-
-	wait_queue_head_t wait;
-	atomic_t pending;	/* # of 'in flight' buffers */
 
 	/* a list of io's that arrived while we were suspended */
 	struct deferred_io *deferred;

@@ -129,6 +129,9 @@ struct dm_table *dm_table_create(void)
 
 	memset(t, 0, sizeof(*t));
 
+	atomic_set(&t->pending, 0);
+	init_waitqueue_head(&t->wait);
+
 	/* allocate a single nodes worth of targets to
 	   begin with */
 	t->hardsect_size = PAGE_CACHE_SIZE;
