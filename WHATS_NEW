@@ -1,5 +1,5 @@
-Version 2.00.12 - 
-============================
+Version 2.00.12 - 14 Apr 2004
+=============================
   Install a default lvm.conf into /etc/lvm if there isn't one already.
   Allow different installation dir for lvm.static (configure --staticdir=)
   Fix inverted selinux error check.
