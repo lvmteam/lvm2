@@ -148,5 +148,7 @@ module_exit(linear_exit);
 
 MODULE_AUTHOR("Joe Thornber <thornber@uk.sistina.com>");
 MODULE_DESCRIPTION("Device Mapper: Linear mapping");
+#ifdef MODULE_LICENSE
 MODULE_LICENSE("GPL");
+#endif
 

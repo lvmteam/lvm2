@@ -29,10 +29,10 @@
 
 /* defines for blk.h */
 #define MAJOR_NR DM_BLK_MAJOR
-#define DEVICE_NR(device) MINOR(device)  /* has no partition bits */
-#define DEVICE_NAME "device-mapper"      /* name for messaging */
-#define DEVICE_NO_RANDOM                 /* no entropy to contribute */
-#define DEVICE_OFF(d)                    /* do-nothing */
+#define DEVICE_NR(device) MINOR(device)	/* has no partition bits */
+#define DEVICE_NAME "device-mapper"	/* name for messaging */
+#define DEVICE_NO_RANDOM		/* no entropy to contribute */
+#define DEVICE_OFF(d)			/* do-nothing */
 
 #include <linux/blk.h>
 #include <linux/blkpg.h>
@@ -42,11 +42,11 @@
 #define DEFAULT_READ_AHEAD 64
 
 const char *_name = "device-mapper";
-int _version[3] = {0, 1, 0};
+int _version[3] = { 0, 1, 0 };
 
 struct io_hook {
 	struct mapped_device *md;
-	void (*end_io)(struct buffer_head *bh, int uptodate);
+	void (*end_io) (struct buffer_head * bh, int uptodate);
 	void *context;
 };
 
@@ -63,7 +63,7 @@ static int _hardsect_size[MAX_DEVICES];
 const char *_fs_dir = "device-mapper";
 static devfs_handle_t _dev_dir;
 
-static int request(request_queue_t *q, int rw, struct buffer_head *bh);
+static int request(request_queue_t * q, int rw, struct buffer_head *bh);
 
 /*
  * setup and teardown the driver
@@ -75,11 +75,12 @@ static int dm_init(void)
 	init_rwsem(&_dev_lock);
 
 	if (!(_io_hook_cache =
-	      kmem_cache_create("dm io hooks", sizeof(struct io_hook),
+	      kmem_cache_create("dm io hooks", sizeof (struct io_hook),
 				0, 0, NULL, NULL)))
 		return -ENOMEM;
 
-	if ((ret = dm_fs_init()) || (ret = dm_target_init()) || (ret = dm_init_blkdev()))
+	if ((ret = dmfs_init()) || (ret = dm_target_init())
+	    || (ret = dm_init_blkdev()))
 		return ret;
 
 	/* set up the arrays */
@@ -97,7 +98,6 @@ static int dm_init(void)
 
 	_dev_dir = devfs_mk_dir(0, _fs_dir, NULL);
 
-
 	printk(KERN_INFO "%s %d.%d.%d initialised\n", _name,
 	       _version[0], _version[1], _version[2]);
 	return 0;
@@ -105,10 +105,10 @@ static int dm_init(void)
 
 static void dm_exit(void)
 {
-	if(kmem_cache_destroy(_io_hook_cache))
+	if (kmem_cache_destroy(_io_hook_cache))
 		WARN("it looks like there are still some io_hooks allocated");
 
-	dm_fs_exit();
+	dmfs_exit();
 	dm_cleanup_blkdev();
 
 	if (devfs_unregister_blkdev(MAJOR_NR, _name) < 0)
@@ -176,7 +176,7 @@ static int dm_blk_close(struct inode *inode, struct file *file)
 			    _hardsect_size[(minor)])
 
 static int dm_blk_ioctl(struct inode *inode, struct file *file,
-		      uint command, ulong a)
+			uint command, ulong a)
 {
 	int minor = MINOR(inode->i_rdev);
 	long size;
@@ -197,31 +197,31 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 
 	case HDIO_GETGEO:
 		{
-			struct hd_geometry tmp = { heads: 64, sectors: 32 };
+			struct hd_geometry tmp = { heads:64, sectors:32 };
 
-			tmp.cylinders = VOLUME_SIZE(minor) / tmp.heads / 
-					tmp.sectors;
+			tmp.cylinders = VOLUME_SIZE(minor) / tmp.heads /
+			    tmp.sectors;
 
-			if (copy_to_user((char *)a, &tmp, sizeof(tmp)))
+			if (copy_to_user((char *) a, &tmp, sizeof (tmp)))
 				return -EFAULT;
 			break;
 		}
 
 	case HDIO_GETGEO_BIG:
 		{
-			struct hd_big_geometry tmp = { heads: 64, sectors: 32 };
+			struct hd_big_geometry tmp = { heads:64, sectors:32 };
 
 			tmp.cylinders = VOLUME_SIZE(minor) / tmp.heads /
-					tmp.sectors;
+			    tmp.sectors;
 
-			if (copy_to_user((char *)a, &tmp, sizeof(tmp)))
+			if (copy_to_user((char *) a, &tmp, sizeof (tmp)))
 				return -EFAULT;
 			break;
 		}
 
 	case BLKGETSIZE:
 		size = VOLUME_SIZE(minor);
-		if (copy_to_user((void *) a, &size, sizeof(long)))
+		if (copy_to_user((void *) a, &size, sizeof (long)))
 			return -EFAULT;
 		break;
 
@@ -233,8 +233,9 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 		return 0;
 
 	case BLKRAGET:
-		if (copy_to_user((void *) a, &read_ahead[MAJOR(inode->i_rdev)],
-				sizeof(long)))
+		if (copy_to_user
+		    ((void *) a, &read_ahead[MAJOR(inode->i_rdev)],
+		     sizeof (long)))
 			return -EFAULT;
 		return 0;
 
@@ -247,7 +248,7 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 	case BLKRRPART:
 		return -EINVAL;
 #if 0
-	case LVM_BMAP: /* we need some method for LILO to use */
+	case LVM_BMAP:		/* we need some method for LILO to use */
 #endif
 
 	default:
@@ -276,7 +277,7 @@ static inline void free_io_hook(struct io_hook *ih)
  */
 static inline struct deferred_io *alloc_deferred(void)
 {
-	return kmalloc(sizeof(struct deferred_io), GFP_NOIO);
+	return kmalloc(sizeof (struct deferred_io), GFP_NOIO);
 }
 
 static inline void free_deferred(struct deferred_io *di)
@@ -396,7 +397,7 @@ static inline int __find_node(struct dm_table *t, struct buffer_head *bh)
 	return (KEYS_PER_NODE * n) + k;
 }
 
-static int request(request_queue_t *q, int rw, struct buffer_head *bh)
+static int request(request_queue_t * q, int rw, struct buffer_head *bh)
 {
 	struct mapped_device *md;
 	int r, minor = MINOR(bh->b_rdev);
@@ -419,7 +420,7 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 			goto bad_no_lock;
 
 		else if (r > 0)
-			return 0; /* deferred successfully */
+			return 0;	/* deferred successfully */
 
 		down_read(&_dev_lock);	/* FIXME: there's still a race here */
 	}
@@ -430,10 +431,10 @@ static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 	up_read(&_dev_lock);
 	return 1;
 
- bad:
+      bad:
 	up_read(&_dev_lock);
 
- bad_no_lock:
+      bad_no_lock:
 	buffer_IO_error(bh);
 	return 0;
 }
@@ -474,12 +475,12 @@ static inline int __any_old_dev(void)
  */
 static struct mapped_device *alloc_dev(int minor)
 {
-	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
+	struct mapped_device *md = kmalloc(sizeof (*md), GFP_KERNEL);
 
 	if (!md)
 		return 0;
 
-	memset(md, 0, sizeof(*md));
+	memset(md, 0, sizeof (*md));
 
 	down_write(&_dev_lock);
 	minor = (minor < 0) ? __any_old_dev() : __specific_dev(minor);
@@ -538,10 +539,10 @@ struct mapped_device *dm_find_by_minor(int minor)
 static int register_device(struct mapped_device *md)
 {
 	md->devfs_entry =
-		devfs_register(_dev_dir, md->name, DEVFS_FL_CURRENT_OWNER,
-			       MAJOR(md->dev), MINOR(md->dev),
-			       S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
-			       &dm_blk_dops, NULL);
+	    devfs_register(_dev_dir, md->name, DEVFS_FL_CURRENT_OWNER,
+			   MAJOR(md->dev), MINOR(md->dev),
+			   S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
+			   &dm_blk_dops, NULL);
 
 	if (!md->devfs_entry)
 		return -ENOMEM;
@@ -754,11 +755,10 @@ void dm_suspend(struct mapped_device *md)
 	up_write(&_dev_lock);
 }
 
-
 struct block_device_operations dm_blk_dops = {
-	open:     dm_blk_open,
+	open:	  dm_blk_open,
 	release:  dm_blk_close,
-	ioctl:    dm_blk_ioctl
+	ioctl:	  dm_blk_ioctl
 };
 
 /*
