@@ -14,6 +14,6 @@ struct ttree;
 struct ttree *ttree_create(struct pool *mem, unsigned int klen);
 
 void *ttree_lookup(struct ttree *tt, unsigned *key);
-void *ttree_insert(struct ttree *tt, unsigned *key, void *data);
+int ttree_insert(struct ttree *tt, unsigned *key, void *data);
 
 #endif

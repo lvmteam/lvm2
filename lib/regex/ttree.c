@@ -22,6 +22,83 @@ struct ttree {
 	struct node *root;
 };
 
+struct node **_lookup_single(struct node **c, unsigned int k)
+{
+	while (*c) {
+		if (k < (*c)->k)
+			c = &((*c)->l);
+
+		else if (k > (*c)->k)
+			c = &((*c)->r);
+
+		else {
+			c = &((*c)->m);
+			break;
+		}
+	}
+
+	return c;
+}
+
+void *ttree_lookup(struct ttree *tt, unsigned *key)
+{
+	struct node **c = &tt->root;
+	int count = tt->klen;
+	unsigned int k;
+
+	while (*c && count) {
+		k = *key++;
+		count--;
+
+		c = _lookup_single(c, k);
+	}
+
+	return *c ? (*c)->data : NULL;
+}
+
+static struct node *_create_node(struct pool *mem, unsigned int k)
+{
+	struct node *n = pool_zalloc(mem, sizeof(*n));
+
+	if (n)
+		n->k = k;
+
+	return n;
+}
+
+int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
+{
+	struct node **c = &tt->root;
+	int count = tt->klen;
+	unsigned int k;
+
+	while (*c && count) {
+		k = *key++;
+		count--;
+
+		c = _lookup_single(c, k);
+	}
+
+	if (!*c) {
+		count++;
+
+		while (count--) {
+			if (!(*c = _create_node(tt->mem, k))) {
+				stack;
+				return 0;
+			}
+
+			k = *key++;
+
+			if (count)
+				c = &((*c)->m);
+		}
+	}
+	(*c)->data = data;
+
+	return 1;
+}
+
 struct ttree *ttree_create(struct pool *mem, unsigned int klen)
 {
 	struct ttree *tt;
@@ -34,96 +111,4 @@ struct ttree *ttree_create(struct pool *mem, unsigned int klen)
 	tt->klen = klen;
 	tt->mem = mem;
 	return tt;
-}
-
-void *ttree_lookup(struct ttree *tt, unsigned *key)
-{
-	struct node *c = tt->root;
-	int count = tt->klen;
-	unsigned k = *key++;
-
-	while (c) {
-		if (k < c->k)
-			c = c->l;
-
-		else if (k > c->k)
-			c = c->r;
-
-		else {
-			if (!--count)
-				break;
-
-			c = c->m;
-			k = *key++;
-		}
-	}
-
-	return c ? c->data : 0;
-}
-
-void *ttree_insert(struct ttree *tt, unsigned *key, void *data) 
-{
-	struct node *c = tt->root, *p = 0;
-	int count = tt->klen, first = 1;
-	unsigned k = *key;
-	void *r = NULL;
-
-	while (c) {
-		p = c;
-		if (k < c->k)
-			c = c->l;
-
-		else if (k > c->k)
-			c = c->r;
-
-		else {
-			c = c->m;
-			if (!--count)
-				break;
-
-			k = *++key;
-		}
-	}
-
-	if (!count) {
-		/* key is already in the tree */
-		r = p->data;
-		p->data = data;
-
-	} else {
-		/* FIXME: put this in seperate function */
-		/* insert new chain of nodes */
-		while (count--) {
-			k = *key++;
-			c = pool_alloc(tt->mem, sizeof(*c));
-
-			if (!c) {
-				stack;
-				return NULL;
-			}
-
-			c->k = k;
-			c->l = c->m = c->r = c->data = 0;
-			if (!p)
-				tt->root = c;
-
-			else if (first) {
-				if (k < p->k)
-					p->l = c;
-
-				else if (k > p->k)
-					p->r = c;
-
-				else
-					p->m = c;
-
-				first = 0;
-			} else
-				p->m = c;
-			p = c;
-		}
-		c->data = data;
-	}
-
-	return r;
 }

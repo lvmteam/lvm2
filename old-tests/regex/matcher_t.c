@@ -87,7 +87,7 @@ static void _scan_input(struct matcher *m, char **regex)
 		if ((ptr = strchr(buffer, '\n')))
 			*ptr = '\0';
 
-		r = matcher_run(m, buffer, buffer + strlen(buffer));
+		r = matcher_run(m, buffer);
 
 		if (r >= 0)
 			printf("%s : %s\n", buffer, regex[r]);

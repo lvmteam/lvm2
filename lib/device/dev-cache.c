@@ -123,7 +123,7 @@ static int _insert(const char *path, int recurse)
 	struct stat info;
 	struct device *dev;
 
-	log_very_verbose("dev-cache adding %s", path);
+	//log_very_verbose("dev-cache adding %s", path);
 
 	if (stat(path, &info) < 0) {
 		log_sys_very_verbose("stat", path);
@@ -138,7 +138,7 @@ static int _insert(const char *path, int recurse)
 	}
 
 	if (S_ISLNK(info.st_mode)) {
-		log_debug("%s is a symbolic link, following", path);
+		//log_debug("%s is a symbolic link, following", path);
 		if (!(path = _follow_link(path, &info))) {
 			stack;
 			return 0;
@@ -146,7 +146,7 @@ static int _insert(const char *path, int recurse)
 	}
 
 	if (!S_ISBLK(info.st_mode)) {
-		log_debug("%s is not a block device", path);
+		//log_debug("%s is not a block device", path);
 		return 0;
 	}
 

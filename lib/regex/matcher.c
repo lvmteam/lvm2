@@ -206,11 +206,11 @@ static int _calc_states(struct matcher *m, struct rx_node *rx)
 	/* create first state */
 	dfa = _create_dfa_state(m->mem);
 	m->start = dfa;
-	ttree_insert(tt, rx->firstpos, dfa);
+	ttree_insert(tt, rx->firstpos + 1, dfa);
 
 	/* prime the queue */
 	h = t = _create_state_queue(m->scratch, dfa, rx->firstpos);
-	while(h) {
+	while (h) {
 		/* pop state off front of the queue */
 		dfa = h->s;
 		dfa_bits = h->bits;
@@ -256,7 +256,7 @@ static int _calc_states(struct matcher *m, struct rx_node *rx)
 		}
 	}
 
-	log_debug("Lexer built with %d dfa states", count);
+	log_debug("Matcher built with %d dfa states", count);
 	return 1;
 }
 
@@ -330,20 +330,20 @@ struct matcher *matcher_create(struct pool *mem,
 	return NULL;
 }
 
-int matcher_run(struct matcher *m, const char *b, const char *e)
+int matcher_run(struct matcher *m, const char *b)
 {
 	struct dfa_state *cs = m->start;
-	int r = -1;
+	int r = 0;
 
-	for (; b != e; b++) {
+	for (; *b; b++) {
 
 		if (!(cs = cs->lookup[(int) (unsigned char) *b]))
 			break;
 
-		if (cs->final)
+		if (cs->final && (!r || cs->final > r))
 			r = cs->final;
 	}
 
 	/* subtract 1 to get back to zero index */
-	return (r < 0) ? r : (r - 1);
+	return r - 1;
 }

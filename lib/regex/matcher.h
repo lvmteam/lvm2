@@ -13,6 +13,6 @@ struct matcher;
 struct matcher *matcher_create(struct pool *mem,
 			       const char **patterns, int num);
 
-int matcher_run(struct matcher *m, const char *begin, const char *end);
+int matcher_run(struct matcher *m, const char *begin);
 
 #endif
