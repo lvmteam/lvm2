@@ -1,3 +1,19 @@
+Friday 14th November 2003
+=========================
+Some bug fixes & minor enhancements, including:
+  Backwards compatibility with LVM1 metadata improved.
+  Missing man pages written.
+  Tool error codes made more consistent.
+  vgmknodes written.
+  O_DIRECT can be turned off if it doesn't work in your kernel.
+
+You need to update libdevmapper before using 'vgmknodes' or 'vgscan --mknodes'.
+If your root filesystem is on an LV, you should run one of those two
+commands to fix up the special files in /dev in your real root filesystem 
+after finishing with your initrd.  Also, remember you can use
+'vgchange --ignorelockingfailure' on your initrd if the tool fails because
+it can't write a lock file to a read-only filesystem.
+
 Wednesday 30th April 2003
 =========================
 A pvmove implementation is now available for the new metadata format.
