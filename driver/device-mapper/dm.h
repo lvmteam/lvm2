@@ -30,6 +30,18 @@
 #ifndef DM_INTERNAL_H
 #define DM_INTERNAL_H
 
+#include <linux/version.h>
+#include <linux/major.h>
+#include <linux/iobuf.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/slab.h>
+#include <linux/vmalloc.h>
+#include <linux/compatmac.h>
+#include <linux/cache.h>
+#include <linux/devfs_fs_kernel.h>
+#include <linux/device-mapper.h>
+
 #define MAX_DEPTH 16
 #define NODE_SIZE L1_CACHE_BYTES
 #define KEYS_PER_NODE (NODE_SIZE / sizeof(offset_t))
@@ -99,19 +111,19 @@ int dm_start_table(struct mapped_device *md);
 int dm_add_entry(struct mapped_device *md, offset_t high,
 		 dm_map_fn target, void *context);
 int dm_complete_table(struct mapped_device *md);
-int dm_clear_table(struct mapped_device *md);
+void dm_free_table(struct mapped_device *md);
 
 
 /* dm-fs.c */
 int dm_init_fs(void);
 int dm_fin_fs(void);
 
-static int is_active(struct mapped_device *md)
+static inline int is_active(struct mapped_device *md)
 {
 	return test_bit(DM_ACTIVE, &md->state);
 }
 
-static void set_active(struct mapped_device *md, int set)
+static inline void set_active(struct mapped_device *md, int set)
 {
 	if (set)
 		set_bit(DM_ACTIVE, &md->state);

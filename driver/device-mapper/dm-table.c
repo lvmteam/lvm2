@@ -25,6 +25,10 @@
  *     16/08/2001 - First version [Joe Thornber]
  */
 
+#include "dm.h"
+
+static int _alloc_targets(struct mapped_device *md, int num);
+
 static inline ulong _round_up(ulong n, ulong size)
 {
 	ulong r = n % size;
@@ -65,72 +69,50 @@ static int _setup_btree_index(int l, struct mapped_device *md)
 	return 1;
 }
 
-void dm_free_btree(struct mapped_device *md)
+void dm_free_table(struct mapped_device *md)
 {
 	int i;
 	for (i = 0; i < md->depth; i++)
-		__free_aligned(md->index[i]);
+		vfree(md->index[i]);
 
-	__free_aligned(md->targets);
-	__free_aligned(md->contexts);
+	vfree(md->targets);
+	vfree(md->contexts);
 
 	md->num_targets = 0;
 	md->num_allocated = 0;
 }
 
-static int _setup_targets(struct mapped_device *md, struct device_table *t)
-{
-	int i;
-	offset_t low = 0;
-
-	md->num_targets = t->count;
-	md->targets = vmalloc(sizeof(*md->targets) * md->num_targets,
-			      NODE_SIZE);
-
-	for (i = 0; i < md->num_targets; i++) {
-		struct mapper *m = _find_mapper(t->map[i].type);
-		if (!m)
-			return 0;
-
-		if (!m->ctr(low, t->map[i].high + 1,
-			    t->map[i].context, md->contexts + i)) {
-			WARN("contructor for '%s' failed", m->name);
-			return 0;
-		}
-
-		md->targets[i] = m->map;
-	}
-
-	return 1;
-}
-
 int dm_start_table(struct mapped_device *md)
 {
-	bit_set(md->state, DM_LOADING);
+	set_bit(DM_LOADING, &md->state);
 
-	dm_free_btree(md);
-	if (!_alloc_targets(2))	/* FIXME: increase once debugged 256 ? */
-		return 0;
+	dm_free_table(md);
+	if (!_alloc_targets(md, 2))	/* FIXME: increase once debugged 256 ? */
+		return -ENOMEM;
+
+	return 0;
 }
 
 int dm_add_entry(struct mapped_device *md, offset_t high,
 		 dm_map_fn target, void *context)
 {
-	if (md->num_targets >= md->num_entries &&
-	    !_alloc_targets(md->num_allocated * 2))
-		retun -ENOMEM;
+	if (md->num_targets >= md->num_targets &&
+	    !_alloc_targets(md, md->num_allocated * 2))
+		return -ENOMEM;
 
 	md->highs[md->num_targets] = high;
 	md->targets[md->num_targets] = target;
 	md->contexts[md->num_targets] = context;
 
 	md->num_targets++;
+	return 0;
 }
 
 int dm_complete_table(struct mapped_device *md)
 {
 	int n, i;
-	offset_t *k;
+
+	clear_bit(DM_LOADING, &md->state);
 
 	/* how many indexes will the btree have ? */
 	for (n = _div_up(md->num_targets, KEYS_PER_NODE), i = 1; n != 1; i++)
@@ -155,10 +137,11 @@ int dm_complete_table(struct mapped_device *md)
 	for (i = md->depth - 1; i; i--)
 		_setup_btree_index(i - 1, md);
 
+	set_bit(DM_LOADED, &md->state);
 	return 1;
 }
 
-static int _alloc_targets(int num)
+static int _alloc_targets(struct mapped_device *md, int num)
 {
 	offset_t *n_highs;
 	dm_map_fn *n_targets;
