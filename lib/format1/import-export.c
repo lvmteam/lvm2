@@ -130,7 +130,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 		/* Does system_id need setting? */
 		if (!vg->system_id || 
 		    strncmp(vg->system_id, EXPORTED_TAG, 
-			    sizeof(EXPORTED_TAG))) {
+			    sizeof(EXPORTED_TAG) - 1)) {
 			if (!_system_id(pvd->system_id, EXPORTED_TAG)) {
 				stack;
 				return 0;
@@ -147,7 +147,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 
 	/* Is VG being imported? */
 	if (vg && !(vg->status & EXPORTED_VG) && vg->system_id &&
-	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG))) {
+	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
 		if (!_system_id(pvd->system_id, IMPORTED_TAG)) {
 			stack;
 			return 0;
@@ -164,7 +164,8 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 	/* Update internal system_id if we changed it */
 	if (vg && 
 	    (!vg->system_id ||
-	     strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))) {
+	     strncmp(vg->system_id, pvd->system_id, 
+		     sizeof(pvd->system_id)))) {
 		if (!(vg->system_id = pool_strdup(mem, pvd->system_id)))
 			log_error("System ID update failed");
 	}

@@ -8,7 +8,7 @@
 
 #include <sys/stat.h>
 
-int check_dir(const char *dir)
+int dir_exists(const char *dir)
 {
 	struct stat info;
 

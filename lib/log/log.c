@@ -51,10 +51,6 @@ void init_test(int level) {
 
 void init_partial(int level) {
 	_partial = level;
-	if (_partial)
-		log_print("Partial mode. Incomplete volume groups will "
-			  "be activated read-only.");
-
 }
 
 void init_cmd_name(int status) {

@@ -67,7 +67,7 @@ int vgcreate(int argc, char **argv)
                 vg_name += strlen(fid->cmd->dev_dir);
 
         snprintf(vg_path, PATH_MAX, "%s%s", fid->cmd->dev_dir, vg_name);
-        if (!check_dir(vg_path)) return ECMD_FAILED;
+        if (!dir_exists(vg_path)) return ECMD_FAILED;
 
         if (!is_valid_chars(vg_name)) {
                 log_error("New volume group name '%s' has invalid characters",

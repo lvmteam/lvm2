@@ -45,6 +45,8 @@ int process_each_lv_in_vg(struct volume_group *vg,
 			  int (*process_single) (struct logical_volume * lv));
 
 int is_valid_chars(char *n);
+int dir_exists(const char *dir);
+
 
 char *default_vgname(struct format_instance *fi);
 char *extract_vgname(struct format_instance *fi, char *lv_name);
