@@ -23,7 +23,8 @@ int lvcreate(int argc, char **argv)
 	uint32_t extents = 0;
 	struct volume_group *vg;
 	struct logical_volume *lv;
-	struct list *lvh, *pvh, *pvl;
+	struct list *pvh;
+	struct pv_list *pvl;
 	char *lv_name = NULL;
 	char *vg_name;
 	char *st;
@@ -95,6 +96,7 @@ int lvcreate(int argc, char **argv)
 			log_error("Please provide a volume group name");
 			return EINVALID_CMD_LINE;
 		}
+
 	} else {
 		/* Ensure lv_name doesn't contain a different VG! */
 		if (lv_name && strchr(lv_name, '/')) {
@@ -121,7 +123,7 @@ int lvcreate(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (lv_name && (lvh = find_lv_in_vg(vg, lv_name))) {
+	if (lv_name && find_lv_in_vg(vg, lv_name)) {
 		log_error("Logical volume %s already exists in "
 			  "volume group %s", lv_name, vg_name);
 		return ECMD_FAILED;
@@ -141,14 +143,16 @@ int lvcreate(int argc, char **argv)
 					  vg->name);
 				return EINVALID_CMD_LINE;
 			}
-			if (list_item(pvl, struct pv_list)->pv.pe_count ==
-			    list_item(pvl, struct pv_list)->pv.pe_allocated) {
+
+			if (pvl->pv.pe_count == pvl->pv.pe_allocated) {
 				log_error("No free extents on physical volume"
 					  " %s", argv[opt]);
 				continue;
 				/* FIXME But check not null at end! */
 			}
-			list_add(pvh, pvl);
+
+			// FIXME: pv_lists should be duplicated.
+			list_add(pvh, &pvl->list);
 		}
 	} else {
 		/* Use full list from VG */

@@ -30,7 +30,7 @@ int lvrename(int argc, char **argv)
 
 	struct volume_group *vg;
 	struct logical_volume *lv;
-	struct list *lvh;
+	struct lv_list *lvl;
 
 	if (argc != 2) {
 		log_error("Old and new logical volume required");
@@ -90,19 +90,19 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((lvh = find_lv_in_vg(vg, lv_name_new))) {
+	if (find_lv_in_vg(vg, lv_name_new)) {
 		log_error("Logical volume %s already exists in "
 			  "volume group %s", lv_name_new, vg_name);
 		return ECMD_FAILED;
 	}
 
-	if (!(lvh = find_lv_in_vg(vg, lv_name_old))) {
+	if (!(lvl = find_lv_in_vg(vg, lv_name_old))) {
 		log_error("Existing logical volume %s not found in "
 			  "volume group %s", lv_name_old, vg_name);
 		return ECMD_FAILED;
 	}
 
-	lv = &list_item(lvh, struct lv_list)->lv;
+	lv = &lvl->lv;
 
 	if (!archive(lv->vg))
 		return ECMD_FAILED;

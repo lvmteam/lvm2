@@ -82,7 +82,7 @@ int pvchange(int argc, char **argv)
 int pvchange_single(struct physical_volume *pv)
 {
 	struct volume_group *vg = NULL;
-	struct list *pvh;
+	struct pv_list *pvl;
 
 	const char *pv_name = dev_name(pv->dev);
 
@@ -97,12 +97,12 @@ int pvchange_single(struct physical_volume *pv)
 			log_error("Unable to find volume group of %s", pv_name);
 			return 0;
 		}
-		if (!(pvh = find_pv_in_vg(vg, pv_name))) {
+		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			log_error("Unable to find %s in volume group %s",
 				pv_name, vg->name);
 			return 0;
 		}
-		pv = &list_item(pvh, struct pv_list)->pv;
+		pv = &pvl->pv;
 		if (!archive(vg))
 			return 0;
 	}

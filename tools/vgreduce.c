@@ -82,7 +82,7 @@ int vgreduce(int argc, char **argv)
 /* Or take pv_name instead? */
 static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 {
-	struct list *pvh;
+	struct pv_list *pvl;
 	const char *name = dev_name(pv->dev);
 
 	if (pv->pe_allocated) {
@@ -102,13 +102,16 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 		return ECMD_FAILED;
 	}
 
-	pvh = find_pv_in_vg(vg, name);
+	pvl = find_pv_in_vg(vg, name);
 
 	if (!archive(vg))
 		return ECMD_FAILED;
 
 	log_verbose("Removing %s from volume group %s", name, vg->name);
-	list_del(pvh);
+	
+	if (pvl)
+		list_del(&pvl->list);
+
 	*pv->vg_name = '\0';
 	vg->pv_count--;
 	vg->free_count -= pv->pe_count - pv->pe_allocated;
