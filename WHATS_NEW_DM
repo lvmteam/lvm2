@@ -1,3 +1,10 @@
+Version 1.00.10 - 2 Apr 2004
+============================
+  Fix DESTDIR handling.
+  Static build installs to dmsetup.static.
+  Basic support for internationalisation.
+  Minor Makefile tidy-ups/fixes.
+
 Version 1.00.09 - 31 Mar 2004
 =============================
   Update copyright notices to Red Hat.
