@@ -249,7 +249,7 @@ int main(int argc, char **argv)
 	}
 
 	if (!c->fn(argc - 1, argv + 1)) {
-		//fprintf(stderr, "Command failed\n");
+		fprintf(stderr, "Command failed\n");
 		exit(1);
 	}
 

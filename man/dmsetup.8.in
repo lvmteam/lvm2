@@ -4,91 +4,90 @@ dmsetup \- low level logical volume management
 .SH SYNOPSIS
 .ad l
 .B dmsetup create
-.I <device name> <table path>
+.I device_name table_file
 .br
 .B dmsetup remove
-.I <device name>
+.I device_name
 .br
 .B dmsetup suspend
-.I <device name>
+.I device_name
 .br
 .B dmsetup resume
-.I <device name>
+.I device_name
 .br
 .B dmsetup reload
-.I <device name> <table path>
+.I device_name table_file
 .br
 .B dmsetup info
-.I <device name>
+.I device_name
 .ad b
 .SH DESCRIPTION
-dmsetup is used to manage mapped devices using the device-mapper
-driver.  Devices are created by loading a table that gives a target
-for ranges of sectors in the logical device.
+dmsetup manages logical devices that use the device-mapper driver.  
+Devices are created by loading a table that specifies a target for
+each sector in the logical device.
 
-The first argument to dmsetup is a command, after this the mapped
-device name (not the full path).
-.SH Commands
-.RS
+The first argument to dmsetup is a command. 
+The second argument is the logical device name.
+.SH COMMANDS
 .IP \fBcreate
-.I <device name> <table path>
+.I device_name table_file
 .br
 Attempts to create a device using the table file given.  If
 successful a device will appear as
 /dev/device-mapper/<device-name>.  See below for information
 on the table file format.
 .IP \fBremove
-.I <device name>
+.I device_name
 .br
 Removes the device
 .IP \fBsuspend
-.I <device name>
+.I device_name
 .br
-Suspends a device, there are two parts to this.  Firstly any
-io that has already been mapped by the device, but has not yet
-completed will be flushed.  Secondly any further io to that
+Suspends a device.  Any I/O that has already been mapped by the device
+but has not yet completed will be flushed.  Any further I/O to that
 device will be postponed for as long as the device is suspended.
 .IP \fBresume
-.I <device name>
+.I device_name
 .br
-Un-suspends a device, postponed io now get's re-queued for processing.
+Un-suspends a device.  Postponed I/O now gets re-queued for processing.
 .IP \fBreload
-.I <device name> <table path>
+.I device_name table_file
 .br
 This command will only work if a device is in the suspended state.
-It allows the user to change the mapping table for an existing device.
+It changes the mapping table for an existing device.
 .IP \fBinfo
-.I <device name>
+.I device_name
 .br
-Output's some brief information about the device in the form:
+Outputs some brief information about the device in the form:
 .br
-<SUSPENDED|ACTIVE>
+    SUSPENDED|ACTIVE
 .br
-<open count>
+    open_count
 .br
-<major>,<minor>
+    major,minor
 .br
-<target count>
-.SH Table format
-Each line of the table specifies a single target, and is of the form:
+    target_count
+.SH TABLE FORMAT
+Each line of the table specifies a single target and is of the form:
 .br
-<logical start sector> <num sectors> <target type> <target args...>
+    logical_start_sector num_sectors target_type target_args
 .br
-At the moment there are 3 simple target types available (though your
-system may have more in the form of modules).
+.br
+At the moment there are 3 simple target types available - though your
+system might have more in the form of modules.
 
 .IP \fBlinear
-.I <destination device> <start sector>
+.I destination_device start_sector
 .br
 The traditional linear mapping.
 
 .IP \fBstriped
-.I <num stripes> <chunk size> [<destination #n> <start sector >]+
+.I num_stripes chunk_size [destination start_sector]+
 .br
-Creates a striped area, 
+Creates a striped area.
 .br
-eg, striped 2 32 /dev/hda1 0 /dev/hdb1 0
-    will map the first chunk (16k) as follows:
+e.g. striped 2 32 /dev/hda1 0 /dev/hdb1 0
+will map the first chunk (16k) as follows:
 .br
     LV chunk 1 -> hda1, chunk 1
 .br
@@ -103,14 +102,15 @@ eg, striped 2 32 /dev/hda1 0 /dev/hdb1 0
 
 .IP \fBio-err
 .br
-Errors any io that goes to this area.  Useful for testing or
-creating devices with holes in them.
+Errors any I/O that goes to this area.  Useful for testing or
+for creating devices with holes in them.
 
 
-.SH Examples
+.SH EXAMPLES
 
 
 # A table to join two disks together
+.br
 .br
 0 1028160 linear /dev/hda 0
 .br
