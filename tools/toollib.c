@@ -168,10 +168,10 @@ int is_valid_chars(char *n)
 char *extract_vgname(struct io_space *ios, char *lv_name)
 { 
 	char *vg_name = lv_name;
-	char *vg_path, *st;
+	char *st;
 
 	/* Path supplied? */
-	if (strchr(vg_name, '/')) {
+	if (vg_name && strchr(vg_name, '/')) {
 		/* Strip prefix (optional) */
 		if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
 			vg_name += strlen(ios->prefix);
@@ -192,13 +192,24 @@ char *extract_vgname(struct io_space *ios, char *lv_name)
 		*strchr(vg_name, '/') = '\0';
 		return vg_name;
 	}
-	
-	/* Take default VG from environment? */
-	vg_path = getenv("LVM_VG_NAME"); 
-	if (!vg_path) {
-		log_error("Path required for Logical Volume %s", lv_name);
+
+	if (!(vg_name = default_vgname(ios))) {
+		if (lv_name)
+			log_error("Path required for Logical Volume %s", lv_name);
 		return 0;
 	}
+		
+	return vg_name;
+}
+
+char *default_vgname(struct io_space *ios)
+{
+	char *vg_path;
+
+	/* Take default VG from environment? */
+	vg_path = getenv("LVM_VG_NAME"); 
+	if (!vg_path)
+		return 0;
 
 	/* Strip prefix (optional) */
 	if (!strncmp(vg_path, ios->prefix, strlen(ios->prefix)))
@@ -211,6 +222,5 @@ char *extract_vgname(struct io_space *ios, char *lv_name)
 	}
 
 	return pool_strdup(ios->mem, vg_path);
-
 }
 

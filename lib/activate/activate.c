@@ -54,6 +54,8 @@ static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
 	return 1;
 }
 
+/* FIXME: Always display error msg */
+/* FIXME: Create dev entry if required */
 int lv_activate(struct logical_volume *lv)
 {
 	int r = 0;

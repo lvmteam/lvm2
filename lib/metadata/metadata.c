@@ -93,6 +93,8 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 
 	list_add(&vg->pvs, &pvl->list);
 	vg->pv_count++;
+	vg->extent_count += pv->pe_count;
+	vg->free_count += pv->pe_count;
 
 	return 1;
 }
@@ -114,7 +116,7 @@ int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
 }
 
 struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
-			       uint64_t extent_size, int max_pv, int max_lv,
+			       uint32_t extent_size, int max_pv, int max_lv,
 			       int pv_count, char **pv_names)
 {
 	struct volume_group *vg;

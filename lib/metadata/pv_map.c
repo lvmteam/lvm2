@@ -97,6 +97,7 @@ static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 		return 0;
 	}
 
+	list_init(&pvm->areas);
 	pva->start = b;
 	pva->count = e - b;
 	list_add(&pvm->areas, &pva->list);
@@ -148,17 +149,19 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
 	list_init(maps);
 
 	if (!_create_maps(mem, pvs, maps)) {
-		log_err("couldn't create pv maps.");
+		log_error("Couldn't create physical volume maps in %s", 
+			  vg->name);
 		goto bad;
 	}
 
 	if (!_fill_bitsets(vg, maps)) {
-		log_err("couldn't fill extent allocation bitmaps.");
+		log_error("Couldn't fill extent allocation bitmaps in %s",
+			  vg->name);
 		goto bad;
 	}
 
 	if (!_create_all_areas(mem, maps)) {
-		log_err("couldn't create area maps.");
+		log_error("Couldn't create area maps in %s", vg->name);
 		goto bad;
 	}
 
@@ -168,3 +171,4 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
 	pool_free(mem, maps);
 	return NULL;
 }
+

@@ -22,6 +22,7 @@ VPATH = @srcdir@
 
 SOURCES=\
 	lvchange.c \
+	lvcreate.c \
 	lvm.c \
 	lvmchange.c \
 	lvremove.c \
