@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <stdlib.h>
+#include <locale.h>
 
 #ifdef READLINE_SUPPORT
 #include <readline/readline.h>
@@ -117,6 +118,7 @@ int main(int argc, char **argv)
 	char *namebase, *base;
 	int ret, alias = 0;
 
+	setlocale(LC_ALL, "");
 	if (!init())
 		return -1;
 
