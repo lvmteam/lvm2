@@ -270,7 +270,7 @@ static struct list_head *_get_pvs(struct io_space *is)
 	return results;
 
  bad:
-	pool_free(mem, results);
+	pool_free(is->mem, results);
 	pool_destroy(mem);
 	return NULL;
 }
