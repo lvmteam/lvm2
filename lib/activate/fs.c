@@ -18,7 +18,7 @@
 #include <string.h>
 
 #include <libdevmapper.h>
-
+#include <dirent.h>
 
 /*
  * Lazy programmer: I'm just going to always try
@@ -42,6 +42,47 @@ static int _mk_dir(struct volume_group *vg)
 	return 1;
 }
 
+static int _is_empty_dir(const char *dir)
+{
+	int i, count, r = 1;
+	struct dirent **dirent;
+	const char *name;
+
+	count = scandir(dir, &dirent, NULL, alphasort);
+	if (!count)
+		return 1;
+
+	if (count < 0) {
+		log_err("Couldn't scan directory '%s'.", dir);
+		return 0;
+	}
+
+	/*
+	 * Scan the devices.
+	 */
+	for (i = 0; i < count; i++) {
+		name = dirent[i]->d_name;
+
+		/*
+		 * Ignore dot files.
+		 */
+		if (!strcmp(name, ".") || !strcmp(name, ".."))
+			continue;
+
+		r = 0;
+		break;
+	}
+
+	/*
+	 * Free the directory entries.
+	 */
+	for (i = 0; i < count; i++)
+		free(dirent[i]);
+	free(dirent);
+
+	return r;
+}
+
 static int _rm_dir(struct volume_group *vg)
 {
 	char vg_path[PATH_MAX];
@@ -54,7 +95,9 @@ static int _rm_dir(struct volume_group *vg)
 	}
 
 	log_very_verbose("Removing directory %s", vg_path);
-	rmdir(vg_path);
+
+	if (_is_empty_dir(vg_path))
+		rmdir(vg_path);
 
 	return 1;
 }
