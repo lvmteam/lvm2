@@ -23,7 +23,7 @@ static int _and_p(struct dev_filter *f, struct device *dev)
 	return 1;
 }
 
-void _destroy(struct dev_filter *f)
+static void _destroy(struct dev_filter *f)
 {
 	struct dev_filter **filters = (struct dev_filter **) f->private;
 
