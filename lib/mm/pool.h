@@ -107,15 +107,6 @@ void pool_abandon_object(struct pool *p);
 /* utilities */
 char *pool_strdup(struct pool *p, const char *str);
 char *pool_strndup(struct pool *p, const char *str, size_t n);
-
-static inline void *pool_zalloc(struct pool *p, size_t s)
-{
-	void *ptr = pool_alloc(p, s);
-
-	if (ptr)
-		memset(ptr, 0, s);
-
-	return ptr;
-}
+void *pool_zalloc(struct pool *p, size_t s);
 
 #endif
