@@ -47,6 +47,9 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	if (!is_identifier(name, dentry->d_name.len))
 		return -EPERM;
 
+	if (dentry->d_name[0] == '.')
+		return -EINVAL;
+
 	inode = dmfs_create_lv(dir, dentry, mode);
 	if (!IS_ERR(inode)) {
 		md = dm_create(name, -1);
@@ -70,8 +73,7 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
  */
 static inline positive(struct dentry *dentry)
 {
-	return dentry->d_inode && dentry->d_inode->u.generic_ip &&
-	       !d_unhashed(dentry);
+	return dentry->d_inode && !d_unhashed(dentry);
 }
 
 static int empty(struct dentry *dentry)
@@ -94,45 +96,12 @@ static int empty(struct dentry *dentry)
 	return 1;
 }
 
-static int dmfs_delete_virtual(struct inode *dir, struct dentry *dentry)
-{
-	struct list_head *list;
-	struct dentry *de;
-	int rv = 0;
-
-	while(1) {
-		spin_lock(&dcache_lock);
-		list = dentry->d_subdirs.next;
-		if (list == &dentry->d_subdirs) {
-			spin_unlock(&dcache_lock);
-			break;
-		}
-		de = list_entry(list, struct dentry, d_child);
-		if (de->d_inode && !d_unhashed(de)) {
-			spin_unlock(&dcache_lock);
-			if (de->d_inode->u.generic_ip)
-				BUG();
-			rv = de->d_inode->ops->unlink(dir, de);
-			if (rv == 0) {
-				d_delete(de);
-				continue;
-			}
-			break;
-		}
-		spin_unlock(&dcache_lock);
-	}
-
-	return rv;
-}
-
 static int dmfs_root_rmdir(struct inode *dir, struct dentry *dentry)
 {
 	int ret = -ENOTEMPTY;
 
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
-
-		ret = dmfs_delete_virtual(dir, dentry);
 		if (ret == 0) {
 			inode->i_nlink--;
 			dput(dentry);
