@@ -4,7 +4,7 @@
  export-objs	:= md.o xor.o
  list-multi	:= lvm-mod.o
  lvm-mod-objs	:= lvm.o lvm-snap.o lvm-fs.o
-+dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-fs.o
++dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-fs.o dm-parse.o
  
  # Note: link order is important.  All raid personalities
  # and xor.o must come before md.o, as they each initialise 
