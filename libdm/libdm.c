@@ -253,57 +253,6 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	return NULL;
 }
 
-/*
- * FIXME: This function is copied straight from
- *        LVM1 without an audit.
- */
-static int __check_devfs(void)
-{
-	int r = 0, len;
-	char dir[PATH_MAX], line[512];
-	char type[32];
-	FILE *mounts = NULL;
-	const char *dev_dir = DM_DIR;
-
-	/* trim the trailing slash off dev_dir, yuck */
-	len = strlen(dev_dir) - 1;
-	while(len && dev_dir[len] == '/')
-		len--;
-
-	if (!(mounts = fopen("/proc/mounts", "r"))) {
-		log("Unable to open /proc/mounts to determine "
-		    "if devfs is mounted");
-		return 0;
-	}
-
-	while (!feof(mounts)) {
-		fgets(line, sizeof(line) - 1, mounts);
-		if (sscanf(line, "%*s %s %s %*s", dir, type) != 2)
-			continue;
-
-		if (!strcmp(type, "devfs") && !strncmp(dir, dev_dir, len)) {
-			r = 1;
-			break;
-		}
-	}
-
-	fclose(mounts);
-	return r;
-}
-
-/*
- * Memo the result of __check_devfs.
- */
-static int _check_devfs(void)
-{
-	static int prev_result = -1;
-
-	if (prev_result >= 0)
-		return prev_result;
-
-	return (prev_result = __check_devfs());
-}
-
 static void _build_dev_path(char *buffer, size_t len, const char *dev_name)
 {
 	snprintf(buffer, len, "/dev/%s/%s", DM_DIR, dev_name);
@@ -312,11 +261,25 @@ static void _build_dev_path(char *buffer, size_t len, const char *dev_name)
 static int _add_dev_node(const char *dev_name, dev_t dev)
 {
 	char path[PATH_MAX];
-
-	if (_check_devfs())
-		return 1;
+	struct stat info;
 
 	_build_dev_path(path, sizeof(path), dev_name);
+
+	if (stat(path, &info) >= 0) {
+		if (!S_ISBLK(info.st_mode)) {
+			log("A non-block device file at '%s' "
+			    "is already present", path);
+			return 0;
+		}
+
+		if (info.st_rdev == dev)
+			return 1;
+
+		if (unlink(path) < 0) {
+			log("Unable to unlink device node for '%s'", dev_name);
+			return 0;
+		}
+	}
 
 	if (mknod(path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
 		log("Unable to make device node for '%s'", dev_name);
@@ -329,9 +292,6 @@ static int _add_dev_node(const char *dev_name, dev_t dev)
 static int _rm_dev_node(const char *dev_name)
 {
 	char path[PATH_MAX];
-
-	if (_check_devfs())
-		return 1;
 
 	_build_dev_path(path, sizeof(path), dev_name);
 
