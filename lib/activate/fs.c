@@ -65,10 +65,10 @@ static int _rm_dir(const char *dev_dir, const char *vg_name)
 		return 0;
 	}
 
-	log_very_verbose("Removing directory %s", vg_path);
-
-	if (is_empty_dir(vg_path))
+	if (is_empty_dir(vg_path)) {
+		log_very_verbose("Removing directory %s", vg_path);
 		rmdir(vg_path);
+	}
 
 	return 1;
 }
@@ -202,9 +202,9 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 	}
 
 	if (lstat(lv_path, &buf) || !S_ISLNK(buf.st_mode)) {
-		if (errno != ENOENT)
-			log_error("%s not symbolic link - not removing",
-				  lv_path);
+		if (errno == ENOENT)
+			return 1;
+		log_error("%s not symbolic link - not removing", lv_path);
 		return 0;
 	}
 
