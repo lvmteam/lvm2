@@ -340,8 +340,7 @@ int lv_is_cow(struct logical_volume *lv);
 
 struct snapshot *find_cow(struct volume_group *vg, struct logical_volume *lv);
 
-int vg_add_snapshot(struct volume_group *vg,
-		    struct logical_volume *origin,
+int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow,
 		    int persistent,
 		    uint32_t chunk_size);

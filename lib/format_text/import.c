@@ -448,7 +448,7 @@ static int _read_snapshot(struct pool *mem,
 		return 0;
 	}
 
-	if (!vg_add_snapshot(vg, org, cow, 1, chunk_size)) {
+	if (!vg_add_snapshot(org, cow, 1, chunk_size)) {
 		stack;
 		return 0;
 	}
