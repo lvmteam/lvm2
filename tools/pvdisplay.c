@@ -131,6 +131,8 @@ void pvdisplay_device(const char *pv_name)
                	log_print ("no logical volume on physical volume %s", pv_name);
 
       pvdisplay_device_out:
+	if (pv)
+		dbg_free(pv->pe);
 	dbg_free(pv);
 	dbg_free(lvs);
 
