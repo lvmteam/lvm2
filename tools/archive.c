@@ -213,7 +213,6 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 {
 	struct volume_group *vg = NULL;
 	struct format_instance *tf;
-	struct list *mdah;
 	struct metadata_area *mda;
 	void *context;
 
@@ -225,8 +224,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	list_iterate(mdah, &tf->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &tf->metadata_areas) {
 		if (!(vg = mda->ops->vg_read(tf, vg_name, mda)))
 			stack;
 		break;
@@ -239,7 +237,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 /* ORPHAN and VG locks held before calling this */
 int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 {
-	struct list *pvh;
+	struct pv_list *pvl;
 	struct physical_volume *pv;
 	struct lvmcache_info *info;
 
@@ -256,8 +254,8 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/* Add any metadata areas on the PVs */
-	list_iterate(pvh, &vg->pvs) {
-		pv = list_item(pvh, struct pv_list)->pv;
+	list_iterate_items(pvl, &vg->pvs) {
+		pv = pvl->pv;
 		if (!(info = info_from_pvid(pv->dev->pvid))) {
 			log_error("PV %s missing from cache",
 				  dev_name(pv->dev));
@@ -319,7 +317,6 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 {
 	int r = 0;
 	struct format_instance *tf;
-	struct list *mdah;
 	struct metadata_area *mda;
 	void *context;
 	struct cmd_context *cmd;
@@ -334,8 +331,7 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 	}
 
 	/* Write and commit the metadata area */
-	list_iterate(mdah, &tf->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &tf->metadata_areas) {
 		if (!(r = mda->ops->vg_write(tf, vg, mda))) {
 			stack;
 			continue;

@@ -23,13 +23,13 @@
 static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			       struct volume_group *vg, int lock)
 {
-	struct list *lvh;
+	struct lv_list *lvl;
 	struct logical_volume *lv;
 	struct physical_volume *pv;
 	int count = 0;
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
+	list_iterate_items(lvl, &vg->lvs) {
+		lv = lvl->lv;
 
 		/* Only request activation of snapshot origin devices */
 		if (lv_is_cow(lv))

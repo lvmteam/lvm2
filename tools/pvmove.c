@@ -202,7 +202,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						struct list **lvs_changed)
 {
 	struct logical_volume *lv_mirr, *lv;
-	struct list *lvh;
+	struct lv_list *lvl;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty(vg->fid, NULL, "pvmove%d",
@@ -222,8 +222,8 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	list_init(*lvs_changed);
 
 	/* Find segments to be moved and set up mirrors */
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
+	list_iterate_items(lvl, &vg->lvs) {
+		lv = lvl->lv;
 		if ((lv == lv_mirr) || (lv_name && strcmp(lv->name, lv_name)))
 			continue;
 		if (lv_is_origin(lv) || lv_is_cow(lv)) {
@@ -576,7 +576,7 @@ static int _poll_pvmove_vgs(struct cmd_context *cmd, const char *vgname,
 			    void *handle)
 {
 	struct pvmove_parms *parms = (struct pvmove_parms *) handle;
-	struct list *lvh;
+	struct lv_list *lvl;
 	struct logical_volume *lv_mirr;
 	struct physical_volume *pv;
 	int finished;
@@ -597,8 +597,8 @@ static int _poll_pvmove_vgs(struct cmd_context *cmd, const char *vgname,
 		return ECMD_FAILED;
 	}
 
-	list_iterate(lvh, &vg->lvs) {
-		lv_mirr = list_item(lvh, struct lv_list)->lv;
+	list_iterate_items(lvl, &vg->lvs) {
+		lv_mirr = lvl->lv;
 		if (!(lv_mirr->status & PVMOVE))
 			continue;
 		if (!(pv = get_pvmove_pv_from_lv_mirr(lv_mirr)))

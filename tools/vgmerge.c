@@ -24,7 +24,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 			   const char *vg_name_from)
 {
 	struct volume_group *vg_to, *vg_from;
-	struct list *lvh1, *lvh2;
+	struct lv_list *lvl1, *lvl2;
 	int active;
 	int consistent = 1;
 
@@ -109,13 +109,12 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	}
 
 	/* Check no conflicts with LV names */
-	list_iterate(lvh1, &vg_to->lvs) {
-		list_iterate(lvh2, &vg_from->lvs) {
-			char *name1 = list_item(lvh1,
-						struct lv_list)->lv->name;
+	list_iterate_items(lvl1, &vg_to->lvs) {
+		char *name1 = lvl1->lv->name;
 
-			char *name2 = list_item(lvh2,
-						struct lv_list)->lv->name;
+		list_iterate_items(lvl2, &vg_from->lvs) {
+			char *name2 = lvl2->lv->name;
+
 			if (!strcmp(name1, name2)) {
 				log_error("Duplicate logical volume "
 					  "name \"%s\" "

@@ -55,7 +55,8 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		      int *list_unsafe)
 {
 	struct snapshot *snap;
-	struct list *snaplist, *snh;
+	struct snapshot_list *snl;
+	struct list *snaplist;
 
 	log_verbose("%s/%s has missing extents: removing (including "
 		    "dependencies)", lv->vg->name, lv->name);
@@ -91,9 +92,9 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 	/* List may be empty */
-	list_iterate(snh, snaplist) {
+	list_iterate_items(snl, snaplist) {
 		*list_unsafe = 1;	/* May remove caller's lvht! */
-		snap = list_item(snh, struct snapshot_list)->snapshot;
+		snap = snl->snapshot;
 		if (!vg_remove_snapshot(lv->vg, snap->cow)) {
 			stack;
 			return 0;
@@ -126,7 +127,6 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	struct lv_segment *seg;
 	unsigned int s;
 	int list_unsafe;
-	struct list *segh;
 
 	/* Deactivate & remove necessary LVs */
       restart_loop:
@@ -136,8 +136,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		lv = list_item(lvh, struct lv_list)->lv;
 
 		/* Are any segments of this LV on missing PVs? */
-		list_iterate(segh, &lv->segments) {
-			seg = list_item(segh, struct lv_segment);
+		list_iterate_items(seg, &lv->segments) {
 			for (s = 0; s < seg->area_count; s++) {
 				if (seg->area[s].type != AREA_PV)
 					continue;

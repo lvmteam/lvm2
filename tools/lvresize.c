@@ -37,10 +37,13 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	const char *vg_name;
 	char *st, *lock_lvid;
 	const char *cmd_name;
-	struct list *pvh, *segh;
+	struct list *pvh;
 	struct lv_list *lvl;
 	int opt = 0;
 	int consistent = 1;
+	struct lv_segment *seg;
+	uint32_t seg_extents;
+	uint32_t sz, str;
 
 	enum {
 		LV_ANY = 0,
@@ -197,12 +200,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	/* If extending, find stripes, stripesize & size of last segment */
 	if (extents > lv->le_count && !(stripes == 1 || (stripes > 1 && ssize))) {
-		list_iterate(segh, &lv->segments) {
-			struct lv_segment *seg;
-			uint32_t sz, str;
-
-			seg = list_item(segh, struct lv_segment);
-
+		list_iterate_items(seg, &lv->segments) {
 			if (seg->type != SEG_STRIPED)
 				continue;
 
@@ -248,12 +246,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Ignoring stripes and stripesize arguments "
 				  "when reducing");
 
-		list_iterate(segh, &lv->segments) {
-			struct lv_segment *seg;
-			uint32_t seg_extents;
-
-			seg = list_item(segh, struct lv_segment);
-
+		list_iterate_items(seg, &lv->segments) {
 			seg_extents = seg->len;
 
 			if (seg->type == SEG_STRIPED) {
