@@ -7,6 +7,9 @@
 #include "metadata.h"
 #include "hash.h"
 #include "dbg_malloc.h"
+#include "log.h"
+#include "pool.h"
+#include "disk-rep.h"
 
 /*
  * After much thought I have decided it is easier,
@@ -25,6 +28,8 @@ struct pe_specifier {
 
 struct lv_map {
 	struct logical_volume *lv;
+	uint32_t stripes;
+	uint32_t stripe_size;
 	struct pe_specifier *map;
 };
 
@@ -50,14 +55,14 @@ _create_lv_maps(struct pool *mem, struct volume_group *vg)
 			goto bad;
 		}
 
-		lvm->lv = ll->lv;
-		if (!(lvm->map = pool_zalloc(sizeof(*lvm->map)
-					     * ll->lv->le_count))) {
+		lvm->lv = &ll->lv;
+		if (!(lvm->map = pool_zalloc(mem, sizeof(*lvm->map)
+					     * ll->lv.le_count))) {
 			stack;
 			goto bad;
 		}
 
-		if (!hash_insert(maps, ll->lv->name, lvm)) {
+		if (!hash_insert(maps, ll->lv.name, lvm)) {
 			stack;
 			goto bad;
 		}
@@ -87,16 +92,24 @@ static int _fill_lv_array(struct lv_map **lvs,
 			return 0;
 		}
 
+		lvm->stripes = ll->lvd.lv_stripes;
+		lvm->stripe_size = ll->lvd.lv_stripesize;
+
 		lvs[i++] = lvm;
 	}
 
 	return 1;
 }
 
-static int _fill_maps(struct hash_table *maps, struct list *pvds)
+static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
+		      struct list *pvds)
 {
 	struct list *pvdh;
-	struct lv_map *map;
+	struct disk_list *dl;
+	struct physical_volume *pv;
+	struct lv_map *lvms[MAX_LV], *lvm;
+	struct pe_disk *e;
+	uint32_t i, lv_num, le;
 
 	list_iterate(pvdh, pvds) {
 		dl = list_item(pvdh, struct disk_list);
@@ -104,7 +117,7 @@ static int _fill_maps(struct hash_table *maps, struct list *pvds)
 		e = dl->extents;
 
 		/* build an array of lv's for this pv */
-		if (!_fill_lv_array(lvs, vg, dl)) {
+		if (!_fill_lv_array(lvms, maps, dl)) {
 			stack;
 			return 0;
 		}
@@ -121,7 +134,7 @@ static int _fill_maps(struct hash_table *maps, struct list *pvds)
 
 			} else {
 				lv_num--;
-				lvm = lvs[lv_num];
+				lvm = lvms[lv_num];
 				le = e[i].le_num;
 
 				if (le >= lvm->lv->le_count) {
@@ -156,6 +169,7 @@ static int _check_single_map(struct lv_map *lvm)
 static int _check_maps_are_complete(struct hash_table *maps)
 {
 	struct hash_node *n;
+	struct lv_map *lvm;
 
 	for (n = hash_get_first(maps); n; n = hash_get_next(maps, n)) {
 		lvm = (struct lv_map *) hash_get_data(maps, n);
@@ -174,7 +188,7 @@ static int _same_segment(struct stripe_segment *seg, struct lv_map *lvm,
 	uint32_t s;
 	uint32_t le = seg->le + (count * seg->stripes);
 
-	for (s = 0; s < stripes; s++) {
+	for (s = 0; s < seg->stripes; s++) {
 		if ((lvm->map[le + s].pv != seg->area[s].pv) ||
 		    (lvm->map[le + s].pe != seg->area[s].pe + count))
 			return 0;
@@ -184,8 +198,8 @@ static int _same_segment(struct stripe_segment *seg, struct lv_map *lvm,
 
 static int _build_segments(struct pool *mem, struct lv_map *lvm)
 {
-	uint32_t stripes = lvm->lv->stripes;
-	uint32_t le;
+	uint32_t stripes = lvm->stripes;
+	uint32_t le, s, count;
 	struct stripe_segment *seg;
 	size_t len;
 
@@ -215,7 +229,7 @@ static int _build_segments(struct pool *mem, struct lv_map *lvm)
 
 		} while (_same_segment(seg, lvm, count++));
 
-		list_add(&lvm->lv->segments, seg);
+		list_add(&lvm->lv->segments, &seg->list);
 	}
 
 	return 1;
@@ -254,7 +268,7 @@ int import_extents(struct pool *mem, struct volume_group *vg,
 		goto out;
 	}
 
-	if (!_fill_maps(maps, pvds)) {
+	if (!_fill_maps(maps, vg, pvds)) {
 		log_err("Couldn't fill logical volume maps.");
 		goto out;
 	}
