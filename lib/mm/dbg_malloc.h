@@ -28,5 +28,14 @@ void bounds_check(void);
 #define bounds_check()
 #endif
 
-#endif
+static inline char *dbg_strdup(const char *str)
+{
+	char *ret = dbg_malloc(strlen(str) + 1);
 
+	if (ret)
+		strcpy(ret, str);
+
+	return ret;
+}
+
+#endif

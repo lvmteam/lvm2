@@ -29,6 +29,7 @@ SOURCES=\
 	format1/import-extents.c \
 	format1/layout.c \
 	format1/vg_number.c \
+	label/label.c \
 	log/log.c \
 	metadata/lv_manip.c \
 	metadata/metadata.c \
@@ -39,7 +40,7 @@ SOURCES=\
 	regex/parse_rx.c \
 	regex/ttree.c \
 	uuid/uuid.c \
-	label/label.c
+	vgcache/vgcache.c
 
 TARGETS=liblvm.a
 

@@ -33,8 +33,8 @@ struct lv_map {
 	struct pe_specifier *map;
 };
 
-static struct hash_table *
-_create_lv_maps(struct pool *mem, struct volume_group *vg)
+static struct hash_table *_create_lv_maps(struct pool *mem,
+					  struct volume_group *vg)
 {
 	struct hash_table *maps = hash_create(32);
 	struct list *llh;
@@ -47,7 +47,7 @@ _create_lv_maps(struct pool *mem, struct volume_group *vg)
 		return NULL;
 	}
 
-	list_iterate (llh, &vg->lvs) {
+	list_iterate(llh, &vg->lvs) {
 		ll = list_item(llh, struct lv_list);
 
 		if (!(lvm = pool_alloc(mem, sizeof(*lvm)))) {
@@ -70,7 +70,7 @@ _create_lv_maps(struct pool *mem, struct volume_group *vg)
 
 	return maps;
 
- bad:
+      bad:
 	hash_destroy(maps);
 	return NULL;
 }
@@ -86,7 +86,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 
 		if (!(lvm = hash_lookup(maps, strrchr(ll->lvd.lv_name, '/')
-					      + 1 ))) {
+					+ 1))) {
 			log_err("Physical volume (%s) contains an "
 				"unknown logical volume (%s).",
 				dev_name(dl->dev), ll->lvd.lv_name);
@@ -133,7 +133,7 @@ static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
 				lv_num--;
 				lvm = lvms[lv_num];
 
-				if(!lvm) {
+				if (!lvm) {
 					log_err("invalid lv in extent map");
 					return 0;
 				}
@@ -236,14 +236,36 @@ static int _read_linear(struct pool *mem, struct lv_map *lvm)
 	return 1;
 }
 
+static int _check_for_stripe(struct lv_map *lvm, uint32_t base_le,
+			     uint32_t stripe, uint32_t length)
+{
+	uint32_t next_pe, pe, base;
+	struct physical_volume *next_pv;
+
+	base = base_le + stripe * length;
+
+	next_pe = lvm->map[base].pe;
+	next_pv = lvm->map[base].pv;
+
+	for (pe = 1; pe < length; pe++) {
+		if (lvm->map[base + pe].pe != next_pe + pe ||
+		    lvm->map[base + pe].pv != next_pv)
+			return 0;
+	}
+
+	return 1;
+}
+
 static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 {
-	uint32_t stripes = lvm->stripes, s, le = 0, pe;
+	uint32_t st, le = 0, flag_warning = 0;
 	struct stripe_segment *seg;
-	struct pe_specifier *pes;
+	size_t seg_size;
 
 	while (le < lvm->lv->le_count) {
-		if (!(seg = _alloc_seg(mem, stripes))) {
+		seg_size = sizeof(*seg) + sizeof(seg->area[0]);
+
+		if (!(seg = _alloc_seg(mem, lvm->stripes))) {
 			stack;
 			return 0;
 		}
@@ -252,8 +274,8 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 		seg->le = le;
 		seg->len = 0;
 		seg->stripe_size = lvm->stripe_size;
-		seg->stripes = stripes;
-	
+		st = 1;
+
 		seg->area[0].pv = lvm->map[le].pv;
 		seg->area[0].pe = lvm->map[le].pe;
 
@@ -263,28 +285,31 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 		       (lvm->map[le + seg->len].pe == seg->area[0].pe +
 			seg->len));
 
-		for (s = 1; s < stripes; s++) {
-			pes = &lvm->map[le + s * seg->len];
-	
-			seg->area[s].pv = pes->pv;
-			seg->area[s].pe = pes->pe;
+		while (st < lvm->stripes &&
+		       _check_for_stripe(lvm, le, st, seg->len)) {
 
-			for (pe = 0; pe < seg->len; pe++) {
-				if (lvm->map[le + s * seg->len + pe].pe !=
-					pes->pe + pe) {
-					log_error("Incompatible striping at LE"
-						  " %d on %s", 
-						  le + s * seg->len + pe,
-						  seg->lv->name);
-					return 0;
-				}
-			}
+			seg->area[st].pv = lvm->map[le + st * seg->len].pv;
+			seg->area[st].pe = lvm->map[le + st * seg->len].pe;
+
+			st++;
 		}
- 
-		seg->len *= stripes;
+
+		if (st != lvm->stripes)
+			flag_warning++;
+
+		seg->stripes = st;
+		seg->len *= seg->stripes;
 		le += seg->len;
 
 		list_add(&lvm->lv->segments, &seg->list);
+	}
+
+	if (flag_warning) {
+		log_error("WARNING: Found %d segments with different numbers "
+			  "of stripes.", flag_warning);
+		log_error("Risk of data corruption.");
+		log_error("Check the mapping is what you intended before you "
+			  "use %s!", seg->lv->name);
 	}
 
 	return 1;
@@ -312,8 +337,7 @@ static int _build_all_segments(struct pool *mem, struct hash_table *maps)
 	return 1;
 }
 
-int import_extents(struct pool *mem, struct volume_group *vg,
-		   struct list *pvds)
+int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvds)
 {
 	int r = 0;
 	struct pool *scratch = pool_create(10 * 1024);
@@ -345,7 +369,7 @@ int import_extents(struct pool *mem, struct volume_group *vg,
 	}
 	r = 1;
 
- out:
+      out:
 	if (maps)
 		hash_destroy(maps);
 	pool_destroy(scratch);

@@ -29,6 +29,7 @@
 #include <ctype.h>
 
 #include "stub.h"
+#include "vgcache.h"
 
 #ifdef READLINE_SUPPORT
 #include <readline/readline.h>
@@ -792,6 +793,7 @@ static void fin(void)
 	fid->ops->destroy(fid);
 	cmd->filter->destroy(cmd->filter);
 	pool_destroy(cmd->mem);
+	vgcache_destroy();
 	dev_cache_exit();
 	destroy_config_file(cmd->cf);
 	dbg_free(cmd);
