@@ -1005,9 +1005,6 @@ static int init(void)
 	/* Use LOG_USER for syslog messages by default */
 	init_syslog(LOG_USER);
 
-	/* send log messages to stderr for now */
-	init_log(stderr);
-
 	_init_rand();
 
 	if (*_sys_dir && lvm_snprintf(config_file, sizeof(config_file),
