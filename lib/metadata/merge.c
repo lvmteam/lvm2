@@ -39,6 +39,7 @@ static int _merge(struct lv_segment *first, struct lv_segment *second)
 
 	/* we should merge */
 	first->len += second->len;
+	first->area_len += second->area_len;
 
 	return 1;
 }
