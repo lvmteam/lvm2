@@ -25,7 +25,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	const char *active_str, *snapshot_str;
 
 /* FIXME Add -D arg to skip this! */
-	if (lv_info(lv, &info) && info.exists)
+	if (lv_info(lv, &info, 0) && info.exists)
 		active_str = "ACTIVE   ";
 	else
 		active_str = "inactive ";

@@ -364,7 +364,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (lp->resize == LV_REDUCE || lp->resizefs) {
 		memset(&info, 0, sizeof(info));
 
-		if (!lv_info(lv, &info) && driver_version(NULL, 0)) {
+		if (!lv_info(lv, &info, 1) && driver_version(NULL, 0)) {
 			log_error("lv_info failed: aborting");
 			return ECMD_FAILED;
 		}
