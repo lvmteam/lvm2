@@ -105,6 +105,16 @@ static int lvchange_availability(struct cmd_context *cmd,
 	return 1;
 }
 
+static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	log_verbose("Refreshing logical volume \"%s\" (if active)", lv->name);
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_LV_HOLD) ||
+	    !unlock_vol(cmd, lv->lvid.s))
+		return 0;
+
+	return 1;
+}
+
 static int lvchange_contiguous(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
@@ -428,6 +438,10 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!lvchange_availability(cmd, lv))
 			return ECMD_FAILED;
 
+	if (arg_count(cmd, refresh_ARG))
+		if (!lvchange_refresh(cmd, lv))
+			return ECMD_FAILED;
+
 	return ECMD_PROCESSED;
 }
 
@@ -437,16 +451,17 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
 	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)
 	    && !arg_count(cmd, persistent_ARG) && !arg_count(cmd, addtag_ARG)
-	    && !arg_count(cmd, deltag_ARG)) {
+	    && !arg_count(cmd, deltag_ARG) && !arg_count(cmd, refresh_ARG)) {
 		log_error("One or more of -a, -C, -j, -m, -M, -p, -r, "
-			  "--addtag or --deltag required");
+			  "--refresh, --addtag or --deltag required");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(cmd, ignorelockingfailure_ARG) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
 	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
-	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG))) {
+	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG) ||
+	     arg_count(cmd, refresh_ARG))) {
 		log_error("Only -a permitted with --ignorelockingfailure");
 		return EINVALID_CMD_LINE;
 	}
