@@ -165,12 +165,17 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l = hash_lookup(pf->devices, dev_name(dev));
+	struct list_head *tmp;
+	struct str_list *sl;
 
 	if (!l) {
 		l = pf->real->passes_filter(pf->real, dev) ?
 			PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
-		hash_insert(pf->devices, dev_name(dev), l);
+		list_for_each(tmp, &dev->aliases) {
+			sl = list_entry(tmp, struct str_list, list);
+			hash_insert(pf->devices, sl->str, l);
+		}
 	}
 
 	return l == PF_GOOD_DEVICE;
