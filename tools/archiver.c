@@ -174,8 +174,6 @@ static int __backup(struct volume_group *vg)
 		return 0;
 	}
 
-	log_verbose("Creating volume group backup \"%s\"", name);
-
 	return backup_to_file(name, desc, vg);
 }
 
@@ -331,6 +329,8 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 	struct cmd_context *cmd;
 
 	cmd = vg->cmd;
+
+	log_verbose("Creating volume group backup \"%s\"", file);
 
 	if (!(context = create_text_context(cmd, file, desc)) ||
 	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
