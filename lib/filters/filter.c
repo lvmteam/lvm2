@@ -55,6 +55,7 @@ static const device_info_t device_info[] = {
 	{"drbd", 16},		/* Distributed Replicated Block Device */
 	{"power2", 16},		/* EMC Powerpath */
 	{"i2o_block", 16},	/* i2o Block Disk */
+	{"iseries/vd", 8},	/* iSeries disks */
 	{NULL, 0}
 };
 
