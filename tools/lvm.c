@@ -966,6 +966,8 @@ static void fin(void)
 	dev_cache_exit();
 	destroy_config_file(cmd->cf);
 	dbg_free(cmd);
+	archive_exit();
+	backup_exit();
 	__fin_commands();
 	dump_memory();
 	fin_log();
