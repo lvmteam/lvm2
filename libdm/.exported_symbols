@@ -17,6 +17,8 @@ dm_task_set_newname
 dm_task_set_event_nr
 dm_task_set_major
 dm_task_set_minor
+dm_task_set_sector
+dm_task_set_message
 dm_task_add_target
 dm_get_next_target
 dm_task_run

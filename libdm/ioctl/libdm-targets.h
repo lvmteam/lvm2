@@ -45,6 +45,8 @@ struct dm_task {
 		struct dm_ioctl_v1 *v1;
 	} dmi;
 	char *newname;
+	char *message;
+	uint64_t sector;
 
 	char *uuid;
 };

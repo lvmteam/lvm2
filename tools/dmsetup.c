@@ -248,6 +248,51 @@ static int _rename(int argc, char **argv, void *data)
 	return r;
 }
 
+static int _message(int argc, char **argv, void *data)
+{
+	int r = 0, sz = 1, i;
+	struct dm_task *dmt;
+	char *str;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_TARGET_MSG)))
+		return 0;
+
+	if (!dm_task_set_name(dmt, argv[1]))
+		goto out;
+
+	if (!dm_task_set_sector(dmt, atoll(argv[2])))
+		goto out;
+
+	argc -= 3;
+	argv += 3;
+
+	for (i = 0; i < argc; i++)
+		sz += strlen(argv[i]) + 1;
+
+	str = malloc(sz);
+
+	for (i = 0; i < argc; i++) {
+		if (i)
+			strcat(str, " ");
+		strcat(str, argv[i]);
+	}
+
+	if (!dm_task_set_message(dmt, str))
+		goto out;
+
+	free(str);
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 static int _version(int argc, char **argv, void *data)
 {
 	int r = 0;
@@ -264,8 +309,9 @@ static int _version(int argc, char **argv, void *data)
 		goto out;
 
 	if (!dm_task_get_driver_version(dmt, (char *) &version,
-					sizeof(version)))
+					sizeof(version))) {
 		goto out;
+	}
 
 	printf("Driver version:    %s\n", version);
 
@@ -623,6 +669,7 @@ static struct command _commands[] = {
 	{"clear", "<dev_name>", 1, 1, _clear},
 	{"reload", "<dev_name> [<table_file>]", 1, 2, _reload},
 	{"rename", "<dev_name> <new_name>", 2, 2, _rename},
+	{"message", "<dev_name> <sector> <message>", 3, -1, _message},
 	{"ls", "", 0, 0, _ls},
 	{"info", "[<dev_name>]", 0, 1, _info},
 	{"deps", "[<dev_name>]", 0, 1, _deps},
@@ -744,7 +791,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (argc < c->min_args + 1 || argc > c->max_args + 1) {
+	if (argc < c->min_args + 1 ||
+	    (c->max_args >= 0 && argc > c->max_args + 1)) {
 		fprintf(stderr, "Incorrect number of arguments\n");
 		_usage(stderr);
 		exit(1);

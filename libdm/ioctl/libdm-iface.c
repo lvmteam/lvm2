@@ -93,6 +93,9 @@ static struct cmd_data _cmd_data_v4[] = {
 #ifdef DM_LIST_VERSIONS
 	{"versions",	DM_LIST_VERSIONS,	{4, 1, 0}},
 #endif
+#ifdef DM_TARGET_MSG
+	{"message",	DM_TARGET_MSG,		{4, 2, 0}},
+#endif
 };
 /* *INDENT-ON* */
 
@@ -146,6 +149,9 @@ void dm_task_destroy(struct dm_task *dmt)
 	if (dmt->newname)
 		free(dmt->newname);
 
+	if (dmt->message)
+		free(dmt->message);
+
 	if (dmt->dmi.v4)
 		free(dmt->dmi.v4);
 
@@ -190,8 +196,9 @@ static int _unmarshal_status_v1(struct dm_task *dmt, struct dm_ioctl_v1 *dmi)
 		if (!dm_task_add_target(dmt, spec->sector_start,
 					(uint64_t) spec->length,
 					spec->target_type,
-					outptr + sizeof(*spec)))
+					outptr + sizeof(*spec))) {
 			return 0;
+		}
 
 		outptr = outbuf + spec->next;
 	}
@@ -652,8 +659,9 @@ static int _unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
 		if (!dm_task_add_target(dmt, spec->sector_start,
 					spec->length,
 					spec->target_type,
-					outptr + sizeof(*spec)))
+					outptr + sizeof(*spec))) {
 			return 0;
+		}
 
 		outptr = outbuf + spec->next;
 	}
@@ -775,6 +783,23 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 	return 1;
 }
 
+int dm_task_set_message(struct dm_task *dmt, const char *message)
+{
+	if (!(dmt->message = strdup(message))) {
+		log_error("dm_task_set_message: strdup(%s) failed", message);
+		return 0;
+	}
+
+	return 1;
+}
+
+int dm_task_set_sector(struct dm_task *dmt, uint64_t sector)
+{
+	dmt->sector = sector;
+
+	return 1;
+}
+
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 {
 	dmt->event_nr = event_nr;
@@ -861,6 +886,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	struct dm_ioctl *dmi;
 	struct target *t;
+	struct dm_target_msg *tmsg;
 	size_t len = sizeof(struct dm_ioctl);
 	void *b, *e;
 	int count = 0;
@@ -871,13 +897,31 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 		count++;
 	}
 
+	if (count && (dmt->sector || dmt->message)) {
+		log_error("targets and message are incompatible");
+		return NULL;
+	}
+
 	if (count && dmt->newname) {
 		log_error("targets and newname are incompatible");
 		return NULL;
 	}
 
+	if (dmt->newname && (dmt->sector || dmt->message)) {
+		log_error("message and newname are incompatible");
+		return NULL;
+	}
+
+	if (dmt->sector && !dmt->message) {
+		log_error("message is required with sector");
+		return NULL;
+	}
+
 	if (dmt->newname)
 		len += strlen(dmt->newname) + 1;
+
+	if (dmt->message)
+		len += sizeof(struct dm_target_msg) + strlen(dmt->message) + 1;
 
 	/*
 	 * Give len a minimum size so that we have space to store
@@ -932,6 +976,12 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	if (dmt->newname)
 		strcpy(b, dmt->newname);
+
+	if (dmt->message) {
+		tmsg = (struct dm_target_msg *) b;
+		tmsg->sector = dmt->sector;
+		strcpy(tmsg->message, dmt->message);
+	}
 
 	return dmi;
 
@@ -1118,8 +1168,9 @@ int dm_task_run(struct dm_task *dmt)
 		dmi->flags |= DM_STATUS_TABLE_FLAG;
 
 	dmi->flags |= DM_EXISTS_FLAG;	/* FIXME */
-	log_debug("dm %s %s %s %s", _cmd_data_v4[dmt->type].name, dmi->name,
-		  dmi->uuid, dmt->newname ? dmt->newname : "");
+	log_debug("dm %s %s %s %s%.0llu %s", _cmd_data_v4[dmt->type].name,
+		  dmi->name, dmi->uuid, dmt->newname ? dmt->newname : "",
+		  dmt->sector, dmt->message ? dmt->message : "");
 	if (ioctl(_control_fd, command, dmi) < 0) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
 				       (dmt->type == DM_DEVICE_MKNODES))) {
