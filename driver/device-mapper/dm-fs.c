@@ -133,10 +133,9 @@ static void close_error_file(struct file *out)
 	fput(out);
 }
 
-static void parse_error(const char *message, void *private)
+static void parse_error(const char *message, struct line_c *lc)
 {
 	char buffer[32];
-	struct line_c *lc = (struct line_c *) private;
 
 #define emit(b, l) lc->out->f_op->write(lc->out, (b), (l), &lc->out->f_pos)
 
@@ -180,7 +179,9 @@ static int dmfs_release(struct inode *inode, struct file *f)
 	if (!(lc->out = open_error_file(lc->in)))
 		return -ENOMEM;
 
-	table = dm_parse(extract_line, lc, parse_error, lc);
+	table = dm_parse(extract_line, lc);
+	if (table && table->err_msg)
+		parse_error(table->err_msg, lc);
 
 	close_error_file(lc->out);
 

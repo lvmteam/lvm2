@@ -23,8 +23,7 @@
 
 #include "dm.h"
 
-struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
-			  dm_error_fn err_fn, void *e_private)
+struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private)
 {
 	struct text_region line, word;
 	struct dm_table *table = dm_table_create();
@@ -53,21 +52,19 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 
 		/* sector start */
 		if (!dm_get_number(&line, &start)) {
-			err_fn("expecting a number for sector start",
-			       e_private);
+			table->err_msg = "expecting a number for sector start";
 			PARSE_ERROR;
 		}
 
 		/* length */
 		if (!dm_get_number(&line, &size)) {
-			err_fn("expecting a number for region length",
-			       e_private);
+			table->err_msg = "expecting a number for region length";
 			PARSE_ERROR;
 		}
 
 		/* target type */
 		if (!dm_get_word(&line, &word)) {
-			err_fn("target type missing", e_private);
+			table->err_msg = "target type missing";
 			PARSE_ERROR;
 		}
 
@@ -76,7 +73,7 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 
 		/* lookup the target type */
 		if (!(ttype = dm_get_target_type(target_name))) {
-			err_fn("unable to find target type", e_private);
+			table->err_msg = "unable to find target type";
 			PARSE_ERROR;
 		}
 
@@ -87,13 +84,12 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 		    ((table->num_targets &&
 		      start != table->highs[table->num_targets - 1] + 1) ||
 		     (!table->num_targets && start))) {
-			err_fn("gap in target ranges", e_private);
+			table->err_msg = "gap in target ranges";
 			PARSE_ERROR;
 		}
 
 		/* build the target */
 		if (ttype->ctr(table, start, size, &line, &context)) {
-			err_fn(table->err_msg, e_private);
 			PARSE_ERROR;
 		}
 
@@ -105,15 +101,13 @@ struct dm_table *dm_parse(extract_line_fn line_fn, void *l_private,
 		/* add the target to the table */
 		high = start + (size - 1);
 		if (dm_table_add_target(table, high, ttype, context)) {
-			err_fn("internal error adding target to table",
-			       e_private);
+			table->err_msg = "internal error adding target to table";
 			PARSE_ERROR;
 		}
 
 		/* Ensure sane block size */
 		if (table->blksize_size < table->hardsect_size) {
-			err_fn("block size smaller than hardsect size", 
-			       e_private);
+			table->err_msg = "block size smaller than hardsect size";
 			PARSE_ERROR;
 		}
 
