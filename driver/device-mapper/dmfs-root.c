@@ -89,6 +89,13 @@ static int dmfs_root_rmdir(struct inode *dir, struct dentry *dentry)
 {
 	int ret = -ENOTEMPTY;
 
+	/* 
+	 * FIXME: Checks need to be more complicated than this... 
+	 * Need to take into account removing "virtual" files but must
+	 * not allow removal whilst tables are still existing. Also we
+	 * should check for the block device being closed.
+	 */
+
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
 

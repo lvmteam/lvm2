@@ -21,6 +21,29 @@
 
 /* Heavily based upon ramfs */
 
+#include <linux/config.h>
+#include <linux/fs.h>
+
+static int dmfs_lv_create(struct inode *dir, struct dentry *dentry, int mode)
+{
+	struct inode *inode;
+
+	if (dentry->d_name.name[0] == '.')
+		return -EPERM;
+
+	if (dentry->d_name.len == 6 && 
+	    memcmp(dentry->d_name.name, "ACTIVE", 6) == 0)
+		return -EPERM;
+
+	inode = dmfs_create_table(dir, dentry, mode)
+	if (!IS_ERR(inode)) {
+		d_instantiate(dentry, inode);
+		dget(dentry);
+		return 0;
+	}
+	return PTR_ERR(inode);
+}
+
 static int dmfs_lv_unlink(struct inode *dir, struct dentry *dentry)
 {
 
@@ -69,7 +92,7 @@ static struct dmfs_lv_file_operations = {
 };
 
 static struct dmfs_lv_inode_operations = {
-	create:		dmfs_create_file,
+	create:		dmfs_lv_create,
 	lookup:		dmfs_lv_lookup,
 	link:		dmfs_lv_link,
 	unlink:		dmfs_lv_unlink,

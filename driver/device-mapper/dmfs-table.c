@@ -24,15 +24,24 @@
 
 static ssize_t dmfs_table_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
+	down(&inode->i_sem);
+
+	up(&inode->i_sem);
 }
 
 static ssize_t dmfs_table_write(struct file *file, const char *buf, size_t size, loff_t *pos)
 {
+	down(&inode->i_sem);
+
+	up(&inode->i_sem);
 }
 
 static int dmfs_table_open(struct inode *inode, struct file *file)
 {
 	struct dentry *dentry = file->f_dentry;
+
+	if (dentry->name[0] == '.')
+		return -EPERM;
 
 	if (dentry->name.len == 6 && memcmp("ACTIVE", dentry->name.name, 6) == 0)
 		return -EPERM;
