@@ -29,11 +29,13 @@ struct memblock {
 };
 
 static struct {
-	unsigned int blocks, mblocks;
+	unsigned block_serialno;/* Non-decreasing serialno of block */
+	unsigned blocks_allocated; /* Current number of blocks allocated */
+	unsigned blocks_max;	/* Max no of concurrently-allocated blocks */
 	unsigned int bytes, mbytes;
 
 } _mem_stats = {
-0, 0, 0, 0};
+0, 0, 0, 0, 0};
 
 static struct memblock *_head = 0;
 static struct memblock *_tail = 0;
@@ -65,7 +67,7 @@ void *malloc_aux(size_t s, const char *file, int line)
 	/* setup fields */
 	nb->magic = nb + 1;
 	nb->length = s;
-	nb->id = ++_mem_stats.blocks;
+	nb->id = ++_mem_stats.block_serialno;
 	nb->next = 0;
 	nb->prev = _tail;
 
@@ -89,8 +91,9 @@ void *malloc_aux(size_t s, const char *file, int line)
 			*ptr++ = (char) nb->id;
 	}
 
-	if (_mem_stats.blocks > _mem_stats.mblocks)
-		_mem_stats.mblocks = _mem_stats.blocks;
+	_mem_stats.blocks_allocated++;
+	if (_mem_stats.blocks_allocated > _mem_stats.blocks_max)
+		_mem_stats.blocks_max = _mem_stats.blocks_allocated;
 
 	_mem_stats.bytes += s;
 	if (_mem_stats.bytes > _mem_stats.mbytes)
@@ -140,8 +143,8 @@ void free_aux(void *p)
 	else
 		_tail = mb->prev;
 
-	assert(_mem_stats.blocks);
-	_mem_stats.blocks--;
+	assert(_mem_stats.blocks_allocated);
+	_mem_stats.blocks_allocated--;
 	_mem_stats.bytes -= mb->length;
 
 	/* free the memory */

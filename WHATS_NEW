@@ -1,5 +1,7 @@
 Version 2.00.24 - 
 =====================================
+  Some fixes to memory debugging code.
+  Exclude internal commands formats & segtypes from install.
 
 Version 2.00.23 - 15th September 2004
 =====================================
