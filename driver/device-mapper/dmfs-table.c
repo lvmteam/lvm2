@@ -21,6 +21,7 @@
 
 #include <linux/config.h>
 #include <linux/fs.h>
+#include <linux/mm.h>
 
 #include "dm.h"
 
@@ -142,7 +143,7 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 	unsigned long page;
 	unsigned long rem = 0;
 	struct dm_table *t;
-	struct page *pg, **hash;
+	struct page *pg;
 	int num = 0;
 
 	if (inode->i_size == 0)
@@ -153,7 +154,7 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 	if (!page)
 		return NULL;
 
-	t = dm_create_table();
+	t = dm_table_create();
 	if (!t) {
 		free_page(page);
 		return NULL;
@@ -164,13 +165,7 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 
 	do {
 		unsigned long end = (index == end_index) ? end_offset : PAGE_CACHE_SIZE;
-		hash = page_hash(mapping, index);
-
-		spin_lock(&pagecache_lock);
-		pg = __find_page_nolock(mapping, index, *hash);
-		if (pg)
-			page_cache_get(pg);
-		spin_unlock(&pagecache_lock);
+		pg = find_get_page(mapping, index);
 
 		if (pg) {
 			char *kaddr;
@@ -195,19 +190,19 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 	if (dm_table_complete(t) == 0)
 		return t;
 
-	dm_put_table(t);
+	dm_table_destroy(t);
 	return NULL;
 
 broken:
 	printk(KERN_ERR "dmfs_parse: Page not uptodate\n");
 	free_page(page);
-	dm_put_table(t);
+	dm_table_destroy(t);
 	return NULL;
 
 parse_error:
 	printk(KERN_ERR "dmfs_parse: Parse error\n");
 	free_page(page);
-	dm_put_table(t);
+	dm_table_destroy(t);
 	return NULL;
 }
 
@@ -225,7 +220,7 @@ static int dmfs_table_release(struct inode *inode, struct file *f)
 
 		if (table) {
 			if (dmi->table)
-				dm_put_table(dmi->table);
+				dm_table_destroy(dmi->table);
 			dmi->table = table;
 		}
 		up(&dmi->sem);
@@ -238,7 +233,7 @@ static int dmfs_table_release(struct inode *inode, struct file *f)
 
 static int dmfs_readpage(struct file *file, struct page *page)
 {
-	if (!PageUptodate(page)) {
+	if (!Page_Uptodate(page)) {
 		memset(kmap(page), 0, PAGE_CACHE_SIZE);
 		kunmap(page);
 		flush_dcache_page(page);

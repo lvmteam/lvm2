@@ -46,9 +46,9 @@ static void dmfs_delete_inode(struct inode *inode)
 		if (dmi->md)
 			dm_remove(dmi->md);
 		if (dmi->table)
-			dm_put_table(dmi->table);
+			dm_table_destroy(dmi->table);
 		if (dmi->dentry)
-			dm_unlock_tdir(dmi->dentry);
+			dput(dmi->dentry);
 		kfree(dmi);
 	}
 
