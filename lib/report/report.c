@@ -259,6 +259,65 @@ static int _pvfmt_disp(struct report_handle *rh, struct field *field,
 	return _string_disp(rh, field, &pv->fmt->name);
 }
 
+static int _int_disp(struct report_handle *rh, struct field *field,
+		     const void *data)
+{
+	const int value = *(const int *) data;
+	uint64_t *sortval;
+	char *repstr;
+
+	if (!(repstr = pool_zalloc(rh->mem, 13))) {
+		log_error("pool_alloc failed");
+		return 0;
+	}
+
+	if (!(sortval = pool_alloc(rh->mem, sizeof(int64_t)))) {
+		log_error("pool_alloc failed");
+		return 0;
+	}
+
+	if (lvm_snprintf(repstr, 12, "%d", value) < 0) {
+		log_error("int too big: %d", value);
+		return 0;
+	}
+
+	*sortval = (const uint64_t) value;
+	field->sort_value = sortval;
+	field->report_string = repstr;
+
+	return 1;
+}
+
+static int _lvkmaj_disp(struct report_handle *rh, struct field *field,
+			const void *data)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct lvinfo info;
+	uint64_t minusone = UINT64_C(-1);
+
+	if (lv_info(lv, &info) && info.exists)
+		return _int_disp(rh, field, &info.major);
+	else
+		return _int_disp(rh, field, &minusone);
+
+	return 1;
+}
+
+static int _lvkmin_disp(struct report_handle *rh, struct field *field,
+			const void *data)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct lvinfo info;
+	uint64_t minusone = UINT64_C(-1);
+
+	if (lv_info(lv, &info) && info.exists)
+		return _int_disp(rh, field, &info.minor);
+	else
+		return _int_disp(rh, field, &minusone);
+
+	return 1;
+}
+
 static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 			  const void *data)
 {
