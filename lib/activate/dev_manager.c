@@ -599,7 +599,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 		}
 
 		if (!(sl->str = _build_name(dm->mem, dm->vg_name,
-					    s->origin->name, "top"))) {
+					    s->origin->name, "real"))) {
 			stack;
 			return 0;
 		}
