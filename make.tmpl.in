@@ -72,10 +72,6 @@ endif
 
 LD_FLAGS += -L$(top_srcdir)/lib -L$(libdir)
 
-ifeq ("@STATIC_LINK@", "yes")
-  LD_FLAGS += -static
-endif
-
 #CFLAGS += -DDEBUG_POOL
 #CFLAGS += -DBOUNDS_CHECK
 
@@ -140,16 +136,14 @@ $(TARGETS): $(OBJECTS)
 %.o: %.c
 	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
 
-%.pot: %.c
+%.pot: %.c Makefile
 	$(CC) -E $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
 		$(CFLAGS) $< > $@
 
-%.pot: Makefile
-	
 %.so: %.o
-	$(CC) -c $(INCLUDES) $(CFLAGS) %< -o $@
+	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
 
-%.so: $(OBJECTS) $(LD_DEPS)
+$(LIB_SHARED): $(OBJECTS) $(LD_DEPS)
 	$(CC) $(SOFLAG) -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
 	$(CLDFLAGS) $(OBJECTS) -o $@
 
