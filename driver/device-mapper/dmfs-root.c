@@ -38,22 +38,31 @@ static int is_identifier(const char *str, int len)
 static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
 	struct super_block *sb = dir->i_sb;
-	int rv;
+	struct inode *inode;
+	struct mapped_device *md;
 
 	if (!is_identifier(name, dentry->d_name.len))
 		return -EPERM;
 
-	rv = dmfs_create_lv(dir, dentry, mode);
-	if (rv == 0) {
-		rv = dm_create(name, -1);
+	inode = dmfs_create_lv(dir, dentry, mode);
+	if (!IS_ERR(inode)) {
+		md = dm_create(name, -1);
+		if (!IS_ERR(md)) {
+			inode->u.generic_ip = md;
+			md->inode = inode;
+			d_instantiate(dentry, inode);
+			dget(dentry);
+			return 0;
+		}
+		iput(inode);
+		return PTR_ERR(md);
 	}
-
-	return rv;
+	return PTR_ERR(inode);
 }
 
 static inline positive(struct dentry *dentry)
 {
-	return dentry->d_inode && ! d_unhashed(dentry);
+	return dentry->d_inode && !d_unhashed(dentry);
 }
 
 static int empty(struct dentry *dentry)
