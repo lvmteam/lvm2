@@ -14,7 +14,8 @@ static void *_locking_lib = NULL;
 static void (*_end_fn) (void) = NULL;
 static int (*_lock_fn) (struct cmd_context * cmd, const char *resource,
 			int flags) = NULL;
-static int (*_init_fn) (int type, struct config_tree * cft) = NULL;
+static int (*_init_fn) (int type, struct config_tree * cft,
+			uint32_t *flags) = NULL;
 
 static int _lock_resource(struct cmd_context *cmd, const char *resource,
 			  int flags)
@@ -49,6 +50,7 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 
 	locking->lock_resource = _lock_resource;
 	locking->fin_locking = _fin_external_locking;
+	locking->flags = 0;
 
 	libname = find_config_str(cft->root, "global/locking_library",
 				  DEFAULT_LOCKING_LIB);
@@ -59,9 +61,9 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 	}
 
 	/* Get the functions we need */
-	if (!(_init_fn = dlsym(_locking_lib, "init_locking")) ||
+	if (!(_init_fn = dlsym(_locking_lib, "locking_init")) ||
 	    !(_lock_fn = dlsym(_locking_lib, "lock_resource")) ||
-	    !(_end_fn = dlsym(_locking_lib, "end_locking"))) {
+	    !(_end_fn = dlsym(_locking_lib, "locking_end"))) {
 		log_error("Shared library %s does not contain locking "
 			  "functions", libname);
 		dlclose(_locking_lib);
@@ -70,5 +72,5 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 	}
 
 	log_verbose("Loaded external locking library %s", libname);
-	return _init_fn(2, cft);
+	return _init_fn(2, cft, &locking->flags);
 }
