@@ -6,6 +6,7 @@ Some bug fixes & minor enhancements, including:
   Tool error codes made more consistent.
   vgmknodes written.
   O_DIRECT can be turned off if it doesn't work in your kernel.
+  dumpconfig to display the active configuration file
 
 You need to update libdevmapper before using 'vgmknodes' or 'vgscan --mknodes'.
 If your root filesystem is on an LV, you should run one of those two
