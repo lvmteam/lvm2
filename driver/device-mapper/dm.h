@@ -118,6 +118,7 @@
 #ifndef DM_INTERNAL_H
 #define DM_INTERNAL_H
 
+#include <linux/config.h>
 #include <linux/version.h>
 #include <linux/major.h>
 #include <linux/iobuf.h>
