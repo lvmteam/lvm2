@@ -234,9 +234,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	}
 
 	if (_get_flag(dl, VISIBLE)) {
-		/*
-		 * FIXME: set the uuid.
-		 */
+		dm_task_set_uuid(dmt, dl->lv->lvid.s);
 	}
 
 	if (!(r = dm_task_run(dmt)))
