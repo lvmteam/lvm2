@@ -70,7 +70,7 @@ struct list *find_snapshots(struct logical_volume *lv)
 	struct list *snaplist;
 	struct snapshot_list *sl, *newsl;
 	struct pool *mem = lv->vg->cmd->mem;
-	
+
 	if (!(snaplist = pool_alloc(mem, sizeof(*snaplist)))) {
 		log_error("snapshot name list allocation failed");
 		return NULL;
@@ -80,21 +80,18 @@ struct list *find_snapshots(struct logical_volume *lv)
 
 	list_iterate(slh, &lv->vg->snapshots) {
 		sl = list_item(slh, struct snapshot_list);
-		if (sl->snapshot->origin == lv) {
-			if(!(newsl = pool_alloc(mem, sizeof(*newsl)))) {
-				log_error("snapshot_list structure allocation"
-					  " failed");
-				pool_free(mem, snaplist);
-				return NULL;
-			}
-			newsl->snapshot = sl->snapshot;
-			list_add(snaplist, &newsl->list);
+		if (!(sl->snapshot->origin == lv))
+			continue;
+		if (!(newsl = pool_alloc(mem, sizeof(*newsl)))) {
+			log_error("snapshot_list structure allocation failed");
+			pool_free(mem, snaplist);
+			return NULL;
 		}
+		newsl->snapshot = sl->snapshot;
+		list_add(snaplist, &newsl->list);
 	}
 
 	return snaplist;
-
-	return NULL;
 }
 
 int vg_add_snapshot(struct logical_volume *origin,
