@@ -188,6 +188,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	size_t len;
 	char vgnamebuf[NAME_LEN + 2];
 	struct raw_locn *rlocn;
+	struct lvmcache_info *info;
 
 	rlocn = mdah->raw_locns;
 
@@ -196,7 +197,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 		if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
 			      sizeof(vgnamebuf), vgnamebuf)) {
 			stack;
-			return NULL;
+			goto error;
 		}
 		if (!strncmp(vgnamebuf, vgname, len = strlen(vgname)) &&
 		    (isspace(vgnamebuf[len]) || vgnamebuf[len] == '{')) {
@@ -204,6 +205,10 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 		}
 		rlocn++;
 	}
+
+      error:
+	if ((info = info_from_pvid(dev_area->dev->pvid)))
+		lvmcache_update_vgname(info, ORPHAN);
 
 	return NULL;
 }
@@ -264,7 +269,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 	}
 
 	if (!(rlocn = _vg_posn(fid, area, vgname))) {
-		stack;
+		log_debug("VG %s not found on %s", vgname, dev_name(area->dev));
 		goto out;
 	}
 
@@ -1183,8 +1188,8 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		return 1;
 	}
 
-	/* Perform full scan and try again */
-	if (!memlock()) {
+	/* Perform full scan (just the first time) and try again */
+	if (!memlock() && !full_scan_done()) {
 		lvmcache_label_scan(fmt->cmd, 2);
 
 		if (info->vginfo && info->vginfo->vgname &&

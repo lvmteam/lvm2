@@ -138,8 +138,11 @@ static int _wait_for_single_mirror(struct cmd_context *cmd, const char *name,
 	while (!finished) {
 		/* FIXME Also needed in vg/lvchange -ay? */
 		/* FIXME Use alarm for regular intervals instead */
-		if (parms->interval && !parms->aborting)
+		if (parms->interval && !parms->aborting) {
 			sleep(parms->interval);
+			/* Devices might have changed while we slept */
+			init_full_scan_done(0);
+		}
 
 		/* Locks the (possibly renamed) VG again */
 		if (!(vg = parms->poll_fns->get_copy_vg(cmd, name))) {

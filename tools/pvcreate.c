@@ -63,10 +63,10 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	/* Is there an md superblock here? */
 	if (!dev && md_filtering()) {
 		unlock_vg(cmd, "");
-		log_verbose("Wiping cache of LVM-capable devices");
+
 		persistent_filter_wipe(cmd->filter);
-		log_verbose("Wiping internal cache");
 		lvmcache_destroy();
+
 		init_md_filtering(0);
 		if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 			log_error("Can't get lock for orphan PVs");
