@@ -1,4 +1,4 @@
-This directory contains an alpha release of LMV2, the new version of 
+This directory contains a beta release of LMV2, the new version of 
 the userland LVM tools designed for the new device-mapper for 
 the Linux kernel.
 
@@ -7,7 +7,7 @@ The device-mapper needs to be installed before compiling these LVM2 tools.
 For more information about LVM2 read the INTRO file.
 Installation instructions are in INSTALL.
 
-This is alpha-quality software, released for testing purposes only.
+This is beta-quality software, released for testing purposes only.
 There is no warranty - see COPYING and COPYING.LIB.
 
 Tarballs are available from:
