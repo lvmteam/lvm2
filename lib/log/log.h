@@ -49,6 +49,7 @@
 #define _LOG_FATAL 2
 
 #define VERBOSE_BASE_LEVEL _LOG_WARN
+#define SECURITY_LEVEL 0
 
 void init_log_file(const char *log_file, int append);
 void init_log_direct(const char *log_file, int append);
@@ -68,6 +69,7 @@ void init_cmd_name(int status);
 void init_msg_prefix(const char *prefix);
 void init_indent(int indent);
 void init_ignorelockingfailure(int level);
+void init_security_level(int level);
 
 void set_cmd_name(const char *cmd_name);
 
@@ -76,6 +78,7 @@ int partial_mode(void);
 int pvmove_mode(void);
 int debug_level(void);
 int ignorelockingfailure(void);
+int security_level(void);
 
 /* Suppress messages to stdout/stderr */
 void log_suppress(int suppress);

@@ -38,6 +38,7 @@ static int _indent = 1;
 static int _log_cmd_name = 0;
 static int _log_suppress = 0;
 static int _ignorelockingfailure = 0;
+static int _security_level = SECURITY_LEVEL;
 static char _cmd_name[30] = "";
 static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
@@ -147,6 +148,11 @@ void init_ignorelockingfailure(int level)
 	_ignorelockingfailure = level;
 }
 
+void init_security_level(int level)
+{
+	_security_level = level;
+}
+
 void init_cmd_name(int status)
 {
 	_log_cmd_name = status;
@@ -189,6 +195,11 @@ int pvmove_mode()
 int ignorelockingfailure()
 {
 	return _ignorelockingfailure;
+}
+
+int security_level()
+{
+	return _security_level;
 }
 
 void init_debug(int level)

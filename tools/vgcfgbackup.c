@@ -15,10 +15,42 @@
 
 #include "tools.h"
 
+static char *_expand_filename(const char *template, const char *vg_name,
+			      char **last_filename)
+{
+	char *filename;
+
+	if (security_level())
+		return dbg_strdup(template);
+
+	filename = dbg_malloc(PATH_MAX);
+	if (snprintf(filename, PATH_MAX, template, vg_name) < 0) {
+		log_error("Error processing filename template %s",
+			   template);
+		dbg_free(filename);	
+		return NULL;
+	}
+	if (*last_filename && !strncmp(*last_filename, filename,
+				      strlen(template))) {
+		log_error("VGs must be backed up into different files. "
+			  "Use %%s in filename for VG name.");
+		dbg_free(filename);
+		return NULL;
+	}
+
+	dbg_free(*last_filename);
+	*last_filename = filename;
+
+	return filename;
+}
+
 static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, int consistent,
 			    void *handle)
 {
+	char **last_filename = (char **)handle;
+	char *filename;
+
 	if (!vg) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
@@ -28,8 +60,13 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 		log_error("Warning: Volume group \"%s\" inconsistent", vg_name);
 
 	if (arg_count(cmd, file_ARG)) {
-		backup_to_file(arg_value(cmd, file_ARG), vg->cmd->cmd_line, vg);
+		if (!(filename = _expand_filename(arg_value(cmd, file_ARG),
+						  vg->name, last_filename))) {
+			stack;
+			return ECMD_FAILED;
+		}
 
+		backup_to_file(filename, vg->cmd->cmd_line, vg);
 	} else {
 		if (!consistent) {
 			log_error("No backup taken: specify filename with -f "
@@ -53,12 +90,15 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
+	char *last_filename = NULL;
 
 	if (partial_mode())
 		init_pvmove(1);
 
-	ret = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
+	ret = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, &last_filename,
 			      &vg_backup_single);
+
+	dbg_free(last_filename);
 
 	init_pvmove(0);
 
