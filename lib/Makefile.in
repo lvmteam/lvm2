@@ -9,8 +9,10 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES=\
+	activate/activate-lv.c \
 	activate/activate.c \
 	activate/fs.c \
+	activate/ll-activate.c \
 	activate/names.c \
 	config/config.c \
 	datastruct/bitset.c \

@@ -6,6 +6,7 @@
 
 #include "metadata.h"
 #include "activate.h"
+#include "ll-activate.h"
 #include "display.h"
 #include "log.h"
 #include "fs.h"
@@ -13,41 +14,14 @@
 #include "names.h"
 
 #include <limits.h>
-#include <linux/kdev_t.h>
 
+#define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
 
 int library_version(char *version, size_t size)
 {
 	if (!dm_get_library_version(version, size))
 		return 0;
 	return 1;
-}
-
-static struct dm_task *_setup_task_with_name(struct logical_volume *lv,
-					     const char *lv_name,
-				   	     int task)
-{
-	char name[128];
-	struct dm_task *dmt;
-
-	if (!(dmt = dm_task_create(task))) {
-		stack;
-		return NULL;
-	}
-
-	if (!build_dm_name(name, sizeof(name), lv->vg->name, lv_name)) {
-		stack;
-		return NULL;
-	}
-
-	dm_task_set_name(dmt, name);
-
-	return dmt;
-}
-
-static struct dm_task *_setup_task(struct logical_volume *lv, int task)
-{
-	return _setup_task_with_name(lv, lv->name, task);
 }
 
 int driver_version(char *version, size_t size)
@@ -75,31 +49,157 @@ int driver_version(char *version, size_t size)
 	return r;
 }
 
+static int _query(struct logical_volume *lv, int (*fn)(const char *))
+{
+	char buffer[128];
+
+	if (!build_dm_name(buffer, sizeof(buffer), "",
+			   lv->vg->name, lv->name)) {
+		stack;
+		return -1;
+	}
+
+	return fn(buffer);
+}
+
+int lv_active(struct logical_volume *lv)
+{
+	return _query(lv, device_active);
+}
+
+int lv_suspended(struct logical_volume *lv)
+{
+	return _query(lv, device_suspended);
+}
+
+int lv_open_count(struct logical_volume *lv)
+{
+	return _query(lv, device_open_count);
+}
+
 int lv_info(struct logical_volume *lv, struct dm_info *info)
 {
-	int r = 0;
-	struct dm_task *dmt;
+	char buffer[128];
 
-	log_very_verbose("Getting device info for %s", lv->name);
-	if (!(dmt = _setup_task(lv, DM_DEVICE_INFO))) {
+	if (!build_dm_name(buffer, sizeof(buffer), "",
+			   lv->vg->name, lv->name)) {
+		stack;
+		return -1;
+	}
+
+	return device_info(buffer, info);
+}
+
+
+int lv_activate(struct logical_volume *lv)
+{
+	char buffer[128];
+
+	if (test_mode()) {
+		_skip("Activation of '%s'.", lv->name);
+		return 0;
+	}
+
+	if (!build_dm_name(buffer, sizeof(buffer), "",
+			   lv->vg->name, lv->name)) {
 		stack;
 		return 0;
 	}
 
-	if (!dm_task_run(dmt)) {
+	if (!device_create_lv(buffer, lv, lv->minor)) {
 		stack;
-		goto out;
+		return 0;
 	}
 
-	if (!dm_task_get_info(dmt, info)) {
+	if (!fs_add_lv(lv, lv->minor)) {
 		stack;
-		goto out;
+		return 0;
 	}
-	r = 1;
 
- out:
-	dm_task_destroy(dmt);
+	return 1;
+}
+
+int lv_reactivate(struct logical_volume *lv)
+{
+	int r;
+	char buffer[128];
+
+	if (test_mode()) {
+		_skip("Reactivation of '%s'.", lv->name);
+		return 0;
+	}
+
+	if (!build_dm_name(buffer, sizeof(buffer), "",
+			   lv->vg->name, lv->name)) {
+		stack;
+		return 0;
+	}
+
+	if (!device_suspended(buffer) && !device_suspend(buffer)) {
+		stack;
+		return 0;
+	}
+
+	r = device_reload_lv(buffer, lv);
+
+	if (!device_resume(buffer)) {
+		stack;
+		return 0;
+	}
+
 	return r;
+}
+
+int lv_deactivate(struct logical_volume *lv)
+{
+	char buffer[128];
+
+	log_very_verbose("Deactivating %s", lv->name);
+	if (test_mode()) {
+		_skip("Deactivating '%s'.", lv->name);
+		return 0;
+	}
+
+	if (!build_dm_name(buffer, sizeof(buffer), "",
+			   lv->vg->name, lv->name)) {
+		stack;
+		return 0;
+	}
+
+	if (!device_deactivate(buffer)) {
+		stack;
+		return 0;
+	}
+
+	fs_del_lv(lv);
+
+	return 1;
+}
+
+int lv_suspend(struct logical_volume *lv)
+{
+	char buffer[128];
+
+	log_very_verbose("Suspending %s", lv->name);
+	if (test_mode()) {
+		_skip("Suspending '%s'.", lv->name);
+		return 0;
+	}
+
+	if (!build_dm_name(buffer, sizeof(buffer), "",
+			   lv->vg->name, lv->name)) {
+		stack;
+		return 0;
+	}
+
+	if (!device_suspend(buffer)) {
+		stack;
+		return 0;
+	}
+
+	fs_del_lv(lv);
+
+	return 1;
 }
 
 int lv_rename(const char *old_name, struct logical_volume *lv)
@@ -108,15 +208,17 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
 	char new_name[PATH_MAX];
 	struct dm_task *dmt;
 
-	if (test_mode())
+	if (test_mode()) {
+		_skip("Rename '%s' to '%s'.", old_name, lv->name);
 		return 0;
+	}
 
-	if (!(dmt = _setup_task_with_name(lv, old_name, DM_DEVICE_RENAME))) {
+	if (!(dmt = setup_dm_task(old_name, DM_DEVICE_RENAME))) {
 		stack;
 		return 0;
 	}
 
-	if (!build_dm_name(new_name, sizeof(new_name),
+	if (!build_dm_name(new_name, sizeof(new_name), "",
 			   lv->vg->name, lv->name)) {
 		stack;
 		return 0;
@@ -136,259 +238,11 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
 
 	fs_rename_lv(old_name, lv);
 
-      end:
+ end:
 	dm_task_destroy(dmt);
 	return r;
 }
 
-int lv_active(struct logical_volume *lv)
-{
-	int r = -1;
-	struct dm_info info;
-
-	if (!lv_info(lv, &info)) {
-		stack;
-		return r;
-	}
-
-	log_very_verbose("%s is%s active", lv->name, info.exists ? "":" not");
-	return info.exists;
-}
-
-int lv_suspended(struct logical_volume *lv)
-{
-	int r = -1;
-	struct dm_info info;
-
-	if (!lv_info(lv, &info)) {
-		stack;
-		return r;
-	}
-
-	log_very_verbose("%s is%s suspended", lv->name,
-			 info.suspended ? "":" not");
-	return info.suspended;
-}
-
-int lv_open_count(struct logical_volume *lv)
-{
-	int r = -1;
-	struct dm_info info;
-
-	if (!lv_info(lv, &info)) {
-		stack;
-		return r;
-	}
-
-	log_very_verbose("%s is open %d time(s)", lv->name, info.open_count);
-	return info.open_count;
-}
-
-/*
- * Emit a target for a given segment.
- */
-static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
-{
-	char params[1024];
-	uint64_t esize = seg->lv->vg->extent_size;
-	uint32_t s, stripes = seg->stripes;
-	int w = 0, tw = 0, error = 0;
-	const char *no_space =
-		"Insufficient space to write target parameters.";
-	char *filler = "/dev/ioerror";
-	char *target;
-
-	if (stripes == 1) {
-		if (!seg->area[0].pv) {
-			target = "error";
-			error = 1;
-		}
-		else 
-			target = "linear";
-	}
-
-	if (stripes > 1) {
-		target = "striped";
-		tw = lvm_snprintf(params, sizeof(params), "%u %u ",
-			      stripes, seg->stripe_size);
-
-		if (tw < 0) {
-			log_err(no_space);
-			return 0;
-		}
-
-		w = tw;
-	}
-
-	if (!error) {
-		for (s = 0; s < stripes; s++, w += tw) {
-			if (!seg->area[s].pv)
-				tw = lvm_snprintf(
-					params + w, sizeof(params) - w,
-			      		"%s 0%s", filler,
-			      		s == (stripes - 1) ? "" : " ");
-			else
-				tw = lvm_snprintf(
-					params + w, sizeof(params) - w,
-			      		"%s %" PRIu64 "%s",
-					dev_name(seg->area[s].pv->dev),
-			      		(seg->area[s].pv->pe_start +
-			         	 (esize * seg->area[s].pe)),
-			      		s == (stripes - 1) ? "" : " ");
-
-			if (tw < 0) {
-				log_err(no_space);
-				return 0;
-			}
-		}
-	}
-
-	log_very_verbose("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
-		   esize * seg->le, esize * seg->len,
-		   target, params);
-
-	if (!dm_task_add_target(dmt, esize * seg->le, esize * seg->len,
-				target, params)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
-
-int _load(struct logical_volume *lv, int task)
-{
-	int r = 0;
-	struct dm_task *dmt;
-	struct list *segh;
-	struct stripe_segment *seg;
-
-	log_very_verbose("Generating devmapper parameters for %s", lv->name);
-	if (!(dmt = _setup_task(lv, task))) {
-		stack;
-		return 0;
-	}
-
-	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct stripe_segment);
-		if (!_emit_target(dmt, seg)) {
-			log_error("Unable to activate logical volume '%s'",
-				lv->name);
-			goto out;
-		}
-	}
-
-	if (!((lv->status & LVM_WRITE) && (lv->vg->status & LVM_WRITE))) {
-	    	if (!dm_task_set_ro(dmt)) {
-			log_error("Failed to set %s read-only during "
-				  "activation.", lv->name);
-			goto out;
-		} else 
-			log_very_verbose("Activating %s read-only", lv->name);
-	}
-
-	if (lv->minor >= 0) {
-		if (!dm_task_set_minor(dmt, MINOR(lv->minor))) {
-			log_error("Failed to set minor number for %s to %d "
-				  "during activation.", lv->name, lv->minor);
-			goto out;
-		} else
-			log_very_verbose("Set minor number for %s to %d.",
-					 lv->name, lv->minor);
-	}
-
-	if (!(r = dm_task_run(dmt)))
-		stack;
-
-	log_verbose("Logical volume %s%s activated", lv->name,
-		    r == 1 ? "" : " not");
-
- out:
-	dm_task_destroy(dmt);
-	return r;
-}
-
-/* FIXME: Always display error msg */
-int lv_activate(struct logical_volume *lv)
-{
-	if (test_mode())
-		return 0;
-
-	log_very_verbose("Activating %s", lv->name);
-	return _load(lv, DM_DEVICE_CREATE) && fs_add_lv(lv);
-}
-
-int _suspend(struct logical_volume *lv, int sus)
-{
-	int r;
-	struct dm_task *dmt;
-	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
-
-	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", lv->name);
-	if (!(dmt = _setup_task(lv, task))) {
-		stack;
-		return 0;
-	}
-
-	if (!(r = dm_task_run(dmt)))
-		log_err("Couldn't %s device '%s'", sus ? "suspend" : "resume",
-			lv->name);
-
-	dm_task_destroy(dmt);
-	return r;
-}
-
-int lv_suspend(struct logical_volume *lv)
-{
-	return _suspend(lv, 1);
-}
-
-int lv_reactivate(struct logical_volume *lv)
-{
-	int r;
-
-	if (test_mode())
-		return 0;
-
-	if (!lv_suspended(lv) && !_suspend(lv, 1)) {
-		stack;
-		return 0;
-	}
-
-	r = _load(lv, DM_DEVICE_RELOAD);
-
-	if (!_suspend(lv, 0)) {
-		stack;
-		return 0;
-	}
-
-	return r;
-}
-
-
-int lv_deactivate(struct logical_volume *lv)
-{
-	int r;
-	struct dm_task *dmt;
-
-	log_very_verbose("Deactivating %s", lv->name);
-	if (test_mode())
-		return 0;
-
-	if (!(dmt = _setup_task(lv, DM_DEVICE_REMOVE))) {
-		stack;
-		return 0;
-	}
-
-	if (!(r = dm_task_run(dmt)))
-		stack;
-
-	dm_task_destroy(dmt);
-
-	fs_del_lv(lv);
-
-	return r;
-}
 
 int activate_lvs_in_vg(struct volume_group *vg)
 {

@@ -21,14 +21,14 @@
  * The name of the device-mapper device for a particular LV.
  * eg, vg0:music
  */
-int build_dm_name(char *buffer, size_t len,
+int build_dm_name(char *buffer, size_t len, const char *prefix,
 		  const char *vg_name, const char *lv_name);
 
 /*
  * The path of the device-mapper device for a particular LV.
  * eg, /dev/device-mapper/vg0:music
  */
-int build_dm_path(char *buffer, size_t len,
+int build_dm_path(char *buffer, size_t len, const char *prefix,
 		  const char *vg_name, const char *lv_name);
 
 /*

@@ -62,7 +62,8 @@ static int _mk_link(struct logical_volume *lv)
 	char lv_path[PATH_MAX], link_path[PATH_MAX];
 	struct stat buf;
 
-	if (!build_dm_path(lv_path, sizeof(lv_path), lv->vg->name, lv->name)) {
+	if (!build_dm_path(lv_path, sizeof(lv_path), "",
+			   lv->vg->name, lv->name)) {
 		log_error("Couldn't create destination pathname for "
 			  "logical volume link for %s", lv->name);
 		return 0;
@@ -126,7 +127,7 @@ static int _rm_link(struct logical_volume *lv, const char *lv_name)
 	return 1;
 }
 
-int fs_add_lv(struct logical_volume *lv)
+int fs_add_lv(struct logical_volume *lv, int minor)
 {
 	if (!_mk_dir(lv->vg) ||
 	    !_mk_link(lv)) {
