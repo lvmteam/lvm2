@@ -138,8 +138,10 @@ int pool_begin_object(struct pool *p, size_t hint)
 	p->object_len = 0;
 	p->object_alignment = align;
 
-	_align_chunk(c, align);
-	if (c->end - c->begin < hint) {
+	if (c)
+		_align_chunk(c, align);
+
+	if (!c || (c->begin > c->end) || (c->end - c->begin < hint)) {
 		/* allocate a new chunk */
 		c = _new_chunk(p,
 			       hint > (p->chunk_size - sizeof(struct chunk)) ?
