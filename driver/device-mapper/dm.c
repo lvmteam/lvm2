@@ -878,8 +878,9 @@ int dm_deactivate(struct mapped_device *md)
 		return -EPERM;
 	}
 
-	close_devices(&md->map->devices);
-	md->map = 0;
+	if (md->map)
+		close_devices(&md->map->devices);
+	md->map = NULL;
 	clear_bit(DM_ACTIVE, &md->state);
 	wu;
 
