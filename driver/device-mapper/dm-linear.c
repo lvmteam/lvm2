@@ -118,6 +118,7 @@ static struct target_type linear_target = {
 	ctr: linear_ctr,
 	dtr: linear_dtr,
 	map: linear_map,
+	flags: TF_BMAP,
 };
 
 static int __init linear_init(void)
