@@ -284,7 +284,7 @@ int lvresize(int argc, char **argv)
 		if (!archive(vg))
 			return ECMD_FAILED;
 
-		if (!lv_reduce(lv, lv->le_count - extents))
+		if (!lv_reduce(fid, lv, lv->le_count - extents))
 			return ECMD_FAILED;
 	}
 
@@ -307,8 +307,8 @@ int lvresize(int argc, char **argv)
 		log_print("Extending logical volume %s to %s", lv_name, dummy);
 		dbg_free(dummy);
 
-		if (!lv_extend(lv, stripes, stripesize, extents - lv->le_count,
-			       pvh))
+		if (!lv_extend(fid, lv, stripes, stripesize,
+			       extents - lv->le_count, pvh))
 			return ECMD_FAILED;
 	}
 
