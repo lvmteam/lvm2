@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 #include <linux/kdev_t.h>
 
 #define NUMBER_OF_MAJORS 256
@@ -56,11 +57,21 @@ static int *scan_proc_dev(void);
 
 static int passes_lvm_type_device_filter(struct dev_filter *f, struct device *dev)
 {
+	int fd;
+
 	/* Is this a recognised device type? */
 	if (!(((int *) f->private)[MAJOR(dev->dev)]))
 		return 0;
-	else
-		return 1;
+
+	/* Check it's accessible */
+        if ((fd = open(dev->name, O_RDONLY)) < 0) {
+                log_debug("Unable to open %s: %s", dev->name, strerror(errno));
+		return 0;
+	}
+
+        close(fd);
+
+	return 1;
 }
 
 struct dev_filter *lvm_type_filter_create()
@@ -68,11 +79,12 @@ struct dev_filter *lvm_type_filter_create()
 	struct dev_filter *f;
 
 	if (!(f = dbg_malloc(sizeof (struct dev_filter)))) {
-		log_error("lvm_v1_filter allocation failed");
+		log_error("LVM type filter allocation failed");
 		return NULL;
 	}
 
 	f->passes_filter = passes_lvm_type_device_filter;
+	f->destroy = lvm_type_filter_destroy;
 
 	if (!(f->private = scan_proc_dev()))
 		return NULL;
