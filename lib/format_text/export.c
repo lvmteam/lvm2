@@ -127,9 +127,6 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 	for (i = 0; (d > 1024.0)  && _units[i]; i++)
 		d /= 1024.0;
 
-	/* FIXME: arrange so this doesn't print a
-	 * decimal point unless we have a
-	 * fractional part. */
 	return lvm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
 }
 
