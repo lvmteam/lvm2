@@ -1,5 +1,6 @@
 Version 2.00.17 -
 =============================
+  Fix rounding of large diplayed sizes.
   Suppress decimal point when using units of sectors/bytes.
   Additional kernel target checks before pvmove & snapshot creation.
   Add i2o_block.

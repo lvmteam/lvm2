@@ -440,7 +440,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			tmp_size += vg->extent_size - tmp_size %
 			    vg->extent_size;
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, tmp_size / 2, SIZE_SHORT));
+				  display_size(cmd, tmp_size, SIZE_SHORT));
 		}
 
 		lp->extents = tmp_size / vg->extent_size;
