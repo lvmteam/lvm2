@@ -1,3 +1,11 @@
+Version 2.00.12 - 
+============================
+  Install a default lvm.conf into /etc/lvm if there isn't one already.
+  Allow different installation dir for lvm.static (configure --staticdir=)
+  Fix inverted selinux error check.
+  Recognise power2 in /proc/devices.
+  Fix counting in lvs_in_vg_opened. [It ignored devices open more than once.]
+
 Version 2.00.11 - 8 Apr 2004
 ============================
   Set fallback_to_lvm1 in lvm.conf (or configure --enable-lvm1_fallback)
