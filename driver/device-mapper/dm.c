@@ -121,7 +121,7 @@
  * writes got copied to both destinations correctly.  Great for
  * implementing pvmove.  Not sure how userland would be notified that
  * the copying process had completed.  Possibly by reading a /proc entry
- * for the LV.
+ * for the LV. Could also use poll() for this kind of thing.
  */
 
 #define MAX_DEVICES 64
@@ -229,7 +229,7 @@ static int _blk_open(struct inode *inode, struct file *file)
 	md->in_use++;
 	spin_unlock(&md->lock);
 
-	MOD_INC_USE_COUNT;
+	MOD_INC_USE_COUNT; /* isn't this done by blk layer ? it should be */
 	return 0;
 }
 
@@ -252,7 +252,7 @@ static int _blk_close(struct inode *inode, struct file *file)
 	md->in_use--;
 	spin_unlock(&md->lock);
 
-	MOD_INC_USE_COUNT;
+	MOD_DEC_USE_COUNT;
 	return 0;
 }
 
