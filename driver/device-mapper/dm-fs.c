@@ -129,6 +129,19 @@ int dm_fs_add(struct mapped_device *md)
 	md->pde->write_proc = _line_splitter;
 	md->pde->data = pfd;
 
+	md->devfs_entry =
+		devfs_register(_dev_dir, md->name, DEVFS_FL_DEFAULT,
+			       MAJOR(md->dev), MINOR(md->dev),
+			       S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
+			       &dm_blk_dops, NULL);
+
+	if (!md->devfs_entry) {
+		kfree(pfd);
+		remove_proc_entry(md->name, _proc_dir);
+		md->pde = 0;
+		return -ENOMEM;	/* FIXME: better error ? */
+	}
+
 	return 0;
 }
 
@@ -137,7 +150,11 @@ int dm_fs_remove(struct mapped_device *md)
 	if (md->pde) {
 		kfree(md->pde->data);
 		remove_proc_entry(md->name, _proc_dir);
+		md->pde = 0;
 	}
+
+	devfs_unregister(md->devfs_entry);
+	md->devfs_entry = 0;
 	return 0;
 }
 

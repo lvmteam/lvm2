@@ -95,6 +95,7 @@ struct target {
 	struct target *next;
 };
 
+extern struct block_device_operations dm_blk_dops;
 
 /* dm-target.c */
 struct target *dm_get_target(const char *name);

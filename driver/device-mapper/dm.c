@@ -137,7 +137,7 @@ static int _blk_close(struct inode *inode, struct file *file);
 static int _blk_ioctl(struct inode *inode, struct file *file,
 		      uint command, ulong a);
 
-static struct block_device_operations _blk_dops = {
+struct block_device_operations dm_blk_dops = {
 	open:     _blk_open,
 	release:  _blk_close,
 	ioctl:    _blk_ioctl
@@ -166,7 +166,7 @@ static int _init(void)
 	blksize_size[MAJOR_NR] = _blksize_size;
 	hardsect_size[MAJOR_NR] = _hardsect_size;
 
-	if (devfs_register_blkdev(MAJOR_NR, _name, &_blk_dops) < 0) {
+	if (devfs_register_blkdev(MAJOR_NR, _name, &dm_blk_dops) < 0) {
 		printk(KERN_ERR "%s -- register_blkdev failed\n", _name);
 		return -EIO;
 	}
@@ -383,17 +383,6 @@ static struct mapped_device *_alloc_dev(int minor)
 	return md;
 }
 
-static void _free_dev(struct mapped_device *md)
-{
-	int minor = MINOR(md->dev);
-
-	wl;
-	_devs[minor] = 0;
-	wu;
-
-	kfree(md);
-}
-
 static inline struct mapped_device *__find_name(const char *name)
 {
 	int i;
@@ -462,8 +451,8 @@ int dm_create(const char *name, int minor)
 	wl;
 	if (__find_name(name)) {
 		WARN("device with that name already exists");
+		kfree(md);
 		wu;
-		_free_dev(md);
 		return -EINVAL;
 	}
 
@@ -503,7 +492,7 @@ int dm_remove(const char *name)
 	}
 
 	minor = MINOR(md->dev);
-	_free_dev(md);
+	kfree(md);
 	_devs[minor] = 0;
 	wu;
 
