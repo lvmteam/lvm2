@@ -2,7 +2,6 @@
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
- *
  */
 
 #include "disk-rep.h"

@@ -133,7 +133,7 @@ struct io_space {
 	/* Return PV with given name (may be full
            or relative path) */
 	struct physical_volume *(*pv_read)(struct io_space *is,
-					   const char *pv_name);
+					   struct device *dev);
 
 	/* Write a PV structure to disk. */
 	/* Fails if the PV is in a VG ie
