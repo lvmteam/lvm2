@@ -342,7 +342,7 @@ static inline int __find_node(struct dm_table *t, struct buffer_head *bh)
 	offset_t *node;
 
 	for (l = 0; l < t->depth; l++) {
-		r = ((KEYS_PER_NODE + 1) * r) + i;
+		r = (CHILD_PER_NODE * r) + i;
 		node = t->index[l] + (r * KEYS_PER_NODE);
 
 		for (i = 0; i < KEYS_PER_NODE; i++)
