@@ -219,7 +219,14 @@ struct logical_volume *lv_create(struct io_space *ios,
 				 uint32_t stripe_size,
 				 uint32_t extents,
 				 struct volume_group *vg,
-				 struct pv_list *acceptable_pvs);
+				 struct list *acceptable_pvs);
+
+int lv_reduce(struct io_space *ios,
+	      struct logical_volume *lv,
+	      uint32_t extents);
+
+int lv_extend(struct io_space *ios, struct logical_volume *lv,
+	      uint32_t extents, struct list *allocatable_pvs);
 
 int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
               char **pv_names);

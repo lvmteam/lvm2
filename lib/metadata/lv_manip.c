@@ -44,8 +44,10 @@ static int _alloc_area(struct logical_volume *lv, uint32_t index,
 	return count;
 }
 
-static int _alloc_striped(struct logical_volume *lv, struct list *pvms)
+static int _alloc_striped(struct logical_volume *lv,
+			  struct list *pvms, uint32_t allocated)
 {
+	/* FIXME: finish */
 	log_err("striped allocation not implemented yet.");
 	return 0;
 }
@@ -55,12 +57,12 @@ static int _alloc_striped(struct logical_volume *lv, struct list *pvms)
  * for the biggest area, or the first area that
  * can complete the allocation.
  */
-static int _alloc_contiguous(struct logical_volume *lv, struct list *pvms)
+static int _alloc_contiguous(struct logical_volume *lv,
+			     struct list *pvms, uint32_t allocated)
 {
 	struct list *tmp1, *tmp2;
 	struct pv_map *pvm;
 	struct pv_area *pva, *biggest;
-	uint32_t allocated = 0;
 
 	list_iterate (tmp1, pvms) {
 		pvm = list_item(tmp1, struct pv_map);
@@ -94,12 +96,12 @@ static int _alloc_contiguous(struct logical_volume *lv, struct list *pvms)
  * Areas just get allocated in order until the lv
  * is full.
  */
-static int _alloc_simple(struct logical_volume *lv, struct list *pvms)
+static int _alloc_simple(struct logical_volume *lv,
+			 struct list *pvms, uint32_t allocated)
 {
 	struct list *tmp1, *tmp2;
 	struct pv_map *pvm;
 	struct pv_area *pva;
-	uint32_t allocated = 0;
 
 	list_iterate (tmp1, pvms) {
 		pvm = list_item(tmp1, struct pv_map);
@@ -132,7 +134,7 @@ struct logical_volume *lv_create(struct io_space *ios,
 				 uint32_t stripe_size,
 				 uint32_t extents,
 				 struct volume_group *vg,
-				 struct pv_list *acceptable_pvs)
+				 struct list *acceptable_pvs)
 {
 	struct lv_list *ll = NULL;
 	struct logical_volume *lv;
@@ -191,19 +193,19 @@ struct logical_volume *lv_create(struct io_space *ios,
 	 * Build the sets of available areas on
 	 * the pv's.
 	 */
-	if (!(pvms = create_pv_maps(scratch, vg))) {
+	if (!(pvms = create_pv_maps(scratch, vg, acceptable_pvs))) {
 		log_err("couldn't create extent mappings");
 		goto bad;
 	}
 
 	if (stripes > 1)
-		r = _alloc_striped(lv, pvms);
+		r = _alloc_striped(lv, pvms, 0u);
 
 	else if (status & ALLOC_CONTIGUOUS)
-		r = _alloc_contiguous(lv, pvms);
+		r = _alloc_contiguous(lv, pvms, 0u);
 
 	else
-		r = _alloc_simple(lv, pvms);
+		r = _alloc_simple(lv, pvms, 0u);
 
 	if (!r) {
 		log_err("Extent allocation failed.");
@@ -223,4 +225,33 @@ struct logical_volume *lv_create(struct io_space *ios,
 
 	pool_destroy(scratch);
 	return NULL;
+}
+
+int lv_reduce(struct io_space *ios,
+	      struct logical_volume *lv, uint32_t extents)
+{
+	if (extents % lv->stripes) {
+		log_err("For a striped volume you must reduce by a "
+			"multiple of the number of stripes");
+		return 0;
+	}
+
+	if (lv->le_count <= extents) {
+		log_err("Attempt to reduce by too many extents, "
+			"there would be nothing left of the logical volume.");
+		return 0;
+	}
+
+	/* Hmmm ... I think all we need to do is ... */
+	lv->le_count -= extents;
+	return 1;
+}
+
+int lv_extend(struct io_space *ios,
+	      struct logical_volume *lv, uint32_t extents,
+	      struct list *allocatable_pvs)
+{
+	/* FIXME: finish */
+	log_err("not implemented");
+	return 0;
 }

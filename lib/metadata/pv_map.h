@@ -34,6 +34,7 @@ struct pv_map {
 	struct list list;
 };
 
-struct list *create_pv_maps(struct pool *mem, struct volume_group *vg);
+struct list *create_pv_maps(struct pool *mem,
+			    struct volume_group *vg, struct list *pvs);
 
 #endif
