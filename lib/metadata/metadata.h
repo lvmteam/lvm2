@@ -10,6 +10,8 @@
 #ifndef _LVM_METADATA_H
 #define _LVM_METADATA_H
 
+#include "dev-cache.h"
+
 #define ID_LEN 32
 
 struct id {
@@ -76,22 +78,21 @@ struct io_space {
 	struct str_list *(*get_vgs)(struct io_space *is);
 	struct dev_list *(*get_pvs)(struct io_space *is);
 
-	struct physical_volume *read_pv(struct io_space *is,
+	struct physical_volume *pv_read(struct io_space *is,
 					struct device *dev);
-	int write_pv(struct io_space *is, struct physical_volume *pv);
+	int pv_write(struct io_space *is, struct physical_volume *pv);
 
-	struct volume_group *(*read_vg)(struct io_space *is,
+	struct volume_group *(*vg_read)(struct io_space *is,
 					const char *vg_name);
-	int (*write_vg)(struct io_space *is, struct volume_group *vg);
+	int (*vg_write)(struct io_space *is, struct volume_group *vg);
 	void (*destructor)(struct io_space *is);
 
-	struct device_manager *mgr;
+	struct dev_filter *filter;
 	void *private;
 };
 
 struct io_space *create_text_format(struct device_manager *mgr,
 				    const char *text_file);
-struct io_space *create_lvm1_format(struct device_manager *mgr);
 
 inline struct volume_group *read_vg(struct io_space *f)
 {
