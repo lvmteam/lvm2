@@ -32,10 +32,16 @@ struct lock_list {
 static struct list _lock_list;
 static char _lock_dir[NAME_LEN];
 
+static sig_t _oldhandler;
+static sigset_t _fullsigset, _intsigset;
+static int _handler_installed;
+
 static int _release_lock(const char *file)
 {
 	struct lock_list *ll;
 	struct list *llh, *llt;
+
+	struct stat buf1, buf2;
 
 	list_iterate_safe(llh, llt, &_lock_list) {
 		ll = list_item(llh, struct lock_list);
@@ -44,10 +50,13 @@ static int _release_lock(const char *file)
 			list_del(llh);
 			log_very_verbose("Unlocking %s", ll->res);
 
-			/* 
-			 * If this is the last pid using the file, remove it 
-			 */
-			if (!flock(ll->lf, LOCK_NB | LOCK_EX))
+			if (flock(ll->lf, LOCK_NB | LOCK_UN))
+				log_sys_error("flock", ll->res);
+
+			if (!flock(ll->lf, LOCK_NB | LOCK_EX) &&
+			    !stat(ll->res, &buf1) &&
+			    !fstat(ll->lf, &buf2) &&
+			    !memcmp(&buf1.st_ino, &buf2.st_ino, sizeof(ino_t)))
 				if (unlink(ll->res))
 					log_sys_error("unlink", ll->res);
 
@@ -70,22 +79,35 @@ void fin_file_locking(void)
 	_release_lock(NULL);
 }
 
+static void _remove_ctrl_c_handler()
+{
+	siginterrupt(SIGINT, 0);
+	if (!_handler_installed || _oldhandler == SIG_ERR)
+		return;
+
+	sigprocmask(SIG_SETMASK, &_fullsigset, NULL);
+	if (signal(SIGINT, _oldhandler) == SIG_ERR)
+		log_sys_error("signal", "_remove_ctrl_c_handler");
+
+	_handler_installed = 0;
+}
+
 void _trap_ctrl_c(int signal)
 {
+	_remove_ctrl_c_handler();
 	log_error("CTRL-c detected: giving up waiting for lock");
 	return;
 }
 
 static void _install_ctrl_c_handler()
 {
-	siginterrupt(SIGINT, 1);
-	signal(SIGINT, _trap_ctrl_c);
-}
+	if ((_oldhandler = signal(SIGINT, _trap_ctrl_c)) == SIG_ERR)
+		return;
 
-static void _remove_ctrl_c_handler()
-{
-	signal(SIGINT, SIG_IGN);
-	siginterrupt(SIGINT, 0);
+	sigprocmask(SIG_SETMASK, &_intsigset, NULL);
+	siginterrupt(SIGINT, 1);
+
+	_handler_installed = 1;
 }
 
 static int _lock_file(const char *file, int flags)
@@ -94,6 +116,7 @@ static int _lock_file(const char *file, int flags)
 	int r = 1;
 
 	struct lock_list *ll;
+	struct stat buf1, buf2;
 
 	switch (flags & LCK_TYPE_MASK) {
 	case LCK_READ:
@@ -117,32 +140,45 @@ static int _lock_file(const char *file, int flags)
 		return 0;
 	}
 
+	ll->lf = -1;
+
 	log_very_verbose("Locking %s", ll->res);
-	if ((ll->lf = open(file, O_CREAT | O_APPEND | O_RDWR, 0777)) < 0) {
-		log_sys_error("open", file);
-		dbg_free(ll->res);
-		dbg_free(ll);
-		return 0;
-	}
+	do {
+		if (ll->lf > -1)
+			close(ll->lf);
 
-	if ((flags & LCK_NONBLOCK))
-		operation |= LOCK_NB;
-	else
-		_install_ctrl_c_handler();
+		if ((ll->lf = open(file, O_CREAT | O_APPEND | O_RDWR, 0777))
+		    < 0) {
+			log_sys_error("open", file);
+			goto err;
+		}
 
-	if (flock(ll->lf, operation)) {
-		log_sys_error("flock", ll->res);
-		dbg_free(ll->res);
-		dbg_free(ll);
-		r = 0;
-	} else
-		list_add(&_lock_list, &ll->list);
+		if ((flags & LCK_NONBLOCK))
+			operation |= LOCK_NB;
+		else
+			_install_ctrl_c_handler();
 
+		r = flock(ll->lf, operation);
+		if (!(flags & LCK_NONBLOCK))
+			_remove_ctrl_c_handler();
 
-	if (!(flags & LCK_NONBLOCK))
-		_remove_ctrl_c_handler();
+		if (r) {
+			log_sys_error("flock", ll->res);
+			goto err;
+		}
 
-	return r;
+		if (!stat(ll->res, &buf1) && !fstat(ll->lf, &buf2) &&
+		    !memcmp(&buf1.st_ino, &buf2.st_ino, sizeof(ino_t)))
+			break;
+	} while (!(flags & LCK_NONBLOCK));
+
+	list_add(&_lock_list, &ll->list);
+	return 1;
+
+      err:
+	dbg_free(ll->res);
+	dbg_free(ll);
+	return 0;
 }
 
 int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
@@ -191,7 +227,6 @@ int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 	return 1;
 }
 
-
 int init_file_locking(struct locking_type *locking, struct config_file *cf)
 {
 	locking->lock_resource = lock_resource;
@@ -206,6 +241,16 @@ int init_file_locking(struct locking_type *locking, struct config_file *cf)
 		return 0;
 
 	list_init(&_lock_list);
+
+	if (sigfillset(&_intsigset) || sigfillset(&_fullsigset)) {
+		log_sys_error("sigfillset", "init_file_locking");
+		return 0;
+	}
+
+	if (sigdelset(&_intsigset, SIGINT)) {
+		log_sys_error("sigdelset", "init_file_locking");
+		return 0;
+	}
 
 	return 1;
 }

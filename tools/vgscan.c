@@ -37,7 +37,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Reading all physical volumes.  This may take a while...");
 
-	return process_each_vg(cmd, argc, argv, LCK_READ, &vgscan_single);
+	return process_each_vg(cmd, argc, argv, LCK_VG_READ, &vgscan_single);
 }
 
 static int vgscan_single(struct cmd_context *cmd, const char *vg_name)

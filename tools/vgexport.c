@@ -34,7 +34,7 @@ int vgexport(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	return process_each_vg(cmd, argc, argv, LCK_READ, &vgexport_single);
+	return process_each_vg(cmd, argc, argv, LCK_VG_READ, &vgexport_single);
 }
 
 static int vgexport_single(struct cmd_context *cmd, const char *vg_name)

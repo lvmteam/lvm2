@@ -31,7 +31,8 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	ret = process_each_vg(cmd, argc, argv, LCK_WRITE | LCK_NONBLOCK,
+	ret = process_each_vg(cmd, argc, argv, 
+			      LCK_VG | LCK_WRITE | LCK_NONBLOCK,
 			      &vgremove_single);
 
 	unlock_vg(cmd, "");

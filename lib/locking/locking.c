@@ -14,37 +14,45 @@
 #include <signal.h>
 
 static struct locking_type _locking;
+static sigset_t _oldset;
 
-static int _lock_count = 0; 		/* Number of locks held */
-static int _signals_ignored = 0;
+static int _lock_count = 0;	/* Number of locks held */
+static int _signals_blocked = 0;
 
-static void _ignore_signals(void)
+static void _block_signals(void)
 {
-	int s;
+	sigset_t set;
 
-	if (_signals_ignored)
+	if (_signals_blocked)
 		return;
 
-	for (s = 0; s < NSIG; s++)
-		signal(s, SIG_IGN);
+	if (sigfillset(&set)) {
+		log_sys_error("sigfillset", "_block_signals");
+		return;
+	}
 
-	_signals_ignored = 1;
+	if (sigprocmask(SIG_SETMASK, &set, &_oldset)) {
+		log_sys_error("sigprocmask", "_block_signals");
+		return;
+	}
+
+	_signals_blocked = 1;
 
 	return;
 }
 
-static void _enable_signals(void)
+static void _unblock_signals(void)
 {
-	int s;
-
-	/* Don't enable signals while any locks are held */
-	if (!_signals_ignored || _lock_count)
+	/* Don't unblock signals while any locks are held */
+	if (!_signals_blocked || _lock_count)
 		return;
 
-	for (s = 0; s < NSIG; s++)
-		signal(s, SIG_DFL);
+	if (sigprocmask(SIG_SETMASK, &_oldset, NULL)) {
+		log_sys_error("sigprocmask", "_block_signals");
+		return;
+	}
 
-	_signals_ignored = 0;
+	_signals_blocked = 0;
 
 	return;
 }
@@ -70,7 +78,7 @@ void no_fin_locking(void)
 	return;
 }
 
-static void _init_no_locking(struct locking_type *locking, 
+static void _init_no_locking(struct locking_type *locking,
 			     struct config_file *cf)
 {
 	locking->lock_resource = no_lock_resource;
@@ -114,21 +122,20 @@ void fin_locking(void)
 }
 
 /*
- * VG locking is by name
- * LV locking is by VG_name/LV_uuid
- * FIXME This should take a VG_uuid instead of VG_name
+ * VG locking is by VG name.
+ * FIXME This should become VG uuid.
  */
 int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
 {
-	_ignore_signals();
+	_block_signals();
 
 	if (!(_locking.lock_resource(cmd, resource, flags))) {
-		_enable_signals();
+		_unblock_signals();
 		return 0;
 	}
 
 	_update_lock_count(flags);
-	_enable_signals();
+	_unblock_signals();
 
 	return 1;
 }
@@ -138,8 +145,8 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 	char resource[258];
 
 	switch (flags & LCK_SCOPE_MASK) {
-	case LCK_VG: /* Lock volume group before changing on-disk metadata. */
-	case LCK_LV: /* Suspends LV if it's active. */
+	case LCK_VG:		/* Lock VG to change on-disk metadata. */
+	case LCK_LV:		/* Suspends LV if it's active. */
 		strncpy(resource, (char *) vol, sizeof(resource));
 		break;
 	default:
@@ -153,11 +160,10 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 
 	/* Perform immediate unlock unless LCK_HOLD set */
 	if (!(flags & LCK_HOLD) && ((flags & LCK_TYPE_MASK) != LCK_NONE)) {
-		if (!_lock_vol(cmd, resource, 
+		if (!_lock_vol(cmd, resource,
 			       (flags & ~LCK_TYPE_MASK) | LCK_NONE))
 			return 0;
 	}
 
 	return 1;
 }
-
