@@ -319,6 +319,9 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	if (seg->segtype->flags & SEG_AREAS_MIRRORED)
 		lv->status |= MIRRORED;
 
+	if (seg->segtype->flags & SEG_VIRTUAL)
+		lv->status |= VIRTUAL;
+
 	return 1;
 }
 

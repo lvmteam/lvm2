@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -22,7 +22,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct snapshot *snap;
 	struct lvinfo info;
 	uint32_t extents = 0;
-	uint32_t size = 0;
+	uint64_t size = 0;
 	uint32_t stripes = 0, ssize = 0, stripesize_extents = 0;
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size = 0;
 	uint32_t extents_used = 0;
@@ -39,7 +39,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct lv_segment *seg;
 	uint32_t seg_extents;
 	uint32_t sz, str;
-	struct segment_type *segtype;
+	struct segment_type *segtype = NULL;
 
 	enum {
 		LV_ANY = 0,
@@ -63,8 +63,9 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
 	}
 
+	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG)) {
-		size = arg_uint_value(cmd, size_ARG, 0);
+		size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)) * 2;
 		sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
 	}
 
@@ -150,22 +151,19 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (size) {
-		/* No of 512-byte sectors */
-		extents = size * 2;
-
-		if (extents % vg->extent_size) {
+		if (size % vg->extent_size) {
 			if (sign == SIGN_MINUS)
-				extents -= extents % vg->extent_size;
+				size -= size % vg->extent_size;
 			else
-				extents += vg->extent_size -
-				    (extents % vg->extent_size);
+				size += vg->extent_size -
+				    (size % vg->extent_size);
 
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, (uint64_t) extents / 2,
+				  display_size(cmd, (uint64_t) size / 2,
 					       SIZE_SHORT));
 		}
 
-		extents /= vg->extent_size;
+		extents = size / vg->extent_size;
 	}
 
 	if (sign == SIGN_PLUS)
@@ -194,11 +192,23 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	seg_size = extents - lv->le_count;
 
+	/* Use segment type of last segment */
+	list_iterate_items(seg, &lv->segments) {
+		segtype = seg->segtype;
+	}
+
+	/* FIXME Support LVs with mixed segment types */
+	if (segtype != (struct segment_type *) arg_ptr_value(cmd, type_ARG,
+							     segtype)) {
+		log_error("VolumeType does not match (%s)", segtype->name);
+		goto error_cmdline;
+	}
+
 	/* If extending, find stripes, stripesize & size of last segment */
 	if (extents > lv->le_count && !(stripes == 1 || (stripes > 1 && ssize))) {
 		list_iterate_items(seg, &lv->segments) {
-			if (strcmp(seg->segtype->ops->name(seg), "striped"))
-				continue;	/* Not striped */
+			if (!(seg->segtype->flags & SEG_AREAS_STRIPED))
+				continue;
 
 			sz = seg->stripe_size;
 			str = seg->area_count;
@@ -355,11 +365,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			  display_size(cmd, (uint64_t)
 				       extents * (vg->extent_size / 2),
 				       SIZE_SHORT));
-		if (!(segtype = get_segtype_from_string(lv->vg->cmd,
-							"striped"))) {
-			stack;
-			return 0;
-		}
 
 		if (!lv_extend(vg->fid, lv, segtype, stripes, ssize, 0u,
 			       extents - lv->le_count, NULL, 0u, 0u, pvh,

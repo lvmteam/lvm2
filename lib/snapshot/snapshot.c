@@ -159,7 +159,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->ops = &_snapshot_ops;
 	segtype->name = "snapshot";
 	segtype->private = NULL;
-	segtype->flags = 0u;
+	segtype->flags = SEG_SNAPSHOT;
 
 	return segtype;
 }

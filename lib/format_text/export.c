@@ -411,7 +411,8 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 		outf(f, "tags = %s", buffer);
 	}
 
-	if (!seg->segtype->ops->text_export(seg, f)) {
+	if (seg->segtype->ops->text_export &&
+	    !seg->segtype->ops->text_export(seg, f)) {
 		stack;
 		return 0;
 	}

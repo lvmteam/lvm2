@@ -89,6 +89,7 @@ xx(lvcreate,
    "\t[-p|--permission {r|rw}]\n"
    "\t[-r|--readahead ReadAheadSectors]\n"
    "\t[-t|--test]\n"
+   "\t[--type VolumeType]\n"
    "\t[-v|--verbose]\n"
    "\t[-Z|--zero {y|n}]\n"
    "\t[--version]\n"
@@ -115,7 +116,7 @@ xx(lvcreate,
 
    autobackup_ARG, chunksize_ARG, contiguous_ARG, extents_ARG, major_ARG,
    minor_ARG, name_ARG, permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
-   snapshot_ARG, stripes_ARG, stripesize_ARG, addtag_ARG, test_ARG,
+   snapshot_ARG, stripes_ARG, stripesize_ARG, addtag_ARG, test_ARG, type_ARG,
    zero_ARG)
 
 xx(lvdisplay,
@@ -165,12 +166,13 @@ xx(lvextend,
    "\t{-l|--extents [+]LogicalExtentsNumber |\n"
    "\t -L|--size [+]LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-t|--test]\n"
+   "\t[--type VolumeType]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
    autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
-   stripesize_ARG, test_ARG)
+   stripesize_ARG, test_ARG, type_ARG)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
@@ -270,12 +272,13 @@ xx(lvresize,
    "\t{-l|--extents [+|-]LogicalExtentsNumber |\n"
    "\t -L|--size [+|-]LogicalVolumeSize[kKmMgGtT]}\n"
    "\t[-t|--test]\n"
+   "\t[--type VolumeType]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
    autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG,
-   test_ARG)
+   test_ARG, type_ARG)
 
 xx(lvs,
    "Display information about logical volumes",

@@ -263,6 +263,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 		repstr[0] = 'p';
 	else if (lv->status & MIRRORED)
 		repstr[0] = 'm';
+	else if (lv->status & VIRTUAL)
+		repstr[0] = 'v';
 	else if (lv_is_origin(lv))
 		repstr[0] = 'o';
 	else if (find_cow(lv))

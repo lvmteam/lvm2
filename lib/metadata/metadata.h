@@ -54,6 +54,7 @@
 #define PVMOVE			0x00002000	/* VG LV SEG */
 #define LOCKED			0x00004000	/* LV */
 #define MIRRORED		0x00008000	/* LV - internal use only */
+#define VIRTUAL			0x00010000	/* LV - internal use only */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */
