@@ -9,6 +9,7 @@
 #include "hash.h"
 #include "pool.h"
 #include "disk-rep.h"
+#include "lv_alloc.h"
 
 /*
  * After much thought I have decided it is easier,
@@ -191,26 +192,13 @@ static int _check_maps_are_complete(struct hash_table *maps)
 	return 1;
 }
 
-static struct lv_segment *_alloc_seg(struct pool *mem, uint32_t stripes)
-{
-	struct lv_segment *seg;
-	uint32_t len = sizeof(*seg) + (stripes * sizeof(seg->area[0]));
-
-	if (!(seg = pool_zalloc(mem, len))) {
-		stack;
-		return NULL;
-	}
-
-	return seg;
-}
-
 static int _read_linear(struct pool *mem, struct lv_map *lvm)
 {
 	uint32_t le = 0;
 	struct lv_segment *seg;
 
 	while (le < lvm->lv->le_count) {
-		seg = _alloc_seg(mem, 1);
+		seg = alloc_lv_segment(mem, 1);
 
 		seg->lv = lvm->lv;
 		seg->type = SEG_STRIPED;
@@ -276,7 +264,7 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 	len = lvm->lv->le_count / lvm->stripes;
 
 	while (le < len) {
-		if (!(seg = _alloc_seg(mem, lvm->stripes))) {
+		if (!(seg = alloc_lv_segment(mem, lvm->stripes))) {
 			stack;
 			return 0;
 		}

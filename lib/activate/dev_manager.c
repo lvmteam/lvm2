@@ -5,6 +5,7 @@
  */
 
 #include "lib.h"
+#include "str_list.h"
 #include "dev_manager.h"
 #include "pool.h"
 #include "hash.h"
@@ -153,33 +154,6 @@ static inline void _set_flag(struct dev_layer *dl, int bit)
 static inline void _clear_flag(struct dev_layer *dl, int bit)
 {
 	dl->flags &= ~(1 << bit);
-}
-
-static int _pre_list_add(struct pool *mem, struct list *pl, const char *str)
-{
-	struct str_list *sl;
-	struct list *plh;
-
-	if (!str) {
-		stack;
-		return 0;
-	}
-
-	/* Already in list? */
-	list_iterate(plh, pl) {
-		if (!strcmp(str, list_item(plh, struct str_list)->str))
-			return 1;
-	}
-
-	if (!(sl = pool_alloc(mem, sizeof(*sl)))) {
-		stack;
-		return 0;
-	}
-
-	sl->str = str;
-	list_add(pl, &sl->list);
-
-	return 1;
 }
 
 /*
@@ -1016,7 +990,7 @@ static int _populate_snapshot(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (lvm_snprintf(params, sizeof(params), "%s %s P %d", 
+	if (lvm_snprintf(params, sizeof(params), "%s %s P %d",
 			 devbufo, devbufc, s->chunk_size) == -1) {
 		stack;
 		return 0;
@@ -1301,10 +1275,10 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg->area[s].type != AREA_LV)
 				continue;
-			if (!_pre_list_add(dm->mem, &dl->pre_create,
-					   _build_dlid(dm->mem,
-						       seg->area[s].u.lv.
-						       lv->lvid.s, NULL))) {
+			if (!str_list_add(dm->mem, &dl->pre_create,
+					  _build_dlid(dm->mem,
+						      seg->area[s].u.lv.
+						      lv->lvid.s, NULL))) {
 				stack;
 				return 0;
 			}
@@ -1327,8 +1301,8 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 	_set_flag(dlr, REMOVE);
 	
 	/* add the dependency on the real device */
-	if (!_pre_list_add(dm->mem, &dl->pre_create,
-			   pool_strdup(dm->mem, dlr->dlid))) {
+	if (!str_list_add(dm->mem, &dl->pre_create,
+			  pool_strdup(dm->mem, dlr->dlid))) {
 		stack;
 		return 0;
 	}
@@ -1361,8 +1335,8 @@ static int _expand_origin_real(struct dev_manager *dm,
 	_set_flag(dl, TOPLEVEL);
 
 	/* add the dependency on the real device */
-	if (!_pre_list_add(dm->mem, &dl->pre_create,
-			   pool_strdup(dm->mem, real_dlid))) {
+	if (!str_list_add(dm->mem, &dl->pre_create,
+			  pool_strdup(dm->mem, real_dlid))) {
 		stack;
 		return 0;
 	}
@@ -1422,21 +1396,21 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	_set_flag(dl, TOPLEVEL);
 
 	/* add the dependency on the cow device */
-	if (!_pre_list_add(dm->mem, &dl->pre_create,
-			   pool_strdup(dm->mem, cow_dlid))) {
+	if (!str_list_add(dm->mem, &dl->pre_create,
+			  pool_strdup(dm->mem, cow_dlid))) {
 		stack;
 		return 0;
 	}
 
 	/* add the dependency on the real origin device */
-	if (!_pre_list_add(dm->mem, &dl->pre_create,
-			   _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
+	if (!str_list_add(dm->mem, &dl->pre_create,
+			  _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
 		stack;
 		return 0;
 	}
 
 	/* add the dependency on the visible origin device */
-	if (!_pre_list_add(dm->mem, &dl->pre_suspend, s->origin->lvid.s)) {
+	if (!str_list_add(dm->mem, &dl->pre_suspend, s->origin->lvid.s)) {
 		stack;
 		return 0;
 	}
@@ -1770,8 +1744,8 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 				continue;
 			}
 
-			if (!_pre_list_add(dm->mem, &dep->pre_create,
-					   dl->dlid)) {
+			if (!str_list_add(dm->mem, &dep->pre_create,
+					  dl->dlid)) {
 				stack;
 				return 0;
 			}
@@ -1787,8 +1761,8 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 				continue;
 			}
 
-			if (!_pre_list_add(dm->mem, &dep->pre_suspend,
-					   dl->dlid)) {
+			if (!str_list_add(dm->mem, &dep->pre_suspend,
+					  dl->dlid)) {
 				stack;
 				return 0;
 			}

@@ -12,6 +12,7 @@
 #include "hash.h"
 #include "toolcontext.h"
 #include "lvmcache.h"
+#include "lv_alloc.h"
 
 typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
 			   struct volume_group * vg, struct config_node * pvn,
@@ -279,9 +280,8 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		}
 	}
 
-	if (!(seg = pool_zalloc(mem, sizeof(*seg) +
-				(sizeof(seg->area[0]) * area_count)))) {
-		stack;
+	if (!(seg = alloc_lv_segment(mem, area_count))) {
+		log_error("Segment allocation failed");
 		return 0;
 	}
 
