@@ -131,7 +131,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		backup(vg);
 		unlock_vg(cmd, pv->vg_name);
 	} else {
-		if (!(pv_write(cmd, pv, &mdas, (int64_t) sector))) {
+		if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
 			unlock_vg(cmd, ORPHAN);
 			log_error("Failed to store physical volume \"%s\"",
 				  pv_name);
