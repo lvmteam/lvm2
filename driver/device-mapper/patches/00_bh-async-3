@@ -56,9 +56,9 @@ diff -urN 2.4.7pre6/include/linux/fs.h bh_async/include/linux/fs.h
 --- 2.4.7pre6/include/linux/fs.h	Wed Jul 11 06:03:19 2001
 +++ bh_async/include/linux/fs.h	Thu Jul 12 07:54:26 2001
 @@ -215,6 +215,7 @@
- 	BH_Mapped,	/* 1 if the buffer has a disk mapping */
  	BH_New,		/* 1 if the buffer is new and not yet written out */
  	BH_Protected,	/* 1 if the buffer is protected */
+	BH_JBD,		/* 1 if it has an attached journal_head */
 +	BH_Async,	/* 1 if the buffer is under end_buffer_io_async I/O */
  
  	BH_PrivateStart,/* not a state bit, but the first bit available

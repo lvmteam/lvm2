@@ -23,6 +23,6 @@
 
 int autobackup_set (void);
 int init_autobackup (void);
-int do_autobackup(char *vg_name, vg_t * vg);
+int do_autobackup(struct volume_group *vg);
 
 #endif

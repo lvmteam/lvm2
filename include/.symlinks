@@ -1,5 +1,4 @@
 ../lib/config/config.h
-../lib/dev-mgr/dev-manager.h
 ../lib/dev-mgr/dev-cache.h
 ../lib/display/display.h
 ../lib/log/log.h
@@ -9,3 +8,4 @@
 ../lib/device/device.h
 ../lib/datastruct/hash.h
 ../lib/datastruct/list.h
+../lib/filters/filter.h

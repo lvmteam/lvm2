@@ -58,7 +58,7 @@ static int _array_size;
 static int _num_commands;
 static struct command *_commands;
 
-static struct dev_mgr *_dm;
+static struct dev_filter *_filter;
 static struct config_file *_cf;
 
 static int _interactive;
@@ -544,10 +544,6 @@ static int split(char *str, int *argc, char **argv, int max)
 	return *argc;
 }
 
-struct dev_mgr *active_dev_mgr(void) {
-	return _dm;
-}
-
 struct config_file *active_config_file(void) {
 	return _cf;
 }
@@ -596,8 +592,12 @@ static int init(void)
 		__init_log(_cf);
 	}
 
-	if (!(_dm = init_dev_manager(_cf->root))) {
+	if ((dev_cache_init)) {
 		stack;
+		goto out;
+	}
+
+	if (!(_filter = config_filter_create(_cf->root))) {
 		goto out;
 	}
 
@@ -619,7 +619,8 @@ static void __fin_commands(void)
 
 static void fin(void)
 {
-	fin_dev_manager(_dm);
+	config_filter_destroy(_filter);
+	dev_cache_exit();
 	destroy_config_file(_cf);
 	__fin_commands();
 	dump_memory();
