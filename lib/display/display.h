@@ -28,7 +28,7 @@
 typedef	enum {SIZE_LONG=0, SIZE_SHORT=1} size_len_t;
 
 /* Specify size in KB */
-char *display_size(unsigned long long size, size_len_t sl);
+char *display_size(uint64_t size, size_len_t sl);
 char *display_uuid(char *uuidstr);
 
 void pvdisplay_colons(struct physical_volume *pv);

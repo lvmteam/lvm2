@@ -203,7 +203,7 @@ struct physical_volume *pv_create(struct format_instance *fi,
 		memcpy(&pv->id, id, sizeof(*id));
 
 	if (!(pv->dev = dev_cache_get(name, fi->cmd->filter))) {
-		log_err("Couldn't find device '%s'", name);
+		log_error("%s: Couldn't find device.", name);
 		goto bad;
 	}
 
@@ -215,14 +215,23 @@ struct physical_volume *pv_create(struct format_instance *fi,
 	*pv->vg_name = 0;
 	pv->status = ALLOCATABLE_PV;
 
-        if (size) {
-		if (size < PV_MIN_SIZE) {
-			log_err("Given size for '%s' is too small", name);
-			goto bad;
-		}
-        	pv->size = size;
-        } else if (!dev_get_size(pv->dev, &pv->size)) {
-		log_err("Couldn't get size of device '%s'", name);
+	if (!dev_get_size(pv->dev, &pv->size)) {
+		log_error("%s: Couldn't get size.", name);
+		goto bad;
+	}
+
+	if (size) {
+		if (size > pv->size)
+			log_print("WARNING: %s: Overriding real size. "
+			  	  "You could lose data.", name);
+		log_verbose("%s: Pretending size is %" PRIu64 " sectors.", 
+			    name, size);
+		pv->size = size;
+	}
+        
+	if (pv->size < PV_MIN_SIZE) {
+		log_error("%s: Size must exceed minimum of %lu sectors.", 
+			  name, PV_MIN_SIZE);
 		goto bad;
 	}
 
@@ -232,7 +241,7 @@ struct physical_volume *pv_create(struct format_instance *fi,
 	pv->pe_allocated = 0;
 
 	if (!fi->ops->pv_setup(fi, pv, NULL)) {
-		log_error("Format-specific setup of physical volume '%s' "
+		log_error("%s: Format-specific setup of physical volume "
 			  "failed.", name);
 		goto bad;
 	}
