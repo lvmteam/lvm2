@@ -22,6 +22,8 @@
 #include <linux/config.h>
 #include <linux/fs.h>
 
+#include "dm.h"
+
 #define DMFS_MAGIC 0x444D4653
 
 extern struct inode *dmfs_create_root(struct super_block *sb, int);
@@ -84,4 +86,28 @@ struct super_block *dmfs_read_super(struct super_block *sb, void *data, int sile
 	return sb;
 }
 
+struct inode *dmfs_new_inode(struct super_block *sb, int mode)
+{
+	struct inode *inode = new_inode(sb);
+	struct dmfs_i *dmi;
 
+	if (inode) {
+		inode->i_mode = mode;
+		inode->i_uid = current->fsuid;
+		inode->i_gid = current->fsgid;
+		inode->i_blksize = PAGE_CACHE_SIZE;
+		inode->i_blocks = 0;
+		inode->i_rdev = NODEV;
+		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
+
+		dmi = kmalloc(sizeof(struct dmfs_i), GFP_KERNEL);
+		if (dmi == NULL) {
+			iput(inode);
+			return NULL;
+		}
+		memset(dmi, sizeof(struct dmfs_i), 0);
+		init_MUTEX(&dmi->sem);
+		inode->generic_ip = dmi;
+	}
+	return inode;
+}

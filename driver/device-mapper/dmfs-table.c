@@ -21,9 +21,8 @@
 
 #include <linux/config.h>
 #include <linux/fs.h>
-#include <linux/parser.h>
-#include "dm.h"
 
+#include "dm.h"
 
 static inline char *next_token(char **p)
 {
@@ -37,42 +36,64 @@ static inline char *next_token(char **p)
 	return r;
 }
 
-static int dmfs_parse_line(struct dmfs_table *t, char *str)
+static offset_t start_of_next_range(struct dm_table *t)
+{
+	offset_t n = 0;
+	if (t->num_targets) {
+		n = t->highs[t->num_targets - 1] + 1;
+	}
+	return n;
+}
+
+static void dmfs_parse_line(struct dmfs_table *t, unsigned num, char *str)
 {
 	char *p = str;
-	const char *delim = " \t";
 	const char *tok;
 	offset_t start, size, high;
 	void *context;
 	struct target_type *ttype;
+	int rv = 0;
+	char *msg;
 
+	msg = "No start argument";
 	tok = next_token(&p);
 	if (!tok)
-		return -1;
+		goto out;
 	start = simple_strtoul(tok, NULL, 10);
 
+	msg = "No size argument";
 	tok = next_token(&p);
 	if (!tok)
-		return -1;
+		goto out;
 	size = simple_strtoul(tok, NULL, 10);
 
+	msg = "Gap in table";
+	if (start != start_of_next_range(t))
+		goto out;
+
+	msg = "No target type";
 	tok = next_token(&p);
 	if (!tok)
-		return -1;
+		goto out;
 
+	msg = "Target type unknown";
 	ttype = dm_get_target_type(tok);
 	if (ttype) {
-		context = ttype->ctr(t, start, size, p);
-		if (!IS_ERR(context)) {
+		msg = "This message should never appear (constructor error)";
+		rv = ttype->ctr(t, start, size, p, &context);
+		if (rv == 0)) {
+			msg = "Error adding target to table";
 			high = start + (size - 1);
 			if (dm_table_add_target(t, high, ttype, context) == 0)
-				return 0;
+				return;
 			ttype->dtr(t, context);
 		}
 		dm_put_target_type(ttype);
 	}
-	return -1;
+out:
+	dmfs_add_error(t, num, msg);
 }
+
 
 static int dmfs_copy(char *dst, int dstlen, char *src, int srclen, int *flag)
 {
@@ -95,7 +116,7 @@ end_of_line:
 	goto out;
 }
 
-static int dmfs_parse_page(struct dm_table *t, char *buf, int len, char *tmp, unsigned long *tmpl)
+static int dmfs_parse_page(struct dm_table *t, char *buf, int len, char *tmp, unsigned long *tmpl, int *num)
 {
 	int copied;
 
@@ -105,15 +126,20 @@ static int dmfs_parse_page(struct dm_table *t, char *buf, int len, char *tmp, un
 		buf += copied;
 		len -= copied;
 		if (*tmpl + copied == PAGE_SIZE - 1)
-			return -1;
+			goto line_too_long;
 		*tmpl = copied;
 		if (flag) {
-			if (dmfs_parse_line(t, tmp))
-				return -1;
+			dmfs_parse_line(t, *num, tmp);
+			(*num)++;
 			*tmpl = 0;
 		}
 	} while(len > 0);
 	return 0;
+
+line_too_long:
+	dmfs_add_error(t, *num, "Line too long");
+	/* FIXME: Add code to recover from this */
+	return -1;
 }
 
 static struct dm_table *dmfs_parse(struct inode *inode)
@@ -126,6 +152,7 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 	unsigned long rem = 0;
 	struct dm_table *t;
 	struct page *pg, **hash;
+	int num = 0;
 
 	if (inode->i_size == 0)
 		return NULL;
@@ -141,9 +168,8 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 		return NULL;
 	}
 
-	down(&inode->i_sem);
-	end_index = inode->i_size >> PAGE_CACHE_SIZE;
-	end_offset = inode->i_size & (PAGE_CAHE_SIZE - 1);
+	end_index = inode->i_size >> PAGE_CACHE_SHIFT;
+	end_offset = inode->i_size & (PAGE_CACHE_SIZE - 1);
 
 	do {
 		unsigned long end = (index == end_index) ? end_offset : PAGE_CACHE_SIZE;
@@ -156,18 +182,23 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 		spin_unlock(&pagecache_lock);
 
 		if (pg) {
+			char *kaddr;
+			int rv;
+
 			if (!Page_Uptodate(pg))
 				goto broken;
 
-			if (dmfs_parse_page(t, pg, end, (char *)page, &rem))
+			kaddr = kmap(pg);
+			rv = dmfs_parse_page(t, kaddr, end, (char *)page, &rem);
+			kunmap(pg);
+
+			if (rv)
 				goto parse_error;
 		}
 
 		page_cache_release(pg);
 		index++;
 	} while(index != end_index);
-
-	up(&inode->i_sem);
 
 	free_page(page);
 	if (dm_table_complete(t) == 0)
@@ -177,14 +208,12 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 	return NULL;
 
 broken:
-	up(&inode->i_sem);
 	printk(KERN_ERR "dmfs_parse: Page not uptodate\n");
 	free_page(page);
 	dm_put_table(t);
 	return NULL;
 
 parse_error:
-	up(&inode->i_sem);
 	printk(KERN_ERR "dmfs_parse: Parse error\n");
 	free_page(page);
 	dm_put_table(t);
@@ -193,17 +222,21 @@ parse_error:
 
 static int dmfs_release(struct inode *inode, struct file *f)
 {
+	struct dmfs_i *dmi = inode->u.generic_ip;
 	struct dm_table *table;
 
 	if (!(f->f_mode & S_IWUGO))
 		return 0;
 
+	down(&dmi->sem);
 	table = dmfs_parse(inode);
 
 	if (table) {
-		dm_put_table((struct dm_table *)inode->u.generic_ip);
-		inode->u.generic_ip = table;
+		if (dmi->table)
+			dm_put_table(dmi->table);
+		dmi->table = table;
 	}
+	up(&dmi->sem);
 
 	return 0;
 }
@@ -290,7 +323,7 @@ struct dmfs_address_space_operations = {
 static struct dmfs_table_file_operations = {
  	llseek:		generic_file_llseek,
 	read:		generic_file_read,
-	write:		generic_file_write,
+	write:		generic_file_write, /* FIXME: Needs to hold dmi->sem */
 	open:		dmfs_table_open,
 	release:	dmfs_table_release,
 	fsync:		dmfs_table_sync,
@@ -315,6 +348,7 @@ int dmfs_create_table(struct inode *dir, int mode)
 		inode->i_mapping->a_ops = &dmfs_address_space_operations;
 		inode->i_fop = &dmfs_table_file_operations;
 		inode->i_op = &dmfs_table_inode_operations;
+		inode->i_mapping = dir->i_mapping;
 	}
 
 	return inode;
