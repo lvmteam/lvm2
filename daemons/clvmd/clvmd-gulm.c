@@ -139,11 +139,28 @@ int init_cluster()
 {
     int status;
     int ccs_h;
+    int port = 0;
+    char *portstr;
 
     /* Get cluster name from CCS */
     /* TODO: is this right? */
-    ccs_h = ccs_connect();
+    ccs_h = ccs_force_connect(NULL, 1); // PJC
+    if (!ccs_h)
+	return -1;
+
     ccs_get(ccs_h, "//cluster/@name", &cluster_name);
+    DEBUGLOG("got cluster name %s\n", cluster_name);
+
+    if (!ccs_get(ccs_h, "//clvm/@port", &portstr))
+    {
+	port = atoi(portstr);
+	free(portstr);
+	DEBUGLOG("got port number %d\n", port);
+
+	if (port <= 0 && port >= 65536)
+	    port = 0;
+    }
+
     ccs_disconnect(ccs_h);
 
     /* Block locking until we are logged in */
@@ -155,7 +172,8 @@ int init_cluster()
     lock_hash = hash_create(10);
 
     /* Get all nodes from CCS */
-    get_all_cluster_nodes();
+    if (get_all_cluster_nodes())
+	return -1;
 
     /* Initialise GULM library */
     status = lg_initialize(&gulm_if, cluster_name, "clvmd");
@@ -174,7 +192,7 @@ int init_cluster()
     }
 
     /* Initialise the inter-node comms */
-    status = init_comms();
+    status = init_comms(port);
     if (status)
 	return status;
 
@@ -316,11 +334,11 @@ static void set_node_state(struct node_info *ninfo, char *csid, uint8_t nodestat
 	     ninfo->name, ninfo->state, num_nodes);
 }
 
-static struct node_info *add_or_set_node(char *name, uint32_t ip, uint8_t state)
+static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_t state)
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, (char *)&ip, MAX_CSID_LEN);
+    ninfo = hash_lookup_binary(node_hash, (char *)ip, MAX_CSID_LEN);
     if (!ninfo)
     {
 	/* If we can't find that node then re-read the config file in case it
@@ -329,7 +347,7 @@ static struct node_info *add_or_set_node(char *name, uint32_t ip, uint8_t state)
 	get_all_cluster_nodes();
 
 	/* Now try again */
-	ninfo = hash_lookup_binary(node_hash, (char *)&ip, MAX_CSID_LEN);
+	ninfo = hash_lookup_binary(node_hash, (char *)ip, MAX_CSID_LEN);
 	if (!ninfo)
 	{
 	    DEBUGLOG("Ignoring node %s, not part of the SAN cluster\n", name);
@@ -342,7 +360,7 @@ static struct node_info *add_or_set_node(char *name, uint32_t ip, uint8_t state)
     return ninfo;
 }
 
-static int core_nodelist(void *misc, lglcb_t type, char *name, uint32_t ip, uint8_t state)
+static int core_nodelist(void *misc, lglcb_t type, char *name, struct in6_addr *ip, uint8_t state)
 {
     DEBUGLOG("CORE nodelist\n");
 
@@ -354,7 +372,7 @@ static int core_nodelist(void *misc, lglcb_t type, char *name, uint32_t ip, uint
     {
 	if (type == lglcb_item)
 	{
-	    DEBUGLOG("Got nodelist, item: %s, %#x, %#x\n", name, ip, state);
+	    DEBUGLOG("Got nodelist, item: %s, %#x\n", name, state);
 
 	    add_or_set_node(name, ip, state);
 	}
@@ -381,24 +399,24 @@ static int core_nodelist(void *misc, lglcb_t type, char *name, uint32_t ip, uint
     return 0;
 }
 
-static int core_statechange(void *misc, uint8_t corestate, uint32_t masterip, char *mastername)
+static int core_statechange(void *misc, uint8_t corestate, uint8_t quorate, struct in6_addr *masterip, char *mastername)
 {
-    DEBUGLOG("CORE Got statechange  corestate:%#x masterip:%#x mastername:%s\n",
-	     corestate, masterip, mastername);
+    DEBUGLOG("CORE Got statechange  corestate:%#x mastername:%s\n",
+	     corestate, mastername);
 
     current_corestate = corestate;
     return 0;
 }
 
-static int core_nodechange(void *misc, char *nodename, uint32_t nodeip, uint8_t nodestate)
+static int core_nodechange(void *misc, char *nodename, struct in6_addr *nodeip, uint8_t nodestate)
 {
     struct node_info *ninfo;
 
-    DEBUGLOG("CORE node change, name=%s, ip=%x, state = %d\n", nodename, nodeip, nodestate);
+    DEBUGLOG("CORE node change, name=%s, state = %d\n", nodename, nodestate);
 
     /* If we don't get nodeip here, try a lookup by name */
     if (!nodeip)
-	csid_from_name((char *)&nodeip, nodename);
+	csid_from_name((char *)nodeip, nodename);
     if (!nodeip)
 	return 0;
 
@@ -443,7 +461,9 @@ static int lock_login_reply(void *misc, uint32_t error, uint8_t which)
     return 0;
 }
 
-static int lock_lock_state(void *misc, uint8_t *key, uint16_t keylen, uint8_t state, uint32_t flags, uint32_t error,
+static int lock_lock_state(void *misc, uint8_t *key, uint16_t keylen,
+			   uint64_t subid, uint64_t start, uint64_t stop,
+			   uint8_t state, uint32_t flags, uint32_t error,
 			   uint8_t *LVB, uint16_t LVBlen)
 {
     struct lock_wait *lwait;
@@ -530,8 +550,7 @@ int name_from_csid(char *csid, char *name)
     ninfo = hash_lookup_binary(node_hash, csid, MAX_CSID_LEN);
     if (!ninfo)
     {
-	sprintf(name, "UNKNOWN [%d.%d.%d.%d]",
-		csid[0], csid[1], csid[2], csid[3]);
+        sprintf(name, "UNKNOWN %s", print_csid(csid));
 	return -1;
     }
 
@@ -661,6 +680,7 @@ static int _lock_resource(char *resource, int mode, int flags, int *lockid)
     DEBUGLOG("lock_resource '%s', flags=%d, mode=%d\n", resource, flags, mode);
 
     status = lg_lock_state_req(gulm_if, resource, strlen(resource)+1,
+			       0, 0, 0,
 			       mode, flags, NULL, 0);
     if (status)
     {
@@ -692,6 +712,7 @@ static int _unlock_resource(char *resource, int lockid)
 
     DEBUGLOG("unlock_resource %s\n", resource);
     status = lg_lock_state_req(gulm_if, resource, strlen(resource)+1,
+			       0, 0, 0,
 			       lg_lock_state_Unlock, 0, NULL, 0);
 
     if (status)
@@ -819,26 +840,38 @@ static int get_all_cluster_nodes()
     int ctree;
     char *nodename;
     int error;
+    int i;
 
     /* Open the config file */
-    ctree = ccs_connect();
+    ctree = ccs_force_connect(NULL, 1);
     if (ctree <= 0)
     {
 	log_error("Error connecting to CCS");
 	return -1;
     }
 
-    error = ccs_get(ctree, "//nodes/node/@name", &nodename);
-    while (nodename)
+    for (i=1; i++;)
     {
+	char nodekey[256];
 	char nodeip[MAX_CSID_LEN];
-	char *clvmflag;
+	int  clvmflag = 1;
+	char *clvmflagstr;
 	char key[256];
 
-	sprintf(key, "//nodes/node[@name=\"%s\"]/clvm", nodename);
-	ccs_get(ctree, key, &clvmflag);
+	sprintf(nodekey, "//cluster/nodes/node[%d]/@name", i);
+	error = ccs_get(ctree, nodekey, &nodename);
+	if (error)
+	    break;
 
-	if ((get_ip_address(nodename, nodeip) == 0) && atoi(clvmflag))
+	sprintf(key, "//nodes/node[@name=\"%s\"]/clvm", nodename);
+	if (!ccs_get(ctree, key, &clvmflagstr))
+	{
+	    clvmflag = atoi(clvmflagstr);
+	    free(clvmflagstr);
+	}
+
+	DEBUGLOG("Got node %s from ccs(clvmflag = %d)\n", nodename, clvmflag);
+	if ((get_ip_address(nodename, nodeip) == 0) && clvmflag)
 	{
 	    struct node_info *ninfo;
 
@@ -863,7 +896,6 @@ static int get_all_cluster_nodes()
 	{
 	    DEBUGLOG("node %s has clvm disabled\n", nodename);
 	}
-	if (clvmflag) free(clvmflag);
 	free(nodename);
 	error = ccs_get(ctree, "//nodes/node/@name", &nodename);
     }

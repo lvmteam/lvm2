@@ -280,12 +280,15 @@ AC_MSG_RESULT($SELINUX)
 ################################################################################
 dnl -- Build cluster LVM daemon
 AC_MSG_CHECKING(whether to build cluster LVM daemon)
-AC_ARG_WITH(clvmd, [  --with-clvmd            Build cluster LVM Daemon],
-CLVMD=$withval, CLVMD=no)
+AC_ARG_WITH(clvmd, [  --with-clvmd=TYPE       Build cluster LVM Daemon: cman/gulm/none],
+CLVMD=$withval, CLVMD=none)
+if test x$CLVMD = xyes ; then
+	CLVMD=cman
+fi
 AC_MSG_RESULT($CLVMD)
 
 dnl -- If clvmd enabled without cluster locking, automagically include it
-if  test x$CLVMD = xyes && test x$CLUSTER = xnone; then
+if  test x$CLVMD != xnone && test x$CLUSTER = xnone ; then
 	CLUSTER=internal
 fi
 
