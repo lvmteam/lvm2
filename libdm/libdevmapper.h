@@ -9,7 +9,10 @@
 
 #include <inttypes.h>
 #include <sys/types.h>
-#include <linux/types.h>
+
+#ifdef linux
+#  include <linux/types.h>
+#endif
 
 /*
  * Since it is quite laborious to build the ioctl
