@@ -25,6 +25,8 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			    void *handle)
 {
 	struct physical_volume *pv, *existing_pv;
+	struct logical_volume *lv;
+	struct lv_list *lvl;
 	uint64_t size = 0;
 	struct list mdas;
 	int pvmetadatacopies = 0;
@@ -32,6 +34,8 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	uint64_t pe_end = 0, pe_start = 0;
 	struct pv_list *pvl;
 	int change_made = 0;
+	struct lvinfo info;
+	int active = 0;
 
 	if (!vg) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
@@ -87,6 +91,27 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		log_error("Archive of \"%s\" metadata failed.", vg_name);
 		return ECMD_FAILED;
 	}
+
+	/* Attempt to change any LVIDs that are too big */
+	if (cmd->fmt->features & FMT_RESTRICTED_LVIDS) {
+		list_iterate_items(lvl, &vg->lvs) {
+			lv = lvl->lv;
+			if (lvnum_from_lvid(&lv->lvid) < MAX_RESTRICTED_LVS)
+				continue;
+			if (lv_info(lv, &info) && info.exists) {
+				log_error("Logical volume %s must be "
+					  "deactivated before conversion.",
+					   lv->name);
+				active++;
+				continue;
+			}
+			lvid_from_lvnum(&lv->lvid, &lv->vg->id, find_free_lvnum(lv));
+
+		}
+	}
+
+	if (active)
+		return ECMD_FAILED;
 
 	list_iterate_items(pvl, &vg->pvs) {
 		existing_pv = pvl->pv;

@@ -334,32 +334,12 @@ static int _pv_setup(const struct format_type *fmt,
 	return 1;
 }
 
-static uint32_t _find_free_lvnum(struct logical_volume *lv)
-{
-	int lvnum_used[MAX_LV];
-	uint32_t i = 0;
-	struct list *lvh;
-	struct lv_list *lvl;
-
-	memset(&lvnum_used, 0, sizeof(lvnum_used));
-
-	list_iterate(lvh, &lv->vg->lvs) {
-		lvl = list_item(lvh, struct lv_list);
-		lvnum_used[lvnum_from_lvid(&lvl->lv->lvid)] = 1;
-	}
-
-	while (lvnum_used[i])
-		i++;
-
-	return i;
-}
-
 static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 {
 	uint64_t max_size = UINT_MAX;
 
 	if (!*lv->lvid.s)
-		lvid_from_lvnum(&lv->lvid, &lv->vg->id, _find_free_lvnum(lv));
+		lvid_from_lvnum(&lv->lvid, &lv->vg->id, find_free_lvnum(lv));
 
 	if (lv->le_count > MAX_LE_TOTAL) {
 		log_error("logical volumes cannot contain more than "
@@ -550,7 +530,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 	fmt->ops = &_format1_ops;
 	fmt->name = FMT_LVM1_NAME;
 	fmt->alias = NULL;
-	fmt->features = 0;
+	fmt->features = FMT_RESTRICTED_LVIDS;
 	fmt->private = NULL;
 
 	if (!(fmt->labeller = lvm1_labeller_create(fmt))) {

@@ -22,6 +22,7 @@
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define PE_ALIGN (65536UL >> SECTOR_SHIFT)	/* PE alignment */
+#define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
@@ -50,7 +51,10 @@
 /* Format features flags */
 #define FMT_SEGMENTS		0x00000001	/* Arbitrary segment params? */
 #define FMT_MDAS		0x00000002	/* Proper metadata areas? */
-
+#define FMT_TAGS		0x00000004	/* Tagging? */
+#define FMT_UNLIMITED_VOLS	0x00000008	/* Unlimited PVs/LVs? */
+#define FMT_RESTRICTED_LVIDS	0x00000010	/* LVID <= 255 */
+  
 typedef enum {
 	ALLOC_DEFAULT,
 	ALLOC_NEXT_FREE,
@@ -510,6 +514,8 @@ struct physical_volume *get_pvmove_pv_from_lv_mirr(struct logical_volume
 float pvmove_percent(struct logical_volume *lv_mirr);
 struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
+
+uint32_t find_free_lvnum(struct logical_volume *lv);
 
 static inline int validate_name(const char *n)
 {
