@@ -141,7 +141,12 @@ int persistent_filter_dump(struct dev_filter *f)
 	struct pfilter *pf = (struct pfilter *) f->private;
 
 	FILE *fp;
-	
+
+	if (!hash_get_num_entries(pf->devices)) {
+		log_very_verbose("Internal persistent device cache empty "
+				 "- not writing to %s", pf->file);
+		return 0;
+	}
 	log_very_verbose("Dumping persistent device cache to %s", pf->file);
 
 	fp = fopen(pf->file, "w");
