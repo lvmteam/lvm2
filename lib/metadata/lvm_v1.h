@@ -31,11 +31,8 @@
 #undef __KERNEL__
 #endif                          /* #ifndef __KERNEL__ */
 
-#include <asm/types.h>
 #include <linux/major.h>
 #include <linux/spinlock.h>
-#include <asm/semaphore.h>
-#include <asm/page.h>
 
 #include <sys/types.h>
 #include <linux/version.h>
