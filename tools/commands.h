@@ -54,7 +54,7 @@ xx(lvchange,
    "Change the attributes of logical volume(s)",
    "lvchange\n"
    "\t[-A|--autobackup y|n]\n"
-   "\t[-a|--available y|n]\n"
+   "\t[-a|--available [e|l]y|n]\n"
    "\t[--addtag Tag]\n"
    "\t[--alloc AllocationType]\n"
    "\t[-C|--contiguous y|n]\n"
@@ -564,7 +564,7 @@ xx(vgchange,
    "\t[-u|--uuid] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
-   "\t{-a|--available {y|n}  |" "\n"
+   "\t{-a|--available [e|l]{y|n}  |" "\n"
    "\t -x|--resizeable {y|n} |" "\n"
    "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
    "\t --addtag Tag |\n"

@@ -4,26 +4,34 @@ lvchange \- change attributes of a logical volume
 .SH SYNOPSIS
 .B lvchange
 [\-\-addtag Tag]
-[\-A/\-\-autobackup y/n] [\-a/\-\-available y/n]
+[\-A/\-\-autobackup y/n] [\-a/\-\-available y/n/ey/en/ly/ln]
+[\-\-alloc AllocationType]
 [\-C/\-\-contiguous y/n] [\-d/\-\-debug] [\-\-deltag Tag]
 [\-h/\-?/\-\-help]
 [\-\-ignorelockingfailure]
 [\-M/\-\-persistent y/n] [\-\-minor minor]
 [\-P/\-\-partial y/n]
 [\-p/\-\-permission r/w] [\-r/\-\-readahead ReadAheadSectors]
+[\-\-refresh]
 [\-t/\-\-test]
 [\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
 .SH DESCRIPTION
-lvchange allows you to change the attributes of a logical volume.
+lvchange allows you to change the attributes of a logical volume
+including making them known to the kernel ready for use.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
-.I \-a, \-\-available y/n
+.I \-a, \-\-available y/n/ey/en/ly/ln
 Controls the availability of the logical volumes for use.
-This is (among others) useful for changing the logical volume's name
-( see
-.B lvrename(8)
-) safely.
+Communicates with the kernel device-mapper driver via
+libdevmapper to activate (-ay) or deactivate (-an) the 
+logical volumes.
+.IP
+If clustered locking is enabled, -ae will activate exclusively
+on one node and -aly will activate only on the local node.
+To deactivate only on the local node use -aln.
+Logical volumes with single-host snapshots are always activated 
+exclusively because they can only be used on one node at once.
 .TP
 .I \-C, \-\-contiguous y/n
 Tries to set or reset the contiguous allocation policy for
@@ -42,11 +50,18 @@ Change access permission to read-only or read/write.
 .TP
 .I \-r, \-\-readahead ReadAheadSectors
 Change read ahead sector count per logical between 2 and 120.
-Not used by device-mapper.
+For compatability with LVM1 only. Ignored by LVM2.
+.TP
+.I \-\-refresh
+If the logical volume is active, reload its metadata.
+This is not necessary in normal operation, but may be useful
+if something has gone wrong or if you're doing clustering 
+manually without a clustered lock manager.
 .SH Examples
-"lvchange -p r vg00/lvol1" changes the permission on 
+"lvchange -pr vg00/lvol1" changes the permission on 
 volume lvol1 in volume group vg00 to be read-only.
 
 .SH SEE ALSO
 .BR lvm (8), 
-.BR lvcreate (8)
+.BR lvcreate (8),
+.BR vgchange (8)

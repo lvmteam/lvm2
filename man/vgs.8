@@ -13,7 +13,7 @@ vgs \- report information about volume groups
 [\-v/\-\-verbose] 
 [\-\-version] [VolumeGroupName [VolumeGroupName...]]
 .SH DESCRIPTION
-vgs produces formatted output about volume groups
+vgs produces formatted output about volume groups.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -32,7 +32,8 @@ if processing the output.
 Comma-separated ordered list of columns.  Precede the list with '+' to append
 to the default selection of columns.  Column names are: vg_fmt, vg_uuid,
 vg_name, vg_attr, vg_size, vg_free, vg_sysid, vg_extent_size, vg_extent_count,
-vg_free_count, max_lv, max_pv, pv_count, lv_count, snap_count, vg_seqno.
+vg_free_count, max_lv, max_pv, pv_count, lv_count, snap_count, vg_seqno,
+vg_tags.
 Any "vg_" prefixes are optional.  Columns mentioned in either \fBpvs (8)\fP 
 or \fBlvs (8)\fP can also be chosen, but columns cannot be taken from both
 at the same time.  The vg_attr bits are: (w)riteable, (r)eadonly, 
@@ -54,5 +55,6 @@ All sizes are output in these units: (h)uman-readable, (s)ectors, (b)ytes,
 of 1000 (S.I.) instead of 1024.  Can also specify custom (u)nits e.g.
 \-\-units 3M
 .SH SEE ALSO
+.BR vgdisplay (8),
 .BR pvs (8),
 .BR lvs (8)
