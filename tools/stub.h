@@ -27,7 +27,6 @@ int vgcfgbackup(int argc, char **argv) {return 1;}
 int vgcfgrestore(int argc, char **argv) {return 1;}
 int vgexport(int argc, char **argv) {return 1;}
 int vgimport(int argc, char **argv) {return 1;}
-int vgmerge(int argc, char **argv) {return 1;}
 int vgmknodes(int argc, char **argv) {return 1;}
 int vgsplit(int argc, char **argv) {return 1;}
 
