@@ -7,7 +7,6 @@
 #ifndef _LVM_BTREE_H
 #define _LVM_BTREE_H
 
-#include "lvm-types.h"
 #include "pool.h"
 
 struct btree;

@@ -13,10 +13,10 @@
 #include <inttypes.h>
 
 /* Define some portable printing types */
-#if __WORDSIZE == 64
-#define PRIsize_t "lu"
-#else
-#define PRIsize_t "u"
+#if (SIZE_MAX == UINT64_MAX)
+#define PRIsize_t PRIu64
+#elif (SIZE_MAX == UINT32_MAX)
+#define PRIsize_t PRIu32
 #endif
 
 struct str_list {

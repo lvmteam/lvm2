@@ -9,9 +9,8 @@
 
 #include "metadata.h"
 
-#include <libdevmapper.h>
-
 struct dev_manager;
+struct dm_info;
 
 /*
  * Constructor and destructor.

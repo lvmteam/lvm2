@@ -262,8 +262,8 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 			return 0;
 		}
 		if (!vg->fid->fmt->ops->
-		    pv_setup(vg->fid->fmt, __UINT64_C(0), 0, 0, 0,
-			     __UINT64_C(0), &vg->fid->metadata_areas, pv, vg)) {
+		    pv_setup(vg->fid->fmt, UINT64_C(0), 0, 0, 0,
+			     UINT64_C(0), &vg->fid->metadata_areas, pv, vg)) {
 			log_error("Format-specific setup for %s failed",
 				  dev_name(pv->dev));
 			return 0;

@@ -70,16 +70,16 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 	switch (*units) {
 	case 'h':
 	case 'H':
-		v = __UINT64_C(1);
+		v = UINT64_C(1);
 		*unit_type = *units;
 		break;
 	case 's':
 		v *= SECTOR_SIZE;
 	case 'b':
 	case 'B':
-		v *= __UINT64_C(1);
+		v *= UINT64_C(1);
 		break;
-#define KILO __UINT64_C(1024)
+#define KILO UINT64_C(1024)
 	case 'k':
 		v *= KILO;
 	case 'm':
@@ -92,7 +92,7 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 		v *= KILO * KILO * KILO * KILO;
 		break;
 #undef KILO
-#define KILO __UINT64_C(1000)
+#define KILO UINT64_C(1000)
 	case 'K':
 		v *= KILO;
 		break;
@@ -167,7 +167,7 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 	int s;
 	int suffix = 1;
 	uint64_t byte;
-	uint64_t units = __UINT64_C(1024);
+	uint64_t units = UINT64_C(1024);
 	char *size_buf = NULL;
 	const char *size_str[][3] = {
 		{" Terabyte", " TB", "T"},
@@ -193,20 +193,20 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 		    *size_str[s][2])
 			break;
 
-	if (size == __UINT64_C(0)) {
+	if (size == UINT64_C(0)) {
 		sprintf(size_buf, "0%s", suffix ? size_str[s][sl] : "");
 		return size_buf;
 	}
 
 	if (s < 8) {
 		byte = cmd->current_settings.unit_factor;
-		size *= __UINT64_C(1024);
+		size *= UINT64_C(1024);
 	} else {
 		suffix = 1;
 		if (cmd->current_settings.unit_type == 'H')
-			units = __UINT64_C(1000);
+			units = UINT64_C(1000);
 		else
-			units = __UINT64_C(1024);
+			units = UINT64_C(1024);
 		byte = units * units * units;
 		s = 0;
 		while (size_str[s] && size < byte)

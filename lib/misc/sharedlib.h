@@ -6,6 +6,7 @@
  */
 
 #include "config.h"
+#include <dlfcn.h>
 
 void *load_shared_library(struct config_tree *cf, const char *libname,
 			  const char *what);

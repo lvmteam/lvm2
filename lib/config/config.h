@@ -7,9 +7,6 @@
 #ifndef _LVM_CONFIG_H
 #define _LVM_CONFIG_H
 
-#include <inttypes.h>
-#include <sys/types.h>
-
 enum {
 	CFG_STRING,
 	CFG_FLOAT,

@@ -27,8 +27,6 @@
 #include "display.h"
 #include "activate.h"
 
-#include <sys/types.h>
-
 /* 
  * For macro use
  */
@@ -566,14 +564,14 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 
 	if (!(snap = find_cow(lv))) {
 		field->report_string = "";
-		*sortval = __UINT64_C(0);
+		*sortval = UINT64_C(0);
 		field->sort_value = sortval;
 		return 1;
 	}
 
 	if (!lv_snapshot_percent(snap->cow, &snap_percent) || snap_percent < 0) {
 		field->report_string = "100.00";
-		*sortval = __UINT64_C(100);
+		*sortval = UINT64_C(100);
 		field->sort_value = sortval;
 		return 1;
 	}
@@ -591,7 +589,7 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	*sortval = snap_percent * __UINT64_C(1000);
+	*sortval = snap_percent * UINT64_C(1000);
 	field->sort_value = sortval;
 	field->report_string = repstr;
 

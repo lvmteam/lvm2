@@ -19,8 +19,11 @@
 #include "label.h"
 #include "lvm-file.h"
 #include "format-text.h"
-#include "sharedlib.h"
 #include "display.h"
+
+#ifdef HAVE_LIBDL
+#include "sharedlib.h"
+#endif
 
 #ifdef LVM1_INTERNAL
 #include "format1.h"
@@ -29,7 +32,6 @@
 #include <locale.h>
 #include <sys/stat.h>
 #include <syslog.h>
-#include <dlfcn.h>
 #include <time.h>
 
 static FILE *_log;
@@ -332,12 +334,10 @@ static int _init_formats(struct cmd_context *cmd)
 
 	struct format_type *fmt;
 	struct list *fmth;
+
+#ifdef HAVE_LIBDL
 	struct config_node *cn;
-	struct config_value *cv;
-
-	struct format_type *(*init_format_fn) (struct cmd_context *);
-
-	void *lib;
+#endif
 
 	label_init();
 
@@ -348,9 +348,15 @@ static int _init_formats(struct cmd_context *cmd)
 	list_add(&cmd->formats, &fmt->list);
 #endif
 
+#ifdef HAVE_LIBDL
 	/* Load any formats in shared libs */
 	if ((cn = find_config_node(cmd->cf->root, "global/format_libraries",
 				   '/'))) {
+
+		struct config_value *cv;
+		struct format_type *(*init_format_fn) (struct cmd_context *);
+		void *lib;
+
 		for (cv = cn->v; cv; cv = cv->next) {
 			if (cv->type != CFG_STRING) {
 				log_error("Invalid string in config file: "
@@ -376,6 +382,7 @@ static int _init_formats(struct cmd_context *cmd)
 			list_add(&cmd->formats, &fmt->list);
 		}
 	}
+#endif
 
 	if (!(fmt = create_text_format(cmd)))
 		return 0;
@@ -469,8 +476,10 @@ static void _destroy_formats(struct list *formats)
 		list_del(&fmt->list);
 		lib = fmt->library;
 		fmt->ops->destroy(fmt);
+#ifdef HAVE_LIBDL
 		if (lib)
 			dlclose(lib);
+#endif
 	}
 }
 

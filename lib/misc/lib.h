@@ -15,6 +15,4 @@
 #include "log.h"
 #include "dbg_malloc.h"
 
-#include <assert.h>
-
 #endif

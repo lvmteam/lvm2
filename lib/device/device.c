@@ -18,7 +18,6 @@
  */
 
 #if 0
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <stdio.h>

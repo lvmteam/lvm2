@@ -78,10 +78,10 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 
 #define stack log_debug("<backtrace>")	/* Backtrace on error */
 
-#define log_error(fmt, args...) log_err(fmt , ## args)
-#define log_print(fmt, args...) log_warn(fmt , ## args)
-#define log_verbose(fmt, args...) log_notice(fmt , ## args)
-#define log_very_verbose(fmt, args...) log_info(fmt , ## args)
+#define log_error(args...) log_err(args)
+#define log_print(args...) log_warn(args)
+#define log_verbose(args...) log_notice(args)
+#define log_very_verbose(args...) log_info(args)
 
 /* Two System call equivalents */
 #define log_sys_error(x, y) \

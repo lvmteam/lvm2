@@ -13,8 +13,6 @@
 #include "metadata.h"
 #include "filter.h"
 
-#include <linux/kdev_t.h>
-
 static struct hash_table *_pvid_hash = NULL;
 static struct hash_table *_vgid_hash = NULL;
 static struct hash_table *_vgname_hash = NULL;

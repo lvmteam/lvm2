@@ -68,8 +68,8 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 
 	pv->pe_alloc_count = 0;
 
-	if (!fid->fmt->ops->pv_setup(fid->fmt, __UINT64_C(0), 0,
-				     vg->extent_size, 0, __UINT64_C(0),
+	if (!fid->fmt->ops->pv_setup(fid->fmt, UINT64_C(0), 0,
+				     vg->extent_size, 0, UINT64_C(0),
 				     &fid->metadata_areas, pv, vg)) {
 		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);

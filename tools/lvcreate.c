@@ -150,7 +150,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG))
-		lp->size = arg_uint64_value(cmd, size_ARG, __UINT64_C(0)) * 2;
+		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)) * 2;
 
 	return 1;
 }
@@ -317,7 +317,7 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 	if (!(dev_open(dev, O_WRONLY)))
 		return 0;
 
-	dev_zero(dev, __UINT64_C(0), (size_t) 4096);
+	dev_zero(dev, UINT64_C(0), (size_t) 4096);
 	dev_close(dev);
 
 	return 1;

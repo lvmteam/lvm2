@@ -7,8 +7,6 @@
 #ifndef _LVM_UUID_H
 #define _LVM_UUID_H
 
-#include "lvm-types.h"
-
 #define ID_LEN 32
 #define ID_LEN_S "32"
 

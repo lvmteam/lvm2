@@ -671,7 +671,7 @@ static int _populate_origin(struct dev_manager *dm,
 
 	log_debug("Adding target: 0 %" PRIu64 " snapshot-origin %s",
 		  dl->lv->size, params);
-	if (!dm_task_add_target(dmt, __UINT64_C(0), dl->lv->size,
+	if (!dm_task_add_target(dmt, UINT64_C(0), dl->lv->size,
 				"snapshot-origin", params)) {
 		stack;
 		return 0;
@@ -712,7 +712,7 @@ static int _populate_snapshot(struct dev_manager *dm,
 	log_debug("Adding target: 0 %" PRIu64 " snapshot %s",
 		  s->origin->size, params);
 	if (!dm_task_add_target
-	    (dmt, __UINT64_C(0), s->origin->size, "snapshot", params)) {
+	    (dmt, UINT64_C(0), s->origin->size, "snapshot", params)) {
 		stack;
 		return 0;
 	}

@@ -117,7 +117,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 		return NULL;
 	}
 
-	if (dev_read(dev, __UINT64_C(0), LABEL_SCAN_SIZE, readbuf) !=
+	if (dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf) !=
 	    LABEL_SCAN_SIZE) {
 		log_debug("%s: Failed to read label area", dev_name(dev));
 		goto out;
@@ -205,7 +205,7 @@ int label_remove(struct device *dev)
 		return 0;
 	}
 
-	if (dev_read(dev, __UINT64_C(0), LABEL_SCAN_SIZE, readbuf) !=
+	if (dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf) !=
 	    LABEL_SCAN_SIZE) {
 		log_debug("%s: Failed to read label area", dev_name(dev));
 		goto out;

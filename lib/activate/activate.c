@@ -15,7 +15,6 @@
 #include "dev_manager.h"
 
 #include <limits.h>
-#include <linux/kdev_t.h>
 #include <fcntl.h>
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)

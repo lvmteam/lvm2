@@ -36,7 +36,6 @@ SOURCES=\
 	format_text/import_vsn1.c \
 	format_text/text_label.c \
 	label/label.c \
-	locking/external_locking.c \
 	locking/file_locking.c \
 	locking/locking.c \
 	locking/no_locking.c \
@@ -77,6 +76,11 @@ ifeq ("@DEVMAPPER@", "yes")
   SOURCES+=\
 	activate/dev_manager.c \
 	activate/fs.c
+endif
+
+ifeq ("@HAVE_LIBDL@", "yes")
+  SOURCES+=\
+	locking/external_locking.c
 endif
 
 TARGETS=liblvm.a

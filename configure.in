@@ -121,6 +121,13 @@ Note: (n)curses also seems to work as a substitute for termcap.  This was
 	)
 fi
 
+dnl Check for dlopen
+AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
+
+if test x$HAVE_LIBDL = xyes; then
+	LIBS="-ldl $LIBS"
+fi
+
 dnl Check for readline (Shamelessly copied from parted 1.4.17)
 if test x$READLINE = xyes; then
 	AC_CHECK_LIB(readline, readline, ,
@@ -155,6 +162,7 @@ AC_SUBST(LIBS)
 AC_SUBST(LVM_VERSION)
 AC_SUBST(DEBUG)
 AC_SUBST(DEVMAPPER)
+AC_SUBST(HAVE_LIBDL)
 dnl First and last lines should not contain files to generate in order to 
 dnl keep utility scripts running properly
 AC_OUTPUT( 								\

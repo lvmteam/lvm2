@@ -8,7 +8,6 @@
 #define _LVM_LABEL_H
 
 #include "cache.h"
-#include "lvm-types.h"
 #include "uuid.h"
 #include "device.h"
 
