@@ -49,6 +49,7 @@
 #define LOCAL_EPARAM 1
 #define LOCAL_CHECK_NAME 2
 #define LOCAL_DEVICE_TYPE_INVALID 3
+#define NUMBER_OF_MAJORS 256
 
 static const char *device_names[] = {
 		"ide",			/* IDE disk */
@@ -73,20 +74,13 @@ struct dev_i {
 	struct dev_i *next;
 };
 
-/* temporary structure - will replace with something smarter later */
-struct dev_n {
-	int major;
-	struct dev_n *next;
-};
-
 struct dev_mgr {
 	/* everything is allocated from this pool */
 	struct pool *pool;
 
 	int has_scanned;
 
-	/* linked list of valid major numbers */
-	struct dev_n *dev_list;
+	char valid_majors[NUMBER_OF_MAJORS];
 
 	/* hash table */
 	int num_slots;
@@ -273,7 +267,6 @@ static struct dev_i *_add_named_device(struct dev_mgr *dm, const char *devpath)
 	struct dev_i *dev = NULL;
 	struct stat stat_b;
 
-	/* FIXME: move lvm_check_dev into this file */
 	if ((stat(devpath, &stat_b) == -1) || _check_dev(dm, &stat_b))
 		goto out;
 
@@ -448,25 +441,25 @@ static int _check_dev(struct dev_mgr *dm, struct stat *stat_b)
 	else if ( ! S_ISBLK(stat_b->st_mode))
 		ret = -LOCAL_CHECK_NAME;
 	else {
-		for(node = dm->dev_list; node != NULL; node = node->next) 
-			if (node->major == seek_major)
+		if (dm->valid_majors[seek_major])
 				ret = 0;
 	}
 
 	return ret;
 }
 
-/* Caches /proc/device info and 
-   returns the number of block devices found in /proc/devices */
+/* Caches /proc/device info and returns the number of block devices found
+   in /proc/devices */
 static int _scan_proc_dev(struct dev_mgr *dm)
 {
 	char line[80];
 	FILE *procdevices = NULL;
 	int ret = 0;
 	int i, j = 0;
-	int line_major = 0;
+	int line_maj = 0;
 	int blocksection = 0;
 	struct dev_n * dev_node= NULL;
+	int dev_len = 0;
 
 	if ((procdevices = fopen("/proc/devices", "r")) != NULL) {
 		while (fgets(line, 80, procdevices) != NULL) {
@@ -475,8 +468,8 @@ static int _scan_proc_dev(struct dev_mgr *dm)
 				i++;
 			
 			/* If its not a number it may be name of section */
-			line_major = atoi(((char *) (line + i)));
-			if (line_major == 0) {
+			line_maj = atoi(((char *) (line + i)));
+			if (line_maj == 0) {
 				blocksection = (line[i] == 'B') ? 1 : 0;
 				continue;
 			}
@@ -490,17 +483,18 @@ static int _scan_proc_dev(struct dev_mgr *dm)
 			while (line[i] == ' ' && line[i] != '\0')
 				i++;
 
+			/* Go through the valid device names and if there is a
+			   match, set the array member corresponding to the
+			   major number to !0 */
 			for (j = 0; device_names[j] != NULL; j++) {
-				if (strlen(device_names[j])
-						<= strlen(line + i)) {
+				
+				dev_len = strlen(device_names[j]);
+				if (dev_len <= strlen(line + i)) {
 					if (strncmp (device_names[j],
-					    line + i,
-					    strlen(device_names[j])) == 0) {
-						dev_node = pool_alloc(dm->pool,
-							sizeof(*dev_node));
-						dev_node->major = line_major;
-						dev_node->next=dm->dev_list;
-						dm->dev_list = dev_node;
+							line + i,
+							dev_len) == 0) {
+				
+						dm->valid_majors[line_maj]='1';
 						ret++;
 						break;
 					}
