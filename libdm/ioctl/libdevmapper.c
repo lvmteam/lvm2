@@ -35,8 +35,19 @@ static char *dm_cmd_list[] = {
 	"info",
 	"deps",
 	"rename",
-	"version"
+	"version",
+	"status",
+	"table",
+	"waitevent"
 };
+
+
+static void *_align(void *ptr, unsigned int a)
+{
+	register unsigned long align = --a;
+
+	return (void *) (((unsigned long) ptr + align) & ~align);
+}
 
 void dm_task_destroy(struct dm_task *dmt)
 {
@@ -71,6 +82,49 @@ int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 
 	strncpy(version, dmt->dmi->version, size);
 
+	return 1;
+}
+
+void *dm_get_next_target(struct dm_task *dmt, void *next, unsigned long long *start,
+			 unsigned long long *length,
+			 char **target_type,
+			 char **params)
+{
+    struct target *t;
+
+    if (!next)
+	next = dmt->head;
+
+    t = next;
+
+    if (t) {
+
+	*start = t->start;
+	*length = t->length;
+	*target_type = t->type;
+	*params = t->params;
+	return t->next;
+    }
+    return NULL;
+}
+
+/* Unmarshall the target info returned from a status call */
+static int unmarshal_status(struct dm_task *dmt, struct dm_ioctl *dmi)
+{
+        char *outbuf = (char *)dmi + sizeof(struct dm_ioctl);
+	char *outptr = outbuf;
+	int i;
+
+	for (i=0; i < dmi->target_count; i++) {
+	    struct dm_target_spec *spec = (struct dm_target_spec *)outptr;
+
+	    if (!dm_task_add_target(dmt, spec->sector_start, spec->length,
+				    spec->target_type, outptr+sizeof(*spec)))
+		return 0;
+	    outptr += sizeof(struct dm_target_spec);
+	    outptr += strlen(outptr) + 1;
+	    _align(outptr, ALIGNMENT);
+	}
 	return 1;
 }
 
@@ -152,13 +206,6 @@ struct target *create_target(uint64_t start,
 	free(t->type);
 	free(t);
 	return NULL;
-}
-
-static void *_align(void *ptr, unsigned int a)
-{
-	register unsigned long align = --a;
-
-	return (void *) (((unsigned long) ptr + align) & ~align);
 }
 
 static void *_add_target(struct target *t, void *out, void *end)
@@ -334,6 +381,19 @@ int dm_task_run(struct dm_task *dmt)
 		command = DM_VERSION;
 		break;
 
+	case DM_DEVICE_STATUS:
+		command = DM_GET_STATUS;
+		break;
+
+	case DM_DEVICE_TABLE:
+	        dmi->flags |= DM_STATUS_TABLE_FLAG;
+		command = DM_GET_STATUS;
+		break;
+
+	case DM_DEVICE_WAITEVENT:
+	        command = DM_WAIT_EVENT;
+		break;
+
 	default:
 		log_error("Internal error: unknown device-mapper task %d",
 			  dmt->type);
@@ -360,6 +420,12 @@ int dm_task_run(struct dm_task *dmt)
 	case DM_DEVICE_RENAME:
 		rename_dev_node(dmt->dev_name, dmt->newname);
 		break;
+
+	case DM_DEVICE_STATUS:
+	case DM_DEVICE_TABLE:
+	        if (!unmarshal_status(dmt, dmi))
+		        goto bad;
+	        break;
 	}
 
 	dmt->dmi = dmi;
