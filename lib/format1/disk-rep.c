@@ -233,6 +233,9 @@ static int _read_vgd(struct disk_list *data)
 
 	_xlate_vgd(vgd);
 
+	if ((vgd->lv_max > MAX_LV) || (vgd->pv_max > MAX_PV))
+		fail;
+		
 	/* If UUID is missing, create one */
 	if (vgd->vg_uuid[0] == '\0')
 		uuid_from_num(vgd->vg_uuid, vgd->vg_number);
