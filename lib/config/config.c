@@ -599,6 +599,16 @@ static void _get_token(struct parser *p)
 			p->te++;
 		break;
 
+	case '\'':
+		p->t = TOK_STRING;
+		p->te++;
+		while ((p->te != p->fe) && (*p->te) && (*p->te != '\''))
+			p->te++;
+
+		if ((p->te != p->fe) && (*p->te))
+			p->te++;
+		break;
+
 	case '.':
 		p->t = TOK_FLOAT;
 	case '0':
