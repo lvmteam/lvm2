@@ -263,14 +263,13 @@ void munge_exported_vg(struct pv_disk *pvd)
 	/* Return if PV not in a VG */
 	if ((!*pvd->vg_name))
 		return;
-	/* FIXME also check vgd->status & VG_EXPORTED? */
 
 	l = strlen(pvd->vg_name);
 	s = sizeof(EXPORTED_TAG);
-	if (!strncmp(pvd->vg_name + l - s + 1, EXPORTED_TAG, s))
-		pvd->vg_name[l - s + 1] = '\0';
-
-	pvd->pv_status |= VG_EXPORTED;
+	if (!strncmp(pvd->vg_name + l - s + 1, EXPORTED_TAG, s)) {
+		pvd->vg_name[l - s + 1] = '\0'; 
+		pvd->pv_status |= VG_EXPORTED;
+	}
 }
 
 static struct disk_list *__read_disk(const struct format_type *fmt,
