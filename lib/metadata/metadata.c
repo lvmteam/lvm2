@@ -66,7 +66,7 @@ int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 	pv->pe_allocated = 0;
 
 	if (!fi->ops->pv_setup(fi, pv, vg)) {
-		log_debug("Format-specific setup of physical volume '%s' "
+		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);
 		return 0;
 	}

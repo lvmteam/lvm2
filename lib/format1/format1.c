@@ -29,8 +29,8 @@ static int _check_vgs(struct list *pvs)
 			first = dl;
 
 		else if (memcmp(&first->vgd, &dl->vgd, sizeof(first->vgd))) {
-			log_err("VG data differs between PVs %s and %s",
-				dev_name(first->dev), dev_name(dl->dev));
+			log_error("VG data differs between PVs %s and %s",
+				  dev_name(first->dev), dev_name(dl->dev));
 			return 0;
 		}
 		pv_count++;
@@ -359,8 +359,8 @@ static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
 {
 	if (lv->le_count > MAX_LE_TOTAL) {
-		log_err("Format 1 logical volumes cannot contain more than "
-			"%d extents.", MAX_LE_TOTAL);
+		log_error("logical volumes cannot contain more than "
+			  "%d extents.", MAX_LE_TOTAL);
 		return 0;
 	}
 

@@ -125,8 +125,8 @@ void pool_free(struct pool *p, void *ptr)
 	}
 
 	if (!c)
-		log_debug("pool_free asked to free a pointer "
-			 "that wasn't in the pool, doing nothing");
+		log_error("Internal error: pool_free asked to free pointer "
+			  "not in pool");
 	else
 		p->chunk = c;
 }

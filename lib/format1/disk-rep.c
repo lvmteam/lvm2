@@ -134,7 +134,8 @@ static int _munge_formats(struct pv_disk *pvd)
 int read_pvd(struct device *dev, struct pv_disk *pvd)
 {
 	if (dev_read(dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd)) {
-		log_debug("Failed to read PV data from %s", dev_name(dev));
+		log_very_verbose("Failed to read PV data from %s", 
+				 dev_name(dev));
 		return 0;
 	}
 
@@ -350,12 +351,13 @@ static void _add_pv_to_list(struct list *head, struct disk_list *data)
 		if (!strncmp(data->pvd.pv_uuid, pvd->pv_uuid, 
 			     sizeof(pvd->pv_uuid))) {
 			if (MAJOR(data->dev->dev) != md_major()) {
-				log_debug("Ignoring duplicate PV %s on %s", 
-					  pvd->pv_uuid, dev_name(data->dev));
+				log_very_verbose("Ignoring duplicate PV %s on "
+						 "%s", pvd->pv_uuid, 
+						 dev_name(data->dev));
 				return;
 			}
-			log_debug("Duplicate PV %s - using md %s", 
-				  pvd->pv_uuid, dev_name(data->dev));
+			log_very_verbose("Duplicate PV %s - using md %s", 
+				  	 pvd->pv_uuid, dev_name(data->dev));
 			list_del(pvdh);
 			break;
 		}
@@ -596,7 +598,8 @@ int write_disks(struct list *pvs)
 		if (!(_write_all_pvd(dl)))
 			fail;
 
-		log_debug("Successfully wrote data to %s", dev_name(dl->dev));
+		log_very_verbose("Successfully wrote data to %s", 
+				 dev_name(dl->dev));
 	}
 
 	return 1;
