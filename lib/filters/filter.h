@@ -21,11 +21,13 @@
 #ifndef _LVM_FILTER_H
 #define _LVM_FILTER_H
 
-struct dev_filter *lvm_type_filter_create(const char *proc);
+#include "config.h"
+
+struct dev_filter *lvm_type_filter_create(const char *proc,
+					  struct config_node *cn);
 
 void lvm_type_filter_destroy(struct dev_filter *f);
 
 int md_major(void);
 
 #endif
-

@@ -91,6 +91,13 @@ Defaults to "/etc/lvm/.cache".
 \fBwrite_cache_state\fP \(em Set to 0 to disable the writing out of the 
 persistent filter cache file when \fBlvm\fP exits.
 Defaults to 1.
+.IP
+\fBtypes\fP \(em List of pairs of additional acceptable block device types
+found in /proc/devices together with maximum (non-zero) number of
+partitions (normally 16).  By default, LVM2 supports ide, sd, md, loop, 
+dasd, dac960, nbd, ida, cciss, ubd and ataraid.  Block devices with major
+numbers of different types are ignored by LVM2.  Example:
+\fBtypes = ["fd", 16]\fP
 .TP
 \fBlog\fP \(em Default log settings
 .IP

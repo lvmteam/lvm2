@@ -22,6 +22,7 @@
 #include "dev-cache.h"
 #include "filter.h"
 #include "lvm-string.h"
+#include "config.h"
 
 #include <dirent.h>
 #include <sys/stat.h>
@@ -39,7 +40,12 @@ typedef struct {
 
 static int _md_major = -1;
 
-/* FIXME Move list into config file */
+int md_major(void)
+{
+	return _md_major;
+}
+
+/* This list can be supplemented with devices/types in the config file */
 static device_info_t device_info[] = {
 	{"ide", 16},		/* IDE disk */
 	{"sd", 16},		/* SCSI disk */
@@ -55,10 +61,8 @@ static device_info_t device_info[] = {
 	{NULL, 0}
 };
 
-static int *scan_proc_dev(const char *proc);
-
-static int passes_lvm_type_device_filter(struct dev_filter *f,
-					 struct device *dev)
+static int _passes_lvm_type_device_filter(struct dev_filter *f,
+					  struct device *dev)
 {
 	int fd;
 	const char *name = dev_name(dev);
@@ -78,48 +82,18 @@ static int passes_lvm_type_device_filter(struct dev_filter *f,
 	return 1;
 }
 
-struct dev_filter *lvm_type_filter_create(const char *proc)
-{
-	struct dev_filter *f;
-
-	if (!(f = dbg_malloc(sizeof(struct dev_filter)))) {
-		log_error("LVM type filter allocation failed");
-		return NULL;
-	}
-
-	f->passes_filter = passes_lvm_type_device_filter;
-	f->destroy = lvm_type_filter_destroy;
-
-	if (!(f->private = scan_proc_dev(proc)))
-		return NULL;
-
-	return f;
-}
-
-int md_major(void)
-{
-	return _md_major;
-}
-
-void lvm_type_filter_destroy(struct dev_filter *f)
-{
-	dbg_free(f->private);
-	dbg_free(f);
-	return;
-}
-
-static int *scan_proc_dev(const char *proc)
+static int *_scan_proc_dev(const char *proc, struct config_node *cn)
 {
 	char line[80];
 	char proc_devices[PATH_MAX];
 	FILE *pd = NULL;
-	int ret = 0;
 	int i, j = 0;
 	int line_maj = 0;
 	int blocksection = 0;
 	int dev_len = 0;
-
+	struct config_value *cv;
 	int *max_partitions_by_major;
+	char *name;
 
 	if (!(max_partitions_by_major =
 	      dbg_malloc(sizeof(int) * NUMBER_OF_MAJORS))) {
@@ -170,16 +144,74 @@ static int *scan_proc_dev(const char *proc)
 		for (j = 0; device_info[j].name != NULL; j++) {
 
 			dev_len = strlen(device_info[j].name);
-			if (dev_len <= strlen(line + i)
-			    && !strncmp(device_info[j].name, line + i, dev_len)
-			    && (line_maj < NUMBER_OF_MAJORS)) {
+			if (dev_len <= strlen(line + i) &&
+			    !strncmp(device_info[j].name, line + i, dev_len) &&
+			    (line_maj < NUMBER_OF_MAJORS)) {
 				max_partitions_by_major[line_maj] =
 				    device_info[j].max_partitions;
-				ret++;
+				break;
+			}
+		}
+
+		if (max_partitions_by_major[line_maj] || !cn)
+			continue;
+
+		/* Check devices/types for local variations */
+		for (cv = cn->v; cv; cv = cv->next) {
+			if (cv->type != CFG_STRING) {
+				log_error("Expecting string in devices/types "
+					  "in config file");
+				return NULL;
+			}
+			dev_len = strlen(cv->v.str);
+			name = cv->v.str;
+			cv = cv->next;
+			if (!cv || cv->type != CFG_INT) {
+				log_error("Max partition count missing for %s "
+					  "in devices/types in config file",
+					  name);
+				return NULL;
+			}
+			if (!cv->v.i) {
+				log_error("Zero partition count invalid for "
+					  "%s in devices/types in config file",
+					  name);
+				return NULL;
+			}
+			if (dev_len <= strlen(line + i) &&
+			    !strncmp(name, line + i, dev_len) &&
+			    (line_maj < NUMBER_OF_MAJORS)) {
+				max_partitions_by_major[line_maj] = cv->v.i;
 				break;
 			}
 		}
 	}
 	fclose(pd);
 	return max_partitions_by_major;
+}
+
+struct dev_filter *lvm_type_filter_create(const char *proc,
+					  struct config_node *cn)
+{
+	struct dev_filter *f;
+
+	if (!(f = dbg_malloc(sizeof(struct dev_filter)))) {
+		log_error("LVM type filter allocation failed");
+		return NULL;
+	}
+
+	f->passes_filter = _passes_lvm_type_device_filter;
+	f->destroy = lvm_type_filter_destroy;
+
+	if (!(f->private = _scan_proc_dev(proc, cn)))
+		return NULL;
+
+	return f;
+}
+
+void lvm_type_filter_destroy(struct dev_filter *f)
+{
+	dbg_free(f->private);
+	dbg_free(f);
+	return;
 }
