@@ -340,7 +340,7 @@ int matcher_run(struct matcher *m, const char *b)
 		if (!(cs = cs->lookup[(int) (unsigned char) *b]))
 			break;
 
-		if (cs->final && (!r || cs->final > r))
+		if (cs->final && (cs->final > r))
 			r = cs->final;
 	}
 
