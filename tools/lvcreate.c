@@ -277,7 +277,7 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 	log_verbose("Zeroing start of logical volume \"%s\"", lv->name);
 
 	if (!(dev = dev_cache_get(name, NULL))) {
-		log_error("\"%s\" not found: device not zeroed", name);
+		log_error("%s: not found: device not zeroed", name);
 		return 0;
 	}
 
@@ -297,7 +297,6 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	struct volume_group *vg;
 	struct logical_volume *lv, *org;
 	struct list *pvh;
-	char lvidbuf[128];
 
 	if (lp->contiguous)
 		status |= ALLOC_CONTIGUOUS;
@@ -395,9 +394,6 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		log_verbose("Setting minor number to %d", lv->minor);
 	}
 
-	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
-		return 0;
-
 	if (!archive(vg))
 		return 0;
 
@@ -405,7 +401,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		return 0;
 
-	if (!lock_vol(cmd, lvidbuf, LCK_LV_ACTIVATE))
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE))
 		return 0;
 
 	if (lp->zero || lp->snapshot)
@@ -413,15 +409,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	else
 		log_print("WARNING: \"%s\" not zeroed", lv->name);
 
-	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
-
 	if (lp->snapshot) {
-		if (!lock_vol(cmd, lvidbuf, LCK_LV_DEACTIVATE)) {
+		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_DEACTIVATE)) {
 			log_err("Couldn't lock snapshot.");
 			return 0;
 		}
-
-		lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
 
 		if (!vg_add_snapshot(org, lv, 1, lp->chunk_size)) {
 			log_err("Couldn't create snapshot.");
@@ -432,9 +424,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 			return 0;
 
-		if (!lock_vol(cmd, lvidbuf, LCK_LV_ACTIVATE))
+		if (!lock_vol(cmd, lv->lvid.s, LCK_LV_ACTIVATE))
 			return 0;
-		lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
 	}
 
 	backup(vg);

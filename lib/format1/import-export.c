@@ -272,9 +272,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 
 int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 {
-	memset(&lv->id, 0, sizeof(lv->id));
-
-	id_from_lvnum(&lv->id, lvd->lv_number);
+	lvid_from_lvnum(&lv->lvid, &lv->vg->id, lvd->lv_number);
 
         if (!(lv->name = _create_lv_name(mem, lvd->lv_name))) {
 		stack;
@@ -431,6 +429,7 @@ static struct logical_volume *_add_lv(struct pool *mem,
 		return NULL;
 	}
 	lv = ll->lv;
+	lv->vg = vg;
 
 	if (!import_lv(mem, lv, lvd)) {
 		stack;
@@ -438,7 +437,6 @@ static struct logical_volume *_add_lv(struct pool *mem,
 	}
 
 	list_add(&vg->lvs, &ll->list);
-	lv->vg = vg;
 	vg->lv_count++;
 
 	return lv;
@@ -504,7 +502,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 		export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
 
-		lv_num = lvnum_from_id(&ll->lv->id);
+		lv_num = lvnum_from_lvid(&ll->lv->lvid);
 
 		lvdl->lvd.lv_number = lv_num;
 

@@ -31,18 +31,12 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	struct list *lvh;
 	struct logical_volume *lv;
 	int count = 0;
-	char lvidbuf[128];
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
-		if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
+		if (!lock_vol(cmd, lv->lvid.s, lock | LCK_NONBLOCK))
 			continue;
-
-		if (!lock_vol(cmd, lvidbuf, lock | LCK_NONBLOCK))
-			continue;
-
-		lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
 
 		count++;
 	}

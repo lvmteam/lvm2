@@ -364,12 +364,14 @@ static int _read_lv(struct pool *mem,
 
 	lv->vg = vg;
 
-
-	if (!_read_id(&lv->id, lvn, "id")) {
+	/* FIXME: read full lvid */
+	if (!_read_id(&lv->lvid.id[1], lvn, "id")) {
 		log_err("Couldn't read uuid for logical volume %s.",
 			lv->name);
 		return 0;
 	}
+
+	memcpy(&lv->lvid.id[0], &lv->vg->id, sizeof(lv->lvid.id[0]));
 
 	if (!(cn = find_config_node(lvn, "status", '/'))) {
 		log_err("Couldn't find status flags for logical volume.");

@@ -49,13 +49,14 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
 /*
  * Lock bits
  */
-#define LCK_NONBLOCK	0x00010000
+#define LCK_NONBLOCK	0x00010000	/* Don't block waiting for lock? */
+#define LCK_HOLD	0x00020000	/* Hold lock when lock_vol returns? */
 
 /*
  * Common combinations
  */
-#define LCK_VG_READ		(LCK_VG | LCK_READ)
-#define LCK_VG_WRITE		(LCK_VG | LCK_WRITE)
+#define LCK_VG_READ		(LCK_VG | LCK_READ | LCK_HOLD)
+#define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
 #define LCK_VG_UNLOCK		(LCK_VG | LCK_NONE)
 
 #define LCK_LV_DEACTIVATE	(LCK_LV | LCK_EXCL)

@@ -26,7 +26,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *lv_name_old, *lv_name_new;
 	char *vg_name, *vg_name_new;
 	char *st;
-	char lvidbuf[128];
 
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -121,13 +120,11 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	lv = lvl->lv;
 
-	if (!lvid(lv, lvidbuf, sizeof(lvidbuf)))
-		goto error;
-
 	if (!archive(lv->vg))
 		goto error;
 
-	if (!lock_vol(cmd, lvidbuf, LCK_LV_SUSPEND | LCK_NONBLOCK))
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD | 
+				       LCK_NONBLOCK))
 		goto error;
 
 	if (!(lv->name = pool_strdup(cmd->mem, lv_name_new))) {
@@ -139,7 +136,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!(cmd->fid->ops->vg_write(cmd->fid, vg)))
 		goto lverror;
 
-	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
+	lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
 
 	backup(lv->vg);
 
@@ -152,7 +149,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 
       lverror:
-	lock_vol(cmd, lvidbuf, LCK_LV_UNLOCK);
+	lock_vol(cmd, lv->lvid.s, LCK_LV_UNLOCK);
 
       error:
 	lock_vol(cmd, vg_name, LCK_VG_UNLOCK);

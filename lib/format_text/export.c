@@ -354,7 +354,8 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 		_out(f, "%s {", lv->name);
 		_inc_indent(f);
 
-		if (!id_write_format(&lv->id, buffer, sizeof(buffer))) {
+		/* FIXME: Write full lvid */
+		if (!id_write_format(&lv->lvid.id[1], buffer, sizeof(buffer))) {
 			stack;
 			return 0;
 		}

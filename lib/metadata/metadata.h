@@ -115,7 +115,7 @@ struct stripe_segment {
 };
 
 struct logical_volume {
-	struct id id;
+	union lvid lvid;
         char *name;
 
 	struct volume_group *vg;
@@ -303,11 +303,8 @@ struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
 
 /* Find an LV within a given VG */
 struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
-struct lv_list *find_lv_in_vg_by_uuid(struct volume_group *vg, 
-				      const char *uuid);
-
-/* Get unique LV identifier - currently "<VG uuid>/<LV uuid>" */
-char *lvid(struct logical_volume *lv, char *buf, int size);
+struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg, 
+				      union lvid *lvid);
 
 /* Return the VG that contains a given LV (based on path given in lv_name) */
 /* or environment var */

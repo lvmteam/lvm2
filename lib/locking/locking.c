@@ -118,6 +118,21 @@ void fin_locking(void)
  * LV locking is by VG_name/LV_uuid
  * FIXME This should take a VG_uuid instead of VG_name
  */
+int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
+{
+	_ignore_signals();
+
+	if (!(_locking.lock_resource(cmd, resource, flags))) {
+		_enable_signals();
+		return 0;
+	}
+
+	_update_lock_count(flags);
+	_enable_signals();
+
+	return 1;
+}
+
 int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 {
 	char resource[258];
@@ -133,15 +148,15 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 		return 0;
 	}
 
-	_ignore_signals();
-
-	if (!(_locking.lock_resource(cmd, resource, flags))) {
-		_enable_signals();
+	if (!_lock_vol(cmd, resource, flags))
 		return 0;
-	}
 
-	_update_lock_count(flags);
-	_enable_signals();
+	/* Perform immediate unlock unless LCK_HOLD set */
+	if (!(flags & LCK_HOLD) && ((flags & LCK_TYPE_MASK) != LCK_NONE)) {
+		if (!_lock_vol(cmd, resource, 
+			       (flags & ~LCK_TYPE_MASK) | LCK_NONE))
+			return 0;
+	}
 
 	return 1;
 }
