@@ -88,7 +88,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	ret = process_each_vg(cmd, argc, argv,
-			      LCK_VG | LCK_WRITE | LCK_NONBLOCK | LCK_HOLD, 1, 
+			      LCK_VG_WRITE | LCK_NONBLOCK, 1, 
 			      NULL, &vgremove_single);
 
 	unlock_vg(cmd, "");
