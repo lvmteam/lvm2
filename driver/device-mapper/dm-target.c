@@ -25,8 +25,6 @@
 
 #include "dm.h"
 
-#include <linux/ctype.h>
-
 static struct target *_targets;
 static spinlock_t _lock = SPIN_LOCK_UNLOCKED;
 
@@ -45,6 +43,7 @@ struct target *dm_get_target(const char *name)
 	spin_lock(&_lock);
 	t = __get_target(name);
 	spin_unlock(&_lock);
+
 	return t;
 }
 
@@ -153,9 +152,9 @@ int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
 	lc->dev = MKDEV((int) major, (int) minor);
 	lc->offset = (int) start - (int) low;
 
-	if (!dm_add_device(md, lc->dev)) {
+	if ((r = dm_add_device(md, lc->dev))) {
 		kfree(lc);
-		return 0;
+		return r;
 	}
 
 	*result = lc;

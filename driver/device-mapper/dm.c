@@ -232,7 +232,7 @@ static int blk_close(struct inode *inode, struct file *file)
 
 	wl;
 	md = _devs[minor];
-	if (!md || md->use_count <= 1) {
+	if (!md || md->use_count < 1) {
 		WARN("reference count in mapped_device incorrect");
 		wu;
 		return -ENXIO;
