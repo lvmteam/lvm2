@@ -57,6 +57,7 @@ enum {
 	COLS_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
+	NOHEADINGS_ARG,
 	NOTABLE_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
@@ -123,6 +124,27 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	if (file)
 		fclose(fp);
 	return r;
+}
+
+static void _display_info_cols_noheadings(struct dm_task *dmt,
+					  struct dm_info *info)
+{
+	const char *uuid;
+
+	if (!info->exists)
+		return;
+
+	uuid = dm_task_get_uuid(dmt);
+
+	printf("%s:%d:%d:%s%s%s%s:%d:%d:%" PRIu32 ":%s\n",
+	       dm_task_get_name(dmt),
+	       info->major, info->minor,
+	       info->live_table ? "L" : "-",
+	       info->inactive_table ? "I" : "-",
+	       info->suspended ? "s" : "-",
+	       info->read_only ? "r" : "w",
+	       info->open_count, info->target_count, info->event_nr,
+	       uuid && *uuid ? uuid : "");
 }
 
 static void _display_info_cols(struct dm_task *dmt, struct dm_info *info)
@@ -201,10 +223,12 @@ static void _display_info(struct dm_task *dmt)
 	if (!dm_task_get_info(dmt, &info))
 		return;
 
-	if (_switches[COLS_ARG])
-		_display_info_cols(dmt, &info);
-	else
+	if (!_switches[COLS_ARG])
 		_display_info_long(dmt, &info);
+	else if (_switches[NOHEADINGS_ARG])
+		_display_info_cols_noheadings(dmt, &info);
+	else
+		_display_info_cols(dmt, &info);
 }
 
 static int _set_task_device(struct dm_task *dmt, const char *name, int optional)
@@ -844,10 +868,11 @@ static int _process_switches(int *argc, char ***argv)
 
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
-		{"columns", 0, NULL, COLS_ARG},
 		{"readonly", 0, NULL, READ_ONLY},
+		{"columns", 0, NULL, COLS_ARG},
 		{"major", 1, NULL, MAJOR_ARG},
 		{"minor", 1, NULL, MINOR_ARG},
+		{"noheadings", 0, NULL, NOHEADINGS_ARG},
 		{"notable", 0, NULL, NOTABLE_ARG},
 		{"uuid", 1, NULL, UUID_ARG},
 		{"verbose", 1, NULL, VERBOSE_ARG},
@@ -888,6 +913,8 @@ static int _process_switches(int *argc, char ***argv)
 			_switches[UUID_ARG]++;
 			_uuid = optarg;
 		}
+		if ((ind == NOHEADINGS_ARG))
+			_switches[NOHEADINGS_ARG]++;
 		if ((ind == VERSION_ARG))
 			_switches[VERSION_ARG]++;
 	}
