@@ -20,9 +20,8 @@
  * each ioctl command you want to execute.
  */
 
-
-typedef void (*dm_log_fn)(int level, const char *file, int line,
-			  const char *f, ...);
+typedef void (*dm_log_fn) (int level, const char *file, int line,
+			   const char *f, ...);
 
 /*
  * The library user may wish to register their own
@@ -35,6 +34,7 @@ enum {
 	DM_DEVICE_CREATE,
 	DM_DEVICE_RELOAD,
 	DM_DEVICE_REMOVE,
+	DM_DEVICE_REMOVE_ALL,
 
 	DM_DEVICE_SUSPEND,
 	DM_DEVICE_RESUME,
@@ -45,7 +45,6 @@ enum {
 
 	DM_DEVICE_VERSION,
 };
-
 
 struct dm_task;
 
@@ -74,8 +73,7 @@ struct dm_deps {
 };
 
 int dm_get_library_version(char *version, size_t size);
-int dm_task_get_driver_version(struct dm_task *dmt, char *version,
-			       size_t size);
+int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
@@ -89,9 +87,7 @@ int dm_task_set_minor(struct dm_task *dmt, int minor);
  */
 int dm_task_add_target(struct dm_task *dmt,
 		       uint64_t start,
-		       uint64_t size,
-		       const char *ttype,
-		       const char *params);
+		       uint64_t size, const char *ttype, const char *params);
 
 /*
  * Call this to actually run the ioctl.
@@ -104,4 +100,4 @@ int dm_task_run(struct dm_task *dmt);
 int dm_set_dev_dir(const char *dir);
 const char *dm_dir(void);
 
-#endif /* LIB_DEVICE_MAPPER_H */
+#endif				/* LIB_DEVICE_MAPPER_H */
