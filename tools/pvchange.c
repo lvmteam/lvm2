@@ -89,6 +89,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 	}
 
+	if (!*pv->vg_name && 
+	    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
+		log_error("Allocatability not supported by orphan "
+			  "%s format PV %s", pv->fmt->name, pv_name);
+		unlock_vg(cmd, ORPHAN);
+		return 0;
+	}
+
 	/* change allocatability for a PV */
 	if (allocatable && (pv->status & ALLOCATABLE_PV)) {
 		log_error("Physical volume \"%s\" is already allocatable",
