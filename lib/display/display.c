@@ -541,6 +541,13 @@ int lvdisplay_segments(struct logical_volume *lv)
 		case SEG_SNAPSHOT:
 			break;
 		case SEG_MIRRORED:
+			log_print("  Mirrors\t\t%u", seg->area_count);
+			log_print("  Mirror size\t\t%u", seg->area_len);
+			log_print("  Mirror original:");
+			_display_stripe(seg, 0, "    ");
+			log_print("  Mirror destination:");
+			_display_stripe(seg, 1, "    ");
+			log_print(" ");
 			break;
 		}
 	}
