@@ -258,7 +258,7 @@ static int _get_word(const char *b, const char *e,
 		return 0;
 
 	*wb = b;
-	while(b != e && !isspace((int) b))
+	while(b != e && !isspace((int) *b))
 		b++;
 	*we = b;
 	return 1;
@@ -267,6 +267,7 @@ static int _get_word(const char *b, const char *e,
 static int _line_splitter(struct file *file, const char *buffer,
 			  unsigned long count, void *data)
 {
+	int r;
 	const char *b = buffer, *e = buffer + count, *lb;
 	struct pf_data *pfd = (struct pf_data *) data;
 
@@ -279,8 +280,8 @@ static int _line_splitter(struct file *file, const char *buffer,
 		while((b != e) && *b != '\n')
 			b++;
 
-		if (!pfd->fn(lb, b, pfd->minor))
-			return lb - buffer;
+		if ((r = pfd->fn(lb, b, pfd->minor)))
+			return r;
 	}
 
 	return count;
