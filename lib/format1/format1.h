@@ -4,8 +4,8 @@
  * This file is released under the GPL.
  */
 
-#ifndef LVM_FORMAT1_H
-#define LVM_FORMAT1_H
+#ifndef _LVM_FORMAT1_H
+#define _LVM_FORMAT1_H
 
 #include "metadata.h"
 

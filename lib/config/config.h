@@ -34,7 +34,7 @@ struct config_file {
         struct config_node *root;
 };
 
-struct config_file *create_config_file();
+struct config_file *create_config_file(void);
 void destroy_config_file(struct config_file *cf);
 
 int read_config(struct config_file *cf, const char *file);
