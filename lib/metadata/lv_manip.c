@@ -140,8 +140,8 @@ static int _alloc_striped(struct logical_volume *lv,
 		}
 
 		if (index < stripes) {
-			log_error("Insufficient free extents (suitable for "
-				  "striping) to allocate logical volume "
+			log_error("Insufficient allocatable extents suitable "
+				  "for striping for logical volume "
 				  "%s: %u required",
 				  lv->name, lv->le_count);
 			goto out;
@@ -236,9 +236,9 @@ static int _alloc_contiguous(struct logical_volume *lv,
 	}
 
 	if (allocated != lv->le_count) {
-		log_error("Insufficient free extents to "
-			  "allocate logical volume %s: %u required",
-			  lv->name, lv->le_count);
+		log_error("Insufficient allocatable extents (%u) "
+			  "for logical volume %s: %u required",
+			  allocated, lv->name, lv->le_count);
 		return 0;
 	}
 
@@ -269,9 +269,9 @@ static int _alloc_simple(struct logical_volume *lv,
 
  done:
 	if (allocated != lv->le_count) {
-		log_error("Insufficient free logical extents to "
-			  "allocate logical volume %s: %u required",
-			  lv->name, lv->le_count);
+		log_error("Insufficient allocatable logical extents (%u) "
+			  "for logical volume %s: %u required",
+			  allocated, lv->name, lv->le_count);
 		return 0;
 	}
 
