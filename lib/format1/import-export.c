@@ -34,41 +34,6 @@ static char *_create_lv_name(struct pool *mem, const char *full_name)
 	return pool_strdup(mem, ptr);
 }
 
-static struct logical_volume *_find_lv(struct volume_group *vg,
-				       const char *name)
-{
-	struct list_head *tmp;
-	struct logical_volume *lv;
-	struct lv_list *ll;
-	const char *ptr = strrchr(name, '/') + 1;
-
-	list_for_each(tmp, &vg->lvs) {
-		ll = list_entry(tmp, struct lv_list, list);
-		lv = &ll->lv;
-
-		if (!strcmp(ptr, lv->name))
-			return lv;
-	}
-
-	return NULL;
-}
-
-static struct physical_volume *_find_pv(struct volume_group *vg,
-					struct device *dev)
-{
-	struct list_head *tmp;
-	struct physical_volume *pv;
-	struct pv_list *pl;
-
-	list_for_each(tmp, &vg->pvs) {
-		pl = list_entry(tmp, struct pv_list, list);
-		pv = &pl->pv;
-		if (dev == pv->dev)
-			return pv;
-	}
-	return NULL;
-}
-
 static int _fill_lv_array(struct logical_volume **lvs,
 			  struct volume_group *vg, struct disk_list *dl)
 {
@@ -79,7 +44,7 @@ static int _fill_lv_array(struct logical_volume **lvs,
 	list_for_each(tmp, &dl->lvs) {
 		struct lvd_list *ll = list_entry(tmp, struct lvd_list, list);
 
-		if (!(lv = _find_lv(vg, ll->lv.lv_name))) {
+		if (!(lv = find_lv(vg, ll->lv.lv_name))) {
 			stack;
 			return 0;
 		}
@@ -475,7 +440,7 @@ int import_lvs(struct pool *mem, struct volume_group *vg,
 			ll = list_entry(tmp2, struct lvd_list, list);
 			lvd = &ll->lv;
 
-			if (!_find_lv(vg, lvd->lv_name) &&
+			if (!find_lv(vg, lvd->lv_name) &&
 			    !_add_lv(mem, vg, lvd)) {
 				stack;
 				return 0;

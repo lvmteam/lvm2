@@ -295,6 +295,8 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 		goto bad;
 	}
 
+	log_very_verbose("Found %s in VG %s", name, data->pv.vg_name);
+
 	return data;
 
  bad:

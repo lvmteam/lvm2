@@ -34,4 +34,6 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 
 int is_valid_chars(char *n);
 
+char *extract_vgname(struct io_space *ios, char *lv_name);
+
 #endif

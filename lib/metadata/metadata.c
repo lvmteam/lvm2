@@ -218,15 +218,71 @@ struct physical_volume *pv_create(struct io_space *ios, const char *name)
 
 struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 {
-	struct list_head *tmp;
+	struct list_head *pvh;
 	struct pv_list *pv;
 
-	list_for_each(tmp, &vg->pvs) {
-		pv = list_entry(tmp, struct pv_list, list);
+	list_for_each(pvh, &vg->pvs) {
+		pv = list_entry(pvh, struct pv_list, list);
+		/* FIXME check dev not name */
 		if (!strcmp(dev_name(pv->pv.dev), pv_name))
-			return tmp;
+			return pvh;
 	}
 
 	return NULL;
 
 }
+
+struct list_head *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
+{
+        struct list_head *lvh;
+
+	const char *ptr;
+
+	/* Use last component */
+	if ((ptr = strrchr(lv_name, '/')))
+		ptr++;
+	else
+		ptr = lv_name;
+		
+        list_for_each(lvh, &vg->lvs)
+                if (!strcmp(list_entry(lvh, struct lv_list, list)->lv.name, 
+			    ptr))
+                        return lvh;
+
+        return NULL;
+}
+
+struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
+{
+	struct list_head *lvh;
+
+	if ((lvh = find_lv_in_vg(vg, lv_name)))
+		return &list_entry(lvh, struct lv_list, list)->lv;
+	else
+		return NULL;
+}
+
+struct physical_volume *_find_pv(struct volume_group *vg,
+                                        struct device *dev)
+{
+        struct list_head *tmp;
+        struct physical_volume *pv;
+        struct pv_list *pl;
+
+        list_for_each(tmp, &vg->pvs) {
+                pl = list_entry(tmp, struct pv_list, list);
+                pv = &pl->pv;
+                if (dev == pv->dev)
+                        return pv;
+        }
+        return NULL;
+}
+
+int lv_remove(struct volume_group *vg, struct list_head *lvh)
+{
+	list_del(lvh);
+	vg->lv_count--;
+
+	return 1;
+}
+

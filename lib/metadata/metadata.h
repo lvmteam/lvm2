@@ -232,16 +232,22 @@ struct physical_volume *pv_find(struct volume_group *vg,
 int lv_add(struct volume_group *vg, struct logical_volume *lv);
 
 /* Remove an LV from a given VG */
-int lv_remove(struct volume_group *vg, struct logical_volume *lv);
-
-/* ? Return the VG that contains a given LV (based on path given in lv_name) */
-/* (or environment var?) */
-struct volume_group *vg_find(const char *lv_name);
-
-/* Find an LV within a given VG */
-struct logical_volume *lv_find(struct volume_group *vg, const char *lv_name);
+int lv_remove(struct volume_group *vg, struct list_head *lvh);
 
 /* Find a PV within a given VG */
 struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
+
+/* Find an LV within a given VG */
+struct list_head *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
+
+/* Return the VG that contains a given LV (based on path given in lv_name) */
+/* or environment var */
+struct volume_group *find_vg_with_lv(const char *lv_name);
+
+
+/* FIXME Merge these functions with ones above */
+struct physical_volume *_find_pv(struct volume_group *vg, struct device *dev);
+struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
+
 
 #endif
