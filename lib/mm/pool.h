@@ -13,7 +13,7 @@
 
 /*
  * The pool allocator is useful when you are going
- * to allocate lot's of memory, use the memory for
+ * to allocate lots of memory, use the memory for
  * a bit, and then free the memory in one go.  A
  * surprising amount of code has this usage
  * profile.
@@ -26,14 +26,14 @@
  * moving it into the allocated half.  This
  * operation is very efficient.
  *
- * pool_free free's the allocated object *and* all
+ * pool_free frees the allocated object *and* all
  * objects allocated after it.  It is important to
  * note this semantic difference from malloc/free.
  * This is also extremely efficient, since a
  * single pool_free can dispose of a large complex
  * object.
  *
- * pool_destroy free's all allocated memory.
+ * pool_destroy frees all allocated memory.
  *
  * eg, If you are building a binary tree in your
  * program, and know that you are only ever going
