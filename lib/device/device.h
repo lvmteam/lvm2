@@ -95,12 +95,8 @@ int dev_is_md(struct device *dev, uint64_t *sb);
 /* FIXME Check partition type if appropriate */
 
 #define is_lvm_partition(a) 1
+/* int is_lvm_partition(const char *name); */
 
-/*
-static inline int is_lvm_partition(const char *name)
-{
-	return 1;
-}
-*/
+int is_partitioned_dev(struct device *dev);
 
 #endif

@@ -37,4 +37,6 @@ void lvm_type_filter_destroy(struct dev_filter *f);
 
 int md_major(void);
 
+int max_partitions(int major);
+
 #endif
