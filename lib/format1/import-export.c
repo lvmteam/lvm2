@@ -512,9 +512,8 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 			return 0;
 		}
 
-		memset(&ul->uuid, 0, NAME_LEN);
+		memset(&ul->uuid, 0, sizeof(ul->uuid));
 		memcpy(&ul->uuid, &pvl->pv.id.uuid, ID_LEN);
-		ul->uuid[ID_LEN] = '\0';
 
 		list_add(&ul->list, &dl->uuids);
 	}
