@@ -73,11 +73,20 @@ struct dev_i {
 	struct dev_i *next;
 };
 
+/* temporary structure - will replace with something smarter later */
+struct dev_n {
+	int major;
+	struct dev_n *next;
+};
+
 struct dev_mgr {
 	/* everything is allocated from this pool */
 	struct pool *pool;
 
 	int has_scanned;
+
+	/* linked list of valid major numbers */
+	struct dev_n *dev_list;
 
 	/* hash table */
 	int num_slots;
@@ -110,7 +119,8 @@ static void _name_insert(struct dev_mgr *dm, struct dev_i *device);
 static void _dev_insert(struct dev_mgr *dm, struct dev_i *device);
 static void _list_insert(struct dev_mgr *dm, struct dev_i *device);
 static unsigned int _hash_dev(dev_t d);
-static int _check_dev(struct stat *stat_b);
+static int _check_dev(struct dev_mgr *dm, struct stat *stat_b);
+static int _scan_proc_dev(struct dev_mgr *dm);
 
 static inline struct device *_get_dev(struct dev_i *di)
 {
@@ -150,6 +160,8 @@ struct dev_mgr *init_dev_manager(struct config_node *cn)
 		destroy_pool(pool);
 		return 0;
 	}
+
+	_scan_proc_dev(dm);
 
 	return dm;
 }
@@ -262,7 +274,7 @@ static struct dev_i *_add_named_device(struct dev_mgr *dm, const char *devpath)
 	struct stat stat_b;
 
 	/* FIXME: move lvm_check_dev into this file */
-	if ((stat(devpath, &stat_b) == -1) || _check_dev(&stat_b))
+	if ((stat(devpath, &stat_b) == -1) || _check_dev(dm, &stat_b))
 		goto out;
 
 	/* Check for directories and scan them if they aren't this directory
@@ -425,23 +437,37 @@ static unsigned int _hash_dev(dev_t d)
 	return (unsigned int) d;
 }
 
-static int _check_dev(struct stat *stat_b)
+static int _check_dev(struct dev_mgr *dm, struct stat *stat_b)
 {
-	char line[80];
 	int ret = 1;
 	int seek_major = MAJOR(stat_b->st_rdev);
+	struct dev_n *node;
 
 	if (stat_b == NULL)
 		ret = -LOCAL_EPARAM;
 	else if ( ! S_ISBLK(stat_b->st_mode))
 		ret = -LOCAL_CHECK_NAME;
 	else {
+		for(node = dm->dev_list; node != NULL; node = node->next) 
+			if (node->major == seek_major)
+				ret = 0;
+	}
+
+	return ret;
+}
+
+/* Caches /proc/device info and 
+   returns the number of block devices found in /proc/devices */
+static int _scan_proc_dev(struct dev_mgr *dm)
+{
+	char line[80];
 	FILE *procdevices = NULL;
+	int ret = 0;
 	int i, j = 0;
 	int line_major = 0;
 	int blocksection = 0;
-	
-	/* FIXME Ought to cache this first time */
+	struct dev_n * dev_node= NULL;
+
 	if ((procdevices = fopen("/proc/devices", "r")) != NULL) {
 		while (fgets(line, 80, procdevices) != NULL) {
 			i = 0;
@@ -458,33 +484,33 @@ static int _check_dev(struct stat *stat_b)
 			if (!blocksection)
 				continue;
 			
-			if (line_major == seek_major) {
-				while (line[i] != ' ' && line[i] != '\0')
-					i++;
-				while (line[i] == ' ' && line[i] != '\0')
-					i++;
-				for (j = 0; device_names[j] != NULL; j++) {
-				    if (strlen(device_names[j])
-						    <= strlen(line + i)) {
+			/* Find the start of the device major name */
+			while (line[i] != ' ' && line[i] != '\0')
+				i++;
+			while (line[i] == ' ' && line[i] != '\0')
+				i++;
+
+			for (j = 0; device_names[j] != NULL; j++) {
+				if (strlen(device_names[j])
+						<= strlen(line + i)) {
 					if (strncmp (device_names[j],
-						line + i,
-						strlen(device_names[j])) == 0) {
-					    ret = j;
-					    break;
+					    line + i,
+					    strlen(device_names[j])) == 0) {
+						dev_node = pool_alloc(dm->pool,
+							sizeof(*dev_node));
+						dev_node->major = line_major;
+						dev_node->next=dm->dev_list;
+						dm->dev_list = dev_node;
+						ret++;
+						break;
 					}
-			    	    }
 				}
-				break;
 			}
 		}
 		fclose(procdevices);
 	}
-	}
-
 	return ret;
 }
-
-
 
 /*
  * Local variables:
