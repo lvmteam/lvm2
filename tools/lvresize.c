@@ -34,7 +34,9 @@ int lvresize(int argc, char **argv)
 	char *st;
 	char *dummy;
 	const char *cmd_name;
-	struct list *lvh, *pvh, *pvl, *segh;
+	struct list *pvh, *segh;
+	struct lv_list *lvl;
+	struct pv_list *pvl;
 	int opt = 0;
 
 	enum {
@@ -107,13 +109,13 @@ int lvresize(int argc, char **argv)
 	}
 
 	/* does LV exist? */
-	if (!(lvh = find_lv_in_vg(vg, lv_name))) {
+	if (!(lvl = find_lv_in_vg(vg, lv_name))) {
 		log_error("Logical volume %s not found in volume group %s",
 			  lv_name, vg_name);
 		return ECMD_FAILED;
 	}
 
-	lv = &list_item(lvh, struct lv_list)->lv;
+	lv = &lvl->lv;
 
 	if (size) {
 		/* No of 512-byte sectors */
@@ -301,14 +303,16 @@ int lvresize(int argc, char **argv)
 					  vg->name);
 				return EINVALID_CMD_LINE;
 			}
-			if (list_item(pvl, struct pv_list)->pv.pe_count ==
-			    list_item(pvl, struct pv_list)->pv.pe_allocated) {
+
+			if (pvl->pv.pe_count == pvl->pv.pe_allocated) {
 				log_error("No free extents on physical volume"
 					  " %s", argv[opt]);
 				continue;
 				/* FIXME Buy check not empty at end! */
 			}
-			list_add(pvh, pvl);
+
+			// FIXME: pv_list's need to be copied.
+			list_add(pvh, &pvl->list);
 		}
 	}
 

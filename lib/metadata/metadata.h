@@ -283,10 +283,10 @@ struct physical_volume *pv_find(struct volume_group *vg,
 
 
 /* Find a PV within a given VG */
-struct list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
+struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
 
 /* Find an LV within a given VG */
-struct list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
+struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
 
 /* Return the VG that contains a given LV (based on path given in lv_name) */
 /* or environment var */

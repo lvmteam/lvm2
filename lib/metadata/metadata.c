@@ -232,25 +232,26 @@ struct physical_volume *pv_create(struct format_instance *fi,
 	return NULL;
 }
 
-struct list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
+struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 {
 	struct list *pvh;
-	struct pv_list *pv;
+	struct pv_list *pvl;
 
 	list_iterate(pvh, &vg->pvs) {
-		pv = list_item(pvh, struct pv_list);
+		pvl = list_item(pvh, struct pv_list);
 		/* FIXME check dev not name */
-		if (!strcmp(dev_name(pv->pv.dev), pv_name))
-			return pvh;
+		if (!strcmp(dev_name(pvl->pv.dev), pv_name))
+			return pvl;
 	}
 
 	return NULL;
 
 }
 
-struct list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
+struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 {
 	struct list *lvh;
+	struct lv_list *lvl;
 	const char *ptr;
 
 	/* Use last component */
@@ -259,21 +260,19 @@ struct list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 	else
 		ptr = lv_name;
 
-	list_iterate(lvh, &vg->lvs)
-	    if (!strcmp(list_item(lvh, struct lv_list)->lv.name, ptr))
-		 return lvh;
+	list_iterate(lvh, &vg->lvs) {
+		lvl = list_item(lvh, struct lv_list);
+		if (!strcmp(lvl->lv.name, ptr))
+			return lvl;
+	}
 
 	return NULL;
 }
 
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
 {
-	struct list *lvh;
-
-	if ((lvh = find_lv_in_vg(vg, lv_name)))
-		return &list_item(lvh, struct lv_list)->lv;
-	else
-		return NULL;
+	struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
+	return lvl ? &lvl->lv : NULL;
 }
 
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)

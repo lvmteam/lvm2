@@ -64,10 +64,10 @@ int process_each_lv(int argc, char **argv,
 	int ret = 0;
 	int vg_count = 0;
 
-	struct list *lvh;
 	struct list *vgh, *vgs;
 	struct volume_group *vg;
 	struct logical_volume *lv;
+	struct lv_list *lvl;
 
 	char *vg_name;
 
@@ -92,7 +92,7 @@ int process_each_lv(int argc, char **argv,
 				continue;
 			}
 
-			if (!(lvh = find_lv_in_vg(vg, lv_name))) {
+			if (!(lvl = find_lv_in_vg(vg, lv_name))) {
 				log_error("Can't find logical volume %s "
 					  "in volume group %s",
 					  lv_name, vg_name);
@@ -101,7 +101,7 @@ int process_each_lv(int argc, char **argv,
 				continue;
 			}
 
-			lv = &list_item(lvh, struct lv_list)->lv;
+			lv = &lvl->lv;
 
 			if ((ret = process_single(lv)) > ret_max)
 				ret_max = ret;
@@ -190,20 +190,18 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 	int ret_max = 0;
 	int ret = 0;
 
-	struct list *pvh;
+	struct pv_list *pvl;
 
 	if (argc) {
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
-			if (!(pvh = find_pv_in_vg(vg, argv[opt]))) {
+			if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
 				log_error("Physical Volume %s not found in "
 					  "Volume Group %s", argv[opt],
 					  vg->name);
 				continue;
 			}
-			ret = process_single(vg,
-					     &list_item(pvh,
-							struct pv_list)->pv);
+			ret = process_single(vg, &pvl->pv);
 			if (ret > ret_max)
 				ret_max = ret;
 		}
