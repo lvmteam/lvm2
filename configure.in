@@ -19,7 +19,7 @@
 ################################################################################
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(lib/dev-mgr/dev-manager.h)
+AC_INIT(lib/device/dev-cache.h)
 
 dnl setup the directory where autoconf has auxilary files
 AC_CONFIG_AUX_DIR(autoconf) 
