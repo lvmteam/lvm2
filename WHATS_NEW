@@ -1,3 +1,7 @@
+Version 2.01.02 - 
+===================================
+  Recognise gnbd devices.
+
 Version 2.01.01 - 19th January 2005
 ===================================
   Fix clvmd lv_info_by_lvid open_count.
