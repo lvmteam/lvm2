@@ -87,7 +87,7 @@ int archive(struct volume_group *vg)
 
 	log_verbose("Archiving volume group %s metadata.", vg->name);
 	if (!__archive(vg)) {
-		log_error("Volume group %s metadata archive failed.", 
+		log_error("Volume group %s metadata archive failed.",
 			  vg->name);
 		return 0;
 	}
@@ -179,3 +179,21 @@ int backup(struct volume_group *vg)
 
 	return 1;
 }
+
+int backup_remove(const char *vg_name)
+{
+	char path[PATH_MAX];
+
+	if (lvm_snprintf(path, sizeof(path), "%s/%s",
+			 _backup_params.dir, vg_name) < 0) {
+		log_err("Failed to generate backup filename (for removal).");
+		return 0;
+	}
+
+	/*
+	 * Let this fail silently.
+	 */
+	unlink(path);
+	return 1;
+}
+
