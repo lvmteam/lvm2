@@ -70,9 +70,9 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv)
 	} else
 		active_str = "inactive ";
 
-	if (lv_is_origin(lv->vg, lv))
+	if (lv_is_origin(lv))
 		snapshot_str = "Original";
-	else if (lv_is_cow(lv->vg, lv))
+	else if (lv_is_cow(lv))
 		snapshot_str = "Snapshot";
 	else
 		snapshot_str = "        ";

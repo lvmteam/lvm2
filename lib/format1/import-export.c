@@ -613,7 +613,7 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 			}
 
 			/* we may have already added this snapshot */
-			if (lv_is_cow(vg, cow))
+			if (lv_is_cow(cow))
 				continue;
 
 			/* insert the snapshot */

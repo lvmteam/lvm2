@@ -8,12 +8,12 @@
 #include "metadata.h"
 #include "toolcontext.h"
 
-int lv_is_origin(struct volume_group *vg, struct logical_volume *lv)
+int lv_is_origin(struct logical_volume *lv)
 {
 	struct list *slh;
 	struct snapshot *s;
 
-	list_iterate (slh, &vg->snapshots) {
+	list_iterate (slh, &lv->vg->snapshots) {
 		s = list_item(slh, struct snapshot_list)->snapshot;
 		if (s->origin == lv)
 			return 1;
@@ -22,12 +22,12 @@ int lv_is_origin(struct volume_group *vg, struct logical_volume *lv)
 	return 0;
 }
 
-int lv_is_cow(struct volume_group *vg, struct logical_volume *lv)
+int lv_is_cow(struct logical_volume *lv)
 {
 	struct list *slh;
 	struct snapshot *s;
 
-	list_iterate (slh, &vg->snapshots) {
+	list_iterate (slh, &lv->vg->snapshots) {
 		s = list_item(slh, struct snapshot_list)->snapshot;
 		if (s->cow == lv)
 			return 1;
@@ -49,7 +49,7 @@ int vg_add_snapshot(struct volume_group *vg,
 	/*
 	 * Is the cow device already being used ?
 	 */
-	if (lv_is_cow(vg, cow)) {
+	if (lv_is_cow(cow)) {
 		log_err("'%s' is already in use as a snapshot.", cow->name);
 		return 0;
 	}
