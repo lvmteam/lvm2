@@ -26,6 +26,7 @@ RANLIB = @RANLIB@
 SHELL = /bin/sh
 INSTALL = @INSTALL@
 LN_S = @LN_S@
+LIBS = @LIBS@
 
 # Setup directory variables
 prefix = @prefix@
