@@ -572,7 +572,7 @@ void export_numbers(struct list_head *pvs, struct volume_group *vg)
 	struct list_head *tmp, *tmp2;
 	struct disk_list *dl;
 	struct lvd_list *ll;
-	int pv_num = 0;
+	int pv_num = 1;
 
 	list_for_each (tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
