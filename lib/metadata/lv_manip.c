@@ -238,7 +238,6 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 		return 0;
 	}
 	seg->le = *ix;
-	seg->le = *ix;
 	seg->len = count;
 	seg->area_len = count;
 	seg->stripe_size = 0;
@@ -277,7 +276,6 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	seg->segtype = segtype;
 	seg->le = *ix;
 	seg->status = 0u;
-	seg->le = *ix;
 	seg->len = count;
 	seg->area_len = count;
 	seg->stripe_size = 0;
@@ -420,6 +418,31 @@ static int _alloc_next_free(struct logical_volume *lv,
 	return 1;
 }
 
+static int _alloc_virtual(struct logical_volume *lv,
+			  uint32_t allocated, struct segment_type *segtype)
+{
+	struct lv_segment *seg;
+
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 0))) {
+		log_err("Couldn't allocate new zero segment.");
+		return 0;
+	}
+
+	seg->lv = lv;
+	seg->segtype = segtype;
+	seg->status = 0u;
+	seg->le = allocated;
+	seg->len = lv->le_count - allocated;
+	seg->area_len = seg->len;
+	seg->stripe_size = 0;
+	seg->area_count = 0;
+	seg->extents_copied = 0u;
+	list_add(&lv->segments, &seg->list);
+	lv->status |= VIRTUAL;
+
+	return 1;
+}
+
 /*
  * Chooses a correct allocation policy.
  */
@@ -434,6 +457,9 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	struct pool *scratch;
 	struct list *pvms, *old_tail = lv->segments.p, *segh;
 	struct lv_segment *seg;
+
+	if (segtype->flags & SEG_VIRTUAL)
+		return _alloc_virtual(lv, allocated, segtype);
 
 	if (!(scratch = pool_create(1024))) {
 		stack;
@@ -582,13 +608,13 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 }
 
 int lv_extend(struct format_instance *fid,
-		      struct logical_volume *lv,
-		      struct segment_type *segtype,
-		      uint32_t stripes, uint32_t stripe_size,
-		      uint32_t mirrors, uint32_t extents,
-		      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
-		      uint32_t status, struct list *allocatable_pvs,
-		      alloc_policy_t alloc)
+	      struct logical_volume *lv,
+	      struct segment_type *segtype,
+	      uint32_t stripes, uint32_t stripe_size,
+	      uint32_t mirrors, uint32_t extents,
+	      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
+	      uint32_t status, struct list *allocatable_pvs,
+	      alloc_policy_t alloc)
 {
 	uint32_t old_le_count = lv->le_count;
 	uint64_t old_size = lv->size;

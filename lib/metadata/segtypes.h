@@ -29,7 +29,9 @@ struct dev_manager;
 #define SEG_CAN_SPLIT		0x00000001
 #define SEG_AREAS_STRIPED	0x00000002
 #define SEG_AREAS_MIRRORED	0x00000004
-#define SEG_FORMAT1_SUPPORT	0x00000008
+#define SEG_SNAPSHOT		0x00000008
+#define SEG_FORMAT1_SUPPORT	0x00000010
+#define SEG_VIRTUAL		0x00000020
 
 struct segment_type {
 	struct list list;
@@ -72,6 +74,8 @@ struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 					     const char *str);
 
 struct segment_type *init_striped_segtype(struct cmd_context *cmd);
+struct segment_type *init_zero_segtype(struct cmd_context *cmd);
+struct segment_type *init_error_segtype(struct cmd_context *cmd);
 
 #ifdef SNAPSHOT_INTERNAL
 struct segment_type *init_snapshot_segtype(struct cmd_context *cmd);

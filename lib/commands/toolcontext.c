@@ -677,6 +677,16 @@ static int _init_segtypes(struct cmd_context *cmd)
 	segtype->library = NULL;
 	list_add(&cmd->segtypes, &segtype->list);
 
+	if (!(segtype = init_zero_segtype(cmd)))
+		return 0;
+	segtype->library = NULL;
+	list_add(&cmd->segtypes, &segtype->list);
+
+	if (!(segtype = init_error_segtype(cmd)))
+		return 0;
+	segtype->library = NULL;
+	list_add(&cmd->segtypes, &segtype->list);
+
 #ifdef SNAPSHOT_INTERNAL
 	if (!(segtype = init_snapshot_segtype(cmd)))
 		return 0;

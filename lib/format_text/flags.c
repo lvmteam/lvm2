@@ -53,6 +53,7 @@ static struct flag _lv_flags[] = {
 	{PVMOVE, "PVMOVE"},
 	{LOCKED, "LOCKED"},
 	{MIRRORED, NULL},
+	{VIRTUAL, NULL},
 	{0, NULL}
 };
 

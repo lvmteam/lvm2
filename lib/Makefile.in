@@ -41,6 +41,7 @@ SOURCES =\
 	device/dev-io.c \
 	device/device.c \
 	display/display.c \
+	error/errseg.c \
 	filters/filter-composite.c \
 	filters/filter-persistent.c \
 	filters/filter-regex.c \
@@ -77,7 +78,8 @@ SOURCES =\
 	regex/ttree.c \
 	report/report.c \
 	striped/striped.c \
-	uuid/uuid.c 
+	uuid/uuid.c \
+	zero/zero.c
 
 ifeq ("@LVM1@", "internal")
   SOURCES +=\

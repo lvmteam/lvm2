@@ -287,6 +287,14 @@ int permission_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
+int segtype_arg(struct cmd_context *cmd, struct arg *a)
+{
+	if (!(a->ptr = (void *) get_segtype_from_string(cmd, a->value)))
+		return 0;
+
+	return 1;
+}
+
 char yes_no_prompt(const char *prompt, ...)
 {
 	int c = 0;

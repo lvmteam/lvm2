@@ -57,9 +57,7 @@ static int _read_name_params(struct lvcreate_params *lp,
 	if (arg_count(cmd, name_ARG))
 		lp->lv_name = arg_value(cmd, name_ARG);
 
-	if (arg_count(cmd, snapshot_ARG)) {
-		lp->snapshot = 1;
-
+	if (lp->snapshot) {
 		if (!argc) {
 			log_err("Please specify a logical volume to act as "
 				"the snapshot origin.");
@@ -143,20 +141,8 @@ static int _read_name_params(struct lvcreate_params *lp,
 static int _read_size_params(struct lvcreate_params *lp,
 			     struct cmd_context *cmd, int *pargc, char ***pargv)
 {
-	/*
-	 * There are two mutually exclusive ways of specifying
-	 * the size ...
-	 */
-	if (arg_count(cmd, extents_ARG) && arg_count(cmd, size_ARG)) {
-		log_error("Invalid combination of arguments");
-		return 0;
-	}
-
-	/*
-	 * ... you must use one of them.
-	 */
-	if (arg_count(cmd, size_ARG) + arg_count(cmd, extents_ARG) == 0) {
-		log_error("Please indicate size using option -l or -L");
+	if (arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG) != 1) {
+		log_error("Please specify either size or extents (not both)");
 		return 0;
 	}
 
@@ -185,20 +171,6 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 			       int *pargc, char ***pargv)
 {
 	int argc = *pargc;
-
-	lp->stripes = 1;
-
-	/* Default is striped */
-	if (!(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
-		stack;
-		return 0;
-	}
-
-	if (arg_count(cmd, stripes_ARG)) {
-		lp->stripes = arg_uint_value(cmd, stripes_ARG, 1);
-		if (lp->stripes == 1)
-			log_print("Redundant stripes argument: default is 1");
-	}
 
 	if (arg_count(cmd, stripesize_ARG)) {
 		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
@@ -248,11 +220,22 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	memset(lp, 0, sizeof(*lp));
 
 	/*
-	 * Check selected options are compatible and set defaults
+	 * Check selected options are compatible and determine segtype
 	 */
-	if (arg_count(cmd, snapshot_ARG)) {
+	lp->segtype = (struct segment_type *)
+	    arg_ptr_value(cmd, type_ARG,
+			  get_segtype_from_string(cmd, "striped"));
+
+	lp->stripes = arg_uint_value(cmd, stripes_ARG, 1);
+	if (arg_count(cmd, stripes_ARG) && lp->stripes == 1)
+		log_print("Redundant stripes argument: default is 1");
+
+	if (arg_count(cmd, snapshot_ARG) || (lp->segtype->flags & SEG_SNAPSHOT))
+		lp->snapshot = 1;
+
+	if (lp->snapshot) {
 		if (arg_count(cmd, zero_ARG)) {
-			log_error("-s and -Z are incompatible");
+			log_error("-Z is incompatible with snapshots");
 			return 0;
 		}
 		if (arg_sign_value(cmd, chunksize_ARG, 0) == SIGN_MINUS) {
@@ -263,9 +246,16 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
 	} else {
 		if (arg_count(cmd, chunksize_ARG)) {
-			log_error("-c is only available with -s");
+			log_error("-c is only available with snapshots");
 			return 0;
 		}
+	}
+
+	if (activation() && lp->segtype->ops->target_present &&
+	    !lp->segtype->ops->target_present()) {
+		log_error("%s: Required device-mapper target(s) not "
+			  "detected in your kernel", lp->segtype->name);
+		return 0;
 	}
 
 	if (!_read_name_params(lp, cmd, &argc, &argv) ||
@@ -482,7 +472,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (vg->free_count < lp->extents) {
+	if (!(lp->segtype->flags & SEG_VIRTUAL) &&
+	    vg->free_count < lp->extents) {
 		log_error("Insufficient free extents (%u) in volume group %s: "
 			  "%u required", vg->free_count, vg->name, lp->extents);
 		return 0;

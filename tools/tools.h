@@ -120,6 +120,7 @@ int tag_arg(struct cmd_context *cmd, struct arg *a);
 int permission_arg(struct cmd_context *cmd, struct arg *a);
 int metadatatype_arg(struct cmd_context *cmd, struct arg *a);
 int units_arg(struct cmd_context *cmd, struct arg *a);
+int segtype_arg(struct cmd_context *cmd, struct arg *a);
 
 char yes_no_prompt(const char *prompt, ...);
 
