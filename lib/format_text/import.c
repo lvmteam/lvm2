@@ -7,6 +7,7 @@
 #include "import-export.h"
 #include "config.h"
 
+#if 0
 struct importer {
 	struct config_file *cf;
 	struct volume_group *vg;
@@ -53,3 +54,4 @@ struct volume_group *text_vg_import(struct cmd_context *cmd,
 	destroy_config_file(cf);
 	return vg;
 }
+#endif

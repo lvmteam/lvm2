@@ -4,8 +4,10 @@
  * This file is released under the LGPL.
  */
 
+#include "log.h"
 #include "metadata.h"
 #include "import-export.h"
+#include "lvm-string.h"
 
 /*
  * Bitsets held in the 'status' flags get
@@ -33,8 +35,8 @@ static struct flag _pv_flags[] = {
 
 static struct flag _lv_flags[] = {
 	{ACTIVE, "ACTIVE"},
-	{READ, "READ"},
-	{WRITE, "WRITE"},
+	{LVM_READ, "READ"},
+	{LVM_WRITE, "WRITE"},
 	{ALLOC_SIMPLE, "ALLOC_SIMPLE"},
 	{ALLOC_STRICT, "ALLOC_STRICT"},
 	{ALLOC_CONTIGUOUS, "ALLOC_CONTIGUOUS"},
@@ -43,7 +45,7 @@ static struct flag _lv_flags[] = {
 	{0, NULL}
 };
 
-static struct flags *_get_flags(int type)
+static struct flag *_get_flags(int type)
 {
 	switch (type) {
 	case VG_FLAGS:
@@ -75,18 +77,22 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 		return 0;
 	}
 
-	if ((n = snprintf(buffer, size, "[")))
+	if ((n = lvm_snprintf(buffer, size, "[")) < 0)
 		return 0;
 	size -= n;
 
 	for (f = 0; flags[f].mask; f++) {
 		if (status & flags[f].mask) {
-			if (!first)
-				fprintf(fp, ", ");
-			else
+			if (!first) {
+				if ((n = lvm_snprintf(buffer, size, ", ")) < 0)
+					return 0;
+				size -= n;
+
+			} else
 				first = 0;
 
-			n = snprintf(buffer, size, "\"%s\"", flags[f].name);
+			n = lvm_snprintf(buffer, size, "\"%s\"",
+					 flags[f].description);
 			if (n < 0)
 				return 0;
 			size -= n;
@@ -95,7 +101,7 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 		}
 	}
 
-	if (snprintf(buffer, size, "]"))
+	if ((n = lvm_snprintf(buffer, size, "]")) < 0)
 		return 0;
 
 	if (status)
@@ -124,8 +130,8 @@ int read_flags(uint32_t *status, int type, struct config_value *cv)
 		}
 
 		for (f = 0; flags[f].description; f++)
-			if (!strcmp(flags[f].description, cv.v.str)) {
-				status &= flags[f].mask;
+			if (!strcmp(flags[f].description, cv->v.str)) {
+				(*status) &= flags[f].mask;
 				break;
 			}
 

@@ -265,7 +265,7 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents);
 int lv_extend(struct logical_volume *lv,
 	      uint32_t stripes,
 	      uint32_t stripe_size,
-	      uint32_t extents, 
+	      uint32_t extents,
 	      struct list *allocatable_pvs);
 
 /* lv must be part of vg->lvs */

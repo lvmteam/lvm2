@@ -130,7 +130,7 @@ void pool_free(struct pool *p, void *ptr)
 		p->chunk = c;
 }
 
-void *pool_begin_object(struct pool *p, size_t init_size)
+int pool_begin_object(struct pool *p, size_t hint)
 {
 	struct chunk *c = p->chunk;
 	const size_t align = DEFAULT_ALIGNMENT;
@@ -139,23 +139,23 @@ void *pool_begin_object(struct pool *p, size_t init_size)
 	p->object_alignment = align;
 
 	_align_chunk(c, align);
-	if (c->end - c->begin < init_size) {
+	if (c->end - c->begin < hint) {
 		/* allocate a new chunk */
 		c = _new_chunk(p,
-		       init_size > (p->chunk_size - sizeof(struct chunk)) ?
-			       init_size + sizeof(struct chunk) + align :
+			       hint > (p->chunk_size - sizeof(struct chunk)) ?
+			       hint + sizeof(struct chunk) + align :
 			       p->chunk_size);
 
 		if (!c)
-			return NULL;
+			return 0;
 
 		_align_chunk(c, align);
 	}
 
-	return c->begin;
+	return 1;
 }
 
-void *pool_grow_object(struct pool *p, void *buffer, size_t n)
+int pool_grow_object(struct pool *p, const void *extra, size_t n)
 {
 	struct chunk *c = p->chunk, *nc;
 
@@ -167,16 +167,16 @@ void *pool_grow_object(struct pool *p, void *buffer, size_t n)
 			nc = _new_chunk(p, p->chunk_size);
 
 		if (!nc)
-			return NULL;
+			return 0;
 
 		_align_chunk(p->chunk, p->object_alignment);
 		memcpy(p->chunk->begin, c->begin, p->object_len);
 		c = p->chunk;
 	}
 
-	memcpy(c->begin + p->object_len, buffer, n);
+	memcpy(c->begin + p->object_len, extra, n);
 	p->object_len += n;
-	return c->begin;
+	return 1;
 }
 
 void *pool_end_object(struct pool *p)

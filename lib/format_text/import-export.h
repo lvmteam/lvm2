@@ -8,6 +8,10 @@
 #define _LVM_TEXT_IMPORT_EXPORT_H
 
 #include "config.h"
+#include "lvm-types.h"
+#include "metadata.h"
+
+#include <stdio.h>
 
 enum {
 	VG_FLAGS,

@@ -7,7 +7,10 @@
 #ifndef _LVM_FORMAT_TEXT_H
 #define _LVM_FORMAT_TEXT_H
 
-struct format_instance *backup_format_create(struct cmd_context,
+#include "lvm-types.h"
+#include "metadata.h"
+
+struct format_instance *backup_format_create(struct cmd_context *cmd,
 					     const char *dir,
 					     uint32_t retain_days,
 					     uint32_t min_backups);

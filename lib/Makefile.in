@@ -29,6 +29,10 @@ SOURCES=\
 	format1/import-extents.c \
 	format1/layout.c \
 	format1/vg_number.c \
+	format_text/backup.c \
+	format_text/export.c \
+	format_text/flags.c \
+	format_text/import.c \
 	label/label.c \
 	log/log.c \
 	metadata/lv_manip.c \
