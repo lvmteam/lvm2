@@ -67,11 +67,13 @@ int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
 	int count = tt->klen;
 	unsigned int k;
 
-	while (*c && count) {
+	do {
 		k = *key++;
 		c = _lookup_single(c, k);
 		count--;
-	}
+
+	} while (*c && count);
+
 
 	if (!*c) {
 		count++;

@@ -16,7 +16,7 @@
 static int _check_vgs(struct list_head *pvs)
 {
 	struct list_head *tmp;
-	struct disk_list *dl;
+	struct disk_list *dl = NULL;
 	struct disk_list *first = NULL;
 
 	int pv_count = 0;
