@@ -98,8 +98,7 @@ int dev_open(struct device *dev, int flags)
 
 static void _flush(int fd)
 {
-	if (ioctl(fd, BLKFLSBUF, 0))
-		log_error("couldn't flush device.");
+	ioctl(fd, BLKFLSBUF, 0);
 }
 
 int dev_close(struct device *dev)
