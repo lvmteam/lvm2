@@ -1,13 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# Copyright (C) YEAR Free Software Foundation, Inc.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-09-29 16:06+0100\n"
+"POT-Creation-Date: 2004-11-23 17:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,10 +125,10 @@ msgstr ""
 #: device/dev-cache.c:298 device/dev-cache.c:346 device/dev-cache.c:391
 #: device/dev-cache.c:396 device/dev-io.c:160 device/dev-io.c:190
 #: device/dev-io.c:288 device/dev-io.c:474 device/dev-io.c:502
-#: display/display.c:211 display/display.c:242 display/display.c:300
-#: display/display.c:347 display/display.c:587 display/display.c:623
-#: error/errseg.c:90 filters/filter-composite.c:54 filters/filter-md.c:35
-#: filters/filter-md.c:47 filters/filter-md.c:59 filters/filter-md.c:65
+#: device/dev-md.c:40 device/dev-md.c:48 device/dev-md.c:63 device/device.c:41
+#: device/device.c:51 display/display.c:211 display/display.c:242
+#: display/display.c:300 display/display.c:347 display/display.c:587
+#: display/display.c:623 error/errseg.c:90 filters/filter-composite.c:54
 #: filters/filter-persistent.c:45 filters/filter-persistent.c:103
 #: filters/filter-persistent.c:108 filters/filter-persistent.c:242
 #: filters/filter-persistent.c:248 filters/filter-persistent.c:260
@@ -137,7 +136,7 @@ msgstr ""
 #: filters/filter-regex.c:126 filters/filter-regex.c:151
 #: filters/filter-regex.c:209 filters/filter-regex.c:214
 #: filters/filter-regex.c:221 filters/filter-regex.c:226
-#: filters/filter-sysfs.c:279 filters/filter.c:218 format1/disk-rep.c:220
+#: filters/filter-sysfs.c:279 filters/filter.c:225 format1/disk-rep.c:220
 #: format1/disk-rep.c:232 format1/disk-rep.c:237 format1/disk-rep.c:256
 #: format1/disk-rep.c:259 format1/disk-rep.c:290 format1/disk-rep.c:293
 #: format1/disk-rep.c:312 format1/disk-rep.c:315 format1/disk-rep.c:332
@@ -186,11 +185,11 @@ msgstr ""
 #: format_text/archive.c:142 format_text/archive.c:169
 #: format_text/archive.c:264 format_text/archive.c:374
 #: format_text/export.c:257 format_text/export.c:258 format_text/export.c:259
-#: format_text/export.c:262 format_text/export.c:264 format_text/export.c:267
+#: format_text/export.c:262 format_text/export.c:266 format_text/export.c:267
 #: format_text/export.c:277 format_text/export.c:281 format_text/export.c:283
 #: format_text/export.c:286 format_text/export.c:289 format_text/export.c:293
 #: format_text/export.c:296 format_text/export.c:300 format_text/export.c:304
-#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:313
+#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:314
 #: format_text/export.c:338 format_text/export.c:345 format_text/export.c:350
 #: format_text/export.c:354 format_text/export.c:358 format_text/export.c:360
 #: format_text/export.c:366 format_text/export.c:369 format_text/export.c:373
@@ -199,14 +198,14 @@ msgstr ""
 #: format_text/export.c:403 format_text/export.c:406 format_text/export.c:411
 #: format_text/export.c:415 format_text/export.c:418 format_text/export.c:423
 #: format_text/export.c:428 format_text/export.c:441 format_text/export.c:448
-#: format_text/export.c:452 format_text/export.c:457 format_text/export.c:465
+#: format_text/export.c:454 format_text/export.c:460 format_text/export.c:465
 #: format_text/export.c:488 format_text/export.c:492 format_text/export.c:496
 #: format_text/export.c:500 format_text/export.c:504 format_text/export.c:505
 #: format_text/export.c:511 format_text/export.c:533 format_text/export.c:538
 #: format_text/export.c:553 format_text/export.c:575 format_text/export.c:582
 #: format_text/export.c:587 format_text/export.c:591 format_text/export.c:594
 #: format_text/export.c:597 format_text/export.c:601 format_text/export.c:604
-#: format_text/export.c:608 format_text/export.c:612 format_text/export.c:614
+#: format_text/export.c:609 format_text/export.c:612 format_text/export.c:614
 #: format_text/export.c:616 format_text/export.c:617 format_text/export.c:623
 #: format_text/export.c:629 format_text/export.c:633 format_text/export.c:638
 #: format_text/export.c:656 format_text/export.c:661 format_text/export.c:670
@@ -258,12 +257,12 @@ msgstr ""
 #: locking/cluster_locking.c:417 locking/cluster_locking.c:429
 #: locking/cluster_locking.c:433 lvchange.c:49 lvchange.c:87 lvchange.c:93
 #: lvchange.c:101 lvchange.c:108 lvchange.c:115 lvchange.c:165 lvchange.c:173
-#: lvchange.c:207 lvchange.c:292 lvchange.c:350 lvchange.c:358 lvcreate.c:251
-#: lvcreate.c:422 lvcreate.c:503 lvcreate.c:509 lvcreate.c:550 lvcreate.c:557
-#: lvcreate.c:641 lvmcmdline.c:973 lvremove.c:74 lvrename.c:146 lvrename.c:157
-#: lvrename.c:164 lvrename.c:169 lvresize.c:355 lvresize.c:412 lvresize.c:419
-#: lvresize.c:426 lvresize.c:438 lvresize.c:445 lvresize.c:451 lvresize.c:470
-#: lvresize.c:484 lvresize.c:509 metadata/lv_manip.c:70
+#: lvchange.c:207 lvchange.c:292 lvchange.c:350 lvchange.c:358 lvcreate.c:265
+#: lvcreate.c:436 lvcreate.c:517 lvcreate.c:523 lvcreate.c:564 lvcreate.c:571
+#: lvcreate.c:655 lvmcmdline.c:975 lvremove.c:74 lvrename.c:146 lvrename.c:157
+#: lvrename.c:164 lvrename.c:169 lvresize.c:360 lvresize.c:417 lvresize.c:424
+#: lvresize.c:431 lvresize.c:443 lvresize.c:450 lvresize.c:456 lvresize.c:475
+#: lvresize.c:489 lvresize.c:514 metadata/lv_manip.c:70
 #: metadata/lv_manip.c:202 metadata/lv_manip.c:237 metadata/lv_manip.c:324
 #: metadata/lv_manip.c:369 metadata/lv_manip.c:462 metadata/lv_manip.c:599
 #: metadata/lv_manip.c:641 metadata/lv_manip.c:652 metadata/lv_manip.c:700
@@ -280,7 +279,7 @@ msgstr ""
 #: metadata/pv_map.c:217 metadata/pv_map.c:226 metadata/pv_map.c:244
 #: metadata/pv_map.c:258 metadata/snapshot_manip.c:124
 #: metadata/snapshot_manip.c:141 mirror/mirrored.c:96 mirror/mirrored.c:171
-#: mirror/mirrored.c:251 misc/lvm-string.c:150 pvmove.c:98 pvmove.c:103
+#: mirror/mirrored.c:251 misc/lvm-string.c:152 pvmove.c:98 pvmove.c:103
 #: pvmove.c:179 pvmove.c:207 pvmove.c:214 pvmove.c:278 pvmove.c:285
 #: pvmove.c:294 pvmove.c:323 pvmove.c:336 pvmove.c:343 pvmove.c:350
 #: pvmove.c:358 pvmove.c:370 pvmove.c:511 pvscan.c:54 regex/matcher.c:182
@@ -291,7 +290,7 @@ msgstr ""
 #: regex/ttree.c:111 report/report.c:522 report/report.c:550
 #: report/report.c:682 snapshot/snapshot.c:74 snapshot/snapshot.c:83
 #: snapshot/snapshot.c:84 snapshot/snapshot.c:85 snapshot/snapshot.c:154
-#: striped/striped.c:90 striped/striped.c:160 striped/striped.c:209
+#: striped/striped.c:91 striped/striped.c:160 striped/striped.c:209
 #: toollib.c:739 toollib.c:789 toollib.c:836 vgcfgbackup.c:65 vgcfgbackup.c:74
 #: vgcfgbackup.c:81 vgreduce.c:28 vgreduce.c:84 vgreduce.c:92 vgreduce.c:98
 #: vgreduce.c:106 vgreduce.c:142 vgreduce.c:158 zero/zero.c:90
@@ -454,7 +453,7 @@ msgstr ""
 msgid "device layer %s missing from hash"
 msgstr ""
 
-#: activate/dev_manager.c:740
+#: activate/dev_manager.c:741
 #, c-format
 msgid "Failed to format device number as dm target (%u,%u)"
 msgstr ""
@@ -610,7 +609,7 @@ msgstr ""
 
 #: activate/fs.c:50 activate/fs.c:85 activate/fs.c:105 activate/fs.c:158
 #: activate/fs.c:171 activate/fs.c:178 activate/fs.c:213
-#: commands/toolcontext.c:334 commands/toolcontext.c:774 config/config.c:155
+#: commands/toolcontext.c:334 commands/toolcontext.c:775 config/config.c:155
 #: config/config.c:204 config/config.c:220 config/config.c:285
 #: config/config.c:382 device/dev-cache.c:148 device/dev-cache.c:152
 #: device/dev-cache.c:320 device/dev-cache.c:327 device/dev-cache.c:488
@@ -619,7 +618,7 @@ msgstr ""
 #: device/dev-io.c:250 device/dev-io.c:310 device/dev-io.c:361
 #: filters/filter-persistent.c:184 filters/filter-sysfs.c:43
 #: filters/filter-sysfs.c:155 filters/filter-sysfs.c:179
-#: filters/filter-sysfs.c:220 filters/filter.c:122 format_text/archive.c:221
+#: filters/filter-sysfs.c:220 filters/filter.c:124 format_text/archive.c:221
 #: format_text/archive.c:230 format_text/format-text.c:612
 #: format_text/format-text.c:626 format_text/format-text.c:632
 #: format_text/format-text.c:657 format_text/format-text.c:719
@@ -629,7 +628,7 @@ msgstr ""
 #: locking/file_locking.c:103 locking/file_locking.c:169
 #: locking/file_locking.c:183 locking/file_locking.c:290
 #: locking/file_locking.c:295 locking/locking.c:44 locking/locking.c:49
-#: locking/locking.c:65 locking/locking.c:200 log/log.c:61 lvmcmdline.c:1380
+#: locking/locking.c:65 locking/locking.c:200 log/log.c:62 lvmcmdline.c:1382
 #: misc/lvm-file.c:47 misc/lvm-file.c:92 misc/lvm-file.c:102
 #: misc/lvm-file.c:151 misc/lvm-file.c:163 misc/lvm-file.c:192
 #: misc/lvm-file.c:201 misc/lvm-file.c:229 misc/lvm-file.c:234 mm/memlock.c:98
@@ -864,7 +863,7 @@ msgstr ""
 msgid "Device directory given in config file too long"
 msgstr ""
 
-#: commands/toolcontext.c:199 lvmcmdline.c:691
+#: commands/toolcontext.c:199 lvmcmdline.c:693
 msgid "Invalid units specification"
 msgstr ""
 
@@ -947,50 +946,50 @@ msgstr ""
 msgid "Failed to create lvm type filter"
 msgstr ""
 
-#: commands/toolcontext.c:563
+#: commands/toolcontext.c:564
 #, c-format
 msgid "Persistent cache filename too long ('%s/.cache')."
 msgstr ""
 
-#: commands/toolcontext.c:571
+#: commands/toolcontext.c:572
 msgid "Failed to create persistent device filter"
 msgstr ""
 
-#: commands/toolcontext.c:585
+#: commands/toolcontext.c:586
 #, c-format
 msgid "Failed to load existing device cache from %s"
 msgstr ""
 
-#: commands/toolcontext.c:674
+#: commands/toolcontext.c:675
 #, c-format
 msgid "_init_formats: Default format (%s) not found"
 msgstr ""
 
-#: commands/toolcontext.c:779
+#: commands/toolcontext.c:780
 msgid "_init_hostname: pool_strdup failed"
 msgstr ""
 
-#: commands/toolcontext.c:784
+#: commands/toolcontext.c:785
 msgid "_init_hostname: pool_strdup kernel_vsn failed"
 msgstr ""
 
-#: commands/toolcontext.c:801
+#: commands/toolcontext.c:802
 msgid "setlocale failed"
 msgstr ""
 
-#: commands/toolcontext.c:810
+#: commands/toolcontext.c:811
 msgid "Failed to allocate command context"
 msgstr ""
 
-#: commands/toolcontext.c:831
+#: commands/toolcontext.c:832
 msgid "Library memory pool creation failed"
 msgstr ""
 
-#: commands/toolcontext.c:862
+#: commands/toolcontext.c:863
 msgid "Command memory pool creation failed"
 msgstr ""
 
-#: commands/toolcontext.c:922
+#: commands/toolcontext.c:923
 msgid "Reloading config files"
 msgstr ""
 
@@ -1310,7 +1309,7 @@ msgstr ""
 
 #: display/display.c:286 display/display.c:312 display/display.c:459
 #: display/display.c:506 display/display.c:592 format_text/archive.c:316
-#: lvmcmdline.c:726 mirror/mirrored.c:54 striped/striped.c:50
+#: lvmcmdline.c:728 mirror/mirrored.c:54 striped/striped.c:50
 msgid " "
 msgstr ""
 
@@ -1612,12 +1611,17 @@ msgstr ""
 msgid "compsoite filters allocation failed"
 msgstr ""
 
-#: filters/filter-md.c:56
+#: filters/filter-md.c:39
 #, c-format
 msgid "%s: Skipping md component device"
 msgstr ""
 
-#: filters/filter-md.c:80
+#: filters/filter-md.c:44
+#, c-format
+msgid "%s: Skipping: error in md component detection"
+msgstr ""
+
+#: filters/filter-md.c:61
 msgid "md filter allocation failed"
 msgstr ""
 
@@ -1715,43 +1719,44 @@ msgstr ""
 msgid "sysfs dev_set creation failed"
 msgstr ""
 
-#: filters/filter.c:70
+#: filters/filter.c:73
 #, c-format
 msgid "%s: Skipping: Unrecognised LVM device type %llu"
 msgstr ""
 
-#: filters/filter.c:77
+#: filters/filter.c:80
 #, c-format
-msgid "%s: Skipping: open failed: %s"
+msgid "%s: Skipping: open failed"
 msgstr ""
 
-#: filters/filter.c:103
-msgid "Filter failed to allocate max_partitions_by_major"
+#: filters/filter.c:85
+#, c-format
+msgid "%s: Skipping: partition table signature found"
 msgstr ""
 
 #: filters/filter.c:108
 msgid "No proc filesystem found: using all block device types"
 msgstr ""
 
-#: filters/filter.c:117
+#: filters/filter.c:119
 msgid "Failed to create /proc/devices string"
 msgstr ""
 
-#: filters/filter.c:173
+#: filters/filter.c:174
 msgid "Expecting string in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:181
+#: filters/filter.c:182
 #, c-format
 msgid "Max partition count missing for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:187
+#: filters/filter.c:188
 #, c-format
 msgid "Zero partition count invalid for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:210
+#: filters/filter.c:216
 msgid "LVM type filter allocation failed"
 msgstr ""
 
@@ -2928,7 +2933,7 @@ msgstr ""
 msgid "%s exists: Is the original LVM driver using this volume group?"
 msgstr ""
 
-#: locking/locking.c:285 lvresize.c:464
+#: locking/locking.c:285 lvresize.c:469
 #, c-format
 msgid "Failed to suspend %s"
 msgstr ""
@@ -2938,8 +2943,12 @@ msgstr ""
 msgid "Failed to activate %s"
 msgstr ""
 
-#: log/log.c:132
+#: log/log.c:133
 msgid "Test mode: Metadata will NOT be updated."
+msgstr ""
+
+#: log/log.c:242
+msgid "vsnprintf failed: skipping external logging function"
 msgstr ""
 
 #: lvchange.c:26
@@ -2977,7 +2986,7 @@ msgstr ""
 msgid "Updating permissions for \"%s\" in kernel"
 msgstr ""
 
-#: lvchange.c:68 lvchange.c:226 lvchange.c:311 lvresize.c:476
+#: lvchange.c:68 lvchange.c:226 lvchange.c:311 lvresize.c:481
 #, c-format
 msgid "Problem reactivating %s"
 msgstr ""
@@ -3085,7 +3094,7 @@ msgstr ""
 msgid "%s: reactivation failed"
 msgstr ""
 
-#: lvchange.c:324 lvcreate.c:528 pvchange.c:44 vgchange.c:219 vgcreate.c:117
+#: lvchange.c:324 lvcreate.c:542 pvchange.c:44 vgchange.c:219 vgcreate.c:117
 msgid "Failed to get tag"
 msgstr ""
 
@@ -3094,7 +3103,7 @@ msgstr ""
 msgid "Logical volume %s/%s does not support tags"
 msgstr ""
 
-#: lvchange.c:336 lvcreate.c:539
+#: lvchange.c:336 lvcreate.c:553
 #, c-format
 msgid "Failed to add tag %s to %s/%s"
 msgstr ""
@@ -3159,274 +3168,274 @@ msgstr ""
 msgid "Only one of --alloc and --contiguous permitted"
 msgstr ""
 
-#: lvcreate.c:62
+#: lvcreate.c:63
 msgid "Please specify a logical volume to act as the snapshot origin."
 msgstr ""
 
-#: lvcreate.c:70
+#: lvcreate.c:71
 msgid "The origin name should include the volume group."
 msgstr ""
 
-#: lvcreate.c:86 lvresize.c:101
+#: lvcreate.c:87 lvresize.c:101
 msgid "Please provide a volume group name"
 msgstr ""
 
-#: lvcreate.c:92
+#: lvcreate.c:106
 msgid "Volume group name expected (no slash)"
 msgstr ""
 
-#: lvcreate.c:107
+#: lvcreate.c:121
 #, c-format
 msgid "Inconsistent volume group names given: \"%s\" and \"%s\""
 msgstr ""
 
-#: lvcreate.c:126 lvrename.c:88
+#: lvcreate.c:140 lvrename.c:88
 msgid ""
 "Names starting \"snapshot\" are reserved. Please choose a different LV name."
 msgstr ""
 
-#: lvcreate.c:132
+#: lvcreate.c:146
 #, c-format
 msgid "Logical volume name \"%s\" is invalid"
 msgstr ""
 
-#: lvcreate.c:145 lvresize.c:63
+#: lvcreate.c:159 lvresize.c:63
 msgid "Please specify either size or extents (not both)"
 msgstr ""
 
-#: lvcreate.c:151
+#: lvcreate.c:165
 msgid "Negative number of extents is invalid"
 msgstr ""
 
-#: lvcreate.c:160
+#: lvcreate.c:174
 msgid "Negative size is invalid"
 msgstr ""
 
-#: lvcreate.c:177
+#: lvcreate.c:191
 msgid "Negative stripesize is invalid"
 msgstr ""
 
-#: lvcreate.c:184
+#: lvcreate.c:198
 msgid "Ignoring stripesize argument with single stripe"
 msgstr ""
 
-#: lvcreate.c:192 lvresize.c:274
+#: lvcreate.c:206 lvresize.c:279
 #, c-format
 msgid "Using default stripesize %dKB"
 msgstr ""
 
-#: lvcreate.c:196
+#: lvcreate.c:210
 #, c-format
 msgid "Too few physical volumes on command line for %d-way striping"
 msgstr ""
 
-#: lvcreate.c:202
+#: lvcreate.c:216
 #, c-format
 msgid "Number of stripes (%d) must be between %d and %d"
 msgstr ""
 
-#: lvcreate.c:210
+#: lvcreate.c:224
 #, c-format
 msgid "Invalid stripe size %d"
 msgstr ""
 
-#: lvcreate.c:233
+#: lvcreate.c:247
 msgid "Redundant stripes argument: default is 1"
 msgstr ""
 
-#: lvcreate.c:240
+#: lvcreate.c:254
 msgid "-Z is incompatible with snapshots"
 msgstr ""
 
-#: lvcreate.c:244
+#: lvcreate.c:258
 msgid "Negative chunk size is invalid"
 msgstr ""
 
-#: lvcreate.c:248
+#: lvcreate.c:262
 #, c-format
 msgid "Setting chunksize to %d sectors."
 msgstr ""
 
-#: lvcreate.c:256
+#: lvcreate.c:270
 msgid "-c is only available with snapshots"
 msgstr ""
 
-#: lvcreate.c:263 metadata/mirror.c:54
+#: lvcreate.c:277 metadata/mirror.c:54
 #, c-format
 msgid "%s: Required device-mapper target(s) not detected in your kernel"
 msgstr ""
 
-#: lvcreate.c:288
+#: lvcreate.c:302
 msgid "Conflicting contiguous and alloc arguments"
 msgstr ""
 
-#: lvcreate.c:313
+#: lvcreate.c:327
 msgid "Please specify minor number with --minor when using -My"
 msgstr ""
 
-#: lvcreate.c:318
+#: lvcreate.c:332
 msgid "Please specify major number with --major when using -My"
 msgstr ""
 
-#: lvcreate.c:324
+#: lvcreate.c:338
 msgid "--major and --minor incompatible with -Mn"
 msgstr ""
 
-#: lvcreate.c:353
+#: lvcreate.c:367
 msgid "Name allocation failed - device not zeroed"
 msgstr ""
 
-#: lvcreate.c:359
+#: lvcreate.c:373
 #, c-format
 msgid "Name too long - device not zeroed (%s)"
 msgstr ""
 
-#: lvcreate.c:363
+#: lvcreate.c:377
 #, c-format
 msgid "Zeroing start of logical volume \"%s\""
 msgstr ""
 
-#: lvcreate.c:366
+#: lvcreate.c:380
 #, c-format
 msgid "%s: not found: device not zeroed"
 msgstr ""
 
-#: lvcreate.c:393 pvmove.c:291 toollib.c:339 vgreduce.c:258
+#: lvcreate.c:407 pvmove.c:291 toollib.c:339 vgreduce.c:258
 #, c-format
 msgid "Finding volume group \"%s\""
 msgstr ""
 
-#: lvcreate.c:396 lvrename.c:112 pvmove.c:66 vgdisplay.c:24 vgmerge.c:38
-#: vgmerge.c:64 vgreduce.c:266 vgremove.c:27 vgrename.c:73 vgsplit.c:178
+#: lvcreate.c:410 lvrename.c:112 pvmove.c:66 vgdisplay.c:24 vgmerge.c:38
+#: vgmerge.c:64 vgreduce.c:266 vgrename.c:73 vgsplit.c:178
 #, c-format
 msgid "Volume group \"%s\" doesn't exist"
 msgstr ""
 
-#: lvcreate.c:401 lvrename.c:117 metadata/metadata.c:804 polldaemon.c:192
+#: lvcreate.c:415 lvrename.c:117 metadata/metadata.c:804 polldaemon.c:192
 #: pvchange.c:67 pvmove.c:72 toollib.c:39 vgchange.c:308 vgck.c:32
 #: vgconvert.c:54 vgextend.c:57 vgmerge.c:44 vgmerge.c:69 vgreduce.c:316
-#: vgremove.c:32 vgrename.c:80 vgsplit.c:184
+#: vgremove.c:35 vgrename.c:80 vgsplit.c:184
 #, c-format
 msgid "Volume group \"%s\" is exported"
 msgstr ""
 
-#: lvcreate.c:406 lvremove.c:27 lvrename.c:122 pvchange.c:73 pvmove.c:78
+#: lvcreate.c:420 lvremove.c:27 lvrename.c:122 pvchange.c:73 pvmove.c:78
 #: vgchange.c:303 vgconvert.c:49 vgexport.c:38 vgextend.c:62 vgmerge.c:50
 #: vgmerge.c:74 vgreduce.c:322 vgrename.c:86 vgsplit.c:190
 #, c-format
 msgid "Volume group \"%s\" is read-only"
 msgstr ""
 
-#: lvcreate.c:411 lvrename.c:127
+#: lvcreate.c:425 lvrename.c:127
 #, c-format
 msgid "Logical volume \"%s\" already exists in volume group \"%s\""
 msgstr ""
 
-#: lvcreate.c:429
+#: lvcreate.c:443
 #, c-format
 msgid "Setting stripe size %d KB to physical extent size %u KB"
 msgstr ""
 
-#: lvcreate.c:442 lvresize.c:193
+#: lvcreate.c:456 lvresize.c:198
 #, c-format
 msgid "Rounding up size to full physical extent %s"
 msgstr ""
 
-#: lvcreate.c:450
+#: lvcreate.c:464
 #, c-format
 msgid "Rounding size (%d extents) up to stripe boundary size (%d extents)"
 msgstr ""
 
-#: lvcreate.c:458
+#: lvcreate.c:472
 msgid "Can't create snapshot without using device-mapper kernel driver"
 msgstr ""
 
-#: lvcreate.c:463
+#: lvcreate.c:477
 #, c-format
 msgid "Couldn't find origin volume '%s'."
 msgstr ""
 
-#: lvcreate.c:468
+#: lvcreate.c:482
 msgid "Snapshots of snapshots are not supported yet."
 msgstr ""
 
-#: lvcreate.c:473
+#: lvcreate.c:487
 msgid "Snapshots of locked devices are not supported yet"
 msgstr ""
 
-#: lvcreate.c:482
+#: lvcreate.c:496
 #, c-format
 msgid "Unable to create logical volume %s with no extents"
 msgstr ""
 
-#: lvcreate.c:489
+#: lvcreate.c:503
 #, c-format
 msgid "Insufficient free extents (%u) in volume group %s: %u required"
 msgstr ""
 
-#: lvcreate.c:495
+#: lvcreate.c:509
 #, c-format
 msgid "Number of stripes (%u) must not exceed number of physical volumes (%d)"
 msgstr ""
 
-#: lvcreate.c:514
+#: lvcreate.c:528
 msgid "Setting read ahead sectors"
 msgstr ""
 
-#: lvcreate.c:522
+#: lvcreate.c:536
 #, c-format
 msgid "Setting device number to (%d, %d)"
 msgstr ""
 
-#: lvcreate.c:533 vgchange.c:224
+#: lvcreate.c:547 vgchange.c:224
 #, c-format
 msgid "Volume group %s does not support tags"
 msgstr ""
 
-#: lvcreate.c:564
+#: lvcreate.c:578
 msgid ""
 "Aborting. Failed to activate snapshot exception store. Remove new LV and "
 "retry."
 msgstr ""
 
-#: lvcreate.c:567
+#: lvcreate.c:581
 msgid "Failed to activate new LV."
 msgstr ""
 
-#: lvcreate.c:574
+#: lvcreate.c:588
 msgid ""
 "Aborting. Failed to wipe snapshot exception store. Remove new LV and retry."
 msgstr ""
 
-#: lvcreate.c:579
+#: lvcreate.c:593
 #, c-format
 msgid "WARNING: \"%s\" not zeroed"
 msgstr ""
 
-#: lvcreate.c:588
+#: lvcreate.c:602
 msgid "Couldn't deactivate new snapshot."
-msgstr ""
-
-#: lvcreate.c:594
-#, c-format
-msgid "Failed to suspend origin %s"
-msgstr ""
-
-#: lvcreate.c:599
-msgid "Couldn't create snapshot."
 msgstr ""
 
 #: lvcreate.c:608
 #, c-format
+msgid "Failed to suspend origin %s"
+msgstr ""
+
+#: lvcreate.c:613
+msgid "Couldn't create snapshot."
+msgstr ""
+
+#: lvcreate.c:622
+#, c-format
 msgid "Problem reactivating origin %s"
 msgstr ""
 
-#: lvcreate.c:615
+#: lvcreate.c:629
 #, c-format
 msgid "Logical volume \"%s\" created"
 msgstr ""
 
-#: lvcreate.c:636 lvrename.c:107 lvresize.c:504 pvchange.c:54 pvmove.c:61
+#: lvcreate.c:650 lvrename.c:107 lvresize.c:509 pvchange.c:54 pvmove.c:61
 #: vgcreate.c:139 vgextend.c:47 vgmerge.c:33 vgmerge.c:57 vgreduce.c:260
 #: vgrename.c:68 vgrename.c:102 vgsplit.c:173 vgsplit.c:197
 #, c-format
@@ -3446,23 +3455,23 @@ msgstr ""
 msgid "With LVM2 and the device mapper, this program is obsolete."
 msgstr ""
 
-#: lvmcmdline.c:266
+#: lvmcmdline.c:268
 msgid "Minor number outside range 0-255"
 msgstr ""
 
-#: lvmcmdline.c:281
+#: lvmcmdline.c:283
 msgid "Major number outside range 0-255"
 msgstr ""
 
-#: lvmcmdline.c:370
+#: lvmcmdline.c:372
 msgid "Couldn't allocate memory."
 msgstr ""
 
-#: lvmcmdline.c:419
+#: lvmcmdline.c:421
 msgid "Out of memory."
 msgstr ""
 
-#: lvmcmdline.c:472
+#: lvmcmdline.c:474
 #, c-format
 msgid ""
 "%s: %s\n"
@@ -3470,155 +3479,155 @@ msgid ""
 "%s"
 msgstr ""
 
-#: lvmcmdline.c:566
+#: lvmcmdline.c:568
 msgid "Unrecognised option."
 msgstr ""
 
-#: lvmcmdline.c:572
+#: lvmcmdline.c:574
 #, c-format
 msgid "Option%s%c%s%s may not be repeated"
 msgstr ""
 
-#: lvmcmdline.c:581
+#: lvmcmdline.c:583
 msgid "Option requires argument."
 msgstr ""
 
-#: lvmcmdline.c:588
+#: lvmcmdline.c:590
 #, c-format
 msgid "Invalid argument %s"
 msgstr ""
 
-#: lvmcmdline.c:607
+#: lvmcmdline.c:609
 #, c-format
 msgid "%s and %s are synonyms.  Please only supply one."
 msgstr ""
 
-#: lvmcmdline.c:633
+#: lvmcmdline.c:635
 #, c-format
 msgid "LVM version:     %s"
 msgstr ""
 
-#: lvmcmdline.c:635
+#: lvmcmdline.c:637
 #, c-format
 msgid "Library version: %s"
 msgstr ""
 
-#: lvmcmdline.c:637
+#: lvmcmdline.c:639
 #, c-format
 msgid "Driver version:  %s"
 msgstr ""
 
-#: lvmcmdline.c:674
+#: lvmcmdline.c:676
 msgid "Partial mode. Incomplete volume groups will be activated read-only."
 msgstr ""
 
-#: lvmcmdline.c:724
+#: lvmcmdline.c:726
 msgid "Available lvm commands:"
 msgstr ""
 
-#: lvmcmdline.c:725
+#: lvmcmdline.c:727
 msgid "Use 'lvm help <command>' for more information"
 msgstr ""
 
-#: lvmcmdline.c:731
+#: lvmcmdline.c:733
 #, c-format
 msgid "%-16.16s%s"
 msgstr ""
 
-#: lvmcmdline.c:795
+#: lvmcmdline.c:797
 msgid "Couldn't copy command line."
 msgstr ""
 
-#: lvmcmdline.c:808
+#: lvmcmdline.c:810
 #, c-format
 msgid "Processing: %s"
 msgstr ""
 
-#: lvmcmdline.c:814
+#: lvmcmdline.c:816
 msgid "Error during parsing of command line."
 msgstr ""
 
-#: lvmcmdline.c:823
+#: lvmcmdline.c:825
 msgid "Updated config file invalid. Aborting."
 msgstr ""
 
-#: lvmcmdline.c:842
+#: lvmcmdline.c:844
 #, c-format
 msgid "Locking type %d initialisation failed."
 msgstr ""
 
-#: lvmcmdline.c:854
+#: lvmcmdline.c:856
 msgid "Test mode: Wiping internal cache"
 msgstr ""
 
-#: lvmcmdline.c:912
+#: lvmcmdline.c:914
 msgid "WARNING: Metadata changes will NOT be backed up"
 msgstr ""
 
-#: lvmcmdline.c:932
+#: lvmcmdline.c:934
 #, c-format
 msgid "Couldn't create default archive path '%s/%s'."
 msgstr ""
 
-#: lvmcmdline.c:941 lvmcmdline.c:961
+#: lvmcmdline.c:943 lvmcmdline.c:963
 msgid "backup_init failed."
 msgstr ""
 
-#: lvmcmdline.c:953
+#: lvmcmdline.c:955
 #, c-format
 msgid "Couldn't create default backup path '%s/%s'."
 msgstr ""
 
-#: lvmcmdline.c:1027
+#: lvmcmdline.c:1029
 #, c-format
 msgid "Line too long (max 255) beginning: %s"
 msgstr ""
 
-#: lvmcmdline.c:1034
+#: lvmcmdline.c:1036
 #, c-format
 msgid "Too many arguments: %s"
 msgstr ""
 
-#: lvmcmdline.c:1166
+#: lvmcmdline.c:1168
 msgid "$HOME/.lvm_history: path too long"
 msgstr ""
 
-#: lvmcmdline.c:1181
+#: lvmcmdline.c:1183
 #, c-format
 msgid "Couldn't read history from %s."
 msgstr ""
 
-#: lvmcmdline.c:1196
+#: lvmcmdline.c:1198
 #, c-format
 msgid "Couldn't write history to %s."
 msgstr ""
 
-#: lvmcmdline.c:1229
+#: lvmcmdline.c:1231
 msgid "Too many arguments, sorry."
 msgstr ""
 
-#: lvmcmdline.c:1243
+#: lvmcmdline.c:1245
 msgid "Exiting."
 msgstr ""
 
-#: lvmcmdline.c:1249
+#: lvmcmdline.c:1251
 #, c-format
 msgid "No such command '%s'.  Try 'help'."
 msgstr ""
 
-#: lvmcmdline.c:1375
+#: lvmcmdline.c:1377
 msgid "Failed to create LVM1 tool pathname"
 msgstr ""
 
-#: lvmcmdline.c:1412
+#: lvmcmdline.c:1414
 msgid "Falling back to LVM1 tools, but no command specified."
 msgstr ""
 
-#: lvmcmdline.c:1428
+#: lvmcmdline.c:1430
 msgid "Please supply an LVM command."
 msgstr ""
 
-#: lvmcmdline.c:1442
+#: lvmcmdline.c:1444
 msgid "No such command.  Try 'help'."
 msgstr ""
 
@@ -3827,106 +3836,110 @@ msgstr ""
 msgid "Can't resize locked LV %s"
 msgstr ""
 
-#: lvresize.c:206
+#: lvresize.c:184
+msgid "Snapshot origin volumes cannot be resized yet."
+msgstr ""
+
+#: lvresize.c:211
 #, c-format
 msgid "Unable to reduce %s below 1 extent"
 msgstr ""
 
-#: lvresize.c:215
+#: lvresize.c:220
 msgid "New size of 0 not permitted"
 msgstr ""
 
-#: lvresize.c:220 lvresize.c:325
+#: lvresize.c:225 lvresize.c:330
 #, c-format
 msgid "New size (%d extents) matches existing size (%d extents)"
 msgstr ""
 
-#: lvresize.c:235
+#: lvresize.c:240
 #, c-format
 msgid "VolumeType does not match (%s)"
 msgstr ""
 
-#: lvresize.c:252
+#: lvresize.c:257
 msgid "Please specify number of stripes (-i) and stripesize (-I)"
 msgstr ""
 
-#: lvresize.c:266
+#: lvresize.c:271
 #, c-format
 msgid "Using stripesize of last segment %dKB"
 msgstr ""
 
-#: lvresize.c:285
+#: lvresize.c:290
 msgid "Ignoring stripes and stripesize arguments when reducing"
 msgstr ""
 
-#: lvresize.c:308
+#: lvresize.c:313
 msgid "Stripesize for striped segment should not be 0!"
 msgstr ""
 
-#: lvresize.c:317
+#: lvresize.c:322
 #, c-format
 msgid ""
 "Rounding size (%d extents) down to stripe boundary size for segment (%d "
 "extents)"
 msgstr ""
 
-#: lvresize.c:332
+#: lvresize.c:337
 #, c-format
 msgid "New size given (%d extents) not larger than existing size (%d extents)"
 msgstr ""
 
-#: lvresize.c:342
+#: lvresize.c:347
 #, c-format
 msgid "New size given (%d extents) not less than existing size (%d extents)"
 msgstr ""
 
-#: lvresize.c:352
+#: lvresize.c:357
 msgid "Ignoring PVs on command line when reducing"
 msgstr ""
 
-#: lvresize.c:363
+#: lvresize.c:368
 msgid "lv_info failed: aborting"
 msgstr ""
 
-#: lvresize.c:368
+#: lvresize.c:373
 #, c-format
 msgid "Logical volume %s must be activated before resizing filesystem"
 msgstr ""
 
-#: lvresize.c:374
+#: lvresize.c:379
 #, c-format
 msgid "WARNING: Reducing active%s logical volume to %s"
 msgstr ""
 
-#: lvresize.c:380
+#: lvresize.c:385
 msgid "THIS MAY DESTROY YOUR DATA (filesystem etc.)"
 msgstr ""
 
-#: lvresize.c:387
+#: lvresize.c:392
 #, c-format
 msgid "Logical volume %s NOT reduced"
 msgstr ""
 
-#: lvresize.c:398
+#: lvresize.c:403
 #, c-format
 msgid "Couldn't create LV path for %s"
 msgstr ""
 
-#: lvresize.c:406
+#: lvresize.c:411
 msgid "Couldn't generate new LV size string"
 msgstr ""
 
-#: lvresize.c:430
+#: lvresize.c:435
 #, c-format
 msgid "%sing logical volume %s to %s"
 msgstr ""
 
-#: lvresize.c:480
+#: lvresize.c:485
 #, c-format
 msgid "Logical volume %s successfully resized"
 msgstr ""
 
-#: lvresize.c:502
+#: lvresize.c:507
 #, c-format
 msgid "Finding volume group %s"
 msgstr ""
@@ -4572,7 +4585,7 @@ msgstr ""
 msgid "Unable to find volume group of \"%s\""
 msgstr ""
 
-#: pvchange.c:79
+#: pvchange.c:80
 #, c-format
 msgid "Unable to find \"%s\" in volume group \"%s\""
 msgstr ""
@@ -4686,115 +4699,139 @@ msgstr ""
 msgid "%d physical volume%s changed / %d physical volume%s not changed"
 msgstr ""
 
-#: pvcreate.c:31 pvremove.c:31
+#: pvcreate.c:33 pvremove.c:31
 #, c-format
 msgid "%s: Not LVM partition type: use -f to override"
 msgstr ""
 
-#: pvcreate.c:48
+#: pvcreate.c:45
 #, c-format
 msgid ""
 "Can't initialize physical volume \"%s\" of volume group \"%s\" without -ff"
 msgstr ""
 
-#: pvcreate.c:56
+#: pvcreate.c:53
 #, c-format
 msgid "%s: physical volume not initialized"
 msgstr ""
 
-#: pvcreate.c:61
+#: pvcreate.c:62 pvscan.c:126 vgscan.c:51
+msgid "Wiping cache of LVM-capable devices"
+msgstr ""
+
+#: pvcreate.c:64 pvscan.c:129 vgscan.c:54
+msgid "Wiping internal cache"
+msgstr ""
+
+#: pvcreate.c:68 pvcreate.c:157 pvremove.c:76 vgcreate.c:134 vgextend.c:40
+#: vgremove.c:83
+msgid "Can't get lock for orphan PVs"
+msgstr ""
+
+#: pvcreate.c:77
+#, c-format
+msgid "Device %s not found."
+msgstr ""
+
+#: pvcreate.c:88
+#, c-format
+msgid "Wiping software RAID md superblock on %s"
+msgstr ""
+
+#: pvcreate.c:90
+#, c-format
+msgid "Failed to wipe RAID md superblock on %s"
+msgstr ""
+
+#: pvcreate.c:97
 #, c-format
 msgid "WARNING: Forcing physical volume creation on %s%s%s%s"
 msgstr ""
 
-#: pvcreate.c:93
+#: pvcreate.c:129
 #, c-format
 msgid "uuid %s already in use on \"%s\""
 msgstr ""
 
-#: pvcreate.c:105
+#: pvcreate.c:141
 #, c-format
 msgid "Unable to read volume group from %s"
 msgstr ""
 
-#: pvcreate.c:111
+#: pvcreate.c:147
 #, c-format
 msgid "Can't find uuid %s in backup file %s"
 msgstr ""
 
-#: pvcreate.c:121 pvremove.c:76 vgcreate.c:134 vgextend.c:40 vgremove.c:86
-msgid "Can't get lock for orphan PVs"
-msgstr ""
-
-#: pvcreate.c:129
+#: pvcreate.c:165
 msgid "Physical volume size may not be negative"
 msgstr ""
 
-#: pvcreate.c:135 vgconvert.c:66
+#: pvcreate.c:171 vgconvert.c:66
 msgid "Metadata size may not be negative"
 msgstr ""
 
-#: pvcreate.c:152 pvremove.c:84
+#: pvcreate.c:188 pvremove.c:84
 #, c-format
 msgid "%s: Couldn't find device.  Check your filters?"
 msgstr ""
 
-#: pvcreate.c:161 vgconvert.c:125
+#: pvcreate.c:197 vgconvert.c:125
 #, c-format
 msgid "Failed to setup physical volume \"%s\""
 msgstr ""
 
-#: pvcreate.c:165 vgconvert.c:136
+#: pvcreate.c:201 vgconvert.c:136
 #, c-format
 msgid "Set up physical volume for \"%s\" with %llu available sectors"
 msgstr ""
 
-#: pvcreate.c:170 vgconvert.c:141
+#: pvcreate.c:206 vgconvert.c:141
 #, c-format
 msgid "Failed to wipe existing label on %s"
 msgstr ""
 
-#: pvcreate.c:174 vgconvert.c:148
+#: pvcreate.c:210 vgconvert.c:148
 #, c-format
 msgid "Writing physical volume data to disk \"%s\""
 msgstr ""
 
-#: pvcreate.c:178 vgconvert.c:153
+#: pvcreate.c:214 vgconvert.c:153
 #, c-format
 msgid "Failed to write physical volume \"%s\""
 msgstr ""
 
-#: pvcreate.c:182 vgconvert.c:159
+#: pvcreate.c:218 vgconvert.c:159
 #, c-format
 msgid "Physical volume \"%s\" successfully created"
 msgstr ""
 
-#: pvcreate.c:198 pvremove.c:112
+#: pvcreate.c:234 pvremove.c:112
 msgid "Please enter a physical volume path"
 msgstr ""
 
-#: pvcreate.c:203
+#: pvcreate.c:239
 msgid "--uuid is required with --restorefile"
 msgstr ""
 
-#: pvcreate.c:208
+#: pvcreate.c:244
 msgid "Can only set uuid on one volume at once"
 msgstr ""
 
-#: pvcreate.c:213 pvremove.c:117
+#: pvcreate.c:249 pvremove.c:117
 msgid "Option y can only be given with option f"
 msgstr ""
 
-#: pvcreate.c:218 vgconvert.c:203
+#: pvcreate.c:254 vgconvert.c:203
 #, c-format
 msgid "labelsector must be less than %lu"
 msgstr ""
 
-#: pvcreate.c:226 vgconvert.c:211
+#: pvcreate.c:262 vgconvert.c:211
 msgid "Metadata parameters only apply to text format"
 msgstr ""
 
-#: pvcreate.c:232 vgconvert.c:217
+#: pvcreate.c:268 vgconvert.c:217
 msgid "Metadatacopies may only be 0, 1 or 2"
 msgstr ""
 
@@ -4891,11 +4928,11 @@ msgstr ""
 msgid "Ignoring remaining command line arguments"
 msgstr ""
 
-#: pvmove.c:304
+#: pvmove.c:305
 msgid "ABORTING: Failed to generate list of moving LVs"
 msgstr ""
 
-#: pvmove.c:312
+#: pvmove.c:313
 msgid "ABORTING: Temporary mirror activation failed."
 msgstr ""
 
@@ -4989,14 +5026,6 @@ msgstr ""
 #: pvscan.c:122
 #, c-format
 msgid "WARNING: only considering physical volumes %s"
-msgstr ""
-
-#: pvscan.c:126 vgscan.c:51
-msgid "Wiping cache of LVM-capable devices"
-msgstr ""
-
-#: pvscan.c:129 vgscan.c:54
-msgid "Wiping internal cache"
 msgstr ""
 
 #: pvscan.c:132
@@ -5959,37 +5988,41 @@ msgstr ""
 msgid "Volume group \"%s\" is not reducible"
 msgstr ""
 
-#: vgremove.c:37
+#: vgremove.c:27
 #, c-format
-msgid "Cannot remove partial volume group \"%s\""
+msgid "Volume group \"%s\" not found or inconsistent."
 msgstr ""
 
-#: vgremove.c:43
+#: vgremove.c:29
+msgid "Consider vgreduce --removemissing if metadata is inconsistent."
+msgstr ""
+
+#: vgremove.c:40
 #, c-format
 msgid "Volume group \"%s\" still contains %d logical volume(s)"
 msgstr ""
 
-#: vgremove.c:52
+#: vgremove.c:49
 #, c-format
 msgid "vg_remove %s failed"
 msgstr ""
 
-#: vgremove.c:59
+#: vgremove.c:56
 #, c-format
 msgid "Removing physical volume \"%s\" from volume group \"%s\""
 msgstr ""
 
-#: vgremove.c:64
+#: vgremove.c:61
 #, c-format
 msgid "Failed to remove physical volume \"%s\" from volume group \"%s\""
 msgstr ""
 
-#: vgremove.c:74
+#: vgremove.c:71
 #, c-format
 msgid "Volume group \"%s\" successfully removed"
 msgstr ""
 
-#: vgremove.c:76
+#: vgremove.c:73
 #, c-format
 msgid "Volume group \"%s\" not properly removed"
 msgstr ""
