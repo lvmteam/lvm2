@@ -79,6 +79,7 @@ struct arg {
 	char short_arg;
 	char *long_arg;
 	int (*fn)(struct arg *a);
+
 	int count;
 	char *value;
 	uint32_t i_value;
