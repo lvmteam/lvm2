@@ -72,7 +72,7 @@ static void dmfs_parse_line(struct dm_table *t, unsigned num, char *str)
 		rv = ttype->ctr(t, start, size, p, &context);
 		msg = context;
 		if (rv == 0) {
-			printk(KERN_DEBUG "%ul %ul %s %s", start, size, 
+			printk("dmfs_parse: %ul %ul %s %s\n", start, size, 
 				ttype->name,
 				ttype->print ? ttype->print(context) : "-");
 			msg = "Error adding target to table";
@@ -183,7 +183,7 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 		}
 
 		index++;
-	} while(index != end_index);
+	} while(index <= end_index);
 
 	free_page(page);
 	if (dm_table_complete(t) == 0)
