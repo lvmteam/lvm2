@@ -478,7 +478,7 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	struct logical_volume *lv;
 	char dname[32];
 
-	if (vg->max_lv == vg->lv_count) {
+	if (vg->max_lv && (vg->max_lv == vg->lv_count)) {
 		log_error("Maximum number of logical volumes (%u) reached "
 			  "in volume group %s", vg->max_lv, vg->name);
 		return NULL;
