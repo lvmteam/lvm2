@@ -1,5 +1,5 @@
-Version 2.00.33 - 
-====================================
+Version 2.00.33 - 7th January 2005
+==================================
   pvcreate wipes first 4 sectors unless given --zero n.
   gulm clvmd now uses new ccsd key names.
   gulm clvmd now doesn't ignore the first node in cluster.conf
