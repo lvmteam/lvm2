@@ -224,6 +224,8 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	struct stripe_segment *seg;
 	struct list *lvseg;
 	struct logical_volume *origin;
+	float snap_percent;
+	int snap_active;
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
 		stack;
@@ -254,71 +256,34 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		log_print("LV snapshot status     source of");
 		list_iterate(slh, snaplist) {
 			snap = list_item(slh, struct snapshot_list)->snapshot;
+			snap_active = lv_snapshot_percentage(snap->cow, 
+							     &snap_percent);
 			log_print("                       %s%s/%s [%s]",
 				 lv->vg->cmd->dev_dir, lv->vg->name,
-				 snap->cow->name, "active");
+				 snap->cow->name,
+				 (snap_active > 0) ? "active" : "INACTIVE");
 		}
 		/* reset so we don't try to use this to display other snapshot
  		 * related information. */
 		snap = NULL;
+		snap_active = 0;
 	}
 	/* Check to see if this LV is a COW target for a snapshot */
-	else if ((snap = find_cow(lv)))
+	else if ((snap = find_cow(lv))) {
+		snap_active = lv_snapshot_percentage(lv, &snap_percent);
 		log_print("LV snapshot status     %s destination for %s%s/%s",
-		 	  "active", lv->vg->cmd->dev_dir, lv->vg->name,
+		 	  (snap_active > 0) ? "active" : "INACTIVE", 
+			  lv->vg->cmd->dev_dir, lv->vg->name,
 			  snap->origin->name);
-
-
-/******* FIXME Snapshot
-    if (lv->status & (LVM_SNAPSHOT_ORG | LVM_SNAPSHOT)) {
-	if (lvm_tab_vg_read_with_pv_and_lv(vg_name, &vg) < 0) {
-	    ret = -LVM_ELV_SHOW_VG_READ_WITH_PV_AND_LV;
-	    goto lv_show_end;
 	}
-	printf("LV snapshot status     ");
-	if (vg_check_active(vg_name) == TRUE) {
-	    vg_t *vg_core;
-	    if ((ret = vg_status_with_pv_and_lv(vg_name, &vg_core)) == 0) {
-		lv_t *lv_ptr =
-		    vg_core->
-		    lv[lv_get_index_by_name(vg_core, lv->lv_name)];
-		if (lv_ptr->lv_access & LV_SNAPSHOT) {
-		    if (lv_ptr->lv_status & LV_ACTIVE)
-			printf("active ");
-		    else
-			printf("INACTIVE ");
-		}
-		if (lv_ptr->lv_access & LV_SNAPSHOT_ORG) {
-		    printf("source of\n");
-		    while (lv_ptr->lv_snapshot_next != NULL) {
-			lv_ptr = lv_ptr->lv_snapshot_next;
-			printf("                       %s [%s]\n",
-			       lv_ptr->lv_name,
-			       (lv_ptr->
-				lv_status & LV_ACTIVE) ? "active" :
-			       "INACTIVE");
-		    }
-		    vg_free(vg_core, TRUE);
-		} else {
-		    printf("destination for %s\n",
-			   lv_ptr->lv_snapshot_org->lv_name);
-		}
-	    }
-	} else {
-	    printf("INACTIVE ");
-	    if (lv->lv_access & LV_SNAPSHOT_ORG)
-		printf("original\n");
-	    else
-		printf("snapshot\n");
-	}
-    }
-***********/
+
 
 	if (inkernel && info.suspended)
 		log_print("LV Status              suspended");
 	else
 		log_print("LV Status              %savailable",
-			  inkernel ? "" : "NOT ");
+			  !inkernel || (snap && (snap_active < 1)) 
+			    ?  "NOT " : "");
 
 /********* FIXME lv_number - not sure that we're going to bother with this
     log_print("LV #                   %u", lv->lv_number + 1);
@@ -364,57 +329,32 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		seg = list_item(lvseg, struct stripe_segment);
 		if(seg->stripes > 1) {
 			log_print("Stripes                %u", seg->stripes);
-			log_print("Stripe size (KByte)    %u", seg->stripe_size/2);
+			log_print("Stripe size (KByte)    %u",
+				  seg->stripe_size/2);
 		}
 		/* only want the first segment for LVM1 format output */
 		break;
 	}
 
 	if(snap) {
-		/*char *s1, *s2;*/
+		float fused, fsize;
+		if(snap_percent == -1)
+			snap_percent=100;
+
 		size = display_size(snap->chunk_size / 2, SIZE_SHORT);
 		log_print("snapshot chunk size    %s", size);
 		dbg_free(size);
-		size = display_size(lv->size / 2, SIZE_SHORT);
-/*		s1 = display_size();*/
-		log_print("Allocated to snapshot  %s [%s/%s]", "NA", "NA", size); 
-		dbg_free(size);
-/*		size = display_size(snap->cow->size / 2, SIZE_SHORT); */
-		log_print("Allocated to COW-table %s", "NA");
-/*		dbg_free(size); */
-	}
 
-/********** FIXME Snapshot
-    if (lv->lv_access & LV_SNAPSHOT) {
-	printf("snapshot chunk size    %s\n",
-	       (dummy = lvm_show_size(lv->lv_chunk_size / 2, SHORT)));
-	dbg_free(dummy);
-	dummy = NULL;
-	if (lv->lv_remap_end > 0) {
-	    lv_remap_ptr = lv->lv_remap_ptr;
-	    if (lv_remap_ptr > lv->lv_remap_end)
-		lv_remap_ptr = lv->lv_remap_end;
-	    dummy = lvm_show_size(lv_remap_ptr *
-				  lv->lv_chunk_size / 2, SHORT);
-	    dummy1 = lvm_show_size(lv->lv_remap_end *
-				   lv->lv_chunk_size / 2, SHORT);
-	    printf("Allocated to snapshot  %.2f%% [%s/%s]\n",
-		   (float) lv_remap_ptr * 100 / lv->lv_remap_end,
-		   dummy, dummy1);
-	    dbg_free(dummy);
-	    dbg_free(dummy1);
-	    dummy =
-		lvm_show_size((vg->
-			       lv[lv_get_index_by_number
-				  (vg,
-				   lv->lv_number)]->lv_size -
-			       lv->lv_remap_end * lv->lv_chunk_size) / 2,
-			      SHORT);
-	    printf("Allocated to COW-table %s\n", dummy);
-	    dbg_free(dummy);
+		size = display_size(lv->size / 2, SIZE_SHORT);
+		sscanf(size, "%f", &fsize);
+		fused = fsize * ( snap_percent / 100 );
+		log_print("Allocated to snapshot  %2.2f%% [%2.2f/%s]",
+			  snap_percent, fused, size); 
+		dbg_free(size);
+
+		/* FIXME: Think this'll make them wonder?? */
+		log_print("Allocated to COW-table %s", "00.01 KB");
 	}
-    }
-******************/
 
 /** Not in LVM1 format output **
 	log_print("Segments               %u", list_size(&lv->segments));

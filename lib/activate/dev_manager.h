@@ -27,6 +27,8 @@ void dev_manager_destroy(struct dev_manager *dm);
  */
 int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 		     struct dm_info *info);
+int dev_manager_get_snapshot_use(struct dev_manager *dm, 
+ 		                   struct logical_volume *lv, float *percent);
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);

@@ -329,6 +329,60 @@ static int _info(const char *name, const char *uuid, struct dm_info *info,
 	return 0;
 }
 
+static int _status_run(const char *name, const char *uuid, char **status,
+		       int *size)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	void *next = NULL;
+	unsigned long long start, length;
+	char *type = NULL;
+	char *params;
+
+	if (!(dmt = _setup_task(name, uuid, DM_DEVICE_STATUS))) {
+		stack;
+		return 0;
+	}
+
+	if (!dm_task_run(dmt)) {
+		stack;
+		goto out;
+	}
+
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length,
+					  &type, &params);
+		if(type) {
+		       snprintf(*status, *size, "%lld %lld %s %s\n",
+				start, length, type, params);
+		}
+		
+	} while (next);
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+
+static int _status(const char *name, const char *uuid, char **status,
+		   uint32_t *size)
+{
+	if (uuid && *uuid && _status_run(NULL, uuid, status, size)
+	    && *status) {
+		return 1;
+	}
+
+	if (name && _status_run(name, NULL, status, size)) {
+		return 1;
+	}
+	
+	return 0;
+}
+
+
 static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
 {
 	int r = 1;
@@ -727,6 +781,50 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	}
 
 	return 1;
+}
+
+int dev_manager_get_snapshot_use(struct dev_manager *dm, 
+ 		                 struct logical_volume *lv, float *percent)
+{
+	char *name, *status, *tmpstr;
+	uint32_t size = 127;
+
+	if(!(status = pool_alloc(dm->mem, sizeof(*status) * size+1))) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Build a name for the top layer.
+	 */
+	if(!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Try and get some info on this device.
+	 */
+	log_debug("Getting device status for %s", name);
+	if(!_status(name, lv->lvid.s, &status, &size)) {
+	       stack;
+	       return 0;
+	}
+
+	/* If the snapshot isn't available, percent will be -1 */
+	*percent = -1;
+
+	/* FIXME: is there a simpler way to do this? */
+	tmpstr = strstr(status, "snapshot");
+	if(!tmpstr) 
+		return 0;
+	
+	tmpstr = strstr(tmpstr, " ");
+	if(!tmpstr)
+		return 0;
+
+	return sscanf(tmpstr, "%f", percent);
+
 }
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,

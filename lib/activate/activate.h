@@ -16,6 +16,10 @@ int library_version(char *version, size_t size);
  * Returns 1 if info structure has been populated, else 0.
  */
 int lv_info(struct logical_volume *lv, struct dm_info *info);
+/*
+ * Returns 1 if percent has been set, else 0.
+ */
+int lv_snapshot_percentage(struct logical_volume *lv, float *percent);
 
 /*
  * These should eventually use config file
