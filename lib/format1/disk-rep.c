@@ -400,6 +400,12 @@ static int _write_all_pv(struct disk_list *data)
 		return 0;
 	}
 
+	/*
+	 * Stop here for orphan pv's.
+	 */
+	if (data->pv.vg_name[0] == '\0')
+		return 1;
+
 	if (!_write_vg(data)) {
 		log_err("failed to write vg data to %s", pv_name);
 		return 0;

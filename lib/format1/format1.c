@@ -314,8 +314,47 @@ static int _pv_setup(struct io_space *is, struct physical_volume *pv,
 
 static int _pv_write(struct io_space *is, struct physical_volume *pv)
 {
-	log_err("format1:pv_write not implemented.");
+	struct pool *mem;
+	struct disk_list *dl;
+	struct list_head pvs;
+
+	INIT_LIST_HEAD(&pvs);
+
+	if (pv->vg_name) {
+		log_info("pv_write should only be called for an orphan pv");
+		return 0;
+	}
+
+	if (!(mem = pool_create(1024))) {
+		stack;
+		return 0;
+	}
+
+
+	if (!(dl = pool_alloc(mem, sizeof(*dl)))) {
+		stack;
+		return 0;
+	}
+	dl->mem = mem;
+	dl->dev = pv->dev;
+
+	if (!export_pv(&dl->pv, pv)) {
+		stack;
+		goto bad;
+	}
+
+	list_add(&dl->list, &pvs);
+	if (!write_pvs(&pvs)) {
+		stack;
+		goto bad;
+	}
+
+	pool_destroy(mem);
 	return 1;
+
+ bad:
+	pool_destroy(mem);
+	return 0;
 }
 
 
