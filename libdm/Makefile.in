@@ -1,0 +1,24 @@
+#
+# Copyright (C) 2001 Sistina Software (UK) Limited.
+#
+# This file is released under the LGPL.
+#
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+
+SOURCES=libdevmapper.c
+
+TARGETS=libdevmapper.so
+
+include ../make.tmpl
+
+install: libdevmapper.so
+	$(INSTALL) -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) libdevmapper.so \
+		$(libdir)
+	$(INSTALL) -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
+		$(includedir)
+
+.PHONY: install 
+
