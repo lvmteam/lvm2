@@ -1,0 +1,20 @@
+#
+# Copyright (C) 2001 Sistina Software (UK) Limited
+#
+# This file is released under the GPL.
+#
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+
+SOURCES=\
+	./dbg_malloc_t.c
+
+TARGETS=dbg_malloc_t
+
+include ../../make.tmpl
+
+dbg_malloc_t: dbg_malloc_t.o
+	gcc $(CFLAGS) -o dbg_malloc_t dbg_malloc_t.o -L../../lib -llvm
+
