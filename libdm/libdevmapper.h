@@ -65,17 +65,18 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid);
 struct dm_info {
 	int exists;
 	int suspended;
-	unsigned int open_count;
-	int major;
-	int minor;		/* minor device number */
+	int32_t open_count;
+	uint32_t major;
+	uint32_t minor;		/* minor device number */
 	int read_only;		/* 0:read-write; 1:read-only */
 
-	unsigned int target_count;
+	int32_t target_count;
 };
 
 struct dm_deps {
-	unsigned int count;
-	__kernel_dev_t device[0];
+	uint32_t count;
+	uint32_t filler;
+	uint64_t device[0];
 };
 
 int dm_get_library_version(char *version, size_t size);

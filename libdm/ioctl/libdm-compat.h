@@ -27,8 +27,8 @@ struct dm_ioctl_v1 {
 	uint32_t data_start;	/* offset to start of data
 				 * relative to start of this struct */
 
-	uint32_t target_count;	/* in/out */
-	uint32_t open_count;	/* out */
+	int32_t target_count;	/* in/out */
+	int32_t open_count;	/* out */
 	uint32_t flags;		/* in/out */
 
 	__kernel_dev_t dev;	/* in/out */
