@@ -122,6 +122,8 @@
  * for the LV. Could also use poll() for this kind of thing.
  */
 
+#include "dm.h"
+
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
 
@@ -130,8 +132,12 @@
 const char *_name = "device-mapper";
 int _version[3] = {1, 0, 0};
 
+#define rl down_read(&_dev_lock)
+#define ru up_read(&_dev_lock)
+#define wl down_write(&_dev_lock)
+#define wu up_read(&_dev_lock)
+
 struct rw_semaphore _dev_lock;
-static int _dev_count = 0;
 static struct mapped_device *_devs[MAX_DEVICES];
 
 /* block device arrays */
@@ -150,7 +156,6 @@ static struct block_device_operations _blk_dops = {
 	ioctl:    _blk_ioctl
 };
 
-static struct mapped_device *_build_map(struct device_table *t);
 static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh);
 
 /*
@@ -169,16 +174,8 @@ static int _init(void)
 	blksize_size[MAJOR_NR] = _blksize_size;
 	hardsect_size[MAJOR_NR] = _hardsect_size;
 
-	if (register_chrdev(DM_CTL_MAJOR, _name, &_ctl_fops) < 0) {
-		printk(KERN_ERR "%s - register_chrdev failed\n", _name);
-		return -EIO;
-	}
-
 	if (register_blkdev(MAJOR_NR, _name, &_blk_dops) < 0) {
 		printk(KERN_ERR "%s -- register_blkdev failed\n", _name);
-		if (unregister_chrdev(DM_CTL_MAJOR, _name) < 0)
-			printk(KERN_ERR "%s - unregister_chrdev failed\n",
-			       _name);
 		return -EIO;
 	}
 
@@ -191,9 +188,6 @@ static int _init(void)
 
 static void _fin(void)
 {
-	if (unregister_chrdev(DM_CTL_MAJOR, _name) < 0)
-		printk(KERN_ERR "%s - unregister_chrdev failed\n", _name);
-
 	if (unregister_blkdev(MAJOR_NR, _name) < 0)
 		printk(KERN_ERR "%s -- unregister_blkdev failed\n", _name);
 
@@ -212,43 +206,44 @@ static void _fin(void)
 static int _blk_open(struct inode *inode, struct file *file)
 {
 	int minor = MINOR(inode->i_rdev);
-	struct mapped_device *md = _devices + minor;
+	struct mapped_device *md;
 
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
 
-	spin_lock(&md->lock);
+	wl;
+	md = _devs[minor];
 
-	if (!md->in_use) {
-		spin_unlock(&md->lock);
+	if (!md || !is_active(md)) {
+		wu;
 		return -ENXIO;
 	}
 
-	md->in_use++;
-	spin_unlock(&md->lock);
+	md->use_count++;
+	wu;
 
-	MOD_INC_USE_COUNT; /* isn't this done by blk layer ? it should be */
+	MOD_INC_USE_COUNT;
 	return 0;
 }
 
 static int _blk_close(struct inode *inode, struct file *file)
 {
 	int minor = MINOR(inode->i_rdev);
-	struct mapped_device *md = _devices + minor;
+	struct mapped_device *md;
 
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
 
-	spin_lock(&md->lock);
-
-	if (md->in_use <= 1) {
+	wl;
+	md = _devs[minor];
+	if (!md || md->use_count <= 1) {
 		WARN("reference count in mapped_device incorrect");
-		spin_unlock(&md->lock);
+		wu;
 		return -ENXIO;
 	}
 
-	md->in_use--;
-	spin_unlock(&md->lock);
+	md->use_count--;
+	wu;
 
 	MOD_DEC_USE_COUNT;
 	return 0;
@@ -313,7 +308,7 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh)
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
 
-	down_read(&_dev_lock);
+	rl;
 	md = _devs[minor];
 
 	if (!md) {
@@ -341,7 +336,7 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh)
 		buffer_IO_error(bh);
 
  out:
-	up_read(&md->lock);
+	ru;
 	return ret;
 }
 
@@ -371,36 +366,35 @@ static inline int __any_old_dev(void)
 
 static struct mapped_device *_alloc_dev(int minor)
 {
-	int i;
 	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
 
-	down_write(&_dev_lock);
+	wl;
 	minor = (minor < 0) ? __any_old_dev() : __specific_dev(minor);
 
 	if (minor < 0) {
 		WARN("no free devices available");
-		up_write(&_dev_lock);
+		wu;
 		kfree(md);
 		return 0;
 	}
 
 	md->dev = MKDEV(DM_BLK_MAJOR, minor);
 	md->name[0] = '\0';
-	clear_bit(md->status, DM_CREATED);
+	md->state = 0;
 
 	_devs[minor] = md;
-	up_write(&_dev_lock);
+	wu;
 
-	return *d;
+	return md;
 }
 
 static void _free_dev(struct mapped_device *md)
 {
-	int i, minor = MINOR(md->dev);
+	int minor = MINOR(md->dev);
 
-	down_write(&_dev_lock);
-	_devs[i] = 0;
-	up_write(&_dev_lock);
+	wl;
+	_devs[minor] = 0;
+	wu;
 
 	kfree(md);
 }
@@ -415,13 +409,35 @@ static inline struct mapped_device *__find_name(const char *name)
 	return 0;
 }
 
+static int _open_dev(struct dev_list *d)
+{
+	int err;
+
+	if (!(d->bd = bdget(kdev_t_to_nr(d->dev))))
+		return -ENOMEM;
+
+	if ((err = blkdev_get(d->bd, FMODE_READ|FMODE_WRITE, 0, BDEV_FILE))) {
+		bdput(d->bd);
+		return err;
+	}
+
+	return 0;
+}
+
+static void _close_dev(struct dev_list *d)
+{
+	blkdev_put(d->bd, BDEV_FILE);
+	bdput(d->bd);
+	d->bd = 0;
+}
+
 struct mapped_device *dm_find_name(const char *name)
 {
 	struct mapped_device *md;
 
-	down_read(&_dev_lock);
+	rl;
 	md = __find_name(name);
-	up_read(&_dev_lock);
+	ru;
 
 	return md;
 }
@@ -430,9 +446,9 @@ struct mapped_device *dm_find_minor(int minor)
 {
 	struct mapped_device *md;
 
-	down_read(&_dev_lock);
+	rl;
 	md = _devs[minor];
-	up_read(&_dev_lock);
+	ru;
 
 	return md;
 }
@@ -447,28 +463,29 @@ int dm_create(int minor, const char *name)
 	if (!(md = _alloc_dev(minor)))
 		return -ENOMEM;
 
-	down_write(&_dev_lock);
-	if (__find_dev(name)) {
+	wl;
+	if (__find_name(name)) {
 		WARN("device with that name already exists");
-		up_write(&_dev_lock);
+		wu;
 		_free_dev(md);
 		return -EINVAL;
 	}
 
 	strcpy(md->name, name);
 	_devs[minor] = md;
-	up_write(&_dev_lock);
+	wu;
+
+	return 0;
 }
 
 int dm_remove(const char *name, int minor)
 {
 	struct mapped_device *md;
-	int minor;
 	struct dev_list *d, *n;
 
-	down_write(&_dev_lock);
-	if (!(md = __find_dev(name))) {
-		up_write(&_dev_lock);
+	wl;
+	if (!(md = __find_name(name))) {
+		wu;
 		return -ENXIO;
 	}
 
@@ -481,13 +498,14 @@ int dm_remove(const char *name, int minor)
 	minor = MINOR(md->dev);
 	_free_dev(md);
 	_devs[minor] = 0;
-	up_write(&_dev_lock);
+	wu;
+
 	return 0;
 }
 
 int dm_add_device(struct mapped_device *md, kdev_t dev)
 {
-	struct dev_list *d = kmalloc(sizeof(*d));
+	struct dev_list *d = kmalloc(sizeof(*d), GFP_KERNEL);
 
 	if (!d)
 		return 0;
@@ -495,6 +513,7 @@ int dm_add_device(struct mapped_device *md, kdev_t dev)
 	d->dev = dev;
 	d->next = md->devices;
 	md->devices = d;
+
 	return 1;
 }
 
@@ -506,10 +525,12 @@ int dm_activate(struct mapped_device *md)
 	if (is_active(md))
 		return 1;
 
+	rl;
 	/* open all the devices */
 	for (d = md->devices; d; d = d->next)
-		if ((ret = _open_dev(d->dev)))
+		if ((ret = _open_dev(d)))
 			goto bad;
+	ru;
 
 	return 0;
 
@@ -517,7 +538,8 @@ int dm_activate(struct mapped_device *md)
 
 	od = d;
 	for (d = md->devices; d != od; d = d->next)
-		_close_dev(d->dev);
+		_close_dev(d);
+	ru;
 
 	return ret;
 }
@@ -530,7 +552,7 @@ void dm_suspend(struct mapped_device *md)
 
 	/* close all the devices */
 	for (d = md->devices; d; d = d->next)
-		_close_dev(d->dev));
+		_close_dev(d);
 
 	set_active(md, 0);
 }
