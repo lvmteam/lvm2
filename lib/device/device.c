@@ -20,8 +20,24 @@
 #include "filter.h"
 #include "xlate.h"
 
+/* See linux/genhd.h and fs/partitions/msdos */
+
 #define PART_MAGIC 0xAA55
-#define PART_OFFSET UINT64_C(510)
+#define PART_MAGIC_OFFSET UINT64_C(0x1FE)
+#define PART_OFFSET UINT64_C(0x1BE)
+
+struct partition {
+        uint8_t boot_ind;
+        uint8_t head;
+        uint8_t sector;
+        uint8_t cyl;
+        uint8_t sys_ind;	/* partition type */
+        uint8_t end_head;
+        uint8_t end_sector;
+        uint8_t end_cyl;
+        uint32_t start_sect;
+        uint32_t nr_sects;
+} __attribute__((packed));
 
 static int _is_partitionable(struct device *dev)
 {
@@ -36,17 +52,40 @@ static int _is_partitionable(struct device *dev)
 static int _has_partition_table(struct device *dev)
 {
 	int ret = 0;
-	uint16_t part_magic;
+	unsigned p;
+	uint8_t buf[SECTOR_SIZE];
+	uint16_t *part_magic;
+	struct partition *part;
 
 	if (!dev_open(dev)) {
 		stack;
 		return -1;
 	}
 
-	if (dev_read(dev, PART_OFFSET, sizeof(part_magic), &part_magic) &&
-	    (part_magic == xlate16(PART_MAGIC)))
-		ret = 1;
+	if (!dev_read(dev, 0, sizeof(buf), &buf)) {
+		stack;
+		goto out;
+	}
 
+	/* FIXME Check for other types of partition table too */
+
+	/* Check for msdos partition table */
+	part_magic = (uint16_t *)(buf + PART_MAGIC_OFFSET);
+	if ((*part_magic == xlate16(PART_MAGIC))) {
+		part = (struct partition *) (buf + PART_OFFSET);
+		for (p = 0; p < 4; p++, part++) {
+			/* Table is invalid if boot indicator not 0 or 0x80 */
+			if ((part->boot_ind & 0x7f)) {
+				ret = 0;
+				break;
+			}
+			/* Must have at least one non-empty partition */
+			if (part->nr_sects)
+				ret = 1;
+		}
+	}
+
+      out:
 	if (!dev_close(dev))
 		stack;
 

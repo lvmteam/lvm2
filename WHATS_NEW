@@ -1,5 +1,6 @@
 Version 2.00.32 - 
 ====================================
+  Cope with empty msdos partition tables.
 
 Version 2.00.31 - 12th December 2004
 ====================================
