@@ -25,5 +25,7 @@ struct dev_filter *lvm_type_filter_create();
 
 void lvm_type_filter_destroy(struct dev_filter *f);
 
+int md_major(void);
+
 #endif
 
