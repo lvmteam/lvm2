@@ -48,7 +48,9 @@ int _read(int fd, void *buf, size_t count)
 	int tot = 0;
 
 	while (tot < count) {
-		n = read(fd, buf, count - tot);
+		do
+			n = read(fd, buf, count - tot);
+		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 
 		if (n <= 0)
 			return tot ? tot : n;
@@ -87,7 +89,9 @@ int _write(int fd, const void *buf, size_t count)
 	int tot = 0;
 
 	while (tot < count) {
-		n = write(fd, buf, count - tot);
+		do
+			n = write(fd, buf, count - tot);
+		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 
 		if (n <= 0)
 			return tot ? tot : n;
