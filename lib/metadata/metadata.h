@@ -265,7 +265,7 @@ struct name_list {
 	char *name;
 };
 
-struct alloc_area {
+struct pe_range {
 	struct list list;
 	uint32_t start;		/* PEs */
 	uint32_t count;		/* PEs */
@@ -275,7 +275,7 @@ struct pv_list {
 	struct list list;
 	struct physical_volume *pv;
 	struct list *mdas;	/* Metadata areas */
-	struct list *alloc_areas;	/* Areas we may allocate from */
+	struct list *pe_ranges;	/* Ranges of PEs e.g. for allocation */
 };
 
 struct lv_list {

@@ -74,8 +74,8 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
  * Builds a list of pv's from the names in argv.  Used in
  * lvcreate/extend.
  */
-struct list *create_pv_list(struct pool *mem,
-			    struct volume_group *vg, int argc, char **argv);
+struct list *create_pv_list(struct pool *mem, struct volume_group *vg, int argc,
+			    char **argv, int allocatable_only);
 
 struct list *clone_pv_list(struct pool *mem, struct list *pvs);
 

@@ -146,7 +146,7 @@ int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
 		}
 		pl->pv = pvl->pv;
 		pvl->mdas = NULL;
-		pvl->alloc_areas = NULL;
+		pvl->pe_ranges = NULL;
 		list_add(pvs, &pvl->list);
 	}
 

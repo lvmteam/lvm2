@@ -92,7 +92,7 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 
 	if (argc) {
 		if (!(allocatable_pvs = create_pv_list(cmd->mem, vg, argc,
-						       argv))) {
+						       argv, 1))) {
 			stack;
 			return NULL;
 		}

@@ -351,7 +351,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		if (lp->argc)
 			log_print("Ignoring PVs on command line when reducing");
 	} else if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
-						     lp->argv) : &vg->pvs)) {
+						     lp->argv, 1) : &vg->pvs)) {
 		stack;
 		return ECMD_FAILED;
 	}
