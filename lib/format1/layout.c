@@ -103,9 +103,10 @@ int calculate_layout(struct disk_list *dl)
 
 /*
  * The number of extents that can fit on a disk is metadata format dependant.
+ * pe_start is any existing value for pe_start
  */
 int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
-			   uint32_t max_extent_count)
+			   uint32_t max_extent_count, uint64_t pe_start)
 {
 	struct pv_disk *pvd = dbg_malloc(sizeof(*pvd));
 	uint32_t end;
@@ -137,6 +138,9 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 		_calc_simple_layout(pvd);
 		end = ((pvd->pe_on_disk.base + pvd->pe_on_disk.size +
 			SECTOR_SIZE - 1) >> SECTOR_SHIFT);
+
+		if (pe_start && end < pe_start)
+			end = pe_start;
 
 		pvd->pe_start = _round_up(end, PE_ALIGN);
 

@@ -173,7 +173,7 @@ struct disk_list {
  */
 int calculate_layout(struct disk_list *dl);
 int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
-			   uint32_t max_extent_count);
+			   uint32_t max_extent_count, uint64_t pe_start);
 
 /*
  * Low level io routines which read/write
