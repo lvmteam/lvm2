@@ -36,6 +36,20 @@ int lv_is_cow(struct logical_volume *lv)
 	return 0;
 }
 
+struct snapshot *find_cow(struct volume_group *vg, struct logical_volume *lv)
+{
+	struct list *slh;
+	struct snapshot *s;
+
+	list_iterate (slh, &vg->snapshots) {
+		s = list_item(slh, struct snapshot_list)->snapshot;
+		if (s->cow == lv)
+			return s;
+	}
+
+	return NULL;
+}
+
 int vg_add_snapshot(struct volume_group *vg,
 		    struct logical_volume *origin,
 		    struct logical_volume *cow,
