@@ -1,3 +1,13 @@
+lvm2 (0.95.04cvs20020304) unstable; urgency=low
+
+  * CVS updated.
+  * Enhance init script; create devmapper control device, etc.
+  * Add dmsetup as a suggestion.
+  * Add /etc/lvm/lvm.conf conffile.
+  * Add undocumented(7) for the commands missing manpages.
+  
+ -- Andres Salomon <dilinger@mp3revolution.net>  Mon,  4 Mar 2002 04:51:26 -0500
+
 lvm2 (0.95.02cvs20020220) unstable; urgency=low
 
   * Initial Release.

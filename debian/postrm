@@ -20,7 +20,7 @@ set -e
 
 case "$1" in
 	purge|remove)
-	#	update-rc.d lvm2 remove >/dev/null
+		update-rc.d lvm2 remove >/dev/null
 	;;
 	upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 	;;
