@@ -22,7 +22,7 @@ struct parse_sp {		/* scratch pad for the parsing process */
 };
 
 
-static struct rx_node *_expr(struct parse_sp *ps, struct rx_node *l);
+static struct rx_node *_or_term(struct parse_sp *ps);
 
 
 /*
@@ -172,8 +172,8 @@ static int _get_token(struct parse_sp *ps)
 	return 1;
 }
 
-static struct rx_node *_create_node(struct pool *mem, int type,
-				    struct rx_node *l, struct rx_node *r)
+static struct rx_node *_node(struct pool *mem, int type,
+			     struct rx_node *l, struct rx_node *r)
 {
 	struct rx_node *n = pool_zalloc(mem, sizeof(*n));
 
@@ -197,7 +197,7 @@ static struct rx_node *_term(struct parse_sp *ps)
 
 	switch(ps->type) {
 	case 0:
-		if (!(n = _create_node(ps->mem, CHARSET, NULL, NULL))) {
+		if (!(n = _node(ps->mem, CHARSET, NULL, NULL))) {
 			stack;
 			return NULL;
 		}
@@ -208,7 +208,7 @@ static struct rx_node *_term(struct parse_sp *ps)
 
 	case '(':
 		_get_token(ps);           /* match '(' */
-		n = _expr(ps, 0);
+		n = _or_term(ps);
 		if(ps->type != ')') {
 			log_debug("missing ')' in regular expression");
 			return 0;
@@ -230,29 +230,33 @@ static struct rx_node *_closure_term(struct parse_sp *ps)
 	if(!(l = _term(ps)))
 		return NULL;
 
-	switch(ps->type) {
-	case '*':
-		n = _create_node(ps->mem, STAR, l, NULL);
-		break;
+	for (;;) {
+		switch(ps->type) {
+		case '*':
+			n = _node(ps->mem, STAR, l, NULL);
+			break;
 
-	case '+':
-		n = _create_node(ps->mem, PLUS, l, NULL);
-		break;
+		case '+':
+			n = _node(ps->mem, PLUS, l, NULL);
+			break;
 
-	case '?':
-		n = _create_node(ps->mem, QUEST, l, NULL);
-		break;
+		case '?':
+			n = _node(ps->mem, QUEST, l, NULL);
+			break;
 
-	default:
-		return l;
+		default:
+			return l;
+		}
+
+		if (!n) {
+			stack;
+			return NULL;
+		}
+
+		_get_token(ps);
+		l = n;
 	}
 
-	if (!n) {
-		stack;
-		return NULL;
-	}
-
-	_get_token(ps);
 	return n;
 }
 
@@ -264,95 +268,61 @@ static struct rx_node *_cat_term(struct parse_sp *ps)
 		return NULL;
 
 	if (ps->type == '|')
-		/* bail out */
 		return l;
 
-	/* catenate */
 	if (!(r = _cat_term(ps)))
 		return l;
 
-	if (!(n = _create_node(ps->mem, CAT, l, r))) {
+	if (!(n = _node(ps->mem, CAT, l, r)))
 		stack;
+
+	return n;
+}
+
+static struct rx_node *_or_term(struct parse_sp *ps)
+{
+	struct rx_node *l, *r, *n;
+
+	if (!(l = _cat_term(ps)))
+		return NULL;
+
+	if (ps->type != '|')
+		return l;
+
+	_get_token(ps);       /* match '|' */
+
+	if (!(r = _or_term(ps))) {
+		log_info("badly formed 'or' expression");
 		return NULL;
 	}
 
-	return n;
-}
-
-static struct rx_node *_expr(struct parse_sp *ps, struct rx_node *l)
-{
-	struct rx_node *n = 0;
-	while((ps->type >= 0) && (ps->type != ')')) {
-
-		if (!(n = _create_node(ps->mem, CAT, l, NULL))) {
-			stack;
-			return NULL;
-		}
-
-		switch(ps->type) {
-		case 0:
-		case '(':
-			/* implicit catenation */
-			if(!l)
-				n = _cat_term(ps);
-			else
-				n->right = _cat_term(ps);
-
-			break;
-
-		case '|':
-			/* 'or' */
-			if(!l) {
-				log_debug("badly formed '|' expression");
-				return 0;
-			}
-			n->type = OR;
-			_get_token(ps);       /* match '|' */
-			n->right = _cat_term(ps);
-			break;
-
-		default:
-			log_debug("unexpected token");
-			return 0;
-		}
-
-		if(!n) {
-			log_err("parse error in regex");
-			return NULL;
-		}
-
-		if((n->type != CHARSET) && !n->left) {
-			log_debug("badly formed regex");
-			ps->type = -1;
-			ps->cursor = ps->rx_end;
-			return 0;
-		}
-
-		l = n;
-	}
+	if (!(n = _node(ps->mem, OR, l, r)))
+		stack;
 
 	return n;
 }
 
-struct rx_node *rx_parse_tok(struct pool *mem, 
+struct rx_node *rx_parse_tok(struct pool *mem,
 			     const char *begin, const char *end)
 {
 	struct rx_node *r;
-	struct parse_sp *ps = pool_alloc(mem, sizeof(*ps));
+	struct parse_sp *ps = pool_zalloc(mem, sizeof(*ps));
 
 	if (!ps) {
 		stack;
 		return NULL;
 	}
 
-	memset(ps, 0, sizeof(*ps));
 	ps->mem = mem;
 	ps->charset = bitset_create(mem, 256);
 	ps->cursor = begin;
 	ps->rx_end = end;
 	_get_token(ps);               /* load the first token */
-	if (!(r = _expr(ps, NULL)))
+
+	if (!(r = _or_term(ps))) {
+		log_err("parse error in regex");
 		pool_free(mem, ps);
+	}
 
 	return r;
 }

@@ -169,7 +169,7 @@ static void _destroy(struct dev_filter *f)
 
 struct dev_filter *regex_filter_create(struct config_value *patterns)
 {
-	struct pool *mem = pool_create(256);
+	struct pool *mem = pool_create(10 * 1024);
 	struct rfilter *rf;
 	struct dev_filter *f;
 

@@ -8,8 +8,6 @@
 #include "pool.h"
 #include "log.h"
 
-#include <stdlib.h>
-
 struct node {
 	unsigned k;
 	struct node *l, *m, *r;
@@ -44,19 +42,16 @@ void *ttree_lookup(struct ttree *tt, unsigned *key)
 {
 	struct node **c = &tt->root;
 	int count = tt->klen;
-	unsigned int k;
 
 	while (*c && count) {
-		k = *key++;
+		c = _lookup_single(c, *key++);
 		count--;
-
-		c = _lookup_single(c, k);
 	}
 
 	return *c ? (*c)->data : NULL;
 }
 
-static struct node *_create_node(struct pool *mem, unsigned int k)
+static struct node *_node(struct pool *mem, unsigned int k)
 {
 	struct node *n = pool_zalloc(mem, sizeof(*n));
 
@@ -74,16 +69,15 @@ int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
 
 	while (*c && count) {
 		k = *key++;
-		count--;
-
 		c = _lookup_single(c, k);
+		count--;
 	}
 
 	if (!*c) {
 		count++;
 
 		while (count--) {
-			if (!(*c = _create_node(tt->mem, k))) {
+			if (!(*c = _node(tt->mem, k))) {
 				stack;
 				return 0;
 			}
