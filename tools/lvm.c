@@ -360,9 +360,7 @@ void usage(const char *name)
  * is no short argument then the index of the
  * argument in the the_args array is set as the
  * long opt value.  Yuck.  Of course this means we
- * can't have more than 'a' long arguments.  Since
- * we have only 1 ATM (--version) I think we can
- * live with this restriction.
+ * can't have more than 'a' long arguments.
  */
 static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 {
@@ -379,7 +377,10 @@ static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 		(*o)->name = a->long_arg + 2;
 		(*o)->has_arg = a->fn ? 1 : 0;
 		(*o)->flag = NULL;
-		(*o)->val = arg;
+		if (a->short_arg)
+			(*o)->val = a->short_arg;
+		else
+			(*o)->val = arg;
 		(*o)++;
 	}
 }
@@ -433,6 +434,9 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 	optarg = 0;
 	optind = 0;
 	while ((opt = getopt_long(*argc, *argv, str, opts, NULL)) >= 0) {
+
+		if (opt == '?')
+			return 0;
 
 		a = _find_arg(cmd->command, opt);
 
@@ -1146,5 +1150,7 @@ int main(int argc, char **argv)
 
       out:
 	_fin(cmd);
+	if (ret == ECMD_PROCESSED)
+		ret = 0;
 	return ret;
 }
