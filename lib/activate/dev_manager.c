@@ -12,6 +12,7 @@
 #include "lvm-string.h"
 #include "fs.h"
 #include "defaults.h"
+#include "toolcontext.h"
 
 #include <libdevmapper.h>
 #include <limits.h>
