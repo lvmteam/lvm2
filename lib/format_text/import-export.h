@@ -24,7 +24,7 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size);
 int read_flags(uint32_t *status, int type, struct config_value *cv);
 
 
-int text_vg_export(FILE *fp, struct volume_group *vg);
+int text_vg_export(FILE *fp, struct volume_group *vg, const char *desc);
 struct volume_group *text_vg_import(struct cmd_context *cmd, const char *file,
 				    struct uuid_map *um);
 

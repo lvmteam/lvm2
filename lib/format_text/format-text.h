@@ -12,18 +12,17 @@
 #include "uuid-map.h"
 
 /*
- * The archive format is used to maintain a set of metadata backup files
- * in an archive directory.
- * 'retain_days' is the minimum number of days that an archive file must 
- *               be held for.
- *
- * 'min_archives' is the minimum number of archives required to be kept
- *               for each volume group.
+ * The archive format is used to maintain a set of metadata
+ * backup files in an archive directory.  'retain_days' is the
+ * minimum number of days that an archive file must be held for.
+ * 'min_archives' is the minimum number of archives required to
+ * be kept for each volume group.
  */
 struct format_instance *archive_format_create(struct cmd_context *cmd,
-					     const char *dir,
-					     uint32_t retain_days,
-					     uint32_t min_archives);
+					      const char *dir,
+					      uint32_t retain_days,
+					      uint32_t min_archives,
+					      const char *desc);
 
 void backup_expire(struct format_instance *fi);
 
@@ -32,6 +31,7 @@ void backup_expire(struct format_instance *fi);
  */
 struct format_instance *text_format_create(struct cmd_context *cmd,
 					   const char *file,
-					   struct uuid_map *um);
+					   struct uuid_map *um,
+					   const char *desc);
 
 #endif

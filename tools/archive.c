@@ -59,15 +59,42 @@ void archive_enable(int flag)
 	_archive_params.enabled = flag;
 }
 
+static char *_build_desc(struct pool *mem, const char *line, int before)
+{
+	size_t len = strlen(line) + 32;
+	char *buffer;
+
+	if (!(buffer = pool_zalloc(mem, strlen(line) + 32))) {
+		stack;
+		return NULL;
+	}
+
+	if (snprintf(buffer, len,
+		     "Created %s executing '%s'",
+		     before ? "*before*" : "*after*", line) < 0) {
+		stack;
+		return NULL;
+	}
+
+	return buffer;
+}
+
 static int __archive(struct volume_group *vg)
 {
 	int r;
 	struct format_instance *archiver;
+	char *desc;
+
+	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 1))) {
+		stack;
+		return 0;
+	}
 
 	if (!(archiver = archive_format_create(vg->cmd,
-					      _archive_params.dir,
-					      _archive_params.keep_days,
-					      _archive_params.keep_number))) {
+					       _archive_params.dir,
+					       _archive_params.keep_days,
+					       _archive_params.keep_number,
+					       desc))) {
 		log_error("Couldn't create archiver object.");
 		return 0;
 	}
@@ -141,6 +168,12 @@ static int __backup(struct volume_group *vg)
 	int r;
 	struct format_instance *tf;
 	char name[PATH_MAX];
+	char *desc;
+
+	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 0))) {
+		stack;
+		return 0;
+	}
 
 	if (lvm_snprintf(name, sizeof(name), "%s/%s",
 			 _backup_params.dir, vg->name) < 0) {
@@ -151,7 +184,7 @@ static int __backup(struct volume_group *vg)
 
 	log_verbose("Creating volume group backup \"%s\"", name);
 
-	if (!(tf = text_format_create(vg->cmd, name, the_um))) {
+	if (!(tf = text_format_create(vg->cmd, name, the_um, desc))) {
 		stack;
 		return 0;
 	}
@@ -207,9 +240,9 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	struct volume_group *vg;
 	struct format_instance *tf;
 
-	if (!(tf = text_format_create(cmd, file, the_um))) {
+	if (!(tf = text_format_create(cmd, file, the_um, cmd->cmd_line))) {
 		log_error("Couldn't create text format object.");
-		return 0;
+		return NULL;
 	}
 
 	if (!(vg = tf->ops->vg_read(tf, vg_name)))
