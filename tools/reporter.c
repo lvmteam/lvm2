@@ -58,11 +58,13 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		       struct physical_volume *pv, void *handle)
 {
 	int consistent = 0;
+	int ret = ECMD_PROCESSED;
 
 	if (!lock_vol(cmd, pv->vg_name, LCK_VG_READ)) {
 		log_error("Can't lock %s: skipping", pv->vg_name);
 		return ECMD_FAILED;
 	}
+
 	if (!(vg = vg_read(cmd, pv->vg_name, &consistent))) {
 		log_error("Can't read %s: skipping", pv->vg_name);
 		unlock_vg(cmd, pv->vg_name);
@@ -70,11 +72,10 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (!report_object(handle, vg, NULL, pv, NULL))
-		return ECMD_FAILED;
+		ret = ECMD_FAILED;
 
 	unlock_vg(cmd, pv->vg_name);
-
-	return ECMD_PROCESSED;
+	return ret;
 }
 
 static int _report(struct cmd_context *cmd, int argc, char **argv,

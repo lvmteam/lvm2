@@ -1,5 +1,6 @@
 Version 2.00.16 - 
 =============================
+  Fix a pvs error path.
   xxchange -ae for exclusive activation.
   Don't return non-zero status if there aren't any volume groups.
   Add --alloc argument to tools.
