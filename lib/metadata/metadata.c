@@ -97,11 +97,26 @@ int _add_pv_to_vg(struct io_space *ios, struct volume_group *vg,
 	return 1;
 }
 
+int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
+	   char **pv_names)
+{
+	int i;
+
+	/* attach each pv */
+	for (i = 0; i < pv_count; i++)
+		if (!_add_pv_to_vg(ios, vg, pv_names[i])) {
+			log_error("Unable to add physical volume '%s' to "
+				  "volume group '%s'.", pv_names[i], vg->name);
+			return 0;
+		}
+
+	return 1;
+}
+
 struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
 			       uint64_t extent_size, int max_pv, int max_lv,
 			       int pv_count, char **pv_names)
 {
-	int i;
 	struct volume_group *vg;
 
 	if (!(vg = pool_alloc(ios->mem, sizeof (*vg)))) {
@@ -151,12 +166,8 @@ struct volume_group *vg_create(struct io_space *ios, const char *vg_name,
 	}
 
 	/* attach the pv's */
-	for (i = 0; i < pv_count; i++)
-		if (!_add_pv_to_vg(ios, vg, pv_names[i])) {
-			log_error("Unable to add physical volume '%s' to "
-				  "volume group '%s'.", pv_names[i], vg_name);
-			goto bad;
-		}
+	if (!vg_extend(ios, vg, pv_count, pv_names))
+		goto bad;
 
 	return vg;
 
