@@ -439,6 +439,7 @@ int init_lvm(void)
 
 	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
 	init_syslog(LOG_DAEMON);
+	init_debug(_LOG_ERR);
 
 	get_initial_state();
 
