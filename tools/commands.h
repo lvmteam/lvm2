@@ -451,7 +451,6 @@ xx(pvremove,
    "\t[-d|--debug]" "\n"
    "\t[-f[f]|--force [--force]] " "\n"
    "\t[-h|-?|--help] " "\n"
-   "\t[-y|--yes]" "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[-y|--yes]" "\n"
