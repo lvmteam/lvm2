@@ -1,6 +1,6 @@
-Version 2.00.28 - 26th November 2004
+Version 2.00.28 - 27th November 2004
 ====================================
-  Fix partition table signature detection.
+  Fix partition table & md signature detection.
   Minor configure/makefile tidy.
   Export version.h from tools for clvmd.
 
