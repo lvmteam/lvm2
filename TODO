@@ -29,5 +29,15 @@ stats
 snapshots
 pvmove
 
+before 2.1
+----------
 
-
+e2fsadm
+lvmdiskscan
+lvmsadc
+lvmsar
+pvdata
+vgexport
+vgimport
+vgsplit
+vgmknodes
