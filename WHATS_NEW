@@ -1,5 +1,6 @@
 Version 2.00.32 - 
 ====================================
+  Fix vgdisplay -s. Breaks (undocumented) lvs/pvs/vgs -s instead for now.
   Fix device reference counting on re-opens.
   Ignore sysfs symlinks when DT_UNKNOWN.
   Add clvmd init script for RHEL4.

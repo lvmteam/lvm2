@@ -654,7 +654,7 @@ xx(vgdisplay,
 
    activevolumegroups_ARG, aligned_ARG, colon_ARG, columns_ARG, disk_ARG,
    ignorelockingfailure_ARG, noheadings_ARG, nosuffix_ARG, options_ARG,
-   partial_ARG, separator_ARG, short_ARG, sort_ARG, unbuffered_ARG, units_ARG)
+   partial_ARG, short_ARG, separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
