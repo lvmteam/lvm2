@@ -1,4 +1,4 @@
-Version 2.01.02 - 
+Version 2.01.02 - 21st January 2005
 ===================================
   Update clvmd_init_rhel4: use lvm.static and don't load dlm.
   Fix some size_t printing.
