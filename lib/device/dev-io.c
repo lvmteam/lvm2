@@ -302,11 +302,14 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 			return 1;
 		}
 
-		if (dev->open_count)
-			log_debug("WARNING: %s already opened read-only",
+		if (dev->open_count) {
+			/* FIXME Ensure we never get here */
+			log_debug("WARNING: %s already opened read-only", 
 				  dev_name(dev));
-		else
-			dev_close_immediate(dev);
+			dev->open_count++;
+		}
+
+		dev_close_immediate(dev);
 	}
 
 	if (memlock())
@@ -342,7 +345,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		return 0;
 	}
 
-	dev->open_count = 1;
+	dev->open_count++;
 	dev->flags &= ~DEV_ACCESSED_W;
 	if ((flags & O_ACCMODE) == O_RDWR)
 		dev->flags |= DEV_OPENED_RW;
@@ -352,8 +355,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	if (!(dev->flags & DEV_REGULAR) &&
 	    ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev))) {
 		log_error("%s: fstat failed: Has device name changed?", name);
-		dev_close(dev);
-		dev->fd = -1;
+		dev_close_immediate(dev);
+		dev->open_count = 0;
 		return 0;
 	}
 
@@ -422,8 +425,11 @@ static int _dev_close(struct device *dev, int immediate)
 		dev_flush(dev);
 #endif
 
+	if (dev->open_count > 0)
+		dev->open_count--;
+
 	/* FIXME lookup device in cache to get vgname and see if it's locked? */
-	if (--dev->open_count < 1 && (immediate || !vgs_locked()))
+	if (immediate || (dev->open_count < 1 && !vgs_locked()))
 		_close(dev);
 
 	return 1;
@@ -455,8 +461,10 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
 	struct device_area where;
 
-	if (!dev->open_count)
+	if (!dev->open_count) {
+		stack;
 		return 0;
+	}
 
 	where.dev = dev;
 	where.start = offset;
@@ -474,8 +482,10 @@ int dev_append(struct device *dev, size_t len, void *buffer)
 {
 	int r;
 
-	if (!dev->open_count)
+	if (!dev->open_count) {
+		stack;
 		return 0;
+	}
 
 	r = dev_write(dev, dev->end, len, buffer);
 	dev->end += (uint64_t) len;
@@ -490,8 +500,10 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
 	struct device_area where;
 
-	if (!dev->open_count)
+	if (!dev->open_count) {
+		stack;
 		return 0;
+	}
 
 	where.dev = dev;
 	where.start = offset;
