@@ -51,7 +51,7 @@ static int vgchange_single(const char *vg_name)
 {
 	struct volume_group *vg;
 
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Unable to find volume group %s", vg_name);
 		return ECMD_FAILED;
 	}
@@ -112,7 +112,7 @@ void vgchange_available(struct volume_group *vg)
 				  &= ~ACTIVE;
 	}
 
-	if (!ios->vg_write(ios, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return;
 
 	if (available && (lv_open = activate_lvs_in_vg(vg)))
@@ -148,7 +148,7 @@ void vgchange_allocation(struct volume_group *vg)
 	else
 		vg->status &= ~EXTENDABLE_VG;
 
-	if (!ios->vg_write(ios, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return;
 
 	log_print("Volume group %s successfully changed", vg->name);
@@ -202,7 +202,7 @@ void vgchange_logicalvolume(struct volume_group *vg)
 
 	vg->max_lv = max_lv;
 
-	if (!ios->vg_write(ios, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return;
 
 	log_print("Volume group %s successfully changed", vg->name);

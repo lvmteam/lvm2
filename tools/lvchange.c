@@ -64,12 +64,12 @@ static int lvchange_single(char *lv_name)
 
 	/* FIXME Common code here - Add to a foreach? */
 	/* does VG exist? */
-	if (!(vg_name = extract_vgname(ios, lv_name))) {
+	if (!(vg_name = extract_vgname(fid, lv_name))) {
 		return ECMD_FAILED;
 	}
 
 	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -153,7 +153,7 @@ static int lvchange_permission(struct logical_volume *lv)
 	}
 
 	log_very_verbose("Updating logical volume %s on disk(s)", lv->name);
-	if (!ios->vg_write(ios, lv->vg))
+	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
 	log_very_verbose("Updating permissions for %s in kernel", lv->name);
@@ -189,7 +189,7 @@ static int lvchange_availability(struct logical_volume *lv)
 	}
 
 	log_very_verbose("Updating logical volume %s on disk(s)", lv->name);
-	if (!ios->vg_write(ios, lv->vg))
+	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
 	log_very_verbose("Updating %s in kernel", lv->name);
@@ -243,7 +243,7 @@ static int lvchange_contiguous(struct logical_volume *lv)
 
 	log_verbose("Updating logical volume %s on disk(s)", lv->name);
 
-	if (!ios->vg_write(ios, lv->vg))
+	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
 	return 1;
@@ -273,7 +273,7 @@ static int lvchange_readahead(struct logical_volume *lv)
 
 	log_verbose("Updating logical volume %s on disk(s)", lv->name);
 
-	if (!ios->vg_write(ios, lv->vg))
+	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
 	return 1;

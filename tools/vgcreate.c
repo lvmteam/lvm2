@@ -62,8 +62,8 @@ int vgcreate(int argc, char **argv)
 	}
 		
         /* Strip prefix if present */
-        if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
-                vg_name += strlen(ios->prefix);
+        if (!strncmp(vg_name, fid->cmd->dev_dir, strlen(fid->cmd->dev_dir)))
+                vg_name += strlen(fid->cmd->dev_dir);
 
         if (!is_valid_chars(vg_name)) {
                 log_error("New volume group name '%s' has invalid characters",
@@ -72,7 +72,7 @@ int vgcreate(int argc, char **argv)
         }
 
 	/* create the new vg */
-	if (!(vg = vg_create(ios, vg_name, extent_size, max_pv, max_lv, 
+	if (!(vg = vg_create(fid, vg_name, extent_size, max_pv, max_lv, 
 		       argc - 1, argv + 1)))
 		return ECMD_FAILED;
 
@@ -85,7 +85,7 @@ int vgcreate(int argc, char **argv)
 			  vg->max_pv);
 
 	/* store vg on disk(s) */
-	if (!ios->vg_write(ios, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
 	/* FIXME Create /dev/vg */

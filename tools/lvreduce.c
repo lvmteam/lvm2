@@ -61,7 +61,7 @@ int lvreduce(int argc, char **argv)
 	argv++;
 	argc--;
 
-	if (!(vg_name = extract_vgname(ios, lv_name))) {
+	if (!(vg_name = extract_vgname(fid, lv_name))) {
 		log_error("Please provide a volume group name");
 		return EINVALID_CMD_LINE;
 	}
@@ -71,7 +71,7 @@ int lvreduce(int argc, char **argv)
 
 	/* does VG exist? */
 	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -180,7 +180,7 @@ int lvreduce(int argc, char **argv)
 /********* FIXME Suspend lv  ***********/
 
 	/* store vg on disk(s) */
-	if (!ios->vg_write(ios, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
 	/* FIXME Ensure it always displays errors? */

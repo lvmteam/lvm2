@@ -49,7 +49,7 @@ int vgreduce(int argc, char **argv)
 	argc--;
 
 	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -114,13 +114,13 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 	*pv->vg_name = '\0';
 	vg->pv_count--;
 
-	if (!(ios->vg_write(ios, vg))) {
+	if (!(fid->ops->vg_write(fid, vg))) {
 		log_error("Removal of physical volume %s from %s failed",
 			  name, vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (!ios->pv_write(ios, pv)) {
+	if (!fid->ops->pv_write(fid, pv)) {
 		log_error("Failed to clear metadata from physical volume %s "
 			  "after removal from %s", name, vg->name);
 		return ECMD_FAILED;

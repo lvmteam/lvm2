@@ -9,6 +9,6 @@
 
 #include "metadata.h"
 
-struct filter_instance *create_lvm1_format(struct cmd_context *cmd);
+struct format_instance *create_lvm1_format(struct cmd_context *cmd);
 
 #endif

@@ -30,7 +30,7 @@ int vgscan(int argc, char **argv)
 	}
 
         log_verbose("Wiping cache of LVM-capable devices");
-        persistent_filter_wipe(ios->filter);
+        persistent_filter_wipe(fid->cmd->filter);
 
 	log_print("Reading all physical volumes (this may take a while...)");
 
@@ -42,7 +42,7 @@ static int vgscan_single(const char *vg_name)
 	struct volume_group *vg;
 
 	log_verbose("Checking for volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s not found", vg_name);
 		return ECMD_FAILED;
 	}
@@ -52,7 +52,7 @@ static int vgscan_single(const char *vg_name)
 
 	if (!(vg->status & ACTIVE)) {
 		vg->status |= ACTIVE;
-		if (!(ios->vg_write(ios, vg))) {
+		if (!(fid->ops->vg_write(fid, vg))) {
 			log_error("Failed to activate volume group %s",
 				  vg_name);
 			return ECMD_FAILED;

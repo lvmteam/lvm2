@@ -87,14 +87,14 @@ int lvcreate(int argc, char **argv)
 		
 	/* If VG not on command line, try -n arg and then environment */
 	if (!argc) {
-		if (!(vg_name = extract_vgname(ios, lv_name))) {
+		if (!(vg_name = extract_vgname(fid, lv_name))) {
 			log_error("Please provide a volume group name");
 			return EINVALID_CMD_LINE;
 		}
 	} else {
 		/* Ensure lv_name doesn't contain a different VG! */
 		if (strchr(lv_name, '/')) {
-			if (!(vg_name = extract_vgname(ios, lv_name)))
+			if (!(vg_name = extract_vgname(fid, lv_name)))
 				return EINVALID_CMD_LINE;
 			if (strcmp(vg_name, argv[0])) {
 				log_error("Inconsistent volume group names "
@@ -112,7 +112,7 @@ int lvcreate(int argc, char **argv)
 
 	/* does VG exist? */
 	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -131,7 +131,7 @@ int lvcreate(int argc, char **argv)
 
 	if (argc) {
 		/* Build up list of PVs */
-		if (!(pvh = pool_alloc(ios->mem, sizeof (struct list)))) {
+		if (!(pvh = pool_alloc(fid->cmd->mem, sizeof (struct list)))) {
 			log_error("pvh list allocation failed");
 			return ECMD_FAILED;
 		}
@@ -225,7 +225,7 @@ int lvcreate(int argc, char **argv)
 
 	log_verbose("Creating logical volume %s", lv_name);
 
-	if (!(lv = lv_create(ios, lv_name, status, stripes, stripesize, 
+	if (!(lv = lv_create(lv_name, status, stripes, stripesize, 
 			     extents, vg, pvh)))
 		return ECMD_FAILED;
 
@@ -235,7 +235,7 @@ int lvcreate(int argc, char **argv)
 	}
 
 	/* store vg on disk(s) */
-	if (!ios->vg_write(ios, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
 	if (!lv_activate(lv))
@@ -250,7 +250,7 @@ int lvcreate(int argc, char **argv)
 
 		log_verbose("Zeroing start of logical volume %s", lv_name);
 
-		/* FIXME get dev = dev_cache_get(lv_name, ios->filter); */
+		/* FIXME get dev = dev_cache_get(lv_name, fid->cmd->filter); */
 		/* FIXME Add fsync! */
 		if (!(dev_write(dev, 0, sizeof (buf), &buf) == sizeof (buf))) {
 			log_error("Initialisation of %s failed", dev_name(dev));

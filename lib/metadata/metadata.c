@@ -116,7 +116,7 @@ int vg_extend(struct format_instance *fi,
 	return 1;
 }
 
-const char *strip_prefix(const char *vg_name, const char *dev_dir)
+const char *strip_dir(const char *vg_name, const char *dev_dir)
 {
 	int len = strlen(dev_dir);
 	if (!strncmp(vg_name, dev_dir, len))

@@ -35,7 +35,7 @@ static int vgremove_single(const char *vg_name)
 	int ret = 0;
 
 	log_verbose("Checking for volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -64,7 +64,7 @@ static int vgremove_single(const char *vg_name)
 		log_verbose("Removing physical volume %s from volume group %s",
 			    dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';
-		if (!(ios->pv_write(ios, pv))) {
+		if (!(fid->ops->pv_write(fid, pv))) {
 			log_error("Failed to remove physical volume %s from "
 				  "volume group %s", dev_name(pv->dev), 
 				  vg_name);

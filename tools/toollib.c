@@ -104,7 +104,7 @@ int process_each_vg(int argc, char **argv,
 				ret_max = ret;
 	} else {
 		log_verbose("Finding all volume group(s)");
-		if (!(vgs_list = ios->get_vgs(ios))) {
+		if (!(vgs_list = fid->ops->get_vgs(fid))) {
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
@@ -165,16 +165,17 @@ int is_valid_chars(char *n)
 	return 1;
 }
 
-char *extract_vgname(struct io_space *ios, char *lv_name)
+char *extract_vgname(struct format_instance *fi, char *lv_name)
 { 
 	char *vg_name = lv_name;
 	char *st;
+	char *dev_dir = fi->cmd->dev_dir;
 
 	/* Path supplied? */
 	if (vg_name && strchr(vg_name, '/')) {
 		/* Strip prefix (optional) */
-		if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
-			vg_name += strlen(ios->prefix);
+		if (!strncmp(vg_name, dev_dir, strlen(dev_dir)))
+			vg_name += strlen(dev_dir);
 
 		/* Require exactly one slash */
 		/* FIXME But allow for consecutive slashes */
@@ -183,7 +184,7 @@ char *extract_vgname(struct io_space *ios, char *lv_name)
 			return 0;
 		}
 
-		vg_name = pool_strdup(ios->mem, vg_name);
+		vg_name = pool_strdup(fid->cmd->mem, vg_name);
 		if (!vg_name) {
 			log_error("Allocation of vg_name failed");
 			return 0;
@@ -193,7 +194,7 @@ char *extract_vgname(struct io_space *ios, char *lv_name)
 		return vg_name;
 	}
 
-	if (!(vg_name = default_vgname(ios))) {
+	if (!(vg_name = default_vgname(fid))) {
 		if (lv_name)
 			log_error("Path required for Logical Volume %s", lv_name);
 		return 0;
@@ -202,9 +203,10 @@ char *extract_vgname(struct io_space *ios, char *lv_name)
 	return vg_name;
 }
 
-char *default_vgname(struct io_space *ios)
+char *default_vgname(struct format_instance *fi)
 {
 	char *vg_path;
+	char *dev_dir = fi->cmd->dev_dir;
 
 	/* Take default VG from environment? */
 	vg_path = getenv("LVM_VG_NAME"); 
@@ -212,8 +214,8 @@ char *default_vgname(struct io_space *ios)
 		return 0;
 
 	/* Strip prefix (optional) */
-	if (!strncmp(vg_path, ios->prefix, strlen(ios->prefix)))
-		vg_path += strlen(ios->prefix);
+	if (!strncmp(vg_path, dev_dir, strlen(dev_dir)))
+		vg_path += strlen(dev_dir);
 
 	if (strchr(vg_path, '/')) {
 		log_error("Environment Volume Group in LVM_VG_NAME invalid: %s", 
@@ -221,6 +223,6 @@ char *default_vgname(struct io_space *ios)
 		return 0;
 	}
 
-	return pool_strdup(ios->mem, vg_path);
+	return pool_strdup(fid->cmd->mem, vg_path);
 }
 

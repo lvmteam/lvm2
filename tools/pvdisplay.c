@@ -38,7 +38,7 @@ int pvdisplay(int argc, char **argv)
                 log_very_verbose("Using physical volume(s) on command line");
 
 		for (; opt < argc; opt++) {
-			if (!(pv = ios->pv_read(ios, argv[opt]))) {
+			if (!(pv = fid->ops->pv_read(fid, argv[opt]))) {
                                 log_error("Failed to read physical volume %s",
                                           argv[opt]);
 				continue;
@@ -47,7 +47,7 @@ int pvdisplay(int argc, char **argv)
 		}
 	} else {
                 log_verbose("Scanning for physical volume names");
-                if (!(pvs = ios->get_pvs(ios)))
+                if (!(pvs = fid->ops->get_pvs(fid)))
                         return ECMD_FAILED;
 
                 list_iterate(pvh, pvs)

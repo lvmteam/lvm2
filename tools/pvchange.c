@@ -52,7 +52,7 @@ int pvchange(int argc, char **argv)
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
-			if (!(pv = ios->pv_read(ios, pv_name))) {
+			if (!(pv = fid->ops->pv_read(fid, pv_name))) {
 				log_error("Failed to read physical volume %s",
 					  pv_name);
 				continue;
@@ -62,7 +62,7 @@ int pvchange(int argc, char **argv)
 		}
 	} else {
 		log_verbose("Scanning for physical volume names");
-		if (!(pvs = ios->get_pvs(ios))) {
+		if (!(pvs = fid->ops->get_pvs(fid))) {
 			return ECMD_FAILED;
 		}
 
@@ -98,7 +98,7 @@ int pvchange_single(struct physical_volume *pv)
 	if (*pv->vg_name) {
 		log_verbose("Finding volume group of physical volume %s", 
 			    pv_name);
-		if (!(vg = ios->vg_read(ios, pv->vg_name))) {
+		if (!(vg = fid->ops->vg_read(fid, pv->vg_name))) {
 			log_error("Unable to find volume group of %s", pv_name);
 			return 0;
 		}
@@ -137,13 +137,13 @@ int pvchange_single(struct physical_volume *pv)
 
 	log_verbose("Updating physical volume %s", pv_name);
 	if (*pv->vg_name) {
-		if (!(ios->vg_write(ios,vg))) {
+		if (!(fid->ops->vg_write(fid,vg))) {
 			log_error("Failed to store physical volume %s in "
 				  "volume group %s", pv_name, vg->name);
 			return 0;
 		}
 	} else {
-		if (!(ios->pv_write(ios, pv))) {
+		if (!(fid->ops->pv_write(fid, pv))) {
 			log_error("Failed to store physical volume %s", 
 				  pv_name);
 			return 0;
