@@ -54,8 +54,6 @@ static struct config_node *_file(struct parser *p);
 static struct config_node *_section(struct parser *p);
 static struct config_value *_value(struct parser *p);
 static struct config_value *_type(struct parser *p);
-static void _parse_error(struct parser *p, const char *file, int line,
-			 const char *mess);
 static int _match_aux(struct parser *p, int t);
 static struct config_value *_create_value(struct parser *p);
 static struct config_node *_create_node(struct parser *p);
@@ -66,7 +64,7 @@ static int _tok_match(const char *str, const char *b, const char *e);
 
 #define match(t) do {\
    if (!_match_aux(p, (t))) {\
-      _parse_error(p, __FILE__, __LINE__, "unexpected token"); \
+	log_error("Parse error at line %d: unexpected token", p->line); \
       return 0;\
    } \
 } while(0);
@@ -349,16 +347,10 @@ static struct config_value *_type(struct parser *p) {
                 break;
 
         default:
-                _parse_error(p, __FILE__, __LINE__, "expected a value");
+		log_error("Parse error at line %d: expected a value", p->line);
                 return 0;
         }
         return v;
-}
-
-static void _parse_error(struct parser *p, const char *file, int line,
-			 const char *mess)
-{
-        plog(_LOG_ERR, file, line, "parse error at %d: %s", p->line, mess);
 }
 
 static int _match_aux(struct parser *p, int t)

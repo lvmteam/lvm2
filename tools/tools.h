@@ -38,6 +38,8 @@
 #include "display.h"
 #include "errors.h"
 #include "filter.h"
+#include "filter-composite.h"
+#include "filter-regex.h"
 #include "format1.h"
 #include "toollib.h"
 #include "activate.h"

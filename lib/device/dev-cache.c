@@ -238,6 +238,18 @@ void dev_cache_exit(void)
 int dev_cache_add_dir(const char *path)
 {
 	struct dir_list *dl;
+	struct stat st;
+
+	if (stat(path, &st)) {
+		log_error("Ignoring %s: %s", path, strerror(errno));
+		/* But don't fail */
+		return 1;
+	}
+
+	if (!S_ISDIR(st.st_mode)) {
+		log_error("Ignoring %s: Not a directory", path);
+		return 1;
+	}
 
 	if (!(dl = _alloc(sizeof(*dl) + strlen(path) + 1)))
 		return 0;

@@ -559,13 +559,74 @@ static void __init_log(struct config_file *cf)
 	if (log_file) {
 		/* set up the logging */
 		if (!(_log = fopen(log_file, "w")))
-			log_error("couldn't open log file %s\n", log_file);
+			log_error("Couldn't open log file %s", log_file);
 		else
 			init_log(_log);
 	}
 
 	_debug_level = find_config_int(cf->root, "log/level", '/', 0);
 	init_debug(_debug_level);
+}
+
+static int dev_cache_setup(void)
+{
+	struct config_node *cn;
+	struct config_value *cv;
+
+	if (!dev_cache_init()) {
+		stack;
+		return 0;
+	}
+
+	if (!(cn = find_config_node(_cf->root, "devices/scan", '/'))) {
+		if (!dev_cache_add_dir("/dev")) {
+			log_error("Failed to add /dev to internal "
+				  "device cache");
+			return 0;
+		}
+	}
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != CFG_STRING) {
+			log_error("Invalid string in config file: "
+				  "devices/scan");
+			return 0;
+		}
+	
+		if (!dev_cache_add_dir(cv->v.str)) {
+			log_error("Failed to add %s to internal device cache", 
+				  cv->v.str);
+			return 0;
+		}
+	} 
+		
+	return 1;
+}
+
+static struct dev_filter *filter_setup(void)
+{
+	struct config_node *cn;
+	struct dev_filter *f1, *f2, *f3, *f4;
+
+	if (!(f1 = lvm_type_filter_create()))
+		return 0;
+
+	if (!(cn = find_config_node(_cf->root, "devices/filter", '/'))) {
+		log_debug("devices/filter not found in config file");
+		return f1;
+	}
+
+	if (!(f2 = regex_filter_create(cn->v))) {
+		log_error("Failed to create regex device filter");
+		return f1;
+	}
+
+	if (!(f4 = composite_filter_create(2, f1, f2))) {
+		log_error("Failed to create composite device filter");
+		return f1;
+	}
+
+	return f4;
 }
 
 static int init(void)
@@ -593,25 +654,20 @@ static int init(void)
 	if (stat(e, &info) != -1) {
 		/* we've found a config file */
 		if (!read_config(_cf, e)) {
-			stack;
+			log_error("Failed to load config file %s", e);
 			goto out;
 		}
 
 		__init_log(_cf);
 	}
 
-	if (!dev_cache_init()) {
-		stack;
+
+	if (!dev_cache_setup()) {
 		goto out;
 	}
 
-	if (!dev_cache_add_dir("/dev")) {
-		log_error("Failed to add %s to internal device cache", prefix);
-		goto out;
-	}
-
-	if (!(_filter = config_filter_create())) {
-		/* Add scan & rejects from _cf->root */
+	if (!(_filter = filter_setup())) {
+		log_error("Failed to set up internal device filters");
 		goto out;
 	}
 
@@ -643,7 +699,7 @@ static void __fin_commands(void)
 static void fin(void)
 {
 	ios->destroy(ios);
-	config_filter_destroy(_filter);
+	lvm_type_filter_destroy(_filter);
 	dev_cache_exit();
 	destroy_config_file(_cf);
 	__fin_commands();

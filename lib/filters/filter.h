@@ -21,9 +21,9 @@
 #ifndef _LVM_FILTER_H
 #define _LVM_FILTER_H
 
-struct dev_filter *config_filter_create();
+struct dev_filter *lvm_type_filter_create();
 
-void config_filter_destroy(struct dev_filter *f);
+void lvm_type_filter_destroy(struct dev_filter *f);
 
 #endif
 
