@@ -172,7 +172,7 @@ static int _read_uuids(struct disk_list *data)
 			fail;
 
 		memcpy(ul->uuid, buffer, NAME_LEN);
-		ul->uuid[NAME_LEN] = '\0';
+		ul->uuid[NAME_LEN - 1] = '\0';
 
 		list_add(&data->uuids, &ul->list);
 
