@@ -190,7 +190,7 @@ static int _write_config(struct config_node *n, FILE * fp, int level)
 		return 1;
 
 	for (i = 0; i < l; i++)
-		space[i] = ' ';
+		space[i] = '\t';
 	space[i] = '\0';
 
 	while (n) {
@@ -306,7 +306,7 @@ static struct config_node *_section(struct parser *p)
 static struct config_value *_value(struct parser *p)
 {
 	/* '[' TYPE* ']' | TYPE */
-	struct config_value *h = 0, *l, *ll = 0;
+	struct config_value *h = NULL, *l, *ll = NULL;
 	if (p->t == TOK_ARRAY_B) {
 		match(TOK_ARRAY_B);
 		while (p->t != TOK_ARRAY_E) {
@@ -339,13 +339,13 @@ static struct config_value *_type(struct parser *p)
 	switch (p->t) {
 	case TOK_INT:
 		v->type = CFG_INT;
-		v->v.i = strtol(p->tb, 0, 0);	/* FIXME: check error */
+		v->v.i = strtol(p->tb, NULL, 0);	/* FIXME: check error */
 		match(TOK_INT);
 		break;
 
 	case TOK_FLOAT:
 		v->type = CFG_FLOAT;
-		v->v.r = strtod(p->tb, 0);	/* FIXME: check error */
+		v->v.r = strtod(p->tb, NULL);	/* FIXME: check error */
 		match(TOK_FLOAT);
 		break;
 
