@@ -253,7 +253,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		}
 
 		_out(f, "id = \"%s\"", buffer);
-		_out_hint(f, "device = %s", dev_name(pv->dev));
+		_out_hint(f, "device = \"%s\"", dev_name(pv->dev));
 		_nl(f);
 
 		if (!print_flags(pv->status, PV_FLAGS,
