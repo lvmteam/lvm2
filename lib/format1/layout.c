@@ -68,14 +68,14 @@ int _check_vg_limits(struct disk_list *dl)
 {
 	if (dl->vgd.lv_max > MAX_LV) {
 		log_error("MaxLogicalVolumes of %d exceeds format limit of %d "
-			  "for VG '%s'", dl->vgd.lv_max, MAX_LV - 1, 
+			  "for VG '%s'", dl->vgd.lv_max, MAX_LV - 1,
 			  dl->pvd.vg_name);
 		return 0;
 	}
 
 	if (dl->vgd.pv_max > MAX_PV) {
 		log_error("MaxPhysicalVolumes of %d exceeds format limit of %d "
-			  "for VG '%s'", dl->vgd.pv_max, MAX_PV - 1, 
+			  "for VG '%s'", dl->vgd.pv_max, MAX_PV - 1,
 			  dl->pvd.vg_name);
 		return 0;
 	}
