@@ -1,3 +1,10 @@
+lvm2 (0.95.04cvs20020306-1) unstable; urgency=low
+
+  * CVS updated.
+  * Convert from debian native package.
+
+ -- Andres Salomon <dilinger@mp3revolution.net>  Wed,  6 Mar 2002 00:43:21 -0500
+
 lvm2 (0.95.04cvs20020304) unstable; urgency=low
 
   * CVS updated.
