@@ -201,6 +201,8 @@ static struct physical_volume *_pv_read(struct io_space *is,
 	struct disk_list *dl;
 	struct device *dev;
 
+        log_very_verbose("Reading physical volume data %s from disk", name); 
+
 	if (!mem) {
 		stack;
 		return NULL;
