@@ -36,7 +36,7 @@ struct target_type *__get_target(const char *name)
 	return t;
 }
 
-struct target_type *dm_get_target(const char *name)
+struct target_type *dm_get_target_type(const char *name)
 {
 	struct target_type *t;
 
@@ -85,9 +85,9 @@ int dm_register_target(const char *name, dm_ctr_fn ctr,
  * io-err: always fails an io, useful for bringing
  * up LV's that have holes in them.
  */
-static int io_err_ctr(struct dm_table *t,
-		      offset_t b, offset_t l,
-		      const char *cb, const char *ce, void **result)
+static int io_err_ctr(struct dm_table *t, offset_t b, offset_t l,
+		      struct text_region *args, void **result,
+		      dm_error_fn fn, void *private)
 {
 	/* this takes no arguments */
 	*result = 0;
@@ -117,37 +117,44 @@ struct linear_c {
  * construct a linear mapping.
  * <dev_path> <offset>
  */
-static int linear_ctr(struct dm_table *t,
-		      offset_t b, offset_t l,
-		      const char *cb, const char *ce, void **result)
+static int linear_ctr(struct dm_table *t, offset_t b, offset_t l,
+		      struct text_region *args, void **result,
+		      dm_error_fn fn, void *private)
 {
 	struct linear_c *lc;
 	unsigned int start;
 	kdev_t dev;
 	int r;
 	char path[256];
-	const char *wb, *we;
+	struct text_region word;
 
-	if ((r = get_word(cb, ce, &wb, &we)))
-		return r;
-	cb = we;
+	if (!dm_get_word(args, &word)) {
+		fn("couldn't get device path", private);
+		return -EINVAL;
+	}
 
-	tok_cpy(path, sizeof(path) - 1, wb, we);
-	if ((r = dm_table_lookup_device(path, &dev)))
-		return r;
+	dm_txt_copy(path, sizeof(path) - 1, &word);
 
-	if ((r = get_number(&cb, ce, &start)))
+	if ((r = dm_table_lookup_device(path, &dev))) {
+		fn("no such device", private);
 		return r;
+	}
+
+	if (!dm_get_number(args, &start)) {
+		fn("destination start not given", private);
+		return -EINVAL;
+	}
 
 	if (!(lc = kmalloc(sizeof(lc), GFP_KERNEL))) {
-		WARN("couldn't allocate memory for linear context\n");
-		return -EINVAL;
+		fn("couldn't allocate memory for linear context\n", private);
+		return -ENOMEM;
 	}
 
 	lc->dev = dev;
 	lc->delta = (int) start - (int) b;
 
 	if ((r = dm_table_add_device(t, lc->dev))) {
+		fn("failed to add destination device to list", private);
 		kfree(lc);
 		return r;
 	}

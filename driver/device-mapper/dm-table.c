@@ -156,7 +156,8 @@ void dm_table_destroy(struct dm_table *t)
 	/* free the targets */
 	for (i = 0; i < t->num_targets; i++) {
 		struct target *tgt = &t->targets[i];
-		tgt->type->dtr(t, tgt->private);
+		if (tgt->private)
+			tgt->type->dtr(t, tgt->private);
 	}
 	vfree(t->targets);
 

@@ -36,12 +36,17 @@
 #define DM_BLK_MAJOR 124
 
 struct dm_table;
+struct text_region;
 typedef unsigned int offset_t;
+
+typedef void (*dm_error_fn)(const char *message, void *private);
 
 /* constructor, destructor and map fn types */
 typedef int (*dm_ctr_fn)(struct dm_table *t,
 			 offset_t b, offset_t l,
-			 const char *cb, const char *ce, void **result);
+			 struct text_region *args, void **result,
+			 dm_error_fn fn, void *private);
+
 typedef void (*dm_dtr_fn)(struct dm_table *t, void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
 

@@ -1,331 +1,528 @@
 /*
- * dm.c
+ * *very* heavily based on ramfs
  *
  * Copyright (C) 2001 Sistina Software
  *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2, or (at
- * your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU CC; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * This file is released under the GPL.
  */
 
-/*
- * procfs and devfs handling for device mapper
- *
- * Changelog
- *
- *     16/08/2001 - First version [Joe Thornber]
- */
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/pagemap.h>
+#include <linux/init.h>
+#include <linux/string.h>
+#include <linux/locks.h>
+#include <linux/file.h>
+
+#include <asm/uaccess.h>
 
 #include "dm.h"
 
-#include <linux/proc_fs.h>
-#include <linux/ctype.h>
+/* some random number */
+#define DM_MAGIC	0x211271
+
+const char *_mount_point = "/device-mapper";
+
+static struct super_operations dm_ops;
+static struct address_space_operations dm_aops;
+static struct file_operations dm_dir_operations;
+static struct file_operations dm_file_operations;
+static struct inode_operations dm_dir_inode_operations;
+
+struct vfsmount *_mnt;
+
+static int _unlink(struct inode *dir, struct dentry *dentry);
+
+#define NOT_A_TABLE ((struct dm_table *) 1)
 
 /*
- * /dev/device-mapper/control is the control char device used to
- * create/destroy mapping devices.
- *
- * When a mapping device called <name> is created it appears as
- * /dev/device-mapper/<name>.  In addition the interface to control the
- * mapping will appear in /proc/device-mapper/<name>.
+ * context for the line splitter and error function.
  */
+struct line_c {
+	unsigned int line_num;
+	loff_t next_read;
+	char data[MAX_TARGET_LINE];
+	int error;
 
-const char *_fs_dir = "device-mapper";
-const char *_control_name = "control";
-
-static struct proc_dir_entry *_proc_dir;
-static struct proc_dir_entry *_control;
-
-static devfs_handle_t _dev_dir;
-
-static int process_control(const char *b, const char *e, int minor,
-			   struct dm_table **map);
-static int process_table(const char *b, const char *e, int minor,
-			 struct dm_table **map);
-static int line_splitter(struct file *file, const char *buffer,
-			 unsigned long count, void *data);
-static int tok_cmp(const char *str, const char *b, const char *e);
-
-typedef int (*process_fn)(const char *b, const char *e, int minor,
-			  struct dm_table **map);
-
-struct pf_data {
-	process_fn fn;
-	int minor;
-	struct dm_table *map;
+	struct file *in;
+	struct file *out;
 };
 
-int dm_fs_init(void)
+/*
+ * Grabs lines one at a time from the table file.
+ */
+int extract_line(struct text_region *line, void *private)
 {
-	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
+	struct line_c *lc = (struct line_c *) private;
+	struct text_region text;
+	ssize_t n;
+	loff_t off = lc->next_read;
+	const char *read_begin;
 
-	if (!pfd)
+	n = lc->in->f_op->read(lc->in, lc->data, sizeof(lc->data), &off);
+
+	if (n <= 0)
 		return 0;
 
-	_dev_dir = devfs_mk_dir(0, _fs_dir, NULL);
+	read_begin = text.b = lc->data;
+	text.e = lc->data + n;
 
-	if (!(_proc_dir = create_proc_entry(_fs_dir, S_IFDIR, &proc_root)))
-		goto fail;
+	if (!dm_get_line(&text, line))
+		return 0;
 
-	if (!(_control = create_proc_entry(_control_name, S_IWUSR, _proc_dir)))
-		goto fail;
+	lc->line_num++;
+	lc->next_read += line->e - read_begin;
 
-	_control->write_proc = line_splitter;
-
-	pfd->fn = process_control;
-	pfd->minor = -1;
-	_control->data = pfd;
-
-	return 0;
-
- fail:
-	dm_fs_exit();
-	return -ENOMEM;
+	return 1;
 }
 
-void dm_fs_exit(void)
+static struct file *open_error_file(struct file *table)
 {
-	if (_control) {
-		remove_proc_entry(_control_name, _proc_dir);
-		_control = 0;
-	}
+	char *name;
+	struct file *f;
 
-	if (_proc_dir) {
-		remove_proc_entry(_fs_dir, &proc_root);
-		_proc_dir = 0;
-	}
+	/* FIXME: arbitrary size */
+	name = kmalloc(512, GFP_KERNEL);
 
-	if (_dev_dir)
-		devfs_unregister(_dev_dir);
+	if (!name)
+		return 0;
+
+	sprintf(name, "%s/%s/%s.err", _mount_point,
+		table->f_dentry->d_parent->d_name.name,
+		table->f_dentry->d_name.name);
+	f = filp_open(name, O_WRONLY|O_TRUNC|O_CREAT, 0);
+	kfree(name);
+
+	if (f)
+		f->f_dentry->d_inode->u.generic_ip = NOT_A_TABLE;
+
+	return f;
 }
 
-int dm_fs_add(struct mapped_device *md)
+static void close_error_file(struct file *out)
 {
-	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
+	fput(out);
+}
 
-	if (!pfd)
+static void parse_error(const char *message, void *private)
+{
+	char buffer[32];
+	struct line_c *lc = (struct line_c *) private;
+
+	if (!lc->error) {
+		lc->out = open_error_file(lc->in);
+		lc->error = 1;
+	}
+
+#define emit(b, l) lc->out->f_op->write(lc->out, (b), (l), &lc->out->f_pos)
+
+	emit(lc->in->f_dentry->d_name.name, lc->in->f_dentry->d_name.len);
+	sprintf(buffer, "(%d): ", lc->line_num);
+	emit(buffer, strlen(buffer));
+	emit(message, strlen(message));
+	emit("\n", 1);
+
+#undef emit
+}
+
+static int _release_file(struct inode *inode, struct file *f)
+{
+	/* FIXME: we should lock the inode to
+           prevent someone else opening it while
+           we are parsing */
+	struct line_c *lc;
+	struct dm_table *table = (struct dm_table *) inode->u.generic_ip;
+
+	/* noop for files without tables (.err files) */
+	if (table == NOT_A_TABLE)
+		return 0;
+
+	/* only bother parsing if it was open for a write */
+	if (!(f->f_mode & S_IWUGO))
+		return 0;
+
+	/* free off the old table */
+	if (table) {
+		dm_table_destroy(table);
+		inode->u.generic_ip = 0;
+	}
+
+	if (!(lc = kmalloc(sizeof(*lc), GFP_KERNEL)))
 		return -ENOMEM;
 
-	pfd->fn = process_table;
-	pfd->minor = MINOR(md->dev);
-	pfd->map = 0;
+	memset(lc, 0, sizeof(*lc));
+	lc->in = f;
 
-	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR,
-					_proc_dir))) {
-		kfree(pfd);
-		return -ENOMEM;
-	}
+	table = dm_parse(extract_line, lc, parse_error, lc);
 
-	md->pde->write_proc = line_splitter;
-	md->pde->data = pfd;
+	/* if there was an error we have to close
+           the .err file */
+	if (lc->out)
+		close_error_file(lc->out);
 
-	md->devfs_entry =
-		devfs_register(_dev_dir, md->name, DEVFS_FL_CURRENT_OWNER,
-			       MAJOR(md->dev), MINOR(md->dev),
-			       S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP,
-			       &dm_blk_dops, NULL);
-
-	if (!md->devfs_entry) {
-		kfree(pfd);
-		remove_proc_entry(md->name, _proc_dir);
-		md->pde = 0;
-		return -ENOMEM;
-	}
+	kfree(lc);
+	inode->u.generic_ip = table;
 
 	return 0;
 }
 
-int dm_fs_remove(struct mapped_device *md)
+void _release_inode(struct inode *inode)
 {
-	if (md->pde) {
-		struct pf_data *pfd = (struct pf_data *) md->pde->data;
+	struct mapped_device *md = (struct mapped_device *)inode->u.generic_ip;
+	struct dm_table *table = (struct dm_table *) inode->u.generic_ip;
 
-		if (pfd->map)
-			dm_table_destroy(pfd->map);
-
-		kfree(md->pde->data);
-		remove_proc_entry(md->name, _proc_dir);
-		md->pde = 0;
-	}
-
-	devfs_unregister(md->devfs_entry);
-	md->devfs_entry = 0;
-	return 0;
-}
-
-static int process_control(const char *b, const char *e, int minor,
-			   struct dm_table **map)
-{
-	const char *wb, *we;
-	char name[64];
-	int create = 0;
-
-	/*
-	 * create <name> [minor]
-	 * remove <name>
-	 */
-	if (get_word(b, e, &wb, &we))
-		return -EINVAL;
-	b = we;
-
-	if (!tok_cmp("create", wb, we))
-		create = 1;
-
-	else if (tok_cmp("remove", wb, we))
-		return -EINVAL;
-
-	if (get_word(b, e, &wb, &we))
-		return -EINVAL;
-	b = we;
-
-	tok_cpy(name, sizeof(name), wb, we);
-
-	if (!create)
-		return dm_remove(name);
-
-	else {
-		if (!get_word(b, e, &wb, &we)) {
-			minor = simple_strtol(wb, (char **) &we, 10);
-
-			if (we == wb)
-				return -EINVAL;
-		}
-
-		return dm_create(name, minor);
-	}
-
-	return -EINVAL;
-}
-
-static int process_table(const char *b, const char *e, int minor,
-			 struct dm_table **map)
-{
-	const char *wb, *we;
-	struct mapped_device *md = dm_find_by_minor(minor);
-	struct dm_table *table = *map;
-	void *context;
-	int r;
-
-	if (!md)
-		return -ENXIO;
-
-	if (get_word(b, e, &wb, &we))
-		return -EINVAL;
-
-	if (!tok_cmp("begin", b, e)) {
-		/* suspend the device if it's active */
-		dm_suspend(md);
-
-		/* start loading a table */
-		table = *map = dm_table_create();
-
-	} else if (!tok_cmp("end", b, e)) {
-		/* activate the device ... <evil chuckle> ... */
-		if (table) {
-			dm_table_complete(table);
-			dm_bind(md, table);
-			dm_activate(md);
-		}
+	if (inode->i_mode & S_IFDIR) {
+		if (md)
+			dm_remove(md->name);
 
 	} else {
-		/* add the new entry */
-		char target[64];
-		struct target_type *t;
-		offset_t start, size, high;
-		size_t len;
+		if (table)
+			dm_table_destroy(table);
 
-		if (get_number(&b, e, &start))
-			return -EINVAL;
+	}
 
-		if (get_number(&b, e, &size))
-			return -EINVAL;
+	inode->u.generic_ip = 0;
+	force_delete(inode);
+}
 
-		if (get_word(b, e, &wb, &we))
-			return -EINVAL;
+static int _statfs(struct super_block *sb, struct statfs *buf)
+{
+	buf->f_type = DM_MAGIC;
+	buf->f_bsize = PAGE_CACHE_SIZE;
+	buf->f_namelen = 255;
+	return 0;
+}
 
-		len = we - wb;
-		if (len > sizeof(target))
-			return -EINVAL;
+/*
+ * Lookup the data. This is trivial - if the dentry didn't already
+ * exist, we know it is negative.
+ */
+static struct dentry * _lookup(struct inode *dir, struct dentry *dentry)
+{
+	d_add(dentry, NULL);
+	return NULL;
+}
 
-		strncpy(target, wb, len);
-		target[len] = '\0';
+/*
+ * Read a page. Again trivial. If it didn't already exist
+ * in the page cache, it is zero-filled.
+ */
+static int _readpage(struct file *file, struct page * page)
+{
+	if (!Page_Uptodate(page)) {
+		memset(kmap(page), 0, PAGE_CACHE_SIZE);
+		kunmap(page);
+		flush_dcache_page(page);
+		SetPageUptodate(page);
+	}
+	UnlockPage(page);
+	return 0;
+}
 
-		if (!(t = dm_get_target(target)))
-			return -EINVAL;
+/*
+ * Writing: just make sure the page gets marked dirty, so that
+ * the page stealer won't grab it.
+ */
+static int _writepage(struct page *page)
+{
+	SetPageDirty(page);
+	UnlockPage(page);
+	return 0;
+}
 
-		/* check there isn't a gap */
-		if ((table->num_targets &&
-		     start != table->highs[table->num_targets - 1] + 1) ||
-		    (!table->num_targets && start)) {
-			WARN("gap in target ranges");
-			return -EINVAL;
+static int _prepare_write(struct file *file, struct page *page,
+			  unsigned offset, unsigned to)
+{
+	void *addr = kmap(page);
+	if (!Page_Uptodate(page)) {
+		memset(addr, 0, PAGE_CACHE_SIZE);
+		flush_dcache_page(page);
+		SetPageUptodate(page);
+	}
+	SetPageDirty(page);
+	return 0;
+}
+
+static int _commit_write(struct file *file, struct page *page,
+			 unsigned offset, unsigned to)
+{
+	struct inode *inode = page->mapping->host;
+	loff_t pos = ((loff_t)page->index << PAGE_CACHE_SHIFT) + to;
+
+	kunmap(page);
+	if (pos > inode->i_size)
+		inode->i_size = pos;
+	return 0;
+}
+
+struct inode *_get_inode(struct super_block *sb, int mode, int dev)
+{
+	struct inode * inode = new_inode(sb);
+
+	if (inode) {
+		inode->i_mode = mode;
+		inode->i_uid = current->fsuid;
+		inode->i_gid = current->fsgid;
+		inode->i_blksize = PAGE_CACHE_SIZE;
+		inode->i_blocks = 0;
+		inode->i_rdev = NODEV;
+		inode->i_mapping->a_ops = &dm_aops;
+		inode->i_atime = inode->i_mtime =
+			inode->i_ctime = CURRENT_TIME;
+		switch (mode & S_IFMT) {
+		default:
+			init_special_inode(inode, mode, dev);
+			break;
+		case S_IFREG:
+			inode->i_fop = &dm_file_operations;
+			break;
+		case S_IFDIR:
+			inode->i_op = &dm_dir_inode_operations;
+			inode->i_fop = &dm_dir_operations;
+			break;
+		case S_IFLNK:
+			inode->i_op = &page_symlink_inode_operations;
+			break;
 		}
+	}
+	return inode;
+}
 
-		if ((r = t->ctr(table, start, size, we, e, &context)))
-			return r;
+/*
+ * File creation. Allocate an inode, and we're done..
+ */
+static int _mknod(struct inode *dir, struct dentry *dentry, int mode)
+{
+	int error = -ENOSPC;
+	struct inode *inode = _get_inode(dir->i_sb, mode, 0);
 
-		high = start + (size - 1);
-		if ((r = dm_table_add_target(table, high, t, context))) {
-			t->dtr(table, context);
-			return r;
+	if (inode) {
+		d_instantiate(dentry, inode);
+		dget(dentry);	/* Extra count - pin the dentry in core */
+		error = 0;
+	}
+
+	return error;
+}
+
+static int _mkdir(struct inode * dir, struct dentry * dentry, int mode)
+{
+	int r;
+	const char *name = (const char *) dentry->d_name.name;
+
+	r = dm_create(name, -1);
+	if (r)
+		return r;
+
+	r = _mknod(dir, dentry, mode | S_IFDIR);
+	if (r) {
+		dm_remove(name);
+		return r;
+	}
+
+	dentry->d_inode->u.generic_ip = dm_find_by_name(name);
+
+	return 0;
+}
+
+static int _rmdir(struct inode *dir, struct dentry *dentry)
+{
+	int r = _unlink(dir, dentry);
+	if (r)
+		return r;
+
+	dm_remove(dentry->d_name.name);
+
+	return 0;
+}
+
+static int _create(struct inode *dir, struct dentry *dentry, int mode)
+{
+	int r;
+
+	if ((r = _mknod(dir, dentry, mode | S_IFREG)))
+		return r;
+
+	dentry->d_inode->u.generic_ip = 0;
+	return 0;
+}
+
+static inline int _positive(struct dentry *dentry)
+{
+	return dentry->d_inode && !d_unhashed(dentry);
+}
+
+/*
+ * Check that a directory is empty (this works
+ * for regular files too, they'll just always be
+ * considered empty..).
+ *
+ * Note that an empty directory can still have
+ * children, they just all have to be negative..
+ */
+static int _empty(struct dentry *dentry)
+{
+	struct list_head *list;
+
+	spin_lock(&dcache_lock);
+	list = dentry->d_subdirs.next;
+
+	while (list != &dentry->d_subdirs) {
+		struct dentry *de = list_entry(list, struct dentry, d_child);
+
+		if (_positive(de)) {
+			spin_unlock(&dcache_lock);
+			return 0;
 		}
+		list = list->next;
+	}
+	spin_unlock(&dcache_lock);
+	return 1;
+}
+
+/*
+ * This works for both directories and regular files.
+ * (non-directories will always have empty subdirs)
+ */
+static int _unlink(struct inode *dir, struct dentry *dentry)
+{
+	int retval = -ENOTEMPTY;
+
+	if (_empty(dentry)) {
+		struct inode *inode = dentry->d_inode;
+
+		inode->i_nlink--;
+		dput(dentry);	/* Undo the count from "create" - this does all the work */
+		retval = 0;
+	}
+	return retval;
+}
+
+/*
+ * The VFS layer already does all the dentry stuff for rename,
+ * we just have to decrement the usage count for the target if
+ * it exists so that the VFS layer correctly free's it when it
+ * gets overwritten.
+ */
+static int _rename(struct inode * old_dir, struct dentry *old_dentry,
+		   struct inode * new_dir,struct dentry *new_dentry)
+{
+	struct inode *inode = new_dentry->d_inode;
+	struct mapped_device *md = old_dir->u.generic_ip;
+	struct dm_table *table = old_dentry->d_inode->u.generic_ip;
+
+	if (!md || !table)
+		return -EINVAL;
+
+	if (!_empty(new_dentry))
+		return -ENOTEMPTY;
+
+	if (!strcmp(new_dentry->d_name.name, "ACTIVE")) {
+		/* activate the table */
+		dm_activate(md, table);
+
+	} else if (!strcmp(old_dentry->d_name.name, "ACTIVE")) {
+		dm_suspend(md);
+
+	}
+
+	if (inode) {
+		inode->i_nlink--;
+		dput(new_dentry);
 	}
 
 	return 0;
 }
 
-static int line_splitter(struct file *file, const char *buffer,
-			 unsigned long count, void *data)
+static int _sync_file(struct file * file, struct dentry *dentry,
+		      int datasync)
+{
+	return 0;
+}
+
+static struct address_space_operations dm_aops = {
+	readpage:	_readpage,
+	writepage:	_writepage,
+	prepare_write:	_prepare_write,
+	commit_write:	_commit_write
+};
+
+static struct file_operations dm_file_operations = {
+	read:		generic_file_read,
+	write:		generic_file_write,
+	mmap:		generic_file_mmap,
+	fsync:		_sync_file,
+	release:        _release_file,
+};
+
+static struct file_operations dm_dir_operations = {
+	read:		generic_read_dir,
+	readdir:	dcache_readdir,
+	fsync:		_sync_file,
+};
+
+static struct inode_operations root_dir_inode_operations = {
+	lookup:		_lookup,
+	mkdir:		_mkdir,
+	rmdir:		_rmdir,
+	rename:		_rename,
+};
+
+static struct inode_operations dm_dir_inode_operations = {
+	create:		_create,
+	lookup:		_lookup,
+	unlink:		_unlink,
+	rename:		_rename,
+};
+
+static struct super_operations dm_ops = {
+	statfs:		_statfs,
+	put_inode:	_release_inode,
+};
+
+static struct super_block *_read_super(struct super_block * sb, void * data,
+				       int silent)
+{
+	struct inode * inode;
+	struct dentry * root;
+
+	sb->s_blocksize = PAGE_CACHE_SIZE;
+	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
+	sb->s_magic = DM_MAGIC;
+	sb->s_op = &dm_ops;
+	inode = _get_inode(sb, S_IFDIR | 0755, 0);
+	inode->i_op = &root_dir_inode_operations;
+	if (!inode)
+		return NULL;
+
+	root = d_alloc_root(inode);
+	if (!root) {
+		iput(inode);
+		return NULL;
+	}
+	sb->s_root = root;
+	return sb;
+}
+
+static DECLARE_FSTYPE(_fs_type, "dm-fs", _read_super, FS_SINGLE);
+
+int __init dm_fs_init(void)
 {
 	int r;
-	const char *b = buffer, *e = buffer + count, *lb;
-	struct pf_data *pfd = (struct pf_data *) data;
+	if ((r = register_filesystem(&_fs_type)))
+		return r;
 
-	while(b < e) {
-		b = eat_space(b, e);
-		if (b == e)
-			break;
+	_mnt = kern_mount(&_fs_type);
 
-		lb = b;
-		while((b != e) && *b != '\n')
-			b++;
-
-		if ((r = pfd->fn(lb, b, pfd->minor, &pfd->map)))
-			return r;
+	if (IS_ERR(_mnt)) {
+		dm_fs_exit();
+		return PTR_ERR(_mnt);
 	}
 
-	return count;
+	return 0;
 }
 
-static int tok_cmp(const char *str, const char *b, const char *e)
+void __exit dm_fs_exit(void)
 {
-	while (*str && b != e) {
-		if (*str < *b)
-			return -1;
-
-		if (*str > *b)
-			return 1;
-
-		str++, b++;
-	}
-
-	if (!*str && b == e)
-		return 0;
-
-	if (*str)
-		return 1;
-
-	return -1;
+	unregister_filesystem(&_fs_type);
 }
-
