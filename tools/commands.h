@@ -298,7 +298,6 @@ xx(pvdisplay,
 
    colon_ARG, maps_ARG, short_ARG)
 
-#if 0
 xx(pvmove,
    "Move extents from one physical volume to another",
    "pvmove "
@@ -314,7 +313,6 @@ xx(pvmove,
    "[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
 
    autobackup_ARG, force_ARG,  name_ARG, test_ARG)
-#endif
 
 xx(pvscan,
    "List all physical volumes",
