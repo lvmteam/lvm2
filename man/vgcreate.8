@@ -1,0 +1,79 @@
+.TH VGCREATE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgcreate \- create a volume group
+.SH SYNOPSIS
+.B vgcreate
+.RB [ \-A | \-\-autobackup " {" y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-l | \-\-maxlogicalvolumes
+.IR MaxLogicalVolumes ]
+.RB [ -p | \-\-maxphysicalvolumes
+.IR MaxPhysicalVolumes ]
+.RB [ \-s | \-\-physicalextentsize
+.IR PhysicalExtentSize [ \fBkKmMgGtT\fR ]]
+.RB [ \-v | \-\-verbose ]
+.RB [ \-\-version ]
+.I VolumeGroupName PhysicalVolumePath
+.RI [ PhysicalVolumePath ...]
+.SH DESCRIPTION
+.B vgcreate
+creates a new volume group called
+.I VolumeGroupName
+using the block special device
+.IR PhysicalVolumePath
+previously configured for LVM with
+.BR pvcreate (8).
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.BR \-A ", " \-\-autobackup " {" y | n }
+Controls automatic backup of VG metadata after the change (see
+.BR vgcfgbackup (8)).
+Default is yes.
+.TP
+.BR \-l ", " \-\-maxlogicalvolumes " " \fIMaxLogicalVolumes\fR
+Sets the maximum possible logical volume count.
+More logical volumes can't be created in this volume group.
+Absolute maximum is 256.
+.TP
+.BR \-p ", " \-\-maxphysicalvolumes " " \fIMaxPhysicalVolumes\fR
+Sets the maximum possible physical volume count.
+More physical volumes can't be included in this volume group.
+Absolute maximum is 256.
+.TP
+.BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize\fR[\fBkKmMgGtT\fR]
+Sets the physical extent size on physical volumes of this volume group.
+A size suffix (k for kilobytes up to t for terabytes) is optional, megabytes
+is the default if no suffix is present.  Values can be from 8 KB to 16 GB in
+powers of 2. The default of 4 MB causes maximum LV sizes of ~256GB because as
+many as ~64k extents are supported per LV. In case larger maximum LV sizes are
+needed (later), you need to set the PE size to a larger value as well. Later
+changes of the PE size in an existing VG are not supported.
+.SH EXAMPLES
+To create a volume group named
+.B test_vg 
+using physical volumes
+.BR /dev/hdk1 ", " /dev/hdl1 ", and " /dev/hdm1
+with default physical extent size of 4MB:
+.nf
+
+\	vgcreate test_vg /dev/sd[k-m]1
+
+.fi
+To limit kernel memory usage, there is a limit of 65536 physical extents
+(PE) per logical volume, so the PE size determines the maximum logical volume
+size.  The default PE size of 4MB limits a single logical volume to 256GB (see
+the -s option to raise that limit).
+There is also (as of Linux 2.4) a kernel limitation of 2TB per block device.
+.SH SEE ALSO
+.BR lvm (8),
+.BR pvdisplay (8),
+.BR pvcreate (8),
+.BR vgdisplay (8),
+.BR vgextend (8),
+.BR vgreduce (8),
+.BR lvcreate (8),
+.BR lvdisplay (8),
+.BR lvextend (8),
+.BR lvreduce (8)

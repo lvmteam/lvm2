@@ -1,0 +1,31 @@
+.TH VGRENAME 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgrename \- rename a volume group
+.SH SYNOPSIS
+.B vgrename
+[\-A/\-\-autobackup y/n]
+[\-d/\-\-debug]
+[\-h/\-?/\-\-help]
+[\-v/\-\-verbose]
+OldVolumeGroupPath/\-Name NewVolumeGroupPath/\-Name
+.SH DESCRIPTION
+vgrename renames an existing (see
+.B vgcreate(8)
+) volume group.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.I \-A, \-\-autobackup y/n
+Controls automatic backup of VG metadata after the change ( see
+.B vgcfgbackup(8)
+). Default is yes.
+.SH Examples
+"vgrename /dev/vg02 /dev/my_volume_group" renames existing
+volume group "vg02" to "my_volume_group".
+.TP
+"vgrename vg02 my_volume_group" does the same.
+.SH SEE ALSO
+.BR lvm (8), 
+.BR vgchange (8), 
+.BR vgcreate (8), 
+.BR lvrename (8)

@@ -1,0 +1,22 @@
+.TH VGCFGBACKUP 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+vgcfgbackup \- backup volume group descriptor area
+.SH SYNOPSIS
+.B vgcfgbackup
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-v | \-\-verbose ]
+.RI [ VolumeGroupName ...]
+.SH DESCRIPTION
+.B vgcfgbackup
+allows you to backup the metadata 
+of one to all volume groups to files in
+.IR /etc/lvm .
+If you don't give any volume groups in the command line, all of them 
+will be backed up.  This DOESN'T backup user/system data in logical
+volume(s)! 
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.SH SEE ALSO
+.BR lvm (8),
+.BR vgcreate (8)

@@ -1,0 +1,27 @@
+.TH LVREMOVE 8 "LVM TOOLS" "Sistina Software UK" \" -*- nroff -*-
+.SH NAME
+lvremove \- remove a logical volume
+.SH SYNOPSIS
+.B lvremove
+[\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-f/\-\-force]
+[\-h/\-?/\-\-help] [\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
+.SH DESCRIPTION
+lvremove allows you to remove one or more inactive logical volumes.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.I \-A, \-\-autobackup y/n
+Controls automatic backup of VG metadata after the change ( see
+.B vgcfgbackup(8)
+). Default is yes.
+.TP
+.I \-f, \-\-force
+Force remove without confirmation.
+.SH Example
+"lvremove -f /dev/vg00/lvol1" removes that inactive logical volume
+unconditionally.
+.SH SEE ALSO
+.BR lvm (8), 
+.BR lvcreate (8), 
+.BR lvdisplay (8), 
+.BR lvscan (8)
