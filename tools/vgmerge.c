@@ -146,7 +146,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 
 	/* FIXME Remove /dev/vgfrom */
 
-	autobackup(vg_to);
+	backup(vg_to);
 
 	log_print("Volume group %s successfully merged into %s",
 		  vg_from->name, vg_to->name);

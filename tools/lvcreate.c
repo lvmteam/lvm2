@@ -225,7 +225,7 @@ int lvcreate(int argc, char **argv)
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
-	autobackup(vg);
+	backup(vg);
 
 	log_print("Logical volume %s created", lv->name);
 

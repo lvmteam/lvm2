@@ -21,6 +21,7 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES=\
+	archive.c \
 	lvchange.c \
 	lvcreate.c \
 	lvdisplay.c \

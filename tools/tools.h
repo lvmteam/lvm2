@@ -20,15 +20,6 @@
 #ifndef _LVM_LVM_H
 #define _LVM_LVM_H
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <ctype.h>
-#include <string.h>
-#include <limits.h>
-
 #include "pool.h"
 #include "dbg_malloc.h"
 #include "list.h"
@@ -49,6 +40,16 @@
 #include "format-text.h"
 #include "toollib.h"
 #include "activate.h"
+#include "archive.h"
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <ctype.h>
+#include <string.h>
+#include <limits.h>
 
 #define CMD_LEN 256
 #define MAX_ARGS 64
