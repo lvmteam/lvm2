@@ -64,7 +64,7 @@ static void _print(struct cmd_context *cmd, const struct device *dev,
 		   uint64_t size, const char *what)
 {
 	log_print("%-*s [%15s] %s", max_len, dev_name(dev),
-		  display_size(cmd, size / 2, SIZE_SHORT), what ? : "");
+		  display_size(cmd, size, SIZE_SHORT), what ? : "");
 }
 
 static int _check_device(struct cmd_context *cmd, struct device *dev)

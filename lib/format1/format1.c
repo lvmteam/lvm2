@@ -345,7 +345,7 @@ static int _pv_setup(const struct format_type *fmt,
 		pv->size--;
 	if (pv->size > MAX_PV_SIZE) {
 		log_error("Physical volumes cannot be bigger than %s",
-			  display_size(fmt->cmd, (uint64_t) MAX_PV_SIZE / 2,
+			  display_size(fmt->cmd, (uint64_t) MAX_PV_SIZE,
 				       SIZE_SHORT));
 		return 0;
 	}
@@ -386,7 +386,7 @@ static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 	}
 	if (lv->size > max_size) {
 		log_error("logical volumes cannot be larger than %s",
-			  display_size(fid->fmt->cmd, max_size / 2,
+			  display_size(fid->fmt->cmd, max_size,
 				       SIZE_SHORT));
 		return 0;
 	}
@@ -468,21 +468,18 @@ static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 
 	if (vg->extent_size > MAX_PE_SIZE || vg->extent_size < MIN_PE_SIZE) {
 		log_error("Extent size must be between %s and %s",
-			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE
-				       / 2,
-				       SIZE_SHORT), display_size(fid->fmt->cmd,
-								 (uint64_t)
-								 MAX_PE_SIZE
-								 / 2,
-								 SIZE_SHORT));
+			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE,
+				       SIZE_SHORT),
+			  display_size(fid->fmt->cmd, (uint64_t) MAX_PE_SIZE,
+				       SIZE_SHORT));
 
 		return 0;
 	}
 
 	if (vg->extent_size % MIN_PE_SIZE) {
 		log_error("Extent size must be multiple of %s",
-			  display_size(fid->fmt->cmd,
-				       (uint64_t) MIN_PE_SIZE / 2, SIZE_SHORT));
+			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE,
+				       SIZE_SHORT));
 		return 0;
 	}
 

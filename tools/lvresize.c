@@ -181,7 +181,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 				    (lp->size % vg->extent_size);
 
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, (uint64_t) lp->size / 2,
+				  display_size(cmd, (uint64_t) lp->size,
 					       SIZE_SHORT));
 		}
 
@@ -352,7 +352,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			log_print("WARNING: Reducing active%s logical volume "
 				  "to %s", info.open_count ? " and open" : "",
 				  display_size(cmd, (uint64_t) lp->extents *
-						    (vg->extent_size / 2),
+						    vg->extent_size,
 					       SIZE_SHORT));
 
 			log_print("THIS MAY DESTROY YOUR DATA "
@@ -391,7 +391,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 		log_print("Extending logical volume %s to %s", lp->lv_name,
 			  display_size(cmd, (uint64_t)
-				       lp->extents * (vg->extent_size / 2),
+				       lp->extents * vg->extent_size,
 				       SIZE_SHORT));
 
 		if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes,

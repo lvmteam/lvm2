@@ -81,7 +81,7 @@ static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 	uint64_t max_size = UINT_MAX;
 
 	if (lv->size > max_size) {
-		char *dummy = display_size(max_size / 2, SIZE_SHORT);
+		char *dummy = display_size(max_size, SIZE_SHORT);
 		log_error("logical volumes cannot be larger than %s", dummy);
 		dbg_free(dummy);
 		return 0;

@@ -66,7 +66,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
 			  pv->fmt ? pv->fmt->name : "    ",
-			  display_size(cmd, pv->size / 2, SIZE_SHORT));
+			  display_size(cmd, pv->size, SIZE_SHORT));
 		return;
 	}
 
@@ -77,24 +77,23 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 			  pv_max_name_len, pv_tmp_name,
 			  vg_name_this,
 			  display_size(cmd, (uint64_t) pv->pe_count *
-				       pv->pe_size / 2, SIZE_SHORT),
+				       pv->pe_size, SIZE_SHORT),
 			  display_size(cmd, (uint64_t) (pv->pe_count -
 							pv->pe_alloc_count)
-				       * pv->pe_size / 2, SIZE_SHORT));
+				       * pv->pe_size, SIZE_SHORT));
 		return;
 	}
 
 	sprintf(vg_tmp_name, "%s", pv->vg_name);
-	log_print
-	    ("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
-	     pv_tmp_name, vg_max_name_len, vg_tmp_name,
-	     pv->fmt ? pv->fmt->name : "    ",
-	     display_size(cmd, (uint64_t) pv->pe_count * pv->pe_size / 2,
-			  SIZE_SHORT), display_size(cmd, (uint64_t)
-						    (pv->pe_count -
-						     pv->pe_alloc_count) *
-						    pv->pe_size / 2,
-						    SIZE_SHORT));
+	log_print("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
+		  pv_tmp_name, vg_max_name_len, vg_tmp_name,
+		  pv->fmt ? pv->fmt->name : "    ",
+		  display_size(cmd, (uint64_t) pv->pe_count * pv->pe_size,
+			       SIZE_SHORT),
+		  display_size(cmd,
+			       (uint64_t) (pv->pe_count - pv->pe_alloc_count) *
+					   pv->pe_size,
+			       SIZE_SHORT));
 	return;
 }
 
@@ -189,10 +188,10 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
 		  pvs_found,
-		  display_size(cmd, size_total / 2, SIZE_SHORT),
+		  display_size(cmd, size_total, SIZE_SHORT),
 		  pvs_found - new_pvs_found,
-		  display_size(cmd, (size_total - size_new) / 2, SIZE_SHORT),
-		  new_pvs_found, display_size(cmd, size_new / 2, SIZE_SHORT));
+		  display_size(cmd, (size_total - size_new), SIZE_SHORT),
+		  new_pvs_found, display_size(cmd, size_new, SIZE_SHORT));
 
 	return ECMD_PROCESSED;
 }
