@@ -5,7 +5,6 @@
  */
 
 #include "log.h"
-#include "merge.h"
 
 /*
  * Returns success if the segments were
@@ -36,7 +35,7 @@ static int _merge(struct stripe_segment *first, struct stripe_segment *second)
 	return 1;
 }
 
-int merge_segments(struct logical_volume *lv)
+int lv_merge_segments(struct logical_volume *lv)
 {
 	struct list *segh;
 	struct stripe_segment *current, *prev = NULL;
