@@ -298,7 +298,7 @@ static void dec_pending(struct buffer_head *bh, int uptodate)
 
 	if (atomic_dec_and_test(&ih->md->pending))
 		/* nudge anyone waiting on suspend queue */
-		wake_up_interruptible(&ih->md->wait);
+		wake_up(&ih->md->wait);
 
 	bh->b_end_io = ih->end_io;
 	bh->b_private = ih->context;
@@ -784,7 +784,7 @@ void dm_suspend(struct mapped_device *md)
 
 	/* wait for all the pending io to flush */
 	add_wait_queue(&md->wait, &wait);
-	current->state = TASK_INTERRUPTIBLE;
+	current->state = TASK_UNINTERRUPTIBLE;
 	do {
 		down_write(&_dev_lock);
 		if (!atomic_read(&md->pending))
