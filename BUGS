@@ -1,1 +1,1 @@
-Ext3 and device-mapper (LVM2 driver) are in compatible at the moment.
+LVM2's device-mapper driver and ext3 are incompatible at the moment.
