@@ -175,11 +175,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Fork into the background (unless requested not to) */
-	if (!debug) {
-		be_daemon();
-	}
-
 	DEBUGLOG("CLVMD started\n");
 
 	/* Open the Unix socket we listen for commands on.
@@ -215,6 +210,12 @@ int main(int argc, char *argv[])
 		log_error("Can't initialise cluster interface\n");
 		exit(5);
 	}
+
+	/* Fork into the background (unless requested not to) */
+	if (!debug) {
+		be_daemon();
+	}
+
 	DEBUGLOG("Cluster ready, doing some more initialisation\n");
 
 	/* Save our CSID */
@@ -228,8 +229,10 @@ int main(int argc, char *argv[])
 
 	/* Add the local socket to the list */
 	newfd = malloc(sizeof(struct local_client));
-	if (!newfd)
+	if (!newfd) {
+	        log_error("Can't allocate memory for socket structures. shutting down\n");
 		exit(2);
+	}
 
 	newfd->fd = local_sock;
 	newfd->type = LOCAL_RENDEZVOUS;
