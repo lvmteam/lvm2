@@ -128,6 +128,7 @@ static int _read_pv(struct pool *mem,
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
 
+	pv->pe_size = vg->extent_size;
 	pv->size = pv->pe_size * (uint64_t) pv->pe_count;
 	pv->pe_allocated = 0;
 
