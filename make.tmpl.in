@@ -1,0 +1,110 @@
+# @configure_input@
+#
+# Copyright (C) 2001 Sistina Software
+#
+# This LVM library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This LVM library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this LVM library; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+# MA 02111-1307, USA
+
+SHELL = /bin/sh
+
+@SET_MAKE@
+
+CC = @CC@
+RANLIB = @RANLIB@
+SHELL = /bin/sh
+INSTALL = @INSTALL@
+LN_S = @LN_S@
+
+# Setup directory variables
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+staticlibdir = ${prefix}/lib
+libdir = @libdir@
+sbindir = @sbindir@
+infodir = @infodir@
+mandir = @mandir@
+
+# setup misc variables
+# define the ownership variables for the binaries and man pages
+OWNER=@OWNER@
+GROUP=@GROUP@
+
+# The number of jobs to run, if blank, defaults to the make standard
+ifndef MAKEFLAGS
+MAKEFLAGS = @JOBS@
+endif
+
+SUFFIXES=
+SUFFIXES=.c .d .o
+
+CFLAGS+=-g -Wall -DDEBUG_MEM -DBOUNDS_CHECK -DDEBUG
+INCLUDES+=-I. -I$(top_srcdir)/lib
+
+ifeq ("@READLINE@", "yes")
+  CFLAGS += -DREADLINE_SUPPORT
+  EXTRA_LIBS += -lreadline
+endif
+
+OBJECTS=$(SOURCES:%.c=%.o)
+
+SUBDIRS.install := $(SUBDIRS:=.install)
+SUBDIRS.clean := $(SUBDIRS:=.clean)
+SUBDIRS.distclean := $(SUBDIRS:=.distclean)
+
+.PHONY: all install distclean clean 
+.PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
+
+all: $(SUBDIRS) $(TARGETS)
+
+install: all $(SUBDIRS.install)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+$(SUBDIRS.install): 
+	$(MAKE) -C $(@:.install=) install
+
+$(SUBDIRS.clean):
+	$(MAKE) -C $(@:.clean=) clean
+
+$(SUBDIRS.distclean):
+	$(MAKE) -C $(@:.distclean=) distclean
+
+%.o: %.c
+	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
+
+%.d: %.c
+	set -e; FILE=`echo $@ | sed 's/\\//\\\\\\//g'`; \
+		$(CC) -MM $(INCLUDES) $< \
+		| sed "s/\($$FILE\)\.o[ :]*/\1.o $$FILE : /g" > $@; \
+		[ -s $@ ] || $(RM) $@
+
+clean: $(SUBDIRS.clean)
+	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d)
+
+distclean: $(SUBDIRS.distclean)
+	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d)
+	$(RM) config.cache config.log config.status
+	$(RM) Makefile make.tmpl
+
+ifneq ($(MAKECMDGOALS),clean)
+  ifneq ($(MAKECMDGOALS),distclean)
+    ifdef SOURCES
+       -include $(SOURCES:.c=.d)
+    endif
+  endif
+endif
+
