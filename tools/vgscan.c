@@ -45,6 +45,8 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 
 int vgscan(struct cmd_context *cmd, int argc, char **argv)
 {
+	int maxret, ret;
+
 	if (argc) {
 		log_error("Too many parameters on command line");
 		return EINVALID_CMD_LINE;
@@ -58,6 +60,14 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Reading all physical volumes.  This may take a while...");
 
-	return process_each_vg(cmd, argc, argv, LCK_VG_READ, 1, NULL,
-			       &vgscan_single);
+	maxret = process_each_vg(cmd, argc, argv, LCK_VG_READ, 1, NULL,
+				 &vgscan_single);
+
+	if (arg_count(cmd, mknodes_ARG)) {
+		ret = vgmknodes(cmd, argc, argv);
+		if (ret > maxret)
+			maxret = ret;
+	}
+
+	return maxret;
 }

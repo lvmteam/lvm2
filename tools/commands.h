@@ -752,11 +752,12 @@ xx(vgscan,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--mknodes]\n"
    "\t[-P|--partial] " "\n"
    "\t[-v|--verbose]\n" 
    "\t[--version]" "\n",
 
-   ignorelockingfailure_ARG, partial_ARG)
+   ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)
 
 xx(vgsplit,
    "Move physical volumes into a new volume group",

@@ -26,6 +26,7 @@ arg(units_ARG, '\0', "units", string_arg)
 arg(nosuffix_ARG, '\0', "nosuffix", NULL)
 arg(removemissing_ARG, '\0', "removemissing", NULL)
 arg(abort_ARG, '\0', "abort", NULL)
+arg(mknodes_ARG, '\0', "mknodes", NULL)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg)
