@@ -120,7 +120,7 @@ int dm_fs_add(struct mapped_device *md)
 	pfd->fn = process_table;
 	pfd->minor = MINOR(md->dev);
 
-	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR, 
+	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR,
 					_proc_dir))) {
 		kfree(pfd);
 		return -ENOMEM;
@@ -228,23 +228,17 @@ static int process_table(const char *b, const char *e, int minor)
 
 	} else {
 		/* add the new entry */
-		int len = we - wb;
-		char high_s[64], *ptr;
 		char target[64];
 		struct target *t;
-		offset_t last = 0, high;
+		offset_t start, size, high;
+		size_t len;
 
-		if (len > sizeof(high_s))
+		if (get_number(&b, e, &start))
 			return -EINVAL;
 
-		strncpy(high_s, wb, we - wb);
-		high_s[len] = '\0';
-
-		high = simple_strtol(high_s, &ptr, 10);
-		if (ptr == high_s)
+		if (get_number(&b, e, &size))
 			return -EINVAL;
 
-		b = we;
 		if (get_word(b, e, &wb, &we))
 			return -EINVAL;
 
@@ -258,10 +252,16 @@ static int process_table(const char *b, const char *e, int minor)
 		if (!(t = dm_get_target(target)))
 			return -EINVAL;
 
-		if (md->num_targets)
-			last = md->highs[md->num_targets - 1] + 1;
+		/* check there isn't a gap */
+		if ((md->num_targets &&
+		     start != md->highs[md->num_targets - 1] + 1) ||
+		    (!md->num_targets && start)) {
+			WARN("gap in target ranges");
+			return -EINVAL;
+		}
 
-		if ((r = t->ctr(last, high, md, we, e, &context)))
+		high = start + (size - 1);
+		if ((r = t->ctr(start, high, md, we, e, &context)))
 			return r;
 
 		if ((r = dm_add_entry(md, high, t->map, context)))

@@ -229,17 +229,33 @@ int dm_fs_remove(struct mapped_device *md);
 
 #define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
 
-static inline int is_active(struct mapped_device *md)
+inline static int is_active(struct mapped_device *md)
 {
 	return test_bit(DM_ACTIVE, &md->state);
 }
 
-static inline const char *eat_space(const char *b, const char *e)
+inline static const char *eat_space(const char *b, const char *e)
 {
 	while(b != e && isspace((int) *b))
 		b++;
 
 	return b;
 }
+
+inline static int get_number(const char **b, const char *e, unsigned int *n)
+{
+	char *ptr;
+	*b = eat_space(*b, e);
+	if (*b >= e)
+		return -EINVAL;
+
+	*n = simple_strtoul(*b, &ptr, 10);
+	if (ptr == *b)
+		return -EINVAL;
+	*b = ptr;
+
+	return 0;
+}
+
 
 #endif
