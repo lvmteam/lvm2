@@ -330,7 +330,7 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns, int num)
 	return NULL;
 }
 
-static struct dfa_state *
+static inline struct dfa_state *
 _step_matcher(unsigned char c, struct dfa_state *cs, int *r)
 {
 	if (!(cs = cs->lookup[c]))
