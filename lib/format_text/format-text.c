@@ -49,7 +49,7 @@ struct text_context {
 
 /*
  * NOTE: Currently there can be only one vg per text file, and locking
- *       assumes VG's metadata is only held in metadata areas on PVs 
+ *       assumes VG's metadata is only held in metadata areas on PVs
  *       inside the VG.
  */
 
@@ -627,12 +627,12 @@ static int _vg_commit_file_backup(struct format_instance *fid,
 		log_debug("Renaming %s to %s", tc->path_edit, tc->path_live);
 		if (rename(tc->path_edit, tc->path_live)) {
 			log_error("%s: rename to %s failed: %s", tc->path_edit,
-				  tc->path_edit, strerror(errno));
+				  tc->path_live, strerror(errno));
 			return 0;
 		}
 	}
 
-	sync();
+	sync_dir(tc->path_edit);
 
 	return 1;
 }
@@ -666,7 +666,7 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 				log_error("%s: rename to %s failed: %s",
 					  tc->path_live, newname,
 					  strerror(errno));
-				sync();
+				sync_dir(newname);
 				return 0;
 			}
 		}
@@ -690,7 +690,7 @@ static int _vg_remove_file(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 	}
 
-	sync();
+	sync_dir(tc->path_live);
 
 	return 1;
 }
