@@ -179,25 +179,19 @@ static int _read_uuids(struct disk_list *data)
 	return 1;
 }
 
-static int _check_lvd(struct lv_disk *lvd)
+static inline int _check_lvd(struct lv_disk *lvd)
 {
-	/* FIXME: add more checks */
-	if (lvd->lv_name[0] == '\0') {
-		log_debug("lv has no name");
-		return 0;
-	}
-
-	return 1;
+	return !(lvd->lv_name[0] == '\0');
 }
 
 static int _read_lvs(struct disk_list *data)
 {
-	int i;
+	int i, read = 0;
 	unsigned long pos;
 	struct lvd_list *ll;
+	struct vg_disk *vgd = &data->vgd;
 
-	/* FIXME May be gaps - use lv_max */
-	for(i = 0; i < data->vgd.lv_cur; i++) {
+	for(i = 0; (i < vgd->lv_max) && (read < vgd->lv_cur); i++) {
 		pos = data->pvd.lv_on_disk.base + (i * sizeof(struct lv_disk));
 		ll = pool_alloc(data->mem, sizeof(*ll));
 
@@ -208,8 +202,9 @@ static int _read_lvs(struct disk_list *data)
 			fail;
 
 		if (!_check_lvd(&ll->lvd))
-			fail;
+			continue;
 
+		read++;
 		list_add(&data->lvds, &ll->list);
 	}
 
@@ -391,6 +386,13 @@ static int _write_lvs(struct disk_list *data)
 	unsigned long pos;
 
 	pos = data->pvd.lv_on_disk.base;
+
+	if (!dev_zero(data->dev, pos, data->pvd.lv_on_disk.size)) {
+		log_err("couldn't zero lv area on device '%s'",
+			dev_name(data->dev));
+		return 0;
+	}
+
 	list_iterate(lvh, &data->lvds) {
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 

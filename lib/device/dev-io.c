@@ -15,6 +15,11 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
+/*
+ * FIXME: all this opening and closing devices is
+ * killing performance.
+ */
+
 int dev_get_size(struct device *dev, uint64_t *size)
 {
 	int fd;
@@ -123,6 +128,42 @@ int64_t dev_write(struct device *dev, uint64_t offset,
 	}
 
 	r = _write(fd, buffer, len);
+	close(fd);
+	return r;
+}
+
+int dev_zero(struct device *dev, uint64_t offset, int64_t len)
+{
+	int64_t r, s;
+	char buffer[4096];
+	const char *name = dev_name(dev);
+	int fd = open(name, O_WRONLY);
+
+	if (fd < 0) {
+		log_sys_error("open", name);
+		return 0;
+	}
+
+	if (lseek(fd, offset, SEEK_SET) < 0) {
+		log_sys_error("lseek", name);
+		return 0;
+	}
+
+	memset(buffer, 0, sizeof(buffer));
+	while (1) {
+		s = len > sizeof(buffer) ? sizeof(buffer) : len;
+		r = _write(fd, buffer, s);
+
+		if (r <= 0)
+			break;
+
+		len -= r;
+		if (!len) {
+			r = 1;
+			break;
+		}
+	}
+
 	close(fd);
 	return r;
 }
