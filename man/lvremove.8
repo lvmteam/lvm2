@@ -8,17 +8,28 @@ lvremove \- remove a logical volume
 [\-t/\-\-test]
 [\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
 .SH DESCRIPTION
-lvremove allows you to remove one or more inactive logical volumes.
+\fBlvremove\fP removes one or more logical volumes.
+Confirmation will be requested before deactivating any active logical
+volume prior to removal.  Logical volumes cannot be deactivated
+or removed while they are open (e.g. if they contain a mounted filesystem).
 .SH OPTIONS
-See \fBlvm\fP for common options.
+See \fBlvm\fP(8) for common options.
 .TP
 .I \-f, \-\-force
-Force remove without confirmation.
-.SH Example
-"lvremove -f /dev/vg00/lvol1" removes that inactive logical volume
-unconditionally.
+Remove active logical volumes without confirmation.
+.SH EXAMPLES
+Remove the active logical volume lvol1 in volume group vg00 
+without asking for confirmation:
+.sp
+\	\fBlvremove -f vg00/lvol1\fP
+.sp
+Remove all logical volumes in volume group vg00:
+.sp
+\	\fBlvremove vg00\fP
 .SH SEE ALSO
-.BR lvm (8), 
 .BR lvcreate (8), 
 .BR lvdisplay (8), 
-.BR lvscan (8)
+.BR lvm (8), 
+.BR lvs (8),
+.BR lvscan (8),
+.BR vgremove (8)

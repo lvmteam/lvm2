@@ -7,13 +7,12 @@ vgremove \- remove a volume group
 VolumeGroupName [VolumeGroupName...]
 .SH DESCRIPTION
 vgremove allows you to remove one or more volume groups.
-The volume group(s) must not have any logical volumes allocated
-and must also be inactive (see
-.B vgchange(8)
-).
+The volume group(s) must not have any logical volumes allocated:
+Remove them first with \fBlvremove\fP.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .SH SEE ALSO
 .BR lvm (8), 
+.BR lvremove (8), 
 .BR vgcreate (8), 
 .BR vgreduce (8)

@@ -18,23 +18,44 @@ If \fBlvm\fP is invoked with argv[0] set to the name of a specific
 LVM command (for example by using a hard or soft link) it acts as 
 that command.  
 .LP
+Where commands take VG or LV names as arguments, the full path name is
+optional.  An LV called "lvol0" in a VG called "vg0" can be specified
+as "vg0/lvol0".  Where a list of VGs is required but is left empty, 
+a list of all VGs will be substituted.  Where a list of LVs is required
+but a VG is given, a list of all the LVs in that VG will be substituted.
+So "lvdisplay vg0" will display all the LVs in "vg0".
+Tags can also be used - see \fBaddtag\fP below.
+.LP
 One advantage of using the built-in shell is that configuration 
-information is cached internally between commands.  
+information gets cached internally between commands.  
 .LP
 A file containing a simple script with one command per line 
 can also be given on the command line.  The script can also be
 executed directly if the first line is #! followed by the absolute
 path of \fBlvm\fP.
+.SH BUILT-IN COMMANDS
+The following commands are built into lvm without links normally
+being created in the filesystem for them.
+.TP
+\fBdumpconfig\fP \(em Display the configuration information after 
+loading \fBlvm.conf\fP (8) and any other configuration files.
+.TP
+\fBformats\fP \(em Display recognised metadata formats.
+.TP
+\fBhelp\fP \(em Display the help text.
+.TP
+\fBpvdata\fP \(em Not implemented in LVM2.
+.TP
+\fBsegtypes\fP \(em Display recognised logical volume segment types.
+.TP
+\fBversion\fP \(em Display version information.
 .LP
-Where commands take VG or LV names as arguments, the full path name is
-optional.  An LV called "lvol0" in a VG called "vg0" can be specified
-as "vg0/lvol0".  If a list of VGs is required but is left empty, a list of
-all VGs will be substituted.  If a list of LVs is required
-but a VG is given, a list of all the LVs in that VG will be substituted.
-So "lvdisplay vg0" will display all the LVs in "vg0".
+The following commands are not implemented in LVM2 but might be
+in future: lvmsadc, lvmsar, pvdata, pvresize.
 .SH OPTIONS
-The following options are available for many of the commands and are 
-not documented on individual manual pages.
+The following options are available for many of the commands. 
+They are implemented generically and documented here rather 
+than repeated on individual manual pages.
 .TP
 \fB-h | --help\fP \(em Display the help text.
 .TP
@@ -54,6 +75,10 @@ Overrides -d and -v.
 .TP
 \fB-t | --test\fP \(em Run in test mode.
 Commands will not update metadata.
+This is implemented by disabling all metadata writing but nevertheless
+returning success to the calling function.  This may lead to unusual
+error messages in multi-stage operations if a tool relies on reading
+back metadata it believes has changed but hasn't.
 .TP
 \fB--driverloaded\fP { \fBy\fP | \fBn\fP }
 Whether or not the device-mapper kernel driver is loaded.
@@ -131,31 +156,42 @@ All tools return a status code of zero on success or non-zero on failure.
 .br
 .I $HOME/.lvm_history
 .SH SEE ALSO
+.BR clvmd (8),
 .BR lvchange (8),
 .BR lvcreate (8),
 .BR lvdisplay (8),
 .BR lvextend (8),
 .BR lvmchange (8),
+.BR lvmdiskscan (8),
 .BR lvreduce (8),
 .BR lvremove (8),
 .BR lvrename (8),
 .BR lvresize (8),
+.BR lvs (8),
 .BR lvscan (8),
 .BR pvchange (8),
 .BR pvcreate (8),
 .BR pvdisplay (8),
+.BR pvmove (8),
+.BR pvremove (8),
+.BR pvs (8),
 .BR pvscan (8),
 .BR vgcfgbackup (8),
 .BR vgchange  (8),
 .BR vgck (8),
+.BR vgconvert (8),
 .BR vgcreate (8),
 .BR vgdisplay (8),
 .BR vgextend (8),
+.BR vgimport (8),
 .BR vgmerge (8),
+.BR vgmknodes (8),
 .BR vgreduce (8),
 .BR vgremove (8),
 .BR vgrename (8),
+.BR vgs (8),
 .BR vgscan (8),
+.BR vgsplit (8),
 .BR readline (3),
 .BR lvm.conf (5)
 

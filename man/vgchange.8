@@ -6,7 +6,7 @@ vgchange \- change attributes of a volume group
 .RB [\-\-addtag
 .IR Tag ]
 .RB [\-A | \-\-autobackup " {" y | n }]
-.RB [\-a | \-\-available " {" y | n }]
+.RB [\-a | \-\-available " [e|l] {" y | n }]
 .RB [\-d | \-\-debug]
 .RB [\-\-deltag
 .IR Tag ]
@@ -42,9 +42,16 @@ Controls automatic backup of metadata after the change.  See
 .B vgcfgbackup (8).
 Default is yes.
 .TP
-.BR \-a ", " \-\-available { y | n }
-Controls the availability of the volume group for input/output.
-In other words: makes a volume group known/unknown to the kernel.
+.BR \-a ", " \-\-available [e|l] { y | n }
+Controls the availability of the logical volumes in the volume 
+group for input/output.
+In other words, makes the logical volumes known/unknown to the kernel.
+.IP
+If clustered locking is enabled, add 'e' to activate/deactivate
+exclusively on one node or 'l' to activate/deactivate only
+on the local node.  
+Logical volumes with single-host snapshots are always activated
+exclusively because they can only be used on one node at once.
 .TP
 .BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes\fR
 Changes the maximum logical volume number of an existing inactive
@@ -69,5 +76,6 @@ to 128.
 
 .fi
 .SH SEE ALSO
+.BR lvchange (8),
 .BR lvm (8),
 .BR vgcreate (8)
