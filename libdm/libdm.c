@@ -172,7 +172,7 @@ int dm_task_add_target(struct dm_task *dmt,
 static void *_align(void *ptr, unsigned int align)
 {
 	align--;
-	return (void *) (((long) ptr + align) & ~align);
+	return (void *) (((unsigned long) ptr + align) & ~align);
 }
 
 static void *_add_target(struct target *t, void *out, void *end)
@@ -244,6 +244,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	for (t = dmt->head; t; t = t->next)
 		if (!(b = _add_target(t, b, e)))
 			goto bad;
+
+	fprintf(stderr, "dm_ioctl size = %lu\n", dmi->data_size);
 
 	return dmi;
 
@@ -397,7 +399,7 @@ int dm_task_run(struct dm_task *dmt)
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		_add_dev_node(dmt->dev_name, dmt->dmi->minor);
+		_add_dev_node(dmt->dev_name, dmi->minor);
 		break;
 
 	case DM_DEVICE_REMOVE:
