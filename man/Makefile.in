@@ -20,16 +20,23 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-MANUALS=$(wildcard *.8)
+MAN5=lvm.conf.5
+MAN8=lvm.8
+MAN5DIR=${mandir}/man5
 MAN8DIR=${mandir}/man8
 
 include ../make.tmpl
 
 install:
 	@echo "*** Installing $(ALL_MANUALS) in $(DESTDIR)$(MAN8DIR) ***"
-	@for f in $(MANUALS); \
+	@for f in $(MAN8); \
 	do \
 	   $(RM) $(DESTDIR)$(MAN8DIR)/$$f; \
 	   @INSTALL@ -D -o $(OWNER) -g $(GROUP) -m 444 $$f $(DESTDIR)$(MAN8DIR)/$$f; \
 	done
 
+	@for f in $(MAN5); \
+	do \
+	   $(RM) $(DESTDIR)$(MAN5DIR)/$$f; \
+	   @INSTALL@ -D -o $(OWNER) -g $(GROUP) -m 444 $$f $(DESTDIR)$(MAN5DIR)/$$f; \
+	done
