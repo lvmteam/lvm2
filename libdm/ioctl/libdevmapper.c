@@ -338,7 +338,7 @@ int dm_task_run(struct dm_task *dmt)
 		goto bad;
 	}
 
-	log_debug("dm %s %s %s %s", dm_cmd_list[dmt->type], dmi->name, 
+	log_debug("dm %s %s %s %s", dm_cmd_list[dmt->type], dmi->name,
 		  dmi->uuid, dmt->newname ? dmt->newname : "");
 	if (ioctl(fd, command, dmi) < 0) {
 		log_error("device-mapper ioctl cmd %d failed: %s", dmt->type,
@@ -354,7 +354,12 @@ int dm_task_run(struct dm_task *dmt)
 	case DM_DEVICE_REMOVE:
 		rm_dev_node(dmt->dev_name);
 		break;
+
+	case DM_DEVICE_RENAME:
+	        rename_dev_node(dmt->dev_name, dmt->newname);
+		break;
 	}
+
 
 	dmt->dmi = dmi;
 	close(fd);
