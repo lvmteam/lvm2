@@ -51,7 +51,7 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(cmd, argc, argv, &lvchange_single);
+	return process_each_lv(cmd, argc, argv, LCK_VG_WRITE, &lvchange_single);
 }
 
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv)

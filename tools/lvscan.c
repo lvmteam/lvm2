@@ -29,7 +29,7 @@ int lvscan(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(cmd, argc, argv, &lvscan_single);
+	return process_each_lv(cmd, argc, argv, LCK_VG_READ, &lvscan_single);
 
 /*********** FIXME Count!   Add private struct to process_each*  
 *	if (!lv_total)
