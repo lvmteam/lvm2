@@ -19,10 +19,11 @@ set -e
 
 
 case "$1" in
-	purge|remove)
+	purge)
+		rm -f /etc/init.d/lvm2
 		update-rc.d lvm2 remove >/dev/null
 	;;
-	upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+	remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 	;;
 
 	*)
