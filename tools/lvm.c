@@ -1168,6 +1168,7 @@ int main(int argc, char **argv)
 	if (!(cmd = _init()))
 		return -1;
 
+	cmd->argv = argv;
 	namebase = strdup(argv[0]);
 	base = basename(namebase);
 	while (*base == '/')
