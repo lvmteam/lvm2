@@ -52,44 +52,40 @@ static struct dm_task *_info(struct logical_volume *lv)
 	return NULL;
 }
 
-int lv_active(struct logical_volume *lv, int *result)
+int lv_active(struct logical_volume *lv)
 {
-	int r = 0;
+	int r = -1;
 	struct dm_task *dmt;
 
 	if (!(dmt = _info(lv))) {
 		stack;
-		return 0;
+		return r;
 	}
 
-	if (!dm_task_exists(dmt, result)) {
+	if (!dm_task_exists(dmt, &r)) {
 		stack;
 		goto out;
 	}
-
-	r = 1;
 
  out:
 	dm_task_destroy(dmt);
 	return r;
 }
 
-int lv_open_count(struct logical_volume *lv, int *result)
+int lv_open_count(struct logical_volume *lv)
 {
-	int r = 0;
+	int r = -1;
 	struct dm_task *dmt;
 
 	if (!(dmt = _info(lv))) {
 		stack;
-		return 0;
+		return r;
 	}
 
-	if (!dm_task_open_count(dmt, result)) {
+	if (!dm_task_open_count(dmt, &r)) {
 		stack;
 		goto out;
 	}
-
-	r = 1;
 
  out:
 	dm_task_destroy(dmt);
@@ -230,15 +226,12 @@ int activate_lvs_in_vg(struct volume_group *vg)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
-	int count = 0, exists;
+	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
 
-		if (!lv_active(lv, &exists) || exists)
-			continue;
-
-		count += lv_activate(lv);
+		count += (!lv_active(lv) && lv_activate(lv));
 	}
 
 	return count;
@@ -253,15 +246,12 @@ int deactivate_lvs_in_vg(struct volume_group *vg)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
-	int count = 0, exists;
+	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
 
-		if (!lv_active(lv, &exists) || !exists)
-			continue;
-
-		count += lv_activate(lv);
+		count += ((lv_active(lv) == 1) && lv_deactivate(lv));
 	}
 
 	return count;
@@ -271,17 +261,12 @@ int lvs_in_vg_activated(struct volume_group *vg)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
-	int exists, count = 0;
+	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
 
-		if (!lv_active(lv, &exists)) {
-			stack;
-			continue; /* FIXME: what is the right thing here ? */
-		}
-
-		count += exists ? 1 : 0;
+		count += (lv_active(lv) == 1);
 	}
 
 	return count;
@@ -291,17 +276,12 @@ int lvs_in_vg_opened(struct volume_group *vg)
 {
 	struct list *lvh;
 	struct logical_volume *lv;
-	int open, count = 0;
+	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = &(list_item(lvh, struct lv_list)->lv);
 
-		if (!lv_open_count(lv, &open)) {
-			stack;
-			continue; /* FIXME: what is the right thing here ? */
-		}
-
-		count += open ? 1 : 0;
+		count += (lv_open_count(lv) == 1);
 	}
 
 	return count;
