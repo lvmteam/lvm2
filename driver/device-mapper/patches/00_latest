@@ -1,6 +1,6 @@
-diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
+diff -ruNX /home/joe/packages/2.4/dontdiff linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
 --- linux/drivers/md/dm-fs.c	Thu Jan  1 01:00:00 1970
-+++ linux-dm/drivers/md/dm-fs.c	Fri Aug 24 10:44:33 2001
++++ linux-dm/drivers/md/dm-fs.c	Wed Aug 29 11:02:20 2001
 @@ -0,0 +1,341 @@
 +/*
 + * dm.c
@@ -70,7 +70,7 @@ diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
 +	int minor;
 +};
 +
-+int dm_init_fs()
++int dm_init_fs(void)
 +{
 +	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
 +
@@ -124,7 +124,7 @@ diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
 +	pfd->fn = process_table;
 +	pfd->minor = MINOR(md->dev);
 +
-+	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR, 
++	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR,
 +					_proc_dir))) {
 +		kfree(pfd);
 +		return -ENOMEM;
@@ -208,7 +208,7 @@ diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
 +static int process_table(const char *b, const char *e, int minor)
 +{
 +	const char *wb, *we;
-+	struct mapped_device *md = dm_find_minor(minor);
++	struct mapped_device *md = dm_find_by_minor(minor);
 +	void *context;
 +	int r;
 +
@@ -223,32 +223,26 @@ diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
 +		dm_suspend(md);
 +
 +		/* start loading a table */
-+		dm_start_table(md);
++		dm_table_start(md);
 +
 +	} else if (!tok_cmp("end", b, e)) {
 +		/* activate the device ... <evil chuckle> ... */
-+		dm_complete_table(md);
++		dm_table_complete(md);
 +		dm_activate(md);
 +
 +	} else {
 +		/* add the new entry */
-+		int len = we - wb;
-+		char high_s[64], *ptr;
 +		char target[64];
 +		struct target *t;
-+		offset_t last = 0, high;
++		offset_t start, size, high;
++		size_t len;
 +
-+		if (len > sizeof(high_s))
++		if (get_number(&b, e, &start))
 +			return -EINVAL;
 +
-+		strncpy(high_s, wb, we - wb);
-+		high_s[len] = '\0';
-+
-+		high = simple_strtol(high_s, &ptr, 10);
-+		if (ptr == high_s)
++		if (get_number(&b, e, &size))
 +			return -EINVAL;
 +
-+		b = we;
 +		if (get_word(b, e, &wb, &we))
 +			return -EINVAL;
 +
@@ -262,13 +256,19 @@ diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
 +		if (!(t = dm_get_target(target)))
 +			return -EINVAL;
 +
-+		if (md->num_targets)
-+			last = md->highs[md->num_targets - 1] + 1;
++		/* check there isn't a gap */
++		if ((md->num_targets &&
++		     start != md->highs[md->num_targets - 1] + 1) ||
++		    (!md->num_targets && start)) {
++			WARN("gap in target ranges");
++			return -EINVAL;
++		}
 +
-+		if ((r = t->ctr(last, high, md, we, e, &context)))
++		high = start + (size - 1);
++		if ((r = t->ctr(start, high, md, we, e, &context)))
 +			return r;
 +
-+		if ((r = dm_add_entry(md, high, t->map, context)))
++		if ((r = dm_table_add_entry(md, high, t->map, context)))
 +			return r;
 +	}
 +
@@ -343,10 +343,10 @@ diff -ruN linux/drivers/md/dm-fs.c linux-dm/drivers/md/dm-fs.c
 +	strncpy(dest, b, len);
 +	dest[len] = '\0';
 +}
-diff -ruN linux/drivers/md/dm-table.c linux-dm/drivers/md/dm-table.c
+diff -ruNX /home/joe/packages/2.4/dontdiff linux/drivers/md/dm-table.c linux-dm/drivers/md/dm-table.c
 --- linux/drivers/md/dm-table.c	Thu Jan  1 01:00:00 1970
-+++ linux-dm/drivers/md/dm-table.c	Fri Aug 24 10:44:33 2001
-@@ -0,0 +1,192 @@
++++ linux-dm/drivers/md/dm-table.c	Wed Aug 29 11:03:08 2001
+@@ -0,0 +1,178 @@
 +/*
 + * dm-table.c
 + *
@@ -427,29 +427,27 @@ diff -ruN linux/drivers/md/dm-table.c linux-dm/drivers/md/dm-table.c
 +	}
 +
 +	vfree(md->targets);
-+	vfree(md->contexts);
 +
 +	md->highs = 0;
 +	md->targets = 0;
-+	md->contexts = 0;
 +
 +	md->num_targets = 0;
 +	md->num_allocated = 0;
 +}
 +
-+int dm_start_table(struct mapped_device *md)
++int dm_table_start(struct mapped_device *md)
 +{
 +	int r;
 +	set_bit(DM_LOADING, &md->state);
 +
 +	dm_free_table(md);
-+	if ((r = alloc_targets(md, 2)))	/* FIXME: increase once debugged 256 ? */
++	if ((r = alloc_targets(md, 64)))
 +		return r;
 +
 +	return 0;
 +}
 +
-+int dm_add_entry(struct mapped_device *md, offset_t high,
++int dm_table_add_entry(struct mapped_device *md, offset_t high,
 +		 dm_map_fn target, void *context)
 +{
 +	if (md->num_targets >= md->num_targets &&
@@ -457,14 +455,14 @@ diff -ruN linux/drivers/md/dm-table.c linux-dm/drivers/md/dm-table.c
 +		return -ENOMEM;
 +
 +	md->highs[md->num_targets] = high;
-+	md->targets[md->num_targets] = target;
-+	md->contexts[md->num_targets] = context;
++	md->targets[md->num_targets].map = target;
++	md->targets[md->num_targets].private = context;
 +
 +	md->num_targets++;
 +	return 0;
 +}
 +
-+int dm_complete_table(struct mapped_device *md)
++int dm_table_complete(struct mapped_device *md)
 +{
 +	int n, i;
 +
@@ -500,8 +498,7 @@ diff -ruN linux/drivers/md/dm-table.c linux-dm/drivers/md/dm-table.c
 +static int alloc_targets(struct mapped_device *md, int num)
 +{
 +	offset_t *n_highs;
-+	dm_map_fn *n_targets;
-+	void **n_contexts;
++	struct target_instance *n_targets;
 +
 +	if (!(n_highs = vmalloc(sizeof(*n_highs) * num)))
 +		return -ENOMEM;
@@ -511,38 +508,27 @@ diff -ruN linux/drivers/md/dm-table.c linux-dm/drivers/md/dm-table.c
 +		return -ENOMEM;
 +	}
 +
-+	if (!(n_contexts = vmalloc(sizeof(*n_contexts) * num))) {
-+		vfree(n_highs);
-+		vfree(n_targets);
-+		return -ENOMEM;
-+	}
-+
 +	if (md->num_targets) {
 +		memcpy(n_highs, md->highs,
 +		       sizeof(*n_highs) * md->num_targets);
 +
 +		memcpy(n_targets, md->targets,
 +		       sizeof(*n_targets) * md->num_targets);
-+
-+		memcpy(n_contexts, md->contexts,
-+		       sizeof(*n_contexts) * md->num_targets);
 +	}
 +
 +	vfree(md->highs);
 +	vfree(md->targets);
-+	vfree(md->contexts);
 +
 +	md->num_allocated = num;
 +	md->highs = n_highs;
 +	md->targets = n_targets;
-+	md->contexts = n_contexts;
 +
 +	return 0;
 +}
-diff -ruN linux/drivers/md/dm-target.c linux-dm/drivers/md/dm-target.c
+diff -ruNX /home/joe/packages/2.4/dontdiff linux/drivers/md/dm-target.c linux-dm/drivers/md/dm-target.c
 --- linux/drivers/md/dm-target.c	Thu Jan  1 01:00:00 1970
-+++ linux-dm/drivers/md/dm-target.c	Fri Aug 24 10:44:33 2001
-@@ -0,0 +1,191 @@
++++ linux-dm/drivers/md/dm-target.c	Wed Aug 29 10:56:38 2001
+@@ -0,0 +1,176 @@
 +/*
 + * dm-target.c
 + *
@@ -630,20 +616,20 @@ diff -ruN linux/drivers/md/dm-target.c linux-dm/drivers/md/dm-target.c
 + *
 + * 'linear' target maps a linear range of a device
 + */
-+int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
-+		const char *cb, const char *ce, void **result)
++static int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
++		      const char *cb, const char *ce, void **result)
 +{
 +	/* this takes no arguments */
 +	*result = 0;
 +	return 0;
 +}
 +
-+void io_err_dtr(void *c)
++static void io_err_dtr(void *c)
 +{
 +	/* empty */
 +}
 +
-+int io_err_map(struct buffer_head *bh, void *context)
++static int io_err_map(struct buffer_head *bh, void *context)
 +{
 +	buffer_IO_error(bh);
 +	return 0;
@@ -655,23 +641,8 @@ diff -ruN linux/drivers/md/dm-target.c linux-dm/drivers/md/dm-target.c
 +	int offset;		/* FIXME: we need a signed offset type */
 +};
 +
-+static int get_number(const char **b, const char *e, unsigned int *n)
-+{
-+	char *ptr;
-+	*b = eat_space(*b, e);
-+	if (*b >= e)
-+		return -EINVAL;
-+
-+	*n = simple_strtoul(*b, &ptr, 10);
-+	if (ptr == *b)
-+		return -EINVAL;
-+	*b = ptr;
-+
-+	return 0;
-+}
-+
-+int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
-+	       const char *cb, const char *ce, void **result)
++static int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
++		      const char *cb, const char *ce, void **result)
 +{
 +	/* context string should be of the form:
 +	 *  <major> <minor> <offset>
@@ -706,12 +677,12 @@ diff -ruN linux/drivers/md/dm-target.c linux-dm/drivers/md/dm-target.c
 +	return 0;
 +}
 +
-+void linear_dtr(void *c)
++static void linear_dtr(void *c)
 +{
 +	kfree(c);
 +}
 +
-+int linear_map(struct buffer_head *bh, void *context)
++static int linear_map(struct buffer_head *bh, void *context)
 +{
 +	struct linear_c *lc = (struct linear_c *) context;
 +
@@ -734,10 +705,10 @@ diff -ruN linux/drivers/md/dm-target.c linux-dm/drivers/md/dm-target.c
 +
 +	return 0;
 +}
-diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
+diff -ruNX /home/joe/packages/2.4/dontdiff linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 --- linux/drivers/md/dm.c	Thu Jan  1 01:00:00 1970
-+++ linux-dm/drivers/md/dm.c	Fri Aug 24 10:44:33 2001
-@@ -0,0 +1,602 @@
++++ linux-dm/drivers/md/dm.c	Thu Aug 30 14:03:06 2001
+@@ -0,0 +1,684 @@
 +/*
 + * device-mapper.c
 + *
@@ -765,13 +736,6 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 + *    14/08/2001 - First Version [Joe Thornber]
 + */
 +
-+
-+/* TODO:
-+ *
-+ * dm_ctr_fn should provide the sector sizes, and hardsector_sizes set
-+ * to the smallest of these.
-+ */
-+
 +#include "dm.h"
 +
 +/* defines for blk.h */
@@ -783,83 +747,17 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +
 +#include <linux/blk.h>
 +
-+/*
-+ * This driver attempts to provide a generic way of specifying logical
-+ * devices which are mapped onto other devices.
-+ *
-+ * It does this by mapping sections of the logical device onto 'targets'.
-+ *
-+ * When the logical device is accessed the make_request function looks up
-+ * the correct target for the given sector, and then asks this target
-+ * to do the remapping.
-+ *
-+ * A btree like structure is used to hold the sector range -> target
-+ * mapping.  Because we know all the entries in the btree in advance
-+ * we can make a very compact tree, omitting pointers to child nodes,
-+ * (child nodes locations can be calculated). Each node of the btree is
-+ * 1 level cache line in size, this gives a small performance boost.
-+ *
-+ * A userland test program for the btree gave the following results on a
-+ * 1 Gigahertz Athlon machine:
-+ *
-+ * entries in btree               lookups per second
-+ * ----------------               ------------------
-+ * 5                              25,000,000
-+ * 1000                           7,700,000
-+ * 10,000,000                     3,800,000
-+ *
-+ * Of course these results should be taken with a pinch of salt; the lookups
-+ * were sequential and there were no other applications (other than X + emacs)
-+ * running to give any pressure on the level 1 cache.
-+ *
-+ * Typically LVM users would find they have very few targets for each
-+ * LV (probably less than 10).
-+ *
-+ * Target types are not hard coded, instead the
-+ * register_mapping_type function should be called.  A target type
-+ * is specified using three functions (see the header):
-+ *
-+ * dm_ctr_fn - takes a string and contructs a target specific piece of
-+ *             context data.
-+ * dm_dtr_fn - destroy contexts.
-+ * dm_map_fn - function that takes a buffer_head and some previously
-+ *             constructed context and performs the remapping.
-+ *
-+ * This file contains two trivial mappers, which are automatically
-+ * registered: 'linear', and 'io_error'.  Linear alone is enough to
-+ * implement most LVM features (omitting striped volumes and
-+ * snapshots).
-+ *
-+ * The driver is controlled through a /proc interface...
-+ * FIXME: finish
-+ *
-+ * At the moment the table assumes 32 bit keys (sectors), the move to
-+ * 64 bits will involve no interface changes, since the tables will be
-+ * read in as ascii data.  A different table implementation can
-+ * therefor be provided at another time.  Either just by changing offset_t
-+ * to 64 bits, or maybe implementing a structure which looks up the keys in
-+ * stages (ie, 32 bits at a time).
-+ *
-+ * More interesting targets:
-+ *
-+ * striped mapping; given a stripe size and a number of device regions
-+ * this would stripe data across the regions.  Especially useful, since
-+ * we could limit each striped region to a 32 bit area and then avoid
-+ * nasy 64 bit %'s.
-+ *
-+ * mirror mapping (reflector ?); would set off a kernel thread slowly
-+ * copying data from one region to another, ensuring that any new
-+ * writes got copied to both destinations correctly.  Great for
-+ * implementing pvmove.  Not sure how userland would be notified that
-+ * the copying process had completed.  Possibly by reading a /proc entry
-+ * for the LV. Could also use poll() for this kind of thing.
-+ */
-+
 +#define MAX_DEVICES 64
 +#define DEFAULT_READ_AHEAD 64
 +
 +const char *_name = "device-mapper";
 +int _version[3] = {0, 1, 0};
++
++struct io_hook {
++	struct mapped_device *md;
++	void (*end_io)(struct buffer_head *bh, int uptodate);
++	void *context;
++};
 +
 +#define rl down_read(&_dev_lock)
 +#define ru up_read(&_dev_lock)
@@ -932,7 +830,7 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	blksize_size[MAJOR_NR] = 0;
 +	hardsect_size[MAJOR_NR] = 0;
 +
-+	printk(KERN_INFO "%s %d.%d.%d finalised\n", _name,
++	printk(KERN_INFO "%s %d.%d.%d cleaned up\n", _name,
 +	       _version[0], _version[1], _version[2]);
 +}
 +
@@ -1032,14 +930,131 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	return 0;
 +}
 +
++/* FIXME: These should have their own slab */
++inline static struct io_hook *alloc_io_hook(void)
++{
++	return kmalloc(sizeof(struct io_hook), GFP_NOIO);
++}
++
++inline static void free_io_hook(struct io_hook *ih)
++{
++	kfree(ih);
++}
++
++inline static struct deferred_io *alloc_deferred(void)
++{
++	return kmalloc(sizeof(struct deferred_io), GFP_NOIO);
++}
++
++inline static void free_deferred(struct deferred_io *di)
++{
++	kfree(di);
++}
++
++static void dec_pending(struct buffer_head *bh, int uptodate)
++{
++	struct io_hook *ih = bh->b_private;
++
++	if (atomic_dec_and_test(&ih->md->pending))
++		/* nudge anyone waiting on suspend queue */
++		wake_up_interruptible(&ih->md->wait);
++
++	bh->b_end_io = ih->end_io;
++	bh->b_private = ih->context;
++	free_io_hook(ih);
++
++	bh->b_end_io(bh, uptodate);
++}
++
++static int queue_io(struct mapped_device *md, struct buffer_head *bh, int rw)
++{
++	struct deferred_io *di = alloc_deferred();
++
++	if (!di)
++		return -ENOMEM;
++
++	wl;
++	if (test_bit(DM_ACTIVE, &md->state)) {
++		wu;
++		return 0;
++	}
++
++	di->bh = bh;
++	di->rw = rw;
++	di->next = md->deferred;
++	md->deferred = di;
++	wu;
++
++	return 1;
++}
++
++
++inline static int __map_buffer(struct mapped_device *md,
++			       struct buffer_head *bh, int node)
++{
++	dm_map_fn fn;
++	void *context;
++	struct io_hook *ih = 0;
++	int r;
++	struct target_instance *ti = md->targets + node;
++
++	fn = ti->map;
++	context = ti->private;
++
++	if (!fn)
++		return 0;
++
++	ih = alloc_io_hook();
++
++	if (!ih)
++		return 0;
++
++	ih->md = md;
++	ih->end_io = bh->b_end_io;
++	ih->context = bh->b_private;
++
++	r = fn(bh, context);
++
++	if (r > 0) {
++		/* hook the end io request fn */
++		atomic_inc(&md->pending);
++		bh->b_end_io = dec_pending;
++		bh->b_private = ih;
++
++	} else if (r == 0)
++		/* we don't need to hook */
++		free_io_hook(ih);
++
++	else if (r < 0) {
++		free_io_hook(ih);
++		return 0;
++	}
++
++	return 1;
++}
++
++inline static int __find_node(struct mapped_device *md, struct buffer_head *bh)
++{
++	int i = 0, l, r = 0;
++	offset_t *node;
++
++	/* search the btree for the correct target */
++	for (l = 0; l < md->depth; l++) {
++		r = ((KEYS_PER_NODE + 1) * r) + i;
++		node = md->index[l] + (r * KEYS_PER_NODE);
++
++		for (i = 0; i < KEYS_PER_NODE; i++)
++			if (node[i] >= bh->b_rsector)
++				break;
++	}
++
++	return (KEYS_PER_NODE * r) + i;
++}
++
 +static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 +{
 +	struct mapped_device *md;
-+	offset_t *node;
-+	int i = 0, l, next_node = 0, ret = 0;
-+	int minor = MINOR(bh->b_rdev);
-+	dm_map_fn fn;
-+	void *context;
++	int r, minor = MINOR(bh->b_rdev);
 +
 +	if (minor >= MAX_DEVICES)
 +		return -ENXIO;
@@ -1047,33 +1062,34 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	rl;
 +	md = _devs[minor];
 +
-+	if (!md) {
-+		ret = -ENXIO;
-+		goto out;
++	if (!md || !test_bit(DM_LOADED, &md->state))
++		goto bad;
++
++	/* if we're suspended we have to queue this io for later */
++	if (!test_bit(DM_ACTIVE, &md->state)) {
++		ru;
++		r = queue_io(md, bh, rw);
++
++		if (r < 0) {
++			buffer_IO_error(bh);
++			return 0;
++
++		} else if (r > 0)
++			return 0; /* deferred successfully */
++
++		rl;	/* FIXME: there's still a race here */
 +	}
 +
-+	for (l = 0; l < md->depth; l++) {
-+		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
-+		node = md->index[l] + (next_node * KEYS_PER_NODE);
++	if (!__map_buffer(md, bh, __find_node(md, bh)))
++		goto bad;
 +
-+		for (i = 0; i < KEYS_PER_NODE; i++)
-+			if (node[i] >= bh->b_rsector)
-+				break;
-+	}
-+
-+	next_node = (KEYS_PER_NODE * next_node) + i;
-+	fn = md->targets[next_node];
-+	context = md->contexts[next_node];
-+
-+	if (fn) {
-+		if ((ret = fn(bh, context)))
-+			atomic_inc(&md->pending);
-+	} else
-+		buffer_IO_error(bh);
-+
-+ out:
 +	ru;
-+	return ret;
++	return 1;
++
++ bad:
++	ru;
++	buffer_IO_error(bh);
++	return 0;
 +}
 +
 +static inline int __specific_dev(int minor)
@@ -1118,6 +1134,8 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	md->dev = MKDEV(DM_BLK_MAJOR, minor);
 +	md->name[0] = '\0';
 +	md->state = 0;
++
++	init_waitqueue_head(&md->wait);
 +
 +	_devs[minor] = md;
 +	wu;
@@ -1171,7 +1189,7 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	return r;
 +}
 +
-+struct mapped_device *dm_find_name(const char *name)
++struct mapped_device *dm_find_by_name(const char *name)
 +{
 +	struct mapped_device *md;
 +
@@ -1182,7 +1200,7 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	return md;
 +}
 +
-+struct mapped_device *dm_find_minor(int minor)
++struct mapped_device *dm_find_by_minor(int minor)
 +{
 +	struct mapped_device *md;
 +
@@ -1236,6 +1254,11 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +		return -ENXIO;
 +	}
 +
++	if (md->use_count) {
++		wu;
++		return -EPERM;
++	}
++
 +	if ((r = dm_fs_remove(md))) {
 +		wu;
 +		return r;
@@ -1269,6 +1292,17 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	return 0;
 +}
 +
++static void __flush_deferred_io(struct mapped_device *md)
++{
++	struct deferred_io *c, *n;
++
++	for (c = md->deferred, md->deferred = 0; c; c = n) {
++		n = c->next;
++		generic_make_request(c->rw, c->bh);
++		free_deferred(c);
++	}
++}
++
 +int dm_activate(struct mapped_device *md)
 +{
 +	int ret, minor;
@@ -1293,7 +1327,7 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +
 +	minor = MINOR(md->dev);
 +
-+	_block_size[minor] = md->highs[md->num_targets - 1] + 1;
++	_block_size[minor] = (md->highs[md->num_targets - 1] + 1) >> 1;
 +	_blksize_size[minor] = BLOCK_SIZE; /* FIXME: this depends on
 +                                              the mapping table */
 +	_hardsect_size[minor] = __find_hardsect_size(md);
@@ -1301,12 +1335,13 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
 +
 +	set_bit(DM_ACTIVE, &md->state);
++
++	__flush_deferred_io(md);
 +	wu;
 +
 +	return 0;
 +
 + bad:
-+
 +	od = d;
 +	for (d = md->devices; d != od; d = d->next)
 +		close_dev(d);
@@ -1317,15 +1352,33 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 +
 +void dm_suspend(struct mapped_device *md)
 +{
++	DECLARE_WAITQUEUE(wait, current);
 +	struct dev_list *d;
 +	if (!is_active(md))
 +		return;
++
++	/* wait for all the pending io to flush */
++	add_wait_queue(&md->wait, &wait);
++	current->state = TASK_INTERRUPTIBLE;
++	do {
++		wl;
++		if (!atomic_read(&md->pending))
++			break;
++
++		wu;
++		schedule();
++
++	} while (1);
++
++	current->state = TASK_RUNNING;
++	remove_wait_queue(&md->wait, &wait);
 +
 +	/* close all the devices */
 +	for (d = md->devices; d; d = d->next)
 +		close_dev(d);
 +
 +	clear_bit(DM_ACTIVE, &md->state);
++	wu;
 +}
 +
 +
@@ -1340,10 +1393,10 @@ diff -ruN linux/drivers/md/dm.c linux-dm/drivers/md/dm.c
 + * c-file-style: "linux"
 + * End:
 + */
-diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
+diff -ruNX /home/joe/packages/2.4/dontdiff linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 --- linux/drivers/md/dm.h	Thu Jan  1 01:00:00 1970
-+++ linux-dm/drivers/md/dm.h	Fri Aug 24 10:44:33 2001
-@@ -0,0 +1,146 @@
++++ linux-dm/drivers/md/dm.h	Thu Aug 30 13:54:05 2001
+@@ -0,0 +1,268 @@
 +/*
 + * dm.h
 + *
@@ -1373,6 +1426,94 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 + *     16/08/2001 - First version [Joe Thornber]
 + */
 +
++/*
++ * This driver attempts to provide a generic way of specifying logical
++ * devices which are mapped onto other devices.
++ *
++ * It does this by mapping sections of the logical device onto 'targets'.
++ *
++ * When the logical device is accessed the make_request function looks up
++ * the correct target for the given sector, and then asks this target
++ * to do the remapping.
++ *
++ * (dm-table.c) A btree like structure is used to hold the sector
++ * range -> target mapping.  Because we know all the entries in the
++ * btree in advance we can make a very compact tree, omitting pointers
++ * to child nodes, (child nodes locations can be calculated). Each
++ * node of the btree is 1 level cache line in size, this gives a small
++ * performance boost.
++ *
++ * A userland test program for the btree gave the following results on a
++ * 1 Gigahertz Athlon machine:
++ *
++ * entries in btree               lookups per second
++ * ----------------               ------------------
++ * 5                              25,000,000
++ * 1000                           7,700,000
++ * 10,000,000                     3,800,000
++ *
++ * Of course these results should be taken with a pinch of salt; the lookups
++ * were sequential and there were no other applications (other than X + emacs)
++ * running to give any pressure on the level 1 cache.
++ *
++ * Typical LVM users would find they have very few targets for each
++ * LV (probably less than 10).
++ *
++ * (dm-target.c) Target types are not hard coded, instead the
++ * register_mapping_type function should be called.  A target type is
++ * specified using three functions (see the header):
++ *
++ * dm_ctr_fn - takes a string and contructs a target specific piece of
++ *             context data.
++ * dm_dtr_fn - destroy contexts.
++ * dm_map_fn - function that takes a buffer_head and some previously
++ *             constructed context and performs the remapping.
++ *
++ * Currently there are two two trivial mappers, which are
++ * automatically registered: 'linear', and 'io_error'.  Linear alone
++ * is enough to implement most LVM features (omitting striped volumes
++ * and snapshots).
++ *
++ * (dm-fs.c) The driver is controlled through a /proc interface:
++ * /proc/device-mapper/control allows you to create and remove devices
++ * by 'cat'ing a line of the following format:
++ *
++ * create <device name> [minor no]
++ * remove <device name>
++ *
++ * /proc/device-mapper/<device name> accepts the mapping table:
++ *
++ * begin
++ * <sector start> <length> <target name> <target args>...
++ * ...
++ * end
++ *
++ * The begin/end lines are nasty, they should be handled by open/close
++ * for the file.
++ *
++ * At the moment the table assumes 32 bit keys (sectors), the move to
++ * 64 bits will involve no interface changes, since the tables will be
++ * read in as ascii data.  A different table implementation can
++ * therefor be provided at another time.  Either just by changing offset_t
++ * to 64 bits, or maybe implementing a structure which looks up the keys in
++ * stages (ie, 32 bits at a time).
++ *
++ * More interesting targets:
++ *
++ * striped mapping; given a stripe size and a number of device regions
++ * this would stripe data across the regions.  Especially useful, since
++ * we could limit each striped region to a 32 bit area and then avoid
++ * nasty 64 bit %'s.
++ *
++ * mirror mapping (reflector ?); would set off a kernel thread slowly
++ * copying data from one region to another, ensuring that any new
++ * writes got copied to both destinations correctly.  Great for
++ * implementing pvmove.  Not sure how userland would be notified that
++ * the copying process had completed.  Possibly by reading a /proc entry
++ * for the LV.  Could also use poll() for this kind of thing.
++ */
++
++
 +#ifndef DM_INTERNAL_H
 +#define DM_INTERNAL_H
 +
@@ -1400,10 +1541,24 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +	DM_ACTIVE,
 +};
 +
++/* devices that a metadevice should uses and hence open/close */
 +struct dev_list {
 +	kdev_t dev;
 +	struct block_device *bd;
 +	struct dev_list *next;
++};
++
++/* io that had to be deferred while we were suspended */
++struct deferred_io {
++	int rw;
++	struct buffer_head *bh;
++	struct deferred_io *next;
++};
++
++/* btree leaf, these do the actual mapping */
++struct target_instance {
++	dm_map_fn map;
++	void *private;
 +};
 +
 +struct mapped_device {
@@ -1412,7 +1567,12 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +
 +	int use_count;
 +	int state;
-+	atomic_t pending;
++
++	wait_queue_head_t wait;
++	atomic_t pending;	/* # of 'in flight' buffers */
++
++	/* a list of io's that arrived while we were suspended */
++	struct deferred_io *deferred;
 +
 +	/* btree table */
 +	int depth;
@@ -1422,8 +1582,7 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +	int num_targets;
 +	int num_allocated;
 +	offset_t *highs;
-+	dm_map_fn *targets;
-+	void **contexts;
++	struct target_instance *targets;
 +
 +	/* used by dm-fs.c */
 +	devfs_handle_t devfs_entry;
@@ -1433,6 +1592,7 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +	struct dev_list *devices;
 +};
 +
++/* information about a target type */
 +struct target {
 +	char *name;
 +	dm_ctr_fn ctr;
@@ -1449,8 +1609,8 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +int dm_std_targets(void);
 +
 +/* dm.c */
-+struct mapped_device *dm_find_name(const char *name);
-+struct mapped_device *dm_find_minor(int minor);
++struct mapped_device *dm_find_by_name(const char *name);
++struct mapped_device *dm_find_by_minor(int minor);
 +
 +int dm_create(const char *name, int minor);
 +int dm_remove(const char *name);
@@ -1459,10 +1619,10 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +void dm_suspend(struct mapped_device *md);
 +
 +/* dm-table.c */
-+int dm_start_table(struct mapped_device *md);
-+int dm_add_entry(struct mapped_device *md, offset_t high,
-+		 dm_map_fn target, void *context);
-+int dm_complete_table(struct mapped_device *md);
++int dm_table_start(struct mapped_device *md);
++int dm_table_add_entry(struct mapped_device *md, offset_t high,
++		       dm_map_fn target, void *context);
++int dm_table_complete(struct mapped_device *md);
 +void dm_free_table(struct mapped_device *md);
 +
 +
@@ -1476,12 +1636,12 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +
 +#define WARN(f, x...) printk(KERN_WARNING "device-mapper: " f "\n" , ## x)
 +
-+static inline int is_active(struct mapped_device *md)
++inline static int is_active(struct mapped_device *md)
 +{
 +	return test_bit(DM_ACTIVE, &md->state);
 +}
 +
-+static inline const char *eat_space(const char *b, const char *e)
++inline static const char *eat_space(const char *b, const char *e)
 +{
 +	while(b != e && isspace((int) *b))
 +		b++;
@@ -1489,11 +1649,26 @@ diff -ruN linux/drivers/md/dm.h linux-dm/drivers/md/dm.h
 +	return b;
 +}
 +
++inline static int get_number(const char **b, const char *e, unsigned int *n)
++{
++	char *ptr;
++	*b = eat_space(*b, e);
++	if (*b >= e)
++		return -EINVAL;
++
++	*n = simple_strtoul(*b, &ptr, 10);
++	if (ptr == *b)
++		return -EINVAL;
++	*b = ptr;
++
++	return 0;
++}
++
 +#endif
-diff -ruN linux/include/linux/device-mapper.h linux-dm/include/linux/device-mapper.h
+diff -ruNX /home/joe/packages/2.4/dontdiff linux/include/linux/device-mapper.h linux-dm/include/linux/device-mapper.h
 --- linux/include/linux/device-mapper.h	Thu Jan  1 01:00:00 1970
-+++ linux-dm/include/linux/device-mapper.h	Fri Aug 24 10:44:10 2001
-@@ -0,0 +1,60 @@
++++ linux-dm/include/linux/device-mapper.h	Tue Aug 28 11:35:56 2001
+@@ -0,0 +1,61 @@
 +/*
 + * device-mapper.h
 + *
@@ -1534,6 +1709,7 @@ diff -ruN linux/include/linux/device-mapper.h linux-dm/include/linux/device-mapp
 +struct mapped_device;
 +typedef unsigned int offset_t;
 +
++/* constructor, destructor and map fn types */
 +typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct mapped_device *md,
 +			 const char *cb, const char *ce, void **result);
 +typedef void (*dm_dtr_fn)(void *c);
