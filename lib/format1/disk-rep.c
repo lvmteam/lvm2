@@ -83,44 +83,56 @@ static void _xlate_vg(struct vg_disk *disk)
         xx32(pvg_total);
 }
 
-static int _read_pv(struct device *dev, struct pv_disk *disk)
+static void _xlate_extents(struct pe_disk *extents, int count)
 {
-	if (dev_read(dev, 0, sizeof(*disk), disk) != sizeof(&disk)) {
-		log_error("failed to read pv from disk (%s)", dev->name);
+	int i;
+
+	for (i = 0; i < count; i++) {
+		extents[i].lv_num = xlate16(extents[i].lv_num);
+		extents[i].le_num = xlate16(extents[i].le_num);
+	}
+}
+
+static int _read_pv(struct data_list *data)
+{
+	struct pv_disk *pvd = &data->pv;
+	if (dev_read(data->dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd)) {
+		stack;
 		return 0;
 	}
 
-	_xlate_pv(disk);
-	memset(disk->pv_name, 0, sizeof (disk->pv_name));
-	strncpy(disk->pv_name, dev->name, sizeof(disk->pv_name) - 1);
-
-	disk->pv_dev = dev->dev;
+	_xlate_pv(pvd);
+	memset(pvd->pv_name, 0, sizeof (pvd->pv_name));
+	strncpy(pvd->pv_name, data->dev->name, sizeof(pvd->pv_name) - 1);
+	pvd->pv_dev = pvd->dev;
 	return 1;
 }
 
 static int _read_lv(struct device *dev, ulong pos, struct lv_disk *disk)
 {
 	if (dev_read(dev, pos, sizeof(*disk), disk) != sizeof(*disk)) {
-		log_error("failed to read lv from disk (%s)", dev->name);
+		stack;
 		return 0;
 	}
-
 	_xlate_lv(disk);
+
 	return 1;
 }
 
-static int _read_vg(struct device *dev, ulong pos, struct vg_disk *disk)
+static int _read_vg(struct disk_list *data)
 {
-	if (dev_read(dev, pos, sizeof(*disk), disk) != sizeof(*disk)) {
-		log_error("failed to read vg from disk (%s)", dev->name);
+	struct vg_disk *vgd = &data->vg;
+	unsigned long pos = data->pv.vg_on_disk.base;
+	if (dev_read(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd)) {
+		stack;
 		return 0;
 	}
+	_xlate_vg(vgd);
 
-	_xlate_vg(disk);
 	return 1;
 }
 
-static int _read_uuids(struct device *dev, struct disk_list *data)
+static int _read_uuids(struct disk_list *data)
 {
 	int num_read = 0;
 	struct uuid_list *ul;
@@ -128,11 +140,10 @@ static int _read_uuids(struct device *dev, struct disk_list *data)
 	ulong pos = data->pv.pv_uuidlist_on_disk.base;
 	ulong end = pos + data->pv.pv_uuidlist_on_disk.size;
 
-	while(pos < end && num_read < ABS_MAX_PV) {
-		if (dev_read(dev, pos, sizeof(buffer), buffer) !=
+	while(pos < end && num_read < MAX_PV) {
+		if (dev_read(data->dev, pos, sizeof(buffer), buffer) !=
 		    sizeof(buffer)) {
-			log_err("failed to read a pv_uuid from %s\n",
-				dev->name);
+			stack;
 			return 0;
 		}
 
@@ -149,16 +160,17 @@ static int _read_uuids(struct device *dev, struct disk_list *data)
 		pos += NAME_LEN;
 		num_read++;
 	}
+
 	return 1;
 }
 
-static int _read_lvs(struct device *dev, struct disk_list *data)
+static int _read_lvs(struct disk_list *data)
 {
 	int i;
 	unsigned long pos;
 
 	for(i = 0; i < data->vg.lv_cur; i++) {
-		pos = data->pv.lv_on_disk.base + (i * sizeof(struct lv_list));
+		pos = data->pv.lv_on_disk.base + (i * sizeof(struct lv_disk));
 		struct lv_list *ll = pool_alloc(sizeof(*ll));
 
 		if (!ll) {
@@ -166,7 +178,7 @@ static int _read_lvs(struct device *dev, struct disk_list *data)
 			return 0;
 		}
 
-		if (!_read_lv(dev, pos, &ll->lv)) {
+		if (!_read_lv(data->dev, pos, &ll->lv)) {
 			stack;
 			return 0;
 		}
@@ -177,7 +189,7 @@ static int _read_lvs(struct device *dev, struct disk_list *data)
 	return 1;
 }
 
-static int _read_extents(struct device *dev, struct disk_list *data)
+static int _read_extents(struct disk_list *data)
 {
 	size_t len = sizeof(struct pe_disk) * data->pv->pe_total;
 	struct pe_disk *extents = pool_alloc(data->mem, len);
@@ -188,54 +200,64 @@ static int _read_extents(struct device *dev, struct disk_list *data)
 		return 0;
 	}
 
-	if (dev_read(dev, pos, len, extents) != len) {
-		log_error("failed to read extents from disk (%s)", dev->name);
+	if (dev_read(data->dev, pos, len, extents) != len) {
+		stack;
 		return 0;
 	}
-
-	for (i = 0; i < data->pv->pe_total; i++) {
-		extents[i].lv_num = xlate16(extents[i].lv_num);
-		extents[i].le_num = xlate16(extents[i].le_num);
-	}
-
+	_xlate_extents(extents, data->pv.pe_total);
 	data->extents = extents;
+
 	return 1;
 }
 
-static int _read_all_pv_data(struct device *dev, struct disk_list *data)
+struct disk_list *read_pv(struct device *dev, struct pool *mem,
+			  const char *vg_name)
 {
-	if (!_read_pv(dev, &data->pv)) {
-		stack;
-		return 0;
+	struct disk_list *data = pool_alloc(mem, sizeof(*data));
+	data->dev = dev;
+	data->mem = mem;
+
+	if (!_read_pv(&data->pv)) {
+		log_err("failed to read pv data from %s\n", dev->name);
+		goto bad;
 	}
 
 	if (strcmp(data->pv.id, "HM")) {
 		log_info("%s does not have a valid PV identifier.\n",
 			 dev->name);
-		return 0;
+		goto bad;
 	}
 
-	if (!_read_vg(dev, data->pv.pv_vg_on_disk.base, &data->vg)) {
+	if (vg_name && strcmp(vg_name, data->pv.vg_name)) {
+		log_info("%s is not a member of the vg '%s'\n", vg_name);
+		goto bad;
+	}
+
+	if (!_read_vg(data->pv.pv_vg_on_disk.base, &data->vg)) {
 		log_err("failed to read vg data from pv (%s)\n", dev->name);
-		return 0;
+		goto bad;
 	}
 
-	if (!_read_uuids(dev, data)) {
+	if (!_read_uuids(data)) {
 		log_err("failed to read pv uuid list from %s\n", dev->name);
-		return 0;
+		goto bad;
 	}
 
-	if (!_read_lvs(dev, data)) {
+	if (!_read_lvs(data)) {
 		log_err("failed to read lv's from %s\n", dev->name);
-		return 0;
+		goto bad;
 	}
 
-	if (!_read_extents(dev, data)) {
+	if (!_read_extents(data)) {
 		log_err("failed to read extents from %s\n", dev->name);
-		return 0;
+		goto bad;
 	}
 
-	return 1;
+	return data;
+
+ bad:
+	pool_free(data);
+	return NULL;
 }
 
 /*
@@ -252,26 +274,167 @@ int read_pvs_in_vg(struct v1 *v, const char *vg_name,
 	struct disk_list *data = NULL;
 
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
-		struct disk_list *data = pool_alloc(mem, sizeof(*data));
 
-		if (!data) {
-			stack;
-			goto bad;
-		}
-
-		if (!first)
-			first = data;
-
-		if (_read_all_pv_data(dev, pvd) &&
-		    !strcmp(pvd->pv.vg_name, vg_name))
-			list_add(&pvd->list, head);
+		if ((data = read_all_pv(dev, mem, vg_name)))
+			list_add(&data->list, head);
 		else
 			pool_free(mem, pvd);
 	}
 	return 1;
+}
 
- bad:
-	if (first)
-		pool_free(mem, first);
-	return 0;
+
+static int _write_vg(struct disk_list *data)
+{
+	struct vg_disk *vgd = &data->vg;
+	unsigned long pos = data->pv.vg_on_disk.base;
+
+	_xlate_vg(vgd);
+	if (dev_write(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd)) {
+		stack;
+		return 0;
+	}
+	_xlate_vg(vgd);
+
+	return 1;
+}
+
+static int _write_uuids(struct disk_list *data)
+{
+	int num_read = 0;
+	struct uuid_list *ul;
+	struct list_head *tmp;
+	ulong pos = data->pv.pv_uuidlist_on_disk.base;
+	ulong end = pos + data->pv.pv_uuidlist_on_disk.size;
+
+	list_for_each(tmp, &data->uuids) {
+		if (pos >= end) {
+			log_err("too many uuids to fit on %s\n",
+				data->dev->name);
+			return 0;
+		}
+
+		ul = list_entry(tmp, struct uuid_list, list);
+		if (dev_write(data->dev, pos, sizeof(NAME_LEN), NAME_LEN) !=
+		    NAME_LEN) {
+			stack;
+			return 0;
+		}
+		pos += NAME_LEN;
+	}
+
+	return 1;
+}
+
+static int _write_lv(struct device *dev, ulong pos, struct lv_disk *disk)
+{
+	_xlate_lv(disk);
+	if (dev_write(dev, pos, sizeof(*disk), disk) != sizeof(*disk)) {
+		stack;
+		return 0;
+	}
+	_xlate_lv(disk);
+
+	return 1;
+}
+
+static int _write_lvs(struct disk_list *data)
+{
+	struct list_head *tmp;
+
+	list_for_each(tmp, &data->lvs) {
+		struct lv_list *ll = list_entry(tmp, struct lv_list, list);
+
+		if (!_write_lv(data->dev, pos, &ll->lv)) {
+			stack;
+			return 0;
+		}
+
+		pos += sizeof(struct lv_disk);
+	}
+
+	return 1;
+}
+
+static int _write_extents(struct disk_list *data)
+{
+	size_t len = sizeof(struct pe_disk) * data->pv.pe_total;
+	struct pe_disk *extents = data->extents;
+	unsigned long pos = data->pv.pe_on_disk.base;
+
+	_xlate_extents(extents, data->pv.pe_total);
+	if (dev_write(data->dev, 0, len, extents) != len) {
+		stack;
+		return 0;
+	}
+	_xlate_extents(extents, data->pv.pe_total);
+
+	return 1;
+}
+
+static int _write_pv(struct disk_list *data)
+{
+	struct pv_disk *disk = &data->pv;
+
+	_xlate_pv(disk);
+	if (dev_write(data->dev, 0, sizeof(*disk), disk) != sizeof(&disk)) {
+		stack;
+		return 0;
+	}
+	_xlate_pv(disk);
+
+	return 1;
+}
+
+static int _write_all_pv(struct disk_list *data)
+{
+	const char *pv_name = data->dev->name;
+
+	if (!_write_pv(data)) {
+		log_err("failed to write pv struct to %s\n", pv_name);
+		return 0;
+	}
+
+	if (!_write_vg(data)) {
+		log_err("failed to write vg data to %s\n", pv_name);
+		return 0;
+	}
+
+	if (!_write_uuids(data)) {
+		log_err("failed to write pv uuid list to %s\n", pv_name);
+		return 0;
+	}
+
+	if (!_write_lvs(data)) {
+		log_err("failed to write lv's to %s\n", pv_name);
+		return 0;
+	}
+
+	if (!_write_extents(data)) {
+		log_err("failed to write extents to %s\n", pv_name);
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Writes all the given pv's to disk.  Does very
+ * little sanity checking, so make sure correct
+ * data is passed to here. */
+int write_pvs(struct list_head *pvs)
+{
+	struct list_head *tmp;
+	struct disk_list *dl;
+
+	list_for_each(tmp, pvs) {
+		dl = list_entry(tmp, struct disk_list, list);
+		if (!(_write_all_pv(dl))) {
+			stack;
+			return 0;
+		}
+		log_debug("successfully wrote data to %s\n", dl->dev->name);
+	}
+
+	return 1;
 }

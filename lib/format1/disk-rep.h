@@ -96,8 +96,10 @@ struct uuid_list {
 struct lv_list {
 	struct list_head list;
 	struct lv_disk lv;
+}
 
 struct disk_list {
+	struct device *dev;
 	struct list_head list;
 	struct pv_disk pv;
 	struct vg_disk vg;
@@ -106,7 +108,12 @@ struct disk_list {
 	struct pe_disk *extents;
 };
 
+struct disk_list *read_pv(struct device *dev, struct pool *mem,
+			  const char *vg_name);
+
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 		   struct pool *mem, struct list_head *results);
+
+int write_pvs(struct list_head *pvs);
 
 #endif
