@@ -15,6 +15,49 @@ static void _build_lv_name(char *buffer, size_t s, struct logical_volume *lv)
 	snprintf(buffer, s, "%s_%s", lv->vg->name, lv->name);
 }
 
+struct dm_task *_setup_task(struct logical_volume *lv, int task)
+{
+	char name[128];
+	struct dm_task *dmt;
+
+	if (!(dmt = dm_task_create(task))) {
+		stack;
+		return NULL;
+	}
+
+	_build_lv_name(name, sizeof(name), lv);
+	dm_task_set_name(dmt, name);
+
+	return dmt;
+}
+
+int lv_active(struct logical_volume *lv, int *result)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	if (!(dmt = _setup_task(lv, DM_DEVICE_INFO))) {
+		stack;
+		return 0;
+	}
+
+	if (!dm_task_run(dmt)) {
+		stack;
+		goto out;
+	}
+
+	if (!dm_task_exists(dmt, result)) {
+		stack;
+		goto out;
+	}
+
+	r = 1;
+
+ out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
 /*
  * Creates a target for the next contiguous run of
  * extents.
@@ -54,23 +97,16 @@ static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
 	return 1;
 }
 
-/* FIXME: Always display error msg */
-/* FIXME: Create dev entry if required */
-int lv_activate(struct logical_volume *lv)
+int _load(struct logical_volume *lv, int task)
 {
 	int r = 0;
 	uint32_t le = 0;
-
-	char name[128];
 	struct dm_task *dmt;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_CREATE))) {
+	if (!(dmt = _setup_task(lv, task))) {
 		stack;
 		return 0;
 	}
-
-	_build_lv_name(name, sizeof(name), lv);
-	dm_task_set_name(dmt, name);
 
 	/*
 	 * Merge adjacent extents.
@@ -91,37 +127,83 @@ int lv_activate(struct logical_volume *lv)
 	return r;
 }
 
-int activate_lvs_in_vg(struct volume_group *vg)
+/* FIXME: Always display error msg */
+/* FIXME: Create dev entry if required */
+int lv_activate(struct logical_volume *lv)
 {
-	struct list *lvh;
+	return _load(lv, DM_DEVICE_CREATE);
+}
 
-	int done = 0;
+int _suspend(struct logical_volume *lv, int sus)
+{
+	int r;
+	struct dm_task *dmt;
+	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
 
-	list_iterate(lvh, &vg->lvs)
-		done += lv_activate(&list_item(lvh, struct lv_list)->lv);
+	if (!(dmt = _setup_task(lv, task))) {
+		stack;
+		return 0;
+	}
 
-	return done;
+	if (!(r = dm_task_run(dmt)))
+		log_err("Couldn't %s device '%s'", sus ? "suspend" : "resume",
+			lv->name);
+
+	dm_task_destroy(dmt);
+	return r;
+}
+
+int lv_reactivate(struct logical_volume *lv)
+{
+	int r;
+	if (!_suspend(lv, 1)) {
+		stack;
+		return 0;
+	}
+
+	r = _load(lv, DM_DEVICE_RELOAD);
+
+	if (!_suspend(lv, 0)) {
+		stack;
+		return 0;
+	}
+
+	return r;
 }
 
 int lv_deactivate(struct logical_volume *lv)
 {
 	int r;
-	char name[128];
 	struct dm_task *dmt;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE))) {
+	if (!(dmt = _setup_task(lv, DM_DEVICE_REMOVE))) {
 		stack;
 		return 0;
 	}
-
-	_build_lv_name(name, sizeof(name), lv);
-	dm_task_set_name(dmt, name);
 
 	if (!(r = dm_task_run(dmt)))
 		stack;
 
 	dm_task_destroy(dmt);
 	return r;
+}
+
+int activate_lvs_in_vg(struct volume_group *vg)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+	int count = 0, exists;
+
+	list_iterate(lvh, &vg->lvs) {
+		lv = &(list_item(lvh, struct lv_list)->lv);
+
+		if (!lv_active(lv, &exists) || exists)
+			continue;
+
+		count += lv_activate(lv);
+	}
+
+	return count;
 }
 
 int lv_update_write_access(struct logical_volume *lv)
@@ -132,16 +214,37 @@ int lv_update_write_access(struct logical_volume *lv)
 int deactivate_lvs_in_vg(struct volume_group *vg)
 {
 	struct list *lvh;
+	struct logical_volume *lv;
+	int count = 0, exists;
 
-	int done = 0;
+	list_iterate(lvh, &vg->lvs) {
+		lv = &(list_item(lvh, struct lv_list)->lv);
 
-	list_iterate(lvh, &vg->lvs)
-		done += lv_deactivate(&list_item(lvh, struct lv_list)->lv);
+		if (!lv_active(lv, &exists) || exists)
+			continue;
 
-	return done;
+		count += lv_activate(lv);
+	}
+
+	return count;
 }
 
 int lvs_in_vg_activated(struct volume_group *vg)
 {
-	return 0;
+	struct list *lvh;
+	struct logical_volume *lv;
+	int exists, count = 0;
+
+	list_iterate(lvh, &vg->lvs) {
+		lv = &(list_item(lvh, struct lv_list)->lv);
+
+		if (!lv_active(lv, &exists)) {
+			stack;
+			continue; /* FIXME: what is the right thing here ? */
+		}
+
+		count += exists ? 1 : 0;
+	}
+
+	return count;
 }
