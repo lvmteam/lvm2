@@ -50,8 +50,8 @@ struct target_type *dm_get_target(const char *name)
 /*
  * register a new target_type.
  */
-int register_map_target(const char *name, dm_ctr_fn ctr,
-			dm_dtr_fn dtr, dm_map_fn map)
+int dm_register_target(const char *name, dm_ctr_fn ctr,
+		       dm_dtr_fn dtr, dm_map_fn map)
 {
 	struct target_type *t =
 		kmalloc(sizeof(*t) + strlen(name) + 1, GFP_KERNEL);
@@ -85,7 +85,8 @@ int register_map_target(const char *name, dm_ctr_fn ctr,
  * io-err: always fails an io, useful for bringing
  * up LV's that have holes in them.
  */
-static int io_err_ctr(offset_t b, offset_t e, struct dm_table *t,
+static int io_err_ctr(struct dm_table *t,
+		      offset_t b, offset_t e,
 		      const char *cb, const char *ce, void **result)
 {
 	/* this takes no arguments */
@@ -93,7 +94,7 @@ static int io_err_ctr(offset_t b, offset_t e, struct dm_table *t,
 	return 0;
 }
 
-static void io_err_dtr(void *c)
+static void io_err_dtr(struct dm_table *t, void *c)
 {
 	/* empty */
 }
@@ -116,7 +117,8 @@ struct linear_c {
  * construct a linear mapping.
  * <major> <minor> <offset>
  */
-static int linear_ctr(offset_t low, offset_t high, struct dm_table *t,
+static int linear_ctr(struct dm_table *t,
+		      offset_t low, offset_t high,
 		      const char *cb, const char *ce, void **result)
 {
 	struct linear_c *lc;
@@ -149,8 +151,10 @@ static int linear_ctr(offset_t low, offset_t high, struct dm_table *t,
 	return 0;
 }
 
-static void linear_dtr(void *c)
+static void linear_dtr(struct dm_table *t, void *c)
 {
+	struct linear_c *lc = (struct linear_c *) c;
+	dm_table_remove_device(t, lc->dev);
 	kfree(c);
 }
 
@@ -171,7 +175,7 @@ int dm_target_init(void)
 	int ret;
 
 #define xx(n, fn) \
-	if ((ret = register_map_target(n, \
+	if ((ret = dm_register_target(n, \
              fn ## _ctr, fn ## _dtr, fn ## _map) < 0)) return ret
 
 	xx("io-err", io_err);
@@ -180,3 +184,5 @@ int dm_target_init(void)
 
 	return 0;
 }
+
+EXPORT_SYMBOL(dm_register_target);

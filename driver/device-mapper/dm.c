@@ -216,12 +216,12 @@ static int blk_ioctl(struct inode *inode, struct file *file,
 	return 0;
 }
 
-inline static struct io_hook *alloc_io_hook(void)
+static inline struct io_hook *alloc_io_hook(void)
 {
 	return kmem_cache_alloc(_io_hook_cache, GFP_NOIO);
 }
 
-inline static void free_io_hook(struct io_hook *ih)
+static inline void free_io_hook(struct io_hook *ih)
 {
 	kmem_cache_free(_io_hook_cache, ih);
 }
@@ -231,12 +231,12 @@ inline static void free_io_hook(struct io_hook *ih)
  * their own slab, I say no for now since they are
  * only used when the device is suspended.
  */
-inline static struct deferred_io *alloc_deferred(void)
+static inline struct deferred_io *alloc_deferred(void)
 {
 	return kmalloc(sizeof(struct deferred_io), GFP_NOIO);
 }
 
-inline static void free_deferred(struct deferred_io *di)
+static inline void free_deferred(struct deferred_io *di)
 {
 	kfree(di);
 }
@@ -289,7 +289,7 @@ static int queue_io(struct mapped_device *md, struct buffer_head *bh, int rw)
 /*
  * do the bh mapping for a given leaf
  */
-inline static int __map_buffer(struct mapped_device *md,
+static inline int __map_buffer(struct mapped_device *md,
 			       struct buffer_head *bh, int leaf)
 {
 	dm_map_fn fn;
@@ -336,7 +336,7 @@ inline static int __map_buffer(struct mapped_device *md,
 /*
  * search the btree for the correct target.
  */
-inline static int __find_node(struct dm_table *t, struct buffer_head *bh)
+static inline int __find_node(struct dm_table *t, struct buffer_head *bh)
 {
 	int i = 0, l, r = 0;
 	offset_t *node;

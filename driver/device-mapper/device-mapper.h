@@ -39,13 +39,14 @@ struct dm_table;
 typedef unsigned int offset_t;
 
 /* constructor, destructor and map fn types */
-typedef int (*dm_ctr_fn)(offset_t b, offset_t e, struct dm_table *t,
+typedef int (*dm_ctr_fn)(struct dm_table *t,
+			 offset_t b, offset_t e,
 			 const char *cb, const char *ce, void **result);
-typedef void (*dm_dtr_fn)(void *c);
+typedef void (*dm_dtr_fn)(struct dm_table *t, void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);
 
-int register_map_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
-			dm_map_fn map);
+int dm_register_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
+		       dm_map_fn map);
 
 
 /* contructors should call this to make sure any
@@ -53,6 +54,7 @@ int register_map_target(const char *name, dm_ctr_fn ctr, dm_dtr_fn dtr,
  * (ie. opened/closed).
  */
 int dm_table_add_device(struct dm_table *t, kdev_t dev);
+void dm_table_remove_device(struct dm_table *t, kdev_t dev);
 
 #endif
 #endif
