@@ -179,7 +179,7 @@ struct target_type {
  * btree leaf, these do the actual mapping
  */
 struct target {
-	dm_map_fn map;
+	struct target_type *type;
 	void *private;
 };
 
@@ -247,8 +247,8 @@ void dm_suspend(struct mapped_device *md);
 struct dm_table *dm_table_create(void);
 void dm_table_destroy(struct dm_table *t);
 
-int dm_table_add_entry(struct dm_table *t, offset_t high,
-		       dm_map_fn target, void *private);
+int dm_table_add_target(struct dm_table *t, offset_t high,
+			struct target_type *type, void *private);
 int dm_table_complete(struct dm_table *t);
 
 
