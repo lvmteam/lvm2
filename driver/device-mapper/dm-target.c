@@ -46,9 +46,12 @@ static struct tt_internal *get_target_type(const char *name)
 
 	read_lock(&_lock);
 	ti = __find_target_type(name);
-	if (ti->use == 0 && ti->tt.module)
-		__MOD_INC_USE_COUNT(ti->tt.module);
-	ti->use++;
+
+	if (ti) {
+		if (ti->use == 0 && ti->tt.module)
+			__MOD_INC_USE_COUNT(ti->tt.module);
+		ti->use++;
+	}
 	read_unlock(&_lock);
 
 	return ti;

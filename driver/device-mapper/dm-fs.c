@@ -506,7 +506,7 @@ static struct super_operations dm_ops = {
 };
 
 static struct super_block *_read_super(struct super_block *sb, void *data,
-					   int silent)
+				       int silent)
 {
 	struct inode *inode;
 	struct dentry *root;

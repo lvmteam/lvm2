@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- *  This file is released under the GPL.
+ * This file is released under the GPL.
  */
 
 /*
@@ -113,6 +113,7 @@ struct dm_table *dm_table_create(void)
 		return 0;
 
 	memset(t, 0, sizeof(*t));
+	INIT_LIST_HEAD(&t->devices);
 
 	/* allocate a single nodes worth of targets to
 	   begin with */
@@ -152,11 +153,11 @@ void dm_table_destroy(struct dm_table *t)
 	}
 
 	/* free the device list */
-	if (t->devices) {
+	if (t->devices.next != &t->devices) {
 		WARN("there are still devices present, someone isn't "
 		     "calling dm_table_remove_device");
 
-		free_devices(t->devices);
+		free_devices(&t->devices);
 	}
 
 	kfree(t);
@@ -215,7 +216,7 @@ static struct dm_dev *find_device(struct list_head *l, kdev_t dev)
 {
 	struct list_head *tmp;
 
-	for (tmp = l->next; tmp != l; l = l->next) {
+	for (tmp = l->next; tmp != l; tmp = tmp->next) {
 
 		struct dm_dev *dd = list_entry(tmp, struct dm_dev, list);
 		if (dd->dev == dev)
@@ -229,7 +230,7 @@ static struct dm_dev *find_device(struct list_head *l, kdev_t dev)
  * add a device to the list, or just increment the
  * usage count if it's already present.
  */
-int dm_table_add_device(struct dm_table *t, const char *path,
+int dm_table_get_device(struct dm_table *t, const char *path,
 			struct dm_dev **result)
 {
 	int r;
@@ -240,7 +241,7 @@ int dm_table_add_device(struct dm_table *t, const char *path,
 	if ((r = lookup_device(path, &dev)))
 		return r;
 
-	dd = find_device(t->devices, dev);
+	dd = find_device(&t->devices, dev);
 	if (!dd) {
 		dd = kmalloc(sizeof(*dd), GFP_KERNEL);
 		if (!dd)
@@ -249,7 +250,7 @@ int dm_table_add_device(struct dm_table *t, const char *path,
 		dd->dev = dev;
 		dd->bd = 0;
 		atomic_set(&dd->count, 0);
-		list_add(&dd->list, t->devices);
+		list_add(&dd->list, &t->devices);
 	}
 	atomic_inc(&dd->count);
 	*result = dd;
@@ -260,7 +261,7 @@ int dm_table_add_device(struct dm_table *t, const char *path,
  * decrement a devices use count and remove it if
  * neccessary.
  */
-void dm_table_remove_device(struct dm_table *t, struct dm_dev *dd)
+void dm_table_put_device(struct dm_table *t, struct dm_dev *dd)
 {
        if (atomic_dec_and_test(&dd->count)) {
 	       list_del(&dd->list);
@@ -287,21 +288,11 @@ int dm_table_add_target(struct dm_table *t, offset_t high,
 	return 0;
 }
 
-/*
- * builds the btree to index the map
- */
-int dm_table_complete(struct dm_table *t)
+
+static int setup_indexes(struct dm_table *t)
 {
-	int i, leaf_nodes, total = 0;
+	int i, total = 0;
 	offset_t *indexes;
-
-	/* how many indexes will the btree have ? */
-	leaf_nodes = div_up(t->num_targets, KEYS_PER_NODE);
-	t->depth = 1 + int_log(leaf_nodes, CHILDREN_PER_NODE);
-
-	/* leaf layer has already been set up */
-	t->counts[t->depth - 1] = leaf_nodes;
-	t->index[t->depth - 1] = t->highs;
 
 	/* allocate the space for *all* the indexes */
 	for (i = t->depth - 2; i >= 0; i--) {
@@ -321,6 +312,27 @@ int dm_table_complete(struct dm_table *t)
 	return 0;
 }
 
-EXPORT_SYMBOL(dm_table_add_device);
 
+/*
+ * builds the btree to index the map
+ */
+int dm_table_complete(struct dm_table *t)
+{
+	int leaf_nodes, r = 0;
 
+	/* how many indexes will the btree have ? */
+	leaf_nodes = div_up(t->num_targets, KEYS_PER_NODE);
+	t->depth = 1 + int_log(leaf_nodes, CHILDREN_PER_NODE);
+
+	/* leaf layer has already been set up */
+	t->counts[t->depth - 1] = leaf_nodes;
+	t->index[t->depth - 1] = t->highs;
+
+	if (t->depth >= 2)
+		r = setup_indexes(t);
+
+	return r;
+}
+
+EXPORT_SYMBOL(dm_table_get_device);
+EXPORT_SYMBOL(dm_table_put_device);

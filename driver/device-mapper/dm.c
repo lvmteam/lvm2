@@ -746,7 +746,7 @@ void __bind(struct mapped_device *md, struct dm_table *t)
 	_block_size[minor] = (t->highs[t->num_targets - 1] + 1) >> 1;
 
 	_blksize_size[minor] = BLOCK_SIZE;
-	_hardsect_size[minor] = __find_hardsect_size(t->devices);
+	_hardsect_size[minor] = __find_hardsect_size(&t->devices);
 	register_disk(NULL, md->dev, 1, &dm_blk_dops, _block_size[minor]);
 }
 
@@ -788,7 +788,7 @@ int dm_activate(struct mapped_device *md, struct dm_table *table)
 
 	__bind(md, table);
 
-	if ((r = open_devices(md->map->devices))) {
+	if ((r = open_devices(&md->map->devices))) {
 		wu;
 		return r;
 	}
@@ -823,7 +823,7 @@ int dm_deactivate(struct mapped_device *md)
 		return -EPERM;
 	}
 
-	close_devices(md->map->devices);
+	close_devices(&md->map->devices);
 	md->map = 0;
 	clear_bit(DM_ACTIVE, &md->state);
 	wu;
@@ -868,7 +868,7 @@ void dm_suspend(struct mapped_device *md)
 
 	current->state = TASK_RUNNING;
 	remove_wait_queue(&md->wait, &wait);
-	close_devices(md->map->devices);
+	close_devices(&md->map->devices);
 
 	md->map = 0;
 	wu;
