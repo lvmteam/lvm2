@@ -7,6 +7,7 @@
 #ifndef _LVM_STRING_H
 #define _LVM_STRING_H
 
+#include <stdio.h>
 #include <stdarg.h>
 
 /*
