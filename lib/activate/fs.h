@@ -9,7 +9,7 @@
 
 #include "metadata.h"
 
-int fs_add_lv(struct io_space *ios, struct logical_volume *lv);
-int fs_del_lv(struct io_space *ios, struct logical_volume *lv);
+int fs_add_lv(struct logical_volume *lv);
+int fs_del_lv(struct logical_volume *lv);
 
 #endif

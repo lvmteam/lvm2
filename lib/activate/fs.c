@@ -7,10 +7,7 @@
 #include <unistd.h>
 
 /*
- * FIXME: copied straight from LVM1, we need to
- * check awkward cases like the guy who was
- * running devfs in parallel, mounted on
- * /devfs/
+ * FIXME: copied straight from LVM1.
  *
  * This should run through /proc/mounts once only,
  * storing devfs mount points in a hash table.
@@ -46,26 +43,33 @@ static int _check_devfs(const char *dev_prefix)
 	return r;
 }
 
-static inline int _running_devfs(struct io_space *ios)
+void _build_lv_path(char *buffer, size_t len, struct logical_volume *lv)
 {
-	static int _using_devfs = -1;
-
-	if (_using_devfs < 0)
-		_using_devfs = _check_devfs(ios->prefix);
-
-	return _using_devfs;
+	snprintf(buffer, len, "%s/device-mapper/%s-%s",
+		 lv->vg->cmd->dev_dir, lv->vg->name, lv->name);
 }
 
-static int _mk_node(struct io_space *ios, struct logical_volume *lv)
+void _build_vg_path(char *buffer, size_t len, struct volume_group *vg)
+{
+	snprintf(buffer, len, "%s/%s", vg->cmd->dev_dir, vg->name);
+}
+
+void _build_link_path(char *buffer, size_t len, struct logical_volume *lv)
+{
+	snprintf(buffer, len, "%s/%s/%s", vg->cmd->dev_dir,
+		 vg->name, lv->name);
+}
+
+static int _mk_node(struct logical_volume *lv)
 {
 	char lv_path[PATH_MAX];
 	dev_t dev;
+	const char *dev_dir = lv->vg->cmd->dev_dir;
 
-	if (_running_devfs(ios))
+	if (_check_devfs(dev_dir))
 		return 1;
 
-	snprintf(lv_path, sizeof(lv_path), "%s/device-mapper/%s",
-		 ios->prefix, lv->name);
+	_build_lv_path(lv_path, sizeof(lv_path), lv);
 
 	if (mknod(lv_path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
 		log_sys_err("mknod", "creating lv device node");
@@ -75,15 +79,15 @@ static int _mk_node(struct io_space *ios, struct logical_volume *lv)
 	return 1;
 }
 
-static int _rm_node(struct io_space *ios, struct logical_volume *lv)
+static int _rm_node(struct logical_volume *lv)
 {
 	char lv_path[PATH_MAX];
+	const char *dev_dir = lv->vg->cmd->dev_dir;
 
-	if (_running_devfs(ios))
+	if (_check_devfs(dev_dir))
 		return 1;
 
-	snprintf(lv_path, sizeof(lv_path), "%s/device-mapper/%s",
-		 ios->prefix, lv->name);
+	_build_lv_path(lv_path, sizeof(lv_path), lv);
 
 	if (unlink(lv_path) < 0) {
 		log_sys_err("unlink", "removing lv device node");
@@ -98,44 +102,66 @@ static int _rm_node(struct io_space *ios, struct logical_volume *lv)
  * and create/remove the vg directory, and not say
  * anything if it fails.
  */
-static int _mk_dir(struct io_space *ios, const char *vg_name)
+static int _mk_dir(struct volume_group *vg)
 {
 	char vg_path[PATH_MAX];
 
-	snprintf(vg_path, sizeof(vg_path), "%s/%s", ios->prefix, vg_name);
+	_build_vg_path(vg_path, sizeof(vg_path), vg);
 	mkdir(vg_path, 0555);
 	return 1;
 }
 
-static int _rm_dir(struct io_space *ios, const char *vg_name)
+static int _rm_dir(struct volume_group *vg)
 {
 	char vg_path[PATH_MAX];
 
-	snprintf(vg_path, sizeof(vg_path), "%s/%s", ios->prefix, vg_name);
+	_build_vg_path(vg_path, sizeof(vg_path), vg);
 	rmdir(vg_path);
 	return 1;
 }
 
-static int _mk_link(struct io_space *ios, struct logical_volume *lv)
+static int _mk_link(struct logical_volume *lv)
 {
 	char lv_path[PATH_MAX], link_path[PATH_MAX];
 
-	snprintf(lv_path, sizeof(lv_path), );
+	_build_lv_path(lv_path, sizeof(lv_path), lv);
+	_build_link_path(link_path, sizeof(link_path), lv);
+
+	if (symlink(lv_path, link_path) < 0) {
+		log_sys_err("symlink", "creating lv symlink");
+		return 0;
+	}
+
+	return 1;
 }
 
-int fs_add_lv(struct io_space *ios, struct logical_volume *lv)
+static int _rm_link(struct logical_volume *lv)
 {
-	if (!_mk_node(ios, lv)) {
+	char link_path[PATH_MAX];
+
+	_build_link_path(link_path, sizeof(link_path), lv);
+
+	if (unlink(link_path) < 0) {
+		log_sys_err("unlink", "unlink lv symlink");
+		return 0;
+	}
+
+	return 1;
+}
+
+int fs_add_lv(struct logical_volume *lv)
+{
+	if (!_mk_node(lv)) {
 		stack;
 		return 0;
 	}
 
-	if (!_mk_dir(ios, lv->vg->name)) {
+	if (!_mk_dir(lv->vg)) {
 		stack;
 		return 0;
 	}
 
-	if (!_mk_link(ios, lv)) {
+	if (!_mk_link(lv)) {
 		stack;
 		return 0;
 	}
@@ -145,17 +171,17 @@ int fs_add_lv(struct io_space *ios, struct logical_volume *lv)
 
 int fs_del_lv(struct logical_volume *lv)
 {
-	if (!_rm_link(ios, lv)) {
+	if (!_rm_link(lv)) {
 		stack;
 		return 0;
 	}
 
-	if (!_rm_dir(ios, lv->vg->name)) {
+	if (!_rm_dir(lv->vg)) {
 		stack;
 		return 0;
 	}
 
-	if (!_rm_node(ios, lv)) {
+	if (!_rm_node(lv)) {
 		stack;
 		return 0;
 	}
