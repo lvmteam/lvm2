@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software (UK) Limited.
+ * Copyright (C) 2001-2003 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
  */
@@ -462,6 +462,40 @@ static int _status(int argc, char **argv, void *data)
 
 }
 
+/* Show target names and their version numbers */
+static int _targets(int argc, char **argv, void *data)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	struct dm_versions *target;
+	struct dm_versions *last_target;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_LIST_VERSIONS)))
+		return 0;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	target = dm_task_get_versions(dmt);
+
+	/* Fetch targets and print 'em */
+	do {
+		last_target = target;
+
+		printf("%-16s v%d.%d.%d\n", target->name, target->version[0],
+		       target->version[1], target->version[2]);
+
+		target = (void *) target + target->next;
+	} while (last_target != target);
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+
+}
+
 static int _info(int argc, char **argv, void *data)
 {
 	int r = 0;
@@ -611,6 +645,7 @@ static struct command _commands[] = {
 	{"status", "[<dev_name>]", 0, 1, _status},
 	{"table", "[<dev_name>]", 0, 1, _status},
 	{"wait", "<dev_name> [<event_nr>]", 1, 2, _wait},
+	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
 	{NULL, NULL, 0, 0, NULL}
 };

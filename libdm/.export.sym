@@ -12,6 +12,7 @@ Base {
 		dm_task_get_deps;
 		dm_task_get_name;
 		dm_task_get_names;
+		dm_task_get_versions;
 		dm_task_get_uuid;
 		dm_task_set_ro;
 		dm_task_set_newname;
