@@ -63,9 +63,8 @@ lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
 	$(CC) -o lvm $(OBJECTS) $(LD_FLAGS) -L$(top_srcdir)/lib \
 	      -L$(DESTDIR)/lib -llvm -ldevmapper $(LIBS)
 
-.commands: commands.h
-	$(CC) -E -P -Dxx\(a\)=a commands.h 2>/dev/null | \
-		grep -v help > .commands
+.commands: commands.h cmdnames.h
+	$(CC) -E -P cmdnames.h | grep -v help > .commands
 
 install: $(TARGETS)
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm \
