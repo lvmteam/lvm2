@@ -438,8 +438,7 @@ xx(pvmove,
    "\t[--version]\n"
    "\t[{-n|--name} LogicalVolume]\n"
 /* "\t[{-n|--name} LogicalVolume[:LogicalExtent[-LogicalExtent]...]]\n" */
-   "\tSourcePhysicalVolume\n"
-/* "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n" */
+   "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n"
    "\t[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
 
    abort_ARG, autobackup_ARG, background_ARG, force_ARG, interval_ARG, name_ARG,
