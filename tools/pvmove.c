@@ -64,6 +64,7 @@ static int _become_daemon(struct cmd_context *cmd)
 	strncpy(*cmd->argv, "(pvmove)", strlen(*cmd->argv));
 
 	reset_locking();
+	dev_close_all();
 
 	return 1;
 }
@@ -123,6 +124,8 @@ static struct volume_group *_get_vg(struct cmd_context *cmd, const char *vgname)
 {
 	int consistent = 1;
 	struct volume_group *vg;
+
+	dev_close_all();
 
 	if (!lock_vol(cmd, vgname, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", vgname);
