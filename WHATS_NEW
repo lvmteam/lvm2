@@ -1,3 +1,5 @@
+Version 2.00.09 - 31 Mar 2004
+=============================
   Update copyright notices for Red Hat.
   Fix vgmknodes to remove dud /dev/mapper entries. (libdevmapper update reqd).
   Add LVM1-style colon output to vgdisplay.
