@@ -34,6 +34,7 @@ SOURCES=\
 	format_text/flags.c \
 	format_text/format-text.c \
 	format_text/import.c \
+	label/label.c \
 	log/log.c \
 	metadata/lv_manip.c \
 	metadata/merge.c \

@@ -69,9 +69,9 @@ int label_register_handler(const char *name, struct labeller *handler);
 
 struct labeller *label_get_handler(const char *name);
 
-int label_remove(const char *path);
-int label_read(const char *path, struct label **result);
-int label_verify(const char *path);
+int label_remove(struct device *dev);
+int label_read(struct device *dev, struct label **result);
+int label_verify(struct device *dev);
 void label_free(struct label *l);
 
 /*
