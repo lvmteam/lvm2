@@ -78,7 +78,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
 		return ECMD_FAILED;
 	}
@@ -158,7 +158,7 @@ void vgchange_resizeable(struct cmd_context *cmd, struct volume_group *vg)
 	else
 		vg->status &= ~RESIZEABLE_VG;
 
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+	if (!vg_write(vg))
 		return;
 
 	backup(vg);
@@ -190,7 +190,7 @@ void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg)
 
 	vg->max_lv = max_lv;
 
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+	if (!vg_write(vg))
 		return;
 
 	backup(vg);

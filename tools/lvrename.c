@@ -39,13 +39,13 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	lv_name_old = argv[0];
 	lv_name_new = argv[1];
 
-	if (!(vg_name = extract_vgname(cmd->fid, lv_name_old))) {
+	if (!(vg_name = extract_vgname(cmd, lv_name_old))) {
 		log_error("Please provide a volume group name");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (strchr(lv_name_new, '/') &&
-	    (vg_name_new = extract_vgname(cmd->fid, lv_name_new)) &&
+	    (vg_name_new = extract_vgname(cmd, lv_name_new)) &&
 	    strcmp(vg_name, vg_name_new)) {
 		log_error("Logical volume names must "
 			  "have the same volume group (\"%s\" or \"%s\")",
@@ -91,7 +91,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		goto error;
 	}
@@ -123,8 +123,8 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	if (!archive(lv->vg))
 		goto error;
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD | 
-				       LCK_NONBLOCK))
+	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD |
+		      LCK_NONBLOCK))
 		goto error;
 
 	if (!(lv->name = pool_strdup(cmd->mem, lv_name_new))) {
@@ -133,7 +133,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	log_verbose("Writing out updated volume group");
-	if (!(cmd->fid->ops->vg_write(cmd->fid, vg)))
+	if (!vg_write(vg))
 		goto lverror;
 
 	unlock_lv(cmd, lv->lvid.s);
@@ -146,7 +146,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		  lv_name_old, lv_name_new, vg_name);
 
 	return 0;
-
 
       lverror:
 	unlock_lv(cmd, lv->lvid.s);

@@ -52,7 +52,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
-			if (!(pv = cmd->fid->ops->pv_read(cmd->fid, pv_name))) {
+			if (!(pv = pv_read(cmd, pv_name))) {
 				log_error
 				    ("Failed to read physical volume \"%s\"",
 				     pv_name);
@@ -63,7 +63,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		}
 	} else {
 		log_verbose("Scanning for physical volume names");
-		if (!(pvs = cmd->fid->ops->get_pvs(cmd->fid))) {
+		if (!(pvs = get_pvs(cmd))) {
 			return ECMD_FAILED;
 		}
 
@@ -103,7 +103,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 			return ECMD_FAILED;
 		}
 
-		if (!(vg = cmd->fid->ops->vg_read(cmd->fid, pv->vg_name))) {
+		if (!(vg = vg_read(cmd, pv->vg_name))) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Unable to find volume group of \"%s\"",
 				  pv_name);
@@ -163,7 +163,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
-		if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
+		if (!vg_write(vg)) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
@@ -172,7 +172,7 @@ int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 		backup(vg);
 		unlock_vg(cmd, pv->vg_name);
 	} else {
-		if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
+		if (!(pv_write(cmd, pv))) {
 			log_error("Failed to store physical volume \"%s\"",
 				  pv_name);
 			return 0;

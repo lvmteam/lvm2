@@ -79,12 +79,12 @@ void pvdisplay_colons(struct physical_volume *pv)
 		  dev_name(pv->dev), pv->vg_name, pv->size,
 		  /* FIXME pv->pv_number, Derive or remove? */
 		  pv->status,	/* FIXME Support old or new format here? */
-		  pv->status & ALLOCATABLE_PV,  /* FIXME remove? */
+		  pv->status & ALLOCATABLE_PV,	/* FIXME remove? */
 		  /* FIXME pv->lv_cur, Remove? */
 		  pv->pe_size / 2,
 		  pv->pe_count,
-		  pv->pe_count - pv->pe_allocated,
-		  pv->pe_allocated, *uuid ? uuid : "none");
+		  pv->pe_count - pv->pe_alloc_count,
+		  pv->pe_alloc_count, *uuid ? uuid : "none");
 
 	return;
 }
@@ -131,7 +131,7 @@ void pvdisplay_full(struct physical_volume *pv)
 	log_print("PV#                   %u", pv->pv_number);
 **********/
 
-	pe_free = pv->pe_count - pv->pe_allocated;
+	pe_free = pv->pe_count - pv->pe_alloc_count;
 	if (pv->pe_count && (pv->status & ALLOCATABLE_PV))
 		log_print("Allocatable           yes %s",
 			  (!pe_free && pv->pe_count) ? "(but full)" : "");
@@ -144,7 +144,7 @@ void pvdisplay_full(struct physical_volume *pv)
 	log_print("PE Size (KByte)       %" PRIu64, pv->pe_size / 2);
 	log_print("Total PE              %u", pv->pe_count);
 	log_print("Free PE               %" PRIu64, pe_free);
-	log_print("Allocated PE          %u", pv->pe_allocated);
+	log_print("Allocated PE          %u", pv->pe_alloc_count);
 
 #ifdef LVM_FUTURE
 	printf("Stale PE              %u", pv->pe_stale);
@@ -156,7 +156,8 @@ void pvdisplay_full(struct physical_volume *pv)
 	return;
 }
 
-int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv)
+int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
+		    struct physical_volume *pv)
 {
 	if (!pv)
 		return 0;
@@ -166,7 +167,7 @@ int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg, struct phy
 	log_print("PV Status             %sallocatable",
 		  (pv->status & ALLOCATABLE_PV) ? "" : "NOT ");
 	log_print("Total PE / Free PE    %u / %u",
-		  pv->pe_count, pv->pe_count - pv->pe_allocated);
+		  pv->pe_count, pv->pe_count - pv->pe_alloc_count);
 
 	log_print(" ");
 	return 0;
@@ -183,16 +184,13 @@ void lvdisplay_colons(struct logical_volume *lv)
 		  lv->vg->name,
 		  lv->name,
 		  lv->vg->name,
-		  (lv->status & (LVM_READ | LVM_WRITE)) >> 8,
-		  inkernel ? 1 : 0,
+		  (lv->status & (LVM_READ | LVM_WRITE)) >> 8, inkernel ? 1 : 0,
 		  /* FIXME lv->lv_number,  */
 		  inkernel ? info.open_count : 0, lv->size, lv->le_count,
 		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
 		  ((lv->status & ALLOC_STRICT) +
 		   (lv->status & ALLOC_CONTIGUOUS) * 2), lv->read_ahead,
-		  inkernel ? info.major : -1,
-		  inkernel ? info.minor : -1
-	    );
+		  inkernel ? info.major : -1, inkernel ? info.minor : -1);
 	return;
 }
 
@@ -275,7 +273,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		log_print("LV Status              suspended");
 	else
 		log_print("LV Status              %savailable",
-		  	  inkernel ? "" : "NOT ");
+			  inkernel ? "" : "NOT ");
 
 /********* FIXME lv_number
     log_print("LV #                   %u", lv->lv_number + 1);
@@ -380,7 +378,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 *************/
 
 	if (inkernel)
-    		log_print("Block device           %d:%d", info.major,
+		log_print("Block device           %d:%d", info.major,
 			  info.minor);
 
 	log_print(" ");
@@ -397,7 +395,7 @@ void _display_stripe(struct stripe_segment *seg, int s, const char *pre)
 
 	if (seg->area[s].pv)
 		log_print("%sphysical extents\t%d to %d", pre,
-			   seg->area[s].pe, seg->area[s].pe + len - 1);
+			  seg->area[s].pe, seg->area[s].pe + len - 1);
 }
 
 int lvdisplay_segments(struct logical_volume *lv)
@@ -408,7 +406,7 @@ int lvdisplay_segments(struct logical_volume *lv)
 
 	log_print("--- Segments ---");
 
-	list_iterate (segh, &lv->segments) {
+	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct stripe_segment);
 
 		log_print("logical extent %d to %d:",
@@ -432,8 +430,6 @@ int lvdisplay_segments(struct logical_volume *lv)
 	log_print(" ");
 	return 1;
 }
-
-
 
 void vgdisplay_extents(struct volume_group *vg)
 {
@@ -482,7 +478,9 @@ void vgdisplay_full(struct volume_group *vg)
       log_print ( "Act PV                %u", vg->pv_act);
 *********/
 
-	s1 = display_size((uint64_t) vg->extent_count * (vg->extent_size / 2), SIZE_SHORT);
+	s1 =
+	    display_size((uint64_t) vg->extent_count * (vg->extent_size / 2),
+			 SIZE_SHORT);
 	log_print("VG Size               %s", s1);
 	dbg_free(s1);
 
@@ -492,15 +490,16 @@ void vgdisplay_full(struct volume_group *vg)
 
 	log_print("Total PE              %u", vg->extent_count);
 
-	s1 =
-	    display_size(((uint64_t)
-                          vg->extent_count - vg->free_count) *
+	s1 = display_size(((uint64_t)
+			   vg->extent_count - vg->free_count) *
 			  (vg->extent_size / 2), SIZE_SHORT);
 	log_print("Alloc PE / Size       %u / %s",
 		  vg->extent_count - vg->free_count, s1);
 	dbg_free(s1);
 
-	s1 = display_size((uint64_t) vg->free_count *  (vg->extent_size / 2), SIZE_SHORT);
+	s1 =
+	    display_size((uint64_t) vg->free_count * (vg->extent_size / 2),
+			 SIZE_SHORT);
 	log_print("Free  PE / Size       %u / %s", vg->free_count, s1);
 	dbg_free(s1);
 

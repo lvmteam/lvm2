@@ -36,7 +36,6 @@ static void _destroy(struct dev_filter *f)
 	dbg_free(f);
 }
 
-
 struct dev_filter *composite_filter_create(int n, ...)
 {
 	struct dev_filter **filters = dbg_malloc(sizeof(*filters) * (n + 1));

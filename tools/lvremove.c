@@ -50,23 +50,21 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
-	if (!lv_info(lv, &info)) {
-		stack;
-		return ECMD_FAILED;
-	}
-
-	if (info.open_count) {
-		log_error("Can't remove open logical volume \"%s\"", lv->name);
-		return ECMD_FAILED;
-	}
-
-	if (info.exists && !arg_count(cmd, force_ARG)) {
-		if (yes_no_prompt("Do you really want to remove active "
-				  "logical volume \"%s\"? [y/n]: ",
-				  lv->name) == 'n') {
-			log_print("Logical volume \"%s\" not removed",
+	if (lv_info(lv, &info)) {
+		if (info.open_count) {
+			log_error("Can't remove open logical volume \"%s\"",
 				  lv->name);
-			return 0;
+			return ECMD_FAILED;
+		}
+
+		if (info.exists && !arg_count(cmd, force_ARG)) {
+			if (yes_no_prompt("Do you really want to remove active "
+					  "logical volume \"%s\"? [y/n]: ",
+					  lv->name) == 'n') {
+				log_print("Logical volume \"%s\" not removed",
+					  lv->name);
+				return 0;
+			}
 		}
 	}
 
@@ -81,7 +79,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 
 	if (lv_is_cow(lv)) {
 		log_verbose("Removing snapshot %s", lv->name);
- 		if (!vg_remove_snapshot(lv->vg, lv)) {
+		if (!vg_remove_snapshot(lv->vg, lv)) {
 			stack;
 			return ECMD_FAILED;
 		}
@@ -94,7 +92,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	/* store it on disks */
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+	if (vg_write(vg))
 		return ECMD_FAILED;
 
 	backup(vg);

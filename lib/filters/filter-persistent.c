@@ -54,7 +54,7 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 
 	if (!(cn = find_config_node(cf->root, path, '/'))) {
 		log_very_verbose("Couldn't find %s array in '%s'",
-			 path, pf->file);
+				 path, pf->file);
 		return 0;
 	}
 
@@ -65,13 +65,13 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 	for (cv = cn->v; cv; cv = cv->next) {
 		if (cv->type != CFG_STRING) {
 			log_verbose("Devices array contains a value "
-				 "which is not a string ... ignoring");
+				    "which is not a string ... ignoring");
 			continue;
 		}
 
 		if (!hash_insert(pf->devices, cv->v.str, data))
 			log_verbose("Couldn't add '%s' to filter ... ignoring",
-				 cv->v.str);
+				    cv->v.str);
 	}
 	return 1;
 }
@@ -101,12 +101,12 @@ int persistent_filter_load(struct dev_filter *f)
 	if (hash_get_num_entries(pf->devices))
 		r = 1;
 
- out:
+      out:
 	destroy_config_file(cf);
 	return r;
 }
 
-static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
+static void _write_array(struct pfilter *pf, FILE * fp, const char *path,
 			 void *data)
 {
 	void *d;
@@ -175,7 +175,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 
 	if (!l) {
 		l = pf->real->passes_filter(pf->real, dev) ?
-			PF_GOOD_DEVICE : PF_BAD_DEVICE;
+		    PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
 		list_iterate(ah, &dev->aliases) {
 			sl = list_item(ah, struct str_list);
@@ -232,7 +232,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 
 	return f;
 
- bad:
+      bad:
 	dbg_free(pf->file);
 	if (pf->devices)
 		hash_destroy(pf->devices);

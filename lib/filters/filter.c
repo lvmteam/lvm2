@@ -71,12 +71,12 @@ static int passes_lvm_type_device_filter(struct dev_filter *f,
 		return 0;
 
 	/* Check it's accessible */
-        if ((fd = open(name, O_RDONLY)) < 0) {
-                log_debug("Unable to open %s: %s", name, strerror(errno));
+	if ((fd = open(name, O_RDONLY)) < 0) {
+		log_debug("Unable to open %s: %s", name, strerror(errno));
 		return 0;
 	}
 
-        close(fd);
+	close(fd);
 
 	return 1;
 }
@@ -85,7 +85,7 @@ struct dev_filter *lvm_type_filter_create(const char *proc)
 {
 	struct dev_filter *f;
 
-	if (!(f = dbg_malloc(sizeof (struct dev_filter)))) {
+	if (!(f = dbg_malloc(sizeof(struct dev_filter)))) {
 		log_error("LVM type filter allocation failed");
 		return NULL;
 	}
@@ -124,12 +124,13 @@ static int *scan_proc_dev(const char *proc)
 
 	int *max_partitions_by_major;
 
-	if (!(max_partitions_by_major = dbg_malloc(sizeof (int) * NUMBER_OF_MAJORS))) {
+	if (!(max_partitions_by_major =
+	      dbg_malloc(sizeof(int) * NUMBER_OF_MAJORS))) {
 		log_error("Filter failed to allocate max_partitions_by_major");
 		return NULL;
 	}
 
-	if (lvm_snprintf(proc_devices, sizeof(proc_devices), 
+	if (lvm_snprintf(proc_devices, sizeof(proc_devices),
 			 "%s/devices", proc) < 0) {
 		log_error("Failed to create /proc/devices string");
 		return NULL;
@@ -140,7 +141,7 @@ static int *scan_proc_dev(const char *proc)
 		return NULL;
 	}
 
-	memset(max_partitions_by_major, 0, sizeof (int) * NUMBER_OF_MAJORS);
+	memset(max_partitions_by_major, 0, sizeof(int) * NUMBER_OF_MAJORS);
 	while (fgets(line, 80, pd) != NULL) {
 		i = 0;
 		while (line[i] == ' ' && line[i] != '\0')
@@ -168,7 +169,7 @@ static int *scan_proc_dev(const char *proc)
 			_md_major = line_maj;
 
 		/* Go through the valid device names and if there is a
-   			match store max number of partitions */
+		   match store max number of partitions */
 		for (j = 0; device_info[j].name != NULL; j++) {
 
 			dev_len = strlen(device_info[j].name);

@@ -25,21 +25,20 @@ static int _can_handle(struct labeller *l, struct device *dev)
 	struct pv_disk pvd;
 	int r;
 
-        if (!dev_open(dev, O_RDONLY)) {
-                stack;
-                return 0;
-        }
+	if (!dev_open(dev, O_RDONLY)) {
+		stack;
+		return 0;
+	}
 
 	r = read_pvd(dev, &pvd);
 
-        if (!dev_close(dev))
-                stack;
+	if (!dev_close(dev))
+		stack;
 
 	return r;
 }
 
-static int _write(struct labeller *l,
-		  struct device *dev, struct label *label)
+static int _write(struct labeller *l, struct device *dev, struct label *label)
 {
 	_not_supported("write");
 	return 0;
@@ -81,15 +80,15 @@ static int _read(struct labeller *l, struct device *dev, struct label **label)
 	struct pv_disk pvd;
 	int r = 0;
 
-        if (!dev_open(dev, O_RDONLY)) {
-                stack;
-                return 0;
-        }
+	if (!dev_open(dev, O_RDONLY)) {
+		stack;
+		return 0;
+	}
 
 	r = read_pvd(dev, &pvd);
 
-        if (!dev_close(dev))
-                stack;
+	if (!dev_close(dev))
+		stack;
 
 	if (!r) {
 		stack;
@@ -118,15 +117,14 @@ static void _destroy(struct labeller *l)
 	dbg_free(l);
 }
 
-
 struct label_ops _lvm1_ops = {
-	can_handle: _can_handle,
-	write: _write,
-	remove: _remove,
-	read: _read,
-	verify: _can_handle,
-	destroy_label: _destroy_label,
-	destroy: _destroy
+	can_handle:	_can_handle,
+	write:		_write,
+	remove:		_remove,
+	read:		_read,
+	verify:		_can_handle,
+	destroy_label:	_destroy_label,
+	destroy:	_destroy
 };
 
 struct labeller *lvm1_labeller_create(void)

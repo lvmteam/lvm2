@@ -46,13 +46,14 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name)
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}
 
-	log_print("Found %svolume group \"%s\"",
-		  (vg->status & EXPORTED_VG) ? "exported " : "", vg_name);
+	log_print("Found %svolume group \"%s\" using metadata type %s",
+		  (vg->status & EXPORTED_VG) ? "exported " : "", vg_name,
+		  vg->fid->fmt->name);
 
 	return 0;
 }

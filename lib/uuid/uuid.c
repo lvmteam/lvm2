@@ -19,6 +19,14 @@ static unsigned char _c[] =
 static int _built_inverse;
 static unsigned char _inverse_c[256];
 
+int lvid_create(union lvid *lvid, struct id *vgid)
+{
+	memcpy(lvid->id, vgid, sizeof(*lvid->id));
+	id_create(&lvid->id[1]);
+
+	return 1;
+}
+
 int lvid_from_lvnum(union lvid *lvid, struct id *vgid, int lv_num)
 {
 	int i;
@@ -116,7 +124,7 @@ int id_write_format(struct id *id, char *buffer, size_t size)
 {
 	int i, tot;
 
-	static int group_size[] = {6, 4, 4, 4, 4, 4, 6};
+	static int group_size[] = { 6, 4, 4, 4, 4, 4, 6 };
 
 	assert(ID_LEN == 32);
 

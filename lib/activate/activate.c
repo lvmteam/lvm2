@@ -189,24 +189,18 @@ static struct logical_volume *_lv_from_lvid(struct cmd_context *cmd,
 	struct lv_list *lvl;
 	struct volume_group *vg;
 	union lvid *lvid;
-	char *vgname;
 
 	lvid = (union lvid *) lvid_s;
 
-	/* FIXME Change vgread to accept vgid directly - can't rely on cache */
-	if (!(vgname = vgname_from_vgid(cmd, &lvid->id[0]))) {
+	log_very_verbose("Finding volume group for uuid %s", lvid_s);
+	if (!(vg = vg_read_by_vgid(cmd, lvid->id[0].uuid))) {
 		log_error("Volume group for uuid not found: %s", lvid_s);
 		return NULL;
 	}
 
-	log_verbose("Finding volume group \"%s\"", vgname);
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vgname))) {
-		log_error("Volume group \"%s\" doesn't exist", vgname);
-		return NULL;
-	}
-
+	log_verbose("Found volume group \"%s\"", vg->name);
 	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vgname);
+		log_error("Volume group \"%s\" is exported", vg->name);
 		return NULL;
 	}
 

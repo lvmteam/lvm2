@@ -9,6 +9,7 @@
 
 #include "uuid.h"
 #include "dev-cache.h"
+#include "pool.h"
 
 /*
  * Holds a mapping from uuid -> device.
@@ -22,5 +23,7 @@ void uuid_map_destroy(struct uuid_map *um);
  * Find the device with a particular uuid.
  */
 struct device *uuid_map_lookup(struct uuid_map *um, struct id *id);
+struct id *uuid_map_lookup_label(struct pool *mem, struct uuid_map *um, 
+				 const char *name);
 
 #endif

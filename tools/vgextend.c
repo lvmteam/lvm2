@@ -52,7 +52,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group \"%s\" not found.", vg_name);
 		goto error;
 	}
@@ -83,7 +83,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 
 	/* extend vg */
-	if (!vg_extend(cmd->fid, vg, argc, argv))
+	if (!vg_extend(vg->fid, vg, argc, argv))
 		goto error;
 
 	/* ret > 0 */
@@ -91,7 +91,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		    "physical volumes", vg_name, argc);
 
 	/* store vg on disk(s) */
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
+	if (!vg_write(vg))
 		goto error;
 
 	backup(vg);

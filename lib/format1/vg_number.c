@@ -15,8 +15,8 @@
  * Put in separate file so it wouldn't contaminate
  * other code.
  */
-int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
-		       int *result)
+int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
+		       const char *candidate_vg, int *result)
 {
 	struct list *pvh;
 	struct list all_pvs;
@@ -31,7 +31,7 @@ int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 		return 0;
 	}
 
-	if (!read_pvs_in_vg(NULL, filter, mem, &all_pvs)) {
+	if (!read_pvs_in_vg(fid->fmt, NULL, filter, mem, &all_pvs)) {
 		stack;
 		goto out;
 	}
@@ -40,8 +40,7 @@ int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 
 	list_iterate(pvh, &all_pvs) {
 		dl = list_item(pvh, struct disk_list);
-		if (!*dl->pvd.vg_name ||
-		    !strcmp(dl->pvd.vg_name, candidate_vg))
+		if (!*dl->pvd.vg_name || !strcmp(dl->pvd.vg_name, candidate_vg))
 			continue;
 
 		numbers[dl->vgd.vg_number] = 1;
@@ -55,7 +54,7 @@ int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 		}
 	}
 
- out:
+      out:
 	pool_destroy(mem);
 	return r;
 }

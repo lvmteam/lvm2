@@ -197,6 +197,10 @@ int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 			return 0;
 		break;
 	case LCK_LV:
+		/* Skip if driver isn't loaded */
+		/* FIXME Use /proc/misc instead? */
+		if (!driver_version(NULL, 0))
+			return 1;
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
 			if (!lv_resume_if_active(cmd, resource))

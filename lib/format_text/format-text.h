@@ -32,9 +32,8 @@ int archive_list(struct cmd_context *cmd, struct uuid_map *um,
 /*
  * The text format can read and write a volume_group to a file.
  */
-struct format_instance *text_format_create(struct cmd_context *cmd,
-					   const char *file,
-					   struct uuid_map *um,
-					   const char *desc);
+struct format_type *create_text_format(struct cmd_context *cmd);
+void *create_text_context(struct format_type *fmt, const char *path, 
+			  const char *desc);
 
 #endif

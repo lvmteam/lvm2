@@ -4,8 +4,8 @@
  * This file is released under the LGPL.
  */
 
-#ifndef _LVM_LVM_H
-#define _LVM_LVM_H
+#ifndef _LVM_TOOLS_H
+#define _LVM_TOOLS_H
 
 #include "pool.h"
 #include "dbg_malloc.h"
@@ -75,6 +75,7 @@ struct arg {
 	uint32_t i_value;
 	uint64_t i64_value;
 	sign_t sign;
+	void *ptr;
 };
 
 /* a register of the lvm commands */
@@ -98,6 +99,7 @@ int int_arg_with_sign(struct arg *a);
 int minor_arg(struct arg *a);
 int string_arg(struct arg *a);
 int permission_arg(struct arg *a);
+int metadatatype_arg(struct arg *a);
 
 char yes_no_prompt(const char *prompt, ...);
 
@@ -127,6 +129,11 @@ static inline uint64_t arg_int64_value(struct cmd_context *cmd, int a,
 				       uint64_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].i64_value : def;
+}
+
+static inline void *arg_ptr_value(struct cmd_context *cmd, int a, void *def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].ptr : def;
 }
 
 static inline sign_t arg_sign_value(struct cmd_context *cmd, int a, sign_t def)

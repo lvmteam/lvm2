@@ -56,7 +56,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
@@ -112,12 +112,12 @@ static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	struct pv_list *pvl;
 	const char *name = dev_name(pv->dev);
 
-	if (pv->pe_allocated) {
+	if (pv->pe_alloc_count) {
 		log_error("Physical volume \"%s\" still in use", name);
 		return ECMD_FAILED;
 	}
 
-/********* FIXME: Is this unnecessary after checking pe_allocated?
+/********* FIXME: Is this unnecessary after checking pe_alloc_count?
 	if (pv->lv_cur > 0) {
 		log_error ("can't reduce volume group \"%s\" by used physical volume \"%s\"", vg_name, error_pv_name);
 	}
@@ -141,16 +141,16 @@ static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	*pv->vg_name = '\0';
 	vg->pv_count--;
-	vg->free_count -= pv->pe_count - pv->pe_allocated;
+	vg->free_count -= pv->pe_count - pv->pe_alloc_count;
 	vg->extent_count -= pv->pe_count;
 
-	if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
+	if (!vg_write(vg)) {
 		log_error("Removal of physical volume \"%s\" from "
 			  "\"%s\" failed", name, vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (!cmd->fid->ops->pv_write(cmd->fid, pv)) {
+	if (!pv_write(cmd, pv)) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" "
 			  "after removal from \"%s\"", name, vg->name);

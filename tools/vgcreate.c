@@ -80,7 +80,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* Create the new VG */
-	if (!(vg = vg_create(cmd->fid, vg_name, extent_size, max_pv, max_lv,
+	if (!(vg = vg_create(cmd, vg_name, extent_size, max_pv, max_lv,
 			     argc - 1, argv + 1)))
 		return ECMD_FAILED;
 
@@ -110,7 +110,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* Store VG on disk(s) */
-	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
+	if (!vg_write(vg)) {
 		unlock_vg(cmd, vg_name);
 		unlock_vg(cmd, "");
 		return ECMD_FAILED;

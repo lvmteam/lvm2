@@ -54,8 +54,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 int is_valid_chars(char *n);
 
-char *default_vgname(struct format_instance *fi);
-char *extract_vgname(struct format_instance *fi, char *lv_name);
+char *default_vgname(struct cmd_context *cmd);
+char *extract_vgname(struct cmd_context *cmd, char *lv_name);
 
 /*
  * Builds a list of pv's from the names in argv.  Used in

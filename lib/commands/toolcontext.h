@@ -18,7 +18,11 @@ struct cmd_context {
 	/* format handler allocates all objects from here */
 	struct pool *mem;
 
-	struct format_instance *fid;
+	struct format_type *fmt;	/* Current format to use by default */
+
+	/* FIXME Move into dynamic list */
+	struct format_type *fmt1;	/* Format1 */
+	struct format_type *fmtt;	/* Format_text */
 
 	char *cmd_line;
 	char *dev_dir;

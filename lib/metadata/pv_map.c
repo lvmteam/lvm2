@@ -82,7 +82,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	}
 
 	/* populate the hash table */
-	list_iterate (pvmh, maps) {
+	list_iterate(pvmh, maps) {
 		pvm = list_item(pvmh, struct pv_map);
 		if (!hash_insert(hash, dev_name(pvm->pv->dev), pvm)) {
 			stack;
@@ -91,18 +91,18 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	}
 
 	/* iterate through all the lv's setting bit's for used pe's */
-	list_iterate (lvh, &vg->lvs) {
+	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
-		list_iterate (segh, &lv->segments) {
+		list_iterate(segh, &lv->segments) {
 			seg = list_item(segh, struct stripe_segment);
 
 			for (s = 0; s < seg->stripes; s++) {
 				for (pe = 0; pe < (seg->len / seg->stripes);
 				     pe++) {
 					if (!_set_allocated(hash,
-					    		    seg->area[s].pv,
-					    		    seg->area[s].pe
+							    seg->area[s].pv,
+							    seg->area[s].pe
 							    + pe)) {
 						stack;
 						goto out;
@@ -113,7 +113,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	}
 	r = 1;
 
- out:
+      out:
 	hash_destroy(hash);
 	return r;
 }
@@ -131,7 +131,7 @@ static void _insert_area(struct list *head, struct pv_area *a)
 		return;
 	}
 
-	list_iterate (pvah, head) {
+	list_iterate(pvah, head) {
 		pva = list_item(pvah, struct pv_area);
 
 		if (pva->count < a->count)
@@ -142,7 +142,7 @@ static void _insert_area(struct list *head, struct pv_area *a)
 }
 
 static int _create_single_area(struct pool *mem, struct pv_map *pvm,
-			       uint32_t *extent)
+			       uint32_t * extent)
 {
 	uint32_t e = *extent, b, count = pvm->pv->pe_count;
 	struct pv_area *pva;

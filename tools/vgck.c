@@ -33,7 +33,7 @@ static int vgck_single(struct cmd_context *cmd, const char *vg_name)
 
 	log_verbose("Checking volume group \"%s\"", vg_name);
 
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}

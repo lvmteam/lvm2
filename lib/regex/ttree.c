@@ -74,7 +74,6 @@ int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
 
 	} while (*c && count);
 
-
 	if (!*c) {
 		count++;
 

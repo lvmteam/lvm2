@@ -31,7 +31,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	ret = process_each_vg(cmd, argc, argv, 
+	ret = process_each_vg(cmd, argc, argv,
 			      LCK_VG | LCK_WRITE | LCK_NONBLOCK,
 			      &vgremove_single);
 
@@ -48,7 +48,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 	int ret = 0;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -73,12 +73,10 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-/************ FIXME
-	if (vg_remove_dir_and_group_and_nodes(vg_name) < 0) {
-		log_error("removing special files of volume group \"%s\"",
-			  vg_name);
+	if (!vg_remove(vg)) {
+		log_error("vg_remove %s failed", vg_name);
+		return ECMD_FAILED;
 	}
-*************/
 
 	/* init physical volumes */
 	list_iterate(pvh, &vg->pvs) {
@@ -86,7 +84,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 		log_verbose("Removing physical volume \"%s\" from "
 			    "volume group \"%s\"", dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';
-		if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
+		if (!pv_write(cmd, pv)) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
 				  dev_name(pv->dev), vg_name);
