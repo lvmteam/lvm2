@@ -77,6 +77,11 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
+const char *dm_task_get_uuid(struct dm_task *dmt)
+{
+	return (dmt->dmi->uuid);
+}
+
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 {
 	return (struct dm_deps *) (((void *) dmt->dmi) + dmt->dmi->data_start);
