@@ -58,6 +58,7 @@ enum {
 	MAJOR_ARG,
 	MINOR_ARG,
 	NOHEADINGS_ARG,
+	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
@@ -291,6 +292,9 @@ static int _load(int argc, char **argv, void *data)
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
 		goto out;
 
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -335,6 +339,9 @@ static int _create(int argc, char **argv, void *data)
 	if (_switches[MINOR_ARG] && !dm_task_set_minor(dmt, _values[MINOR_ARG]))
 		goto out;
 
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -362,6 +369,9 @@ static int _rename(int argc, char **argv, void *data)
 		goto out;
 
 	if (!dm_task_set_newname(dmt, argv[argc - 1]))
+		goto out;
+
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -420,6 +430,9 @@ static int _message(int argc, char **argv, void *data)
 
 	free(str);
 
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -474,6 +487,9 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 		goto out;
 
 	if (event_nr && !dm_task_set_event_nr(dmt, event_nr))
+		goto out;
+
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -599,6 +615,9 @@ static int _status(int argc, char **argv, void *data)
 	if (!_set_task_device(dmt, name, 0))
 		goto out;
 
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -674,6 +693,9 @@ static int _mknodes(int argc, char **argv, void *data)
 	if (!_set_task_device(dmt, argc > 1 ? argv[1] : NULL, 1))
 		goto out;
 
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
 	if (!dm_task_run(dmt))
 		goto out;
 
@@ -705,6 +727,9 @@ static int _info(int argc, char **argv, void *data)
 		return 0;
 
 	if (!_set_task_device(dmt, name, 0))
+		goto out;
+
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -742,6 +767,9 @@ static int _deps(int argc, char **argv, void *data)
 		return 0;
 
 	if (!_set_task_device(dmt, name, 0))
+		goto out;
+
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -841,7 +869,7 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly]\n\n");
+		"        [-r|--readonly] [--noopencount]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
@@ -873,6 +901,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"major", 1, NULL, MAJOR_ARG},
 		{"minor", 1, NULL, MINOR_ARG},
 		{"noheadings", 0, NULL, NOHEADINGS_ARG},
+		{"noopencount", 0, NULL, NOOPENCOUNT_ARG},
 		{"notable", 0, NULL, NOTABLE_ARG},
 		{"uuid", 1, NULL, UUID_ARG},
 		{"verbose", 1, NULL, VERBOSE_ARG},
@@ -915,6 +944,8 @@ static int _process_switches(int *argc, char ***argv)
 		}
 		if ((ind == NOHEADINGS_ARG))
 			_switches[NOHEADINGS_ARG]++;
+		if ((ind == NOOPENCOUNT_ARG))
+			_switches[NOOPENCOUNT_ARG]++;
 		if ((ind == VERSION_ARG))
 			_switches[VERSION_ARG]++;
 	}

@@ -929,6 +929,13 @@ int dm_task_set_sector(struct dm_task *dmt, uint64_t sector)
 	return 1;
 }
 
+int dm_task_no_open_count(struct dm_task *dmt)
+{
+	dmt->no_open_count = 1;
+
+	return 1;
+}
+
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 {
 	dmt->event_nr = event_nr;
@@ -1298,8 +1305,13 @@ int dm_task_run(struct dm_task *dmt)
 		dmi->flags |= DM_STATUS_TABLE_FLAG;
 
 	dmi->flags |= DM_EXISTS_FLAG;	/* FIXME */
-	log_debug("dm %s %s %s %s%.0llu %s", _cmd_data_v4[dmt->type].name,
+
+	if (dmt->no_open_count)
+		dmi->flags |= DM_SKIP_BDGET_FLAG;
+
+	log_debug("dm %s %s %s %s%c %.0llu %s", _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? dmt->newname : "",
+		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->sector, dmt->message ? dmt->message : "");
 	if (ioctl(_control_fd, command, dmi) < 0) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||

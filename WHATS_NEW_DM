@@ -1,5 +1,6 @@
-Version 1.00.22 -
+Version 1.01.00 -
 ============================
+  Add dm_task_no_open_count() to skip getting open_count.
 
 Version 1.00.21 - 7 Jan 2005
 ============================
