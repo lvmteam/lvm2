@@ -75,7 +75,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 
 	backup_remove(vg_name);
 
-	if (!ret)
+	if (ret == ECMD_PROCESSED)
 		log_print("Volume group \"%s\" successfully removed", vg_name);
 	else
 		log_error("Volume group \"%s\" not properly removed", vg_name);
