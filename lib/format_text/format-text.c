@@ -1147,7 +1147,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 	}
 
 	/* Perform full scan and try again */
-	cache_label_scan(fmt->cmd, 0);
+	cache_label_scan(fmt->cmd, 1);
 
 	if (info->vginfo && info->vginfo->vgname && *info->vginfo->vgname &&
 	    _get_pv_from_vg(info->fmt, info->vginfo->vgname, info->dev->pvid,

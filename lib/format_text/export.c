@@ -400,6 +400,10 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 		_outf(f, "%s_count = %u%s", type, seg->area_count,
 		      (seg->area_count == 1) ? "\t# linear" : "");
 
+		if ((seg->type == SEG_MIRRORED) && (seg->status & PVMOVE))
+			_out_size(f, (uint64_t) seg->extents_moved,
+				  "extents_moved = %u", seg->extents_moved);
+
 		if ((seg->type == SEG_STRIPED) && (seg->area_count > 1))
 			_out_size(f, (uint64_t) seg->stripe_size,
 				  "stripe_size = %u", seg->stripe_size);

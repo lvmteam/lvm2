@@ -221,7 +221,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	struct config_value *cv;
 	const char *seg_name = sn->key;
 	uint32_t start_extent, extent_count;
-	uint32_t chunk_size;
+	uint32_t chunk_size, extents_moved = 0u, seg_status = 0u;
 	const char *org_name, *cow_name;
 	struct logical_volume *org, *cow, *lv1;
 	segment_type_t segtype;
@@ -267,6 +267,16 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 				  "segment '%s'.", sn->key);
 			return 0;
 		}
+
+		if (find_config_node(sn, "extents_moved", '/')) {
+			if (_read_uint32(sn, "extents_moved", &extents_moved))
+				seg_status |= PVMOVE;
+			else {
+				log_error("Couldn't read 'extents_moved' for "
+					  "segment '%s'.", sn->key);
+				return 0;
+			}
+		}
 	}
 
 	if (!(seg = pool_zalloc(mem, sizeof(*seg) +
@@ -280,6 +290,8 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->len = extent_count;
 	seg->area_len = extent_count;
 	seg->type = segtype;
+	seg->status = seg_status;
+	seg->extents_moved = extents_moved;
 
 	switch (segtype) {
 	case SEG_SNAPSHOT:
