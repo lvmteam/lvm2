@@ -526,3 +526,43 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 	}
 	return 1;
 }
+
+static int _get_lv_number(struct volume_group *vg, const char *name)
+{
+	/* FIXME: inefficient */
+	struct list_head *tmp;
+	struct lv_list *ll;
+	int r = 0;
+
+	list_for_each (tmp, &vg->lvs) {
+		ll = list_entry(tmp, struct lv_list, list);
+		if (!strcmp(ll->lv.name, name))
+			break;
+		r++;
+	}
+
+	return r;
+}
+
+/*
+ * This calculates the nasty pv_number and
+ * lv_number fields used by LVM1.  Very
+ * inefficient code.
+ */
+void export_numbers(struct list_head *pvs, struct volume_group *vg)
+{
+	struct list_head *tmp, *tmp2;
+	struct disk_list *dl;
+	struct lvd_list *ll;
+	int pv_num = 0;
+
+	list_for_each (tmp, pvs) {
+		dl = list_entry(tmp, struct disk_list, list);
+		dl->pv.pv_number = pv_num++;
+
+		list_for_each (tmp2, &dl->lvs) {
+			ll = list_entry(tmp2, struct lvd_list, list);
+			ll->lv.lv_number = _get_lv_number(vg, ll->lv.lv_name);
+		}
+	}
+}
