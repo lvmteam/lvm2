@@ -1,22 +1,9 @@
 /*
  * dm-table.c
  *
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2, or (at
- * your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU CC; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ *  This file is released under the GPL.
  */
 
 /*
@@ -99,10 +86,10 @@ static int alloc_targets(struct dm_table *t, int num)
 	int size = (sizeof(struct target) + sizeof(offset_t)) * num;
 
 	n_highs = vmalloc(size);
-	if (n_highs == NULL)
+	if (!n_highs)
 		return -ENOMEM;
 
-	n_targets = (struct target *)(n_highs + num);
+	n_targets = (struct target *) (n_highs + num);
 
 	if (n) {
 		memcpy(n_highs, t->highs, sizeof(*n_highs) * n);
@@ -127,15 +114,6 @@ struct dm_table *dm_table_create(void)
 
 	memset(t, 0, sizeof(*t));
 
-	atomic_set(&t->refcnt, 1);
-	atomic_set(&t->pending, 0);
-	init_waitqueue_head(&t->wait);
-
-	t->hardsect_size = PAGE_CACHE_SIZE;
-
-	/* FIXME: Let this be specified/changed */
-	t->blksize_size = BLOCK_SIZE;
-
 	/* allocate a single nodes worth of targets to
 	   begin with */
 	if (alloc_targets(t, KEYS_PER_NODE)) {
@@ -146,18 +124,14 @@ struct dm_table *dm_table_create(void)
 	return t;
 }
 
-static void dm_table_destroy(struct dm_table *t)
+void dm_table_destroy(struct dm_table *t)
 {
 	int i;
 
-	if (atomic_read(&t->pending))
-		BUG();
-
-	/* free the indexes */
-	for (i = 0; i < t->depth - 1; i++) {
-		vfree(t->index[i]);
-		t->index[i] = 0;
-	}
+	/* free the indexes (see dm_table_complete) */
+	if (t->depth >= 2)
+		vfree(t->index[t->depth - 2]);
+	vfree(t->highs);
 
 	/* free the targets */
 	for (i = 0; i < t->num_targets; i++) {
@@ -165,19 +139,26 @@ static void dm_table_destroy(struct dm_table *t)
 		if (tgt->private)
 			tgt->type->dtr(t, tgt->private);
 	}
-	vfree(t->highs);
+
+	/* free the device list */
+	if (t->devices) {
+		struct dev_list *d, *n;
+
+		WARN("there are still devices present, someone isn't "
+		     "calling dm_table_remove_device");
+
+		for (d = t->devices; d; d = n) {
+			n = d->next;
+			kfree(d);
+		}
+	}
 
 	kfree(t);
 }
 
-void dm_put_table(struct dm_table *t)
-{
-	if (atomic_dec_and_test(&t->refcnt))
-		dm_table_destroy(t);
-}
-
 /*
- * checks to see if we need to extend highs or targets
+ * Checks to see if we need to extend
+ * highs or targets.
  */
 static inline int check_space(struct dm_table *t)
 {
@@ -187,7 +168,100 @@ static inline int check_space(struct dm_table *t)
 	return 0;
 }
 
+
 /*
+ * convert a device path to a kdev_t.
+ */
+int lookup_device(const char *path, kdev_t dev)
+{
+       int r;
+       struct nameidata nd;
+       struct inode *inode;
+
+       if (!path_init(path, LOOKUP_FOLLOW, &nd))
+               return 0;
+
+       if ((r = path_walk(path, &nd)))
+               goto bad;
+
+       inode = nd.dentry->d_inode;
+       if (!inode) {
+               r = -ENOENT;
+               goto bad;
+       }
+
+       if (!S_ISBLK(inode->i_mode)) {
+               r = -EINVAL;
+               goto bad;
+       }
+
+       dev = inode->i_bdev->bd_dev;
+
+ bad:
+       path_release(&nd);
+       return r;
+}
+
+/*
+ * see if we've already got a device in the list.
+ */
+static struct dm_dev *find_device(struct list_head *l, kdev_t dev)
+{
+	struct list_head *tmp;
+
+	for (tmp = l->next; tmp != l; l = l->next) {
+
+		struct dm_dev *dd = list_entry(tmp, struct dm_dev, list);
+		if (dd->dev == dev)
+			return dd;
+	}
+
+       return 0;
+}
+
+/*
+ * add a device to the list, or just increment the
+ * usage count if it's already present.
+ */
+int dm_table_add_device(struct dm_table *t, const char *path,
+			struct dm_dev **result)
+{
+	int r;
+	kdev_t dev;
+	struct dm_dev *dd;
+
+	/* convert the path to a device */
+	if ((r = lookup_device(path, &dev)))
+		return r;
+
+	dd = find_device(t->devices, kd);
+	if (!dd) {
+		dd = kmalloc(sizeof(*dd), GFP_KERNEL);
+		if (!dd)
+			return -ENOMEM;
+
+		dd->dev = dev;
+		dd->bd = 0;
+		atomic_set(&dd->count, 0);
+		list_add(&dd->list, &t->devices);
+	}
+	atomic_inc(&dd->count);
+	*result = dd;
+
+	return 0;
+}
+/*
+ * decrement a devices use count and remove it if
+ * neccessary.
+ */
+void dm_table_remove_device(struct dm_table *t, struct dm_dev *dd)
+{
+       if (atomic_dec_and_test(&dd->count)) {
+	       list_del(&dd->list);
+               kfree(dd);
+       }
+}
+
  * adds a target to the map
  */
 int dm_table_add_target(struct dm_table *t, offset_t high,
@@ -211,7 +285,8 @@ int dm_table_add_target(struct dm_table *t, offset_t high,
  */
 int dm_table_complete(struct dm_table *t)
 {
-	int i, leaf_nodes;
+	int i, leaf_nodes, total = 0;
+	offset_t *indexes;
 
 	/* how many indexes will the btree have ? */
 	leaf_nodes = div_up(t->num_targets, KEYS_PER_NODE);
@@ -221,21 +296,24 @@ int dm_table_complete(struct dm_table *t)
 	t->counts[t->depth - 1] = leaf_nodes;
 	t->index[t->depth - 1] = t->highs;
 
-	/* set up internal nodes, bottom-up */
+	/* allocate the space for *all* the indexes */
 	for (i = t->depth - 2; i >= 0; i--) {
 		t->counts[i] = div_up(t->counts[i + 1], CHILDREN_PER_NODE);
-		t->index[i] = vmalloc(NODE_SIZE * t->counts[i]);
-		if (!t->index[i])
-			goto free_indices;
+		total += t->counts[i];
+	}
+
+	if (!(indexes = vmalloc(NODE_SIZE * total)))
+		return -ENOMEM;
+
+	/* set up internal nodes, bottom-up */
+	for (i = t->depth - 2, total = 0; i >= 0; i--) {
+		t->index[i] = indexes + (KEYS_PER_NODE * t->counts[i]);
 		setup_btree_index(i, t);
 	}
 
 	return 0;
-
-free_indices:
-	for(++i; i < t->depth - 1; i++) {
-		vfree(t->index[i]);
-	}
-	return -ENOMEM;
 }
+
+EXPORT_SYMBOL(dm_table_add_device);
+
 
