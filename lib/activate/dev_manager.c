@@ -90,6 +90,7 @@ struct dev_manager {
 
 	char *vg_name;
 	struct list active_list;
+	struct list remove_list;
 
 	struct hash_table *layers;
 };
@@ -525,6 +526,7 @@ struct dev_manager *dev_manager_create(const char *vg_name)
 	}
 
 	list_init(&dm->active_list);
+	list_init(&dm->remove_list);
 
 	return dm;
 
@@ -694,7 +696,6 @@ static int _expand_origin_real(struct dev_manager *dm,
 
 static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 {
-#if 0
 	struct logical_volume *active;
 	struct snapshot *s;
 	struct list *sh;
@@ -710,9 +711,6 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 	}
 
 	return _expand_vanilla(dm, lv);
-#else
-	return _expand_origin_real(dm, lv);
-#endif
 }
 
 static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
@@ -1067,25 +1065,6 @@ static int _execute(struct dev_manager *dm, struct logical_volume *lv,
 	return 1;
 }
 
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
-{
-	if (!_execute(dm, lv, _create_rec)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
-
-int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
-{
-	if (!_execute(dm, lv, _remove_rec)) {
-		stack;
-		return 0;
-	}
-
-	return 0;
-}
 
 
 /*
@@ -1105,6 +1084,8 @@ static int _add_existing_layer(struct dev_manager *dm, const char *name)
 {
 	struct dev_layer *new;
 	char *copy;
+
+	log_verbose("Found layer '%s'", name);
 
 	if (!(copy = pool_strdup(dm->mem, name))) {
 		stack;
@@ -1180,3 +1161,81 @@ static int _scan_existing_devices(struct dev_manager *dm)
 	return r;
 }
 
+static int _add_active(struct dev_manager *dm, struct logical_volume *lv)
+{
+	struct lv_list *lvl;
+
+	if (!(lvl = pool_alloc(dm->mem, sizeof(*lvl)))) {
+		stack;
+		return 0;
+	}
+
+	lvl->lv = lv;
+	list_add(&dm->active_list, &lvl->list);
+
+	return 1;
+}
+
+static int _fill_in_active_list(struct dev_manager *dm,
+				struct volume_group *vg)
+{
+	int found;
+	char *name;
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	list_iterate (lvh, &vg->lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+
+		name = _build_name(dm->mem, dm->vg_name, lv->name, "");
+		if (!name) {
+			stack;
+			return 0;
+		}
+
+		found = hash_lookup(dm->layers, name) ? 1 : 0;
+		pool_free(dm->mem, name);
+
+		if (found && !_add_active(dm, lv)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+{
+	if (!_scan_existing_devices(dm)) {
+		stack;
+		return 0;
+	}
+
+	if (!_fill_in_active_list(dm, lv->vg)) {
+		stack;
+		return 0;
+	}
+
+	if (!_add_active(dm, lv)) {
+		stack;
+		return 0;
+	}
+
+	if (!_execute(dm, lv, _create_rec)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
+{
+	if (!_execute(dm, lv, _remove_rec)) {
+		stack;
+		return 0;
+	}
+
+	return 0;
+}
