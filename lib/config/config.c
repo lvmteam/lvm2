@@ -188,7 +188,7 @@ int read_config_fd(struct config_tree *cf, int fd, const char *file,
 		dbg_free(p->fb);
 	else {
 		/* unmap the file */
-		if (munmap((char *) (p->fb - mmap_offset), size)) {
+		if (munmap((char *) (p->fb - mmap_offset), size + mmap_offset)) {
 			log_sys_error("munmap", file);
 			r = 0;
 		}
