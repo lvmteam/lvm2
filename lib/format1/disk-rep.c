@@ -339,8 +339,7 @@ static int _write_uuids(struct disk_list *data)
 		}
 
 		ul = list_entry(tmp, struct uuid_list, list);
-		if (dev_write(data->dev, pos,
-			      sizeof(NAME_LEN), ul->uuid) != NAME_LEN)
+		if (dev_write(data->dev, pos, NAME_LEN, ul->uuid) != NAME_LEN)
 			fail;
 
 		pos += NAME_LEN;
