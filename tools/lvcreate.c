@@ -192,7 +192,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	 * Set the defaults.
 	 */
 	memset(lp, 0, sizeof(*lp));
-	lp->chunk_size = 2 * arg_int_value(cmd, chunksize_ARG, 32);
+	lp->chunk_size = 2 * arg_int_value(cmd, chunksize_ARG, 8);
 	log_verbose("setting chunksize to %d sectors.", lp->chunk_size);
 
 	if (!_read_name_params(lp, cmd, &argc, &argv) ||
