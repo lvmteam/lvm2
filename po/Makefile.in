@@ -25,7 +25,7 @@ install: $(TARGETS)
 	@echo Installing translation files in $(localedir)
 	@( \
 		for lang in $(LANGS); do \
-			$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 $$lang.mo \
+			$(INSTALL) -D $(OWNER) $(GROUP) -m 444 $$lang.mo \
 			    $(localedir)/$$lang/LC_MESSAGES/@INTL_PACKAGE@.mo;\
 	  done; \
 	)

@@ -39,24 +39,24 @@ install: $(INSTALL_TYPE)
 
 install_dynamic: install_@interface@
 	$(LN_S) -f libdevmapper.so.$(LIB_VERSION) $(libdir)/libdevmapper.so
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.h \
 		$(includedir)/libdevmapper.h
 
 install_static: install_@interface@_static
 	$(LN_S) -f libdevmapper.a.$(LIB_VERSION) $(libdir)/libdevmapper.a
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 libdevmapper.h \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.h \
 		$(includedir)/libdevmapper.h
 
 install_fs: fs/libdevmapper.so
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper.so.$(LIB_VERSION)
 
 install_ioctl: ioctl/libdevmapper.so
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper.so.$(LIB_VERSION)
 
 install_ioctl_static: ioctl/libdevmapper.a
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper.a.$(LIB_VERSION)
 
 .PHONY: distclean_lib distclean

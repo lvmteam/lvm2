@@ -34,12 +34,12 @@ install:
 	@for f in $(MAN8); \
 	do \
 	   $(RM) $(MAN8DIR)/$$f; \
-	   @INSTALL@ -D -o $(OWNER) -g $(GROUP) -m 444 $$f $(MAN8DIR)/$$f; \
+	   @INSTALL@ -D $(OWNER) $(GROUP) -m 444 $$f $(MAN8DIR)/$$f; \
 	done
 
 	@echo "Installing $(MAN5) in $(MAN5DIR)"
 	@for f in $(MAN5); \
 	do \
 	   $(RM) $(MAN5DIR)/$$f; \
-	   @INSTALL@ -D -o $(OWNER) -g $(GROUP) -m 444 $$f $(MAN5DIR)/$$f; \
+	   @INSTALL@ -D $(OWNER) $(GROUP) -m 444 $$f $(MAN5DIR)/$$f; \
 	done

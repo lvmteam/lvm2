@@ -108,21 +108,21 @@ liblvm2cmd.so: liblvm2cmd.a $(LD_DEPS)
 	install_tools_dynamic install_tools_static
 
 install_cmdlib_dynamic: liblvm2cmd.so
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) liblvm2cmd.so \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) liblvm2cmd.so \
 		$(libdir)/liblvm2cmd.so.$(LIB_VERSION)
 	$(LN_S) -f liblvm2cmd.so.$(LIB_VERSION) $(libdir)/liblvm2cmd.so
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 lvm2cmd.h \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 lvm2cmd.h \
 		$(includedir)/lvm2cmd.h
 
 install_cmdlib_static: liblvm2cmd.a
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) liblvm2cmd.a \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) liblvm2cmd.a \
 		$(libdir)/liblvm2cmd.a.$(LIB_VERSION)
 	$(LN_S) -f liblvm2cmd.a.$(LIB_VERSION) $(libdir)/liblvm2cmd.a
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 444 lvm2cmd.h \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 lvm2cmd.h \
 		$(includedir)/lvm2cmd.h
 
 install_tools_dynamic: lvm .commands
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) lvm \
 		$(sbindir)/lvm
 	@echo Creating symbolic links for individual commands in $(sbindir)
 	@( \
@@ -133,7 +133,7 @@ install_tools_dynamic: lvm .commands
 	)
 
 install_tools_static: lvm.static
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm.static \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) lvm.static \
 		$(staticdir)/lvm.static
 
 install: $(INSTALL_TARGETS)

@@ -32,7 +32,7 @@ include ../../make.tmpl
 .PHONY: install
 
 install: liblvm2format1.so
-	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2format1.so.$(LIB_VERSION)
 	$(LN_S) -f liblvm2format1.so.$(LIB_VERSION) $(libdir)/liblvm2format1.so
 

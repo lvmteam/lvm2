@@ -23,7 +23,7 @@ include ../make.tmpl
 install:
 	@if [ ! -e $(confdir)/$(CONFDEST) ]; then \
 		echo "Installing $(CONFSRC) as $(confdir)/$(CONFDEST)"; \
-		@INSTALL@ -D -o $(OWNER) -g $(GROUP) -m 644 $(CONFSRC) \
+		@INSTALL@ -D $(OWNER) $(GROUP) -m 644 $(CONFSRC) \
 			$(confdir)/$(CONFDEST); \
 	fi
 
