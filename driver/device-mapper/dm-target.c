@@ -61,7 +61,7 @@ int register_map_target(const char *name, dm_ctr_fn ctr,
 		return -1;	/* FIXME: what's a good return value ? */
 	}
 
-	t->name = (char *) t + 1;
+	t->name = (char *) (t + 1);
 	strcpy(t->name, name);
 
 	t->ctr = ctr;
