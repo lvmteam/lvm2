@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-12-12 21:48+0000\n"
+"POT-Creation-Date: 2004-12-22 21:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -114,7 +114,8 @@ msgstr ""
 #: commands/toolcontext.c:268 commands/toolcontext.c:287
 #: commands/toolcontext.c:294 commands/toolcontext.c:371
 #: commands/toolcontext.c:386 commands/toolcontext.c:410
-#: commands/toolcontext.c:461 config/config.c:105 config/config.c:110
+#: commands/toolcontext.c:461 commands/toolcontext.c:637
+#: commands/toolcontext.c:734 config/config.c:105 config/config.c:110
 #: config/config.c:140 config/config.c:161 config/config.c:192
 #: config/config.c:239 config/config.c:244 config/config.c:406
 #: config/config.c:424 config/config.c:429 config/config.c:439
@@ -125,160 +126,162 @@ msgstr ""
 #: device/dev-cache.c:189 device/dev-cache.c:195 device/dev-cache.c:229
 #: device/dev-cache.c:300 device/dev-cache.c:348 device/dev-cache.c:393
 #: device/dev-cache.c:398 device/dev-io.c:174 device/dev-io.c:204
-#: device/dev-io.c:317 device/dev-io.c:509 device/dev-io.c:537
-#: device/dev-md.c:41 device/dev-md.c:49 device/dev-md.c:64 device/device.c:42
-#: device/device.c:51 display/display.c:211 display/display.c:242
-#: display/display.c:300 display/display.c:347 display/display.c:587
-#: display/display.c:623 error/errseg.c:90 filters/filter-composite.c:54
-#: filters/filter-persistent.c:45 filters/filter-persistent.c:103
-#: filters/filter-persistent.c:108 filters/filter-persistent.c:239
-#: filters/filter-persistent.c:245 filters/filter-persistent.c:257
-#: filters/filter-regex.c:78 filters/filter-regex.c:105
-#: filters/filter-regex.c:126 filters/filter-regex.c:151
-#: filters/filter-regex.c:212 filters/filter-regex.c:217
-#: filters/filter-regex.c:224 filters/filter-regex.c:229
-#: filters/filter-sysfs.c:283 filters/filter.c:236 format1/disk-rep.c:220
-#: format1/disk-rep.c:232 format1/disk-rep.c:237 format1/disk-rep.c:256
-#: format1/disk-rep.c:259 format1/disk-rep.c:290 format1/disk-rep.c:293
-#: format1/disk-rep.c:312 format1/disk-rep.c:315 format1/disk-rep.c:332
-#: format1/disk-rep.c:342 format1/disk-rep.c:348 format1/disk-rep.c:413
-#: format1/disk-rep.c:420 format1/disk-rep.c:511 format1/disk-rep.c:534
-#: format1/disk-rep.c:546 format1/disk-rep.c:576 format1/disk-rep.c:590
-#: format1/disk-rep.c:623 format1/disk-rep.c:688 format1/disk-rep.c:695
-#: format1/disk-rep.c:713 format1/format1.c:177 format1/format1.c:192
-#: format1/format1.c:201 format1/format1.c:206 format1/format1.c:223
-#: format1/format1.c:237 format1/format1.c:258 format1/format1.c:269
-#: format1/format1.c:284 format1/format1.c:310 format1/format1.c:315
-#: format1/format1.c:320 format1/format1.c:325 format1/format1.c:362
-#: format1/format1.c:409 format1/format1.c:425 format1/format1.c:430
-#: format1/format1.c:437 format1/format1.c:449 format1/format1.c:500
-#: format1/format1.c:520 format1/format1.c:529 format1/format1.c:573
-#: format1/import-export.c:61 format1/import-export.c:121
-#: format1/import-export.c:141 format1/import-export.c:158
-#: format1/import-export.c:166 format1/import-export.c:201
-#: format1/import-export.c:206 format1/import-export.c:211
-#: format1/import-export.c:289 format1/import-export.c:426
-#: format1/import-export.c:431 format1/import-export.c:452
-#: format1/import-export.c:459 format1/import-export.c:484
-#: format1/import-export.c:506 format1/import-export.c:511
-#: format1/import-export.c:520 format1/import-export.c:528
-#: format1/import-export.c:539 format1/import-export.c:544
-#: format1/import-export.c:669 format1/import-export.c:726
-#: format1/import-extents.c:65 format1/import-extents.c:72
-#: format1/import-extents.c:77 format1/import-extents.c:133
-#: format1/import-extents.c:199 format1/import-extents.c:216
-#: format1/import-extents.c:281 format1/import-extents.c:287
-#: format1/import-extents.c:335 format1/import-extents.c:351
-#: format1/import-extents.c:366 format1/layout.c:124 format1/lvm1-label.c:66
-#: format1/vg_number.c:39 format1/vg_number.c:44 format_pool/disk_rep.c:51
-#: format_pool/disk_rep.c:107 format_pool/disk_rep.c:263
-#: format_pool/disk_rep.c:366 format_pool/disk_rep.c:376
-#: format_pool/disk_rep.c:381 format_pool/format_pool.c:139
-#: format_pool/format_pool.c:144 format_pool/format_pool.c:149
-#: format_pool/format_pool.c:159 format_pool/format_pool.c:168
-#: format_pool/format_pool.c:173 format_pool/format_pool.c:193
-#: format_pool/format_pool.c:202 format_pool/format_pool.c:208
-#: format_pool/format_pool.c:238 format_pool/format_pool.c:243
-#: format_pool/format_pool.c:253 format_pool/format_pool.c:258
-#: format_pool/import_export.c:96 format_pool/import_export.c:222
-#: format_pool/import_export.c:259 format_pool/import_export.c:295
-#: format_pool/import_export.c:300 format_text/archive.c:122
-#: format_text/archive.c:142 format_text/archive.c:169
-#: format_text/archive.c:264 format_text/archive.c:374
-#: format_text/export.c:257 format_text/export.c:258 format_text/export.c:259
-#: format_text/export.c:262 format_text/export.c:264 format_text/export.c:267
-#: format_text/export.c:277 format_text/export.c:281 format_text/export.c:283
-#: format_text/export.c:286 format_text/export.c:289 format_text/export.c:293
-#: format_text/export.c:296 format_text/export.c:300 format_text/export.c:304
-#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:313
-#: format_text/export.c:338 format_text/export.c:345 format_text/export.c:350
-#: format_text/export.c:354 format_text/export.c:358 format_text/export.c:360
-#: format_text/export.c:366 format_text/export.c:369 format_text/export.c:373
-#: format_text/export.c:376 format_text/export.c:379 format_text/export.c:382
-#: format_text/export.c:387 format_text/export.c:391 format_text/export.c:400
-#: format_text/export.c:403 format_text/export.c:406 format_text/export.c:411
-#: format_text/export.c:415 format_text/export.c:418 format_text/export.c:423
-#: format_text/export.c:428 format_text/export.c:441 format_text/export.c:448
-#: format_text/export.c:452 format_text/export.c:457 format_text/export.c:465
-#: format_text/export.c:488 format_text/export.c:492 format_text/export.c:496
-#: format_text/export.c:500 format_text/export.c:504 format_text/export.c:505
-#: format_text/export.c:511 format_text/export.c:533 format_text/export.c:538
-#: format_text/export.c:553 format_text/export.c:575 format_text/export.c:582
-#: format_text/export.c:587 format_text/export.c:591 format_text/export.c:594
-#: format_text/export.c:597 format_text/export.c:601 format_text/export.c:604
-#: format_text/export.c:608 format_text/export.c:612 format_text/export.c:614
-#: format_text/export.c:616 format_text/export.c:617 format_text/export.c:623
-#: format_text/export.c:629 format_text/export.c:633 format_text/export.c:638
-#: format_text/export.c:656 format_text/export.c:661 format_text/export.c:670
-#: format_text/export.c:675 format_text/export.c:680 format_text/export.c:703
-#: format_text/export.c:709 format_text/export.c:712 format_text/export.c:717
-#: format_text/export.c:721 format_text/export.c:725 format_text/export.c:729
-#: format_text/export.c:732 format_text/export.c:755 format_text/export.c:783
-#: format_text/export.c:796 format_text/flags.c:88 format_text/flags.c:132
-#: format_text/format-text.c:125 format_text/format-text.c:173
-#: format_text/format-text.c:195 format_text/format-text.c:216
-#: format_text/format-text.c:229 format_text/format-text.c:237
-#: format_text/format-text.c:254 format_text/format-text.c:259
-#: format_text/format-text.c:264 format_text/format-text.c:284
-#: format_text/format-text.c:293 format_text/format-text.c:335
-#: format_text/format-text.c:340 format_text/format-text.c:385
-#: format_text/format-text.c:398 format_text/format-text.c:415
-#: format_text/format-text.c:444 format_text/format-text.c:470
-#: format_text/format-text.c:497 format_text/format-text.c:511
-#: format_text/format-text.c:516 format_text/format-text.c:539
-#: format_text/format-text.c:553 format_text/format-text.c:790
-#: format_text/format-text.c:795 format_text/format-text.c:804
-#: format_text/format-text.c:815 format_text/format-text.c:828
-#: format_text/format-text.c:1011 format_text/format-text.c:1069
-#: format_text/format-text.c:1074 format_text/format-text.c:1085
-#: format_text/format-text.c:1087 format_text/format-text.c:1095
-#: format_text/format-text.c:1165 format_text/format-text.c:1171
-#: format_text/format-text.c:1350 format_text/format-text.c:1356
-#: format_text/format-text.c:1375 format_text/format-text.c:1409
-#: format_text/format-text.c:1429 format_text/format-text.c:1447
-#: format_text/format-text.c:1452 format_text/format-text.c:1466
-#: format_text/format-text.c:1479 format_text/format-text.c:1485
-#: format_text/format-text.c:1516 format_text/format-text.c:1521
-#: format_text/format-text.c:1526 format_text/format-text.c:1535
-#: format_text/format-text.c:1638 format_text/import.c:53
-#: format_text/import.c:72 format_text/import_vsn1.c:123
-#: format_text/import_vsn1.c:134 format_text/import_vsn1.c:167
-#: format_text/import_vsn1.c:276 format_text/import_vsn1.c:282
-#: format_text/import_vsn1.c:301 format_text/import_vsn1.c:413
-#: format_text/import_vsn1.c:441 format_text/import_vsn1.c:449
-#: format_text/import_vsn1.c:466 format_text/import_vsn1.c:473
-#: format_text/import_vsn1.c:502 format_text/import_vsn1.c:558
-#: format_text/import_vsn1.c:606 format_text/import_vsn1.c:631
-#: format_text/import_vsn1.c:641 format_text/import_vsn1.c:646
-#: format_text/import_vsn1.c:716 format_text/tags.c:29 format_text/tags.c:36
-#: format_text/tags.c:43 format_text/tags.c:49 format_text/tags.c:68
-#: label/label.c:91 label/label.c:125 label/label.c:190 label/label.c:212
-#: label/label.c:264 label/label.c:278 label/label.c:313 label/label.c:321
-#: label/label.c:333 label/label.c:345 locking/cluster_locking.c:85
+#: device/dev-io.c:322 device/dev-io.c:465 device/dev-io.c:486
+#: device/dev-io.c:504 device/dev-io.c:523 device/dev-io.c:551
+#: device/dev-md.c:41 device/dev-md.c:49 device/dev-md.c:64 device/device.c:61
+#: device/device.c:66 device/device.c:90 display/display.c:211
+#: display/display.c:242 display/display.c:300 display/display.c:347
+#: display/display.c:587 display/display.c:623 error/errseg.c:90
+#: filters/filter-composite.c:54 filters/filter-persistent.c:45
+#: filters/filter-persistent.c:103 filters/filter-persistent.c:108
+#: filters/filter-persistent.c:239 filters/filter-persistent.c:245
+#: filters/filter-persistent.c:257 filters/filter-regex.c:78
+#: filters/filter-regex.c:105 filters/filter-regex.c:126
+#: filters/filter-regex.c:151 filters/filter-regex.c:212
+#: filters/filter-regex.c:217 filters/filter-regex.c:224
+#: filters/filter-regex.c:229 filters/filter-sysfs.c:285 filters/filter.c:252
+#: format1/disk-rep.c:220 format1/disk-rep.c:232 format1/disk-rep.c:237
+#: format1/disk-rep.c:256 format1/disk-rep.c:259 format1/disk-rep.c:290
+#: format1/disk-rep.c:293 format1/disk-rep.c:312 format1/disk-rep.c:315
+#: format1/disk-rep.c:332 format1/disk-rep.c:342 format1/disk-rep.c:348
+#: format1/disk-rep.c:413 format1/disk-rep.c:420 format1/disk-rep.c:511
+#: format1/disk-rep.c:534 format1/disk-rep.c:546 format1/disk-rep.c:576
+#: format1/disk-rep.c:590 format1/disk-rep.c:623 format1/disk-rep.c:688
+#: format1/disk-rep.c:695 format1/disk-rep.c:713 format1/format1.c:177
+#: format1/format1.c:192 format1/format1.c:201 format1/format1.c:206
+#: format1/format1.c:223 format1/format1.c:237 format1/format1.c:258
+#: format1/format1.c:269 format1/format1.c:284 format1/format1.c:310
+#: format1/format1.c:315 format1/format1.c:320 format1/format1.c:325
+#: format1/format1.c:362 format1/format1.c:409 format1/format1.c:425
+#: format1/format1.c:430 format1/format1.c:437 format1/format1.c:449
+#: format1/format1.c:500 format1/format1.c:520 format1/format1.c:529
+#: format1/format1.c:573 format1/import-export.c:61
+#: format1/import-export.c:121 format1/import-export.c:141
+#: format1/import-export.c:158 format1/import-export.c:166
+#: format1/import-export.c:201 format1/import-export.c:206
+#: format1/import-export.c:211 format1/import-export.c:289
+#: format1/import-export.c:426 format1/import-export.c:431
+#: format1/import-export.c:452 format1/import-export.c:459
+#: format1/import-export.c:484 format1/import-export.c:506
+#: format1/import-export.c:511 format1/import-export.c:520
+#: format1/import-export.c:528 format1/import-export.c:539
+#: format1/import-export.c:544 format1/import-export.c:669
+#: format1/import-export.c:726 format1/import-extents.c:65
+#: format1/import-extents.c:72 format1/import-extents.c:77
+#: format1/import-extents.c:133 format1/import-extents.c:199
+#: format1/import-extents.c:216 format1/import-extents.c:281
+#: format1/import-extents.c:287 format1/import-extents.c:335
+#: format1/import-extents.c:351 format1/import-extents.c:366
+#: format1/layout.c:124 format1/lvm1-label.c:66 format1/vg_number.c:39
+#: format1/vg_number.c:44 format_pool/disk_rep.c:51 format_pool/disk_rep.c:107
+#: format_pool/disk_rep.c:263 format_pool/disk_rep.c:366
+#: format_pool/disk_rep.c:376 format_pool/disk_rep.c:381
+#: format_pool/format_pool.c:139 format_pool/format_pool.c:144
+#: format_pool/format_pool.c:149 format_pool/format_pool.c:159
+#: format_pool/format_pool.c:168 format_pool/format_pool.c:173
+#: format_pool/format_pool.c:193 format_pool/format_pool.c:202
+#: format_pool/format_pool.c:208 format_pool/format_pool.c:238
+#: format_pool/format_pool.c:243 format_pool/format_pool.c:253
+#: format_pool/format_pool.c:258 format_pool/import_export.c:96
+#: format_pool/import_export.c:222 format_pool/import_export.c:259
+#: format_pool/import_export.c:295 format_pool/import_export.c:300
+#: format_text/archive.c:122 format_text/archive.c:142
+#: format_text/archive.c:169 format_text/archive.c:264
+#: format_text/archive.c:374 format_text/export.c:257 format_text/export.c:258
+#: format_text/export.c:259 format_text/export.c:262 format_text/export.c:264
+#: format_text/export.c:267 format_text/export.c:277 format_text/export.c:281
+#: format_text/export.c:283 format_text/export.c:286 format_text/export.c:289
+#: format_text/export.c:293 format_text/export.c:296 format_text/export.c:300
+#: format_text/export.c:304 format_text/export.c:307 format_text/export.c:308
+#: format_text/export.c:313 format_text/export.c:338 format_text/export.c:345
+#: format_text/export.c:350 format_text/export.c:354 format_text/export.c:358
+#: format_text/export.c:360 format_text/export.c:366 format_text/export.c:369
+#: format_text/export.c:373 format_text/export.c:376 format_text/export.c:379
+#: format_text/export.c:382 format_text/export.c:387 format_text/export.c:391
+#: format_text/export.c:400 format_text/export.c:403 format_text/export.c:406
+#: format_text/export.c:411 format_text/export.c:415 format_text/export.c:418
+#: format_text/export.c:423 format_text/export.c:428 format_text/export.c:441
+#: format_text/export.c:448 format_text/export.c:452 format_text/export.c:457
+#: format_text/export.c:465 format_text/export.c:488 format_text/export.c:492
+#: format_text/export.c:496 format_text/export.c:500 format_text/export.c:504
+#: format_text/export.c:505 format_text/export.c:511 format_text/export.c:533
+#: format_text/export.c:538 format_text/export.c:553 format_text/export.c:575
+#: format_text/export.c:582 format_text/export.c:587 format_text/export.c:591
+#: format_text/export.c:594 format_text/export.c:597 format_text/export.c:601
+#: format_text/export.c:604 format_text/export.c:608 format_text/export.c:612
+#: format_text/export.c:614 format_text/export.c:616 format_text/export.c:617
+#: format_text/export.c:623 format_text/export.c:629 format_text/export.c:633
+#: format_text/export.c:638 format_text/export.c:656 format_text/export.c:661
+#: format_text/export.c:670 format_text/export.c:675 format_text/export.c:680
+#: format_text/export.c:703 format_text/export.c:709 format_text/export.c:712
+#: format_text/export.c:717 format_text/export.c:721 format_text/export.c:725
+#: format_text/export.c:729 format_text/export.c:732 format_text/export.c:755
+#: format_text/export.c:783 format_text/export.c:796 format_text/flags.c:88
+#: format_text/flags.c:132 format_text/format-text.c:125
+#: format_text/format-text.c:173 format_text/format-text.c:195
+#: format_text/format-text.c:216 format_text/format-text.c:229
+#: format_text/format-text.c:237 format_text/format-text.c:254
+#: format_text/format-text.c:259 format_text/format-text.c:264
+#: format_text/format-text.c:284 format_text/format-text.c:293
+#: format_text/format-text.c:335 format_text/format-text.c:340
+#: format_text/format-text.c:385 format_text/format-text.c:398
+#: format_text/format-text.c:415 format_text/format-text.c:444
+#: format_text/format-text.c:470 format_text/format-text.c:497
+#: format_text/format-text.c:511 format_text/format-text.c:516
+#: format_text/format-text.c:539 format_text/format-text.c:553
+#: format_text/format-text.c:790 format_text/format-text.c:795
+#: format_text/format-text.c:804 format_text/format-text.c:815
+#: format_text/format-text.c:828 format_text/format-text.c:1011
+#: format_text/format-text.c:1069 format_text/format-text.c:1074
+#: format_text/format-text.c:1085 format_text/format-text.c:1087
+#: format_text/format-text.c:1095 format_text/format-text.c:1165
+#: format_text/format-text.c:1171 format_text/format-text.c:1350
+#: format_text/format-text.c:1356 format_text/format-text.c:1375
+#: format_text/format-text.c:1409 format_text/format-text.c:1429
+#: format_text/format-text.c:1447 format_text/format-text.c:1452
+#: format_text/format-text.c:1466 format_text/format-text.c:1479
+#: format_text/format-text.c:1485 format_text/format-text.c:1516
+#: format_text/format-text.c:1521 format_text/format-text.c:1526
+#: format_text/format-text.c:1535 format_text/format-text.c:1638
+#: format_text/import.c:53 format_text/import.c:72
+#: format_text/import_vsn1.c:123 format_text/import_vsn1.c:134
+#: format_text/import_vsn1.c:167 format_text/import_vsn1.c:276
+#: format_text/import_vsn1.c:282 format_text/import_vsn1.c:301
+#: format_text/import_vsn1.c:413 format_text/import_vsn1.c:441
+#: format_text/import_vsn1.c:449 format_text/import_vsn1.c:466
+#: format_text/import_vsn1.c:473 format_text/import_vsn1.c:502
+#: format_text/import_vsn1.c:558 format_text/import_vsn1.c:606
+#: format_text/import_vsn1.c:631 format_text/import_vsn1.c:641
+#: format_text/import_vsn1.c:646 format_text/import_vsn1.c:716
+#: format_text/tags.c:29 format_text/tags.c:36 format_text/tags.c:43
+#: format_text/tags.c:49 format_text/tags.c:68 label/label.c:91
+#: label/label.c:125 label/label.c:190 label/label.c:212 label/label.c:264
+#: label/label.c:278 label/label.c:313 label/label.c:321 label/label.c:333
+#: label/label.c:345 locking/cluster_locking.c:85
 #: locking/cluster_locking.c:417 locking/cluster_locking.c:429
-#: locking/cluster_locking.c:433 lvchange.c:49 lvchange.c:87 lvchange.c:93
-#: lvchange.c:101 lvchange.c:108 lvchange.c:115 lvchange.c:165 lvchange.c:173
-#: lvchange.c:207 lvchange.c:292 lvchange.c:350 lvchange.c:358 lvcreate.c:265
-#: lvcreate.c:436 lvcreate.c:517 lvcreate.c:523 lvcreate.c:564 lvcreate.c:571
-#: lvcreate.c:655 lvmcmdline.c:1004 lvremove.c:74 lvrename.c:146
-#: lvrename.c:157 lvrename.c:164 lvrename.c:169 lvresize.c:360 lvresize.c:417
-#: lvresize.c:424 lvresize.c:431 lvresize.c:443 lvresize.c:450 lvresize.c:456
-#: lvresize.c:475 lvresize.c:489 lvresize.c:514 metadata/lv_manip.c:70
-#: metadata/lv_manip.c:202 metadata/lv_manip.c:237 metadata/lv_manip.c:324
-#: metadata/lv_manip.c:369 metadata/lv_manip.c:462 metadata/lv_manip.c:599
-#: metadata/lv_manip.c:641 metadata/lv_manip.c:652 metadata/lv_manip.c:700
-#: metadata/lv_manip.c:714 metadata/merge.c:179 metadata/metadata.c:174
-#: metadata/metadata.c:198 metadata/metadata.c:266 metadata/metadata.c:278
-#: metadata/metadata.c:468 metadata/metadata.c:509 metadata/metadata.c:515
-#: metadata/metadata.c:521 metadata/metadata.c:545 metadata/metadata.c:570
-#: metadata/metadata.c:588 metadata/metadata.c:651 metadata/metadata.c:656
-#: metadata/metadata.c:689 metadata/metadata.c:826 metadata/metadata.c:905
-#: metadata/metadata.c:938 metadata/mirror.c:48 metadata/mirror.c:88
-#: metadata/mirror.c:97 metadata/mirror.c:247 metadata/mirror.c:327
-#: metadata/pv_map.c:33 metadata/pv_map.c:40 metadata/pv_map.c:95
-#: metadata/pv_map.c:115 metadata/pv_map.c:172 metadata/pv_map.c:199
-#: metadata/pv_map.c:217 metadata/pv_map.c:226 metadata/pv_map.c:244
-#: metadata/pv_map.c:258 metadata/snapshot_manip.c:124
+#: locking/cluster_locking.c:433 locking/external_locking.c:76 lvchange.c:49
+#: lvchange.c:87 lvchange.c:93 lvchange.c:101 lvchange.c:108 lvchange.c:115
+#: lvchange.c:165 lvchange.c:173 lvchange.c:207 lvchange.c:292 lvchange.c:350
+#: lvchange.c:358 lvcreate.c:265 lvcreate.c:436 lvcreate.c:517 lvcreate.c:523
+#: lvcreate.c:564 lvcreate.c:571 lvcreate.c:655 lvmcmdline.c:1004
+#: lvremove.c:74 lvrename.c:146 lvrename.c:157 lvrename.c:164 lvrename.c:169
+#: lvresize.c:360 lvresize.c:417 lvresize.c:424 lvresize.c:431 lvresize.c:443
+#: lvresize.c:450 lvresize.c:456 lvresize.c:475 lvresize.c:489 lvresize.c:514
+#: metadata/lv_manip.c:70 metadata/lv_manip.c:202 metadata/lv_manip.c:237
+#: metadata/lv_manip.c:324 metadata/lv_manip.c:369 metadata/lv_manip.c:462
+#: metadata/lv_manip.c:599 metadata/lv_manip.c:641 metadata/lv_manip.c:652
+#: metadata/lv_manip.c:700 metadata/lv_manip.c:714 metadata/merge.c:179
+#: metadata/metadata.c:174 metadata/metadata.c:198 metadata/metadata.c:266
+#: metadata/metadata.c:278 metadata/metadata.c:468 metadata/metadata.c:509
+#: metadata/metadata.c:515 metadata/metadata.c:521 metadata/metadata.c:545
+#: metadata/metadata.c:570 metadata/metadata.c:588 metadata/metadata.c:651
+#: metadata/metadata.c:656 metadata/metadata.c:689 metadata/metadata.c:826
+#: metadata/metadata.c:905 metadata/metadata.c:938 metadata/mirror.c:48
+#: metadata/mirror.c:88 metadata/mirror.c:97 metadata/mirror.c:247
+#: metadata/mirror.c:327 metadata/pv_map.c:33 metadata/pv_map.c:40
+#: metadata/pv_map.c:95 metadata/pv_map.c:115 metadata/pv_map.c:172
+#: metadata/pv_map.c:199 metadata/pv_map.c:217 metadata/pv_map.c:226
+#: metadata/pv_map.c:244 metadata/pv_map.c:258 metadata/snapshot_manip.c:124
 #: metadata/snapshot_manip.c:141 mirror/mirrored.c:96 mirror/mirrored.c:171
 #: mirror/mirrored.c:251 misc/lvm-string.c:152 pvmove.c:98 pvmove.c:103
 #: pvmove.c:179 pvmove.c:207 pvmove.c:214 pvmove.c:278 pvmove.c:285
@@ -615,25 +618,25 @@ msgstr ""
 #: config/config.c:382 device/dev-cache.c:150 device/dev-cache.c:154
 #: device/dev-cache.c:322 device/dev-cache.c:329 device/dev-cache.c:490
 #: device/dev-cache.c:492 device/dev-io.c:131 device/dev-io.c:235
-#: device/dev-io.c:240 device/dev-io.c:339 device/dev-io.c:395
-#: filters/filter-persistent.c:184 filters/filter-sysfs.c:43
-#: filters/filter-sysfs.c:155 filters/filter-sysfs.c:179
-#: filters/filter-sysfs.c:220 filters/filter.c:135 format_text/archive.c:221
-#: format_text/archive.c:230 format_text/format-text.c:612
-#: format_text/format-text.c:626 format_text/format-text.c:632
-#: format_text/format-text.c:657 format_text/format-text.c:719
-#: format_text/format-text.c:724 format_text/format-text.c:750
-#: format_text/format-text.c:775 locking/file_locking.c:61
-#: locking/file_locking.c:69 locking/file_locking.c:72
-#: locking/file_locking.c:103 locking/file_locking.c:169
-#: locking/file_locking.c:183 locking/file_locking.c:290
-#: locking/file_locking.c:295 locking/locking.c:44 locking/locking.c:49
-#: locking/locking.c:65 locking/locking.c:200 log/log.c:62 lvmcmdline.c:1411
-#: misc/lvm-file.c:47 misc/lvm-file.c:92 misc/lvm-file.c:102
-#: misc/lvm-file.c:151 misc/lvm-file.c:163 misc/lvm-file.c:192
-#: misc/lvm-file.c:201 misc/lvm-file.c:229 misc/lvm-file.c:234 mm/memlock.c:98
-#: mm/memlock.c:106 mm/memlock.c:117 toollib.c:948 uuid/uuid.c:86
-#: uuid/uuid.c:91
+#: device/dev-io.c:240 device/dev-io.c:242 device/dev-io.c:248
+#: device/dev-io.c:344 device/dev-io.c:400 filters/filter-persistent.c:184
+#: filters/filter-sysfs.c:43 filters/filter-sysfs.c:155
+#: filters/filter-sysfs.c:179 filters/filter-sysfs.c:222 filters/filter.c:151
+#: format_text/archive.c:221 format_text/archive.c:230
+#: format_text/format-text.c:612 format_text/format-text.c:626
+#: format_text/format-text.c:632 format_text/format-text.c:657
+#: format_text/format-text.c:719 format_text/format-text.c:724
+#: format_text/format-text.c:750 format_text/format-text.c:775
+#: locking/file_locking.c:61 locking/file_locking.c:69
+#: locking/file_locking.c:72 locking/file_locking.c:103
+#: locking/file_locking.c:169 locking/file_locking.c:183
+#: locking/file_locking.c:290 locking/file_locking.c:295 locking/locking.c:44
+#: locking/locking.c:49 locking/locking.c:65 locking/locking.c:200
+#: log/log.c:62 lvmcmdline.c:1411 misc/lvm-file.c:47 misc/lvm-file.c:92
+#: misc/lvm-file.c:102 misc/lvm-file.c:151 misc/lvm-file.c:163
+#: misc/lvm-file.c:192 misc/lvm-file.c:201 misc/lvm-file.c:229
+#: misc/lvm-file.c:234 mm/memlock.c:98 mm/memlock.c:106 mm/memlock.c:117
+#: toollib.c:948 uuid/uuid.c:86 uuid/uuid.c:91
 #, c-format
 msgid "%s: %s failed: %s"
 msgstr ""
@@ -960,9 +963,32 @@ msgstr ""
 msgid "Failed to load existing device cache from %s"
 msgstr ""
 
+#: commands/toolcontext.c:631
+msgid "Invalid string in config file: global/format_libraries"
+msgstr ""
+
+#: commands/toolcontext.c:642
+#, c-format
+msgid "Shared library %s does not contain format functions"
+msgstr ""
+
 #: commands/toolcontext.c:675
 #, c-format
 msgid "_init_formats: Default format (%s) not found"
+msgstr ""
+
+#: commands/toolcontext.c:728
+msgid "Invalid string in config file: global/segment_libraries"
+msgstr ""
+
+#: commands/toolcontext.c:739
+#, c-format
+msgid "Shared library %s does not contain segment type functions"
+msgstr ""
+
+#: commands/toolcontext.c:753
+#, c-format
+msgid "Duplicate segment type %s: unloading shared library %s"
 msgstr ""
 
 #: commands/toolcontext.c:780
@@ -1204,52 +1230,52 @@ msgstr ""
 msgid "Bounce buffer alloca failed"
 msgstr ""
 
-#: device/dev-io.c:248
+#: device/dev-io.c:250
 #, c-format
 msgid "%s: size is %llu sectors"
 msgstr ""
 
-#: device/dev-io.c:304
+#: device/dev-io.c:307
 #, c-format
 msgid "WARNING: %s already opened read-only"
 msgstr ""
 
-#: device/dev-io.c:311
+#: device/dev-io.c:316
 #, c-format
 msgid "WARNING: dev_open(%s) called while suspended"
 msgstr ""
 
-#: device/dev-io.c:323
+#: device/dev-io.c:328
 #, c-format
 msgid "%s: stat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:352
+#: device/dev-io.c:357
 #, c-format
 msgid "%s: fstat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:368
+#: device/dev-io.c:373
 #, c-format
 msgid "Opened %s %s"
 msgstr ""
 
-#: device/dev-io.c:400
+#: device/dev-io.c:405
 #, c-format
 msgid "Closed %s"
 msgstr ""
 
-#: device/dev-io.c:413
+#: device/dev-io.c:418
 #, c-format
 msgid "Attempt to close device '%s' which is not open."
 msgstr ""
 
-#: device/dev-io.c:514
+#: device/dev-io.c:528
 #, c-format
 msgid "Wiping %s at %llu length %Zu"
 msgstr ""
 
-#: device/dev-io.c:517
+#: device/dev-io.c:531
 #, c-format
 msgid "Wiping %s at sector %llu length %Zu sectors"
 msgstr ""
@@ -1736,57 +1762,67 @@ msgstr ""
 msgid "sysfs path name too long: %s in %s"
 msgstr ""
 
-#: filters/filter-sysfs.c:250
+#: filters/filter-sysfs.c:252
 #, c-format
 msgid "%s: Skipping (sysfs)"
 msgstr ""
 
-#: filters/filter-sysfs.c:273
+#: filters/filter-sysfs.c:275
 msgid "sysfs pool creation failed"
 msgstr ""
 
-#: filters/filter-sysfs.c:278
+#: filters/filter-sysfs.c:280
 msgid "sysfs dev_set creation failed"
 msgstr ""
 
-#: filters/filter.c:82
+#: filters/filter.c:84
 #, c-format
 msgid "%s: Skipping: Unrecognised LVM device type %llu"
 msgstr ""
 
-#: filters/filter.c:89
+#: filters/filter.c:91
 #, c-format
 msgid "%s: Skipping: open failed"
 msgstr ""
 
-#: filters/filter.c:94
+#: filters/filter.c:97
 #, c-format
-msgid "%s: Skipping: partition table signature found"
+msgid "%s: Skipping: dev_get_size failed"
 msgstr ""
 
-#: filters/filter.c:118
+#: filters/filter.c:102
+#, c-format
+msgid "%s: Skipping: Too small to hold a PV"
+msgstr ""
+
+#: filters/filter.c:107
+#, c-format
+msgid "%s: Skipping: Partition table signature found"
+msgstr ""
+
+#: filters/filter.c:134
 msgid "No proc filesystem found: using all block device types"
 msgstr ""
 
-#: filters/filter.c:130
+#: filters/filter.c:146
 msgid "Failed to create /proc/devices string"
 msgstr ""
 
-#: filters/filter.c:185
+#: filters/filter.c:201
 msgid "Expecting string in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:193
+#: filters/filter.c:209
 #, c-format
 msgid "Max partition count missing for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:199
+#: filters/filter.c:215
 #, c-format
 msgid "Zero partition count invalid for %s in devices/types in config file"
 msgstr ""
 
-#: filters/filter.c:227
+#: filters/filter.c:243
 msgid "LVM type filter allocation failed"
 msgstr ""
 
@@ -2888,6 +2924,20 @@ msgstr ""
 msgid "Locking %s at 0x%x"
 msgstr ""
 
+#: locking/external_locking.c:63
+msgid "External locking already initialised"
+msgstr ""
+
+#: locking/external_locking.c:85
+#, c-format
+msgid "Shared library %s does not contain locking functions"
+msgstr ""
+
+#: locking/external_locking.c:92
+#, c-format
+msgid "Loaded external locking library %s"
+msgstr ""
+
 #: locking/file_locking.c:59
 #, c-format
 msgid "Unlocking %s"
@@ -2939,6 +2989,10 @@ msgstr ""
 
 #: locking/locking.c:137
 msgid "File-based locking enabled."
+msgstr ""
+
+#: locking/locking.c:144
+msgid "External locking enabled."
 msgstr ""
 
 #: locking/locking.c:152
@@ -3120,7 +3174,7 @@ msgstr ""
 msgid "%s: reactivation failed"
 msgstr ""
 
-#: lvchange.c:324 lvcreate.c:542 pvchange.c:44 vgchange.c:219 vgcreate.c:117
+#: lvchange.c:324 lvcreate.c:542 pvchange.c:46 vgchange.c:219 vgcreate.c:117
 msgid "Failed to get tag"
 msgstr ""
 
@@ -3338,14 +3392,14 @@ msgid "Volume group \"%s\" doesn't exist"
 msgstr ""
 
 #: lvcreate.c:415 lvrename.c:117 metadata/metadata.c:804 polldaemon.c:192
-#: pvchange.c:67 pvmove.c:72 toollib.c:39 vgchange.c:308 vgck.c:32
+#: pvchange.c:69 pvmove.c:72 toollib.c:39 vgchange.c:308 vgck.c:32
 #: vgconvert.c:54 vgextend.c:57 vgmerge.c:44 vgmerge.c:69 vgreduce.c:316
 #: vgremove.c:35 vgrename.c:80 vgsplit.c:184
 #, c-format
 msgid "Volume group \"%s\" is exported"
 msgstr ""
 
-#: lvcreate.c:420 lvremove.c:27 lvrename.c:122 pvchange.c:73 pvmove.c:78
+#: lvcreate.c:420 lvremove.c:27 lvrename.c:122 pvchange.c:75 pvmove.c:78
 #: vgchange.c:303 vgconvert.c:49 vgexport.c:38 vgextend.c:62 vgmerge.c:50
 #: vgmerge.c:74 vgreduce.c:322 vgrename.c:86 vgsplit.c:190
 #, c-format
@@ -3461,7 +3515,7 @@ msgstr ""
 msgid "Logical volume \"%s\" created"
 msgstr ""
 
-#: lvcreate.c:650 lvrename.c:107 lvresize.c:509 pvchange.c:54 pvmove.c:61
+#: lvcreate.c:650 lvrename.c:107 lvresize.c:509 pvchange.c:56 pvmove.c:61
 #: vgcreate.c:139 vgextend.c:47 vgmerge.c:33 vgmerge.c:57 vgreduce.c:260
 #: vgrename.c:68 vgrename.c:102 vgsplit.c:173 vgsplit.c:197
 #, c-format
@@ -4513,6 +4567,16 @@ msgstr ""
 msgid "sync_dir failed in strdup"
 msgstr ""
 
+#: misc/sharedlib.c:41
+#, c-format
+msgid "Opening shared %s library %s"
+msgstr ""
+
+#: misc/sharedlib.c:44
+#, c-format
+msgid "Unable to open external %s library %s"
+msgstr ""
+
 #: mm/dbg_malloc.c:223
 #, c-format
 msgid "Huge memory allocation (size %u) rejected - metadata corruption?"
@@ -4615,126 +4679,126 @@ msgstr ""
 msgid "Checking progress every %u seconds"
 msgstr ""
 
-#: pvchange.c:50
+#: pvchange.c:52
 #, c-format
 msgid "Finding volume group of physical volume \"%s\""
 msgstr ""
 
-#: pvchange.c:60
+#: pvchange.c:62
 #, c-format
 msgid "Unable to find volume group of \"%s\""
 msgstr ""
 
-#: pvchange.c:79
+#: pvchange.c:81
 #, c-format
 msgid "Unable to find \"%s\" in volume group \"%s\""
 msgstr ""
 
-#: pvchange.c:86
+#: pvchange.c:88
 #, c-format
 msgid "Volume group containing %s does not support tags"
 msgstr ""
 
-#: pvchange.c:92
+#: pvchange.c:94
 #, c-format
 msgid "Volume group containing %s has active logical volumes"
 msgstr ""
 
-#: pvchange.c:101
+#: pvchange.c:103
 #, c-format
 msgid "Can't change tag on Physical Volume %s not in volume group"
 msgstr ""
 
-#: pvchange.c:106
+#: pvchange.c:108
 msgid "Can't get lock for orphans"
 msgstr ""
 
-#: pvchange.c:112
+#: pvchange.c:114
 #, c-format
 msgid "Unable to read PV \"%s\""
 msgstr ""
 
-#: pvchange.c:121
+#: pvchange.c:123
 #, c-format
 msgid "Allocatability not supported by orphan %s format PV %s"
 msgstr ""
 
-#: pvchange.c:129
+#: pvchange.c:131
 #, c-format
 msgid "Physical volume \"%s\" is already allocatable"
 msgstr ""
 
-#: pvchange.c:139
+#: pvchange.c:141
 #, c-format
 msgid "Physical volume \"%s\" is already unallocatable"
 msgstr ""
 
-#: pvchange.c:149
+#: pvchange.c:151
 #, c-format
 msgid "Setting physical volume \"%s\" allocatable"
 msgstr ""
 
-#: pvchange.c:153
+#: pvchange.c:155
 #, c-format
 msgid "Setting physical volume \"%s\" NOT allocatable"
 msgstr ""
 
-#: pvchange.c:161
+#: pvchange.c:163
 #, c-format
 msgid "Failed to add tag %s to physical volume %s"
 msgstr ""
 
-#: pvchange.c:167
+#: pvchange.c:169
 #, c-format
 msgid "Failed to remove tag %s from physical volume%s"
 msgstr ""
 
-#: pvchange.c:177
+#: pvchange.c:179
 #, c-format
 msgid "Updating physical volume \"%s\""
 msgstr ""
 
-#: pvchange.c:181
+#: pvchange.c:183
 #, c-format
 msgid "Failed to store physical volume \"%s\" in volume group \"%s\""
 msgstr ""
 
-#: pvchange.c:190
+#: pvchange.c:192
 #, c-format
 msgid "Failed to store physical volume \"%s\""
 msgstr ""
 
-#: pvchange.c:197
+#: pvchange.c:199
 #, c-format
 msgid "Physical volume \"%s\" changed"
 msgstr ""
 
-#: pvchange.c:219
+#: pvchange.c:221
 msgid "Please give exactly one option of -x, -uuid, --addtag or --deltag"
 msgstr ""
 
-#: pvchange.c:225
+#: pvchange.c:227
 msgid "Please give a physical volume path"
 msgstr ""
 
-#: pvchange.c:230
+#: pvchange.c:232
 msgid "Option a and PhysicalVolumePath are exclusive"
 msgstr ""
 
-#: pvchange.c:235 toollib.c:525
+#: pvchange.c:237 toollib.c:525
 msgid "Using physical volume(s) on command line"
 msgstr ""
 
-#: pvchange.c:240
+#: pvchange.c:242
 #, c-format
 msgid "Failed to read physical volume %s"
 msgstr ""
 
-#: pvchange.c:248 toollib.c:595
+#: pvchange.c:250 toollib.c:595
 msgid "Scanning for physical volume names"
 msgstr ""
 
-#: pvchange.c:259
+#: pvchange.c:261
 #, c-format
 msgid "%d physical volume%s changed / %d physical volume%s not changed"
 msgstr ""
