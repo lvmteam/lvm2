@@ -98,6 +98,9 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;
+
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {

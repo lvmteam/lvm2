@@ -480,6 +480,9 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!_read_params(&lp, cmd, argc, argv))
 		return -EINVALID_CMD_LINE;
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;
+
 	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", lp.vg_name);
 		return 0;

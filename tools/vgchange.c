@@ -75,6 +75,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;
+
 	return process_each_vg(cmd, argc, argv,
 			       (arg_count(cmd, available_ARG)) ?
 			       LCK_VG_READ : LCK_VG_WRITE, &vgchange_single);

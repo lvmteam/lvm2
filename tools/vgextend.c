@@ -36,6 +36,9 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	vg_name = argv[0];
 	argc--;
 	argv++;

@@ -94,6 +94,9 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if ((st = strrchr(lv_name, '/')))
 		lv_name = st + 1;
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;
+
 	/* does VG exist? */
 	log_verbose("Finding volume group %s", vg_name);
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {

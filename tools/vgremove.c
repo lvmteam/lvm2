@@ -26,6 +26,9 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;

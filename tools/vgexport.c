@@ -34,6 +34,9 @@ int vgexport(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	return process_each_vg(cmd, argc, argv, LCK_VG_READ, &vgexport_single);
 }
 

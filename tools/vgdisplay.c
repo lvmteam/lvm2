@@ -34,6 +34,9 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!driver_is_loaded())
+		return ECMD_FAILED;     
+
 	/* FIXME -D disk_ARG is now redundant */
 
 /********* FIXME: Do without this - or else 2(+) passes! 
