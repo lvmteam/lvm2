@@ -1,5 +1,5 @@
-Version 2.01.09 - 
-=================================
+Version 2.01.09 - 4th April 2005
+================================
   Add --ignorelockingfailure to vgmknodes.
   clvmd: Don't allow user operations to start until the lvm thread is fully up.
   clvmd-gulm: set KEEPALIVE on sockets.
