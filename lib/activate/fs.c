@@ -65,7 +65,7 @@ static int _rm_dir(const char *dev_dir, const char *vg_name)
 		return 0;
 	}
 
-	if (is_empty_dir(vg_path)) {
+	if (dir_exists(vg_path) && is_empty_dir(vg_path)) {
 		log_very_verbose("Removing directory %s", vg_path);
 		rmdir(vg_path);
 	}

@@ -1,5 +1,6 @@
 Version 2.01.08 - 
 ================================
+  Avoid rmdir opendir error messsages when dir was already removed.
   Tighten signal handlers.
   Avoid some compiler warnings.
   Additional rename failure error message.
