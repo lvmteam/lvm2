@@ -77,6 +77,12 @@ static int _read_name_params(struct lvcreate_params *lp,
 			}
 
 		} else {
+			if (strrchr(argv[0], '/')) {
+				log_error("Volume group name expected "
+					  "(no slash)");
+				return 0;
+			}
+
 			/*
 			 * Ensure lv_name doesn't contain a
 			 * different VG.
@@ -188,12 +194,24 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
-	/*
-	 * Set the defaults.
-	 */
 	memset(lp, 0, sizeof(*lp));
-	lp->chunk_size = 2 * arg_int_value(cmd, chunksize_ARG, 8);
-	log_verbose("setting chunksize to %d sectors.", lp->chunk_size);
+
+	/*
+	 * Check selected options are compatible and set defaults
+	 */
+	if (arg_count(cmd, snapshot_ARG)) {
+		if (arg_count(cmd, zero_ARG)) {
+			log_error("-s and -Z are incompatible");
+			return 0;
+		}
+		lp->chunk_size = 2 * arg_int_value(cmd, chunksize_ARG, 8);
+		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
+	} else {
+		if (arg_count(cmd, chunksize_ARG)) {
+			log_error("-c is only available with -s");
+			return 0;
+		}
+	}
 
 	if (!_read_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, cmd, &argc, &argv) ||
