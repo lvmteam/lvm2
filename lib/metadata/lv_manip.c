@@ -131,8 +131,7 @@ static int _alloc_simple(struct logical_volume *lv,
  * Chooses a correct allocation policy.
  */
 static int _allocate(struct volume_group *vg, struct logical_volume *lv,
-		     struct list *acceptable_pvs,
-		     uint32_t allocated, uint32_t extents)
+		     struct list *acceptable_pvs, uint32_t allocated)
 {
 	int r = 0;
 	struct pool *scratch;
@@ -163,7 +162,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 
 	if (r) {
 		vg->lv_count++;
-		vg->free_count -= extents;
+		vg->free_count -= lv->le_count - allocated;
 	}
 
  out:
@@ -225,7 +224,7 @@ struct logical_volume *lv_create(struct io_space *ios,
 		goto bad;
 	}
 
-	if (!_allocate(vg, lv, acceptable_pvs, 0u, extents)) {
+	if (!_allocate(vg, lv, acceptable_pvs, 0u)) {
 		stack;
 		goto bad;
 	}
@@ -262,9 +261,41 @@ int lv_reduce(struct io_space *ios,
 
 int lv_extend(struct io_space *ios,
 	      struct logical_volume *lv, uint32_t extents,
-	      struct list *allocatable_pvs)
+	      struct list *acceptable_pvs)
 {
-	/* FIXME: finish */
-	log_err("not implemented");
+	struct pe_specifier *new_map;
+	struct logical_volume *new_lv;
+
+	if (!(new_map = pool_zalloc(ios->mem, sizeof(*new_map) * 
+				    (extents + lv->le_count)))) {
+		stack;
+		return 0;
+	}
+
+	memcpy(new_map, lv->map, sizeof(*new_map) * lv->le_count);
+
+	if (!(new_lv = pool_alloc(ios->mem, sizeof(*new_lv)))) {
+		pool_free(ios->mem, new_map);
+		stack;
+		return 0;
+	}
+	
+	memcpy(new_lv, lv, sizeof(*lv));
+	new_lv->map = new_map;
+	new_lv->le_count += extents;
+
+	if (!_allocate(lv->vg, lv, acceptable_pvs, lv->le_count)) {
+		stack;
+		goto bad;
+	}
+
+	memcpy(lv, new_lv, sizeof(*lv));
+
+	/* now you see why new_lv had to be allocated last */
+	pool_free(ios->mem, new_lv);
+	return 1;
+
+ bad:
+	pool_free(ios->mem, new_map);
 	return 0;
 }
