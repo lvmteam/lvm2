@@ -333,7 +333,7 @@ static int _accept_format(struct dev_filter *f, struct device *dev)
 /* We just want to know if it's labelled or not */
 static int _accept_label(struct dev_filter *f, struct device *dev)
 {
-    return is_labelled(dev);
+    return lvm2_is_labelled(NULL, dev);
 }
 
 static void _destroy(struct dev_filter *f)
@@ -555,7 +555,7 @@ static struct labeller this_labeller =
 };
 
 /* Don't know how this gets called... */
-void lvm2_init()
+void lvm2_label_init()
 {
     label_register_handler("LVM2", &this_labeller);
 }
