@@ -262,7 +262,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 	char uuid[64];
 	struct snapshot *snap = NULL;
 	struct list *slh, *snaplist;
-	float snap_percent; /* fused, fsize; */
+	float snap_percent;	/* fused, fsize; */
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
 		stack;
@@ -334,23 +334,23 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
 ***********/
 
-    if (snap) {
-    	if (snap_percent == -1)
-		snap_percent = 100;
+	if (snap) {
+		if (snap_percent == -1)
+			snap_percent = 100;
 
-	size = display_size(snap->chunk_size / 2, SIZE_SHORT);
-	log_print("Snapshot chunk size    %s", size);
-	dbg_free(size);
+		size = display_size(snap->chunk_size / 2, SIZE_SHORT);
+		log_print("Snapshot chunk size    %s", size);
+		dbg_free(size);
 
 /*
 	size = display_size(lv->size / 2, SIZE_SHORT);
 	sscanf(size, "%f", &fsize);
 	fused = fsize * snap_percent / 100;
 */
-	log_print("Allocated to snapshot  %.2f%% ", /* [%.2f/%s]", */
-		  snap_percent);  /*, fused, size); */
-	/* dbg_free(size); */
-    }
+		log_print("Allocated to snapshot  %.2f%% ",	/* [%.2f/%s]", */
+			  snap_percent);	/*, fused, size); */
+		/* dbg_free(size); */
+	}
 
 /********** FIXME Snapshot
 	size = ???
@@ -397,7 +397,7 @@ int lvdisplay_segments(struct logical_volume *lv)
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
 
-		log_print("Logical extent %d to %d:",
+		log_print("Logical extent %u to %u:",
 			  seg->le, seg->le + seg->len - 1);
 
 		log_print("  Type\t\t%s", get_segtype_string(seg->type));
@@ -407,9 +407,9 @@ int lvdisplay_segments(struct logical_volume *lv)
 			if (seg->stripes == 1)
 				_display_stripe(seg, 0, "  ");
 			else {
-				log_print("  Stripes\t\t%d", seg->stripes);
-				log_print("  Stripe size\t\t%d",
-					  seg->stripe_size);
+				log_print("  Stripes\t\t%u", seg->stripes);
+				log_print("  Stripe size\t\t%u KB",
+					  seg->stripe_size / 2);
 
 				for (s = 0; s < seg->stripes; s++) {
 					log_print("  Stripe %d:", s);
