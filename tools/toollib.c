@@ -20,6 +20,8 @@
 
 #include "tools.h"
 
+#include <ctype.h>
+
 static int _autobackup = 1;
 
 int autobackup_set()
@@ -92,11 +94,8 @@ int process_each_vg(int argc, char **argv,
 	int ret_max = 0;
 	int ret = 0;
 
-	struct io_space *ios;
 	struct list_head *vgh;
 	struct name_list *vgs_list;
-
-	ios = active_ios();
 
 	if (argc) {
 		log_verbose("Using volume group(s) on command line");
@@ -120,3 +119,14 @@ int process_each_vg(int argc, char **argv,
 
 	return ret_max;
 }
+
+int is_valid_chars(char *n)
+{
+	register char c;
+	while ((c = *n++))
+		if (!isalnum(c) && c != '.' && c != '_' && c != '-' &&
+			c != '+')
+			return 0;
+	return 1;
+}
+
