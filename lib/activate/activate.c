@@ -592,7 +592,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	if (!info.exists)
 		return 1;
 
-	if (info.open_count) {
+	if (info.open_count && (lv->status & VISIBLE_LV)) {
 		log_error("LV %s/%s in use: not removing", lv->vg->name,
 			  lv->name);
 		return 0;
