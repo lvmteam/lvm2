@@ -26,6 +26,7 @@
 #include <linux/fs.h>
 
 #include "dm.h"
+#include "dmfs.h"
 
 extern struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *dentry);
 
@@ -144,16 +145,9 @@ static struct inode_operations dmfs_root_inode_operations = {
 
 struct inode *dmfs_create_root(struct super_block *sb, int mode)
 {
-	struct inode *inode = new_inode(sb);
+	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
 
 	if (inode) {
-		inode->i_mode = mode | S_IFDIR;
-		inode->i_uid = current->fsuid;
-		inode->i_gid = current->fsgid;
-		inode->i_blksize = PAGE_CACHE_SIZE;
-		inode->i_blocks = 0;
-		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_root_file_operations;
 		inode->i_op = &dmfs_root_inode_operations;
 	}

@@ -25,6 +25,7 @@
 #include <linux/fs.h>
 
 #include "dm.h"
+#include "dmfs.h"
 
 extern struct inode *dmfs_create_error(struct inode *, int);
 extern struct inode *dmfs_create_table(struct inode *, int);
@@ -124,7 +125,7 @@ static struct inode_operations dmfs_tdir_inode_operations = {
 
 struct inode *dmfs_create_tdir(struct super_block *sb, int mode)
 {
-	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
+	struct inode *inode = dmfs_new_private_inode(sb, mode | S_IFDIR);
 
 	if (inode) {
 		inode->i_fop = &dmfs_tdir_file_operations;

@@ -21,7 +21,9 @@
 
 #include <linux/config.h>
 #include <linux/fs.h>
+#include <linux/init.h>
 
+#include "dmfs.h"
 #include "dm.h"
 
 #define DMFS_MAGIC 0x444D4653
@@ -63,7 +65,7 @@ static struct super_operations dmfs_super_operations = {
 	delete_inode:	dmfs_delete_inode,
 };
 
-struct super_block *dmfs_read_super(struct super_block *sb, void *data, int silent)
+static struct super_block *dmfs_read_super(struct super_block *sb, void *data, int silent)
 {
 	struct inode *inode;
 	struct dentry *root;
@@ -90,7 +92,6 @@ struct super_block *dmfs_read_super(struct super_block *sb, void *data, int sile
 struct inode *dmfs_new_inode(struct super_block *sb, int mode)
 {
 	struct inode *inode = new_inode(sb);
-	struct dmfs_i *dmi;
 
 	if (inode) {
 		inode->i_mode = mode;
@@ -100,7 +101,17 @@ struct inode *dmfs_new_inode(struct super_block *sb, int mode)
 		inode->i_blocks = 0;
 		inode->i_rdev = NODEV;
 		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
+	}
 
+	return inode;
+}
+
+struct inode *dmfs_new_private_inode(struct super_block *sb, int mode)
+{
+	struct inode *inode = dmfs_new_inode(sb, mode);
+	struct dmfs_i *dmi;
+
+	if (inode) {
 		dmi = kmalloc(sizeof(struct dmfs_i), GFP_KERNEL);
 		if (dmi == NULL) {
 			iput(inode);
@@ -113,3 +124,33 @@ struct inode *dmfs_new_inode(struct super_block *sb, int mode)
 	}
 	return inode;
 }
+
+static DECLARE_FSTYPE(dmfs_fstype, "dmfs", dmfs_read_super, FS_SINGLE);
+static struct vfsmount *dmfs_mnt;
+
+int __init dmfs_init(void)
+{
+	int ret;
+
+	ret = register_filesystem(&dmfs_fstype);
+	if (ret < 0)
+		goto out;
+
+	dmfs_mnt = kern_mount(&dmfs_fstype);
+	if (IS_ERR(dmfs_mnt)) {
+		ret = PTR_ERR(dmfs_mnt);
+		unregister_filesystem(&dmfs_fstype);
+	}
+out:
+	return ret;
+}
+
+int __exit dmfs_exit(void)
+{
+	/* kern_umount(&dmfs_mnt); */
+
+	unregister_filesystem(&dmfs_fstype);
+
+	return 0;
+}
+

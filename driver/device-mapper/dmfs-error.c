@@ -22,8 +22,10 @@
 #include <linux/config.h>
 #include <linux/list.h>
 #include <linux/fs.h>
+#include <linux/seq_file.h>
 
 #include "dm.h"
+#include "dmfs.h"
 
 struct dmfs_error {
 	struct list_head list;
@@ -55,76 +57,51 @@ void dmfs_zap_errors(struct inode *inode)
 	}
 }
 
-static struct dmfs_error *find_initial_message(struct inode *inode, loff_t *pos)
+static void *e_start(void *context, loff_t *pos)
 {
-	struct dmfs_error *e;
-	struct list_head *tmp, *head;
+	struct list_head *p;
+	loff_t n = *pos;
+	struct dmfs_i *dmi = context;
 
-	tmp = head = &DMFS_I(inode)->errors;
-	for(;;) {
-		tmp = tmp->next;
-		if (tmp == head)
-			break;
-		e = list_entry(tmp, struct dmfs_error, list);
-		if (*pos < e->len)
-			return e;
-		(*pos) -= e->len;
-	}
-
+	down(&dmi->sem);
+	list_for_each(p, &dmi->errors)
+		if (n-- == 0)
+			return list_entry(p, struct dmfs_error, list);
 	return NULL;
 }
 
-static int copy_sequence(struct inode *inode, struct dmfs_error *e, char *buf,
-			size_t size, loff_t offset)
+static void *e_next(void *context, void *v, loff_t *pos)
 {
-	char *from;
-	int amount;
-	int copied = 0;
-
-	do {
-		from = e->msg + offset;
-		amount = e->len - offset;
-
-		if (size < amount)
-			amount = size;
-
-		if (copy_to_user(buf, from, amount))
-			return -EFAULT;
-
-		buf += amount;
-		copied += amount;
-		size -= amount;
-		offset = 0;
-
-		if (e->list.next == &DMFS_I(inode)->errors)
-			break;
-		e = list_entry(e->list.next, struct dmfs_error, list);
-	} while(size > 0);
-
-	return amount;
+	struct dmfs_i *dmi = context;
+	struct list_head *p = ((struct dmfs_error *)v)->list.next;
+	(*pos)++;
+	return (p == &dmi->errors) ? NULL 
+				   : list_entry(p, struct dmfs_error, list);
 }
 
-static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t *pos)
+static void e_stop(void *context, void *v)
 {
-	struct inode *inode = file->f_dentry->d_parent->d_inode;
-	struct dmfs_i *dmi = DMFS_I(inode);
-	int copied = 0;
-	loff_t offset = *pos;
-
-	if (!access_ok(VERIFY_WRITE, buf, size))
-		return -EFAULT;
-
-	down(&dmi->sem);
-	if (dmi->table) {
-		struct dmfs_error *e = find_initial_message(inode, &offset);
-		if (e) {
-			copied = copy_sequence(inode, e, buf, size, offset);
-			if (copied > 0)
-				(*pos) += copied;
-		}
-	}
+	struct dmfs_i *dmi = context;
 	up(&dmi->sem);
-	return copied;
+}
+
+static int show_error(struct seq_file *e, void *v)
+{
+	struct dmfs_error *d = v;
+	seq_puts(e, d->msg);
+	return 0;
+}
+
+static struct seq_operations error_op = {
+	start: e_start,
+	next: e_next,
+	stop: e_stop,
+	show: show_error,
+};
+
+static int dmfs_error_open(struct inode *inode, struct file *file)
+{
+	return seq_open(file, &error_op, DMFS_I(file->f_dentry->d_parent->d_inode));
 }
 
 static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasync)
@@ -133,7 +110,10 @@ static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasyn
 }
 
 static struct file_operations dmfs_error_file_operations = {
-	read:		dmfs_error_read,
+	open:		dmfs_error_open,
+	read:		seq_read,
+	llseek:		seq_lseek,
+	release:	seq_release,
 	fsync:		dmfs_error_sync,
 };
 
@@ -142,16 +122,9 @@ static struct inode_operations dmfs_error_inode_operations = {
 
 struct inode *dmfs_create_error(struct inode *dir, int mode)
 {
-	struct inode *inode = new_inode(dir->i_sb);
+	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFREG);
 
 	if (inode) {
-		inode->i_mode = mode | S_IFREG;
-		inode->i_uid = current->fsuid;
-		inode->i_gid = current->fsgid;
-		inode->i_blksize = PAGE_CACHE_SIZE;
-		inode->i_blocks = 0;
-		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_error_file_operations;
 		inode->i_op = &dmfs_error_inode_operations;
 	}

@@ -26,6 +26,7 @@
 #include <linux/fs.h>
 
 #include "dm.h"
+#include "dmfs.h"
 
 extern struct address_space_operations dmfs_address_space_operations;
 extern struct inode *dmfs_create_tdir(struct super_block *sb, int mode);
@@ -77,7 +78,7 @@ err_out:
 
 struct inode *dmfs_create_symlink(struct inode *dir, int mode)
 {
-	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFLNK);
+	struct inode *inode = dmfs_new_private_inode(dir->i_sb, mode | S_IFLNK);
 
 	if (inode) {
 		inode->i_mapping->a_ops = &dmfs_address_space_operations;
@@ -261,7 +262,7 @@ static struct inode_operations dmfs_lv_inode_operations = {
 
 struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *dentry)
 {
-	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
+	struct inode *inode = dmfs_new_private_inode(sb, mode | S_IFDIR);
 	struct mapped_device *md;
 	const char *name = dentry->d_name.name;
 	char tmp_name[DM_NAME_LEN + 1];
