@@ -338,6 +338,12 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	char buffer[256];
 	int seg_count;
 
+	/*
+	 * Don't bother with an lv section if there are no lvs.
+	 */
+	if (list_empty(&vg->lvs))
+		return 1;
+
 	_out(f, "logical_volumes {");
 	_nl(f);
 	_inc_indent(f);
@@ -373,6 +379,55 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 
 		_dec_indent(f);
 		_out(f, "}");
+	}
+
+	_dec_indent(f);
+	_out(f, "}");
+
+	return 1;
+}
+
+static int _print_snapshot(struct formatter *f, struct snapshot *s,
+			   unsigned int count)
+{
+	_nl(f);
+	_out(f, "snapshot%u {", count);
+	_inc_indent(f);
+
+	_out(f, "chunk_size = %u", s->chunk_size);
+	_out(f, "origin = \"%s\"", s->origin->name);
+	_out(f, "cow_store = \"%s\"", s->cow->name);
+
+	_dec_indent(f);
+	_out(f, "}");
+
+	return 1;
+}
+
+static int _print_snapshots(struct formatter *f, struct volume_group *vg)
+{
+	struct list *sh;
+	struct snapshot *s;
+	unsigned int count = 0;
+
+	/*
+	 * Don't bother with a snapshot section if there are no
+	 * snapshots.
+	 */
+	if (list_empty(&vg->snapshots))
+		return 1;
+
+	_out(f, "snapshots {");
+	_nl(f);
+	_inc_indent(f);
+
+	list_iterate (sh, &vg->snapshots) {
+		s = list_item(sh, struct snapshot_list)->snapshot;
+
+		if (!_print_snapshot(f, s, count++)) {
+			stack;
+			return 0;
+		}
 	}
 
 	_dec_indent(f);
@@ -467,13 +522,15 @@ int text_vg_export(FILE *fp, struct volume_group *vg, const char *desc)
 		fail;
 
 	_nl(f);
-
 	if (!_print_pvs(f, vg))
 		fail;
 
 	_nl(f);
-
 	if (!_print_lvs(f, vg))
+		fail;
+
+	_nl(f);
+	if (!_print_snapshots(f, vg))
 		fail;
 
 #undef fail

@@ -398,17 +398,71 @@ static int _read_lv(struct pool *mem,
 	return 1;
 }
 
+static int _read_snapshot(struct pool *mem,
+			  struct volume_group *vg, struct config_node *sn,
+			  struct config_node *vgn, struct hash_table *pv_hash,
+			  struct uuid_map *um)
+{
+	uint32_t chunk_size;
+	const char *org_name, *cow_name;
+	struct logical_volume *org, *cow;
+
+	if (!(sn = sn->child)) {
+		log_err("Empty snapshot section.");
+		return 0;
+	}
+
+	if (!_read_uint32(sn, "chunk_size", &chunk_size)) {
+		log_err("Couldn't read chunk size for snapshot.");
+		return 0;
+	}
+
+	if (!(cow_name = find_config_str(sn, "cow_store", '/', NULL))) {
+		log_err("Snapshot cow storage not specified.");
+		return 0;
+	}
+
+	if (!(org_name = find_config_str(sn, "origin", '/', NULL))) {
+		log_err("Snapshot origin not specified.");
+		return 0;
+	}
+
+	if (!(cow = find_lv(vg, cow_name))) {
+		log_err("Unknown logical volume specified for "
+			"snapshot cow store.");
+		return 0;
+	}
+
+	if (!(org = find_lv(vg, org_name))) {
+		log_err("Unknown logical volume specified for "
+			"snapshot origin.");
+		return 0;
+	}
+
+	if (!vg_add_snapshot(vg, org, cow, 1, chunk_size)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _read_sections(const char *section, section_fn fn,
 			  struct pool *mem,
 			  struct volume_group *vg, struct config_node *vgn,
 			  struct hash_table *pv_hash,
-			  struct uuid_map *um)
+			  struct uuid_map *um,
+			  int optional)
 {
 	struct config_node *n;
 
 	if (!(n = find_config_node(vgn, section, '/'))) {
-		log_err("Couldn't find section '%s'.", section);
-		return 0;
+		if (!optional) {
+			log_err("Couldn't find section '%s'.", section);
+			return 0;
+		}
+
+		return 1;
 	}
 
 	for (n = n->child; n; n = n->sib) {
@@ -514,7 +568,7 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 
 	list_init(&vg->pvs);
 	if (!_read_sections("physical_volumes", _read_pv, mem, vg,
-			    vgn, pv_hash, um)) {
+			    vgn, pv_hash, um, 0)) {
 		log_err("Couldn't find all physical volumes for volume "
 			"group %s.", vg->name);
 		goto bad;
@@ -522,9 +576,17 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf,
 
 	list_init(&vg->lvs);
 	if (!_read_sections("logical_volumes", _read_lv, mem, vg,
-			    vgn, pv_hash, um)) {
+			    vgn, pv_hash, um, 1)) {
 		log_err("Couldn't read all logical volumes for volume "
 			"group %s.", vg->name);
+		goto bad;
+	}
+
+	list_init(&vg->snapshots);
+	if (!_read_sections("snapshots", _read_snapshot, mem, vg,
+			    vgn, pv_hash, um, 1)) {
+		log_err("Couldn't read all snapshots for volume group %s.",
+			vg->name);
 		goto bad;
 	}
 
