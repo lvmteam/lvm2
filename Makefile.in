@@ -26,6 +26,9 @@ ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += test/mm test/device test/format1 test/regex test/filters
 endif
 
-
 include make.tmpl
+
+lib: include
+tools: include lib
+
 
