@@ -3,6 +3,8 @@ Version 2.00.33 -
 
   gulm clvmd now uses new ccsd key names.
   gulm clvmd now doesn't ignore the first node in cluster.conf
+  Improve clvmd failure message if it's already running.
+  Allow user to kill clvmd during initialisation.
 
 
 Version 2.00.32 - 22nd December 2004
