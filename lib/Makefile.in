@@ -38,7 +38,8 @@ SOURCES=\
 	regex/matcher.c \
 	regex/parse_rx.c \
 	regex/ttree.c \
-	uuid/uuid.c
+	uuid/uuid.c \
+	label/label.c
 
 TARGETS=liblvm.a
 

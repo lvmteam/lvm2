@@ -20,3 +20,4 @@
 ../lib/mm/xlate.h
 ../lib/regex/matcher.h
 ../lib/uuid/uuid.h
+../lib/label/label.h
