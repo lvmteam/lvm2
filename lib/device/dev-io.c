@@ -30,10 +30,14 @@
 #  define BLKGETSIZE64 DKIOCGETBLOCKCOUNT
 #  define BLKFLSBUF DKIOCSYNCHRONIZECACHE
 #  define BLKSIZE_SHIFT 0
+#endif
+
+#ifdef O_DIRECT_SUPPORT
 #  ifndef O_DIRECT
-#    define O_DIRECT	0
+#    error O_DIRECT support configured but O_DIRECT definition not found in headers
 #  endif
 #endif
+
 
 /* FIXME Use _llseek for 64-bit
 _syscall5(int,  _llseek,  uint,  fd, ulong, hi, ulong, lo, loff_t *, res, uint, wh);
@@ -284,8 +288,10 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		return 0;
 	}
 
+#ifdef O_DIRECT_SUPPORT
 	if (direct)
 		flags |= O_DIRECT;
+#endif
 
 	if ((dev->fd = open(name, flags, 0777)) < 0) {
 		log_sys_error("open", name);
@@ -302,7 +308,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		dev->fd = -1;
 		return 0;
 	}
-#if !O_DIRECT
+
+#ifndef O_DIRECT_SUPPORT
 	if (!(dev->flags & DEV_REGULAR))
 		dev_flush(dev);
 #endif
@@ -353,7 +360,8 @@ int dev_close(struct device *dev)
 			  "which is not open.", dev_name(dev));
 		return 0;
 	}
-#if !O_DIRECT
+
+#ifndef O_DIRECT_SUPPORT
 	if (dev->flags & DEV_ACCESSED_W)
 		dev_flush(dev);
 #endif
@@ -406,7 +414,7 @@ int dev_append(struct device *dev, size_t len, void *buffer)
 	r = dev_write(dev, dev->end, len, buffer);
 	dev->end += (uint64_t) len;
 
-#if !O_DIRECT
+#ifndef O_DIRECT_SUPPORT
 	dev_flush(dev);
 #endif
 	return r;
