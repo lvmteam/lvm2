@@ -438,11 +438,16 @@ static int _find_free_lvnum(struct logical_volume *lv)
 	return i;
 }
 
+/*
+ * Validate/populate LV structure for format1.
+ * Supplied LV structure can be for a new LV or for an already-existing one.
+ */
 static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
 {
 	uint64_t max_size = UINT_MAX;
 
-	lvid_from_lvnum(&lv->lvid, &lv->vg->id, _find_free_lvnum(lv));
+	if (!*lv->lvid.s)
+		lvid_from_lvnum(&lv->lvid, &lv->vg->id, _find_free_lvnum(lv));
 
 	if (lv->le_count > MAX_LE_TOTAL) {
 		log_error("logical volumes cannot contain more than "
