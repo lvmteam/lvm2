@@ -261,6 +261,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 
 	if (lv->status & PVMOVE)
 		repstr[0] = 'p';
+	else if (lv->status & MIRRORED)
+		repstr[0] = 'm';
 	else if (lv_is_origin(lv))
 		repstr[0] = 'o';
 	else if (find_cow(lv))
@@ -730,7 +732,7 @@ static int _copypercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(lv->status & PVMOVE) ||
+	if ((!(lv->status & PVMOVE) && !(lv->status & MIRRORED)) ||
 	    !lv_mirror_percent(lv, 0, &percent, NULL)) {
 		field->report_string = "";
 		*sortval = UINT64_C(0);
@@ -1123,32 +1125,58 @@ static int _report_headings(void *handle)
 	struct report_handle *rh = handle;
 	struct list *fh;
 	struct field_properties *fp;
+	const char *heading;
+	char buf[1024];
 
 	if (rh->flags & RH_HEADINGS_PRINTED)
 		return 1;
 
+	rh->flags |= RH_HEADINGS_PRINTED;
+
 	if (!(rh->flags & RH_HEADINGS))
-		goto out;
+		return 1;
+
+	if (!pool_begin_object(rh->mem, 128)) {
+		log_error("pool_begin_object failed for headings");
+		return 0;
+	}
 
 	/* First heading line */
 	list_iterate(fh, &rh->field_props) {
 		fp = list_item(fh, struct field_properties);
 		if (fp->flags & FLD_HIDDEN)
 			continue;
-		if (rh->flags & RH_ALIGNED)
-			printf("%-*.*s", fp->width, fp->width,
-			       _fields[fp->field_num].heading);
-		else
-			printf("%s", _fields[fp->field_num].heading);
-		if (!list_end(&rh->field_props, fh))
-			printf("%s", rh->separator);
-	}
-	printf("\n");
 
-      out:
-	rh->flags |= RH_HEADINGS_PRINTED;
+		heading = _fields[fp->field_num].heading;
+		if (rh->flags & RH_ALIGNED) {
+			if (lvm_snprintf(buf, sizeof(buf), "%-*.*s",
+					 fp->width, fp->width, heading) < 0) {
+				log_error("snprintf heading failed");
+				pool_end_object(rh->mem);
+				return 0;
+			}
+			if (!pool_grow_object(rh->mem, buf, fp->width))
+				goto bad;
+		} else if (!pool_grow_object(rh->mem, heading, strlen(heading)))
+			goto bad;
+
+		if (!list_end(&rh->field_props, fh))
+			if (!pool_grow_object(rh->mem, rh->separator,
+					      strlen(rh->separator)))
+				goto bad;
+	}
+	if (!pool_grow_object(rh->mem, "\0", 1)) {
+		log_error("pool_grow_object failed");
+		goto bad;
+	}
+	log_print("%s", (char *) pool_end_object(rh->mem));
 
 	return 1;
+
+      bad:
+	log_error("Failed to generate report headings for printing");
+
+	return 0;
 }
 
 /*
@@ -1233,6 +1261,9 @@ int report_output(void *handle)
 	struct list *fh, *rowh, *ftmp, *rtmp;
 	struct row *row = NULL;
 	struct field *field;
+	const char *repstr;
+	char buf[4096];
+	int width;
 
 	if (list_empty(&rh->rows))
 		return 1;
@@ -1247,26 +1278,53 @@ int report_output(void *handle)
 
 	/* Print and clear buffer */
 	list_iterate_safe(rowh, rtmp, &rh->rows) {
+		if (!pool_begin_object(rh->mem, 512)) {
+			log_error("pool_begin_object failed for row");
+			return 0;
+		}
 		row = list_item(rowh, struct row);
 		list_iterate_safe(fh, ftmp, &row->fields) {
 			field = list_item(fh, struct field);
 			if (field->props->flags & FLD_HIDDEN)
 				continue;
-			if (!(rh->flags & RH_ALIGNED))
-				printf("%s", field->report_string);
-			else if (field->props->flags & FLD_ALIGN_LEFT)
-				printf("%-*.*s", field->props->width,
-				       field->props->width,
-				       field->report_string);
-			else if (field->props->flags & FLD_ALIGN_RIGHT)
-				printf("%*.*s", field->props->width,
-				       field->props->width,
-				       field->report_string);
+
+			repstr = field->report_string;
+			width = field->props->width;
+			if (!(rh->flags & RH_ALIGNED)) {
+				if (!pool_grow_object(rh->mem, repstr,
+						      strlen(repstr)))
+					goto bad;
+			} else if (field->props->flags & FLD_ALIGN_LEFT) {
+				if (lvm_snprintf(buf, sizeof(buf), "%-*.*s",
+						 width, width, repstr) < 0) {
+					log_error("snprintf repstr failed");
+					pool_end_object(rh->mem);
+					return 0;
+				}
+				if (!pool_grow_object(rh->mem, buf, width))
+					goto bad;
+			} else if (field->props->flags & FLD_ALIGN_RIGHT) {
+				if (lvm_snprintf(buf, sizeof(buf), "%*.*s",
+						 width, width, repstr) < 0) {
+					log_error("snprintf repstr failed");
+					pool_end_object(rh->mem);
+					return 0;
+				}
+				if (!pool_grow_object(rh->mem, buf, width))
+					goto bad;
+			}
+
 			if (!list_end(&row->fields, fh))
-				printf("%s", rh->separator);
+				if (!pool_grow_object(rh->mem, rh->separator,
+						      strlen(rh->separator)))
+					goto bad;
 			list_del(&field->list);
 		}
-		printf("\n");
+		if (!pool_grow_object(rh->mem, "\0", 1)) {
+			log_error("pool_grow_object failed for row");
+			return 0;
+		}
+		log_print("%s", (char *) pool_end_object(rh->mem));
 		list_del(&row->list);
 	}
 
@@ -1274,4 +1332,8 @@ int report_output(void *handle)
 		pool_free(rh->mem, row);
 
 	return 1;
+
+      bad:
+	log_error("Failed to generate row for printing");
+	return 0;
 }
