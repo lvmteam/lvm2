@@ -103,7 +103,7 @@ void pvdisplay_colons(struct physical_volume *pv)
 
 	uuid = display_uuid(pv->id.uuid);
 
-	log_print("%s:%s:%" FMT_64 "u:-1:%u:%u:-1:%" FMT_64 "u:%u:%u:%u:%s",
+	log_print("%s:%s:%" PRIu64 ":-1:%u:%u:-1:%" PRIu64 ":%u:%u:%u:%s",
 		  dev_name(pv->dev), pv->vg_name, pv->size,
 		  /* FIXME pv->pv_number, Derive or remove? */
 		  pv->status,	/* FIXME Support old or new format here? */
@@ -170,9 +170,9 @@ void pvdisplay_full(struct physical_volume *pv)
 /*********FIXME
 	log_print("Cur LV                %u", pv->lv_cur);
 *********/
-	log_print("PE Size (KByte)       %" FMT_64 "u", pv->pe_size / 2);
+	log_print("PE Size (KByte)       %" PRIu64, pv->pe_size / 2);
 	log_print("Total PE              %u", pv->pe_count);
-	log_print("Free PE               %" FMT_64 "u", pe_free);
+	log_print("Free PE               %" PRIu64, pe_free);
 	log_print("Allocated PE          %u", pv->pe_allocated);
 
 #ifdef LVM_FUTURE
@@ -205,7 +205,7 @@ void pv_display_short(struct physical_volume *pv)
 
 void lvdisplay_colons(struct logical_volume *lv)
 {
-	log_print("%s/%s:%s:%d:%d:-1:%d:%" FMT_64 "u:%d:-1:%d:%d:-1:-1",
+	log_print("%s/%s:%s:%d:%d:-1:%d:%" PRIu64 ":%d:-1:%d:%d:-1:-1",
 		  /* FIXME Prefix - attach to struct volume_group? */
 		  lv->vg->name,
 		  lv->name,
