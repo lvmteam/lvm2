@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2005-02-01 16:32+0000\n"
+"POT-Creation-Date: 2005-03-08 13:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,8 +126,8 @@ msgstr ""
 #: device/dev-cache.c:189 device/dev-cache.c:195 device/dev-cache.c:229
 #: device/dev-cache.c:300 device/dev-cache.c:348 device/dev-cache.c:393
 #: device/dev-cache.c:398 device/dev-io.c:174 device/dev-io.c:204
-#: device/dev-io.c:322 device/dev-io.c:465 device/dev-io.c:486
-#: device/dev-io.c:504 device/dev-io.c:523 device/dev-io.c:551
+#: device/dev-io.c:322 device/dev-io.c:468 device/dev-io.c:489
+#: device/dev-io.c:507 device/dev-io.c:526 device/dev-io.c:554
 #: device/dev-md.c:41 device/dev-md.c:49 device/dev-md.c:64 device/device.c:61
 #: device/device.c:66 device/device.c:90 display/display.c:211
 #: display/display.c:242 display/display.c:300 display/display.c:347
@@ -263,7 +263,7 @@ msgstr ""
 #: lvchange.c:87 lvchange.c:93 lvchange.c:101 lvchange.c:108 lvchange.c:115
 #: lvchange.c:165 lvchange.c:173 lvchange.c:207 lvchange.c:292 lvchange.c:350
 #: lvchange.c:358 lvcreate.c:265 lvcreate.c:436 lvcreate.c:517 lvcreate.c:523
-#: lvcreate.c:564 lvcreate.c:571 lvcreate.c:656 lvmcmdline.c:1004
+#: lvcreate.c:564 lvcreate.c:571 lvcreate.c:656 lvmcmdline.c:1008
 #: lvremove.c:74 lvrename.c:146 lvrename.c:157 lvrename.c:164 lvrename.c:169
 #: lvresize.c:360 lvresize.c:417 lvresize.c:424 lvresize.c:431 lvresize.c:443
 #: lvresize.c:450 lvresize.c:456 lvresize.c:475 lvresize.c:489 lvresize.c:514
@@ -627,24 +627,25 @@ msgstr ""
 #: device/dev-cache.c:322 device/dev-cache.c:329 device/dev-cache.c:490
 #: device/dev-cache.c:492 device/dev-io.c:131 device/dev-io.c:235
 #: device/dev-io.c:240 device/dev-io.c:242 device/dev-io.c:248
-#: device/dev-io.c:344 device/dev-io.c:400 filters/filter-persistent.c:184
-#: filters/filter-sysfs.c:43 filters/filter-sysfs.c:155
-#: filters/filter-sysfs.c:179 filters/filter-sysfs.c:222 filters/filter.c:152
-#: format_text/archive.c:221 format_text/archive.c:230
-#: format_text/format-text.c:615 format_text/format-text.c:629
-#: format_text/format-text.c:635 format_text/format-text.c:660
-#: format_text/format-text.c:722 format_text/format-text.c:727
-#: format_text/format-text.c:753 format_text/format-text.c:778
-#: locking/file_locking.c:61 locking/file_locking.c:69
-#: locking/file_locking.c:72 locking/file_locking.c:103
-#: locking/file_locking.c:169 locking/file_locking.c:183
-#: locking/file_locking.c:290 locking/file_locking.c:295 locking/locking.c:44
-#: locking/locking.c:49 locking/locking.c:65 locking/locking.c:200
-#: log/log.c:62 lvmcmdline.c:1411 misc/lvm-file.c:47 misc/lvm-file.c:92
-#: misc/lvm-file.c:102 misc/lvm-file.c:151 misc/lvm-file.c:163
-#: misc/lvm-file.c:192 misc/lvm-file.c:201 misc/lvm-file.c:229
-#: misc/lvm-file.c:234 mm/memlock.c:98 mm/memlock.c:106 mm/memlock.c:117
-#: toollib.c:966 uuid/uuid.c:84 uuid/uuid.c:89
+#: device/dev-io.c:345 device/dev-io.c:347 device/dev-io.c:403
+#: filters/filter-persistent.c:184 filters/filter-sysfs.c:43
+#: filters/filter-sysfs.c:155 filters/filter-sysfs.c:179
+#: filters/filter-sysfs.c:222 filters/filter.c:152 format_text/archive.c:221
+#: format_text/archive.c:230 format_text/format-text.c:615
+#: format_text/format-text.c:629 format_text/format-text.c:635
+#: format_text/format-text.c:660 format_text/format-text.c:722
+#: format_text/format-text.c:727 format_text/format-text.c:753
+#: format_text/format-text.c:778 locking/file_locking.c:61
+#: locking/file_locking.c:69 locking/file_locking.c:72
+#: locking/file_locking.c:103 locking/file_locking.c:169
+#: locking/file_locking.c:183 locking/file_locking.c:290
+#: locking/file_locking.c:295 locking/locking.c:44 locking/locking.c:49
+#: locking/locking.c:65 locking/locking.c:200 log/log.c:62 lvmcmdline.c:1415
+#: misc/lvm-file.c:47 misc/lvm-file.c:92 misc/lvm-file.c:102
+#: misc/lvm-file.c:151 misc/lvm-file.c:163 misc/lvm-file.c:192
+#: misc/lvm-file.c:201 misc/lvm-file.c:229 misc/lvm-file.c:234 mm/memlock.c:98
+#: mm/memlock.c:106 mm/memlock.c:117 toollib.c:966 uuid/uuid.c:84
+#: uuid/uuid.c:89
 #, c-format
 msgid "%s: %s failed: %s"
 msgstr ""
@@ -1275,32 +1276,32 @@ msgstr ""
 msgid "%s: stat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:357
+#: device/dev-io.c:360
 #, c-format
 msgid "%s: fstat failed: Has device name changed?"
 msgstr ""
 
-#: device/dev-io.c:373
+#: device/dev-io.c:376
 #, c-format
 msgid "Opened %s %s"
 msgstr ""
 
-#: device/dev-io.c:405
+#: device/dev-io.c:408
 #, c-format
 msgid "Closed %s"
 msgstr ""
 
-#: device/dev-io.c:418
+#: device/dev-io.c:421
 #, c-format
 msgid "Attempt to close device '%s' which is not open."
 msgstr ""
 
-#: device/dev-io.c:528
+#: device/dev-io.c:531
 #, c-format
 msgid "Wiping %s at %llu length %Zu"
 msgstr ""
 
-#: device/dev-io.c:531
+#: device/dev-io.c:534
 #, c-format
 msgid "Wiping %s at sector %llu length %Zu sectors"
 msgstr ""
@@ -3697,56 +3698,56 @@ msgstr ""
 msgid "Couldn't create default backup path '%s/%s'."
 msgstr ""
 
-#: lvmcmdline.c:1058
+#: lvmcmdline.c:1062
 #, c-format
 msgid "Line too long (max 255) beginning: %s"
 msgstr ""
 
-#: lvmcmdline.c:1065
+#: lvmcmdline.c:1069
 #, c-format
 msgid "Too many arguments: %s"
 msgstr ""
 
-#: lvmcmdline.c:1197
+#: lvmcmdline.c:1201
 msgid "$HOME/.lvm_history: path too long"
 msgstr ""
 
-#: lvmcmdline.c:1212
+#: lvmcmdline.c:1216
 #, c-format
 msgid "Couldn't read history from %s."
 msgstr ""
 
-#: lvmcmdline.c:1227
+#: lvmcmdline.c:1231
 #, c-format
 msgid "Couldn't write history to %s."
 msgstr ""
 
-#: lvmcmdline.c:1260
+#: lvmcmdline.c:1264
 msgid "Too many arguments, sorry."
 msgstr ""
 
-#: lvmcmdline.c:1274
+#: lvmcmdline.c:1278
 msgid "Exiting."
 msgstr ""
 
-#: lvmcmdline.c:1280
+#: lvmcmdline.c:1284
 #, c-format
 msgid "No such command '%s'.  Try 'help'."
 msgstr ""
 
-#: lvmcmdline.c:1406
+#: lvmcmdline.c:1410
 msgid "Failed to create LVM1 tool pathname"
 msgstr ""
 
-#: lvmcmdline.c:1443
+#: lvmcmdline.c:1458
 msgid "Falling back to LVM1 tools, but no command specified."
 msgstr ""
 
-#: lvmcmdline.c:1459
+#: lvmcmdline.c:1474
 msgid "Please supply an LVM command."
 msgstr ""
 
-#: lvmcmdline.c:1473
+#: lvmcmdline.c:1488
 msgid "No such command.  Try 'help'."
 msgstr ""
 
