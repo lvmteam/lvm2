@@ -169,6 +169,8 @@ static int _read_devs(struct dev_set *ds, const char *dir)
 {
         struct dirent *d;
         DIR *dr;
+	unsigned char dtype;
+	struct stat info;
 	char path[PATH_MAX];
 	dev_t dev;
 	int r = 1;
@@ -189,19 +191,29 @@ static int _read_devs(struct dev_set *ds, const char *dir)
 			continue;
 		}
 
-		if (d->d_type == DT_DIR) {
+		dtype = d->d_type;
+
+		if (dtype == DT_UNKNOWN) {
+			if (stat(path, &info) >= 0) {
+				if (S_ISDIR(info.st_mode))
+					dtype = DT_DIR;
+				else if (S_ISREG(info.st_mode))
+					dtype = DT_REG;
+			}
+		}
+
+		if (dtype == DT_DIR) {
 			if (!_read_devs(ds, path)) {
 				r = 0;
 				break;
 			}
 		}
 
-		if ((d->d_type == DT_REG && !strcmp(d->d_name, "dev")))
+		if ((dtype == DT_REG && !strcmp(d->d_name, "dev")))
 			if (!_read_dev(path, &dev) || !_set_insert(ds, dev)) {
 				r = 0;
 				break;
 			}
-
 	}
 
         if (closedir(dr))
