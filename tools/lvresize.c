@@ -37,6 +37,7 @@ int lvresize(int argc, char **argv)
 	struct list *pvh, *segh;
 	struct lv_list *lvl;
 	int opt = 0;
+	int active;
 
 	enum {
 		LV_ANY = 0,
@@ -314,6 +315,9 @@ int lvresize(int argc, char **argv)
 			return ECMD_FAILED;
 	}
 
+
+	active = lv_active(lv);
+
 /********* FIXME Suspend lv  ***********/
 
 	/* store vg on disk(s) */
@@ -322,8 +326,7 @@ int lvresize(int argc, char **argv)
 
         backup(vg);
 
-	/* FIXME Ensure it always displays errors? */
-	if (!lv_reactivate(lv))
+	if (active && !lv_reactivate(lv))
 		return ECMD_FAILED;
 
 /********* FIXME Resume *********/
