@@ -351,7 +351,6 @@ static int _mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	}
 
 	dentry->d_inode->u.generic_ip = md;
-	md->inode = dentry->d_inode;
 
 	return 0;
 }
