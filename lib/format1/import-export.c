@@ -60,8 +60,6 @@ int import_pv(struct pool *mem, struct device *dev,
 	pv->pe_count = pvd->pe_total;
 	pv->pe_allocated = pvd->pe_allocated;
 
-	init_list(&pv->allocated);
-
 	return 1;
 }
 
@@ -207,7 +205,6 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 
 int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 {
-	int len;
 	memset(&lv->id, 0, sizeof(lv->id));
         if (!(lv->name = _create_lv_name(mem, lvd->lv_name))) {
 		stack;
@@ -244,17 +241,10 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 		lv->status |= ALLOC_SIMPLE;
 
 	lv->read_ahead = lvd->lv_read_ahead;
-	lv->stripes = lvd->lv_stripes;
-
         lv->size = lvd->lv_size;
         lv->le_count = lvd->lv_allocated_le;
 
 	list_init(&lv->segments);
-
-	if (!lv->segments) {
-		stack;
-		return 0;
-	}
 
 	return 1;
 }
@@ -289,7 +279,8 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 		lvd->lv_status |= LV_SPINDOWN;
 
 	lvd->lv_read_ahead = lv->read_ahead;
-	lvd->lv_stripes = lv->stripes;
+	lvd->lv_stripes = list_item(lv->segments.n,
+				    struct stripe_segment)->stripes;
 
         lvd->lv_size = lv->size;
         lvd->lv_allocated_le = lv->le_count;
@@ -311,22 +302,19 @@ int export_extents(struct disk_list *dl, int lv_num,
 	struct list *segh;
 	struct pe_disk *ped;
 	struct stripe_segment *seg;
-	uint32_t pe;
-	struct span *pes;
+	uint32_t pe, s;
 
 	list_iterate (segh, &lv->segments) {
 		seg = list_item(segh, struct stripe_segment);
 
-		for (a = 0; a < seg->stripes; a++) {
-			if (seg->areas[a].pv != pv)
+		for (s = 0; s < seg->stripes; s++) {
+			if (seg->area[s].pv != pv)
 				continue; /* not our pv */
 
-			pes = seg->areas[a].pes;
-
-			for (pe = 0; pe < pe->len; pe++) {
-				ped = &dl->extents[pe + pes->start];
+			for (pe = 0; pe < seg->len; pe++) {
+				ped = &dl->extents[pe + seg->area[s].pe];
 				ped->lv_num = lv_num;
-				ped->le_num = seg->le + a +
+				ped->le_num = seg->le + s +
 					(seg->stripes * pe);
 			}
 		}
