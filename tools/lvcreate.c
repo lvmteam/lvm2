@@ -347,7 +347,7 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 
 	dev_zero(dev, UINT64_C(0), (size_t) 4096);
-	dev_close(dev);
+	dev_close_immediate(dev);
 
 	return 1;
 }

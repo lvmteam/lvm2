@@ -54,6 +54,7 @@ int dev_open(struct device *dev);
 int dev_open_quiet(struct device *dev);
 int dev_open_flags(struct device *dev, int flags, int append, int quiet);
 int dev_close(struct device *dev);
+int dev_close_immediate(struct device *dev);
 void dev_close_all(void);
 
 static inline int dev_fd(struct device *dev)
