@@ -1,4 +1,13 @@
-Mondy 18th November 2002
+Wednesday 30th April 2003
+=========================
+A pvmove implementation is now available for the new metadata format.
+
+When running a command that allocates space (e.g. lvcreate), you can now
+restrict not only which disk(s) may be used but also the Physical Extents 
+on those disks.  e.g. lvcreate -L 10 vg1 /dev/hda6:1000-2000:3000-4000
+
+
+Monday 18th November 2002
 ========================
 
 The new format of LVM metadata is ready for you to test!
@@ -15,7 +24,7 @@ While testing, we recommend turning logging on in the configuration file
 to provide us with diagnostic information:
   log {
         file="/tmp/lvm2.log"
-	level=6
+	level=7
   }
 
 You should schedule regular backups of your configuration file and
@@ -78,9 +87,10 @@ finds something unexpected.  This applies particularly to tools that
 work on more than one volume group at once (e.g. vgsplit).
 
 Display output.  Some metadata information cannot yet be displayed.
-Work has started on new display tools.
 
 Recovery tools to salvage "lost" metadata directly from the disks:
 but we hope the new format will mean such tools are hardly ever needed!
 
+pvmove will be enhanced to remove the volume group lock so that you can
+run other commands alongside.
 
