@@ -1,0 +1,23 @@
+--- linux-2.4.9/drivers/md/Makefile	Tue Aug 28 08:55:08 2001
++++ linux-2.4.9-lvm2/drivers/md/Makefile	Tue Aug 28 08:55:22 2001
+@@ -7,6 +7,7 @@
+ export-objs	:= md.o xor.o
+ list-multi	:= lvm-mod.o
+ lvm-mod-objs	:= lvm.o lvm-snap.o
++dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-fs.o
+ 
+ # Note: link order is important.  All raid personalities
+ # and xor.o must come before md.o, as they each initialise 
+@@ -19,9 +20,12 @@
+ obj-$(CONFIG_MD_RAID5)		+= raid5.o xor.o
+ obj-$(CONFIG_BLK_DEV_MD)	+= md.o
+ obj-$(CONFIG_BLK_DEV_LVM)	+= lvm-mod.o
++obj-$(CONFIG_BLK_DEV_DM)	+= dm-mod.o
+ 
+ include $(TOPDIR)/Rules.make
+ 
+ lvm-mod.o: $(lvm-mod-objs)
+ 	$(LD) -r -o $@ $(lvm-mod-objs)
+ 
++dm-mod.o: $(dm-mod-objs)
++	$(LD) -r -o $@ $(dm-mod-objs)

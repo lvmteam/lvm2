@@ -18,13 +18,4 @@
 +dep_tristate ' Device mapper support' CONFIG_BLK_DEV_DM $CONFIG_MD
 +
  endmenu
---- linux/drivers/md/Makefile.orig	Tue Aug 21 14:19:14 2001
-+++ linux/drivers/md/Makefile	Tue Aug 21 14:20:06 2001
-@@ -19,6 +19,7 @@
- obj-$(CONFIG_MD_RAID5)		+= raid5.o xor.o
- obj-$(CONFIG_BLK_DEV_MD)	+= md.o
- obj-$(CONFIG_BLK_DEV_LVM)	+= lvm-mod.o
-+obj-$(CONFIG_BLK_DEV_DM)	+= dm.o dm-table.o dm-target.o dm-fs.o
- 
- include $(TOPDIR)/Rules.make
- 
+
