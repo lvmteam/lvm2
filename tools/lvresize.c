@@ -24,8 +24,6 @@ struct lvresize_params {
 
 	struct segment_type *segtype;
 
-	struct list *pvh;
-
 	/* size */
 	uint32_t extents;
 	uint64_t size;
@@ -122,27 +120,28 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	struct lv_segment *seg;
 	uint32_t seg_extents;
 	uint32_t sz, str;
+	struct list *pvh = NULL;
 
 	if (!(vg = vg_read(cmd, lp->vg_name, &consistent))) {
 		log_error("Volume group %s doesn't exist", lp->vg_name);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group %s is exported", vg->name);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
 		log_error("Volume group %s is read-only", lp->vg_name);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	/* does LV exist? */
 	if (!(lvl = find_lv_in_vg(vg, lp->lv_name))) {
 		log_error("Logical volume %s not found in volume group %s",
 			  lp->lv_name, lp->vg_name);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	if (arg_count(cmd, stripes_ARG)) {
@@ -155,7 +154,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (arg_count(cmd, stripesize_ARG)) {
 		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
 			log_error("Stripesize may not be negative.");
-			goto error;
+			return ECMD_FAILED;
 		}
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
 			lp->stripe_size = 2 * arg_uint_value(cmd,
@@ -168,11 +167,11 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	if (lv->status & LOCKED) {
 		log_error("Can't resize locked LV %s", lv->name);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lv->alloc);
-	
+
 	if (lp->size) {
 		if (lp->size % vg->extent_size) {
 			if (lp->sign == SIGN_MINUS)
@@ -196,7 +195,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		if (lp->extents >= lv->le_count) {
 			log_error("Unable to reduce %s below 1 extent",
 				  lp->lv_name);
-			goto error_cmdline;
+			return EINVALID_CMD_LINE;
 		}
 
 		lp->extents = lv->le_count - lp->extents;
@@ -204,13 +203,13 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	if (!lp->extents) {
 		log_error("New size of 0 not permitted");
-		goto error_cmdline;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (lp->extents == lv->le_count) {
 		log_error("New size (%d extents) matches existing size "
 			  "(%d extents)", lp->extents, lv->le_count);
-		goto error_cmdline;
+		return EINVALID_CMD_LINE;
 	}
 
 	seg_size = lp->extents - lv->le_count;
@@ -224,7 +223,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (lp->segtype != (struct segment_type *) arg_ptr_value(cmd, type_ARG,
 								 lp->segtype)) {
 		log_error("VolumeType does not match (%s)", lp->segtype->name);
-		goto error_cmdline;
+		return EINVALID_CMD_LINE;
 	}
 
 	/* If extending, find stripes, stripesize & size of last segment */
@@ -242,7 +241,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			    (seg_stripes && seg_stripes != str && !lp->stripes)) {
 				log_error("Please specify number of "
 					  "stripes (-i) and stripesize (-I)");
-				goto error_cmdline;
+				return EINVALID_CMD_LINE;
 			}
 
 			seg_stripesize = sz;
@@ -258,7 +257,8 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 					  "%dKB", seg_stripesize / 2);
 				lp->stripe_size = seg_stripesize;
 			} else {
-				lp->stripe_size = find_config_int(cmd->cft->root,
+				lp->stripe_size =
+					find_config_int(cmd->cft->root,
 							"metadata/stripesize",
 							DEFAULT_STRIPESIZE) * 2;
 				log_print("Using default stripesize %dKB",
@@ -296,7 +296,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	if (lp->stripes > 1 && !lp->stripe_size) {
 		log_error("Stripesize for striped segment should not be 0!");
-		goto error_cmdline;
+		return EINVALID_CMD_LINE;
 	}
 
 	if ((lp->stripes > 1)) {
@@ -314,7 +314,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (lp->extents == lv->le_count) {
 		log_error("New size (%d extents) matches existing size "
 			  "(%d extents)", lp->extents, lv->le_count);
-		goto error_cmdline;
+		return EINVALID_CMD_LINE;
 	}
 
 	if (lp->extents < lv->le_count) {
@@ -322,7 +322,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			log_error("New size given (%d extents) not larger "
 				  "than existing size (%d extents)",
 				  lp->extents, lv->le_count);
-			goto error_cmdline;
+			return EINVALID_CMD_LINE;
 		} else
 			lp->resize = LV_REDUCE;
 	}
@@ -332,7 +332,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			log_error("New size given (%d extents) not less than "
 				  "existing size (%d extents)", lp->extents,
 				  lv->le_count);
-			goto error_cmdline;
+			return EINVALID_CMD_LINE;
 		} else
 			lp->resize = LV_EXTEND;
 	}
@@ -345,7 +345,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 		if (!lv_info(lv, &info) && driver_version(NULL, 0)) {
 			log_error("lv_info failed: aborting");
-			goto error;
+			return ECMD_FAILED;
 		}
 
 		if (info.exists) {
@@ -364,29 +364,29 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 					  " [y/n]: ", lp->lv_name) == 'n') {
 				log_print("Logical volume %s NOT reduced",
 					  lp->lv_name);
-				goto error;
+				return ECMD_FAILED;
 			}
 		}
 
 		if (!archive(vg)) {
 			stack;
-			goto error;
+			return ECMD_FAILED;
 		}
 
 		if (!lv_reduce(vg->fid, lv, lv->le_count - lp->extents))
-			goto error;
+			return ECMD_FAILED;
 	}
 
 	if (lp->resize == LV_EXTEND) {
-		if (!(lp->pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
-						  lp->argv) : &vg->pvs)) {
+		if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
+						      lp->argv) : &vg->pvs)) {
 			stack;
-			goto error;
+			return ECMD_FAILED;
 		}
 
 		if (!archive(vg)) {
 			stack;
-			goto error;
+			return ECMD_FAILED;
 		}
 
 		log_print("Extending logical volume %s to %s", lp->lv_name,
@@ -395,16 +395,18 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 				       SIZE_SHORT));
 
 		if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes,
-			       lp->stripe_size, 0u, lp->extents - lv->le_count,
-			       NULL, 0u, 0u, lp->pvh, alloc)) {
-			goto error;
+			       lp->stripe_size, 0u,
+			       lp->extents - lv->le_count,
+			       NULL, 0u, 0u, pvh, alloc)) {
+			stack;
+			return ECMD_FAILED;
 		}
 	}
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg)) {
 		stack;
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	backup(vg);
@@ -418,29 +420,23 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (!suspend_lv(cmd, lock_lvid)) {
 		log_error("Failed to suspend %s", lp->lv_name);
 		vg_revert(vg);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	if (!vg_commit(vg)) {
 		stack;
 		resume_lv(cmd, lock_lvid);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	if (!resume_lv(cmd, lock_lvid)) {
 		log_error("Problem reactivating %s", lp->lv_name);
-		goto error;
+		return ECMD_FAILED;
 	}
 
 	log_print("Logical volume %s successfully resized", lp->lv_name);
 
 	return ECMD_PROCESSED;
-
-      error:
-	return ECMD_FAILED;
-
-      error_cmdline:
-	return EINVALID_CMD_LINE;
 }
 
 int lvresize(struct cmd_context *cmd, int argc, char **argv)
