@@ -98,6 +98,7 @@ static int _mk_link(struct logical_volume *lv)
 
 static int _rm_link(struct logical_volume *lv, const char *lv_name)
 {
+	struct stat buf;
 	char link_path[PATH_MAX];
 
 	if (!lv_name)
@@ -111,6 +112,11 @@ static int _rm_link(struct logical_volume *lv, const char *lv_name)
 	}
 
 	log_very_verbose("Removing link %s", link_path);
+	if (lstat(link_path, &buf) || !S_ISLNK(buf.st_mode)) {
+			log_error("%s not symbolic link - not removing",
+				  link_path);
+			return 0;
+	}
 	if (unlink(link_path) < 0) {
 		log_sys_error("unlink", link_path);
 		return 0;
