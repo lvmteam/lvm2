@@ -35,6 +35,7 @@ int lvremove(int argc, char **argv)
 static int lvremove_single(struct logical_volume *lv)
 {
 	struct volume_group *vg;
+	int active;
 
 	vg = lv->vg;
 
@@ -44,16 +45,17 @@ static int lvremove_single(struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
-	/* FIXME Force option? */
 	if (lv_open_count(lv) > 0) {
 		log_error("Can't remove open logical volume %s", lv->name);
 		return ECMD_FAILED;
 	}
 
-	if (!arg_count(force_ARG)) {
+	active = lv_active(lv);
+
+	if (active && !arg_count(force_ARG)) {
 		if (yes_no_prompt
-		    ("Do you really want to remove %s? [y/n]: ",
-		     lv->name) == 'n') {
+		    ("Do you really want to remove active logical volume %s? "
+		     "[y/n]: ", lv->name) == 'n') {
 			log_print("Logical volume %s not removed", lv->name);
 			return 0;
 		}
@@ -62,7 +64,7 @@ static int lvremove_single(struct logical_volume *lv)
 	if (!archive(vg))
 		return ECMD_FAILED;
 
-	if (!lv_deactivate(lv)) {
+	if (active && !lv_deactivate(lv)) {
 		log_error("Unable to deactivate logical volume %s", lv->name);
 	}
 
@@ -71,12 +73,6 @@ static int lvremove_single(struct logical_volume *lv)
 		log_error("Error releasing logical volume %s", lv->name);
 		return ECMD_FAILED;
 	}
-
-/********* FIXME
-	log_verbose("Unlinking special file %s", lv->name);
-	if (!lvm_check_devfs() && unlink(lv->name) == -1)
-		log_error("Error unlinking special file %s", lv_name);
-**********/
 
 	/* store it on disks */
 	if (!fid->ops->vg_write(fid, vg))
