@@ -3907,23 +3907,30 @@ esac
 
 
 
+OWNER="root"
+GROUP="root"
+
 
 # Check whether --with-user or --without-user was given.
 if test "${with_user+set}" = set; then
   withval="$with_user"
    OWNER="$withval"
-else
-   OWNER="root"
 fi;
+
+if test x$OWNER != x; then
+	OWNER="-o $OWNER"
+fi
 
 
 # Check whether --with-group or --without-group was given.
 if test "${with_group+set}" = set; then
   withval="$with_group"
    GROUP="$withval"
-else
-   GROUP="root"
 fi;
+
+if test x$GROUP != x; then
+	GROUP="-g $GROUP"
+fi
 
 # Check whether --enable-lvm1_fallback or --disable-lvm1_fallback was given.
 if test "${enable_lvm1_fallback+set}" = set; then
