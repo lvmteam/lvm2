@@ -111,6 +111,11 @@ static void _insert_area(struct list *head, struct pv_area *a)
 	struct list *pvah;
 	struct pv_area *pva;
 
+	if (list_empty(head)) {
+		list_add(head, &a->list);
+		return;
+	}
+
 	list_iterate (pvah, head) {
 		pva = list_item(pvah, struct pv_area);
 
@@ -118,10 +123,8 @@ static void _insert_area(struct list *head, struct pv_area *a)
 			break;
 	}
 
-	a->list.n = &pva->list;
-	a->list.p = pva->list.p;
-	pva->list.p->n = &a->list;
-	pva->list.p = &a->list;
+	list_add_h(&pva->list, &a->list);
+	return;
 }
 
 static int _create_single_area(struct pool *mem, struct pv_map *pvm,

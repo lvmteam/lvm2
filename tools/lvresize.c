@@ -178,7 +178,7 @@ int lvresize(int argc, char **argv)
 
 	/* If extending, find stripes, stripesize & size of last segment */
 	if (extents > lv->le_count && 
-	    !(stripes == 1 || stripes > 1 && stripesize)) {
+	    !(stripes == 1 || (stripes > 1 && stripesize))) {
 		list_iterate(segh, &lv->segments) {
 			struct stripe_segment *seg;
 			uint32_t sz, str;

@@ -18,6 +18,7 @@ int lvcreate(int argc, char **argv)
 	int opt = 0;
 	uint32_t status = 0;
 	uint32_t size = 0;
+	uint32_t size_rest;
 	uint32_t extents = 0;
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -51,18 +52,22 @@ int lvcreate(int argc, char **argv)
 	zero = strcmp(arg_str_value(zero_ARG, "y"), "n");
 
 	if (arg_count(stripes_ARG)) {
-		log_print("Stripes not yet implemented in LVM2. Ignoring.");
 		stripes = arg_int_value(stripes_ARG, 1);
 		if (stripes == 1)
 			log_print("Redundant stripes argument: default is 1");
 	}
 
 	if (arg_count(stripesize_ARG))
-		stripesize = arg_int_value(stripesize_ARG, 0);
+		stripesize = 2 * arg_int_value(stripesize_ARG, 0);
 
 	if (stripes == 1 && stripesize) {
 		log_print("Ignoring stripesize argument with single stripe");
 		stripesize = 0;
+	}
+
+	if (stripes > 1 && !stripesize) {
+		stripesize = 2 * STRIPE_SIZE_DEFAULT;
+		log_print("Using default stripesize %dKB", stripesize / 2);
 	}
 
 	if (arg_count(permission_ARG))
@@ -157,44 +162,31 @@ int lvcreate(int argc, char **argv)
 		pvh = &vg->pvs;
 	}
 
-/********* FIXME Move default choice (0) into format1
-			log_print("Using default stripe size of %lu KB",
-				  LVM_DEFAULT_STRIPE_SIZE);
-***********/
-
-	if (argc && argc != stripes) {
-		log_error("Incorrect number of physical volumes on "
+	if (argc && argc < stripes ) {
+		log_error("Too few physical volumes on "
 			  "command line for %d-way striping", stripes);
 		return EINVALID_CMD_LINE;
 	}
 
-/******** FIXME Inside lv_create stripes
-	log_verbose("checking stripe count");
-	if (stripes < 1 || stripes > LVM_MAX_STRIPES) {
-		log_error("Invalid number of stripes: %d", stripes);
-		log_error("must be between %d and %d", 1, LVM_MAX_STRIPES);
+	if (stripes < 1 || stripes > MAX_STRIPES) {
+		log_error("Number of stripes (%d) must be between %d and %d", 
+			  stripes, 1, MAX_STRIPES);
 		return EINVALID_CMD_LINE;
 	}
 
-	log_verbose("checking stripe size");
-	if (stripesize > 0 && lv_check_stripesize(stripesize) < 0) {
-		log_error("invalid stripe size %d", stripesize);
+	if (stripes > 1 && (stripesize < STRIPE_SIZE_MIN ||
+			    stripesize > STRIPE_SIZE_MAX ||
+			    stripesize & (stripesize - 1))) {
+		log_error("Invalid stripe size %d", stripesize);
 		return EINVALID_CMD_LINE;
 	}
-*********/
 
-	stripesize *= 2;
-
-/******** FIXME Stripes
-	log_verbose
-	    ("checking stripe size against volume group physical extent size");
-	if (stripesize > vg_core->pe_size) {
-		log_error
-		    ("setting stripe size %d KB to physical extent size %u KB",
-		     stripesize / 2, vg_core->pe_size / 2);
-		stripesize = vg_core->pe_size;
+	if (stripesize > vg->extent_size) {
+		log_error("Setting stripe size %d KB to physical extent "
+			  "size %u KB",
+		     	  stripesize / 2, vg->extent_size / 2);
+		stripesize = vg->extent_size;
 	}
-**********/
 
 	if (size) {
 		/* No of 512-byte sectors */
@@ -212,16 +204,12 @@ int lvcreate(int argc, char **argv)
 		extents /= vg->extent_size;
 	}
 
-/******* FIXME Stripes
-	size_rest = size % (stripes * vg_core->pe_size);
-	if (size_rest != 0) {
-		log_print("rounding %d KB to stripe boundary size ",
-			  size / 2);
-		size = size - size_rest + stripes * vg_core->pe_size;
-		printf("%d KB / %u PE\n", size / 2,
-		       size / vg_core->pe_size);
-	}
-*************/
+        if ((size_rest = extents % stripes)) {
+                log_print("Rounding size (%d extents) up to stripe boundary "
+                          "size (%d extents)", extents,
+                          extents - size_rest + stripes);
+                extents = extents - size_rest + stripes;
+        }
 
 	if (!(lv = lv_create(lv_name, status, stripes, stripesize, extents,
 			     vg, pvh))) return ECMD_FAILED;

@@ -11,11 +11,18 @@
 #define _LVM_METADATA_H
 
 #include <sys/types.h>
+#include <asm/page.h>
 #include "dev-cache.h"
 #include "list.h"
 #include "uuid.h"
 
 #define NAME_LEN 128
+#define MAX_STRIPES 128
+#define SECTOR_SIZE 512
+#define STRIPE_SIZE_DEFAULT 16    /* 16KB */
+#define STRIPE_SIZE_MIN ( PAGE_SIZE/SECTOR_SIZE)     /* PAGESIZE in sectors */
+#define STRIPE_SIZE_MAX ( 512L * 1024 / SECTOR_SIZE) /* 512 KB in sectors */
+
 
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
