@@ -51,7 +51,7 @@ int pvdisplay(int argc, char **argv)
                         return ECMD_FAILED;
 
                 list_iterate(pvh, pvs)
-                        pvdisplay_single(&list_item(pvh, struct pv_list)->pv);
+                        pvdisplay_single(list_item(pvh, struct pv_list)->pv);
 	}
 
 	return 0;

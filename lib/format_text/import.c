@@ -56,12 +56,13 @@ static int _read_pv(struct pool *mem,
 	struct pv_list *pvl;
 	struct config_node *cn;
 
-	if (!(pvl = pool_zalloc(mem, sizeof(*pvl)))) {
+	if (!(pvl = pool_zalloc(mem, sizeof(*pvl))) ||
+	    !(pvl->pv = pool_zalloc(mem, sizeof(*pvl->pv)))) {
 		stack;
 		return 0;
 	}
 
-	pv = &pvl->pv;
+	pv = pvl->pv;
 
 	/*
 	 * Add the pv to the pv hash for quick lookup when we read

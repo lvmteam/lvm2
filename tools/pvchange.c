@@ -69,7 +69,7 @@ int pvchange(int argc, char **argv)
 		list_iterate(pvh, pvs) {
 			total++;
 			done += pvchange_single(
-				&list_item(pvh, struct pv_list)->pv);
+				list_item(pvh, struct pv_list)->pv);
 		}
 	}
 
@@ -102,7 +102,7 @@ int pvchange_single(struct physical_volume *pv)
 				pv_name, vg->name);
 			return 0;
 		}
-		pv = &pvl->pv;
+		pv = pvl->pv;
 		if (!archive(vg))
 			return 0;
 	}

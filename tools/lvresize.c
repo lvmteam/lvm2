@@ -36,7 +36,6 @@ int lvresize(int argc, char **argv)
 	const char *cmd_name;
 	struct list *pvh, *segh;
 	struct lv_list *lvl;
-	struct pv_list *pvl;
 	int opt = 0;
 
 	enum {
@@ -163,7 +162,7 @@ int lvresize(int argc, char **argv)
 	}
 
 	/* If extending, find stripes, stripesize & size of last segment */
-	if (extents > lv->le_count && 
+	if (extents > lv->le_count &&
 	    !(stripes == 1 || (stripes > 1 && stripesize))) {
 		list_iterate(segh, &lv->segments) {
 			struct stripe_segment *seg;
@@ -289,31 +288,11 @@ int lvresize(int argc, char **argv)
 			return ECMD_FAILED;
 	}
 
-	if (resize == LV_EXTEND && argc) {
-		/* Build up list of PVs */
-		if (!(pvh = pool_alloc(fid->cmd->mem, sizeof(struct list)))) {
-			log_error("pvh list allocation failed");
-			return ECMD_FAILED;
-		}
-		list_init(pvh);
-		for (; opt < argc; opt++) {
-			if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
-				log_error("Physical Volume %s not found in "
-					  "Volume Group %s", argv[opt],
-					  vg->name);
-				return EINVALID_CMD_LINE;
-			}
-
-			if (pvl->pv.pe_count == pvl->pv.pe_allocated) {
-				log_error("No free extents on physical volume"
-					  " %s", argv[opt]);
-				continue;
-				/* FIXME Buy check not empty at end! */
-			}
-
-			// FIXME: pv_list's need to be copied.
-			list_add(pvh, &pvl->list);
-		}
+	if ((resize == LV_EXTEND && argc) &&
+	    !(pvh = create_pv_list(fid->cmd->mem, vg,
+				    argc - opt, argv + opt))) {
+		stack;
+		return ECMD_FAILED;
 	}
 
 	if (resize == LV_EXTEND) {

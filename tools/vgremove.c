@@ -58,7 +58,7 @@ static int vgremove_single(const char *vg_name)
 
 	/* init physical volumes */
 	list_iterate(pvh, &vg->pvs) {
-		pv = &list_item(pvh, struct pv_list)->pv;
+		pv = list_item(pvh, struct pv_list)->pv;
 		log_verbose("Removing physical volume %s from volume group %s",
 			    dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';

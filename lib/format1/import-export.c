@@ -316,15 +316,16 @@ int import_pvs(struct pool *mem, struct list *pvds,
 
 	*count = 0;
 	list_iterate(pvdh, pvds) {
-		dl = list_item(pvdh, struct disk_list);
-		pvl = pool_alloc(mem, sizeof(*pvl));
 
-		if (!pvl) {
+		dl = list_item(pvdh, struct disk_list);
+
+		if (!(pvl = pool_alloc(mem, sizeof(*pvl))) ||
+		    !(pvl->pv = pool_alloc(mem, sizeof(*pvl->pv)))) {
 			stack;
 			return 0;
 		}
 
-		if (!import_pv(mem, dl->dev, &pvl->pv, &dl->pvd)) {
+		if (!import_pv(mem, dl->dev, pvl->pv, &dl->pvd)) {
 			stack;
 			return 0;
 		}
@@ -440,7 +441,7 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 		}
 
 		memset(ul->uuid, 0, sizeof(ul->uuid));
-		memcpy(ul->uuid, pvl->pv.id.uuid, ID_LEN);
+		memcpy(ul->uuid, pvl->pv->id.uuid, ID_LEN);
 
 		list_add(&dl->uuids, &ul->list);
 	}

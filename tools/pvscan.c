@@ -63,7 +63,7 @@ int pvscan(int argc, char **argv)
 	/* eliminate exported/new if required */
 	list_iterate(pvh, pvs) {
 		pvl = list_item(pvh, struct pv_list);
-		pv = &pvl->pv;
+		pv = pvl->pv;
 
 		if ((arg_count(exported_ARG) && !(pv->status & EXPORTED_VG))
 		    || (arg_count(novolumegroup_ARG) && (*pv->vg_name))) {
@@ -96,7 +96,7 @@ int pvscan(int argc, char **argv)
 	/* find maximum pv name length */
 	pv_max_name_len = vg_max_name_len = 0;
 	list_iterate(pvh, pvs) {
-		pv = &list_item(pvh, struct pv_list)->pv;
+		pv = list_item(pvh, struct pv_list)->pv;
 		len = strlen(dev_name(pv->dev));
 		if (pv_max_name_len < len)
 			pv_max_name_len = len;
@@ -108,7 +108,7 @@ int pvscan(int argc, char **argv)
 	vg_max_name_len += 2;
 
 	list_iterate(pvh, pvs)
-		pvscan_display_single(&list_item(pvh, struct pv_list)->pv);
+		pvscan_display_single(list_item(pvh, struct pv_list)->pv);
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");

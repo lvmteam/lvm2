@@ -17,7 +17,7 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 	struct pv_map *pvm;
 
 	list_iterate(tmp, pvs) {
-		pv = &(list_item(tmp, struct pv_list)->pv);
+		pv = list_item(tmp, struct pv_list)->pv;
 
 		if (!(pv->status & ALLOCATABLE_PV))
 			continue;
@@ -47,8 +47,12 @@ static int _set_allocated(struct hash_table *hash,
 	struct pv_map *pvm;
 
 	if (!(pvm = (struct pv_map *) hash_lookup(hash, dev_name(pv->dev)))) {
-		log_err("pv_map not present in hash table.");
-		return 0;
+		/*
+		 * it does matter that this fails, it just means
+		 * this part of the lv is on a pv that we're not
+		 * interested in allocating to.
+		 */
+		return 1;
 	}
 
 	/* sanity check */

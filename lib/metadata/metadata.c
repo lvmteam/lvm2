@@ -84,7 +84,7 @@ int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 		return 0;
 	}
 
-	memcpy(&pvl->pv, pv, sizeof(*pv));
+	pvl->pv = pv;
 
 	list_add(&vg->pvs, &pvl->list);
 	vg->pv_count++;
@@ -240,7 +240,7 @@ struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 	list_iterate(pvh, &vg->pvs) {
 		pvl = list_item(pvh, struct pv_list);
 		/* FIXME check dev not name */
-		if (!strcmp(dev_name(pvl->pv.dev), pv_name))
+		if (!strcmp(dev_name(pvl->pv->dev), pv_name))
 			return pvl;
 	}
 
@@ -279,11 +279,10 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 {
 	struct list *pvh;
 	struct physical_volume *pv;
-	struct pv_list *pl;
 
 	list_iterate(pvh, &vg->pvs) {
-		pl = list_item(pvh, struct pv_list);
-		pv = &pl->pv;
+		pv = list_item(pvh, struct pv_list)->pv;
+
 		if (dev == pv->dev)
 			return pv;
 	}

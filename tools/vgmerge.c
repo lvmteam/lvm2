@@ -124,7 +124,7 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 		list_del(pvh);
 		list_add(&vg_to->pvs, pvh);
 
-		pv = &list_item(pvh, struct pv_list)->pv;
+		pv = list_item(pvh, struct pv_list)->pv;
 		pv->vg_name = pool_strdup(fid->cmd->mem, vg_to->name);
 	}
 	vg_to->pv_count += vg_from->pv_count;

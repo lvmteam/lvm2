@@ -65,7 +65,7 @@ int vgreduce(int argc, char **argv)
 
 /******* FIXME
 	log_error ("no empty physical volumes found in volume group \"%s\"", vg_name);
-		
+
 	log_verbose
 	    ("volume group \"%s\" will be reduced by %d physical volume%s",
 	     vg_name, np, np > 1 ? "s" : "");
@@ -108,7 +108,7 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 		return ECMD_FAILED;
 
 	log_verbose("Removing %s from volume group %s", name, vg->name);
-	
+
 	if (pvl)
 		list_del(&pvl->list);
 
