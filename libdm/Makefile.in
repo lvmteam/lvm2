@@ -9,7 +9,9 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 interface = @interface@
 
-SOURCES=$(interface)/libdevmapper.c
+SOURCES=$(interface)/libdevmapper.c libdm-common.c
+
+INCLUDES=-I$(interface)
 
 TARGETS=$(interface)/libdevmapper.so
 

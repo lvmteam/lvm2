@@ -14,73 +14,16 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>
 #include <errno.h>
-
-#include <linux/dm-ioctl.h>
 #include <linux/kdev_t.h>
 
-#define DEV_DIR "/dev/"
+#include <sys/ioctl.h>
+#include <linux/dm-ioctl.h>
+
+#include "libdm-targets.h"
+#include "libdm-common.h"
+
 #define ALIGNMENT sizeof(int)
-
-static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
-
-/*
- * Library users can provide their own logging
- * function.
- */
-static void _default_log(int level, const char *file, int line,
-			 const char *f, ...)
-{
-	va_list ap;
-
-	va_start(ap, f);
-	vfprintf(stderr, f, ap);
-	va_end(ap);
-
-	fprintf(stderr, "\n");
-}
-
-static dm_log_fn _log = _default_log;
-
-void dm_log_init(dm_log_fn fn)
-{
-	_log = fn;
-}
-
-#define log(msg, x...) _log(1, __FILE__, __LINE__, msg, ## x)
-
-struct target {
-
-	unsigned long long start;
-	unsigned long long length;
-	char *type;
-	char *params;
-
-	struct target *next;
-};
-
-struct dm_task {
-	int type;
-	char *dev_name;
-
-	struct target *head, *tail;
-
-	struct dm_ioctl *dmi;
-};
-
-struct dm_task *dm_task_create(int type)
-{
-	struct dm_task *dmt = malloc(sizeof(*dmt));
-
-	if (!dmt)
-		return NULL;
-
-	memset(dmt, 0, sizeof(*dmt));
-
-	dmt->type = type;
-	return dmt;
-}
 
 void dm_task_destroy(struct dm_task *dmt)
 {
@@ -97,14 +40,6 @@ void dm_task_destroy(struct dm_task *dmt)
 	free(dmt);
 }
 
-int dm_task_set_name(struct dm_task *dmt, const char *name)
-{
-	if (dmt->dev_name)
-		free(dmt->dev_name);
-
-	return (dmt->dev_name = strdup(name)) ? 1 : 0;
-}
-
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 {
 	if (!dmt->dmi)
@@ -119,23 +54,26 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
-static struct target *_create_target(unsigned long long start,
-				     unsigned long long len,
+struct target *create_target(uint64_t start,
+				     uint64_t len,
 				     const char *type, const char *params)
 {
 	struct target *t = malloc(sizeof(*t));
 
-	if (!t)
+	if (!t) {
+                log("create_target: malloc(%d) failed", sizeof(*t));
 		return NULL;
+	}
+
 	memset(t, 0, sizeof(*t));
 
 	if (!(t->params = strdup(params))) {
-		log("Out of memory");
+		log("create_target: strdup(params) failed");
 		goto bad;
 	}
 
 	if (!(t->type = strdup(type))) {
-		log("Out of memory");
+		log("create_target: strdup(type) failed");
 		goto bad;
 	}
 
@@ -148,27 +86,6 @@ static struct target *_create_target(unsigned long long start,
 	free(t->type);
 	free(t);
 	return NULL;
-}
-
-int dm_task_add_target(struct dm_task *dmt,
-		       unsigned long long start,
-		       unsigned long long size,
-		       const char *ttype,
-		       const char *params)
-{
-	struct target *t = _create_target(start, size, ttype, params);
-
-	if (!t)
-		return 0;
-
-	if (!dmt->head)
-		dmt->head = dmt->tail = t;
-	else {
-		dmt->tail->next = t;
-		dmt->tail = t;
-	}
-
-	return 1;
 }
 
 static void *_align(void *ptr, unsigned int align)
@@ -254,60 +171,6 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	return NULL;
 }
 
-static void _build_dev_path(char *buffer, size_t len, const char *dev_name)
-{
-	snprintf(buffer, len, "/dev/%s/%s", DM_DIR, dev_name);
-}
-
-static int _add_dev_node(const char *dev_name, dev_t dev)
-{
-	char path[PATH_MAX];
-	struct stat info;
-
-	_build_dev_path(path, sizeof(path), dev_name);
-
-	if (stat(path, &info) >= 0) {
-		if (!S_ISBLK(info.st_mode)) {
-			log("A non-block device file at '%s' "
-			    "is already present", path);
-			return 0;
-		}
-
-		if (info.st_rdev == dev)
-			return 1;
-
-		if (unlink(path) < 0) {
-			log("Unable to unlink device node for '%s'", dev_name);
-			return 0;
-		}
-	}
-
-	if (mknod(path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
-		log("Unable to make device node for '%s'", dev_name);
-		return 0;
-	}
-
-	return 1;
-}
-
-static int _rm_dev_node(const char *dev_name)
-{
-	char path[PATH_MAX];
-	struct stat info;
-
-	_build_dev_path(path, sizeof(path), dev_name);
-
-	if (stat(path, &info) < 0)
-		return 1;
-
-	if (unlink(path) < 0) {
-		log("Unable to unlink device node for '%s'", dev_name);
-		return 0;
-	}
-
-	return 1;
-}
-
 int dm_task_run(struct dm_task *dmt)
 {
 	int fd = -1;
@@ -320,7 +183,7 @@ int dm_task_run(struct dm_task *dmt)
 		return 0;
 	}
 
-	snprintf(control, sizeof(control), "%s/control", _dm_dir);
+	snprintf(control, sizeof(control), "%s/control", dm_dir());
 
 	if ((fd = open(control, O_RDWR)) < 0) {
 		log("Couldn't open device-mapper control device");
@@ -366,11 +229,11 @@ int dm_task_run(struct dm_task *dmt)
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		_add_dev_node(dmt->dev_name, MKDEV(dmi->major, dmi->minor));
+		add_dev_node(dmt->dev_name, MKDEV(dmi->major, dmi->minor));
 		break;
 
 	case DM_DEVICE_REMOVE:
-		_rm_dev_node(dmt->dev_name);
+		rm_dev_node(dmt->dev_name);
 		break;
 	}
 
@@ -384,13 +247,3 @@ int dm_task_run(struct dm_task *dmt)
 	return 0;
 }
 
-int dm_set_dev_dir(const char *dir)
-{
-	snprintf(_dm_dir, sizeof(_dm_dir), "%s%s", dir, DM_DIR);
-	return 1;
-}
-
-const char *dm_dir(void)
-{
-	return _dm_dir;
-}

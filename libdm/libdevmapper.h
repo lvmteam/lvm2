@@ -7,6 +7,8 @@
 #ifndef LIB_DEVICE_MAPPER_H
 #define LIB_DEVICE_MAPPER_H
 
+#include <inttypes.h>
+
 /*
  * Since it is quite laborious to build the ioctl
  * arguments for the device-mapper people are
@@ -64,8 +66,8 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
  * Use these to prepare for a create or reload.
  */
 int dm_task_add_target(struct dm_task *dmt,
-		       unsigned long long start,
-		       unsigned long long size,
+		       uint64_t start,
+		       uint64_t size,
 		       const char *ttype,
 		       const char *params);
 
