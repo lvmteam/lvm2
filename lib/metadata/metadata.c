@@ -39,9 +39,6 @@ int _add_pv_to_vg(struct format_instance *fi, struct volume_group *vg,
 		return 0;
 	}
 
-	/* FIXME check this */
-	pv->exported = NULL;
-
 	if (!(pv->vg_name = pool_strdup(mem, vg->name))) {
 		log_error("vg->name allocation failed for '%s'", pv_name);
 		return 0;
@@ -132,10 +129,12 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 	}
 
 	/* is this vg name already in use ? */
+	init_partial(1);
 	if (fi->ops->vg_read(fi, vg_name)) {
 		log_err("A volume group called '%s' already exists.", vg_name);
 		goto bad;
 	}
+	init_partial(0);
 
 	if (!id_create(&vg->id)) {
 		log_err("Couldn't create uuid for volume group '%s'.",
@@ -154,6 +153,7 @@ struct volume_group *vg_create(struct format_instance *fi, const char *vg_name,
 	}
 
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
+	vg->system_id = NULL;
 
 	vg->extent_size = extent_size;
 	vg->extent_count = 0;
@@ -213,7 +213,6 @@ struct physical_volume *pv_create(struct format_instance *fi,
 	}
 
 	*pv->vg_name = 0;
-	pv->exported = NULL;
 	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {

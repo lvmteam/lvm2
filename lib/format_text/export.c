@@ -201,6 +201,8 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	}
 
 	_out(f, "status = %s", buffer);
+	if (vg->system_id && *vg->system_id)
+		_out(f, "system_id = \"%s\"", vg->system_id);
 	_out_size(f, vg->extent_size, "extent_size = %u", vg->extent_size);
 	_out(f, "max_lv = %u", vg->max_lv);
 	_out(f, "max_pv = %u", vg->max_pv);

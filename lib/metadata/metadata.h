@@ -27,8 +27,9 @@
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-#define EXPORTED_VG          	0x00000002  /* VG */
+#define EXPORTED_VG          	0x00000002  /* VG PV */
 #define RESIZEABLE_VG        	0x00000004  /* VG */
+#define PARTIAL_VG		0x00000040  /* VG */
 
 /* May any free extents on this PV be used or must they be left free? */
 #define ALLOCATABLE_PV         	0x00000008  /* PV */
@@ -52,14 +53,10 @@
 #define SNAPSHOT_ORG      	0x00020000  /* LV */
 
 
-#define EXPORTED_TAG "PV_EXP"  /* Identifier of exported PV */
-#define IMPORTED_TAG "PV_IMP"  /* Identifier of imported PV */
-
 struct physical_volume {
         struct id id;
 	struct device *dev;
 	char *vg_name;
-	char *exported;
 
         uint32_t status;
         uint64_t size;
@@ -78,6 +75,7 @@ struct volume_group {
 
 	struct id id;
 	char *name;
+	char *system_id;
 
         uint32_t status;
 
@@ -267,7 +265,7 @@ struct logical_volume *lv_create(struct format_instance *fi,
 				 struct volume_group *vg,
 				 struct list *acceptable_pvs);
 
-int lv_reduce(struct format_instance *fi,
+int lv_reduce(struct format_instance *fi, 
 	      struct logical_volume *lv, uint32_t extents);
 
 int lv_extend(struct format_instance *fi,

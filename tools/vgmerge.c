@@ -63,9 +63,29 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 		return ECMD_FAILED;
 	}
 
+        if (vg_to->status & EXPORTED_VG) {
+                log_error("Volume group %s is exported", vg_to->name);
+                return ECMD_FAILED;
+        }
+
+	if (!(vg_to->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg_to->name);
+		return ECMD_FAILED;
+	}
+
 	log_verbose("Checking for volume group %s", vg_name_from);
 	if (!(vg_from = fid->ops->vg_read(fid, vg_name_from))) {
 		log_error("Volume group %s doesn't exist", vg_name_from);
+		return ECMD_FAILED;
+	}
+
+        if (vg_from->status & EXPORTED_VG) {
+                log_error("Volume group %s is exported", vg_from->name);
+                return ECMD_FAILED;
+        }
+
+	if (!(vg_from->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg_from->name);
 		return ECMD_FAILED;
 	}
 

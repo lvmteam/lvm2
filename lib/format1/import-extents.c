@@ -349,6 +349,7 @@ int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvds)
 		goto out;
 	}
 
+	/* FIXME Support partial activation if (vg->status & PARTIAL_VG) */
 	if (!_check_maps_are_complete(maps)) {
 		stack;
 		goto out;

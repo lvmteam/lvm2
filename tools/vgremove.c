@@ -40,6 +40,16 @@ static int vgremove_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
+        if (vg->status & EXPORTED_VG) {
+                log_error("Volume group %s is exported", vg->name);
+                return ECMD_FAILED;
+        }
+
+	if (vg->status & PARTIAL_VG) {
+		log_error("Cannot remove partial volume group %s", vg->name);
+		return ECMD_FAILED;
+	}
+
 	if (vg->lv_count) {
 		log_error("Volume group %s still contains %d logical volume(s)",
 			  vg_name, vg->lv_count);

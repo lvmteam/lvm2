@@ -54,6 +54,16 @@ int vgreduce(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+        if (vg->status & EXPORTED_VG) {
+                log_error("Volume group %s is exported", vg->name);
+                return ECMD_FAILED;
+        }
+
+	if (!(vg->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg_name);
+		return ECMD_FAILED;
+	}
+
 	if (!(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group %s is not reducable", vg_name);
 		return ECMD_FAILED;

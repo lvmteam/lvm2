@@ -20,39 +20,49 @@
 
 #include "tools.h"
 
-static int vgscan_single(const char *vg_name);
+static int vgexport_single(const char *vg_name);
 
-int vgscan(int argc, char **argv)
+int vgexport(int argc, char **argv)
 {
-	if (argc) {
-		log_error("Too many parameters on command line");
-		return EINVALID_CMD_LINE;
-	}
-
-	log_verbose("Wiping cache of LVM-capable devices");
-	persistent_filter_wipe(fid->cmd->filter);
-
-	log_verbose("Wiping internal cache of PVs in VGs");
-	vgcache_destroy();
-
-	log_print("Reading all physical volumes.  This may take a while...");
-
-	return process_each_vg(argc, argv, &vgscan_single);
+	return process_each_vg(argc, argv, &vgexport_single);
 }
 
-static int vgscan_single(const char *vg_name)
+static int vgexport_single(const char *vg_name)
 {
 	struct volume_group *vg;
 
-	log_verbose("Checking for volume group %s", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s not found", vg_name);
+		log_error("Unable to find volume group %s", vg_name);
 		return ECMD_FAILED;
 	}
 
-	log_print("Found %svolume group %s", 
-		  (vg->status & EXPORTED_VG) ? "exported " : "",
-		  vg_name);
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group %s is already exported", vg_name);
+		return ECMD_FAILED;
+	}
 
+	if (!(vg->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (lvs_in_vg_activated(vg)) {
+		log_error("Volume group %s has active logical volumes", 
+			  vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (!archive(vg))
+		return ECMD_FAILED;
+
+	vg->status |= EXPORTED_VG;
+
+	if (!fid->ops->vg_write(fid,vg))
+		return ECMD_FAILED;
+
+	backup(vg);
+
+	log_print("Volume group %s successfully exported", vg->name);
+	
 	return 0;
 }

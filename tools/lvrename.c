@@ -90,6 +90,16 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+        if (vg->status & EXPORTED_VG) {
+                log_error("Volume group %s is exported", vg->name);
+                return ECMD_FAILED;
+        }
+
+        if (!(vg->status & LVM_WRITE)) {
+                log_error("Volume group %s is read-only", vg_name);
+                return ECMD_FAILED;
+        }
+
 	if (find_lv_in_vg(vg, lv_name_new)) {
 		log_error("Logical volume %s already exists in "
 			  "volume group %s", lv_name_new, vg_name);

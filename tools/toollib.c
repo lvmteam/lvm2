@@ -10,13 +10,13 @@
 
 int check_dir(const char *dir)
 {
-        struct stat info;
+	struct stat info;
 
 	if (!*dir)
 		return 1;
 
-        if (stat(dir, &info) != -1 ) {
-                log_error("%s exists", dir);
+	if (stat(dir, &info) != -1) {
+		log_error("%s exists", dir);
 		return 0;
 	}
 
@@ -25,26 +25,25 @@ int check_dir(const char *dir)
 
 int create_dir(const char *dir)
 {
-        struct stat info;
+	struct stat info;
 
 	if (!*dir)
 		return 1;
 
-        if (stat(dir, &info) < 0 ) {
-                log_verbose("Creating directory %s", dir);
-                if (!mkdir(dir, 0777));
-                        return 1;
-                log_sys_error("mkdir", dir);
-                return 0;
-        }
+	if (stat(dir, &info) < 0) {
+		log_verbose("Creating directory %s", dir);
+		if (!mkdir(dir, 0777))
+			return 1;
+		log_sys_error("mkdir", dir);
+		return 0;
+	}
 
-        if (S_ISDIR(info.st_mode))
-                return 1;
+	if (S_ISDIR(info.st_mode))
+		return 1;
 
-        log_error("Directory %s not found", dir);
-        return 0;
+	log_error("Directory %s not found", dir);
+	return 0;
 }
-
 
 int process_each_lv_in_vg(struct volume_group *vg,
 			  int (*process_single) (struct logical_volume *lv))
@@ -55,11 +54,11 @@ int process_each_lv_in_vg(struct volume_group *vg,
 	struct list *lvh;
 	struct logical_volume *lv;
 
-	/* FIXME Export-handling */
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group %s is exported", vg->name);
 		return ECMD_FAILED;
 	}
+
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 		ret = process_single(lv);
@@ -72,7 +71,7 @@ int process_each_lv_in_vg(struct volume_group *vg,
 }
 
 int process_each_lv(int argc, char **argv,
-		    int (*process_single) (struct logical_volume * lv))
+		    int (*process_single) (struct logical_volume *lv))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -105,6 +104,12 @@ int process_each_lv(int argc, char **argv,
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
 				continue;
+			}
+
+			if (vg->status & EXPORTED_VG) {
+				log_error("Volume group %s is exported",
+					  vg->name);
+				return ECMD_FAILED;
 			}
 
 			if (!(lvl = find_lv_in_vg(vg, lv_name))) {
@@ -179,8 +184,8 @@ int process_each_vg(int argc, char **argv,
 }
 
 int process_each_pv_in_vg(struct volume_group *vg,
-		    int (*process_single) (struct volume_group * vg,
-					   struct physical_volume * pv))
+			  int (*process_single) (struct volume_group *vg,
+						 struct physical_volume *pv))
 {
 	int ret_max = 0;
 	int ret = 0;
@@ -198,8 +203,8 @@ int process_each_pv_in_vg(struct volume_group *vg,
 }
 
 int process_each_pv(int argc, char **argv, struct volume_group *vg,
-		    int (*process_single) (struct volume_group * vg,
-					   struct physical_volume * pv))
+		    int (*process_single) (struct volume_group *vg,
+					   struct physical_volume *pv))
 {
 	int opt = 0;
 	int ret_max = 0;
@@ -301,8 +306,7 @@ char *default_vgname(struct format_instance *fi)
 }
 
 struct list *create_pv_list(struct pool *mem,
-			    struct volume_group *vg,
-			    int argc, char **argv)
+			    struct volume_group *vg, int argc, char **argv)
 {
 	struct list *r;
 	struct pv_list *pvl, *new_pvl;
@@ -338,5 +342,5 @@ struct list *create_pv_list(struct pool *mem,
 		list_add(r, &new_pvl->list);
 	}
 
-	return list_empty(r) ? NULL: r;
+	return list_empty(r) ? NULL : r;
 }

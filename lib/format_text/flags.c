@@ -21,6 +21,7 @@ struct flag {
 static struct flag _vg_flags[] = {
 	{EXPORTED_VG, "EXPORTED"},
 	{RESIZEABLE_VG, "RESIZEABLE"},
+	{PARTIAL_VG, "PARTIAL"},
 	{LVM_READ, "READ"},
 	{LVM_WRITE, "WRITE"},
 	{CLUSTERED, "CLUSTERED"},
@@ -30,6 +31,7 @@ static struct flag _vg_flags[] = {
 
 static struct flag _pv_flags[] = {
 	{ALLOCATABLE_PV, "ALLOCATABLE"},
+	{EXPORTED_VG, "EXPORTED"},
 	{0, NULL}
 };
 
@@ -117,9 +119,8 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 		return 0;
 
 	if (status)
-		/* FIXME: agk is this the correct log level ? */
-		log_print("Not all flags were successfully exported, "
-			  "possible bug.");
+		log_error("Metadata inconsistency: Not all flags successfully "
+			  "exported.");
 
 	return 1;
 }

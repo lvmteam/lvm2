@@ -13,16 +13,44 @@
 #include "display.h"
 
 /* VG consistency checks */
-static int _check_vgs(struct list *pvs)
+static int _check_vgs(struct list *pvs, int *partial)
 {
-	struct list *pvh;
+	struct list *pvh, *t;
 	struct disk_list *dl = NULL;
 	struct disk_list *first = NULL;
 
 	int pv_count = 0;
+	int exported = -1;
 
-	/* check all the vg's are the same */
+	*partial = 0;
+
+	/*
+	 * If there are exported and unexported PVs, ignore exported ones.
+	 * This means an active VG won't be affected if disks are inserted
+	 * bearing an exported VG with the same name.
+	 */ 
 	list_iterate(pvh, pvs) {
+		dl = list_item(pvh, struct disk_list);
+
+		if (exported < 0) {
+			exported = dl->pvd.pv_status & VG_EXPORTED;
+			continue;
+		}
+
+		if (exported != (dl->pvd.pv_status & VG_EXPORTED)) {
+			/* Remove exported PVs */
+			list_iterate_safe(pvh, t, pvs) {
+				dl = list_item(pvh, struct disk_list);
+				if (dl->pvd.pv_status & VG_EXPORTED)
+					list_del(pvh);
+			}
+			break;
+		}
+	}
+
+
+	/* Remove any PVs with VG structs that differ from the first */
+	list_iterate_safe(pvh, t, pvs) {
 		dl = list_item(pvh, struct disk_list);
 
 		if (!first)
@@ -31,16 +59,23 @@ static int _check_vgs(struct list *pvs)
 		else if (memcmp(&first->vgd, &dl->vgd, sizeof(first->vgd))) {
 			log_error("VG data differs between PVs %s and %s",
 				  dev_name(first->dev), dev_name(dl->dev));
+			list_del(pvh);
+			if (partial_mode()) {
+				*partial = 1;
+				continue;
+			}
 			return 0;
 		}
 		pv_count++;
 	}
 
 	/* On entry to fn, list known to be non-empty */
-	if (!(pv_count == dl->vgd.pv_cur)) {
-		log_error("Only %d out of %d PV(s) found for VG %s",
-			  pv_count, dl->vgd.pv_cur, dl->pvd.vg_name);
-		return 0;
+	if (pv_count != dl->vgd.pv_cur) {
+		log_error("%d PV(s) found for VG %s: expected %d",
+			  pv_count, dl->pvd.vg_name, dl->vgd.pv_cur);
+		if (!partial_mode())
+			return 0;
+		*partial = 1;
 	}
 
 	return 1;
@@ -50,6 +85,7 @@ static struct volume_group *_build_vg(struct pool *mem, struct list *pvs)
 {
 	struct volume_group *vg = pool_alloc(mem, sizeof(*vg));
 	struct disk_list *dl;
+	int partial;
 
 	if (!vg)
 		goto bad;
@@ -57,20 +93,20 @@ static struct volume_group *_build_vg(struct pool *mem, struct list *pvs)
 	if (list_empty(pvs))
 		goto bad;
 
-	dl = list_item(pvs->n, struct disk_list);
-
 	memset(vg, 0, sizeof(*vg));
 
 	list_init(&vg->pvs);
 	list_init(&vg->lvs);
 
-	if (!_check_vgs(pvs))
+	if (!_check_vgs(pvs, &partial))
 		goto bad;
 
-	if (!import_vg(mem, vg, dl))
+	dl = list_item(pvs->n, struct disk_list);
+
+	if (!import_vg(mem, vg, dl, partial))
 		goto bad;
 
-	if (!import_pvs(mem, pvs, &vg->pvs, &vg->pv_count))
+	if (!import_pvs(mem, vg, pvs, &vg->pvs, &vg->pv_count))
 		goto bad;
 
 	if (!import_lvs(mem, vg, pvs))
@@ -137,7 +173,7 @@ static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 	list_init(&dl->uuids);
 	list_init(&dl->lvds);
 
-	if (!export_pv(&dl->pvd, pv) ||
+	if (!export_pv(mem, vg, &dl->pvd, pv) ||
 	    !export_vg(&dl->vgd, vg) ||
 	    !export_uuids(dl, vg) ||
 	    !export_lvs(dl, vg, pv, dev_dir) ||
@@ -191,6 +227,12 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 		return 0;
 	}
 
+	if (vg->status & PARTIAL_VG) {
+		log_error("Cannot change metadata for partial volume group %s",
+			  vg->name);
+		return 0;
+	}
+
 	list_init(&pvds);
 
 	r = (_flatten_vg(mem, vg, &pvds, fi->cmd->dev_dir, fi->cmd->filter) &&
@@ -229,7 +271,7 @@ static struct physical_volume *_pv_read(struct format_instance *fi,
 		goto out;
 	}
 
-	if (!import_pv(fi->cmd->mem, dl->dev, pv, &dl->pvd)) {
+	if (!import_pv(fi->cmd->mem, dl->dev, NULL, pv, &dl->pvd)) {
 		stack;
 		pool_free(fi->cmd->mem, pv);
 		pv = NULL;
@@ -265,7 +307,7 @@ static struct list *_get_pvs(struct format_instance *fi)
 		goto bad;
 	}
 
-	if (!import_pvs(fi->cmd->mem, &pvs, results, &count)) {
+	if (!import_pvs(fi->cmd->mem, NULL, &pvs, results, &count)) {
 		stack;
 		goto bad;
 	}
@@ -396,7 +438,7 @@ static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 	dl->mem = mem;
 	dl->dev = pv->dev;
 
-	if (!export_pv(&dl->pvd, pv)) {
+	if (!export_pv(mem, NULL, &dl->pvd, pv)) {
 		stack;
 		goto bad;
 	}

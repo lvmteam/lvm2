@@ -53,13 +53,14 @@ xx(lvchange,
    "\t[-C/--contiguous y/n]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-P/--partial] " "\n"
    "\t[-p/--permission r/rw]\n"
    "\t[-r/--readahead ReadAheadSectors]\n"
    "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, available_ARG, contiguous_ARG,
+   autobackup_ARG, available_ARG, contiguous_ARG, partial_ARG,
    permission_ARG, readahead_ARG, test_ARG)
 
 xx(lvcreate,
@@ -358,6 +359,7 @@ xx(vgchange,
    "Change volume group attributes",
    "vgchange" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[-P|--partial] " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[-t|--test]" "\n"
@@ -368,7 +370,7 @@ xx(vgchange,
    "\t -l|--logicalvolume MaxLogicalVolumes}" "\n"
    "\t[VolumeGroupName...]\n",
 
-   autobackup_ARG, available_ARG, logicalvolume_ARG, 
+   autobackup_ARG, available_ARG, logicalvolume_ARG, partial_ARG,
    resizeable_ARG, resizable_ARG, allocation_ARG, 
    test_ARG)
 
