@@ -34,7 +34,6 @@
 #include <netdb.h>
 #include <assert.h>
 
-#include "ccs.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"
@@ -47,43 +46,19 @@ static int listen_fd = -1;
 static int tcp_port;
 struct hash_table *sock_hash;
 
-static int get_tcp_port(int default_port);
 static int get_our_ip_address(char *addr, int *family);
 static int read_from_tcpsock(struct local_client *fd, char *buf, int len, char *csid,
 			     struct local_client **new_client);
 
 /* Called by init_cluster() to open up the listening socket */
-// TODO: IPv6 compat.
-int init_comms()
+int init_comms(unsigned short port)
 {
-    struct sockaddr *addr = NULL;
-    struct sockaddr_in addr4;
-    struct sockaddr_in6 addr6;
-    int    addr_len;
-    int    family;
-    char   address[MAX_CSID_LEN];
+    struct sockaddr_in6 addr;
 
     sock_hash = hash_create(100);
-    tcp_port = get_tcp_port(DEFAULT_TCP_PORT);
+    tcp_port = port ? port : DEFAULT_TCP_PORT;
 
-    /* Get IP address and IP type */
-    get_our_ip_address(address, &family);
-    if (family == AF_INET)
-    {
-	memcpy(&addr4.sin_addr, addr, sizeof(struct in_addr));
-	addr = (struct sockaddr *)&addr4;
-	addr4.sin_port = htons(tcp_port);
-	addr_len = sizeof(addr4);
-    }
-    else
-    {
-	memcpy(&addr6.sin6_addr, addr, sizeof(struct in6_addr));
-	addr = (struct sockaddr *)&addr6;
-	addr6.sin6_port = htons(tcp_port);
-	addr_len = sizeof(addr6);
-    }
-
-    listen_fd = socket(family, SOCK_STREAM, 0);
+    listen_fd = socket(AF_INET6, SOCK_STREAM, 0);
 
     if (listen_fd < 0)
     {
@@ -95,11 +70,13 @@ int init_comms()
 	setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
     }
 
-    addr->sa_family = family;
+    memset(&addr, 0, sizeof(addr)); // Bind to INADDR_ANY
+    addr.sin6_family = AF_INET6;
+    addr.sin6_port = htons(tcp_port);
 
-    if (bind(listen_fd, addr, addr_len) < 0)
+    if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {
-	DEBUGLOG("Can't bind to port\n");
+	DEBUGLOG("Can't bind to port: %s\n", strerror(errno));
 	syslog(LOG_ERR, "Can't bind to port %d, is clvmd already running ?", tcp_port);
 	close(listen_fd);
 	return -1;
@@ -142,7 +119,7 @@ int alloc_client(int fd, char *csid, struct local_client **new_client)
 {
     struct local_client *client;
 
-    DEBUGLOG("alloc_client %d csid = [%d.%d.%d.%d]\n", fd,csid[0],csid[1],csid[2],csid[3]);
+    DEBUGLOG("alloc_client %d csid = %s\n", fd, print_csid(csid));
 
     /* Create a local_client and return it */
     client = malloc(sizeof(struct local_client));
@@ -199,7 +176,7 @@ int cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid,
 			struct local_client **new_client)
 {
     int newfd;
-    struct sockaddr_in addr;
+    struct sockaddr_in6 addr;
     socklen_t addrlen = sizeof(addr);
     int status;
     char name[MAX_CLUSTER_MEMBER_NAME_LEN];
@@ -218,22 +195,20 @@ int cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid,
 
     /* Check that the client is a member of the cluster
        and reject if not.
-       // FIXME: IPv4 specific
     */
-    if (name_from_csid((char *)&addr.sin_addr.s_addr, name) < 0)
+    if (name_from_csid((char *)&addr.sin6_addr, name) < 0)
     {
-	char *ip = (char *)&addr.sin_addr.s_addr;
-	syslog(LOG_ERR, "Got connect from non-cluster node %d.%d.%d.%d\n",
-	       ip[0], ip[1], ip[2], ip[3]);
-	DEBUGLOG("Got connect from non-cluster node %d.%d.%d.%d\n",
-		 ip[0], ip[1], ip[2], ip[3]);
+	syslog(LOG_ERR, "Got connect from non-cluster node %s\n",
+	       print_csid((char *)&addr.sin6_addr));
+	DEBUGLOG("Got connect from non-cluster node %s\n",
+		 print_csid((char *)&addr.sin6_addr));
 	close(newfd);
 
 	errno = EAGAIN;
 	return -1;
     }
 
-    status = alloc_client(newfd, (char *)&addr.sin_addr.s_addr, new_client);
+    status = alloc_client(newfd, (char *)&addr.sin6_addr, new_client);
     if (status)
     {
 	DEBUGLOG("cluster_fd_callback, alloc_client failed, status = %d\n", status);
@@ -250,7 +225,7 @@ int cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid,
 static int read_from_tcpsock(struct local_client *client, char *buf, int len, char *csid,
 			     struct local_client **new_client)
 {
-    struct sockaddr_in addr;
+    struct sockaddr_in6 addr;
     socklen_t slen = sizeof(addr);
     int status;
 
@@ -259,7 +234,7 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
 
     /* Get "csid" */
     getpeername(client->fd, (struct sockaddr *)&addr, &slen);
-    memcpy(csid, &addr.sin_addr.s_addr, MAX_CSID_LEN);
+    memcpy(csid, &addr.sin6_addr, MAX_CSID_LEN);
 
     status = read(client->fd, buf, len);
 
@@ -289,11 +264,11 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
 static int connect_csid(char *csid, struct local_client **newclient)
 {
     int fd;
-    struct sockaddr_in addr;
+    struct sockaddr_in6 addr;
     int status;
 
     DEBUGLOG("Connecting socket\n");
-    fd = socket(PF_INET, SOCK_STREAM, 0);
+    fd = socket(PF_INET6, SOCK_STREAM, 0);
 
     if (fd < 0)
     {
@@ -301,12 +276,12 @@ static int connect_csid(char *csid, struct local_client **newclient)
 	return -1;
     }
 
-    addr.sin_family = AF_INET;
-    memcpy(&addr.sin_addr.s_addr, csid, MAX_CSID_LEN);
-    addr.sin_port = htons(tcp_port);
+    addr.sin6_family = AF_INET6;
+    memcpy(&addr.sin6_addr, csid, MAX_CSID_LEN);
+    addr.sin6_port = htons(tcp_port);
 
     DEBUGLOG("Connecting socket %d\n", fd);
-    if (connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
+    if (connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in6)) < 0)
     {
 	syslog(LOG_ERR, "Unable to connect to remote node: %m");
 	DEBUGLOG("Unable to connect to remote node: %s\n", strerror(errno));
@@ -334,7 +309,7 @@ static int tcp_send_message(void *buf, int msglen, unsigned char *csid, const ch
 
     assert(csid);
 
-    DEBUGLOG("tcp_send_message, csid = [%d.%d.%d.%d], msglen = %d\n", csid[0],csid[1],csid[2],csid[3], msglen);
+    DEBUGLOG("tcp_send_message, csid = %s, msglen = %d\n", print_csid(csid), msglen);
 
     /* Don't connect to ourself */
     get_our_csid(ourcsid);
@@ -383,55 +358,17 @@ int cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
     return status;
 }
 
-static int get_tcp_port(int default_port)
-{
-    int ccs_handle;
-    int port = default_port;
-    char *portstr;
-
-    ccs_handle = ccs_connect();
-    if (ccs_handle)
-    {
-	return port;
-    }
-
-    if (!ccs_get(ccs_handle, "//clvm/@port", &portstr))
-    {
-	port = atoi(portstr);
-	free(portstr);
-
-	if (port <= 0 && port >= 65536)
-	    port = default_port;
-    }
-    ccs_disconnect(ccs_handle);
-
-    DEBUGLOG("Using port %d for communications\n", port);
-    return port;
-}
-
 /* To get our own IP address we get the locally bound address of the
    socket that's talking to GULM in the assumption(eek) that it will
    be on the "right" network in a multi-homed system */
 static int get_our_ip_address(char *addr, int *family)
 {
-    /* Use a sockaddr_in6 to make sure it's big enough */
-    struct sockaddr_in6 saddr;
-    int socklen = sizeof(saddr);
+	struct utsname info;
 
-    if (!getsockname(gulm_fd(), (struct sockaddr *)&saddr, &socklen))
-    {
-	if (saddr.sin6_family == AF_INET6)
-	{
-	    memcpy(addr, &saddr.sin6_addr, sizeof(saddr.sin6_addr));
-	}
-	else
-	{
-	    struct sockaddr_in *sin4 = (struct sockaddr_in *)&saddr;
-	    memcpy(addr, &sin4->sin_addr, sizeof(sin4->sin_addr));
-	}
+	uname(&info);
+	get_ip_address(info.nodename, addr);
+
 	return 0;
-    }
-    return -1;
 }
 
 /* Public version of above for those that don't care what protocol
@@ -454,6 +391,14 @@ void get_our_csid(char *csid)
     memcpy(csid, our_csid, MAX_CSID_LEN);
 }
 
+static void map_v4_to_v6(struct in_addr *ip4, struct in6_addr *ip6)
+{
+   ip6->s6_addr32[0] = 0;
+   ip6->s6_addr32[1] = 0;
+   ip6->s6_addr32[2] = htonl(0xffff);
+   ip6->s6_addr32[3] = ip4->s_addr;
+}
+
 /* Get someone else's IP address from DNS */
 int get_ip_address(char *node, char *addr)
 {
@@ -467,14 +412,29 @@ int get_ip_address(char *node, char *addr)
     /* Try IPv6 first. The man page for gethostbyname implies that
        it will lookup ip6 & ip4 names, but it seems not to */
     he = gethostbyname2(node, AF_INET6);
-    if (!he)
+    if (he)
+    {
+	memcpy(addr, he->h_addr_list[0],
+	       he->h_length);
+    }
+    else
+    {
 	he = gethostbyname2(node, AF_INET);
-    if (!he)
-	return -1;
-
-    /* For IPv4 address just use the lower 4 bytes */
-    memcpy(&addr, he->h_addr_list[0],
-	   he->h_length);
+	if (!he)
+	    return -1;
+	map_v4_to_v6((struct in_addr *)he->h_addr_list[0], (struct in6_addr *)addr);
+    }
 
     return 0;
+}
+
+char *print_csid(char *csid)
+{
+    static char buf[128];
+    int *icsid = (int *)csid;
+
+    sprintf(buf, "[%x.%x.%x.%x]",
+	    icsid[0],icsid[1],icsid[2],icsid[3]);
+
+    return buf;
 }

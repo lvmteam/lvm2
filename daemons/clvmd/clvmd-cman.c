@@ -55,7 +55,6 @@ static int max_updown_nodes = 50;	/* Current size of the allocated array */
 static int *node_updown = NULL;
 static dlm_lshandle_t *lockspace;
 
-static void sigusr1_handler(int sig);
 static void count_clvmds_running(void);
 static void get_members(void);
 static int nodeid_from_csid(char *csid);

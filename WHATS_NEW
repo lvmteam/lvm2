@@ -6,6 +6,7 @@ Version 2.00.26 -
   Make clvmd cope with large gaps in node numbers IDs.
   Make clvmd initialisation cope better with debugging output.
   clvmd -V now displays lvm version too.
+  Add optional gulm build for clvmd
 
 Version 2.00.25 - 29th September 2004
 =====================================
