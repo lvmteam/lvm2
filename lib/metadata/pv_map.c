@@ -7,6 +7,8 @@
 #include "pv_map.h"
 #include "log.h"
 
+#include <assert.h>
+
 static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 {
 	struct list *tmp;
@@ -35,42 +37,68 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 	return 1;
 }
 
+static int _set_allocated(struct hash_table *hash,
+			  struct physical_volume *pv, int pe)
+{
+	struct pv_map *pvm;
+
+	if (!(pvm = (struct pv_map *) hash_lookup(hash, dev_name(pv->dev)))) {
+		log_err("pv_map not present in hash table.");
+		return 0;
+	}
+
+	/* sanity check */
+	assert(!bit(pvm->allocated_extents, pe));
+
+	bit_set(pvm->allocated_extents, pe);
+	return 1;
+}
+
 static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 {
-	/*
-	 * FIXME: should put pvm's in a table for
-	 * O(1) access, and remove the nasty inner
-	 * loop in this code.
-	 */
 	struct list *lvh, *pvmh;
 	struct logical_volume *lv;
-	struct pe_specifier *pes;
 	struct pv_map *pvm;
-	uint32_t le;
+	uint32_t i, r = 0;
+	struct hash_table *hash;
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = &(list_item(lvh, struct lv_list)->lv);
+	if (!(hash = hash_table_create(128))) {
+		log_err("Couldn't create hash table for pv maps.");
+		return 0;
+	}
 
-		for (le = 0; le < lv->le_count; le++) {
-			pes = lv->map + le;
-
-			/* this is the nasty that will kill performance */
-			list_iterate(pvmh, maps) {
-				pvm = list_item(pvmh, struct pv_map);
-
-				if (pvm->pv == pes->pv)
-					break;
-			}
-
-			/* not all pvs are necc. in the list */
-			if (pvmh == maps)
-				continue;
-
-			bit_set(pvm->allocated_extents, pes->pe);
+	/* populate the hash table */
+	list_iterate (pvmh, maps) {
+		pvm = list_item(pvmh, struct pv_map);
+		if (!hash_insert(hash, dev_name(pvm->pv->dev), pvm)) {
+			stack;
+			goto out;
 		}
 	}
 
-	return 1;
+	/* iterate through all the lv's setting bit's for used pe's */
+	list_iterate (lvh, &vg->lvs) {
+		lv = &(list_item(lvh, struct lv_list)->lv);
+
+		list_iterate (segh, &lv->segments) {
+			seg = list_item(segh, struct stripe_segment);
+
+			for (i = 0; i < seg->len; i++) {
+				if (!_set_allocated(hash,
+					    seg->area[i % seg->stripes].pv,
+					    seg->area[i % seg->stripes].pe +
+						    (i / stripes))) {
+					stack;
+					goto out;
+				}
+			}
+		}
+	}
+	r = 1;
+
+ out:
+	hash_table_destroy(hash);
+	return r;
 }
 
 static int _create_single_area(struct pool *mem, struct pv_map *pvm,

@@ -36,28 +36,6 @@ static char *_create_lv_name(struct pool *mem, const char *full_name)
 	return pool_strdup(mem, ptr);
 }
 
-static int _fill_lv_array(struct logical_volume **lvs,
-			  struct volume_group *vg, struct disk_list *dl)
-{
-	struct list *lvh;
-	struct logical_volume *lv;
-	int i = 0;
-
-	list_iterate(lvh, &dl->lvds) {
-		struct lvd_list *ll = list_item(lvh, struct lvd_list);
-
-		if (!(lv = find_lv(vg, ll->lvd.lv_name))) {
-			stack;
-			return 0;
-		}
-
-		lvs[i] = lv;
-		i++;
-	}
-
-	return 1;
-}
-
 int import_pv(struct pool *mem, struct device *dev,
 	      struct physical_volume *pv, struct pv_disk *pvd)
 {
@@ -81,6 +59,9 @@ int import_pv(struct pool *mem, struct device *dev,
 	pv->pe_start = pvd->pe_start;
 	pv->pe_count = pvd->pe_total;
 	pv->pe_allocated = pvd->pe_allocated;
+
+	init_list(&pv->allocated);
+
 	return 1;
 }
 
@@ -268,12 +249,12 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
         lv->size = lvd->lv_size;
         lv->le_count = lvd->lv_allocated_le;
 
-	len = sizeof(struct pe_specifier) * lv->le_count;
-	if (!(lv->map = pool_alloc(mem, len))) {
+	list_init(&lv->segments);
+
+	if (!lv->segments) {
 		stack;
 		return 0;
 	}
-	memset(lv->map, 0, len);
 
 	return 1;
 }
@@ -323,71 +304,34 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 		lvd->lv_allocation |= LV_CONTIGUOUS;
 }
 
-int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvds)
-{
-	struct disk_list *dl;
-	struct logical_volume *lv, *lvs[MAX_LV];
-	struct physical_volume *pv;
-	struct pe_disk *e;
-	int i;
-	uint32_t lv_num, le;
-	struct list *pvdh;
-
-	list_iterate(pvdh, pvds) {
-		dl = list_item(pvdh, struct disk_list);
-		pv = _find_pv(vg, dl->dev);
-		e = dl->extents;
-
-		/* build an array of lv's for this pv */
-		if (!_fill_lv_array(lvs, vg, dl)) {
-			stack;
-			return 0;
-		}
-
-		for (i = 0; i < dl->pvd.pe_total; i++) {
-			lv_num = e[i].lv_num;
-
-			if (lv_num == UNMAPPED_EXTENT)
-				continue;
-
-			else if(lv_num > dl->pvd.lv_cur) {
-				log_err("invalid lv in extent map\n");
-				return 0;
-
-			} else {
-				lv_num--;
-				lv = lvs[lv_num];
-				le = e[i].le_num;
-
-				if (le >= lv->le_count) {
-					log_err("logical extent number "
-						"out of bounds");
-					return 0;
-				}
-
-				lv->map[le].pv = pv;
-				lv->map[le].pe = i;
-			}
-		}
-	}
-
-	return 1;
-}
-
 int export_extents(struct disk_list *dl, int lv_num,
 		   struct logical_volume *lv,
 		   struct physical_volume *pv)
 {
+	struct list *segh;
 	struct pe_disk *ped;
-	int le;
+	struct stripe_segment *seg;
+	uint32_t pe;
+	struct span *pes;
 
-	for (le = 0; le < lv->le_count; le++) {
-		if (lv->map[le].pv == pv) {
-			ped = &dl->extents[lv->map[le].pe];
-			ped->lv_num = lv_num;
-			ped->le_num = le;
+	list_iterate (segh, &lv->segments) {
+		seg = list_item(segh, struct stripe_segment);
+
+		for (a = 0; a < seg->stripes; a++) {
+			if (seg->areas[a].pv != pv)
+				continue; /* not our pv */
+
+			pes = seg->areas[a].pes;
+
+			for (pe = 0; pe < pe->len; pe++) {
+				ped = &dl->extents[pe + pes->start];
+				ped->lv_num = lv_num;
+				ped->le_num = seg->le + a +
+					(seg->stripes * pe);
+			}
 		}
 	}
+
 	return 1;
 }
 

@@ -26,6 +26,7 @@ SOURCES=\
 	format1/disk-rep.c \
 	format1/format1.c \
 	format1/import-export.c \
+	format1/import-extents.c \
 	format1/layout.c \
 	format1/vg_number.c \
 	log/log.c \
