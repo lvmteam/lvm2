@@ -14,6 +14,7 @@
 #include "names.h"
 
 #include <limits.h>
+#include <linux/kdev_t.h>
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
 
@@ -64,7 +65,7 @@ static int _query(struct logical_volume *lv, int (*fn)(const char *))
 
 
 /*
- * These three functions return the number of LVs in the state, 
+ * These three functions return the number of LVs in the state,
  * or -1 on error.
  */
 int lv_active(struct logical_volume *lv)
@@ -99,9 +100,15 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 	return device_info(buffer, info);
 }
 
+static inline int _read_only_lv(struct logical_volume *lv)
+{
+	return (lv->status & LVM_WRITE) && (lv->vg->status & LVM_WRITE);
+}
 
 int lv_activate(struct logical_volume *lv)
 {
+	int r = 0;
+	struct dm_task *dmt;
 	char buffer[128];
 
 	if (test_mode()) {
@@ -109,23 +116,117 @@ int lv_activate(struct logical_volume *lv)
 		return 0;
 	}
 
+	/*
+	 * Decide what we're going to call this device.
+	 */
 	if (!build_dm_name(buffer, sizeof(buffer), "",
 			   lv->vg->name, lv->name)) {
 		stack;
 		return 0;
 	}
 
-	if (!device_create_lv(buffer, lv, lv->minor)) {
+	/*
+	 * Create a task.
+	 */
+	if (!(dmt = setup_dm_task(buffer, DM_DEVICE_CREATE))) {
 		stack;
 		return 0;
 	}
 
-	if (!fs_add_lv(lv, lv->minor)) {
+	/*
+	 * Populate it.
+	 */
+	if (!device_populate_lv(dmt, lv)) {
 		stack;
 		return 0;
 	}
 
-	return 1;
+	/*
+	 * Do we want a specific minor number ?
+	 */
+	if (lv->minor >= 0) {
+		if (!dm_task_set_minor(dmt, MINOR(lv->minor))) {
+			log_error("Failed to set minor number for %s to %d "
+				  "during activation.", lv->name, lv->minor);
+			goto out;
+		} else
+			log_very_verbose("Set minor number for %s to %d.",
+					 lv->name, lv->minor);
+	}
+
+	/*
+	 * Read only ?
+	 */
+	if (!_read_only_lv(lv)) {
+	    	if (!dm_task_set_ro(dmt)) {
+			log_error("Failed to set %s read-only during "
+				  "activation.", lv->name);
+			goto out;
+		} else
+			log_very_verbose("Activating %s read-only", lv->name);
+	}
+
+	/*
+	 * Load this into the kernel.
+	 */
+	if (!(r = dm_task_run(dmt))) {
+		log_err("Activation failed.");
+		goto out;
+	}
+
+	/*
+	 * Create device nodes and symbolic links.
+	 */
+	if (!fs_add_lv(lv, lv->minor))
+		stack;
+
+ out:
+	dm_task_destroy(dmt);
+	log_verbose("Logical volume %s%s activated", lv->name,
+		    r == 1 ? "" : " not");
+	return r;
+}
+
+static int _reload(const char *name, struct logical_volume *lv)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	/*
+	 * Create a task.
+	 */
+	if (!(dmt = setup_dm_task(name, DM_DEVICE_RELOAD))) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Populate it.
+	 */
+	if (!device_populate_lv(dmt, lv)) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Load this into the kernel.
+	 */
+	if (!(r = dm_task_run(dmt))) {
+		log_err("Activation failed.");
+		goto out;
+	}
+
+	/*
+	 * Create device nodes and symbolic links.
+	 */
+	if (!fs_add_lv(lv, lv->minor))
+		stack;
+
+ out:
+	dm_task_destroy(dmt);
+	log_verbose("Logical volume %s%s re-activated", lv->name,
+		    r == 1 ? "" : " not");
+	return r;
 }
 
 int lv_reactivate(struct logical_volume *lv)
@@ -138,18 +239,24 @@ int lv_reactivate(struct logical_volume *lv)
 		return 0;
 	}
 
+	/*
+	 * Decide what we're going to call this device.
+	 */
 	if (!build_dm_name(buffer, sizeof(buffer), "",
 			   lv->vg->name, lv->name)) {
 		stack;
 		return 0;
 	}
 
+	/*
+	 * Suspend the device if it isn't already.
+	 */
 	if (!device_suspended(buffer) && !device_suspend(buffer)) {
 		stack;
 		return 0;
 	}
 
-	r = device_reload_lv(buffer, lv);
+	r = _reload(buffer, lv);
 
 	if (!device_resume(buffer)) {
 		stack;

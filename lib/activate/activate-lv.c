@@ -9,8 +9,6 @@
 #include "log.h"
 
 #include <libdevmapper.h>
-#include <linux/kdev_t.h>
-
 
 /*
  * Emit a target for a given segment.
@@ -85,66 +83,19 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	return 1;
 }
 
-int _load(const char *name, struct logical_volume *lv, int task)
+int device_populate_lv(struct dm_task *dmt, struct logical_volume *lv)
 {
-	int r = 0;
-	struct dm_task *dmt;
 	struct list *segh;
 	struct stripe_segment *seg;
 
-	log_very_verbose("Generating devmapper parameters for %s", lv->name);
-	if (!(dmt = setup_dm_task(name, task))) {
-		stack;
-		return 0;
-	}
-
+	log_very_verbose("Generating devmapper table for %s", lv->name);
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct stripe_segment);
 		if (!_emit_target(dmt, seg)) {
-			log_error("Unable to activate logical volume '%s'",
-				lv->name);
-			goto out;
+			log_error("Unable to build table for '%s'", lv->name);
+			return 0;
 		}
 	}
 
-	if (!((lv->status & LVM_WRITE) && (lv->vg->status & LVM_WRITE))) {
-	    	if (!dm_task_set_ro(dmt)) {
-			log_error("Failed to set %s read-only during "
-				  "activation.", lv->name);
-			goto out;
-		} else
-			log_very_verbose("Activating %s read-only", lv->name);
-	}
-
-	if (lv->minor >= 0) {
-		if (!dm_task_set_minor(dmt, MINOR(lv->minor))) {
-			log_error("Failed to set minor number for %s to %d "
-				  "during activation.", lv->name, lv->minor);
-			goto out;
-		} else
-			log_very_verbose("Set minor number for %s to %d.",
-					 lv->name, lv->minor);
-	}
-
-	if (!(r = dm_task_run(dmt)))
-		stack;
-
-	log_verbose("Logical volume %s%s activated", lv->name,
-		    r == 1 ? "" : " not");
-
- out:
-	dm_task_destroy(dmt);
-	return r;
-}
-
-int device_create_lv(const char *name, struct logical_volume *lv, int minor)
-{
-	log_very_verbose("Activating %s", name);
-	return _load(name, lv, DM_DEVICE_CREATE);
-}
-
-int device_reload_lv(const char *name, struct logical_volume *lv)
-{
-	log_very_verbose("Reactivating %s", name);
-	return _load(name, lv, DM_DEVICE_RELOAD);
+	return 1;
 }

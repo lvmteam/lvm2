@@ -36,26 +36,27 @@ int device_resume(const char *name);
 
 
 /*
+ * The next three functions populate a dm_task with a suitable
+ * set of targets.
+ */
+
+/*
  * Creates a device with a mapping table as specified by the lv.
  */
-int device_create_lv(const char *name, struct logical_volume *lv, int minor);
-int device_reload_lv(const char *name, struct logical_volume *lv);
-
+int device_populate_lv(struct dm_task *dmt, struct logical_volume *lv);
 
 /*
  * Layers the origin device above an already active 'real'
  * device.
  */
-int device_create_origin(struct logical_volume *lv,
-			 const char *real, int minor);
-
+int device_populate_origin(struct dm_task *dmt, struct logical_volume *lv,
+			   const char *real);
 
 /*
  * Creates a snapshot device for a given origin and exception
  * storage area.
  */
-int device_create_snapshot(struct logical_volume *lv,
-			   const char *origin, const char *cow_device,
-			   int minor);
+int device_populate_snapshot(struct dm_task *dmt, struct logical_volume *lv,
+			     const char *origin, const char *cow_device);
 
 #endif
