@@ -30,7 +30,7 @@ So now we have:
      |         |         |
      \/        \/        \/
 +-----------------------------+
-|  PV1     |   PV2   |   PV3  | 254:3
+|  PV1     |   PV2   |   PV3  | 254:4
 +----------+---------+--------+
 
 Any writes to segment2 of the LV get intercepted by the mirror target
