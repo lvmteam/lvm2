@@ -29,6 +29,10 @@
 #include <linux/dm-ioctl.h>
 #include <linux/kdev_t.h>
 
+#ifdef HAVE_SELINUX
+#  include <selinux/selinux.h>
+#endif
+
 #define DEV_DIR "/dev/"
 
 static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
@@ -197,6 +201,31 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 	return 1;
 }
 
+#ifdef HAVE_SELINUX
+static int _set_selinux_context(const char *path)
+{
+	security_context_t scontext;
+
+	log_debug("Setting SELinux context for %s", path);
+	if (is_selinux_enabled() <= 0)
+		return 0;
+
+	if (matchpathcon(path, 0, &scontext) < 0) {
+		log_error("%s: matchpathcon failed: %s", path, strerror(errno));
+		return 0;
+	}
+
+	if (lsetfilecon(path, scontext) < 0) {
+		log_error("%s: lsetfilecon failed: %s", path, strerror(errno));
+		free(scontext);
+		return 0;
+	}
+
+	free(scontext);
+	return 1;
+}
+#endif
+
 static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
 {
 	char path[PATH_MAX];
@@ -226,6 +255,10 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
 		log_error("Unable to make device node for '%s'", dev_name);
 		return 0;
 	}
+#ifdef HAVE_SELINUX
+	if (!_set_selinux_context(path))
+		return 0;
+#endif
 
 	return 1;
 }
