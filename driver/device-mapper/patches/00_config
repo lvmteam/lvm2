@@ -1,5 +1,6 @@
---- linux-2.4.14/drivers/md/Config.in	Mon Sep 24 16:29:14 2001
-+++ linux/drivers/md/Config.in	Tue Nov  6 11:25:35 2001
+diff -ru linux-2.4.16/drivers/md/Config.in linux/drivers/md/Config.in
+--- linux-2.4.16/drivers/md/Config.in	Mon Sep 24 16:29:14 2001
++++ linux/drivers/md/Config.in	Thu Nov 29 10:27:35 2001
 @@ -14,5 +14,7 @@
  dep_tristate '  Multipath I/O support' CONFIG_MD_MULTIPATH $CONFIG_BLK_DEV_MD
  
