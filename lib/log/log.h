@@ -8,6 +8,8 @@
 #define _LVM_LOG_H
 
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 #define _LOG_DEBUG 7
 #define _LOG_INFO 6

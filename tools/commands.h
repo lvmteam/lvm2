@@ -39,11 +39,11 @@ xx(help,
 
 xx(lvactivate,
    "Activate logical volume on given partition(s)",
-  "lvactivate "
+   "lvactivate "
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
    "\t[-v/--verbose]\n"
-  "Physical Volume(s)\n")
+   "Logical Volume(s)\n")
 
 xx(lvchange,
    "Change the attributes of logical volume(s)",

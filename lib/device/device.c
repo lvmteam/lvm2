@@ -38,6 +38,7 @@
 #include <linux/major.h>
 #include <linux/genhd.h>
 
+#if 0
 int _get_partition_type(struct dev_filter *filter, struct device *d);
 
 #define MINOR_PART(dm, d) (MINOR((d)->dev) % dev_max_partitions(dm, (d)->dev))
@@ -208,3 +209,4 @@ int _get_partition_type(struct dev_mgr *dm, struct device *d)
 
 	return 0;
 }
+#endif

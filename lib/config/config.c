@@ -77,7 +77,7 @@ static int _tok_match(const char *str, const char *b, const char *e);
 struct config_file *create_config_file()
 {
         struct cs *c;
-        struct pool *mem = create_pool(10 * 1024);
+        struct pool *mem = pool_create(10 * 1024);
 
         if (!mem) {
                 stack;
@@ -86,7 +86,7 @@ struct config_file *create_config_file()
 
         if (!(c = pool_alloc(mem, sizeof(*c)))) {
                 stack;
-                destroy_pool(mem);
+                pool_destroy(mem);
                 return 0;
         }
 
@@ -97,7 +97,7 @@ struct config_file *create_config_file()
 
 void destroy_config_file(struct config_file *cf)
 {
-        destroy_pool(((struct cs *) cf)->mem);
+        pool_destroy(((struct cs *) cf)->mem);
 }
 
 int read_config(struct config_file *cf, const char *file)

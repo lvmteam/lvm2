@@ -72,7 +72,7 @@ struct hash_table *create_hash_table(unsigned size_hint)
 {
 	size_t len;
 	unsigned new_size = 16u;
-	struct hash_c *hc = dbg_malloc(sizeof(*hc));
+	struct hash_table *hc = dbg_malloc(sizeof(*hc));
 
 	if (!hc) {
 		stack;
@@ -92,7 +92,7 @@ struct hash_table *create_hash_table(unsigned size_hint)
 		goto bad;
 	}
 	memset(hc->slots, 0, len);
-	return (struct hash_table) hc;
+	return hc;
 
  bad:
 	dbg_free(hc->slots);
@@ -102,7 +102,7 @@ struct hash_table *create_hash_table(unsigned size_hint)
 
 void destroy_hash_table(struct hash_table *t)
 {
-	struct hash_node **c, *n;
+	struct hash_node *c, *n;
 	int i;
 
 	for (i = 0; i < t->num_slots; i++)
@@ -111,8 +111,8 @@ void destroy_hash_table(struct hash_table *t)
 			dbg_free(c);
 		}
 
-	dbg_free(hc->slots);
-	dbg_free(hc);
+	dbg_free(t->slots);
+	dbg_free(t);
 }
 
 static inline struct hash_node **_find(struct hash_table *t, const char *key)
@@ -121,10 +121,10 @@ static inline struct hash_node **_find(struct hash_table *t, const char *key)
 	struct hash_node **c;
 
 	for(c = &t->slots[h]; *c; c = &((*c)->next))
-		if(!strcmp(key, *c->key))
+		if(!strcmp(key, (*c)->key))
 			break;
 
-	return c
+	return c;
 }
 
 char *hash_lookup(struct hash_table *t, const char *key)
@@ -160,8 +160,8 @@ void hash_remove(struct hash_table *t, const char *key)
 
 	if (*c) {
 		struct hash_node *old = *c;
-		*c = *c->next;
-		dbg_free(*old);
+		*c = (*c)->next;
+		dbg_free(old);
 		t->num_nodes--;
 	}
 }

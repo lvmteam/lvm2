@@ -7,7 +7,7 @@
 #ifndef _LVM_DEV_CACHE_H
 #define _LVM_DEV_CACHE_H
 
-#include <sys/types.h>
+#include "lvm-types.h"
 
 /*
  * All devices in LVM will be represented by one of these.

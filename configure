@@ -556,7 +556,7 @@ ac_config_sub=$ac_aux_dir/config.sub
 ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
  
 
-for ac_prog in gawk mawk nawk awk
+for ac_prog in mawk gawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -1317,7 +1317,7 @@ else
 int main() {
 
 /* Ultrix mips cc rejects this.  */
-typedef int charset[2]; const charset x;
+typedef int charset[2]; const charset x = {0,0};
 /* SunOS 4.1.1 cc rejects this.  */
 char const *const *ccp;
 char **p;
@@ -1392,7 +1392,7 @@ for ac_kw in inline __inline__ __inline; do
 #include "confdefs.h"
 
 int main() {
-} $ac_kw foo() {
+} int $ac_kw foo() {
 ; return 0; }
 EOF
 if { (eval echo configure:1399: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
@@ -2159,6 +2159,7 @@ include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
+test/mm/Makefile							\
 " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -2254,6 +2255,7 @@ include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
+test/mm/Makefile							\
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF

@@ -21,6 +21,7 @@
 #ifndef _LVM_DISPLAY_METADATA_H
 #define _LVM_DISPLAY_METADATA_H
 
+#if 0
 #include "metadata/metadata.h"
 
 void pv_display_colons(pv_t * pv);
@@ -34,5 +35,5 @@ static inline unsigned long get_pe_offset(ulong p, pv_t *pv)
 {
         return pv->pe_start + (p * pv->pe_size);
 }
-
+#endif
 #endif

@@ -16,7 +16,7 @@ struct hash_table *hash_create(unsigned size_hint);
 void hash_destroy(struct hash_table *t);
 
 char *hash_lookup(struct hash_table *t, const char *key);
-void hash_insert(struct hash_table *t, const char *key, void *data);
+int hash_insert(struct hash_table *t, const char *key, void *data);
 void hash_remove(struct hash_table *t, const char *key);
 
 unsigned hash_get_num_entries(struct hash_table *t);
