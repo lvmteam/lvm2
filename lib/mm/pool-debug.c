@@ -195,25 +195,3 @@ void pool_abandon_object(struct pool *p)
 	p->begun = 0;
 	p->object = NULL;
 }
-
-char *pool_strdup(struct pool *p, const char *str)
-{
-	char *ret = pool_alloc(p, strlen(str) + 1);
-
-	if (ret)
-		strcpy(ret, str);
-
-	return ret;
-}
-
-char *pool_strndup(struct pool *p, const char *str, size_t n)
-{
-	char *ret = pool_alloc(p, n + 1);
-
-	if (ret) {
-		strncpy(ret, str, n);
-		ret[n] = '\0';
-	}
-
-	return ret;
-}
