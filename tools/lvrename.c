@@ -107,7 +107,10 @@ int lvrename(int argc, char **argv)
 	if (!archive(lv->vg))
 		return ECMD_FAILED;
 
-	active = lv_active(lv);
+	if ((active = lv_active(lv)) < 0) {
+		log_error("Unable to determine status of %s", lv->name);
+		return ECMD_FAILED;
+	}
 
 	if (active && !lv_suspend(lv)) {
 		log_error("Failed to suspend %s", lv->name);

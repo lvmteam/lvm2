@@ -64,6 +64,10 @@ CFLAGS+=-DDEBUG_MEM -DDEBUG
 INCLUDES+=-I. -I$(top_srcdir)/include
 INC_LNS=$(top_srcdir)/include/.symlinks_created
 
+ifdef DESTDIR
+  INCLUDES+=-I$(DESTDIR)/usr/include
+endif
+
 STRIP=
 #STRIP=-s
 
@@ -118,7 +122,7 @@ clean: $(SUBDIRS.clean)
 distclean: $(SUBDIRS.distclean)
 	$(RM) $(OBJECTS) $(TARGETS) $(SOURCES:%.c=%.d)
 	$(RM) config.cache config.log config.status
-	$(RM) Makefile make.tmpl
+	$(RM) Makefile make.tmpl version.h
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),distclean)

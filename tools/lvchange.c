@@ -139,7 +139,10 @@ static int lvchange_availability(struct logical_volume *lv)
 	if (strcmp(arg_str_value(available_ARG, "n"), "n"))
 		activate = 1;
 
-	active = lv_active(lv);
+	if ((active = lv_active(lv)) < 0) {
+		log_error("Unable to determine status of %s", lv->name);
+		return 0;
+	}
 
 	if (activate && active) {
 		log_verbose("Logical volume %s is already active", lv->name);

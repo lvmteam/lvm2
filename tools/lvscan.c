@@ -64,7 +64,7 @@ static int lvscan_single(struct logical_volume *lv)
 	const char *active_str, *snapshot_str;
 
 /* FIXME Add -D arg to skip this! */
-	if (lv_active(lv)) {
+	if (lv_active(lv) > 0) {
 		active_str = "ACTIVE   ";
 		active++;
 	} else
