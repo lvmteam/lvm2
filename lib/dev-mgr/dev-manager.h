@@ -22,6 +22,8 @@
 #ifndef DEV_MANAGER_H
 #define DEV_MANAGER_H
 
+#include "config.h"
+
 struct device {
 	char *name;
 	dev_t dev;
@@ -30,7 +32,7 @@ struct device {
 struct dev_mgr;
 typedef struct _dummy_counter *dev_counter_t;
 
-struct dev_mgr *init_dev_manager();
+struct dev_mgr *init_dev_manager(struct config_node *cfg_node);
 void fin_dev_manager(struct dev_mgr *dm);
 
 struct device *dev_by_name(struct dev_mgr *dm, const char *name);

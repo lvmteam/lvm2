@@ -31,6 +31,7 @@
  *		  _list_insert.  Most of the logic from _hash_insert is now in
  *		  _add.
  *	20/08/2001 - Created _add_named_device and used it in dev_by_name
+ *	21/08/2001 - Basic config file support added
  *
  */
 
@@ -38,6 +39,8 @@
 #include "hash.h"
 #include "pool.h"
 #include "dev-manager.h"
+
+#define DEFAULT_BASE_DIR "/dev"
 
 struct dev_i {
 	struct device d;
@@ -91,10 +94,11 @@ static inline struct device *_get_dev(struct dev_i *di)
 	return di ? &di->d : 0;
 }
 
-struct dev_mgr *init_dev_manager()
+struct dev_mgr *init_dev_manager(struct config_node *cn)
 {
 	struct pool *pool = create_pool(10 * 1024);
-	struct dev_mgr *dm;
+	struct dev_mgr *dm = NULL;
+	const char * base_dir = NULL;
 
 	if (!pool) {
 		stack;
@@ -110,9 +114,13 @@ struct dev_mgr *init_dev_manager()
 	memset(dm, 0, sizeof(*dm));
 	dm->pool = pool;
 
-	/* FIXME: This should be setup based on the config file */
+	if(cn) 
+		base_dir = find_config_str(cn, "dev-mgr/base_dir", '/', 0);
+	if(!base_dir)	
+		base_dir = DEFAULT_BASE_DIR;
+
 	dm->devdir = pool_alloc(dm->pool, sizeof(char*));
-	dm->devdir[0] = pool_strdup(dm->pool, "/dev");
+	dm->devdir[0] = pool_strdup(dm->pool, base_dir);
 
 	if (!_create_hash_table(dm, 128)) {
 		stack;
