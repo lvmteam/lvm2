@@ -1,3 +1,29 @@
+  Update copyright notices for Red Hat.
+  Fix vgmknodes to remove dud /dev/mapper entries. (libdevmapper update reqd).
+  Add LVM1-style colon output to vgdisplay.
+  lvchange --refresh to reload active LVs.
+  Add string display to memory leak dump.
+  Add locking flags & memlock option.
+  Add list_versions to library.
+  Ignore open hidden LVs when checking if deactivation is OK.
+  Suppress move percentage when device inactive.
+  Add lv_info_by_lvid.
+  Various tidy-ups to the build process.
+  Rebaseline internal verbose level.
+  Add --nolocking option for read operations if locking is failing.
+  Add option to compile into a library.
+  When compiled without libdevmapper, only print warning message once.
+  Fix lvreduce PV extent calculations.
+  Fix DESTDIR to work with configure path overrides.
+  Always use / as config file separator & rename internal config file variables.
+  Add support for tagging PV/VG/LVs and hosts.
+  Fix rare bug in recognition of long cmdline argument forms.
+  Add basic internationalisation infrastructure.
+  Don't recurse symlinked dirs such as /dev/fd on 2.6 kernels.
+  Update autoconf files.
+  Add sysfs block device filtering for 2.6 kernels.
+  Update refs for move to sources.redhat.com.
+
 Friday 14th November 2003
 =========================
 Some bug fixes & minor enhancements, including:
