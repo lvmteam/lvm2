@@ -53,6 +53,7 @@ struct cmd_context {
 	char *cmd_line;
 	struct command *command;
 	struct arg *args;
+	char **argv;
 
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
