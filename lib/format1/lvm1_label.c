@@ -73,7 +73,7 @@ static int _read(struct labeller *l,
 	int r = 0;
 
 	if (!(dl = read_disk(dev, mem, NULL))) {
-		log_err("Couldn't read lvm1 label.");
+		stack;
 		return 0;
 	}
 
