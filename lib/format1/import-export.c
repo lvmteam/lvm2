@@ -231,8 +231,6 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	vgd->pv_max = vg->max_pv;
 	vgd->pv_cur = vg->pv_count;
 
-	//vgd->pv_act = ???;
-
 	vgd->pe_size = vg->extent_size;
 	vgd->pe_total = vg->extent_count;
 	vgd->pe_allocated = vg->extent_count - vg->free_count;
@@ -564,5 +562,26 @@ void export_numbers(struct list_head *pvs, struct volume_group *vg)
 			ll = list_entry(tmp2, struct lvd_list, list);
 			ll->lv.lv_number = _get_lv_number(vg, ll->lv.lv_name);
 		}
+	}
+}
+
+/*
+ * Calculate vg_disk->pv_act.
+ */
+void export_pv_act(struct list_head *pvs)
+{
+	struct list_head *tmp;
+	struct disk_list *dl;
+	int act = 0;
+
+	list_for_each (tmp, pvs) {
+		dl = list_entry(tmp, struct disk_list, list);
+		if (dl->pv.pv_status & PV_ACTIVE)
+			act++;
+	}
+
+	list_for_each (tmp, pvs) {
+		dl = list_entry(tmp, struct disk_list, list);
+		dl->vg.pv_act = act;
 	}
 }
