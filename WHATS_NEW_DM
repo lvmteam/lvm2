@@ -1,9 +1,13 @@
+Version 1.00.13 - 6 Apr 2004
+============================
+  Add some basic selinux support.
+
 Version 1.00.12 - 6 Apr 2004
-===========================
+============================
   Fix dmsetup.static install.
 
 Version 1.00.11 - 5 Apr 2004
-===========================
+============================
   configure --enable-static_link does static build in addition to dynamic.
   Moved Makefile library targets definition into template.
 
