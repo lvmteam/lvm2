@@ -632,8 +632,32 @@ int find_config_bool(struct config_node *cn, const char *path,
 	return fail;
 }
 
-/*
- * Local variables:
- * c-file-style: "linux"
- * End:
- */
+int get_config_uint32(struct config_node *cn, const char *path,
+		    char sep, uint32_t *result)
+{
+	struct config_node *n;
+
+	n = find_config_node(cn, path, sep);
+
+	if (!n || !n->v || n->v->type != CFG_INT)
+		return 0;
+
+	*result = n->v->v.i;
+	return 1;
+}
+
+int get_config_uint64(struct config_node *cn, const char *path,
+		    char sep, uint64_t *result)
+{
+	struct config_node *n;
+
+	n = find_config_node(cn, path, sep);
+
+	if (!n || !n->v || n->v->type != CFG_INT)
+		return 0;
+
+	/* FIXME Support 64-bit value! */
+	*result = (uint64_t) n->v->v.i;
+	return 1;
+}
+
