@@ -86,7 +86,7 @@ int dm_register_target(const char *name, dm_ctr_fn ctr,
  * up LV's that have holes in them.
  */
 static int io_err_ctr(struct dm_table *t,
-		      offset_t b, offset_t e,
+		      offset_t b, offset_t l,
 		      const char *cb, const char *ce, void **result)
 {
 	/* this takes no arguments */
@@ -110,7 +110,7 @@ static int io_err_map(struct buffer_head *bh, void *context)
  */
 struct linear_c {
 	kdev_t dev;
-	int offset;		/* FIXME: we need a signed offset type */
+	int delta;		/* FIXME: we need a signed offset type */
 };
 
 /*
@@ -118,7 +118,7 @@ struct linear_c {
  * <dev_path> <offset>
  */
 static int linear_ctr(struct dm_table *t,
-		      offset_t low, offset_t high,
+		      offset_t b, offset_t l,
 		      const char *cb, const char *ce, void **result)
 {
 	struct linear_c *lc;
@@ -145,7 +145,7 @@ static int linear_ctr(struct dm_table *t,
 	}
 
 	lc->dev = dev;
-	lc->offset = (int) start - (int) low;
+	lc->delta = (int) start - (int) b;
 
 	if ((r = dm_table_add_device(t, lc->dev))) {
 		kfree(lc);
@@ -168,7 +168,7 @@ static int linear_map(struct buffer_head *bh, void *context)
 	struct linear_c *lc = (struct linear_c *) context;
 
 	bh->b_rdev = lc->dev;
-	bh->b_rsector = bh->b_rsector + lc->offset;
+	bh->b_rsector = bh->b_rsector + lc->delta;
 	return 1;
 }
 

@@ -40,7 +40,7 @@ typedef unsigned int offset_t;
 
 /* constructor, destructor and map fn types */
 typedef int (*dm_ctr_fn)(struct dm_table *t,
-			 offset_t b, offset_t e,
+			 offset_t b, offset_t l,
 			 const char *cb, const char *ce, void **result);
 typedef void (*dm_dtr_fn)(struct dm_table *t, void *c);
 typedef int (*dm_map_fn)(struct buffer_head *bh, void *context);

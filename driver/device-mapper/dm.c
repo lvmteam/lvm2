@@ -298,7 +298,7 @@ static inline int __map_buffer(struct mapped_device *md,
 	int r;
 	struct target *ti = md->map->targets + leaf;
 
-	fn = ti->map;
+	fn = ti->type->map;
 	context = ti->private;
 
 	if (!fn)

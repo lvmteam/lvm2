@@ -272,11 +272,11 @@ static int process_table(const char *b, const char *e, int minor,
 			return -EINVAL;
 		}
 
-		high = start + (size - 1);
-		if ((r = t->ctr(table, start, high, we, e, &context)))
+		if ((r = t->ctr(table, start, size, we, e, &context)))
 			return r;
 
-		if ((r = dm_table_add_entry(table, high, t->map, context))) {
+		high = start + (size - 1);
+		if ((r = dm_table_add_target(table, high, t, context))) {
 			t->dtr(table, context);
 			return r;
 		}

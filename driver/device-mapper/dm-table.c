@@ -40,12 +40,12 @@ static inline ulong div_up(ulong n, ulong size)
 	return round_up(n, size) / size;
 }
 
-/* ceiling(log_size(n)) */
+/* similar to ceiling(log_size(n)) */
 static uint int_log(ulong n, ulong base)
 {
 	int result = 0;
 
-	while (n != 1) {
+	while (n > 1) {
 		n = div_up(n, base);
 		result++;
 	}
@@ -153,14 +153,18 @@ void dm_table_destroy(struct dm_table *t)
 		return;
 
 	/* free the indexes */
-	for (i = 0; i < t->depth; i++) {
+	for (i = 0; i < t->depth - 1; i++) {
 		vfree(t->index[i]);
 		t->index[i] = 0;
 	}
+	vfree(t->highs);
 
-	/* t->highs was already freed as t->index[t->depth - 1] */
+	/* free the targets */
+	for (i = 0; i < t->num_targets; i++) {
+		struct target *tgt = &t->targets[i];
+		tgt->type->dtr(t, tgt->private);
+	}
 	vfree(t->targets);
-	kfree(t);
 
 	/* free the device list */
 	if (t->devices) {
@@ -174,6 +178,8 @@ void dm_table_destroy(struct dm_table *t)
 			kfree(d);
 		}
 	}
+
+	kfree(t);
 }
 
 /*
@@ -190,8 +196,8 @@ static inline int check_space(struct dm_table *t)
 /*
  * adds a target to the map
  */
-int dm_table_add_entry(struct dm_table *t, offset_t high,
-		       dm_map_fn target, void *private)
+int dm_table_add_target(struct dm_table *t, offset_t high,
+			struct target_type *type, void *private)
 {
 	int r, n;
 
@@ -200,16 +206,14 @@ int dm_table_add_entry(struct dm_table *t, offset_t high,
 
 	n = t->num_targets++;
 	t->highs[n] = high;
-	t->targets[n].map = target;
+	t->targets[n].type = type;
 	t->targets[n].private = private;
 
 	return 0;
 }
 
 /*
- * convert a device path to a kdev_t.  I've not
- * looked at vfs stuff before so could someone
- * more knowledgeable please check this.
+ * convert a device path to a kdev_t.
  */
 int dm_table_lookup_device(const char *path, kdev_t *d)
 {
@@ -224,6 +228,10 @@ int dm_table_lookup_device(const char *path, kdev_t *d)
 		goto bad;
 
 	inode = nd.dentry->d_inode;
+	if (!inode) {
+		r = -ENOENT;
+		goto bad;
+	}
 
 	if (!S_ISBLK(inode->i_mode)) {
 		r = -EINVAL;
@@ -240,13 +248,13 @@ int dm_table_lookup_device(const char *path, kdev_t *d)
 /*
  * see if we've already got a device in the list.
  */
-static struct dev_list *find_device(struct dev_list *d, kdev_t dev)
+static struct dev_list **find_device(struct dev_list **d, kdev_t dev)
 {
-	while(d) {
-		if (d->dev == dev)
+	while (*d) {
+		if ((*d)->dev == dev)
 			break;
 
-		d = d->next;
+		d = &(*d)->next;
 	}
 
 	return d;
@@ -260,7 +268,7 @@ int dm_table_add_device(struct dm_table *t, kdev_t dev)
 {
 	struct dev_list *d;
 
-	d = find_device(t->devices, dev);
+	d = *find_device(&t->devices, dev);
 	if (!d) {
 		d = kmalloc(sizeof(*d), GFP_KERNEL);
 		if (!d)
@@ -282,15 +290,18 @@ int dm_table_add_device(struct dm_table *t, kdev_t dev)
  */
 void dm_table_remove_device(struct dm_table *t, kdev_t dev)
 {
-	struct dev_list *d = find_device(t->devices, dev);
+	struct dev_list **d = find_device(&t->devices, dev);
 
-	if (!d) {
+	if (!*d) {
 		WARN("asked to remove a device that isn't present");
 		return;
 	}
 
-	if (atomic_dec_and_test(&d->count))
-		kfree(d);
+	if (atomic_dec_and_test(&(*d)->count)) {
+		struct dev_list *node = *d;
+		*d = (*d)->next;
+		kfree(node);
+	}
 }
 
 /*
@@ -302,28 +313,18 @@ int dm_table_complete(struct dm_table *t)
 
 	/* how many indexes will the btree have ? */
 	leaf_nodes = div_up(t->num_targets, KEYS_PER_NODE);
-	i = 1 + int_log(leaf_nodes, KEYS_PER_NODE + 1);
-
-	/* work out how many nodes are in each layer */
-	t->depth = i;
-	t->counts[t->depth - 1] = div_up(t->num_targets, KEYS_PER_NODE);
-
-	while (--i)
-		t->counts[i - 1] = div_up(t->counts[i], KEYS_PER_NODE + 1);
-
-	/* allocate memory for the internal nodes */
-	for (i = 0; i < (t->depth - 1); i++) {
-		size_t s = NODE_SIZE * t->counts[i];
-		t->index[i] = vmalloc(s);
-		memset(t->index[i], -1, s);
-	}
+	t->depth = 1 + int_log(leaf_nodes, KEYS_PER_NODE + 1);
 
 	/* leaf layer has already been set up */
+	t->counts[t->depth - 1] = leaf_nodes;
 	t->index[t->depth - 1] = t->highs;
 
-	/* fill in higher levels */
-	for (i = t->depth - 1; i; i--)
-		setup_btree_index(i - 1, t);
+	/* set up internal nodes, bottom-up */
+	for (i = t->depth - 2; i >= 0; i--) {
+		t->counts[i] = div_up(t->counts[i + 1], KEYS_PER_NODE + 1);
+		t->index[i] = vmalloc(NODE_SIZE * t->counts[i]);
+		setup_btree_index(i, t);
+	}
 
 	return 0;
 }
