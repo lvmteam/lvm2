@@ -356,6 +356,17 @@ static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 	return 1;
 }
 
+static int _lv_setup(struct format_instance *fi, struct logical_volume *lv)
+{
+	if (lv->le_count > 65536UL) {
+		log_err("Format 1 logical volumes cannot contain more than "
+			"65536 extents.");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 {
 	struct pool *mem;
@@ -454,6 +465,7 @@ static struct format_handler _format1_ops = {
 	pv_read: _pv_read,
 	pv_setup: _pv_setup,
 	pv_write: _pv_write,
+	lv_setup: _lv_setup,
 	vg_read: _vg_read,
 	vg_setup: _vg_setup,
 	vg_write: _vg_write,
