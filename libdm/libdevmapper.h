@@ -48,7 +48,11 @@ enum {
 
 	DM_DEVICE_STATUS,
 	DM_DEVICE_TABLE,
-	DM_DEVICE_WAITEVENT
+	DM_DEVICE_WAITEVENT,
+
+	DM_DEVICE_LIST,
+
+	DM_DEVICE_CLEAR
 };
 
 struct dm_task;
@@ -65,6 +69,8 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid);
 struct dm_info {
 	int exists;
 	int suspended;
+	int live_table;
+	int inactive_table;
 	int32_t open_count;
 	uint32_t event_nr;
 	uint32_t major;
@@ -80,12 +86,20 @@ struct dm_deps {
 	uint64_t device[0];
 };
 
+struct dm_names {
+	uint64_t dev;
+	uint32_t next;		/* Offset to next struct from start of this struct */
+	char name[0];
+};
+
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
+const char *dm_task_get_name(struct dm_task *dmt);
 const char *dm_task_get_uuid(struct dm_task *dmt);
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
+struct dm_names *dm_task_get_names(struct dm_task *dmt);
 
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
@@ -99,6 +113,11 @@ int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr);
 int dm_task_add_target(struct dm_task *dmt,
 		       uint64_t start,
 		       uint64_t size, const char *ttype, const char *params);
+
+/*
+ * Format major/minor numbers correctly for input to driver
+ */
+int dm_format_dev(char *buf, int bufsize, uint32_t dev_major, uint32_t dev_minor);
 
 /* Use this to retrive target information returned from a STATUS call */
 void *dm_get_next_target(struct dm_task *dmt,
@@ -115,5 +134,9 @@ int dm_task_run(struct dm_task *dmt);
  */
 int dm_set_dev_dir(const char *dir);
 const char *dm_dir(void);
+
+/* Release library resources */
+void dm_lib_release(void);
+void dm_lib_exit(void);
 
 #endif				/* LIB_DEVICE_MAPPER_H */

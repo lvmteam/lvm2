@@ -84,6 +84,47 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	return r;
 }
 
+static void _display_info(struct dm_task *dmt)
+{
+	struct dm_info info;
+	const char *uuid;
+
+	if (!dm_task_get_info(dmt, &info))
+		return;
+
+	if (!info.exists) {
+		printf("Device does not exist.\n");
+		return;
+	}
+
+	printf("Name:              %s\n", dm_task_get_name(dmt));
+
+	printf("State:             %s%s\n",
+	       info.suspended ? "SUSPENDED" : "ACTIVE",
+	       info.read_only ? " (READ-ONLY)" : "");
+
+	if (!info.live_table && !info.inactive_table)
+		printf("Tables present:    None\n");
+	else
+		printf("Tables present:    %s%s%s\n",
+		       info.live_table ? "LIVE" : "",
+		       info.live_table && info.inactive_table ? " & " : "",
+		       info.inactive_table ? "INACTIVE" : "");
+
+	if (info.open_count != -1)
+		printf("Open count:        %d\n", info.open_count);
+
+	printf("Event number:      %" PRIu32 "\n", info.event_nr);
+	printf("Major, minor:      %d, %d\n", info.major, info.minor);
+
+	if (info.target_count != -1)
+		printf("Number of targets: %d\n", info.target_count);
+
+	if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
+		printf("UUID: %s\n", uuid);
+
+}
+
 static int _load(int task, const char *name, const char *file, const char *uuid)
 {
 	int r = 0;
@@ -98,7 +139,7 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 	if (uuid && !dm_task_set_uuid(dmt, uuid))
 		goto out;
 
-	if (!_parse_file(dmt, file))
+	if (file && !_parse_file(dmt, file))
 		goto out;
 
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
@@ -115,6 +156,8 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 
 	r = 1;
 
+	_display_info(dmt);
+
       out:
 	dm_task_destroy(dmt);
 
@@ -123,7 +166,11 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 
 static int _create(int argc, char **argv)
 {
-	return _load(DM_DEVICE_CREATE, argv[1], argv[2], argv[3]);
+	if (argc == 1)
+		return _load(DM_DEVICE_CREATE, argv[1], NULL, NULL);
+
+	return _load(DM_DEVICE_CREATE, argv[1], argv[2],
+		     (argc == 3) ? argv[3] : NULL);
 }
 
 static int _reload(int argc, char **argv)
@@ -185,7 +232,7 @@ static int _version(int argc, char **argv)
 	return r;
 }
 
-static int _simple(int task, const char *name)
+static int _simple(int task, const char *name, int display)
 {
 	int r = 0;
 
@@ -200,6 +247,9 @@ static int _simple(int task, const char *name)
 
 	r = dm_task_run(dmt);
 
+	if (r && display)
+		_display_info(dmt);
+
       out:
 	dm_task_destroy(dmt);
 	return r;
@@ -207,27 +257,32 @@ static int _simple(int task, const char *name)
 
 static int _remove_all(int argc, char **argv)
 {
-	return _simple(DM_DEVICE_REMOVE_ALL, "");
+	return _simple(DM_DEVICE_REMOVE_ALL, "", 0);
 }
 
 static int _remove(int argc, char **argv)
 {
-	return _simple(DM_DEVICE_REMOVE, argv[1]);
+	return _simple(DM_DEVICE_REMOVE, argv[1], 0);
 }
 
 static int _suspend(int argc, char **argv)
 {
-	return _simple(DM_DEVICE_SUSPEND, argv[1]);
+	return _simple(DM_DEVICE_SUSPEND, argv[1], 1);
 }
 
 static int _resume(int argc, char **argv)
 {
-	return _simple(DM_DEVICE_RESUME, argv[1]);
+	return _simple(DM_DEVICE_RESUME, argv[1], 1);
+}
+
+static int _clear(int argc, char **argv)
+{
+	return _simple(DM_DEVICE_CLEAR, argv[1], 1);
 }
 
 static int _wait(int argc, char **argv)
 {
-	return _simple(DM_DEVICE_WAITEVENT, argv[1]);
+	return _simple(DM_DEVICE_WAITEVENT, argv[1], 2);
 }
 
 static int _status(int argc, char **argv)
@@ -254,6 +309,11 @@ static int _status(int argc, char **argv)
 	if (!dm_task_run(dmt))
 		goto out;
 
+	if (cmd == DM_DEVICE_STATUS) {
+		_display_info(dmt);
+		printf("\n");
+	}
+
 	/* Fetch targets and print 'em */
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
@@ -275,11 +335,9 @@ static int _status(int argc, char **argv)
 static int _info(int argc, char **argv)
 {
 	int r = 0;
-	const char *uuid;
 
 	/* remove <dev_name> */
 	struct dm_task *dmt;
-	struct dm_info info;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_INFO)))
 		return 0;
@@ -290,33 +348,7 @@ static int _info(int argc, char **argv)
 	if (!dm_task_run(dmt))
 		goto out;
 
-	if (!dm_task_get_info(dmt, &info))
-		goto out;
-
-	if (!info.exists) {
-		printf("Device does not exist.\n");
-		r = 1;
-		goto out;
-	}
-
-	printf("Name:              %s\n", argv[1]);
-
-	printf("State:             %s%s\n",
-	       info.suspended ? "SUSPENDED" : "ACTIVE",
-	       info.read_only ? " (READ-ONLY)" : "");
-
-	if (info.open_count != -1)
-		printf("Open count:        %d\n", info.open_count);
-
-	printf("Event number:      %" PRIu32 "\n", info.event_nr);
-	printf("Major, minor:      %d, %d\n", info.major, info.minor);
-
-	if (info.target_count != -1)
-		printf("Number of targets: %d\n", info.target_count);
-
-	if ((uuid = dm_task_get_uuid(dmt)) && *uuid)
-		printf("UUID: %s\n", uuid);
-
+	_display_info(dmt);
 	r = 1;
 
       out:
@@ -355,6 +387,8 @@ static int _deps(int argc, char **argv)
 		goto out;
 	}
 
+	_display_info(dmt);
+
 	printf("%d dependencies\t:", deps->count);
 
 	for (i = 0; i < deps->count; i++)
@@ -364,6 +398,41 @@ static int _deps(int argc, char **argv)
 	printf("\n");
 
 	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _ls(int argc, char **argv)
+{
+	int r = 0;
+	struct dm_names *names;
+	unsigned next = 0;
+
+	struct dm_task *dmt;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_LIST)))
+		return 0;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	if (!(names = dm_task_get_names(dmt)))
+		goto out;
+
+	r = 1;
+	if (!names->dev) {
+		printf("No devices found\n");
+		goto out;
+	}
+
+	do {
+		names = (void *) names + next;
+		printf("%s\t(%d, %d)\n", names->name,
+		       (int) MAJOR(names->dev), (int) MINOR(names->dev));
+		next = names->next;
+	} while (next);
 
       out:
 	dm_task_destroy(dmt);
@@ -384,15 +453,18 @@ struct command {
 };
 
 static struct command _commands[] = {
-	{"create", "<dev_name> <table_file> [<uuid>]", 2, 3, _create},
+	{"create", "<dev_name> <table_file> [<uuid>]", 1, 3, _create},
 	{"remove", "<dev_name>", 1, 1, _remove},
 	{"remove_all", "", 0, 0, _remove_all},
 	{"suspend", "<dev_name>", 1, 1, _suspend},
 	{"resume", "<dev_name>", 1, 1, _resume},
+	{"load", "<dev_name> <table_file>", 2, 2, _reload},
+	{"clear", "<dev_name>", 1, 1, _clear},
 	{"reload", "<dev_name> <table_file>", 2, 2, _reload},
+	{"rename", "<dev_name> <new_name>", 2, 2, _rename},
+	{"ls", "", 0, 0, _ls},
 	{"info", "<dev_name>", 1, 1, _info},
 	{"deps", "<dev_name>", 1, 1, _deps},
-	{"rename", "<dev_name> <new_name>", 2, 2, _rename},
 	{"status", "<dev_name>", 1, 1, _status},
 	{"table", "<dev_name>", 1, 1, _status},
 	{"wait", "<dev_name>", 1, 1, _wait},
@@ -493,6 +565,9 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Command failed\n");
 		exit(1);
 	}
+
+	dm_lib_release();
+	dm_lib_exit();
 
 	return 0;
 }

@@ -6,6 +6,7 @@
 
 #include "libdm-targets.h"
 #include "libdm-common.h"
+#include "list.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -183,7 +184,7 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 	return 1;
 }
 
-int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
+static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
 {
 	char path[PATH_MAX];
 	struct stat info;
@@ -216,7 +217,7 @@ int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
 	return 1;
 }
 
-int rename_dev_node(const char *old_name, const char *new_name)
+static int _rename_dev_node(const char *old_name, const char *new_name)
 {
 	char oldpath[PATH_MAX];
 	char newpath[PATH_MAX];
@@ -252,7 +253,7 @@ int rename_dev_node(const char *old_name, const char *new_name)
 	return 1;
 }
 
-int rm_dev_node(const char *dev_name)
+static int _rm_dev_node(const char *dev_name)
 {
 	char path[PATH_MAX];
 	struct stat info;
@@ -268,6 +269,105 @@ int rm_dev_node(const char *dev_name)
 	}
 
 	return 1;
+}
+
+typedef enum {
+	NODE_ADD,
+	NODE_DEL,
+	NODE_RENAME
+} node_op_t;
+
+static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
+		       uint32_t minor, const char *old_name)
+{
+	switch (type) {
+	case NODE_ADD:
+		return _add_dev_node(dev_name, major, minor);
+	case NODE_DEL:
+		return _rm_dev_node(dev_name);
+	case NODE_RENAME:
+		return _rename_dev_node(old_name, dev_name);
+	}
+
+	return 1;
+}
+
+static LIST_INIT(_node_ops);
+
+struct node_op_parms {
+	struct list list;
+	node_op_t type;
+	char *dev_name;
+	uint32_t major;
+	uint32_t minor;
+	char *old_name;
+	char names[0];
+};
+
+static void _store_str(char **pos, char **ptr, const char *str)
+{
+	strcpy(*pos, str);
+	*ptr = *pos;
+	*pos += strlen(*ptr) + 1;
+}
+
+static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
+			  uint32_t minor, const char *old_name)
+{
+	struct node_op_parms *nop;
+	size_t len = strlen(dev_name) + strlen(old_name) + 2;
+	char *pos;
+
+	if (!(nop = malloc(sizeof(*nop) + len))) {
+		log_error("Insufficient memory to stack mknod operation");
+		return 0;
+	}
+
+	pos = nop->names;
+	nop->type = type;
+	nop->major = major;
+	nop->minor = minor;
+
+	_store_str(&pos, &nop->dev_name, dev_name);
+	_store_str(&pos, &nop->old_name, old_name);
+
+	list_add(&_node_ops, &nop->list);
+
+	return 1;
+}
+
+static void _pop_node_ops(void)
+{
+	struct list *noph, *nopht;
+	struct node_op_parms *nop;
+
+	list_iterate_safe(noph, nopht, &_node_ops) {
+		nop = list_item(noph, struct node_op_parms);
+		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
+			    nop->old_name);
+		list_del(&nop->list);
+		free(nop);
+	}
+}
+
+int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
+{
+	return _stack_node_op(NODE_ADD, dev_name, major, minor, "");
+}
+
+int rename_dev_node(const char *old_name, const char *new_name)
+{
+	return _stack_node_op(NODE_RENAME, new_name, 0, 0, old_name);
+}
+
+int rm_dev_node(const char *dev_name)
+{
+	return _stack_node_op(NODE_DEL, dev_name, 0, 0, "");
+}
+
+void update_devs(void)
+{
+	_pop_node_ops();
 }
 
 int dm_set_dev_dir(const char *dir)
