@@ -36,7 +36,7 @@ static int pvcreate_check(const char *name)
 		return 0;
 
 	/* is there a pv here already */
-	if (!(pv = ios->pv_read(ios, name)))
+	if (!(pv = fid->ops->pv_read(fid, name)))
 		return 1;
 
 	/* orphan ? */
@@ -86,7 +86,7 @@ static void pvcreate_single(const char *pv_name)
 	if (!pvcreate_check(pv_name))
 		return;
 
-	if (!(pv = pv_create(ios, pv_name))) {
+	if (!(pv = pv_create(fid, pv_name))) {
 		log_err("Failed to setup physical volume %s", pv_name);
 		return;
 	}
@@ -95,7 +95,7 @@ static void pvcreate_single(const char *pv_name)
 		    pv_name, pv->size);
 
 	log_verbose("Writing physical volume data to disk %s", pv_name);
-	if (!(ios->pv_write(ios, pv))) {
+	if (!(fid->ops->pv_write(fid, pv))) {
 		log_error("Failed to write physical volume %s", pv_name);
 		return;
 	}
@@ -119,7 +119,7 @@ int pvcreate(int argc, char **argv)
 
 	for (i = 0; i < argc; i++) {
 		pvcreate_single(argv[i]);
-		pool_empty(ios->mem);
+		pool_empty(fid->cmd->mem);
 	}
 
 	return 0;

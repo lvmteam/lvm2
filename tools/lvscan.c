@@ -72,7 +72,7 @@ static int lvscan_single(const char *vg_name)
 	struct list *lvh;
 
 	log_verbose("Checking for volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s not found", vg_name);
 		return ECMD_FAILED;
 	}
@@ -112,7 +112,7 @@ static int lvscan_single(const char *vg_name)
 			    display_size(lv->size / 2, SIZE_SHORT);
 
 		log_print("%s%s '%s%s/%s' [%s]%s%s", active_str, snapshot_str,
-		       ios->prefix, vg->name, lv->name, dummy,
+		       fid->cmd->dev_dir, vg->name, lv->name, dummy,
 		       (lv->status & ALLOC_STRICT) ? " strict" : "",
 		       (lv->status & ALLOC_CONTIGUOUS) ? " contiguous" : "");
 

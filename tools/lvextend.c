@@ -62,7 +62,7 @@ int lvextend(int argc, char **argv)
 	argv++;
 	argc--;
 
-	if (!(vg_name = extract_vgname(ios, lv_name))) {
+	if (!(vg_name = extract_vgname(fid, lv_name))) {
 		log_error("Please provide a volume group name");
 		return EINVALID_CMD_LINE;
 	}
@@ -72,7 +72,7 @@ int lvextend(int argc, char **argv)
 
 	/* does VG exist? */
 	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -100,7 +100,7 @@ int lvextend(int argc, char **argv)
 
 	if (argc) {
 		/* Build up list of PVs */
-		if (!(pvh = pool_alloc(ios->mem, sizeof (struct list)))) {
+		if (!(pvh = pool_alloc(fid->cmd->mem, sizeof (struct list)))) {
 			log_error("pvh list allocation failed");
 			return ECMD_FAILED;
 		}
@@ -162,13 +162,13 @@ int lvextend(int argc, char **argv)
 		   display_size(extents * vg->extent_size / 2, SIZE_SHORT)));
 	dbg_free(dummy);
 
-	lv_extend(ios, lv, extents - lv->le_count, pvh);
+	lv_extend(lv, extents - lv->le_count, pvh);
 	/* where parm is always *increase* not actual */
 
 /********* FIXME Suspend lv  ***********/
 
 	/* store vg on disk(s) */
-	if (!ios->vg_write(ios, vg))
+	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
 	/* FIXME Ensure it always displays errors? */

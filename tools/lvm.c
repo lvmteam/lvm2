@@ -59,10 +59,11 @@ static int _array_size;
 static int _num_commands;
 static struct command *_commands;
 
-/* Exported */
-struct io_space *ios;
+/* Exported LVM1 disk format */
+struct format_instance *fid;
 
-static struct dev_filter *_filter;
+struct cmd_context *cmd;
+
 /* Whether or not to dump persistent filter state */
 static int dump_filter;
 static struct config_file *_cf;
@@ -561,7 +562,7 @@ static int run_command(int argc, char **argv)
 	/*
 	 * free off any memory the command used.
 	 */
-	pool_empty(ios->mem);
+	pool_empty(cmd->mem);
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
 		usage(com->name);
@@ -600,11 +601,6 @@ static int split(char *str, int *argc, char **argv, int max)
 struct config_file *active_config_file(void)
 {
 	return _cf;
-}
-
-struct dev_filter *active_filter(void)
-{
-	return _filter;
 }
 
 static void __init_log(struct config_file *cf)
@@ -732,10 +728,14 @@ static int init(void)
 	int ret = 0;
 	const char *e = getenv("LVM_CONFIG_FILE");
 	struct stat info;
-	struct pool *ios_pool;
+
+	if (!(cmd = dbg_malloc(sizeof(*cmd)))) {
+		log_error("Failed to allocate command context");
+		goto out;
+	}
 
 	/* FIXME: Override from config file. (Append trailing slash if reqd) */
-	char *prefix = "/dev/";
+	cmd->dev_dir = "/dev/";
 
 	if (!(_cf = create_config_file())) {
 		stack;
@@ -763,17 +763,17 @@ static int init(void)
 		goto out;
 	}
 
-	if (!(_filter = filter_setup())) {
+	if (!(cmd->filter = filter_setup())) {
 		log_error("Failed to set up internal device filters");
 		goto out;
 	}
 
-	if (!(ios_pool = pool_create(4 * 1024))) {
-		log_error("ios pool creation failed");
+	if (!(cmd->mem = pool_create(4 * 1024))) {
+		log_error("Command pool creation failed");
 		goto out;
 	}
 
-	if (!(ios = create_lvm1_format(prefix, ios_pool, _filter))) {
+	if (!(fid = create_lvm1_format(cmd))) {
 		goto out;
 	}
 
@@ -796,12 +796,14 @@ static void __fin_commands(void)
 static void fin(void)
 {
 	if (dump_filter)
-		persistent_filter_dump(_filter);
+		persistent_filter_dump(cmd->filter);
 
-	ios->destroy(ios);
-	_filter->destroy(_filter);
+	fid->ops->destroy(fid);
+	cmd->filter->destroy(cmd->filter);
+	pool_destroy(cmd->mem);
 	dev_cache_exit();
 	destroy_config_file(_cf);
+	dbg_free(cmd);
 	__fin_commands();
 	dump_memory();
 	fin_log();

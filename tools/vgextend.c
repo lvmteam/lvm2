@@ -41,7 +41,7 @@ int vgextend(int argc, char **argv)
 	argv++;
 
 	log_verbose("Checking for volume group '%s'", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group '%s' not found.", vg_name);
 		return ECMD_FAILED;
 	}
@@ -64,7 +64,7 @@ int vgextend(int argc, char **argv)
 **********/
 
 	/* extend vg */
-	if (!vg_extend(ios, vg, argc, argv))
+	if (!vg_extend(fid, vg, argc, argv))
 		return ECMD_FAILED;
 
 	/* ret > 0 */
@@ -72,7 +72,7 @@ int vgextend(int argc, char **argv)
 		    "physical volumes", vg_name, argc);
 
         /* store vg on disk(s) */
-        if (!ios->vg_write(ios, vg))
+        if (!fid->ops->vg_write(fid, vg))
                 return ECMD_FAILED;
 
 /********* FIXME

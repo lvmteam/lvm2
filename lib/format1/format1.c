@@ -92,7 +92,7 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 {
 	struct pool *mem = pool_create(1024 * 10);
 	struct list pvs;
-	struct volume_group *vg;
+	struct volume_group *vg = NULL;
 	list_init(&pvs);
 
 	if (!mem) {
@@ -105,13 +105,17 @@ static struct volume_group *_vg_read(struct format_instance *fi,
 
 	if (!read_pvs_in_vg(vg_name, fi->cmd->filter, mem, &pvs)) {
 		stack;
-		return NULL;
+		goto bad;
 	}
 
-	if (!(vg = _build_vg(fi->cmd->mem, &pvs)))
+	if (!(vg = _build_vg(fi->cmd->mem, &pvs))) {
 		stack;
+		goto bad;
+	}
+
 	vg->cmd = fi->cmd;
 
+ bad:
 	pool_destroy(mem);
 	return vg;
 }

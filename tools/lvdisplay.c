@@ -56,12 +56,12 @@ int lvdisplay_single(char *lv_name)
 	struct logical_volume *lv;
 
 	/* does VG exist? */
-	if (!(vg_name = extract_vgname(ios, lv_name))) {
+	if (!(vg_name = extract_vgname(fid, lv_name))) {
 		return ECMD_FAILED;
 	}
 
 	log_verbose("Finding volume group %s", vg_name);
-	if (!(vg = ios->vg_read(ios, vg_name))) {
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}

@@ -123,8 +123,7 @@ static inline int arg_count_increment(int a)
 }
 
 struct config_file *active_config_file(void);
-struct dev_filter *active_filter(void);
 
-extern struct io_space *ios;
+extern struct format_instance *fid;
 
 #endif

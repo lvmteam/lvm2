@@ -40,7 +40,7 @@ int vgrename(int argc, char **argv)
 	vg_name_old = argv[0];
 	vg_name_new = argv[1];
 
-	prefix = ios->prefix;
+	prefix = fid->cmd->dev_dir;
 	length = strlen(prefix);
 
 	/* If present, strip prefix */
@@ -68,7 +68,7 @@ int vgrename(int argc, char **argv)
 	}
 
 	log_verbose("Checking for existing volume group %s", vg_name_old);
-	if (!(vg_old = ios->vg_read(ios, vg_name_old))) {
+	if (!(vg_old = fid->ops->vg_read(fid, vg_name_old))) {
 		log_error("Volume group %s doesn't exist", vg_name_old);
 		return ECMD_FAILED;
 	}
@@ -82,7 +82,7 @@ int vgrename(int argc, char **argv)
 	}
 
 	log_verbose("Checking for new volume group %s", vg_name_new);
-	if ((vg_new = ios->vg_read(ios, vg_name_new))) {
+	if ((vg_new = fid->ops->vg_read(fid, vg_name_new))) {
 		log_error("New volume group %s already exists", vg_name_new);
 		return ECMD_FAILED;
 	}
@@ -114,7 +114,7 @@ int vgrename(int argc, char **argv)
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!(ios->vg_write(ios, vg_old))) {
+	if (!(fid->ops->vg_write(fid, vg_old))) {
 		return ECMD_FAILED;
 	}
 
@@ -141,7 +141,7 @@ char *lv_change_vgname(char *vg_name, char *lv_name)
 	** check if lv_name includes a path 
 	if ((lv_name_ptr = strrchr(lv_name, '/'))) {
 	    lv_name_ptr++;
-	    sprintf(lv_name_buf, "%s%s/%s%c", ios->prefix, vg_name,
+	    sprintf(lv_name_buf, "%s%s/%s%c", fid->cmd->dev_dir, vg_name,
 		    lv_name_ptr, 0);} 
 	else
 	    strncpy(lv_name_buf, lv_name, NAME_LEN - 1); return lv_name_buf;}
