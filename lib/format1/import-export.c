@@ -13,9 +13,9 @@
 #include "list.h"
 #include "lvm-string.h"
 #include "filter.h"
+#include "toolcontext.h"
 
 #include <time.h>
-#include <sys/utsname.h>
 
 static int _check_vg_name(const char *name)
 {
@@ -81,17 +81,11 @@ int import_pv(struct pool *mem, struct device *dev,
 	return 1;
 }
 
-static int _system_id(char *s, const char *prefix)
+static int _system_id(struct cmd_context *cmd, char *s, const char *prefix)
 {
-	struct utsname uts;
-
-	if (uname(&uts) != 0) {
-		log_sys_error("uname", "_system_id");
-		return 0;
-	}
 
 	if (lvm_snprintf(s, NAME_LEN, "%s%s%lu",
-			 prefix, uts.nodename, time(NULL)) < 0) {
+			 prefix, cmd->hostname, time(NULL)) < 0) {
 		log_error("Generated system_id too long");
 		return 0;
 	}
@@ -99,7 +93,8 @@ static int _system_id(char *s, const char *prefix)
 	return 1;
 }
 
-int export_pv(struct pool *mem, struct volume_group *vg,
+int export_pv(struct cmd_context *cmd, struct pool *mem,
+	      struct volume_group *vg,
 	      struct pv_disk *pvd, struct physical_volume *pv)
 {
 	memset(pvd, 0, sizeof(*pvd));
@@ -130,7 +125,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 		if (!*vg->system_id ||
 		    strncmp(vg->system_id, EXPORTED_TAG,
 			    sizeof(EXPORTED_TAG) - 1)) {
-			if (!_system_id(pvd->system_id, EXPORTED_TAG)) {
+			if (!_system_id(cmd, pvd->system_id, EXPORTED_TAG)) {
 				stack;
 				return 0;
 			}
@@ -147,7 +142,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 	/* Is VG being imported? */
 	if (vg && !(vg->status & EXPORTED_VG) && *vg->system_id &&
 	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
-		if (!_system_id(pvd->system_id, IMPORTED_TAG)) {
+		if (!_system_id(cmd, pvd->system_id, IMPORTED_TAG)) {
 			stack;
 			return 0;
 		}
@@ -155,7 +150,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 
 	/* Generate system_id if PV is in VG */
 	if (!pvd->system_id || !*pvd->system_id)
-		if (!_system_id(pvd->system_id, "")) {
+		if (!_system_id(cmd, pvd->system_id, "")) {
 			stack;
 			return 0;
 		}

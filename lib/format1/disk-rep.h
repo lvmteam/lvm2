@@ -10,6 +10,7 @@
 #include "lvm-types.h"
 #include "metadata.h"
 #include "pool.h"
+#include "toolcontext.h"
 
 #define MAX_PV 256
 #define MAX_LV 256
@@ -196,7 +197,8 @@ int write_disks(const struct format_type *fmt, struct list *pvds);
 int import_pv(struct pool *mem, struct device *dev,
 	      struct volume_group *vg,
 	      struct physical_volume *pv, struct pv_disk *pvd);
-int export_pv(struct pool *mem, struct volume_group *vg,
+int export_pv(struct cmd_context *cmd, struct pool *mem,
+	      struct volume_group *vg,
 	      struct pv_disk *pvd, struct physical_volume *pv);
 
 int import_vg(struct pool *mem,
