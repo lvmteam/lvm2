@@ -21,6 +21,8 @@
 #ifndef _LVM_DBG_MALLOC_H
 #define _LVM_DBG_MALLOC_H
 
+#include <sys/types.h>
+
 #ifdef DEBUG_MEM
 void *malloc_aux(size_t s, const char *file, int line);
 void free_aux(void *p);

@@ -24,38 +24,38 @@ int lvactivate(int argc, char **argv)
 {
 	int p;
 
-	struct dev_mgr *dm;
+	struct io_space *ios;
 	struct device *pv_dev;
 
-	char *lv;
+	char *lv_name;
 	char *pv_name;
 
-	pv_t *pv = NULL;
-	lv_disk_t *lvs = NULL;
+	struct physical_volume *pv = NULL;
+	struct logical_volume *lv = NULL;
 
 	if (argc < 2) {
 		log_error("please enter logical volume & physical volume(s)");
 		return LVM_EINVALID_CMD_LINE;
 	}
 
-	lv = argv[0];
+	lv_name = argv[0];
 	argc--;
 	argv++;
 
-	dm = active_dev_mgr();
+	ios = active_ios();
 
 	while (argc--) {
 		pv_name = argv[argc];
-		if (!(pv_dev = dev_by_name(dm, pv_name))) {
+		if (!(pv_dev = dev_cache_get(pv_name))) {
 			log_error("device \"%s\" not found", pv_name);
 			return -1;
 		}
 
-		if (!(pv = pv_read(dm, pv_name))) {
+		if (!(pv = pv_read(ios, pv_dev))) {
 			return -1;
 		}
 
-		if (pv->pe_allocated) {
+		if (pv->status & STATUS_ALLOCATED) {
 			if (!(pv->pe = pv_read_pe(pv_name, pv)))
 				goto pvdisplay_device_out;
 			if (!(lvs = pv_read_lvs(pv))) {

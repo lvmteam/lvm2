@@ -3,19 +3,47 @@
  *
  * This file is released under the GPL.
  *
- * This is the in core representation of a volume group and it's
+ * This is the in core representation of a volume group and its
  * associated physical and logical volumes.
  */
 
 #ifndef _LVM_METADATA_H
 #define _LVM_METADATA_H
 
+#include <sys/types.h>
 #include "dev-cache.h"
 
 #define ID_LEN 32
 
+
+/* Various flags */
+/* Note that the bits no longer necessarily correspond to LVM1 disk format */
+
+#define STATUS_ACTIVE            0x01  /* PV VG LV */
+
+#define STATUS_EXPORTED          0x02  /* VG */
+#define STATUS_EXTENDABLE        0x04  /* VG */
+
+#define STATUS_ALLOCATED         0x02  /* PV */
+
+#define STATUS_SPINDOWN          0x02  /* LV */
+#define STATUS_BADBLOCK_ON       0x04  /* LV */
+#define STATUS_ALLOC_STRICT      0x08  /* LV */
+#define STATUS_ALLOC_CONTIGUOUS  0x10  /* LV */
+
+#define ACCESS_READ              0x01  /* LV VG */
+#define ACCESS_WRITE             0x02  /* LV VG */
+
+#define ACCESS_SNAPSHOT          0x04  /* LV */
+#define ACCESS_SNAPSHOT_ORG      0x08  /* LV */
+
+#define ACCESS_CLUSTERED         0x04  /* VG */
+#define ACCESS_SHARED            0x08  /* VG */
+
+
+
 struct id {
-	uint8_t chars[ID_LEN];
+	__uint8_t chars[ID_LEN];
 };
 
 struct logical_volume;
@@ -25,19 +53,19 @@ struct physical_volume {
 	struct device *dev;
 	char *vg_name;
 
-        uint32_t status;
-        uint64_t size;
+        __uint32_t status;
+        __uint64_t size;
 
         /* physical extents */
-        uint64_t pe_size;
-        uint64_t pe_start;
-        uint32_t pe_count;
-        uint32_t pe_allocated;
+        __uint64_t pe_size;
+        __uint64_t pe_start;
+        __uint32_t pe_count;
+        __uint32_t pe_allocated;
 };
 
 struct pe_specifier {
         struct physical_volume *pv;
-        uint32_t pe;
+        __uint32_t pe;
 };
 
 struct logical_volume {
@@ -45,12 +73,12 @@ struct logical_volume {
 	struct id *id;
         char *name;
 
-        uint32_t access;
-        uint32_t status;
-        uint32_t open;
+        __uint32_t access;
+        __uint32_t status;
+        __uint32_t open;
 
-        uint64_t size;
-        uint32_t le_count;
+        __uint64_t size;
+        __uint32_t le_count;
 
         /* le -> pe mapping array */
         struct pe_specifier *map;
@@ -60,76 +88,62 @@ struct volume_group {
 	struct id *id;
 	char *name;
 
-        uint64_t extent_size;
-        uint32_t extent_count;
-        uint32_t free_count;
+        __uint64_t extent_size;
+        __uint32_t extent_count;
+        __uint32_t free_count;
 
         /* physical volumes */
-        uint32_t pv_count;
+        __uint32_t pv_count;
         struct physical_volume **pv;
 
         /* logical volumes */
-        uint32_t lv_count;
+        __uint32_t lv_count;
         struct logical_volume **lv;
 };
+
 
 /* ownership of returned objects passes */
 struct io_space {
 	struct str_list *(*get_vgs)(struct io_space *is);
 	struct dev_list *(*get_pvs)(struct io_space *is);
 
-	struct physical_volume *pv_read(struct io_space *is,
+	struct physical_volume *(*pv_read)(struct io_space *is,
 					struct device *dev);
-	int pv_write(struct io_space *is, struct physical_volume *pv);
+	int (*pv_write)(struct io_space *is, struct physical_volume *pv);
 
 	struct volume_group *(*vg_read)(struct io_space *is,
 					const char *vg_name);
 	int (*vg_write)(struct io_space *is, struct volume_group *vg);
-	void (*destructor)(struct io_space *is);
+	void (*destroy)(struct io_space *is);
 
 	struct dev_filter *filter;
 	void *private;
 };
 
-struct io_space *create_text_format(struct device_manager *mgr,
+/* FIXME: Move to other files */
+struct io_space *create_text_format(struct dev_filter *filter,
 				    const char *text_file);
+struct io_space *create_lvm_v1_format(struct dev_filter *filter);
 
-inline struct volume_group *read_vg(struct io_space *f)
-{
-	struct dev_list *pvs = f->get_pvs();
-	return f->read_vg(pvs);
-}
-
-inline int write_vg(struct io_object *f, struct volume_group *vg)
-{
-	return f->write_vg(vg);
-}
-
-
-
-inline int write_backup(struct io_format *orig, struct io_format *text)
+inline int write_backup(struct io_space *orig, struct io_space *text)
 {
 
 }
-
 
 
 int id_eq(struct id *op1, struct id *op2);
 
-struct volume_group *create_vg();
-int destroy_vg(struct volume_group *vg);
+struct volume_group *vg_create();
+struct physical_volume *pv_create();
 
-int add_pv(struct volume_group *vg, struct physical_volume *pv);
-struct physical_volume *find_pv(struct volume_group *vg,
+int vg_destroy(struct volume_group *vg);
+
+int pv_add(struct volume_group *vg, struct physical_volume *pv);
+struct physical_volume *pv_find(struct volume_group *vg,
 				struct physical_volume *pv);
 
-int add_lv(struct volume_group *vg, struct logical_volume *lv);
-struct logical_volume *find_lv(struct volume_group *vg,
+int lv_add(struct volume_group *vg, struct logical_volume *lv);
+struct logical_volume *lv_find(struct volume_group *vg,
 			       struct logical_volume *lv);
-
-struct io_handler {
-	struct volume_group *read_vg();
-	int write_vg(struct volume_group *vg);
-};
 
 #endif

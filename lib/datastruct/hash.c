@@ -5,8 +5,8 @@
  */
 
 
-#include "hash.h"
 #include "dbg_malloc.h"
+#include "hash.h"
 #include "log.h"
 
 struct hash_node {
@@ -68,7 +68,7 @@ static unsigned _hash(const char *str)
 	return h;
 }
 
-hash_table_t create_hash_table(unsigned size_hint)
+struct hash_table *create_hash_table(unsigned size_hint)
 {
 	size_t len;
 	unsigned new_size = 16u;
@@ -92,7 +92,7 @@ hash_table_t create_hash_table(unsigned size_hint)
 		goto bad;
 	}
 	memset(hc->slots, 0, len);
-	return (hash_table_t) hc;
+	return (struct hash_table) hc;
 
  bad:
 	dbg_free(hc->slots);

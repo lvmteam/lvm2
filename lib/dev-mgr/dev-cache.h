@@ -7,6 +7,8 @@
 #ifndef _LVM_DEV_CACHE_H
 #define _LVM_DEV_CACHE_H
 
+#include <sys/types.h>
+
 /*
  * All devices in LVM will be represented by one of these.
  * pointer comparisons are valid.
@@ -17,7 +19,7 @@ struct device {
 };
 
 struct dev_filter {
-	int (*passes_filter)(struct dev_cache_filter *f, struct device *dev);
+	int (*passes_filter)(struct dev_filter *f, struct device *dev);
 	void *private;
 };
 
@@ -45,7 +47,7 @@ struct device *dev_iter_get(struct dev_iter *iter);
  * All io should use these routines, rather than opening the devices
  * by hand.  You do not have to call an open routine.
  */
-uint64_t dev_get_size(struct device *dev); /* in 512 byte sectors */
+__uint64_t dev_get_size(struct device *dev); /* in 512 byte sectors */
 ssize_t dev_read(struct device *dev, size_t offset, size_t len, void *buffer);
 ssize_t dev_write(struct device *dev, size_t offset, size_t len, void *buffer);
 

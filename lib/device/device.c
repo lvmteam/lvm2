@@ -30,7 +30,7 @@
 
 #include "dbg_malloc.h"
 #include "log.h"
-#include "dev-manager.h"
+#include "dev-cache.h"
 #include "metadata.h"
 #include "device.h"
 

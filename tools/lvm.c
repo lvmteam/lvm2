@@ -59,6 +59,7 @@ static int _num_commands;
 static struct command *_commands;
 
 static struct dev_filter *_filter;
+static struct io_space *_ios;
 static struct config_file *_cf;
 
 static int _interactive;
@@ -211,10 +212,10 @@ int string_arg(struct arg *a)
 int permission_arg(struct arg *a)
 {
 	if ((!strcmp(a->value, "rw")) || (!strcmp(a->value, "wr")))
-		a->i_value = LV_READ | LV_WRITE;
+		a->i_value = ACCESS_READ | ACCESS_WRITE;
 
 	else if (!strcmp(a->value, "r"))
-		a->i_value = LV_READ;
+		a->i_value = ACCESS_READ;
 
 	else
 		return 0;
@@ -447,8 +448,8 @@ static int process_common_commands(struct command *com)
 	}
 
 	if (arg_count(version_ARG)) {
-		/* FIXME: Add driver version */
-		log_error("%s: %s", com->name, lvm_version);
+		/* FIXME: Add driver and software version */
+		log_error("%s: ", com->name);
 		return LVM_ECMD_PROCESSED;
 	}
 
@@ -548,6 +549,14 @@ struct config_file *active_config_file(void) {
 	return _cf;
 }
 
+struct dev_filter *active_filter(void) {
+	return _filter;
+}
+
+struct io_space *active_ios(void) {
+	return _ios;
+}
+
 static void __init_log(struct config_file *cf)
 {
 	const char *log_file = find_config_str(cf->root, "log/file", '/', 0);
@@ -601,6 +610,10 @@ static int init(void)
 		goto out;
 	}
 
+	if (!(_ios = create_lvm_v1_format(_filter))) {
+		goto out;
+	}
+
 	ret = 1;
 
       out:
@@ -619,6 +632,7 @@ static void __fin_commands(void)
 
 static void fin(void)
 {
+	_ios->destroy(_ios);
 	config_filter_destroy(_filter);
 	dev_cache_exit();
 	destroy_config_file(_cf);

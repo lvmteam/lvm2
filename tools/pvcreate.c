@@ -45,42 +45,36 @@ int pvcreate(int argc, char **argv)
 void pvcreate_single(const char *pv_name)
 {
 	int size;
-	pv_t *pv = NULL;
-	pv_t *pv_new;
+	struct physical_volume *pv = NULL;
 
-	struct dev_mgr *dm;
+	struct io_space *ios;
 	struct device *pv_dev;
 
-	dm = active_dev_mgr();
+	ios = active_ios();
 
-	if (!(pv_dev = dev_by_name(dm, pv_name))) {
+	if (!(pv_dev = dev_cache_get(pv_name))) {
 		log_error("Device %s not found", pv_name);
 		return;
 	}
 
-	if ((size = device_get_size(pv_name)) < 0) {
+	if ((size = dev_get_size(pv_dev)) < 0) {
 		log_error("Unable to get size of %s", pv_name);
 		return;
 	}
 
-	if (arg_count(force_ARG) < 1 && !partition_type_is_lvm(dm, pv_dev)) {
+	if (arg_count(force_ARG) < 1 && !partition_type_is_lvm(ios, pv_dev)) {
 		return;
 	}
 
-	if (!(pv = pv_read(dm, pv_name))) {
+	pv = ios->pv_read(ios, pv_dev);
+
+	if (pv && (pv->status & STATUS_EXPORTED)) {
+		log_error ("Physical volume %s belongs to exported volume"
+			   " group %s", pv_name, pv->vg_name);
 		return;
 	}
 
-/****
-	FIXME: Check attributes
-
-	EXPORTED
-	pv->vg_name[strlen(pv->vg_name) - strlen(EXPORTED)] = 0;
-	log_error ("physical volume \"%s\" belongs to exported volume group \"%s\"",
-	pv_name, pv->vg_name);
-*****/
-
-	if (pv->vg_name[0]) {
+	if (pv && pv->vg_name[0]) {
 		if (arg_count(force_ARG) < 2) {
 			log_error("Can't initialize physical volume %s of "
 				  "volume group %s without -ff", pv_name,
@@ -99,18 +93,20 @@ void pvcreate_single(const char *pv_name)
 		}
 
 	}
-/***
 
-	if (pv) {
-		if (pv_check_active((char *) pv->vg_name, (char *) pv_name) ==
-		    TRUE) {
-			log_error
-			    ("can't force create on active physical volume \"%s\"",
-			     pv_name);
+	if (pv && (pv->status & STATUS_ACTIVE)) {
+		log_error("Can't create on active physical volume %s",
+			  pv_name);
+		return;
+	}
+
+
+	if (!pv) {
+		if (!(pv = pv_create()))
 			return;
-		}
-
-***/
+		/* FIXME: Set up initial size & PEs here */
+	}
+	
 
 	if (arg_count(force_ARG)) {
 		/* FIXME: Change to log_print */
@@ -127,20 +123,13 @@ void pvcreate_single(const char *pv_name)
 	log_verbose("setting up physical volume for %s with %u sectors",
 		    pv_name, size);
 
-/*** FIXME: New metadata creation fn reqd
-	if (!(pv_new = pv_setup_for_create(pv_name, size)) < 0) {
-		log_error("Failed to set up  physical volume %s", pv_name);
-		return;
-	}
-***/
 
 	log_verbose("writing physical volume data to disk %s", pv_name);
 
-/*** FIXME: New metadata write fn reqd
-	if (!(pv_write(pv_name, pv_new)) == 0) {
+	if (!(pv_write(ios, pv))) {
 		log_error("Failed to create physical volume %s", pv_name);
+		return;
 	}
-***/
 
 	printf("physical volume %s successfully created\n", pv_name);
 
