@@ -384,8 +384,8 @@ static void _register_commands()
 {
 #define xx(a, b, c...) _register_command(# a, a, b, ## c, \
 					driverloaded_ARG, \
-                                        debug_ARG, help_ARG, help2_ARG, \
-                                        version_ARG, verbose_ARG, \
+					debug_ARG, help_ARG, help2_ARG, \
+					version_ARG, verbose_ARG, \
 					quiet_ARG, -1);
 #include "commands.h"
 #undef xx
