@@ -68,6 +68,11 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!extent_size) {
+		log_error("Physical extent size may not be zero");
+		return EINVALID_CMD_LINE;
+	}
+
 	/* Strip dev_dir if present */
 	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
 		vg_name += strlen(cmd->dev_dir);
