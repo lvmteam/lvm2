@@ -25,7 +25,8 @@ SOURCES=\
 	lvmchange.c\
 	toollib.c\
 	vgck.c\
-	vgrename.c
+	vgrename.c\
+	vgremove.c
 
 TARGETS=\
 	lvm

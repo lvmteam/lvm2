@@ -95,7 +95,7 @@ int process_each_vg(int argc, char **argv,
 	int ret = 0;
 
 	struct list_head *vgh;
-	struct name_list *vgs_list;
+	struct list_head *vgs_list;
 
 	if (argc) {
 		log_verbose("Using volume group(s) on command line");
@@ -108,7 +108,7 @@ int process_each_vg(int argc, char **argv,
 			log_error("No volume groups found");
 			return ECMD_FAILED;
 		}
-		list_for_each(vgh, &vgs_list->list) {
+		list_for_each(vgh, vgs_list) {
 			ret =
 			    process_single(list_entry
 					   (vgh, struct name_list, list)->name);

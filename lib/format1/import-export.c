@@ -98,7 +98,7 @@ int import_pv(struct pool *mem, struct device *dev,
 		pv->status |= ACTIVE;
 
 	if (pvd->pv_allocatable)
-		pv->status |= ALLOCATABLE;
+		pv->status |= ALLOCATED_PV;
 
 	pv->size = pvd->pv_size;
 	pv->pe_size = pvd->pe_size;
@@ -131,8 +131,8 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 	if (pv->status & ACTIVE)
 		pvd->pv_status |= PV_ACTIVE;
 
-	if (pv->status & ALLOCATABLE)
-		pvd->pv_allocatable = PV_ALLOCATABLE;
+	if (pv->status & ALLOCATED_PV)
+		pvd->pv_allocatable = ALLOCATED_PV;
 
 	pvd->pv_size = pv->size;
 	pvd->lv_cur = 0;	/* this is set when exporting the lv list */

@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _LVM_TOOLS_H
-#define _LVM_TOOLS_H
+#ifndef _LVM_LVM_H
+#define _LVM_LVM_H
 
 #include <stdio.h>
 #include <stdarg.h>

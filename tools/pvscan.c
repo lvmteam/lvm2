@@ -31,7 +31,6 @@ int pvscan(int argc, char **argv)
 	int pvs_found = 0;
 	char *s1, *s2, *s3;
 
-	struct io_space *ios;
 	struct pv_list *pvs_list, *pvl;
 	struct list_head *pvh;
 	struct physical_volume *pv;
@@ -55,8 +54,6 @@ int pvscan(int argc, char **argv)
 			  "of exported volume group(s)" : "in no volume group");
 
 	log_verbose("Walking through all physical volumes");
-
-	ios = active_ios();
 
 	if (!(pvs_list = ios->get_pvs(ios)))
 		return ECMD_FAILED;

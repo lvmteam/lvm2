@@ -47,10 +47,7 @@ void pvcreate_single(const char *pv_name)
 	int size;
 	struct physical_volume *pv = NULL;
 
-	struct io_space *ios;
 	struct device *pv_dev;
-
-	ios = active_ios();
 
 	if (!(pv_dev = dev_cache_get(pv_name))) {
 		log_error("Device %s not found", pv_name);

@@ -37,7 +37,6 @@ int pvchange(int argc, char **argv)
 	char *pv_name;
 	char *vg_name;
 
-	struct io_space *ios;
 	struct physical_volume *pv = NULL;
 	struct volume_group *vg = NULL;
 	struct device *pv_dev;
@@ -50,8 +49,6 @@ int pvchange(int argc, char **argv)
 		log_error("Please give the x option");
 		return EINVALID_CMD_LINE;
 	}
-
-	ios = active_ios();
 
 	if (!(arg_count(all_ARG)) && !argc) {
 		log_error("Please give a physical volume path");

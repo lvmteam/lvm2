@@ -48,10 +48,6 @@ int vgcreate(int argc, char **argv)
 	char *pv_name = NULL;
 	char **vg_name_ptr = NULL;
 
-	struct io_space *ios;
-
-	ios = active_ios();
-
 	if (arg_count(maxlogicalvolumes_ARG))
 		max_lv = arg_int_value(maxlogicalvolumes_ARG, 0);
 
