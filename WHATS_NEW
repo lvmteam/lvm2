@@ -1,5 +1,7 @@
 Version 2.00.16 - 
 =============================
+  Rename move->copy.
+  Add devices to segments report.
   Begin separating out segment code. There's a lot of change here.
   Compress any (obsolete) long LVM1 pvids encountered.
   Support for tagged config files.

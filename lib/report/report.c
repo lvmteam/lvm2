@@ -124,6 +124,68 @@ static int _dev_name_disp(struct report_handle *rh, struct field *field,
 	return _string_disp(rh, field, &name);
 }
 
+static int _devices_disp(struct report_handle *rh, struct field *field,
+			 const void *data)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	unsigned int s;
+	const char *devname;
+	uint32_t extent;
+	char extent_str[32];
+
+	if (!pool_begin_object(rh->mem, 256)) {
+		log_error("pool_begin_object failed");
+		return 0;
+	}
+
+	for (s = 0; s < seg->area_count; s++) {
+		switch (seg->area[s].type) {
+		case AREA_LV:
+			devname = seg->area[s].u.lv.lv->name;
+			extent = seg->area[s].u.lv.le;
+			break;
+		case AREA_PV:
+			devname = dev_name(seg->area[s].u.pv.pv->dev);
+			extent = seg->area[s].u.pv.pe;
+			break;
+		default:
+			devname = "unknown";
+			extent = 0;
+		}
+
+		if (!pool_grow_object(rh->mem, devname, strlen(devname))) {
+			log_error("pool_grow_object failed");
+			return 0;
+		}
+
+		if (lvm_snprintf(extent_str, sizeof(extent_str), "(%" PRIu32
+				 ")", extent) < 0) {
+			log_error("Extent number lvm_snprintf failed");
+			return 0;
+		}
+
+		if (!pool_grow_object(rh->mem, extent_str, strlen(extent_str))) {
+			log_error("pool_grow_object failed");
+			return 0;
+		}
+
+		if ((s != seg->area_count - 1) &&
+		    !pool_grow_object(rh->mem, ",", 1)) {
+			log_error("pool_grow_object failed");
+			return 0;
+		}
+	}
+
+	if (!pool_grow_object(rh->mem, "\0", 1)) {
+		log_error("pool_grow_object failed");
+		return 0;
+	}
+
+	field->report_string = pool_end_object(rh->mem);
+	field->sort_value = (const void *) field->report_string;
+
+	return 1;
+}
 static int _tags_disp(struct report_handle *rh, struct field *field,
 		      const void *data)
 {
@@ -655,11 +717,11 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 	return 1;
 }
 
-static int _movepercent_disp(struct report_handle *rh, struct field *field,
+static int _copypercent_disp(struct report_handle *rh, struct field *field,
 			     const void *data)
 {
 	struct logical_volume *lv = (struct logical_volume *) data;
-	float move_percent;
+	float percent;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -669,26 +731,26 @@ static int _movepercent_disp(struct report_handle *rh, struct field *field,
 	}
 
 	if (!(lv->status & PVMOVE) ||
-	    !lv_mirror_percent(lv, 0, &move_percent, NULL)) {
+	    !lv_mirror_percent(lv, 0, &percent, NULL)) {
 		field->report_string = "";
 		*sortval = UINT64_C(0);
 		field->sort_value = sortval;
 		return 1;
 	}
 
-	move_percent = pvmove_percent(lv);
+	percent = pvmove_percent(lv);
 
 	if (!(repstr = pool_zalloc(rh->mem, 8))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
 
-	if (lvm_snprintf(repstr, 7, "%.2f", move_percent) < 0) {
-		log_error("move percentage too large");
+	if (lvm_snprintf(repstr, 7, "%.2f", percent) < 0) {
+		log_error("copy percentage too large");
 		return 0;
 	}
 
-	*sortval = move_percent * UINT64_C(1000);
+	*sortval = percent * UINT64_C(1000);
 	field->sort_value = sortval;
 	field->report_string = repstr;
 
