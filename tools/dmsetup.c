@@ -22,6 +22,7 @@
  */
 enum {
 	READ_ONLY = 0,
+	MAJOR_ARG,
 	MINOR_ARG,
 	VERBOSE_ARG,
 	NUM_SWITCHES
@@ -101,6 +102,9 @@ static int _load(int task, const char *name, const char *file, const char *uuid)
 		goto out;
 
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
+		goto out;
+
+	if (_switches[MAJOR_ARG] && !dm_task_set_major(dmt, _values[MAJOR_ARG]))
 		goto out;
 
 	if (_switches[MINOR_ARG] && !dm_task_set_minor(dmt, _values[MINOR_ARG]))
@@ -255,7 +259,7 @@ static int _status(int argc, char **argv)
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 		if (target_type) {
-			printf("%"PRIu64" %"PRIu64" %s %s\n",
+			printf("%" PRIu64 " %" PRIu64 " %s %s\n",
 			       start, length, target_type, params);
 		}
 	} while (next);
@@ -394,7 +398,7 @@ static struct command _commands[] = {
 	{NULL, NULL, 0, 0, NULL}
 };
 
-static void _usage(FILE * out)
+static void _usage(FILE *out)
 {
 	int i;
 
@@ -422,6 +426,7 @@ static int _process_switches(int *argc, char ***argv)
 
 	static struct option long_options[] = {
 		{"read-only", 0, NULL, READ_ONLY},
+		{"major", 1, NULL, MAJOR_ARG},
 		{"minor", 1, NULL, MINOR_ARG},
 		{"verbose", 1, NULL, VERBOSE_ARG},
 		{"", 0, NULL, 0}
@@ -433,10 +438,14 @@ static int _process_switches(int *argc, char ***argv)
 	memset(&_switches, 0, sizeof(_switches));
 	memset(&_values, 0, sizeof(_values));
 
-	while ((c = getopt_long(*argc, *argv, "m:rv",
+	while ((c = getopt_long(*argc, *argv, "j:m:rv",
 				long_options, &ind)) != -1) {
 		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
+		if (c == 'j' || ind == MAJOR_ARG) {
+			_switches[MAJOR_ARG]++;
+			_values[MAJOR_ARG] = atoi(optarg);
+		}
 		if (c == 'm' || ind == MINOR_ARG) {
 			_switches[MINOR_ARG]++;
 			_values[MINOR_ARG] = atoi(optarg);
