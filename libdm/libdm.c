@@ -23,6 +23,8 @@
 #define DEV_DIR "/dev/"
 #define ALIGNMENT sizeof(int)
 
+static char _dm_dir[PATH_MAX] = DEV_DIR DM_DIR;
+
 /*
  * Library users can provide their own logging
  * function.
@@ -292,8 +294,12 @@ static int _add_dev_node(const char *dev_name, dev_t dev)
 static int _rm_dev_node(const char *dev_name)
 {
 	char path[PATH_MAX];
+	struct stat info;
 
 	_build_dev_path(path, sizeof(path), dev_name);
+
+	if (stat(path, &info) < 0)
+		return 1;
 
 	if (unlink(path) < 0) {
 		log("Unable to unlink device node for '%s'", dev_name);
@@ -308,13 +314,16 @@ int dm_task_run(struct dm_task *dmt)
 	int fd = -1;
 	struct dm_ioctl *dmi = _flatten(dmt);
 	unsigned int command;
+	char control[PATH_MAX];
 
 	if (!dmi) {
 		log("Couldn't create ioctl argument");
 		return 0;
 	}
 
-	if ((fd = open(DEV_DIR DM_DIR "/control", O_RDWR)) < 0) {
+	snprintf(control, sizeof(control), "%s/control", _dm_dir);
+
+	if ((fd = open(control, O_RDWR)) < 0) {
 		log("Couldn't open device-mapper control device");
 		goto bad;
 	}
@@ -376,7 +385,13 @@ int dm_task_run(struct dm_task *dmt)
 	return 0;
 }
 
+int dm_set_dev_dir(const char *dir)
+{
+	snprintf(_dm_dir, sizeof(_dm_dir), "%s/%s", dir, DM_DIR);
+	return 1;
+}
+
 const char *dm_dir(void)
 {
-	return DM_DIR;
+	return _dm_dir;
 }
