@@ -1046,7 +1046,6 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	struct list *sh;
 	struct dev_layer *dep;
 	char *dlid, *newname, *suffix;
-	int len;
 	int suspended = 0;
 
 	list_iterate(sh, &dl->pre_create) {
@@ -1076,13 +1075,11 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 
 	/* Rename? */
 	if (dl->info.exists) {
-		newname = _build_name(dm->mem, dm->vg_name, dl->lv->name, NULL);
-		len = strlen(newname);
-		if (strncmp(newname, dl->name, len)) {
-			if ((suffix = rindex(dl->dlid, '-')))
-				suffix++;
-			newname = _build_name(dm->mem, dm->vg_name,
-					      dl->lv->name, suffix);
+		if ((suffix = rindex(dl->dlid, '-')))
+			suffix++;
+		newname = _build_name(dm->mem, dm->vg_name, dl->lv->name,
+				      suffix);
+		if (strcmp(newname, dl->name)) {
 			if (!_rename(dm, dl, newname)) {
 				stack;
 				return 0;
@@ -1259,12 +1256,21 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
  * looking at the beginning of the device
  * name.
  */
-static int _belong_to_vg(const char *vg, const char *name)
+static int _belong_to_vg(const char *vgname, const char *name)
 {
-	/*
-	 * FIXME: broken for vg's with '-'s in.
-	 */
-	return !strncmp(vg, name, strlen(vg));
+	const char *v = vgname, *n = name;
+
+	while (*v) {
+		if ((*v != *n) || 
+		    (*v == '-' && *(++n) != '-'))
+			return 0;
+		v++, n++;
+	}
+
+	if (*n == '-' && *(n+1) != '-')
+		return 1;
+	else
+		return 0;
 }
 
 static int _add_existing_layer(struct dev_manager *dm, const char *name)

@@ -221,6 +221,11 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 int is_valid_chars(char *n)
 {
 	register char c;
+
+	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
+	if (*n == '-')
+		return 0;
+
 	while ((c = *n++))
 		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
 			return 0;
