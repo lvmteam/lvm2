@@ -358,7 +358,7 @@ static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_
 	}
     }
 
-    set_node_state(ninfo, (char *)&ip, state);
+    set_node_state(ninfo, (char *)ip, state);
 
     return ninfo;
 }

@@ -1,6 +1,7 @@
 Version 2.01.03 - 
 ===================================
   clvmd announces startup and cluster connection in syslog.
+  Gulm clvmd doesn't hang trying to talk to a rebooted node.
 
 Version 2.01.02 - 21st January 2005
 ===================================
