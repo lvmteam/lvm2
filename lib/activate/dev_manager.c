@@ -943,6 +943,7 @@ static int _populate_snapshot(struct dev_manager *dm,
 	char params[PATH_MAX * 2 + 32];
 	struct snapshot *s;
 	struct dev_layer *dlo, *dlc;
+	char devbufo[10], devbufc[10];
 
 	if (!(s = find_cow(dl->lv))) {
 		log_error("Couldn't find snapshot for '%s'.", dl->lv->name);
@@ -970,9 +971,22 @@ static int _populate_snapshot(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (snprintf(params, sizeof(params), "%03u:%03u %03u:%03u P %d",
-		     dlo->info.major, dlo->info.minor,
-		     dlc->info.major, dlc->info.minor, s->chunk_size) == -1) {
+	if (!dm_format_dev(devbufo, sizeof(devbufo), dlo->info.major,
+			   dlo->info.minor)) {
+		log_error("Couldn't create origin device parameters for '%s'.",
+			  s->origin->name);
+		return 0;
+	}
+
+	if (!dm_format_dev(devbufc, sizeof(devbufc), dlc->info.major,
+			   dlc->info.minor)) {
+		log_error("Couldn't create cow device parameters for '%s'.",
+			  s->cow->name);
+		return 0;
+	}
+
+	if (snprintf(params, sizeof(params), "%s %s P %d", 
+		     devbufo, devbufc, s->chunk_size) == -1) {
 		stack;
 		return 0;
 	}
