@@ -1,63 +1,64 @@
 # An example volume group
 
-volume_group {
-	id = "ksjdlfksjldskjlsk"
-	name = "sample_volume_group"
+sample_volume_group {
 
+	id = "ksjdlfksjldskjlsk"
 	status = ["ACTIVE"]
 
-	extent_size = 8192	# 4M
+	extent_size = 8192	# 4 Megabytes
 
 	max_lv = 99
         max_pv = 255
-}
 
-physical_volumes {
+	physical_volumes {
 
-	pv1 {
-		id = "lksjdflksdlsk"
-		device = "/dev/hda1"	# Hint only
+		pv1 {
+			id = "lksjdflksdlsk"
+			device = "/dev/hda1"	# Hint only
 
-		status = ["ALLOCATABLE"]
-		pe_start = 8192
-        	pe_count = 2048   	# 8 Gigabytes
-	}
-
-	pv2 {
-		id = "lksjdflksdlsk"
-		device = "/dev/hda2"	# Hint only
-
-		status = ["ALLOCATABLE"]
-		pe_start = 8192
-        	pe_count = 1024   	# 4 Gigabytes
-	}
-}
-
-logical_volumes {
-
-	music {
-		id = "lksdflskj"
-	        status = ["ACTIVE"]
-		read_ahead = 1024
-
-		segment_count = 2
-
-	        segment1 {
-			start_extent = 0
-			extent_count = 1024	# 4 Gigabytes
-			stripes = 1
-		
-			areas = ["pv1", 0]
+			status = ["ALLOCATABLE"]
+			pe_start = 8192
+       		 	pe_count = 2048   	# 8 Gigabytes
 		}
 
-		segment2 {
-			start_extent = 1024
-			extent_count = 2048	# 8 Gigabytes
-			stripes = 2
-			stripe_size = 32	# 16k stripes
+		pv2 {
+			id = "lksjdflksdlsk"
+			device = "/dev/hda2"	# Hint only
 
-			areas = ["pv1", 1024,
-				 "pv2", 0]
+			status = ["ALLOCATABLE"]
+			pe_start = 8192
+        		pe_count = 1024   	# 4 Gigabytes
+		}
+	}
+
+	logical_volumes {
+
+		music {
+	        	status = ["ACTIVE"]
+			read_ahead = 1024
+
+			segment_count = 2
+
+	        	segment1 {
+				start_extent = 0
+				extent_count = 1024	# 4 Gigabytes
+				stripes = 1
+		
+				areas = [
+					"pv1", 0
+				]
+			}
+
+			segment2 {
+				start_extent = 1024
+				extent_count = 2048	# 8 Gigabytes
+				stripes = 2
+				stripe_size = 32	# 16 Kilobytes
+
+				areas = [
+					"pv1", 1024,
+					"pv2", 0
+				]
 		}
 	}
 }
