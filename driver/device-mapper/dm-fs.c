@@ -49,7 +49,7 @@ struct line_c {
 static int is_identifier(const char *str, int len)
 {
 	while(len--) {
-		if (!isalnum(*str) || *str != '_')
+		if (!isalnum(*str) && *str != '_')
 			return 0;
 		str++;
 	}
