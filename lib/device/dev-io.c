@@ -300,6 +300,12 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		flags |= O_DIRECT;
 #endif
 
+#ifdef O_NOATIME
+	/* Don't update atime on device inodes */
+	if (!(dev->flags & DEV_REGULAR))
+		flags |= O_NOATIME;
+#endif
+
 	if ((dev->fd = open(name, flags, 0777)) < 0) {
 		log_sys_error("open", name);
 		return 0;
