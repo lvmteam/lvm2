@@ -9,6 +9,8 @@
 
 #include "metadata.h"
 
+#include <libdevmapper.h>
+
 struct dev_manager;
 
 /*
@@ -23,6 +25,8 @@ void dev_manager_destroy(struct dev_manager *dm);
  * (eg, an origin is created before its snapshot, but is not
  * unsuspended until the snapshot is also created.)
  */
+int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
+		     struct dm_info *info);
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_reactivate(struct dev_manager *dm, struct logical_volume *lv);
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);

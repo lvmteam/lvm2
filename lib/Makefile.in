@@ -11,6 +11,7 @@ VPATH = @srcdir@
 SOURCES=\
 	activate/activate-lv.c \
 	activate/activate.c \
+	activate/dev_manager.c \
 	activate/fs.c \
 	activate/ll-activate.c \
 	activate/names.c \

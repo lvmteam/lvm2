@@ -9,6 +9,7 @@
 #include "hash.h"
 #include "log.h"
 
+#include <libdevmapper.h>
 
 /* layer types */
 enum {
@@ -25,8 +26,8 @@ struct dev_layer {
 	 * Setup the dm_task.
 	 */
 	int type;
-	int exists;
-	int suspended;
+	int (*populate)(struct dm_task *dmt, struct dev_layer *dl);
+	struct dm_info info;
 	struct logical_volume *lv;
 
 	/*
@@ -42,12 +43,6 @@ struct dev_layer {
 	 struct list pre_active;
 };
 
-struct dl_list {
-	struct list list;
-	struct dev_layer *layer;
-};
-
-
 struct dev_manager {
 	struct pool *mem;
 
@@ -55,6 +50,13 @@ struct dev_manager {
 	struct hash_table *layers;
 };
 
+
+/*
+ * Device layer names are all of the form <vg>:<lv>:<layer>, any
+ * other colons that appear in these names are quoted with yet
+ * another colon.  The top layer of any device is always called
+ * 'top'.  eg, vg0:lvol0:top.
+ */
 static void _count_colons(const char *str, size_t *len, int *colons)
 {
 	const char *ptr;
@@ -104,6 +106,132 @@ static char *_build_name(struct pool *mem, const char *vg,
 	return r;
 }
 
+
+/*
+ * Low level device-layer operations.
+ */
+static struct dm_task *_setup_task(const char *name, int task)
+{
+	struct dm_task *dmt;
+
+	if (!(dmt = dm_task_create(task))) {
+		stack;
+		return NULL;
+	}
+
+	dm_task_set_name(dmt, name);
+	return dmt;
+}
+
+
+static int _load(struct dev_layer *dl, int task)
+{
+	int r;
+	struct dm_task *dmt;
+
+	log_very_verbose("Creating %s.", dl->name);
+	if (!(dmt = _setup_task(dl->name, task))) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Populate the table.
+	 */
+	if (!dl->populate(dmt, dl)) {
+		log_err("Couldn't populate device '%s'.", dl->name);
+		return 0;
+	}
+
+	if (!(r = dm_task_run(dmt)))
+		log_err("Couldn't create device '%s'.", dl->name);
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _remove(struct dev_layer *dl)
+{
+	int r;
+	struct dm_task *dmt;
+
+	log_very_verbose("Removing device '%s'.", dl->name);
+	if (!(dmt = _setup_task(dl->name, DM_DEVICE_REMOVE))) {
+		stack;
+		return 0;
+	}
+
+	if (!(r = dm_task_run(dmt)))
+		log_err("Couldn't remove device '%s'", dl->name);
+
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _suspend_or_resume(const char *name, int sus)
+{
+	int r;
+	struct dm_task *dmt;
+	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
+
+	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
+	if (!(dmt = _setup_task(name, task))) {
+		stack;
+		return 0;
+	}
+
+	if (!(r = dm_task_run(dmt)))
+		log_err("Couldn't %s device '%s'", sus ? "suspend" : "resume",
+			name);
+
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _suspend(struct dev_layer *dl)
+{
+	if (dl->info.suspended)
+		return 1;
+
+	return _suspend_or_resume(dl->name, 1);
+}
+
+static int _resume(struct dev_layer *dl)
+{
+	if (!dl->info.suspended)
+		return 1;
+
+	return _suspend_or_resume(dl->name, 0);
+}
+
+static int _info(const char *name, struct dm_info *info)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	log_very_verbose("Getting device info for %s", name);
+	if (!(dmt = _setup_task(name, DM_DEVICE_INFO))) {
+		stack;
+		return 0;
+	}
+
+	if (!dm_task_run(dmt)) {
+		stack;
+		goto out;
+	}
+
+	if (!dm_task_get_info(dmt, info)) {
+		stack;
+		goto out;
+	}
+	r = 1;
+
+ out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+
 /*
  * dev_manager implementation.
  */
@@ -147,6 +275,30 @@ void dev_manager_destroy(struct dev_manager *dm)
 	pool_destroy(dm->mem);
 }
 
+int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
+		     struct dm_info *info)
+{
+	char *name;
+
+	/*
+	 * Build a name for the top layer.
+	 */
+	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, "top"))) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Try and get some info on this device.
+	 */
+	if (!_info(name, info)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
 static struct dev_layer *
 _create_layer(struct pool *mem, const char *layer,
 	      int type, struct logical_volume *lv)
@@ -163,8 +315,12 @@ _create_layer(struct pool *mem, const char *layer,
 		return NULL;
 	}
 
+	if (!_info(dl->name, &dl->info)) {
+		stack;
+		return NULL;
+	}
+
 	dl->type = type;
-	dl->suspended = 0;
 	dl->lv = lv;
 
 	return dl;
@@ -173,7 +329,8 @@ _create_layer(struct pool *mem, const char *layer,
 /*
  * Finds the specified layer.
  */
-static struct dev_layer *_lookup(struct dev_manager *dm, const char *lv, const char *layer)
+static struct dev_layer *_lookup(struct dev_manager *dm,
+				 const char *lv, const char *layer)
 {
 	char *name;
 	struct dev_layer *dl;
@@ -235,35 +392,6 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 	return 1;
 }
 
-#if 0
-static int _get_info(const char *name, struct dm_info *info)
-{
-	int r = 0;
-	struct dm_task *dmt;
-
-	log_very_verbose("Getting device info for %s", name);
-	if (!(dmt = setup_dm_task(name, DM_DEVICE_INFO))) {
-		stack;
-		return 0;
-	}
-
-	if (!dm_task_run(dmt)) {
-		stack;
-		goto out;
-	}
-
-	if (!dm_task_get_info(dmt, info)) {
-		stack;
-		goto out;
-	}
-	r = 1;
-
- out:
-	dm_task_destroy(dmt);
-	return r;
-}
-#endif
-
 /*
  * Clears the mark bit on all layers.
  */
@@ -320,13 +448,13 @@ void _emit(struct dev_layer *dl)
  * Recurses through the tree, ensuring that devices are created
  * in correct order.
  */
-int _create(struct dev_layer *dl)
+int _create(struct dev_manager *dm, struct dev_layer *dl)
 {
 	struct list *sh;
 	struct dev_layer *dep;
 	char *name;
 
-	if (dl->exists && !_suspend(dl)) {
+	if (dl->info.exists && !_suspend(dl)) {
 		stack;
 		return 0;
 	}
@@ -334,20 +462,20 @@ int _create(struct dev_layer *dl)
 	list_iterate (sh, &dl->pre_create) {
 		name = list_item(sh, struct str_list)->str;
 
-		if (!(dep = hash_lookup(dm_layers, name))) {
+		if (!(dep = hash_lookup(dm->layers, name))) {
 			log_err("Couldn't find device layer '%s'.", name);
 			return 0;
 		}
 
-		if (!_create(dep)) {
+		if (!_create(dm, dep)) {
 			stack;
 			return 0;
 		}
 	}
 
-	if (dl->exists) {
+	if (dl->info.exists) {
 		/* reload */
-		if (!_reload(dl)) {
+		if (!_load(dl, DM_DEVICE_RELOAD)) {
 			stack;
 			return 0;
 		}
@@ -358,7 +486,7 @@ int _create(struct dev_layer *dl)
 		}
 	} else {
 		/* create */
-		if (!_create(dl)) {
+		if (!_load(dl, DM_DEVICE_CREATE)) {
 			stack;
 			return 0;
 		}
@@ -369,8 +497,8 @@ int _create(struct dev_layer *dl)
 
 /*
  * The guts of the activation unit, this examines the device
- * layers in the manager, and tries to issue the correct activate
- * them in the correct order.
+ * layers in the manager, and tries to issue the correct
+ * instructions to activate them in order.
  */
 static int _execute(struct dev_manager *dm)
 {
@@ -396,7 +524,8 @@ static int _execute(struct dev_manager *dm)
 			}
 
 			if (dl->mark) {
-				log_err("Circular device dependency found for '%s'.",
+				log_err("Circular device dependency found for "
+					"'%s'.",
 					dl->name);
 				return 0;
 			}
@@ -437,7 +566,7 @@ static int _prune_unmarked(struct dev_manager *dm)
 	return 1;
 }
 
-int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct dev_layer *dl;
 	struct list *lvh;
@@ -464,11 +593,14 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 	}
 
 	_prune_unmarked(dm);
-
-	/*
-	 * Now we are just left with the layers required to
-	 * implement the lv.
-	 */
+	return 1;
+}
+int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
+{
+	if (!_select_lv(dm, lv)) {
+		stack;
+		return 0;
+	}
 
 	if (!_execute(dm)) {
 		stack;
@@ -486,7 +618,16 @@ int dev_manager_reactivate(struct dev_manager *dm, struct logical_volume *lv)
 
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	log_err("dev_manager_reactivate not implemented.");
+	if (!_select_lv(dm, lv)) {
+		stack;
+		return 0;
+	}
+
+	if (!_execute(dm)) {
+		stack;
+		return 0;
+	}
+
 	return 0;
 }
 
