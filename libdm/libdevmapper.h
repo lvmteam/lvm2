@@ -74,8 +74,9 @@ int dm_task_add_target(struct dm_task *dmt,
 int dm_task_run(struct dm_task *dmt);
 
 /*
- * Return the device-mapper directory
+ * Configure the device-mapper directory
  */
+int dm_set_dev_dir(const char *dir);
 const char *dm_dir(void);
 
 #endif /* LIB_DEVICE_MAPPER_H */
