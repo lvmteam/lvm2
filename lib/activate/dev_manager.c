@@ -436,8 +436,8 @@ static int _populate_origin(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (lvm_snprintf(params, sizeof(params), "%s/%s 0",
-			 dm_dir(), real) == -1) {
+	if (lvm_snprintf(params, sizeof(params),
+			 "%s/%s", dm_dir(), real) == -1) {
 		log_err("Couldn't create origin device parameters for '%s'.",
 			dl->name);
 		return 0;
