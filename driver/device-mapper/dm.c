@@ -474,6 +474,10 @@ static inline int __any_old_dev(void)
 static struct mapped_device *alloc_dev(int minor)
 {
 	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
+
+	if (!md)
+		return 0;
+
 	memset(md, 0, sizeof(*md));
 
 	down_write(&_dev_lock);
@@ -625,7 +629,7 @@ int dm_create(const char *name, int minor)
 		return -ENXIO;
 
 	if (!(md = alloc_dev(minor)))
-		return -ENOMEM;
+		return -ENXIO;
 
 	down_write(&_dev_lock);
 	if (__find_by_name(name)) {

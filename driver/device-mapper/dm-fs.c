@@ -100,7 +100,7 @@ static struct file *open_error_file(struct file *table)
 		table->f_vfsmnt->mnt_mountpoint->d_name.name,
 		table->f_dentry->d_parent->d_name.name,
 		table->f_dentry->d_name.name);
-	f = filp_open(name, O_WRONLY|O_TRUNC|O_CREAT, 0);
+	f = filp_open(name, O_WRONLY|O_TRUNC|O_CREAT, S_IRUGO);
 	kfree(name);
 
 	if (f)
