@@ -11,15 +11,13 @@
 #include "pool.h"
 #include "dbg_malloc.h"
 #include "lvm-string.h"
+#include "display.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
 
-/*
- * The first half of this file deals with
- * exporting the vg, ie. writing it to a file.
- */
+
 struct formatter {
 	struct pool *mem;	/* pv names allocated from here */
 	struct hash_table *pv_names;	/* dev_name -> pv_name (eg, pv1) */
@@ -360,12 +358,15 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 
 		_out(f, "id = \"%s\"", buffer);
 
-		if (!print_flags(lv->status, LV_FLAGS, buffer, sizeof(buffer))) {
+		if (!print_flags(lv->status, LV_FLAGS,
+				 buffer, sizeof(buffer))) {
 			stack;
 			return 0;
 		}
 
 		_out(f, "status = %s", buffer);
+		_out(f, "allocation_policy = \"%s\"",
+		     get_alloc_string(lv->alloc));
 		_out(f, "read_ahead = %u", lv->read_ahead);
 		if (lv->minor >= 0)
 			_out(f, "minor = %d", lv->minor);

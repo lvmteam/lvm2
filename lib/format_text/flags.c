@@ -38,9 +38,6 @@ static struct flag _pv_flags[] = {
 static struct flag _lv_flags[] = {
 	{LVM_READ, "READ"},
 	{LVM_WRITE, "WRITE"},
-	{ALLOC_SIMPLE, "ALLOC_SIMPLE"},
-	{ALLOC_STRICT, "ALLOC_STRICT"},
-	{ALLOC_CONTIGUOUS, "ALLOC_CONTIGUOUS"},
 	{FIXED_MINOR, "FIXED_MINOR"},
 	{0, NULL}
 };

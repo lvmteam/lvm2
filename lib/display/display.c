@@ -207,16 +207,50 @@ void lvdisplay_colons(struct logical_volume *lv)
 		  /* FIXME lv->lv_number,  */
 		  inkernel ? info.open_count : 0, lv->size, lv->le_count,
 		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
-		  ((lv->status & ALLOC_STRICT) +
-		   (lv->status & ALLOC_CONTIGUOUS) * 2), lv->read_ahead,
+		  ((lv->alloc == ALLOC_STRICT) +
+		   (lv->alloc == ALLOC_CONTIGUOUS) * 2), lv->read_ahead,
 		  inkernel ? info.major : -1, inkernel ? info.minor : -1);
 	return;
+}
+
+
+static struct {
+	alloc_policy_t alloc;
+	const char *str;
+} _policies[] = {
+	{ALLOC_NEXT_FREE, "next free"},
+	{ALLOC_STRICT, "strict"},
+	{ALLOC_CONTIGUOUS, "contiguous"}
+};
+
+static int _num_policies = sizeof(_policies) / sizeof(*_policies);
+
+const char *get_alloc_string(alloc_policy_t alloc)
+{
+	int i;
+
+	for (i = 0; i < _num_policies; i++)
+		if (_policies[i].alloc == alloc)
+			return _policies[i].str;
+
+	return NULL;
+}
+
+alloc_policy_t get_alloc_from_string(const char *str)
+{
+	int i;
+
+	for (i = 0; i < _num_policies; i++)
+		if (!strcmp(_policies[i].str, str))
+			return _policies[i].alloc;
+
+	log_warn("Unknown allocation policy, defaulting to next free");
+	return ALLOC_NEXT_FREE;
 }
 
 int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	char *size;
-	uint32_t alloc;
 	struct dm_info info;
 	int inkernel;
 	char uuid[64];
@@ -243,7 +277,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		  lv->vg->name, lv->name);
 	log_print("VG Name                %s", lv->vg->name);
 
-/* Not in LVM1 format 
+/* Not in LVM1 format
 	log_print("LV UUID                %s", uuid);
 **/
 	log_print("LV Write Access        %s",
@@ -252,11 +286,11 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	/* see if this LV is an origin for a snapshot */
 	if ((snap = find_origin(lv))) {
 		struct list *slh, *snaplist = find_snapshots(lv);
-		
+
 		log_print("LV snapshot status     source of");
 		list_iterate(slh, snaplist) {
 			snap = list_item(slh, struct snapshot_list)->snapshot;
-			snap_active = lv_snapshot_percent(snap->cow, 
+			snap_active = lv_snapshot_percent(snap->cow,
 							  &snap_percent);
 			log_print("                       %s%s/%s [%s]",
 				 lv->vg->cmd->dev_dir, lv->vg->name,
@@ -272,7 +306,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	else if ((snap = find_cow(lv))) {
 		snap_active = lv_snapshot_percent(lv, &snap_percent);
 		log_print("LV snapshot status     %s destination for %s%s/%s",
-		 	  (snap_active > 0) ? "active" : "INACTIVE", 
+		 	  (snap_active > 0) ? "active" : "INACTIVE",
 			  lv->vg->cmd->dev_dir, lv->vg->name,
 			  snap->origin->name);
 	}
@@ -282,7 +316,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		log_print("LV Status              suspended");
 	else
 		log_print("LV Status              %savailable",
-			  !inkernel || (snap && (snap_active < 1)) 
+			  !inkernel || (snap && (snap_active < 1))
 			    ?  "NOT " : "");
 
 /********* FIXME lv_number - not sure that we're going to bother with this
@@ -292,7 +326,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 /* LVM1 lists the number of LVs open in this field, therefore, so do we. */
 	log_print("# open                 %u", lvs_in_vg_opened(lv->vg));
 
-/* We're not going to use this count ATM, 'cause it's not what LVM1 does 
+/* We're not going to use this count ATM, 'cause it's not what LVM1 does
 	if (inkernel)
 		log_print("# open                 %u", info.open_count);
 */
@@ -312,18 +346,18 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		origin = snap->origin;
 	else
 		origin = lv;
-	
+
 	size = display_size(origin->size / 2, SIZE_SHORT);
 	log_print("LV Size                %s", size);
 	dbg_free(size);
 
 	log_print("Current LE             %u", origin->le_count);
-	
+
 /********** FIXME allocation - is there anytime the allocated LEs will not
  * equal the current LEs? */
 	log_print("Allocated LE           %u", origin->le_count);
 /**********/
-	
+
 
 	list_iterate(lvseg, &lv->segments) {
 		seg = list_item(lvseg, struct stripe_segment);
@@ -349,7 +383,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		sscanf(size, "%f", &fsize);
 		fused = fsize * ( snap_percent / 100 );
 		log_print("Allocated to snapshot  %2.2f%% [%2.2f/%s]",
-			  snap_percent, fused, size); 
+			  snap_percent, fused, size);
 		dbg_free(size);
 
 		/* FIXME: Think this'll make them wonder?? */
@@ -374,16 +408,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 #endif
 ***************/
 
-	/* FIXME next free == ALLOC_SIMPLE */
-	alloc = lv->status & (ALLOC_STRICT | ALLOC_CONTIGUOUS);
-	log_print("Allocation             %s%s%s%s",
-		  !(alloc & (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "next free" :
-		  "", (alloc == ALLOC_STRICT) ? "strict" : "",
-		  (alloc == ALLOC_CONTIGUOUS) ? "contiguous" : "",
-		  (alloc ==
-		   (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "strict/contiguous" :
-		  "");
-
+	log_print("Allocation             %s", get_alloc_string(lv->alloc));
 	log_print("Read ahead sectors     %u", lv->read_ahead);
 
 	if (lv->status & FIXED_MINOR)
@@ -499,7 +524,7 @@ void vgdisplay_full(struct volume_group *vg)
 			  vg->status & SHARED ? "yes" : "no");
 	}
 /****** FIXME VG # - we aren't implementing this because people should
- * use the UUID for this anyway 
+ * use the UUID for this anyway
 	log_print("VG #                  %u", vg->vg_number);
 *******/
 	log_print("MAX LV                %u", vg->max_lv);
