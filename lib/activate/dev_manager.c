@@ -165,89 +165,6 @@ static inline void _clear_flag(struct dev_layer *dl, int bit)
 	dl->flags &= ~(1 << bit);
 }
 
-/*
- * Device layer names are all of the form <vg>-<lv>-<layer>, any
- * other hyphens that appear in these names are quoted with yet
- * another hyphen.  The top layer of any device has no layer
- * name.  eg, vg0-lvol0.
- */
-static void _count_hyphens(const char *str, size_t *len, int *hyphens)
-{
-	const char *ptr;
-
-	for (ptr = str; *ptr; ptr++, (*len)++)
-		if (*ptr == '-')
-			(*hyphens)++;
-}
-
-/*
- * Copies a string, quoting hyphens with hyphens.
- */
-static void _quote_hyphens(char **out, const char *src)
-{
-	while (*src) {
-		if (*src == '-')
-			*(*out)++ = '-';
-
-		*(*out)++ = *src++;
-	}
-}
-
-/*
- * <vg>-<lv>-<layer> or if !layer just <vg>-<lv>.
- */
-static char *_build_name(struct pool *mem, const char *vg,
-			 const char *lv, const char *layer)
-{
-	size_t len = 0;
-	int hyphens = 0;
-	char *r, *out;
-
-	_count_hyphens(vg, &len, &hyphens);
-	_count_hyphens(lv, &len, &hyphens);
-
-	if (layer && *layer)
-		_count_hyphens(layer, &len, &hyphens);
-
-	len += hyphens + 2;
-
-	if (!(r = pool_alloc(mem, len))) {
-		stack;
-		return NULL;
-	}
-
-	out = r;
-	_quote_hyphens(&out, vg);
-	*out++ = '-';
-	_quote_hyphens(&out, lv);
-
-	if (layer && *layer) {
-		*out++ = '-';
-		_quote_hyphens(&out, layer);
-	}
-	*out = '\0';
-
-	return r;
-}
-
-/* Find start of LV component in hyphenated name */
-static char *_find_lv_name(char *vg)
-{
-	char *c = vg;
-
-	while (*c && *(c + 1)) {
-		if (*c == '-') {
-			if (*(c + 1) == '-')
-				c++;
-			else
-				return (c + 1);
-		}
-		c++;
-	}
-
-	return NULL;
-}
-
 static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
 {
 	char *dlid;
@@ -519,10 +436,16 @@ static int _percent(struct dev_manager *dm, const char *name, const char *uuid,
 	return 0;
 }
 
-static int _rename(struct dev_layer *dl, char *newname)
+static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
 {
 	int r = 1;
 	struct dm_task *dmt;
+	char *vgname, *lvname, *layer;
+
+	if (!split_dm_name(dm->mem, dl->name, &vgname, &lvname, &layer)) {
+		log_error("Couldn't split up dm layer name %s", dl->name);
+		return 0;
+	}
 
 	log_verbose("Renaming %s to %s", dl->name, newname);
 
@@ -537,11 +460,13 @@ static int _rename(struct dev_layer *dl, char *newname)
 		goto out;
 	}
 
-	if (!(r = dm_task_run(dmt)))
+	if (!(r = dm_task_run(dmt))) {
 		log_error("Couldn't rename device '%s'.", dl->name);
+		goto out;
+	}
 
 	if (r && _get_flag(dl, VISIBLE))
-		fs_rename_lv(dl->lv, newname, _find_lv_name(dl->name));
+		fs_rename_lv(dl->lv, newname, lvname);
 
 	dl->name = newname;
 
@@ -1052,7 +977,7 @@ int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL))) {
 		stack;
 		return 0;
 	}
@@ -1077,7 +1002,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL))) {
 		stack;
 		return 0;
 	}
@@ -1109,7 +1034,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL))) {
 		stack;
 		return 0;
 	}
@@ -1173,7 +1098,7 @@ static struct dev_layer *_create_layer(struct dev_manager *dm,
 	char *name, *dlid;
 	struct dev_layer *dl;
 
-	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, layer))) {
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer))) {
 		stack;
 		return NULL;
 	}
@@ -1618,11 +1543,11 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	if (dl->info.exists) {
 		if ((suffix = rindex(dl->dlid, '-')))
 			suffix++;
-		newname = _build_name(dm->mem, dm->vg_name, dl->lv->name,
-				      suffix);
+		newname = build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
+					suffix);
 		if (strcmp(newname, dl->name)) {
 			if (!_suspend_parents(dm, dl) ||
-			    !_suspend(dl) || !_rename(dl, newname)) {
+			    !_suspend(dl) || !_rename(dm, dl, newname)) {
 				stack;
 				return 0;
 			}
@@ -2227,8 +2152,8 @@ int dev_manager_lv_mknodes(const struct logical_volume *lv)
 {
 	char *name;
 
-	if (!(name = _build_name(lv->vg->cmd->mem, lv->vg->name,
-				 lv->name, NULL))) {
+	if (!(name = build_dm_name(lv->vg->cmd->mem, lv->vg->name,
+				   lv->name, NULL))) {
 		stack;
 		return 0;
 	}

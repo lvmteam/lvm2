@@ -16,6 +16,7 @@
 #include "lib.h"
 #include "lvm-types.h"
 #include "lvm-string.h"
+#include "pool.h"
 
 #include <ctype.h>
 
@@ -98,3 +99,107 @@ int split_words(char *buffer, unsigned max, char **argv)
 
 	return arg;
 }
+
+/*
+ * Device layer names are all of the form <vg>-<lv>-<layer>, any
+ * other hyphens that appear in these names are quoted with yet
+ * another hyphen.  The top layer of any device has no layer
+ * name.  eg, vg0-lvol0.
+ */
+static void _count_hyphens(const char *str, size_t *len, int *hyphens)
+{
+	const char *ptr;
+
+	for (ptr = str; *ptr; ptr++, (*len)++)
+		if (*ptr == '-')
+			(*hyphens)++;
+}
+
+/*
+ * Copies a string, quoting hyphens with hyphens.
+ */
+static void _quote_hyphens(char **out, const char *src)
+{
+	while (*src) {
+		if (*src == '-')
+			*(*out)++ = '-';
+
+		*(*out)++ = *src++;
+	}
+}
+
+/*
+ * <vg>-<lv>-<layer> or if !layer just <vg>-<lv>.
+ */
+char *build_dm_name(struct pool *mem, const char *vg,
+		    const char *lv, const char *layer)
+{
+	size_t len = 0;
+	int hyphens = 0;
+	char *r, *out;
+
+	_count_hyphens(vg, &len, &hyphens);
+	_count_hyphens(lv, &len, &hyphens);
+
+	if (layer && *layer)
+		_count_hyphens(layer, &len, &hyphens);
+
+	len += hyphens + 2;
+
+	if (!(r = pool_alloc(mem, len))) {
+		stack;
+		return NULL;
+	}
+
+	out = r;
+	_quote_hyphens(&out, vg);
+	*out++ = '-';
+	_quote_hyphens(&out, lv);
+
+	if (layer && *layer) {
+		*out++ = '-';
+		_quote_hyphens(&out, layer);
+	}
+	*out = '\0';
+
+	return r;
+}
+
+/*
+ * Remove hyphen quoting from a component of a name.
+ * NULL-terminates the component and returns start of next component.
+ */
+static char *_unquote(char *component)
+{
+	char *c = component;
+	char *o = c;
+
+	while (*c) {
+		if (*(c + 1)) {
+			if (*c == '-') {
+				if (*(c + 1) == '-')
+					c++;
+				else
+					break;
+			}
+		}
+		*o = *c;
+		o++;
+		c++;
+	}
+
+	*o = '\0';
+	return (c + 1);
+}
+
+int split_dm_name(struct pool *mem, const char *dmname,
+		  char **vgname, char **lvname, char **layer)
+{
+	if (!(*vgname = pool_strdup(mem, dmname)))
+		return 0;
+
+	_unquote(*layer = _unquote(*lvname = _unquote(*vgname)));
+
+	return 1;
+}
+
