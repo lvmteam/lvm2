@@ -336,8 +336,17 @@ int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
 {
 	int r;
 	struct dev_manager *dm;
+	struct lvinfo info;
 
 	if (!activation())
+		return 0;
+
+	if (!lv_info(lv, &info)) {
+		stack;
+		return 0;
+	}
+
+	if (!info.exists)
 		return 0;
 
 	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {

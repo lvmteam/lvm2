@@ -672,15 +672,13 @@ static int _movepercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(lv->status & PVMOVE)) {
+	if (!(lv->status & PVMOVE) ||
+	    !lv_mirror_percent(lv, 0, &move_percent, NULL)) {
 		field->report_string = "";
 		*sortval = UINT64_C(0);
 		field->sort_value = sortval;
 		return 1;
 	}
-
-	/* Update percentage done in lv metadata in core */
-	lv_mirror_percent(lv, 0, &move_percent, NULL);
 
 	move_percent = pvmove_percent(lv);
 
