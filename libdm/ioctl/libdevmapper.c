@@ -442,6 +442,14 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 		if (!_unmarshal_status_v1(dmt, dmi))
 			goto bad;
 		break;
+
+	case DM_DEVICE_SUSPEND:
+	case DM_DEVICE_RESUME:
+		dmt->type = DM_DEVICE_INFO;
+		if (!dm_task_run(dmt))
+			goto bad;
+		free(dmi);	/* We'll use what info returned */
+		return 1;
 	}
 
 	dmt->dmi.v1 = dmi;
