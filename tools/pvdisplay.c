@@ -51,7 +51,7 @@ static int _pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
 	if (!arg_count(cmd, maps_ARG))
 		return ECMD_PROCESSED;
 
-	return 0;
+	return ECMD_PROCESSED;
 }
 
 int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
