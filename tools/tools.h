@@ -73,6 +73,7 @@ struct arg {
 	int count;
 	char *value;
 	uint32_t i_value;
+	uint64_t i64_value;
 	sign_t sign;
 };
 
@@ -120,6 +121,12 @@ static inline uint32_t arg_int_value(struct cmd_context *cmd, int a,
 				     uint32_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].i_value : def;
+}
+
+static inline uint64_t arg_int64_value(struct cmd_context *cmd, int a,
+				       uint64_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].i64_value : def;
 }
 
 static inline sign_t arg_sign_value(struct cmd_context *cmd, int a, sign_t def)
