@@ -44,6 +44,8 @@ static void dmfs_parse_line(struct dm_table *t, unsigned num, char *str)
 	int rv = 0;
 	char *msg;
 
+	printk("dmfs_parse_line: (%s)\n", str);
+
 	msg = "No start argument";
 	tok = next_token(&p);
 	if (!tok)
@@ -101,11 +103,23 @@ static int dmfs_copy(char *dst, int dstlen, char *src, int srclen, int *flag)
 		len--;
 	}
 out:
-	return dst - start;
+	return (dst - start);
 end_of_line:
+	dst++;
 	*flag = 1;
-	*dst++ = 0;
 	goto out;
+}
+
+static int dmfs_line_is_not_comment(char *str)
+{
+	while(*str) {
+		if (*str == '#')
+			break;
+		if (!isspace(*str))
+			return 1;
+		str++;
+	}
+	return 0;
 }
 
 static int dmfs_parse_page(struct dm_table *t, char *buf, int end, unsigned long end_index, char *tmp, unsigned long *tmpl, int *num)
@@ -120,9 +134,11 @@ static int dmfs_parse_page(struct dm_table *t, char *buf, int end, unsigned long
 		len -= copied;
 		if (*tmpl + copied == PAGE_SIZE - 1)
 			goto line_too_long;
-		*tmpl = copied;
+		(*tmpl) += copied;
 		if (flag || (len == 0 && end)) {
-			dmfs_parse_line(t, *num, tmp);
+			*(tmp + *tmpl) = 0;
+			if (dmfs_line_is_not_comment(tmp))
+				dmfs_parse_line(t, *num, tmp);
 			(*num)++;
 			*tmpl = 0;
 		}
@@ -186,11 +202,11 @@ static struct dm_table *dmfs_parse(struct inode *inode)
 	} while(index <= end_index);
 
 	free_page(page);
-	if (dm_table_complete(t) == 0)
-		return t;
+	if (list_empty(&t->errors)) {
+		dm_table_complete(t);
+	}
 
-	dm_table_destroy(t);
-	return NULL;
+	return t;
 
 broken:
 	printk(KERN_ERR "dmfs_parse: Page not uptodate\n");
