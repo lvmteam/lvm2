@@ -14,13 +14,6 @@
 #include <libdevmapper.h>
 #include <limits.h>
 
-/* layer types */
-enum {
-	VANILLA,
-	ORIGIN,
-	SNAPSHOT
-};
-
 struct dev_layer {
 	char *name;
 	int mark;
@@ -29,7 +22,6 @@ struct dev_layer {
 	/*
 	 * Setup the dm_task.
 	 */
-	int type;
 	int (*populate)(struct dev_manager *dm,
 			struct dm_task *dmt, struct dev_layer *dl);
 	struct dm_info info;
@@ -60,7 +52,7 @@ struct dev_manager {
  * Device layer names are all of the form <vg>-<lv>-<layer>, any
  * other hyphens that appear in these names are quoted with yet
  * another hyphen.  The top layer of any device is always called
- * 'top'.  eg, vg0-lvol0-top.
+ * 'top'.  eg, vg0-lvol0.
  */
 static void _count_hyphens(const char *str, size_t *len, int *hyphens)
 {
@@ -84,6 +76,9 @@ static void _quote_hyphens(char **out, const char *src)
 	}
 }
 
+/*
+ * <vg>-<lv>-<layer> or if !layer just <vg>-<lv>.
+ */
 static char *_build_name(struct pool *mem, const char *vg,
 			 const char *lv, const char *layer)
 {
@@ -93,7 +88,9 @@ static char *_build_name(struct pool *mem, const char *vg,
 
 	_count_hyphens(vg, &len, &hyphens);
 	_count_hyphens(lv, &len, &hyphens);
-	_count_hyphens(layer, &len, &hyphens);
+
+	if (layer)
+		_count_hyphens(layer, &len, &hyphens);
 
 	len += hyphens + 2;
 
@@ -103,9 +100,15 @@ static char *_build_name(struct pool *mem, const char *vg,
 	}
 
 	out = r;
-	_quote_hyphens(&out, vg); *out++ = '-';
-	_quote_hyphens(&out, lv); *out++ = '-';
-	_quote_hyphens(&out, layer); *out = '\0';
+	_quote_hyphens(&out, vg);
+	*out++ = '-';
+	_quote_hyphens(&out, lv);
+
+	if (layer) {
+		*out++ = '-';
+		_quote_hyphens(&out, layer);
+	}
+	*out = '\0';
 
 	return r;
 }
@@ -473,7 +476,7 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	/*
 	 * Build a name for the top layer.
 	 */
-	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, "top"))) {
+	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
 		stack;
 		return 0;
 	}
@@ -490,8 +493,7 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 }
 
 static struct dev_layer *
-_create_layer(struct pool *mem, const char *layer,
-	      int type, struct logical_volume *lv)
+_create_layer(struct pool *mem, const char *layer, struct logical_volume *lv)
 {
 	struct dev_layer *dl;
 
@@ -510,7 +512,6 @@ _create_layer(struct pool *mem, const char *layer,
 		return NULL;
 	}
 
-	dl->type = type;
 	dl->lv = lv;
 	list_init(&dl->pre_create);
 	list_init(&dl->pre_active);
@@ -558,7 +559,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 		char *cow_name;
 		struct str_list *sl;
 
-		if (!(dl = _create_layer(dm->mem, "cow", VANILLA, lv))) {
+		if (!(dl = _create_layer(dm->mem, "cow", lv))) {
 			stack;
 			return 0;
 		}
@@ -572,7 +573,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 		}
 		cow_name = dl->name;
 
-		if (!(dl = _create_layer(dm->mem, "top", SNAPSHOT, lv))) {
+		if (!(dl = _create_layer(dm->mem, NULL, lv))) {
 			stack;
 			return 0;
 		}
@@ -621,7 +622,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 		char *real_name;
 		struct str_list *sl;
 
-		if (!(dl = _create_layer(dm->mem, "real", VANILLA, lv))) {
+		if (!(dl = _create_layer(dm->mem, "real", lv))) {
 			stack;
 			return 0;
 		}
@@ -634,7 +635,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 		}
 		real_name = dl->name;
 
-		if (!(dl = _create_layer(dm->mem, "top", ORIGIN, lv))) {
+		if (!(dl = _create_layer(dm->mem, NULL, lv))) {
 			stack;
 			return 0;
 		}
@@ -664,7 +665,7 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 		 * only one layer.
 		 */
 		struct dev_layer *dl;
-		if (!(dl = _create_layer(dm->mem, "top", VANILLA, lv))) {
+		if (!(dl = _create_layer(dm->mem, NULL, lv))) {
 			stack;
 			return 0;
 		}
@@ -891,7 +892,7 @@ static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
 	/*
 	 * Mark the desired logical volume.
 	 */
-	if (!(dl = _lookup(dm, lv->name, "top"))) {
+	if (!(dl = _lookup(dm, lv->name, NULL))) {
 		log_err("Couldn't find top layer of '%s'.", lv->name);
 		return 0;
 	}

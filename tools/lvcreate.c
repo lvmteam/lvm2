@@ -36,7 +36,8 @@ struct lvcreate_params {
 };
 
 static int _read_name_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc, char ***pargv)
+			     struct cmd_context *cmd, int *pargc,
+			     char ***pargv)
 {
 	int argc = *pargc;
 	char **argv = *pargv, *ptr;
@@ -108,7 +109,8 @@ static int _read_name_params(struct lvcreate_params *lp,
 }
 
 static int _read_size_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc, char ***pargv)
+			     struct cmd_context *cmd, int *pargc,
+			     char ***pargv)
 {
 	/*
 	 * There are two mutually exclusive ways of specifying
