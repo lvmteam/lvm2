@@ -53,6 +53,9 @@ static int vgremove_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
+	if (!archive(vg))
+		return ECMD_FAILED;
+
 /************ FIXME
 	if (vg_remove_dir_and_group_and_nodes(vg_name) < 0) {
 		log_error("removing special files of volume group %s",

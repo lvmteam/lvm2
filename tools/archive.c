@@ -9,6 +9,7 @@
 #include "dbg_malloc.h"
 #include "format-text.h"
 #include "lvm-string.h"
+#include "toollib.h"
 
 #include <limits.h>
 
@@ -23,8 +24,16 @@ static struct {
 int archive_init(const char *dir,
 		 unsigned int keep_days, unsigned int keep_min)
 {
+	_archive_params.dir = NULL;
+
+	if (!*dir)
+		return 1;
+
+	if (!create_dir(dir))
+		return 0;
+
 	if (!(_archive_params.dir = dbg_strdup(dir))) {
-		log_err("Couldn't create copy of archive dir.");
+		log_error("Couldn't copy archive directory name.");
 		return 0;
 	}
 
@@ -36,7 +45,8 @@ int archive_init(const char *dir,
 
 void archive_exit(void)
 {
-	dbg_free(_archive_params.dir);
+	if (_archive_params.dir)
+		dbg_free(_archive_params.dir);
 	memset(&_archive_params, 0, sizeof(_archive_params));
 }
 
@@ -67,7 +77,7 @@ static int __archive(struct volume_group *vg)
 
 int archive(struct volume_group *vg)
 {
-	if (!_archive_params.enabled)
+	if (!_archive_params.enabled || !_archive_params.dir)
 		return 1;
 
 	if (test_mode()) {
@@ -75,9 +85,10 @@ int archive(struct volume_group *vg)
 		return 1;
 	}
 
-	log_print("Creating archive of volume group '%s' ...", vg->name);
+	log_verbose("Archiving volume group %s metadata.", vg->name);
 	if (!__archive(vg)) {
-		log_error("Archiving failed.");
+		log_error("Volume group %s metadata archive failed.", 
+			  vg->name);
 		return 0;
 	}
 
@@ -94,8 +105,15 @@ static struct {
 
 int backup_init(const char *dir)
 {
+	_backup_params.dir = NULL;
+	if (!*dir)
+		return 1;
+
+	if (!create_dir(dir))
+		return 0;
+
 	if (!(_backup_params.dir = dbg_strdup(dir))) {
-		log_err("Couldn't create copy of backup dir.");
+		log_error("Couldn't copy backup directory name.");
 		return 0;
 	}
 
@@ -104,7 +122,8 @@ int backup_init(const char *dir)
 
 void backup_exit(void)
 {
-	dbg_free(_backup_params.dir);
+	if (_backup_params.dir)
+		dbg_free(_backup_params.dir);
 	memset(&_backup_params, 0, sizeof(_backup_params));
 }
 
@@ -121,12 +140,15 @@ static int __backup(struct volume_group *vg)
 
 	if (lvm_snprintf(name, sizeof(name), "%s/%s",
 			 _backup_params.dir, vg->name) < 0) {
-		log_err("Couldn't generate backup filename for volume group.");
+		log_error("Failed to generate volume group metadata backup "
+			  "filename.");
 		return 0;
 	}
 
+	log_verbose("Creating volume group backup %s", name);
+
 	if (!(tf = text_format_create(vg->cmd, name))) {
-		log_error("Couldn't create backup object.");
+		stack;
 		return 0;
 	}
 
@@ -139,18 +161,19 @@ static int __backup(struct volume_group *vg)
 
 int backup(struct volume_group *vg)
 {
-	if (!_backup_params.enabled)
+	if (!_backup_params.enabled || !_backup_params.dir) {
+		log_print("WARNING: This metadata update is NOT backed up");
 		return 1;
+	}
 
 	if (test_mode()) {
 		log_print("Test mode: Skipping volume group backup.");
 		return 1;
 	}
 
-	log_print("Creating backup of volume group '%s' ...", vg->name);
-
 	if (!__backup(vg)) {
-		log_error("Backup failed.");
+		log_error("Backup of volume group %s metadata failed.",
+			  vg->name);
 		return 0;
 	}
 

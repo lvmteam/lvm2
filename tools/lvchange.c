@@ -67,6 +67,9 @@ static int lvchange_single(struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
+	if (!archive(lv->vg))
+		return 0;
+
 	/* access permission change */
 	if (arg_count(permission_ARG))
 		doit += lvchange_permission(lv);
@@ -115,6 +118,7 @@ static int lvchange_permission(struct logical_volume *lv)
 		lv->status &= ~LVM_WRITE;
 		log_verbose("Setting logical volume %s read-only", lv->name);
 	}
+
 
 	log_very_verbose("Updating logical volume %s on disk(s)", lv->name);
 	if (!fid->ops->vg_write(fid, lv->vg))

@@ -112,6 +112,9 @@ int vgmerge_single(const char *vg_name_to, const char *vg_name_from)
 
 	/* FIXME List arg: vg_show_with_pv_and_lv(vg_to); */
 
+	if (!archive(vg_from) || !archive(vg_to))
+		return ECMD_FAILED;
+
 	/* Merge volume groups */
 	while (!list_empty(&vg_from->pvs)) {
 		struct list *pvh = vg_from->pvs.n;

@@ -681,14 +681,18 @@ static void __init_log(struct config_file *cf)
 	_default_settings.test = find_config_int(cf->root, "log/test", '/', 0);
 }
 
-/*
- * '_sys_dir' must have been set before calling this.
- */
 static int _init_backup(struct config_file *cf)
 {
 	int days, min;
 	char default_dir[PATH_MAX];
 	const char *dir;
+
+	if (!_sys_dir) {
+		log_warn("WARNING: Metadata changes will NOT be backed up");
+		backup_init("");
+		archive_init("", 0, 0);
+		return 1;
+	}
 
 	/* set up archiving */
 	_default_settings.archive =

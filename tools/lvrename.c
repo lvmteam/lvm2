@@ -111,6 +111,9 @@ int lvrename(int argc, char **argv)
 
 	lv = &list_item(lvh, struct lv_list)->lv;
 
+	if (!archive(lv->vg))
+		return ECMD_FAILED;
+
 	if (!(lv->name = pool_strdup(fid->cmd->mem, lv_name_new))) {
 		log_error("Failed to allocate space for new name");
 		return ECMD_FAILED;

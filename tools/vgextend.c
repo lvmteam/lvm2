@@ -63,6 +63,9 @@ int vgextend(int argc, char **argv)
 	dummy = NULL;
 **********/
 
+	if (!archive(vg))
+		return ECMD_FAILED;
+
 	/* extend vg */
 	if (!vg_extend(fid, vg, argc, argv))
 		return ECMD_FAILED;

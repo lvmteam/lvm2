@@ -296,6 +296,9 @@ int lvresize(int argc, char **argv)
 			}
 		}
 
+		if (!archive(vg))
+			return ECMD_FAILED;
+
 		if (!lv_reduce(lv, lv->le_count - extents))
 			return ECMD_FAILED;
 	}
@@ -326,6 +329,9 @@ int lvresize(int argc, char **argv)
 	}
 
 	if (resize == LV_EXTEND) {
+		if (!archive(vg))
+			return ECMD_FAILED;
+
 		if (!argc) {
 			/* Use full list from VG */
 			pvh = &vg->pvs;
