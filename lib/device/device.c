@@ -18,6 +18,7 @@
 #include "device.h"
 #include "metadata.h"
 #include "filter.h"
+#include "xlate.h"
 
 #define PART_MAGIC 0xAA55
 #define PART_OFFSET UINT64_C(510)
