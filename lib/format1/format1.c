@@ -37,9 +37,8 @@ static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 	struct volume_group *vg = pool_alloc(mem, sizeof(*vg));
 	struct disk_list *dl;
 
-
 	if (list_empty(pvs)) {
-		log_err("no pv's in volume group");
+		stack;
 		return NULL;
 	}
 
@@ -104,6 +103,25 @@ static struct volume_group *_vg_read(struct io_space *is, const char *vg_name)
 	return vg;
 }
 
+#if 0
+static int _calculate_disk_sizes(struct disk_list *dl)
+{
+	pvd->pv_on_disk.base = ??;
+	pvd->pv_on_disk.size = ??;
+
+        pvd->vg_on_disk.base = ??;
+        pvd->vg_on_disk.size = ??;
+
+        pvd->pv_uuidlist_on_disk.base = ??;
+        pvd->pv_uuidlist_on_disk.size = ??;
+
+        pvd->lv_on_disk.base = ??;
+        pvd->lv_on_disk.size = ??;
+
+        pvd->pe_on_disk.base = ??;
+        pvd->pe_on_disk.size = ??;
+}
+#endif
 static struct disk_list *_flatten_pv(struct pool *mem, struct volume_group *vg,
 				     struct physical_volume *pv,
 				     const char *prefix)
