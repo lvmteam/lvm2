@@ -12,7 +12,6 @@
 ../lib/device/dev-cache.h
 ../lib/device/device.h
 ../lib/display/display.h
-../lib/display/display_formats.h
 ../lib/filters/filter-composite.h
 ../lib/filters/filter-persistent.h
 ../lib/filters/filter-regex.h
