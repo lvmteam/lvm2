@@ -501,7 +501,8 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev));
+		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev),
+			     dmt->uid, dmt->gid, dmt->mode);
 		break;
 
 	case DM_DEVICE_REMOVE:
@@ -515,7 +516,8 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	case DM_DEVICE_MKNODES:
 		if (dmi->flags & DM_EXISTS_FLAG)
 			add_dev_node(dmt->dev_name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev));
+				     MINOR(dmi->dev),
+				     dmt->uid, dmt->gid, dmt->mode);
 		else
 			rm_dev_node(dmt->dev_name);
 		break;
@@ -1194,7 +1196,8 @@ int dm_task_run(struct dm_task *dmt)
       ignore_error:
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev));
+		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev),
+			     dmt->uid, dmt->gid, dmt->mode);
 		break;
 
 	case DM_DEVICE_REMOVE:
@@ -1212,7 +1215,8 @@ int dm_task_run(struct dm_task *dmt)
 	case DM_DEVICE_MKNODES:
 		if (dmi->flags & DM_EXISTS_FLAG)
 			add_dev_node(dmi->name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev));
+				     MINOR(dmi->dev),
+				     dmt->uid, dmt->gid, dmt->mode);
 		else if (dmt->dev_name)
 			rm_dev_node(dmt->dev_name);
 		break;

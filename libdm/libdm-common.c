@@ -113,6 +113,9 @@ struct dm_task *dm_task_create(int type)
 	dmt->type = type;
 	dmt->minor = -1;
 	dmt->major = -1;
+	dmt->uid = DEVICE_UID;
+	dmt->gid = DEVICE_GID;
+	dmt->mode = DEVICE_MODE;
 
 	return dmt;
 }
@@ -226,11 +229,13 @@ static int _set_selinux_context(const char *path)
 }
 #endif
 
-static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
+static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
+			 uid_t uid, gid_t gid, mode_t mode)
 {
 	char path[PATH_MAX];
 	struct stat info;
 	dev_t dev = MKDEV(major, minor);
+	mode_t old_mask;
 
 	_build_dev_path(path, sizeof(path), dev_name);
 
@@ -241,6 +246,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
 			return 0;
 		}
 
+		/* If right inode already exists we don't touch uid etc. */
 		if (info.st_rdev == dev)
 			return 1;
 
@@ -251,10 +257,18 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
 		}
 	}
 
-	if (mknod(path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
+	old_mask = umask(0);
+	if (mknod(path, S_IFBLK | mode, dev) < 0) {
 		log_error("Unable to make device node for '%s'", dev_name);
 		return 0;
 	}
+	umask(old_mask);
+
+	if (chown(path, uid, gid) < 0) {
+		log_error("%s: chown failed: %s", path, strerror(errno));
+		return 0;
+	}
+
 #ifdef HAVE_SELINUX
 	if (!_set_selinux_context(path))
 		return 0;
@@ -324,11 +338,12 @@ typedef enum {
 } node_op_t;
 
 static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
-		       uint32_t minor, const char *old_name)
+		       uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
+		       const char *old_name)
 {
 	switch (type) {
 	case NODE_ADD:
-		return _add_dev_node(dev_name, major, minor);
+		return _add_dev_node(dev_name, major, minor, uid, gid, mode);
 	case NODE_DEL:
 		return _rm_dev_node(dev_name);
 	case NODE_RENAME:
@@ -346,6 +361,9 @@ struct node_op_parms {
 	char *dev_name;
 	uint32_t major;
 	uint32_t minor;
+	uid_t uid;
+	gid_t gid;
+	mode_t mode;
 	char *old_name;
 	char names[0];
 };
@@ -358,7 +376,8 @@ static void _store_str(char **pos, char **ptr, const char *str)
 }
 
 static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
-			  uint32_t minor, const char *old_name)
+			  uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
+			  const char *old_name)
 {
 	struct node_op_parms *nop;
 	size_t len = strlen(dev_name) + strlen(old_name) + 2;
@@ -373,6 +392,9 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	nop->type = type;
 	nop->major = major;
 	nop->minor = minor;
+	nop->uid = uid;
+	nop->gid = gid;
+	nop->mode = mode;
 
 	_store_str(&pos, &nop->dev_name, dev_name);
 	_store_str(&pos, &nop->old_name, old_name);
@@ -390,25 +412,27 @@ static void _pop_node_ops(void)
 	list_iterate_safe(noph, nopht, &_node_ops) {
 		nop = list_item(noph, struct node_op_parms);
 		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
-			    nop->old_name);
+			    nop->uid, nop->gid, nop->mode, nop->old_name);
 		list_del(&nop->list);
 		free(nop);
 	}
 }
 
-int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor)
+int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
+		 uid_t uid, gid_t gid, mode_t mode)
 {
-	return _stack_node_op(NODE_ADD, dev_name, major, minor, "");
+	return _stack_node_op(NODE_ADD, dev_name, major, minor, uid, gid, mode,
+			      "");
 }
 
 int rename_dev_node(const char *old_name, const char *new_name)
 {
-	return _stack_node_op(NODE_RENAME, new_name, 0, 0, old_name);
+	return _stack_node_op(NODE_RENAME, new_name, 0, 0, 0, 0, 0, old_name);
 }
 
 int rm_dev_node(const char *dev_name)
 {
-	return _stack_node_op(NODE_DEL, dev_name, 0, 0, "");
+	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0, 0, 0, "");
 }
 
 void update_devs(void)

@@ -17,6 +17,7 @@
 #define LIB_DMTARGETS_H
 
 #include <inttypes.h>
+#include <sys/types.h>
 
 struct dm_ioctl;
 struct dm_ioctl_v1;
@@ -40,6 +41,9 @@ struct dm_task {
 	uint32_t event_nr;
 	int major;
 	int minor;
+	uid_t uid;
+	gid_t gid;
+	mode_t mode;
 	union {
 		struct dm_ioctl *v4;
 		struct dm_ioctl_v1 *v1;
