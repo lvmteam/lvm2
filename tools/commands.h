@@ -226,10 +226,11 @@ xx(lvscan,
    "\t[-d|--debug] " "\n"
    "\t[-D|--disk]" "\n"
    "\t[-h|--help] " "\n"
+   "\t[-P|--partial] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   blockdevice_ARG, disk_ARG)
+   blockdevice_ARG, disk_ARG, partial_ARG)
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
@@ -327,12 +328,13 @@ xx(pvscan,
    "\t[-d|--debug] " "\n"
    "\t{-e|--exported | -n/--novolumegroup} " "\n"
    "\t[-h|--help]" "\n"
+   "\t[-P|--partial] " "\n"
    "\t[-s|--short] " "\n"
    "\t[-u|--uuid] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   exported_ARG,  novolumegroup_ARG, short_ARG, uuid_ARG)
+   exported_ARG,  novolumegroup_ARG, partial_ARG, short_ARG, uuid_ARG)
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
@@ -520,7 +522,9 @@ xx(vgscan,
    "vgscan "
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
-   "\t[-v/--verbose]\n" )
+   "\t[-P/--partial] " "\n"
+   "\t[-v/--verbose]\n" ,
+   partial_ARG)
 
 xx(vgsplit,
    "Move physical volumes into a new volume group",

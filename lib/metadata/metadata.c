@@ -362,6 +362,12 @@ int vg_write(struct volume_group *vg)
 	struct list *mdah;
 	void *mdl;
 
+	if (vg->status & PARTIAL_VG) {
+		log_error("Cannot change metadata for partial volume group %s",
+			  vg->name);
+		return 0;
+	}
+
 	vg->seqno++;
 
 	/* Write to each copy of the metadata area */

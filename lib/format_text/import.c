@@ -91,13 +91,15 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 	if (!(pv->dev = uuid_map_lookup(um, &pv->id))) {
 		char buffer[64];
 
-		if (!id_write_format(&pv->id, buffer, sizeof(buffer))) {
+		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			log_err("Couldn't find device.");
-			return 0;
-		}
+		else
+			log_err("Couldn't find device with uuid '%s'.", buffer);
 
-		log_err("Couldn't find device with uuid '%s'.", buffer);
-		return 0;
+		if (partial_mode())
+			vg->status |= PARTIAL_VG;
+		else
+			return 0;
 	}
 
 	if (!(pv->vg_name = pool_strdup(mem, vg->name))) {
@@ -609,6 +611,11 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	hash_destroy(pv_hash);
+
+	if (vg->status & PARTIAL_VG) {
+		vg->status &= ~LVM_WRITE;
+		vg->status |= LVM_READ;
+	}
 
 	/*
 	 * Finished.

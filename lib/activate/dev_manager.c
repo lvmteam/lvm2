@@ -538,7 +538,7 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 	}
 
 	for (s = 0; s < stripes; s++, w += tw) {
-		if (!seg->area[s].pv)
+		if (!seg->area[s].pv || !seg->area[s].pv->dev)
 			tw = lvm_snprintf(params + w, sizeof(params) - w,
 					  "%s 0%s", filler,
 					  s == (stripes - 1) ? "" : " ");

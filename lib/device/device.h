@@ -47,7 +47,8 @@ int dev_zero(struct device *dev, uint64_t offset, int64_t len);
 
 
 static inline const char *dev_name(struct device *dev) {
-	return list_item(dev->aliases.n, struct str_list)->str;
+	return (dev) ? list_item(dev->aliases.n, struct str_list)->str :
+		       "unknown device";
 }
 
 /* Return a valid device name from the alias list; NULL otherwise */
