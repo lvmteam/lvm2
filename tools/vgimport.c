@@ -34,7 +34,7 @@ int vgimport(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	return process_each_vg(cmd, argc, argv, LCK_WRITE, &vgimport_single);
+	return process_each_vg(cmd, argc, argv, LCK_VG_WRITE, &vgimport_single);
 }
 
 static int vgimport_single(struct cmd_context *cmd, const char *vg_name)

@@ -24,7 +24,7 @@ static int vgck_single(struct cmd_context *cmd, const char *vg_name);
 
 int vgck(struct cmd_context *cmd, int argc, char **argv)
 {
-	return process_each_vg(cmd, argc, argv, LCK_READ, &vgck_single);
+	return process_each_vg(cmd, argc, argv, LCK_VG_READ, &vgck_single);
 }
 
 static int vgck_single(struct cmd_context *cmd, const char *vg_name)

@@ -134,7 +134,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		log_verbose("Using volume group(s) on command line");
 		for (; opt < argc; opt++) {
 			vg_name = argv[opt];
-			if (!lock_vol(cmd, vg_name, LCK_VG | lock_type)) {
+			if (!lock_vol(cmd, vg_name, lock_type)) {
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}
@@ -150,7 +150,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		}
 		list_iterate(vgh, vgs) {
 			vg_name = list_item(vgh, struct name_list)->name;
-			if (!lock_vol(cmd, vg_name, LCK_VG | lock_type)) {
+			if (!lock_vol(cmd, vg_name, lock_type)) {
 				log_error("Can't lock %s: skipping", vg_name);
 				continue;
 			}

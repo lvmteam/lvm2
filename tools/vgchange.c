@@ -67,7 +67,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	return process_each_vg(cmd, argc, argv,
 			       (arg_count(cmd, available_ARG)) ?
-			       LCK_READ : LCK_WRITE, &vgchange_single);
+			       LCK_VG_READ : LCK_VG_WRITE, &vgchange_single);
 }
 
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name)
