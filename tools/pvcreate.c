@@ -149,7 +149,8 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 						   DEFAULT_PVMETADATACOPIES);
 
 	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {
-		log_error("%s: Couldn't find device.", pv_name);
+		log_error("%s: Couldn't find device.  Check your filters?",
+			  pv_name);
 		goto error;
 	}
 
