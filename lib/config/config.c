@@ -177,6 +177,13 @@ static void _write_value(FILE * fp, struct config_value *v)
 	case CFG_INT:
 		fprintf(fp, "%d", v->v.i);
 		break;
+
+	case CFG_EMPTY_ARRAY:
+		fprintf(fp, "[]");
+		break;
+
+	default:
+		log_err("Unknown value type");
 	}
 }
 
@@ -325,6 +332,16 @@ static struct config_value *_value(struct parser *p)
 				match(TOK_COMMA);
 		}
 		match(TOK_ARRAY_E);
+
+		/*
+		 * Special case an empty array.
+		 */
+		if (!h) {
+			if (!(h = _create_value(p)))
+				return NULL;
+
+			h->type = CFG_EMPTY_ARRAY;
+		}
 	} else
 		h = _type(p);
 
@@ -335,6 +352,8 @@ static struct config_value *_type(struct parser *p)
 {
 	/* [0-9]+ | [0-9]*\.[0-9]* | ".*" */
 	struct config_value *v = _create_value(p);
+	if (!v)
+		return NULL;
 
 	switch (p->t) {
 	case TOK_INT:
