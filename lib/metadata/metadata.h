@@ -38,7 +38,8 @@
 #define VISIBLE_LV		0x00000040	/* LV */
 #define FIXED_MINOR		0x00000080	/* LV */
 /* FIXME Remove when metadata restructuring is completed */
-#define SNAPSHOT		0x00001000	/* LV - temp internal use only */
+#define SNAPSHOT		0x00001000	/* LV - tmp internal use only */
+#define PVMOVE_VG		0x00002000	/* VG - tmp use only */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */
@@ -397,6 +398,12 @@ int lv_extend(struct format_instance *fi,
 	      uint32_t stripe_size,
 	      uint32_t extents, struct list *allocatable_pvs);
 
+int lv_extend_mirror(struct format_instance *fid,
+		     struct logical_volume *lv,
+		     struct physical_volume *mirrored_pv,
+		     uint32_t mirrored_pe,
+		     uint32_t extents, struct list *allocatable_pvs);
+
 /* Lock list of LVs */
 int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags);
 int unlock_lvs(struct cmd_context *cmd, struct list *lvs);
@@ -468,6 +475,18 @@ int vg_add_snapshot(struct logical_volume *origin,
 		    int persistent, struct id *id, uint32_t chunk_size);
 
 int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow);
+
+/*
+ * Mirroring functions
+ */
+int insert_pvmove_mirrors(struct cmd_context *cmd,
+			  struct logical_volume *lv_mirr,
+			  struct physical_volume *pv,
+			  struct logical_volume *lv,
+			  struct list *allocatable_pvs,
+			  struct list *lvs_changed);
+int remove_pvmove_mirrors(struct cmd_context *cmd, struct volume_group *vg,
+			  struct logical_volume *lv_mirr, int commit);
 
 static inline int validate_name(const char *n)
 {

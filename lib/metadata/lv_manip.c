@@ -211,6 +211,45 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 	return 1;
 }
 
+static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
+				struct pv_map *map, struct pv_area *pva,
+				struct physical_volume *mirrored_pv,
+				uint32_t mirrored_pe)
+{
+	uint32_t count, remaining;
+	struct lv_segment *seg;
+
+	count = pva->count;
+	remaining = lv->le_count - *ix;
+	if (count > remaining)
+		count = remaining;
+
+	if (!(seg = _alloc_segment(lv->vg->cmd->mem, 2))) {
+		log_err("Couldn't allocate new mirrored segment.");
+		return 0;
+	}
+
+	seg->lv = lv;
+	seg->type = SEG_MIRRORED;
+	seg->le = *ix;
+	seg->len = count;
+	seg->area_len = count;
+	seg->stripe_size = 0;
+	seg->area_count = 2;
+	/* FIXME Remove AREA_PV restriction here? */
+	seg->area[0].type = AREA_PV;
+	seg->area[0].u.pv.pv = mirrored_pv;
+	seg->area[0].u.pv.pe = mirrored_pe;
+	seg->area[1].type = AREA_PV;
+	seg->area[1].u.pv.pv = map->pvl->pv;
+	seg->area[1].u.pv.pe = pva->start;
+	list_add(&lv->segments, &seg->list);
+
+	consume_pv_area(pva, count);
+	*ix += count;
+	return 1;
+}
+
 /*
  * Only one area per pv is allowed, so we search
  * for the biggest area, or the first area that
@@ -247,6 +286,44 @@ static int _alloc_contiguous(struct logical_volume *lv,
 
 	if (allocated != lv->le_count) {
 		log_error("Insufficient allocatable extents (%u) "
+			  "for logical volume %s: %u required",
+			  allocated, lv->name, lv->le_count);
+		return 0;
+	}
+
+	return 1;
+}
+
+/* FIXME Contiguous depends on *segment* (i.e. stripe) not LV */
+static int _alloc_mirrored(struct logical_volume *lv,
+			   struct list *pvms, uint32_t allocated,
+			   struct physical_volume *mirrored_pv,
+			   uint32_t mirrored_pe)
+{
+	struct list *tmp1;
+	struct pv_map *pvm;
+	struct pv_area *pva;
+
+	list_iterate(tmp1, pvms) {
+		pvm = list_item(tmp1, struct pv_map);
+
+		if (list_empty(&pvm->areas))
+			continue;
+
+		/* first item in the list is the biggest */
+		pva = list_item(pvm->areas.n, struct pv_area);
+
+		if (!_alloc_mirrored_area(lv, &allocated, pvm, pva,
+					  mirrored_pv, mirrored_pe)) {
+			stack;
+			return 0;
+		}
+
+		break;
+	}
+
+	if (allocated != lv->le_count) {
+		log_error("Insufficient contiguous allocatable extents (%u) "
 			  "for logical volume %s: %u required",
 			  allocated, lv->name, lv->le_count);
 		return 0;
@@ -293,7 +370,8 @@ static int _alloc_next_free(struct logical_volume *lv,
  */
 static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		     struct list *allocatable_pvs, uint32_t allocated,
-		     uint32_t stripes, uint32_t stripe_size)
+		     uint32_t stripes, uint32_t stripe_size,
+		     struct physical_volume *mirrored_pv, uint32_t mirrored_pe)
 {
 	int r = 0;
 	struct pool *scratch;
@@ -313,6 +391,9 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	if (stripes > 1)
 		r = _alloc_striped(lv, pvms, allocated, stripes, stripe_size);
 
+	else if (mirrored_pv)
+		r = _alloc_mirrored(lv, pvms, allocated, mirrored_pv,
+				    mirrored_pe);
 	else if (lv->alloc == ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
 
@@ -474,7 +555,8 @@ struct logical_volume *lv_create(struct format_instance *fi,
 	lv->size = (uint64_t) extents *vg->extent_size;
 	lv->le_count = extents;
 
-	if (!_allocate(vg, lv, allocatable_pvs, 0u, stripes, stripe_size)) {
+	if (!_allocate(vg, lv, allocatable_pvs, 0u, stripes, stripe_size,
+		       NULL, 0u)) {
 		stack;
 		return NULL;
 	}
@@ -536,7 +618,7 @@ int lv_extend(struct format_instance *fi,
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
 
 	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count,
-		       stripes, stripe_size)) {
+		       stripes, stripe_size, NULL, 0u)) {
 		lv->le_count = old_le_count;
 		lv->size = old_size;
 		stack;
@@ -550,6 +632,34 @@ int lv_extend(struct format_instance *fi,
 	}
 
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int lv_extend_mirror(struct format_instance *fid,
+		     struct logical_volume *lv,
+		     struct physical_volume *mirrored_pv,
+		     uint32_t mirrored_pe,
+		     uint32_t extents, struct list *allocatable_pvs)
+{
+	uint32_t old_le_count = lv->le_count;
+	uint64_t old_size = lv->size;
+
+	lv->le_count += extents;
+	lv->size += (uint64_t) extents *lv->vg->extent_size;
+
+	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count,
+		       1, extents, mirrored_pv, mirrored_pe)) {
+		lv->le_count = old_le_count;
+		lv->size = old_size;
+		stack;
+		return 0;
+	}
+
+	if (fid->fmt->ops->lv_setup && !fid->fmt->ops->lv_setup(fid, lv)) {
 		stack;
 		return 0;
 	}

@@ -157,6 +157,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	struct volume_group *vg;
 	struct pool *mem = cmd->mem;
 	int consistent = 0;
+	int old_partial;
 
 	if (!(vg = pool_zalloc(mem, sizeof(*vg)))) {
 		stack;
@@ -164,12 +165,13 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	/* is this vg name already in use ? */
+	old_partial = partial_mode();
 	init_partial(1);
 	if (vg_read(cmd, vg_name, &consistent)) {
 		log_err("A volume group called '%s' already exists.", vg_name);
 		goto bad;
 	}
-	init_partial(0);
+	init_partial(old_partial);
 
 	if (!id_create(&vg->id)) {
 		log_err("Couldn't create uuid for volume group '%s'.", vg_name);
@@ -614,8 +616,15 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 		}
 	}
 
-	*consistent = 1;
+	if ((correct_vg->status & PVMOVE_VG) && !pvmove_mode()) {
+		log_error("WARNING: Interrupted pvmove detected in "
+			  "volume group %s", vg->name);
+		log_error("Please restore the metadata by running "
+			  "vgcfgrestore.");
+		return NULL;
+	}
 
+	*consistent = 1;
 	return correct_vg;
 }
 
@@ -753,6 +762,8 @@ struct list *get_pvs(struct cmd_context *cmd)
 	struct list *vgnames, *slh;
 	struct volume_group *vg;
 	int consistent = 0;
+	int old_partial;
+	int old_pvmove;
 
 	cache_label_scan(cmd, 0);
 
@@ -771,7 +782,10 @@ struct list *get_pvs(struct cmd_context *cmd)
 
 	/* Read every VG to ensure cache consistency */
 	/* Orphan VG is last on list */
+	old_partial = partial_mode();
+	old_pvmove = pvmove_mode();
 	init_partial(1);
+	init_pvmove(1);
 	list_iterate(slh, vgnames) {
 		vgname = list_item(slh, struct str_list)->str;
 		if (!vgname)
@@ -790,7 +804,8 @@ struct list *get_pvs(struct cmd_context *cmd)
 			list_add(results, pvh);
 		}
 	}
-	init_partial(0);
+	init_pvmove(old_pvmove);
+	init_partial(old_partial);
 
 	return results;
 }
