@@ -157,7 +157,7 @@ static int _init(void)
 	if ((ret = dm_init_fs()))
 		return ret;
 
-	if (!dm_std_targets())
+	if (dm_std_targets())
 		return -EIO;	/* FIXME: better error value */
 
 	/* set up the arrays */

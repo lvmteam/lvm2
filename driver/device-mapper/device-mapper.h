@@ -32,8 +32,8 @@
 
 #include <linux/major.h>
 
-/* FIXME: steal LVM's devices for now */
-#define DM_BLK_MAJOR LVM_BLK_MAJOR
+/* FIXME: Use value from local range for now, for co-existence with LVM 1 */
+#define DM_BLK_MAJOR 124
 
 struct mapped_device;
 typedef unsigned int offset_t;
