@@ -8,6 +8,7 @@
 #include "log.h"
 #include "toolcontext.h"
 #include "lvm-string.h"
+#include "lvm-file.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -18,13 +19,7 @@
 #include <string.h>
 
 #include <libdevmapper.h>
-#include <dirent.h>
 
-/*
- * Lazy programmer: I'm just going to always try
- * and create/remove the vg directory, and not say
- * anything if it fails.
- */
 static int _mk_dir(struct volume_group *vg)
 {
 	char vg_path[PATH_MAX];
@@ -36,51 +31,16 @@ static int _mk_dir(struct volume_group *vg)
 		return 0;
 	}
 
-	log_very_verbose("Creating directory %s", vg_path);
-	mkdir(vg_path, 0555);
-
-	return 1;
-}
-
-static int _is_empty_dir(const char *dir)
-{
-	int i, count, r = 1;
-	struct dirent **dirent;
-	const char *name;
-
-	count = scandir(dir, &dirent, NULL, alphasort);
-	if (!count)
+	if (dir_exists(vg_path))
 		return 1;
 
-	if (count < 0) {
-		log_err("Couldn't scan directory '%s'.", dir);
+	log_very_verbose("Creating directory %s", vg_path);
+	if (mkdir(vg_path, 0555)) {
+		log_sys_error("mkdir", vg_path);
 		return 0;
 	}
 
-	/*
-	 * Scan the devices.
-	 */
-	for (i = 0; i < count; i++) {
-		name = dirent[i]->d_name;
-
-		/*
-		 * Ignore dot files.
-		 */
-		if (!strcmp(name, ".") || !strcmp(name, ".."))
-			continue;
-
-		r = 0;
-		break;
-	}
-
-	/*
-	 * Free the directory entries.
-	 */
-	for (i = 0; i < count; i++)
-		free(dirent[i]);
-	free(dirent);
-
-	return r;
+	return 1;
 }
 
 static int _rm_dir(struct volume_group *vg)
@@ -96,7 +56,7 @@ static int _rm_dir(struct volume_group *vg)
 
 	log_very_verbose("Removing directory %s", vg_path);
 
-	if (_is_empty_dir(vg_path))
+	if (is_empty_dir(vg_path))
 		rmdir(vg_path);
 
 	return 1;

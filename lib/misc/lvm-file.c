@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 /*
  * Creates a temporary filename, and opens a descriptor to the
@@ -21,17 +22,16 @@
  * rename the file after successfully writing it.  Grab
  * NFS-supported exclusive fcntl discretionary lock.
  */
-int create_temp_name(const char *dir, char *buffer, size_t len,
-			     int *fd)
+int create_temp_name(const char *dir, char *buffer, size_t len, int *fd)
 {
 	int i, num;
 	pid_t pid;
 	char hostname[255];
 	struct flock lock = {
-		l_type: F_WRLCK,
-		l_whence: 0,
-		l_start: 0,
-		l_len: 0
+		l_type:F_WRLCK,
+		l_whence:0,
+		l_start:0,
+		l_len:0
 	};
 
 	num = rand();
@@ -99,7 +99,6 @@ int lvm_rename(const char *old, const char *new)
 	return 1;
 }
 
-
 int path_exists(const char *path)
 {
 	struct stat info;
@@ -129,7 +128,6 @@ int dir_exists(const char *path)
 	return 1;
 }
 
-
 /* FIXME: Make this create directories recursively */
 int create_dir(const char *dir)
 {
@@ -153,3 +151,23 @@ int create_dir(const char *dir)
 	return 0;
 }
 
+int is_empty_dir(const char *dir)
+{
+	struct dirent *dirent;
+	DIR *d;
+
+	if (!(d = opendir(dir))) {
+		log_sys_error("opendir", dir);
+		return 0;
+	}
+
+	while ((dirent = readdir(d)))
+		if (strcmp(dirent->d_name, ".") && strcmp(dirent->d_name, ".."))
+			break;
+
+	if (closedir(d)) {
+		log_sys_error("closedir", dir);
+	}
+
+	return dirent ? 0 : 1;
+}

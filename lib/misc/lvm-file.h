@@ -23,6 +23,11 @@ int path_exists(const char *path);
 int dir_exists(const char *path);
 
 /*
+ * Return 1 if dir is empty
+ */
+int is_empty_dir(const char *dir);
+
+/*
  * Create directory (but not recursively) if necessary
  * Return 1 if directory exists on return, else 0
  */
