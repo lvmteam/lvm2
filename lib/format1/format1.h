@@ -9,6 +9,10 @@
 
 #include "metadata.h"
 
-struct format_type *create_lvm1_format(struct cmd_context *cmd);
+#define FMT_LVM1_NAME "lvm1"
+
+#ifdef LVM1_INTERNAL
+struct format_type *init_lvm1_format(struct cmd_context *cmd);
+#endif
 
 #endif

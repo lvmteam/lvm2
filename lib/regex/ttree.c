@@ -4,9 +4,9 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "ttree.h"
 #include "pool.h"
-#include "log.h"
 
 struct node {
 	unsigned k;

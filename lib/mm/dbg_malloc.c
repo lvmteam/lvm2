@@ -4,14 +4,11 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
+#include "lvm-types.h"
+
 #include <assert.h>
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-
-#include "dbg_malloc.h"
-#include "log.h"
 
 struct memblock {
 	struct memblock *prev, *next;	/* All allocated blocks are linked */

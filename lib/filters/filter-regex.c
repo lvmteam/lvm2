@@ -4,12 +4,12 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "pool.h"
 #include "filter-regex.h"
 #include "matcher.h"
 #include "device.h"
 #include "bitset.h"
-#include "log.h"
 #include "list.h"
 
 struct rfilter {
@@ -137,7 +137,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	 * build the matcher.
 	 */
 	if (!(rf->engine = matcher_create(rf->mem, (const char **) regex,
-					  count))) 
+					  count)))
 		stack;
 	r = 1;
 

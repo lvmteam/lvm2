@@ -4,14 +4,12 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "config.h"
 #include "dev-cache.h"
 #include "hash.h"
-#include "dbg_malloc.h"
-#include "log.h"
 #include "filter-persistent.h"
 
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -43,10 +41,13 @@ int persistent_filter_wipe(struct dev_filter *f)
 	struct pfilter *pf = (struct pfilter *) f->private;
 
 	hash_wipe(pf->devices);
+	/* Trigger complete device scan */
+	dev_cache_scan(1);
+
 	return 1;
 }
 
-static int _read_array(struct pfilter *pf, struct config_file *cf,
+static int _read_array(struct pfilter *pf, struct config_tree *cf,
 		       const char *path, void *data)
 {
 	struct config_node *cn;
@@ -72,6 +73,8 @@ static int _read_array(struct pfilter *pf, struct config_file *cf,
 		if (!hash_insert(pf->devices, cv->v.str, data))
 			log_verbose("Couldn't add '%s' to filter ... ignoring",
 				    cv->v.str);
+		/* Populate dev_cache ourselves */
+		dev_cache_get(cv->v.str, NULL);
 	}
 	return 1;
 }
@@ -81,32 +84,37 @@ int persistent_filter_load(struct dev_filter *f)
 	struct pfilter *pf = (struct pfilter *) f->private;
 
 	int r = 0;
-	struct config_file *cf;
+	struct config_tree *cf;
 
-	if (!(cf = create_config_file())) {
+	if (!(cf = create_config_tree())) {
 		stack;
 		return 0;
 	}
 
-	if (!read_config(cf, pf->file)) {
+	if (!read_config_file(cf, pf->file)) {
 		stack;
 		goto out;
 	}
 
 	_read_array(pf, cf, "persistent_filter_cache/valid_devices",
 		    PF_GOOD_DEVICE);
-	_read_array(pf, cf, "persistent_filter_cache/invalid_devices",
-		    PF_BAD_DEVICE);
+	/* We don't gain anything by holding invalid devices */
+	/* _read_array(pf, cf, "persistent_filter_cache/invalid_devices",
+	   PF_BAD_DEVICE); */
 
-	if (hash_get_num_entries(pf->devices))
+	/* Did we find anything? */
+	if (hash_get_num_entries(pf->devices)) {
+		/* We populated dev_cache ourselves */
+		dev_cache_scan(0);
 		r = 1;
+	}
 
       out:
-	destroy_config_file(cf);
+	destroy_config_tree(cf);
 	return r;
 }
 
-static void _write_array(struct pfilter *pf, FILE * fp, const char *path,
+static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 			 void *data)
 {
 	void *d;
@@ -147,6 +155,12 @@ int persistent_filter_dump(struct dev_filter *f)
 				 "- not writing to %s", pf->file);
 		return 0;
 	}
+	if (!dev_cache_has_scanned()) {
+		log_very_verbose("Device cache incomplete - not writing "
+				 "to %s", pf->file);
+		return 0;
+	}
+
 	log_very_verbose("Dumping persistent device cache to %s", pf->file);
 
 	fp = fopen(pf->file, "w");
@@ -160,7 +174,8 @@ int persistent_filter_dump(struct dev_filter *f)
 	fprintf(fp, "persistent_filter_cache {\n");
 
 	_write_array(pf, fp, "valid_devices", PF_GOOD_DEVICE);
-	_write_array(pf, fp, "invalid_devices", PF_BAD_DEVICE);
+	/* We don't gain anything by remembering invalid devices */
+	/* _write_array(pf, fp, "invalid_devices", PF_BAD_DEVICE); */
 
 	fprintf(fp, "}\n");
 	fclose(fp);

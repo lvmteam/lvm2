@@ -4,7 +4,7 @@
  * This file is released under the LGPL.
  */
 
-#include "log.h"
+#include "lib.h"
 #include "pool.h"
 #include "disk-rep.h"
 

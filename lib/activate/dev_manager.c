@@ -4,10 +4,10 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "dev_manager.h"
 #include "pool.h"
 #include "hash.h"
-#include "log.h"
 #include "lvm-string.h"
 #include "fs.h"
 
@@ -162,7 +162,7 @@ static int _pre_list_add(struct pool *mem, struct list *pl, char *str)
  * another hyphen.  The top layer of any device has no layer
  * name.  eg, vg0-lvol0.
  */
-static void _count_hyphens(const char *str, size_t * len, int *hyphens)
+static void _count_hyphens(const char *str, size_t *len, int *hyphens)
 {
 	const char *ptr;
 
@@ -577,7 +577,7 @@ static int _resume(struct dev_layer *dl)
  * Emit a target for a given segment.
  * FIXME: tidy this function.
  */
-static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
+static int _emit_target(struct dm_task *dmt, struct lv_segment *seg)
 {
 	char params[1024];
 	uint64_t esize = seg->lv->vg->extent_size;
@@ -638,11 +638,11 @@ static int _populate_vanilla(struct dev_manager *dm,
 			     struct dm_task *dmt, struct dev_layer *dl)
 {
 	struct list *segh;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 	struct logical_volume *lv = dl->lv;
 
 	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct stripe_segment);
+		seg = list_item(segh, struct lv_segment);
 		if (!_emit_target(dmt, seg)) {
 			log_error("Unable to build table for '%s'", lv->name);
 			return 0;

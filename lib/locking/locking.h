@@ -9,7 +9,7 @@
 #include "uuid.h"
 #include "config.h"
 
-int init_locking(int type, struct config_file *cf);
+int init_locking(int type, struct config_tree *cf);
 void fin_locking(void);
 
 /*

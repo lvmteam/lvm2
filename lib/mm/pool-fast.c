@@ -4,13 +4,9 @@
  * This file is released under the LGPL.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-
+#include "lib.h"
 #include "pool.h"
-#include "dbg_malloc.h"
-#include "log.h"
+#include "lvm-types.h"
 
 struct chunk {
 	char *begin, *end;

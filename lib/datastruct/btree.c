@@ -4,8 +4,8 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "btree.h"
-#include "log.h"
 
 struct node {
 	uint32_t key;

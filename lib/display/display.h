@@ -25,19 +25,21 @@
 
 #include <stdint.h>
 
-typedef	enum {SIZE_LONG=0, SIZE_SHORT=1} size_len_t;
+typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1 } size_len_t;
 
 /* Specify size in KB */
 char *display_size(uint64_t size, size_len_t sl);
 char *display_uuid(char *uuidstr);
 
 void pvdisplay_colons(struct physical_volume *pv);
-void pvdisplay_full(struct physical_volume *pv);
-int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv);
+void pvdisplay_full(struct physical_volume *pv, void *handle);
+int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
+		    struct physical_volume *pv, void *handle);
 
 void lvdisplay_colons(struct logical_volume *lv);
 int lvdisplay_segments(struct logical_volume *lv);
-int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv);
+int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
+		   void *handle);
 
 void vgdisplay_extents(struct volume_group *vg);
 void vgdisplay_full(struct volume_group *vg);
@@ -45,14 +47,15 @@ void vgdisplay_colons(struct volume_group *vg);
 void vgdisplay_short(struct volume_group *vg);
 
 /*
- * Retrieve a text description of the allocation policy.  Only
- * extern because it's used by lvscan.
+ * Allocation policy display conversion routines.
  */
 const char *get_alloc_string(alloc_policy_t alloc);
+alloc_policy_t get_alloc_from_string(const char *str);
 
 /*
- * FIXME: put this somewhere more sensible.
+ * Segment type display conversion routines.
  */
-alloc_policy_t get_alloc_from_string(const char *str);
+segment_type_t get_segtype_from_string(const char *str);
+const char *get_segtype_string(segment_type_t segtype);
 
 #endif

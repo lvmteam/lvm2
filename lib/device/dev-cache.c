@@ -4,17 +4,14 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "dev-cache.h"
-#include "log.h"
 #include "pool.h"
 #include "hash.h"
 #include "list.h"
 #include "lvm-types.h"
 #include "btree.h"
-#include "dbg_malloc.h"
 
-#include <stdlib.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/param.h>
@@ -63,6 +60,8 @@ static struct device *_create_dev(dev_t d)
 	list_init(&dev->aliases);
 	dev->dev = d;
 	dev->fd = -1;
+	dev->flags = 0;
+	memset(dev->pvid, 0, sizeof(dev->pvid));
 	return dev;
 }
 
@@ -227,6 +226,21 @@ static void _full_scan(void)
 	};
 
 	_cache.has_scanned = 1;
+}
+
+int dev_cache_has_scanned(void)
+{
+	return _cache.has_scanned;
+}
+
+void dev_cache_scan(int do_scan)
+{
+	if (!do_scan)
+		_cache.has_scanned = 1;
+	else {
+		_cache.has_scanned = 0;
+		_full_scan();
+	}
 }
 
 int dev_cache_init(void)

@@ -11,8 +11,6 @@
 #include "pool.h"
 
 #include <limits.h>
-#include <string.h>
-
 
 typedef uint32_t *bitset_t;
 

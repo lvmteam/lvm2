@@ -17,6 +17,7 @@
  * MA 02111-1307, USA
  */
 
+#if 0
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -24,9 +25,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <string.h>
+
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <linux/fs.h>
+#include <linux/major.h>
+#include <linux/genhd.h>
 
 #include "dbg_malloc.h"
 #include "log.h"
@@ -34,11 +38,6 @@
 #include "metadata.h"
 #include "device.h"
 
-#include <linux/fs.h>
-#include <linux/major.h>
-#include <linux/genhd.h>
-
-#if 0
 int _get_partition_type(struct dev_filter *filter, struct device *d);
 
 #define MINOR_PART(dm, d) (MINOR((d)->dev) % dev_max_partitions(dm, (d)->dev))

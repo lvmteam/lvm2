@@ -4,20 +4,16 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "fs.h"
-#include "log.h"
 #include "toolcontext.h"
 #include "lvm-string.h"
 #include "lvm-file.h"
 
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
-#include <stdio.h>
-#include <string.h>
-
 #include <libdevmapper.h>
 
 static int _mk_dir(struct volume_group *vg)

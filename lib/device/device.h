@@ -9,6 +9,7 @@
 
 #include "lvm-types.h"
 #include "list.h"
+#include "uuid.h"
 
 #define DEV_ACCESSED_W		0x00000001	/* Device written to? */
 
@@ -17,17 +18,25 @@
  * pointer comparisons are valid.
  */
 struct device {
-	struct list aliases; /* struct str_list from lvm-types.h */
+	struct list aliases;	/* struct str_list from lvm-types.h */
 	dev_t dev;
 
 	/* private */
 	int fd;
 	uint32_t flags;
+
+	char pvid[ID_LEN + 1];
 };
 
 struct device_list {
 	struct list list;
 	struct device *dev;
+};
+
+struct device_area {
+	struct device *dev;
+	uint64_t start;		/* Bytes */
+	uint64_t size;		/* Bytes */
 };
 
 /*
@@ -39,24 +48,36 @@ int dev_get_sectsize(struct device *dev, uint32_t *size);
 int dev_open(struct device *dev, int flags);
 int dev_close(struct device *dev);
 
+static inline int dev_fd(struct device *dev)
+{
+	return dev->fd;
+}
+
+int raw_read(int fd, void *buf, size_t count);
+
 int64_t dev_read(struct device *dev,
 		 uint64_t offset, int64_t len, void *buffer);
 int64_t dev_write(struct device *dev,
 		  uint64_t offset, int64_t len, void *buffer);
 int dev_zero(struct device *dev, uint64_t offset, int64_t len);
 
-
-static inline const char *dev_name(struct device *dev) {
+static inline const char *dev_name(struct device *dev)
+{
 	return (dev) ? list_item(dev->aliases.n, struct str_list)->str :
-		       "unknown device";
+	    "unknown device";
 }
 
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev);
 
-static inline int is_lvm_partition(const char *name) {
+static inline int is_lvm_partition(const char *name)
+{
 	return 1;
 }
 
-#endif
+static inline int dev_is_open(struct device *dev)
+{
+	return dev->fd >= 0 ? 1 : 0;
+}
 
+#endif

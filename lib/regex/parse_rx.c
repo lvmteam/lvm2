@@ -4,13 +4,9 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "parse_rx.h"
 #include "bitset.h"
-#include "log.h"
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 struct parse_sp {		/* scratch pad for the parsing process */
 	struct pool *mem;

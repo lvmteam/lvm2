@@ -1,0 +1,7 @@
+{ 
+	global:
+		init_format;
+	local:
+		*;
+};
+

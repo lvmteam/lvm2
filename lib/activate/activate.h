@@ -7,7 +7,11 @@
 #ifndef LVM_ACTIVATE_H
 #define LVM_ACTIVATE_H
 
+#include "metadata.h"
 #include <libdevmapper.h>
+
+void set_activation(int activation);
+int activation();
 
 int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);

@@ -4,15 +4,13 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "disk-rep.h"
-#include "dbg_malloc.h"
 #include "pool.h"
 #include "xlate.h"
-#include "log.h"
-#include "vgcache.h"
 #include "filter.h"
+#include "cache.h"
 
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <linux/kdev_t.h>
@@ -116,12 +114,12 @@ static int _munge_formats(struct pv_disk *pvd)
 	switch (pvd->version) {
 	case 1:
 		pvd->pe_start = ((pvd->pe_on_disk.base +
-				  pvd->pe_on_disk.size) / SECTOR_SIZE);
+				  pvd->pe_on_disk.size) >> SECTOR_SHIFT);
 		break;
 
 	case 2:
 		pvd->version = 1;
-		pe_start = pvd->pe_start * SECTOR_SIZE;
+		pe_start = pvd->pe_start << SECTOR_SHIFT;
 		pvd->pe_on_disk.size = pe_start - pvd->pe_on_disk.base;
 		break;
 
@@ -132,7 +130,7 @@ static int _munge_formats(struct pv_disk *pvd)
 	return 1;
 }
 
-int read_pvd(struct device *dev, struct pv_disk *pvd)
+static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 {
 	if (dev_read(dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd)) {
 		log_very_verbose("Failed to read PV data from %s",
@@ -143,14 +141,14 @@ int read_pvd(struct device *dev, struct pv_disk *pvd)
 	_xlate_pvd(pvd);
 
 	if (pvd->id[0] != 'H' || pvd->id[1] != 'M') {
-		log_very_verbose("%s does not have a valid PV identifier",
+		log_very_verbose("%s does not have a valid LVM1 PV identifier",
 				 dev_name(dev));
 		return 0;
 	}
 
 	if (!_munge_formats(pvd)) {
-		log_very_verbose("Unknown metadata version %d found on %s",
-				 pvd->version, dev_name(dev));
+		log_very_verbose("format1: Unknown metadata version %d "
+				 "found on %s", pvd->version, dev_name(dev));
 		return 0;
 	}
 
@@ -282,6 +280,7 @@ static struct disk_list *__read_disk(struct format_type *fmt,
 {
 	struct disk_list *dl = pool_alloc(mem, sizeof(*dl));
 	const char *name = dev_name(dev);
+	struct cache_info *info;
 
 	if (!dl) {
 		stack;
@@ -293,9 +292,18 @@ static struct disk_list *__read_disk(struct format_type *fmt,
 	list_init(&dl->uuids);
 	list_init(&dl->lvds);
 
-	if (!read_pvd(dev, &dl->pvd)) {
+	if (!_read_pvd(dev, &dl->pvd)) {
 		stack;
 		goto bad;
+	}
+
+	if (!(info = cache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
+			       dl->pvd.vg_name, NULL)))
+		stack;
+	else {
+		info->device_size = xlate32(dl->pvd.pv_size) << SECTOR_SHIFT;
+		list_init(&info->mdas);
+		info->status &= ~CACHE_INVALID;
 	}
 
 	/*
@@ -305,7 +313,7 @@ static struct disk_list *__read_disk(struct format_type *fmt,
 		log_very_verbose("%s is not a member of any format1 VG", name);
 
 		/* Update VG cache */
-		vgcache_add(dl->pvd.vg_name, NULL, dev, fmt);
+		/* vgcache_add(dl->pvd.vg_name, NULL, dev, fmt); */
 
 		return (vg_name) ? NULL : dl;
 	}
@@ -319,7 +327,7 @@ static struct disk_list *__read_disk(struct format_type *fmt,
 	_munge_exported_vg(dl);
 
 	/* Update VG cache with what we found */
-	vgcache_add(dl->pvd.vg_name, dl->vgd.vg_uuid, dev, fmt);
+	/* vgcache_add(dl->pvd.vg_name, dl->vgd.vg_uuid, dev, fmt); */
 
 	if (vg_name && strcmp(vg_name, dl->pvd.vg_name)) {
 		log_very_verbose("%s is not a member of the VG %s",
@@ -407,14 +415,15 @@ int read_pvs_in_vg(struct format_type *fmt, const char *vg_name,
 	struct dev_iter *iter;
 	struct device *dev;
 	struct disk_list *data = NULL;
-
-	struct list *pvdh, *pvdh2;
+	struct list *vgih;
+	struct cache_vginfo *vginfo;
 
 	/* Fast path if we already saw this VG and cached the list of PVs */
-	if ((pvdh = vgcache_find(vg_name))) {
-		list_iterate(pvdh2, pvdh) {
-			dev = list_item(pvdh2, struct pvdev_list)->dev;
-			if (!(data = read_disk(fmt, dev, mem, vg_name)))
+	if (vg_name && (vginfo = vginfo_from_vgname(vg_name)) &&
+	    vginfo->infos.n) {
+		list_iterate(vgih, &vginfo->infos) {
+			dev = list_item(vgih, struct cache_info)->dev;
+			if (dev && !(data = read_disk(fmt, dev, mem, vg_name)))
 				break;
 			_add_pv_to_list(head, data);
 		}
@@ -422,11 +431,12 @@ int read_pvs_in_vg(struct format_type *fmt, const char *vg_name,
 		/* Did we find the whole VG? */
 		if (!vg_name || !*vg_name ||
 		    (data && *data->pvd.vg_name &&
-		     list_size(head) == data->vgd.pv_cur)) return 1;
+		     list_size(head) == data->vgd.pv_cur))
+			return 1;
 
-		/* Something changed. Remove the hints. */
+		/* Failed */
 		list_init(head);
-		vgcache_del(vg_name);
+		/* vgcache_del(vg_name); */
 	}
 
 	if (!(iter = dev_iter_create(filter))) {
@@ -514,8 +524,7 @@ static int _write_lvs(struct disk_list *data)
 		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 
 		offset = sizeof(struct lv_disk) * ll->lvd.lv_number;
-		if (offset + sizeof(struct lv_disk) >
-		    data->pvd.lv_on_disk.size) {
+		if (offset + sizeof(struct lv_disk) > data->pvd.lv_on_disk.size) {
 			log_error("lv_number %d too large", ll->lvd.lv_number);
 			return 0;
 		}
@@ -587,19 +596,19 @@ static int __write_all_pvd(struct format_type *fmt, struct disk_list *data)
 		return 0;
 	}
 
-	vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, data->dev, fmt);
+	/* vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, data->dev, fmt); */
 	/*
 	 * Stop here for orphan pv's.
 	 */
 	if (data->pvd.vg_name[0] == '\0') {
-		if (!test_mode())
-			vgcache_add(data->pvd.vg_name, NULL, data->dev, fmt);
+		/* if (!test_mode())
+		   vgcache_add(data->pvd.vg_name, NULL, data->dev, fmt); */
 		return 1;
 	}
 
-	if (!test_mode())
-		vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, data->dev,
-			    fmt);
+	/* if (!test_mode())
+	   vgcache_add(data->pvd.vg_name, data->vgd.vg_uuid, data->dev,
+	   fmt); */
 
 	if (!_write_vgd(data)) {
 		log_error("Failed to write VG data to %s", pv_name);

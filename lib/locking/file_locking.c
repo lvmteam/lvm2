@@ -5,7 +5,7 @@
  *
  */
 
-#include "log.h"
+#include "lib.h"
 #include "locking.h"
 #include "locking_types.h"
 #include "activate.h"
@@ -13,11 +13,9 @@
 #include "defaults.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
-#include "dbg_malloc.h"
 
 #include <limits.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
@@ -117,13 +115,16 @@ static int _lock_file(const char *file, int flags)
 
 	struct lock_list *ll;
 	struct stat buf1, buf2;
+	char state;
 
 	switch (flags & LCK_TYPE_MASK) {
 	case LCK_READ:
 		operation = LOCK_SH;
+		state = 'R';
 		break;
 	case LCK_WRITE:
 		operation = LOCK_EX;
+		state = 'W';
 		break;
 	case LCK_UNLOCK:
 		return _release_lock(file);
@@ -142,7 +143,8 @@ static int _lock_file(const char *file, int flags)
 
 	ll->lf = -1;
 
-	log_very_verbose("Locking %s", ll->res);
+	log_very_verbose("Locking %s %c%c", ll->res, state,
+			 flags & LCK_NONBLOCK ? ' ' : 'B');
 	do {
 		if (ll->lf > -1)
 			close(ll->lf);
@@ -197,10 +199,6 @@ int file_lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 			return 0;
 		break;
 	case LCK_LV:
-		/* Skip if driver isn't loaded */
-		/* FIXME Use /proc/misc instead? */
-		if (!driver_version(NULL, 0))
-			return 1;
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
 			if (!lv_resume_if_active(cmd, resource))
@@ -231,7 +229,7 @@ int file_lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 	return 1;
 }
 
-int init_file_locking(struct locking_type *locking, struct config_file *cf)
+int init_file_locking(struct locking_type *locking, struct config_tree *cf)
 {
 	locking->lock_resource = file_lock_resource;
 	locking->fin_locking = fin_file_locking;

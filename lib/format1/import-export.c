@@ -6,12 +6,11 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "disk-rep.h"
-#include "dbg_malloc.h"
 #include "pool.h"
 #include "hash.h"
 #include "list.h"
-#include "log.h"
 #include "lvm-string.h"
 
 #include <time.h>
@@ -57,9 +56,9 @@ int import_pv(struct pool *mem, struct device *dev,
 
 	if (vg &&
 	    strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id)))
-		    log_very_verbose("System ID %s on %s differs from %s for "
-				     "volume group", pvd->system_id,
-				     dev_name(pv->dev), vg->system_id);
+		log_very_verbose("System ID %s on %s differs from %s for "
+				 "volume group", pvd->system_id,
+				 dev_name(pv->dev), vg->system_id);
 
 	/*
 	 * If exported, we still need to flag in pv->status too because
@@ -163,7 +162,7 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 	if (vg &&
 	    (!*vg->system_id ||
 	     strncmp(vg->system_id, pvd->system_id, sizeof(pvd->system_id))))
-		    strncpy(vg->system_id, pvd->system_id, NAME_LEN);
+		strncpy(vg->system_id, pvd->system_id, NAME_LEN);
 
 	//pvd->pv_major = MAJOR(pv->dev);
 
@@ -172,7 +171,10 @@ int export_pv(struct pool *mem, struct volume_group *vg,
 
 	pvd->pv_size = pv->size;
 	pvd->lv_cur = 0;	/* this is set when exporting the lv list */
-	pvd->pe_size = pv->pe_size;
+	if (vg)
+		pvd->pe_size = vg->extent_size;
+	else
+		pvd->pe_size = pv->pe_size;
 	pvd->pe_total = pv->pe_count;
 	pvd->pe_allocated = pv->pe_alloc_count;
 	pvd->pe_start = pv->pe_start;
@@ -278,6 +280,8 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 		return 0;
 	}
 
+	lv->status |= VISIBLE_LV;
+
 	if (lvd->lv_status & LV_SPINDOWN)
 		lv->status |= SPINDOWN_LV;
 
@@ -296,13 +300,11 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	if (lvd->lv_badblock)
 		lv->status |= BADBLOCK_ON;
 
-	if (lvd->lv_allocation & LV_STRICT)
-		lv->alloc = ALLOC_STRICT;
-
+	/* Drop the unused LV_STRICT here */
 	if (lvd->lv_allocation & LV_CONTIGUOUS)
 		lv->alloc = ALLOC_CONTIGUOUS;
 	else
-		lv->alloc |= ALLOC_NEXT_FREE;
+		lv->alloc = ALLOC_NEXT_FREE;
 
 	lv->read_ahead = lvd->lv_read_ahead;
 	lv->size = lvd->lv_size;
@@ -313,15 +315,13 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	return 1;
 }
 
-void export_lv(struct lv_disk *lvd, struct volume_group *vg,
-	       struct logical_volume *lv, const char *dev_dir)
+static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
+		       struct logical_volume *lv, const char *dev_dir)
 {
 	memset(lvd, 0, sizeof(*lvd));
 	snprintf(lvd->lv_name, sizeof(lvd->lv_name), "%s%s/%s",
 		 dev_dir, vg->name, lv->name);
 
-	/* FIXME: Add 'if' test */
-	_check_vg_name(vg->name);
 	strcpy(lvd->vg_name, vg->name);
 
 	if (lv->status & LVM_READ)
@@ -339,19 +339,15 @@ void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	}
 
 	lvd->lv_read_ahead = lv->read_ahead;
-	lvd->lv_stripes = list_item(lv->segments.n,
-				    struct stripe_segment)->stripes;
+	lvd->lv_stripes = list_item(lv->segments.n, struct lv_segment)->stripes;
 	lvd->lv_stripesize = list_item(lv->segments.n,
-				       struct stripe_segment)->stripe_size;
+				       struct lv_segment)->stripe_size;
 
 	lvd->lv_size = lv->size;
 	lvd->lv_allocated_le = lv->le_count;
 
 	if (lv->status & BADBLOCK_ON)
 		lvd->lv_badblock = LV_BADBLOCK_ON;
-
-	if (lv->alloc == ALLOC_STRICT)
-		lvd->lv_allocation |= LV_STRICT;
 
 	if (lv->alloc == ALLOC_CONTIGUOUS)
 		lvd->lv_allocation |= LV_CONTIGUOUS;
@@ -362,11 +358,11 @@ int export_extents(struct disk_list *dl, int lv_num,
 {
 	struct list *segh;
 	struct pe_disk *ped;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 	uint32_t pe, s;
 
 	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct stripe_segment);
+		seg = list_item(segh, struct lv_segment);
 
 		for (s = 0; s < seg->stripes; s++) {
 			if (seg->area[s].pv != pv)
@@ -384,7 +380,7 @@ int export_extents(struct disk_list *dl, int lv_num,
 	return 1;
 }
 
-int import_pvs(struct format_instance *fid, struct pool *mem,
+int import_pvs(struct format_type *fmt, struct pool *mem,
 	       struct volume_group *vg,
 	       struct list *pvds, struct list *results, int *count)
 {
@@ -408,7 +404,7 @@ int import_pvs(struct format_instance *fid, struct pool *mem,
 			return 0;
 		}
 
-		pvl->pv->fid = fid;
+		pvl->pv->fmt = fmt;
 		list_add(results, &pvl->list);
 		(*count)++;
 	}
@@ -477,6 +473,11 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	int lv_num, len;
 	struct hash_table *lvd_hash;
 
+	if (!_check_vg_name(vg->name)) {
+		stack;
+		return 0;
+	}
+
 	if (!(lvd_hash = hash_create(32))) {
 		stack;
 		return 0;
@@ -499,7 +500,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 			goto out;
 		}
 
-		export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
+		_export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
 
 		lv_num = lvnum_from_lvid(&ll->lv->lvid);
 
@@ -616,7 +617,8 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 				continue;
 
 			/* insert the snapshot */
-			if (!vg_add_snapshot(org, cow, 1, lvd->lv_chunk_size)) {
+			if (!vg_add_snapshot(org, cow, 1, NULL,
+					     lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");
 				return 0;
 			}

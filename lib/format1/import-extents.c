@@ -4,10 +4,9 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "metadata.h"
 #include "hash.h"
-#include "dbg_malloc.h"
-#include "log.h"
 #include "pool.h"
 #include "disk-rep.h"
 
@@ -192,9 +191,9 @@ static int _check_maps_are_complete(struct hash_table *maps)
 	return 1;
 }
 
-static struct stripe_segment *_alloc_seg(struct pool *mem, uint32_t stripes)
+static struct lv_segment *_alloc_seg(struct pool *mem, uint32_t stripes)
 {
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 	uint32_t len = sizeof(*seg) + (stripes * sizeof(seg->area[0]));
 
 	if (!(seg = pool_zalloc(mem, len))) {
@@ -208,12 +207,13 @@ static struct stripe_segment *_alloc_seg(struct pool *mem, uint32_t stripes)
 static int _read_linear(struct pool *mem, struct lv_map *lvm)
 {
 	uint32_t le = 0;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 
 	while (le < lvm->lv->le_count) {
 		seg = _alloc_seg(mem, 1);
 
 		seg->lv = lvm->lv;
+		seg->type = SEG_STRIPED;
 		seg->le = le;
 		seg->len = 0;
 		seg->stripe_size = 0;
@@ -238,7 +238,7 @@ static int _read_linear(struct pool *mem, struct lv_map *lvm)
 	return 1;
 }
 
-static int _check_stripe(struct lv_map *lvm, struct stripe_segment *seg,
+static int _check_stripe(struct lv_map *lvm, struct lv_segment *seg,
 			 uint32_t base_le, uint32_t len)
 {
 	uint32_t le, st;
@@ -260,7 +260,7 @@ static int _check_stripe(struct lv_map *lvm, struct stripe_segment *seg,
 static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 {
 	uint32_t st, le = 0, len;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 
 	/*
 	 * Work out overall striped length
@@ -279,6 +279,7 @@ static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 		}
 
 		seg->lv = lvm->lv;
+		seg->type = SEG_STRIPED;
 		seg->stripe_size = lvm->stripe_size;
 		seg->stripes = lvm->stripes;
 		seg->le = seg->stripes * le;
