@@ -23,6 +23,8 @@ int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 	struct pool *mem = pool_create(10 * 1024);
 	int numbers[MAX_VG], i, r = 0;
 
+	INIT_LIST_HEAD(&all_pvs);
+
 	if (!mem) {
 		stack;
 		return 0;
