@@ -206,6 +206,8 @@ struct physical_volume *pv_create(struct io_space *ios, const char *name);
 
 
 
+int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
+              char **pv_names);
 
 
 

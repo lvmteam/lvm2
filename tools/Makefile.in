@@ -27,6 +27,7 @@ SOURCES=\
 	toollib.c \
 	vgck.c \
 	vgcreate.c \
+	vgextend.c \
 	vgreduce.c \
 	vgrename.c \
 	vgremove.c \
