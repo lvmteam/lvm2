@@ -394,6 +394,7 @@ int lv_is_cow(struct logical_volume *lv);
 
 struct snapshot *find_cow(struct logical_volume *lv);
 struct snapshot *find_origin(struct logical_volume *lv);
+struct list *find_snapshots(struct logical_volume *lv);
 
 int vg_add_snapshot(struct logical_volume *origin,
 		    struct logical_volume *cow,

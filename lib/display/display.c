@@ -247,12 +247,17 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	log_print("LV Write Access        %s",
 		  (lv->status & LVM_WRITE) ? "read/write" : "read only");
 
-	/* see if this LV is an origina for a snapshot */
+	/* see if this LV is an origin for a snapshot */
 	if ((snap = find_origin(lv))) {
-		log_print("LV snapshot status     source of");
-		log_print("                       %s%s/%s [%s]",
-			  lv->vg->cmd->dev_dir, lv->vg->name, snap->cow->name,
-			  "active");
+		struct list *slh, *snaplist = find_snapshots(lv);
+		
+		list_iterate(slh, snaplist) {
+			snap = list_item(slh, struct snapshot_list)->snapshot;
+			log_print("LV snapshot status     source of");
+			log_print("                       %s%s/%s [%s]",
+				 lv->vg->cmd->dev_dir, lv->vg->name,
+				 snap->cow->name, "active");
+		}
 		/* reset so we don't try to use this to display other snapshot
  		 * related information. */
 		snap = NULL;
