@@ -4,10 +4,13 @@ dmsetup \- low level logical volume management
 .SH SYNOPSIS
 .ad l
 .B dmsetup create
-.I device_name table_file
+.I device_name table_file [uuid]
 .br
 .B dmsetup remove
 .I device_name
+.br
+.B dmsetup rename
+.I device_name new_name
 .br
 .B dmsetup suspend
 .I device_name
@@ -20,6 +23,23 @@ dmsetup \- low level logical volume management
 .br
 .B dmsetup info
 .I device_name
+.br
+.B dmsetup deps
+.I device_name
+.br
+.B dmsetup status
+.I device_name
+.br
+.B dmsetup table
+.I device_name
+.br
+.B dmsetup wait
+.I device_name
+.br
+.B dmsetup remove_all
+.I device_name
+.br
+.B dmsetup version
 .ad b
 .SH DESCRIPTION
 dmsetup manages logical devices that use the device-mapper driver.  
@@ -27,19 +47,25 @@ Devices are created by loading a table that specifies a target for
 each sector in the logical device.
 
 The first argument to dmsetup is a command. 
-The second argument is the logical device name.
+The second argument is the logical device name or uuid.
 .SH COMMANDS
 .IP \fBcreate
-.I device_name table_file
+.I device_name table_file [uuid]
 .br
-Attempts to create a device using the table file given.  If
+Attempts to create a device using the table file given.
+The optional uuid can be used in place of
+device_name in subsequent dmsetup commands.  If
 successful a device will appear as
 /dev/device-mapper/<device-name>.  See below for information
 on the table file format.
 .IP \fBremove
 .I device_name
 .br
-Removes the device
+Removes a device
+.IP \fBrename
+.I device_name new_name
+.br
+Renames a device
 .IP \fBsuspend
 .I device_name
 .br
@@ -67,14 +93,40 @@ Outputs some brief information about the device in the form:
     major,minor
 .br
     target_count
+.IP \fBdeps
+.I device_name
+.br
+Outputs a list of (major, minor) pairs for devices referenced by the
+specified device.
+.IP \fBstatus
+.I device_name
+.br
+Outputs status information for each of the device's targets.
+.IP \fBtable
+.I device_name
+.br
+Outputs the current table for the device in a format than can be fed
+back in using the create or reload commands.
+.IP \fBwait
+.I device_name
+.br
+Sleeps until an event is triggered against a device.
+.IP \fBremove_all
+.br
+Attempts to remove all device definitions i.e. reset the driver.
+Use with care!
+.IP \fBversion
+.I device_name
+.br
+Outputs version information.
 .SH TABLE FORMAT
 Each line of the table specifies a single target and is of the form:
 .br
     logical_start_sector num_sectors target_type target_args
 .br
 .br
-At the moment there are 3 simple target types available - though your
-system might have more in the form of modules.
+There are currently three simple target types available together 
+with more complex optional ones that implement snapshots and mirrors.
 
 .IP \fBlinear
 .I destination_device start_sector
