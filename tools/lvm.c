@@ -739,6 +739,9 @@ static int run_command(int argc, char **argv)
 
 	set_cmd_name(cmd->command->name);
 
+	/* FIXME: not sure that this is the best place for this... */
+	init_msg_prefix(find_config_str(cmd->cf->root, "log/prefix", '/', 0));
+
 	if ((ret = process_common_commands(cmd->command)))
 		return ret;
 

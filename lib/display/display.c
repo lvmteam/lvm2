@@ -104,6 +104,18 @@ void pvdisplay_full(struct physical_volume *pv)
 		return;
 	}
 
+	/* Compat */
+	if(!pv->pe_size) {
+		size = display_size((uint64_t) pv->size / 2, SIZE_SHORT);
+		log_print("\"%s\" is a new physical volume of %s", dev_name(pv->dev), size);
+		dbg_free(size);
+		return;
+	}
+
+	set_cmd_name("");
+	init_msg_prefix("");
+
+/****** FIXME Do we really need this conditional here? */
 	log_print("--- %sPhysical volume ---", pv->pe_size ? "" : "NEW ");
 	log_print("PV Name               %s", dev_name(pv->dev));
 	log_print("VG Name               %s%s", pv->vg_name,
@@ -114,18 +126,23 @@ void pvdisplay_full(struct physical_volume *pv)
 		size1 = display_size((pv->size - pv->pe_count * pv->pe_size)
 				     / 2, SIZE_SHORT);
 
-/******** FIXME display LVM on-disk data size
+/******** FIXME display LVM on-disk data size - static for now...
 		size2 = display_size(pv->size / 2, SIZE_SHORT);
 ********/
 
-		log_print("PV Size               %s" " / not usable %s",	/*  [LVM: %s]", */
-			  size, size1);	/* , size2);    */
+		log_print("PV Size               %s [%llu secs]" " / not "
+			  "usable %s [LVM: %s]",
+			  size, (uint64_t) pv->size, size1, "151 KB");
+	/* , size2);    */
 
 		dbg_free(size1);
 		/* dbg_free(size2); */
 	} else
 		log_print("PV Size               %s", size);
 	dbg_free(size);
+
+/******** FIXME anytime this *isn't* available? */
+	log_print("PV Status             available");
 
 /*********FIXME Anything use this?
 	log_print("PV#                   %u", pv->pv_number);
@@ -138,9 +155,9 @@ void pvdisplay_full(struct physical_volume *pv)
 	else
 		log_print("Allocatable           NO");
 
-/*********FIXME
-	log_print("Cur LV                %u", pv->lv_cur);
-*********/
+/*********FIXME Erm...where is this stored?
+	log_print("Cur LV                %u", vg->lv_count);
+*/
 	log_print("PE Size (KByte)       %" PRIu64, pv->pe_size / 2);
 	log_print("Total PE              %u", pv->pe_count);
 	log_print("Free PE               %" PRIu64, pe_free);
@@ -173,6 +190,8 @@ int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
 	return 0;
 }
 
+
+
 void lvdisplay_colons(struct logical_volume *lv)
 {
 	int inkernel;
@@ -202,6 +221,9 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	int inkernel;
 	char uuid[64];
 	struct snapshot *snap;
+	struct stripe_segment *seg;
+	struct list *lvseg;
+	struct logical_volume *origin;
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
 		stack;
@@ -210,19 +232,37 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 
 	inkernel = lv_info(lv, &info) && info.exists;
 
+	set_cmd_name("");
+	init_msg_prefix("");
+
 	log_print("--- Logical volume ---");
 
 	log_print("LV Name                %s%s/%s", lv->vg->cmd->dev_dir,
 		  lv->vg->name, lv->name);
 	log_print("VG Name                %s", lv->vg->name);
 
+/* Not in LVM1 format 
 	log_print("LV UUID                %s", uuid);
-
+**/
 	log_print("LV Write Access        %s",
 		  (lv->status & LVM_WRITE) ? "read/write" : "read only");
 
-	if ((snap = find_cow(lv)))
-		log_print("Snapshot of            %s", snap->origin->name);
+	/* see if this LV is an origina for a snapshot */
+	if ((snap = find_origin(lv))) {
+		log_print("LV snapshot status     source of");
+		log_print("                       %s%s/%s [%s]",
+			  lv->vg->cmd->dev_dir, lv->vg->name, snap->cow->name,
+			  "active");
+		/* reset so we don't try to use this to display other snapshot
+ 		 * related information. */
+		snap = NULL;
+	}
+	/* Check to see if this LV is a COW target for a snapshot */
+	else if ((snap = find_cow(lv)))
+		log_print("LV snapshot status     %s destination for %s%s/%s",
+		 	  "active", lv->vg->cmd->dev_dir, lv->vg->name,
+			  snap->origin->name);
+
 
 /******* FIXME Snapshot
     if (lv->status & (LVM_SNAPSHOT_ORG | LVM_SNAPSHOT)) {
@@ -275,13 +315,17 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 		log_print("LV Status              %savailable",
 			  inkernel ? "" : "NOT ");
 
-/********* FIXME lv_number
+/********* FIXME lv_number - not sure that we're going to bother with this
     log_print("LV #                   %u", lv->lv_number + 1);
 ************/
 
+/* LVM1 lists the number of LVs open in this field, therefore, so do we. */
+	log_print("# open                 %u", lvs_in_vg_opened(lv->vg));
+
+/* We're not going to use this count ATM, 'cause it's not what LVM1 does 
 	if (inkernel)
 		log_print("# open                 %u", info.open_count);
-
+*/
 /********
 #ifdef LVM_FUTURE
     printf("Mirror copies          %u\n", lv->lv_mirror_copies);
@@ -294,15 +338,46 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 #endif
 ********/
 
-	size = display_size(lv->size / 2, SIZE_SHORT);
+	if(snap)
+		origin = snap->origin;
+	else
+		origin = lv;
+	
+	size = display_size(origin->size / 2, SIZE_SHORT);
 	log_print("LV Size                %s", size);
 	dbg_free(size);
 
-	log_print("Current LE             %u", lv->le_count);
+	log_print("Current LE             %u", origin->le_count);
+	
+/********** FIXME allocation - is there anytime the allocated LEs will not
+ * equal the current LEs? */
+	log_print("Allocated LE           %u", origin->le_count);
+/**********/
+	
 
-/********** FIXME allocation
-    log_print("Allocated LE           %u", lv->allocated_le);
-**********/
+	list_iterate(lvseg, &lv->segments) {
+		seg = list_item(lvseg, struct stripe_segment);
+		if(seg->stripes > 1) {
+			log_print("Stripes                %u", seg->stripes);
+			log_print("Stripe size (KByte)    %u", seg->stripe_size/2);
+		}
+		/* only want the first segment for LVM1 format output */
+		break;
+	}
+
+	if(snap) {
+		/*char *s1, *s2;*/
+		size = display_size(snap->chunk_size / 2, SIZE_SHORT);
+		log_print("snapshot chunk size    %s", size);
+		dbg_free(size);
+		size = display_size(lv->size / 2, SIZE_SHORT);
+/*		s1 = display_size();*/
+		log_print("Allocated to snapshot  %s [%s/%s]", "NA", "NA", size); 
+		dbg_free(size);
+/*		size = display_size(snap->cow->size / 2, SIZE_SHORT); */
+		log_print("Allocated to COW-table %s", "NA");
+/*		dbg_free(size); */
+	}
 
 /********** FIXME Snapshot
     if (lv->lv_access & LV_SNAPSHOT) {
@@ -336,7 +411,9 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
     }
 ******************/
 
+/** Not in LVM1 format output **
 	log_print("Segments               %u", list_size(&lv->segments));
+***/
 
 /********* FIXME Stripes & stripesize for each segment
 	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
@@ -441,10 +518,27 @@ void vgdisplay_full(struct volume_group *vg)
 	uint32_t access;
 	char *s1;
 	char uuid[64];
+	uint32_t active_pvs;
+	struct list *pvlist;
+
+	set_cmd_name("");
+	init_msg_prefix("");
+
+	/* get the number of active PVs */
+	if(vg->status & PARTIAL_VG) {
+		active_pvs=0;
+		list_iterate(pvlist, &(vg->pvs)) {
+			active_pvs++;
+		}
+	}
+	else
+		active_pvs=vg->pv_count;
 
 	log_print("--- Volume group ---");
 	log_print("VG Name               %s", vg->name);
+/****** Not in LVM1 output, so we aren't outputing it here:
 	log_print("System ID             %s", vg->system_id);
+*******/
 	access = vg->status & (LVM_READ | LVM_WRITE);
 	log_print("VG Access             %s%s%s%s",
 		  access == (LVM_READ | LVM_WRITE) ? "read/write" : "",
@@ -452,31 +546,24 @@ void vgdisplay_full(struct volume_group *vg)
 		  access == LVM_WRITE ? "write" : "",
 		  access == 0 ? "error" : "");
 	log_print("VG Status             %s%sresizable",
-		  vg->status & EXPORTED_VG ? "exported/" : "",
+		  vg->status & EXPORTED_VG ? "exported/" : "available/",
 		  vg->status & RESIZEABLE_VG ? "" : "NOT ");
-/******* FIXME vg number
-	log_print ("VG #                  %u\n", vg->vg_number);
-********/
 	if (vg->status & CLUSTERED) {
 		log_print("Clustered             yes");
 		log_print("Shared                %s",
 			  vg->status & SHARED ? "yes" : "no");
 	}
+/****** FIXME VG # - we aren't implementing this because people should
+ * use the UUID for this anyway 
+	log_print("VG #                  %u", vg->vg_number);
+*******/
 	log_print("MAX LV                %u", vg->max_lv);
 	log_print("Cur LV                %u", vg->lv_count);
-/****** FIXME Open LVs
-      log_print ( "Open LV               %u", vg->lv_open);
-*******/
-/****** FIXME Max LV Size
-      log_print ( "MAX LV Size           %s",
-               ( s1 = display_size ( LVM_LV_SIZE_MAX(vg) / 2, SIZE_SHORT)));
-      free ( s1);
-*********/
+        log_print("Open LV               %u", lvs_in_vg_opened(vg));
+        log_print("MAX LV Size           256 TB");
 	log_print("Max PV                %u", vg->max_pv);
 	log_print("Cur PV                %u", vg->pv_count);
-/******* FIXME act PVs
-      log_print ( "Act PV                %u", vg->pv_act);
-*********/
+      	log_print("Act PV                %u", active_pvs);
 
 	s1 =
 	    display_size((uint64_t) vg->extent_count * (vg->extent_size / 2),
