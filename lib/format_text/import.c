@@ -189,6 +189,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		return 0;
 	}
 	seg->stripes = stripes;
+	seg->lv = lv;
 
 	if (!_read_int32(sn, "start_extent", &seg->le)) {
 		log_err("Couldn't read 'start_extent' for segment '%s'.",
