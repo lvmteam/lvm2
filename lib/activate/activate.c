@@ -238,7 +238,7 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 	}
 
 	if (info.exists && !info.suspended)
-		_lv_suspend(lv);
+		return _lv_suspend(lv);
 
 	return 1;
 }
@@ -262,7 +262,7 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 	}
 
 	if (info.exists && info.suspended)
-		_lv_activate(lv);
+		return _lv_activate(lv);
 
 	return 1;
 }
@@ -286,7 +286,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	}
 
 	if (info.exists)
-		_lv_deactivate(lv);
+		return _lv_deactivate(lv);
 
 	return 1;
 }
@@ -310,7 +310,7 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 	}
 
 	if (!info.exists || info.suspended)
-		_lv_activate(lv);
+		return _lv_activate(lv);
 
 	return 1;
 }
