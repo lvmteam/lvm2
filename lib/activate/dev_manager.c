@@ -41,6 +41,8 @@
  *
  */
 
+#define MAX_TARGET_PARAMSIZE 50000
+
 enum {
 	ACTIVE = 0,
 	RELOAD = 1,
@@ -765,10 +767,10 @@ static int _resume(struct dev_layer *dl)
  * Emit a target for a given segment.
  * FIXME: tidy this function.
  */
-static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
-			struct lv_segment *seg)
+static int _emit_target_line(struct dev_manager *dm, struct dm_task *dmt,
+			     struct lv_segment *seg, char *params,
+			     size_t paramsize)
 {
-	char params[1024];
 	uint64_t esize = seg->lv->vg->extent_size;
 	uint32_t s, start_area = 0u, areas = seg->area_count;
 	int w = 0, tw = 0;
@@ -794,7 +796,7 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 			target = "linear";
 		else if (areas > 1) {
 			target = "striped";
-			if ((tw = lvm_snprintf(params, sizeof(params), "%u %u ",
+			if ((tw = lvm_snprintf(params, paramsize, "%u %u ",
 					       areas, seg->stripe_size)) < 0)
 				goto error;
 			w = tw;
@@ -820,8 +822,7 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 			break;
 		}
 		target = "mirror";
-		if ((tw = lvm_snprintf(params, sizeof(params),
-				       "core 1 %u %u ",
+		if ((tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
 				       dm->mirror_region_size, areas)) < 0)
 			goto error;
 		w = tw;
@@ -833,11 +834,11 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 		if ((seg->area[s].type == AREA_PV &&
 		     (!seg->area[s].u.pv.pv || !seg->area[s].u.pv.pv->dev)) ||
 		    (seg->area[s].type == AREA_LV && !seg->area[s].u.lv.lv))
-			tw = lvm_snprintf(params + w, sizeof(params) - w,
+			tw = lvm_snprintf(params + w, paramsize - w,
 					  "%s 0%s", dm->stripe_filler,
 					  trailing_space);
 		else if (seg->area[s].type == AREA_PV)
-			tw = lvm_snprintf(params + w, sizeof(params) - w,
+			tw = lvm_snprintf(params + w, paramsize - w,
 					  "%s %" PRIu64 "%s",
 					  dev_name(seg->area[s].u.pv.pv->dev),
 					  (seg->area[s].u.pv.pv->pe_start +
@@ -855,7 +856,7 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 					  dl->info.major, dl->info.minor);
 				return 0;
 			}
-			tw = lvm_snprintf(params + w, sizeof(params) - w,
+			tw = lvm_snprintf(params + w, paramsize - w,
 					  "%s %" PRIu64 "%s", devbuf,
 					  esize * seg->area[s].u.lv.le,
 					  trailing_space);
@@ -877,7 +878,37 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 	return 1;
 
       error:
-	log_error("Insufficient space in params[] to write target parameters.");
+	log_debug("Insufficient space in params[%" PRIsize_t "] for target "
+		  "parameters.", paramsize);
+	return -1;
+}
+
+static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
+			struct lv_segment *seg)
+{
+	char *params;
+	size_t paramsize = 4096;
+	int ret;
+
+	do {
+		if (!(params = dbg_malloc(paramsize))) {
+			log_error("Insufficient space for target parameters.");
+			return 0;
+		}
+
+		ret = _emit_target_line(dm, dmt, seg, params, paramsize);
+		dbg_free(params);
+
+		if (!ret)
+			stack;
+
+		if (ret >= 0)
+			return ret;
+
+		paramsize *= 2;
+	} while (paramsize < MAX_TARGET_PARAMSIZE);
+
+	log_error("Target parameter size too big. Aborting.");
 	return 0;
 }
 
@@ -985,8 +1016,8 @@ static int _populate_snapshot(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (snprintf(params, sizeof(params), "%s %s P %d", 
-		     devbufo, devbufc, s->chunk_size) == -1) {
+	if (lvm_snprintf(params, sizeof(params), "%s %s P %d", 
+			 devbufo, devbufc, s->chunk_size) == -1) {
 		stack;
 		return 0;
 	}
@@ -1589,8 +1620,7 @@ static int _resume_with_deps(struct dev_manager *dm, struct dev_layer *dl)
 		}
 	}
 
-	if (dl->info.exists & !_get_flag(dl, SUSPENDED) &&
-	    !_resume(dl)) {
+	if (dl->info.exists & !_get_flag(dl, SUSPENDED) && !_resume(dl)) {
 		stack;
 		return 0;
 	}
