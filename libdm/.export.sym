@@ -10,6 +10,8 @@ Base {
 		dm_task_get_driver_version;
 		dm_task_get_info;
 		dm_task_get_deps;
+		dm_task_get_name;
+		dm_task_get_names;
 		dm_task_get_uuid;
 		dm_task_set_ro;
 		dm_task_set_newname;
@@ -21,6 +23,9 @@ Base {
 		dm_task_run;
 		dm_set_dev_dir;
 		dm_dir;
+		dm_format_dev;
+		dm_lib_release;
+		dm_lib_exit;
 	local:
 		*;
 };

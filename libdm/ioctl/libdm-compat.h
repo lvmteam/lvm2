@@ -54,21 +54,55 @@ struct dm_target_deps_v1 {
 	__kernel_dev_t dev[0];	/* out */
 };
 
+enum {
+	/* Top level cmds */
+	DM_VERSION_CMD_V1 = 0,
+	DM_REMOVE_ALL_CMD_V1,
+
+	/* device level cmds */
+	DM_DEV_CREATE_CMD_V1,
+	DM_DEV_REMOVE_CMD_V1,
+	DM_DEV_RELOAD_CMD_V1,
+	DM_DEV_RENAME_CMD_V1,
+	DM_DEV_SUSPEND_CMD_V1,
+	DM_DEV_DEPS_CMD_V1,
+	DM_DEV_STATUS_CMD_V1,
+
+	/* target level cmds */
+	DM_TARGET_STATUS_CMD_V1,
+	DM_TARGET_WAIT_CMD_V1,
+};
+
+#define DM_VERSION_V1       _IOWR(DM_IOCTL, DM_VERSION_CMD_V1, struct dm_ioctl)
+#define DM_REMOVE_ALL_V1    _IOWR(DM_IOCTL, DM_REMOVE_ALL_CMD_V1, struct dm_ioctl)
+
+#define DM_DEV_CREATE_V1    _IOWR(DM_IOCTL, DM_DEV_CREATE_CMD_V1, struct dm_ioctl)
+#define DM_DEV_REMOVE_V1    _IOWR(DM_IOCTL, DM_DEV_REMOVE_CMD_V1, struct dm_ioctl)
+#define DM_DEV_RELOAD_V1    _IOWR(DM_IOCTL, DM_DEV_RELOAD_CMD_V1, struct dm_ioctl)
+#define DM_DEV_SUSPEND_V1   _IOWR(DM_IOCTL, DM_DEV_SUSPEND_CMD_V1, struct dm_ioctl)
+#define DM_DEV_RENAME_V1    _IOWR(DM_IOCTL, DM_DEV_RENAME_CMD_V1, struct dm_ioctl)
+#define DM_DEV_DEPS_V1      _IOWR(DM_IOCTL, DM_DEV_DEPS_CMD_V1, struct dm_ioctl)
+#define DM_DEV_STATUS_V1    _IOWR(DM_IOCTL, DM_DEV_STATUS_CMD_V1, struct dm_ioctl)
+
+#define DM_TARGET_STATUS_V1 _IOWR(DM_IOCTL, DM_TARGET_STATUS_CMD_V1, struct dm_ioctl)
+#define DM_TARGET_WAIT_V1   _IOWR(DM_IOCTL, DM_TARGET_WAIT_CMD_V1, struct dm_ioctl)
+
 /* *INDENT-OFF* */
 static struct cmd_data _cmd_data_v1[] = {
-        { "create",     DM_DEV_CREATE,    {1, 0, 0} },
-        { "reload",     DM_DEV_RELOAD,    {1, 0, 0} },
-        { "remove",     DM_DEV_REMOVE,    {1, 0, 0} },
-        { "remove_all", DM_REMOVE_ALL,    {1, 0, 0} },
-        { "suspend",    DM_DEV_SUSPEND,   {1, 0, 0} },
-        { "resume",     DM_DEV_SUSPEND,   {1, 0, 0} },
-        { "info",       DM_DEV_STATUS,    {1, 0, 0} },
-        { "deps",       DM_DEV_DEPS,      {1, 0, 0} },
-        { "rename",     DM_DEV_RENAME,    {1, 0, 0} },
-        { "version",    DM_VERSION,       {1, 0, 0} },
-        { "status",     DM_TARGET_STATUS, {1, 0, 0} },
-        { "table",      DM_TARGET_STATUS, {1, 0, 0} },
-        { "waitevent",  DM_TARGET_WAIT,   {1, 0, 0} },
+        { "create",	DM_DEV_CREATE_V1,	{1, 0, 0} },
+        { "reload",	DM_DEV_RELOAD_V1,	{1, 0, 0} },
+        { "remove",	DM_DEV_REMOVE_V1,	{1, 0, 0} },
+        { "remove_all",	DM_REMOVE_ALL_V1,	{1, 0, 0} },
+        { "suspend",	DM_DEV_SUSPEND_V1,	{1, 0, 0} },
+        { "resume",	DM_DEV_SUSPEND_V1,	{1, 0, 0} },
+        { "info",	DM_DEV_STATUS_V1,	{1, 0, 0} },
+        { "deps",	DM_DEV_DEPS_V1,		{1, 0, 0} },
+        { "rename",	DM_DEV_RENAME_V1,	{1, 0, 0} },
+        { "version",	DM_VERSION_V1,		{1, 0, 0} },
+        { "status",	DM_TARGET_STATUS_V1,	{1, 0, 0} },
+        { "table",	DM_TARGET_STATUS_V1,	{1, 0, 0} },
+        { "waitevent",	DM_TARGET_WAIT_V1,	{1, 0, 0} },
+        { "names",	0,			{4, 0, 0} }
 };
 /* *INDENT-ON* */
 
