@@ -236,80 +236,56 @@ static int _read_linear(struct pool *mem, struct lv_map *lvm)
 	return 1;
 }
 
-static int _check_for_stripe(struct lv_map *lvm, uint32_t base_le,
-			     uint32_t stripe, uint32_t length)
-{
-	uint32_t next_pe, pe, base;
-	struct physical_volume *next_pv;
-
-	base = base_le + stripe * length;
-
-	next_pe = lvm->map[base].pe;
-	next_pv = lvm->map[base].pv;
-
-	for (pe = 1; pe < length; pe++) {
-		if (lvm->map[base + pe].pe != next_pe + pe ||
-		    lvm->map[base + pe].pv != next_pv)
-			return 0;
-	}
-
-	return 1;
-}
-
 static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 {
-	uint32_t st, le = 0, flag_warning = 0;
+	const char *too_many_segments =
+		"Logical volume appears to contain more than one segment, "
+		"which is not allowed in format1.";
+
+
 	struct stripe_segment *seg;
+	struct pe_specifier *ps;
+	uint32_t len, i, s;
 
-	while (le < lvm->lv->le_count) {
-
-		if (!(seg = _alloc_seg(mem, lvm->stripes))) {
-			stack;
-			return 0;
-		}
-
-		seg->lv = lvm->lv;
-		seg->le = le;
-		seg->len = 0;
-		seg->stripe_size = lvm->stripe_size;
-		st = 1;
-
-		seg->area[0].pv = lvm->map[le].pv;
-		seg->area[0].pe = lvm->map[le].pe;
-
-		do
-			seg->len++;
-		while ((lvm->map[le + seg->len].pv == seg->area[0].pv) &&
-		       (lvm->map[le + seg->len].pe == seg->area[0].pe +
-			seg->len));
-
-		while (st < lvm->stripes &&
-		       _check_for_stripe(lvm, le, st, seg->len)) {
-
-			seg->area[st].pv = lvm->map[le + st * seg->len].pv;
-			seg->area[st].pe = lvm->map[le + st * seg->len].pe;
-
-			st++;
-		}
-
-		if (st != lvm->stripes)
-			flag_warning++;
-
-		seg->stripes = st;
-		seg->len *= seg->stripes;
-		le += seg->len;
-
-		list_add(&lvm->lv->segments, &seg->list);
+	if (!(seg = _alloc_seg(mem, lvm->stripes))) {
+		stack;
+		return 0;
 	}
 
-	if (flag_warning) {
-		log_error("WARNING: Found %d segments with different numbers "
-			  "of stripes.", flag_warning);
-		log_error("Risk of data corruption.");
-		log_error("Check the mapping is what you intended before you "
-			  "use %s!", seg->lv->name);
+	seg->lv = lvm->lv;
+	seg->le = 0;
+	seg->len = lvm->lv->le_count;
+	seg->stripes = lvm->stripes;
+	seg->stripe_size = lvm->stripe_size;
+
+	/*
+	 * There can only be a single segment for format1.
+	 */
+	if (seg->len % seg->stripes) {
+		log_err(too_many_segments);
+		return 0;
 	}
 
+	len = seg->len / seg->stripes;
+	for (s = 0; s < lvm->stripes; s++) {
+		seg->area[s].pv = lvm->map[s * len].pv;
+		seg->area[s].pe = lvm->map[s * len].pe;
+	}
+
+	/*
+	 * Check this assumption was correct.
+	 */
+	for (i = 1; i < len; i++)
+		for (s = 0; s < lvm->stripes; s++) {
+			ps = lvm->map + i + (s * len);
+			if ((seg->area[s].pv != ps->pv) ||
+			    ((seg->area[s].pe + i) != ps->pe)) {
+				log_err(too_many_segments);
+				return 0;
+			}
+		}
+
+	list_add(&lvm->lv->segments, &seg->list);
 	return 1;
 }
 
