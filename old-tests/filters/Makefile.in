@@ -1,0 +1,21 @@
+#
+# Copyright (C) 2001 Sistina Software (UK) Limited
+#
+# This file is released under the GPL.
+#
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+
+SOURCES=\
+	rfilter_t.c
+
+TARGETS=\
+	rfilter_t
+
+include ../../make.tmpl
+
+rfilter_t: rfilter_t.o $(top_srcdir)/lib/liblvm.a
+	$(CC) -o rfilter_t rfilter_t.o -L$(top_srcdir)/lib -llvm
+
