@@ -52,7 +52,7 @@ TARGETS = \
 include $(top_srcdir)/make.tmpl
 
 CFLAGS += -D_REENTRANT -fno-strict-aliasing
-LIBS += -L../../tools -ldevmapper -llvm -Wl,-Bstatic -llvm2cmd -Wl,-Bdynamic -lpthread
+LIBS += -ldevmapper -llvm -lpthread
 
 INSTALL_TARGETS = \
 	install_clvmd

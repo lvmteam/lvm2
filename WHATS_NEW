@@ -4,7 +4,6 @@ Version 2.01.04 -
   Remove unused -f from pvmove.
   Gulm clvmd doesn't report "connection refused" errors.
   clvmd does a basic config file sanity check at startup.
-  clvmd now uses liblvm2cmd to preload the lock state rather than popen
 
 Version 2.01.03 - 1st February 2005
 ===================================
