@@ -29,8 +29,8 @@ LN_S = @LN_S@
 LIBS = @LIBS@
 
 # Setup directory variables
-prefix = @prefix@
-exec_prefix = @exec_prefix@
+prefix = $(DESTDIR)@prefix@
+exec_prefix = $(DESTDIR)@exec_prefix@
 bindir = @bindir@
 libdir = @libdir@
 sbindir = @sbindir@

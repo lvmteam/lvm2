@@ -64,9 +64,10 @@ lvm: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
 		grep -v help > .commands
 
 install: $(TARGETS)
-	$(INSTALL) -c -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) -D lvm \
+	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) lvm \
 		$(sbindir)/lvm
-	( \
+	@echo Creating symbolic links for individual commands in $(sbindir)
+	@( \
 		for v in `cat .commands`; do \
 			cd $(sbindir); \
 			$(LN_S) -f lvm $$v; \
