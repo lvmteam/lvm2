@@ -149,7 +149,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 
 static int _accept_p(struct dev_filter *f, struct device *dev)
 {
-	int m, nothing_matched = 1, first = 1;
+	int m, first = 1;
 	struct rfilter *rf = (struct rfilter *) f->private;
 	struct list_head *tmp;
 	struct str_list *sl;
@@ -159,8 +159,6 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 		m = matcher_run(rf->engine, sl->str);
 
 		if (m >= 0) {
-			nothing_matched = 0;
-
 			if (bit(rf->accept, m)) {
 
 				if (!first) {
@@ -170,7 +168,8 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 
 				return 1;
 			}
-		}
+		} else
+			return 1;
 
 		first = 0;
 	}
@@ -179,7 +178,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 	 * pass everything that doesn't match
 	 * anything.
 	 */
-	return nothing_matched;
+	return 1;
 }
 
 static void _destroy(struct dev_filter *f)
