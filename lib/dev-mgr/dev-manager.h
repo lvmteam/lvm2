@@ -22,7 +22,7 @@
 #ifndef DEV_MANAGER_H
 #define DEV_MANAGER_H
 
-#include "config.h"
+#include "config/config.h"
 
 struct device {
 	char *name;

@@ -29,8 +29,8 @@
  */
 
 #include "config.h"
-#include "pool.h"
-#include "log.h"
+#include "mm/pool.h"
+#include "log/log.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
