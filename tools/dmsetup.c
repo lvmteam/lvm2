@@ -270,6 +270,7 @@ static int _message(int argc, char **argv, void *data)
 		sz += strlen(argv[i]) + 1;
 
 	str = malloc(sz);
+	memset(str, 0, sz);
 
 	for (i = 0; i < argc; i++) {
 		if (i)
