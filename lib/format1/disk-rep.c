@@ -8,6 +8,7 @@
 #include "disk-rep.h"
 #include "pool.h"
 
+#define fail do {stack; return 0;} while(0)
 #define xx16(v) disk->v = xlate16(disk->v)
 #define xx32(v) disk->v = xlate32(disk->v)
 #define xx64(v) disk->v = xlate64(disk->v)
@@ -96,10 +97,8 @@ static void _xlate_extents(struct pe_disk *extents, int count)
 static int _read_pv(struct data_list *data)
 {
 	struct pv_disk *pvd = &data->pv;
-	if (dev_read(data->dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd)) {
-		stack;
-		return 0;
-	}
+	if (dev_read(data->dev, 0, sizeof(*pvd), pvd) != sizeof(*pvd))
+		fail;
 
 	_xlate_pv(pvd);
 	memset(pvd->pv_name, 0, sizeof (pvd->pv_name));
@@ -110,10 +109,9 @@ static int _read_pv(struct data_list *data)
 
 static int _read_lv(struct device *dev, ulong pos, struct lv_disk *disk)
 {
-	if (dev_read(dev, pos, sizeof(*disk), disk) != sizeof(*disk)) {
-		stack;
-		return 0;
-	}
+	if (dev_read(dev, pos, sizeof(*disk), disk) != sizeof(*disk))
+		fail;
+
 	_xlate_lv(disk);
 
 	return 1;
@@ -123,10 +121,9 @@ static int _read_vg(struct disk_list *data)
 {
 	struct vg_disk *vgd = &data->vg;
 	unsigned long pos = data->pv.vg_on_disk.base;
-	if (dev_read(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd)) {
-		stack;
-		return 0;
-	}
+	if (dev_read(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
+		fail;
+
 	_xlate_vg(vgd);
 
 	return 1;
@@ -142,15 +139,11 @@ static int _read_uuids(struct disk_list *data)
 
 	while(pos < end && num_read < MAX_PV) {
 		if (dev_read(data->dev, pos, sizeof(buffer), buffer) !=
-		    sizeof(buffer)) {
-			stack;
-			return 0;
-		}
+		    sizeof(buffer))
+			fail;
 
-		if (!(ul = pool_alloc(data->mem, sizeof(*ul)))) {
-			stack;
-			return 0;
-		}
+		if (!(ul = pool_alloc(data->mem, sizeof(*ul))))
+			fail;
 
 		memcpy(ul->uuid, buffer, NAME_LEN);
 		ul->uuid[NAME_LEN] = '\0';
@@ -173,15 +166,11 @@ static int _read_lvs(struct disk_list *data)
 		pos = data->pv.lv_on_disk.base + (i * sizeof(struct lv_disk));
 		struct lv_list *ll = pool_alloc(sizeof(*ll));
 
-		if (!ll) {
-			stack;
-			return 0;
-		}
+		if (!ll)
+			fail;
 
-		if (!_read_lv(data->dev, pos, &ll->lv)) {
-			stack;
-			return 0;
-		}
+		if (!_read_lv(data->dev, pos, &ll->lv))
+			fail;
 
 		list_add(&ll->list, &data->lvs);
 	}
@@ -195,15 +184,12 @@ static int _read_extents(struct disk_list *data)
 	struct pe_disk *extents = pool_alloc(data->mem, len);
 	unsigned long pos = data->pv.pe_on_disk.base;
 
-	if (!extents) {
-		stack;
-		return 0;
-	}
+	if (!extents)
+		fail;
 
-	if (dev_read(data->dev, pos, len, extents) != len) {
-		stack;
-		return 0;
-	}
+	if (dev_read(data->dev, pos, len, extents) != len)
+		fail;
+
 	_xlate_extents(extents, data->pv.pe_total);
 	data->extents = extents;
 
@@ -290,10 +276,9 @@ static int _write_vg(struct disk_list *data)
 	unsigned long pos = data->pv.vg_on_disk.base;
 
 	_xlate_vg(vgd);
-	if (dev_write(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd)) {
-		stack;
-		return 0;
-	}
+	if (dev_write(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
+		fail;
+
 	_xlate_vg(vgd);
 
 	return 1;
@@ -315,11 +300,10 @@ static int _write_uuids(struct disk_list *data)
 		}
 
 		ul = list_entry(tmp, struct uuid_list, list);
-		if (dev_write(data->dev, pos, sizeof(NAME_LEN), NAME_LEN) !=
-		    NAME_LEN) {
-			stack;
-			return 0;
-		}
+		if (dev_write(data->dev, pos, 
+			      sizeof(NAME_LEN), NAME_LEN) != NAME_LEN)
+			fail;
+
 		pos += NAME_LEN;
 	}
 
@@ -329,10 +313,9 @@ static int _write_uuids(struct disk_list *data)
 static int _write_lv(struct device *dev, ulong pos, struct lv_disk *disk)
 {
 	_xlate_lv(disk);
-	if (dev_write(dev, pos, sizeof(*disk), disk) != sizeof(*disk)) {
-		stack;
-		return 0;
-	}
+	if (dev_write(dev, pos, sizeof(*disk), disk) != sizeof(*disk))
+		fail;
+
 	_xlate_lv(disk);
 
 	return 1;
@@ -345,10 +328,8 @@ static int _write_lvs(struct disk_list *data)
 	list_for_each(tmp, &data->lvs) {
 		struct lv_list *ll = list_entry(tmp, struct lv_list, list);
 
-		if (!_write_lv(data->dev, pos, &ll->lv)) {
-			stack;
-			return 0;
-		}
+		if (!_write_lv(data->dev, pos, &ll->lv))
+			fail;
 
 		pos += sizeof(struct lv_disk);
 	}
@@ -363,10 +344,9 @@ static int _write_extents(struct disk_list *data)
 	unsigned long pos = data->pv.pe_on_disk.base;
 
 	_xlate_extents(extents, data->pv.pe_total);
-	if (dev_write(data->dev, 0, len, extents) != len) {
-		stack;
-		return 0;
-	}
+	if (dev_write(data->dev, 0, len, extents) != len)
+		fail;
+
 	_xlate_extents(extents, data->pv.pe_total);
 
 	return 1;
@@ -377,10 +357,9 @@ static int _write_pv(struct disk_list *data)
 	struct pv_disk *disk = &data->pv;
 
 	_xlate_pv(disk);
-	if (dev_write(data->dev, 0, sizeof(*disk), disk) != sizeof(&disk)) {
-		stack;
-		return 0;
-	}
+	if (dev_write(data->dev, 0, sizeof(*disk), disk) != sizeof(&disk))
+		fail;
+
 	_xlate_pv(disk);
 
 	return 1;
@@ -421,7 +400,8 @@ static int _write_all_pv(struct disk_list *data)
 /*
  * Writes all the given pv's to disk.  Does very
  * little sanity checking, so make sure correct
- * data is passed to here. */
+ * data is passed to here.
+ */
 int write_pvs(struct list_head *pvs)
 {
 	struct list_head *tmp;
@@ -429,10 +409,9 @@ int write_pvs(struct list_head *pvs)
 
 	list_for_each(tmp, pvs) {
 		dl = list_entry(tmp, struct disk_list, list);
-		if (!(_write_all_pv(dl))) {
-			stack;
-			return 0;
-		}
+		if (!(_write_all_pv(dl)))
+			fail;
+
 		log_debug("successfully wrote data to %s\n", dl->dev->name);
 	}
 
