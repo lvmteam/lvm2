@@ -240,8 +240,7 @@ int dm_table_complete(struct dm_table *t);
 typedef int (*extract_line_fn)(struct text_region *line,
 			       void *private);
 
-struct dm_table *dm_parse(extract_line_fn line_fn, void *line_private,
-			  dm_error_fn err_fn, void *err_private);
+struct dm_table *dm_parse(extract_line_fn line_fn, void *line_private);
 
 
 static inline int dm_empty_tok(struct text_region *txt)
