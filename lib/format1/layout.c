@@ -66,14 +66,14 @@ static void _calc_simple_layout(struct pv_disk *pvd)
 
 int _check_vg_limits(struct disk_list *dl)
 {
-	if (dl->vgd.lv_max >= MAX_LV) {
+	if (dl->vgd.lv_max > MAX_LV) {
 		log_error("MaxLogicalVolumes of %d exceeds format limit of %d "
 			  "for VG '%s'", dl->vgd.lv_max, MAX_LV - 1, 
 			  dl->pvd.vg_name);
 		return 0;
 	}
 
-	if (dl->vgd.pv_max >= MAX_PV) {
+	if (dl->vgd.pv_max > MAX_PV) {
 		log_error("MaxPhysicalVolumes of %d exceeds format limit of %d "
 			  "for VG '%s'", dl->vgd.pv_max, MAX_PV - 1, 
 			  dl->pvd.vg_name);
