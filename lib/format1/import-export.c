@@ -298,8 +298,8 @@ int export_extents(struct disk_list *dl, int lv_num,
 			for (pe = 0; pe < (seg->len / seg->stripes); pe++) {
 				ped = &dl->extents[pe + seg->area[s].pe];
 				ped->lv_num = lv_num;
-				ped->le_num = seg->le + pe +
-					      s * (seg->len / seg->stripes);
+				ped->le_num = (seg->le / seg->stripes) + pe +
+					      s * (lv->le_count / seg->stripes);
 			}
 		}
 	}

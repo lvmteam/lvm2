@@ -236,56 +236,73 @@ static int _read_linear(struct pool *mem, struct lv_map *lvm)
 	return 1;
 }
 
+static int _check_stripe(struct lv_map *lvm, struct stripe_segment *seg,
+			 uint32_t base_le, uint32_t len)
+{
+	uint32_t le, st;
+
+	le = base_le + seg->len;
+
+	/*
+	 * Is the next physical extent in every stripe adjacent to the last?
+	 */
+	for (st = 0; st < seg->stripes; st++)
+		if ((lvm->map[le + st * len].pv != seg->area[st].pv) ||
+	       	    (lvm->map[le + st * len].pe != seg->area[st].pe + seg->len))
+			return 0;
+
+	return 1;
+}
+
 static int _read_stripes(struct pool *mem, struct lv_map *lvm)
 {
-	const char *too_many_segments =
-		"Logical volume appears to contain more than one segment, "
-		"which is not allowed in format1.";
-
-
+	uint32_t st, le = 0, len;
 	struct stripe_segment *seg;
-	struct pe_specifier *ps;
-	uint32_t len, i, s;
-
-	if (!(seg = _alloc_seg(mem, lvm->stripes))) {
-		stack;
-		return 0;
-	}
-
-	seg->lv = lvm->lv;
-	seg->le = 0;
-	seg->len = lvm->lv->le_count;
-	seg->stripes = lvm->stripes;
-	seg->stripe_size = lvm->stripe_size;
 
 	/*
-	 * There can only be a single segment for format1.
+	 * Work out overall striped length
 	 */
-	if (seg->len % seg->stripes) {
-		log_err(too_many_segments);
-		return 0;
+	if (lvm->lv->le_count % lvm->stripes) {
+		log_error("Number of stripes (%u) incompatible "
+			  "with logical extent count (%u) for %s",
+			  lvm->stripes, lvm->lv->le_count,
+			  lvm->lv->name);
 	}
+	len = lvm->lv->le_count / lvm->stripes;
 
-	len = seg->len / seg->stripes;
-	for (s = 0; s < lvm->stripes; s++) {
-		seg->area[s].pv = lvm->map[s * len].pv;
-		seg->area[s].pe = lvm->map[s * len].pe;
-	}
-
-	/*
-	 * Check this assumption was correct.
-	 */
-	for (i = 1; i < len; i++)
-		for (s = 0; s < lvm->stripes; s++) {
-			ps = lvm->map + i + (s * len);
-			if ((seg->area[s].pv != ps->pv) ||
-			    ((seg->area[s].pe + i) != ps->pe)) {
-				log_err(too_many_segments);
-				return 0;
-			}
+	while (le < len) {
+		if (!(seg = _alloc_seg(mem, lvm->stripes))) {
+			stack;
+			return 0;
 		}
 
-	list_add(&lvm->lv->segments, &seg->list);
+		seg->lv = lvm->lv;
+		seg->stripe_size = lvm->stripe_size;
+		seg->stripes = lvm->stripes;
+		seg->le = seg->stripes * le;
+		seg->len = 1;
+
+		/*
+		 * Set up start positions of each stripe in this segment
+		 */
+		for (st = 0; st < seg->stripes; st++) {
+			seg->area[st].pv = lvm->map[le + st * len].pv;
+			seg->area[st].pe = lvm->map[le + st * len].pe;
+		}
+
+		/* 
+		 * Find how many blocks are contiguous in all stripes
+		 * and so can form part of this segment
+		 */
+		while (_check_stripe(lvm, seg, le, len))
+			seg->len++;
+
+		le += seg->len;
+		seg->len *= seg->stripes;
+
+		list_add(&lvm->lv->segments, &seg->list);
+	}
+
 	return 1;
 }
 
