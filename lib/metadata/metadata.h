@@ -208,6 +208,9 @@ struct volume_group *vg_create(struct io_space *ios, const char *name,
 			       int pv_count, char **pv_names);
 struct physical_volume *pv_create(struct io_space *ios, const char *name);
 
+struct logical_volume *lv_create(struct io_space *ios, const char *name,
+				 uint32_t status, int stripes, 
+				 uint64_t extents, char **pv_names);
 
 
 int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
