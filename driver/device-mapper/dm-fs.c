@@ -47,6 +47,9 @@ struct line_c {
 
 static int is_identifier(const char *str, int len)
 {
+	if (len > DM_NAME_LEN - 1)
+		return 0;
+	
 	while(len--) {
 		if (!isalnum(*str) && *str != '_')
 			return 0;
@@ -92,21 +95,25 @@ int extract_line(struct text_region *line, void *private)
 
 static struct file *open_error_file(struct file *table)
 {
-	char *name;
 	struct file *f;
+	char *name, *buffer = (char *) kmalloc(PATH_MAX + 1, GFP_KERNEL);
 
-	name = kmalloc(PATH_MAX + 1, GFP_KERNEL);
-
-	if (!name)
+	if (!buffer)
 		return 0;
 
-	/* FIXME: Assumes path depth; avoid filp_open.  */
-	sprintf(name, "/%s/%s/%s.err",
-		table->f_vfsmnt->mnt_mountpoint->d_name.name,
-		table->f_dentry->d_parent->d_name.name,
-		table->f_dentry->d_name.name);
+	/* Get path name */
+	name = d_path(table->f_dentry, table->f_vfsmnt, buffer, PATH_MAX + 1);
+
+	if (!name) {
+		kfree(buffer);
+		return 0;
+	}
+
+	/* Create error file */
+	strcat(name, ".err");
 	f = filp_open(name, O_WRONLY | O_TRUNC | O_CREAT, S_IRUGO);
-	kfree(name);
+	
+	kfree(buffer);
 
 	if (f)
 		f->f_dentry->d_inode->u.generic_ip = NOT_A_TABLE;
