@@ -37,6 +37,7 @@
 #include <linux/blk.h>
 #include <linux/blkpg.h>
 #include <linux/hdreg.h>
+#include <linux/lvm.h>
 
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
@@ -63,7 +64,8 @@ static int _hardsect_size[MAX_DEVICES];
 const char *_fs_dir = "device-mapper";
 static devfs_handle_t _dev_dir;
 
-static int request(request_queue_t * q, int rw, struct buffer_head *bh);
+static int request(request_queue_t *q, int rw, struct buffer_head *bh);
+static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb);
 
 /*
  * setup and teardown the driver
@@ -247,9 +249,9 @@ static int dm_blk_ioctl(struct inode *inode, struct file *file,
 
 	case BLKRRPART:
 		return -EINVAL;
-#if 0
-	case LVM_BMAP:		/* we need some method for LILO to use */
-#endif
+
+	case LV_BMAP:
+		return dm_user_bmap(inode, (struct lv_bmap *)a);
 
 	default:
 		printk(KERN_WARNING "%s - unknown block ioctl %d",
@@ -397,7 +399,52 @@ static inline int __find_node(struct dm_table *t, struct buffer_head *bh)
 	return (KEYS_PER_NODE * n) + k;
 }
 
-static int request(request_queue_t * q, int rw, struct buffer_head *bh)
+static int dm_user_bmap(struct inode *inode, struct lv_bmap *lvb)
+{
+	struct buffer_head bh;
+	struct mapped_device *md;
+	unsigned long block;
+	int minor = MINOR(inode->i_rdev);
+	int err;
+
+	if (minor >= MAX_DEVICES)
+		return -ENXIO;
+
+	md = _devs[minor];
+	if (md == NULL)
+		return -ENXIO;
+
+	if (get_user(block, &lvb->lv_block))
+		return -EFAULT;
+
+	memset(&bh, 0, sizeof(bh));
+	bh.b_blocknr = block;
+	bh.b_dev = bh.b_rdev = inode->i_rdev;
+	bh.b_size = _blksize_size[minor];
+	bh.b_rsector = block * (bh.b_size >> 9);
+
+	err = -EINVAL;
+	down_read(&_dev_lock);
+	if (test_bit(DM_ACTIVE, &md->state) && md->map) {
+		struct target *t = md->map->targets + __find_node(md->map, &bh);
+		struct target_type *target = t->type;
+		if (target->flags & TF_BMAP) {
+			err = target->map(&bh, t->private);
+		}
+	}
+	up_read(&_dev_lock);
+
+	if (err >= 0) {
+		if (put_user(kdev_t_to_nr(bh.b_rdev), &lvb->lv_dev))
+			return -EFAULT;
+		if (put_user(bh.b_rsector / (bh.b_size >> 9), &lvb->lv_dev))
+			return -EFAULT;
+	}
+
+	return err;
+}
+
+static int request(request_queue_t *q, int rw, struct buffer_head *bh)
 {
 	struct mapped_device *md;
 	int r, minor = MINOR(bh->b_rdev);

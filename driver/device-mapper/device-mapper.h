@@ -59,7 +59,10 @@ struct target_type {
         dm_ctr_fn ctr;
         dm_dtr_fn dtr;
         dm_map_fn map;
+	unsigned long flags;
 };
+
+#define TF_BMAP	0x0001	/* Target supports bmap operation */
 
 int dm_register_target(struct target_type *t);
 int dm_unregister_target(struct target_type *t);
