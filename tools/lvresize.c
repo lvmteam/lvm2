@@ -258,7 +258,7 @@ int lvresize(int argc, char **argv)
 		if (argc)
 			log_print("Ignoring PVs on command line when reducing");
 
-		if (lv_active(lv)) {
+		if (lv_active(lv) > 0) {
 			dummy =
 			    display_size(extents * vg->extent_size / 2,
 					 SIZE_SHORT);
