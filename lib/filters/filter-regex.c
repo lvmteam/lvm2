@@ -186,6 +186,9 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 		first = 0;
 	}
 
+	if (rejected)
+		log_debug("%s: Skipping (regex)", dev_name(dev));
+
 	/*
 	 * pass everything that doesn't match
 	 * anything.

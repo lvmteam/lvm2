@@ -212,13 +212,10 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 			sl = list_item(ah, struct str_list);
 			hash_insert(pf->devices, sl->str, l);
 		}
-	}
+	} else if (l == PF_BAD_DEVICE)
+			log_debug("%s: Skipping (cached)", dev_name(dev));
 
-	if (l == PF_BAD_DEVICE) {
-		log_debug("%s: Skipping (cached)", dev_name(dev));
-		return 0;
-	} else
-		return 1;
+	return (l == PF_BAD_DEVICE) ? 0 : 1;
 }
 
 static void _destroy(struct dev_filter *f)
