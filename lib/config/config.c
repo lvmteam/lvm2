@@ -502,7 +502,7 @@ static struct config_value *_value(struct parser *p)
 
 static struct config_value *_type(struct parser *p)
 {
-	/* [0-9]+ | [0-9]*\.[0-9]* | ".*" */
+	/* [+-]{0,1}[0-9]+ | [0-9]*\.[0-9]* | ".*" */
 	struct config_value *v = _create_value(p);
 
 	if (!v)
@@ -637,6 +637,8 @@ static void _get_token(struct parser *p, int tok_prev)
 	case '7':
 	case '8':
 	case '9':
+	case '+':
+	case '-':
 		if (values_allowed) {
 			p->te++;
 			while ((p->te != p->fe) && (*p->te)) {
