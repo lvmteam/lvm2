@@ -81,4 +81,6 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);
 struct list *create_pv_list(struct pool *mem,
 			    struct volume_group *vg, int argc, char **argv);
 
+struct list *clone_pv_list(struct pool *mem, struct list *pvs);
+
 #endif

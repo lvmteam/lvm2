@@ -437,11 +437,120 @@ char *default_vgname(struct cmd_context *cmd)
 	return pool_strdup(cmd->mem, vg_path);
 }
 
+static int _add_alloc_area(struct pool *mem, struct list *alloc_areas,
+			   uint32_t start, uint32_t count)
+{
+	struct alloc_area *aa;
+	struct list *aah;
+
+	log_debug("Adding alloc area: start PE %" PRIu32 " length %" PRIu32,
+		  start, count);
+
+	/* Ensure no overlap with existing areas */
+	list_iterate(aah, alloc_areas) {
+		aa = list_item(aah, struct alloc_area);
+		if (((start < aa->start) && (start + count - 1 >= aa->start)) ||
+		    ((start >= aa->start) &&
+		     (aa->start + aa->count - 1) >= start)) {
+			log_error("Overlapping PE ranges detected (%" PRIu32
+				  "-%" PRIu32 ", %" PRIu32 "-%" PRIu32 ")",
+				  start, start + count - 1, aa->start,
+				  aa->start + aa->count - 1);
+			return 0;
+		}
+	}
+
+	if (!(aa = pool_alloc(mem, sizeof(*aa)))) {
+		log_error("Allocation of list failed");
+		return 0;
+	}
+
+	aa->start = start;
+	aa->count = count;
+	list_add(alloc_areas, &aa->list);
+
+	return 1;
+}
+
+static int _parse_pes(struct pool *mem, char *c, struct list *alloc_areas,
+		      uint32_t size)
+{
+	char *endptr;
+	uint32_t start, end;
+
+	/* Default to whole PV */
+	if (!c) {
+		if (!_add_alloc_area(mem, alloc_areas, UINT32_C(0), size)) {
+			stack;
+			return 0;
+		}
+		return 1;
+	}
+
+	while (*c) {
+		if (*c != ':')
+			goto error;
+
+		c++;
+
+		/* Disallow :: and :\0 */
+		if (*c == ':' || !*c)
+			goto error;
+
+		/* Default to whole range */
+		start = UINT32_C(0);
+		end = size - 1;
+
+		/* Start extent given? */
+		if (isdigit(*c)) {
+			start = (uint32_t) strtoul(c, &endptr, 10);
+			if (endptr == c)
+				goto error;
+			c = endptr;
+			/* Just one number given? */
+			if (!*c || *c == ':')
+				end = start;
+		}
+		/* Range? */
+		if (*c == '-') {
+			c++;
+			if (isdigit(*c)) {
+				end = (uint32_t) strtoul(c, &endptr, 10);
+				if (endptr == c)
+					goto error;
+				c = endptr;
+			}
+		}
+		if (*c && *c != ':')
+			goto error;
+
+		if ((start > end) || (end > size - 1)) {
+			log_error("PE range error: start extent %" PRIu32 " to "
+				  "end extent %" PRIu32, start, end);
+			return 0;
+		}
+
+		if (!_add_alloc_area(mem, alloc_areas, start, end - start + 1)) {
+			stack;
+			return 0;
+		}
+
+	}
+
+	return 1;
+
+      error:
+	log_error("Physical extent parsing error at %s", c);
+	return 0;
+}
+
 struct list *create_pv_list(struct pool *mem,
 			    struct volume_group *vg, int argc, char **argv)
 {
 	struct list *r;
+	struct list *alloc_areas;
 	struct pv_list *pvl, *new_pvl;
+	char *pvname = NULL, *colon;
 	int i;
 
 	/* Build up list of PVs */
@@ -452,16 +561,29 @@ struct list *create_pv_list(struct pool *mem,
 	list_init(r);
 
 	for (i = 0; i < argc; i++) {
+		if ((colon = strchr(argv[i], ':'))) {
+			if (!(pvname = pool_strndup(mem, argv[i],
+						    colon - argv[i]))) {
+				log_error("Failed to clone PV name");
+				return NULL;
+			}
+		} else
+			pvname = argv[i];
 
-		if (!(pvl = find_pv_in_vg(vg, argv[i]))) {
+		if (!(pvl = find_pv_in_vg(vg, pvname))) {
 			log_err("Physical Volume \"%s\" not found in "
-				"Volume Group \"%s\"", argv[i], vg->name);
+				"Volume Group \"%s\"", pvname, vg->name);
 			return NULL;
+		}
+
+		if (!(pvl->pv->status & ALLOCATABLE_PV)) {
+			log_error("Physical volume %s not allocatable", pvname);
+			continue;
 		}
 
 		if (pvl->pv->pe_count == pvl->pv->pe_alloc_count) {
 			log_err("No free extents on physical volume \"%s\"",
-				argv[i]);
+				pvname);
 			continue;
 		}
 
@@ -472,7 +594,47 @@ struct list *create_pv_list(struct pool *mem,
 
 		memcpy(new_pvl, pvl, sizeof(*new_pvl));
 		list_add(r, &new_pvl->list);
+
+		if (!(alloc_areas = pool_alloc(mem, sizeof(*alloc_areas)))) {
+			log_error("Allocation of alloc_areas list failed");
+			return NULL;
+		}
+		list_init(alloc_areas);
+
+		/* Specify which physical extents may be used for allocation */
+		if (!_parse_pes(mem, colon, alloc_areas, pvl->pv->pe_count)) {
+			stack;
+			return NULL;
+		}
+		new_pvl->alloc_areas = alloc_areas;
 	}
 
 	return list_empty(r) ? NULL : r;
+}
+
+struct list *clone_pv_list(struct pool *mem, struct list *pvsl)
+{
+	struct list *r, *pvh;
+	struct pv_list *pvl, *new_pvl;
+
+	/* Build up list of PVs */
+	if (!(r = pool_alloc(mem, sizeof(*r)))) {
+		log_error("Allocation of list failed");
+		return NULL;
+	}
+	list_init(r);
+
+	list_iterate(pvh, pvsl) {
+		pvl = list_item(pvh, struct pv_list);
+
+		if (!(new_pvl = pool_zalloc(mem, sizeof(*new_pvl)))) {
+			log_error("Unable to allocate physical volume list.");
+			return NULL;
+		}
+
+		memcpy(new_pvl, pvl, sizeof(*new_pvl));
+		list_add(r, &new_pvl->list);
+	}
+
+	return r;
 }

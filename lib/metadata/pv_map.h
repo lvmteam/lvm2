@@ -28,7 +28,7 @@ struct pv_area {
 };
 
 struct pv_map {
-	struct physical_volume *pv;
+	struct pv_list *pvl;
 	bitset_t allocated_extents;
 	struct list areas;
 

@@ -6,6 +6,7 @@
 
 #include "lib.h"
 #include "metadata.h"
+#include "locking.h"
 #include "pv_map.h"
 #include "lvm-string.h"
 #include "toolcontext.h"
@@ -19,9 +20,12 @@ static void _get_extents(struct lv_segment *seg)
 	unsigned int s, count;
 	struct physical_volume *pv;
 
-	for (s = 0; s < seg->stripes; s++) {
-		pv = seg->area[s].pv;
-		count = seg->len / seg->stripes;
+	for (s = 0; s < seg->area_count; s++) {
+		if (seg->area[s].type != AREA_PV)
+			continue;
+
+		pv = seg->area[s].u.pv.pv;
+		count = seg->area_len;
 		pv->pe_alloc_count += count;
 	}
 }
@@ -31,11 +35,14 @@ static void _put_extents(struct lv_segment *seg)
 	unsigned int s, count;
 	struct physical_volume *pv;
 
-	for (s = 0; s < seg->stripes; s++) {
-		pv = seg->area[s].pv;
+	for (s = 0; s < seg->area_count; s++) {
+		if (seg->area[s].type != AREA_PV)
+			continue;
+
+		pv = seg->area[s].u.pv.pv;
 
 		if (pv) {
-			count = seg->len / seg->stripes;
+			count = seg->area_len;
 			assert(pv->pe_alloc_count >= count);
 			pv->pe_alloc_count -= count;
 		}
@@ -60,13 +67,13 @@ static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 			      struct pv_area **areas, uint32_t *ix)
 {
 	uint32_t count = lv->le_count - *ix;
-	uint32_t per_area = count / stripes;
+	uint32_t area_len = count / stripes;
 	uint32_t smallest = areas[stripes - 1]->count;
 	uint32_t s;
 	struct lv_segment *seg;
 
-	if (smallest < per_area)
-		per_area = smallest;
+	if (smallest < area_len)
+		area_len = smallest;
 
 	if (!(seg = _alloc_segment(lv->vg->cmd->mem, stripes))) {
 		log_err("Couldn't allocate new stripe segment.");
@@ -76,15 +83,17 @@ static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 	seg->lv = lv;
 	seg->type = SEG_STRIPED;
 	seg->le = *ix;
-	seg->len = per_area * stripes;
-	seg->stripes = stripes;
+	seg->len = area_len * stripes;
+	seg->area_len = area_len;
+	seg->area_count = stripes;
 	seg->stripe_size = stripe_size;
 
 	for (s = 0; s < stripes; s++) {
 		struct pv_area *pva = areas[s];
-		seg->area[s].pv = pva->map->pv;
-		seg->area[s].pe = pva->start;
-		consume_pv_area(pva, per_area);
+		seg->area[s].type = AREA_PV;
+		seg->area[s].u.pv.pv = pva->map->pvl->pv;
+		seg->area[s].u.pv.pe = pva->start;
+		consume_pv_area(pva, area_len);
 	}
 
 	list_add(&lv->segments, &seg->list);
@@ -188,10 +197,12 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 	seg->type = SEG_STRIPED;
 	seg->le = *ix;
 	seg->len = count;
+	seg->area_len = count;
 	seg->stripe_size = 0;
-	seg->stripes = 1;
-	seg->area[0].pv = map->pv;
-	seg->area[0].pe = pva->start;
+	seg->area_count = 1;
+	seg->area[0].type = AREA_PV;
+	seg->area[0].u.pv.pv = map->pvl->pv;
+	seg->area[0].u.pv.pe = pva->start;
 
 	list_add(&lv->segments, &seg->list);
 
@@ -281,7 +292,7 @@ static int _alloc_next_free(struct logical_volume *lv,
  * Chooses a correct allocation policy.
  */
 static int _allocate(struct volume_group *vg, struct logical_volume *lv,
-		     struct list *acceptable_pvs, uint32_t allocated,
+		     struct list *allocatable_pvs, uint32_t allocated,
 		     uint32_t stripes, uint32_t stripe_size)
 {
 	int r = 0;
@@ -296,7 +307,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	/*
 	 * Build the sets of available areas on the pv's.
 	 */
-	if (!(pvms = create_pv_maps(scratch, vg, acceptable_pvs)))
+	if (!(pvms = create_pv_maps(scratch, vg, allocatable_pvs)))
 		goto out;
 
 	if (stripes > 1)
@@ -359,43 +370,20 @@ static char *_generate_lv_name(struct volume_group *vg,
 	return buffer;
 }
 
-struct logical_volume *lv_create(struct format_instance *fi,
-				 const char *name,
-				 uint32_t status,
-				 alloc_policy_t alloc,
-				 uint32_t stripes,
-				 uint32_t stripe_size,
-				 uint32_t extents,
-				 struct volume_group *vg,
-				 struct list *acceptable_pvs)
+struct logical_volume *lv_create_empty(struct format_instance *fi,
+				       const char *name,
+				       uint32_t status,
+				       alloc_policy_t alloc,
+				       struct volume_group *vg)
 {
 	struct cmd_context *cmd = vg->cmd;
 	struct lv_list *ll = NULL;
 	struct logical_volume *lv;
 	char dname[32];
 
-	if (!extents) {
-		log_error("Unable to create logical volume %s with no extents",
-			  name);
-		return NULL;
-	}
-
-	if (vg->free_count < extents) {
-		log_error("Insufficient free extents (%u) in volume group %s: "
-			  "%u required", vg->free_count, vg->name, extents);
-		return NULL;
-	}
-
 	if (vg->max_lv == vg->lv_count) {
 		log_error("Maximum number of logical volumes (%u) reached "
 			  "in volume group %s", vg->max_lv, vg->name);
-		return NULL;
-	}
-
-	if (stripes > list_size(acceptable_pvs)) {
-		log_error("Number of stripes (%u) must not exceed "
-			  "number of physical volumes (%d)", stripes,
-			  list_size(acceptable_pvs));
 		return NULL;
 	}
 
@@ -409,17 +397,20 @@ struct logical_volume *lv_create(struct format_instance *fi,
 
 	if (!(ll = pool_zalloc(cmd->mem, sizeof(*ll))) ||
 	    !(ll->lv = pool_zalloc(cmd->mem, sizeof(*ll->lv)))) {
-		stack;
+		log_error("lv_list allocation failed");
+		if (ll)
+			pool_free(cmd->mem, ll);
 		return NULL;
 	}
 
 	lv = ll->lv;
-
 	lv->vg = vg;
 
 	if (!(lv->name = pool_strdup(cmd->mem, name))) {
-		stack;
-		goto bad;
+		log_error("lv name strdup failed");
+		if (ll)
+			pool_free(cmd->mem, ll);
+		return NULL;
 	}
 
 	lv->status = status;
@@ -427,30 +418,73 @@ struct logical_volume *lv_create(struct format_instance *fi,
 	lv->read_ahead = 0;
 	lv->major = -1;
 	lv->minor = -1;
-	lv->size = (uint64_t) extents *vg->extent_size;
-	lv->le_count = extents;
+	lv->size = UINT64_C(0);
+	lv->le_count = 0;
 	list_init(&lv->segments);
-
-	if (!_allocate(vg, lv, acceptable_pvs, 0u, stripes, stripe_size)) {
-		stack;
-		goto bad;
-	}
 
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
 		stack;
-		goto bad;
+		if (ll)
+			pool_free(cmd->mem, ll);
+		return NULL;
 	}
 
 	vg->lv_count++;
 	list_add(&vg->lvs, &ll->list);
 
 	return lv;
+}
 
-      bad:
-	if (ll)
-		pool_free(cmd->mem, ll);
+struct logical_volume *lv_create(struct format_instance *fi,
+				 const char *name,
+				 uint32_t status,
+				 alloc_policy_t alloc,
+				 uint32_t stripes,
+				 uint32_t stripe_size,
+				 uint32_t extents,
+				 struct volume_group *vg,
+				 struct list *allocatable_pvs)
+{
+	struct logical_volume *lv;
 
-	return NULL;
+	if (!extents) {
+		log_error("Unable to create logical volume %s with no extents",
+			  name);
+		return NULL;
+	}
+
+	if (vg->free_count < extents) {
+		log_error("Insufficient free extents (%u) in volume group %s: "
+			  "%u required", vg->free_count, vg->name, extents);
+		return NULL;
+	}
+
+	if (stripes > list_size(allocatable_pvs)) {
+		log_error("Number of stripes (%u) must not exceed "
+			  "number of physical volumes (%d)", stripes,
+			  list_size(allocatable_pvs));
+		return NULL;
+	}
+
+	if (!(lv = lv_create_empty(fi, name, status, alloc, vg))) {
+		stack;
+		return NULL;
+	}
+
+	lv->size = (uint64_t) extents *vg->extent_size;
+	lv->le_count = extents;
+
+	if (!_allocate(vg, lv, allocatable_pvs, 0u, stripes, stripe_size)) {
+		stack;
+		return NULL;
+	}
+
+	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
+		stack;
+		return NULL;
+	}
+
+	return lv;
 }
 
 int lv_reduce(struct format_instance *fi,
@@ -493,7 +527,7 @@ int lv_reduce(struct format_instance *fi,
 int lv_extend(struct format_instance *fi,
 	      struct logical_volume *lv,
 	      uint32_t stripes, uint32_t stripe_size,
-	      uint32_t extents, struct list *acceptable_pvs)
+	      uint32_t extents, struct list *allocatable_pvs)
 {
 	uint32_t old_le_count = lv->le_count;
 	uint64_t old_size = lv->size;
@@ -501,10 +535,11 @@ int lv_extend(struct format_instance *fi,
 	lv->le_count += extents;
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
 
-	if (!_allocate(lv->vg, lv, acceptable_pvs, old_le_count,
+	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count,
 		       stripes, stripe_size)) {
 		lv->le_count = old_le_count;
 		lv->size = old_size;
+		stack;
 		return 0;
 	}
 
@@ -541,6 +576,37 @@ int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 	vg->free_count += lv->le_count;
 
 	list_del(&lvl->list);
+
+	return 1;
+}
+
+/* Lock a list of LVs */
+int lock_lvs(struct cmd_context *cmd, struct list *lvs, int flags)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	list_iterate(lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		if (!lock_vol(cmd, lv->lvid.s, flags)) {
+			log_error("Failed to lock %s", lv->name);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/* Unlock list of LVs */
+int unlock_lvs(struct cmd_context *cmd, struct list *lvs)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+
+	list_iterate(lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		unlock_lv(cmd, lv->lvid.s);
+	}
 
 	return 1;
 }

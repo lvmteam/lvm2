@@ -47,7 +47,7 @@ FIELD(VGS, vg, NUM, "#SN", snapshot_count, 3, uint32, "snap_count")
 FIELD(VGS, vg, NUM, "Seq", seqno, 3, uint32, "vg_seqno")
 
 FIELD(SEGS, seg, STR, "Type", list, 4, segtype, "segtype")
-FIELD(SEGS, seg, NUM, "#Str", stripes, 4, uint32, "stripes")
+FIELD(SEGS, seg, NUM, "#Str", area_count, 4, uint32, "stripes")
 FIELD(SEGS, seg, NUM, "Stripe", stripe_size, 6, size32, "stripesize")
 FIELD(SEGS, seg, NUM, "Chunk", chunk_size, 5, size32, "chunksize")
 FIELD(SEGS, seg, NUM, "Start", list, 5, segstart, "seg_start")

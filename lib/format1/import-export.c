@@ -342,9 +342,10 @@ static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	}
 
 	lvd->lv_read_ahead = lv->read_ahead;
-	lvd->lv_stripes = list_item(lv->segments.n, struct lv_segment)->stripes;
-	lvd->lv_stripesize = list_item(lv->segments.n,
-				       struct lv_segment)->stripe_size;
+	lvd->lv_stripes =
+	    list_item(lv->segments.n, struct lv_segment)->area_count;
+	lvd->lv_stripesize =
+	    list_item(lv->segments.n, struct lv_segment)->stripe_size;
 
 	lvd->lv_size = lv->size;
 	lvd->lv_allocated_le = lv->le_count;
@@ -367,15 +368,25 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
 
-		for (s = 0; s < seg->stripes; s++) {
-			if (seg->area[s].pv != pv)
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg->type != SEG_STRIPED) {
+				log_error("Non-striped segment type in LV %s: "
+					  "unsupported by format1", lv->name);
+				return 0;
+			}
+			if (seg->area[s].type != AREA_PV) {
+				log_error("LV stripe found in LV %s: "
+					  "unsupported by format1", lv->name);
+				return 0;
+			}
+			if (seg->area[s].u.pv.pv != pv)
 				continue;	/* not our pv */
 
-			for (pe = 0; pe < (seg->len / seg->stripes); pe++) {
-				ped = &dl->extents[pe + seg->area[s].pe];
+			for (pe = 0; pe < (seg->len / seg->area_count); pe++) {
+				ped = &dl->extents[pe + seg->area[s].u.pv.pe];
 				ped->lv_num = lv_num;
-				ped->le_num = (seg->le / seg->stripes) + pe +
-				    s * (lv->le_count / seg->stripes);
+				ped->le_num = (seg->le / seg->area_count) + pe +
+				    s * (lv->le_count / seg->area_count);
 			}
 		}
 	}
@@ -396,7 +407,7 @@ int import_pvs(const struct format_type *fmt, struct pool *mem,
 
 		dl = list_item(pvdh, struct disk_list);
 
-		if (!(pvl = pool_alloc(mem, sizeof(*pvl))) ||
+		if (!(pvl = pool_zalloc(mem, sizeof(*pvl))) ||
 		    !(pvl->pv = pool_alloc(mem, sizeof(*pvl->pv)))) {
 			stack;
 			return 0;

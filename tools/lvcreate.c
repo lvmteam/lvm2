@@ -107,20 +107,22 @@ static int _read_name_params(struct lvcreate_params *lp,
 		}
 	}
 
-	if (lp->lv_name && (ptr = strrchr(lp->lv_name, '/')))
-		lp->lv_name = ptr + 1;
+	if (lp->lv_name) {
+		if ((ptr = strrchr(lp->lv_name, '/')))
+			lp->lv_name = ptr + 1;
 
-	/* FIXME Remove this restriction eventually */
-	if (lp->lv_name && !strncmp(lp->lv_name, "snapshot", 8)) {
-		log_error("Names starting \"snapshot\" are reserved. "
-			  "Please choose a different LV name.");
-		return 0;
-	}
+		/* FIXME Remove this restriction eventually */
+		if (!strncmp(lp->lv_name, "snapshot", 8)) {
+			log_error("Names starting \"snapshot\" are reserved. "
+				  "Please choose a different LV name.");
+			return 0;
+		}
 
-	if (!validate_name(lp->lv_name)) {
-		log_error("Logical volume name \"%s\" has invalid characters",
-			  lp->lv_name);
-		return 0;
+		if (!validate_name(lp->lv_name)) {
+			log_error("Logical volume name \"%s\" has invalid "
+				  "characters", lp->lv_name);
+			return 0;
+		}
 	}
 
 	return 1;
@@ -276,8 +278,8 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			}
 		} else {
 			if ((lp->minor != -1) || (lp->major != -1)) {
-				log_error
-				    ("--major and --minor incompatible with -Mn");
+				log_error("--major and --minor incompatible "
+					  "with -Mn");
 				return 0;
 			}
 		}

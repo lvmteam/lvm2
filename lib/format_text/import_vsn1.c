@@ -215,7 +215,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			 struct hash_table *pv_hash)
 {
 	unsigned int s;
-	uint32_t stripes = 0;
+	uint32_t area_count = 0;
 	struct lv_segment *seg;
 	struct config_node *cn;
 	struct config_value *cv;
@@ -223,7 +223,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	uint32_t start_extent, extent_count;
 	uint32_t chunk_size;
 	const char *org_name, *cow_name;
-	struct logical_volume *org, *cow;
+	struct logical_volume *org, *cow, *lv1;
 	segment_type_t segtype;
 
 	if (!(sn = sn->child)) {
@@ -254,7 +254,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	}
 
 	if (segtype == SEG_STRIPED) {
-		if (!_read_int32(sn, "stripe_count", &stripes)) {
+		if (!_read_int32(sn, "stripe_count", &area_count)) {
 			log_error("Couldn't read 'stripe_count' for "
 				  "segment '%s'.", sn->key);
 			return 0;
@@ -262,7 +262,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	}
 
 	if (!(seg = pool_zalloc(mem, sizeof(*seg) +
-				(sizeof(seg->area[0]) * stripes)))) {
+				(sizeof(seg->area[0]) * area_count)))) {
 		stack;
 		return 0;
 	}
@@ -270,9 +270,10 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->lv = lv;
 	seg->le = start_extent;
 	seg->len = extent_count;
+	seg->area_len = extent_count;
+	seg->type = segtype;
 
 	switch (segtype) {
-	case SEG_MIRROR:
 	case SEG_SNAPSHOT:
 		lv->status |= SNAPSHOT;
 
@@ -316,15 +317,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		break;
 
 	case SEG_STRIPED:
-		seg->stripes = stripes;
-
-		if (!seg->stripes) {
-			log_error("Zero stripes *not* allowed for segment '%s'",
-				  sn->key);
-			return 0;
-		}
-
-		if ((seg->stripes != 1) &&
+		if ((area_count != 1) &&
 		    !_read_int32(sn, "stripe_size", &seg->stripe_size)) {
 			log_error("Couldn't read stripe_size for segment '%s'.",
 				  sn->key);
@@ -337,55 +330,71 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			return 0;
 		}
 
-		for (cv = cn->v, s = 0; cv && s < seg->stripes;
+		seg->area_len /= area_count;
+
+	case SEG_MIRRORED:
+		seg->area_count = area_count;
+
+		if (!seg->area_count) {
+			log_error("Zero areas not allowed for segment '%s'",
+				  sn->key);
+			return 0;
+		}
+
+		for (cv = cn->v, s = 0; cv && s < seg->area_count;
 		     s++, cv = cv->next) {
 
 			/* first we read the pv */
 			const char *bad = "Badly formed areas array for "
 			    "segment '%s'.";
 			struct physical_volume *pv;
-			uint32_t allocated;
 
 			if (cv->type != CFG_STRING) {
 				log_error(bad, sn->key);
 				return 0;
 			}
 
-			if (!(pv = hash_lookup(pv_hash, cv->v.str))) {
-				log_error("Couldn't find physical volume '%s' "
+			if (!cv->next) {
+				log_error(bad, sn->key);
+				return 0;
+			}
+
+			if (cv->next->type != CFG_INT) {
+				log_error(bad, sn->key);
+				return 0;
+			}
+
+			/* FIXME Cope if LV not yet read in */
+			if ((pv = hash_lookup(pv_hash, cv->v.str))) {
+				seg->area[s].type = AREA_PV;
+				seg->area[s].u.pv.pv = pv;
+				seg->area[s].u.pv.pe = cv->next->v.i;
+				/*
+				 * Adjust extent counts in the pv and vg.
+				 */
+				pv->pe_alloc_count += seg->area_len;
+				vg->free_count -= seg->area_len;
+
+			} else if ((lv1 = find_lv(vg, cv->v.str))) {
+				seg->area[s].type = AREA_LV;
+				seg->area[s].u.lv.lv = lv1;
+				seg->area[s].u.lv.le = cv->next->v.i;
+			} else {
+				log_error("Couldn't find volume '%s' "
 					  "for segment '%s'.",
 					  cv->v.str ? cv->v.str : "NULL",
 					  seg_name);
 				return 0;
 			}
 
-			seg->area[s].pv = pv;
-
-			if (!(cv = cv->next)) {
-				log_error(bad, sn->key);
-				return 0;
-			}
-
-			if (cv->type != CFG_INT) {
-				log_error(bad, sn->key);
-				return 0;
-			}
-
-			seg->area[s].pe = cv->v.i;
-
-			/*
-			   * Adjust the extent counts in the pv and vg.
-			 */
-			allocated = seg->len / seg->stripes;
-			pv->pe_alloc_count += allocated;
-			vg->free_count -= allocated;
+			cv = cv->next;
 		}
 
 		/*
 		 * Check we read the correct number of stripes.
 		 */
-		if (cv || (s < seg->stripes)) {
-			log_error("Incorrect number of stripes in 'area' array "
+		if (cv || (s < seg->area_count)) {
+			log_error("Incorrect number of areas in area array "
 				  "for segment '%s'.", seg_name);
 			return 0;
 		}
@@ -456,9 +465,9 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 	return 1;
 }
 
-static int _read_lv(struct format_instance *fid, struct pool *mem,
-		    struct volume_group *vg, struct config_node *lvn,
-		    struct config_node *vgn, struct hash_table *pv_hash)
+static int _read_lvnames(struct format_instance *fid, struct pool *mem,
+			 struct volume_group *vg, struct config_node *lvn,
+			 struct config_node *vgn, struct hash_table *pv_hash)
 {
 	struct logical_volume *lv;
 	struct lv_list *lvl;
@@ -482,17 +491,6 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 		return 0;
 	}
 
-	lv->vg = vg;
-
-	/* FIXME: read full lvid */
-	if (!_read_id(&lv->lvid.id[1], lvn, "id")) {
-		log_error("Couldn't read uuid for logical volume %s.",
-			  lv->name);
-		return 0;
-	}
-
-	memcpy(&lv->lvid.id[0], &lv->vg->id, sizeof(lv->lvid.id[0]));
-
 	if (!(cn = find_config_node(lvn, "status", '/'))) {
 		log_error("Couldn't find status flags for logical volume.");
 		return 0;
@@ -500,12 +498,6 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 
 	if (!(read_flags(&lv->status, LV_FLAGS, cn->v))) {
 		log_error("Couldn't read status flags for logical volume.");
-		return 0;
-	}
-
-	list_init(&lv->segments);
-	if (!_read_segments(mem, vg, lv, lvn, pv_hash)) {
-		stack;
 		return 0;
 	}
 
@@ -524,6 +516,48 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead))
 		lv->read_ahead = 0;
 
+	list_init(&lv->segments);
+
+	lv->vg = vg;
+	vg->lv_count++;
+	list_add(&vg->lvs, &lvl->list);
+
+	return 1;
+}
+
+static int _read_lvsegs(struct format_instance *fid, struct pool *mem,
+			struct volume_group *vg, struct config_node *lvn,
+			struct config_node *vgn, struct hash_table *pv_hash)
+{
+	struct logical_volume *lv;
+	struct lv_list *lvl;
+
+	if (!(lvl = find_lv_in_vg(vg, lvn->key))) {
+		log_error("Lost logical volume reference %s", lvn->key);
+		return 0;
+	}
+
+	lv = lvl->lv;
+
+	if (!(lvn = lvn->child)) {
+		log_error("Empty logical volume section.");
+		return 0;
+	}
+
+	/* FIXME: read full lvid */
+	if (!_read_id(&lv->lvid.id[1], lvn, "id")) {
+		log_error("Couldn't read uuid for logical volume %s.",
+			  lv->name);
+		return 0;
+	}
+
+	memcpy(&lv->lvid.id[0], &lv->vg->id, sizeof(lv->lvid.id[0]));
+
+	if (!_read_segments(mem, vg, lv, lvn, pv_hash)) {
+		stack;
+		return 0;
+	}
+
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
 
 	/* Skip this for now for snapshots */
@@ -541,9 +575,9 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 			log_error("Couldn't read major number for logical "
 				  "volume %s.", lv->name);
 		}
-
-		vg->lv_count++;
-		list_add(&vg->lvs, &lvl->list);
+	} else {
+		vg->lv_count--;
+		list_del(&lvl->list);
 	}
 
 	return 1;
@@ -687,10 +721,18 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	list_init(&vg->lvs);
 	list_init(&vg->snapshots);
-	if (!_read_sections(fid, "logical_volumes", _read_lv, mem, vg,
+
+	if (!_read_sections(fid, "logical_volumes", _read_lvnames, mem, vg,
 			    vgn, pv_hash, 1)) {
-		log_error("Couldn't read all logical volumes for volume "
+		log_error("Couldn't read all logical volume names for volume "
 			  "group %s.", vg->name);
+		goto bad;
+	}
+
+	if (!_read_sections(fid, "logical_volumes", _read_lvsegs, mem, vg,
+			    vgn, pv_hash, 1)) {
+		log_error("Couldn't read all logical volumes for "
+			  "volume group %s.", vg->name);
 		goto bad;
 	}
 

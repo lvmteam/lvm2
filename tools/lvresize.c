@@ -192,8 +192,12 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			uint32_t sz, str;
 
 			seg = list_item(segh, struct lv_segment);
+
+			if (seg->type != SEG_STRIPED)
+				continue;
+
 			sz = seg->stripe_size;
-			str = seg->stripes;
+			str = seg->area_count;
 
 			if ((seg_stripesize && seg_stripesize != sz
 			     && !ssize) ||
@@ -239,10 +243,13 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 			uint32_t seg_extents;
 
 			seg = list_item(segh, struct lv_segment);
+
 			seg_extents = seg->len;
 
-			seg_stripesize = seg->stripe_size;
-			seg_stripes = seg->stripes;
+			if (seg->type == SEG_STRIPED) {
+				seg_stripesize = seg->stripe_size;
+				seg_stripes = seg->area_count;
+			}
 
 			if (extents <= extents_used + seg_extents)
 				break;

@@ -11,13 +11,13 @@
 static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 {
 	struct list *tmp;
-	struct physical_volume *pv;
 	struct pv_map *pvm;
+	struct pv_list *pvl;
 
 	list_iterate(tmp, pvs) {
-		pv = list_item(tmp, struct pv_list)->pv;
+		pvl = list_item(tmp, struct pv_list);
 
-		if (!(pv->status & ALLOCATABLE_PV))
+		if (!(pvl->pv->status & ALLOCATABLE_PV))
 			continue;
 
 		if (!(pvm = pool_zalloc(mem, sizeof(*pvm)))) {
@@ -25,9 +25,9 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 			return 0;
 		}
 
-		pvm->pv = pv;
+		pvm->pvl = pvl;
 		if (!(pvm->allocated_extents =
-		      bitset_create(mem, pv->pe_count))) {
+		      bitset_create(mem, pvl->pv->pe_count))) {
 			stack;
 			return 0;
 		}
@@ -39,8 +39,8 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 	return 1;
 }
 
-static int _set_allocated(struct hash_table *hash,
-			  struct physical_volume *pv, uint32_t pe)
+static int _set_allocd(struct hash_table *hash,
+		       struct physical_volume *pv, uint32_t pe)
 {
 	struct pv_map *pvm;
 
@@ -82,7 +82,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	/* populate the hash table */
 	list_iterate(pvmh, maps) {
 		pvm = list_item(pvmh, struct pv_map);
-		if (!hash_insert(hash, dev_name(pvm->pv->dev), pvm)) {
+		if (!hash_insert(hash, dev_name(pvm->pvl->pv->dev), pvm)) {
 			stack;
 			goto out;
 		}
@@ -95,13 +95,14 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 		list_iterate(segh, &lv->segments) {
 			seg = list_item(segh, struct lv_segment);
 
-			for (s = 0; s < seg->stripes; s++) {
-				for (pe = 0; pe < (seg->len / seg->stripes);
-				     pe++) {
-					if (!_set_allocated(hash,
-							    seg->area[s].pv,
-							    seg->area[s].pe
-							    + pe)) {
+			for (s = 0u; s < seg->area_count; s++) {
+				for (pe = 0u; pe < seg->area_len; pe++) {
+					if (seg->area[s].type != AREA_PV)
+						continue;
+					if (!_set_allocd(hash,
+							 seg->area[s].u.pv.pv,
+							 seg->area[s].u.pv.pe
+							 + pe)) {
 						stack;
 						goto out;
 					}
@@ -140,22 +141,22 @@ static void _insert_area(struct list *head, struct pv_area *a)
 }
 
 static int _create_single_area(struct pool *mem, struct pv_map *pvm,
-			       uint32_t *extent)
+			       uint32_t end, uint32_t *extent)
 {
-	uint32_t e = *extent, b, count = pvm->pv->pe_count;
+	uint32_t e = *extent, b;
 	struct pv_area *pva;
 
-	while (e < count && bit(pvm->allocated_extents, e))
+	while (e <= end && bit(pvm->allocated_extents, e))
 		e++;
 
-	if (e == count) {
+	if (e > end) {
 		*extent = e;
 		return 1;
 	}
 
 	b = e++;
 
-	while (e < count && !bit(pvm->allocated_extents, e))
+	while (e <= end && !bit(pvm->allocated_extents, e))
 		e++;
 
 	if (!(pva = pool_zalloc(mem, sizeof(*pva)))) {
@@ -163,6 +164,8 @@ static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 		return 0;
 	}
 
+	log_debug("Allowing allocation on %s start PE %" PRIu32 " length %"
+		  PRIu32, dev_name(pvm->pvl->pv->dev), b, e - b);
 	pva->map = pvm;
 	pva->start = b;
 	pva->count = e - b;
@@ -172,12 +175,18 @@ static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 	return 1;
 }
 
-static int _create_areas(struct pool *mem, struct pv_map *pvm)
+static int _create_areas(struct pool *mem, struct pv_map *pvm, uint32_t start,
+			 uint32_t count)
 {
-	uint32_t pe = 0;
+	uint32_t pe, end;
 
-	while (pe < pvm->pv->pe_count)
-		if (!_create_single_area(mem, pvm, &pe)) {
+	end = start + count - 1;
+	if (end > pvm->pvl->pv->pe_count - 1)
+		end = pvm->pvl->pv->pe_count - 1;
+
+	pe = start;
+	while (pe <= end)
+		if (!_create_single_area(mem, pvm, end, &pe)) {
 			stack;
 			return 0;
 		}
@@ -185,7 +194,36 @@ static int _create_areas(struct pool *mem, struct pv_map *pvm)
 	return 1;
 }
 
-static int _create_all_areas(struct pool *mem, struct list *maps)
+static int _create_allocatable_areas(struct pool *mem, struct pv_map *pvm)
+{
+	struct list *alloc_areas, *aah;
+	struct alloc_area *aa;
+
+	alloc_areas = pvm->pvl->alloc_areas;
+
+	if (alloc_areas) {
+		list_iterate(aah, alloc_areas) {
+			aa = list_item(aah, struct alloc_area);
+			if (!_create_areas(mem, pvm, aa->start, aa->count)) {
+				stack;
+				return 0;
+			}
+
+		}
+	} else {
+		/* Use whole PV */
+		if (!_create_areas(mem, pvm, UINT32_C(0),
+				   pvm->pvl->pv->pe_count)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+static int _create_all_areas(struct pool *mem, struct list *maps,
+			     struct list *pvs)
 {
 	struct list *tmp;
 	struct pv_map *pvm;
@@ -193,7 +231,7 @@ static int _create_all_areas(struct pool *mem, struct list *maps)
 	list_iterate(tmp, maps) {
 		pvm = list_item(tmp, struct pv_map);
 
-		if (!_create_areas(mem, pvm)) {
+		if (!_create_allocatable_areas(mem, pvm)) {
 			stack;
 			return 0;
 		}
@@ -226,7 +264,7 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
 		goto bad;
 	}
 
-	if (!_create_all_areas(mem, maps)) {
+	if (!_create_all_areas(mem, maps, pvs)) {
 		log_error("Couldn't create area maps in %s", vg->name);
 		goto bad;
 	}
