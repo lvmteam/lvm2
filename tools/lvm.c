@@ -72,6 +72,7 @@ struct config_info {
 	int debug;
 	int verbose;
 	int test;
+	int syslog;
 
 	int archive;		/* should we archive ? */
 	int backup;		/* should we backup ? */
@@ -710,21 +711,31 @@ static void __init_log(struct config_file *cf)
 {
 	char *open_mode = "a";
 
-	const char *log_file = find_config_str(cf->root, "log/file", '/', 0);
+	const char *log_file;
+
+
+	_default_settings.syslog =
+		find_config_int(cf->root, "log/syslog", '/', 1);
+	if (_default_settings.syslog != 1)
+		fin_syslog();
+
+	if (_default_settings.syslog > 1)
+		init_syslog(_default_settings.syslog);
 
 	_default_settings.debug =
 		find_config_int(cf->root, "log/level", '/', 0);
+	init_debug(_default_settings.debug);
+
 	_default_settings.verbose =
 		find_config_int(cf->root, "log/verbose", '/', 0);
+	init_verbose(_default_settings.verbose);
+
 	_default_settings.test = find_config_int(cf->root, "global/test", 
 						 '/', 0);
-
 	if (find_config_int(cf->root, "log/overwrite", '/', 0))
 		open_mode = "w";
 
-	init_debug(_default_settings.debug);
-	init_verbose(_default_settings.verbose);
-
+	log_file = find_config_str(cf->root, "log/file", '/', 0);
 	if (log_file) {
 		/* set up the logging */
 		if (!(_log = fopen(log_file, open_mode)))
@@ -1078,6 +1089,7 @@ static void fin(void)
 
 	dump_memory();
 	fin_log();
+	fin_syslog();
 
 	if (_log)
 		fclose(_log);
