@@ -134,24 +134,24 @@ struct pe_disk {
 
 
 struct uuid_list {
-	struct list_head list;
+	struct list list;
 	char uuid[NAME_LEN];
 };
 
 struct lvd_list {
-	struct list_head list;
+	struct list list;
 	struct lv_disk lv;
 };
 
 struct disk_list {
 	struct pool *mem;
 	struct device *dev;
-	struct list_head list;
+	struct list list;
 
 	struct pv_disk pv;
 	struct vg_disk vg;
-	struct list_head uuids;
-	struct list_head lvs;
+	struct list uuids;
+	struct list lvs;
 	struct pe_disk *extents;
 };
 
@@ -182,9 +182,9 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 			  const char *vg_name);
 
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
-		   struct pool *mem, struct list_head *results);
+		   struct pool *mem, struct list *results);
 
-int write_pvs(struct list_head *pvs);
+int write_pvs(struct list *pvs);
 
 
 /*
@@ -204,30 +204,29 @@ int import_lv(struct pool *mem, struct logical_volume *lv,
 void export_lv(struct lv_disk *lvd, struct volume_group *vg,
 	       struct logical_volume *lv, const char *prefix);
 
-int import_extents(struct pool *mem, struct volume_group *vg,
-		   struct list_head *pvs);
+int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvs);
 int export_extents(struct disk_list *dl, int lv_num,
 		   struct logical_volume *lv,
 		   struct physical_volume *pv);
 
-int import_pvs(struct pool *mem, struct list_head *pvs,
-	       struct list_head *results, int *count);
+int import_pvs(struct pool *mem, struct list *pvs,
+	       struct list *results, int *count);
 
 int import_lvs(struct pool *mem, struct volume_group *vg,
-	       struct list_head *pvs);
+	       struct list *pvs);
 int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	       struct physical_volume *pv, const char *prefix);
 
 int export_uuids(struct disk_list *dl, struct volume_group *vg);
 
-void export_numbers(struct list_head *pvs, struct volume_group *vg);
+void export_numbers(struct list *pvs, struct volume_group *vg);
 
-void export_pv_act(struct list_head *pvs);
+void export_pv_act(struct list *pvs);
 
 /* blech */
 int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 		       int *result);
-int export_vg_number(struct list_head *pvs, const char *vg_name,
+int export_vg_number(struct list *pvs, const char *vg_name,
 		     struct dev_filter *filter);
 
 

@@ -15,7 +15,7 @@
  * pointer comparisons are valid.
  */
 struct device {
-	struct list_head aliases; /* struct str_list from lvm-types.h */
+	struct list aliases; /* struct str_list from lvm-types.h */
 	dev_t dev;
 };
 
@@ -31,7 +31,7 @@ int64_t dev_write(struct device *dev,
 		  uint64_t offset, int64_t len, void *buffer);
 
 static inline const char *dev_name(struct device *dev) {
-	return list_entry(dev->aliases.next, struct str_list, list)->str;
+	return list_item(dev->aliases.n, struct str_list)->str;
 }
 
 

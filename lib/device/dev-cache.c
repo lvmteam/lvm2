@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "dev-cache.h"
@@ -31,7 +31,7 @@ struct dev_iter {
 };
 
 struct dir_list {
-	struct list_head list;
+	struct list list;
 	char dir[0];
 };
 
@@ -41,7 +41,7 @@ static struct {
 	struct btree *devices;
 
 	int has_scanned;
-	struct list_head dirs;
+	struct list dirs;
 
 } _cache;
 
@@ -60,7 +60,7 @@ static struct device *_create_dev(dev_t d)
 		return NULL;
 	}
 
-	INIT_LIST_HEAD(&dev->aliases);
+	list_init(&dev->aliases);
 	dev->dev = d;
 	return dev;
 }
@@ -79,7 +79,7 @@ static int _add_alias(struct device *dev, const char *path)
 		return 0;
 	}
 
-	list_add(&sl->list, &dev->aliases);
+	list_add(&dev->aliases, &sl->list);
 	return 1;
 }
 
@@ -254,15 +254,15 @@ static int _insert(const char *path, int rec)
 
 static void _full_scan(void)
 {
-	struct list_head *tmp;
+	struct list *dh;
 
 	if (_cache.has_scanned)
 		return;
 
-	list_for_each(tmp, &_cache.dirs) {
-		struct dir_list *dl = list_entry(tmp, struct dir_list, list);
+	list_iterate(dh, &_cache.dirs) {
+		struct dir_list *dl = list_item(dh, struct dir_list);
 		_insert_dir(dl->dir);
-	}
+	};
 
 	_cache.has_scanned = 1;
 }
@@ -288,7 +288,7 @@ int dev_cache_init(void)
 		goto bad;
 	}
 
-	INIT_LIST_HEAD(&_cache.dirs);
+	list_init(&_cache.dirs);
 
 	return 1;
 
@@ -324,7 +324,7 @@ int dev_cache_add_dir(const char *path)
 		return 0;
 
 	strcpy(dl->dir, path);
-	list_add(&dl->list, &_cache.dirs);
+	list_add(&_cache.dirs, &dl->list);
 	return 1;
 }
 

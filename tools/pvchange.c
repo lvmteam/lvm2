@@ -31,7 +31,7 @@ int pvchange(int argc, char **argv)
 	struct physical_volume *pv;
 	char *pv_name;
 
-	struct list_head *pvh, *pvs;
+	struct list *pvh, *pvs;
 
 	if (arg_count(allocation_ARG) == 0) {
 		log_error("Please give the x option");
@@ -66,10 +66,10 @@ int pvchange(int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
-		list_for_each(pvh, pvs) {
+		list_iterate(pvh, pvs) {
 			total++;
-			done += pvchange_single(&list_entry(pvh, struct pv_list,
-							    list)->pv);
+			done += pvchange_single(
+				&list_item(pvh, struct pv_list)->pv);
 		}
 	}
 
@@ -87,7 +87,7 @@ int pvchange(int argc, char **argv)
 int pvchange_single(struct physical_volume *pv)
 {
 	struct volume_group *vg = NULL;
-	struct list_head *pvh;
+	struct list *pvh;
 
 	const char *pv_name = dev_name(pv->dev);
 
@@ -107,7 +107,7 @@ int pvchange_single(struct physical_volume *pv)
 				pv_name, vg->name);
 			return 0;
 		}
-		pv = &list_entry(pvh, struct pv_list, list)->pv;
+		pv = &list_item(pvh, struct pv_list)->pv;
 	}
 
 	/* change allocatability for a PV */

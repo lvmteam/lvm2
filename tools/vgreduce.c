@@ -87,7 +87,7 @@ int vgreduce(int argc, char **argv)
 /* Or take pv_name instead? */
 static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 {
-	struct list_head *pvh;
+	struct list *pvh;
 	const char *name = dev_name(pv->dev);
 
 	if (pv->pe_allocated) {

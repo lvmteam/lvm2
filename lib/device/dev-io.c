@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "device.h"

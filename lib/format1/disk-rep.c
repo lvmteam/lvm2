@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "disk-rep.h"
@@ -170,7 +170,7 @@ static int _read_uuids(struct disk_list *data)
 		memcpy(ul->uuid, buffer, NAME_LEN);
 		ul->uuid[NAME_LEN] = '\0';
 
-		list_add(&ul->list, &data->uuids);
+		list_add(&data->uuids, &ul->list);
 
 		pos += NAME_LEN;
 		num_read++;
@@ -209,7 +209,7 @@ static int _read_lvs(struct disk_list *data)
 		if (!_check_lv(&ll->lv))
 			fail;
 
-		list_add(&ll->list, &data->lvs);
+		list_add(&data->lvs, &ll->list);
 	}
 
 	return 1;
@@ -241,8 +241,8 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 
 	data->dev = dev;
 	data->mem = mem;
-	INIT_LIST_HEAD(&data->uuids);
-	INIT_LIST_HEAD(&data->lvs);
+	list_init(&data->uuids);
+	list_init(&data->lvs);
 
 	if (!_read_pv(data)) {
 		log_debug("Failed to read PV data from %s", name);
@@ -311,7 +311,7 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
  * the memory if something goes wrong.
  */
 int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
-		   struct pool *mem, struct list_head *head)
+		   struct pool *mem, struct list *head)
 {
 	struct dev_iter *iter = dev_iter_create(filter);
 	struct device *dev;
@@ -319,7 +319,7 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		if ((data = read_pv(dev, mem, vg_name)))
-			list_add(&data->list, head);
+			list_add(head, &data->list);
 	}
 	dev_iter_destroy(iter);
 
@@ -347,18 +347,18 @@ static int _write_vg(struct disk_list *data)
 static int _write_uuids(struct disk_list *data)
 {
 	struct uuid_list *ul;
-	struct list_head *tmp;
+	struct list *uh;
 	ulong pos = data->pv.pv_uuidlist_on_disk.base;
 	ulong end = pos + data->pv.pv_uuidlist_on_disk.size;
 
-	list_for_each(tmp, &data->uuids) {
+	list_iterate(uh, &data->uuids) {
 		if (pos >= end) {
 			log_error("Too many uuids to fit on %s",
 				  dev_name(data->dev));
 			return 0;
 		}
 
-		ul = list_entry(tmp, struct uuid_list, list);
+		ul = list_item(uh, struct uuid_list);
 		if (dev_write(data->dev, pos, NAME_LEN, ul->uuid) != NAME_LEN)
 			fail;
 
@@ -381,11 +381,11 @@ static int _write_lv(struct device *dev, ulong pos, struct lv_disk *disk)
 
 static int _write_lvs(struct disk_list *data)
 {
-	struct list_head *tmp;
+	struct list *lvh;
 	unsigned long pos;
 
-	list_for_each(tmp, &data->lvs) {
-		struct lvd_list *ll = list_entry(tmp, struct lvd_list, list);
+	list_iterate(lvh, &data->lvs) {
+		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 		pos = data->pv.lv_on_disk.base;
 
 		if (!_write_lv(data->dev, pos, &ll->lv))
@@ -468,13 +468,13 @@ static int _write_all_pv(struct disk_list *data)
  * little sanity checking, so make sure correct
  * data is passed to here.
  */
-int write_pvs(struct list_head *pvs)
+int write_pvs(struct list *pvs)
 {
-	struct list_head *tmp;
+	struct list *pvh;
 	struct disk_list *dl;
 
-	list_for_each(tmp, pvs) {
-		dl = list_entry(tmp, struct disk_list, list);
+	list_iterate(pvh, pvs) {
+		dl = list_item(pvh, struct disk_list);
 		if (!(_write_all_pv(dl)))
 			fail;
 

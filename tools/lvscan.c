@@ -69,7 +69,7 @@ static int lvscan_single(const char *vg_name)
 
 	struct volume_group *vg;
 	struct logical_volume *lv;
-	struct list_head *lvh;
+	struct list *lvh;
 
 	log_verbose("Checking for volume group %s", vg_name);
 	if (!(vg = ios->vg_read(ios, vg_name))) {
@@ -84,8 +84,8 @@ static int lvscan_single(const char *vg_name)
 
 	vg_total++;
 
-	list_for_each(lvh, &vg->lvs) {
-		lv = &list_entry(lvh, struct lv_list, list)->lv;
+	list_iterate(lvh, &vg->lvs) {
+		lv = &list_item(lvh, struct lv_list)->lv;
 
 		if (lv->status & ACTIVE) {
 			active_str = "ACTIVE   ";

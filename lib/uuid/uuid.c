@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This file is released under the GPL.
+ * This file is released under the LGPL.
  */
 
 #include "uuid.h"
