@@ -238,12 +238,6 @@ static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 	}
 
-	if (vg->status & PARTIAL_VG) {
-		log_error("Cannot change metadata for partial volume group %s",
-			  vg->name);
-		return 0;
-	}
-
 	list_init(&pvds);
 
 	r = (_flatten_vg(fid, mem, vg, &pvds, fid->fmt->cmd->dev_dir,
