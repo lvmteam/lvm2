@@ -354,8 +354,9 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 	if ((pvdh = vgcache_find(vg_name))) {
 		list_iterate(pvdh2, pvdh) {
 			dev = list_item(pvdh2, struct pvdev_list)->dev;
-			if ((data = read_disk(dev, mem, vg_name)))
-				list_add(head, &data->list);
+			if (!(data = read_disk(dev, mem, vg_name)))
+				break;
+			list_add(head, &data->list);
 		}
 
 		/* Did we find the whole VG? */
@@ -502,7 +503,8 @@ static int __write_all_pvd(struct disk_list *data)
 		return 0;
 	}
 
-	vgcache_add(data->pvd.vg_name, data->dev);
+	if (!test_mode())
+		vgcache_add(data->pvd.vg_name, data->dev);
 	/*
 	 * Stop here for orphan pv's.
 	 */
