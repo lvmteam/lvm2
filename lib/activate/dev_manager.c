@@ -78,11 +78,6 @@ struct dev_layer {
 	 */
 	struct list pre_create;
 
-	/*
-	 * Devices that must be created before this one can be
-	 * unsuspended.  Holds str_lists.
-	 */
-	struct list pre_active;
 };
 
 struct dl_list {
@@ -135,6 +130,30 @@ static inline void _set_flag(struct dev_layer *dl, int bit)
 static inline void _clear_flag(struct dev_layer *dl, int bit)
 {
 	dl->flags &= ~(1 << bit);
+}
+
+static int _pre_list_add(struct pool *mem, struct list *pl, char *str)
+{
+	struct str_list *sl;
+	struct list *plh;
+
+	if (!str) {
+		stack;
+		return 0;
+	}
+
+	list_iterate(plh, pl) {
+	}
+
+	if (!(sl = pool_alloc(mem, sizeof(*sl)))) {
+		stack;
+		return 0;
+	}
+
+	sl->str = str;
+	list_add(pl, &sl->list);
+
+	return 1;
 }
 
 /*
@@ -736,7 +755,6 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 		dl->dlid = dlid;
 
 	list_init(&dl->pre_create);
-	list_init(&dl->pre_active);
 
 	if (!hash_insert(dm->layers, dl->dlid, dl)) {
 		stack;
@@ -823,7 +841,6 @@ static int _expand_origin_real(struct dev_manager *dm,
 {
 	struct dev_layer *dl;
 	char *real_dlid;
-	struct str_list *sl;
 
 	if (!(dl = _create_layer(dm, "real", lv))) {
 		stack;
@@ -842,17 +859,11 @@ static int _expand_origin_real(struct dev_manager *dm,
 	_set_flag(dl, VISIBLE);
 
 	/* add the dependency on the real device */
-	if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+	if (!_pre_list_add(dm->mem, &dl->pre_create,
+			   pool_strdup(dm->mem, real_dlid))) {
 		stack;
 		return 0;
 	}
-
-	if (!(sl->str = pool_strdup(dm->mem, real_dlid))) {
-		stack;
-		return 0;
-	}
-
-	list_add(&dl->pre_create, &sl->list);
 
 	return 1;
 }
@@ -885,7 +896,6 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	 */
 	struct dev_layer *dl;
 	char *cow_dlid;
-	struct str_list *sl;
 
 	if (!(dl = _create_layer(dm, "cow", lv))) {
 		stack;
@@ -904,30 +914,18 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 	_set_flag(dl, VISIBLE);
 
 	/* add the dependency on the real device */
-	if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+	if (!_pre_list_add(dm->mem, &dl->pre_create,
+			   pool_strdup(dm->mem, cow_dlid))) {
 		stack;
 		return 0;
 	}
-
-	if (!(sl->str = pool_strdup(dm->mem, cow_dlid))) {
-		stack;
-		return 0;
-	}
-
-	list_add(&dl->pre_create, &sl->list);
 
 	/* add the dependency on the org device */
-	if (!(sl = pool_alloc(dm->mem, sizeof(*sl)))) {
+	if (!_pre_list_add(dm->mem, &dl->pre_create,
+			   _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
 		stack;
 		return 0;
 	}
-
-	if (!(sl->str = _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
-		stack;
-		return 0;
-	}
-
-	list_add(&dl->pre_create, &sl->list);
 
 	return 1;
 }
