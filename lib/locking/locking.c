@@ -101,13 +101,13 @@ int init_locking(int type, struct config_file *cf)
 			return 0;
 		log_very_verbose("File-based locking enabled.");
 		break;
-/******
+
 	case 2:
-		if (!init_other_locking(&_locking, cf))
+		if (!init_external_locking(&_locking, cf))
 			return 0;
-		log_very_verbose("Other locking enabled.");
+		log_very_verbose("External locking enabled.");
 		break;
-******/
+
 	default:
 		log_error("Unknown locking type requested.");
 		return 0;
