@@ -1,5 +1,6 @@
 Version 1.00.18
 =============================
+  Add -c to dmsetup for column-based output.
   Add target message-passing ioctl.
 
 Version 1.00.17 - 17 Apr 2004
