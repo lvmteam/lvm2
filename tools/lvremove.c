@@ -44,7 +44,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv)
 		return ECMD_FAILED;
 	}
 
-	if (lv->status & SNAPSHOT_ORG) {
+	if (lv_is_origin(lv->vg, lv)) {
 		log_error("Can't remove logical volume \"%s\" under snapshot",
 			  lv->name);
 		return ECMD_FAILED;

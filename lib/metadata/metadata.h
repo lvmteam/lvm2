@@ -50,9 +50,6 @@
 #define ALLOC_STRICT		0x00002000  /* LV */
 #define ALLOC_CONTIGUOUS	0x00004000  /* LV */
 
-#define SNAPSHOT          	0x00010000  /* LV */
-#define SNAPSHOT_ORG      	0x00020000  /* LV */
-
 
 struct physical_volume {
         struct id id;

@@ -91,6 +91,6 @@ int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow)
 	}
 
 	/* fail */
-	log_err("Asked to remove an unknow snapshot.");
+	log_err("Asked to remove an unknown snapshot.");
 	return 0;
 }
