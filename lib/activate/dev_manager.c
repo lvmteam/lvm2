@@ -56,7 +56,8 @@
 enum {
 	ACTIVE = 0,
 	DIRTY = 1,
-	VISIBLE = 2
+	VISIBLE = 2,
+	READWRITE = 3
 };
 
 typedef enum {
@@ -252,7 +253,7 @@ static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
 /*
  * Low level device-layer operations.
  */
-static struct dm_task *_setup_task(const char *name, int task)
+static struct dm_task *_setup_task(const char *name, const char *uuid, int task)
 {
 	struct dm_task *dmt;
 
@@ -261,25 +262,26 @@ static struct dm_task *_setup_task(const char *name, int task)
 		return NULL;
 	}
 
-	dm_task_set_name(dmt, name);
+	if (name)
+		dm_task_set_name(dmt, name);
+
+	if (uuid && *uuid)
+		dm_task_set_uuid(dmt, uuid);
+
 	return dmt;
 }
 
-static int _info(const char *name, const char *uuid, struct dm_info *info,
+static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 		 struct pool *mem, char **uuid_out)
 {
 	int r = 0;
 	struct dm_task *dmt;
 	const char *u;
 
-	log_debug("Getting device info for %s", name);
-	if (!(dmt = _setup_task(name, DM_DEVICE_INFO))) {
+	if (!(dmt = _setup_task(name, uuid, DM_DEVICE_INFO))) {
 		stack;
 		return 0;
 	}
-
-	if (uuid)
-		dm_task_set_uuid(dmt, uuid);
 
 	if (!dm_task_run(dmt)) {
 		stack;
@@ -305,6 +307,19 @@ static int _info(const char *name, const char *uuid, struct dm_info *info,
 	return r;
 }
 
+static int _info(const char *name, const char *uuid, struct dm_info *info,
+		 struct pool *mem, char **uuid_out)
+{
+	if (uuid && *uuid && _info_run(NULL, uuid, info, mem, uuid_out) 
+	    && info->exists)
+		return 1;
+
+	if (name)
+		return _info_run(name, NULL, info, mem, uuid_out);
+
+	return 0;
+}
+
 static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
 {
 	int r = 1;
@@ -312,7 +327,7 @@ static int _rename(struct dev_manager *dm, struct dev_layer *dl, char *newname)
 
 	log_verbose("Renaming %s to %s", dl->name, newname);
 
-	if (!(dmt = _setup_task(dl->name, DM_DEVICE_RENAME))) {
+	if (!(dmt = _setup_task(dl->name, NULL, DM_DEVICE_RENAME))) {
 		stack;
 		return 0;
 	}
@@ -342,7 +357,8 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	struct dm_task *dmt;
 
 	log_verbose("Loading %s", dl->name);
-	if (!(dmt = _setup_task(dl->name, task))) {
+	if (!(dmt = _setup_task(task == DM_DEVICE_CREATE ? dl->name : NULL,
+				dl->dlid, task))) {
 		stack;
 		return 0;
 	}
@@ -356,7 +372,14 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 		goto out;
 	}
 
-	dm_task_set_uuid(dmt, dl->dlid);
+	if (!_get_flag(dl, READWRITE)) {
+		if (!dm_task_set_ro(dmt)) {
+			log_error("Failed to set %s read-only during "
+				  "activation.", dl->name);
+			goto out;
+		} else
+			log_very_verbose("Activating %s read-only", dl->name);
+	}
 
 	if (!(r = dm_task_run(dmt)))
 		log_error("Couldn't load device '%s'.", dl->name);
@@ -387,7 +410,7 @@ static int _remove(struct dev_layer *dl)
 	else
 		log_very_verbose("Removing %s", dl->name);
 
-	if (!(dmt = _setup_task(dl->name, DM_DEVICE_REMOVE))) {
+	if (!(dmt = _setup_task(dl->name, NULL, DM_DEVICE_REMOVE))) {
 		stack;
 		return 0;
 	}
@@ -418,7 +441,7 @@ static int _suspend_or_resume(const char *name, suspend_t suspend)
 	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
 
 	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", name);
-	if (!(dmt = _setup_task(name, task))) {
+	if (!(dmt = _setup_task(name, NULL, task))) {
 		stack;
 		return 0;
 	}
@@ -673,8 +696,8 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	char *name;
 
 	/*
-	 * Build a name for the top layer.
-	 */
+ 	 * Build a name for the top layer.
+ 	 */
 	if (!(name = _build_name(dm->mem, lv->vg->name, lv->name, NULL))) {
 		stack;
 		return 0;
@@ -683,6 +706,7 @@ int dev_manager_info(struct dev_manager *dm, struct logical_volume *lv,
 	/*
 	 * Try and get some info on this device.
 	 */
+	log_debug("Getting device info for %s", name);
 	if (!_info(name, lv->lvid.s, info, NULL, NULL)) {
 		stack;
 		return 0;
@@ -725,6 +749,7 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 
 	dl->name = name;
 
+	log_debug("Getting device info for %s", dl->name);
 	if (!_info(dl->name, dlid, &dl->info, dm->mem, &uuid)) {
 		stack;
 		return NULL;
@@ -744,6 +769,12 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 	}
 
 	return dl;
+}
+
+static inline int _read_only_lv(struct logical_volume *lv)
+{
+		return (!(lv->vg->status & LVM_WRITE) ||
+			!(lv->status & LVM_WRITE));
 }
 
 static struct dev_layer *_create_layer(struct dev_manager *dm,
@@ -770,6 +801,9 @@ static struct dev_layer *_create_layer(struct dev_manager *dm,
 	}
 
 	dl->lv = lv;
+
+	if (!_read_only_lv(lv))
+		_set_flag(dl, READWRITE);
 
 	return dl;
 }
@@ -1046,7 +1080,6 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	struct list *sh;
 	struct dev_layer *dep;
 	char *dlid, *newname, *suffix;
-	int suspended = 0;
 
 	list_iterate(sh, &dl->pre_create) {
 		dlid = list_item(sh, struct str_list)->str;
@@ -1056,11 +1089,10 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 			return 0;
 		}
 
-		if (dl->info.exists && !suspended && !_suspend(dl)) {
+		if (dl->info.exists && !_suspend(dl)) {
 			stack;
 			return 0;
 		}
-		suspended = 1;
 
 		if (!strcmp(dep->dlid, dl->dlid)) {
 			log_error("BUG: pre-create loop detected (%s)", dlid);
@@ -1095,10 +1127,6 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 		}
 		return 1;
 	}
-
-	/* We didn't suspend it - nothing to do */
-	if (!suspended)
-		return 1;
 
 	/* Reload */
 	if (_get_flag(dl, DIRTY) && !_load(dm, dl, DM_DEVICE_RELOAD)) {
