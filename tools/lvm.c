@@ -485,6 +485,15 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 		}
 
 		if (a->fn) {
+			if (a->count) {
+				log_error("Option%s%c%s%s may not be repeated",
+					  a->short_arg ? " -" : "",
+					  a->short_arg ? : ' ',
+					  (a->short_arg && a->long_arg) ? 
+						"/" : "",
+					  a->long_arg ? : "");
+					return 0;
+			}
 
 			if (!optarg) {
 				log_error("Option requires argument.");
