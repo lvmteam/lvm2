@@ -119,55 +119,84 @@ struct lv_list {
 	struct logical_volume lv;
 };
 
-/* ownership of returned objects passes */
+/*
+ * Ownership of objects passes to caller.
+ */
 struct io_space {
-	/* Returns list of names of all vgs - vg
-           component only, not full path*/
+	/*
+	 * Returns a name_list of vg's.
+	 */
 	struct list_head *(*get_vgs)(struct io_space *is);
 
-	/* Returns list of fully-populated pv structures */
+	/*
+	 * Returns pv_list of fully-populated pv structures.
+	 */
 	struct list_head *(*get_pvs)(struct io_space *is);
 
-	/* Return PV with given name (may be full or relative path) */
+	/*
+	 * Return PV with given path.
+	 */
 	struct physical_volume *(*pv_read)(struct io_space *is,
 					   const char *pv_name);
 
-	/* Write a PV structure to disk. */
-	/* Fails if the PV is in a VG ie
-           pv->vg_name must be null */
+	/*
+	 * fill out a pv ready for importing into
+	 * a vg.
+	 */
+	int (*pv_setup)(struct io_space *is, struct physical_volume *pv,
+			struct volume_group *vg);
+
+	/*
+	 * Write a PV structure to disk. Fails if
+	 * the PV is in a VG ie pv->vg_name must
+	 * be null.
+	 */
 	int (*pv_write)(struct io_space *is, struct physical_volume *pv);
 
-	/* if vg_name doesn't contain any slash, this function adds prefix */
+	/*
+	 * If vg_name doesn't contain any slash,
+	 * this function adds prefix.
+	 */
 	struct volume_group *(*vg_read)(struct io_space *is,
 					const char *vg_name);
 
-	/* Write out complete VG metadata. */
-	/* Ensure *internal* consistency before writing anything.
-	 *   eg. PEs can't refer to PVs not part of the VG
-	 * Order write sequence to aid recovery if process is aborted
-	 *   (eg flush entire set of changes to each disk in turn)
-	 * It is the responsibility of the caller to ensure external
- 	 * consistency, eg by calling pv_write() if removing PVs from a VG
-	 * or calling vg_write() a second time if splitting a VG into two.
-	 * vg_write() must not read or write from any PVs not included
-	 * in the volume_group structure it is handed.
+	/*
+	 * Write out complete VG metadata.  Ensure
+	 * *internal* consistency before writing
+	 * anything.  eg. PEs can't refer to PVs
+	 * not part of the VG.  Order write sequence
+	 * to aid recovery if process is aborted
+	 * (eg flush entire set of changes to each
+	 * disk in turn) It is the responsibility
+	 * of the caller to ensure external
+	 * consistency, eg by calling pv_write()
+	 * if removing PVs from a VG or calling
+	 * vg_write() a second time if splitting a
+	 * VG into two.  vg_write() must not read
+	 * or write from any PVs not included in
+	 * the volume_group structure it is
+	 * handed.
 	 */
 	int (*vg_write)(struct io_space *is, struct volume_group *vg);
 
+	/*
+	 * Destructor for this object.
+	 */
 	void (*destroy)(struct io_space *is);
 
-	/* Current volume group prefix. */
-	/* Default to "/dev/" */
+	/*
+	 * Current volume group prefix.
+	 */
 	char *prefix;
 	struct pool *mem;
 	struct dev_filter *filter;
 	void *private;
 };
 
+
 /* FIXME: Move to other files */
 struct io_space *create_text_format(struct dev_filter *filter,
 				    const char *text_file);
-struct io_space *create_lvm_v1_format(struct dev_filter *filter);
 
 int id_eq(struct id *op1, struct id *op2);
 

@@ -11,6 +11,7 @@
 #include "list.h"
 #include "log.h"
 
+
 static int _check_vg_name(const char *name)
 {
 	return strlen(name) < NAME_LEN;
