@@ -730,6 +730,12 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	struct lvinfo info;
 	int r = 1;
 
+	if (!lv) {
+		r = dev_manager_mknodes();
+		fs_unlock();
+		return r;
+	}
+
 	if (!_lv_info(lv, 1, &info)) {
 		stack;
 		return 0;
