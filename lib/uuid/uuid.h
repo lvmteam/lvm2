@@ -19,4 +19,15 @@ int id_create(struct id *id);
 int id_valid(struct id *id);
 int id_cmp(struct id *lhs, struct id *rhs);
 
+/*
+ * Fills 'buffer' with a more human readable form
+ * of the uuid.
+ */
+int id_write_format(struct id *id, char *buffer, size_t size);
+
+/*
+ * Reads a formatted uuid.
+ */
+int id_read_format(struct id *id, char *buffer);
+
 #endif
