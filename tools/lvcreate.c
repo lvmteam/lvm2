@@ -429,6 +429,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 				  "yet.");
 			return 0;
 		}
+		if (org->status & LOCKED) {
+			log_error("Snapshots of locked devices are not "
+				  "supported yet");
+			return 0;
+		}
 	}
 
 	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc,

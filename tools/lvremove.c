@@ -39,6 +39,13 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	if (lv->status & LOCKED) {
+		log_error("Can't remove locked LV %s", lv->name);
+		return ECMD_FAILED;
+	}
+
+	/* FIXME Ensure not referred to by another existing LVs */
+
 	if (lv_info(lv, &info)) {
 		if (info.open_count) {
 			log_error("Can't remove open logical volume \"%s\"",

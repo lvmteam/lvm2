@@ -140,6 +140,11 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	lv = lvl->lv;
 
+	if (lv->status & LOCKED) {
+		log_error("Can't resize locked LV %s", lv->name);
+		goto error;
+	}
+
 	if (size) {
 		/* No of 512-byte sectors */
 		extents = size * 2;
