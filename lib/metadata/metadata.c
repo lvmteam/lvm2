@@ -654,7 +654,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 				stack;
 				return NULL;
 			}
-			lvmcache_label_scan(cmd, 1);
+			lvmcache_label_scan(cmd, 2);
 			if (!(fmt = fmt_from_vgname(vgname))) {
 				stack;
 				return NULL;
@@ -768,7 +768,7 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 	 *       allowed to do a full scan here any more. */
 
 	// The slow way - full scan required to cope with vgrename 
-	if (!(vgnames = get_vgs(cmd, 1))) {
+	if (!(vgnames = get_vgs(cmd, 2))) {
 		log_error("vg_read_by_vgid: get_vgs failed");
 		return NULL;
 	}

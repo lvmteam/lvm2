@@ -355,11 +355,11 @@ static int _insert(const char *path, int rec)
 	return r;
 }
 
-static void _full_scan(void)
+static void _full_scan(int dev_scan)
 {
 	struct list *dh;
 
-	if (_cache.has_scanned)
+	if (_cache.has_scanned && !dev_scan)
 		return;
 
 	list_iterate(dh, &_cache.dirs) {
@@ -381,7 +381,7 @@ void dev_cache_scan(int do_scan)
 		_cache.has_scanned = 1;
 	else {
 		_cache.has_scanned = 0;
-		_full_scan();
+		_full_scan(1);
 	}
 }
 
@@ -540,7 +540,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 	return (d && (!f || f->passes_filter(f, d))) ? d : NULL;
 }
 
-struct dev_iter *dev_iter_create(struct dev_filter *f)
+struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 {
 	struct dev_iter *di = dbg_malloc(sizeof(*di));
 
@@ -549,7 +549,7 @@ struct dev_iter *dev_iter_create(struct dev_filter *f)
 		return NULL;
 	}
 
-	_full_scan();
+	_full_scan(dev_scan);
 	di->current = btree_first(_cache.devices);
 	di->filter = f;
 

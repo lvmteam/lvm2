@@ -1,5 +1,6 @@
-Version 2.01.07 - 
+Version 2.01.07 - 8th March 2005
 ================================
+  Cope with new devices appearing by rescanning /dev if a uuid can't be found.
   Remove DESTDIR from LVM_SHARED_PATH.
   clvmd fixes: make FDs close-on-exec
                gulm unlocks VG & orphan locks at startup in case they are stale

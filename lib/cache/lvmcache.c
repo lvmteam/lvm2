@@ -188,7 +188,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 		goto out;
 	}
 
-	if (!(iter = dev_iter_create(cmd->filter))) {
+	if (!(iter = dev_iter_create(cmd->filter, (full_scan == 2) ? 1: 0))) {
 		log_error("dev_iter creation failed");
 		goto out;
 	}
@@ -266,7 +266,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	if (memlock())
 		return NULL;
 
-	lvmcache_label_scan(cmd, 1);
+	lvmcache_label_scan(cmd, 2);
 
 	/* Try again */
 	if ((info = info_from_pvid((char *) pvid))) {
