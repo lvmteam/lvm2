@@ -109,7 +109,7 @@ static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	log_verbose("Refreshing logical volume \"%s\" (if active)", lv->name);
 	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD) ||
-	    !unlock_vol(cmd, lv->lvid.s))
+	    !unlock_lv(cmd, lv->lvid.s))
 		return 0;
 
 	return 1;
