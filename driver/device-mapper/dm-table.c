@@ -214,9 +214,17 @@ int dm_table_complete(struct dm_table *t)
 	for (i = t->depth - 2; i >= 0; i--) {
 		t->counts[i] = div_up(t->counts[i + 1], CHILDREN_PER_NODE);
 		t->index[i] = vmalloc(NODE_SIZE * t->counts[i]);
+		if (!t->index[i])
+			goto free_indices;
 		setup_btree_index(i, t);
 	}
 
 	return 0;
+
+free_indices:
+	for(++i; i < t->depth - 1; i++) {
+		vfree(t->index[i]);
+	}
+	return -ENOMEM;
 }
 
