@@ -449,11 +449,11 @@ static void check_config()
 		return;
 
 	if (locking_type == 2) { /* External library, check name */
-		char *libname;
+		const char *libname;
 
 		libname = find_config_str(cmd->cft->root, "global/locking_library",
 					  "");
-		if (!strcmp(libname, "liblvm2clusterlock.so"))
+		if (strstr(libname, "liblvm2clusterlock.so"))
 			return;
 
 		log_error("Incorrect LVM locking library specified in lvm.conf, cluster operations may not work.");
