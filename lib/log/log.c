@@ -28,6 +28,7 @@ static struct str_list _log_dev_alias;
 static int _verbose_level = VERBOSE_BASE_LEVEL;
 static int _test = 0;
 static int _partial = 0;
+static int _md_filtering = 0;
 static int _pvmove = 0;
 static int _debug_level = 0;
 static int _syslog = 0;
@@ -138,6 +139,11 @@ void init_partial(int level)
 	_partial = level;
 }
 
+void init_md_filtering(int level)
+{
+	_md_filtering = level;
+}
+
 void init_pvmove(int level)
 {
 	_pvmove = level;
@@ -185,6 +191,11 @@ int test_mode()
 int partial_mode()
 {
 	return _partial;
+}
+
+int md_filtering()
+{
+	return _md_filtering;
 }
 
 int pvmove_mode()

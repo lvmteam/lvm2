@@ -28,7 +28,12 @@
 
 static int _ignore_md(struct dev_filter *f, struct device *dev)
 {
-	int ret = dev_is_md(dev, NULL);
+	int ret;
+	
+	if (!md_filtering())
+		return 1;
+	
+	ret = dev_is_md(dev, NULL);
 
 	if (ret == 1) {
 		log_debug("%s: Skipping md component device", dev_name(dev));
