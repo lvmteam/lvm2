@@ -1,5 +1,6 @@
-Version 2.01.01 - 
+Version 2.01.01 - 19th January 2005
 ===================================
+  Fix clvmd lv_info_by_lvid open_count.
   Store snapshot and origin sizes separately.
   Update vgcreate man page.
 

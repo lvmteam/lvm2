@@ -198,7 +198,7 @@ static int do_activate_lv(char *resource, int mode)
 		return errno;
 
 	/* If it's suspended then resume it */
-	if (!lv_info_by_lvid(cmd, resource, &lvi))
+	if (!lv_info_by_lvid(cmd, resource, &lvi, 0))
 		return EIO;
 
 	if (lvi.suspended)
@@ -244,7 +244,7 @@ static int do_suspend_lv(char *resource)
 	}
 
 	/* Only suspend it if it exists */
-	if (!lv_info_by_lvid(cmd, resource, &lvi))
+	if (!lv_info_by_lvid(cmd, resource, &lvi, 0))
 		return EIO;
 
 	if (lvi.exists) {
@@ -363,7 +363,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 		if (oldmode == LKM_PWMODE) {
 			struct lvinfo lvi;
 
-			if (!lv_info_by_lvid(cmd, resource, &lvi))
+			if (!lv_info_by_lvid(cmd, resource, &lvi, 0))
 				return EIO;
 
 			if (lvi.exists) {
