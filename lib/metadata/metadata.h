@@ -140,8 +140,9 @@ struct io_space {
 					   const char *pv_name);
 
 	/*
-	 * fill out a pv ready for importing into
-	 * a vg.
+	 * Fill out a pv ready for importing into
+	 * a vg.  *Be careful*, this allocates
+	 * vg_name from is->mem.
 	 */
 	int (*pv_setup)(struct io_space *is, struct physical_volume *pv,
 			struct volume_group *vg);

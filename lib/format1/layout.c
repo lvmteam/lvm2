@@ -6,6 +6,7 @@
 
 #include "disk-rep.h"
 #include "log.h"
+#include "dbg_malloc.h"
 
 
 /*
@@ -45,14 +46,8 @@ static int _adjust_pe_on_disk(struct pv_disk *pvd)
 	return 1;
 }
 
-/*
- * This assumes pe_count and pe_start have already
- * been calculated correctly.
- */
-int calculate_layout(struct disk_list *dl)
+static void _calc_simple_layout(struct pv_disk *pvd)
 {
-	struct pv_disk *pvd = &dl->pv;
-
 	pvd->pv_on_disk.base = METADATA_BASE;
 	pvd->pv_on_disk.size = PV_SIZE;
 
@@ -67,7 +62,17 @@ int calculate_layout(struct disk_list *dl)
 
         pvd->pe_on_disk.base = _next_base(&pvd->lv_on_disk);
         pvd->pe_on_disk.size = pvd->pe_total * sizeof(struct pe_disk);
+}
 
+/*
+ * This assumes pe_count and pe_start have already
+ * been calculated correctly.
+ */
+int calculate_layout(struct disk_list *dl)
+{
+	struct pv_disk *pvd = &dl->pv;
+
+	_calc_simple_layout(pvd);
 	if (!_adjust_pe_on_disk(pvd)) {
 		log_err("insufficient space for metadata and PE's.");
 		return 0;
@@ -77,3 +82,42 @@ int calculate_layout(struct disk_list *dl)
 }
 
 
+/*
+ * It may seem strange to have a struct
+ * physical_volume in here, but the number of
+ * extents that can fit on a disk *is* metadata
+ * format dependant.
+ */
+int calculate_extent_count(struct physical_volume *pv)
+{
+	struct pv_disk *pvd = dbg_malloc(sizeof(*pvd));
+	uint32_t end;
+
+	if (!pvd) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Guess how many extents will fit,
+	 * bearing in mind that one is going to be
+	 * knocked off at the start of the next
+	 * loop.
+	 */
+	pvd->pe_total = (pv->size / pv->pe_size);
+
+	do {
+		pvd->pe_total--;
+		_calc_simple_layout(pvd);
+		end = ((pvd->pe_on_disk.base + pvd->pe_on_disk.size) /
+		       SECTOR_SIZE);
+
+		pvd->pe_start = _round_up(end, PE_ALIGN);
+
+	} while((pvd->pe_start + (pvd->pe_total * pv->pe_size)) > pv->size);
+
+	pv->pe_count = pvd->pe_total;
+	pv->pe_start = pvd->pe_start;
+	dbg_free(pvd);
+	return 1;
+}
