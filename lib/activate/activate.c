@@ -144,7 +144,7 @@ int lv_info(const struct logical_volume *lv, struct lvinfo *info)
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
 		stack;
 		return 0;
 	}
@@ -174,7 +174,7 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
 		stack;
 		return 0;
 	}
@@ -217,7 +217,7 @@ static int _lv_activate(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
 		stack;
 		return 0;
 	}
@@ -234,7 +234,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
 		stack;
 		return 0;
 	}
@@ -251,7 +251,7 @@ static int _lv_suspend(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
 		stack;
 		return 0;
 	}

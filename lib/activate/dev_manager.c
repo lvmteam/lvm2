@@ -10,6 +10,7 @@
 #include "hash.h"
 #include "lvm-string.h"
 #include "fs.h"
+#include "defaults.h"
 
 #include <libdevmapper.h>
 #include <limits.h>
@@ -45,7 +46,8 @@ enum {
 	RELOAD = 1,
 	VISIBLE = 2,
 	READWRITE = 3,
-	SUSPENDED = 4
+	SUSPENDED = 4,
+	NOPROPAGATE = 5
 };
 
 typedef enum {
@@ -73,8 +75,8 @@ struct dev_layer {
 	struct logical_volume *lv;
 
 	/*
-	 * Devices that must be created before this one can be
-	 * created.  Holds str_lists.
+	 * Devices that must be created before this one can be created.
+	 * Reloads get propagated to this list.  Holds str_lists.
 	 */
 	struct list pre_create;
 
@@ -85,8 +87,13 @@ struct dl_list {
 	struct dev_layer *dl;
 };
 
+static const char *stripe_filler = NULL;
+
 struct dev_manager {
 	struct pool *mem;
+
+	struct config_tree *cf;
+	const char *stripe_filler;
 
 	char *vg_name;
 
@@ -378,6 +385,11 @@ static int _status_run(const char *name, const char *uuid,
 static int _status(const char *name, const char *uuid,
 		   unsigned long long *start, unsigned long long *length,
 		   char **type, uint32_t type_size, char **params,
+		   uint32_t param_size) __attribute__ ((unused));
+
+static int _status(const char *name, const char *uuid,
+		   unsigned long long *start, unsigned long long *length,
+		   char **type, uint32_t type_size, char **params,
 		   uint32_t param_size)
 {
 	if (uuid && *uuid && _status_run(NULL, uuid, start, length, type,
@@ -387,6 +399,78 @@ static int _status(const char *name, const char *uuid,
 
 	if (name && _status_run(name, NULL, start, length, type, type_size,
 				params, param_size))
+		return 1;
+
+	return 0;
+}
+
+static int _percent_run(const char *name, const char *uuid,
+			const char *target_type, float *percent)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	void *next = NULL;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+	float percent2;
+
+	uint64_t numerator, denominator;
+	uint64_t total_numerator = 0, total_denominator = 0;
+
+	*percent = -1;
+
+	if (!(dmt = _setup_task(name, uuid, DM_DEVICE_STATUS))) {
+		stack;
+		return 0;
+	}
+
+	if (!dm_task_run(dmt)) {
+		stack;
+		goto out;
+	}
+
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length, &type,
+					  &params);
+
+		if (!type || !params || strcmp(type, target_type))
+			continue;
+
+		if (strcmp(type, "snapshot"))
+			continue;
+
+		/* Snapshot */
+		if (index(params, '/')) {
+			if (sscanf(params, "%" PRIu64 "/%" PRIu64,
+				   &numerator, &denominator) == 2) {
+				total_numerator += numerator;
+				total_denominator += denominator;
+			}
+			continue;
+		} else if (sscanf(params, "%f", &percent2) == 1) {
+			*percent += percent2;
+			*percent /= 2;
+		}
+	} while (next);
+
+	if (total_denominator)
+		*percent = (float) total_numerator *100 / total_denominator;
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _percent(const char *name, const char *uuid, const char *target_type,
+		    float *percent)
+{
+	if (uuid && *uuid && _percent_run(NULL, uuid, target_type, percent))
+		return 1;
+
+	if (name && _percent_run(name, NULL, target_type, percent))
 		return 1;
 
 	return 0;
@@ -553,7 +637,7 @@ static int _suspend_or_resume(const char *name, action_t suspend)
 
 static int _suspend(struct dev_layer *dl)
 {
-	if (dl->info.suspended)
+	if (!dl->info.exists || dl->info.suspended)
 		return 1;
 
 	if (!_suspend_or_resume(dl->name, SUSPEND)) {
@@ -567,7 +651,7 @@ static int _suspend(struct dev_layer *dl)
 
 static int _resume(struct dev_layer *dl)
 {
-	if (!dl->info.suspended)
+	if (!dl->info.exists || !dl->info.suspended)
 		return 1;
 
 	if (!_suspend_or_resume(dl->name, RESUME)) {
@@ -588,47 +672,73 @@ static int _resume(struct dev_layer *dl)
  * Emit a target for a given segment.
  * FIXME: tidy this function.
  */
-static int _emit_target(struct dm_task *dmt, struct lv_segment *seg)
+static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
+			struct lv_segment *seg)
 {
 	char params[1024];
 	uint64_t esize = seg->lv->vg->extent_size;
-	uint32_t s, stripes = seg->stripes;
+	uint32_t s, areas = seg->area_count;
 	int w = 0, tw = 0;
-	const char *filler = "/dev/ioerror";
 	const char *target = NULL;
+	const char *trailing_space;
 
-	if (stripes == 1) {
-		if (!seg->area[0].pv) {
-			target = "error";
-			goto add_target;
-		} else
+	switch (seg->type) {
+	case SEG_SNAPSHOT:
+		log_error("_emit_target: Internal error: Can't handle "
+			  "SEG_SNAPSHOT");
+		return 0;
+		/* Target formats:
+		 *   linear [device offset]+
+		 *   striped #stripes stripe_size [device offset]+
+		 */
+	case SEG_STRIPED:
+		if (areas == 1)
 			target = "linear";
-	} else if (stripes > 1) {
-		target = "striped";
-		if ((tw = lvm_snprintf(params, sizeof(params), "%u %u ",
-				       stripes, seg->stripe_size)) < 0)
-			goto error;
-		w = tw;
+		else if (areas > 1) {
+			target = "striped";
+			if ((tw = lvm_snprintf(params, sizeof(params), "%u %u ",
+					       areas, seg->stripe_size)) < 0)
+				goto error;
+			w = tw;
+		} else {
+			log_error("_emit_target: Internal error: SEG_STRIPED "
+				  "with no stripes");
+			return 0;
+		}
+		break;
+	case SEG_MIRRORED:
+		break;
 	}
 
-	for (s = 0; s < stripes; s++, w += tw) {
-		if (!seg->area[s].pv || !seg->area[s].pv->dev)
+	for (s = 0; s < areas; s++, w += tw) {
+		trailing_space = (areas - s - 1) ? " " : "";
+		if ((seg->area[s].type == AREA_PV &&
+		     (!seg->area[s].u.pv.pv || !seg->area[s].u.pv.pv->dev)) ||
+		    (seg->area[s].type == AREA_LV && !seg->area[s].u.lv.lv))
 			tw = lvm_snprintf(params + w, sizeof(params) - w,
-					  "%s 0%s", filler,
-					  s == (stripes - 1) ? "" : " ");
-		else
+					  "%s 0%s", dm->stripe_filler,
+					  trailing_space);
+		else if (seg->area[s].type == AREA_PV)
 			tw = lvm_snprintf(params + w, sizeof(params) - w,
 					  "%s %" PRIu64 "%s",
-					  dev_name(seg->area[s].pv->dev),
-					  (seg->area[s].pv->pe_start +
-					   (esize * seg->area[s].pe)),
-					  s == (stripes - 1) ? "" : " ");
+					  dev_name(seg->area[s].u.pv.pv->dev),
+					  (seg->area[s].u.pv.pv->pe_start +
+					   (esize * seg->area[s].u.pv.pe)),
+					  trailing_space);
+		else
+			tw = lvm_snprintf(params + w, sizeof(params) - w,
+					  "%s/%s %" PRIu64 "%s", dm_dir(),
+					  _build_name(dm->mem,
+						      seg->lv->vg->name,
+						      seg->area[s].u.lv.lv->
+						      name, NULL),
+					  esize * seg->area[s].u.lv.le,
+					  trailing_space);
 
 		if (tw < 0)
 			goto error;
 	}
 
-      add_target:
 	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
 		  esize * seg->le, esize * seg->len, target, params);
 
@@ -641,7 +751,7 @@ static int _emit_target(struct dm_task *dmt, struct lv_segment *seg)
 	return 1;
 
       error:
-	log_error("Insufficient space to write target parameters.");
+	log_error("Insufficient space in params[] to write target parameters.");
 	return 0;
 }
 
@@ -654,7 +764,7 @@ static int _populate_vanilla(struct dev_manager *dm,
 
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
-		if (!_emit_target(dmt, seg)) {
+		if (!_emit_target(dm, dmt, seg)) {
 			log_error("Unable to build table for '%s'", lv->name);
 			return 0;
 		}
@@ -734,7 +844,8 @@ static int _populate_snapshot(struct dev_manager *dm,
 /*
  * dev_manager implementation.
  */
-struct dev_manager *dev_manager_create(const char *vg_name)
+struct dev_manager *dev_manager_create(const char *vg_name,
+				       struct config_tree *cf)
 {
 	struct pool *mem;
 	struct dev_manager *dm;
@@ -750,6 +861,13 @@ struct dev_manager *dev_manager_create(const char *vg_name)
 	}
 
 	dm->mem = mem;
+	dm->cf = cf;
+	if (!stripe_filler) {
+		stripe_filler = find_config_str(cf->root,
+						"activation/missing_stripe_filler",
+						'/', DEFAULT_STRIPE_FILLER);
+	}
+	dm->stripe_filler = stripe_filler;
 
 	if (!(dm->vg_name = pool_strdup(dm->mem, vg_name))) {
 		stack;
@@ -807,23 +925,7 @@ int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 struct logical_volume *lv, float *percent)
 {
-	char *name, *type, *params;
-	unsigned long long start, length;
-	unsigned int numerator, denominator;
-
-	/* FIXME: Use #defines - & move allocations into _status_run ? */
-	uint32_t type_size = 32;
-	uint32_t param_size = 32;
-
-	if (!(type = pool_alloc(dm->mem, sizeof(*type) * type_size))) {
-		stack;
-		return 0;
-	}
-
-	if (!(params = pool_alloc(dm->mem, sizeof(*params) * param_size))) {
-		stack;
-		return 0;
-	}
+	char *name;
 
 	/*
 	 * Build a name for the top layer.
@@ -836,31 +938,16 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	/*
 	 * Try and get some info on this device.
 	 */
-	log_debug("Getting device status for %s", name);
-	if (!(_status(name, lv->lvid.s, &start, &length, &type, type_size,
-		      &params, param_size))) {
+	log_debug("Getting device status percentage for %s", name);
+	if (!(_percent(name, lv->lvid.s, "snapshot", percent))) {
 		stack;
 		return 0;
 	}
 
-	/* FIXME Ensure this is a *snapshot* target with percentage! */
 	/* FIXME pool_free ? */
 
 	/* If the snapshot isn't available, percent will be -1 */
-	*percent = -1;
-
-	if (!params)
-		return 0;
-
-	if (index(params, '/')) {
-		if (sscanf(params, "%u/%u", &numerator, &denominator) == 2) {
-			*percent = (float) numerator *100 / denominator;
-			return 1;
-		}
-	} else if (sscanf(params, "%f", percent) == 1)
-		return 1;
-
-	return 0;
+	return 1;
 }
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
@@ -958,13 +1045,36 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv)
 	 * only one layer.
 	 */
 	struct dev_layer *dl;
+	struct list *segh;
+	struct lv_segment *seg;
+	uint32_t s;
 
 	if (!(dl = _create_layer(dm, NULL, lv))) {
 		stack;
 		return 0;
 	}
 	dl->populate = _populate_vanilla;
-	_set_flag(dl, VISIBLE);
+	if (lv->status & VISIBLE_LV)
+		_set_flag(dl, VISIBLE);
+
+	/* Add dependencies for any LVs that segments refer to */
+	list_iterate(segh, &lv->segments) {
+		seg = list_item(segh, struct lv_segment);
+		if (seg->type != SEG_STRIPED && seg->type != SEG_MIRRORED)
+			continue;
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg->area[s].type != AREA_LV)
+				continue;
+			if (!_pre_list_add(dm->mem, &dl->pre_create,
+					   _build_dlid(dm->mem,
+						       seg->area[s].u.lv.lv->
+						       lvid.s, NULL))) {
+				stack;
+				return 0;
+			}
+			_set_flag(dl, NOPROPAGATE);
+		}
+	}
 
 	return 1;
 }
@@ -1115,6 +1225,10 @@ static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
 		}
 
 		if (_get_flag(dep, flag))
+			continue;
+
+		/* Only propagate LV ACTIVE dependencies for now */
+		if ((flag != ACTIVE) && _get_flag(dl, NOPROPAGATE))
 			continue;
 
 		_set_flag(dep, flag);
@@ -1452,6 +1566,7 @@ static int _add_existing_layer(struct dev_manager *dm, const char *name)
 	return 1;
 }
 
+/* FIXME Get this info directly from the driver not the unreliable fs */
 static int _scan_existing_devices(struct dev_manager *dm)
 {
 	const char *dev_dir = dm_dir();
@@ -1570,12 +1685,34 @@ static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 	return _add_lvs(dm->mem, &dm->reload_list, old_origin);
 }
 
+static int _remove_suspended_lvs(struct dev_manager *dm,
+				 struct logical_volume *lv)
+{
+	struct logical_volume *suspended;
+	struct snapshot *s;
+	struct list *sh, *suspend_head;
+
+	suspend_head = &dm->suspend_list;
+
+	/* Remove from list any snapshots with given origin */
+	list_iterate(sh, suspend_head) {
+		suspended = list_item(sh, struct lv_list)->lv;
+		if ((s = find_cow(suspended)) && s->origin == lv) {
+			_remove_lv(suspend_head, suspended);
+		}
+	}
+
+	_remove_lv(suspend_head, lv);
+
+	return 1;
+}
+
 static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 {
-	int found;
 	char *dlid;
 	struct list *lvh;
 	struct logical_volume *lv;
+	struct dev_layer *dl;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
@@ -1585,15 +1722,23 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 			return 0;
 		}
 
-		found = hash_lookup(dm->layers, dlid) ? 1 : 0;
+		dl = hash_lookup(dm->layers, dlid);
 		pool_free(dm->mem, dlid);
 
-		if (found) {
-			log_debug("Found active lv %s", lv->name);
+		if (dl) {
+			log_debug("Found active lv %s%s", lv->name,
+				  dl->info.suspended ? " (suspended)" : "");
 
 			if (!_add_lv(dm->mem, &dm->active_list, lv)) {
 				stack;
 				return 0;
+			}
+
+			if (dl->info.suspended) {
+				if (!_add_lv(dm->mem, &dm->suspend_list, lv)) {
+					stack;
+					return 0;
+				}
 			}
 		}
 	}
@@ -1629,6 +1774,13 @@ static int _action(struct dev_manager *dm, struct logical_volume *lv,
 			return 0;
 		}
 	}
+
+	if (action == SUSPEND || action == RESUME || action == ACTIVATE)
+		/* Get into known state - remove from suspend list if present */
+		if (!_remove_suspended_lvs(dm, lv)) {
+			stack;
+			return 0;
+		}
 
 	if (action == SUSPEND) {
 		if (!_add_lvs(dm->mem, &dm->suspend_list, lv)) {
