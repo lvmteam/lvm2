@@ -1039,6 +1039,43 @@ static char **_completion(const char *text, int start_pos, int end_pos)
 	return match_list;
 }
 
+static int _hist_file(char *buffer, size_t size)
+{
+	char *e = getenv("HOME");
+
+	if (lvm_snprintf(buffer, size, "%s/.lvm_history", e) < 0) {
+		log_err("History file path too long (%s/.lvm_history).", e);
+		return 0;
+	}
+
+	return 1;
+}
+
+#define MAX_HISTORY 100
+static void _read_history(void)
+{
+	char hist_file[PATH_MAX];
+
+	if (!_hist_file(hist_file, sizeof(hist_file)))
+		return;
+
+	if (read_history(hist_file))
+		log_very_verbose("Couldn't read history from %s.", hist_file);
+
+	stifle_history(MAX_HISTORY);
+}
+
+static void _write_history(void)
+{
+	char hist_file[PATH_MAX];
+
+	if (!_hist_file(hist_file, sizeof(hist_file)))
+		return;
+
+	if (write_history(hist_file))
+		log_very_verbose("Couldn't write history to %s.", hist_file);
+}
+
 static int shell(void)
 {
 	int argc, ret;
@@ -1046,6 +1083,8 @@ static int shell(void)
 
 	rl_readline_name = "lvm";
 	rl_attempted_completion_function = (CPPFunction *) _completion;
+
+	_read_history();
 
 	_interactive = 1;
 	while (1) {
@@ -1080,6 +1119,7 @@ static int shell(void)
 			continue;
 
 		if (!strcmp(argv[0], "quit")) {
+			remove_history(history_length - 1);
 			log_error("Exiting.");
 			break;
 		}
@@ -1090,6 +1130,7 @@ static int shell(void)
 				  argv[0]);
 	}
 
+	_write_history();
 	free(input);
 	return 0;
 }
