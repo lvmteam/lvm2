@@ -18,6 +18,7 @@ SOURCES=\
 	format1/format1.c \
 	format1/import-export.c \
 	format1/layout.c \
+	format1/vg_number.c \
 	log/log.c \
 	mm/dbg_malloc.c \
 	mm/pool.c

@@ -151,7 +151,6 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 		strncpy(pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));
 
 	//pvd->pv_major = MAJOR(pv->dev);
-	//pvd->pv_number = ??;
 
 	if (pv->status & ACTIVE)
 		pvd->pv_status |= PV_ACTIVE;
@@ -607,3 +606,24 @@ void export_pv_act(struct list_head *pvs)
 		dl->vg.pv_act = act;
 	}
 }
+
+int export_vg_number(struct list_head *pvs, const char *vg_name, 
+		     struct dev_filter *filter)
+{
+	struct list_head *tmp;
+	struct disk_list *dl;
+	int vg_num;
+
+	if (!get_free_vg_number(filter, vg_name, &vg_num)) {
+		stack;
+		return 0;
+	}
+
+	list_for_each (tmp, pvs) {
+		dl = list_entry(tmp, struct disk_list, list);
+		dl->vg.vg_number = vg_num;
+	}
+
+	return 1;
+}
+

@@ -220,4 +220,11 @@ void export_numbers(struct list_head *pvs, struct volume_group *vg);
 
 void export_pv_act(struct list_head *pvs);
 
+/* blech */
+int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
+		       int *result);
+int export_vg_number(struct list_head *pvs, const char *vg_name,
+		     struct dev_filter *filter);
+
+
 #endif
