@@ -132,7 +132,7 @@
 const char *_name = "device-mapper";
 int _version[3] = {1, 0, 0};
 
-spinlock_t _dev_lock;
+struct rw_semaphore _dev_lock;
 static int _dev_count = 0;
 static struct mapped_device *_devs[MAX_DEVICES];
 
@@ -171,9 +171,9 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh);
  */
 static int _init(void)
 {
-	_init_mds();
+	init_rwsem(&_dev_lock);
 
-	if (!_register_std_targets())
+	if (!dm_std_targets())
 		return -EIO;	/* FIXME: better error value */
 
 	/* set up the arrays */
@@ -218,50 +218,6 @@ static void _fin(void)
 	printk(KERN_INFO "%s(%d, %d, %d) successfully finalised\n", _name,
 	       _version[0], _version[1], _version[2]);
 }
-
-/*
- * character device fns
- */
-static int _ctl_open(struct inode *inode, struct file *file)
-{
-	if (!capable(CAP_SYS_ADMIN))
-		return -EACCES;
-
-	MOD_INC_USE_COUNT;
-	return 0;
-}
-
-static int _ctl_close(struct inode *inode, struct file *file)
-{
-	MOD_DEC_USE_COUNT;
-	return 0;
-}
-
-static int _ctl_ioctl(struct inode *inode, struct file *file,
-		      uint command, ulong a)
-{
-	struct dm_request req;
-
-	if (copy_from_user(&req, (void *) a, sizeof(req)))
-		return -EFAULT;
-
-	switch (command) {
-	case MAPPED_DEVICE_CREATE:
-		return _create_dev(req.minor, req.name);
-		break;
-
-	case MAPPED_DEVICE_DESTROY:
-		return _destroy_dev(req.minor);
-		break;
-
-	default:
-		WARN("_ctl_ioctl: unknown command 0x%x", command);
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 
 /*
  * block device functions
@@ -370,10 +326,14 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh)
 	if (minor >= MAX_DEVICES)
 		return -ENXIO;
 
+	down_read(&_dev_lock);
 	md = _devs[minor];
-	if (MINOR(md->dev != minor))
+	up_read(&_dev_lock);
+
+	if (!md)
 		return -ENXIO;
 
+	down_read(&md->lock);
 	for (l = 0; l < md->depth; l++) {
 		next_node = ((KEYS_PER_NODE + 1) * next_node) + i;
 		node = md->index[l] + (next_node * KEYS_PER_NODE);
@@ -393,6 +353,8 @@ static int _request_fn(request_queue_t *q, int rw, struct buffer_head *bh)
 	} else
 		buffer_IO_error(bh);
 
+
+	up_read(&md->lock);
 	return ret;
 }
 
@@ -426,12 +388,12 @@ static struct mapped_device *_alloc_dev(int minor)
 	int i;
 	struct mapped_device *md = kmalloc(sizeof(*md), GFP_KERNEL);
 
-	spin_lock(&_dev_lock);
+	down_write(&_dev_lock);
 	minor = (minor < 0) ? __any_old_dev() : __specific_dev(minor);
 
 	if (minor < 0) {
 		WARN("no free devices available");
-		spin_unlock(&_dev_lock);
+		up_write(&_dev_lock);
 		kfree(md);
 		return 0;
 	}
@@ -441,7 +403,7 @@ static struct mapped_device *_alloc_dev(int minor)
 	clear_bit(md->status, DM_CREATED);
 
 	_devs[minor] = md;
-	spin_unlock(&_dev_lock);
+	up_write(&_dev_lock);
 
 	return *d;
 }
@@ -450,60 +412,75 @@ static void _free_dev(struct mapped_device *md)
 {
 	int i, minor = MINOR(md->dev);
 
-	spin_lock(&_dev_lock);
+	down_write(&_dev_lock);
 	_devs[i] = 0;
-	spin_unlock(&_dev_lock);
+	up_write(&_dev_lock);
 
 	kfree(md);
 }
 
-static struct mapped_device *__find_dev(const char *name)
+static inline struct mapped_device *__find_dev(const char *name)
 {
 	int i;
+	return 0;
+}
+
+struct mapped_device *dm_find_name(const char *name)
+{
+	int i;
+	struct mapped_device *md;
+
+	down_read(&_dev_lock);
 	for (i = 0; i < MAX_DEVICES; i++)
 		if (_devs[i] && !strcmp(_devs[i]->name, name))
 			return _devs[i];
 
-	return 0;
+	up_read(&_dev_lock);
 }
 
-static int _create_dev(int minor, const char *name)
+struct mapped_device *dm_find_minor(int minor)
+{
+
+}
+
+static int dm_create(int minor, const char *name)
 {
 	struct mapped_device *md = _alloc_dev(minor);
 
 	if (!md)
 		return -ENXIO;
 
-	spin_lock(&_dev_lock);
+	down_write(&_dev_lock);
 	if (__find_dev(name)) {
 		WARN("device with that name already exists");
-		spin_unlock(&_dev_lock);
+		up_write(&_dev_lock);
 		_free_dev(md);
 		return -EINVAL;
 	}
 
 	strcpy(md->name, name);
-	spin_unlock(&_dev_lock);
-
-	dm_fs_add_lv(md);
+	up_write(&_dev_lock);
 }
 
-static int _destroy_dev(int minor)
+static int dm_remove(const char *name, int minor)
 {
 	struct mapped_device *md;
+	int minor;
 
-	spin_lock(&_dev_lock);
-	md = _devs[minor];
+	down_write(&_dev_lock);
+	if (!(md = __find_dev(name))) {
+		up_write(&_dev_lock);
+		return -ENXIO;
+	}
+
+	minor = MINOR(md->dev);
 	clear_bit(md->status, CREATED);
-	spin_unlock(&_dev_lock);
 
 	dm_clear_table(md);
 
-	spin_lock(&_dev_lock);
 	_free_dev(md);
-	spin_unlock(&_dev_lock);
-
-	dm_fs_remove_lv(md);
+	_devs[minor] = 0;
+	up_write(&_dev_lock);
 	return 0;
 }
 
