@@ -57,10 +57,14 @@ struct dm_info {
 	unsigned int open_count;
 	int major;
 	int minor;		/* minor device number */
+	int read_only;
+
 	unsigned int target_count;
 };
 
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
+
+int dm_task_set_ro(struct dm_task *dmt);
 
 /*
  * Use these to prepare for a create or reload.

@@ -51,7 +51,14 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	info->open_count = dmt->dmi->open_count;
 	info->major = dmt->dmi->major;
 	info->minor = dmt->dmi->minor;
+	info->read_only = dmt->dmi->read_only;
 	info->target_count = dmt->dmi->target_count;
+	return 1;
+}
+
+int dm_task_set_ro(struct dm_task *dmt)
+{
+	dmt->read_only = 1;
 	return 1;
 }
 
@@ -156,6 +163,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	dmi->suspend = (dmt->type == DM_DEVICE_SUSPEND) ? 1 : 0;
 	dmi->open_count = 0;
 	dmi->minor = -1;
+	dmi->read_only = dmt->read_only;
 
 	dmi->target_count = count;
 

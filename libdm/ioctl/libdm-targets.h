@@ -19,6 +19,7 @@ struct dm_task {
 
 	struct target *head, *tail;
 
+	int read_only;
 	struct dm_ioctl *dmi;
 };
 

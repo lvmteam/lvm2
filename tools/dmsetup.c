@@ -16,11 +16,27 @@
 #include <sys/types.h>
 #include <ctype.h>
 #include <errno.h>
+#include <unistd.h>
+#include <getopt.h>
 
 #define LINE_SIZE 1024
 
 #define err(msg, x...) fprintf(stderr, msg "\n", ##x)
 
+/*
+ * We have only very simple switches ATM.
+ */
+enum {
+	READ_ONLY = 0,
+	NUM_SWITCHES
+};
+
+static int _switches[NUM_SWITCHES];
+
+
+/*
+ * Commands
+ */
 static int _parse_file(struct dm_task *dmt, const char *file)
 {
         char buffer[LINE_SIZE], *ttype, *ptr, *comment;
@@ -84,6 +100,9 @@ static int _load(int task, const char *name, const char *file)
 		goto out;
 
 	if (!_parse_file(dmt, file))
+		goto out;
+
+	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -221,7 +240,7 @@ static void _usage(FILE *out)
 	return;
 }
 
-struct command *_find_command(const char *name)
+static struct command *_find_command(const char *name)
 {
 	int i;
 
@@ -232,29 +251,57 @@ struct command *_find_command(const char *name)
 	return NULL;
 }
 
+static int _process_switches(int *argc, char ***argv)
+{
+	int index;
+	char c;
+
+	static struct option long_options[] = {
+		{"read-only", 0, NULL, READ_ONLY},
+	};
+
+	/*
+	 * Zero all the index counts.
+	 */
+	memset(&_switches, 0, sizeof(_switches));
+
+	while ((c = getopt_long(*argc, *argv, "r",
+				long_options, &index)) != -1)
+		if (c == 'r' || index == READ_ONLY)
+			_switches[READ_ONLY]++;
+
+	*argv += optind;
+	*argc -= optind;
+	return 1;
+}
 
 int main(int argc, char **argv)
 {
 	struct command *c;
+
+	if (!_process_switches(&argc, &argv)) {
+		fprintf(stderr, "Couldn't process command line switches.\n");
+		exit(1);
+	}
 
 	if (argc < 2) {
 		_usage(stderr);
 		exit(1);
 	}
 
-	if (!(c = _find_command(argv[1]))) {
+	if (!(c = _find_command(argv[0]))) {
 		fprintf(stderr, "Unknown command\n");
 		_usage(stderr);
 		exit(1);
 	}
 
-	if (argc != c->num_args + 2) {
+	if (argc != c->num_args + 1) {
 		fprintf(stderr, "Incorrect number of arguments\n");
 		_usage(stderr);
 		exit(1);
 	}
 
-	if (!c->fn(argc - 1, argv + 1)) {
+	if (!c->fn(argc, argv)) {
 		fprintf(stderr, "Command failed\n");
 		exit(1);
 	}
