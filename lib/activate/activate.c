@@ -62,7 +62,15 @@ int lvs_in_vg_opened(struct volume_group *vg)
 {
 	return 0;
 }
+int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
+{
+	return 1;
+}
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
+{
+	return 1;
+}
+int lv_resume(struct cmd_context *cmd, const char *lvid_s)
 {
 	return 1;
 }
@@ -74,7 +82,16 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 {
 	return 1;
 }
+int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
+			 int *activate_lv)
+{
+	return 1;
+}
 int lv_activate(struct cmd_context *cmd, const char *lvid_s)
+{
+	return 1;
+}
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s)
 {
 	return 1;
 }
@@ -339,7 +356,7 @@ static int _lv_open_count(struct logical_volume *lv)
 }
 
 /* FIXME Need to detect and handle an lv rename */
-static int _lv_activate(struct logical_volume *lv)
+static int _lv_activate_lv(struct logical_volume *lv)
 {
 	int r;
 	struct dev_manager *dm;
@@ -373,7 +390,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_suspend(struct logical_volume *lv)
+static int _lv_suspend_lv(struct logical_volume *lv)
 {
 	int r;
 	struct dev_manager *dm;
@@ -428,8 +445,8 @@ int lvs_in_vg_opened(struct volume_group *vg)
 	return count;
 }
 
-/* These return success if the device is not active */
-int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
+static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
+		       int error_if_not_suspended)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
@@ -451,10 +468,10 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 	}
 
 	if (!info.exists || info.suspended)
-		return 1;
+		return error_if_not_suspended ? 0 : 1;
 
 	memlock_inc();
-	if (!_lv_suspend(lv)) {
+	if (!_lv_suspend_lv(lv)) {
 		memlock_dec();
 		fs_unlock();
 		return 0;
@@ -463,7 +480,19 @@ int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
 	return 1;
 }
 
-int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
+/* Returns success if the device is not active */
+int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s)
+{
+	return _lv_suspend(cmd, lvid_s, 0);
+}
+
+int lv_suspend(struct cmd_context *cmd, const char *lvid_s)
+{
+	return _lv_suspend(cmd, lvid_s, 1);
+}
+
+static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
+		      int error_if_not_active)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
@@ -485,15 +514,26 @@ int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
 	}
 
 	if (!info.exists || !info.suspended)
-		return 1;
+		return error_if_not_active ? 0 : 1;
 
-	if (!_lv_activate(lv))
+	if (!_lv_activate_lv(lv))
 		return 0;
 
 	memlock_dec();
 	fs_unlock();
 
 	return 1;
+}
+
+/* Returns success if the device is not active */
+int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s)
+{
+	return _lv_resume(cmd, lvid_s, 0);
+}
+
+int lv_resume(struct cmd_context *cmd, const char *lvid_s)
+{
+	return _lv_resume(cmd, lvid_s, 1);
 }
 
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
@@ -535,7 +575,31 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	return r;
 }
 
-int lv_activate(struct cmd_context *cmd, const char *lvid_s)
+/* Test if LV passes filter */
+int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
+			 int *activate_lv)
+{
+	struct logical_volume *lv;
+
+	if (!activation())
+		goto activate;
+
+	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+		return 0;
+
+	if (!_passes_activation_filter(cmd, lv)) {
+		log_verbose("Not activating %s/%s due to config file settings",
+			    lv->vg->name, lv->name);
+		*activate_lv = 0;
+		return 1;
+	}
+
+      activate:
+	*activate_lv = 1;
+	return 1;
+}
+
+static int _lv_activate(struct cmd_context *cmd, const char *lvid_s, int filter)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
@@ -547,7 +611,7 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
 
-	if (!_passes_activation_filter(cmd, lv)) {
+	if (filter && !_passes_activation_filter(cmd, lv)) {
 		log_verbose("Not activating %s/%s due to config file settings",
 			    lv->vg->name, lv->name);
 		return 0;
@@ -567,11 +631,23 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 		return 1;
 
 	memlock_inc();
-	r = _lv_activate(lv);
+	r = _lv_activate_lv(lv);
 	memlock_dec();
 	fs_unlock();
 
 	return r;
+}
+
+/* Activate LV */
+int lv_activate(struct cmd_context *cmd, const char *lvid_s)
+{
+	return _lv_activate(cmd, lvid_s, 0);
+}
+
+/* Activate LV only if it passes filter */
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s)
+{
+	return _lv_activate(cmd, lvid_s, 1);
 }
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
