@@ -19,7 +19,6 @@
  */
 
 int e2fsadm(int argc, char **argv) {return 1;}
-int lvchange(int argc, char **argv) {return 1;}
 int lvcreate(int argc, char **argv) {return 1;}
 int lvdisplay(int argc, char **argv) {return 1;}
 int lvextend(int argc, char **argv) {return 1;}

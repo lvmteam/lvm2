@@ -21,6 +21,7 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES=\
+	lvchange.c \
 	lvm.c \
 	lvmchange.c \
 	lvremove.c \
