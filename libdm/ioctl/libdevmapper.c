@@ -76,11 +76,13 @@ void dm_task_destroy(struct dm_task *dmt)
 
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 {
+	unsigned int *v;
+
 	if (!dmt->dmi)
 		return 0;
 
-	strncpy(version, dmt->dmi->version, size);
-
+	v = dmt->dmi->version;
+	snprintf(version, size, "%u.%u.%u", v[0], v[1], v[2]);
 	return 1;
 }
 
@@ -281,7 +283,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	memset(dmi, 0, len);
 
-	strncpy(dmi->version, DM_IOCTL_VERSION, sizeof(dmi->version));
+	dmi->version[0] = DM_IOCTL_MAJOR;
+	dmi->version[1] = DM_IOCTL_MINOR;
+	dmi->version[2] = DM_IOCTL_PATCH;
 	dmi->data_size = len;
 	dmi->data_start = sizeof(struct dm_ioctl);
 
@@ -341,15 +345,15 @@ int dm_task_run(struct dm_task *dmt)
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		command = DM_CREATE;
+		command = DM_DEV_CREATE;
 		break;
 
 	case DM_DEVICE_RELOAD:
-		command = DM_RELOAD;
+		command = DM_DEV_RELOAD;
 		break;
 
 	case DM_DEVICE_REMOVE:
-		command = DM_REMOVE;
+		command = DM_DEV_REMOVE;
 		break;
 
 	case DM_DEVICE_REMOVE_ALL:
@@ -357,23 +361,23 @@ int dm_task_run(struct dm_task *dmt)
 		break;
 
 	case DM_DEVICE_SUSPEND:
-		command = DM_SUSPEND;
+		command = DM_DEV_SUSPEND;
 		break;
 
 	case DM_DEVICE_RESUME:
-		command = DM_SUSPEND;
+		command = DM_DEV_SUSPEND;
 		break;
 
 	case DM_DEVICE_INFO:
-		command = DM_INFO;
+		command = DM_DEV_STATUS;
 		break;
 
 	case DM_DEVICE_DEPS:
-		command = DM_DEPS;
+		command = DM_DEV_DEPS;
 		break;
 
 	case DM_DEVICE_RENAME:
-		command = DM_RENAME;
+		command = DM_DEV_RENAME;
 		break;
 
 	case DM_DEVICE_VERSION:
@@ -381,16 +385,16 @@ int dm_task_run(struct dm_task *dmt)
 		break;
 
 	case DM_DEVICE_STATUS:
-		command = DM_GET_STATUS;
+		command = DM_TARGET_STATUS;
 		break;
 
 	case DM_DEVICE_TABLE:
 		dmi->flags |= DM_STATUS_TABLE_FLAG;
-		command = DM_GET_STATUS;
+		command = DM_TARGET_STATUS;
 		break;
 
 	case DM_DEVICE_WAITEVENT:
-		command = DM_WAIT_EVENT;
+		command = DM_TARGET_WAIT;
 		break;
 
 	default:
