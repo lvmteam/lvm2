@@ -74,7 +74,7 @@ static int _init_cluster(void)
 	/* Open the cluster communication socket */
 	cluster_sock = socket(AF_CLUSTER, SOCK_DGRAM, CLPROTO_CLIENT);
 	if (cluster_sock == -1) {
-		syslog(LOG_ERR, "Can't open cman cluster manager socket: %m");
+		/* Don't print an error here because we could be just probing for CMAN */
 		return -1;
 	}
 
