@@ -22,9 +22,52 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment);
 void pool_empty(struct pool *p);
 void pool_free(struct pool *p, void *ptr);
 
-/* object building routines */
-void *pool_begin_object(struct pool *p, size_t init_size);
-void *pool_grow_object(struct pool *p, void *buffer, size_t delta);
+/*
+ * Object building routines:
+ *
+ * These allow you to 'grow' an object, useful for
+ * building strings, or filling in dynamic
+ * arrays.
+ *
+ * It's probably best explained with an example:
+ *
+ * char *build_string(struct pool *mem)
+ * {
+ *      int i;
+ *      char buffer[16];
+ *
+ *      if (!pool_begin_object(mem, 128))
+ *              return NULL;
+ *
+ *      for (i = 0; i < 50; i++) {
+ *              snprintf(buffer, sizeof(buffer), "%d, ", i);
+ *              if (!pool_grow_object(mem, buffer, strlen(buffer)))
+ *                      goto bad;
+ *      }
+ *
+ *	// add null
+ *      if (!pool_grow_object(mem, "\0", 1))
+ *              goto bad;
+ *
+ *      return pool_end_object(mem);
+ *
+ * bad:
+ *
+ *      pool_abandon_object(mem);
+ *      return NULL;
+ *}
+ *
+ * So start an object by calling pool_begin_object
+ * with a guess at the final object size - if in
+ * doubt make the guess too small.
+ *
+ * Then append chunks of data to your object with
+ * pool_grow_object.  Finally get your object with
+ * a call to pool_end_object.
+ *
+ */
+void *pool_begin_object(struct pool *p, size_t hint);
+void *pool_grow_object(struct pool *p, void *extra, size_t delta);
 void *pool_end_object(struct pool *p);
 void pool_abandon_object(struct pool *p);
 
