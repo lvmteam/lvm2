@@ -137,9 +137,8 @@
 #define DM_NAME_LEN 64
 
 enum {
-	DM_LOADED = 0,
-	DM_LOADING,
-	DM_ACTIVE,
+	DM_BOUND = 0,		/* device has been bound to a table */
+	DM_ACTIVE,		/* device is running */
 };
 
 /*
@@ -183,6 +182,24 @@ struct target {
 };
 
 /*
+ * the btree
+ */
+struct dm_table {
+	/* btree table */
+	int depth;
+	int counts[MAX_DEPTH];	/* in nodes */
+	offset_t *index[MAX_DEPTH];
+
+	int num_targets;
+	int num_allocated;
+	offset_t *highs;
+	struct target *targets;
+
+	/* a list of devices used by this table */
+	struct dev_list *devices;
+};
+
+/*
  * the actual device struct
  */
 struct mapped_device {
@@ -198,29 +215,20 @@ struct mapped_device {
 	/* a list of io's that arrived while we were suspended */
 	struct deferred_io *deferred;
 
-	/* btree table */
-	int depth;
-	int counts[MAX_DEPTH];	/* in nodes */
-	offset_t *index[MAX_DEPTH];
-
-	int num_targets;
-	int num_allocated;
-	offset_t *highs;
-	struct target *targets;
+	struct dm_table *map;
 
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
 	struct proc_dir_entry *pde;
-
-	/* a list of devices used by this md */
-	struct dev_list *devices;
 };
 
 extern struct block_device_operations dm_blk_dops;
 
+
 /* dm-target.c */
 int dm_target_init(void);
 struct target_type *dm_get_target(const char *name);
+
 
 /* dm.c */
 struct mapped_device *dm_find_by_name(const char *name);
@@ -228,16 +236,19 @@ struct mapped_device *dm_find_by_minor(int minor);
 
 int dm_create(const char *name, int minor);
 int dm_remove(const char *name);
-
+int dm_bind(struct mapped_device *md, struct dm_table *t);
 int dm_activate(struct mapped_device *md);
 void dm_suspend(struct mapped_device *md);
 
+
 /* dm-table.c */
-int dm_table_start(struct mapped_device *md);
-int dm_table_add_entry(struct mapped_device *md, offset_t high,
-		       dm_map_fn target, void *context);
-int dm_table_complete(struct mapped_device *md);
-void dm_table_free(struct mapped_device *md);
+struct dm_table *dm_table_create(void);
+void dm_table_destroy(struct dm_table *t);
+
+int dm_table_add_entry(struct dm_table *t, offset_t high,
+		       dm_map_fn target, void *private);
+int dm_table_complete(struct dm_table *t);
+
 
 /* dm-fs.c */
 int dm_fs_init(void);

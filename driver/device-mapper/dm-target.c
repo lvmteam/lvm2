@@ -47,6 +47,9 @@ struct target_type *dm_get_target(const char *name)
 	return t;
 }
 
+/*
+ * register a new target_type.
+ */
 int register_map_target(const char *name, dm_ctr_fn ctr,
 			dm_dtr_fn dtr, dm_map_fn map)
 {
@@ -82,7 +85,7 @@ int register_map_target(const char *name, dm_ctr_fn ctr,
  * io-err: always fails an io, useful for bringing
  * up LV's that have holes in them.
  */
-static int io_err_ctr(offset_t b, offset_t e, struct mapped_device *md,
+static int io_err_ctr(offset_t b, offset_t e, struct dm_table *t,
 		      const char *cb, const char *ce, void **result)
 {
 	/* this takes no arguments */
@@ -109,11 +112,13 @@ struct linear_c {
 	int offset;		/* FIXME: we need a signed offset type */
 };
 
-static int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
+/*
+ * construct a linear mapping.
+ * <major> <minor> <offset>
+ */
+static int linear_ctr(offset_t low, offset_t high, struct dm_table *t,
 		      const char *cb, const char *ce, void **result)
 {
-	/* <major> <minor> <offset> */
-
 	struct linear_c *lc;
 	unsigned int major, minor, start;
 	int r;
@@ -135,7 +140,7 @@ static int linear_ctr(offset_t low, offset_t high, struct mapped_device *md,
 	lc->dev = MKDEV((int) major, (int) minor);
 	lc->offset = (int) start - (int) low;
 
-	if ((r = dm_add_device(md, lc->dev))) {
+	if ((r = dm_table_add_device(t, lc->dev))) {
 		kfree(lc);
 		return r;
 	}

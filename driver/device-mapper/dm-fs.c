@@ -49,21 +49,25 @@ static struct proc_dir_entry *_control;
 
 static devfs_handle_t _dev_dir;
 
+static int process_control(const char *b, const char *e, int minor,
+			   struct dm_table **map);
+static int process_table(const char *b, const char *e, int minor,
+			 struct dm_table **map);
 static int line_splitter(struct file *file, const char *buffer,
 			 unsigned long count, void *data);
-static int process_control(const char *b, const char *e, int minor);
-static int process_table(const char *b, const char *e, int minor);
 static int get_word(const char *b, const char *e,
 		    const char **wb, const char **we);
 static int tok_cmp(const char *str, const char *b, const char *e);
 static void tok_cpy(char *dest, size_t max,
 		    const char *b, const char *e);
 
-typedef int (*process_fn)(const char *b, const char *e, int minor);
+typedef int (*process_fn)(const char *b, const char *e, int minor,
+			  struct dm_table **map);
 
 struct pf_data {
 	process_fn fn;
 	int minor;
+	struct dm_table *map;
 };
 
 int dm_fs_init(void)
@@ -119,6 +123,7 @@ int dm_fs_add(struct mapped_device *md)
 
 	pfd->fn = process_table;
 	pfd->minor = MINOR(md->dev);
+	pfd->map = 0;
 
 	if (!(md->pde = create_proc_entry(md->name, S_IRUGO | S_IWUSR,
 					_proc_dir))) {
@@ -148,6 +153,11 @@ int dm_fs_add(struct mapped_device *md)
 int dm_fs_remove(struct mapped_device *md)
 {
 	if (md->pde) {
+		struct pf_data *pfd = (struct pf_data *) md->pde->data;
+
+		if (pfd->map)
+			dm_table_destroy(pfd->map);
+
 		kfree(md->pde->data);
 		remove_proc_entry(md->name, _proc_dir);
 		md->pde = 0;
@@ -158,7 +168,8 @@ int dm_fs_remove(struct mapped_device *md)
 	return 0;
 }
 
-static int process_control(const char *b, const char *e, int minor)
+static int process_control(const char *b, const char *e, int minor,
+			   struct dm_table **map)
 {
 	const char *wb, *we;
 	char name[64];
@@ -201,10 +212,12 @@ static int process_control(const char *b, const char *e, int minor)
 	return -EINVAL;
 }
 
-static int process_table(const char *b, const char *e, int minor)
+static int process_table(const char *b, const char *e, int minor,
+			 struct dm_table **map)
 {
 	const char *wb, *we;
 	struct mapped_device *md = dm_find_by_minor(minor);
+	struct dm_table *table = *map;
 	void *context;
 	int r;
 
@@ -219,12 +232,15 @@ static int process_table(const char *b, const char *e, int minor)
 		dm_suspend(md);
 
 		/* start loading a table */
-		dm_table_start(md);
+		table = *map = dm_table_create();
 
 	} else if (!tok_cmp("end", b, e)) {
 		/* activate the device ... <evil chuckle> ... */
-		dm_table_complete(md);
-		dm_activate(md);
+		if (table) {
+			dm_table_complete(table);
+			dm_bind(md, table);
+			dm_activate(md);
+		}
 
 	} else {
 		/* add the new entry */
@@ -253,18 +269,18 @@ static int process_table(const char *b, const char *e, int minor)
 			return -EINVAL;
 
 		/* check there isn't a gap */
-		if ((md->num_targets &&
-		     start != md->highs[md->num_targets - 1] + 1) ||
-		    (!md->num_targets && start)) {
+		if ((table->num_targets &&
+		     start != table->highs[table->num_targets - 1] + 1) ||
+		    (!table->num_targets && start)) {
 			WARN("gap in target ranges");
 			return -EINVAL;
 		}
 
 		high = start + (size - 1);
-		if ((r = t->ctr(start, high, md, we, e, &context)))
+		if ((r = t->ctr(start, high, table, we, e, &context)))
 			return r;
 
-		if ((r = dm_table_add_entry(md, high, t->map, context)))
+		if ((r = dm_table_add_entry(table, high, t->map, context)))
 			return r;
 	}
 
@@ -302,7 +318,7 @@ static int line_splitter(struct file *file, const char *buffer,
 		while((b != e) && *b != '\n')
 			b++;
 
-		if ((r = pfd->fn(lb, b, pfd->minor)))
+		if ((r = pfd->fn(lb, b, pfd->minor, &pfd->map)))
 			return r;
 	}
 
