@@ -64,10 +64,11 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
 #define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
 
-#define LCK_LV_DEACTIVATE	(LCK_LV | LCK_EXCL)
 #define LCK_LV_SUSPEND		(LCK_LV | LCK_WRITE)
-#define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ)
+#define LCK_LV_RESUME		(LCK_LV | LCK_UNLOCK | LCK_NONBLOCK)
 #define LCK_LV_UNLOCK		(LCK_LV | LCK_UNLOCK)
+#define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ)
+#define LCK_LV_DEACTIVATE	(LCK_LV | LCK_EXCL)
 
 #define unlock_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_UNLOCK)
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
