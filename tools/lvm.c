@@ -376,6 +376,15 @@ static void alloc_command(void)
 		__alloc(2 * _array_size);
 }
 
+/*
+ * Sets up the short and long argument.  If there
+ * is no short argument then the index of the
+ * argument in the the_args array is set as the
+ * long opt value.  Yuck.  Of course this means we
+ * can't have more than 'a' long arguments.  Since
+ * we have only 1 ATM (--version) I think we can
+ * live with this restriction.
+ */
 static void add_getopt_arg(int arg, char **ptr, struct option **o)
 {
 	struct arg *a = the_args + arg;
@@ -391,7 +400,7 @@ static void add_getopt_arg(int arg, char **ptr, struct option **o)
 		(*o)->name = a->long_arg + 2;
 		(*o)->has_arg = a->fn ? 1 : 0;
 		(*o)->flag = NULL;
-		(*o)->val = a->short_arg;
+		(*o)->val = arg;
 		(*o)++;
 	}
 }
@@ -456,12 +465,18 @@ static int process_command_line(struct command *com, int *argc, char ***argv)
 static struct arg *find_arg(struct command *com, int opt)
 {
 	struct arg *a;
-	int i;
+	int i, arg;
 
 	for (i = 0; i < com->num_args; i++) {
-		a = the_args + com->valid_args[i];
+		arg = com->valid_args[i];
+		a = the_args + arg;
 
-		if (opt == a->short_arg)
+		/*
+		 * opt should equal either the
+		 * short arg, or the index into
+		 * 'the_args'.
+		 */
+		if ((a->short_arg && (opt == a->short_arg)) || (opt == arg))
 			return a;
 	}
 
