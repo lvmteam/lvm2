@@ -892,6 +892,17 @@ static int _mda_setup(const struct format_type *fmt,
 	/* Place mda straight after label area at start of disk */
 	start1 = LABEL_SCAN_SIZE;
 
+	/* Ensure it's not going to be bigger than the disk! */
+	if (mda_size1 > disk_size) {
+		log_print("Warning: metadata area fills disk %s",
+			  dev_name(pv->dev));
+		/* Leave some free space for rounding */
+		/* Avoid empty data area as could cause tools problems */
+		mda_size1 = disk_size - start1 - alignment * 2;
+		/* Only have 1 mda in this case */
+		pvmetadatacopies = 1;
+	}
+
 	/* Round up to PE_ALIGN boundary */
 	mda_adjustment = (mda_size1 + start1) % alignment;
 	if (mda_adjustment)
