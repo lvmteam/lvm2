@@ -64,16 +64,27 @@ int dev_get_sectsize(struct device *dev, uint32_t *size)
 
 int dev_open(struct device *dev, int flags)
 {
+	struct stat buf;
 	const char *name = dev_name(dev);
 
-	/* FIXME Check flags (eg is write now reqd?) */
 	if (dev->fd >= 0) {
 		log_error("Device '%s' has already been opened", name);
 		return 0;
 	}
 
+	if ((stat(name, &buf) < 0) || (buf.st_rdev != dev->dev)) {
+		log_error("%s: stat failed: Has device name changed?", name);
+		return 0;
+	}
+
 	if ((dev->fd = open(name, flags)) < 0) {
 		log_sys_error("open", name);
+		return 0;
+	}
+
+	if ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev)) {
+		log_error("%s: fstat failed: Has device name changed?", name);
+		dev_close(dev->fd);
 		return 0;
 	}
 

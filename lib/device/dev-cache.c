@@ -120,28 +120,6 @@ static int _insert_dev(const char *path, dev_t d)
 	return 1;
 }
 
-/*
- * return a new path for the destination of the link.
- */
-static char *_follow_link(const char *path, struct stat *info)
-{
-	char buffer[PATH_MAX + 1];
-	int n;
-	n = readlink(path, buffer, sizeof(buffer) - 1);
-
-	if (n <= 0)
-		return NULL;
-
-	buffer[n] = '\0';
-
-	if (stat(buffer, info) < 0) {
-		log_sys_very_verbose("stat", buffer);
-		return NULL;
-	}
-
-	return pool_strdup(_cache.mem, buffer);
-}
-
 static char *_join(const char *dir, const char *name)
 {
 	int len = strlen(dir) + strlen(name) + 2;
@@ -208,28 +186,11 @@ static int _insert_dir(const char *dir)
 static int _insert(const char *path, int rec)
 {
 	struct stat info;
-	char *actual_path;
 	int r = 0;
 
 	if (stat(path, &info) < 0) {
 		log_sys_very_verbose("stat", path);
 		return 0;
-	}
-
-	/* follow symlinks if neccessary. */
-	if (S_ISLNK(info.st_mode)) {
-		log_debug("%s: Following symbolic link", path);
-		if (!(actual_path = _follow_link(path, &info))) {
-			stack;
-			return 0;
-		}
-
-		if (stat(actual_path, &info) < 0) {
-			log_sys_very_verbose("stat", actual_path);
-			return 0;
-		}
-
-		dbg_free(actual_path);
 	}
 
 	if (S_ISDIR(info.st_mode)) { /* add a directory */
