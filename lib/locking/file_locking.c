@@ -181,7 +181,7 @@ static int _lock_file(const char *file, int flags)
 	return 0;
 }
 
-int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
+int file_lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 {
 	char lockfile[PATH_MAX];
 
@@ -233,7 +233,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 
 int init_file_locking(struct locking_type *locking, struct config_file *cf)
 {
-	locking->lock_resource = lock_resource;
+	locking->lock_resource = file_lock_resource;
 	locking->fin_locking = fin_file_locking;
 
 	/* Get lockfile directory from config file */
