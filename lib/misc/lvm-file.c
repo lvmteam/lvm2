@@ -194,3 +194,35 @@ int is_empty_dir(const char *dir)
 
 	return dirent ? 0 : 1;
 }
+
+void sync_dir(const char *file)
+{
+	int fd;
+	char *dir, *c;
+
+	if (!(dir = dbg_strdup(file))) {
+		log_error("sync_dir failed in strdup");
+		return;
+	}
+
+	if (!dir_exists(dir)) {
+		c = dir + strlen(dir);
+		while (*c != '/' && c > dir)
+			c--;
+
+		*c = '\0';
+	}
+
+	if ((fd = open(dir, O_RDONLY)) == -1) {
+		log_sys_error("open", dir);
+		goto out;
+	}
+
+	if (fsync(fd) == -1)
+		log_sys_error("fsync", dir);
+
+	close(fd);
+
+      out:
+	dbg_free(dir);
+}
