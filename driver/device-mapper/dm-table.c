@@ -84,11 +84,12 @@ void dm_free_table(struct mapped_device *md)
 
 int dm_start_table(struct mapped_device *md)
 {
+	int r;
 	set_bit(DM_LOADING, &md->state);
 
 	dm_free_table(md);
-	if (!_alloc_targets(md, 2))	/* FIXME: increase once debugged 256 ? */
-		return -ENOMEM;
+	if ((r = _alloc_targets(md, 2)))	/* FIXME: increase once debugged 256 ? */
+		return r;
 
 	return 0;
 }
@@ -148,17 +149,17 @@ static int _alloc_targets(struct mapped_device *md, int num)
 	void **n_contexts;
 
 	if (!(n_highs = vmalloc(sizeof(*n_highs) * num)))
-		return 0;
+		return -ENOMEM;
 
 	if (!(n_targets = vmalloc(sizeof(*n_targets) * num))) {
 		vfree(n_highs);
-		return 0;
+		return -ENOMEM;
 	}
 
 	if (!(n_contexts = vmalloc(sizeof(*n_contexts) * num))) {
 		vfree(n_highs);
 		vfree(n_targets);
-		return 0;
+		return -ENOMEM;
 	}
 
 	memcpy(n_highs, md->highs, sizeof(*n_highs) * md->num_targets);
@@ -175,5 +176,5 @@ static int _alloc_targets(struct mapped_device *md, int num)
 	md->targets = n_targets;
 	md->contexts = n_contexts;
 
-	return 1;
+	return 0;
 }
