@@ -56,7 +56,8 @@ struct lvmcache_info {
 int lvmcache_init(void);
 void lvmcache_destroy(void);
 
-/* Set full_scan to 1 to reread every filtered device label */
+/* Set full_scan to 1 to reread every filtered device label or
+ * 2 to rescan /dev for new devices */
 int lvmcache_label_scan(struct cmd_context *cmd, int full_scan);
 
 /* Add/delete a device */

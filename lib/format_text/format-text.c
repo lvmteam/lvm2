@@ -1185,7 +1185,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 
 	/* Perform full scan and try again */
 	if (!memlock()) {
-		lvmcache_label_scan(fmt->cmd, 1);
+		lvmcache_label_scan(fmt->cmd, 2);
 
 		if (info->vginfo && info->vginfo->vgname &&
 		    *info->vginfo->vgname &&

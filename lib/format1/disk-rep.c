@@ -482,7 +482,7 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 		/* vgcache_del(vg_name); */
 	}
 
-	if (!(iter = dev_iter_create(filter))) {
+	if (!(iter = dev_iter_create(filter, 1))) {
 		log_error("read_pvs_in_vg: dev_iter_create failed");
 		return 0;
 	}
