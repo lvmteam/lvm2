@@ -156,6 +156,32 @@ out:
         return r;
 }
 
+static int _version(int argc, char **argv)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	char version[16];
+
+	if (!(dmt = dm_task_create(DM_DEVICE_VERSION)))
+		return 0;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	if (!dm_task_get_driver_version(dmt, (char *)&version, 
+					sizeof(version)))
+		goto out;
+
+	printf("Driver version:    %s\n", version);
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 static int _simple(int task, const char *name)
 {
 	int r = 0;
@@ -256,6 +282,7 @@ static struct command _commands[] = {
 	{"reload", "<dev_name> <table_file>", 2, _reload},
 	{"info", "<dev_name>", 1, _info},
 	{"rename", "<dev_name> <new_name>", 2, _rename},
+	{"version", "", 0, _version},
 	{NULL, NULL, 0, NULL}
 };
 
@@ -322,7 +349,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (argc < 2) {
+	if (argc == 0) {
 		_usage(stderr);
 		exit(1);
 	}
