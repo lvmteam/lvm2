@@ -20,16 +20,16 @@
 
 #include "tools.h"
 
-static int lvscan_single(struct logical_volume *lv);
+static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv);
 
-int lvscan(int argc, char **argv)
+int lvscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (argc) {
 		log_error("No additional command line arguments allowed");
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_lv(argc, argv, &lvscan_single);
+	return process_each_lv(cmd, argc, argv, &lvscan_single);
 
 /*********** FIXME Count!   Add private struct to process_each*  
 	if (!lv_total)
@@ -54,7 +54,7 @@ int lvscan(int argc, char **argv)
 
 }
 
-static int lvscan_single(struct logical_volume *lv)
+static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	int active = 0;
 	int lv_total = 0;
@@ -88,7 +88,7 @@ static int lvscan_single(struct logical_volume *lv)
 	dummy = display_size(lv->size / 2, SIZE_SHORT);
 
 	log_print("%s%s '%s%s/%s' [%s]%s%s", active_str, snapshot_str,
-		  fid->cmd->dev_dir, lv->vg->name, lv->name, dummy,
+		  cmd->dev_dir, lv->vg->name, lv->name, dummy,
 		  (lv->status & ALLOC_STRICT) ? " strict" : "",
 		  (lv->status & ALLOC_CONTIGUOUS) ? " contiguous" : "");
 
@@ -102,7 +102,7 @@ static int lvscan_single(struct logical_volume *lv)
 ****************/
 
 /******** FIXME Device number display & Snapshot
-		if (arg_count(blockdevice_ARG))
+		if (arg_count(cmd,blockdevice_ARG))
 			printf(" %d:%d",
 			       MAJOR(lv->lv_dev),
 			       MINOR(lv->lv_dev));

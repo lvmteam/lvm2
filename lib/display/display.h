@@ -33,11 +33,11 @@ char *display_uuid(char *uuidstr);
 
 void pvdisplay_colons(struct physical_volume *pv);
 void pvdisplay_full(struct physical_volume *pv);
-int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv);
+int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv);
 
 void lvdisplay_colons(struct logical_volume *lv);
 int lvdisplay_segments(struct logical_volume *lv);
-int lvdisplay_full(struct logical_volume *lv);
+int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv);
 
 void vgdisplay_extents(struct volume_group *vg);
 void vgdisplay_full(struct volume_group *vg);

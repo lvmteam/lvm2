@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2001  Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * LVM is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * LVM is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU CC; see the file COPYING.  If not, write to
- * the Free Software Foundation, 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * This file is released under the LGPL.
  */
 
 #ifndef _LVM_LVM_H
@@ -43,6 +30,7 @@
 #include "activate.h"
 #include "archive.h"
 #include "locking.h"
+#include "toolcontext.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -57,9 +45,9 @@
 #define MAX_ARGS 64
 
 /* command functions */
-typedef int (*command_fn)(int argc, char **argv);
+typedef int (*command_fn)(struct cmd_context *cmd, int argc, char **argv);
 
-#define xx(a, b...) int a(int argc, char **argv);
+#define xx(a, b...) int a(struct cmd_context *cmd, int argc, char **argv);
 #include "commands.h"
 #undef xx
 
@@ -88,8 +76,6 @@ struct arg {
 	sign_t sign;
 };
 
-extern struct arg the_args[ARG_COUNT + 1];
-
 /* a register of the lvm commands */
 struct command {
         const char *name;
@@ -100,9 +86,6 @@ struct command {
         int num_args;
         int *valid_args;
 };
-
-extern struct command *the_command;
-extern struct uuid_map *the_um;
 
 void usage(const char *name);
 
@@ -118,41 +101,37 @@ int permission_arg(struct arg *a);
 char yes_no_prompt(const char *prompt, ...);
 
 /* we use the enums to access the switches */
-static inline int arg_count(int a) {
-	return the_args[a].count;
+static inline int arg_count(struct cmd_context *cmd, int a) {
+	return cmd->args[a].count;
 }
 
-static inline char *arg_value(int a) {
-	return the_args[a].value;
+static inline char *arg_value(struct cmd_context *cmd, int a) {
+	return cmd->args[a].value;
 }
 
-static inline char *arg_str_value(int a, char *def)
+static inline char *arg_str_value(struct cmd_context *cmd, int a, char *def)
 {
-	return arg_count(a) ? the_args[a].value : def;
+	return arg_count(cmd, a) ? cmd->args[a].value : def;
 }
 
-static inline uint32_t arg_int_value(int a, uint32_t def)
+static inline uint32_t arg_int_value(struct cmd_context *cmd, int a, uint32_t def)
 {
-	return arg_count(a) ? the_args[a].i_value : def;
+	return arg_count(cmd, a) ? cmd->args[a].i_value : def;
 }
 
-static inline sign_t arg_sign_value(int a, sign_t def)
+static inline sign_t arg_sign_value(struct cmd_context *cmd, int a, sign_t def)
 {
-	return arg_count(a) ? the_args[a].sign : def;
+	return arg_count(cmd, a) ? cmd->args[a].sign : def;
 }
 
-static inline int arg_count_increment(int a)
+static inline int arg_count_increment(struct cmd_context *cmd, int a)
 {
-	return the_args[a].count++;
+	return cmd->args[a].count++;
 }
 
-static inline const char *command_name(void)
+static inline const char *command_name(struct cmd_context *cmd)
 {
-	return the_command->name;
+	return cmd->command->name;
 }
-
-extern struct format_instance *fid;
-
-extern int lvdisplay_single(struct logical_volume *lv);
 
 #endif

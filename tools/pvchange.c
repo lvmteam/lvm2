@@ -20,9 +20,9 @@
 
 #include "tools.h"
 
-int pvchange_single(struct physical_volume *pv);
+int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv);
 
-int pvchange(int argc, char **argv)
+int pvchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	int opt = 0;
 	int done = 0;
@@ -33,17 +33,17 @@ int pvchange(int argc, char **argv)
 
 	struct list *pvh, *pvs;
 
-	if (arg_count(allocatable_ARG) == 0) {
+	if (arg_count(cmd,allocatable_ARG) == 0) {
 		log_error("Please give the x option");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!(arg_count(all_ARG)) && !argc) {
+	if (!(arg_count(cmd,all_ARG)) && !argc) {
 		log_error("Please give a physical volume path");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(all_ARG) && argc) {
+	if (arg_count(cmd,all_ARG) && argc) {
 		log_error("Option a and PhysicalVolumePath are exclusive");
 		return EINVALID_CMD_LINE;
 	}
@@ -52,23 +52,23 @@ int pvchange(int argc, char **argv)
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
-			if (!(pv = fid->ops->pv_read(fid, pv_name))) {
+			if (!(pv = cmd->fid->ops->pv_read(cmd->fid, pv_name))) {
 				log_error("Failed to read physical volume \"%s\"",
 					  pv_name);
 				continue;
 			}
 			total++;
-			done += pvchange_single(pv);
+			done += pvchange_single(cmd, pv);
 		}
 	} else {
 		log_verbose("Scanning for physical volume names");
-		if (!(pvs = fid->ops->get_pvs(fid))) {
+		if (!(pvs = cmd->fid->ops->get_pvs(cmd->fid))) {
 			return ECMD_FAILED;
 		}
 
 		list_iterate(pvh, pvs) {
 			total++;
-			done += pvchange_single(
+			done += pvchange_single(cmd,
 				list_item(pvh, struct pv_list)->pv);
 		}
 	}
@@ -81,14 +81,14 @@ int pvchange(int argc, char **argv)
 	return 0;
 }
 
-int pvchange_single(struct physical_volume *pv)
+int pvchange_single(struct cmd_context *cmd, struct physical_volume *pv)
 {
 	struct volume_group *vg = NULL;
 	struct pv_list *pvl;
 
 	const char *pv_name = dev_name(pv->dev);
 
-	int allocatable = !strcmp(arg_str_value(allocatable_ARG, "n"), "y");
+	int allocatable = !strcmp(arg_str_value(cmd,allocatable_ARG, "n"), "y");
 
 	/* If in a VG, must change using volume group. */
 	if (*pv->vg_name) {
@@ -100,7 +100,7 @@ int pvchange_single(struct physical_volume *pv)
 			return ECMD_FAILED;
 		}
 
-		if (!(vg = fid->ops->vg_read(fid, pv->vg_name))) {
+		if (!(vg = cmd->fid->ops->vg_read(cmd->fid, pv->vg_name))) {
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Unable to find volume group of \"%s\"",
 			pv_name);
@@ -157,7 +157,7 @@ int pvchange_single(struct physical_volume *pv)
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
-		if (!(fid->ops->vg_write(fid,vg))) {
+		if (!(cmd->fid->ops->vg_write(cmd->fid,vg))) {
 			lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
@@ -166,7 +166,7 @@ int pvchange_single(struct physical_volume *pv)
 		backup(vg);
 		lock_vol(pv->vg_name, LCK_VG | LCK_NONE);
 	} else {
-		if (!(fid->ops->pv_write(fid, pv))) {
+		if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
 			log_error("Failed to store physical volume \"%s\"", 
 				  pv_name);
 			return 0;

@@ -20,28 +20,28 @@
 
 #include "tools.h"
 
-static int vgexport_single(const char *vg_name);
+static int vgexport_single(struct cmd_context *cmd, const char *vg_name);
 
-int vgexport(int argc, char **argv)
+int vgexport(struct cmd_context *cmd, int argc, char **argv)
 {
-	if (!argc && !arg_count(all_ARG)) {
+	if (!argc && !arg_count(cmd,all_ARG)) {
 		log_error("Please supply volume groups or use -a for all.");
 		return ECMD_FAILED;
 	}
 
-	if (argc && arg_count(all_ARG)) {
+	if (argc && arg_count(cmd,all_ARG)) {
 		log_error("No arguments permitted when using -a for all.");
 		return ECMD_FAILED;
 	}
 
-	return process_each_vg(argc, argv, LCK_READ, &vgexport_single);
+	return process_each_vg(cmd, argc, argv, LCK_READ, &vgexport_single);
 }
 
-static int vgexport_single(const char *vg_name)
+static int vgexport_single(struct cmd_context *cmd, const char *vg_name)
 {
 	struct volume_group *vg;
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
 		goto error;
 	}
@@ -67,7 +67,7 @@ static int vgexport_single(const char *vg_name)
 
 	vg->status |= EXPORTED_VG;
 
-	if (!fid->ops->vg_write(fid,vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid,vg))
 		goto error;
 
 	backup(vg);

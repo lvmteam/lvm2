@@ -27,16 +27,16 @@ const char _really_init[] =
  * See if we may pvcreate on this device.
  * 0 indicates we may not.
  */
-static int pvcreate_check(const char *name)
+static int pvcreate_check(struct cmd_context *cmd, const char *name)
 {
 	struct physical_volume *pv;
 
 	/* is the partition type set correctly ? */
-	if ((arg_count(force_ARG) < 1) && !is_lvm_partition(name))
+	if ((arg_count(cmd,force_ARG) < 1) && !is_lvm_partition(name))
 		return 0;
 
 	/* is there a pv here already */
-	if (!(pv = fid->ops->pv_read(fid, name)))
+	if (!(pv = cmd->fid->ops->pv_read(cmd->fid, name)))
 		return 1;
 
 	/* orphan ? */
@@ -45,20 +45,20 @@ static int pvcreate_check(const char *name)
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* we must have -ff to overwrite a non orphan */
-	if (arg_count(force_ARG) < 2) {
+	if (arg_count(cmd,force_ARG) < 2) {
 		log_error("Can't initialize physical volume \"%s\" of "
 			  "volume group \"%s\" without -ff", name, pv->vg_name);
 		return 0;
 	}
 
 	/* prompt */
-	if (!arg_count(yes_ARG) &&
+	if (!arg_count(cmd,yes_ARG) &&
 	    yes_no_prompt(_really_init, name, pv->vg_name) == 'n') {
 		log_print("Physical volume \"%s\" not initialized", name);
 		return 0;
 	}
 
-	if (arg_count(force_ARG)) {
+	if (arg_count(cmd,force_ARG)) {
 		log_print("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
 			  pv->vg_name[0] ? " of volume group \"" : "",
@@ -69,18 +69,18 @@ static int pvcreate_check(const char *name)
 	return 1;
 }
 
-static void pvcreate_single(const char *pv_name)
+static void pvcreate_single(struct cmd_context *cmd, const char *pv_name)
 {
 	struct physical_volume *pv;
 	struct id id, *idp = NULL;
 	char *uuid;
 	struct device *dev;
 
-	if (arg_count(uuidstr_ARG)) {
-		uuid = arg_str_value(uuidstr_ARG,"");
+	if (arg_count(cmd,uuidstr_ARG)) {
+		uuid = arg_str_value(cmd,uuidstr_ARG,"");
 		if (!id_read_format(&id, uuid))
 			return;
-		if ((dev = uuid_map_lookup(the_um, &id))) {
+		if ((dev = uuid_map_lookup(cmd->um, &id))) {
 			log_error("uuid %s already in use on \"%s\"", uuid,
 				  dev_name(dev));
 			return;
@@ -88,10 +88,10 @@ static void pvcreate_single(const char *pv_name)
 		idp = &id;
 	}
 
-	if (!pvcreate_check(pv_name))
+	if (!pvcreate_check(cmd, pv_name))
 		return;
 
-	if (!(pv = pv_create(fid, pv_name, idp))) {
+	if (!(pv = pv_create(cmd->fid, pv_name, idp))) {
 		log_err("Failed to setup physical volume \"%s\"", pv_name);
 		return;
 	}
@@ -101,7 +101,7 @@ static void pvcreate_single(const char *pv_name)
 		    pv_name, pv->size);
 
 	log_verbose("Writing physical volume data to disk \"%s\"", pv_name);
-	if (!(fid->ops->pv_write(fid, pv))) {
+	if (!(cmd->fid->ops->pv_write(cmd->fid, pv))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		return;
 	}
@@ -109,7 +109,7 @@ static void pvcreate_single(const char *pv_name)
 	log_print("Physical volume \"%s\" successfully created", pv_name);
 }
 
-int pvcreate(int argc, char **argv)
+int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i;
 
@@ -118,19 +118,19 @@ int pvcreate(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(uuidstr_ARG) && argc != 1) {
+	if (arg_count(cmd,uuidstr_ARG) && argc != 1) {
 		log_error("Can only set uuid on one volume at once");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(yes_ARG) && !arg_count(force_ARG)) {
+	if (arg_count(cmd,yes_ARG) && !arg_count(cmd,force_ARG)) {
 		log_error("Option y can only be given with option f");
 		return EINVALID_CMD_LINE;
 	}
 
 	for (i = 0; i < argc; i++) {
-		pvcreate_single(argv[i]);
-		pool_empty(fid->cmd->mem);
+		pvcreate_single(cmd, argv[i]);
+		pool_empty(cmd->mem);
 	}
 
 	return 0;

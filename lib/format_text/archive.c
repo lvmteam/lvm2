@@ -13,6 +13,7 @@
 #include "import-export.h"
 #include "lvm-string.h"
 #include "lvm-file.h"
+#include "toolcontext.h"
 
 #include <dirent.h>
 #include <unistd.h>

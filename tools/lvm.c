@@ -31,7 +31,9 @@
   #endif
 #endif
 
-/* define exported table of valid switches */
+/* 
+ * Exported table of valid switches
+ */
 struct arg the_args[ARG_COUNT + 1] = {
 
 #define arg(a, b, c, d) {b, "--" c, d, 0, NULL},
@@ -40,19 +42,10 @@ struct arg the_args[ARG_COUNT + 1] = {
 
 };
 
+
 static int _array_size;
 static int _num_commands;
 static struct command *_commands;
-
-/* Exported LVM1 disk format */
-struct format_instance *fid;
-
-/* Map of uuid -> device */
-struct uuid_map *the_um;
-
-/* Export command being processed */
-struct command *the_command;
-
 struct cmd_context *cmd;
 
 /* Whether or not to dump persistent filter state */
@@ -558,14 +551,14 @@ static int merge_synonym(int oldarg, int newarg)
 {
 	struct arg *old, *new;
 
-	if (arg_count(oldarg) && arg_count(newarg)) {
+	if (arg_count(cmd,oldarg) && arg_count(cmd,newarg)) {
 		log_error("%s and %s are synonyms.  Please only supply one.",
 			  the_args[oldarg].long_arg,
 			  the_args[newarg].long_arg);
 		return 0;
 	}
 
-	if (!arg_count(oldarg))
+	if (!arg_count(cmd,oldarg))
 		return 1;
 
 	old = the_args + oldarg;
@@ -579,7 +572,7 @@ static int merge_synonym(int oldarg, int newarg)
 	return 1;
 }
 
-int version(int argc, char **argv)
+int version(struct cmd_context *cmd, int argc, char **argv)
 {
 	char version[80];
 
@@ -596,39 +589,39 @@ static int process_common_commands(struct command *com)
 {
 	_current_settings = _default_settings;
 
-	if (arg_count(suspend_ARG))
+	if (arg_count(cmd,suspend_ARG))
 		kill(getpid(), SIGSTOP);
 
-	if (arg_count(debug_ARG))
+	if (arg_count(cmd,debug_ARG))
 		_current_settings.debug = _LOG_FATAL +
-					  (arg_count(debug_ARG) - 1);
+					  (arg_count(cmd,debug_ARG) - 1);
 
-	if (arg_count(verbose_ARG))
-		_current_settings.verbose = arg_count(verbose_ARG);
+	if (arg_count(cmd,verbose_ARG))
+		_current_settings.verbose = arg_count(cmd,verbose_ARG);
 
-	if (arg_count(quiet_ARG)) {
+	if (arg_count(cmd,quiet_ARG)) {
 		_current_settings.debug = 0;
 		_current_settings.verbose = 0;
 	}
 
-	if (arg_count(test_ARG))
-		_current_settings.test = arg_count(test_ARG);
+	if (arg_count(cmd,test_ARG))
+		_current_settings.test = arg_count(cmd,test_ARG);
 
-	if (arg_count(help_ARG)) {
+	if (arg_count(cmd,help_ARG)) {
 		usage(com->name);
 		return ECMD_PROCESSED;
 	}
 
-	if (arg_count(version_ARG)) {
-		return version(0, (char **)NULL);
+	if (arg_count(cmd,version_ARG)) {
+		return version(cmd, 0, (char **)NULL);
 	}
 
-	if (arg_count(autobackup_ARG)) {
+	if (arg_count(cmd,autobackup_ARG)) {
 		_current_settings.archive = 1;
 		_current_settings.backup = 1;
 	}
 
-	if (arg_count(partial_ARG)) {
+	if (arg_count(cmd,partial_ARG)) {
 		init_partial(1);
 		log_print("Partial mode. Incomplete volume groups will "
 			  "be activated read-only.");
@@ -646,7 +639,7 @@ static int process_common_commands(struct command *com)
 	return 0;
 }
 
-int help(int argc, char **argv)
+int help(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!argc)
 		display_help();
@@ -725,17 +718,17 @@ static int run_command(int argc, char **argv)
 	if (!(cmd->cmd_line = _copy_command_line(cmd->mem, argc, argv)))
 		return ECMD_FAILED;
 
-	if (!(the_command = find_command(argv[0])))
+	if (!(cmd->command = find_command(argv[0])))
 		return ENO_SUCH_CMD;
 
-	if (!process_command_line(the_command, &argc, &argv)) {
+	if (!process_command_line(cmd->command, &argc, &argv)) {
 		log_error("Error during parsing of command line.");
 		return EINVALID_CMD_LINE;
 	}
 
-	set_cmd_name(the_command->name);
+	set_cmd_name(cmd->command->name);
 
-	if ((ret = process_common_commands(the_command)))
+	if ((ret = process_common_commands(cmd->command)))
 		return ret;
 
 	_use_settings(&_current_settings);
@@ -748,7 +741,7 @@ static int run_command(int argc, char **argv)
 		return 0;
 	}
 
-	ret = the_command->fn(argc, argv);
+	ret = cmd->command->fn(cmd, argc, argv);
 
 	fin_locking();
 
@@ -766,7 +759,7 @@ static int run_command(int argc, char **argv)
 	pool_empty(cmd->mem);
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
-		usage(the_command->name);
+		usage(cmd->command->name);
 
 
 	return ret;
@@ -1018,7 +1011,7 @@ static struct dev_filter *filter_setup(struct config_file *cf)
 	return f4;
 }
 
-static int _init_uuid_map(struct dev_filter *filter)
+static struct uuid_map *_init_uuid_map(struct dev_filter *filter)
 {
 	label_init();
 
@@ -1033,12 +1026,12 @@ static int _init_uuid_map(struct dev_filter *filter)
 		return 0;
 	}
 
-	return (the_um = uuid_map_create(filter)) ? 1 : 0;
+	return uuid_map_create(filter);
 }
 
 static void _exit_uuid_map(void)
 {
-	uuid_map_destroy(the_um);
+	uuid_map_destroy(cmd->um);
 	label_exit();
 	_lvm1_label->ops->destroy(_lvm1_label);
 	_lvm1_label = NULL;
@@ -1077,6 +1070,8 @@ static int init(void)
 		log_error("Failed to allocate command context");
 		return 0;
 	}
+
+	cmd->args = &the_args[0];
 
 	if (!(cmd->cf = create_config_file())) {
 		stack;
@@ -1144,7 +1139,7 @@ static int init(void)
 	}
 
 	/* the uuid map uses the filter */
-	if (!_init_uuid_map(cmd->filter)) {
+	if (!(cmd->um = _init_uuid_map(cmd->filter))) {
 		log_err("Failed to set up the uuid map.");
 		return 0;
 	}
@@ -1154,7 +1149,7 @@ static int init(void)
 		return 0;
 	}
 
-	if (!(fid = create_lvm1_format(cmd)))
+	if (!(cmd->fid = create_lvm1_format(cmd)))
 		return 0;
 
 	_use_settings(&_default_settings);
@@ -1176,16 +1171,16 @@ static void fin(void)
 	if (_dump_filter)
 		persistent_filter_dump(cmd->filter);
 
-	fid->ops->destroy(fid);
+	cmd->fid->ops->destroy(cmd->fid);
 	cmd->filter->destroy(cmd->filter);
 	pool_destroy(cmd->mem);
 	vgcache_destroy();
 	dev_cache_exit();
 	destroy_config_file(cmd->cf);
-	dbg_free(cmd);
 	archive_exit();
 	backup_exit();
 	_exit_uuid_map();
+	dbg_free(cmd);
 	__fin_commands();
 
 	dump_memory();

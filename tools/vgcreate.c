@@ -26,7 +26,7 @@
 
 #define DEFAULT_EXTENT 4096  /* In KB */
 
-int vgcreate(int argc, char **argv)
+int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	int max_lv, max_pv;
 	uint32_t extent_size;
@@ -46,11 +46,11 @@ int vgcreate(int argc, char **argv)
 	}
 
 	vg_name = argv[0];
-	max_lv = arg_int_value(maxlogicalvolumes_ARG, DEFAULT_LV);
-	max_pv = arg_int_value(maxphysicalvolumes_ARG, DEFAULT_PV);
+	max_lv = arg_int_value(cmd,maxlogicalvolumes_ARG, DEFAULT_LV);
+	max_pv = arg_int_value(cmd,maxphysicalvolumes_ARG, DEFAULT_PV);
 
 	/* Units of 512-byte sectors */
-	extent_size = arg_int_value(physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
+	extent_size = arg_int_value(cmd,physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
 
 	if (max_lv < 1) {
 		log_error("maxlogicalvolumes too low");
@@ -63,10 +63,10 @@ int vgcreate(int argc, char **argv)
 	}
 
         /* Strip dev_dir if present */
-        if (!strncmp(vg_name, fid->cmd->dev_dir, strlen(fid->cmd->dev_dir)))
-                vg_name += strlen(fid->cmd->dev_dir);
+        if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
+                vg_name += strlen(cmd->dev_dir);
 
-        snprintf(vg_path, PATH_MAX, "%s%s", fid->cmd->dev_dir, vg_name);
+        snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
         if (path_exists(vg_path)) {
 		log_error("%s: already exists in filesystem", vg_path);
 		return ECMD_FAILED;
@@ -79,7 +79,7 @@ int vgcreate(int argc, char **argv)
         }
 
 	/* Create the new VG */
-	if (!(vg = vg_create(fid, vg_name, extent_size, max_pv, max_lv,
+	if (!(vg = vg_create(cmd->fid, vg_name, extent_size, max_pv, max_lv,
 		       argc - 1, argv + 1)))
 		return ECMD_FAILED;
 
@@ -109,7 +109,7 @@ int vgcreate(int argc, char **argv)
 	}
 
 	/* Store VG on disk(s) */
-	if (!fid->ops->vg_write(fid, vg)) {
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg)) {
 		lock_vol(vg_name, LCK_VG | LCK_NONE);
 		lock_vol("", LCK_VG | LCK_NONE);
 		return ECMD_FAILED;

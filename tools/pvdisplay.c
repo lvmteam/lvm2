@@ -20,16 +20,16 @@
 
 #include "tools.h"
 
-void pvdisplay_single(struct physical_volume *pv);
+void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv);
 
-int pvdisplay(int argc, char **argv)
+int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 {
 	int opt=0;
 
 	struct list *pvh, *pvs;
 	struct physical_volume *pv;
 
-	if (arg_count(colon_ARG) && arg_count(maps_ARG)) {
+	if (arg_count(cmd,colon_ARG) && arg_count(cmd,maps_ARG)) {
 		log_error("Option -v not allowed with option -c");
 		return EINVALID_CMD_LINE;
 	}
@@ -38,27 +38,27 @@ int pvdisplay(int argc, char **argv)
                 log_very_verbose("Using physical volume(s) on command line");
 
 		for (; opt < argc; opt++) {
-			if (!(pv = fid->ops->pv_read(fid, argv[opt]))) {
+			if (!(pv = cmd->fid->ops->pv_read(cmd->fid, argv[opt]))) {
                                 log_error("Failed to read physical "
 					  "volume \"%s\"",
                                           argv[opt]);
 				continue;
 			}
-			pvdisplay_single(pv);
+			pvdisplay_single(cmd, pv);
 		}
 	} else {
                 log_verbose("Scanning for physical volume names");
-                if (!(pvs = fid->ops->get_pvs(fid)))
+                if (!(pvs = cmd->fid->ops->get_pvs(cmd->fid)))
                         return ECMD_FAILED;
 
                 list_iterate(pvh, pvs)
-                        pvdisplay_single(list_item(pvh, struct pv_list)->pv);
+                        pvdisplay_single(cmd, list_item(pvh, struct pv_list)->pv);
 	}
 
 	return 0;
 }
 
-void pvdisplay_single(struct physical_volume *pv)
+void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv)
 {
 	char *sz;
         uint64_t size;
@@ -70,7 +70,7 @@ void pvdisplay_single(struct physical_volume *pv)
 	else
 		size = (pv->pe_count - pv->pe_allocated) * pv->pe_size;
 
-	if (arg_count(short_ARG)) {
+	if (arg_count(cmd,short_ARG)) {
 		sz = display_size(size / 2, SIZE_SHORT);
 		log_print("Device \"%s\" has a capacity of %s", pv_name, sz);
 		dbg_free(sz);
@@ -103,14 +103,14 @@ void pvdisplay_single(struct physical_volume *pv)
       ret = pv_check_consistency (pv)
 */
 
-	if (arg_count(colon_ARG)) {
+	if (arg_count(cmd,colon_ARG)) {
 		pvdisplay_colons(pv);
 		return;
 	}
 
 	pvdisplay_full(pv);
 
-	if (!arg_count(maps_ARG))
+	if (!arg_count(cmd,maps_ARG))
 		return;
 
 /******* FIXME

@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-int vgrename(int argc, char **argv)
+int vgrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *dev_dir;
 	int length;
@@ -40,7 +40,7 @@ int vgrename(int argc, char **argv)
 	vg_name_old = argv[0];
 	vg_name_new = argv[1];
 
-	dev_dir = fid->cmd->dev_dir;
+	dev_dir = cmd->dev_dir;
 	length = strlen(dev_dir);
 
 	/* If present, strip dev_dir */
@@ -74,7 +74,7 @@ int vgrename(int argc, char **argv)
                 return ECMD_FAILED;
         }
 
-	if (!(vg_old = fid->ops->vg_read(fid, vg_name_old))) {
+	if (!(vg_old = cmd->fid->ops->vg_read(cmd->fid, vg_name_old))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
 		lock_vol(vg_name_old, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
@@ -112,7 +112,7 @@ int vgrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((vg_new = fid->ops->vg_read(fid, vg_name_new))) {
+	if ((vg_new = cmd->fid->ops->vg_read(cmd->fid, vg_name_new))) {
 		log_error("New volume group \"%s\" already exists",
 			  vg_name_new);
 		goto error;
@@ -150,7 +150,7 @@ int vgrename(int argc, char **argv)
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!(fid->ops->vg_write(fid, vg_old))) {
+	if (!(cmd->fid->ops->vg_write(cmd->fid, vg_old))) {
 		goto error;
 	}
 
@@ -182,7 +182,7 @@ char *lv_change_vgname(char *vg_name, char *lv_name)
 	** check if lv_name includes a path 
 	if ((lv_name_ptr = strrchr(lv_name, '/'))) {
 	    lv_name_ptr++;
-	    sprintf(lv_name_buf, "%s%s/%s%c", fid->cmd->dev_dir, vg_name,
+	    sprintf(lv_name_buf, "%s%s/%s%c", cmd->dev_dir, vg_name,
 		    lv_name_ptr, 0);} 
 	else
 	    strncpy(lv_name_buf, lv_name, NAME_LEN - 1); return lv_name_buf;}

@@ -10,6 +10,7 @@
 #include "log.h"
 #include "uuid.h"
 #include "hash.h"
+#include "toolcontext.h"
 
 
 typedef int (*section_fn)(struct pool *mem,

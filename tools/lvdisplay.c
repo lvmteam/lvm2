@@ -20,27 +20,28 @@
 
 #include "tools.h"
 
-int lvdisplay(int argc, char **argv)
+int lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv)
 {
-	/* FIXME Allow VG args via process_each */
-
-	if (arg_count(colon_ARG) && arg_count(verbose_ARG)) {
-		log_error("Options -v and -c are incompatible");
-		return EINVALID_CMD_LINE;
-	}
-
-	return process_each_lv(argc, argv, &lvdisplay_single);
-}
-
-int lvdisplay_single(struct logical_volume *lv)
-{
-	if (arg_count(colon_ARG))
+	if (arg_count(cmd,colon_ARG))
 		lvdisplay_colons(lv);
 	else {
-		lvdisplay_full(lv);
-		if (arg_count(maps_ARG))
+		lvdisplay_full(cmd, lv);
+		if (arg_count(cmd,maps_ARG))
 			lvdisplay_segments(lv);
 	}
 
 	return 0;
 }
+
+int lvdisplay(struct cmd_context *cmd, int argc, char **argv)
+{
+	/* FIXME Allow VG args via process_each */
+
+	if (arg_count(cmd,colon_ARG) && arg_count(cmd,verbose_ARG)) {
+		log_error("Options -v and -c are incompatible");
+		return EINVALID_CMD_LINE;
+	}
+
+	return process_each_lv(cmd, argc, argv, &lvdisplay_single);
+}
+

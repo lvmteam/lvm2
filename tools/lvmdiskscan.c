@@ -13,7 +13,7 @@
 
 #include "tools.h"
 
-int _get_max_dev_name_len(void);
+int _get_max_dev_name_len(struct dev_filter *filter);
 void _count(struct device*, int*, int*);
 void _print(struct device*, uint64_t, char*);
 int _check_device(struct device*);
@@ -24,19 +24,19 @@ int pv_disks_found = 0;
 int pv_parts_found = 0;
 int max_len;
 
-int lvmdiskscan(int argc, char **argv)
+int lvmdiskscan(struct cmd_context *cmd, int argc, char **argv)
 {
 	uint64_t size;
         struct dev_iter *iter;
         struct device *dev;
 	struct physical_volume *pv;
 
-	if (arg_count(lvmpartition_ARG))
+	if (arg_count(cmd,lvmpartition_ARG))
 		log_print("WARNING: only considering LVM devices");
 
-	max_len = _get_max_dev_name_len();
+	max_len = _get_max_dev_name_len(cmd->filter);
 
-        if (!(iter = dev_iter_create(fid->cmd->filter))) {
+        if (!(iter = dev_iter_create(cmd->filter))) {
                 log_error("dev_iter_create failed");
                 return 0;
         }
@@ -44,7 +44,7 @@ int lvmdiskscan(int argc, char **argv)
         /* Do scan */
         for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		/* Try if it is a PV first */
-		if((pv = fid->ops->pv_read(fid, dev_name(dev)))) {
+		if((pv = cmd->fid->ops->pv_read(cmd->fid, dev_name(dev)))) {
 			if(!dev_get_size(dev, &size)) {
 				log_error("Couldn't get size of \"%s\"",
 					  dev_name(dev));
@@ -55,7 +55,7 @@ int lvmdiskscan(int argc, char **argv)
 			continue;
 		}
 		/* If user just wants PVs we are done */
-		if (arg_count(lvmpartition_ARG)) continue;
+		if (arg_count(cmd,lvmpartition_ARG)) continue;
 		
 		/* What other device is it? */
 		if(!_check_device(dev)) continue;
@@ -63,7 +63,7 @@ int lvmdiskscan(int argc, char **argv)
         dev_iter_destroy(iter);
 
 	/* Display totals */
-	if (!arg_count(lvmpartition_ARG)) {
+	if (!arg_count(cmd,lvmpartition_ARG)) {
 		log_print("%d disk%s",
 			  disks_found, disks_found == 1 ? "" : "s");
 		log_print("%d partition%s",
@@ -103,13 +103,13 @@ int _check_device(struct device *dev) {
 }
 
 
-int _get_max_dev_name_len(void) {
+int _get_max_dev_name_len(struct dev_filter *filter) {
 	int len = 0;
 	int max_len = 0;
         struct dev_iter *iter;
         struct device *dev;
 
-        if (!(iter = dev_iter_create(fid->cmd->filter))) {
+        if (!(iter = dev_iter_create(filter))) {
                 log_error("dev_iter_create failed");
                 return 0;
         }

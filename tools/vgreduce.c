@@ -20,9 +20,9 @@
 
 #include "tools.h"
 
-static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv);
+static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv);
 
-int vgreduce(int argc, char **argv)
+int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct volume_group *vg;
 	char *vg_name;
@@ -34,12 +34,12 @@ int vgreduce(int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc == 1 && !arg_count(all_ARG)) {
+	if (argc == 1 && !arg_count(cmd,all_ARG)) {
 		log_error("Please enter physical volume paths or option -a");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc > 1 && arg_count(all_ARG)) {
+	if (argc > 1 && arg_count(cmd,all_ARG)) {
 		log_error("Option -a and physical volume paths mutually "
 			  "exclusive");
 		return EINVALID_CMD_LINE;
@@ -55,7 +55,7 @@ int vgreduce(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		lock_vol(vg_name, LCK_VG | LCK_NONE);
 		return ECMD_FAILED;
@@ -81,7 +81,7 @@ int vgreduce(int argc, char **argv)
 
 	/* FIXME: Pass private structure through to all these functions */
 	/* and update in batch here? */
-	ret = process_each_pv(argc, argv, vg, vgreduce_single);
+	ret = process_each_pv(cmd, argc, argv, vg, vgreduce_single);
 
 	lock_vol(vg_name, LCK_VG | LCK_NONE);
 
@@ -105,7 +105,7 @@ int vgreduce(int argc, char **argv)
 }
 
 /* Or take pv_name instead? */
-static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
+static int vgreduce_single(struct cmd_context *cmd, struct volume_group *vg, struct physical_volume *pv)
 {
 	struct pv_list *pvl;
 	const char *name = dev_name(pv->dev);
@@ -142,14 +142,14 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 	vg->free_count -= pv->pe_count - pv->pe_allocated;
 	vg->extent_count -= pv->pe_count;
 
-	if (!(fid->ops->vg_write(fid, vg))) {
+	if (!(cmd->fid->ops->vg_write(cmd->fid, vg))) {
 		log_error("Removal of physical volume \"%s\" from "
 			  "\"%s\" failed",
 			  name, vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (!fid->ops->pv_write(fid, pv)) {
+	if (!cmd->fid->ops->pv_write(cmd->fid, pv)) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" "
 			  "after removal from \"%s\"", name, vg->name);

@@ -20,7 +20,7 @@
 
 #include "tools.h"
 
-int vgextend(int argc, char **argv)
+int vgextend(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *vg_name;
 	struct volume_group *vg = NULL;
@@ -52,7 +52,7 @@ int vgextend(int argc, char **argv)
 		goto error;
 	}
 
-	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
 		log_error("Volume group \"%s\" not found.", vg_name);
 		goto error;
 	}
@@ -83,7 +83,7 @@ int vgextend(int argc, char **argv)
 		goto error;
 
 	/* extend vg */
-	if (!vg_extend(fid, vg, argc, argv))
+	if (!vg_extend(cmd->fid, vg, argc, argv))
 		goto error;
 
 	/* ret > 0 */
@@ -91,7 +91,7 @@ int vgextend(int argc, char **argv)
 		    "physical volumes", vg_name, argc);
 
         /* store vg on disk(s) */
-	if (!fid->ops->vg_write(fid, vg))
+	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
 		goto error;
 
 	backup(vg);
