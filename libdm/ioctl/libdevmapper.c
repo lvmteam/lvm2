@@ -208,7 +208,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	if (dmt->read_only)
 		dmi->flags |= DM_READONLY_FLAG;
 
-	if (dmt->minor > 0) {
+	if (dmt->minor >= 0) {
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
 		dmi->dev = MKDEV(0, dmt->minor);
 	}
