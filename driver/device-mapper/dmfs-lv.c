@@ -22,224 +22,166 @@
 /* Heavily based upon ramfs */
 
 #include <linux/config.h>
-#include <linux/ctype.h>
 #include <linux/fs.h>
+#include <linux/seq_file.h>
 
 #include "dm.h"
 #include "dmfs.h"
 
-extern struct address_space_operations dmfs_address_space_operations;
-extern struct inode *dmfs_create_tdir(struct super_block *sb, int mode);
+struct dmfs_inode_info {
+	const char *name;
+	struct inode *(*create)(struct inode *, int, struct seq_operations *, int);
+	struct seq_operations *seq_ops;
+	int type;
+};
 
-struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
+#define DMFS_SEQ(inode) ((struct seq_operations *)(inode)->u.generic_ip)
+
+extern struct inode *dmfs_create_table(struct inode *, int, struct seq_operations *, int);
+extern struct seq_operations dmfs_error_seq_ops;
+extern struct seq_operations dmfs_status_seq_ops;
+extern struct seq_operations dmfs_active_seq_ops;
+extern ssize_t dmfs_active_write(struct file *file, const char *buf, size_t size, loff_t *ppos);
+
+static int dmfs_seq_open(struct inode *inode, struct file *file)
 {
-	struct nameidata nd;
-	int err = -ENOENT;
-	struct file file;
-	struct dentry *dentry;
-
-	memset(&file, 0, sizeof(struct file));
-
-	if (!path_init(name, LOOKUP_FOLLOW, &nd))
-		return ERR_PTR(-EINVAL);
-
-	err = path_walk(name, &nd);
-	if (err)
-		goto err_out;
-
-	err = -EINVAL;
-	if (nd.mnt->mnt_sb != dir->i_sb)
-		goto err_out;
-
-	if (nd.dentry->d_parent->d_inode != dir)
-		goto err_out;
-
-	err = -ENODATA;
-	if (DMFS_I(nd.dentry->d_inode) == NULL || 
-	    DMFS_I(nd.dentry->d_inode)->table == NULL)
-		goto err_out;
-
-	if (!list_empty(&(DMFS_I(nd.dentry->d_inode)->errors)))
-		goto err_out;
-
-	dentry = nd.dentry;
-	file.f_dentry = nd.dentry;
-	err = deny_write_access(&file);
-	if (err)
-		goto err_out;
-
-	dget(dentry);
-	path_release(&nd);
-	return dentry;
-err_out:
-	path_release(&nd);
-	return ERR_PTR(err);
+	int ret = seq_open(file, DMFS_SEQ(inode));
+	if (ret >= 0) {
+		struct seq_file *seq = file->private_data;
+		seq->context = DMFS_I(file->f_dentry->d_parent->d_inode);
+	}
+	return ret;
 }
 
-struct inode *dmfs_create_symlink(struct inode *dir, int mode)
+static int dmfs_no_fsync(struct file *file, struct dentry *dentry, int datasync)
 {
-	struct inode *inode = dmfs_new_private_inode(dir->i_sb, mode | S_IFLNK);
+	return 0;
+};
 
+static struct file_operations dmfs_active_file_operations = {
+	open:		dmfs_seq_open,
+	read:		seq_read,
+	llseek:		seq_lseek,
+	release:	seq_release,
+	write:		dmfs_active_write,
+	fsync:		dmfs_no_fsync,
+};
+
+static struct inode_operations dmfs_null_inode_operations = {
+};
+
+static struct file_operations dmfs_seq_ro_file_operations = {
+	open:		dmfs_seq_open,
+	read:		seq_read,
+	llseek:		seq_lseek,
+	release:	seq_release,
+	fsync:		dmfs_no_fsync,
+};
+
+static struct inode *dmfs_create_seq_ro(struct inode *dir, int mode, struct seq_operations *seq_ops, int dev)
+{
+	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFREG);
 	if (inode) {
-		inode->i_mapping->a_ops = &dmfs_address_space_operations;
-		inode->i_op = &page_symlink_inode_operations;
+		inode->i_fop = &dmfs_seq_ro_file_operations;
+		inode->i_op = &dmfs_null_inode_operations;
+		DMFS_SEQ(inode) = seq_ops;
 	}
+	return inode;
+}
 
+static struct inode *dmfs_create_device(struct inode *dir, int mode, struct seq_operations *seq_ops, int dev)
+{
+	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFBLK);
+	if (inode) {
+		init_special_inode(inode, mode | S_IFBLK, dev);
+	}
+	return inode;
+}
+
+static struct inode *dmfs_create_active(struct inode *dir, int mode, struct seq_operations *seq_ops, int dev)
+{
+	struct inode *inode = dmfs_create_seq_ro(dir, mode, seq_ops, dev);
+	if (inode) {
+		inode->i_fop = &dmfs_active_file_operations;
+	}
 	return inode;
 }
 
 static int dmfs_lv_unlink(struct inode *dir, struct dentry *dentry)
 {
 	struct inode *inode = dentry->d_inode;
-	struct file file = { f_dentry: DMFS_I(inode)->dentry };
 
-	if (!(inode->i_mode & S_IFLNK))
-		return -EINVAL;
-
-	dm_suspend(DMFS_I(dir)->md);
-	allow_write_access(&file);
-	dput(DMFS_I(inode)->dentry);
-	DMFS_I(inode)->dentry = NULL;
+	inode->i_mapping = &inode->i_data;
 	inode->i_nlink--;
-	dput(dentry);
 	return 0;
 }
 
-static int dmfs_lv_symlink(struct inode *dir, struct dentry *dentry, 
-			   const char *symname)
+static struct dmfs_inode_info dmfs_ii[] = {
+	{ ".", NULL, NULL, DT_DIR },
+	{ "..", NULL, NULL, DT_DIR },
+	{ "table", dmfs_create_table, NULL, DT_REG },
+	{ "error", dmfs_create_seq_ro, &dmfs_error_seq_ops, DT_REG },
+	{ "status", dmfs_create_seq_ro, &dmfs_status_seq_ops, DT_REG },
+	{ "device", dmfs_create_device, NULL, DT_BLK },
+	{ "active", dmfs_create_active, &dmfs_active_seq_ops, DT_REG },
+};
+
+#define NR_DMFS_II (sizeof(dmfs_ii)/sizeof(struct dmfs_inode_info))
+
+static struct dmfs_inode_info *dmfs_find_by_name(const char *n, int len)
 {
-	struct inode *inode;
-	struct dentry *de;
-	int rv;
-	int l;
+	int i;
 
-	if (dentry->d_name.len != 6 || 
-	    memcmp(dentry->d_name.name, "ACTIVE", 6) != 0)
-		return -EINVAL;
-
-	de = dmfs_verify_name(dir, symname);
-	if (IS_ERR(de))
-		return PTR_ERR(de);
-
-	inode = dmfs_create_symlink(dir, S_IRWXUGO);
-	if (inode == NULL) {
-		rv = -ENOSPC;
-		goto out_allow_write;
+	for(i = 2; i < NR_DMFS_II; i++) {
+		if (strlen(dmfs_ii[i].name) != len)
+			continue;
+		if (memcmp(dmfs_ii[i].name, n, len) == 0)
+			return &dmfs_ii[i];
 	}
-
-	DMFS_I(inode)->dentry = de;
-	d_instantiate(dentry, inode);
-	dget(dentry);
-
-	l = strlen(symname) + 1;
-	rv = block_symlink(inode, symname, l);
-	if (rv)
-		goto out_dput;
-
-	rv = dm_activate(DMFS_I(dir)->md, DMFS_I(de->d_inode)->table);
-	if (rv)
-		goto out_dput;
-
-	return rv;
-
-out_dput:
-	dput(dentry);
-	DMFS_I(inode)->dentry = NULL;
-out_allow_write:
-	{
-		struct file file = { f_dentry: de };
-		allow_write_access(&file);
-		dput(de);
-	}
-	return rv;
-}
-
-static int is_identifier(const char *str, int len)
-{
-	while(len--) {
-		if (!isalnum(*str) && *str != '_')
-			return 0;
-		str++;
-	}
-	return 1;
-}
-
-static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
-{
-	struct inode *inode;
-	int rv = -ENOSPC;
-
-	if (dentry->d_name.len >= DM_NAME_LEN)
-		return -EINVAL;
-
-	if (!is_identifier(dentry->d_name.name, dentry->d_name.len))
-		return -EPERM;
-
-	if (dentry->d_name.len == 6 && 
-	    memcmp(dentry->d_name.name, "ACTIVE", 6) == 0)
-		return -EINVAL;
-
-	if (dentry->d_name.name[0] == '.')
-		return -EINVAL;
-
-	inode = dmfs_create_tdir(dir->i_sb, mode);
-	if (inode) {
-		d_instantiate(dentry, inode);
-		dget(dentry);
-		rv = 0;
-	}
-	return rv;
-}
-
-/*
- * if u.generic_ip is not NULL, then it indicates an inode which
- * represents a table. If it is NULL then the inode is a virtual
- * file and should be deleted along with the directory.
- */
-static inline int positive(struct dentry *dentry)
-{
-	return dentry->d_inode && !d_unhashed(dentry);
-}
-
-static int empty(struct dentry *dentry)
-{
-	struct list_head *list;
-
-	spin_lock(&dcache_lock);
-	list = dentry->d_subdirs.next;
-
-	while(list != &dentry->d_subdirs) {
-		struct dentry *de = list_entry(list, struct dentry, d_child);
-
-		if (positive(de)) {
-			spin_unlock(&dcache_lock);
-			return 0;
-		}
-		list = list->next;
-	}
-	spin_unlock(&dcache_lock);
-	return 1;
-}
-
-static int dmfs_lv_rmdir(struct inode *dir, struct dentry *dentry)
-{
-	int ret = -ENOTEMPTY;
-
-	if (empty(dentry)) {
-		struct inode *inode = dentry->d_inode;
-		inode->i_nlink--;
-		dput(dentry);
-		ret = 0;
-	}
-
-	return ret;
+	return NULL;
 }
 
 static struct dentry *dmfs_lv_lookup(struct inode *dir, struct dentry *dentry)
 {
-	d_add(dentry, NULL);
+	struct inode *inode = NULL;
+	struct dmfs_inode_info *ii;
+
+	ii = dmfs_find_by_name(dentry->d_name.name, dentry->d_name.len);
+	if (ii) {
+		int dev = kdev_t_to_nr(DMFS_I(dir)->md->dev);
+		inode = ii->create(dir, 0600, ii->seq_ops, dev);
+	}
+
+	d_add(dentry, inode);
 	return NULL;
 }
+
+static int dmfs_inum(int entry, struct dentry *dentry)
+{
+	if (entry == 0)
+		return dentry->d_inode->i_ino;
+	if (entry == 1)
+		return dentry->d_parent->d_inode->i_ino;
+
+	return entry;
+}
+
+static int dmfs_lv_readdir(struct file *filp, void *dirent, filldir_t filldir)
+{
+	struct dentry *dentry = filp->f_dentry;
+	struct dmfs_inode_info *ii;
+
+	while (filp->f_pos < NR_DMFS_II) {
+		ii = &dmfs_ii[filp->f_pos];
+		if (filldir(dirent, ii->name, strlen(ii->name), filp->f_pos,
+				dmfs_inum(filp->f_pos, dentry), ii->type) < 0)
+			break;
+		filp->f_pos++;
+	}
+
+	return 0;
+}
+
 
 static int dmfs_lv_sync(struct file *file, struct dentry *dentry, int datasync)
 {
@@ -248,16 +190,13 @@ static int dmfs_lv_sync(struct file *file, struct dentry *dentry, int datasync)
 
 static struct file_operations dmfs_lv_file_operations = {
 	read:		generic_read_dir,
-	readdir:	dcache_readdir,
+	readdir:	dmfs_lv_readdir,
 	fsync:		dmfs_lv_sync,
 };
 
 static struct inode_operations dmfs_lv_inode_operations = {
 	lookup:		dmfs_lv_lookup,
 	unlink:		dmfs_lv_unlink,
-	symlink:	dmfs_lv_symlink,
-	mkdir:		dmfs_lv_mkdir,
-	rmdir:		dmfs_lv_rmdir,
 };
 
 struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *dentry)

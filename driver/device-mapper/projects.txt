@@ -1,6 +1,5 @@
     List of projects, ideas and pending bug fixes
    ===============================================
 
- o Check tables are an integer multiple of the underlying block size at
-   table load time.
+ o Pending merge with ioctl interface version of the code.
 

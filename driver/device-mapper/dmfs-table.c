@@ -206,6 +206,10 @@ static struct dm_table *dmfs_parse(struct inode *inode, struct file *filp)
 		}
 		free_page(page);
 	}
+	if (!list_empty(&DMFS_I(inode)->errors)) {
+		dm_table_destroy(t);
+		t = NULL;
+	}
 	return t;
 }
 
@@ -223,9 +227,19 @@ static int dmfs_table_release(struct inode *inode, struct file *f)
 		table = dmfs_parse(dentry->d_parent->d_inode, f);
 
 		if (table) {
-			if (dmi->table)
-				dm_table_destroy(dmi->table);
-			dmi->table = table;
+			struct mapped_device *md = dmi->md;
+			int need_activate = 0;
+
+			if (is_active(md)) {
+				dm_deactivate(md);
+				need_activate = 1;
+			}
+			if (md->map) {
+				dm_table_destroy(md->map);
+			}
+			if (need_activate) {
+				dm_activate(md, table);
+			}
 		}
 		up(&dmi->sem);
 

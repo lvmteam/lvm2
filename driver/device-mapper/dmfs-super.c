@@ -41,19 +41,19 @@ static int dmfs_statfs(struct super_block *sb, struct statfs *buf)
 
 static void dmfs_delete_inode(struct inode *inode)
 {
-	struct dmfs_i *dmi = DMFS_I(inode);
+	if (S_ISDIR(inode->i_mode)) {
+		struct dmfs_i *dmi = DMFS_I(inode);
 
-	if (dmi) {
-		if (dmi->md)
-			dm_remove(dmi->md);
-		if (dmi->table)
-			dm_table_destroy(dmi->table);
-		if (dmi->dentry)
-			dput(dmi->dentry);
-		if (!list_empty(&dmi->errors))
-			dmfs_zap_errors(inode);
-		kfree(dmi);
-		MOD_DEC_USE_COUNT; /* Don't remove */
+		if (dmi) {
+			if (dmi->md)
+				dm_remove(dmi->md);
+			if (dmi->dentry)
+				dput(dmi->dentry);
+			if (!list_empty(&dmi->errors))
+				dmfs_zap_errors(inode);
+			kfree(dmi);
+			MOD_DEC_USE_COUNT; /* Don't remove */
+		}
 	}
 
 	inode->u.generic_ip = NULL;
