@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <linux/kdev_t.h>
 
+#include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <linux/dm-ioctl.h>
 
