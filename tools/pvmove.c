@@ -173,7 +173,10 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 		lv = list_item(lvh, struct lv_list)->lv;
 		if ((lv == lv_mirr) || (lv_name && strcmp(lv->name, lv_name)))
 			continue;
-
+		if (lv_is_origin(lv) || lv_is_cow(lv)) {
+			log_print("Skipping snapshot-related LV %s", lv->name);
+			continue;
+		}
 		if (!insert_pvmove_mirrors(cmd, lv_mirr, pv, lv,
 					   allocatable_pvs, &lvs_changed)) {
 			stack;
