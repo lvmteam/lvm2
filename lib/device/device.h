@@ -22,6 +22,7 @@
 #define DEV_ACCESSED_W		0x00000001	/* Device written to? */
 #define DEV_REGULAR		0x00000002	/* Regular file? */
 #define DEV_ALLOCED		0x00000004	/* dbg_malloc used */
+#define DEV_OPENED_RW		0x00000008	/* Opened RW */
 
 /*
  * All devices in LVM will be represented by one of these.
@@ -34,6 +35,7 @@ struct device {
 	/* private */
 	int fd;
 	int open_count;
+	int block_size;
 	uint32_t flags;
 	uint64_t end;
 	struct list open_list;

@@ -27,7 +27,7 @@ static int _is_partitionable(struct device *dev)
 {
 	int parts = max_partitions(MAJOR(dev->dev));
 
-	if (!parts || (MINOR(dev->dev) % parts))
+	if ((parts <= 1) || (MINOR(dev->dev) % parts))
 		return 0;
 
 	return 1;

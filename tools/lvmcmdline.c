@@ -26,6 +26,7 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <sys/resource.h>
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -807,7 +808,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))
 		return ECMD_FAILED;
 
-	log_debug("Processing: %s", cmd->cmd_line);
+	log_debug("Parsing: %s", cmd->cmd_line);
 
 	if (!(cmd->command = _find_command(argv[0])))
 		return ENO_SUCH_CMD;
@@ -830,6 +831,12 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	if ((ret = _get_settings(cmd)))
 		goto out;
 	_apply_settings(cmd);
+
+	log_debug("Processing: %s", cmd->cmd_line);
+
+#ifdef O_DIRECT_SUPPORT
+	log_debug("O_DIRECT will be used");
+#endif
 
 	if ((ret = _process_common_commands(cmd)))
 		goto out;
@@ -967,9 +974,31 @@ static int _init_backup(struct cmd_context *cmd, struct config_tree *cft)
 	return 1;
 }
 
+static void _close_stray_fds(void)
+{
+	struct rlimit rlim;
+	int fd;
+
+	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
+		fprintf(stderr, "getrlimit(RLIMIT_NOFILE) failed: %s\n",
+			strerror(errno));
+		return;
+	}
+
+	for (fd = 3; fd < rlim.rlim_cur; fd++) {
+		if (!close(fd))
+			fprintf(stderr, "File descriptor %d left open\n", fd);
+		else if (errno != EBADF)
+			fprintf(stderr, "Close failed on stray file ",
+				"descriptor %d: %s\n", fd, strerror(errno));
+	}
+}
+
 static struct cmd_context *_init_lvm(void)
 {
 	struct cmd_context *cmd;
+
+	_close_stray_fds();
 
 	if (!(cmd = create_toolcontext(&the_args[0]))) {
 		stack;
