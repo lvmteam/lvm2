@@ -20,7 +20,7 @@ SOURCES = mirrored.c
 
 LIB_SHARED = liblvm2mirror.so
 
-include ../../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 .PHONY: install
 

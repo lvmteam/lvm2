@@ -27,7 +27,7 @@ MAN8=lvchange.8 lvcreate.8 lvdisplay.8 lvextend.8 lvm.8 lvmchange.8 \
 MAN5DIR=${mandir}/man5
 MAN8DIR=${mandir}/man8
 
-include ../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 install:
 	@echo "Installing $(MAN8) in $(MAN8DIR)"

@@ -24,7 +24,7 @@ TARGETS=\
 	parse_t \
 	matcher_t
 
-include ../../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 parse_t: parse_t.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o parse_t parse_t.o -L$(top_srcdir)/lib -llvm
