@@ -649,6 +649,11 @@ static int split(char *str, int *argc, char **argv, int max)
 	return *argc;
 }
 
+static void _init_rand(void)
+{
+	srand((unsigned int) time(NULL) + (unsigned int) getpid());
+}
+
 static void __init_log(struct config_file *cf)
 {
 	char *open_mode = "a";
@@ -879,6 +884,8 @@ static int init(void)
 
 	/* Use LOG_USER for syslog messages by default */
 	init_syslog(LOG_USER);
+
+	_init_rand();
 
 	/* send log messages to stderr for now */
 	init_log(stderr);

@@ -15,6 +15,9 @@
 
 #include <dirent.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 /*
@@ -268,29 +271,59 @@ static int _scan_backups(struct backup_c *bc)
 	return 1;
 }
 
+/*
+ * Creates a temporary filename, and opens a
+ * descriptor to the file.  Both the filename and
+ * descriptor are needed so we can rename the file
+ * after successfully writing it.
+ */
+static int _create_temp_name(const char *dir, char *buffer, size_t len,
+			     int *fd)
+{
+	int i, num;
+
+	num = rand();
+	for (i = 0; i < 20; i++, num++) {
+		if (lvm_snprintf(buffer, len, "%s/lvm_%d", dir, num) == -1) {
+			log_err("Not enough space to build temporary file "
+				"string.");
+			return 0;
+		}
+
+		*fd = open(buffer, O_CREAT | O_EXCL | O_WRONLY);
+		if (*fd != -1)
+			return 1;
+	}
+
+	return 0;
+}
+
+static int _valid_destination(char *file)
+{
+	int fd;
+
+	fd = open(file, O_WRONLY | O_CREAT | O_EXCL);
+
+	if (fd == -1)
+		return 0;
+
+	close(fd);
+	return 1;
+}
+
 static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
 	int r = 0, index = 0, i, fd;
 	struct backup_c *bc = (struct backup_c *) fi->private;
 	struct backup_file *last;
-	char *tmp_name;
 	FILE *fp = NULL;
-	char backup_name[PATH_MAX];
+	char temp_file[PATH_MAX], backup_name[PATH_MAX];
 
 	/*
 	 * Build a format string for mkstemp.
 	 */
-	if (lvm_snprintf(backup_name, sizeof(backup_name), "%s/lvm_XXXXXX",
-			 bc->dir) < 0) {
+	if (!_create_temp_name(bc->dir, temp_file, sizeof(temp_file), &fd)) {
 		log_err("Couldn't generate template for backup name.");
-		return 0;
-	}
-
-	/*
-	 * Write the backup, to a temporary file.
-	 */
-	if ((fd = mkstemp(backup_name)) == -1) {
-		log_err("Couldn't create temporary file for backup.");
 		return 0;
 	}
 
@@ -302,8 +335,11 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 
 	if (!text_vg_export(fp, vg)) {
 		stack;
-		goto out;
+		fclose(fp);
+		return 0;
 	}
+
+	fclose(fp);
 
 	/*
 	 * Now we want to rename this file to <vg>_index.vg.
@@ -327,26 +363,22 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 			log_err("backup file name too long.");
 			goto out;
 		}
-#if 0
-		if (rename(tmp_name, backup_name) < 0) {
+
+		if (!_valid_destination(backup_name))
+			continue;
+
+		if (rename(temp_file, backup_name) < 0) {
 			log_err("couldn't rename backup file to %s.",
 				backup_name);
 		} else {
 			r = 1;
 			break;
 		}
-#else
-		r = 1;
-		break;
-#endif
 
 		index++;
 	}
 
  out:
-	if (fp)
-		fclose(fp);
-	free(tmp_name);
 	return r;
 }
 
