@@ -7,6 +7,7 @@
 #include "libdm-targets.h"
 #include "libdm-common.h"
 #include "list.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <stdlib.h>

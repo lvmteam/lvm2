@@ -6,6 +6,7 @@
 
 #include "libdm-targets.h"
 #include "libdm-common.h"
+#include "log.h"
 
 #ifdef DM_COMPAT
 #  include "libdm-compat.h"
