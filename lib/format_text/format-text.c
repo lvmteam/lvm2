@@ -21,52 +21,52 @@ static void _not_written(const char *cmd)
 	log_err("The text format is lacking an implementation for '%s'", cmd);
 }
 
-struct list *_get_vgs(struct format_instance *fi)
+static struct list *_get_vgs(struct format_instance *fi)
 {
 	_not_written("_get_vgs");
 	return NULL;
 }
 
-struct list *_get_pvs(struct format_instance *fi)
+static struct list *_get_pvs(struct format_instance *fi)
 {
 	_not_written("_get_vgs");
 	return NULL;
 }
 
-struct physical_volume *_pv_read(struct format_instance *fi,
-				 const char *pv_name)
+static struct physical_volume *_pv_read(struct format_instance *fi,
+					const char *pv_name)
 {
 	_not_written("_get_vgs");
 	return NULL;
 }
 
-int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
-	      struct volume_group *vg)
+static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
+		     struct volume_group *vg)
 {
 	_not_written("_get_vgs");
 	return 0;
 }
 
-int _pv_write(struct format_instance *fi, struct physical_volume *pv)
+static int _pv_write(struct format_instance *fi, struct physical_volume *pv)
 {
 	_not_written("_get_vgs");
 	return 0;
 }
 
-int _vg_setup(struct format_instance *fi, struct volume_group *vg)
+static int _vg_setup(struct format_instance *fi, struct volume_group *vg)
 {
 	_not_written("_get_vgs");
 	return 0;
 }
 
-struct volume_group *_vg_read(struct format_instance *fi,
-			      const char *vg_name)
+static struct volume_group *_vg_read(struct format_instance *fi,
+				     const char *vg_name)
 {
 	_not_written("_get_vgs");
 	return NULL;
 }
 
-int _vg_write(struct format_instance *fi, struct volume_group *vg)
+static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
 	FILE *fp;
 	char *file = (char *) fi->private;
@@ -85,7 +85,7 @@ int _vg_write(struct format_instance *fi, struct volume_group *vg)
 	return 1;
 }
 
-void _destroy(struct format_instance *fi)
+static void _destroy(struct format_instance *fi)
 {
 	pool_free(fi->cmd->mem, fi);
 }

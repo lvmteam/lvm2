@@ -120,7 +120,7 @@ static int lvchange_permission(struct logical_volume *lv)
 	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
-	autobackup(lv->vg);
+	backup(lv->vg);
 
 	log_very_verbose("Updating permissions for %s in kernel", lv->name);
 	if (!lv_update_write_access(lv))
@@ -158,7 +158,7 @@ static int lvchange_availability(struct logical_volume *lv)
 				 lv->name);
 		if (!fid->ops->vg_write(fid, lv->vg))
 			return 0;
-		autobackup(lv->vg);
+		backup(lv->vg);
 	}
 
 	if ((lv_stat & ACTIVE) && (active & ACTIVE))
@@ -222,7 +222,7 @@ static int lvchange_contiguous(struct logical_volume *lv)
 	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
-	autobackup(lv->vg);
+	backup(lv->vg);
 
 	return 1;
 }
@@ -254,7 +254,7 @@ static int lvchange_readahead(struct logical_volume *lv)
 	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
-	autobackup(lv->vg);
+	backup(lv->vg);
 
 	return 1;
 }

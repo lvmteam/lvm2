@@ -87,7 +87,7 @@ static int lvremove_single(struct logical_volume *lv)
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
-	autobackup(vg);
+	backup(vg);
 
 	log_print("logical volume %s successfully removed", lv->name);
 	return 0;

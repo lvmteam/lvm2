@@ -4,8 +4,13 @@
  * This file is released under the GPL.
  */
 
+#include "log.h"
 #include "archive.h"
 #include "dbg_malloc.h"
+#include "format-text.h"
+#include "lvm-string.h"
+
+#include <limits.h>
 
 static struct {
 	int enabled;
@@ -24,7 +29,7 @@ int archive_init(const char *dir,
 	}
 
 	_archive_params.keep_days = keep_days;
-	_archive_params.keep_number = keep_number;
+	_archive_params.keep_number = keep_min;
 	_archive_params.enabled = 1;
 	return 1;
 }
@@ -100,7 +105,7 @@ int backup_init(const char *dir)
 void backup_exit(void)
 {
 	dbg_free(_backup_params.dir);
-	memset(&backup_params, 0, sizeof(_backup_params));
+	memset(&_backup_params, 0, sizeof(_backup_params));
 }
 
 void backup_enable(int flag)

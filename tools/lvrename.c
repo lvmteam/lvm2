@@ -122,7 +122,7 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	autobackup(lv->vg);
+	backup(lv->vg);
 
 	/* FIXME Update symlink. */
 	lv_reactivate(lv);

@@ -139,7 +139,7 @@ int pvchange_single(struct physical_volume *pv)
 				  "volume group %s", pv_name, vg->name);
 			return 0;
 		}
-		autobackup(vg);
+		backup(vg);
 	} else {
 		if (!(fid->ops->pv_write(fid, pv))) {
 			log_error("Failed to store physical volume %s", 

@@ -120,7 +120,7 @@ int vgrename(int argc, char **argv)
 
 /******* FIXME Any LV things to update? */
 
-	autobackup(vg_old);
+	backup(vg_old);
 
 	log_print("Volume group %s successfully renamed to %s",
 		  vg_name_old, vg_name_new);

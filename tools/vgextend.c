@@ -75,7 +75,7 @@ int vgextend(int argc, char **argv)
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
-	autobackup(vg);
+	backup(vg);
 
 	log_print("Volume group '%s' successfully extended", vg_name);
 

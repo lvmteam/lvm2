@@ -5,6 +5,8 @@
  */
 
 #include "tools.h"
+#include "archive.h"
+#include "defaults.h"
 
 #include <assert.h>
 #include <getopt.h>
@@ -52,6 +54,10 @@ static int _dump_filter;
 static int _interactive;
 static FILE *_log;
 
+/*
+ * This structure only contains those options that
+ * can have a default and per command setting.
+ */
 struct config_info {
 	int debug;
 	int verbose;
@@ -70,14 +76,11 @@ static struct config_info _current_settings;
  *
  * o  The lvm configuration (lvm.conf)
  * o  The persistent filter cache (.cache)
- * o  Volume group backups (backup/)
+ * o  Volume group backups (/backup)
+ * o  Archive of old vg configurations (/archive)
  */
 static char _sys_dir[PATH_MAX] = "/etc/lvm";
-static char _backup_dir[PATH_MAX];
 static char _dev_dir[PATH_MAX];
-
-#define DEFAULT_DEV_DIR "/dev"
-
 
 /* static functions */
 static void register_commands(void);
@@ -672,6 +675,64 @@ static void __init_log(struct config_file *cf)
 	_default_settings.test = find_config_int(cf->root, "log/test", '/', 0);
 }
 
+/*
+ * '_sys_dir' must have been set before calling this.
+ */
+static int _init_backup(struct config_file *cf)
+{
+	int days, min;
+	char default_dir[PATH_MAX];
+	const char *dir;
+
+	/* set up archiving */
+	_default_settings.archive =
+		find_config_bool(cmd->cf->root, "backup/archive", '/',
+				 DEFAULT_ARCHIVE_FLAG);
+
+	days = find_config_int(cmd->cf->root, "backup/retain_days", '/',
+			       DEFAULT_ARCHIVE_DAYS);
+
+	min = find_config_int(cmd->cf->root, "backup/retain_min", '/',
+				 DEFAULT_ARCHIVE_NUMBER);
+
+	if (lvm_snprintf(default_dir, sizeof(default_dir), "%s/%s", _sys_dir,
+			 DEFAULT_ARCHIVE_SUBDIR) == -1) {
+		log_err("Couldn't create default archive path '%s/%s'.",
+			_sys_dir, DEFAULT_ARCHIVE_SUBDIR);
+		return 0;
+	}
+
+	dir = find_config_str(cmd->cf->root, "backup/archive_dir", '/',
+			      default_dir);
+
+	if (!archive_init(dir, days, min)) {
+		log_debug("backup_init failed.");
+		return 0;
+	}
+
+	/* set up the backup */
+	_default_settings.backup =
+		find_config_bool(cmd->cf->root, "backup/backup", '/',
+				 DEFAULT_BACKUP_FLAG);
+
+	if (lvm_snprintf(default_dir, sizeof(default_dir), "%s/%s", _sys_dir,
+			 DEFAULT_BACKUP_SUBDIR) == -1) {
+		log_err("Couldn't create default backup path '%s/%s'.",
+			_sys_dir, DEFAULT_BACKUP_SUBDIR);
+		return 0;
+	}
+
+	dir = find_config_str(cmd->cf->root, "backup/backup_dir", '/',
+			      default_dir);
+
+	if (!backup_init(dir)) {
+		log_debug("backup_init failed.");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int dev_cache_setup(struct config_file *cf)
 {
 	struct config_node *cn;
@@ -851,27 +912,8 @@ static int init(void)
 
 	dm_log_init(print_log);
 
-	if (!*strncpy(_backup_dir,
-		      find_config_str(cmd->cf->root, "backup/dir", '/', ""),
-		      sizeof(_backup_dir)) &&
-	    *_sys_dir &&
-	    lvm_snprintf(_backup_dir, sizeof(_backup_dir), "%s/backup",
-			 _sys_dir) < 0) {
-		log_error("Backup directory given in config file too long");
+	if (!_init_backup(cmd->cf))
 		return 0;
-	}
-
-	if (!create_dir(_backup_dir))
-		return 0;
-
-	_backup_days = find_config_int(cmd->cf->root, "backup/days", '/',
-				       _backup_days);
-
-	_backup_number = find_config_int(cmd->cf->root, "backup/keep", '/',
-					 _backup_number);
-
-	_backup_auto = find_config_int(cmd->cf->root, "backup/auto", '/',
-					 _backup_auto);
 
 	if (!dev_cache_setup(cmd->cf))
 		return 0;
@@ -889,7 +931,7 @@ static int init(void)
 	if (!(fid = create_lvm1_format(cmd)))
 		return 0;
 
-	use_settings(_default_settings);
+	_use_settings(&_default_settings);
 	return 1;
 }
 
