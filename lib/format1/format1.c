@@ -12,7 +12,8 @@
 #include "log.h"
 
 
-static int _import_vg(struct volume_group *vg, struct list_head *pvs)
+static int _import_vg(struct pool *mem,
+		      struct volume_group *vg, struct list_head *pvs)
 {
 	struct list_head *tmp;
 	struct disk_list *dl;
@@ -26,7 +27,10 @@ static int _import_vg(struct volume_group *vg, struct list_head *pvs)
 			first = &dl->vg;
 
 			memcpy(&vg->id.uuid, &first->vg_uuid, ID_LEN);
-			vg->name = NULL;
+			if (!(vg->name = pool_strdup(mem, dl->pv.vg_name))) {
+				stack;
+				return 0;
+			}
 
 			// FIXME: encode flags
 			//vg->status = first->vg_status;
@@ -157,6 +161,7 @@ static struct logical_volume *_add_lv(struct pool *mem,
 	}
 
 	list_add(&ll->list, &vg->lvs);
+	vg->lv_count++;
 
 	return lv;
 }
@@ -268,7 +273,7 @@ static struct volume_group *_build_vg(struct pool *mem, struct list_head *pvs)
 	INIT_LIST_HEAD(&vg->pvs);
 	INIT_LIST_HEAD(&vg->lvs);
 
-	if (!_import_vg(vg, pvs))
+	if (!_import_vg(mem, vg, pvs))
 		goto bad;
 
 	if (!_import_pvs(mem, vg, pvs))
