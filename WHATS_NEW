@@ -6,6 +6,8 @@ Version 2.01.02 -
   Split out pool sptype_names to avoid unused const.
   Always fail if random id generation fails.
   Recognise gnbd devices.
+  Fix clvmd startup bug introduced in cman/gulm amalgamation.
+  Improve reporting of node-specific locking errors.
 
 Version 2.01.01 - 19th January 2005
 ===================================

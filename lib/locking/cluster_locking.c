@@ -147,10 +147,16 @@ static int _send_request(char *inbuf, int inlen, char **retbuf)
 	}
 
 	/* Was it an error ? */
-	if (outheader->status < 0) {
-		errno = -outheader->status;
-		log_error("cluster request failed: %s", strerror(errno));
-		return 0;
+	if (outheader->status != 0) {
+		errno = outheader->status;
+
+		/* Only return an error here if there are no node-specific
+		   errors present in the message that might have more detail */
+		if (!(outheader->flags & CLVMD_FLAG_NODEERRS)) {
+			log_error("cluster request failed: %s", strerror(errno));
+			return 0;
+		}
+
 	}
 
 	return 1;
@@ -328,7 +334,7 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	 * VG locks are just that: locks, and have no side effects
 	 * so we only need to do them on the local node because all
 	 * locks are cluster-wide.
-	 * Also, if the lock is exclusive it makes no sense to try to 
+	 * Also, if the lock is exclusive it makes no sense to try to
 	 * acquire it on all nodes, so just do that on the local node too.
 	 */
 	if (cmd == CLVMD_CMD_LOCK_VG ||
@@ -341,10 +347,11 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 
 	/* If any nodes were down then display them and return an error */
 	for (i = 0; i < num_responses; i++) {
-		if (response[i].status == -EHOSTDOWN) {
+		if (response[i].status == EHOSTDOWN) {
 			log_error("clvmd not running on node %s",
 				  response[i].node);
 			status = 0;
+			errno = response[i].status;
 		} else if (response[i].status) {
 			log_error("Error locking on node %s: %s",
 				  response[i].node,
@@ -352,6 +359,7 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 				  	response[i].response :
 				  	strerror(response[i].status));
 			status = 0;
+			errno = response[i].status;
 		}
 	}
 

@@ -913,11 +913,6 @@ static int get_all_cluster_nodes()
     return 0;
 }
 
-static void _cluster_init_completed(void)
-{
-	clvmd_cluster_init_completed();
-}
-
 static int _get_main_cluster_fd(void)
 {
 	return get_main_gulm_cluster_fd();
@@ -934,7 +929,7 @@ static int _cluster_send_message(void *buf, int msglen, char *csid, const char *
 }
 
 static struct cluster_ops _cluster_gulm_ops = {
-	.cluster_init_completed   = _cluster_init_completed,
+	.cluster_init_completed   = NULL,
 	.cluster_send_message     = _cluster_send_message,
 	.name_from_csid           = gulm_name_from_csid,
 	.csid_from_name           = _csid_from_name,

@@ -785,7 +785,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		if (thisfd->bits.localsock.in_progress) {
 			struct clvm_header reply;
 			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = -EBUSY;
+			reply.status = EBUSY;
 			reply.arglen = 0;
 			reply.flags = 0;
 			send_message(&reply, sizeof(reply), our_csid,
@@ -808,7 +808,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		if (!thisfd->bits.localsock.cmd) {
 			struct clvm_header reply;
 			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = -ENOMEM;
+			reply.status = ENOMEM;
 			reply.arglen = 0;
 			reply.flags = 0;
 			send_message(&reply, sizeof(reply), our_csid,
@@ -855,7 +855,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 			DEBUGLOG("Unknown node: '%s'\n", inheader->node);
 
 			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = -ENOENT;
+			reply.status = ENOENT;
 			reply.flags = 0;
 			reply.arglen = 0;
 			send_message(&reply, sizeof(reply), our_csid,
@@ -886,7 +886,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 			close(comms_pipe[1]);
 
 			reply.cmd = CLVMD_CMD_REPLY;
-			reply.status = -ENOMEM;
+			reply.status = ENOMEM;
 			reply.arglen = 0;
 			reply.flags = 0;
 			send_message(&reply, sizeof(reply), our_csid,
@@ -1076,7 +1076,7 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 
 				/* Return a failure response */
 				head.cmd = CLVMD_CMD_REPLY;
-				head.status = -EFBIG;
+				head.status = EFBIG;
 				head.flags = 0;
 				head.clientid = msg->clientid;
 				head.arglen = 0;
@@ -1093,7 +1093,7 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 			     msg->arglen);
 			/* Return a failure response */
 			head.cmd = CLVMD_CMD_REPLY;
-			head.status = -ENOMEM;
+			head.status = ENOMEM;
 			head.flags = 0;
 			head.clientid = msg->clientid;
 			head.arglen = 0;
@@ -1156,7 +1156,7 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 		    do_command(NULL, msg, msglen, &replyargs, buflen,
 			       &replylen);
 	} else {
-		status = -ENOMEM;
+		status = ENOMEM;
 	}
 
 	/* If it wasn't a reply, then reply */
@@ -1191,7 +1191,7 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 				    (aggreply,
 				     replylen + sizeof(struct clvm_header)) < 0
 				    && replylen > 0)
-					agghead->status = -EFBIG;
+					agghead->status = EFBIG;
 
 				send_message(agghead,
 					     sizeof(struct clvm_header), csid,
@@ -1216,7 +1216,7 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 			DEBUGLOG("Error attempting to realloc return buffer\n");
 			/* Return a failure response */
 			head.cmd = CLVMD_CMD_REPLY;
-			head.status = -ENOMEM;
+			head.status = ENOMEM;
 			head.flags = 0;
 			head.clientid = msg->clientid;
 			head.arglen = 0;
@@ -1254,7 +1254,7 @@ static void add_reply_to_list(struct local_client *client, int status,
 		if (len > 0) {
 			reply->replymsg = malloc(len);
 			if (!reply->replymsg) {
-				reply->status = -ENOMEM;
+				reply->status = ENOMEM;
 			} else {
 				memcpy(reply->replymsg, buf, len);
 			}
@@ -1445,9 +1445,10 @@ static void send_local_reply(struct local_client *client, int status, int fd)
 	replybuf = malloc(message_len);
 
 	clientreply = (struct clvm_header *) replybuf;
-	clientreply->status = -status;
+	clientreply->status = status;
 	clientreply->cmd = CLVMD_CMD_REPLY;
 	clientreply->node[0] = '\0';
+	clientreply->flags = 0;
 
 	ptr = clientreply->args;
 
@@ -1458,6 +1459,9 @@ static void send_local_reply(struct local_client *client, int status, int fd)
 
 		strcpy(ptr, thisreply->node);
 		ptr += strlen(thisreply->node) + 1;
+
+		if (thisreply->status)
+			clientreply->flags |= CLVMD_FLAG_NODEERRS;
 
 		*(int *) ptr = thisreply->status;
 		ptr += sizeof(int);
@@ -1627,7 +1631,7 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 
 	cmd = malloc(sizeof(struct lvm_thread_cmd));
 	if (!cmd)
-		return -ENOMEM;
+		return ENOMEM;
 
 	cmd->msg = malloc(msglen);
 	if (!cmd->msg) {
@@ -1709,7 +1713,7 @@ static void check_all_callback(struct local_client *client, char *csid,
 			       int node_up)
 {
 	if (!node_up)
-		add_reply_to_list(client, -EHOSTDOWN, csid, "CLVMD not running",
+		add_reply_to_list(client, EHOSTDOWN, csid, "CLVMD not running",
 				  18);
 }
 
