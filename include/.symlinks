@@ -17,7 +17,6 @@
 ../lib/filters/filter-regex.h
 ../lib/filters/filter.h
 ../lib/format1/format1.h
-../lib/format1/lvm1-label.h
 ../lib/format_text/format-text.h
 ../lib/label/label.h
 ../lib/locking/locking.h
