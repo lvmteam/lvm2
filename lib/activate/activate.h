@@ -12,6 +12,7 @@
 /* FIXME Snapshot handling? */
 
 int lv_active(struct logical_volume *lv);
+int lv_suspended(struct logical_volume *lv);
 int lv_open_count(struct logical_volume *lv);
 int lv_info(struct logical_volume *lv, struct dm_info *info);
 

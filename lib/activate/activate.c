@@ -73,6 +73,21 @@ int lv_active(struct logical_volume *lv)
 	return info.exists;
 }
 
+int lv_suspended(struct logical_volume *lv)
+{
+	int r = -1;
+	struct dm_info info;
+
+	if (!lv_info(lv, &info)) {
+		stack;
+		return r;
+	}
+
+	log_very_verbose("%s is%s suspended", lv->name, 
+			 info.suspended ? "":" not");
+	return info.suspended;
+}
+
 int lv_open_count(struct logical_volume *lv)
 {
 	int r = -1;
@@ -163,6 +178,11 @@ int _load(struct logical_volume *lv, int task)
 		}
 	}
 
+	if (!(lv->status & LVM_WRITE) && !dm_task_set_ro(dmt))
+		log_error("Failed to set %s read-only during activation.",
+			   lv->name);
+
+
 	if (!(r = dm_task_run(dmt)))
 		stack;
 
@@ -211,7 +231,7 @@ int lv_reactivate(struct logical_volume *lv)
 	if (test_mode())
 		return 0;
 
-	if (!_suspend(lv, 1)) {
+	if (!lv_suspended(lv) && !_suspend(lv, 1)) {
 		stack;
 		return 0;
 	}
@@ -267,7 +287,18 @@ int activate_lvs_in_vg(struct volume_group *vg)
 
 int lv_update_write_access(struct logical_volume *lv)
 {
-	return 0;
+        struct dm_info info;
+
+        if (!lv_info(lv, &info)) {
+                stack;
+                return 0;
+        }
+
+        if (!info.exists || info.suspended)
+		/* Noop */
+		return 1;
+
+	return lv_reactivate(lv);
 }
 
 int deactivate_lvs_in_vg(struct volume_group *vg)
