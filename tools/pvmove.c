@@ -182,7 +182,7 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 		pvl = list_item(pvh, struct pv_list);
 		if ((pvl->pv->dev == pv->dev) ||
 		    (pvl->pv->pe_count == pvl->pv->pe_alloc_count))
-			list_del(&pvl->list);
+			    list_del(&pvl->list);
 	}
 
 	if (list_empty(allocatable_pvs)) {
@@ -575,6 +575,17 @@ static int _poll_pvmove_vgs(struct cmd_context *cmd, const char *vgname,
 	struct logical_volume *lv_mirr;
 	struct physical_volume *pv;
 	int finished;
+
+	if (!vg) {
+		log_error("Couldn't read volume group %s", vgname);
+		return ECMD_FAILED;
+	}
+
+	if (!consistent) {
+		log_error("Volume Group %s inconsistent - skipping", vgname);
+		/* FIXME Should we silently recover it here or not? */
+		return ECMD_FAILED;
+	}
 
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg->name);
