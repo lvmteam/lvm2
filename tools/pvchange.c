@@ -107,7 +107,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return 0;
 		}
 
-		if (!(pv = pv_read(cmd, pv_name, &mdas, &sector))) {
+		if (!(pv = pv_read(cmd, pv_name, &mdas, &sector, 1))) {
 			unlock_vg(cmd, ORPHAN);
 			log_error("Unable to read PV \"%s\"", pv_name);
 			return 0;
@@ -236,10 +236,9 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
 			/* FIXME Read VG instead - pv_read will fail */
-			if (!(pv = pv_read(cmd, pv_name, &mdas, NULL))) {
-				log_error
-				    ("Failed to read physical volume \"%s\"",
-				     pv_name);
+			if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1))) {
+				log_error("Failed to read physical volume %s",
+					  pv_name);
 				continue;
 			}
 			total++;

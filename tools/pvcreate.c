@@ -35,7 +35,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 
 	/* is there a pv here already */
 	/* FIXME Use partial mode here? */
-	if (!(pv = pv_read(cmd, name, NULL, NULL)))
+	if (!(pv = pv_read(cmd, name, NULL, NULL, 0)))
 		return 1;
 
 	/* orphan ? */

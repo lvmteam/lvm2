@@ -39,7 +39,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	}
 
 	list_init(&mdas);
-	if (!(pv = pv_read(fid->fmt->cmd, pv_name, &mdas, NULL))) {
+	if (!(pv = pv_read(fid->fmt->cmd, pv_name, &mdas, NULL, 1))) {
 		log_error("%s not identified as an existing physical volume",
 			  pv_name);
 		return 0;
@@ -426,7 +426,7 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 {
 	struct physical_volume *pv;
 
-	if (!(pv = pv_read(cmd, pv_name, NULL, NULL))) {
+	if (!(pv = pv_read(cmd, pv_name, NULL, NULL, 1))) {
 		log_error("Physical volume %s not found", pv_name);
 		return NULL;
 	}
@@ -605,7 +605,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 
 	list_iterate(ih, &vginfo->infos) {
 		dev = list_item(ih, struct lvmcache_info)->dev;
-		if (!(pv = pv_read(cmd, dev_name(dev), NULL, NULL))) {
+		if (!(pv = pv_read(cmd, dev_name(dev), NULL, NULL, 1))) {
 			continue;
 		}
 		if (!(pvl = pool_zalloc(cmd->mem, sizeof(*pvl)))) {
@@ -814,7 +814,8 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s)
 
 /* FIXME Use label functions instead of PV functions */
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
-				struct list *mdas, uint64_t *label_sector)
+				struct list *mdas, uint64_t *label_sector,
+				int warnings)
 {
 	struct physical_volume *pv;
 	struct label *label;
@@ -827,7 +828,9 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	if (!(label_read(dev, &label))) {
-		log_error("No physical volume label read from %s", pv_name);
+		if (warnings)
+			log_error("No physical volume label read from %s",
+				  pv_name);
 		return 0;
 	}
 

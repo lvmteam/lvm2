@@ -479,6 +479,7 @@ xx(pvs,
    "Display information about physical volumes",
    "pvs" "\n"
    "\t[--aligned]\n"
+   "\t[-a|--all]\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|-?|--help] " "\n"
    "\t[--noheadings]\n"
@@ -493,9 +494,9 @@ xx(pvs,
    "\t[--version]\n"
    "\t[PhysicalVolume [PhysicalVolume...]]\n",
    
-   aligned_ARG, ignorelockingfailure_ARG, noheadings_ARG, nolocking_ARG,
-   nosuffix_ARG, options_ARG, separator_ARG, sort_ARG, unbuffered_ARG,
-   units_ARG)
+   aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, separator_ARG, sort_ARG,
+   unbuffered_ARG, units_ARG)
 
 xx(pvscan,
    "List all physical volumes",

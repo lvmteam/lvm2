@@ -34,7 +34,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	}
 
 	/* is there a pv here already */
-	if (!(pv = pv_read(cmd, name, NULL, NULL)))
+	if (!(pv = pv_read(cmd, name, NULL, NULL, 1)))
 		return 1;
 
 	/* orphan ? */
