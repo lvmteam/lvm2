@@ -609,7 +609,7 @@ static struct mapped_device *alloc_dev(int minor)
 		return 0;
 	}
 
-	md->dev = MKDEV(DM_BLK_MAJOR, minor);
+	md->dev = MKDEV(major, minor);
 	md->name[0] = '\0';
 	md->state = 0;
 

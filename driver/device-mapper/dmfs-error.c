@@ -112,48 +112,11 @@ static int show_error(struct seq_file *e, void *v)
 	return 0;
 }
 
-static struct seq_operations error_op = {
+struct seq_operations dmfs_error_seq_ops = {
 	start: e_start,
 	next: e_next,
 	stop: e_stop,
 	show: show_error,
 };
 
-static int dmfs_error_open(struct inode *inode, struct file *file)
-{
-	int ret = seq_open(file, &error_op);
-	if (ret >=0) {
-		struct seq_file *seq = file->private_data;
-		seq->context = DMFS_I(file->f_dentry->d_parent->d_inode);
-	}
-	return ret;
-}
-
-static int dmfs_error_sync(struct file *file, struct dentry *dentry, int datasync)
-{
-	return 0;
-}
-
-static struct file_operations dmfs_error_file_operations = {
-	open:		dmfs_error_open,
-	read:		seq_read,
-	llseek:		seq_lseek,
-	release:	seq_release,
-	fsync:		dmfs_error_sync,
-};
-
-static struct inode_operations dmfs_error_inode_operations = {
-};
-
-struct inode *dmfs_create_error(struct inode *dir, int mode)
-{
-	struct inode *inode = dmfs_new_inode(dir->i_sb, mode | S_IFREG);
-
-	if (inode) {
-		inode->i_fop = &dmfs_error_file_operations;
-		inode->i_op = &dmfs_error_inode_operations;
-	}
-
-	return inode;
-}
 

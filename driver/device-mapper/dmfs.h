@@ -3,7 +3,6 @@
 
 struct dmfs_i {
         struct semaphore sem;
-        struct dm_table *table;
         struct mapped_device *md;
         struct dentry *dentry;
         struct list_head errors;

@@ -17,9 +17,6 @@
 
 #include <linux/major.h>
 
-/* FIXME: Use value from local range for now, for co-existence with LVM 1 */
-#define DM_BLK_MAJOR 124
-
 struct dm_table;
 struct dm_dev;
 typedef unsigned int offset_t;
