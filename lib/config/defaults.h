@@ -28,6 +28,10 @@
 
 #define DEFAULT_FORMAT "lvm1"
 
+#define DEFAULT_MSG_PREFIX "  "
+
+#define DEFAULT_CMD_NAME 0
+
 #ifdef READLINE_SUPPORT
   #define DEFAULT_MAX_HISTORY 100
 #endif
