@@ -270,7 +270,7 @@ static int _print_header(struct formatter *f,
 
 static int _print_vg(struct formatter *f, struct volume_group *vg)
 {
-	char buffer[256];
+	char buffer[4096];
 
 	if (!id_write_format(&vg->id, buffer, sizeof(buffer))) {
 		stack;
@@ -280,14 +280,24 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 	_outf(f, "id = \"%s\"", buffer);
 
 	_outf(f, "seqno = %u", vg->seqno);
+
 	if (!print_flags(vg->status, VG_FLAGS, buffer, sizeof(buffer))) {
 		stack;
 		return 0;
 	}
-
 	_outf(f, "status = %s", buffer);
+
+	if (!list_empty(&vg->tags)) {
+		if (!print_tags(&vg->tags, buffer, sizeof(buffer))) {
+			stack;
+			return 0;
+		}
+		_outf(f, "tags = %s", buffer);
+	}
+
 	if (vg->system_id && *vg->system_id)
 		_outf(f, "system_id = \"%s\"", vg->system_id);
+
 	if (!_out_size(f, (uint64_t) vg->extent_size, "extent_size = %u",
 		       vg->extent_size)) {
 		stack;
@@ -314,7 +324,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 {
 	struct list *pvh;
 	struct physical_volume *pv;
-	char buffer[256];
+	char buffer[4096];
 	const char *name;
 
 	_outf(f, "physical_volumes {");
@@ -348,8 +358,16 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 			stack;
 			return 0;
 		}
-
 		_outf(f, "status = %s", buffer);
+
+		if (!list_empty(&pv->tags)) {
+			if (!print_tags(&pv->tags, buffer, sizeof(buffer))) {
+				stack;
+				return 0;
+			}
+			_outf(f, "tags = %s", buffer);
+		}
+
 		_outf(f, "pe_start = %" PRIu64, pv->pe_start);
 		if (!_out_size(f, vg->extent_size * (uint64_t) pv->pe_count,
 			       "pe_count = %u", pv->pe_count)) {
@@ -372,6 +390,7 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 	unsigned int s;
 	const char *name;
 	const char *type;
+	char buffer[4096];
 
 	_outf(f, "segment%u {", count);
 	_inc_indent(f);
@@ -385,6 +404,14 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 
 	f->nl(f);
 	_outf(f, "type = \"%s\"", get_segtype_string(seg->type));
+
+	if (!list_empty(&seg->tags)) {
+		if (!print_tags(&seg->tags, buffer, sizeof(buffer))) {
+			stack;
+			return 0;
+		}
+		_outf(f, "tags = %s", buffer);
+	}
 
 	switch (seg->type) {
 	case SEG_SNAPSHOT:
@@ -490,6 +517,9 @@ static int _print_snapshot(struct formatter *f, struct snapshot *snap,
 	seg.cow = snap->cow;
 	seg.chunk_size = snap->chunk_size;
 
+	/* Can't tag a snapshot independently of its origin */
+	list_init(&seg.tags);
+
 	if (!_print_segment(f, snap->origin->vg, 1, &seg)) {
 		stack;
 		return 0;
@@ -524,7 +554,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	struct list *lvh;
 	struct logical_volume *lv;
 	struct lv_segment *seg;
-	char buffer[256];
+	char buffer[4096];
 	int seg_count;
 
 	/*
@@ -555,8 +585,16 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 			stack;
 			return 0;
 		}
-
 		_outf(f, "status = %s", buffer);
+
+		if (!list_empty(&lv->tags)) {
+			if (!print_tags(&lv->tags, buffer, sizeof(buffer))) {
+				stack;
+				return 0;
+			}
+			_outf(f, "tags = %s", buffer);
+		}
+
 		if (lv->alloc != ALLOC_DEFAULT)
 			_outf(f, "allocation_policy = \"%s\"",
 			      get_alloc_string(lv->alloc));

@@ -151,19 +151,9 @@ static int lvchange_contiguous(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!lock_vol(cmd, lv->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)) {
-		log_error("Failed to lock %s", lv->name);
-		vg_revert(lv->vg);
-		return 0;
-	}
-
+	/* No need to suspend LV for this change */
 	if (!vg_commit(lv->vg)) {
-		unlock_lv(cmd, lv->lvid.s);
-		return 0;
-	}
-
-	if (!unlock_lv(cmd, lv->lvid.s)) {
-		log_error("Problem reactivating %s", lv->name);
+		stack;
 		return 0;
 	}
 
@@ -249,8 +239,8 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			log_error("Major number must be specified with -My");
 			return 0;
 		}
-		if (lv_info(lv, &info) && info.exists && 
-			!arg_count(cmd, force_ARG)) {
+		if (lv_info(lv, &info) && info.exists &&
+		    !arg_count(cmd, force_ARG)) {
 			if (yes_no_prompt("Logical volume %s will be "
 					  "deactivated first. "
 					  "Continue? [y/n]: ",
@@ -301,6 +291,52 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	return 1;
 }
 
+static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
+			int arg)
+{
+	const char *tag;
+
+	if (!(tag = arg_str_value(cmd, arg, NULL))) {
+		log_error("Failed to get tag");
+		return 0;
+	}
+
+	if (!(lv->vg->fid->fmt->features & FMT_TAGS)) {
+		log_error("Logical volume %s/%s does not support tags",
+			  lv->vg->name, lv->name);
+		return 0;
+	}
+
+	if ((arg == addtag_ARG)) {
+		if (!str_list_add(cmd->mem, &lv->tags, tag)) {
+			log_error("Failed to add tag %s to %s/%s",
+				  tag, lv->vg->name, lv->name);
+			return 0;
+		}
+	} else {
+		if (!str_list_del(&lv->tags, tag)) {
+			log_error("Failed to remove tag %s from %s/%s",
+				  tag, lv->vg->name, lv->name);
+			return 0;
+		}
+	}
+
+	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
+	if (!vg_write(lv->vg)) {
+		stack;
+		return 0;
+	}
+
+	backup(lv->vg);
+
+	/* No need to suspend LV for this change */
+	if (!vg_commit(lv->vg)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			   void *handle)
 {
@@ -368,6 +404,22 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		doit += lvchange_persistent(cmd, lv);
 	}
 
+	/* add tag */
+	if (arg_count(cmd, addtag_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_tag(cmd, lv, addtag_ARG);
+	}
+
+	/* del tag */
+	if (arg_count(cmd, deltag_ARG)) {
+		if (!archived && !archive(lv->vg))
+			return ECMD_FAILED;
+		archived = 1;
+		doit += lvchange_tag(cmd, lv, deltag_ARG);
+	}
+
 	if (doit)
 		log_print("Logical volume \"%s\" changed", lv->name);
 
@@ -384,15 +436,17 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	if (!arg_count(cmd, available_ARG) && !arg_count(cmd, contiguous_ARG)
 	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
 	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)
-	    && !arg_count(cmd, persistent_ARG)) {
-		log_error("One or more of -a, -C, -j, -m, -M, -p or -r "
-			  "required");
+	    && !arg_count(cmd, persistent_ARG) && !arg_count(cmd, addtag_ARG)
+	    && !arg_count(cmd, deltag_ARG)) {
+		log_error("One or more of -a, -C, -j, -m, -M, -p, -r, "
+			  "--addtag or --deltag required");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(cmd, ignorelockingfailure_ARG) &&
 	    (arg_count(cmd, contiguous_ARG) || arg_count(cmd, permission_ARG) ||
-	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG))) {
+	     arg_count(cmd, readahead_ARG) || arg_count(cmd, persistent_ARG) ||
+	     arg_count(cmd, addtag_ARG) || arg_count(cmd, deltag_ARG))) {
 		log_error("Only -a permitted with --ignorelockingfailure");
 		return EINVALID_CMD_LINE;
 	}

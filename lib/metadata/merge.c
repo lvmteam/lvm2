@@ -8,6 +8,7 @@
 #include "metadata.h"
 #include "toolcontext.h"
 #include "lv_alloc.h"
+#include "str_list.h"
 
 /*
  * Test whether two segments could be merged by the current merging code
@@ -39,6 +40,9 @@ static int _segments_compatible(struct lv_segment *first,
 		    (first->area[s].u.pv.pe + width != second->area[s].u.pv.pe))
 			return 0;
 	}
+
+	if (!str_list_lists_equal(&first->tags, &second->tags))
+		return 0;
 
 	return 1;
 }
@@ -128,6 +132,11 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 	len = sizeof(*seg) + (seg->area_count * sizeof(seg->area[0]));
 	memcpy(split_seg, seg, len);
+
+	if (!str_list_dup(lv->vg->cmd->mem, &split_seg->tags, &seg->tags)) {
+		log_error("LV segment tags duplication failed");
+		return 0;
+	}
 
 	/* In case of a striped segment, the offset has to be / stripes */
 	if (seg->type == SEG_STRIPED)

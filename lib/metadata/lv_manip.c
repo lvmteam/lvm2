@@ -60,6 +60,8 @@ struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t stripes)
 		return NULL;
 	}
 
+	list_init(&seg->tags);
+
 	return seg;
 }
 
@@ -519,6 +521,7 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	lv->size = UINT64_C(0);
 	lv->le_count = 0;
 	list_init(&lv->segments);
+	list_init(&lv->tags);
 
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
 		stack;

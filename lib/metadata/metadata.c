@@ -211,6 +211,8 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	vg->snapshot_count = 0;
 	list_init(&vg->snapshots);
 
+	list_init(&vg->tags);
+
 	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, vg_name,
 						       NULL))) {
 		log_error("Failed to create format instance");
@@ -292,6 +294,8 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 	pv->pe_count = 0;
 	pv->pe_alloc_count = 0;
 	pv->fmt = fmt;
+
+	list_init(&pv->tags);
 
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
 				existing_extent_size,
@@ -562,6 +566,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	list_init(&vg->pvs);
 	list_init(&vg->lvs);
 	list_init(&vg->snapshots);
+	list_init(&vg->tags);
 	vg->cmd = cmd;
 	if (!(vg->name = pool_strdup(cmd->mem, ORPHAN))) {
 		log_error("vg name allocation failed");
@@ -804,6 +809,8 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 		log_error("pv allocation for '%s' failed", pv_name);
 		return 0;
 	}
+
+	list_init(&pv->tags);
 
 	/* FIXME Move more common code up here */
 	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, mdas))) {

@@ -36,6 +36,7 @@ SOURCES=\
 	format_text/format-text.c \
 	format_text/import.c \
 	format_text/import_vsn1.c \
+	format_text/tags.c \
 	format_text/text_label.c \
 	label/label.c \
 	locking/file_locking.c \

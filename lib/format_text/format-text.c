@@ -1640,7 +1640,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	fmt->ops = &_text_handler;
 	fmt->name = FMT_TEXT_NAME;
 	fmt->alias = FMT_TEXT_ALIAS;
-	fmt->features = FMT_SEGMENTS | FMT_MDAS;
+	fmt->features = FMT_SEGMENTS | FMT_MDAS | FMT_TAGS;
 
 	if (!(mda_lists = dbg_malloc(sizeof(struct mda_lists)))) {
 		log_error("Failed to allocate dir_list");

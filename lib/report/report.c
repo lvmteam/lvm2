@@ -128,6 +128,36 @@ static int _dev_name_disp(struct report_handle *rh, struct field *field,
 	return _string_disp(rh, field, &name);
 }
 
+static int _tags_disp(struct report_handle *rh, struct field *field,
+		      const void *data)
+{
+	const struct list *tags = (const struct list *) data;
+	struct str_list *sl;
+
+	if (!pool_begin_object(rh->mem, 256)) {
+		log_error("pool_begin_object failed");
+		return 0;
+	}
+
+	list_iterate_items(sl, tags) {
+		if (!pool_grow_object(rh->mem, sl->str, strlen(sl->str)) ||
+		    (sl->list.n != tags && !pool_grow_object(rh->mem, ",", 1))) {
+			log_error("pool_grow_object failed");
+			return 0;
+		}
+	}
+
+	if (!pool_grow_object(rh->mem, "\0", 1)) {
+		log_error("pool_grow_object failed");
+		return 0;
+	}
+
+	field->report_string = pool_end_object(rh->mem);
+	field->sort_value = (const void *) field->report_string;
+
+	return 1;
+}
+
 static int _vgfmt_disp(struct report_handle *rh, struct field *field,
 		       const void *data)
 {

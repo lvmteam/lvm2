@@ -103,6 +103,8 @@ struct physical_volume {
 	uint64_t pe_start;
 	uint32_t pe_count;
 	uint32_t pe_alloc_count;
+
+	struct list tags;
 };
 
 struct metadata_area;
@@ -177,6 +179,8 @@ struct volume_group {
 	/* snapshots */
 	uint32_t snapshot_count;
 	struct list snapshots;
+
+	struct list tags;
 };
 
 struct lv_segment {
@@ -197,6 +201,8 @@ struct lv_segment {
 	struct logical_volume *cow;
 	uint32_t chunk_size;
 	uint32_t extents_moved;
+
+	struct list tags;
 
 	/* There will be one area for each stripe */
 	struct {
@@ -230,6 +236,7 @@ struct logical_volume {
 	uint32_t le_count;
 
 	struct list segments;
+	struct list tags;
 };
 
 struct snapshot {

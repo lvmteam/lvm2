@@ -243,6 +243,20 @@ int major_arg(struct cmd_context *cmd, struct arg *a)
 
 int string_arg(struct cmd_context *cmd, struct arg *a)
 {
+
+	return 1;
+}
+
+int tag_arg(struct cmd_context *cmd, struct arg *a)
+{
+	char *pos = a->value;
+
+	if (*pos == '@')
+		pos++;
+
+	if (!validate_name(pos))
+		return 0;
+
 	return 1;
 }
 
