@@ -561,27 +561,6 @@ static struct mapped_device *alloc_dev(int minor)
 	return md;
 }
 
-static inline struct mapped_device *__find_by_name(const char *name)
-{
-	int i;
-	for (i = 0; i < MAX_DEVICES; i++)
-		if (_devs[i] && !strcmp(_devs[i]->name, name))
-			return _devs[i];
-
-	return 0;
-}
-
-struct mapped_device *dm_find_by_name(const char *name)
-{
-	struct mapped_device *md;
-
-	down_read(&_dev_lock);
-	md = __find_by_name(name);
-	up_read(&_dev_lock);
-
-	return md;
-}
-
 struct mapped_device *dm_find_by_minor(int minor)
 {
 	struct mapped_device *md;
@@ -650,36 +629,28 @@ static void dm_sbin_hotplug(struct mapped_device *md, int create)
 /*
  * constructor for a new device
  */
-int dm_create(const char *name, int minor)
+struct mapped_device *dm_create(const char *name, int minor)
 {
 	int r;
 	struct mapped_device *md;
 
 	if (minor >= MAX_DEVICES)
-		return -ENXIO;
+		return ERR_PTR(-ENXIO);
 
 	if (!(md = alloc_dev(minor)))
-		return -ENXIO;
+		return ERR_PTR(-ENXIO);
 
 	down_write(&_dev_lock);
-	if (__find_by_name(name)) {
-		WARN("device with that name already exists");
-		kfree(md);
-		up_write(&_dev_lock);
-		return -EINVAL;
-	}
-
 	strcpy(md->name, name);
-
 	if ((r = register_device(md))) {
 		up_write(&_dev_lock);
-		return r;
+		return ERR_PTR(r);
 	}
 	up_write(&_dev_lock);
 
 	dm_sbin_hotplug(md, 1);
 
-	return 0;
+	return md;
 }
 
 /*
@@ -687,17 +658,11 @@ int dm_create(const char *name, int minor)
  * deliberately not destroyed, dm-fs should manage
  * table objects.
  */
-int dm_remove(const char *name)
+int dm_remove(struct mapped_device *md)
 {
-	struct mapped_device *md;
 	int minor, r;
 
 	down_write(&_dev_lock);
-	if (!(md = __find_by_name(name))) {
-		up_write(&_dev_lock);
-		return -ENXIO;
-	}
-
 	if (md->use_count) {
 		up_write(&_dev_lock);
 		return -EPERM;
@@ -709,11 +674,11 @@ int dm_remove(const char *name)
 	}
 
 	minor = MINOR(md->dev);
-	kfree(md);
 	_devs[minor] = 0;
 	up_write(&_dev_lock);
 
 	dm_sbin_hotplug(md, 0);
+	kfree(md);
 
 	return 0;
 }
