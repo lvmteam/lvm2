@@ -31,6 +31,7 @@ int id_create(struct id *id)
 
 	if (read(random, id->uuid, len) != len) {
 		log_sys_error("read", "id_create");
+		close(random);
 		return 0;
 	}
 	close(random);
