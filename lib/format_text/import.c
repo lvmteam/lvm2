@@ -31,12 +31,12 @@ typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
  */
 static void _invalid_format(const char *str)
 {
-	log_err("invalid text format file (%s)", str);
+	log_error("Can't process text format file (%s)", str);
 }
 
 /*
  * Checks that the config file contains vg metadata, and that it
- * is in a version that we understand.
+ * we recognise the version number,
  */
 static int _check_version(struct config_file *cf)
 {
@@ -47,14 +47,14 @@ static int _check_version(struct config_file *cf)
 	 * Check the contents field.
 	 */
 	if (!(cn = find_config_node(cf->root, CONTENTS_FIELD, '/'))) {
-		_invalid_format("no contents field");
+		_invalid_format("missing contents field");
 		return 0;
 	}
 
 	cv = cn->v;
 	if (!cv || cv->type != CFG_STRING || strcmp(cv->v.str, CONTENTS_VALUE))
 	{
-		_invalid_format("incorrect contents field");
+		_invalid_format("unrecognised contents field");
 		return 0;
 	}
 
@@ -62,13 +62,13 @@ static int _check_version(struct config_file *cf)
 	 * Check the version number.
 	 */
 	if (!(cn = find_config_node(cf->root, FORMAT_VERSION_FIELD, '/'))) {
-		_invalid_format("no version field");
+		_invalid_format("missing version number");
 		return 0;
 	}
 
 	cv = cn->v;
 	if (!cv || cv->type != CFG_INT || cv->v.i != FORMAT_VERSION_VALUE) {
-		_invalid_format("incorrect version number");
+		_invalid_format("unrecognised version number");
 		return 0;
 	}
 
@@ -80,18 +80,18 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 	struct config_value *cv;
 
 	if (!(cn = find_config_node(cn, path, '/'))) {
-		log_err("Couldn't find uuid.");
+		log_error("Couldn't find uuid.");
 		return 0;
 	}
 
 	cv = cn->v;
 	if (!cv || !cv->v.str) {
-		log_err("uuid must be a string.");
+		log_error("uuid must be a string.");
 		return 0;
 	}
 
 	if (!id_read_format(id, cv->v.str)) {
-		log_err("Invalid uuid.");
+		log_error("Invalid uuid.");
 		return 0;
 	}
 
@@ -125,12 +125,12 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 	}
 
 	if (!(pvn = pvn->child)) {
-		log_err("Empty pv section.");
+		log_error("Empty pv section.");
 		return 0;
 	}
 
 	if (!_read_id(&pv->id, pvn, "id")) {
-		log_err("Couldn't read uuid for volume group.");
+		log_error("Couldn't read uuid for volume group.");
 		return 0;
 	}
 
@@ -141,9 +141,9 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 		char buffer[64];
 
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
-			log_err("Couldn't find device.");
+			log_error("Couldn't find device.");
 		else
-			log_err("Couldn't find device with uuid '%s'.", buffer);
+			log_error("Couldn't find device with uuid '%s'.", buffer);
 
 		if (partial_mode())
 			vg->status |= PARTIAL_VG;
@@ -157,22 +157,22 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 	}
 
 	if (!(cn = find_config_node(pvn, "status", '/'))) {
-		log_err("Couldn't find status flags for physical volume.");
+		log_error("Couldn't find status flags for physical volume.");
 		return 0;
 	}
 
 	if (!(read_flags(&pv->status, PV_FLAGS, cn->v))) {
-		log_err("Couldn't read status flags for physical volume.");
+		log_error("Couldn't read status flags for physical volume.");
 		return 0;
 	}
 
 	if (!_read_int64(pvn, "pe_start", &pv->pe_start)) {
-		log_err("Couldn't read extent size for volume group.");
+		log_error("Couldn't read extent size for volume group.");
 		return 0;
 	}
 
 	if (!_read_int32(pvn, "pe_count", &pv->pe_count)) {
-		log_err("Couldn't find extent count (pe_count) for "
+		log_error("Couldn't find extent count (pe_count) for "
 			"physical volume.");
 		return 0;
 	}
@@ -223,12 +223,12 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	const char *seg_name = sn->key;
 
 	if (!(sn = sn->child)) {
-		log_err("Empty segment section.");
+		log_error("Empty segment section.");
 		return 0;
 	}
 
 	if (!_read_int32(sn, "stripes", &stripes)) {
-		log_err("Couldn't read 'stripes' for segment '%s'.", sn->key);
+		log_error("Couldn't read 'stripes' for segment '%s'.", sn->key);
 		return 0;
 	}
 
@@ -241,32 +241,32 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->lv = lv;
 
 	if (!_read_int32(sn, "start_extent", &seg->le)) {
-		log_err("Couldn't read 'start_extent' for segment '%s'.",
+		log_error("Couldn't read 'start_extent' for segment '%s'.",
 			sn->key);
 		return 0;
 	}
 
 	if (!_read_int32(sn, "extent_count", &seg->len)) {
-		log_err("Couldn't read 'extent_count' for segment '%s'.",
+		log_error("Couldn't read 'extent_count' for segment '%s'.",
 			sn->key);
 		return 0;
 	}
 
 	if (seg->stripes == 0) {
-		log_err("Zero stripes is *not* allowed for segment '%s'.",
+		log_error("Zero stripes is *not* allowed for segment '%s'.",
 			sn->key);
 		return 0;
 	}
 
 	if ((seg->stripes != 1) &&
 	    !_read_int32(sn, "stripe_size", &seg->stripe_size)) {
-		log_err("Couldn't read 'stripe_size' for segment '%s'.",
+		log_error("Couldn't read 'stripe_size' for segment '%s'.",
 			sn->key);
 		return 0;
 	}
 
 	if (!(cn = find_config_node(sn, "areas", '/'))) {
-		log_err("Couldn't find 'areas' array for segment '%s'.",
+		log_error("Couldn't find 'areas' array for segment '%s'.",
 			sn->key);
 		return 0;
 	}
@@ -283,26 +283,26 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		uint32_t allocated;
 
 		if (cv->type != CFG_STRING) {
-			log_err(bad, sn->key);
+			log_error(bad, sn->key);
 			return 0;
 		}
 
 		if (!(pv = hash_lookup(pv_hash, cv->v.str))) {
-			log_err("Couldn't find physical volume '%s' for "
+			log_error("Couldn't find physical volume '%s' for "
 				"segment '%s'.",
-				cn->v->v.str ? cn->v->v.str : "NULL", seg_name);
+				cv->v.str ? cv->v.str : "NULL", seg_name);
 			return 0;
 		}
 
 		seg->area[s].pv = pv;
 
 		if (!(cv = cv->next)) {
-			log_err(bad, sn->key);
+			log_error(bad, sn->key);
 			return 0;
 		}
 
 		if (cv->type != CFG_INT) {
-			log_err(bad, sn->key);
+			log_error(bad, sn->key);
 			return 0;
 		}
 
@@ -320,7 +320,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	 * Check we read the correct number of stripes.
 	 */
 	if (cv || (s < seg->stripes)) {
-		log_err("Incorrect number of stripes in 'area' array "
+		log_error("Incorrect number of stripes in 'area' array "
 			"for segment '%s'.", seg_name);
 		return 0;
 	}
@@ -355,12 +355,12 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 	}
 
 	if (!_read_int32(lvn, "segment_count", &seg_count)) {
-		log_err("Couldn't read segment count for logical volume.");
+		log_error("Couldn't read segment count for logical volume.");
 		return 0;
 	}
 
 	if (seg_count != count) {
-		log_err("segment_count and actual number of segments "
+		log_error("segment_count and actual number of segments "
 			"disagree.");
 		return 0;
 	}
@@ -407,7 +407,7 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 	}
 
 	if (!(lvn = lvn->child)) {
-		log_err("Empty logical volume section.");
+		log_error("Empty logical volume section.");
 		return 0;
 	}
 
@@ -415,19 +415,19 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 
 	/* FIXME: read full lvid */
 	if (!_read_id(&lv->lvid.id[1], lvn, "id")) {
-		log_err("Couldn't read uuid for logical volume %s.", lv->name);
+		log_error("Couldn't read uuid for logical volume %s.", lv->name);
 		return 0;
 	}
 
 	memcpy(&lv->lvid.id[0], &lv->vg->id, sizeof(lv->lvid.id[0]));
 
 	if (!(cn = find_config_node(lvn, "status", '/'))) {
-		log_err("Couldn't find status flags for logical volume.");
+		log_error("Couldn't find status flags for logical volume.");
 		return 0;
 	}
 
 	if (!(read_flags(&lv->status, LV_FLAGS, cn->v))) {
-		log_err("Couldn't read status flags for logical volume.");
+		log_error("Couldn't read status flags for logical volume.");
 		return 0;
 	}
 
@@ -439,7 +439,7 @@ static int _read_lv(struct format_instance *fid, struct pool *mem,
 	}
 
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead)) {
-		log_err("Couldn't read 'read_ahead' value for "
+		log_error("Couldn't read 'read_ahead' value for "
 			"logical volume.");
 		return 0;
 	}
@@ -467,33 +467,33 @@ static int _read_snapshot(struct format_instance *fid, struct pool *mem,
 	struct logical_volume *org, *cow;
 
 	if (!(sn = sn->child)) {
-		log_err("Empty snapshot section.");
+		log_error("Empty snapshot section.");
 		return 0;
 	}
 
 	if (!_read_uint32(sn, "chunk_size", &chunk_size)) {
-		log_err("Couldn't read chunk size for snapshot.");
+		log_error("Couldn't read chunk size for snapshot.");
 		return 0;
 	}
 
 	if (!(cow_name = find_config_str(sn, "cow_store", '/', NULL))) {
-		log_err("Snapshot cow storage not specified.");
+		log_error("Snapshot cow storage not specified.");
 		return 0;
 	}
 
 	if (!(org_name = find_config_str(sn, "origin", '/', NULL))) {
-		log_err("Snapshot origin not specified.");
+		log_error("Snapshot origin not specified.");
 		return 0;
 	}
 
 	if (!(cow = find_lv(vg, cow_name))) {
-		log_err("Unknown logical volume specified for "
+		log_error("Unknown logical volume specified for "
 			"snapshot cow store.");
 		return 0;
 	}
 
 	if (!(org = find_lv(vg, org_name))) {
-		log_err("Unknown logical volume specified for "
+		log_error("Unknown logical volume specified for "
 			"snapshot origin.");
 		return 0;
 	}
@@ -517,7 +517,7 @@ static int _read_sections(struct format_instance *fid,
 
 	if (!(n = find_config_node(vgn, section, '/'))) {
 		if (!optional) {
-			log_err("Couldn't find section '%s'.", section);
+			log_error("Couldn't find section '%s'.", section);
 			return 0;
 		}
 
@@ -547,7 +547,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	for (vgn = cf->root; (vgn && vgn->v); vgn = vgn->sib) ;
 
 	if (!vgn) {
-		log_err("Couldn't find volume group in file.");
+		log_error("Couldn't find volume group in file.");
 		return NULL;
 	}
 
@@ -582,29 +582,29 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	if (!_read_id(&vg->id, vgn, "id")) {
-		log_err("Couldn't read uuid for volume group %s.", vg->name);
+		log_error("Couldn't read uuid for volume group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!_read_int32(vgn, "seqno", &vg->seqno)) {
-		log_err("Couldn't read 'seqno' for volume group %s.", vg->name);
+		log_error("Couldn't read 'seqno' for volume group %s.", vg->name);
 		goto bad;
 	}
 
 	if (!(cn = find_config_node(vgn, "status", '/'))) {
-		log_err("Couldn't find status flags for volume group %s.",
+		log_error("Couldn't find status flags for volume group %s.",
 			vg->name);
 		goto bad;
 	}
 
 	if (!(read_flags(&vg->status, VG_FLAGS, cn->v))) {
-		log_err("Couldn't read status flags for volume group %s.",
+		log_error("Couldn't read status flags for volume group %s.",
 			vg->name);
 		goto bad;
 	}
 
 	if (!_read_int32(vgn, "extent_size", &vg->extent_size)) {
-		log_err("Couldn't read extent size for volume group %s.",
+		log_error("Couldn't read extent size for volume group %s.",
 			vg->name);
 		goto bad;
 	}
@@ -615,13 +615,13 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	 */
 
 	if (!_read_int32(vgn, "max_lv", &vg->max_lv)) {
-		log_err("Couldn't read 'max_lv' for volume group %s.",
+		log_error("Couldn't read 'max_lv' for volume group %s.",
 			vg->name);
 		goto bad;
 	}
 
 	if (!_read_int32(vgn, "max_pv", &vg->max_pv)) {
-		log_err("Couldn't read 'max_pv' for volume group %s.",
+		log_error("Couldn't read 'max_pv' for volume group %s.",
 			vg->name);
 		goto bad;
 	}
@@ -631,14 +631,14 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	 * structures.
 	 */
 	if (!(pv_hash = hash_create(32))) {
-		log_err("Couldn't create hash table.");
+		log_error("Couldn't create hash table.");
 		goto bad;
 	}
 
 	list_init(&vg->pvs);
 	if (!_read_sections(fid, "physical_volumes", _read_pv, mem, vg,
 			    vgn, pv_hash, um, 0)) {
-		log_err("Couldn't find all physical volumes for volume "
+		log_error("Couldn't find all physical volumes for volume "
 			"group %s.", vg->name);
 		goto bad;
 	}
@@ -646,7 +646,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	list_init(&vg->lvs);
 	if (!_read_sections(fid, "logical_volumes", _read_lv, mem, vg,
 			    vgn, pv_hash, um, 1)) {
-		log_err("Couldn't read all logical volumes for volume "
+		log_error("Couldn't read all logical volumes for volume "
 			"group %s.", vg->name);
 		goto bad;
 	}
@@ -654,7 +654,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	list_init(&vg->snapshots);
 	if (!_read_sections(fid, "snapshots", _read_snapshot, mem, vg,
 			    vgn, pv_hash, um, 1)) {
-		log_err("Couldn't read all snapshots for volume group %s.",
+		log_error("Couldn't read all snapshots for volume group %s.",
 			vg->name);
 		goto bad;
 	}
