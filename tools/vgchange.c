@@ -25,17 +25,30 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 {
 	struct list *lvh;
 	struct logical_volume *lv;
+	struct physical_volume *pv;
 	int count = 0;
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
-		/* Only request activatation of snapshot origin devices */
+		/* Only request activation of snapshot origin devices */
 		if (lv_is_cow(lv))
+			continue;
+
+		/* Can't deactive a pvmove LV */
+		if ((lock == LCK_LV_DEACTIVATE) && (lv->status & PVMOVE))
 			continue;
 
 		if (!lock_vol(cmd, lv->lvid.s, lock | LCK_NONBLOCK))
 			continue;
+
+		if ((lv->status & PVMOVE) &&
+		    (pv = get_pvmove_pv_from_lv_mirr(lv))) {
+			log_verbose("Spawning background process for %s %s",
+				    lv->name, dev_name(pv->dev));
+			pvmove_poll(cmd, dev_name(pv->dev), 1);
+			continue;
+		}
 
 		count++;
 	}
