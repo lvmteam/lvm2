@@ -38,18 +38,16 @@ static int dmfs_statfs(struct super_block *sb, struct statfs *buf)
 static void dmfs_delete_inode(struct inode *inode)
 {
 	struct super_block *sb = inode->i_sb;
+	struct dmfs_i *dmi = DMFS_I(inode);
 
-	switch(inode->i_mode & S_IFMT) {
-		case S_IFDIR:
-			if (inode->u.generic_ip) {
-				dm_remove((struct mapped_device *)inode->u.generic_ip);
-			}
-			break;
-		case S_IFREG:
-			if (inode->u.generic_ip) {
-				dm_put_table((struct dm_table *)inode->u.generic_ip);
-			}
-			break;
+	if (dmi) {
+		if (dmi->md)
+			dm_remove(dmi->md);
+		if (dmi->table)
+			dm_put_table(dmi->table):
+		if (dmi->dentry)
+			dm_unlock_tdir(dmi->dentry);
+		kfree(dmi);
 	}
 
 	inode->u.generic_ip = NULL;
