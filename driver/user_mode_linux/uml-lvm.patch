@@ -24,7 +24,7 @@
  obj-$(CONFIG_MD_RAID5)		+= raid5.o xor.o
  obj-$(CONFIG_BLK_DEV_MD)	+= md.o
  obj-$(CONFIG_BLK_DEV_LVM)	+= lvm-mod.o
-+obj-$(CONFIG_BLK_DEV_DM)	+= dm.o dm-table.o dm-target.o dm.o
++obj-$(CONFIG_BLK_DEV_DM)	+= dm.o dm-table.o dm-target.o dm-fs.o
  
  include $(TOPDIR)/Rules.make
  
