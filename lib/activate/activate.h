@@ -9,8 +9,8 @@
 
 /* FIXME Snapshot handling? */
 
-int lv_active(struct logical_volume *lv, int *result);
-int lv_open_count(struct logical_volume *lv, int *result);
+int lv_active(struct logical_volume *lv);
+int lv_open_count(struct logical_volume *lv);
 
 int lv_activate(struct logical_volume *lv);
 int lv_reactivate(struct logical_volume *lv);

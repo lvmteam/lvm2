@@ -24,6 +24,7 @@
 #include "dbg_malloc.h"
 #include "log.h"
 #include "display.h"
+#include "activate.h"
 
 #define SIZE_BUF 128
 
@@ -205,141 +206,199 @@ void pv_display_short(struct physical_volume *pv)
 	return;
 }
 
-#if 0
-/******** FIXME
-void pv_display_pe(pv_t * pv, pe_disk_t * pe)
+void lvdisplay_colons(struct logical_volume *lv)
 {
-	int p;
-
-	for (p = 0; p < pv->pe_total; p++)
-		printf("pe#: %4d  vg: %s  lv: %d  le: %d\n",
-		       p, pv->vg_name, pe[p].lv_num, pe[p].le_num);
-
+	log_print("%s/%s:%s:%d:%d:-1:%d:%llu:%d:-1:%d:%d:-1:-1",
+		  /* FIXME Prefix - attach to struct volume_group? */
+		  lv->vg->name,
+	          lv->name,  
+	          lv->vg->name,
+	          (lv->status & (LVM_READ | LVM_WRITE)) >> 8,
+	          lv->status & ACTIVE,
+	          /* FIXME lv->lv_number,  */
+	          lvs_in_vg_opened(lv->vg),
+	          lv->size,
+	          lv->le_count,
+	          /* FIXME num allocated?  */
+	          (lv->status & (ALLOC_STRICT | ALLOC_CONTIGUOUS)) >> 12,
+	          lv->read_ahead 
+		   /* FIXME device num MAJOR(lv->lv_dev), MINOR(lv->lv_dev) */
+	         );
 	return;
 }
-*******/
 
-void pv_display_pe_text(pv_t * pv, pe_disk_t * pe, lv_disk_t * lvs)
+void lvdisplay_extents(struct logical_volume *lv)
 {
-	int flag = 0;
-	int lv_num_last = 0;
-	int p = 0;
-	int pe_free = 0;
-	int *pe_this_count = NULL;
-	int pt = 0;
-	int pt_count = 0;
-	lv_disk_t *lv;
-	char *lv_name_this = NULL;
-	char *lv_names = NULL;
-	char *lv_names_sav = NULL;
-	pe_disk_t *pe_this = NULL;
+	return;
+}
 
-	if ((pe_this = dbg_malloc(pv->pe_total * sizeof (pe_disk_t))) == NULL) {
-		log_error("pe_this allocation failed");
-		goto pv_display_pe_text_out;
+void lvdisplay_full(struct logical_volume *lv)
+{
+	char *size;
+	uint32_t alloc;
+
+    log_print("--- Logical volume ---");
+
+	/* FIXME prefix */
+	log_print("LV Name                %s/%s", lv->vg->name, lv->name);
+    log_print("VG Name                %s", lv->vg->name);
+
+    log_print("LV Write Access        %s",
+              (lv->status & LVM_WRITE) ? "read/write" : "read only");
+
+/******* FIXME Snapshot
+    if (lv->status & (LVM_SNAPSHOT_ORG | LVM_SNAPSHOT)) {
+	if (lvm_tab_vg_read_with_pv_and_lv(vg_name, &vg) < 0) {
+	    ret = -LVM_ELV_SHOW_VG_READ_WITH_PV_AND_LV;
+	    goto lv_show_end;
 	}
-
-	if ((pe_this_count = dbg_malloc(pv->pe_total * sizeof (int))) == NULL) {
-		log_error("pe_this_count allocation failed");
-		goto pv_display_pe_text_out;
-	}
-
-	memset(pe_this, 0, pv->pe_total * sizeof (pe_disk_t));
-	memset(pe_this_count, 0, pv->pe_total * sizeof (int));
-
-	/* get PE and LE summaries */
-	pt_count = 0;
-	for (p = pt_count; p < pv->pe_total; p++) {
-		if (pe[p].lv_num != 0) {
-			flag = 0;
-			for (pt = 0; pt < pt_count; pt++) {
-				if (pe_this[pt].lv_num == pe[p].lv_num) {
-					flag = 1;
-					break;
-				}
-			}
-			if (flag == 0) {
-				pe_this[pt_count].lv_num = pe[p].lv_num;
-				for (pt = 0; pt < pv->pe_total; pt++)
-					if (pe_this[pt_count].lv_num ==
-					    pe[pt].lv_num)
-						    pe_this_count[pt_count]++;
-				pt_count++;
-			}
+	printf("LV snapshot status     ");
+	if (vg_check_active(vg_name) == TRUE) {
+	    vg_t *vg_core;
+	    if ((ret = vg_status_with_pv_and_lv(vg_name, &vg_core)) == 0) {
+		lv_t *lv_ptr =
+		    vg_core->
+		    lv[lv_get_index_by_name(vg_core, lv->lv_name)];
+		if (lv_ptr->lv_access & LV_SNAPSHOT) {
+		    if (lv_ptr->lv_status & LV_ACTIVE)
+			printf("active ");
+		    else
+			printf("INACTIVE ");
 		}
-	}
-
-	lv = lvs;
-	printf("   --- Distribution of physical volume ---\n"
-	       "   LV Name                   LE of LV  PE for LV\n");
-	for (pt = 0; pt < pt_count; pt++) {
-		printf("   %-25s ", lv->lv_name);
-		if (strlen(lv->lv_name) > 25)
-			printf("\n                             ");
-		printf("%-8u  %-8d\n",
-		       lv->lv_allocated_le,
-		       pe_this_count[pt]);
-		if (pe_this[pt].lv_num > lv_num_last) {
-			lv_num_last = pe_this[pt].lv_num;
-			lv_names_sav = lv_names;
-			if ((lv_names = dbg_realloc(lv_names,
-						    lv_num_last * NAME_LEN)) ==
-			    NULL) {
-				log_error("realloc error in %s [line %d]",
-					  __FILE__, __LINE__);
-				goto pv_display_pe_text_out;
-			} else
-				lv_names_sav = NULL;
+		if (lv_ptr->lv_access & LV_SNAPSHOT_ORG) {
+		    printf("source of\n");
+		    while (lv_ptr->lv_snapshot_next != NULL) {
+			lv_ptr = lv_ptr->lv_snapshot_next;
+			printf("                       %s [%s]\n",
+			       lv_ptr->lv_name,
+			       (lv_ptr->
+				lv_status & LV_ACTIVE) ? "active" :
+			       "INACTIVE");
+		    }
+		    vg_free(vg_core, TRUE);
+		} else {
+		    printf("destination for %s\n",
+			   lv_ptr->lv_snapshot_org->lv_name);
 		}
-		strcpy(&lv_names[(pe_this[pt].lv_num - 1) * NAME_LEN],
-		       lv->lv_name);
-		lv++;
+	    }
+	} else {
+	    printf("INACTIVE ");
+	    if (lv->lv_access & LV_SNAPSHOT_ORG)
+		printf("original\n");
+	    else
+		printf("snapshot\n");
 	}
+    }
+***********/
 
-	printf("\n   --- Physical extents ---\n"
-	       "   PE    LV                        LE      Disk sector\n");
-	pe_free = -1;
-	for (p = 0; p < pv->pe_total; p++) {
-		if (pe[p].lv_num != 0) {
-			if (pe_free > -1) {
-				pv_display_pe_free(pe_free, p);
-				pe_free = -1;
-			}
-			lv_name_this = &lv_names[(pe[p].lv_num - 1) * NAME_LEN];
-			printf("   %05d %-25s ", p, lv_name_this);
-			if (strlen(lv_name_this) > 25)
-				printf("\n                                  ");
-			printf("%05d   %ld\n", pe[p].le_num,
-			       get_pe_offset(p, pv));
+    log_print("LV Status              %savailable",
+    	(lv->status & ACTIVE) ? "" : "NOT ");
 
-		} else if (pe_free == -1)
-			pe_free = p;
-	}
+/********* FIXME lv_number
+    log_print("LV #                   %u", lv->lv_number + 1);
+************/
 
-	if (pe_free > 0)
-		pv_display_pe_free(pe_free, p);
-
-      pv_display_pe_text_out:
-	if (lv_names != NULL)
-		dbg_free(lv_names);
-	else if (lv_names_sav != NULL)
-		dbg_free(lv_names_sav);
-	if (pe_this != NULL)
-		dbg_free(pe_this);
-	if (pe_this_count != NULL)
-		dbg_free(pe_this_count);
-
-	return;
-}
-
-void pv_display_pe_free(int pe_free, int p)
-{
-	printf("   %05d free\n", pe_free);
-
-	if (p - pe_free > 1)
-		printf("   .....\n   %05d free\n", p - 1);
-
-	return;
-}
+/********* FIXME lv_open
+    log_print("# open                 %u\n", lv->lv_open);
+**********/
+/********
+#ifdef LVM_FUTURE
+    printf("Mirror copies          %u\n", lv->lv_mirror_copies);
+    printf("Consistency recovery   ");
+    if (lv->lv_recovery | LV_BADBLOCK_ON)
+	printf("bad blocks\n");
+    else
+	printf("none\n");
+    printf("Schedule               %u\n", lv->lv_schedule);
 #endif
+********/
+
+
+	size = display_size(lv->size / 2, SIZE_SHORT);
+    log_print("LV Size                %s", size);
+    dbg_free(size);
+
+    log_print("Current LE             %u", lv->le_count);
+
+/********** FIXME allocation
+    log_print("Allocated LE           %u", lv->allocated_le);
+**********/
+
+/********** FIXME Snapshot
+    if (lv->lv_access & LV_SNAPSHOT) {
+	printf("snapshot chunk size    %s\n",
+	       (dummy = lvm_show_size(lv->lv_chunk_size / 2, SHORT)));
+	dbg_free(dummy);
+	dummy = NULL;
+	if (lv->lv_remap_end > 0) {
+	    lv_remap_ptr = lv->lv_remap_ptr;
+	    if (lv_remap_ptr > lv->lv_remap_end)
+		lv_remap_ptr = lv->lv_remap_end;
+	    dummy = lvm_show_size(lv_remap_ptr *
+				  lv->lv_chunk_size / 2, SHORT);
+	    dummy1 = lvm_show_size(lv->lv_remap_end *
+				   lv->lv_chunk_size / 2, SHORT);
+	    printf("Allocated to snapshot  %.2f%% [%s/%s]\n",
+		   (float) lv_remap_ptr * 100 / lv->lv_remap_end,
+		   dummy, dummy1);
+	    dbg_free(dummy);
+	    dbg_free(dummy1);
+	    dummy =
+		lvm_show_size((vg->
+			       lv[lv_get_index_by_number
+				  (vg,
+				   lv->lv_number)]->lv_size -
+			       lv->lv_remap_end * lv->lv_chunk_size) / 2,
+			      SHORT);
+	    printf("Allocated to COW-table %s\n", dummy);
+	    dbg_free(dummy);
+	}
+    }
+******************/
+
+    if (lv->stripes > 1) {
+	log_print("Stripes                %u", lv->stripes);
+/*********** FIXME stripesize 
+	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
+***********/
+    }
+
+
+/**************
+#ifdef LVM_FUTURE
+    printf("Bad block             ");
+    if (lv->lv_badblock == LV_BADBLOCK_ON)
+	printf("on\n");
+    else
+	printf("off\n");
+#endif
+***************/
+
+	alloc = lv->status & (ALLOC_STRICT | ALLOC_CONTIGUOUS);
+    log_print("Allocation             %s%s%s%s",
+		!(alloc & (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "next free" : "",
+		(alloc == ALLOC_STRICT) ? "strict" : "",
+		(alloc == ALLOC_CONTIGUOUS) ? "contiguous" : "",
+		(alloc == (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "strict/contiguous" : ""
+		);
+
+    log_print("Read ahead sectors     %u\n", lv->read_ahead);
+
+/****************
+#ifdef LVM_FUTURE
+    printf("IO Timeout (seconds)   ");
+    if (lv->lv_io_timeout == 0)
+	printf("default\n\n");
+    else
+	printf("%lu\n\n", lv->lv_io_timeout);
+#endif
+*************/
+
+/********* FIXME blockdev 
+    printf("Block device           %d:%d\n",
+	   MAJOR(lv->lv_dev), MINOR(lv->lv_dev));
+*************/
+
+    return;
+}
 
