@@ -35,6 +35,11 @@ int lv_suspend(struct logical_volume *lv);
 int lv_rename(const char *old_name, struct logical_volume *lv);
 
 /*
+ * Snapshot volume need kernel specific initialisation.
+ */
+int lv_setup_cow_store(struct logical_volume *lv);
+
+/*
  * Return number of LVs in the VG that are active.
  */
 int lvs_in_vg_activated(struct volume_group *vg);

@@ -206,8 +206,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	/*
 	 * Should we zero the lv.
 	 */
-	lp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n") ||
-		arg_count(cmd, snapshot_ARG);
+	lp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 
 	/*
 	 * Contiguous ?
@@ -376,16 +375,15 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
 		return 0;
 
 	backup(vg);
-
 	log_print("Logical volume \"%s\" created", lv->name);
-
-	if (!lv_activate(lv))
-		return 0;
 
 	*plv = lv;
 	return 1;
 }
 
+/*
+ * Non-snapshot volumes may be zeroed to remove old filesystems.
+ */
 static int _zero(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct device *dev;
@@ -445,12 +443,22 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (!lp.zero) {
-		log_print("WARNING: \"%s\" not zeroed", lv->name);
-
-	} else if (!_zero(cmd, lv)) {
+	if (!lp.snapshot && !lv_setup_cow_store(lv)) {
 		stack;
 		goto out;
+	}
+
+	if (!lv_activate(lv))
+		goto out;
+
+	if (!lp.snapshot) {
+		if (!lp.zero)
+			log_print("WARNING: \"%s\" not zeroed", lv->name);
+
+		else if (!_zero(cmd, lv)) {
+			stack;
+			goto out;
+		}
 	}
 
 	/*

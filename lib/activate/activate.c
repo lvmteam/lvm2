@@ -15,6 +15,7 @@
 
 #include <limits.h>
 #include <linux/kdev_t.h>
+#include <fcntl.h>
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
 
@@ -105,11 +106,10 @@ static inline int _read_only_lv(struct logical_volume *lv)
 	return (lv->status & LVM_WRITE) && (lv->vg->status & LVM_WRITE);
 }
 
-int lv_activate(struct logical_volume *lv)
+int _lv_activate_named(struct logical_volume *lv, const char *name)
 {
 	int r = 0;
 	struct dm_task *dmt;
-	char buffer[128];
 
 	if (test_mode()) {
 		_skip("Activation of '%s'.", lv->name);
@@ -117,18 +117,9 @@ int lv_activate(struct logical_volume *lv)
 	}
 
 	/*
-	 * Decide what we're going to call this device.
-	 */
-	if (!build_dm_name(buffer, sizeof(buffer), "",
-			   lv->vg->name, lv->name)) {
-		stack;
-		return 0;
-	}
-
-	/*
 	 * Create a task.
 	 */
-	if (!(dmt = setup_dm_task(buffer, DM_DEVICE_CREATE))) {
+	if (!(dmt = setup_dm_task(name, DM_DEVICE_CREATE))) {
 		stack;
 		return 0;
 	}
@@ -174,17 +165,33 @@ int lv_activate(struct logical_volume *lv)
 		goto out;
 	}
 
-	/*
-	 * Create device nodes and symbolic links.
-	 */
-	if (!fs_add_lv(lv, lv->minor))
-		stack;
-
  out:
 	dm_task_destroy(dmt);
 	log_verbose("Logical volume %s%s activated", lv->name,
 		    r == 1 ? "" : " not");
 	return r;
+}
+
+int lv_activate(struct logical_volume *lv)
+{
+	char buffer[128];
+
+	/*
+	 * Decide what we're going to call this device.
+	 */
+	if (!build_dm_name(buffer, sizeof(buffer), "",
+			   lv->vg->name, lv->name)) {
+		stack;
+		return 0;
+	}
+
+	if (!_lv_activate_named(lv, buffer) ||
+	    !fs_add_lv(lv, lv->minor)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }
 
 static int _reload(const char *name, struct logical_volume *lv)
@@ -357,6 +364,52 @@ int lv_rename(const char *old_name, struct logical_volume *lv)
  end:
 	dm_task_destroy(dmt);
 	return r;
+}
+
+/*
+ * Zero the start of a cow store so the driver spots that it is a
+ * new store.
+ */
+int lv_setup_cow_store(struct logical_volume *lv)
+{
+	char buffer[128];
+	char path[PATH_MAX];
+	struct device *dev;
+
+	/*
+	 * Decide what we're going to call this device.
+	 */
+	if (!build_dm_name(buffer, sizeof(buffer), "cow_init",
+			   lv->vg->name, lv->name)) {
+		stack;
+		return 0;
+	}
+
+	if (!_lv_activate_named(lv, buffer)) {
+		log_err("Unable to activate cow store logical volume.");
+		return 0;
+	}
+
+	/* FIXME: hard coded dir */
+	if (lvm_snprintf(path, sizeof(path), "/dev/device-mapper/%s",
+			 buffer) < 0) {
+		log_error("Name too long - device not zeroed (%s)",
+			  lv->name);
+		return 0;
+	}
+
+	if (!(dev = dev_cache_get(path, NULL))) {
+		log_error("\"%s\" not found: device not zeroed", path);
+		return 0;
+	}
+
+	if (!(dev_open(dev, O_WRONLY)))
+		return 0;
+
+	dev_zero(dev, 0, 4096);
+	dev_close(dev);
+
+	return 1;
 }
 
 
