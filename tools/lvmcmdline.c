@@ -1394,7 +1394,8 @@ int lvm2_main(int argc, char **argv)
 	base = basename(namebase);
 	while (*base == '/')
 		base++;
-	if (strcmp(base, "lvm") && strcmp(base, "lvm.static"))
+	if (strcmp(base, "lvm") && strcmp(base, "lvm.static") &&
+	    strcmp(base, "initrd-lvm"))
 		alias = 1;
 	free(namebase);
 
