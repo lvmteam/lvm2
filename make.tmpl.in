@@ -73,6 +73,10 @@ ifeq ("@READLINE@", "yes")
   CFLAGS += -DREADLINE_SUPPORT
 endif
 
+ifeq ("@HAVE_RL_COMPLETION_MATCHES@", "yes")
+  CFLAGS += -DHAVE_RL_COMPLETION_MATCHES
+endif
+
 OBJECTS=$(SOURCES:%.c=%.o)
 
 SUBDIRS.install := $(SUBDIRS:=.install)

@@ -112,11 +112,14 @@ package as well (which may be called readline-devel or something similar).
 )
 		exit
 	)
+	AC_CHECK_FUNC(rl_completion_matches, HAVE_RL_COMPLETION_MATCHES=yes,
+		HAVE_RL_COMPLETION_MATCHES=no)
 fi
 
 AC_SUBST(JOBS)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(READLINE)
+AC_SUBST(HAVE_RL_COMPLETION_MATCHES)
 AC_SUBST(OWNER)
 AC_SUBST(GROUP)
 AC_SUBST(LIBS)

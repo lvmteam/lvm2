@@ -2020,7 +2020,57 @@ package as well (which may be called readline-devel or something similar).
 	
 fi
 
+	echo $ac_n "checking for rl_completion_matches""... $ac_c" 1>&6
+echo "configure:2025: checking for rl_completion_matches" >&5
+if eval "test \"`echo '$''{'ac_cv_func_rl_completion_matches'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 2030 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char rl_completion_matches(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char rl_completion_matches();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_rl_completion_matches) || defined (__stub___rl_completion_matches)
+choke me
+#else
+rl_completion_matches();
+#endif
+
+; return 0; }
+EOF
+if { (eval echo configure:2053: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  eval "ac_cv_func_rl_completion_matches=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_func_rl_completion_matches=no"
 fi
+rm -f conftest*
+fi
+
+if eval "test \"`echo '$ac_cv_func_'rl_completion_matches`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  HAVE_RL_COMPLETION_MATCHES=yes
+else
+  echo "$ac_t""no" 1>&6
+HAVE_RL_COMPLETION_MATCHES=no
+fi
+
+fi
+
 
 
 
@@ -2197,6 +2247,7 @@ s%@CPP@%$CPP%g
 s%@JOBS@%$JOBS%g
 s%@STATIC_LINK@%$STATIC_LINK%g
 s%@READLINE@%$READLINE%g
+s%@HAVE_RL_COMPLETION_MATCHES@%$HAVE_RL_COMPLETION_MATCHES%g
 s%@OWNER@%$OWNER%g
 s%@GROUP@%$GROUP%g
 
