@@ -42,7 +42,7 @@ int dev_get_size(struct device *dev, uint64_t *size)
 		return 0;
 	}
 
-	*size >>= BLKSIZE_SHIFT;
+	*size >>= BLKSIZE_SHIFT;	/* Convert to sectors */
 	close(fd);
 	return 1;
 }
