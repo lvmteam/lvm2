@@ -68,7 +68,7 @@ static unsigned _hash(const char *str)
 	return h;
 }
 
-struct hash_table *create_hash_table(unsigned size_hint)
+struct hash_table *hash_create(unsigned size_hint)
 {
 	size_t len;
 	unsigned new_size = 16u;
@@ -100,7 +100,7 @@ struct hash_table *create_hash_table(unsigned size_hint)
 	return 0;
 }
 
-void destroy_hash_table(struct hash_table *t)
+void hash_destroy(struct hash_table *t)
 {
 	struct hash_node *c, *n;
 	int i;

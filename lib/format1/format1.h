@@ -9,6 +9,6 @@
 
 #include "metadata.h"
 
-struct io_space *create_lvm_v1_format(struct dev_filter *filter);
+struct io_space *create_lvm1_format(struct dev_filter *filter);
 
 #endif

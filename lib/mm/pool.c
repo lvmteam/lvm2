@@ -30,7 +30,7 @@ struct chunk *_new_chunk(struct pool *p, size_t s);
 /* by default things come out aligned for doubles */
 #define DEFAULT_ALIGNMENT __alignof__ (double)
 
-struct pool *create_pool(size_t chunk_hint)
+struct pool *pool_create(size_t chunk_hint)
 {
 	size_t new_size = 1024;
 	struct pool *p = dbg_malloc(sizeof(*p));
@@ -49,7 +49,7 @@ struct pool *create_pool(size_t chunk_hint)
 	return p;
 }
 
-void destroy_pool(struct pool *p)
+void pool_destroy(struct pool *p)
 {
 	struct chunk *c, *pr;
 	dbg_free(p->spare_chunk);
