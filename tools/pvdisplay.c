@@ -29,7 +29,7 @@ int pvdisplay(int argc, char **argv)
 	struct list *pvh, *pvs;
 	struct physical_volume *pv;
 
-	if (arg_count(colon_ARG) && arg_count(verbose_ARG)) {
+	if (arg_count(colon_ARG) && arg_count(maps_ARG)) {
 		log_error("Option -v not allowed with option -c");
 		return EINVALID_CMD_LINE;
 	}
@@ -110,7 +110,7 @@ void pvdisplay_single(struct physical_volume *pv)
 
 	pvdisplay_full(pv);
 
-	if (!arg_count(verbose_ARG))
+	if (!arg_count(maps_ARG))
 		return;
 
 /******* FIXME

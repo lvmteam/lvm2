@@ -21,21 +21,19 @@
 xx(e2fsadm,
    "Resize logical volume and ext2 filesystem",
    "e2fsadm "
-   "[-d|--debug] "
-   "[-h|--help] "
-   "[-n|--nofsck]\n\t"
-   "{[-l|--extents] [+|-]LogicalExtentsNumber |\n\t"
-   " [-L|--size] [+|-]LogicalVolumeSize[kKmMgGtT]}\n\t"
-   "[-t|--test] "
-   "[-v|--verbose] "
-   "[--version] "
-   "LogicalVolumePath\n",
+   "[-d|--debug] " "[-h|--help] " "[-n|--nofsck]" "\n"
+   "\t{[-l|--extents] [+|-]LogicalExtentsNumber |" "\n"
+   "\t [-L|--size] [+|-]LogicalVolumeSize[kKmMgGtT]}" "\n"
+   "\t[-t|--test] "  "\n"
+   "\t[-v|--verbose] "  "\n"
+   "\t[--version] " "\n"
+   "\tLogicalVolumePath" "\n",
 
     extents_ARG, size_ARG, nofsck_ARG, test_ARG)
 
 xx(help,
    "Display help for commands",
-   "help <command>\n")
+   "help <command>" "\n")
 
 /*********
 xx(lvactivate,
@@ -66,34 +64,40 @@ xx(lvchange,
 
 xx(lvcreate,
    "Create a logical volume",
-   "lvcreate "
-   "[-A|--autobackup {y|n}] "
-   "[-C|--contiguous {y|n}] "
-   "[-d|--debug]\n"
-   "\t[-h|--help] "
-   "[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n\t"
-   "{-l|--extents LogicalExtentsNumber |\n\t"
-   " -L|--size LogicalVolumeSize[kKmMgGtT]} "
-   "[-n|--name LogicalVolumeName]\n\t"
-   "[-p|--permission {r|rw}] "
-   "[-r|--readahead ReadAheadSectors]\n\t"
-   "[-t|--test] "
-   "[-v|--verbose] "
-   "[-Z|--zero {y|n}] "
-   "[--version]\n\t"
-   "VolumeGroupName [PhysicalVolumePath...]\n\n"
-   "lvcreate "
-   "-s|--snapshot "
-   "[-c|--chunksize ChunkSize]\n\t"
-   "{-l|--extents LogicalExtentsNumber |\n\t"
-   " -L|--size LogicalVolumeSize[kKmMgGtT]}\n\t"
-   "-n|--name SnapshotLogicalVolumeName\n\t"
-   "[-t|--test]\n\t"
-   "LogicalVolume[Path] [PhysicalVolumePath...]\n",
+   "lvcreate " "\n" 
+   "\t[-A|--autobackup {y|n}] "  "\n"
+   "\t[-C|--contiguous {y|n}] " "\n"
+   "\t[-d|--debug]" "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]" "\n"
+   "\t{-l|--extents LogicalExtentsNumber |" "\n"
+   "\t -L|--size LogicalVolumeSize[kKmMgGtT]} " "\n"
+   "\t[-n|--name LogicalVolumeName]"  "\n"
+   "\t[-p|--permission {r|rw}] " "\n"
+   "\t[-r|--readahead ReadAheadSectors]"  "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose] "  "\n"
+   "\t[-Z|--zero {y|n}] "  "\n"
+   "\t[--version]" "\n"
+   "\tVolumeGroupName [PhysicalVolumePath...]" "\n\n"
 
-   autobackup_ARG, chunksize_ARG, contiguous_ARG,
-   stripes_ARG, stripesize_ARG, extents_ARG, size_ARG, name_ARG,
-   permission_ARG, readahead_ARG, snapshot_ARG, test_ARG, zero_ARG)
+   ,
+/*
+   "lvcreate "
+   "\t-s|--snapshot "
+   "\t[-c|--chunksize ChunkSize]" "\n"
+   "\t{-l|--extents LogicalExtentsNumber |" "\n"
+   "\t -L|--size LogicalVolumeSize[kKmMgGtT]}" "\n"
+   "\t-n|--name SnapshotLogicalVolumeName" "\n"
+   "\t[-t|--test]" "\n"
+   "\tLogicalVolume[Path] [PhysicalVolumePath...]" "\n",
+chunksize_ARG, 
+snapshot_ARG, 
+*/
+
+   autobackup_ARG, contiguous_ARG, stripes_ARG, stripesize_ARG, 
+   extents_ARG, size_ARG, name_ARG, permission_ARG, readahead_ARG, 
+   test_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -102,10 +106,11 @@ xx(lvdisplay,
    "\t[-d/--debug]\n"
    "\t[-D/--disk]\n"
    "\t[-h/-?/--help]\n"
-   "\t[-v[v]/--verbose [--verbose]]\n"
+   "\t[-m/--maps]\n"
+   "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-    colon_ARG, disk_ARG)
+    colon_ARG, disk_ARG, maps_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -124,16 +129,14 @@ xx(lvextend,
    test_ARG)
 
 xx(lvmchange,
-   "With the device mapper, lvmchange is obsolete and does nothing.",
+   "With the device mapper, this is obsolete and does nothing.",
    "lvmchange\n" 
    "\t[-d/--debug]\n"
-   "\t[-f/--force]\n"
    "\t[-h/-?/--help]\n"
-   "\t[-i/-?/--iop_version]\n"
    "\t[-R/--reset]\n"
    "\t[-v/--verbose]\n",
 
-    force_ARG, reset_ARG)
+    reset_ARG)
 
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",
@@ -197,14 +200,14 @@ xx(lvremove,
 xx(lvrename,
    "Rename a logical volume",
    "lvrename "
-   "[-A|--autobackup {y|n}] "
-   "[-d|--debug] "
-   "[-h|--help] "
-   "[-t|--test] "
-   "[-v|--verbose]\n\t"
-   "[--version] "
-   "{ OldLogicalVolumePath NewLogicalVolumePath |\n\t"
-   "  VolumeGroupName OldLogicalVolumeName NewLogicalVolumeName }\n",
+   "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose]" "\n"
+   "\t[--version] " "\n"
+   "\t{ OldLogicalVolumePath NewLogicalVolumePath |" "\n"
+   "\t  VolumeGroupName OldLogicalVolumeName NewLogicalVolumeName }\n",
 
    autobackup_ARG, test_ARG)
 
@@ -226,13 +229,13 @@ xx(lvresize,
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
-   "lvscan "
-   "[-b|--blockdevice] "
-   "[-d|--debug] "
-   "[-D|--disk]\n\t"
-   "[-h|--help] "
-   "[-v|--verbose] "
-   "[--version]\n",
+   "lvscan " "\n"
+   "\t[-b|--blockdevice] " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-D|--disk]" "\n" 
+   "\t[-h|--help] " "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version]\n",
 
    blockdevice_ARG, disk_ARG)
 
@@ -252,32 +255,32 @@ xx(pvchange,
 
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
-   "pvcreate "
-   "[-d|--debug]"
-   "[-f[f]|--force [--force]] "
-   "[-h|--help] "
-   "[-y|--yes]\n\t"
-   "[-t|--test] "
-   "[-v|--verbose] "
-   "[--version] "
-   "PhysicalVolume [PhysicalVolume...]\n",
+   "pvcreate " "\n"
+   "\t[-d|--debug]" "\n"
+   "\t[-f[f]|--force [--force]] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-y|--yes]" "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version] " "\n"
+   "\tPhysicalVolume [PhysicalVolume...]\n",
 
    force_ARG, test_ARG, yes_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
-   "pvdata "
-   "[-a|--all] "
-   "[-d|--debug] "
-   "[-E|--physicalextent] "
-   "[-h|--help]\n\t"
-   "[-L|--logicalvolume] "
-   "[-P[P]|--physicalvolume [--physicalvolume]]\n\t"
-   "[-U|--uuidlist] "
-   "[-v[v]|--verbose [--verbose]] "
-   "[-V|--volumegroup]\n\t"
-   "[--version] "
-   "PhysicalVolume [PhysicalVolume...]\n",
+   "pvdata " "\n"
+   "\t[-a|--all] " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-E|--physicalextent] " "\n"
+   "\t[-h|--help]" "\n"
+   "\t[-L|--logicalvolume] " "\n"
+   "\t[-P[P]|--physicalvolume [--physicalvolume]]" "\n"
+   "\t[-U|--uuidlist] " "\n"
+   "\t[-v[v]|--verbose [--verbose]] " "\n"
+   "\t[-V|--volumegroup]" "\n"
+   "\t[--version] " "\n"
+   "\tPhysicalVolume [PhysicalVolume...]\n",
 
    all_ARG,  logicalextent_ARG, physicalextent_ARG,
    physicalvolume_ARG, uuidlist_ARG, volumegroup_ARG)
@@ -288,11 +291,12 @@ xx(pvdisplay,
    "\t[-c/--colon]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[-m/--maps]\n"
    "\t[-s/--short]\n"
-   "\t[-v[v]/--verbose [--verbose]]\n"
+   "\t[-v/--verbose]\n"
    "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
 
-   colon_ARG, short_ARG)
+   colon_ARG, maps_ARG, short_ARG)
 
 #if 0
 xx(pvmove,
@@ -303,7 +307,7 @@ xx(pvmove,
    "[-f|--force]"
    "[-h|--help]\n\t"
    "[-t|--test] "
-   "[-v[v]|--verbose [--verbose]] "
+   "[-v|--verbose] "
    "[--version]\n\t"
    "[{-n|--name} LogicalVolume[:LogicalExtent[-LogicalExtent]...]]\n\t"
    "SourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n\t"
@@ -314,55 +318,55 @@ xx(pvmove,
 
 xx(pvscan,
    "List all physical volumes",
-   "pvscan "
-   "[-d|--debug] "
-   "{-e|--exported | -n/--novolumegroup} "
-   "[-h|--help]\n\t"
-   "[-s|--short] "
-   "[-u|--uuid] "
-   "[-v[v]|--verbose [--verbose]] "
-   "[--version]\n",
+   "pvscan " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t{-e|--exported | -n/--novolumegroup} " "\n"
+   "\t[-h|--help]" "\n"
+   "\t[-s|--short] " "\n"
+   "\t[-u|--uuid] " "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version]\n",
 
    exported_ARG,  novolumegroup_ARG, short_ARG, uuid_ARG)
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
-   "vgcfgbackup "
-   "[-d|--debug] "
-   "[-h|--help] "
-   "[-v|--verbose]\n\t"
-   "[-V|--version] "
-   "[VolumeGroupName...]\n" )
+   "vgcfgbackup " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-v|--verbose]" "\n"
+   "\t[-V|--version] " "\n"
+   "\t[VolumeGroupName...]\n" )
 
 xx(vgcfgrestore,
    "Restore volume group configuration",
-   "vgcfgrestore "
-   "[-d|--debug] "
-   "[-f|--file VGConfPath] "
-   "[-l[l]|--list [--list]]\n\t"
-   "[-n|--name VolumeGroupName] "
-   "[-h|--help]\n\t"
-   "[-o|--oldpath OldPhysicalVolumePath] "
-   "[-t|--test] "
-   "[-v|--verbose]\n\t"
-   "[--version] "
-   "[PhysicalVolumePath]\n",
+   "vgcfgrestore " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-f|--file VGConfPath] " "\n"
+   "\t[-l[l]|--list [--list]]" "\n"
+   "\t[-n|--name VolumeGroupName] " "\n"
+   "\t[-h|--help]" "\n"
+   "\t[-o|--oldpath OldPhysicalVolumePath] " "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose]" "\n"
+   "\t[--version] " "\n"
+   "[PhysicalVolumePath]\n", 
 
    file_ARG, list_ARG, name_ARG, oldpath_ARG, test_ARG)
 
 xx(vgchange,
    "Change volume group attributes",
-   "vgchange\n\t"
-   "[-A|--autobackup {y|n}] "
-   "[-d|--debug] "
-   "[-h|--help] "
-   "[-t|--test]\n\t"
-   "[-v|--verbose] "
-   "[--version]\n\t"
-   "{-a|--available {y|n} |\n\t"
-   " -x|--allocation {y|n} |\n\t"
-   " -l|--logicalvolume MaxLogicalVolumes}\n\t"
-   "[VolumeGroupName...]\n",
+   "vgchange" "\n"
+   "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-t|--test]" "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version]" "\n"
+   "\t{-a|--available {y|n}  |" "\n"
+   "\t -x|--allocation {y|n} |" "\n"
+   "\t -l|--logicalvolume MaxLogicalVolumes}" "\n"
+   "\t[VolumeGroupName...]\n",
 
    autobackup_ARG, available_ARG, logicalvolume_ARG, allocation_ARG,
    test_ARG)
@@ -377,42 +381,42 @@ xx(vgck,
 
 xx(vgcreate,
    "Create a volume group",
-   "vgcreate"
-   "[-A|--autobackup {y|n}] "
-   "[-d|--debug]\n\t"
-   "[-l|--maxlogicalvolumes MaxLogicalVolumes]\n\t"
-   "[-p|--maxphysicalvolumes MaxPhysicalVolumes] "
-   "[-h|--help]\n\t"
-   "[-s|--physicalextentsize PhysicalExtentSize[kKmMgGtT]] "
-   "[-t|--test] "
-   "[-v|--verbose]\n\t"
-   "[--version] "
-   "VolumeGroupName "
-   "PhysicalVolume [PhysicalVolume...]\n",
+   "vgcreate" "\n"
+   "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[-d|--debug]" "\n"
+   "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
+   "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
+   "\t[-h|--help]" "\n"
+   "\t[-s|--physicalextentsize PhysicalExtentSize[kKmMgGtT]] " "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose]" "\n"
+   "\t[--version] " "\n"
+   "\tVolumeGroupName PhysicalVolume [PhysicalVolume...]\n",
 
    autobackup_ARG, maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
    physicalextentsize_ARG, test_ARG)
 
 xx(vgdisplay,
    "Display volume group information",
-   "vgdisplay "
-   "[-c|--colon | -s|--short | -v[v]|--verbose [--verbose]]\n\t"
-   "[-d|--debug] "
-   "[-h|--help] "
-   "[--version]\n\t"
-   "[-A|--activevolumegroups | [-D|--disk] [VolumeGroupName...] ]\n",
+   "vgdisplay " "\n"
+   "\t[-c|--colon | -s|--short | -v|--verbose]" "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[--version]" "\n"
+   "\t[-A|--activevolumegroups | [-D|--disk]" "\n"
+   "\t[VolumeGroupName...] ]\n",
 
    activevolumegroups_ARG, colon_ARG, disk_ARG, short_ARG)
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
-   "vgexport "
-   "[-a|--all] "
-   "[-d|--debug] "
-   "[-h|--help]\n\t"
-   "[-v|--verbose] "
-   "[--version] "
-   "VolumeGroupName [VolumeGroupName...]\n",
+   "vgexport " "\n"
+   "\t[-a|--all] " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-h|--help]" "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version] " "\n"
+   "\tVolumeGroupName [VolumeGroupName...]\n",
 
    all_ARG, test_ARG)
 
@@ -424,21 +428,19 @@ xx(vgextend,
    "\t[-h/-?/--help]\n"
    "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
-   "\tVolumeGroupName\n"
-   "\tPhysicalDevicePath [PhysicalDevicePath...]\n",
+   "\tVolumeGroupName PhysicalDevicePath [PhysicalDevicePath...]\n",
 
    autobackup_ARG, test_ARG)
 
 xx(vgimport,
    "Register exported volume group with system",
-   "vgimport "
-   "[-d|--debug] "
-   "[-f|--force] "
-   "[-h|--help] "
-   "[-t|--test] "
-   "[-v|--verbose]\n\t"
-   "VolumeGroupName PhysicalVolumePath "
-   "[PhysicalVolumePath...]\n",
+   "vgimport " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-f|--force] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose]" "\n"
+   "\tVolumeGroupName PhysicalVolumePath " "[PhysicalVolumePath...]\n",
 
    force_ARG, test_ARG)
 
@@ -497,7 +499,7 @@ xx(vgrename,
    "\t[-h/-?/--help]\n"
    "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
-   "\tOldVolumeGroupPath NewVolumeGroupPath /\n"
+   "\tOldVolumeGroupPath NewVolumeGroupPath |\n"
    "\tOldVolumeGroupName NewVolumeGroupName\n",
 
    autobackup_ARG, force_ARG, test_ARG)
@@ -511,15 +513,15 @@ xx(vgscan,
 
 xx(vgsplit,
    "Move physical volumes into a new volume group",
-   "vgsplit "
-   "[-A|--autobackup {y|n}] "
-   "[-d|--debug] "
-   "[-h|--help] "
-   "[-l|--list]\n\t"
-   "[-t|--test] "
-   "[-v|--verbose] "
-   "[--version]\n\t"
-   "ExistingVolumeGroupName NewVolumeGroupName\n\t"
-   "PhysicalVolumePath [PhysicalVolumePath...]\n",
+   "vgsplit " "\n"
+   "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[-d|--debug] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-l|--list]" "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version]" "\n"
+   "\tExistingVolumeGroupName NewVolumeGroupName" "\n"
+   "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
 
    autobackup_ARG, list_ARG, test_ARG)

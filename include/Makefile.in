@@ -31,11 +31,13 @@ all: .symlinks_created
 	for i in `cat .symlinks`; do $(LN_S) $$i ; done
 	touch $@
 
-clean:
-
 distclean:
 	find . -maxdepth 1 -type l -exec $(RM) \{\} \;
 	$(RM) Makefile .include_symlinks .symlinks_created
 
-.PHONY: clean distclean all
+clean:
+
+install:
+
+.PHONY: clean distclean all install
 
