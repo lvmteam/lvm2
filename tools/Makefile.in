@@ -37,6 +37,7 @@ SOURCES=\
 	pvchange.c \
 	pvcreate.c \
 	pvdisplay.c \
+	pvmove.c \
 	pvremove.c \
 	pvscan.c \
 	report.c \
