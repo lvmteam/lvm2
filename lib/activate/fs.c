@@ -56,7 +56,7 @@ static int _check_devfs(const char *dev_prefix)
 
 void _build_lv_path(char *buffer, size_t len, struct logical_volume *lv)
 {
-	snprintf(buffer, len, "%s%s/%s-%s",
+	snprintf(buffer, len, "%s%s/%s_%s",
 		 lv->vg->cmd->dev_dir, dm_dir(), lv->vg->name, lv->name);
 }
 
@@ -88,7 +88,7 @@ static int _mk_node(struct logical_volume *lv)
 	}
 
 	_build_lv_path(lv_path, sizeof(lv_path), lv);
-	
+
 	if (mknod(lv_path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
 		log_sys_error("mknod", lv_path);
 		return 0;
