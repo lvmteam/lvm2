@@ -2071,6 +2071,13 @@ fi
 
 fi
 
+if test "-f VERSION"; then
+  LVM_VERSION="\"`cat VERSION`\""
+else
+  LVM_VERSION="Unknown"
+fi
+
+
 
 
 
@@ -2198,6 +2205,7 @@ include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
+tools/version.h								\
 test/mm/Makefile							\
 test/device/Makefile							\
 test/format1/Makefile							\
@@ -2250,6 +2258,7 @@ s%@READLINE@%$READLINE%g
 s%@HAVE_RL_COMPLETION_MATCHES@%$HAVE_RL_COMPLETION_MATCHES%g
 s%@OWNER@%$OWNER%g
 s%@GROUP@%$GROUP%g
+s%@LVM_VERSION@%$LVM_VERSION%g
 
 CEOF
 EOF
@@ -2298,6 +2307,7 @@ include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
+tools/version.h								\
 test/mm/Makefile							\
 test/device/Makefile							\
 test/format1/Makefile							\
