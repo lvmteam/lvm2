@@ -75,15 +75,14 @@ static int lvchange_permission(struct cmd_context *cmd,
 static int lvchange_availability(struct cmd_context *cmd,
 				 struct logical_volume *lv)
 {
-	int activate = 0;
+	int activate;
 	const char *pvname;
 
-	if (strcmp(arg_str_value(cmd, available_ARG, "n"), "n"))
-		activate = 1;
+	activate = arg_uint_value(cmd, available_ARG, 0);
 
 	if (activate) {
 		log_verbose("Activating logical volume \"%s\"", lv->name);
-		if (lv_is_origin(lv)) {
+		if (lv_is_origin(lv) || (activate == 2)) {
 			if (!activate_lv_excl(cmd, lv->lvid.s)) {
 				stack;
 				return 0;

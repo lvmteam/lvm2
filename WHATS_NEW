@@ -1,5 +1,6 @@
 Version 2.00.16 - 
 =============================
+  xxchange -ae for exclusive activation.
   Don't return non-zero status if there aren't any volume groups.
   Add --alloc argument to tools.
   Rename allocation policies to contiguous, normal, anywhere, inherit.

@@ -109,6 +109,7 @@ void usage(const char *name);
 
 /* the argument verify/normalise functions */
 int yes_no_arg(struct cmd_context *cmd, struct arg *a);
+int yes_no_excl_arg(struct cmd_context *cmd, struct arg *a);
 int size_kb_arg(struct cmd_context *cmd, struct arg *a);
 int size_mb_arg(struct cmd_context *cmd, struct arg *a);
 int int_arg(struct cmd_context *cmd, struct arg *a);

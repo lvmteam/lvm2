@@ -37,7 +37,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		if (!activate) {
 			if (!deactivate_lv(cmd, lv->lvid.s))
 				continue;
-		} else if (lv_is_origin(lv)) {
+		} else if (lv_is_origin(lv) || (activate == 2)) {
 			if (!activate_lv_excl(cmd, lv->lvid.s))
 				continue;
 		} else if (!activate_lv(cmd, lv->lvid.s))
@@ -60,7 +60,9 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
 	int lv_open, active;
-	int available = !strcmp(arg_str_value(cmd, available_ARG, "n"), "y");
+	int available;
+
+	available = arg_uint_value(cmd, available_ARG, 0);
 
 	/* FIXME: Force argument to deactivate them? */
 	if (!available && (lv_open = lvs_in_vg_opened(vg))) {
@@ -73,7 +75,7 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
 
-	if (available && _activate_lvs_in_vg(cmd, vg, 1))
+	if (available && _activate_lvs_in_vg(cmd, vg, available))
 		log_verbose("Activated logical volumes in "
 			    "volume group \"%s\"", vg->name);
 
