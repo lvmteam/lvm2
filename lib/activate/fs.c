@@ -43,6 +43,8 @@ static void _mk_dir(struct volume_group *vg)
 	char vg_path[PATH_MAX];
 
 	_build_vg_path(vg_path, sizeof(vg_path), vg);
+
+	log_very_verbose("Creating directory %s", vg_path);
 	mkdir(vg_path, 0555);
 }
 
@@ -51,6 +53,8 @@ static void _rm_dir(struct volume_group *vg)
 	char vg_path[PATH_MAX];
 
 	_build_vg_path(vg_path, sizeof(vg_path), vg);
+
+	log_very_verbose("Removing directory %s", vg_path);
 	rmdir(vg_path);
 }
 
@@ -61,6 +65,7 @@ static int _mk_link(struct logical_volume *lv)
 	_build_lv_path(lv_path, sizeof(lv_path), lv);
 	_build_link_path(link_path, sizeof(link_path), lv);
 
+	log_very_verbose("Linking %s to %s", link_path, lv_path);
 	if (symlink(lv_path, link_path) < 0) {
 		log_sys_error("symlink", link_path);
 		return 0;
@@ -75,6 +80,7 @@ static int _rm_link(struct logical_volume *lv)
 
 	_build_link_path(link_path, sizeof(link_path), lv);
 
+	log_very_verbose("Removing link %s", link_path);
 	if (unlink(link_path) < 0) {
 		log_sys_error("unlink", link_path);
 		return 0;

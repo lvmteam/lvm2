@@ -36,6 +36,7 @@ int lv_info(struct logical_volume *lv, struct dm_info *info)
 	int r = 0;
 	struct dm_task *dmt;
 
+	log_very_verbose("Getting device info for %s", lv->name);
 	if (!(dmt = _setup_task(lv, DM_DEVICE_INFO))) {
 		stack;
 		return 0;
@@ -67,6 +68,7 @@ int lv_active(struct logical_volume *lv)
 		return r;
 	}
 
+	log_very_verbose("%s is%s active", lv->name, info.exists ? "":" not");
 	return info.exists;
 }
 
@@ -80,6 +82,7 @@ int lv_open_count(struct logical_volume *lv)
 		return r;
 	}
 
+	log_very_verbose("%s is open %d time(s)", lv->name, info.open_count);
 	return info.open_count;
 }
 
@@ -121,6 +124,11 @@ static int _emit_target(struct dm_task *dmt, struct stripe_segment *seg)
 		}
 	}
 
+	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
+		   esize * seg->le, esize * seg->len,
+		   stripes == 1 ? "linear" : "striped",
+		   params);
+
 	if (!dm_task_add_target(dmt, esize * seg->le, esize * seg->len,
 				stripes == 1 ? "linear" : "striped",
 				params)) {
@@ -138,6 +146,7 @@ int _load(struct logical_volume *lv, int task)
 	struct list *segh;
 	struct stripe_segment *seg;
 
+	log_very_verbose("Generating devmapper parameters for %s", lv->name);
 	if (!(dmt = _setup_task(lv, task))) {
 		stack;
 		return 0;
@@ -168,6 +177,7 @@ int lv_activate(struct logical_volume *lv)
 	if (test_mode())
 		return 0;
 
+	log_very_verbose("Activating %s", lv->name);
 	return _load(lv, DM_DEVICE_CREATE) && fs_add_lv(lv);
 }
 
@@ -177,6 +187,7 @@ int _suspend(struct logical_volume *lv, int sus)
 	struct dm_task *dmt;
 	int task = sus ? DM_DEVICE_SUSPEND : DM_DEVICE_RESUME;
 
+	log_very_verbose("%s %s", sus ? "Suspending" : "Resuming", lv->name);
 	if (!(dmt = _setup_task(lv, task))) {
 		stack;
 		return 0;
@@ -217,6 +228,7 @@ int lv_deactivate(struct logical_volume *lv)
 	int r;
 	struct dm_task *dmt;
 
+	log_very_verbose("Deactivating %s", lv->name);
 	if (test_mode())
 		return 0;
 
