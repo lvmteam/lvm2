@@ -1,11 +1,12 @@
 ../lib/config/config.h
-../lib/dev-mgr/dev-cache.h
+../lib/device/device.h
+../lib/device/dev-cache.h
 ../lib/display/display.h
 ../lib/log/log.h
 ../lib/metadata/metadata.h
 ../lib/mm/dbg_malloc.h
 ../lib/mm/pool.h
-../lib/device/device.h
 ../lib/datastruct/hash.h
 ../lib/datastruct/list.h
 ../lib/filters/filter.h
+../lib/datastruct/lvm-types.h
