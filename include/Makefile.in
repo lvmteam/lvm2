@@ -35,9 +35,11 @@ distclean:
 	find . -maxdepth 1 -type l -exec $(RM) \{\} \;
 	$(RM) Makefile .include_symlinks .symlinks_created
 
+pofile: all
+
 clean:
 
 install:
 
-.PHONY: clean distclean all install
+.PHONY: clean distclean all install pofile
 

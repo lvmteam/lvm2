@@ -436,6 +436,10 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (!setlocale(LC_ALL, ""))
 		log_error("setlocale failed");
 
+#ifdef INTL_PACKAGE
+	bindtextdomain(INTL_PACKAGE, LOCALEDIR);
+#endif
+
 	init_syslog(DEFAULT_LOG_FACILITY);
 
 	if (!(cmd = dbg_malloc(sizeof(*cmd)))) {

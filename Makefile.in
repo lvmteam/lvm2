@@ -20,16 +20,30 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-SUBDIRS = include man lib tools
+SUBDIRS = include man 
+
+ifeq ("@INTL@", "yes")
+  SUBDIRS += po
+endif
+
+SUBDIRS += lib tools
 
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += lib/format1 \
+	     po \
 	     test/mm test/device test/format1 test/regex test/filters
 endif
 
 include make.tmpl
 
 lib: include
-tools: include lib
+tools: lib
+po: lib tools
 
+ifeq ("@INTL@", "yes")
+lib.pofile: include.pofile
+tools.pofile: lib.pofile
+po.pofile: lib.pofile tools.pofile
+pofile: po.pofile
+endif
 

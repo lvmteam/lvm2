@@ -15,5 +15,6 @@
 
 #include "log.h"
 #include "dbg_malloc.h"
+#include "intl.h"
 
 #endif
