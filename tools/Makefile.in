@@ -16,6 +16,10 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
+ifeq ("@FSADM@", "yes")
+  SUBDIRS += fsadm
+endif
+
 SOURCES =\
 	archiver.c \
 	dumpconfig.c \
@@ -84,7 +88,7 @@ ifeq ("@DEVMAPPER@", "yes")
 	LVMLIBS += -ldevmapper
 endif
 
-include ../make.tmpl
+include $(top_srcdir)/make.tmpl
 
 lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o $@ $(OBJECTS) lvm.o $(LD_FLAGS) $(LVMLIBS) $(LIBS) -rdynamic

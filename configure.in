@@ -58,7 +58,8 @@ case "$host_os" in
 		LD_FLAGS="-Wl,--export-dynamic"
 		SOFLAG="-shared"
 		DEVMAPPER=yes
-		ODIRECT=yes ;;
+		ODIRECT=yes
+		FSADM=yes ;;
 	darwin*)
 		CFLAGS="-no-cpp-precomp -fno-common"
 		CLDFLAGS=
@@ -68,7 +69,8 @@ case "$host_os" in
 		LD_FLAGS=
 		SOFLAG="-dynamiclib"
 		DEVMAPPER=no
-		ODIRECT=no ;;
+		ODIRECT=no
+		FSADM=no ;;
 esac
 
 dnl -- prefix is /usr by default, the exec_prefix default is setup later
@@ -370,6 +372,7 @@ AC_SUBST(CONFDIR)
 AC_SUBST(STATICDIR)
 AC_SUBST(INTL_PACKAGE)
 AC_SUBST(INTL)
+AC_SUBST(FSADM)
 
 dnl First and last lines should not contain files to generate in order to 
 dnl keep utility scripts running properly
@@ -387,6 +390,7 @@ man/Makefile							 	\
 po/Makefile								\
 tools/Makefile							 	\
 tools/version.h								\
+tools/fsadm/Makefile							\
 test/mm/Makefile							\
 test/device/Makefile							\
 test/format1/Makefile							\

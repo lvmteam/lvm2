@@ -169,14 +169,16 @@ xx(lvextend,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents [+]LogicalExtentsNumber |\n"
    "\t -L|--size [+]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-n|--nofsck]\n"
+   "\t[-r|--resizefs]\n"
    "\t[-t|--test]\n"
    "\t[--type VolumeType]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   alloc_ARG, autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
-   stripesize_ARG, test_ARG, type_ARG)
+   alloc_ARG, autobackup_ARG, extents_ARG, nofsck_ARG, resizefs_ARG,
+   size_ARG, stripes_ARG, stripesize_ARG, test_ARG, type_ARG)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
@@ -230,12 +232,14 @@ xx(lvreduce,
    "\t[-h|--help]\n"
    "\t{-l|--extents [-]LogicalExtentsNumber |\n"
    "\t -L|--size [-]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-n|--nofsck]\n"
+   "\t[-r|--resizefs]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path]\n",
 
-   autobackup_ARG, force_ARG,  extents_ARG,
+   autobackup_ARG, force_ARG,  extents_ARG, nofsck_ARG, resizefs_ARG,
    size_ARG, test_ARG, yes_ARG)
 
 xx(lvremove,
@@ -276,14 +280,16 @@ xx(lvresize,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents [+|-]LogicalExtentsNumber |\n"
    "\t -L|--size [+|-]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-n|--nofsck]\n"
+   "\t[-r|--resizefs]\n"
    "\t[-t|--test]\n"
    "\t[--type VolumeType]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   alloc_ARG, autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
-   stripesize_ARG, test_ARG, type_ARG)
+   alloc_ARG, autobackup_ARG, extents_ARG, nofsck_ARG, resizefs_ARG,
+   size_ARG, stripes_ARG, stripesize_ARG, test_ARG, type_ARG)
 
 xx(lvs,
    "Display information about logical volumes",

@@ -309,7 +309,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=/usr
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MSGFMT JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LD_DEPS LD_FLAGS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL FSADM LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -3898,7 +3898,8 @@ case "$host_os" in
 		LD_FLAGS="-Wl,--export-dynamic"
 		SOFLAG="-shared"
 		DEVMAPPER=yes
-		ODIRECT=yes ;;
+		ODIRECT=yes
+		FSADM=yes ;;
 	darwin*)
 		CFLAGS="-no-cpp-precomp -fno-common"
 		CLDFLAGS=
@@ -3908,7 +3909,8 @@ case "$host_os" in
 		LD_FLAGS=
 		SOFLAG="-dynamiclib"
 		DEVMAPPER=no
-		ODIRECT=no ;;
+		ODIRECT=no
+		FSADM=no ;;
 esac
 
 
@@ -5195,7 +5197,8 @@ fi
 
 
 
-                                                                                                                                                                                    ac_config_files="$ac_config_files Makefile make.tmpl doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
+
+                                                                                                                                                                                              ac_config_files="$ac_config_files Makefile make.tmpl doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h tools/fsadm/Makefile test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -5759,6 +5762,7 @@ do
   "po/Makefile" ) CONFIG_FILES="$CONFIG_FILES po/Makefile" ;;
   "tools/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
   "tools/version.h" ) CONFIG_FILES="$CONFIG_FILES tools/version.h" ;;
+  "tools/fsadm/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/fsadm/Makefile" ;;
   "test/mm/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/mm/Makefile" ;;
   "test/device/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/device/Makefile" ;;
   "test/format1/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/format1/Makefile" ;;
@@ -5903,6 +5907,7 @@ s,@CONFDIR@,$CONFDIR,;t t
 s,@STATICDIR@,$STATICDIR,;t t
 s,@INTL_PACKAGE@,$INTL_PACKAGE,;t t
 s,@INTL@,$INTL,;t t
+s,@FSADM@,$FSADM,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
