@@ -1,12 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Free Software Foundation, Inc.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-09-15 16:28+0100\n"
+"POT-Creation-Date: 2004-09-29 16:06+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -185,11 +186,11 @@ msgstr ""
 #: format_text/archive.c:142 format_text/archive.c:169
 #: format_text/archive.c:264 format_text/archive.c:374
 #: format_text/export.c:257 format_text/export.c:258 format_text/export.c:259
-#: format_text/export.c:262 format_text/export.c:266 format_text/export.c:267
+#: format_text/export.c:262 format_text/export.c:264 format_text/export.c:267
 #: format_text/export.c:277 format_text/export.c:281 format_text/export.c:283
 #: format_text/export.c:286 format_text/export.c:289 format_text/export.c:293
 #: format_text/export.c:296 format_text/export.c:300 format_text/export.c:304
-#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:314
+#: format_text/export.c:307 format_text/export.c:308 format_text/export.c:313
 #: format_text/export.c:338 format_text/export.c:345 format_text/export.c:350
 #: format_text/export.c:354 format_text/export.c:358 format_text/export.c:360
 #: format_text/export.c:366 format_text/export.c:369 format_text/export.c:373
@@ -198,14 +199,14 @@ msgstr ""
 #: format_text/export.c:403 format_text/export.c:406 format_text/export.c:411
 #: format_text/export.c:415 format_text/export.c:418 format_text/export.c:423
 #: format_text/export.c:428 format_text/export.c:441 format_text/export.c:448
-#: format_text/export.c:454 format_text/export.c:460 format_text/export.c:465
+#: format_text/export.c:452 format_text/export.c:457 format_text/export.c:465
 #: format_text/export.c:488 format_text/export.c:492 format_text/export.c:496
 #: format_text/export.c:500 format_text/export.c:504 format_text/export.c:505
 #: format_text/export.c:511 format_text/export.c:533 format_text/export.c:538
 #: format_text/export.c:553 format_text/export.c:575 format_text/export.c:582
 #: format_text/export.c:587 format_text/export.c:591 format_text/export.c:594
 #: format_text/export.c:597 format_text/export.c:601 format_text/export.c:604
-#: format_text/export.c:609 format_text/export.c:612 format_text/export.c:614
+#: format_text/export.c:608 format_text/export.c:612 format_text/export.c:614
 #: format_text/export.c:616 format_text/export.c:617 format_text/export.c:623
 #: format_text/export.c:629 format_text/export.c:633 format_text/export.c:638
 #: format_text/export.c:656 format_text/export.c:661 format_text/export.c:670
@@ -290,7 +291,7 @@ msgstr ""
 #: regex/ttree.c:111 report/report.c:522 report/report.c:550
 #: report/report.c:682 snapshot/snapshot.c:74 snapshot/snapshot.c:83
 #: snapshot/snapshot.c:84 snapshot/snapshot.c:85 snapshot/snapshot.c:154
-#: striped/striped.c:91 striped/striped.c:160 striped/striped.c:209
+#: striped/striped.c:90 striped/striped.c:160 striped/striped.c:209
 #: toollib.c:739 toollib.c:789 toollib.c:836 vgcfgbackup.c:65 vgcfgbackup.c:74
 #: vgcfgbackup.c:81 vgreduce.c:28 vgreduce.c:84 vgreduce.c:92 vgreduce.c:98
 #: vgreduce.c:106 vgreduce.c:142 vgreduce.c:158 zero/zero.c:90
@@ -453,7 +454,7 @@ msgstr ""
 msgid "device layer %s missing from hash"
 msgstr ""
 
-#: activate/dev_manager.c:741
+#: activate/dev_manager.c:740
 #, c-format
 msgid "Failed to format device number as dm target (%u,%u)"
 msgstr ""
@@ -638,7 +639,7 @@ msgstr ""
 msgid "%s: %s failed: %s"
 msgstr ""
 
-#: activate/fs.c:68
+#: activate/fs.c:69
 #, c-format
 msgid "Removing directory %s"
 msgstr ""
@@ -687,7 +688,7 @@ msgstr ""
 msgid "Couldn't determine link pathname."
 msgstr ""
 
-#: activate/fs.c:206
+#: activate/fs.c:207
 #, c-format
 msgid "%s not symbolic link - not removing"
 msgstr ""
@@ -2941,10 +2942,6 @@ msgstr ""
 msgid "Test mode: Metadata will NOT be updated."
 msgstr ""
 
-#: log/log.c:231
-msgid "vsnprintf failed: skipping external logging function"
-msgstr ""
-
 #: lvchange.c:26
 #, c-format
 msgid "Logical volume \"%s\" is already writable"
@@ -4367,7 +4364,7 @@ msgstr ""
 msgid "Couldn't create area maps in %s"
 msgstr ""
 
-#: metadata/segtypes.c:30
+#: metadata/segtype.c:30
 #, c-format
 msgid "Unrecognised segment type %s"
 msgstr ""
@@ -4575,7 +4572,7 @@ msgstr ""
 msgid "Unable to find volume group of \"%s\""
 msgstr ""
 
-#: pvchange.c:80
+#: pvchange.c:79
 #, c-format
 msgid "Unable to find \"%s\" in volume group \"%s\""
 msgstr ""
@@ -4894,11 +4891,11 @@ msgstr ""
 msgid "Ignoring remaining command line arguments"
 msgstr ""
 
-#: pvmove.c:305
+#: pvmove.c:304
 msgid "ABORTING: Failed to generate list of moving LVs"
 msgstr ""
 
-#: pvmove.c:313
+#: pvmove.c:312
 msgid "ABORTING: Temporary mirror activation failed."
 msgstr ""
 
