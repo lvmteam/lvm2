@@ -102,24 +102,6 @@ static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
 	return lvname;
 }
 
-static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
-						const char *pv_name)
-{
-	struct physical_volume *pv;
-
-	if (!(pv = pv_read(cmd, pv_name, NULL, NULL))) {
-		log_error("Physical volume %s not found", pv_name);
-		return NULL;
-	}
-
-	if (!pv->vg_name[0]) {
-		log_error("Physical volume %s not in a volume group", pv_name);
-		return NULL;
-	}
-
-	return pv;
-}
-
 static struct volume_group *_get_vg(struct cmd_context *cmd, const char *vgname)
 {
 	int consistent = 1;
@@ -315,7 +297,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	int first_time = 1;
 
 	/* Find PV (in VG) */
-	if (!(pv = _find_pv_by_name(cmd, pv_name))) {
+	if (!(pv = find_pv_by_name(cmd, pv_name))) {
 		stack;
 		return EINVALID_CMD_LINE;
 	}
@@ -541,7 +523,7 @@ static int _wait_for_single_pvmove(struct cmd_context *cmd, const char *pv_name,
 		if (parms->interval && !parms->aborting)
 			sleep(parms->interval);
 
-		if (!(pv = _find_pv_by_name(cmd, pv_name))) {
+		if (!(pv = find_pv_by_name(cmd, pv_name))) {
 			log_error("ABORTING: Can't reread PV %s", pv_name);
 			return 0;
 		}

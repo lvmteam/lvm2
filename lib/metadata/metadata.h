@@ -459,6 +459,8 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd,
 /* FIXME Merge these functions with ones above */
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
 struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
+struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
+					const char *pv_name);
 
 /* Find LV segment containing given LE */
 struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le);
