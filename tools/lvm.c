@@ -15,8 +15,6 @@
 #include <ctype.h>
 
 #include "stub.h"
-#include "vgcache.h"
-#include "lvm-string.h"
 
 #ifdef READLINE_SUPPORT
 #include <readline/readline.h>
