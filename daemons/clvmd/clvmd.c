@@ -1292,7 +1292,8 @@ static void *pre_and_post_thread(void *arg)
 		DEBUGLOG("Got pre command condition...\n");
 	}
 	DEBUGLOG("Subthread finished\n");
-	return (void *) 0;
+	pthread_exit((void *) 0);
+	return 0;
 }
 
 /* Process a command on the local node and store the result */
@@ -1681,7 +1682,6 @@ static void ntoh_clvm(struct clvm_header *hdr)
 static void sigusr2_handler(int sig)
 {
 	DEBUGLOG("SIGUSR2 received\n");
-	pthread_exit((void *) -1);
 	return;
 }
 
