@@ -8,6 +8,8 @@
 #include "lvm-types.h"
 #include "lvm-string.h"
 
+#include <ctype.h>
+
 /*
  * On error, up to glibc 2.0.6, snprintf returned -1 if buffer was too small;
  * From glibc 2.1 it returns number of chars (excl. trailing null) that would 
@@ -45,4 +47,45 @@ int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
 	*buffer += n;
 	*size -= n;
 	return 1;
+}
+
+/*
+ * consume characters while they match the predicate function.
+ */
+static char *_consume(char *buffer, int (*fn) (int))
+{
+	while (*buffer && fn(*buffer))
+		buffer++;
+
+	return buffer;
+}
+
+static int _isword(int c)
+{
+	return !isspace(c);
+}
+
+/*
+ * Split buffer into NULL-separated words in argv.
+ * Returns number of words.
+ */
+int split_words(char *buffer, unsigned max, char **argv)
+{
+	unsigned arg;
+
+	for (arg = 0; arg < max; arg++) {
+		buffer = _consume(buffer, isspace);
+		if (!*buffer)
+			break;
+
+		argv[arg] = buffer;
+		buffer = _consume(buffer, _isword);
+
+		if (*buffer) {
+			*buffer = '\0';
+			buffer++;
+		}
+	}
+
+	return arg;
 }
