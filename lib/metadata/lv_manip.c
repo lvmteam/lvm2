@@ -50,12 +50,50 @@ static int _alloc_striped(struct logical_volume *lv, struct list *pvms)
 	return 0;
 }
 
+/*
+ * Only one area per pv is allowed, so we search
+ * for the biggest area, or the first area that
+ * can complete the allocation.
+ */
 static int _alloc_contiguous(struct logical_volume *lv, struct list *pvms)
 {
-	log_err("contiguous allocation not implemented yet.");
-	return 0;
+	struct list *tmp1, *tmp2;
+	struct pv_map *pvm;
+	struct pv_area *pva, *biggest;
+	uint32_t allocated = 0;
+
+	list_iterate (tmp1, pvms) {
+		pvm = list_item(tmp1, struct pv_map);
+		biggest = NULL;
+
+		list_iterate (tmp2, &pvm->areas) {
+			pva = list_item(tmp2, struct pv_area);
+
+			if (!biggest || (pva->count > biggest->count))
+				biggest = pva;
+
+			if (biggest->count >= (lv->le_count - allocated))
+				break;
+		}
+
+		allocated += _alloc_area(lv, allocated, pvm->pv, pva);
+		if (allocated == lv->le_count)
+			break;
+	}
+
+	if (allocated != lv->le_count) {
+		log_err("insufficient free extents to "
+			"allocate logical volume");
+		return 0;
+	}
+
+	return 1;
 }
 
+/*
+ * Areas just get allocated in order until the lv
+ * is full.
+ */
 static int _alloc_simple(struct logical_volume *lv, struct list *pvms)
 {
 	struct list *tmp1, *tmp2;
