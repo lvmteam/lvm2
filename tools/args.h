@@ -51,7 +51,7 @@ arg(allocation_ARG, '\0', "allocation", yes_no_arg)
 /*
  * ... and now the short args.
  */
-arg(available_ARG, 'a', "available", yes_no_arg)
+arg(available_ARG, 'a', "available", yes_no_excl_arg)
 arg(all_ARG, 'a', "all", NULL)
 arg(autobackup_ARG, 'A', "autobackup", yes_no_arg)
 arg(activevolumegroups_ARG, 'A', "activevolumegroups", NULL)

@@ -85,6 +85,31 @@ int yes_no_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
+int yes_no_excl_arg(struct cmd_context *cmd, struct arg *a)
+{
+	a->sign = SIGN_NONE;
+
+	if (!strcmp(a->value, "e")) {
+		a->i_value = 2;
+		a->ui_value = 2;
+	}
+
+	else if (!strcmp(a->value, "y")) {
+		a->i_value = 1;
+		a->ui_value = 1;
+	}
+
+	else if (!strcmp(a->value, "n")) {
+		a->i_value = 0;
+		a->ui_value = 0;
+	}
+
+	else
+		return 0;
+
+	return 1;
+}
+
 int metadatatype_arg(struct cmd_context *cmd, struct arg *a)
 {
 	struct format_type *fmt;
