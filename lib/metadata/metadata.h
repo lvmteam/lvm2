@@ -33,7 +33,7 @@
 #define CLUSTERED         	0x00000400  /* VG */
 #define SHARED            	0x00000800  /* VG */
 
-#define ALLOC_STRICT      	0x00001000  /* LV */
+#define ALLOC_STRICT            0x00001000  /* LV */
 #define ALLOC_CONTIGUOUS  	0x00002000  /* LV */
 #define SNAPSHOT          	0x00004000  /* LV */
 #define SNAPSHOT_ORG      	0x00008000  /* LV */
@@ -208,10 +208,17 @@ struct volume_group *vg_create(struct io_space *ios, const char *name,
 			       int pv_count, char **pv_names);
 struct physical_volume *pv_create(struct io_space *ios, const char *name);
 
-struct logical_volume *lv_create(struct io_space *ios, const char *name,
-				 uint32_t status, int stripes, 
-				 uint64_t extents, char **pv_names);
-
+/*
+ * This will insert the new lv into the
+ * volume_group.
+ */
+struct logical_volume *lv_create(struct io_space *ios,
+				 const char *name,
+				 uint32_t status,
+				 uint32_t stripes,
+				 uint32_t stripe_size,
+				 struct volume_group *vg,
+				 struct pv_list *acceptable_pvs);
 
 int vg_extend(struct io_space *ios, struct volume_group *vg, int pv_count,
               char **pv_names);

@@ -29,6 +29,7 @@ SOURCES=\
 	format1/vg_number.c \
 	log/log.c \
 	metadata/metadata.c \
+	metadata/pv_map.c \
 	mm/dbg_malloc.c \
 	mm/pool.c \
 	regex/matcher.c \
