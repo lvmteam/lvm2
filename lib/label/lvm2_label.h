@@ -23,5 +23,5 @@ struct lvm2_label
 #define VERSION_MATCH_LESSEQUAL 3
 #define VERSION_MATCH_ANY       4
 
-extern struct dev_filter *label_filter_create();
-extern struct dev_filter *label_format_filter_create(char *disk_type, uint32_t version[3], int match_type);
+extern struct dev_filter *lvm2_label_filter_create();
+extern struct dev_filter *lvm2_label_format_filter_create(char *disk_type, uint32_t version[3], int match_type);
