@@ -31,18 +31,7 @@ install_fs: fs/libdevmapper.so
 
 install_ioctl: ioctl/libdevmapper.so
 	$(INSTALL) -D -o $(OWNER) -g $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/libdevmapper.so.$(LIB_VERSION).$(IOCTL_VERSION)
-	$(LN_S) -f libdevmapper.so.$(LIB_VERSION).$(IOCTL_VERSION) \
-		 $(libdir)/libdevmapper.so.$(LIB_VERSION)
-
-#ioctl/libdevmapper.o: ioctl_version
-
-#ioctl_version: ioctl/libdevmapper.c
-#	@echo Checking library version compatible with kernel version in dm-ioctl.h
-#	test "$(IOCTL_VERSION)" = \
-#	     "$(shell $(CC) -E -dM $(INCLUDES) $(CFLAGS) \
-#	      ioctl/libdevmapper.c | \
-#	      awk -F '[ \t\"]+' '/DM_IOCTL_VERSION/ {print $$3}' )"
+		$(libdir)/libdevmapper.so.$(LIB_VERSION)
 
 distclean_lib: 
 	$(RM) libdm-common.h
@@ -50,3 +39,4 @@ distclean_lib:
 distclean: distclean_lib
 
 .PHONY: distclean_lib distclean
+
