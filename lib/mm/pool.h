@@ -23,8 +23,8 @@ void pool_empty(struct pool *p);
 void pool_free(struct pool *p, void *ptr);
 
 /* object building routines */
-void *pool_begin_object(struct pool *p, size_t hint, unsigned align);
-void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t n);
+void *pool_begin_object(struct pool *p, size_t init_size);
+void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t delta);
 void *pool_end_object(struct pool *p);
 void pool_abandon_object(struct pool *p);
 
