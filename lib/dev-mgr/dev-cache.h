@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
  */
@@ -31,7 +31,7 @@ int dev_cache_init(void);
 void dev_cache_exit(void);
 
 int dev_cache_add_dir(const char *path);
-struct device *dev_cache_get(const char *name);
+struct device *dev_cache_get(const char *name, struct dev_filter *f);
 
 
 /*
@@ -45,10 +45,13 @@ struct device *dev_iter_get(struct dev_iter *iter);
 
 /*
  * All io should use these routines, rather than opening the devices
- * by hand.  You do not have to call an open routine.
+ * by hand.  You do not have to call an open routine.  ATM all io is
+ * immediately flushed.
  */
-__uint64_t dev_get_size(struct device *dev); /* in 512 byte sectors */
-ssize_t dev_read(struct device *dev, size_t offset, size_t len, void *buffer);
-ssize_t dev_write(struct device *dev, size_t offset, size_t len, void *buffer);
+int dev_get_size(struct device *dev, uint64_t *size); /* in k */
+int64_t dev_read(struct device *dev, uint64_t offset,
+		 int64_t len, void *buffer);
+int64_t dev_write(struct device *dev, uint64_t offset,
+		  int64_t len, void *buffer);
 
 #endif

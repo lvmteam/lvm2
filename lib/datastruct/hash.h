@@ -8,10 +8,12 @@
 #define _LVM_HASH_H
 
 struct hash_table;
+struct hash_node;
+
 typedef void (*iterate_fn)(void *data);
 
-struct hash_table *create_hash_table(unsigned size_hint);
-void destroy_hash_table(struct hash_table *t);
+struct hash_table *hash_create(unsigned size_hint);
+void hash_destroy(struct hash_table *t);
 
 char *hash_lookup(struct hash_table *t, const char *key);
 void hash_insert(struct hash_table *t, const char *key, void *data);
@@ -19,6 +21,10 @@ void hash_remove(struct hash_table *t, const char *key);
 
 unsigned hash_get_num_entries(struct hash_table *t);
 void hash_iterate(struct hash_table *t, iterate_fn f);
+
+void *hash_get_data(struct hash_table *t, struct hash_node *n);
+struct hash_node *hash_get_first(struct hash_table *t);
+struct hash_node *hash_get_next(struct hash_table *t, struct hash_node *n);
 
 #endif
 

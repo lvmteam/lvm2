@@ -181,4 +181,29 @@ void hash_iterate(struct hash_table *t, iterate_fn f)
 			f(c->data);
 }
 
+void *hash_get_data(struct hash_table *t, struct hash_node *n)
+{
+	return n->data;
+}
+
+static struct hash_node *_next_slot(struct hash_table *t, unsigned int s)
+{
+	struct hash_node *c = 0;
+	int i;
+
+	for (i = s; i < t->num_slots && !c; i++)
+		c = t->slots[i];
+
+	return c;
+}
+
+struct hash_node *hash_get_first(struct hash_table *t)
+{
+	return _next_slot(t, 0);
+}
+
+struct hash_node *hash_get_next(struct hash_table *t, struct hash_node *n)
+{
+	return n->next ? n->next : _next_slot(t, _hash(n->key) + 1);
+}
 

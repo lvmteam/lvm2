@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
  * This file is released under the GPL.
  */
@@ -11,83 +11,163 @@
 
 #include <stdlib.h>
 
-#define DEV_PATH_LEN 256
+/*
+ * FIXME: really need to seperate names from the devices since
+ * multiple names can point to the same device.
+ */
 
-struct d_internal {
-	struct device dev;
-
-	int count;
-
-	int rw;
-	FILE *fp;
+struct dev_iter {
+	struct hash_node *current;
+	struct dev_filter *filter;
 };
 
-struct {
-	static pool *mem;
+struct dir_list {
+	struct list_head dir_list;
+	char *dir[0];
+};
+
+static struct {
+	struct pool *mem;
 	struct hash_table *devices;
+
+	int has_scanned;
+	struct list_head dirs;
+
 } _cache;
 
-static inline struct d_internal *_alloc_dev()
+
+#define _alloc(x) pool_alloc(_cache.mem, (x))
+#define _free(x) pool_free(_cache.mem, (x))
+
+/*
+ * return a new path for the destination of the path.
+ */
+static char * _follow_link(const char *path, struct stat *info)
 {
-	return pool_alloc(_cache.mem, sizeof(struct d_internal));
+	char buffer[PATH_MAX + 1], *r;
+	int n;
+	n = readlink(path, buffer);
+
+	if (n <= 0)
+		return NULL;
+
+	buffer[n] = '\0';
+
+	if (stat(buffer, info) < 0) {
+		log_sys_err("stat");
+		return NULL;
+	}
+
+	return pool_strdup(_cache.mem, buffer);
 }
 
-static struct d_internal *_create_dev(const char *path)
+/*
+ * Get rid of extra slashes in the path string.
+ */
+static void _collapse_slashes(char *str)
 {
-	/* FIXME: follow sym links */
+	char *ptr;
+	int was_slash = 0;
+
+	for (ptr = str; *ptr; ptr++) {
+		if (*ptr == '/') {
+			if (was_slash)
+				continue;
+
+			was_slash = 1;
+		} else
+			was_slash = 0;
+		*str++ = *ptr;
+	}
+
+	*str = *ptr;
+}
+
+static struct device *_create_dev(const char *path)
+{
 	struct stat info;
-	char norm[DEV_PATH_LEN];
-	_normalise_path(norm, path);
+	struct device *dev;
+	char *normed = _collapse_slashes(path);
 
-	if (stat(path, &info) < 0) {
+	if (!normed) {
+		stack;
+		return NULL;
+	}
+
+	if (stat(normed, &info) < 0) {
 		log_sys_error("stat");
-		return 0;
+		return NULL;
 	}
 
-	/* FIXME: lost the will to program */
-	if () {
-
+	if (S_ISLNK(info.st_mode)) {
+		char *new_path;
+		log_debug("%s is a symbolic link, following\n", normed);
+		normed = _follow_link(normed, &info);
+		if (!normed)
+			return NULL;
 	}
+
+	if (!S_ISBLK(info.st_mode)) {
+		log_debug("%s is not a block device\n", normed);
+		return NULL;
+	}
+
+	if (!(dev = _alloc(sizeof(*dev)))) {
+		stack;
+		return NULL;
+	}
+
+	dev->name = normed;
+	dev->dev = info.st_rdev;
+	return dev;
 }
 
-
-#define DEV_READ 0
-#define DEV_WRITE 1
-static inline struct FILE *_open_read(const char *path)
+static struct device *_add(const char *dir, const char *path)
 {
-	return fopen(path, "r");
+	struct device *d;
+	int len = strlen(dir) + strlen(path) + 2;
+	char *buffer = _alloc(len);
+
+	snprintf(buffer, len, "%s/%s", path);
+	d = dev_cache_get(path);
+
+	if (!d)
+		_free(buffer);	/* pool_free is safe in this case */
+
+	return d;
 }
 
-static inline struct FILE *_open_write(const char *path)
+static int _dir_scan(const char *dir)
 {
-	return fopen(path, "rw");
-}
+	int n, dirent_count;
+	struct dirent **dirent;
 
-static int _check_open(struct d_internal *di, int rw)
-{
-	/* is it already open ? */
-	if (dev->fp)
-		return 0;
-
-	if (di->fp) {
-		/* do we need to upgrade a read ? */
-		if (di->rw == DEV_READ && rw == DEV_WRITE) {
-			struct FILE *fp = _open_write(di->dev.path);
-			if (!fp)
-				return 0;
-
-			fclose(di->fp);
-			di->fp  = fp;
+	dirent_count = scandir(dir, &dirent, NULL, alphasort);
+	if (dirent_count > 0) {
+		for (n = 0; n < dirent_count; n++) {
+			_add(dir, dirent[n]->d_name);
+			free(dirent[n]);
 		}
-	} else if (rw == DEV_READ)
-		di->fp = _open_read(di->dev.path);
-	else
-		di->fp = _open_write(di->dev.path);
+		free(dirent);
+	}
 
-	return di->fp ? 1 : 0;
+	return 1;
 }
 
-int init_dev_cache()
+static void _full_scan(void)
+{
+	struct dir_list *dl;
+
+	if (_cache.has_scanned)
+		return;
+
+	for (dl = _cache.dirs.next; dl != &_cache.dirs; dl = dl->next)
+		_dir_scan(dl.dir);
+
+	_cache.has_scanned = 1;
+}
+
+int dev_cache_init(void)
 {
 	if (!(_cache.mem = pool_create(10 * 1024))) {
 		stack;
@@ -104,68 +184,70 @@ int init_dev_cache()
 	return 1;
 }
 
-static void _close_device(void *d)
-{
-	struct d_internal *di = (struct d_internal *) d;
-	if (di->fp)
-		fclose(di->fp);
-}
-
-void exit_dev_cache()
+void dev_cache_exit(void)
 {
 	pool_destroy(_cache.mem);
-	hash_iterate(_cache.devices, _close_devices);
 	hash_destroy(_cache.devices);
 }
 
-struct device *get_device(const char *name)
+int dev_cache_add_dir(const char *path)
 {
-	struct d_internal *di = hash_lookup(_cache.devices, name);
-	if (di)
-		di->count++;
-	else {
-		di = _create_device(name);
+	struct dir_list *dl;
 
-		if (di)
-			hash_insert(t, name, di);
+	if (!(dl = _alloc(sizeof(*dl) + strlen(path) + 1)))
+		return 0;
+
+	strcpy(dl->dir, path);
+	list_add(dl, _cache.directories);
+	return 1;
+}
+
+struct device *dev_cache_get(const char *name)
+{
+	struct device *d = hash_lookup(_cache.devices, name);
+	if (!d && (d = _create_device(name)))
+		hash_insert(t, name, d);
+
+	return d;
+}
+
+struct dev_iter *dev_iter_create(struct dev_filter *f)
+{
+	struct dev_iter *di = dbg_malloc(sizeof(*di));
+
+	if (!di)
+		return NULL;
+
+	_full_scan();
+	di->current = hash_get_first();
+	di->filter = f;
+
+	return di;
+}
+
+void dev_iter_destroy(struct dev_iter *iter)
+{
+	dbg_free(iter);
+}
+
+static inline struct device *_iter_next(struct dev_iter *iter)
+{
+	struct device *d = hash_get_data(_cache.devices, iter->current);
+	iter->current = hash_next(_cache.devices, iter->current);
+	return d;
+}
+
+struct device *dev_iter_get(struct dev_iter *iter)
+{
+	while (iter->current) {
+		struct device *d = _iter_next(iter);
+		if (!iter->filter ||
+		    iter->filter->pass_filter(iter->filter, d))
+			return d;
 	}
 
-	return di ? &di->d : 0;
+	return NULL;
 }
 
-void put_device(struct device *d)
-{
-	struct d_internal *di = (struct d_internal *) d;
-	if (--di->count < 0)
-		log_error("device reference count < 0");
 
-	else if (di->count == 0)
-		_close_device(di);
-}
 
-ssize_t dev_read(struct device *dev, size_t offset, size_t len, void *buffer)
-{
-	struct d_internal *di = (struct d_internal *) dev;
-
-	if (!_check_open(di, DEV_READ)) {
-		stack;
-		return -EPERM;
-	}
-
-	fseek(dev->fp, offset, SEEK_SET);
-	return fread(buffer, 1, len, dev->fp);
-
-}
-
-ssize_t dev_write(struct device *dev, size_t offset, size_t len, void *buffer)
-{
-	struct d_internal *di = (struct d_internal *) dev;
-
-	if (!_check_open(di, DEV_WRITE)) {
-		stack;
-		return -EPERM;
-	}
-
-	fseek(dev->fp, offset, SEEK_SET);
-	return fwrite(buffer, 1, len, dev->fp);
-}

@@ -1,21 +1,7 @@
 /*
- * Copyright (C) 2001  Sistina Software
+ * Copyright (C) 2001 Sistina Software (UK) Limited.
  *
- * This LVM library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This LVM library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this LVM library; if not, write to the Free
- * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
- * MA 02111-1307, USA
- *
+ * This file is released under the GPL.
  */
 
 #ifndef _LVM_LOG_H
@@ -31,7 +17,7 @@
 #define _LOG_FATAL 2
 
 void init_log(FILE *fp);
-void fin_log();
+void fin_log(void);
 
 void init_syslog(int facility);
 void fin_syslog(void);
@@ -43,7 +29,8 @@ void init_debug(int level);
 int test_mode(void);
 int debug_level(void);
 
-void print_log(int level, const char *file, int line, const char *format, ...);
+void print_log(int level, const char *file, int line, const char *format, ...)
+     __attribute__ (( format (printf, 4, 5) ));
 
 #define plog(l, x...) print_log(l, __FILE__, __LINE__ , ## x)
 
@@ -58,7 +45,7 @@ void print_log(int level, const char *file, int line, const char *format, ...);
 
 #define stack log_debug( "stack trace" )
 
-/* 
+/*
  * Macros to use for messages:
  *
  *   log_error - always print to stderr
@@ -69,7 +56,6 @@ void print_log(int level, const char *file, int line, const char *format, ...);
  *
  * In addition, messages will be logged to file or syslog if they
  * are more serious than the log level specified with -d.
- *
  */
 
 #define log_error(fmt, args...) log_err(fmt , ## args)
