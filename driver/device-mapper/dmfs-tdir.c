@@ -31,20 +31,6 @@ extern struct inode *dmfs_create_table(struct inode *, int);
 extern struct inode *dmfs_create_status(struct inode *, int);
 
 
-int dm_lock_tdir(struct dentry *dentry)
-{
-	struct file file = { f_dentry: dentry };
-
-	return deny_write_access(&file);
-}
-
-void dm_unlock_tdir(struct dentry *dentry)
-{
-	struct file file = { f_dentry: dentry };
-
-	allow_write_access(&file);
-}
-
 static int dmfs_tdir_unlink(struct inode *dir, struct dentry *dentry)
 {
 	struct inode *inode = dentry->d_inode;
@@ -62,8 +48,10 @@ static struct dentry *dmfs_tdir_lookup(struct inode *dir, struct dentry *dentry)
 
 	switch(dentry->d_name.len) {
 		case 5:
-			if (memcmp("table", name, 5) == 0)
+			if (memcmp("table", name, 5) == 0) {
 				inode = dmfs_create_table(dir, 0600);
+				break;
+			}
 			if (memcmp("error", name, 5) == 0)
 				inode = dmfs_create_error(dir, 0600);
 			break;
