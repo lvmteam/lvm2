@@ -120,18 +120,20 @@ int label_remove(struct device *dev)
 
 int label_read(struct device *dev, struct label **result)
 {
-	struct labeller *l;
 	int r;
+	struct list *lih;
+	struct labeller_i *li;
 
-	if (!(l = _find_labeller(dev))) {
-		stack;
-		return 0;
+	list_iterate (lih, &_labellers) {
+		li = list_item(lih, struct labeller_i);
+		if ((r = li->l->ops->read(li->l, dev, result))) {
+			(*result)->labeller = li->l;
+			return r;
+		}
 	}
 
-	if ((r = l->ops->read(l, dev, result)))
-		(*result)->labeller = l;
-
-	return r;
+	log_debug("No label on device '%s'.", dev_name(dev));
+	return 0;
 }
 
 int label_verify(struct device *dev)
