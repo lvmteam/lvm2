@@ -32,16 +32,7 @@
  * to the smallest of these.
  */
 
-#include <linux/version.h>
-#include <linux/major.h>
-#include <linux/iobuf.h>
-#include <linux/module.h>
-#include <linux/fs.h>
-#include <linux/slab.h>
-#include <linux/vmalloc.h>
-#include <linux/compatmac.h>
-#include <linux/cache.h>
-#include <linux/device-mapper.h>
+#include "dm.h"
 
 /* defines for blk.h */
 #define MAJOR_NR DM_BLK_MAJOR
@@ -121,8 +112,6 @@
  * the copying process had completed.  Possibly by reading a /proc entry
  * for the LV. Could also use poll() for this kind of thing.
  */
-
-#include "dm.h"
 
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
