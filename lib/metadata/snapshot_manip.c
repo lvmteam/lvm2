@@ -137,6 +137,7 @@ int vg_add_snapshot(struct logical_volume *origin,
 	cow->status &= ~VISIBLE_LV;
 	sl->snapshot = s;
 	list_add(&origin->vg->snapshots, &sl->list);
+	origin->vg->snapshot_count++;
 
 	return 1;
 }
@@ -151,6 +152,7 @@ int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow)
 
 		if (sl->snapshot->cow == cow) {
 			list_del(slh);
+			vg->snapshot_count--;
 			return 1;
 		}
 	}
