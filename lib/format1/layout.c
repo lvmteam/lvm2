@@ -140,8 +140,8 @@ int calculate_extent_count(struct physical_volume *pv)
 	do {
 		pvd->pe_total--;
 		_calc_simple_layout(pvd);
-		end = ((pvd->pe_on_disk.base + pvd->pe_on_disk.size) /
-		       SECTOR_SIZE);
+		end = ((pvd->pe_on_disk.base + pvd->pe_on_disk.size + \
+			SECTOR_SIZE - 1) / SECTOR_SIZE);
 
 		pvd->pe_start = _round_up(end, PE_ALIGN);
 
