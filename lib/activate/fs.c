@@ -20,6 +20,10 @@
 #include "lvm-file.h"
 #include "memlock.h"
 
+#ifdef HAVE_SELINUX
+#  include "selinux.h"
+#endif
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -174,6 +178,13 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 		log_sys_error("symlink", lv_path);
 		return 0;
 	}
+
+#ifdef HAVE_SELINUX
+        if (set_selinux_context(lv_path)) {
+                log_sys_error("set_selinux_context", lv_path);
+                return 0;
+        }
+#endif
 
 	return 1;
 }
