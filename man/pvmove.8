@@ -3,7 +3,7 @@
 pvmove \- move physical extents
 .SH SYNOPSIS
 .B pvmove
-[\-\-abort]
+[\-\-abort] [\-\-background]
 [\-d/\-\-debug] [\-h/\-\-help] [\-i/\-\-interval Seconds] [\-v/\-\-verbose]
 [\-n/\-\-name LogicalVolume] 
 [SourcePhysicalVolume[:PE[-PE]...] [DestinationPhysicalVolume[:PE[-PE]...]...]]
@@ -23,13 +23,56 @@ is specifed, the normal allocation rules for the volume group are used.
 
 If \fBpvmove\fP gets interrupted for any reason (e.g. the machine crashes)
 then run \fBpvmove\fP again without any PhysicalVolume arguments to
-continue with any moves that were in progress or use \fBpvmove --abort\fP to 
-abort them.
+restart any moves that were in progress from the last checkpoint.
+Alternatively use \fBpvmove --abort\fP at any time to abort them
+at the last checkpoint.
+
+You can run more than one pvmove at once provided they are moving data
+off different SourcePhysicalVolumes, but additional pvmoves will ignore
+any logical volumes already in the process of being changed, so some
+data might not get moved.
+
+\fBpvmove\fP works as follows:
+
+1. A temporary 'pvmove' logical volume is created to store
+details of all the data movements required.
+
+2. Every logical volume in the volume group is searched
+for contiguous data that need moving
+according to the command line arguments.
+For each piece of data found, a new segment is added to the end of the
+pvmove LV.
+This segment takes the form of a temporary mirror to copy the data 
+from the original location to a newly-allocated location. 
+The original LV is updated to use the new temporary mirror segment
+in the pvmove LV instead of accessing the data directly.
+
+3. The volume group metadata is updated on disk.
+
+4. The first segment of the pvmove logical volume is activated and starts
+to mirror the first part of the data.  Only one segment is mirrored at once
+as this is usually more efficient.
+
+5. A daemon repeatedly checks progress at the specified time interval.
+When it detects that the first temporary mirror is in-sync,
+it breaks that mirror so that only the new location for that data gets used 
+and writes a checkpoint into the volume group metadata on disk.
+Then it activates the mirror for the next segment of the pvmove LV.
+
+6. When there are no more segments left to be mirrored, 
+the temporary logical volume is removed and the volume group metadata 
+is updated so that the logical volumes reflect the new data locations.
+
+Note that this new process cannot support the original LVM1
+type of on-disk metadata.  Metadata can be converted using \fBvgconvert\fP(8).
 
 .SH OPTIONS
 .TP
 .I \-\-abort
-Abort any moves currently in progress.
+Abort any moves in progress.
+.TP
+.I \-\-background
+Run the daemon in the background.
 .TP
 .I \-i, \-\-interval Seconds
 Report progress as a percentage at regular intervals.
@@ -50,4 +93,4 @@ runtime information, use:
 \	pvmove -v /dev/hda4
 
 .SH SEE ALSO
-.BR lvm (8)
+.BR lvm (8), vgconvert (8)
