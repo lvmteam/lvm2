@@ -16,9 +16,10 @@ SOURCES=\
 	device/dev-cache.c \
 	device/dev-io.c \
 	device/device.c \
+	filters/filter-persistent.c \
+	filters/filter-regex.c \
 	display/display.c \
 	filters/filter.c \
-	filters/filter-regex.c \
 	format1/disk-rep.c \
 	format1/format1.c \
 	format1/import-export.c \
@@ -28,8 +29,8 @@ SOURCES=\
 	metadata/metadata.c \
 	mm/dbg_malloc.c \
 	mm/pool.c \
-	regex/parse_rx.c \
 	regex/matcher.c \
+	regex/parse_rx.c \
 	regex/ttree.c \
 	uuid/uuid.c
 

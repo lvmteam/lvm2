@@ -127,7 +127,7 @@ static inline struct hash_node **_find(struct hash_table *t, const char *key)
 	return c;
 }
 
-char *hash_lookup(struct hash_table *t, const char *key)
+void *hash_lookup(struct hash_table *t, const char *key)
 {
 	struct hash_node **c = _find(t, key);
 	return *c ? (*c)->data : 0;
@@ -179,6 +179,11 @@ void hash_iterate(struct hash_table *t, iterate_fn f)
 	for (i = 0; i < t->num_slots; i++)
 		for (c = t->slots[i]; c; c = c->next)
 			f(c->data);
+}
+
+char *hash_get_key(struct hash_table *t, struct hash_node *n)
+{
+	return n->key;
 }
 
 void *hash_get_data(struct hash_table *t, struct hash_node *n)

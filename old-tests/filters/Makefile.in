@@ -9,13 +9,18 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 SOURCES=\
-	rfilter_t.c
+	rfilter_t.c \
+	pfilter_t.c
 
 TARGETS=\
-	rfilter_t
+	rfilter_t \
+	pfilter_t
 
 include ../../make.tmpl
 
 rfilter_t: rfilter_t.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o rfilter_t rfilter_t.o -L$(top_srcdir)/lib -llvm
+
+pfilter_t: pfilter_t.o $(top_srcdir)/lib/liblvm.a
+	$(CC) -o pfilter_t pfilter_t.o -L$(top_srcdir)/lib -llvm
 
