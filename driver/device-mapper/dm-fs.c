@@ -96,13 +96,20 @@ int extract_line(struct text_region *line, void *private)
 static struct file *open_error_file(struct file *table)
 {
 	struct file *f;
-	char *name, *buffer = (char *) kmalloc(PATH_MAX + 1, GFP_KERNEL);
+	char *name, *buffer;
+	int bufsize = PATH_MAX + 1;
+
+	if (bufsize < PAGE_SIZE)
+		bufsize = PAGE_SIZE;
+
+	/* Get space to append ".err" */
+ 	buffer = (char *) kmalloc(bufsize + 4, GFP_KERNEL);
 
 	if (!buffer)
 		return 0;
 
 	/* Get path name */
-	name = d_path(table->f_dentry, table->f_vfsmnt, buffer, PATH_MAX + 1);
+	name = d_path(table->f_dentry, table->f_vfsmnt, buffer, bufsize);
 
 	if (!name) {
 		kfree(buffer);
