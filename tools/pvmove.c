@@ -60,7 +60,7 @@ static int _become_daemon(struct cmd_context *cmd)
 	if (setsid() == -1)
 		log_error("Background process failed to setsid: %s",
 			  strerror(errno));
-	init_verbose(0);
+	init_verbose(VERBOSE_BASE_LEVEL);
 
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);

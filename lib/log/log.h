@@ -39,6 +39,8 @@
 #define _LOG_ERR 3
 #define _LOG_FATAL 2
 
+#define VERBOSE_BASE_LEVEL _LOG_WARN
+
 void init_log_file(const char *log_file, int append);
 void init_log_direct(const char *log_file, int append);
 void init_log_while_suspended(int log_while_suspended);

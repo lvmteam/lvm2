@@ -85,7 +85,7 @@ static void _init_logging(struct cmd_context *cmd)
 	/* Verbose level for tty output */
 	cmd->default_settings.verbose =
 	    find_config_int(cmd->cft->root, "log/verbose", DEFAULT_VERBOSE);
-	init_verbose(cmd->default_settings.verbose);
+	init_verbose(cmd->default_settings.verbose + VERBOSE_BASE_LEVEL);
 
 	/* Log message formatting */
 	init_indent(find_config_int(cmd->cft->root, "log/indent",

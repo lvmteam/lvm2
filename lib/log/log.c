@@ -16,7 +16,7 @@ static FILE *_log_file;
 static struct device _log_dev;
 static struct str_list _log_dev_alias;
 
-static int _verbose_level = 0;
+static int _verbose_level = VERBOSE_BASE_LEVEL;
 static int _test = 0;
 static int _partial = 0;
 static int _pvmove = 0;
@@ -197,7 +197,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 		case _LOG_DEBUG:
 			if (!strcmp("<backtrace>", format))
 				break;
-			if (_verbose_level > 2) {
+			if (_verbose_level >= _LOG_DEBUG) {
 				printf("%s%s", _cmd_name, _msg_prefix);
 				if (_indent)
 					printf("      ");
@@ -207,7 +207,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			break;
 
 		case _LOG_INFO:
-			if (_verbose_level > 1) {
+			if (_verbose_level >= _LOG_INFO) {
 				printf("%s%s", _cmd_name, _msg_prefix);
 				if (_indent)
 					printf("    ");
@@ -216,7 +216,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			}
 			break;
 		case _LOG_NOTICE:
-			if (_verbose_level) {
+			if (_verbose_level >= _LOG_NOTICE) {
 				printf("%s%s", _cmd_name, _msg_prefix);
 				if (_indent)
 					printf("  ");
@@ -225,22 +225,27 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			}
 			break;
 		case _LOG_WARN:
-			printf("%s%s", _cmd_name, _msg_prefix);
-			vprintf(trformat, ap);
-			putchar('\n');
+			if (_verbose_level >= _LOG_WARN) {
+				printf("%s%s", _cmd_name, _msg_prefix);
+				vprintf(trformat, ap);
+				putchar('\n');
+			}
 			break;
 		case _LOG_ERR:
-			fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
-			vfprintf(stderr, trformat, ap);
-			fputc('\n', stderr);
+			if (_verbose_level >= _LOG_ERR) {
+				fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
+				vfprintf(stderr, trformat, ap);
+				fputc('\n', stderr);
+			}
 			break;
 		case _LOG_FATAL:
 		default:
-			fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
-			vfprintf(stderr, trformat, ap);
-			fputc('\n', stderr);
+			if (_verbose_level >= _LOG_FATAL) {
+				fprintf(stderr, "%s%s", _cmd_name, _msg_prefix);
+				vfprintf(stderr, trformat, ap);
+				fputc('\n', stderr);
+			}
 			break;
-			;
 		}
 		va_end(ap);
 	}
