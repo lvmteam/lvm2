@@ -809,6 +809,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 {
 	char *name, *type, *params;
 	unsigned long long start, length;
+	unsigned int numerator, denominator;
 
 	/* FIXME: Use #defines - & move allocations into _status_run ? */
 	uint32_t type_size = 32;
@@ -851,7 +852,15 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	if (!params)
 		return 0;
 
-	return sscanf(params, "%f", percent);
+	if (index(params, '/')) {
+		if (sscanf(params, "%u/%u", &numerator, &denominator) == 2) {
+			*percent = (float) numerator *100 / denominator;
+			return 1;
+		}
+	} else if (sscanf(params, "%f", percent) == 1)
+		return 1;
+
+	return 0;
 }
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
