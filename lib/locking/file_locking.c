@@ -257,6 +257,7 @@ int init_file_locking(struct locking_type *locking, struct config_tree *cft)
 	locking->lock_resource = _file_lock_resource;
 	locking->reset_locking = _reset_file_locking;
 	locking->fin_locking = _fin_file_locking;
+	locking->flags = 0;
 
 	/* Get lockfile directory from config file */
 	strncpy(_lock_dir, find_config_str(cft->root, "global/locking_dir",
