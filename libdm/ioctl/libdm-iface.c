@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -13,22 +13,17 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "lib.h"
 #include "libdm-targets.h"
 #include "libdm-common.h"
-#include "log.h"
+#include "libdm-file.h"
 
 #ifdef DM_COMPAT
 #  include "libdm-compat.h"
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <errno.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <limits.h>
 
@@ -52,6 +47,13 @@
       (DM_VERSION_MAJOR == 4 && DM_VERSION_MINOR >= 0))
 #error The version of dm-ioctl.h included is incompatible.
 #endif
+
+/* FIXME This should be exported in device-mapper.h */
+#define DM_NAME "device-mapper"
+
+#define PROC_MISC "/proc/misc"
+#define PROC_DEVICES "/proc/devices"
+#define MISC_NAME "misc"
 
 /* dm major version no for running kernel */
 static int _dm_version = DM_VERSION_MAJOR;
@@ -114,22 +116,144 @@ static void *_align(void *ptr, unsigned int a)
 	return (void *) (((unsigned long) ptr + agn) & ~agn);
 }
 
+static int _get_proc_number(const char *file, const char *name,
+			    uint32_t *number)
+{
+	FILE *fl;
+	char nm[256];
+	int c;
+
+	if (!(fl = fopen(file, "r"))) {
+		log_error("%s: fopen failed: %s", file, strerror(errno));
+		return 0;
+	}
+
+	while (!feof(fl)) {
+		if (fscanf(fl, "%d %255s\n", number, &nm[0]) == 2) {
+			if (!strcmp(name, nm)) {
+				fclose(fl);
+				return 1;
+			}
+		}
+		do {
+			c = fgetc(fl);
+		} while (c != EOF && c != '\n');
+	}
+	fclose(fl);
+
+	log_error("%s: No entry for %s found", file, name);
+	return 0;
+}
+
+static int _control_device_number(uint32_t *major, uint32_t *minor)
+{
+	if (!_get_proc_number(PROC_DEVICES, MISC_NAME, major) ||
+	    !_get_proc_number(PROC_MISC, DM_NAME, minor)) {
+		*major = 0;
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Returns 1 if exists; 0 if it doesn't; -1 if it's wrong
+ */
+static int _control_exists(const char *control, uint32_t major, uint32_t minor)
+{
+	struct stat buf;
+
+	if (stat(control, &buf) < 0) {
+		if (errno != ENOENT)
+			log_error("%s: stat failed: %s", control,
+				  strerror(errno));
+		return 0;
+	}
+
+	if (!S_ISCHR(buf.st_mode)) {
+		log_verbose("%s: Wrong inode type", control);
+		if (!unlink(control))
+			return 0;
+		log_error("%s: unlink failed: %s", control,
+			  strerror(errno));
+		return -1;
+	}
+
+	if (major && buf.st_rdev != MKDEV(major, minor)) {
+		log_verbose("%s: Wrong device number: (%u, %u) instead of "
+			    "(%u, %u)", control,
+			    MAJOR(buf.st_mode), MINOR(buf.st_mode),
+			    major, minor);
+		if (!unlink(control))
+			return 0;
+		log_error("%s: unlink failed: %s", control,
+			  strerror(errno));
+		return -1;
+	}
+
+	return 1;
+}
+
+static int _create_control(const char *control, uint32_t major, uint32_t minor)
+{
+	int ret;
+	mode_t old_umask;
+
+	if (!major)
+		return 0;
+
+	old_umask = umask(0022);
+	ret = create_dir(dm_dir());
+	umask(old_umask);
+
+	if (!ret)
+		return 0;
+
+	log_verbose("Creating device %s (%u, %u)", control, major, minor);
+
+	if (mknod(control, S_IFCHR | S_IRUSR | S_IWUSR,
+		  MKDEV(major, minor)) < 0)  {
+		log_error("%s: mknod failed: %s", control, strerror(errno));
+		return 0;
+	}
+
+#ifdef HAVE_SELINUX
+        if (!set_selinux_context(control)) {
+                stack;
+                return 0;
+        }
+#endif
+
+	return 1;
+}
+
 static int _open_control(void)
 {
 	char control[PATH_MAX];
+	uint32_t major = 0, minor;
 
 	if (_control_fd != -1)
 		return 1;
 
 	snprintf(control, sizeof(control), "%s/control", dm_dir());
 
+	if (!_control_device_number(&major, &minor))
+		log_error("Is device-mapper driver missing from kernel?");
+
+	if (!_control_exists(control, major, minor) &&
+	    !_create_control(control, major, minor))
+		goto error;
+
 	if ((_control_fd = open(control, O_RDWR)) < 0) {
 		log_error("%s: open failed: %s", control, strerror(errno));
-		log_error("Is device-mapper driver missing from kernel?");
-		return 0;
+		goto error;
 	}
 
 	return 1;
+
+error:
+	log_error("Failure to communicate with kernel device-mapper driver.");
+	return 0;
 }
 
 void dm_task_destroy(struct dm_task *dmt)
