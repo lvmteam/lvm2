@@ -64,19 +64,8 @@ struct target_type {
 int dm_register_target(struct target_type *t);
 int dm_unregister_target(struct target_type *t);
 
-struct dm_bdev {
-        struct list_head list;
-        struct block_device *bdev;
-        int use;
-};
-
-struct dm_bdev *dm_blkdev_get(const char *path);
-void dm_blkdev_put(struct dm_bdev *);
-
-static inline kdev_t dm_bdev2rdev(struct dm_bdev *d)
-{
-	return to_kdev_t(d->bdev->bd_dev);
-}
+struct block_device *dm_blkdev_get(const char *path);
+int dm_blkdev_put(struct block_device *);
 
 struct text_region {
         const char *b;
