@@ -30,7 +30,6 @@ int lvreduce(int argc, char **argv) {return 1;}
 int lvremove(int argc, char **argv) {return 1;}
 int lvrename(int argc, char **argv) {return 1;}
 int lvscan(int argc, char **argv) {return 1;}
-int pvdisplay(int argc, char **argv) {return 1;}
 int pvdata(int argc, char **argv) {return 1;}
 int vgcfgbackup(int argc, char **argv) {return 1;}
 int vgcfgrestore(int argc, char **argv) {return 1;}
