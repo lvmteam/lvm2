@@ -645,6 +645,18 @@ static int _pvsize_disp(struct report_handle *rh, struct field *field,
 	return _size64_disp(rh, field, &size);
 }
 
+static int _devsize_disp(struct report_handle *rh, struct field *field,
+			const void *data)
+{
+	const struct device *dev = *(const struct device **) data;
+	uint64_t size;
+
+	if (!dev_get_size(dev, &size))
+		size = 0;
+
+	return _size64_disp(rh, field, &size);
+}
+
 static int _vgfree_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
