@@ -394,6 +394,12 @@ static struct list *_get_vgs(struct format_instance *fi)
 static int _pv_setup(struct format_instance *fi, struct physical_volume *pv,
 		     struct volume_group *vg)
 {
+	if (pv->size == MAX_PV_SIZE) pv->size--;
+	if (pv->size > MAX_PV_SIZE) {
+		log_error("physical volumes cannot be bigger than 2TB");
+		return 0;
+	}
+
 	/*
 	 * This works out pe_start and pe_count.
 	 */
