@@ -234,10 +234,9 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 	struct format_instance *tf;
 	void *context;
 
-	if (!(context = create_text_context(vg->cmd->fmtt, file,
+	if (!(context = create_text_context(cmd->fmtt, file,
 					    cmd->cmd_line)) ||
-	    !(tf = vg->cmd->fmtt->ops->create_instance(cmd->fmtt, NULL,
-						       context))) {
+	    !(tf = cmd->fmtt->ops->create_instance(cmd->fmtt, NULL, context))) {
 		log_error("Couldn't create text format object.");
 		return NULL;
 	}
