@@ -338,8 +338,8 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	    && !arg_count(cmd, permission_ARG) && !arg_count(cmd, readahead_ARG)
 	    && !arg_count(cmd, minor_ARG) && !arg_count(cmd, major_ARG)
 	    && !arg_count(cmd, persistent_ARG)) {
-		log_error
-		    ("One or more of -a, -C, -j, -m, -M, -p or -r required");
+		log_error("One or more of -a, -C, -j, -m, -M, -p or -r "
+			  "required");
 		return EINVALID_CMD_LINE;
 	}
 
