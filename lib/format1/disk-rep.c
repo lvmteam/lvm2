@@ -337,7 +337,7 @@ struct disk_list *read_disk(struct device *dev, struct pool *mem,
 }
 
 /*
- * Build a list of pv_d's structures, allocated from mem.  
+ * Build a list of pv_d's structures, allocated from mem.
  * We keep track of the first object allocated form the pool
  * so we can free off all the memory if something goes wrong.
  */

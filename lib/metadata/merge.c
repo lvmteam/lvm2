@@ -5,6 +5,7 @@
  */
 
 #include "log.h"
+#include "metadata.h"
 
 /*
  * Returns success if the segments were

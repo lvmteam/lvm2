@@ -7,6 +7,7 @@
 #include "import-export.h"
 #include "pool.h"
 #include "log.h"
+#include "uuid.h"
 
 
 typedef int (*section_fn)(struct pool *mem,
@@ -18,6 +19,29 @@ typedef int (*section_fn)(struct pool *mem,
 
 #define _read_int64(root, path, result) \
 	get_config_uint64(root, path, '/', result)
+
+static int _read_id(struct id *id, struct config_node *cn, const char *path)
+{
+	struct config_value *cv;
+
+	if (!(cn = find_config_node(cn, path, '/'))) {
+		log_err("Couldn't find uuid.");
+		return 0;
+	}
+
+	cv = cn->v;
+	if (!cv || !cv->v.str) {
+		log_err("uuid must be a string.");
+		return 0;
+	}
+
+	if (!id_read_format(id, cv->v.str)) {
+		log_err("Invalid uuid.");
+		return 0;
+	}
+
+	return 1;
+}
 
 static int _read_pv(struct pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
@@ -34,12 +58,10 @@ static int _read_pv(struct pool *mem,
 
 	pv = &pvl->pv;
 
-/******** FIXME _read_id undefined 
 	if (!_read_id(&pv->id, vgn, "id")) {
 		log_err("Couldn't read uuid for volume group.");
 		return 0;
 	}
-*************/
 
 	/*
 	 * FIXME: need label/vgcache code to convert the uuid
@@ -167,14 +189,14 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			return 0;
 		}
 
-/**********FIXME _find_pv undefined
+#if 0
 		if (!(pv = _find_pv(cv->v.str, pv_hash))) {
 			log_err("Couldn't find physical volume (%s) for "
 				"segment '%s'.",
 				cn->v->v.str ? cn->v->v.str : "NULL", sn->key);
 				return 0;
 		}
-*******************/
+#endif
 
 		seg->area[s].pv = pv;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001 Sistina Software (UK) Limited.
+ * Copyright (C) 2002 Sistina Software (UK) Limited.
  *
  * This file is released under the LGPL.
  */
