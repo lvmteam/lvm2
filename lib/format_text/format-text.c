@@ -68,14 +68,33 @@ static int _vg_setup(struct format_instance *fi, struct volume_group *vg)
 static struct volume_group *_vg_read(struct format_instance *fi,
 				     const char *vg_name)
 {
-	_not_written("_get_vgs");
-	return NULL;
+	char *file = (char *) fi->private;
+	struct volume_group *vg;
+
+	if (!(vg = text_vg_import(fi->cmd, file))) {
+		stack;
+		return NULL;
+	}
+
+	/*
+	 * Currently you can only have a single volume group per
+	 * text file (this restriction may remain).  We need to
+	 * check that it contains the correct volume group.
+	 */
+	if (strcmp(vg_name, vg->name)) {
+		pool_free(fi->cmd->mem, vg);
+		log_err("'%s' does not contain volume group '%s'.",
+			file, vg_name);
+		return NULL;
+	}
+
+	return vg;
 }
 
 static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 {
 	FILE *fp;
-	int fd; 
+	int fd;
 	char *slash;
 	char *file = (char *) fi->private;
 	char temp_file[PATH_MAX], temp_dir[PATH_MAX];
@@ -87,6 +106,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 	else if (slash - file < PATH_MAX) {
 		strncpy(temp_dir, file, slash - file);
 		temp_dir[slash - file] = '\0';
+
 	} else {
 		log_error("Text format failed to determine directory.");
 		return 0;
@@ -125,7 +145,8 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 
 static void _destroy(struct format_instance *fi)
 {
-	pool_free(fi->cmd->mem, fi);
+	dbg_free(fi->private);
+	dbg_free(fi);
 }
 
 static struct format_handler _text_handler = {
@@ -148,13 +169,13 @@ struct format_instance *text_format_create(struct cmd_context *cmd,
 	struct format_instance *fi;
 	char *path;
 
-	if (!(fi = pool_alloc(cmd->mem, sizeof(*fi)))) {
+	if (!(fi = dbg_malloc(sizeof(*fi)))) {
 		log_err(no_alloc);
 		return NULL;
 	}
 
-	if (!(path = pool_strdup(cmd->mem, file))) {
-		pool_free(fi->cmd->mem, fi);
+	if (!(path = dbg_strdup(file))) {
+		dbg_free(fi);
 		log_err(no_alloc);
 		return NULL;
 	}

@@ -55,12 +55,12 @@ int vgcreate(int argc, char **argv)
 		log_error("maxlogicalvolumes too low");
 		return EINVALID_CMD_LINE;
 	}
-		
+
 	if (max_pv < 1) {
 		log_error("maxphysicalvolumes too low");
 		return EINVALID_CMD_LINE;
 	}
-		
+
         /* Strip dev_dir if present */
         if (!strncmp(vg_name, fid->cmd->dev_dir, strlen(fid->cmd->dev_dir)))
                 vg_name += strlen(fid->cmd->dev_dir);
@@ -72,16 +72,16 @@ int vgcreate(int argc, char **argv)
         }
 
 	/* Create the new VG */
-	if (!(vg = vg_create(fid, vg_name, extent_size, max_pv, max_lv, 
+	if (!(vg = vg_create(fid, vg_name, extent_size, max_pv, max_lv,
 		       argc - 1, argv + 1)))
 		return ECMD_FAILED;
 
-	if (max_lv != vg->max_lv) 
-		log_error("Warning: Setting maxlogicalvolumes to %d", 
+	if (max_lv != vg->max_lv)
+		log_error("Warning: Setting maxlogicalvolumes to %d",
 			  vg->max_lv);
 
-	if (max_pv != vg->max_pv) 
-		log_error("Warning: Setting maxphysicalvolumes to %d", 
+	if (max_pv != vg->max_pv)
+		log_error("Warning: Setting maxphysicalvolumes to %d",
 			  vg->max_pv);
 
 	if (!archive(vg))

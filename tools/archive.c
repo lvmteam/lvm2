@@ -198,3 +198,64 @@ int backup_remove(const char *vg_name)
 	return 1;
 }
 
+static int _read_vg(struct command_context *cmd,
+		    const char *vg_name, const char *file)
+{
+	int r;
+	struct format_instance *tf;
+
+	if (!(tf = text_format_create(cmd, file))) {
+		log_error("Couldn't create text format object.");
+		return 0;
+	}
+
+	if (!(r = tf->ops->vg_read(tf, vg_name)))
+		stack;
+
+	tf->ops->destroy(tf);
+	return r;
+}
+
+int backup_restore_from_file(const char *vg_name, const char *file)
+{
+	struct volume_group *vg;
+
+	/*
+	 * Read in the volume group.
+	 */
+	if (!(vg = _read_vg(vg_name, file))) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Check that those pv's referenced in the backup are
+	 * currently orphans or members of the vg.s
+	 */
+	/*
+	 * FIXME: waiting for label code.
+	 */
+
+	/*
+	 * Write the vg.
+	 */
+	if (!fid->ops->vg_write(fid, vg)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int backup_restore(const char *vg_name)
+{
+	char path[PATH_MAX];
+
+	if (lvm_snprintf(path, sizeof(path), "%s/%s",
+			 _backup_params.dir, vg_name) < 0) {
+		log_err("Failed to generate backup filename (for restore).");
+		return 0;
+	}
+
+	return backup_restore_from_file(vg_name, path);
+}
