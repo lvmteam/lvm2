@@ -39,7 +39,7 @@ int lvdisplay_single(struct logical_volume *lv)
 	else {
 		lvdisplay_full(lv);
 		if (arg_count(maps_ARG))
-			lvdisplay_extents(lv);
+			lvdisplay_segments(lv);
 	}
 
 	return 0;
