@@ -526,3 +526,8 @@ xx(vgsplit,
    "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
 
    autobackup_ARG, list_ARG, test_ARG)
+
+xx(version,
+   "Display software and driver version information",
+   "version\n" )
+

@@ -11,6 +11,9 @@
 
 /* FIXME Snapshot handling? */
 
+int driver_version(char *version, size_t size);
+int library_version(char *version, size_t size);
+
 int lv_active(struct logical_volume *lv);
 int lv_suspended(struct logical_volume *lv);
 int lv_open_count(struct logical_volume *lv);

@@ -11,6 +11,13 @@
 #include "fs.h"
 #include "lvm-string.h"
 
+int library_version(char *version, size_t size)
+{
+	if (!dm_get_library_version(version, size))
+		return 0;
+	return 1;
+}
+
 static void _build_lv_name(char *buffer, size_t s, const char *vg_name,
 			   const char *lv_name)
 {
@@ -37,6 +44,31 @@ static struct dm_task *_setup_task_with_name(struct logical_volume *lv,
 static struct dm_task *_setup_task(struct logical_volume *lv, int task)
 {
 	return _setup_task_with_name(lv, lv->name, task);
+}
+
+int driver_version(char *version, size_t size)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	log_very_verbose("Getting driver version");
+	if (!(dmt = dm_task_create(DM_DEVICE_VERSION))) {
+		stack;
+		return 0;
+	}
+
+	if (!dm_task_run(dmt))
+		log_error("Failed to get driver version");
+
+	if (!dm_task_get_driver_version(dmt, version, size))
+		goto out;
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+
+	return r;
 }
 
 int lv_info(struct logical_volume *lv, struct dm_info *info)

@@ -9,6 +9,7 @@
 #include "defaults.h"
 #include "lvm1_label.h"
 #include "label.h"
+#include "version.h"
 
 #include "stub.h"
 
@@ -537,6 +538,19 @@ static int merge_synonym(int oldarg, int newarg)
 	return 1;
 }
 
+int version(int argc, char **argv)
+{
+	char version[80];
+
+	log_error("LVM version:     %s", LVM_VERSION);
+	if (library_version(version, sizeof(version)))
+		log_error("Library version: %s", version);
+	if (driver_version(version, sizeof(version)))
+		log_error("Driver version:  %s", version);
+
+	return ECMD_PROCESSED;
+}
+
 static int process_common_commands(struct command *com)
 {
 	_current_settings = _default_settings;
@@ -565,9 +579,7 @@ static int process_common_commands(struct command *com)
 	}
 
 	if (arg_count(version_ARG)) {
-		/* FIXME: Add driver and software version */
-		log_error("%s: ", com->name);
-		return ECMD_PROCESSED;
+		return version(0, (char **)NULL);
 	}
 
 	if (arg_count(autobackup_ARG)) {

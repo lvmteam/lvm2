@@ -116,6 +116,12 @@ package as well (which may be called readline-devel or something similar).
 		HAVE_RL_COMPLETION_MATCHES=no)
 fi
 
+if test "-f VERSION"; then
+  LVM_VERSION="\"`cat VERSION`\""
+else
+  LVM_VERSION="Unknown"
+fi
+
 AC_SUBST(JOBS)
 AC_SUBST(STATIC_LINK)
 AC_SUBST(READLINE)
@@ -123,6 +129,7 @@ AC_SUBST(HAVE_RL_COMPLETION_MATCHES)
 AC_SUBST(OWNER)
 AC_SUBST(GROUP)
 AC_SUBST(LIBS)
+AC_SUBST(LVM_VERSION)
 dnl First and last lines should not contain files to generate in order to 
 dnl keep utility scripts running properly
 AC_OUTPUT( 								\
@@ -132,6 +139,7 @@ include/Makefile						 	\
 lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
+tools/version.h								\
 test/mm/Makefile							\
 test/device/Makefile							\
 test/format1/Makefile							\
