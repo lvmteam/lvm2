@@ -36,7 +36,7 @@ void pvdisplay_full(struct physical_volume *pv);
 int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv);
 
 void lvdisplay_colons(struct logical_volume *lv);
-void lvdisplay_extents(struct logical_volume *lv);
+int lvdisplay_segments(struct logical_volume *lv);
 int lvdisplay_full(struct logical_volume *lv);
 
 void vgdisplay_extents(struct volume_group *vg);

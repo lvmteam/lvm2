@@ -112,7 +112,7 @@ void pvdisplay_full(struct physical_volume *pv)
 		size1 = display_size((pv->size - pv->pe_count * pv->pe_size)
 				     / 2, SIZE_SHORT);
 
-/******** FIXME display LVM on-disk data size 
+/******** FIXME display LVM on-disk data size
 		size2 = display_size(pv->size / 2, SIZE_SHORT);
 ********/
 
@@ -363,7 +363,7 @@ int lvdisplay_full(struct logical_volume *lv)
 *************/
 
 	if (inkernel)
-    		log_print("Block device           %d:%d", info.major, 
+    		log_print("Block device           %d:%d", info.major,
 			  info.minor);
 
 	log_print(" ");
@@ -371,51 +371,52 @@ int lvdisplay_full(struct logical_volume *lv)
 	return 0;
 }
 
-void lvdisplay_extents(struct logical_volume *lv)
+void _display_stripe(struct stripe_segment *seg, int s, const char *pre)
 {
-	int le;
-	struct list *pvh;
-	struct physical_volume *pv;
+	uint32_t len = seg->len / seg->stripes;
 
-	log_print("--- Distribution of logical volume on physical "
-		    "volumes  ---");
-	log_print("PV Name                  PE on PV     ");
+	log_print("%sphysical volume\t%s", pre,
+		  dev_name(seg->area[s].pv->dev));
 
-/********* FIXME Segments & Stripes
-	list_iterate(pvh, &lv->vg->pvs) {
-		int count = 0;
-		pv = &list_item(pvh, struct pv_list)->pv;
-		for (le = 0; le < lv->le_count; le++)
-			if (lv->map[le].pv->dev == pv->dev)
-				count++;
-		if (count)
-			log_print("%-25s %d", dev_name(pv->dev), count);
-	}
-
-**********/
-/********* FIXME "reads      writes" 
-
-	   
-    printf("\n   --- logical volume i/o statistic ---\n"
-	   "   %d reads  %d writes\n", sum_reads, sum_writes);
-
-******* */
-
-	log_print(" ");
-	log_print("--- Logical extents ---");
-	log_print("LE    PV                        PE");
-
-/******** FIXME Segments & Stripes
-	for (le = 0; le < lv->le_count; le++) {
-		log_print("%05d %-25s %05u  ", le,
-			    dev_name(lv->map[le].pv->dev), lv->map[le].pe);
-	}
-******/
-
-	log_print(" ");
-
-	return;
+	log_print("%sphysical extents\t%d to %d",
+		  pre,
+		  seg->area[s].pe, seg->area[s].pe + len - 1);
 }
+
+int lvdisplay_segments(struct logical_volume *lv)
+{
+	int s;
+	struct list *segh;
+	struct stripe_segment *seg;
+
+	log_print("--- Segments ---");
+
+	list_iterate (segh, &lv->segments) {
+		seg = list_item(segh, struct stripe_segment);
+
+		log_print("logical extent %d to %d:",
+			  seg->le, seg->le + seg->len - 1);
+
+		if (seg->stripes == 1)
+			_display_stripe(seg, 0, "  ");
+
+		else {
+			log_print("  stripes\t\t%d", seg->stripes);
+			log_print("  stripe size\t\t%d", seg->stripe_size);
+
+			for (s = 0; s < seg->stripes; s++) {
+				log_print("  stripe %d:", s);
+				_display_stripe(seg, s, "    ");
+			}
+		}
+		log_print(" ");
+	}
+
+	log_print(" ");
+	return 1;
+}
+
+
 
 void vgdisplay_extents(struct volume_group *vg)
 {
