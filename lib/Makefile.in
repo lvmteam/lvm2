@@ -43,6 +43,7 @@ SOURCES=\
 	metadata/lv_manip.c \
 	metadata/merge.c \
 	metadata/metadata.c \
+	metadata/mirror.c \
 	metadata/pv_map.c \
 	metadata/snapshot_manip.c \
 	misc/crc.c \
