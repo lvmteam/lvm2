@@ -22,6 +22,19 @@
 #include <linux/config.h>
 #include <linux/fs.h>
 
+#include "dm.h"
+
+void dmfs_add_error(struct dm_table *t, unsigned num, char *str)
+{
+
+}
+
+/* 
+ * Assuming that we allow modules to call this rather than passing the message
+ * back. Not sure which approach to take yet.
+ */
+EXPORT_SYMBOL(dmfs_add_error);
+
 static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
 	struct dmfs_i *dmi = DMFS_I(file->f_dentry->d_parent->d_inode);
@@ -31,6 +44,11 @@ static ssize_t dmfs_error_read(struct file *file, char *buf, size_t size, loff_t
 	if (!access_ok(VERIFY_WRITE, buf, count))
 		return -EFAULT;
 
+	down(&dmi->sem);
+	if (dmi->table) {
+
+	}
+	up(&dmi->sem);
 	return copied;
 }
 

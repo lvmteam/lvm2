@@ -25,6 +25,8 @@
 #include <linux/ctype.h>
 #include <linux/fs.h>
 
+#include "dm.h"
+
 extern struct dmfs_address_space_operations;
 
 struct dentry *dmfs_verify_name(struct inode *dir, char *name)
@@ -73,8 +75,10 @@ struct inode *dmfs_create_symlink(struct inode *dir, int mode)
 	return inode;
 }
 
-static int dmfs_lv_unlink(struct inode *inode, struct dentry *dentry)
+static int dmfs_lv_unlink(struct inode *dir, struct dentry *dentry)
 {
+	struct inode *inode = dentry->d_inode;
+
 	if (!(inode->i_mode & S_IFLNK))
 		return -EINVAL;
 
@@ -229,16 +233,9 @@ static struct dm_root_inode_operations = {
 
 struct inode *dmfs_create_lv(struct super_block *sb, int mode)
 {
-	struct inode *inode = new_inode(sb);
+	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
 
 	if (inode) {
-		inode->i_mode = mode | S_IFDIR;
-		inode->i_uid = current->fsuid;
-		inode->i_gid = current->fsgid;
-		inode->i_blksize = PAGE_CACHE_SIZE;
-		inode->i_blocks = 0;
-		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_lv_file_operations;
 		inode->i_op = &dmfs_lv_dir_operations;
 	}

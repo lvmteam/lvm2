@@ -25,6 +25,8 @@
 #include <linux/ctype.h>
 #include <linux/fs.h>
 
+#include "dm.h"
+
 static int is_identifier(const char *str, int len)
 {
 	while(len--) {

@@ -24,7 +24,7 @@
 
 static ssize_t dmfs_status_read(struct file *file, char *buf, size_t size, loff_t *pos)
 {
-	return size;
+	return 0;
 }
 
 static int dmfs_status_sync(struct file *file, struct dentry *dentry, int datasync)

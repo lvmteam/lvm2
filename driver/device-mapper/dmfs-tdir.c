@@ -24,6 +24,8 @@
 #include <linux/config.h>
 #include <linux/fs.h>
 
+#include "dm.h"
+
 extern struct inode *dmfs_create_error(struct inode *, int);
 extern struct inode *dmfs_create_table(struct inode *, int);
 extern struct inode *dmfs_create_status(struct inode *, int);
@@ -45,6 +47,9 @@ void dm_unlock_tdir(struct dentry *dentry)
 
 static int dmfs_tdir_unlink(struct inode *dir, struct dentry *dentry)
 {
+	struct inode *inode = dentry->d_inode;
+
+	inode->i_mapping = &inode->i_data;
 	inode->i_nlink--;
 	dput(dentry);
 	return 0;
@@ -131,16 +136,9 @@ static struct dmfs_tdir_inode_operations = {
 
 struct inode *dmfs_create_tdir(struct inode *dir, struct dentry *dentry, int mode)
 {
-	struct inode *inode = new_inode(sb);
+	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
 
 	if (inode) {
-		inode->i_mode = mode | S_IFDIR;
-		inode->i_uid = current->fsuid;
-		inode->i_gid = current->fsgid;
-		inode->i_blksize = PAGE_CACHE_SIZE;
-		inode->i_blocks = 0;
-		inode->i_rdev = NODEV;
-		inode->i_atime = inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 		inode->i_fop = &dmfs_tdir_file_operations;
 		inode->i_op = &dmfs_tdir_dir_operations;
 	}
