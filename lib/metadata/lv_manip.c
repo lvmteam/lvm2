@@ -406,12 +406,11 @@ struct logical_volume *lv_create(const char *name,
 
 	log_verbose("Creating logical volume %s", name);
 
-	if (!(ll = pool_zalloc(cmd->mem, sizeof(*ll)))) {
+	if (!(ll = pool_zalloc(cmd->mem, sizeof(*ll))) ||
+	    !(ll->lv = pool_zalloc(cmd->mem, sizeof(*ll->lv)))) {
 		stack;
 		return NULL;
 	}
-
-	list_init(&ll->list);
 
 	lv = ll->lv;
 
@@ -509,6 +508,13 @@ int lv_extend(struct logical_volume *lv,
 int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 {
 	struct list *segh;
+	struct lv_list *lvl;
+
+	/* find the lv list */
+	if (!(lvl = find_lv_in_vg(vg, lv->name))) {
+		stack;
+		return 0;
+	}
 
 	/* iterate through the lv's segments freeing off the pe's */
 	list_iterate (segh, &lv->segments)
@@ -517,7 +523,7 @@ int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 	vg->lv_count--;
 	vg->free_count += lv->le_count;
 
-	list_del(&list_head(lv, struct lv_list, lv));
+	list_del(&lvl->list);
 
 	return 1;
 }
