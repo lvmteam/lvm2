@@ -169,11 +169,17 @@ static int _info(int argc, char **argv)
 		goto out;
 	}
 
-	printf("state:             %s\n",
+	printf("State:             %s\n",
 	       info.suspended ? "SUSPENDED" : "ACTIVE");
-	printf("open count:        %d\n", info.open_count);
-	printf("major, minor:      %d, %d\n", info.major, info.minor);
-	printf("number of targets: %d\n", info.target_count);
+
+	if (info.open_count != -1)
+		printf("Open count:        %d\n", info.open_count);
+
+	printf("Major, minor:      %d, %d\n", info.major, info.minor);
+
+	if (info.target_count != -1)
+		printf("Number of targets: %d\n", info.target_count);
+
 	r = 1;
 
  out:
