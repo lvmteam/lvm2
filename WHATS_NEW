@@ -1,5 +1,6 @@
 Version 2.01.02 - 
 ===================================
+  Fix 64 bit xlate consts.
   Split out pool sptype_names to avoid unused const.
   Always fail if random id generation fails.
   Recognise gnbd devices.
