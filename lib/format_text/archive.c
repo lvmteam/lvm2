@@ -331,7 +331,7 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 	}
 
 	if ((last = (struct archive_file *) hash_lookup(bc->vg_archives,
-						       vg->name))) {
+							vg->name))) {
 		/* move to the last in the list */
 		last = list_item(last->list.p, struct archive_file);
 		index = last->index + 1;

@@ -302,4 +302,18 @@ struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
  */
 const char *strip_dir(const char *vg_name, const char *dir);
 
+/*
+ * Checks that an lv has no gaps or overlapping segments.
+ */
+int lv_check_segments(struct logical_volume *lv);
+
+
+/*
+ * Sometimes (eg, after an lvextend), it is possible to merge two
+ * adjacent segments into a single segment.  This function trys
+ * to merge as many segments as possible.
+ */
+int lv_merge_segments(struct logical_volume *lv);
+
+
 #endif

@@ -8,15 +8,339 @@
 #include "config.h"
 
 #if 0
-struct importer {
-	struct config_file *cf;
-	struct volume_group *vg;
-};
+typedef int (*section_fn)(struct pool *mem,
+			  struct volume_group *vg, struct config_node *pvn);
+
+static int _read_int32(struct config_node *root, const char *path,
+		       uint32_t *result)
+{
+	struct config_node *cn;
+	struct config_value *cv;
+
+	if (!(cn = find_config_node(root, path, '/')))
+		return 0;
+
+	cv = cn->v;
+
+	if (!cv || cv->type != CFG_INT)
+		return 0;
+
+	*result = cv->v.i;
+	return 1;
+}
+
+static int _read_pv(struct pool *mem,
+		    struct volume_group *vg, struct config_node *pvn)
+{
+	struct physical_volume *pv;
+	struct config_node *cn;
+
+	if (!(pv = pool_zalloc(mem, sizeof(*pv)))) {
+		stack;
+		return 0;
+	}
+
+	if (!_read_id(&pv->id, vgn, "id")) {
+		log_err("Couldn't read uuid for volume group.");
+		goto bad;
+	}
+
+	/*
+	 * FIXME: need label/vgcache code to convert the uuid
+	 * into a device.
+	 */
+
+	if (!(pv->vg_name = pool_strdup(mem, vg->name))) {
+		stack;
+		return 0;
+	}
+
+	if (!(cn = find_config_node(vgn, "status", '/'))) {
+		log_err("Couldn't find status flags for physical volume.");
+		return 0;
+	}
+
+	if (!(read_flags(&pv->status, PV_FLAGS, cn->v))) {
+		log_err("Couldn't read status flags for physical volume.");
+		return 0;
+	}
+
+	if (!_read_int64(pvn, "pe_start", &pv->pe_start)) {
+		log_err("Couldn't read extent size for volume group.");
+		return 0;
+	}
+
+	if (!_read_int32(pvn, "pe_count", &pv->pe_count)) {
+		log_err("Couldn't find extent count (pe_count) for "
+			"physical volume.");
+		return 0;
+	}
+
+	/* adjust the volume group. */
+	vg->extent_count += pv->pe_count;
+	vg->free_count += pv->pe_count;
+
+	pv->size = pv->pe_size * (uint64_t) pv->pe_count;
+	pv->pe_allocated = 0;
+
+	list_add(&vg->pvs, &pv->list);
+	return 1;
+}
+
+static void _insert_segment(struct logical_volume *lv,
+			    struct stripe_segment *seg)
+{
+	struct list *segh;
+	struct stripe_segment *comp;
+
+	list_iterate (segh, &lv->segs) {
+		comp = list_item(segh, struct stripe_segment);
+
+		if (comp->le > seg->le) {
+			list_add(&comp->list, &seg->list);
+			return;
+		}
+	}
+
+	list_add(&lv->segs, &seg->list);
+}
+
+static int _read_segment(struct pool *mem, struct volume_group *vg,
+			 struct logical_volume *lv, struct config_node *sn)
+{
+	struct stripe_segment *seg;
+	struct config_node *cn;
+	struct config_value *sv;
+
+	if (!(seg = pool_zalloc(mem, sizeof(*seg)))) {
+		stack;
+		return 0;
+	}
+
+	if (!_read_int32(sn, "start_extent", &seg->le)) {
+		log_err("Couldn't read 'start_extent' for segment '%s'.",
+			sn->key);
+		return 0;
+	}
+
+	if (!_read_int32(sn, "extent_count", &seg->len)) {
+		log_err("Couldn't read 'extent_count' for segment '%s'.",
+			sn->key);
+		return 0;
+	}
+
+	if (!_read_int32(sn, "stripes", &seg->stripes)) {
+		log_err("Couldn't read 'stripes' for segment '%s'.",
+			sn->key);
+		return 0;
+	}
+
+	if (seg->stripes == 0) {
+		log_err("Zero stripes is *not* allowed for segment '%s'.",
+			sn->key);
+		return 0;
+	}
+
+	if ((seg->stripes != 1) &&
+	    !_read_int32(sn, "stripe_size", &seg->stripe_size)) {
+		log_err("Couldn't read 'stripe_size' for segment '%s'.",
+			sn->key);
+		return 0;
+	}
+
+	if (!(cn = config_find_node(sn, "areas", '/'))) {
+		log_err("Couldn't find 'areas' array for segment '%s'.",
+			sn->key);
+		return 0;
+	}
+
+	/*
+	 * Read the stripes from the 'areas' array.
+	 * FIXME: we could move this to a seperate function.
+	 */
+	for (cv = cn->v, s = 0; cv && s < seg->stripes; s++, cv = cv->next) {
+
+		/* first we read the pv */
+		const char *bad = "Badly formed areas array for segment '%s'.";
+		struct physical_volume *pv;
+		uint32_t allocated;
+
+		if (cv->type != CFG_STRING) {
+			log_err(bad, sn->key);
+			return 0;
+		}
+
+		if (!(pv = _find_pv(cv->v.str, pv_hash))) {
+			log_err("Couldn't find physical volume (%s) for "
+				"segment '%s'.",
+				cn->v.str ? cn->v.str : "NULL", sn->key)
+				return 0;
+		}
+
+		seg->area[s].pv = pv;
+
+		if (!(cv = cv->next)) {
+			log_err(bad, sn->key);
+			return 0;
+		}
+
+		if (cv->type != CFG_INT) {
+			log_err(bad, sn->key);
+			return 0;
+		}
+
+		seg->area[s].pe = cv->v.i;
+
+		/*
+		 * Adjust the extent counts in the pv and vg.
+		 */
+		allocated = seg->len / seg->stripes;
+		pv->pe_allocate += allocated;
+		vg->free_count -= allocated;
+	}
+
+	/*
+	 * Check we read the correct number of stripes.
+	 */
+	if (cv || (s < seg->stripes)) {
+		log_err("Incorrect number of stripes in 'area' array "
+			"for segment '%s'.", sn->key);
+		return 0;
+	}
+
+	/*
+	 * Insert into correct part of segment list.
+	 */
+	_insert_segment(lv, seg);
+	return 1;
+}
+
+static int _read_segments(struct pool *mem, struct volume_group *vg,
+			  struct logical_volume *lv, struct config_node *lvn)
+{
+	struct config_node *sn;
+	int count = 0, seg_count;
+
+	for (sn = lvn->child; sn; sn = sn->sib) {
+
+		/*
+		 * All sub-sections are assumed to be segments.
+		 */
+		if (sn->v) {
+			if (!_read_segment(mem, vg, lv, sn)) {
+				stack;
+				return 0;
+			}
+
+			count++;
+		}
+	}
+
+	if (!_read_int32(lvn, "segment_count", &seg_count)) {
+		log_err("Couldn't read segment count for logical volume.");
+		return 0;
+	}
+
+	if (lv->segment_count != count) {
+		log_err("segment_count and actual number of segments "
+			"disagree.");
+		return 0;
+	}
+
+	/*
+	 * Check there are no gaps or overlaps in the lv.
+	 */
+	if (!lv_check_segments(lv)) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Merge segments in case someones been editing things by hand.
+	 */
+	if (!lv_merge_segments(lv)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _read_lv(struct pool *mem,
+		    struct volume_group *vg, struct config_node *lvn)
+{
+	struct logical_volume *lv;
+	struct config_node *cn;
+
+	if (!(lv = pool_zalloc(mem, sizeof(*lv)))) {
+		stack;
+		return 0;
+	}
+
+	if (!(lv->name = pool_strdup(mem, lvn->key))) {
+		stack;
+		return 0;
+	}
+
+	lv->vg = vg;
+
+	if (!(cn = find_config_node(lvn, "status", '/'))) {
+		log_err("Couldn't find status flags for logical volume.");
+		return 0;
+	}
+
+	if (!(read_flags(&lv->status, LV_FLAGS, cn->v))) {
+		log_err("Couldn't read status flags for logical volume.");
+		return 0;
+	}
+
+	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead)) {
+		log_err("Couldn't read 'read_ahead' value for "
+			"logical volume.");
+		return 0;
+	}
+
+	list_init(&lv->segments);
+	if (!_read_segments(mem, vg, lv, lvn)) {
+		stack;
+		return 0;
+	}
+
+	list_add(&vg->lvs, &lv->list);
+
+	return 1;
+}
+
+static int _read_sections(const char *section, section_fn fn,
+			  struct pool *mem,
+			  struct volume_group *vg, struct config_node *cn)
+{
+	struct config_node *n;
+
+	if (!(n = find_config_node(cn, section, '/'))) {
+		log_err("Couldn't find section '%s'.", section);
+		return 0;
+	}
+
+	for (n = n->child; n; n = n->sib) {
+		if (!section_fn(mem, vg, n)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
 
 static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 {
-	struct config_node *vgn;
+	struct config_node *vgn = cf->root, cn;
 	struct volume_group *vg;
+
+	if (!vgn) {
+		log_err("Couldn't not find volume group.");
+		return NULL;
+	}
 
 	if (!(vgn = find_config_node(cf->root, "volume_group", '/'))) {
 		log_err("Couldn't find volume_group section.");
@@ -28,7 +352,68 @@ static struct volume_group *_read_vg(struct pool *mem, struct config_file *cf)
 		return NULL;
 	}
 
-	vg->
+	if (!_read_id(&vg->id, vgn, "id")) {
+		log_err("Couldn't read uuid for volume group.");
+		goto bad;
+	}
+
+	if (!(vg->name = pool_strdup(mem, vgn->key))) {
+		stack;
+		goto bad;
+	}
+
+	if (!(cn = find_config_node(vgn, "status", '/'))) {
+		log_err("Couldn't find status flags for volume group.");
+		goto bad;
+	}
+
+	if (!(read_flags(&vg->status, VG_FLAGS, cn->v))) {
+		log_err("Couldn't read status flags for volume group.");
+		goto bad;
+	}
+
+	if (!_read_int32(vgn, "extent_size", &vg->extent_size)) {
+		log_err("Couldn't read extent size for volume group.");
+		goto bad;
+	}
+
+	/*
+	 * 'extent_count' and 'free_count' get filled in
+	 * implicitly when reading in the pv's and lv's.
+	 */
+
+	if (!_read_int32(vgn, "max_lv", &vg->max_lv)) {
+		log_err("Couldn't read 'max_lv' for volume group.");
+		goto bad;
+	}
+
+	if (!_read_int32(vgn, "min_lv", &vg->min_lv)) {
+		log_err("Couldn't read 'min_lv' for volume group.");
+		goto bad;
+	}
+
+	list_init(&vg->pvs);
+	if (!_read_sections("physical_volumes", _read_pv, mem, vg, vgn)) {
+		log_err("Couldn't read all physical volumes for volume "
+			"group.");
+		goto bad;
+	}
+
+	list_init(&vg->lvs);
+	if (!_read_sections("logical_volumes", _read_lv, mem, vg, vgn)) {
+		log_err("Couldn't read all logical volumes for volume "
+			"group.");
+		goto bad;
+	}
+
+	/*
+	 * Finished.
+	 */
+	return vg;
+
+ bad:
+	pool_free(mem, vg);
+	return NULL;
 }
 
 struct volume_group *text_vg_import(struct cmd_context *cmd,
