@@ -57,6 +57,7 @@ static const device_info_t device_info[] = {
 	{"cciss", 16},		/* Compaq CCISS array */
 	{"ubd", 16},		/* User-mode virtual block device */
 	{"ataraid", 16},	/* ATA Raid */
+	{"drbd", 16},		/* Distributed Replicated Block Device */
 	{NULL, 0}
 };
 
