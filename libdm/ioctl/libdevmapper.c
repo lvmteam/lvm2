@@ -23,7 +23,7 @@
  */
 
 #if !((DM_VERSION_MAJOR == 1 && DM_VERSION_MINOR >= 0) || \
-      (DM_VERSION_MAJOR == 3 && DM_VERSION_MINOR >= 0))
+      (DM_VERSION_MAJOR == 4 && DM_VERSION_MINOR >= 0))
 #error The version of dm-ioctl.h included is incompatible.
 #endif
 
@@ -35,7 +35,7 @@ static int _log_suppress = 0;
  * Support both old and new major numbers to ease the transition.
  * Clumsy, but only temporary.
  */
-#if DM_VERSION_MAJOR == 3 && defined(DM_COMPAT)
+#if DM_VERSION_MAJOR == 4 && defined(DM_COMPAT)
 const int _dm_compat = 1;
 #else
 const int _dm_compat = 0;
@@ -43,20 +43,20 @@ const int _dm_compat = 0;
 
 
 /* *INDENT-OFF* */
-static struct cmd_data _cmd_data_v3[] = {
-	{"create",	DM_DEV_CREATE,		{3, 0, 0}},
-	{"reload",	DM_DEV_RELOAD,		{3, 0, 0}},
-	{"remove",	DM_DEV_REMOVE,		{3, 0, 0}},
-	{"remove_all",	DM_REMOVE_ALL,		{3, 0, 0}},
-	{"suspend",	DM_DEV_SUSPEND,		{3, 0, 0}},
-	{"resume",	DM_DEV_SUSPEND,		{3, 0, 0}},
-	{"info",	DM_DEV_STATUS,		{3, 0, 0}},
-	{"deps",	DM_DEV_DEPS,		{3, 0, 0}},
-	{"rename",	DM_DEV_RENAME,		{3, 0, 0}},
-	{"version",	DM_VERSION,		{3, 0, 0}},
-	{"status",	DM_TARGET_STATUS,	{3, 0, 0}},
-	{"table",	DM_TARGET_STATUS,	{3, 0, 0}},
-	{"waitevent",	DM_TARGET_WAIT,		{3, 0, 0}},
+static struct cmd_data _cmd_data_v4[] = {
+	{"create",	DM_DEV_CREATE,		{4, 0, 0}},
+	{"reload",	DM_DEV_RELOAD,		{4, 0, 0}},
+	{"remove",	DM_DEV_REMOVE,		{4, 0, 0}},
+	{"remove_all",	DM_REMOVE_ALL,		{4, 0, 0}},
+	{"suspend",	DM_DEV_SUSPEND,		{4, 0, 0}},
+	{"resume",	DM_DEV_SUSPEND,		{4, 0, 0}},
+	{"info",	DM_DEV_STATUS,		{4, 0, 0}},
+	{"deps",	DM_DEV_DEPS,		{4, 0, 0}},
+	{"rename",	DM_DEV_RENAME,		{4, 0, 0}},
+	{"version",	DM_VERSION,		{4, 0, 0}},
+	{"status",	DM_TARGET_STATUS,	{4, 0, 0}},
+	{"table",	DM_TARGET_STATUS,	{4, 0, 0}},
+	{"waitevent",	DM_TARGET_WAIT,		{4, 0, 0}},
 };
 /* *INDENT-ON* */
 
@@ -364,8 +364,8 @@ void dm_task_destroy(struct dm_task *dmt)
 	if (dmt->newname)
 		free(dmt->newname);
 
-	if (dmt->dmi.v3)
-		free(dmt->dmi.v3);
+	if (dmt->dmi.v4)
+		free(dmt->dmi.v4);
 
 	if (dmt->uuid)
 		free(dmt->uuid);
@@ -380,12 +380,12 @@ int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 	if (_dm_version == 1)
 		return _dm_task_get_driver_version_v1(dmt, version, size);
 
-	if (!dmt->dmi.v3) {
+	if (!dmt->dmi.v4) {
 		version[0] = '\0';
 		return 0;
 	}
 
-	v = dmt->dmi.v3->version;
+	v = dmt->dmi.v4->version;
 	snprintf(version, size, "%u.%u.%u", v[0], v[1], v[2]);
 	return 1;
 }
@@ -501,22 +501,22 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	if (_dm_version == 1)
 		return _dm_task_get_info_v1(dmt, info);
 
-	if (!dmt->dmi.v3)
+	if (!dmt->dmi.v4)
 		return 0;
 
 	memset(info, 0, sizeof(*info));
 
-	info->exists = dmt->dmi.v3->flags & DM_EXISTS_FLAG ? 1 : 0;
+	info->exists = dmt->dmi.v4->flags & DM_EXISTS_FLAG ? 1 : 0;
 	if (!info->exists)
 		return 1;
 
-	info->suspended = dmt->dmi.v3->flags & DM_SUSPEND_FLAG ? 1 : 0;
-	info->read_only = dmt->dmi.v3->flags & DM_READONLY_FLAG ? 1 : 0;
-	info->target_count = dmt->dmi.v3->target_count;
-	info->open_count = dmt->dmi.v3->open_count;
-	info->event_nr = dmt->dmi.v3->event_nr;
-	info->major = MAJOR(dmt->dmi.v3->dev);
-	info->minor = MINOR(dmt->dmi.v3->dev);
+	info->suspended = dmt->dmi.v4->flags & DM_SUSPEND_FLAG ? 1 : 0;
+	info->read_only = dmt->dmi.v4->flags & DM_READONLY_FLAG ? 1 : 0;
+	info->target_count = dmt->dmi.v4->target_count;
+	info->open_count = dmt->dmi.v4->open_count;
+	info->event_nr = dmt->dmi.v4->event_nr;
+	info->major = MAJOR(dmt->dmi.v4->dev);
+	info->minor = MINOR(dmt->dmi.v4->dev);
 
 	return 1;
 }
@@ -526,7 +526,7 @@ const char *dm_task_get_uuid(struct dm_task *dmt)
 	if (_dm_version == 1)
 		return _dm_task_get_uuid_v1(dmt);
 
-	return (dmt->dmi.v3->uuid);
+	return (dmt->dmi.v4->uuid);
 }
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
@@ -534,8 +534,8 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt)
 	if (_dm_version == 1)
 		return _dm_task_get_deps_v1(dmt);
 
-	return (struct dm_deps *) (((void *) dmt->dmi.v3) +
-				   dmt->dmi.v3->data_start);
+	return (struct dm_deps *) (((void *) dmt->dmi.v4) +
+				   dmt->dmi.v4->data_start);
 }
 
 int dm_task_set_ro(struct dm_task *dmt)
@@ -670,7 +670,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 
 	memset(dmi, 0, len);
 
-	version = &_cmd_data_v3[dmt->type].version;
+	version = &_cmd_data_v4[dmt->type].version;
 
 	dmi->version[0] = (*version)[0];
 	dmi->version[1] = (*version)[1];
@@ -744,19 +744,19 @@ int dm_task_run(struct dm_task *dmt)
 	}
 
 	if ((unsigned) dmt->type >=
-	    (sizeof(_cmd_data_v3) / sizeof(*_cmd_data_v3))) {
+	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
 		log_error("Internal error: unknown device-mapper task %d",
 			  dmt->type);
 		goto bad;
 	}
 
-	command = _cmd_data_v3[dmt->type].cmd;
+	command = _cmd_data_v4[dmt->type].cmd;
 
 	if (dmt->type == DM_DEVICE_TABLE)
 		dmi->flags |= DM_STATUS_TABLE_FLAG;
 
 	dmi->flags |= DM_EXISTS_FLAG;	/* FIXME */
-	log_debug("dm %s %s %s %s", _cmd_data_v3[dmt->type].name, dmi->name,
+	log_debug("dm %s %s %s %s", _cmd_data_v4[dmt->type].name, dmi->name,
 		  dmi->uuid, dmt->newname ? dmt->newname : "");
 	if (ioctl(fd, command, dmi) < 0) {
 		if (errno == ENXIO && dmt->type == DM_DEVICE_INFO) {
@@ -794,7 +794,7 @@ int dm_task_run(struct dm_task *dmt)
 		break;
 	}
 
-	dmt->dmi.v3 = dmi;
+	dmt->dmi.v4 = dmi;
 	close(fd);
 	return 1;
 
