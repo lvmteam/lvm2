@@ -7,6 +7,7 @@
 #ifndef _LVM_POOL_H
 #define _LVM_POOL_H
 
+#include <string.h>
 #include <stdlib.h>
 
 struct pool;
