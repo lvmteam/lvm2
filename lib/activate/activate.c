@@ -25,9 +25,15 @@
 #ifndef DEVMAPPER_SUPPORT
 void set_activation(int act)
 {
-	if (act)
-		log_error("Compiled without libdevmapper support. "
-			  "Can't enable activation.");
+	static int warned = 0;
+
+	if (warned || !act)
+		return;
+
+	log_error("Compiled without libdevmapper support. "
+		  "Can't enable activation.");
+
+	warned = 1;
 }
 int activation(void)
 {
