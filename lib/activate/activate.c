@@ -287,7 +287,7 @@ int _load(struct logical_volume *lv, int task)
 			log_very_verbose("Activating %s read-only", lv->name);
 	}
 
-	if (lv->minor) {
+	if (lv->minor >= 0) {
 		if (!dm_task_set_minor(dmt, MINOR(lv->minor))) {
 			log_error("Failed to set minor number for %s to %d "
 				  "during activation.", lv->name, lv->minor);
