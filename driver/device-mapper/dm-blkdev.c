@@ -22,12 +22,13 @@
 #include <linux/config.h>
 #include <linux/slab.h>
 #include <linux/list.h>
+#include <asm/atomic.h>
 #include "dm.h"
 
 struct dm_bdev {
         struct list_head list;
         struct block_device *bdev;
-        int use;
+        atomic_t use;
 };
 
 #define DMB_HASH_SHIFT 8
@@ -69,7 +70,7 @@ static struct dm_bdev *__dm_get_device(struct block_device *bdev, unsigned hash)
 		b = list_entry(tmp, struct dm_bdev, list);
 		if (b->bdev != bdev)
 			continue;
-		b->use++;
+		atomic_inc(&b->use);
 		return b;
 	}
 
@@ -94,7 +95,7 @@ static struct block_device *dm_get_device(struct block_device *bdev)
 		return ERR_PTR(-ENOMEM);
 
 	n->bdev = bdev;
-	n->use = 1;
+	atomic_set(&n->use, 1);
 
 	down(&bdev_sem);
 	read_lock(&bdev_lock);
@@ -151,7 +152,7 @@ static void dm_blkdev_drop(struct dm_bdev *d)
 {
 	down(&bdev_sem);
 	write_lock(&bdev_lock);
-	if (d->use == 0) {
+	if (atomic_read(&d->use) == 0) {
 		list_del(&d->list);
 	} else {
 		d = NULL;
@@ -173,8 +174,11 @@ int dm_blkdev_put(struct block_device *bdev)
 	read_lock(&bdev_lock);
 	d = __dm_get_device(bdev, hash);
 	if (d) {
-		--d->use; /* Drop count from __dm_get_device */
-		if (--d->use == 0)
+		/* 
+		 * One for ref that we want to drop,
+		 * one for ref from __dm_get_device()
+		 */
+		if (atomic_sub_and_test(2, &d->use))
 			do_drop = 1;
 	}
 	read_unlock(&bdev_lock);
