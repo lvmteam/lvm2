@@ -20,138 +20,131 @@
 
 #include "tools.h"
 
-char *lv_change_vgname(char *vg_name, char *lv_name);
-
 int vgrename(int argc, char **argv)
 {
-	int l = 0;
-	int length = 0;
-	int p = 0;
-
-	int ret = 0;
-	char *lv_name_ptr;
-	char *vg_name_old;
-	char *vg_name_new;
-	char vg_name_old_buf[NAME_LEN] = { 0, };
-	char vg_name_new_buf[NAME_LEN] = { 0, };
 	char *prefix;
+	int length;
 
-	struct io_space *ios;
+	char *vg_name_old, *vg_name_new;
+
+	char old_path[NAME_LEN], new_path[NAME_LEN];
+
 	struct volume_group *vg_old, *vg_new;
+	struct list_head *pvh;
 
 	if (argc != 2) {
-		log_error("command line too short");
+		log_error("old and new volume group names need specifying");
 		return EINVALID_CMD_LINE;
 	}
 
-	ios = active_ios();
+	vg_name_old = argv[0];
+	vg_name_new = argv[1];
 
-	prefix = lvm_dir_prefix();
+	prefix = ios->prefix;
 	length = strlen(prefix);
 
-	vg_name_old = argv[0];
+	/* If present, strip prefix */
+	if (!strncmp(vg_name_old, prefix, length))
+		vg_name_old += length;
+	if (!strncmp(vg_name_new, prefix, length))
+		vg_name_new += length;
 
-	if (strlen(vg_name_new = argv[1]) > NAME_LEN - length - 2) {
-		log_error("New logical volume path exceeds maximum length "
+	/* Check sanity of new name */
+	if (strlen(vg_name_new) > NAME_LEN - length - 2) {
+		log_error("New volume group path exceeds maximum length "
 			  "of %d!", NAME_LEN - length - 2);
 		return ECMD_FAILED;
 	}
 
-	if (vg_check_name(vg_name_new) < 0) {
-		return EINVALID_CMD_LINE;
-	}
-
-	/* FIXME Handle prefix-related logic internally within ios functions? */
-	if (strncmp(vg_name_old, prefix, length) != 0) {
-		sprintf(vg_name_old_buf, "%s%s", prefix, vg_name_old);
-		vg_name_old = vg_name_old_buf;
-	}
-	if (strncmp(vg_name_new, prefix, length) != 0) {
-		sprintf(vg_name_new_buf, "%s%s", prefix, vg_name_new);
-		vg_name_new = vg_name_new_buf;
-	}
-
-	if (strcmp(vg_name_old, vg_name_new) == 0) {
-		log_error("volume group names must be different");
+	if (!is_valid_chars(vg_name_new)) {
+		log_error("New volume group name %s has invalid characters",
+			  vg_name_new);
 		return ECMD_FAILED;
 	}
 
-	log_verbose("Checking existing volume group %s", vg_name_old);
+	if (!strcmp(vg_name_old, vg_name_new)) {
+		log_error("Old and new volume group names must differ");
+		return ECMD_FAILED;
+	}
+
+	log_verbose("Checking for existing volume group %s", vg_name_old);
 	if (!(vg_old = ios->vg_read(ios, vg_name_old))) {
-		log_error("volume group %s doesn't exist", vg_name_old);
+		log_error("Volume group %s doesn't exist", vg_name_old);
 		return ECMD_FAILED;
 	}
+
 	if (vg_old->status & ACTIVE) {
 		log_error("Volume group %s still active", vg_name_old);
+		if (!force_ARG) {
+			log_error("Use -f to force the rename");
+			return ECMD_FAILED;
+		}
 	}
 
-	log_verbose("Checking new volume group %s", vg_name_new);
+	log_verbose("Checking for new volume group %s", vg_name_new);
 	if ((vg_new = ios->vg_read(ios, vg_name_new))) {
 		log_error("New volume group %s already exists", vg_name_new);
 		return ECMD_FAILED;
 	}
 
-	/* change the volume name in all structures */
+	/* Change the volume group name */
 	strcpy(vg_old->name, vg_name_new);
 
-	/* FIXME: Are these necessary? Or can vg_write fix these implicitly? */
-	for (p = 0; p < vg_old->pv_count; p++)
-		if (vg_old->pv[p])
-			strcpy(vg_old->pv[p]->vg_name, vg_name_new);
+	/* FIXME Should vg_write fix these implicitly? It has to check them. */
+	list_for_each(pvh, &vg_old->pvs) {
+		strcpy(list_entry(pvh, struct pv_list, list)->pv.vg_name, 
+			vg_name_new);
+	}
 
-	for (l = 0; l < vg_old->lv_count; l++) {
-		if (vg_old->lv[l] &&
-		    !(lv_name_ptr =
-		      lv_change_vgname(vg_name_new, vg_old->lv[l]->name))) {
+/********** FIXME: Check within vg_write now
 			log_error("A new logical volume path exceeds "
 				  "maximum of %d!", NAME_LEN - 2);
 			return ECMD_FAILED;
-		}
-		strcpy(vg_old->lv[l]->name, lv_name_ptr);
-	}
+*************/
 
-	if (vg_remove_dir_and_group_and_nodes(vg_name_old) < 0) {
-		log_error("removing volume group nodes and directory of \"%s\"",
-			  vg_name_old);
+	sprintf(old_path, "%s%s", prefix, vg_name_old);
+	sprintf(new_path, "%s%s", prefix, vg_name_new);
+
+	log_verbose("Renaming %s to %s", old_path, new_path);
+	if (!(rename(old_path, new_path))) {
+		log_error("Renaming %s to %s failed: %s",
+			  old_path, new_path, strerror(errno));
 		return ECMD_FAILED;
 	}
 
 	/* store it on disks */
-	log_verbose("updating volume group name");
+	log_verbose("Writing out updated volume group");
 	if (ios->vg_write(ios, vg_old)) {
 		return ECMD_FAILED;
 	}
 
-	log_verbose("creating volume group directory %s%s", prefix,
-		    vg_name_new);
-	if (vg_create_dir_and_group_and_nodes(vg_old)) {
-		return ECMD_FAILED;
-	}
-
+/*********** 
 	if ((ret = do_autobackup(vg_name_new, vg_old)))
 		return ECMD_FAILED;
+**********/
 
 	log_print("Volume group %s successfully renamed to %s",
 		  vg_name_old, vg_name_new);
 
-	return 0;
+	/* FIXME: Deallocations */
 
-/* FIXME: Deallocations */
+	return 0;
 }
 
-/* FIXME: Move this out */
-
+/* FIXME: Moved into vg_write now */
+/*******************
 char *lv_change_vgname(char *vg_name, char *lv_name)
 {
 	char *lv_name_ptr = NULL;
 	static char lv_name_buf[NAME_LEN] = { 0, };
 
-	/* check if lv_name includes a path */
+	** check if lv_name includes a path 
 	if ((lv_name_ptr = strrchr(lv_name, '/'))) {
-		lv_name_ptr++;
-		sprintf(lv_name_buf, "%s%s/%s%c", lvm_dir_prefix(), vg_name,
-			lv_name_ptr, 0);
-	} else
-		strncpy(lv_name_buf, lv_name, NAME_LEN - 1);
-	return lv_name_buf;
-}
+	    lv_name_ptr++;
+	    sprintf(lv_name_buf, "%s%s/%s%c", ios->prefix, vg_name,
+		    lv_name_ptr, 0);} 
+	else
+	    strncpy(lv_name_buf, lv_name, NAME_LEN - 1); return lv_name_buf;}
+
+**********************/
+

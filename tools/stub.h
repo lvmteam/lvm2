@@ -27,13 +27,18 @@ int lvmdiskscan(int argc, char **argv) {return 1;}
 int lvmsadc(int argc, char **argv) {return 1;}
 int lvmsar(int argc, char **argv) {return 1;}
 int lvreduce(int argc, char **argv) {return 1;}
+int lvremove(int argc, char **argv) {return 1;}
 int lvrename(int argc, char **argv) {return 1;}
 int lvscan(int argc, char **argv) {return 1;}
+int pvcreate(int argc, char **argv) {return 1;}
+int pvchange(int argc, char **argv) {return 1;}
+int pvdisplay(int argc, char **argv) {return 1;}
 int pvdata(int argc, char **argv) {return 1;}
+int pvscan(int argc, char **argv) {return 1;}
 int vgcfgbackup(int argc, char **argv) {return 1;}
-int vgcfgrestore(int argc, char **argv) {return 1;}
 int vgchange(int argc, char **argv) {return 1;}
-int vgck(int argc, char **argv) {return 1;}
+int vgcreate(int argc, char **argv) {return 1;}
+int vgcfgrestore(int argc, char **argv) {return 1;}
 int vgdisplay(int argc, char **argv) {return 1;}
 int vgexport(int argc, char **argv) {return 1;}
 int vgextend(int argc, char **argv) {return 1;}
@@ -44,5 +49,4 @@ int vgreduce(int argc, char **argv) {return 1;}
 int vgremove(int argc, char **argv) {return 1;}
 int vgscan(int argc, char **argv) {return 1;}
 int vgsplit(int argc, char **argv) {return 1;}
-int init_autobackup() {return 0;}
 

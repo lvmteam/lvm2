@@ -57,8 +57,10 @@ static int _array_size;
 static int _num_commands;
 static struct command *_commands;
 
+/* Exported */
+struct io_space *ios;
+
 static struct dev_filter *_filter;
-static struct io_space *_ios;
 static struct config_file *_cf;
 
 static int _interactive;
@@ -483,7 +485,7 @@ static void display_help()
 
 	log_error("Available lvm commands:");
 	log_error("Use 'lvm help <command>' for more information");
-	log_error("");
+	log_error(" ");
 
 	for (i = 0; i < _num_commands; i++) {
 		struct command *com = _commands + i;
@@ -554,11 +556,6 @@ struct dev_filter *active_filter(void)
 	return _filter;
 }
 
-struct io_space *active_ios(void)
-{
-	return _ios;
-}
-
 static void __init_log(struct config_file *cf)
 {
 	const char *log_file = find_config_str(cf->root, "log/file", '/', 0);
@@ -580,6 +577,10 @@ static int init(void)
 	int ret = 0;
 	const char *e = getenv("LVM_CONFIG_FILE");
 	struct stat info;
+	struct pool *ios_pool;
+
+	/* FIXME: Override from config file */
+	char *prefix = "/dev/";
 
 	if (!(_cf = create_config_file())) {
 		stack;
@@ -603,16 +604,27 @@ static int init(void)
 		__init_log(_cf);
 	}
 
-	if ((dev_cache_init)) {
+	if (!dev_cache_init()) {
 		stack;
 		goto out;
 	}
 
-	if (!(_filter = config_filter_create(_cf->root))) {
+	if (!dev_cache_add_dir(prefix)) {
+		log_error("Failed to add %s to internal device cache", prefix);
 		goto out;
 	}
 
-	if (!(_ios = create_lvm_v1_format(_filter))) {
+	if (!(_filter = config_filter_create())) {
+		/* Add scan & rejects from _cf->root */
+		goto out;
+	}
+
+	if (!(ios_pool = pool_create(4 * 1024))) {
+		log_error("ios pool creation failed");
+		goto out;
+	}
+
+	if (!(ios = create_lvm1_format(prefix, ios_pool, _filter))) {
 		goto out;
 	}
 
@@ -634,7 +646,7 @@ static void __fin_commands(void)
 
 static void fin(void)
 {
-	_ios->destroy(_ios);
+	ios->destroy(ios);
 	config_filter_destroy(_filter);
 	dev_cache_exit();
 	destroy_config_file(_cf);

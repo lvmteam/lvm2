@@ -27,6 +27,10 @@
 #include <sys/types.h>
 #include <string.h>
 
+#include "pool.h"
+#include "dbg_malloc.h"
+#include "list.h"
+#include "log.h"
 #include "metadata.h"
 #include "config.h"
 #include "dev-cache.h"
@@ -34,9 +38,7 @@
 #include "display.h"
 #include "errors.h"
 #include "filter.h"
-#include "list.h"
-#include "log.h"
-#include "dbg_malloc.h"
+#include "format1.h"
 #include "toollib.h"
 
 #define CMD_LEN 256
@@ -105,5 +107,7 @@ static inline int arg_count_increment(int a)
 
 struct config_file *active_config_file(void);
 struct dev_filter *active_filter(void);
-struct io_space *active_ios(void);
+
+extern struct io_space *ios;
+
 #endif

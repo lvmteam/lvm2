@@ -27,4 +27,7 @@ int do_autobackup(struct volume_group *vg);
 
 int process_each_vg(int argc, char **argv,
 		    int (*process_single) (const char *vg_name));
+
+int is_valid_chars(char *n);
+
 #endif

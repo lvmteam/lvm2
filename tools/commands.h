@@ -37,6 +37,7 @@ xx(help,
    "Display help for commands",
    "help <command>\n")
 
+/*********
 xx(lvactivate,
    "Activate logical volume on given partition(s)",
    "lvactivate "
@@ -44,6 +45,7 @@ xx(lvactivate,
    "\t[-h/-?/--help]\n"
    "\t[-v/--verbose]\n"
    "Logical Volume(s)\n")
+***********/
 
 xx(lvchange,
    "Change the attributes of logical volume(s)",
@@ -454,12 +456,13 @@ xx(vgrename,
    "vgrename\n"
    "\t[-A/--autobackup y/n]\n"
    "\t[-d/--debug]\n"
+   "\t[-f/--force]\n"
    "\t[-h/-?/--help]\n"
    "\t[-v/--verbose]\n"
    "\tOldVolumeGroupPath NewVolumeGroupPath /\n"
    "\tOldVolumeGroupName NewVolumeGroupName\n",
 
-   autobackup_ARG)
+   autobackup_ARG, force_ARG)
 
 xx(vgscan,
    "Search for all volume groups",

@@ -23,12 +23,8 @@ VPATH = @srcdir@
 SOURCES=\
 	lvm.c\
 	lvmchange.c\
-	lvremove.c\
-	pvcreate.c\
-	pvchange.c\
-	pvdisplay.c\
-	pvscan.c\
-	vgcreate.c\
+	toollib.c\
+	vgck.c\
 	vgrename.c
 
 TARGETS=\
