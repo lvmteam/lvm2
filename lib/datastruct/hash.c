@@ -188,7 +188,7 @@ void *hash_get_data(struct hash_table *t, struct hash_node *n)
 
 static struct hash_node *_next_slot(struct hash_table *t, unsigned int s)
 {
-	struct hash_node *c = 0;
+	struct hash_node *c = NULL;
 	int i;
 
 	for (i = s; i < t->num_slots && !c; i++)
@@ -204,6 +204,7 @@ struct hash_node *hash_get_first(struct hash_table *t)
 
 struct hash_node *hash_get_next(struct hash_table *t, struct hash_node *n)
 {
-	return n->next ? n->next : _next_slot(t, _hash(n->key) + 1);
+	unsigned int h = _hash(n->key) & (t->num_slots - 1);
+	return n->next ? n->next : _next_slot(t, h + 1);
 }
 

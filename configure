@@ -1317,7 +1317,7 @@ else
 int main() {
 
 /* Ultrix mips cc rejects this.  */
-typedef int charset[2]; const charset x = {0,0};
+typedef int charset[2]; const charset x;
 /* SunOS 4.1.1 cc rejects this.  */
 char const *const *ccp;
 char **p;
@@ -1392,7 +1392,7 @@ for ac_kw in inline __inline__ __inline; do
 #include "confdefs.h"
 
 int main() {
-} int $ac_kw foo() {
+} $ac_kw foo() {
 ; return 0; }
 EOF
 if { (eval echo configure:1399: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
@@ -2160,6 +2160,7 @@ lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
 test/mm/Makefile							\
+test/device/Makefile							\
 test/format1/Makefile							\
 " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
@@ -2257,6 +2258,7 @@ lib/Makefile							 	\
 man/Makefile							 	\
 tools/Makefile							 	\
 test/mm/Makefile							\
+test/device/Makefile							\
 test/format1/Makefile							\
 "}
 EOF
