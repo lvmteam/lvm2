@@ -21,8 +21,6 @@
 /* some random number */
 #define DM_MAGIC	0x211271
 
-const char *_mount_point = "/device-mapper";
-
 static struct super_operations dm_ops;
 static struct address_space_operations dm_aops;
 static struct file_operations dm_dir_operations;
@@ -81,13 +79,14 @@ static struct file *open_error_file(struct file *table)
 	char *name;
 	struct file *f;
 
-	/* FIXME: arbitrary size */
-	name = kmalloc(512, GFP_KERNEL);
+	name = kmalloc(PATH_MAX + 1, GFP_KERNEL);
 
 	if (!name)
 		return 0;
 
-	sprintf(name, "%s/%s/%s.err", _mount_point,
+	/* FIXME: Assumes path depth; avoid filp_open.  */
+	sprintf(name, "/%s/%s/%s.err", 
+		table->f_vfsmnt->mnt_mountpoint->d_name.name,
 		table->f_dentry->d_parent->d_name.name,
 		table->f_dentry->d_name.name);
 	f = filp_open(name, O_WRONLY|O_TRUNC|O_CREAT, 0);
