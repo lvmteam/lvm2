@@ -90,18 +90,28 @@ int yes_no_excl_arg(struct cmd_context *cmd, struct arg *a)
 	a->sign = SIGN_NONE;
 
 	if (!strcmp(a->value, "e")) {
-		a->i_value = 2;
-		a->ui_value = 2;
+		a->i_value = CHANGE_AE;
+		a->ui_value = CHANGE_AE;
 	}
 
 	else if (!strcmp(a->value, "y")) {
-		a->i_value = 1;
-		a->ui_value = 1;
+		a->i_value = CHANGE_AY;
+		a->ui_value = CHANGE_AY;
 	}
 
 	else if (!strcmp(a->value, "n")) {
-		a->i_value = 0;
-		a->ui_value = 0;
+		a->i_value = CHANGE_AN;
+		a->ui_value = CHANGE_AN;
+	}
+
+	else if (!strcmp(a->value, "ln") || !strcmp(a->value, "nl")) {
+		a->i_value = CHANGE_ALN;
+		a->ui_value = CHANGE_ALN;
+	}
+
+	else if (!strcmp(a->value, "ly") || !strcmp(a->value, "yl")) {
+		a->i_value = CHANGE_ALY;
+		a->ui_value = CHANGE_ALY;
 	}
 
 	else

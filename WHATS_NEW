@@ -1,5 +1,6 @@
 Version 2.00.17 -
 =============================
+  Add local activation support.
   Tidy relative paths in makefile includes.
   fsadm support for fsck and resizing - needs testing.
   Add read-only GFS pool support.

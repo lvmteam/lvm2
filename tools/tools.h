@@ -78,6 +78,14 @@ typedef enum {
 	SIGN_MINUS = 2
 } sign_t;
 
+enum {
+	CHANGE_AY = 0,
+	CHANGE_AN = 1,
+	CHANGE_AE = 2,
+	CHANGE_ALY = 3,
+	CHANGE_ALN = 4
+};
+
 /* a global table of possible arguments */
 struct arg {
 	const char short_arg;
