@@ -1054,7 +1054,7 @@ static char *_list_args(const char *text, int state)
 			char c;
 			if (!(c = (the_args +
 				   com->valid_args[match_no++])->short_arg))
-				continue;
+				    continue;
 
 			sprintf(s, "-%c", c);
 			if (!strncmp(text, s, len))
@@ -1285,6 +1285,42 @@ void lvm2_exit(void *handle)
 
 #endif
 
+/*
+ * Determine whether we should fall back and exec the equivalent LVM1 tool
+ */
+static int _lvm1_fallback(struct cmd_context *cmd)
+{
+	char vsn[80];
+	int dm_present;
+
+	if (!find_config_int(cmd->cft->root, "global/fallback_to_lvm1",
+			     DEFAULT_FALLBACK_TO_LVM1) ||
+	    strncmp(cmd->kernel_vsn, "2.4.", 4))
+		return 0;
+
+	log_suppress(1);
+	dm_present = driver_version(vsn, sizeof(vsn));
+	log_suppress(0);
+
+	if (dm_present || !lvm1_present(cmd))
+		return 0;
+
+	return 1;
+}
+
+static void _exec_lvm1_command(struct cmd_context *cmd, int argc, char **argv)
+{
+	char path[PATH_MAX];
+
+	if (lvm_snprintf(path, sizeof(path), "%s.lvm1", argv[0]) < 0) {
+		log_error("Failed to create LVM1 tool pathname");
+		return;
+	}
+
+	execvp(path, argv);
+	log_sys_error("execvp", path);
+}
+
 int lvm2_main(int argc, char **argv)
 {
 	char *namebase, *base;
@@ -1305,6 +1341,21 @@ int lvm2_main(int argc, char **argv)
 
 	_register_commands();
 
+	if (_lvm1_fallback(cmd)) {
+		/* Attempt to run equivalent LVM1 tool instead */
+		if (!alias) {
+			argv++;
+			argc--;
+			alias = 0;
+		}
+		if (!argc) {
+			log_error("Falling back to LVM1 tools, but no "
+				  "command specified.");
+			return ECMD_FAILED;
+		}
+		_exec_lvm1_command(cmd, argc, argv);
+		return ECMD_FAILED;
+	}
 #ifdef READLINE_SUPPORT
 	if (!alias && argc == 1) {
 		ret = _shell(cmd);

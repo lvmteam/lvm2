@@ -58,6 +58,7 @@ struct cmd_context {
 
 	struct list formats;	/* Available formats */
 	const char *hostname;
+	const char *kernel_vsn;
 
 	char *cmd_line;
 	struct command *command;

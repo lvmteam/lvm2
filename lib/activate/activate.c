@@ -19,6 +19,7 @@
 #include "memlock.h"
 #include "display.h"
 #include "fs.h"
+#include "lvm-file.h"
 #include "lvm-string.h"
 #include "pool.h"
 #include "toolcontext.h"
@@ -30,6 +31,22 @@
 #include <unistd.h>
 
 #define _skip(fmt, args...) log_very_verbose("Skipping: " fmt , ## args)
+
+int lvm1_present(struct cmd_context *cmd)
+{
+	char path[PATH_MAX];
+
+	if (lvm_snprintf(path, sizeof(path), "%s/lvm/global", cmd->proc_dir)
+	    < 0) {
+		log_error("LVM1 proc global snprintf failed");
+		return 0;
+	}
+
+	if (path_exists(path))
+		return 1;
+	else
+		return 0;
+}
 
 #ifndef DEVMAPPER_SUPPORT
 void set_activation(int act)

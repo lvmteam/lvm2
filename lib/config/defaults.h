@@ -35,6 +35,12 @@
 
 #define DEFAULT_UMASK 0077
 
+#ifdef LVM1_FALLBACK
+#  define DEFAULT_FALLBACK_TO_LVM1 1
+#else
+#  define DEFAULT_FALLBACK_TO_LVM1 0
+#endif
+
 #ifdef LVM1_SUPPORT
 #  define DEFAULT_FORMAT "lvm1"
 #else
