@@ -151,6 +151,7 @@ void *pool_end_object(struct pool *p)
 {
 	assert(p->object);
 	p->object = 0;
+	return &p->tail->data;
 }
 
 void pool_abandon_object(struct pool *p)
