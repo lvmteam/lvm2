@@ -62,11 +62,12 @@ static int vgremove_single(const char *vg_name)
 	list_for_each(pvh, &vg->pvs) {
 		pv = &list_entry(pvh, struct pv_list, list)->pv;
 		log_verbose("Removing physical volume %s from volume group %s",
-			    pv->dev->name, vg_name);
+			    dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';
 		if (!(ios->pv_write(ios, pv))) {
 			log_error("Failed to remove physical volume %s from "
-				  "volume group %s", pv->dev->name, vg_name);
+				  "volume group %s", dev_name(pv->dev), 
+				  vg_name);
 			ret = ECMD_FAILED;
 		}
 	}

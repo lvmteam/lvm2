@@ -19,16 +19,17 @@ int dev_get_size(struct device *dev, uint64_t *size)
 {
 	int fd;
 	long s;
+	const char *name = dev_name(dev);
 
-	log_very_verbose("Getting size of %s", dev->name);
-	if ((fd = open(dev->name, O_RDONLY)) < 0) {
-		log_sys_error("open", dev->name);
+	log_very_verbose("Getting size of %s", name);
+	if ((fd = open(name, O_RDONLY)) < 0) {
+		log_sys_error("open", name);
 		return 0;
 	}
 
 	/* FIXME: add 64 bit ioctl */
 	if (ioctl(fd, BLKGETSIZE, &s) < 0) {
-		log_sys_error("ioctl BLKGETSIZE", dev->name);
+		log_sys_error("ioctl BLKGETSIZE", name);
 		close(fd);
 		return 0;
 	}
@@ -66,15 +67,16 @@ int64_t dev_read(struct device *dev, uint64_t offset,
 		 int64_t len, void *buffer)
 {
 	int64_t r;
-	int fd = open(dev->name, O_RDONLY);
+	const char *name = dev_name(dev);
+	int fd = open(name, O_RDONLY);
 
 	if (fd < 0) {
-		log_sys_very_verbose("open", dev->name);
+		log_sys_very_verbose("open", name);
 		return 0;
 	}
 
 	if (lseek(fd, offset, SEEK_SET) < 0) {
-		log_sys_error("lseek", dev->name);
+		log_sys_error("lseek", name);
 		return 0;
 	}
 
@@ -107,15 +109,16 @@ int64_t dev_write(struct device *dev, uint64_t offset,
 		  int64_t len, void *buffer)
 {
 	int64_t r;
-	int fd = open(dev->name, O_WRONLY);
+	const char *name = dev_name(dev);
+	int fd = open(name, O_WRONLY);
 
 	if (fd < 0) {
-		log_sys_error("open", dev->name);
+		log_sys_error("open", name);
 		return 0;
 	}
 
 	if (lseek(fd, offset, SEEK_SET) < 0) {
-		log_sys_error("lseek", dev->name);
+		log_sys_error("lseek", name);
 		return 0;
 	}
 

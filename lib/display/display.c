@@ -102,7 +102,7 @@ void pvdisplay_colons(struct physical_volume *pv)
 	uuid = display_uuid(pv->id.uuid);
 
 	log_print("%s:%s:%llu:-1:%u:%u:-1:%llu:%u:%u:%u:%s",
-	       pv->dev->name,
+	       dev_name(pv->dev),
 	       pv->vg_name,
 	       pv->size,
 	       /* FIXME pv->pv_number, Derive or remove? */
@@ -133,7 +133,7 @@ void pvdisplay_full(struct physical_volume * pv)
 	uuid = display_uuid(pv->id.uuid);
 
 	log_print("--- %sPhysical volume ---", pv->pe_size ? "" : "NEW ");
-	log_print("PV Name               %s", pv->dev->name);
+	log_print("PV Name               %s", dev_name(pv->dev));
 	log_print("VG Name               %s", pv->vg_name);
 
 	size = display_size(pv->size / 2, SIZE_SHORT);
@@ -194,7 +194,7 @@ void pv_display_short(struct physical_volume *pv)
 	if (!pv) 
 		return;
 
-	log_print("PV Name               %s     ", pv->dev->name);
+	log_print("PV Name               %s     ", dev_name(pv->dev));
 	/* FIXME  pv->pv_number); */
 	log_print("PV Status             %savailable / %sallocatable",
 		(pv->status & ACTIVE) ? "" : "NOT ",

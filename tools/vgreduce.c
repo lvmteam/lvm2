@@ -88,9 +88,10 @@ int vgreduce(int argc, char **argv)
 static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 {
 	struct list_head *pvh;
+	const char *name = dev_name(pv->dev);
 
 	if (pv->pe_allocated) {
-		log_error("Physical volume %s still in use", pv->dev->name);
+		log_error("Physical volume %s still in use", name);
 		return ECMD_FAILED;
 	}
 
@@ -102,31 +103,30 @@ static int vgreduce_single(struct volume_group *vg, struct physical_volume *pv)
 
 	if (vg->pv_count == 1) {
 		log_error("Can't remove final physical volume %s from "
-			  "volume group %s", pv->dev->name, vg->name);
+			  "volume group %s", name, vg->name);
 		return ECMD_FAILED;
 	}
 
-	pvh = find_pv_in_vg(vg, pv->dev->name);
+	pvh = find_pv_in_vg(vg, name);
 
-	log_verbose("Removing %s from volume group %s", pv->dev->name,
-		    vg->name);
+	log_verbose("Removing %s from volume group %s", name, vg->name);
 	list_del(pvh);
 	*pv->vg_name = '\0';
 	vg->pv_count--;
 
 	if (!(ios->vg_write(ios, vg))) {
 		log_error("Removal of physical volume %s from %s failed",
-			  pv->dev->name, vg->name);
+			  name, vg->name);
 		return ECMD_FAILED;
 	}
 
 	if (!ios->pv_write(ios, pv)) {
 		log_error("Failed to clear metadata from physical volume %s "
-			  "after removal from %s", pv->dev->name, vg->name);
+			  "after removal from %s", name, vg->name);
 		return ECMD_FAILED;
 	}
 
-	log_print("Removed %s from volume group %s", pv->dev->name, vg->name);
+	log_print("Removed %s from volume group %s", name, vg->name);
 
 	return 0;
 }

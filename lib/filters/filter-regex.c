@@ -151,7 +151,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 	int m;
 	struct rfilter *rf = (struct rfilter *) f->private;
 
-	m = matcher_run(rf->engine, dev->name);
+	m = matcher_run(rf->engine, dev_name(dev));
 
 	/*
 	 * pass everything that doesn't match,

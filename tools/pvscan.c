@@ -97,7 +97,7 @@ int pvscan(int argc, char **argv)
 	pv_max_name_len = vg_max_name_len = 0;
 	list_for_each(pvh, pvs) {
 		pv = &list_entry(pvh, struct pv_list, list)->pv;
-		len = strlen(pv->dev->name);
+		len = strlen(dev_name(pv->dev));
 		if (pv_max_name_len < len)
 			pv_max_name_len = len;
 		len = strlen(pv->vg_name);
@@ -143,7 +143,7 @@ void pvscan_display_single(struct physical_volume *pv)
 
 	/* short listing? */
 	if (arg_count(short_ARG) > 0) {
-		log_print("%s", pv->dev->name);
+		log_print("%s", dev_name(pv->dev));
 		return;
 	}
 
@@ -167,9 +167,9 @@ void pvscan_display_single(struct physical_volume *pv)
 		sprintf(pv_tmp_name,
 			"%-*s with UUID %s",
 			pv_max_name_len - 2,
-			pv->dev->name, display_uuid(pv->id.uuid));
+			dev_name(pv->dev), display_uuid(pv->id.uuid));
 	} else {
-		sprintf(pv_tmp_name, "%s", pv->dev->name);
+		sprintf(pv_tmp_name, "%s", dev_name(pv->dev));
 	}
 
 	if (!*pv->vg_name) {

@@ -162,13 +162,13 @@ int persistent_filter_dump(struct dev_filter *f)
 static int _lookup_p(struct dev_filter *f, struct device *dev)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
-	void *l = hash_lookup(pf->devices, dev->name);
+	void *l = hash_lookup(pf->devices, dev_name(dev));
 
 	if (!l) {
 		l = pf->real->passes_filter(pf->real, dev) ?
 			PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
-		hash_insert(pf->devices, dev->name, l);
+		hash_insert(pf->devices, dev_name(dev), l);
 	}
 
 	return l == PF_GOOD_DEVICE;

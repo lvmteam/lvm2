@@ -62,11 +62,11 @@ void pvdisplay_single(struct physical_volume *pv)
 	char *sz;
         uint64_t size;
 
-	char *pv_name = pv->dev->name;
+	const char *pv_name = dev_name(pv->dev);
 
 	if (!*pv->vg_name)
 		size = pv->size;
-	else 
+	else
 		size = (pv->pe_count - pv->pe_allocated) * pv->pe_size;
 
 	if (arg_count(short_ARG)) {
@@ -77,7 +77,7 @@ void pvdisplay_single(struct physical_volume *pv)
 		return;
 	}
 
-	if (pv->status & EXPORTED_VG) 
+	if (pv->status & EXPORTED_VG)
         	log_print("Physical volume '%s' of volume group '%s' "
 			  "is exported" , pv_name, pv->vg_name);
 
@@ -87,7 +87,7 @@ void pvdisplay_single(struct physical_volume *pv)
 
 	if (!pv->vg_name) {
         	log_print ( "'%s' is a new physical volume of %s",
-                  	     pv_name, ( sz = display_size ( size / 2, 
+                  	     pv_name, ( sz = display_size ( size / 2,
 								SIZE_SHORT)));
 		dbg_free(sz);
 	}

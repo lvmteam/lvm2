@@ -51,29 +51,18 @@ static struct {
 
 static int _insert(const char *path, int rec);
 
-static struct device *_create_dev(const char *path, dev_t d)
+static struct device *_create_dev(dev_t d)
 {
 	struct device *dev;
-	char *name = pool_strdup(_cache.mem, path);
 
-	if (!name) {
+	if (!(dev = _alloc(sizeof(*dev)))) {
 		stack;
 		return NULL;
 	}
 
-	if (!(dev = _alloc(sizeof(*dev)))) {
-		stack;
-		goto bad;
-	}
-
-	dev->name = name;
 	INIT_LIST_HEAD(&dev->aliases);
 	dev->dev = d;
 	return dev;
-
- bad:
-	_free(name);
-	return NULL;
 }
 
 static int _add_alias(struct device *dev, const char *path)
@@ -103,15 +92,9 @@ static int _insert_dev(const char *path, dev_t d)
 	struct device *dev;
 
 	/* is this device already registered ? */
-	if ((dev = (struct device *) btree_lookup(_cache.devices, d))) {
-		if (!_add_alias(dev, path)) {
-			log_err("Couldn't add alias to dir cache.");
-			return 0;
-		}
-
-	} else {
+	if (!(dev = (struct device *) btree_lookup(_cache.devices, d))) {
 		/* create new device */
-		if (!(dev = _create_dev(path, d))) {
+		if (!(dev = _create_dev(d))) {
 			stack;
 			return 0;
 		}
@@ -123,9 +106,8 @@ static int _insert_dev(const char *path, dev_t d)
 		}
 	}
 
-	/* insert the name/alias */
-	if (!(hash_insert(_cache.names, path, dev))) {
-		log_err("Couldn't insert device into hash table.");
+	if (!_add_alias(dev, path)) {
+		log_err("Couldn't add alias to dir cache.");
 		return 0;
 	}
 
