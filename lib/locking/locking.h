@@ -25,17 +25,22 @@ void fin_locking(void);
 int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
 
 /*
+ * Does the LVM1 driver have this VG active?
+ */
+int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
+
+/*
  * Lock type - these numbers are the same as VMS and the IBM DLM
  */
 #define LCK_TYPE_MASK	0x000000FF
 
-#define LCK_NULL	0x00000000 /* LCK$_NLMODE */
-#define LCK_READ	0x00000001 /* LCK$_CRMODE */
-                                   /* LCK$_CWMODE */
-                                   /* LCK$_PRMODE */
-#define LCK_WRITE	0x00000004 /* LCK$_PWMODE */
-#define LCK_EXCL	0x00000005 /* LCK$_EXMODE */
-#define LCK_UNLOCK      0x00000010 /* This is ours */
+#define LCK_NULL	0x00000000	/* LCK$_NLMODE */
+#define LCK_READ	0x00000001	/* LCK$_CRMODE */
+					/* LCK$_CWMODE */
+					/* LCK$_PRMODE */
+#define LCK_WRITE	0x00000004	/* LCK$_PWMODE */
+#define LCK_EXCL	0x00000005	/* LCK$_EXMODE */
+#define LCK_UNLOCK      0x00000010	/* This is ours */
 
 /*
  * Lock scope
@@ -64,4 +69,3 @@ int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
 
 #define unlock_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_UNLOCK)
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
-
