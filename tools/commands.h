@@ -33,6 +33,10 @@ xx(e2fsadm,
     extents_ARG, size_ARG, nofsck_ARG, test_ARG)
 *********/
 
+xx(dumpconfig,
+   "Dump active configuration",
+   "dumpconfig <filename>\n")
+
 xx(help,
    "Display help for commands",
    "help <command>" "\n")

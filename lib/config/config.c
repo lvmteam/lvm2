@@ -385,17 +385,25 @@ static int _write_config(struct config_node *n, FILE *fp, int level)
 int write_config_file(struct config_tree *cf, const char *file)
 {
 	int r = 1;
-	FILE *fp = fopen(file, "w");
-	if (!fp) {
+	FILE *fp;
+
+	if (!file) {
+		fp = stdout;
+		file = "stdout";
+	} else if (!(fp = fopen(file, "w"))) {
 		log_sys_error("open", file);
 		return 0;
 	}
 
+	log_verbose("Dumping configuration to %s", file);
 	if (!_write_config(cf->root, fp, 0)) {
-		stack;
+		log_error("Failure while writing configuration");
 		r = 0;
 	}
-	fclose(fp);
+
+	if (fp != stdout)
+		fclose(fp);
+
 	return r;
 }
 
