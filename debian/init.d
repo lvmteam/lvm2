@@ -11,44 +11,32 @@ DESC=LVM
 
 test -f $DAEMON || exit 0
 
-set -e
-
 case "$1" in
   start)
 	echo -n "Initializing $DESC: "
-	modprobe dm-mod >/dev/null 2>&1 && CONT=1
-
-	if test "$CONT"; then
-		vgchange -a y 2>/dev/null
-		# TODO: attempt to mount all lvm devices; mount -a?
-		echo "$NAME."
-	else
-		echo "device-mapper kernel module not loaded; refusing to init LVM"
-	fi
+	modprobe dm-mod >/dev/null 2>&1
+	vgchange -a y 2>/dev/null
+	# TODO: attempt to mount all lvm devices; mount -a?
+	echo "$NAME."
 	;;
   stop)
 	echo -n "Shutting down $DESC: "
 	# TODO: attempt to umount all lvm devices; umount -a?
-	vgchange -a n 2>/dev/null && CONT=1
-
-	if test "$CONT"; then
-		rmmod dm-mod >/dev/null 2>&1
-	fi
+	vgchange -a n 2>/dev/null
+	rmmod dm-mod >/dev/null 2>&1
 	echo "$NAME."
 	;;
   restart|force-reload)
 	echo -n "Restarting $DESC: "
 	# TODO: attempt to umount all lvm devices; umount -a?
-	vgchange -a n 2>/dev/null && CONT=1
+	vgchange -a n 2>/dev/null
+	rmmod dm-mod >/dev/null 2>&1
 
-	if test "$CONT"; then
-		rmmod dm-mod >/dev/null 2>&1
-		sleep 1
-		modprobe dm-mod >/dev/null 2>&1
-		vgchange -a y 2>/dev/null
-		# TODO: attempt to mount all lvm devices; mount -a?
+	sleep 1
+	modprobe dm-mod >/dev/null 2>&1
+	vgchange -a y 2>/dev/null
+	# TODO: attempt to mount all lvm devices; mount -a?
 
-	fi
 	echo "$NAME."
 	;;
   *)
