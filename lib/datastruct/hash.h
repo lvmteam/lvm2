@@ -1,13 +1,11 @@
 /*
- * tools/lib/datastruct/hash.h
- *
  * Copyright (C) 2001 Sistina Software
  *
  * This file is released under the GPL.
  */
 
-#ifndef HASH_H
-#define HASH_H
+#ifndef _LVM_HASH_H
+#define _LVM_HASH_H
 
 struct hash_table;
 typedef void (*iterate_fn)(void *data);

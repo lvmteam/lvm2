@@ -1,7 +1,7 @@
 /* stolen from the Linux kernel. */
 
-#ifndef _LINUX_LIST_H
-#define _LINUX_LIST_H
+#ifndef _LVM_LIST_H
+#define _LVM_LIST_H
 
 #ifdef __KERNEL__
 

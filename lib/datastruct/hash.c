@@ -1,6 +1,4 @@
 /*
- * tools/lib/datastruct/hash.h
- *
  * Copyright (C) 2001 Sistina Software
  *
  * This file is released under the GPL.

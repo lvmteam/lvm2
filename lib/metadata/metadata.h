@@ -7,8 +7,8 @@
  * associated physical and logical volumes.
  */
 
-#ifndef METADATA_H
-#define METADATA_H
+#ifndef _LVM_METADATA_H
+#define _LVM_METADATA_H
 
 #define ID_LEN 32
 

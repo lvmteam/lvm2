@@ -1,6 +1,4 @@
 /*
- * tools/lib/pool.c
- *
  * Copyright (C) 2001 Sistina Software
  *
  * LVM is free software; you can redistribute it and/or modify
@@ -24,7 +22,7 @@
 
 #include "pool.h"
 #include "dbg_malloc.h"
-#include "log/log.h"
+#include "log.h"
 
 struct chunk {
 	char *begin, *end;

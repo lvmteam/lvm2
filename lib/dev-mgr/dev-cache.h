@@ -6,8 +6,8 @@
  * This file is released under the GPL.
  */
 
-#ifndef DEV_CACHE_H
-#define DEV_CACHE_H
+#ifndef _LVM_DEV_CACHE_H
+#define _LVM_DEV_CACHE_H
 
 struct device {
 	char *name;

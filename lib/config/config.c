@@ -38,8 +38,8 @@
 #include <errno.h>
 
 #include "config.h"
-#include "mm/pool.h"
-#include "log/log.h"
+#include "pool.h"
+#include "log.h"
 
 enum {
         TOK_INT,

@@ -20,10 +20,10 @@
 
 #include <sys/types.h>
 #include <string.h>
-#include "display/display.h"
-#include "metadata/metadata.h"
-#include "mm/dbg_malloc.h"
-#include "log/log.h"
+#include "display.h"
+#include "metadata.h"
+#include "dbg_malloc.h"
+#include "log.h"
 
 #define SIZE_BUF 128
 
