@@ -73,12 +73,18 @@ static int _vg_write(struct format_instance *fi, struct volume_group *vg)
 
 	/* FIXME: should be opened exclusively */
 	if (!(fp = fopen(file, "w"))) {
-		log_err("Couldn't open text file '%s'.", file);
+		log_sys_error("fopen", file);
 		return 0;
 	}
 
 	if (!text_vg_export(fp, vg)) {
-		log_err("Couldn't write text format file.");
+		log_error("Failed to write metadata to %s.", file);
+		fclose(fp);
+		return 0;
+	}
+
+	if (!fclose(fp)) {
+		log_sys_error("fclose", file);
 		return 0;
 	}
 
