@@ -6,6 +6,7 @@
  */
 
 #include "tools.h"
+
 #include <fcntl.h>
 
 int lvcreate(int argc, char **argv)
@@ -224,6 +225,8 @@ int lvcreate(int argc, char **argv)
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
+	autobackup(vg);
+
 	log_print("Logical volume %s created", lv->name);
 
 	if (!lv_activate(lv))
@@ -258,11 +261,6 @@ int lvcreate(int argc, char **argv)
 
 	} else
 		log_print("WARNING: %s not zeroed", lv->name);
-
-/******** FIXME backup
-	if ((ret = do_autobackup(vg_name, vg)))
-		return ret;
-***********/
 
 	return 0;
 }

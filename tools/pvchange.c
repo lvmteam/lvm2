@@ -73,11 +73,6 @@ int pvchange(int argc, char **argv)
 		}
 	}
 
-/******* FIXME Backup
-	if ((ret = do_autobackup(vg_name, vg)))
-		return ret;
-*********/
-
 	log_print("%d physical volume(s) changed / %d physical volume(s) "
 		  "not changed", done, total - done);
 
@@ -144,6 +139,7 @@ int pvchange_single(struct physical_volume *pv)
 				  "volume group %s", pv_name, vg->name);
 			return 0;
 		}
+		autobackup(vg);
 	} else {
 		if (!(fid->ops->pv_write(fid, pv))) {
 			log_error("Failed to store physical volume %s", 

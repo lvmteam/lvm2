@@ -39,6 +39,8 @@ void init_verbose(int level) {
 
 void init_test(int level) {
 	_test = level;
+	if (_test)
+		log_print("Test mode. Metadata will NOT be updated.");
 }
 
 int test_mode() {

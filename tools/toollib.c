@@ -6,6 +6,8 @@
 
 #include "tools.h"
 
+#include <sys/stat.h>
+
 static int _autobackup;
 static char _backup_dir[PATH_MAX];
 static int _keep_days;		/* keep for at least this number of days */
@@ -87,9 +89,14 @@ static int __autobackup(struct volume_group *vg)
 
 int autobackup(struct volume_group *vg)
 {
-	if (!_autobackup) {
+	if (!_autobackup || !*_backup_dir) {
 		log_print("WARNING: You don't have an automatic backup of %s",
 			  vg->name);
+		return 1;
+	}
+
+	if (test_mode()) {
+		log_print("Test mode: Skipping automatic backup");
 		return 1;
 	}
 
@@ -97,12 +104,34 @@ int autobackup(struct volume_group *vg)
 		  vg->name);
 
 	if (!__autobackup(vg)) {
-		log_err("Autobackup failed.");
+		log_error("Autobackup failed.");
 		return 0;
 	}
 
-	log_err("Autobackup not implemented yet.");
 	return 1;
+}
+
+
+int create_dir(const char *dir)
+{
+        struct stat info;
+
+	if (!*dir)
+		return 1;
+
+        if (stat(dir, &info) < 0 ) {
+                log_verbose("Creating directory %s", dir);
+                if (!mkdir(dir, S_IRWXU))
+                        return 1;
+                log_sys_error("mkdir", dir);
+                return 0;
+        }
+
+        if (S_ISDIR(info.st_mode))
+                return 1;
+
+        log_error("Directory %s not found", dir);
+        return 0;
 }
 
 

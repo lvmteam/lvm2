@@ -122,10 +122,10 @@ int lvrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	autobackup(lv->vg);
+
 	/* FIXME Update symlink. */
 	lv_reactivate(lv);
-
-	/* FIXME backup */
 
 	log_print("Renamed %s to %s in volume group %s%s",
 		  lv_name_old, lv_name_new, fid->cmd->dev_dir, vg_name);

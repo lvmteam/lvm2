@@ -117,6 +117,8 @@ void vgchange_available(struct volume_group *vg)
 	if (!fid->ops->vg_write(fid, vg))
 		return;
 
+	autobackup(vg);
+
 	if (available && (lv_open = activate_lvs_in_vg(vg)))
 		log_verbose("Activated %d logical volumes in "
 			    "volume group %s", lv_open, vg->name);
@@ -153,11 +155,9 @@ void vgchange_allocation(struct volume_group *vg)
 	if (!fid->ops->vg_write(fid, vg))
 		return;
 
-	log_print("Volume group %s successfully changed", vg->name);
+	autobackup(vg);
 
-/********FIXME
-	do_autobackup(vg->name, vg);
-*********/
+	log_print("Volume group %s successfully changed", vg->name);
 
 	return;
 }
@@ -207,10 +207,9 @@ void vgchange_logicalvolume(struct volume_group *vg)
 	if (!fid->ops->vg_write(fid, vg))
 		return;
 
+	autobackup(vg);
+
 	log_print("Volume group %s successfully changed", vg->name);
 
-/*******FIXME
-	do_autobackup(vg->name, vg);
-********/
 	return;
 }

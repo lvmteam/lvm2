@@ -120,10 +120,7 @@ int vgrename(int argc, char **argv)
 
 /******* FIXME Any LV things to update? */
 
-/*********** 
-	if ((ret = do_autobackup(vg_name_new, vg_old)))
-		return ECMD_FAILED;
-**********/
+	autobackup(vg_old);
 
 	log_print("Volume group %s successfully renamed to %s",
 		  vg_name_old, vg_name_new);
