@@ -63,6 +63,9 @@ struct cmd_context {
 	struct config_info default_settings;
 	struct config_info current_settings;
 
+	/* List of defined tags */
+	struct list tags;
+
 	char sys_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
 	char proc_dir[PATH_MAX];
@@ -70,5 +73,6 @@ struct cmd_context {
 
 struct cmd_context *create_toolcontext(struct arg *the_args);
 void destroy_toolcontext(struct cmd_context *cmd);
+int refresh_toolcontext(struct cmd_context *cmd);
 
 #endif

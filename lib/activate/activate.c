@@ -14,6 +14,7 @@
 #include "pool.h"
 #include "toolcontext.h"
 #include "dev_manager.h"
+#include "str_list.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -109,6 +110,87 @@ void set_activation(int act)
 int activation(void)
 {
 	return _activation;
+}
+
+static int _passes_activation_filter(struct cmd_context *cmd,
+				     struct logical_volume *lv)
+{
+	struct config_node *cn;
+	struct config_value *cv;
+	char *str;
+	char path[PATH_MAX];
+
+	if (!(cn = find_config_node(cmd->cf->root, "activation/volume_list",
+				    '/'))) {
+		/* If no hosts tags defined, activate */
+		if (list_empty(&cmd->tags))
+			return 1;
+
+		/* If any host tag matches any LV or VG tag, activate */
+		if (str_list_match_list(&cmd->tags, &lv->tags) ||
+		    str_list_match_list(&cmd->tags, &lv->vg->tags))
+			return 1;
+
+		/* Don't activate */
+		return 0;
+	}
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != CFG_STRING) {
+			log_error("Ignoring invalid string in config file "
+				  "activation/volume_list");
+			continue;
+		}
+		str = cv->v.str;
+		if (!*str) {
+			log_error("Ignoring empty string in config file "
+				  "activation/volume_list");
+			continue;
+		}
+
+		/* Tag? */
+		if (*str == '@') {
+			str++;
+			if (!*str) {
+				log_error("Ignoring empty tag in config file "
+					  "activation/volume_list");
+				continue;
+			}
+			/* If any host tag matches any LV or VG tag, activate */
+			if (!strcmp(str, "*")) {
+				if (str_list_match_list(&cmd->tags, &lv->tags)
+				    || str_list_match_list(&cmd->tags,
+							   &lv->vg->tags))
+					    return 1;
+				else
+					continue;
+			}
+			/* If supplied tag matches LV or VG tag, activate */
+			if (str_list_match_item(&lv->tags, str) ||
+			    str_list_match_item(&lv->vg->tags, str))
+				return 1;
+			else
+				continue;
+		}
+		if (!index(str, '/')) {
+			/* vgname supplied */
+			if (!strcmp(str, lv->vg->name))
+				return 1;
+			else
+				continue;
+		}
+		/* vgname/lvname */
+		if (lvm_snprintf(path, sizeof(path), "%s/%s", lv->vg->name,
+				 lv->name) < 0) {
+			log_error("lvm_snprintf error from %s/%s", lv->vg->name,
+				  lv->name);
+			continue;
+		}
+		if (!strcmp(path, str))
+			return 1;
+	}
+
+	return 0;
 }
 
 int library_version(char *version, size_t size)
@@ -465,6 +547,12 @@ int lv_activate(struct cmd_context *cmd, const char *lvid_s)
 
 	if (!(lv = lv_from_lvid(cmd, lvid_s)))
 		return 0;
+
+	if (!_passes_activation_filter(cmd, lv)) {
+		log_verbose("Not activating %s/%s due to config file settings",
+			    lv->vg->name, lv->name);
+		return 0;
+	}
 
 	if (test_mode()) {
 		_skip("Activating '%s'.", lv->name);
