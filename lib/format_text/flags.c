@@ -39,6 +39,7 @@ static struct flag _lv_flags[] = {
 	{LVM_READ, "READ"},
 	{LVM_WRITE, "WRITE"},
 	{FIXED_MINOR, "FIXED_MINOR"},
+	{VISIBLE_LV, "VISIBLE"},
 	{0, NULL}
 };
 

@@ -378,6 +378,12 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
+	/*
+	 * For now all logical volumes are visible.
+	 */
+	status |= VISIBLE_LV;
+
+
 	if (!(lv = lv_create(vg->fid, lp->lv_name, status, alloc,
 			     lp->stripes, lp->stripe_size, lp->extents,
 			     vg, pvh))) return 0;
