@@ -18,6 +18,7 @@
 #include <errno.h>
 
 #include <linux/dm-ioctl.h>
+#include <linux/kdev_t.h>
 
 #define DEVICE_MAPPER_CONTROL "/dev/device-mapper/control"
 #define ALIGNMENT sizeof(int)
@@ -245,8 +246,6 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 		if (!(b = _add_target(t, b, e)))
 			goto bad;
 
-	fprintf(stderr, "dm_ioctl size = %lu\n", dmi->data_size);
-
 	return dmi;
 
  bad:
@@ -399,7 +398,7 @@ int dm_task_run(struct dm_task *dmt)
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
-		_add_dev_node(dmt->dev_name, dmi->minor);
+		_add_dev_node(dmt->dev_name, MKDEV(DM_BLK_MAJOR, dmi->minor));
 		break;
 
 	case DM_DEVICE_REMOVE:
