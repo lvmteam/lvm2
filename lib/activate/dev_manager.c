@@ -1939,7 +1939,6 @@ static int _add_existing_layer(struct dev_manager *dm, const char *name)
 
 static int _scan_existing_devices(struct dev_manager *dm)
 {
-
 	int r = 0;
 	struct dm_names *names;
 	unsigned next = 0;
@@ -2199,6 +2198,20 @@ int dev_manager_lv_mknodes(const struct logical_volume *lv)
 int dev_manager_lv_rmnodes(const struct logical_volume *lv)
 {
 	return fs_del_lv(lv);
+}
+
+int dev_manager_mknodes(void)
+{
+	struct dm_task *dmt;
+	int r;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
+		return 0;
+
+	r = dm_task_run(dmt);
+
+	dm_task_destroy(dmt);
+	return r;
 }
 
 void dev_manager_exit(void)

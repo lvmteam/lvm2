@@ -40,6 +40,7 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv);
 
 int dev_manager_lv_mknodes(const struct logical_volume *lv);
 int dev_manager_lv_rmnodes(const struct logical_volume *lv);
+int dev_manager_mknodes(void);
 
 /*
  * Put the desired changes into effect.
