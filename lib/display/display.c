@@ -511,7 +511,7 @@ void vgdisplay_short(struct volume_group *vg)
 	    display_size((vg->extent_count - vg->free_count) * vg->extent_size /
 			 2, SIZE_SHORT);
 	s3 = display_size(vg->free_count * vg->extent_size / 2, SIZE_SHORT);
-	log_print("%s %-9s [%-9s used / %s free]", vg->name,
+	log_print("\"%s\" %-9s [%-9s used / %s free]", vg->name,
 /********* FIXME if "open" print "/used" else print "/idle"???  ******/
 		  s1, s2, s3);
 	dbg_free(s1);

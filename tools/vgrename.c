@@ -57,7 +57,7 @@ int vgrename(int argc, char **argv)
 	}
 
 	if (!is_valid_chars(vg_name_new)) {
-		log_error("New volume group name %s has invalid characters",
+		log_error("New volume group name \"%s\" has invalid characters",
 			  vg_name_new);
 		return ECMD_FAILED;
 	}
@@ -67,24 +67,25 @@ int vgrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	log_verbose("Checking for existing volume group %s", vg_name_old);
+	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 	if (!(vg_old = fid->ops->vg_read(fid, vg_name_old))) {
-		log_error("Volume group %s doesn't exist", vg_name_old);
+		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
 		return ECMD_FAILED;
 	}
 
         if (vg_old->status & EXPORTED_VG) {
-                log_error("Volume group %s is exported", vg_old->name);
+                log_error("Volume group \"%s\" is exported", vg_old->name);
                 return ECMD_FAILED;
         }
 
 	if (!(vg_old->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg_old->name);
+		log_error("Volume group \"%s\" is read-only", vg_old->name);
 		return ECMD_FAILED;
 	}
 
 	if (lvs_in_vg_activated(vg_old)) {
-		log_error("Volume group %s still has active LVs", vg_name_old);
+		log_error("Volume group \"%s\" still has active LVs",
+			  vg_name_old);
 /***** FIXME Handle this with multiple LV renames!
 		if (!force_ARG) {
 			log_error("Use -f to force the rename");
@@ -93,9 +94,10 @@ int vgrename(int argc, char **argv)
 *****/
 	}
 
-	log_verbose("Checking for new volume group %s", vg_name_new);
+	log_verbose("Checking for new volume group \"%s\"", vg_name_new);
 	if ((vg_new = fid->ops->vg_read(fid, vg_name_new))) {
-		log_error("New volume group %s already exists", vg_name_new);
+		log_error("New volume group \"%s\" already exists",
+			  vg_name_new);
 		return ECMD_FAILED;
 	}
 
@@ -120,9 +122,9 @@ int vgrename(int argc, char **argv)
 	sprintf(old_path, "%s%s", dev_dir, vg_name_old);
 	sprintf(new_path, "%s%s", dev_dir, vg_name_new);
 
-	log_verbose("Renaming %s to %s", old_path, new_path);
+	log_verbose("Renaming \"%s\" to \"%s\"", old_path, new_path);
 	if (rename(old_path, new_path)) {
-		log_error("Renaming %s to %s failed: %s",
+		log_error("Renaming \"%s\" to \"%s\" failed: %s",
 			  old_path, new_path, strerror(errno));
 		return ECMD_FAILED;
 	}
@@ -137,7 +139,7 @@ int vgrename(int argc, char **argv)
 
 	backup(vg_old);
 
-	log_print("Volume group %s successfully renamed to %s",
+	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
 		  vg_name_old, vg_name_new);
 
 	/* FIXME: Deallocations */

@@ -89,9 +89,9 @@ int archive(struct volume_group *vg)
 		return 1;
 	}
 
-	log_verbose("Archiving volume group %s metadata.", vg->name);
+	log_verbose("Archiving volume group \"%s\" metadata.", vg->name);
 	if (!__archive(vg)) {
-		log_error("Volume group %s metadata archive failed.",
+		log_error("Volume group \"%s\" metadata archive failed.",
 			  vg->name);
 		return 0;
 	}
@@ -149,7 +149,7 @@ static int __backup(struct volume_group *vg)
 		return 0;
 	}
 
-	log_verbose("Creating volume group backup %s", name);
+	log_verbose("Creating volume group backup \"%s\"", name);
 
 	if (!(tf = text_format_create(vg->cmd, name, the_um))) {
 		stack;

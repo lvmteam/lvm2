@@ -21,7 +21,7 @@
 #include "tools.h"
 
 const char _really_init[] =
-    "Really INITIALIZE physical volume %s of volume group %s [y/n]? ";
+    "Really INITIALIZE physical volume \"%s\" of volume group \"%s\" [y/n]? ";
 
 /*
  * See if we may pvcreate on this device.
@@ -46,23 +46,24 @@ static int pvcreate_check(const char *name)
 	/* Allow partial & exported VGs to be destroyed. */
 	/* we must have -ff to overwrite a non orphan */
 	if (arg_count(force_ARG) < 2) {
-		log_error("Can't initialize physical volume %s of "
-			  "volume group %s without -ff", name, pv->vg_name);
+		log_error("Can't initialize physical volume \"%s\" of "
+			  "volume group \"%s\" without -ff", name, pv->vg_name);
 		return 0;
 	}
 
 	/* prompt */
 	if (!arg_count(yes_ARG) &&
 	    yes_no_prompt(_really_init, name, pv->vg_name) == 'n') {
-		log_print("Physical volume %s not initialized", name);
+		log_print("Physical volume \"%s\" not initialized", name);
 		return 0;
 	}
 
 	if (arg_count(force_ARG)) {
 		log_print("WARNING: Forcing physical volume creation on "
-			  "%s%s%s", name,
-			  pv->vg_name[0] ? " of volume group " : "",
-			  pv->vg_name[0] ? pv->vg_name : "");
+			  "%s%s%s%s", name,
+			  pv->vg_name[0] ? " of volume group \"" : "",
+			  pv->vg_name[0] ? pv->vg_name : "",
+			  pv->vg_name[0] ? "\"" : "");
 	}
 
 	return 1;
@@ -80,7 +81,7 @@ static void pvcreate_single(const char *pv_name)
 		if (!id_read_format(&id, uuid))
 			return;
 		if ((dev = uuid_map_lookup(the_um, &id))) {
-			log_error("uuid %s already in use on %s", uuid,
+			log_error("uuid %s already in use on \"%s\"", uuid,
 				  dev_name(dev));
 			return;
 		}
@@ -91,20 +92,21 @@ static void pvcreate_single(const char *pv_name)
 		return;
 
 	if (!(pv = pv_create(fid, pv_name, idp))) {
-		log_err("Failed to setup physical volume %s", pv_name);
+		log_err("Failed to setup physical volume \"%s\"", pv_name);
 		return;
 	}
 
-	log_verbose("Set up physical volume for %s with %" PRIu64 " sectors",
+	log_verbose("Set up physical volume for \"%s\" with %" PRIu64
+		    " sectors",
 		    pv_name, pv->size);
 
-	log_verbose("Writing physical volume data to disk %s", pv_name);
+	log_verbose("Writing physical volume data to disk \"%s\"", pv_name);
 	if (!(fid->ops->pv_write(fid, pv))) {
-		log_error("Failed to write physical volume %s", pv_name);
+		log_error("Failed to write physical volume \"%s\"", pv_name);
 		return;
 	}
 
-	log_print("Physical volume %s successfully created", pv_name);
+	log_print("Physical volume \"%s\" successfully created", pv_name);
 }
 
 int pvcreate(int argc, char **argv)

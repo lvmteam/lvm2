@@ -40,18 +40,18 @@ static int lvremove_single(struct logical_volume *lv)
 	vg = lv->vg;
 
 	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg->name);
+		log_error("Volume group \"%s\" is read-only", vg->name);
 		return ECMD_FAILED;
 	}
 
 	if (lv->status & SNAPSHOT_ORG) {
-		log_error("Can't remove logical volume %s under snapshot",
+		log_error("Can't remove logical volume \"%s\" under snapshot",
 			  lv->name);
 		return ECMD_FAILED;
 	}
 
 	if (lv_open_count(lv) > 0) {
-		log_error("Can't remove open logical volume %s", lv->name);
+		log_error("Can't remove open logical volume \"%s\"", lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -59,9 +59,9 @@ static int lvremove_single(struct logical_volume *lv)
 
 	if (active && !arg_count(force_ARG)) {
 		if (yes_no_prompt
-		    ("Do you really want to remove active logical volume %s? "
+		    ("Do you really want to remove active logical volume \"%s\"? "
 		     "[y/n]: ", lv->name) == 'n') {
-			log_print("Logical volume %s not removed", lv->name);
+			log_print("Logical volume \"%s\" not removed", lv->name);
 			return 0;
 		}
 	}
@@ -70,12 +70,12 @@ static int lvremove_single(struct logical_volume *lv)
 		return ECMD_FAILED;
 
 	if (active && !lv_deactivate(lv)) {
-		log_error("Unable to deactivate logical volume %s", lv->name);
+		log_error("Unable to deactivate logical volume \"%s\"", lv->name);
 	}
 
-	log_verbose("Releasing logical volume %s", lv->name);
+	log_verbose("Releasing logical volume \"%s\"", lv->name);
 	if (!lv_remove(vg, lv)) {
-		log_error("Error releasing logical volume %s", lv->name);
+		log_error("Error releasing logical volume \"%s\"", lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -85,6 +85,6 @@ static int lvremove_single(struct logical_volume *lv)
 
 	backup(vg);
 
-	log_print("logical volume %s successfully removed", lv->name);
+	log_print("logical volume \"%s\" successfully removed", lv->name);
 	return 0;
 }

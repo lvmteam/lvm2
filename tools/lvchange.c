@@ -50,19 +50,19 @@ static int lvchange_single(struct logical_volume *lv)
 	if ((lv->vg->status & PARTIAL_VG) && 
 	    (arg_count(contiguous_ARG) || arg_count(permission_ARG) ||
 	     arg_count(readahead_ARG))) {
-		log_error("Only -a permitted with partial volume group %s",
+		log_error("Only -a permitted with partial volume group \"%s\"",
 			  lv->vg->name);
 		return EINVALID_CMD_LINE;
 	}
 
 	if (lv->status & SNAPSHOT_ORG) {
-		log_error("Can't change logical volume %s under snapshot",
+		log_error("Can't change logical volume \"%s\" under snapshot",
 			  lv->name);
 		return ECMD_FAILED;
 	}
 
 	if (lv->status & SNAPSHOT) {
-		log_error("Can't change snapshot logical volume %s", lv->name);
+		log_error("Can't change snapshot logical volume \"%s\"", lv->name);
 		return ECMD_FAILED;
 	}
 
@@ -91,7 +91,7 @@ static int lvchange_single(struct logical_volume *lv)
 	}
 
 	if (doit)
-		log_print("Logical volume %s changed", lv->name);
+		log_print("Logical volume \"%s\" changed", lv->name);
 
 	/* availability change */
 	if (arg_count(available_ARG))
@@ -108,31 +108,31 @@ static int lvchange_permission(struct logical_volume *lv)
 	lv_access = arg_int_value(permission_ARG, 0);
 
 	if ((lv_access & LVM_WRITE) && (lv->status & LVM_WRITE)) {
-		log_error("Logical volume %s is already writable", lv->name);
+		log_error("Logical volume \"%s\" is already writable", lv->name);
 		return 0;
 	}
 
 	if (!(lv_access & LVM_WRITE) && !(lv->status & LVM_WRITE)) {
-		log_error("Logical volume %s is already read only", lv->name);
+		log_error("Logical volume \"%s\" is already read only", lv->name);
 		return 0;
 	}
 
 	if (lv_access & LVM_WRITE) {
 		lv->status |= LVM_WRITE;
-		log_verbose("Setting logical volume %s read/write", lv->name);
+		log_verbose("Setting logical volume \"%s\" read/write", lv->name);
 	} else {
 		lv->status &= ~LVM_WRITE;
-		log_verbose("Setting logical volume %s read-only", lv->name);
+		log_verbose("Setting logical volume \"%s\" read-only", lv->name);
 	}
 
 
-	log_very_verbose("Updating logical volume %s on disk(s)", lv->name);
+	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
 
 	backup(lv->vg);
 
-	log_very_verbose("Updating permissions for %s in kernel", lv->name);
+	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
 	if (!lv_update_write_access(lv))
 		return 0;
 
@@ -148,33 +148,33 @@ static int lvchange_availability(struct logical_volume *lv)
 		activate = 1;
 
 	if ((active = lv_active(lv)) < 0) {
-		log_error("Unable to determine status of %s", lv->name);
+		log_error("Unable to determine status of \"%s\"", lv->name);
 		return 0;
 	}
 
 	if (activate && active) {
-		log_verbose("Logical volume %s is already active", lv->name);
+		log_verbose("Logical volume \"%s\" is already active", lv->name);
 		return 0;
 	}
 
 	if (!activate && !active) {
-		log_verbose("Logical volume %s is already inactive", lv->name);
+		log_verbose("Logical volume \"%s\" is already inactive", lv->name);
 		return 0;
 	}
 	
 	if (activate & lv_suspended(lv)) {
-		log_verbose("Reactivating logical volume %s", lv->name); 
+		log_verbose("Reactivating logical volume \"%s\"", lv->name); 
 		if (!lv_reactivate(lv))
 			return 0;
 		return 1;
 	}
 	
 	if (activate) {
-		log_verbose("Activating logical volume %s", lv->name);
+		log_verbose("Activating logical volume \"%s\"", lv->name);
 		if (!lv_activate(lv))
 			return 0;
 	} else {
-		log_verbose("Deactivating logical volume %s", lv->name);
+		log_verbose("Deactivating logical volume \"%s\"", lv->name);
 		if (!lv_deactivate(lv))
 			return 0;
 	}
@@ -191,14 +191,14 @@ static int lvchange_contiguous(struct logical_volume *lv)
 
 	if ((lv_allocation & ALLOC_CONTIGUOUS) &&
 	    (lv->status & ALLOC_CONTIGUOUS)) {
-		log_error("Allocation policy of logical volume %s is "
+		log_error("Allocation policy of logical volume \"%s\" is "
 			  "already contiguous", lv->name);
 		return 0;
 	}
 
 	if (!(lv_allocation & ALLOC_CONTIGUOUS) &&
 	    !(lv->status & ALLOC_CONTIGUOUS)) {
-		log_error("Allocation policy of logical volume %s is already"
+		log_error("Allocation policy of logical volume \"%s\" is already"
 			  " not contiguous", lv->name);
 		return 0;
 	}
@@ -206,21 +206,21 @@ static int lvchange_contiguous(struct logical_volume *lv)
 /******** FIXME lv_check_contiguous? 
 	if ((lv_allocation & ALLOC_CONTIGUOUS)
 		    && (ret = lv_check_contiguous(vg, lv_index + 1)) == FALSE) {
-			log_error("No contiguous logical volume %s", lv->name);
+			log_error("No contiguous logical volume \"%s\"", lv->name);
 			return 0;
 *********/
 
 	if (lv_allocation & ALLOC_CONTIGUOUS) {
 		lv->status |= ALLOC_CONTIGUOUS;
-		log_verbose("Setting contiguous allocation policy for %s",
+		log_verbose("Setting contiguous allocation policy for \"%s\"",
 			    lv->name);
 	} else {
 		lv->status &= ~ALLOC_CONTIGUOUS;
-		log_verbose("Removing contiguous allocation policy for %s",
+		log_verbose("Removing contiguous allocation policy for \"%s\"",
 			    lv->name);
 	}
 
-	log_verbose("Updating logical volume %s on disk(s)", lv->name);
+	log_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
 	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;
@@ -244,15 +244,15 @@ static int lvchange_readahead(struct logical_volume *lv)
 ********/
 
 	if (lv->read_ahead == read_ahead) {
-		log_error("Read ahead is already %u for %s",
+		log_error("Read ahead is already %u for \"%s\"",
 			  read_ahead, lv->name);
 		return 0;
 	}
 
 	lv->read_ahead = read_ahead;
-	log_verbose("Setting read ahead to %u for %s", read_ahead, lv->name);
+	log_verbose("Setting read ahead to %u for \"%s\"", read_ahead, lv->name);
 
-	log_verbose("Updating logical volume %s on disk(s)", lv->name);
+	log_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
 	if (!fid->ops->vg_write(fid, lv->vg))
 		return 0;

@@ -44,13 +44,13 @@ static int vgscan_single(const char *vg_name)
 {
 	struct volume_group *vg;
 
-	log_verbose("Checking for volume group %s", vg_name);
+	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s not found", vg_name);
+		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}
 
-	log_print("Found %svolume group %s", 
+	log_print("Found %svolume group \"%s\"", 
 		  (vg->status & EXPORTED_VG) ? "exported " : "",
 		  vg_name);
 

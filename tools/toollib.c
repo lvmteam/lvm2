@@ -16,7 +16,7 @@ int dir_exists(const char *dir)
 		return 1;
 
 	if (stat(dir, &info) != -1) {
-		log_error("%s exists", dir);
+		log_error("\"%s\" exists", dir);
 		return 0;
 	}
 
@@ -31,7 +31,7 @@ int create_dir(const char *dir)
 		return 1;
 
 	if (stat(dir, &info) < 0) {
-		log_verbose("Creating directory %s", dir);
+		log_verbose("Creating directory \"%s\"", dir);
 		if (!mkdir(dir, 0777))
 			return 1;
 		log_sys_error("mkdir", dir);
@@ -41,7 +41,7 @@ int create_dir(const char *dir)
 	if (S_ISDIR(info.st_mode))
 		return 1;
 
-	log_error("Directory %s not found", dir);
+	log_error("Directory \"%s\" not found", dir);
 	return 0;
 }
 
@@ -55,7 +55,7 @@ int process_each_lv_in_vg(struct volume_group *vg,
 	struct logical_volume *lv;
 
 	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group %s is exported", vg->name);
+		log_error("Volume group \"%s\" is exported", vg->name);
 		return ECMD_FAILED;
 	}
 
@@ -97,9 +97,9 @@ int process_each_lv(int argc, char **argv,
 				continue;
 			}
 
-			log_verbose("Finding volume group %s", vg_name);
+			log_verbose("Finding volume group \"%s\"", vg_name);
 			if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-				log_error("Volume group %s doesn't exist",
+				log_error("Volume group \"%s\" doesn't exist",
 					  vg_name);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
@@ -107,14 +107,14 @@ int process_each_lv(int argc, char **argv,
 			}
 
 			if (vg->status & EXPORTED_VG) {
-				log_error("Volume group %s is exported",
+				log_error("Volume group \"%s\" is exported",
 					  vg->name);
 				return ECMD_FAILED;
 			}
 
 			if (!(lvl = find_lv_in_vg(vg, lv_name))) {
-				log_error("Can't find logical volume %s "
-					  "in volume group %s",
+				log_error("Can't find logical volume \"%s\" "
+					  "in volume group \"%s\"",
 					  lv_name, vg_name);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
@@ -135,7 +135,8 @@ int process_each_lv(int argc, char **argv,
 		list_iterate(vgh, vgs) {
 			vg_name = list_item(vgh, struct name_list)->name;
 			if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-				log_error("Volume group %s not found", vg_name);
+				log_error("Volume group \"%s\" not found",
+					  vg_name);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
 				continue;
@@ -216,8 +217,8 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			if (!(pvl = find_pv_in_vg(vg, argv[opt]))) {
-				log_error("Physical Volume %s not found in "
-					  "Volume Group %s", argv[opt],
+				log_error("Physical Volume \"%s\" not found in "
+					  "Volume Group \"%s\"", argv[opt],
 					  vg->name);
 				continue;
 			}
@@ -257,7 +258,7 @@ char *extract_vgname(struct format_instance *fi, char *lv_name)
 		/* Require exactly one slash */
 		/* FIXME But allow for consecutive slashes */
 		if (!(st = strchr(vg_name, '/')) || (strchr(st + 1, '/'))) {
-			log_error("%s: Invalid path for Logical Volume",
+			log_error("\"%s\": Invalid path for Logical Volume",
 				  lv_name);
 			return 0;
 		}
@@ -274,7 +275,7 @@ char *extract_vgname(struct format_instance *fi, char *lv_name)
 
 	if (!(vg_name = default_vgname(fid))) {
 		if (lv_name)
-			log_error("Path required for Logical Volume %s",
+			log_error("Path required for Logical Volume \"%s\"",
 				  lv_name);
 		return 0;
 	}
@@ -297,8 +298,8 @@ char *default_vgname(struct format_instance *fi)
 		vg_path += strlen(dev_dir);
 
 	if (strchr(vg_path, '/')) {
-		log_error("Environment Volume Group in LVM_VG_NAME invalid: %s",
-			  vg_path);
+		log_error("Environment Volume Group in LVM_VG_NAME invalid: "
+			  "\"%s\"", vg_path);
 		return 0;
 	}
 
@@ -322,13 +323,13 @@ struct list *create_pv_list(struct pool *mem,
 	for (i = 0; i < argc; i++) {
 
 		if (!(pvl = find_pv_in_vg(vg, argv[i]))) {
-			log_err("Physical Volume %s not found in "
-				"Volume Group %s", argv[i], vg->name);
+			log_err("Physical Volume \"%s\" not found in "
+				"Volume Group \"%s\"", argv[i], vg->name);
 			return NULL;
 		}
 
 		if (pvl->pv->pe_count == pvl->pv->pe_allocated) {
-			log_err("No free extents on physical volume %s",
+			log_err("No free extents on physical volume \"%s\"",
 				argv[i]);
 			continue;
 		}

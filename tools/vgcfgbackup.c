@@ -29,9 +29,9 @@ static int vg_backup_single(const char *vg_name)
 {
 	struct volume_group *vg;
 
-	log_verbose("Checking for volume group %s", vg_name);
+	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group %s not found", vg_name);
+		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -47,7 +47,7 @@ static int vg_backup_single(const char *vg_name)
 		}
 	}
 
-	log_print("Volume group %s successfully backed up.", vg_name);
+	log_print("Volume group \"%s\" successfully backed up.", vg_name);
 	return 0;
 }
 

@@ -40,24 +40,24 @@ int vgextend(int argc, char **argv)
 	argc--;
 	argv++;
 
-	log_verbose("Checking for volume group '%s'", vg_name);
+	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Volume group '%s' not found.", vg_name);
+		log_error("Volume group \"%s\" not found.", vg_name);
 		return ECMD_FAILED;
 	}
 
         if (vg->status & EXPORTED_VG) {
-                log_error("Volume group %s is exported", vg->name);
+                log_error("Volume group \"%s\" is exported", vg->name);
                 return ECMD_FAILED;
         }
 
 	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg_name);
+		log_error("Volume group \"%s\" is read-only", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & RESIZEABLE_VG)) {
-		log_error("Volume group '%s' is not resizeable.", vg_name);
+		log_error("Volume group \"%s\" is not resizeable.", vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -76,7 +76,7 @@ int vgextend(int argc, char **argv)
 		return ECMD_FAILED;
 
 	/* ret > 0 */
-	log_verbose("Volume group '%s' will be extended by %d new "
+	log_verbose("Volume group \"%s\" will be extended by %d new "
 		    "physical volumes", vg_name, argc);
 
         /* store vg on disk(s) */
@@ -85,7 +85,7 @@ int vgextend(int argc, char **argv)
 
 	backup(vg);
 
-	log_print("Volume group '%s' successfully extended", vg_name);
+	log_print("Volume group \"%s\" successfully extended", vg_name);
 
 	return 0;
 }

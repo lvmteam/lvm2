@@ -42,22 +42,22 @@ static int vgexport_single(const char *vg_name)
 	struct volume_group *vg;
 
 	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
-		log_error("Unable to find volume group %s", vg_name);
+		log_error("Unable to find volume group \"%s\"", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group %s is already exported", vg_name);
+		log_error("Volume group \"%s\" is already exported", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg_name);
+		log_error("Volume group \"%s\" is read-only", vg_name);
 		return ECMD_FAILED;
 	}
 
 	if (lvs_in_vg_activated(vg)) {
-		log_error("Volume group %s has active logical volumes", 
+		log_error("Volume group \"%s\" has active logical volumes", 
 			  vg_name);
 		return ECMD_FAILED;
 	}
@@ -72,7 +72,7 @@ static int vgexport_single(const char *vg_name)
 
 	backup(vg);
 
-	log_print("Volume group %s successfully exported", vg->name);
+	log_print("Volume group \"%s\" successfully exported", vg->name);
 	
 	return 0;
 }

@@ -70,7 +70,7 @@ int vgcreate(int argc, char **argv)
         if (!dir_exists(vg_path)) return ECMD_FAILED;
 
         if (!is_valid_chars(vg_name)) {
-                log_error("New volume group name '%s' has invalid characters",
+                log_error("New volume group name \"%s\" has invalid characters",
                           vg_name);
                 return ECMD_FAILED;
         }
@@ -97,7 +97,7 @@ int vgcreate(int argc, char **argv)
 
 	backup(vg);
 
-	log_print("Volume group %s successfully created", vg->name);
+	log_print("Volume group \"%s\" successfully created", vg->name);
 
 	return 0;
 }
