@@ -86,6 +86,40 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 	return ECMD_PROCESSED;
 }
 
+static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
+{
+	alloc_policy_t alloc;
+
+	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
+
+	if (alloc == ALLOC_INHERIT) {
+		log_error("Volume Group allocation policy cannot inherit "
+		          "from anything");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (alloc == vg->alloc) {
+		log_error("Volume group allocation policy is already %s",
+			  get_alloc_string(vg->alloc));
+		return ECMD_FAILED;
+	}
+
+	if (!archive(vg))
+		return ECMD_FAILED;
+
+	vg->alloc = alloc;
+
+	if (!vg_write(vg) || !vg_commit(vg))
+		return ECMD_FAILED;
+
+	backup(vg);
+
+	log_print("Volume group \"%s\" successfully changed", vg->name);
+
+	return ECMD_PROCESSED;
+}
+
+
 static int _vgchange_resizeable(struct cmd_context *cmd,
 				struct volume_group *vg)
 {
@@ -280,6 +314,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	else if (arg_count(cmd, uuid_ARG))
 		r = _vgchange_uuid(cmd, vg);
 
+	else if (arg_count(cmd, alloc_ARG))
+		r = _vgchange_alloc(cmd, vg);
+
 	return r;
 }
 
@@ -288,17 +325,20 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (!
 	    (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
 	     arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
-	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG))) {
-		log_error("One of -a, -l, -x, --addtag, --deltag or --uuid "
-			  "options required");
+	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) +
+	     arg_count(cmd, alloc_ARG))) {
+		log_error("One of -a, -l, -x, --alloc, --addtag, --deltag "
+			  "or --uuid required");
 		return EINVALID_CMD_LINE;
 	}
 
+	/* FIXME Cope with several changes at once! */
 	if (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
 	    arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
-	    arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) > 1) {
-		log_error("Only one of -a, -l, -x, --addtag, --deltag or --uuid"
-			  " options allowed");
+	    arg_count(cmd, addtag_ARG) + arg_count(cmd, alloc_ARG) +
+	    arg_count(cmd, uuid_ARG) > 1) {
+		log_error("Only one of -a, -l, -x, --alloc, --addtag, --deltag "
+		          "or --uuid allowed");
 		return EINVALID_CMD_LINE;
 	}
 

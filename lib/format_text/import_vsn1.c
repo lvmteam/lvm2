@@ -490,7 +490,7 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 		return 0;
 	}
 
-	lv->alloc = ALLOC_DEFAULT;
+	lv->alloc = ALLOC_INHERIT;
 	if ((cn = find_config_node(lvn, "allocation_policy"))) {
 		struct config_value *cv = cn->v;
 		if (!cv || !cv->v.str) {
@@ -499,6 +499,10 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 		}
 
 		lv->alloc = get_alloc_from_string(cv->v.str);
+		if (lv->alloc == ALLOC_INVALID) {
+			stack;
+			return 0;
+		}
 	}
 
 	/* read_ahead defaults to 0 */
@@ -698,6 +702,21 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		log_error("Couldn't read 'max_pv' for volume group %s.",
 			  vg->name);
 		goto bad;
+	}
+
+	vg->alloc = ALLOC_NORMAL;
+	if ((cn = find_config_node(vgn, "allocation_policy"))) {
+		struct config_value *cv = cn->v;
+		if (!cv || !cv->v.str) {
+			log_error("allocation_policy must be a string.");
+			return 0;
+		}
+
+		vg->alloc = get_alloc_from_string(cv->v.str);
+		if (vg->alloc == ALLOC_INVALID) {
+			stack;
+			return 0;
+		}
 	}
 
 	/*

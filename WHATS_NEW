@@ -1,5 +1,10 @@
 Version 2.00.16 - 
 =============================
+  Add --alloc argument to tools.
+  Rename allocation policies to contiguous, normal, anywhere, inherit.
+  nextfree becomes normal; anywhere isn't implemented yet.
+  LV inherits allocation policy from VG. Defaults: LV - inherit; VG - normal
+  Additional status character added to vgs to indicate allocation policy.
   Add reset_fn to external_locking.
   Ensure presence of virtual targets before attempting activating.
   Attempt to fix resizing of snapshot origins.

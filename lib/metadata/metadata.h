@@ -70,9 +70,11 @@
 #define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
 
 typedef enum {
-	ALLOC_DEFAULT,
-	ALLOC_NEXT_FREE,
-	ALLOC_CONTIGUOUS
+	ALLOC_INVALID,
+	ALLOC_INHERIT,
+	ALLOC_CONTIGUOUS,
+	ALLOC_NORMAL,
+	ALLOC_ANYWHERE
 } alloc_policy_t;
 
 typedef enum {
@@ -167,6 +169,7 @@ struct volume_group {
 	char *system_id;
 
 	uint32_t status;
+	alloc_policy_t alloc;
 
 	uint32_t extent_size;
 	uint32_t extent_count;
@@ -389,7 +392,8 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t extent_size, uint32_t max_pv,
-			       uint32_t max_lv, int pv_count, char **pv_names);
+			       uint32_t max_lv, alloc_policy_t alloc,
+			       int pv_count, char **pv_names);
 int vg_remove(struct volume_group *vg);
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);

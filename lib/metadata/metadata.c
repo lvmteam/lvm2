@@ -162,7 +162,8 @@ const char *strip_dir(const char *vg_name, const char *dev_dir)
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 			       uint32_t extent_size, uint32_t max_pv,
-			       uint32_t max_lv, int pv_count, char **pv_names)
+			       uint32_t max_lv, alloc_policy_t alloc,
+			       int pv_count, char **pv_names)
 {
 	struct volume_group *vg;
 	struct pool *mem = cmd->mem;
@@ -210,6 +211,8 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 
 	vg->max_lv = max_lv;
 	vg->max_pv = max_pv;
+
+	vg->alloc = alloc;
 
 	vg->pv_count = 0;
 	list_init(&vg->pvs);

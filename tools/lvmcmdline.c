@@ -287,6 +287,21 @@ int permission_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
+int alloc_arg(struct cmd_context *cmd, struct arg *a)
+{
+	alloc_policy_t alloc;
+
+	a->sign = SIGN_NONE;
+
+	alloc = get_alloc_from_string(a->value);
+	if (alloc == ALLOC_INVALID)
+		return 0;
+
+	a->ui_value = (uint32_t) alloc;
+
+	return 1;
+}
+
 int segtype_arg(struct cmd_context *cmd, struct arg *a)
 {
 	if (!(a->ptr = (void *) get_segtype_from_string(cmd, a->value)))

@@ -52,6 +52,7 @@ xx(lvchange,
    "\t[-A|--autobackup y|n]\n"
    "\t[-a|--available y|n]\n"
    "\t[--addtag Tag]\n"
+   "\t[--alloc AllocationType]\n"
    "\t[-C|--contiguous y|n]\n"
    "\t[-d|--debug]\n"
    "\t[--deltag Tag]\n"
@@ -68,7 +69,7 @@ xx(lvchange,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-   autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
+   alloc_ARG, autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
    ignorelockingfailure_ARG, major_ARG, minor_ARG, partial_ARG, permission_ARG,
    persistent_ARG, readahead_ARG, refresh_ARG, addtag_ARG, deltag_ARG,
    test_ARG)
@@ -78,6 +79,7 @@ xx(lvcreate,
    "lvcreate " "\n"
    "\t[-A|--autobackup {y|n}]\n"
    "\t[--addtag Tag]\n"
+   "\t[--alloc AllocationType]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
@@ -99,6 +101,7 @@ xx(lvcreate,
    "\t[-c|--chunksize]\n"
    "\t[-A|--autobackup {y|n}]\n"
    "\t[--addtag Tag]\n"
+   "\t[--alloc AllocationType]\n"
    "\t[-C|--contiguous {y|n}]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
@@ -114,10 +117,10 @@ xx(lvcreate,
    "\t[--version]\n"
    "\tOriginalLogicalVolume[Path] [PhysicalVolumePath...]\n\n",
 
-   autobackup_ARG, chunksize_ARG, contiguous_ARG, extents_ARG, major_ARG,
-   minor_ARG, name_ARG, permission_ARG, persistent_ARG, readahead_ARG, size_ARG,
-   snapshot_ARG, stripes_ARG, stripesize_ARG, addtag_ARG, test_ARG, type_ARG,
-   zero_ARG)
+   addtag_ARG, alloc_ARG, autobackup_ARG, chunksize_ARG, contiguous_ARG,
+   extents_ARG, major_ARG, minor_ARG, name_ARG, permission_ARG,
+   persistent_ARG, readahead_ARG, size_ARG, snapshot_ARG, stripes_ARG,
+   stripesize_ARG, test_ARG, type_ARG, zero_ARG)
 
 xx(lvdisplay,
    "Display information about a logical volume",
@@ -160,6 +163,7 @@ xx(lvextend,
    "Add space to a logical volume",
    "lvextend\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--alloc AllocationType]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
@@ -171,7 +175,7 @@ xx(lvextend,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
+   alloc_ARG, autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
    stripesize_ARG, test_ARG, type_ARG)
 
 xx(lvmchange,
@@ -266,6 +270,7 @@ xx(lvresize,
    "Resize a logical volume",
    "lvresize\n"
    "\t[-A|--autobackup y|n]\n"
+   "\t[--alloc AllocationType]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
@@ -277,8 +282,8 @@ xx(lvresize,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG,
-   test_ARG, type_ARG)
+   alloc_ARG, autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
+   stripesize_ARG, test_ARG, type_ARG)
 
 xx(lvs,
    "Display information about logical volumes",
@@ -536,6 +541,7 @@ xx(vgchange,
    "Change volume group attributes",
    "vgchange" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
+   "\t[--alloc AllocationType] " "\n"
    "\t[-P|--partial] " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
@@ -551,9 +557,9 @@ xx(vgchange,
    "\t --deltag Tag}\n"
    "\t[VolumeGroupName...]\n",
 
-   allocation_ARG, autobackup_ARG, available_ARG, ignorelockingfailure_ARG,
-   logicalvolume_ARG, partial_ARG, resizeable_ARG, resizable_ARG, deltag_ARG,
-   addtag_ARG, test_ARG, uuid_ARG)
+   addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, available_ARG,
+   deltag_ARG, ignorelockingfailure_ARG, logicalvolume_ARG, partial_ARG,
+   resizeable_ARG, resizable_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
@@ -586,6 +592,7 @@ xx(vgcreate,
    "vgcreate" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--addtag Tag] " "\n"
+   "\t[--alloc AllocationType] " "\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|--help]" "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
@@ -597,8 +604,8 @@ xx(vgcreate,
    "\t[--version] " "\n"
    "\tVolumeGroupName PhysicalVolume [PhysicalVolume...]\n",
 
-   autobackup_ARG, maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
-   metadatatype_ARG, physicalextentsize_ARG, addtag_ARG, test_ARG)
+   addtag_ARG, alloc_ARG, autobackup_ARG, maxlogicalvolumes_ARG,
+   maxphysicalvolumes_ARG, metadatatype_ARG, physicalextentsize_ARG, test_ARG)
 
 xx(vgdisplay,
    "Display volume group information",

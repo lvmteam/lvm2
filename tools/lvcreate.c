@@ -21,7 +21,6 @@ struct lvcreate_params {
 	/* flags */
 	int snapshot;
 	int zero;
-	int contiguous;
 	int major;
 	int minor;
 
@@ -43,6 +42,7 @@ struct lvcreate_params {
 
 	uint32_t permission;
 	uint32_t read_ahead;
+	alloc_policy_t alloc;
 
 	int pv_count;
 	char **pvs;
@@ -217,6 +217,8 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
+	int contiguous;
+
 	memset(lp, 0, sizeof(*lp));
 
 	/*
@@ -269,9 +271,18 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	lp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 
 	/*
-	 * Contiguous ?
+	 * Alloc policy
 	 */
-	lp->contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
+	contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
+
+	lp->alloc = contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
+
+	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lp->alloc);
+
+	if (contiguous && (lp->alloc != ALLOC_CONTIGUOUS)) {
+		log_error("Conflicting contiguous and alloc arguments");
+		return 0;
+	}
 
 	/*
 	 * Read ahead.
@@ -365,15 +376,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	uint32_t size_rest;
 	uint32_t status = 0;
 	uint64_t tmp_size;
-	alloc_policy_t alloc = ALLOC_DEFAULT;
 	struct volume_group *vg;
 	struct logical_volume *lv, *org = NULL;
 	struct list *pvh;
 	const char *tag;
 	int consistent = 1;
-
-	if (lp->contiguous)
-		alloc = ALLOC_CONTIGUOUS;
 
 	status |= lp->permission | VISIBLE_LV;
 
@@ -487,13 +494,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d",
-				   status, alloc, vg))) {
+				   status, lp->alloc, vg))) {
 		stack;
 		return 0;
 	}
 
 	if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes, lp->stripe_size,
-		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, alloc)) {
+		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc)) {
 		stack;
 		return 0;
 	}
