@@ -109,7 +109,7 @@ void pvdisplay_full(struct physical_volume *pv)
 	log_print("VG Name               %s%s", pv->vg_name,
 		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
-	size = display_size(pv->size / 2, SIZE_SHORT);
+	size = display_size( ( unsigned long long) pv->size / 2, SIZE_SHORT);
 	if (pv->pe_size && pv->pe_count) {
 		size1 = display_size((pv->size - pv->pe_count * pv->pe_size)
 				     / 2, SIZE_SHORT);
@@ -470,7 +470,7 @@ void vgdisplay_full(struct volume_group *vg)
       log_print ( "Act PV                %u", vg->pv_act);
 *********/
 
-	s1 = display_size(vg->extent_count * vg->extent_size / 2, SIZE_SHORT);
+	s1 = display_size((unsigned long long) vg->extent_count * (vg->extent_size / 2), SIZE_SHORT);
 	log_print("VG Size               %s", s1);
 	dbg_free(s1);
 
@@ -481,13 +481,14 @@ void vgdisplay_full(struct volume_group *vg)
 	log_print("Total PE              %u", vg->extent_count);
 
 	s1 =
-	    display_size((vg->extent_count - vg->free_count) *
-			 vg->extent_size / 2, SIZE_SHORT);
+	    display_size(((unsigned long long)
+                          vg->extent_count - vg->free_count) *
+			  (vg->extent_size / 2), SIZE_SHORT);
 	log_print("Alloc PE / Size       %u / %s",
 		  vg->extent_count - vg->free_count, s1);
 	dbg_free(s1);
 
-	s1 = display_size(vg->free_count * vg->extent_size / 2, SIZE_SHORT);
+	s1 = display_size((unsigned long long) vg->free_count *  (vg->extent_size / 2), SIZE_SHORT);
 	log_print("Free  PE / Size       %u / %s", vg->free_count, s1);
 	dbg_free(s1);
 
