@@ -650,7 +650,8 @@ static void be_daemon()
 			        fprintf(stderr, "clvmd could not create local socket\n");
 				break;
 			case DFAIL_CLUSTER_IF:
-			        fprintf(stderr, "clvmd could not connect to cluster\n");
+			        fprintf(stderr, "clvmd could not connect to cluster manager\n");
+				fprintf(stderr, "Consult syslog for more information\n");
 				break;
 			case DFAIL_MALLOC:
 			        fprintf(stderr, "clvmd failed, not enough memory\n");
