@@ -91,17 +91,17 @@ endif
 include $(top_srcdir)/make.tmpl
 
 lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o $@ $(OBJECTS) lvm.o $(LD_FLAGS) $(LVMLIBS) $(LIBS) -rdynamic
+	$(CC) -o $@ $(OBJECTS) lvm.o $(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
 
 lvm.static: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o $@ $(OBJECTS) lvm.o -static $(LD_FLAGS) $(LVMLIBS) $(LIBS) \
+	$(CC) -o $@ $(OBJECTS) lvm.o -static $(LDFLAGS) $(LVMLIBS) $(LIBS) \
 		-rdynamic
 
 liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS)
 	cat $(top_srcdir)/lib/liblvm.a > $@
 	$(AR) rs $@ $(OBJECTS)
 
-liblvm2cmd.so: liblvm2cmd.a $(LD_DEPS)
+liblvm2cmd.so: liblvm2cmd.a $(LDDEPS)
 	$(CC) -o liblvm2cmd.so $(SOFLAG) $(CLDFLAGS) \
 		$(CLDWHOLEARCHIVE) liblvm2cmd.a $(CLDNOWHOLEARCHIVE)
 

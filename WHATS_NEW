@@ -1,5 +1,8 @@
 Version 2.00.19 -
 ==============================
+  Added --disable-selinux to configure script.
+  LD_FLAGS->LDFLAGS & LD_DEPS->LDDEPS in configure script.
+  Add init_debug to clvmd.
 
 Version 2.00.18 - 24 June 2004
 ==============================

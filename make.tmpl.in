@@ -28,8 +28,8 @@ CFLAGS += @CFLAGS@
 CLDFLAGS += @CLDFLAGS@
 CLDWHOLEARCHIVE += @CLDWHOLEARCHIVE@
 CLDNOWHOLEARCHIVE += @CLDNOWHOLEARCHIVE@
-LD_DEPS += @LD_DEPS@
-LD_FLAGS += @LD_FLAGS@
+LDDEPS += @LDDEPS@
+LDFLAGS += @LDFLAGS@
 SOFLAG += @SOFLAG@
 
 # Setup directory variables
@@ -72,13 +72,13 @@ ifeq ("@INTL@", "yes")
   CFLAGS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
 endif
 
-LD_FLAGS += -L$(top_srcdir)/lib -L$(libdir)
+LDFLAGS += -L$(top_srcdir)/lib -L$(libdir)
 
 #CFLAGS += -DDEBUG_POOL
 #CFLAGS += -DBOUNDS_CHECK
 
 #CFLAGS += -pg
-#LD_FLAGS += -pg
+#LDFLAGS += -pg
 
 STRIP=
 #STRIP = -s
@@ -145,7 +145,7 @@ $(TARGETS): $(OBJECTS)
 %.so: %.o
 	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
 
-$(LIB_SHARED): $(OBJECTS) $(LD_DEPS)
+$(LIB_SHARED): $(OBJECTS) $(LDDEPS)
 	$(CC) $(SOFLAG) -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
 	$(CLDFLAGS) $(OBJECTS) -o $@
 
@@ -166,11 +166,11 @@ $(LIB_STATIC): $(OBJECTS)
 
 clean: $(SUBDIRS.clean)
 	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES:%.c=%.pot) $(LD_DEPS)
+	      $(SOURCES:%.c=%.pot) $(LDDEPS)
 
 distclean: $(SUBDIRS.distclean)
 	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES:%.c=%.pot) $(LD_DEPS) \
+	      $(SOURCES:%.c=%.pot) $(LDDEPS) \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
 	      version.h lvm2.po
