@@ -55,17 +55,19 @@ static device_info_t device_info[] = {
 
 static int *scan_proc_dev(void);
 
-static int passes_lvm_type_device_filter(struct dev_filter *f, struct device *dev)
+static int passes_lvm_type_device_filter(struct dev_filter *f,
+					 struct device *dev)
 {
 	int fd;
+	const char *name = dev_name(dev);
 
 	/* Is this a recognised device type? */
 	if (!(((int *) f->private)[MAJOR(dev->dev)]))
 		return 0;
 
 	/* Check it's accessible */
-        if ((fd = open(dev->name, O_RDONLY)) < 0) {
-                log_debug("Unable to open %s: %s", dev->name, strerror(errno));
+        if ((fd = open(name, O_RDONLY)) < 0) {
+                log_debug("Unable to open %s: %s", name, strerror(errno));
 		return 0;
 	}
 

@@ -29,7 +29,7 @@ static int _check_vgs(struct list_head *pvs)
 			first = dl;
 		else if (memcmp(&first->vg, &dl->vg, sizeof(first->vg))) {
 			log_err("VG data differs between PVs %s and %s",
-				first->dev->name, dl->dev->name);
+				dev_name(first->dev), dev_name(dl->dev));
 			return 0;
 		}
 		pv_count++;

@@ -89,7 +89,7 @@ int pvchange_single(struct physical_volume *pv)
 	struct volume_group *vg = NULL;
 	struct list_head *pvh;
 
-	char *pv_name = pv->dev->name;
+	const char *pv_name = dev_name(pv->dev);
 
 	int allocation = !strcmp(arg_str_value(allocation_ARG, "n"), "y");
 
@@ -135,7 +135,7 @@ int pvchange_single(struct physical_volume *pv)
 		log_verbose("Physical volume %s inactive", pv_name);
 	}
 
-	log_verbose("Updating physical volume %s", pv->dev->name);
+	log_verbose("Updating physical volume %s", pv_name);
 	if (*pv->vg_name) {
 		if (!(ios->vg_write(ios,vg))) {
 			log_error("Failed to store physical volume %s in "

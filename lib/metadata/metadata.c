@@ -218,10 +218,13 @@ struct physical_volume *pv_create(struct io_space *ios, const char *name)
 
 struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 {
-	struct list_head *pvh;
-	list_for_each(pvh, &vg->pvs) {
-		if (!strcmp(list_entry(pvh, struct pv_list, list)->pv.dev->name,
-			    pv_name)) return pvh;
+	struct list_head *tmp;
+	struct pv_list *pv;
+
+	list_for_each(tmp, &vg->pvs) {
+		pv = list_entry(tmp, struct pv_list, list);
+		if (!strcmp(dev_name(pv->pv.dev), pv_name))
+			return tmp;
 	}
 
 	return NULL;
