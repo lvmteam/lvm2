@@ -1063,6 +1063,7 @@ int report_object(void *handle, struct volume_group *vg,
 	struct row *row;
 	struct field *field;
 	void *data = NULL;
+	int skip;
 
 	if (lv && pv) {
 		log_error("report_object: One of *lv and *pv must be NULL!");
@@ -1090,6 +1091,8 @@ int report_object(void *handle, struct volume_group *vg,
 	list_iterate(fh, &rh->field_props) {
 		fp = list_item(fh, struct field_properties);
 
+		skip = 0;
+
 		if (!(field = pool_zalloc(rh->mem, sizeof(*field)))) {
 			log_error("struct field allocation failed");
 			return 0;
@@ -1101,6 +1104,10 @@ int report_object(void *handle, struct volume_group *vg,
 			data = (void *) lv + _fields[fp->field_num].offset;
 			break;
 		case VGS:
+			if (!vg) {
+				skip = 1;
+				break;
+			}
 			data = (void *) vg + _fields[fp->field_num].offset;
 			break;
 		case PVS:
@@ -1110,7 +1117,10 @@ int report_object(void *handle, struct volume_group *vg,
 			data = (void *) seg + _fields[fp->field_num].offset;
 		}
 
-		if (!_fields[fp->field_num].report_fn(rh, field, data)) {
+		if (skip) {
+			field->report_string = "";
+			field->sort_value = (const void *) field->report_string;
+		} else if (!_fields[fp->field_num].report_fn(rh, field, data)) {
 			log_error("report function failed for field %s",
 				  _fields[fp->field_num].id);
 			return 0;

@@ -463,6 +463,44 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	return ret_max;
 }
 
+static int _process_all_devs(struct cmd_context *cmd, void *handle,
+		    int (*process_single) (struct cmd_context * cmd,
+					   struct volume_group * vg,
+					   struct physical_volume * pv,
+					   void *handle))
+{
+	struct physical_volume *pv;
+	struct physical_volume pv_dummy;
+	struct dev_iter *iter;
+	struct device *dev;
+
+	int ret_max = 0;
+	int ret = 0;
+
+	if (!(iter = dev_iter_create(cmd->filter))) {
+		log_error("dev_iter creation failed");
+		return ECMD_FAILED;
+	}
+
+	while ((dev = dev_iter_get(iter))) {
+		if (!(pv = pv_read(cmd, dev_name(dev), NULL, NULL, 0))) {
+			memset(&pv_dummy, 0, sizeof(pv_dummy));
+			list_init(&pv_dummy.segments);
+			list_init(&pv_dummy.tags);
+			pv_dummy.dev = dev;
+			pv_dummy.fmt = NULL;
+			pv = &pv_dummy;
+		}
+		ret = process_single(cmd, NULL, pv, handle);
+		if (ret > ret_max)
+			ret_max = ret;
+	}
+
+	dev_iter_destroy(iter);
+
+	return ret_max;
+}
+
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		    struct volume_group *vg, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
@@ -516,7 +554,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				}
 				pv = pvl->pv;
 			} else {
-				if (!(pv = pv_read(cmd, argv[opt], NULL, NULL))) {
+				if (!(pv = pv_read(cmd, argv[opt], NULL,
+						   NULL, 1))) {
 					log_error("Failed to read physical "
 						  "volume \"%s\"", argv[opt]);
 					ret_max = ECMD_FAILED;
@@ -547,6 +586,10 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				    "volume group");
 			ret = process_each_pv_in_vg(cmd, vg, NULL, handle,
 						    process_single);
+			if (ret > ret_max)
+				ret_max = ret;
+		} else if (arg_count(cmd, all_ARG)) {
+			ret = _process_all_devs(cmd, handle, process_single);
 			if (ret > ret_max)
 				ret_max = ret;
 		} else {
