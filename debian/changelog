@@ -1,3 +1,9 @@
+lvm2 (1.95.08-1) unstable; urgency=low
+
+  * New upstream release (Beta3).
+
+ -- Andres Salomon <dilinger@mp3revolution.net>  Thu, 23 May 2002 03:46:37 -0500
+
 lvm2 (0.95.05-3) unstable; urgency=low
 
   * Get rid of awk dependency in init script.  (Closes: #146257)
