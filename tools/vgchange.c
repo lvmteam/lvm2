@@ -78,20 +78,18 @@ static int vgchange_single(const char *vg_name)
 
 void vgchange_available(struct volume_group *vg)
 {
-	int lv_open;
-	struct list *pvh;
+	int lv_open, lv_active;
+	struct list *lvh;
 	int available = !strcmp(arg_str_value(available_ARG, "n"), "y");
 
-	/* FIXME Kernel status to override disk flags ! */
-	if (available && (vg->status & ACTIVE)) {
-		log_error("Volume group '%s' is already active", vg->name);
-		return;
-	}
+	/* Ignore existing disk status */
+	if (available && (vg->status & ACTIVE))
+		log_verbose("Volume group %s is already active on disk", 
+			    vg->name);
 
-	if (!available && !(vg->status & ACTIVE)) {
-		log_error("Volume group '%s' is already not active", vg->name);
-		return;
-	}
+	if (!available && !(vg->status & ACTIVE))
+		log_verbose("Volume group %s is already inactive on disk", 
+			    vg->name);
 
 	/* FIXME: Force argument to deactivate them? */
 	if (!available && (lv_open = lvs_in_vg_opened(vg))) {
@@ -100,15 +98,19 @@ void vgchange_available(struct volume_group *vg)
 		return;
 	}
 
+	if (available && (lv_active = lvs_in_vg_activated(vg)))
+		log_verbose("%d logical volume(s) in volume group %s "
+			    "already active", lv_active, vg->name);
+
 	if (available) {
 		vg->status |= ACTIVE;
-		list_iterate(pvh, &vg->pvs)
-			list_item(pvh, struct pv_list)->pv.status 
+		list_iterate(lvh, &vg->lvs)
+			list_item(lvh, struct lv_list)->lv.status 
 				  |= ACTIVE;
 	} else {
 		vg->status &= ~ACTIVE;
-		list_iterate(pvh, &vg->pvs)
-			list_item(pvh, struct pv_list)->pv.status 
+		list_iterate(lvh, &vg->lvs)
+			list_item(lvh, struct lv_list)->lv.status 
 				  &= ~ACTIVE;
 	}
 
@@ -117,13 +119,13 @@ void vgchange_available(struct volume_group *vg)
 
 	if (available && (lv_open = activate_lvs_in_vg(vg)))
 		log_verbose("Activated %d logical volumes in "
-			    "volume group '%s'", lv_open, vg->name);
+			    "volume group %s", lv_open, vg->name);
 
 	if (!available && (lv_open = deactivate_lvs_in_vg(vg)))
 		log_verbose("Deactivated %d logical volumes in "
-			    "volume group '%s'", lv_open, vg->name);
+			    "volume group %s", lv_open, vg->name);
 
-	log_print("Volume group %s successfully changed", vg->name);
+	log_print("Volume group %s updated", vg->name);
 
 	return;
 }

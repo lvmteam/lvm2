@@ -10,8 +10,6 @@
 #include "log.h"
 #include "fs.h"
 
-#include <devmapper/libdevmapper.h>
-
 static void _build_lv_name(char *buffer, size_t s, struct logical_volume *lv)
 {
 	snprintf(buffer, s, "%s_%s", lv->vg->name, lv->name);
@@ -33,7 +31,7 @@ static struct dm_task *_setup_task(struct logical_volume *lv, int task)
 	return dmt;
 }
 
-static int _info(struct logical_volume *lv, struct dm_info *info)
+int lv_info(struct logical_volume *lv, struct dm_info *info)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -64,7 +62,7 @@ int lv_active(struct logical_volume *lv)
 	int r = -1;
 	struct dm_info info;
 
-	if (!_info(lv, &info)) {
+	if (!lv_info(lv, &info)) {
 		stack;
 		return r;
 	}
@@ -77,7 +75,7 @@ int lv_open_count(struct logical_volume *lv)
 	int r = -1;
 	struct dm_info info;
 
-	if (!_info(lv, &info)) {
+	if (!lv_info(lv, &info)) {
 		stack;
 		return r;
 	}
@@ -152,6 +150,8 @@ int _load(struct logical_volume *lv, int task)
 
 	if (!(r = dm_task_run(dmt)))
 		stack;
+
+	log_verbose("Logical volume %s activated", lv->name);
 
  out:
 	dm_task_destroy(dmt);

@@ -71,7 +71,7 @@ int vgcreate(int argc, char **argv)
                 return ECMD_FAILED;
         }
 
-	/* create the new vg */
+	/* Create the new VG */
 	if (!(vg = vg_create(fid, vg_name, extent_size, max_pv, max_lv, 
 		       argc - 1, argv + 1)))
 		return ECMD_FAILED;
@@ -84,15 +84,11 @@ int vgcreate(int argc, char **argv)
 		log_error("Warning: Setting maxphysicalvolumes to %d", 
 			  vg->max_pv);
 
-	/* store vg on disk(s) */
+	/* Store VG on disk(s) */
 	if (!fid->ops->vg_write(fid, vg))
 		return ECMD_FAILED;
 
-	/* FIXME Create /dev/vg */
-	/* FIXME Activate */
-
-	log_print("Volume group %s successfully created and activated",
-		  vg_name);
+	log_print("Volume group %s successfully created", vg->name);
 
 	return 0;
 }

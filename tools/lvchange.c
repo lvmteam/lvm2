@@ -44,14 +44,17 @@ int lvchange(int argc, char **argv)
 
 static int lvchange_single(struct logical_volume *lv)
 {
-	char *vg_name;
 	int doit = 0;
 
-	if (!(lv->vg->status & ACTIVE)) {
+/******* Removed requirement for VG to be active before making changes
+	if (!(lv->vg->status & ACTIVE) && 
+	    !(arg_count(available_ARG) && 
+	      strcmp(arg_str_value(available_ARG, "n"), "n"))) {
 		log_error("Volume group %s must be active before changing a "
-			  "logical volume", vg_name);
+			  "logical volume", vg->name);
 		return ECMD_FAILED;
 	}
+********/
 
 	if (lv->status & SNAPSHOT_ORG) {
 		log_error("Can't change logical volume %s under snapshot",
@@ -83,8 +86,6 @@ static int lvchange_single(struct logical_volume *lv)
 	if (!doit) {
 		return 0;
 	}
-
-	/* FIXME activate change */
 
 	log_print("Logical volume %s changed", lv->name);
 
@@ -131,19 +132,12 @@ static int lvchange_permission(struct logical_volume *lv)
 static int lvchange_availability(struct logical_volume *lv)
 {
 	int lv_stat = 0;
+	int active;
 
 	if (strcmp(arg_str_value(available_ARG, "n"), "n"))
 		lv_stat |= ACTIVE;
 
-	if ((lv_stat & ACTIVE) && (lv->status & ACTIVE)) {
-		log_error("Logical volume %s is already active", lv->name);
-		return 0;
-	}
-
-	if (!(lv_stat & ACTIVE) && !(lv->status & ACTIVE)) {
-		log_error("Logical volume %s is already not active", lv->name);
-		return 0;
-	}
+	active = lv_active(lv);
 
 	if (lv_stat & ACTIVE) {
 		lv->status |= ACTIVE;
@@ -153,17 +147,32 @@ static int lvchange_availability(struct logical_volume *lv)
 		log_verbose("Deactivating logical volume %s", lv->name);
 	}
 
-	log_very_verbose("Updating logical volume %s on disk(s)", lv->name);
-	if (!fid->ops->vg_write(fid, lv->vg))
-		return 0;
+	if ((lv_stat & ACTIVE) && (lv->status & ACTIVE))
+		log_verbose("Logical volume %s is already active on disk", 
+			    lv->name);
+	else if (!(lv_stat & ACTIVE) && !(lv->status & ACTIVE))
+		log_verbose("Logical volume %s is already inactive on disk", 
+			    lv->name);
+	else {
+		log_very_verbose("Updating logical volume %s on disk(s)", 
+				 lv->name);
+		if (!fid->ops->vg_write(fid, lv->vg))
+			return 0;
+	}
 
-	log_very_verbose("Updating %s in kernel", lv->name);
-	if (lv_stat & ACTIVE) {
-		if (!lv_activate(lv))
-			return 0;
-	} else {
-		if (!lv_deactivate(lv))
-			return 0;
+	if ((lv_stat & ACTIVE) && (active & ACTIVE))
+		log_verbose("Logical volume %s is already active", lv->name);
+	else if (!(lv_stat & ACTIVE) && !(active & ACTIVE))
+		log_verbose("Logical volume %s is already inactive", lv->name);
+	else {
+		log_very_verbose("Updating %s in kernel", lv->name);
+		if (lv_stat & ACTIVE) {
+			if (!lv_activate(lv))
+				return 0;
+		} else {
+			if (!lv_deactivate(lv))
+				return 0;
+		}
 	}
 
 	return 1;

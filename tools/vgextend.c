@@ -46,10 +46,10 @@ int vgextend(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg->status & ACTIVE)) {
+/******* Ignore active
+	if (!(vg->status & ACTIVE))
 		log_error("Volume group '%s' is not active.", vg_name);
-		return ECMD_FAILED;
-	}
+********/
 
 	if (!(vg->status & EXTENDABLE_VG)) {
 		log_error("Volume group '%s' is not extendable.", vg_name);

@@ -131,9 +131,11 @@ int pvchange_single(struct physical_volume *pv)
 		pv->status &= ~ALLOCATED_PV;
 	}
 
+/******* Ignore active
 	if (!(pv->status & ACTIVE)) {
 		log_verbose("Physical volume %s inactive", pv_name);
 	}
+********/
 
 	log_verbose("Updating physical volume %s", pv_name);
 	if (*pv->vg_name) {

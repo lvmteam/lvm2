@@ -207,19 +207,24 @@ int pvdisplay_short(struct volume_group *vg, struct physical_volume *pv)
 
 void lvdisplay_colons(struct logical_volume *lv)
 {
-	log_print("%s/%s:%s:%d:%d:-1:%d:%" PRIu64 ":%d:-1:%d:%d:-1:-1",
-		  /* FIXME Prefix - attach to struct volume_group? */
+	int inkernel;
+	struct dm_info info;
+	inkernel = lv_info(lv, &info) && info.exists;
+
+	log_print("%s%s/%s:%s:%d:%d:-1:%d:%" PRIu64 ":%d:-1:%d:%d:%d:%d",
+		  lv->vg->cmd->dev_dir,
 		  lv->vg->name,
 		  lv->name,
 		  lv->vg->name,
 		  (lv->status & (LVM_READ | LVM_WRITE)) >> 8,
-		  lv->status & ACTIVE,
+		  inkernel ? 1 : 0,
 		  /* FIXME lv->lv_number,  */
-		  lvs_in_vg_opened(lv->vg), lv->size, lv->le_count,
+		  inkernel ? info.open_count : 0, lv->size, lv->le_count,
 		  /* FIXME Add num allocated to struct! lv->lv_allocated_le, */
 		  ((lv->status & ALLOC_STRICT) +
-		   (lv->status & ALLOC_CONTIGUOUS) * 2), lv->read_ahead
-		  /* FIXME device num MAJOR(lv->lv_dev), MINOR(lv->lv_dev) */
+		   (lv->status & ALLOC_CONTIGUOUS) * 2), lv->read_ahead,
+		  inkernel ? info.major : -1,
+		  inkernel ? info.minor : -1
 	    );
 	return;
 }
@@ -228,11 +233,15 @@ int lvdisplay_full(struct logical_volume *lv)
 {
 	char *size;
 	uint32_t alloc;
+	struct dm_info info;
+	int inkernel;
+
+	inkernel = lv_info(lv, &info) && info.exists;
 
 	log_print("--- Logical volume ---");
 
-	/* FIXME Add dev_dir */
-	log_print("LV Name                %s/%s", lv->vg->name, lv->name);
+	log_print("LV Name                %s%s/%s", lv->vg->cmd->dev_dir,
+		  lv->vg->name, lv->name);
 	log_print("VG Name                %s", lv->vg->name);
 
 	log_print("LV Write Access        %s",
@@ -283,16 +292,19 @@ int lvdisplay_full(struct logical_volume *lv)
     }
 ***********/
 
-	log_print("LV Status              %savailable",
-		  (lv->status & ACTIVE) ? "" : "NOT ");
+	if (inkernel && info.suspended)
+		log_print("LV Status              suspended");
+	else
+		log_print("LV Status              %savailable",
+		  	  inkernel ? "" : "NOT ");
 
 /********* FIXME lv_number
     log_print("LV #                   %u", lv->lv_number + 1);
 ************/
 
-/********* FIXME lv_open
-    log_print("# open                 %u\n", lv->lv_open);
-**********/
+	if (inkernel)
+		log_print("# open                 %u", info.open_count);
+
 /********
 #ifdef LVM_FUTURE
     printf("Mirror copies          %u\n", lv->lv_mirror_copies);
@@ -374,7 +386,7 @@ int lvdisplay_full(struct logical_volume *lv)
 		   (ALLOC_STRICT | ALLOC_CONTIGUOUS)) ? "strict/contiguous" :
 		  "");
 
-	log_print("Read ahead sectors     %u\n", lv->read_ahead);
+	log_print("Read ahead sectors     %u", lv->read_ahead);
 
 /****************
 #ifdef LVM_FUTURE
@@ -386,14 +398,14 @@ int lvdisplay_full(struct logical_volume *lv)
 #endif
 *************/
 
-/********* FIXME blockdev 
-    printf("Block device           %d:%d\n",
-	   MAJOR(lv->lv_dev), MINOR(lv->lv_dev));
-*************/
+	if (inkernel)
+    		log_print("Block device           %d:%d", info.major, 
+			  info.minor);
+
+	log_print(" ");
 
 	return 0;
 }
-
 
 void lvdisplay_extents(struct logical_volume *lv)
 {

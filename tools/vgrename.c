@@ -118,6 +118,8 @@ int vgrename(int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+/******* FIXME Any LV things to update? */
+
 /*********** 
 	if ((ret = do_autobackup(vg_name_new, vg_old)))
 		return ECMD_FAILED;
