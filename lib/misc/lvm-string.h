@@ -21,4 +21,6 @@ int lvm_snprintf(char *buf, size_t bufsize, const char *format, ...);
 
 int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...);
 
+int split_words(char *buffer, unsigned max, char **argv);
+
 #endif
