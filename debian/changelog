@@ -1,8 +1,10 @@
-lvm2 (1.95.08-1) unstable; urgency=low
+lvm2 (1.95.10-1) unstable; urgency=low
 
-  * New upstream release (Beta3).
+  * New upstream release (Beta 3.2).
+  * Change all references to /dev/device-mapper/control to
+    /dev/mapper/control.
 
- -- Andres Salomon <dilinger@mp3revolution.net>  Thu, 23 May 2002 03:46:37 -0500
+ -- Andres Salomon <dilinger@mp3revolution.net>  Sun,  1 Sep 2002 18:55:12 -0400
 
 lvm2 (0.95.05-3) unstable; urgency=low
 

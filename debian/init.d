@@ -14,7 +14,7 @@ modprobe dm-mod >/dev/null 2>&1
 
 # Create necessary files in /dev for device-mapper
 create_devfiles() {
-	DIR="/dev/device-mapper"
+	DIR="/dev/mapper"
 	FILE="$DIR/control"
 	major=$(grep "[0-9] misc$" /proc/devices | sed 's/[ ]\+misc//')
 	minor=$(grep "[0-9] device-mapper$" /proc/misc | sed 's/[ ]\+device-mapper//')
@@ -33,6 +33,12 @@ case "$1" in
 	echo -n "Initializing $DESC: "
 	create_devfiles
 	vgchange -a y
+
+#	# Mount all LVM devices
+#	for vg in $( vgchange -a y 2>/dev/null | grep active | awk -F\" '{print $2}' ); do
+#		MTPT=$( grep $vg /etc/fstab | awk '{print $2}' )
+#		mount $MTPT
+#	done
 	echo "$NAME."
 	;;
   stop)
