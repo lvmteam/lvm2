@@ -251,9 +251,9 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv)
 	if ((snap = find_origin(lv))) {
 		struct list *slh, *snaplist = find_snapshots(lv);
 		
+		log_print("LV snapshot status     source of");
 		list_iterate(slh, snaplist) {
 			snap = list_item(slh, struct snapshot_list)->snapshot;
-			log_print("LV snapshot status     source of");
 			log_print("                       %s%s/%s [%s]",
 				 lv->vg->cmd->dev_dir, lv->vg->name,
 				 snap->cow->name, "active");
