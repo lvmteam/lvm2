@@ -864,7 +864,7 @@ Optional Packages:
   --with-group=GROUP      Set the group owner of installed files
   --with-lvm1=TYPE        LVM1 metadata support: internal/shared/none
                           TYPE=internal
-  --with-pool=TYPE        GFS pool metadata support: internal/shared/none
+  --with-pool=TYPE        GFS pool read-only support: internal/shared/none
                           TYPE=internal
   --with-snapshots=TYPE   Snapshot support: internal/shared/none
                           TYPE=internal

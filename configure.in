@@ -123,7 +123,7 @@ fi
 
 dnl -- format_pool inclusion type
 AC_ARG_WITH(pool,
-  [  --with-pool=TYPE        GFS pool metadata support: internal/shared/none
+  [  --with-pool=TYPE        GFS pool read-only support: internal/shared/none
                           [TYPE=internal] ],
   [ POOL="$withval" ],
   [ POOL="internal" ])

@@ -28,7 +28,7 @@ include ../../make.tmpl
 
 .PHONY: install
 
-install: liblvm2format_pool.so
+install: liblvm2formatpool.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/liblvm2formatpool.so.$(LIB_VERSION)
 	$(LN_S) -f liblvm2formatpool.so.$(LIB_VERSION) \
