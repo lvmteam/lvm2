@@ -34,6 +34,4 @@ int process_each_pv(int argc, char **argv, struct volume_group *vg,
 
 int is_valid_chars(char *n);
 
-struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
-
 #endif

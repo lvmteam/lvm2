@@ -6,9 +6,9 @@
 
 #include "tools.h"
 
-/* FIXME Config file? */
-#define DEFAULT_PV 128
-#define DEFAULT_LV 128
+/* FIXME From config file? */
+#define DEFAULT_PV 255
+#define DEFAULT_LV 255
 #define DEFAULT_EXTENT 8192
 
 int vgcreate(int argc, char **argv)
@@ -33,13 +33,41 @@ int vgcreate(int argc, char **argv)
 	max_pv = arg_int_value(maxphysicalvolumes_ARG, DEFAULT_PV);
 	extent_size = arg_int_value(physicalextentsize_ARG, DEFAULT_EXTENT);
 
+	if (max_lv < 1) {
+		log_error("maxlogicalvolumes too low");
+		return EINVALID_CMD_LINE;
+	}
+		
+	if (max_pv < 1) {
+		log_error("maxphysicalvolumes too low");
+		return EINVALID_CMD_LINE;
+	}
+		
+        /* Strip prefix if present */
+        if (!strncmp(vg_name, ios->prefix, strlen(ios->prefix)))
+                vg_name += strlen(ios->prefix);
+
+        if (!is_valid_chars(vg_name)) {
+                log_error("New volume group name '%s' has invalid characters",
+                          vg_name);
+                return ECMD_FAILED;
+        }
+
 	/* create the new vg */
-	if (!vg_create(ios, vg_name, extent_size, max_pv, max_lv, 
-		       argc - 1, argv + 1))
+	if (!(vg = vg_create(ios, vg_name, extent_size, max_pv, max_lv, 
+		       argc - 1, argv + 1)))
 		return ECMD_FAILED;
 
+	if (max_lv != vg->max_lv) 
+		log_error("Warning: Setting maxlogicalvolumes to %d", 
+			  vg->max_lv);
+
+	if (max_pv != vg->max_pv) 
+		log_error("Warning: Setting maxphysicalvolumes to %d", 
+			  vg->max_pv);
+
 	/* store vg on disk(s) */
-	if (ios->vg_write(ios, vg))
+	if (!ios->vg_write(ios, vg))
 		return ECMD_FAILED;
 
 	/* FIXME Create /dev/vg */

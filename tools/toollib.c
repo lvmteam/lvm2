@@ -166,14 +166,3 @@ int is_valid_chars(char *n)
 	return 1;
 }
 
-struct list_head *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
-{
-	struct list_head *pvh;
-	list_for_each(pvh, &vg->pvs) {
-		if (!strcmp(list_entry(pvh, struct pv_list, list)->pv.dev->name,
-			    pv_name)) return pvh;
-	}
-
-	return NULL;
-
-}
