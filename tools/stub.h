@@ -28,7 +28,6 @@ int lvmdiskscan(int argc, char **argv) {return 1;}
 int lvmsadc(int argc, char **argv) {return 1;}
 int lvmsar(int argc, char **argv) {return 1;}
 int lvreduce(int argc, char **argv) {return 1;}
-int lvremove(int argc, char **argv) {return 1;}
 int lvrename(int argc, char **argv) {return 1;}
 int lvscan(int argc, char **argv) {return 1;}
 int pvchange(int argc, char **argv) {return 1;}

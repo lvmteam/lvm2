@@ -52,8 +52,6 @@ struct id {
 	__uint8_t uuid[ID_LEN];
 };
 
-struct logical_volume;
-
 struct physical_volume {
         struct id *id;
 	struct device *dev;
@@ -94,6 +92,9 @@ struct logical_volume {
 struct volume_group {
 	struct id *id;
 	char *name;
+
+        __uint32_t status;
+        __uint32_t access;
 
         __uint64_t extent_size;
         __uint32_t extent_count;
@@ -155,11 +156,13 @@ struct physical_volume *pv_create();
 int vg_destroy(struct volume_group *vg);
 
 int pv_add(struct volume_group *vg, struct physical_volume *pv);
+int pv_remove(struct volume_group *vg, struct physical_volume *pv);
 struct physical_volume *pv_find(struct volume_group *vg,
-				struct physical_volume *pv);
+				const char *pv_name);
 
 int lv_add(struct volume_group *vg, struct logical_volume *lv);
+int lv_remove(struct volume_group *vg, struct logical_volume *lv);
 struct logical_volume *lv_find(struct volume_group *vg,
-			       struct logical_volume *lv);
+			       const char *lv_name);
 
 #endif
