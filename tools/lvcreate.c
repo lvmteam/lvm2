@@ -44,6 +44,8 @@ int lvcreate(int argc, char **argv)
 
 	if (strcmp(arg_str_value(contiguous_ARG, "n"), "n"))
 		status |= ALLOC_CONTIGUOUS;
+	else
+		status |= ALLOC_SIMPLE;
 
 	zero = strcmp(arg_str_value(zero_ARG, "y"), "n");
 
@@ -84,7 +86,7 @@ int lvcreate(int argc, char **argv)
 			  "using -n");
 		return EINVALID_CMD_LINE;
 	}
-		
+
 	/* If VG not on command line, try -n arg and then environment */
 	if (!argc) {
 		if (!(vg_name = extract_vgname(fid, lv_name))) {
@@ -225,7 +227,7 @@ int lvcreate(int argc, char **argv)
 
 	log_verbose("Creating logical volume %s", lv_name);
 
-	if (!(lv = lv_create(lv_name, status, stripes, stripesize, 
+	if (!(lv = lv_create(lv_name, status, stripes, stripesize,
 			     extents, vg, pvh)))
 		return ECMD_FAILED;
 

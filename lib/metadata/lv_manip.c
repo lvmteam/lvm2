@@ -322,3 +322,21 @@ int lv_extend(struct logical_volume *lv, uint32_t extents,
 	pool_free(cmd->mem, new_map);
 	return 0;
 }
+
+/* FIXME: I don't like the way the lvh is passed in here - EJT */
+int lv_remove(struct volume_group *vg, struct list *lvh)
+{
+	int i;
+	struct logical_volume *lv;
+
+	lv = &list_item(lvh, struct lv_list)->lv;
+	for (i = 0; i < lv->le_count; i++)
+		lv->map[i].pv->pe_allocated--;
+
+	vg->lv_count--;
+	vg->free_count += lv->le_count;
+
+	list_del(lvh);
+
+	return 1;
+}

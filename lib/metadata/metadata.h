@@ -33,11 +33,14 @@
 #define CLUSTERED         	0x00000400  /* VG */
 #define SHARED            	0x00000800  /* VG */
 
-#define ALLOC_SIMPLE            0x00001000  /* LVM */
+/* FIXME: This should be an enum rather than a bitset,
+   remove from status - EJT */
+#define ALLOC_SIMPLE            0x00001000  /* LV */
 #define ALLOC_STRICT		0x00002000  /* LV */
 #define ALLOC_CONTIGUOUS  	0x00004000  /* LV */
-#define SNAPSHOT          	0x00008000  /* LV */
-#define SNAPSHOT_ORG      	0x00010000  /* LV */
+
+#define SNAPSHOT          	0x00010000  /* LV */
+#define SNAPSHOT_ORG      	0x00020000  /* LV */
 
 
 #define EXPORTED_TAG "PV_EXP"  /* Identifier of exported PV */
@@ -244,6 +247,8 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents);
 int lv_extend(struct logical_volume *lv,
 	      uint32_t extents, struct list *allocatable_pvs);
 
+int lv_remove(struct volume_group *vg, struct list *lvh);
+
 
 /* FIXME: Move to other files */
 int id_eq(struct id *op1, struct id *op2);
@@ -254,8 +259,6 @@ int pv_remove(struct volume_group *vg, struct physical_volume *pv);
 struct physical_volume *pv_find(struct volume_group *vg,
 				const char *pv_name);
 
-/* Remove an LV from a given VG */
-int lv_remove(struct volume_group *vg, struct list *lvh);
 
 /* Find a PV within a given VG */
 struct list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
