@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-11-23 17:41+0000\n"
+"POT-Creation-Date: 2004-11-23 18:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1621,7 +1621,7 @@ msgstr ""
 msgid "%s: Skipping: error in md component detection"
 msgstr ""
 
-#: filters/filter-md.c:61
+#: filters/filter-md.c:62
 msgid "md filter allocation failed"
 msgstr ""
 
@@ -4503,7 +4503,7 @@ msgstr ""
 
 #: mm/pool-fast.c:45
 #, c-format
-msgid "Couldn't create memory pool (size %Zu)"
+msgid "Couldn't create memory pool %s (size %Zu)"
 msgstr ""
 
 #: mm/pool-fast.c:134
