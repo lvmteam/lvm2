@@ -27,7 +27,7 @@
 
 #include "dm.h"
 
-extern struct inode *dmfs_create_lv(struct inode *dir, int mode, struct dentry *dentry);
+extern struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *dentry);
 
 static int is_identifier(const char *str, int len)
 {
@@ -52,7 +52,7 @@ static int dmfs_root_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	if (dentry->d_name.name[0] == '.')
 		return -EINVAL;
 
-	inode = dmfs_create_lv(dir, mode, dentry);
+	inode = dmfs_create_lv(dir->i_sb, mode, dentry);
 	if (!IS_ERR(inode)) {
 		d_instantiate(dentry, inode);
 		dget(dentry);
@@ -98,6 +98,7 @@ static int dmfs_root_rmdir(struct inode *dir, struct dentry *dentry)
 	if (empty(dentry)) {
 		struct inode *inode = dentry->d_inode;
 		ret = dm_deactivate(DMFS_I(inode)->md);
+		printk("ret=%d\n", ret);
 		if (ret == 0) {
 			inode->i_nlink--;
 			dput(dentry);

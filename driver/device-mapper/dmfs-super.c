@@ -39,7 +39,6 @@ static int dmfs_statfs(struct super_block *sb, struct statfs *buf)
 
 static void dmfs_delete_inode(struct inode *inode)
 {
-	struct super_block *sb = inode->i_sb;
 	struct dmfs_i *dmi = DMFS_I(inode);
 
 	if (dmi) {
@@ -105,7 +104,7 @@ struct inode *dmfs_new_inode(struct super_block *sb, int mode)
 			iput(inode);
 			return NULL;
 		}
-		memset(dmi, sizeof(struct dmfs_i), 0);
+		memset(dmi, 0, sizeof(struct dmfs_i));
 		init_MUTEX(&dmi->sem);
 		inode->u.generic_ip = dmi;
 	}

@@ -28,7 +28,7 @@
 #include "dm.h"
 
 extern struct address_space_operations dmfs_address_space_operations;
-extern struct inode *dmfs_create_tdir(struct inode *dir, int mode);
+extern struct inode *dmfs_create_tdir(struct super_block *sb, int mode);
 
 struct dentry *dmfs_verify_name(struct inode *dir, const char *name)
 {
@@ -161,6 +161,7 @@ static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
 	struct inode *inode;
 
+	printk("lv mkdir\n");
 	if (dentry->d_name.len >= DM_NAME_LEN)
 		return -EINVAL;
 
@@ -173,8 +174,8 @@ static int dmfs_lv_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 
 	if (dentry->d_name.name[0] == '.')
 		return -EINVAL;
-
-	inode = dmfs_create_tdir(dir, mode);
+	printk("try create new tdir\n");
+	inode = dmfs_create_tdir(dir->i_sb, mode);
 	if (!IS_ERR(inode)) {
 		d_instantiate(dentry, inode);
 		dget(dentry);
@@ -221,6 +222,7 @@ static int dmfs_lv_rmdir(struct inode *dir, struct dentry *dentry)
 		struct inode *inode = dentry->d_inode;
 		inode->i_nlink--;
 		dput(dentry);
+		ret = 0;
 	}
 
 	return ret;
@@ -256,16 +258,20 @@ struct inode *dmfs_create_lv(struct super_block *sb, int mode, struct dentry *de
 	struct inode *inode = dmfs_new_inode(sb, mode | S_IFDIR);
 	struct mapped_device *md;
 	const char *name = dentry->d_name.name;
+	char tmp_name[DM_NAME_LEN + 1];
 
 	if (inode) {
 		inode->i_fop = &dmfs_lv_file_operations;
 		inode->i_op = &dmfs_lv_inode_operations;
-		md = dm_create(name, -1);
+		memcpy(tmp_name, name, dentry->d_name.len);
+		tmp_name[dentry->d_name.len] = 0;
+		md = dm_create(tmp_name, -1);
 		if (md == NULL) {
 			iput(inode);
 			return NULL;
 		}
 		DMFS_I(inode)->md = md;
+		printk("created new lv\n");
 	}
 
 	return inode;
