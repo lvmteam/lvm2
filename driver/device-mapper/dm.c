@@ -77,8 +77,7 @@ static int dm_init(void)
 
 	init_rwsem(&_dev_lock);
 
-	if (!_io_hook_cache &&
-	    !(_io_hook_cache =
+	if (!(_io_hook_cache =
 	      kmem_cache_create("dm io hooks", sizeof(struct io_hook),
 				0, 0, NULL, NULL)))
 		return -ENOMEM;
@@ -109,7 +108,7 @@ static int dm_init(void)
 
 static void dm_exit(void)
 {
-	if(kmem_cache_shrink(_io_hook_cache))
+	if(kmem_cache_destroy(_io_hook_cache))
 		WARN("it looks like there are still some io_hooks allocated");
 
 	dm_fs_exit();
