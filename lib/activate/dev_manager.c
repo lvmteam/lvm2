@@ -54,7 +54,7 @@
  */
 
 enum {
-	MARK = 0,
+	ACTIVE = 0,
 	DIRTY = 1,
 	VISIBLE = 2
 };
@@ -85,11 +85,30 @@ struct dev_layer {
 	 struct list pre_active;
 };
 
+struct dl_list {
+	struct list list;
+	struct dev_layer *dl;
+};
+
 struct dev_manager {
 	struct pool *mem;
 
 	char *vg_name;
+
+	/*
+	 * list of struct lv_list, contains lvs that we wish to
+	 * be active after execution.
+	 */
 	struct list active_list;
+
+	/*
+	 * Layers that need reloading.
+	 */
+	struct list dirty_list;
+
+	/*
+	 * Layers that will need removing after activation.
+	 */
 	struct list remove_list;
 
 	struct hash_table *layers;
@@ -115,8 +134,8 @@ static inline void _clear_flag(struct dev_layer *dl, int bit) {
 /*
  * Device layer names are all of the form <vg>-<lv>-<layer>, any
  * other hyphens that appear in these names are quoted with yet
- * another hyphen.  The top layer of any device is always called
- * 'top'.  eg, vg0-lvol0.
+ * another hyphen.  The top layer of any device has no layer
+ * name.  eg, vg0-lvol0.
  */
 static void _count_hyphens(const char *str, size_t *len, int *hyphens)
 {
@@ -227,6 +246,7 @@ static int _load(struct dev_manager *dm, struct dev_layer *dl, int task)
 	if (_get_flag(dl, VISIBLE))
 		fs_add_lv(dl->lv, dl->name);
 
+	dl->info.exists = 1;
 	return r;
 }
 
@@ -526,6 +546,7 @@ struct dev_manager *dev_manager_create(const char *vg_name)
 	}
 
 	list_init(&dm->active_list);
+	list_init(&dm->dirty_list);
 	list_init(&dm->remove_list);
 
 	return dm;
@@ -803,23 +824,23 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 /*
  * Clears the mark bit on all layers.
  */
-static void _clear_marks(struct dev_manager *dm)
+static void _clear_marks(struct dev_manager *dm, int flag)
 {
 	struct hash_node *hn;
 	struct dev_layer *dl;
 
 	hash_iterate (hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
-		_clear_flag(dl, MARK);
+		_clear_flag(dl, flag);
 	}
 }
 
 
 /*
- * Starting with a given layer this function recurses through all
- * dependent layers setting the mark bit.
+ * Propogates marks via the pre_create dependency list.
  */
-static int _mark_pre_create(struct dev_manager *dm, struct dev_layer *dl)
+static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
+			      int flag)
 {
 	struct list *sh;
 	char *name;
@@ -833,12 +854,12 @@ static int _mark_pre_create(struct dev_manager *dm, struct dev_layer *dl)
 			return 0;
 		}
 
-		if (_get_flag(dep, MARK))
+		if (_get_flag(dep, flag))
 			continue;
 
-		_set_flag(dep, MARK);
+		_set_flag(dep, flag);
 
-		if (!_mark_pre_create(dm, dep)) {
+		if (!_trace_layer_marks(dm, dep, flag)) {
 			stack;
 			return 0;
 		}
@@ -847,9 +868,52 @@ static int _mark_pre_create(struct dev_manager *dm, struct dev_layer *dl)
 	return 1;
 }
 
-void _emit(struct dev_layer *dl)
+/*
+ * Calls _trace_single for every marked layer.
+ */
+static int _trace_all_marks(struct dev_manager *dm, int flag)
 {
-	log_print("emitting layer '%s'", dl->name);
+	struct hash_node *hn;
+	struct dev_layer *dl;
+
+	hash_iterate (hn, dm->layers) {
+		dl = hash_get_data(dm->layers, hn);
+		if (_get_flag(dl, flag) && !_trace_layer_marks(dm, dl, flag)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * Marks the top layers, then traces these through the
+ * dependencies.
+ */
+static int _mark_lvs(struct dev_manager *dm, struct list *lvs, int flag)
+{
+	struct list *lvh;
+	struct logical_volume *lv;
+	struct dev_layer *dl;
+
+	list_iterate (lvh, lvs) {
+		lv = list_item(lvh, struct lv_list)->lv;
+
+		if (!(dl = _lookup(dm, lv->name, NULL))) {
+			stack;
+			return 0;
+		}
+
+		_set_flag(dl, flag);
+	}
+
+	if (!_trace_all_marks(dm, flag)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }
 
 /*
@@ -904,104 +968,15 @@ int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	return 1;
 }
 
-/*
- * Layers are removed in a top-down manner.
- */
-int _remove_rec(struct dev_manager *dm, struct dev_layer *dl)
+static int _build_all_layers(struct dev_manager *dm, struct volume_group *vg)
 {
-	struct list *sh;
-	struct dev_layer *dep;
-	char *name;
-
-	if (dl->info.exists && dl->info.suspended && !_resume(dl)) {
-		stack;
-		return 0;
-	}
-
-	if (!_remove(dl)) {
-		stack;
-		return 0;
-	}
-
-	list_iterate (sh, &dl->pre_create) {
-		name = list_item(sh, struct str_list)->str;
-
-		if (!(dep = hash_lookup(dm->layers, name))) {
-			log_err("Couldn't find device layer '%s'.", name);
-			return 0;
-		}
-
-		if (!_remove_rec(dm, dep)) {
-			stack;
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-static int _mark_dependants(struct dev_manager *dm)
-{
-	struct hash_node *hn;
-	struct dev_layer *dl;
-
-	_clear_marks(dm);
-
-	/*
-	 * Mark any dependants.
-	 */
-	hash_iterate (hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
-
-		if (!_get_flag(dl, MARK)) {
-			if (!_mark_pre_create(dm, dl)) {
-				stack;
-				return 0;
-			}
-
-			if (_get_flag(dl, MARK)) {
-				log_err("Circular device dependency found for "
-					"'%s'.",
-					dl->name);
-				return 0;
-			}
-		}
-	}
-
-	return 1;
-}
-
-/*
- * Remove all layers from the hash table that do not have their
- * mark flag set.
- */
-static int _prune_unmarked(struct dev_manager *dm)
-{
-	struct hash_node *hn, *next;
-	struct dev_layer *dl;
-
-	for (hn = hash_get_first(dm->layers); hn; hn = next) {
-
-		next = hash_get_next(dm->layers, hn);
-		dl = hash_get_data(dm->layers, hn);
-
-		if (!_get_flag(dl, MARK))
-			hash_remove(dm->layers, dl->name);
-	}
-
-	return 1;
-}
-
-static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
-{
-	struct dev_layer *dl;
 	struct list *lvh;
 	struct logical_volume *lvt;
 
 	/*
 	 * Build layers for complete vg.
 	 */
-	list_iterate (lvh, &lv->vg->lvs) {
+	list_iterate (lvh, &vg->lvs) {
 		lvt = list_item(lvh, struct lv_list)->lv;
 		if (!_expand_lv(dm, lvt)) {
 			stack;
@@ -1009,21 +984,78 @@ static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
 		}
 	}
 
+	return 1;
+}
+
+static int _fill_in_remove_list(struct dev_manager *dm)
+{
+	struct hash_node *hn;
+	struct dev_layer *dl;
+	struct dl_list *dll;
+
+	hash_iterate (hn, dm->layers) {
+		dl = hash_get_data(dm->layers, hn);
+
+		if (!_get_flag(dl, ACTIVE)) {
+			dll = pool_alloc(dm->mem, sizeof(*dll));
+			if (!dll) {
+				stack;
+				return 0;
+			}
+
+			dll->dl = dl;
+			list_add(&dm->remove_list, &dll->list);
+		}
+	}
+
+	return 1;
+}
+
+
+/*
+ * Layers are removed in a top-down manner.
+ */
+int _remove_old_layers(struct dev_manager *dm)
+{
+	int change;
+
 	/*
-	 * Mark the desired logical volume.
+	 * FIXME: quick hack.  We just loop round removing
+	 * unopened devices, until we run out of things to close.
 	 */
-	if (!(dl = _lookup(dm, lv->name, NULL))) {
-		log_err("Couldn't find top layer of '%s'.", lv->name);
+	do {
+		struct list *rh, *n;
+		struct dev_layer *dl;
+
+		change = 0;
+		for (rh = dm->remove_list.n; rh != &dm->remove_list; rh = n) {
+			n = rh->n;
+			dl = list_item(rh, struct dl_list)->dl;
+
+			if (!_info(dl->name, &dl->info)) {
+				stack;
+				return 0;
+			}
+
+			if (dl->info.exists && !dl->info.open_count) {
+				change = 1;
+
+				if (!_remove(dl)) {
+					stack;
+					return 0;
+				}
+
+				list_del(rh);
+			}
+		}
+
+	} while(change);
+
+	if (!list_empty(&dm->remove_list)) {
+		log_err("Couldn't remove all redundant layers.");
 		return 0;
 	}
 
-	_set_flag(dl, MARK);
-	if (!_mark_pre_create(dm, dl)) {
-		stack;
-		return 0;
-	}
-
-	_prune_unmarked(dm);
 	return 1;
 }
 
@@ -1032,22 +1064,35 @@ static int _select_lv(struct dev_manager *dm, struct logical_volume *lv)
  * layers in the manager, and tries to issue the correct
  * instructions to activate them in order.
  */
-static int _execute(struct dev_manager *dm, struct logical_volume *lv,
-		    int (*cmd)(struct dev_manager *dm, struct dev_layer *dl))
+static int _execute(struct dev_manager *dm, struct volume_group *vg)
 {
 	struct hash_node *hn;
 	struct dev_layer *dl;
 
-	if (!_select_lv(dm, lv)) {
+	if (!_build_all_layers(dm, vg)) {
 		stack;
 		return 0;
 	}
 
 	/*
-	 * We need to make a list of top level devices, ie. those
-	 * that have no entries in 'pre_create'.
+	 * Mark all dirty layers.
 	 */
-	if (!_mark_dependants(dm)) {
+	_clear_marks(dm, DIRTY);
+	if (!_mark_lvs(dm, &dm->dirty_list, DIRTY)) {
+		stack;
+		return 0;
+	}
+
+	/*
+	 * Mark all active layers.
+	 */
+	_clear_marks(dm, ACTIVE);
+	if (!_mark_lvs(dm, &dm->active_list, ACTIVE)) {
+		stack;
+		return 0;
+	}
+
+	if (!_fill_in_remove_list(dm)) {
 		stack;
 		return 0;
 	}
@@ -1058,8 +1103,13 @@ static int _execute(struct dev_manager *dm, struct logical_volume *lv,
 	hash_iterate (hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
 
-		if (!_get_flag(dl, MARK))
-			cmd(dm, dl);
+		if (_get_flag(dl, ACTIVE) && _get_flag(dl, VISIBLE))
+			_create_rec(dm, dl);
+	}
+
+	if (!_remove_old_layers(dm)) {
+		stack;
+		return 0;
 	}
 
 	return 1;
@@ -1161,19 +1211,34 @@ static int _scan_existing_devices(struct dev_manager *dm)
 	return r;
 }
 
-static int _add_active(struct dev_manager *dm, struct logical_volume *lv)
+static int _add_lv(struct pool *mem,
+		   struct list *head, struct logical_volume *lv)
 {
 	struct lv_list *lvl;
 
-	if (!(lvl = pool_alloc(dm->mem, sizeof(*lvl)))) {
+	if (!(lvl = pool_alloc(mem, sizeof(*lvl)))) {
 		stack;
 		return 0;
 	}
 
 	lvl->lv = lv;
-	list_add(&dm->active_list, &lvl->list);
+	list_add(head, &lvl->list);
 
 	return 1;
+}
+
+static void _remove_lv(struct list *head, struct logical_volume *lv)
+{
+	struct list *lvh;
+	struct lv_list *lvl;
+
+	list_iterate (lvh, head) {
+		lvl = list_item(lvh, struct lv_list);
+		if (lvl->lv == lv) {
+			list_del(lvh);
+			break;
+		}
+	}
 }
 
 static int _fill_in_active_list(struct dev_manager *dm,
@@ -1187,7 +1252,7 @@ static int _fill_in_active_list(struct dev_manager *dm,
 	list_iterate (lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
 
-		name = _build_name(dm->mem, dm->vg_name, lv->name, "");
+		name = _build_name(dm->mem, dm->vg_name, lv->name, NULL);
 		if (!name) {
 			stack;
 			return 0;
@@ -1196,15 +1261,23 @@ static int _fill_in_active_list(struct dev_manager *dm,
 		found = hash_lookup(dm->layers, name) ? 1 : 0;
 		pool_free(dm->mem, name);
 
-		if (found && !_add_active(dm, lv)) {
-			stack;
-			return 0;
+		if (found) {
+			log_verbose("Active lv '%s' found.", lv->name);
+
+			if (!_add_lv(dm->mem, &dm->active_list, lv)) {
+				stack;
+				return 0;
+			}
 		}
 	}
 
 	return 1;
 }
 
+/*
+ * FIXME: There's a lot of common code between activate and
+ *        deactivate.
+ */
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	if (!_scan_existing_devices(dm)) {
@@ -1217,12 +1290,17 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (!_add_active(dm, lv)) {
+	/*
+	 * Remove it so we don't add it twice.
+	 */
+	_remove_lv(&dm->active_list, lv);
+	if (!_add_lv(dm->mem, &dm->dirty_list, lv) ||
+	    !_add_lv(dm->mem, &dm->active_list, lv)) {
 		stack;
 		return 0;
 	}
 
-	if (!_execute(dm, lv, _create_rec)) {
+	if (!_execute(dm, lv->vg)) {
 		stack;
 		return 0;
 	}
@@ -1232,7 +1310,19 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	if (!_execute(dm, lv, _remove_rec)) {
+	if (!_scan_existing_devices(dm)) {
+		stack;
+		return 0;
+	}
+
+	if (!_fill_in_active_list(dm, lv->vg)) {
+		stack;
+		return 0;
+	}
+
+	_remove_lv(&dm->active_list, lv);
+
+	if (!_execute(dm, lv->vg)) {
 		stack;
 		return 0;
 	}
