@@ -8,8 +8,21 @@
 
 int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 {
+	char *vg_name;
+
 	if (argc != 1) {
 		log_err("Please specify a *single* volume group to restore.");
+		return ECMD_FAILED;
+	}
+
+	vg_name = argv[0];
+
+	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
+		vg_name += strlen(cmd->dev_dir);
+
+	if (!validate_vgname(vg_name)) {
+		log_error("Volume group name \"%s\" has invalid characters",
+			  vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -18,7 +31,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	 * list of archive files for a particular vg
 	 */
 	if (arg_count(cmd, list_ARG)) {
-		if (!archive_display(cmd, argv[0]))
+		if (!archive_display(cmd, vg_name))
 			return ECMD_FAILED;
 
 		return 0;
@@ -29,23 +42,25 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!lock_vol(cmd, argv[0], LCK_VG_WRITE | LCK_NONBLOCK)) {
-		log_error("Unable to lock volume group %s", argv[0]);
+	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
+		log_error("Unable to lock volume group %s", vg_name);
 		unlock_vg(cmd, ORPHAN);
 		return ECMD_FAILED;
 	}
 
 	if (!(arg_count(cmd, file_ARG) ?
-	      backup_restore_from_file(cmd, argv[0],
+	      backup_restore_from_file(cmd, vg_name,
 				       arg_str_value(cmd, file_ARG, "")) :
-	      backup_restore(cmd, argv[0]))) {
-		unlock_vg(cmd, argv[0]);
+	      backup_restore(cmd, vg_name))) {
+		unlock_vg(cmd, vg_name);
 		unlock_vg(cmd, ORPHAN);
 		log_err("Restore failed.");
 		return ECMD_FAILED;
 	}
 
-	unlock_vg(cmd, argv[0]);
+	log_print("Restored volume group %s", vg_name);
+
+	unlock_vg(cmd, vg_name);
 	unlock_vg(cmd, ORPHAN);
 	return 0;
 }
