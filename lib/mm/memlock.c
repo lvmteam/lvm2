@@ -134,15 +134,15 @@ int memlock(void)
 
 void memlock_init(struct cmd_context *cmd)
 {
-	_size_stack = find_config_int(cmd->cf->root,
+	_size_stack = find_config_int(cmd->cft->root,
 				      "activation/reserved_stack",
-				      '/', DEFAULT_RESERVED_STACK) * 1024;
-	_size_malloc_tmp = find_config_int(cmd->cf->root,
+				      DEFAULT_RESERVED_STACK) * 1024;
+	_size_malloc_tmp = find_config_int(cmd->cft->root,
 					   "activation/reserved_memory",
-					   '/', DEFAULT_RESERVED_MEMORY) * 1024;
-	_default_priority = find_config_int(cmd->cf->root,
+					   DEFAULT_RESERVED_MEMORY) * 1024;
+	_default_priority = find_config_int(cmd->cft->root,
 				            "activation/process_priority",
-				            '/', DEFAULT_PROCESS_PRIORITY);
+				            DEFAULT_PROCESS_PRIORITY);
 }
 
 #endif

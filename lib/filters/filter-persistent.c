@@ -51,13 +51,13 @@ int persistent_filter_wipe(struct dev_filter *f)
 	return 1;
 }
 
-static int _read_array(struct pfilter *pf, struct config_tree *cf,
+static int _read_array(struct pfilter *pf, struct config_tree *cft,
 		       const char *path, void *data)
 {
 	struct config_node *cn;
 	struct config_value *cv;
 
-	if (!(cn = find_config_node(cf->root, path, '/'))) {
+	if (!(cn = find_config_node(cft->root, path))) {
 		log_very_verbose("Couldn't find %s array in '%s'",
 				 path, pf->file);
 		return 0;
@@ -88,22 +88,22 @@ int persistent_filter_load(struct dev_filter *f)
 	struct pfilter *pf = (struct pfilter *) f->private;
 
 	int r = 0;
-	struct config_tree *cf;
+	struct config_tree *cft;
 
-	if (!(cf = create_config_tree())) {
+	if (!(cft = create_config_tree())) {
 		stack;
 		return 0;
 	}
 
-	if (!read_config_file(cf, pf->file)) {
+	if (!read_config_file(cft, pf->file)) {
 		stack;
 		goto out;
 	}
 
-	_read_array(pf, cf, "persistent_filter_cache/valid_devices",
+	_read_array(pf, cft, "persistent_filter_cache/valid_devices",
 		    PF_GOOD_DEVICE);
 	/* We don't gain anything by holding invalid devices */
-	/* _read_array(pf, cf, "persistent_filter_cache/invalid_devices",
+	/* _read_array(pf, cft, "persistent_filter_cache/invalid_devices",
 	   PF_BAD_DEVICE); */
 
 	/* Did we find anything? */
@@ -116,7 +116,7 @@ int persistent_filter_load(struct dev_filter *f)
 	log_very_verbose("Loaded persistent filter cache from %s", pf->file);
 
       out:
-	destroy_config_tree(cf);
+	destroy_config_tree(cft);
 	return r;
 }
 

@@ -32,7 +32,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!write_config_file(cmd->cf, file))
+	if (!write_config_file(cmd->cft, file))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;

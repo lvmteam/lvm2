@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 
-void *load_shared_library(struct config_tree *cf, const char *libname,
+void *load_shared_library(struct config_tree *cft, const char *libname,
 			  const char *desc)
 {
 	char path[PATH_MAX];
@@ -25,8 +25,7 @@ void *load_shared_library(struct config_tree *cf, const char *libname,
 	/* If libname doesn't begin with '/' then use lib_dir/libname,
 	 * if present */
 	if (libname[0] == '/' ||
-	    !(lib_dir = find_config_str(cf->root, "global/library_dir",
-					'/', 0)) ||
+	    !(lib_dir = find_config_str(cft->root, "global/library_dir", 0)) ||
 	    (lvm_snprintf(path, sizeof(path), "%s/%s", lib_dir,
 			  libname) == -1) || stat(path, &info) == -1)
 		strncpy(path, libname, sizeof(path));

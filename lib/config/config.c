@@ -43,7 +43,7 @@ struct parser {
 };
 
 struct cs {
-	struct config_tree cf;
+	struct config_tree cft;
 	struct pool *mem;
 	time_t timestamp;
 	char *filename;
@@ -59,6 +59,8 @@ static int _match_aux(struct parser *p, int t);
 static struct config_value *_create_value(struct parser *p);
 static struct config_node *_create_node(struct parser *p);
 static char *_dup_tok(struct parser *p);
+
+static const int sep = '/';
 
 #define MAX_INDENT 32
 
@@ -99,22 +101,22 @@ struct config_tree *create_config_tree(void)
 	}
 
 	c->mem = mem;
-	c->cf.root = (struct config_node *) NULL;
+	c->cft.root = (struct config_node *) NULL;
 	c->timestamp = 0;
 	c->filename = NULL;
-	return &c->cf;
+	return &c->cft;
 }
 
-void destroy_config_tree(struct config_tree *cf)
+void destroy_config_tree(struct config_tree *cft)
 {
-	pool_destroy(((struct cs *) cf)->mem);
+	pool_destroy(((struct cs *) cft)->mem);
 }
 
-int read_config_fd(struct config_tree *cf, struct device *dev,
+int read_config_fd(struct config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum)
 {
-	struct cs *c = (struct cs *) cf;
+	struct cs *c = (struct cs *) cft;
 	struct parser *p;
 	int r = 0;
 	int use_mmap = 1;
@@ -172,7 +174,7 @@ int read_config_fd(struct config_tree *cf, struct device *dev,
 	p->tb = p->te = p->fb;
 	p->line = 1;
 	_get_token(p, TOK_SECTION_E);
-	if (!(cf->root = _file(p))) {
+	if (!(cft->root = _file(p))) {
 		stack;
 		goto out;
 	}
@@ -193,9 +195,9 @@ int read_config_fd(struct config_tree *cf, struct device *dev,
 	return r;
 }
 
-int read_config_file(struct config_tree *cf, const char *file)
+int read_config_file(struct config_tree *cft, const char *file)
 {
-	struct cs *c = (struct cs *) cf;
+	struct cs *c = (struct cs *) cft;
 	struct stat info;
 	struct device *dev;
 	int r = 1;
@@ -225,7 +227,7 @@ int read_config_file(struct config_tree *cf, const char *file)
 		return 0;
 	}
 
-	r = read_config_fd(cf, dev, 0, (size_t) info.st_size, 0, 0,
+	r = read_config_fd(cft, dev, 0, (size_t) info.st_size, 0, 0,
 			   (checksum_fn_t) NULL, 0);
 
 	dev_close(dev);
@@ -236,9 +238,9 @@ int read_config_file(struct config_tree *cf, const char *file)
 	return r;
 }
 
-time_t config_file_timestamp(struct config_tree *cf)
+time_t config_file_timestamp(struct config_tree *cft)
 {
-	struct cs *c = (struct cs *) cf;
+	struct cs *c = (struct cs *) cft;
 
 	return c->timestamp;
 }
@@ -246,10 +248,10 @@ time_t config_file_timestamp(struct config_tree *cf)
 /*
  * Returns 1 if config file reloaded
  */
-int reload_config_file(struct config_tree **cf)
+int reload_config_file(struct config_tree **cft)
 {
-	struct config_tree *new_cf;
-	struct cs *c = (struct cs *) *cf;
+	struct config_tree *new_cft;
+	struct cs *c = (struct cs *) *cft;
 	struct cs *new_cs;
 	struct stat info;
 	struct device *dev;
@@ -283,7 +285,7 @@ int reload_config_file(struct config_tree **cf)
 		return 0;
 	}
 
-	if (!(new_cf = create_config_tree())) {
+	if (!(new_cft = create_config_tree())) {
 		log_error("Allocation of new config_tree failed");
 		return 0;
 	}
@@ -298,17 +300,17 @@ int reload_config_file(struct config_tree **cf)
 		return 0;
 	}
 
-	r = read_config_fd(new_cf, dev, 0, (size_t) info.st_size,
+	r = read_config_fd(new_cft, dev, 0, (size_t) info.st_size,
 			   0, 0, (checksum_fn_t) NULL, 0);
 
 	dev_close(dev);
 
 	if (r) {
-		new_cs = (struct cs *) new_cf;
+		new_cs = (struct cs *) new_cft;
 		new_cs->filename = pool_strdup(new_cs->mem, c->filename);
 		new_cs->timestamp = info.st_mtime;
-		destroy_config_tree(*cf);
-		*cf = new_cf;
+		destroy_config_tree(*cft);
+		*cft = new_cft;
 	}
 
 	return r;
@@ -382,7 +384,7 @@ static int _write_config(struct config_node *n, FILE *fp, int level)
 	return 1;
 }
 
-int write_config_file(struct config_tree *cf, const char *file)
+int write_config_file(struct config_tree *cft, const char *file)
 {
 	int r = 1;
 	FILE *fp;
@@ -396,7 +398,7 @@ int write_config_file(struct config_tree *cf, const char *file)
 	}
 
 	log_verbose("Dumping configuration to %s", file);
-	if (!_write_config(cf->root, fp, 0)) {
+	if (!_write_config(cft->root, fp, 0)) {
 		log_error("Failure while writing configuration");
 		r = 0;
 	}
@@ -728,8 +730,7 @@ static char *_dup_tok(struct parser *p)
 /*
  * utility functions
  */
-struct config_node *find_config_node(struct config_node *cn,
-				     const char *path, const int sep)
+struct config_node *find_config_node(struct config_node *cn, const char *path)
 {
 	const char *e;
 
@@ -761,9 +762,9 @@ struct config_node *find_config_node(struct config_node *cn,
 }
 
 const char *find_config_str(struct config_node *cn,
-			    const char *path, const int sep, const char *fail)
+			    const char *path, const char *fail)
 {
-	struct config_node *n = find_config_node(cn, path, sep);
+	struct config_node *n = find_config_node(cn, path);
 
 	if (n && n->v->type == CFG_STRING) {
 		if (*n->v->v.str)
@@ -777,10 +778,9 @@ const char *find_config_str(struct config_node *cn,
 	return fail;
 }
 
-int find_config_int(struct config_node *cn, const char *path,
-		    const int sep, int fail)
+int find_config_int(struct config_node *cn, const char *path, int fail)
 {
-	struct config_node *n = find_config_node(cn, path, sep);
+	struct config_node *n = find_config_node(cn, path);
 
 	if (n && n->v->type == CFG_INT) {
 		log_very_verbose("Setting %s to %d", path, n->v->v.i);
@@ -792,10 +792,9 @@ int find_config_int(struct config_node *cn, const char *path,
 	return fail;
 }
 
-float find_config_float(struct config_node *cn, const char *path,
-			const int sep, float fail)
+float find_config_float(struct config_node *cn, const char *path, float fail)
 {
-	struct config_node *n = find_config_node(cn, path, sep);
+	struct config_node *n = find_config_node(cn, path);
 
 	if (n && n->v->type == CFG_FLOAT) {
 		log_very_verbose("Setting %s to %f", path, n->v->v.r);
@@ -835,10 +834,9 @@ static int _str_to_bool(const char *str, int fail)
 	return fail;
 }
 
-int find_config_bool(struct config_node *cn, const char *path,
-		     const int sep, int fail)
+int find_config_bool(struct config_node *cn, const char *path, int fail)
 {
-	struct config_node *n = find_config_node(cn, path, sep);
+	struct config_node *n = find_config_node(cn, path);
 	struct config_value *v;
 
 	if (!n)
@@ -858,11 +856,11 @@ int find_config_bool(struct config_node *cn, const char *path,
 }
 
 int get_config_uint32(struct config_node *cn, const char *path,
-		      const int sep, uint32_t *result)
+		      uint32_t *result)
 {
 	struct config_node *n;
 
-	n = find_config_node(cn, path, sep);
+	n = find_config_node(cn, path);
 
 	if (!n || !n->v || n->v->type != CFG_INT)
 		return 0;
@@ -872,11 +870,11 @@ int get_config_uint32(struct config_node *cn, const char *path,
 }
 
 int get_config_uint64(struct config_node *cn, const char *path,
-		      const int sep, uint64_t *result)
+		      uint64_t *result)
 {
 	struct config_node *n;
 
-	n = find_config_node(cn, path, sep);
+	n = find_config_node(cn, path);
 
 	if (!n || !n->v || n->v->type != CFG_INT)
 		return 0;
@@ -886,12 +884,11 @@ int get_config_uint64(struct config_node *cn, const char *path,
 	return 1;
 }
 
-int get_config_str(struct config_node *cn, const char *path,
-		   const int sep, char **result)
+int get_config_str(struct config_node *cn, const char *path, char **result)
 {
 	struct config_node *n;
 
-	n = find_config_node(cn, path, sep);
+	n = find_config_node(cn, path);
 
 	if (!n || !n->v || n->v->type != CFG_STRING)
 		return 0;

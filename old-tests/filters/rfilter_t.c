@@ -20,7 +20,7 @@
 
 int main(int argc, char **argv)
 {
-	struct config_file *cf;
+	struct config_file *cft;
 	struct config_node *cn;
 	struct dev_filter *filter;
 	struct dev_iter *iter;
@@ -34,17 +34,17 @@ int main(int argc, char **argv)
 	init_log(stderr);
 	init_debug(_LOG_DEBUG);
 
-	if (!(cf = create_config_file())) {
+	if (!(cft = create_config_file())) {
 		fprintf(stderr, "couldn't create config file\n");
 		exit(1);
 	}
 
-	if (!read_config(cf, argv[1])) {
+	if (!read_config(cft, argv[1])) {
 		fprintf(stderr, "couldn't read config file\n");
 		exit(1);
 	}
 
-	if (!(cn = find_config_node(cf->root, "/devices/filter", '/'))) {
+	if (!(cn = find_config_node(cft->root, "/devices/filter", '/'))) {
 		fprintf(stderr, "couldn't find filter section\n");
 		exit(1);
 	}
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 	dev_iter_destroy(iter);
 	filter->destroy(filter);
 	dev_cache_exit();
-	destroy_config_file(cf);
+	destroy_config_file(cft);
 
 	dump_memory();
 	fin_log();

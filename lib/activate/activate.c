@@ -120,8 +120,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 	char *str;
 	char path[PATH_MAX];
 
-	if (!(cn = find_config_node(cmd->cf->root, "activation/volume_list",
-				    '/'))) {
+	if (!(cn = find_config_node(cmd->cft->root, "activation/volume_list"))) {
 		/* If no hosts tags defined, activate */
 		if (list_empty(&cmd->tags))
 			return 1;
@@ -244,7 +243,7 @@ static int _lv_info(const struct logical_volume *lv, int mknodes,
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
 		stack;
 		return 0;
 	}
@@ -279,7 +278,7 @@ int lv_snapshot_percent(struct logical_volume *lv, float *percent)
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
 		stack;
 		return 0;
 	}
@@ -302,7 +301,7 @@ int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
 	if (!activation())
 		return 0;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
 		stack;
 		return 0;
 	}
@@ -345,7 +344,7 @@ static int _lv_activate(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
 		stack;
 		return 0;
 	}
@@ -362,7 +361,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
 		stack;
 		return 0;
 	}
@@ -379,7 +378,7 @@ static int _lv_suspend(struct logical_volume *lv)
 	int r;
 	struct dev_manager *dm;
 
-	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cf))) {
+	if (!(dm = dev_manager_create(lv->vg->name, lv->vg->cmd->cft))) {
 		stack;
 		return 0;
 	}

@@ -51,31 +51,27 @@ int reload_config_file(struct config_tree **cf);
 time_t config_file_timestamp(struct config_tree *cf);
 
 struct config_node *find_config_node(struct config_node *cn,
-				     const char *path, const int separator);
+				     const char *path);
 
-const char *find_config_str(struct config_node *cn,
-			    const char *path, const int sep, const char *fail);
+const char *find_config_str(struct config_node *cn, const char *path,
+			    const char *fail);
 
-int find_config_int(struct config_node *cn, const char *path,
-		    const int sep, int fail);
+int find_config_int(struct config_node *cn, const char *path, int fail);
 
-float find_config_float(struct config_node *cn, const char *path,
-			const int sep, float fail);
+float find_config_float(struct config_node *cn, const char *path, float fail);
 
 /*
  * Understands (0, ~0), (y, n), (yes, no), (on,
  * off), (true, false).
  */
-int find_config_bool(struct config_node *cn, const char *path,
-		     const int sep, int fail);
+int find_config_bool(struct config_node *cn, const char *path, int fail);
 
 int get_config_uint32(struct config_node *cn, const char *path,
-		      const int sep, uint32_t *result);
+		      uint32_t *result);
 
 int get_config_uint64(struct config_node *cn, const char *path,
-		      const int sep, uint64_t *result);
+		      uint64_t *result);
 
-int get_config_str(struct config_node *cn, const char *path,
-		   const int sep, char **result);
+int get_config_str(struct config_node *cn, const char *path, char **result);
 
 #endif

@@ -1584,21 +1584,21 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!get_config_uint64(cn, "start_sector", '/', &dev_area.start)) {
+	if (!get_config_uint64(cn, "start_sector", &dev_area.start)) {
 		log_error("Missing start_sector in metadata disk_area section "
 			  "of config file");
 		return 0;
 	}
 	dev_area.start <<= SECTOR_SHIFT;
 
-	if (!get_config_uint64(cn, "size", '/', &dev_area.size)) {
+	if (!get_config_uint64(cn, "size", &dev_area.size)) {
 		log_error("Missing size in metadata disk_area section "
 			  "of config file");
 		return 0;
 	}
 	dev_area.size <<= SECTOR_SHIFT;
 
-	if (!get_config_str(cn, "id", '/', &id_str)) {
+	if (!get_config_str(cn, "id", &id_str)) {
 		log_error("Missing uuid in metadata disk_area section "
 			  "of config file");
 		return 0;
@@ -1663,7 +1663,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	if ((cn = find_config_node(cmd->cf->root, "metadata/dirs", '/'))) {
+	if ((cn = find_config_node(cmd->cft->root, "metadata/dirs"))) {
 		for (cv = cn->v; cv; cv = cv->next) {
 			if (cv->type != CFG_STRING) {
 				log_error("Invalid string in config file: "
@@ -1679,7 +1679,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		}
 	}
 
-	if (!(cn = find_config_node(cmd->cf->root, "metadata/disk_areas", '/')))
+	if (!(cn = find_config_node(cmd->cft->root, "metadata/disk_areas")))
 		return fmt;
 
 	for (cn = cn->child; cn; cn = cn->sib) {

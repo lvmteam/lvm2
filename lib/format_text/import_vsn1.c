@@ -20,13 +20,13 @@ typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
 			   struct hash_table * pv_hash);
 
 #define _read_int32(root, path, result) \
-	get_config_uint32(root, path, '/', result)
+	get_config_uint32(root, path, result)
 
 #define _read_uint32(root, path, result) \
-	get_config_uint32(root, path, '/', result)
+	get_config_uint32(root, path, result)
 
 #define _read_int64(root, path, result) \
-	get_config_uint64(root, path, '/', result)
+	get_config_uint64(root, path, result)
 
 /*
  * Logs an attempt to read an invalid format file.
@@ -40,7 +40,7 @@ static void _invalid_format(const char *str)
  * Checks that the config file contains vg metadata, and that it
  * we recognise the version number,
  */
-static int _check_version(struct config_tree *cf)
+static int _check_version(struct config_tree *cft)
 {
 	struct config_node *cn;
 	struct config_value *cv;
@@ -48,7 +48,7 @@ static int _check_version(struct config_tree *cf)
 	/*
 	 * Check the contents field.
 	 */
-	if (!(cn = find_config_node(cf->root, CONTENTS_FIELD, '/'))) {
+	if (!(cn = find_config_node(cft->root, CONTENTS_FIELD))) {
 		_invalid_format("missing contents field");
 		return 0;
 	}
@@ -62,7 +62,7 @@ static int _check_version(struct config_tree *cf)
 	/*
 	 * Check the version number.
 	 */
-	if (!(cn = find_config_node(cf->root, FORMAT_VERSION_FIELD, '/'))) {
+	if (!(cn = find_config_node(cft->root, FORMAT_VERSION_FIELD))) {
 		_invalid_format("missing version number");
 		return 0;
 	}
@@ -80,7 +80,7 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 {
 	struct config_value *cv;
 
-	if (!(cn = find_config_node(cn, path, '/'))) {
+	if (!(cn = find_config_node(cn, path))) {
 		log_error("Couldn't find uuid.");
 		return 0;
 	}
@@ -157,7 +157,7 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 		return 0;
 	}
 
-	if (!(cn = find_config_node(pvn, "status", '/'))) {
+	if (!(cn = find_config_node(pvn, "status"))) {
 		log_error("Couldn't find status flags for physical volume.");
 		return 0;
 	}
@@ -181,7 +181,7 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 	list_init(&pv->tags);
 
 	/* Optional tags */
-	if ((cn = find_config_node(pvn, "tags", '/')) &&
+	if ((cn = find_config_node(pvn, "tags")) &&
 	    !(read_tags(mem, &pv->tags, cn->v))) {
 		log_error("Couldn't read tags for physical volume %s in %s.",
 			  dev_name(pv->dev), vg->name);
@@ -255,7 +255,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	}
 
 	segtype = SEG_STRIPED;	/* Default */
-	if ((cn = find_config_node(sn, "type", '/'))) {
+	if ((cn = find_config_node(sn, "type"))) {
 		cv = cn->v;
 		if (!cv || !cv->v.str) {
 			log_error("Segment type must be a string.");
@@ -279,7 +279,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			return 0;
 		}
 
-		if (find_config_node(sn, "extents_moved", '/')) {
+		if (find_config_node(sn, "extents_moved")) {
 			if (_read_uint32(sn, "extents_moved", &extents_moved))
 				seg_status |= PVMOVE;
 			else {
@@ -304,7 +304,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	seg->extents_moved = extents_moved;
 
 	/* Optional tags */
-	if ((cn = find_config_node(sn, "tags", '/')) &&
+	if ((cn = find_config_node(sn, "tags")) &&
 	    !(read_tags(mem, &seg->tags, cn->v))) {
 		log_error("Couldn't read tags for a segment of %s/%s.",
 			  vg->name, lv->name);
@@ -322,13 +322,13 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 
 		log_suppress(1);
 
-		if (!(cow_name = find_config_str(sn, "cow_store", '/', NULL))) {
+		if (!(cow_name = find_config_str(sn, "cow_store", NULL))) {
 			log_suppress(0);
 			log_error("Snapshot cow storage not specified.");
 			return 0;
 		}
 
-		if (!(org_name = find_config_str(sn, "origin", '/', NULL))) {
+		if (!(org_name = find_config_str(sn, "origin", NULL))) {
 			log_suppress(0);
 			log_error("Snapshot origin not specified.");
 			return 0;
@@ -362,7 +362,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 			return 0;
 		}
 
-		if (!(cn = find_config_node(sn, "stripes", '/'))) {
+		if (!(cn = find_config_node(sn, "stripes"))) {
 			log_error("Couldn't find stripes array for segment "
 				  "'%s'.", sn->key);
 			return 0;
@@ -380,7 +380,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		}
 
 		if ((seg->type == SEG_MIRRORED) &&
-		    !(cn = find_config_node(sn, "mirrors", '/'))) {
+		    !(cn = find_config_node(sn, "mirrors"))) {
 			log_error("Couldn't find mirrors array for segment "
 				  "'%s'.", sn->key);
 			return 0;
@@ -536,7 +536,7 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 		return 0;
 	}
 
-	if (!(cn = find_config_node(lvn, "status", '/'))) {
+	if (!(cn = find_config_node(lvn, "status"))) {
 		log_error("Couldn't find status flags for logical volume.");
 		return 0;
 	}
@@ -547,7 +547,7 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 	}
 
 	lv->alloc = ALLOC_DEFAULT;
-	if ((cn = find_config_node(lvn, "allocation_policy", '/'))) {
+	if ((cn = find_config_node(lvn, "allocation_policy"))) {
 		struct config_value *cv = cn->v;
 		if (!cv || !cv->v.str) {
 			log_error("allocation_policy must be a string.");
@@ -565,7 +565,7 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 	list_init(&lv->tags);
 
 	/* Optional tags */
-	if ((cn = find_config_node(lvn, "tags", '/')) &&
+	if ((cn = find_config_node(lvn, "tags")) &&
 	    !(read_tags(mem, &lv->tags, cn->v))) {
 		log_error("Couldn't read tags for logical volume %s/%s.",
 			  vg->name, lv->name);
@@ -645,7 +645,7 @@ static int _read_sections(struct format_instance *fid,
 {
 	struct config_node *n;
 
-	if (!(n = find_config_node(vgn, section, '/'))) {
+	if (!(n = find_config_node(vgn, section))) {
 		if (!optional) {
 			log_error("Couldn't find section '%s'.", section);
 			return 0;
@@ -665,7 +665,7 @@ static int _read_sections(struct format_instance *fid,
 }
 
 static struct volume_group *_read_vg(struct format_instance *fid,
-				     struct config_tree *cf)
+				     struct config_tree *cft)
 {
 	struct config_node *vgn, *cn;
 	struct volume_group *vg;
@@ -673,7 +673,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	struct pool *mem = fid->fmt->cmd->mem;
 
 	/* skip any top-level values */
-	for (vgn = cf->root; (vgn && vgn->v); vgn = vgn->sib) ;
+	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib) ;
 
 	if (!vgn) {
 		log_error("Couldn't find volume group in file.");
@@ -702,7 +702,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
 	vgn = vgn->child;
 
-	if ((cn = find_config_node(vgn, "system_id", '/')) && cn->v) {
+	if ((cn = find_config_node(vgn, "system_id")) && cn->v) {
 		if (!cn->v->v.str) {
 			log_error("system_id must be a string");
 			goto bad;
@@ -721,7 +721,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if (!(cn = find_config_node(vgn, "status", '/'))) {
+	if (!(cn = find_config_node(vgn, "status"))) {
 		log_error("Couldn't find status flags for volume group %s.",
 			  vg->name);
 		goto bad;
@@ -778,7 +778,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	list_init(&vg->tags);
 
 	/* Optional tags */
-	if ((cn = find_config_node(vgn, "tags", '/')) &&
+	if ((cn = find_config_node(vgn, "tags")) &&
 	    !(read_tags(mem, &vg->tags, cn->v))) {
 		log_error("Couldn't read tags for volume group %s.", vg->name);
 		goto bad;
@@ -819,17 +819,17 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 }
 
 static void _read_desc(struct pool *mem,
-		       struct config_tree *cf, time_t *when, char **desc)
+		       struct config_tree *cft, time_t *when, char **desc)
 {
 	const char *d;
 	unsigned int u = 0u;
 
 	log_suppress(1);
-	d = find_config_str(cf->root, "description", '/', "");
+	d = find_config_str(cft->root, "description", "");
 	log_suppress(0);
 	*desc = pool_strdup(mem, d);
 
-	get_config_uint32(cf->root, "creation_time", '/', &u);
+	get_config_uint32(cft->root, "creation_time", &u);
 	*when = u;
 }
 
