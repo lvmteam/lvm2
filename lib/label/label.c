@@ -30,7 +30,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 	len = sizeof(*li) + strlen(name) + 1;
 
 	if (!(li = dbg_malloc(len))) {
-		log_err("Couldn't allocate memory for labeller list object.");
+		log_error("Couldn't allocate memory for labeller list object.");
 		return NULL;
 	}
 
@@ -102,7 +102,7 @@ static struct labeller *_find_labeller(struct device *dev)
 			return li->l;
 	}
 
-	log_err("Could not find label on device '%s'.", dev_name(dev));
+	log_debug("No label on device '%s'.", dev_name(dev));
 	return NULL;
 }
 
