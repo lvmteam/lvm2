@@ -10,6 +10,7 @@ VPATH = @srcdir@
 
 SOURCES=\
 	read_vg_t.c \
+	write_vg_t.c \
 	pretty_print.c \
 	get_pvs_t.c \
 	read_pv_t.c \
@@ -17,6 +18,7 @@ SOURCES=\
 
 TARGETS=\
 	read_vg_t \
+	write_vg_t \
 	get_pvs_t \
 	read_pv_t \
 	get_vgs_t
@@ -25,6 +27,10 @@ include ../../make.tmpl
 
 read_vg_t: read_vg_t.o pretty_print.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o read_vg_t read_vg_t.o pretty_print.o -L$(top_srcdir)/lib -llvm
+
+write_vg_t: write_vg_t.o pretty_print.o $(top_srcdir)/lib/liblvm.a
+	$(CC) -o write_vg_t write_vg_t.o pretty_print.o \
+	-L$(top_srcdir)/lib -llvm
 
 get_pvs_t: get_pvs_t.o pretty_print.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o get_pvs_t get_pvs_t.o pretty_print.o -L$(top_srcdir)/lib -llvm

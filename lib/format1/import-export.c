@@ -22,7 +22,13 @@ static int _check_vg_name(const char *name)
  */
 static char *_create_lv_name(struct pool *mem, const char *full_name)
 {
-	const char *ptr = strrchr(full_name, '/') + 1;
+	const char *ptr = strrchr(full_name, '/');
+
+	if (!ptr)
+		ptr = full_name;
+	else
+		ptr++;
+
 	return pool_strdup(mem, ptr);
 }
 
@@ -87,7 +93,7 @@ int import_pv(struct pool *mem, struct device *dev,
 	      struct physical_volume *pv, struct pv_disk *pvd)
 {
 	memset(pv, 0, sizeof(*pv));
-	memcpy(&pv->id, &pvd->pv_uuid, ID_LEN);
+	memcpy(&pv->id, pvd->pv_uuid, ID_LEN);
 
 	pv->dev = dev;
 	if (!(pv->vg_name = pool_strdup(mem, pvd->vg_name))) {
@@ -117,7 +123,7 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 	pvd->id[1] = 'M';
 	pvd->version = 1;
 
-	memcpy(&pvd->pv_uuid, &pv->id.uuid, ID_LEN);
+	memcpy(pvd->pv_uuid, pv->id.uuid, ID_LEN);
 
 	if (!_check_vg_name(pv->vg_name)) {
 		stack;
@@ -151,7 +157,7 @@ int import_vg(struct pool *mem,
 	      struct volume_group *vg, struct disk_list *dl)
 {
 	struct vg_disk *vgd = &dl->vg;
-	memcpy(&vg->id.uuid, &vgd->vg_uuid, ID_LEN);
+	memcpy(vg->id.uuid, vgd->vg_uuid, ID_LEN);
 
 	if (!_check_vg_name(dl->pv.vg_name)) {
 		stack;
@@ -195,7 +201,7 @@ int import_vg(struct pool *mem,
 int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 {
 	memset(vgd, 0, sizeof(*vgd));
-	memcpy(&vgd->vg_uuid, &vg->id.uuid, ID_LEN);
+	memcpy(vgd->vg_uuid, vg->id.uuid, ID_LEN);
 	//vgd->vg_number = ??;
 
 	if (vg->status &= LVM_READ)
@@ -236,7 +242,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 {
 	int len;
-	memset(&lv->id.uuid, 0, sizeof(lv->id));
+	memset(&lv->id, 0, sizeof(lv->id));
         if (!(lv->name = _create_lv_name(mem, lvd->lv_name))) {
 		stack;
 		return 0;
@@ -478,10 +484,10 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		stack;
 		return 0;
 	}
-	memset(&dl->extents, 0, len);
+	memset(dl->extents, 0, len);
 
 
-	list_for_each(tmp, &dl->lvs) {
+	list_for_each(tmp, &vg->lvs) {
 		ll = list_entry(tmp, struct lv_list, list);
 		if (!(lvdl = pool_alloc(dl->mem, sizeof(*lvdl)))) {
 			stack;
@@ -495,6 +501,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		}
 
 		list_add(&lvdl->list, &dl->lvs);
+		dl->pv.lv_cur++;
 	}
 	return 1;
 }
@@ -512,8 +519,8 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 			return 0;
 		}
 
-		memset(&ul->uuid, 0, sizeof(ul->uuid));
-		memcpy(&ul->uuid, &pvl->pv.id.uuid, ID_LEN);
+		memset(ul->uuid, 0, sizeof(ul->uuid));
+		memcpy(ul->uuid, pvl->pv.id.uuid, ID_LEN);
 
 		list_add(&ul->list, &dl->uuids);
 	}

@@ -102,8 +102,8 @@ static int _munge_formats(struct pv_disk *pvd)
 
 	switch (pvd->version) {
 	case 1:
-		pe_start = (pvd->pe_on_disk.base + pvd->pe_on_disk.size) / 
-			SECTOR_SIZE;
+		pvd->pe_start = ((pvd->pe_on_disk.base +
+				  pvd->pe_on_disk.size) / SECTOR_SIZE);
 		break;
 
 	case 2:
@@ -179,6 +179,17 @@ static int _read_uuids(struct disk_list *data)
 	return 1;
 }
 
+static int _check_lv(struct lv_disk *lvd)
+{
+	/* FIXME: add more checks */
+	if (lvd->lv_name[0] == '\0') {
+		log_debug("lv has no name");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _read_lvs(struct disk_list *data)
 {
 	int i;
@@ -193,6 +204,9 @@ static int _read_lvs(struct disk_list *data)
 			fail;
 
 		if (!_read_lv(data->dev, pos, &ll->lv))
+			fail;
+
+		if (!_check_lv(&ll->lv))
 			fail;
 
 		list_add(&ll->list, &data->lvs);
@@ -240,7 +254,7 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 	}
 
 	if (!_munge_formats(&data->pv)) {
-		log_very_verbose("Unknown metadata version %d found on %s", 
+		log_very_verbose("Unknown metadata version %d found on %s",
 			    data->pv.version, dev->name);
 		goto bad;
 	}
@@ -380,9 +394,10 @@ static int _write_extents(struct disk_list *data)
 {
 	size_t len = sizeof(struct pe_disk) * data->pv.pe_total;
 	struct pe_disk *extents = data->extents;
+	unsigned long pos = data->pv.pe_on_disk.base;
 
 	_xlate_extents(extents, data->pv.pe_total);
-	if (dev_write(data->dev, 0, len, extents) != len)
+	if (dev_write(data->dev, pos, len, extents) != len)
 		fail;
 
 	_xlate_extents(extents, data->pv.pe_total);
