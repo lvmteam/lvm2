@@ -194,8 +194,10 @@ static int _read_devs(struct dev_set *ds, const char *dir)
 		dtype = d->d_type;
 
 		if (dtype == DT_UNKNOWN) {
-			if (stat(path, &info) >= 0) {
-				if (S_ISDIR(info.st_mode))
+			if (lstat(path, &info) >= 0) {
+				if (S_ISLNK(info.st_mode))
+					dtype = DT_LNK;
+				else if (S_ISDIR(info.st_mode))
 					dtype = DT_DIR;
 				else if (S_ISREG(info.st_mode))
 					dtype = DT_REG;
