@@ -67,7 +67,7 @@ static offset_t high(struct dm_table *t, int l, int n)
 			return t->index[l][((n + 1) * KEYS_PER_NODE) - 1];
 
 		l++;
-		n = (n + 1) * (KEYS_PER_NODE + 1) - 1;
+		n = (n + 1) * CHILD_PER_NODE - 1;
 	}
 
 	return -1;
@@ -313,7 +313,7 @@ int dm_table_complete(struct dm_table *t)
 
 	/* how many indexes will the btree have ? */
 	leaf_nodes = div_up(t->num_targets, KEYS_PER_NODE);
-	t->depth = 1 + int_log(leaf_nodes, KEYS_PER_NODE + 1);
+	t->depth = 1 + int_log(leaf_nodes, CHILD_PER_NODE);
 
 	/* leaf layer has already been set up */
 	t->counts[t->depth - 1] = leaf_nodes;
@@ -321,7 +321,7 @@ int dm_table_complete(struct dm_table *t)
 
 	/* set up internal nodes, bottom-up */
 	for (i = t->depth - 2; i >= 0; i--) {
-		t->counts[i] = div_up(t->counts[i + 1], KEYS_PER_NODE + 1);
+		t->counts[i] = div_up(t->counts[i + 1], CHILD_PER_NODE);
 		t->index[i] = vmalloc(NODE_SIZE * t->counts[i]);
 		setup_btree_index(i, t);
 	}

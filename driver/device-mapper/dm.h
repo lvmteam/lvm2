@@ -134,6 +134,7 @@
 #define MAX_DEPTH 16
 #define NODE_SIZE L1_CACHE_BYTES
 #define KEYS_PER_NODE (NODE_SIZE / sizeof(offset_t))
+#define CHILD_PER_NODE (KEYS_PER_NODE + 1)
 #define DM_NAME_LEN 64
 
 enum {
