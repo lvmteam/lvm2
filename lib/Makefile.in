@@ -8,10 +8,16 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
+ifeq ("@LVM1@", "shared")
+  SUBDIRS = format1
+endif
+
 SOURCES=\
 	activate/activate.c \
 	activate/dev_manager.c \
 	activate/fs.c \
+	cache/cache.c \
+	commands/toolcontext.c \
 	config/config.c \
 	datastruct/bitset.c \
 	datastruct/btree.c \
@@ -24,20 +30,14 @@ SOURCES=\
 	filters/filter-persistent.c \
 	filters/filter-regex.c \
 	filters/filter.c \
-	format1/disk-rep.c \
-	format1/format1.c \
-	format1/import-export.c \
-	format1/import-extents.c \
-	format1/layout.c \
-	format1/lvm1_label.c \
-	format1/vg_number.c \
 	format_text/archive.c \
 	format_text/export.c \
 	format_text/flags.c \
 	format_text/format-text.c \
 	format_text/import.c \
+	format_text/import_vsn1.c \
+	format_text/text_label.c \
 	label/label.c \
-	label/uuid-map.c \
 	locking/external_locking.c \
 	locking/file_locking.c \
 	locking/locking.c \
@@ -48,14 +48,26 @@ SOURCES=\
 	metadata/metadata.c \
 	metadata/pv_map.c \
 	metadata/snapshot_manip.c \
+	misc/crc.c \
 	misc/lvm-file.c \
+	misc/sharedlib.c \
 	mm/dbg_malloc.c \
 	mm/pool.c \
 	regex/matcher.c \
 	regex/parse_rx.c \
 	regex/ttree.c \
-	uuid/uuid.c \
-	vgcache/vgcache.c
+	uuid/uuid.c 
+
+ifeq ("@LVM1@", "internal")
+  SOURCES+=\
+	format1/disk-rep.c \
+	format1/format1.c \
+	format1/import-export.c \
+	format1/import-extents.c \
+	format1/layout.c \
+	format1/lvm1-label.c \
+	format1/vg_number.c
+endif
 
 TARGETS=liblvm.a
 

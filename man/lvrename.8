@@ -5,7 +5,9 @@ lvrename \- rename a logical volume
 .B lvrename
 .RB [ \-A | \-\-autobackup " {" y | n }]
 .RB [ \-d | \-\-debug ]
+.RB [ \-f | \-\-force ]
 .RB [ \-h | \-\-help ]
+.RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
 .TP
@@ -20,11 +22,6 @@ to
 .IR NewLogicalVolume { Name | Path }.
 .SH OPTIONS
 See \fBlvm\fP for common options.
-.TP
-.BR \-A ", " \-\-autobackup " {" y | n }
-Controls automatic backup of VG metadata after the change (see
-.BR vgcfgbackup (8)).
-Default is yes.
 .SH EXAMPLE
 To rename
 .B lvold

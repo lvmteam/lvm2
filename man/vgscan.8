@@ -3,7 +3,10 @@
 vgscan \- scan all disks for volume groups and rebuild caches
 .SH SYNOPSIS
 .B vgscan
-[\-d/\-\-debug] [\-h/\-?/\-\-help] [\-v/\-\-verbose]
+[\-d/\-\-debug] [\-h/\-?/\-\-help] 
+[\-\-ignorelockingfailure]
+[\-P/\-\-partial]
+[\-v/\-\-verbose]
 .SH DESCRIPTION
 vgscan scans all SCSI, (E)IDE disks, multiple devices and a bunch
 of other disk devices in the system looking for LVM physical volumes

@@ -18,6 +18,21 @@
  *
  */
 
+/***********  Replace with script?
+xx(e2fsadm,
+   "Resize logical volume and ext2 filesystem",
+   "e2fsadm "
+   "[-d|--debug] " "[-h|--help] " "[-n|--nofsck]" "\n"
+   "\t{[-l|--extents] [+|-]LogicalExtentsNumber |" "\n"
+   "\t [-L|--size] [+|-]LogicalVolumeSize[kKmMgGtT]}" "\n"
+   "\t[-t|--test] "  "\n"
+   "\t[-v|--verbose] "  "\n"
+   "\t[--version] " "\n"
+   "\tLogicalVolumePath" "\n",
+
+    extents_ARG, size_ARG, nofsck_ARG, test_ARG)
+*********/
+
 xx(help,
    "Display help for commands",
    "help <command>" "\n")
@@ -40,6 +55,7 @@ xx(lvchange,
    "\t[-C/--contiguous y/n]\n"
    "\t[-d/--debug]\n"
    "\t[-h/-?/--help]\n"
+   "\t[--ignorelockingfailure]\n"
    "\t[-M/--persistent y/n] [--minor minor]\n"
    "\t[-P/--partial] " "\n"
    "\t[-p/--permission r/rw]\n"
@@ -84,14 +100,14 @@ xx(lvdisplay,
    "lvdisplay\n"
    "\t[-c/--colon]\n"
    "\t[-d/--debug]\n"
-   "\t[-D/--disk]\n"
    "\t[-h/-?/--help]\n"
    "\t[-m/--maps]\n"
    "\t[-P/--partial] " "\n"
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
-    colon_ARG, disk_ARG, maps_ARG, partial_ARG, ignorelockingfailure_ARG)
+    colon_ARG, disk_ARG, maps_ARG, partial_ARG,
+    ignorelockingfailure_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -106,8 +122,8 @@ xx(lvextend,
    "\t[-v/--verbose]\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG, stripesize_ARG,
-   test_ARG)
+   autobackup_ARG, extents_ARG, size_ARG, stripes_ARG,
+   stripesize_ARG, test_ARG)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
@@ -212,7 +228,6 @@ xx(lvscan,
    "lvscan " "\n"
    "\t[-b|--blockdevice] " "\n"
    "\t[-d|--debug] " "\n"
-   "\t[-D|--disk]" "\n"
    "\t[-h|--help] " "\n"
    "\t[-P|--partial] " "\n"
    "\t[-v|--verbose] " "\n"
@@ -237,18 +252,25 @@ xx(pvchange,
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
    "pvcreate " "\n"
+   "\t[--restorefile file]\n"
    "\t[-d|--debug]" "\n"
    "\t[-f[f]|--force [--force]] " "\n"
    "\t[-h|--help] " "\n"
-   "\t[-y|--yes]" "\n"
-   "\t[-s|--size PhysicalVolumeSize[kKmMgGtT]" "\n"
+   "\t[--labelsector sector] " "\n"
+   "\t[-M|--metadatatype 1|2]" "\n"
+   "\t[--metadatacopies #copies]" "\n"
+   "\t[--metadatasize MetadataSize[kKmMgGtT]]" "\n"
+   "\t[--setphysicalvolumesize PhysicalVolumeSize[kKmMgGtT]" "\n"
    "\t[-t|--test] " "\n"
    "\t[-u|--uuid uuid] " "\n"
    "\t[-v|--verbose] " "\n"
+   "\t[-y|--yes]" "\n"
    "\t[--version] " "\n"
    "\tPhysicalVolume [PhysicalVolume...]\n",
 
-   force_ARG, test_ARG, physicalvolumesize_ARG, uuidstr_ARG, yes_ARG)
+   force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
+   metadatasize_ARG, physicalvolumesize_ARG, restorefile_ARG, uuidstr_ARG,
+   yes_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
@@ -297,9 +319,26 @@ xx(pvmove,
 
    autobackup_ARG, force_ARG,  name_ARG, test_ARG)
 
+xx(pvremove,
+   "Remove LVM label(s) from physical volume(s)",
+   "pvremove " "\n"
+   "\t[-d|--debug]" "\n"
+   "\t[-f[f]|--force [--force]] " "\n"
+   "\t[-h|--help] " "\n"
+   "\t[-y|--yes]" "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[-y|--yes]" "\n"
+   "\t[--version] " "\n"
+   "\tPhysicalVolume [PhysicalVolume...]\n",
+
+   force_ARG, test_ARG, yes_ARG)
+
 xx(pvresize,
    "Resize a physical volume in use by a volume group",
-   "pvmove "
+   "Not implemented.  Use pvcreate options.",
+/***
+   "pvresize "
    "[-A|--autobackup {y|n}] "
    "[-d|--debug] "
    "[-h|--help]\n\t"
@@ -307,7 +346,7 @@ xx(pvresize,
    "[-v|--verbose] "
    "[--version]\n\t"
    "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
-
+***/
    autobackup_ARG, physicalvolumesize_ARG)
 
 xx(pvscan,
@@ -343,6 +382,7 @@ xx(vgcfgrestore,
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
    "\t[-l[l]|--list [--list]]" "\n"
+   "\t[-M|--metadatatype 1|2]" "\n"
    "\t[-n|--name VolumeGroupName] " "\n"
    "\t[-h|--help]" "\n"
    "\t[-t|--test] " "\n"
@@ -350,7 +390,7 @@ xx(vgcfgrestore,
    "\t[--version] " "\n"
    "\tVolumeGroupName",
 
-   file_ARG, list_ARG, name_ARG, test_ARG)
+   file_ARG, list_ARG, metadatatype_ARG, name_ARG, test_ARG)
 
 xx(vgchange,
    "Change volume group attributes",
@@ -379,6 +419,23 @@ xx(vgck,
    "\t[-v/--verbose]\n"
    "\t[VolumeGroupName...]\n" )
 
+xx(vgconvert,
+   "Change volume group metadata format",
+   "vgconvert  " "\n"
+   "\t[-d|--debug]" "\n"
+   "\t[-h|--help] " "\n"
+   "\t[--labelsector sector] " "\n"
+   "\t[-M|--metadatatype 1|2]" "\n"
+   "\t[--metadatacopies #copies]" "\n"
+   "\t[--metadatasize MetadataSize[kKmMgGtT]]" "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version] " "\n"
+   "\tVolumeGroupName [VolumeGroupName...]\n",
+
+   force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
+   metadatasize_ARG )
+
 xx(vgcreate,
    "Create a volume group",
    "vgcreate" "\n"
@@ -386,7 +443,7 @@ xx(vgcreate,
    "\t[-d|--debug]" "\n"
    "\t[-h|--help]" "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
-   "\t[-M|--metadatatype lvm1/text] " "\n"
+   "\t[-M|--metadatatype 1|2] " "\n"
    "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
    "\t[-s|--physicalextentsize PhysicalExtentSize[kKmMgGtT]] " "\n"
    "\t[-t|--test] " "\n"
@@ -403,6 +460,7 @@ xx(vgdisplay,
    "\t[-c|--colon | -s|--short | -v|--verbose]" "\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
+   "\t[--ignorelockingfailure]" "\n"
    "\t[-P|--partial] " "\n"
    "\t[-A|--activevolumegroups | [-D|--disk]" "\n"
    "\t[--version]" "\n"
@@ -499,7 +557,6 @@ xx(vgrename,
    "vgrename\n"
    "\t[-A/--autobackup y/n]\n"
    "\t[-d/--debug]\n"
-   "\t[-f/--force]\n"
    "\t[-h/-?/--help]\n"
    "\t[-t/--test]\n"
    "\t[-v/--verbose]\n"
@@ -524,7 +581,7 @@ xx(vgsplit,
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[-l|--list]" "\n"
-   "\t[-M|--metadatatype lvm1/text] " "\n"
+   "\t[-M|--metadatatype 1|2] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"

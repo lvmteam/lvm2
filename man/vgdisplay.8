@@ -6,8 +6,9 @@ vgdisplay \- display attributes of volume groups
 .RB [ \-A | \-\-activevolumegroups ]
 .RB [ \-c | \-\-colon ]
 .RB [ \-d | \-\-debug ]
-.RB [ \-D | \-\-disk ]
 .RB [ \-h | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-P | \-\-partial ]
 .RB [ \-s | \-\-short ]
 .RB [ \-v [ v ]| \-\-verbose " [" \-\-verbose ]]
 .RB [ \-\-version ]
@@ -49,11 +50,6 @@ The values are:
 17 uuid of volume group
 
 .fi
-.TP
-.BR \-D ", " \-\-disk
-Show attributes from the volume group descriptor area on disk(s).
-Without this switch they are shown from the kernel.
-Useful if the volume group isn't activated.
 .TP
 .BR \-s ", " \-\-short
 Give a short listing showing the existence of volume groups.

@@ -5,8 +5,9 @@ lvscan \- scan (all disks) for logical volumes
 .B lvscan
 .RB [ \-b | \-\-blockdevice ]
 .RB [ \-d | \-\-debug ]
-.RB [ \-D | \-\-disk ]
 .RB [ \-h | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-P | \-\-partial ]
 .RB [ \-v | \-\-verbose ]
 .SH DESCRIPTION
 .B lvscan
@@ -18,10 +19,6 @@ See \fBlvm\fP for common options.
 .BR \-b ", " \-\-blockdevice
 Adds the device major and minor numbers to the display
 of each logical volume.
-.TP
-.BR \-D ", " \-\-disk
-Scan for logical volumes on disk(s) instead of getting the information
-from the kernel.
 .SH SEE ALSO
 .BR lvm (8), 
 .BR lvcreate (8),

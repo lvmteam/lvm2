@@ -1,0 +1,86 @@
+Mondy 18th November 2002
+========================
+
+The new format of LVM metadata is ready for you to test!
+  We expect it to be more efficient and more robust than the original format.
+  It's more compact and supports transactional changes and replication.
+  Should things go wrong on a system, it's human-readable (and editable).
+
+Please report any problems you find to the mailing list, 
+linux-lvm@sistina.com.  The software has NOT yet been thoroughly
+tested and so quite possibly there'll still be some bugs in it.
+Be aware of the disclaimer in the COPYING file.
+
+While testing, we recommend turning logging on in the configuration file 
+to provide us with diagnostic information:
+  log {
+        file="/tmp/lvm2.log"
+	level=6
+  }
+
+You should schedule regular backups of your configuration file and
+metadata backups and archives (normally kept under /etc/lvm).
+
+Please read docs/example.conf and "man lvm.conf" to find out more about 
+the configuration file.
+
+To convert an existing volume group called vg1 to the new format using
+the default settings, use "vgconvert -M2 vg1".  See "man vgconvert".
+
+-M (or --metadatatype in its long form) is a new flag to indicate which
+format of metadata the command should use for anything it creates.
+Currently, the valid types are "lvm1" and "lvm2" and they can be
+abbreviated to "1" and "2" respectively.  The default value for this
+flag can be changed in the global section in the config file.
+
+Backwards-compatible support for the original LVM1 metadata format is
+maintained, but it can be moved into a shared library or removed
+completely with configure's --with-lvm1 option.
+
+Under LVM2, the basic unit of metadata is the volume group.  Different
+volume groups can use different formats of metadata - vg1 could use
+the original LVM1 format while vg2 used the new format - but you can't
+mix formats within a volume group.  So to add a PV to an LVM2-format
+volume group you must run "pvcreate -M2" on it, followed by "vgextend".
+
+With LVM2-format metadata, lvextend will let you specify striping
+parameters.  So an LV could consist of two or more "segments" - the
+first segment could have 3 stripes while the second segment has just 2.
+
+LVM2 maintains a backup of the current metadata for each volume group
+in /etc/lvm/backup, and puts copies of previous versions in
+/etc/lvm/archive.  "vgcfgbackup" and "vgcfgrestore" can be used to
+create and restore from these files.  If you fully understand what 
+you're doing, metadata can be changed by editing a copy of a current
+backup file and using vgcfgrestore to reload it.
+
+Please read the pvcreate man page for more information on the new
+format for metadata.
+
+All tools that can change things have a --test flag which can be used
+to check the effect  of a set of cmdline args without really making the
+changes.
+
+
+What's not finished?
+====================
+The internal cache.  If you turn on debugging output you'll see lots of
+repeated disk reads, many of which will eventually get optimised out.
+
+--test sometimes causes a command to fail (e.g. vgconvert --test) even 
+though the real command would work: again, fixing this is waiting for 
+the work on the cache.
+
+Several of the tools do not yet contain the logic to handle full
+recovery: combinations of pvcreate and vgcfgrestore may sometimes be
+needed to restore metadata if a tool gets interrupted or crashes or
+finds something unexpected.  This applies particularly to tools that
+work on more than one volume group at once (e.g. vgsplit).
+
+Display output.  Some metadata information cannot yet be displayed.
+Work has started on new display tools.
+
+Recovery tools to salvage "lost" metadata directly from the disks:
+but we hope the new format will mean such tools are hardly ever needed!
+
+

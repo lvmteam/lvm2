@@ -4,9 +4,9 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "format-text.h"
 
-#include "log.h"
 #include "pool.h"
 #include "config.h"
 #include "hash.h"
@@ -17,7 +17,6 @@
 
 #include <dirent.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
@@ -52,7 +51,7 @@ struct archive_file {
  * Extract vg name and version number from a filename.
  */
 static int _split_vg(const char *filename, char *vg, size_t vg_size,
-		     uint32_t * index)
+		     uint32_t *index)
 {
 	int len, vg_len;
 	char *dot, *underscore;
@@ -202,7 +201,7 @@ static void _remove_expired(struct list *archives, uint32_t archives_size,
 		return;
 
 	/* Convert retain_days into the time after which we must retain */
-	retain_time = time(NULL) - (time_t) retain_days * SECS_PER_DAY;
+	retain_time = time(NULL) - (time_t) retain_days *SECS_PER_DAY;
 
 	/* Assume list is ordered oldest first (by index) */
 	list_iterate(bh, archives) {
@@ -252,7 +251,7 @@ int archive_vg(struct volume_group *vg,
 		return 0;
 	}
 
-	if (!text_vg_export(fp, vg, desc)) {
+	if (!text_vg_export_file(vg, desc, fp)) {
 		stack;
 		fclose(fp);
 		return 0;
@@ -297,8 +296,7 @@ int archive_vg(struct volume_group *vg,
 	return 1;
 }
 
-static void _display_archive(struct cmd_context *cmd, struct uuid_map *um,
-			     struct archive_file *af)
+static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 {
 	struct volume_group *vg = NULL;
 	struct format_instance *tf;
@@ -308,8 +306,9 @@ static void _display_archive(struct cmd_context *cmd, struct uuid_map *um,
 
 	log_print("path:\t\t%s", af->path);
 
-	if (!(context = create_text_context(cmd->fmtt, af->path, NULL)) ||
-	    !(tf = cmd->fmtt->ops->create_instance(cmd->fmtt, NULL, context))) {
+	if (!(context = create_text_context(cmd, af->path, NULL)) ||
+	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
+							 context))) {
 		log_error("Couldn't create text instance object.");
 		return;
 	}
@@ -319,7 +318,7 @@ static void _display_archive(struct cmd_context *cmd, struct uuid_map *um,
 	 * retrieve the archive time and description.
 	 */
 	/* FIXME Use variation on _vg_read */
-	if (!(vg = text_vg_import(tf, af->path, um, &when, &desc))) {
+	if (!(vg = text_vg_import_file(tf, af->path, &when, &desc))) {
 		log_print("Unable to read archive file.");
 		tf->fmt->ops->destroy_instance(tf);
 		return;
@@ -332,8 +331,7 @@ static void _display_archive(struct cmd_context *cmd, struct uuid_map *um,
 	tf->fmt->ops->destroy_instance(tf);
 }
 
-int archive_list(struct cmd_context *cmd, struct uuid_map *um,
-		 const char *dir, const char *vg)
+int archive_list(struct cmd_context *cmd, const char *dir, const char *vg)
 {
 	struct list *archives, *ah;
 	struct archive_file *af;
@@ -349,7 +347,7 @@ int archive_list(struct cmd_context *cmd, struct uuid_map *um,
 	list_iterate(ah, archives) {
 		af = list_item(ah, struct archive_file);
 
-		_display_archive(cmd, um, af);
+		_display_archive(cmd, af);
 		log_print(" ");
 	}
 

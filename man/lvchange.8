@@ -5,17 +5,16 @@ lvchange \- change attributes of a logical volume
 .B lvchange
 [\-A/\-\-autobackup y/n] [\-a/\-\-available y/n]
 [\-C/\-\-contiguous y/n] [\-d/\-\-debug] [\-h/\-?/\-\-help]
+[\-\-ignorelockingfailure]
+[\-M/\-\-persistent y/n] [\-\-minor minor]
+[\-P/\-\-partial y/n]
 [\-p/\-\-permission r/w] [\-r/\-\-readahead ReadAheadSectors]
+[\-t/\-\-test]
 [\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
 .SH DESCRIPTION
 lvchange allows you to change the attributes of a logical volume.
 .SH OPTIONS
 See \fBlvm\fP for common options.
-.TP
-.I \-A, \-\-autobackup y/n
-Controls automatic backup of VG metadata after the change ( see
-.B vgcfgbackup(8)
-). Default is yes.
 .TP
 .I \-a, \-\-available y/n
 Controls the availability of the logical volumes for use.
@@ -25,18 +24,25 @@ This is (among others) useful for changing the logical volume's name
 ) safely.
 .TP
 .I \-C, \-\-contiguous y/n
-Tries to set or resets the contiguous allocation policy for
+Tries to set or reset the contiguous allocation policy for
 logical volumes. It's only possible to change a non-contiguous
 logical volume's allocation policy to contiguous, if all of the
 allocated physical extents are already contiguous.
+.TP
+.I \-\-minor minor
+Set the minor number.
+.TP
+.I \-M, \-\-persistent y/n
+Set to y to make the minor number specified persistent.
 .TP
 .I \-p, \-\-permission r/w
 Change access permission to read-only or read/write.
 .TP
 .I \-r, \-\-readahead ReadAheadSectors
 Change read ahead sector count per logical between 2 and 120.
+Not used by device-mapper.
 .SH Examples
-"lvchange -x n /dev/vg00/lvol1" prevents the allocation of any physical
+"lvchange -x n vg00/lvol1" prevents the allocation of any physical
 extents on logical volume lvol1 in volume group vg00.
 .SH SEE ALSO
 .BR lvm (8), 

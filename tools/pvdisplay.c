@@ -20,44 +20,8 @@
 
 #include "tools.h"
 
-void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv);
-
-int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
-{
-	int opt = 0;
-
-	struct list *pvh, *pvs;
-	struct physical_volume *pv;
-
-	if (arg_count(cmd, colon_ARG) && arg_count(cmd, maps_ARG)) {
-		log_error("Option -v not allowed with option -c");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (argc) {
-		log_very_verbose("Using physical volume(s) on command line");
-
-		for (; opt < argc; opt++) {
-			if (!(pv = pv_read(cmd, argv[opt]))) {
-				log_error("Failed to read physical "
-					  "volume \"%s\"", argv[opt]);
-				continue;
-			}
-			pvdisplay_single(cmd, pv);
-		}
-	} else {
-		log_verbose("Scanning for physical volume names");
-		if (!(pvs = get_pvs(cmd)))
-			return ECMD_FAILED;
-
-		list_iterate(pvh, pvs)
-		    pvdisplay_single(cmd, list_item(pvh, struct pv_list)->pv);
-	}
-
-	return 0;
-}
-
-void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv)
+void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv,
+		      void *handle)
 {
 	char *sz;
 	uint64_t size;
@@ -80,50 +44,57 @@ void pvdisplay_single(struct cmd_context *cmd, struct physical_volume *pv)
 		log_print("Physical volume \"%s\" of volume group \"%s\" "
 			  "is exported", pv_name, pv->vg_name);
 
-/********* FIXME
-        log_error("no physical volume identifier on \"%s\"" , pv_name);
-*********/
-
 	if (!pv->vg_name) {
 		log_print("\"%s\" is a new physical volume of \"%s\"",
 			  pv_name, (sz = display_size(size / 2, SIZE_SHORT)));
 		dbg_free(sz);
 	}
 
-/* FIXME: Check active - no point?
-      log_very_verbose("checking physical volume activity" );
-         pv_check_active ( pv->vg_name, pv->pv_name)
-         pv_status  ( pv->vg_name, pv->pv_name, &pv)
-*/
-
-/* FIXME: Check consistency - do this when reading metadata BUT trigger mesgs
-      log_very_verbose("checking physical volume consistency" );
-      ret = pv_check_consistency (pv)
-*/
-
 	if (arg_count(cmd, colon_ARG)) {
 		pvdisplay_colons(pv);
 		return;
 	}
 
-	pvdisplay_full(pv);
+	pvdisplay_full(pv, handle);
 
 	if (!arg_count(cmd, maps_ARG))
 		return;
 
-/******* FIXME
-	if (pv->pe_alloc_count) {
-		if (!(pv->pe = pv_read_pe(pv_name, pv)))
-			goto pvdisplay_device_out;
-		if (!(lvs = pv_read_lvs(pv))) {
-			log_error("Failed to read LVs on \"%s\"", pv->pv_name);
-			goto pvdisplay_device_out;
-		}
-		pv_display_pe_text(pv, pv->pe, lvs);
-	} else
-		log_print("no logical volume on physical volume \"%s\"",
-			  pv_name);
-**********/
-
 	return;
+}
+
+int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
+{
+	int opt = 0;
+
+	struct list *pvh, *pvs;
+	struct physical_volume *pv;
+
+	if (arg_count(cmd, colon_ARG) && arg_count(cmd, maps_ARG)) {
+		log_error("Option -v not allowed with option -c");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (argc) {
+		log_very_verbose("Using physical volume(s) on command line");
+
+		for (; opt < argc; opt++) {
+			if (!(pv = pv_read(cmd, argv[opt], NULL, NULL))) {
+				log_error("Failed to read physical "
+					  "volume \"%s\"", argv[opt]);
+				continue;
+			}
+			pvdisplay_single(cmd, pv, NULL);
+		}
+	} else {
+		log_verbose("Scanning for physical volume names");
+		if (!(pvs = get_pvs(cmd)))
+			return ECMD_FAILED;
+
+		list_iterate(pvh, pvs)
+		    pvdisplay_single(cmd, list_item(pvh, struct pv_list)->pv,
+				     NULL);
+	}
+
+	return 0;
 }

@@ -20,11 +20,6 @@
 
 #include "tools.h"
 
-static int vgchange_single(struct cmd_context *cmd, const char *vg_name);
-void vgchange_available(struct cmd_context *cmd, struct volume_group *vg);
-void vgchange_resizeable(struct cmd_context *cmd, struct volume_group *vg);
-void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg);
-
 static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			       struct volume_group *vg, int lock)
 {
@@ -46,72 +41,6 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	}
 
 	return count;
-}
-
-int vgchange(struct cmd_context *cmd, int argc, char **argv)
-{
-	if (!
-	    (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
-	     arg_count(cmd, resizeable_ARG))) {
-		log_error("One of -a, -l or -x options required");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
-	    arg_count(cmd, resizeable_ARG) > 1) {
-		log_error("Only one of -a, -l or -x options allowed");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_count(cmd, ignorelockingfailure_ARG) &&
-	    !arg_count(cmd, available_ARG)) {
-		log_error("--ignorelockingfailure only available with -a");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (arg_count(cmd, available_ARG) == 1
-	    && arg_count(cmd, autobackup_ARG)) {
-		log_error("-A option not necessary with -a option");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;
-
-	return process_each_vg(cmd, argc, argv,
-			       (arg_count(cmd, available_ARG)) ?
-			       LCK_VG_READ : LCK_VG_WRITE, &vgchange_single);
-}
-
-static int vgchange_single(struct cmd_context *cmd, const char *vg_name)
-{
-	struct volume_group *vg;
-
-	if (!(vg = vg_read(cmd, vg_name))) {
-		log_error("Unable to find volume group \"%s\"", vg_name);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg->status & LVM_WRITE) && !arg_count(cmd, available_ARG)) {
-		log_error("Volume group \"%s\" is read-only", vg->name);
-		return ECMD_FAILED;
-	}
-
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg_name);
-		return ECMD_FAILED;
-	}
-
-	if (arg_count(cmd, available_ARG))
-		vgchange_available(cmd, vg);
-
-	if (arg_count(cmd, resizeable_ARG))
-		vgchange_resizeable(cmd, vg);
-
-	if (arg_count(cmd, logicalvolume_ARG))
-		vgchange_logicalvolume(cmd, vg);
-
-	return 0;
 }
 
 void vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
@@ -207,4 +136,75 @@ void vgchange_logicalvolume(struct cmd_context *cmd, struct volume_group *vg)
 	log_print("Volume group \"%s\" successfully changed", vg->name);
 
 	return;
+}
+
+static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
+			   struct volume_group *vg, int consistent,
+			   void *handle)
+{
+	if (!vg) {
+		log_error("Unable to find volume group \"%s\"", vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (!consistent) {
+		unlock_vg(cmd, vg_name);
+		log_error("Volume group \"%s\" inconsistent", vg_name);
+		if (!(vg = recover_vg(cmd, vg_name, LCK_VG_WRITE)))
+			return ECMD_FAILED;
+	}
+
+	if (!(vg->status & LVM_WRITE) && !arg_count(cmd, available_ARG)) {
+		log_error("Volume group \"%s\" is read-only", vg->name);
+		return ECMD_FAILED;
+	}
+
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (arg_count(cmd, available_ARG))
+		vgchange_available(cmd, vg);
+
+	if (arg_count(cmd, resizeable_ARG))
+		vgchange_resizeable(cmd, vg);
+
+	if (arg_count(cmd, logicalvolume_ARG))
+		vgchange_logicalvolume(cmd, vg);
+
+	return 0;
+}
+
+int vgchange(struct cmd_context *cmd, int argc, char **argv)
+{
+	if (!
+	    (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
+	     arg_count(cmd, resizeable_ARG))) {
+		log_error("One of -a, -l or -x options required");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
+	    arg_count(cmd, resizeable_ARG) > 1) {
+		log_error("Only one of -a, -l or -x options allowed");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, ignorelockingfailure_ARG) &&
+	    !arg_count(cmd, available_ARG)) {
+		log_error("--ignorelockingfailure only available with -a");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, available_ARG) == 1
+	    && arg_count(cmd, autobackup_ARG)) {
+		log_error("-A option not necessary with -a option");
+		return EINVALID_CMD_LINE;
+	}
+
+	return process_each_vg(cmd, argc, argv,
+			       (arg_count(cmd, available_ARG)) ?
+			       LCK_VG_READ : LCK_VG_WRITE, 0, NULL,
+			       &vgchange_single);
 }

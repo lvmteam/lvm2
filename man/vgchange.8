@@ -3,14 +3,17 @@
 vgchange \- change attributes of a volume group
 .SH SYNOPSIS
 .B vgchange
-.RB [ \-A | \-\-autobackup " {" y | n }]
+.RB [\-A | \-\-autobackup " {" y | n }]
 .RB [\-a | \-\-available " {" y | n }]
 .RB [\-d | \-\-debug]
-.RB [ \-h | \-\-help]
+.RB [\-h | \-\-help]
+.RB [\-\-ignorelockingfailure]
 .RB [\-l | \-\-logicalvolume
 .IR MaxLogicalVolumes ]
-.RB [ \-v | \-\-verbose ]
-.RB [ \-\-version ]
+.RB [\-P | \-\-partial]
+.RB [-t | \-\-test]
+.RB [\-v | \-\-verbose]
+.RB [\-\-version ]
 .RB [\-x | \-\-resizeable " {" y | n }]
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION
@@ -20,12 +23,13 @@ Its main purpose is to activate and deactivate
 .IR VolumeGroupName ,
 or all volume groups if none is specified.  Only active volume groups
 are subject to changes and allow access to their logical volumes.
-During volume group activation, if
+[Not yet implemented: During volume group activation, if
 .B vgchange
 recognizes snapshot logical volumes which were dropped because they ran
 out of space, it displays a message informing the administrator that such
 snapshots should be removed (see
 .BR lvremove (8)).
+]
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP

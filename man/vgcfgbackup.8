@@ -4,17 +4,19 @@ vgcfgbackup \- backup volume group descriptor area
 .SH SYNOPSIS
 .B vgcfgbackup
 .RB [ \-d | \-\-debug ]
+.RB [ \-f | \-\-file " filename" ]
 .RB [ \-h | \-\-help ]
+.RB [ \-\-ignorelockingfailure ]
+.RB [ \-P | \-\-partial ]
 .RB [ \-v | \-\-verbose ]
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 .B vgcfgbackup
 allows you to backup the metadata 
-of one to all volume groups to files in
-.IR /etc/lvm .
-If you don't give any volume groups in the command line, all of them 
+of your volume groups.
+If you don't name any volume groups pn the command line, all of them 
 will be backed up.  This DOESN'T backup user/system data in logical
-volume(s)! 
+volume(s)!  Backup /etc/lvm regularly too.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .SH SEE ALSO

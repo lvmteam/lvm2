@@ -24,6 +24,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *dev_dir;
 	int length;
+	int consistent = 1;
 
 	char *vg_name_old, *vg_name_new;
 
@@ -56,7 +57,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!is_valid_chars(vg_name_new)) {
+	if (!validate_vgname(vg_name_new)) {
 		log_error("New volume group name \"%s\" has invalid characters",
 			  vg_name_new);
 		return ECMD_FAILED;
@@ -67,9 +68,6 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!driver_is_loaded())
-		return ECMD_FAILED;     
-
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 
 	if (!lock_vol(cmd, vg_name_old, LCK_VG_WRITE)) {
@@ -77,7 +75,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_old = vg_read(cmd, vg_name_old))) {
+	if (!(vg_old = vg_read(cmd, vg_name_old, &consistent)) || !consistent) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
 		unlock_vg(cmd, vg_name_old);
 		return ECMD_FAILED;
@@ -115,7 +113,8 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((vg_new = vg_read(cmd, vg_name_new))) {
+	consistent = 0;
+	if ((vg_new = vg_read(cmd, vg_name_new, &consistent))) {
 		log_error("New volume group \"%s\" already exists",
 			  vg_name_new);
 		goto error;
@@ -133,18 +132,14 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		       vg_name_new);
 	}
 
-/********** FIXME: Check within vg_write now
-			log_error("A new logical volume path exceeds "
-				  "maximum of %d!", NAME_LEN - 2);
-			goto error;
-*************/
-
 	sprintf(old_path, "%s%s", dev_dir, vg_name_old);
 	sprintf(new_path, "%s%s", dev_dir, vg_name_new);
 
 	if (dir_exists(old_path)) {
 		log_verbose("Renaming \"%s\" to \"%s\"", old_path, new_path);
-		if (rename(old_path, new_path)) {
+		if (test_mode())
+			log_verbose("Test mode: Skipping rename.");
+		else if (rename(old_path, new_path)) {
 			log_error("Renaming \"%s\" to \"%s\" failed: %s",
 				  old_path, new_path, strerror(errno));
 			goto error;
@@ -175,19 +170,3 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	return ECMD_FAILED;
 }
 
-/* FIXME: Moved into vg_write now */
-/*******************
-char *lv_change_vgname(char *vg_name, char *lv_name)
-{
-	char *lv_name_ptr = NULL;
-	static char lv_name_buf[NAME_LEN] = { 0, };
-
-	** check if lv_name includes a path 
-	if ((lv_name_ptr = strrchr(lv_name, '/'))) {
-	    lv_name_ptr++;
-	    sprintf(lv_name_buf, "%s%s/%s%c", cmd->dev_dir, vg_name,
-		    lv_name_ptr, 0);} 
-	else
-	    strncpy(lv_name_buf, lv_name, NAME_LEN - 1); return lv_name_buf;}
-
-**********************/

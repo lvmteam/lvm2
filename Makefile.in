@@ -23,7 +23,8 @@ VPATH = @srcdir@
 SUBDIRS = include man lib tools
 
 ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS += test/mm test/device test/format1 test/regex test/filters
+  SUBDIRS += lib/format1 \
+	     test/mm test/device test/format1 test/regex test/filters
 endif
 
 include make.tmpl

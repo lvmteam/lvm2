@@ -20,20 +20,15 @@
 
 #include "tools.h"
 
-static int vgck_single(struct cmd_context *cmd, const char *vg_name);
-
-int vgck(struct cmd_context *cmd, int argc, char **argv)
+static int vgck_single(struct cmd_context *cmd, const char *vg_name,
+		       struct volume_group *vg, int consistent, void *handle)
 {
-	return process_each_vg(cmd, argc, argv, LCK_VG_READ, &vgck_single);
-}
+	if (!consistent) {
+		log_error("Volume group \"%s\" inconsistent", vg_name);
+		return ECMD_FAILED;
+	}
 
-static int vgck_single(struct cmd_context *cmd, const char *vg_name)
-{
-	struct volume_group *vg;
-
-	log_verbose("Checking volume group \"%s\"", vg_name);
-
-	if (!(vg = vg_read(cmd, vg_name))) {
+	if (!vg) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		return ECMD_FAILED;
 	}
@@ -43,12 +38,12 @@ static int vgck_single(struct cmd_context *cmd, const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-/******* FIXME Must be caught and logged by vg_read
-	log_error("not all physical volumes of volume group \"%s\" online",
-	log_error("volume group \"%s\" has physical volumes with ",
-		  "invalid version",
-********/
-
 	/* FIXME: free */
 	return 0;
+}
+
+int vgck(struct cmd_context *cmd, int argc, char **argv)
+{
+	return process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
+			       &vgck_single);
 }

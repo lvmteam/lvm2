@@ -20,38 +20,15 @@
 
 #include "tools.h"
 
-static int vgremove_single(struct cmd_context *cmd, const char *vg_name);
-
-int vgremove(struct cmd_context *cmd, int argc, char **argv)
+static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
+			   struct volume_group *vg, int consistent,
+			   void *handle)
 {
-	int ret;
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;     
-
-	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
-		log_error("Can't get lock for orphan PVs");
-		return ECMD_FAILED;
-	}
-
-	ret = process_each_vg(cmd, argc, argv,
-			      LCK_VG | LCK_WRITE | LCK_NONBLOCK,
-			      &vgremove_single);
-
-	unlock_vg(cmd, "");
-
-	return ret;
-}
-
-static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
-{
-	struct volume_group *vg;
 	struct physical_volume *pv;
 	struct list *pvh;
 	int ret = 0;
 
-	log_verbose("Checking for volume group \"%s\"", vg_name);
-	if (!(vg = vg_read(cmd, vg_name))) {
+	if (!vg || !consistent) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
@@ -87,7 +64,8 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 		log_verbose("Removing physical volume \"%s\" from "
 			    "volume group \"%s\"", dev_name(pv->dev), vg_name);
 		*pv->vg_name = '\0';
-		if (!pv_write(cmd, pv)) {
+		/* FIXME Write to same sector label was read from */
+		if (!pv_write(cmd, pv, NULL, -1)) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
 				  dev_name(pv->dev), vg_name);
@@ -101,6 +79,24 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name)
 		log_print("Volume group \"%s\" successfully removed", vg_name);
 	else
 		log_error("Volume group \"%s\" not properly removed", vg_name);
+
+	return ret;
+}
+
+int vgremove(struct cmd_context *cmd, int argc, char **argv)
+{
+	int ret;
+
+	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
+
+	ret = process_each_vg(cmd, argc, argv,
+			      LCK_VG | LCK_WRITE | LCK_NONBLOCK, 1, NULL,
+			      &vgremove_single);
+
+	unlock_vg(cmd, "");
 
 	return ret;
 }

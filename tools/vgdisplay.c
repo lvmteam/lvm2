@@ -20,63 +20,18 @@
 
 #include "tools.h"
 
-static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name);
-
-int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
+static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
+			    struct volume_group *vg, int consistent,
+			    void *handle)
 {
-	if (arg_count(cmd, colon_ARG) && arg_count(cmd, short_ARG)) {
-		log_error("Option -c is not allowed with option -s");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (argc && arg_count(cmd, activevolumegroups_ARG)) {
-		log_error("Option -A is not allowed with volume group names");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!driver_is_loaded())
-		return ECMD_FAILED;     
-
-	/* FIXME -D disk_ARG is now redundant */
-
-/********* FIXME: Do without this - or else 2(+) passes! 
-	   Figure out longest volume group name 
-	for (c = opt; opt < argc; opt++) {
-		len = strlen(argv[opt]);
-		if (len > max_len)
-			max_len = len;
-	}
-**********/
-
-	process_each_vg(cmd, argc, argv, LCK_VG_READ, &vgdisplay_single);
-
-/******** FIXME Need to count number processed 
-	  Add this to process_each_vg if arg_count(cmd,activevolumegroups_ARG) ? 
-
-	if (opt == argc) {
-		log_print("no ");
-		if (arg_count(cmd,activevolumegroups_ARG))
-			printf("active ");
-		printf("volume groups found\n\n");
-		return LVM_E_NO_VG;
-	}
-************/
-
-	return 0;
-}
-
-static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name)
-{
-
-	struct volume_group *vg;
-
 	/* FIXME Do the active check here if activevolumegroups_ARG ? */
-
-	log_very_verbose("Finding volume group \"%s\"", vg_name);
-	if (!(vg = vg_read(cmd, vg_name))) {
+	if (!vg) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		return ECMD_FAILED;
 	}
+
+	if (!consistent)
+		log_error("WARNING: Volume group \"%s\" inconsistent", vg_name);
 
 	if (vg->status & EXPORTED_VG)
 		log_print("WARNING: volume group \"%s\" is exported", vg_name);
@@ -96,11 +51,50 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name)
 	if (arg_count(cmd, verbose_ARG)) {
 		vgdisplay_extents(vg);
 
-		process_each_lv_in_vg(cmd, vg, &lvdisplay_full);
+		process_each_lv_in_vg(cmd, vg, NULL, &lvdisplay_full);
 
 		log_print("--- Physical volumes ---");
-		process_each_pv_in_vg(cmd, vg, &pvdisplay_short);
+		process_each_pv_in_vg(cmd, vg, NULL, &pvdisplay_short);
 	}
+
+	return 0;
+}
+
+int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
+{
+	if (arg_count(cmd, colon_ARG) && arg_count(cmd, short_ARG)) {
+		log_error("Option -c is not allowed with option -s");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (argc && arg_count(cmd, activevolumegroups_ARG)) {
+		log_error("Option -A is not allowed with volume group names");
+		return EINVALID_CMD_LINE;
+	}
+
+/********* FIXME: Do without this - or else 2(+) passes! 
+	   Figure out longest volume group name 
+	for (c = opt; opt < argc; opt++) {
+		len = strlen(argv[opt]);
+		if (len > max_len)
+			max_len = len;
+	}
+**********/
+
+	process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
+			&vgdisplay_single);
+
+/******** FIXME Need to count number processed 
+	  Add this to process_each_vg if arg_count(cmd,activevolumegroups_ARG) ? 
+
+	if (opt == argc) {
+		log_print("no ");
+		if (arg_count(cmd,activevolumegroups_ARG))
+			printf("active ");
+		printf("volume groups found\n\n");
+		return LVM_E_NO_VG;
+	}
+************/
 
 	return 0;
 }

@@ -39,6 +39,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	struct list *pvh, *segh;
 	struct lv_list *lvl;
 	int opt = 0;
+	int consistent = 1;
 
 	enum {
 		LV_ANY = 0,
@@ -94,9 +95,6 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if ((st = strrchr(lv_name, '/')))
 		lv_name = st + 1;
 
-	if (!driver_is_loaded())
-		return ECMD_FAILED;
-
 	/* does VG exist? */
 	log_verbose("Finding volume group %s", vg_name);
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
@@ -104,7 +102,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name))) {
+	if (!(vg = vg_read(cmd, vg_name, &consistent))) {
 		log_error("Volume group %s doesn't exist", vg_name);
 		goto error;
 	}
@@ -193,10 +191,10 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 	if (extents > lv->le_count &&
 	    !(stripes == 1 || (stripes > 1 && stripesize))) {
 		list_iterate(segh, &lv->segments) {
-			struct stripe_segment *seg;
+			struct lv_segment *seg;
 			uint32_t sz, str;
 
-			seg = list_item(segh, struct stripe_segment);
+			seg = list_item(segh, struct lv_segment);
 			sz = seg->stripe_size;
 			str = seg->stripes;
 
@@ -237,10 +235,10 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 				  "when reducing");
 
 		list_iterate(segh, &lv->segments) {
-			struct stripe_segment *seg;
+			struct lv_segment *seg;
 			uint32_t seg_extents;
 
-			seg = list_item(segh, struct stripe_segment);
+			seg = list_item(segh, struct lv_segment);
 			seg_extents = seg->len;
 
 			seg_stripesize = seg->stripe_size;
@@ -261,7 +259,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Stripesize for striped segment should not be 0!");
 		goto error_cmdline;
 	}
-	
+
 	if ((stripes > 1)) {
 		if (!(stripesize_extents = stripesize / vg->extent_size))
 			stripesize_extents = 1;

@@ -6,6 +6,7 @@ pvscan \- scan all disks for physical volumes
 .RB [ \-d | \-\-debug]
 .RB [\-e | \-\-exported]
 .RB [\-h | \-\-help]
+.RB [\-\-ignorelockingfailure]
 .RB [ \-n | \-\-novolumegroup]
 .RB [\-s | \-\-short]
 .RB [\-u | \-\-uuid]
@@ -26,7 +27,7 @@ Only show physical volumes not belonging to any volume group.
 Short listing format.
 .TP
 .BR \-u ", " \-\-uuid
-Show UUIDs (Unifrom Unique Identifiers) in addition to device special names.
+Show UUIDs (Uniform Unique Identifiers) in addition to device special names.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvcreate (8),

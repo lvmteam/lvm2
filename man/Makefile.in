@@ -23,8 +23,9 @@ VPATH = @srcdir@
 MAN5=lvm.conf.5
 MAN8=lvchange.8 lvcreate.8 lvdisplay.8 lvextend.8 lvm.8 lvmchange.8 \
 	lvreduce.8 lvremove.8 lvrename.8 lvscan.8 pvchange.8 \
-	pvcreate.8 pvdisplay.8 pvscan.8 vgcfgbackup.8 vgchange.8 vgck.8 \
-	vgcreate.8 vgdisplay.8 vgextend.8 vgmerge.8 vgreduce.8 vgremove.8 \
+	pvcreate.8 pvdisplay.8 pvremove.8 pvscan.8 vgcfgbackup.8 \
+	vgcfgrestore.8 vgchange.8 vgck.8 vgcreate.8 \
+	vgconvert.8 vgdisplay.8 vgextend.8 vgmerge.8 vgreduce.8 vgremove.8 \
 	vgrename.8 vgscan.8
 MAN5DIR=${mandir}/man5
 MAN8DIR=${mandir}/man8

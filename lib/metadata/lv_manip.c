@@ -4,10 +4,9 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "metadata.h"
 #include "pv_map.h"
-#include "log.h"
-#include "dbg_malloc.h"
 #include "lvm-string.h"
 #include "toolcontext.h"
 
@@ -17,7 +16,7 @@
  * These functions adjust the pe counts in pv's
  * after we've added or removed segments.
  */
-static void _get_extents(struct stripe_segment *seg)
+static void _get_extents(struct lv_segment *seg)
 {
 	int s, count;
 	struct physical_volume *pv;
@@ -29,7 +28,7 @@ static void _get_extents(struct stripe_segment *seg)
 	}
 }
 
-static void _put_extents(struct stripe_segment *seg)
+static void _put_extents(struct lv_segment *seg)
 {
 	int s, count;
 	struct physical_volume *pv;
@@ -43,9 +42,9 @@ static void _put_extents(struct stripe_segment *seg)
 	}
 }
 
-static struct stripe_segment *_alloc_segment(struct pool *mem, int stripes)
+static struct lv_segment *_alloc_segment(struct pool *mem, int stripes)
 {
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 	uint32_t len = sizeof(*seg) + (stripes * sizeof(seg->area[0]));
 
 	if (!(seg = pool_zalloc(mem, len))) {
@@ -58,13 +57,13 @@ static struct stripe_segment *_alloc_segment(struct pool *mem, int stripes)
 
 static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 			      uint32_t stripe_size,
-			      struct pv_area **areas, uint32_t * index)
+			      struct pv_area **areas, uint32_t *index)
 {
 	uint32_t count = lv->le_count - *index;
 	uint32_t per_area = count / stripes;
 	uint32_t smallest = areas[stripes - 1]->count;
 	uint32_t s;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 
 	if (smallest < per_area)
 		per_area = smallest;
@@ -75,6 +74,7 @@ static int _alloc_stripe_area(struct logical_volume *lv, uint32_t stripes,
 	}
 
 	seg->lv = lv;
+	seg->type = SEG_STRIPED;
 	seg->le = *index;
 	seg->len = per_area * stripes;
 	seg->stripes = stripes;
@@ -169,11 +169,11 @@ static int _alloc_striped(struct logical_volume *lv,
  * the complete area then the area is split, otherwise the area
  * is unlinked from the pv_map.
  */
-static int _alloc_linear_area(struct logical_volume *lv, uint32_t * index,
+static int _alloc_linear_area(struct logical_volume *lv, uint32_t *index,
 			      struct pv_map *map, struct pv_area *pva)
 {
 	uint32_t count, remaining;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 
 	count = pva->count;
 	remaining = lv->le_count - *index;
@@ -186,6 +186,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t * index,
 	}
 
 	seg->lv = lv;
+	seg->type = SEG_STRIPED;
 	seg->le = *index;
 	seg->len = count;
 	seg->stripe_size = 0;
@@ -248,8 +249,8 @@ static int _alloc_contiguous(struct logical_volume *lv,
  * Areas just get allocated in order until the lv
  * is full.
  */
-static int _alloc_simple(struct logical_volume *lv,
-			 struct list *pvms, uint32_t allocated)
+static int _alloc_next_free(struct logical_volume *lv,
+			    struct list *pvms, uint32_t allocated)
 {
 	struct list *tmp1, *tmp2;
 	struct pv_map *pvm;
@@ -305,8 +306,8 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	else if (lv->alloc == ALLOC_CONTIGUOUS)
 		r = _alloc_contiguous(lv, pvms, allocated);
 
-	else if (lv->alloc == ALLOC_NEXT_FREE)
-		r = _alloc_simple(lv, pvms, allocated);
+	else if (lv->alloc == ALLOC_NEXT_FREE || lv->alloc == ALLOC_DEFAULT)
+		r = _alloc_next_free(lv, pvms, allocated);
 
 	else {
 		log_error("Unknown allocation policy: "
@@ -322,7 +323,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 		 * counts in pv's.
 		 */
 		for (segh = lv->segments.p; segh != old_tail; segh = segh->p)
-			_get_extents(list_item(segh, struct stripe_segment));
+			_get_extents(list_item(segh, struct lv_segment));
 	} else {
 		/*
 		 * Put the segment list back how we found it.
@@ -456,12 +457,12 @@ int lv_reduce(struct format_instance *fi,
 	      struct logical_volume *lv, uint32_t extents)
 {
 	struct list *segh;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 	uint32_t count = extents;
 
 	for (segh = lv->segments.p;
 	     (segh != &lv->segments) && count; segh = segh->p) {
-		seg = list_item(segh, struct stripe_segment);
+		seg = list_item(segh, struct lv_segment);
 
 		if (seg->len <= count) {
 			/* remove this segment completely */
@@ -534,7 +535,7 @@ int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 
 	/* iterate through the lv's segments freeing off the pe's */
 	list_iterate(segh, &lv->segments)
-	    _put_extents(list_item(segh, struct stripe_segment));
+	    _put_extents(list_item(segh, struct lv_segment));
 
 	vg->lv_count--;
 	vg->free_count += lv->le_count;

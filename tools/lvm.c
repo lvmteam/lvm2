@@ -5,9 +5,7 @@
  */
 
 #include "tools.h"
-#include "archive.h"
 #include "defaults.h"
-#include "lvm1_label.h"
 #include "label.h"
 #include "version.h"
 
@@ -19,10 +17,7 @@
 #include <syslog.h>
 #include <libgen.h>
 #include <sys/stat.h>
-#include <ctype.h>
 #include <time.h>
-#include <stdlib.h>
-#include <locale.h>
 
 #ifdef READLINE_SUPPORT
 #include <readline/readline.h>
@@ -46,136 +41,10 @@ struct arg the_args[ARG_COUNT + 1] = {
 static int _array_size;
 static int _num_commands;
 static struct command *_commands;
-struct cmd_context *cmd;
-
-/* Whether or not to dump persistent filter state */
-static int _dump_filter;
 
 static int _interactive;
-static FILE *_log;
 
-/* lvm1 label handler */
-static struct labeller *_lvm1_label;
-
-/*
- * This structure only contains those options that
- * can have a default and per command setting.
- */
-struct config_info {
-	int debug;
-	int verbose;
-	int test;
-	int syslog;
-	const char *msg_prefix;
-	int cmd_name;		/* Show command name? */
-
-	int archive;		/* should we archive ? */
-	int backup;		/* should we backup ? */
-
-	struct format_type *fmt;
-
-	mode_t umask;
-};
-
-static struct config_info _default_settings;
-static struct config_info _current_settings;
-
-/*
- * The lvm_sys_dir contains:
- *
- * o  The lvm configuration (lvm.conf)
- * o  The persistent filter cache (.cache)
- * o  Volume group backups (/backup)
- * o  Archive of old vg configurations (/archive)
- */
-static char _sys_dir[PATH_MAX] = "/etc/lvm";
-static char _dev_dir[PATH_MAX];
-static char _proc_dir[PATH_MAX];
-
-/* static functions */
-static void register_commands(void);
-static struct command *find_command(const char *name);
-static void register_command(const char *name, command_fn fn,
-			     const char *desc, const char *usage, ...);
-static void create_new_command(const char *name, command_fn command,
-			       const char *desc, const char *usage,
-			       int nargs, int *args);
-
-static void alloc_command(void);
-static void add_getopt_arg(int arg, char **ptr, struct option **o);
-static int process_command_line(struct command *com, int *argc, char ***argv);
-static struct arg *find_arg(struct command *com, int a);
-static int process_common_commands(struct command *com);
-static int run_command(int argc, char **argv);
-static int init(void);
-static void fin(void);
-static int run_script(int argc, char **argv);
-
-#ifdef READLINE_SUPPORT
-static int shell(void);
-#endif
-
-static void display_help(void);
-
-int main(int argc, char **argv)
-{
-	char *namebase, *base;
-	int ret, alias = 0;
-
-	if (!init())
-		return -1;
-
-	namebase = strdup(argv[0]);
-	base = basename(namebase);
-	while (*base == '/')
-		base++;
-	if (strcmp(base, "lvm"))
-		alias = 1;
-	free(namebase);
-
-	register_commands();
-
-#ifdef READLINE_SUPPORT
-	if (!alias && argc == 1) {
-		ret = shell();
-		goto out;
-	}
-#endif
-
-	if (!alias) {
-		if (argc < 2) {
-			log_fatal("Please supply an LVM command.");
-			display_help();
-			ret = EINVALID_CMD_LINE;
-			goto out;
-		}
-
-		argc--;
-		argv++;
-	}
-
-	ret = run_command(argc, argv);
-	if ((ret == ENO_SUCH_CMD) && (!alias))
-		ret = run_script(argc, argv);
-	if (ret == ENO_SUCH_CMD)
-		log_error("No such command.  Try 'help'.");
-
-      out:
-	fin();
-	return ret;
-}
-
-void usage(const char *name)
-{
-	struct command *com = find_command(name);
-
-	if (!com)
-		return;
-
-	log_error("%s: %s\n\n%s", com->name, com->desc, com->usage);
-}
-
-int yes_no_arg(struct arg *a)
+int yes_no_arg(struct cmd_context *cmd, struct arg *a)
 {
 	a->sign = SIGN_NONE;
 
@@ -191,18 +60,26 @@ int yes_no_arg(struct arg *a)
 	return 1;
 }
 
-int metadatatype_arg(struct arg *a)
+int metadatatype_arg(struct cmd_context *cmd, struct arg *a)
 {
-	if (!strcasecmp(a->value, cmd->fmtt->name))
-		a->ptr = cmd->fmtt;
+	struct format_type *fmt;
+	struct list *fmth;
 
-	else if (!strcasecmp(a->value, cmd->fmt1->name))
-		a->ptr = cmd->fmt1;
+	char *format;
 
-	else
-		return 0;
+	format = a->value;
 
-	return 1;
+	list_iterate(fmth, &cmd->formats) {
+		fmt = list_item(fmth, struct format_type);
+		if (!strcasecmp(fmt->name, format) ||
+		    !strcasecmp(fmt->name + 3, format) ||
+		    (fmt->alias && !strcasecmp(fmt->alias, format))) {
+			a->ptr = fmt;
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 int _get_int_arg(struct arg *a, char **ptr)
@@ -236,7 +113,7 @@ int _get_int_arg(struct arg *a, char **ptr)
 	return 1;
 }
 
-int size_arg(struct arg *a)
+int size_arg(struct cmd_context *cmd, struct arg *a)
 {
 	char *ptr;
 	int i;
@@ -283,7 +160,7 @@ int size_arg(struct arg *a)
 	return 1;
 }
 
-int int_arg(struct arg *a)
+int int_arg(struct cmd_context *cmd, struct arg *a)
 {
 	char *ptr;
 
@@ -293,7 +170,7 @@ int int_arg(struct arg *a)
 	return 1;
 }
 
-int int_arg_with_sign(struct arg *a)
+int int_arg_with_sign(struct cmd_context *cmd, struct arg *a)
 {
 	char *ptr;
 
@@ -303,7 +180,7 @@ int int_arg_with_sign(struct arg *a)
 	return 1;
 }
 
-int minor_arg(struct arg *a)
+int minor_arg(struct cmd_context *cmd, struct arg *a)
 {
 	char *ptr;
 
@@ -318,12 +195,12 @@ int minor_arg(struct arg *a)
 	return 1;
 }
 
-int string_arg(struct arg *a)
+int string_arg(struct cmd_context *cmd, struct arg *a)
 {
 	return 1;
 }
 
-int permission_arg(struct arg *a)
+int permission_arg(struct cmd_context *cmd, struct arg *a)
 {
 	a->sign = SIGN_NONE;
 
@@ -358,18 +235,45 @@ char yes_no_prompt(const char *prompt, ...)
 	return c;
 }
 
-static void register_commands()
+static void __alloc(int size)
 {
-#define xx(a, b, c...) register_command(# a, a, b, ## c, \
-                                        debug_ARG, help_ARG, \
-                                        version_ARG, verbose_ARG, \
-					quiet_ARG, -1);
-#include "commands.h"
-#undef xx
+	if (!(_commands = dbg_realloc(_commands, sizeof(*_commands) * size))) {
+		log_fatal("Couldn't allocate memory.");
+		exit(ECMD_FAILED);
+	}
+
+	_array_size = size;
 }
 
-static void register_command(const char *name, command_fn fn,
-			     const char *desc, const char *usage, ...)
+static void _alloc_command(void)
+{
+	if (!_array_size)
+		__alloc(32);
+
+	if (_array_size <= _num_commands)
+		__alloc(2 * _array_size);
+}
+
+static void _create_new_command(const char *name, command_fn command,
+				const char *desc, const char *usage,
+				int nargs, int *args)
+{
+	struct command *nc;
+
+	_alloc_command();
+
+	nc = _commands + _num_commands++;
+
+	nc->name = name;
+	nc->desc = desc;
+	nc->usage = usage;
+	nc->fn = command;
+	nc->num_args = nargs;
+	nc->valid_args = args;
+}
+
+static void _register_command(const char *name, command_fn fn,
+			      const char *desc, const char *usage, ...)
 {
 	int nargs = 0, i;
 	int *args;
@@ -394,10 +298,21 @@ static void register_command(const char *name, command_fn fn,
 	va_end(ap);
 
 	/* enter the command in the register */
-	create_new_command(name, fn, desc, usage, nargs, args);
+	_create_new_command(name, fn, desc, usage, nargs, args);
 }
 
-static struct command *find_command(const char *name)
+static void _register_commands()
+{
+#define xx(a, b, c...) _register_command(# a, a, b, ## c, \
+					driverloaded_ARG, \
+                                        debug_ARG, help_ARG, \
+                                        version_ARG, verbose_ARG, \
+					quiet_ARG, -1);
+#include "commands.h"
+#undef xx
+}
+
+static struct command *_find_command(const char *name)
 {
 	int i;
 	char *namebase, *base;
@@ -418,41 +333,14 @@ static struct command *find_command(const char *name)
 	return _commands + i;
 }
 
-static void create_new_command(const char *name, command_fn command,
-			       const char *desc, const char *usage,
-			       int nargs, int *args)
+void usage(const char *name)
 {
-	struct command *nc;
+	struct command *com = _find_command(name);
 
-	alloc_command();
+	if (!com)
+		return;
 
-	nc = _commands + _num_commands++;
-
-	nc->name = name;
-	nc->desc = desc;
-	nc->usage = usage;
-	nc->fn = command;
-	nc->num_args = nargs;
-	nc->valid_args = args;
-}
-
-static void __alloc(int size)
-{
-	if (!(_commands = dbg_realloc(_commands, sizeof(*_commands) * size))) {
-		log_fatal("Couldn't allocate memory.");
-		exit(ECMD_FAILED);
-	}
-
-	_array_size = size;
-}
-
-static void alloc_command(void)
-{
-	if (!_array_size)
-		__alloc(32);
-
-	if (_array_size <= _num_commands)
-		__alloc(2 * _array_size);
+	log_error("%s: %s\n\n%s", com->name, com->desc, com->usage);
 }
 
 /*
@@ -464,7 +352,7 @@ static void alloc_command(void)
  * we have only 1 ATM (--version) I think we can
  * live with this restriction.
  */
-static void add_getopt_arg(int arg, char **ptr, struct option **o)
+static void _add_getopt_arg(int arg, char **ptr, struct option **o)
 {
 	struct arg *a = the_args + arg;
 
@@ -484,65 +372,7 @@ static void add_getopt_arg(int arg, char **ptr, struct option **o)
 	}
 }
 
-static int process_command_line(struct command *com, int *argc, char ***argv)
-{
-	int i, opt;
-	char str[((ARG_COUNT + 1) * 2) + 1], *ptr = str;
-	struct option opts[ARG_COUNT + 1], *o = opts;
-	struct arg *a;
-
-	for (i = 0; i < ARG_COUNT; i++) {
-		struct arg *a = the_args + i;
-
-		/* zero the count and arg */
-		a->count = 0;
-		a->value = 0;
-		a->i_value = 0;
-	}
-
-	/* fill in the short and long opts */
-	for (i = 0; i < com->num_args; i++)
-		add_getopt_arg(com->valid_args[i], &ptr, &o);
-
-	*ptr = '\0';
-	memset(o, 0, sizeof(*o));
-
-	/* initialise getopt_long & scan for command line switches */
-	optarg = 0;
-	optind = 0;
-	while ((opt = getopt_long(*argc, *argv, str, opts, NULL)) >= 0) {
-
-		a = find_arg(com, opt);
-
-		if (!a) {
-			log_fatal("Unrecognised option.");
-			return 0;
-		}
-
-		if (a->fn) {
-
-			if (!optarg) {
-				log_error("Option requires argument.");
-				return 0;
-			}
-
-			a->value = optarg;
-
-			if (!a->fn(a)) {
-				log_error("Invalid argument %s", optarg);
-				return 0;
-			}
-		}
-
-		a->count++;
-	}
-
-	*argc -= optind;
-	*argv += optind;
-	return 1;
-}
-
-static struct arg *find_arg(struct command *com, int opt)
+static struct arg *_find_arg(struct command *com, int opt)
 {
 	struct arg *a;
 	int i, arg;
@@ -563,7 +393,66 @@ static struct arg *find_arg(struct command *com, int opt)
 	return 0;
 }
 
-static int merge_synonym(int oldarg, int newarg)
+static int _process_command_line(struct cmd_context *cmd, int *argc,
+				 char ***argv)
+{
+	int i, opt;
+	char str[((ARG_COUNT + 1) * 2) + 1], *ptr = str;
+	struct option opts[ARG_COUNT + 1], *o = opts;
+	struct arg *a;
+
+	for (i = 0; i < ARG_COUNT; i++) {
+		struct arg *a = the_args + i;
+
+		/* zero the count and arg */
+		a->count = 0;
+		a->value = 0;
+		a->i_value = 0;
+	}
+
+	/* fill in the short and long opts */
+	for (i = 0; i < cmd->command->num_args; i++)
+		_add_getopt_arg(cmd->command->valid_args[i], &ptr, &o);
+
+	*ptr = '\0';
+	memset(o, 0, sizeof(*o));
+
+	/* initialise getopt_long & scan for command line switches */
+	optarg = 0;
+	optind = 0;
+	while ((opt = getopt_long(*argc, *argv, str, opts, NULL)) >= 0) {
+
+		a = _find_arg(cmd->command, opt);
+
+		if (!a) {
+			log_fatal("Unrecognised option.");
+			return 0;
+		}
+
+		if (a->fn) {
+
+			if (!optarg) {
+				log_error("Option requires argument.");
+				return 0;
+			}
+
+			a->value = optarg;
+
+			if (!a->fn(cmd, a)) {
+				log_error("Invalid argument %s", optarg);
+				return 0;
+			}
+		}
+
+		a->count++;
+	}
+
+	*argc -= optind;
+	*argv += optind;
+	return 1;
+}
+
+static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 {
 	struct arg *old, *new;
 
@@ -600,37 +489,34 @@ int version(struct cmd_context *cmd, int argc, char **argv)
 	return ECMD_PROCESSED;
 }
 
-static int process_common_commands(struct command *com)
+static int _get_settings(struct cmd_context *cmd)
 {
-	_current_settings = _default_settings;
+	cmd->current_settings = cmd->default_settings;
 
 	if (arg_count(cmd, debug_ARG))
-		_current_settings.debug = _LOG_FATAL +
+		cmd->current_settings.debug = _LOG_FATAL +
 		    (arg_count(cmd, debug_ARG) - 1);
 
 	if (arg_count(cmd, verbose_ARG))
-		_current_settings.verbose = arg_count(cmd, verbose_ARG);
+		cmd->current_settings.verbose = arg_count(cmd, verbose_ARG);
 
 	if (arg_count(cmd, quiet_ARG)) {
-		_current_settings.debug = 0;
-		_current_settings.verbose = 0;
+		cmd->current_settings.debug = 0;
+		cmd->current_settings.verbose = 0;
 	}
 
 	if (arg_count(cmd, test_ARG))
-		_current_settings.test = arg_count(cmd, test_ARG);
+		cmd->current_settings.test = arg_count(cmd, test_ARG);
 
-	if (arg_count(cmd, help_ARG)) {
-		usage(com->name);
-		return ECMD_PROCESSED;
-	}
-
-	if (arg_count(cmd, version_ARG)) {
-		return version(cmd, 0, (char **) NULL);
+	if (arg_count(cmd, driverloaded_ARG)) {
+		cmd->current_settings.activation =
+		    arg_int_value(cmd, driverloaded_ARG,
+				  cmd->default_settings.activation);
 	}
 
 	if (arg_count(cmd, autobackup_ARG)) {
-		_current_settings.archive = 1;
-		_current_settings.backup = 1;
+		cmd->current_settings.archive = 1;
+		cmd->current_settings.backup = 1;
 	}
 
 	if (arg_count(cmd, partial_ARG)) {
@@ -646,29 +532,31 @@ static int process_common_commands(struct command *com)
 		init_ignorelockingfailure(0);
 
 	/* Handle synonyms */
-	if (!merge_synonym(resizable_ARG, resizeable_ARG) ||
-	    !merge_synonym(allocation_ARG, allocatable_ARG) ||
-	    !merge_synonym(allocation_ARG, resizeable_ARG))
-		return ECMD_FAILED;
+	if (!_merge_synonym(cmd, resizable_ARG, resizeable_ARG) ||
+	    !_merge_synonym(cmd, allocation_ARG, allocatable_ARG) ||
+	    !_merge_synonym(cmd, allocation_ARG, resizeable_ARG))
+		return EINVALID_CMD_LINE;
+
+	/* Zero indicates success */
+	return 0;
+}
+
+static int _process_common_commands(struct cmd_context *cmd)
+{
+	if (arg_count(cmd, help_ARG)) {
+		usage(cmd->command->name);
+		return ECMD_PROCESSED;
+	}
+
+	if (arg_count(cmd, version_ARG)) {
+		return version(cmd, 0, (char **) NULL);
+	}
 
 	/* Zero indicates it's OK to continue processing this command */
 	return 0;
 }
 
-int help(struct cmd_context *cmd, int argc, char **argv)
-{
-	if (!argc)
-		display_help();
-	else {
-		int i;
-		for (i = 0; i < argc; i++)
-			usage(argv[i]);
-	}
-
-	return 0;
-}
-
-static void display_help(void)
+static void _display_help(void)
 {
 	int i;
 
@@ -683,22 +571,38 @@ static void display_help(void)
 	}
 }
 
-static void _use_settings(struct config_info *settings)
+int help(struct cmd_context *cmd, int argc, char **argv)
 {
-	init_debug(settings->debug);
-	init_verbose(settings->verbose);
-	init_test(settings->test);
+	if (!argc)
+		_display_help();
+	else {
+		int i;
+		for (i = 0; i < argc; i++)
+			usage(argv[i]);
+	}
 
-	init_msg_prefix(_default_settings.msg_prefix);
-	init_cmd_name(_default_settings.cmd_name);
-
-	archive_enable(settings->archive);
-	backup_enable(settings->backup);
-
-	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG, settings->fmt);
+	return 0;
 }
 
-static char *_copy_command_line(struct pool *mem, int argc, char **argv)
+static void _apply_settings(struct cmd_context *cmd)
+{
+	init_debug(cmd->current_settings.debug);
+	init_verbose(cmd->current_settings.verbose);
+	init_test(cmd->current_settings.test);
+
+	init_msg_prefix(cmd->default_settings.msg_prefix);
+	init_cmd_name(cmd->default_settings.cmd_name);
+
+	archive_enable(cmd->current_settings.archive);
+	backup_enable(cmd->current_settings.backup);
+
+	set_activation(cmd->current_settings.activation);
+
+	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG,
+				 cmd->current_settings.fmt);
+}
+
+static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 {
 	int i;
 
@@ -720,59 +624,68 @@ static char *_copy_command_line(struct pool *mem, int argc, char **argv)
 	/*
 	 * Terminate.
 	 */
-	if (!pool_grow_object(mem, "\0", 1))
+	if (!pool_grow_object(cmd->mem, "\0", 1))
 		goto bad;
 
-	return pool_end_object(mem);
+	return pool_end_object(cmd->mem);
 
       bad:
 	log_err("Couldn't copy command line.");
-	pool_abandon_object(mem);
+	pool_abandon_object(cmd->mem);
 	return NULL;
 }
 
-static int run_command(int argc, char **argv)
+static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret = 0;
 	int locking_type;
 
-	if (!(cmd->cmd_line = _copy_command_line(cmd->mem, argc, argv)))
+	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))
 		return ECMD_FAILED;
 
-	if (!(cmd->command = find_command(argv[0])))
+	if (!(cmd->command = _find_command(argv[0])))
 		return ENO_SUCH_CMD;
 
-	if (!process_command_line(cmd->command, &argc, &argv)) {
+	if (!_process_command_line(cmd, &argc, &argv)) {
 		log_error("Error during parsing of command line.");
 		return EINVALID_CMD_LINE;
 	}
 
 	set_cmd_name(cmd->command->name);
 
-	if ((ret = process_common_commands(cmd->command)))
-		return ret;
+	if (reload_config_file(&cmd->cf)) {
+		;
+		/* FIXME Reinitialise various settings inc. logging, filters */
+	}
 
-	_use_settings(&_current_settings);
+	if ((ret = _get_settings(cmd)))
+		goto out;
+	_apply_settings(cmd);
+
+	if ((ret = _process_common_commands(cmd)))
+		goto out;
 
 	locking_type = find_config_int(cmd->cf->root, "global/locking_type",
 				       '/', 1);
 	if (!init_locking(locking_type, cmd->cf)) {
 		log_error("Locking type %d initialisation failed.",
 			  locking_type);
-		return 0;
+		ret = ECMD_FAILED;
+		goto out;
 	}
 
 	ret = cmd->command->fn(cmd, argc, argv);
 
 	fin_locking();
 
-	/*
-	 * set the debug and verbose levels back
-	 * to the global default.  We have to do
-	 * this so the logging levels get set
-	 * correctly for program exit.
-	 */
-	_use_settings(&_default_settings);
+      out:
+	if (test_mode()) {
+		log_verbose("Test mode: Wiping internal cache");
+		cache_destroy();
+	}
+
+	cmd->current_settings = cmd->default_settings;
+	_apply_settings(cmd);
 
 	/*
 	 * free off any memory the command used.
@@ -785,7 +698,7 @@ static int run_command(int argc, char **argv)
 	return ret;
 }
 
-static int split(char *str, int *argc, char **argv, int max)
+static int _split(char *str, int *argc, char **argv, int max)
 {
 	char *b = str, *e;
 	*argc = 0;
@@ -818,62 +731,13 @@ static void _init_rand(void)
 	srand((unsigned int) time(NULL) + (unsigned int) getpid());
 }
 
-static void __init_log(struct config_file *cf)
-{
-	char *open_mode = "a";
-
-	const char *log_file;
-
-	_default_settings.syslog =
-	    find_config_int(cf->root, "log/syslog", '/', 1);
-	if (_default_settings.syslog != 1)
-		fin_syslog();
-
-	if (_default_settings.syslog > 1)
-		init_syslog(_default_settings.syslog);
-
-	_default_settings.debug =
-	    find_config_int(cf->root, "log/level", '/', 0);
-	init_debug(_default_settings.debug);
-
-	_default_settings.verbose =
-	    find_config_int(cf->root, "log/verbose", '/', 0);
-	init_verbose(_default_settings.verbose);
-
-	init_indent(find_config_int(cf->root, "log/indent", '/', 1));
-
-	_default_settings.msg_prefix = find_config_str(cf->root, "log/prefix",
-						       '/', DEFAULT_MSG_PREFIX);
-	init_msg_prefix(_default_settings.msg_prefix);
-
-	_default_settings.cmd_name = find_config_int(cf->root,
-						     "log/command_names", '/',
-						     DEFAULT_CMD_NAME);
-	init_cmd_name(_default_settings.cmd_name);
-
-	_default_settings.test = find_config_int(cf->root, "global/test",
-						 '/', 0);
-	if (find_config_int(cf->root, "log/overwrite", '/', 0))
-		open_mode = "w";
-
-	log_file = find_config_str(cf->root, "log/file", '/', 0);
-	if (log_file) {
-		/* set up the logging */
-		if (!(_log = fopen(log_file, open_mode)))
-			log_error("Couldn't open log file %s", log_file);
-		else
-			init_log(_log);
-	}
-
-}
-
-static int _init_backup(struct config_file *cf)
+static int _init_backup(struct cmd_context *cmd, struct config_tree *cf)
 {
 	int days, min;
 	char default_dir[PATH_MAX];
 	const char *dir;
 
-	if (!_sys_dir) {
+	if (!cmd->sys_dir) {
 		log_warn("WARNING: Metadata changes will NOT be backed up");
 		backup_init("");
 		archive_init("", 0, 0);
@@ -881,7 +745,7 @@ static int _init_backup(struct config_file *cf)
 	}
 
 	/* set up archiving */
-	_default_settings.archive =
+	cmd->default_settings.archive =
 	    find_config_bool(cmd->cf->root, "backup/archive", '/',
 			     DEFAULT_ARCHIVE_ENABLED);
 
@@ -891,10 +755,11 @@ static int _init_backup(struct config_file *cf)
 	min = find_config_int(cmd->cf->root, "backup/retain_min", '/',
 			      DEFAULT_ARCHIVE_NUMBER);
 
-	if (lvm_snprintf(default_dir, sizeof(default_dir), "%s/%s", _sys_dir,
-			 DEFAULT_ARCHIVE_SUBDIR) == -1) {
+	if (lvm_snprintf
+	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
+	     DEFAULT_ARCHIVE_SUBDIR) == -1) {
 		log_err("Couldn't create default archive path '%s/%s'.",
-			_sys_dir, DEFAULT_ARCHIVE_SUBDIR);
+			cmd->sys_dir, DEFAULT_ARCHIVE_SUBDIR);
 		return 0;
 	}
 
@@ -907,14 +772,15 @@ static int _init_backup(struct config_file *cf)
 	}
 
 	/* set up the backup */
-	_default_settings.backup =
+	cmd->default_settings.backup =
 	    find_config_bool(cmd->cf->root, "backup/backup", '/',
 			     DEFAULT_BACKUP_ENABLED);
 
-	if (lvm_snprintf(default_dir, sizeof(default_dir), "%s/%s", _sys_dir,
-			 DEFAULT_BACKUP_SUBDIR) == -1) {
+	if (lvm_snprintf
+	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
+	     DEFAULT_BACKUP_SUBDIR) == -1) {
 		log_err("Couldn't create default backup path '%s/%s'.",
-			_sys_dir, DEFAULT_BACKUP_SUBDIR);
+			cmd->sys_dir, DEFAULT_BACKUP_SUBDIR);
 		return 0;
 	}
 
@@ -929,269 +795,26 @@ static int _init_backup(struct config_file *cf)
 	return 1;
 }
 
-static int dev_cache_setup(struct config_file *cf)
+static struct cmd_context *_init(void)
 {
-	struct config_node *cn;
-	struct config_value *cv;
+	struct cmd_context *cmd;
 
-	if (!dev_cache_init()) {
+	if (!(cmd = create_toolcontext(&the_args[0]))) {
 		stack;
-		return 0;
+		return NULL;
 	}
-
-	if (!(cn = find_config_node(cf->root, "devices/scan", '/'))) {
-		if (!dev_cache_add_dir("/dev")) {
-			log_error("Failed to add /dev to internal "
-				  "device cache");
-			return 0;
-		}
-		log_verbose
-		    ("device/scan not in config file: Defaulting to /dev");
-		return 1;
-	}
-
-	for (cv = cn->v; cv; cv = cv->next) {
-		if (cv->type != CFG_STRING) {
-			log_error("Invalid string in config file: "
-				  "devices/scan");
-			return 0;
-		}
-
-		if (!dev_cache_add_dir(cv->v.str)) {
-			log_error("Failed to add %s to internal device cache",
-				  cv->v.str);
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-static struct dev_filter *filter_components_setup(struct config_file *cf)
-{
-	struct config_node *cn;
-	struct dev_filter *f1, *f2, *f3;
-
-	if (!(f2 = lvm_type_filter_create(_proc_dir)))
-		return 0;
-
-	if (!(cn = find_config_node(cf->root, "devices/filter", '/'))) {
-		log_debug("devices/filter not found in config file: no regex "
-			  "filter installed");
-		return f2;
-	}
-
-	if (!(f1 = regex_filter_create(cn->v))) {
-		log_error("Failed to create regex device filter");
-		return f2;
-	}
-
-	if (!(f3 = composite_filter_create(2, f1, f2))) {
-		log_error("Failed to create composite device filter");
-		return f2;
-	}
-
-	return f3;
-}
-
-static struct dev_filter *filter_setup(struct config_file *cf)
-{
-	const char *lvm_cache;
-	struct dev_filter *f3, *f4;
-	struct stat st;
-	char cache_file[PATH_MAX];
-
-	_dump_filter = 0;
-
-	if (!(f3 = filter_components_setup(cmd->cf)))
-		return 0;
-
-	if (lvm_snprintf(cache_file, sizeof(cache_file),
-			 "%s/.cache", _sys_dir) < 0) {
-		log_error("Persistent cache filename too long ('%s/.cache').",
-			  _sys_dir);
-		return 0;
-	}
-
-	lvm_cache = find_config_str(cf->root, "devices/cache", '/', cache_file);
-
-	if (!(f4 = persistent_filter_create(f3, lvm_cache))) {
-		log_error("Failed to create persistent device filter");
-		return 0;
-	}
-
-	/* Should we ever dump persistent filter state? */
-	if (find_config_int(cf->root, "devices/write_cache_state", '/', 1))
-		_dump_filter = 1;
-
-	if (!*_sys_dir)
-		_dump_filter = 0;
-
-	if (!stat(lvm_cache, &st) && !persistent_filter_load(f4))
-		log_verbose("Failed to load existing device cache from %s",
-			    lvm_cache);
-
-	return f4;
-}
-
-static struct uuid_map *_init_uuid_map(struct dev_filter *filter)
-{
-	label_init();
-
-	/* add in the lvm1 labeller */
-	if (!(_lvm1_label = lvm1_labeller_create())) {
-		log_err("Couldn't create lvm1 label handler.");
-		return 0;
-	}
-
-	if (!(label_register_handler("lvm1", _lvm1_label))) {
-		log_err("Couldn't register lvm1 label handler.");
-		return 0;
-	}
-
-	return uuid_map_create(filter);
-}
-
-static void _exit_uuid_map(void)
-{
-	uuid_map_destroy(cmd->um);
-	label_exit();
-	_lvm1_label->ops->destroy(_lvm1_label);
-	_lvm1_label = NULL;
-}
-
-static int _get_env_vars(void)
-{
-	const char *e;
-
-	/* Set to "" to avoid using any system directory */
-	if ((e = getenv("LVM_SYSTEM_DIR"))) {
-		if (lvm_snprintf(_sys_dir, sizeof(_sys_dir), "%s", e) < 0) {
-			log_error("LVM_SYSTEM_DIR environment variable "
-				  "is too long.");
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-static int init(void)
-{
-	struct stat info;
-	char config_file[PATH_MAX] = "";
-	const char *format;
-	mode_t old_umask;
-
-	if (!setlocale(LC_ALL, ""))
-		log_error("setlocale failed");
-
-	if (!_get_env_vars())
-		return 0;
-
-	/* Create system directory if it doesn't already exist */
-	if (!create_dir(_sys_dir))
-		return 0;
-
-	if (!(cmd = dbg_malloc(sizeof(*cmd)))) {
-		log_error("Failed to allocate command context");
-		return 0;
-	}
-
-	cmd->args = &the_args[0];
-
-	if (!(cmd->cf = create_config_file())) {
-		stack;
-		return 0;
-	}
-
-	/* Use LOG_USER for syslog messages by default */
-	init_syslog(LOG_USER);
 
 	_init_rand();
 
-	if (*_sys_dir && lvm_snprintf(config_file, sizeof(config_file),
-				      "%s/lvm.conf", _sys_dir) < 0) {
-		log_error("lvm_sys_dir was too long");
-		return 0;
-	}
+	if (!_init_backup(cmd, cmd->cf))
+		return NULL;
 
-	if (stat(config_file, &info) != -1 &&
-	    !read_config(cmd->cf, config_file)) {
-		log_error("Failed to load config file %s", config_file);
-		return 0;
-	}
+	_apply_settings(cmd);
 
-	__init_log(cmd->cf);
-
-	_default_settings.umask = find_config_int(cmd->cf->root,
-						  "global/umask", '/',
-						  DEFAULT_UMASK);
-
-	if ((old_umask = umask((mode_t) _default_settings.umask)) !=
-	    (mode_t) _default_settings.umask)
-		    log_verbose("Set umask to %04o", _default_settings.umask);
-
-	if (lvm_snprintf(_dev_dir, sizeof(_dev_dir), "%s/",
-			 find_config_str(cmd->cf->root, "devices/dir",
-					 '/', DEFAULT_DEV_DIR)) < 0) {
-		log_error("Device directory given in config file too long");
-		return 0;
-	}
-
-	cmd->dev_dir = _dev_dir;
-	dm_set_dev_dir(cmd->dev_dir);
-
-	dm_log_init(print_log);
-
-	if (lvm_snprintf(_proc_dir, sizeof(_proc_dir), "%s",
-			 find_config_str(cmd->cf->root, "global/proc",
-					 '/', DEFAULT_PROC_DIR)) < 0) {
-		log_error("Device directory given in config file too long");
-		return 0;
-	}
-
-	if (!_init_backup(cmd->cf))
-		return 0;
-
-	if (!dev_cache_setup(cmd->cf))
-		return 0;
-
-	if (!(cmd->filter = filter_setup(cmd->cf))) {
-		log_error("Failed to set up internal device filters");
-		return 0;
-	}
-
-	/* the uuid map uses the filter */
-	if (!(cmd->um = _init_uuid_map(cmd->filter))) {
-		log_err("Failed to set up the uuid map.");
-		return 0;
-	}
-
-	if (!(cmd->mem = pool_create(4 * 1024))) {
-		log_error("Command pool creation failed");
-		return 0;
-	}
-
-	/* FIXME Replace with list, dynamic libs etc. */
-	if (!(cmd->fmt1 = create_lvm1_format(cmd)))
-		return 0;
-
-	if (!(cmd->fmtt = create_text_format(cmd)))
-		return 0;
-
-	format = find_config_str(cmd->cf->root, "global/format", '/',
-				 DEFAULT_FORMAT);
-	if (!strcasecmp(format, "text"))
-		_default_settings.fmt = cmd->fmtt;
-	else			/* "lvm1" */
-		_default_settings.fmt = cmd->fmt1;
-
-	_use_settings(&_default_settings);
-	return 1;
+	return cmd;
 }
 
-static void __fin_commands(void)
+static void _fin_commands(struct cmd_context *cmd)
 {
 	int i;
 
@@ -1201,33 +824,16 @@ static void __fin_commands(void)
 	dbg_free(_commands);
 }
 
-static void fin(void)
+static void _fin(struct cmd_context *cmd)
 {
-	if (_dump_filter)
-		persistent_filter_dump(cmd->filter);
-
-	cmd->fmt1->ops->destroy(cmd->fmt1);
-	cmd->fmtt->ops->destroy(cmd->fmtt);
-	cmd->filter->destroy(cmd->filter);
-	pool_destroy(cmd->mem);
-	vgcache_destroy();
-	dev_cache_exit();
-	destroy_config_file(cmd->cf);
 	archive_exit();
 	backup_exit();
-	_exit_uuid_map();
-	dbg_free(cmd);
-	__fin_commands();
+	_fin_commands(cmd);
 
-	dump_memory();
-	fin_log();
-	fin_syslog();
-
-	if (_log)
-		fclose(_log);
+	destroy_toolcontext(cmd);
 }
 
-static int run_script(int argc, char **argv)
+static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 {
 	FILE *script;
 
@@ -1253,7 +859,7 @@ static int run_script(int argc, char **argv)
 			ret = EINVALID_CMD_LINE;
 			break;
 		}
-		if (split(buffer, &argc, argv, MAX_ARGS) == MAX_ARGS) {
+		if (_split(buffer, &argc, argv, MAX_ARGS) == MAX_ARGS) {
 			buffer[50] = '\0';
 			log_error("Too many arguments: %s", buffer);
 			ret = EINVALID_CMD_LINE;
@@ -1263,7 +869,7 @@ static int run_script(int argc, char **argv)
 			continue;
 		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit"))
 			break;
-		run_command(argc, argv);
+		_run_command(cmd, argc, argv);
 	}
 
 	fclose(script);
@@ -1337,7 +943,7 @@ static char *_list_args(const char *text, int state)
 			char c;
 			if (!(c = (the_args +
 				   com->valid_args[match_no++])->short_arg))
-				    continue;
+				continue;
 
 			sprintf(s, "-%c", c);
 			if (!strncmp(text, s, len))
@@ -1394,7 +1000,7 @@ static int _hist_file(char *buffer, size_t size)
 	return 1;
 }
 
-static void _read_history(void)
+static void _read_history(struct cmd_context *cmd)
 {
 	char hist_file[PATH_MAX];
 
@@ -1420,7 +1026,7 @@ static void _write_history(void)
 		log_very_verbose("Couldn't write history to %s.", hist_file);
 }
 
-static int shell(void)
+static int _shell(struct cmd_context *cmd)
 {
 	int argc, ret;
 	char *input = NULL, *args[MAX_ARGS], **argv;
@@ -1428,7 +1034,7 @@ static int shell(void)
 	rl_readline_name = "lvm";
 	rl_attempted_completion_function = (CPPFunction *) _completion;
 
-	_read_history();
+	_read_history(cmd);
 
 	_interactive = 1;
 	while (1) {
@@ -1449,7 +1055,7 @@ static int shell(void)
 
 		argv = args;
 
-		if (split(input, &argc, argv, MAX_ARGS) == MAX_ARGS) {
+		if (_split(input, &argc, argv, MAX_ARGS) == MAX_ARGS) {
 			log_error("Too many arguments, sorry.");
 			continue;
 		}
@@ -1468,14 +1074,65 @@ static int shell(void)
 			break;
 		}
 
-		ret = run_command(argc, argv);
+		ret = _run_command(cmd, argc, argv);
 		if (ret == ENO_SUCH_CMD)
 			log_error("No such command '%s'.  Try 'help'.",
 				  argv[0]);
+
+		_write_history();
 	}
 
-	_write_history();
 	free(input);
 	return 0;
 }
+
 #endif
+
+int main(int argc, char **argv)
+{
+	char *namebase, *base;
+	int ret, alias = 0;
+	struct cmd_context *cmd;
+
+	if (!(cmd = _init()))
+		return -1;
+
+	namebase = strdup(argv[0]);
+	base = basename(namebase);
+	while (*base == '/')
+		base++;
+	if (strcmp(base, "lvm"))
+		alias = 1;
+	free(namebase);
+
+	_register_commands();
+
+#ifdef READLINE_SUPPORT
+	if (!alias && argc == 1) {
+		ret = _shell(cmd);
+		goto out;
+	}
+#endif
+
+	if (!alias) {
+		if (argc < 2) {
+			log_fatal("Please supply an LVM command.");
+			_display_help();
+			ret = EINVALID_CMD_LINE;
+			goto out;
+		}
+
+		argc--;
+		argv++;
+	}
+
+	ret = _run_command(cmd, argc, argv);
+	if ((ret == ENO_SUCH_CMD) && (!alias))
+		ret = _run_script(cmd, argc, argv);
+	if (ret == ENO_SUCH_CMD)
+		log_error("No such command.  Try 'help'.");
+
+      out:
+	_fin(cmd);
+	return ret;
+}

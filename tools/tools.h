@@ -7,39 +7,40 @@
 #ifndef _LVM_TOOLS_H
 #define _LVM_TOOLS_H
 
-#include "pool.h"
-#include "dbg_malloc.h"
-#include "list.h"
-#include "log.h"
-#include "lvm-string.h"
-#include "lvm-file.h"
-#include "metadata.h"
+#define _GNU_SOURCE
+
+#include "activate.h"
+#include "archive.h"
+#include "cache.h"
 #include "config.h"
+#include "dbg_malloc.h"
 #include "dev-cache.h"
 #include "device.h"
-#include "vgcache.h"
 #include "display.h"
 #include "errors.h"
 #include "filter.h"
-#include "filter-persistent.h"
 #include "filter-composite.h"
+#include "filter-persistent.h"
 #include "filter-regex.h"
-#include "format1.h"
 #include "format-text.h"
-#include "toollib.h"
-#include "activate.h"
-#include "archive.h"
+#include "metadata.h"
+#include "list.h"
 #include "locking.h"
+#include "log.h"
+#include "lvm-file.h"
+#include "lvm-string.h"
+#include "pool.h"
 #include "toolcontext.h"
+#include "toollib.h"
 
-#include <stdio.h>
+#include <ctype.h>
+#include <limits.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <ctype.h>
-#include <string.h>
-#include <limits.h>
 
 #define CMD_LEN 256
 #define MAX_ARGS 64
@@ -68,7 +69,7 @@ typedef enum {
 struct arg {
 	char short_arg;
 	char *long_arg;
-	int (*fn) (struct arg * a);
+	int (*fn) (struct cmd_context * cmd, struct arg * a);
 
 	int count;
 	char *value;
@@ -92,14 +93,14 @@ struct command {
 void usage(const char *name);
 
 /* the argument verify/normalise functions */
-int yes_no_arg(struct arg *a);
-int size_arg(struct arg *a);
-int int_arg(struct arg *a);
-int int_arg_with_sign(struct arg *a);
-int minor_arg(struct arg *a);
-int string_arg(struct arg *a);
-int permission_arg(struct arg *a);
-int metadatatype_arg(struct arg *a);
+int yes_no_arg(struct cmd_context *cmd, struct arg *a);
+int size_arg(struct cmd_context *cmd, struct arg *a);
+int int_arg(struct cmd_context *cmd, struct arg *a);
+int int_arg_with_sign(struct cmd_context *cmd, struct arg *a);
+int minor_arg(struct cmd_context *cmd, struct arg *a);
+int string_arg(struct cmd_context *cmd, struct arg *a);
+int permission_arg(struct cmd_context *cmd, struct arg *a);
+int metadatatype_arg(struct cmd_context *cmd, struct arg *a);
 
 char yes_no_prompt(const char *prompt, ...);
 
@@ -149,15 +150,6 @@ static inline int arg_count_increment(struct cmd_context *cmd, int a)
 static inline const char *command_name(struct cmd_context *cmd)
 {
 	return cmd->command->name;
-}
-
-static inline int driver_is_loaded(void)
-{
-	int i = driver_version(NULL, 0);
-
-	if (!i)
-		log_error("device-mapper driver/module not loaded?");
-	return i;
 }
 
 #endif

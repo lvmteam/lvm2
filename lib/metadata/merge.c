@@ -4,7 +4,7 @@
  * This file is released under the LGPL.
  */
 
-#include "log.h"
+#include "lib.h"
 #include "metadata.h"
 
 /*
@@ -12,12 +12,14 @@
  * successfully merged.  If the do merge, 'first'
  * will be adjusted to contain both areas.
  */
-static int _merge(struct stripe_segment *first, struct stripe_segment *second)
+static int _merge(struct lv_segment *first, struct lv_segment *second)
 {
 	int s;
 	uint32_t width;
 
 	if (!first ||
+	    (first->type != SEG_STRIPED) ||
+	    (first->type != second->type) ||
 	    (first->stripes != second->stripes) ||
 	    (first->stripe_size != second->stripe_size))
 		return 0;
@@ -39,10 +41,10 @@ static int _merge(struct stripe_segment *first, struct stripe_segment *second)
 int lv_merge_segments(struct logical_volume *lv)
 {
 	struct list *segh;
-	struct stripe_segment *current, *prev = NULL;
+	struct lv_segment *current, *prev = NULL;
 
 	list_iterate(segh, &lv->segments) {
-		current = list_item(segh, struct stripe_segment);
+		current = list_item(segh, struct lv_segment);
 
 		if (_merge(prev, current))
 			list_del(&current->list);

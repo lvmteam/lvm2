@@ -4,16 +4,13 @@ lvremove \- remove a logical volume
 .SH SYNOPSIS
 .B lvremove
 [\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-f/\-\-force]
-[\-h/\-?/\-\-help] [\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
+[\-h/\-?/\-\-help] 
+[\-t/\-\-test]
+[\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
 .SH DESCRIPTION
 lvremove allows you to remove one or more inactive logical volumes.
 .SH OPTIONS
 See \fBlvm\fP for common options.
-.TP
-.I \-A, \-\-autobackup y/n
-Controls automatic backup of VG metadata after the change ( see
-.B vgcfgbackup(8)
-). Default is yes.
 .TP
 .I \-f, \-\-force
 Force remove without confirmation.

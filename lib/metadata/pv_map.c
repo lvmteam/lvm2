@@ -4,8 +4,8 @@
  * This file is released under the LGPL.
  */
 
+#include "lib.h"
 #include "pv_map.h"
-#include "log.h"
 #include "hash.h"
 
 #include <assert.h>
@@ -73,7 +73,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 	struct pv_map *pvm;
 	uint32_t s, pe;
 	struct hash_table *hash;
-	struct stripe_segment *seg;
+	struct lv_segment *seg;
 	int r = 0;
 
 	if (!(hash = hash_create(128))) {
@@ -95,7 +95,7 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 		lv = list_item(lvh, struct lv_list)->lv;
 
 		list_iterate(segh, &lv->segments) {
-			seg = list_item(segh, struct stripe_segment);
+			seg = list_item(segh, struct lv_segment);
 
 			for (s = 0; s < seg->stripes; s++) {
 				for (pe = 0; pe < (seg->len / seg->stripes);
@@ -142,7 +142,7 @@ static void _insert_area(struct list *head, struct pv_area *a)
 }
 
 static int _create_single_area(struct pool *mem, struct pv_map *pvm,
-			       uint32_t * extent)
+			       uint32_t *extent)
 {
 	uint32_t e = *extent, b, count = pvm->pv->pe_count;
 	struct pv_area *pva;
