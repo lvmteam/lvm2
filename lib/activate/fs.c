@@ -4,7 +4,16 @@
  * This file is released under the LGPL.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "fs.h"
+#include "log.h"
 
 /*
  * FIXME: copied straight from LVM1.
@@ -15,7 +24,7 @@
 static int _check_devfs(const char *dev_prefix)
 {
 	int r = 0, len;
-	char dir[NAME_LEN], line[512];
+	char dir[PATH_MAX], line[512];
 	char type[32];
 	FILE *mounts = NULL;
 
@@ -33,7 +42,7 @@ static int _check_devfs(const char *dev_prefix)
 			continue;
 
 		if (!strcmp(type, "devfs") && !strncmp(dir, dev_prefix, len)) {
-			ret = 1;
+			r = 1;
 			break;
 		}
 	}
@@ -56,8 +65,8 @@ void _build_vg_path(char *buffer, size_t len, struct volume_group *vg)
 
 void _build_link_path(char *buffer, size_t len, struct logical_volume *lv)
 {
-	snprintf(buffer, len, "%s/%s/%s", vg->cmd->dev_dir,
-		 vg->name, lv->name);
+	snprintf(buffer, len, "%s/%s/%s", lv->vg->cmd->dev_dir,
+		 lv->vg->name, lv->name);
 }
 
 static int _mk_node(struct logical_volume *lv)
@@ -72,7 +81,7 @@ static int _mk_node(struct logical_volume *lv)
 	_build_lv_path(lv_path, sizeof(lv_path), lv);
 
 	if (mknod(lv_path, S_IFBLK | S_IRUSR | S_IWUSR | S_IRGRP, dev) < 0) {
-		log_sys_err("mknod", "creating lv device node");
+		log_sys_error("mknod", "creating lv device node");
 		return 0;
 	}
 
@@ -90,7 +99,7 @@ static int _rm_node(struct logical_volume *lv)
 	_build_lv_path(lv_path, sizeof(lv_path), lv);
 
 	if (unlink(lv_path) < 0) {
-		log_sys_err("unlink", "removing lv device node");
+		log_sys_error("unlink", "removing lv device node");
 		return 0;
 	}
 
@@ -128,7 +137,7 @@ static int _mk_link(struct logical_volume *lv)
 	_build_link_path(link_path, sizeof(link_path), lv);
 
 	if (symlink(lv_path, link_path) < 0) {
-		log_sys_err("symlink", "creating lv symlink");
+		log_sys_error("symlink", "creating lv symlink");
 		return 0;
 	}
 
@@ -142,7 +151,7 @@ static int _rm_link(struct logical_volume *lv)
 	_build_link_path(link_path, sizeof(link_path), lv);
 
 	if (unlink(link_path) < 0) {
-		log_sys_err("unlink", "unlink lv symlink");
+		log_sys_error("unlink", "unlink lv symlink");
 		return 0;
 	}
 
