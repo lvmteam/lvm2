@@ -11,6 +11,8 @@
 #include "list.h"
 #include "log.h"
 
+#include <time.h>
+#include <sys/utsname.h>
 
 static int _check_vg_name(const char *name)
 {
@@ -115,6 +117,19 @@ int import_pv(struct pool *mem, struct device *dev,
 	return 1;
 }
 
+static int _system_id(char *system_id)
+{
+	struct utsname uts;
+
+	if (uname(&uts) != 0) {
+		log_sys_error("uname", "_system_id");
+		return 0;
+	}
+
+	sprintf(system_id, "%s%lu", uts.nodename, time(NULL));
+	return 1;
+}
+
 int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 {
 	memset(pvd, 0, sizeof(*pvd));
@@ -150,6 +165,12 @@ int export_pv(struct pv_disk *pvd, struct physical_volume *pv)
 	pvd->pe_total = pv->pe_count;
 	pvd->pe_allocated = pv->pe_allocated;
 	pvd->pe_start = pv->pe_start;
+
+	if (!_system_id(pvd->system_id)) {
+		stack;
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -234,6 +255,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	vgd->pe_size = vg->extent_size;
 	vgd->pe_total = vg->extent_count;
 	vgd->pe_allocated = vg->extent_count - vg->free_count;
+
 	return 1;
 }
 
