@@ -9,7 +9,6 @@
 ../lib/format1/format1.h
 ../lib/log/log.h
 ../lib/metadata/metadata.h
-../lib/metadata/metadata.h
 ../lib/mm/dbg_malloc.h
 ../lib/mm/pool.h
 ../lib/mm/xlate.h
