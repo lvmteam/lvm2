@@ -150,6 +150,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	if (!(dmi = malloc(len)))
 		return NULL;
 
+	strncpy(dmi->version, DM_IOCTL_VERSION, sizeof(dmi->version));
 	dmi->data_size = len;
 	strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
 	dmi->suspend = (dmt->type == DM_DEVICE_SUSPEND) ? 1 : 0;
