@@ -83,6 +83,10 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 		int needed = s + alignment + sizeof(struct chunk);
 		c = _new_chunk(p, (needed > p->chunk_size) ?
 			       needed : p->chunk_size);
+
+		if (!c)
+			return NULL;
+
 		_align_chunk(c, alignment);
 	}
 
@@ -141,6 +145,10 @@ void *pool_begin_object(struct pool *p, size_t init_size)
 		       init_size > (p->chunk_size - sizeof(struct chunk)) ?
 			       init_size + sizeof(struct chunk) + align :
 			       p->chunk_size);
+
+		if (!c)
+			return NULL;
+
 		_align_chunk(c, align);
 	}
 
@@ -149,14 +157,17 @@ void *pool_begin_object(struct pool *p, size_t init_size)
 
 void *pool_grow_object(struct pool *p, unsigned char *buffer, size_t n)
 {
-	struct chunk *c = p->chunk;
+	struct chunk *c = p->chunk, *nc;
 
 	if (c->end - (c->begin + p->object_len) < n) {
 		/* move into a new chunk */
 		if (p->object_len + n > (p->chunk_size / 2))
-			_new_chunk(p, (p->object_len + n) * 2);
+			nc = _new_chunk(p, (p->object_len + n) * 2);
 		else
-			_new_chunk(p, p->chunk_size);
+			nc = _new_chunk(p, p->chunk_size);
+
+		if (!nc)
+			return NULL;
 
 		_align_chunk(p->chunk, p->object_alignment);
 		memcpy(p->chunk->begin, c->begin, p->object_len);
@@ -209,7 +220,9 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 		c = p->spare_chunk;
 		p->spare_chunk = 0;
 	} else {
-		c = dbg_malloc(s);
+		if (!(c = dbg_malloc(s)))
+			return NULL;
+
 		c->end = (char *) c + s;
 	}
 
