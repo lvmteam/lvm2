@@ -42,6 +42,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/* Work through all segments on the supplied PV */
 	list_iterate(segh, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
 		for (s = 0; s < seg->area_count; s++) {
@@ -49,6 +50,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 			    seg->area[s].u.pv.pv->dev != pv->dev)
 				continue;
 
+			/* First time, add LV to list of LVs affected */
 			if (!lv_used) {
 				if (!(lvl = pool_alloc(cmd->mem, sizeof(*lvl)))) {
 					log_error("lv_list alloc failed");
@@ -64,7 +66,8 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 				       seg->area_len, 0u, seg->area_len,
 				       seg->area[s].u.pv.pv,
 				       seg->area[s].u.pv.pe,
-				       PVMOVE, allocatable_pvs)) {
+				       PVMOVE, allocatable_pvs,
+				       lv->alloc)) {
 				log_error("Allocation for temporary "
 					  "pvmove LV failed");
 				return 0;
@@ -85,6 +88,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	return 1;
 }
 
+/* Remove a temporary mirror */
 int remove_pvmove_mirrors(struct volume_group *vg,
 			  struct logical_volume *lv_mirr)
 {
@@ -93,11 +97,13 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 	struct lv_segment *seg, *mir_seg;
 	uint32_t s, c;
 
+	/* Loop through all LVs except the temporary mirror */
 	list_iterate(lvh, &vg->lvs) {
 		lv1 = list_item(lvh, struct lv_list)->lv;
 		if (lv1 == lv_mirr)
 			continue;
 
+		/* Find all segments that point at the temporary mirror */
 		list_iterate(segh, &lv1->segments) {
 			seg = list_item(segh, struct lv_segment);
 			for (s = 0; s < seg->area_count; s++) {
@@ -105,13 +111,17 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				    seg->area[s].u.lv.lv != lv_mirr)
 					continue;
 
+				/* Find the mirror segment pointed at */
 				if (!(mir_seg = find_seg_by_le(lv_mirr,
 							       seg->area[s].
 							       u.lv.le))) {
+					/* FIXME Error message */
 					log_error("No segment found with LE");
 					return 0;
 				}
 
+				/* Check the segment params are compatible */
+				/* FIXME Improve error mesg & remove restrcn */
 				if ((!(mir_seg->segtype->flags
 				       & SEG_AREAS_MIRRORED)) ||
 				    !(mir_seg->status & PVMOVE) ||
@@ -122,8 +132,11 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 					return 0;
 				}
 
-				if (mir_seg->extents_copied ==
-					mir_seg->area_len)
+				/* Replace original segment with newly-mirrored
+				 * area (or original if reverting)
+				 */
+				if (mir_seg->extents_copied == 
+				        mir_seg->area_len)
 					c = 1;
 				else
 					c = 0;
@@ -132,6 +145,7 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				seg->area[s].u.pv.pv = mir_seg->area[c].u.pv.pv;
 				seg->area[s].u.pv.pe = mir_seg->area[c].u.pv.pe;
 
+				/* Replace mirror with old area */
 				if (!
 				    (mir_seg->segtype =
 				     get_segtype_from_string(vg->cmd,
@@ -141,6 +155,7 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				}
 				mir_seg->area_count = 1;
 
+				/* FIXME Assumes only one pvmove at a time! */
 				lv1->status &= ~LOCKED;
 			}
 		}
@@ -199,6 +214,7 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 		if (!(lv->status & lv_type))
 			continue;
 
+		/* Check segment origins point to pvname */
 		list_iterate(segh, &lv->segments) {
 			seg = list_item(segh, struct lv_segment);
 			if (seg->area[0].type != AREA_PV)
@@ -249,6 +265,7 @@ struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 		if (lv1 == lv)
 			continue;
 
+		/* Find whether any segment points at the supplied LV */
 		list_iterate(segh, &lv1->segments) {
 			seg = list_item(segh, struct lv_segment);
 			for (s = 0; s < seg->area_count; s++) {
