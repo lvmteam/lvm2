@@ -143,15 +143,17 @@ int init_cluster()
     char *portstr;
 
     /* Get cluster name from CCS */
-    /* TODO: is this right? */
-    ccs_h = ccs_force_connect(NULL, 1); // PJC
-    if (!ccs_h)
+    ccs_h = ccs_force_connect(NULL, 0);
+    if (ccs_h < 0)
+    {
+	syslog(LOG_ERR, "Cannot login in to CCSD server\n");
 	return -1;
+    }
 
     ccs_get(ccs_h, "//cluster/@name", &cluster_name);
     DEBUGLOG("got cluster name %s\n", cluster_name);
 
-    if (!ccs_get(ccs_h, "//clvm/@port", &portstr))
+    if (!ccs_get(ccs_h, "//cluster/clvm/@port", &portstr))
     {
 	port = atoi(portstr);
 	free(portstr);
@@ -244,7 +246,6 @@ void cluster_closedown()
     DEBUGLOG("cluster_closedown\n");
     lg_lock_logout(gulm_if);
     lg_core_logout(gulm_if);
-    lg_core_shutdown(gulm_if);
     lg_release(gulm_if);
 }
 
@@ -844,7 +845,7 @@ static int get_all_cluster_nodes()
 
     /* Open the config file */
     ctree = ccs_force_connect(NULL, 1);
-    if (ctree <= 0)
+    if (ctree < 0)
     {
 	log_error("Error connecting to CCS");
 	return -1;
@@ -897,7 +898,6 @@ static int get_all_cluster_nodes()
 	    DEBUGLOG("node %s has clvm disabled\n", nodename);
 	}
 	free(nodename);
-	error = ccs_get(ctree, "//cluster/clusternodes/clusternode/@name", &nodename);
     }
 
     /* Finished with config file */
@@ -906,7 +906,3 @@ static int get_all_cluster_nodes()
     return 0;
 }
 
-int gulm_fd(void)
-{
-    return lg_core_selector(gulm_if);
-}
