@@ -22,6 +22,7 @@
 #include "format-text.h"
 #include "display.h"
 #include "memlock.h"
+#include "str_list.h"
 
 #ifdef HAVE_LIBDL
 #include "sharedlib.h"
@@ -110,8 +111,12 @@ static void _init_logging(struct cmd_context *cmd)
 		append = 0;
 
 	log_file = find_config_str(cmd->cf->root, "log/file", '/', 0);
-	if (log_file)
+
+	if (log_file) {
+		release_log_memory();
+		fin_log();
 		init_log_file(log_file, append);
+	}
 
 	log_file = find_config_str(cmd->cf->root, "log/activate_file", '/', 0);
 	if (log_file)
@@ -442,6 +447,105 @@ static int _init_hostname(struct cmd_context *cmd)
 	return 1;
 }
 
+static int _set_tag(struct cmd_context *cmd, const char *tag)
+{
+	log_very_verbose("Setting host tag: %s", pool_strdup(cmd->libmem, tag));
+
+	if (!str_list_add(cmd->libmem, &cmd->tags, tag)) {
+		log_error("_init_tags: str_list_add %s failed", tag);
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _check_host_filters(struct cmd_context *cmd, struct config_node *hn,
+			       int *passes)
+{
+	struct config_node *cn;
+	struct config_value *cv;
+
+	*passes = 1;
+
+	for (cn = hn; cn; cn = cn->sib) {
+		if (!cn->v)
+			continue;
+		if (!strcmp(cn->key, "host_list")) {
+			*passes = 0;
+			if (cn->v->type == CFG_EMPTY_ARRAY)
+				continue;
+			for (cv = cn->v; cv; cv = cv->next) {
+				if (cv->type != CFG_STRING) {
+					log_error("Invalid hostname string "
+						  "for tag %s", cn->key);
+					return 0;
+				}
+				if (!strcmp(cv->v.str, cmd->hostname)) {
+					*passes = 1;
+					return 1;
+				}
+			}
+		}
+		if (!strcmp(cn->key, "host_filter")) {
+			log_error("host_filter not supported yet");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+	
+static int _init_tags(struct cmd_context *cmd)
+{
+	struct config_node *tn, *cn;
+	const char *tag;
+	int passes;
+
+	list_init(&cmd->tags);
+
+	if (!(tn = find_config_node(cmd->cf->root, "tags", '/')) ||
+	    !tn->child) {
+		log_very_verbose("No tags defined in config file");
+		return 1;
+	}
+
+	if (find_config_int(cmd->cf->root, "tags/hosttags", '/',
+			    DEFAULT_HOSTTAGS)) {
+		/* FIXME Strip out invalid chars: only A-Za-z0-9_+.- */
+		if (!_set_tag(cmd, cmd->hostname)) {
+			stack;
+			return 0;
+		}
+	}
+
+	for (cn = tn->child; cn; cn = cn->sib) {
+		if (cn->v)
+			continue;
+		tag = cn->key;
+		if (*tag == '@')
+			tag++;
+		if (!validate_name(tag)) {
+			log_error("Invalid tag in config file: %s", cn->key);
+			return 0;
+		}
+		if (cn->child) {
+			passes = 0;
+			if (!_check_host_filters(cmd, cn->child, &passes)) {
+				stack;
+				return 0;
+			}
+			if (!passes)
+				continue;
+		}
+		if (!_set_tag(cmd, tag)) {
+			stack;
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 /* Entry point */
 struct cmd_context *create_toolcontext(struct arg *the_args)
 {
@@ -509,6 +613,9 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (!_init_hostname(cmd))
 		goto error;
 
+	if (!_init_tags(cmd))
+		goto error;
+
 	cmd->current_settings = cmd->default_settings;
 
 	return cmd;
@@ -516,6 +623,16 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
       error:
 	dbg_free(cmd);
 	return NULL;
+}
+
+int refresh_toolcontext(struct cmd_context *cmd)
+{
+	_init_logging(cmd);
+	_init_tags(cmd);
+
+	/* FIXME Reset filters and dev_cache */
+
+	return 1;
 }
 
 static void _destroy_formats(struct list *formats)

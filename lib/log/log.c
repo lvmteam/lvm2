@@ -47,11 +47,9 @@ void init_log_file(const char *log_file, int append)
 
 void init_log_direct(const char *log_file, int append)
 {
-	const char *filename;
 	int open_flags = append ? 0 : O_TRUNC;
 
-	filename = dbg_strdup(log_file);
-	dev_create_file(filename, &_log_dev, &_log_dev_alias);
+	dev_create_file(log_file, &_log_dev, &_log_dev_alias);
 	if (!dev_open_flags(&_log_dev, O_RDWR | O_CREAT | open_flags, 1, 0))
 		return;
 
@@ -76,6 +74,9 @@ void log_suppress(int suppress)
 
 void release_log_memory(void)
 {
+	if (!_log_direct)
+		return;
+
 	dbg_free((char *) _log_dev_alias.str);
 	_log_dev_alias.str = "activate_log file";
 }

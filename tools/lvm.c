@@ -750,8 +750,11 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	set_cmd_name(cmd->command->name);
 
 	if (reload_config_file(&cmd->cf)) {
-		;
-		/* FIXME Reinitialise various settings inc. logging, filters */
+		/* Reinitialise various settings inc. logging, filters */
+		if (!refresh_toolcontext(cmd)) {
+			log_error("Updated config file invalid. Aborting.");
+			return ECMD_FAILED;
+		}
 	}
 
 	if ((ret = _get_settings(cmd)))
