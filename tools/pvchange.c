@@ -33,7 +33,7 @@ int pvchange(int argc, char **argv)
 
 	struct list *pvh, *pvs;
 
-	if (arg_count(allocation_ARG) == 0) {
+	if (arg_count(allocatable_ARG) == 0) {
 		log_error("Please give the x option");
 		return EINVALID_CMD_LINE;
 	}
@@ -86,7 +86,7 @@ int pvchange_single(struct physical_volume *pv)
 
 	const char *pv_name = dev_name(pv->dev);
 
-	int allocation = !strcmp(arg_str_value(allocation_ARG, "n"), "y");
+	int allocatable = !strcmp(arg_str_value(allocatable_ARG, "n"), "y");
 
 	/* If in a VG, must change using volume group.  Pointless. */
 	/* FIXME: Provide a direct pv_write_pv that *only* touches PV structs*/
@@ -108,24 +108,24 @@ int pvchange_single(struct physical_volume *pv)
 	}
 
 	/* change allocatability for a PV */
-	if (allocation && (pv->status & ALLOCATED_PV)) {
+	if (allocatable && (pv->status & ALLOCATABLE_PV)) {
 		log_error("Physical volume %s is already allocatable", pv_name);
 		return 0;
 	}
 
-	if (!allocation && !(pv->status & ALLOCATED_PV)) {
+	if (!allocatable && !(pv->status & ALLOCATABLE_PV)) {
 		log_error("Physical volume %s is already unallocatable",
 			  pv_name);
 		return 0;
 	}
 
-	if (allocation) {
+	if (allocatable) {
 		log_verbose("Setting physical volume %s allocatable", pv_name);
-		pv->status |= ALLOCATED_PV;
+		pv->status |= ALLOCATABLE_PV;
 	} else {
 		log_verbose("Setting physical volume %s NOT allocatable",
 			    pv_name);
-		pv->status &= ~ALLOCATED_PV;
+		pv->status &= ~ALLOCATABLE_PV;
 	}
 
 /******* Ignore active

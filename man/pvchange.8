@@ -4,7 +4,7 @@ pvchange \- change attributes of a physical volume
 .SH SYNOPSIS
 .B pvchange
 [\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-h/\-?/\-\-help]
-[\-v/\-\-verbose] [\-a/\-\-all] [\-x/\-\-allocation y/n] [PhysicalVolumePath...]
+[\-v/\-\-verbose] [\-a/\-\-all] [\-x/\-\-allocatable y/n] [PhysicalVolumePath...]
 .SH DESCRIPTION
 pvchange allows you to change the allocation permissions of one or
 more physical volumes.
@@ -20,7 +20,7 @@ Controls automatic backup of VG metadata after the change ( see
 If PhysicalVolumePath is not specified on the command line all
 physical volumes are searched for and used.
 .TP
-.I \-x, \-\-allocation y/n
+.I \-x, \-\-allocatable y/n
 Enable or disable allocation of physical extents on this physical volume.
 .SH Example
 "pvchange -x n /dev/sdk1" disallows the allocation of physical extents

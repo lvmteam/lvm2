@@ -19,6 +19,9 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *maps)
 	list_iterate(tmp, pvs) {
 		pv = &(list_item(tmp, struct pv_list)->pv);
 
+		if (!(pv->status & ALLOCATABLE_PV))
+			continue;
+
 		if (!(pvm = pool_zalloc(mem, sizeof(*pvm)))) {
 			stack;
 			return 0;

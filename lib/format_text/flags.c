@@ -21,7 +21,7 @@ struct flag {
 static struct flag _vg_flags[] = {
 	{ACTIVE, "ACTIVE"},
 	{EXPORTED_VG, "EXPORTED"},
-	{EXTENDABLE_VG, "EXTENDABLE"},
+	{RESIZEABLE_VG, "RESIZEABLE"},
 	{CLUSTERED, "CLUSTERED"},
 	{SHARED, "SHARED"},
 	{0, NULL}
@@ -29,7 +29,7 @@ static struct flag _vg_flags[] = {
 
 static struct flag _pv_flags[] = {
 	{ACTIVE, "ACTIVE"},
-	{ALLOCATED_PV, "ALLOCATED"},
+	{ALLOCATABLE_PV, "ALLOCATABLE"},
 	{0, NULL}
 };
 

@@ -22,19 +22,19 @@
 
 static int vgchange_single(const char *vg_name);
 void vgchange_available(struct volume_group *vg);
-void vgchange_allocation(struct volume_group *vg);
+void vgchange_resizeable(struct volume_group *vg);
 void vgchange_logicalvolume(struct volume_group *vg);
 
 int vgchange(int argc, char **argv)
 {
 	if (!(arg_count(available_ARG) + arg_count(logicalvolume_ARG) +
-	      arg_count(allocation_ARG))) {
+	      arg_count(resizeable_ARG))) {
 		log_error("One of -a, -l or -x options required");
 		return EINVALID_CMD_LINE;
 	}
 
 	if (arg_count(available_ARG) + arg_count(logicalvolume_ARG) +
-	    arg_count(allocation_ARG) > 1) {
+	    arg_count(resizeable_ARG) > 1) {
 		log_error("Only one of -a, -l or -x options allowed");
 		return EINVALID_CMD_LINE;
 	}
@@ -56,15 +56,16 @@ static int vgchange_single(const char *vg_name)
 		return ECMD_FAILED;
 	}
 
-	if (vg->status & EXPORTED_VG)
+	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group %s is exported", vg_name);
 		return ECMD_FAILED;
+	}
 
 	if (arg_count(available_ARG))
 		vgchange_available(vg);
 
-	if (arg_count(allocation_ARG))
-		vgchange_allocation(vg);
+	if (arg_count(resizeable_ARG))
+		vgchange_resizeable(vg);
 
 	if (arg_count(logicalvolume_ARG))
 		vgchange_logicalvolume(vg);
@@ -131,17 +132,17 @@ void vgchange_available(struct volume_group *vg)
 	return;
 }
 
-void vgchange_allocation(struct volume_group *vg)
+void vgchange_resizeable(struct volume_group *vg)
 {
-	int extendable = !strcmp(arg_str_value(allocation_ARG, "n"), "y");
+	int resizeable = !strcmp(arg_str_value(resizeable_ARG, "n"), "y");
 
-	if (extendable && (vg->status & EXTENDABLE_VG)) {
-		log_error("Volume group %s is already extendable", vg->name);
+	if (resizeable && (vg->status & RESIZEABLE_VG)) {
+		log_error("Volume group %s is already resizeable", vg->name);
 		return;
 	}
 
-	if (!extendable && !(vg->status & EXTENDABLE_VG)) {
-		log_error("Volume group %s is already not extendable",
+	if (!resizeable && !(vg->status & RESIZEABLE_VG)) {
+		log_error("Volume group %s is already not resizeable",
 			  vg->name);
 		return;
 	}
@@ -149,10 +150,10 @@ void vgchange_allocation(struct volume_group *vg)
 	if (!archive(vg))
 		return;
 
-	if (extendable)
-		vg->status |= EXTENDABLE_VG;
+	if (resizeable)
+		vg->status |= RESIZEABLE_VG;
 	else
-		vg->status &= ~EXTENDABLE_VG;
+		vg->status &= ~RESIZEABLE_VG;
 
 	if (!fid->ops->vg_write(fid, vg))
 		return;
@@ -174,8 +175,8 @@ void vgchange_logicalvolume(struct volume_group *vg)
 		return;
 	}
 
-	if (!(vg->status & EXTENDABLE_VG)) {
-		log_error("Volume group '%s' must be extendable "
+	if (!(vg->status & RESIZEABLE_VG)) {
+		log_error("Volume group '%s' must be resizeable "
 			  "to change MaxLogicalVolume", vg->name);
 		return;
 	}

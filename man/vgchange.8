@@ -11,7 +11,7 @@ vgchange \- change attributes of a volume group
 .IR MaxLogicalVolumes ]
 .RB [ \-v | \-\-verbose ]
 .RB [ \-\-version ]
-.RB [\-x | \-\-allocation " {" y | n }]
+.RB [\-x | \-\-resizeable " {" y | n }]
 .RI [ VolumeGroupName ...]
 .SH DESCRIPTION
 .B vgchange
@@ -42,7 +42,7 @@ In other words: makes a volume group known/unknown to the kernel.
 Changes the maximum logical volume number of an existing inactive
 volume group.
 .TP
-.BR \-x ", " \-\-allocation { y | n }
+.BR \-x ", " \-\-resizeable { y | n }
 Enables or disables the extension/reduction of this volume group
 with/by physical volumes.
 .SH EXAMPLES

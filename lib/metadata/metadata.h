@@ -29,10 +29,10 @@
 
 #define ACTIVE               	0x00000001  /* PV VG LV */
 #define EXPORTED_VG          	0x00000002  /* VG */  /* And PV too perhaps? */
-#define EXTENDABLE_VG        	0x00000004  /* VG */
+#define RESIZEABLE_VG        	0x00000004  /* VG */
 
-/* FIXME: What does this mean ? */
-#define ALLOCATED_PV         	0x00000008  /* PV */
+/* May any free extents on this PV be used or must they be left free? */
+#define ALLOCATABLE_PV         	0x00000008  /* PV */
 
 #define SPINDOWN_LV          	0x00000010  /* LV */
 #define BADBLOCK_ON       	0x00000020  /* LV */

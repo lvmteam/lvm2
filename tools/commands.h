@@ -248,10 +248,10 @@ xx(pvchange,
    "\t[-v/--verbose]\n"
    "\t[-a/--all]\n"
    "\t[-t|--test]\n"
-   "\t[-x/--allocation y/n]\n"
+   "\t[-x/--allocatable y/n]\n"
    "\t[PhysicalVolumePath...]\n",
 
-   all_ARG, autobackup_ARG, allocation_ARG, test_ARG)
+   all_ARG, autobackup_ARG, allocatable_ARG, allocation_ARG, test_ARG)
 
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
@@ -366,11 +366,12 @@ xx(vgchange,
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
    "\t{-a|--available {y|n}  |" "\n"
-   "\t -x|--allocation {y|n} |" "\n"
+   "\t -x|--resizeable {y|n} |" "\n"
    "\t -l|--logicalvolume MaxLogicalVolumes}" "\n"
    "\t[VolumeGroupName...]\n",
 
-   autobackup_ARG, available_ARG, logicalvolume_ARG, allocation_ARG,
+   autobackup_ARG, available_ARG, logicalvolume_ARG, 
+   resizeable_ARG, resizable_ARG, allocation_ARG, 
    test_ARG)
 
 xx(vgck,
