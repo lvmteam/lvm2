@@ -342,6 +342,12 @@ struct format_handler {
 	int (*vg_setup) (struct format_instance * fi, struct volume_group * vg);
 
 	/*
+	 * Check whether particular segment type is supported.
+	 */
+	int (*segtype_supported) (struct format_instance *fid,
+				  struct segment_type *segtype);
+
+	/*
 	 * Create format instance with a particular metadata area
 	 */
 	struct format_instance *(*create_instance) (const struct format_type *
