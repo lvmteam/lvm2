@@ -14,7 +14,7 @@ typedef int (*lock_resource_fn) (struct cmd_context * cmd, const char *resource,
 typedef void (*fin_lock_fn) (void);
 typedef void (*reset_lock_fn) (void);
 
-#define LCK_PRE_MEMLOCK 0x00000001      /* Is memlock() needed before calls? */
+#define LCK_PRE_MEMLOCK	0x00000001	/* Is memlock() needed before calls? */
 
 struct locking_type {
 	uint32_t flags;

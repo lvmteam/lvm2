@@ -468,7 +468,7 @@ int vg_write(struct volume_group *vg)
 	/* Write to each copy of the metadata area */
 	list_iterate(mdah, &vg->fid->metadata_areas) {
 		mda = list_item(mdah, struct metadata_area);
-		if(!mda->ops->vg_write) {
+		if (!mda->ops->vg_write) {
 			log_error("Format does not support writing volume"
 				  "group metadata areas");
 			/* Revert */
