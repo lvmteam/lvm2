@@ -15,6 +15,7 @@
 
 #include "tools.h"
 #include "polldaemon.h"
+#include "display.h"
 
 /* Allow /dev/vgname/lvname, vgname/lvname or lvname */
 static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
@@ -85,7 +86,8 @@ static struct volume_group *_get_vg(struct cmd_context *cmd, const char *vgname)
 /* Create list of PVs for allocation of replacement extents */
 static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 					 char **argv, struct volume_group *vg,
-					 struct physical_volume *pv)
+					 struct physical_volume *pv,
+					 alloc_policy_t alloc)
 {
 	struct list *allocatable_pvs, *pvht, *pvh;
 	struct pv_list *pvl;
@@ -103,13 +105,18 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 		}
 	}
 
-	/* Don't allocate onto the PV we're clearing! */
-	/* Remove PV if full */
 	list_iterate_safe(pvh, pvht, allocatable_pvs) {
 		pvl = list_item(pvh, struct pv_list);
-		if ((pvl->pv->dev == pv->dev) ||
-		    (pvl->pv->pe_count == pvl->pv->pe_alloc_count))
-			    list_del(&pvl->list);
+
+		/* Don't allocate onto the PV we're clearing! */
+		if ((alloc != ALLOC_ANYWHERE) && (pvl->pv->dev == pv->dev)) {
+			list_del(&pvl->list);
+			continue;
+		}
+
+		/* Remove PV if full */
+		if ((pvl->pv->pe_count == pvl->pv->pe_alloc_count))
+			list_del(&pvl->list);
 	}
 
 	if (list_empty(allocatable_pvs)) {
@@ -126,12 +133,14 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						struct list *source_pvl,
 						const char *lv_name,
 						struct list *allocatable_pvs,
+						alloc_policy_t alloc,
 						struct list **lvs_changed)
 {
 	struct logical_volume *lv_mirr, *lv;
 	struct lv_list *lvl;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
+	/* FIXME Pass 'alloc' down to lv_extend */
 	if (!(lv_mirr = lv_create_empty(vg->fid, NULL, "pvmove%d",
 					LVM_READ | LVM_WRITE,
 					ALLOC_CONTIGUOUS, vg))) {
@@ -252,6 +261,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	struct volume_group *vg;
 	struct list *source_pvl;
 	struct list *allocatable_pvs;
+	alloc_policy_t alloc;
 	struct list *lvs_changed;
 	struct physical_volume *pv;
 	struct logical_volume *lv_mirr;
@@ -313,9 +323,14 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 			return ECMD_FAILED;
 		}
 
+		alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG,
+							ALLOC_INHERIT);
+		if (alloc == ALLOC_INHERIT)
+			alloc = vg->alloc;
+
 		/* Get PVs we can use for allocation */
 		if (!(allocatable_pvs = _get_allocatable_pvs(cmd, argc, argv,
-							     vg, pv))) {
+							     vg, pv, alloc))) {
 			stack;
 			unlock_vg(cmd, pv->vg_name);
 			return ECMD_FAILED;
@@ -328,7 +343,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		}
 
 		if (!(lv_mirr = _set_up_pvmove_lv(cmd, vg, source_pvl, lv_name,
-						  allocatable_pvs,
+						  allocatable_pvs, alloc,
 						  &lvs_changed))) {
 			stack;
 			unlock_vg(cmd, pv->vg_name);
