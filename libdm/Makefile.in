@@ -44,5 +44,10 @@ ioctl_version: ioctl/libdevmapper.c
 	      ioctl/libdevmapper.c | \
 	      awk -F '[ \t\"]+' '/DM_IOCTL_VERSION/ {print $$3}' )"
 
-.PHONY: ioctl_version
+distclean_lib: 
+	$(RM) libdm-common.h
+
+distclean: distclean_lib
+
+.PHONY: ioctl_version distclean_lib distclean
 
