@@ -261,6 +261,14 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		}
 	}
 
+	if (segtype == SEG_MIRRORED) {
+		if (!_read_int32(sn, "mirror_count", &area_count)) {
+			log_error("Couldn't read 'mirror_count' for "
+				  "segment '%s'.", sn->key);
+			return 0;
+		}
+	}
+
 	if (!(seg = pool_zalloc(mem, sizeof(*seg) +
 				(sizeof(seg->area[0]) * area_count)))) {
 		stack;
@@ -338,6 +346,13 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		if (!seg->area_count) {
 			log_error("Zero areas not allowed for segment '%s'",
 				  sn->key);
+			return 0;
+		}
+
+		if ((seg->type == SEG_MIRRORED) &&
+		    !(cn = find_config_node(sn, "mirrors", '/'))) {
+			log_error("Couldn't find mirrors array for segment "
+				  "'%s'.", sn->key);
 			return 0;
 		}
 
