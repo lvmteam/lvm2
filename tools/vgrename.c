@@ -22,7 +22,7 @@
 
 int vgrename(int argc, char **argv)
 {
-	char *prefix;
+	char *dev_dir;
 	int length;
 
 	char *vg_name_old, *vg_name_new;
@@ -40,13 +40,13 @@ int vgrename(int argc, char **argv)
 	vg_name_old = argv[0];
 	vg_name_new = argv[1];
 
-	prefix = fid->cmd->dev_dir;
-	length = strlen(prefix);
+	dev_dir = fid->cmd->dev_dir;
+	length = strlen(dev_dir);
 
-	/* If present, strip prefix */
-	if (!strncmp(vg_name_old, prefix, length))
+	/* If present, strip dev_dir */
+	if (!strncmp(vg_name_old, dev_dir, length))
 		vg_name_old += length;
-	if (!strncmp(vg_name_new, prefix, length))
+	if (!strncmp(vg_name_new, dev_dir, length))
 		vg_name_new += length;
 
 	/* Check sanity of new name */
@@ -102,8 +102,8 @@ int vgrename(int argc, char **argv)
 			return ECMD_FAILED;
 *************/
 
-	sprintf(old_path, "%s%s", prefix, vg_name_old);
-	sprintf(new_path, "%s%s", prefix, vg_name_new);
+	sprintf(old_path, "%s%s", dev_dir, vg_name_old);
+	sprintf(new_path, "%s%s", dev_dir, vg_name_new);
 
 	log_verbose("Renaming %s to %s", old_path, new_path);
 	if (rename(old_path, new_path)) {

@@ -29,6 +29,7 @@ SOURCES=\
 	lvmchange.c \
 	lvreduce.c \
 	lvremove.c \
+	lvrename.c \
 	lvresize.c \
 	lvscan.c \
 	pvchange.c \

@@ -1,0 +1,131 @@
+/*
+ * Copyright (C) 2001  Sistina Software
+ *
+ * LVM is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * LVM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LVM; see the file COPYING.  If not, write to
+ * the Free Software Foundation, 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ *
+ */
+
+#include "tools.h"
+
+int lvrename(int argc, char **argv)
+{
+	int maxlen;
+	char *lv_name_old, *lv_name_new;
+	char *vg_name, *vg_name_new;
+	char *st;
+
+	struct volume_group *vg;
+	struct logical_volume *lv;
+	struct list *lvh;
+
+	if (argc != 2) {
+		log_error("Old and new logical volume required");
+		return EINVALID_CMD_LINE;
+	}
+
+	lv_name_old = argv[0];
+	lv_name_new = argv[1];
+
+	if (!(vg_name = extract_vgname(fid, lv_name_old))) {
+		log_error("Please provide a volume group name");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (strchr(lv_name_new, '/') &&
+	    (vg_name_new = extract_vgname(fid, lv_name_new)) &&
+	    strcmp(vg_name, vg_name_new)) {
+		log_error("Logical volume names must "
+			  "have the same volume group (%s or %s)",
+			  vg_name, vg_name_new);
+		return EINVALID_CMD_LINE;
+	}
+
+	if ((st = strrchr(lv_name_old, '/')))
+		lv_name_old = st + 1;
+
+	if ((st = strrchr(lv_name_new, '/')))
+		lv_name_new = st + 1;
+
+	/* Check sanity of new name */
+	maxlen = NAME_LEN - strlen(vg_name) - strlen(fid->cmd->dev_dir) - 3;
+	if (strlen(lv_name_new) > maxlen) {
+		log_error("New logical volume path exceeds maximum length "
+			  "of %d!", maxlen);
+		return ECMD_FAILED;
+	}
+
+	if (!*lv_name_new) {
+		log_error("New logical volume name may not be blank");
+		return ECMD_FAILED;
+	}
+
+	if (!is_valid_chars(lv_name_new)) {
+		log_error("New logical volume name %s has invalid characters",
+			  lv_name_new);
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!strcmp(lv_name_old, lv_name_new)) {
+		log_error("Old and new logical volume names must differ");
+		return EINVALID_CMD_LINE;
+	}
+
+	log_verbose("Checking for existing volume group %s", vg_name);
+	if (!(vg = fid->ops->vg_read(fid, vg_name))) {
+		log_error("Volume group %s doesn't exist", vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (!(vg->status & ACTIVE)) {
+		log_error("Volume group %s must be active before changing a "
+			  "logical volume", vg_name);
+		return ECMD_FAILED;
+	}
+
+	if ((lvh = find_lv_in_vg(vg, lv_name_new))) {
+		log_error("Logical volume %s already exists in "
+			  "volume group %s", lv_name_new, vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (!(lvh = find_lv_in_vg(vg, lv_name_old))) {
+		log_error("Existing logical volume %s not found in "
+			  "volume group %s", lv_name_old, vg_name);
+		return ECMD_FAILED;
+	}
+
+	lv = &list_item(lvh, struct lv_list)->lv;
+
+	if (!(lv->name = pool_strdup(fid->cmd->mem, lv_name_new))) {
+		log_error("Failed to allocate space for new name");
+		return ECMD_FAILED;
+	}
+
+	/* store it on disks */
+	log_verbose("Writing out updated volume group");
+	if (!(fid->ops->vg_write(fid, vg))) {
+		return ECMD_FAILED;
+	}
+
+	/* FIXME Update symlink.  lv_reactivate? */
+
+	/* FIXME backup */
+
+	log_print("Renamed %s to %s in volume group %s%s",
+		  lv_name_old, lv_name_new, fid->cmd->dev_dir, vg_name);
+
+	return 0;
+}

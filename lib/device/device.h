@@ -46,9 +46,5 @@ static inline int is_lvm_partition(const char *name) {
 	return 1;
 }
 
-#define LVM_DEFAULT_DIR_PREFIX "/dev/"
-/* FIXME Allow config file override */
-static inline char *lvm_dir_prefix(void) { return LVM_DEFAULT_DIR_PREFIX; }
-
 #endif
 
