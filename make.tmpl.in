@@ -58,7 +58,7 @@ CFLAGS+=-g -fno-omit-frame-pointer
 #CFLAGS+=-pg
 #LD_FLAGS=-pg
 
-CFLAGS+=-DDEBUG_MEM -DDEBUG
+CFLAGS+=-DDEBUG_MEM -DDEBUG -DDEBUG_POOL
 #CFLAGS+=-DBOUNDS_CHECK
 
 INCLUDES+=-I. -I$(top_srcdir)/include
