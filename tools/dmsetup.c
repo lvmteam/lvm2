@@ -269,7 +269,7 @@ static int _version(int argc, char **argv, void *data)
 	return r;
 }
 
-static int _simple(int task, const char *name, int display)
+static int _simple(int task, const char *name, uint32_t event_nr, int display)
 {
 	int r = 0;
 
@@ -280,6 +280,9 @@ static int _simple(int task, const char *name, int display)
 		return 0;
 
 	if (!dm_task_set_name(dmt, name))
+		goto out;
+
+	if (event_nr && !dm_task_set_event_nr(dmt, event_nr))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -294,32 +297,33 @@ static int _simple(int task, const char *name, int display)
 
 static int _remove_all(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_REMOVE_ALL, "", 0);
+	return _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0);
 }
 
 static int _remove(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_REMOVE, argv[1], 0);
+	return _simple(DM_DEVICE_REMOVE, argv[1], 0, 0);
 }
 
 static int _suspend(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_SUSPEND, argv[1], 1);
+	return _simple(DM_DEVICE_SUSPEND, argv[1], 0, 1);
 }
 
 static int _resume(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_RESUME, argv[1], 1);
+	return _simple(DM_DEVICE_RESUME, argv[1], 0, 1);
 }
 
 static int _clear(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_CLEAR, argv[1], 1);
+	return _simple(DM_DEVICE_CLEAR, argv[1], 0, 1);
 }
 
 static int _wait(int argc, char **argv, void *data)
 {
-	return _simple(DM_DEVICE_WAITEVENT, argv[1], 2);
+	return _simple(DM_DEVICE_WAITEVENT, argv[1],
+		       (argc == 3) ? atoi(argv[2]) : 0, 1);
 }
 
 static int _process_mapper_dir(int argc, char **argv,
@@ -606,7 +610,7 @@ static struct command _commands[] = {
 	{"mknodes", "[<dev_name>]", 0, 1, _info},
 	{"status", "[<dev_name>]", 0, 1, _status},
 	{"table", "[<dev_name>]", 0, 1, _status},
-	{"wait", "<dev_name>", 1, 1, _wait},
+	{"wait", "<dev_name> [<event_nr>]", 1, 2, _wait},
 	{"version", "", 0, 0, _version},
 	{NULL, NULL, 0, 0, NULL}
 };
