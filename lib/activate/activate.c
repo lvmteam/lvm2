@@ -15,16 +15,51 @@ static void _build_lv_name(char *buffer, size_t s, struct logical_volume *lv)
 	snprintf(buffer, s, "%s_%s", lv->vg->name, lv->name);
 }
 
+/*
+ * Creates a target for the next contiguous run of
+ * extents.
+ */
+static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
+			unsigned int *ple)
+{
+	char params[1024];
+	unsigned int le = *ple;
+	uint64_t esize = lv->vg->extent_size;
+	int i, count = 0;
+	struct pe_specifier *pes, *first = NULL;
+
+	for (i = le; i < lv->le_count; i++) {
+		pes = lv->map + i;
+
+		if (!first)
+			first = pes;
+
+		else if (first->pv != pes->pv || first->pe != pes->pe + 1)
+				break; /* no longer contig. */
+
+		count++;
+	}
+
+	snprintf(params, sizeof(params), "%s %llu",
+		 dev_name(first->pv->dev),
+		 first->pv->pe_start + (esize * first->pe));
+
+	if (!dm_task_add_target(dmt, esize * le, esize * count,
+				"linear", params)) {
+		stack;
+		return 0;
+	}
+
+	*ple = i;
+	return 1;
+}
+
 int lv_activate(struct logical_volume *lv)
 {
 	int r = 0;
-	int i;
+	uint32_t le = 0;
 
-	uint64_t esize = lv->vg->extent_size;
-	uint64_t start = 0ull;
-	char params[1024];
 	char name[128];
-	struct pe_specifier *pes;
 	struct dm_task *dmt;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_CREATE))) {
@@ -35,18 +70,15 @@ int lv_activate(struct logical_volume *lv)
 	_build_lv_name(name, sizeof(name), lv);
 	dm_task_set_name(dmt, name);
 
-	for (i = 0; i < lv->le_count; i++) {
-		pes = lv->map + i;
-		snprintf(params, sizeof(params), "%s %llu",
-			 dev_name(pes->pv->dev),
-			 pes->pv->pe_start + (esize * pes->pe));
-
-		if (!dm_task_add_target(dmt, start, esize, "linear", params)) {
-			stack;
+	/*
+	 * Merge adjacent extents.
+	 */
+	while (le < lv->le_count) {
+		if (!_emit_target(dmt, lv, &le)) {
+			log_err("unable to activate logical volume '%s'",
+				lv->name);
 			goto out;
 		}
-
-		start += esize;
 	}
 
 	if (!(r = dm_task_run(dmt)))

@@ -579,7 +579,7 @@ void export_pv_act(struct list *pvs)
 	}
 }
 
-int export_vg_number(struct list *pvs, const char *vg_name, 
+int export_vg_number(struct list *pvs, const char *vg_name,
 		     struct dev_filter *filter)
 {
 	struct list *pvh;
