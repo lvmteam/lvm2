@@ -544,6 +544,9 @@ find_config_str(struct config_node *cn,
 	if (n && n->v->type == CFG_STRING)
 		return n->v->v.str;
 
+	if (fail)
+		log_debug("%s not found in config: defaulting to %s",
+			  path, fail);
 	return fail;
 }
 

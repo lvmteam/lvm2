@@ -123,7 +123,11 @@ static int _insert(const char *path, int recurse)
 	struct stat info;
 	struct device *dev;
 
-	//log_very_verbose("dev-cache adding %s", path);
+	/* If entry already exists, replace it */
+        if ((dev = (struct device *)hash_lookup(_cache.devices, path))) {
+		log_debug("dev-cache: removing %s", path);
+		hash_remove(_cache.devices, path);
+	}
 
 	if (stat(path, &info) < 0) {
 		log_sys_very_verbose("stat", path);
@@ -138,7 +142,7 @@ static int _insert(const char *path, int recurse)
 	}
 
 	if (S_ISLNK(info.st_mode)) {
-		//log_debug("%s is a symbolic link, following", path);
+		log_debug("%s: Following symbolic link", path);
 		if (!(path = _follow_link(path, &info))) {
 			stack;
 			return 0;
@@ -146,16 +150,18 @@ static int _insert(const char *path, int recurse)
 	}
 
 	if (!S_ISBLK(info.st_mode)) {
-		//log_debug("%s is not a block device", path);
+		log_debug("%s: Not a block device", path);
 		return 0;
 	}
 
 	if (!(dev = _create_dev(path, &info))) {
-		stack;
+		log_debug("%s: Creation of device cache entry failed!", path);
 		return 0;
 	}
 
+	log_debug("dev-cache: adding %s", path);
 	hash_insert(_cache.devices, path, dev);
+
 	return 1;
 }
 

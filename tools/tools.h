@@ -38,6 +38,7 @@
 #include "display.h"
 #include "errors.h"
 #include "filter.h"
+#include "filter-persistent.h"
 #include "filter-composite.h"
 #include "filter-regex.h"
 #include "format1.h"
