@@ -5,6 +5,7 @@
  */
 
 #include "disk-rep.h"
+#include "dbg_malloc.h"
 #include "pool.h"
 #include "xlate.h"
 #include "log.h"
@@ -169,7 +170,7 @@ static int _read_lvd(struct device *dev, ulong pos, struct lv_disk *disk)
 static int _read_vgd(struct disk_list *data)
 {
 	struct vg_disk *vgd = &data->vgd;
-	unsigned long pos = data->pvd.vg_on_disk.base;
+	ulong pos = data->pvd.vg_on_disk.base;
 	if (dev_read(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
 		fail;
 
@@ -214,7 +215,7 @@ static inline int _check_lvd(struct lv_disk *lvd)
 static int _read_lvs(struct disk_list *data)
 {
 	int i, read = 0;
-	unsigned long pos;
+	ulong pos;
 	struct lvd_list *ll;
 	struct vg_disk *vgd = &data->vgd;
 
@@ -242,7 +243,7 @@ static int _read_extents(struct disk_list *data)
 {
 	size_t len = sizeof(struct pe_disk) * data->pvd.pe_total;
 	struct pe_disk *extents = pool_alloc(data->mem, len);
-	unsigned long pos = data->pvd.pe_on_disk.base;
+	ulong pos = data->pvd.pe_on_disk.base;
 
 	if (!extents)
 		fail;
@@ -421,7 +422,7 @@ int read_pvs_in_vg(const char *vg_name, struct dev_filter *filter,
 static int _write_vgd(struct disk_list *data)
 {
 	struct vg_disk *vgd = &data->vgd;
-	unsigned long pos = data->pvd.vg_on_disk.base;
+	ulong pos = data->pvd.vg_on_disk.base;
 
 	_xlate_vgd(vgd);
 	if (dev_write(data->dev, pos, sizeof(*vgd), vgd) != sizeof(*vgd))
@@ -470,7 +471,7 @@ static int _write_lvd(struct device *dev, ulong pos, struct lv_disk *disk)
 static int _write_lvs(struct disk_list *data)
 {
 	struct list *lvh;
-	unsigned long pos;
+	ulong pos;
 
 	pos = data->pvd.lv_on_disk.base;
 
@@ -496,7 +497,7 @@ static int _write_extents(struct disk_list *data)
 {
 	size_t len = sizeof(struct pe_disk) * data->pvd.pe_total;
 	struct pe_disk *extents = data->extents;
-	unsigned long pos = data->pvd.pe_on_disk.base;
+	ulong pos = data->pvd.pe_on_disk.base;
 
 	_xlate_extents(extents, data->pvd.pe_total);
 	if (dev_write(data->dev, pos, len, extents) != len)
@@ -509,14 +510,34 @@ static int _write_extents(struct disk_list *data)
 
 static int _write_pvd(struct disk_list *data)
 {
-	struct pv_disk *disk = &data->pvd;
+	char *buf;
+	ulong pos = data->pvd.pv_on_disk.base;
+	ulong size = data->pvd.pv_on_disk.size;
 
-	_xlate_pvd(disk);
-	if (dev_write(data->dev, 0, sizeof(*disk), disk) != sizeof(*disk))
+	if(size < sizeof(struct pv_disk)) {
+		log_err("Invalid PV size.");
+		return 0;
+	}
+
+ 	/* Make sure that the gap between the PV structure and
+	   the next one is zeroed in order to make non LVM tools
+	   happy (idea from AED) */
+	buf = dbg_malloc(size);
+	if(!buf) {
+		log_err("Couldn't allocate temporary PV buffer.");
+		return 0;
+	}
+
+	memset(buf, 0, size);
+	memcpy(buf, &data->pvd, sizeof(struct pv_disk));
+
+	_xlate_pvd((struct pv_disk *)buf);
+	if (dev_write(data->dev, pos, size, buf) != size) {
+		dbg_free(buf);
 		fail;
+	}
 
-	_xlate_pvd(disk);
-
+	dbg_free(buf);
 	return 1;
 }
 
