@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2005-01-21 18:49+0000\n"
+"POT-Creation-Date: 2005-02-01 16:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,11 +111,11 @@ msgstr ""
 #: archiver.c:71 archiver.c:78 archiver.c:90 archiver.c:166 archiver.c:236
 #: archiver.c:286 archiver.c:303 archiver.c:345 archiver.c:350
 #: cache/lvmcache.c:454 cache/lvmcache.c:495 cache/lvmcache.c:526
-#: commands/toolcontext.c:268 commands/toolcontext.c:287
-#: commands/toolcontext.c:294 commands/toolcontext.c:371
-#: commands/toolcontext.c:386 commands/toolcontext.c:410
-#: commands/toolcontext.c:461 commands/toolcontext.c:637
-#: commands/toolcontext.c:734 config/config.c:105 config/config.c:110
+#: commands/toolcontext.c:274 commands/toolcontext.c:293
+#: commands/toolcontext.c:300 commands/toolcontext.c:377
+#: commands/toolcontext.c:392 commands/toolcontext.c:416
+#: commands/toolcontext.c:467 commands/toolcontext.c:643
+#: commands/toolcontext.c:740 config/config.c:105 config/config.c:110
 #: config/config.c:140 config/config.c:161 config/config.c:192
 #: config/config.c:239 config/config.c:244 config/config.c:406
 #: config/config.c:424 config/config.c:429 config/config.c:439
@@ -292,13 +292,13 @@ msgstr ""
 #: regex/parse_rx.c:229 regex/parse_rx.c:280 regex/parse_rx.c:305
 #: regex/parse_rx.c:328 regex/parse_rx.c:340 regex/ttree.c:91
 #: regex/ttree.c:111 report/report.c:522 report/report.c:550
-#: report/report.c:682 snapshot/snapshot.c:78 snapshot/snapshot.c:87
-#: snapshot/snapshot.c:89 snapshot/snapshot.c:90 snapshot/snapshot.c:91
-#: snapshot/snapshot.c:160 striped/striped.c:90 striped/striped.c:160
-#: striped/striped.c:209 toollib.c:734 toollib.c:784 toollib.c:831
-#: uuid/uuid.c:91 uuid/uuid.c:95 vgcfgbackup.c:65 vgcfgbackup.c:74
-#: vgcfgbackup.c:81 vgreduce.c:28 vgreduce.c:84 vgreduce.c:92 vgreduce.c:98
-#: vgreduce.c:106 vgreduce.c:142 vgreduce.c:158 zero/zero.c:90
+#: report/report.c:682 snapshot/snapshot.c:75 snapshot/snapshot.c:84
+#: snapshot/snapshot.c:85 snapshot/snapshot.c:86 snapshot/snapshot.c:155
+#: striped/striped.c:90 striped/striped.c:160 striped/striped.c:209
+#: toollib.c:734 toollib.c:784 toollib.c:831 uuid/uuid.c:91 uuid/uuid.c:95
+#: vgcfgbackup.c:65 vgcfgbackup.c:74 vgcfgbackup.c:81 vgreduce.c:28
+#: vgreduce.c:84 vgreduce.c:92 vgreduce.c:98 vgreduce.c:106 vgreduce.c:142
+#: vgreduce.c:158 zero/zero.c:90
 msgid "<backtrace>"
 msgstr ""
 
@@ -621,7 +621,7 @@ msgstr ""
 
 #: activate/fs.c:50 activate/fs.c:85 activate/fs.c:105 activate/fs.c:158
 #: activate/fs.c:171 activate/fs.c:178 activate/fs.c:213
-#: commands/toolcontext.c:334 commands/toolcontext.c:775 config/config.c:155
+#: commands/toolcontext.c:340 commands/toolcontext.c:781 config/config.c:155
 #: config/config.c:204 config/config.c:220 config/config.c:285
 #: config/config.c:382 device/dev-cache.c:150 device/dev-cache.c:154
 #: device/dev-cache.c:322 device/dev-cache.c:329 device/dev-cache.c:490
@@ -874,156 +874,173 @@ msgstr ""
 msgid "Device directory given in config file too long"
 msgstr ""
 
-#: commands/toolcontext.c:199 lvmcmdline.c:694
+#: commands/toolcontext.c:185
+#, c-format
+msgid "Warning: proc dir %s not found - some checks will be bypassed"
+msgstr ""
+
+#: commands/toolcontext.c:205 lvmcmdline.c:694
 msgid "Invalid units specification"
 msgstr ""
 
-#: commands/toolcontext.c:208
+#: commands/toolcontext.c:214
 #, c-format
 msgid "Setting host tag: %s"
 msgstr ""
 
-#: commands/toolcontext.c:211
+#: commands/toolcontext.c:217
 #, c-format
 msgid "_set_tag: str_list_add %s failed"
 msgstr ""
 
-#: commands/toolcontext.c:235
+#: commands/toolcontext.c:241
 #, c-format
 msgid "Invalid hostname string for tag %s"
 msgstr ""
 
-#: commands/toolcontext.c:246
+#: commands/toolcontext.c:252
 msgid "host_filter not supported yet"
 msgstr ""
 
-#: commands/toolcontext.c:281
+#: commands/toolcontext.c:287
 #, c-format
 msgid "Invalid tag in config file: %s"
 msgstr ""
 
-#: commands/toolcontext.c:314
+#: commands/toolcontext.c:320
 msgid "LVM_SYSTEM_DIR or tag was too long"
 msgstr ""
 
-#: commands/toolcontext.c:319
+#: commands/toolcontext.c:325
 msgid "config_tree_list allocation failed"
 msgstr ""
 
-#: commands/toolcontext.c:324
+#: commands/toolcontext.c:330
 msgid "config_tree allocation failed"
 msgstr ""
 
-#: commands/toolcontext.c:339
+#: commands/toolcontext.c:345
 #, c-format
 msgid "Loading config file: %s"
 msgstr ""
 
-#: commands/toolcontext.c:341
+#: commands/toolcontext.c:347
 #, c-format
 msgid "Failed to load config file %s"
 msgstr ""
 
-#: commands/toolcontext.c:364 commands/toolcontext.c:402
+#: commands/toolcontext.c:370 commands/toolcontext.c:408
 msgid "Failed to create config tree"
 msgstr ""
 
-#: commands/toolcontext.c:467
+#: commands/toolcontext.c:473
 msgid "Failed to add /dev to internal device cache"
 msgstr ""
 
-#: commands/toolcontext.c:471
+#: commands/toolcontext.c:477
 msgid "device/scan not in config file: Defaulting to /dev"
 msgstr ""
 
-#: commands/toolcontext.c:478
+#: commands/toolcontext.c:484
 msgid "Invalid string in config file: devices/scan"
 msgstr ""
 
-#: commands/toolcontext.c:484 format_text/format-text.c:1681
+#: commands/toolcontext.c:490 format_text/format-text.c:1681
 #, c-format
 msgid "Failed to add %s to internal device cache"
 msgstr ""
 
-#: commands/toolcontext.c:522
+#: commands/toolcontext.c:528
 msgid "devices/filter not found in config file: no regex filter installed"
 msgstr ""
 
-#: commands/toolcontext.c:526
+#: commands/toolcontext.c:532
 msgid "Failed to create regex device filter"
 msgstr ""
 
-#: commands/toolcontext.c:533
+#: commands/toolcontext.c:539
 msgid "Failed to create lvm type filter"
 msgstr ""
 
-#: commands/toolcontext.c:564
+#: commands/toolcontext.c:570
 #, c-format
 msgid "Persistent cache filename too long ('%s/.cache')."
 msgstr ""
 
-#: commands/toolcontext.c:572
+#: commands/toolcontext.c:578
 msgid "Failed to create persistent device filter"
 msgstr ""
 
-#: commands/toolcontext.c:586
+#: commands/toolcontext.c:592
 #, c-format
 msgid "Failed to load existing device cache from %s"
 msgstr ""
 
-#: commands/toolcontext.c:631
+#: commands/toolcontext.c:637
 msgid "Invalid string in config file: global/format_libraries"
 msgstr ""
 
-#: commands/toolcontext.c:642
+#: commands/toolcontext.c:648
 #, c-format
 msgid "Shared library %s does not contain format functions"
 msgstr ""
 
-#: commands/toolcontext.c:675
+#: commands/toolcontext.c:681
 #, c-format
 msgid "_init_formats: Default format (%s) not found"
 msgstr ""
 
-#: commands/toolcontext.c:728
+#: commands/toolcontext.c:734
 msgid "Invalid string in config file: global/segment_libraries"
 msgstr ""
 
-#: commands/toolcontext.c:739
+#: commands/toolcontext.c:745
 #, c-format
 msgid "Shared library %s does not contain segment type functions"
 msgstr ""
 
-#: commands/toolcontext.c:753
+#: commands/toolcontext.c:759
 #, c-format
 msgid "Duplicate segment type %s: unloading shared library %s"
 msgstr ""
 
-#: commands/toolcontext.c:780
+#: commands/toolcontext.c:786
 msgid "_init_hostname: pool_strdup failed"
 msgstr ""
 
-#: commands/toolcontext.c:785
+#: commands/toolcontext.c:791
 msgid "_init_hostname: pool_strdup kernel_vsn failed"
 msgstr ""
 
-#: commands/toolcontext.c:802
+#: commands/toolcontext.c:808
 msgid "setlocale failed"
 msgstr ""
 
-#: commands/toolcontext.c:811
+#: commands/toolcontext.c:817
 msgid "Failed to allocate command context"
 msgstr ""
 
-#: commands/toolcontext.c:832
+#: commands/toolcontext.c:835
+msgid ""
+"Failed to create LVM2 system dir for metadata backups, config files and "
+"internal cache."
+msgstr ""
+
+#: commands/toolcontext.c:837
+msgid ""
+"Set environment variable LVM_SYSTEM_DIR to alternative location or empty "
+"string."
+msgstr ""
+
+#: commands/toolcontext.c:843
 msgid "Library memory pool creation failed"
 msgstr ""
 
-#: commands/toolcontext.c:863
+#: commands/toolcontext.c:874
 msgid "Command memory pool creation failed"
 msgstr ""
 
-#: commands/toolcontext.c:923
+#: commands/toolcontext.c:934
 msgid "Reloading config files"
 msgstr ""
 
@@ -1646,7 +1663,7 @@ msgstr ""
 msgid "Please specify one file for output"
 msgstr ""
 
-#: error/errseg.c:100 mirror/mirrored.c:261 snapshot/snapshot.c:170
+#: error/errseg.c:100 mirror/mirrored.c:261 snapshot/snapshot.c:165
 #: striped/striped.c:220 zero/zero.c:100
 #, c-format
 msgid "Initialised segtype: %s"
