@@ -1,3 +1,6 @@
+Version 2.00.25 - 
+=====================================
+
 Version 2.00.24 - 16th September 2004
 =====================================
   Fix pool_empty so it really does empty the memory pool.
