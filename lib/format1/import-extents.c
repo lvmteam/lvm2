@@ -164,6 +164,7 @@ static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
 static int _check_single_map(struct lv_map *lvm)
 {
 	uint32_t i;
+
 	for (i = 0; i < lvm->lv->le_count; i++) {
 		if (!lvm->map[i].pv) {
 			log_err("Logical volume (%s) contains an incomplete "
@@ -349,8 +350,7 @@ int import_extents(struct pool *mem, struct volume_group *vg, struct list *pvds)
 		goto out;
 	}
 
-	/* FIXME Support partial activation if (vg->status & PARTIAL_VG) */
-	if (!_check_maps_are_complete(maps)) {
+	if (!_check_maps_are_complete(maps) && !(vg->status & PARTIAL_VG)) {
 		stack;
 		goto out;
 	}
