@@ -12,7 +12,7 @@
  * FIXME: Quick hack.  We can use caching to
  * prevent a total re-read, even so vg_number
  * causes the tools to check *every* pv.  Yuck.
- * Put in seperate file so it wouldn't contaminate
+ * Put in separate file so it wouldn't contaminate
  * other code.
  */
 int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
@@ -40,7 +40,8 @@ int get_free_vg_number(struct dev_filter *filter, const char *candidate_vg,
 
 	list_iterate(pvh, &all_pvs) {
 		dl = list_item(pvh, struct disk_list);
-		if (!strcmp(dl->pvd.vg_name, candidate_vg))
+		if (!*dl->pvd.vg_name ||
+		    !strcmp(dl->pvd.vg_name, candidate_vg))
 			continue;
 
 		numbers[dl->vgd.vg_number] = 1;
