@@ -9,281 +9,444 @@
 
 #include <fcntl.h>
 
-int lvcreate(struct cmd_context *cmd, int argc, char **argv)
-{
+struct lvcreate_params {
+	/* flags */
+	int snapshot;
 	int zero;
-	uint32_t read_ahead = 0;
-	int stripes = 1;
-	int stripesize = 0;
+	int contiguous;
 
-	int opt = 0;
-	uint32_t status = 0;
-	uint32_t size = 0;
-	uint32_t size_rest;
-	uint32_t extents = 0;
-	struct volume_group *vg;
-	struct logical_volume *lv;
-	struct list *pvh;
-	char *lv_name = NULL;
+	char *origin;
 	char *vg_name;
-	char *st;
+	char *lv_name;
 
-	if (arg_count(cmd, snapshot_ARG) || arg_count(cmd, chunksize_ARG)) {
-		log_error("Snapshots are not yet supported in LVM2.");
-		return EINVALID_CMD_LINE;
+	uint32_t stripes;
+	uint32_t stripe_size;
+	uint32_t chunk_size;
+
+	/* size */
+	uint32_t extents;
+	uint64_t size;
+
+	uint32_t permission;
+	uint32_t read_ahead;
+
+	int pv_count;
+	char **pvs;
+};
+
+
+static int _read_name_params(struct lvcreate_params *lp,
+			     struct cmd_context *cmd,
+			     int *pargc, char ***pargv)
+{
+	int argc = *pargc;
+	char **argv = *pargv, *ptr;
+
+	if (arg_count(cmd, name_ARG))
+		lp->lv_name = arg_value(cmd, name_ARG);
+
+	if (arg_count(cmd, snapshot_ARG)) {
+		lp->snapshot = 1;
+
+		if (!argc) {
+			log_err("Please specify a logical volume to act as "
+				"the snapshot origin.");
+			return 0;
+		}
+
+		lp->origin = argv[0];
+		(*pargv)++, (*pargc)--;
+		if (!(lp->vg_name = extract_vgname(cmd->fid, lp->origin))) {
+			log_err("The origin name should include the "
+				"volume group.");
+			return 0;
+		}
+
+	} else {
+		/*
+		 * If VG not on command line, try -n arg and then
+		 * environment.
+		 */
+		if (!argc) {
+			if (!(lp->vg_name =
+			      extract_vgname(cmd->fid, lp->lv_name))) {
+				log_err("Please provide a volume group name");
+				return 0;
+			}
+
+		} else {
+			/*
+			 * Ensure lv_name doesn't contain a
+			 * different VG.
+			 */
+			if (lp->lv_name && strchr(lp->lv_name, '/')) {
+				if (!(lp->vg_name =
+				      extract_vgname(cmd->fid, lp->lv_name)))
+					return 0;
+
+				if (strcmp(lp->vg_name, argv[0])) {
+					log_error("Inconsistent volume group "
+						  "names "
+						  "given: \"%s\" and \"%s\"",
+						  lp->vg_name, argv[0]);
+					return 0;
+				}
+			}
+
+			lp->vg_name = argv[0];
+			(*pargv)++, (*pargc)--;
+		}
 	}
 
-	/* mutually exclusive */
-	if ((arg_count(cmd, zero_ARG) && arg_count(cmd, snapshot_ARG)) ||
-	    (arg_count(cmd, extents_ARG) && arg_count(cmd, size_ARG))) {
+	if (lp->lv_name && (ptr = strrchr(lp->lv_name, '/')))
+		lp->lv_name = ptr + 1;
+
+	return 1;
+}
+
+static int _read_size_params(struct lvcreate_params *lp,
+			     struct cmd_context *cmd,
+			     int *pargc, char ***pargv)
+{
+	/*
+	 * There are two mutually exclusive ways of specifying
+	 * the size ...
+	 */
+	if (arg_count(cmd, extents_ARG) && arg_count(cmd, size_ARG)) {
 		log_error("Invalid combination of arguments");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
+	/*
+	 * ... you must use one of them.
+	 */
 	if (arg_count(cmd, size_ARG) + arg_count(cmd, extents_ARG) == 0) {
 		log_error("Please indicate size using option -l or -L");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
-	if (strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n"))
-		status |= ALLOC_CONTIGUOUS;
-	else
-		status |= ALLOC_SIMPLE;
+	if (arg_count(cmd, extents_ARG))
+		lp->extents = arg_int_value(cmd, extents_ARG, 0);
 
-	zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
+	/* Size returned in kilobyte units; held in sectors */
+	if (arg_count(cmd, size_ARG))
+		lp->size = arg_int_value(cmd, size_ARG, 0);
+
+	return 1;
+}
+
+static int _read_stripe_params(struct lvcreate_params *lp,
+			       struct cmd_context *cmd,
+			       int *pargc, char ***pargv)
+{
+	int argc = *pargc;
+
+	lp->stripes = 1;
 
 	if (arg_count(cmd, stripes_ARG)) {
-		stripes = arg_int_value(cmd, stripes_ARG, 1);
-		if (stripes == 1)
+		lp->stripes = arg_int_value(cmd, stripes_ARG, 1);
+		if (lp->stripes == 1)
 			log_print("Redundant stripes argument: default is 1");
 	}
 
 	if (arg_count(cmd, stripesize_ARG))
-		stripesize = 2 * arg_int_value(cmd, stripesize_ARG, 0);
+		lp->stripe_size = 2 * arg_int_value(cmd, stripesize_ARG, 0);
 
-	if (stripes == 1 && stripesize) {
+	if (lp->stripes == 1 && lp->stripe_size) {
 		log_print("Ignoring stripesize argument with single stripe");
-		stripesize = 0;
+		lp->stripe_size = 0;
 	}
 
-	if (stripes > 1 && !stripesize) {
-		stripesize = 2 * STRIPE_SIZE_DEFAULT;
-		log_print("Using default stripesize %dKB", stripesize / 2);
+	if (lp->stripes > 1 && !lp->stripe_size) {
+		lp->stripe_size = 2 * STRIPE_SIZE_DEFAULT;
+		log_print("Using default stripesize %dKB",
+			  lp->stripe_size / 2);
 	}
 
-	if (arg_count(cmd, permission_ARG))
-		status |= arg_int_value(cmd, permission_ARG, 0);
-	else
-		status |= LVM_READ | LVM_WRITE;
-
-	if (arg_count(cmd, readahead_ARG))
-		read_ahead = arg_int_value(cmd, readahead_ARG, 0);
-
-	if (arg_count(cmd, extents_ARG))
-		extents = arg_int_value(cmd, extents_ARG, 0);
-
-	/* Size returned in kilobyte units; held in sectors */
-	if (arg_count(cmd, size_ARG))
-		size = arg_int_value(cmd, size_ARG, 0);
-
-	if (arg_count(cmd, name_ARG))
-		lv_name = arg_value(cmd, name_ARG);
-
-	/* If VG not on command line, try -n arg and then environment */
-	if (!argc) {
-		if (!(vg_name = extract_vgname(cmd->fid, lv_name))) {
-			log_error("Please provide a volume group name");
-			return EINVALID_CMD_LINE;
-		}
-
-	} else {
-		/* Ensure lv_name doesn't contain a different VG! */
-		if (lv_name && strchr(lv_name, '/')) {
-			if (!(vg_name = extract_vgname(cmd->fid, lv_name)))
-				return EINVALID_CMD_LINE;
-			if (strcmp(vg_name, argv[0])) {
-				log_error("Inconsistent volume group names "
-					  "given: \"%s\" and \"%s\"",
-					  vg_name, argv[0]);
-				return EINVALID_CMD_LINE;
-			}
-		}
-		vg_name = argv[0];
-		argv++;
-		argc--;
-	}
-
-	if (lv_name && (st = strrchr(lv_name, '/')))
-		lv_name = st + 1;
-
-	/* does VG exist? */
-	log_verbose("Finding volume group \"%s\"", vg_name);
-
-	if (!lock_vol(vg_name, LCK_VG | LCK_WRITE)) {
-		log_error("Can't get lock for %s", vg_name);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, vg_name))) {
-		log_error("Volume group \"%s\" doesn't exist", vg_name);
-		goto error;
-	}
-
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg_name);
-		goto error;
-	}
-
-	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg_name);
-		goto error;
-	}
-
-	if (lv_name && find_lv_in_vg(vg, lv_name)) {
-		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", lv_name, vg_name);
-		goto error;
-	}
-
-	if (!argc)
-		/* Use full list from VG */
-		pvh = &vg->pvs;
-
-	else {
-		if (!(pvh = create_pv_list(cmd->mem, vg,
-					   argc - opt, argv + opt))) {
-			stack;
-			goto error;
-		}
-	}
-
-	if (argc && argc < stripes) {
+	if (argc && argc < lp->stripes) {
 		log_error("Too few physical volumes on "
-			  "command line for %d-way striping", stripes);
-		goto error_cmdline;
+			  "command line for %d-way striping", lp->stripes);
+		return 0;
 	}
 
-	if (stripes < 1 || stripes > MAX_STRIPES) {
+	if (lp->stripes < 1 || lp->stripes > MAX_STRIPES) {
 		log_error("Number of stripes (%d) must be between %d and %d",
-			  stripes, 1, MAX_STRIPES);
-		goto error_cmdline;
+			  lp->stripes, 1, MAX_STRIPES);
+		return 0;
 	}
 
-	if (stripes > 1 && (stripesize < STRIPE_SIZE_MIN ||
-			    stripesize > STRIPE_SIZE_MAX ||
-			    stripesize & (stripesize - 1))) {
-		log_error("Invalid stripe size %d", stripesize);
-		goto error_cmdline;
+	if (lp->stripes > 1 && (lp->stripe_size < STRIPE_SIZE_MIN ||
+				lp->stripe_size > STRIPE_SIZE_MAX ||
+				lp->stripe_size & (lp->stripe_size - 1))) {
+		log_error("Invalid stripe size %d", lp->stripe_size);
+		return 0;
 	}
 
-	if (stripesize > vg->extent_size) {
-		log_error("Setting stripe size %d KB to physical extent "
-			  "size %u KB", stripesize / 2, vg->extent_size / 2);
-		stripesize = vg->extent_size;
-	}
+	return 1;
+}
 
-	if (size) {
-		/* No of 512-byte sectors */
-		extents = size * 2;
+static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
+			int argc, char **argv)
+{
+	/*
+	 * Set the defaults.
+	 */
+	memset(lp, 0, sizeof(*lp));
+	lp->chunk_size = 256;
 
-		if (extents % vg->extent_size) {
-			char *s1;
+	if (!_read_name_params(lp, cmd, &argc, &argv) ||
+	    !_read_size_params(lp, cmd, &argc, &argv) ||
+	    !_read_stripe_params(lp, cmd, &argc, &argv))
+		return EINVALID_CMD_LINE;
 
-			extents += vg->extent_size - extents % vg->extent_size;
-			log_print("Rounding up size to full physical extent %s",
-				  (s1 = display_size(extents / 2, SIZE_SHORT)));
-			dbg_free(s1);
-		}
+	/*
+	 * Should we zero the lv.
+	 */
+	lp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n") ||
+		arg_count(cmd, snapshot_ARG);
 
-		extents /= vg->extent_size;
-	}
+	/*
+	 * Contiguous ?
+	 */
+	lp->contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
 
-	if ((size_rest = extents % stripes)) {
-		log_print("Rounding size (%d extents) up to stripe boundary "
-			  "size (%d extents)", extents,
-			  extents - size_rest + stripes);
-		extents = extents - size_rest + stripes;
-	}
+	/*
+	 * Read ahead.
+	 */
+	if (arg_count(cmd, readahead_ARG))
+		lp->read_ahead = arg_int_value(cmd, readahead_ARG, 0);
 
-	if (!archive(vg))
-		goto error;
+	/*
+	 * Permissions.
+	 */
+	if (arg_count(cmd, permission_ARG))
+		lp->permission = arg_int_value(cmd, permission_ARG, 0);
+	else
+		lp->permission = LVM_READ | LVM_WRITE;
 
-	if (!(lv = lv_create(cmd->fid, lv_name, status,
-			     stripes, stripesize, extents, vg, pvh)))
-		goto error;
 
-	if (arg_count(cmd, readahead_ARG)) {
-		log_verbose("Setting read ahead sectors");
-		lv->read_ahead = read_ahead;
-	}
-
-	if (arg_count(cmd, minor_ARG)) {
-		lv->status |= FIXED_MINOR;
-		lv->minor = arg_int_value(cmd, minor_ARG, -1);
-		log_verbose("Setting minor number to %d", lv->minor);
-	}
-
+#if 0
+	/* persistent minor */
 	if (arg_count(cmd, persistent_ARG)) {
 		if (!strcmp(arg_str_value(cmd, persistent_ARG, "n"), "n"))
 			lv->status &= ~FIXED_MINOR;
 		else if (!arg_count(cmd, minor_ARG)) {
 			log_error("Please specify minor number with "
 				  "--minor when using -My");
-			goto error;
+			return 0;
 		}
 		lv->status |= FIXED_MINOR;
 	}
+#endif
+
+	lp->pv_count = argc;
+	lp->pvs = argv;
+
+	return 1;
+}
+
+static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp,
+		     struct logical_volume **plv)
+{
+	uint32_t size_rest;
+	uint32_t status;
+	struct volume_group *vg;
+	struct logical_volume *lv;
+	struct list *pvh;
+
+
+	*plv = NULL;
+
+	if (lp->contiguous)
+		status |= ALLOC_CONTIGUOUS;
+	else
+		status |= ALLOC_SIMPLE;
+
+
+	status |= lp->permission;
+
+	/* does VG exist? */
+	log_verbose("Finding volume group \"%s\"", lp->vg_name);
+
+	if (!(vg = cmd->fid->ops->vg_read(cmd->fid, lp->vg_name))) {
+		log_error("Volume group \"%s\" doesn't exist", lp->vg_name);
+		return 0;
+	}
+
+	if (vg->status & EXPORTED_VG) {
+		log_error("Volume group \"%s\" is exported", lp->vg_name);
+		return 0;
+	}
+
+	if (!(vg->status & LVM_WRITE)) {
+		log_error("Volume group \"%s\" is read-only", lp->vg_name);
+		return 0;
+	}
+
+	if (lp->lv_name && find_lv_in_vg(vg, lp->lv_name)) {
+		log_error("Logical volume \"%s\" already exists in "
+			  "volume group \"%s\"", lp->lv_name, lp->vg_name);
+		return 0;
+	}
+
+
+	/*
+	 * Create the pv list.
+	 */
+	if (lp->pv_count) {
+		if (!(pvh = create_pv_list(cmd->mem, vg,
+					   lp->pv_count, lp->pvs))) {
+			stack;
+			return 0;
+		}
+	} else
+		pvh = &vg->pvs;
+
+
+	if (lp->stripe_size > vg->extent_size) {
+		log_error("Setting stripe size %d KB to physical extent "
+			  "size %u KB", lp->stripe_size / 2,
+			  vg->extent_size / 2);
+		lp->stripe_size = vg->extent_size;
+	}
+
+	if (lp->size) {
+		/* No of 512-byte sectors */
+		lp->extents = lp->size * 2;
+
+		if (lp->extents % vg->extent_size) {
+			char *s1;
+
+			lp->extents += vg->extent_size - lp->extents %
+				vg->extent_size;
+			log_print("Rounding up size to full physical "
+				  "extent %s",
+				  (s1 = display_size(lp->extents / 2,
+						     SIZE_SHORT)));
+			dbg_free(s1);
+		}
+
+		lp->extents /= vg->extent_size;
+	}
+
+	if ((size_rest = lp->extents % lp->stripes)) {
+		log_print("Rounding size (%d extents) up to stripe boundary "
+			  "size (%d extents)", lp->extents,
+			  lp->extents - size_rest + lp->stripes);
+		lp->extents = lp->extents - size_rest + lp->stripes;
+	}
+
+	if (!archive(vg))
+		return 0;
+
+	if (!(lv = lv_create(cmd->fid, lp->lv_name, status,
+			     lp->stripes, lp->stripe_size, lp->extents,
+			     vg, pvh)))
+		return 0;
+
+	if (lp->read_ahead) {
+		log_verbose("Setting read ahead sectors");
+		lv->read_ahead = lp->read_ahead;
+	}
+
+#if 0
+	if (lp->minor >= 0) {
+		lv->status |= FIXED_MINOR;
+		lv->minor = lp->minor;
+		log_verbose("Setting minor number to %d", lv->minor);
+	}
+#endif
 
 	/* store vg on disk(s) */
 	if (!cmd->fid->ops->vg_write(cmd->fid, vg))
-		goto error;
+		return 0;
 
 	backup(vg);
 
 	log_print("Logical volume \"%s\" created", lv->name);
 
 	if (!lv_activate(lv))
-		goto error;
+		return 0;
 
-	if (zero) {
-		struct device *dev;
-		char *name;
+	*plv = lv;
+	return 1;
+}
 
-		if (!(name = pool_alloc(cmd->mem, PATH_MAX))) {
-			log_error("Name allocation failed - device not zeroed");
-			goto error;
-		}
+static int _zero(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct device *dev;
+	char *name;
 
-		if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
-				 lv->vg->name, lv->name) < 0) {
-			log_error("Name too long - device not zeroed (%s)",
-				  lv->name);
-			goto error;
-		}
+	/*
+	 * FIXME:
+	 * <clausen> also, more than 4k
+	 * <clausen> say, reiserfs puts it's superblock 32k in, IIRC
+	 * <ejt_> k, I'll drop a fixme to that effect
+	 *           (I know the device is at least 4k, but not 32k)
+	 */
+	if (!(name = pool_alloc(cmd->mem, PATH_MAX))) {
+		log_error("Name allocation failed - device not zeroed");
+		return 0;
+	}
 
-		log_verbose("Zeroing start of logical volume \"%s\"", name);
+	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+			 lv->vg->name, lv->name) < 0) {
+		log_error("Name too long - device not zeroed (%s)",
+			  lv->name);
+		return 0;
+	}
 
-		if (!(dev = dev_cache_get(name, NULL))) {
-			log_error("\"%s\" not found: device not zeroed", name);
-			goto error;
-		}
-		if (!(dev_open(dev, O_WRONLY)))
-			goto error;
-		dev_zero(dev, 0, 4096);
-		dev_close(dev);
+	log_verbose("Zeroing start of logical volume \"%s\"", lv->name);
 
-	} else
+	if (!(dev = dev_cache_get(name, NULL))) {
+		log_error("\"%s\" not found: device not zeroed", name);
+		return 0;
+	}
+
+	if (!(dev_open(dev, O_WRONLY)))
+		return 0;
+
+	dev_zero(dev, 0, 4096);
+	dev_close(dev);
+
+	return 1;
+}
+
+int lvcreate(struct cmd_context *cmd, int argc, char **argv)
+{
+	int r = ECMD_FAILED;
+	struct lvcreate_params lp;
+	struct logical_volume *lv;
+
+	if (!_read_params(&lp, cmd, argc, argv))
+		return -EINVALID_CMD_LINE;
+
+	if (!lock_vol(lp.vg_name, LCK_VG | LCK_WRITE)) {
+		log_error("Can't get lock for %s", lp.vg_name);
+		return 0;
+	}
+
+	if (!_lvcreate(cmd, &lp, &lv)) {
+		stack;
+		goto out;
+	}
+
+	if (!lp.zero) {
 		log_print("WARNING: \"%s\" not zeroed", lv->name);
 
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
+	} else if (!_zero(cmd, lv)) {
+		stack;
+		goto out;
+	}
 
-	return 0;
+	/*
+	 * FIXME: as a sanity check we could try reading the
+	 * last block of the device ?
+	 */
 
-      error:
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
-	return ECMD_FAILED;
+	r = 0;
 
-      error_cmdline:
-	lock_vol(vg_name, LCK_VG | LCK_NONE);
-	return EINVALID_CMD_LINE;
+ out:
+	lock_vol(lp.vg_name, LCK_VG | LCK_NONE);
+	return r;
 }
