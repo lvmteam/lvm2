@@ -239,9 +239,9 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 		goto bad;
 	}
 
-	if (!(_munge_formats(&data->pv))) {
+	if (!_munge_formats(&data->pv)) {
 		log_verbose("Unknown metadata version %d found on %s", 
-			data->pv.version, dev->name);
+			    data->pv.version, dev->name);
 		goto bad;
 	}
 
@@ -250,7 +250,7 @@ struct disk_list *read_pv(struct device *dev, struct pool *mem,
 	 */
 	if (data->pv.vg_name == '\0') {
 		log_very_verbose("%s is not a member of any VG",
-			dev->name);
+				 dev->name);
 		return data;
 	}
 
