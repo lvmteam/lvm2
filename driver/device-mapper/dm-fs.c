@@ -39,107 +39,115 @@
  */
 
 const char *_fs_dir = "device-mapper";
+const char *_control_name = "control";
 
 static struct proc_dir_entry *_proc_dir;
+static struct proc_dir_entry *_control;
 
 static devfs_handle_t _dev_dir;
-static devfs_handle_t _dev_control;
+
+static int _line_splitter(struct file *file, const char *buffer,
+			  unsigned long *count, void *data)
+
+typedef int (process_fn)(const char *b, const char *e);
+
+struct pf_data {
+	process_fn data;
+	int minor;
+};
 
 int dm_init_fs()
 {
-	/* create /dev/device-manager */
+	struct pf_data *pfd = kmalloc(sizeof(*pfd), GFP_KERNEL);
+
+	if (!pfd)
+		return 0;
+
 	_dev_dir = devfs_mk_dir(0, _fs_dir, NULL);
 
-	/* and put the control device in it */
-	_dev_control = devfs_register(0 , "device-mapper", 0, DM_CHAR_MAJOR, 0,
-				      S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP,
-				      &dm_ctl_fops, NULL);
+	if (!(_proc_dir = create_proc_entry(_fs_dir, S_IFDIR, &proc_root)))
+		goto fail;
 
-	if (!(_proc_dir = create_proc_entry(_fs_dir, S_IFDIR, &proc_root))) {
-		devfs_unregister(_dm_control);
-		_dm_control = 0;
-		return 0;
-	}
+	if (!(_control = create_proc_entry(_control_name, 0, _proc_dir)))
+		goto fail;
+
+	_control->write_proc = _line_splitter;
+
+	pfd->fn = _process_control;
+	pfd->minor = -1;
+	_control->data = pfd;
 
 	return 1;
+
+ fail:
+	dm_fin_fs();
+	return 0;
 }
 
 void dm_fin_fs(void)
 {
-	/* FIXME: unregister all devices and proc interfaces */
+	if (_control) {
+		remove_proc_entry(_control_name, _proc_dir);
+		_control = 0;
+	}
 
-	devfs_unregister(_dev_control);
-	devfs_unregister(_dev_dir);
+	if (_proc_dir) {
+		remove_proc_entry(_fs_dir, &proc_root);
+		_proc_dir = 0;
+	}
 
-	remove_proc_entry(_fs_dir, &proc_root);
+	if (_dev_dir)
+		devfs_unregister(_dev_dir);
 }
 
-int dm_add(const char *name)
+int _process_control(const char *b, const char *e, int minor)
 {
+	const char *wb, *we;
+	char *name[64];
+	long minor = -1;
+	int create = 0;
 
-}
+	/*
+	 * create <name> [minor]
+	 * remove <name>
+	 */
+	if (!_get_word(b, e, &wb, &we))
+		return -EINVAL;
+	b = we;
 
-int dm_remove(const char *name)
-{
+	if (!_tok_cmp("create", wb, we))
+		create = 1;
 
-}
+	else if (_tok_cmp("remove", wb, we))
+		return -EINVAL;
 
+	if (!_get_word(b, e, &wb, &we))
+		return -EINVAL;
+	b = we;
 
-static int _setup_targets(struct mapped_device *md, struct device_table *t)
-{
-	int i;
-	offset_t low = 0;
+	_tok_cpy(name, sizeof(buffer), wb, we);
 
-	md->num_targets = t->count;
-	md->targets = __aligned(sizeof(*md->targets) * md->num_targets,
-			       NODE_SIZE);
+	if (create) {
+		if (_get_word(b, e, &wb, &we)) {
+			minor = simple_strtol(wb, &we, 10);
 
-	for (i = 0; i < md->num_targets; i++) {
-		struct mapper *m = _find_mapper(t->map[i].type);
-		if (!m)
-			return 0;
-
-		if (!m->ctr(low, t->map[i].high + 1,
-			    t->map[i].context, md->contexts + i)) {
-			WARN("contructor for '%s' failed", m->name);
-			return 0;
+			if (we == wb)
+				return -EINVAL;
 		}
+		_create_dm(name, minor);
 
-		md->targets[i] = m->map;
+	} else {
+		if (!_get_word(b, e, &wb, &we))
+			return -EINVAL;
+
+		_tok_cpy(name, sizeof(buffer), wb, we);
+		_remove_dm(name, minor);
 	}
 
-	return 1;
+	return -EINVAL;
 }
 
-static const char *_eat_white(const char *b, const char *e)
-{
-	while(b != e && isspace((int) *b))
-		b++;
-
-	return b;
-}
-
-static int _get_line(const char *b, const char *e,
-		     const char **lb, const char **le)
-{
-	b = _eat_white(b, e);
-	if (b == e)
-		return 0;
-
-	lb = b;
-	while((b != e) && *b != '\n')
-		b++;
-
-	if (b == e) {
-		/* FIXME: handle partial lines */
-		return 0;
-	}
-
-	*le = b;
-	return 1;
-}
-
-static int _process_line(const char *b, const char *e)
+static int _process_table(const char *b, const char *e, int minor)
 {
 	struct target *t;
 	const char *wb, *we;
@@ -161,47 +169,131 @@ static int _process_line(const char *b, const char *e)
 		/* FIXME: add module loading here */
 		return -EPARAM;
 	}
-
-	
 }
 
-static int _write_proc(struct file *file, const char *buffer,
-		       unsigned long *count, void *data)
+static int _process_table(const char *b, const char *e, int minor)
 {
-	const char *b, *e, *lb, *le;
-	int minor = (int) data;
+	const char *wb, *we;
 	struct mapped_device *md = dm_get_dev(minor);
 
 	if (!md)
 		return -ENXIO;
 
-	b = buffer;
-	e = buffer + e;
+	if (!_get_word(b, e, &wb, &we))
+		return -EINVAL;
 
-	if (!is_loading(md)) {
-		if (!_get_line(b, e, &lb, &le))
-			return -EPARAM;
+	if (!_tok_cmp("begin", b, e)) {
+		/* suspend the device if it's active */
+		dm_suspend(md);
 
-		if (tokcmp("begin\n", lb, le))
-			return -EPARAM;
+		/* start loading a table */
+		dm_start_table(md);
 
-		start_loading(md);
-		b = le;
+	} else if (!_tok_cmp("end", b, e)) {
+		/* activate the device ... <evil chuckle> ... */
+		dm_complete_table(md);
+		dm_activate(md);
+
+	} else {
+		/* add the new entry */
+		int len = we - wb;
+		char high_s[64], *ptr;
+		char target[64];
+		struct target *t;
+		offset_t high;
+
+		if (len > sizeof(high_s))
+			return 0;
+
+		strncpy(high_s, wb, we - wb);
+		high_s[len] = '\0';
+
+		high = strtol(high_s, &ptr, 10);
+		if (ptr == high_s)
+			return 0;
+
+		b = we;
+		if (!_get_word(b, e, &wb, &we))
+			return 0;
+
+		len = we - wb;
+		if (len > sizeof(target))
+			return 0;
+
+		strncpy(target, wb, len);
+		target[len] = '\0';
+
+		if (!(t = dm_get_target(target)))
+			return 0;
+
+		dm_add_entry(md, high, t, context);
 	}
 
-	while(_get_line(b, e, &lb, &le)) {
-		if (!tokcmp("end\n", wb, we)) {
-			/* FIXME: finish */
-		}
+	return 1;
+}
 
-		ret = _process_line(lb, le);
-		if (ret < 0)
-			goto fail;
+static const char *_eat_space(const char *b, const char *e)
+{
+	while(b != e && isspace((int) *b))
+		b++;
 
-		b = le;
+	return b;
+}
+
+static int _get_word(const char *b, const char *e,
+		     const char **wb, const char *we)
+{
+	b = _eat_space(b, e);
+
+	if (b == e)
+		return 0;
+
+	*wb = b;
+	while(b != e && !isspace((int) b))
+		b++;
+	*we = e;
+	return 1;
+}
+
+static int _line_splitter(struct file *file, const char *buffer,
+			  unsigned long *count, void *data)
+{
+	const char *b = buffer, *e = buffer + count, *lb;
+	struct pf_data *pfd = (struct pf_data *) data;
+
+	while(b < e) {
+		b = _eat_space(b, e);
+		if (b == e)
+			return 0;
+
+		lb = b;
+		while((b != e) && *b != '\n')
+			b++;
+
+		if (!pfd->fn(lb, b, pfd->minor))
+			return lb - buffer;
 	}
 
- fail:
-	/* stop the table load */
+	return count;
+}
 
+static int _tok_cmp(const char *str, const char *b, const char *e)
+{
+	while (*str && b != e) {
+		if (*str < *b)
+			return -1;
+
+		if (*str > *b)
+			return 1;
+
+		str++, b++;
+	}
+
+	if (!*str && b == e)
+		return 0;
+
+	if (*str)
+		return 1;
+
+	return -1;
 }

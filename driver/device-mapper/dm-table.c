@@ -107,6 +107,45 @@ void dm_free_btree(struct mapped_device *md)
 	__free_aligned(md->contexts);
 }
 
+static int _setup_targets(struct mapped_device *md, struct device_table *t)
+{
+	int i;
+	offset_t low = 0;
 
+	md->num_targets = t->count;
+	md->targets = __aligned(sizeof(*md->targets) * md->num_targets,
+			       NODE_SIZE);
 
+	for (i = 0; i < md->num_targets; i++) {
+		struct mapper *m = _find_mapper(t->map[i].type);
+		if (!m)
+			return 0;
+
+		if (!m->ctr(low, t->map[i].high + 1,
+			    t->map[i].context, md->contexts + i)) {
+			WARN("contructor for '%s' failed", m->name);
+			return 0;
+		}
+
+		md->targets[i] = m->map;
+	}
+
+	return 1;
+}
+
+int dm_start_table(struct mapped_device *md)
+{
+	/* if this is active, suspend it */
+}
+
+int dm_add_entry(struct mapped_device *md, offset_t high,
+		 dm_map_fn target, void *context)
+{
+	
+}
+
+int dm_activate_table(struct mapped_device *md)
+{
+	
+}
 

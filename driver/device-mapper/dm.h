@@ -36,11 +36,12 @@
 
 enum {
 	DM_LOADING,
-	DM_CREATED,
 	DM_ACTIVE,
 };
 
 struct mapped_device {
+	struct rw_semaphore lock;
+
 	kdev_t dev;
 	char name[DM_NAME_LEN];
 
@@ -59,8 +60,6 @@ struct mapped_device {
 
 	/* used by dm-fs.c */
 	devfs_handle_t devfs_entry;
-	char incomplete_input[64];
-	
 };
 
 /* dm-target.c */
@@ -76,11 +75,20 @@ struct target {
 struct target *dm_get_target(const char *name);
 int dm_std_targets(void);
 
-/* dm.c */
 
+/* dm.c */
+struct mapped_device *dm_find_name(const char *name);
+struct mapped_device *dm_find_minor(int minor);
+
+void dm_suspend(struct mapped_device *md);
+void dm_activate(struct mapped_device *md);
 
 /* dm-table.c */
-int dm_build_btree(struct mapped_device *md);
+int dm_start_table(struct mapped_device *md);
+int dm_add_entry(struct mapped_device *md, offset_t high,
+		 dm_map_fn target, void *context);
+int dm_complete_table(struct mapped_device *md);
+
 
 /* dm-fs.c */
 int dm_init_fs(void);
