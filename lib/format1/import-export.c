@@ -31,18 +31,16 @@ static struct logical_volume *_find_lv(struct volume_group *vg,
 	struct list_head *tmp;
 	struct logical_volume *lv;
 	struct lv_list *ll;
-	const char *ptr;
+	const char *ptr = strrchr(name, '/') + 1;
 
 	list_for_each(tmp, &vg->lvs) {
 		ll = list_entry(tmp, struct lv_list, list);
 		lv = &ll->lv;
 
-		ptr = strrchr(name, '/') + 1;
 		if (!strcmp(ptr, lv->name))
 			return lv;
 	}
 
-	log_info("couldn't find lv with name '%s'", name);
 	return NULL;
 }
 
@@ -512,4 +510,3 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 	}
 	return 1;
 }
-
