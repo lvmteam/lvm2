@@ -38,6 +38,7 @@
 #include <linux/blkpg.h>
 #include <linux/hdreg.h>
 #include <linux/lvm.h>
+#include <linux/kmod.h>
 
 #define MAX_DEVICES 64
 #define DEFAULT_READ_AHEAD 64
@@ -603,6 +604,40 @@ static int unregister_device(struct mapped_device *md)
 	return 0;
 }
 
+#ifdef CONFIG_HOTPLUG
+static void dm_sbin_hotplug(struct mapped_device *md, int create)
+{
+	int i;
+	char *argv[3];
+	char *envp[5];
+	char name[DM_NAME_LEN + 16];
+
+	if (!hotplug_path[0])
+		return;
+
+	sprintf(name, "DMNAME=%s\n", md->name);
+
+	i = 0;
+	argv[i++] = hotplug_path;
+	argv[i++] = "devmap";
+	argv[i] = 0;
+
+	i = 0;
+	envp[i++] = "HOME=/";
+	envp[i++] = "PATH=/sbin:/bin:/usr/sbin:/usr/bin";
+	envp[i++] = name;
+	if (create)
+		envp[i++] = "ACTION=add";
+	else
+		envp[i++] = "ACTION=remove";
+	envp[i] = 0;
+
+	call_usermodehelper(argv[0], argv, envp);
+}
+#else
+#define dm_sbin_hotplug(md, create) do { } while(0)
+#endif /* CONFIG_HOTPLUG */
+
 /*
  * constructor for a new device
  */
@@ -632,6 +667,8 @@ int dm_create(const char *name, int minor)
 		return r;
 	}
 	up_write(&_dev_lock);
+
+	dm_sbin_hotplug(md, 1);
 
 	return 0;
 }
@@ -666,6 +703,8 @@ int dm_remove(const char *name)
 	kfree(md);
 	_devs[minor] = 0;
 	up_write(&_dev_lock);
+
+	dm_sbin_hotplug(md, 0);
 
 	return 0;
 }
