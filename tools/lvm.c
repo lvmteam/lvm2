@@ -912,6 +912,7 @@ static void _exit_uuid_map(void)
 	uuid_map_destroy(the_um);
 	label_exit();
 	_lvm1_label->ops->destroy(_lvm1_label);
+	_lvm1_label = NULL;
 }
 
 static int _get_env_vars(void)

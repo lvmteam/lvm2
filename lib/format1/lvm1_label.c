@@ -99,6 +99,7 @@ static void _destroy(struct labeller *l)
 {
 	struct pool *mem = (struct pool *) l->private;
 	pool_destroy(mem);
+	dbg_free(l);
 }
 
 
