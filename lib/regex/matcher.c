@@ -330,20 +330,33 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns, int num)
 	return NULL;
 }
 
+static struct dfa_state *
+_step_matcher(unsigned char c, struct dfa_state *cs, int *r)
+{
+	if (!(cs = cs->lookup[c]))
+		return NULL;
+
+	if (cs->final && (cs->final > *r))
+		*r = cs->final;
+
+	return cs;
+}
+
 int matcher_run(struct matcher *m, const char *b)
 {
 	struct dfa_state *cs = m->start;
 	int r = 0;
 
-	for (; *b; b++) {
+	if (!(cs = _step_matcher(HAT_CHAR, cs, &r)))
+		goto out;
 
-		if (!(cs = cs->lookup[(int) (unsigned char) *b]))
-			break;
+	for (; *b; b++)
+		if (!(cs = _step_matcher(*b, cs, &r)))
+			goto out;
 
-		if (cs->final && (cs->final > r))
-			r = cs->final;
-	}
+	_step_matcher(DOLLAR_CHAR, cs, &r);
 
+ out:
 	/* subtract 1 to get back to zero index */
 	return r - 1;
 }

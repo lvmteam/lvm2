@@ -15,10 +15,16 @@ enum {
 	PLUS,
 	OR,
 	QUEST,
-	CHARSET,
-	HAT,
-	DOLLAR
+	CHARSET
 };
+
+/*
+ * We're never going to be running the regex on non-printable
+ * chars, so we can use a couple of these chars to represent the
+ * start and end of a string.
+ */
+#define HAT_CHAR 0x2
+#define DOLLAR_CHAR 0x2
 
 struct rx_node {
 	int type;
