@@ -144,6 +144,13 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
+	/* FIXME Cache the label format change so we don't have to skip this */
+	if (test_mode()) {
+		log_verbose("Test mode: Skipping metadata writing for VG %s in"
+			    " format %s", vg_name, cmd->fmt->name);
+		return 0;
+	}
+
 	log_verbose("Writing metadata for VG %s using format %s", vg_name,
 		    cmd->fmt->name);
 	if (!backup_restore_vg(cmd, vg)) {
