@@ -10,6 +10,7 @@
 #include "device.h"
 #include "bitset.h"
 #include "log.h"
+#include "list.h"
 
 struct rfilter {
 	struct pool *mem;
@@ -148,17 +149,28 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 
 static int _accept_p(struct dev_filter *f, struct device *dev)
 {
-	int m;
+	int m, nothing_matched = 1;
 	struct rfilter *rf = (struct rfilter *) f->private;
+	struct list_head *tmp;
+	struct str_list *sl;
 
-	m = matcher_run(rf->engine, dev_name(dev));
+	list_for_each(tmp, &dev->aliases) {
+		sl = list_entry(tmp, struct str_list, list);
+		m = matcher_run(rf->engine, sl->str);
+
+		if (m >= 0) {
+			nothing_matched = 0;
+
+			if (bit(rf->accept, m))
+				return 1;
+		}
+	}
 
 	/*
-	 * pass everything that doesn't match,
-	 * otherwise look it up in the accepts
-	 * bitset.
+	 * pass everything that doesn't match
+	 * anything.
 	 */
-	return (m < 0) ? 1 : bit(rf->accept, m);
+	return nothing_matched;
 }
 
 static void _destroy(struct dev_filter *f)
