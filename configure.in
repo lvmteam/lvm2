@@ -55,6 +55,7 @@ case "$host_os" in
 		CLDWHOLEARCHIVE="-Wl,-whole-archive"
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
 		LD_DEPS=".export.sym"
+		LD_FLAGS="-Wl,--export-dynamic"
 		SOFLAG="-shared"
 		DEVMAPPER=yes
 		ODIRECT=yes ;;
@@ -64,6 +65,7 @@ case "$host_os" in
 		CLDWHOLEARCHIVE="-all_load"
 		CLDNOWHOLEARCHIVE=
 		LD_DEPS=
+		LD_FLAGS=
 		SOFLAG="-dynamiclib"
 		DEVMAPPER=no
 		ODIRECT=no ;;
@@ -183,10 +185,20 @@ fi
 dnl Check for dlopen
 AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
 
-if test x$HAVE_LIBDL = xyes; then
+if [[ "x$HAVE_LIBDL" = xyes -a "xSTATIC_LINK" = xno ]]; then
 	CFLAGS="$CFLAGS -DHAVE_LIBDL"
 	LIBS="-ldl $LIBS"
+else
+	HAVE_LIBDL=no
 fi
+
+dnl Check for shared/static conflicts
+if [[ "x$LVM1" = xshared -a "x$STATIC_LINK" = xyes ]];
+ then  AC_MSG_ERROR(
+Features cannot be \"shared\" when building statically
+)
+ exit
+fi;
 
 dnl Check for getopt
 AC_CHECK_HEADERS(getopt.h, CFLAGS="$CFLAGS -DHAVE_GETOPTLONG")
@@ -246,6 +258,7 @@ AC_SUBST(CLDFLAGS)
 AC_SUBST(CLDWHOLEARCHIVE)
 AC_SUBST(CLDNOWHOLEARCHIVE)
 AC_SUBST(LD_DEPS)
+AC_SUBST(LD_FLAGS)
 AC_SUBST(SOFLAG)
 AC_SUBST(LIBS)
 AC_SUBST(LVM_VERSION)

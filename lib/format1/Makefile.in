@@ -25,7 +25,7 @@ SOURCES =\
 	lvm1-label.c \
 	vg_number.c
 
-TARGETS = liblvm2format1.so
+LIB_SHARED = liblvm2format1.so
 
 include ../../make.tmpl
 

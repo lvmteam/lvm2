@@ -97,7 +97,7 @@ endif
 
 LIB_STATIC = liblvm.a
 
-TARGETS = $(LIB_STATIC)
+$(SUBDIRS): $(LIB_STATIC)
 
 include ../make.tmpl
 
