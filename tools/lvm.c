@@ -680,7 +680,7 @@ int help(struct cmd_context *cmd, int argc, char **argv)
 static void _apply_settings(struct cmd_context *cmd)
 {
 	init_debug(cmd->current_settings.debug);
-	init_verbose(cmd->current_settings.verbose);
+	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
 	init_test(cmd->current_settings.test);
 
 	init_msg_prefix(cmd->default_settings.msg_prefix);
