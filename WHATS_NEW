@@ -3,6 +3,8 @@ Version 2.00.25 -
   Fix return code from rm_link for vgmknodes.
   Make clvmd LV hash table thread-safe.
   Fix clvmd locking so it will lock out multiple users on the same node
+  Fix clvmd VG locking to it can copw with multiple VG locks
+  Remove spurious trailing dot in lvreduce man page
  
 
 Version 2.00.24 - 16th September 2004
