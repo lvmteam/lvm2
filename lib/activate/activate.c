@@ -104,8 +104,12 @@ static int _emit_target(struct dm_task *dmt, struct logical_volume *lv,
 		if (!first)
 			first = pes;
 
-		else if (first->pv != pes->pv || first->pe != pes->pe + 1)
-				break; /* no longer contig. */
+		/*
+		 * check that we're still contiguous.
+		 */
+		else if ((pes->pv != first->pv) ||
+			 (pes->pe != first->pe + count))
+				break;
 
 		count++;
 	}
