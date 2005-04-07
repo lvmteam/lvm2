@@ -221,7 +221,6 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	list_init(&vg->lvs);
 
 	vg->snapshot_count = 0;
-	list_init(&vg->snapshots);
 
 	list_init(&vg->tags);
 
@@ -617,7 +616,6 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	}
 	list_init(&vg->pvs);
 	list_init(&vg->lvs);
-	list_init(&vg->snapshots);
 	list_init(&vg->tags);
 	vg->cmd = cmd;
 	if (!(vg->name = pool_strdup(cmd->mem, ORPHAN))) {

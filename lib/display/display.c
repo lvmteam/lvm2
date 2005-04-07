@@ -337,10 +337,9 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 		   void *handle)
 {
 	struct lvinfo info;
-	int inkernel, snap_active;
+	int inkernel, snap_active = 0;
 	char uuid[64];
-	struct snapshot *snap = NULL;
-	struct list *slh, *snaplist;
+	struct lv_segment *snap_seg = NULL;
 	float snap_percent;	/* fused, fsize; */
 
 	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
@@ -364,27 +363,30 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lv_is_origin(lv)) {
 		log_print("LV snapshot status     source of");
 
-		snaplist = find_snapshots(lv);
-		list_iterate(slh, snaplist) {
-			snap = list_item(slh, struct snapshot_list)->snapshot;
-			snap_active = lv_snapshot_percent(snap->cow,
-							  &snap_percent);
-			if (!snap_active || snap_percent < 0 ||
-			    snap_percent >= 100) snap_active = 0;
+		list_iterate_items_gen(snap_seg, &lv->snapshot_segs,
+				       origin_list) {
+			if (inkernel &&
+			    (snap_active = lv_snapshot_percent(snap_seg->cow,
+							       &snap_percent)))
+				if (snap_percent < 0 || snap_percent >= 100)
+					snap_active = 0;
 			log_print("                       %s%s/%s [%s]",
 				  lv->vg->cmd->dev_dir, lv->vg->name,
-				  snap->cow->name,
+				  snap_seg->cow->name,
 				  (snap_active > 0) ? "active" : "INACTIVE");
 		}
-		snap = NULL;
-	} else if ((snap = find_cow(lv))) {
-		snap_active = lv_snapshot_percent(lv, &snap_percent);
-		if (!snap_active || snap_percent < 0 || snap_percent >= 100)
-			snap_active = 0;
+		snap_seg = NULL;
+	} else if ((snap_seg = find_cow(lv))) {
+		if (inkernel &&
+		    (snap_active = lv_snapshot_percent(snap_seg->cow,
+						       &snap_percent)))
+			if (snap_percent < 0 || snap_percent >= 100)
+				snap_active = 0;
+
 		log_print("LV snapshot status     %s destination for %s%s/%s",
 			  (snap_active > 0) ? "active" : "INACTIVE",
 			  lv->vg->cmd->dev_dir, lv->vg->name,
-			  snap->origin->name);
+			  snap_seg->origin->name);
 	}
 
 	if (inkernel && info.suspended)
@@ -402,46 +404,30 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 
 	log_print("LV Size                %s",
 		  display_size(cmd,
-			       snap ? snap->origin->size : lv->size,
+			       snap_seg ? snap_seg->origin->size : lv->size,
 			       SIZE_SHORT));
 
 	log_print("Current LE             %u",
-		  snap ? snap->origin->le_count : lv->le_count);
+		  snap_seg ? snap_seg->origin->le_count : lv->le_count);
 
-/********** FIXME allocation
-    log_print("Allocated LE           %u", lv->allocated_le);
-**********/
+	if (snap_seg) {
+		log_print("COW-table size         %s",
+			  display_size(cmd, (uint64_t) lv->size, SIZE_SHORT));
+		log_print("COW-table LE           %u", lv->le_count);
+
+		if (snap_active)
+			log_print("Allocated to snapshot  %.2f%% ", snap_percent);	
+
+		log_print("Snapshot chunk size    %s",
+			  display_size(cmd, (uint64_t) snap_seg->chunk_size,
+				       SIZE_SHORT));
+	}
 
 	log_print("Segments               %u", list_size(&lv->segments));
 
 /********* FIXME Stripes & stripesize for each segment
 	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
 ***********/
-
-	if (snap) {
-		if (snap_percent == -1)
-			snap_percent = 100;
-
-		log_print("Snapshot chunk size    %s",
-			  display_size(cmd, (uint64_t) snap->chunk_size,
-				       SIZE_SHORT));
-
-/*
-	size = display_size(lv->size, SIZE_SHORT);
-	sscanf(size, "%f", &fsize);
-	fused = fsize * snap_percent / 100;
-*/
-		log_print("Allocated to snapshot  %.2f%% ",	/* [%.2f/%s]", */
-			  snap_percent);	/*, fused, size); */
-		/* dbg_free(size); */
-	}
-
-/********** FIXME Snapshot
-	size = ???
-	log_print("Allocated to COW-table %s", size);
-	dbg_free(size);
-    }
-******************/
 
 	log_print("Allocation             %s", get_alloc_string(lv->alloc));
 	log_print("Read ahead sectors     %u", lv->read_ahead);
@@ -550,7 +536,7 @@ void vgdisplay_full(struct volume_group *vg)
 			  vg->status & SHARED ? "yes" : "no");
 	}
 	log_print("MAX LV                %u", vg->max_lv);
-	log_print("Cur LV                %u", vg->lv_count);
+	log_print("Cur LV                %u", vg->lv_count + vg->snapshot_count);
 	log_print("Open LV               %u", lvs_in_vg_opened(vg));
 /****** FIXME Max LV Size
       log_print ( "MAX LV Size           %s",

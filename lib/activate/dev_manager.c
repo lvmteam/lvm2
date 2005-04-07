@@ -875,22 +875,23 @@ static int _populate_snapshot(struct dev_manager *dm,
 {
 	char *origin, *cow;
 	char params[PATH_MAX * 2 + 32];
-	struct snapshot *s;
+	struct lv_segment *snap_seg;
 	struct dev_layer *dlo, *dlc;
 	char devbufo[10], devbufc[10];
 	uint64_t size;
 
-	if (!(s = find_cow(dl->lv))) {
+	if (!(snap_seg = find_cow(dl->lv))) {
 		log_error("Couldn't find snapshot for '%s'.", dl->lv->name);
 		return 0;
 	}
 
-	if (!(origin = _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
+	if (!(origin = _build_dlid(dm->mem, snap_seg->origin->lvid.s,
+				   "real"))) {
 		stack;
 		return 0;
 	}
 
-	if (!(cow = _build_dlid(dm->mem, s->cow->lvid.s, "cow"))) {
+	if (!(cow = _build_dlid(dm->mem, snap_seg->cow->lvid.s, "cow"))) {
 		stack;
 		return 0;
 	}
@@ -909,24 +910,24 @@ static int _populate_snapshot(struct dev_manager *dm,
 	if (!dm_format_dev(devbufo, sizeof(devbufo), dlo->info.major,
 			   dlo->info.minor)) {
 		log_error("Couldn't create origin device parameters for '%s'.",
-			  s->origin->name);
+			  snap_seg->origin->name);
 		return 0;
 	}
 
 	if (!dm_format_dev(devbufc, sizeof(devbufc), dlc->info.major,
 			   dlc->info.minor)) {
 		log_error("Couldn't create cow device parameters for '%s'.",
-			  s->cow->name);
+			  snap_seg->cow->name);
 		return 0;
 	}
 
 	if (lvm_snprintf(params, sizeof(params), "%s %s P %d",
-			 devbufo, devbufc, s->chunk_size) == -1) {
+			 devbufo, devbufc, snap_seg->chunk_size) == -1) {
 		stack;
 		return 0;
 	}
 
-	size = (uint64_t) s->le_count * s->origin->vg->extent_size;
+	size = (uint64_t) snap_seg->len * snap_seg->origin->vg->extent_size;
 
 	log_debug("Adding target: 0 %" PRIu64 " snapshot %s", size, params);
 	if (!dm_task_add_target(dmt, UINT64_C(0), size, "snapshot", params)) {
@@ -1274,7 +1275,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct logical_volume *active;
-	struct snapshot *s;
+	struct lv_segment *snap_seg;
 	struct list *sh;
 
 	/*
@@ -1283,7 +1284,7 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 	 */
 	list_iterate(sh, &dm->active_list) {
 		active = list_item(sh, struct lv_list)->lv;
-		if ((s = find_cow(active)) && (s->origin == lv))
+		if ((snap_seg = find_cow(active)) && (snap_seg->origin == lv))
 			return _expand_origin_real(dm, lv);
 	}
 
@@ -1294,7 +1295,7 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 }
 
 static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
-			    struct snapshot *s)
+			    struct lv_segment *snap_seg)
 {
 	/*
 	 * snapshot(org, cow)
@@ -1331,13 +1332,15 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 
 	/* add the dependency on the real origin device */
 	if (!str_list_add(dm->mem, &dl->pre_create,
-			  _build_dlid(dm->mem, s->origin->lvid.s, "real"))) {
+			  _build_dlid(dm->mem, snap_seg->origin->lvid.s,
+				      "real"))) {
 		stack;
 		return 0;
 	}
 
 	/* add the dependency on the visible origin device */
-	if (!str_list_add(dm->mem, &dl->pre_suspend, s->origin->lvid.s)) {
+	if (!str_list_add(dm->mem, &dl->pre_suspend,
+			  snap_seg->origin->lvid.s)) {
 		stack;
 		return 0;
 	}
@@ -1350,13 +1353,13 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
  */
 static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 {
-	struct snapshot *s;
+	struct lv_segment *snap_seg;
 
 	/*
 	 * FIXME: this doesn't cope with recursive snapshots yet.
 	 */
-	if ((s = find_cow(lv)))
-		return _expand_snapshot(dm, lv, s);
+	if ((snap_seg = find_cow(lv)))
+		return _expand_snapshot(dm, lv, snap_seg);
 
 	else if (lv_is_origin(lv))
 		return _expand_origin(dm, lv);
@@ -1445,6 +1448,8 @@ static int _mark_lvs(struct dev_manager *dm, struct list *lvs, int flag)
 
 	list_iterate(lvh, lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
+		if (lv->status & SNAPSHOT)
+			continue;
 
 		if (!(dl = _lookup(dm, lv->lvid.s, NULL))) {
 			stack;
@@ -1606,14 +1611,16 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 static int _build_all_layers(struct dev_manager *dm, struct volume_group *vg)
 {
 	struct list *lvh;
-	struct logical_volume *lvt;
+	struct logical_volume *lv;
 
 	/*
 	 * Build layers for complete vg.
 	 */
 	list_iterate(lvh, &vg->lvs) {
-		lvt = list_item(lvh, struct lv_list)->lv;
-		if (!_expand_lv(dm, lvt)) {
+		lv = list_item(lvh, struct lv_list)->lv;
+		if (lv->status & SNAPSHOT)
+			continue;
+		if (!_expand_lv(dm, lv)) {
 			stack;
 			return 0;
 		}
@@ -1915,12 +1922,14 @@ static int _add_lvs(struct pool *mem,
 		    struct list *head, struct logical_volume *origin)
 {
 	struct logical_volume *lv;
-	struct snapshot *s;
+	struct lv_segment *snap_seg;
 	struct list *lvh;
 
 	list_iterate(lvh, &origin->vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
-		if ((s = find_cow(lv)) && s->origin == origin)
+		if (lv->status & SNAPSHOT)
+			continue;
+		if ((snap_seg = find_cow(lv)) && snap_seg->origin == origin)
 			if (!_add_lv(mem, head, lv))
 				return 0;
 	}
@@ -1945,7 +1954,7 @@ static void _remove_lv(struct list *head, struct logical_volume *lv)
 static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct logical_volume *active, *old_origin;
-	struct snapshot *s;
+	struct lv_segment *snap_seg;
 	struct list *sh, *active_head;
 
 	active_head = &dm->active_list;
@@ -1953,22 +1962,23 @@ static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 	/* Remove any snapshots with given origin */
 	list_iterate(sh, active_head) {
 		active = list_item(sh, struct lv_list)->lv;
-		if ((s = find_cow(active)) && s->origin == lv) {
+		if ((snap_seg = find_cow(active)) && snap_seg->origin == lv) {
 			_remove_lv(active_head, active);
 		}
 	}
 
 	_remove_lv(active_head, lv);
 
-	if (!(s = find_cow(lv)))
+	if (!(snap_seg = find_cow(lv)))
 		return 1;
 
-	old_origin = s->origin;
+	old_origin = snap_seg->origin;
 
 	/* Was this the last active snapshot with this origin? */
 	list_iterate(sh, active_head) {
 		active = list_item(sh, struct lv_list)->lv;
-		if ((s = find_cow(active)) && s->origin == old_origin) {
+		if ((snap_seg = find_cow(active)) &&
+		    snap_seg->origin == old_origin) {
 			return 1;
 		}
 	}
@@ -1980,7 +1990,7 @@ static int _remove_suspended_lvs(struct dev_manager *dm,
 				 struct logical_volume *lv)
 {
 	struct logical_volume *suspended;
-	struct snapshot *s;
+	struct lv_segment *snap_seg;
 	struct list *sh, *suspend_head;
 
 	suspend_head = &dm->suspend_list;
@@ -1988,7 +1998,8 @@ static int _remove_suspended_lvs(struct dev_manager *dm,
 	/* Remove from list any snapshots with given origin */
 	list_iterate(sh, suspend_head) {
 		suspended = list_item(sh, struct lv_list)->lv;
-		if ((s = find_cow(suspended)) && s->origin == lv) {
+		if ((snap_seg = find_cow(suspended)) &&
+		    snap_seg->origin == lv) {
 			_remove_lv(suspend_head, suspended);
 		}
 	}
@@ -2074,6 +2085,8 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 
 	list_iterate(lvh, &vg->lvs) {
 		lv = list_item(lvh, struct lv_list)->lv;
+		if (lv->status & SNAPSHOT)
+			continue;
 
 		if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, NULL))) {
 			stack;

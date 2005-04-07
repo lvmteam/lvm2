@@ -50,7 +50,7 @@
 #define VISIBLE_LV		0x00000040	/* LV */
 #define FIXED_MINOR		0x00000080	/* LV */
 /* FIXME Remove when metadata restructuring is completed */
-#define SNAPSHOT		0x00001000	/* LV - tmp internal use only */
+#define SNAPSHOT		0x00001000	/* LV - internal use only */
 #define PVMOVE			0x00002000	/* VG LV SEG */
 #define LOCKED			0x00004000	/* LV */
 #define MIRRORED		0x00008000	/* LV - internal use only */
@@ -191,11 +191,8 @@ struct volume_group {
 
 	/* logical volumes */
 	uint32_t lv_count;
-	struct list lvs;
-
-	/* snapshots */
 	uint32_t snapshot_count;
-	struct list snapshots;
+	struct list lvs;
 
 	struct list tags;
 };
@@ -217,7 +214,8 @@ struct lv_segment {
 	uint32_t area_len;
 	struct logical_volume *origin;
 	struct logical_volume *cow;
-	uint32_t chunk_size;
+	struct list origin_list;
+	uint32_t chunk_size;	/* In sectors */
 	uint32_t extents_copied;
 
 	struct list tags;
@@ -253,18 +251,12 @@ struct logical_volume {
 	uint64_t size;
 	uint32_t le_count;
 
+	uint32_t origin_count;
+	struct list snapshot_segs;
+	struct lv_segment *snapshot;
+
 	struct list segments;
 	struct list tags;
-};
-
-struct snapshot {
-	union lvid lvid;
-
-	uint32_t chunk_size;	/* in 512 byte sectors */
-	uint32_t le_count;
-
-	struct logical_volume *origin;
-	struct logical_volume *cow;
 };
 
 struct name_list {
@@ -288,12 +280,6 @@ struct pv_list {
 struct lv_list {
 	struct list list;
 	struct logical_volume *lv;
-};
-
-struct snapshot_list {
-	struct list list;
-
-	struct snapshot *snapshot;
 };
 
 struct mda_list {
@@ -424,6 +410,7 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
+				       int import,
 				       struct volume_group *vg);
 
 int lv_reduce(struct format_instance *fi,
@@ -503,11 +490,10 @@ int lv_is_cow(const struct logical_volume *lv);
 
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv);
 
-struct snapshot *find_cow(const struct logical_volume *lv);
-struct snapshot *find_origin(const struct logical_volume *lv);
-struct list *find_snapshots(const struct logical_volume *lv);
+struct lv_segment *find_cow(const struct logical_volume *lv);
 
-int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
+int vg_add_snapshot(struct format_instance *fid, const char *name,
+		    struct logical_volume *origin, struct logical_volume *cow,
 		    union lvid *lvid, uint32_t extent_count,
 		    uint32_t chunk_size);
 

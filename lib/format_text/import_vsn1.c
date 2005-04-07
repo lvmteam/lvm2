@@ -508,6 +508,8 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead))
 		lv->read_ahead = 0;
 
+	lv->snapshot = NULL;
+	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
 
@@ -561,24 +563,29 @@ static int _read_lvsegs(struct format_instance *fid, struct pool *mem,
 
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
 
-	/* Skip this for now for snapshots */
-	if (!(lv->status & SNAPSHOT)) {
-		lv->minor = -1;
-		if ((lv->status & FIXED_MINOR) &&
-		    !_read_int32(lvn, "minor", &lv->minor)) {
-			log_error("Couldn't read minor number for logical "
-				  "volume %s.", lv->name);
-			return 0;
-		}
-		lv->major = -1;
-		if ((lv->status & FIXED_MINOR) &&
-		    !_read_int32(lvn, "major", &lv->major)) {
-			log_error("Couldn't read major number for logical "
-				  "volume %s.", lv->name);
-		}
-	} else {
+	/*
+	 * FIXME We now have 2 LVs for each snapshot. The real one was
+	 * created by vg_add_snapshot from the segment text_import.
+	 */
+	if (lv->status & SNAPSHOT) {
 		vg->lv_count--;
 		list_del(&lvl->list);
+		return 1;
+	}
+
+	lv->minor = -1;
+	if ((lv->status & FIXED_MINOR) &&
+	    !_read_int32(lvn, "minor", &lv->minor)) {
+		log_error("Couldn't read minor number for logical "
+			  "volume %s.", lv->name);
+		return 0;
+	}
+
+	lv->major = -1;
+	if ((lv->status & FIXED_MINOR) &&
+	    !_read_int32(lvn, "major", &lv->major)) {
+		log_error("Couldn't read major number for logical "
+			  "volume %s.", lv->name);
 	}
 
 	return 1;
@@ -736,7 +743,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	list_init(&vg->lvs);
-	list_init(&vg->snapshots);
 	list_init(&vg->tags);
 
 	/* Optional tags */

@@ -143,7 +143,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	/* FIXME Pass 'alloc' down to lv_extend */
 	if (!(lv_mirr = lv_create_empty(vg->fid, NULL, "pvmove%d", NULL,
 					LVM_READ | LVM_WRITE,
-					ALLOC_CONTIGUOUS, vg))) {
+					ALLOC_CONTIGUOUS, 0, vg))) {
 		log_error("Creation of temporary pvmove LV failed");
 		return NULL;
 	}
@@ -160,7 +160,8 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	/* Find segments to be moved and set up mirrors */
 	list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
-		if ((lv == lv_mirr) || (lv_name && strcmp(lv->name, lv_name)))
+		if ((lv == lv_mirr) ||
+		    (lv_name && strcmp(lv->name, lv_name)))
 			continue;
 		if (lv_is_origin(lv) || lv_is_cow(lv)) {
 			log_print("Skipping snapshot-related LV %s", lv->name);

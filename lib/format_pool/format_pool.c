@@ -132,7 +132,6 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 	vg->system_id = NULL;
 	list_init(&vg->pvs);
 	list_init(&vg->lvs);
-	list_init(&vg->snapshots);
 	list_init(&vg->tags);
 
 	if (!import_pool_vg(vg, smem, pds)) {

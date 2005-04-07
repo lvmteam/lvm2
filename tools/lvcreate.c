@@ -513,7 +513,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d", NULL,
-				   status, lp->alloc, vg))) {
+				   status, lp->alloc, 0, vg))) {
 		stack;
 		return 0;
 	}
@@ -609,8 +609,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			return 0;
 		}
 
-		if (!vg_add_snapshot(org, lv, NULL, org->le_count,
-				     lp->chunk_size)) {
+		if (!vg_add_snapshot(vg->fid, NULL, org, lv, NULL,
+				     org->le_count, lp->chunk_size)) {
 			log_err("Couldn't create snapshot.");
 			return 0;
 		}

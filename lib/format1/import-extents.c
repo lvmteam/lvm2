@@ -60,6 +60,8 @@ static struct hash_table *_create_lv_maps(struct pool *mem,
 
 	list_iterate(llh, &vg->lvs) {
 		ll = list_item(llh, struct lv_list);
+		if (ll->lv->status & SNAPSHOT)
+			continue;
 
 		if (!(lvm = pool_alloc(mem, sizeof(*lvm)))) {
 			stack;

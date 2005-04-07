@@ -323,6 +323,8 @@ int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 	lv->size = lvd->lv_size;
 	lv->le_count = lvd->lv_allocated_le;
 
+	lv->snapshot = NULL;
+	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
 
@@ -495,7 +497,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	       struct physical_volume *pv, const char *dev_dir)
 {
 	int r = 0;
-	struct list *lvh, *sh;
+	struct list *lvh;
 	struct lv_list *ll;
 	struct lvd_list *lvdl;
 	size_t len;
@@ -524,6 +526,9 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 
 	list_iterate(lvh, &vg->lvs) {
 		ll = list_item(lvh, struct lv_list);
+		if (ll->lv->status & SNAPSHOT)
+			continue;
+
 		if (!(lvdl = pool_alloc(dl->mem, sizeof(*lvdl)))) {
 			stack;
 			goto out;
@@ -532,7 +537,6 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		_export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
 
 		lv_num = lvnum_from_lvid(&ll->lv->lvid);
-
 		lvdl->lvd.lv_number = lv_num;
 
 		if (!hash_insert(lvd_hash, ll->lv->name, &lvdl->lvd)) {
@@ -545,35 +549,18 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 			goto out;
 		}
 
+		if (lv_is_origin(ll->lv))
+			lvdl->lvd.lv_access |= LV_SNAPSHOT_ORG;
+
+		if (lv_is_cow(ll->lv)) {
+			lvdl->lvd.lv_access |= LV_SNAPSHOT;
+			lvdl->lvd.lv_chunk_size = ll->lv->snapshot->chunk_size;
+			lvdl->lvd.lv_snapshot_minor =
+			    lvnum_from_lvid(&ll->lv->snapshot->origin->lvid);
+		}
+
 		list_add(&dl->lvds, &lvdl->list);
 		dl->pvd.lv_cur++;
-	}
-
-	/*
-	 * Now we need to run through the snapshots, exporting
-	 * the SNAPSHOT_ORG flags etc.
-	 */
-	list_iterate(sh, &vg->snapshots) {
-		struct lv_disk *org, *cow;
-		struct snapshot *s = list_item(sh,
-					       struct snapshot_list)->snapshot;
-
-		if (!(org = hash_lookup(lvd_hash, s->origin->name))) {
-			log_err("Couldn't find snapshot origin '%s'.",
-				s->origin->name);
-			goto out;
-		}
-
-		if (!(cow = hash_lookup(lvd_hash, s->cow->name))) {
-			log_err("Couldn't find snapshot cow store '%s'.",
-				s->cow->name);
-			goto out;
-		}
-
-		org->lv_access |= LV_SNAPSHOT_ORG;
-		cow->lv_access |= LV_SNAPSHOT;
-		cow->lv_snapshot_minor = org->lv_number;
-		cow->lv_chunk_size = s->chunk_size;
 	}
 
 	r = 1;
@@ -646,7 +633,8 @@ int import_snapshots(struct pool *mem, struct volume_group *vg,
 				continue;
 
 			/* insert the snapshot */
-			if (!vg_add_snapshot(org, cow, NULL, org->le_count, 
+			if (!vg_add_snapshot(vg->fid, NULL, org, cow, NULL,
+					     org->le_count, 
 					     lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");
 				return 0;
