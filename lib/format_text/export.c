@@ -488,7 +488,7 @@ static int _print_snapshot(struct formatter *f, struct snapshot *snap,
 	outf(f, "snapshot%u {", count);
 	_inc_indent(f);
 
-	if (!id_write_format(&snap->id, buffer, sizeof(buffer))) {
+	if (!id_write_format(&snap->lvid.id[1], buffer, sizeof(buffer))) {
 		stack;
 		return 0;
 	}
