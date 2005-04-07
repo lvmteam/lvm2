@@ -27,7 +27,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		lv = lvl->lv;
 
 		/* Only request activation of snapshot origin devices */
-		if (lv_is_cow(lv))
+		if ((lv->status & SNAPSHOT) || lv_is_cow(lv))
 			continue;
 
 		/* Can't deactive a pvmove LV */

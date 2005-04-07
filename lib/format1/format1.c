@@ -148,7 +148,6 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	vg->seqno = 0;
 	list_init(&vg->pvs);
 	list_init(&vg->lvs);
-	list_init(&vg->snapshots);
 	list_init(&vg->tags);
 
 	if (!_check_vgs(pvs, &partial))

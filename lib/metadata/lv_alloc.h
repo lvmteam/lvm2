@@ -17,4 +17,7 @@
 #include "pool.h"
 
 struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t num_areas);
+struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
+				      uint32_t allocated);
+
 #endif

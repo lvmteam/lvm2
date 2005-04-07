@@ -82,6 +82,8 @@ int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
 	lv->name = NULL;
 	lv->le_count = 0;
 	lv->read_ahead = 0;
+	lv->snapshot = NULL;
+	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
 
@@ -112,6 +114,8 @@ int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
 		} else {
 			lv->minor = -1;
 		}
+		lv->snapshot = NULL;
+		list_init(&lv->snapshot_segs);
 		list_init(&lv->segments);
 		list_init(&lv->tags);
 	}
@@ -288,8 +292,11 @@ int import_pool_segments(struct list *lvs, struct pool *mem,
 
 	list_iterate(lvhs, lvs) {
 		lvl = list_item(lvhs, struct lv_list);
-
 		lv = lvl->lv;
+
+		if (lv->status & SNAPSHOT)
+			continue;
+
 		for (i = 0; i < subpools; i++) {
 			if (usp[i].striping) {
 				if (!_add_stripe_seg(mem, &usp[i], lv, &le_cur)) {

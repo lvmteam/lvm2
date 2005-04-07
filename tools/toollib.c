@@ -60,6 +60,9 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	list_iterate_items(lvl, &vg->lvs) {
+		if (lvl->lv->status & SNAPSHOT)
+			continue;
+
 		/* Should we process this LV? */
 		if (process_all)
 			process_lv = 1;

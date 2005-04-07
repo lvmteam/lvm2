@@ -115,7 +115,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
-	struct snapshot *snap;
+	struct lv_segment *snap_seg;
 	struct lvinfo info;
 	uint32_t stripesize_extents = 0;
 	uint32_t seg_stripes = 0, seg_stripesize = 0, seg_size = 0;
@@ -472,8 +472,8 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	backup(vg);
 
 	/* If snapshot, must suspend all associated devices */
-	if ((snap = find_cow(lv)))
-		lock_lvid = snap->origin->lvid.s;
+	if ((snap_seg = find_cow(lv)))
+		lock_lvid = snap_seg->origin->lvid.s;
 	else
 		lock_lvid = lv->lvid.s;
 

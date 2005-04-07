@@ -440,6 +440,34 @@ static int _alloc_virtual(struct logical_volume *lv,
 	return 1;
 }
 
+struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
+				      uint32_t allocated)
+{
+	struct lv_segment *seg;
+
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 0))) {
+		log_err("Couldn't allocate new zero segment.");
+		return NULL;
+	}
+
+	seg->lv = lv;
+	seg->segtype = get_segtype_from_string(lv->vg->cmd, "snapshot");
+	if (!seg->segtype) {
+		log_error("Failed to find snapshot segtype");
+		return NULL;
+	}
+	seg->status = 0u;
+	seg->le = allocated;
+	seg->len = lv->le_count - allocated;
+	seg->area_len = seg->len;
+	seg->stripe_size = 0;
+	seg->extents_copied = 0u;
+	list_add(&lv->segments, &seg->list);
+	lv->status |= VIRTUAL;
+
+	return seg;
+}
+
 /*
  * Chooses a correct allocation policy.
  */
@@ -546,6 +574,7 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
+				       int import,
 				       struct volume_group *vg)
 {
 	struct cmd_context *cmd = vg->cmd;
@@ -566,7 +595,8 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 		return NULL;
 	}
 
-	log_verbose("Creating logical volume %s", name);
+	if (!import)
+		log_verbose("Creating logical volume %s", name);
 
 	if (!(ll = pool_zalloc(cmd->mem, sizeof(*ll))) ||
 	    !(ll->lv = pool_zalloc(cmd->mem, sizeof(*ll->lv)))) {
@@ -593,6 +623,8 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	lv->minor = -1;
 	lv->size = UINT64_C(0);
 	lv->le_count = 0;
+	lv->snapshot = NULL;
+	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
 
@@ -606,7 +638,9 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 		return NULL;
 	}
 
-	vg->lv_count++;
+	if (!import)
+		vg->lv_count++;
+
 	list_add(&vg->lvs, &ll->list);
 
 	return lv;

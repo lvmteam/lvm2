@@ -477,87 +477,6 @@ static int _count_segments(struct logical_volume *lv)
 	return r;
 }
 
-static int _print_snapshot(struct formatter *f, struct snapshot *snap,
-			   unsigned int count)
-{
-	char buffer[256];
-	struct lv_segment seg;
-
-	f->nl(f);
-
-	outf(f, "snapshot%u {", count);
-	_inc_indent(f);
-
-	if (!id_write_format(&snap->lvid.id[1], buffer, sizeof(buffer))) {
-		stack;
-		return 0;
-	}
-
-	outf(f, "id = \"%s\"", buffer);
-
-	seg.status = LVM_READ | LVM_WRITE | VISIBLE_LV;
-	if (!print_flags(seg.status, LV_FLAGS, buffer, sizeof(buffer))) {
-		stack;
-		return 0;
-	}
-
-	outf(f, "status = %s", buffer);
-	outf(f, "segment_count = 1");
-
-	f->nl(f);
-
-	if (!(seg.segtype = get_segtype_from_string(snap->origin->vg->cmd,
-						    "snapshot"))) {
-		stack;
-		return 0;
-	}
-
-	seg.le = 0;
-	seg.len = snap->le_count;
-	seg.origin = snap->origin;
-	seg.cow = snap->cow;
-	seg.chunk_size = snap->chunk_size;
-
-	/* FIXME Dummy values */
-	list_init(&seg.list);
-	seg.lv = snap->cow;
-	seg.stripe_size = 0;
-	seg.area_count = 0;
-	seg.area_len = 0;
-	seg.extents_copied = 0;
-
-	/* Can't tag a snapshot independently of its origin */
-	list_init(&seg.tags);
-
-	if (!_print_segment(f, snap->origin->vg, 1, &seg)) {
-		stack;
-		return 0;
-	}
-
-	_dec_indent(f);
-	outf(f, "}");
-
-	return 1;
-}
-
-static int _print_snapshots(struct formatter *f, struct volume_group *vg)
-{
-	struct list *sh;
-	struct snapshot *s;
-	unsigned int count = 0;
-
-	list_iterate(sh, &vg->snapshots) {
-		s = list_item(sh, struct snapshot_list)->snapshot;
-
-		if (!_print_snapshot(f, s, count++)) {
-			stack;
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
 static int _print_lvs(struct formatter *f, struct volume_group *vg)
 {
 	struct list *lvh;
@@ -627,11 +546,6 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 
 		_dec_indent(f);
 		outf(f, "}");
-	}
-
-	if (!_print_snapshots(f, vg)) {
-		stack;
-		return 0;
 	}
 
 	_dec_indent(f);

@@ -54,6 +54,7 @@ static struct flag _lv_flags[] = {
 	{LOCKED, "LOCKED"},
 	{MIRRORED, NULL},
 	{VIRTUAL, NULL},
+	{SNAPSHOT, NULL},
 	{0, NULL}
 };
 

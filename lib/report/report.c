@@ -324,7 +324,7 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
 	char *repstr;
-	struct snapshot *snap;
+	struct lv_segment *snap_seg;
 	float snap_percent;
 
 	if (!(repstr = pool_zalloc(rh->mem, 7))) {
@@ -373,8 +373,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 			repstr[5] = '-';
 
 		/* Snapshot dropped? */
-		if ((snap = find_cow(lv)) &&
-		    (!lv_snapshot_percent(snap->cow, &snap_percent) ||
+		if ((snap_seg = find_cow(lv)) &&
+		    (!lv_snapshot_percent(snap_seg->cow, &snap_percent) ||
 		     snap_percent < 0 || snap_percent >= 100)) {
 			repstr[0] = toupper(repstr[0]);
 			if (info.suspended)
@@ -478,10 +478,10 @@ static int _origin_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct snapshot *snap;
+	struct lv_segment *snap_seg;
 
-	if ((snap = find_cow(lv)))
-		return _string_disp(rh, field, &snap->origin->name);
+	if ((snap_seg = find_cow(lv)))
+		return _string_disp(rh, field, &snap_seg->origin->name);
 
 	field->report_string = "";
 	field->sort_value = (const void *) field->report_string;
@@ -762,7 +762,7 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 			   const void *data)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct snapshot *snap;
+	struct lv_segment *snap_seg;
 	struct lvinfo info;
 	float snap_percent;
 	uint64_t *sortval;
@@ -773,15 +773,16 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(snap = find_cow(lv)) ||
-	    (lv_info(snap->cow, &info, 0) && !info.exists)) {
+	if (!(snap_seg = find_cow(lv)) ||
+	    (lv_info(snap_seg->cow, &info, 0) && !info.exists)) {
 		field->report_string = "";
 		*sortval = UINT64_C(0);
 		field->sort_value = sortval;
 		return 1;
 	}
 
-	if (!lv_snapshot_percent(snap->cow, &snap_percent) || snap_percent < 0) {
+	if (!lv_snapshot_percent(snap_seg->cow, &snap_percent)
+	    || snap_percent < 0) {
 		field->report_string = "100.00";
 		*sortval = UINT64_C(100);
 		field->sort_value = sortval;
