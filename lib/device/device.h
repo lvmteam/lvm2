@@ -23,6 +23,8 @@
 #define DEV_REGULAR		0x00000002	/* Regular file? */
 #define DEV_ALLOCED		0x00000004	/* dbg_malloc used */
 #define DEV_OPENED_RW		0x00000008	/* Opened RW */
+#define DEV_O_DIRECT		0x00000010	/* Use O_DIRECT */
+#define DEV_O_DIRECT_TESTED	0x00000020	/* DEV_O_DIRECT is reliable */
 
 /*
  * All devices in LVM will be represented by one of these.
@@ -64,7 +66,7 @@ int dev_get_sectsize(struct device *dev, uint32_t *size);
 /* Use quiet version if device number could change e.g. when opening LV */
 int dev_open(struct device *dev);
 int dev_open_quiet(struct device *dev);
-int dev_open_flags(struct device *dev, int flags, int append, int quiet);
+int dev_open_flags(struct device *dev, int flags, int direct, int quiet);
 int dev_close(struct device *dev);
 int dev_close_immediate(struct device *dev);
 void dev_close_all(void);

@@ -180,11 +180,6 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		return ECMD_FAILED;
 	}
 
-	if (lv_is_origin(lv)) {
-		log_error("Snapshot origin volumes cannot be resized yet.");
-		return ECMD_FAILED;
-	}
-
 	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lv->alloc);
 
 	if (lp->size) {
@@ -350,6 +345,23 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			return EINVALID_CMD_LINE;
 		} else
 			lp->resize = LV_EXTEND;
+	}
+
+
+	if (lv_is_origin(lv)) {
+		if (lp->resize == LV_REDUCE) {
+			log_error("Snapshot origin volumes cannot be reduced "
+				  "in size yet.");
+			return ECMD_FAILED;
+		}
+
+		memset(&info, 0, sizeof(info));
+
+		if (lv_info(lv, &info, 0) && info.exists) {
+			log_error("Snapshot origin volumes can be resized "
+				  "only while inactive: try lvchange -an");
+			return ECMD_FAILED;
+		}
 	}
 
 	if (lp->resize == LV_REDUCE) {
