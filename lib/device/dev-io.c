@@ -363,13 +363,14 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		return 0;
 	}
 
-      opened:
-	dev->open_count++;
-	dev->flags &= ~DEV_ACCESSED_W;
 #ifdef O_DIRECT_SUPPORT
+      opened:
 	if (direct)
 		dev->flags |= DEV_O_DIRECT_TESTED;
 #endif
+	dev->open_count++;
+	dev->flags &= ~DEV_ACCESSED_W;
+
 	if ((flags & O_ACCMODE) == O_RDWR)
 		dev->flags |= DEV_OPENED_RW;
 	else
