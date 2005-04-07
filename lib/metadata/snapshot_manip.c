@@ -105,7 +105,7 @@ struct list *find_snapshots(const struct logical_volume *lv)
 }
 
 int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
-		    int persistent, struct id *id, uint32_t extent_count,
+		    int persistent, union lvid *lvid, uint32_t extent_count,
 		    uint32_t chunk_size)
 {
 	struct snapshot *s;
@@ -131,9 +131,9 @@ int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
 	s->origin = origin;
 	s->cow = cow;
 
-	if (id)
-		s->id = *id;
-	else if (!id_create(&s->id)) {
+	if (lvid)
+		s->lvid = *lvid;
+	else if (!lvid_create(&s->lvid, &origin->vg->id)) {
 		log_error("Random UUID creation failed for snapshot %s.",
 			  cow->name);
 		return 0;
