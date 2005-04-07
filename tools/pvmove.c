@@ -141,7 +141,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	/* FIXME Pass 'alloc' down to lv_extend */
-	if (!(lv_mirr = lv_create_empty(vg->fid, NULL, "pvmove%d",
+	if (!(lv_mirr = lv_create_empty(vg->fid, NULL, "pvmove%d", NULL,
 					LVM_READ | LVM_WRITE,
 					ALLOC_CONTIGUOUS, vg))) {
 		log_error("Creation of temporary pvmove LV failed");
