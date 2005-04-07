@@ -330,8 +330,13 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	}
 
 #ifdef O_DIRECT_SUPPORT
-	if (direct)
-		flags |= O_DIRECT;
+	if (direct) {
+		if (!(dev->flags & DEV_O_DIRECT_TESTED))
+			dev->flags |= DEV_O_DIRECT;
+
+		if ((dev->flags & DEV_O_DIRECT))
+			flags |= O_DIRECT;
+	}
 #endif
 
 #ifdef O_NOATIME
@@ -341,6 +346,16 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 #endif
 
 	if ((dev->fd = open(name, flags, 0777)) < 0) {
+#ifdef O_DIRECT_SUPPORT
+		if (direct && !(dev->flags & DEV_O_DIRECT_TESTED)) {
+			flags &= ~O_DIRECT;
+			if ((dev->fd = open(name, flags, 0777)) >= 0) {
+				dev->flags &= ~DEV_O_DIRECT;
+				log_debug("%s: Not using O_DIRECT", name);
+				goto opened;
+			}
+		}
+#endif
 		if (quiet)
 			log_sys_debug("open", name);
 		else
@@ -348,8 +363,13 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		return 0;
 	}
 
+      opened:
 	dev->open_count++;
 	dev->flags &= ~DEV_ACCESSED_W;
+#ifdef O_DIRECT_SUPPORT
+	if (direct)
+		dev->flags |= DEV_O_DIRECT_TESTED;
+#endif
 	if ((flags & O_ACCMODE) == O_RDWR)
 		dev->flags |= DEV_OPENED_RW;
 	else
@@ -373,8 +393,9 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 	list_add(&_open_devices, &dev->open_list);
 
-	log_debug("Opened %s %s", dev_name(dev),
-		  dev->flags & DEV_OPENED_RW ? "RW" : "RO");
+	log_debug("Opened %s %s%s", dev_name(dev),
+		  dev->flags & DEV_OPENED_RW ? "RW" : "RO",
+		  dev->flags & DEV_O_DIRECT ? " O_DIRECT" : "");
 
 	return 1;
 }
