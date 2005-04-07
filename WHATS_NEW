@@ -1,6 +1,7 @@
 Version 2.01.10 - 
 ================================
   Internal snapshot restructuring.
+  Remove unused internal non-persistent snapshot option.
   Allow offline extension of snapshot volumes.
   Move from 2-step to 3-step on-disk metadata commit.
   Scan ramdisks too and allow non-O_DIRECT fallback.

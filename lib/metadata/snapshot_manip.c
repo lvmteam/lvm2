@@ -105,7 +105,7 @@ struct list *find_snapshots(const struct logical_volume *lv)
 }
 
 int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
-		    int persistent, union lvid *lvid, uint32_t extent_count,
+		    union lvid *lvid, uint32_t extent_count,
 		    uint32_t chunk_size)
 {
 	struct snapshot *s;
@@ -125,7 +125,6 @@ int vg_add_snapshot(struct logical_volume *origin, struct logical_volume *cow,
 		return 0;
 	}
 
-	s->persistent = persistent;
 	s->chunk_size = chunk_size;
 	s->le_count = extent_count;
 	s->origin = origin;
