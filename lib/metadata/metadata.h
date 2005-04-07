@@ -421,6 +421,7 @@ int vg_extend(struct format_instance *fi, struct volume_group *vg,
 struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       const char *name,
 				       const char *name_format,
+				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg);

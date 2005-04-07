@@ -512,7 +512,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d",
+	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d", NULL,
 				   status, lp->alloc, vg))) {
 		stack;
 		return 0;

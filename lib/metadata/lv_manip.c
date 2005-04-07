@@ -543,6 +543,7 @@ static char *_generate_lv_name(struct volume_group *vg, const char *format,
 struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       const char *name,
 				       const char *name_format,
+				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
 				       struct volume_group *vg)
@@ -594,6 +595,9 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	lv->le_count = 0;
 	list_init(&lv->segments);
 	list_init(&lv->tags);
+
+	if (lvid)
+		lv->lvid = *lvid;
 
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
 		stack;

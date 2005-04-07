@@ -72,6 +72,8 @@ static int _check_mirror_status(struct cmd_context *cmd,
 	float segment_percent = 0.0, overall_percent = 0.0;
 	uint32_t event_nr = 0;
 
+void *x;
+
 	/* By default, caller should not retry */
 	*finished = 1;
 
@@ -96,6 +98,9 @@ static int _check_mirror_status(struct cmd_context *cmd,
 		log_print("%s: Moved: %.1f%%", name, overall_percent);
 	else
 		log_verbose("%s: Moved: %.1f%%", name, overall_percent);
+
+x = pool_alloc(cmd->mem, 1);
+pool_free(cmd->mem, x);
 
 	if (segment_percent < 100.0) {
 		/* The only case the caller *should* try again later */
