@@ -7,6 +7,7 @@ Version 2.01.10 -
   Scan ramdisks too and allow non-O_DIRECT fallback.
   Annotate, tidy and extend list.h.
   Alignment tidying.
+  Make clvmd work around some "bugs" in gulm's node state notifications.
 
 Version 2.01.09 - 4th April 2005
 ================================
