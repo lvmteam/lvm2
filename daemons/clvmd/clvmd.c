@@ -280,6 +280,7 @@ int main(int argc, char *argv[])
 	        child_init_signal(DFAIL_MALLOC);
 
 	newfd->fd = local_sock;
+	newfd->removeme = 0;
 	newfd->type = LOCAL_RENDEZVOUS;
 	newfd->callback = local_rendezvous_callback;
 	newfd->next = local_client_head.next;
@@ -346,6 +347,7 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 		newfd->fd = client_fd;
 		newfd->type = LOCAL_SOCK;
 		newfd->xid = 0;
+		newfd->removeme = 0;
 		newfd->callback = local_sock_callback;
 		newfd->bits.localsock.replies = NULL;
 		newfd->bits.localsock.expected_replies = 0;
@@ -519,6 +521,20 @@ static void main_loop(int local_sock, int cmd_timeout)
 
 			for (thisfd = &local_client_head; thisfd != NULL;
 			     thisfd = thisfd->next) {
+
+				if (thisfd->removeme) {
+					struct local_client *free_fd;
+					lastfd->next = thisfd->next;
+					free_fd = thisfd;
+					thisfd = lastfd;
+
+					DEBUGLOG("removeme set for fd %d\n", free_fd->fd);
+
+					/* Queue cleanup, this also frees the client struct */
+					add_to_lvmqueue(free_fd, NULL, 0, NULL);
+					break;
+				}
+
 				if (FD_ISSET(thisfd->fd, &in)) {
 					struct local_client *newfd;
 					int ret;
@@ -905,6 +921,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		DEBUGLOG("creating pipe, [%d, %d]\n", comms_pipe[0],
 			 comms_pipe[1]);
 		newfd->fd = comms_pipe[0];
+		newfd->removeme = 0;
 		newfd->type = THREAD_PIPE;
 		newfd->callback = local_pipe_callback;
 		newfd->next = thisfd->next;
@@ -1061,8 +1078,8 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 	/* Get the node name as we /may/ need it later */
 	clops->name_from_csid(csid, nodename);
 
-	DEBUGLOG("process_remote_command %d for clientid 0x%x on node %s\n",
-		 msg->cmd, msg->clientid, nodename);
+	DEBUGLOG("process_remote_command %d for clientid 0x%x XID %d on node %s\n",
+		 msg->cmd, msg->clientid, msg->xid, nodename);
 
 	/* Is the data to be found in the system LV ? */
 	if (msg->flags & CLVMD_FLAG_SYSTEMLV) {
@@ -1575,9 +1592,10 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 
 static int process_work_item(struct lvm_thread_cmd *cmd)
 {
-
 	/* If msg is NULL then this is a cleanup request */
 	if (cmd->msg == NULL) {
+		DEBUGLOG("process_work_item: free fd %d\n", cmd->client->fd);
+		close(cmd->client->fd);
 		cmd_client_cleanup(cmd->client);
 		free(cmd->client);
 		return 0;
@@ -1638,7 +1656,8 @@ static void *lvm_thread_fn(void *arg)
 			pthread_mutex_unlock(&lvm_thread_mutex);
 
 			process_work_item(cmd);
-			free(cmd->msg);
+			if (cmd->msg)
+				free(cmd->msg);
 			free(cmd);
 
 			pthread_mutex_lock(&lvm_thread_mutex);
