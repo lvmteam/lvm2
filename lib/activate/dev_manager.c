@@ -727,6 +727,25 @@ static int _emit_target_line(struct dev_manager *dm, struct dm_task *dmt,
 	return 1;
 }
 
+int compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
+		     char *params, size_t paramsize, int *pos, int areas,
+		     uint32_t region_size)
+{
+	int tw;
+
+	tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
+			  region_size, areas);
+
+	if (tw < 0) {
+		stack;
+		return -1;
+	}
+
+	*pos += tw;
+
+	return 1;
+}
+
 int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		       char *params, size_t paramsize, int *pos, int start_area,
 		       int areas)

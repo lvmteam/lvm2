@@ -131,6 +131,7 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 	int areas = seg->area_count;
 	int start_area = 0u;
 	uint32_t region_size, region_max;
+	int ret;
 
 	if (!*target_state)
 		*target_state = _init_target(mem, cft);
@@ -166,10 +167,10 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 				    region_size);
 		}
 
-		if ((*pos = lvm_snprintf(params, paramsize, "core 1 %u %u ",
-					 region_size, areas)) < 0) {
+		if ((ret = compose_log_line(dm, seg, params, paramsize, pos,
+					    areas, region_size)) <= 0) {
 			stack;
-			return -1;
+			return ret;
 		}
 	}
 
