@@ -1149,34 +1149,6 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	return 1;
 }
 
-static int _get_pv_from_vg(const struct format_type *fmt, const char *vg_name,
-			   const char *id, struct physical_volume *pv)
-{
-	struct volume_group *vg;
-	struct list *pvh;
-	struct pv_list *pvl;
-	int consistent = 0;
-
-	if (!(vg = vg_read(fmt->cmd, vg_name, &consistent))) {
-		log_error("format_text: _vg_read failed to read VG %s",
-			  vg_name);
-		return 0;
-	}
-
-	if (!consistent)
-		log_error("Warning: Volume group %s is not consistent",
-			  vg_name);
-
-	list_iterate(pvh, &vg->pvs) {
-		pvl = list_item(pvh, struct pv_list);
-		if (id_equal(&pvl->pv->id, (const struct id *) id)) {
-			memcpy(pv, pvl->pv, sizeof(*pv));
-			return 1;
-		}
-	}
-	return 0;
-}
-
 static int _add_raw(struct list *raw_list, struct device_area *dev_area)
 {
 	struct raw_list *rl;
@@ -1225,8 +1197,8 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 
 	/* Have we already cached vgname? */
 	if (info->vginfo && info->vginfo->vgname && *info->vginfo->vgname &&
-	    _get_pv_from_vg(info->fmt, info->vginfo->vgname, info->dev->pvid,
-			    pv)) {
+	    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
+				 info->dev->pvid, pv)) {
 		return 1;
 	}
 
@@ -1236,8 +1208,8 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 
 		if (info->vginfo && info->vginfo->vgname &&
 		    *info->vginfo->vgname &&
-		    _get_pv_from_vg(info->fmt, info->vginfo->vgname,
-				    info->dev->pvid, pv)) {
+		    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
+					 info->dev->pvid, pv)) {
 			return 1;
 		}
 	}
