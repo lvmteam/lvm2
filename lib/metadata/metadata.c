@@ -109,6 +109,34 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	return 1;
 }
 
+int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
+			 const char *id, struct physical_volume *pv)
+{
+	struct volume_group *vg;
+	struct list *pvh;
+	struct pv_list *pvl;
+	int consistent = 0;
+
+	if (!(vg = vg_read(fmt->cmd, vg_name, &consistent))) {
+		log_error("get_pv_from_vg: vg_read failed to read VG %s",
+			  vg_name);
+		return 0;
+	}
+
+	if (!consistent)
+		log_error("Warning: Volume group %s is not consistent",
+			  vg_name);
+
+	list_iterate(pvh, &vg->pvs) {
+		pvl = list_item(pvh, struct pv_list);
+		if (id_equal(&pvl->pv->id, (const struct id *) id)) {
+			memcpy(pv, pvl->pv, sizeof(*pv));
+			return 1;
+		}
+	}
+	return 0;
+}
+
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name)
 {

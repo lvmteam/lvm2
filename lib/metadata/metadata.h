@@ -437,6 +437,8 @@ struct physical_volume *pv_find(struct volume_group *vg, const char *pv_name);
 struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
 struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
 					      struct id *id);
+int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
+			 const char *id, struct physical_volume *pv);
 
 /* Find an LV within a given VG */
 struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
