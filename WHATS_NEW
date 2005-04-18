@@ -1,5 +1,6 @@
 Version 2.01.10 - 
 ================================
+  vgchange --physicalextentsize
   Internal snapshot restructuring.
   Remove unused internal non-persistent snapshot option.
   Allow offline extension of snapshot volumes.
