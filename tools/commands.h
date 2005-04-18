@@ -569,13 +569,15 @@ xx(vgchange,
    "\t -c|--clustered {y|n} |" "\n"
    "\t -x|--resizeable {y|n} |" "\n"
    "\t -l|--logicalvolume MaxLogicalVolumes |" "\n"
+   "\t -s|--physicalextentsize PhysicalExtentSize[kKmMgGtT] |" "\n"
    "\t --addtag Tag |\n"
    "\t --deltag Tag}\n"
    "\t[VolumeGroupName...]\n",
 
    addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, available_ARG,
    clustered_ARG, deltag_ARG, ignorelockingfailure_ARG, logicalvolume_ARG,
-   partial_ARG, resizeable_ARG, resizable_ARG, test_ARG, uuid_ARG)
+   partial_ARG, physicalextentsize_ARG, resizeable_ARG, resizable_ARG,
+   test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",

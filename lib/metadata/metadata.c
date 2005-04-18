@@ -281,6 +281,153 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	return NULL;
 }
 
+static int _recalc_extents(uint32_t *extents, const char *desc1,
+			   const char *desc2, uint32_t old_size,
+			   uint32_t new_size)
+{
+	uint64_t size = (uint64_t) old_size * (*extents);
+
+	if (size % new_size) {
+		log_error("New size %" PRIu64 " for %s%s not an exact number "
+			  "of new extents.", size, desc1, desc2);
+		return 0;
+	}
+
+	size /= new_size;
+
+	if (size > UINT32_MAX) {
+		log_error("New extent count %" PRIu64 " for %s%s exceeds "
+			  "32 bits.", size, desc1, desc2);
+		return 0;
+	}
+
+	*extents = (uint32_t) size;
+
+	return 1;
+}
+
+int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
+		     uint32_t new_size)
+{
+	uint32_t old_size = vg->extent_size;
+	struct pv_list *pvl;
+	struct lv_list *lvl;
+	struct physical_volume *pv;
+	struct logical_volume *lv;
+	struct lv_segment *seg;
+	uint32_t s;
+
+	vg->extent_size = new_size;
+
+	if (vg->fid->fmt->ops->vg_setup &&
+	    !vg->fid->fmt->ops->vg_setup(vg->fid, vg)) {
+		stack;
+		return 0;
+	}
+
+	if (!_recalc_extents(&vg->extent_count, vg->name, "", old_size,
+			     new_size)) {
+		stack;
+		return 0;
+	}
+
+	if (!_recalc_extents(&vg->free_count, vg->name, " free space",
+			     old_size, new_size)) {
+		stack;
+		return 0;
+	}
+
+	/* foreach PV */
+	list_iterate_items(pvl, &vg->pvs) {
+		pv = pvl->pv;
+
+		pv->pe_size = new_size;
+		if (!_recalc_extents(&pv->pe_count, dev_name(pv->dev), "",
+				     old_size, new_size)) {
+			stack;
+			return 0;
+		}
+
+		if (!_recalc_extents(&pv->pe_alloc_count, dev_name(pv->dev),
+				     " allocated space", old_size, new_size)) {
+			stack;
+			return 0;
+		}
+	}
+
+	/* foreach LV */
+	list_iterate_items(lvl, &vg->lvs) {
+		lv = lvl->lv;
+
+		if (!_recalc_extents(&lv->le_count, lv->name, "", old_size,
+				     new_size)) {
+			stack;
+			return 0;
+		}
+
+		list_iterate_items(seg, &lv->segments) {
+			if (!_recalc_extents(&seg->le, lv->name,
+					     " segment start", old_size,
+					     new_size)) {
+				stack;
+				return 0;
+			}
+
+			if (!_recalc_extents(&seg->len, lv->name,
+					     " segment length", old_size,
+					     new_size)) {
+				stack;
+				return 0;
+			}
+
+			if (!_recalc_extents(&seg->area_len, lv->name,
+					     " area length", old_size,
+					     new_size)) {
+				stack;
+				return 0;
+			}
+
+			if (!_recalc_extents(&seg->extents_copied, lv->name,
+					     " extents moved", old_size,
+					     new_size)) {
+				stack;
+				return 0;
+			}
+
+			/* foreach area */
+			for (s = 0; s < seg->area_count; s++) {
+				switch (seg->area[s].type) {
+				case AREA_PV:
+					if (!_recalc_extents
+					    (&seg->area[s].u.pv.pe, lv->name,
+					     " area start", old_size,
+					     new_size)) {
+						stack;
+						return 0;
+					}
+					break;
+				case AREA_LV:
+					if (!_recalc_extents
+					    (&seg->area[s].u.lv.le, lv->name,
+					     " area start", old_size,
+					     new_size)) {
+						stack;
+						return 0;
+					}
+					break;
+				default:
+					log_error("Unrecognised segment type "
+						  "%u", seg->area[s].type);
+					return 0;
+				}
+			}
+		}
+
+	}
+
+	return 1;
+}
+
 /* Sizes in sectors */
 struct physical_volume *pv_create(const struct format_type *fmt,
 				  struct device *dev,
