@@ -288,6 +288,28 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	return ret_max;
 }
 
+int process_each_segment_in_pv(struct cmd_context *cmd,
+			       struct volume_group *vg,
+			       struct physical_volume *pv,
+			       void *handle,
+			       int (*process_single) (struct cmd_context * cmd,
+						      struct volume_group * vg,
+						      struct pv_segment * pvseg,
+						      void *handle))
+{
+	struct pv_segment *pvseg;
+	int ret_max = 0;
+	int ret;
+
+	list_iterate_items(pvseg, &pv->segments) {
+		ret = process_single(cmd, vg, pvseg, handle);
+		if (ret > ret_max)
+			ret_max = ret;
+	}
+
+	return ret_max;
+}
+
 int process_each_segment_in_lv(struct cmd_context *cmd,
 			       struct logical_volume *lv,
 			       void *handle,
@@ -475,6 +497,8 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 		if (!(pv = pv_read(cmd, dev_name(dev), NULL, NULL, 0))) {
 			memset(&pv_dummy, 0, sizeof(pv_dummy));
 			list_init(&pv_dummy.tags);
+			list_init(&pv_dummy.segments);
+			list_init(&pv_dummy.free_segments);
 			pv_dummy.dev = dev;
 			pv_dummy.fmt = NULL;
 			pv = &pv_dummy;

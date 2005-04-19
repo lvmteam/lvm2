@@ -26,6 +26,7 @@
 #include "filter.h"
 #include "toolcontext.h"
 #include "segtype.h"
+#include "pv_alloc.h"
 
 #include <time.h>
 
@@ -89,6 +90,13 @@ int import_pv(struct pool *mem, struct device *dev,
 	pv->pe_alloc_count = pvd->pe_allocated;
 
 	list_init(&pv->tags);
+	list_init(&pv->segments);
+	list_init(&pv->free_segments);
+
+	if (!alloc_pv_segment_whole_pv(mem, pv)) {
+		stack;
+		return 0;
+	}
 
 	return 1;
 }

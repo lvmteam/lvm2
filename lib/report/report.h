@@ -18,7 +18,7 @@
 
 #include "metadata.h"
 
-typedef enum { LVS = 1, PVS = 2, VGS = 4, SEGS = 8 } report_type_t;
+typedef enum { LVS = 1, PVS = 2, VGS = 4, SEGS = 8, PVSEGS = 16 } report_type_t;
 
 struct field;
 struct report_handle;
@@ -32,7 +32,7 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 void report_free(void *handle);
 int report_object(void *handle, struct volume_group *vg,
 		  struct logical_volume *lv, struct physical_volume *pv,
-		  struct lv_segment *seg);
+		  struct lv_segment *seg, struct pv_segment *pvseg);
 int report_output(void *handle);
 
 #endif

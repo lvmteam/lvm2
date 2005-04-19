@@ -21,6 +21,7 @@
 #include "disk_rep.h"
 #include "sptype_names.h"
 #include "lv_alloc.h"
+#include "pv_alloc.h"
 #include "str_list.h"
 #include "display.h"
 #include "segtype.h"
@@ -182,6 +183,13 @@ int import_pool_pv(const struct format_type *fmt, struct pool *mem,
 	pv->pe_alloc_count = pv->pe_count;
 
 	list_init(&pv->tags);
+	list_init(&pv->segments);
+	list_init(&pv->free_segments);
+
+	if (!alloc_pv_segment_whole_pv(mem, pv)) {
+		stack;
+		return 0;
+	}
 
 	return 1;
 }
