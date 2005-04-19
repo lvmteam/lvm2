@@ -21,6 +21,8 @@
 #include "lvm-string.h"
 #include "lvmcache.h"
 #include "memlock.h"
+#include "str_list.h"
+#include "pv_alloc.h"
 
 static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 			 const char *pv_name)
@@ -113,6 +115,19 @@ static int _copy_pv(struct physical_volume *pv_to,
 		    struct physical_volume *pv_from)
 {
 	memcpy(pv_to, pv_from, sizeof(*pv_to));
+
+	if (!str_list_dup(pv_to->fmt->cmd->mem, &pv_to->tags, &pv_from->tags)) {
+		log_error("PV tags duplication failed");
+		return 0;
+	}
+
+	if (!peg_dup(pv_to->fmt->cmd->mem, &pv_to->segments,
+		     &pv_to->free_segments, &pv_from->segments)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }
 
 int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
@@ -495,6 +510,8 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 	pv->fmt = fmt;
 
 	list_init(&pv->tags);
+	list_init(&pv->segments);
+	list_init(&pv->free_segments);
 
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
 				existing_extent_size,
@@ -1114,14 +1131,14 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 
 	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {
 		stack;
-		return 0;
+		return NULL;
 	}
 
 	if (!(label_read(dev, &label))) {
 		if (warnings)
 			log_error("No physical volume label read from %s",
 				  pv_name);
-		return 0;
+		return NULL;
 	}
 
 	info = (struct lvmcache_info *) label->info;
@@ -1130,22 +1147,29 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 
 	if (!(pv = pool_zalloc(cmd->mem, sizeof(*pv)))) {
 		log_error("pv allocation for '%s' failed", pv_name);
-		return 0;
+		return NULL;
 	}
 
 	list_init(&pv->tags);
+	list_init(&pv->segments);
+	list_init(&pv->free_segments);
 
 	/* FIXME Move more common code up here */
 	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, mdas))) {
 		log_error("Failed to read existing physical volume '%s'",
 			  pv_name);
-		return 0;
+		return NULL;
 	}
 
 	if (!pv->size)
 		return NULL;
-	else
-		return pv;
+	
+	if (!alloc_pv_segment_whole_pv(cmd->mem, pv)) {
+		stack;
+		return NULL;
+	}
+
+	return pv;
 }
 
 /* May return empty list */

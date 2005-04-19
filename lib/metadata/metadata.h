@@ -99,6 +99,20 @@ struct format_type {
 	void *private;
 };
 
+struct pv_segment {
+	struct list list;	/* Member of pv->segments: ordered list
+				 * covering entire data area on this PV */
+
+	struct physical_volume *pv;
+	uint32_t pe;
+	uint32_t len;
+
+	struct lv_segment *lvseg;	/* NULL if free space */
+	uint32_t lv_area;	/* Index to area in LV segment */
+
+	struct list freelist;	/* Member of pv->free_segments */
+};
+
 struct physical_volume {
 	struct id id;
 	struct device *dev;
@@ -114,6 +128,8 @@ struct physical_volume {
 	uint32_t pe_count;
 	uint32_t pe_alloc_count;
 
+	struct list segments;	/* Ordered pv_segments covering complete PV */
+	struct list free_segments;	/* Free pv_segments for this PV */
 	struct list tags;
 };
 
@@ -227,6 +243,7 @@ struct lv_segment {
 			struct {
 				struct physical_volume *pv;
 				uint32_t pe;
+				struct pv_segment *pvseg;
 			} pv;
 			struct {
 				struct logical_volume *lv;
@@ -285,6 +302,11 @@ struct lv_list {
 struct mda_list {
 	struct list list;
 	struct device_area mda;
+};
+
+struct peg_list {
+	struct list list;
+	struct pv_segment *peg;
 };
 
 /*
