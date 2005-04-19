@@ -90,6 +90,7 @@ static pthread_cond_t lvm_thread_cond;
 static pthread_mutex_t lvm_start_mutex;
 static struct list lvm_cmd_head;
 static volatile sig_atomic_t quit = 0;
+static volatile sig_atomic_t reread_config = 0;
 static int child_pipe[2];
 
 /* Reasons the daemon failed initialisation */
@@ -101,6 +102,7 @@ static int child_pipe[2];
 
 /* Prototypes for code further down */
 static void sigusr2_handler(int sig);
+static void sighup_handler(int sig);
 static void sigterm_handler(int sig);
 static void send_local_reply(struct local_client *client, int status,
 			     int clientid);
@@ -222,8 +224,10 @@ int main(int argc, char *argv[])
 
 	/* Set up signal handlers, USR1 is for cluster change notifications (in cman)
 	   USR2 causes child threads to exit.
+	   HUP causes gulm version to re-read nodes list from CCS.
 	   PIPE should be ignored */
 	signal(SIGUSR2, sigusr2_handler);
+	signal(SIGHUP,  sighup_handler);
 	signal(SIGPIPE, SIG_IGN);
 
 	/* Block SIGUSR2 in the main process */
@@ -514,7 +518,18 @@ static void main_loop(int local_sock, int cmd_timeout)
 				FD_SET(thisfd->fd, &in);
 		}
 
-		if ((select_status = select(FD_SETSIZE, &in, NULL, NULL, &tv)) > 0) {
+		select_status = select(FD_SETSIZE, &in, NULL, NULL, &tv);
+
+		if (reread_config) {
+			int saved_errno = errno;
+
+			reread_config = 0;
+			if (clops->reread_config)
+				clops->reread_config();
+			errno = saved_errno;
+		}
+
+		if (select_status > 0) {
 			struct local_client *lastfd = NULL;
 			char csid[MAX_CSID_LEN];
 			char buf[max_cluster_message];
@@ -1818,6 +1833,12 @@ static void sigterm_handler(int sig)
 	DEBUGLOG("SIGTERM received\n");
 	quit = 1;
 	return;
+}
+
+static void sighup_handler(int sig)
+{
+        DEBUGLOG("got SIGHUP\n");
+	reread_config = 1;
 }
 
 int sync_lock(const char *resource, int mode, int flags, int *lockid)

@@ -136,12 +136,11 @@ static void badsig_handler(int sig)
     exit(0);
 }
 
-static void sighup_handler(int sig)
+static void _reread_config(void)
 {
-    DEBUGLOG("got SIGHUP\n");
-
-    /* Re-read CCS node list */
-    get_all_cluster_nodes();
+        /* Re-read CCS node list */
+	DEBUGLOG("Re-reading CCS config\n");
+	get_all_cluster_nodes();
 }
 
 static int _init_cluster(void)
@@ -243,9 +242,6 @@ static int _init_cluster(void)
     /* So I can kill it without taking GULM down too */
     signal(SIGINT, badsig_handler);
     signal(SIGTERM, badsig_handler);
-
-    /* Re-read the node list on SIGHUP */
-    signal(SIGHUP, sighup_handler);
 
     return 0;
 }
@@ -986,6 +982,7 @@ static struct cluster_ops _cluster_gulm_ops = {
 	.is_quorate               = _is_quorate,
 	.get_our_csid             = _get_our_csid,
 	.add_up_node              = gulm_add_up_node,
+	.reread_config            = _reread_config,
 	.cluster_closedown        = _cluster_closedown,
 	.sync_lock                = _sync_lock,
 	.sync_unlock              = _sync_unlock,
