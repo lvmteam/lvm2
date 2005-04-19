@@ -40,6 +40,7 @@ struct cluster_ops {
 
 	void (*get_our_csid) (char *csid);
 	void (*add_up_node) (char *csid);
+	void (*reread_config) (void);
 	void (*cluster_closedown) (void);
 
 	int (*sync_lock) (const char *resource, int mode, int flags, int *lockid);
