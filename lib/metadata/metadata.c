@@ -109,7 +109,8 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	return 1;
 }
 
-static void _copy_pv(struct physical_volume *pv_to, struct physical_volume *pv_from)
+static int _copy_pv(struct physical_volume *pv_to,
+		    struct physical_volume *pv_from)
 {
 	memcpy(pv_to, pv_from, sizeof(*pv_to));
 }
@@ -123,7 +124,7 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 	int consistent = 0;
 
 	if (!(vg = vg_read(fmt->cmd, vg_name, &consistent))) {
-		log_error("get_pv_from_vg: vg_read failed to read VG %s",
+		log_error("get_pv_from_vg_by_id: vg_read failed to read VG %s",
 			  vg_name);
 		return 0;
 	}
@@ -135,10 +136,14 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 	list_iterate(pvh, &vg->pvs) {
 		pvl = list_item(pvh, struct pv_list);
 		if (id_equal(&pvl->pv->id, (const struct id *) id)) {
-			_copy_pv(pv, pvl->pv);
+			if (!_copy_pv(pv, pvl->pv)) {
+				stack;
+				return 0;
+			}
 			return 1;
 		}
 	}
+
 	return 0;
 }
 
