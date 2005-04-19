@@ -1,5 +1,6 @@
 Version 2.01.10 - 
 ================================
+  Initial pv_segment support.
   vgchange --physicalextentsize
   Internal snapshot restructuring.
   Remove unused internal non-persistent snapshot option.

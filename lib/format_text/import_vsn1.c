@@ -22,6 +22,7 @@
 #include "toolcontext.h"
 #include "lvmcache.h"
 #include "lv_alloc.h"
+#include "pv_alloc.h"
 #include "segtype.h"
 #include "text_import.h"
 
@@ -190,6 +191,8 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 	}
 
 	list_init(&pv->tags);
+	list_init(&pv->segments);
+	list_init(&pv->free_segments);
 
 	/* Optional tags */
 	if ((cn = find_config_node(pvn, "tags")) &&
@@ -207,6 +210,11 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 	pv->size = vg->extent_size * (uint64_t) pv->pe_count;
 	pv->pe_alloc_count = 0;
 	pv->fmt = fid->fmt;
+
+	if (!alloc_pv_segment_whole_pv(mem, pv)) {
+		stack;
+		return 0;
+	}
 
 	vg->pv_count++;
 	list_add(&vg->pvs, &pvl->list);

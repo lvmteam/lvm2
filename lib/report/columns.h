@@ -71,4 +71,7 @@ FIELD(SEGS, seg, NUM, "Start", list, 5, segstart, "seg_start")
 FIELD(SEGS, seg, NUM, "SSize", list, 5, segsize, "seg_size")
 FIELD(SEGS, seg, STR, "Seg Tags", tags, 8, tags, "seg_tags")
 FIELD(SEGS, seg, STR, "Devices", list, 5, devices, "devices")
+
+FIELD(PVSEGS, pvseg, NUM, "Start", pe, 5, uint32, "pvseg_start")
+FIELD(PVSEGS, pvseg, NUM, "SSize", len, 5, uint32, "pvseg_size")
 /* *INDENT-ON* */

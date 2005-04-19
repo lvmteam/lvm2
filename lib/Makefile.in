@@ -70,6 +70,7 @@ SOURCES =\
 	metadata/merge.c \
 	metadata/metadata.c \
 	metadata/mirror.c \
+	metadata/pv_manip.c \
 	metadata/pv_map.c \
 	metadata/segtype.c \
 	metadata/snapshot_manip.c \

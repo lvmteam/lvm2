@@ -40,6 +40,14 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					   struct volume_group * vg,
 					   struct physical_volume * pv,
 					   void *handle));
+int process_each_segment_in_pv(struct cmd_context *cmd,
+			       struct volume_group *vg,
+			       struct physical_volume *pv,
+			       void *handle,
+			       int (*process_single) (struct cmd_context * cmd,
+						      struct volume_group * vg,
+						      struct pv_segment * pvseg,
+						      void *handle));
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		    int lock_type, void *handle,

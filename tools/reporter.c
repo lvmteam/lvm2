@@ -24,7 +24,7 @@ static int _vgs_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	if (!report_object(handle, vg, NULL, NULL, NULL))
+	if (!report_object(handle, vg, NULL, NULL, NULL, NULL))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -33,7 +33,7 @@ static int _vgs_single(struct cmd_context *cmd, const char *vg_name,
 static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 		       void *handle)
 {
-	if (!report_object(handle, lv->vg, lv, NULL, NULL))
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -42,16 +42,48 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 static int _segs_single(struct cmd_context *cmd, struct lv_segment *seg,
 			void *handle)
 {
-	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg))
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;
+}
+
+static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
+			      struct pv_segment *pvseg, void *handle)
+{
+	int consistent = 0;
+	struct physical_volume *pv = pvseg->pv;
+	int ret = ECMD_PROCESSED;
+
+	if (!lock_vol(cmd, pv->vg_name, LCK_VG_READ)) {
+		log_error("Can't lock %s: skipping", pv->vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (!(vg = vg_read(cmd, pv->vg_name, &consistent))) {
+		log_error("Can't read %s: skipping", pv->vg_name);
+		unlock_vg(cmd, pv->vg_name);
+		return ECMD_FAILED;
+	}
+
+	if (!report_object(handle, vg, NULL, pv, NULL, pvseg))
+		ret = ECMD_FAILED;
+
+	unlock_vg(cmd, pv->vg_name);
+	return ret;
 }
 
 static int _lvsegs_single(struct cmd_context *cmd, struct logical_volume *lv,
 			  void *handle)
 {
 	return process_each_segment_in_lv(cmd, lv, handle, _segs_single);
+}
+
+static int _pvsegs_single(struct cmd_context *cmd, struct volume_group *vg,
+			  struct physical_volume *pv, void *handle)
+{
+	return process_each_segment_in_pv(cmd, vg, pv, handle,
+					  _pvsegs_sub_single);
 }
 
 static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
@@ -73,7 +105,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (!report_object(handle, vg, NULL, pv, NULL))
+	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
 		ret = ECMD_FAILED;
 
 	if (pv->vg_name)
@@ -151,6 +183,18 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 						  "report/segs_cols_verbose",
 						  DEFAULT_SEGS_COLS_VERB);
 		break;
+	case PVSEGS:
+		keys = find_config_str(cmd->cft->root, "report/pvsegs_sort",
+				       DEFAULT_PVSEGS_SORT);
+		if (!arg_count(cmd, verbose_ARG))
+			options = find_config_str(cmd->cft->root,
+						  "report/pvsegs_cols",
+						  DEFAULT_PVSEGS_COLS);
+		else
+			options = find_config_str(cmd->cft->root,
+						  "report/pvsegs_cols_verbose",
+						  DEFAULT_PVSEGS_COLS_VERB);
+		break;
 	}
 
 	/* If -o supplied use it, else use default for report_type */
@@ -208,6 +252,10 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		r = process_each_lv(cmd, argc, argv, LCK_VG_READ, report_handle,
 				    &_lvsegs_single);
 		break;
+	case PVSEGS:
+		r = process_each_pv(cmd, argc, argv, NULL, report_handle,
+				    &_pvsegs_single);
+		break;
 	}
 
 	report_output(report_handle);
@@ -235,5 +283,12 @@ int vgs(struct cmd_context *cmd, int argc, char **argv)
 
 int pvs(struct cmd_context *cmd, int argc, char **argv)
 {
-	return _report(cmd, argc, argv, PVS);
+	report_type_t type;
+
+	if (arg_count(cmd, segments_ARG))
+		type = PVSEGS;
+	else
+		type = PVS;
+
+	return _report(cmd, argc, argv, type);
 }

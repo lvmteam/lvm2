@@ -31,6 +31,7 @@ static union {
 	struct logical_volume _lv;
 	struct volume_group _vg;
 	struct lv_segment _seg;
+	struct pv_segment _pvseg;
 } _dummy;
 
 /*
@@ -1078,6 +1079,9 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	case SEGS:
 		rh->field_prefix = "seg_";
 		break;
+	case PVSEGS:
+		rh->field_prefix = "pvseg_";
+		break;
 	default:
 		rh->field_prefix = "";
 	}
@@ -1097,6 +1101,8 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	/* Ensure options selected are compatible */
 	if (rh->type & SEGS)
 		rh->type |= LVS;
+	if (rh->type & PVSEGS)
+		rh->type |= PVS;
 	if ((rh->type & LVS) && (rh->type & PVS)) {
 		log_error("Can't report LV and PV fields at the same time");
 		return NULL;
@@ -1107,6 +1113,8 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		*report_type = SEGS;
 	else if (rh->type & LVS)
 		*report_type = LVS;
+	else if (rh->type & PVSEGS)
+		*report_type = PVSEGS;
 	else if (rh->type & PVS)
 		*report_type = PVS;
 
@@ -1127,7 +1135,7 @@ void report_free(void *handle)
  */
 int report_object(void *handle, struct volume_group *vg,
 		  struct logical_volume *lv, struct physical_volume *pv,
-		  struct lv_segment *seg)
+		  struct lv_segment *seg, struct pv_segment *pvseg)
 {
 	struct report_handle *rh = handle;
 	struct list *fh;
@@ -1187,6 +1195,9 @@ int report_object(void *handle, struct volume_group *vg,
 			break;
 		case SEGS:
 			data = (void *) seg + _fields[fp->field_num].offset;
+			break;
+		case PVSEGS:
+			data = (void *) pvseg + _fields[fp->field_num].offset;
 		}
 
 		if (skip) {
