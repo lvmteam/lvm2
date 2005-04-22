@@ -212,39 +212,40 @@ static int _add_stripe_seg(struct pool *mem,
 			   uint32_t *le_cur)
 {
 	struct lv_segment *seg;
+	struct segment_type *segtype;
 	int j;
+	uint32_t area_len;
 
-	if (!(seg = alloc_lv_segment(mem, usp->num_devs))) {
-		log_error("Unable to allocate striped lv_segment structure");
-		return 0;
-	}
 	if (usp->striping & (usp->striping - 1)) {
 		log_error("Stripe size must be a power of 2");
 		return 0;
 	}
-	seg->stripe_size = usp->striping;
-	seg->status |= 0;
-	seg->le += *le_cur;
-	seg->lv = lv;
+
+	area_len = (usp->devs[0].blocks) / POOL_PE_SIZE;
+
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd,
+						     "striped"))) {
+		stack;
+		return 0;
+	}
+
+	if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur, 
+				     area_len * usp->num_devs, 0,
+				     usp->striping, usp->num_devs, area_len,
+				     0, 0))) {
+		log_error("Unable to allocate striped lv_segment structure");
+		return 0;
+	}
+
+	for (j = 0; j < usp->num_devs; j++)
+		set_lv_segment_area_pv(seg, j, usp->devs[j].pv, 0);
 
 	/* add the subpool type to the segment tag list */
 	str_list_add(mem, &seg->tags, _cvt_sptype(usp->type));
 
-	for (j = 0; j < usp->num_devs; j++) {
-		if (!(seg->segtype = get_segtype_from_string(lv->vg->cmd,
-							     "striped"))) {
-			stack;
-			return 0;
-		}
-
-		seg->area_len = (usp->devs[j].blocks) / POOL_PE_SIZE;
-		seg->len += seg->area_len;
-		*le_cur += seg->area_len;
-
-		set_lv_segment_area_pv(seg, j, usp->devs[j].pv, 0);
-	}
-
 	list_add(&lv->segments, &seg->list);
+
+	*le_cur += seg->len;
 
 	return 1;
 }
@@ -254,35 +255,35 @@ static int _add_linear_seg(struct pool *mem,
 			   uint32_t *le_cur)
 {
 	struct lv_segment *seg;
+	struct segment_type *segtype;
 	int j;
+	uint32_t area_len;
+
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped"))) {
+		stack;
+		return 0;
+	}
 
 	for (j = 0; j < usp->num_devs; j++) {
-		/* linear segments only have 1 data area */
-		if (!(seg = alloc_lv_segment(mem, 1))) {
+		area_len = (usp->devs[j].blocks) / POOL_PE_SIZE;
+
+		if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur,
+					     area_len, 0, usp->striping,
+					     1, area_len, POOL_PE_SIZE, 0))) {
 			log_error("Unable to allocate linear lv_segment "
 				  "structure");
 			return 0;
 		}
-		seg->stripe_size = usp->striping;
-		seg->le += *le_cur;
-		seg->chunk_size = POOL_PE_SIZE;
-		seg->status |= 0;
-		if (!(seg->segtype = get_segtype_from_string(lv->vg->cmd,
-							     "striped"))) {
-			stack;
-			return 0;
-		}
+
 		/* add the subpool type to the segment tag list */
 		str_list_add(mem, &seg->tags, _cvt_sptype(usp->type));
 
-		seg->lv = lv;
-
-		seg->area_len = (usp->devs[j].blocks) / POOL_PE_SIZE;
-		seg->len = seg->area_len;
-		*le_cur += seg->len;
 		set_lv_segment_area_pv(seg, 0, usp->devs[j].pv, 0);
 		list_add(&lv->segments, &seg->list);
+
+		*le_cur += seg->len;
 	}
+
 	return 1;
 }
 

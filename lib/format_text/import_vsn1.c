@@ -291,18 +291,12 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 		return 0;
 	}
 
-	if (!(seg = alloc_lv_segment(mem, area_count))) {
+	if (!(seg = alloc_lv_segment(mem, segtype, lv, start_extent,
+				     extent_count, 0, 0, area_count,
+				     extent_count, 0, 0))) {
 		log_error("Segment allocation failed");
 		return 0;
 	}
-
-	seg->lv = lv;
-	seg->le = start_extent;
-	seg->len = extent_count;
-	seg->area_len = extent_count;
-	seg->status = 0u;
-	seg->segtype = segtype;
-	seg->extents_copied = 0u;
 
 	if (seg->segtype->ops->text_import &&
 	    !seg->segtype->ops->text_import(seg, sn, pv_hash)) {
