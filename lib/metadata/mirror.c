@@ -19,6 +19,7 @@
 #include "segtype.h"
 #include "display.h"
 #include "activate.h"
+#include "lv_alloc.h"
 
 /* 
  * Replace any LV segments on given PV with temporary mirror.
@@ -153,9 +154,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 						  "temporary LV for pvmove.");
 					return 0;
 				}
-				seg->area[s].type = AREA_LV;
-				seg->area[s].u.lv.lv = lv_mirr;
-				seg->area[s].u.lv.le = start_le;
+				set_lv_segment_area_lv(seg, s, lv_mirr, start_le);
 	
 				extent_count += seg->area_len;
 	
@@ -225,9 +224,9 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				else
 					c = 0;
 
-				seg->area[s].type = AREA_PV;
-				seg->area[s].u.pv.pv = mir_seg->area[c].u.pv.pv;
-				seg->area[s].u.pv.pe = mir_seg->area[c].u.pv.pe;
+				set_lv_segment_area_pv(seg, s,
+						       mir_seg->area[c].u.pv.pv,
+						       mir_seg->area[c].u.pv.pe);
 
 				/* Replace mirror with old area */
 				if (!

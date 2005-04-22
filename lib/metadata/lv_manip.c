@@ -77,6 +77,23 @@ struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t num_areas)
 	return seg;
 }
 
+void set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
+			    struct physical_volume *pv, uint32_t pe)
+{
+	seg->area[area_num].type = AREA_PV;
+	seg->area[area_num].u.pv.pv = pv;
+	seg->area[area_num].u.pv.pe = pe;
+	seg->area[area_num].u.pv.pvseg = NULL;
+}
+
+void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
+			    struct logical_volume *lv, uint32_t le)
+{
+	seg->area[area_num].type = AREA_LV;
+	seg->area[area_num].u.lv.lv = lv;
+	seg->area[area_num].u.lv.le = le;
+}
+
 static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 				uint32_t stripe_size,
 				struct segment_type *segtype,
@@ -113,9 +130,7 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 
 	for (s = 0; s < area_count; s++) {
 		struct pv_area *pva = areas[s];
-		seg->area[s].type = AREA_PV;
-		seg->area[s].u.pv.pv = pva->map->pvl->pv;
-		seg->area[s].u.pv.pe = pva->start;
+		set_lv_segment_area_pv(seg, s, pva->map->pvl->pv, pva->start);
 		consume_pv_area(pva, area_len);
 	}
 
@@ -241,9 +256,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 	seg->len = count;
 	seg->area_len = count;
 	seg->stripe_size = 0;
-	seg->area[0].type = AREA_PV;
-	seg->area[0].u.pv.pv = map->pvl->pv;
-	seg->area[0].u.pv.pe = pva->start;
+	set_lv_segment_area_pv(seg, 0, map->pvl->pv, pva->start);
 
 	list_add(&lv->segments, &seg->list);
 
@@ -280,12 +293,8 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	seg->stripe_size = 0;
 	seg->extents_copied = 0u;
 	/* FIXME Remove AREA_PV restriction here? */
-	seg->area[0].type = AREA_PV;
-	seg->area[0].u.pv.pv = mirrored_pv;
-	seg->area[0].u.pv.pe = mirrored_pe;
-	seg->area[1].type = AREA_PV;
-	seg->area[1].u.pv.pv = map->pvl->pv;
-	seg->area[1].u.pv.pe = pva->start;
+	set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe);
+	set_lv_segment_area_pv(seg, 1, map->pvl->pv, pva->start);
 	list_add(&lv->segments, &seg->list);
 
 	consume_pv_area(pva, count);

@@ -224,9 +224,7 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 		seg->area_len = 0;
 		seg->stripe_size = 0;
 
-		seg->area[0].type = AREA_PV;
-		seg->area[0].u.pv.pv = lvm->map[le].pv;
-		seg->area[0].u.pv.pe = lvm->map[le].pe;
+		set_lv_segment_area_pv(seg, 0, lvm->map[le].pv, lvm->map[le].pe);
 
 		do {
 			seg->len++;
