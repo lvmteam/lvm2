@@ -1,5 +1,6 @@
 Version 2.01.10 - 
 ================================
+  Tidy lv_segment interface.
   Initial pv_segment support.
   vgchange --physicalextentsize
   Internal snapshot restructuring.

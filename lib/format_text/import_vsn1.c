@@ -369,19 +369,14 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 
 		/* FIXME Cope if LV not yet read in */
 		if ((pv = hash_lookup(pv_hash, cv->v.str))) {
-			seg->area[s].type = AREA_PV;
-			seg->area[s].u.pv.pv = pv;
-			seg->area[s].u.pv.pe = cv->next->v.i;
+			set_lv_segment_area_pv(seg, s, pv, cv->next->v.i);
 			/*
 			 * Adjust extent counts in the pv and vg.
 			 */
 			pv->pe_alloc_count += seg->area_len;
 			seg->lv->vg->free_count -= seg->area_len;
-
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
-			seg->area[s].type = AREA_LV;
-			seg->area[s].u.lv.lv = lv1;
-			seg->area[s].u.lv.le = cv->next->v.i;
+			set_lv_segment_area_lv(seg, s, lv1, cv->next->v.i);
 		} else {
 			log_error("Couldn't find volume '%s' "
 				  "for segment '%s'.",
