@@ -16,7 +16,17 @@
 #ifndef _LVM_LV_ALLOC_H
 #include "pool.h"
 
-struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t num_areas);
+struct lv_segment *alloc_lv_segment(struct pool *mem,
+				    struct segment_type *segtype,
+				    struct logical_volume *lv,
+				    uint32_t le, uint32_t len,
+				    uint32_t status,
+				    uint32_t stripe_size,
+				    uint32_t area_count,
+				    uint32_t area_len,
+				    uint32_t chunk_size,
+				    uint32_t extents_copied);
+
 struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 				      uint32_t allocated);
 

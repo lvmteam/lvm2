@@ -61,17 +61,35 @@ static void _put_extents(struct lv_segment *seg)
 	}
 }
 
-struct lv_segment *alloc_lv_segment(struct pool *mem, uint32_t num_areas)
+struct lv_segment *alloc_lv_segment(struct pool *mem,
+				    struct segment_type *segtype,
+				    struct logical_volume *lv,
+				    uint32_t le, uint32_t len,
+				    uint32_t status,
+				    uint32_t stripe_size,
+				    uint32_t area_count,
+				    uint32_t area_len,
+				    uint32_t chunk_size,
+				    uint32_t extents_copied)
 {
 	struct lv_segment *seg;
-	uint32_t len = sizeof(*seg) + (num_areas * sizeof(seg->area[0]));
+	uint32_t sz = sizeof(*seg) + (area_count * sizeof(seg->area[0]));
 
-	if (!(seg = pool_zalloc(mem, len))) {
+	if (!(seg = pool_zalloc(mem, sz))) {
 		stack;
 		return NULL;
 	}
 
-	seg->area_count = num_areas;
+	seg->segtype = segtype;
+	seg->lv = lv;
+	seg->le = le;
+	seg->len = len;
+	seg->status = status;
+	seg->stripe_size = stripe_size;
+	seg->area_count = area_count;
+	seg->area_len = area_len;
+	seg->chunk_size = chunk_size;
+	seg->extents_copied = extents_copied;
 	list_init(&seg->tags);
 
 	return seg;
@@ -115,18 +133,13 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 	if (smallest < area_len)
 		area_len = smallest;
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, area_count))) {
-		log_err("Couldn't allocate new parallel segment.");
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, *ix,
+				     area_len * (striped ? area_count : 1),
+				     0u, stripe_size, area_count, area_len,
+				     0u, 0u))) {
+		log_error("Couldn't allocate new parallel segment.");
 		return 0;
 	}
-
-	seg->lv = lv;
-	seg->segtype = segtype;
-	seg->le = *ix;
-	seg->len = area_len * (striped ? area_count : 1);
-	seg->area_len = area_len;
-	seg->stripe_size = stripe_size;
-	seg->extents_copied = 0u;
 
 	for (s = 0; s < area_count; s++) {
 		struct pv_area *pva = areas[s];
@@ -236,32 +249,31 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 {
 	uint32_t count, remaining;
 	struct lv_segment *seg;
+	struct segment_type *segtype;
 
 	count = pva->count;
 	remaining = lv->le_count - *ix;
 	if (count > remaining)
 		count = remaining;
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 1))) {
-		log_err("Couldn't allocate new stripe segment.");
-		return 0;
-	}
-
-	seg->lv = lv;
-	if (!(seg->segtype = get_segtype_from_string(lv->vg->cmd, "striped"))) {
+	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped"))) {
 		stack;
 		return 0;
 	}
-	seg->le = *ix;
-	seg->len = count;
-	seg->area_len = count;
-	seg->stripe_size = 0;
+
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, *ix,
+				     count, 0, 0, 1, count, 0, 0))) {
+		log_error("Couldn't allocate new stripe segment.");
+		return 0;
+	}
+
 	set_lv_segment_area_pv(seg, 0, map->pvl->pv, pva->start);
 
 	list_add(&lv->segments, &seg->list);
 
-	consume_pv_area(pva, count);
-	*ix += count;
+	consume_pv_area(pva, seg->len);
+	*ix += seg->len;
+
 	return 1;
 }
 
@@ -279,26 +291,21 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	if (count > remaining)
 		count = remaining;
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 2))) {
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, *ix,
+				     count, 0, 0, 2, count, 0, 0))) {
 		log_err("Couldn't allocate new mirrored segment.");
 		return 0;
 	}
 
-	seg->lv = lv;
-	seg->segtype = segtype;
-	seg->le = *ix;
-	seg->status = 0u;
-	seg->len = count;
-	seg->area_len = count;
-	seg->stripe_size = 0;
-	seg->extents_copied = 0u;
 	/* FIXME Remove AREA_PV restriction here? */
 	set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe);
 	set_lv_segment_area_pv(seg, 1, map->pvl->pv, pva->start);
+
 	list_add(&lv->segments, &seg->list);
 
-	consume_pv_area(pva, count);
-	*ix += count;
+	consume_pv_area(pva, seg->len);
+	*ix += seg->len;
+
 	return 1;
 }
 
@@ -430,19 +437,13 @@ static int _alloc_virtual(struct logical_volume *lv,
 {
 	struct lv_segment *seg;
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 0))) {
-		log_err("Couldn't allocate new zero segment.");
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, allocated,
+				     lv->le_count - allocated, 0, 0, 0,
+				     lv->le_count - allocated, 0, 0))) {
+		log_error("Couldn't allocate new zero segment.");
 		return 0;
 	}
 
-	seg->lv = lv;
-	seg->segtype = segtype;
-	seg->status = 0u;
-	seg->le = allocated;
-	seg->len = lv->le_count - allocated;
-	seg->area_len = seg->len;
-	seg->stripe_size = 0;
-	seg->extents_copied = 0u;
 	list_add(&lv->segments, &seg->list);
 	lv->status |= VIRTUAL;
 
@@ -453,24 +454,21 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 				      uint32_t allocated)
 {
 	struct lv_segment *seg;
+	struct segment_type *segtype;
 
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, 0))) {
-		log_err("Couldn't allocate new zero segment.");
-		return NULL;
-	}
-
-	seg->lv = lv;
-	seg->segtype = get_segtype_from_string(lv->vg->cmd, "snapshot");
-	if (!seg->segtype) {
+	segtype = get_segtype_from_string(lv->vg->cmd, "snapshot");
+	if (!segtype) {
 		log_error("Failed to find snapshot segtype");
 		return NULL;
 	}
-	seg->status = 0u;
-	seg->le = allocated;
-	seg->len = lv->le_count - allocated;
-	seg->area_len = seg->len;
-	seg->stripe_size = 0;
-	seg->extents_copied = 0u;
+
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, allocated,
+				     lv->le_count - allocated, 0, 0, 0,
+				     lv->le_count - allocated, 0, 0))) {
+		log_error("Couldn't allocate new snapshot segment.");
+		return NULL;
+	}
+
 	list_add(&lv->segments, &seg->list);
 	lv->status |= VIRTUAL;
 

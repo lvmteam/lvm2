@@ -98,11 +98,17 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	}
 
 	/* Clone the existing segment */
-	if (!(split_seg = alloc_lv_segment(lv->vg->cmd->mem, seg->area_count))) {
-		log_error("Couldn't allocate new LV segment.");
+	if (!(split_seg = alloc_lv_segment(lv->vg->cmd->mem, seg->segtype,
+					   seg->lv, seg->le, seg->len,
+					   seg->status, seg->stripe_size,
+					   seg->area_count, seg->area_len,
+					   seg->chunk_size,
+					   seg->extents_copied))) {
+		log_error("Couldn't allocate cloned LV segment.");
 		return 0;
 	}
 
+	/* FIXME Avoid the memcpy */
 	len = sizeof(*seg) + (seg->area_count * sizeof(seg->area[0]));
 	memcpy(split_seg, seg, len);
 

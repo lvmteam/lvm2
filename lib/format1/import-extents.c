@@ -207,56 +207,55 @@ static int _check_maps_are_complete(struct hash_table *maps)
 
 static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 {
-	uint32_t le = 0;
+	uint32_t le = 0, len;
 	struct lv_segment *seg;
+	struct segment_type *segtype;
+
+	if (!(segtype = get_segtype_from_string(cmd, "striped"))) {
+		stack;
+		return 0;
+	}
 
 	while (le < lvm->lv->le_count) {
-		seg = alloc_lv_segment(cmd->mem, 1);
+		len = 0;
 
-		seg->lv = lvm->lv;
-		if (!(seg->segtype = get_segtype_from_string(cmd, "striped"))) {
-			stack;
+		do
+			len++;
+		while ((lvm->map[le + len].pv == lvm->map[le].pv) &&
+			 (lvm->map[le].pv &&
+			  lvm->map[le + len].pe == lvm->map[le].pe + len));
+
+		if (!(seg = alloc_lv_segment(cmd->mem, segtype, lvm->lv, le,
+					     len, 0, 0, 1, len, 0, 0))) {
+			log_error("Failed to allocate linear segment.");
 			return 0;
 		}
 
-		seg->le = le;
-		seg->len = 0;
-		seg->area_len = 0;
-		seg->stripe_size = 0;
-
 		set_lv_segment_area_pv(seg, 0, lvm->map[le].pv, lvm->map[le].pe);
 
-		do {
-			seg->len++;
-			seg->area_len++;
-		} while ((lvm->map[le + seg->len].pv == seg->area[0].u.pv.pv) &&
-			 (seg->area[0].u.pv.pv &&
-			  lvm->map[le + seg->len].pe == seg->area[0].u.pv.pe +
-			  seg->len));
+		list_add(&lvm->lv->segments, &seg->list);
 
 		le += seg->len;
-
-		list_add(&lvm->lv->segments, &seg->list);
 	}
 
 	return 1;
 }
 
-static int _check_stripe(struct lv_map *lvm, struct lv_segment *seg,
-			 uint32_t base_le, uint32_t len)
+static int _check_stripe(struct lv_map *lvm, uint32_t area_count,
+			 uint32_t seg_len, uint32_t base_le, uint32_t len)
 {
-	uint32_t le, st;
-
-	le = base_le + seg->len;
+	uint32_t st;
 
 	/*
 	 * Is the next physical extent in every stripe adjacent to the last?
 	 */
-	for (st = 0; st < seg->area_count; st++)
-		if ((lvm->map[le + st * len].pv != seg->area[st].u.pv.pv) ||
-		    (seg->area[st].u.pv.pv &&
-		     lvm->map[le + st * len].pe !=
-		     seg->area[st].u.pv.pe + seg->len)) return 0;
+	for (st = 0; st < area_count; st++)
+		if ((lvm->map[base_le + st * len + seg_len].pv !=
+		     lvm->map[base_le + st * len].pv) ||
+		    (lvm->map[base_le + st * len].pv &&
+		     lvm->map[base_le + st * len + seg_len].pe !=
+		     lvm->map[base_le + st * len].pe + seg_len))
+			return 0;
 
 	return 1;
 }
@@ -264,7 +263,9 @@ static int _check_stripe(struct lv_map *lvm, struct lv_segment *seg,
 static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 {
 	uint32_t st, le = 0, len;
+	uint32_t area_len;
 	struct lv_segment *seg;
+	struct segment_type *segtype;
 
 	/*
 	 * Work out overall striped length
@@ -276,43 +277,42 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 	}
 	len = lvm->lv->le_count / lvm->stripes;
 
+	if (!(segtype = get_segtype_from_string(cmd, "striped"))) {
+		stack;
+		return 0;
+	}
+
 	while (le < len) {
-		if (!(seg = alloc_lv_segment(cmd->mem, lvm->stripes))) {
-			stack;
-			return 0;
-		}
-
-		seg->lv = lvm->lv;
-		if (!(seg->segtype = get_segtype_from_string(cmd, "striped"))) {
-			stack;
-			return 0;
-		}
-		seg->stripe_size = lvm->stripe_size;
-		seg->le = seg->area_count * le;
-		seg->len = 1;
-		seg->area_len = 1;
-
-		/*
-		 * Set up start positions of each stripe in this segment
-		 */
-		for (st = 0; st < seg->area_count; st++) {
-			seg->area[st].u.pv.pv = lvm->map[le + st * len].pv;
-			seg->area[st].u.pv.pe = lvm->map[le + st * len].pe;
-		}
+		area_len = 1;
 
 		/* 
 		 * Find how many blocks are contiguous in all stripes
 		 * and so can form part of this segment
 		 */
-		while (_check_stripe(lvm, seg, le, len)) {
-			seg->len++;
-			seg->area_len++;
+		while (_check_stripe(lvm, lvm->stripes,
+				     area_len * lvm->stripes, le, len))
+			area_len++;
+
+		if (!(seg = alloc_lv_segment(cmd->mem, segtype, lvm->lv,
+					     lvm->stripes * le,
+					     lvm->stripes * area_len,
+					     0, lvm->stripe_size, lvm->stripes,
+					     area_len, 0, 0))) {
+			log_error("Failed to allocate striped segment.");
+			return 0;
 		}
 
-		le += seg->len;
-		seg->len *= seg->area_count;
+		/*
+		 * Set up start positions of each stripe in this segment
+		 */
+		for (st = 0; st < seg->area_count; st++)
+			set_lv_segment_area_pv(seg, st,
+					       lvm->map[le + st * len].pv,
+					       lvm->map[le + st * len].pe);
 
 		list_add(&lvm->lv->segments, &seg->list);
+
+		le += seg->len;
 	}
 
 	return 1;
