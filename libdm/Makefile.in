@@ -17,6 +17,14 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 interface = @interface@
 
+ifeq ("@DMEVENTD@", "yes")
+   SUBDIRS += event
+endif
+
+ifeq ($(MAKECMDGOALS),distclean)
+  SUBDIRS += event
+endif
+
 SOURCES = libdm-common.c libdm-file.c $(interface)/libdm-iface.c
 
 INCLUDES = -I$(interface)
