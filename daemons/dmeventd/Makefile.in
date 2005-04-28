@@ -16,18 +16,18 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-TARGETS = test dmeventd
+TARGETS = dmevent dmeventd
 INSTALL_TYPE = install_dynamic
 
-SOURCES = test.c dmeventd.c
-CLEAN_TARGETS = test
+SOURCES = dmevent.c dmeventd.c
+CLEAN_TARGETS = dmevent
 
 LDFLAGS += -ldl -ldevmapper -lpthread
 
 include ../make.tmpl
 
-test: $(OBJECTS) $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
-	$(CC) -o $@ test.o $(LDFLAGS) \
+dmevent: $(OBJECTS) $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
+	$(CC) -o $@ dmevent.o $(LDFLAGS) \
 	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -ldevmapper -ldmevent $(LIBS)
 
 dmeventd: $(OBJECTS) $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
