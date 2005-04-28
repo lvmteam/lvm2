@@ -19,18 +19,26 @@ VPATH = @srcdir@
 TARGETS = dmevent dmeventd
 INSTALL_TYPE = install_dynamic
 
-SOURCES = dmevent.c dmeventd.c
+SOURCES = noop.c
 CLEAN_TARGETS = dmevent
 
+ifeq ("@LIB_SUFFIX@","dylib")
+  LIB_SHARED = libdmeventnoop.dylib
+else
+  LIB_SHARED = libdmeventnoop.so
+endif
+ 
 LDFLAGS += -ldl -ldevmapper -lpthread
 
 include ../make.tmpl
 
-dmevent: $(OBJECTS) $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
+libdmeventnoop.so: noop.o
+
+dmevent: dmevent.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
 	$(CC) -o $@ dmevent.o $(LDFLAGS) \
 	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -ldevmapper -ldmevent $(LIBS)
 
-dmeventd: $(OBJECTS) $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
+dmeventd: dmeventd.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
 	$(CC) -o $@ dmeventd.o $(LDFLAGS) \
 	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -ldevmapper -ldmevent $(LIBS)
 
