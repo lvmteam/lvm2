@@ -22,6 +22,7 @@
 #include "log.h"
 #include "libdm-event.h"
 #include "list.h"
+#include "libmultilog.h"
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -41,16 +42,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-/*
- * Macros to be moved external later...
- */
-#undef log_print
-#undef log_err
-#undef stack
-#define log_print(x...) fprintf(stdout, "[dmeventd] " x)
-#define	log_err(x...)   fprintf(stderr, "ERROR: " x)
-#define stack		log_print("trace: %s:%s(%d)\n", \
-				  __FILE__, __func__, __LINE__);
 
 #define	dbg_malloc(x...)	malloc(x)
 #define	dbg_strdup(x...)	strdup(x)
@@ -964,6 +955,7 @@ int main(void)
 {
 	int ret = 0;
 	struct fifos fifos;
+	pthread_t log_thread = {0};
 
 	switch (daemonize()) {
 	case 1: /* Child. */
@@ -975,6 +967,15 @@ int main(void)
 
 		init_thread_signals();
 		kill(getppid(), SIGHUP);
+
+		/* Startup the syslog thread now so log_* macros work */
+                if(!start_syslog_thread(&log_thread, 100)) {
+                        fprintf(stderr, "Could not start logging thread\n");
+                        munlockall();
+                        pthread_mutex_destroy(&mutex);
+                        break;
+                }
+
 		init_fifos(&fifos);
 		pthread_mutex_init(&mutex, NULL);
 
