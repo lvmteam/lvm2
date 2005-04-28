@@ -36,11 +36,11 @@ libdmeventnoop.so: noop.o
 
 dmevent: dmevent.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
 	$(CC) -o $@ dmevent.o $(LDFLAGS) \
-	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -ldevmapper -ldmevent $(LIBS)
+	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -L$(top_srcdir)/multilog -lmultilog -ldmevent $(LIBS)
 
 dmeventd: dmeventd.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
 	$(CC) -o $@ dmeventd.o $(LDFLAGS) \
-	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -ldevmapper -ldmevent $(LIBS)
+	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -L$(top_srcdir)/multilog -ldmevent -lmultilog $(LIBS)
 
 install: $(INSTALL_TYPE)
 
