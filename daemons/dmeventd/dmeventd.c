@@ -109,13 +109,14 @@ struct dso_data {
 static LIST_INIT(dso_registry);
 
 /* Structure to keep parsed register variables from client message. */
-struct register_data {
+struct message_data {
 	char *dso_name;		/* Name of DSO. */
 	char *device_path;	/* Mapped device path. */
 	union {
 		char *str;	/* Events string as fetched from message. */
 		enum event_type field;	/* Events bitfield. */
 	} events;
+	struct daemon_message *msg;	/* Pointer to message buffer. */
 };
 
 /*
@@ -139,7 +140,7 @@ struct thread_status {
 static LIST_INIT(thread_registry);
 
 /* Allocate/free the status structure for a monitoring thread. */
-static struct thread_status *alloc_thread_status(struct register_data *data,
+static struct thread_status *alloc_thread_status(struct message_data *data,
 						 struct dso_data *dso_data)
 {
 	struct thread_status *ret = (typeof(ret)) dbg_malloc(sizeof(*ret));
@@ -165,7 +166,7 @@ static void free_thread_status(struct thread_status *thread)
 }
 
 /* Allocate/free DSO data. */
-static struct dso_data *alloc_dso_data(struct register_data *data)
+static struct dso_data *alloc_dso_data(struct message_data *data)
 {
 	struct dso_data *ret = (typeof(ret)) dbg_malloc(sizeof(*ret));
 
@@ -187,57 +188,65 @@ static void free_dso_data(struct dso_data *data)
 }
 
 /* Fetch a string off src and duplicate it into *dest. */
+/* FIXME: move to separate module to share with the client lib. */
 static const char delimiter = ' ';
 static char *fetch_string(char **src)
 {
-	char *p, *ret;
+	char *p, *ret = NULL;
 
-	if ((p = strchr(*src, delimiter)))
+	if ((p = strchr(*src, delimiter))) {
 		*p = 0;
 
-	if ((ret = dbg_strdup(*src)))
-		*src += strlen(ret) + 1;
+		if ((ret = dbg_strdup(*src)))
+			*src += strlen(ret) + 1;
 
-	if (p)
-		*p = delimiter;
+		if (p)
+			*p = delimiter;
+	} else if (*src)
+		ret = dbg_strdup(*src);
 
 	return ret;
 }
 
 /* Free message memory. */
-static void free_message(struct register_data *register_data)
+static void free_message(struct message_data *message_data)
 {
-	if (register_data->dso_name)
-		dbg_free(register_data->dso_name);
+	if (message_data->dso_name)
+		dbg_free(message_data->dso_name);
 
-	if (register_data->device_path)
-		dbg_free(register_data->device_path);
+	if (message_data->device_path)
+		dbg_free(message_data->device_path);
 }
 
 /* Parse a register message from the client. */
-static int parse_message(struct register_data *register_data, char *msg)
+static int parse_message(struct message_data *message_data)
 {
-	char *p = msg;
+	char *p = message_data->msg->msg;
 
-	memset(register_data, 0, sizeof(*register_data));
+	memset(message_data, 0, sizeof(*message_data));
 
 	/*
 	 * Retrieve application identifier, mapped device
 	 * path and events # string from message.
 	 */
-	if ((register_data->dso_name    = fetch_string(&p)) &&
-	    (register_data->device_path = fetch_string(&p)) &&
-	    (register_data->events.str  = fetch_string(&p))) {
-		enum event_type i = atoi(register_data->events.str);
+	if ((message_data->dso_name    = fetch_string(&p)) &&
+	    (message_data->device_path = fetch_string(&p)) &&
+	    (message_data->events.str  = fetch_string(&p))) {
+		if (message_data->events.str) {
+			enum event_type i = atoi(message_data->events.str);
 
-		/* Free string representaion of events. Not needed an more. */
-		dbg_free(register_data->events.str);
-		register_data->events.field = i;
+			/*
+			 * Free string representaion of events.
+			 * Not needed an more.
+			 */
+			dbg_free(message_data->events.str);
+			message_data->events.field = i;
+		}
 
 		return 1;
 	}
 
-	free_message(register_data);
+	free_message(message_data);
 
 	return 0;
 };
@@ -336,7 +345,7 @@ static int device_exists(char *device)
  *
  * Mutex must be hold when calling this.
  */
-static struct thread_status *lookup_thread_status(struct register_data *data)
+static struct thread_status *lookup_thread_status(struct message_data *data)
 {
 	struct thread_status *thread;
 
@@ -361,7 +370,8 @@ static int error_detected(struct thread_status *thread, char *params)
 {
 	size_t len;
 
-	if ((len = strlen(params)) && params[len - 1] == 'F') {
+	if ((len = strlen(params)) &&
+	    params[len - 1] == 'F') {
 		thread->current_events |= DEVICE_ERROR;
 		return 1;
 	}
@@ -391,7 +401,7 @@ static int event_wait(struct thread_status *thread)
 						  &target_type, &params);
 
 log_print("%s: %s\n", __func__, params);
-			if (error_detected(thread, params))
+			if ((ret = error_detected(thread, params)))
 				break;
 		} while(next);
 	}
@@ -431,7 +441,7 @@ static void monitor_unregister(void *arg)
 }
 
 /* Device monitoring thread. */
-void *monitor_thread(void *arg)
+static void *monitor_thread(void *arg)
 {
 	struct thread_status *thread = arg;
 
@@ -452,7 +462,14 @@ void *monitor_thread(void *arg)
 /* REMOVEME: */
 log_print("%s: cycle on %s\n", __func__, thread->device_path);
 
-		/* Check against filter. */
+		/*
+		 * Check against filter.
+		 *
+		 * If there's current events delivered from event_wait() AND
+		 * the device got registered for those events AND
+		 * those events haven't been processed yet, call
+		 * the DSO's process_event() handler.
+		 */
 		if (thread->events &
 		    thread->current_events &
 		    ~thread->processed_events) {
@@ -492,7 +509,7 @@ static void lib_put(struct dso_data *data)
 }
 
 /* Find DSO data. */
-static struct dso_data *lookup_dso(struct register_data *data)
+static struct dso_data *lookup_dso(struct message_data *data)
 {
 	struct dso_data *dso_data, *ret = NULL;
 
@@ -500,8 +517,8 @@ static struct dso_data *lookup_dso(struct register_data *data)
 
 	list_iterate_items(dso_data, &dso_registry) {
 		if (!strcmp(data->dso_name, dso_data->dso_name)) {
+			lib_get(dso_data);
 			ret = dso_data;
-			lib_get(ret);
 			break;
 		}
 	}
@@ -534,7 +551,7 @@ static int lookup_symbols(void *dl, struct dso_data *data)
 }
 
 /* Create a DSO file name based on its name. */
-static char *create_dso_file(char *dso_name)
+static char *create_dso_file_name(char *dso_name)
 {
 	char *ret;
 	static char *prefix = "libdmeventd_";
@@ -549,13 +566,13 @@ static char *create_dso_file(char *dso_name)
 }
 
 /* Load an application specific DSO. */
-static struct dso_data *load_dso(struct register_data *data)
+static struct dso_data *load_dso(struct message_data *data)
 {
 	void *dl;
 	struct dso_data *ret = NULL;
 	char *dso_file;
 
-	if (!(dso_file = create_dso_file(data->dso_name)))
+	if (!(dso_file = create_dso_file_name(data->dso_name)))
 		return NULL;
 
 	if (!(dl = dlopen(dso_file, RTLD_NOW)))
@@ -599,32 +616,27 @@ static struct dso_data *load_dso(struct register_data *data)
  * Only one caller at a time here, because we use a FIFO and lock
  * it against multiple accesses.
  */
-static int register_for_event(char *msg)
+static int register_for_event(struct message_data *message_data)
 {
 	int ret = 0;
-	struct register_data register_data;
 	struct thread_status *thread, *thread_new;
 	struct dso_data *dso_data;
 
-	/* Parse the register message and find/load the appropriate DSO. */
-	if (!parse_message(&register_data, msg))
-		return -EINVAL;
-
-	if (!device_exists(register_data.device_path)) {
+	if (!device_exists(message_data->device_path)) {
 		stack;
 		ret = -ENODEV;
 		goto out;
 	}
 
-	if (!(dso_data = lookup_dso(&register_data)) &&
-	    !(dso_data = load_dso(&register_data))) {
+	if (!(dso_data = lookup_dso(message_data)) &&
+	    !(dso_data = load_dso(message_data))) {
 		stack;
 		ret = -ELIBACC;
 		goto out;
 	}
 		
 	/* Preallocate thread status struct to avoid deadlock. */
-	if (!(thread_new = alloc_thread_status(&register_data, dso_data))) {
+	if (!(thread_new = alloc_thread_status(message_data, dso_data))) {
 		stack;
 		ret = -ENOMEM;
 		goto out;
@@ -635,7 +647,7 @@ static int register_for_event(char *msg)
 
 	lock_mutex();
 
-	if ((thread = lookup_thread_status(&register_data)))
+	if ((thread = lookup_thread_status(message_data)))
 		ret = -EPERM;
 	else {
 		thread = thread_new;
@@ -651,7 +663,7 @@ static int register_for_event(char *msg)
 	}
 
 	/* Or event # into events bitfield. */
-	thread->events |= register_data.events.field;
+	thread->events |= message_data->events.field;
 
 	unlock_mutex();
 
@@ -663,7 +675,7 @@ static int register_for_event(char *msg)
 		free_thread_status(thread_new);
 
    out:
-	free_message(&register_data);
+	free_message(message_data);
 
 	return ret;
 }
@@ -673,29 +685,24 @@ static int register_for_event(char *msg)
  *
  * Only one caller at a time here as with register_for_event().
  */
-static int unregister_for_event(char *msg)
+static int unregister_for_event(struct message_data *message_data)
 {
 	int ret = 0;
-	struct register_data register_data;
 	struct thread_status *thread;
 
-	if (!parse_message(&register_data, msg))
-		return -EINVAL;
-		
 	/*
 	 * Clear event in bitfield and deactivate
 	 * monitoring thread in case bitfield is 0.
 	 */
-
 	lock_mutex();
 
-	if (!(thread = lookup_thread_status(&register_data))) {
+	if (!(thread = lookup_thread_status(message_data))) {
 		unlock_mutex();
 		ret = -ESRCH;
 		goto out;
 	}
 
-	thread->events &= ~register_data.events.field;
+	thread->events &= ~message_data->events.field;
 
 	/*
 	 * In case there's no events to monitor on this
@@ -724,9 +731,56 @@ static int unregister_for_event(char *msg)
 
 
    out:
-	free_message(&register_data);
+	free_message(message_data);
 
 	return ret;
+}
+
+/*
+ * Get next registered device.
+ *
+ * Only one caller at a time here as with register_for_event().
+ */
+static int next_registered_device(struct message_data *message_data)
+{
+	struct daemon_message *msg = message_data->msg;
+
+	snprintf(msg->msg, sizeof(msg->msg), "%s %s %u", 
+		 message_data->dso_name, message_data->device_path,
+		 message_data->events.field);
+
+	return 0;
+}
+
+static struct list *device_iter = NULL;
+static int get_next_registered_device(struct message_data *message_data)
+{
+	struct thread_status *thread;
+
+	if (!device_iter) {
+		if (list_empty(&thread_registry))
+			return -ENOENT;
+
+		device_iter = thread_registry.n;
+	} else if (device_iter == &thread_registry) {
+		device_iter = NULL;
+		return -ENOENT;
+	}
+
+	thread = list_item(device_iter, struct thread_status);
+	device_iter = device_iter->n;
+
+log_print("%s: device_path: %s\n", __func__, message_data->device_path);
+	if (message_data->device_path &&
+	    !strcmp(thread->device_path, message_data->device_path))
+		return next_registered_device(message_data);
+
+log_print("%s: dso_name: %s\n", __func__, message_data->dso_name);
+	if (message_data->dso_name &&
+	    !strcmp(thread->dso_data->dso_name, message_data->dso_name))
+		return next_registered_device(message_data);
+		
+	return next_registered_device(message_data);
 }
 
 /* Initialize a fifos structure with path names. */
@@ -797,28 +851,39 @@ static int client_write(struct fifos *fifos, struct daemon_message *msg)
 }
 
 /* Process a request passed from the communication thread. */
-static int _process_request(struct daemon_message *msg)
+static int do_process_request(struct daemon_message *msg)
 {
 	int ret;
+	static struct message_data message_data;
+
+	/* Parse the message. */
+	message_data.msg = msg;
+	if (msg->opcode.cmd != CMD_ACTIVE &&
+	    !parse_message(&message_data)) {
+		stack;
+		return -EINVAL;
+	}	
 
 	/* Check the request type. */
 	switch (msg->opcode.cmd) {
 	case CMD_ACTIVE:
 		ret = 0;
 		break;
-
 	case CMD_REGISTER_FOR_EVENT:
-		ret = register_for_event(msg->msg);
+		ret = register_for_event(&message_data);
 		break;
-
 	case CMD_UNREGISTER_FOR_EVENT:
-		ret = unregister_for_event(msg->msg);
+		ret = unregister_for_event(&message_data);
+		break;
+	case CMD_GET_NEXT_REGISTERED_DEVICE:
+		ret = get_next_registered_device(&message_data);
 		break;
 	}
 
 	return ret;
 }
 
+/* Only one caller at a time. */
 static void process_request(struct fifos *fifos, struct daemon_message *msg)
 {
 	/* Read the request from the client. */
@@ -828,7 +893,7 @@ static void process_request(struct fifos *fifos, struct daemon_message *msg)
 		return;
 	}
 
-	msg->opcode.status = _process_request(msg);
+	msg->opcode.status = do_process_request(msg);
 
 	memset(&msg->msg, 0, sizeof(msg->msg));
 	if (!client_write(fifos, msg))

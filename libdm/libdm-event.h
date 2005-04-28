@@ -30,6 +30,7 @@ enum dmeventd_command {
 	CMD_ACTIVE = 1,
 	CMD_REGISTER_FOR_EVENT,
 	CMD_UNREGISTER_FOR_EVENT,
+	CMD_GET_NEXT_REGISTERED_DEVICE,
 };
 
 /* Message passed between client and daemon. */
@@ -65,6 +66,8 @@ enum event_type {
 int dm_register_for_event(char *dso_name, char *device, enum event_type events);
 int dm_unregister_for_event(char *dso_name, char *device,
 			    enum event_type events);
+int dm_get_next_registered_device(char **dso_name, char **device,
+			    enum event_type *events);
 
 #endif
 
