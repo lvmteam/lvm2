@@ -102,9 +102,11 @@ int main(int argc, char **argv)
 	
 	if (list) {
 		do {
-			ret = dm_get_next_registered_device(&dso_name, &device, &events);
-			if (!ret) {
-				printf("%s %s 0x%x\n", dso_name, device, events);
+			if (!(ret= dm_get_next_registered_device(&dso_name,
+								 &device,
+								 &events))) {
+				printf("%s %s 0x%x\n",
+				       dso_name, device, events);
 				free(dso_name);
 				free(device);
 			}
@@ -112,6 +114,7 @@ int main(int argc, char **argv)
 
 		exit(EXIT_SUCCESS);
 	}
+
 	if ((ret = reg ? dm_register_for_event(dso_name, device, events) :
 			 dm_unregister_for_event(dso_name, device, events))) {
 		fprintf(stderr, "Failed to %sregister %s: %s\n",
