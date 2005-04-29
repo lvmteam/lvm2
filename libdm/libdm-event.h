@@ -56,8 +56,8 @@ struct daemon_message {
 struct fifos {
 	int client;
 	int server;
-	char *client_path;
-	char *server_path;
+	const char *client_path;
+	const char *server_path;
 };
 
 /* Event type definitions. */
