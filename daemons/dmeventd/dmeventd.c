@@ -375,7 +375,7 @@ static int error_detected(struct thread_status *thread, char *params)
 static int event_wait(struct thread_status *thread)
 {
 	int ret = 0;
-	void *next;
+	void *next=NULL;
 	char *params, *target_type;
 	uint64_t start, length;
 	struct dm_task *dmt;
@@ -913,6 +913,9 @@ fflush(stdout);
 		break;
 	case CMD_GET_NEXT_REGISTERED_DEVICE:
 		ret = get_registered_device(&message_data, 1);
+		break;
+	default:
+		ret = -EINVAL;
 		break;
 	}
 
