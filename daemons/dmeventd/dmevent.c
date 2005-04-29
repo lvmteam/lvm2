@@ -95,13 +95,16 @@ static int parse_argv(int argc, char **argv,
 int main(int argc, char **argv)
 {
 	int list = 0, next = 0, ret, reg = default_reg;
-	char *device, *device_arg, *dso_name = default_dso_name, *dso_name_arg;
+	char *device = NULL, *device_arg = NULL,
+	     *dso_name = default_dso_name, *dso_name_arg = NULL;
 
 	if (!parse_argv(argc, argv, &dso_name_arg, &device_arg, &reg, &list))
 		exit(EXIT_FAILURE);
 
 	if (dso_name_arg)
 		dso_name = dso_name_arg;
+	else
+		dso_name_arg = dso_name;
 	
 	if (device_arg)
 		device = device_arg;

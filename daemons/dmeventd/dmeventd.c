@@ -183,18 +183,16 @@ static void free_dso_data(struct dso_data *data)
 static const char delimiter = ' ';
 static char *fetch_string(char **src)
 {
-	char *p, *ret = NULL;
+	char *p, *ret;
 
-	if ((p = strchr(*src, delimiter))) {
+	if ((p = strchr(*src, delimiter)))
 		*p = 0;
 
-		if ((ret = dbg_strdup(*src)))
-			*src += strlen(ret) + 1;
+	if ((ret = strdup(*src)))
+		*src += strlen(ret) + 1;
 
-		if (p)
-			*p = delimiter;
-	} else if (*src)
-		ret = dbg_strdup(*src);
+	if (p)
+		*p = delimiter;
 
 	return ret;
 }
@@ -214,6 +212,8 @@ static int parse_message(struct message_data *message_data)
 {
 	char *p = message_data->msg->msg;
 
+log_print("%s: here\n", __func__);
+fflush(stdout);
 	memset(message_data, 0, sizeof(*message_data));
 
 	/*
@@ -223,6 +223,7 @@ static int parse_message(struct message_data *message_data)
 	if ((message_data->dso_name    = fetch_string(&p)) &&
 	    (message_data->device_path = fetch_string(&p)) &&
 	    (message_data->events.str  = fetch_string(&p))) {
+log_print("%s: %s %s %s\n", __func__, message_data->dso_name, message_data->device_path, message_data->events.str);
 		if (message_data->events.str) {
 			enum event_type i = atoi(message_data->events.str);
 
@@ -622,6 +623,8 @@ static int register_for_event(struct message_data *message_data)
 		ret = -ENODEV;
 		goto out;
 	}
+log_print("%s\n", __func__);
+fflush(stdout);
 
 	if (!(dso_data = lookup_dso(message_data)) &&
 	    !(dso_data = load_dso(message_data))) {
@@ -887,10 +890,12 @@ log_print("%s: \"%s\"\n", __func__, msg->msg);
 	if (msg->opcode.cmd != CMD_ACTIVE &&
 	    !parse_message(&message_data)) {
 		stack;
+fflush(stdout);
 		return -EINVAL;
-	}	
+	}
 
-log_print("%s: \"%s\"\n", __func__, message_data.msg->msg);
+log_print("%s (2nd): \"%s\"\n", __func__, message_data.msg->msg);
+fflush(stdout);
 
 	/* Check the request type. */
 	switch (msg->opcode.cmd) {
