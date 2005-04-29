@@ -22,7 +22,7 @@
 #include "log.h"
 #include "libdm-event.h"
 #include "list.h"
-#include "libmultilog.h"
+// #include "libmultilog.h"
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -279,7 +279,7 @@ static int storepid(int lf)
  * Used to synchronize daemon startups.
  */
 static int lf = -1;
-static char *pidfile = "/var/run/dmeventd.pid";
+static char pidfile[] = "/var/run/dmeventd.pid";
 
 /* Store pid in pidfile. */
 static int lock(void)
@@ -403,19 +403,19 @@ log_print("%s: %s\n", __func__, params);
 }
 
 /* Register a device with the DSO. */
-static int register_device(struct thread_status *thread)
+static int do_register_device(struct thread_status *thread)
 {
 	return thread->dso_data->register_device(thread->device_path);
 }
 
 /* Unregister a device with the DSO. */
-static int unregister_device(struct thread_status *thread)
+static int do_unregister_device(struct thread_status *thread)
 {
 	return thread->dso_data->unregister_device(thread->device_path);
 }
 
 /* Process an event the DSO. */
-static void process_event(struct thread_status *thread)
+static void do_process_event(struct thread_status *thread)
 {
 	thread->dso_data->process_event(thread->device_path,
 					thread->current_events);
@@ -426,7 +426,7 @@ static void monitor_unregister(void *arg)
 {
 	struct thread_status *thread = arg;
 
-	if (!unregister_device(thread))
+	if (!do_unregister_device(thread))
 		log_err("%s: %s unregister failed\n", __func__,
 			thread->device_path);
 }
@@ -464,7 +464,7 @@ log_print("%s: cycle on %s\n", __func__, thread->device_path);
 		if (thread->events &
 		    thread->current_events &
 		    ~thread->processed_events) {
-			process_event(thread);
+			do_process_event(thread);
 			thread->processed_events |= thread->current_events;
 		}
 	}
@@ -545,13 +545,15 @@ static int lookup_symbols(void *dl, struct dso_data *data)
 static char *create_dso_file_name(char *dso_name)
 {
 	char *ret;
-	static char *prefix = "libdmeventd_";
-	static char *suffix = ".so";
+	static char prefix[] = "libdmeventd";
+	static char suffix[] = ".so";
 
 	if ((ret = dbg_malloc(strlen(prefix) +
 			      strlen(dso_name) +
 			      strlen(suffix) + 1)))
 		sprintf(ret, "%s%s%s", prefix, dso_name, suffix);
+
+log_print("%s: \"%s\"\n", __func__, ret);
 
 	return ret;
 }
@@ -562,6 +564,8 @@ static struct dso_data *load_dso(struct message_data *data)
 	void *dl;
 	struct dso_data *ret = NULL;
 	char *dso_file;
+
+log_print("%s: \"%s\"\n", __func__, data->dso_name);
 
 	if (!(dso_file = create_dso_file_name(data->dso_name)))
 		return NULL;
@@ -633,7 +637,7 @@ static int register_for_event(struct message_data *message_data)
 		goto out;
 	}
 
-	if (!(ret = register_device(thread_new)))
+	if (!(ret = do_register_device(thread_new)))
 			goto out;
 
 	lock_mutex();
@@ -732,46 +736,69 @@ static int unregister_for_event(struct message_data *message_data)
  *
  * Only one caller at a time here as with register_for_event().
  */
-static int next_registered_device(struct message_data *message_data)
+static int registered_device(struct message_data *message_data,
+			     struct thread_status *thread)
 {
 	struct daemon_message *msg = message_data->msg;
 
 	snprintf(msg->msg, sizeof(msg->msg), "%s %s %u", 
-		 message_data->dso_name, message_data->device_path,
-		 message_data->events.field);
+		 thread->dso_data->dso_name, thread->device_path,
+		 thread->events);
+
+	unlock_mutex();
 
 	return 0;
 }
 
-static struct list *device_iter = NULL;
-static int get_next_registered_device(struct message_data *message_data)
+static int get_registered_device(struct message_data *message_data, int next)
 {
-	struct thread_status *thread;
+	int dev, dso, hit = 0;
+	struct thread_status *thread = list_item(thread_registry.n,
+				    		 struct thread_status);
 
-	if (!device_iter) {
-		if (list_empty(&thread_registry))
-			return -ENOENT;
+	lock_mutex();
 
-		device_iter = thread_registry.n;
-	} else if (device_iter == &thread_registry) {
-		device_iter = NULL;
+	if (!message_data->dso_name &&
+	    !message_data->device_path)
+		goto out;
+		
+
+	list_iterate_items(thread, &thread_registry) {
+		dev = dso = 0;
+
+		/* If we've got a DSO name. */
+		if (message_data->dso_name &&
+		    !strcmp(message_data->dso_name,
+			    thread->dso_data->dso_name))
+			dso = 1;
+
+		if (message_data->device_path &&
+		    !strcmp(message_data->device_path,
+			    thread->device_path))
+			dev = 1;
+
+		/* We've got both DSO name and device patch. */
+		if ((dso && dev) || dso || dev) {
+			hit = 1;
+			break;
+		}
+	}
+
+	/*
+	 * If we got a registered device and want the next one ->
+	 * fetch next element off the list.
+	 */
+	if (hit && next)
+		thread = list_item(&thread->list.n, struct thread_status);
+
+   out:
+	if (list_empty(&thread->list) ||
+	    list_end(&thread_registry, &thread->list)) {
+		unlock_mutex();
 		return -ENOENT;
 	}
 
-	thread = list_item(device_iter, struct thread_status);
-	device_iter = device_iter->n;
-
-log_print("%s: device_path: %s\n", __func__, message_data->device_path);
-	if (message_data->device_path &&
-	    !strcmp(thread->device_path, message_data->device_path))
-		return next_registered_device(message_data);
-
-log_print("%s: dso_name: %s\n", __func__, message_data->dso_name);
-	if (message_data->dso_name &&
-	    !strcmp(thread->dso_data->dso_name, message_data->dso_name))
-		return next_registered_device(message_data);
-		
-	return next_registered_device(message_data);
+	return registered_device(message_data, thread);
 }
 
 /* Initialize a fifos structure with path names. */
@@ -830,15 +857,22 @@ static int client_read(struct fifos *fifos, struct daemon_message *msg)
  */
 static int client_write(struct fifos *fifos, struct daemon_message *msg)
 {
+	int bytes = 0, ret = 0;
 	fd_set fds;
 
-	do {
-		/* Watch client write FIFO if it's ready for output. */
-		FD_ZERO(&fds);
-		FD_SET(fifos->server, &fds);
-	} while (select(fifos->server + 1, NULL, &fds, NULL, NULL) <= 0);
+	errno = 0;
+	while (bytes < sizeof(*msg) && errno != EIO) {
+		do {
+			/* Watch client write FIFO to be ready for output. */
+			FD_ZERO(&fds);
+			FD_SET(fifos->server, &fds);
+		} while (select(fifos->server +1, NULL, &fds, NULL, NULL) != 1);
 
-	return write(fifos->server, msg, sizeof(*msg)) == sizeof(*msg);
+		ret = write(fifos->server, msg, sizeof(*msg) - bytes);
+		bytes += ret > 0 ? ret : 0;
+	}
+
+	return bytes == sizeof(*msg);
 }
 
 /* Process a request passed from the communication thread. */
@@ -847,6 +881,7 @@ static int do_process_request(struct daemon_message *msg)
 	int ret;
 	static struct message_data message_data;
 
+log_print("%s: \"%s\"\n", __func__, msg->msg);
 	/* Parse the message. */
 	message_data.msg = msg;
 	if (msg->opcode.cmd != CMD_ACTIVE &&
@@ -854,6 +889,8 @@ static int do_process_request(struct daemon_message *msg)
 		stack;
 		return -EINVAL;
 	}	
+
+log_print("%s: \"%s\"\n", __func__, message_data.msg->msg);
 
 	/* Check the request type. */
 	switch (msg->opcode.cmd) {
@@ -866,8 +903,11 @@ static int do_process_request(struct daemon_message *msg)
 	case CMD_UNREGISTER_FOR_EVENT:
 		ret = unregister_for_event(&message_data);
 		break;
+	case CMD_GET_REGISTERED_DEVICE:
+		ret = get_registered_device(&message_data, 0);
+		break;
 	case CMD_GET_NEXT_REGISTERED_DEVICE:
-		ret = get_next_registered_device(&message_data);
+		ret = get_registered_device(&message_data, 1);
 		break;
 	}
 
@@ -969,12 +1009,14 @@ int main(void)
 		kill(getppid(), SIGHUP);
 
 		/* Startup the syslog thread now so log_* macros work */
+/*
                 if(!start_syslog_thread(&log_thread, 100)) {
                         fprintf(stderr, "Could not start logging thread\n");
                         munlockall();
                         pthread_mutex_destroy(&mutex);
                         break;
                 }
+*/
 
 		init_fifos(&fifos);
 		pthread_mutex_init(&mutex, NULL);
