@@ -20,7 +20,7 @@ TARGETS = dmevent dmeventd
 INSTALL_TYPE = install_dynamic
 
 SOURCES = noop.c
-CLEAN_TARGETS = dmevent
+CLEAN_TARGETS = dmevent.o dmeventd.o
 
 ifeq ("@LIB_SUFFIX@","dylib")
   LIB_SHARED = libdmeventnoop.dylib
