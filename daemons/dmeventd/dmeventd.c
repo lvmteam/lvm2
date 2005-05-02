@@ -119,7 +119,7 @@ struct message_data {
 struct thread_status {
 	struct list	list;
 
-	pthread_t		thread;
+	pthread_t	thread;
 
 	struct dso_data *dso_data;/* DSO this thread accesses. */
 	
@@ -375,7 +375,7 @@ static int error_detected(struct thread_status *thread, char *params)
 static int event_wait(struct thread_status *thread)
 {
 	int ret = 0;
-	void *next=NULL;
+	void *next = NULL;
 	char *params, *target_type;
 	uint64_t start, length;
 	struct dm_task *dmt;
@@ -756,10 +756,11 @@ static int registered_device(struct message_data *message_data,
 static int get_registered_device(struct message_data *message_data, int next)
 {
 	int dev, dso, hit = 0;
-	struct thread_status *thread = list_item(thread_registry.n,
-				    		 struct thread_status);
+	struct thread_status *thread;
 
 	lock_mutex();
+
+	thread = list_item(thread_registry.n, struct thread_status);
 
 	if (!message_data->dso_name &&
 	    !message_data->device_path)
@@ -769,18 +770,20 @@ static int get_registered_device(struct message_data *message_data, int next)
 	list_iterate_items(thread, &thread_registry) {
 		dev = dso = 0;
 
-		/* If we've got a DSO name. */
+		/* If DSO name equals. */
 		if (message_data->dso_name &&
 		    !strcmp(message_data->dso_name,
 			    thread->dso_data->dso_name))
 			dso = 1;
 
+		/* If dev path equals. */
 		if (message_data->device_path &&
 		    !strcmp(message_data->device_path,
 			    thread->device_path))
 			dev = 1;
 
-		/* We've got both DSO name and device patch. */
+		/* We've got both DSO name and device patch or either. */
+		/* FIXME: wrong logic! */
 		if ((dso && dev) || dso || dev) {
 			hit = 1;
 			break;
@@ -796,10 +799,12 @@ static int get_registered_device(struct message_data *message_data, int next)
 
    out:
 	if (list_empty(&thread->list) ||
-	    list_end(&thread_registry, &thread->list)) {
+	    &thread->list == &thread_registry) {
 		unlock_mutex();
 		return -ENOENT;
 	}
+
+	unlock_mutex();
 
 	return registered_device(message_data, thread);
 }
@@ -991,19 +996,26 @@ log_print("daemonized\n");
 }
 
 /* Init thread signal handling. */
-static void init_thread_signals(void)
+#define HANGUP	SIGHUP
+static void init_thread_signals(int hup)
 {
 	sigset_t sigset;
 	
 	sigfillset(&sigset);
-	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
+
+	if (hup)
+		sigdelset(&sigset, HANGUP);
+
+	pthread_sigmask(SIG_SETMASK, &sigset, NULL);
 }
 
 int main(void)
 {
-	int ret = 0;
 	struct fifos fifos;
-	pthread_t log_thread = {0};
+	pthread_t log_thread = { 0 };
+
+	/* Make sure, parent accepts HANGUP signal. */
+	init_thread_signals(1);
 
 	switch (daemonize()) {
 	case 1: /* Child. */
@@ -1013,8 +1025,8 @@ int main(void)
 			break;
 		}
 
-		init_thread_signals();
-		kill(getppid(), SIGHUP);
+		init_thread_signals(0);
+		kill(getppid(), HANGUP);
 
 		/* Startup the syslog thread now so log_* macros work */
 /*
@@ -1031,12 +1043,12 @@ int main(void)
 
 		if (!storepid(lf)) {
 			stack;
-			return 0;
+			exit(EXIT_FAILURE);
 		}
 
 		if (mlockall(MCL_FUTURE) == -1) {
 			stack;
-			return 0;
+			exit(EXIT_FAILURE);
 		}
 
 		/* Communication thread runs forever... */
@@ -1048,7 +1060,7 @@ int main(void)
 
 	case 0: /* Error (either on daemonize() or on comm_thread() return. */
 		unlock();
-		ret = 1;
+		exit(EXIT_FAILURE);
 		break;
 
 	case 2: /* Parent. */
@@ -1056,7 +1068,7 @@ int main(void)
 		break;
 	}
 
-	return 1;
+	exit(EXIT_SUCCESS);
 }
 
 /*
