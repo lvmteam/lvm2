@@ -23,16 +23,16 @@ SOURCES = noop.c
 CLEAN_TARGETS = dmevent.o dmeventd.o
 
 ifeq ("@LIB_SUFFIX@","dylib")
-  LIB_SHARED = libdmeventnoop.dylib
+  LIB_SHARED = libdmeventdnoop.dylib
 else
-  LIB_SHARED = libdmeventnoop.so
+  LIB_SHARED = libdmeventdnoop.so
 endif
  
 LDFLAGS += -ldl -ldevmapper -lpthread
 
 include ../make.tmpl
 
-libdmeventnoop.so: noop.o
+libdmeventdnoop.so: noop.o
 
 dmevent: dmevent.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
 	$(CC) -o $@ dmevent.o $(LDFLAGS) \
