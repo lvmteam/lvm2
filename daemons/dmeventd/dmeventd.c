@@ -899,7 +899,6 @@ fflush(stdout);
 		return -EINVAL;
 	}
 
-log_print("%s (2nd): \"%s\"\n", __func__, message_data.msg->msg);
 fflush(stdout);
 
 	/* Check the request type. */
