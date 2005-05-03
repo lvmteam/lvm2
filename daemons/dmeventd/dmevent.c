@@ -14,6 +14,7 @@
 
 #include "libdevmapper.h"
 #include "libdm-event.h"
+#include "libmultilog.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -100,12 +101,23 @@ int main(int argc, char **argv)
 {
 	int list = 0, next = 0, ret, reg = default_reg;
 	char *device = NULL, *device_arg, *dso_name = NULL, *dso_name_arg;
+	struct log_data *ldata;
 
 	if (!parse_argv(argc, argv, &dso_name, &device, &reg, &list))
 		exit(EXIT_FAILURE);
 
 	device_arg = device;
 	dso_name_arg = dso_name;
+
+
+	if(!(ldata = malloc(sizeof(*ldata))))
+		exit(ENOMEM);
+	if(!memset(ldata, 0, sizeof(*ldata)))
+		exit(ENOMEM);
+
+	/* FIXME: use -v/-q options to set this */
+	ldata->verbose_level = _LOG_DEBUG;
+	multilog_add_type(standard, ldata);
 
 	if (list) {
 		do {

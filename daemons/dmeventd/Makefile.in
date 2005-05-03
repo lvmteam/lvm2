@@ -28,7 +28,7 @@ else
   LIB_SHARED = libdmeventdnoop.so
 endif
  
-LDFLAGS += -ldl -ldevmapper -lpthread
+LDFLAGS += -ldl -ldevmapper -lpthread -lmultilog
 
 include ../make.tmpl
 
