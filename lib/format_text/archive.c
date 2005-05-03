@@ -148,7 +148,7 @@ static struct list *_scan_archive(struct pool *mem,
 
 	/* Sort fails beyond 5-digit indexes */
 	if ((count = scandir(dir, &dirent, NULL, alphasort)) < 0) {
-		log_err("Couldn't scan archive directory.");
+		log_err("Couldn't scan the archive directory (%s).", dir);
 		return 0;
 	}
 
@@ -273,7 +273,7 @@ int archive_vg(struct volume_group *vg,
 	 * Now we want to rename this file to <vg>_index.vg.
 	 */
 	if (!(archives = _scan_archive(vg->cmd->mem, vg->name, dir))) {
-		log_err("Couldn't scan the archive directory (%s).", dir);
+		stack;
 		return 0;
 	}
 
@@ -349,7 +349,7 @@ int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 	struct archive_file *af;
 
 	if (!(archives = _scan_archive(cmd->mem, vgname, dir))) {
-		log_err("Couldn't scan the archive directory (%s).", dir);
+		stack;
 		return 0;
 	}
 
