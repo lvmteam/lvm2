@@ -19,10 +19,8 @@
  */
 
 #include "libdevmapper.h"
-#include "log.h"
 #include "libdm-event.h"
 #include "list.h"
-// #include "libmultilog.h"
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -41,6 +39,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "libmultilog.h"
 
 
 #define	dbg_malloc(x...)	malloc(x)
@@ -1020,7 +1020,12 @@ static void init_thread_signals(int hup)
 int main(void)
 {
 	struct fifos fifos;
-	pthread_t log_thread = { 0 };
+
+	struct log_data *tsdata = malloc(sizeof(*tsdata));
+	if(!tsdata)
+		exit(-ENOMEM);
+	if(!memset(tsdata, 0, sizeof(*tsdata)))
+		exit(-ENOMEM);
 
 	/* Make sure, parent accepts HANGUP signal. */
 	init_thread_signals(1);
@@ -1036,15 +1041,9 @@ int main(void)
 		init_thread_signals(0);
 		kill(getppid(), HANGUP);
 
-		/* Startup the syslog thread now so log_* macros work */
-/*
-                if(!start_syslog_thread(&log_thread, 100)) {
-                        fprintf(stderr, "Could not start logging thread\n");
-                        munlockall();
-                        pthread_mutex_destroy(&mutex);
-                        break;
-                }
-*/
+		multilog_clear_logging();
+		tsdata->verbose_level = _LOG_DEBUG;
+		multilog_add_type(threaded_syslog, tsdata);
 
 		init_fifos(&fifos);
 		pthread_mutex_init(&mutex, NULL);

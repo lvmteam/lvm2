@@ -19,15 +19,6 @@
 
 #include <stdint.h>
 
-/* FIXME Replace with log.h */
-#undef log_print
-#undef log_err
-#undef stack
-#define log_print(x...)	   fprintf(stderr, "[dmeventdlib] " x)
-#define log_err(x...)	   log_print(x)
-#define stack log_print("trace: %s:%s(%d)\n", __FILE__, __func__, __LINE__);
-
-
 #define	DAEMON		"/sbin/dmeventd"
 #define LOCKFILE	"/var/lock/dmeventd"
 #define	FIFO_CLIENT	"/var/run/dmeventd-client"
