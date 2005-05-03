@@ -36,9 +36,6 @@ int archive_init(const char *dir, unsigned int keep_days, unsigned int keep_min)
 	if (!*dir)
 		return 1;
 
-	if (!create_dir(dir))
-		return 0;
-
 	if (!(_archive_params.dir = dbg_strdup(dir))) {
 		log_error("Couldn't copy archive directory name.");
 		return 0;
@@ -106,6 +103,9 @@ int archive(struct volume_group *vg)
 		return 1;
 	}
 
+	if (!create_dir(_archive_params.dir))
+		return 0;
+
 	log_verbose("Archiving volume group \"%s\" metadata.", vg->name);
 	if (!__archive(vg)) {
 		log_error("Volume group \"%s\" metadata archive failed.",
@@ -133,9 +133,6 @@ int backup_init(const char *dir)
 	_backup_params.dir = NULL;
 	if (!*dir)
 		return 1;
-
-	if (!create_dir(dir))
-		return 0;
 
 	if (!(_backup_params.dir = dbg_strdup(dir))) {
 		log_error("Couldn't copy backup directory name.");
@@ -188,6 +185,9 @@ int backup(struct volume_group *vg)
 		log_verbose("Test mode: Skipping volume group backup.");
 		return 1;
 	}
+
+	if (!create_dir(_backup_params.dir))
+		return 0;
 
 	if (!__backup(vg)) {
 		log_error("Backup of volume group %s metadata failed.",

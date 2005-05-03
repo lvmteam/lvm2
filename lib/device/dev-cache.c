@@ -49,7 +49,6 @@ static struct {
 } _cache;
 
 #define _alloc(x) pool_zalloc(_cache.mem, (x))
-#define _strdup(x) pool_strdup(_cache.mem, (x))
 #define _free(x) pool_free(_cache.mem, (x))
 
 static int _insert(const char *path, int rec);
@@ -70,14 +69,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				dbg_free(dev);
 				return NULL;
 			}
-			if (!(alias->str = dbg_strdup(filename))) {
-				log_error("filename strdup failed");
-				if (allocate) {
-					dbg_free(dev);
-					dbg_free(alias);
-				}
-				return NULL;
-			}
+
 			dev->flags = DEV_ALLOCED;
 		} else {
 			if (!(dev = _alloc(sizeof(*dev)))) {
@@ -86,19 +78,21 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 			}
 			if (!(alias = _alloc(sizeof(*alias)))) {
 				log_error("struct str_list allocation failed");
-				dbg_free(dev);
-				return NULL;
-			}
-			if (!(alias->str = _strdup(filename))) {
-				log_error("filename strdup failed");
-				if (allocate) {
-					dbg_free(dev);
-					dbg_free(alias);
-				}
+				_free(dev);
 				return NULL;
 			}
 		}
 	}
+
+	if (!(alias->str = dbg_strdup(filename))) {
+		log_error("filename strdup failed");
+		if (allocate && use_malloc) {
+			dbg_free(dev);
+			dbg_free(alias);
+		}
+		return NULL;
+	}
+
 	dev->flags |= DEV_REGULAR;
 	list_init(&dev->aliases);
 	list_add(&dev->aliases, &alias->list);
