@@ -95,21 +95,14 @@ static int parse_argv(int argc, char **argv,
 int main(int argc, char **argv)
 {
 	int list = 0, next = 0, ret, reg = default_reg;
-	char *device = NULL, *device_arg = NULL,
-	     *dso_name = default_dso_name, *dso_name_arg = NULL;
+	char *device = NULL, *dso_name = default_dso_name, *dso_name_arg = NULL;
 
-	if (!parse_argv(argc, argv, &dso_name_arg, &device_arg, &reg, &list))
+	if (!parse_argv(argc, argv, &dso_name_arg, &device, &reg, &list))
 		exit(EXIT_FAILURE);
 
-	if (dso_name_arg)
-		dso_name = dso_name_arg;
-	else
-		dso_name_arg = dso_name;
-	
-	if (device_arg)
-		device = device_arg;
-	
 	if (list) {
+		dso_name = dso_name_arg;
+			
 		do {
 			/* FIXME: dso_name and/or device name given. */
 			if (!(ret= dm_get_registered_device(&dso_name,
@@ -118,25 +111,15 @@ int main(int argc, char **argv)
 				printf("%s %s 0x%x\n",
 				       dso_name, device, events);
 
-				if (!dso_name_arg) {
-					free(dso_name);
-					dso_name = NULL;
-				}
-
-				if (!device_arg) {
-					free(device);
-					device = NULL;
-				}
-
-				if (dso_name_arg && device_arg)
-					break;
-
 				next = 1;
 			}
 		} while (!ret);
 
 		exit(EXIT_SUCCESS);
 	}
+
+	if (dso_name_arg)
+		dso_name = dso_name_arg;
 
 	if ((ret = reg ? dm_register_for_event(dso_name, device, events) :
 			 dm_unregister_for_event(dso_name, device, events))) {

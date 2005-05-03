@@ -214,7 +214,6 @@ static int parse_message(struct message_data *message_data)
 
 log_print("%s: here\n", __func__);
 fflush(stdout);
-	memset(message_data, 0, sizeof(*message_data));
 
 	/*
 	 * Retrieve application identifier, mapped device
@@ -770,6 +769,7 @@ static int get_registered_device(struct message_data *message_data, int next)
 	list_iterate_items(thread, &thread_registry) {
 		dev = dso = 0;
 
+log_print("%s: working %s %s %u\n", __func__, thread->dso_data->dso_name, thread->device_path, thread->events);
 		/* If DSO name equals. */
 		if (message_data->dso_name &&
 		    !strcmp(message_data->dso_name,
@@ -784,10 +784,19 @@ static int get_registered_device(struct message_data *message_data, int next)
 
 		/* We've got both DSO name and device patch or either. */
 		/* FIXME: wrong logic! */
-		if ((dso && dev) || dso || dev) {
+		if (message_data->dso_name && message_data->device_path &&
+		    dso && dev)
 			hit = 1;
+		else if (message_data->dso_name && dso)
+			hit = 1;
+		else if (message_data->device_path &&
+			 dev)
+			hit = 1;
+
+		if (hit)
+{log_print("%s: HIT %s %s %u\n", __func__, thread->dso_data->dso_name, thread->device_path, thread->events);
 			break;
-		}
+}
 	}
 
 	/*
