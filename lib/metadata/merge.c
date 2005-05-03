@@ -17,6 +17,7 @@
 #include "metadata.h"
 #include "toolcontext.h"
 #include "lv_alloc.h"
+#include "pv_alloc.h"
 #include "str_list.h"
 #include "segtype.h"
 
@@ -85,7 +86,6 @@ int lv_check_segments(struct logical_volume *lv)
 static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 			     uint32_t le)
 {
-	size_t len;
 	struct lv_segment *split_seg;
 	uint32_t s;
 	uint32_t offset = le - seg->le;
@@ -108,10 +108,6 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 		return 0;
 	}
 
-	/* FIXME Avoid the memcpy */
-	len = sizeof(*seg) + (seg->area_count * sizeof(seg->area[0]));
-	memcpy(split_seg, seg, len);
-
 	if (!str_list_dup(lv->vg->cmd->mem, &split_seg->tags, &seg->tags)) {
 		log_error("LV segment tags duplication failed");
 		return 0;
@@ -122,25 +118,43 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	if (seg->segtype->flags & SEG_AREAS_STRIPED)
 		area_offset /= seg->area_count;
 
+	split_seg->area_len -= area_offset;
+	seg->area_len = area_offset;
+
+	split_seg->len -= offset;
+	seg->len = offset;
+
+	split_seg->le = seg->le + seg->len;
+
 	/* Adjust the PV mapping */
 	for (s = 0; s < seg->area_count; s++) {
+		split_seg->area[s].type = seg->area[s].type;
+
 		/* Split area at the offset */
 		switch (seg->area[s].type) {
 		case AREA_LV:
+			split_seg->area[s].u.lv.lv = seg->area[s].u.lv.lv;
 			split_seg->area[s].u.lv.le =
-			    seg->area[s].u.lv.le + area_offset;
+			    seg->area[s].u.lv.le + seg->area_len;
 			log_debug("Split %s:%u[%u] at %u: %s LE %u", lv->name,
 				  seg->le, s, le, seg->area[s].u.lv.lv->name,
 				  split_seg->area[s].u.lv.le);
 			break;
 
 		case AREA_PV:
-			split_seg->area[s].u.pv.pe =
-			    seg->area[s].u.pv.pe + area_offset;
+			if (!assign_peg_to_lvseg(seg->area[s].u.pv.pvseg->pv,
+						 seg->area[s].u.pv.pvseg->pe +
+						     seg->area_len,
+						 seg->area[s].u.pv.pvseg->len -
+						     seg->area_len,
+						 split_seg, s)) {
+				stack;
+				return 0;
+			}
 			log_debug("Split %s:%u[%u] at %u: %s PE %u", lv->name,
 				  seg->le, s, le,
-				  dev_name(seg->area[s].u.pv.pv->dev),
-				  split_seg->area[s].u.pv.pe);
+				  dev_name(seg->area[s].u.pv.pvseg->pv->dev),
+				  split_seg->area[s].u.pv.pvseg->pe);
 			break;
 
 		default:
@@ -149,14 +163,6 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 			return 0;
 		}
 	}
-
-	split_seg->area_len -= area_offset;
-	seg->area_len = area_offset;
-
-	split_seg->len -= offset;
-	seg->len = offset;
-
-	split_seg->le = seg->le + seg->len;
 
 	/* Add split off segment to the list _after_ the original one */
 	list_add_h(&seg->list, &split_seg->list);

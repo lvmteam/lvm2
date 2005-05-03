@@ -222,11 +222,25 @@ static int _aligned_io(struct device_area *where, void *buffer,
 	return 1;
 }
 
-/*-----------------------------------------------------------------
- * Public functions
- *---------------------------------------------------------------*/
+static int _dev_get_size_file(const struct device *dev, uint64_t *size)
+{
+	const char *name = dev_name(dev);
+	struct stat info;
 
-int dev_get_size(const struct device *dev, uint64_t *size)
+	if (stat(name, &info)) {
+		log_sys_error("stat", name);
+		return 0;
+	}
+
+	*size = info.st_size;
+	*size >>= SECTOR_SHIFT;	/* Convert to sectors */
+
+	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
+
+	return 1;
+}
+
+static int _dev_get_size_dev(const struct device *dev, uint64_t *size)
 {
 	int fd;
 	const char *name = dev_name(dev);
@@ -250,6 +264,18 @@ int dev_get_size(const struct device *dev, uint64_t *size)
 	log_very_verbose("%s: size is %" PRIu64 " sectors", name, *size);
 
 	return 1;
+}
+
+/*-----------------------------------------------------------------
+ * Public functions
+ *---------------------------------------------------------------*/
+
+int dev_get_size(const struct device *dev, uint64_t *size)
+{
+	if ((dev->flags & DEV_REGULAR))
+		return _dev_get_size_file(dev, size);
+	else
+		return _dev_get_size_dev(dev, size);
 }
 
 /* FIXME Unused

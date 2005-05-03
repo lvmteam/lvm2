@@ -81,7 +81,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 				if (seg->area[s].type != AREA_PV)
 					continue;
 
-				pv = seg->area[s].u.pv.pv;
+				pv = seg->area[s].u.pv.pvseg->pv;
 				if (vg_with) {
 					if (!pv_is_in_vg(vg_with, pv)) {
 						log_error("Logical Volume %s "

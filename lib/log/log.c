@@ -72,7 +72,7 @@ void init_log_direct(const char *log_file, int append)
 {
 	int open_flags = append ? 0 : O_TRUNC;
 
-	dev_create_file(log_file, &_log_dev, &_log_dev_alias);
+	dev_create_file(log_file, &_log_dev, &_log_dev_alias, 1);
 	if (!dev_open_flags(&_log_dev, O_RDWR | O_CREAT | open_flags, 1, 0))
 		return;
 

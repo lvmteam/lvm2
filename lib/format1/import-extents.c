@@ -231,7 +231,11 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 			return 0;
 		}
 
-		set_lv_segment_area_pv(seg, 0, lvm->map[le].pv, lvm->map[le].pe);
+		if (!set_lv_segment_area_pv(seg, 0, lvm->map[le].pv,
+					    lvm->map[le].pe)) {
+			stack;
+			return 0;
+		}
 
 		list_add(&lvm->lv->segments, &seg->list);
 
@@ -306,9 +310,12 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 		 * Set up start positions of each stripe in this segment
 		 */
 		for (st = 0; st < seg->area_count; st++)
-			set_lv_segment_area_pv(seg, st,
-					       lvm->map[le + st * len].pv,
-					       lvm->map[le + st * len].pe);
+			if (!set_lv_segment_area_pv(seg, st,
+						    lvm->map[le + st * len].pv,
+						    lvm->map[le + st * len].pe)) {
+				stack;
+				return 0;
+			}
 
 		list_add(&lvm->lv->segments, &seg->list);
 

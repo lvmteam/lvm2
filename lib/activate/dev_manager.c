@@ -760,7 +760,9 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 	for (s = start_area; s < areas; s++, *pos += tw) {
 		trailing_space = (areas - s - 1) ? " " : "";
 		if ((seg->area[s].type == AREA_PV &&
-		     (!seg->area[s].u.pv.pv || !seg->area[s].u.pv.pv->dev)) ||
+		     (!seg->area[s].u.pv.pvseg ||
+		      !seg->area[s].u.pv.pvseg->pv ||
+		      !seg->area[s].u.pv.pvseg->pv->dev)) ||
 		    (seg->area[s].type == AREA_LV && !seg->area[s].u.lv.lv))
 			tw = lvm_snprintf(params + *pos, paramsize - *pos,
 					  "%s 0%s", dm->stripe_filler,
@@ -768,9 +770,12 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		else if (seg->area[s].type == AREA_PV)
 			tw = lvm_snprintf(params + *pos, paramsize - *pos,
 					  "%s %" PRIu64 "%s",
-					  dev_name(seg->area[s].u.pv.pv->dev),
-					  (seg->area[s].u.pv.pv->pe_start +
-					   (esize * seg->area[s].u.pv.pe)),
+					  dev_name(seg->area[s].u.pv.pvseg->
+						   pv->dev),
+					  (seg->area[s].u.pv.pvseg->pv->
+					   pe_start +
+					   (esize * seg->area[s].u.pv.pvseg->
+					    pe)),
 					  trailing_space);
 		else {
 			if (!(dl = hash_lookup(dm->layers,

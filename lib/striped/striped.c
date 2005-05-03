@@ -26,6 +26,7 @@
 #include "targets.h"
 #include "lvm-string.h"
 #include "activate.h"
+#include "pv_alloc.h"
 
 static const char *_name(const struct lv_segment *seg)
 {
@@ -118,8 +119,10 @@ static int _segments_compatible(struct lv_segment *first,
 
 		width = first->area_len;
 
-		if ((first->area[s].u.pv.pv != second->area[s].u.pv.pv) ||
-		    (first->area[s].u.pv.pe + width != second->area[s].u.pv.pe))
+		if ((first->area[s].u.pv.pvseg->pv !=
+		     second->area[s].u.pv.pvseg->pv) ||
+		    (first->area[s].u.pv.pvseg->pe + width !=
+		     second->area[s].u.pv.pvseg->pe))
 			return 0;
 	}
 
@@ -131,11 +134,18 @@ static int _segments_compatible(struct lv_segment *first,
 
 static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 {
+	uint32_t s;
+
 	if (!_segments_compatible(seg1, seg2))
 		return 0;
 
 	seg1->len += seg2->len;
 	seg1->area_len += seg2->area_len;
+
+	for (s = 0; s < seg1->area_count; s++)
+		if (seg1->area[s].type == AREA_PV)
+			merge_pv_segments(seg1->area[s].u.pv.pvseg,
+					  seg2->area[s].u.pv.pvseg);
 
 	return 1;
 }

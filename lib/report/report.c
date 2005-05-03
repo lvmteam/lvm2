@@ -160,8 +160,8 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 			extent = seg->area[s].u.lv.le;
 			break;
 		case AREA_PV:
-			name = dev_name(seg->area[s].u.pv.pv->dev);
-			extent = seg->area[s].u.pv.pe;
+			name = dev_name(seg->area[s].u.pv.pvseg->pv->dev);
+			extent = seg->area[s].u.pv.pvseg->pe;
 			break;
 		default:
 			name = "unknown";
@@ -502,7 +502,7 @@ static int _movepv_disp(struct report_handle *rh, struct field *field,
 		seg = list_item(segh, struct lv_segment);
 		if (!(seg->status & PVMOVE))
 			continue;
-		name = dev_name(seg->area[0].u.pv.pv->dev);
+		name = dev_name(seg->area[0].u.pv.pvseg->pv->dev);
 		return _string_disp(rh, field, &name);
 	}
 

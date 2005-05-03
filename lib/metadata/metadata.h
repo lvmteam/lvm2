@@ -241,8 +241,6 @@ struct lv_segment {
 		area_type_t type;
 		union {
 			struct {
-				struct physical_volume *pv;
-				uint32_t pe;
 				struct pv_segment *pvseg;
 			} pv;
 			struct {
@@ -485,6 +483,9 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 
 /* Find LV segment containing given LE */
 struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le);
+
+/* Find PV segment containing given LE */
+struct pv_segment *find_peg_by_pe(struct physical_volume *pv, uint32_t pe);
 
 /*
  * Remove a dev_dir if present.

@@ -109,9 +109,9 @@ static int _fill_bitsets(struct volume_group *vg, struct list *maps)
 					if (seg->area[s].type != AREA_PV)
 						continue;
 					if (!_set_allocd(hash,
-							 seg->area[s].u.pv.pv,
-							 seg->area[s].u.pv.pe
-							 + pe)) {
+						 seg->area[s].u.pv.pvseg->pv,
+						 seg->area[s].u.pv.pvseg->pe
+						 + pe)) {
 						stack;
 						goto out;
 					}

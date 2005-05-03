@@ -235,7 +235,7 @@ int read_config_file(struct config_tree *cft)
 		return 1;
 	}
 
-	if (!(dev = dev_create_file(c->filename, NULL, NULL))) {
+	if (!(dev = dev_create_file(c->filename, NULL, NULL, 1))) {
 		stack;
 		return 0;
 	}

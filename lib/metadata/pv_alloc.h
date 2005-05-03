@@ -18,5 +18,13 @@
 int alloc_pv_segment_whole_pv(struct pool *mem, struct physical_volume *pv);
 int peg_dup(struct pool *mem, struct list *peg_new, struct list *peg_free_new,
 	    struct list *peg_old);
+struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv, uint32_t pe,
+				       uint32_t area_len,
+				       struct lv_segment *seg,
+				       uint32_t area_num);
+int pv_split_segment(struct physical_volume *pv, uint32_t pe);
+int release_pv_segment(struct pv_segment *peg, uint32_t new_area_len);
+int check_pv_segments(struct volume_group *vg);
+void merge_pv_segments(struct pv_segment *peg1, struct pv_segment *peg2);
 
 #endif

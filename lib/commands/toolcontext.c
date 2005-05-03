@@ -493,6 +493,24 @@ static int _init_dev_cache(struct cmd_context *cmd)
 		}
 	}
 
+	if (!(cn = find_config_node(cmd->cft->root, "devices/loopfiles")))
+		return 1;
+
+	for (cv = cn->v; cv; cv = cv->next) {
+		if (cv->type != CFG_STRING) {
+			log_error("Invalid string in config file: "
+				  "devices/loopfiles");
+			return 0;
+		}
+
+		if (!dev_cache_add_loopfile(cv->v.str)) {
+			log_error("Failed to add loopfile %s to internal "
+				  "device cache", cv->v.str);
+			return 0;
+		}
+	}
+
+
 	return 1;
 }
 

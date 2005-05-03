@@ -444,13 +444,14 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 	for (s = 0; s < seg->area_count; s++) {
 		switch (seg->area[s].type) {
 		case AREA_PV:
-			if (!(name = _get_pv_name(f, seg->area[s].u.pv.pv))) {
+			if (!(name = _get_pv_name(f, seg->area[s].u.pv.pvseg->
+						     pv))) {
 				stack;
 				return 0;
 			}
 
 			outf(f, "\"%s\", %u%s", name,
-			     seg->area[s].u.pv.pe,
+			     seg->area[s].u.pv.pvseg->pe,
 			     (s == seg->area_count - 1) ? "" : ",");
 			break;
 		case AREA_LV:
