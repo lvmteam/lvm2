@@ -451,14 +451,17 @@ void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre)
 {
 	switch (seg->area[s].type) {
 	case AREA_PV:
+		/* FIXME Re-check the conditions for 'Missing' */
 		log_print("%sPhysical volume\t%s", pre,
-			  seg->area[s].u.pv.pv ?
-			  dev_name(seg->area[s].u.pv.pv->dev) : "Missing");
+			  seg->area[s].u.pv.pvseg->pv ?
+			  dev_name(seg->area[s].u.pv.pvseg->pv->dev) :
+			    "Missing");
 
-		if (seg->area[s].u.pv.pv)
+		if (seg->area[s].u.pv.pvseg->pv)
 			log_print("%sPhysical extents\t%d to %d", pre,
-				  seg->area[s].u.pv.pe,
-				  seg->area[s].u.pv.pe + seg->area_len - 1);
+				  seg->area[s].u.pv.pvseg->pe,
+				  seg->area[s].u.pv.pvseg->pe +
+				      seg->area_len - 1);
 		break;
 	case AREA_LV:
 		log_print("%sLogical volume\t%s", pre,

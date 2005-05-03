@@ -403,11 +403,12 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 					  "unsupported by format1", lv->name);
 				return 0;
 			}
-			if (seg->area[s].u.pv.pv != pv)
+			if (seg->area[s].u.pv.pvseg->pv != pv)
 				continue;	/* not our pv */
 
 			for (pe = 0; pe < (seg->len / seg->area_count); pe++) {
-				ped = &dl->extents[pe + seg->area[s].u.pv.pe];
+				ped = &dl->extents[pe +
+						   seg->area[s].u.pv.pvseg->pe];
 				ped->lv_num = lv_num;
 				ped->le_num = (seg->le / seg->area_count) + pe +
 				    s * (lv->le_count / seg->area_count);

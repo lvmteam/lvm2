@@ -363,7 +363,10 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 
 		/* FIXME Cope if LV not yet read in */
 		if ((pv = hash_lookup(pv_hash, cv->v.str))) {
-			set_lv_segment_area_pv(seg, s, pv, cv->next->v.i);
+			if (!set_lv_segment_area_pv(seg, s, pv, cv->next->v.i)) {
+				stack;
+				return 0;
+			}
 			/*
 			 * Adjust extent counts in the pv and vg.
 			 */

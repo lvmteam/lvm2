@@ -1,7 +1,9 @@
 Version 2.01.10 - 
 ================================
+  Reinstate full PV size when removing from VG.
+  Support loopfiles for testing.
   Tidy lv_segment interface.
-  Initial pv_segment support.
+  pv_segment support.
   vgchange --physicalextentsize
   Internal snapshot restructuring.
   Remove unused internal non-persistent snapshot option.

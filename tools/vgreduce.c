@@ -134,7 +134,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 				/* FIXME Also check for segs on deleted LVs */
 
-				pv = seg->area[s].u.pv.pv;
+				pv = seg->area[s].u.pv.pvseg->pv;
 				if (!pv || !pv->dev) {
 					if (!_remove_lv(cmd, lv, &list_unsafe)) {
 						stack;
@@ -190,6 +190,13 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		list_del(&pvl->list);
 
 	pv->vg_name = ORPHAN;
+        pv->status = ALLOCATABLE_PV;
+
+	if (!dev_get_size(pv->dev, &pv->size)) {
+		log_error("%s: Couldn't get size.", dev_name(pv->dev));
+		return ECMD_FAILED;
+	}
+
 	vg->pv_count--;
 	vg->free_count -= pv->pe_count - pv->pe_alloc_count;
 	vg->extent_count -= pv->pe_count;

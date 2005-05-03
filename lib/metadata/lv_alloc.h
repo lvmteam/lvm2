@@ -30,8 +30,8 @@ struct lv_segment *alloc_lv_segment(struct pool *mem,
 struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 				      uint32_t allocated);
 
-void set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
-			    struct physical_volume *pv, uint32_t pe);
+int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
+			   struct physical_volume *pv, uint32_t pe);
 void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			    struct logical_volume *lv, uint32_t le);
 

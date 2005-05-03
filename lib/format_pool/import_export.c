@@ -238,7 +238,10 @@ static int _add_stripe_seg(struct pool *mem,
 	}
 
 	for (j = 0; j < usp->num_devs; j++)
-		set_lv_segment_area_pv(seg, j, usp->devs[j].pv, 0);
+		if (!set_lv_segment_area_pv(seg, j, usp->devs[j].pv, 0)) {
+			stack;
+			return 0;
+		}
 
 	/* add the subpool type to the segment tag list */
 	str_list_add(mem, &seg->tags, _cvt_sptype(usp->type));
@@ -278,7 +281,10 @@ static int _add_linear_seg(struct pool *mem,
 		/* add the subpool type to the segment tag list */
 		str_list_add(mem, &seg->tags, _cvt_sptype(usp->type));
 
-		set_lv_segment_area_pv(seg, 0, usp->devs[j].pv, 0);
+		if (!set_lv_segment_area_pv(seg, 0, usp->devs[j].pv, 0)) {
+			stack;
+			return 0;
+		}
 		list_add(&lv->segments, &seg->list);
 
 		*le_cur += seg->len;

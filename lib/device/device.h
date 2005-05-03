@@ -83,7 +83,7 @@ int dev_zero(struct device *dev, uint64_t offset, size_t len);
 void dev_flush(struct device *dev);
 
 struct device *dev_create_file(const char *filename, struct device *dev,
-			       struct str_list *alias);
+			       struct str_list *alias, int use_malloc);
 
 static inline const char *dev_name(const struct device *dev)
 {

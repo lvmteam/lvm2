@@ -62,12 +62,12 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 		seg = list_item(segh, struct lv_segment);
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg->area[s].type != AREA_PV ||
-			    seg->area[s].u.pv.pv->dev != pvl->pv->dev)
+			    seg->area[s].u.pv.pvseg->pv->dev != pvl->pv->dev)
 				continue;
 
 			/* Do these PEs need moving? */
 			list_iterate_items(per, pvl->pe_ranges) {
-				pe_start = seg->area[s].u.pv.pe;
+				pe_start = seg->area[s].u.pv.pvseg->pe;
 				pe_end = pe_start + seg->area_len - 1;
 				per_end = per->start + per->count - 1;
 
@@ -107,10 +107,10 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 		seg = list_item(segh, struct lv_segment);
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg->area[s].type != AREA_PV ||
-			    seg->area[s].u.pv.pv->dev != pvl->pv->dev)
+			    seg->area[s].u.pv.pvseg->pv->dev != pvl->pv->dev)
 				continue;
 
-			pe_start = seg->area[s].u.pv.pe;
+			pe_start = seg->area[s].u.pv.pvseg->pe;
 
 			/* Do these PEs need moving? */
 			list_iterate_items(per, pvl->pe_ranges) {
@@ -122,8 +122,10 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 
 				log_debug("Matched PE range %u-%u against "
 					  "%s %u len %u", per->start, per_end,
-					  dev_name(seg->area[s].u.pv.pv->dev),
-					  seg->area[s].u.pv.pe, seg->area_len);
+					  dev_name(seg->area[s].u.pv.pvseg->
+						   pv->dev),
+					  seg->area[s].u.pv.pvseg->pe,
+					  seg->area_len);
 
 				/* First time, add LV to list of LVs affected */
 				if (!lv_used) {
@@ -138,16 +140,16 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	
 				log_very_verbose("Moving %s:%u-%u of %s/%s",
 						 dev_name(pvl->pv->dev),
-						 seg->area[s].u.pv.pe,
-						 seg->area[s].u.pv.pe +
+						 seg->area[s].u.pv.pvseg->pe,
+						 seg->area[s].u.pv.pvseg->pe +
 						     seg->area_len - 1,
 						 lv->vg->name, lv->name);
 
 				start_le = lv_mirr->le_count;
 				if (!lv_extend(lv->vg->fid, lv_mirr, segtype, 1,
 				       	seg->area_len, 0u, seg->area_len,
-				       	seg->area[s].u.pv.pv,
-				       	seg->area[s].u.pv.pe,
+				       	seg->area[s].u.pv.pvseg->pv,
+				       	seg->area[s].u.pv.pvseg->pe,
 				       	PVMOVE, allocatable_pvs,
 				       	lv->alloc)) {
 					log_error("Unable to allocate "
@@ -224,9 +226,12 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				else
 					c = 0;
 
-				set_lv_segment_area_pv(seg, s,
-						       mir_seg->area[c].u.pv.pv,
-						       mir_seg->area[c].u.pv.pe);
+				if (!set_lv_segment_area_pv(seg, s,
+					    mir_seg->area[c].u.pv.pvseg->pv,
+					    mir_seg->area[c].u.pv.pvseg->pe)) {
+					stack;
+					return 0;
+				}
 
 				/* Replace mirror with old area */
 				if (!
@@ -262,7 +267,7 @@ const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
 			continue;
 		if (seg->area[0].type != AREA_PV)
 			continue;
-		return dev_name(seg->area[0].u.pv.pv->dev);
+		return dev_name(seg->area[0].u.pv.pvseg->pv->dev);
 	}
 
 	return NULL;
@@ -306,7 +311,7 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 			seg = list_item(segh, struct lv_segment);
 			if (seg->area[0].type != AREA_PV)
 				continue;
-			if (seg->area[0].u.pv.pv->dev != dev)
+			if (seg->area[0].u.pv.pvseg->pv->dev != dev)
 				continue;
 			return lv;
 		}

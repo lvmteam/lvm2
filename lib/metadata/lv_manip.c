@@ -20,6 +20,7 @@
 #include "lvm-string.h"
 #include "toolcontext.h"
 #include "lv_alloc.h"
+#include "pv_alloc.h"
 #include "display.h"
 #include "segtype.h"
 
@@ -36,7 +37,7 @@ static void _get_extents(struct lv_segment *seg)
 		if (seg->area[s].type != AREA_PV)
 			continue;
 
-		pv = seg->area[s].u.pv.pv;
+		pv = seg->area[s].u.pv.pvseg->pv;
 		count = seg->area_len;
 		pv->pe_alloc_count += count;
 	}
@@ -51,7 +52,7 @@ static void _put_extents(struct lv_segment *seg)
 		if (seg->area[s].type != AREA_PV)
 			continue;
 
-		pv = seg->area[s].u.pv.pv;
+		pv = seg->area[s].u.pv.pvseg->pv;
 
 		if (pv) {
 			count = seg->area_len;
@@ -95,13 +96,18 @@ struct lv_segment *alloc_lv_segment(struct pool *mem,
 	return seg;
 }
 
-void set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
-			    struct physical_volume *pv, uint32_t pe)
+int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
+			   struct physical_volume *pv, uint32_t pe)
 {
 	seg->area[area_num].type = AREA_PV;
-	seg->area[area_num].u.pv.pv = pv;
-	seg->area[area_num].u.pv.pe = pe;
-	seg->area[area_num].u.pv.pvseg = NULL;
+
+	if (!(seg->area[area_num].u.pv.pvseg =
+	      assign_peg_to_lvseg(pv, pe, seg->area_len, seg, area_num))) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }
 
 void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
@@ -110,6 +116,17 @@ void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 	seg->area[area_num].type = AREA_LV;
 	seg->area[area_num].u.lv.lv = lv;
 	seg->area[area_num].u.lv.le = le;
+}
+
+static void _shrink_lv_segment(struct lv_segment *seg)
+{
+	uint32_t s;
+
+	for (s = 0; s < seg->area_count; s++) {
+		if (seg->area[s].type != AREA_PV)
+			continue;
+		release_pv_segment(seg->area[s].u.pv.pvseg, seg->area_len);
+	}
 }
 
 static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
@@ -143,7 +160,11 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 
 	for (s = 0; s < area_count; s++) {
 		struct pv_area *pva = areas[s];
-		set_lv_segment_area_pv(seg, s, pva->map->pvl->pv, pva->start);
+		if (!set_lv_segment_area_pv(seg, s, pva->map->pvl->pv,
+					    pva->start)) {
+			stack;
+			return 0;
+		}
 		consume_pv_area(pva, area_len);
 	}
 
@@ -267,7 +288,10 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 		return 0;
 	}
 
-	set_lv_segment_area_pv(seg, 0, map->pvl->pv, pva->start);
+	if (!set_lv_segment_area_pv(seg, 0, map->pvl->pv, pva->start)) {
+		stack;
+		return 0;
+	}
 
 	list_add(&lv->segments, &seg->list);
 
@@ -298,8 +322,11 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 	}
 
 	/* FIXME Remove AREA_PV restriction here? */
-	set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe);
-	set_lv_segment_area_pv(seg, 1, map->pvl->pv, pva->start);
+	if (!set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe) ||
+	    !set_lv_segment_area_pv(seg, 1, map->pvl->pv, pva->start)) {
+		stack;
+		return 0;
+	}
 
 	list_add(&lv->segments, &seg->list);
 
@@ -717,6 +744,8 @@ int lv_reduce(struct format_instance *fi,
 			/* remove this segment completely */
 			count -= seg->len;
 			_put_extents(seg);
+			seg->area_len = 0;
+			_shrink_lv_segment(seg);
 			list_del(segh);
 		} else {
 			/* reduce this segment */
@@ -732,6 +761,7 @@ int lv_reduce(struct format_instance *fi,
 			}
 			seg->area_len -=
 			    count / (striped ? seg->area_count : 1);
+			_shrink_lv_segment(seg);
 			_get_extents(seg);
 			count = 0;
 		}
@@ -751,7 +781,7 @@ int lv_reduce(struct format_instance *fi,
 
 int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 {
-	struct list *segh;
+	struct lv_segment *seg;
 	struct lv_list *lvl;
 
 	/* find the lv list */
@@ -761,8 +791,8 @@ int lv_remove(struct volume_group *vg, struct logical_volume *lv)
 	}
 
 	/* iterate through the lv's segments freeing off the pe's */
-	list_iterate(segh, &lv->segments)
-	    _put_extents(list_item(segh, struct lv_segment));
+	list_iterate_items(seg, &lv->segments)
+	    _put_extents(seg);
 
 	vg->lv_count--;
 	vg->free_count += lv->le_count;

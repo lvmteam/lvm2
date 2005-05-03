@@ -101,9 +101,14 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 	}
 
-	pvl->pv = pv;
+	if (!alloc_pv_segment_whole_pv(mem, pv)) {
+		stack;
+		return NULL;
+	}
 
+	pvl->pv = pv;
 	list_add(&vg->pvs, &pvl->list);
+
 	vg->pv_count++;
 	vg->extent_count += pv->pe_count;
 	vg->free_count += pv->pe_count;
@@ -335,6 +340,7 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 	struct physical_volume *pv;
 	struct logical_volume *lv;
 	struct lv_segment *seg;
+	struct pv_segment *pvseg;
 	uint32_t s;
 
 	vg->extent_size = new_size;
@@ -372,6 +378,22 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 				     " allocated space", old_size, new_size)) {
 			stack;
 			return 0;
+		}
+
+		/* foreach PV Segment */
+		list_iterate_items(pvseg, &pv->free_segments) {
+			if (!_recalc_extents(&pvseg->pe, dev_name(pv->dev),
+					     " PV segment start", old_size,
+					     new_size)) {
+				stack;
+				return 0;
+			}
+			if (!_recalc_extents(&pvseg->len, dev_name(pv->dev),
+					     " PV segment length", old_size,
+					     new_size)) {
+				stack;
+				return 0;
+			}
 		}
 	}
 
@@ -419,8 +441,17 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 				switch (seg->area[s].type) {
 				case AREA_PV:
 					if (!_recalc_extents
-					    (&seg->area[s].u.pv.pe, lv->name,
-					     " area start", old_size,
+					    (&seg->area[s].u.pv.pvseg->pe,
+					     lv->name,
+					     " pvseg start", old_size,
+					     new_size)) {
+						stack;
+						return 0;
+					}
+					if (!_recalc_extents
+					    (&seg->area[s].u.pv.pvseg->len,
+					     lv->name,
+					     " pvseg length", old_size,
 					     new_size)) {
 						stack;
 						return 0;
@@ -658,6 +689,19 @@ struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le)
 	return NULL;
 }
 
+/* Find segment at a given physical extent in a PV */
+struct pv_segment *find_peg_by_pe(struct physical_volume *pv, uint32_t pe)
+{
+	struct pv_segment *peg;
+
+	list_iterate_items(peg, &pv->segments) {
+		if (pe >= peg->pe && pe < peg->pe + peg->len)
+			return peg;
+	}
+
+	return NULL;
+}
+
 int vg_remove(struct volume_group *vg)
 {
 	struct list *mdah;
@@ -685,6 +729,12 @@ int vg_write(struct volume_group *vg)
 {
 	struct list *mdah, *mdah2;
 	struct metadata_area *mda;
+
+	if (!check_pv_segments(vg)) {
+		log_error("Internal error: PV segments corrupted in %s.",
+			  vg->name);
+		return 0;
+	}
 
 	if (vg->status & PARTIAL_VG) {
 		log_error("Cannot change metadata for partial volume group %s",
