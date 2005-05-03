@@ -27,7 +27,7 @@
 #include <unistd.h>
 
 static enum event_type events = ALL_ERRORS; /* All until we can distinguish. */
-static char *default_dso_name = "noop";  /* default DSO is noop */
+static char default_dso_name[] = "noop";  /* default DSO is noop */
 static int default_reg = 1;		 /* default action is register */
 
 /* Display help. */
@@ -58,7 +58,9 @@ static int parse_argv(int argc, char **argv,
 	while ((c = getopt(argc, argv, options)) != -1) {
 		switch (c) {
 		case 'd':
-			*dso_name = optarg;
+			if (!(*dso_name = strdup(optarg)))
+				exit(EXIT_FAILURE);
+
 			break;
 		case 'h':
 			print_usage(argv[0]);
@@ -80,14 +82,16 @@ static int parse_argv(int argc, char **argv,
 		}
 	}
 
-	if (!*list) {
-		if (optind >= argc) {
+	if (!*dso_name && !(*dso_name = strdup(default_dso_name)))
+		exit(EXIT_FAILURE);
+
+	if (optind >= argc) {
+		if (!*list) {
 			fprintf(stderr, "You need to specify a device.\n");
 			return 0;
 		}
-
-		*device = argv[optind];
-	}
+	} else if (!(*device = strdup(argv[optind])))
+			exit(EXIT_FAILURE);
 
 	return 1;
 }
@@ -95,43 +99,58 @@ static int parse_argv(int argc, char **argv,
 int main(int argc, char **argv)
 {
 	int list = 0, next = 0, ret, reg = default_reg;
-	char *device = NULL, *dso_name = default_dso_name, *dso_name_arg = NULL;
+	char *device = NULL, *device_arg, *dso_name = NULL, *dso_name_arg;
 
-	if (!parse_argv(argc, argv, &dso_name_arg, &device, &reg, &list))
+	if (!parse_argv(argc, argv, &dso_name, &device, &reg, &list))
 		exit(EXIT_FAILURE);
 
+	device_arg = device;
+	dso_name_arg = dso_name;
+
 	if (list) {
-		dso_name = dso_name_arg;
-			
 		do {
-			/* FIXME: dso_name and/or device name given. */
 			if (!(ret= dm_get_registered_device(&dso_name,
 							    &device,
 							    &events, next))) {
 				printf("%s %s 0x%x\n",
 				       dso_name, device, events);
 
+				if (device_arg)
+					break;
+
 				next = 1;
 			}
 		} while (!ret);
 
-		exit(EXIT_SUCCESS);
-	}
+		if (dso_name)
+			free(dso_name);
 
-	if (dso_name_arg)
-		dso_name = dso_name_arg;
+		if (device)
+			free(device);
+
+		ret = (ret && device_arg) ? EXIT_FAILURE : EXIT_SUCCESS;
+		goto out;
+	}
 
 	if ((ret = reg ? dm_register_for_event(dso_name, device, events) :
 			 dm_unregister_for_event(dso_name, device, events))) {
 		fprintf(stderr, "Failed to %sregister %s: %s\n",
 			reg ? "": "un", device, strerror(-ret));
-
-		exit(EXIT_FAILURE);
+		ret = EXIT_FAILURE;
+	} else {
+		printf("%s %sregistered successfully.\n",
+		       device, reg ? "" : "un");
+		ret = EXIT_SUCCESS;
 	}
 
-	printf("%s %sregistered successfully.\n", device, reg ? "" : "un");
+   out:
+	if (device_arg)
+		free(device_arg);
 
-	exit(EXIT_SUCCESS);
+	if (dso_name_arg)
+		free(dso_name_arg);
+
+	exit(ret);
 }
 
 /*
