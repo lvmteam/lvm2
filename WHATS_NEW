@@ -1,5 +1,5 @@
-Version 2.01.10 - 
-================================
+Version 2.01.10 - 3rd May 2005
+==============================
   Don't create backup and archive dirs till needed.
   Reinstate full PV size when removing from VG.
   Support loopfiles for testing.
