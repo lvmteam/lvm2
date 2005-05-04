@@ -50,8 +50,8 @@ static void print_usage(char *name)
 }
 
 /* Parse command line arguments. */
-static int parse_argv(int argc, char **argv,
-		      char **dso_name, char **device, int *reg, int *list)
+static int parse_argv(int argc, char **argv, char **dso_name_arg,
+		      char **device_arg, int *reg, int *list)
 {
 	int c;
 	const char *options = "d:hlru";
@@ -59,9 +59,7 @@ static int parse_argv(int argc, char **argv,
 	while ((c = getopt(argc, argv, options)) != -1) {
 		switch (c) {
 		case 'd':
-			if (!(*dso_name = strdup(optarg)))
-				exit(EXIT_FAILURE);
-
+			dso_name_arg = optarg;
 			break;
 		case 'h':
 			print_usage(argv[0]);
@@ -83,16 +81,13 @@ static int parse_argv(int argc, char **argv,
 		}
 	}
 
-	if (!*dso_name && !(*dso_name = strdup(default_dso_name)))
-		exit(EXIT_FAILURE);
-
 	if (optind >= argc) {
 		if (!*list) {
 			fprintf(stderr, "You need to specify a device.\n");
 			return 0;
 		}
-	} else if (!(*device = strdup(argv[optind])))
-			exit(EXIT_FAILURE);
+	} else 
+		device_arg = argv[optind];
 
 	return 1;
 }
@@ -100,15 +95,25 @@ static int parse_argv(int argc, char **argv,
 int main(int argc, char **argv)
 {
 	int list = 0, next = 0, ret, reg = default_reg;
-	char *device = NULL, *device_arg, *dso_name = NULL, *dso_name_arg;
+	char *device, *device_arg = NULL, *dso_name, *dso_name_arg = NULL;
 	struct log_data *ldata;
 
-	if (!parse_argv(argc, argv, &dso_name, &device, &reg, &list))
+	if (!parse_argv(argc, argv, &dso_name_arg, &device_arg, &reg, &list))
 		exit(EXIT_FAILURE);
 
-	device_arg = device;
-	dso_name_arg = dso_name;
+	if (device_arg){
+		if (!(device = strdup(device_arg)))
+			exit(EXIT_FAILURE);
+	} else
+		device = NULL;
 
+	if (dso_name_arg){
+		if (!(dso_name = strdup(dso_name_arg)))
+			exit(EXIT_FAILURE);
+	} else {
+		if (!(dso_name = strdup(default_dso_name)))
+			exit(EXIT_FAILURE);
+	}
 
 	if(!(ldata = malloc(sizeof(*ldata))))
 		exit(ENOMEM);
@@ -134,12 +139,6 @@ int main(int argc, char **argv)
 			}
 		} while (!ret);
 
-		if (dso_name)
-			free(dso_name);
-
-		if (device)
-			free(device);
-
 		ret = (ret && device_arg) ? EXIT_FAILURE : EXIT_SUCCESS;
 		goto out;
 	}
@@ -158,11 +157,10 @@ int main(int argc, char **argv)
    out:
 	multilog_del_type(standard, ldata);
 
-	if (device_arg)
-		free(device_arg);
-
-	if (dso_name_arg)
-		free(dso_name_arg);
+	if (device)
+		free(device);
+	if (dso_name)
+		free(dso_name);
 
 	exit(ret);
 }
