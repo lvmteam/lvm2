@@ -59,7 +59,7 @@ static int parse_argv(int argc, char **argv, char **dso_name_arg,
 	while ((c = getopt(argc, argv, options)) != -1) {
 		switch (c) {
 		case 'd':
-			dso_name_arg = optarg;
+			*dso_name_arg = optarg;
 			break;
 		case 'h':
 			print_usage(argv[0]);
@@ -87,7 +87,7 @@ static int parse_argv(int argc, char **argv, char **dso_name_arg,
 			return 0;
 		}
 	} else 
-		device_arg = argv[optind];
+		*device_arg = argv[optind];
 
 	return 1;
 }
