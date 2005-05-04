@@ -156,6 +156,8 @@ int main(int argc, char **argv)
 	}
 
    out:
+	multilog_del_type(standard, ldata);
+
 	if (device_arg)
 		free(device_arg);
 
