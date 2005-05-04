@@ -13,18 +13,18 @@
  */
 
 #include "libdm-event.h"
+#include "libmultilog.h"
 
-#include <stdio.h>
 
 void process_event(char *device, enum event_type event)
 {
-	fprintf(stderr, "[%s] %s(%d) - Device: %s, Event %d\n",
+	log_err("[%s] %s(%d) - Device: %s, Event %d\n",
 		__FILE__, __func__, __LINE__, device, event);
 }
 
 int register_device(char *device)
 {
-	fprintf(stderr, "[%s] %s(%d) - Device: %s\n",
+	log_err("[%s] %s(%d) - Device: %s\n",
 		__FILE__, __func__, __LINE__, device);
 
 	return 1;
@@ -32,7 +32,7 @@ int register_device(char *device)
 
 int unregister_device(char *device)
 {
-	fprintf(stderr, "[%s] %s(%d) - Device: %s\n",
+	log_err("[%s] %s(%d) - Device: %s\n",
 		__FILE__, __func__, __LINE__, device);
 
 	return 1;
