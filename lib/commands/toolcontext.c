@@ -35,6 +35,7 @@
 #include "str_list.h"
 #include "segtype.h"
 #include "lvmcache.h"
+#include "dev-cache.h"
 
 #ifdef HAVE_LIBDL
 #include "sharedlib.h"
