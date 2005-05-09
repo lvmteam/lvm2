@@ -30,6 +30,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct list *source_pvl,
 			  struct logical_volume *lv,
 			  struct list *allocatable_pvs,
+			  alloc_policy_t alloc,
 			  struct list *lvs_changed)
 {
 	struct list *segh;
@@ -76,7 +77,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 				    (pe_start > per_end))
 					continue;
 
-				if (seg->segtype->flags & SEG_AREAS_STRIPED)
+				if (seg_is_striped(seg))
 					stripe_multiplier = seg->area_count;
 				else
 					stripe_multiplier = 1;
@@ -146,12 +147,12 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 						 lv->vg->name, lv->name);
 
 				start_le = lv_mirr->le_count;
-				if (!lv_extend(lv->vg->fid, lv_mirr, segtype, 1,
+				if (!lv_extend(lv_mirr, segtype, 1,
 				       	seg->area_len, 0u, seg->area_len,
 				       	seg->area[s].u.pv.pvseg->pv,
 				       	seg->area[s].u.pv.pvseg->pe,
 				       	PVMOVE, allocatable_pvs,
-				       	lv->alloc)) {
+				       	alloc)) {
 					log_error("Unable to allocate "
 						  "temporary LV for pvmove.");
 					return 0;
@@ -207,8 +208,7 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 
 				/* Check the segment params are compatible */
 				/* FIXME Improve error mesg & remove restrcn */
-				if ((!(mir_seg->segtype->flags
-				       & SEG_AREAS_MIRRORED)) ||
+				if (!seg_is_mirrored(mir_seg) ||
 				    !(mir_seg->status & PVMOVE) ||
 				    mir_seg->le != seg->area[s].u.lv.le ||
 				    mir_seg->area_count != 2 ||
@@ -263,7 +263,7 @@ const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
 
 	list_iterate(segh, &lv_mirr->segments) {
 		seg = list_item(segh, struct lv_segment);
-		if (!(seg->segtype->flags & SEG_AREAS_MIRRORED))
+		if (!seg_is_mirrored(seg))
 			continue;
 		if (seg->area[0].type != AREA_PV)
 			continue;
@@ -391,7 +391,7 @@ float copy_percent(struct logical_volume *lv_mirr)
 
 		denominator += seg->area_len;
 
-		if (seg->segtype->flags & SEG_AREAS_MIRRORED)
+		if (seg_is_mirrored(seg))
 			numerator += seg->extents_copied;
 		else
 			numerator += seg->area_len;

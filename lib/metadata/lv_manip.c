@@ -140,7 +140,7 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 	int striped = 0;
 
 	/* Striped or mirrored? */
-	if (segtype->flags & SEG_AREAS_STRIPED)
+	if (seg_is_striped(seg))
 		striped = 1;
 
 	count = lv->le_count - *ix;
@@ -505,7 +505,7 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 /*
  * Chooses a correct allocation policy.
  */
-static int _allocate(struct volume_group *vg, struct logical_volume *lv,
+static int _allocate(struct logical_volume *lv,
 		     struct list *allocatable_pvs, uint32_t allocated,
 		     alloc_policy_t alloc, struct segment_type *segtype,
 		     uint32_t stripes, uint32_t stripe_size, uint32_t mirrors,
@@ -526,12 +526,12 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	}
 
 	if (alloc == ALLOC_INHERIT)
-		alloc = vg->alloc;
+		alloc = lv->vg->alloc;
 
 	/*
 	 * Build the sets of available areas on the pv's.
 	 */
-	if (!(pvms = create_pv_maps(scratch, vg, allocatable_pvs)))
+	if (!(pvms = create_pv_maps(scratch, lv->vg, allocatable_pvs)))
 		goto out;
 
 	if (stripes > 1 || mirrors > 1)
@@ -555,7 +555,7 @@ static int _allocate(struct volume_group *vg, struct logical_volume *lv,
 	}
 
 	if (r) {
-		vg->free_count -= lv->le_count - allocated;
+		lv->vg->free_count -= lv->le_count - allocated;
 
 		/*
 		 * Iterate through the new segments, updating pe
@@ -680,8 +680,10 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	return lv;
 }
 
-int lv_extend(struct format_instance *fid,
-	      struct logical_volume *lv,
+/*
+ * Entry point for all extent allocations
+ */
+int lv_extend(struct logical_volume *lv,
 	      struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t extents,
@@ -695,17 +697,17 @@ int lv_extend(struct format_instance *fid,
 	lv->le_count += extents;
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
 
-	if (fid->fmt->ops->segtype_supported &&
-	    !fid->fmt->ops->segtype_supported(fid, segtype)) {
+	if (lv->vg->fid->fmt->ops->segtype_supported &&
+	    !lv->vg->fid->fmt->ops->segtype_supported(lv->vg->fid, segtype)) {
 		log_error("Metadata format (%s) does not support required "
-			  "LV segment type (%s).", fid->fmt->name,
+			  "LV segment type (%s).", lv->vg->fid->fmt->name,
 			  segtype->name);
 		log_error("Consider changing the metadata format by running "
 			  "vgconvert.");
 		return 0;
 	}
 
-	if (!_allocate(lv->vg, lv, allocatable_pvs, old_le_count, alloc,
+	if (!_allocate(lv, allocatable_pvs, old_le_count, alloc,
 		       segtype, stripes, stripe_size, mirrors, mirrored_pv,
 		       mirrored_pe, status)) {
 		lv->le_count = old_le_count;
@@ -720,7 +722,8 @@ int lv_extend(struct format_instance *fid,
 		return 0;
 	}
 
-	if (fid->fmt->ops->lv_setup && !fid->fmt->ops->lv_setup(fid, lv)) {
+	if (lv->vg->fid->fmt->ops->lv_setup &&
+	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
 		stack;
 		return 0;
 	}
@@ -728,50 +731,65 @@ int lv_extend(struct format_instance *fid,
 	return 1;
 }
 
-int lv_reduce(struct format_instance *fi,
-	      struct logical_volume *lv, uint32_t extents)
+static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
+{
+	_put_extents(seg);
+	seg->len -= reduction;
+
+	/* Caller must ensure exact divisibility */
+	if (seg_is_striped(seg)) {
+		if (reduction % seg->area_count) {
+			log_error("Segment extent reduction %" PRIu32
+				  "not divisible by #stripes %" PRIu32,
+				  reduction, seg->area_count);
+			return 0;
+		}
+		seg->area_len -= (reduction / seg->area_count);
+	} else
+		seg->area_len -= reduction;
+
+	_shrink_lv_segment(seg);
+	_get_extents(seg);
+
+	return 1;
+}
+
+/*
+ * Entry point for all extent reductions
+ */
+int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
 	struct list *segh;
 	struct lv_segment *seg;
 	uint32_t count = extents;
-	int striped;
+	uint32_t reduction;
 
-	for (segh = lv->segments.p;
-	     (segh != &lv->segments) && count; segh = segh->p) {
+	list_uniterate(segh, &lv->segments, &lv->segments) {
 		seg = list_item(segh, struct lv_segment);
+
+		if (!count)
+			break;
 
 		if (seg->len <= count) {
 			/* remove this segment completely */
-			count -= seg->len;
-			_put_extents(seg);
-			seg->area_len = 0;
-			_shrink_lv_segment(seg);
 			list_del(segh);
-		} else {
-			/* reduce this segment */
-			_put_extents(seg);
-			seg->len -= count;
-			striped = seg->segtype->flags & SEG_AREAS_STRIPED;
-			/* Caller must ensure exact divisibility */
-			if (striped && (count % seg->area_count)) {
-				log_error("Segment extent reduction %" PRIu32
-					  "not divisible by #stripes %" PRIu32,
-					  count, seg->area_count);
-				return 0;
-			}
-			seg->area_len -=
-			    count / (striped ? seg->area_count : 1);
-			_shrink_lv_segment(seg);
-			_get_extents(seg);
-			count = 0;
+			reduction = seg->len;
+		} else
+			reduction = count;
+
+		if (!_lv_segment_reduce(seg, reduction)) {
+			stack;
+			return 0;
 		}
+		count -= reduction;
 	}
 
 	lv->le_count -= extents;
 	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
 	lv->vg->free_count += extents;
 
-	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
+	if (lv->le_count && lv->vg->fid->fmt->ops->lv_setup &&
+	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
 		stack;
 		return 0;
 	}
@@ -779,25 +797,24 @@ int lv_reduce(struct format_instance *fi,
 	return 1;
 }
 
-int lv_remove(struct volume_group *vg, struct logical_volume *lv)
+int lv_remove(struct logical_volume *lv)
 {
-	struct lv_segment *seg;
 	struct lv_list *lvl;
 
-	/* find the lv list */
-	if (!(lvl = find_lv_in_vg(vg, lv->name))) {
+	if (!lv_reduce(lv, lv->le_count)) {
 		stack;
 		return 0;
 	}
 
-	/* iterate through the lv's segments freeing off the pe's */
-	list_iterate_items(seg, &lv->segments)
-	    _put_extents(seg);
-
-	vg->lv_count--;
-	vg->free_count += lv->le_count;
+	/* find the lv list */
+	if (!(lvl = find_lv_in_vg(lv->vg, lv->name))) {
+		stack;
+		return 0;
+	}
 
 	list_del(&lvl->list);
+
+	lv->vg->lv_count--;
 
 	return 1;
 }

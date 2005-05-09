@@ -317,10 +317,10 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	 */
 	_insert_segment(lv, seg);
 
-	if (seg->segtype->flags & SEG_AREAS_MIRRORED)
+	if (seg_is_mirrored(seg))
 		lv->status |= MIRRORED;
 
-	if (seg->segtype->flags & SEG_VIRTUAL)
+	if (seg_is_virtual(seg))
 		lv->status |= VIRTUAL;
 
 	return 1;

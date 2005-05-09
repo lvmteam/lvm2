@@ -33,6 +33,12 @@ struct dev_manager;
 #define SEG_FORMAT1_SUPPORT	0x00000010
 #define SEG_VIRTUAL		0x00000020
 
+#define seg_is_mirrored(seg)	((seg)->segtype->flags & SEG_AREAS_MIRRORED ? 1 : 0)
+#define seg_is_striped(seg)	((seg)->segtype->flags & SEG_AREAS_STRIPED ? 1 : 0)
+#define seg_is_snapshot(seg)	((seg)->segtype->flags & SEG_SNAPSHOT ? 1 : 0)
+#define seg_is_virtual(seg)	((seg)->segtype->flags & SEG_VIRTUAL ? 1 : 0)
+#define seg_can_split(seg)	((seg)->segtype->flags & SEG_CAN_SPLIT ? 1 : 0)
+
 struct segment_type {
 	struct list list;
 	struct cmd_context *cmd;

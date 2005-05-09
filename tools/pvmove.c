@@ -140,7 +140,6 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	struct lv_list *lvl;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
-	/* FIXME Pass 'alloc' down to lv_extend */
 	if (!(lv_mirr = lv_create_empty(vg->fid, NULL, "pvmove%d", NULL,
 					LVM_READ | LVM_WRITE,
 					ALLOC_CONTIGUOUS, 0, vg))) {
@@ -176,7 +175,8 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 		}
 		if (!insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
-					   allocatable_pvs, *lvs_changed)) {
+					   allocatable_pvs, alloc,
+					   *lvs_changed)) {
 			stack;
 			return NULL;
 		}
@@ -439,7 +439,7 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	log_verbose("Removing temporary pvmove LV");
-	if (!lv_remove(vg, lv_mirr)) {
+	if (!lv_remove(lv_mirr)) {
 		log_error("ABORTING: Removal of temporary pvmove LV failed");
 		return 0;
 	}

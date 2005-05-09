@@ -435,11 +435,11 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       int import,
 				       struct volume_group *vg);
 
-int lv_reduce(struct format_instance *fi,
-	      struct logical_volume *lv, uint32_t extents);
+/* Entry point for all LV extent reductions */
+int lv_reduce(struct logical_volume *lv, uint32_t extents);
 
-int lv_extend(struct format_instance *fid,
-	      struct logical_volume *lv,
+/* Entry point for all LV extent allocations */
+int lv_extend(struct logical_volume *lv,
 	      struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t extents,
@@ -447,8 +447,8 @@ int lv_extend(struct format_instance *fid,
 	      uint32_t status, struct list *allocatable_pvs,
 	      alloc_policy_t alloc);
 
-/* lv must be part of vg->lvs */
-int lv_remove(struct volume_group *vg, struct logical_volume *lv);
+/* lv must be part of lv->vg->lvs */
+int lv_remove(struct logical_volume *lv);
 
 /* Manipulate PV structures */
 int pv_add(struct volume_group *vg, struct physical_volume *pv);
@@ -524,7 +524,7 @@ int vg_add_snapshot(struct format_instance *fid, const char *name,
 		    union lvid *lvid, uint32_t extent_count,
 		    uint32_t chunk_size);
 
-int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow);
+int vg_remove_snapshot(struct logical_volume *cow);
 
 /*
  * Mirroring functions
@@ -534,6 +534,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct list *source_pvl,
 			  struct logical_volume *lv,
 			  struct list *allocatable_pvs,
+			  alloc_policy_t alloc,
 			  struct list *lvs_changed);
 int remove_pvmove_mirrors(struct volume_group *vg,
 			  struct logical_volume *lv_mirr);
