@@ -22,7 +22,7 @@
 #include <inttypes.h>
 
 /* Define some portable printing types */
-#define PRIsize_t "Zu"
+#define PRIsize_t "zu"
 
 struct str_list {
 	struct list list;
