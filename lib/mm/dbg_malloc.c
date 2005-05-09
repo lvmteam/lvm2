@@ -19,6 +19,16 @@
 
 #include <stdarg.h>
 
+char *dbg_strdup(const char *str)
+{
+	char *ret = dbg_malloc(strlen(str) + 1);
+
+	if (ret)
+		strcpy(ret, str);
+
+	return ret;
+}
+
 #ifdef DEBUG_MEM
 
 struct memblock {
