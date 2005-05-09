@@ -1,5 +1,6 @@
 Version 2.01.11 - 
 ==============================
+  Un-inline dbg_strdup.
   lv_reduce tidying.
   Remove some unnecessary parameters.
   Introduce seg_is macros.

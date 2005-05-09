@@ -21,7 +21,9 @@
 #include <string.h>
 
 void *malloc_aux(size_t s, const char *file, int line);
-#  define dbg_malloc(s) malloc_aux((s), __FILE__, __LINE__)
+#define dbg_malloc(s) malloc_aux((s), __FILE__, __LINE__)
+
+char *dbg_strdup(const char *str);
 
 #ifdef DEBUG_MEM
 
@@ -41,15 +43,5 @@ void bounds_check(void);
 #  define bounds_check()
 
 #endif
-
-static inline char *dbg_strdup(const char *str)
-{
-	char *ret = dbg_malloc(strlen(str) + 1);
-
-	if (ret)
-		strcpy(ret, str);
-
-	return ret;
-}
 
 #endif
