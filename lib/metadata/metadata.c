@@ -103,7 +103,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 
 	if (!alloc_pv_segment_whole_pv(mem, pv)) {
 		stack;
-		return NULL;
+		return 0;
 	}
 
 	pvl->pv = pv;
