@@ -50,6 +50,7 @@ static struct {
 
 #define _alloc(x) pool_zalloc(_cache.mem, (x))
 #define _free(x) pool_free(_cache.mem, (x))
+#define _strdup(x) pool_strdup(_cache.mem, (x))
 
 static int _insert(const char *path, int rec);
 
@@ -69,7 +70,12 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				dbg_free(dev);
 				return NULL;
 			}
-
+			if (!(alias->str = dbg_strdup(filename))) {
+				log_error("filename strdup failed");
+				dbg_free(dev);
+				dbg_free(alias);
+				return NULL;
+			}
 			dev->flags = DEV_ALLOCED;
 		} else {
 			if (!(dev = _alloc(sizeof(*dev)))) {
@@ -81,15 +87,13 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				_free(dev);
 				return NULL;
 			}
+			if (!(alias->str = _strdup(filename))) {
+				log_error("filename strdup failed");
+				return NULL;
+			}
 		}
-	}
-
-	if (!(alias->str = dbg_strdup(filename))) {
+	} else if (!(alias->str = dbg_strdup(filename))) {
 		log_error("filename strdup failed");
-		if (allocate && use_malloc) {
-			dbg_free(dev);
-			dbg_free(alias);
-		}
 		return NULL;
 	}
 

@@ -193,6 +193,8 @@ int dump_memory(void)
 		for (c = 0; c < sizeof(str) - 1; c++) {
 			if (c >= mb->length)
 				str[c] = ' ';
+			else if (*(char *)(mb->magic + c) == '\0')
+				str[c] = '\0';
 			else if (*(char *)(mb->magic + c) < ' ')
 				str[c] = '?';
 			else
