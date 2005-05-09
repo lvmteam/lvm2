@@ -96,7 +96,6 @@ int main(int argc, char **argv)
 {
 	int list = 0, next = 0, ret, reg = default_reg;
 	char *device, *device_arg = NULL, *dso_name, *dso_name_arg = NULL;
-	struct log_data *ldata;
 
 	if (!parse_argv(argc, argv, &dso_name_arg, &device_arg, &reg, &list))
 		exit(EXIT_FAILURE);
@@ -115,14 +114,9 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 	}
 
-	if(!(ldata = malloc(sizeof(*ldata))))
-		exit(ENOMEM);
-	if(!memset(ldata, 0, sizeof(*ldata)))
-		exit(ENOMEM);
-
 	/* FIXME: use -v/-q options to set this */
-	ldata->verbose_level = _LOG_DEBUG;
-	multilog_add_type(standard, ldata);
+	multilog_add_type(standard, NULL);
+	multilog_init_verbose(standard, _LOG_DEBUG);
 
 	if (list) {
 		do {
@@ -155,7 +149,7 @@ int main(int argc, char **argv)
 	}
 
    out:
-	multilog_del_type(standard, ldata);
+	multilog_del_type(standard);
 
 	if (device)
 		free(device);

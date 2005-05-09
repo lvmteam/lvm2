@@ -1021,12 +1021,6 @@ int main(void)
 {
 	struct fifos fifos;
 
-	struct log_data *tsdata = malloc(sizeof(*tsdata));
-	if(!tsdata)
-		exit(-ENOMEM);
-	if(!memset(tsdata, 0, sizeof(*tsdata)))
-		exit(-ENOMEM);
-
 	/* Make sure, parent accepts HANGUP signal. */
 	init_thread_signals(1);
 
@@ -1042,8 +1036,8 @@ int main(void)
 		kill(getppid(), HANGUP);
 
 		multilog_clear_logging();
-		tsdata->verbose_level = _LOG_DEBUG;
-		multilog_add_type(threaded_syslog, tsdata);
+		multilog_add_type(threaded_syslog, NULL);
+		multilog_init_verbose(threaded_syslog, _LOG_DEBUG);
 
 		init_fifos(&fifos);
 		pthread_mutex_init(&mutex, NULL);
