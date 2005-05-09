@@ -70,14 +70,14 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (lv_is_cow(lv)) {
 		log_verbose("Removing snapshot %s", lv->name);
-		if (!vg_remove_snapshot(lv->vg, lv)) {
+		if (!vg_remove_snapshot(lv)) {
 			stack;
 			return ECMD_FAILED;
 		}
 	}
 
 	log_verbose("Releasing logical volume \"%s\"", lv->name);
-	if (!lv_remove(vg, lv)) {
+	if (!lv_remove(lv)) {
 		log_error("Error releasing logical volume \"%s\"", lv->name);
 		return ECMD_FAILED;
 	}

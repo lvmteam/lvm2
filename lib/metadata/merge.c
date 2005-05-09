@@ -91,7 +91,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	uint32_t offset = le - seg->le;
 	uint32_t area_offset;
 
-	if (!(seg->segtype->flags & SEG_CAN_SPLIT)) {
+	if (!seg_can_split(seg)) {
 		log_error("Unable to split the %s segment at LE %" PRIu32
 			  " in LV %s", seg->segtype->name, le, lv->name);
 		return 0;
@@ -115,7 +115,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 	/* In case of a striped segment, the offset has to be / stripes */
 	area_offset = offset;
-	if (seg->segtype->flags & SEG_AREAS_STRIPED)
+	if (seg_is_striped(seg))
 		area_offset /= seg->area_count;
 
 	split_seg->area_len -= area_offset;

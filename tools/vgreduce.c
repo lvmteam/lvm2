@@ -86,13 +86,13 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		cow = snap_seg->cow;
 
 		*list_unsafe = 1;	/* May remove caller's lvht! */
-		if (!vg_remove_snapshot(lv->vg, cow)) {
+		if (!vg_remove_snapshot(cow)) {
 			stack;
 			return 0;
 		}
 		log_verbose("Removing LV %s from VG %s", cow->name,
 			    lv->vg->name);
-		if (!lv_remove(lv->vg, cow)) {
+		if (!lv_remove(cow)) {
 			stack;
 			return 0;
 		}
@@ -100,7 +100,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* Remove the LV itself */
 	log_verbose("Removing LV %s from VG %s", lv->name, lv->vg->name);
-	if (!lv_remove(lv->vg, lv)) {
+	if (!lv_remove(lv)) {
 		stack;
 		return 0;
 	}

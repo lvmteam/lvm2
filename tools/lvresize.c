@@ -240,7 +240,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if ((lp->extents > lv->le_count) &&
 	    !(lp->stripes == 1 || (lp->stripes > 1 && lp->stripe_size))) {
 		list_iterate_items(seg, &lv->segments) {
-			if (!(seg->segtype->flags & SEG_AREAS_STRIPED))
+			if (!seg_is_striped(seg))
 				continue;
 
 			sz = seg->stripe_size;
@@ -288,7 +288,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		list_iterate_items(seg, &lv->segments) {
 			seg_extents = seg->len;
 
-			if (seg->segtype->flags & SEG_AREAS_STRIPED) {
+			if (seg_is_striped(seg)) {
 				seg_stripesize = seg->stripe_size;
 				seg_stripes = seg->area_count;
 			}
@@ -451,14 +451,14 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			       SIZE_SHORT));
 
 	if (lp->resize == LV_REDUCE) {
-		if (!lv_reduce(vg->fid, lv, lv->le_count - lp->extents)) {
+		if (!lv_reduce(lv, lv->le_count - lp->extents)) {
 			stack;
 			return ECMD_FAILED;
 		}
-	} else if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes,
-			       lp->stripe_size, 0u,
-			       lp->extents - lv->le_count,
-			       NULL, 0u, 0u, pvh, alloc)) {
+	} else if (!lv_extend(lv, lp->segtype, lp->stripes,
+			      lp->stripe_size, 0u,
+			      lp->extents - lv->le_count,
+			      NULL, 0u, 0u, pvh, alloc)) {
 		stack;
 		return ECMD_FAILED;
 	}

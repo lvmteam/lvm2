@@ -81,12 +81,12 @@ int vg_add_snapshot(struct format_instance *fid, const char *name,
 	return 1;
 }
 
-int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow)
+int vg_remove_snapshot(struct logical_volume *cow)
 {
 	list_del(&cow->snapshot->origin_list);
 	cow->snapshot->origin->origin_count--;
 
-	if (!lv_remove(vg, cow->snapshot->lv)) {
+	if (!lv_remove(cow->snapshot->lv)) {
 		log_error("Failed to remove internal snapshot LV %s",
 			  cow->snapshot->lv->name);
 		return 0;
@@ -94,8 +94,8 @@ int vg_remove_snapshot(struct volume_group *vg, struct logical_volume *cow)
 
 	cow->snapshot = NULL;
 
-	vg->snapshot_count--;
-	vg->lv_count++;
+	cow->vg->snapshot_count--;
+	cow->vg->lv_count++;
 	cow->status |= VISIBLE_LV;
 
 	return 1;

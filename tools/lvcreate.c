@@ -246,7 +246,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	if (arg_count(cmd, stripes_ARG) && lp->stripes == 1)
 		log_print("Redundant stripes argument: default is 1");
 
-	if (arg_count(cmd, snapshot_ARG) || (lp->segtype->flags & SEG_SNAPSHOT))
+	if (arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp))
 		lp->snapshot = 1;
 
 	if (lp->snapshot) {
@@ -498,7 +498,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!(lp->segtype->flags & SEG_VIRTUAL) &&
+	if (!seg_is_virtual(lp) &&
 	    vg->free_count < lp->extents) {
 		log_error("Insufficient free extents (%u) in volume group %s: "
 			  "%u required", vg->free_count, vg->name, lp->extents);
@@ -518,7 +518,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!lv_extend(vg->fid, lv, lp->segtype, lp->stripes, lp->stripe_size,
+	if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
 		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc)) {
 		stack;
 		return 0;
