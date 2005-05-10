@@ -1,5 +1,6 @@
 Version 2.01.11 - 
 ==============================
+  Redhatify the clvmd rhel4 initscript
   %Zu->%zu
   Fix loopfiles alias alloc & mem debugging.
   Un-inline dbg_strdup.
