@@ -24,20 +24,15 @@ start()
 	do
 		if ! pidof clvmd > /dev/null 
 		then 
-			echo -n "Starting clvmd:"
-			clvmd > /dev/null 2>&1
+			echo -n "Starting clvmd: "
+			daemon clvmd
 			rtrn=$?
-			if [ $rtrn -eq 0 ]
+			echo
+			if [ $rtrn -ne 0 ]
 			then
-				success
-				echo
-			else
-				failure
-				echo
 				break
 			fi
-		fi	
-		
+ 		fi	
 		# refresh cache
 		$VGSCAN  > /dev/null 2>&1
 		
@@ -45,28 +40,22 @@ start()
 		then
 			for vg in $LVM_VGS
 			do
-				echo -n "Activating lvm $vg:"
-				if $VGCHANGE -ayl $vg > /dev/null 2>&1
+				if action "Activating lvm $vg:" $VGCHANGE -ayl $vg
 				then
-					success
-					echo
+					echo;
 				else
 					rtrn=$?
-					failure
-					echo
-				fi
+					echo;
+                                fi
 			done
 		else
-			echo -n "Activating lvms:"
-			if $VGCHANGE -ayl > /dev/null 2>&1
+			if action "Activating lvms:" $VGCHANGE -ayl
 			then
-				success
-				echo
+				echo;
 			else
 				rtrn=$?
-				failure
-				echo
-			fi
+				echo;
+                        fi
 		fi
 	done
 
@@ -81,49 +70,30 @@ stop()
 		then
 			for vg in $LVM_VGS
 			do
-				echo -n "Deactivating lvm $vg:"
-				if $VGCHANGE -anl $vg > /dev/null 2>&1
+				if action "Deactivating lvm $vg:" $VGCHANGE -anl $vg
 				then
-					success
-					echo
+					echo;
 				else
 					rtrn=$?
-					failure
-					echo
+					echo;
 				fi
 			done
 		else
-			echo -n "Deactivating lvms:"
-			if $VGCHANGE -anl > /dev/null 2>&1
+			if action "Deactivating lvms:" if $VGCHANGE -anl
 			then
-				success
-				echo
+				echo;
 			else
 				rtrn=$?
-				failure
-				echo
+				echo;
 			fi
 		fi
 
 		[ $rtrn -ne 0 ] && break
 
 		echo -n "Stopping clvm:"
-		pid=$(pidof clvmd)
-		if [ -n "$pid" ]
-		then
-			while kill $pid > /dev/null 2>&1
-			do
-				sleep 1
-			done
-		fi
-		if [ $rtrn -eq 0 ]
-		then
-			success
-			echo
-		else
-			failure
-			echo
-		fi
+		killproc clvmd -TERM
+		rtrn=$?
+		echo
 	done
 	
 	return $rtrn
@@ -146,8 +116,10 @@ case "$1" in
 	;;
 
   restart)
-	$0 stop
-	$0 start 
+	if stop
+	then
+		start
+	fi 
 	rtrn=$?
 	;;
 
