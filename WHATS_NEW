@@ -1,5 +1,6 @@
 Version 2.01.11 - 
 ==============================
+  Fix contiguous allocation policy with linear.
   Cope with missing format1 PVs again.
   Remove lists of free PV segments.
   Simplify pv_maps code and remove slow bitset algorithm.

@@ -196,9 +196,8 @@ static int _alloc_parallel(struct logical_volume *lv,
 			   uint32_t mirrors, struct segment_type *segtype)
 {
 	int r = 0;
-	struct list *pvmh;
 	struct pv_area **areas;
-	unsigned int pv_count = 0, ix;
+	unsigned int pv_count, ix;
 	struct pv_map *pvm;
 	size_t len;
 	uint32_t area_count;
@@ -213,8 +212,7 @@ static int _alloc_parallel(struct logical_volume *lv,
 	else
 		area_count = mirrors;
 
-	list_iterate(pvmh, pvms)
-	    pv_count++;
+	pv_count = list_size(pvms);
 
 	/* allocate an array of pv_areas, one candidate per pv */
 	len = sizeof(*areas) * pv_count;
@@ -226,9 +224,7 @@ static int _alloc_parallel(struct logical_volume *lv,
 	while (allocated != lv->le_count) {
 
 		ix = 0;
-		list_iterate(pvmh, pvms) {
-			pvm = list_item(pvmh, struct pv_map);
-
+		list_iterate_items(pvm, pvms) {
 			if (list_empty(&pvm->areas))
 				continue;
 
@@ -341,39 +337,54 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
  * can complete the allocation.
  */
 
-/*
- * FIXME: subsequent lvextends may not be contiguous.
- */
 static int _alloc_contiguous(struct logical_volume *lv,
 			     struct list *pvms, uint32_t allocated)
 {
-	struct list *tmp1;
 	struct pv_map *pvm;
 	struct pv_area *pva;
+	struct lv_segment *prev_lvseg;
+	struct pv_segment *prev_pvseg = NULL;
+	uint32_t largest = 0;
 
-	list_iterate(tmp1, pvms) {
-		pvm = list_item(tmp1, struct pv_map);
+	/* So far the only case is exactly one area */
+	if ((prev_lvseg = list_item(list_last(&lv->segments), struct lv_segment)) &&
+	    (prev_lvseg->area_count == 1) &&
+	    (prev_lvseg->area[0].type == AREA_PV))
+		prev_pvseg = prev_lvseg->area[0].u.pv.pvseg;
 
-		if (list_empty(&pvm->areas))
+	list_iterate_items(pvm, pvms) {
+		if (prev_pvseg && (prev_pvseg->pv != pvm->pv))
 			continue;
 
-		/* first item in the list is the biggest */
-		pva = list_item(pvm->areas.n, struct pv_area);
-		if (pva->count < lv->le_count)
-			continue;
+		list_iterate_items(pva, &pvm->areas) {
+			if (prev_pvseg &&
+			    (prev_pvseg->pe + prev_pvseg->len != pva->start))
+				continue;
 
-		if (!_alloc_linear_area(lv, &allocated, pvm, pva)) {
-			stack;
-			return 0;
+			if (pva->count > largest)
+				largest = pva->count;
+
+			/* first item in the list is the biggest */
+			if (pva->count < lv->le_count - allocated)
+				goto next_pv;
+
+			if (!_alloc_linear_area(lv, &allocated, pvm, pva)) {
+				stack;
+				return 0;
+			}
+
+			goto out;
 		}
 
-		break;
+      next_pv:
+		;
 	}
 
+      out:
 	if (allocated != lv->le_count) {
 		log_error("Insufficient allocatable extents (%u) "
 			  "for logical volume %s: %u required",
-			  allocated, lv->name, lv->le_count);
+			  largest, lv->name, lv->le_count - allocated);
 		return 0;
 	}
 
@@ -387,15 +398,12 @@ static int _alloc_mirrored(struct logical_volume *lv,
 			   struct physical_volume *mirrored_pv,
 			   uint32_t mirrored_pe)
 {
-	struct list *tmp1;
 	struct pv_map *pvm;
 	struct pv_area *pva;
 	uint32_t max_found = 0;
 
 	/* Try each PV in turn */
-	list_iterate(tmp1, pvms) {
-		pvm = list_item(tmp1, struct pv_map);
-
+	list_iterate_items(pvm, pvms) {
 		if (list_empty(&pvm->areas))
 			continue;
 
@@ -432,15 +440,11 @@ static int _alloc_mirrored(struct logical_volume *lv,
 static int _alloc_next_free(struct logical_volume *lv,
 			    struct list *pvms, uint32_t allocated)
 {
-	struct list *tmp1, *tmp2;
 	struct pv_map *pvm;
 	struct pv_area *pva;
 
-	list_iterate(tmp1, pvms) {
-		pvm = list_item(tmp1, struct pv_map);
-
-		list_iterate(tmp2, &pvm->areas) {
-			pva = list_item(tmp2, struct pv_area);
+	list_iterate_items(pvm, pvms) {
+		list_iterate_items(pva, &pvm->areas) {
 			if (!_alloc_linear_area(lv, &allocated, pvm, pva) ||
 			    (allocated == lv->le_count))
 				goto done;
@@ -560,7 +564,7 @@ static int _allocate(struct logical_volume *lv,
 		 * Iterate through the new segments, updating pe
 		 * counts in pv's.
 		 */
-		for (segh = lv->segments.p; segh != old_tail; segh = segh->p) {
+		list_uniterate(segh, old_tail, &lv->segments) {
 			seg = list_item(segh, struct lv_segment);
 			_get_extents(seg);
 			seg->status = status;
@@ -581,14 +585,11 @@ static int _allocate(struct logical_volume *lv,
 static char *_generate_lv_name(struct volume_group *vg, const char *format,
 			       char *buffer, size_t len)
 {
-	struct list *lvh;
-	struct logical_volume *lv;
+	struct lv_list *lvl;
 	int high = -1, i;
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = (list_item(lvh, struct lv_list)->lv);
-
-		if (sscanf(lv->name, format, &i) != 1)
+	list_iterate_items(lvl, &vg->lvs) {
+		if (sscanf(lvl->lv->name, format, &i) != 1)
 			continue;
 
 		if (i > high)
@@ -822,14 +823,12 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
 {
 	int lvnum_used[MAX_RESTRICTED_LVS + 1];
 	uint32_t i = 0;
-	struct list *lvh;
 	struct lv_list *lvl;
 	int lvnum;
 
 	memset(&lvnum_used, 0, sizeof(lvnum_used));
 
-	list_iterate(lvh, &lv->vg->lvs) {
-		lvl = list_item(lvh, struct lv_list);
+	list_iterate_items(lvl, &lv->vg->lvs) {
 		lvnum = lvnum_from_lvid(&lvl->lv->lvid);
 		if (lvnum <= MAX_RESTRICTED_LVS)
 			lvnum_used[lvnum] = 1;
