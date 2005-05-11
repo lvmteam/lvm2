@@ -104,6 +104,14 @@ static inline int list_end(struct list *head, struct list *elem)
 }
 
 /*
+ * Return last element of the list or NULL if empty
+ */
+static inline struct list *list_last(struct list *head)
+{
+	return (list_empty(head) ? NULL : head->p);
+}
+
+/*
  * Return the previous element of the list, or NULL if we've reached the start.
  */
 static inline struct list *list_prev(struct list *head, struct list *elem)
