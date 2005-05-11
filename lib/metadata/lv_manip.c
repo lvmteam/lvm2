@@ -160,8 +160,7 @@ static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 
 	for (s = 0; s < area_count; s++) {
 		struct pv_area *pva = areas[s];
-		if (!set_lv_segment_area_pv(seg, s, pva->map->pvl->pv,
-					    pva->start)) {
+		if (!set_lv_segment_area_pv(seg, s, pva->map->pv, pva->start)) {
 			stack;
 			return 0;
 		}
@@ -288,7 +287,7 @@ static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
 		return 0;
 	}
 
-	if (!set_lv_segment_area_pv(seg, 0, map->pvl->pv, pva->start)) {
+	if (!set_lv_segment_area_pv(seg, 0, map->pv, pva->start)) {
 		stack;
 		return 0;
 	}
@@ -323,7 +322,7 @@ static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
 
 	/* FIXME Remove AREA_PV restriction here? */
 	if (!set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe) ||
-	    !set_lv_segment_area_pv(seg, 1, map->pvl->pv, pva->start)) {
+	    !set_lv_segment_area_pv(seg, 1, map->pv, pva->start)) {
 		stack;
 		return 0;
 	}

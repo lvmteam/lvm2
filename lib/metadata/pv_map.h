@@ -33,19 +33,21 @@ struct pv_area {
 	uint32_t start;
 	uint32_t count;
 
-	struct list list;
+	struct list list;		/* pv_map.areas */
 };
 
 struct pv_map {
-	struct pv_list *pvl;
-	bitset_t allocated_extents;
-	struct list areas;
+	struct physical_volume *pv;
+	struct list areas;		/* struct pv_areas */
 
 	struct list list;
 };
 
-struct list *create_pv_maps(struct pool *mem,
-			    struct volume_group *vg, struct list *pvs);
+/*
+ * Find intersection between available_pvs and free space in VG
+ */
+struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
+			    struct list *allocatable_pvs);
 
 void consume_pv_area(struct pv_area *area, uint32_t to_go);
 

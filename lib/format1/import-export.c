@@ -91,7 +91,6 @@ int import_pv(struct pool *mem, struct device *dev,
 
 	list_init(&pv->tags);
 	list_init(&pv->segments);
-	list_init(&pv->free_segments);
 
 	if (!alloc_pv_segment_whole_pv(mem, pv)) {
 		stack;
