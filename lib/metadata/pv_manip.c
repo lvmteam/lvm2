@@ -39,7 +39,6 @@ static struct pv_segment *_alloc_pv_segment(struct pool *mem,
 	peg->lv_area = lv_area;
 
 	list_init(&peg->list);
-	list_init(&peg->freelist);
 
 	return peg;
 }
@@ -58,18 +57,15 @@ int alloc_pv_segment_whole_pv(struct pool *mem, struct physical_volume *pv)
 	}
 
 	list_add(&pv->segments, &peg->list);
-	list_add(&pv->free_segments, &peg->freelist);
 
 	return 1;
 }
 
-int peg_dup(struct pool *mem, struct list *peg_new, struct list *peg_free_new,
-	    struct list *peg_old)
+int peg_dup(struct pool *mem, struct list *peg_new, struct list *peg_old)
 {
 	struct pv_segment *peg, *pego;
 
 	list_init(peg_new);
-	list_init(peg_free_new);
 
 	list_iterate_items(pego, peg_old) {
 		if (!(peg = _alloc_pv_segment(mem, pego->pv, pego->pe,
@@ -79,8 +75,6 @@ int peg_dup(struct pool *mem, struct list *peg_new, struct list *peg_free_new,
 			return 0;
 		} 
 		list_add(peg_new, &peg->list);
-		if (!peg->lvseg)
-			list_add(peg_free_new, &peg->freelist);
 	}
 
 	return 1;
@@ -105,7 +99,6 @@ static int _pv_split_segment(struct physical_volume *pv, struct pv_segment *peg,
 	peg->len = peg->len - peg_new->len;
 
 	list_add_h(&peg->list, &peg_new->list);
-	list_add_h(&pv->free_segments, &peg_new->freelist);
 
 	return 1;
 }
@@ -160,9 +153,6 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 	peg->lvseg = seg;
 	peg->lv_area = area_num;
 
-	list_del(&peg->freelist);
-	list_init(&peg->freelist);
-
 	return peg;
 }
 
@@ -173,7 +163,6 @@ int release_pv_segment(struct pv_segment *peg, uint32_t new_area_len)
 		peg->lv_area = 0;
 
 		/* FIXME merge free space */
-		list_add(&peg->pv->free_segments, &peg->freelist);
 
 		return 1;
 	}
@@ -194,9 +183,6 @@ void merge_pv_segments(struct pv_segment *peg1, struct pv_segment *peg2)
 	peg1->len += peg2->len;
 
 	list_del(&peg2->list);
-
-	if (!list_empty(&peg2->freelist))
-		list_del(&peg2->freelist);
 }
 
 /*
@@ -208,7 +194,6 @@ int check_pv_segments(struct volume_group *vg)
 	struct pv_list *pvl;
 	struct pv_segment *peg;
 	unsigned s, segno;
-	int free_count, free_total, free_size;
 	uint32_t start_pe;
 	int ret = 1;
 
@@ -216,12 +201,8 @@ int check_pv_segments(struct volume_group *vg)
 		pv = pvl->pv;
 		segno = 0;
 		start_pe = 0;
-		free_total = 0;
-
-		free_count = list_size(&pv->free_segments);
 
 		list_iterate_items(peg, &pv->segments) {
-			free_size = list_size(&peg->freelist);
 			s = peg->lv_area;
 
 			/* FIXME Remove this next line eventually */
@@ -250,30 +231,8 @@ int check_pv_segments(struct volume_group *vg)
 						  peg->lvseg->area_len);
 					ret = 0;
 				}
-				if (free_size) {
-					log_debug("Segment is on free list!");
-					ret = 0;
-				}
-			} else {
-				free_total++;
-				if (!free_size) {
-					log_debug("Seg missing from free list");
-					ret = 0;
-				}
-				if (free_size != free_count) {
-					log_debug("Seg free size inconsistent: "
-						  "%u != %u", free_size,
-						  free_count);
-					ret = 0;
-				}
 			}
 			start_pe += peg->len;
-		}
-
-		if (free_count != free_total) {
-			log_debug("Free list inconsistent: %u != %u",
-				  free_count, free_total);
-			ret = 0;
 		}
 	}
 

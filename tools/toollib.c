@@ -498,7 +498,6 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 			memset(&pv_dummy, 0, sizeof(pv_dummy));
 			list_init(&pv_dummy.tags);
 			list_init(&pv_dummy.segments);
-			list_init(&pv_dummy.free_segments);
 			pv_dummy.dev = dev;
 			pv_dummy.fmt = NULL;
 			pv = &pv_dummy;

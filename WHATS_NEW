@@ -1,6 +1,8 @@
 Version 2.01.11 - 
 ==============================
-  Redhatify the clvmd rhel4 initscript
+  Remove lists of free PV segments.
+  Simplify pv_maps code and remove slow bitset algorithm.
+  Red-Hat-ify the clvmd rhel4 initscript.
   %Zu->%zu
   Fix loopfiles alias alloc & mem debugging.
   Un-inline dbg_strdup.

@@ -109,8 +109,6 @@ struct pv_segment {
 
 	struct lv_segment *lvseg;	/* NULL if free space */
 	uint32_t lv_area;	/* Index to area in LV segment */
-
-	struct list freelist;	/* Member of pv->free_segments */
 };
 
 struct physical_volume {
@@ -129,7 +127,6 @@ struct physical_volume {
 	uint32_t pe_alloc_count;
 
 	struct list segments;	/* Ordered pv_segments covering complete PV */
-	struct list free_segments;	/* Free pv_segments for this PV */
 	struct list tags;
 };
 

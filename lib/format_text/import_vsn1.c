@@ -192,7 +192,6 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 
 	list_init(&pv->tags);
 	list_init(&pv->segments);
-	list_init(&pv->free_segments);
 
 	/* Optional tags */
 	if ((cn = find_config_node(pvn, "tags")) &&

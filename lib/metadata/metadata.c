@@ -127,7 +127,7 @@ static int _copy_pv(struct physical_volume *pv_to,
 	}
 
 	if (!peg_dup(pv_to->fmt->cmd->mem, &pv_to->segments,
-		     &pv_to->free_segments, &pv_from->segments)) {
+		     &pv_from->segments)) {
 		stack;
 		return 0;
 	}
@@ -380,8 +380,11 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 			return 0;
 		}
 
-		/* foreach PV Segment */
-		list_iterate_items(pvseg, &pv->free_segments) {
+		/* foreach free PV Segment */
+		list_iterate_items(pvseg, &pv->segments) {
+			if (pvseg->lvseg)
+				continue;
+
 			if (!_recalc_extents(&pvseg->pe, dev_name(pv->dev),
 					     " PV segment start", old_size,
 					     new_size)) {
@@ -542,7 +545,6 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 
 	list_init(&pv->tags);
 	list_init(&pv->segments);
-	list_init(&pv->free_segments);
 
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
 				existing_extent_size,
@@ -1202,7 +1204,6 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 
 	list_init(&pv->tags);
 	list_init(&pv->segments);
-	list_init(&pv->free_segments);
 
 	/* FIXME Move more common code up here */
 	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, mdas))) {
