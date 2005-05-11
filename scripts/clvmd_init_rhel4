@@ -13,6 +13,8 @@
 LVDISPLAY="/usr/sbin/lvdisplay"
 VGCHANGE="/usr/sbin/vgchange"
 VGSCAN="/usr/sbin/vgscan"
+VGDISPLAY="/usr/sbin/vgdisplay"
+VGS="/usr/sbin/vgs"
 
 [ -f /etc/sysconfig/cluster ] && . /etc/sysconfig/cluster
 
@@ -40,21 +42,15 @@ start()
 		then
 			for vg in $LVM_VGS
 			do
-				if action "Activating lvm $vg:" $VGCHANGE -ayl $vg
+				if ! action "Activating VG $vg:" $VGCHANGE -ayl $vg
 				then
-					echo;
-				else
 					rtrn=$?
-					echo;
                                 fi
 			done
 		else
-			if action "Activating lvms:" $VGCHANGE -ayl
+			if ! action "Activating VGs:" $VGCHANGE -ayl
 			then
-				echo;
-			else
 				rtrn=$?
-				echo;
                         fi
 		fi
 	done
@@ -70,22 +66,20 @@ stop()
 		then
 			for vg in $LVM_VGS
 			do
-				if action "Deactivating lvm $vg:" $VGCHANGE -anl $vg
+				if ! action "Deactivating VG $vg:" $VGCHANGE -anl $vg
 				then
-					echo;
-				else
 					rtrn=$?
-					echo;
 				fi
 			done
 		else
-			if action "Deactivating lvms:" if $VGCHANGE -anl
-			then
-				echo;
-			else
-				rtrn=$?
-				echo;
-			fi
+			# Hack to only deactivate clustered volumes
+		        clustervgs=`$VGDISPLAY \`$VGS --noheadings -o name\` | awk 'BEGIN {RS="VG Name"} {if (/Clustered/) print $1;}'`
+			for vg in $clustervgs; do
+				if ! action "Deactivating VG $vg:" $VGCHANGE -anl $vg
+				then
+					rtrn=$?
+				fi
+			done
 		fi
 
 		[ $rtrn -ne 0 ] && break
