@@ -1,5 +1,6 @@
 Version 2.01.11 - 
 ==============================
+  Cope with missing format1 PVs again.
   Remove lists of free PV segments.
   Simplify pv_maps code and remove slow bitset algorithm.
   Red-Hat-ify the clvmd rhel4 initscript.
