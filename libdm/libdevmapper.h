@@ -166,6 +166,6 @@ const char *dm_dir(void);
 
 /* Release library resources */
 void dm_lib_release(void);
-void dm_lib_exit(void);
+void dm_lib_exit(void) __attribute((destructor));
 
 #endif				/* LIB_DEVICE_MAPPER_H */

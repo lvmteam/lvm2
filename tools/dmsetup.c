@@ -1073,8 +1073,5 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	dm_lib_release();
-	dm_lib_exit();
-
 	return 0;
 }

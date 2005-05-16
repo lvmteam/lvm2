@@ -1,5 +1,6 @@
 Version 1.01.02 - 
 =============================
+  Call dm_lib_exit() and dm_lib_release() automatically now.
   Add --target <target_type> filter to dmsetup table/status.
   Fix dmsetup getopt_long usage.
 
