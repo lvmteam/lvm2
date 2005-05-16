@@ -117,6 +117,7 @@ static void *_align(void *ptr, unsigned int a)
 	return (void *) (((unsigned long) ptr + agn) & ~agn);
 }
 
+#ifdef DM_IOCTLS
 static int _get_proc_number(const char *file, const char *name,
 			    uint32_t *number)
 {
@@ -226,6 +227,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 
 	return 1;
 }
+#endif
 
 static int _open_control(void)
 {
@@ -1396,10 +1398,7 @@ void dm_lib_release(void)
 
 void dm_lib_exit(void)
 {
-	if (_control_fd != -1) {
-		close(_control_fd);
-		_control_fd = -1;
-	}
+	dm_lib_release();
 	_version_ok = 1;
 	_version_checked = 0;
 }
