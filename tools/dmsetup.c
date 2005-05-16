@@ -62,6 +62,7 @@ enum {
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	OPTIONS_ARG,
+	TARGET_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
 	VERSION_ARG,
@@ -72,6 +73,7 @@ static int _switches[NUM_SWITCHES];
 static int _values[NUM_SWITCHES];
 static char *_uuid;
 static char *_fields;
+static char *_target;
 
 /*
  * Commands
@@ -609,6 +611,7 @@ static int _status(int argc, char **argv, void *data)
 	int cmd;
 	struct dm_names *names = (struct dm_names *) data;
 	char *name = NULL;
+	int matched = 0;
 
 	if (data)
 		name = names->name;
@@ -636,13 +639,16 @@ static int _status(int argc, char **argv, void *data)
 	if (!dm_task_run(dmt))
 		goto out;
 
-	if (_switches[VERBOSE_ARG])
-		_display_info(dmt);
-
 	/* Fetch targets and print 'em */
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
+		/* Skip if target type doesn't match */
+		if (_switches[TARGET_ARG] && target_type &&
+		    strcmp(target_type, _target))
+			continue;
+		if (!matched && _switches[VERBOSE_ARG])
+			_display_info(dmt);
 		if (data && !_switches[VERBOSE_ARG])
 			printf("%s: ", name);
 		if (target_type) {
@@ -650,9 +656,10 @@ static int _status(int argc, char **argv, void *data)
 			       start, length, target_type, params);
 		}
 		printf("\n");
+		matched = 1;
 	} while (next);
 
-	if (data && _switches[VERBOSE_ARG])
+	if (data && _switches[VERBOSE_ARG] && matched)
 		printf("\n");
 
 	r = 1;
@@ -867,8 +874,8 @@ static struct command _commands[] = {
 	{"ls", "", 0, 0, _ls},
 	{"info", "[<device>]", 0, 1, _info},
 	{"deps", "[<device>]", 0, 1, _deps},
-	{"status", "[<device>]", 0, 1, _status},
-	{"table", "[<device>]", 0, 1, _status},
+	{"status", "[<device>] [--target <target_type>]", 0, 1, _status},
+	{"table", "[<device>] [--target <target_type>]", 0, 1, _status},
 	{"wait", "<device> [<event_nr>]", 0, 2, _wait},
 	{"mknodes", "[<device>]", 0, 1, _mknodes},
 	{"targets", "", 0, 0, _targets},
@@ -905,22 +912,23 @@ static struct command *_find_command(const char *name)
 static int _process_switches(int *argc, char ***argv)
 {
 	char *base, *namebase;
-	int ind;
+	static int ind;
 	int c;
 
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
-		{"readonly", 0, NULL, READ_ONLY},
-		{"columns", 0, NULL, COLS_ARG},
-		{"major", 1, NULL, MAJOR_ARG},
-		{"minor", 1, NULL, MINOR_ARG},
-		{"noheadings", 0, NULL, NOHEADINGS_ARG},
-		{"noopencount", 0, NULL, NOOPENCOUNT_ARG},
-		{"notable", 0, NULL, NOTABLE_ARG},
-		{"options", 1, NULL, OPTIONS_ARG},
-		{"uuid", 1, NULL, UUID_ARG},
-		{"verbose", 1, NULL, VERBOSE_ARG},
-		{"version", 0, NULL, VERSION_ARG},
+		{"readonly", 0, &ind, READ_ONLY},
+		{"columns", 0, &ind, COLS_ARG},
+		{"major", 1, &ind, MAJOR_ARG},
+		{"minor", 1, &ind, MINOR_ARG},
+		{"noheadings", 0, &ind, NOHEADINGS_ARG},
+		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
+		{"notable", 0, &ind, NOTABLE_ARG},
+		{"options", 1, &ind, OPTIONS_ARG},
+		{"target", 1, &ind, TARGET_ARG},
+		{"uuid", 1, &ind, UUID_ARG},
+		{"verbose", 1, &ind, VERBOSE_ARG},
+		{"version", 0, &ind, VERSION_ARG},
 		{"", 0, NULL, 0}
 	};
 #else
@@ -969,8 +977,8 @@ static int _process_switches(int *argc, char ***argv)
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((c = GETOPTLONG_FN(*argc, *argv, "cCj:m:no:ru:v",
-				  long_options, &ind)) != -1) {
+	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCj:m:no:ru:v",
+					    long_options, NULL)) != -1) {
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
 		if (c == 'r' || ind == READ_ONLY)
@@ -994,6 +1002,10 @@ static int _process_switches(int *argc, char ***argv)
 		if (c == 'u' || ind == UUID_ARG) {
 			_switches[UUID_ARG]++;
 			_uuid = optarg;
+		}
+		if ((ind == TARGET_ARG)) {
+			_switches[TARGET_ARG]++;
+			_target = optarg;
 		}
 		if ((ind == NOHEADINGS_ARG))
 			_switches[NOHEADINGS_ARG]++;

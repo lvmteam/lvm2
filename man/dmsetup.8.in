@@ -40,10 +40,10 @@ dmsetup \- low level logical volume management
 .B dmsetup deps
 .I [device_name]
 .br
-.B dmsetup status
+.B dmsetup status [--target target_type]
 .I [device_name]
 .br
-.B dmsetup table
+.B dmsetup table [--target target_type]
 .I [device_name]
 .br
 .B dmsetup wait
@@ -172,9 +172,12 @@ Un-suspends a device.
 If an inactive table has been loaded, it becomes live.
 Postponed I/O then gets re-queued for processing.
 .IP \fBstatus
+.I [--target target_type]
 .I [device_name]
 .br
 Outputs status information for each of the device's targets.
+With --target, only information relating to the specified target type
+is displayed.
 .IP \fBsuspend
 .I device_name
 .br
@@ -182,10 +185,13 @@ Suspends a device.  Any I/O that has already been mapped by the device
 but has not yet completed will be flushed.  Any further I/O to that
 device will be postponed for as long as the device is suspended.
 .IP \fBtable
+.I [--target target_type]
 .I [device_name]
 .br
 Outputs the current table for the device in a format that can be fed
 back in using the create or load commands.
+With --target, only information relating to the specified target type
+is displayed.
 .IP \fBtargets
 .br
 Displays the names and versions of the currently-loaded targets.

@@ -1,5 +1,7 @@
 Version 1.01.02 - 
 =============================
+  Add --target <target_type> filter to dmsetup table/status.
+  Fix dmsetup getopt_long usage.
 
 Version 1.01.01 - 29 Mar 2005
 =============================
