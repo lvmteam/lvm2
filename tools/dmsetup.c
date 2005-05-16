@@ -13,6 +13,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
 #include "libdevmapper.h"
 #include "log.h"
 
@@ -24,6 +27,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sys/param.h>
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -38,6 +44,15 @@ extern char *optarg;
 #  define OPTIND_INIT 1
 #endif
 
+#ifndef TEMP_FAILURE_RETRY
+# define TEMP_FAILURE_RETRY(expression) \
+  (__extension__                                                              \
+    ({ long int __result;                                                     \
+       do __result = (long int) (expression);                                 \
+       while (__result == -1L && errno == EINTR);                             \
+       __result; }))
+#endif
+
 #ifdef linux
 #  include "kdev_t.h"
 #else
@@ -47,6 +62,7 @@ extern char *optarg;
 #endif
 
 #define LINE_SIZE 1024
+#define ARGS_MAX 256
 
 #define err(msg, x...) fprintf(stderr, msg "\n", ##x)
 
@@ -56,6 +72,7 @@ extern char *optarg;
 enum {
 	READ_ONLY = 0,
 	COLS_ARG,
+	EXEC_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
 	NOHEADINGS_ARG,
@@ -74,6 +91,7 @@ static int _values[NUM_SWITCHES];
 static char *_uuid;
 static char *_fields;
 static char *_target;
+static char *_command;
 
 /*
  * Commands
@@ -608,6 +626,94 @@ static void _display_dev(struct dm_task *dmt, char *name)
 		printf("%s\t(%u, %u)\n", name, info.major, info.minor);
 }
 
+static int _mknodes_single(char *name)
+{
+	struct dm_task *dmt;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
+		return 0;
+
+	if (!_set_task_device(dmt, name, 1))
+		goto out;
+
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _mknodes(int argc, char **argv, void *data)
+{
+	return _mknodes_single(argc > 1 ? argv[1] : NULL);
+}
+
+static int _exec_command(char *name)
+{
+	int n;
+	static char path[PATH_MAX];
+	static char *args[ARGS_MAX + 1];
+	static int argc = 0;
+	char *c;
+	pid_t pid;
+
+	if (argc < 0)
+		return 0;
+
+	if (!_mknodes_single(name))
+		return 0;
+
+	n = snprintf(path, sizeof(path), "%s/%s", dm_dir(), name);
+	if (n < 0 || n > sizeof(path) - 1)
+		return 0;
+
+	if (!argc) {
+		c = _command;
+		while (argc < ARGS_MAX) {
+			while (*c && isspace(*c))
+				c++;
+			if (!*c)
+				break;
+			args[argc++] = c;
+			while (*c && !isspace(*c))
+				c++;
+			if (*c)
+				*c++ = '\0';
+		}
+
+		if (!argc) {
+			argc = -1;
+			return 0;
+		}
+
+		if (argc == ARGS_MAX) {
+			err("Too many args to --exec\n");
+			argc = -1;
+			return 0;
+		}
+
+		args[argc++] = path;
+		args[argc] = NULL;
+	}
+
+	if (!(pid = fork())) {
+		execvp(args[0], args);
+		exit(127);
+	} else if (pid < (pid_t) 0)
+		return 0;
+
+	TEMP_FAILURE_RETRY(waitpid(pid, NULL, 0));
+
+	return 1;
+}
+
 static int _status(int argc, char **argv, void *data)
 {
 	int r = 0;
@@ -660,9 +766,12 @@ static int _status(int argc, char **argv, void *data)
 		    strcmp(target_type, _target))
 			continue;
 		if (ls_only) {
-			_display_dev(dmt, name);
+			if (!_switches[EXEC_ARG] || !_command ||
+			    _switches[VERBOSE_ARG])
+				_display_dev(dmt, name);
 			next = NULL;
-		} else {
+		} else if (!_switches[EXEC_ARG] || !_command ||
+			   _switches[VERBOSE_ARG]) {
 			if (!matched && _switches[VERBOSE_ARG])
 				_display_info(dmt);
 			if (data && !_switches[VERBOSE_ARG])
@@ -679,12 +788,14 @@ static int _status(int argc, char **argv, void *data)
 	if (data && _switches[VERBOSE_ARG] && matched && !ls_only)
 		printf("\n");
 
+	if (matched && _switches[EXEC_ARG] && _command && !_exec_command(name))
+		goto out;
+
 	r = 1;
 
       out:
 	dm_task_destroy(dmt);
 	return r;
-
 }
 
 /* Show target names and their version numbers */
@@ -719,30 +830,6 @@ static int _targets(int argc, char **argv, void *data)
 	dm_task_destroy(dmt);
 	return r;
 
-}
-
-static int _mknodes(int argc, char **argv, void *data)
-{
-	struct dm_task *dmt;
-	int r = 0;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
-		return 0;
-
-	if (!_set_task_device(dmt, argc > 1 ? argv[1] : NULL, 1))
-		goto out;
-
-	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
-		goto out;
-
-	if (!dm_task_run(dmt))
-		goto out;
-
-	r = 1;
-
-      out:
-	dm_task_destroy(dmt);
-	return r;
 }
 
 static int _info(int argc, char **argv, void *data)
@@ -859,7 +946,8 @@ static int _display_name(int argc, char **argv, void *data)
 
 static int _ls(int argc, char **argv, void *data)
 {
-	if (_switches[TARGET_ARG] && _target)
+	if ((_switches[TARGET_ARG] && _target) ||
+	    (_switches[EXEC_ARG] && _command))
 		return _status(argc, argv, data);
 	else
 		return _process_all(argc, argv, _display_name);
@@ -891,7 +979,7 @@ static struct command _commands[] = {
 	{"reload", "<device> [<table_file>]", 0, 2, _load},
 	{"rename", "<device> <new_name>", 1, 2, _rename},
 	{"message", "<device> <sector> <message>", 2, -1, _message},
-	{"ls", "[--target <target_type>]", 0, 0, _ls},
+	{"ls", "[--target <target_type>] [--exec <command>]", 0, 0, _ls},
 	{"info", "[<device>]", 0, 1, _info},
 	{"deps", "[<device>]", 0, 1, _deps},
 	{"status", "[<device>] [--target <target_type>]", 0, 1, _status},
@@ -939,6 +1027,7 @@ static int _process_switches(int *argc, char ***argv)
 	static struct option long_options[] = {
 		{"readonly", 0, &ind, READ_ONLY},
 		{"columns", 0, &ind, COLS_ARG},
+		{"exec", 1, &ind, EXEC_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
 		{"noheadings", 0, &ind, NOHEADINGS_ARG},
@@ -1022,6 +1111,10 @@ static int _process_switches(int *argc, char ***argv)
 		if (c == 'u' || ind == UUID_ARG) {
 			_switches[UUID_ARG]++;
 			_uuid = optarg;
+		}
+		if ((ind == EXEC_ARG)) {
+			_switches[EXEC_ARG]++;
+			_command = optarg;
 		}
 		if ((ind == TARGET_ARG)) {
 			_switches[TARGET_ARG]++;
