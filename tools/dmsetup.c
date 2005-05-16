@@ -600,6 +600,14 @@ static int _process_all(int argc, char **argv,
 	return r;
 }
 
+static void _display_dev(struct dm_task *dmt, char *name)
+{
+	struct dm_info info;
+
+	if (dm_task_get_info(dmt, &info))
+		printf("%s\t(%u, %u)\n", name, info.major, info.minor);
+}
+
 static int _status(int argc, char **argv, void *data)
 {
 	int r = 0;
@@ -612,6 +620,7 @@ static int _status(int argc, char **argv, void *data)
 	struct dm_names *names = (struct dm_names *) data;
 	char *name = NULL;
 	int matched = 0;
+	int ls_only = 0;
 
 	if (data)
 		name = names->name;
@@ -626,6 +635,9 @@ static int _status(int argc, char **argv, void *data)
 		cmd = DM_DEVICE_TABLE;
 	else
 		cmd = DM_DEVICE_STATUS;
+
+	if (!strcmp(argv[0], "ls"))
+		ls_only = 1;
 
 	if (!(dmt = dm_task_create(cmd)))
 		return 0;
@@ -647,19 +659,24 @@ static int _status(int argc, char **argv, void *data)
 		if (_switches[TARGET_ARG] && target_type &&
 		    strcmp(target_type, _target))
 			continue;
-		if (!matched && _switches[VERBOSE_ARG])
-			_display_info(dmt);
-		if (data && !_switches[VERBOSE_ARG])
-			printf("%s: ", name);
-		if (target_type) {
-			printf("%" PRIu64 " %" PRIu64 " %s %s",
-			       start, length, target_type, params);
+		if (ls_only) {
+			_display_dev(dmt, name);
+			next = NULL;
+		} else {
+			if (!matched && _switches[VERBOSE_ARG])
+				_display_info(dmt);
+			if (data && !_switches[VERBOSE_ARG])
+				printf("%s: ", name);
+			if (target_type) {
+				printf("%" PRIu64 " %" PRIu64 " %s %s",
+				       start, length, target_type, params);
+			}
+			printf("\n");
 		}
-		printf("\n");
 		matched = 1;
 	} while (next);
 
-	if (data && _switches[VERBOSE_ARG] && matched)
+	if (data && _switches[VERBOSE_ARG] && matched && !ls_only)
 		printf("\n");
 
 	r = 1;
@@ -842,7 +859,10 @@ static int _display_name(int argc, char **argv, void *data)
 
 static int _ls(int argc, char **argv, void *data)
 {
-	return _process_all(argc, argv, _display_name);
+	if (_switches[TARGET_ARG] && _target)
+		return _status(argc, argv, data);
+	else
+		return _process_all(argc, argv, _display_name);
 }
 
 /*
@@ -871,7 +891,7 @@ static struct command _commands[] = {
 	{"reload", "<device> [<table_file>]", 0, 2, _load},
 	{"rename", "<device> <new_name>", 1, 2, _rename},
 	{"message", "<device> <sector> <message>", 2, -1, _message},
-	{"ls", "", 0, 0, _ls},
+	{"ls", "[--target <target_type>]", 0, 0, _ls},
 	{"info", "[<device>]", 0, 1, _info},
 	{"deps", "[<device>]", 0, 1, _deps},
 	{"status", "[<device>] [--target <target_type>]", 0, 1, _status},
