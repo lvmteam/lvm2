@@ -89,6 +89,10 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		return ECMD_FAILED;
 	}
 
+	/* FIXME Move into library where clvmd can use it */
+	if (activate && !lockingfailed())
+		check_current_backup(vg);
+
 	if (activate && (active = lvs_in_vg_activated(vg)))
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);

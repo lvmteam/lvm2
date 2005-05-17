@@ -60,4 +60,6 @@ int backup_restore(struct cmd_context *cmd, const char *vg_name);
 
 int backup_to_file(const char *file, const char *desc, struct volume_group *vg);
 
+void check_current_backup(struct volume_group *vg);
+
 #endif
