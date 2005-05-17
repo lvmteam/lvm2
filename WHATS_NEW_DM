@@ -1,4 +1,4 @@
-Version 1.01.02 - 
+Version 1.01.02 - 17 May 2005
 =============================
   Call dm_lib_exit() and dm_lib_release() automatically now.
   Add --target <target_type> filter to dmsetup table/status/ls.
