@@ -129,38 +129,59 @@ static void _shrink_lv_segment(struct lv_segment *seg)
 	}
 }
 
+/*
+ * The heart of the allocation code.  This function takes a list of
+ * pv_area and allocates them to the lv.  If the lv doesn't need
+ * the complete area then the area is split, otherwise the area
+ * is unlinked from the pv_map.
+ */
 static int _alloc_parallel_area(struct logical_volume *lv, uint32_t area_count,
 				uint32_t stripe_size,
 				struct segment_type *segtype,
-				struct pv_area **areas, uint32_t *ix)
+				struct pv_area **areas, uint32_t *ix,
+				struct physical_volume *mirrored_pv,
+				uint32_t mirrored_pe)
 {
-	uint32_t count, area_len, smallest;
+	uint32_t area_len, smallest, remaining;
 	uint32_t s;
+	uint32_t extra_areas = 0;
 	struct lv_segment *seg;
+	struct pv_area *pva;
 	int striped = 0;
 
 	/* Striped or mirrored? */
 	if (seg_is_striped(seg))
 		striped = 1;
 
-	count = lv->le_count - *ix;
-	area_len = count / (striped ? area_count : 1);
+	if (mirrored_pv)
+		extra_areas = 1;
+
+	remaining = lv->le_count - *ix;
+	area_len = remaining / (striped ? area_count : 1);
 	smallest = areas[area_count - 1]->count;
 
-	if (smallest < area_len)
+	if (area_len > smallest)
 		area_len = smallest;
 
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, *ix,
 				     area_len * (striped ? area_count : 1),
-				     0u, stripe_size, area_count, area_len,
-				     0u, 0u))) {
-		log_error("Couldn't allocate new parallel segment.");
+				     0u, stripe_size, area_count + extra_areas,
+				     area_len, 0u, 0u))) {
+		log_error("Couldn't allocate new LV segment.");
 		return 0;
 	}
 
+	if (extra_areas) {
+		if (!set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe)) {
+			stack;
+			return 0;
+		}
+	}
+
 	for (s = 0; s < area_count; s++) {
-		struct pv_area *pva = areas[s];
-		if (!set_lv_segment_area_pv(seg, s, pva->map->pv, pva->start)) {
+		pva = areas[s];
+		if (!set_lv_segment_area_pv(seg, s + extra_areas, pva->map->pv,
+					    pva->start)) {
 			stack;
 			return 0;
 		}
@@ -190,63 +211,100 @@ static int _comp_area(const void *l, const void *r)
 	return 0;
 }
 
-static int _alloc_parallel(struct logical_volume *lv,
+static int _alloc_parallel(struct logical_volume *lv, alloc_policy_t alloc,
 			   struct list *pvms, uint32_t allocated,
 			   uint32_t stripes, uint32_t stripe_size,
-			   uint32_t mirrors, struct segment_type *segtype)
+			   uint32_t mirrors, struct segment_type *segtype,
+			   struct physical_volume *mirrored_pv,
+			   uint32_t mirrored_pe)
 {
 	int r = 0;
-	struct pv_area **areas;
+	struct pv_area **areas, *pva;
 	unsigned int pv_count, ix;
 	struct pv_map *pvm;
-	size_t len;
-	uint32_t area_count;
+	uint32_t area_count, largest = 0;
 
 	if (stripes > 1 && mirrors > 1) {
 		log_error("striped mirrors are not supported yet");
 		return 0;
 	}
 
+	if ((stripes > 1 || mirrors > 1) && mirrored_pv) {
+		log_error("Can't mix striping or mirroring with "
+			  "creation of a mirrored PV yet");
+		return 0;
+	}
+
 	if (stripes > 1)
 		area_count = stripes;
+	else if (mirrored_pv)
+		area_count = 1;
 	else
 		area_count = mirrors;
 
 	pv_count = list_size(pvms);
 
 	/* allocate an array of pv_areas, one candidate per pv */
-	len = sizeof(*areas) * pv_count;
 	if (!(areas = dbg_malloc(sizeof(*areas) * pv_count))) {
 		log_err("Couldn't allocate areas array.");
 		return 0;
 	}
 
 	while (allocated != lv->le_count) {
-
 		ix = 0;
+		/* Put the largest area on each PV into areas array */
 		list_iterate_items(pvm, pvms) {
 			if (list_empty(&pvm->areas))
 				continue;
 
-			areas[ix++] = list_item(pvm->areas.n, struct pv_area);
+			list_iterate_items(pva, &pvm->areas) {
+				if (pva->count > largest)
+					largest = pva->count;
+
+				if (mirrored_pv) {
+					if (pva->count < lv->le_count - allocated)
+						goto next_pv;
+				}
+
+				areas[ix++] = pva;
+				if (mirrored_pv)
+					goto try_it;
+			}
+      next_pv:
+			;
 		}
 
-		if (ix < area_count) {
-			log_error("Insufficient allocatable extents suitable "
-				  "for parallel use for logical volume "
-				  "%s: %u required", lv->name, lv->le_count);
-			goto out;
-		}
+      try_it:
+		if (ix < area_count)
+			break;
 
 		/* sort the areas so we allocate from the biggest */
-		qsort(areas, ix, sizeof(*areas), _comp_area);
+		if (ix > 1)
+			qsort(areas, ix, sizeof(*areas), _comp_area);
 
 		if (!_alloc_parallel_area(lv, area_count, stripe_size, segtype,
-					  areas, &allocated)) {
+					  areas, &allocated, mirrored_pv, mirrored_pe)) {
 			stack;
 			goto out;
 		}
+
+		if (mirrored_pv)
+			break;
 	}
+
+	if (allocated != lv->le_count) {
+		if (mirrored_pv)
+			log_error("Insufficient contiguous allocatable extents "
+				  "(%u) for logical volume %s: %u required",
+				  largest, lv->name, lv->le_count - allocated);
+		else
+			log_error("Insufficient allocatable extents suitable "
+				  "for parallel use for logical volume %s: "
+				   "%u more required", lv->name,
+				   lv->le_count - allocated);
+		goto out;
+	}
+
 	r = 1;
 
       out:
@@ -255,99 +313,30 @@ static int _alloc_parallel(struct logical_volume *lv,
 }
 
 /*
- * The heart of the allocation code.  This function takes a
- * pv_area and allocates it to the lv.  If the lv doesn't need
- * the complete area then the area is split, otherwise the area
- * is unlinked from the pv_map.
+ * For contiguous, only one area per pv is allowed, so we search
+ * for the biggest area, or the first area that can complete 
+ * the allocation.  If there is an existing segment, new space must
+ * be contiguous to it.
  */
-static int _alloc_linear_area(struct logical_volume *lv, uint32_t *ix,
-			      struct pv_map *map, struct pv_area *pva)
-{
-	uint32_t count, remaining;
-	struct lv_segment *seg;
-	struct segment_type *segtype;
-
-	count = pva->count;
-	remaining = lv->le_count - *ix;
-	if (count > remaining)
-		count = remaining;
-
-	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped"))) {
-		stack;
-		return 0;
-	}
-
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, *ix,
-				     count, 0, 0, 1, count, 0, 0))) {
-		log_error("Couldn't allocate new stripe segment.");
-		return 0;
-	}
-
-	if (!set_lv_segment_area_pv(seg, 0, map->pv, pva->start)) {
-		stack;
-		return 0;
-	}
-
-	list_add(&lv->segments, &seg->list);
-
-	consume_pv_area(pva, seg->len);
-	*ix += seg->len;
-
-	return 1;
-}
-
-static int _alloc_mirrored_area(struct logical_volume *lv, uint32_t *ix,
-				struct pv_map *map, struct pv_area *pva,
-				struct segment_type *segtype,
-				struct physical_volume *mirrored_pv,
-				uint32_t mirrored_pe)
-{
-	uint32_t count, remaining;
-	struct lv_segment *seg;
-
-	count = pva->count;
-	remaining = lv->le_count - *ix;
-	if (count > remaining)
-		count = remaining;
-
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv, *ix,
-				     count, 0, 0, 2, count, 0, 0))) {
-		log_err("Couldn't allocate new mirrored segment.");
-		return 0;
-	}
-
-	/* FIXME Remove AREA_PV restriction here? */
-	if (!set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe) ||
-	    !set_lv_segment_area_pv(seg, 1, map->pv, pva->start)) {
-		stack;
-		return 0;
-	}
-
-	list_add(&lv->segments, &seg->list);
-
-	consume_pv_area(pva, seg->len);
-	*ix += seg->len;
-
-	return 1;
-}
-
-/*
- * Only one area per pv is allowed, so we search
- * for the biggest area, or the first area that
- * can complete the allocation.
- */
-
-static int _alloc_contiguous(struct logical_volume *lv,
-			     struct list *pvms, uint32_t allocated)
+static int _alloc_next_free(struct logical_volume *lv, alloc_policy_t alloc,
+			    struct list *pvms, uint32_t allocated,
+			    struct segment_type *segtype)
 {
 	struct pv_map *pvm;
 	struct pv_area *pva;
+	uint32_t prev_allocated = allocated;
 	struct lv_segment *prev_lvseg;
 	struct pv_segment *prev_pvseg = NULL;
 	uint32_t largest = 0;
+	int contiguous = 0;
 
 	/* So far the only case is exactly one area */
-	if ((prev_lvseg = list_item(list_last(&lv->segments), struct lv_segment)) &&
+	if ((alloc == ALLOC_CONTIGUOUS))
+		contiguous = 1;
+
+	if (contiguous &&
+	    (prev_lvseg = list_item(list_last(&lv->segments),
+				    struct lv_segment)) &&
 	    (prev_lvseg->area_count == 1) &&
 	    (prev_lvseg->area[0].type == AREA_PV))
 		prev_pvseg = prev_lvseg->area[0].u.pv.pvseg;
@@ -365,15 +354,18 @@ static int _alloc_contiguous(struct logical_volume *lv,
 				largest = pva->count;
 
 			/* first item in the list is the biggest */
-			if (pva->count < lv->le_count - allocated)
+			if (contiguous &&
+			    pva->count < lv->le_count - allocated)
 				goto next_pv;
 
-			if (!_alloc_linear_area(lv, &allocated, pvm, pva)) {
+			if (!_alloc_parallel_area(lv, 1, 0, segtype, &pva,
+						  &allocated, NULL, 0)) {
 				stack;
 				return 0;
 			}
 
-			goto out;
+			if (contiguous || (allocated == lv->le_count))
+				goto out;
 		}
 
       next_pv:
@@ -382,80 +374,11 @@ static int _alloc_contiguous(struct logical_volume *lv,
 
       out:
 	if (allocated != lv->le_count) {
-		log_error("Insufficient allocatable extents (%u) "
+		log_error("Insufficient %sallocatable extents (%u) "
 			  "for logical volume %s: %u required",
-			  largest, lv->name, lv->le_count - allocated);
-		return 0;
-	}
-
-	return 1;
-}
-
-/* FIXME Contiguous depends on *segment* (i.e. stripe) not LV */
-static int _alloc_mirrored(struct logical_volume *lv,
-			   struct list *pvms, uint32_t allocated,
-			   struct segment_type *segtype,
-			   struct physical_volume *mirrored_pv,
-			   uint32_t mirrored_pe)
-{
-	struct pv_map *pvm;
-	struct pv_area *pva;
-	uint32_t max_found = 0;
-
-	/* Try each PV in turn */
-	list_iterate_items(pvm, pvms) {
-		if (list_empty(&pvm->areas))
-			continue;
-
-		/* first item in the list is the biggest */
-		pva = list_item(pvm->areas.n, struct pv_area);
-		if (pva->count < lv->le_count - allocated) {
-			max_found = pva->count;
-			continue;
-		}
-
-		if (!_alloc_mirrored_area(lv, &allocated, pvm, pva, segtype,
-					  mirrored_pv, mirrored_pe)) {
-			stack;
-			return 0;
-		}
-
-		break;
-	}
-
-	if (allocated != lv->le_count) {
-		log_error("Insufficient contiguous allocatable extents (%u) "
-			  "for logical volume %s: %u required",
-			  allocated + max_found, lv->name, lv->le_count);
-		return 0;
-	}
-
-	return 1;
-}
-
-/*
- * Areas just get allocated in order until the lv
- * is full.
- */
-static int _alloc_next_free(struct logical_volume *lv,
-			    struct list *pvms, uint32_t allocated)
-{
-	struct pv_map *pvm;
-	struct pv_area *pva;
-
-	list_iterate_items(pvm, pvms) {
-		list_iterate_items(pva, &pvm->areas) {
-			if (!_alloc_linear_area(lv, &allocated, pvm, pva) ||
-			    (allocated == lv->le_count))
-				goto done;
-		}
-	}
-
-      done:
-	if (allocated != lv->le_count) {
-		log_error("Insufficient allocatable logical extents (%u) "
-			  "for logical volume %s: %u required",
-			  allocated, lv->name, lv->le_count);
+			  contiguous ? "contiguous " : "",
+			  contiguous ? largest : allocated - prev_allocated,
+			  lv->name, lv->le_count - prev_allocated);
 		return 0;
 	}
 
@@ -537,25 +460,12 @@ static int _allocate(struct logical_volume *lv,
 	if (!(pvms = create_pv_maps(scratch, lv->vg, allocatable_pvs)))
 		goto out;
 
-	if (stripes > 1 || mirrors > 1)
-		r = _alloc_parallel(lv, pvms, allocated, stripes, stripe_size,
-				    mirrors, segtype);
-
-	else if (mirrored_pv)
-		r = _alloc_mirrored(lv, pvms, allocated, segtype, mirrored_pv,
-				    mirrored_pe);
-
-	else if (alloc == ALLOC_CONTIGUOUS)
-		r = _alloc_contiguous(lv, pvms, allocated);
-
-	else if (alloc == ALLOC_NORMAL || alloc == ALLOC_ANYWHERE)
-		r = _alloc_next_free(lv, pvms, allocated);
-
-	else {
-		log_error("Unrecognised allocation policy: "
-			  "unable to set up logical volume.");
-		goto out;
-	}
+	if (stripes > 1 || mirrors > 1 || mirrored_pv)
+		r = _alloc_parallel(lv, alloc, pvms, allocated, stripes,
+				    stripe_size, mirrors, segtype,
+				    mirrored_pv, mirrored_pe);
+	else
+		r = _alloc_next_free(lv, alloc, pvms, allocated, segtype);
 
 	if (r) {
 		lv->vg->free_count -= lv->le_count - allocated;

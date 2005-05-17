@@ -518,6 +518,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
+	/* The snapshot segment gets created later */
+	if (lp->snapshot)
+		if (!(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
+			stack;
+			return 0;
+		}
+
 	if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
 		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc)) {
 		stack;
