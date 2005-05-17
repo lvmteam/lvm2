@@ -2,6 +2,7 @@ Version 2.01.11 -
 ==============================
   Move archiver code from tools into library.
   vgscan/change/display/vgs automatically create metadata backups if needed.
+  Merge cloned allocation functions.
   Fix contiguous allocation policy with linear.
   Cope with missing format1 PVs again.
   Remove lists of free PV segments.
