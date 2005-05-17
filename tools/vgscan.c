@@ -36,6 +36,8 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 		  (vg->status & EXPORTED_VG) ? "exported " : "", vg_name,
 		  vg->fid->fmt->name);
 
+	check_current_backup(vg);
+
 	return ECMD_PROCESSED;
 }
 

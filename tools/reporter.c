@@ -27,6 +27,8 @@ static int _vgs_single(struct cmd_context *cmd, const char *vg_name,
 	if (!report_object(handle, vg, NULL, NULL, NULL, NULL))
 		return ECMD_FAILED;
 
+	check_current_backup(vg);
+
 	return ECMD_PROCESSED;
 }
 

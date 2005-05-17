@@ -53,6 +53,8 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 		process_each_pv_in_vg(cmd, vg, NULL, NULL, &pvdisplay_short);
 	}
 
+	check_current_backup(vg);
+
 	return ECMD_PROCESSED;
 }
 

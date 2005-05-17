@@ -106,7 +106,13 @@ int archive(struct volume_group *vg)
 	if (!create_dir(_archive_params.dir))
 		return 0;
 
-	log_verbose("Archiving volume group \"%s\" metadata.", vg->name);
+	/* Trap a read-only file system */
+        if ((access(_archive_params.dir, R_OK | W_OK | X_OK) == -1) &&
+	     (errno == EROFS))
+                return 0;
+
+	log_verbose("Archiving volume group \"%s\" metadata (seqno %u).", vg->name,
+		    vg->seqno);
 	if (!__archive(vg)) {
 		log_error("Volume group \"%s\" metadata archive failed.",
 			  vg->name);
@@ -189,6 +195,11 @@ int backup(struct volume_group *vg)
 	if (!create_dir(_backup_params.dir))
 		return 0;
 
+	/* Trap a read-only file system */
+        if ((access(_backup_params.dir, R_OK | W_OK | X_OK) == -1) &&
+	    (errno == EROFS))
+                return 0;
+
 	if (!__backup(vg)) {
 		log_error("Backup of volume group %s metadata failed.",
 			  vg->name);
@@ -269,7 +280,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 			return 0;
 		}
 		if (cmd->fmt != info->fmt) {
-			log_error("PV %s is a different format (%s)",
+			log_error("PV %s is a different format (seqno %s)",
 				  dev_name(pv->dev), info->fmt->name);
 			return 0;
 		}
@@ -330,7 +341,7 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 
 	cmd = vg->cmd;
 
-	log_verbose("Creating volume group backup \"%s\"", file);
+	log_verbose("Creating volume group backup \"%s\" (seqno %u).", file, vg->seqno);
 
 	if (!(context = create_text_context(cmd, file, desc)) ||
 	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
@@ -353,4 +364,35 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 
 	tf->fmt->ops->destroy_instance(tf);
 	return r;
+}
+
+/*
+ * Update backup (and archive) if they're out-of-date or don't exist.
+ */
+void check_current_backup(struct volume_group *vg)
+{
+	char path[PATH_MAX];
+	struct volume_group *vg_backup;
+
+	if ((vg->status & PARTIAL_VG) || (vg->status & EXPORTED_VG))
+		return;
+
+	if (lvm_snprintf(path, sizeof(path), "%s/%s",
+			 _backup_params.dir, vg->name) < 0) {
+		log_debug("Failed to generate backup filename.");
+		return;
+	}
+
+	log_suppress(1);
+	/* Up-to-date backup exists? */
+	if ((vg_backup = backup_read_vg(vg->cmd, vg->name, path)) &&
+	    (vg->seqno == vg_backup->seqno) &&
+	    (id_equal(&vg->id, &vg_backup->id)))
+		return;
+	log_suppress(0);
+
+	if (vg_backup)
+		archive(vg_backup);
+	archive(vg);
+	backup(vg);
 }
