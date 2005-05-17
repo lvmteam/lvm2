@@ -54,6 +54,7 @@ SOURCES =\
 	filters/filter-md.c \
 	filters/filter.c \
 	format_text/archive.c \
+	format_text/archiver.c \
 	format_text/export.c \
 	format_text/flags.c \
 	format_text/format-text.c \

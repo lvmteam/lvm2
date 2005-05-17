@@ -758,8 +758,8 @@ static void _apply_settings(struct cmd_context *cmd)
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 	init_cmd_name(cmd->default_settings.cmd_name);
 
-	archive_enable(cmd->current_settings.archive);
-	backup_enable(cmd->current_settings.backup);
+	archive_enable(cmd, cmd->current_settings.archive);
+	backup_enable(cmd, cmd->current_settings.backup);
 
 	set_activation(cmd->current_settings.activation);
 
@@ -912,69 +912,6 @@ static void _init_rand(void)
 	srand((unsigned int) time(NULL) + (unsigned int) getpid());
 }
 
-static int _init_backup(struct cmd_context *cmd, struct config_tree *cft)
-{
-	uint32_t days, min;
-	char default_dir[PATH_MAX];
-	const char *dir;
-
-	if (!cmd->sys_dir) {
-		log_warn("WARNING: Metadata changes will NOT be backed up");
-		backup_init("");
-		archive_init("", 0, 0);
-		return 1;
-	}
-
-	/* set up archiving */
-	cmd->default_settings.archive =
-	    find_config_bool(cmd->cft->root, "backup/archive",
-			     DEFAULT_ARCHIVE_ENABLED);
-
-	days = (uint32_t) find_config_int(cmd->cft->root, "backup/retain_days",
-					  DEFAULT_ARCHIVE_DAYS);
-
-	min = (uint32_t) find_config_int(cmd->cft->root, "backup/retain_min",
-					 DEFAULT_ARCHIVE_NUMBER);
-
-	if (lvm_snprintf
-	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
-	     DEFAULT_ARCHIVE_SUBDIR) == -1) {
-		log_err("Couldn't create default archive path '%s/%s'.",
-			cmd->sys_dir, DEFAULT_ARCHIVE_SUBDIR);
-		return 0;
-	}
-
-	dir = find_config_str(cmd->cft->root, "backup/archive_dir",
-			      default_dir);
-
-	if (!archive_init(dir, days, min)) {
-		log_debug("backup_init failed.");
-		return 0;
-	}
-
-	/* set up the backup */
-	cmd->default_settings.backup =
-	    find_config_bool(cmd->cft->root, "backup/backup",
-			     DEFAULT_BACKUP_ENABLED);
-
-	if (lvm_snprintf
-	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
-	     DEFAULT_BACKUP_SUBDIR) == -1) {
-		log_err("Couldn't create default backup path '%s/%s'.",
-			cmd->sys_dir, DEFAULT_BACKUP_SUBDIR);
-		return 0;
-	}
-
-	dir = find_config_str(cmd->cft->root, "backup/backup_dir", default_dir);
-
-	if (!backup_init(dir)) {
-		log_debug("backup_init failed.");
-		return 0;
-	}
-
-	return 1;
-}
-
 static void _close_stray_fds(void)
 {
 	struct rlimit rlim;
@@ -1012,9 +949,6 @@ static struct cmd_context *_init_lvm(void)
 
 	_init_rand();
 
-	if (!_init_backup(cmd, cmd->cft))
-		return NULL;
-
 	_apply_settings(cmd);
 
 	return cmd;
@@ -1032,10 +966,7 @@ static void _fin_commands(struct cmd_context *cmd)
 
 static void _fin(struct cmd_context *cmd)
 {
-	archive_exit();
-	backup_exit();
 	_fin_commands(cmd);
-
 	destroy_toolcontext(cmd);
 }
 

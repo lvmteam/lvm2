@@ -19,11 +19,6 @@
 #include "metadata.h"
 
 /*
- * FIXME: This file is going to merge with the archiving code in
- * lib/format_text at some point.
- */
-
-/*
  * There are two operations that come under the general area of
  * backups.  'Archiving' occurs just before a volume group
  * configuration is changed.  The user may configure when
@@ -36,20 +31,20 @@
  * Typically backups will be stored in /etc/lvm/backups.
  */
 
-int archive_init(const char *dir,
+int archive_init(struct cmd_context *cmd, const char *dir,
 		 unsigned int keep_days, unsigned int keep_min);
-void archive_exit(void);
+void archive_exit(struct cmd_context *cmd);
 
-void archive_enable(int flag);
+void archive_enable(struct cmd_context *cmd, int flag);
 int archive(struct volume_group *vg);
 int archive_display(struct cmd_context *cmd, const char *vg_name);
 
-int backup_init(const char *dir);
-void backup_exit(void);
+int backup_init(struct cmd_context *cmd, const char *dir);
+void backup_exit(struct cmd_context *cmd);
 
-void backup_enable(int flag);
+void backup_enable(struct cmd_context *cmd, int flag);
 int backup(struct volume_group *vg);
-int backup_remove(const char *vg_name);
+int backup_remove(struct cmd_context *cmd, const char *vg_name);
 
 struct volume_group *backup_read_vg(struct cmd_context *cmd,
 				    const char *vg_name, const char *file);
