@@ -36,6 +36,7 @@
 #include "segtype.h"
 #include "lvmcache.h"
 #include "dev-cache.h"
+#include "archiver.h"
 
 #ifdef HAVE_LIBDL
 #include "sharedlib.h"
@@ -814,6 +815,69 @@ static int _init_hostname(struct cmd_context *cmd)
 	return 1;
 }
 
+static int _init_backup(struct cmd_context *cmd)
+{
+	uint32_t days, min;
+	char default_dir[PATH_MAX];
+	const char *dir;
+
+	if (!cmd->sys_dir) {
+		log_warn("WARNING: Metadata changes will NOT be backed up");
+		backup_init(cmd, "");
+		archive_init(cmd, "", 0, 0);
+		return 1;
+	}
+
+	/* set up archiving */
+	cmd->default_settings.archive =
+	    find_config_bool(cmd->cft->root, "backup/archive",
+			     DEFAULT_ARCHIVE_ENABLED);
+
+	days = (uint32_t) find_config_int(cmd->cft->root, "backup/retain_days",
+					  DEFAULT_ARCHIVE_DAYS);
+
+	min = (uint32_t) find_config_int(cmd->cft->root, "backup/retain_min",
+					 DEFAULT_ARCHIVE_NUMBER);
+
+	if (lvm_snprintf
+	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
+	     DEFAULT_ARCHIVE_SUBDIR) == -1) {
+		log_err("Couldn't create default archive path '%s/%s'.",
+			cmd->sys_dir, DEFAULT_ARCHIVE_SUBDIR);
+		return 0;
+	}
+
+	dir = find_config_str(cmd->cft->root, "backup/archive_dir",
+			      default_dir);
+
+	if (!archive_init(cmd, dir, days, min)) {
+		log_debug("backup_init failed.");
+		return 0;
+	}
+
+	/* set up the backup */
+	cmd->default_settings.backup =
+	    find_config_bool(cmd->cft->root, "backup/backup",
+			     DEFAULT_BACKUP_ENABLED);
+
+	if (lvm_snprintf
+	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
+	     DEFAULT_BACKUP_SUBDIR) == -1) {
+		log_err("Couldn't create default backup path '%s/%s'.",
+			cmd->sys_dir, DEFAULT_BACKUP_SUBDIR);
+		return 0;
+	}
+
+	dir = find_config_str(cmd->cft->root, "backup/backup_dir", default_dir);
+
+	if (!backup_init(cmd, dir)) {
+		log_debug("backup_init failed.");
+		return 0;
+	}
+
+	return 1;
+}
+
 /* Entry point */
 struct cmd_context *create_toolcontext(struct arg *the_args)
 {
@@ -900,6 +964,9 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 		goto error;
 
 	if (!_init_segtypes(cmd))
+		goto error;
+
+	if (!_init_backup(cmd))
 		goto error;
 
 	cmd->current_settings = cmd->default_settings;
@@ -1012,6 +1079,8 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	if (cmd->dump_filter)
 		persistent_filter_dump(cmd->filter);
 
+	archive_exit(cmd);
+	backup_exit(cmd);
 	activation_exit();
 	lvmcache_destroy();
 	label_exit();

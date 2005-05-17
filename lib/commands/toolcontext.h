@@ -44,6 +44,8 @@ struct config_info {
 };
 
 struct config_tree;
+struct archive_params;
+struct backup_params;
 
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
@@ -72,6 +74,9 @@ struct cmd_context {
 	struct config_tree *cft;
 	struct config_info default_settings;
 	struct config_info current_settings;
+
+	struct archive_params *archive_params;
+	struct backup_params *backup_params;
 
 	/* List of defined tags */
 	struct list tags;

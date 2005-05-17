@@ -21,7 +21,6 @@ ifeq ("@FSADM@", "yes")
 endif
 
 SOURCES =\
-	archiver.c \
 	dumpconfig.c \
 	formats.c \
 	lvchange.c \

@@ -76,7 +76,7 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 		}
 
 		/* just use the normal backup code */
-		backup_enable(1);	/* force a backup */
+		backup_enable(cmd, 1);	/* force a backup */
 		if (!backup(vg)) {
 			stack;
 			return ECMD_FAILED;
