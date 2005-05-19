@@ -140,6 +140,33 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	}
 	vg_to->pv_count += vg_from->pv_count;
 
+	/* Fix up LVIDs */
+	list_iterate_items(lvl1, &vg_to->lvs) {
+		union lvid *lvid1 = &lvl1->lv->lvid;
+		char uuid[64];
+
+		list_iterate_items(lvl2, &vg_from->lvs) {
+			union lvid *lvid2 = &lvl2->lv->lvid;
+
+                	if (id_equal(&lvid1->id[1], &lvid2->id[1])) {
+				if (!id_create(&lvid2->id[1])) {
+					log_error("Failed to generate new "
+						  "random LVID for %s",
+						  lvl2->lv->name);
+					goto error;
+				}
+                		if (!id_write_format(&lvid2->id[1], uuid,
+						     sizeof(uuid))) {
+                        		stack;
+                        		goto error;
+		                }
+
+				log_verbose("Changed LVID for %s to %s",
+					    lvl2->lv->name, uuid);
+			}
+		}
+	}
+ 
 	while (!list_empty(&vg_from->lvs)) {
 		struct list *lvh = vg_from->lvs.n;
 
