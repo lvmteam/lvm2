@@ -626,14 +626,11 @@ struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg,
 				      const union lvid *lvid)
 {
-	struct list *lvh;
 	struct lv_list *lvl;
 
-	list_iterate(lvh, &vg->lvs) {
-		lvl = list_item(lvh, struct lv_list);
+	list_iterate_items(lvl, &vg->lvs)
 		if (!strncmp(lvl->lv->lvid.s, lvid->s, sizeof(*lvid)))
 			return lvl;
-	}
 
 	return NULL;
 }
