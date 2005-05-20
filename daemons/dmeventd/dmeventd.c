@@ -321,14 +321,9 @@ static void unlock(void)
 /* Check, if a device exists. */
 static int device_exists(char *device)
 {
-	int f;
+	struct stat st_buf;
 
-	if ((f = open(device, O_RDONLY)) == -1)
-		return 0;
-
-	close(f);
-
-	return 1;
+	return !stat(device, &st_buf) && S_ISBLK(st_buf.st_mode);
 }
 
 /*
@@ -963,9 +958,10 @@ static void comm_thread(struct fifos *fifos)
 		return;
 	}
 	
-	/* Loop forever and handle client requests sequentially. */
-	while (1)
+	/* Exit after last unregister. */
+	do {
 		process_request(fifos, &msg);
+	} while (!list_empty(&thread_registry));
 }
 
 /* Fork into the background and detach from our parent process. */

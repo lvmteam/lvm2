@@ -100,13 +100,13 @@ int main(int argc, char **argv)
 	if (!parse_argv(argc, argv, &dso_name_arg, &device_arg, &reg, &list))
 		exit(EXIT_FAILURE);
 
-	if (device_arg){
+	if (device_arg) {
 		if (!(device = strdup(device_arg)))
 			exit(EXIT_FAILURE);
 	} else
 		device = NULL;
 
-	if (dso_name_arg){
+	if (dso_name_arg) {
 		if (!(dso_name = strdup(dso_name_arg)))
 			exit(EXIT_FAILURE);
 	} else {
