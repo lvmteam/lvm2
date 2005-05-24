@@ -24,9 +24,12 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	struct pv_list *pvl;
 	struct list mdas;
 	uint64_t sector;
+	uint32_t orig_pe_alloc_count;
 
 	const char *pv_name = dev_name(pv->dev);
 	const char *tag = NULL;
+	const char *orig_vg_name;
+	char uuid[64];
 
 	int consistent = 1;
 	int allocatable = 0;
@@ -177,6 +180,24 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			log_error("Failed to generate new random UUID for %s.",
 				  pv_name);
 			return 0;
+		}
+		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
+			stack;
+			return 0;
+		}
+		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
+		if (*pv->vg_name) {
+			orig_vg_name = pv->vg_name;
+			orig_pe_alloc_count = pv->pe_alloc_count;
+			pv->vg_name = ORPHAN;
+			pv->pe_alloc_count = 0;
+			if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
+				log_error("pv_write with new uuid failed "
+					  "for %s.", pv_name);
+				return 0;
+			}
+			pv->vg_name = orig_vg_name;
+			pv->pe_alloc_count = orig_pe_alloc_count;
 		}
 	}
 
