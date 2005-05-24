@@ -38,7 +38,8 @@ struct backup_params {
 int archive_init(struct cmd_context *cmd, const char *dir,
 		 unsigned int keep_days, unsigned int keep_min)
 {
-	if (!(cmd->archive_params = pool_zalloc(cmd->mem, sizeof(*cmd->archive_params)))) {
+	if (!(cmd->archive_params = pool_zalloc(cmd->libmem,
+						sizeof(*cmd->archive_params)))) {
 		log_error("archive_params alloc failed");
 		return 0;
 	}
@@ -149,7 +150,8 @@ int archive_display(struct cmd_context *cmd, const char *vg_name)
 
 int backup_init(struct cmd_context *cmd, const char *dir)
 {
-	if (!(cmd->backup_params = pool_zalloc(cmd->mem, sizeof(*cmd->archive_params)))) {
+	if (!(cmd->backup_params = pool_zalloc(cmd->libmem,
+					       sizeof(*cmd->archive_params)))) {
 		log_error("archive_params alloc failed");
 		return 0;
 	}
