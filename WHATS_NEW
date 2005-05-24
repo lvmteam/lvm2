@@ -1,5 +1,6 @@
 Version 2.01.11 - 
 ==============================
+  Fix non-orphan pvchange -u.
   Fix vgmerge to handle duplicate LVIDs.
   Move archiver code from tools into library.
   vgscan/change/display/vgs automatically create metadata backups if needed.
