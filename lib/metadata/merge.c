@@ -58,11 +58,13 @@ int lv_merge_segments(struct logical_volume *lv)
 /*
  * Verify that an LV's segments are consecutive, complete and don't overlap.
  */
-int lv_check_segments(struct logical_volume *lv)
+int check_lv_segments(struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 	uint32_t le = 0;
 	unsigned seg_count = 0;
+	int r = 1;
+	uint32_t area_multiplier, s;
 
 	list_iterate_items(seg, &lv->segments) {
 		seg_count++;
@@ -70,13 +72,58 @@ int lv_check_segments(struct logical_volume *lv)
 			log_error("LV %s invalid: segment %u should begin at "
 				  "LE %" PRIu32 " (found %" PRIu32 ").",
 				  lv->name, seg_count, le, seg->le);
-			return 0;
+			r = 0;
+		}
+
+		area_multiplier = segtype_is_striped(seg->segtype) ? 
+					seg->area_count : 1;
+
+		if (seg->area_len * area_multiplier != seg->len) {
+			log_error("LV %s: segment %u has inconsistent "
+				  "area_len %u",
+				  lv->name, seg_count, seg->area_len);
+			r = 0;
+		}
+
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) == AREA_PV) {
+				if (!seg_pvseg(seg, s) ||
+				    seg_pvseg(seg, s)->lvseg != seg ||
+				    seg_pvseg(seg, s)->lv_area != s) {
+					log_error("LV %s: segment %u has "
+						  "inconsistent PV area %u",
+						  lv->name, seg_count, s);
+					r = 0;
+				}
+			} else {
+				if (!seg_lv(seg, s) ||
+				    seg_lv(seg, s)->vg != lv->vg ||
+				    seg_lv(seg, s) == lv) {
+					log_error("LV %s: segment %u has "
+						  "inconsistent LV area %u",
+						  lv->name, seg_count, s);
+					r = 0;
+				}
+				if (seg_le(seg, s) != le) {
+					log_error("LV %s: segment %u has "
+						  "inconsistent LV area %u "
+						  "size",
+						  lv->name, seg_count, s);
+					r = 0;
+				}
+			}
 		}
 
 		le += seg->len;
 	}
 
-	return 1;
+	if (le != lv->le_count) {
+		log_error("LV %s: inconsistent LE count %u != %u",
+			  lv->name, le, lv->le_count);
+		r = 0;
+	}
+
+	return r;
 }
 
 /*
@@ -101,8 +148,9 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	if (!(split_seg = alloc_lv_segment(lv->vg->cmd->mem, seg->segtype,
 					   seg->lv, seg->le, seg->len,
 					   seg->status, seg->stripe_size,
+					   seg->log_lv,
 					   seg->area_count, seg->area_len,
-					   seg->chunk_size,
+					   seg->chunk_size, seg->region_size,
 					   seg->extents_copied))) {
 		log_error("Couldn't allocate cloned LV segment.");
 		return 0;
@@ -128,24 +176,24 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 	/* Adjust the PV mapping */
 	for (s = 0; s < seg->area_count; s++) {
-		split_seg->area[s].type = seg->area[s].type;
+		seg_type(split_seg, s) = seg_type(seg, s);
 
 		/* Split area at the offset */
-		switch (seg->area[s].type) {
+		switch (seg_type(seg, s)) {
 		case AREA_LV:
-			split_seg->area[s].u.lv.lv = seg->area[s].u.lv.lv;
-			split_seg->area[s].u.lv.le =
-			    seg->area[s].u.lv.le + seg->area_len;
+			seg_lv(split_seg, s) = seg_lv(seg, s);
+			seg_le(split_seg, s) =
+			    seg_le(seg, s) + seg->area_len;
 			log_debug("Split %s:%u[%u] at %u: %s LE %u", lv->name,
-				  seg->le, s, le, seg->area[s].u.lv.lv->name,
-				  split_seg->area[s].u.lv.le);
+				  seg->le, s, le, seg_lv(seg, s)->name,
+				  seg_le(split_seg, s));
 			break;
 
 		case AREA_PV:
-			if (!assign_peg_to_lvseg(seg->area[s].u.pv.pvseg->pv,
-						 seg->area[s].u.pv.pvseg->pe +
+			if (!assign_peg_to_lvseg(seg_pv(seg, s),
+						 seg_pe(seg, s) +
 						     seg->area_len,
-						 seg->area[s].u.pv.pvseg->len -
+						 seg_pvseg(seg, s)->len -
 						     seg->area_len,
 						 split_seg, s)) {
 				stack;
@@ -153,13 +201,13 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 			}
 			log_debug("Split %s:%u[%u] at %u: %s PE %u", lv->name,
 				  seg->le, s, le,
-				  dev_name(seg->area[s].u.pv.pvseg->pv->dev),
-				  split_seg->area[s].u.pv.pvseg->pe);
+				  dev_name(seg_dev(seg, s)),
+				  seg_pe(split_seg, s));
 			break;
 
 		default:
 			log_error("Unrecognised segment type %u",
-				  seg->area[s].type);
+				  seg_type(seg, s));
 			return 0;
 		}
 	}

@@ -196,7 +196,7 @@ static int _compare_paths(const char *path0, const char *path1)
 static int _add_alias(struct device *dev, const char *path)
 {
 	struct str_list *sl = _alloc(sizeof(*sl));
-	struct list *ah;
+	struct str_list *strl;
 	const char *oldpath;
 	int prefer_old = 1;
 
@@ -206,8 +206,8 @@ static int _add_alias(struct device *dev, const char *path)
 	}
 
 	/* Is name already there? */
-	list_iterate(ah, &dev->aliases) {
-		if (!strcmp(list_item(ah, struct str_list)->str, path)) {
+	list_iterate_items(strl, &dev->aliases) {
+		if (!strcmp(strl->str, path)) {
 			log_debug("%s: Already in device cache", path);
 			return 1;
 		}
@@ -414,20 +414,16 @@ static int _insert(const char *path, int rec)
 
 static void _full_scan(int dev_scan)
 {
-	struct list *dh;
+	struct dir_list *dl;
 
 	if (_cache.has_scanned && !dev_scan)
 		return;
 
-	list_iterate(dh, &_cache.dirs) {
-		struct dir_list *dl = list_item(dh, struct dir_list);
+	list_iterate_items(dl, &_cache.dirs)
 		_insert_dir(dl->dir);
-	};
 
-	list_iterate(dh, &_cache.files) {
-		struct dir_list *dl = list_item(dh, struct dir_list);
+	list_iterate_items(dl, &_cache.files)
 		_insert_file(dl->dir);
-	};
 
 	_cache.has_scanned = 1;
 	init_full_scan_done(1);

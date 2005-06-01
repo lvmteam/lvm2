@@ -104,6 +104,14 @@ static inline int list_end(struct list *head, struct list *elem)
 }
 
 /*
+ * Return first element of the list or NULL if empty
+ */
+static inline struct list *list_first(struct list *head)
+{
+	return (list_empty(head) ? NULL : head->n);
+}
+
+/*
  * Return last element of the list or NULL if empty
  */
 static inline struct list *list_last(struct list *head)
@@ -193,6 +201,25 @@ static inline struct list *list_next(struct list *head, struct list *elem)
  * The list should be 'struct list list' within the containing structure.
  */
 #define list_iterate_items(v, head) list_iterate_items_gen(v, (head), list)
+
+/*
+ * Walk a list backwards, setting 'v' in turn to the containing structure 
+ * of each item.
+ * The containing structure should be the same type as 'v'.
+ * The 'struct list' variable within the containing structure is 'field'.
+ */
+#define list_iterate_back_items_gen(v, head, field) \
+	for (v = list_struct_base((head)->p, typeof(*v), field); \
+	     &v->field != (head); \
+	     v = list_struct_base(v->field.p, typeof(*v), field))
+
+/*
+ * Walk a list backwards, setting 'v' in turn to the containing structure 
+ * of each item.
+ * The containing structure should be the same type as 'v'.
+ * The list should be 'struct list list' within the containing structure.
+ */
+#define list_iterate_back_items(v, head) list_iterate_back_items_gen(v, (head), list)
 
 /*
  * Return the number of elements in a list by walking it.

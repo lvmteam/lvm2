@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lv_alloc.h"
 
 #include <fcntl.h>
 
@@ -31,6 +32,7 @@ struct lvcreate_params {
 	uint32_t stripes;
 	uint32_t stripe_size;
 	uint32_t chunk_size;
+	uint32_t region_size;
 
 	uint32_t mirrors;
 
@@ -228,6 +230,38 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 	return 1;
 }
 
+static int _read_mirror_params(struct lvcreate_params *lp,
+			       struct cmd_context *cmd,
+			       int *pargc, char ***pargv)
+{
+	int argc = *pargc;
+
+	if (argc && (unsigned) argc < lp->mirrors) {
+		log_error("Too few physical volumes on "
+			  "command line for %d-way mirroring", lp->mirrors);
+		return 0;
+	}
+
+	if (arg_count(cmd, regionsize_ARG)) {
+		if (arg_sign_value(cmd, regionsize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative regionsize is invalid");
+			return 0;
+		}
+		lp->region_size = 2 * arg_uint_value(cmd, regionsize_ARG, 0);
+	} else
+		lp->region_size = 2 * find_config_int(cmd->cft->root,
+					"activation/mirror_region_size",
+					DEFAULT_MIRROR_REGION_SIZE);
+
+	if (lp->region_size & (lp->region_size - 1)) {
+		log_error("Region size (%" PRIu32 ") must be a power of 2",
+			  lp->region_size);
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
@@ -248,6 +282,18 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 
 	if (arg_count(cmd, snapshot_ARG) || seg_is_snapshot(lp))
 		lp->snapshot = 1;
+
+	lp->mirrors = 1;
+
+	/* Default to 2 mirrored areas if --type mirror */
+	if (seg_is_mirrored(lp))
+		lp->mirrors = 2;
+
+	if (arg_count(cmd, mirrors_ARG)) {
+		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
+		if (lp->mirrors == 1)
+			log_print("Redundant mirrors argument: default is 0");
+	}
 
 	if (lp->snapshot) {
 		if (arg_count(cmd, zero_ARG)) {
@@ -272,6 +318,25 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 		}
 	}
 
+	if (lp->mirrors > 1) {
+		if (lp->snapshot) {
+			log_error("mirrors and snapshots are currently "
+				  "incompatible");
+			return 0;
+		}
+
+		if (lp->stripes > 1) {
+			log_error("mirrors and stripes are currently "
+				  "incompatible");
+			return 0;
+		}
+
+		if (!(lp->segtype = get_segtype_from_string(cmd, "mirror"))) {
+			stack;
+			return 0;
+		}
+	}
+
 	if (activation() && lp->segtype->ops->target_present &&
 	    !lp->segtype->ops->target_present()) {
 		log_error("%s: Required device-mapper target(s) not "
@@ -281,8 +346,11 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 
 	if (!_read_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, cmd, &argc, &argv) ||
-	    !_read_stripe_params(lp, cmd, &argc, &argv))
+	    !_read_stripe_params(lp, cmd, &argc, &argv) ||
+	    !_read_mirror_params(lp, cmd, &argc, &argv)) {
+		stack;
 		return 0;
+	}
 
 	/*
 	 * Should we zero the lv.
@@ -392,14 +460,15 @@ static int _zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 
 static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 {
-	uint32_t size_rest;
+	uint32_t size_rest, region_max;
 	uint32_t status = 0;
 	uint64_t tmp_size;
 	struct volume_group *vg;
-	struct logical_volume *lv, *org = NULL;
+	struct logical_volume *lv, *org = NULL, *log_lv = NULL;
 	struct list *pvh;
 	const char *tag;
 	int consistent = 1;
+	struct alloc_handle *ah = NULL;
 
 	status |= lp->permission | VISIBLE_LV;
 
@@ -505,30 +574,98 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (lp->stripes > list_size(pvh)) {
+	if (lp->stripes > list_size(pvh) && lp->alloc != ALLOC_ANYWHERE) {
 		log_error("Number of stripes (%u) must not exceed "
 			  "number of physical volumes (%d)", lp->stripes,
 			  list_size(pvh));
 		return 0;
 	}
 
-	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d", NULL,
-				   status, lp->alloc, 0, vg))) {
-		stack;
+	if (lp->mirrors > 1 && !activation()) {
+		log_error("Can't create mirror without using "
+			  "device-mapper kernel driver.");
 		return 0;
 	}
 
 	/* The snapshot segment gets created later */
-	if (lp->snapshot)
-		if (!(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
+	if (lp->snapshot &&
+	    !(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
+		stack;
+		return 0;
+	}
+
+	if (!archive(vg))
+		return 0;
+
+	if (lp->mirrors > 1) {
+		/* FIXME Adjust lp->region_size if necessary */
+		region_max = (1 << (ffs(lp->extents) - 1)) * vg->extent_size;
+
+		if (region_max < lp->region_size) {
+			lp->region_size = region_max;
+			log_print("Using reduced mirror region size of %" PRIu32
+				  " sectors", lp->region_size);
+		}
+
+		/* FIXME Calculate how many extents needed for the log */
+
+		if (!(log_lv = lv_create_empty(vg->fid, NULL, "mirrorlog%d", NULL,
+				VISIBLE_LV | LVM_READ | LVM_WRITE,
+				lp->alloc, 0, vg))) {
 			stack;
 			return 0;
 		}
 
-	if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
-		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc)) {
+		if (!(ah = allocate_extents(vg, NULL, lp->segtype, lp->stripes,
+					    lp->mirrors, 1, lp->extents,
+					    NULL, 0, 0, pvh, lp->alloc))) {
+			stack;
+			return 0;
+		}
+
+		if (!lv_add_log_segment(ah, log_lv)) {
+			stack;
+			goto error;
+		}
+
+		/* store mirror log on disk(s) */
+		if (!vg_write(vg)) {
+			stack;
+			goto error;
+		}
+
+		backup(vg);
+
+		if (!vg_commit(vg)) {
+			stack;
+			goto error;
+		}
+
+		if (!activate_lv(cmd, log_lv->lvid.s)) {
+			log_error("Aborting. Failed to activate mirror log. "
+				  "Remove new LVs and retry.");
+			goto error;
+		}
+
+		if (activation() && !_zero_lv(cmd, log_lv)) {
+			log_error("Aborting. Failed to wipe mirror log. "
+				  "Remove new LV and retry.");
+			goto error;
+		}
+
+		if (!deactivate_lv(cmd, log_lv->lvid.s)) {
+			log_error("Aborting. Failed to deactivate mirror log. "
+				  "Remove new LV and retry.");
+			goto error;
+		}
+
+		log_lv->status &= ~VISIBLE_LV;
+	}
+
+	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d", NULL,
+				   status, lp->alloc, 0, vg))) {
 		stack;
-		return 0;
+		goto error;
 	}
 
 	if (lp->read_ahead) {
@@ -547,24 +684,38 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	if (arg_count(cmd, addtag_ARG)) {
 		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
 			log_error("Failed to get tag");
-			return 0;
+			goto error;
 		}
 
 		if (!(lv->vg->fid->fmt->features & FMT_TAGS)) {
 			log_error("Volume group %s does not support tags",
 				  lv->vg->name);
-			return 0;
+			goto error;
 		}
 
 		if (!str_list_add(cmd->mem, &lv->tags, tag)) {
 			log_error("Failed to add tag %s to %s/%s",
 				  tag, lv->vg->name, lv->name);
-			return 0;
+			goto error;
 		}
 	}
 
-	if (!archive(vg))
+	if (lp->mirrors > 1) {
+		if (!lv_add_segment(ah, 0, lp->mirrors, lv, lp->segtype,
+				    lp->stripe_size, NULL, 0, 0,
+				    lp->region_size, log_lv)) {
+			log_error("Aborting. Failed to add mirror segment. "
+				  "Remove new LV and retry.");
+			goto error;
+		}
+
+		alloc_destroy(ah);
+		ah = NULL;
+	} else if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
+		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc)) {
+		stack;
 		return 0;
+	}
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg)) {
@@ -642,6 +793,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	 */
 
 	return 1;
+
+error:
+	if (ah)
+		alloc_destroy(ah);
+	return 0;
 }
 
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)

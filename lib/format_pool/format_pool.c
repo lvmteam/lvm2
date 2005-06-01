@@ -33,8 +33,6 @@
 static struct user_subpool *_build_usp(struct list *pls, struct pool *mem,
 				       int *sps)
 {
-
-	struct list *plhs;
 	struct pool_list *pl;
 	struct user_subpool *usp = NULL, *cur_sp = NULL;
 	struct user_device *cur_dev = NULL;
@@ -43,9 +41,7 @@ static struct user_subpool *_build_usp(struct list *pls, struct pool *mem,
 	 * FIXME: Need to do some checks here - I'm tempted to add a
 	 * user_pool structure and build the entire thing to check against.
 	 */
-	list_iterate(plhs, pls) {
-		pl = list_item(plhs, struct pool_list);
-
+	list_iterate_items(pl, pls) {
 		*sps = pl->pd.pl_subpools;
 		if (!usp && (!(usp = pool_zalloc(mem, sizeof(*usp) * (*sps))))) {
 			log_error("Unable to allocate %d subpool structures",
@@ -72,13 +68,13 @@ static struct user_subpool *_build_usp(struct list *pls, struct pool *mem,
 				  "structures", pl->pd.pl_sp_devs);
 			return 0;
 		}
+
 		cur_dev = &cur_sp->devs[pl->pd.pl_sp_devid];
 		cur_dev->sp_id = cur_sp->id;
 		cur_dev->devid = pl->pd.pl_sp_id;
 		cur_dev->blocks = pl->pd.pl_blocks;
 		cur_dev->pv = pl->pv;
 		cur_dev->initialized = 1;
-
 	}
 
 	return usp;

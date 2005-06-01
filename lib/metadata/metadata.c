@@ -139,7 +139,6 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 			 const char *id, struct physical_volume *pv)
 {
 	struct volume_group *vg;
-	struct list *pvh;
 	struct pv_list *pvl;
 	int consistent = 0;
 
@@ -153,8 +152,7 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 		log_error("Warning: Volume group %s is not consistent",
 			  vg_name);
 
-	list_iterate(pvh, &vg->pvs) {
-		pvl = list_item(pvh, struct pv_list);
+	list_iterate_items(pvl, &vg->pvs) {
 		if (id_equal(&pvl->pv->id, (const struct id *) id)) {
 			if (!_copy_pv(pv, pvl->pv)) {
 				stack;
@@ -171,19 +169,17 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name)
 {
 	struct pool *mem = cmd->mem;
-	struct physical_volume *pv;
-	struct list *pvh;
+	struct pv_list *pvl;
 
 	if (!(vg->name = pool_strdup(mem, new_name))) {
 		log_error("vg->name allocation failed for '%s'", new_name);
 		return 0;
 	}
 
-	list_iterate(pvh, &vg->pvs) {
-		pv = list_item(pvh, struct pv_list)->pv;
-		if (!(pv->vg_name = pool_strdup(mem, new_name))) {
+	list_iterate_items(pvl, &vg->pvs) {
+		if (!(pvl->pv->vg_name = pool_strdup(mem, new_name))) {
 			log_error("pv->vg_name allocation failed for '%s'",
-				  dev_name(pv->dev));
+				  dev_name(pvl->pv->dev));
 			return 0;
 		}
 	}
@@ -441,10 +437,10 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 
 			/* foreach area */
 			for (s = 0; s < seg->area_count; s++) {
-				switch (seg->area[s].type) {
+				switch (seg_type(seg, s)) {
 				case AREA_PV:
 					if (!_recalc_extents
-					    (&seg->area[s].u.pv.pvseg->pe,
+					    (&seg_pe(seg, s),
 					     lv->name,
 					     " pvseg start", old_size,
 					     new_size)) {
@@ -452,7 +448,7 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 						return 0;
 					}
 					if (!_recalc_extents
-					    (&seg->area[s].u.pv.pvseg->len,
+					    (&seg_pvseg(seg, s)->len,
 					     lv->name,
 					     " pvseg length", old_size,
 					     new_size)) {
@@ -462,7 +458,7 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 					break;
 				case AREA_LV:
 					if (!_recalc_extents
-					    (&seg->area[s].u.lv.le, lv->name,
+					    (&seg_le(seg, s), lv->name,
 					     " area start", old_size,
 					     new_size)) {
 						stack;
@@ -471,7 +467,7 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 					break;
 				default:
 					log_error("Unrecognised segment type "
-						  "%u", seg->area[s].type);
+						  "%u", seg_type(seg, s));
 					return 0;
 				}
 			}
@@ -563,26 +559,22 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 
 struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 {
-	struct list *pvh;
 	struct pv_list *pvl;
 
-	list_iterate(pvh, &vg->pvs) {
-		pvl = list_item(pvh, struct pv_list);
+	list_iterate_items(pvl, &vg->pvs)
 		if (pvl->pv->dev == dev_cache_get(pv_name, vg->cmd->filter))
 			return pvl;
-	}
 
 	return NULL;
 }
 
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
 {
-	struct list *pvh;
+	struct pv_list *pvl;
 
-	list_iterate(pvh, &vg->pvs) {
-		if (pv == list_item(pvh, struct pv_list)->pv)
+	list_iterate_items(pvl, &vg->pvs)
+		if (pv == pvl->pv)
 			 return 1;
-	}
 
 	return 0;
 }
@@ -590,21 +582,17 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
 struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
 					      struct id *id)
 {
-	struct list *pvh;
 	struct pv_list *pvl;
 
-	list_iterate(pvh, &vg->pvs) {
-		pvl = list_item(pvh, struct pv_list);
+	list_iterate_items(pvl, &vg->pvs)
 		if (id_equal(&pvl->pv->id, id))
 			return pvl->pv;
-	}
 
 	return NULL;
 }
 
 struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 {
-	struct list *lvh;
 	struct lv_list *lvl;
 	const char *ptr;
 
@@ -614,11 +602,9 @@ struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
 	else
 		ptr = lv_name;
 
-	list_iterate(lvh, &vg->lvs) {
-		lvl = list_item(lvh, struct lv_list);
+	list_iterate_items(lvl, &vg->lvs)
 		if (!strcmp(lvl->lv->name, ptr))
 			return lvl;
-	}
 
 	return NULL;
 }
@@ -643,15 +629,12 @@ struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
 
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 {
-	struct list *pvh;
-	struct physical_volume *pv;
+	struct pv_list *pvl;
 
-	list_iterate(pvh, &vg->pvs) {
-		pv = list_item(pvh, struct pv_list)->pv;
+	list_iterate_items(pvl, &vg->pvs)
+		if (dev == pvl->pv->dev)
+			return pvl->pv;
 
-		if (dev == pv->dev)
-			return pv;
-	}
 	return NULL;
 }
 
@@ -676,14 +659,11 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 /* Find segment at a given logical extent in an LV */
 struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le)
 {
-	struct list *segh;
 	struct lv_segment *seg;
 
-	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct lv_segment);
+	list_iterate_items(seg, &lv->segments)
 		if (le >= seg->le && le < seg->le + seg->len)
 			return seg;
-	}
 
 	return NULL;
 }
@@ -693,23 +673,20 @@ struct pv_segment *find_peg_by_pe(struct physical_volume *pv, uint32_t pe)
 {
 	struct pv_segment *peg;
 
-	list_iterate_items(peg, &pv->segments) {
+	list_iterate_items(peg, &pv->segments)
 		if (pe >= peg->pe && pe < peg->pe + peg->len)
 			return peg;
-	}
 
 	return NULL;
 }
 
 int vg_remove(struct volume_group *vg)
 {
-	struct list *mdah;
 	struct metadata_area *mda;
 
 	/* FIXME Improve recovery situation? */
 	/* Remove each copy of the metadata */
-	list_iterate(mdah, &vg->fid->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		if (mda->ops->vg_remove &&
 		    !mda->ops->vg_remove(vg->fid, vg, mda)) {
 			stack;
@@ -726,13 +703,22 @@ int vg_remove(struct volume_group *vg)
  */
 int vg_write(struct volume_group *vg)
 {
-	struct list *mdah, *mdah2;
+	struct list *mdah;
 	struct metadata_area *mda;
+	struct lv_list *lvl;
 
 	if (!check_pv_segments(vg)) {
 		log_error("Internal error: PV segments corrupted in %s.",
 			  vg->name);
 		return 0;
+	}
+
+	list_iterate_items(lvl, &vg->lvs) {
+		if (!check_lv_segments(lvl->lv)) {
+			log_error("Internal error: LV segments corrupted in %s.",
+				  lvl->lv->name);
+			return 0;
+		}
 	}
 
 	if (vg->status & PARTIAL_VG) {
@@ -749,14 +735,13 @@ int vg_write(struct volume_group *vg)
 	vg->seqno++;
 
 	/* Write to each copy of the metadata area */
-	list_iterate(mdah, &vg->fid->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		if (!mda->ops->vg_write) {
 			log_error("Format does not support writing volume"
 				  "group metadata areas");
 			/* Revert */
-			list_uniterate(mdah2, &vg->fid->metadata_areas, mdah) {
-				mda = list_item(mdah2, struct metadata_area);
+			list_uniterate(mdah, &vg->fid->metadata_areas, &mda->list) {
+				mda = list_item(mdah, struct metadata_area);
 
 				if (mda->ops->vg_revert &&
 				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
@@ -768,8 +753,9 @@ int vg_write(struct volume_group *vg)
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
 			stack;
 			/* Revert */
-			list_uniterate(mdah2, &vg->fid->metadata_areas, mdah) {
-				mda = list_item(mdah2, struct metadata_area);
+			list_uniterate(mdah, &vg->fid->metadata_areas, &mda->list) {
+				mda = list_item(mdah, struct metadata_area);
+
 				if (mda->ops->vg_revert &&
 				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
 					stack;
@@ -780,14 +766,12 @@ int vg_write(struct volume_group *vg)
 	}
 
 	/* Now pre-commit each copy of the new metadata */
-	list_iterate(mdah, &vg->fid->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		if (mda->ops->vg_precommit &&
 		    !mda->ops->vg_precommit(vg->fid, vg, mda)) {
 			stack;
 			/* Revert */
-			list_iterate(mdah2, &vg->fid->metadata_areas) {
-				mda = list_item(mdah2, struct metadata_area);
+			list_iterate_items(mda, &vg->fid->metadata_areas) {
 				if (mda->ops->vg_revert &&
 				    !mda->ops->vg_revert(vg->fid, vg, mda)) {
 					stack;
@@ -803,14 +787,12 @@ int vg_write(struct volume_group *vg)
 /* Commit pending changes */
 int vg_commit(struct volume_group *vg)
 {
-	struct list *mdah;
 	struct metadata_area *mda;
 	int cache_updated = 0;
 	int failed = 0;
 
 	/* Commit to each copy of the metadata area */
-	list_iterate(mdah, &vg->fid->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		failed = 0;
 		if (mda->ops->vg_commit &&
 		    !mda->ops->vg_commit(vg->fid, vg, mda)) {
@@ -822,7 +804,6 @@ int vg_commit(struct volume_group *vg)
 			lvmcache_update_vg(vg);
 			cache_updated = 1;
 		}
-
 	}
 
 	/* If at least one mda commit succeeded, it was committed */
@@ -832,11 +813,9 @@ int vg_commit(struct volume_group *vg)
 /* Don't commit any pending changes */
 int vg_revert(struct volume_group *vg)
 {
-	struct list *mdah;
 	struct metadata_area *mda;
 
-	list_iterate(mdah, &vg->fid->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		if (mda->ops->vg_revert &&
 		    !mda->ops->vg_revert(vg->fid, vg, mda)) {
 			stack;
@@ -850,8 +829,7 @@ int vg_revert(struct volume_group *vg)
 static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 {
 	struct lvmcache_vginfo *vginfo;
-	struct list *ih;
-	struct device *dev;
+	struct lvmcache_info *info;
 	struct pv_list *pvl;
 	struct volume_group *vg;
 	struct physical_volume *pv;
@@ -874,9 +852,8 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	list_iterate(ih, &vginfo->infos) {
-		dev = list_item(ih, struct lvmcache_info)->dev;
-		if (!(pv = pv_read(cmd, dev_name(dev), NULL, NULL, 1))) {
+	list_iterate_items(info, &vginfo->infos) {
+		if (!(pv = pv_read(cmd, dev_name(info->dev), NULL, NULL, 1))) {
 			continue;
 		}
 		if (!(pvl = pool_zalloc(cmd->mem, sizeof(*pvl)))) {
@@ -905,7 +882,6 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct format_instance *fid;
 	const struct format_type *fmt;
 	struct volume_group *vg, *correct_vg = NULL;
-	struct list *mdah;
 	struct metadata_area *mda;
 	int inconsistent = 0;
 
@@ -949,8 +925,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	}
 
 	/* Ensure contents of all metadata areas match - else do recovery */
-	list_iterate(mdah, &fid->metadata_areas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &fid->metadata_areas) {
 		if ((precommitted &&
 		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
 		    (!precommitted &&
@@ -993,8 +968,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 
 		/* Ensure contents of all metadata areas match - else recover */
-		list_iterate(mdah, &fid->metadata_areas) {
-			mda = list_item(mdah, struct metadata_area);
+		list_iterate_items(mda, &fid->metadata_areas) {
 			if ((precommitted &&
 			     !(vg = mda->ops->vg_read_precommit(fid, vgname,
 								mda))) ||
@@ -1088,9 +1062,10 @@ struct volume_group *vg_read_precommitted(struct cmd_context *cmd,
 struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 {
 	const char *vgname;
-	struct list *vgnames, *slh;
+	struct list *vgnames;
 	struct volume_group *vg;
 	struct lvmcache_vginfo *vginfo;
+	struct str_list *strl;
 	int consistent = 0;
 
 	/* Is corresponding vgname already cached? */
@@ -1121,8 +1096,8 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 		return NULL;
 	}
 
-	list_iterate(slh, vgnames) {
-		vgname = list_item(slh, struct str_list)->str;
+	list_iterate_items(strl, vgnames) {
+		vgname = strl->str;
 		if (!vgname || !*vgname)
 			continue;	// FIXME Unnecessary? 
 		consistent = 0;
@@ -1228,10 +1203,11 @@ struct list *get_vgs(struct cmd_context *cmd, int full_scan)
 
 struct list *get_pvs(struct cmd_context *cmd)
 {
+	struct str_list *strl;
 	struct list *results;
 	const char *vgname;
 	struct list *pvh, *tmp;
-	struct list *vgnames, *slh;
+	struct list *vgnames;
 	struct volume_group *vg;
 	int consistent = 0;
 	int old_partial;
@@ -1258,8 +1234,8 @@ struct list *get_pvs(struct cmd_context *cmd)
 	old_pvmove = pvmove_mode();
 	init_partial(1);
 	init_pvmove(1);
-	list_iterate(slh, vgnames) {
-		vgname = list_item(slh, struct str_list)->str;
+	list_iterate_items(strl, vgnames) {
+		vgname = strl->str;
 		if (!vgname)
 			continue;	/* FIXME Unnecessary? */
 		consistent = 0;

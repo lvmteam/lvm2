@@ -158,13 +158,11 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 
 static int _accept_p(struct dev_filter *f, struct device *dev)
 {
-	struct list *ah;
 	int m, first = 1, rejected = 0;
 	struct rfilter *rf = (struct rfilter *) f->private;
 	struct str_list *sl;
 
-	list_iterate(ah, &dev->aliases) {
-		sl = list_item(ah, struct str_list);
+	list_iterate_items(sl, &dev->aliases) {
 		m = matcher_run(rf->engine, sl->str);
 
 		if (m >= 0) {

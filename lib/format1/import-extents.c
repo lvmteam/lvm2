@@ -48,7 +48,6 @@ static struct hash_table *_create_lv_maps(struct pool *mem,
 					  struct volume_group *vg)
 {
 	struct hash_table *maps = hash_create(32);
-	struct list *llh;
 	struct lv_list *ll;
 	struct lv_map *lvm;
 
@@ -58,8 +57,7 @@ static struct hash_table *_create_lv_maps(struct pool *mem,
 		return NULL;
 	}
 
-	list_iterate(llh, &vg->lvs) {
-		ll = list_item(llh, struct lv_list);
+	list_iterate_items(ll, &vg->lvs) {
 		if (ll->lv->status & SNAPSHOT)
 			continue;
 
@@ -91,13 +89,12 @@ static struct hash_table *_create_lv_maps(struct pool *mem,
 static int _fill_lv_array(struct lv_map **lvs,
 			  struct hash_table *maps, struct disk_list *dl)
 {
-	struct list *lvh;
+	struct lvd_list *ll;
 	struct lv_map *lvm;
 
 	memset(lvs, 0, sizeof(*lvs) * MAX_LV);
-	list_iterate(lvh, &dl->lvds) {
-		struct lvd_list *ll = list_item(lvh, struct lvd_list);
 
+	list_iterate_items(ll, &dl->lvds) {
 		if (!(lvm = hash_lookup(maps, strrchr(ll->lvd.lv_name, '/')
 					+ 1))) {
 			log_err("Physical volume (%s) contains an "
@@ -118,15 +115,13 @@ static int _fill_lv_array(struct lv_map **lvs,
 static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
 		      struct list *pvds)
 {
-	struct list *pvdh;
 	struct disk_list *dl;
 	struct physical_volume *pv;
 	struct lv_map *lvms[MAX_LV], *lvm;
 	struct pe_disk *e;
 	uint32_t i, lv_num, le;
 
-	list_iterate(pvdh, pvds) {
-		dl = list_item(pvdh, struct disk_list);
+	list_iterate_items(dl, pvds) {
 		pv = find_pv(vg, dl->dev);
 		e = dl->extents;
 
@@ -226,7 +221,7 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 			  lvm->map[le + len].pe == lvm->map[le].pe + len));
 
 		if (!(seg = alloc_lv_segment(cmd->mem, segtype, lvm->lv, le,
-					     len, 0, 0, 1, len, 0, 0))) {
+					     len, 0, 0, NULL, 1, len, 0, 0, 0))) {
 			log_error("Failed to allocate linear segment.");
 			return 0;
 		}
@@ -300,8 +295,9 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 		if (!(seg = alloc_lv_segment(cmd->mem, segtype, lvm->lv,
 					     lvm->stripes * le,
 					     lvm->stripes * area_len,
-					     0, lvm->stripe_size, lvm->stripes,
-					     area_len, 0, 0))) {
+					     0, lvm->stripe_size, NULL,
+					     lvm->stripes,
+					     area_len, 0, 0, 0))) {
 			log_error("Failed to allocate striped segment.");
 			return 0;
 		}

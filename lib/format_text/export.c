@@ -330,7 +330,7 @@ static inline const char *_get_pv_name(struct formatter *f,
 
 static int _print_pvs(struct formatter *f, struct volume_group *vg)
 {
-	struct list *pvh;
+	struct pv_list *pvl;
 	struct physical_volume *pv;
 	char buffer[4096];
 	const char *name;
@@ -338,8 +338,8 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 	outf(f, "physical_volumes {");
 	_inc_indent(f);
 
-	list_iterate(pvh, &vg->pvs) {
-		pv = list_item(pvh, struct pv_list)->pv;
+	list_iterate_items(pvl, &vg->pvs) {
+		pv = pvl->pv;
 
 		if (!(name = _get_pv_name(f, pv))) {
 			stack;
@@ -442,22 +442,21 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 	_inc_indent(f);
 
 	for (s = 0; s < seg->area_count; s++) {
-		switch (seg->area[s].type) {
+		switch (seg_type(seg, s)) {
 		case AREA_PV:
-			if (!(name = _get_pv_name(f, seg->area[s].u.pv.pvseg->
-						     pv))) {
+			if (!(name = _get_pv_name(f, seg_pv(seg, s)))) {
 				stack;
 				return 0;
 			}
 
 			outf(f, "\"%s\", %u%s", name,
-			     seg->area[s].u.pv.pvseg->pe,
+			     seg_pe(seg, s),
 			     (s == seg->area_count - 1) ? "" : ",");
 			break;
 		case AREA_LV:
 			outf(f, "\"%s\", %u%s",
-			     seg->area[s].u.lv.lv->name,
-			     seg->area[s].u.lv.le,
+			     seg_lv(seg, s)->name,
+			     seg_le(seg, s),
 			     (s == seg->area_count - 1) ? "" : ",");
 		}
 	}
@@ -467,24 +466,68 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 	return 1;
 }
 
-static int _count_segments(struct logical_volume *lv)
+static int _print_lv(struct formatter *f, struct logical_volume *lv)
 {
-	int r = 0;
-	struct list *segh;
+	struct lv_segment *seg;
+	char buffer[4096];
+	int seg_count;
 
-	list_iterate(segh, &lv->segments)
-	    r++;
+	f->nl(f);
+	outf(f, "%s {", lv->name);
+	_inc_indent(f);
 
-	return r;
+	/* FIXME: Write full lvid */
+	if (!id_write_format(&lv->lvid.id[1], buffer, sizeof(buffer))) {
+		stack;
+		return 0;
+	}
+
+	outf(f, "id = \"%s\"", buffer);
+
+	if (!print_flags(lv->status, LV_FLAGS, buffer, sizeof(buffer))) {
+		stack;
+		return 0;
+	}
+	outf(f, "status = %s", buffer);
+
+	if (!list_empty(&lv->tags)) {
+		if (!print_tags(&lv->tags, buffer, sizeof(buffer))) {
+			stack;
+			return 0;
+		}
+		outf(f, "tags = %s", buffer);
+	}
+
+	if (lv->alloc != ALLOC_INHERIT)
+		outf(f, "allocation_policy = \"%s\"",
+		     get_alloc_string(lv->alloc));
+
+	if (lv->read_ahead)
+		outf(f, "read_ahead = %u", lv->read_ahead);
+	if (lv->major >= 0)
+		outf(f, "major = %d", lv->major);
+	if (lv->minor >= 0)
+		outf(f, "minor = %d", lv->minor);
+	outf(f, "segment_count = %u", list_size(&lv->segments));
+	f->nl(f);
+
+	seg_count = 1;
+	list_iterate_items(seg, &lv->segments) {
+		if (!_print_segment(f, lv->vg, seg_count++, seg)) {
+			stack;
+			return 0;
+		}
+	}
+
+	_dec_indent(f);
+	outf(f, "}");
+
+	return 1;
 }
 
 static int _print_lvs(struct formatter *f, struct volume_group *vg)
 {
-	struct list *lvh;
-	struct logical_volume *lv;
-	struct lv_segment *seg;
-	char buffer[4096];
-	int seg_count;
+	struct lv_list *lvl;
 
 	/*
 	 * Don't bother with an lv section if there are no lvs.
@@ -495,58 +538,25 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	outf(f, "logical_volumes {");
 	_inc_indent(f);
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-
-		f->nl(f);
-		outf(f, "%s {", lv->name);
-		_inc_indent(f);
-
-		/* FIXME: Write full lvid */
-		if (!id_write_format(&lv->lvid.id[1], buffer, sizeof(buffer))) {
+	/*
+	 * Write visible LVs first
+	 */
+	list_iterate_items(lvl, &vg->lvs) {
+		if (!(lvl->lv->status & VISIBLE_LV))
+			continue;
+		if (!_print_lv(f, lvl->lv)) {
 			stack;
 			return 0;
 		}
+	}
 
-		outf(f, "id = \"%s\"", buffer);
-
-		if (!print_flags(lv->status, LV_FLAGS, buffer, sizeof(buffer))) {
+	list_iterate_items(lvl, &vg->lvs) {
+		if ((lvl->lv->status & VISIBLE_LV))
+			continue;
+		if (!_print_lv(f, lvl->lv)) {
 			stack;
 			return 0;
 		}
-		outf(f, "status = %s", buffer);
-
-		if (!list_empty(&lv->tags)) {
-			if (!print_tags(&lv->tags, buffer, sizeof(buffer))) {
-				stack;
-				return 0;
-			}
-			outf(f, "tags = %s", buffer);
-		}
-
-		if (lv->alloc != ALLOC_INHERIT)
-			outf(f, "allocation_policy = \"%s\"",
-			     get_alloc_string(lv->alloc));
-
-		if (lv->read_ahead)
-			outf(f, "read_ahead = %u", lv->read_ahead);
-		if (lv->major >= 0)
-			outf(f, "major = %d", lv->major);
-		if (lv->minor >= 0)
-			outf(f, "minor = %d", lv->minor);
-		outf(f, "segment_count = %u", _count_segments(lv));
-		f->nl(f);
-
-		seg_count = 1;
-		list_iterate_items(seg, &lv->segments) {
-			if (!_print_segment(f, vg, seg_count++, seg)) {
-				stack;
-				return 0;
-			}
-		}
-
-		_dec_indent(f);
-		outf(f, "}");
 	}
 
 	_dec_indent(f);
@@ -563,7 +573,7 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 {
 	int count = 0;
-	struct list *pvh;
+	struct pv_list *pvl;
 	struct physical_volume *pv;
 	char buffer[32], *name;
 
@@ -577,8 +587,8 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 		goto bad;
 	}
 
-	list_iterate(pvh, &vg->pvs) {
-		pv = list_item(pvh, struct pv_list)->pv;
+	list_iterate_items(pvl, &vg->pvs) {
+		pv = pvl->pv;
 
 		/* FIXME But skip if there's already an LV called pv%d ! */
 		if (lvm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0) {

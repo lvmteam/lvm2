@@ -405,6 +405,12 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	/* FIXME Test for VISIBLE instead? */
+	if (lv->status & MIRROR_LOG) {
+		log_error("Unable to change mirror log LV %s directly", lv->name);
+		return ECMD_FAILED;
+	}
+
 	/* access permission change */
 	if (arg_count(cmd, permission_ARG)) {
 		if (!archive(lv->vg))

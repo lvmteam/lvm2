@@ -30,12 +30,9 @@
 
 int import_pool_vg(struct volume_group *vg, struct pool *mem, struct list *pls)
 {
-	struct list *plhs;
 	struct pool_list *pl;
 
-	list_iterate(plhs, pls) {
-		pl = list_item(plhs, struct pool_list);
-
+	list_iterate_items(pl, pls) {
 		vg->extent_count +=
 		    ((pl->pd.pl_blocks) / POOL_PE_SIZE);
 
@@ -61,7 +58,6 @@ int import_pool_vg(struct volume_group *vg, struct pool *mem, struct list *pls)
 int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
 {
 	struct pool_list *pl;
-	struct list *plhs;
 	struct lv_list *lvl = pool_zalloc(mem, sizeof(*lvl));
 	struct logical_volume *lv;
 
@@ -88,9 +84,7 @@ int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
 	list_init(&lv->segments);
 	list_init(&lv->tags);
 
-	list_iterate(plhs, pls) {
-		pl = list_item(plhs, struct pool_list);
-
+	list_iterate_items(pl, pls) {
 		lv->size += pl->pd.pl_blocks;
 
 		if (lv->name)
@@ -134,11 +128,8 @@ int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
 {
 	struct pv_list *pvl;
 	struct pool_list *pl;
-	struct list *plhs;
 
-	list_iterate(plhs, pls) {
-		pl = list_item(plhs, struct pool_list);
-
+	list_iterate_items(pl, pls) {
 		if (!(pvl = pool_zalloc(mem, sizeof(*pvl)))) {
 			log_error("Unable to allocate pv list structure");
 			return 0;
@@ -180,7 +171,7 @@ int import_pool_pv(const struct format_type *fmt, struct pool *mem,
 	pv->pe_size = POOL_PE_SIZE;
 	pv->pe_start = POOL_PE_START;
 	pv->pe_count = pv->size / POOL_PE_SIZE;
-	pv->pe_alloc_count = pv->pe_count;
+	pv->pe_alloc_count = 0;
 
 	list_init(&pv->tags);
 	list_init(&pv->segments);
@@ -230,8 +221,8 @@ static int _add_stripe_seg(struct pool *mem,
 
 	if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur, 
 				     area_len * usp->num_devs, 0,
-				     usp->striping, usp->num_devs, area_len,
-				     0, 0))) {
+				     usp->striping, NULL, usp->num_devs,
+				     area_len, 0, 0, 0))) {
 		log_error("Unable to allocate striped lv_segment structure");
 		return 0;
 	}
@@ -271,7 +262,8 @@ static int _add_linear_seg(struct pool *mem,
 
 		if (!(seg = alloc_lv_segment(mem, segtype, lv, *le_cur,
 					     area_len, 0, usp->striping,
-					     1, area_len, POOL_PE_SIZE, 0))) {
+					     NULL, 1, area_len,
+					     POOL_PE_SIZE, 0, 0))) {
 			log_error("Unable to allocate linear lv_segment "
 				  "structure");
 			return 0;
@@ -295,15 +287,12 @@ static int _add_linear_seg(struct pool *mem,
 int import_pool_segments(struct list *lvs, struct pool *mem,
 			 struct user_subpool *usp, int subpools)
 {
-
-	struct list *lvhs;
 	struct lv_list *lvl;
 	struct logical_volume *lv;
 	uint32_t le_cur = 0;
 	int i;
 
-	list_iterate(lvhs, lvs) {
-		lvl = list_item(lvhs, struct lv_list);
+	list_iterate_items(lvl, lvs) {
 		lv = lvl->lv;
 
 		if (lv->status & SNAPSHOT)
@@ -325,5 +314,4 @@ int import_pool_segments(struct list *lvs, struct pool *mem,
 	}
 
 	return 1;
-
 }

@@ -424,11 +424,11 @@ struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 
 static void _add_pv_to_list(struct list *head, struct disk_list *data)
 {
-	struct list *pvdh;
 	struct pv_disk *pvd;
+	struct disk_list *diskl;
 
-	list_iterate(pvdh, head) {
-		pvd = &list_item(pvdh, struct disk_list)->pvd;
+	list_iterate_items(diskl, head) {
+		pvd = &diskl->pvd;
 		if (!strncmp(data->pvd.pv_uuid, pvd->pv_uuid,
 			     sizeof(pvd->pv_uuid))) {
 			if (MAJOR(data->dev->dev) != md_major()) {
@@ -439,7 +439,7 @@ static void _add_pv_to_list(struct list *head, struct disk_list *data)
 			}
 			log_very_verbose("Duplicate PV %s - using md %s",
 					 pvd->pv_uuid, dev_name(data->dev));
-			list_del(pvdh);
+			list_del(&diskl->list);
 			break;
 		}
 	}
@@ -458,14 +458,14 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 	struct dev_iter *iter;
 	struct device *dev;
 	struct disk_list *data = NULL;
-	struct list *vgih;
 	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
 
 	/* Fast path if we already saw this VG and cached the list of PVs */
 	if (vg_name && (vginfo = vginfo_from_vgname(vg_name)) &&
 	    vginfo->infos.n) {
-		list_iterate(vgih, &vginfo->infos) {
-			dev = list_item(vgih, struct lvmcache_info)->dev;
+		list_iterate_items(info, &vginfo->infos) {
+			dev = info->dev;
 			if (dev && !(data = read_disk(fmt, dev, mem, vg_name)))
 				break;
 			_add_pv_to_list(head, data);
@@ -518,18 +518,16 @@ static int _write_vgd(struct disk_list *data)
 static int _write_uuids(struct disk_list *data)
 {
 	struct uuid_list *ul;
-	struct list *uh;
 	uint64_t pos = data->pvd.pv_uuidlist_on_disk.base;
 	uint64_t end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
-	list_iterate(uh, &data->uuids) {
+	list_iterate_items(ul, &data->uuids) {
 		if (pos >= end) {
 			log_error("Too many uuids to fit on %s",
 				  dev_name(data->dev));
 			return 0;
 		}
 
-		ul = list_item(uh, struct uuid_list);
 		if (!dev_write(data->dev, pos, NAME_LEN, ul->uuid))
 			fail;
 
@@ -552,7 +550,7 @@ static int _write_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 
 static int _write_lvs(struct disk_list *data)
 {
-	struct list *lvh;
+	struct lvd_list *ll;
 	uint64_t pos, offset;
 
 	pos = data->pvd.lv_on_disk.base;
@@ -563,9 +561,7 @@ static int _write_lvs(struct disk_list *data)
 		return 0;
 	}
 
-	list_iterate(lvh, &data->lvds) {
-		struct lvd_list *ll = list_item(lvh, struct lvd_list);
-
+	list_iterate_items(ll, &data->lvds) {
 		offset = sizeof(struct lv_disk) * ll->lvd.lv_number;
 		if (offset + sizeof(struct lv_disk) > data->pvd.lv_on_disk.size) {
 			log_error("lv_number %d too large", ll->lvd.lv_number);
@@ -704,11 +700,9 @@ static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data)
  */
 int write_disks(const struct format_type *fmt, struct list *pvs)
 {
-	struct list *pvh;
 	struct disk_list *dl;
 
-	list_iterate(pvh, pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate_items(dl, pvs) {
 		if (!(_write_all_pvd(fmt, dl)))
 			fail;
 

@@ -622,7 +622,6 @@ static int _init_formats(struct cmd_context *cmd)
 	const char *format;
 
 	struct format_type *fmt;
-	struct list *fmth;
 
 #ifdef HAVE_LIBDL
 	const struct config_node *cn;
@@ -689,8 +688,7 @@ static int _init_formats(struct cmd_context *cmd)
 	format = find_config_str(cmd->cft->root, "global/format",
 				 DEFAULT_FORMAT);
 
-	list_iterate(fmth, &cmd->formats) {
-		fmt = list_item(fmth, struct format_type);
+	list_iterate_items(fmt, &cmd->formats) {
 		if (!strcasecmp(fmt->name, format) ||
 		    (fmt->alias && !strcasecmp(fmt->alias, format))) {
 			cmd->default_settings.fmt = fmt;

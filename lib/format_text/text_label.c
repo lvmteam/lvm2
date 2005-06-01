@@ -39,7 +39,6 @@ static int _write(struct label *label, char *buf)
 	struct pv_header *pvhdr;
 	struct lvmcache_info *info;
 	struct disk_locn *pvh_dlocn_xl;
-	struct list *mdash, *dash;
 	struct metadata_area *mda;
 	struct mda_context *mdac;
 	struct data_area_list *da;
@@ -57,9 +56,7 @@ static int _write(struct label *label, char *buf)
 	pvh_dlocn_xl = &pvhdr->disk_areas_xl[0];
 
 	/* List of data areas (holding PEs) */
-	list_iterate(dash, &info->das) {
-		da = list_item(dash, struct data_area_list);
-
+	list_iterate_items(da, &info->das) {
 		pvh_dlocn_xl->offset = xlate64(da->disk_locn.offset);
 		pvh_dlocn_xl->size = xlate64(da->disk_locn.size);
 		pvh_dlocn_xl++;
@@ -71,8 +68,7 @@ static int _write(struct label *label, char *buf)
 	pvh_dlocn_xl++;
 
 	/* List of metadata area header locations */
-	list_iterate(mdash, &info->mdas) {
-		mda = list_item(mdash, struct metadata_area);
+	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 
 		if (mdac->area.dev != info->dev)
@@ -198,7 +194,6 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	struct lvmcache_info *info;
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
-	struct list *mdah;
 	struct metadata_area *mda;
 	char vgnamebuf[NAME_LEN + 2];
 	struct mda_context *mdac;
@@ -235,8 +230,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 		dlocn_xl++;
 	}
 
-	list_iterate(mdah, &info->mdas) {
-		mda = list_item(mdah, struct metadata_area);
+	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (vgname_from_mda(info->fmt, &mdac->area, vgnamebuf,
 				    sizeof(vgnamebuf))) {

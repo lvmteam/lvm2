@@ -78,10 +78,10 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 		list_iterate_items(seg, &lv->segments) {
 			for (s = 0; s < seg->area_count; s++) {
 				/* FIXME Check AREA_LV too */
-				if (seg->area[s].type != AREA_PV)
+				if (seg_type(seg, s) != AREA_PV)
 					continue;
 
-				pv = seg->area[s].u.pv.pvseg->pv;
+				pv = seg_pv(seg, s);
 				if (vg_with) {
 					if (!pv_is_in_vg(vg_with, pv)) {
 						log_error("Logical Volume %s "

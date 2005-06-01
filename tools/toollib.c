@@ -110,9 +110,9 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 	int ret = 0;
 	int consistent;
 
-	struct list *slh, *tags_arg;
+	struct list *tags_arg;
 	struct list *vgnames;	/* VGs to process */
-	struct str_list *sll;
+	struct str_list *sll, *strl;
 	struct volume_group *vg;
 	struct list tags, lvnames;
 	struct list arg_lvnames;	/* Cmdline vgname or vgname/lvname */
@@ -228,8 +228,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		}
 	}
 
-	list_iterate(slh, vgnames) {
-		vgname = list_item(slh, struct str_list)->str;
+	list_iterate_items(strl, vgnames) {
+		vgname = strl->str;
 		if (!vgname || !*vgname)
 			continue;	/* FIXME Unnecessary? */
 		if (!lock_vol(cmd, vgname, lock_type)) {

@@ -223,12 +223,9 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 
 static void _insert_segment(struct logical_volume *lv, struct lv_segment *seg)
 {
-	struct list *segh;
 	struct lv_segment *comp;
 
-	list_iterate(segh, &lv->segments) {
-		comp = list_item(segh, struct lv_segment);
-
+	list_iterate_items(comp, &lv->segments) {
 		if (comp->le > seg->le) {
 			list_add(&comp->list, &seg->list);
 			return;
@@ -291,8 +288,8 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 	}
 
 	if (!(seg = alloc_lv_segment(mem, segtype, lv, start_extent,
-				     extent_count, 0, 0, area_count,
-				     extent_count, 0, 0))) {
+				     extent_count, 0, 0, NULL, area_count,
+				     extent_count, 0, 0, 0))) {
 		log_error("Segment allocation failed");
 		return 0;
 	}
@@ -369,7 +366,6 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 			/*
 			 * Adjust extent counts in the pv and vg.
 			 */
-			pv->pe_alloc_count += seg->area_len;
 			seg->lv->vg->free_count -= seg->area_len;
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
 			set_lv_segment_area_lv(seg, s, lv1, cv->next->v.i);
@@ -436,7 +432,7 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 	/*
 	 * Check there are no gaps or overlaps in the lv.
 	 */
-	if (!lv_check_segments(lv)) {
+	if (!check_lv_segments(lv)) {
 		stack;
 		return 0;
 	}

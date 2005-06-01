@@ -41,4 +41,5 @@ int init_no_locking(struct locking_type *locking, struct config_tree *cf);
 int init_file_locking(struct locking_type *locking, struct config_tree *cf);
 
 int init_external_locking(struct locking_type *locking, struct config_tree *cf);
+
 int init_cluster_locking(struct locking_type *locking, struct config_tree *cf);

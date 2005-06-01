@@ -55,6 +55,7 @@
 #define LOCKED			0x00004000	/* LV */
 #define MIRRORED		0x00008000	/* LV - internal use only */
 #define VIRTUAL			0x00010000	/* LV - internal use only */
+#define MIRROR_LOG		0x00020000	/* LV */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */
@@ -228,8 +229,10 @@ struct lv_segment {
 	struct logical_volume *origin;
 	struct logical_volume *cow;
 	struct list origin_list;
-	uint32_t chunk_size;	/* In sectors */
+	uint32_t chunk_size;	/* For snapshots - in sectors */
+	uint32_t region_size;	/* For mirrors - in sectors */
 	uint32_t extents_copied;
+	struct logical_volume *log_lv;
 
 	struct list tags;
 
@@ -247,6 +250,14 @@ struct lv_segment {
 		} u;
 	} area[0];
 };
+
+#define seg_type(seg, s)	(seg)->area[(s)].type
+#define seg_pvseg(seg, s)	(seg)->area[(s)].u.pv.pvseg
+#define seg_pv(seg, s)		(seg)->area[(s)].u.pv.pvseg->pv
+#define seg_dev(seg, s)		(seg)->area[(s)].u.pv.pvseg->pv->dev
+#define seg_pe(seg, s)		(seg)->area[(s)].u.pv.pvseg->pe
+#define seg_lv(seg, s)		(seg)->area[(s)].u.lv.lv
+#define seg_le(seg, s)		(seg)->area[(s)].u.lv.le
 
 struct logical_volume {
 	union lvid lvid;
@@ -492,7 +503,7 @@ const char *strip_dir(const char *vg_name, const char *dir);
 /*
  * Checks that an lv has no gaps or overlapping segments.
  */
-int lv_check_segments(struct logical_volume *lv);
+int check_lv_segments(struct logical_volume *lv);
 
 /*
  * Sometimes (eg, after an lvextend), it is possible to merge two
