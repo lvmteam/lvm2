@@ -57,12 +57,9 @@ static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
 
 static void _add_pl_to_list(struct list *head, struct pool_list *data)
 {
-	struct list *pvdh;
 	struct pool_list *pl;
 
-	list_iterate(pvdh, head) {
-		pl = list_item(pvdh, struct pool_list);
-
+	list_iterate_items(pl, head) {
 		if (id_equal(&data->pv_uuid, &pl->pv_uuid)) {
 			char uuid[ID_LEN + 7];
 
@@ -76,7 +73,7 @@ static void _add_pl_to_list(struct list *head, struct pool_list *data)
 			}
 			log_very_verbose("Duplicate PV %s - using md %s",
 					 uuid, dev_name(data->dev));
-			list_del(pvdh);
+			list_del(&pl->list);
 			break;
 		}
 	}
@@ -247,11 +244,9 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 			struct lvmcache_vginfo *vginfo, struct list *head,
 			uint32_t *devcount)
 {
-
-	struct list *vgih = NULL;
-	struct device *dev;
-	struct pool_list *pl = NULL;
-	struct pool *tmpmem = NULL;
+	struct lvmcache_info *info;
+	struct pool_list *pl;
+	struct pool *tmpmem;
 
 	uint32_t sp_count = 0;
 	uint32_t *sp_devs = NULL;
@@ -264,16 +259,16 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 		return 0;
 	}
 
-	list_iterate(vgih, &vginfo->infos) {
-		dev = list_item(vgih, struct lvmcache_info)->dev;
-		if (dev &&
-		    !(pl = read_pool_disk(fmt, dev, mem, vginfo->vgname)))
+	list_iterate_items(info, &vginfo->infos) {
+		if (info->dev &&
+		    !(pl = read_pool_disk(fmt, info->dev, mem, vginfo->vgname)))
 			    break;
 		/*
 		 * We need to keep track of the total expected number
 		 * of devices per subpool
 		 */
 		if (!sp_count) {
+			/* FIXME pl left uninitialised if !info->dev */
 			sp_count = pl->pd.pl_subpools;
 			if (!(sp_devs =
 			      pool_zalloc(tmpmem,
@@ -298,9 +293,8 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 	}
 
 	*devcount = 0;
-	for (i = 0; i < sp_count; i++) {
+	for (i = 0; i < sp_count; i++)
 		*devcount += sp_devs[i];
-	}
 
 	pool_destroy(tmpmem);
 

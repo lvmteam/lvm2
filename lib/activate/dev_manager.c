@@ -732,9 +732,38 @@ int compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 		     uint32_t region_size)
 {
 	int tw;
+	char devbuf[10];
+	char *name;
+	struct dev_layer *dl;
 
-	tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
-			  region_size, areas);
+	if (!seg->log_lv)
+		tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
+				  region_size, areas);
+	else {
+		if (!(name = build_dm_name(dm->mem, seg->log_lv->vg->name,
+					   seg->log_lv->name, NULL))) {
+			stack;
+			return 0;
+		}
+
+		if (!(dl = hash_lookup(dm->layers, seg->log_lv->lvid.s))) {
+			log_error("device layer %s missing from hash",
+				  seg->log_lv->lvid.s);
+			return 0;
+		}
+
+		if (!dm_format_dev(devbuf, sizeof(devbuf), dl->info.major,
+				   dl->info.minor)) {
+			log_error("Failed to format device number as dm "
+				  "target (%u,%u)",
+				   dl->info.major, dl->info.minor);
+			return 0;
+		}
+
+		/* FIXME add sync parm? */
+		tw = lvm_snprintf(params, paramsize, "disk 2 %s %u %u ",
+				  devbuf, region_size, areas);
+	}
 
 	if (tw < 0) {
 		stack;
@@ -759,29 +788,26 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 
 	for (s = start_area; s < areas; s++, *pos += tw) {
 		trailing_space = (areas - s - 1) ? " " : "";
-		if ((seg->area[s].type == AREA_PV &&
-		     (!seg->area[s].u.pv.pvseg ||
-		      !seg->area[s].u.pv.pvseg->pv ||
-		      !seg->area[s].u.pv.pvseg->pv->dev)) ||
-		    (seg->area[s].type == AREA_LV && !seg->area[s].u.lv.lv))
+		if ((seg_type(seg, s) == AREA_PV &&
+		     (!seg_pvseg(seg, s) ||
+		      !seg_pv(seg, s) ||
+		      !seg_dev(seg, s))) ||
+		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s)))
 			tw = lvm_snprintf(params + *pos, paramsize - *pos,
 					  "%s 0%s", dm->stripe_filler,
 					  trailing_space);
-		else if (seg->area[s].type == AREA_PV)
+		else if (seg_type(seg, s) == AREA_PV)
 			tw = lvm_snprintf(params + *pos, paramsize - *pos,
 					  "%s %" PRIu64 "%s",
-					  dev_name(seg->area[s].u.pv.pvseg->
-						   pv->dev),
-					  (seg->area[s].u.pv.pvseg->pv->
-					   pe_start +
-					   (esize * seg->area[s].u.pv.pvseg->
-					    pe)),
+					  dev_name(seg_dev(seg, s)),
+					  (seg_pv(seg, s)->pe_start +
+					   (esize * seg_pe(seg, s))),
 					  trailing_space);
 		else {
 			if (!(dl = hash_lookup(dm->layers,
-					       seg->area[s].u.lv.lv->lvid.s))) {
+					       seg_lv(seg, s)->lvid.s))) {
 				log_error("device layer %s missing from hash",
-					  seg->area[s].u.lv.lv->lvid.s);
+					  seg_lv(seg, s)->lvid.s);
 				return 0;
 			}
 			if (!dm_format_dev
@@ -794,7 +820,7 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 			}
 			tw = lvm_snprintf(params + *pos, paramsize - *pos,
 					  "%s %" PRIu64 "%s", devbuf,
-					  esize * seg->area[s].u.lv.le,
+					  esize * seg_le(seg, s),
 					  trailing_space);
 		}
 
@@ -842,14 +868,12 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 static int _populate_vanilla(struct dev_manager *dm,
 			     struct dm_task *dmt, struct dev_layer *dl)
 {
-	struct list *segh;
 	struct lv_segment *seg;
 	struct logical_volume *lv = dl->lv;
 
 	dm->pvmove_mirror_count = 0u;
 
-	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct lv_segment);
+	list_iterate_items(seg, &lv->segments) {
 		if (!_emit_target(dm, dmt, seg)) {
 			log_error("Unable to build table for '%s'", lv->name);
 			return 0;
@@ -1201,7 +1225,6 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 	 * only one layer.
 	 */
 	struct dev_layer *dl, *dlr;
-	struct list *segh;
 	struct lv_segment *seg;
 	uint32_t s;
 
@@ -1219,14 +1242,22 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 		_set_flag(dl, TOPLEVEL);
 
 	/* Add dependencies for any LVs that segments refer to */
-	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct lv_segment);
+	list_iterate_items(seg, &lv->segments) {
+		if (seg->log_lv &&
+		    !str_list_add(dm->mem, &dl->pre_create,
+				  _build_dlid(dm->mem, seg->log_lv->lvid.s,
+					      NULL))) {
+			stack;
+			return 0;
+		}
+		// FIXME Check we don't want NOPROPAGATE here
+
 		for (s = 0; s < seg->area_count; s++) {
-			if (seg->area[s].type != AREA_LV)
+			if (seg_type(seg, s) != AREA_LV)
 				continue;
 			if (!str_list_add(dm->mem, &dl->pre_create,
 					  _build_dlid(dm->mem,
-						      seg->area[s].u.lv.lv->
+						      seg_lv(seg, s)->
 						      lvid.s, NULL))) {
 				stack;
 				return 0;
@@ -1300,14 +1331,14 @@ static int _expand_origin(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct logical_volume *active;
 	struct lv_segment *snap_seg;
-	struct list *sh;
+	struct lv_list *lvl;
 
 	/*
 	 * We only need to create an origin layer if one of our
 	 * snapshots is in the active list
 	 */
-	list_iterate(sh, &dm->active_list) {
-		active = list_item(sh, struct lv_list)->lv;
+	list_iterate_items(lvl, &dm->active_list) {
+		active = lvl->lv;
 		if ((snap_seg = find_cow(active)) && (snap_seg->origin == lv))
 			return _expand_origin_real(dm, lv);
 	}
@@ -1411,12 +1442,12 @@ static void _clear_marks(struct dev_manager *dm, int flag)
 static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
 			      int flag)
 {
-	struct list *sh;
+	struct str_list *strl;
 	const char *dlid;
 	struct dev_layer *dep;
 
-	list_iterate(sh, &dl->pre_create) {
-		dlid = list_item(sh, struct str_list)->str;
+	list_iterate_items(strl, &dl->pre_create) {
+		dlid = strl->str;
 
 		if (!(dep = hash_lookup(dm->layers, dlid))) {
 			log_error("Couldn't find device layer '%s'.", dlid);
@@ -1466,16 +1497,14 @@ static int _trace_all_marks(struct dev_manager *dm, int flag)
  */
 static int _mark_lvs(struct dev_manager *dm, struct list *lvs, int flag)
 {
-	struct list *lvh;
-	struct logical_volume *lv;
+	struct lv_list *lvl;
 	struct dev_layer *dl;
 
-	list_iterate(lvh, lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (lv->status & SNAPSHOT)
+	list_iterate_items(lvl, lvs) {
+		if (lvl->lv->status & SNAPSHOT)
 			continue;
 
-		if (!(dl = _lookup(dm, lv->lvid.s, NULL))) {
+		if (!(dl = _lookup(dm, lvl->lv->lvid.s, NULL))) {
 			stack;
 			return 0;
 		}
@@ -1493,12 +1522,12 @@ static int _mark_lvs(struct dev_manager *dm, struct list *lvs, int flag)
 
 static int _suspend_parents(struct dev_manager *dm, struct dev_layer *dl)
 {
-	struct list *sh;
+	struct str_list *strl;
 	struct dev_layer *dep;
 	const char *dlid;
 
-	list_iterate(sh, &dl->pre_suspend) {
-		dlid = list_item(sh, struct str_list)->str;
+	list_iterate_items(strl, &dl->pre_suspend) {
+		dlid = strl->str;
 
 		if (!(dep = hash_lookup(dm->layers, dlid))) {
 			log_debug("_suspend_parents couldn't find device "
@@ -1527,12 +1556,12 @@ static int _suspend_parents(struct dev_manager *dm, struct dev_layer *dl)
 
 static int _resume_with_deps(struct dev_manager *dm, struct dev_layer *dl)
 {
-	struct list *sh;
+	struct str_list *strl;
 	struct dev_layer *dep;
 	const char *dlid;
 
-	list_iterate(sh, &dl->pre_create) {
-		dlid = list_item(sh, struct str_list)->str;
+	list_iterate_items(strl, &dl->pre_create) {
+		dlid = strl->str;
 
 		if (!(dep = hash_lookup(dm->layers, dlid))) {
 			log_debug("_resume_with_deps couldn't find device "
@@ -1565,7 +1594,7 @@ static int _resume_with_deps(struct dev_manager *dm, struct dev_layer *dl)
  */
 static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 {
-	struct list *sh;
+	struct str_list *strl;
 	struct dev_layer *dep;
 	const char *dlid;
 	char *newname, *suffix;
@@ -1577,8 +1606,8 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 		return 0;
 	}
 
-	list_iterate(sh, &dl->pre_create) {
-		dlid = list_item(sh, struct str_list)->str;
+	list_iterate_items(strl, &dl->pre_create) {
+		dlid = strl->str;
 
 		if (!(dep = hash_lookup(dm->layers, dlid))) {
 			log_error("Couldn't find device layer '%s'.", dlid);
@@ -1634,17 +1663,15 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 
 static int _build_all_layers(struct dev_manager *dm, struct volume_group *vg)
 {
-	struct list *lvh;
-	struct logical_volume *lv;
+	struct lv_list *lvl;
 
 	/*
 	 * Build layers for complete vg.
 	 */
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (lv->status & SNAPSHOT)
+	list_iterate_items(lvl, &vg->lvs) {
+		if (lvl->lv->status & SNAPSHOT)
 			continue;
-		if (!_expand_lv(dm, lv)) {
+		if (!_expand_lv(dm, lvl->lv)) {
 			stack;
 			return 0;
 		}
@@ -1684,15 +1711,15 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 {
 	struct hash_node *hn;
 	struct dev_layer *dl;
-	struct list *sh;
+	struct str_list *strl;
 	const char *dlid;
 	struct dev_layer *dep;
 
 	hash_iterate(hn, dm->layers) {
 		dl = hash_get_data(dm->layers, hn);
 
-		list_iterate(sh, &dl->pre_suspend) {
-			dlid = list_item(sh, struct str_list)->str;
+		list_iterate_items(strl, &dl->pre_suspend) {
+			dlid = strl->str;
 
 			if (!(dep = hash_lookup(dm->layers, dlid))) {
 				log_debug("_populate_pre_suspend_lists: "
@@ -1707,8 +1734,8 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 			}
 		}
 
-		list_iterate(sh, &dl->pre_create) {
-			dlid = list_item(sh, struct str_list)->str;
+		list_iterate_items(strl, &dl->pre_create) {
+			dlid = strl->str;
 
 			if (!(dep = hash_lookup(dm->layers, dlid))) {
 				log_debug("_populate_pre_suspend_lists: "
@@ -1733,6 +1760,7 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 static int _remove_old_layers(struct dev_manager *dm)
 {
 	int change;
+	struct dl_list *dll;
 	struct list *rh, *n;
 	struct dev_layer *dl;
 
@@ -1755,10 +1783,8 @@ static int _remove_old_layers(struct dev_manager *dm)
 	} while (change);
 
 	if (!list_empty(&dm->remove_list)) {
-		list_iterate(rh, &dm->remove_list) {
-			dl = list_item(rh, struct dl_list)->dl;
-			log_error("Couldn't deactivate device %s", dl->name);
-		}
+		list_iterate_items(dll, &dm->remove_list)
+			log_error("Couldn't deactivate device %s", dll->dl->name);
 		return 0;
 	}
 
@@ -1945,16 +1971,14 @@ static int _add_lv(struct pool *mem,
 static int _add_lvs(struct pool *mem,
 		    struct list *head, struct logical_volume *origin)
 {
-	struct logical_volume *lv;
 	struct lv_segment *snap_seg;
-	struct list *lvh;
+	struct lv_list *lvl;
 
-	list_iterate(lvh, &origin->vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (lv->status & SNAPSHOT)
+	list_iterate_items(lvl, &origin->vg->lvs) {
+		if (lvl->lv->status & SNAPSHOT)
 			continue;
-		if ((snap_seg = find_cow(lv)) && snap_seg->origin == origin)
-			if (!_add_lv(mem, head, lv))
+		if ((snap_seg = find_cow(lvl->lv)) && snap_seg->origin == origin)
+			if (!_add_lv(mem, head, lvl->lv))
 				return 0;
 	}
 
@@ -1963,13 +1987,11 @@ static int _add_lvs(struct pool *mem,
 
 static void _remove_lv(struct list *head, struct logical_volume *lv)
 {
-	struct list *lvh;
 	struct lv_list *lvl;
 
-	list_iterate(lvh, head) {
-		lvl = list_item(lvh, struct lv_list);
+	list_iterate_items(lvl, head) {
 		if (lvl->lv == lv) {
-			list_del(lvh);
+			list_del(&lvl->list);
 			break;
 		}
 	}
@@ -1979,13 +2001,14 @@ static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct logical_volume *active, *old_origin;
 	struct lv_segment *snap_seg;
-	struct list *sh, *active_head;
+	struct list *active_head;
+	struct lv_list *lvl;
 
 	active_head = &dm->active_list;
 
 	/* Remove any snapshots with given origin */
-	list_iterate(sh, active_head) {
-		active = list_item(sh, struct lv_list)->lv;
+	list_iterate_items(lvl, active_head) {
+		active = lvl->lv;
 		if ((snap_seg = find_cow(active)) && snap_seg->origin == lv) {
 			_remove_lv(active_head, active);
 		}
@@ -1999,8 +2022,8 @@ static int _remove_lvs(struct dev_manager *dm, struct logical_volume *lv)
 	old_origin = snap_seg->origin;
 
 	/* Was this the last active snapshot with this origin? */
-	list_iterate(sh, active_head) {
-		active = list_item(sh, struct lv_list)->lv;
+	list_iterate_items(lvl, active_head) {
+		active = lvl->lv;
 		if ((snap_seg = find_cow(active)) &&
 		    snap_seg->origin == old_origin) {
 			return 1;
@@ -2015,13 +2038,14 @@ static int _remove_suspended_lvs(struct dev_manager *dm,
 {
 	struct logical_volume *suspended;
 	struct lv_segment *snap_seg;
-	struct list *sh, *suspend_head;
+	struct list *suspend_head;
+	struct lv_list *lvl;
 
 	suspend_head = &dm->suspend_list;
 
 	/* Remove from list any snapshots with given origin */
-	list_iterate(sh, suspend_head) {
-		suspended = list_item(sh, struct lv_list)->lv;
+	list_iterate_items(lvl, suspend_head) {
+		suspended = lvl->lv;
 		if ((snap_seg = find_cow(suspended)) &&
 		    snap_seg->origin == lv) {
 			_remove_lv(suspend_head, suspended);
@@ -2036,13 +2060,13 @@ static int _remove_suspended_lvs(struct dev_manager *dm,
 static int _targets_present(struct dev_manager *dm, struct list *lvs)
 {
 	struct logical_volume *lv;
-	struct list *lvh, *segh;
+	struct lv_list *lvl;
 	struct segment_type *segtype;
 	struct lv_segment *seg;
 	int snapshots = 0, mirrors = 0;
 
-	list_iterate(lvh, lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
+	list_iterate_items(lvl, lvs) {
+		lv = lvl->lv;
 
 		if (!snapshots)
 			if (lv_is_cow(lv) || lv_is_origin(lv))
@@ -2053,8 +2077,7 @@ static int _targets_present(struct dev_manager *dm, struct list *lvs)
 				mirrors = 1;
 
 		if (lv->status & VIRTUAL) {
-			list_iterate(segh, &lv->segments) {
-				seg = list_item(segh, struct lv_segment);
+			list_iterate_items(seg, &lv->segments) {
 				if (seg->segtype->ops->target_present &&
 				    !seg->segtype->ops->target_present()) {
 					log_error("Can't expand LV: %s target "
@@ -2103,16 +2126,14 @@ static int _targets_present(struct dev_manager *dm, struct list *lvs)
 static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 {
 	char *dlid;
-	struct list *lvh;
-	struct logical_volume *lv;
+	struct lv_list *lvl;
 	struct dev_layer *dl;
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (lv->status & SNAPSHOT)
+	list_iterate_items(lvl, &vg->lvs) {
+		if (lvl->lv->status & SNAPSHOT)
 			continue;
 
-		if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, NULL))) {
+		if (!(dlid = _build_dlid(dm->mem, lvl->lv->lvid.s, NULL))) {
 			stack;
 			return 0;
 		}
@@ -2121,16 +2142,16 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 		pool_free(dm->mem, dlid);
 
 		if (dl) {
-			log_debug("Found active lv %s%s", lv->name,
+			log_debug("Found active lv %s%s", lvl->lv->name,
 				  dl->info.suspended ? " (suspended)" : "");
 
-			if (!_add_lv(dm->mem, &dm->active_list, lv)) {
+			if (!_add_lv(dm->mem, &dm->active_list, lvl->lv)) {
 				stack;
 				return 0;
 			}
 
 			if (dl->info.suspended) {
-				if (!_add_lv(dm->mem, &dm->suspend_list, lv)) {
+				if (!_add_lv(dm->mem, &dm->suspend_list, lvl->lv)) {
 					stack;
 					return 0;
 				}

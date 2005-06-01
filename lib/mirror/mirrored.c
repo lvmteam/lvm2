@@ -35,7 +35,7 @@ enum {
 };
 
 struct mirror_state {
-	uint32_t region_size;
+	uint32_t default_region_size;
 };
 
 static const char *_name(const struct lv_segment *seg)
@@ -45,14 +45,25 @@ static const char *_name(const struct lv_segment *seg)
 
 static void _display(const struct lv_segment *seg)
 {
+	const char *size;
+
 	log_print("  Mirrors\t\t%u", seg->area_count);
 	log_print("  Mirror size\t\t%u", seg->area_len);
+	if (seg->log_lv)
+		log_print("  Mirror log volume\t%s", seg->log_lv->name);
+
+	if (seg->region_size) {
+		size = display_size(seg->lv->vg->cmd,
+				    (uint64_t) seg->region_size,
+				    SIZE_SHORT);
+		log_print("  Mirror region size\t%s", size);
+	}
+
 	log_print("  Mirror original:");
 	display_stripe(seg, 0, "    ");
 	log_print("  Mirror destination:");
 	display_stripe(seg, 1, "    ");
 	log_print(" ");
-
 }
 
 static int _text_import_area_count(struct config_node *sn, uint32_t *area_count)
@@ -70,6 +81,7 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 			struct hash_table *pv_hash)
 {
 	const struct config_node *cn;
+	char *logname = NULL;
 
 	if (find_config_node(sn, "extents_moved")) {
 		if (get_config_uint32(sn, "extents_moved",
@@ -80,6 +92,35 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 				  "segment '%s'.", sn->key);
 			return 0;
 		}
+	}
+
+	if (find_config_node(sn, "region_size")) {
+		if (!get_config_uint32(sn, "region_size",
+				      &seg->region_size)) {
+			log_error("Couldn't read 'region_size' for "
+				  "segment '%s'.", sn->key);
+			return 0;
+		}
+	}
+
+        if ((cn = find_config_node(sn, "mirror_log"))) {
+                if (!cn->v || !cn->v->v.str) {
+                        log_error("Mirror log type must be a string.");
+                        return 0;
+                }
+                logname = cn->v->v.str;
+		if (!(seg->log_lv = find_lv(seg->lv->vg, logname))) {
+			log_error("Unrecognised mirror log in segment %s.",
+				  sn->key);
+			return 0;
+		}
+		seg->log_lv->status |= MIRROR_LOG;
+        }
+
+	if (logname && !seg->region_size) {
+		log_error("Missing region size for mirror log for segment "
+			  "'%s'.", sn->key);
+		return 0;
 	}
 
 	if (!(cn = find_config_node(sn, "mirrors"))) {
@@ -96,7 +137,11 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 	outf(f, "mirror_count = %u", seg->area_count);
 	if (seg->status & PVMOVE)
 		out_size(f, (uint64_t) seg->extents_copied * seg->lv->vg->extent_size,
-			 "extents_moved = %u", seg->extents_copied);
+			 "extents_moved = %" PRIu32, seg->extents_copied);
+	if (seg->log_lv)
+		outf(f, "mirror_log = \"%s\"", seg->log_lv->name);
+	if (seg->region_size)
+		outf(f, "region_size = %" PRIu32, seg->region_size);
 
 	return out_areas(f, seg, "mirror");
 }
@@ -112,7 +157,7 @@ static struct mirror_state *_init_target(struct pool *mem,
 		return NULL;
 	}
 
-	mirr_state->region_size = 2 *
+	mirr_state->default_region_size = 2 *
 	    find_config_int(cft->root,
 			    "activation/mirror_region_size",
 			    DEFAULT_MIRROR_REGION_SIZE);
@@ -156,15 +201,23 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 	} else {
 		*target = "mirror";
 
-		/* Find largest power of 2 region size unit we can use */
-		region_max = (1 << (ffs(seg->area_len) - 1)) *
+		if (!(seg->status & PVMOVE)) {
+			if (!seg->region_size) {
+				log_error("Missing region size for mirror segment.");
+				return 0;
+			}
+			region_size = seg->region_size;
+		} else {
+			/* Find largest power of 2 region size unit we can use */
+			region_max = (1 << (ffs(seg->area_len) - 1)) *
 			      seg->lv->vg->extent_size;
 
-		region_size = mirr_state->region_size;
-		if (region_max < region_size) {
-			region_size = region_max;
-			log_verbose("Using reduced mirror region size of %u sectors",
-				    region_size);
+			region_size = mirr_state->default_region_size;
+			if (region_max < region_size) {
+				region_size = region_max;
+				log_verbose("Using reduced mirror region size of %u sectors",
+					    region_size);
+			}
 		}
 
 		if ((ret = compose_log_line(dm, seg, params, paramsize, pos,

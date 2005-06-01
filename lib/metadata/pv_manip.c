@@ -165,9 +165,11 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 	return peg;
 }
 
-int release_pv_segment(struct pv_segment *peg, uint32_t new_area_len)
+int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
-	if (new_area_len == 0) {
+	peg->pv->pe_alloc_count -= area_reduction;
+
+	if (!peg->lvseg->area_len) {
 		peg->lvseg = NULL;
 		peg->lv_area = 0;
 
@@ -176,7 +178,7 @@ int release_pv_segment(struct pv_segment *peg, uint32_t new_area_len)
 		return 1;
 	}
 
-	if (!pv_split_segment(peg->pv, peg->pe + new_area_len)) {
+	if (!pv_split_segment(peg->pv, peg->pe + peg->lvseg->area_len)) {
 		stack;
 		return 0;
 	}
@@ -203,13 +205,16 @@ int check_pv_segments(struct volume_group *vg)
 	struct pv_list *pvl;
 	struct pv_segment *peg;
 	unsigned s, segno;
-	uint32_t start_pe;
+	uint32_t start_pe, alloced;
+	uint32_t pv_count = 0, free_count = 0, extent_count = 0;
 	int ret = 1;
 
 	list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 		segno = 0;
 		start_pe = 0;
+		alloced = 0;
+		pv_count++;
 
 		list_iterate_items(peg, &pv->segments) {
 			s = peg->lv_area;
@@ -221,30 +226,63 @@ int check_pv_segments(struct volume_group *vg)
 				  peg->lvseg ? peg->lvseg->le : 0, s);
 			/* FIXME Add details here on failure instead */
 			if (start_pe != peg->pe) {
-				log_debug("Gap in pvsegs: %u, %u",
+				log_error("Gap in pvsegs: %u, %u",
 					  start_pe, peg->pe);
 				ret = 0;
 			}
 			if (peg->lvseg) {
-				if (peg->lvseg->area[s].type != AREA_PV) {
-					log_debug("Wrong lvseg area type");
+				if (seg_type(peg->lvseg, s) != AREA_PV) {
+					log_error("Wrong lvseg area type");
 					ret = 0;
 				}
-				if (peg->lvseg->area[s].u.pv.pvseg != peg) {
-					log_debug("Inconsistent pvseg pointers");
+				if (seg_pvseg(peg->lvseg, s) != peg) {
+					log_error("Inconsistent pvseg pointers");
 					ret = 0;
 				}
 				if (peg->lvseg->area_len != peg->len) {
-					log_debug("Inconsistent length: %u %u",
+					log_error("Inconsistent length: %u %u",
 						  peg->len,
 						  peg->lvseg->area_len);
 					ret = 0;
 				}
+				alloced += peg->len;
 			}
 			start_pe += peg->len;
 		}
+
+		if (start_pe != pv->pe_count) {
+			log_error("PV segment pe_count mismatch: %u != %u",
+				  start_pe, pv->pe_count);
+			ret = 0;
+		}
+
+		if (alloced != pv->pe_alloc_count) {
+			log_error("PV segment pe_alloc_count mismatch: "
+				  "%u != %u", alloced, pv->pe_alloc_count);
+			ret = 0;
+		}
+
+		extent_count += start_pe;
+		free_count += (start_pe - alloced);
+	}
+
+	if (pv_count != vg->pv_count) {
+		log_error("PV segment VG pv_count mismatch: %u != %u",
+			  pv_count, vg->pv_count);
+		ret = 0;
+	}
+
+	if (free_count != vg->free_count) {
+		log_error("PV segment VG free_count mismatch: %u != %u",
+			  free_count, vg->free_count);
+		ret = 0;
+	}
+
+	if (extent_count != vg->extent_count) {
+		log_error("PV segment VG extent_count mismatch: %u != %u",
+			  extent_count, vg->extent_count);
+		ret = 0;
 	}
 
 	return ret;
 }
-

@@ -154,14 +154,14 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 	}
 
 	for (s = 0; s < seg->area_count; s++) {
-		switch (seg->area[s].type) {
+		switch (seg_type(seg, s)) {
 		case AREA_LV:
-			name = seg->area[s].u.lv.lv->name;
-			extent = seg->area[s].u.lv.le;
+			name = seg_lv(seg, s)->name;
+			extent = seg_le(seg, s);
 			break;
 		case AREA_PV:
-			name = dev_name(seg->area[s].u.pv.pvseg->pv->dev);
-			extent = seg->area[s].u.pv.pvseg->pe;
+			name = dev_name(seg_dev(seg, s));
+			extent = seg_pe(seg, s);
 			break;
 		default:
 			name = "unknown";
@@ -337,6 +337,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 		repstr[0] = 'p';
 	else if (lv->status & MIRRORED)
 		repstr[0] = 'm';
+	else if (lv->status & MIRROR_LOG)
+		repstr[0] = 'l';
 	else if (lv->status & VIRTUAL)
 		repstr[0] = 'v';
 	else if (lv_is_origin(lv))
@@ -490,19 +492,35 @@ static int _origin_disp(struct report_handle *rh, struct field *field,
 	return 1;
 }
 
+static int _loglv_disp(struct report_handle *rh, struct field *field,
+		       const void *data)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct lv_segment *seg;
+
+	list_iterate_items(seg, &lv->segments) {
+		if (!seg_is_mirrored(seg) || !seg->log_lv)
+			continue;
+		return _string_disp(rh, field, &seg->log_lv->name);
+	}
+
+	field->report_string = "";
+	field->sort_value = (const void *) field->report_string;
+
+	return 1;
+}
+
 static int _movepv_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	const char *name;
-	struct list *segh;
 	struct lv_segment *seg;
 
-	list_iterate(segh, &lv->segments) {
-		seg = list_item(segh, struct lv_segment);
+	list_iterate_items(seg, &lv->segments) {
 		if (!(seg->status & PVMOVE))
 			continue;
-		name = dev_name(seg->area[0].u.pv.pvseg->pv->dev);
+		name = dev_name(seg_dev(seg, 0));
 		return _string_disp(rh, field, &name);
 	}
 
@@ -917,12 +935,9 @@ static int _field_match(struct report_handle *rh, const char *field, size_t len)
 static int _add_sort_key(struct report_handle *rh, uint32_t field_num,
 			 uint32_t flags)
 {
-	struct list *fh;
 	struct field_properties *fp, *found = NULL;
 
-	list_iterate(fh, &rh->field_props) {
-		fp = list_item(fh, struct field_properties);
-
+	list_iterate_items(fp, &rh->field_props) {
 		if (fp->field_num == field_num) {
 			found = fp;
 			break;
@@ -1138,7 +1153,6 @@ int report_object(void *handle, struct volume_group *vg,
 		  struct lv_segment *seg, struct pv_segment *pvseg)
 {
 	struct report_handle *rh = handle;
-	struct list *fh;
 	struct field_properties *fp;
 	struct row *row;
 	struct field *field;
@@ -1168,9 +1182,7 @@ int report_object(void *handle, struct volume_group *vg,
 	list_add(&rh->rows, &row->list);
 
 	/* For each field to be displayed, call its report_fn */
-	list_iterate(fh, &rh->field_props) {
-		fp = list_item(fh, struct field_properties);
-
+	list_iterate_items(fp, &rh->field_props) {
 		skip = 0;
 
 		if (!(field = pool_zalloc(rh->mem, sizeof(*field)))) {
@@ -1231,7 +1243,6 @@ int report_object(void *handle, struct volume_group *vg,
 static int _report_headings(void *handle)
 {
 	struct report_handle *rh = handle;
-	struct list *fh;
 	struct field_properties *fp;
 	const char *heading;
 	char buf[1024];
@@ -1250,8 +1261,7 @@ static int _report_headings(void *handle)
 	}
 
 	/* First heading line */
-	list_iterate(fh, &rh->field_props) {
-		fp = list_item(fh, struct field_properties);
+	list_iterate_items(fp, &rh->field_props) {
 		if (fp->flags & FLD_HIDDEN)
 			continue;
 
@@ -1268,7 +1278,7 @@ static int _report_headings(void *handle)
 		} else if (!pool_grow_object(rh->mem, heading, strlen(heading)))
 			goto bad;
 
-		if (!list_end(&rh->field_props, fh))
+		if (!list_end(&rh->field_props, &fp->list))
 			if (!pool_grow_object(rh->mem, rh->separator,
 					      strlen(rh->separator)))
 				goto bad;
@@ -1336,7 +1346,6 @@ static int _row_compare(const void *a, const void *b)
 static int _sort_rows(struct report_handle *rh)
 {
 	struct row *(*rows)[];
-	struct list *rowh;
 	uint32_t count = 0;
 	struct row *row;
 
@@ -1346,10 +1355,8 @@ static int _sort_rows(struct report_handle *rh)
 		return 0;
 	}
 
-	list_iterate(rowh, &rh->rows) {
-		row = list_item(rowh, struct row);
+	list_iterate_items(row, &rh->rows)
 		(*rows)[count++] = row;
-	}
 
 	qsort(rows, count, sizeof(**rows), _row_compare);
 

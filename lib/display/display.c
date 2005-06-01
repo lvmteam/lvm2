@@ -449,29 +449,28 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 
 void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre)
 {
-	switch (seg->area[s].type) {
+	switch (seg_type(seg, s)) {
 	case AREA_PV:
 		/* FIXME Re-check the conditions for 'Missing' */
 		log_print("%sPhysical volume\t%s", pre,
-			  seg->area[s].u.pv.pvseg->pv ?
-			  dev_name(seg->area[s].u.pv.pvseg->pv->dev) :
+			  seg_pv(seg, s) ?
+			  dev_name(seg_dev(seg, s)) :
 			    "Missing");
 
-		if (seg->area[s].u.pv.pvseg->pv)
+		if (seg_pv(seg, s))
 			log_print("%sPhysical extents\t%d to %d", pre,
-				  seg->area[s].u.pv.pvseg->pe,
-				  seg->area[s].u.pv.pvseg->pe +
-				      seg->area_len - 1);
+				  seg_pe(seg, s),
+				  seg_pe(seg, s) + seg->area_len - 1);
 		break;
 	case AREA_LV:
 		log_print("%sLogical volume\t%s", pre,
-			  seg->area[s].u.lv.lv ?
-			  seg->area[s].u.lv.lv->name : "Missing");
+			  seg_lv(seg, s) ?
+			  seg_lv(seg, s)->name : "Missing");
 
-		if (seg->area[s].u.lv.lv)
+		if (seg_lv(seg, s))
 			log_print("%sLogical extents\t%d to %d", pre,
-				  seg->area[s].u.lv.le,
-				  seg->area[s].u.lv.le + seg->area_len - 1);
+				  seg_le(seg, s),
+				  seg_le(seg, s) + seg->area_len - 1);
 
 	}
 }

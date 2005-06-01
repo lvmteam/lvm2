@@ -34,6 +34,12 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	if (lv->status & MIRROR_LOG) {
+		log_error("Can't remove logical volume %s used as mirror log",
+			  lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (lv->status & LOCKED) {
 		log_error("Can't remove locked LV %s", lv->name);
 		return ECMD_FAILED;

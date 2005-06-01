@@ -98,14 +98,11 @@ int label_register_handler(const char *name, struct labeller *handler)
 
 struct labeller *label_get_handler(const char *name)
 {
-	struct list *lih;
 	struct labeller_i *li;
 
-	list_iterate(lih, &_labellers) {
-		li = list_item(lih, struct labeller_i);
+	list_iterate_items(li, &_labellers)
 		if (!strcmp(li->name, name))
 			return li->l;
-	}
 
 	return NULL;
 }
@@ -113,7 +110,6 @@ struct labeller *label_get_handler(const char *name)
 static struct labeller *_find_labeller(struct device *dev, char *buf,
 				       uint64_t *label_sector)
 {
-	struct list *lih;
 	struct labeller_i *li;
 	struct labeller *r = NULL;
 	struct label_header *lh;
@@ -166,8 +162,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 				continue;
 		}
 
-		list_iterate(lih, &_labellers) {
-			li = list_item(lih, struct labeller_i);
+		list_iterate_items(li, &_labellers) {
 			if (li->l->ops->can_handle(li->l, (char *) lh, sector)) {
 				log_very_verbose("%s: %s label detected",
 						 dev_name(dev), li->name);
@@ -208,7 +203,6 @@ int label_remove(struct device *dev)
 	int r = 1;
 	uint64_t sector;
 	int wipe;
-	struct list *lih;
 	struct labeller_i *li;
 	struct label_header *lh;
 
@@ -244,8 +238,7 @@ int label_remove(struct device *dev)
 			if (xlate64(lh->sector_xl) == sector)
 				wipe = 1;
 		} else {
-			list_iterate(lih, &_labellers) {
-				li = list_item(lih, struct labeller_i);
+			list_iterate_items(li, &_labellers) {
 				if (li->l->ops->can_handle(li->l, (char *) lh,
 							   sector)) {
 					wipe = 1;

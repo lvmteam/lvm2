@@ -204,16 +204,14 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 	struct pfilter *pf = (struct pfilter *) f->private;
 	void *l = hash_lookup(pf->devices, dev_name(dev));
 	struct str_list *sl;
-	struct list *ah;
 
 	if (!l) {
 		l = pf->real->passes_filter(pf->real, dev) ?
 		    PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
-		list_iterate(ah, &dev->aliases) {
-			sl = list_item(ah, struct str_list);
+		list_iterate_items(sl, &dev->aliases)
 			hash_insert(pf->devices, sl->str, l);
-		}
+
 	} else if (l == PF_BAD_DEVICE)
 			log_debug("%s: Skipping (cached)", dev_name(dev));
 

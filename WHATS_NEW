@@ -1,5 +1,16 @@
 Version 2.01.11 - 
 ==============================
+  Allow the creation of mirrors with contiguous extents.
+  Always perform sanity checks against metadata before committing it to disk.
+  Split lv_extend into two steps: choosing extents + allocation to LV(s).
+  Add mirror log region size to metadata.
+  Use list_iterate_items throughout and add list*back macros.
+  Introduce seg_ macros to access areas.
+  Add segtype_is_ macros.
+  Support tiny metadata areas for pool conversions.
+  Mirror activation handles disk log as well as core.
+  Activation code recognises mirror log dependency.
+  Add mirror_log and regionsize fields to report.
   Fix non-orphan pvchange -u.
   Fix vgmerge to handle duplicate LVIDs.
   Move archiver code from tools into library.

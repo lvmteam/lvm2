@@ -517,17 +517,15 @@ static int _lv_suspend_lv(struct logical_volume *lv)
  */
 int lvs_in_vg_activated(struct volume_group *vg)
 {
-	struct list *lvh;
-	struct logical_volume *lv;
+	struct lv_list *lvl;
 	int count = 0;
 
 	if (!activation())
 		return 0;
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (lv->status & VISIBLE_LV)
-			count += (_lv_active(lv) == 1);
+	list_iterate_items(lvl, &vg->lvs) {
+		if (lvl->lv->status & VISIBLE_LV)
+			count += (_lv_active(lvl->lv) == 1);
 	}
 
 	return count;
@@ -535,17 +533,16 @@ int lvs_in_vg_activated(struct volume_group *vg)
 
 int lvs_in_vg_opened(struct volume_group *vg)
 {
-	struct list *lvh;
+	struct lv_list *lvl;
 	struct logical_volume *lv;
 	int count = 0;
 
 	if (!activation())
 		return 0;
 
-	list_iterate(lvh, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
-		if (lv->status & VISIBLE_LV)
-			count += (_lv_open_count(lv) > 0);
+	list_iterate_items(lvl, &vg->lvs) {
+		if (lvl->lv->status & VISIBLE_LV)
+			count += (_lv_open_count(lvl->lv) > 0);
 	}
 
 	return count;

@@ -112,6 +112,9 @@ void *malloc_aux(size_t s, const char *file, int line)
 	if (_mem_stats.bytes > _mem_stats.mbytes)
 		_mem_stats.mbytes = _mem_stats.bytes;
 
+	/* log_debug("Allocated: %u %u %u", nb->id, _mem_stats.blocks_allocated,
+		  _mem_stats.bytes); */
+
 	return nb + 1;
 }
 

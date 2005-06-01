@@ -119,10 +119,10 @@ static int _segments_compatible(struct lv_segment *first,
 
 		width = first->area_len;
 
-		if ((first->area[s].u.pv.pvseg->pv !=
-		     second->area[s].u.pv.pvseg->pv) ||
-		    (first->area[s].u.pv.pvseg->pe + width !=
-		     second->area[s].u.pv.pvseg->pe))
+		if ((seg_pv(first, s) !=
+		     seg_pv(second, s)) ||
+		    (seg_pe(first, s) + width !=
+		     seg_pe(second, s)))
 			return 0;
 	}
 
@@ -144,8 +144,8 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 
 	for (s = 0; s < seg1->area_count; s++)
 		if (seg1->area[s].type == AREA_PV)
-			merge_pv_segments(seg1->area[s].u.pv.pvseg,
-					  seg2->area[s].u.pv.pvseg);
+			merge_pv_segments(seg_pvseg(seg1, s),
+					  seg_pvseg(seg2, s));
 
 	return 1;
 }

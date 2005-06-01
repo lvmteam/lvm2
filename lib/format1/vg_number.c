@@ -27,7 +27,6 @@
 int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 		       const char *candidate_vg, int *result)
 {
-	struct list *pvh;
 	struct list all_pvs;
 	struct disk_list *dl;
 	struct pool *mem = pool_create("lvm1 vg_number", 10 * 1024);
@@ -47,8 +46,7 @@ int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 
 	memset(numbers, 0, sizeof(numbers));
 
-	list_iterate(pvh, &all_pvs) {
-		dl = list_item(pvh, struct disk_list);
+	list_iterate_items(dl, &all_pvs) {
 		if (!*dl->pvd.vg_name || !strcmp(dl->pvd.vg_name, candidate_vg))
 			continue;
 

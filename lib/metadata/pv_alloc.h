@@ -22,7 +22,7 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv, uint32_t pe,
 				       struct lv_segment *seg,
 				       uint32_t area_num);
 int pv_split_segment(struct physical_volume *pv, uint32_t pe);
-int release_pv_segment(struct pv_segment *peg, uint32_t new_area_len);
+int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction);
 int check_pv_segments(struct volume_group *vg);
 void merge_pv_segments(struct pv_segment *peg1, struct pv_segment *peg2);
 

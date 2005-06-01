@@ -91,7 +91,6 @@ static int _split_vg(const char *filename, char *vgname, size_t vg_size,
 
 static void _insert_file(struct list *head, struct archive_file *b)
 {
-	struct list *bh;
 	struct archive_file *bf = NULL;
 
 	if (list_empty(head)) {
@@ -99,11 +98,9 @@ static void _insert_file(struct list *head, struct archive_file *b)
 		return;
 	}
 
-	/* index increases through list */
-	list_iterate(bh, head) {
-		bf = list_item(bh, struct archive_file);
-
-		if (bf->index > b->index) {
+	/* index reduces through list */
+	list_iterate_items(bf, head) {
+		if (b->index > bf->index) {
 			list_add(&bf->list, &b->list);
 			return;
 		}
@@ -200,7 +197,6 @@ static struct list *_scan_archive(struct pool *mem,
 static void _remove_expired(struct list *archives, uint32_t archives_size,
 			    uint32_t retain_days, uint32_t min_archive)
 {
-	struct list *bh;
 	struct archive_file *bf;
 	struct stat sb;
 	time_t retain_time;
@@ -214,9 +210,7 @@ static void _remove_expired(struct list *archives, uint32_t archives_size,
 	retain_time = time(NULL) - (time_t) retain_days *SECS_PER_DAY;
 
 	/* Assume list is ordered oldest first (by index) */
-	list_iterate(bh, archives) {
-		bf = list_item(bh, struct archive_file);
-
+	list_iterate_items(bf, archives) {
 		/* Get the mtime of the file and unlink if too old */
 		if (stat(bf->path, &sb)) {
 			log_sys_error("stat", bf->path);
@@ -280,7 +274,7 @@ int archive_vg(struct volume_group *vg,
 	if (list_empty(archives))
 		ix = 0;
 	else {
-		last = list_item(archives->p, struct archive_file);
+		last = list_item(list_first(archives), struct archive_file);
 		ix = last->index + 1;
 	}
 
@@ -345,7 +339,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 
 int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 {
-	struct list *archives, *ah;
+	struct list *archives;
 	struct archive_file *af;
 
 	if (!(archives = _scan_archive(cmd->mem, vgname, dir))) {
@@ -356,11 +350,8 @@ int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 	if (list_empty(archives))
 		log_print("No archives found in %s.", dir);
 
-	list_iterate(ah, archives) {
-		af = list_item(ah, struct archive_file);
-
+	list_iterate_back_items(af, archives)
 		_display_archive(cmd, af);
-	}
 
 	pool_free(cmd->mem, archives);
 

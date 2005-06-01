@@ -59,7 +59,7 @@ int vg_add_snapshot(struct format_instance *fid, const char *name,
 
 	snap->le_count = extent_count;
 
-	if (!(seg = alloc_snapshot_seg(snap, 0))) {
+	if (!(seg = alloc_snapshot_seg(snap, 0, 0))) {
 		stack;
 		return 0;
 	}
