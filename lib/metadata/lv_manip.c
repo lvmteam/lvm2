@@ -621,7 +621,10 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 		if (contiguous && (contiguous_count < ix_offset))
 			break;
 
-		if (ix + ix_offset < ah->area_count + ah->log_count)
+		/* Only allocate log_area the first time around */
+		if (ix + ix_offset < ah->area_count +
+			    (ah->log_count && !ah->log_area.len) ?
+				ah->log_count : 0)
 			/* FIXME With ALLOC_ANYWHERE, need to split areas */
 			break;
 
@@ -630,9 +633,10 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			qsort(areas + ix_offset, ix, sizeof(*areas),
 			      _comp_area);
 
+		/* First time around, use smallest area as log_area */
 		if (!_alloc_parallel_area(ah, needed, areas,
 					  allocated,
-					  ah->log_count ?
+					  (ah->log_count && !ah->log_area.len) ?
 						*(areas + ix_offset + ix - 1) :
 						NULL)) {
 			stack;
@@ -673,7 +677,7 @@ static int _allocate(struct alloc_handle *ah,
 		return 1;
 	}
 
-	if (mirrored_pv || (ah->alloc == ALLOC_CONTIGUOUS) || ah->log_count)
+	if (mirrored_pv || (ah->alloc == ALLOC_CONTIGUOUS))
 		can_split = 0;
 
 	if (lv && !list_empty(&lv->segments))
