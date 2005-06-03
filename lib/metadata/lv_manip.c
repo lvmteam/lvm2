@@ -179,10 +179,11 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 	seg->area_len -= area_reduction;
 
 	for (s = 0; s < seg->area_count; s++) {
-		if (seg_type(seg, s) != AREA_PV)
-			continue;
-		release_pv_segment(seg_pvseg(seg, s), area_reduction);
-		seg->lv->vg->free_count += area_reduction;
+		if (seg_type(seg, s) == AREA_PV) {
+			release_pv_segment(seg_pvseg(seg, s), area_reduction);
+			seg->lv->vg->free_count += area_reduction;
+		} else if (seg_lv(seg, s)->status & MIRROR_IMAGE)
+			lv_reduce(seg_lv(seg, s), area_reduction);	
 	}
 
 	return 1;
@@ -193,6 +194,7 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
  */
 int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
+	struct lv_list *lvl;
 	struct lv_segment *seg;
 	uint32_t count = extents;
 	uint32_t reduction;
@@ -223,8 +225,18 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	lv->le_count -= extents;
 	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
 
-	if (lv->le_count && lv->vg->fid->fmt->ops->lv_setup &&
-	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
+	/* Remove the LV if it is now empty */
+	if (!lv->le_count) {
+		if (!(lvl = find_lv_in_vg(lv->vg, lv->name))) {
+			stack;
+			return 0;
+		}
+
+		list_del(&lvl->list);
+
+		lv->vg->lv_count--;
+	} else if (lv->vg->fid->fmt->ops->lv_setup &&
+		   !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
 		stack;
 		return 0;
 	}
@@ -237,22 +249,11 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
  */
 int lv_remove(struct logical_volume *lv)
 {
-	struct lv_list *lvl;
 
 	if (!lv_reduce(lv, lv->le_count)) {
 		stack;
 		return 0;
 	}
-
-	/* find the lv list */
-	if (!(lvl = find_lv_in_vg(lv->vg, lv->name))) {
-		stack;
-		return 0;
-	}
-
-	list_del(&lvl->list);
-
-	lv->vg->lv_count--;
 
 	return 1;
 }
