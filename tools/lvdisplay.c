@@ -18,6 +18,9 @@
 static int _lvdisplay_single(struct cmd_context *cmd, struct logical_volume *lv,
 			     void *handle)
 {
+	if (!arg_count(cmd, all_ARG) && !(lv->status & VISIBLE_LV))
+		return ECMD_PROCESSED;
+
 	if (arg_count(cmd, colon_ARG))
 		lvdisplay_colons(lv);
 	else {

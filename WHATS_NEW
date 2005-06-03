@@ -1,5 +1,9 @@
 Version 2.01.11 - 
 ==============================
+  Centralise restrictions on LV names.
+  Always insert an intermediate layer for mirrors.
+  Suppress hidden LVs from reports unless --all is given.
+  Use square brackets for hidden LVs in reports.
   Allow the creation of mirrors with contiguous extents.
   Always perform sanity checks against metadata before committing it to disk.
   Split lv_extend into two steps: choosing extents + allocation to LV(s).

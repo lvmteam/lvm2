@@ -35,7 +35,8 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 			   struct physical_volume *pv, uint32_t pe);
 void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
-			    struct logical_volume *lv, uint32_t le);
+			    struct logical_volume *lv, uint32_t le,
+			    uint32_t flags);
 
 struct alloc_handle;
 struct alloc_handle *allocate_extents(struct volume_group *vg,
@@ -64,6 +65,14 @@ int lv_add_segment(struct alloc_handle *ah,
 int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv);
 int lv_add_virtual_segment(struct logical_volume *lv, uint32_t status,
                            uint32_t extents, struct segment_type *segtype);
+int lv_add_mirror_segment(struct alloc_handle *ah,
+			  struct logical_volume *lv,
+			  struct logical_volume **sub_lvs,
+			  uint32_t mirrors,
+			  struct segment_type *segtype,
+			  uint32_t status,
+			  uint32_t region_size,
+			  struct logical_volume *log_lv);
 
 void alloc_destroy(struct alloc_handle *ah);
 

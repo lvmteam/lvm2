@@ -82,7 +82,7 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 
 	seg->area_len /= seg->area_count;
 
-	return text_import_areas(seg, sn, cn, pv_hash);
+	return text_import_areas(seg, sn, cn, pv_hash, 0);
 }
 
 static int _text_export(const struct lv_segment *seg, struct formatter *f)

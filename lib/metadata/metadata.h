@@ -56,6 +56,7 @@
 #define MIRRORED		0x00008000	/* LV - internal use only */
 #define VIRTUAL			0x00010000	/* LV - internal use only */
 #define MIRROR_LOG		0x00020000	/* LV */
+#define MIRROR_IMAGE		0x00040000	/* LV */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */
@@ -436,7 +437,6 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 /* Manipulate LVs */
 struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       const char *name,
-				       const char *name_format,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
@@ -534,9 +534,19 @@ int vg_add_snapshot(struct format_instance *fid, const char *name,
 
 int vg_remove_snapshot(struct logical_volume *cow);
 
+
 /*
  * Mirroring functions
  */
+struct alloc_handle;
+int create_mirror_layers(struct alloc_handle *ah,
+			 uint32_t first_area,
+			 uint32_t num_mirrors,
+			 struct logical_volume *lv,
+			 struct segment_type *segtype,
+			 uint32_t status,
+			 uint32_t region_size,
+			 struct logical_volume *log_lv);
 int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv_mirr,
 			  struct list *source_pvl,
@@ -559,6 +569,8 @@ struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
 
 uint32_t find_free_lvnum(struct logical_volume *lv);
+char *generate_lv_name(struct volume_group *vg, const char *format,
+		       char *buffer, size_t len);
 
 static inline int validate_name(const char *n)
 {

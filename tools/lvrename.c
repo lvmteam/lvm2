@@ -83,10 +83,8 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	/* FIXME Remove this restriction eventually */
-	if (!strncmp(lv_name_new, "snapshot", 8)) {
-		log_error("Names starting \"snapshot\" are reserved. "
-			  "Please choose a different LV name.");
+	if (!apply_lvname_restrictions(lv_name_new)) {
+		stack;
 		return ECMD_FAILED;
 	}
 

@@ -405,9 +405,20 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	/* FIXME Test for VISIBLE instead? */
 	if (lv->status & MIRROR_LOG) {
 		log_error("Unable to change mirror log LV %s directly", lv->name);
+		return ECMD_FAILED;
+	}
+
+	if (lv->status & MIRROR_IMAGE) {
+		log_error("Unable to change mirror image LV %s directly",
+			  lv->name);
+		return ECMD_FAILED;
+	}
+
+	if (!(lv->status & VISIBLE_LV)) {
+		log_error("Unable to change internal LV %s directly",
+			  lv->name);
 		return ECMD_FAILED;
 	}
 

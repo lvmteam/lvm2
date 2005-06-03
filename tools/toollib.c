@@ -1012,3 +1012,33 @@ int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
 
 	return 1;
 }
+
+int apply_lvname_restrictions(const char *name)
+{
+	if (!strncmp(name, "snapshot", 8)) {
+		log_error("Names starting \"snapshot\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
+
+	if (!strncmp(name, "pvmove", 6)) {
+		log_error("Names starting \"pvmove\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
+
+	if (strstr(name, "_mlog")) {
+		log_error("Names including \"_mlog\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
+
+	if (strstr(name, "_mimage")) {
+		log_error("Names including \"_mimage\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
+
+	return 1;
+}
+
