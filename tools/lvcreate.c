@@ -497,6 +497,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
+	if (lp->mirrors && !(vg->fid->fmt->features & FMT_SEGMENTS)) {
+		log_error("Metadata does not support mirroring.");
+		return 0;
+	}
+
 	/*
 	 * Create the pv list.
 	 */

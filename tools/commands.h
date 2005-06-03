@@ -178,6 +178,7 @@ xx(lvextend,
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents [+]LogicalExtentsNumber |\n"
    "\t -L|--size [+]LogicalVolumeSize[kKmMgGtT]}\n"
+   "\t[-m|--mirrors Mirrors]\n"
    "\t[-n|--nofsck]\n"
    "\t[-r|--resizefs]\n"
    "\t[-t|--test]\n"
@@ -186,8 +187,9 @@ xx(lvextend,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   alloc_ARG, autobackup_ARG, extents_ARG, nofsck_ARG, resizefs_ARG,
-   size_ARG, stripes_ARG, stripesize_ARG, test_ARG, type_ARG)
+   alloc_ARG, autobackup_ARG, extents_ARG, mirrors_ARG, nofsck_ARG,
+   resizefs_ARG, size_ARG, stripes_ARG, stripesize_ARG, test_ARG,
+   type_ARG)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
