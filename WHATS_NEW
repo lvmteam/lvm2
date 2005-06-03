@@ -1,5 +1,6 @@
 Version 2.01.11 - 
 ==============================
+  Allow mirror images to have more than one segment.
   Centralise restrictions on LV names.
   Always insert an intermediate layer for mirrors.
   Suppress hidden LVs from reports unless --all is given.
