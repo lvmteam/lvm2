@@ -300,7 +300,7 @@ static struct alloc_handle *_alloc_init(struct pool *mem,
 	uint32_t s, area_count;
 
 	if (stripes > 1 && mirrors > 1) {
-		log_error("striped mirrors are not supported yet");
+		log_error("Striped mirrors are not supported yet");
 		return NULL;
 	}
 
@@ -980,7 +980,9 @@ int lv_extend(struct logical_volume *lv,
 	      alloc_policy_t alloc)
 {
 	int r = 1;
+	uint32_t m;
 	struct alloc_handle *ah;
+	struct lv_segment *first_seg;
 
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, status, extents, segtype);
@@ -992,10 +994,29 @@ int lv_extend(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!lv_add_segment(ah, 0, ah->area_count, lv, segtype, stripe_size,
+	if (!mirrors) {
+		if (!lv_add_segment(ah, 0, ah->area_count, lv, segtype, stripe_size,
 			    mirrored_pv, mirrored_pe, status, 0, NULL)) {
-		stack;
-		goto out;
+			stack;
+			goto out;
+		}
+	} else {
+		list_iterate_items(first_seg, &lv->segments)
+			break;
+		for (m = 0; m < mirrors; m++) {
+			if (!lv_add_segment(ah, m, 1, seg_lv(first_seg, m),
+					    get_segtype_from_string(lv->vg->cmd,
+								    "striped"),
+					    0, NULL, 0, 0, 0, NULL)) {
+				log_error("Aborting. Failed to extend %s.",
+					  seg_lv(first_seg, m)->name);
+				return 0;
+                	}
+		}
+		first_seg->area_len += extents;
+		first_seg->len += extents;
+		lv->le_count += extents;
+		lv->size += (uint64_t) extents *lv->vg->extent_size;
 	}
 
       out:
