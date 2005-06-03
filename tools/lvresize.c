@@ -387,6 +387,11 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			lp->resize = LV_EXTEND;
 	}
 
+	if (lp->mirrors && activation() &&
+	    lv_info(lv, &info, 0) && info.exists) {
+		log_error("Mirrors cannot be resized while active yet.");
+		return ECMD_FAILED;
+	}
 
 	if (lv_is_origin(lv)) {
 		if (lp->resize == LV_REDUCE) {
