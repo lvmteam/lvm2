@@ -90,4 +90,6 @@ struct list *clone_pv_list(struct pool *mem, struct list *pvs);
 int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
 	     const char *size);
 
+int apply_lvname_restrictions(const char *name);
+
 #endif

@@ -50,7 +50,7 @@ int vg_add_snapshot(struct format_instance *fid, const char *name,
 		return 0;
 	}
 
-	if (!(snap = lv_create_empty(fid, name, name ? NULL : "snapshot%d",
+	if (!(snap = lv_create_empty(fid, name ? name : "snapshot%d",
 				     lvid, LVM_READ | LVM_WRITE | VISIBLE_LV,
 				     ALLOC_INHERIT, 1, origin->vg))) {
 		stack;

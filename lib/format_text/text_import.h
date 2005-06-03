@@ -20,6 +20,7 @@ struct lv_segment;
 struct config_node;
 
 int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
-		      const struct config_node *cn, struct hash_table *pv_hash);
+		      const struct config_node *cn, struct hash_table *pv_hash,
+		      uint32_t flags);
 
 #endif

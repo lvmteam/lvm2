@@ -74,6 +74,11 @@ struct lv_segment *alloc_lv_segment(struct pool *mem,
 		return NULL;
 	}
 
+	if (!segtype) {
+		log_error("alloc_lv_segment: Missing segtype.");
+		return NULL;
+	}
+
 	seg->segtype = segtype;
 	seg->lv = lv;
 	seg->le = le;
@@ -142,11 +147,13 @@ int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
  * Link one LV segment to another.  Assumes sizes already match.
  */
 void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
-			    struct logical_volume *lv, uint32_t le)
+			    struct logical_volume *lv, uint32_t le,
+			    uint32_t flags)
 {
 	seg->area[area_num].type = AREA_LV;
 	seg_lv(seg, area_num) = lv;
 	seg_le(seg, area_num) = le;
+	lv->status |= flags;
 }
 
 /*
@@ -170,12 +177,12 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 
 	seg->len -= reduction;
 	seg->area_len -= area_reduction;
-	seg->lv->vg->free_count += area_reduction * seg->area_count;
 
 	for (s = 0; s < seg->area_count; s++) {
 		if (seg_type(seg, s) != AREA_PV)
 			continue;
 		release_pv_segment(seg_pvseg(seg, s), area_reduction);
+		seg->lv->vg->free_count += area_reduction;
 	}
 
 	return 1;
@@ -271,6 +278,7 @@ struct alloc_handle {
 	uint32_t area_count;		/* Number of parallel areas */
 	uint32_t area_multiple;		/* seg->len = area_len * area_multiple */
 	uint32_t log_count;		/* Number of parallel 1-extent logs */
+	uint32_t total_area_len;	/* Total number of parallel extents */
 
 	struct alloced_area log_area;	/* Extent used for log */
 	struct list alloced_areas[0];	/* Lists of areas in each stripe */
@@ -464,6 +472,8 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 		aa[s].len = area_len;
 		list_add(&ah->alloced_areas[s], &aa[s].list);
 	}
+
+	ah->total_area_len += area_len;
 
 	for (s = 0; s < ah->area_count; s++)
 		consume_pv_area(areas[s], area_len);
@@ -831,6 +841,11 @@ int lv_add_segment(struct alloc_handle *ah,
 		   uint32_t region_size,
 		   struct logical_volume *log_lv)
 {
+	if (!segtype) {
+		log_error("Missing segtype in lv_add_segment().");
+		return 0;
+	}
+
 	if (segtype_is_virtual(segtype)) {
 		log_error("lv_add_segment cannot handle virtual segments");
 		return 0;
@@ -902,6 +917,53 @@ int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv)
 }
 
 /*
+ * Add a mirror segment
+ */
+int lv_add_mirror_segment(struct alloc_handle *ah,
+			  struct logical_volume *lv,
+			  struct logical_volume **sub_lvs,
+			  uint32_t mirrors,
+			  struct segment_type *segtype,
+			  uint32_t status,
+			  uint32_t region_size,
+			  struct logical_volume *log_lv)
+{
+	struct lv_segment *seg;
+	uint32_t m;
+
+	if (list_empty(&log_lv->segments)) {
+		log_error("Log LV %s is empty.", log_lv->name);
+		return 0;
+	}
+
+	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem,
+				     get_segtype_from_string(lv->vg->cmd,
+							     "mirror"),
+				     lv, lv->le_count, ah->total_area_len, 0,
+				     0, log_lv, mirrors, ah->total_area_len, 0,
+				     region_size, 0))) {
+		log_error("Couldn't allocate new mirror segment.");
+		return 0;
+	}
+
+	for (m = 0; m < mirrors; m++)
+		set_lv_segment_area_lv(seg, m, sub_lvs[m], 0, MIRROR_IMAGE);
+
+	list_add(&lv->segments, &seg->list);
+	lv->le_count += ah->total_area_len;
+	lv->size += (uint64_t) lv->le_count *lv->vg->extent_size;
+
+	if (lv->vg->fid->fmt->ops->lv_setup &&
+	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+
+/*
  * Entry point for single-step LV allocation + extension.
  */
 int lv_extend(struct logical_volume *lv,
@@ -936,8 +998,8 @@ int lv_extend(struct logical_volume *lv,
 	return r;
 }
 
-static char *_generate_lv_name(struct volume_group *vg, const char *format,
-			       char *buffer, size_t len)
+char *generate_lv_name(struct volume_group *vg, const char *format,
+		       char *buffer, size_t len)
 {
 	struct lv_list *lvl;
 	int high = -1, i;
@@ -961,7 +1023,6 @@ static char *_generate_lv_name(struct volume_group *vg, const char *format,
  */
 struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       const char *name,
-				       const char *name_format,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
@@ -979,8 +1040,8 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 		return NULL;
 	}
 
-	if (!name && !(name = _generate_lv_name(vg, name_format, dname,
-						sizeof(dname)))) {
+	if (strstr(name, "%d") &&
+	    !(name = generate_lv_name(vg, name, dname, sizeof(dname)))) {
 		log_error("Failed to generate unique name for the new "
 			  "logical volume");
 		return NULL;

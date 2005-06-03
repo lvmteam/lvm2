@@ -137,10 +137,8 @@ static int _read_name_params(struct lvcreate_params *lp,
 		if ((ptr = strrchr(lp->lv_name, '/')))
 			lp->lv_name = ptr + 1;
 
-		/* FIXME Remove this restriction eventually */
-		if (!strncmp(lp->lv_name, "snapshot", 8)) {
-			log_error("Names starting \"snapshot\" are reserved. "
-				  "Please choose a different LV name.");
+		if (!apply_lvname_restrictions(lp->lv_name)) {
+			stack;
 			return 0;
 		}
 
@@ -469,6 +467,9 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	const char *tag;
 	int consistent = 1;
 	struct alloc_handle *ah = NULL;
+	char *log_name, lv_name_buf[128];
+	const char *lv_name;
+	size_t len;
 
 	status |= lp->permission | VISIBLE_LV;
 
@@ -597,6 +598,16 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	if (!archive(vg))
 		return 0;
 
+	if (lp->lv_name)
+		lv_name = lp->lv_name;
+	else {
+		if (!generate_lv_name(vg, "lvol%d", lv_name_buf, sizeof(lv_name_buf))) {
+			log_error("Failed to generate LV name.");
+			return 0;
+		}
+		lv_name = &lv_name_buf[0];
+	}
+
 	if (lp->mirrors > 1) {
 		/* FIXME Adjust lp->region_size if necessary */
 		region_max = (1 << (ffs(lp->extents) - 1)) * vg->extent_size;
@@ -609,7 +620,29 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 		/* FIXME Calculate how many extents needed for the log */
 
-		if (!(log_lv = lv_create_empty(vg->fid, NULL, "mirrorlog%d", NULL,
+		len = strlen(lv_name) + 32;
+        	if (!(log_name = alloca(len))) {
+                	log_error("log_name allocation failed. "
+	                          "Remove new LV and retry.");
+                	return 0;
+        	}
+
+        	if (lvm_snprintf(log_name, len, "%s_mlog", lv_name) < 0) {
+                	log_error("log_name allocation failed. "
+	                          "Remove new LV and retry.");
+                	return 0;
+        	}
+
+		if (find_lv_in_vg(vg, log_name)) {
+        		if (lvm_snprintf(log_name, len, "%s_mlog_%%d",
+					 lv_name) < 0) {
+                		log_error("log_name allocation failed. "
+					  "Remove new LV and retry.");
+                		return 0;
+        		}
+		}
+ 
+		if (!(log_lv = lv_create_empty(vg->fid, log_name, NULL,
 				VISIBLE_LV | LVM_READ | LVM_WRITE,
 				lp->alloc, 0, vg))) {
 			stack;
@@ -662,7 +695,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		log_lv->status &= ~VISIBLE_LV;
 	}
 
-	if (!(lv = lv_create_empty(vg->fid, lp->lv_name, "lvol%d", NULL,
+	if (!(lv = lv_create_empty(vg->fid, lv_name ? lv_name : "lvol%d", NULL,
 				   status, lp->alloc, 0, vg))) {
 		stack;
 		goto error;
@@ -701,11 +734,10 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if (lp->mirrors > 1) {
-		if (!lv_add_segment(ah, 0, lp->mirrors, lv, lp->segtype,
-				    lp->stripe_size, NULL, 0, 0,
-				    lp->region_size, log_lv)) {
-			log_error("Aborting. Failed to add mirror segment. "
-				  "Remove new LV and retry.");
+		if (!create_mirror_layers(ah, 0, lp->mirrors, lv,
+					  lp->segtype, 0,
+					  lp->region_size, log_lv)) {
+			stack;
 			goto error;
 		}
 

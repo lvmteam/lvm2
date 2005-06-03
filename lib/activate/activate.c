@@ -534,7 +534,6 @@ int lvs_in_vg_activated(struct volume_group *vg)
 int lvs_in_vg_opened(struct volume_group *vg)
 {
 	struct lv_list *lvl;
-	struct logical_volume *lv;
 	int count = 0;
 
 	if (!activation())

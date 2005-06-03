@@ -131,6 +131,7 @@ xx(lvcreate,
 xx(lvdisplay,
    "Display information about a logical volume",
    "lvdisplay\n"
+   "\t[-a|--all]\n"
    "\t[-c|--colon]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -145,6 +146,7 @@ xx(lvdisplay,
    "\n"
    "lvdisplay --columns|-C\n"
    "\t[--aligned]\n"
+   "\t[-a|--all]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -161,9 +163,10 @@ xx(lvdisplay,
    "\t[--version]" "\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-    aligned_ARG, colon_ARG, columns_ARG, disk_ARG, ignorelockingfailure_ARG,
-    maps_ARG, noheadings_ARG, nosuffix_ARG, options_ARG, sort_ARG,
-    partial_ARG, segments_ARG, separator_ARG, unbuffered_ARG, units_ARG)
+    aligned_ARG, all_ARG, colon_ARG, columns_ARG, disk_ARG,
+    ignorelockingfailure_ARG, maps_ARG, noheadings_ARG, nosuffix_ARG,
+    options_ARG, sort_ARG, partial_ARG, segments_ARG, separator_ARG,
+    unbuffered_ARG, units_ARG)
 
 xx(lvextend,
    "Add space to a logical volume",
@@ -300,6 +303,7 @@ xx(lvresize,
 xx(lvs,
    "Display information about logical volumes",
    "lvs" "\n"
+   "\t[-a|--all]\n"
    "\t[--aligned]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -317,9 +321,9 @@ xx(lvs,
    "\t[--version]" "\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
    
-   aligned_ARG, ignorelockingfailure_ARG, noheadings_ARG, nolocking_ARG,
-   nosuffix_ARG, options_ARG, partial_ARG, segments_ARG, separator_ARG,
-   sort_ARG, unbuffered_ARG, units_ARG)
+   aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, segments_ARG,
+   separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
@@ -775,6 +779,7 @@ xx(vgs,
    "Display information about volume groups",
    "vgs" "\n"
    "\t[--aligned]\n"
+   "\t[-a|--all]\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
@@ -790,9 +795,9 @@ xx(vgs,
    "\t[--version]\n"
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
    
-   aligned_ARG, ignorelockingfailure_ARG, noheadings_ARG, nolocking_ARG,
-   nosuffix_ARG, options_ARG, partial_ARG, separator_ARG, sort_ARG,
-   unbuffered_ARG, units_ARG)
+   aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
+   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, separator_ARG,
+   sort_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgscan,
    "Search for all volume groups",

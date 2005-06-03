@@ -337,6 +337,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 		repstr[0] = 'p';
 	else if (lv->status & MIRRORED)
 		repstr[0] = 'm';
+	else if (lv->status & MIRROR_IMAGE)
+		repstr[0] = 'i';
 	else if (lv->status & MIRROR_LOG)
 		repstr[0] = 'l';
 	else if (lv->status & VIRTUAL)
@@ -506,6 +508,39 @@ static int _loglv_disp(struct report_handle *rh, struct field *field,
 
 	field->report_string = "";
 	field->sort_value = (const void *) field->report_string;
+
+	return 1;
+}
+
+static int _lvname_disp(struct report_handle *rh, struct field *field,
+			const void *data)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	char *repstr;
+	size_t len;
+
+	if (lv->status & VISIBLE_LV) {
+		repstr = lv->name;
+		return _string_disp(rh, field, &repstr);
+	}
+
+	len = strlen(lv->name) + 3;
+	if (!(repstr = pool_zalloc(rh->mem, len))) {
+		log_error("pool_alloc failed");
+		return 0;
+	}
+
+	if (lvm_snprintf(repstr, len, "[%s]", lv->name) < 0) {
+		log_error("lvname snprintf failed");
+		return 0;
+	}
+
+	field->report_string = repstr;
+
+	if (!(field->sort_value = pool_strdup(rh->mem, lv->name))) {
+		log_error("pool_strdup failed");
+		return 0;
+	}
 
 	return 1;
 }

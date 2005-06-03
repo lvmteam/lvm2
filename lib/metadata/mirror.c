@@ -20,6 +20,70 @@
 #include "display.h"
 #include "activate.h"
 #include "lv_alloc.h"
+#include "lvm-string.h"
+
+int create_mirror_layers(struct alloc_handle *ah,
+			 uint32_t first_area,
+			 uint32_t num_mirrors,
+			 struct logical_volume *lv,
+			 struct segment_type *segtype,
+			 uint32_t status,
+			 uint32_t region_size,
+			 struct logical_volume *log_lv)
+{
+	uint32_t m;
+	struct logical_volume **img_lvs;
+	char *img_name;
+	size_t len;
+	
+	if (!(img_lvs = alloca(sizeof(*img_lvs) * num_mirrors))) {
+		log_error("img_lvs allocation failed. "
+			  "Remove new LV and retry.");
+		return 0;
+	}
+
+	len = strlen(lv->name) + 32;
+	if (!(img_name = alloca(len))) {
+		log_error("img_name allocation failed. "
+			  "Remove new LV and retry.");
+		return 0;
+	}
+
+	if (lvm_snprintf(img_name, len, "%s_mimage_%%d", lv->name) < 0) {
+		log_error("img_name allocation failed. "
+			  "Remove new LV and retry.");
+		return 0;
+	}
+
+	for (m = 0; m < num_mirrors; m++) {
+		if (!(img_lvs[m] = lv_create_empty(lv->vg->fid, img_name,
+					     NULL, LVM_READ | LVM_WRITE,
+					     ALLOC_INHERIT, 0, lv->vg))) {\
+			log_error("Aborting. Failed to create submirror LV. "
+				  "Remove new LV and retry.");
+			return 0;
+		}
+
+		if (!lv_add_segment(ah, m, 1, img_lvs[m],
+				    get_segtype_from_string(lv->vg->cmd,
+							    "striped"),
+				    0, NULL, 0, 0, 0, NULL)) {
+			log_error("Aborting. Failed to add submirror segment "
+				  "to %s. Remove new LV and retry.",
+				  img_lvs[m]->name);
+			return 0;
+		}
+	}
+
+	if (!lv_add_mirror_segment(ah, lv, img_lvs, num_mirrors, segtype,
+				   0, region_size, log_lv)) {
+		log_error("Aborting. Failed to add mirror segment. "
+			  "Remove new LV and retry.");
+		return 0;
+	}
+
+	return 1;
+}
 
 /* 
  * Replace any LV segments on given PV with temporary mirror.
@@ -153,7 +217,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 						  "temporary LV for pvmove.");
 					return 0;
 				}
-				set_lv_segment_area_lv(seg, s, lv_mirr, start_le);
+				set_lv_segment_area_lv(seg, s, lv_mirr, start_le, 0);
 	
 				extent_count += seg->area_len;
 	

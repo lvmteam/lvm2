@@ -34,6 +34,12 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
+	if (lv->status & MIRROR_IMAGE) {
+		log_error("Can't remove logical volume %s used by a mirror",
+			  lv->name);
+		return ECMD_FAILED;
+	}
+
 	if (lv->status & MIRROR_LOG) {
 		log_error("Can't remove logical volume %s used as mirror log",
 			  lv->name);

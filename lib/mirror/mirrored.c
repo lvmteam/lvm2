@@ -129,7 +129,7 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 		return 0;
 	}
 
-	return text_import_areas(seg, sn, cn, pv_hash);
+	return text_import_areas(seg, sn, cn, pv_hash, MIRROR_IMAGE);
 }
 
 static int _text_export(const struct lv_segment *seg, struct formatter *f)

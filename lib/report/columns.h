@@ -19,7 +19,7 @@
 
 /* *INDENT-OFF* */
 FIELD(LVS, lv, STR, "LV UUID", lvid.id[1], 38, uuid, "lv_uuid")
-FIELD(LVS, lv, STR, "LV", name, 4, string, "lv_name")
+FIELD(LVS, lv, STR, "LV", lvid, 4, lvname, "lv_name")
 FIELD(LVS, lv, STR, "Attr", lvid, 4, lvstatus, "lv_attr")
 FIELD(LVS, lv, NUM, "Maj", major, 3, int32, "lv_major")
 FIELD(LVS, lv, NUM, "Min", minor, 3, int32, "lv_minor")

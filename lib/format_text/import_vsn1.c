@@ -323,7 +323,8 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 }
 
 int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
-		      const struct config_node *cn, struct hash_table *pv_hash)
+		      const struct config_node *cn, struct hash_table *pv_hash,
+		      uint32_t flags)
 {
 	unsigned int s;
 	struct config_value *cv;
@@ -368,7 +369,8 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 			 */
 			seg->lv->vg->free_count -= seg->area_len;
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
-			set_lv_segment_area_lv(seg, s, lv1, cv->next->v.i);
+			set_lv_segment_area_lv(seg, s, lv1, cv->next->v.i,
+					       flags);
 		} else {
 			log_error("Couldn't find volume '%s' "
 				  "for segment '%s'.",
