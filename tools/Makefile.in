@@ -24,6 +24,7 @@ SOURCES =\
 	dumpconfig.c \
 	formats.c \
 	lvchange.c \
+	lvconvert.c \
 	lvcreate.c \
 	lvdisplay.c \
 	lvextend.c \
