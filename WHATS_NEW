@@ -1,5 +1,6 @@
 Version 2.01.11 - 
 ==============================
+  Introduce lvconvert.  So far only removes mirror images.
   Allow mirror images to be resized.
   Allow mirror images to have more than one segment.
   Centralise restrictions on LV names.

@@ -22,6 +22,75 @@
 #include "lv_alloc.h"
 #include "lvm-string.h"
 
+/*
+ * Reduce mirrored_seg to num_mirrors images.
+ */
+int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors)
+{
+	uint32_t m;
+
+	for (m = num_mirrors; m < mirrored_seg->area_count; m++) {
+		if (!lv_remove(seg_lv(mirrored_seg, m))) {
+			stack;
+			return 0;
+		}
+	}
+
+	mirrored_seg->area_count = num_mirrors;
+
+	return 1;
+}
+
+int remove_all_mirror_images(struct logical_volume *lv)
+{
+	struct lv_segment *first_seg, *seg;
+	struct logical_volume *lv1;
+
+	list_iterate_items(first_seg, &lv->segments)
+		break;
+
+	if (!remove_mirror_images(first_seg, 1)) {
+		stack;
+		return 0;
+	}
+
+	if (!lv_remove(first_seg->log_lv)) {
+		stack;
+		return 0;
+	}
+
+	lv1 = seg_lv(first_seg, 0);
+
+	lv->segments = lv1->segments;
+	lv->segments.n->p = &lv->segments;
+	lv->segments.p->n = &lv->segments;
+
+	list_init(&lv1->segments);
+	lv1->le_count = 0;
+	lv1->size = 0;
+	if (!lv_remove(lv1)) {
+		stack;
+		return 0;
+	}
+
+	lv->status &= ~MIRRORED;
+
+	list_iterate_items(seg, &lv->segments)
+		seg->lv = lv;
+
+	return 1;
+}
+
+/*
+ * Add mirror images to an existing mirror
+ */
+int add_mirror_images(struct alloc_handle *ah,
+		      uint32_t first_area,
+		      uint32_t num_areas,
+		      struct logical_volume *lv)
+{
+}
+
 int create_mirror_layers(struct alloc_handle *ah,
 			 uint32_t first_area,
 			 uint32_t num_mirrors,

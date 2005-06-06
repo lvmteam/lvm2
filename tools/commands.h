@@ -78,6 +78,19 @@ xx(lvchange,
    persistent_ARG, readahead_ARG, refresh_ARG, addtag_ARG, deltag_ARG,
    test_ARG)
 
+xx(lvconvert,
+   "Change logical volume layout",
+   "lvconvert " "\n"
+   "\t[--alloc AllocationPolicy]\n"
+   "\t[-d|--debug]\n"
+   "\t[-h|-?|--help]\n"
+   "\t[-m|--mirrors Mirrors]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
+   "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
+
+   alloc_ARG, mirrors_ARG, test_ARG)
+
 xx(lvcreate,
    "Create a logical volume",
    "lvcreate " "\n"
