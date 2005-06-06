@@ -584,6 +584,9 @@ static inline int validate_name(const char *n)
 	if (*n == '-')
 		return 0;
 
+	if (!strcmp(n, ".") || !strcmp(n, ".."))
+		return 0;
+
 	while ((len++, c = *n++))
 		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
 			return 0;

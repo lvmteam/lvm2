@@ -1042,3 +1042,18 @@ int apply_lvname_restrictions(const char *name)
 	return 1;
 }
 
+int validate_vg_name(struct cmd_context *cmd, const char *vg_name)
+{
+	char vg_path[PATH_MAX];
+
+	if (!validate_name(vg_name))
+		return 0;
+
+	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
+	if (path_exists(vg_path)) {
+		log_error("%s: already exists in filesystem", vg_path);
+		return 0;
+	}
+
+	return 1;
+}

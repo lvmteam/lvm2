@@ -222,6 +222,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
+	if (!validate_vg_name(cmd, vg_name_to)) {
+		log_error("New volume group name \"%s\" is invalid",
+			   vg_name_to);
+		goto error;
+	}
+
 	if ((active = lvs_in_vg_activated(vg_from))) {
 		/* FIXME Remove this restriction */
 		log_error("Logical volumes in \"%s\" must be inactive",

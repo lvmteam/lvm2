@@ -150,8 +150,8 @@ static struct list *_scan_archive(struct pool *mem,
 	}
 
 	for (i = 0; i < count; i++) {
-		/* ignore dot files */
-		if (dirent[i]->d_name[0] == '.')
+		if (!strcmp(dirent[i]->d_name, ".") ||
+		    !strcmp(dirent[i]->d_name, ".."))
 			continue;
 
 		/* check the name is the correct format */

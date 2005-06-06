@@ -92,4 +92,6 @@ int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
 
 int apply_lvname_restrictions(const char *name);
 
+int validate_vg_name(struct cmd_context *cmd, const char *vg_name);
+
 #endif

@@ -84,12 +84,14 @@ int remove_all_mirror_images(struct logical_volume *lv)
 /*
  * Add mirror images to an existing mirror
  */
+/* FIXME
 int add_mirror_images(struct alloc_handle *ah,
 		      uint32_t first_area,
 		      uint32_t num_areas,
 		      struct logical_volume *lv)
 {
 }
+*/
 
 int create_mirror_layers(struct alloc_handle *ah,
 			 uint32_t first_area,
