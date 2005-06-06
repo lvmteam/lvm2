@@ -22,7 +22,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	size_t max_lv, max_pv;
 	uint32_t extent_size;
 	char *vg_name;
-	char vg_path[PATH_MAX];
 	struct volume_group *vg;
 	const char *tag;
 	alloc_policy_t alloc;
@@ -89,13 +88,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
 		vg_name += strlen(cmd->dev_dir);
 
-	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
-	if (path_exists(vg_path)) {
-		log_error("%s: already exists in filesystem", vg_path);
-		return ECMD_FAILED;
-	}
-
-	if (!validate_name(vg_name)) {
+	if (!validate_vg_name(cmd, vg_name)) {
 		log_error("New volume group name \"%s\" is invalid", vg_name);
 		return ECMD_FAILED;
 	}
