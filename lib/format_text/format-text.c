@@ -344,9 +344,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	struct pv_list *pvl;
 	int r = 0;
 	uint32_t new_wrap = 0, old_wrap = 0;
-
-	/* FIXME Essential fix! Make dynamic (realloc? pool?) */
-	char buf[65536];
+	char *buf = NULL;
 	int found = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
@@ -373,7 +371,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0);
 	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
-	if (!(mdac->rlocn.size = text_vg_export_raw(vg, "", buf, sizeof(buf)))) {
+	if (!(mdac->rlocn.size = text_vg_export_raw(vg, "", &buf))) {
 		log_error("VG %s metadata writing failed", vg->name);
 		goto out;
 	}
@@ -433,6 +431,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!r && !dev_close(mdac->area.dev))
 		stack;
 
+	if (buf)
+		dbg_free(buf);
 	return r;
 }
 

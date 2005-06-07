@@ -537,6 +537,7 @@ static int _check_contiguous(struct lv_segment *prev_lvseg,
 /*
  * Choose sets of parallel areas to use, respecting any constraints.
  */
+/* FIXME Also accept existing areas new space must be parallel to */
 static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 				struct list *pvms, struct pv_area **areas,
 				uint32_t areas_size, unsigned can_split,
@@ -634,6 +635,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			      _comp_area);
 
 		/* First time around, use smallest area as log_area */
+		/* FIXME decide which PV to use at top of function instead */
 		if (!_alloc_parallel_area(ah, needed, areas,
 					  allocated,
 					  (ah->log_count && !ah->log_area.len) ?
@@ -994,7 +996,7 @@ int lv_extend(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!mirrors) {
+	if (mirrors < 2) {
 		if (!lv_add_segment(ah, 0, ah->area_count, lv, segtype, stripe_size,
 			    mirrored_pv, mirrored_pe, status, 0, NULL)) {
 			stack;
