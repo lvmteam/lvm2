@@ -30,6 +30,7 @@
 static enum event_type events = ALL_ERRORS; /* All until we can distinguish. */
 static char default_dso_name[] = "noop";  /* default DSO is noop */
 static int default_reg = 1;		 /* default action is register */
+static uint32_t timeout;
 
 /* Display help. */
 static void print_usage(char *name)
@@ -45,6 +46,7 @@ static void print_usage(char *name)
 	       "  -h                 Print this usage.\n"
 	       "  -l                 List registered devices.\n"
 	       "  -r                 Register for event (default).\n"
+	       "  -t <timeout>       (un)register for timeout event.\n"
 	       "  -u                 Unregister for event.\n"
 	       "\n", cmd);
 }
@@ -54,7 +56,7 @@ static int parse_argv(int argc, char **argv, char **dso_name_arg,
 		      char **device_arg, int *reg, int *list)
 {
 	int c;
-	const char *options = "d:hlru";
+	const char *options = "d:hlrt:u";
 
 	while ((c = getopt(argc, argv, options)) != -1) {
 		switch (c) {
@@ -69,6 +71,14 @@ static int parse_argv(int argc, char **argv, char **dso_name_arg,
 			break;
 		case 'r':
 			*reg = 1;
+			break;
+		case 't':
+			events = TIMEOUT;
+			if (sscanf(optarg, "%"SCNu32, &timeout) != 1){
+				fprintf(stderr, "invalid timeout '%s'\n",
+					optarg);
+				timeout = 0;
+			}
 			break;
 		case 'u':
 			*reg = 0;
@@ -119,19 +129,25 @@ int main(int argc, char **argv)
 	multilog_init_verbose(standard, _LOG_DEBUG);
 
 	if (list) {
-		do {
-			if (!(ret= dm_get_registered_device(&dso_name,
-							    &device,
-							    &events, next))) {
-				printf("%s %s 0x%x\n",
-				       dso_name, device, events);
+		while (1) {
+			if ((ret= dm_get_registered_device(&dso_name, &device,
+							   &events, next)))
+				break;
+			printf("%s %s 0x%x", dso_name, device, events);
+			if (events & TIMEOUT){
+				if ((ret = dm_get_event_timeout(device,
+							  	&timeout))) {
+					ret = EXIT_FAILURE;
+					goto out;
+				}
+				printf(" %"PRIu32"\n", timeout);
+			} else
+				printf("\n");
+			if (device_arg)
+				break;
 
-				if (device_arg)
-					break;
-
-				next = 1;
-			}
-		} while (!ret);
+			next = 1;
+		}
 
 		ret = (ret && device_arg) ? EXIT_FAILURE : EXIT_SUCCESS;
 		goto out;
@@ -143,9 +159,16 @@ int main(int argc, char **argv)
 			reg ? "": "un", device, strerror(-ret));
 		ret = EXIT_FAILURE;
 	} else {
-		printf("%s %sregistered successfully.\n",
-		       device, reg ? "" : "un");
-		ret = EXIT_SUCCESS;
+		if (reg && (events & TIMEOUT) &&
+		    ((ret = dm_set_event_timeout(device, timeout)))){
+			fprintf(stderr, "Failed to set timeout for %s: %s\n",
+				device, strerror(-ret));
+			ret = EXIT_FAILURE;
+		} else {
+			printf("%s %sregistered successfully.\n",
+			       device, reg ? "" : "un");
+			ret = EXIT_SUCCESS;
+		}
 	}
 
    out:
