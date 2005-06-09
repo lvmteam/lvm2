@@ -25,6 +25,7 @@
 #define	FIFO_SERVER	"/var/run/dmeventd-server"
 #define PIDFILE		"/var/run/dmeventd.pid"
 
+#define DEFAULT_TIMEOUT 10
 /* Commands for the daemon passed in the message below. */
 enum dmeventd_command {
 	CMD_ACTIVE = 1,
@@ -32,6 +33,8 @@ enum dmeventd_command {
 	CMD_UNREGISTER_FOR_EVENT,
 	CMD_GET_REGISTERED_DEVICE,
 	CMD_GET_NEXT_REGISTERED_DEVICE,
+	CMD_SET_TIMEOUT,
+	CMD_GET_TIMEOUT,
 };
 
 /* Message passed between client and daemon. */
@@ -60,6 +63,7 @@ enum event_type {
 	PATH_ERROR	= 0x10, /* Failure on an io path. */
 	ADAPTOR_ERROR	= 0x20, /* Failure off a host adaptor. */
 	SYNC_STATUS	= 0x40, /* Mirror synchronization completed/failed. */
+	TIMEOUT		= 0x80, /* Timeout has occured */
 };
 #define	ALL_ERRORS (SECTOR_ERROR | DEVICE_ERROR | PATH_ERROR | ADAPTOR_ERROR)
 
@@ -69,6 +73,8 @@ int dm_unregister_for_event(char *dso_name, char *device,
 			    enum event_type events);
 int dm_get_registered_device(char **dso_name, char **device,
 			     enum event_type *events, int next);
+int dm_set_event_timeout(char *device, uint32_t timeout);
+int dm_get_event_timeout(char *device, uint32_t *timeout);
 
 /* Prototypes for DSO interface. */
 void process_event(char *device, enum event_type event);
