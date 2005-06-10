@@ -1,3 +1,7 @@
+Version 1.01.03 -
+=============================
+  Fix configure script to reenable selinux.
+
 Version 1.01.02 - 17 May 2005
 =============================
   Call dm_lib_exit() and dm_lib_release() automatically now.
