@@ -1,6 +1,6 @@
-Version 1.01.03 -
+Version 1.01.03 - 10 Jun 2005
 =============================
-  Fix configure script to reenable selinux.
+  Fix configure script to re-enable selinux.
 
 Version 1.01.02 - 17 May 2005
 =============================
