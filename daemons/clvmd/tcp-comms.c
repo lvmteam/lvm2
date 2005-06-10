@@ -228,6 +228,25 @@ int cluster_fd_gulm_callback(struct local_client *fd, char *buf, int len, char *
     return newfd;
 }
 
+/* Try to get at least 'len' bytes from the socket */
+static int really_read(int fd, char *buf, int len)
+{
+	int got, offset;
+
+	got = offset = 0;
+
+	do {
+		got = read(fd, buf+offset, len-offset);
+		DEBUGLOG("really_read. got %d bytes\n", got);
+		offset += got;
+	} while (got > 0 && offset < len);
+
+	if (got < 0)
+		return got;
+	else
+		return offset;
+}
+
 
 static int read_from_tcpsock(struct local_client *client, char *buf, int len, char *csid,
 			     struct local_client **new_client)
@@ -248,7 +267,7 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
     /* Read just the header first, then get the rest if there is any.
      * Stream sockets, sigh.
      */
-    status = read(client->fd, buf, sizeof(struct clvm_header));
+    status = really_read(client->fd, buf, sizeof(struct clvm_header));
     if (status > 0)
     {
 	    int status2;
@@ -258,7 +277,7 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
 	    /* Get the rest */
 	    if (arglen && arglen < GULM_MAX_CLUSTER_MESSAGE)
 	    {
-		    status2 = read(client->fd, buf+status, arglen);
+		    status2 = really_read(client->fd, buf+status, arglen);
 		    if (status2 > 0)
 			    status += status2;
 		    else
