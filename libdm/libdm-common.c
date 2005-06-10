@@ -204,7 +204,6 @@ int set_selinux_context(const char *path)
 {
 	security_context_t scontext;
 
-	log_debug("Setting SELinux context for %s", path);
 	if (is_selinux_enabled() <= 0)
 		return 1;
 
@@ -212,6 +211,8 @@ int set_selinux_context(const char *path)
 		log_error("%s: matchpathcon failed: %s", path, strerror(errno));
 		return 0;
 	}
+
+	log_debug("Setting SELinux context for %s to %s", path, scontext);
 
 	if ((lsetfilecon(path, scontext) < 0) && (errno != ENOTSUP)) {
 		log_error("%s: lsetfilecon failed: %s", path, strerror(errno));
