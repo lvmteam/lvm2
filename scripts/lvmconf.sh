@@ -100,13 +100,15 @@ function validate_args
     fi
 }
 
+umask 0077
+
 parse_args "$@"
 
 validate_args
 
 
-SCRIPTFILE=`mktemp /etc/lvm/lvmscript.XXXXXXXXXX`
-TMPFILE=`mktemp /etc/lvm/lvmtmp.XXXXXXXXXX`
+SCRIPTFILE=/etc/lvm/.lvmconf-script.tmp
+TMPFILE=/etc/lvm/.lvmconf-tmp.tmp
 
 
 # Flags so we know which parts of the file we can replace and which need
