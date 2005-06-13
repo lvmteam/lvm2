@@ -1,5 +1,6 @@
-Version 1.01.03 - 10 Jun 2005
+Version 1.01.03 - 13 Jun 2005
 =============================
+  Use matchpathcon mode parameter.
   Fix configure script to re-enable selinux.
 
 Version 1.01.02 - 17 May 2005
