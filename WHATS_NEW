@@ -1,5 +1,5 @@
-Version 2.01.11 - 
-==============================
+Version 2.01.11 - 13th June 2005
+================================
   Use matchpathcon mode parameter.
   Don't defer closing dead FDs in clvmd.
   Remove hard-coded 64k text metadata writing restriction.
