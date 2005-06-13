@@ -1,5 +1,7 @@
 Version 2.01.11 - 
 ==============================
+  Use matchpathcon mode parameter.
+  Don't defer closing dead FDs in clvmd.
   Remove hard-coded 64k text metadata writing restriction.
   Make VG name restrictions consistent.
   Introduce lvconvert.  So far only removes mirror images.
@@ -36,7 +38,6 @@ Version 2.01.11 -
   lv_reduce tidying.
   Remove some unnecessary parameters.
   Introduce seg_is macros.
-  Don't defer closing dead FDs in clvmd.
 
 Version 2.01.10 - 3rd May 2005
 ==============================

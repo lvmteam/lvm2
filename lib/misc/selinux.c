@@ -18,27 +18,28 @@
 
 #include <selinux/selinux.h>
 
-int set_selinux_context(const char *path)
+int set_selinux_context(const char *path, mode_t mode)
 {
 	security_context_t scontext;
 
 	if (is_selinux_enabled() <= 0)
 		return 1;
 
-	if (matchpathcon(path, 0, &scontext) < 0) {
-		log_sys_error("matchpathcon", path);
+	if (matchpathcon(path, mode, &scontext) < 0) {
+		log_error("%s: matchpathcon %07o failed: %s", path, mode,
+			  strerror(errno));
 		return 0;
 	}
 
-	log_very_verbose("Setting SELinux context for %s to %s",
+	log_very_verbose("Setting SELinux context for %s to %s.",
 			 path, scontext);
 
 	if ((lsetfilecon(path, scontext) < 0) && (errno != ENOTSUP)) {
 		log_sys_error("lsetfilecon", path);
-		free(scontext);
+		freecon(scontext);
 		return 0;
 	}
 
-	free(scontext);
+	freecon(scontext);
 	return 1;
 }
