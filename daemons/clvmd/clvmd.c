@@ -578,6 +578,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 						lastfd->next = thisfd->next;
 						free_fd = thisfd;
 						thisfd = lastfd;
+						close(free_fd->fd);
 
 						/* Queue cleanup, this also frees the client struct */
 						add_to_lvmqueue(free_fd, NULL, 0, NULL);
@@ -1610,7 +1611,6 @@ static int process_work_item(struct lvm_thread_cmd *cmd)
 	/* If msg is NULL then this is a cleanup request */
 	if (cmd->msg == NULL) {
 		DEBUGLOG("process_work_item: free fd %d\n", cmd->client->fd);
-		close(cmd->client->fd);
 		cmd_client_cleanup(cmd->client);
 		free(cmd->client);
 		return 0;

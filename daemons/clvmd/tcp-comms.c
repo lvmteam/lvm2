@@ -106,6 +106,7 @@ void tcp_remove_client(char *csid)
     {
 	hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 	client->removeme = 1;
+	close(client->fd);
     }
 
     /* Look for a mangled one too */
@@ -116,6 +117,7 @@ void tcp_remove_client(char *csid)
     {
 	hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 	client->removeme = 1;
+	close(client->fd);
     }
 
     /* Put it back as we found it */
