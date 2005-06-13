@@ -15,6 +15,8 @@
 #ifndef _LVM_SELINUX_H
 #define _LVM_SELINUX_H
 
-int set_selinux_context(const char * path);
+#include <sys/types.h>
+
+int set_selinux_context(const char * path, mode_t mode);
 
 #endif
