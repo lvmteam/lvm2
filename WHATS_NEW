@@ -36,6 +36,7 @@ Version 2.01.11 -
   lv_reduce tidying.
   Remove some unnecessary parameters.
   Introduce seg_is macros.
+  Don't defer closing dead FDs in clvmd.
 
 Version 2.01.10 - 3rd May 2005
 ==============================
