@@ -465,9 +465,9 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 						return 0;
 					}
 					break;
-				default:
-					log_error("Unrecognised segment type "
-						  "%u", seg_type(seg, s));
+				case AREA_UNASSIGNED:
+					log_error("Unassigned area %u found in "
+						  "segment", s);
 					return 0;
 				}
 			}
@@ -1045,7 +1045,27 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 			     int *consistent)
 {
-	return _vg_read(cmd, vgname, consistent, 0);
+	struct volume_group *vg;
+	struct lv_list *lvl;
+
+	if (!(vg = _vg_read(cmd, vgname, consistent, 0)))
+		return NULL;
+
+	if (!check_pv_segments(vg)) {
+		log_error("Internal error: PV segments corrupted in %s.",
+			  vg->name);
+		return NULL;
+	}
+
+	list_iterate_items(lvl, &vg->lvs) {
+		if (!check_lv_segments(lvl->lv)) {
+			log_error("Internal error: LV segments corrupted in %s.",
+				  lvl->lv->name);
+			return NULL;
+		}
+	}
+
+	return vg;
 }
 
 struct volume_group *vg_read_precommitted(struct cmd_context *cmd,

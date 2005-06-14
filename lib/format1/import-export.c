@@ -395,7 +395,7 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 				return 0;
 			}
 			if (seg_type(seg, s) != AREA_PV) {
-				log_error("LV stripe found in LV %s: "
+				log_error("Non-PV stripe found in LV %s: "
 					  "unsupported by format1", lv->name);
 				return 0;
 			}

@@ -81,6 +81,7 @@ typedef enum {
 } alloc_policy_t;
 
 typedef enum {
+	AREA_UNASSIGNED = 0,
 	AREA_PV,
 	AREA_LV
 } area_type_t;
@@ -443,8 +444,11 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 				       int import,
 				       struct volume_group *vg);
 
-/* Entry point for all LV extent reductions */
+/* Reduce the size of an LV by extents */
 int lv_reduce(struct logical_volume *lv, uint32_t extents);
+
+/* Empty an LV prior to deleting it */
+int lv_empty(struct logical_volume *lv);
 
 /* Entry point for all LV extent allocations */
 int lv_extend(struct logical_volume *lv,

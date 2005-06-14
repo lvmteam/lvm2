@@ -480,6 +480,9 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 			     seg_lv(seg, s)->name,
 			     seg_le(seg, s),
 			     (s == seg->area_count - 1) ? "" : ",");
+			break;
+		case AREA_UNASSIGNED:
+			return 0;
 		}
 	}
 

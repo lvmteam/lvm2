@@ -125,6 +125,74 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 	return seg;
 }
 
+void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
+			     uint32_t area_reduction)
+{
+	if (seg_type(seg, s) == AREA_UNASSIGNED)
+		return;
+
+	if (seg_type(seg, s) == AREA_PV) {
+		release_pv_segment(seg_pvseg(seg, s), area_reduction);
+		return;
+	}
+
+	if (seg_lv(seg, s)->status & MIRROR_IMAGE) {
+		lv_reduce(seg_lv(seg, s), area_reduction);	
+		return;
+	}
+
+	if (area_reduction == seg->area_len) {
+		seg_lv(seg, s) = NULL;
+		seg_le(seg, s) = 0;
+		seg_type(seg, s) = AREA_UNASSIGNED;
+	}
+}
+
+/*
+ * Move a segment area from one segment to another
+ */
+int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
+			 struct lv_segment *seg_from, uint32_t area_from)
+{
+	struct physical_volume *pv;
+	struct logical_volume *lv;
+	uint32_t pe, le;
+
+	switch (seg_type(seg_from, area_from)) {
+	case AREA_PV:
+		pv = seg_pv(seg_from, area_from);
+		pe = seg_pe(seg_from, area_from);
+
+		release_lv_segment_area(seg_from, area_from,
+					seg_from->area_len);
+		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
+
+		if (!set_lv_segment_area_pv(seg_to, area_to, pv, pe)) {
+			stack;
+			return 0;
+		}
+
+		break;
+
+	case AREA_LV:
+		lv = seg_lv(seg_from, area_from);
+		le = seg_le(seg_from, area_from);
+
+		release_lv_segment_area(seg_from, area_from,
+					seg_from->area_len);
+		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
+
+		set_lv_segment_area_lv(seg_to, area_to, lv, le, 0);
+
+		break;
+
+	case AREA_UNASSIGNED:
+		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
+	}
+
+	return 1;
+}
+
 /*
  * Link part of a PV to an LV segment.
  */
@@ -132,7 +200,6 @@ int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 			   struct physical_volume *pv, uint32_t pe)
 {
 	seg->area[area_num].type = AREA_PV;
-	pv->pe_alloc_count += seg->area_len;
 
 	if (!(seg_pvseg(seg, area_num) =
 	      assign_peg_to_lvseg(pv, pe, seg->area_len, seg, area_num))) {
@@ -175,16 +242,11 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 	} else
 		area_reduction = reduction;
 
+	for (s = 0; s < seg->area_count; s++)
+		release_lv_segment_area(seg, s, area_reduction);
+
 	seg->len -= reduction;
 	seg->area_len -= area_reduction;
-
-	for (s = 0; s < seg->area_count; s++) {
-		if (seg_type(seg, s) == AREA_PV) {
-			release_pv_segment(seg_pvseg(seg, s), area_reduction);
-			seg->lv->vg->free_count += area_reduction;
-		} else if (seg_lv(seg, s)->status & MIRROR_IMAGE)
-			lv_reduce(seg_lv(seg, s), area_reduction);	
-	}
 
 	return 1;
 }
@@ -192,7 +254,7 @@ static int _lv_segment_reduce(struct lv_segment *seg, uint32_t reduction)
 /*
  * Entry point for all LV reductions in size.
  */
-int lv_reduce(struct logical_volume *lv, uint32_t extents)
+static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 {
 	struct lv_list *lvl;
 	struct lv_segment *seg;
@@ -225,6 +287,9 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	lv->le_count -= extents;
 	lv->size = (uint64_t) lv->le_count * lv->vg->extent_size;
 
+	if (!delete)
+		return 1;
+
 	/* Remove the LV if it is now empty */
 	if (!lv->le_count) {
 		if (!(lvl = find_lv_in_vg(lv->vg, lv->name))) {
@@ -242,6 +307,19 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 	}
 
 	return 1;
+}
+
+/*
+ * Empty an LV
+ */
+int lv_empty(struct logical_volume *lv)
+{
+	return _lv_reduce(lv, 0, lv->le_count);
+}
+
+int lv_reduce(struct logical_volume *lv, uint32_t extents)
+{
+	return _lv_reduce(lv, extents, 1);
 }
 
 /*
@@ -405,8 +483,6 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 	extents = aa[0].len * area_multiple;
 	lv->le_count += extents;
 	lv->size += (uint64_t) extents *lv->vg->extent_size;
-
-	lv->vg->free_count -= aa[0].len * area_count;
 
 	if (segtype_is_mirrored(segtype))
 		lv->status |= MIRRORED;
@@ -624,8 +700,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 
 		/* Only allocate log_area the first time around */
 		if (ix + ix_offset < ah->area_count +
-			    (ah->log_count && !ah->log_area.len) ?
-				ah->log_count : 0)
+			    ((ah->log_count && !ah->log_area.len) ?
+				ah->log_count : 0))
 			/* FIXME With ALLOC_ANYWHERE, need to split areas */
 			break;
 
@@ -911,8 +987,6 @@ int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv)
 	list_add(&log_lv->segments, &seg->list);
 	log_lv->le_count += ah->log_area.len;
 	log_lv->size += (uint64_t) log_lv->le_count *log_lv->vg->extent_size;
-
-	log_lv->vg->free_count--;
 
 	if (log_lv->vg->fid->fmt->ops->lv_setup &&
 	    !log_lv->vg->fid->fmt->ops->lv_setup(log_lv->vg->fid, log_lv)) {

@@ -163,8 +163,8 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 			name = dev_name(seg_dev(seg, s));
 			extent = seg_pe(seg, s);
 			break;
-		default:
-			name = "unknown";
+		case AREA_UNASSIGNED:
+			name = "unassigned";
 			extent = 0;
 		}
 

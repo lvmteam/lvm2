@@ -86,7 +86,12 @@ int check_lv_segments(struct logical_volume *lv)
 		}
 
 		for (s = 0; s < seg->area_count; s++) {
-			if (seg_type(seg, s) == AREA_PV) {
+			if (seg_type(seg, s) == AREA_UNASSIGNED) {
+				log_error("LV %s: segment %u has unassigned "
+					  "area %u.",
+					  lv->name, seg_count, s);
+				r = 0;
+			} else if (seg_type(seg, s) == AREA_PV) {
 				if (!seg_pvseg(seg, s) ||
 				    seg_pvseg(seg, s)->lvseg != seg ||
 				    seg_pvseg(seg, s)->lv_area != s) {
@@ -104,6 +109,7 @@ int check_lv_segments(struct logical_volume *lv)
 						  lv->name, seg_count, s);
 					r = 0;
 				}
+/* FIXME I don't think this ever holds?
 				if (seg_le(seg, s) != le) {
 					log_error("LV %s: segment %u has "
 						  "inconsistent LV area %u "
@@ -111,6 +117,7 @@ int check_lv_segments(struct logical_volume *lv)
 						  lv->name, seg_count, s);
 					r = 0;
 				}
+ */
 			}
 		}
 
@@ -205,9 +212,8 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 				  seg_pe(split_seg, s));
 			break;
 
-		default:
-			log_error("Unrecognised segment type %u",
-				  seg_type(seg, s));
+		case AREA_UNASSIGNED:
+			log_error("Unassigned area %u found in segment", s);
 			return 0;
 		}
 	}

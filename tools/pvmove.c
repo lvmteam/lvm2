@@ -170,6 +170,14 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			log_print("Skipping mirror LV %s", lv->name);
 			continue;
 		}
+		if (lv->status & MIRROR_LOG) {
+			log_print("Skipping mirror log LV %s", lv->name);
+			continue;
+		}
+		if (lv->status & MIRROR_IMAGE) {
+			log_print("Skipping mirror image LV %s", lv->name);
+			continue;
+		}
 		if (lv->status & LOCKED) {
 			log_print("Skipping locked LV %s", lv->name);
 			continue;

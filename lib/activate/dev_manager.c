@@ -803,7 +803,7 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 					  (seg_pv(seg, s)->pe_start +
 					   (esize * seg_pe(seg, s))),
 					  trailing_space);
-		else {
+		else if (seg_type(seg, s) == AREA_LV) {
 			if (!(dl = hash_lookup(dm->layers,
 					       seg_lv(seg, s)->lvid.s))) {
 				log_error("device layer %s missing from hash",
@@ -822,6 +822,10 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 					  "%s %" PRIu64 "%s", devbuf,
 					  esize * seg_le(seg, s),
 					  trailing_space);
+		} else {
+			log_error("Internal error: Unassigned area found in LV %s.",
+				  seg->lv);
+			return 0;
 		}
 
 		if (tw < 0) {
@@ -1243,6 +1247,7 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 
 	/* Add dependencies for any LVs that segments refer to */
 	list_iterate_items(seg, &lv->segments) {
+		// When do we need? _set_flag(dl, REMOVE) on the log?
 		if (seg->log_lv &&
 		    !str_list_add(dm->mem, &dl->pre_create,
 				  _build_dlid(dm->mem, seg->log_lv->lvid.s,
@@ -1250,7 +1255,6 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 			stack;
 			return 0;
 		}
-		// FIXME Check we don't want NOPROPAGATE here
 
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) != AREA_LV)
@@ -1262,7 +1266,10 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 				stack;
 				return 0;
 			}
+
+			// ? if (seg_lv(seg, s)->status & PVMOVE)
 			_set_flag(dl, NOPROPAGATE);
+			// When do we need? _set_flag(dl, REMOVE) 
 		}
 	}
 

@@ -162,14 +162,18 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 	peg->lvseg = seg;
 	peg->lv_area = area_num;
 
+	peg->pv->pe_alloc_count += area_len;
+	peg->lvseg->lv->vg->free_count -= area_len;
+
 	return peg;
 }
 
 int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
 	peg->pv->pe_alloc_count -= area_reduction;
+	peg->lvseg->lv->vg->free_count += area_reduction;
 
-	if (!peg->lvseg->area_len) {
+	if (peg->lvseg->area_len == area_reduction) {
 		peg->lvseg = NULL;
 		peg->lv_area = 0;
 
@@ -178,7 +182,8 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 		return 1;
 	}
 
-	if (!pv_split_segment(peg->pv, peg->pe + peg->lvseg->area_len)) {
+	if (!pv_split_segment(peg->pv, peg->pe + peg->lvseg->area_len -
+				       area_reduction)) {
 		stack;
 		return 0;
 	}
