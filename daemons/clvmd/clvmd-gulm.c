@@ -944,7 +944,13 @@ static int get_all_cluster_nodes()
 	}
 	else
 	{
-	    DEBUGLOG("node %s has clvm disabled\n", nodename);
+		if (!clvmflag) {
+			DEBUGLOG("node %s has clvm disabled\n", nodename);
+		}
+		else {
+			DEBUGLOG("Cannot resolve host name %s\n", nodename);
+			log_err("Cannot resolve host name %s\n", nodename);
+		}
 	}
 	free(nodename);
     }

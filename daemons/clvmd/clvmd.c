@@ -512,6 +512,10 @@ static void main_loop(int local_sock, int cmd_timeout)
 		FD_ZERO(&in);
 		for (thisfd = &local_client_head; thisfd != NULL;
 		     thisfd = thisfd->next) {
+
+			if (thisfd->removeme)
+				continue;
+
 			/* if the cluster is not quorate then don't listen for new requests */
 			if ((thisfd->type != LOCAL_RENDEZVOUS &&
 			     thisfd->type != LOCAL_SOCK) || quorate)
