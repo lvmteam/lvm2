@@ -1,8 +1,8 @@
-Version 2.01.12 - 
+Version 2.01.12 - 14th June 2005
 ================================
   Various allocation-related pvmove fixes.
-  Log an error if clvmd can't resolve a host name got from CCS
-  Fix potential spin loop in clvmd
+  Log an error if clvmd can't resolve a host name got from CCS.
+  Fix potential spin loop in clvmd.
 
 Version 2.01.11 - 13th June 2005
 ================================
