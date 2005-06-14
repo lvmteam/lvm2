@@ -115,7 +115,8 @@ static int _segments_compatible(struct lv_segment *first,
 		/* FIXME Relax this to first area type != second area type */
 		/*       plus the additional AREA_LV checks needed */
 		if ((first->area[s].type != AREA_PV) ||
-		    (second->area[s].type != AREA_PV)) return 0;
+		    (second->area[s].type != AREA_PV))
+			return 0;
 
 		width = first->area_len;
 

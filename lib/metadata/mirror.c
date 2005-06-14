@@ -171,6 +171,8 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	struct lv_segment *seg;
 	struct lv_list *lvl;
 	struct pv_list *pvl;
+	struct physical_volume *pv;
+	uint32_t pe;
 	int lv_used = 0;
 	uint32_t s, start_le, extent_count = 0u;
 	struct segment_type *segtype;
@@ -270,18 +272,19 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 					lv_used = 1;
 				}
 	
+				pv = seg_pv(seg, s);
+				pe = seg_pe(seg, s);
 				log_very_verbose("Moving %s:%u-%u of %s/%s",
 						 dev_name(pvl->pv->dev),
-						 seg_pe(seg, s),
-						 seg_pe(seg, s) +
-						     seg->area_len - 1,
+						 pe, pe + seg->area_len - 1,
 						 lv->vg->name, lv->name);
 
 				start_le = lv_mirr->le_count;
+				/* FIXME Clean this up */
+				release_lv_segment_area(seg, s, seg->area_len);
 				if (!lv_extend(lv_mirr, segtype, 1,
 				       	seg->area_len, 0u, seg->area_len,
-				       	seg_pv(seg, s),
-				       	seg_pe(seg, s),
+				       	pv, pe,
 				       	PVMOVE, allocatable_pvs,
 				       	alloc)) {
 					log_error("Unable to allocate "
@@ -355,22 +358,22 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 				else
 					c = 0;
 
-				if (!set_lv_segment_area_pv(seg, s,
-					    seg_pv(mir_seg, c),
-					    seg_pe(mir_seg, c))) {
+				if (!move_lv_segment_area(seg, s, mir_seg, c)) {
 					stack;
 					return 0;
 				}
 
-				/* Replace mirror with old area */
+				release_lv_segment_area(mir_seg, !c, mir_seg->area_len);
+
+				/* Replace mirror with error segment */
 				if (!
 				    (mir_seg->segtype =
 				     get_segtype_from_string(vg->cmd,
-							     "striped"))) {
-					log_error("Missing striped segtype");
+							     "error"))) {
+					log_error("Missing error segtype");
 					return 0;
 				}
-				mir_seg->area_count = 1;
+				mir_seg->area_count = 0;
 
 				/* FIXME Assumes only one pvmove at a time! */
 				lv1->status &= ~LOCKED;
@@ -381,6 +384,10 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 
 	}
 
+	if (!lv_empty(lv_mirr)) {
+		stack;
+		return 0;
+	}
 
 	return 1;
 }
@@ -392,7 +399,7 @@ const char *get_pvmove_pvname_from_lv_mirr(struct logical_volume *lv_mirr)
 	list_iterate_items(seg, &lv_mirr->segments) {
 		if (!seg_is_mirrored(seg))
 			continue;
-		if (seg->area[0].type != AREA_PV)
+		if (seg_type(seg, 0) != AREA_PV)
 			continue;
 		return dev_name(seg_dev(seg, 0));
 	}
@@ -433,7 +440,7 @@ struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 
 		/* Check segment origins point to pvname */
 		list_iterate_items(seg, &lv->segments) {
-			if (seg->area[0].type != AREA_PV)
+			if (seg_type(seg, 0) != AREA_PV)
 				continue;
 			if (seg_dev(seg, 0) != dev)
 				continue;

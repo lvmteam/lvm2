@@ -1,10 +1,12 @@
 Version 2.01.12 - 
 ================================
+  Various allocation-related pvmove fixes.
   Log an error if clvmd can't resolve a host name got from CCS
   Fix potential spin loop in clvmd
 
 Version 2.01.11 - 13th June 2005
 ================================
+  Added lvmconf.sh.
   Use matchpathcon mode parameter.
   Don't defer closing dead FDs in clvmd.
   Remove hard-coded 64k text metadata writing restriction.

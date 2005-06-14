@@ -37,6 +37,10 @@ int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			    struct logical_volume *lv, uint32_t le,
 			    uint32_t flags);
+int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
+			 struct lv_segment *seg_from, uint32_t area_from);
+void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
+			     uint32_t area_reduction);
 
 struct alloc_handle;
 struct alloc_handle *allocate_extents(struct volume_group *vg,

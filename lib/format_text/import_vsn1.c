@@ -364,10 +364,6 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 				stack;
 				return 0;
 			}
-			/*
-			 * Adjust extent counts in the pv and vg.
-			 */
-			seg->lv->vg->free_count -= seg->area_len;
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
 			set_lv_segment_area_lv(seg, s, lv1, cv->next->v.i,
 					       flags);

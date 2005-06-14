@@ -247,6 +247,8 @@ static int _insert_dev(const char *path, dev_t d)
 
 	/* Generate pretend device numbers for loopfiles */
 	if (!d) {
+		if (hash_lookup(_cache.names, path))
+			return 1;
 		d = ++loopfile_count;
 		loopfile = 1;
 	}
@@ -627,6 +629,10 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 	if (!d) {
 		_insert(name, 0);
 		d = (struct device *) hash_lookup(_cache.names, name);
+		if (!d) {
+			_full_scan(0);
+			d = (struct device *) hash_lookup(_cache.names, name);
+		}
 	}
 
 	return (d && (!f || (d->flags & DEV_REGULAR) ||

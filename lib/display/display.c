@@ -471,7 +471,9 @@ void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre)
 			log_print("%sLogical extents\t%d to %d", pre,
 				  seg_le(seg, s),
 				  seg_le(seg, s) + seg->area_len - 1);
-
+		break;
+	case AREA_UNASSIGNED:
+		log_print("%sUnassigned area", pre);
 	}
 }
 
