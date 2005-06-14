@@ -551,6 +551,9 @@ int create_mirror_layers(struct alloc_handle *ah,
 			 uint32_t status,
 			 uint32_t region_size,
 			 struct logical_volume *log_lv);
+int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors);
+int remove_all_mirror_images(struct logical_volume *lv);
+
 int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv_mirr,
 			  struct list *source_pvl,
