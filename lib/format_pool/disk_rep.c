@@ -245,7 +245,7 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 			uint32_t *devcount)
 {
 	struct lvmcache_info *info;
-	struct pool_list *pl;
+	struct pool_list *pl = NULL;
 	struct pool *tmpmem;
 
 	uint32_t sp_count = 0;
