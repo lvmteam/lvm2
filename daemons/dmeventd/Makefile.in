@@ -28,7 +28,7 @@ else
   LIB_SHARED = libdmeventdnoop.so
 endif
  
-LDFLAGS += -ldl -ldevmapper -lpthread -lmultilog
+LDFLAGS += -ldl -ldevmapper -lmultilog
 
 include ../make.tmpl
 
@@ -36,11 +36,11 @@ libdmeventdnoop.so: noop.o
 
 dmevent: dmevent.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
 	$(CC) -o $@ dmevent.o $(LDFLAGS) \
-	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -L$(top_srcdir)/multilog -ldmevent $(LIBS)
+	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -L$(top_srcdir)/multilog $(LIBS)
 
 dmeventd: dmeventd.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX) $(top_srcdir)/lib/event/libdmevent.$(LIB_SUFFIX)
 	$(CC) -o $@ dmeventd.o $(LDFLAGS) \
-	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -L$(top_srcdir)/multilog -ldmevent $(LIBS)
+	      -L$(interfacedir) -L$(DESTDIR)/lib -L$(top_srcdir)/lib/event -L$(top_srcdir)/multilog -lpthread -ldmevent $(LIBS)
 
 install: $(INSTALL_TYPE)
 

@@ -26,11 +26,23 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dlfcn.h>
 
 static enum event_type events = ALL_ERRORS; /* All until we can distinguish. */
 static char default_dso_name[] = "noop";  /* default DSO is noop */
 static int default_reg = 1;		 /* default action is register */
 static uint32_t timeout;
+
+struct event_ops {
+int (*dm_register_for_event)(char *dso_name, char *device,
+			     enum event_type event_types);
+int (*dm_unregister_for_event)(char *dso_name, char *device,
+			       enum event_type event_types);
+int (*dm_get_registered_device)(char **dso_name, char **device,
+				enum event_type *event_types, int next);
+int (*dm_set_event_timeout)(char *device, uint32_t time);
+int (*dm_get_event_timeout)(char *device, uint32_t *time);
+};
 
 /* Display help. */
 static void print_usage(char *name)
@@ -102,8 +114,35 @@ static int parse_argv(int argc, char **argv, char **dso_name_arg,
 	return 1;
 }
 
+
+static int lookup_symbol(void *dl, void **symbol, const char *name)
+{
+	if ((*symbol = dlsym(dl, name)))
+		return 1;
+
+	fprintf(stderr, "error looking up %s symbol: %s\n", name, dlerror());
+
+	return 0;
+}
+
+static int lookup_symbols(void *dl, struct event_ops *e)
+{
+	return lookup_symbol(dl, (void *) &e->dm_register_for_event,
+			     "dm_register_for_event") &&
+	       lookup_symbol(dl, (void *) &e->dm_unregister_for_event,
+			     "dm_unregister_for_event") &&
+	       lookup_symbol(dl, (void *) &e->dm_get_registered_device,
+			     "dm_get_registered_device") &&
+	       lookup_symbol(dl, (void *) &e->dm_set_event_timeout,
+			     "dm_set_event_timeout") &&
+	       lookup_symbol(dl, (void *) &e->dm_get_event_timeout,
+			     "dm_get_event_timeout");
+}
+
 int main(int argc, char **argv)
 {
+	void *dl;
+	struct event_ops e;
 	int list = 0, next = 0, ret, reg = default_reg;
 	char *device, *device_arg = NULL, *dso_name, *dso_name_arg = NULL;
 
@@ -128,15 +167,22 @@ int main(int argc, char **argv)
 	multilog_add_type(standard, NULL);
 	multilog_init_verbose(standard, _LOG_DEBUG);
 
+	if (!(dl = dlopen("libdmevent.so", RTLD_NOW))){
+		fprintf(stderr, "Cannot dlopen libdmevent.so: %s\n", dlerror());
+		goto out;
+	}
+	if (!(lookup_symbols(dl, &e)))
+		goto out;
 	if (list) {
 		while (1) {
-			if ((ret= dm_get_registered_device(&dso_name, &device,
-							   &events, next)))
+			if ((ret= e.dm_get_registered_device(&dso_name,
+							     &device,
+							     &events, next)))
 				break;
 			printf("%s %s 0x%x", dso_name, device, events);
 			if (events & TIMEOUT){
-				if ((ret = dm_get_event_timeout(device,
-							  	&timeout))) {
+				if ((ret = e.dm_get_event_timeout(device,
+							  	  &timeout))) {
 					ret = EXIT_FAILURE;
 					goto out;
 				}
@@ -153,14 +199,14 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	if ((ret = reg ? dm_register_for_event(dso_name, device, events) :
-			 dm_unregister_for_event(dso_name, device, events))) {
+	if ((ret = reg ? e.dm_register_for_event(dso_name, device, events) :
+			 e.dm_unregister_for_event(dso_name, device, events))) {
 		fprintf(stderr, "Failed to %sregister %s: %s\n",
 			reg ? "": "un", device, strerror(-ret));
 		ret = EXIT_FAILURE;
 	} else {
 		if (reg && (events & TIMEOUT) &&
-		    ((ret = dm_set_event_timeout(device, timeout)))){
+		    ((ret = e.dm_set_event_timeout(device, timeout)))){
 			fprintf(stderr, "Failed to set timeout for %s: %s\n",
 				device, strerror(-ret));
 			ret = EXIT_FAILURE;
