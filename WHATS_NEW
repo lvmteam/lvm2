@@ -1,6 +1,7 @@
 Version 2.01.13 - 
 ================================
-  Fix lvm1 non-mirror lvcreate.
+  Fix lvm1 format metadata read.
+  Fix lvm1 format non-mirror lvcreate.
 
 Version 2.01.12 - 14th June 2005
 ================================

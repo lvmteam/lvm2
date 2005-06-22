@@ -241,7 +241,7 @@ int import_vg(struct pool *mem,
 
 	vg->extent_size = vgd->pe_size;
 	vg->extent_count = vgd->pe_total;
-	vg->free_count = vgd->pe_total - vgd->pe_allocated;
+	vg->free_count = vgd->pe_total;
 	vg->max_lv = vgd->lv_max;
 	vg->max_pv = vgd->pv_max;
 	vg->alloc = ALLOC_NORMAL;
