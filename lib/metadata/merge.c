@@ -197,12 +197,13 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 			break;
 
 		case AREA_PV:
-			if (!assign_peg_to_lvseg(seg_pv(seg, s),
+			if (!(seg_pvseg(split_seg, s) =
+			     assign_peg_to_lvseg(seg_pv(seg, s),
 						 seg_pe(seg, s) +
 						     seg->area_len,
 						 seg_pvseg(seg, s)->len -
 						     seg->area_len,
-						 split_seg, s)) {
+						 split_seg, s))) {
 				stack;
 				return 0;
 			}
@@ -242,6 +243,11 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le)
 		return 1;
 
 	if (!_lv_split_segment(lv, seg, le)) {
+		stack;
+		return 0;
+	}
+
+	if (!vg_validate(lv->vg)) {
 		stack;
 		return 0;
 	}

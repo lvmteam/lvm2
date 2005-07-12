@@ -1,5 +1,7 @@
 Version 2.01.13 - 
 ================================
+  Fix pvmove segment splitting.
+  Abstract vg_validate.
   Only make one attempt at contiguous allocation.
   Fix lvm1 format metadata read.
   Fix lvm1 format non-mirror lvcreate.
