@@ -1,5 +1,6 @@
 Version 2.01.13 - 
 ================================
+  Only make one attempt at contiguous allocation.
   Fix lvm1 format metadata read.
   Fix lvm1 format non-mirror lvcreate.
 
