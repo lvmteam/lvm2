@@ -697,14 +697,8 @@ int vg_remove(struct volume_group *vg)
 	return 1;
 }
 
-/*
- * After vg_write() returns success,
- * caller MUST call either vg_commit() or vg_revert()
- */
-int vg_write(struct volume_group *vg)
+int vg_validate(struct volume_group *vg)
 {
-	struct list *mdah;
-	struct metadata_area *mda;
 	struct lv_list *lvl;
 
 	if (!check_pv_segments(vg)) {
@@ -719,6 +713,23 @@ int vg_write(struct volume_group *vg)
 				  lvl->lv->name);
 			return 0;
 		}
+	}
+
+	return 1;
+}
+
+/*
+ * After vg_write() returns success,
+ * caller MUST call either vg_commit() or vg_revert()
+ */
+int vg_write(struct volume_group *vg)
+{
+	struct list *mdah;
+	struct metadata_area *mda;
+
+	if (!vg_validate(vg)) {
+		stack;
+		return 0;
 	}
 
 	if (vg->status & PARTIAL_VG) {

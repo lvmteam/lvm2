@@ -391,6 +391,7 @@ struct format_handler {
 /*
  * Utility functions
  */
+int vg_validate(struct volume_group *vg);
 int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);
 int vg_revert(struct volume_group *vg);
@@ -537,7 +538,6 @@ int vg_add_snapshot(struct format_instance *fid, const char *name,
 		    uint32_t chunk_size);
 
 int vg_remove_snapshot(struct logical_volume *cow);
-
 
 /*
  * Mirroring functions

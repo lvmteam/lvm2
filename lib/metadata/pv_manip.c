@@ -100,6 +100,11 @@ static int _pv_split_segment(struct physical_volume *pv, struct pv_segment *peg,
 
 	list_add_h(&peg->list, &peg_new->list);
 
+	if (peg->lvseg) {
+		peg->pv->pe_alloc_count -= peg_new->len;
+		peg->lvseg->lv->vg->free_count += peg_new->len;
+	}
+
 	return 1;
 }
 
@@ -170,10 +175,16 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 
 int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
-	peg->pv->pe_alloc_count -= area_reduction;
-	peg->lvseg->lv->vg->free_count += area_reduction;
+	if (!peg->lvseg) {
+		log_error("release_pv_segment with unallocated segment: "
+			  "%s PE %" PRIu32, dev_name(peg->pv->dev), peg->pe);
+		return 0;
+	}
 
 	if (peg->lvseg->area_len == area_reduction) {
+		peg->pv->pe_alloc_count -= area_reduction;
+		peg->lvseg->lv->vg->free_count += area_reduction;
+
 		peg->lvseg = NULL;
 		peg->lv_area = 0;
 
