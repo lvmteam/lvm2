@@ -721,7 +721,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			return 0;
 		}
 
-	} while (*allocated != needed && can_split);
+	} while (!contiguous && *allocated != needed && can_split);
 
 	return 1;
 }
