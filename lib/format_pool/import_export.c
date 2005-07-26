@@ -45,7 +45,7 @@ int import_pool_vg(struct volume_group *vg, struct pool *mem, struct list *pls)
 		get_pool_vg_uuid(&vg->id, &pl->pd);
 		vg->extent_size = POOL_PE_SIZE;
 		vg->status |= LVM_READ | LVM_WRITE | CLUSTERED | SHARED;
-		vg->free_count = 0;
+		vg->free_count = vg->extent_count;
 		vg->max_lv = 1;
 		vg->max_pv = POOL_MAX_DEVICES;
 		vg->alloc = ALLOC_NORMAL;
