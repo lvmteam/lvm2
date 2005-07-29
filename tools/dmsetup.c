@@ -757,13 +757,16 @@ static int _status(int argc, char **argv, void *data)
 	if (!dm_task_run(dmt))
 		goto out;
 
+	if (!name)
+		name = (char *) dm_task_get_name(dmt);
+
 	/* Fetch targets and print 'em */
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 		/* Skip if target type doesn't match */
-		if (_switches[TARGET_ARG] && target_type &&
-		    strcmp(target_type, _target))
+		if (_switches[TARGET_ARG] &&
+		    (!target_type || strcmp(target_type, _target)))
 			continue;
 		if (ls_only) {
 			if (!_switches[EXEC_ARG] || !_command ||

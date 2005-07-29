@@ -1,3 +1,7 @@
+Version 1.01.04
+=============================
+  Fix dmsetup ls -j and status --target with empty table.
+
 Version 1.01.03 - 13 Jun 2005
 =============================
   Use matchpathcon mode parameter.
