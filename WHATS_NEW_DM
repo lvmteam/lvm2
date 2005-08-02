@@ -1,3 +1,6 @@
+Version 1.01.05
+=============================
+
 Version 1.01.04 - 2 Aug 2005
 =============================
   Fix dmsetup ls -j and status --target with empty table.
