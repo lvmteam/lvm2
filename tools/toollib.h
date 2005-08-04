@@ -94,4 +94,6 @@ int apply_lvname_restrictions(const char *name);
 
 int validate_vg_name(struct cmd_context *cmd, const char *vg_name);
 
+int zero_lv(struct cmd_context *cmd, struct logical_volume *lv);
+
 #endif
