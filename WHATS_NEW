@@ -1,5 +1,8 @@
-Version 2.01.14 - 
-================================
+Version 2.01.15 - 
+=================================
+
+Version 2.01.14 - 4th August 2005
+=================================
   Fix lvconvert PV parameter in help string.
   Prevent snapshots getting activated in a clustered VG.
   Separate out _build_dev_string.
