@@ -906,12 +906,6 @@ static int _populate_origin(struct dev_manager *dm,
 		return 0;
 	}
 
-+       if (dl->lv->vg->status & CLUSTERED) {
-+               /* FIXME put csnap code here */
-+               log_error("Clustered snapshots are not yet supported");
-+               return 0;
-
-
 	log_debug("Adding target: 0 %" PRIu64 " snapshot-origin %s",
 		  dl->lv->size, params);
 	if (!dm_task_add_target(dmt, UINT64_C(0), dl->lv->size,
