@@ -1,5 +1,6 @@
 Version 2.01.14 - 
 ================================
+  Separate out _build_dev_string.
   Move zero_lv to toollib.
   Fix pool format handler to work with pv segment code.
 
