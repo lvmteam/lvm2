@@ -1,13 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# Copyright (C) YEAR Free Software Foundation, Inc.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2005-07-13 20:17+0100\n"
+"POT-Creation-Date: 2005-08-04 00:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -67,73 +66,76 @@ msgstr ""
 #: activate/dev_manager.c:555 activate/dev_manager.c:615
 #: activate/dev_manager.c:621 activate/dev_manager.c:628
 #: activate/dev_manager.c:657 activate/dev_manager.c:714
-#: activate/dev_manager.c:723 activate/dev_manager.c:745
-#: activate/dev_manager.c:769 activate/dev_manager.c:832
-#: activate/dev_manager.c:857 activate/dev_manager.c:898
-#: activate/dev_manager.c:918 activate/dev_manager.c:942
-#: activate/dev_manager.c:947 activate/dev_manager.c:978
-#: activate/dev_manager.c:986 activate/dev_manager.c:1003
-#: activate/dev_manager.c:1008 activate/dev_manager.c:1023
-#: activate/dev_manager.c:1028 activate/dev_manager.c:1061
-#: activate/dev_manager.c:1071 activate/dev_manager.c:1087
-#: activate/dev_manager.c:1097 activate/dev_manager.c:1119
-#: activate/dev_manager.c:1128 activate/dev_manager.c:1142
-#: activate/dev_manager.c:1150 activate/dev_manager.c:1163
-#: activate/dev_manager.c:1183 activate/dev_manager.c:1188
-#: activate/dev_manager.c:1194 activate/dev_manager.c:1216
-#: activate/dev_manager.c:1236 activate/dev_manager.c:1255
-#: activate/dev_manager.c:1266 activate/dev_manager.c:1281
-#: activate/dev_manager.c:1293 activate/dev_manager.c:1307
-#: activate/dev_manager.c:1320 activate/dev_manager.c:1330
-#: activate/dev_manager.c:1370 activate/dev_manager.c:1381
-#: activate/dev_manager.c:1391 activate/dev_manager.c:1399
-#: activate/dev_manager.c:1406 activate/dev_manager.c:1474
-#: activate/dev_manager.c:1493 activate/dev_manager.c:1515
-#: activate/dev_manager.c:1523 activate/dev_manager.c:1551
-#: activate/dev_manager.c:1556 activate/dev_manager.c:1585
-#: activate/dev_manager.c:1591 activate/dev_manager.c:1612
-#: activate/dev_manager.c:1630 activate/dev_manager.c:1644
-#: activate/dev_manager.c:1654 activate/dev_manager.c:1664
-#: activate/dev_manager.c:1682 activate/dev_manager.c:1705
-#: activate/dev_manager.c:1739 activate/dev_manager.c:1755
-#: activate/dev_manager.c:1812 activate/dev_manager.c:1821
-#: activate/dev_manager.c:1830 activate/dev_manager.c:1839
-#: activate/dev_manager.c:1844 activate/dev_manager.c:1849
-#: activate/dev_manager.c:1861 activate/dev_manager.c:1871
-#: activate/dev_manager.c:1877 activate/dev_manager.c:1913
-#: activate/dev_manager.c:1918 activate/dev_manager.c:1950
-#: activate/dev_manager.c:1968 activate/dev_manager.c:2144
-#: activate/dev_manager.c:2156 activate/dev_manager.c:2162
-#: activate/dev_manager.c:2176 activate/dev_manager.c:2181
-#: activate/dev_manager.c:2188 activate/dev_manager.c:2196
-#: activate/dev_manager.c:2204 activate/dev_manager.c:2210
-#: activate/dev_manager.c:2217 activate/dev_manager.c:2222
-#: activate/dev_manager.c:2250 activate/fs.c:234 activate/fs.c:241
-#: activate/fs.c:248 activate/fs.c:251 activate/fs.c:325 archiver.c:68
-#: archiver.c:75 archiver.c:87 archiver.c:163 archiver.c:236 archiver.c:286
-#: archiver.c:303 archiver.c:345 archiver.c:350 cache/lvmcache.c:474
-#: cache/lvmcache.c:515 cache/lvmcache.c:546 commands/toolcontext.c:276
-#: commands/toolcontext.c:295 commands/toolcontext.c:302
-#: commands/toolcontext.c:379 commands/toolcontext.c:394
-#: commands/toolcontext.c:418 commands/toolcontext.c:469
-#: commands/toolcontext.c:662 commands/toolcontext.c:758 config/config.c:105
-#: config/config.c:110 config/config.c:140 config/config.c:161
-#: config/config.c:192 config/config.c:239 config/config.c:244
-#: config/config.c:406 config/config.c:424 config/config.c:429
-#: config/config.c:439 config/config.c:453 config/config.c:469
-#: config/config.c:525 config/config.c:708 datastruct/btree.c:90
-#: datastruct/hash.c:96 datastruct/hash.c:109 datastruct/str_list.c:24
-#: datastruct/str_list.c:38 datastruct/str_list.c:47 datastruct/str_list.c:77
-#: device/dev-cache.c:204 device/dev-cache.c:217 device/dev-cache.c:262
-#: device/dev-cache.c:266 device/dev-cache.c:337 device/dev-cache.c:368
-#: device/dev-cache.c:407 device/dev-cache.c:453 device/dev-cache.c:458
-#: device/dev-io.c:174 device/dev-io.c:204 device/dev-io.c:348
-#: device/dev-io.c:516 device/dev-io.c:537 device/dev-io.c:555
-#: device/dev-io.c:574 device/dev-io.c:602 device/dev-md.c:41
-#: device/dev-md.c:49 device/dev-md.c:64 device/device.c:61 device/device.c:66
-#: device/device.c:90 display/display.c:211 display/display.c:242
-#: display/display.c:300 display/display.c:346 display/display.c:577
-#: display/display.c:613 error/errseg.c:90 filters/filter-composite.c:54
+#: activate/dev_manager.c:723 activate/dev_manager.c:766
+#: activate/dev_manager.c:772 activate/dev_manager.c:782
+#: activate/dev_manager.c:821 activate/dev_manager.c:835
+#: activate/dev_manager.c:860 activate/dev_manager.c:900
+#: activate/dev_manager.c:905 activate/dev_manager.c:913
+#: activate/dev_manager.c:936 activate/dev_manager.c:941
+#: activate/dev_manager.c:947 activate/dev_manager.c:952
+#: activate/dev_manager.c:958 activate/dev_manager.c:966
+#: activate/dev_manager.c:983 activate/dev_manager.c:988
+#: activate/dev_manager.c:1003 activate/dev_manager.c:1008
+#: activate/dev_manager.c:1041 activate/dev_manager.c:1051
+#: activate/dev_manager.c:1067 activate/dev_manager.c:1077
+#: activate/dev_manager.c:1099 activate/dev_manager.c:1108
+#: activate/dev_manager.c:1122 activate/dev_manager.c:1130
+#: activate/dev_manager.c:1143 activate/dev_manager.c:1163
+#: activate/dev_manager.c:1168 activate/dev_manager.c:1174
+#: activate/dev_manager.c:1196 activate/dev_manager.c:1216
+#: activate/dev_manager.c:1235 activate/dev_manager.c:1246
+#: activate/dev_manager.c:1261 activate/dev_manager.c:1273
+#: activate/dev_manager.c:1287 activate/dev_manager.c:1300
+#: activate/dev_manager.c:1310 activate/dev_manager.c:1350
+#: activate/dev_manager.c:1361 activate/dev_manager.c:1371
+#: activate/dev_manager.c:1379 activate/dev_manager.c:1386
+#: activate/dev_manager.c:1462 activate/dev_manager.c:1481
+#: activate/dev_manager.c:1503 activate/dev_manager.c:1511
+#: activate/dev_manager.c:1539 activate/dev_manager.c:1544
+#: activate/dev_manager.c:1573 activate/dev_manager.c:1579
+#: activate/dev_manager.c:1600 activate/dev_manager.c:1618
+#: activate/dev_manager.c:1632 activate/dev_manager.c:1642
+#: activate/dev_manager.c:1652 activate/dev_manager.c:1670
+#: activate/dev_manager.c:1693 activate/dev_manager.c:1727
+#: activate/dev_manager.c:1743 activate/dev_manager.c:1800
+#: activate/dev_manager.c:1809 activate/dev_manager.c:1818
+#: activate/dev_manager.c:1827 activate/dev_manager.c:1832
+#: activate/dev_manager.c:1837 activate/dev_manager.c:1849
+#: activate/dev_manager.c:1859 activate/dev_manager.c:1865
+#: activate/dev_manager.c:1901 activate/dev_manager.c:1906
+#: activate/dev_manager.c:1938 activate/dev_manager.c:1956
+#: activate/dev_manager.c:2132 activate/dev_manager.c:2144
+#: activate/dev_manager.c:2150 activate/dev_manager.c:2164
+#: activate/dev_manager.c:2169 activate/dev_manager.c:2176
+#: activate/dev_manager.c:2184 activate/dev_manager.c:2192
+#: activate/dev_manager.c:2198 activate/dev_manager.c:2205
+#: activate/dev_manager.c:2210 activate/dev_manager.c:2238 activate/fs.c:234
+#: activate/fs.c:241 activate/fs.c:248 activate/fs.c:251 activate/fs.c:325
+#: archiver.c:68 archiver.c:75 archiver.c:87 archiver.c:163 archiver.c:236
+#: archiver.c:286 archiver.c:303 archiver.c:345 archiver.c:350
+#: cache/lvmcache.c:474 cache/lvmcache.c:515 cache/lvmcache.c:546
+#: commands/toolcontext.c:276 commands/toolcontext.c:295
+#: commands/toolcontext.c:302 commands/toolcontext.c:379
+#: commands/toolcontext.c:394 commands/toolcontext.c:418
+#: commands/toolcontext.c:469 commands/toolcontext.c:662
+#: commands/toolcontext.c:758 config/config.c:105 config/config.c:110
+#: config/config.c:140 config/config.c:161 config/config.c:192
+#: config/config.c:239 config/config.c:244 config/config.c:406
+#: config/config.c:424 config/config.c:429 config/config.c:439
+#: config/config.c:453 config/config.c:469 config/config.c:525
+#: config/config.c:708 datastruct/btree.c:90 datastruct/hash.c:96
+#: datastruct/hash.c:109 datastruct/str_list.c:24 datastruct/str_list.c:38
+#: datastruct/str_list.c:47 datastruct/str_list.c:77 device/dev-cache.c:204
+#: device/dev-cache.c:217 device/dev-cache.c:262 device/dev-cache.c:266
+#: device/dev-cache.c:337 device/dev-cache.c:368 device/dev-cache.c:407
+#: device/dev-cache.c:453 device/dev-cache.c:458 device/dev-io.c:174
+#: device/dev-io.c:204 device/dev-io.c:348 device/dev-io.c:516
+#: device/dev-io.c:537 device/dev-io.c:555 device/dev-io.c:574
+#: device/dev-io.c:602 device/dev-md.c:41 device/dev-md.c:49
+#: device/dev-md.c:64 device/device.c:61 device/device.c:66 device/device.c:90
+#: display/display.c:211 display/display.c:242 display/display.c:300
+#: display/display.c:346 display/display.c:577 display/display.c:613
+#: error/errseg.c:90 filters/filter-composite.c:54
 #: filters/filter-persistent.c:45 filters/filter-persistent.c:105
 #: filters/filter-persistent.c:110 filters/filter-persistent.c:239
 #: filters/filter-persistent.c:245 filters/filter-persistent.c:257
@@ -200,11 +202,11 @@ msgstr ""
 #: format_text/export.c:113 format_text/export.c:178 format_text/export.c:188
 #: format_text/export.c:279 format_text/export.c:280 format_text/export.c:281
 #: format_text/export.c:282 format_text/export.c:284 format_text/export.c:285
-#: format_text/export.c:286 format_text/export.c:289 format_text/export.c:299
+#: format_text/export.c:288 format_text/export.c:289 format_text/export.c:299
 #: format_text/export.c:303 format_text/export.c:305 format_text/export.c:308
 #: format_text/export.c:311 format_text/export.c:315 format_text/export.c:318
 #: format_text/export.c:322 format_text/export.c:326 format_text/export.c:329
-#: format_text/export.c:330 format_text/export.c:334 format_text/export.c:335
+#: format_text/export.c:330 format_text/export.c:334 format_text/export.c:336
 #: format_text/export.c:360 format_text/export.c:367 format_text/export.c:371
 #: format_text/export.c:372 format_text/export.c:376 format_text/export.c:380
 #: format_text/export.c:382 format_text/export.c:385 format_text/export.c:388
@@ -214,11 +216,11 @@ msgstr ""
 #: format_text/export.c:428 format_text/export.c:432 format_text/export.c:433
 #: format_text/export.c:437 format_text/export.c:440 format_text/export.c:445
 #: format_text/export.c:450 format_text/export.c:461 format_text/export.c:463
-#: format_text/export.c:470 format_text/export.c:474 format_text/export.c:479
+#: format_text/export.c:470 format_text/export.c:476 format_text/export.c:482
 #: format_text/export.c:490 format_text/export.c:500 format_text/export.c:501
 #: format_text/export.c:506 format_text/export.c:510 format_text/export.c:513
 #: format_text/export.c:516 format_text/export.c:520 format_text/export.c:523
-#: format_text/export.c:527 format_text/export.c:531 format_text/export.c:533
+#: format_text/export.c:528 format_text/export.c:531 format_text/export.c:533
 #: format_text/export.c:535 format_text/export.c:536 format_text/export.c:537
 #: format_text/export.c:542 format_text/export.c:548 format_text/export.c:563
 #: format_text/export.c:573 format_text/export.c:582 format_text/export.c:588
@@ -275,10 +277,10 @@ msgstr ""
 #: lvchange.c:87 lvchange.c:93 lvchange.c:107 lvchange.c:114 lvchange.c:121
 #: lvchange.c:171 lvchange.c:179 lvchange.c:213 lvchange.c:298 lvchange.c:356
 #: lvchange.c:364 lvconvert.c:43 lvconvert.c:73 lvconvert.c:90 lvconvert.c:219
-#: lvcreate.c:141 lvcreate.c:309 lvcreate.c:333 lvcreate.c:349 lvcreate.c:511
-#: lvcreate.c:599 lvcreate.c:653 lvcreate.c:660 lvcreate.c:665 lvcreate.c:671
-#: lvcreate.c:678 lvcreate.c:705 lvcreate.c:745 lvcreate.c:753 lvcreate.c:759
-#: lvcreate.c:766 lvcreate.c:856 lvmcmdline.c:946 lvremove.c:86 lvrename.c:87
+#: lvcreate.c:141 lvcreate.c:309 lvcreate.c:333 lvcreate.c:349 lvcreate.c:469
+#: lvcreate.c:557 lvcreate.c:611 lvcreate.c:618 lvcreate.c:623 lvcreate.c:629
+#: lvcreate.c:636 lvcreate.c:663 lvcreate.c:703 lvcreate.c:711 lvcreate.c:717
+#: lvcreate.c:724 lvcreate.c:814 lvmcmdline.c:946 lvremove.c:86 lvrename.c:87
 #: lvrename.c:144 lvrename.c:155 lvrename.c:162 lvrename.c:167 lvresize.c:417
 #: lvresize.c:474 lvresize.c:481 lvresize.c:488 lvresize.c:500 lvresize.c:507
 #: lvresize.c:513 lvresize.c:532 lvresize.c:546 lvresize.c:571
@@ -326,7 +328,7 @@ msgstr ""
 #: regex/ttree.c:111 report/report.c:576 report/report.c:604
 #: report/report.c:736 snapshot/snapshot.c:75 snapshot/snapshot.c:84
 #: snapshot/snapshot.c:85 snapshot/snapshot.c:86 snapshot/snapshot.c:155
-#: striped/striped.c:91 striped/striped.c:171 striped/striped.c:220
+#: striped/striped.c:92 striped/striped.c:171 striped/striped.c:220
 #: toollib.c:760 toollib.c:810 toollib.c:857 uuid/uuid.c:91 uuid/uuid.c:95
 #: vgcfgbackup.c:65 vgcfgbackup.c:74 vgcfgbackup.c:81 vgchange.c:302
 #: vgmerge.c:160 vgreduce.c:28 vgreduce.c:90 vgreduce.c:96 vgreduce.c:104
@@ -492,157 +494,135 @@ msgstr ""
 msgid "Adding target: %llu %llu %s %s"
 msgstr ""
 
-#: activate/dev_manager.c:750 activate/dev_manager.c:809
+#: activate/dev_manager.c:736
 #, c-format
-msgid "device layer %s missing from hash"
+msgid "%s device layer %s missing from hash"
 msgstr ""
 
-#: activate/dev_manager.c:757 activate/dev_manager.c:816
+#: activate/dev_manager.c:743
 #, c-format
-msgid "Failed to format device number as dm target (%u,%u)"
+msgid "Failed to format %s device number for %s as dm target (%u,%u)"
 msgstr ""
 
-#: activate/dev_manager.c:826
+#: activate/dev_manager.c:829
 #, c-format
 msgid "Internal error: Unassigned area found in LV %s."
 msgstr ""
 
-#: activate/dev_manager.c:849
+#: activate/dev_manager.c:852
 msgid "Insufficient space for target parameters."
 msgstr ""
 
-#: activate/dev_manager.c:862
-#, c-format
+#: activate/dev_manager.c:865
 msgid "Insufficient space in params[%zu] for target parameters."
 msgstr ""
 
-#: activate/dev_manager.c:868
+#: activate/dev_manager.c:871
 msgid "Target parameter size too big. Aborting."
 msgstr ""
 
-#: activate/dev_manager.c:882
+#: activate/dev_manager.c:885
 #, c-format
 msgid "Unable to build table for '%s'"
 msgstr ""
 
-#: activate/dev_manager.c:903
-#, c-format
-msgid "Couldn't find real device layer %s in hash"
-msgstr ""
-
-#: activate/dev_manager.c:909 activate/dev_manager.c:964
-#, c-format
-msgid "Couldn't create origin device parameters for '%s'."
-msgstr ""
-
-#: activate/dev_manager.c:914
+#: activate/dev_manager.c:909
 #, c-format
 msgid "Adding target: 0 %llu snapshot-origin %s"
 msgstr ""
 
-#: activate/dev_manager.c:936
+#: activate/dev_manager.c:930
 #, c-format
 msgid "Couldn't find snapshot for '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:952
-#, c-format
-msgid "Couldn't find origin device layer %s in hash"
-msgstr ""
-
-#: activate/dev_manager.c:958
-#, c-format
-msgid "Couldn't find cow device layer %s in hash"
-msgstr ""
-
-#: activate/dev_manager.c:971
-#, c-format
-msgid "Couldn't create cow device parameters for '%s'."
-msgstr ""
-
-#: activate/dev_manager.c:984
+#: activate/dev_manager.c:964
 #, c-format
 msgid "Adding target: 0 %llu snapshot %s"
 msgstr ""
 
-#: activate/dev_manager.c:1068 activate/dev_manager.c:1148
+#: activate/dev_manager.c:1048 activate/dev_manager.c:1128
 #, c-format
 msgid "Getting device info for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1094
+#: activate/dev_manager.c:1074
 #, c-format
 msgid "Getting device status percentage for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1125
+#: activate/dev_manager.c:1105
 #, c-format
 msgid "Getting device mirror status percentage for %s"
 msgstr ""
 
-#: activate/dev_manager.c:1460 activate/dev_manager.c:1620
+#: activate/dev_manager.c:1405 activate/dev_manager.c:1411
+msgid "Clustered snapshots are not yet supported"
+msgstr ""
+
+#: activate/dev_manager.c:1448 activate/dev_manager.c:1608
 #, c-format
 msgid "Couldn't find device layer '%s'."
 msgstr ""
 
-#: activate/dev_manager.c:1540
+#: activate/dev_manager.c:1528
 #, c-format
 msgid "_suspend_parents couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1546
+#: activate/dev_manager.c:1534
 #, c-format
 msgid "BUG: pre-suspend loop detected (%s)"
 msgstr ""
 
-#: activate/dev_manager.c:1574
+#: activate/dev_manager.c:1562
 #, c-format
 msgid "_resume_with_deps couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1580 activate/dev_manager.c:1625
+#: activate/dev_manager.c:1568 activate/dev_manager.c:1613
 #, c-format
 msgid "BUG: pre-create loop detected (%s)"
 msgstr ""
 
-#: activate/dev_manager.c:1732 activate/dev_manager.c:1748
+#: activate/dev_manager.c:1720 activate/dev_manager.c:1736
 #, c-format
 msgid ""
 "_populate_pre_suspend_lists: Couldn't find device layer '%s' - skipping."
 msgstr ""
 
-#: activate/dev_manager.c:1794
+#: activate/dev_manager.c:1782
 #, c-format
 msgid "Couldn't deactivate device %s"
 msgstr ""
 
-#: activate/dev_manager.c:1910
+#: activate/dev_manager.c:1898
 #, c-format
 msgid "Found existing layer '%s'"
 msgstr ""
 
-#: activate/dev_manager.c:2090
+#: activate/dev_manager.c:2078
 #, c-format
 msgid "Can't expand LV: %s target support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2102
+#: activate/dev_manager.c:2090
 msgid "Can't expand LV: Mirror support missing from tools?"
 msgstr ""
 
-#: activate/dev_manager.c:2109
+#: activate/dev_manager.c:2097
 msgid "Can't expand LV: Mirror support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2117
+#: activate/dev_manager.c:2105
 msgid "Can't expand LV: Snapshot support missing from tools?"
 msgstr ""
 
-#: activate/dev_manager.c:2124
+#: activate/dev_manager.c:2112
 msgid "Can't expand LV: Snapshot support missing from kernel?"
 msgstr ""
 
-#: activate/dev_manager.c:2152
+#: activate/dev_manager.c:2140
 #, c-format
 msgid "Found active lv %s%s"
 msgstr ""
@@ -1394,12 +1374,10 @@ msgid "Attempt to close device '%s' which is not open."
 msgstr ""
 
 #: device/dev-io.c:579
-#, c-format
 msgid "Wiping %s at %llu length %zu"
 msgstr ""
 
 #: device/dev-io.c:582
-#, c-format
 msgid "Wiping %s at sector %llu length %zu sectors"
 msgstr ""
 
@@ -3194,6 +3172,10 @@ msgstr ""
 msgid "Test mode: Metadata will NOT be updated."
 msgstr ""
 
+#: log/log.c:264
+msgid "vsnprintf failed: skipping external logging function"
+msgstr ""
+
 #: lvchange.c:26
 #, c-format
 msgid "Logical volume \"%s\" is already writable"
@@ -3343,7 +3325,7 @@ msgstr ""
 msgid "%s: reactivation failed"
 msgstr ""
 
-#: lvchange.c:330 lvcreate.c:724 pvchange.c:49 vgchange.c:322 vgcreate.c:111
+#: lvchange.c:330 lvcreate.c:682 pvchange.c:49 vgchange.c:322 vgcreate.c:111
 msgid "Failed to get tag"
 msgstr ""
 
@@ -3352,7 +3334,7 @@ msgstr ""
 msgid "Logical volume %s/%s does not support tags"
 msgstr ""
 
-#: lvchange.c:342 lvcreate.c:735
+#: lvchange.c:342 lvcreate.c:693
 #, c-format
 msgid "Failed to add tag %s to %s/%s"
 msgstr ""
@@ -3494,20 +3476,20 @@ msgstr ""
 msgid "Checking for existing volume group \"%s\""
 msgstr ""
 
-#: lvconvert.c:192 lvcreate.c:851 lvrename.c:105 lvresize.c:566 pvchange.c:59
+#: lvconvert.c:192 lvcreate.c:809 lvrename.c:105 lvresize.c:566 pvchange.c:59
 #: pvmove.c:61 vgcreate.c:144 vgextend.c:47 vgmerge.c:33 vgmerge.c:57
 #: vgreduce.c:265 vgrename.c:68 vgrename.c:102 vgsplit.c:189 vgsplit.c:213
 #, c-format
 msgid "Can't get lock for %s"
 msgstr ""
 
-#: lvconvert.c:197 lvcreate.c:480 lvrename.c:110 pvmove.c:66 vgdisplay.c:24
+#: lvconvert.c:197 lvcreate.c:438 lvrename.c:110 pvmove.c:66 vgdisplay.c:24
 #: vgmerge.c:38 vgmerge.c:64 vgreduce.c:271 vgrename.c:73 vgsplit.c:194
 #, c-format
 msgid "Volume group \"%s\" doesn't exist"
 msgstr ""
 
-#: lvconvert.c:202 lvcreate.c:485 lvrename.c:115 metadata/metadata.c:1166
+#: lvconvert.c:202 lvcreate.c:443 lvrename.c:115 metadata/metadata.c:1166
 #: polldaemon.c:200 pvchange.c:72 pvmove.c:72 toollib.c:42 vgchange.c:415
 #: vgck.c:32 vgconvert.c:54 vgextend.c:57 vgmerge.c:44 vgmerge.c:69
 #: vgreduce.c:321 vgremove.c:35 vgrename.c:80 vgsplit.c:200
@@ -3515,7 +3497,7 @@ msgstr ""
 msgid "Volume group \"%s\" is exported"
 msgstr ""
 
-#: lvconvert.c:207 lvcreate.c:490 lvremove.c:27 lvrename.c:120 pvchange.c:78
+#: lvconvert.c:207 lvcreate.c:448 lvremove.c:27 lvrename.c:120 pvchange.c:78
 #: pvmove.c:78 vgchange.c:410 vgconvert.c:49 vgexport.c:38 vgextend.c:62
 #: vgmerge.c:50 vgmerge.c:74 vgreduce.c:327 vgrename.c:86 vgsplit.c:206
 #, c-format
@@ -3661,168 +3643,149 @@ msgstr ""
 msgid "--major and --minor incompatible with -Mn"
 msgstr ""
 
-#: lvcreate.c:433
-msgid "Name allocation failed - device not zeroed"
-msgstr ""
-
-#: lvcreate.c:439
-#, c-format
-msgid "Name too long - device not zeroed (%s)"
-msgstr ""
-
-#: lvcreate.c:443
-#, c-format
-msgid "Zeroing start of logical volume \"%s\""
-msgstr ""
-
-#: lvcreate.c:446
-#, c-format
-msgid "%s: not found: device not zeroed"
-msgstr ""
-
-#: lvcreate.c:477 pvmove.c:300 toollib.c:350 vgreduce.c:263
+#: lvcreate.c:435 pvmove.c:300 toollib.c:350 vgreduce.c:263
 #, c-format
 msgid "Finding volume group \"%s\""
 msgstr ""
 
-#: lvcreate.c:495 lvrename.c:125
+#: lvcreate.c:453 lvrename.c:125
 #, c-format
 msgid "Logical volume \"%s\" already exists in volume group \"%s\""
 msgstr ""
 
-#: lvcreate.c:501
+#: lvcreate.c:459
 msgid "Metadata does not support mirroring."
 msgstr ""
 
-#: lvcreate.c:518
+#: lvcreate.c:476
 #, c-format
 msgid "Setting stripe size %d KB to physical extent size %u KB"
 msgstr ""
 
-#: lvcreate.c:531 lvresize.c:206
+#: lvcreate.c:489 lvresize.c:206
 #, c-format
 msgid "Rounding up size to full physical extent %s"
 msgstr ""
 
-#: lvcreate.c:539
+#: lvcreate.c:497
 #, c-format
 msgid "Rounding size (%d extents) up to stripe boundary size (%d extents)"
 msgstr ""
 
-#: lvcreate.c:547
+#: lvcreate.c:505
 msgid "Can't create snapshot without using device-mapper kernel driver"
 msgstr ""
 
-#: lvcreate.c:552
+#: lvcreate.c:510
 #, c-format
 msgid "Couldn't find origin volume '%s'."
 msgstr ""
 
-#: lvcreate.c:557
+#: lvcreate.c:515
 msgid "Snapshots of snapshots are not supported yet."
 msgstr ""
 
-#: lvcreate.c:562
+#: lvcreate.c:520
 msgid "Snapshots of locked devices are not supported yet"
 msgstr ""
 
-#: lvcreate.c:571
+#: lvcreate.c:529
 #, c-format
 msgid "Unable to create logical volume %s with no extents"
 msgstr ""
 
-#: lvcreate.c:578
+#: lvcreate.c:536
 #, c-format
 msgid "Insufficient free extents (%u) in volume group %s: %u required"
 msgstr ""
 
-#: lvcreate.c:584
+#: lvcreate.c:542
 #, c-format
 msgid "Number of stripes (%u) must not exceed number of physical volumes (%d)"
 msgstr ""
 
-#: lvcreate.c:591
+#: lvcreate.c:549
 msgid "Can't create mirror without using device-mapper kernel driver."
 msgstr ""
 
-#: lvcreate.c:610
+#: lvcreate.c:568
 msgid "Failed to generate LV name."
 msgstr ""
 
-#: lvcreate.c:622 mirror/mirrored.c:218
+#: lvcreate.c:580 mirror/mirrored.c:218
 #, c-format
 msgid "Using reduced mirror region size of %u sectors"
 msgstr ""
 
-#: lvcreate.c:630 lvcreate.c:636 lvcreate.c:644
+#: lvcreate.c:588 lvcreate.c:594 lvcreate.c:602
 msgid "log_name allocation failed. Remove new LV and retry."
 msgstr ""
 
-#: lvcreate.c:683
+#: lvcreate.c:641
 msgid "Aborting. Failed to activate mirror log. Remove new LVs and retry."
 msgstr ""
 
-#: lvcreate.c:689
+#: lvcreate.c:647
 msgid "Aborting. Failed to wipe mirror log. Remove new LV and retry."
 msgstr ""
 
-#: lvcreate.c:695
+#: lvcreate.c:653
 msgid "Aborting. Failed to deactivate mirror log. Remove new LV and retry."
 msgstr ""
 
-#: lvcreate.c:710
+#: lvcreate.c:668
 msgid "Setting read ahead sectors"
 msgstr ""
 
-#: lvcreate.c:718
+#: lvcreate.c:676
 #, c-format
 msgid "Setting device number to (%d, %d)"
 msgstr ""
 
-#: lvcreate.c:729 vgchange.c:327
+#: lvcreate.c:687 vgchange.c:327
 #, c-format
 msgid "Volume group %s does not support tags"
 msgstr ""
 
-#: lvcreate.c:773
+#: lvcreate.c:731
 msgid ""
 "Aborting. Failed to activate snapshot exception store. Remove new LV and "
 "retry."
 msgstr ""
 
-#: lvcreate.c:776
+#: lvcreate.c:734
 msgid "Failed to activate new LV."
 msgstr ""
 
-#: lvcreate.c:783
+#: lvcreate.c:741
 msgid ""
 "Aborting. Failed to wipe snapshot exception store. Remove new LV and retry."
 msgstr ""
 
-#: lvcreate.c:788
+#: lvcreate.c:746
 #, c-format
 msgid "WARNING: \"%s\" not zeroed"
 msgstr ""
 
-#: lvcreate.c:797
+#: lvcreate.c:755
 msgid "Couldn't deactivate new snapshot."
 msgstr ""
 
-#: lvcreate.c:803
+#: lvcreate.c:761
 #, c-format
 msgid "Failed to suspend origin %s"
 msgstr ""
 
-#: lvcreate.c:809
+#: lvcreate.c:767
 msgid "Couldn't create snapshot."
 msgstr ""
 
-#: lvcreate.c:818
+#: lvcreate.c:776
 #, c-format
 msgid "Problem reactivating origin %s"
 msgstr ""
 
-#: lvcreate.c:825
+#: lvcreate.c:783
 #, c-format
 msgid "Logical volume \"%s\" created"
 msgstr ""
@@ -4124,7 +4087,6 @@ msgid "Logical volume names must have the same volume group (\"%s\" or \"%s\")"
 msgstr ""
 
 #: lvrename.c:76
-#, c-format
 msgid "New logical volume path exceeds maximum length of %zu!"
 msgstr ""
 
@@ -5111,7 +5073,6 @@ msgid "Unable to open external %s library %s"
 msgstr ""
 
 #: mm/dbg_malloc.c:239
-#, c-format
 msgid "Huge memory allocation (size %zu) rejected - metadata corruption?"
 msgstr ""
 
@@ -5139,7 +5100,6 @@ msgid "memlock_count dec to %d"
 msgstr ""
 
 #: mm/pool-fast.c:45
-#, c-format
 msgid "Couldn't create memory pool %s (size %zu)"
 msgstr ""
 
@@ -5148,7 +5108,6 @@ msgid "Internal error: pool_free asked to free pointer not in pool"
 msgstr ""
 
 #: mm/pool-fast.c:223
-#, c-format
 msgid "Out of memory.  Requested %zu bytes."
 msgstr ""
 
@@ -5222,7 +5181,7 @@ msgstr ""
 msgid "Unable to find volume group of \"%s\""
 msgstr ""
 
-#: pvchange.c:84
+#: pvchange.c:85
 #, c-format
 msgid "Unable to find \"%s\" in volume group \"%s\""
 msgstr ""
@@ -5592,11 +5551,11 @@ msgstr ""
 msgid "Ignoring remaining command line arguments"
 msgstr ""
 
-#: pvmove.c:313
+#: pvmove.c:314
 msgid "ABORTING: Failed to generate list of moving LVs"
 msgstr ""
 
-#: pvmove.c:321
+#: pvmove.c:322
 msgid "ABORTING: Temporary mirror activation failed."
 msgstr ""
 
@@ -6143,6 +6102,25 @@ msgstr ""
 #: toollib.c:1054
 #, c-format
 msgid "%s: already exists in filesystem"
+msgstr ""
+
+#: toollib.c:1077
+msgid "Name allocation failed - device not zeroed"
+msgstr ""
+
+#: toollib.c:1083
+#, c-format
+msgid "Name too long - device not zeroed (%s)"
+msgstr ""
+
+#: toollib.c:1087
+#, c-format
+msgid "Zeroing start of logical volume \"%s\""
+msgstr ""
+
+#: toollib.c:1090
+#, c-format
+msgid "%s: not found: device not zeroed"
 msgstr ""
 
 #: uuid/uuid.c:133
