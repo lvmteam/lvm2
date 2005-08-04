@@ -906,6 +906,12 @@ static int _populate_origin(struct dev_manager *dm,
 		return 0;
 	}
 
++       if (dl->lv->vg->status & CLUSTERED) {
++               /* FIXME put csnap code here */
++               log_error("Clustered snapshots are not yet supported");
++               return 0;
+
+
 	log_debug("Adding target: 0 %" PRIu64 " snapshot-origin %s",
 		  dl->lv->size, params);
 	if (!dm_task_add_target(dmt, UINT64_C(0), dl->lv->size,
@@ -1400,11 +1406,19 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
 	/*
 	 * FIXME: this doesn't cope with recursive snapshots yet.
 	 */
-	if ((snap_seg = find_cow(lv)))
+	if ((snap_seg = find_cow(lv))) {
+		if (lv->vg->status & CLUSTERED) {
+			log_error("Clustered snapshots are not yet supported");
+			return 0;
+		}
 		return _expand_snapshot(dm, lv, snap_seg);
-
-	else if (lv_is_origin(lv))
+	} else if (lv_is_origin(lv)) {
+		if (lv->vg->status & CLUSTERED) {
+			log_error("Clustered snapshots are not yet supported");
+			return 0;
+		}
 		return _expand_origin(dm, lv);
+	}
 
 	return _expand_vanilla(dm, lv, 0);
 }
