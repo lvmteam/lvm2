@@ -727,6 +727,28 @@ static int _emit_target_line(struct dev_manager *dm, struct dm_task *dmt,
 	return 1;
 }
 
+static int _build_dev_string(struct dev_manager *dm, char *dlid,
+			     char *devbuf, size_t bufsize, const char *desc)
+{
+	struct dev_layer *dl;
+
+	if (!(dl = hash_lookup(dm->layers, dlid))) {
+		log_error("%s device layer %s missing from hash",
+			  desc, dlid);
+		return 0;
+	}
+
+	if (!dm_format_dev(devbuf, bufsize, dl->info.major,
+			   dl->info.minor)) {
+		log_error("Failed to format %s device number for %s as dm "
+			  "target (%u,%u)",
+			  desc, dlid, dl->info.major, dl->info.minor);
+		return 0;
+	}
+
+	return 1;
+}
+
 int compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 		     char *params, size_t paramsize, int *pos, int areas,
 		     uint32_t region_size)
@@ -734,7 +756,6 @@ int compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 	int tw;
 	char devbuf[10];
 	char *name;
-	struct dev_layer *dl;
 
 	if (!seg->log_lv)
 		tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
@@ -746,17 +767,9 @@ int compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 			return 0;
 		}
 
-		if (!(dl = hash_lookup(dm->layers, seg->log_lv->lvid.s))) {
-			log_error("device layer %s missing from hash",
-				  seg->log_lv->lvid.s);
-			return 0;
-		}
-
-		if (!dm_format_dev(devbuf, sizeof(devbuf), dl->info.major,
-				   dl->info.minor)) {
-			log_error("Failed to format device number as dm "
-				  "target (%u,%u)",
-				   dl->info.major, dl->info.minor);
+		if (!_build_dev_string(dm, seg->log_lv->lvid.s, devbuf,
+				       sizeof(devbuf), "log")) {
+			stack;
 			return 0;
 		}
 
@@ -783,7 +796,6 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 	int tw = 0;
 	const char *trailing_space;
 	uint64_t esize = seg->lv->vg->extent_size;
-	struct dev_layer *dl;
 	char devbuf[10];
 
 	for (s = start_area; s < areas; s++, *pos += tw) {
@@ -804,18 +816,9 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 					   (esize * seg_pe(seg, s))),
 					  trailing_space);
 		else if (seg_type(seg, s) == AREA_LV) {
-			if (!(dl = hash_lookup(dm->layers,
-					       seg_lv(seg, s)->lvid.s))) {
-				log_error("device layer %s missing from hash",
-					  seg_lv(seg, s)->lvid.s);
-				return 0;
-			}
-			if (!dm_format_dev
-			    (devbuf, sizeof(devbuf), dl->info.major,
-			     dl->info.minor)) {
-				log_error
-				    ("Failed to format device number as dm target (%u,%u)",
-				     dl->info.major, dl->info.minor);
+			if (!_build_dev_string(dm, seg_lv(seg, s)->lvid.s, devbuf,
+					       sizeof(devbuf), "LV")) {
+				stack;
 				return 0;
 			}
 			tw = lvm_snprintf(params + *pos, paramsize - *pos,
@@ -824,7 +827,7 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 					  trailing_space);
 		} else {
 			log_error("Internal error: Unassigned area found in LV %s.",
-				  seg->lv);
+				  seg->lv->name);
 			return 0;
 		}
 
@@ -892,22 +895,14 @@ static int _populate_origin(struct dev_manager *dm,
 {
 	char *real;
 	char params[PATH_MAX + 32];
-	struct dev_layer *dlr;
 
 	if (!(real = _build_dlid(dm->mem, dl->lv->lvid.s, "real"))) {
 		stack;
 		return 0;
 	}
 
-	if (!(dlr = hash_lookup(dm->layers, real))) {
-		log_error("Couldn't find real device layer %s in hash", real);
-		return 0;
-	}
-
-	if (!dm_format_dev(params, sizeof(params), dlr->info.major,
-			   dlr->info.minor)) {
-		log_error("Couldn't create origin device parameters for '%s'.",
-			  real);
+	if (!_build_dev_string(dm, real, params, sizeof(params), "origin")) {
+		stack;
 		return 0;
 	}
 
@@ -928,7 +923,6 @@ static int _populate_snapshot(struct dev_manager *dm,
 	char *origin, *cow;
 	char params[PATH_MAX * 2 + 32];
 	struct lv_segment *snap_seg;
-	struct dev_layer *dlo, *dlc;
 	char devbufo[10], devbufc[10];
 	uint64_t size;
 
@@ -948,28 +942,14 @@ static int _populate_snapshot(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!(dlo = hash_lookup(dm->layers, origin))) {
-		log_error("Couldn't find origin device layer %s in hash",
-			  origin);
+	if (!_build_dev_string(dm, origin, devbufo, sizeof(devbufo),
+			       "origin")) {
+		stack;
 		return 0;
 	}
 
-	if (!(dlc = hash_lookup(dm->layers, cow))) {
-		log_error("Couldn't find cow device layer %s in hash", cow);
-		return 0;
-	}
-
-	if (!dm_format_dev(devbufo, sizeof(devbufo), dlo->info.major,
-			   dlo->info.minor)) {
-		log_error("Couldn't create origin device parameters for '%s'.",
-			  snap_seg->origin->name);
-		return 0;
-	}
-
-	if (!dm_format_dev(devbufc, sizeof(devbufc), dlc->info.major,
-			   dlc->info.minor)) {
-		log_error("Couldn't create cow device parameters for '%s'.",
-			  snap_seg->cow->name);
+	if (!_build_dev_string(dm, cow, devbufc, sizeof(devbufc), "cow")) {
+		stack;
 		return 0;
 	}
 
