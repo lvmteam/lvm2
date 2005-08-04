@@ -87,7 +87,7 @@ xx(lvconvert,
    "\t[-m|--mirrors Mirrors]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
-   "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
+   "\tLogicalVolume[Path] [PhysicalVolume[Path]...]\n",
 
    alloc_ARG, mirrors_ARG, test_ARG)
 
