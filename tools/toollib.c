@@ -1057,3 +1057,46 @@ int validate_vg_name(struct cmd_context *cmd, const char *vg_name)
 
 	return 1;
 }
+
+/*
+ * Volumes may be zeroed to remove old application data.
+ */
+int zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct device *dev;
+	char *name;
+
+	/*
+	 * FIXME:
+	 * <clausen> also, more than 4k
+	 * <clausen> say, reiserfs puts it's superblock 32k in, IIRC
+	 * <ejt_> k, I'll drop a fixme to that effect
+	 *           (I know the device is at least 4k, but not 32k)
+	 */
+	if (!(name = pool_alloc(cmd->mem, PATH_MAX))) {
+		log_error("Name allocation failed - device not zeroed");
+		return 0;
+	}
+
+	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+			 lv->vg->name, lv->name) < 0) {
+		log_error("Name too long - device not zeroed (%s)", lv->name);
+		return 0;
+	}
+
+	log_verbose("Zeroing start of logical volume \"%s\"", lv->name);
+
+	if (!(dev = dev_cache_get(name, NULL))) {
+		log_error("%s: not found: device not zeroed", name);
+		return 0;
+	}
+
+	if (!dev_open_quiet(dev))
+		return 0;
+
+	dev_zero(dev, UINT64_C(0), (size_t) 4096);
+	dev_close_immediate(dev);
+
+	return 1;
+}
+
