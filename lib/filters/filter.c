@@ -71,6 +71,7 @@ static const device_info_t device_info[] = {
 	{"iseries/vd", 8},	/* iSeries disks */
 	{"gnbd", 1},		/* Network block device */
 	{"ramdisk", 1},		/* RAM disk */
+	{"aoe", 16},		/* ATA over Ethernet */
 	{NULL, 0}
 };
 
