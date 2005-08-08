@@ -1344,6 +1344,10 @@ int dm_task_run(struct dm_task *dmt)
 #else /* Userspace alternative for testing */
 #endif
 
+	if (dmi->flags & DM_BUFFER_FULL_FLAG)
+		/* FIXME Increase buffer size and retry operation (if query) */
+		log_error("Warning: libdevmapper buffer too small for data");
+
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
 		add_dev_node(dmt->dev_name, MAJOR(dmi->dev), MINOR(dmi->dev),
