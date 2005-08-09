@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Factor out _get_library_path().
   Recognise ATA over Ethernet (aoe) devices.
 
 Version 2.01.14 - 4th August 2005
