@@ -747,6 +747,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 
 		/* If the client went away in mid command then tidy up */
 		if (thisfd->bits.localsock.in_progress) {
+			pthread_kill(thisfd->bits.localsock.threadid, SIGUSR2);
 			pthread_mutex_lock(&thisfd->bits.localsock.mutex);
 			thisfd->bits.localsock.state = POST_COMMAND;
 			pthread_cond_signal(&thisfd->bits.localsock.cond);
@@ -763,7 +764,6 @@ static int read_from_local_sock(struct local_client *thisfd)
 			thisfd->bits.localsock.state = PRE_COMMAND;
 			pthread_cond_signal(&thisfd->bits.localsock.cond);
 			pthread_mutex_unlock(&thisfd->bits.localsock.mutex);
-			pthread_kill(thisfd->bits.localsock.threadid, SIGUSR2);
 
 			jstat =
 			    pthread_join(thisfd->bits.localsock.threadid,
