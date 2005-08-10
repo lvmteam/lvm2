@@ -23,8 +23,7 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		       char *params, size_t paramsize, int *pos,
 		       int start_area, int areas);
 
-int compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
-		     char *params, size_t paramsize, int *pos, int areas,
-		     uint32_t region_size);
+int build_dev_string(struct dev_manager *dm, char *dlid, char *devbuf,
+		     size_t bufsize, const char *desc);
 
 #endif
