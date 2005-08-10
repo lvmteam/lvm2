@@ -165,6 +165,38 @@ static struct mirror_state *_init_target(struct pool *mem,
 	return mirr_state;
 }
 
+static int _compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
+			     char *params, size_t paramsize, int *pos,
+			     int areas, uint32_t region_size)
+{
+	int tw;
+	char devbuf[10];
+
+	if (!seg->log_lv)
+		tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
+				  region_size, areas);
+	else {
+		if (!build_dev_string(dm, seg->log_lv->lvid.s, devbuf,
+				      sizeof(devbuf), "log")) {
+			stack;
+			return 0;
+		}
+
+		/* FIXME add sync parm? */
+		tw = lvm_snprintf(params, paramsize, "disk 2 %s %u %u ",
+				  devbuf, region_size, areas);
+	}
+
+	if (tw < 0) {
+		stack;
+		return -1;
+	}
+
+	*pos += tw;
+
+	return 1;
+}
+
 static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 				struct config_tree *cft, void **target_state,
 				struct lv_segment *seg, char *params,
@@ -220,8 +252,8 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 			}
 		}
 
-		if ((ret = compose_log_line(dm, seg, params, paramsize, pos,
-					    areas, region_size)) <= 0) {
+		if ((ret = _compose_log_line(dm, seg, params, paramsize, pos,
+					     areas, region_size)) <= 0) {
 			stack;
 			return ret;
 		}

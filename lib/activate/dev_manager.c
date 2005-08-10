@@ -727,8 +727,8 @@ static int _emit_target_line(struct dev_manager *dm, struct dm_task *dmt,
 	return 1;
 }
 
-static int _build_dev_string(struct dev_manager *dm, char *dlid,
-			     char *devbuf, size_t bufsize, const char *desc)
+int build_dev_string(struct dev_manager *dm, char *dlid, char *devbuf,
+		     size_t bufsize, const char *desc)
 {
 	struct dev_layer *dl;
 
@@ -745,45 +745,6 @@ static int _build_dev_string(struct dev_manager *dm, char *dlid,
 			  desc, dlid, dl->info.major, dl->info.minor);
 		return 0;
 	}
-
-	return 1;
-}
-
-int compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
-		     char *params, size_t paramsize, int *pos, int areas,
-		     uint32_t region_size)
-{
-	int tw;
-	char devbuf[10];
-	char *name;
-
-	if (!seg->log_lv)
-		tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
-				  region_size, areas);
-	else {
-		if (!(name = build_dm_name(dm->mem, seg->log_lv->vg->name,
-					   seg->log_lv->name, NULL))) {
-			stack;
-			return 0;
-		}
-
-		if (!_build_dev_string(dm, seg->log_lv->lvid.s, devbuf,
-				       sizeof(devbuf), "log")) {
-			stack;
-			return 0;
-		}
-
-		/* FIXME add sync parm? */
-		tw = lvm_snprintf(params, paramsize, "disk 2 %s %u %u ",
-				  devbuf, region_size, areas);
-	}
-
-	if (tw < 0) {
-		stack;
-		return -1;
-	}
-
-	*pos += tw;
 
 	return 1;
 }
@@ -816,8 +777,8 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 					   (esize * seg_pe(seg, s))),
 					  trailing_space);
 		else if (seg_type(seg, s) == AREA_LV) {
-			if (!_build_dev_string(dm, seg_lv(seg, s)->lvid.s, devbuf,
-					       sizeof(devbuf), "LV")) {
+			if (!build_dev_string(dm, seg_lv(seg, s)->lvid.s, devbuf,
+					      sizeof(devbuf), "LV")) {
 				stack;
 				return 0;
 			}
@@ -901,7 +862,7 @@ static int _populate_origin(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!_build_dev_string(dm, real, params, sizeof(params), "origin")) {
+	if (!build_dev_string(dm, real, params, sizeof(params), "origin")) {
 		stack;
 		return 0;
 	}
@@ -942,13 +903,12 @@ static int _populate_snapshot(struct dev_manager *dm,
 		return 0;
 	}
 
-	if (!_build_dev_string(dm, origin, devbufo, sizeof(devbufo),
-			       "origin")) {
+	if (!build_dev_string(dm, origin, devbufo, sizeof(devbufo), "origin")) {
 		stack;
 		return 0;
 	}
 
-	if (!_build_dev_string(dm, cow, devbufc, sizeof(devbufc), "cow")) {
+	if (!build_dev_string(dm, cow, devbufc, sizeof(devbufc), "cow")) {
 		stack;
 		return 0;
 	}
