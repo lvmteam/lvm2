@@ -94,6 +94,9 @@ int apply_lvname_restrictions(const char *name);
 
 int validate_vg_name(struct cmd_context *cmd, const char *vg_name);
 
+int generate_log_name_format(struct volume_group *vg, const char *lv_name,
+                             char *buffer, size_t size);
+
 int zero_lv(struct cmd_context *cmd, struct logical_volume *lv);
 
 #endif

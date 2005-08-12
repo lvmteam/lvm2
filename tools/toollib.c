@@ -1058,6 +1058,24 @@ int validate_vg_name(struct cmd_context *cmd, const char *vg_name)
 	return 1;
 }
 
+int generate_log_name_format(struct volume_group *vg, const char *lv_name,
+			     char *buffer, size_t size)
+{
+	if (lvm_snprintf(buffer, size, "%s_mlog", lv_name) < 0) {
+		stack;
+		return 0;
+	}
+
+	if (find_lv_in_vg(vg, buffer) &&
+	    lvm_snprintf(buffer, size, "%s_mlog_%%d",
+			 lv_name) < 0) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * Volumes may be zeroed to remove old application data.
  */
