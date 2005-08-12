@@ -23,6 +23,26 @@
 #include "lvm-string.h"
 
 /*
+ * Ensure region size is compatible with volume size.
+ */
+uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
+				     uint32_t region_size)
+{
+	uint32_t region_max;
+
+	region_max = (1 << (ffs(extents) - 1)) * extent_size;
+
+	if (region_max < region_size) {
+		region_size = region_max;
+		log_print("Using reduced mirror region size of %" PRIu32
+			  " sectors", region_max);
+		return region_max;
+	}
+
+	return region_size;
+}
+
+/*
  * Reduce mirrored_seg to num_mirrors images.
  */
 int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors)

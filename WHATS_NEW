@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Factor out adjusted_mirror_region_size().
   Move compose_log_line() into mirror directory.
   Factor out _get_library_path().
   Don't kill idling clvmd threads.
