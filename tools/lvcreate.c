@@ -579,27 +579,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* FIXME Calculate how many extents needed for the log */
 
 		len = strlen(lv_name) + 32;
-        	if (!(log_name = alloca(len))) {
+        	if (!(log_name = alloca(len)) ||
+		    !(generate_log_name_format(vg, lv_name, log_name, len))) {
                 	log_error("log_name allocation failed. "
 	                          "Remove new LV and retry.");
                 	return 0;
         	}
 
-        	if (lvm_snprintf(log_name, len, "%s_mlog", lv_name) < 0) {
-                	log_error("log_name allocation failed. "
-	                          "Remove new LV and retry.");
-                	return 0;
-        	}
-
-		if (find_lv_in_vg(vg, log_name)) {
-        		if (lvm_snprintf(log_name, len, "%s_mlog_%%d",
-					 lv_name) < 0) {
-                		log_error("log_name allocation failed. "
-					  "Remove new LV and retry.");
-                		return 0;
-        		}
-		}
- 
 		if (!(log_lv = lv_create_empty(vg->fid, log_name, NULL,
 				VISIBLE_LV | LVM_READ | LVM_WRITE,
 				lp->alloc, 0, vg))) {
