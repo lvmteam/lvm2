@@ -543,6 +543,8 @@ int vg_remove_snapshot(struct logical_volume *cow);
  * Mirroring functions
  */
 struct alloc_handle;
+uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
+                                     uint32_t region_size);
 int create_mirror_layers(struct alloc_handle *ah,
 			 uint32_t first_area,
 			 uint32_t num_mirrors,

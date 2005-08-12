@@ -416,7 +416,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 
 static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 {
-	uint32_t size_rest, region_max;
+	uint32_t size_rest;
 	uint32_t status = 0;
 	uint64_t tmp_size;
 	struct volume_group *vg;
@@ -572,14 +572,9 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if (lp->mirrors > 1) {
-		/* FIXME Adjust lp->region_size if necessary */
-		region_max = (1 << (ffs(lp->extents) - 1)) * vg->extent_size;
-
-		if (region_max < lp->region_size) {
-			lp->region_size = region_max;
-			log_print("Using reduced mirror region size of %" PRIu32
-				  " sectors", lp->region_size);
-		}
+		lp->region_size = adjusted_mirror_region_size(vg->extent_size,
+							      lp->extents,
+							      lp->region_size);
 
 		/* FIXME Calculate how many extents needed for the log */
 
