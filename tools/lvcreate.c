@@ -506,6 +506,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 				  "device-mapper kernel driver");
 			return 0;
 		}
+		/* FIXME Allow exclusive activation. */
+		if (vg->status & CLUSTERED) {
+			log_error("Clustered snapshots are not yet supported.");
+			return 0;
+		}
 		if (!(org = find_lv(vg, lp->origin))) {
 			log_err("Couldn't find origin volume '%s'.",
 				lp->origin);

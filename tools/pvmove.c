@@ -238,8 +238,9 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* Activate the temporary mirror LV */
 	/* Only the first mirror segment gets activated as a mirror */
+	/* FIXME: Add option to use a log */
 	if (first_time) {
-		if (!activate_lv(cmd, lv_mirr->lvid.s)) {
+		if (!activate_lv_excl(cmd, lv_mirr->lvid.s)) {
 			if (!test_mode())
 				log_error("ABORTING: Temporary mirror "
 					  "activation failed.  "
@@ -317,7 +318,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		}
 
 		/* Ensure mirror LV is active */
-		if (!activate_lv(cmd, lv_mirr->lvid.s)) {
+		if (!activate_lv_excl(cmd, lv_mirr->lvid.s)) {
 			log_error
 			    ("ABORTING: Temporary mirror activation failed.");
 			unlock_vg(cmd, pv->vg_name);

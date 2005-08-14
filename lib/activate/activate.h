@@ -46,8 +46,9 @@ int lv_suspend(struct cmd_context *cmd, const char *lvid_s);
 int lv_suspend_if_active(struct cmd_context *cmd, const char *lvid_s);
 int lv_resume(struct cmd_context *cmd, const char *lvid_s);
 int lv_resume_if_active(struct cmd_context *cmd, const char *lvid_s);
-int lv_activate(struct cmd_context *cmd, const char *lvid_s);
-int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s);
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive);
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s,
+			    int exclusive);
 int lv_deactivate(struct cmd_context *cmd, const char *lvid_s);
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);

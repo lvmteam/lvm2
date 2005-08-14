@@ -243,7 +243,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			break;
 		case LCK_READ:
 			log_debug("Locking LV %s (R)", resource);
-			if (!lv_activate_with_filter(cmd, resource))
+			if (!lv_activate_with_filter(cmd, resource, 0))
 				return 0;
 			break;
 		case LCK_WRITE:
@@ -253,7 +253,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			break;
 		case LCK_EXCL:
 			log_debug("Locking LV %s (EX)", resource);
-			if (!lv_activate_with_filter(cmd, resource))
+			if (!lv_activate_with_filter(cmd, resource, 1))
 				return 0;
 			break;
 		default:
