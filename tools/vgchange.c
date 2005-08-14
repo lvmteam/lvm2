@@ -182,6 +182,7 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 			       struct volume_group *vg)
 {
 	int clustered = !strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
+	struct lv_list *lvl;
 
 	if (clustered && (vg->status & CLUSTERED)) {
 		log_error("Volume group \"%s\" is already clustered",
@@ -193,6 +194,17 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 		log_error("Volume group \"%s\" is already not clustered",
 			  vg->name);
 		return ECMD_FAILED;
+	}
+
+	if (clustered) {
+        	list_iterate_items(lvl, &vg->lvs) {
+                	if (lvl->lv->origin_count || lvl->lv->snapshot) {
+				log_error("Volume group %s contains snapshots "
+					  "that are not yet supported.",
+					  vg->name);
+				return ECMD_FAILED;
+			}
+		}
 	}
 
 	if (!archive(vg))

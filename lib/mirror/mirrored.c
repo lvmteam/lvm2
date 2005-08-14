@@ -171,10 +171,19 @@ static int _compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 {
 	int tw;
 	char devbuf[10];
+	const char *clustered = "";
+
+	/*
+	 * Use clustered mirror log for non-exclusive activation 
+	 * in clustered VG.
+	 */
+	if ((!(seg->lv->status & ACTIVATE_EXCL) &&
+	      (seg->lv->vg->status & CLUSTERED)))
+		clustered = "cluster ";
 
 	if (!seg->log_lv)
-		tw = lvm_snprintf(params, paramsize, "core 1 %u %u ",
-				  region_size, areas);
+		tw = lvm_snprintf(params, paramsize, "%score 1 %u %u ",
+				  clustered, region_size, areas);
 	else {
 		if (!build_dev_string(dm, seg->log_lv->lvid.s, devbuf,
 				      sizeof(devbuf), "log")) {
@@ -183,8 +192,8 @@ static int _compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 		}
 
 		/* FIXME add sync parm? */
-		tw = lvm_snprintf(params, paramsize, "disk 2 %s %u %u ",
-				  devbuf, region_size, areas);
+		tw = lvm_snprintf(params, paramsize, "%sdisk 2 %s %u %u ",
+				  clustered, devbuf, region_size, areas);
 	}
 
 	if (tw < 0) {

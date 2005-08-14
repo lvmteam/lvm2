@@ -130,11 +130,11 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 {
 	return 1;
 }
-int lv_activate(struct cmd_context *cmd, const char *lvid_s)
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
 	return 1;
 }
-int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s)
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
 	return 1;
 }
@@ -701,7 +701,8 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 	return 1;
 }
 
-static int _lv_activate(struct cmd_context *cmd, const char *lvid_s, int filter)
+static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
+			int exclusive, int filter)
 {
 	struct logical_volume *lv;
 	struct lvinfo info;
@@ -732,6 +733,9 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s, int filter)
 	if (info.exists && !info.suspended)
 		return 1;
 
+	if (exclusive)
+		lv->status |= ACTIVATE_EXCL;
+
 	memlock_inc();
 	r = _lv_activate_lv(lv);
 	memlock_dec();
@@ -741,15 +745,15 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s, int filter)
 }
 
 /* Activate LV */
-int lv_activate(struct cmd_context *cmd, const char *lvid_s)
+int lv_activate(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
-	return _lv_activate(cmd, lvid_s, 0);
+	return _lv_activate(cmd, lvid_s, exclusive, 0);
 }
 
 /* Activate LV only if it passes filter */
-int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s)
+int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exclusive)
 {
-	return _lv_activate(cmd, lvid_s, 1);
+	return _lv_activate(cmd, lvid_s, exclusive, 1);
 }
 
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)

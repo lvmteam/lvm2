@@ -57,6 +57,7 @@
 #define VIRTUAL			0x00010000	/* LV - internal use only */
 #define MIRROR_LOG		0x00020000	/* LV */
 #define MIRROR_IMAGE		0x00040000	/* LV */
+#define ACTIVATE_EXCL		0x00080000	/* LV - internal use only */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */

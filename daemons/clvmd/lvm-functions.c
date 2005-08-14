@@ -173,6 +173,7 @@ static int do_activate_lv(char *resource, int mode)
 	int oldmode;
 	int status;
 	int activate_lv;
+	int exclusive = 0;
 	struct lvinfo lvi;
 
 	/* Is it already open ? */
@@ -189,8 +190,10 @@ static int do_activate_lv(char *resource, int mode)
 		return 0;	/* Success, we did nothing! */
 
 	/* Do we need to activate exclusively? */
-	if (activate_lv == 2)
+	if ((activate_lv == 2) || (mode == LKM_EXMODE)) {
+		exclusive = 1;
 		mode = LKM_EXMODE;
+	}
 
 	/* OK, try to get the lock */
 	status = hold_lock(resource, mode, LKF_NOQUEUE);
@@ -206,7 +209,7 @@ static int do_activate_lv(char *resource, int mode)
 			return EIO;
 
 	/* Now activate it */
-	if (!lv_activate(cmd, resource))
+	if (!lv_activate(cmd, resource, exclusive))
 		return EIO;
 
 	return 0;

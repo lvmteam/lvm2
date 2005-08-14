@@ -1,5 +1,8 @@
 Version 2.01.15 - 
 =================================
+  Prepend 'cluster' activation parameter to mirror log when appropriate.
+  Pass exclusive flag to lv_activate and on to target activation code.
+  Prevent snapshot creation in a clustered VG for now.
   Factor out adjusted_mirror_region_size() and generate_log_name_format().
   Move compose_log_line() into mirror directory.
   Factor out _get_library_path().
