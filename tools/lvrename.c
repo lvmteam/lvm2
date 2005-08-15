@@ -158,18 +158,18 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(lv->vg);
 
-	if (!suspend_lv(cmd, lv->lvid.s)) {
+	if (!suspend_lv(cmd, lv)) {
 		stack;
 		goto error;
 	}
 
 	if (!vg_commit(vg)) {
 		stack;
-		resume_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv);
 		goto error;
 	}
 
-	resume_lv(cmd, lv->lvid.s);
+	resume_lv(cmd, lv);
 
 	unlock_vg(cmd, vg_name);
 

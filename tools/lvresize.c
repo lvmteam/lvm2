@@ -124,7 +124,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	uint32_t extents_used = 0;
 	uint32_t size_rest;
 	alloc_policy_t alloc;
-	char *lock_lvid;
+	struct logical_volume *lock_lv;
 	struct lv_list *lvl;
 	int consistent = 1;
 	struct lv_segment *seg;
@@ -518,11 +518,11 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	/* If snapshot, must suspend all associated devices */
 	if ((snap_seg = find_cow(lv)))
-		lock_lvid = snap_seg->origin->lvid.s;
+		lock_lv = snap_seg->origin;
 	else
-		lock_lvid = lv->lvid.s;
+		lock_lv = lv;
 
-	if (!suspend_lv(cmd, lock_lvid)) {
+	if (!suspend_lv(cmd, lock_lv)) {
 		log_error("Failed to suspend %s", lp->lv_name);
 		vg_revert(vg);
 		return ECMD_FAILED;
@@ -530,11 +530,11 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	if (!vg_commit(vg)) {
 		stack;
-		resume_lv(cmd, lock_lvid);
+		resume_lv(cmd, lock_lv);
 		return ECMD_FAILED;
 	}
 
-	if (!resume_lv(cmd, lock_lvid)) {
+	if (!resume_lv(cmd, lock_lv)) {
 		log_error("Problem reactivating %s", lp->lv_name);
 		return ECMD_FAILED;
 	}

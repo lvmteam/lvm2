@@ -52,19 +52,19 @@ static int lvchange_permission(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!suspend_lv(cmd, lv->lvid.s)) {
+	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
 		return 0;
 	}
 
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv);
 		return 0;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!resume_lv(cmd, lv->lvid.s)) {
+	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
 		return 0;
 	}
@@ -83,13 +83,13 @@ static int lvchange_availability(struct cmd_context *cmd,
 	if (activate == CHANGE_ALN) {
 		log_verbose("Deactivating logical volume \"%s\" locally",
 			    lv->name);
-		if (!deactivate_lv_local(cmd, lv->lvid.s)) {
+		if (!deactivate_lv_local(cmd, lv)) {
 			stack;
 			return 0;
 		}
 	} else if (activate == CHANGE_AN) {
 		log_verbose("Deactivating logical volume \"%s\"", lv->name);
-		if (!deactivate_lv(cmd, lv->lvid.s)) {
+		if (!deactivate_lv(cmd, lv)) {
 			stack;
 			return 0;
 		}
@@ -103,21 +103,21 @@ static int lvchange_availability(struct cmd_context *cmd,
 		if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
 			log_verbose("Activating logical volume \"%s\" "
 				    "exclusively", lv->name);
-			if (!activate_lv_excl(cmd, lv->lvid.s)) {
+			if (!activate_lv_excl(cmd, lv)) {
 				stack;
 				return 0;
 			}
 		} else if (activate == CHANGE_ALY) {
 			log_verbose("Activating logical volume \"%s\" locally",
 				    lv->name);
-			if (!activate_lv_local(cmd, lv->lvid.s)) {
+			if (!activate_lv_local(cmd, lv)) {
 				stack;
 				return 0;
 			}
 		} else {
 			log_verbose("Activating logical volume \"%s\"",
 				    lv->name);
-			if (!activate_lv(cmd, lv->lvid.s)) {
+			if (!activate_lv(cmd, lv)) {
 				stack;
 				return 0;
 			}
@@ -137,7 +137,7 @@ static int lvchange_availability(struct cmd_context *cmd,
 static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	log_verbose("Refreshing logical volume \"%s\" (if active)", lv->name);
-	if (!suspend_lv(cmd, lv->lvid.s) || !resume_lv(cmd, lv->lvid.s))
+	if (!suspend_lv(cmd, lv) || !resume_lv(cmd, lv))
 		return 0;
 
 	return 1;
@@ -216,19 +216,19 @@ static int lvchange_readahead(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!suspend_lv(cmd, lv->lvid.s)) {
+	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
 		return 0;
 	}
 
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv);
 		return 0;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!resume_lv(cmd, lv->lvid.s)) {
+	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
 		return 0;
 	}
@@ -274,7 +274,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			active = 1;
 		}
 		log_verbose("Ensuring %s is inactive.", lv->name);
-		if (!deactivate_lv(cmd, lv->lvid.s)) {
+		if (!deactivate_lv(cmd, lv)) {
 			log_error("%s: deactivation failed", lv->name);
 			return 0;
 		}
@@ -286,7 +286,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		if (active) {
 			log_verbose("Re-activating logical volume \"%s\"",
 				    lv->name);
-			if (!activate_lv(cmd, lv->lvid.s)) {
+			if (!activate_lv(cmd, lv)) {
 				log_error("%s: reactivation failed", lv->name);
 				return 0;
 			}
@@ -301,19 +301,19 @@ static int lvchange_persistent(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!suspend_lv(cmd, lv->lvid.s)) {
+	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
 		return 0;
 	}
 
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv);
 		return 0;
 	}
 
 	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!resume_lv(cmd, lv->lvid.s)) {
+	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
 		return 0;
 	}

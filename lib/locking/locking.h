@@ -81,16 +81,16 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
 
-#define resume_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_RESUME)
-#define suspend_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_SUSPEND | LCK_HOLD)
-#define deactivate_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_DEACTIVATE)
-#define activate_lv(cmd, vol)	lock_vol(cmd, vol, LCK_LV_ACTIVATE | LCK_HOLD)
-#define activate_lv_excl(cmd, vol)	\
-				lock_vol(cmd, vol, LCK_LV_EXCLUSIVE | LCK_HOLD)
-#define activate_lv_local(cmd, vol)	\
-	lock_vol(cmd, vol, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
-#define deactivate_lv_local(cmd, vol)	\
-	lock_vol(cmd, vol, LCK_LV_DEACTIVATE | LCK_LOCAL)
+#define resume_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_RESUME)
+#define suspend_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)
+#define deactivate_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_DEACTIVATE)
+#define activate_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_ACTIVATE | LCK_HOLD)
+#define activate_lv_excl(cmd, lv)	\
+				lock_vol(cmd, (lv)->lvid.s, LCK_LV_EXCLUSIVE | LCK_HOLD)
+#define activate_lv_local(cmd, lv)	\
+	lock_vol(cmd, (lv)->lvid.s, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
+#define deactivate_lv_local(cmd, lv)	\
+	lock_vol(cmd, (lv)->lvid.s, LCK_LV_DEACTIVATE | LCK_LOCAL)
 
 /* Process list of LVs */
 int suspend_lvs(struct cmd_context *cmd, struct list *lvs);

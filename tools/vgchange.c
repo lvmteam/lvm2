@@ -37,18 +37,18 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			continue;
 
 		if (activate == CHANGE_AN) {
-			if (!deactivate_lv(cmd, lv->lvid.s))
+			if (!deactivate_lv(cmd, lv))
 				continue;
 		} else if (activate == CHANGE_ALN) {
-			if (!deactivate_lv_local(cmd, lv->lvid.s))
+			if (!deactivate_lv_local(cmd, lv))
 				continue;
 		} else if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
-			if (!activate_lv_excl(cmd, lv->lvid.s))
+			if (!activate_lv_excl(cmd, lv))
 				continue;
 		} else if (activate == CHANGE_ALY) {
-			if (!activate_lv_local(cmd, lv->lvid.s))
+			if (!activate_lv_local(cmd, lv))
 				continue;
-		} else if (!activate_lv(cmd, lv->lvid.s))
+		} else if (!activate_lv(cmd, lv))
 			continue;
 
 		if ((lv->status & PVMOVE) &&

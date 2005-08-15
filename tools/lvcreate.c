@@ -623,7 +623,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			goto error;
 		}
 
-		if (!activate_lv(cmd, log_lv->lvid.s)) {
+		if (!activate_lv(cmd, log_lv)) {
 			log_error("Aborting. Failed to activate mirror log. "
 				  "Remove new LVs and retry.");
 			goto error;
@@ -635,7 +635,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			goto error;
 		}
 
-		if (!deactivate_lv(cmd, log_lv->lvid.s)) {
+		if (!deactivate_lv(cmd, log_lv)) {
 			log_error("Aborting. Failed to deactivate mirror log. "
 				  "Remove new LV and retry.");
 			goto error;
@@ -711,7 +711,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!activate_lv(cmd, lv->lvid.s)) {
+	if (!activate_lv(cmd, lv)) {
 		if (lp->snapshot)
 			/* FIXME Remove the failed lv we just added */
 			log_error("Aborting. Failed to activate snapshot "
@@ -737,13 +737,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
-		if (!deactivate_lv(cmd, lv->lvid.s)) {
+		if (!deactivate_lv(cmd, lv)) {
 			log_err("Couldn't deactivate new snapshot.");
 			return 0;
 		}
 
 		/* FIXME write/commit/backup sequence issue */
-		if (!suspend_lv(cmd, org->lvid.s)) {
+		if (!suspend_lv(cmd, org)) {
 			log_error("Failed to suspend origin %s", org->name);
 			return 0;
 		}
@@ -758,7 +758,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		if (!vg_write(vg) || !vg_commit(vg))
 			return 0;
 
-		if (!resume_lv(cmd, org->lvid.s)) {
+		if (!resume_lv(cmd, org)) {
 			log_error("Problem reactivating origin %s", org->name);
 			return 0;
 		}
