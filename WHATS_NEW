@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Move lvconvert parameters into struct lvconvert_params.
   Add clustered VG flag to LV lock requests.
   Change LV locking macros to take lv instead of lvid.
   Prepend 'cluster' activation parameter to mirror log when appropriate.
