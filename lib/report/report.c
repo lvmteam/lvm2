@@ -432,7 +432,7 @@ static int _vgstatus_disp(struct report_handle *rh, struct field *field,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	char *repstr;
 
-	if (!(repstr = pool_zalloc(rh->mem, 6))) {
+	if (!(repstr = pool_zalloc(rh->mem, 7))) {
 		log_error("pool_alloc failed");
 		return 0;
 	}
@@ -458,6 +458,11 @@ static int _vgstatus_disp(struct report_handle *rh, struct field *field,
 		repstr[3] = '-';
 
 	repstr[4] = _alloc_policy_char(vg->alloc);
+
+	if (vg->status & CLUSTERED)
+		repstr[5] = 'c';
+	else
+		repstr[5] = '-';
 
 	field->report_string = repstr;
 	field->sort_value = (const void *) field->report_string;
