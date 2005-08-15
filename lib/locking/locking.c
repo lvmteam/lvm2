@@ -268,7 +268,7 @@ int resume_lvs(struct cmd_context *cmd, struct list *lvs)
 	struct lv_list *lvl;
 
 	list_iterate_items(lvl, lvs)
-		resume_lv(cmd, lvl->lv->lvid.s);
+		resume_lv(cmd, lvl->lv);
 
 	return 1;
 }
@@ -280,11 +280,11 @@ int suspend_lvs(struct cmd_context *cmd, struct list *lvs)
 	struct lv_list *lvl;
 
 	list_iterate_items(lvl, lvs) {
-		if (!suspend_lv(cmd, lvl->lv->lvid.s)) {
+		if (!suspend_lv(cmd, lvl->lv)) {
 			log_error("Failed to suspend %s", lvl->lv->name);
 			list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = list_item(lvh, struct lv_list);
-				resume_lv(cmd, lvl->lv->lvid.s);
+				resume_lv(cmd, lvl->lv);
 			}
 
 			return 0;
@@ -301,11 +301,11 @@ int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs)
 	struct lv_list *lvl;
 
 	list_iterate_items(lvl, lvs) {
-		if (!activate_lv_excl(cmd, lvl->lv->lvid.s)) {
+		if (!activate_lv_excl(cmd, lvl->lv)) {
 			log_error("Failed to activate %s", lvl->lv->name);
 			list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = list_item(lvh, struct lv_list);
-				activate_lv(cmd, lvl->lv->lvid.s);
+				activate_lv(cmd, lvl->lv);
 			}
 
 			return 0;

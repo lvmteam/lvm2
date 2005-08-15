@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Change LV locking macros to take lv instead of lvid.
   Prepend 'cluster' activation parameter to mirror log when appropriate.
   Pass exclusive flag to lv_activate and on to target activation code.
   Prevent snapshot creation in a clustered VG for now.

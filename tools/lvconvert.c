@@ -93,20 +93,20 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 	backup(lv->vg);
 
-	if (!suspend_lv(cmd, lv->lvid.s)) {
+	if (!suspend_lv(cmd, lv)) {
 		log_error("Failed to lock %s", lv->name);
 		vg_revert(lv->vg);
 		return 0;
 	}
 
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv->lvid.s);
+		resume_lv(cmd, lv);
 		return 0;
 	}
 
 	log_very_verbose("Updating \"%s\" in kernel", lv->name);
 
-	if (!resume_lv(cmd, lv->lvid.s)) {
+	if (!resume_lv(cmd, lv)) {
 		log_error("Problem reactivating %s", lv->name);
 		return 0;
 	}
