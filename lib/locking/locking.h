@@ -65,6 +65,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_NONBLOCK	0x00000010	/* Don't block waiting for lock? */
 #define LCK_HOLD	0x00000020	/* Hold lock when lock_vol returns? */
 #define LCK_LOCAL	0x00000040	/* Don't propagate to other nodes */
+#define LCK_CLUSTER_VG	0x00000080	/* VG is clustered */
 
 /*
  * Common combinations
@@ -79,22 +80,27 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_LV_ACTIVATE		(LCK_LV | LCK_READ | LCK_NONBLOCK)
 #define LCK_LV_DEACTIVATE	(LCK_LV | LCK_NULL | LCK_NONBLOCK)
 
+#define LCK_LV_CLUSTERED(lv)	\
+	(((lv)->vg->status & CLUSTERED) ? LCK_CLUSTER_VG : 0)
+
+#define lock_lv_vol(cmd, lv, flags)	\
+	lock_vol(cmd, (lv)->lvid.s, flags | LCK_LV_CLUSTERED(lv))
+
 #define unlock_vg(cmd, vol)	lock_vol(cmd, vol, LCK_VG_UNLOCK)
 
-#define resume_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_RESUME)
-#define suspend_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_SUSPEND | LCK_HOLD)
-#define deactivate_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_DEACTIVATE)
-#define activate_lv(cmd, lv)	lock_vol(cmd, (lv)->lvid.s, LCK_LV_ACTIVATE | LCK_HOLD)
+#define resume_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_RESUME)
+#define suspend_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_SUSPEND | LCK_HOLD)
+#define deactivate_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE)
+#define activate_lv(cmd, lv)	lock_lv_vol(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD)
 #define activate_lv_excl(cmd, lv)	\
-				lock_vol(cmd, (lv)->lvid.s, LCK_LV_EXCLUSIVE | LCK_HOLD)
+				lock_lv_vol(cmd, lv, LCK_LV_EXCLUSIVE | LCK_HOLD)
 #define activate_lv_local(cmd, lv)	\
-	lock_vol(cmd, (lv)->lvid.s, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
+	lock_lv_vol(cmd, lv, LCK_LV_ACTIVATE | LCK_HOLD | LCK_LOCAL)
 #define deactivate_lv_local(cmd, lv)	\
-	lock_vol(cmd, (lv)->lvid.s, LCK_LV_DEACTIVATE | LCK_LOCAL)
+	lock_lv_vol(cmd, lv, LCK_LV_DEACTIVATE | LCK_LOCAL)
 
 /* Process list of LVs */
 int suspend_lvs(struct cmd_context *cmd, struct list *lvs);
 int resume_lvs(struct cmd_context *cmd, struct list *lvs);
 int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs);
-
 
