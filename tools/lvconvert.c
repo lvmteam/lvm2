@@ -15,24 +15,56 @@
 #include "tools.h"
 
 struct lvconvert_params {
+	const char *lv_name;
+	uint32_t mirrors;
+
+	alloc_policy_t alloc;
+
+	int pv_count;
+	char **pvs;
 	struct list *pvh;
 };
 
+static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
+			int argc, char **argv)
+{
+	memset(lp, 0, sizeof(*lp));
+
+	lp->alloc = ALLOC_INHERIT;
+	if (arg_count(cmd, alloc_ARG))
+		lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG,
+							    lp->alloc);
+
+	if (!arg_count(cmd, mirrors_ARG)) {
+		log_error("--mirrors argument required");
+		return 0;
+	}
+
+	lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
+
+	if (!argc) {
+		log_error("Please give logical volume path");
+		return 0;
+	}
+
+	lp->lv_name = argv[0];
+	argv++, argc--;
+
+	lp->pv_count = argc;
+	lp->pvs = argv;
+
+	return 1;
+}
+
 static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * lv,
-			     struct list *allocatable_pvs)
+			     struct lvconvert_params *lp)
 {
 	struct lv_segment *first_seg;
-	uint32_t mirrors, existing_mirrors;
-	alloc_policy_t alloc = ALLOC_INHERIT;
+	uint32_t existing_mirrors;
 	// struct alloc_handle *ah = NULL;
 	// struct logical_volume *log_lv;
 
-	if (arg_count(cmd, alloc_ARG))
-		alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, alloc);
-
-	mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
-
-	if ((mirrors == 1)) {
+	if ((lp->mirrors == 1)) {
 		if (!(lv->status & MIRRORED)) {
 			log_error("Logical volume %s is already not mirrored.",
 				  lv->name);
@@ -53,13 +85,13 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			list_iterate_items(first_seg, &lv->segments)
 				break;
 			existing_mirrors = first_seg->area_count;
-			if (mirrors == existing_mirrors) {
+			if (lp->mirrors == existing_mirrors) {
 				log_error("Logical volume %s already has %"
 					  PRIu32 " mirror(s).", lv->name,
-					  mirrors - 1);
+					  lp->mirrors - 1);
 				return 1;
 			}
-			if (mirrors > existing_mirrors) {
+			if (lp->mirrors > existing_mirrors) {
 				/* FIXME Unless anywhere, remove PV of log_lv 
 				 * from allocatable_pvs & allocate 
 				 * (mirrors - existing_mirrors) new areas
@@ -69,7 +101,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					  "supported yet.");
 				return 0;
 			} else {
-				if (!remove_mirror_images(first_seg, mirrors)) {
+				if (!remove_mirror_images(first_seg, lp->mirrors)) {
 					stack;
 					return 0;
 				}
@@ -116,8 +148,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	return 1;
 }
 
-static int lvconvert_single(struct cmd_context * cmd, struct logical_volume * lv,
-			     int argc, char **argv, void *handle)
+static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
+			    void *handle)
 {
 	struct lvconvert_params *lp = handle;
 
@@ -146,7 +178,7 @@ static int lvconvert_single(struct cmd_context * cmd, struct logical_volume * lv
 	if (arg_count(cmd, mirrors_ARG)) {
 		if (!archive(lv->vg))
 			return ECMD_FAILED;
-		if (!lvconvert_mirrors(cmd, lv, lp->pvh))
+		if (!lvconvert_mirrors(cmd, lv, lp))
 			return ECMD_FAILED;
 	}
 
@@ -155,7 +187,7 @@ static int lvconvert_single(struct cmd_context * cmd, struct logical_volume * lv
 
 int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 {
-	const char *vg_name, *lv_name;
+	const char *vg_name;
 	char *st;
 	int consistent = 1;
 	struct volume_group *vg;
@@ -163,28 +195,20 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	struct lvconvert_params lp;
 	int ret = ECMD_FAILED;
 
-	if (!arg_count(cmd, mirrors_ARG)) {
-		log_error("--mirrors argument required");
+	if (!_read_params(&lp, cmd, argc, argv)) {
+		stack;
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!argc) {
-		log_error("Please give logical volume path(s)");
-		return EINVALID_CMD_LINE;
-	}
-
-	lv_name = argv[0];
-	argv++, argc--;
-
-	vg_name = extract_vgname(cmd, lv_name);
+	vg_name = extract_vgname(cmd, lp.lv_name);
 
 	if (!validate_name(vg_name)) {
 		log_error("Please provide a valid volume group name");
 		return EINVALID_CMD_LINE;
 	}
 
-	if ((st = strrchr(lv_name, '/')))
-		lv_name = st + 1;
+	if ((st = strrchr(lp.lv_name, '/')))
+		lp.lv_name = st + 1;
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
 
@@ -208,21 +232,22 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		goto error;
 	}
 
-	if (!(lvl = find_lv_in_vg(vg, lv_name))) {
+	if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
 		log_error("Logical volume \"%s\" not found in "
-			  "volume group \"%s\"", lv_name, vg_name);
+			  "volume group \"%s\"", lp.lv_name, vg_name);
 		goto error;
 	}
 
-	if (argc) {
-		if (!(lp.pvh = create_pv_list(cmd->mem, vg, argc, argv, 1))) {
+	if (lp.pv_count) {
+		if (!(lp.pvh = create_pv_list(cmd->mem, vg, lp.pv_count,
+					      lp.pvs, 1))) {
 			stack;
 			goto error;
 		}
 	} else
 		lp.pvh = &vg->pvs;
 
-	ret = lvconvert_single(cmd, lvl->lv, argc, argv, &lp);
+	ret = lvconvert_single(cmd, lvl->lv, &lp);
 
 error:
 	unlock_vg(cmd, vg_name);
