@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Tidy lvmconf.sh.
   Add format1 dev_write debug messages.
   Add clustered VG attribute to report.
   Move lvconvert parameters into struct lvconvert_params.
