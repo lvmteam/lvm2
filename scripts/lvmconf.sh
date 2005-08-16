@@ -1,8 +1,19 @@
 #!/bin/sh
 #
+# Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
+#
+# This file is part of the lvm2-cluster package.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions
+# of the GNU General Public License v.2.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#
 # Edit an lvm.conf file to adjust various properties
-#
-#
 #
 
 function usage
@@ -138,7 +149,7 @@ then
     if [ "$have_global" = "1" ] 
 	then
 	echo "global keys but no 'global {' found, can't edit file"
-	exit 12
+	exit 13
     fi
 fi
 
@@ -161,7 +172,7 @@ EOF
     if [ $? != 0 ]
     then
 	echo "failed to create temporary config file, $CONFIGFILE not updated"
-	exit 1
+	exit 14
     fi
 else
     #
@@ -208,7 +219,7 @@ else
     if [ $? != 0 ]
     then
 	echo "sed failed, $CONFIGFILE not updated"
-	exit 1
+	exit 15
     fi
 fi
 
