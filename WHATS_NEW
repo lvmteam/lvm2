@@ -11,6 +11,7 @@ Version 2.01.15 -
   Move compose_log_line() into mirror directory.
   Factor out _get_library_path().
   Don't kill idling clvmd threads.
+  clvmd no longer takes out locks for non-clustered LVs.
   Recognise ATA over Ethernet (aoe) devices.
 
 Version 2.01.14 - 4th August 2005

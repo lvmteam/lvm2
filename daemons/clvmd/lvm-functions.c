@@ -168,7 +168,7 @@ int hold_unlock(char *resource)
 */
 
 /* Activate LV exclusive or non-exclusive */
-static int do_activate_lv(char *resource, int mode)
+static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 {
 	int oldmode;
 	int status;
@@ -195,10 +195,12 @@ static int do_activate_lv(char *resource, int mode)
 		mode = LKM_EXMODE;
 	}
 
-	/* OK, try to get the lock */
-	status = hold_lock(resource, mode, LKF_NOQUEUE);
-	if (status)
-		return errno;
+	/* Try to get the lock if it's a clustered volume group */
+	if (lock_flags & LCK_CLUSTER_VG) {
+		status = hold_lock(resource, mode, LKF_NOQUEUE);
+		if (status)
+			return errno;
+	}
 
 	/* If it's suspended then resume it */
 	if (!lv_info_by_lvid(cmd, resource, &lvi, 0))
@@ -258,14 +260,14 @@ static int do_suspend_lv(char *resource)
 	return 0;
 }
 
-static int do_deactivate_lv(char *resource)
+static int do_deactivate_lv(char *resource, unsigned char lock_flags)
 {
 	int oldmode;
 	int status;
 
 	/* Is it open ? */
 	oldmode = get_current_lock(resource);
-	if (oldmode == -1) {
+	if (oldmode == -1 && (lock_flags & LCK_CLUSTER_VG)) {
 		DEBUGLOG("do_deactivate_lock, lock not already held\n");
 		return 0;	/* We don't need to do anything */
 	}
@@ -273,9 +275,11 @@ static int do_deactivate_lv(char *resource)
 	if (!lv_deactivate(cmd, resource))
 		return EIO;
 
-	status = hold_unlock(resource);
-	if (status)
-		return errno;
+	if (lock_flags & LCK_CLUSTER_VG) {
+		status = hold_unlock(resource);
+		if (status)
+			return errno;
+	}
 
 	return 0;
 }
@@ -286,7 +290,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 {
 	int status = 0;
 
-	DEBUGLOG("do_lock_lv: resource '%s', cmd = 0x%x, flags = %d\n",
+	DEBUGLOG("do_lock_lv: resource '%s', cmd = 0x%x, flags = %x\n",
 		 resource, command, lock_flags);
 
 	if (!cmd->config_valid || config_files_changed(cmd)) {
@@ -299,7 +303,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	switch (command) {
 	case LCK_LV_EXCLUSIVE:
-		status = do_activate_lv(resource, LKM_EXMODE);
+		status = do_activate_lv(resource, lock_flags, LKM_EXMODE);
 		break;
 
 	case LCK_LV_SUSPEND:
@@ -312,11 +316,11 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		break;
 
 	case LCK_LV_ACTIVATE:
-		status = do_activate_lv(resource, LKM_CRMODE);
+		status = do_activate_lv(resource, lock_flags, LKM_CRMODE);
 		break;
 
 	case LCK_LV_DEACTIVATE:
-		status = do_deactivate_lv(resource);
+		status = do_deactivate_lv(resource, lock_flags);
 		break;
 
 	default:
@@ -436,23 +440,24 @@ static void drop_vg_locks()
  */
 static void *get_initial_state()
 {
-	char lv[64], vg[64], flags[25];
+	char lv[64], vg[64], flags[25], vg_flags[25];
 	char uuid[65];
 	char line[255];
 	FILE *lvs =
 	    popen
-	    ("lvm lvs --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr",
+	    ("lvm lvs --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
 	     "r");
 
 	if (!lvs)
 		return NULL;
 
 	while (fgets(line, sizeof(line), lvs)) {
-	        if (sscanf(line, "%s %s %s\n", vg, lv, flags) == 3) {
+	        if (sscanf(line, "%s %s %s %s\n", vg, lv, flags, vg_flags) == 4) {
 
 			/* States: s:suspended a:active S:dropped snapshot I:invalid snapshot */
 		        if (strlen(vg) == 38 &&                         /* is is a valid UUID ? */
-			    (flags[4] == 'a' || flags[4] == 's')) {	/* is it active or suspended? */
+			    (flags[4] == 'a' || flags[4] == 's') &&	/* is it active or suspended? */
+			    vg_flags[5] == 'c') {			/* is it clustered ? */
 				/* Convert hyphen-separated UUIDs into one */
 				memcpy(&uuid[0], &vg[0], 6);
 				memcpy(&uuid[6], &vg[7], 4);

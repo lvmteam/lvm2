@@ -109,7 +109,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	case CLVMD_CMD_LOCK_LV:
 		/* This is the biggie */
-		lock_cmd = args[0];
+		lock_cmd = args[0] & 0x3F;
 		lock_flags = args[1];
 		lockname = &args[2];
 		status = do_lock_lv(lock_cmd, lock_flags, lockname);
@@ -161,7 +161,7 @@ static int lock_vg(struct local_client *client)
 	client->bits.localsock.private = (void *)lock_hash;
     }
 
-    lock_cmd = args[0];
+    lock_cmd = args[0] & 0x3F;
     lock_flags = args[1];
     lockname = &args[2];
     DEBUGLOG("doing PRE command LOCK_VG '%s' at %x (client=%p)\n", lockname, lock_cmd, client);
