@@ -327,8 +327,8 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	args = alloca(len);
 	strcpy(args + 2, name);
 
-	args[0] = flags & 0xBF; /* Maskoff LOCAL flag */
-	args[1] = 0;		/* Not used now */
+	args[0] = flags & 0x7F; /* Maskoff lock flags */
+	args[1] = flags & 0xC0; /* Bitmap flags */
 
 	/*
 	 * VG locks are just that: locks, and have no side effects
@@ -339,7 +339,8 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	 */
 	if (cmd == CLVMD_CMD_LOCK_VG ||
 	    (flags & LCK_TYPE_MASK) == LCK_EXCL ||
-	    (flags & LCK_LOCAL))
+	    (flags & LCK_LOCAL) ||
+	    !(flags & LCK_CLUSTER_VG))
 		node = ".";
 
 	status = _cluster_request(cmd, node, args, len,
