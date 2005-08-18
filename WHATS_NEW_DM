@@ -1,5 +1,6 @@
-Version 1.01.05
+Version 1.01.05 -
 =============================
+  Fix termination of getopt_long() option array.
   Report 'buffer full' condition with v4 ioctl as well as with v1.
 
 Version 1.01.04 - 2 Aug 2005

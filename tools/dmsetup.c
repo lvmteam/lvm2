@@ -1041,7 +1041,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"uuid", 1, &ind, UUID_ARG},
 		{"verbose", 1, &ind, VERBOSE_ARG},
 		{"version", 0, &ind, VERSION_ARG},
-		{"", 0, NULL, 0}
+		{0, 0, 0, 0}
 	};
 #else
 	struct option long_options;
