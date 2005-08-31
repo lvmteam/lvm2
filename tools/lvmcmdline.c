@@ -350,21 +350,30 @@ int segtype_arg(struct cmd_context *cmd, struct arg *a)
 
 char yes_no_prompt(const char *prompt, ...)
 {
-	int c = 0;
+	int c = 0, ret = 0;
 	va_list ap;
 
-	while (c != 'y' && c != 'n') {
-		if (c == '\n' || c == 0) {
+	do {
+		if (c == '\n' || !c) {
 			va_start(ap, prompt);
 			vprintf(prompt, ap);
 			va_end(ap);
 		}
-		c = tolower(getchar());
-	}
 
-	while (getchar() != '\n') ;
+		if ((c = getchar()) == EOF) {
+			ret = 'n';
+			break;
+		}
 
-	return c;
+		c = tolower(c);
+		if ((c == 'y') || (c == 'n'))
+			ret = c;
+	} while (!ret || c != '\n');
+
+	if (c != '\n')
+		printf("\n");
+
+	return ret;
 }
 
 static void __alloc(int size)

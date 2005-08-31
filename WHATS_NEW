@@ -1,5 +1,7 @@
 Version 2.01.15 - 
 =================================
+  Fix yes_no_prompt() error handling.
+  Add lvm.conf comment warning against multiple filter lines.
   Tidy lvmconf.sh.
   Add format1 dev_write debug messages.
   Add clustered VG attribute to report.
