@@ -666,7 +666,7 @@ static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 	}
 
-	if (fsync(fd)) {
+	if (fsync(fd) && (errno != EROFS) && (errno != EINVAL)) {
 		log_sys_error("fsync", tc->path_edit);
 		fclose(fp);
 		return 0;
