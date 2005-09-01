@@ -236,7 +236,7 @@ void sync_dir(const char *file)
 		goto out;
 	}
 
-	if (fsync(fd) == -1)
+	if (fsync(fd) && (errno != EROFS) && (errno != EINVAL))
 		log_sys_error("fsync", dir);
 
 	close(fd);
