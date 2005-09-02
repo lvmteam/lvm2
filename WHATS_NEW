@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Don't assume exactly two mirrors when parsing mirror status.
   Suppress fsync() error message on filesystems that don't support it.
   Fix yes_no_prompt() error handling.
   Add lvm.conf comment warning against multiple filter lines.

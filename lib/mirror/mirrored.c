@@ -279,18 +279,41 @@ static int _target_percent(void **target_state, struct pool *mem,
 {
 	struct mirror_state *mirr_state;
 	uint64_t numerator, denominator;
+	unsigned mirror_count, m;
+	int used;
+	char *pos = params;
 
 	if (!*target_state)
 		*target_state = _init_target(mem, cft);
 
 	mirr_state = *target_state;
 
+	/* Status line: <#mirrors> (maj:min)+ <synced>/<total_regions> */
 	log_debug("Mirror status: %s", params);
-	if (sscanf(params, "%*d %*x:%*x %*x:%*x %" PRIu64
-		   "/%" PRIu64, &numerator, &denominator) != 2) {
-		log_error("Failure parsing mirror status: %s", params);
+
+	if (sscanf(pos, "%u %n", mirror_count, used) != 1) {
+		log_error("Failure parsing mirror status mirror count: %s",
+			  params);
 		return 0;
 	}
+	pos += used;
+
+	for (m = 0; m < mirror_count; m++) {
+		if (sscanf(pos, "%*x:%*x %n", &used) != 0) {
+			log_error("Failure parsing mirror status devices: %s",
+				  params);
+			return 0;
+		}
+		pos += used;
+	}
+
+	if (sscanf(pos, "%" PRIu64 "/%" PRIu64 "%n", &numerator, &denominator,
+		   &used) != 2) {
+		log_error("Failure parsing mirror status fraction: %s", params);
+		return 0;
+	}
+	pos += used;
+
 	*total_numerator += numerator;
 	*total_denominator += denominator;
 
