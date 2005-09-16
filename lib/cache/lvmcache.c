@@ -506,6 +506,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 					  "%s", pvid, dev_name(dev),
 					  dev_name(existing->dev));
 		}
+		/* Switch over to new preferred device */
+		existing->dev = dev;
 		info = existing;
 		/* Has labeller changed? */
 		if (info->label->labeller != labeller) {
