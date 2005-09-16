@@ -23,12 +23,21 @@ bitset_t bitset_create(struct pool *mem, unsigned num_bits)
 {
 	unsigned n = (num_bits / BITS_PER_INT) + 2;
 	size_t size = sizeof(int) * n;
-	unsigned *bs = pool_zalloc(mem, size);
+	bitset_t bs;
+	
+	if (mem)
+		bs = pool_zalloc(mem, size);
+	else
+		bs = dbg_malloc(size);
 
 	if (!bs)
 		return NULL;
 
 	*bs = num_bits;
+
+	if (!mem)
+		bit_clear_all(bs);
+
 	return bs;
 }
 
