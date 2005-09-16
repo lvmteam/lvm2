@@ -1,5 +1,8 @@
 Version 2.01.15 - 
 =================================
+  Add is_dm_major() for use in duplicate device detection in lvmcache_add().
+  Really switch device number in lvmcache when it says it is doing so.
+  Option for bitset memory allocation using malloc as well as pool.
   Don't assume exactly two mirrors when parsing mirror status.
   Suppress fsync() error message on filesystems that don't support it.
   Fix yes_no_prompt() error handling.
