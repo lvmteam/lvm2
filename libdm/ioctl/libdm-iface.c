@@ -1026,7 +1026,7 @@ static void *_add_target(struct target *t, void *out, void *end)
 	return out;
 }
 
-static struct dm_ioctl *_flatten(struct dm_task *dmt)
+static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 {
 	const size_t min_size = 16 * 1024;
 	const int (*version)[3];
@@ -1076,6 +1076,10 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt)
 	 */
 	if (len < min_size)
 		len = min_size;
+
+	/* Increase buffer size if repeating because buffer was too small */
+	while (repeat_count--)
+		len *= 2;
 
 	if (!(dmi = malloc(len)))
 		return NULL;
@@ -1276,40 +1280,14 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	return r;
 }
 
-int dm_task_run(struct dm_task *dmt)
+static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned repeat_count)
 {
-	struct dm_ioctl *dmi = NULL;
-	unsigned int command;
+	struct dm_ioctl *dmi;
 
-#ifdef DM_COMPAT
-	if (_dm_version == 1)
-		return _dm_task_run_v1(dmt);
-#endif
-
-	if ((unsigned) dmt->type >=
-	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
-		log_error("Internal error: unknown device-mapper task %d",
-			  dmt->type);
-		goto bad;
-	}
-
-	command = _cmd_data_v4[dmt->type].cmd;
-
-	/* Old-style creation had a table supplied */
-	if (dmt->type == DM_DEVICE_CREATE && dmt->head)
-		return _create_and_load_v4(dmt);
-
-	if (dmt->type == DM_DEVICE_MKNODES && !dmt->dev_name &&
-	    !dmt->uuid && dmt->major <= 0)
-		return _mknodes_v4(dmt);
-
-	if (!_open_control())
-		return 0;
-
-	dmi = _flatten(dmt);
+	dmi = _flatten(dmt, repeat_count);
 	if (!dmi) {
 		log_error("Couldn't create ioctl argument");
-		return 0;
+		return NULL;
 	}
 
 	if (dmt->type == DM_DEVICE_TABLE)
@@ -1338,15 +1316,65 @@ int dm_task_run(struct dm_task *dmt)
 				log_error("device-mapper ioctl "
 					  "cmd %d failed: %s",
 					  _IOC_NR(command), strerror(errno));
-			goto bad;
+			free(dmi);
+			return NULL;
 		}
 	}
 #else /* Userspace alternative for testing */
 #endif
+	return dmi;
+}
 
-	if (dmi->flags & DM_BUFFER_FULL_FLAG)
-		/* FIXME Increase buffer size and retry operation (if query) */
-		log_error("Warning: libdevmapper buffer too small for data");
+int dm_task_run(struct dm_task *dmt)
+{
+	struct dm_ioctl *dmi;
+	unsigned command;
+	unsigned repeat_count = 0;
+
+#ifdef DM_COMPAT
+	if (_dm_version == 1)
+		return _dm_task_run_v1(dmt);
+#endif
+
+	if ((unsigned) dmt->type >=
+	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
+		log_error("Internal error: unknown device-mapper task %d",
+			  dmt->type);
+		return 0;
+	}
+
+	command = _cmd_data_v4[dmt->type].cmd;
+
+	/* Old-style creation had a table supplied */
+	if (dmt->type == DM_DEVICE_CREATE && dmt->head)
+		return _create_and_load_v4(dmt);
+
+	if (dmt->type == DM_DEVICE_MKNODES && !dmt->dev_name &&
+	    !dmt->uuid && dmt->major <= 0)
+		return _mknodes_v4(dmt);
+
+	if (!_open_control())
+		return 0;
+
+repeat_ioctl:
+	if (!(dmi = _do_dm_ioctl(dmt, repeat_count)))
+		return 0;
+
+	if (dmi->flags & DM_BUFFER_FULL_FLAG) {
+		switch (dmt->type) {
+		case DM_DEVICE_LIST_VERSIONS:
+		case DM_DEVICE_LIST:
+		case DM_DEVICE_DEPS:
+		case DM_DEVICE_STATUS:
+		case DM_DEVICE_TABLE:
+		case DM_DEVICE_WAITEVENT:
+			repeat_count++;
+			free(dmi);
+			goto repeat_ioctl;
+		default:
+			log_error("Warning: libdevmapper buffer too small for data");
+		}
+	}
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
