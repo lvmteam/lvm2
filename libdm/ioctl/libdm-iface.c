@@ -63,6 +63,7 @@ static int _log_suppress = 0;
 static int _control_fd = -1;
 static int _version_checked = 0;
 static int _version_ok = 1;
+static unsigned _ioctl_buffer_double_factor = 0;
 
 /*
  * Support both old and new major numbers to ease the transition.
@@ -610,8 +611,10 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	if (dmt->type == DM_DEVICE_TABLE)
 		dmi->flags |= DM_STATUS_TABLE_FLAG;
 
-	log_debug("dm %s %s %s %s", _cmd_data_v1[dmt->type].name, dmi->name,
-		  dmi->uuid, dmt->newname ? dmt->newname : "");
+	log_debug("dm %s %s %s%s%s [%u]", _cmd_data_v1[dmt->type].name,
+		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
+		  dmt->newname ? dmt->newname : "",
+		  dmi->data_size);
 	if (dmt->type == DM_DEVICE_LIST) {
 		if (!_dm_names_v1(dmi))
 			goto bad;
@@ -1280,7 +1283,8 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	return r;
 }
 
-static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned repeat_count)
+static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
+				     unsigned repeat_count)
 {
 	struct dm_ioctl *dmi;
 
@@ -1298,10 +1302,13 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned repeat_count)
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
-	log_debug("dm %s %s %s %s%c %.0llu %s", _cmd_data_v4[dmt->type].name,
-		  dmi->name, dmi->uuid, dmt->newname ? dmt->newname : "",
+	log_debug("dm %s %s %s%s%s %c %.0llu %s [%u]",
+		  _cmd_data_v4[dmt->type].name,
+		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
+		  dmt->newname ? dmt->newname : "",
 		  dmt->no_open_count ? 'N' : 'O',
-		  dmt->sector, dmt->message ? dmt->message : "");
+		  dmt->sector, dmt->message ? dmt->message : "",
+		  dmi->data_size);
 #ifdef DM_IOCTLS
 	if (ioctl(_control_fd, command, dmi) < 0) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
@@ -1329,7 +1336,6 @@ int dm_task_run(struct dm_task *dmt)
 {
 	struct dm_ioctl *dmi;
 	unsigned command;
-	unsigned repeat_count = 0;
 
 #ifdef DM_COMPAT
 	if (_dm_version == 1)
@@ -1357,7 +1363,7 @@ int dm_task_run(struct dm_task *dmt)
 		return 0;
 
 repeat_ioctl:
-	if (!(dmi = _do_dm_ioctl(dmt, repeat_count)))
+	if (!(dmi = _do_dm_ioctl(dmt, command, _ioctl_buffer_double_factor)))
 		return 0;
 
 	if (dmi->flags & DM_BUFFER_FULL_FLAG) {
@@ -1368,7 +1374,7 @@ repeat_ioctl:
 		case DM_DEVICE_STATUS:
 		case DM_DEVICE_TABLE:
 		case DM_DEVICE_WAITEVENT:
-			repeat_count++;
+			_ioctl_buffer_double_factor++;
 			free(dmi);
 			goto repeat_ioctl;
 		default:
