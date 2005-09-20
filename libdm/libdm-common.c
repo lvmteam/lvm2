@@ -111,6 +111,7 @@ struct dm_task *dm_task_create(int type)
 	dmt->uid = DEVICE_UID;
 	dmt->gid = DEVICE_GID;
 	dmt->mode = DEVICE_MODE;
+	dmt->no_open_count = 0;
 
 	return dmt;
 }
