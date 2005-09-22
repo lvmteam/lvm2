@@ -1,5 +1,6 @@
 Version 1.01.05 -
 =============================
+  Resync list.h with LVM2.
   Remember increased buffer size and use for subsequent calls.
   On 'buffer full' condition, double buffer size and repeat ioctl.
   Fix termination of getopt_long() option array.
