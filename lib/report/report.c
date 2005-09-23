@@ -524,7 +524,8 @@ static int _lvname_disp(struct report_handle *rh, struct field *field,
 	char *repstr;
 	size_t len;
 
-	if (lv->status & VISIBLE_LV) {
+	/* FIXME Remove need for snapshot special case */
+	if (lv->status & VISIBLE_LV || lv_is_cow(lv)) {
 		repstr = lv->name;
 		return _string_disp(rh, field, &repstr);
 	}

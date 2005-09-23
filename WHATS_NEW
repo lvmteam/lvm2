@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Don't hide snapshots from default 'lvs' output.
   Add is_dm_major() for use in duplicate device detection in lvmcache_add().
   Really switch device number in lvmcache when it says it is doing so.
   Option for bitset memory allocation using malloc as well as pool.
