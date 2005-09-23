@@ -35,7 +35,9 @@ static int _vgs_single(struct cmd_context *cmd, const char *vg_name,
 static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 		       void *handle)
 {
-	if (!arg_count(cmd, all_ARG) && !(lv->status & VISIBLE_LV))
+	/* FIXME Avoid snapshot special-case */
+	if (!arg_count(cmd, all_ARG) && !(lv->status & VISIBLE_LV) &&
+	    !(lv_is_cow(lv)))
 		return ECMD_PROCESSED;
 
 	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL))
