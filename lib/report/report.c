@@ -660,6 +660,21 @@ static int _segsize_disp(struct report_handle *rh, struct field *field,
 	return _size64_disp(rh, field, &size);
 }
 
+static int _chunksize_disp(struct report_handle *rh, struct field *field,
+			   const void *data)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+	struct lv_segment *snap_seg;
+	uint64_t size;
+
+	if ((snap_seg = find_cow(seg->lv)))
+		size = (uint64_t) snap_seg->chunk_size;
+	else
+		size = 0;
+
+	return _size64_disp(rh, field, &size);
+}
+
 static int _pvused_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
