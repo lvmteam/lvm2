@@ -83,7 +83,9 @@ static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
 static int _lvsegs_single(struct cmd_context *cmd, struct logical_volume *lv,
 			  void *handle)
 {
-	if (!arg_count(cmd, all_ARG) && !(lv->status & VISIBLE_LV))
+	/* FIXME Avoid snapshot special-case */
+	if (!arg_count(cmd, all_ARG) && !(lv->status & VISIBLE_LV) &&
+	    !(lv_is_cow(lv)))
 		return ECMD_PROCESSED;
 
 	return process_each_segment_in_lv(cmd, lv, handle, _segs_single);
