@@ -1,4 +1,4 @@
-Version 1.01.05 -
+Version 1.01.05 - 26 Sep 2005
 =============================
   Resync list.h with LVM2.
   Remember increased buffer size and use for subsequent calls.
@@ -7,7 +7,7 @@ Version 1.01.05 -
   Report 'buffer full' condition with v4 ioctl as well as with v1.
 
 Version 1.01.04 - 2 Aug 2005
-=============================
+============================
   Fix dmsetup ls -j and status --target with empty table.
 
 Version 1.01.03 - 13 Jun 2005
