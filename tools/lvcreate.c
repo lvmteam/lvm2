@@ -303,6 +303,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 		lp->chunk_size = 2 * arg_uint_value(cmd, chunksize_ARG, 8);
+// FIXME Restrict chunk_size to power of 2 in range PAGE_SIZE up to 512k (=1024)
 		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot"))) {
