@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Reduce chunksize limit to 512k.
   Fix chunksize field in reports.
   Don't hide snapshots from default 'lvs' output.
   Add is_dm_major() for use in duplicate device detection in lvmcache_add().
