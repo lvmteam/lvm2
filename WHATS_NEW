@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Validate chunksize in lvcreate.
   Reduce chunksize limit to 512k.
   Fix chunksize field in reports.
   Don't hide snapshots from default 'lvs' output.
