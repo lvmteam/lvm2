@@ -87,7 +87,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 
-	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
@@ -96,7 +96,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 			      LCK_VG_WRITE | LCK_NONBLOCK, 1, 
 			      NULL, &vgremove_single);
 
-	unlock_vg(cmd, "");
+	unlock_vg(cmd, ORPHAN);
 
 	return ret;
 }
