@@ -86,6 +86,12 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 		goto error;
 	}
 
+	if (!dev_test_excl(dev)) {
+		log_error("Can't open %s exclusively.  Mounted filesystem?",
+			  dev_name(dev));
+		return 0;
+	}
+
 	/* Wipe existing label(s) */
 	if (!label_remove(dev)) {
 		log_error("Failed to wipe existing label(s) on %s", pv_name);
