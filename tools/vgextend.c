@@ -36,14 +36,14 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
-		unlock_vg(cmd, "");
+		unlock_vg(cmd, ORPHAN);
 		log_error("Can't get lock for %s", vg_name);
 		goto error;
 	}
@@ -93,7 +93,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	backup(vg);
 
 	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, "");
+	unlock_vg(cmd, ORPHAN);
 
 	log_print("Volume group \"%s\" successfully extended", vg_name);
 
@@ -101,6 +101,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
       error:
 	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, "");
+	unlock_vg(cmd, ORPHAN);
 	return ECMD_FAILED;
 }

@@ -135,32 +135,32 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	else
 		vg->status &= ~CLUSTERED;
 
-	if (!lock_vol(cmd, "", LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		log_error("Can't get lock for %s", vg_name);
-		unlock_vg(cmd, "");
+		unlock_vg(cmd, ORPHAN);
 		return ECMD_FAILED;
 	}
 
 	if (!archive(vg)) {
 		unlock_vg(cmd, vg_name);
-		unlock_vg(cmd, "");
+		unlock_vg(cmd, ORPHAN);
 		return ECMD_FAILED;
 	}
 
 	/* Store VG on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		unlock_vg(cmd, vg_name);
-		unlock_vg(cmd, "");
+		unlock_vg(cmd, ORPHAN);
 		return ECMD_FAILED;
 	}
 
 	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, "");
+	unlock_vg(cmd, ORPHAN);
 
 	backup(vg);
 
