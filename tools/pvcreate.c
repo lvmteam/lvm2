@@ -82,6 +82,12 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 		return 0;
 	}
 
+	if (!dev_test_excl(dev)) {
+		log_error("Can't open %s exclusively.  Mounted filesystem?",
+			  name);
+		return 0;
+	}
+
 	/* Wipe superblock? */
 	if (dev_is_md(dev, &md_superblock) &&
 	    ((!arg_count(cmd, uuidstr_ARG) &&
@@ -218,8 +224,12 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 			log_error("%s not opened: device not zeroed", pv_name);
 			goto error;
 		}
-			
-		dev_zero(dev, UINT64_C(0), (size_t) 2048);
+
+		if (!dev_zero(dev, UINT64_C(0), (size_t) 2048)) {
+			log_error("%s not wiped: aborting", pv_name);
+			dev_close(dev);
+			goto error;
+		}
 		dev_close(dev);
 	}
 

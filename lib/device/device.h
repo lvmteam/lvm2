@@ -23,8 +23,9 @@
 #define DEV_REGULAR		0x00000002	/* Regular file? */
 #define DEV_ALLOCED		0x00000004	/* dbg_malloc used */
 #define DEV_OPENED_RW		0x00000008	/* Opened RW */
-#define DEV_O_DIRECT		0x00000010	/* Use O_DIRECT */
-#define DEV_O_DIRECT_TESTED	0x00000020	/* DEV_O_DIRECT is reliable */
+#define DEV_OPENED_EXCL		0x00000010	/* Opened EXCL */
+#define DEV_O_DIRECT		0x00000020	/* Use O_DIRECT */
+#define DEV_O_DIRECT_TESTED	0x00000040	/* DEV_O_DIRECT is reliable */
 
 /*
  * All devices in LVM will be represented by one of these.
@@ -70,6 +71,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet);
 int dev_close(struct device *dev);
 int dev_close_immediate(struct device *dev);
 void dev_close_all(void);
+int dev_test_excl(struct device *dev);
 
 static inline int dev_fd(struct device *dev)
 {

@@ -320,15 +320,22 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 {
 	struct stat buf;
 	const char *name;
+	int need_excl = 0, need_rw = 0;
+
+	if ((flags & O_ACCMODE) == O_RDWR)
+		need_rw = 1;
+
+	if ((flags & O_EXCL))
+		need_excl = 1;
 
 	if (dev->fd >= 0) {
-		if ((dev->flags & DEV_OPENED_RW) ||
-		    ((flags & O_ACCMODE) != O_RDWR)) {
+		if (((dev->flags & DEV_OPENED_RW) || !need_rw) &&
+		    ((dev->flags & DEV_OPENED_EXCL) || !need_excl)) {
 			dev->open_count++;
 			return 1;
 		}
 
-		if (dev->open_count) {
+		if (dev->open_count && !need_excl) {
 			/* FIXME Ensure we never get here */
 			log_debug("WARNING: %s already opened read-only", 
 				  dev_name(dev));
@@ -397,10 +404,15 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	dev->open_count++;
 	dev->flags &= ~DEV_ACCESSED_W;
 
-	if ((flags & O_ACCMODE) == O_RDWR)
+	if (need_rw)
 		dev->flags |= DEV_OPENED_RW;
 	else
 		dev->flags &= ~DEV_OPENED_RW;
+
+	if (need_excl)
+		dev->flags |= DEV_OPENED_EXCL;
+	else
+		dev->flags &= ~DEV_OPENED_EXCL;
 
 	if (!(dev->flags & DEV_REGULAR) &&
 	    ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev))) {
@@ -420,8 +432,9 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 	list_add(&_open_devices, &dev->open_list);
 
-	log_debug("Opened %s %s%s", dev_name(dev),
+	log_debug("Opened %s %s%s%s", dev_name(dev),
 		  dev->flags & DEV_OPENED_RW ? "RW" : "RO",
+		  dev->flags & DEV_OPENED_EXCL ? " O_EXCL" : "",
 		  dev->flags & DEV_O_DIRECT ? " O_DIRECT" : "");
 
 	return 1;
@@ -443,6 +456,21 @@ int dev_open(struct device *dev)
 	flags = vg_write_lock_held() ? O_RDWR : O_RDONLY;
 
 	return dev_open_flags(dev, flags, 1, 0);
+}
+
+int dev_test_excl(struct device *dev)
+{
+	int flags;
+	int r;
+
+	flags = vg_write_lock_held() ? O_RDWR : O_RDONLY;
+	flags |= O_EXCL;
+
+	r = dev_open_flags(dev, flags, 1, 1);
+	if (r)
+		dev_close_immediate(dev);
+
+	return r;
 }
 
 static void _close(struct device *dev)
@@ -478,6 +506,11 @@ static int _dev_close(struct device *dev, int immediate)
 
 	if (dev->open_count > 0)
 		dev->open_count--;
+
+	if (immediate && dev->open_count) {
+		log_debug("%s: Immediate close attempt while still referenced");
+		dev->open_count = 0;
+	}
 
 	/* FIXME lookup device in cache to get vgname and see if it's locked? */
 	if (immediate || (dev->open_count < 1 && !vgs_locked()))

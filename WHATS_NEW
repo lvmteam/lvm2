@@ -1,5 +1,6 @@
 Version 2.01.15 - 
 =================================
+  Refuse to run pvcreate/pvremove on devices we can't open exclusively.
   Use ORPHAN lock definition throughout.
   Validate chunksize in lvcreate.
   Reduce chunksize limit to 512k.
