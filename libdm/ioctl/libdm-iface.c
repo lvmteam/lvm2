@@ -950,6 +950,13 @@ int dm_task_no_open_count(struct dm_task *dmt)
 	return 1;
 }
 
+int dm_task_skip_lockfs(struct dm_task *dmt)
+{
+	dmt->skip_lockfs = 1;
+
+	return 1;
+}
+
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 {
 	dmt->event_nr = event_nr;
@@ -1105,6 +1112,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->flags |= DM_SUSPEND_FLAG;
 	if (dmt->read_only)
 		dmi->flags |= DM_READONLY_FLAG;
+	if (dmt->skip_lockfs)
+		dmi->flags |= DM_SKIP_LOCKFS_FLAG;
 
 	if (dmt->minor >= 0) {
 		if (dmt->major <= 0) {
