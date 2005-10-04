@@ -1,5 +1,6 @@
 Version 1.01.06 - 
 =============================
+  Add dmsetup --nolockfs support for suspend/reload.
 
 Version 1.01.05 - 26 Sep 2005
 =============================

@@ -76,6 +76,7 @@ enum {
 	MAJOR_ARG,
 	MINOR_ARG,
 	NOHEADINGS_ARG,
+	NOLOCKFS_ARG,
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	OPTIONS_ARG,
@@ -525,6 +526,9 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
+	if (_switches[NOLOCKFS_ARG] && !dm_task_skip_lockfs(dmt))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -1000,7 +1004,7 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly] [--noopencount]\n\n");
+		"        [-r|--readonly] [--noopencount] [--nolockfs]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
@@ -1034,6 +1038,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
 		{"noheadings", 0, &ind, NOHEADINGS_ARG},
+		{"nolockfs", 0, &ind, NOLOCKFS_ARG},
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
@@ -1125,6 +1130,8 @@ static int _process_switches(int *argc, char ***argv)
 		}
 		if ((ind == NOHEADINGS_ARG))
 			_switches[NOHEADINGS_ARG]++;
+		if ((ind == NOLOCKFS_ARG))
+			_switches[NOLOCKFS_ARG]++;
 		if ((ind == NOOPENCOUNT_ARG))
 			_switches[NOOPENCOUNT_ARG]++;
 		if ((ind == VERSION_ARG))

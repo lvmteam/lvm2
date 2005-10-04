@@ -135,6 +135,7 @@ int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr);
 int dm_task_set_message(struct dm_task *dmt, const char *message);
 int dm_task_set_sector(struct dm_task *dmt, uint64_t sector);
 int dm_task_no_open_count(struct dm_task *dmt);
+int dm_task_skip_lockfs(struct dm_task *dmt);
 
 /*
  * Use these to prepare for a create or reload.
