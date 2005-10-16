@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 #include "label.h"
 #include "metadata.h"
 #include "lvmcache.h"
@@ -28,7 +27,7 @@
 
 /* This file contains only imports at the moment... */
 
-int import_pool_vg(struct volume_group *vg, struct pool *mem, struct list *pls)
+int import_pool_vg(struct volume_group *vg, struct dm_pool *mem, struct list *pls)
 {
 	struct pool_list *pl;
 
@@ -41,7 +40,7 @@ int import_pool_vg(struct volume_group *vg, struct pool *mem, struct list *pls)
 		if (vg->name)
 			continue;
 
-		vg->name = pool_strdup(mem, pl->pd.pl_pool_name);
+		vg->name = dm_pool_strdup(mem, pl->pd.pl_pool_name);
 		get_pool_vg_uuid(&vg->id, &pl->pd);
 		vg->extent_size = POOL_PE_SIZE;
 		vg->status |= LVM_READ | LVM_WRITE | CLUSTERED | SHARED;
@@ -55,10 +54,10 @@ int import_pool_vg(struct volume_group *vg, struct pool *mem, struct list *pls)
 	return 1;
 }
 
-int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
+int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct list *pls)
 {
 	struct pool_list *pl;
-	struct lv_list *lvl = pool_zalloc(mem, sizeof(*lvl));
+	struct lv_list *lvl = dm_pool_zalloc(mem, sizeof(*lvl));
 	struct logical_volume *lv;
 
 	if (!lvl) {
@@ -66,7 +65,7 @@ int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
 		return 0;
 	}
 
-	if (!(lvl->lv = pool_zalloc(mem, sizeof(*lvl->lv)))) {
+	if (!(lvl->lv = dm_pool_zalloc(mem, sizeof(*lvl->lv)))) {
 		log_error("Unable to allocate logical volume structure");
 		return 0;
 	}
@@ -90,7 +89,7 @@ int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
 		if (lv->name)
 			continue;
 
-		if (!(lv->name = pool_strdup(mem, pl->pd.pl_pool_name))) {
+		if (!(lv->name = dm_pool_strdup(mem, pl->pd.pl_pool_name))) {
 			stack;
 			return 0;
 		}
@@ -124,17 +123,17 @@ int import_pool_lvs(struct volume_group *vg, struct pool *mem, struct list *pls)
 }
 
 int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
-		    struct list *pvs, struct pool *mem, struct list *pls)
+		    struct list *pvs, struct dm_pool *mem, struct list *pls)
 {
 	struct pv_list *pvl;
 	struct pool_list *pl;
 
 	list_iterate_items(pl, pls) {
-		if (!(pvl = pool_zalloc(mem, sizeof(*pvl)))) {
+		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
 			log_error("Unable to allocate pv list structure");
 			return 0;
 		}
-		if (!(pvl->pv = pool_zalloc(mem, sizeof(*pvl->pv)))) {
+		if (!(pvl->pv = dm_pool_zalloc(mem, sizeof(*pvl->pv)))) {
 			log_error("Unable to allocate pv structure");
 			return 0;
 		}
@@ -150,7 +149,7 @@ int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
 	return 1;
 }
 
-int import_pool_pv(const struct format_type *fmt, struct pool *mem,
+int import_pool_pv(const struct format_type *fmt, struct dm_pool *mem,
 		   struct volume_group *vg, struct physical_volume *pv,
 		   struct pool_list *pl)
 {
@@ -162,7 +161,7 @@ int import_pool_pv(const struct format_type *fmt, struct pool *mem,
 	pv->fmt = fmt;
 
 	pv->dev = pl->dev;
-	if (!(pv->vg_name = pool_strdup(mem, pd->pl_pool_name))) {
+	if (!(pv->vg_name = dm_pool_strdup(mem, pd->pl_pool_name))) {
 		log_error("Unable to duplicate vg_name string");
 		return 0;
 	}
@@ -197,7 +196,7 @@ static const char *_cvt_sptype(uint32_t sptype)
 	return sptype_names[i].name;
 }
 
-static int _add_stripe_seg(struct pool *mem,
+static int _add_stripe_seg(struct dm_pool *mem,
 			   struct user_subpool *usp, struct logical_volume *lv,
 			   uint32_t *le_cur)
 {
@@ -243,7 +242,7 @@ static int _add_stripe_seg(struct pool *mem,
 	return 1;
 }
 
-static int _add_linear_seg(struct pool *mem,
+static int _add_linear_seg(struct dm_pool *mem,
 			   struct user_subpool *usp, struct logical_volume *lv,
 			   uint32_t *le_cur)
 {
@@ -284,7 +283,7 @@ static int _add_linear_seg(struct pool *mem,
 	return 1;
 }
 
-int import_pool_segments(struct list *lvs, struct pool *mem,
+int import_pool_segments(struct list *lvs, struct dm_pool *mem,
 			 struct user_subpool *usp, int subpools)
 {
 	struct lv_list *lvl;

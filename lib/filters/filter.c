@@ -19,7 +19,6 @@
 #include "lvm-string.h"
 #include "config.h"
 #include "metadata.h"
-#include "bitset.h"
 
 #include <dirent.h>
 #include <unistd.h>
@@ -39,7 +38,7 @@ typedef struct {
 } device_info_t;
 
 static int _md_major = -1;
-static bitset_t _dm_bitset;
+static dm_bitset_t _dm_bitset;
 
 int md_major(void)
 {
@@ -48,7 +47,7 @@ int md_major(void)
 
 int is_dm_major(int major)
 {
-	return bit(_dm_bitset, major) ? 1 : 0;
+	return dm_bit(_dm_bitset, major) ? 1 : 0;
 }
 
 /*
@@ -191,7 +190,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 		/* Look for dm devices */
 		if (!strncmp("device-mapper", line + i, 13) &&
 		    isspace(*(line + i + 13)))
-			bit_set(_dm_bitset, line_maj);
+			dm_bit_set(_dm_bitset, line_maj);
 
 		/* Go through the valid device names and if there is a
 		   match store max number of partitions */
@@ -254,7 +253,7 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 {
 	struct dev_filter *f;
 
-	if (!(f = dbg_malloc(sizeof(struct dev_filter)))) {
+	if (!(f = dm_malloc(sizeof(struct dev_filter)))) {
 		log_error("LVM type filter allocation failed");
 		return NULL;
 	}
@@ -263,9 +262,9 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 	f->destroy = lvm_type_filter_destroy;
 	f->private = NULL;
 
-	if (!(_dm_bitset = bitset_create(NULL, NUMBER_OF_MAJORS))) {
+	if (!(_dm_bitset = dm_bitset_create(NULL, NUMBER_OF_MAJORS))) {
 		stack;
-		dbg_free(f);
+		dm_free(f);
 		return NULL;
 	}
 
@@ -279,7 +278,7 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 
 void lvm_type_filter_destroy(struct dev_filter *f)
 {
-	bitset_destroy(_dm_bitset);
-	dbg_free(f);
+	dm_bitset_destroy(_dm_bitset);
+	dm_free(f);
 	return;
 }

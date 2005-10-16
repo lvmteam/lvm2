@@ -38,7 +38,7 @@ struct backup_params {
 int archive_init(struct cmd_context *cmd, const char *dir,
 		 unsigned int keep_days, unsigned int keep_min)
 {
-	if (!(cmd->archive_params = pool_zalloc(cmd->libmem,
+	if (!(cmd->archive_params = dm_pool_zalloc(cmd->libmem,
 						sizeof(*cmd->archive_params)))) {
 		log_error("archive_params alloc failed");
 		return 0;
@@ -49,7 +49,7 @@ int archive_init(struct cmd_context *cmd, const char *dir,
 	if (!*dir)
 		return 1;
 
-	if (!(cmd->archive_params->dir = dbg_strdup(dir))) {
+	if (!(cmd->archive_params->dir = dm_strdup(dir))) {
 		log_error("Couldn't copy archive directory name.");
 		return 0;
 	}
@@ -64,7 +64,7 @@ int archive_init(struct cmd_context *cmd, const char *dir,
 void archive_exit(struct cmd_context *cmd)
 {
 	if (cmd->archive_params->dir)
-		dbg_free(cmd->archive_params->dir);
+		dm_free(cmd->archive_params->dir);
 	memset(cmd->archive_params, 0, sizeof(*cmd->archive_params));
 }
 
@@ -73,12 +73,12 @@ void archive_enable(struct cmd_context *cmd, int flag)
 	cmd->archive_params->enabled = flag;
 }
 
-static char *_build_desc(struct pool *mem, const char *line, int before)
+static char *_build_desc(struct dm_pool *mem, const char *line, int before)
 {
 	size_t len = strlen(line) + 32;
 	char *buffer;
 
-	if (!(buffer = pool_zalloc(mem, strlen(line) + 32))) {
+	if (!(buffer = dm_pool_zalloc(mem, strlen(line) + 32))) {
 		stack;
 		return NULL;
 	}
@@ -150,7 +150,7 @@ int archive_display(struct cmd_context *cmd, const char *vg_name)
 
 int backup_init(struct cmd_context *cmd, const char *dir)
 {
-	if (!(cmd->backup_params = pool_zalloc(cmd->libmem,
+	if (!(cmd->backup_params = dm_pool_zalloc(cmd->libmem,
 					       sizeof(*cmd->archive_params)))) {
 		log_error("archive_params alloc failed");
 		return 0;
@@ -160,7 +160,7 @@ int backup_init(struct cmd_context *cmd, const char *dir)
 	if (!*dir)
 		return 1;
 
-	if (!(cmd->backup_params->dir = dbg_strdup(dir))) {
+	if (!(cmd->backup_params->dir = dm_strdup(dir))) {
 		log_error("Couldn't copy backup directory name.");
 		return 0;
 	}
@@ -171,7 +171,7 @@ int backup_init(struct cmd_context *cmd, const char *dir)
 void backup_exit(struct cmd_context *cmd)
 {
 	if (cmd->backup_params->dir)
-		dbg_free(cmd->backup_params->dir);
+		dm_free(cmd->backup_params->dir);
 	memset(cmd->backup_params, 0, sizeof(*cmd->backup_params));
 }
 

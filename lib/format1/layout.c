@@ -117,7 +117,7 @@ int calculate_layout(struct disk_list *dl)
 int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 			   uint32_t max_extent_count, uint64_t pe_start)
 {
-	struct pv_disk *pvd = dbg_malloc(sizeof(*pvd));
+	struct pv_disk *pvd = dm_malloc(sizeof(*pvd));
 	uint32_t end;
 
 	if (!pvd) {
@@ -138,7 +138,7 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 	if (pvd->pe_total < PE_SIZE_PV_SIZE_REL) {
 		log_error("Too few extents on %s.  Try smaller extent size.",
 			  dev_name(pv->dev));
-		dbg_free(pvd);
+		dm_free(pvd);
 		return 0;
 	}
 
@@ -160,13 +160,13 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 		log_error("Metadata extent limit (%u) exceeded for %s - "
 			  "%u required", MAX_PE_TOTAL, dev_name(pv->dev),
 			  pvd->pe_total);
-		dbg_free(pvd);
+		dm_free(pvd);
 		return 0;
 	}
 
 	pv->pe_count = pvd->pe_total;
 	pv->pe_start = pvd->pe_start;
 	/* We can't set pe_size here without breaking LVM1 compatibility */
-	dbg_free(pvd);
+	dm_free(pvd);
 	return 1;
 }

@@ -217,7 +217,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			return 0;
 		}
 		if (*opts == '+') {
-			str = pool_alloc(cmd->mem,
+			str = dm_pool_alloc(cmd->mem,
 					 strlen(options) + strlen(opts) + 1);
 			strcpy(str, options);
 			strcat(str, ",");

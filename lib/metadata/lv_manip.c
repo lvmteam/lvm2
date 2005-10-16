@@ -53,7 +53,7 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
 /*
  * All lv_segments get created here.
  */
-struct lv_segment *alloc_lv_segment(struct pool *mem,
+struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    struct segment_type *segtype,
 				    struct logical_volume *lv,
 				    uint32_t le, uint32_t len,
@@ -69,7 +69,7 @@ struct lv_segment *alloc_lv_segment(struct pool *mem,
 	struct lv_segment *seg;
 	uint32_t sz = sizeof(*seg) + (area_count * sizeof(seg->area[0]));
 
-	if (!(seg = pool_zalloc(mem, sz))) {
+	if (!(seg = dm_pool_zalloc(mem, sz))) {
 		stack;
 		return NULL;
 	}
@@ -351,7 +351,7 @@ struct alloced_area {
  * Details of an allocation attempt
  */
 struct alloc_handle {
-	struct pool *mem;
+	struct dm_pool *mem;
 
 	alloc_policy_t alloc;		/* Overall policy */
 	uint32_t area_count;		/* Number of parallel areas */
@@ -366,7 +366,7 @@ struct alloc_handle {
 /*
  * Preparation for a specific allocation attempt
  */
-static struct alloc_handle *_alloc_init(struct pool *mem,
+static struct alloc_handle *_alloc_init(struct dm_pool *mem,
 					struct segment_type *segtype,
 					alloc_policy_t alloc,
 					uint32_t mirrors,
@@ -403,7 +403,7 @@ static struct alloc_handle *_alloc_init(struct pool *mem,
 	else
 		area_count = stripes;
 
-	if (!(ah = pool_zalloc(mem, sizeof(*ah) + sizeof(ah->alloced_areas[0]) * area_count))) {
+	if (!(ah = dm_pool_zalloc(mem, sizeof(*ah) + sizeof(ah->alloced_areas[0]) * area_count))) {
 		log_error("allocation handle allocation failed");
 		return NULL;
 	}
@@ -411,7 +411,7 @@ static struct alloc_handle *_alloc_init(struct pool *mem,
 	if (segtype_is_virtual(segtype))
 		return ah;
 
-	if (!(ah->mem = pool_create("allocation", 1024))) {
+	if (!(ah->mem = dm_pool_create("allocation", 1024))) {
 		log_error("allocation pool creation failed");
 		return NULL;
 	}
@@ -432,7 +432,7 @@ static struct alloc_handle *_alloc_init(struct pool *mem,
 void alloc_destroy(struct alloc_handle *ah)
 {
 	if (ah->mem)
-		pool_destroy(ah->mem);
+		dm_pool_destroy(ah->mem);
 }
 
 static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
@@ -537,7 +537,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 	if (area_len > smallest)
 		area_len = smallest;
 
-	if (!(aa = pool_alloc(ah->mem, sizeof(*aa) *
+	if (!(aa = dm_pool_alloc(ah->mem, sizeof(*aa) *
 			      (ah->area_count + (log_area ? 1 : 0))))) {
 		log_error("alloced_area allocation failed");
 		return 0;
@@ -781,7 +781,7 @@ static int _allocate(struct alloc_handle *ah,
 	}
 
 	/* Allocate an array of pv_areas to hold the largest space on each PV */
-	if (!(areas = dbg_malloc(sizeof(*areas) * areas_size))) {
+	if (!(areas = dm_malloc(sizeof(*areas) * areas_size))) {
 		log_err("Couldn't allocate areas array.");
 		return 0;
 	}
@@ -831,7 +831,7 @@ static int _allocate(struct alloc_handle *ah,
 	r = 1;
 
       out:
-	dbg_free(areas);
+	dm_free(areas);
 	return r;
 }
 
@@ -1152,21 +1152,21 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	if (!import)
 		log_verbose("Creating logical volume %s", name);
 
-	if (!(ll = pool_zalloc(cmd->mem, sizeof(*ll))) ||
-	    !(ll->lv = pool_zalloc(cmd->mem, sizeof(*ll->lv)))) {
+	if (!(ll = dm_pool_zalloc(cmd->mem, sizeof(*ll))) ||
+	    !(ll->lv = dm_pool_zalloc(cmd->mem, sizeof(*ll->lv)))) {
 		log_error("lv_list allocation failed");
 		if (ll)
-			pool_free(cmd->mem, ll);
+			dm_pool_free(cmd->mem, ll);
 		return NULL;
 	}
 
 	lv = ll->lv;
 	lv->vg = vg;
 
-	if (!(lv->name = pool_strdup(cmd->mem, name))) {
+	if (!(lv->name = dm_pool_strdup(cmd->mem, name))) {
 		log_error("lv name strdup failed");
 		if (ll)
-			pool_free(cmd->mem, ll);
+			dm_pool_free(cmd->mem, ll);
 		return NULL;
 	}
 
@@ -1188,7 +1188,7 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
 		stack;
 		if (ll)
-			pool_free(cmd->mem, ll);
+			dm_pool_free(cmd->mem, ll);
 		return NULL;
 	}
 

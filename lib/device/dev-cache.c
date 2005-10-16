@@ -15,9 +15,6 @@
 
 #include "lib.h"
 #include "dev-cache.h"
-#include "pool.h"
-#include "hash.h"
-#include "list.h"
 #include "lvm-types.h"
 #include "btree.h"
 #include "filter.h"
@@ -38,8 +35,8 @@ struct dir_list {
 };
 
 static struct {
-	struct pool *mem;
-	struct hash_table *names;
+	struct dm_pool *mem;
+	struct dm_hash_table *names;
 	struct btree *devices;
 
 	int has_scanned;
@@ -48,9 +45,9 @@ static struct {
 
 } _cache;
 
-#define _alloc(x) pool_zalloc(_cache.mem, (x))
-#define _free(x) pool_free(_cache.mem, (x))
-#define _strdup(x) pool_strdup(_cache.mem, (x))
+#define _alloc(x) dm_pool_zalloc(_cache.mem, (x))
+#define _free(x) dm_pool_free(_cache.mem, (x))
+#define _strdup(x) dm_pool_strdup(_cache.mem, (x))
 
 static int _insert(const char *path, int rec);
 
@@ -61,19 +58,19 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 
 	if (allocate) {
 		if (use_malloc) {
-			if (!(dev = dbg_malloc(sizeof(*dev)))) {
+			if (!(dev = dm_malloc(sizeof(*dev)))) {
 				log_error("struct device allocation failed");
 				return NULL;
 			}
-			if (!(alias = dbg_malloc(sizeof(*alias)))) {
+			if (!(alias = dm_malloc(sizeof(*alias)))) {
 				log_error("struct str_list allocation failed");
-				dbg_free(dev);
+				dm_free(dev);
 				return NULL;
 			}
-			if (!(alias->str = dbg_strdup(filename))) {
+			if (!(alias->str = dm_strdup(filename))) {
 				log_error("filename strdup failed");
-				dbg_free(dev);
-				dbg_free(alias);
+				dm_free(dev);
+				dm_free(alias);
 				return NULL;
 			}
 			dev->flags = DEV_ALLOCED;
@@ -92,7 +89,7 @@ struct device *dev_create_file(const char *filename, struct device *dev,
 				return NULL;
 			}
 		}
-	} else if (!(alias->str = dbg_strdup(filename))) {
+	} else if (!(alias->str = dm_strdup(filename))) {
 		log_error("filename strdup failed");
 		return NULL;
 	}
@@ -213,7 +210,7 @@ static int _add_alias(struct device *dev, const char *path)
 		}
 	}
 
-	if (!(sl->str = pool_strdup(_cache.mem, path))) {
+	if (!(sl->str = dm_pool_strdup(_cache.mem, path))) {
 		stack;
 		return 0;
 	}
@@ -247,7 +244,7 @@ static int _insert_dev(const char *path, dev_t d)
 
 	/* Generate pretend device numbers for loopfiles */
 	if (!d) {
-		if (hash_lookup(_cache.names, path))
+		if (dm_hash_lookup(_cache.names, path))
 			return 1;
 		d = ++loopfile_count;
 		loopfile = 1;
@@ -279,7 +276,7 @@ static int _insert_dev(const char *path, dev_t d)
 		return 0;
 	}
 
-	if (!hash_insert(_cache.names, path, dev)) {
+	if (!dm_hash_insert(_cache.names, path, dev)) {
 		log_err("Couldn't add name to hash in dev cache.");
 		return 0;
 	}
@@ -290,7 +287,7 @@ static int _insert_dev(const char *path, dev_t d)
 static char *_join(const char *dir, const char *name)
 {
 	size_t len = strlen(dir) + strlen(name) + 2;
-	char *r = dbg_malloc(len);
+	char *r = dm_malloc(len);
 	if (r)
 		snprintf(r, len, "%s/%s", dir, name);
 
@@ -340,7 +337,7 @@ static int _insert_dir(const char *dir)
 
 			_collapse_slashes(path);
 			r &= _insert(path, 1);
-			dbg_free(path);
+			dm_free(path);
 
 			free(dirent[n]);
 		}
@@ -449,14 +446,14 @@ int dev_cache_init(void)
 	_cache.names = NULL;
 	_cache.has_scanned = 0;
 
-	if (!(_cache.mem = pool_create("dev_cache", 10 * 1024))) {
+	if (!(_cache.mem = dm_pool_create("dev_cache", 10 * 1024))) {
 		stack;
 		return 0;
 	}
 
-	if (!(_cache.names = hash_create(128))) {
+	if (!(_cache.names = dm_hash_create(128))) {
 		stack;
-		pool_destroy(_cache.mem);
+		dm_pool_destroy(_cache.mem);
 		_cache.mem = 0;
 		return 0;
 	}
@@ -484,7 +481,7 @@ static void _check_closed(struct device *dev)
 
 static inline void _check_for_open_devices(void)
 {
-	hash_iter(_cache.names, (iterate_fn) _check_closed);
+	dm_hash_iter(_cache.names, (dm_hash_iterate_fn) _check_closed);
 }
 
 void dev_cache_exit(void)
@@ -493,12 +490,12 @@ void dev_cache_exit(void)
 		_check_for_open_devices();
 
 	if (_cache.mem) {
-		pool_destroy(_cache.mem);
+		dm_pool_destroy(_cache.mem);
 		_cache.mem = NULL;
 	}
 
 	if (_cache.names) {
-		hash_destroy(_cache.names);
+		dm_hash_destroy(_cache.names);
 		_cache.names = NULL;
 	}
 
@@ -592,7 +589,7 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 				  (int) MINOR(dev->dev));
 
 		/* Remove the incorrect hash entry */
-		hash_remove(_cache.names, name);
+		dm_hash_remove(_cache.names, name);
 
 		/* Leave list alone if there isn't an alternative name */
 		/* so dev_name will always find something to return. */
@@ -615,23 +612,23 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 struct device *dev_cache_get(const char *name, struct dev_filter *f)
 {
 	struct stat buf;
-	struct device *d = (struct device *) hash_lookup(_cache.names, name);
+	struct device *d = (struct device *) dm_hash_lookup(_cache.names, name);
 
 	if (d && (d->flags & DEV_REGULAR))
 		return d;
 
 	/* If the entry's wrong, remove it */
 	if (d && (stat(name, &buf) || (buf.st_rdev != d->dev))) {
-		hash_remove(_cache.names, name);
+		dm_hash_remove(_cache.names, name);
 		d = NULL;
 	}
 
 	if (!d) {
 		_insert(name, 0);
-		d = (struct device *) hash_lookup(_cache.names, name);
+		d = (struct device *) dm_hash_lookup(_cache.names, name);
 		if (!d) {
 			_full_scan(0);
-			d = (struct device *) hash_lookup(_cache.names, name);
+			d = (struct device *) dm_hash_lookup(_cache.names, name);
 		}
 	}
 
@@ -641,7 +638,7 @@ struct device *dev_cache_get(const char *name, struct dev_filter *f)
 
 struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 {
-	struct dev_iter *di = dbg_malloc(sizeof(*di));
+	struct dev_iter *di = dm_malloc(sizeof(*di));
 
 	if (!di) {
 		log_error("dev_iter allocation failed");
@@ -664,7 +661,7 @@ struct dev_iter *dev_iter_create(struct dev_filter *f, int dev_scan)
 
 void dev_iter_destroy(struct dev_iter *iter)
 {
-	dbg_free(iter);
+	dm_free(iter);
 }
 
 static inline struct device *_iter_next(struct dev_iter *iter)

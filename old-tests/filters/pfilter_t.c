@@ -15,7 +15,6 @@
 
 #include "filter-persistent.h"
 #include "log.h"
-#include "dbg_malloc.h"
 #include "config.h"
 #include "filter-regex.h"
 

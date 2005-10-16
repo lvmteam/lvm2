@@ -14,9 +14,8 @@
  */
 
 #ifndef _LVM_LV_ALLOC_H
-#include "pool.h"
 
-struct lv_segment *alloc_lv_segment(struct pool *mem,
+struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    struct segment_type *segtype,
 				    struct logical_volume *lv,
 				    uint32_t le, uint32_t len,

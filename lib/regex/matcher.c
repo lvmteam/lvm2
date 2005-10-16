@@ -17,7 +17,6 @@
 #include "matcher.h"
 #include "parse_rx.h"
 #include "ttree.h"
-#include "bitset.h"
 
 struct dfa_state {
 	int final;
@@ -26,7 +25,7 @@ struct dfa_state {
 
 struct state_queue {
 	struct dfa_state *s;
-	bitset_t bits;
+	dm_bitset_t bits;
 	struct state_queue *next;
 };
 
@@ -35,7 +34,7 @@ struct matcher {		/* Instance variables for the lexer */
 	unsigned num_nodes;
 	int nodes_entered;
 	struct rx_node **nodes;
-	struct pool *scratch, *mem;
+	struct dm_pool *scratch, *mem;
 };
 
 #define TARGET_TRANS '\0'
@@ -72,9 +71,9 @@ static void _create_bitsets(struct matcher *m)
 
 	for (i = 0; i < m->num_nodes; i++) {
 		struct rx_node *n = m->nodes[i];
-		n->firstpos = bitset_create(m->scratch, m->num_nodes);
-		n->lastpos = bitset_create(m->scratch, m->num_nodes);
-		n->followpos = bitset_create(m->scratch, m->num_nodes);
+		n->firstpos = dm_bitset_create(m->scratch, m->num_nodes);
+		n->lastpos = dm_bitset_create(m->scratch, m->num_nodes);
+		n->followpos = dm_bitset_create(m->scratch, m->num_nodes);
 	}
 }
 
@@ -88,48 +87,48 @@ static void _calc_functions(struct matcher *m)
 		c1 = rx->left;
 		c2 = rx->right;
 
-		if (bit(rx->charset, TARGET_TRANS))
+		if (dm_bit(rx->charset, TARGET_TRANS))
 			rx->final = final++;
 
 		switch (rx->type) {
 		case CAT:
 			if (c1->nullable)
-				bit_union(rx->firstpos,
+				dm_bit_union(rx->firstpos,
 					  c1->firstpos, c2->firstpos);
 			else
-				bit_copy(rx->firstpos, c1->firstpos);
+				dm_bit_copy(rx->firstpos, c1->firstpos);
 
 			if (c2->nullable)
-				bit_union(rx->lastpos,
+				dm_bit_union(rx->lastpos,
 					  c1->lastpos, c2->lastpos);
 			else
-				bit_copy(rx->lastpos, c2->lastpos);
+				dm_bit_copy(rx->lastpos, c2->lastpos);
 
 			rx->nullable = c1->nullable && c2->nullable;
 			break;
 
 		case PLUS:
-			bit_copy(rx->firstpos, c1->firstpos);
-			bit_copy(rx->lastpos, c1->lastpos);
+			dm_bit_copy(rx->firstpos, c1->firstpos);
+			dm_bit_copy(rx->lastpos, c1->lastpos);
 			rx->nullable = c1->nullable;
 			break;
 
 		case OR:
-			bit_union(rx->firstpos, c1->firstpos, c2->firstpos);
-			bit_union(rx->lastpos, c1->lastpos, c2->lastpos);
+			dm_bit_union(rx->firstpos, c1->firstpos, c2->firstpos);
+			dm_bit_union(rx->lastpos, c1->lastpos, c2->lastpos);
 			rx->nullable = c1->nullable || c2->nullable;
 			break;
 
 		case QUEST:
 		case STAR:
-			bit_copy(rx->firstpos, c1->firstpos);
-			bit_copy(rx->lastpos, c1->lastpos);
+			dm_bit_copy(rx->firstpos, c1->firstpos);
+			dm_bit_copy(rx->lastpos, c1->lastpos);
 			rx->nullable = 1;
 			break;
 
 		case CHARSET:
-			bit_set(rx->firstpos, i);
-			bit_set(rx->lastpos, i);
+			dm_bit_set(rx->firstpos, i);
+			dm_bit_set(rx->lastpos, i);
 			rx->nullable = 0;
 			break;
 
@@ -145,9 +144,9 @@ static void _calc_functions(struct matcher *m)
 		switch (rx->type) {
 		case CAT:
 			for (j = 0; j < m->num_nodes; j++) {
-				if (bit(c1->lastpos, j)) {
+				if (dm_bit(c1->lastpos, j)) {
 					struct rx_node *n = m->nodes[j];
-					bit_union(n->followpos,
+					dm_bit_union(n->followpos,
 						  n->followpos, c2->firstpos);
 				}
 			}
@@ -156,9 +155,9 @@ static void _calc_functions(struct matcher *m)
 		case PLUS:
 		case STAR:
 			for (j = 0; j < m->num_nodes; j++) {
-				if (bit(rx->lastpos, j)) {
+				if (dm_bit(rx->lastpos, j)) {
 					struct rx_node *n = m->nodes[j];
-					bit_union(n->followpos,
+					dm_bit_union(n->followpos,
 						  n->followpos, rx->firstpos);
 				}
 			}
@@ -167,16 +166,16 @@ static void _calc_functions(struct matcher *m)
 	}
 }
 
-static inline struct dfa_state *_create_dfa_state(struct pool *mem)
+static inline struct dfa_state *_create_dfa_state(struct dm_pool *mem)
 {
-	return pool_zalloc(mem, sizeof(struct dfa_state));
+	return dm_pool_zalloc(mem, sizeof(struct dfa_state));
 }
 
-static struct state_queue *_create_state_queue(struct pool *mem,
+static struct state_queue *_create_state_queue(struct dm_pool *mem,
 					       struct dfa_state *dfa,
-					       bitset_t bits)
+					       dm_bitset_t bits)
 {
-	struct state_queue *r = pool_alloc(mem, sizeof(*r));
+	struct state_queue *r = dm_pool_alloc(mem, sizeof(*r));
 
 	if (!r) {
 		stack;
@@ -184,20 +183,20 @@ static struct state_queue *_create_state_queue(struct pool *mem,
 	}
 
 	r->s = dfa;
-	r->bits = bitset_create(mem, bits[0]);	/* first element is the size */
-	bit_copy(r->bits, bits);
+	r->bits = dm_bitset_create(mem, bits[0]);	/* first element is the size */
+	dm_bit_copy(r->bits, bits);
 	r->next = 0;
 	return r;
 }
 
 static int _calc_states(struct matcher *m, struct rx_node *rx)
 {
-	unsigned iwidth = (m->num_nodes / BITS_PER_INT) + 1;
+	unsigned iwidth = (m->num_nodes / DM_BITS_PER_INT) + 1;
 	struct ttree *tt = ttree_create(m->scratch, iwidth);
 	struct state_queue *h, *t, *tmp;
 	struct dfa_state *dfa, *ldfa;
 	int i, a, set_bits = 0, count = 0;
-	bitset_t bs = bitset_create(m->scratch, m->num_nodes), dfa_bits;
+	dm_bitset_t bs = dm_bitset_create(m->scratch, m->num_nodes), dfa_bits;
 
 	if (!tt) {
 		stack;
@@ -223,16 +222,16 @@ static int _calc_states(struct matcher *m, struct rx_node *rx)
 		h = h->next;
 
 		/* iterate through all the inputs for this state */
-		bit_clear_all(bs);
+		dm_bit_clear_all(bs);
 		for (a = 0; a < 256; a++) {
 			/* iterate through all the states in firstpos */
-			for (i = bit_get_first(dfa_bits);
-			     i >= 0; i = bit_get_next(dfa_bits, i)) {
-				if (bit(m->nodes[i]->charset, a)) {
+			for (i = dm_bit_get_first(dfa_bits);
+			     i >= 0; i = dm_bit_get_next(dfa_bits, i)) {
+				if (dm_bit(m->nodes[i]->charset, a)) {
 					if (a == TARGET_TRANS)
 						dfa->final = m->nodes[i]->final;
 
-					bit_union(bs, bs,
+					dm_bit_union(bs, bs,
 						  m->nodes[i]->followpos);
 					set_bits = 1;
 				}
@@ -259,7 +258,7 @@ static int _calc_states(struct matcher *m, struct rx_node *rx)
 
 				dfa->lookup[a] = ldfa;
 				set_bits = 0;
-				bit_clear_all(bs);
+				dm_bit_clear_all(bs);
 			}
 		}
 	}
@@ -268,14 +267,14 @@ static int _calc_states(struct matcher *m, struct rx_node *rx)
 	return 1;
 }
 
-struct matcher *matcher_create(struct pool *mem, const char **patterns,
+struct matcher *matcher_create(struct dm_pool *mem, const char **patterns,
 			       unsigned num)
 {
 	char *all, *ptr;
 	int i;
 	size_t len = 0;
 	struct rx_node *rx;
-	struct pool *scratch = pool_create("regex matcher", 10 * 1024);
+	struct dm_pool *scratch = dm_pool_create("regex matcher", 10 * 1024);
 	struct matcher *m;
 
 	if (!scratch) {
@@ -283,7 +282,7 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns,
 		return NULL;
 	}
 
-	if (!(m = pool_alloc(mem, sizeof(*m)))) {
+	if (!(m = dm_pool_alloc(mem, sizeof(*m)))) {
 		stack;
 		return NULL;
 	}
@@ -294,7 +293,7 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns,
 	for (i = 0; i < num; i++)
 		len += strlen(patterns[i]) + 8;
 
-	ptr = all = pool_alloc(scratch, len + 1);
+	ptr = all = dm_pool_alloc(scratch, len + 1);
 
 	if (!all) {
 		stack;
@@ -316,7 +315,7 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns,
 	m->mem = mem;
 	m->scratch = scratch;
 	m->num_nodes = _count_nodes(rx);
-	m->nodes = pool_alloc(scratch, sizeof(*m->nodes) * m->num_nodes);
+	m->nodes = dm_pool_alloc(scratch, sizeof(*m->nodes) * m->num_nodes);
 
 	if (!m->nodes) {
 		stack;
@@ -327,14 +326,14 @@ struct matcher *matcher_create(struct pool *mem, const char **patterns,
 	_create_bitsets(m);
 	_calc_functions(m);
 	_calc_states(m, rx);
-	pool_destroy(scratch);
+	dm_pool_destroy(scratch);
 	m->scratch = NULL;
 
 	return m;
 
       bad:
-	pool_destroy(scratch);
-	pool_destroy(mem);
+	dm_pool_destroy(scratch);
+	dm_pool_destroy(mem);
 	return NULL;
 }
 

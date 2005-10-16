@@ -17,7 +17,6 @@
 #include "metadata.h"
 #include "report.h"
 #include "toolcontext.h"
-#include "pool.h"
 #include "lvm-string.h"
 #include "display.h"
 #include "activate.h"
@@ -45,7 +44,7 @@ static union {
 
 struct report_handle {
 	struct cmd_context *cmd;
-	struct pool *mem;
+	struct dm_pool *mem;
 
 	report_type_t type;
 	const char *field_prefix;
@@ -121,8 +120,8 @@ static int _string_disp(struct report_handle *rh, struct field *field,
 {
 	if (!
 	    (field->report_string =
-	     pool_strdup(rh->mem, *(const char **) data))) {
-		log_error("pool_strdup failed");
+	     dm_pool_strdup(rh->mem, *(const char **) data))) {
+		log_error("dm_pool_strdup failed");
 		return 0;
 	}
 
@@ -144,12 +143,12 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 	unsigned int s;
-	const char *name;
-	uint32_t extent;
+	const char *name = NULL;
+	uint32_t extent = 0;
 	char extent_str[32];
 
-	if (!pool_begin_object(rh->mem, 256)) {
-		log_error("pool_begin_object failed");
+	if (!dm_pool_begin_object(rh->mem, 256)) {
+		log_error("dm_pool_begin_object failed");
 		return 0;
 	}
 
@@ -168,8 +167,8 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 			extent = 0;
 		}
 
-		if (!pool_grow_object(rh->mem, name, strlen(name))) {
-			log_error("pool_grow_object failed");
+		if (!dm_pool_grow_object(rh->mem, name, strlen(name))) {
+			log_error("dm_pool_grow_object failed");
 			return 0;
 		}
 
@@ -179,24 +178,24 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 			return 0;
 		}
 
-		if (!pool_grow_object(rh->mem, extent_str, strlen(extent_str))) {
-			log_error("pool_grow_object failed");
+		if (!dm_pool_grow_object(rh->mem, extent_str, strlen(extent_str))) {
+			log_error("dm_pool_grow_object failed");
 			return 0;
 		}
 
 		if ((s != seg->area_count - 1) &&
-		    !pool_grow_object(rh->mem, ",", 1)) {
-			log_error("pool_grow_object failed");
+		    !dm_pool_grow_object(rh->mem, ",", 1)) {
+			log_error("dm_pool_grow_object failed");
 			return 0;
 		}
 	}
 
-	if (!pool_grow_object(rh->mem, "\0", 1)) {
-		log_error("pool_grow_object failed");
+	if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
+		log_error("dm_pool_grow_object failed");
 		return 0;
 	}
 
-	field->report_string = pool_end_object(rh->mem);
+	field->report_string = dm_pool_end_object(rh->mem);
 	field->sort_value = (const void *) field->report_string;
 
 	return 1;
@@ -207,25 +206,25 @@ static int _tags_disp(struct report_handle *rh, struct field *field,
 	const struct list *tags = (const struct list *) data;
 	struct str_list *sl;
 
-	if (!pool_begin_object(rh->mem, 256)) {
-		log_error("pool_begin_object failed");
+	if (!dm_pool_begin_object(rh->mem, 256)) {
+		log_error("dm_pool_begin_object failed");
 		return 0;
 	}
 
 	list_iterate_items(sl, tags) {
-		if (!pool_grow_object(rh->mem, sl->str, strlen(sl->str)) ||
-		    (sl->list.n != tags && !pool_grow_object(rh->mem, ",", 1))) {
-			log_error("pool_grow_object failed");
+		if (!dm_pool_grow_object(rh->mem, sl->str, strlen(sl->str)) ||
+		    (sl->list.n != tags && !dm_pool_grow_object(rh->mem, ",", 1))) {
+			log_error("dm_pool_grow_object failed");
 			return 0;
 		}
 	}
 
-	if (!pool_grow_object(rh->mem, "\0", 1)) {
-		log_error("pool_grow_object failed");
+	if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
+		log_error("dm_pool_grow_object failed");
 		return 0;
 	}
 
-	field->report_string = pool_end_object(rh->mem);
+	field->report_string = dm_pool_end_object(rh->mem);
 	field->sort_value = (const void *) field->report_string;
 
 	return 1;
@@ -267,13 +266,13 @@ static int _int_disp(struct report_handle *rh, struct field *field,
 	uint64_t *sortval;
 	char *repstr;
 
-	if (!(repstr = pool_zalloc(rh->mem, 13))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 13))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
-	if (!(sortval = pool_alloc(rh->mem, sizeof(int64_t)))) {
-		log_error("pool_alloc failed");
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(int64_t)))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -328,8 +327,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 	struct lv_segment *snap_seg;
 	float snap_percent;
 
-	if (!(repstr = pool_zalloc(rh->mem, 7))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 7))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -405,8 +404,8 @@ static int _pvstatus_disp(struct report_handle *rh, struct field *field,
 	const uint32_t status = *(const uint32_t *) data;
 	char *repstr;
 
-	if (!(repstr = pool_zalloc(rh->mem, 4))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 4))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -432,8 +431,8 @@ static int _vgstatus_disp(struct report_handle *rh, struct field *field,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	char *repstr;
 
-	if (!(repstr = pool_zalloc(rh->mem, 7))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 7))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -531,8 +530,8 @@ static int _lvname_disp(struct report_handle *rh, struct field *field,
 	}
 
 	len = strlen(lv->name) + 3;
-	if (!(repstr = pool_zalloc(rh->mem, len))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, len))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -543,8 +542,8 @@ static int _lvname_disp(struct report_handle *rh, struct field *field,
 
 	field->report_string = repstr;
 
-	if (!(field->sort_value = pool_strdup(rh->mem, lv->name))) {
-		log_error("pool_strdup failed");
+	if (!(field->sort_value = dm_pool_strdup(rh->mem, lv->name))) {
+		log_error("dm_pool_strdup failed");
 		return 0;
 	}
 
@@ -583,13 +582,13 @@ static int _size32_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(field->report_string = pool_strdup(rh->mem, disp))) {
-		log_error("pool_strdup failed");
+	if (!(field->report_string = dm_pool_strdup(rh->mem, disp))) {
+		log_error("dm_pool_strdup failed");
 		return 0;
 	}
 
-	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
-		log_error("pool_alloc failed");
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(uint64_t)))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -611,13 +610,13 @@ static int _size64_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (!(field->report_string = pool_strdup(rh->mem, disp))) {
-		log_error("pool_strdup failed");
+	if (!(field->report_string = dm_pool_strdup(rh->mem, disp))) {
+		log_error("dm_pool_strdup failed");
 		return 0;
 	}
 
-	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
-		log_error("pool_alloc failed");
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(uint64_t)))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -748,8 +747,8 @@ static int _uuid_disp(struct report_handle *rh, struct field *field,
 {
 	char *repstr = NULL;
 
-	if (!(repstr = pool_alloc(rh->mem, 40))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_alloc(rh->mem, 40))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -771,13 +770,13 @@ static int _uint32_disp(struct report_handle *rh, struct field *field,
 	uint64_t *sortval;
 	char *repstr;
 
-	if (!(repstr = pool_zalloc(rh->mem, 12))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 12))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
-	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
-		log_error("pool_alloc failed");
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(uint64_t)))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -800,13 +799,13 @@ static int _int32_disp(struct report_handle *rh, struct field *field,
 	uint64_t *sortval;
 	char *repstr;
 
-	if (!(repstr = pool_zalloc(rh->mem, 13))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 13))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
-	if (!(sortval = pool_alloc(rh->mem, sizeof(int64_t)))) {
-		log_error("pool_alloc failed");
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(int64_t)))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -843,8 +842,8 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 	uint64_t *sortval;
 	char *repstr;
 
-	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
-		log_error("pool_alloc failed");
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(uint64_t)))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -864,8 +863,8 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 		return 1;
 	}
 
-	if (!(repstr = pool_zalloc(rh->mem, 8))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 8))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -889,8 +888,8 @@ static int _copypercent_disp(struct report_handle *rh, struct field *field,
 	uint64_t *sortval;
 	char *repstr;
 
-	if (!(sortval = pool_alloc(rh->mem, sizeof(uint64_t)))) {
-		log_error("pool_alloc failed");
+	if (!(sortval = dm_pool_alloc(rh->mem, sizeof(uint64_t)))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -904,8 +903,8 @@ static int _copypercent_disp(struct report_handle *rh, struct field *field,
 
 	percent = copy_percent(lv);
 
-	if (!(repstr = pool_zalloc(rh->mem, 8))) {
-		log_error("pool_alloc failed");
+	if (!(repstr = dm_pool_zalloc(rh->mem, 8))) {
+		log_error("dm_pool_alloc failed");
 		return 0;
 	}
 
@@ -966,7 +965,7 @@ static int _field_match(struct report_handle *rh, const char *field, size_t len)
 		     !strncasecmp(_fields[f].id + l, field, len) &&
 		     strlen(_fields[f].id) == l + len)) {
 			rh->type |= _fields[f].type;
-			if (!(fp = pool_zalloc(rh->mem, sizeof(*fp)))) {
+			if (!(fp = dm_pool_zalloc(rh->mem, sizeof(*fp)))) {
 				log_error("struct field_properties allocation "
 					  "failed");
 				return 0;
@@ -1002,7 +1001,7 @@ static int _add_sort_key(struct report_handle *rh, uint32_t field_num,
 
 	if (!found) {
 		/* Add as a non-display field */
-		if (!(found = pool_zalloc(rh->mem, sizeof(*found)))) {
+		if (!(found = dm_pool_zalloc(rh->mem, sizeof(*found)))) {
 			log_error("struct field_properties allocation failed");
 			return 0;
 		}
@@ -1116,8 +1115,8 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 {
 	struct report_handle *rh;
 
-	if (!(rh = pool_zalloc(cmd->mem, sizeof(*rh)))) {
-		log_error("report_handle pool_zalloc failed");
+	if (!(rh = dm_pool_zalloc(cmd->mem, sizeof(*rh)))) {
+		log_error("report_handle dm_pool_zalloc failed");
 		return 0;
 	}
 
@@ -1157,7 +1156,7 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		rh->field_prefix = "";
 	}
 
-	if (!(rh->mem = pool_create("report", 10 * 1024))) {
+	if (!(rh->mem = dm_pool_create("report", 10 * 1024))) {
 		log_error("Allocation of memory pool for report failed");
 		return NULL;
 	}
@@ -1196,7 +1195,7 @@ void report_free(void *handle)
 {
 	struct report_handle *rh = handle;
 
-	pool_destroy(rh->mem);
+	dm_pool_destroy(rh->mem);
 
 	return;
 }
@@ -1220,7 +1219,7 @@ int report_object(void *handle, struct volume_group *vg,
 		return 0;
 	}
 
-	if (!(row = pool_zalloc(rh->mem, sizeof(*row)))) {
+	if (!(row = dm_pool_zalloc(rh->mem, sizeof(*row)))) {
 		log_error("struct row allocation failed");
 		return 0;
 	}
@@ -1228,7 +1227,7 @@ int report_object(void *handle, struct volume_group *vg,
 	row->rh = rh;
 
 	if ((rh->flags & RH_SORT_REQUIRED) &&
-	    !(row->sort_fields = pool_zalloc(rh->mem, sizeof(struct field *) *
+	    !(row->sort_fields = dm_pool_zalloc(rh->mem, sizeof(struct field *) *
 					     rh->keys_count))) {
 		log_error("row sort value structure allocation failed");
 		return 0;
@@ -1241,7 +1240,7 @@ int report_object(void *handle, struct volume_group *vg,
 	list_iterate_items(fp, &rh->field_props) {
 		skip = 0;
 
-		if (!(field = pool_zalloc(rh->mem, sizeof(*field)))) {
+		if (!(field = dm_pool_zalloc(rh->mem, sizeof(*field)))) {
 			log_error("struct field allocation failed");
 			return 0;
 		}
@@ -1311,8 +1310,8 @@ static int _report_headings(void *handle)
 	if (!(rh->flags & RH_HEADINGS))
 		return 1;
 
-	if (!pool_begin_object(rh->mem, 128)) {
-		log_error("pool_begin_object failed for headings");
+	if (!dm_pool_begin_object(rh->mem, 128)) {
+		log_error("dm_pool_begin_object failed for headings");
 		return 0;
 	}
 
@@ -1326,24 +1325,24 @@ static int _report_headings(void *handle)
 			if (lvm_snprintf(buf, sizeof(buf), "%-*.*s",
 					 fp->width, fp->width, heading) < 0) {
 				log_error("snprintf heading failed");
-				pool_end_object(rh->mem);
+				dm_pool_end_object(rh->mem);
 				return 0;
 			}
-			if (!pool_grow_object(rh->mem, buf, fp->width))
+			if (!dm_pool_grow_object(rh->mem, buf, fp->width))
 				goto bad;
-		} else if (!pool_grow_object(rh->mem, heading, strlen(heading)))
+		} else if (!dm_pool_grow_object(rh->mem, heading, strlen(heading)))
 			goto bad;
 
 		if (!list_end(&rh->field_props, &fp->list))
-			if (!pool_grow_object(rh->mem, rh->separator,
+			if (!dm_pool_grow_object(rh->mem, rh->separator,
 					      strlen(rh->separator)))
 				goto bad;
 	}
-	if (!pool_grow_object(rh->mem, "\0", 1)) {
-		log_error("pool_grow_object failed");
+	if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
+		log_error("dm_pool_grow_object failed");
 		goto bad;
 	}
-	log_print("%s", (char *) pool_end_object(rh->mem));
+	log_print("%s", (char *) dm_pool_end_object(rh->mem));
 
 	return 1;
 
@@ -1405,7 +1404,7 @@ static int _sort_rows(struct report_handle *rh)
 	uint32_t count = 0;
 	struct row *row;
 
-	if (!(rows = pool_alloc(rh->mem, sizeof(**rows) *
+	if (!(rows = dm_pool_alloc(rh->mem, sizeof(**rows) *
 				list_size(&rh->rows)))) {
 		log_error("sort array allocation failed");
 		return 0;
@@ -1449,8 +1448,8 @@ int report_output(void *handle)
 
 	/* Print and clear buffer */
 	list_iterate_safe(rowh, rtmp, &rh->rows) {
-		if (!pool_begin_object(rh->mem, 512)) {
-			log_error("pool_begin_object failed for row");
+		if (!dm_pool_begin_object(rh->mem, 512)) {
+			log_error("dm_pool_begin_object failed for row");
 			return 0;
 		}
 		row = list_item(rowh, struct row);
@@ -1462,45 +1461,45 @@ int report_output(void *handle)
 			repstr = field->report_string;
 			width = field->props->width;
 			if (!(rh->flags & RH_ALIGNED)) {
-				if (!pool_grow_object(rh->mem, repstr,
+				if (!dm_pool_grow_object(rh->mem, repstr,
 						      strlen(repstr)))
 					goto bad;
 			} else if (field->props->flags & FLD_ALIGN_LEFT) {
 				if (lvm_snprintf(buf, sizeof(buf), "%-*.*s",
 						 width, width, repstr) < 0) {
 					log_error("snprintf repstr failed");
-					pool_end_object(rh->mem);
+					dm_pool_end_object(rh->mem);
 					return 0;
 				}
-				if (!pool_grow_object(rh->mem, buf, width))
+				if (!dm_pool_grow_object(rh->mem, buf, width))
 					goto bad;
 			} else if (field->props->flags & FLD_ALIGN_RIGHT) {
 				if (lvm_snprintf(buf, sizeof(buf), "%*.*s",
 						 width, width, repstr) < 0) {
 					log_error("snprintf repstr failed");
-					pool_end_object(rh->mem);
+					dm_pool_end_object(rh->mem);
 					return 0;
 				}
-				if (!pool_grow_object(rh->mem, buf, width))
+				if (!dm_pool_grow_object(rh->mem, buf, width))
 					goto bad;
 			}
 
 			if (!list_end(&row->fields, fh))
-				if (!pool_grow_object(rh->mem, rh->separator,
+				if (!dm_pool_grow_object(rh->mem, rh->separator,
 						      strlen(rh->separator)))
 					goto bad;
 			list_del(&field->list);
 		}
-		if (!pool_grow_object(rh->mem, "\0", 1)) {
-			log_error("pool_grow_object failed for row");
+		if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
+			log_error("dm_pool_grow_object failed for row");
 			return 0;
 		}
-		log_print("%s", (char *) pool_end_object(rh->mem));
+		log_print("%s", (char *) dm_pool_end_object(rh->mem));
 		list_del(&row->list);
 	}
 
 	if (row)
-		pool_free(rh->mem, row);
+		dm_pool_free(rh->mem, row);
 
 	return 1;
 

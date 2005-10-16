@@ -202,7 +202,7 @@ int _get_partition_type(struct dev_mgr *dm, struct device *d)
 		return 0;
 	}
 
-	if (!(buffer = dbg_malloc(SECTOR_SIZE))) {
+	if (!(buffer = dm_malloc(SECTOR_SIZE))) {
 		log_error("Failed to allocate partition table buffer");
 		return 0;
 	}

@@ -13,10 +13,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dbg_malloc.h"
 #include "log.h"
 #include "../../lib/regex/parse_rx.h"
-#include "bitset.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -72,7 +70,7 @@ static void _pretty_print(struct rx_node *rx, int depth)
 
 int main(int argc, char **argv)
 {
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct rx_node *rx;
 
 	if (argc != 2) {
@@ -83,7 +81,7 @@ int main(int argc, char **argv)
 	init_log(stderr);
 	init_debug(_LOG_INFO);
 
-	if (!(mem = pool_create(1024))) {
+	if (!(mem = dm_pool_create(1024))) {
 		fprintf(stderr, "Couldn't create pool\n");
 		exit(1);
 	}
@@ -94,7 +92,7 @@ int main(int argc, char **argv)
 	}
 
 	_pretty_print(rx, 0);
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 
 	dump_memory();
 	fin_log();

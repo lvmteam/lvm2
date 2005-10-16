@@ -16,8 +16,6 @@
 #ifndef _LVM_PARSE_REGEX_H
 #define _LVM_PARSE_REGEX_H
 
-#include "bitset.h"
-
 enum {
 	CAT,
 	STAR,
@@ -37,18 +35,18 @@ enum {
 
 struct rx_node {
 	int type;
-	bitset_t charset;
+	dm_bitset_t charset;
 	struct rx_node *left, *right;
 
 	/* used to build the dfa for the toker */
 	int nullable, final;
-	bitset_t firstpos;
-	bitset_t lastpos;
-	bitset_t followpos;
+	dm_bitset_t firstpos;
+	dm_bitset_t lastpos;
+	dm_bitset_t followpos;
 };
 
-struct rx_node *rx_parse_str(struct pool *mem, const char *str);
-struct rx_node *rx_parse_tok(struct pool *mem,
+struct rx_node *rx_parse_str(struct dm_pool *mem, const char *str);
+struct rx_node *rx_parse_tok(struct dm_pool *mem,
 			     const char *begin, const char *end);
 
 #endif

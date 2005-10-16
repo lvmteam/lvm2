@@ -21,7 +21,6 @@
 #include "fs.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
-#include "pool.h"
 #include "toolcontext.h"
 #include "dev_manager.h"
 #include "str_list.h"
@@ -762,7 +761,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	int r = 1;
 
 	if (!lv) {
-		r = dev_manager_mknodes();
+		r = dm_mknodes(NULL);
 		fs_unlock();
 		return r;
 	}

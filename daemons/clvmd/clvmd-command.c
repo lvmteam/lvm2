@@ -66,7 +66,6 @@
 #include <errno.h>
 
 #include "list.h"
-#include "hash.h"
 #include "locking.h"
 #include "log.h"
 #include "lvm-functions.h"

@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "label.h"
-#include "list.h"
 #include "crc.h"
 #include "xlate.h"
 #include "lvmcache.h"
@@ -46,7 +45,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 
 	len = sizeof(*li) + strlen(name) + 1;
 
-	if (!(li = dbg_malloc(len))) {
+	if (!(li = dm_malloc(len))) {
 		log_error("Couldn't allocate memory for labeller list object.");
 		return NULL;
 	}
@@ -59,7 +58,7 @@ static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 
 static void _free_li(struct labeller_i *li)
 {
-	dbg_free(li);
+	dm_free(li);
 }
 
 int label_init(void)
@@ -353,14 +352,14 @@ int label_verify(struct device *dev)
 void label_destroy(struct label *label)
 {
 	label->labeller->ops->destroy_label(label->labeller, label);
-	dbg_free(label);
+	dm_free(label);
 }
 
 struct label *label_create(struct labeller *labeller)
 {
 	struct label *label;
 
-	if (!(label = dbg_malloc(sizeof(*label)))) {
+	if (!(label = dm_malloc(sizeof(*label)))) {
 		log_error("label allocaction failed");
 		return NULL;
 	}

@@ -41,7 +41,6 @@
 #include "toolcontext.h"
 #include "log.h"
 #include "activate.h"
-#include "hash.h"
 #include "locking.h"
 
 static struct cmd_context *cmd = NULL;
@@ -330,7 +329,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	}
 
 	/* clean the pool for another command */
-	pool_empty(cmd->mem);
+	dm_pool_empty(cmd->mem);
 
 	DEBUGLOG("Command return is %d\n", status);
 	return status;

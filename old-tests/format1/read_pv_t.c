@@ -15,8 +15,6 @@
 
 #include "log.h"
 #include "format1.h"
-#include "dbg_malloc.h"
-#include "pool.h"
 #include "pretty_print.h"
 #include "list.h"
 
@@ -26,7 +24,7 @@ int main(int argc, char **argv)
 {
 	struct io_space *ios;
 	struct physical_volume *pv;
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct device *dev;
 
 	if (argc != 2) {
@@ -47,7 +45,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (!(mem = pool_create(10 * 1024))) {
+	if (!(mem = dm_pool_create(10 * 1024))) {
 		fprintf(stderr, "couldn't create pool\n");
 		exit(1);
 	}
@@ -69,7 +67,7 @@ int main(int argc, char **argv)
 	dump_pv(pv, stdout);
 	ios->destroy(ios);
 
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	dev_cache_exit();
 	dump_memory();
 	fin_log();

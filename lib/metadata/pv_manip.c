@@ -14,12 +14,11 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 #include "metadata.h"
 #include "pv_alloc.h"
 #include "toolcontext.h"
 
-static struct pv_segment *_alloc_pv_segment(struct pool *mem,
+static struct pv_segment *_alloc_pv_segment(struct dm_pool *mem,
 					    struct physical_volume *pv,
 					    uint32_t pe, uint32_t len,
 					    struct lv_segment *lvseg,
@@ -27,7 +26,7 @@ static struct pv_segment *_alloc_pv_segment(struct pool *mem,
 {
 	struct pv_segment *peg;
 
-	if (!(peg = pool_zalloc(mem, sizeof(*peg)))) {
+	if (!(peg = dm_pool_zalloc(mem, sizeof(*peg)))) {
 		log_error("pv_segment allocation failed");
 		return NULL;
 	}
@@ -43,7 +42,7 @@ static struct pv_segment *_alloc_pv_segment(struct pool *mem,
 	return peg;
 }
 
-int alloc_pv_segment_whole_pv(struct pool *mem, struct physical_volume *pv)
+int alloc_pv_segment_whole_pv(struct dm_pool *mem, struct physical_volume *pv)
 {
 	struct pv_segment *peg;
 
@@ -61,7 +60,7 @@ int alloc_pv_segment_whole_pv(struct pool *mem, struct physical_volume *pv)
 	return 1;
 }
 
-int peg_dup(struct pool *mem, struct list *peg_new, struct list *peg_old)
+int peg_dup(struct dm_pool *mem, struct list *peg_new, struct list *peg_old)
 {
 	struct pv_segment *peg, *pego;
 

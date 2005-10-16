@@ -127,7 +127,7 @@ static int _send_request(char *inbuf, int inlen, char **retbuf)
 
 	/* Allocate buffer */
 	buflen = len + outheader->arglen;
-	*retbuf = dbg_malloc(buflen);
+	*retbuf = dm_malloc(buflen);
 	if (!*retbuf) {
 		errno = ENOMEM;
 		return 0;
@@ -236,7 +236,7 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 	 * With an extra pair of INTs on the front to sanity
 	 * check the pointer when we are given it back to free
 	 */
-	outptr = dbg_malloc(sizeof(lvm_response_t) * num_responses +
+	outptr = dm_malloc(sizeof(lvm_response_t) * num_responses +
 			    sizeof(int) * 2);
 	if (!outptr) {
 		errno = ENOMEM;
@@ -259,12 +259,12 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 		rarray[i].status = *(int *) inptr;
 		inptr += sizeof(int);
 
-		rarray[i].response = dbg_malloc(strlen(inptr) + 1);
+		rarray[i].response = dm_malloc(strlen(inptr) + 1);
 		if (rarray[i].response == NULL) {
 			/* Free up everything else and return error */
 			int j;
 			for (j = 0; j < i; j++)
-				dbg_free(rarray[i].response);
+				dm_free(rarray[i].response);
 			free(outptr);
 			errno = ENOMEM;
 			status = -1;
@@ -281,7 +281,7 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 
       out:
 	if (retbuf)
-		dbg_free(retbuf);
+		dm_free(retbuf);
 
 	return status;
 }
@@ -302,10 +302,10 @@ static int _cluster_free_request(lvm_response_t * response)
 	num = ptr[1];
 
 	for (i = 0; i < num; i++) {
-		dbg_free(response[i].response);
+		dm_free(response[i].response);
 	}
 
-	dbg_free(ptr);
+	dm_free(ptr);
 
 	return 1;
 }

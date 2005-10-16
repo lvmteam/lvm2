@@ -16,7 +16,6 @@
 #include "filter-regex.h"
 #include "config.h"
 #include "log.h"
-#include "dbg_malloc.h"
 
 #include <stdio.h>
 #include <ctype.h>

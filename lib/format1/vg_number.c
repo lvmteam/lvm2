@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 #include "disk-rep.h"
 
 /*
@@ -29,7 +28,7 @@ int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 {
 	struct list all_pvs;
 	struct disk_list *dl;
-	struct pool *mem = pool_create("lvm1 vg_number", 10 * 1024);
+	struct dm_pool *mem = dm_pool_create("lvm1 vg_number", 10 * 1024);
 	int numbers[MAX_VG], i, r = 0;
 
 	list_init(&all_pvs);
@@ -62,6 +61,6 @@ int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 	}
 
       out:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return r;
 }

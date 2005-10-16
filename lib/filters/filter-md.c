@@ -51,14 +51,14 @@ static int _ignore_md(struct dev_filter *f, struct device *dev)
 
 static void _destroy(struct dev_filter *f)
 {
-	dbg_free(f);
+	dm_free(f);
 }
 
 struct dev_filter *md_filter_create(void)
 {
 	struct dev_filter *f;
 
-	if (!(f = dbg_malloc(sizeof(*f)))) {
+	if (!(f = dm_malloc(sizeof(*f)))) {
 		log_error("md filter allocation failed");
 		return NULL;
 	}

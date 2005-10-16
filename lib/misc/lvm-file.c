@@ -146,7 +146,7 @@ static int _create_dir_recursive(const char *dir)
 
 	log_verbose("Creating directory \"%s\"", dir);
 	/* Create parent directories */
-	orig = s = dbg_strdup(dir);
+	orig = s = dm_strdup(dir);
 	while ((s = strchr(s, '/')) != NULL) {
 		*s = '\0';
 		if (*orig) {
@@ -154,13 +154,13 @@ static int _create_dir_recursive(const char *dir)
 			if (rc < 0 && errno != EEXIST) {
 				if (errno != EROFS)
 					log_sys_error("mkdir", orig);
-				dbg_free(orig);
+				dm_free(orig);
 				return 0;
 			}
 		}
 		*s++ = '/';
 	}
-	dbg_free(orig);
+	dm_free(orig);
 
 	/* Create final directory */
 	rc = mkdir(dir, 0777);
@@ -215,7 +215,7 @@ void sync_dir(const char *file)
 	int fd;
 	char *dir, *c;
 
-	if (!(dir = dbg_strdup(file))) {
+	if (!(dir = dm_strdup(file))) {
 		log_error("sync_dir failed in strdup");
 		return;
 	}
@@ -242,5 +242,5 @@ void sync_dir(const char *file)
 	close(fd);
 
       out:
-	dbg_free(dir);
+	dm_free(dir);
 }

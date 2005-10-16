@@ -17,8 +17,6 @@
 #define _LVM_PV_MAP_H
 
 #include "metadata.h"
-#include "bitset.h"
-#include "pool.h"
 
 /*
  * The in core rep. only stores a mapping from
@@ -46,7 +44,7 @@ struct pv_map {
 /*
  * Find intersection between available_pvs and free space in VG
  */
-struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
+struct list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 			    struct list *allocatable_pvs);
 
 void consume_pv_area(struct pv_area *area, uint32_t to_go);

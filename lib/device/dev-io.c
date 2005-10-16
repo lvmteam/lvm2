@@ -484,10 +484,10 @@ static void _close(struct device *dev)
 	log_debug("Closed %s", dev_name(dev));
 
 	if (dev->flags & DEV_ALLOCED) {
-		dbg_free((void *) list_item(dev->aliases.n, struct str_list)->
+		dm_free((void *) list_item(dev->aliases.n, struct str_list)->
 			 str);
-		dbg_free(dev->aliases.n);
-		dbg_free(dev);
+		dm_free(dev->aliases.n);
+		dm_free(dev);
 	}
 }
 
@@ -508,7 +508,8 @@ static int _dev_close(struct device *dev, int immediate)
 		dev->open_count--;
 
 	if (immediate && dev->open_count) {
-		log_debug("%s: Immediate close attempt while still referenced");
+		log_debug("%s: Immediate close attempt while still referenced",
+			  dev_name(dev));
 		dev->open_count = 0;
 	}
 

@@ -16,7 +16,6 @@
 
 #include "lib.h"
 #include "toolcontext.h"
-#include "pool.h"
 #include "metadata.h"
 #include "defaults.h"
 #include "lvm-string.h"
@@ -213,7 +212,7 @@ static int _process_config(struct cmd_context *cmd)
 
 static int _set_tag(struct cmd_context *cmd, const char *tag)
 {
-	log_very_verbose("Setting host tag: %s", pool_strdup(cmd->libmem, tag));
+	log_very_verbose("Setting host tag: %s", dm_pool_strdup(cmd->libmem, tag));
 
 	if (!str_list_add(cmd->libmem, &cmd->tags, tag)) {
 		log_error("_set_tag: str_list_add %s failed", tag);
@@ -323,7 +322,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	if (!(cfl = pool_alloc(cmd->libmem, sizeof(*cfl)))) {
+	if (!(cfl = dm_pool_alloc(cmd->libmem, sizeof(*cfl)))) {
 		log_error("config_tree_list allocation failed");
 		return 0;
 	}
@@ -800,13 +799,13 @@ static int _init_hostname(struct cmd_context *cmd)
 		return 0;
 	}
 
-	if (!(cmd->hostname = pool_strdup(cmd->libmem, uts.nodename))) {
-		log_error("_init_hostname: pool_strdup failed");
+	if (!(cmd->hostname = dm_pool_strdup(cmd->libmem, uts.nodename))) {
+		log_error("_init_hostname: dm_pool_strdup failed");
 		return 0;
 	}
 
-	if (!(cmd->kernel_vsn = pool_strdup(cmd->libmem, uts.release))) {
-		log_error("_init_hostname: pool_strdup kernel_vsn failed");
+	if (!(cmd->kernel_vsn = dm_pool_strdup(cmd->libmem, uts.release))) {
+		log_error("_init_hostname: dm_pool_strdup kernel_vsn failed");
 		return 0;
 	}
 
@@ -894,7 +893,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 
 	init_syslog(DEFAULT_LOG_FACILITY);
 
-	if (!(cmd = dbg_malloc(sizeof(*cmd)))) {
+	if (!(cmd = dm_malloc(sizeof(*cmd)))) {
 		log_error("Failed to allocate command context");
 		return NULL;
 	}
@@ -920,7 +919,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 		goto error;
 	}
 
-	if (!(cmd->libmem = pool_create("library", 4 * 1024))) {
+	if (!(cmd->libmem = dm_pool_create("library", 4 * 1024))) {
 		log_error("Library memory pool creation failed");
 		return 0;
 	}
@@ -951,7 +950,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	if (!_init_filters(cmd))
 		goto error;
 
-	if (!(cmd->mem = pool_create("command", 4 * 1024))) {
+	if (!(cmd->mem = dm_pool_create("command", 4 * 1024))) {
 		log_error("Command memory pool creation failed");
 		return 0;
 	}
@@ -973,7 +972,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	return cmd;
 
       error:
-	dbg_free(cmd);
+	dm_free(cmd);
 	return NULL;
 }
 
@@ -1085,15 +1084,15 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(&cmd->formats);
 	cmd->filter->destroy(cmd->filter);
-	pool_destroy(cmd->mem);
+	dm_pool_destroy(cmd->mem);
 	dev_cache_exit();
 	_destroy_tags(cmd);
 	_destroy_tag_configs(cmd);
-	pool_destroy(cmd->libmem);
-	dbg_free(cmd);
+	dm_pool_destroy(cmd->libmem);
+	dm_free(cmd);
 
 	release_log_memory();
-	dump_memory();
+	dm_dump_memory();
 	fin_log();
 	fin_syslog();
 

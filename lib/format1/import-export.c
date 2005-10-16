@@ -19,9 +19,6 @@
 
 #include "lib.h"
 #include "disk-rep.h"
-#include "pool.h"
-#include "hash.h"
-#include "list.h"
 #include "lvm-string.h"
 #include "filter.h"
 #include "toolcontext.h"
@@ -38,7 +35,7 @@ static int _check_vg_name(const char *name)
 /*
  * Extracts the last part of a path.
  */
-static char *_create_lv_name(struct pool *mem, const char *full_name)
+static char *_create_lv_name(struct dm_pool *mem, const char *full_name)
 {
 	const char *ptr = strrchr(full_name, '/');
 
@@ -47,10 +44,10 @@ static char *_create_lv_name(struct pool *mem, const char *full_name)
 	else
 		ptr++;
 
-	return pool_strdup(mem, ptr);
+	return dm_pool_strdup(mem, ptr);
 }
 
-int import_pv(struct pool *mem, struct device *dev,
+int import_pv(struct dm_pool *mem, struct device *dev,
 	      struct volume_group *vg,
 	      struct physical_volume *pv, struct pv_disk *pvd)
 {
@@ -58,7 +55,7 @@ int import_pv(struct pool *mem, struct device *dev,
 	memcpy(&pv->id, pvd->pv_uuid, ID_LEN);
 
 	pv->dev = dev;
-	if (!(pv->vg_name = pool_strdup(mem, pvd->vg_name))) {
+	if (!(pv->vg_name = dm_pool_strdup(mem, pvd->vg_name))) {
 		stack;
 		return 0;
 	}
@@ -112,7 +109,7 @@ static int _system_id(struct cmd_context *cmd, char *s, const char *prefix)
 	return 1;
 }
 
-int export_pv(struct cmd_context *cmd, struct pool *mem,
+int export_pv(struct cmd_context *cmd, struct dm_pool *mem,
 	      struct volume_group *vg,
 	      struct pv_disk *pvd, struct physical_volume *pv)
 {
@@ -198,7 +195,7 @@ int export_pv(struct cmd_context *cmd, struct pool *mem,
 	return 1;
 }
 
-int import_vg(struct pool *mem,
+int import_vg(struct dm_pool *mem,
 	      struct volume_group *vg, struct disk_list *dl, int partial)
 {
 	struct vg_disk *vgd = &dl->vgd;
@@ -209,12 +206,12 @@ int import_vg(struct pool *mem,
 		return 0;
 	}
 
-	if (!(vg->name = pool_strdup(mem, dl->pvd.vg_name))) {
+	if (!(vg->name = dm_pool_strdup(mem, dl->pvd.vg_name))) {
 		stack;
 		return 0;
 	}
 
-	if (!(vg->system_id = pool_alloc(mem, NAME_LEN))) {
+	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN))) {
 		stack;
 		return 0;
 	}
@@ -288,7 +285,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	return 1;
 }
 
-int import_lv(struct pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
+int import_lv(struct dm_pool *mem, struct logical_volume *lv, struct lv_disk *lvd)
 {
 	lvid_from_lvnum(&lv->lvid, &lv->vg->id, lvd->lv_number);
 
@@ -414,7 +411,7 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 	return 1;
 }
 
-int import_pvs(const struct format_type *fmt, struct pool *mem,
+int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
 	       struct volume_group *vg,
 	       struct list *pvds, struct list *results, int *count)
 {
@@ -423,8 +420,8 @@ int import_pvs(const struct format_type *fmt, struct pool *mem,
 
 	*count = 0;
 	list_iterate_items(dl, pvds) {
-		if (!(pvl = pool_zalloc(mem, sizeof(*pvl))) ||
-		    !(pvl->pv = pool_alloc(mem, sizeof(*pvl->pv)))) {
+		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
+		    !(pvl->pv = dm_pool_alloc(mem, sizeof(*pvl->pv)))) {
 			stack;
 			return 0;
 		}
@@ -442,15 +439,15 @@ int import_pvs(const struct format_type *fmt, struct pool *mem,
 	return 1;
 }
 
-static struct logical_volume *_add_lv(struct pool *mem,
+static struct logical_volume *_add_lv(struct dm_pool *mem,
 				      struct volume_group *vg,
 				      struct lv_disk *lvd)
 {
 	struct lv_list *ll;
 	struct logical_volume *lv;
 
-	if (!(ll = pool_zalloc(mem, sizeof(*ll))) ||
-	    !(ll->lv = pool_zalloc(mem, sizeof(*ll->lv)))) {
+	if (!(ll = dm_pool_zalloc(mem, sizeof(*ll))) ||
+	    !(ll->lv = dm_pool_zalloc(mem, sizeof(*ll->lv)))) {
 		stack;
 		return NULL;
 	}
@@ -468,7 +465,7 @@ static struct logical_volume *_add_lv(struct pool *mem,
 	return lv;
 }
 
-int import_lvs(struct pool *mem, struct volume_group *vg, struct list *pvds)
+int import_lvs(struct dm_pool *mem, struct volume_group *vg, struct list *pvds)
 {
 	struct disk_list *dl;
 	struct lvd_list *ll;
@@ -498,14 +495,14 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	struct lvd_list *lvdl;
 	size_t len;
 	uint32_t lv_num;
-	struct hash_table *lvd_hash;
+	struct dm_hash_table *lvd_hash;
 
 	if (!_check_vg_name(vg->name)) {
 		stack;
 		return 0;
 	}
 
-	if (!(lvd_hash = hash_create(32))) {
+	if (!(lvd_hash = dm_hash_create(32))) {
 		stack;
 		return 0;
 	}
@@ -514,7 +511,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	 * setup the pv's extents array
 	 */
 	len = sizeof(struct pe_disk) * dl->pvd.pe_total;
-	if (!(dl->extents = pool_alloc(dl->mem, len))) {
+	if (!(dl->extents = dm_pool_alloc(dl->mem, len))) {
 		stack;
 		goto out;
 	}
@@ -524,7 +521,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		if (ll->lv->status & SNAPSHOT)
 			continue;
 
-		if (!(lvdl = pool_alloc(dl->mem, sizeof(*lvdl)))) {
+		if (!(lvdl = dm_pool_alloc(dl->mem, sizeof(*lvdl)))) {
 			stack;
 			goto out;
 		}
@@ -534,7 +531,7 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 		lv_num = lvnum_from_lvid(&ll->lv->lvid);
 		lvdl->lvd.lv_number = lv_num;
 
-		if (!hash_insert(lvd_hash, ll->lv->name, &lvdl->lvd)) {
+		if (!dm_hash_insert(lvd_hash, ll->lv->name, &lvdl->lvd)) {
 			stack;
 			goto out;
 		}
@@ -561,14 +558,14 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	r = 1;
 
       out:
-	hash_destroy(lvd_hash);
+	dm_hash_destroy(lvd_hash);
 	return r;
 }
 
 /*
  * FIXME: More inefficient code.
  */
-int import_snapshots(struct pool *mem, struct volume_group *vg,
+int import_snapshots(struct dm_pool *mem, struct volume_group *vg,
 		     struct list *pvds)
 {
 	struct logical_volume *lvs[MAX_LV];
@@ -642,7 +639,7 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 	struct pv_list *pvl;
 
 	list_iterate_items(pvl, &vg->pvs) {
-		if (!(ul = pool_alloc(dl->mem, sizeof(*ul)))) {
+		if (!(ul = dm_pool_alloc(dl->mem, sizeof(*ul)))) {
 			stack;
 			return 0;
 		}

@@ -16,14 +16,12 @@
 #ifndef _LVM_STR_LIST_H
 #define _LVM_STR_LIST_H
 
-#include "pool.h"
-
-struct list *str_list_create(struct pool *mem);
-int str_list_add(struct pool *mem, struct list *sll, const char *str);
+struct list *str_list_create(struct dm_pool *mem);
+int str_list_add(struct dm_pool *mem, struct list *sll, const char *str);
 int str_list_del(struct list *sll, const char *str);
 int str_list_match_item(struct list *sll, const char *str);
 int str_list_match_list(struct list *sll, struct list *sll2);
 int str_list_lists_equal(struct list *sll, struct list *sll2);
-int str_list_dup(struct pool *mem, struct list *sllnew, struct list *sllold);
+int str_list_dup(struct dm_pool *mem, struct list *sllnew, struct list *sllold);
 
 #endif

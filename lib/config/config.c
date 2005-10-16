@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "config.h"
 #include "crc.h"
-#include "pool.h"
 #include "device.h"
 #include "str_list.h"
 #include "toolcontext.h"
@@ -50,12 +49,12 @@ struct parser {
 	int fd;			/* descriptor for file being parsed */
 	int line;		/* line number we are on */
 
-	struct pool *mem;
+	struct dm_pool *mem;
 };
 
 struct cs {
 	struct config_tree cft;
-	struct pool *mem;
+	struct dm_pool *mem;
 	time_t timestamp;
 	char *filename;
 	int exists;
@@ -99,16 +98,16 @@ static int _tok_match(const char *str, const char *b, const char *e)
 struct config_tree *create_config_tree(const char *filename)
 {
 	struct cs *c;
-	struct pool *mem = pool_create("config", 10 * 1024);
+	struct dm_pool *mem = dm_pool_create("config", 10 * 1024);
 
 	if (!mem) {
 		stack;
 		return 0;
 	}
 
-	if (!(c = pool_zalloc(mem, sizeof(*c)))) {
+	if (!(c = dm_pool_zalloc(mem, sizeof(*c)))) {
 		stack;
-		pool_destroy(mem);
+		dm_pool_destroy(mem);
 		return 0;
 	}
 
@@ -117,13 +116,13 @@ struct config_tree *create_config_tree(const char *filename)
 	c->timestamp = 0;
 	c->exists = 0;
 	if (filename)
-		c->filename = pool_strdup(c->mem, filename);
+		c->filename = dm_pool_strdup(c->mem, filename);
 	return &c->cft;
 }
 
 void destroy_config_tree(struct config_tree *cft)
 {
-	pool_destroy(((struct cs *) cft)->mem);
+	dm_pool_destroy(((struct cs *) cft)->mem);
 }
 
 int read_config_fd(struct config_tree *cft, struct device *dev,
@@ -136,7 +135,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 	int use_mmap = 1;
 	off_t mmap_offset = 0;
 
-	if (!(p = pool_alloc(c->mem, sizeof(*p)))) {
+	if (!(p = dm_pool_alloc(c->mem, sizeof(*p)))) {
 		stack;
 		return 0;
 	}
@@ -157,7 +156,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 		}
 		p->fb = p->fb + mmap_offset;
 	} else {
-		if (!(p->fb = dbg_malloc(size + size2))) {
+		if (!(p->fb = dm_malloc(size + size2))) {
 			stack;
 			return 0;
 		}
@@ -197,7 +196,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 
       out:
 	if (!use_mmap)
-		dbg_free(p->fb);
+		dm_free(p->fb);
 	else {
 		/* unmap the file */
 		if (munmap((char *) (p->fb - mmap_offset), size + mmap_offset)) {
@@ -688,14 +687,14 @@ static void _eat_space(struct parser *p)
  */
 static struct config_value *_create_value(struct parser *p)
 {
-	struct config_value *v = pool_alloc(p->mem, sizeof(*v));
+	struct config_value *v = dm_pool_alloc(p->mem, sizeof(*v));
 	memset(v, 0, sizeof(*v));
 	return v;
 }
 
 static struct config_node *_create_node(struct parser *p)
 {
-	struct config_node *n = pool_alloc(p->mem, sizeof(*n));
+	struct config_node *n = dm_pool_alloc(p->mem, sizeof(*n));
 	memset(n, 0, sizeof(*n));
 	return n;
 }
@@ -703,7 +702,7 @@ static struct config_node *_create_node(struct parser *p)
 static char *_dup_tok(struct parser *p)
 {
 	size_t len = p->te - p->tb;
-	char *str = pool_alloc(p->mem, len + 1);
+	char *str = dm_pool_alloc(p->mem, len + 1);
 	if (!str) {
 		stack;
 		return 0;

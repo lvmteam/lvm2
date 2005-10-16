@@ -16,8 +16,6 @@
 #include "lib.h"
 #include "import-export.h"
 #include "metadata.h"
-#include "hash.h"
-#include "pool.h"
 #include "display.h"
 #include "lvm-string.h"
 #include "segtype.h"
@@ -36,8 +34,8 @@ typedef int (*nl_fn) (struct formatter * f);
  * exporting the vg, ie. writing it to a file.
  */
 struct formatter {
-	struct pool *mem;	/* pv names allocated from here */
-	struct hash_table *pv_names;	/* dev_name -> pv_name (eg, pv1) */
+	struct dm_pool *mem;	/* pv names allocated from here */
+	struct dm_hash_table *pv_names;	/* dev_name -> pv_name (eg, pv1) */
 
 	union {
 		FILE *fp;	/* where we're writing to */
@@ -108,7 +106,7 @@ static int _nl_raw(struct formatter *f)
 
 	/* If metadata doesn't fit, double the buffer size */
 	if (f->data.buf.used + 2 > f->data.buf.size) {
-		if (!(newbuf = dbg_realloc(f->data.buf.start,
+		if (!(newbuf = dm_realloc(f->data.buf.start,
 					   f->data.buf.size * 2))) {
 			stack;
 			return 0;
@@ -173,7 +171,7 @@ static int _out_with_comment_raw(struct formatter *f, const char *comment,
 
 	/* If metadata doesn't fit, double the buffer size */
 	if (n < 0 || (n + f->data.buf.used + 2 > f->data.buf.size)) {
-		if (!(newbuf = dbg_realloc(f->data.buf.start,
+		if (!(newbuf = dm_realloc(f->data.buf.start,
 					   f->data.buf.size * 2))) {
 			stack;
 			return 0;
@@ -347,7 +345,7 @@ static inline const char *_get_pv_name(struct formatter *f,
 				       struct physical_volume *pv)
 {
 	return (pv) ? (const char *)
-	    hash_lookup(f->pv_names, dev_name(pv->dev)) : "Missing";
+	    dm_hash_lookup(f->pv_names, dev_name(pv->dev)) : "Missing";
 }
 
 static int _print_pvs(struct formatter *f, struct volume_group *vg)
@@ -602,12 +600,12 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 	struct physical_volume *pv;
 	char buffer[32], *name;
 
-	if (!(f->mem = pool_create("text pv_names", 512))) {
+	if (!(f->mem = dm_pool_create("text pv_names", 512))) {
 		stack;
 		goto bad;
 	}
 
-	if (!(f->pv_names = hash_create(128))) {
+	if (!(f->pv_names = dm_hash_create(128))) {
 		stack;
 		goto bad;
 	}
@@ -621,12 +619,12 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 			goto bad;
 		}
 
-		if (!(name = pool_strdup(f->mem, buffer))) {
+		if (!(name = dm_pool_strdup(f->mem, buffer))) {
 			stack;
 			goto bad;
 		}
 
-		if (!hash_insert(f->pv_names, dev_name(pv->dev), name)) {
+		if (!dm_hash_insert(f->pv_names, dev_name(pv->dev), name)) {
 			stack;
 			goto bad;
 		}
@@ -636,10 +634,10 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 
       bad:
 	if (f->mem)
-		pool_destroy(f->mem);
+		dm_pool_destroy(f->mem);
 
 	if (f->pv_names)
-		hash_destroy(f->pv_names);
+		dm_hash_destroy(f->pv_names);
 
 	return 0;
 }
@@ -686,10 +684,10 @@ static int _text_vg_export(struct formatter *f,
 
       out:
 	if (f->mem)
-		pool_destroy(f->mem);
+		dm_pool_destroy(f->mem);
 
 	if (f->pv_names)
-		hash_destroy(f->pv_names);
+		dm_hash_destroy(f->pv_names);
 
 	return r;
 }
@@ -701,7 +699,7 @@ int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 
 	_init();
 
-	if (!(f = dbg_malloc(sizeof(*f)))) {
+	if (!(f = dm_malloc(sizeof(*f)))) {
 		stack;
 		return 0;
 	}
@@ -716,7 +714,7 @@ int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 	r = _text_vg_export(f, vg, desc);
 	if (r)
 		r = !ferror(f->data.fp);
-	dbg_free(f);
+	dm_free(f);
 	return r;
 }
 
@@ -728,7 +726,7 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 
 	_init();
 
-	if (!(f = dbg_malloc(sizeof(*f)))) {
+	if (!(f = dm_malloc(sizeof(*f)))) {
 		stack;
 		return 0;
 	}
@@ -736,7 +734,7 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 	memset(f, 0, sizeof(*f));
 
 	f->data.buf.size = 65536;	/* Initial metadata limit */
-	if (!(f->data.buf.start = dbg_malloc(f->data.buf.size))) {
+	if (!(f->data.buf.start = dm_malloc(f->data.buf.size))) {
 		log_error("text_export buffer allocation failed");
 		goto out;
 	}
@@ -748,7 +746,7 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 
 	if (!_text_vg_export(f, vg, desc)) {
 		stack;
-		dbg_free(f->data.buf.start);
+		dm_free(f->data.buf.start);
 		goto out;
 	}
 
@@ -756,7 +754,7 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 	*buf = f->data.buf.start;
 
       out:
-	dbg_free(f);
+	dm_free(f);
 	return r;
 }
 

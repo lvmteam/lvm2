@@ -17,11 +17,12 @@
 #define _LVM_DEVICE_H
 
 #include "uuid.h"
+
 #include <fcntl.h>
 
 #define DEV_ACCESSED_W		0x00000001	/* Device written to? */
 #define DEV_REGULAR		0x00000002	/* Regular file? */
-#define DEV_ALLOCED		0x00000004	/* dbg_malloc used */
+#define DEV_ALLOCED		0x00000004	/* dm_malloc used */
 #define DEV_OPENED_RW		0x00000008	/* Opened RW */
 #define DEV_OPENED_EXCL		0x00000010	/* Opened EXCL */
 #define DEV_O_DIRECT		0x00000020	/* Use O_DIRECT */

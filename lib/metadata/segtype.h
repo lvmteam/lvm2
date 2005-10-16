@@ -22,7 +22,6 @@ struct config_tree;
 struct lv_segment;
 struct formatter;
 struct config_node;
-struct hash_table;
 struct dev_manager;
 
 /* Feature flags */
@@ -62,16 +61,16 @@ struct segtype_handler {
 				       uint32_t *area_count);
 	int (*text_import) (struct lv_segment * seg,
 			    const struct config_node * sn,
-			    struct hash_table * pv_hash);
+			    struct dm_hash_table * pv_hash);
 	int (*merge_segments) (struct lv_segment * seg1,
 			       struct lv_segment * seg2);
-	int (*compose_target_line) (struct dev_manager * dm, struct pool * mem,
+	int (*compose_target_line) (struct dev_manager * dm, struct dm_pool * mem,
 				    struct config_tree * cft,
 				    void **target_state,
 				    struct lv_segment * seg, char *params,
 				    size_t paramsize, const char **target,
 				    int *pos, uint32_t *pvmove_mirror_count);
-	int (*target_percent) (void **target_state, struct pool * mem,
+	int (*target_percent) (void **target_state, struct dm_pool * mem,
 			       struct config_tree * cft,
 			       struct lv_segment * seg, char *params,
 			       uint64_t *total_numerator,

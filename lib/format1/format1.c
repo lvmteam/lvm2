@@ -15,10 +15,7 @@
 
 #include "lib.h"
 #include "disk-rep.h"
-#include "pool.h"
-#include "hash.h"
 #include "limits.h"
-#include "list.h"
 #include "display.h"
 #include "toolcontext.h"
 #include "lvmcache.h"
@@ -128,8 +125,8 @@ static int _check_vgs(struct list *pvs, int *partial)
 static struct volume_group *_build_vg(struct format_instance *fid,
 				      struct list *pvs)
 {
-	struct pool *mem = fid->fmt->cmd->mem;
-	struct volume_group *vg = pool_alloc(mem, sizeof(*vg));
+	struct dm_pool *mem = fid->fmt->cmd->mem;
+	struct volume_group *vg = dm_pool_alloc(mem, sizeof(*vg));
 	struct disk_list *dl;
 	int partial;
 
@@ -172,7 +169,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 
       bad:
 	stack;
-	pool_free(mem, vg);
+	dm_pool_free(mem, vg);
 	return NULL;
 }
 
@@ -180,7 +177,7 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda)
 {
-	struct pool *mem = pool_create("lvm1 vg_read", 1024 * 10);
+	struct dm_pool *mem = dm_pool_create("lvm1 vg_read", 1024 * 10);
 	struct list pvs;
 	struct volume_group *vg = NULL;
 	list_init(&pvs);
@@ -205,16 +202,16 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 	}
 
       bad:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return vg;
 }
 
 static struct disk_list *_flatten_pv(struct format_instance *fid,
-				     struct pool *mem, struct volume_group *vg,
+				     struct dm_pool *mem, struct volume_group *vg,
 				     struct physical_volume *pv,
 				     const char *dev_dir)
 {
-	struct disk_list *dl = pool_alloc(mem, sizeof(*dl));
+	struct disk_list *dl = dm_pool_alloc(mem, sizeof(*dl));
 
 	if (!dl) {
 		stack;
@@ -232,14 +229,14 @@ static struct disk_list *_flatten_pv(struct format_instance *fid,
 	    !export_uuids(dl, vg) ||
 	    !export_lvs(dl, vg, pv, dev_dir) || !calculate_layout(dl)) {
 		stack;
-		pool_free(mem, dl);
+		dm_pool_free(mem, dl);
 		return NULL;
 	}
 
 	return dl;
 }
 
-static int _flatten_vg(struct format_instance *fid, struct pool *mem,
+static int _flatten_vg(struct format_instance *fid, struct dm_pool *mem,
 		       struct volume_group *vg,
 		       struct list *pvds, const char *dev_dir,
 		       struct dev_filter *filter)
@@ -270,7 +267,7 @@ static int _flatten_vg(struct format_instance *fid, struct pool *mem,
 static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 		     struct metadata_area *mda)
 {
-	struct pool *mem = pool_create("lvm1 vg_write", 1024 * 10);
+	struct dm_pool *mem = dm_pool_create("lvm1 vg_write", 1024 * 10);
 	struct list pvds;
 	int r = 0;
 
@@ -286,14 +283,14 @@ static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 	     write_disks(fid->fmt, &pvds));
 
 	lvmcache_update_vg(vg);
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return r;
 }
 
 static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
-	struct pool *mem = pool_create("lvm1 pv_read", 1024);
+	struct dm_pool *mem = dm_pool_create("lvm1 pv_read", 1024);
 	struct disk_list *dl;
 	struct device *dev;
 	int r = 0;
@@ -325,7 +322,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 	r = 1;
 
       out:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return r;
 }
 
@@ -392,7 +389,7 @@ static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		     struct list *mdas, int64_t sector)
 {
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct disk_list *dl;
 	struct list pvs;
 	struct label *label;
@@ -415,12 +412,12 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	pv->pe_size = pv->pe_count = 0;
 	pv->pe_start = PE_ALIGN;
 
-	if (!(mem = pool_create("lvm1 pv_write", 1024))) {
+	if (!(mem = dm_pool_create("lvm1 pv_write", 1024))) {
 		stack;
 		return 0;
 	}
 
-	if (!(dl = pool_alloc(mem, sizeof(*dl)))) {
+	if (!(dl = dm_pool_alloc(mem, sizeof(*dl)))) {
 		stack;
 		goto bad;
 	}
@@ -444,11 +441,11 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		goto bad;
 	}
 
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return 1;
 
       bad:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return 0;
 }
 
@@ -510,7 +507,7 @@ static struct format_instance *_create_instance(const struct format_type *fmt,
 	struct format_instance *fid;
 	struct metadata_area *mda;
 
-	if (!(fid = pool_alloc(fmt->cmd->mem, sizeof(*fid)))) {
+	if (!(fid = dm_pool_alloc(fmt->cmd->mem, sizeof(*fid)))) {
 		stack;
 		return NULL;
 	}
@@ -519,9 +516,9 @@ static struct format_instance *_create_instance(const struct format_type *fmt,
 	list_init(&fid->metadata_areas);
 
 	/* Define a NULL metadata area */
-	if (!(mda = pool_alloc(fmt->cmd->mem, sizeof(*mda)))) {
+	if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda)))) {
 		stack;
-		pool_free(fmt->cmd->mem, fid);
+		dm_pool_free(fmt->cmd->mem, fid);
 		return NULL;
 	}
 
@@ -539,7 +536,7 @@ static void _destroy_instance(struct format_instance *fid)
 
 static void _destroy(const struct format_type *fmt)
 {
-	dbg_free((void *) fmt);
+	dm_free((void *) fmt);
 }
 
 static struct format_handler _format1_ops = {
@@ -561,7 +558,7 @@ struct format_type *init_format(struct cmd_context *cmd);
 struct format_type *init_format(struct cmd_context *cmd)
 #endif
 {
-	struct format_type *fmt = dbg_malloc(sizeof(*fmt));
+	struct format_type *fmt = dm_malloc(sizeof(*fmt));
 
 	if (!fmt) {
 		stack;

@@ -16,11 +16,11 @@
 #include "lib.h"
 #include "str_list.h"
 
-struct list *str_list_create(struct pool *mem)
+struct list *str_list_create(struct dm_pool *mem)
 {
 	struct list *sl;
 
-	if (!(sl = pool_alloc(mem, sizeof(struct list)))) {
+	if (!(sl = dm_pool_alloc(mem, sizeof(struct list)))) {
 		stack;
 		return NULL;
 	}
@@ -30,7 +30,7 @@ struct list *str_list_create(struct pool *mem)
 	return sl;
 }
 
-int str_list_add(struct pool *mem, struct list *sll, const char *str)
+int str_list_add(struct dm_pool *mem, struct list *sll, const char *str)
 {
 	struct str_list *sln;
 
@@ -43,7 +43,7 @@ int str_list_add(struct pool *mem, struct list *sll, const char *str)
 	if (str_list_match_item(sll, str))
 		return 1;
 
-	if (!(sln = pool_alloc(mem, sizeof(*sln)))) {
+	if (!(sln = dm_pool_alloc(mem, sizeof(*sln)))) {
 		stack;
 		return 0;
 	}
@@ -66,7 +66,7 @@ int str_list_del(struct list *sll, const char *str)
 	return 1;
 }
 
-int str_list_dup(struct pool *mem, struct list *sllnew, struct list *sllold)
+int str_list_dup(struct dm_pool *mem, struct list *sllnew, struct list *sllold)
 {
 	struct str_list *sl;
 

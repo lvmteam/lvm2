@@ -71,8 +71,8 @@ static int _release_lock(const char *file, int unlock)
 			if (close(ll->lf) < 0)
 				log_sys_error("close", ll->res);
 
-			dbg_free(ll->res);
-			dbg_free(llh);
+			dm_free(ll->res);
+			dm_free(llh);
 
 			if (file)
 				return 1;
@@ -150,11 +150,11 @@ static int _lock_file(const char *file, int flags)
 		return 0;
 	}
 
-	if (!(ll = dbg_malloc(sizeof(struct lock_list))))
+	if (!(ll = dm_malloc(sizeof(struct lock_list))))
 		return 0;
 
-	if (!(ll->res = dbg_strdup(file))) {
-		dbg_free(ll);
+	if (!(ll->res = dm_strdup(file))) {
+		dm_free(ll);
 		return 0;
 	}
 
@@ -197,8 +197,8 @@ static int _lock_file(const char *file, int flags)
 	return 1;
 
       err:
-	dbg_free(ll->res);
-	dbg_free(ll);
+	dm_free(ll->res);
+	dm_free(ll);
 	return 0;
 }
 

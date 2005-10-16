@@ -24,13 +24,13 @@ struct node {
 };
 
 struct btree {
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct node *root;
 };
 
-struct btree *btree_create(struct pool *mem)
+struct btree *btree_create(struct dm_pool *mem)
 {
-	struct btree *t = pool_alloc(mem, sizeof(*t));
+	struct btree *t = dm_pool_alloc(mem, sizeof(*t));
 
 	if (t) {
 		t->mem = mem;
@@ -86,7 +86,7 @@ int btree_insert(struct btree *t, uint32_t k, void *data)
 	struct node *p, **c = _lookup(&t->root, key, &p), *n;
 
 	if (!*c) {
-		if (!(n = pool_alloc(t->mem, sizeof(*n)))) {
+		if (!(n = dm_pool_alloc(t->mem, sizeof(*n)))) {
 			stack;
 			return 0;
 		}

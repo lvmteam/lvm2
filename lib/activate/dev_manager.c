@@ -16,8 +16,6 @@
 #include "lib.h"
 #include "str_list.h"
 #include "dev_manager.h"
-#include "pool.h"
-#include "hash.h"
 #include "lvm-string.h"
 #include "fs.h"
 #include "defaults.h"
@@ -27,7 +25,6 @@
 #include "targets.h"
 #include "config.h"
 
-#include <libdevmapper.h>
 #include <limits.h>
 #include <dirent.h>
 
@@ -113,7 +110,7 @@ struct dl_list {
 static const char *stripe_filler = NULL;
 
 struct dev_manager {
-	struct pool *mem;
+	struct dm_pool *mem;
 
 	struct cmd_context *cmd;
 
@@ -144,7 +141,7 @@ struct dev_manager {
 	 */
 	struct list remove_list;
 
-	struct hash_table *layers;
+	struct dm_hash_table *layers;
 };
 
 /*
@@ -165,7 +162,7 @@ static inline void _clear_flag(struct dev_layer *dl, int bit)
 	dl->flags &= ~(1 << bit);
 }
 
-static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
+static char *_build_dlid(struct dm_pool *mem, const char *lvid, const char *layer)
 {
 	char *dlid;
 	size_t len;
@@ -175,7 +172,7 @@ static char *_build_dlid(struct pool *mem, const char *lvid, const char *layer)
 
 	len = strlen(lvid) + strlen(layer) + 2;
 
-	if (!(dlid = pool_alloc(mem, len))) {
+	if (!(dlid = dm_pool_alloc(mem, len))) {
 		stack;
 		return NULL;
 	}
@@ -211,7 +208,7 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 }
 
 static int _info_run(const char *name, const char *uuid, struct dm_info *info,
-		     int mknodes, int with_open_count, struct pool *mem,
+		     int mknodes, int with_open_count, struct dm_pool *mem,
 		     char **uuid_out)
 {
 	int r = 0;
@@ -245,7 +242,7 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 			stack;
 			goto out;
 		}
-		*uuid_out = pool_strdup(mem, u);
+		*uuid_out = dm_pool_strdup(mem, u);
 	}
 	r = 1;
 
@@ -256,7 +253,7 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 
 static int _info(const char *name, const char *uuid, int mknodes,
 		 int with_open_count, struct dm_info *info,
-		 struct pool *mem, char **uuid_out)
+		 struct dm_pool *mem, char **uuid_out)
 {
 	if (!mknodes && uuid && *uuid &&
 	    _info_run(NULL, uuid, info, 0, with_open_count, mem, uuid_out) &&
@@ -732,7 +729,7 @@ int build_dev_string(struct dev_manager *dm, char *dlid, char *devbuf,
 {
 	struct dev_layer *dl;
 
-	if (!(dl = hash_lookup(dm->layers, dlid))) {
+	if (!(dl = dm_hash_lookup(dm->layers, dlid))) {
 		log_error("%s device layer %s missing from hash",
 			  desc, dlid);
 		return 0;
@@ -809,13 +806,13 @@ static int _emit_target(struct dev_manager *dm, struct dm_task *dmt,
 	int ret;
 
 	do {
-		if (!(params = dbg_malloc(paramsize))) {
+		if (!(params = dm_malloc(paramsize))) {
 			log_error("Insufficient space for target parameters.");
 			return 0;
 		}
 
 		ret = _emit_target_line(dm, dmt, seg, params, paramsize);
-		dbg_free(params);
+		dm_free(params);
 
 		if (!ret)
 			stack;
@@ -936,15 +933,15 @@ static int _populate_snapshot(struct dev_manager *dm,
 struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 				       const char *vg_name)
 {
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct dev_manager *dm;
 
-	if (!(mem = pool_create("dev_manager", 16 * 1024))) {
+	if (!(mem = dm_pool_create("dev_manager", 16 * 1024))) {
 		stack;
 		return NULL;
 	}
 
-	if (!(dm = pool_alloc(mem, sizeof(*dm)))) {
+	if (!(dm = dm_pool_alloc(mem, sizeof(*dm)))) {
 		stack;
 		goto bad;
 	}
@@ -959,12 +956,12 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	}
 	dm->stripe_filler = stripe_filler;
 
-	if (!(dm->vg_name = pool_strdup(dm->mem, vg_name))) {
+	if (!(dm->vg_name = dm_pool_strdup(dm->mem, vg_name))) {
 		stack;
 		goto bad;
 	}
 
-	if (!(dm->layers = hash_create(32))) {
+	if (!(dm->layers = dm_hash_create(32))) {
 		stack;
 		goto bad;
 	}
@@ -979,14 +976,14 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	return dm;
 
       bad:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return NULL;
 }
 
 void dev_manager_destroy(struct dev_manager *dm)
 {
-	hash_destroy(dm->layers);
-	pool_destroy(dm->mem);
+	dm_hash_destroy(dm->layers);
+	dm_pool_destroy(dm->mem);
 }
 
 int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
@@ -1038,7 +1035,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 		return 0;
 	}
 
-	/* FIXME pool_free ? */
+	/* FIXME dm_pool_free ? */
 
 	/* If the snapshot isn't available, percent will be -1 */
 	return 1;
@@ -1060,7 +1057,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 		return 0;
 	}
 
-	/* FIXME pool_free ? */
+	/* FIXME dm_pool_free ? */
 
 	log_debug("Getting device mirror status percentage for %s", name);
 	if (!(_percent(dm, name, lv->lvid.s, "mirror", wait, lv, percent,
@@ -1078,7 +1075,7 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 	struct dev_layer *dl;
 	char *uuid;
 
-	if (!(dl = pool_zalloc(dm->mem, sizeof(*dl)))) {
+	if (!(dl = dm_pool_zalloc(dm->mem, sizeof(*dl)))) {
 		stack;
 		return NULL;
 	}
@@ -1099,7 +1096,7 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 	list_init(&dl->pre_create);
 	list_init(&dl->pre_suspend);
 
-	if (!hash_insert(dm->layers, dl->dlid, dl)) {
+	if (!dm_hash_insert(dm->layers, dl->dlid, dl)) {
 		stack;
 		return NULL;
 	}
@@ -1129,7 +1126,7 @@ static struct dev_layer *_create_layer(struct dev_manager *dm,
 		return NULL;
 	}
 
-	if (!(dl = hash_lookup(dm->layers, dlid)) &&
+	if (!(dl = dm_hash_lookup(dm->layers, dlid)) &&
 	    !(dl = _create_dev(dm, name, dlid))) {
 		stack;
 		return NULL;
@@ -1157,8 +1154,8 @@ static struct dev_layer *_lookup(struct dev_manager *dm,
 		return NULL;
 	}
 
-	dl = hash_lookup(dm->layers, dlid);
-	pool_free(dm->mem, dlid);
+	dl = dm_hash_lookup(dm->layers, dlid);
+	dm_pool_free(dm->mem, dlid);
 	return dl;
 }
 
@@ -1229,7 +1226,7 @@ static int _expand_vanilla(struct dev_manager *dm, struct logical_volume *lv,
 
 	/* add the dependency on the real device */
 	if (!str_list_add(dm->mem, &dl->pre_create,
-			  pool_strdup(dm->mem, dlr->dlid))) {
+			  dm_pool_strdup(dm->mem, dlr->dlid))) {
 		stack;
 		return 0;
 	}
@@ -1266,7 +1263,7 @@ static int _expand_origin_real(struct dev_manager *dm,
 
 	/* add the dependency on the real device */
 	if (!str_list_add(dm->mem, &dl->pre_create,
-			  pool_strdup(dm->mem, real_dlid))) {
+			  dm_pool_strdup(dm->mem, real_dlid))) {
 		stack;
 		return 0;
 	}
@@ -1327,7 +1324,7 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 
 	/* add the dependency on the cow device */
 	if (!str_list_add(dm->mem, &dl->pre_create,
-			  pool_strdup(dm->mem, cow_dlid))) {
+			  dm_pool_strdup(dm->mem, cow_dlid))) {
 		stack;
 		return 0;
 	}
@@ -1382,11 +1379,11 @@ static int _expand_lv(struct dev_manager *dm, struct logical_volume *lv)
  */
 static void _clear_marks(struct dev_manager *dm, int flag)
 {
-	struct hash_node *hn;
+	struct dm_hash_node *hn;
 	struct dev_layer *dl;
 
-	hash_iterate(hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
+	dm_hash_iterate(hn, dm->layers) {
+		dl = dm_hash_get_data(dm->layers, hn);
 		_clear_flag(dl, flag);
 	}
 }
@@ -1404,7 +1401,7 @@ static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
 	list_iterate_items(strl, &dl->pre_create) {
 		dlid = strl->str;
 
-		if (!(dep = hash_lookup(dm->layers, dlid))) {
+		if (!(dep = dm_hash_lookup(dm->layers, dlid))) {
 			log_error("Couldn't find device layer '%s'.", dlid);
 			return 0;
 		}
@@ -1432,11 +1429,11 @@ static int _trace_layer_marks(struct dev_manager *dm, struct dev_layer *dl,
  */
 static int _trace_all_marks(struct dev_manager *dm, int flag)
 {
-	struct hash_node *hn;
+	struct dm_hash_node *hn;
 	struct dev_layer *dl;
 
-	hash_iterate(hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
+	dm_hash_iterate(hn, dm->layers) {
+		dl = dm_hash_get_data(dm->layers, hn);
 		if (_get_flag(dl, flag) && !_trace_layer_marks(dm, dl, flag)) {
 			stack;
 			return 0;
@@ -1484,7 +1481,7 @@ static int _suspend_parents(struct dev_manager *dm, struct dev_layer *dl)
 	list_iterate_items(strl, &dl->pre_suspend) {
 		dlid = strl->str;
 
-		if (!(dep = hash_lookup(dm->layers, dlid))) {
+		if (!(dep = dm_hash_lookup(dm->layers, dlid))) {
 			log_debug("_suspend_parents couldn't find device "
 				  "layer '%s' - skipping.", dlid);
 			continue;
@@ -1518,7 +1515,7 @@ static int _resume_with_deps(struct dev_manager *dm, struct dev_layer *dl)
 	list_iterate_items(strl, &dl->pre_create) {
 		dlid = strl->str;
 
-		if (!(dep = hash_lookup(dm->layers, dlid))) {
+		if (!(dep = dm_hash_lookup(dm->layers, dlid))) {
 			log_debug("_resume_with_deps couldn't find device "
 				  "layer '%s' - skipping.", dlid);
 			continue;
@@ -1564,7 +1561,7 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 	list_iterate_items(strl, &dl->pre_create) {
 		dlid = strl->str;
 
-		if (!(dep = hash_lookup(dm->layers, dlid))) {
+		if (!(dep = dm_hash_lookup(dm->layers, dlid))) {
 			log_error("Couldn't find device layer '%s'.", dlid);
 			return 0;
 		}
@@ -1637,18 +1634,18 @@ static int _build_all_layers(struct dev_manager *dm, struct volume_group *vg)
 
 static int _fill_in_remove_list(struct dev_manager *dm)
 {
-	struct hash_node *hn;
+	struct dm_hash_node *hn;
 	struct dev_layer *dl;
 	struct dl_list *dll;
 
-	hash_iterate(hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
+	dm_hash_iterate(hn, dm->layers) {
+		dl = dm_hash_get_data(dm->layers, hn);
 
 		if (_get_flag(dl, REMOVE))
 			_clear_flag(dl, ACTIVE);
 
 		if (!_get_flag(dl, ACTIVE)) {
-			dll = pool_alloc(dm->mem, sizeof(*dll));
+			dll = dm_pool_alloc(dm->mem, sizeof(*dll));
 			if (!dll) {
 				stack;
 				return 0;
@@ -1664,19 +1661,19 @@ static int _fill_in_remove_list(struct dev_manager *dm)
 
 static int _populate_pre_suspend_lists(struct dev_manager *dm)
 {
-	struct hash_node *hn;
+	struct dm_hash_node *hn;
 	struct dev_layer *dl;
 	struct str_list *strl;
 	const char *dlid;
 	struct dev_layer *dep;
 
-	hash_iterate(hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
+	dm_hash_iterate(hn, dm->layers) {
+		dl = dm_hash_get_data(dm->layers, hn);
 
 		list_iterate_items(strl, &dl->pre_suspend) {
 			dlid = strl->str;
 
-			if (!(dep = hash_lookup(dm->layers, dlid))) {
+			if (!(dep = dm_hash_lookup(dm->layers, dlid))) {
 				log_debug("_populate_pre_suspend_lists: "
 					  "Couldn't find device layer '%s' - "
 					  "skipping.", dlid);
@@ -1692,7 +1689,7 @@ static int _populate_pre_suspend_lists(struct dev_manager *dm)
 		list_iterate_items(strl, &dl->pre_create) {
 			dlid = strl->str;
 
-			if (!(dep = hash_lookup(dm->layers, dlid))) {
+			if (!(dep = dm_hash_lookup(dm->layers, dlid))) {
 				log_debug("_populate_pre_suspend_lists: "
 					  "Couldn't find device layer '%s' - "
 					  "skipping.", dlid);
@@ -1753,7 +1750,7 @@ static int _remove_old_layers(struct dev_manager *dm)
  */
 static int _execute(struct dev_manager *dm, struct volume_group *vg)
 {
-	struct hash_node *hn;
+	struct dm_hash_node *hn;
 	struct dev_layer *dl;
 
 	if (!_build_all_layers(dm, vg)) {
@@ -1801,8 +1798,8 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
 	/*
 	 * Now only top level devices will be unmarked.
 	 */
-	hash_iterate(hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
+	dm_hash_iterate(hn, dm->layers) {
+		dl = dm_hash_get_data(dm->layers, hn);
 
 		if (_get_flag(dl, ACTIVE) && _get_flag(dl, TOPLEVEL))
 			if (!_create_rec(dm, dl)) {
@@ -1812,8 +1809,8 @@ static int _execute(struct dev_manager *dm, struct volume_group *vg)
 	}
 
 	/* Resume devices */
-	hash_iterate(hn, dm->layers) {
-		dl = hash_get_data(dm->layers, hn);
+	dm_hash_iterate(hn, dm->layers) {
+		dl = dm_hash_get_data(dm->layers, hn);
 
 		if (!_resume_with_deps(dm, dl)) {
 			stack;
@@ -1857,7 +1854,7 @@ static int _add_existing_layer(struct dev_manager *dm, const char *name)
 
 	log_debug("Found existing layer '%s'", name);
 
-	if (!(copy = pool_strdup(dm->mem, name))) {
+	if (!(copy = dm_pool_strdup(dm->mem, name))) {
 		stack;
 		return 0;
 	}
@@ -1907,12 +1904,12 @@ static int _scan_existing_devices(struct dev_manager *dm)
 	return r;
 }
 
-static int _add_lv(struct pool *mem,
+static int _add_lv(struct dm_pool *mem,
 		   struct list *head, struct logical_volume *lv)
 {
 	struct lv_list *lvl;
 
-	if (!(lvl = pool_alloc(mem, sizeof(*lvl)))) {
+	if (!(lvl = dm_pool_alloc(mem, sizeof(*lvl)))) {
 		stack;
 		return 0;
 	}
@@ -1923,7 +1920,7 @@ static int _add_lv(struct pool *mem,
 	return 1;
 }
 
-static int _add_lvs(struct pool *mem,
+static int _add_lvs(struct dm_pool *mem,
 		    struct list *head, struct logical_volume *origin)
 {
 	struct lv_segment *snap_seg;
@@ -2093,8 +2090,8 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 			return 0;
 		}
 
-		dl = hash_lookup(dm->layers, dlid);
-		pool_free(dm->mem, dlid);
+		dl = dm_hash_lookup(dm->layers, dlid);
+		dm_pool_free(dm->mem, dlid);
 
 		if (dl) {
 			log_debug("Found active lv %s%s", lvl->lv->name,
@@ -2205,20 +2202,6 @@ int dev_manager_lv_mknodes(const struct logical_volume *lv)
 int dev_manager_lv_rmnodes(const struct logical_volume *lv)
 {
 	return fs_del_lv(lv);
-}
-
-int dev_manager_mknodes(void)
-{
-	struct dm_task *dmt;
-	int r;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
-		return 0;
-
-	r = dm_task_run(dmt);
-
-	dm_task_destroy(dmt);
-	return r;
 }
 
 void dev_manager_exit(void)

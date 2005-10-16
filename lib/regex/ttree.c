@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "ttree.h"
-#include "pool.h"
 
 struct node {
 	unsigned k;
@@ -25,7 +24,7 @@ struct node {
 
 struct ttree {
 	int klen;
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct node *root;
 };
 
@@ -60,9 +59,9 @@ void *ttree_lookup(struct ttree *tt, unsigned *key)
 	return *c ? (*c)->data : NULL;
 }
 
-static struct node *_node(struct pool *mem, unsigned int k)
+static struct node *_node(struct dm_pool *mem, unsigned int k)
 {
-	struct node *n = pool_zalloc(mem, sizeof(*n));
+	struct node *n = dm_pool_zalloc(mem, sizeof(*n));
 
 	if (n)
 		n->k = k;
@@ -103,11 +102,11 @@ int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
 	return 1;
 }
 
-struct ttree *ttree_create(struct pool *mem, unsigned int klen)
+struct ttree *ttree_create(struct dm_pool *mem, unsigned int klen)
 {
 	struct ttree *tt;
 
-	if (!(tt = pool_zalloc(mem, sizeof(*tt)))) {
+	if (!(tt = dm_pool_zalloc(mem, sizeof(*tt)))) {
 		stack;
 		return NULL;
 	}

@@ -100,7 +100,7 @@ void release_log_memory(void)
 	if (!_log_direct)
 		return;
 
-	dbg_free((char *) _log_dev_alias.str);
+	dm_free((char *) _log_dev_alias.str);
 	_log_dev_alias.str = "activate_log file";
 }
 

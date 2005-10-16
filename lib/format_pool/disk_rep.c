@@ -14,12 +14,10 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 #include "label.h"
 #include "metadata.h"
 #include "lvmcache.h"
 #include "filter.h"
-#include "list.h"
 #include "xlate.h"
 
 #include "disk_rep.h"
@@ -35,7 +33,7 @@
 #define CPOUT_64(x, y) {(y) = xlate64_be((x));}
 
 static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
-			    struct pool *mem, struct pool_list *pl,
+			    struct dm_pool *mem, struct pool_list *pl,
 			    const char *vg_name)
 {
 	char buf[512];
@@ -240,13 +238,13 @@ void get_pool_uuid(char *uuid, uint64_t poolid, uint32_t spid, uint32_t devid)
 
 }
 
-static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
+static int _read_vg_pds(const struct format_type *fmt, struct dm_pool *mem,
 			struct lvmcache_vginfo *vginfo, struct list *head,
 			uint32_t *devcount)
 {
 	struct lvmcache_info *info;
 	struct pool_list *pl = NULL;
-	struct pool *tmpmem;
+	struct dm_pool *tmpmem;
 
 	uint32_t sp_count = 0;
 	uint32_t *sp_devs = NULL;
@@ -254,7 +252,7 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 
 	/* FIXME: maybe should return a different error in memory
 	 * allocation failure */
-	if (!(tmpmem = pool_create("pool read_vg", 512))) {
+	if (!(tmpmem = dm_pool_create("pool read_vg", 512))) {
 		stack;
 		return 0;
 	}
@@ -271,11 +269,11 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 			/* FIXME pl left uninitialised if !info->dev */
 			sp_count = pl->pd.pl_subpools;
 			if (!(sp_devs =
-			      pool_zalloc(tmpmem,
+			      dm_pool_zalloc(tmpmem,
 					  sizeof(uint32_t) * sp_count))) {
 				log_error("Unable to allocate %d 32-bit uints",
 					  sp_count);
-				pool_destroy(tmpmem);
+				dm_pool_destroy(tmpmem);
 				return 0;
 			}
 		}
@@ -296,7 +294,7 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 	for (i = 0; i < sp_count; i++)
 		*devcount += sp_devs[i];
 
-	pool_destroy(tmpmem);
+	dm_pool_destroy(tmpmem);
 
 	if (pl && *pl->pd.pl_pool_name)
 		return 1;
@@ -306,7 +304,7 @@ static int _read_vg_pds(const struct format_type *fmt, struct pool *mem,
 }
 
 int read_pool_pds(const struct format_type *fmt, const char *vg_name,
-		  struct pool *mem, struct list *pdhead)
+		  struct dm_pool *mem, struct list *pdhead)
 {
 	struct lvmcache_vginfo *vginfo;
 	uint32_t totaldevs;
@@ -351,7 +349,7 @@ int read_pool_pds(const struct format_type *fmt, const char *vg_name,
 }
 
 struct pool_list *read_pool_disk(const struct format_type *fmt,
-				 struct device *dev, struct pool *mem,
+				 struct device *dev, struct dm_pool *mem,
 				 const char *vg_name)
 {
 	struct pool_list *pl;
@@ -361,7 +359,7 @@ struct pool_list *read_pool_disk(const struct format_type *fmt,
 		return NULL;
 	}
 
-	if (!(pl = pool_zalloc(mem, sizeof(*pl)))) {
+	if (!(pl = dm_pool_zalloc(mem, sizeof(*pl)))) {
 		log_error("Unable to allocate pool list structure");
 		return 0;
 	}

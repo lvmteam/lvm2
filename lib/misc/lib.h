@@ -24,7 +24,9 @@
 #define _FILE_OFFSET_BITS 64
 
 #include "log.h"
-#include "dbg_malloc.h"
 #include "intl.h"
+#include "lvm-types.h"
+
+#include <libdevmapper.h>
 
 #endif

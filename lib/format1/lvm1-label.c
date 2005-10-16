@@ -90,7 +90,7 @@ static void _destroy_label(struct labeller *l, struct label *label)
 
 static void _destroy(struct labeller *l)
 {
-	dbg_free(l);
+	dm_free(l);
 }
 
 struct label_ops _lvm1_ops = {
@@ -107,7 +107,7 @@ struct labeller *lvm1_labeller_create(struct format_type *fmt)
 {
 	struct labeller *l;
 
-	if (!(l = dbg_malloc(sizeof(*l)))) {
+	if (!(l = dm_malloc(sizeof(*l)))) {
 		log_err("Couldn't allocate labeller object.");
 		return NULL;
 	}

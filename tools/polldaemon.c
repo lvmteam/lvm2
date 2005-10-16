@@ -99,8 +99,8 @@ void *x;
 	else
 		log_verbose("%s: Moved: %.1f%%", name, overall_percent);
 
-x = pool_alloc(cmd->mem, 1);
-pool_free(cmd->mem, x);
+x = dm_pool_alloc(cmd->mem, 1);
+dm_pool_free(cmd->mem, x);
 
 	if (segment_percent < 100.0) {
 		/* The only case the caller *should* try again later */

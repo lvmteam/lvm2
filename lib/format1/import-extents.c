@@ -15,8 +15,6 @@
 
 #include "lib.h"
 #include "metadata.h"
-#include "hash.h"
-#include "pool.h"
 #include "disk-rep.h"
 #include "lv_alloc.h"
 #include "display.h"
@@ -44,10 +42,10 @@ struct lv_map {
 	struct pe_specifier *map;
 };
 
-static struct hash_table *_create_lv_maps(struct pool *mem,
+static struct dm_hash_table *_create_lv_maps(struct dm_pool *mem,
 					  struct volume_group *vg)
 {
-	struct hash_table *maps = hash_create(32);
+	struct dm_hash_table *maps = dm_hash_create(32);
 	struct lv_list *ll;
 	struct lv_map *lvm;
 
@@ -61,19 +59,19 @@ static struct hash_table *_create_lv_maps(struct pool *mem,
 		if (ll->lv->status & SNAPSHOT)
 			continue;
 
-		if (!(lvm = pool_alloc(mem, sizeof(*lvm)))) {
+		if (!(lvm = dm_pool_alloc(mem, sizeof(*lvm)))) {
 			stack;
 			goto bad;
 		}
 
 		lvm->lv = ll->lv;
-		if (!(lvm->map = pool_zalloc(mem, sizeof(*lvm->map)
+		if (!(lvm->map = dm_pool_zalloc(mem, sizeof(*lvm->map)
 					     * ll->lv->le_count))) {
 			stack;
 			goto bad;
 		}
 
-		if (!hash_insert(maps, ll->lv->name, lvm)) {
+		if (!dm_hash_insert(maps, ll->lv->name, lvm)) {
 			stack;
 			goto bad;
 		}
@@ -82,12 +80,12 @@ static struct hash_table *_create_lv_maps(struct pool *mem,
 	return maps;
 
       bad:
-	hash_destroy(maps);
+	dm_hash_destroy(maps);
 	return NULL;
 }
 
 static int _fill_lv_array(struct lv_map **lvs,
-			  struct hash_table *maps, struct disk_list *dl)
+			  struct dm_hash_table *maps, struct disk_list *dl)
 {
 	struct lvd_list *ll;
 	struct lv_map *lvm;
@@ -95,7 +93,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 	memset(lvs, 0, sizeof(*lvs) * MAX_LV);
 
 	list_iterate_items(ll, &dl->lvds) {
-		if (!(lvm = hash_lookup(maps, strrchr(ll->lvd.lv_name, '/')
+		if (!(lvm = dm_hash_lookup(maps, strrchr(ll->lvd.lv_name, '/')
 					+ 1))) {
 			log_err("Physical volume (%s) contains an "
 				"unknown logical volume (%s).",
@@ -112,7 +110,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 	return 1;
 }
 
-static int _fill_maps(struct hash_table *maps, struct volume_group *vg,
+static int _fill_maps(struct dm_hash_table *maps, struct volume_group *vg,
 		      struct list *pvds)
 {
 	struct disk_list *dl;
@@ -184,13 +182,13 @@ static int _check_single_map(struct lv_map *lvm)
 	return 1;
 }
 
-static int _check_maps_are_complete(struct hash_table *maps)
+static int _check_maps_are_complete(struct dm_hash_table *maps)
 {
-	struct hash_node *n;
+	struct dm_hash_node *n;
 	struct lv_map *lvm;
 
-	for (n = hash_get_first(maps); n; n = hash_get_next(maps, n)) {
-		lvm = (struct lv_map *) hash_get_data(maps, n);
+	for (n = dm_hash_get_first(maps); n; n = dm_hash_get_next(maps, n)) {
+		lvm = (struct lv_map *) dm_hash_get_data(maps, n);
 
 		if (!_check_single_map(lvm)) {
 			stack;
@@ -327,13 +325,13 @@ static int _build_segments(struct cmd_context *cmd, struct lv_map *lvm)
 		_read_linear(cmd, lvm));
 }
 
-static int _build_all_segments(struct cmd_context *cmd, struct hash_table *maps)
+static int _build_all_segments(struct cmd_context *cmd, struct dm_hash_table *maps)
 {
-	struct hash_node *n;
+	struct dm_hash_node *n;
 	struct lv_map *lvm;
 
-	for (n = hash_get_first(maps); n; n = hash_get_next(maps, n)) {
-		lvm = (struct lv_map *) hash_get_data(maps, n);
+	for (n = dm_hash_get_first(maps); n; n = dm_hash_get_next(maps, n)) {
+		lvm = (struct lv_map *) dm_hash_get_data(maps, n);
 		if (!_build_segments(cmd, lvm)) {
 			stack;
 			return 0;
@@ -347,8 +345,8 @@ int import_extents(struct cmd_context *cmd, struct volume_group *vg,
 		   struct list *pvds)
 {
 	int r = 0;
-	struct pool *scratch = pool_create("lvm1 import_extents", 10 * 1024);
-	struct hash_table *maps;
+	struct dm_pool *scratch = dm_pool_create("lvm1 import_extents", 10 * 1024);
+	struct dm_hash_table *maps;
 
 	if (!scratch) {
 		stack;
@@ -378,7 +376,7 @@ int import_extents(struct cmd_context *cmd, struct volume_group *vg,
 
       out:
 	if (maps)
-		hash_destroy(maps);
-	pool_destroy(scratch);
+		dm_hash_destroy(maps);
+	dm_pool_destroy(scratch);
 	return r;
 }

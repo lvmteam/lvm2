@@ -378,7 +378,7 @@ char yes_no_prompt(const char *prompt, ...)
 
 static void __alloc(int size)
 {
-	if (!(_commands = dbg_realloc(_commands, sizeof(*_commands) * size))) {
+	if (!(_commands = dm_realloc(_commands, sizeof(*_commands) * size))) {
 		log_fatal("Couldn't allocate memory.");
 		exit(ECMD_FAILED);
 	}
@@ -427,7 +427,7 @@ static void _register_command(const char *name, command_fn fn,
 	va_end(ap);
 
 	/* allocate space for them */
-	if (!(args = dbg_malloc(sizeof(*args) * nargs))) {
+	if (!(args = dm_malloc(sizeof(*args) * nargs))) {
 		log_fatal("Out of memory.");
 		exit(ECMD_FAILED);
 	}
@@ -784,29 +784,29 @@ static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 	 * Build up the complete command line, used as a
 	 * description for backups.
 	 */
-	if (!pool_begin_object(cmd->mem, 128))
+	if (!dm_pool_begin_object(cmd->mem, 128))
 		goto bad;
 
 	for (i = 0; i < argc; i++) {
-		if (!pool_grow_object(cmd->mem, argv[i], strlen(argv[i])))
+		if (!dm_pool_grow_object(cmd->mem, argv[i], strlen(argv[i])))
 			goto bad;
 
 		if (i < (argc - 1))
-			if (!pool_grow_object(cmd->mem, " ", 1))
+			if (!dm_pool_grow_object(cmd->mem, " ", 1))
 				goto bad;
 	}
 
 	/*
 	 * Terminate.
 	 */
-	if (!pool_grow_object(cmd->mem, "\0", 1))
+	if (!dm_pool_grow_object(cmd->mem, "\0", 1))
 		goto bad;
 
-	return pool_end_object(cmd->mem);
+	return dm_pool_end_object(cmd->mem);
 
       bad:
 	log_err("Couldn't copy command line.");
-	pool_abandon_object(cmd->mem);
+	dm_pool_abandon_object(cmd->mem);
 	return NULL;
 }
 
@@ -880,7 +880,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	/*
 	 * free off any memory the command used.
 	 */
-	pool_empty(cmd->mem);
+	dm_pool_empty(cmd->mem);
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
 		_usage(cmd->command->name);
@@ -968,9 +968,9 @@ static void _fin_commands(struct cmd_context *cmd)
 	int i;
 
 	for (i = 0; i < _num_commands; i++)
-		dbg_free(_commands[i].valid_args);
+		dm_free(_commands[i].valid_args);
 
-	dbg_free(_commands);
+	dm_free(_commands);
 }
 
 static void _fin(struct cmd_context *cmd)
@@ -1268,7 +1268,7 @@ int lvm2_run(void *handle, const char *cmdline)
 
 	cmd->argv = argv;
 
-	if (!(cmdcopy = dbg_strdup(cmdline))) {
+	if (!(cmdcopy = dm_strdup(cmdline))) {
 		log_error("Cmdline copy failed.");
 		ret = ECMD_FAILED;
 		goto out;
@@ -1289,7 +1289,7 @@ int lvm2_run(void *handle, const char *cmdline)
 	ret = _run_command(cmd, argc, argv);
 
       out:
-	dbg_free(cmdcopy);
+	dm_free(cmdcopy);
 
 	if (oneoff)
 		lvm2_exit(handle);
