@@ -93,7 +93,7 @@ int dm_get_library_version(char *version, size_t size)
 
 struct dm_task *dm_task_create(int type)
 {
-	struct dm_task *dmt = malloc(sizeof(*dmt));
+	struct dm_task *dmt = dbg_malloc(sizeof(*dmt));
 
 	if (!dmt) {
 		log_error("dm_task_create: malloc(%d) failed", sizeof(*dmt));
@@ -123,7 +123,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	struct stat st1, st2;
 
 	if (dmt->dev_name) {
-		free(dmt->dev_name);
+		dbg_free(dmt->dev_name);
 		dmt->dev_name = NULL;
 	}
 
@@ -143,7 +143,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 		name = pos + 1;
 	}
 
-	if (!(dmt->dev_name = strdup(name))) {
+	if (!(dmt->dev_name = dbg_strdup(name))) {
 		log_error("dm_task_set_name: strdup(%s) failed", name);
 		return 0;
 	}
@@ -154,11 +154,11 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 {
 	if (dmt->uuid) {
-		free(dmt->uuid);
+		dbg_free(dmt->uuid);
 		dmt->uuid = NULL;
 	}
 
-	if (!(dmt->uuid = strdup(uuid))) {
+	if (!(dmt->uuid = dbg_strdup(uuid))) {
 		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
 		return 0;
 	}
@@ -381,7 +381,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	size_t len = strlen(dev_name) + strlen(old_name) + 2;
 	char *pos;
 
-	if (!(nop = malloc(sizeof(*nop) + len))) {
+	if (!(nop = dbg_malloc(sizeof(*nop) + len))) {
 		log_error("Insufficient memory to stack mknod operation");
 		return 0;
 	}
@@ -412,7 +412,7 @@ static void _pop_node_ops(void)
 		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
 			    nop->uid, nop->gid, nop->mode, nop->old_name);
 		list_del(&nop->list);
-		free(nop);
+		dbg_free(nop);
 	}
 }
 

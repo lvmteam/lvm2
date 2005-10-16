@@ -165,8 +165,71 @@ int dm_task_run(struct dm_task *dmt);
 int dm_set_dev_dir(const char *dir);
 const char *dm_dir(void);
 
-/* Release library resources */
+/*
+ * Determine whether a major number belongs to device-mapper or not.
+ */
+int dm_is_dm_major(uint32_t major);
+
+/*
+ * Release library resources
+ */
 void dm_lib_release(void);
 void dm_lib_exit(void) __attribute((destructor));
+
+/*****************************
+ * Dependency tree functions *
+ *****************************/
+struct deptree;
+struct deptree_node;
+
+/*
+ * Initialise an empty dependency tree.
+ *
+ * The tree consists of a root node together with one node for each mapped 
+ * device which has child nodes for each device referenced in its table.
+ *
+ * Every node in the tree has one or more children and one or more parents.
+ *
+ * The root node is the parent/child of every node that doesn't have other 
+ * parents/children.
+ */
+struct deptree *dm_deptree_create(void);
+void dm_deptree_free(struct deptree *deptree);
+
+/*
+ * Add nodes to the tree for a given device and all the devices it uses.
+ */
+int dm_deptree_add_dev(struct deptree *deptree, uint32_t major, uint32_t minor);
+
+/*
+ * Search for a node in the tree.
+ * Set major and minor to 0 to get the root node.
+ */
+struct deptree_node *dm_deptree_find_node(struct deptree *deptree,
+					  uint32_t major,
+					  uint32_t minor);
+
+/*
+ * Use this to walk through all children of a given node.
+ * Set handle to NULL in first call.
+ * Returns NULL after the last child.
+ * Set inverted to use inverted tree.
+ */
+struct deptree_node *dm_deptree_next_child(void **handle,
+					   struct deptree_node *parent,
+					   uint32_t inverted);
+
+/*
+ * Get properties of a node.
+ */
+const char *dm_deptree_node_get_name(struct deptree_node *node);
+const char *dm_deptree_node_get_uuid(struct deptree_node *node);
+const struct dm_info *dm_deptree_node_get_info(struct deptree_node *node);
+
+/*
+ * Returns the number of children of the given node (excluding the root node).
+ * Set inverted for the number of parents.
+ */
+int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted);
 
 #endif				/* LIB_DEVICE_MAPPER_H */

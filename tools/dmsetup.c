@@ -1,8 +1,11 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005 NEC Corperation
  *
  * This file is part of the device-mapper userspace tools.
+ *
+ * It includes tree drawing code based on pstree: http://psmisc.sourceforge.net/
  *
  * This copyrighted material is made available to anyone wishing to use,
  * modify, copy, or redistribute it subject to the terms and conditions
@@ -30,6 +33,16 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/param.h>
+#include <locale.h>
+#include <langinfo.h>
+
+#ifdef HAVE_SYS_IOCTL_H
+#  include <sys/ioctl.h>
+#endif
+
+#if HAVE_TERMIOS_H
+#  include <termios.h>
+#endif
 
 #ifdef HAVE_GETOPTLONG
 #  include <getopt.h>
@@ -81,6 +94,7 @@ enum {
 	NOTABLE_ARG,
 	OPTIONS_ARG,
 	TARGET_ARG,
+	TREE_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
 	VERSION_ARG,
@@ -93,6 +107,7 @@ static char *_uuid;
 static char *_fields;
 static char *_target;
 static char *_command;
+static struct deptree *_dtree;
 
 /*
  * Commands
@@ -951,11 +966,348 @@ static int _display_name(int argc, char **argv, void *data)
 	return 1;
 }
 
+/*
+ * Tree drawing code
+ */
+
+enum {
+	TR_DEVICE=0,	/* display device major:minor number */
+	TR_TABLE,
+	TR_STATUS,
+	TR_ACTIVE,
+	TR_RW,
+	TR_OPENCOUNT,
+	TR_UUID,
+	TR_COMPACT,
+	TR_TRUNCATE,
+	TR_BOTTOMUP,
+	NUM_TREEMODE,
+};
+
+static int _tree_switches[NUM_TREEMODE];
+
+#define TR_PRINT_ATTRIBUTE ( _tree_switches[TR_ACTIVE] || \
+			     _tree_switches[TR_RW] || \
+			     _tree_switches[TR_OPENCOUNT] || \
+			     _tree_switches[TR_UUID] )
+
+#define TR_PRINT_TARGETS ( _tree_switches[TR_TABLE] || \
+			   _tree_switches[TR_STATUS] )
+
+/* Compact - fewer newlines */
+#define TR_PRINT_COMPACT (_tree_switches[TR_COMPACT] && \
+			  !TR_PRINT_ATTRIBUTE && \
+			  !TR_PRINT_TARGETS)
+
+/* FIXME Get rid of this */
+#define MAX_DEPTH 100
+
+/* Drawing character definition from pstree */
+/* [pstree comment] UTF-8 defines by Johan Myreen, updated by Ben Winslow */
+#define UTF_V	"\342\224\202"	/* U+2502, Vertical line drawing char */
+#define UTF_VR	"\342\224\234"	/* U+251C, Vertical and right */
+#define UTF_H	"\342\224\200"	/* U+2500, Horizontal */
+#define UTF_UR	"\342\224\224"	/* U+2514, Up and right */
+#define UTF_HD	"\342\224\254"	/* U+252C, Horizontal and down */
+
+#define VT_BEG	"\033(0\017"	/* use graphic chars */
+#define VT_END	"\033(B"	/* back to normal char set */
+#define VT_V	"x"		/* see UTF definitions above */
+#define VT_VR	"t"
+#define VT_H	"q"
+#define VT_UR	"m"
+#define VT_HD	"w"
+
+static struct {
+	const char *empty_2;	/*    */
+	const char *branch_2;	/* |- */
+	const char *vert_2;	/* |  */
+	const char *last_2;	/* `- */
+	const char *single_3;	/* --- */
+	const char *first_3;	/* -+- */
+}
+_tsym_ascii = {
+	"  ",
+	"|-",
+	"| ",
+	"`-",
+	"---",
+	"-+-"
+},
+_tsym_utf = {
+	"  ",
+	UTF_VR UTF_H,
+	UTF_V " ",
+	UTF_UR UTF_H,
+	UTF_H UTF_H UTF_H,
+	UTF_H UTF_HD UTF_H
+},
+_tsym_vt100 = {
+	"  ",
+	VT_BEG VT_VR VT_H VT_END,
+	VT_BEG VT_V VT_END " ",
+	VT_BEG VT_UR VT_H VT_END,
+	VT_BEG VT_H VT_H VT_H VT_END,
+	VT_BEG VT_H VT_HD VT_H VT_END
+},
+*_tsym = &_tsym_ascii;
+
+/*
+ * Tree drawing functions.
+ */
+/* FIXME Get rid of these statics - use dynamic struct */
+/* FIXME Explain what these vars are for */
+static int _tree_width[MAX_DEPTH], _tree_more[MAX_DEPTH];
+static int _termwidth = 80;	/* Maximum output width */
+static int _cur_x = 1;		/* Current horizontal output position */
+static char _last_char = 0;
+
+static void _out_char(char c)
+{
+	/* Only first UTF-8 char counts */
+	_cur_x += ((c & 0xc0) != 0x80);
+
+	if (!_tree_switches[TR_TRUNCATE]) {
+		putchar(c);
+		return;
+	}
+
+	/* Truncation? */
+	if (_cur_x <= _termwidth)
+		putchar(c);
+
+	if (_cur_x == _termwidth + 1 && ((c & 0xc0) != 0x80)) {
+		if (_last_char || (c & 0x80)) {
+			putchar('.');
+			putchar('.');
+			putchar('.');
+		} else {
+			_last_char = c;
+			_cur_x--;
+		}
+	}
+}
+
+static void _out_string(const char *str)
+{
+	while (*str)
+		_out_char(*str++);
+}
+
+/* non-negative integers only */
+static unsigned _out_int(unsigned num)
+{
+	unsigned digits = 0;
+	unsigned divi;
+
+	if (!num) {
+		_out_char('0');
+		return 1;
+	}
+
+	/* non zero case */
+	for (divi = 1; num / divi; divi *= 10)
+		digits++;
+
+	for (divi /= 10; divi; divi /= 10)
+		_out_char('0' + (num / divi) % 10);
+
+	return digits;
+}
+
+static void _out_newline(void)
+{
+	if (_last_char && _cur_x == _termwidth)
+		putchar(_last_char);
+	_last_char = 0;
+	putchar('\n');
+	_cur_x = 1;
+}
+
+static void _out_prefix(int depth)
+{
+	int x, d;
+
+	for (d = 0; d < depth; d++) {
+		for (x = _tree_width[d] + 1; x > 0; x--)
+			_out_char(' ');
+
+		_out_string(d == depth - 1 ?
+				!_tree_more[depth] ? _tsym->last_2 : _tsym->branch_2
+			   : _tree_more[d + 1] ?
+				_tsym->vert_2 : _tsym->empty_2);
+	}
+}
+
+/*
+ * Display tree
+ */
+static void _display_tree_attributes(struct deptree_node *node)
+{
+	int attr = 0;
+	const char *uuid;
+	const struct dm_info *info;
+
+	uuid = dm_deptree_node_get_uuid(node);
+	info = dm_deptree_node_get_info(node);
+
+	if (!info->exists)
+		return;
+
+	if (_tree_switches[TR_ACTIVE]) {
+		_out_string(attr++ ? ", " : " [");
+		_out_string(info->suspended ? "SUSPENDED" : "ACTIVE");
+	}
+
+	if (_tree_switches[TR_RW]) {
+		_out_string(attr++ ? ", " : " [");
+		_out_string(info->read_only ? "RO" : "RW");
+	}
+
+	if (_tree_switches[TR_OPENCOUNT]) {
+		_out_string(attr++ ? ", " : " [");
+		(void) _out_int(info->open_count);
+	}
+
+	if (_tree_switches[TR_UUID]) {
+		_out_string(attr++ ? ", " : " [");
+		_out_string(uuid && *uuid ? uuid : "");
+	}
+
+	if (attr)
+		_out_char(']');
+}
+
+static void _display_tree_node(struct deptree_node *node, unsigned depth,
+			       unsigned first_child, unsigned last_child,
+			       unsigned has_children)
+{
+	int offset;
+	const char *name;
+	const struct dm_info *info;
+	int first_on_line = 0;
+
+	/* Sub-tree for targets has 2 more depth */
+	if (depth + 2 > MAX_DEPTH)
+		return;
+
+	name = dm_deptree_node_get_name(node);
+
+	if ((!name || !*name) && !_tree_switches[TR_DEVICE])
+		return;
+
+	/* Indicate whether there are more nodes at this depth */
+	_tree_more[depth] = !last_child;
+	_tree_width[depth] = 0;
+
+	if (_cur_x == 1)
+		first_on_line = 1;
+
+	if (!TR_PRINT_COMPACT || first_on_line)
+		_out_prefix(depth);
+
+	/* Remember the starting point for compact */
+	offset = _cur_x;
+
+	if (TR_PRINT_COMPACT && !first_on_line)
+		_out_string(_tree_more[depth] ? _tsym->first_3 : _tsym->single_3);
+
+	/* display node */
+	if (name)
+		_out_string(name);
+
+	info = dm_deptree_node_get_info(node);
+
+	if (_tree_switches[TR_DEVICE]) {
+		_out_string(name ? " (" : "(");
+		(void) _out_int(info->major);
+		_out_char(':');
+		(void) _out_int(info->minor);
+		_out_char(')');
+	}
+
+	/* display additional info */
+	if (TR_PRINT_ATTRIBUTE)
+		_display_tree_attributes(node);
+
+	if (TR_PRINT_COMPACT)
+		_tree_width[depth] = _cur_x - offset;
+
+	if (!TR_PRINT_COMPACT || !has_children)
+		_out_newline();
+
+	if (TR_PRINT_TARGETS) {
+		_tree_more[depth + 1] = has_children;
+		// FIXME _display_tree_targets(name, depth + 2);
+	}
+}
+
+/*
+ * Walk the dependency tree
+ */
+static void _tree_walk_children(struct deptree_node *node, unsigned depth)
+{
+	struct deptree_node *child, *next_child;
+	void *handle = NULL;
+	uint32_t inverted = _tree_switches[TR_BOTTOMUP];
+	unsigned first_child = 1;
+	unsigned has_children;
+
+	next_child = dm_deptree_next_child(&handle, node, inverted);
+
+	while ((child = next_child)) {
+		next_child = dm_deptree_next_child(&handle, node, inverted);
+		has_children =
+		    dm_deptree_node_num_children(child, inverted) ? 1 : 0;
+
+		_display_tree_node(child, depth, first_child,
+				   next_child ? 0 : 1, has_children);
+
+		if (has_children)
+			_tree_walk_children(child, depth + 1);
+
+		first_child = 0;
+	}
+}
+
+static int _add_dep(int argc, char **argv, void *data)
+{
+	struct dm_names *names = (struct dm_names *) data;
+
+	if (!dm_deptree_add_dev(_dtree, MAJOR(names->dev), MINOR(names->dev)))
+		return 0;
+
+	return 1;
+}
+
+/*
+ * Create and walk dependency tree
+ */
+static int _tree(int argc, char **argv, void *data)
+{
+	if (!(_dtree = dm_deptree_create()))
+		return 0;
+
+	if (!_process_all(argc, argv, _add_dep))
+		return 0;
+
+	_tree_walk_children(dm_deptree_find_node(_dtree, 0, 0), 0);
+
+	dm_deptree_free(_dtree);
+
+	return 1;
+}
+
+/*
+ * List devices
+ */
 static int _ls(int argc, char **argv, void *data)
 {
 	if ((_switches[TARGET_ARG] && _target) ||
 	    (_switches[EXEC_ARG] && _command))
 		return _status(argc, argv, data);
+	else if ((_switches[TREE_ARG]))
+		return _tree(argc, argv, data);
 	else
 		return _process_all(argc, argv, _display_name);
 }
@@ -986,7 +1338,7 @@ static struct command _commands[] = {
 	{"reload", "<device> [<table_file>]", 0, 2, _load},
 	{"rename", "<device> <new_name>", 1, 2, _rename},
 	{"message", "<device> <sector> <message>", 2, -1, _message},
-	{"ls", "[--target <target_type>] [--exec <command>]", 0, 0, _ls},
+	{"ls", "[--target <target_type>] [--exec <command>] [--tree]", 0, 0, _ls},
 	{"info", "[<device>]", 0, 1, _info},
 	{"deps", "[<device>]", 0, 1, _deps},
 	{"status", "[<device>] [--target <target_type>]", 0, 1, _status},
@@ -1024,6 +1376,72 @@ static struct command *_find_command(const char *name)
 	return NULL;
 }
 
+static int _process_tree_options(const char *options)
+{
+	const char *s, *end;
+	struct winsize winsz;
+	int len;
+
+	/* Symbol set default */
+	if (!strcmp(nl_langinfo(CODESET), "UTF-8"))
+		_tsym = &_tsym_utf;
+	else
+		_tsym = &_tsym_ascii;
+
+	/* Default */
+	_tree_switches[TR_DEVICE] = 1;
+	_tree_switches[TR_TRUNCATE] = 1;
+
+	/* parse */
+	for (s = options; s && *s; s++) {
+		len = 0;
+		for (end = s; *end && *end != ','; end++, len++)
+			;
+		if (!strncmp(s, "device", len))
+			_tree_switches[TR_DEVICE] = 1;
+		else if (!strncmp(s, "nodevice", len))
+			_tree_switches[TR_DEVICE] = 0;
+		else if (!strncmp(s, "status", len))
+			_tree_switches[TR_STATUS] = 1;
+		else if (!strncmp(s, "table", len))
+			_tree_switches[TR_TABLE] = 1;
+		else if (!strncmp(s, "active", len))
+			_tree_switches[TR_ACTIVE] = 1;
+		else if (!strncmp(s, "open", len))
+			_tree_switches[TR_OPENCOUNT] = 1;
+		else if (!strncmp(s, "uuid", len))
+			_tree_switches[TR_UUID] = 1;
+		else if (!strncmp(s, "rw", len))
+			_tree_switches[TR_RW] = 1;
+		else if (!strncmp(s, "utf", len))
+			_tsym = &_tsym_utf;
+		else if (!strncmp(s, "vt100", len))
+			_tsym = &_tsym_vt100;
+		else if (!strncmp(s, "ascii", len))
+			_tsym = &_tsym_ascii;
+		else if (!strncmp(s, "inverted", len))
+			_tree_switches[TR_BOTTOMUP] = 1;
+		else if (!strncmp(s, "compact", len))
+			_tree_switches[TR_COMPACT] = 1;
+		else if (!strncmp(s, "notrunc", len))
+			_tree_switches[TR_TRUNCATE] = 0;
+		else {
+			fprintf(stderr, "Tree options not recognised: %s\n", s);
+			return 0;
+		}
+		if (!*end)
+			break;
+		s = end;
+	}
+
+	/* Truncation doesn't work well with vt100 drawing char */
+	if (_tsym != &_tsym_vt100)
+		if (ioctl(1, TIOCGWINSZ, &winsz) >= 0 && winsz.ws_col > 3)
+			_termwidth = winsz.ws_col - 3;
+
+	return 1;
+}
+
 static int _process_switches(int *argc, char ***argv)
 {
 	char *base, *namebase;
@@ -1043,6 +1461,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
 		{"target", 1, &ind, TARGET_ARG},
+		{"tree", 0, &ind, TREE_ARG},
 		{"uuid", 1, &ind, UUID_ARG},
 		{"verbose", 1, &ind, VERBOSE_ARG},
 		{"version", 0, &ind, VERSION_ARG},
@@ -1134,6 +1553,8 @@ static int _process_switches(int *argc, char ***argv)
 			_switches[NOLOCKFS_ARG]++;
 		if ((ind == NOOPENCOUNT_ARG))
 			_switches[NOOPENCOUNT_ARG]++;
+		if ((ind == TREE_ARG))
+			_switches[TREE_ARG]++;
 		if ((ind == VERSION_ARG))
 			_switches[VERSION_ARG]++;
 	}
@@ -1148,10 +1569,14 @@ static int _process_switches(int *argc, char ***argv)
 		return 0;
 	}
 
-	if (_switches[OPTIONS_ARG] && strcmp(_fields, "name")) {
+	if (_switches[COLS_ARG] && _switches[OPTIONS_ARG] &&
+	    strcmp(_fields, "name")) {
 		fprintf(stderr, "Only -o name is supported so far.\n");
 		return 0;
 	}
+
+	if (_switches[TREE_ARG] && !_process_tree_options(_fields))
+		return 0;
 
 	*argv += optind;
 	*argc -= optind;
@@ -1161,10 +1586,13 @@ static int _process_switches(int *argc, char ***argv)
 int main(int argc, char **argv)
 {
 	struct command *c;
+	int r = 1;
+
+        (void) setlocale(LC_ALL, "");
 
 	if (!_process_switches(&argc, &argv)) {
 		fprintf(stderr, "Couldn't process command line.\n");
-		exit(1);
+		goto out;
 	}
 
 	if (_switches[VERSION_ARG]) {
@@ -1174,27 +1602,30 @@ int main(int argc, char **argv)
 
 	if (argc == 0) {
 		_usage(stderr);
-		exit(1);
+		goto out;
 	}
 
 	if (!(c = _find_command(argv[0]))) {
 		fprintf(stderr, "Unknown command\n");
 		_usage(stderr);
-		exit(1);
+		goto out;
 	}
 
 	if (argc < c->min_args + 1 ||
 	    (c->max_args >= 0 && argc > c->max_args + 1)) {
 		fprintf(stderr, "Incorrect number of arguments\n");
 		_usage(stderr);
-		exit(1);
+		goto out;
 	}
 
       doit:
 	if (!c->fn(argc, argv, NULL)) {
 		fprintf(stderr, "Command failed\n");
-		exit(1);
+		goto out;
 	}
 
-	return 0;
+	r = 0;
+
+out:
+	return r;
 }

@@ -17,6 +17,7 @@
 #include "libdm-targets.h"
 #include "libdm-common.h"
 #include "libdm-file.h"
+#include "bitset.h"
 
 #ifdef DM_COMPAT
 #  include "libdm-compat.h"
@@ -56,10 +57,13 @@
 #define PROC_DEVICES "/proc/devices"
 #define MISC_NAME "misc"
 
+#define NUMBER_OF_MAJORS 4096
+
 /* dm major version no for running kernel */
 static int _dm_version = DM_VERSION_MAJOR;
 static int _log_suppress = 0;
 
+static bitset_t _dm_bitset = NULL;
 static int _control_fd = -1;
 static int _version_checked = 0;
 static int _version_ok = 1;
@@ -119,12 +123,17 @@ static void *_align(void *ptr, unsigned int a)
 }
 
 #ifdef DM_IOCTLS
+/*
+ * Set number to NULL to populate _dm_bitset - otherwise first
+ * match is returned.
+ */
 static int _get_proc_number(const char *file, const char *name,
 			    uint32_t *number)
 {
 	FILE *fl;
 	char nm[256];
 	int c;
+	uint32_t num;
 
 	if (!(fl = fopen(file, "r"))) {
 		log_error("%s: fopen failed: %s", file, strerror(errno));
@@ -132,10 +141,14 @@ static int _get_proc_number(const char *file, const char *name,
 	}
 
 	while (!feof(fl)) {
-		if (fscanf(fl, "%d %255s\n", number, &nm[0]) == 2) {
+		if (fscanf(fl, "%d %255s\n", &num, &nm[0]) == 2) {
 			if (!strcmp(name, nm)) {
-				fclose(fl);
-				return 1;
+				if (number) {
+					*number = num;
+					fclose(fl);
+					return 1;
+				}
+				bit_set(_dm_bitset, num);
 			}
 		} else do {
 			c = fgetc(fl);
@@ -143,8 +156,12 @@ static int _get_proc_number(const char *file, const char *name,
 	}
 	fclose(fl);
 
-	log_error("%s: No entry for %s found", file, name);
-	return 0;
+	if (number) {
+		log_error("%s: No entry for %s found", file, name);
+		return 0;
+	}
+
+	return 1;
 }
 
 static int _control_device_number(uint32_t *major, uint32_t *minor)
@@ -230,6 +247,35 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 }
 #endif
 
+static int _create_dm_bitset(void)
+{
+#ifdef DM_IOCTLS
+	if (_dm_bitset)
+		return 1;
+
+	if (!(_dm_bitset = bitset_create(NULL, NUMBER_OF_MAJORS)))
+		return 0;
+
+	if (!_get_proc_number(PROC_DEVICES, DM_NAME, NULL)) {
+		bitset_destroy(_dm_bitset);
+		_dm_bitset = NULL;
+		return 0;
+	}
+
+	return 1;
+#else
+	return 0;
+#endif
+}
+
+int dm_is_dm_major(uint32_t major)
+{
+	if (!_create_dm_bitset())
+		return 0;
+
+	return bit(_dm_bitset, major) ? 1 : 0;
+}
+
 static int _open_control(void)
 {
 #ifdef DM_IOCTLS
@@ -253,6 +299,11 @@ static int _open_control(void)
 		goto error;
 	}
 
+	if (!_create_dm_bitset()) {
+		log_error("Failed to set up list of device-mapper major numbers");
+		return 0;
+	}
+
 	return 1;
 
 error:
@@ -269,27 +320,27 @@ void dm_task_destroy(struct dm_task *dmt)
 
 	for (t = dmt->head; t; t = n) {
 		n = t->next;
-		free(t->params);
-		free(t->type);
-		free(t);
+		dbg_free(t->params);
+		dbg_free(t->type);
+		dbg_free(t);
 	}
 
 	if (dmt->dev_name)
-		free(dmt->dev_name);
+		dbg_free(dmt->dev_name);
 
 	if (dmt->newname)
-		free(dmt->newname);
+		dbg_free(dmt->newname);
 
 	if (dmt->message)
-		free(dmt->message);
+		dbg_free(dmt->message);
 
 	if (dmt->dmi.v4)
-		free(dmt->dmi.v4);
+		dbg_free(dmt->dmi.v4);
 
 	if (dmt->uuid)
-		free(dmt->uuid);
+		dbg_free(dmt->uuid);
 
-	free(dmt);
+	dbg_free(dmt);
 }
 
 /*
@@ -470,7 +521,7 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 	if (len < min_size)
 		len = min_size;
 
-	if (!(dmi = malloc(len)))
+	if (!(dmi = dbg_malloc(len)))
 		return NULL;
 
 	memset(dmi, 0, len);
@@ -519,7 +570,7 @@ static struct dm_ioctl_v1 *_flatten_v1(struct dm_task *dmt)
 	return dmi;
 
       bad:
-	free(dmi);
+	dbg_free(dmi);
 	return NULL;
 }
 
@@ -670,7 +721,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 		dmt->type = DM_DEVICE_INFO;
 		if (!dm_task_run(dmt))
 			goto bad;
-		free(dmi);	/* We'll use what info returned */
+		dbg_free(dmi);	/* We'll use what info returned */
 		return 1;
 	}
 
@@ -678,7 +729,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 	return 1;
 
       bad:
-	free(dmi);
+	dbg_free(dmi);
 	return 0;
 }
 
@@ -918,7 +969,7 @@ int dm_task_set_ro(struct dm_task *dmt)
 
 int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 {
-	if (!(dmt->newname = strdup(newname))) {
+	if (!(dmt->newname = dbg_strdup(newname))) {
 		log_error("dm_task_set_newname: strdup(%s) failed", newname);
 		return 0;
 	}
@@ -928,7 +979,7 @@ int dm_task_set_newname(struct dm_task *dmt, const char *newname)
 
 int dm_task_set_message(struct dm_task *dmt, const char *message)
 {
-	if (!(dmt->message = strdup(message))) {
+	if (!(dmt->message = dbg_strdup(message))) {
 		log_error("dm_task_set_message: strdup(%s) failed", message);
 		return 0;
 	}
@@ -967,7 +1018,7 @@ int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr)
 struct target *create_target(uint64_t start, uint64_t len, const char *type,
 			     const char *params)
 {
-	struct target *t = malloc(sizeof(*t));
+	struct target *t = dbg_malloc(sizeof(*t));
 
 	if (!t) {
 		log_error("create_target: malloc(%d) failed", sizeof(*t));
@@ -976,12 +1027,12 @@ struct target *create_target(uint64_t start, uint64_t len, const char *type,
 
 	memset(t, 0, sizeof(*t));
 
-	if (!(t->params = strdup(params))) {
+	if (!(t->params = dbg_strdup(params))) {
 		log_error("create_target: strdup(params) failed");
 		goto bad;
 	}
 
-	if (!(t->type = strdup(type))) {
+	if (!(t->type = dbg_strdup(type))) {
 		log_error("create_target: strdup(type) failed");
 		goto bad;
 	}
@@ -991,9 +1042,9 @@ struct target *create_target(uint64_t start, uint64_t len, const char *type,
 	return t;
 
       bad:
-	free(t->params);
-	free(t->type);
-	free(t);
+	dbg_free(t->params);
+	dbg_free(t->type);
+	dbg_free(t);
 	return NULL;
 }
 
@@ -1091,7 +1142,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	while (repeat_count--)
 		len *= 2;
 
-	if (!(dmi = malloc(len)))
+	if (!(dmi = dbg_malloc(len)))
 		return NULL;
 
 	memset(dmi, 0, len);
@@ -1149,7 +1200,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	return dmi;
 
       bad:
-	free(dmi);
+	dbg_free(dmi);
 	return NULL;
 }
 
@@ -1284,7 +1335,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 
 	/* Use the original structure last so the info will be correct */
 	dmt->type = DM_DEVICE_RESUME;
-	free(dmt->uuid);
+	dbg_free(dmt->uuid);
 	dmt->uuid = NULL;
 
 	r = dm_task_run(dmt);
@@ -1332,7 +1383,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				log_error("device-mapper ioctl "
 					  "cmd %d failed: %s",
 					  _IOC_NR(command), strerror(errno));
-			free(dmi);
+			dbg_free(dmi);
 			return NULL;
 		}
 	}
@@ -1384,7 +1435,7 @@ repeat_ioctl:
 		case DM_DEVICE_TABLE:
 		case DM_DEVICE_WAITEVENT:
 			_ioctl_buffer_double_factor++;
-			free(dmi);
+			dbg_free(dmi);
 			goto repeat_ioctl;
 		default:
 			log_error("Warning: libdevmapper buffer too small for data");
@@ -1430,7 +1481,7 @@ repeat_ioctl:
 	return 1;
 
       bad:
-	free(dmi);
+	dbg_free(dmi);
 	return 0;
 }
 
@@ -1446,6 +1497,10 @@ void dm_lib_release(void)
 void dm_lib_exit(void)
 {
 	dm_lib_release();
+	if (_dm_bitset)
+		bitset_destroy(_dm_bitset);
+	_dm_bitset = NULL;
+	dump_memory();
 	_version_ok = 1;
 	_version_checked = 0;
 }
