@@ -1,6 +1,7 @@
 Version 1.02.00 - 
 =============================
   Added dependency tree functions to library.
+  Added hash, bitset, pool, dbg_malloc to library.
   Added ls --tree to dmsetup.
   Added dmsetup --nolockfs support for suspend/reload.
 

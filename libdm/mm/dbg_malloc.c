@@ -14,14 +14,13 @@
  */
 
 #include "lib.h"
-#include "dbg_malloc.h"
 
 #include <assert.h>
 #include <stdarg.h>
 
-char *dbg_strdup(const char *str)
+char *dm_strdup(const char *str)
 {
-	char *ret = dbg_malloc(strlen(str) + 1);
+	char *ret = dm_malloc(strlen(str) + 1);
 
 	if (ret)
 		strcpy(ret, str);
@@ -52,7 +51,7 @@ static struct {
 static struct memblock *_head = 0;
 static struct memblock *_tail = 0;
 
-void *malloc_aux(size_t s, const char *file, int line)
+void *dm_malloc_aux(size_t s, const char *file, int line)
 {
 	struct memblock *nb;
 	size_t tsize = s + sizeof(*nb) + sizeof(unsigned long);
@@ -74,7 +73,7 @@ void *malloc_aux(size_t s, const char *file, int line)
 	nb->line = line;
 
 #ifdef BOUNDS_CHECK
-	bounds_check();
+	dm_bounds_check();
 #endif
 
 	/* setup fields */
@@ -118,7 +117,7 @@ void *malloc_aux(size_t s, const char *file, int line)
 	return nb + 1;
 }
 
-void free_aux(void *p)
+void dm_free_aux(void *p)
 {
 	char *ptr;
 	size_t i;
@@ -127,7 +126,7 @@ void free_aux(void *p)
 		return;
 
 #ifdef BOUNDS_CHECK
-	bounds_check();
+	dm_bounds_check();
 #endif
 
 	/* sanity check */
@@ -167,22 +166,22 @@ void free_aux(void *p)
 	free(mb);
 }
 
-void *realloc_aux(void *p, unsigned int s, const char *file, int line)
+void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line)
 {
 	void *r;
 	struct memblock *mb = ((struct memblock *) p) - 1;
 
-	r = malloc_aux(s, file, line);
+	r = dm_malloc_aux(s, file, line);
 
 	if (p) {
 		memcpy(r, p, mb->length);
-		free_aux(p);
+		dm_free_aux(p);
 	}
 
 	return r;
 }
 
-int dump_memory(void)
+int dm_dump_memory(void)
 {
 	unsigned long tot = 0;
 	struct memblock *mb;
@@ -217,7 +216,7 @@ int dump_memory(void)
 	return 1;
 }
 
-void bounds_check(void)
+void dm_bounds_check(void)
 {
 	struct memblock *mb = _head;
 	while (mb) {
@@ -233,7 +232,7 @@ void bounds_check(void)
 
 #else
 
-void *malloc_aux(size_t s, const char *file, int line)
+void *dm_malloc_aux(size_t s, const char *file, int line)
 {
 	if (s > 50000000) {
 		log_error("Huge memory allocation (size %" PRIsize_t

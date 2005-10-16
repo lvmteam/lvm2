@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 
 struct block {
 	struct block *next;
@@ -29,7 +28,7 @@ typedef struct {
 	unsigned int bytes, maxbytes;
 } pool_stats;
 
-struct pool {
+struct dm_pool {
 	const char *name;
 
 	int begun;
@@ -44,9 +43,9 @@ struct pool {
 /* by default things come out aligned for doubles */
 #define DEFAULT_ALIGNMENT __alignof__ (double)
 
-struct pool *pool_create(const char *name, size_t chunk_hint)
+struct pool *dm_pool_create(const char *name, size_t chunk_hint)
 {
-	struct pool *mem = dbg_malloc(sizeof(*mem));
+	struct dm_pool *mem = dm_malloc(sizeof(*mem));
 
 	if (!mem) {
 		log_error("Couldn't create memory pool %s (size %"
@@ -72,7 +71,7 @@ struct pool *pool_create(const char *name, size_t chunk_hint)
 	return mem;
 }
 
-static void _free_blocks(struct pool *p, struct block *b)
+static void _free_blocks(struct dm_pool *p, struct block *b)
 {
 	struct block *n;
 
@@ -81,13 +80,13 @@ static void _free_blocks(struct pool *p, struct block *b)
 		p->stats.blocks_allocated--;
 
 		n = b->next;
-		dbg_free(b->data);
-		dbg_free(b);
+		dm_free(b->data);
+		dm_free(b);
 		b = n;
 	}
 }
 
-static void _pool_stats(struct pool *p, const char *action)
+static void _pool_stats(struct dm_pool *p, const char *action)
 {
 #ifdef DEBUG_POOL
 	log_debug("%s mempool %s: %u/%u bytes, %u/%u blocks, "
@@ -99,19 +98,19 @@ static void _pool_stats(struct pool *p, const char *action)
 #endif
 }
 
-void pool_destroy(struct pool *p)
+void dm_pool_destroy(struct dm_pool *p)
 {
 	_pool_stats(p, "Destroying");
 	_free_blocks(p, p->blocks);
-	dbg_free(p);
+	dm_free(p);
 }
 
-void *pool_alloc(struct pool *p, size_t s)
+void *dm_pool_alloc(struct dm_pool *p, size_t s)
 {
-	return pool_alloc_aligned(p, s, DEFAULT_ALIGNMENT);
+	return dm_pool_alloc_aligned(p, s, DEFAULT_ALIGNMENT);
 }
 
-static void _append_block(struct pool *p, struct block *b)
+static void _append_block(struct dm_pool *p, struct block *b)
 {
 	if (p->tail) {
 		p->tail->next = b;
@@ -135,7 +134,7 @@ static struct block *_new_block(size_t s, unsigned alignment)
 
 	/* FIXME: I'm currently ignoring the alignment arg. */
 	size_t len = sizeof(struct block) + s;
-	struct block *b = dbg_malloc(len);
+	struct block *b = dm_malloc(len);
 
 	/*
 	 * Too lazy to implement alignment for debug version, and
@@ -149,9 +148,9 @@ static struct block *_new_block(size_t s, unsigned alignment)
 		return NULL;
 	}
 
-	if (!(b->data = dbg_malloc(s))) {
+	if (!(b->data = dm_malloc(s))) {
 		log_err(_oom);
-		dbg_free(b);
+		dm_free(b);
 		return NULL;
 	}
 
@@ -161,7 +160,7 @@ static struct block *_new_block(size_t s, unsigned alignment)
 	return b;
 }
 
-void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
+void *dm_pool_alloc_aligned(struct dm_pool *p, size_t s, unsigned alignment)
 {
 	struct block *b = _new_block(s, alignment);
 
@@ -173,14 +172,14 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 	return b->data;
 }
 
-void pool_empty(struct pool *p)
+void dm_pool_empty(struct dm_pool *p)
 {
 	_pool_stats(p, "Emptying");
 	_free_blocks(p, p->blocks);
 	p->blocks = p->tail = NULL;
 }
 
-void pool_free(struct pool *p, void *ptr)
+void dm_pool_free(struct dm_pool *p, void *ptr)
 {
 	struct block *b, *prev = NULL;
 
@@ -210,14 +209,14 @@ void pool_free(struct pool *p, void *ptr)
 	_pool_stats(p, "Freeing (after)");
 }
 
-int pool_begin_object(struct pool *p, size_t init_size)
+int dm_pool_begin_object(struct dm_pool *p, size_t init_size)
 {
 	assert(!p->begun);
 	p->begun = 1;
 	return 1;
 }
 
-int pool_grow_object(struct pool *p, const void *buffer, size_t delta)
+int dm_pool_grow_object(struct dm_pool *p, const void *buffer, size_t delta)
 {
 	struct block *new;
 	size_t size = delta;
@@ -234,8 +233,8 @@ int pool_grow_object(struct pool *p, const void *buffer, size_t delta)
 
 	if (p->object) {
 		memcpy(new->data, p->object->data, p->object->size);
-		dbg_free(p->object->data);
-		dbg_free(p->object);
+		dm_free(p->object->data);
+		dm_free(p->object);
 	}
 	p->object = new;
 
@@ -244,7 +243,7 @@ int pool_grow_object(struct pool *p, const void *buffer, size_t delta)
 	return 1;
 }
 
-void *pool_end_object(struct pool *p)
+void *dm_pool_end_object(struct dm_pool *p)
 {
 	assert(p->begun);
 	_append_block(p, p->object);
@@ -254,10 +253,10 @@ void *pool_end_object(struct pool *p)
 	return p->tail->data;
 }
 
-void pool_abandon_object(struct pool *p)
+void dm_pool_abandon_object(struct dm_pool *p)
 {
 	assert(p->begun);
-	dbg_free(p->object);
+	dm_free(p->object);
 	p->begun = 0;
 	p->object = NULL;
 }

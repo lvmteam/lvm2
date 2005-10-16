@@ -14,14 +14,13 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 
 struct chunk {
 	char *begin, *end;
 	struct chunk *prev;
 };
 
-struct pool {
+struct dm_pool {
 	struct chunk *chunk, *spare_chunk;	/* spare_chunk is a one entry free
 						   list to stop 'bobbling' */
 	size_t chunk_size;
@@ -30,15 +29,15 @@ struct pool {
 };
 
 void _align_chunk(struct chunk *c, unsigned alignment);
-struct chunk *_new_chunk(struct pool *p, size_t s);
+struct chunk *_new_chunk(struct dm_pool *p, size_t s);
 
 /* by default things come out aligned for doubles */
 #define DEFAULT_ALIGNMENT __alignof__ (double)
 
-struct pool *pool_create(const char *name, size_t chunk_hint)
+struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 {
 	size_t new_size = 1024;
-	struct pool *p = dbg_malloc(sizeof(*p));
+	struct dm_pool *p = dm_malloc(sizeof(*p));
 
 	if (!p) {
 		log_error("Couldn't create memory pool %s (size %"
@@ -55,26 +54,26 @@ struct pool *pool_create(const char *name, size_t chunk_hint)
 	return p;
 }
 
-void pool_destroy(struct pool *p)
+void dm_pool_destroy(struct dm_pool *p)
 {
 	struct chunk *c, *pr;
-	dbg_free(p->spare_chunk);
+	dm_free(p->spare_chunk);
 	c = p->chunk;
 	while (c) {
 		pr = c->prev;
-		dbg_free(c);
+		dm_free(c);
 		c = pr;
 	}
 
-	dbg_free(p);
+	dm_free(p);
 }
 
-void *pool_alloc(struct pool *p, size_t s)
+void *dm_pool_alloc(struct dm_pool *p, size_t s)
 {
-	return pool_alloc_aligned(p, s, DEFAULT_ALIGNMENT);
+	return dm_pool_alloc_aligned(p, s, DEFAULT_ALIGNMENT);
 }
 
-void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
+void *dm_pool_alloc_aligned(struct dm_pool *p, size_t s, unsigned alignment)
 {
 	struct chunk *c = p->chunk;
 	void *r;
@@ -101,7 +100,7 @@ void *pool_alloc_aligned(struct pool *p, size_t s, unsigned alignment)
 	return r;
 }
 
-void pool_empty(struct pool *p)
+void dm_pool_empty(struct dm_pool *p)
 {
 	struct chunk *c;
 
@@ -109,10 +108,10 @@ void pool_empty(struct pool *p)
 		;
 
 	if (c)
-		pool_free(p, (char *) (c + 1));
+		dm_pool_free(p, (char *) (c + 1));
 }
 
-void pool_free(struct pool *p, void *ptr)
+void dm_pool_free(struct dm_pool *p, void *ptr)
 {
 	struct chunk *c = p->chunk;
 
@@ -124,7 +123,7 @@ void pool_free(struct pool *p, void *ptr)
 		}
 
 		if (p->spare_chunk)
-			dbg_free(p->spare_chunk);
+			dm_free(p->spare_chunk);
 		p->spare_chunk = c;
 		c = c->prev;
 	}
@@ -136,7 +135,7 @@ void pool_free(struct pool *p, void *ptr)
 		p->chunk = c;
 }
 
-int pool_begin_object(struct pool *p, size_t hint)
+int dm_pool_begin_object(struct dm_pool *p, size_t hint)
 {
 	struct chunk *c = p->chunk;
 	const size_t align = DEFAULT_ALIGNMENT;
@@ -163,7 +162,7 @@ int pool_begin_object(struct pool *p, size_t hint)
 	return 1;
 }
 
-int pool_grow_object(struct pool *p, const void *extra, size_t n)
+int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t n)
 {
 	struct chunk *c = p->chunk, *nc;
 
@@ -187,7 +186,7 @@ int pool_grow_object(struct pool *p, const void *extra, size_t n)
 	return 1;
 }
 
-void *pool_end_object(struct pool *p)
+void *dm_pool_end_object(struct dm_pool *p)
 {
 	struct chunk *c = p->chunk;
 	void *r = c->begin;
@@ -197,7 +196,7 @@ void *pool_end_object(struct pool *p)
 	return r;
 }
 
-void pool_abandon_object(struct pool *p)
+void dm_pool_abandon_object(struct dm_pool *p)
 {
 	p->object_len = 0;
 	p->object_alignment = DEFAULT_ALIGNMENT;
@@ -208,7 +207,7 @@ void _align_chunk(struct chunk *c, unsigned alignment)
 	c->begin += alignment - ((unsigned long) c->begin & (alignment - 1));
 }
 
-struct chunk *_new_chunk(struct pool *p, size_t s)
+struct chunk *_new_chunk(struct dm_pool *p, size_t s)
 {
 	struct chunk *c;
 
@@ -218,7 +217,7 @@ struct chunk *_new_chunk(struct pool *p, size_t s)
 		c = p->spare_chunk;
 		p->spare_chunk = 0;
 	} else {
-		if (!(c = dbg_malloc(s))) {
+		if (!(c = dm_malloc(s))) {
 			log_error("Out of memory.  Requested %" PRIsize_t
 				  " bytes.", s);
 			return NULL;

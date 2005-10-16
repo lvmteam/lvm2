@@ -645,33 +645,9 @@ static void _display_dev(struct dm_task *dmt, char *name)
 		printf("%s\t(%u, %u)\n", name, info.major, info.minor);
 }
 
-static int _mknodes_single(char *name)
-{
-	struct dm_task *dmt;
-	int r = 0;
-
-	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
-		return 0;
-
-	if (!_set_task_device(dmt, name, 1))
-		goto out;
-
-	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
-		goto out;
-
-	if (!dm_task_run(dmt))
-		goto out;
-
-	r = 1;
-
-      out:
-	dm_task_destroy(dmt);
-	return r;
-}
-
 static int _mknodes(int argc, char **argv, void *data)
 {
-	return _mknodes_single(argc > 1 ? argv[1] : NULL);
+	return dm_mknodes(argc > 1 ? argv[1] : NULL);
 }
 
 static int _exec_command(char *name)
@@ -686,7 +662,7 @@ static int _exec_command(char *name)
 	if (argc < 0)
 		return 0;
 
-	if (!_mknodes_single(name))
+	if (!dm_mknodes(name))
 		return 0;
 
 	n = snprintf(path, sizeof(path), "%s/%s", dm_dir(), name);
