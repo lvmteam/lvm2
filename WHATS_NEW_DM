@@ -1,6 +1,8 @@
-Version 1.01.06 - 
+Version 1.02.00 - 
 =============================
-  Add dmsetup --nolockfs support for suspend/reload.
+  Added dependency tree functions to library.
+  Added ls --tree to dmsetup.
+  Added dmsetup --nolockfs support for suspend/reload.
 
 Version 1.01.05 - 26 Sep 2005
 =============================

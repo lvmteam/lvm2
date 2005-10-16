@@ -29,3 +29,15 @@ dm_dir
 dm_format_dev
 dm_lib_release
 dm_lib_exit
+dm_deptree_create
+dm_deptree_free
+dm_deptree_add_dev
+dm_deptree_node_get_name
+dm_deptree_node_get_uuid
+dm_deptree_node_get_info
+dm_deptree_node_num_children
+dm_deptree_node_num_parents
+dm_deptree_find_node
+dm_deptree_next_child
+dm_deptree_next_parent
+dm_is_dm_major
