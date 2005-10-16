@@ -19,9 +19,9 @@
 #include "pool-fast.c"
 #endif
 
-char *pool_strdup(struct pool *p, const char *str)
+char *dm_pool_strdup(struct dm_pool *p, const char *str)
 {
-	char *ret = pool_alloc(p, strlen(str) + 1);
+	char *ret = dm_pool_alloc(p, strlen(str) + 1);
 
 	if (ret)
 		strcpy(ret, str);
@@ -29,9 +29,9 @@ char *pool_strdup(struct pool *p, const char *str)
 	return ret;
 }
 
-char *pool_strndup(struct pool *p, const char *str, size_t n)
+char *dm_pool_strndup(struct dm_pool *p, const char *str, size_t n)
 {
-	char *ret = pool_alloc(p, n + 1);
+	char *ret = dm_pool_alloc(p, n + 1);
 
 	if (ret) {
 		strncpy(ret, str, n);
@@ -41,9 +41,9 @@ char *pool_strndup(struct pool *p, const char *str, size_t n)
 	return ret;
 }
 
-void *pool_zalloc(struct pool *p, size_t s)
+void *dm_pool_zalloc(struct dm_pool *p, size_t s)
 {
-	void *ptr = pool_alloc(p, s);
+	void *ptr = dm_pool_alloc(p, s);
 
 	if (ptr)
 		memset(ptr, 0, s);

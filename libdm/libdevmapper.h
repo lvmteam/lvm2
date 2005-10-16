@@ -23,6 +23,10 @@
 #  include <linux/types.h>
 #endif
 
+#include <limits.h>
+#include <string.h>
+#include <stdlib.h>
+
 /*
  * Since it is quite laborious to build the ioctl
  * arguments for the device-mapper people are
@@ -176,6 +180,15 @@ int dm_is_dm_major(uint32_t major);
 void dm_lib_release(void);
 void dm_lib_exit(void) __attribute((destructor));
 
+/***********************************************************************
+ * Wrappers
+ ***********************************************************************/
+
+/*
+ * Use NULL for all devices.
+ */
+int dm_mknodes(const char *name);
+
 /*****************************
  * Dependency tree functions *
  *****************************/
@@ -231,5 +244,203 @@ const struct dm_info *dm_deptree_node_get_info(struct deptree_node *node);
  * Set inverted for the number of parents.
  */
 int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted);
+
+/*****************************************************************************
+ * Library functions
+ *****************************************************************************/
+
+void *dm_malloc_aux(size_t s, const char *file, int line);
+#define dm_malloc(s) dm_malloc_aux((s), __FILE__, __LINE__)
+
+char *dm_strdup(const char *str);
+
+#ifdef DEBUG_MEM
+
+void dm_free_aux(void *p);
+void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line);
+int dm_dump_memory(void);
+void dm_bounds_check(void);
+
+#  define dm_free(p) dm_free_aux(p)
+#  define dm_realloc(p, s) dm_realloc_aux(p, s, __FILE__, __LINE__)
+
+#else
+
+#  define dm_free(p) free(p)
+#  define dm_realloc(p, s) realloc(p, s)
+#  define dm_dump_memory()
+#  define dm_bounds_check()
+
+#endif
+
+/******************
+ * pool functions
+ ******************/
+
+/*
+ * The pool allocator is useful when you are going to allocate
+ * lots of memory, use the memory for a bit, and then free the
+ * memory in one go.  A surprising amount of code has this usage
+ * profile.
+ *
+ * You should think of the pool as an infinite, contiguous chunk
+ * of memory.  The front of this chunk of memory contains
+ * allocated objects, the second half is free.  dm_pool_alloc grabs
+ * the next 'size' bytes from the free half, in effect moving it
+ * into the allocated half.  This operation is very efficient.
+ *
+ * dm_pool_free frees the allocated object *and* all objects
+ * allocated after it.  It is important to note this semantic
+ * difference from malloc/free.  This is also extremely
+ * efficient, since a single dm_pool_free can dispose of a large
+ * complex object.
+ *
+ * dm_pool_destroy frees all allocated memory.
+ *
+ * eg, If you are building a binary tree in your program, and
+ * know that you are only ever going to insert into your tree,
+ * and not delete (eg, maintaining a symbol table for a
+ * compiler).  You can create yourself a pool, allocate the nodes
+ * from it, and when the tree becomes redundant call dm_pool_destroy
+ * (no nasty iterating through the tree to free nodes).
+ *
+ * eg, On the other hand if you wanted to repeatedly insert and
+ * remove objects into the tree, you would be better off
+ * allocating the nodes from a free list; you cannot free a
+ * single arbitrary node with pool.
+ */
+
+struct dm_pool;
+
+/* constructor and destructor */
+struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint);
+void dm_pool_destroy(struct dm_pool *p);
+
+/* simple allocation/free routines */
+void *dm_pool_alloc(struct dm_pool *p, size_t s);
+void *dm_pool_alloc_aligned(struct dm_pool *p, size_t s, unsigned alignment);
+void dm_pool_empty(struct dm_pool *p);
+void dm_pool_free(struct dm_pool *p, void *ptr);
+
+/*
+ * Object building routines:
+ *
+ * These allow you to 'grow' an object, useful for
+ * building strings, or filling in dynamic
+ * arrays.
+ *
+ * It's probably best explained with an example:
+ *
+ * char *build_string(struct dm_pool *mem)
+ * {
+ *      int i;
+ *      char buffer[16];
+ *
+ *      if (!dm_pool_begin_object(mem, 128))
+ *              return NULL;
+ *
+ *      for (i = 0; i < 50; i++) {
+ *              snprintf(buffer, sizeof(buffer), "%d, ", i);
+ *              if (!dm_pool_grow_object(mem, buffer, strlen(buffer)))
+ *                      goto bad;
+ *      }
+ *
+ *	// add null
+ *      if (!dm_pool_grow_object(mem, "\0", 1))
+ *              goto bad;
+ *
+ *      return dm_pool_end_object(mem);
+ *
+ * bad:
+ *
+ *      dm_pool_abandon_object(mem);
+ *      return NULL;
+ *}
+ *
+ * So start an object by calling dm_pool_begin_object
+ * with a guess at the final object size - if in
+ * doubt make the guess too small.
+ *
+ * Then append chunks of data to your object with
+ * dm_pool_grow_object.  Finally get your object with
+ * a call to dm_pool_end_object.
+ *
+ */
+int dm_pool_begin_object(struct dm_pool *p, size_t hint);
+int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta);
+void *dm_pool_end_object(struct dm_pool *p);
+void dm_pool_abandon_object(struct dm_pool *p);
+
+/* utilities */
+char *dm_pool_strdup(struct dm_pool *p, const char *str);
+char *dm_pool_strndup(struct dm_pool *p, const char *str, size_t n);
+void *dm_pool_zalloc(struct dm_pool *p, size_t s);
+
+/******************
+ * bitset functions
+ ******************/
+
+typedef uint32_t *dm_bitset_t;
+
+dm_bitset_t dm_bitset_create(struct dm_pool *mem, unsigned num_bits);
+void dm_bitset_destroy(dm_bitset_t bs);
+
+void dm_bit_union(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2);
+int dm_bit_get_first(dm_bitset_t bs);
+int dm_bit_get_next(dm_bitset_t bs, int last_bit);
+
+#define DM_BITS_PER_INT (sizeof(int) * CHAR_BIT)
+
+#define dm_bit(bs, i) \
+   (bs[(i / DM_BITS_PER_INT) + 1] & (0x1 << (i & (DM_BITS_PER_INT - 1))))
+
+#define dm_bit_set(bs, i) \
+   (bs[(i / DM_BITS_PER_INT) + 1] |= (0x1 << (i & (DM_BITS_PER_INT - 1))))
+
+#define dm_bit_clear(bs, i) \
+   (bs[(i / DM_BITS_PER_INT) + 1] &= ~(0x1 << (i & (DM_BITS_PER_INT - 1))))
+
+#define dm_bit_set_all(bs) \
+   memset(bs + 1, -1, ((*bs / DM_BITS_PER_INT) + 1) * sizeof(int))
+
+#define dm_bit_clear_all(bs) \
+   memset(bs + 1, 0, ((*bs / DM_BITS_PER_INT) + 1) * sizeof(int))
+
+#define dm_bit_copy(bs1, bs2) \
+   memcpy(bs1 + 1, bs2 + 1, ((*bs1 / DM_BITS_PER_INT) + 1) * sizeof(int))
+
+/****************
+ * hash functions
+ ****************/
+
+struct dm_hash_table;
+struct dm_hash_node;
+
+typedef void (*dm_hash_iterate_fn) (void *data);
+
+struct dm_hash_table *dm_hash_create(unsigned size_hint);
+void dm_hash_destroy(struct dm_hash_table *t);
+void dm_hash_wipe(struct dm_hash_table *t);
+
+void *dm_hash_lookup(struct dm_hash_table *t, const char *key);
+int dm_hash_insert(struct dm_hash_table *t, const char *key, void *data);
+void dm_hash_remove(struct dm_hash_table *t, const char *key);
+
+void *dm_hash_lookup_binary(struct dm_hash_table *t, const char *key, uint32_t len);
+int dm_hash_insert_binary(struct dm_hash_table *t, const char *key, uint32_t len,
+		       void *data);
+void dm_hash_remove_binary(struct dm_hash_table *t, const char *key, uint32_t len);
+
+unsigned dm_hash_get_num_entries(struct dm_hash_table *t);
+void dm_hash_iter(struct dm_hash_table *t, dm_hash_iterate_fn f);
+
+char *dm_hash_get_key(struct dm_hash_table *t, struct dm_hash_node *n);
+void *dm_hash_get_data(struct dm_hash_table *t, struct dm_hash_node *n);
+struct dm_hash_node *dm_hash_get_first(struct dm_hash_table *t);
+struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_node *n);
+
+#define dm_hash_iterate(v, h) \
+	for (v = dm_hash_get_first(h); v; \
+	     v = dm_hash_get_next(h, v))
 
 #endif				/* LIB_DEVICE_MAPPER_H */

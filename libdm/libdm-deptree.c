@@ -17,8 +17,6 @@
 #include "libdm-common.h"
 #include "list.h"
 #include "kdev_t.h"
-#include "pool.h"
-#include "hash.h"
 
 #include <stdarg.h>
 #include <sys/param.h>
@@ -37,8 +35,8 @@ struct deptree_node {
 };
 
 struct deptree {
-	struct pool *mem;
-	struct hash_table *devs;
+	struct dm_pool *mem;
+	struct dm_hash_table *devs;
 	struct deptree_node root;
 };
 
@@ -51,7 +49,7 @@ struct deptree *dm_deptree_create(void)
 {
 	struct deptree *deptree;
 
-	if (!(deptree = dbg_malloc(sizeof(*deptree)))) {
+	if (!(deptree = dm_malloc(sizeof(*deptree)))) {
 		log_error("dm_deptree_create malloc failed");
 		return NULL;
 	}
@@ -61,16 +59,16 @@ struct deptree *dm_deptree_create(void)
 	list_init(&deptree->root.uses);
 	list_init(&deptree->root.used_by);
 
-	if (!(deptree->mem = pool_create("deptree", 1024))) {
+	if (!(deptree->mem = dm_pool_create("deptree", 1024))) {
 		log_error("deptree pool creation failed");
-		dbg_free(deptree);
+		dm_free(deptree);
 		return NULL;
 	}
 
-	if (!(deptree->devs = hash_create(8))) {
+	if (!(deptree->devs = dm_hash_create(8))) {
 		log_error("deptree hash creation failed");
-		pool_destroy(deptree->mem);
-		dbg_free(deptree);
+		dm_pool_destroy(deptree->mem);
+		dm_free(deptree);
 		return NULL;
 	}
 
@@ -82,9 +80,9 @@ void dm_deptree_free(struct deptree *deptree)
 	if (!deptree)
 		return;
 
-	hash_destroy(deptree->devs);
-	pool_destroy(deptree->mem);
-	dbg_free(deptree);
+	dm_hash_destroy(deptree->devs);
+	dm_pool_destroy(deptree->mem);
+	dm_free(deptree);
 }
 
 static int _nodes_are_linked(struct deptree_node *parent,
@@ -104,7 +102,7 @@ static int _link(struct list *list, struct deptree_node *node)
 {
 	struct deptree_link *dlink;
 
-	if (!(dlink = pool_alloc(node->deptree->mem, sizeof(*dlink)))) {
+	if (!(dlink = dm_pool_alloc(node->deptree->mem, sizeof(*dlink)))) {
 		log_error("deptree link allocation failed");
 		return 0;
 	}
@@ -171,7 +169,7 @@ static struct deptree_node *_create_deptree_node(struct deptree *deptree,
 	struct deptree_node *node;
 	uint64_t dev;
 
-	if (!(node = pool_zalloc(deptree->mem, sizeof(*node)))) {
+	if (!(node = dm_pool_zalloc(deptree->mem, sizeof(*node)))) {
 		log_error("_create_deptree_node alloc failed");
 		return NULL;
 	}
@@ -187,10 +185,10 @@ static struct deptree_node *_create_deptree_node(struct deptree *deptree,
 
 	dev = MKDEV(info->major, info->minor);
 
-	if (!hash_insert_binary(deptree->devs, (const char *) &dev,
+	if (!dm_hash_insert_binary(deptree->devs, (const char *) &dev,
 				sizeof(dev), node)) {
 		log_error("deptree node hash insertion failed");
-		pool_free(deptree->mem, node);
+		dm_pool_free(deptree->mem, node);
 		return NULL;
 	}
 
@@ -202,11 +200,11 @@ static struct deptree_node *_find_deptree_node(struct deptree *deptree,
 {
 	uint64_t dev = MKDEV(major, minor);
 
-	return hash_lookup_binary(deptree->devs, (const char *) &dev,
+	return dm_hash_lookup_binary(deptree->devs, (const char *) &dev,
 				  sizeof(dev));
 }
 
-static int _deps(struct dm_task **dmt, struct pool *mem, uint32_t major, uint32_t minor,
+static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint32_t minor,
 		 const char **name, const char **uuid,
 		 struct dm_info *info, struct dm_deps **deps)
 {
@@ -254,11 +252,11 @@ static int _deps(struct dm_task **dmt, struct pool *mem, uint32_t major, uint32_
 				  minor, info->minor);
 			goto failed;
 		}
-		if (!(*name = pool_strdup(mem, dm_task_get_name(*dmt)))) {
+		if (!(*name = dm_pool_strdup(mem, dm_task_get_name(*dmt)))) {
 			log_error("name pool_strdup failed");
 			goto failed;
 		}
-		if (!(*uuid = pool_strdup(mem, dm_task_get_uuid(*dmt)))) {
+		if (!(*uuid = dm_pool_strdup(mem, dm_task_get_uuid(*dmt)))) {
 			log_error("uuid pool_strdup failed");
 			goto failed;
 		}

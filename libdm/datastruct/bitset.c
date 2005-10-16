@@ -14,21 +14,20 @@
  */
 
 #include "lib.h"
-#include "bitset.h"
 
 /* FIXME: calculate this. */
 #define INT_SHIFT 5
 
-bitset_t bitset_create(struct pool *mem, unsigned num_bits)
+dm_bitset_t dm_bitset_create(struct dm_pool *mem, unsigned num_bits)
 {
-	unsigned n = (num_bits / BITS_PER_INT) + 2;
+	unsigned n = (num_bits / DM_BITS_PER_INT) + 2;
 	size_t size = sizeof(int) * n;
-	bitset_t bs;
+	dm_bitset_t bs;
 	
 	if (mem)
-		bs = pool_zalloc(mem, size);
+		bs = dm_pool_zalloc(mem, size);
 	else
-		bs = dbg_malloc(size);
+		bs = dm_malloc(size);
 
 	if (!bs)
 		return NULL;
@@ -36,20 +35,20 @@ bitset_t bitset_create(struct pool *mem, unsigned num_bits)
 	*bs = num_bits;
 
 	if (!mem)
-		bit_clear_all(bs);
+		dm_bit_clear_all(bs);
 
 	return bs;
 }
 
-void bitset_destroy(bitset_t bs)
+void dm_bitset_destroy(dm_bitset_t bs)
 {
-	dbg_free(bs);
+	dm_free(bs);
 }
 
-void bit_union(bitset_t out, bitset_t in1, bitset_t in2)
+void dm_bit_union(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2)
 {
 	int i;
-	for (i = (in1[0] / BITS_PER_INT) + 1; i; i--)
+	for (i = (in1[0] / DM_BITS_PER_INT) + 1; i; i--)
 		out[i] = in1[i] | in2[i];
 }
 
@@ -58,7 +57,7 @@ void bit_union(bitset_t out, bitset_t in1, bitset_t in2)
  */
 static inline int _test_word(uint32_t test, int bit)
 {
-	while (bit < BITS_PER_INT) {
+	while (bit < DM_BITS_PER_INT) {
 		if (test & (0x1 << bit))
 			return bit;
 		bit++;
@@ -67,7 +66,7 @@ static inline int _test_word(uint32_t test, int bit)
 	return -1;
 }
 
-int bit_get_next(bitset_t bs, int last_bit)
+int dm_bit_get_next(dm_bitset_t bs, int last_bit)
 {
 	int bit, word;
 	uint32_t test;
@@ -77,19 +76,19 @@ int bit_get_next(bitset_t bs, int last_bit)
 	while (last_bit < bs[0]) {
 		word = last_bit >> INT_SHIFT;
 		test = bs[word + 1];
-		bit = last_bit & (BITS_PER_INT - 1);
+		bit = last_bit & (DM_BITS_PER_INT - 1);
 
 		if ((bit = _test_word(test, bit)) >= 0)
-			return (word * BITS_PER_INT) + bit;
+			return (word * DM_BITS_PER_INT) + bit;
 
-		last_bit = last_bit - (last_bit & (BITS_PER_INT - 1)) +
-		    BITS_PER_INT;
+		last_bit = last_bit - (last_bit & (DM_BITS_PER_INT - 1)) +
+		    DM_BITS_PER_INT;
 	}
 
 	return -1;
 }
 
-int bit_get_first(bitset_t bs)
+int dm_bit_get_first(dm_bitset_t bs)
 {
-	return bit_get_next(bs, -1);
+	return dm_bit_get_next(bs, -1);
 }

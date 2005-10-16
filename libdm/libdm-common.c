@@ -93,7 +93,7 @@ int dm_get_library_version(char *version, size_t size)
 
 struct dm_task *dm_task_create(int type)
 {
-	struct dm_task *dmt = dbg_malloc(sizeof(*dmt));
+	struct dm_task *dmt = dm_malloc(sizeof(*dmt));
 
 	if (!dmt) {
 		log_error("dm_task_create: malloc(%d) failed", sizeof(*dmt));
@@ -123,7 +123,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 	struct stat st1, st2;
 
 	if (dmt->dev_name) {
-		dbg_free(dmt->dev_name);
+		dm_free(dmt->dev_name);
 		dmt->dev_name = NULL;
 	}
 
@@ -143,7 +143,7 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 		name = pos + 1;
 	}
 
-	if (!(dmt->dev_name = dbg_strdup(name))) {
+	if (!(dmt->dev_name = dm_strdup(name))) {
 		log_error("dm_task_set_name: strdup(%s) failed", name);
 		return 0;
 	}
@@ -154,11 +154,11 @@ int dm_task_set_name(struct dm_task *dmt, const char *name)
 int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 {
 	if (dmt->uuid) {
-		dbg_free(dmt->uuid);
+		dm_free(dmt->uuid);
 		dmt->uuid = NULL;
 	}
 
-	if (!(dmt->uuid = dbg_strdup(uuid))) {
+	if (!(dmt->uuid = dm_strdup(uuid))) {
 		log_error("dm_task_set_uuid: strdup(%s) failed", uuid);
 		return 0;
 	}
@@ -381,7 +381,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	size_t len = strlen(dev_name) + strlen(old_name) + 2;
 	char *pos;
 
-	if (!(nop = dbg_malloc(sizeof(*nop) + len))) {
+	if (!(nop = dm_malloc(sizeof(*nop) + len))) {
 		log_error("Insufficient memory to stack mknod operation");
 		return 0;
 	}
@@ -412,7 +412,7 @@ static void _pop_node_ops(void)
 		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
 			    nop->uid, nop->gid, nop->mode, nop->old_name);
 		list_del(&nop->list);
-		dbg_free(nop);
+		dm_free(nop);
 	}
 }
 
@@ -447,4 +447,25 @@ int dm_set_dev_dir(const char *dir)
 const char *dm_dir(void)
 {
 	return _dm_dir;
+}
+
+int dm_mknodes(const char *name)
+{
+	struct dm_task *dmt;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_MKNODES)))
+		return 0;
+
+	if (name && !dm_task_set_name(dmt, name))
+		goto out;
+
+	if (!dm_task_no_open_count(dmt))
+		goto out;
+
+	r = dm_task_run(dmt);
+
+out:
+	dm_task_destroy(dmt);
+	return r;
 }

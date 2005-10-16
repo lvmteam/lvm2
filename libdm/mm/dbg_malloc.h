@@ -20,7 +20,7 @@
 #include <string.h>
 
 void *malloc_aux(size_t s, const char *file, int line);
-#define dbg_malloc(s) malloc_aux((s), __FILE__, __LINE__)
+#define dm_malloc(s) malloc_aux((s), __FILE__, __LINE__)
 
 char *dbg_strdup(const char *str);
 
@@ -31,12 +31,12 @@ void *realloc_aux(void *p, unsigned int s, const char *file, int line);
 int dump_memory(void);
 void bounds_check(void);
 
-#  define dbg_free(p) free_aux(p)
+#  define dm_free(p) free_aux(p)
 #  define dbg_realloc(p, s) realloc_aux(p, s, __FILE__, __LINE__)
 
 #else
 
-#  define dbg_free(p) free(p)
+#  define dm_free(p) free(p)
 #  define dbg_realloc(p, s) realloc(p, s)
 #  define dump_memory()
 #  define bounds_check()
