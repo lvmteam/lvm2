@@ -1,5 +1,5 @@
-Version 2.01.15 - 
-=================================
+Version 2.01.15 - 16th October 2005
+===================================
   Refuse to run pvcreate/pvremove on devices we can't open exclusively.
   Use ORPHAN lock definition throughout.
   Validate chunksize in lvcreate.
