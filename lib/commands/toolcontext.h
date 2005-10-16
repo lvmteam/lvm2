@@ -17,7 +17,6 @@
 #define _LVM_TOOLCONTEXT_H
 
 #include "dev-cache.h"
-#include "pool.h"
 
 #include <stdio.h>
 #include <limits.h>
@@ -50,8 +49,8 @@ struct backup_params;
 /* FIXME Split into tool & library contexts */
 /* command-instance-related variables needed by library */
 struct cmd_context {
-	struct pool *libmem;	/* For permanent config data */
-	struct pool *mem;	/* Transient: Cleared between each command */
+	struct dm_pool *libmem;	/* For permanent config data */
+	struct dm_pool *mem;	/* Transient: Cleared between each command */
 
 	const struct format_type *fmt;	/* Current format to use by default */
 	struct format_type *fmt_backup;	/* Format to use for backups */

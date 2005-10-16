@@ -15,7 +15,6 @@
 #include "lib.h"
 #include "filter-sysfs.h"
 #include "lvm-string.h"
-#include "pool.h"
 
 #ifdef linux
 
@@ -69,21 +68,21 @@ struct entry {
 
 #define SET_BUCKETS 64
 struct dev_set {
-	struct pool *mem;
+	struct dm_pool *mem;
 	const char *sys_block;
 	int initialised;
 	struct entry *slots[SET_BUCKETS];
 };
 
-static struct dev_set *_dev_set_create(struct pool *mem, const char *sys_block)
+static struct dev_set *_dev_set_create(struct dm_pool *mem, const char *sys_block)
 {
 	struct dev_set *ds;
 
-	if (!(ds = pool_zalloc(mem, sizeof(*ds))))
+	if (!(ds = dm_pool_zalloc(mem, sizeof(*ds))))
 		return NULL;
 
 	ds->mem = mem;
-	ds->sys_block = pool_strdup(mem, sys_block);
+	ds->sys_block = dm_pool_strdup(mem, sys_block);
 	ds->initialised = 0;
 
 	return ds;
@@ -102,7 +101,7 @@ static int _set_insert(struct dev_set *ds, dev_t dev)
 	struct entry *e;
 	unsigned h = _hash_dev(dev);
 
-	if (!(e = pool_alloc(ds->mem, sizeof(*e))))
+	if (!(e = dm_pool_alloc(ds->mem, sizeof(*e))))
 		return 0;
 
 	e->next = ds->slots[h];
@@ -258,20 +257,20 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 static void _destroy(struct dev_filter *f)
 {
 	struct dev_set *ds = (struct dev_set *) f->private;
-	pool_destroy(ds->mem);
+	dm_pool_destroy(ds->mem);
 }
 
 struct dev_filter *sysfs_filter_create(const char *proc)
 {
 	char sys_block[PATH_MAX];
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct dev_set *ds;
 	struct dev_filter *f;
 
 	if (!_locate_sysfs_blocks(proc, sys_block, sizeof(sys_block)))
 		return NULL;
 
-	if (!(mem = pool_create("sysfs", 256))) {
+	if (!(mem = dm_pool_create("sysfs", 256))) {
 		log_error("sysfs pool creation failed");
 		return NULL;
 	}
@@ -281,7 +280,7 @@ struct dev_filter *sysfs_filter_create(const char *proc)
 		goto bad;
 	}
 
-	if (!(f = pool_zalloc(mem, sizeof(*f)))) {
+	if (!(f = dm_pool_zalloc(mem, sizeof(*f)))) {
 		stack;
 		goto bad;
 	}
@@ -292,7 +291,7 @@ struct dev_filter *sysfs_filter_create(const char *proc)
 	return f;
 
  bad:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return NULL;
 }
 

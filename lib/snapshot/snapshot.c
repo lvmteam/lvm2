@@ -14,8 +14,6 @@
  */
 
 #include "lib.h"
-#include "pool.h"
-#include "list.h"
 #include "toolcontext.h"
 #include "metadata.h"
 #include "segtype.h"
@@ -89,7 +87,7 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _target_percent(void **target_state, struct pool *mem,
+static int _target_percent(void **target_state, struct dm_pool *mem,
 			   struct config_tree *cft, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
 			   uint64_t *total_denominator, float *percent)
@@ -128,7 +126,7 @@ static int _target_present(void)
 
 static void _destroy(const struct segment_type *segtype)
 {
-	dbg_free((void *) segtype);
+	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _snapshot_ops = {
@@ -149,7 +147,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd);
 struct segment_type *init_segtype(struct cmd_context *cmd)
 #endif
 {
-	struct segment_type *segtype = dbg_malloc(sizeof(*segtype));
+	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
 
 	if (!segtype) {
 		stack;

@@ -39,7 +39,6 @@
 #include "clvmd-comms.h"
 #include "clvmd.h"
 #include "clvmd-gulm.h"
-#include "hash.h"
 
 #define DEFAULT_TCP_PORT 21064
 

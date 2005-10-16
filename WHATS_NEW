@@ -1,5 +1,7 @@
 Version 2.02.00 - 
 ===================================
+  Move mknodes into libdevmapper.
+  Move bitset, hash, pool and dbg_malloc into libdevmapper.
 
 Version 2.01.15 - 16th October 2005
 ===================================

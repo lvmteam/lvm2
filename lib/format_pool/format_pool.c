@@ -14,12 +14,9 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 #include "label.h"
 #include "metadata.h"
-#include "hash.h"
 #include "limits.h"
-#include "list.h"
 #include "display.h"
 #include "toolcontext.h"
 #include "lvmcache.h"
@@ -30,7 +27,7 @@
 #define FMT_POOL_NAME "pool"
 
 /* Must be called after pvs are imported */
-static struct user_subpool *_build_usp(struct list *pls, struct pool *mem,
+static struct user_subpool *_build_usp(struct list *pls, struct dm_pool *mem,
 				       int *sps)
 {
 	struct pool_list *pl;
@@ -43,7 +40,7 @@ static struct user_subpool *_build_usp(struct list *pls, struct pool *mem,
 	 */
 	list_iterate_items(pl, pls) {
 		*sps = pl->pd.pl_subpools;
-		if (!usp && (!(usp = pool_zalloc(mem, sizeof(*usp) * (*sps))))) {
+		if (!usp && (!(usp = dm_pool_zalloc(mem, sizeof(*usp) * (*sps))))) {
 			log_error("Unable to allocate %d subpool structures",
 				  *sps);
 			return 0;
@@ -61,7 +58,7 @@ static struct user_subpool *_build_usp(struct list *pls, struct pool *mem,
 
 		if (!cur_sp->devs &&
 		    (!(cur_sp->devs =
-		       pool_zalloc(mem,
+		       dm_pool_zalloc(mem,
 				   sizeof(*usp->devs) * pl->pd.pl_sp_devs)))) {
 
 			log_error("Unable to allocate %d pool_device "
@@ -103,15 +100,15 @@ static int _check_usp(char *vgname, struct user_subpool *usp, int sp_count)
 }
 
 static struct volume_group *_build_vg_from_pds(struct format_instance
-					       *fid, struct pool *mem,
+					       *fid, struct dm_pool *mem,
 					       struct list *pds)
 {
-	struct pool *smem = fid->fmt->cmd->mem;
+	struct dm_pool *smem = fid->fmt->cmd->mem;
 	struct volume_group *vg = NULL;
 	struct user_subpool *usp = NULL;
 	int sp_count;
 
-	if (!(vg = pool_zalloc(smem, sizeof(*vg)))) {
+	if (!(vg = dm_pool_zalloc(smem, sizeof(*vg)))) {
 		log_error("Unable to allocate volume group structure");
 		return NULL;
 	}
@@ -176,7 +173,7 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda)
 {
-	struct pool *mem = pool_create("pool vg_read", 1024);
+	struct dm_pool *mem = dm_pool_create("pool vg_read", 1024);
 	struct list pds;
 	struct volume_group *vg = NULL;
 
@@ -205,7 +202,7 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 	}
 
       out:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return vg;
 }
 
@@ -222,7 +219,7 @@ static int _pv_setup(const struct format_type *fmt,
 static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
-	struct pool *mem = pool_create("pool pv_read", 1024);
+	struct dm_pool *mem = dm_pool_create("pool pv_read", 1024);
 	struct pool_list *pl;
 	struct device *dev;
 	int r = 0;
@@ -259,7 +256,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 	r = 1;
 
       out:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return r;
 }
 
@@ -276,7 +273,7 @@ static struct format_instance *_create_instance(const struct format_type *fmt,
 	struct format_instance *fid;
 	struct metadata_area *mda;
 
-	if (!(fid = pool_zalloc(fmt->cmd->mem, sizeof(*fid)))) {
+	if (!(fid = dm_pool_zalloc(fmt->cmd->mem, sizeof(*fid)))) {
 		log_error("Unable to allocate format instance structure for "
 			  "pool format");
 		return NULL;
@@ -286,10 +283,10 @@ static struct format_instance *_create_instance(const struct format_type *fmt,
 	list_init(&fid->metadata_areas);
 
 	/* Define a NULL metadata area */
-	if (!(mda = pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
+	if (!(mda = dm_pool_zalloc(fmt->cmd->mem, sizeof(*mda)))) {
 		log_error("Unable to allocate metadata area structure "
 			  "for pool format");
-		pool_free(fmt->cmd->mem, fid);
+		dm_pool_free(fmt->cmd->mem, fid);
 		return NULL;
 	}
 
@@ -307,7 +304,7 @@ static void _destroy_instance(struct format_instance *fid)
 
 static void _destroy(const struct format_type *fmt)
 {
-	dbg_free((void *) fmt);
+	dm_free((void *) fmt);
 }
 
 /* *INDENT-OFF* */
@@ -327,7 +324,7 @@ struct format_type *init_format(struct cmd_context *cmd);
 struct format_type *init_format(struct cmd_context *cmd)
 #endif
 {
-	struct format_type *fmt = dbg_malloc(sizeof(*fmt));
+	struct format_type *fmt = dm_malloc(sizeof(*fmt));
 
 	if (!fmt) {
 		log_error("Unable to allocate format type structure for pool "

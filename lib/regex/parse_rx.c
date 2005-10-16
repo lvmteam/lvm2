@@ -15,12 +15,11 @@
 
 #include "lib.h"
 #include "parse_rx.h"
-#include "bitset.h"
 
 struct parse_sp {		/* scratch pad for the parsing process */
-	struct pool *mem;
+	struct dm_pool *mem;
 	int type;		/* token type, 0 indicates a charset */
-	bitset_t charset;	/* The current charset */
+	dm_bitset_t charset;	/* The current charset */
 	const char *cursor;	/* where we are in the regex */
 	const char *rx_end;	/* 1pte for the expression being parsed */
 };
@@ -31,8 +30,8 @@ static void _single_char(struct parse_sp *ps, unsigned int c, const char *ptr)
 {
 	ps->type = 0;
 	ps->cursor = ptr + 1;
-	bit_clear_all(ps->charset);
-	bit_set(ps->charset, c);
+	dm_bit_clear_all(ps->charset);
+	dm_bit_set(ps->charset, c);
 }
 
 /*
@@ -54,15 +53,15 @@ static int _get_token(struct parse_sp *ps)
 	case '[':
 		ptr++;
 		if (*ptr == '^') {
-			bit_set_all(ps->charset);
+			dm_bit_set_all(ps->charset);
 
 			/* never transition on zero */
-			bit_clear(ps->charset, 0);
+			dm_bit_clear(ps->charset, 0);
 			neg = 1;
 			ptr++;
 
 		} else
-			bit_clear_all(ps->charset);
+			dm_bit_clear_all(ps->charset);
 
 		while ((ptr < ps->rx_end) && (*ptr != ']')) {
 			if (*ptr == '\\') {
@@ -104,17 +103,17 @@ static int _get_token(struct parse_sp *ps)
 
 				for (; lc <= c; lc++) {
 					if (neg)
-						bit_clear(ps->charset, lc);
+						dm_bit_clear(ps->charset, lc);
 					else
-						bit_set(ps->charset, lc);
+						dm_bit_set(ps->charset, lc);
 				}
 				range = 0;
 			} else {
 				/* add c into the bitset */
 				if (neg)
-					bit_clear(ps->charset, c);
+					dm_bit_clear(ps->charset, c);
 				else
-					bit_set(ps->charset, c);
+					dm_bit_set(ps->charset, c);
 			}
 			ptr++;
 			lc = c;
@@ -154,10 +153,10 @@ static int _get_token(struct parse_sp *ps)
 		/* The 'all but newline' character set */
 		ps->type = 0;
 		ps->cursor = ptr + 1;
-		bit_set_all(ps->charset);
-		bit_clear(ps->charset, (int) '\n');
-		bit_clear(ps->charset, (int) '\r');
-		bit_clear(ps->charset, 0);
+		dm_bit_set_all(ps->charset);
+		dm_bit_clear(ps->charset, (int) '\n');
+		dm_bit_clear(ps->charset, (int) '\r');
+		dm_bit_clear(ps->charset, 0);
 		break;
 
 	case '\\':
@@ -172,19 +171,19 @@ static int _get_token(struct parse_sp *ps)
 
 		ps->type = 0;
 		ps->cursor = ptr + 1;
-		bit_clear_all(ps->charset);
+		dm_bit_clear_all(ps->charset);
 		switch (*ptr) {
 		case 'n':
-			bit_set(ps->charset, (int) '\n');
+			dm_bit_set(ps->charset, (int) '\n');
 			break;
 		case 'r':
-			bit_set(ps->charset, (int) '\r');
+			dm_bit_set(ps->charset, (int) '\r');
 			break;
 		case 't':
-			bit_set(ps->charset, (int) '\t');
+			dm_bit_set(ps->charset, (int) '\t');
 			break;
 		default:
-			bit_set(ps->charset, (int) *ptr);
+			dm_bit_set(ps->charset, (int) *ptr);
 		}
 		break;
 
@@ -192,22 +191,22 @@ static int _get_token(struct parse_sp *ps)
 		/* add a single character to the bitset */
 		ps->type = 0;
 		ps->cursor = ptr + 1;
-		bit_clear_all(ps->charset);
-		bit_set(ps->charset, (int) *ptr);
+		dm_bit_clear_all(ps->charset);
+		dm_bit_set(ps->charset, (int) *ptr);
 		break;
 	}
 
 	return 1;
 }
 
-static struct rx_node *_node(struct pool *mem, int type,
+static struct rx_node *_node(struct dm_pool *mem, int type,
 			     struct rx_node *l, struct rx_node *r)
 {
-	struct rx_node *n = pool_zalloc(mem, sizeof(*n));
+	struct rx_node *n = dm_pool_zalloc(mem, sizeof(*n));
 
 	if (n) {
-		if (!(n->charset = bitset_create(mem, 256))) {
-			pool_free(mem, n);
+		if (!(n->charset = dm_bitset_create(mem, 256))) {
+			dm_pool_free(mem, n);
 			return NULL;
 		}
 
@@ -230,7 +229,7 @@ static struct rx_node *_term(struct parse_sp *ps)
 			return NULL;
 		}
 
-		bit_copy(n->charset, ps->charset);
+		dm_bit_copy(n->charset, ps->charset);
 		_get_token(ps);	/* match charset */
 		break;
 
@@ -330,11 +329,11 @@ static struct rx_node *_or_term(struct parse_sp *ps)
 	return n;
 }
 
-struct rx_node *rx_parse_tok(struct pool *mem,
+struct rx_node *rx_parse_tok(struct dm_pool *mem,
 			     const char *begin, const char *end)
 {
 	struct rx_node *r;
-	struct parse_sp *ps = pool_zalloc(mem, sizeof(*ps));
+	struct parse_sp *ps = dm_pool_zalloc(mem, sizeof(*ps));
 
 	if (!ps) {
 		stack;
@@ -342,20 +341,20 @@ struct rx_node *rx_parse_tok(struct pool *mem,
 	}
 
 	ps->mem = mem;
-	ps->charset = bitset_create(mem, 256);
+	ps->charset = dm_bitset_create(mem, 256);
 	ps->cursor = begin;
 	ps->rx_end = end;
 	_get_token(ps);		/* load the first token */
 
 	if (!(r = _or_term(ps))) {
 		log_error("Parse error in regex");
-		pool_free(mem, ps);
+		dm_pool_free(mem, ps);
 	}
 
 	return r;
 }
 
-struct rx_node *rx_parse_str(struct pool *mem, const char *str)
+struct rx_node *rx_parse_str(struct dm_pool *mem, const char *str)
 {
 	return rx_parse_tok(mem, str, str + strlen(str));
 }

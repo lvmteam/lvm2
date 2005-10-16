@@ -42,8 +42,8 @@ static void _destroy(struct dev_filter *f)
 		filters++;
 	}
 
-	dbg_free(f->private);
-	dbg_free(f);
+	dm_free(f->private);
+	dm_free(f);
 }
 
 struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
@@ -55,7 +55,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 		return NULL;
 	}
 
-	if (!(filters_copy = dbg_malloc(sizeof(*filters) * (n + 1)))) {
+	if (!(filters_copy = dm_malloc(sizeof(*filters) * (n + 1)))) {
 		log_error("composite filters allocation failed");
 		return NULL;
 	}
@@ -63,9 +63,9 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 	memcpy(filters_copy, filters, sizeof(*filters) * n);
 	filters_copy[n] = NULL;
 
-	if (!(cft = dbg_malloc(sizeof(*cft)))) {
+	if (!(cft = dm_malloc(sizeof(*cft)))) {
 		log_error("compsoite filters allocation failed");
-		dbg_free(filters_copy);
+		dm_free(filters_copy);
 		return NULL;
 	}
 

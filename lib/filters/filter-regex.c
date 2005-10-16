@@ -14,21 +14,18 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 #include "filter-regex.h"
 #include "matcher.h"
 #include "device.h"
-#include "bitset.h"
-#include "list.h"
 
 struct rfilter {
-	struct pool *mem;
-	bitset_t accept;
+	struct dm_pool *mem;
+	dm_bitset_t accept;
 	struct matcher *engine;
 };
 
-static int _extract_pattern(struct pool *mem, const char *pat,
-			    char **regex, bitset_t accept, int ix)
+static int _extract_pattern(struct dm_pool *mem, const char *pat,
+			    char **regex, dm_bitset_t accept, int ix)
 {
 	char sep, *r, *ptr;
 
@@ -37,11 +34,11 @@ static int _extract_pattern(struct pool *mem, const char *pat,
 	 */
 	switch (*pat) {
 	case 'a':
-		bit_set(accept, ix);
+		dm_bit_set(accept, ix);
 		break;
 
 	case 'r':
-		bit_clear(accept, ix);
+		dm_bit_clear(accept, ix);
 		break;
 
 	default:
@@ -74,7 +71,7 @@ static int _extract_pattern(struct pool *mem, const char *pat,
 	/*
 	 * copy the regex
 	 */
-	if (!(r = pool_strdup(mem, pat))) {
+	if (!(r = dm_pool_strdup(mem, pat))) {
 		stack;
 		return 0;
 	}
@@ -95,13 +92,13 @@ static int _extract_pattern(struct pool *mem, const char *pat,
 
 static int _build_matcher(struct rfilter *rf, struct config_value *val)
 {
-	struct pool *scratch;
+	struct dm_pool *scratch;
 	struct config_value *v;
 	char **regex;
 	unsigned count = 0;
 	int i, r = 0;
 
-	if (!(scratch = pool_create("filter matcher", 1024))) {
+	if (!(scratch = dm_pool_create("filter matcher", 1024))) {
 		stack;
 		return 0;
 	}
@@ -122,7 +119,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	/*
 	 * allocate space for them
 	 */
-	if (!(regex = pool_alloc(scratch, sizeof(*regex) * count))) {
+	if (!(regex = dm_pool_alloc(scratch, sizeof(*regex) * count))) {
 		stack;
 		goto out;
 	}
@@ -130,7 +127,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	/*
 	 * create the accept/reject bitset
 	 */
-	rf->accept = bitset_create(rf->mem, count);
+	rf->accept = dm_bitset_create(rf->mem, count);
 
 	/*
 	 * fill the array back to front because we
@@ -152,7 +149,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	r = 1;
 
       out:
-	pool_destroy(scratch);
+	dm_pool_destroy(scratch);
 	return r;
 }
 
@@ -166,7 +163,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 		m = matcher_run(rf->engine, sl->str);
 
 		if (m >= 0) {
-			if (bit(rf->accept, m)) {
+			if (dm_bit(rf->accept, m)) {
 
 				if (!first) {
 					log_debug("%s: New preferred name",
@@ -197,12 +194,12 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 static void _destroy(struct dev_filter *f)
 {
 	struct rfilter *rf = (struct rfilter *) f->private;
-	pool_destroy(rf->mem);
+	dm_pool_destroy(rf->mem);
 }
 
 struct dev_filter *regex_filter_create(struct config_value *patterns)
 {
-	struct pool *mem = pool_create("filter regex", 10 * 1024);
+	struct dm_pool *mem = dm_pool_create("filter regex", 10 * 1024);
 	struct rfilter *rf;
 	struct dev_filter *f;
 
@@ -211,7 +208,7 @@ struct dev_filter *regex_filter_create(struct config_value *patterns)
 		return NULL;
 	}
 
-	if (!(rf = pool_alloc(mem, sizeof(*rf)))) {
+	if (!(rf = dm_pool_alloc(mem, sizeof(*rf)))) {
 		stack;
 		goto bad;
 	}
@@ -223,7 +220,7 @@ struct dev_filter *regex_filter_create(struct config_value *patterns)
 		goto bad;
 	}
 
-	if (!(f = pool_zalloc(mem, sizeof(*f)))) {
+	if (!(f = dm_pool_zalloc(mem, sizeof(*f)))) {
 		stack;
 		goto bad;
 	}
@@ -234,6 +231,6 @@ struct dev_filter *regex_filter_create(struct config_value *patterns)
 	return f;
 
       bad:
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 	return NULL;
 }

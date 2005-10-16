@@ -14,7 +14,6 @@
  */
 
 #include "lib.h"
-#include "pool.h"
 #include "label.h"
 #include "metadata.h"
 #include "xlate.h"
@@ -79,7 +78,7 @@ static void _destroy_label(struct labeller *l, struct label *label)
 
 static void _destroy(struct labeller *l)
 {
-	dbg_free(l);
+	dm_free(l);
 }
 
 struct label_ops _pool_ops = {
@@ -96,7 +95,7 @@ struct labeller *pool_labeller_create(struct format_type *fmt)
 {
 	struct labeller *l;
 
-	if (!(l = dbg_malloc(sizeof(*l)))) {
+	if (!(l = dm_malloc(sizeof(*l)))) {
 		log_error("Couldn't allocate labeller object.");
 		return NULL;
 	}

@@ -16,9 +16,7 @@
 #include "lib.h"
 #include "metadata.h"
 #include "import-export.h"
-#include "pool.h"
 #include "display.h"
-#include "hash.h"
 #include "toolcontext.h"
 #include "lvmcache.h"
 

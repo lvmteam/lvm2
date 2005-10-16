@@ -149,7 +149,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 
 	lv_mirr->status |= (PVMOVE | LOCKED);
 
-	if (!(*lvs_changed = pool_alloc(cmd->mem, sizeof(**lvs_changed)))) {
+	if (!(*lvs_changed = dm_pool_alloc(cmd->mem, sizeof(**lvs_changed)))) {
 		log_error("lvs_changed list struct allocation failed");
 		return NULL;
 	}
@@ -507,7 +507,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 
 		/* Drop any PE lists from PV name */
 		if ((colon = strchr(pv_name, ':'))) {
-			if (!(pv_name = pool_strndup(cmd->mem, pv_name,
+			if (!(pv_name = dm_pool_strndup(cmd->mem, pv_name,
 						     (unsigned) (colon -
 								 pv_name)))) {
 				log_error("Failed to clone PV name");

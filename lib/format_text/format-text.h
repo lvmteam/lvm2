@@ -18,7 +18,6 @@
 
 #include "lvm-types.h"
 #include "metadata.h"
-#include "pool.h"
 
 /*
  * Archives a vg config.  'retain_days' is the minimum number of
@@ -47,11 +46,11 @@ struct labeller *text_labeller_create(const struct format_type *fmt);
 
 int pvhdr_read(struct device *dev, char *buf);
 
-int add_da(const struct format_type *fmt, struct pool *mem, struct list *das,
+int add_da(const struct format_type *fmt, struct dm_pool *mem, struct list *das,
 	   uint64_t start, uint64_t size);
 void del_das(struct list *das);
 
-int add_mda(const struct format_type *fmt, struct pool *mem, struct list *mdas,
+int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct list *mdas,
 	    struct device *dev, uint64_t start, uint64_t size);
 void del_mdas(struct list *mdas);
 

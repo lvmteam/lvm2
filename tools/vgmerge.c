@@ -136,7 +136,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		list_add(&vg_to->pvs, pvh);
 
 		pv = list_item(pvh, struct pv_list)->pv;
-		pv->vg_name = pool_strdup(cmd->mem, vg_to->name);
+		pv->vg_name = dm_pool_strdup(cmd->mem, vg_to->name);
 	}
 	vg_to->pv_count += vg_from->pv_count;
 

@@ -145,7 +145,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-	if (!(lv->name = pool_strdup(cmd->mem, lv_name_new))) {
+	if (!(lv->name = dm_pool_strdup(cmd->mem, lv_name_new))) {
 		log_error("Failed to allocate space for new name");
 		goto error;
 	}

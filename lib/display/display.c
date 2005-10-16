@@ -151,7 +151,7 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 		{"         ", "   ", " "},
 	};
 
-	if (!(size_buf = pool_alloc(cmd->mem, SIZE_BUF))) {
+	if (!(size_buf = dm_pool_alloc(cmd->mem, SIZE_BUF))) {
 		log_error("no memory for size display buffer");
 		return "";
 	}

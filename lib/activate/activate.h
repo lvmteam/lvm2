@@ -18,10 +18,6 @@
 
 #include "metadata.h"
 
-#ifdef DEVMAPPER_SUPPORT
-#  include <libdevmapper.h>
-#endif
-
 struct lvinfo {
 	int exists;
 	int suspended;

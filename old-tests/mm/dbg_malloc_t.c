@@ -13,7 +13,6 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dbg_malloc.h"
 #include "log.h"
 
 #include <stdio.h>

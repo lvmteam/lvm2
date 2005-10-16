@@ -19,7 +19,6 @@
 #include "config.h"
 #include "lvm-types.h"
 #include "metadata.h"
-#include "pool.h"
 
 #include <stdio.h>
 
@@ -46,7 +45,7 @@ struct text_vg_version_ops {
 	int (*check_version) (struct config_tree * cf);
 	struct volume_group *(*read_vg) (struct format_instance * fid,
 					 struct config_tree * cf);
-	void (*read_desc) (struct pool * mem, struct config_tree * cf,
+	void (*read_desc) (struct dm_pool * mem, struct config_tree * cf,
 			   time_t *when, char **desc);
 };
 
@@ -56,7 +55,7 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size);
 int read_flags(uint32_t *status, int type, struct config_value *cv);
 
 int print_tags(struct list *tags, char *buffer, size_t size);
-int read_tags(struct pool *mem, struct list *tags, struct config_value *cv);
+int read_tags(struct dm_pool *mem, struct list *tags, struct config_value *cv);
 
 int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp);
 int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf);

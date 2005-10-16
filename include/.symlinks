@@ -6,9 +6,7 @@
 ../lib/commands/toolcontext.h
 ../lib/config/config.h
 ../lib/config/defaults.h
-../lib/datastruct/bitset.h
 ../lib/datastruct/btree.h
-../lib/datastruct/hash.h
 ../lib/datastruct/list.h
 ../lib/datastruct/lvm-types.h
 ../lib/datastruct/str_list.h
@@ -34,9 +32,7 @@
 ../lib/metadata/metadata.h
 ../lib/metadata/pv_alloc.h
 ../lib/metadata/segtype.h
-../lib/mm/dbg_malloc.h
 ../lib/mm/memlock.h
-../lib/mm/pool.h
 ../lib/mm/xlate.h
 ../lib/misc/crc.h
 ../lib/misc/intl.h

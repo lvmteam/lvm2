@@ -203,6 +203,26 @@ static inline struct list *list_next(struct list *head, struct list *elem)
 #define list_iterate_items(v, head) list_iterate_items_gen(v, (head), list)
 
 /*
+ * Walk a list, setting 'v' in turn to the containing structure of each item.
+ * The containing structure should be the same type as 'v'.
+ * The 'struct list' variable within the containing structure is 'field'.
+ * t must be defined as a temporary variable of the same type as v.
+ */
+#define list_iterate_items_gen_safe(v, t, head, field) \
+	for (v = list_struct_base((head)->n, typeof(*v), field), \
+	     t = list_struct_base(v->field.n, typeof(*v), field); \
+	     &v->field != (head); \
+	     v = t, t = list_struct_base(v->field.n, typeof(*v), field))
+/*
+ * Walk a list, setting 'v' in turn to the containing structure of each item.
+ * The containing structure should be the same type as 'v'.
+ * The list should be 'struct list list' within the containing structure.
+ * t must be defined as a temporary variable of the same type as v.
+ */
+#define list_iterate_items_safe(v, t, head) \
+	list_iterate_items_gen_safe(v, t, (head), list)
+
+/*
  * Walk a list backwards, setting 'v' in turn to the containing structure 
  * of each item.
  * The containing structure should be the same type as 'v'.

@@ -49,10 +49,8 @@
 #include "clvmd-comms.h"
 #include "lvm-functions.h"
 #include "clvmd.h"
-#include "hash.h"
 #include "clvmd-gulm.h"
 #include "libgulm.h"
-#include "hash.h"
 
 /* Hash list of nodes in the cluster */
 static struct hash_table *node_hash;

@@ -14,8 +14,6 @@
  */
 
 #include "lib.h"
-#include "pool.h"
-#include "list.h"
 #include "toolcontext.h"
 #include "metadata.h"
 #include "segtype.h"
@@ -78,7 +76,7 @@ static int _text_import_area_count(struct config_node *sn, uint32_t *area_count)
 }
 
 static int _text_import(struct lv_segment *seg, const struct config_node *sn,
-			struct hash_table *pv_hash)
+			struct dm_hash_table *pv_hash)
 {
 	const struct config_node *cn;
 	char *logname = NULL;
@@ -147,12 +145,12 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static struct mirror_state *_init_target(struct pool *mem,
+static struct mirror_state *_init_target(struct dm_pool *mem,
 					 struct config_tree *cft)
 {
 	struct mirror_state *mirr_state;
 
-	if (!(mirr_state = pool_alloc(mem, sizeof(*mirr_state)))) {
+	if (!(mirr_state = dm_pool_alloc(mem, sizeof(*mirr_state)))) {
 		log_error("struct mirr_state allocation failed");
 		return NULL;
 	}
@@ -206,7 +204,7 @@ static int _compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 	return 1;
 }
 
-static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
+static int _compose_target_line(struct dev_manager *dm, struct dm_pool *mem,
 				struct config_tree *cft, void **target_state,
 				struct lv_segment *seg, char *params,
 				size_t paramsize, const char **target, int *pos,
@@ -272,7 +270,7 @@ static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
 				  areas);
 }
 
-static int _target_percent(void **target_state, struct pool *mem,
+static int _target_percent(void **target_state, struct dm_pool *mem,
 			   struct config_tree *cft, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
 			   uint64_t *total_denominator, float *percent)
@@ -291,7 +289,7 @@ static int _target_percent(void **target_state, struct pool *mem,
 	/* Status line: <#mirrors> (maj:min)+ <synced>/<total_regions> */
 	log_debug("Mirror status: %s", params);
 
-	if (sscanf(pos, "%u %n", mirror_count, used) != 1) {
+	if (sscanf(pos, "%u %n", &mirror_count, &used) != 1) {
 		log_error("Failure parsing mirror status mirror count: %s",
 			  params);
 		return 0;
@@ -339,7 +337,7 @@ static int _target_present(void)
 
 static void _destroy(const struct segment_type *segtype)
 {
-	dbg_free((void *) segtype);
+	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _mirrored_ops = {
@@ -363,7 +361,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd);
 struct segment_type *init_segtype(struct cmd_context *cmd)
 #endif
 {
-	struct segment_type *segtype = dbg_malloc(sizeof(*segtype));
+	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
 
 	if (!segtype) {
 		stack;

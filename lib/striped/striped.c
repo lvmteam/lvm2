@@ -14,8 +14,6 @@
  */
 
 #include "lib.h"
-#include "pool.h"
-#include "list.h"
 #include "toolcontext.h"
 #include "segtype.h"
 #include "display.h"
@@ -63,7 +61,7 @@ static int _text_import_area_count(struct config_node *sn, uint32_t *area_count)
 }
 
 static int _text_import(struct lv_segment *seg, const struct config_node *sn,
-			struct hash_table *pv_hash)
+			struct dm_hash_table *pv_hash)
 {
 	struct config_node *cn;
 
@@ -152,7 +150,7 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _compose_target_line(struct dev_manager *dm, struct pool *mem,
+static int _compose_target_line(struct dev_manager *dm, struct dm_pool *mem,
 				struct config_tree *cft, void **target_state,
 				struct lv_segment *seg, char *params,
 				size_t paramsize, const char **target, int *pos,
@@ -195,7 +193,7 @@ static int _target_present(void)
 
 static void _destroy(const struct segment_type *segtype)
 {
-	dbg_free((void *) segtype);
+	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _striped_ops = {
@@ -214,7 +212,7 @@ static struct segtype_handler _striped_ops = {
 
 struct segment_type *init_striped_segtype(struct cmd_context *cmd)
 {
-	struct segment_type *segtype = dbg_malloc(sizeof(*segtype));
+	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
 
 	if (!segtype) {
 		stack;

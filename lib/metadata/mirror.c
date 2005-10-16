@@ -283,7 +283,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 
 				/* First time, add LV to list of LVs affected */
 				if (!lv_used) {
-					if (!(lvl = pool_alloc(cmd->mem, sizeof(*lvl)))) {
+					if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
 						log_error("lv_list alloc failed");
 						return 0;
 					}
@@ -495,7 +495,7 @@ struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 	struct lv_segment *seg;
 	uint32_t s;
 
-	if (!(lvs = pool_alloc(cmd->mem, sizeof(*lvs)))) {
+	if (!(lvs = dm_pool_alloc(cmd->mem, sizeof(*lvs)))) {
 		log_error("lvs list alloc failed");
 		return NULL;
 	}
@@ -514,7 +514,7 @@ struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 				if (seg_type(seg, s) != AREA_LV ||
 				    seg_lv(seg, s) != lv)
 					continue;
-				if (!(lvl = pool_alloc(cmd->mem, sizeof(*lvl)))) {
+				if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
 					log_error("lv_list alloc failed");
 					return NULL;
 				}

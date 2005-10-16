@@ -14,7 +14,6 @@
  */
 
 #include "matcher.h"
-#include "dbg_malloc.h"
 #include "log.h"
 
 #include <stdio.h>
@@ -105,7 +104,7 @@ static void _scan_input(struct matcher *m, char **regex)
 
 int main(int argc, char **argv)
 {
-	struct pool *mem;
+	struct dm_pool *mem;
 	struct matcher *scanner;
 	char **regex;
 	int nregex;
@@ -118,7 +117,7 @@ int main(int argc, char **argv)
 	init_log(stderr);
 	init_debug(_LOG_DEBUG);
 
-	if (!(mem = pool_create(10 * 1024))) {
+	if (!(mem = dm_pool_create(10 * 1024))) {
 		fprintf(stderr, "Couldn't create pool\n");
 		exit(2);
 	}
@@ -135,7 +134,7 @@ int main(int argc, char **argv)
 
 	_scan_input(scanner, regex);
 	_free_regex(regex, nregex);
-	pool_destroy(mem);
+	dm_pool_destroy(mem);
 
 	dump_memory();
 	fin_log();

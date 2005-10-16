@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "pv_map.h"
-#include "hash.h"
 #include "pv_alloc.h"
 
 /*
@@ -33,12 +32,12 @@ static void _insert_area(struct list *head, struct pv_area *a)
 	list_add(&pva->list, &a->list);
 }
 
-static int _create_single_area(struct pool *mem, struct pv_map *pvm,
+static int _create_single_area(struct dm_pool *mem, struct pv_map *pvm,
 			       uint32_t start, uint32_t length)
 {
 	struct pv_area *pva;
 
-	if (!(pva = pool_zalloc(mem, sizeof(*pva)))) {
+	if (!(pva = dm_pool_zalloc(mem, sizeof(*pva)))) {
 		stack;
 		return 0;
 	}
@@ -53,7 +52,7 @@ static int _create_single_area(struct pool *mem, struct pv_map *pvm,
 	return 1;
 }
 
-static int _create_alloc_areas_for_pv(struct pool *mem, struct pv_map *pvm,
+static int _create_alloc_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 				      uint32_t start, uint32_t count)
 {
         struct pv_segment *peg;
@@ -98,7 +97,7 @@ static int _create_alloc_areas_for_pv(struct pool *mem, struct pv_map *pvm,
 	return 1;
 }
 
-static int _create_all_areas_for_pv(struct pool *mem, struct pv_map *pvm,
+static int _create_all_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 				    struct list *pe_ranges)
 {
 	struct pe_range *aa;
@@ -125,7 +124,7 @@ static int _create_all_areas_for_pv(struct pool *mem, struct pv_map *pvm,
 	return 1;
 }
 
-static int _create_maps(struct pool *mem, struct list *pvs, struct list *pvms)
+static int _create_maps(struct dm_pool *mem, struct list *pvs, struct list *pvms)
 {
 	struct pv_map *pvm;
 	struct pv_list *pvl;
@@ -134,7 +133,7 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *pvms)
 		if (!(pvl->pv->status & ALLOCATABLE_PV))
 			continue;
 
-		if (!(pvm = pool_zalloc(mem, sizeof(*pvm)))) {
+		if (!(pvm = dm_pool_zalloc(mem, sizeof(*pvm)))) {
 			stack;
 			return 0;
 		}
@@ -156,12 +155,12 @@ static int _create_maps(struct pool *mem, struct list *pvs, struct list *pvms)
 /*
  * Create list of PV areas available for this particular allocation
  */
-struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
+struct list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 			    struct list *allocatable_pvs)
 {
 	struct list *pvms;
 
-	if (!(pvms = pool_zalloc(mem, sizeof(*pvms)))) {
+	if (!(pvms = dm_pool_zalloc(mem, sizeof(*pvms)))) {
 		log_error("create_pv_maps alloc failed");
 		return NULL;
 	}
@@ -171,7 +170,7 @@ struct list *create_pv_maps(struct pool *mem, struct volume_group *vg,
 	if (!_create_maps(mem, allocatable_pvs, pvms)) {
 		log_error("Couldn't create physical volume maps in %s",
 			  vg->name);
-		pool_free(mem, pvms);
+		dm_pool_free(mem, pvms);
 		return NULL;
 	}
 

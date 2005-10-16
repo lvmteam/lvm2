@@ -18,7 +18,6 @@
 
 #include "label.h"
 #include "metadata.h"
-#include "pool.h"
 
 #define MINOR_OFFSET 65536
 
@@ -138,20 +137,20 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 void pool_label_out(struct pool_disk *pl, char *buf);
 void pool_label_in(struct pool_disk *pl, char *buf);
 void get_pool_uuid(char *uuid, uint64_t poolid, uint32_t spid, uint32_t devid);
-int import_pool_vg(struct volume_group *vg, struct pool *mem, struct list *pls);
-int import_pool_lvs(struct volume_group *vg, struct pool *mem,
+int import_pool_vg(struct volume_group *vg, struct dm_pool *mem, struct list *pls);
+int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem,
 		    struct list *pls);
 int import_pool_pvs(const struct format_type *fmt, struct volume_group *vg,
-		    struct list *pvs, struct pool *mem, struct list *pls);
-int import_pool_pv(const struct format_type *fmt, struct pool *mem,
+		    struct list *pvs, struct dm_pool *mem, struct list *pls);
+int import_pool_pv(const struct format_type *fmt, struct dm_pool *mem,
 		   struct volume_group *vg, struct physical_volume *pv,
 		   struct pool_list *pl);
-int import_pool_segments(struct list *lvs, struct pool *mem,
+int import_pool_segments(struct list *lvs, struct dm_pool *mem,
 			 struct user_subpool *usp, int sp_count);
 int read_pool_pds(const struct format_type *fmt, const char *vgname,
-		  struct pool *mem, struct list *head);
+		  struct dm_pool *mem, struct list *head);
 struct pool_list *read_pool_disk(const struct format_type *fmt,
-				 struct device *dev, struct pool *mem,
+				 struct device *dev, struct dm_pool *mem,
 				 const char *vg_name);
 
 #endif				/* DISK_REP_POOL_FORMAT_H */

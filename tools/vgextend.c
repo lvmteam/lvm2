@@ -71,7 +71,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 /********** FIXME
 	log_print("maximum logical volume size is %s",
 		  (dummy = lvm_show_size(LVM_LV_SIZE_MAX(vg) / 2, LONG)));
-	dbg_free(dummy);
+	dm_free(dummy);
 	dummy = NULL;
 **********/
 

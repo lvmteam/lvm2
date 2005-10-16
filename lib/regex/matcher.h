@@ -16,10 +16,8 @@
 #ifndef _LVM_MATCHER_H
 #define _LVM_MATCHER_H
 
-#include "pool.h"
-
 struct matcher;
-struct matcher *matcher_create(struct pool *mem, const char **patterns,
+struct matcher *matcher_create(struct dm_pool *mem, const char **patterns,
 			       unsigned num);
 
 int matcher_run(struct matcher *m, const char *begin);

@@ -16,6 +16,8 @@
 #ifndef _LVM_CONFIG_H
 #define _LVM_CONFIG_H
 
+#include "lvm-types.h"
+
 struct device;
 struct cmd_context;
 

@@ -16,9 +16,7 @@
 #include "lib.h"
 #include "metadata.h"
 #include "import-export.h"
-#include "pool.h"
 #include "display.h"
-#include "hash.h"
 #include "toolcontext.h"
 #include "lvmcache.h"
 #include "lv_alloc.h"
@@ -26,10 +24,10 @@
 #include "segtype.h"
 #include "text_import.h"
 
-typedef int (*section_fn) (struct format_instance * fid, struct pool * mem,
+typedef int (*section_fn) (struct format_instance * fid, struct dm_pool * mem,
 			   struct volume_group * vg, struct config_node * pvn,
 			   struct config_node * vgn,
-			   struct hash_table * pv_hash);
+			   struct dm_hash_table * pv_hash);
 
 #define _read_int32(root, path, result) \
 	get_config_uint32(root, path, (uint32_t *) result)
@@ -111,16 +109,16 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 	return 1;
 }
 
-static int _read_pv(struct format_instance *fid, struct pool *mem,
+static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
-		    struct config_node *vgn, struct hash_table *pv_hash)
+		    struct config_node *vgn, struct dm_hash_table *pv_hash)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
 	struct config_node *cn;
 
-	if (!(pvl = pool_zalloc(mem, sizeof(*pvl))) ||
-	    !(pvl->pv = pool_zalloc(mem, sizeof(*pvl->pv)))) {
+	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
+	    !(pvl->pv = dm_pool_zalloc(mem, sizeof(*pvl->pv)))) {
 		stack;
 		return 0;
 	}
@@ -131,7 +129,7 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 	 * Add the pv to the pv hash for quick lookup when we read
 	 * the lv segments.
 	 */
-	if (!hash_insert(pv_hash, pvn->key, pv)) {
+	if (!dm_hash_insert(pv_hash, pvn->key, pv)) {
 		stack;
 		return 0;
 	}
@@ -164,7 +162,7 @@ static int _read_pv(struct format_instance *fid, struct pool *mem,
 			return 0;
 	}
 
-	if (!(pv->vg_name = pool_strdup(mem, vg->name))) {
+	if (!(pv->vg_name = dm_pool_strdup(mem, vg->name))) {
 		stack;
 		return 0;
 	}
@@ -236,9 +234,9 @@ static void _insert_segment(struct logical_volume *lv, struct lv_segment *seg)
 	list_add(&lv->segments, &seg->list);
 }
 
-static int _read_segment(struct pool *mem, struct volume_group *vg,
+static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 			 struct logical_volume *lv, struct config_node *sn,
-			 struct hash_table *pv_hash)
+			 struct dm_hash_table *pv_hash)
 {
 	uint32_t area_count = 0u;
 	struct lv_segment *seg;
@@ -323,7 +321,7 @@ static int _read_segment(struct pool *mem, struct volume_group *vg,
 }
 
 int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
-		      const struct config_node *cn, struct hash_table *pv_hash,
+		      const struct config_node *cn, struct dm_hash_table *pv_hash,
 		      uint32_t flags)
 {
 	unsigned int s;
@@ -359,7 +357,7 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 		}
 
 		/* FIXME Cope if LV not yet read in */
-		if ((pv = hash_lookup(pv_hash, cv->v.str))) {
+		if ((pv = dm_hash_lookup(pv_hash, cv->v.str))) {
 			if (!set_lv_segment_area_pv(seg, s, pv, cv->next->v.i)) {
 				stack;
 				return 0;
@@ -389,9 +387,9 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 	return 1;
 }
 
-static int _read_segments(struct pool *mem, struct volume_group *vg,
+static int _read_segments(struct dm_pool *mem, struct volume_group *vg,
 			  struct logical_volume *lv, struct config_node *lvn,
-			  struct hash_table *pv_hash)
+			  struct dm_hash_table *pv_hash)
 {
 	struct config_node *sn;
 	int count = 0, seg_count;
@@ -446,23 +444,23 @@ static int _read_segments(struct pool *mem, struct volume_group *vg,
 	return 1;
 }
 
-static int _read_lvnames(struct format_instance *fid, struct pool *mem,
+static int _read_lvnames(struct format_instance *fid, struct dm_pool *mem,
 			 struct volume_group *vg, struct config_node *lvn,
-			 struct config_node *vgn, struct hash_table *pv_hash)
+			 struct config_node *vgn, struct dm_hash_table *pv_hash)
 {
 	struct logical_volume *lv;
 	struct lv_list *lvl;
 	struct config_node *cn;
 
-	if (!(lvl = pool_zalloc(mem, sizeof(*lvl))) ||
-	    !(lvl->lv = pool_zalloc(mem, sizeof(*lvl->lv)))) {
+	if (!(lvl = dm_pool_zalloc(mem, sizeof(*lvl))) ||
+	    !(lvl->lv = dm_pool_zalloc(mem, sizeof(*lvl->lv)))) {
 		stack;
 		return 0;
 	}
 
 	lv = lvl->lv;
 
-	if (!(lv->name = pool_strdup(mem, lvn->key))) {
+	if (!(lv->name = dm_pool_strdup(mem, lvn->key))) {
 		stack;
 		return 0;
 	}
@@ -521,9 +519,9 @@ static int _read_lvnames(struct format_instance *fid, struct pool *mem,
 	return 1;
 }
 
-static int _read_lvsegs(struct format_instance *fid, struct pool *mem,
+static int _read_lvsegs(struct format_instance *fid, struct dm_pool *mem,
 			struct volume_group *vg, struct config_node *lvn,
-			struct config_node *vgn, struct hash_table *pv_hash)
+			struct config_node *vgn, struct dm_hash_table *pv_hash)
 {
 	struct logical_volume *lv;
 	struct lv_list *lvl;
@@ -586,9 +584,9 @@ static int _read_lvsegs(struct format_instance *fid, struct pool *mem,
 
 static int _read_sections(struct format_instance *fid,
 			  const char *section, section_fn fn,
-			  struct pool *mem,
+			  struct dm_pool *mem,
 			  struct volume_group *vg, struct config_node *vgn,
-			  struct hash_table *pv_hash, int optional)
+			  struct dm_hash_table *pv_hash, int optional)
 {
 	struct config_node *n;
 
@@ -616,8 +614,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 {
 	struct config_node *vgn, *cn;
 	struct volume_group *vg;
-	struct hash_table *pv_hash = NULL;
-	struct pool *mem = fid->fmt->cmd->mem;
+	struct dm_hash_table *pv_hash = NULL;
+	struct dm_pool *mem = fid->fmt->cmd->mem;
 
 	/* skip any top-level values */
 	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib) ;
@@ -627,7 +625,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		return NULL;
 	}
 
-	if (!(vg = pool_zalloc(mem, sizeof(*vg)))) {
+	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg)))) {
 		stack;
 		return NULL;
 	}
@@ -637,12 +635,12 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	/* eg Set to instance of fmt1 here if reading a format1 backup? */
 	vg->fid = fid;
 
-	if (!(vg->name = pool_strdup(mem, vgn->key))) {
+	if (!(vg->name = dm_pool_strdup(mem, vgn->key))) {
 		stack;
 		goto bad;
 	}
 
-	if (!(vg->system_id = pool_zalloc(mem, NAME_LEN))) {
+	if (!(vg->system_id = dm_pool_zalloc(mem, NAME_LEN))) {
 		stack;
 		goto bad;
 	}
@@ -722,7 +720,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	 * The pv hash memoises the pv section names -> pv
 	 * structures.
 	 */
-	if (!(pv_hash = hash_create(32))) {
+	if (!(pv_hash = dm_hash_create(32))) {
 		log_error("Couldn't create hash table.");
 		goto bad;
 	}
@@ -759,7 +757,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	hash_destroy(pv_hash);
+	dm_hash_destroy(pv_hash);
 
 	if (vg->status & PARTIAL_VG) {
 		vg->status &= ~LVM_WRITE;
@@ -773,13 +771,13 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 
       bad:
 	if (pv_hash)
-		hash_destroy(pv_hash);
+		dm_hash_destroy(pv_hash);
 
-	pool_free(mem, vg);
+	dm_pool_free(mem, vg);
 	return NULL;
 }
 
-static void _read_desc(struct pool *mem,
+static void _read_desc(struct dm_pool *mem,
 		       struct config_tree *cft, time_t *when, char **desc)
 {
 	const char *d;
@@ -788,7 +786,7 @@ static void _read_desc(struct pool *mem,
 	log_suppress(1);
 	d = find_config_str(cft->root, "description", "");
 	log_suppress(0);
-	*desc = pool_strdup(mem, d);
+	*desc = dm_pool_strdup(mem, d);
 
 	get_config_uint32(cft->root, "creation_time", &u);
 	*when = u;

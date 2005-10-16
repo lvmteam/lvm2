@@ -16,11 +16,9 @@
 #ifndef _LVM_BTREE_H
 #define _LVM_BTREE_H
 
-#include "pool.h"
-
 struct btree;
 
-struct btree *btree_create(struct pool *mem);
+struct btree *btree_create(struct dm_pool *mem);
 
 void *btree_lookup(struct btree *t, uint32_t k);
 int btree_insert(struct btree *t, uint32_t k, void *data);

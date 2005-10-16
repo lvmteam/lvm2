@@ -15,7 +15,6 @@
 
 #include "lib.h"
 #include "disk-rep.h"
-#include "pool.h"
 #include "xlate.h"
 #include "filter.h"
 #include "lvmcache.h"
@@ -255,7 +254,7 @@ static int _read_uuids(struct disk_list *data)
 		if (!dev_read(data->dev, pos, sizeof(buffer), buffer))
 			fail;
 
-		if (!(ul = pool_alloc(data->mem, sizeof(*ul))))
+		if (!(ul = dm_pool_alloc(data->mem, sizeof(*ul))))
 			fail;
 
 		memcpy(ul->uuid, buffer, NAME_LEN);
@@ -284,7 +283,7 @@ static int _read_lvs(struct disk_list *data)
 
 	for (i = 0; (i < vgd->lv_max) && (read < vgd->lv_cur); i++) {
 		pos = data->pvd.lv_on_disk.base + (i * sizeof(struct lv_disk));
-		ll = pool_alloc(data->mem, sizeof(*ll));
+		ll = dm_pool_alloc(data->mem, sizeof(*ll));
 
 		if (!ll)
 			fail;
@@ -305,7 +304,7 @@ static int _read_lvs(struct disk_list *data)
 static int _read_extents(struct disk_list *data)
 {
 	size_t len = sizeof(struct pe_disk) * data->pvd.pe_total;
-	struct pe_disk *extents = pool_alloc(data->mem, len);
+	struct pe_disk *extents = dm_pool_alloc(data->mem, len);
 	uint64_t pos = data->pvd.pe_on_disk.base;
 
 	if (!extents)
@@ -321,10 +320,10 @@ static int _read_extents(struct disk_list *data)
 }
 
 static struct disk_list *__read_disk(const struct format_type *fmt,
-				     struct device *dev, struct pool *mem,
+				     struct device *dev, struct dm_pool *mem,
 				     const char *vg_name)
 {
-	struct disk_list *dl = pool_alloc(mem, sizeof(*dl));
+	struct disk_list *dl = dm_pool_alloc(mem, sizeof(*dl));
 	const char *name = dev_name(dev);
 	struct lvmcache_info *info;
 
@@ -400,12 +399,12 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 	return dl;
 
       bad:
-	pool_free(dl->mem, dl);
+	dm_pool_free(dl->mem, dl);
 	return NULL;
 }
 
 struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
-			    struct pool *mem, const char *vg_name)
+			    struct dm_pool *mem, const char *vg_name)
 {
 	struct disk_list *r;
 
@@ -452,7 +451,7 @@ static void _add_pv_to_list(struct list *head, struct disk_list *data)
  * so we can free off all the memory if something goes wrong.
  */
 int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
-		   struct dev_filter *filter, struct pool *mem,
+		   struct dev_filter *filter, struct dm_pool *mem,
 		   struct list *head)
 {
 	struct dev_iter *iter;
@@ -531,8 +530,8 @@ static int _write_uuids(struct disk_list *data)
 			return 0;
 		}
 
-		log_debug("Writing %s uuidlist to %s at %" PRIu64 " len %"
-			  PRIsize_t, data->pvd.vg_name, dev_name(data->dev),
+		log_debug("Writing %s uuidlist to %s at %" PRIu64 " len %d",
+			  data->pvd.vg_name, dev_name(data->dev),
 			  pos, NAME_LEN);
 
 		if (!dev_write(data->dev, pos, NAME_LEN, ul->uuid))
@@ -619,7 +618,7 @@ static int _write_pvd(struct disk_list *data)
 	/* Make sure that the gap between the PV structure and
 	   the next one is zeroed in order to make non LVM tools
 	   happy (idea from AED) */
-	buf = dbg_malloc(size);
+	buf = dm_malloc(size);
 	if (!buf) {
 		log_err("Couldn't allocate temporary PV buffer.");
 		return 0;
@@ -634,11 +633,11 @@ static int _write_pvd(struct disk_list *data)
 
 	_xlate_pvd((struct pv_disk *) buf);
 	if (!dev_write(data->dev, pos, size, buf)) {
-		dbg_free(buf);
+		dm_free(buf);
 		fail;
 	}
 
-	dbg_free(buf);
+	dm_free(buf);
 	return 1;
 }
 

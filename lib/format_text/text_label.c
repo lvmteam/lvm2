@@ -86,18 +86,18 @@ static int _write(struct label *label, char *buf)
 	return 1;
 }
 
-int add_da(const struct format_type *fmt, struct pool *mem, struct list *das,
+int add_da(const struct format_type *fmt, struct dm_pool *mem, struct list *das,
 	   uint64_t start, uint64_t size)
 {
 	struct data_area_list *dal;
 
 	if (!mem) {
-		if (!(dal = dbg_malloc(sizeof(*dal)))) {
+		if (!(dal = dm_malloc(sizeof(*dal)))) {
 			log_error("struct data_area_list allocation failed");
 			return 0;
 		}
 	} else {
-		if (!(dal = pool_alloc(mem, sizeof(*dal)))) {
+		if (!(dal = dm_pool_alloc(mem, sizeof(*dal)))) {
 			log_error("struct data_area_list allocation failed");
 			return 0;
 		}
@@ -119,11 +119,11 @@ void del_das(struct list *das)
 	list_iterate_safe(dah, tmp, das) {
 		da = list_item(dah, struct data_area_list);
 		list_del(&da->list);
-		dbg_free(da);
+		dm_free(da);
 	}
 }
 
-int add_mda(const struct format_type *fmt, struct pool *mem, struct list *mdas,
+int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct list *mdas,
 	    struct device *dev, uint64_t start, uint64_t size)
 {
 /* FIXME List size restricted by pv_header SECTOR_SIZE */
@@ -132,23 +132,23 @@ int add_mda(const struct format_type *fmt, struct pool *mem, struct list *mdas,
 	struct mda_context *mdac;
 
 	if (!mem) {
-		if (!(mdal = dbg_malloc(sizeof(struct metadata_area)))) {
+		if (!(mdal = dm_malloc(sizeof(struct metadata_area)))) {
 			log_error("struct mda_list allocation failed");
 			return 0;
 		}
 
-		if (!(mdac = dbg_malloc(sizeof(struct mda_context)))) {
+		if (!(mdac = dm_malloc(sizeof(struct mda_context)))) {
 			log_error("struct mda_context allocation failed");
-			dbg_free(mdal);
+			dm_free(mdal);
 			return 0;
 		}
 	} else {
-		if (!(mdal = pool_alloc(mem, sizeof(struct metadata_area)))) {
+		if (!(mdal = dm_pool_alloc(mem, sizeof(struct metadata_area)))) {
 			log_error("struct mda_list allocation failed");
 			return 0;
 		}
 
-		if (!(mdac = pool_alloc(mem, sizeof(struct mda_context)))) {
+		if (!(mdac = dm_pool_alloc(mem, sizeof(struct mda_context)))) {
 			log_error("struct mda_context allocation failed");
 			return 0;
 		}
@@ -173,9 +173,9 @@ void del_mdas(struct list *mdas)
 
 	list_iterate_safe(mdah, tmp, mdas) {
 		mda = list_item(mdah, struct metadata_area);
-		dbg_free(mda->metadata_locn);
+		dm_free(mda->metadata_locn);
 		list_del(&mda->list);
-		dbg_free(mda);
+		dm_free(mda);
 	}
 }
 
@@ -255,7 +255,7 @@ static void _destroy_label(struct labeller *l, struct label *label)
 
 static void _destroy(struct labeller *l)
 {
-	dbg_free(l);
+	dm_free(l);
 }
 
 struct label_ops _text_ops = {
@@ -272,7 +272,7 @@ struct labeller *text_labeller_create(const struct format_type *fmt)
 {
 	struct labeller *l;
 
-	if (!(l = dbg_malloc(sizeof(*l)))) {
+	if (!(l = dm_malloc(sizeof(*l)))) {
 		log_err("Couldn't allocate labeller object.");
 		return NULL;
 	}

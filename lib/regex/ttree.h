@@ -16,11 +16,9 @@
 #ifndef _LVM_TTREE_H
 #define _LVM_TTREE_H
 
-#include "pool.h"
-
 struct ttree;
 
-struct ttree *ttree_create(struct pool *mem, unsigned int klen);
+struct ttree *ttree_create(struct dm_pool *mem, unsigned int klen);
 
 void *ttree_lookup(struct ttree *tt, unsigned *key);
 int ttree_insert(struct ttree *tt, unsigned *key, void *data);

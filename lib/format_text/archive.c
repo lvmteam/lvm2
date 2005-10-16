@@ -16,9 +16,7 @@
 #include "lib.h"
 #include "format-text.h"
 
-#include "pool.h"
 #include "config.h"
-#include "hash.h"
 #include "import-export.h"
 #include "lvm-string.h"
 #include "lvm-file.h"
@@ -109,24 +107,24 @@ static void _insert_file(struct list *head, struct archive_file *b)
 	list_add_h(&bf->list, &b->list);
 }
 
-static char *_join(struct pool *mem, const char *dir, const char *name)
+static char *_join(struct dm_pool *mem, const char *dir, const char *name)
 {
-	if (!pool_begin_object(mem, 32) ||
-	    !pool_grow_object(mem, dir, strlen(dir)) ||
-	    !pool_grow_object(mem, "/", 1) ||
-	    !pool_grow_object(mem, name, strlen(name)) ||
-	    !pool_grow_object(mem, "\0", 1)) {
+	if (!dm_pool_begin_object(mem, 32) ||
+	    !dm_pool_grow_object(mem, dir, strlen(dir)) ||
+	    !dm_pool_grow_object(mem, "/", 1) ||
+	    !dm_pool_grow_object(mem, name, strlen(name)) ||
+	    !dm_pool_grow_object(mem, "\0", 1)) {
 		stack;
 		return NULL;
 	}
 
-	return pool_end_object(mem);
+	return dm_pool_end_object(mem);
 }
 
 /*
  * Returns a list of archive_files.
  */
-static struct list *_scan_archive(struct pool *mem,
+static struct list *_scan_archive(struct dm_pool *mem,
 				  const char *vgname, const char *dir)
 {
 	int i, count;
@@ -136,7 +134,7 @@ static struct list *_scan_archive(struct pool *mem,
 	struct archive_file *af;
 	struct list *results;
 
-	if (!(results = pool_alloc(mem, sizeof(*results)))) {
+	if (!(results = dm_pool_alloc(mem, sizeof(*results)))) {
 		stack;
 		return NULL;
 	}
@@ -171,7 +169,7 @@ static struct list *_scan_archive(struct pool *mem,
 		/*
 		 * Create a new archive_file.
 		 */
-		if (!(af = pool_alloc(mem, sizeof(*af)))) {
+		if (!(af = dm_pool_alloc(mem, sizeof(*af)))) {
 			log_err("Couldn't create new archive file.");
 			results = NULL;
 			goto out;
@@ -333,7 +331,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 	log_print("Description:\t%s", desc ? desc : "<No description>");
 	log_print("Backup Time:\t%s", ctime(&when));
 
-	pool_free(cmd->mem, vg);
+	dm_pool_free(cmd->mem, vg);
 	tf->fmt->ops->destroy_instance(tf);
 }
 
@@ -353,7 +351,7 @@ int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 	list_iterate_back_items(af, archives)
 		_display_archive(cmd, af);
 
-	pool_free(cmd->mem, archives);
+	dm_pool_free(cmd->mem, archives);
 
 	return 1;
 }

@@ -16,7 +16,6 @@
 #include "lib.h"
 #include "lvm-types.h"
 #include "lvm-string.h"
-#include "pool.h"
 
 #include <ctype.h>
 
@@ -131,7 +130,7 @@ static void _quote_hyphens(char **out, const char *src)
 /*
  * <vg>-<lv>-<layer> or if !layer just <vg>-<lv>.
  */
-char *build_dm_name(struct pool *mem, const char *vg,
+char *build_dm_name(struct dm_pool *mem, const char *vg,
 		    const char *lv, const char *layer)
 {
 	size_t len = 1;
@@ -148,7 +147,7 @@ char *build_dm_name(struct pool *mem, const char *vg,
 
 	len += hyphens;
 
-	if (!(r = pool_alloc(mem, len))) {
+	if (!(r = dm_pool_alloc(mem, len))) {
 		stack;
 		return NULL;
 	}
@@ -194,10 +193,10 @@ static char *_unquote(char *component)
 	return (c + 1);
 }
 
-int split_dm_name(struct pool *mem, const char *dmname,
+int split_dm_name(struct dm_pool *mem, const char *dmname,
 		  char **vgname, char **lvname, char **layer)
 {
-	if (!(*vgname = pool_strdup(mem, dmname)))
+	if (!(*vgname = dm_pool_strdup(mem, dmname)))
 		return 0;
 
 	_unquote(*layer = _unquote(*lvname = _unquote(*vgname)));

@@ -20,14 +20,15 @@
 #define _FILE_OFFSET_BITS 64
 
 #include <assert.h>
+#include <libdevmapper.h>
 
+#include "lvm-types.h"
 #include "log.h"
 #include "activate.h"
 #include "archiver.h"
 #include "lvmcache.h"
 #include "config.h"
 #include "defaults.h"
-#include "dbg_malloc.h"
 #include "dev-cache.h"
 #include "device.h"
 #include "display.h"
@@ -42,7 +43,6 @@
 #include "locking.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
-#include "pool.h"
 #include "segtype.h"
 #include "str_list.h"
 #include "toolcontext.h"

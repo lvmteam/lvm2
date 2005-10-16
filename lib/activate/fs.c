@@ -29,7 +29,6 @@
 #include <unistd.h>
 #include <limits.h>
 #include <dirent.h>
-#include <libdevmapper.h>
 
 static int _mk_dir(const char *dev_dir, const char *vg_name)
 {
@@ -283,7 +282,7 @@ static int _stack_fs_op(fs_op_t type, const char *dev_dir, const char *vg_name,
 	    strlen(dev) + strlen(old_lv_name) + 5;
 	char *pos;
 
-	if (!(fsp = dbg_malloc(sizeof(*fsp) + len))) {
+	if (!(fsp = dm_malloc(sizeof(*fsp) + len))) {
 		log_error("No space to stack fs operation");
 		return 0;
 	}
@@ -312,7 +311,7 @@ static void _pop_fs_ops(void)
 		_do_fs_op(fsp->type, fsp->dev_dir, fsp->vg_name, fsp->lv_name,
 			  fsp->dev, fsp->old_lv_name);
 		list_del(&fsp->list);
-		dbg_free(fsp);
+		dm_free(fsp);
 	}
 }
 
