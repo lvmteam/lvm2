@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Replacement deactivation code.
   Simplify dev_manager_info().
   Attempt to load missing targets using modprobe.
   Add -a to lvscan.
