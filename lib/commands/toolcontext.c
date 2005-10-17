@@ -1078,7 +1078,6 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	archive_exit(cmd);
 	backup_exit(cmd);
-	activation_exit();
 	lvmcache_destroy();
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
@@ -1092,7 +1091,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	dm_free(cmd);
 
 	release_log_memory();
-	dm_dump_memory();
+	activation_exit();
 	fin_log();
 	fin_syslog();
 

@@ -2156,11 +2156,6 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 	return _action(dm, lv, ACTIVATE);
 }
 
-int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
-{
-	return _action(dm, lv, DEACTIVATE);
-}
-
 int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 {
 	return _action(dm, lv, SUSPEND);
@@ -2187,5 +2182,198 @@ int dev_manager_lv_rmnodes(const struct logical_volume *lv)
 void dev_manager_exit(void)
 {
 	dm_lib_exit();
+}
+
+/*
+ * New deactivation code
+ */
+static struct deptree *_create_partial_deptree(uint32_t major, uint32_t minor)
+{
+	struct deptree *dtree;
+
+	if (!(dtree = dm_deptree_create())) {
+		log_error("partial deptree creation failed");
+		return NULL;
+	}
+
+	if (!dm_deptree_add_dev(dtree, major, minor)) {
+		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to deptree",
+			  major, minor);
+		dm_deptree_free(dtree);
+		return NULL;
+	}
+
+	return dtree;
+}
+
+static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
+{
+	struct dm_task *dmt;
+	int r;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
+		log_error("_info_by_dev: dm_task creation failed");
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
+		log_error("_info_by_dev: Failed to set device number");
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
+	if ((r = dm_task_run(dmt)))
+		r = dm_task_get_info(dmt, info);
+
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _deactivate_node(const char *name, uint32_t major, uint32_t minor)
+{
+	struct dm_task *dmt;
+	int r;
+
+	log_verbose("Removing %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE))) {
+		log_error("Deactivation dm_task creation failed for %s", name);
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
+		log_error("Failed to set device number for %s deactivation", name);
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	r = dm_task_run(dmt);
+
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _deactivate_children(struct deptree_node *dnode, const char *root_uuid)
+{
+	void *handle = NULL;
+	struct deptree_node *child = dnode;
+	struct dm_info info;
+	const struct dm_info *dinfo;
+	const char *name;
+	const char *uuid;
+
+	while((child = dm_deptree_next_child(&handle, child, 0))) {
+		if (!(dinfo = dm_deptree_node_get_info(child))) {
+			stack;
+			continue;
+		}
+
+		if (!(name = dm_deptree_node_get_name(dnode))) {
+			stack;
+			continue;
+		}
+
+		if (!(uuid = dm_deptree_node_get_uuid(dnode))) {
+			stack;
+			continue;
+		}
+
+		/* Ignore if it doesn't belong to this VG */
+		if (strncmp(uuid, root_uuid, ID_LEN)) {
+			stack;
+			continue;
+		}
+
+		/* Refresh open_count */
+		if (!_info_by_dev(dinfo->major, dinfo->minor, &info) ||
+		    !info.exists || info.open_count)
+			continue;
+
+		if (!_deactivate_node(name, info.major, info.minor)) {
+			log_error("Unable to deactivate %s (%" PRIu32
+				  ":%" PRIu32 ")", name, info.major,
+				  info.minor);
+			continue;
+		}
+
+		if (dm_deptree_node_num_children(child, 0))
+			_deactivate_children(child, root_uuid);
+	}
+
+	return 1;
+}
+
+/*
+ * Deactivate LV and all devices it references that nothing else has open.
+ */
+int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
+{
+	char *dlid, *name, *uuid;
+	struct dm_info info;
+	struct deptree *dtree;
+	struct deptree_node *dnode;
+	int r = 0;
+
+	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL))) {
+		stack;
+		return 0;
+	}
+
+	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, ""))) {
+		stack;
+		return 0;
+	}
+
+        log_debug("Getting device info for %s [%s]", name, dlid);
+        if (!_info(name, dlid, 0, 0, &info, dm->mem, &uuid)) {
+                stack;
+                return 0;
+        }
+
+	if (!info.exists) {
+		/* FIXME Search for invisible devices left by previous incomplete removal */
+		log_debug("Ignoring deactivation request for inactive %s [%s]", name, dlid);
+		return 1;
+	}
+
+	if (!(dtree = _create_partial_deptree(info.major, info.minor))) {
+		stack;
+		return 0;
+	}
+
+	if (info.open_count) {
+		log_error("Unable to deactivate open (%" PRId32 ") device %s [%s]", info.open_count, name, dlid);
+		goto out;
+	}
+
+	if (!(dnode = dm_deptree_find_node(dtree, info.major, info.minor))) {
+		log_error("Lost dependency tree node for %s (%" PRIu32 ":%" PRIu32 ") [%s]",
+			  name, info.major, info.minor, dlid);
+		goto out;
+	}
+
+	if (!_deactivate_node(name, info.major, info.minor)) {
+		stack;
+		goto out;
+	}
+
+	fs_del_lv(lv);
+
+	if (!_deactivate_children(dnode, uuid)) {
+		stack;
+		goto out;
+	}
+
+	r = 1;
+
+out:
+	dm_deptree_free(dtree);
+
+	return r;
 }
 
