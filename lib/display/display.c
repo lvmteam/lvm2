@@ -317,7 +317,7 @@ void lvdisplay_colons(struct logical_volume *lv)
 {
 	int inkernel;
 	struct lvinfo info;
-	inkernel = lv_info(lv, &info, 1) && info.exists;
+	inkernel = lv_info(lv->vg->cmd, lv, &info, 1) && info.exists;
 
 	log_print("%s%s/%s:%s:%d:%d:-1:%d:%" PRIu64 ":%d:-1:%d:%d:%d:%d",
 		  lv->vg->cmd->dev_dir,
@@ -347,7 +347,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	inkernel = lv_info(lv, &info, 1) && info.exists;
+	inkernel = lv_info(cmd, lv, &info, 1) && info.exists;
 
 	log_print("--- Logical volume ---");
 

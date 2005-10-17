@@ -96,7 +96,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 				continue;
 			if (lvnum_from_lvid(&lv->lvid) < MAX_RESTRICTED_LVS)
 				continue;
-			if (lv_info(lv, &info, 0) && info.exists) {
+			if (lv_info(cmd, lv, &info, 0) && info.exists) {
 				log_error("Logical volume %s must be "
 					  "deactivated before conversion.",
 					   lv->name);
