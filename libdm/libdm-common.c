@@ -469,3 +469,24 @@ out:
 	dm_task_destroy(dmt);
 	return r;
 }
+
+int dm_driver_version(char *version, size_t size)
+{
+	struct dm_task *dmt;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_VERSION)))
+		return 0;
+
+	if (!dm_task_run(dmt))
+		log_error("Failed to get driver version");
+
+	if (!dm_task_get_driver_version(dmt, version, size))
+		goto out;
+
+	r = 1;
+
+out:
+	dm_task_destroy(dmt);
+	return r;
+}

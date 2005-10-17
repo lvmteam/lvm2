@@ -188,6 +188,7 @@ void dm_lib_exit(void) __attribute((destructor));
  * Use NULL for all devices.
  */
 int dm_mknodes(const char *name);
+int dm_driver_version(char *version, size_t size);
 
 /*****************************
  * Dependency tree functions *

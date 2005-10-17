@@ -1,5 +1,6 @@
 Version 1.02.00 - 
 =============================
+  Add dm_driver_version().
   Added dependency tree functions to library.
   Added hash, bitset, pool, dbg_malloc to library.
   Added ls --tree to dmsetup.

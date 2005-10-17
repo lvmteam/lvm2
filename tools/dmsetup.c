@@ -497,32 +497,17 @@ static int _message(int argc, char **argv, void *data)
 
 static int _version(int argc, char **argv, void *data)
 {
-	int r = 0;
-	struct dm_task *dmt;
 	char version[80];
 
 	if (dm_get_library_version(version, sizeof(version)))
 		printf("Library version:   %s\n", version);
 
-	if (!(dmt = dm_task_create(DM_DEVICE_VERSION)))
+	if (dm_driver_version(version, sizeof(version)))
 		return 0;
-
-	if (!dm_task_run(dmt))
-		goto out;
-
-	if (!dm_task_get_driver_version(dmt, (char *) &version,
-					sizeof(version))) {
-		goto out;
-	}
 
 	printf("Driver version:    %s\n", version);
 
-	r = 1;
-
-      out:
-	dm_task_destroy(dmt);
-
-	return r;
+	return 1;
 }
 
 static int _simple(int task, const char *name, uint32_t event_nr, int display)
