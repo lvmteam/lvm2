@@ -969,50 +969,6 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 	return vg_read(cmd, vgname, &consistent);
 }
 
-/*
- * Execute and wait for external command
- */
-int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
-	     const char *size)
-{
-	pid_t pid;
-	int status;
-
-	log_verbose("Executing: %s %s %s %s", command, fscmd, lv_path, size);
-
-	if ((pid = fork()) == -1) {
-		log_error("fork failed: %s", strerror(errno));
-		return 0;
-	}
-
-	if (!pid) {
-		/* Child */
-		/* FIXME Use execve directly */
-		execlp(command, command, fscmd, lv_path, size, NULL);
-		log_sys_error("execlp", command);
-		exit(errno);
-	}
-
-	/* Parent */
-	if (wait4(pid, &status, 0, NULL) != pid) {
-		log_error("wait4 child process %u failed: %s", pid,
-			  strerror(errno));
-		return 0;
-	}
-
-	if (!WIFEXITED(status)) {
-		log_error("Child %u exited abnormally", pid);
-		return 0;
-	}
-
-	if (WEXITSTATUS(status)) {
-		log_error("%s failed: %u", command, WEXITSTATUS(status));
-		return 0;
-	}
-
-	return 1;
-}
-
 int apply_lvname_restrictions(const char *name)
 {
 	if (!strncmp(name, "snapshot", 8)) {

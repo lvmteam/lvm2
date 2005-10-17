@@ -50,7 +50,7 @@ case "$host_os" in
 		LDDEPS="$LDDEPS"
 		LDFLAGS="$LDFLAGS"
 		SOFLAG="-dynamiclib"
-		DEVMAPPER=no
+		DEVMAPPER=yes
 		ODIRECT=no
 		SELINUX=no
 		CLUSTER=none
@@ -513,6 +513,13 @@ fi
 
 if test x$HAVE_SELINUX = xyes; then
 	AC_CHECK_HEADERS(selinux/selinux.h,,AC_MSG_ERROR(bailing out))
+fi
+
+################################################################################
+AC_PATH_PROG(MODPROBE_CMD, modprobe)
+
+if test x$MODPROBE_CMD != x; then
+	CFLAGS="$CFLAGS -DMODPROBE_CMD=\\\"$MODPROBE_CMD\\\""
 fi
 
 ################################################################################

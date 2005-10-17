@@ -72,8 +72,6 @@ static int _check_mirror_status(struct cmd_context *cmd,
 	float segment_percent = 0.0, overall_percent = 0.0;
 	uint32_t event_nr = 0;
 
-void *x;
-
 	/* By default, caller should not retry */
 	*finished = 1;
 
@@ -87,7 +85,7 @@ void *x;
 		return 0;
 	}
 
-	if (!lv_mirror_percent(lv_mirr, !parms->interval, &segment_percent,
+	if (!lv_mirror_percent(cmd, lv_mirr, !parms->interval, &segment_percent,
 			       &event_nr)) {
 		log_error("ABORTING: Mirror percentage check failed.");
 		return 0;
@@ -98,9 +96,6 @@ void *x;
 		log_print("%s: Moved: %.1f%%", name, overall_percent);
 	else
 		log_verbose("%s: Moved: %.1f%%", name, overall_percent);
-
-x = dm_pool_alloc(cmd->mem, 1);
-dm_pool_free(cmd->mem, x);
 
 	if (segment_percent < 100.0) {
 		/* The only case the caller *should* try again later */
