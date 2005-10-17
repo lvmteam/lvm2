@@ -267,6 +267,12 @@ static int _info(const char *name, const char *uuid, int mknodes,
 	return 0;
 }
 
+int dev_manager_info(const char *name, const char *uuid,
+		     int with_mknodes, int with_open_count, struct dm_info *info)
+{
+	return _info(name, uuid, with_mknodes, with_open_count, info, NULL, NULL);
+}
+
 /* FIXME Interface must cope with multiple targets */
 static int _status_run(const char *name, const char *uuid,
 		       unsigned long long *s, unsigned long long *l,
@@ -984,32 +990,6 @@ void dev_manager_destroy(struct dev_manager *dm)
 {
 	dm_hash_destroy(dm->layers);
 	dm_pool_destroy(dm->mem);
-}
-
-int dev_manager_info(struct dev_manager *dm, const struct logical_volume *lv,
-		     int mknodes, int with_open_count, struct dm_info *info)
-{
-	char *name;
-
-	/*
-	 * Build a name for the top layer.
-	 */
-	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL))) {
-		stack;
-		return 0;
-	}
-
-	/*
-	 * Try and get some info on this device.
-	 */
-	log_debug("Getting device info for %s", name);
-	if (!_info(name, lv->lvid.s, mknodes, with_open_count, info, NULL,
-		   NULL)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
 }
 
 int dev_manager_snapshot_percent(struct dev_manager *dm,
@@ -2208,3 +2188,4 @@ void dev_manager_exit(void)
 {
 	dm_lib_exit();
 }
+

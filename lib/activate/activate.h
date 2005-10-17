@@ -52,7 +52,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
 /*
  * Returns 1 if info structure has been populated, else 0.
  */
-int lv_info(const struct logical_volume *lv, struct lvinfo *info,
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, struct lvinfo *info,
 	    int with_open_count);
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 		    struct lvinfo *info, int with_open_count);
@@ -67,7 +67,7 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
  * Returns 1 if percent has been set, else 0.
  */
 int lv_snapshot_percent(struct logical_volume *lv, float *percent);
-int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
+int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv, int wait, float *percent,
 		      uint32_t *event_nr);
 
 /*
@@ -75,7 +75,5 @@ int lv_mirror_percent(struct logical_volume *lv, int wait, float *percent,
  */
 int lvs_in_vg_activated(struct volume_group *vg);
 int lvs_in_vg_opened(struct volume_group *vg);
-
-int lv_setup_cow_store(struct logical_volume *lv);
 
 #endif

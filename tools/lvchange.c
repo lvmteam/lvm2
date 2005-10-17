@@ -262,7 +262,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			log_error("Major number must be specified with -My");
 			return 0;
 		}
-		if (lv_info(lv, &info, 0) && info.exists &&
+		if (lv_info(cmd, lv, &info, 0) && info.exists &&
 		    !arg_count(cmd, force_ARG)) {
 			if (yes_no_prompt("Logical volume %s will be "
 					  "deactivated temporarily. "

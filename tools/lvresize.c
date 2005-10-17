@@ -388,7 +388,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	}
 
 	if (lp->mirrors && activation() &&
-	    lv_info(lv, &info, 0) && info.exists) {
+	    lv_info(cmd, lv, &info, 0) && info.exists) {
 		log_error("Mirrors cannot be resized while active yet.");
 		return ECMD_FAILED;
 	}
@@ -402,7 +402,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 		memset(&info, 0, sizeof(info));
 
-		if (lv_info(lv, &info, 0) && info.exists) {
+		if (lv_info(cmd, lv, &info, 0) && info.exists) {
 			log_error("Snapshot origin volumes can be resized "
 				  "only while inactive: try lvchange -an");
 			return ECMD_FAILED;
@@ -421,7 +421,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (lp->resize == LV_REDUCE || lp->resizefs) {
 		memset(&info, 0, sizeof(info));
 
-		if (!lv_info(lv, &info, 1) && driver_version(NULL, 0)) {
+		if (!lv_info(cmd, lv, &info, 1) && driver_version(NULL, 0)) {
 			log_error("lv_info failed: aborting");
 			return ECMD_FAILED;
 		}
