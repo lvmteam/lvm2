@@ -81,3 +81,4 @@ dm_hash_get_key
 dm_hash_get_data
 dm_hash_get_first
 dm_hash_get_next
+dm_driver_version
