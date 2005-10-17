@@ -343,6 +343,7 @@ xx(lvs,
 xx(lvscan,
    "List all logical volumes in all volume groups",
    "lvscan " "\n"
+   "\t[-a|--all]\n"
    "\t[-b|--blockdevice] " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|-?|--help] " "\n"
@@ -351,7 +352,7 @@ xx(lvscan,
    "\t[-v|--verbose] " "\n"
    "\t[--version]\n",
 
-   blockdevice_ARG, disk_ARG, ignorelockingfailure_ARG, partial_ARG)
+   all_ARG, blockdevice_ARG, disk_ARG, ignorelockingfailure_ARG, partial_ARG)
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
