@@ -27,7 +27,7 @@ static const char *_name(const struct lv_segment *seg)
 }
 
 static int _text_import(struct lv_segment *seg, const struct config_node *sn,
-			struct hash_table *pv_hash)
+			struct dm_hash_table *pv_hash)
 {
 	uint32_t chunk_size;
 	const char *org_name, *cow_name;

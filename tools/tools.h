@@ -41,6 +41,7 @@
 #include "metadata.h"
 #include "list.h"
 #include "locking.h"
+#include "lvm-exec.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
 #include "segtype.h"
