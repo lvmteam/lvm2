@@ -2267,18 +2267,18 @@ static int _deactivate_children(struct deptree_node *dnode, const char *root_uui
 	const char *name;
 	const char *uuid;
 
-	while((child = dm_deptree_next_child(&handle, child, 0))) {
+	while((child = dm_deptree_next_child(&handle, dnode, 0))) {
 		if (!(dinfo = dm_deptree_node_get_info(child))) {
 			stack;
 			continue;
 		}
 
-		if (!(name = dm_deptree_node_get_name(dnode))) {
+		if (!(name = dm_deptree_node_get_name(child))) {
 			stack;
 			continue;
 		}
 
-		if (!(uuid = dm_deptree_node_get_uuid(dnode))) {
+		if (!(uuid = dm_deptree_node_get_uuid(child))) {
 			stack;
 			continue;
 		}
@@ -2330,7 +2330,7 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 	}
 
         log_debug("Getting device info for %s [%s]", name, dlid);
-        if (!_info(name, dlid, 0, 0, &info, dm->mem, &uuid)) {
+        if (!_info(name, dlid, 0, 1, &info, dm->mem, &uuid)) {
                 stack;
                 return 0;
         }
