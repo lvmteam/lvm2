@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Add -a to lvscan.
   Move mknodes into libdevmapper.
   Move bitset, hash, pool and dbg_malloc into libdevmapper.
 
