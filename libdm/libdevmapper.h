@@ -247,7 +247,8 @@ const struct dm_info *dm_deptree_node_get_info(struct deptree_node *node);
 int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted);
 
 /*
- * Deactivate a device with its dependencies if the uuid prefix matches
+ * Deactivate a device plus all dependencies.
+ * Ignores devices that don't have a uuid starting with uuid_prefix.
  */
 int dm_deptree_deactivate_children(struct deptree_node *dnode,
 				   const char *uuid_prefix,
