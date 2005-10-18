@@ -169,7 +169,6 @@ int dm_task_set_uuid(struct dm_task *dmt, const char *uuid)
 int dm_task_set_major(struct dm_task *dmt, int major)
 {
 	dmt->major = major;
-	log_debug("Setting major: %d", dmt->major);
 
 	return 1;
 }
@@ -177,7 +176,6 @@ int dm_task_set_major(struct dm_task *dmt, int major)
 int dm_task_set_minor(struct dm_task *dmt, int minor)
 {
 	dmt->minor = minor;
-	log_debug("Setting minor: %d", dmt->minor);
 
 	return 1;
 }
