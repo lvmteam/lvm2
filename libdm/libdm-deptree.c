@@ -400,7 +400,7 @@ struct deptree_node *dm_deptree_next_child(void **handle,
 }
 
 /*
- * Deactivate a device with its dependencies if the uuid prefix matches
+ * Deactivate a device with its dependencies if the uuid prefix matches.
  */
 static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 {
@@ -454,7 +454,9 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor)
 	return r;
 }
 
-int dm_deptree_deactivate_children(struct deptree_node *dnode, const char *uuid_prefix, size_t uuid_prefix_len)
+int dm_deptree_deactivate_children(struct deptree_node *dnode,
+				   const char *uuid_prefix,
+				   size_t uuid_prefix_len)
 {
 	void *handle = NULL;
 	struct deptree_node *child = dnode;
@@ -480,7 +482,7 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode, const char *uuid_
 		}
 
 		/* Ignore if it doesn't belong to this VG */
-		if (strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
 		/* Refresh open_count */
