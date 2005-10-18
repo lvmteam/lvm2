@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Split lv_segment_area from lv_segment to permit extension.
   Replacement deactivation code using libdevmapper dependency tree.
   Simplify dev_manager_info().
   Attempt to load missing targets using modprobe.

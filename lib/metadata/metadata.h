@@ -214,6 +214,20 @@ struct volume_group {
 	struct list tags;
 };
 
+/* There will be one area for each stripe */
+struct lv_segment_area {
+	area_type_t type;
+	union {
+		struct {
+			struct pv_segment *pvseg;
+		} pv;
+		struct {
+			struct logical_volume *lv;
+			uint32_t le;
+		} lv;
+	} u;
+};
+
 struct segment_type;
 struct lv_segment {
 	struct list list;
@@ -239,28 +253,16 @@ struct lv_segment {
 
 	struct list tags;
 
-	/* There will be one area for each stripe */
-	struct {
-		area_type_t type;
-		union {
-			struct {
-				struct pv_segment *pvseg;
-			} pv;
-			struct {
-				struct logical_volume *lv;
-				uint32_t le;
-			} lv;
-		} u;
-	} area[0];
+	struct lv_segment_area *areas;
 };
 
-#define seg_type(seg, s)	(seg)->area[(s)].type
-#define seg_pvseg(seg, s)	(seg)->area[(s)].u.pv.pvseg
-#define seg_pv(seg, s)		(seg)->area[(s)].u.pv.pvseg->pv
-#define seg_dev(seg, s)		(seg)->area[(s)].u.pv.pvseg->pv->dev
-#define seg_pe(seg, s)		(seg)->area[(s)].u.pv.pvseg->pe
-#define seg_lv(seg, s)		(seg)->area[(s)].u.lv.lv
-#define seg_le(seg, s)		(seg)->area[(s)].u.lv.le
+#define seg_type(seg, s)	(seg)->areas[(s)].type
+#define seg_pvseg(seg, s)	(seg)->areas[(s)].u.pv.pvseg
+#define seg_pv(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv
+#define seg_dev(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pv->dev
+#define seg_pe(seg, s)		(seg)->areas[(s)].u.pv.pvseg->pe
+#define seg_lv(seg, s)		(seg)->areas[(s)].u.lv.lv
+#define seg_le(seg, s)		(seg)->areas[(s)].u.lv.le
 
 struct logical_volume {
 	union lvid lvid;

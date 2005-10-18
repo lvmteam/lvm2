@@ -67,9 +67,15 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 				    uint32_t extents_copied)
 {
 	struct lv_segment *seg;
-	uint32_t sz = sizeof(*seg) + (area_count * sizeof(seg->area[0]));
+	uint32_t areas_sz = area_count * sizeof(*seg->areas);
 
-	if (!(seg = dm_pool_zalloc(mem, sz))) {
+	if (!(seg = dm_pool_zalloc(mem, sizeof(*seg)))) {
+		stack;
+		return NULL;
+	}
+
+	if (!(seg->areas = dm_pool_zalloc(mem, areas_sz))) {
+		dm_pool_free(mem, seg);
 		stack;
 		return NULL;
 	}
@@ -199,7 +205,7 @@ int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
 int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 			   struct physical_volume *pv, uint32_t pe)
 {
-	seg->area[area_num].type = AREA_PV;
+	seg->areas[area_num].type = AREA_PV;
 
 	if (!(seg_pvseg(seg, area_num) =
 	      assign_peg_to_lvseg(pv, pe, seg->area_len, seg, area_num))) {
@@ -217,10 +223,33 @@ void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			    struct logical_volume *lv, uint32_t le,
 			    uint32_t flags)
 {
-	seg->area[area_num].type = AREA_LV;
+	seg->areas[area_num].type = AREA_LV;
 	seg_lv(seg, area_num) = lv;
 	seg_le(seg, area_num) = le;
 	lv->status |= flags;
+}
+
+/*
+ * Prepare for adding parallel areas to an existing segment.
+ */
+static int _lv_segment_add_areas(struct logical_volume *lv,
+				 struct lv_segment *seg,
+				 uint32_t new_area_count)
+{
+	struct lv_segment_area *newareas;
+	uint32_t areas_sz = new_area_count * sizeof(*newareas);
+
+	if (!(newareas = dm_pool_zalloc(lv->vg->cmd->mem, areas_sz))) {
+		stack;
+		return 0;
+	}
+
+	memcpy(newareas, seg->areas, seg->area_count * sizeof(*seg->areas));
+
+	seg->areas = newareas;
+	seg->area_count = new_area_count;
+
+	return 1;
 }
 
 /*
