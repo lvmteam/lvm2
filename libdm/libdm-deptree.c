@@ -480,10 +480,8 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode, const char *uuid_
 		}
 
 		/* Ignore if it doesn't belong to this VG */
-		if (strncmp(uuid, uuid_prefix, uuid_prefix_len)) {
-			stack;
+		if (strncmp(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
-		}
 
 		/* Refresh open_count */
 		if (!_info_by_dev(dinfo->major, dinfo->minor, &info) ||
