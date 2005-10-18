@@ -112,8 +112,8 @@ static int _segments_compatible(struct lv_segment *first,
 
 		/* FIXME Relax this to first area type != second area type */
 		/*       plus the additional AREA_LV checks needed */
-		if ((first->area[s].type != AREA_PV) ||
-		    (second->area[s].type != AREA_PV))
+		if ((first->areas[s].type != AREA_PV) ||
+		    (second->areas[s].type != AREA_PV))
 			return 0;
 
 		width = first->area_len;
@@ -142,7 +142,7 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 	seg1->area_len += seg2->area_len;
 
 	for (s = 0; s < seg1->area_count; s++)
-		if (seg1->area[s].type == AREA_PV)
+		if (seg1->areas[s].type == AREA_PV)
 			merge_pv_segments(seg_pvseg(seg1, s),
 					  seg_pvseg(seg2, s));
 
