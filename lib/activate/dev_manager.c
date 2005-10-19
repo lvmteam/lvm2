@@ -167,19 +167,17 @@ static char *_build_dlid(struct dm_pool *mem, const char *lvid, const char *laye
 	char *dlid;
 	size_t len;
 
-	/* FIXME Prepend 'LVM2-' */
-
 	if (!layer)
 		layer = "";
 
-	len = strlen(lvid) + strlen(layer) + 2;
+	len = 4 + strlen(lvid) + strlen(layer) + 2;
 
 	if (!(dlid = dm_pool_alloc(mem, len))) {
 		stack;
 		return NULL;
 	}
 
-	sprintf(dlid, "%s%s%s", lvid, (*layer) ? "-" : "", layer);
+	sprintf(dlid, "LVM-%s%s%s", lvid, (*layer) ? "-" : "", layer);
 
 	return dlid;
 }
@@ -209,7 +207,7 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 	return dmt;
 }
 
-static int _info_run(const char *name, const char *uuid, struct dm_info *info,
+static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 		     int mknodes, int with_open_count, struct dm_pool *mem,
 		     char **uuid_out)
 {
@@ -220,7 +218,7 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 
 	dmtask = mknodes ? DM_DEVICE_MKNODES : DM_DEVICE_INFO;
 
-	if (!(dmt = _setup_task(name, uuid, 0, dmtask))) {
+	if (!(dmt = _setup_task(name, dlid, 0, dmtask))) {
 		stack;
 		return 0;
 	}
@@ -253,12 +251,12 @@ static int _info_run(const char *name, const char *uuid, struct dm_info *info,
 	return r;
 }
 
-static int _info(const char *name, const char *uuid, int mknodes,
+static int _info(const char *name, const char *dlid, int mknodes,
 		 int with_open_count, struct dm_info *info,
 		 struct dm_pool *mem, char **uuid_out)
 {
-	if (!mknodes && uuid && *uuid &&
-	    _info_run(NULL, uuid, info, 0, with_open_count, mem, uuid_out) &&
+	if (!mknodes && dlid && *dlid &&
+	    _info_run(NULL, dlid, info, 0, with_open_count, mem, uuid_out) &&
 	    	      info->exists)
 		return 1;
 
@@ -269,10 +267,19 @@ static int _info(const char *name, const char *uuid, int mknodes,
 	return 0;
 }
 
-int dev_manager_info(const char *name, const char *uuid,
-		     int with_mknodes, int with_open_count, struct dm_info *info)
+int dev_manager_info(struct dm_pool *mem, const char *name,
+		     const struct logical_volume *lv, int with_mknodes,
+		     int with_open_count, struct dm_info *info)
 {
-	return _info(name, uuid, with_mknodes, with_open_count, info, NULL, NULL);
+	const char *dlid;
+
+	if (!(dlid = _build_dlid(mem, lv->lvid.s, NULL))) {
+		log_error("dlid build failed for %s", lv->name);
+		return 0;
+	}
+
+	return _info(name, dlid, with_mknodes, with_open_count, info,
+		     NULL, NULL);
 }
 
 /* FIXME Interface must cope with multiple targets */
@@ -347,7 +354,7 @@ static int _status(const char *name, const char *uuid,
 }
 
 static int _percent_run(struct dev_manager *dm, const char *name,
-			const char *uuid,
+			const char *dlid,
 			const char *target_type, int wait,
 			struct logical_volume *lv, float *percent,
 			uint32_t *event_nr)
@@ -367,7 +374,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 	*percent = -1;
 
-	if (!(dmt = _setup_task(name, uuid, event_nr,
+	if (!(dmt = _setup_task(name, dlid, event_nr,
 				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS))) {
 		stack;
 		return 0;
@@ -438,13 +445,13 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	return r;
 }
 
-static int _percent(struct dev_manager *dm, const char *name, const char *uuid,
+static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		    const char *target_type, int wait,
 		    struct logical_volume *lv, float *percent,
 		    uint32_t *event_nr)
 {
-	if (uuid && *uuid
-	    && _percent_run(dm, NULL, uuid, target_type, wait, lv, percent,
+	if (dlid && *dlid
+	    && _percent_run(dm, NULL, dlid, target_type, wait, lv, percent,
 			    event_nr))
 		return 1;
 
@@ -998,6 +1005,7 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 struct logical_volume *lv, float *percent)
 {
 	char *name;
+	const char *dlid;
 
 	/*
 	 * Build a name for the top layer.
@@ -1007,11 +1015,16 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 		return 0;
 	}
 
+	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, NULL))) {
+		stack;
+		return 0;
+	}
+
 	/*
 	 * Try and get some info on this device.
 	 */
 	log_debug("Getting device status percentage for %s", name);
-	if (!(_percent(dm, name, lv->lvid.s, "snapshot", 0, NULL, percent,
+	if (!(_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
 		       NULL))) {
 		stack;
 		return 0;
@@ -1119,25 +1132,6 @@ static struct dev_layer *_create_layer(struct dev_manager *dm,
 	if (!_read_only_lv(lv))
 		_set_flag(dl, READWRITE);
 
-	return dl;
-}
-
-/*
- * Finds the specified layer.
- */
-static struct dev_layer *_lookup(struct dev_manager *dm,
-				 const char *lvid, const char *layer)
-{
-	char *dlid;
-	struct dev_layer *dl;
-
-	if (!(dlid = _build_dlid(dm->mem, lvid, layer))) {
-		stack;
-		return NULL;
-	}
-
-	dl = dm_hash_lookup(dm->layers, dlid);
-	dm_pool_free(dm->mem, dlid);
 	return dl;
 }
 
@@ -1423,6 +1417,25 @@ static int _trace_all_marks(struct dev_manager *dm, int flag)
 	}
 
 	return 1;
+}
+
+/*
+ * Finds the specified layer.
+ */
+static struct dev_layer *_lookup(struct dev_manager *dm,
+				 const char *lvid, const char *layer)
+{
+	char *dlid;
+	struct dev_layer *dl;
+
+	if (!(dlid = _build_dlid(dm->mem, lvid, layer))) {
+		stack;
+		return NULL;
+	}
+
+	dl = dm_hash_lookup(dm->layers, dlid);
+	dm_pool_free(dm->mem, dlid);
+	return dl;
 }
 
 /*
@@ -2191,7 +2204,7 @@ void dev_manager_exit(void)
  */
 static int _add_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree, struct logical_volume *lv)
 {
-	char *dlid, *name, *uuid;
+	char *dlid, *name;
 	struct dm_info info;
 
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, NULL))) {
@@ -2199,13 +2212,13 @@ static int _add_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree, str
 		return 0;
 	}
 
-	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, ""))) {
+	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, NULL))) {
 		stack;
 		return 0;
 	}
 
         log_debug("Getting device info for %s [%s]", name, dlid);
-        if (!_info(name, dlid, 0, 1, &info, dm->mem, &uuid)) {
+        if (!_info(name, dlid, 0, 1, &info, dm->mem, NULL)) {
                 stack;
                 return 0;
         }
@@ -2271,12 +2284,13 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 		goto out;
 	}
 
-	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, ""))) {
+	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, NULL))) {
 		log_error("dlid build failed for %s", lv->name);
 		goto out;
 	}
 
-	if (!dm_deptree_deactivate_children(dnode, dlid, ID_LEN)) {
+	/* Only process nodes with uuid of "LVM-" plus VG id. */
+	if (!dm_deptree_deactivate_children(dnode, dlid, ID_LEN + 4)) {
 		stack;
 		goto out;
 	}

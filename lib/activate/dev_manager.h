@@ -35,7 +35,8 @@ void dev_manager_exit(void);
  * (eg, an origin is created before its snapshot, but is not
  * unsuspended until the snapshot is also created.)
  */
-int dev_manager_info(const char *name, const char *uuid,
+int dev_manager_info(struct dm_pool *mem, const char *name,
+		     const struct logical_volume *lv,
 		     int mknodes, int with_open_count, struct dm_info *info);
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 struct logical_volume *lv, float *percent);
