@@ -309,7 +309,9 @@ static int _target_present(const char *target_name)
 
 int target_present(const char *target_name)
 {
+#ifdef MODPROBE_CMD
 	char module[128];
+#endif
 
 	if (!activation())
 		return 0;
@@ -350,7 +352,8 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv, in
 	}
 
 	log_debug("Getting device info for %s", name);
-	if (!dev_manager_info(name, lv->lvid.s, with_mknodes, with_open_count, &dminfo)) {
+	if (!dev_manager_info(lv->vg->cmd->mem, name, lv, with_mknodes,
+			      with_open_count, &dminfo)) {
 		dm_pool_free(cmd->mem, name);
 		stack;
 		return 0;
