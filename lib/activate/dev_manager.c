@@ -182,6 +182,11 @@ static char *_build_dlid(struct dm_pool *mem, const char *lvid, const char *laye
 	return dlid;
 }
 
+char *build_dlid(struct dev_manager *dm, const char *lvid, const char *layer)
+{
+	return _build_dlid(dm->mem, lvid, layer);
+}
+
 /*
  * Low level device-layer operations.
  */
@@ -770,6 +775,7 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 	const char *trailing_space;
 	uint64_t esize = seg->lv->vg->extent_size;
 	char devbuf[10];
+	char *dlid;
 
 	for (s = start_area; s < areas; s++, *pos += tw) {
 		trailing_space = (areas - s - 1) ? " " : "";
@@ -789,8 +795,13 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 					   (esize * seg_pe(seg, s))),
 					  trailing_space);
 		else if (seg_type(seg, s) == AREA_LV) {
-			if (!build_dev_string(dm, seg_lv(seg, s)->lvid.s, devbuf,
-					      sizeof(devbuf), "LV")) {
+			if (!(dlid = _build_dlid(dm->mem,
+						 seg_lv(seg, s)->lvid.s, NULL))) {
+				stack;
+				return 0;
+			}
+			if (!build_dev_string(dm, dlid,
+					      devbuf,sizeof(devbuf), "LV")) {
 				stack;
 				return 0;
 			}
@@ -1315,7 +1326,8 @@ static int _expand_snapshot(struct dev_manager *dm, struct logical_volume *lv,
 
 	/* add the dependency on the visible origin device */
 	if (!str_list_add(dm->mem, &dl->pre_suspend,
-			  snap_seg->origin->lvid.s)) {
+			  _build_dlid(dm->mem, snap_seg->origin->lvid.s,
+				      NULL))) {
 		stack;
 		return 0;
 	}
@@ -1574,7 +1586,7 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 
 	/* Rename? */
 	if (dl->info.exists) {
-		if ((suffix = rindex(dl->dlid, '-')))
+		if ((suffix = rindex(dl->dlid + 4, '-')))
 			suffix++;
 		newname = build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
 					suffix);

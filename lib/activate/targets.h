@@ -26,4 +26,6 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 int build_dev_string(struct dev_manager *dm, char *dlid, char *devbuf,
 		     size_t bufsize, const char *desc);
 
+char *build_dlid(struct dev_manager *dm, const char *lvid, const char *layer);
+
 #endif
