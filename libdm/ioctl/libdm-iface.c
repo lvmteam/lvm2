@@ -1361,15 +1361,15 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
-	log_debug("dm %s %s %s%s%s %s%0" PRIu32 "%s%0" PRIu32
+	log_debug("dm %s %s %s%s%s %s%0d%s%0d"
 		  "%s%c %.0llu %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
 		  dmt->major > 0 ? "(" : "",
-		  dmt->major,
+		  dmt->major > 0 ? dmt->major : 0,
 		  dmt->major > 0 ? ":" : "",
-		  dmt->minor,
+		  dmt->minor > 0 ? dmt->minor : 0,
 		  dmt->major > 0 ? ") " : "",
 		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->sector, dmt->message ? dmt->message : "",
