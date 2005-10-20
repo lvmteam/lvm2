@@ -170,6 +170,7 @@ static int _compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 	int tw;
 	char devbuf[10];
 	const char *clustered = "";
+	char *dlid;
 
 	/*
 	 * Use clustered mirror log for non-exclusive activation 
@@ -183,7 +184,11 @@ static int _compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
 		tw = lvm_snprintf(params, paramsize, "%score 1 %u %u ",
 				  clustered, region_size, areas);
 	else {
-		if (!build_dev_string(dm, seg->log_lv->lvid.s, devbuf,
+		if (!(dlid = build_dlid(dm, seg->log_lv->lvid.s, NULL))) {
+			stack;
+			return 0;
+		}
+		if (!build_dev_string(dm, dlid, devbuf,
 				      sizeof(devbuf), "log")) {
 			stack;
 			return 0;
