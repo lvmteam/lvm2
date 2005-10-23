@@ -43,6 +43,11 @@ static struct format_instance *_create_text_instance(const struct format_type
 						     *fmt, const char *vgname,
 						     void *context);
 
+struct text_fid_context {
+	char *raw_metadata_buf;
+	uint32_t raw_metadata_buf_size;
+};
+
 struct dir_list {
 	struct list list;
 	char dir[0];
@@ -337,12 +342,12 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 			 struct metadata_area *mda)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	struct text_fid_context *fidtc = (struct text_fid_context *) fid->private;
 	struct raw_locn *rlocn;
 	struct mda_header *mdah;
 	struct pv_list *pvl;
 	int r = 0;
 	uint32_t new_wrap = 0, old_wrap = 0;
-	char *buf = NULL;
 	int found = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
@@ -369,10 +374,14 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0);
 	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
-	if (!(mdac->rlocn.size = text_vg_export_raw(vg, "", &buf))) {
+	if (!fidtc->raw_metadata_buf &&
+	    !(fidtc->raw_metadata_buf_size =
+			text_vg_export_raw(vg, "", &fidtc->raw_metadata_buf))) {
 		log_error("VG %s metadata writing failed", vg->name);
 		goto out;
 	}
+
+	mdac->rlocn.size = fidtc->raw_metadata_buf_size;
 
 	if (mdac->rlocn.offset + mdac->rlocn.size > mdah->size)
 		new_wrap = (mdac->rlocn.offset + mdac->rlocn.size) - mdah->size;
@@ -396,7 +405,8 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	/* Write text out, circularly */
 	if (!dev_write(mdac->area.dev, mdac->area.start + mdac->rlocn.offset,
-		       (size_t) (mdac->rlocn.size - new_wrap), buf)) {
+		       (size_t) (mdac->rlocn.size - new_wrap),
+		       fidtc->raw_metadata_buf)) {
 		stack;
 		goto out;
 	}
@@ -409,18 +419,20 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		if (!dev_write(mdac->area.dev,
 			       mdac->area.start + MDA_HEADER_SIZE,
 			       (size_t) new_wrap,
-			       buf + mdac->rlocn.size - new_wrap)) {
+			       fidtc->raw_metadata_buf + 
+			       mdac->rlocn.size - new_wrap)) {
 			stack;
 			goto out;
 		}
 	}
 
-	mdac->rlocn.checksum = calc_crc(INITIAL_CRC, buf,
+	mdac->rlocn.checksum = calc_crc(INITIAL_CRC, fidtc->raw_metadata_buf,
 					(uint32_t) (mdac->rlocn.size -
 						    new_wrap));
 	if (new_wrap)
 		mdac->rlocn.checksum = calc_crc(mdac->rlocn.checksum,
-						buf + mdac->rlocn.size -
+						fidtc->raw_metadata_buf +
+						mdac->rlocn.size -
 						new_wrap, new_wrap);
 
 	r = 1;
@@ -429,8 +441,6 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!r && !dev_close(mdac->area.dev))
 		stack;
 
-	if (buf)
-		dm_free(buf);
 	return r;
 }
 
@@ -440,6 +450,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 				int precommit)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	struct text_fid_context *fidtc = (struct text_fid_context *) fid->private;
 	struct mda_header *mdah;
 	struct raw_locn *rlocn;
 	struct pv_list *pvl;
@@ -488,8 +499,14 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	r = 1;
 
       out:
-	if (!precommit && !dev_close(mdac->area.dev))
-		stack;
+	if (!precommit) {
+		if (!dev_close(mdac->area.dev))
+			stack;
+		if (fidtc->raw_metadata_buf) {
+			dm_free(fidtc->raw_metadata_buf);
+			fidtc->raw_metadata_buf = NULL;
+		}
+	}
 
 	return r;
 }
@@ -512,6 +529,7 @@ static int _vg_revert_raw(struct format_instance *fid, struct volume_group *vg,
 			  struct metadata_area *mda)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	struct text_fid_context *fidtc = (struct text_fid_context *) fid->private;
 	struct pv_list *pvl;
 	int found = 0;
 
@@ -528,6 +546,11 @@ static int _vg_revert_raw(struct format_instance *fid, struct volume_group *vg,
 
 	if (!dev_close(mdac->area.dev))
 		stack;
+
+	if (fidtc->raw_metadata_buf) {
+		dm_free(fidtc->raw_metadata_buf);
+		fidtc->raw_metadata_buf = NULL;
+	}
 
 	return 1;
 }
@@ -1401,6 +1424,7 @@ static struct format_instance *_create_text_instance(const struct format_type
 						     void *context)
 {
 	struct format_instance *fid;
+	struct text_fid_context *fidtc;
 	struct metadata_area *mda, *mda_new;
 	struct mda_context *mdac, *mdac_new;
 	struct dir_list *dl;
@@ -1415,8 +1439,16 @@ static struct format_instance *_create_text_instance(const struct format_type
 		return NULL;
 	}
 
-	fid->fmt = fmt;
+	if (!(fidtc = (struct text_fid_context *)
+			dm_pool_zalloc(fmt->cmd->mem,sizeof(*fidtc)))) {
+		log_error("Couldn't allocate text_fid_context.");
+		return NULL;
+	}
 
+	fidtc->raw_metadata_buf = NULL;
+	fid->private = (void *) fidtc;
+
+	fid->fmt = fmt;
 	list_init(&fid->metadata_areas);
 
 	if (!vgname) {

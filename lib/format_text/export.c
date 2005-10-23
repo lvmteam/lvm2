@@ -29,6 +29,19 @@ struct formatter;
 typedef int (*out_with_comment_fn) (struct formatter * f, const char *comment,
 				    const char *fmt, va_list ap);
 typedef int (*nl_fn) (struct formatter * f);
+
+/*
+ * Macro for formatted output.
+ * out_with_comment_fn returns -1 if data didn't fit and buffer was expanded.
+ * Then argument list is reset and out_with_comment_fn is called again.
+ */
+#define _out_with_comment(f, buffer, fmt, ap) \
+        do { \
+		va_start(ap, fmt); \
+		r = f->out_with_comment(f, buffer, fmt, ap); \
+		va_end(ap); \
+	} while (r == -1)
+
 /*
  * The first half of this file deals with
  * exporting the vg, ie. writing it to a file.
@@ -100,19 +113,30 @@ static int _nl_file(struct formatter *f)
 	return 1;
 }
 
-static int _nl_raw(struct formatter *f)
+static int _extend_buffer(struct formatter *f)
 {
 	char *newbuf;
 
-	/* If metadata doesn't fit, double the buffer size */
-	if (f->data.buf.used + 2 > f->data.buf.size) {
-		if (!(newbuf = dm_realloc(f->data.buf.start,
-					   f->data.buf.size * 2))) {
-			stack;
-			return 0;
-		}
-		f->data.buf.start = newbuf;
-		f->data.buf.size *= 2;
+	log_debug("Doubling metadata output buffer to %" PRIu32,
+		  f->data.buf.size * 2);
+	if (!(newbuf = dm_realloc(f->data.buf.start,
+				   f->data.buf.size * 2))) {
+		log_error("Buffer reallocation failed.");
+		return 0;
+	}
+	f->data.buf.start = newbuf;
+	f->data.buf.size *= 2;
+
+	return 1;
+}
+
+static int _nl_raw(struct formatter *f)
+{
+	/* If metadata doesn't fit, extend buffer */
+	if ((f->data.buf.used + 2 > f->data.buf.size) &&
+	    (!_extend_buffer(f))) {
+		stack;
+		return 0;
 	}
 
 	*(f->data.buf.start + f->data.buf.used) = '\n';
@@ -163,22 +187,17 @@ static int _out_with_comment_raw(struct formatter *f, const char *comment,
 				 const char *fmt, va_list ap)
 {
 	int n;
-	char *newbuf;
 
-      retry:
 	n = vsnprintf(f->data.buf.start + f->data.buf.used,
 		      f->data.buf.size - f->data.buf.used, fmt, ap);
 
-	/* If metadata doesn't fit, double the buffer size */
+	/* If metadata doesn't fit, extend buffer */
 	if (n < 0 || (n + f->data.buf.used + 2 > f->data.buf.size)) {
-		if (!(newbuf = dm_realloc(f->data.buf.start,
-					   f->data.buf.size * 2))) {
+		if (!_extend_buffer(f)) {
 			stack;
 			return 0;
 		}
-		f->data.buf.start = newbuf;
-		f->data.buf.size *= 2;
-		goto retry;
+		return -1; /* Retry */
 	}
 
 	f->data.buf.used += n;
@@ -229,9 +248,7 @@ int out_size(struct formatter *f, uint64_t size, const char *fmt, ...)
 	if (!_sectors_to_units(size, buffer, sizeof(buffer)))
 		return 0;
 
-	va_start(ap, fmt);
-	r = f->out_with_comment(f, buffer, fmt, ap);
-	va_end(ap);
+	_out_with_comment(f, buffer, fmt, ap);
 
 	return r;
 }
@@ -245,9 +262,7 @@ int out_hint(struct formatter *f, const char *fmt, ...)
 	va_list ap;
 	int r;
 
-	va_start(ap, fmt);
-	r = f->out_with_comment(f, "# Hint only", fmt, ap);
-	va_end(ap);
+	_out_with_comment(f, "# Hint only", fmt, ap);
 
 	return r;
 }
@@ -260,9 +275,7 @@ int out_text(struct formatter *f, const char *fmt, ...)
 	va_list ap;
 	int r;
 
-	va_start(ap, fmt);
-	r = f->out_with_comment(f, NULL, fmt, ap);
-	va_end(ap);
+	_out_with_comment(f, NULL, fmt, ap);
 
 	return r;
 }

@@ -181,6 +181,7 @@ struct metadata_area {
 struct format_instance {
 	const struct format_type *fmt;
 	struct list metadata_areas;	/* e.g. metadata locations */
+	void *private;
 };
 
 struct volume_group {
