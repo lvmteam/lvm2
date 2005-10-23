@@ -1,5 +1,7 @@
 Version 2.02.00 - 
 ===================================
+  Fix automatic text metadata buffer expansion (using macro).
+  Cache formatted text metadata buffer between metadata area writes.
   Add pe_start field to pvs.
   Add 'LVM-' prefix to uuids.
   Split lv_segment_area from lv_segment to permit extension.
