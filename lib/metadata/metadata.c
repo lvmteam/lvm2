@@ -22,6 +22,7 @@
 #include "memlock.h"
 #include "str_list.h"
 #include "pv_alloc.h"
+#include "activate.h"
 
 static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 			 const char *pv_name)
@@ -55,6 +56,13 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	if (pv->fmt != fid->fmt) {
 		log_error("Physical volume %s is of different format type (%s)",
 			  pv_name, pv->fmt->name);
+		return 0;
+	}
+
+	/* Ensure PV doesn't depend on another PV already in the VG */
+	if (pv_uses_vg(fid->fmt->cmd, pv, vg)) {
+		log_error("Physical volume %s might be constructed from same "
+			  "volume group %s", pv_name, vg->name);
 		return 0;
 	}
 

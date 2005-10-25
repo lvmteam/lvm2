@@ -229,6 +229,9 @@ void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 	lv->status |= flags;
 }
 
+static int _lv_segment_add_areas(struct logical_volume *lv,
+				 struct lv_segment *seg,
+				 uint32_t new_area_count) __attribute__ ((unused));
 /*
  * Prepare for adding parallel areas to an existing segment.
  */

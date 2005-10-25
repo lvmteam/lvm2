@@ -28,7 +28,6 @@
 
 #define NUMBER_OF_MAJORS 4096
 
-/* FIXME Make this sparse */
 /* 0 means LVM won't use this major number. */
 static int _max_partitions_by_major[NUMBER_OF_MAJORS];
 
@@ -38,16 +37,10 @@ typedef struct {
 } device_info_t;
 
 static int _md_major = -1;
-static dm_bitset_t _dm_bitset;
 
 int md_major(void)
 {
 	return _md_major;
-}
-
-int is_dm_major(int major)
-{
-	return dm_bit(_dm_bitset, major) ? 1 : 0;
 }
 
 /*
@@ -78,6 +71,7 @@ static const device_info_t device_info[] = {
 	{"gnbd", 1},		/* Network block device */
 	{"ramdisk", 1},		/* RAM disk */
 	{"aoe", 16},		/* ATA over Ethernet */
+	{"device-mapper", 1},	/* Other mapped devices */
 	{NULL, 0}
 };
 
@@ -187,11 +181,6 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 		if (!strncmp("md", line + i, 2) && isspace(*(line + i + 2)))
 			_md_major = line_maj;
 
-		/* Look for dm devices */
-		if (!strncmp("device-mapper", line + i, 13) &&
-		    isspace(*(line + i + 13)))
-			dm_bit_set(_dm_bitset, line_maj);
-
 		/* Go through the valid device names and if there is a
 		   match store max number of partitions */
 		for (j = 0; device_info[j].name != NULL; j++) {
@@ -262,12 +251,6 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 	f->destroy = lvm_type_filter_destroy;
 	f->private = NULL;
 
-	if (!(_dm_bitset = dm_bitset_create(NULL, NUMBER_OF_MAJORS))) {
-		stack;
-		dm_free(f);
-		return NULL;
-	}
-
 	if (!_scan_proc_dev(proc, cn)) {
 		stack;
 		return NULL;
@@ -278,7 +261,6 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 
 void lvm_type_filter_destroy(struct dev_filter *f)
 {
-	dm_bitset_destroy(_dm_bitset);
 	dm_free(f);
 	return;
 }

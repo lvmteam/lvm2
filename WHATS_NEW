@@ -1,5 +1,8 @@
 Version 2.02.00 - 
 ===================================
+  Add DEFS to make.tmpl.
+  Use dm_is_dm_major instead of local copy.
+  Allow mapped devices to be used as PVs.
   Move set_selinux_context into libdevmapper.
   Fix automatic text metadata buffer expansion (using macro).
   Cache formatted text metadata buffer between metadata area writes.

@@ -76,4 +76,10 @@ int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv, int wa
 int lvs_in_vg_activated(struct volume_group *vg);
 int lvs_in_vg_opened(struct volume_group *vg);
 
+/*
+ * Returns 1 if PV has a dependency tree that uses anything in VG.
+ */
+int pv_uses_vg(struct cmd_context *cmd, struct physical_volume *pv,
+	       struct volume_group *vg);
+
 #endif
