@@ -254,6 +254,23 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len);
 
+/*
+ * Suspend a device plus all dependencies.
+ * Ignores devices that don't have a uuid starting with uuid_prefix.
+ */
+int dm_deptree_suspend_children(struct deptree_node *dnode,
+				   const char *uuid_prefix,
+				   size_t uuid_prefix_len);
+
+/*
+ * Is the uuid prefix present in the tree?
+ * Only returns 0 if every node was checked successfully.
+ * Returns 1 if the tree walk has to be aborted.
+ */
+int dm_deptree_children_use_uuid(struct deptree_node *dnode,
+				 const char *uuid_prefix,
+				 size_t uuid_prefix_len);
+
 /*****************************************************************************
  * Library functions
  *****************************************************************************/

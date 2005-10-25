@@ -83,4 +83,6 @@ dm_hash_get_first
 dm_hash_get_next
 dm_driver_version
 dm_deptree_deactivate_children
+dm_deptree_suspend_children
+dm_deptree_children_use_uuid
 dm_set_selinux_context

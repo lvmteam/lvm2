@@ -402,7 +402,8 @@ struct deptree_node *dm_deptree_next_child(void **handle,
 /*
  * Deactivate a device with its dependencies if the uuid prefix matches.
  */
-static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
+static int _info_by_dev(uint32_t major, uint32_t minor, int with_open_count,
+			struct dm_info *info)
 {
 	struct dm_task *dmt;
 	int r;
@@ -417,6 +418,9 @@ static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 		dm_task_destroy(dmt);
 		return 0;
 	}
+
+	if (!with_open_count && !dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
 
 	if ((r = dm_task_run(dmt)))
 		r = dm_task_get_info(dmt, info);
@@ -448,6 +452,38 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor)
 		log_error("Failed to disable open_count");
 
 	r = dm_task_run(dmt);
+
+	/* FIXME Remove node from tree or mark invalid? */
+
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
+			 struct dm_info *newinfo)
+{
+	struct dm_task *dmt;
+	int r;
+
+	log_verbose("Suspending %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_SUSPEND))) {
+		log_error("Suspend dm_task creation failed for %s", name);
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
+		log_error("Failed to set device number for %s suspension.", name);
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	if ((r = dm_task_run(dmt)))
+		r = dm_task_get_info(dmt, newinfo);
 
 	dm_task_destroy(dmt);
 
@@ -486,7 +522,7 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode,
 			continue;
 
 		/* Refresh open_count */
-		if (!_info_by_dev(dinfo->major, dinfo->minor, &info) ||
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 1, &info) ||
 		    !info.exists || info.open_count)
 			continue;
 
@@ -502,4 +538,85 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode,
 	}
 
 	return 1;
+}
+
+/* FIXME Walk breadth first? */
+int dm_deptree_suspend_children(struct deptree_node *dnode,
+				   const char *uuid_prefix,
+				   size_t uuid_prefix_len)
+{
+	void *handle = NULL;
+	struct deptree_node *child = dnode;
+	struct dm_info info, newinfo;
+	const struct dm_info *dinfo;
+	const char *name;
+	const char *uuid;
+
+	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
+		if (!(dinfo = dm_deptree_node_get_info(child))) {
+			stack;
+			continue;
+		}
+
+		if (!(name = dm_deptree_node_get_name(child))) {
+			stack;
+			continue;
+		}
+
+		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+			stack;
+			continue;
+		}
+
+		/* Ignore if it doesn't belong to this VG */
+		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
+
+		/* FIXME Ensure parents are already suspended */
+		if (!_info_by_dev(dinfo->major, dinfo->minor, 0, &info) ||
+		    !info.exists)
+			continue;
+
+		if (!_suspend_node(name, info.major, info.minor, &newinfo)) {
+			log_error("Unable to suspend %s (%" PRIu32
+				  ":%" PRIu32 ")", name, info.major,
+				  info.minor);
+			continue;
+		}
+
+		/* Update cached info */
+		child->info = newinfo;
+
+		if (dm_deptree_node_num_children(child, 0))
+			dm_deptree_suspend_children(child, uuid_prefix, uuid_prefix_len);
+	}
+
+	return 1;
+}
+
+/*
+ * Returns 1 if unsure.
+ */
+int dm_deptree_children_use_uuid(struct deptree_node *dnode,
+				 const char *uuid_prefix,
+				 size_t uuid_prefix_len)
+{
+	void *handle = NULL;
+	struct deptree_node *child = dnode;
+	const char *uuid;
+
+	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
+		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+			log_error("Failed to get uuid for deptree node.");
+			return 1;
+		}
+
+		if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
+			return 1;
+
+		if (dm_deptree_node_num_children(child, 0))
+			dm_deptree_children_use_uuid(child, uuid_prefix, uuid_prefix_len);
+	}
+
+	return 0;
 }
