@@ -36,7 +36,6 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 void lvm_type_filter_destroy(struct dev_filter *f);
 
 int md_major(void);
-int is_dm_major(int major);
 int max_partitions(int major);
 
 #endif

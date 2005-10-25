@@ -24,6 +24,7 @@
 #include "toolcontext.h"
 #include "targets.h"
 #include "config.h"
+#include "filter.h"
 
 #include <limits.h>
 #include <dirent.h>
@@ -54,6 +55,7 @@
  */
 
 #define MAX_TARGET_PARAMSIZE 50000
+#define UUID_PREFIX "LVM-"
 
 enum {
 	ACTIVE = 0,
@@ -170,14 +172,14 @@ static char *_build_dlid(struct dm_pool *mem, const char *lvid, const char *laye
 	if (!layer)
 		layer = "";
 
-	len = 4 + strlen(lvid) + strlen(layer) + 2;
+	len = sizeof(UUID_PREFIX) + sizeof(union lvid) + strlen(layer);
 
 	if (!(dlid = dm_pool_alloc(mem, len))) {
 		stack;
 		return NULL;
 	}
 
-	sprintf(dlid, "LVM-%s%s%s", lvid, (*layer) ? "-" : "", layer);
+	sprintf(dlid, UUID_PREFIX "%s%s%s", lvid, (*layer) ? "-" : "", layer);
 
 	return dlid;
 }
@@ -2279,7 +2281,7 @@ fail:
 /*
  * Deactivate LV and all devices it references that nothing else has open.
  */
-int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
+static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, action_t action)
 {
 	struct deptree *dtree;
 	struct deptree_node *dnode;
@@ -2302,12 +2304,23 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 	}
 
 	/* Only process nodes with uuid of "LVM-" plus VG id. */
-	if (!dm_deptree_deactivate_children(dnode, dlid, ID_LEN + 4)) {
-		stack;
+	switch(action) {
+	case DEACTIVATE:
+		if (!dm_deptree_deactivate_children(dnode, dlid, ID_LEN + 4)) {
+			stack;
+			goto out;
+		}
+		break;
+	case SUSPEND:
+		if (!dm_deptree_suspend_children(dnode, dlid, ID_LEN + 4)) {
+			stack;
+			goto out;
+		}
+		break;
+	default:
+		log_error("_tree_action: Action %u not supported.", action);
 		goto out;
-	}
-
-	fs_del_lv(lv);
+	}	
 
 	r = 1;
 
@@ -2317,3 +2330,56 @@ out:
 	return r;
 }
 
+int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
+{
+	int r;
+
+	r = _tree_action(dm, lv, DEACTIVATE);
+
+	fs_del_lv(lv);
+
+	return r;
+}
+
+/*
+ * Does device use VG somewhere in its construction?
+ * Returns 1 if uncertain.
+ */
+int dev_manager_device_uses_vg(struct dev_manager *dm, struct device *dev,
+			       struct volume_group *vg)
+{
+	struct deptree *dtree;
+	struct deptree_node *dnode;
+	char dlid[sizeof(UUID_PREFIX) + sizeof(struct id) - 1];
+	int r = 1;
+
+	if (!(dtree = dm_deptree_create())) {
+		log_error("partial deptree creation failed");
+		return r;
+	}
+
+	if (!dm_deptree_add_dev(dtree, MAJOR(dev->dev), MINOR(dev->dev))) {
+		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to deptree",
+			  dev_name(dev), (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev));
+		goto out;
+	}
+
+	memcpy(dlid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1);
+	memcpy(dlid + sizeof(UUID_PREFIX) - 1, &vg->id.uuid[0], sizeof(vg->id));
+
+	if (!(dnode = dm_deptree_find_node(dtree, 0, 0))) {
+		log_error("Lost dependency tree root node");
+		goto out;
+	}
+
+	if (dm_deptree_children_use_uuid(dnode, dlid, sizeof(UUID_PREFIX) + sizeof(vg->id) - 1)) {
+		stack;
+		goto out;
+	}
+
+	r = 0;
+
+out:
+	dm_deptree_free(dtree);
+	return r;
+}

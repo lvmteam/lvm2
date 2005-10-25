@@ -494,8 +494,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 						 pvid, dev_name(dev),
 						 dev_name(existing->dev));
 				return NULL;
-			} else if (is_dm_major(MAJOR(existing->dev->dev)) &&
-				   !is_dm_major(MAJOR(dev->dev))) {
+			} else if (dm_is_dm_major(MAJOR(existing->dev->dev)) &&
+				   !dm_is_dm_major(MAJOR(dev->dev))) {
 				log_very_verbose("Ignoring duplicate PV %s on "
 						 "%s - using dm %s",
 						 pvid, dev_name(dev),
@@ -507,8 +507,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 						 "using md %s", pvid,
 						 dev_name(existing->dev),
 						 dev_name(dev));
-			else if (!is_dm_major(MAJOR(existing->dev->dev)) &&
-				 is_dm_major(MAJOR(dev->dev)))
+			else if (!dm_is_dm_major(MAJOR(existing->dev->dev)) &&
+				 dm_is_dm_major(MAJOR(dev->dev)))
 				log_very_verbose("Duplicate PV %s on %s - "
 						 "using dm %s", pvid,
 						 dev_name(existing->dev),

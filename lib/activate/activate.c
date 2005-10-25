@@ -26,6 +26,7 @@
 #include "dev_manager.h"
 #include "str_list.h"
 #include "config.h"
+#include "filter.h"
 
 #include <limits.h>
 #include <fcntl.h>
@@ -142,6 +143,12 @@ int lv_activate_with_filter(struct cmd_context *cmd, const char *lvid_s, int exc
 int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 {
 	return 1;
+}
+
+int pv_uses_vg(struct cmd_context *cmd, struct physical_volume *pv,
+               struct volume_group *vg)
+{
+	return 0;
 }
 
 void activation_exit(void)
@@ -786,6 +793,34 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 		r = dev_manager_lv_rmnodes(lv);
 
 	fs_unlock();
+
+	return r;
+}
+
+/*
+ * Does PV use VG somewhere in its construction?
+ * Returns 1 on failure.
+ */
+int pv_uses_vg(struct cmd_context *cmd, struct physical_volume *pv,
+               struct volume_group *vg)
+{
+	struct dev_manager *dm;
+	int r;
+
+	if (!activation())
+		return 0;
+
+	if (!dm_is_dm_major(MAJOR(pv->dev->dev)))
+		return 0;
+
+	if (!(dm = dev_manager_create(cmd, vg->name))) {
+		stack;
+		return 1;
+	}
+
+	r = dev_manager_device_uses_vg(dm, pv->dev, vg);
+
+	dev_manager_destroy(dm);
 
 	return r;
 }

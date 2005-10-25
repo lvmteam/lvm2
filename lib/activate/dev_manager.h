@@ -17,9 +17,11 @@
 #define _LVM_DEV_MANAGER_H
 
 struct logical_volume;
+struct volume_group;
 struct cmd_context;
 struct dev_manager;
 struct dm_info;
+struct device;
 
 /*
  * Constructor and destructor.
@@ -54,5 +56,8 @@ int dev_manager_lv_rmnodes(const struct logical_volume *lv);
  * Put the desired changes into effect.
  */
 int dev_manager_execute(struct dev_manager *dm);
+
+int dev_manager_device_uses_vg(struct dev_manager *dm, struct device *dev,
+			       struct volume_group *vg);
 
 #endif
