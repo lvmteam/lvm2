@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Move set_selinux_context into libdevmapper.
   Fix automatic text metadata buffer expansion (using macro).
   Cache formatted text metadata buffer between metadata area writes.
   Add pe_start field to pvs.
