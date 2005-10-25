@@ -40,7 +40,6 @@
 ../lib/misc/lvm-exec.h
 ../lib/misc/lvm-file.h
 ../lib/misc/lvm-string.h
-../lib/misc/selinux.h
 ../lib/misc/sharedlib.h
 ../lib/regex/matcher.h
 ../lib/report/report.h
