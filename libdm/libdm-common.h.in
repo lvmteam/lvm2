@@ -28,8 +28,6 @@ int rm_dev_node(const char *dev_name);
 int rename_dev_node(const char *old_name, const char *new_name);
 void update_devs(void);
 
-int set_selinux_context(const char *path, mode_t mode);
-
 #define DM_LIB_VERSION @DM_LIB_VERSION@
 
 #endif

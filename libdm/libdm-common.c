@@ -199,7 +199,7 @@ int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 }
 
 #ifdef HAVE_SELINUX
-int set_selinux_context(const char *path, mode_t mode)
+int dm_set_selinux_context(const char *path, mode_t mode)
 {
 	security_context_t scontext;
 
@@ -266,7 +266,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	}
 
 #ifdef HAVE_SELINUX
-	if (!set_selinux_context(path, S_IFBLK))
+	if (!dm_set_selinux_context(path, S_IFBLK))
 		return 0;
 #endif
 

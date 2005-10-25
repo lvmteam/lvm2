@@ -453,3 +453,8 @@ struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_no
 	     v = dm_hash_get_next(h, v))
 
 #endif				/* LIB_DEVICE_MAPPER_H */
+
+/*
+ * selinux
+ */
+int dm_set_selinux_context(const char *path, mode_t mode);
