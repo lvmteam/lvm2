@@ -1361,15 +1361,15 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
-	log_debug("dm %s %s %s%s%s %s%0.0d%s%0.0d"
+	log_debug("dm %s %s %s%s%s %s%0" PRIu32 "%s%0" PRIu32
 		  "%s%c %.0llu %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
 		  dmt->major > 0 ? "(" : "",
-		  dmt->major > 0 ? dmt->major : 0,
+		  dmt->major,
 		  dmt->major > 0 ? ":" : "",
-		  dmt->minor > 0 ? dmt->minor : 0,
+		  dmt->minor,
 		  dmt->major > 0 ? ") " : "",
 		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->sector, dmt->message ? dmt->message : "",
@@ -1377,8 +1377,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 #ifdef DM_IOCTLS
 	if (ioctl(_control_fd, command, dmi) < 0) {
 		if (errno == ENXIO && ((dmt->type == DM_DEVICE_INFO) ||
-				       (dmt->type == DM_DEVICE_MKNODES) ||
-				       (dmt->type == DM_DEVICE_STATUS)))
+				       (dmt->type == DM_DEVICE_MKNODES)))
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
 		else {
 			if (_log_suppress)
@@ -1407,6 +1406,8 @@ int dm_task_run(struct dm_task *dmt)
 	if (_dm_version == 1)
 		return _dm_task_run_v1(dmt);
 #endif
+
+dm_task_skip_lockfs(dmt); // AGK TEMP
 
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
