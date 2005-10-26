@@ -707,6 +707,7 @@ static int _status(int argc, char **argv, void *data)
 	char *name = NULL;
 	int matched = 0;
 	int ls_only = 0;
+	struct dm_info info;
 
 	if (data)
 		name = names->name;
@@ -735,6 +736,9 @@ static int _status(int argc, char **argv, void *data)
 		goto out;
 
 	if (!dm_task_run(dmt))
+		goto out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
 		goto out;
 
 	if (!name)
