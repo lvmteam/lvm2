@@ -2162,8 +2162,7 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 	return 1;
 }
 
-static int _action(struct dev_manager *dm, struct logical_volume *lv,
-		   action_t action)
+static int _action_activate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	if (!_scan_existing_devices(dm)) {
 		stack;
@@ -2175,34 +2174,23 @@ static int _action(struct dev_manager *dm, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (action == ACTIVATE || action == DEACTIVATE)
-		/* Get into known state - remove from active list if present */
-		if (!_remove_lvs(dm, lv)) {
-			stack;
-			return 0;
-		}
-
-	if (action == ACTIVATE) {
-		/* Add to active & reload lists */
-		if (!_add_lvs(dm->mem, &dm->reload_list, lv) ||
-		    !_add_lvs(dm->mem, &dm->active_list, lv)) {
-			stack;
-			return 0;
-		}
+	/* Get into known state - remove from active list if present */
+	if (!_remove_lvs(dm, lv)) {
+		stack;
+		return 0;
 	}
 
-	if (action == SUSPEND || action == RESUME || action == ACTIVATE)
-		/* Get into known state - remove from suspend list if present */
-		if (!_remove_suspended_lvs(dm, lv)) {
-			stack;
-			return 0;
-		}
+	/* Add to active & reload lists */
+	if (!_add_lvs(dm->mem, &dm->reload_list, lv) ||
+	    !_add_lvs(dm->mem, &dm->active_list, lv)) {
+		stack;
+		return 0;
+	}
 
-	if (action == SUSPEND) {
-		if (!_add_lvs(dm->mem, &dm->suspend_list, lv)) {
-			stack;
-			return 0;
-		}
+	/* Get into known state - remove from suspend list if present */
+	if (!_remove_suspended_lvs(dm, lv)) {
+		stack;
+		return 0;
 	}
 
 	if (!_targets_present(dm, &dm->active_list) ||
@@ -2221,7 +2209,7 @@ static int _action(struct dev_manager *dm, struct logical_volume *lv,
 
 int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 {
-	return _action(dm, lv, ACTIVATE);
+	return _action_activate(dm, lv);
 }
 
 int dev_manager_lv_mknodes(const struct logical_volume *lv)
