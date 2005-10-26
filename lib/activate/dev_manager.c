@@ -1621,7 +1621,7 @@ static int _create_rec(struct dev_manager *dm, struct dev_layer *dl)
 
 	/* Rename? */
 	if (dl->info.exists) {
-		if ((suffix = rindex(dl->dlid + 4, '-')))
+		if ((suffix = rindex(dl->dlid + sizeof(UUID_PREFIX) - 1, '-')))
 			suffix++;
 		newname = build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
 					suffix);
@@ -2334,13 +2334,13 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	/* Only process nodes with uuid of "LVM-" plus VG id. */
 	switch(action) {
 	case DEACTIVATE:
-		if (!dm_deptree_deactivate_children(dnode, dlid, ID_LEN + 4)) {
+		if (!dm_deptree_deactivate_children(dnode, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
 			stack;
 			goto out;
 		}
 		break;
 	case SUSPEND:
-		if (!dm_deptree_suspend_children(dnode, dlid, ID_LEN + 4)) {
+		if (!dm_deptree_suspend_children(dnode, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1)) {
 			stack;
 			goto out;
 		}
