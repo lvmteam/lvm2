@@ -363,6 +363,30 @@ int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted)
 }
 
 /*
+ * Returns 1 if no prefix supplied
+ */
+static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_t uuid_prefix_len)
+{
+	if (!uuid_prefix)
+		return 1;
+
+	if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		return 1;
+
+	/* Handle transition: active device uuids might be missing the prefix */
+	if (uuid_prefix_len <= 4)
+		return 0;
+
+	if (!strcmp(uuid, "LVM-") || strcmp(uuid_prefix, "LVM-"))
+		return 0;
+
+	if (!strncmp(uuid, uuid_prefix + 4, uuid_prefix_len - 4))
+		return 1;
+
+	return 0;
+}
+
+/*
  * Returns 1 if no children.
  */
 static int _children_suspended(struct deptree_node *node,
@@ -392,7 +416,7 @@ static int _children_suspended(struct deptree_node *node,
 		}
 
 		/* Ignore if it doesn't belong to this VG */
-		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
 		if (!(dinfo = dm_deptree_node_get_info(dlink->node))) {
@@ -563,7 +587,7 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode,
 		}
 
 		/* Ignore if it doesn't belong to this VG */
-		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
 		/* Refresh open_count */
@@ -614,7 +638,7 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 		}
 
 		/* Ignore if it doesn't belong to this VG */
-		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
 		/* Ensure immediate parents are already suspended */
