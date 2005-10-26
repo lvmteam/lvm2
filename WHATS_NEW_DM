@@ -1,5 +1,6 @@
 Version 1.02.00 - 
 =============================
+  Also suppress error if device doesn't exist with DM_DEVICE_STATUS.
   Export dm_set_selinux_context().
   Add dm_driver_version().
   Added dependency tree functions to library.
