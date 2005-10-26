@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Replacement suspend code using libdevmapper dependency tree.
   Add DEFS to make.tmpl.
   Use dm_is_dm_major instead of local copy.
   Allow mapped devices to be used as PVs.
