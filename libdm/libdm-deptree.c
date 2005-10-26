@@ -363,6 +363,51 @@ int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted)
 }
 
 /*
+ * Returns 1 if no children.
+ */
+static int _children_suspended(struct deptree_node *node,
+			       uint32_t inverted,
+			       const char *uuid_prefix,
+			       size_t uuid_prefix_len)
+{
+	struct list *list;
+	struct deptree_link *dlink;
+	const struct dm_info *dinfo;
+	const char *uuid;
+
+	if (inverted) {
+		if (_nodes_are_linked(&node->deptree->root, node))
+			return 1;
+		list = &node->used_by;
+	} else {
+		if (_nodes_are_linked(node, &node->deptree->root))
+			return 1;
+		list = &node->uses;
+	}
+
+	list_iterate_items(dlink, list) {
+		if (!(uuid = dm_deptree_node_get_uuid(dlink->node))) {
+			stack;
+			continue;
+		}
+
+		/* Ignore if it doesn't belong to this VG */
+		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
+
+		if (!(dinfo = dm_deptree_node_get_info(dlink->node))) {
+			stack;
+			return 0;
+		}
+
+		if (!dinfo->suspended)
+			return 0;
+	}
+
+	return 1;
+}
+
+/*
  * Set major and minor to zero for root of tree.
  */
 struct deptree_node *dm_deptree_find_node(struct deptree *deptree,
@@ -540,7 +585,6 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode,
 	return 1;
 }
 
-/* FIXME Walk breadth first? */
 int dm_deptree_suspend_children(struct deptree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len)
@@ -552,6 +596,7 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 	const char *name;
 	const char *uuid;
 
+	/* Suspend nodes at this level of the tree */
 	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
 		if (!(dinfo = dm_deptree_node_get_info(child))) {
 			stack;
@@ -572,7 +617,10 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
-		/* FIXME Ensure parents are already suspended */
+		/* Ensure immediate parents are already suspended */
+		if (!_children_suspended(child, 1, uuid_prefix, uuid_prefix_len))
+			continue;
+
 		if (!_info_by_dev(dinfo->major, dinfo->minor, 0, &info) ||
 		    !info.exists)
 			continue;
@@ -586,6 +634,20 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 
 		/* Update cached info */
 		child->info = newinfo;
+	}
+
+	/* Then suspend any child nodes */
+	handle = NULL;
+
+	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
+		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+			stack;
+			continue;
+		}
+
+		/* Ignore if it doesn't belong to this VG */
+		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
 
 		if (dm_deptree_node_num_children(child, 0))
 			dm_deptree_suspend_children(child, uuid_prefix, uuid_prefix_len);
