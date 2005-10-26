@@ -1074,6 +1074,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 			       float *percent, uint32_t *event_nr)
 {
 	char *name;
+	const char *dlid;
 
 	/*
 	 * Build a name for the top layer.
@@ -1085,8 +1086,13 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 
 	/* FIXME dm_pool_free ? */
 
+	if (!(dlid = _build_dlid(dm->mem, lv->lvid.s, NULL))) {
+		log_error("dlid build failed for %s", lv->name);
+		return 0;
+	}
+
 	log_debug("Getting device mirror status percentage for %s", name);
-	if (!(_percent(dm, name, lv->lvid.s, "mirror", wait, lv, percent,
+	if (!(_percent(dm, name, dlid, "mirror", wait, lv, percent,
 		       event_nr))) {
 		stack;
 		return 0;
