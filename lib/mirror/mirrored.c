@@ -44,6 +44,7 @@ static const char *_name(const struct lv_segment *seg)
 static void _display(const struct lv_segment *seg)
 {
 	const char *size;
+	uint32_t s;
 
 	log_print("  Mirrors\t\t%u", seg->area_count);
 	log_print("  Mirror size\t\t%u", seg->area_len);
@@ -59,8 +60,9 @@ static void _display(const struct lv_segment *seg)
 
 	log_print("  Mirror original:");
 	display_stripe(seg, 0, "    ");
-	log_print("  Mirror destination:");
-	display_stripe(seg, 1, "    ");
+	log_print("  Mirror destinations:");
+	for (s = 1; s < seg->area_count; s++)
+		display_stripe(seg, s, "    ");
 	log_print(" ");
 }
 
