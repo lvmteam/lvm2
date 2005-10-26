@@ -377,7 +377,10 @@ static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_
 	if (uuid_prefix_len <= 4)
 		return 0;
 
-	if (!strcmp(uuid, "LVM-") || strcmp(uuid_prefix, "LVM-"))
+	if (!strncmp(uuid, "LVM-", 4))
+		return 0;
+
+	if (strncmp(uuid_prefix, "LVM-", 4))
 		return 0;
 
 	if (!strncmp(uuid, uuid_prefix + 4, uuid_prefix_len - 4))
@@ -697,7 +700,7 @@ int dm_deptree_children_use_uuid(struct deptree_node *dnode,
 			return 1;
 		}
 
-		if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		if (_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			return 1;
 
 		if (dm_deptree_node_num_children(child, 0))
