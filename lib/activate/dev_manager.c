@@ -2185,11 +2185,6 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 	return _action(dm, lv, ACTIVATE);
 }
 
-int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
-{
-	return _action(dm, lv, SUSPEND);
-}
-
 int dev_manager_lv_mknodes(const struct logical_volume *lv)
 {
 	char *name;
@@ -2330,6 +2325,7 @@ out:
 	return r;
 }
 
+
 int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 {
 	int r;
@@ -2339,6 +2335,11 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 	fs_del_lv(lv);
 
 	return r;
+}
+
+int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
+{
+	return _tree_action(dm, lv, SUSPEND);
 }
 
 /*
