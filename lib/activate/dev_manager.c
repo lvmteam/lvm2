@@ -267,7 +267,7 @@ static int _info(const char *name, const char *dlid, int mknodes,
 			      uuid_out) &&
 	    	    info->exists)
 			return 1;
-		else if (_info_run(NULL, dlid + sizeof(UUID_PREFIX), info,
+		else if (_info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
 				   0, with_open_count, mem, uuid_out) &&
 			 info->exists)
 			return 1;
@@ -302,6 +302,7 @@ static int _status_run(const char *name, const char *uuid,
 {
 	int r = 0;
 	struct dm_task *dmt;
+	struct dm_info info;
 	void *next = NULL;
 	uint64_t start, length;
 	char *type = NULL;
@@ -316,6 +317,11 @@ static int _status_run(const char *name, const char *uuid,
 		log_error("Failed to disable open_count");
 
 	if (!dm_task_run(dmt)) {
+		stack;
+		goto out;
+	}
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists) {
 		stack;
 		goto out;
 	}
@@ -359,7 +365,7 @@ static int _status(const char *name, const char *uuid,
 				type_size, params, param_size) &&
 		    *params)
 			return 1;
-		else if (_status_run(NULL, uuid + sizeof(UUID_PREFIX), start,
+		else if (_status_run(NULL, uuid + sizeof(UUID_PREFIX) - 1, start,
 				     length, type, type_size, params,
 				     param_size) &&
 			 *params)
@@ -474,7 +480,7 @@ static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		if (_percent_run(dm, NULL, dlid, target_type, wait, lv, percent,
 				 event_nr))
 			return 1;
-		else if (_percent_run(dm, NULL, dlid + sizeof(UUID_PREFIX),
+		else if (_percent_run(dm, NULL, dlid + sizeof(UUID_PREFIX) - 1,
 				      target_type, wait, lv, percent,
 				      event_nr))
 			return 1;
