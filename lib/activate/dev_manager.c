@@ -89,7 +89,7 @@ struct dev_layer {
 	struct dm_info info;
 
 	/* lvid plus layer */
-	const char *dlid;
+	char *dlid;
 
 	struct logical_volume *lv;
 
@@ -262,10 +262,16 @@ static int _info(const char *name, const char *dlid, int mknodes,
 		 int with_open_count, struct dm_info *info,
 		 struct dm_pool *mem, char **uuid_out)
 {
-	if (!mknodes && dlid && *dlid &&
-	    _info_run(NULL, dlid, info, 0, with_open_count, mem, uuid_out) &&
-	    	      info->exists)
-		return 1;
+	if (!mknodes && dlid && *dlid) {
+		if (_info_run(NULL, dlid, info, 0, with_open_count, mem,
+			      uuid_out) &&
+	    	    info->exists)
+			return 1;
+		else if (_info_run(NULL, dlid + sizeof(UUID_PREFIX), info,
+				   0, with_open_count, mem, uuid_out) &&
+			 info->exists)
+			return 1;
+	}
 
 	if (name)
 		return _info_run(name, NULL, info, mknodes, with_open_count,
@@ -348,10 +354,17 @@ static int _status(const char *name, const char *uuid,
 		   char **type, uint32_t type_size, char **params,
 		   uint32_t param_size)
 {
-	if (uuid && *uuid && _status_run(NULL, uuid, start, length, type,
-					 type_size, params, param_size)
-	    && *params)
-		return 1;
+	if (uuid && *uuid) {
+		if (_status_run(NULL, uuid, start, length, type,
+				type_size, params, param_size) &&
+		    *params)
+			return 1;
+		else if (_status_run(NULL, uuid + sizeof(UUID_PREFIX), start,
+				     length, type, type_size, params,
+				     param_size) &&
+			 *params)
+			return 1;
+	}
 
 	if (name && _status_run(name, NULL, start, length, type, type_size,
 				params, param_size))
@@ -457,10 +470,15 @@ static int _percent(struct dev_manager *dm, const char *name, const char *dlid,
 		    struct logical_volume *lv, float *percent,
 		    uint32_t *event_nr)
 {
-	if (dlid && *dlid
-	    && _percent_run(dm, NULL, dlid, target_type, wait, lv, percent,
-			    event_nr))
-		return 1;
+	if (dlid && *dlid) {
+		if (_percent_run(dm, NULL, dlid, target_type, wait, lv, percent,
+				 event_nr))
+			return 1;
+		else if (_percent_run(dm, NULL, dlid + sizeof(UUID_PREFIX),
+				      target_type, wait, lv, percent,
+				      event_nr))
+			return 1;
+	}
 
 	if (name && _percent_run(dm, name, NULL, target_type, wait, lv, percent,
 				 event_nr))
@@ -1078,7 +1096,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 }
 
 static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
-				     const char *dlid)
+				     char *dlid)
 {
 	struct dev_layer *dl;
 	char *uuid;
@@ -1096,9 +1114,18 @@ static struct dev_layer *_create_dev(struct dev_manager *dm, char *name,
 		return NULL;
 	}
 
-	if (dl->info.exists)
-		dl->dlid = uuid;
-	else
+	if (dl->info.exists) {
+		/* If old-style UUID found, convert it. */
+		if (strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1)) {
+			if (!(dl->dlid = dm_pool_alloc(dm->mem, sizeof(UUID_PREFIX) + strlen(uuid)))) {
+				stack;
+				return NULL;
+			}
+			memcpy(dl->dlid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1);
+			memcpy(dl->dlid + sizeof(UUID_PREFIX) - 1, uuid, strlen(uuid));
+		} else
+			dl->dlid = uuid;
+	} else
 		dl->dlid = dlid;
 
 	list_init(&dl->pre_create);
@@ -1868,7 +1895,7 @@ static int _add_existing_layer(struct dev_manager *dm, const char *name)
 		return 0;
 	}
 
-	if (!(dl = _create_dev(dm, copy, ""))) {
+	if (!(dl = _create_dev(dm, copy, (char *)""))) {
 		stack;
 		return 0;
 	}
