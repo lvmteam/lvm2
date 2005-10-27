@@ -63,8 +63,7 @@ void lvmcache_lock_vgname(const char *vgname, int read_only)
 	_vgs_locked++;
 }
 
-static int _vgname_is_locked(const char *vgname) __attribute__ ((unused));
-static int _vgname_is_locked(const char *vgname)
+int vgname_is_locked(const char *vgname)
 {
 	if (!_lock_hash)
 		return 0;
