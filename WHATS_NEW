@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Only keep a device open if it's known to belong to a locked VG.
   Fix lvdisplay to show all mirror destinations.
   Replacement suspend code using libdevmapper dependency tree.
   Add DEFS to make.tmpl.
