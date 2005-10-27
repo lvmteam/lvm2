@@ -551,3 +551,29 @@ float copy_percent(struct logical_volume *lv_mirr)
 
 	return denominator ? (float) numerator *100 / denominator : 100.0;
 }
+
+/*
+ * Fixup mirror pointers after single-pass segment import
+ */
+int fixup_imported_mirrors(struct volume_group *vg)
+{
+	struct lv_list *lvl;
+	struct lv_segment *seg;
+	uint32_t s;
+
+	list_iterate_items(lvl, &vg->lvs) {
+		list_iterate_items(seg, &lvl->lv->segments) {
+			if (seg->segtype !=
+			    get_segtype_from_string(vg->cmd, "mirror"))
+				continue;
+
+			if (seg->log_lv)
+				find_seg_by_le(seg->log_lv, 0)->mirror_seg = seg;
+			for (s = 0; s < seg->area_count; s++)
+				if (seg_type(seg, s) == AREA_LV)
+					find_seg_by_le(seg_lv(seg, s), 0)->
+					    mirror_seg = seg;
+		}
+	}
+}
+

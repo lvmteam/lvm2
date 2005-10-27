@@ -58,9 +58,9 @@ int lv_merge_segments(struct logical_volume *lv)
 /*
  * Verify that an LV's segments are consecutive, complete and don't overlap.
  */
-int check_lv_segments(struct logical_volume *lv)
+int check_lv_segments(struct logical_volume *lv, int complete_vg)
 {
-	struct lv_segment *seg;
+	struct lv_segment *seg, *seg2;
 	uint32_t le = 0;
 	unsigned seg_count = 0;
 	int r = 1;
@@ -85,7 +85,7 @@ int check_lv_segments(struct logical_volume *lv)
 			r = 0;
 		}
 
-		if (seg->log_lv) {
+		if (complete_vg && seg->log_lv) {
 			if (!seg_is_mirrored(seg)) {
 				log_error("LV %s: segment %u has log LV but "
 					  "is not mirrored",
@@ -100,8 +100,8 @@ int check_lv_segments(struct logical_volume *lv)
 				r = 0;
 			}
 
-			if (!find_seg_by_le(seg->log_lv, 0) ||
-			    find_seg_by_le(seg->log_lv, 0)->mirror_seg != seg) {
+			if (!(seg2 = find_seg_by_le(seg->log_lv, 0)) ||
+			    seg2->mirror_seg != seg) {
 				log_error("LV %s: segment %u log LV does not "
 					  "point back to mirror segment",
 					   lv->name, seg_count);
@@ -109,7 +109,7 @@ int check_lv_segments(struct logical_volume *lv)
 			}
 		}
 
-		if (seg->status & MIRROR_IMAGE) {
+		if (complete_vg && seg->status & MIRROR_IMAGE) {
 			if (!seg->mirror_seg ||
 			    !seg_is_mirrored(seg->mirror_seg)) {
 				log_error("LV %s: segment %u mirror image "
@@ -144,7 +144,7 @@ int check_lv_segments(struct logical_volume *lv)
 					r = 0;
 				}
 
-				if (seg_lv(seg, s) &&
+				if (complete_vg && seg_lv(seg, s) &&
 				    (seg_lv(seg, s)->status & MIRROR_IMAGE) &&
 				    (find_seg_by_le(seg_lv(seg, s),
 						    seg_le(seg, s))->mirror_seg

@@ -512,6 +512,10 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 						 "using dm %s", pvid,
 						 dev_name(existing->dev),
 						 dev_name(dev));
+			/* FIXME If both dm, check dependencies */
+			//else if (dm_is_dm_major(MAJOR(existing->dev->dev)) &&
+				 //dm_is_dm_major(MAJOR(dev->dev)))
+				 //
 			else
 				log_error("Found duplicate PV %s: using %s not "
 					  "%s", pvid, dev_name(dev),

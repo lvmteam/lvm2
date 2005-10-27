@@ -512,8 +512,9 @@ const char *strip_dir(const char *vg_name, const char *dir);
 
 /*
  * Checks that an lv has no gaps or overlapping segments.
+ * Set complete_vg to perform additional VG level checks.
  */
-int check_lv_segments(struct logical_volume *lv);
+int check_lv_segments(struct logical_volume *lv, int complete_vg);
 
 /*
  * Sometimes (eg, after an lvextend), it is possible to merge two
@@ -564,6 +565,7 @@ int remove_all_mirror_images(struct logical_volume *lv);
  * Given mirror image or mirror log segment, find corresponding mirror segment 
  */
 struct lv_segment *find_mirror_seg(struct lv_segment *seg);
+int fixup_imported_mirrors(struct volume_group *vg);
 
 int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv_mirr,

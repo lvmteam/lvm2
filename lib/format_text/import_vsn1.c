@@ -428,7 +428,7 @@ static int _read_segments(struct dm_pool *mem, struct volume_group *vg,
 	/*
 	 * Check there are no gaps or overlaps in the lv.
 	 */
-	if (!check_lv_segments(lv)) {
+	if (!check_lv_segments(lv, 0)) {
 		stack;
 		return 0;
 	}
@@ -753,6 +753,12 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	if (!_read_sections(fid, "logical_volumes", _read_lvsegs, mem, vg,
 			    vgn, pv_hash, 1)) {
 		log_error("Couldn't read all logical volumes for "
+			  "volume group %s.", vg->name);
+		goto bad;
+	}
+
+	if (!fixup_imported_mirrors(vg)) {
+		log_error("Failed to fixup mirror pointers after import for "
 			  "volume group %s.", vg->name);
 		goto bad;
 	}
