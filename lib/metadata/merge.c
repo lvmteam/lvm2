@@ -85,6 +85,40 @@ int check_lv_segments(struct logical_volume *lv)
 			r = 0;
 		}
 
+		if (seg->log_lv) {
+			if (!seg_is_mirrored(seg)) {
+				log_error("LV %s: segment %u has log LV but "
+					  "is not mirrored",
+					  lv->name, seg_count);
+				r = 0;
+			}
+
+			if (!(seg->log_lv->status & MIRROR_LOG)) {
+				log_error("LV %s: segment %u log LV %s is not "
+					  "a mirror log",
+					   lv->name, seg_count, seg->log_lv->name);
+				r = 0;
+			}
+
+			if (!find_seg_by_le(seg->log_lv, 0) ||
+			    find_seg_by_le(seg->log_lv, 0)->mirror_seg != seg) {
+				log_error("LV %s: segment %u log LV does not "
+					  "point back to mirror segment",
+					   lv->name, seg_count);
+				r = 0;
+			}
+		}
+
+		if (seg->status & MIRROR_IMAGE) {
+			if (!seg->mirror_seg ||
+			    !seg_is_mirrored(seg->mirror_seg)) {
+				log_error("LV %s: segment %u mirror image "
+					  "is not mirrored",
+					  lv->name, seg_count);
+				r = 0;
+			}
+		}
+
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) == AREA_UNASSIGNED) {
 				log_error("LV %s: segment %u has unassigned "
@@ -109,6 +143,18 @@ int check_lv_segments(struct logical_volume *lv)
 						  lv->name, seg_count, s);
 					r = 0;
 				}
+
+				if (seg_lv(seg, s) &&
+				    (seg_lv(seg, s)->status & MIRROR_IMAGE) &&
+				    (find_seg_by_le(seg_lv(seg, s),
+						    seg_le(seg, s))->mirror_seg
+							!= seg)) {
+					log_error("LV %s: segment %u mirror "
+						  "image %u missing mirror ptr",
+						  lv->name, seg_count, s);
+					r = 0;
+				}
+
 /* FIXME I don't think this ever holds?
 				if (seg_le(seg, s) != le) {
 					log_error("LV %s: segment %u has "
