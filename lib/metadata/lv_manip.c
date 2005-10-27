@@ -666,12 +666,10 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	/* FIXME Do calculations on free extent counts before selecting space */
 	/* FIXME Select log PV appropriately if there isn't one yet */
 
-	if ((alloc == ALLOC_CONTIGUOUS)) {
+	/* Are there any preceding segments we must follow on from? */
+	if ((alloc == ALLOC_CONTIGUOUS) && prev_lvseg) {
 		contiguous = 1;
-		if (prev_lvseg)
-			ix_offset = prev_lvseg->area_count;
-		else
-			ix_offset = ah->area_count;
+		ix_offset = prev_lvseg->area_count;
 	}
 
 	/* FIXME This algorithm needs a lot of cleaning up! */
