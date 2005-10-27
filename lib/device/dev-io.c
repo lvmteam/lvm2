@@ -493,6 +493,8 @@ static void _close(struct device *dev)
 
 static int _dev_close(struct device *dev, int immediate)
 {
+	struct lvmcache_info *info;
+
 	if (dev->fd < 0) {
 		log_error("Attempt to close device '%s' "
 			  "which is not open.", dev_name(dev));
@@ -513,8 +515,12 @@ static int _dev_close(struct device *dev, int immediate)
 		dev->open_count = 0;
 	}
 
-	/* FIXME lookup device in cache to get vgname and see if it's locked? */
-	if (immediate || (dev->open_count < 1 && !vgs_locked()))
+	/* Close unless device is known to belong to a locked VG */
+	if (immediate ||
+	    (dev->open_count < 1 && 
+	     (!(info = info_from_pvid(dev->pvid)) ||
+	      !info->vginfo ||
+	      !vgname_is_locked(info->vginfo->vgname))))
 		_close(dev);
 
 	return 1;
