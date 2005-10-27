@@ -715,7 +715,7 @@ int vg_validate(struct volume_group *vg)
 	}
 
 	list_iterate_items(lvl, &vg->lvs) {
-		if (!check_lv_segments(lvl->lv)) {
+		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error("Internal error: LV segments corrupted in %s.",
 				  lvl->lv->name);
 			return 0;
@@ -1076,7 +1076,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	}
 
 	list_iterate_items(lvl, &vg->lvs) {
-		if (!check_lv_segments(lvl->lv)) {
+		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error("Internal error: LV segments corrupted in %s.",
 				  lvl->lv->name);
 			return NULL;

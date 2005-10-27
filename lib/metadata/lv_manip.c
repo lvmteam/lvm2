@@ -488,13 +488,11 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 
 	area_multiple = segtype_is_striped(segtype) ? area_count : 1;
 
-	/* FIXME Shouldn't log_lv always be NULL here? */
-	/* (As we set up log segments elsewhere) */
-
+	/* log_lv gets set up elsehere */
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
 				     lv->le_count,
 				     aa[0].len * area_multiple,
-				     status, stripe_size, log_lv,
+				     status, stripe_size, NULL,
 				     area_count + extra_areas,
 				     aa[0].len, 0u, region_size, 0u))) {
 		log_error("Couldn't allocate new LV segment.");
