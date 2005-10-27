@@ -251,6 +251,7 @@ struct lv_segment {
 	uint32_t region_size;	/* For mirrors - in sectors */
 	uint32_t extents_copied;
 	struct logical_volume *log_lv;
+	struct lv_segment *mirror_seg;
 
 	struct list tags;
 
@@ -559,6 +560,10 @@ int create_mirror_layers(struct alloc_handle *ah,
 			 struct logical_volume *log_lv);
 int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors);
 int remove_all_mirror_images(struct logical_volume *lv);
+/*
+ * Given mirror image or mirror log segment, find corresponding mirror segment 
+ */
+struct lv_segment *find_mirror_seg(struct lv_segment *seg);
 
 int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv_mirr,

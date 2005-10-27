@@ -97,10 +97,13 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	seg->region_size = region_size;
 	seg->extents_copied = extents_copied;
 	seg->log_lv = log_lv;
+	seg->mirror_seg = NULL;
 	list_init(&seg->tags);
 
-	if (log_lv)
+	if (log_lv) {
 		log_lv->status |= MIRROR_LOG;
+		find_seg_by_le(log_lv, 0)->mirror_seg = seg;
+	}
 
 	return seg;
 }
@@ -484,6 +487,9 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 		extra_areas = 1;
 
 	area_multiple = segtype_is_striped(segtype) ? area_count : 1;
+
+	/* FIXME Shouldn't log_lv always be NULL here? */
+	/* (As we set up log segments elsewhere) */
 
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
 				     lv->le_count,
@@ -1059,8 +1065,10 @@ int lv_add_mirror_segment(struct alloc_handle *ah,
 		return 0;
 	}
 
-	for (m = 0; m < mirrors; m++)
+	for (m = 0; m < mirrors; m++) {
 		set_lv_segment_area_lv(seg, m, sub_lvs[m], 0, MIRROR_IMAGE);
+		find_seg_by_le(sub_lvs[m], 0)->mirror_seg = seg;
+	}
 
 	list_add(&lv->segments, &seg->list);
 	lv->le_count += ah->total_area_len;

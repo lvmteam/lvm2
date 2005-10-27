@@ -2164,6 +2164,7 @@ static int _fill_in_active_list(struct dev_manager *dm, struct volume_group *vg)
 
 static int _action_activate(struct dev_manager *dm, struct logical_volume *lv)
 {
+	// Replace with deptree code for lv + known deps only.
 	if (!_scan_existing_devices(dm)) {
 		stack;
 		return 0;

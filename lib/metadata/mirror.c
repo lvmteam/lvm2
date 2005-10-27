@@ -22,6 +22,11 @@
 #include "lv_alloc.h"
 #include "lvm-string.h"
 
+struct lv_segment *find_mirror_seg(struct lv_segment *seg)
+{
+	return seg->mirror_seg;
+}
+
 /*
  * Ensure region size is compatible with volume size.
  */
@@ -149,8 +154,8 @@ int create_mirror_layers(struct alloc_handle *ah,
 	for (m = 0; m < num_mirrors; m++) {
 		if (!(img_lvs[m] = lv_create_empty(lv->vg->fid, img_name,
 					     NULL, LVM_READ | LVM_WRITE,
-					     ALLOC_INHERIT, 0, lv->vg))) {\
-			log_error("Aborting. Failed to create submirror LV. "
+					     ALLOC_INHERIT, 0, lv->vg))) {
+			log_error("Aborting. Failed to create mirror image LV. "
 				  "Remove new LV and retry.");
 			return 0;
 		}
@@ -159,7 +164,7 @@ int create_mirror_layers(struct alloc_handle *ah,
 				    get_segtype_from_string(lv->vg->cmd,
 							    "striped"),
 				    0, NULL, 0, 0, 0, NULL)) {
-			log_error("Aborting. Failed to add submirror segment "
+			log_error("Aborting. Failed to add mirror image segment "
 				  "to %s. Remove new LV and retry.",
 				  img_lvs[m]->name);
 			return 0;
