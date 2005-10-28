@@ -748,12 +748,6 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			return 0;
 		}
 
-		/* FIXME write/commit/backup sequence issue */
-		if (!suspend_lv(cmd, org)) {
-			log_error("Failed to suspend origin %s", org->name);
-			return 0;
-		}
-
 		if (!vg_add_snapshot(vg->fid, NULL, org, lv, NULL,
 				     org->le_count, lp->chunk_size)) {
 			log_err("Couldn't create snapshot.");
@@ -761,7 +755,15 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		}
 
 		/* store vg on disk(s) */
-		if (!vg_write(vg) || !vg_commit(vg))
+		if (!vg_write(vg))
+			return 0;
+
+		if (!suspend_lv(cmd, org)) {
+			log_error("Failed to suspend origin %s", org->name);
+			return 0;
+		}
+
+		if (!vg_commit(vg))
 			return 0;
 
 		if (!resume_lv(cmd, org)) {
