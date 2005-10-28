@@ -102,7 +102,7 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 
 	if (log_lv) {
 		log_lv->status |= MIRROR_LOG;
-		find_seg_by_le(log_lv, 0)->mirror_seg = seg;
+		first_seg(log_lv)->mirror_seg = seg;
 	}
 
 	return seg;
@@ -232,9 +232,6 @@ void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 	lv->status |= flags;
 }
 
-static int _lv_segment_add_areas(struct logical_volume *lv,
-				 struct lv_segment *seg,
-				 uint32_t new_area_count) __attribute__ ((unused));
 /*
  * Prepare for adding parallel areas to an existing segment.
  */
@@ -1063,7 +1060,7 @@ int lv_add_mirror_segment(struct alloc_handle *ah,
 
 	for (m = 0; m < mirrors; m++) {
 		set_lv_segment_area_lv(seg, m, sub_lvs[m], 0, MIRROR_IMAGE);
-		find_seg_by_le(sub_lvs[m], 0)->mirror_seg = seg;
+		first_seg(sub_lvs[m])->mirror_seg = seg;
 	}
 
 	list_add(&lv->segments, &seg->list);
@@ -1079,6 +1076,42 @@ int lv_add_mirror_segment(struct alloc_handle *ah,
 	return 1;
 }
 
+/*
+ * Add parallel areas to an existing mirror
+ */
+int lv_add_more_mirrored_areas(struct logical_volume *lv,
+			       struct logical_volume **sub_lvs,
+			       uint32_t num_extra_areas,
+			       uint32_t status)
+{
+	struct lv_segment *seg;
+	uint32_t old_area_count, new_area_count;
+	uint32_t m;
+
+	if (list_size(&lv->segments) != 1) {
+		log_error("Mirrored LV must only have one segment.");
+		return 0;
+	}
+
+	list_iterate_items(seg, &lv->segments)
+		break;
+
+	old_area_count = seg->area_count;
+	new_area_count = old_area_count + num_extra_areas;
+
+	if (!_lv_segment_add_areas(lv, seg, new_area_count)) {
+		log_error("Failed to allocate widened LV segment for %s.",
+			  lv->name);
+		return 0;
+	}
+
+	for (m = old_area_count; m < new_area_count; m++) {
+		set_lv_segment_area_lv(seg, m, sub_lvs[m - old_area_count], 0, status);
+		first_seg(sub_lvs[m - old_area_count])->mirror_seg = seg;
+	}
+
+	return 1;
+}
 
 /*
  * Entry point for single-step LV allocation + extension.
@@ -1094,7 +1127,7 @@ int lv_extend(struct logical_volume *lv,
 	int r = 1;
 	uint32_t m;
 	struct alloc_handle *ah;
-	struct lv_segment *first_seg;
+	struct lv_segment *seg;
 
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, status, extents, segtype);
@@ -1113,20 +1146,19 @@ int lv_extend(struct logical_volume *lv,
 			goto out;
 		}
 	} else {
-		list_iterate_items(first_seg, &lv->segments)
-			break;
+		seg = first_seg(lv);
 		for (m = 0; m < mirrors; m++) {
-			if (!lv_add_segment(ah, m, 1, seg_lv(first_seg, m),
+			if (!lv_add_segment(ah, m, 1, seg_lv(seg, m),
 					    get_segtype_from_string(lv->vg->cmd,
 								    "striped"),
 					    0, NULL, 0, 0, 0, NULL)) {
 				log_error("Aborting. Failed to extend %s.",
-					  seg_lv(first_seg, m)->name);
+					  seg_lv(seg, m)->name);
 				return 0;
                 	}
 		}
-		first_seg->area_len += extents;
-		first_seg->len += extents;
+		seg->area_len += extents;
+		seg->len += extents;
 		lv->le_count += extents;
 		lv->size += (uint64_t) extents *lv->vg->extent_size;
 	}

@@ -59,7 +59,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * lv,
 			     struct lvconvert_params *lp)
 {
-	struct lv_segment *first_seg;
+	struct lv_segment *seg;
 	uint32_t existing_mirrors;
 	// struct alloc_handle *ah = NULL;
 	// struct logical_volume *log_lv;
@@ -82,9 +82,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					  "mirror segments.", lv->name);
 				return 0;
 			}
-			list_iterate_items(first_seg, &lv->segments)
-				break;
-			existing_mirrors = first_seg->area_count;
+			seg = first_seg(lv);
+			existing_mirrors = seg->area_count;
 			if (lp->mirrors == existing_mirrors) {
 				log_error("Logical volume %s already has %"
 					  PRIu32 " mirror(s).", lv->name,
@@ -101,7 +100,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					  "supported yet.");
 				return 0;
 			} else {
-				if (!remove_mirror_images(first_seg, lp->mirrors)) {
+				if (!remove_mirror_images(seg, lp->mirrors)) {
 					stack;
 					return 0;
 				}

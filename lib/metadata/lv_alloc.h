@@ -76,6 +76,10 @@ int lv_add_mirror_segment(struct alloc_handle *ah,
 			  uint32_t status,
 			  uint32_t region_size,
 			  struct logical_volume *log_lv);
+int lv_add_more_mirrored_areas(struct logical_volume *lv,
+                               struct logical_volume **sub_lvs,
+                               uint32_t new_area_count,
+                               uint32_t status);
 
 void alloc_destroy(struct alloc_handle *ah);
 
