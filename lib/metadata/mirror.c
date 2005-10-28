@@ -47,6 +47,25 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 	return region_size;
 }
 
+static void _move_lv_segments(struct logical_volume *lv_to, struct logical_volume *lv_from)
+{
+	struct lv_segment *seg;
+
+	lv_to->segments = lv_from->segments;
+	lv_to->segments.n->p = &lv_to->segments;
+	lv_to->segments.p->n = &lv_to->segments;
+
+	list_iterate_items(seg, &lv_to->segments)
+		seg->lv = lv_to;
+
+/* FIXME set or reset seg->mirror_seg (according to status)? */
+
+	list_init(&lv_from->segments);
+
+	lv_from->le_count = 0;
+	lv_from->size = 0;
+}
+
 /*
  * Reduce mirrored_seg to num_mirrors images.
  */
@@ -68,40 +87,31 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors)
 
 int remove_all_mirror_images(struct logical_volume *lv)
 {
-	struct lv_segment *first_seg, *seg;
+	struct lv_segment *seg;
 	struct logical_volume *lv1;
 
-	list_iterate_items(first_seg, &lv->segments)
-		break;
+	seg = first_seg(lv);
 
-	if (!remove_mirror_images(first_seg, 1)) {
+	if (!remove_mirror_images(seg, 1)) {
 		stack;
 		return 0;
 	}
 
-	if (!lv_remove(first_seg->log_lv)) {
+	if (seg->log_lv && !lv_remove(seg->log_lv)) {
 		stack;
 		return 0;
 	}
 
-	lv1 = seg_lv(first_seg, 0);
+	lv1 = seg_lv(seg, 0);
 
-	lv->segments = lv1->segments;
-	lv->segments.n->p = &lv->segments;
-	lv->segments.p->n = &lv->segments;
+	_move_lv_segments(lv, lv1);
 
-	list_init(&lv1->segments);
-	lv1->le_count = 0;
-	lv1->size = 0;
 	if (!lv_remove(lv1)) {
 		stack;
 		return 0;
 	}
 
 	lv->status &= ~MIRRORED;
-
-	list_iterate_items(seg, &lv->segments)
-		seg->lv = lv;
 
 	return 1;
 }
@@ -118,26 +128,17 @@ int add_mirror_images(struct alloc_handle *ah,
 }
 */
 
-int create_mirror_layers(struct alloc_handle *ah,
-			 uint32_t first_area,
-			 uint32_t num_mirrors,
-			 struct logical_volume *lv,
-			 struct segment_type *segtype,
-			 uint32_t status,
-			 uint32_t region_size,
-			 struct logical_volume *log_lv)
+static int _create_layers_for_mirror(struct alloc_handle *ah,
+				     uint32_t first_area,
+				     uint32_t num_mirrors,
+				     struct logical_volume *lv,
+				     struct segment_type *segtype,
+				     struct logical_volume **img_lvs)
 {
 	uint32_t m;
-	struct logical_volume **img_lvs;
 	char *img_name;
 	size_t len;
 	
-	if (!(img_lvs = alloca(sizeof(*img_lvs) * num_mirrors))) {
-		log_error("img_lvs allocation failed. "
-			  "Remove new LV and retry.");
-		return 0;
-	}
-
 	len = strlen(lv->name) + 32;
 	if (!(img_name = alloca(len))) {
 		log_error("img_name allocation failed. "
@@ -169,6 +170,43 @@ int create_mirror_layers(struct alloc_handle *ah,
 				  img_lvs[m]->name);
 			return 0;
 		}
+	}
+
+	return 1;
+}
+
+int create_mirror_layers(struct alloc_handle *ah,
+			 uint32_t first_area,
+			 uint32_t num_mirrors,
+			 struct logical_volume *lv,
+			 struct segment_type *segtype,
+			 uint32_t status,
+			 uint32_t region_size,
+			 struct logical_volume *log_lv)
+{
+	struct logical_volume **img_lvs;
+	
+	if (!(img_lvs = alloca(sizeof(*img_lvs) * num_mirrors))) {
+		log_error("img_lvs allocation failed. "
+			  "Remove new LV and retry.");
+		return 0;
+	}
+
+	if (!_create_layers_for_mirror(ah, first_area, num_mirrors, lv,
+				       segtype, img_lvs)) {
+		stack;
+		return 0;
+	}
+
+	/* Already got the parent mirror segment? */
+	if (lv->status & MIRRORED)
+		return lv_add_more_mirrored_areas(lv, img_lvs, num_mirrors,
+						  MIRROR_IMAGE);
+
+	/* Already got a non-mirrored area to be converted? */
+	if (!first_area) {
+		_move_lv_segments(img_lvs[0], lv);
+		lv->status |= MIRRORED;
 	}
 
 	if (!lv_add_mirror_segment(ah, lv, img_lvs, num_mirrors, segtype,
@@ -568,12 +606,14 @@ int fixup_imported_mirrors(struct volume_group *vg)
 				continue;
 
 			if (seg->log_lv)
-				find_seg_by_le(seg->log_lv, 0)->mirror_seg = seg;
+				first_seg(seg->log_lv)->mirror_seg = seg;
 			for (s = 0; s < seg->area_count; s++)
 				if (seg_type(seg, s) == AREA_LV)
-					find_seg_by_le(seg_lv(seg, s), 0)->
-					    mirror_seg = seg;
+					first_seg(seg_lv(seg, s))->mirror_seg
+					    = seg;
 		}
 	}
+
+	return 1;
 }
 

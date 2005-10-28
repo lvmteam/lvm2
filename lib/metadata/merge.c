@@ -100,7 +100,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				r = 0;
 			}
 
-			if (!(seg2 = find_seg_by_le(seg->log_lv, 0)) ||
+			if (!(seg2 = first_seg(seg->log_lv)) ||
 			    seg2->mirror_seg != seg) {
 				log_error("LV %s: segment %u log LV does not "
 					  "point back to mirror segment",
