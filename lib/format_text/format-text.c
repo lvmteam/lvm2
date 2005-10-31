@@ -187,17 +187,22 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				       struct mda_header *mdah,
 				       const char *vgname,
-				       int precommit)
+				       int *precommitted)
 {
 	size_t len;
 	char vgnamebuf[NAME_LEN + 2];
-	struct raw_locn *rlocn;
+	struct raw_locn *rlocn, *rlocn_precommitted;
 	struct lvmcache_info *info;
 
 	rlocn = mdah->raw_locns;	/* Slot 0 */
+	rlocn_precommitted = rlocn + 1;	/* Slot 1 */
 
-	if (precommit)
-		rlocn++;		/* Slot 1 */
+	/* Should we use precommitted metadata? */
+	if (*precommitted && rlocn_precommitted->size &&
+	    (rlocn_precommitted->offset != rlocn->offset)) {
+		rlocn = rlocn_precommitted;
+	} else
+		*precommitted = 0;
 
 	/* FIXME Loop through rlocns two-at-a-time.  List null-terminated. */
 	/* FIXME Ignore if checksum incorrect!!! */
@@ -241,6 +246,7 @@ static int _raw_holds_vgname(struct format_instance *fid,
 			     struct device_area *dev_area, const char *vgname)
 {
 	int r = 0;
+	int noprecommit = 0;
 	struct mda_header *mdah;
 
 	if (!dev_open(dev_area->dev)) {
@@ -253,7 +259,7 @@ static int _raw_holds_vgname(struct format_instance *fid,
 		return 0;
 	}
 
-	if (_find_vg_rlocn(dev_area, mdah, vgname, 0))
+	if (_find_vg_rlocn(dev_area, mdah, vgname, &noprecommit))
 		r = 1;
 
 	if (!dev_close(dev_area->dev))
@@ -265,7 +271,7 @@ static int _raw_holds_vgname(struct format_instance *fid,
 static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 					      const char *vgname,
 					      struct device_area *area,
-					      int precommit)
+					      int precommitted)
 {
 	struct volume_group *vg = NULL;
 	struct raw_locn *rlocn;
@@ -284,7 +290,7 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		goto out;
 	}
 
-	if (!(rlocn = _find_vg_rlocn(area, mdah, vgname, precommit))) {
+	if (!(rlocn = _find_vg_rlocn(area, mdah, vgname, &precommitted))) {
 		log_debug("VG %s not found on %s", vgname, dev_name(area->dev));
 		goto out;
 	}
@@ -309,9 +315,12 @@ static struct volume_group *_vg_read_raw_area(struct format_instance *fid,
 		goto out;
 	}
 	log_debug("Read %s %smetadata (%u) from %s at %" PRIu64 " size %"
-		  PRIu64, vg->name, precommit ? "pre-commit " : "",
+		  PRIu64, vg->name, precommitted ? "pre-commit " : "",
 		  vg->seqno, dev_name(area->dev),
 		  area->start + rlocn->offset, rlocn->size);
+
+	if (precommitted)
+		vg->status |= PRECOMMITTED;
 
       out:
 	if (!dev_close(area->dev))
@@ -349,6 +358,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	int r = 0;
 	uint32_t new_wrap = 0, old_wrap = 0;
 	int found = 0;
+	int noprecommit = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
 	list_iterate_items(pvl, &vg->pvs) {
@@ -371,7 +381,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0);
+	rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, &noprecommit);
 	mdac->rlocn.offset = _next_rlocn_offset(rlocn, mdah);
 
 	if (!fidtc->raw_metadata_buf &&
@@ -456,6 +466,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	struct pv_list *pvl;
 	int r = 0;
 	int found = 0;
+	int noprecommit = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
 	list_iterate_items(pvl, &vg->pvs) {
@@ -473,23 +484,41 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 		goto out;
 	}
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0))) {
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, &noprecommit))) {
 		mdah->raw_locns[0].offset = 0;
+		mdah->raw_locns[0].size = 0;
+		mdah->raw_locns[0].checksum = 0;
 		mdah->raw_locns[1].offset = 0;
+		mdah->raw_locns[1].size = 0;
+		mdah->raw_locns[1].checksum = 0;
 		mdah->raw_locns[2].offset = 0;
+		mdah->raw_locns[2].size = 0;
+		mdah->raw_locns[2].checksum = 0;
 		rlocn = &mdah->raw_locns[0];
 	}
 
 	if (precommit)
 		rlocn++;
+	else {
+		/* If not precommitting, wipe the precommitted rlocn */
+		mdah->raw_locns[1].offset = 0;
+		mdah->raw_locns[1].size = 0;
+		mdah->raw_locns[1].checksum = 0;
+	}
 
-	rlocn->offset = mdac->rlocn.offset;
-	rlocn->size = mdac->rlocn.size;
-	rlocn->checksum = mdac->rlocn.checksum;
+	/* Is there new metadata to commit? */
+	if (mdac->rlocn.size) {
+		rlocn->offset = mdac->rlocn.offset;
+		rlocn->size = mdac->rlocn.size;
+		rlocn->checksum = mdac->rlocn.checksum;
+		log_debug("%sCommitting %s metadata (%u) to %s header at %"
+			  PRIu64, precommit ? "Pre-" : "", vg->name, vg->seqno,
+			  dev_name(mdac->area.dev), mdac->area.start);
+	} else
+		log_debug("Wiping pre-committed %s metadata from %s "
+			  "header at %" PRIu64, vg->name,
+			  dev_name(mdac->area.dev), mdac->area.start);
 
-	log_debug("%sCommitting %s metadata (%u) to %s header at %" PRIu64,
-		  precommit ? "Pre-" : "", vg->name, vg->seqno,
-		  dev_name(mdac->area.dev), mdac->area.start);
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
 				   mdah)) {
 		log_error("Failed to write metadata area header");
@@ -529,7 +558,6 @@ static int _vg_revert_raw(struct format_instance *fid, struct volume_group *vg,
 			  struct metadata_area *mda)
 {
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
-	struct text_fid_context *fidtc = (struct text_fid_context *) fid->private;
 	struct pv_list *pvl;
 	int found = 0;
 
@@ -544,15 +572,9 @@ static int _vg_revert_raw(struct format_instance *fid, struct volume_group *vg,
 	if (!found)
 		return 1;
 
-	if (!dev_close(mdac->area.dev))
-		stack;
-
-	if (fidtc->raw_metadata_buf) {
-		dm_free(fidtc->raw_metadata_buf);
-		fidtc->raw_metadata_buf = NULL;
-	}
-
-	return 1;
+	/* Wipe pre-committed metadata */
+	mdac->rlocn.size = 0;
+	return _vg_commit_raw_rlocn(fid, vg, mda, 0);
 }
 
 static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
@@ -562,6 +584,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 	struct mda_header *mdah;
 	struct raw_locn *rlocn;
 	int r = 0;
+	int noprecommit = 0;
 
 	if (!dev_open(mdac->area.dev)) {
 		stack;
@@ -573,7 +596,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 		goto out;
 	}
 
-	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, 0))) {
+	if (!(rlocn = _find_vg_rlocn(&mdac->area, mdah, vg->name, &noprecommit))) {
 		rlocn = &mdah->raw_locns[0];
 		mdah->raw_locns[1].offset = 0;
 	}
@@ -640,8 +663,14 @@ static struct volume_group *_vg_read_precommit_file(struct format_instance *fid,
 						    struct metadata_area *mda)
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
+	struct volume_group *vg;
 
-	return _vg_read_file_name(fid, vgname, tc->path_edit);
+	if ((vg = _vg_read_file_name(fid, vgname, tc->path_edit)))
+		vg->status |= PRECOMMITTED;
+	else
+		vg = _vg_read_file_name(fid, vgname, tc->path_live);
+
+	return vg;
 }
 
 static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,

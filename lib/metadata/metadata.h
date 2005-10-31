@@ -404,10 +404,6 @@ int vg_commit(struct volume_group *vg);
 int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 			     int *consistent);
-// struct volume_group *vg_read_precommitted(struct cmd_context *cmd,
-// 					  const char *vg_name,
-// 					  int *consistent);
-// struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct list *mdas, uint64_t *label_sector,
 				int warnings);
@@ -495,7 +491,8 @@ struct volume_group *find_vg_with_lv(const char *lv_name);
 
 /* Find LV with given lvid (used during activation) */
 struct logical_volume *lv_from_lvid(struct cmd_context *cmd,
-				    const char *lvid_s);
+				    const char *lvid_s,
+				    int precommitted);
 
 /* FIXME Merge these functions with ones above */
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
