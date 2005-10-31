@@ -160,6 +160,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!suspend_lv(cmd, lv)) {
 		stack;
+		vg_revert(vg);
 		goto error;
 	}
 
