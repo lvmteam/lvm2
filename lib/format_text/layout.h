@@ -37,6 +37,8 @@ struct data_area_list {
 /* On disk */
 struct pv_header {
 	uint8_t pv_uuid[ID_LEN];
+
+	/* This size can be overridden if PV belongs to a VG */
 	uint64_t device_size_xl;	/* Bytes */
 
 	/* NULL-terminated list of data areas followed by */

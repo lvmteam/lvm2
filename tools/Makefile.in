@@ -42,6 +42,7 @@ SOURCES =\
 	pvdisplay.c \
 	pvmove.c \
 	pvremove.c \
+	pvresize.c \
 	pvscan.c \
 	reporter.c \
 	segtypes.c \

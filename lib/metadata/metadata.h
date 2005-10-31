@@ -58,6 +58,7 @@
 #define MIRROR_LOG		0x00020000	/* LV */
 #define MIRROR_IMAGE		0x00040000	/* LV */
 #define ACTIVATE_EXCL		0x00080000	/* LV - internal use only */
+#define PRECOMMITTED		0x00100000	/* VG - internal use only */
 
 #define LVM_READ              	0x00000100	/* LV VG */
 #define LVM_WRITE             	0x00000200	/* LV VG */
@@ -72,6 +73,7 @@
 #define FMT_RESTRICTED_LVIDS	0x00000010	/* LVID <= 255 */
 #define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
 #define FMT_PRECOMMIT		0x00000040	/* Supports pre-commit? */
+#define FMT_RESIZE_PV		0x00000080	/* Supports pvresize? */
 
 typedef enum {
 	ALLOC_INVALID,
@@ -402,10 +404,10 @@ int vg_commit(struct volume_group *vg);
 int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
 			     int *consistent);
-struct volume_group *vg_read_precommitted(struct cmd_context *cmd,
-					  const char *vg_name,
-					  int *consistent);
-struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid);
+// struct volume_group *vg_read_precommitted(struct cmd_context *cmd,
+// 					  const char *vg_name,
+// 					  int *consistent);
+// struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct list *mdas, uint64_t *label_sector,
 				int warnings);
@@ -428,6 +430,8 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 				  uint32_t existing_extent_size,
 				  int pvmetadatacopies,
 				  uint64_t pvmetadatasize, struct list *mdas);
+int pv_resize(struct physical_volume *pv, struct volume_group *vg,
+              uint32_t new_pe_count);
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t extent_size, uint32_t max_pv,
@@ -491,7 +495,8 @@ struct volume_group *find_vg_with_lv(const char *lv_name);
 
 /* Find LV with given lvid (used during activation) */
 struct logical_volume *lv_from_lvid(struct cmd_context *cmd,
-				    const char *lvid_s);
+				    const char *lvid_s,
+				    int precommit);
 
 /* FIXME Merge these functions with ones above */
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
