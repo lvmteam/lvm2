@@ -19,7 +19,6 @@
 /*int e2fsadm(struct cmd_context *cmd, int argc, char **argv) unimplemented*/
 int lvmsadc(struct cmd_context *cmd, int argc, char **argv) unimplemented
 int lvmsar(struct cmd_context *cmd, int argc, char **argv) unimplemented
-int pvresize(struct cmd_context *cmd, int argc, char **argv) unimplemented
 
 int pvdata(struct cmd_context *cmd, int argc, char **argv) {
 	log_error("There's no 'pvdata' command in LVM2.");

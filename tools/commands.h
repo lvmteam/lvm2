@@ -373,6 +373,19 @@ xx(pvchange,
    all_ARG, allocatable_ARG, allocation_ARG, autobackup_ARG, deltag_ARG,
    addtag_ARG, test_ARG, uuid_ARG)
 
+xx(pvresize,
+   "Resize physical volume(s)",
+   "pvresize " "\n"
+   "\t[-d|--debug]" "\n"
+   "\t[-h|-?|--help] " "\n"
+   "\t[--setphysicalvolumesize PhysicalVolumeSize[kKmMgGtT]" "\n"
+   "\t[-t|--test] " "\n"
+   "\t[-v|--verbose] " "\n"
+   "\t[--version] " "\n"
+   "\tPhysicalVolume [PhysicalVolume...]\n",
+
+   physicalvolumesize_ARG, test_ARG)
+
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
    "pvcreate " "\n"

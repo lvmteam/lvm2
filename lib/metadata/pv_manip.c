@@ -301,3 +301,98 @@ int check_pv_segments(struct volume_group *vg)
 
 	return ret;
 }
+
+static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg, uint32_t new_pe_count)
+{
+	struct pv_segment *peg, *pegt;
+	uint32_t old_pe_count = pv->pe_count;
+
+	if (new_pe_count < pv->pe_alloc_count) {
+		log_error("%s: cannot resize to %" PRIu32 " extents "
+			  "as %" PRIu32 " are allocated.",
+			  dev_name(pv->dev), new_pe_count,
+			  pv->pe_alloc_count);
+		return 0;
+	}
+
+	/* Check PEs to be removed are not already allocated */
+	list_iterate_items(peg, &pv->segments) {
+ 		if (peg->pe + peg->len <= new_pe_count)
+			continue;
+
+		if (peg->lvseg) {
+			log_error("%s: cannot resize to %" PRIu32 " extents as "
+				  "later ones are allocated.",
+				  dev_name(pv->dev), new_pe_count);
+			return 0;
+		}
+	}
+
+	if (!pv_split_segment(pv, new_pe_count)) {
+		stack;
+		return 0;
+	}
+
+	list_iterate_items_safe(peg, pegt, &pv->segments) {
+ 		if (peg->pe + peg->len > new_pe_count)
+			list_del(&peg->list);
+	}
+
+	pv->pe_count = new_pe_count;
+
+	vg->extent_count -= (old_pe_count - new_pe_count);
+	vg->free_count -= (old_pe_count - new_pe_count);
+
+	return 1;
+}
+
+static int _extend_pv(struct physical_volume *pv, struct volume_group *vg,
+		      uint32_t new_pe_count)
+{
+	struct pv_segment *peg;
+	uint32_t old_pe_count = pv->pe_count;
+
+	if ((uint64_t) new_pe_count * pv->pe_size > pv->size ) {
+		log_error("%s: cannot resize to %" PRIu32 " extents as there "
+			  "is only room for %" PRIu64 ".", dev_name(pv->dev),
+			  new_pe_count, pv->size / pv->pe_size);
+		return 0;
+	}
+
+	peg = _alloc_pv_segment(pv->fmt->cmd->mem, pv,
+				old_pe_count,
+				new_pe_count - old_pe_count,
+				NULL, 0);
+	list_add(&pv->segments, &peg->list);
+
+	pv->pe_count = new_pe_count;
+
+	vg->extent_count += (new_pe_count - old_pe_count);
+	vg->free_count += (new_pe_count - old_pe_count);
+
+	return 1;
+}
+
+/*
+ * Resize a PV in a VG, adding or removing segments as needed.
+ * New size must fit within pv->size.
+ */
+int pv_resize(struct physical_volume *pv,
+	      struct volume_group *vg,
+	      uint32_t new_pe_count)
+{
+	if ((new_pe_count == pv->pe_count)) {
+		log_verbose("No change to size of physical volume %s.",
+			    dev_name(pv->dev));
+		return 1;
+	}
+
+	log_verbose("Resizing physical volume %s from %" PRIu32
+		    " to %" PRIu32 " extents.",
+		    dev_name(pv->dev), pv->pe_count, new_pe_count);
+
+	if (new_pe_count > pv->pe_count)
+		return _extend_pv(pv, vg, new_pe_count);
+	else
+		return _reduce_pv(pv, vg, new_pe_count);
+}
