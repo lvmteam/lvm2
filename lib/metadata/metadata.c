@@ -902,6 +902,8 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
  * If consistent is 0, caller must check whether consistent == 1 on return
  * and take appropriate action if it isn't (e.g. abort; get write lock 
  * and call vg_read again).
+ *
+ * If precommitted is set, use precommitted metadata if present.
  */
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
@@ -912,9 +914,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct volume_group *vg, *correct_vg = NULL;
 	struct metadata_area *mda;
 	int inconsistent = 0;
+	int use_precommitted = precommitted;
 
 	if (!*vgname) {
-		if (precommitted) {
+		if (use_precommitted) {
 			log_error("Internal error: vg_read requires vgname "
 				  "with pre-commit.");
 			return NULL;
@@ -940,11 +943,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 	}
 
-	if (precommitted && !(fmt->features & FMT_PRECOMMIT)) {
-		log_error("Internal error: %s doesn't support "
-			  "pre-commit", fmt->name);
-		return NULL;
-	}
+	if (use_precommitted && !(fmt->features & FMT_PRECOMMIT))
+		use_precommitted = 0;
 
 	/* create format instance with appropriate metadata area */
 	if (!(fid = fmt->ops->create_instance(fmt, vgname, NULL))) {
@@ -954,9 +954,9 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	/* Ensure contents of all metadata areas match - else do recovery */
 	list_iterate_items(mda, &fid->metadata_areas) {
-		if ((precommitted &&
+		if ((use_precommitted &&
 		     !(vg = mda->ops->vg_read_precommit(fid, vgname, mda))) ||
-		    (!precommitted &&
+		    (!use_precommitted &&
 		     !(vg = mda->ops->vg_read(fid, vgname, mda)))) {
 			inconsistent = 1;
 			continue;
@@ -983,11 +983,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return NULL;
 		}
 
-		if (precommitted && !(fmt->features & FMT_PRECOMMIT)) {
-			log_error("Internal error: %s doesn't support "
-				  "pre-commit", fmt->name);
-			return NULL;
-		}
+		if (precommitted && !(fmt->features & FMT_PRECOMMIT))
+			use_precommitted = 0;
 
 		/* create format instance with appropriate metadata area */
 		if (!(fid = fmt->ops->create_instance(fmt, vgname, NULL))) {
@@ -997,10 +994,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 		/* Ensure contents of all metadata areas match - else recover */
 		list_iterate_items(mda, &fid->metadata_areas) {
-			if ((precommitted &&
+			if ((use_precommitted &&
 			     !(vg = mda->ops->vg_read_precommit(fid, vgname,
 								mda))) ||
-			    (!precommitted &&
+			    (!use_precommitted &&
 			     !(vg = mda->ops->vg_read(fid, vgname, mda)))) {
 				inconsistent = 1;
 				continue;
@@ -1027,7 +1024,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	lvmcache_update_vg(correct_vg);
 
 	if (inconsistent) {
-		if (precommitted) {
+		/* FIXME Test should be if we're *using* precommitted metadata not if we were searching for it */
+		if (use_precommitted) {
 			log_error("Inconsistent pre-commit metadata copies "
 				  "for volume group %s", vgname);
 			return NULL;
@@ -1096,18 +1094,13 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	return vg;
 }
 
-struct volume_group *vg_read_precommitted(struct cmd_context *cmd,
-					  const char *vgname,
-					  int *consistent)
-{
-	return _vg_read(cmd, vgname, consistent, 1);
-}
-
 /* This is only called by lv_from_lvid, which is only called from 
  * activate.c so we know the appropriate VG lock is already held and 
  * the vg_read is therefore safe.
  */
-struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
+static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
+					    const char *vgid,
+					    int precommitted)
 {
 	const char *vgname;
 	struct list *vgnames;
@@ -1119,7 +1112,8 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 	/* Is corresponding vgname already cached? */
 	if ((vginfo = vginfo_from_vgid(vgid)) &&
 	    vginfo->vgname && *vginfo->vgname) {
-		if ((vg = vg_read(cmd, vginfo->vgname, &consistent)) &&
+		if ((vg = _vg_read(cmd, vginfo->vgname,
+				   &consistent, precommitted)) &&
 		    !strncmp(vg->id.uuid, vgid, ID_LEN)) {
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
@@ -1149,7 +1143,8 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 		if (!vgname || !*vgname)
 			continue;	// FIXME Unnecessary? 
 		consistent = 0;
-		if ((vg = vg_read(cmd, vgname, &consistent)) &&
+		if ((vg = _vg_read(cmd, vgname, &consistent,
+				   precommitted)) &&
 		    !strncmp(vg->id.uuid, vgid, ID_LEN)) {
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
@@ -1164,7 +1159,8 @@ struct volume_group *vg_read_by_vgid(struct cmd_context *cmd, const char *vgid)
 }
 
 /* Only called by activate.c */
-struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s)
+struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
+				    int precommitted)
 {
 	struct lv_list *lvl;
 	struct volume_group *vg;
@@ -1173,7 +1169,7 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s)
 	lvid = (const union lvid *) lvid_s;
 
 	log_very_verbose("Finding volume group for uuid %s", lvid_s);
-	if (!(vg = vg_read_by_vgid(cmd, lvid->id[0].uuid))) {
+	if (!(vg = _vg_read_by_vgid(cmd, lvid->id[0].uuid, precommitted))) {
 		log_error("Volume group for uuid not found: %s", lvid_s);
 		return NULL;
 	}

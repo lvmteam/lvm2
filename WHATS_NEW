@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Clear up precommitted metadata better.
   A pvresize implementation.
   Fix contiguous allocation when there are no preceding segments.
   Add mirror_seg pointer to lv_segment struct.

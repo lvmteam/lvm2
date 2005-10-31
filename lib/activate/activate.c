@@ -388,7 +388,7 @@ int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
 {
 	struct logical_volume *lv;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
 	return _lv_info(cmd, lv, 0, info, with_open_count);
@@ -571,7 +571,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+	/* Use precommitted metadata if present */
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 1)))
 		return 0;
 
 	if (test_mode()) {
@@ -617,7 +618,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
 	if (test_mode()) {
@@ -662,7 +663,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
 	if (test_mode()) {
@@ -701,7 +702,7 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		goto activate;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
 	if (!_passes_activation_filter(cmd, lv)) {
@@ -726,7 +727,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	if (!(lv = lv_from_lvid(cmd, lvid_s)))
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
 	if (filter && !_passes_activation_filter(cmd, lv)) {
