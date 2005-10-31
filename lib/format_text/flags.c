@@ -36,6 +36,7 @@ static struct flag _vg_flags[] = {
 	{LVM_WRITE, "WRITE"},
 	{CLUSTERED, "CLUSTERED"},
 	{SHARED, "SHARED"},
+	{PRECOMMITTED, NULL},
 	{0, NULL}
 };
 
