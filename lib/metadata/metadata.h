@@ -495,8 +495,7 @@ struct volume_group *find_vg_with_lv(const char *lv_name);
 
 /* Find LV with given lvid (used during activation) */
 struct logical_volume *lv_from_lvid(struct cmd_context *cmd,
-				    const char *lvid_s,
-				    int precommit);
+				    const char *lvid_s);
 
 /* FIXME Merge these functions with ones above */
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
