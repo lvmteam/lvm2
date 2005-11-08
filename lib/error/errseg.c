@@ -38,18 +38,13 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _compose_target_line(struct dev_manager *dm, struct dm_pool *mem,
+static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 				struct config_tree *cft, void **target_state,
-				struct lv_segment *seg, char *params,
-				size_t paramsize, const char **target, int *pos,
+				struct lv_segment *seg,
+				struct deptree_node *node, uint64_t len,
 				uint32_t *pvmove_mirror_count)
 {
-	/*   error */
-
-	*target = "error";
-	*params = '\0';
-
-	return 1;
+	return dm_deptree_node_add_error_target(node, len);
 }
 
 static int _target_present(void)
@@ -57,8 +52,10 @@ static int _target_present(void)
 	static int checked = 0;
 	static int present = 0;
 
-	if (!checked)
-		present = target_present("error");
+	/* Reported truncated in older kernels */
+	if (!checked &&
+	    (target_present("error", 0) || target_present("erro", 0)))
+		present = 1;
 
 	checked = 1;
 	return present;
@@ -74,7 +71,7 @@ static struct segtype_handler _error_ops = {
 	name:_name,
 	merge_segments:_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	compose_target_line:_compose_target_line,
+	add_target_line:_add_target_line,
 	target_present:_target_present,
 #endif
 	destroy:_destroy,
@@ -84,16 +81,14 @@ struct segment_type *init_error_segtype(struct cmd_context *cmd)
 {
 	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
 
-	if (!segtype) {
-		stack;
-		return NULL;
-	}
+	if (!segtype)
+		return_NULL;
 
 	segtype->cmd = cmd;
 	segtype->ops = &_error_ops;
 	segtype->name = "error";
 	segtype->private = NULL;
-	segtype->flags = SEG_CAN_SPLIT | SEG_VIRTUAL;
+	segtype->flags = SEG_CAN_SPLIT | SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);
 

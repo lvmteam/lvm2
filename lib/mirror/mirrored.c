@@ -165,118 +165,6 @@ static struct mirror_state *_init_target(struct dm_pool *mem,
 	return mirr_state;
 }
 
-static int _compose_log_line(struct dev_manager *dm, struct lv_segment *seg,
-			     char *params, size_t paramsize, int *pos,
-			     int areas, uint32_t region_size)
-{
-	int tw;
-	char devbuf[10];
-	const char *clustered = "";
-	char *dlid;
-
-	/*
-	 * Use clustered mirror log for non-exclusive activation 
-	 * in clustered VG.
-	 */
-	if ((!(seg->lv->status & ACTIVATE_EXCL) &&
-	      (seg->lv->vg->status & CLUSTERED)))
-		clustered = "cluster ";
-
-	if (!seg->log_lv)
-		tw = lvm_snprintf(params, paramsize, "%score 1 %u %u ",
-				  clustered, region_size, areas);
-	else {
-		if (!(dlid = build_dlid(dm, seg->log_lv->lvid.s, NULL))) {
-			stack;
-			return 0;
-		}
-		if (!build_dev_string(dm, dlid, devbuf,
-				      sizeof(devbuf), "log")) {
-			stack;
-			return 0;
-		}
-
-		/* FIXME add sync parm? */
-		tw = lvm_snprintf(params, paramsize, "%sdisk 2 %s %u %u ",
-				  clustered, devbuf, region_size, areas);
-	}
-
-	if (tw < 0) {
-		stack;
-		return -1;
-	}
-
-	*pos += tw;
-
-	return 1;
-}
-
-static int _compose_target_line(struct dev_manager *dm, struct dm_pool *mem,
-				struct config_tree *cft, void **target_state,
-				struct lv_segment *seg, char *params,
-				size_t paramsize, const char **target, int *pos,
-				uint32_t *pvmove_mirror_count)
-{
-	struct mirror_state *mirr_state;
-	int mirror_status = MIRR_RUNNING;
-	int areas = seg->area_count;
-	int start_area = 0u;
-	uint32_t region_size, region_max;
-	int ret;
-
-	if (!*target_state)
-		*target_state = _init_target(mem, cft);
-
-	mirr_state = *target_state;
-
-	/*   mirror  log_type #log_params [log_params]* 
-	 *           #mirrors [device offset]+
-	 */
-	if (seg->status & PVMOVE) {
-		if (seg->extents_copied == seg->area_len) {
-			mirror_status = MIRR_COMPLETED;
-			start_area = 1;
-		} else if ((*pvmove_mirror_count)++) {
-			mirror_status = MIRR_DISABLED;
-			areas = 1;
-		}
-	}
-
-	if (mirror_status != MIRR_RUNNING) {
-		*target = "linear";
-	} else {
-		*target = "mirror";
-
-		if (!(seg->status & PVMOVE)) {
-			if (!seg->region_size) {
-				log_error("Missing region size for mirror segment.");
-				return 0;
-			}
-			region_size = seg->region_size;
-		} else {
-			/* Find largest power of 2 region size unit we can use */
-			region_max = (1 << (ffs(seg->area_len) - 1)) *
-			      seg->lv->vg->extent_size;
-
-			region_size = mirr_state->default_region_size;
-			if (region_max < region_size) {
-				region_size = region_max;
-				log_verbose("Using reduced mirror region size of %u sectors",
-					    region_size);
-			}
-		}
-
-		if ((ret = _compose_log_line(dm, seg, params, paramsize, pos,
-					     areas, region_size)) <= 0) {
-			stack;
-			return ret;
-		}
-	}
-
-	return compose_areas_line(dm, seg, params, paramsize, pos, start_area,
-				  areas);
-}
-
 static int _target_percent(void **target_state, struct dm_pool *mem,
 			   struct config_tree *cft, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
@@ -328,13 +216,109 @@ static int _target_percent(void **target_state, struct dm_pool *mem,
 	return 1;
 }
 
+static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
+		    struct deptree_node *node, uint32_t area_count, uint32_t region_size)
+{
+	unsigned clustered = 0;
+	char *log_dlid = NULL;
+
+	/*
+	 * Use clustered mirror log for non-exclusive activation 
+	 * in clustered VG.
+	 */
+	if ((!(seg->lv->status & ACTIVATE_EXCL) &&
+	      (seg->lv->vg->status & CLUSTERED)))
+		clustered = 1;
+
+	if (seg->log_lv &&
+	    !(log_dlid = build_dlid(dm, seg->log_lv->lvid.s, NULL))) {
+		log_error("Failed to build uuid for log LV %s.",
+			  seg->log_lv->name);
+		return 0;
+	}
+
+	/* FIXME Add sync parm? */
+	return dm_deptree_node_add_mirror_target_log(node, region_size, clustered, log_dlid, area_count);
+}
+
+static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
+                                struct config_tree *cft, void **target_state,
+                                struct lv_segment *seg,
+                                struct deptree_node *node, uint64_t len,
+                                uint32_t *pvmove_mirror_count)
+{
+	struct mirror_state *mirr_state;
+	uint32_t area_count = seg->area_count;
+	int start_area = 0u;
+	int mirror_status = MIRR_RUNNING;
+	uint32_t region_size, region_max;
+	int r;
+
+	if (!*target_state)
+		*target_state = _init_target(mem, cft);
+
+	mirr_state = *target_state;
+
+	/*
+	 * For pvmove, only have one mirror segment RUNNING at once.
+	 * Segments before this are COMPLETED and use 2nd area.
+	 * Segments after this are DISABLED and use 1st area.
+	 */
+	if (seg->status & PVMOVE) {
+		if (seg->extents_copied == seg->area_len) {
+			mirror_status = MIRR_COMPLETED;
+			start_area = 1;
+		} else if ((*pvmove_mirror_count)++) {
+			mirror_status = MIRR_DISABLED;
+			area_count = 1;
+		}
+		/* else MIRR_RUNNING */
+	}
+
+	if (mirror_status != MIRR_RUNNING) {
+		if (!dm_deptree_node_add_linear_target(node, len))
+			return_0;
+		goto done;
+	}
+
+	if (!(seg->status & PVMOVE)) {
+		if (!seg->region_size) {
+			log_error("Missing region size for mirror segment.");
+			return 0;
+		}
+		region_size = seg->region_size;
+	} else {
+		/* Find largest power of 2 region size unit we can use */
+		region_max = (1 << (ffs(seg->area_len) - 1)) *
+		      seg->lv->vg->extent_size;
+
+		region_size = mirr_state->default_region_size;
+		if (region_max < region_size) {
+			region_size = region_max;
+			log_verbose("Using reduced mirror region size of %u sectors",
+				    region_size);
+		}
+	}
+
+	if (!dm_deptree_node_add_mirror_target(node, len))
+		return_0;
+
+	if ((r = _add_log(dm, seg, node, area_count, region_size)) <= 0) {
+		stack;
+		return r;
+	}
+
+      done:
+	return add_areas_line(dm, seg, node, start_area, seg->area_count);
+}
+
 static int _target_present(void)
 {
 	static int checked = 0;
 	static int present = 0;
 
 	if (!checked)
-		present = target_present("mirror");
+		present = target_present("mirror", 1);
 
 	checked = 1;
 
@@ -354,7 +338,7 @@ static struct segtype_handler _mirrored_ops = {
 	text_import:_text_import,
 	text_export:_text_export,
 #ifdef DEVMAPPER_SUPPORT
-	compose_target_line:_compose_target_line,
+	add_target_line:_add_target_line,
 	target_percent:_target_percent,
 	target_present:_target_present,
 #endif

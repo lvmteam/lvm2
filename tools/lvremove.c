@@ -20,6 +20,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct volume_group *vg;
 	struct lvinfo info;
+	struct logical_volume *origin = NULL;
 
 	vg = lv->vg;
 
@@ -74,6 +75,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!archive(vg))
 		return ECMD_FAILED;
 
+	/* FIXME Snapshot commit out of sequence if it fails after here? */
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate logical volume \"%s\"",
 			  lv->name);
@@ -81,6 +83,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (lv_is_cow(lv)) {
+		origin = find_cow(lv)->origin;
 		log_verbose("Removing snapshot %s", lv->name);
 		if (!vg_remove_snapshot(lv)) {
 			stack;
@@ -102,6 +105,14 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!vg_commit(vg))
 		return ECMD_FAILED;
+
+	/* If no snapshots left, reload without -real. */
+	if (origin && !lv_is_origin(origin)) {
+		if (!suspend_lv(cmd, origin))
+			log_error("Failed to refresh %s without snapshot.", origin->name);
+		else if (!resume_lv(cmd, origin))
+			log_error("Failed to resume %s.", origin->name);
+	}
 
 	log_print("Logical volume \"%s\" successfully removed", lv->name);
 	return ECMD_PROCESSED;

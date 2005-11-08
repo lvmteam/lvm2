@@ -31,12 +31,14 @@ struct dev_manager;
 #define SEG_SNAPSHOT		0x00000008
 #define SEG_FORMAT1_SUPPORT	0x00000010
 #define SEG_VIRTUAL		0x00000020
+#define SEG_CANNOT_BE_ZEROED	0x00000040
 
 #define seg_is_mirrored(seg)	((seg)->segtype->flags & SEG_AREAS_MIRRORED ? 1 : 0)
 #define seg_is_striped(seg)	((seg)->segtype->flags & SEG_AREAS_STRIPED ? 1 : 0)
 #define seg_is_snapshot(seg)	((seg)->segtype->flags & SEG_SNAPSHOT ? 1 : 0)
 #define seg_is_virtual(seg)	((seg)->segtype->flags & SEG_VIRTUAL ? 1 : 0)
 #define seg_can_split(seg)	((seg)->segtype->flags & SEG_CAN_SPLIT ? 1 : 0)
+#define seg_cannot_be_zeroed(seg) ((seg)->segtype->flags & SEG_CANNOT_BE_ZEROED ? 1 : 0)
 
 #define segtype_is_striped(segtype)	((segtype)->flags & SEG_AREAS_STRIPED ? 1 : 0)
 #define segtype_is_mirrored(segtype)	((segtype)->flags & SEG_AREAS_MIRRORED ? 1 : 0)
@@ -64,12 +66,11 @@ struct segtype_handler {
 			    struct dm_hash_table * pv_hash);
 	int (*merge_segments) (struct lv_segment * seg1,
 			       struct lv_segment * seg2);
-	int (*compose_target_line) (struct dev_manager * dm, struct dm_pool * mem,
-				    struct config_tree * cft,
-				    void **target_state,
-				    struct lv_segment * seg, char *params,
-				    size_t paramsize, const char **target,
-				    int *pos, uint32_t *pvmove_mirror_count);
+	int (*add_target_line) (struct dev_manager *dm, struct dm_pool *mem,
+                                struct config_tree *cft, void **target_state,
+                                struct lv_segment *seg,
+                                struct deptree_node *node, uint64_t len,
+                                uint32_t *pvmove_mirror_count);
 	int (*target_percent) (void **target_state, struct dm_pool * mem,
 			       struct config_tree * cft,
 			       struct lv_segment * seg, char *params,

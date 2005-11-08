@@ -106,7 +106,8 @@ static int _segments_compatible(struct lv_segment *first,
 	unsigned s;
 
 	if ((first->area_count != second->area_count) ||
-	    (first->stripe_size != second->stripe_size)) return 0;
+	    (first->stripe_size != second->stripe_size))
+		return 0;
 
 	for (s = 0; s < first->area_count; s++) {
 
@@ -150,32 +151,25 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _compose_target_line(struct dev_manager *dm, struct dm_pool *mem,
-				struct config_tree *cft, void **target_state,
-				struct lv_segment *seg, char *params,
-				size_t paramsize, const char **target, int *pos,
-				uint32_t *pvmove_mirror_count)
+static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
+                                struct config_tree *cft, void **target_state,
+                                struct lv_segment *seg,
+                                struct deptree_node *node, uint64_t len,
+                                uint32_t *pvmove_mirror_count)
 {
-	/*   linear [device offset]+
-	 *   striped #stripes stripe_size [device offset]+   */
-
-	if (seg->area_count == 1)
-		*target = "linear";
-	else if (seg->area_count > 1) {
-		*target = "striped";
-		if ((*pos = lvm_snprintf(params, paramsize, "%u %u ",
-					 seg->area_count,
-					 seg->stripe_size)) < 0) {
-			stack;
-			return -1;
-		}
-	} else {
-		log_error("Internal error: striped target with no stripes");
+	if (!seg->area_count) {
+		log_error("Internal error: striped add_target_line called "
+			  "with no areas for %s.", seg->lv->name);
 		return 0;
 	}
+	if (seg->area_count == 1) {
+		if (!dm_deptree_node_add_linear_target(node, len))
+			return_0;
+	} else if (!dm_deptree_node_add_striped_target(node, len,
+						  seg->stripe_size))
+		return_0;
 
-	return compose_areas_line(dm, seg, params, paramsize, pos, 0u,
-				  seg->area_count);
+	return add_areas_line(dm, seg, node, 0u, seg->area_count);
 }
 
 static int _target_present(void)
@@ -184,7 +178,8 @@ static int _target_present(void)
 	static int present = 0;
 
 	if (!checked)
-		present = target_present("linear") && target_present("striped");
+		present = target_present("linear", 0) &&
+			  target_present("striped", 0);
 
 	checked = 1;
 	return present;
@@ -204,7 +199,7 @@ static struct segtype_handler _striped_ops = {
 	text_export:_text_export,
 	merge_segments:_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	compose_target_line:_compose_target_line,
+	add_target_line:_add_target_line,
 	target_present:_target_present,
 #endif
 	destroy:_destroy,
