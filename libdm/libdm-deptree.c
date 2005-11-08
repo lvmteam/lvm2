@@ -23,6 +23,84 @@
 
 #include <linux/dm-ioctl.h>
 
+#define MAX_TARGET_PARAMSIZE 500000
+
+/* Supported segment types */
+enum {
+	SEG_ERROR, 
+	SEG_LINEAR,
+	SEG_MIRRORED,
+	SEG_SNAPSHOT,
+	SEG_SNAPSHOT_ORIGIN,
+	SEG_STRIPED,
+	SEG_ZERO,
+};
+/* FIXME Add crypt and multipath support */
+
+struct {
+	unsigned type;
+	const char *target;
+} dm_segtypes[] = {
+	{ SEG_ERROR, "error" },
+	{ SEG_LINEAR, "linear" },
+	{ SEG_MIRRORED, "mirror" },
+	{ SEG_SNAPSHOT, "snapshot" },
+	{ SEG_SNAPSHOT_ORIGIN, "snapshot-origin" },
+	{ SEG_STRIPED, "striped" },
+	{ SEG_ZERO, "zero"},
+};
+
+/* Some segment types have a list of areas of other devices attached */
+struct seg_area {
+	struct list list;
+
+	struct deptree_node *dev_node;
+
+	uint64_t offset;
+};
+
+/* Per-segment properties */
+struct load_segment {
+	struct list list;
+
+	unsigned type;
+
+	uint64_t size;
+
+	unsigned area_count;		/* Linear + Striped + Mirrored */
+	struct list areas;		/* Linear + Striped + Mirrored */
+
+	uint32_t stripe_size;		/* Striped */
+
+	int persistent;			/* Snapshot */
+	uint32_t chunk_size;		/* Snapshot */
+	struct deptree_node *cow;	/* Snapshot */
+	struct deptree_node *origin;	/* Snapshot + Snapshot origin */
+
+	struct deptree_node *log;	/* Mirror */
+	uint32_t region_size;		/* Mirror */
+	unsigned clustered;		/* Mirror */
+	unsigned mirror_area_count;	/* Mirror */
+};
+
+/* Per-device properties */
+struct load_properties {
+	int read_only;
+	uint32_t major;
+	uint32_t minor;
+
+	unsigned segment_count;
+	struct list segs;
+
+	const char *new_name;
+};
+
+/* Two of these used to join two nodes with uses and used_by. */
+struct deptree_link {
+	struct list list;
+	struct deptree_node *node;
+};
+
 struct deptree_node {
 	struct deptree *deptree;
 
@@ -32,18 +110,34 @@ struct deptree_node {
 
         struct list uses;       	/* Nodes this node uses */
         struct list used_by;    	/* Nodes that use this node */
+
+	void *context;			/* External supplied context */
+
+	struct load_properties props;	/* For creation/table (re)load */
 };
 
 struct deptree {
 	struct dm_pool *mem;
 	struct dm_hash_table *devs;
+	struct dm_hash_table *uuids;
 	struct deptree_node root;
 };
 
-struct deptree_link {
-	struct list list;
-	struct deptree_node *node;
-};
+/* FIXME Consider exporting this */
+static int _dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
+{
+        int n;
+        va_list ap;
+
+        va_start(ap, format);
+        n = vsnprintf(buf, bufsize, format, ap);
+        va_end(ap);
+
+        if (n < 0 || (n > bufsize - 1))
+                return -1;
+
+        return n;
+}
 
 struct deptree *dm_deptree_create(void)
 {
@@ -72,6 +166,14 @@ struct deptree *dm_deptree_create(void)
 		return NULL;
 	}
 
+	if (!(deptree->uuids = dm_hash_create(32))) {
+		log_error("deptree uuid hash creation failed");
+		dm_hash_destroy(deptree->devs);
+		dm_pool_destroy(deptree->mem);
+		dm_free(deptree);
+		return NULL;
+	}
+
 	return deptree;
 }
 
@@ -80,6 +182,7 @@ void dm_deptree_free(struct deptree *deptree)
 	if (!deptree)
 		return;
 
+	dm_hash_destroy(deptree->uuids);
 	dm_hash_destroy(deptree->devs);
 	dm_pool_destroy(deptree->mem);
 	dm_free(deptree);
@@ -90,10 +193,9 @@ static int _nodes_are_linked(struct deptree_node *parent,
 {
 	struct deptree_link *dlink;
 
-	list_iterate_items(dlink, &parent->uses) {
+	list_iterate_items(dlink, &parent->uses)
 		if (dlink->node == child)
 			return 1;
-	}
 
 	return 0;
 }
@@ -132,12 +234,11 @@ static void _unlink(struct list *list, struct deptree_node *node)
 {
 	struct deptree_link *dlink;
 
-	list_iterate_items(dlink, list) {
+	list_iterate_items(dlink, list)
 		if (dlink->node == node) {
 			list_del(&dlink->list);
 			break;
 		}
-	}
 }
 
 static void _unlink_nodes(struct deptree_node *parent,
@@ -150,6 +251,11 @@ static void _unlink_nodes(struct deptree_node *parent,
 	_unlink(&child->used_by, parent);
 }
 
+static int _add_to_toplevel(struct deptree_node *node)
+{
+	return _link_nodes(&node->deptree->root, node);
+}
+
 static void _remove_from_toplevel(struct deptree_node *node)
 {
 	return _unlink_nodes(&node->deptree->root, node);
@@ -160,11 +266,34 @@ static int _add_to_bottomlevel(struct deptree_node *node)
 	return _link_nodes(node, &node->deptree->root);
 }
 
+static void _remove_from_bottomlevel(struct deptree_node *node)
+{
+	return _unlink_nodes(node, &node->deptree->root);
+}
+
+static int _link_tree_nodes(struct deptree_node *parent, struct deptree_node *child)
+{
+	/* Don't link to root node if child already has a parent */
+	if ((parent == &parent->deptree->root)) {
+		if (dm_deptree_node_num_children(child, 1))
+			return 1;
+	} else
+		_remove_from_toplevel(child);
+
+	if ((child == &child->deptree->root)) {
+		if (dm_deptree_node_num_children(parent, 0))
+			return 1;
+	} else
+		_remove_from_bottomlevel(parent);
+
+	return _link_nodes(parent, child);
+}
+
 static struct deptree_node *_create_deptree_node(struct deptree *deptree,
-						 struct deptree_node *parent,
 						 const char *name,
 						 const char *uuid,
-						 struct dm_info *info)
+						 struct dm_info *info,
+						 void *context)
 {
 	struct deptree_node *node;
 	uint64_t dev;
@@ -179,15 +308,26 @@ static struct deptree_node *_create_deptree_node(struct deptree *deptree,
 	node->name = name;
 	node->uuid = uuid;
 	node->info = *info;
+	node->context = context;
 
 	list_init(&node->uses);
 	list_init(&node->used_by);
+	list_init(&node->props.segs);
 
 	dev = MKDEV(info->major, info->minor);
 
 	if (!dm_hash_insert_binary(deptree->devs, (const char *) &dev,
 				sizeof(dev), node)) {
 		log_error("deptree node hash insertion failed");
+		dm_pool_free(deptree->mem, node);
+		return NULL;
+	}
+
+	if (uuid && *uuid &&
+	    !dm_hash_insert(deptree->uuids, uuid, node)) {
+		log_error("deptree uuid hash insertion failed");
+		dm_hash_remove_binary(deptree->devs, (const char *) &dev,
+				      sizeof(dev));
 		dm_pool_free(deptree->mem, node);
 		return NULL;
 	}
@@ -204,6 +344,13 @@ static struct deptree_node *_find_deptree_node(struct deptree *deptree,
 				  sizeof(dev));
 }
 
+static struct deptree_node *_find_deptree_node_by_uuid(struct deptree *deptree,
+						       const char *uuid)
+{
+	/* FIXME Do we need to cope with missing LVM- prefix too? */
+	return dm_hash_lookup(deptree->uuids, uuid);
+}
+
 static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint32_t minor,
 		 const char **name, const char **uuid,
 		 struct dm_info *info, struct dm_deps **deps)
@@ -217,6 +364,9 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		info->major = major;
 		info->minor = minor;
 		info->exists = 0;
+		info->live_table = 0;
+		info->inactive_table = 0;
+		info->read_only = 0;
 		return 1;
 	}
 
@@ -270,67 +420,179 @@ failed:
 	return 0;
 }
 
-static int _add_dev(struct deptree *deptree, struct deptree_node *parent,
-		    uint32_t major, uint32_t minor)
+static struct deptree_node *_add_dev(struct deptree *deptree,
+				     struct deptree_node *parent,
+				     uint32_t major, uint32_t minor)
 {
 	struct dm_task *dmt = NULL;
 	struct dm_info info;
 	struct dm_deps *deps = NULL;
 	const char *name = NULL;
 	const char *uuid = NULL;
-	struct deptree_node *node;
+	struct deptree_node *node = NULL;
 	uint32_t i;
-	int r = 0;
 	int new = 0;
 
 	/* Already in tree? */
 	if (!(node = _find_deptree_node(deptree, major, minor))) {
 		if (!_deps(&dmt, deptree->mem, major, minor, &name, &uuid, &info, &deps))
-			return 0;
+			return NULL;
 
-		if (!(node = _create_deptree_node(deptree, node, name, uuid,
-						  &info)))
+		if (!(node = _create_deptree_node(deptree, name, uuid,
+						  &info, NULL)))
 			goto out;
 		new = 1;
 	}
 
-	/* If new parent not root node, remove any existing root node parent */
-	if (parent != &deptree->root)
-		_remove_from_toplevel(node);
-
-	/* Create link to parent.  Use root node only if no other parents. */
-	if ((parent != &deptree->root) || !dm_deptree_node_num_children(node, 1))
-		if (!_link_nodes(parent, node))
-			goto out;
+	if (!_link_tree_nodes(parent, node)) {
+		node = NULL;
+		goto out;
+	}
 
 	/* If node was already in tree, no need to recurse. */
 	if (!new)
-		return 1;
+		goto out;
 
 	/* Can't recurse if not a mapped device or there are no dependencies */
 	if (!node->info.exists || !deps->count) {
 		if (!_add_to_bottomlevel(node))
-			goto out;
-		return 1;
+			node = NULL;
+		goto out;
 	}
 
 	/* Add dependencies to tree */
 	for (i = 0; i < deps->count; i++)
 		if (!_add_dev(deptree, node, MAJOR(deps->device[i]),
-			      MINOR(deps->device[i])))
+			      MINOR(deps->device[i]))) {
+			node = NULL;
 			goto out;
+		}
 
-	r = 1;
 out:
 	if (dmt)
 		dm_task_destroy(dmt);
 
+	return node;
+}
+
+static int _node_clear_table(struct deptree_node *dnode)
+{
+	struct dm_task *dmt;
+	struct dm_info *info;
+	const char *name;
+	int r;
+
+	if (!(info = &dnode->info)) {
+		stack;
+		return 0;
+	}
+
+	if (!(name = dm_deptree_node_get_name(dnode))) {
+		stack;
+		return 0;
+	}
+
+	/* Is there a table? */
+	if (!info->exists || !info->inactive_table)
+		return 1;
+
+	log_verbose("Clearing inactive table %s (%" PRIu32 ":%" PRIu32 ")",
+		    name, info->major, info->minor);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_CLEAR))) {
+		dm_task_destroy(dmt);
+		log_error("Table clear dm_task creation failed for %s", name);
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, info->major) ||
+	    !dm_task_set_minor(dmt, info->minor)) {
+		log_error("Failed to set device number for %s table clear", name);
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
+	r = dm_task_run(dmt);
+
+	if (!dm_task_get_info(dmt, info)) {
+		stack;
+		r = 0;
+	}
+
+	dm_task_destroy(dmt);
+
 	return r;
+}
+
+struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
+					    const char *name,
+					    const char *uuid,
+					    uint32_t major, uint32_t minor,
+					    int read_only,
+					    int clear_inactive,
+					    void *context)
+{
+	struct deptree_node *dnode;
+	struct dm_info info;
+	const char *name2;
+	const char *uuid2;
+
+	/* Do we need to add node to tree? */
+	if (!(dnode = dm_deptree_find_node_by_uuid(deptree, uuid))) {
+		if (!(name2 = dm_pool_strdup(deptree->mem, name))) {
+			log_error("name pool_strdup failed");
+			return NULL;
+		}
+		if (!(uuid2 = dm_pool_strdup(deptree->mem, uuid))) {
+			log_error("uuid pool_strdup failed");
+			return NULL;
+		}
+
+		info.major = 0;
+		info.minor = 0;
+		info.exists = 0;
+		info.live_table = 0;
+		info.inactive_table = 0;
+		info.read_only = 0;
+
+		if (!(dnode = _create_deptree_node(deptree, name2, uuid2,
+						   &info, context))) {
+			stack;
+			return NULL;
+		}
+
+		/* Attach to root node until a table is supplied */
+		if (!_add_to_toplevel(dnode) || !_add_to_bottomlevel(dnode)) {
+			stack;
+			return NULL;
+		}
+
+		dnode->props.major = major;
+		dnode->props.minor = minor;
+		dnode->props.new_name = NULL;
+	} else if (strcmp(name, dnode->name)) {
+		/* Do we need to rename node? */
+		if (!(dnode->props.new_name = dm_pool_strdup(deptree->mem, name))) {
+			log_error("name pool_strdup failed");
+			return 0;
+		}
+	}
+
+	dnode->props.read_only = read_only ? 1 : 0;
+
+	if (clear_inactive && !_node_clear_table(dnode)) {
+		stack;
+		return NULL;
+	}
+
+	dnode->context = context;
+
+	return dnode;
 }
 
 int dm_deptree_add_dev(struct deptree *deptree, uint32_t major, uint32_t minor)
 {
-	return _add_dev(deptree, &deptree->root, major, minor);
+	return _add_dev(deptree, &deptree->root, major, minor) ? 1 : 0;
 }
 
 const char *dm_deptree_node_get_name(struct deptree_node *node)
@@ -346,6 +608,11 @@ const char *dm_deptree_node_get_uuid(struct deptree_node *node)
 const struct dm_info *dm_deptree_node_get_info(struct deptree_node *node)
 {
 	return &node->info;
+}
+
+void *dm_deptree_node_get_context(struct deptree_node *node)
+{
+	return node->context;
 }
 
 int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted)
@@ -448,6 +715,18 @@ struct deptree_node *dm_deptree_find_node(struct deptree *deptree,
 }
 
 /*
+ * Set uuid to NULL for root of tree.
+ */
+struct deptree_node *dm_deptree_find_node_by_uuid(struct deptree *deptree,
+						  const char *uuid)
+{
+	if (!uuid || !*uuid)
+		return &deptree->root;
+
+	return _find_deptree_node_by_uuid(deptree, uuid);
+}
+
+/*
  * First time set *handle to NULL.
  * Set inverted to invert the tree.
  */
@@ -525,7 +804,75 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor)
 
 	r = dm_task_run(dmt);
 
+	/* FIXME Until kernel returns actual name so dm-ioctl.c can handle it */
+	rm_dev_node(name);
+
 	/* FIXME Remove node from tree or mark invalid? */
+
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+static int _rename_node(const char *old_name, const char *new_name, uint32_t major, uint32_t minor)
+{
+	struct dm_task *dmt;
+	int r = 0;
+
+	log_verbose("Renaming %s (%" PRIu32 ":%" PRIu32 ") to %s", old_name, major, minor, new_name);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_RENAME))) {
+		log_error("Rename dm_task creation failed for %s", old_name);
+		return 0;
+	}
+
+	if (!dm_task_set_name(dmt, old_name)) {
+		log_error("Failed to set name for %s rename.", old_name);
+		goto out;
+	}
+
+	if (!dm_task_set_newname(dmt, new_name)) {
+                stack;
+                goto out;
+        }
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	r = dm_task_run(dmt);
+
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+
+/* FIXME Merge with _suspend_node? */
+static int _resume_node(const char *name, uint32_t major, uint32_t minor,
+			struct dm_info *newinfo)
+{
+	struct dm_task *dmt;
+	int r;
+
+	log_verbose("Resuming %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_RESUME))) {
+		log_error("Suspend dm_task creation failed for %s", name);
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
+		log_error("Failed to set device number for %s resumption.", name);
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	if ((r = dm_task_run(dmt)))
+		r = dm_task_get_info(dmt, newinfo);
 
 	dm_task_destroy(dmt);
 
@@ -683,6 +1030,403 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 	return 1;
 }
 
+int dm_deptree_activate_children(struct deptree_node *dnode,
+				 const char *uuid_prefix,
+				 size_t uuid_prefix_len)
+{
+	void *handle = NULL;
+	struct deptree_node *child = dnode;
+	struct dm_info newinfo;
+	const char *name;
+	const char *uuid;
+
+	/* Activate children first */
+	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
+		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+			stack;
+			continue;
+		}
+
+		if (_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+			return 1;
+
+		if (dm_deptree_node_num_children(child, 0))
+			dm_deptree_activate_children(child, uuid_prefix, uuid_prefix_len);
+
+		if (!(name = dm_deptree_node_get_name(child))) {
+			stack;
+			continue;
+		}
+
+		/* Rename? */
+		if (child->props.new_name) {
+			if (!_rename_node(name, child->props.new_name, child->info.major, child->info.minor)) {
+				log_error("Failed to rename %s (%" PRIu32
+					  ":%" PRIu32 ") to %s", name, child->info.major,
+					  child->info.minor, child->props.new_name);
+				return 0;
+			}
+			child->name = child->props.new_name;
+			child->props.new_name = NULL;
+		}
+
+		if (!child->info.inactive_table && !child->info.suspended)
+			continue;
+
+		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
+			log_error("Unable to resume %s (%" PRIu32
+				  ":%" PRIu32 ")", name, child->info.major,
+				  child->info.minor);
+			continue;
+		}
+
+		/* Update cached info */
+		child->info = newinfo;
+	}
+
+	handle = NULL;
+
+	return 1;
+}
+
+static int _create_node(struct deptree_node *dnode)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	log_verbose("Creating %s", dnode->name);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_CREATE))) {
+		log_error("Create dm_task creation failed for %s", dnode->name);
+		return 0;
+	}
+
+	if (!dm_task_set_name(dmt, dnode->name)) {
+		log_error("Failed to set device name for %s", dnode->name);
+		goto out;
+	}
+
+	if (!dm_task_set_uuid(dmt, dnode->uuid)) {
+		log_error("Failed to set uuid for %s", dnode->name);
+		goto out;
+	}
+
+	if (dnode->props.major &&
+	    (!dm_task_set_major(dmt, dnode->props.major) ||
+	     !dm_task_set_minor(dmt, dnode->props.minor))) {
+		log_error("Failed to set device number for %s creation.", dnode->name);
+		goto out;
+	}
+
+	if (dnode->props.read_only && !dm_task_set_ro(dmt)) {
+		log_error("Failed to set read only flag for %s", dnode->name);
+		goto out;
+	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	if ((r = dm_task_run(dmt)))
+		r = dm_task_get_info(dmt, &dnode->info);
+
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
+
+static int _build_dev_string(char *devbuf, size_t bufsize, struct deptree_node *node)
+{
+	if (!dm_format_dev(devbuf, bufsize, node->info.major, node->info.minor)) {
+                log_error("Failed to format %s device number for %s as dm "
+                          "target (%u,%u)",
+                          node->name, node->uuid, node->info.major, node->info.minor);
+                return 0;
+	}
+
+	return 1;
+}
+
+static int _emit_areas_line(struct dm_task *dmt, struct load_segment *seg, char *params, size_t paramsize, int *pos)
+{
+	struct seg_area *area;
+	char devbuf[10];
+	int tw;
+	const char *prefix = "";
+
+	list_iterate_items(area, &seg->areas) {
+		if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node)) {
+			stack;
+			return 0;
+		}
+
+		if ((tw = _dm_snprintf(params + *pos, paramsize - *pos, "%s%s %" PRIu64,
+					prefix, devbuf, area->offset)) < 0) {
+                        stack;
+                        return -1;
+                }
+
+		prefix = " ";
+		*pos += tw;
+	}
+
+	return 1;
+}
+
+static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uint64_t *seg_start, char *params, size_t paramsize)
+{
+        int pos = 0;
+	int tw;
+        int r;
+	char originbuf[10], cowbuf[10], logbuf[10];
+
+	switch(seg->type) {
+	case SEG_ERROR:
+	case SEG_ZERO:
+		params[0] = '\0';
+	case SEG_LINEAR:
+		break;
+	case SEG_MIRRORED:
+		if (seg->clustered) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered ")) < 0) {
+                        	stack;
+                        	return -1;
+                	}
+			pos += tw;
+		}
+		if (!seg->log) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "core 1 ")) < 0) {
+                        	stack;
+                        	return -1;
+                	}
+			pos += tw;
+		} else {
+			if (!_build_dev_string(logbuf, sizeof(logbuf), seg->log)) {
+				stack;
+				return 0;
+			}
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "disk 2 %s ", logbuf)) < 0) {
+                        	stack;
+                        	return -1;
+                	}
+			pos += tw;
+		}
+		if ((tw = _dm_snprintf(params + pos, paramsize - pos, "%u %u ", seg->region_size, seg->mirror_area_count)) < 0) {
+                       	stack;
+                       	return -1;
+               	}
+		pos += tw;
+		break;
+	case SEG_SNAPSHOT:
+		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin)) {
+			stack;
+			return 0;
+		}
+		if (!_build_dev_string(cowbuf, sizeof(cowbuf), seg->cow)) {
+			stack;
+			return 0;
+		}
+		if ((pos = _dm_snprintf(params, paramsize, "%s %s %c %d",
+                                        originbuf, cowbuf,
+					seg->persistent ? 'P' : 'N',
+                                        seg->chunk_size)) < 0) {
+                        stack;
+                        return -1;
+                }
+		break;
+	case SEG_SNAPSHOT_ORIGIN:
+		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin)) {
+			stack;
+			return 0;
+		}
+		if ((pos = _dm_snprintf(params, paramsize, "%s",
+                                        originbuf)) < 0) {
+                        stack;
+                        return -1;
+                }
+		break;
+	case SEG_STRIPED:
+		if ((pos = _dm_snprintf(params, paramsize, "%u %u ",
+                                         seg->area_count,
+                                         seg->stripe_size)) < 0) {
+                        stack;
+                        return -1;
+                }
+		break;
+	}
+
+	switch(seg->type) {
+	case SEG_ERROR:
+	case SEG_SNAPSHOT:
+	case SEG_SNAPSHOT_ORIGIN:
+	case SEG_ZERO:
+		break;
+	case SEG_LINEAR:
+	case SEG_MIRRORED:
+	case SEG_STRIPED:
+		if ((r = _emit_areas_line(dmt, seg, params, paramsize, &pos)) <= 0) {
+			stack;
+			return r;
+		}
+		break;
+	}
+
+	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
+		  *seg_start, seg->size, dm_segtypes[seg->type].target, params);
+
+	if (!dm_task_add_target(dmt, *seg_start, seg->size, dm_segtypes[seg->type].target, params)) {
+		stack;
+		return 0;
+	}
+
+	*seg_start += seg->size;
+
+	return 1;
+}
+
+static int _emit_segment(struct dm_task *dmt, struct load_segment *seg,
+			 uint64_t *seg_start)
+{
+	char *params;
+	size_t paramsize = 4096;
+	int ret;
+
+	do {
+		if (!(params = dm_malloc(paramsize))) {
+			log_error("Insufficient space for target parameters.");
+			return 0;
+		}
+
+		ret = _emit_segment_line(dmt, seg, seg_start, params, paramsize);
+		dm_free(params);
+
+		if (!ret)
+			stack;
+
+		if (ret >= 0)
+			return ret;
+
+		log_debug("Insufficient space in params[%" PRIsize_t
+			  "] for target parameters.", paramsize);
+
+		paramsize *= 2;
+	} while (paramsize < MAX_TARGET_PARAMSIZE);
+
+	log_error("Target parameter size too big. Aborting.");
+	return 0;
+}
+
+static int _load_node(struct deptree_node *dnode)
+{
+	int r = 0;
+	struct dm_task *dmt;
+	struct load_segment *seg;
+	uint64_t seg_start = 0;
+
+	log_verbose("Loading %s table", dnode->name);
+
+	if (!(dmt = dm_task_create(DM_DEVICE_RELOAD))) {
+		log_error("Reload dm_task creation failed for %s", dnode->name);
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, dnode->info.major) ||
+	    !dm_task_set_minor(dmt, dnode->info.minor)) {
+		log_error("Failed to set device number for %s reload.", dnode->name);
+		goto out;
+	}
+
+	if (dnode->props.read_only && !dm_task_set_ro(dmt)) {
+		log_error("Failed to set read only flag for %s", dnode->name);
+		goto out;
+	}
+
+	if (!dm_task_no_open_count(dmt))
+		log_error("Failed to disable open_count");
+
+	list_iterate_items(seg, &dnode->props.segs)
+		if (!_emit_segment(dmt, seg, &seg_start)) {
+			stack;
+			goto out;
+		}
+
+	if ((r = dm_task_run(dmt)))
+		r = dm_task_get_info(dmt, &dnode->info);
+
+	dnode->props.segment_count = 0;
+
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+
+}
+
+int dm_deptree_preload_children(struct deptree_node *dnode,
+				 const char *uuid_prefix,
+				 size_t uuid_prefix_len)
+{
+	void *handle = NULL;
+	struct deptree_node *child;
+	struct dm_info newinfo;
+	const char *name;
+
+	/* Preload children first */
+	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
+		/* Skip existing non-device-mapper devices */
+		if (!child->info.exists && child->info.major)
+			continue;
+
+		/* Ignore if it doesn't belong to this VG */
+		if (uuid_prefix && child->info.exists &&
+		    strncmp(child->uuid, uuid_prefix, uuid_prefix_len))
+			continue;
+
+		if (dm_deptree_node_num_children(child, 0))
+			dm_deptree_preload_children(child, uuid_prefix, uuid_prefix_len);
+
+		if (!(name = dm_deptree_node_get_name(child))) {
+			stack;
+			continue;
+		}
+
+		/* FIXME Cope if name exists with no uuid? */
+		if (!child->info.exists) {
+			if (!_create_node(child)) {
+				stack;
+				return 0;
+			}
+		}
+
+		if (!child->info.inactive_table && child->props.segment_count) {
+			if (!_load_node(child)) {
+				stack;
+				return 0;
+			}
+		}
+
+		/* Resume device immediately if it has parents */
+		if (!dm_deptree_node_num_children(child, 1))
+			continue;
+
+		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
+			log_error("Unable to resume %s (%" PRIu32
+				  ":%" PRIu32 ")", name, child->info.major,
+				  child->info.minor);
+			continue;
+		}
+
+		/* Update cached info */
+		child->info = newinfo;
+	}
+
+	handle = NULL;
+
+	return 1;
+}
+
+
 /*
  * Returns 1 if unsure.
  */
@@ -700,7 +1444,7 @@ int dm_deptree_children_use_uuid(struct deptree_node *dnode,
 			return 1;
 		}
 
-		if (_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+		if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
 			return 1;
 
 		if (dm_deptree_node_num_children(child, 0))
@@ -708,4 +1452,271 @@ int dm_deptree_children_use_uuid(struct deptree_node *dnode,
 	}
 
 	return 0;
+}
+
+/*
+ * Target functions
+ */
+static struct load_segment *_add_segment(struct deptree_node *dnode, unsigned type, uint64_t size)
+{
+	struct load_segment *seg;
+
+	if (!(seg = dm_pool_zalloc(dnode->deptree->mem, sizeof(*seg)))) {
+		log_error("deptree node segment allocation failed");
+		return NULL;
+	}
+
+	seg->type = type;
+	seg->size = size;
+	seg->area_count = 0;
+	list_init(&seg->areas);
+	seg->stripe_size = 0;
+	seg->persistent = 0;
+	seg->chunk_size = 0;
+	seg->cow = NULL;
+	seg->origin = NULL;
+
+	list_add(&dnode->props.segs, &seg->list);
+	dnode->props.segment_count++;
+
+	return seg;
+}
+
+int dm_deptree_node_add_snapshot_origin_target(struct deptree_node *dnode,
+                                               uint64_t size,
+                                               const char *origin_uuid)
+{
+	struct load_segment *seg;
+	struct deptree_node *origin_node;
+
+	if (!(seg = _add_segment(dnode, SEG_SNAPSHOT_ORIGIN, size))) {
+		stack;
+		return 0;
+	}
+
+	if (!(origin_node = dm_deptree_find_node_by_uuid(dnode->deptree, origin_uuid))) {
+		log_error("Couldn't find snapshot origin uuid %s.", origin_uuid);
+		return 0;
+	}
+
+	seg->origin = origin_node;
+	if (!_link_tree_nodes(dnode, origin_node)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int dm_deptree_node_add_snapshot_target(struct deptree_node *node,
+                                        uint64_t size,
+                                        const char *origin_uuid,
+                                        const char *cow_uuid,
+                                        int persistent,
+                                        uint32_t chunk_size)
+{
+	struct load_segment *seg;
+	struct deptree_node *origin_node, *cow_node;
+
+	if (!(seg = _add_segment(node, SEG_SNAPSHOT, size))) {
+		stack;
+		return 0;
+	}
+
+	if (!(origin_node = dm_deptree_find_node_by_uuid(node->deptree, origin_uuid))) {
+		log_error("Couldn't find snapshot origin uuid %s.", origin_uuid);
+		return 0;
+	}
+
+	seg->origin = origin_node;
+	if (!_link_tree_nodes(node, origin_node)) {
+		stack;
+		return 0;
+	}
+
+	if (!(cow_node = dm_deptree_find_node_by_uuid(node->deptree, cow_uuid))) {
+		log_error("Couldn't find snapshot origin uuid %s.", cow_uuid);
+		return 0;
+	}
+
+	seg->cow = cow_node;
+	if (!_link_tree_nodes(node, cow_node)) {
+		stack;
+		return 0;
+	}
+
+	seg->persistent = persistent ? 1 : 0;
+	seg->chunk_size = chunk_size;
+
+	return 1;
+}
+
+int dm_deptree_node_add_error_target(struct deptree_node *node,
+                                     uint64_t size)
+{
+	if (!_add_segment(node, SEG_ERROR, size)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int dm_deptree_node_add_zero_target(struct deptree_node *node,
+                                    uint64_t size)
+{
+	if (!_add_segment(node, SEG_ZERO, size)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int dm_deptree_node_add_linear_target(struct deptree_node *node,
+                                      uint64_t size)
+{
+	if (!_add_segment(node, SEG_LINEAR, size)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int dm_deptree_node_add_striped_target(struct deptree_node *node,
+                                       uint64_t size,
+                                       uint32_t stripe_size)
+{
+	struct load_segment *seg;
+
+	if (!(seg = _add_segment(node, SEG_STRIPED, size))) {
+		stack;
+		return 0;
+	}
+
+	seg->stripe_size = stripe_size;
+
+	return 1;
+}
+
+int dm_deptree_node_add_mirror_target_log(struct deptree_node *node,
+					  uint32_t region_size,
+					  unsigned clustered, 
+					  const char *log_uuid,
+					  unsigned area_count)
+{
+	struct deptree_node *log_node;
+	struct load_segment *seg;
+
+	if (!node->props.segment_count) {
+		log_error("Internal error: Attempt to add target area to missing segment.");
+		return 0;
+	}
+
+	seg = list_item(list_last(&node->props.segs), struct load_segment);
+
+	if (!(log_node = dm_deptree_find_node_by_uuid(node->deptree, log_uuid))) {
+		log_error("Couldn't find snapshot log uuid %s.", log_uuid);
+		return 0;
+	}
+
+	seg->log = log_node;
+	if (!_link_tree_nodes(node, log_node)) {
+		stack;
+		return 0;
+	}
+
+	seg->region_size = region_size;
+	seg->clustered = clustered;
+	seg->mirror_area_count = area_count;
+
+	return 1;
+}
+
+int dm_deptree_node_add_mirror_target(struct deptree_node *node,
+                                      uint64_t size)
+{
+	struct load_segment *seg;
+
+	if (!(seg = _add_segment(node, SEG_MIRRORED, size))) {
+		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int _add_area(struct deptree_node *node, struct load_segment *seg, struct deptree_node *dev_node, uint64_t offset)
+{
+	struct seg_area *area;
+
+	if (!(area = dm_pool_zalloc(node->deptree->mem, sizeof (*area)))) {
+		log_error("Failed to allocate target segment area.");
+		return 0;
+	}
+
+	area->dev_node = dev_node;
+	area->offset = offset;
+
+	list_add(&seg->areas, &area->list);
+	seg->area_count++;
+
+	return 1;
+}
+
+int dm_deptree_node_add_target_area(struct deptree_node *node,
+                                    const char *dev_name,
+                                    const char *uuid,
+                                    uint64_t offset)
+{
+	struct load_segment *seg;
+	struct stat info;
+	struct deptree_node *dev_node;
+
+	if ((!dev_name || !*dev_name) && (!uuid || !*uuid)) {
+		log_error("dm_deptree_node_add_target_area called without device");
+		return 0;
+	}
+
+	if (uuid) {
+		if (!(dev_node = dm_deptree_find_node_by_uuid(node->deptree, uuid))) {
+			log_error("Couldn't find area uuid %s.", uuid);
+			return 0;
+		}
+		if (!_link_tree_nodes(node, dev_node)) {
+			stack;
+			return 0;
+		}
+	} else {
+        	if (stat(dev_name, &info) < 0) {
+			log_error("Device %s not found.", dev_name);
+			return 0;
+		}
+
+        	if (!S_ISBLK(info.st_mode)) {
+			log_error("Device %s is not a block device.", dev_name);
+			return 0;
+		}
+
+		/* FIXME Check correct macro use */
+		if (!(dev_node = _add_dev(node->deptree, node, MAJOR(info.st_rdev), MINOR(info.st_rdev)))) {
+			stack;
+			return 0;
+		}
+	}
+
+	if (!node->props.segment_count) {
+		log_error("Internal error: Attempt to add target area to missing segment.");
+		return 0;
+	}
+
+	seg = list_item(list_last(&node->props.segs), struct load_segment);
+
+	if (!_add_area(node, seg, dev_node, offset)) {
+		stack;
+		return 0;
+	}
+
+	return 1;
 }

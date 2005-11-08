@@ -642,7 +642,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 
 	dmi = _flatten_v1(dmt);
 	if (!dmi) {
-		log_error("Couldn't create ioctl argument");
+		log_error("Couldn't create ioctl argument.");
 		return 0;
 	}
 
@@ -1167,8 +1167,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 
 	if (dmt->minor >= 0) {
 		if (dmt->major <= 0) {
-			log_error("Missing major number for persistent device");
-			return NULL;
+			log_error("Missing major number for persistent device.");
+			goto bad;
 		}
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
 		dmi->dev = MKDEV(dmt->major, dmt->minor);
@@ -1349,7 +1349,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 
 	dmi = _flatten(dmt, repeat_count);
 	if (!dmi) {
-		log_error("Couldn't create ioctl argument");
+		log_error("Couldn't create ioctl argument.");
 		return NULL;
 	}
 
@@ -1361,7 +1361,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
-	log_debug("dm %s %s %s%s%s %s%0.0d%s%0.0d"
+	log_debug("dm %s %s %s%s%s %s%0.0d%s%0.0d%s"
 		  "%s%c %.0llu %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
@@ -1370,6 +1370,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->major > 0 ? dmt->major : 0,
 		  dmt->major > 0 ? ":" : "",
 		  dmt->minor > 0 ? dmt->minor : 0,
+		  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
 		  dmt->major > 0 ? ") " : "",
 		  dmt->no_open_count ? 'N' : 'O',
 		  dmt->sector, dmt->message ? dmt->message : "",
