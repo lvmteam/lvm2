@@ -216,12 +216,25 @@ void dm_deptree_free(struct deptree *deptree);
 int dm_deptree_add_dev(struct deptree *deptree, uint32_t major, uint32_t minor);
 
 /*
+ * Add a new node to the tree if it doesn't already exist.
+ */
+struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
+                                            const char *name,
+                                            const char *uuid,
+                                            uint32_t major, uint32_t minor,
+                                            int read_only,
+                                            int clear_inactive,
+                                            void *context);
+
+/*
  * Search for a node in the tree.
- * Set major and minor to 0 to get the root node.
+ * Set major and minor to 0 or uuid to NULL to get the root node.
  */
 struct deptree_node *dm_deptree_find_node(struct deptree *deptree,
 					  uint32_t major,
 					  uint32_t minor);
+struct deptree_node *dm_deptree_find_node_by_uuid(struct deptree *deptree,
+						  const char *uuid);
 
 /*
  * Use this to walk through all children of a given node.
@@ -239,6 +252,7 @@ struct deptree_node *dm_deptree_next_child(void **handle,
 const char *dm_deptree_node_get_name(struct deptree_node *node);
 const char *dm_deptree_node_get_uuid(struct deptree_node *node);
 const struct dm_info *dm_deptree_node_get_info(struct deptree_node *node);
+void *dm_deptree_node_get_context(struct deptree_node *node);
 
 /*
  * Returns the number of children of the given node (excluding the root node).
@@ -253,6 +267,21 @@ int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted);
 int dm_deptree_deactivate_children(struct deptree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len);
+/*
+ * Preload/create a device plus all dependencies.
+ * Ignores devices that don't have a uuid starting with uuid_prefix.
+ */
+int dm_deptree_preload_children(struct deptree_node *dnode,
+                                 const char *uuid_prefix,
+                                 size_t uuid_prefix_len);
+
+/*
+ * Resume a device plus all dependencies.
+ * Ignores devices that don't have a uuid starting with uuid_prefix.
+ */
+int dm_deptree_activate_children(struct deptree_node *dnode,
+                                 const char *uuid_prefix,
+                                 size_t uuid_prefix_len);
 
 /*
  * Suspend a device plus all dependencies.
@@ -270,6 +299,39 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 int dm_deptree_children_use_uuid(struct deptree_node *dnode,
 				 const char *uuid_prefix,
 				 size_t uuid_prefix_len);
+
+/*
+ * Construct tables for new nodes.
+ */
+int dm_deptree_node_add_snapshot_origin_target(struct deptree_node *dnode,
+					       uint64_t size,
+					       const char *origin_uuid);
+int dm_deptree_node_add_snapshot_target(struct deptree_node *node,
+					uint64_t size,
+					const char *origin_uuid,
+					const char *cow_uuid,
+					int persistent,
+					uint32_t chunk_size);
+int dm_deptree_node_add_error_target(struct deptree_node *node,
+				     uint64_t size);
+int dm_deptree_node_add_zero_target(struct deptree_node *node,
+				    uint64_t size);
+int dm_deptree_node_add_linear_target(struct deptree_node *node,
+				      uint64_t size);
+int dm_deptree_node_add_striped_target(struct deptree_node *node,
+				       uint64_t size,
+				       uint32_t stripe_size);
+int dm_deptree_node_add_mirror_target(struct deptree_node *node,
+				      uint64_t size);
+int dm_deptree_node_add_mirror_target_log(struct deptree_node *node,
+					  uint32_t region_size,
+					  unsigned clustered,
+					  const char *log_uuid,
+					  unsigned area_count);
+int dm_deptree_node_add_target_area(struct deptree_node *node,
+				    const char *dev_name,
+				    const char *dlid,
+				    uint64_t offset);
 
 /*****************************************************************************
  * Library functions
