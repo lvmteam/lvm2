@@ -204,10 +204,8 @@ int create_mirror_layers(struct alloc_handle *ah,
 						  MIRROR_IMAGE);
 
 	/* Already got a non-mirrored area to be converted? */
-	if (!first_area) {
+	if (first_area)
 		_move_lv_segments(img_lvs[0], lv);
-		lv->status |= MIRRORED;
-	}
 
 	if (!lv_add_mirror_segment(ah, lv, img_lvs, num_mirrors, segtype,
 				   0, region_size, log_lv)) {
@@ -215,6 +213,8 @@ int create_mirror_layers(struct alloc_handle *ah,
 			  "Remove new LV and retry.");
 		return 0;
 	}
+
+	lv->status |= MIRRORED;
 
 	return 1;
 }

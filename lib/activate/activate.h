@@ -25,6 +25,8 @@ struct lvinfo {
 	int major;
 	int minor;
 	int read_only;
+	int live_table;
+	int inactive_table;
 };
 
 void set_activation(int activation);
@@ -34,7 +36,7 @@ int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 int lvm1_present(struct cmd_context *cmd);
 
-int target_present(const char *target_name);
+int target_present(const char *target_name, int use_modprobe);
 
 void activation_exit(void);
 

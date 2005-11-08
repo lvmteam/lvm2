@@ -115,8 +115,8 @@ static int _target_present(void)
 	static int present = 0;
 
 	if (!checked)
-		present = target_present("snapshot") &&
-		    target_present("snapshot-origin");
+		present = target_present("snapshot", 1) &&
+		    target_present("snapshot-origin", 0);
 
 	checked = 1;
 

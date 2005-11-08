@@ -359,7 +359,8 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	/*
 	 * Should we zero the lv.
 	 */
-	lp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
+	lp->zero = strcmp(arg_str_value(cmd, zero_ARG, 
+		(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
 
 	/*
 	 * Alloc policy

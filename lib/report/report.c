@@ -369,24 +369,28 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 	if (lv_info(lv->vg->cmd, lv, &info, 1) && info.exists) {
 		if (info.suspended)
 			repstr[4] = 's';	/* Suspended */
-		else
+		else if (info.live_table)
 			repstr[4] = 'a';	/* Active */
-		if (info.open_count)
-			repstr[5] = 'o';	/* Open */
+		else if (info.inactive_table)
+			repstr[4] = 'i';	/* Inactive with table */
 		else
-			repstr[5] = '-';
+			repstr[4] = 'd';	/* Inactive without table */
 
 		/* Snapshot dropped? */
-		if ((snap_seg = find_cow(lv)) &&
+		if (info.live_table && (snap_seg = find_cow(lv)) &&
 		    (!lv_snapshot_percent(snap_seg->cow, &snap_percent) ||
 		     snap_percent < 0 || snap_percent >= 100)) {
 			repstr[0] = toupper(repstr[0]);
 			if (info.suspended)
-				repstr[4] = 'S';
+				repstr[4] = 'S'; /* Susp Inv snapshot */
 			else
-				repstr[4] = 'I';
+				repstr[4] = 'I'; /* Invalid snapshot */
 		}
 
+		if (info.open_count)
+			repstr[5] = 'o';	/* Open */
+		else
+			repstr[5] = '-';
 	} else {
 		repstr[4] = '-';
 		repstr[5] = '-';
