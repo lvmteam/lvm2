@@ -1392,6 +1392,10 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			}
 		}
 
+		/* Don't load tables yet if this flag is set */
+		if (!resume_children)
+			continue;
+
 		if (!child->info.inactive_table && child->props.segment_count) {
 			if (!_load_node(child)) {
 				stack;
@@ -1400,7 +1404,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		}
 
 		/* Resume device immediately if it has parents */
-		if (!resume_children || !dm_tree_node_num_children(child, 1))
+		if (!dm_tree_node_num_children(child, 1))
 			continue;
 
 		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
