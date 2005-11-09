@@ -154,7 +154,7 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
                                 struct config_tree *cft, void **target_state,
                                 struct lv_segment *seg,
-                                struct deptree_node *node, uint64_t len,
+                                struct dm_tree_node *node, uint64_t len,
                                 uint32_t *pvmove_mirror_count)
 {
 	if (!seg->area_count) {
@@ -163,9 +163,9 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 		return 0;
 	}
 	if (seg->area_count == 1) {
-		if (!dm_deptree_node_add_linear_target(node, len))
+		if (!dm_tree_node_add_linear_target(node, len))
 			return_0;
-	} else if (!dm_deptree_node_add_striped_target(node, len,
+	} else if (!dm_tree_node_add_striped_target(node, len,
 						  seg->stripe_size))
 		return_0;
 
