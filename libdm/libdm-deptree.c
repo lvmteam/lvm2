@@ -1053,8 +1053,8 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			continue;
 		}
 
-		if (_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
-			return 1;
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+			continue;
 
 		if (dm_tree_node_num_children(child, 0))
 			dm_tree_activate_children(child, uuid_prefix, uuid_prefix_len);
@@ -1579,7 +1579,7 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  const char *log_uuid,
 					  unsigned area_count)
 {
-	struct dm_tree_node *log_node;
+	struct dm_tree_node *log_node = NULL;
 	struct load_segment *seg;
 
 	if (!node->props.segment_count) {
@@ -1589,8 +1589,8 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 
 	seg = list_item(list_last(&node->props.segs), struct load_segment);
 
-	if (!(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
-		log_error("Couldn't find snapshot log uuid %s.", log_uuid);
+	if (log_uuid && !(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
+		log_error("Couldn't find mirror log uuid %s.", log_uuid);
 		return 0;
 	}
 
