@@ -35,6 +35,7 @@
 #include <netdb.h>
 #include <assert.h>
 
+#include "libdevmapper.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"
@@ -44,7 +45,7 @@
 
 static int listen_fd = -1;
 static int tcp_port;
-struct hash_table *sock_hash;
+struct dm_hash_table *sock_hash;
 
 static int get_our_ip_address(char *addr, int *family);
 static int read_from_tcpsock(struct local_client *fd, char *buf, int len, char *csid,
@@ -55,7 +56,7 @@ int init_comms(unsigned short port)
 {
     struct sockaddr_in6 addr;
 
-    sock_hash = hash_create(100);
+    sock_hash = dm_hash_create(100);
     tcp_port = port ? port : DEFAULT_TCP_PORT;
 
     listen_fd = socket(AF_INET6, SOCK_STREAM, 0);
@@ -100,10 +101,10 @@ void tcp_remove_client(char *csid)
        job of clvmd.c whch will do the job when it notices the
        other end has gone. We just need to remove the client(s) from
        the hash table so we don't try to use it for sending any more */
-    client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+    client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
     if (client)
     {
-	hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+	dm_hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 	client->removeme = 1;
 	close(client->fd);
     }
@@ -111,10 +112,10 @@ void tcp_remove_client(char *csid)
     /* Look for a mangled one too */
     csid[0] ^= 0x80;
 
-    client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+    client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
     if (client)
     {
-	hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+	dm_hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 	client->removeme = 1;
 	close(client->fd);
     }
@@ -145,7 +146,7 @@ int alloc_client(int fd, char *csid, struct local_client **new_client)
 	*new_client = client;
 
     /* Add to our list of node sockets */
-    if (hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN))
+    if (dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN))
     {
 	DEBUGLOG("alloc_client mangling CSID for second connection\n");
 	/* This is a duplicate connection but we can't close it because
@@ -158,7 +159,7 @@ int alloc_client(int fd, char *csid, struct local_client **new_client)
 
         /* If it still exists then kill the connection as we should only
            ever have one incoming connection from each node */
-        if (hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN))
+        if (dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN))
         {
 	    DEBUGLOG("Multiple incoming connections from node\n");
             syslog(LOG_ERR, " Bogus incoming connection from %d.%d.%d.%d\n", csid[0],csid[1],csid[2],csid[3]);
@@ -168,7 +169,7 @@ int alloc_client(int fd, char *csid, struct local_client **new_client)
             return -1;
         }
     }
-    hash_insert_binary(sock_hash, csid, GULM_MAX_CSID_LEN, client);
+    dm_hash_insert_binary(sock_hash, csid, GULM_MAX_CSID_LEN, client);
 
     return 0;
 }
@@ -301,7 +302,7 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
 	/* If the csid was mangled, then make sure we remove the right entry */
 	if (client->bits.net.flags)
 	    remcsid[0] ^= 0x80;
-	hash_remove_binary(sock_hash, remcsid, GULM_MAX_CSID_LEN);
+	dm_hash_remove_binary(sock_hash, remcsid, GULM_MAX_CSID_LEN);
 
 	/* Tell cluster manager layer */
 	add_down_node(remcsid);
@@ -380,7 +381,7 @@ static int tcp_send_message(void *buf, int msglen, unsigned char *csid, const ch
     if (memcmp(csid, ourcsid, GULM_MAX_CSID_LEN) == 0)
 	return msglen;
 
-    client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+    client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
     if (!client)
     {
 	status = gulm_connect_csid(csid, &client);

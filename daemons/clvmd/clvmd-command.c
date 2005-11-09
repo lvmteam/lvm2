@@ -65,6 +65,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "libdevmapper.h"
 #include "list.h"
 #include "locking.h"
 #include "log.h"
@@ -137,7 +138,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 static int lock_vg(struct local_client *client)
 {
-    struct hash_table *lock_hash;
+    struct dm_hash_table *lock_hash;
     struct clvm_header *header =
 	(struct clvm_header *) client->bits.localsock.cmd;
     unsigned char lock_cmd;
@@ -151,10 +152,10 @@ static int lock_vg(struct local_client *client)
        practice there should only ever be more than two VGs locked
        if a user tries to merge lots of them at once */
     if (client->bits.localsock.private) {
-	lock_hash = (struct hash_table *)client->bits.localsock.private;
+	lock_hash = (struct dm_hash_table *)client->bits.localsock.private;
     }
     else {
-	lock_hash = hash_create(3);
+	lock_hash = dm_hash_create(3);
 	if (!lock_hash)
 	    return ENOMEM;
 	client->bits.localsock.private = (void *)lock_hash;
@@ -167,7 +168,7 @@ static int lock_vg(struct local_client *client)
 
     if (lock_cmd == LCK_UNLOCK) {
 
-	lkid = (int)(long)hash_lookup(lock_hash, lockname);
+	lkid = (int)(long)dm_hash_lookup(lock_hash, lockname);
 	if (lkid == 0)
 	    return EINVAL;
 
@@ -175,7 +176,7 @@ static int lock_vg(struct local_client *client)
 	if (status)
 	    status = errno;
 	else
-	    hash_remove(lock_hash, lockname);
+	    dm_hash_remove(lock_hash, lockname);
     }
     else {
 
@@ -183,7 +184,7 @@ static int lock_vg(struct local_client *client)
 	if (status)
 	    status = errno;
 	else
-	    hash_insert(lock_hash, lockname, (void *)lkid);
+	    dm_hash_insert(lock_hash, lockname, (void *)lkid);
     }
 
     return status;
@@ -267,19 +268,19 @@ void cmd_client_cleanup(struct local_client *client)
 {
     if (client->bits.localsock.private) {
 
-	struct hash_node *v;
-	struct hash_table *lock_hash =
-	    (struct hash_table *)client->bits.localsock.private;
+	struct dm_hash_node *v;
+	struct dm_hash_table *lock_hash =
+	    (struct dm_hash_table *)client->bits.localsock.private;
 
-	hash_iterate(v, lock_hash) {
-		int lkid = (int)(long)hash_get_data(lock_hash, v);
-		char *lockname = hash_get_key(lock_hash, v);
+	dm_hash_iterate(v, lock_hash) {
+		int lkid = (int)(long)dm_hash_get_data(lock_hash, v);
+		char *lockname = dm_hash_get_key(lock_hash, v);
 
 		DEBUGLOG("cleanup: Unlocking lock %s %x\n", lockname, lkid);
 		sync_unlock(lockname, lkid);
 	}
 
-	hash_destroy(lock_hash);
+	dm_hash_destroy(lock_hash);
 	client->bits.localsock.private = 0;
     }
 }

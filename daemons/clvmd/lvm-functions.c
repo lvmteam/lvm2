@@ -31,6 +31,9 @@
 #include <syslog.h>
 #include <assert.h>
 
+#include "libdevmapper.h"
+#include "list.h"
+#include "lvm-types.h"
 #include "libdlm.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
@@ -44,7 +47,7 @@
 #include "locking.h"
 
 static struct cmd_context *cmd = NULL;
-static struct hash_table *lv_hash = NULL;
+static struct dm_hash_table *lv_hash = NULL;
 static pthread_mutex_t lv_hash_lock;
 
 struct lv_info {
@@ -58,7 +61,7 @@ static int get_current_lock(char *resource)
 	struct lv_info *lvi;
 
 	pthread_mutex_lock(&lv_hash_lock);
-	lvi = hash_lookup(lv_hash, resource);
+	lvi = dm_hash_lookup(lv_hash, resource);
 	pthread_mutex_unlock(&lv_hash_lock);
 	if (lvi) {
 		return lvi->lock_mode;
@@ -70,13 +73,13 @@ static int get_current_lock(char *resource)
 /* Called at shutdown to tidy the lockspace */
 void unlock_all()
 {
-	struct hash_node *v;
+	struct dm_hash_node *v;
 
 	pthread_mutex_lock(&lv_hash_lock);
-	hash_iterate(v, lv_hash) {
-		struct lv_info *lvi = hash_get_data(lv_hash, v);
+	dm_hash_iterate(v, lv_hash) {
+		struct lv_info *lvi = dm_hash_get_data(lv_hash, v);
 
-		sync_unlock(hash_get_key(lv_hash, v), lvi->lock_id);
+		sync_unlock(dm_hash_get_key(lv_hash, v), lvi->lock_id);
 	}
 	pthread_mutex_unlock(&lv_hash_lock);
 }
@@ -91,7 +94,7 @@ int hold_lock(char *resource, int mode, int flags)
 	flags &= LKF_NOQUEUE;	/* Only LKF_NOQUEUE is valid here */
 
 	pthread_mutex_lock(&lv_hash_lock);
-	lvi = hash_lookup(lv_hash, resource);
+	lvi = dm_hash_lookup(lv_hash, resource);
 	pthread_mutex_unlock(&lv_hash_lock);
 	if (lvi) {
 		/* Already exists - convert it */
@@ -121,7 +124,7 @@ int hold_lock(char *resource, int mode, int flags)
 				 strerror(errno));
 		} else {
 		        pthread_mutex_lock(&lv_hash_lock);
-			hash_insert(lv_hash, resource, lvi);
+			dm_hash_insert(lv_hash, resource, lvi);
 			pthread_mutex_unlock(&lv_hash_lock);
 		}
 		errno = saved_errno;
@@ -137,7 +140,7 @@ int hold_unlock(char *resource)
 	int saved_errno;
 
 	pthread_mutex_lock(&lv_hash_lock);
-	lvi = hash_lookup(lv_hash, resource);
+	lvi = dm_hash_lookup(lv_hash, resource);
 	pthread_mutex_unlock(&lv_hash_lock);
 	if (!lvi) {
 		DEBUGLOG("hold_unlock, lock not already held\n");
@@ -148,7 +151,7 @@ int hold_unlock(char *resource)
 	saved_errno = errno;
 	if (!status) {
 	    	pthread_mutex_lock(&lv_hash_lock);
-		hash_remove(lv_hash, resource);
+		dm_hash_remove(lv_hash, resource);
 		pthread_mutex_unlock(&lv_hash_lock);
 		free(lvi);
 	} else {
@@ -510,7 +513,7 @@ static void check_config()
 void init_lvhash()
 {
 	/* Create hash table for keeping LV locks & status */
-	lv_hash = hash_create(100);
+	lv_hash = dm_hash_create(100);
 	pthread_mutex_init(&lv_hash_lock, NULL);
 }
 
