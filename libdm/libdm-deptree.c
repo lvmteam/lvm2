@@ -1357,8 +1357,7 @@ out:
 
 int dm_tree_preload_children(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
-				 size_t uuid_prefix_len,
-				 int resume_children)
+				 size_t uuid_prefix_len)
 {
 	void *handle = NULL;
 	struct dm_tree_node *child;
@@ -1377,7 +1376,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (dm_tree_node_num_children(child, 0))
-			dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len, resume_children);
+			dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len);
 
 		if (!(name = dm_tree_node_get_name(child))) {
 			stack;
@@ -1391,10 +1390,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 				return 0;
 			}
 		}
-
-		/* Don't load tables yet if this flag is set */
-		if (!resume_children)
-			continue;
 
 		if (!child->info.inactive_table && child->props.segment_count) {
 			if (!_load_node(child)) {

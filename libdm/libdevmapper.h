@@ -274,8 +274,7 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
  */
 int dm_tree_preload_children(struct dm_tree_node *dnode,
                                  const char *uuid_prefix,
-                                 size_t uuid_prefix_len,
-				 int resume_children);
+                                 size_t uuid_prefix_len);
 
 /*
  * Resume a device plus all dependencies.
