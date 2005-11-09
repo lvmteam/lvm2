@@ -1357,7 +1357,8 @@ out:
 
 int dm_tree_preload_children(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
-				 size_t uuid_prefix_len)
+				 size_t uuid_prefix_len,
+				 int resume_children)
 {
 	void *handle = NULL;
 	struct dm_tree_node *child;
@@ -1376,7 +1377,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (dm_tree_node_num_children(child, 0))
-			dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len);
+			dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len, resume_children);
 
 		if (!(name = dm_tree_node_get_name(child))) {
 			stack;
@@ -1399,7 +1400,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		}
 
 		/* Resume device immediately if it has parents */
-		if (!dm_tree_node_num_children(child, 1))
+		if (!resume_children || !dm_tree_node_num_children(child, 1))
 			continue;
 
 		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
@@ -1589,15 +1590,16 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 
 	seg = list_item(list_last(&node->props.segs), struct load_segment);
 
-	if (log_uuid && !(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
-		log_error("Couldn't find mirror log uuid %s.", log_uuid);
-		return 0;
+	if (log_uuid) {
+		if (!(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
+			log_error("Couldn't find mirror log uuid %s.", log_uuid);
+			return 0;
+		}
+		if (!_link_tree_nodes(node, log_node))
+			return_0;
 	}
 
 	seg->log = log_node;
-	if (!_link_tree_nodes(node, log_node))
-		return_0;
-
 	seg->region_size = region_size;
 	seg->clustered = clustered;
 	seg->mirror_area_count = area_count;
