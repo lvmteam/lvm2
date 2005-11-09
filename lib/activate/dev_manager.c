@@ -622,6 +622,8 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 {
 	struct dm_tree *dtree;
 	struct list *snh, *snht;
+	struct lv_segment *seg;
+	uint32_t s;
 
 	if (!(dtree = dm_tree_create())) {
 		log_error("Partial dtree creation failed for %s.", lv->name);
@@ -639,6 +641,16 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 			stack;
 			goto fail;
 		}
+
+	/* Add any LVs used by segments in this LV */
+	list_iterate_items(seg, &lv->segments)
+		for (s = 0; s < seg->area_count; s++)
+			if (seg_type(seg, s) == AREA_LV && seg_lv(seg, s)) {
+				if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, s))) {
+					stack;
+					goto fail;
+				}
+			}
 
 	return dtree;
 
@@ -976,7 +988,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
-		if (!dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1, (lv->status & LOCKED) ? 0 : 1))
+		if (!dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 
 		if ((action == ACTIVATE) &&
@@ -1011,6 +1023,10 @@ int dev_manager_activate(struct dev_manager *dm, struct logical_volume *lv)
 
 int dev_manager_preload(struct dev_manager *dm, struct logical_volume *lv)
 {
+	/* FIXME Update the pvmove implementation! */
+	if ((lv->status & PVMOVE) || (lv->status & LOCKED))
+		return 1;
+
 	return _tree_action(dm, lv, PRELOAD);
 }
 
