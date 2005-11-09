@@ -573,7 +573,7 @@ int dev_manager_lv_rmnodes(const struct logical_volume *lv)
 	return fs_del_lv(lv);
 }
 
-static int _add_dev_to_deptree(struct dev_manager *dm, struct deptree *dtree,
+static int _add_dev_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
 			       struct logical_volume *lv, const char *layer)
 {
 	char *dlid, *name;
@@ -591,7 +591,7 @@ static int _add_dev_to_deptree(struct dev_manager *dm, struct deptree *dtree,
                 return 0;
         }
 
-	if (info.exists && !dm_deptree_add_dev(dtree, info.major, info.minor)) {
+	if (info.exists && !dm_tree_add_dev(dtree, info.major, info.minor)) {
 		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to deptree",
 			  info.major, info.minor);
 		return 0;
@@ -603,7 +603,7 @@ static int _add_dev_to_deptree(struct dev_manager *dm, struct deptree *dtree,
 /*
  * Add LV and any known dependencies
  */
-static int _add_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree, struct logical_volume *lv)
+static int _add_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv)
 {
 	if (!_add_dev_to_deptree(dm, dtree, lv, NULL))
 		return_0;
@@ -618,12 +618,12 @@ static int _add_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree, str
 	return 1;
 }
 
-static struct deptree *_create_partial_deptree(struct dev_manager *dm, struct logical_volume *lv)
+static struct dm_tree *_create_partial_deptree(struct dev_manager *dm, struct logical_volume *lv)
 {
-	struct deptree *dtree;
+	struct dm_tree *dtree;
 	struct list *snh, *snht;
 
-	if (!(dtree = dm_deptree_create())) {
+	if (!(dtree = dm_tree_create())) {
 		log_error("Partial deptree creation failed for %s.", lv->name);
 		return NULL;
 	}
@@ -643,12 +643,12 @@ static struct deptree *_create_partial_deptree(struct dev_manager *dm, struct lo
 	return dtree;
 
 fail:
-	dm_deptree_free(dtree);
+	dm_tree_free(dtree);
 	return NULL;
 }
 
 int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
-		   struct deptree_node *node, int start_area, int areas)
+		   struct dm_tree_node *node, int start_area, int areas)
 {
 	uint64_t extent_size = seg->lv->vg->extent_size;
 	uint32_t s;
@@ -660,11 +660,11 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		      !seg_pv(seg, s) ||
 		      !seg_dev(seg, s))) ||
 		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s)))
-			dm_deptree_node_add_target_area(node,
+			dm_tree_node_add_target_area(node,
 							dm->stripe_filler,
 							NULL, 0);
 		else if (seg_type(seg, s) == AREA_PV)
-			dm_deptree_node_add_target_area(node,
+			dm_tree_node_add_target_area(node,
 							dev_name(seg_dev(seg, s)),
 							NULL,
 							(seg_pv(seg, s)->pe_start +
@@ -674,7 +674,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 						 seg_lv(seg, s)->lvid.s,
 						 NULL)))
 				return_0;
-			dm_deptree_node_add_target_area(node, NULL, dlid,
+			dm_tree_node_add_target_area(node, NULL, dlid,
 							extent_size * seg_le(seg, s));
 		} else {
 			log_error("Internal error: Unassigned area found in LV %s.",
@@ -687,8 +687,8 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 }
 
 static int _add_origin_target_to_deptree(struct dev_manager *dm,
-					 struct deptree *dtree,
-					 struct deptree_node *dnode,
+					 struct dm_tree *dtree,
+					 struct dm_tree_node *dnode,
 					 struct logical_volume *lv)
 {
 	const char *real_dlid;
@@ -696,15 +696,15 @@ static int _add_origin_target_to_deptree(struct dev_manager *dm,
 	if (!(real_dlid = build_dlid(dm, lv->lvid.s, "real")))
 		return_0;
 
-	if (!dm_deptree_node_add_snapshot_origin_target(dnode, lv->size, real_dlid))
+	if (!dm_tree_node_add_snapshot_origin_target(dnode, lv->size, real_dlid))
 		return_0;
 
 	return 1;
 }
 
 static int _add_snapshot_target_to_deptree(struct dev_manager *dm,
-					   struct deptree *dtree,
-					   struct deptree_node *dnode,
+					   struct dm_tree *dtree,
+					   struct dm_tree_node *dnode,
 					   struct logical_volume *lv)
 {
 	const char *origin_dlid;
@@ -725,15 +725,15 @@ static int _add_snapshot_target_to_deptree(struct dev_manager *dm,
 
 	size = (uint64_t) snap_seg->len * snap_seg->origin->vg->extent_size;
 
-	if (!dm_deptree_node_add_snapshot_target(dnode, size, origin_dlid, cow_dlid, 1, snap_seg->chunk_size))
+	if (!dm_tree_node_add_snapshot_target(dnode, size, origin_dlid, cow_dlid, 1, snap_seg->chunk_size))
 		return_0;
 
 	return 1;
 }
 
 static int _add_target_to_deptree(struct dev_manager *dm,
-				  struct deptree *dtree,
-				  struct deptree_node *dnode,
+				  struct dm_tree *dtree,
+				  struct dm_tree_node *dnode,
 				  struct lv_segment *seg)
 {
 	uint64_t extent_size = seg->lv->vg->extent_size;
@@ -751,12 +751,12 @@ static int _add_target_to_deptree(struct dev_manager *dm,
 						  &dm-> pvmove_mirror_count);
 }
 
-static int _add_new_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree,
+static int _add_new_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
 				  struct logical_volume *lv, const char *layer);
 
 static int _add_segment_to_deptree(struct dev_manager *dm,
-				   struct deptree *dtree,
-				   struct deptree_node *dnode,
+				   struct dm_tree *dtree,
+				   struct dm_tree_node *dnode,
 				   struct lv_segment *seg,
 				   const char *layer)
 {
@@ -814,12 +814,12 @@ static int _add_segment_to_deptree(struct dev_manager *dm,
 	return 1;
 }
 
-static int _add_new_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree,
+static int _add_new_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
 				  struct logical_volume *lv, const char *layer)
 {
 	struct lv_segment *seg;
 	struct lv_layer *lvlayer;
-	struct deptree_node *dnode;
+	struct dm_tree_node *dnode;
 	char *name, *dlid;
 
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
@@ -829,8 +829,8 @@ static int _add_new_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree,
 		return_0;
 
 	/* We've already processed this node if it already has a context ptr */
-	if ((dnode = dm_deptree_find_node_by_uuid(dtree, dlid)) &&
-	    dm_deptree_node_get_context(dnode))
+	if ((dnode = dm_tree_find_node_by_uuid(dtree, dlid)) &&
+	    dm_tree_node_get_context(dnode))
 		return 1;
 
 	/* FIXME How do we determine whether a pre-existing node need reloading or not? */
@@ -847,7 +847,7 @@ static int _add_new_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree,
 	 * existing inactive table left behind.
 	 * Major/minor settings only apply to the visible layer.
 	 */
-	if (!(dnode = dm_deptree_add_new_dev(dtree, name, dlid,
+	if (!(dnode = dm_tree_add_new_dev(dtree, name, dlid,
 					     layer ? lv->major : 0,
 					     layer ? lv->minor : 0,
 					     _read_only_lv(lv),
@@ -856,7 +856,7 @@ static int _add_new_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree,
 		return_0;
 
 	/* Store existing name so we can do rename later */
-	lvlayer->old_name = dm_deptree_node_get_name(dnode);
+	lvlayer->old_name = dm_tree_node_get_name(dnode);
 
 	/* Create table */
 	dm->pvmove_mirror_count = 0u;
@@ -876,21 +876,21 @@ static int _add_new_lv_to_deptree(struct dev_manager *dm, struct deptree *dtree,
 /*
  * Create LV symlinks for children of supplied root node.
  */
-static int _create_lv_symlinks(struct dev_manager *dm, struct deptree_node *root)
+static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root)
 {
 	void *handle = NULL;
-	struct deptree_node *child;
+	struct dm_tree_node *child;
 	struct lv_layer *lvlayer;
 	char *vgname, *lvname, *layer;
 	const char *name;
 	int r = 1;
 
-	while ((child = dm_deptree_next_child(&handle, root, 0))) {
-		if (!(lvlayer = (struct lv_layer *) dm_deptree_node_get_context(child)))
+	while ((child = dm_tree_next_child(&handle, root, 0))) {
+		if (!(lvlayer = (struct lv_layer *) dm_tree_node_get_context(child)))
 			continue;
 
 		/* Detect rename */
-		name = dm_deptree_node_get_name(child);
+		name = dm_tree_node_get_name(child);
 
 		if (name && lvlayer->old_name && *lvlayer->old_name && strcmp(name, lvlayer->old_name)) {
 	        	if (!split_dm_name(dm->mem, lvlayer->old_name, &vgname, &lvname, &layer)) {
@@ -905,18 +905,18 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct deptree_node *root
 	return r;
 }
 
-static int _clean_tree(struct dev_manager *dm, struct logical_volume *lv, struct deptree_node *root)
+static int _clean_tree(struct dev_manager *dm, struct logical_volume *lv, struct dm_tree_node *root)
 {
 	void *handle = NULL;
-	struct deptree_node *child;
+	struct dm_tree_node *child;
 	char *vgname, *lvname, *layer;
 	const char *name, *uuid;
 
-	while ((child = dm_deptree_next_child(&handle, root, 0))) {
-		if (!(name = dm_deptree_node_get_name(child)))
+	while ((child = dm_tree_next_child(&handle, root, 0))) {
+		if (!(name = dm_tree_node_get_name(child)))
 			continue;
 
-		if (!(uuid = dm_deptree_node_get_uuid(child)))
+		if (!(uuid = dm_tree_node_get_uuid(child)))
 			continue;
 
         	if (!split_dm_name(dm->mem, name, &vgname, &lvname, &layer)) {
@@ -928,7 +928,7 @@ static int _clean_tree(struct dev_manager *dm, struct logical_volume *lv, struct
 		if (!*layer)
 			continue;
 
-		if (!dm_deptree_deactivate_children(root, uuid, strlen(uuid)))
+		if (!dm_tree_deactivate_children(root, uuid, strlen(uuid)))
 			return_0;
 	}
 
@@ -937,15 +937,15 @@ static int _clean_tree(struct dev_manager *dm, struct logical_volume *lv, struct
 
 static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, action_t action)
 {
-	struct deptree *dtree;
-	struct deptree_node *root;
+	struct dm_tree *dtree;
+	struct dm_tree_node *root;
 	char *dlid;
 	int r = 0;
 
 	if (!(dtree = _create_partial_deptree(dm, lv)))
 		return_0;
 
-	if (!(root = dm_deptree_find_node(dtree, 0, 0))) {
+	if (!(root = dm_tree_find_node(dtree, 0, 0))) {
 		log_error("Lost dependency tree root node");
 		goto out;
 	}
@@ -962,11 +962,11 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 		break;
 	case DEACTIVATE:
  		/* Deactivate LV and all devices it references that nothing else has open. */
-		if (!dm_deptree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
+		if (!dm_tree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 		break;
 	case SUSPEND:
-		if (!dm_deptree_suspend_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
+		if (!dm_tree_suspend_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 		break;
 	case PRELOAD:
@@ -976,11 +976,11 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
-		if (!dm_deptree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
+		if (!dm_tree_preload_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 
 		if ((action == ACTIVATE) &&
-		    !dm_deptree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
+		    !dm_tree_activate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 
 		if (!_create_lv_symlinks(dm, root)) {
@@ -996,7 +996,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	r = 1;
 
 out:
-	dm_deptree_free(dtree);
+	dm_tree_free(dtree);
 
 	return r;
 }
@@ -1037,17 +1037,17 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
 int dev_manager_device_uses_vg(struct dev_manager *dm, struct device *dev,
 			       struct volume_group *vg)
 {
-	struct deptree *dtree;
-	struct deptree_node *root;
+	struct dm_tree *dtree;
+	struct dm_tree_node *root;
 	char dlid[sizeof(UUID_PREFIX) + sizeof(struct id) - 1];
 	int r = 1;
 
-	if (!(dtree = dm_deptree_create())) {
+	if (!(dtree = dm_tree_create())) {
 		log_error("partial deptree creation failed");
 		return r;
 	}
 
-	if (!dm_deptree_add_dev(dtree, MAJOR(dev->dev), MINOR(dev->dev))) {
+	if (!dm_tree_add_dev(dtree, MAJOR(dev->dev), MINOR(dev->dev))) {
 		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to deptree",
 			  dev_name(dev), (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev));
 		goto out;
@@ -1056,17 +1056,17 @@ int dev_manager_device_uses_vg(struct dev_manager *dm, struct device *dev,
 	memcpy(dlid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1);
 	memcpy(dlid + sizeof(UUID_PREFIX) - 1, &vg->id.uuid[0], sizeof(vg->id));
 
-	if (!(root = dm_deptree_find_node(dtree, 0, 0))) {
+	if (!(root = dm_tree_find_node(dtree, 0, 0))) {
 		log_error("Lost dependency tree root node");
 		goto out;
 	}
 
-	if (dm_deptree_children_use_uuid(root, dlid, sizeof(UUID_PREFIX) + sizeof(vg->id) - 1))
+	if (dm_tree_children_use_uuid(root, dlid, sizeof(UUID_PREFIX) + sizeof(vg->id) - 1))
 		goto_out;
 
 	r = 0;
 
 out:
-	dm_deptree_free(dtree);
+	dm_tree_free(dtree);
 	return r;
 }
