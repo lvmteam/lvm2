@@ -41,6 +41,7 @@
 #include <syslog.h>
 #include <assert.h>
 
+#include "libdevmapper.h"
 #include "ccs.h"
 #include "list.h"
 #include "locking.h"
@@ -53,10 +54,10 @@
 #include "libgulm.h"
 
 /* Hash list of nodes in the cluster */
-static struct hash_table *node_hash;
+static struct dm_hash_table *node_hash;
 
 /* hash list of outstanding lock requests */
-static struct hash_table *lock_hash;
+static struct dm_hash_table *lock_hash;
 
 /* Copy of the current quorate state */
 static uint8_t gulm_quorate = 0;
@@ -94,7 +95,7 @@ static int _csid_from_name(char *csid, char *name);
 static void _cluster_closedown(void);
 
 /* In tcp-comms.c */
-extern struct hash_table *sock_hash;
+extern struct dm_hash_table *sock_hash;
 
 static int add_internal_client(int fd, fd_callback_t callback)
 {
@@ -176,8 +177,8 @@ static int _init_cluster(void)
     pthread_mutex_lock(&lock_start_mutex);
     lock_start_flag = 1;
 
-    node_hash = hash_create(100);
-    lock_hash = hash_create(10);
+    node_hash = dm_hash_create(100);
+    lock_hash = dm_hash_create(10);
 
     /* Get all nodes from CCS */
     if (get_all_cluster_nodes())
@@ -315,8 +316,6 @@ static int core_login_reply(void *misc, uint64_t gen, uint32_t error, uint32_t r
 
 static void set_node_state(struct node_info *ninfo, char *csid, uint8_t nodestate)
 {
-    int oldstate = ninfo->state;
-
     if (nodestate == lg_core_Logged_in)
     {
 	/* Don't clobber NODE_CLVMD state */
@@ -355,7 +354,7 @@ static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, (char *)ip, GULM_MAX_CSID_LEN);
+    ninfo = dm_hash_lookup_binary(node_hash, (char *)ip, GULM_MAX_CSID_LEN);
     if (!ninfo)
     {
 	/* If we can't find that node then re-read the config file in case it
@@ -364,7 +363,7 @@ static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_
 	get_all_cluster_nodes();
 
 	/* Now try again */
-	ninfo = hash_lookup_binary(node_hash, (char *)ip, GULM_MAX_CSID_LEN);
+	ninfo = dm_hash_lookup_binary(node_hash, (char *)ip, GULM_MAX_CSID_LEN);
 	if (!ninfo)
 	{
 	    DEBUGLOG("Ignoring node %s, not part of the SAN cluster\n", name);
@@ -510,7 +509,7 @@ static int lock_lock_state(void *misc, uint8_t *key, uint16_t keylen,
     if (in_shutdown)
 	    return 0;
 
-    lwait = hash_lookup(lock_hash, key);
+    lwait = dm_hash_lookup(lock_hash, key);
     if (!lwait)
     {
 	DEBUGLOG("Can't find hash entry for resource %s\n", key);
@@ -555,22 +554,22 @@ int get_next_node_csid(void **context, char *csid)
     /* First node */
     if (!*context)
     {
-	*context = hash_get_first(node_hash);
+	*context = dm_hash_get_first(node_hash);
     }
     else
     {
-	*context = hash_get_next(node_hash, *context);
+	*context = dm_hash_get_next(node_hash, *context);
     }
     if (*context)
-	ninfo = hash_get_data(node_hash, *context);
+	ninfo = dm_hash_get_data(node_hash, *context);
 
     /* Find a node that is UP */
     while (*context && ninfo->state == NODE_DOWN)
     {
-	*context = hash_get_next(node_hash, *context);
+	*context = dm_hash_get_next(node_hash, *context);
 	if (*context)
 	{
-	    ninfo = hash_get_data(node_hash, *context);
+	    ninfo = dm_hash_get_data(node_hash, *context);
 	}
     }
 
@@ -579,7 +578,7 @@ int get_next_node_csid(void **context, char *csid)
 	return 0;
     }
 
-    memcpy(csid, hash_get_key(node_hash, *context), GULM_MAX_CSID_LEN);
+    memcpy(csid, dm_hash_get_key(node_hash, *context), GULM_MAX_CSID_LEN);
     return 1;
 }
 
@@ -587,7 +586,7 @@ int gulm_name_from_csid(char *csid, char *name)
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
+    ninfo = dm_hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
     if (!ninfo)
     {
         sprintf(name, "UNKNOWN %s", print_csid(csid));
@@ -601,15 +600,15 @@ int gulm_name_from_csid(char *csid, char *name)
 
 static int _csid_from_name(char *csid, char *name)
 {
-    struct hash_node *hn;
+    struct dm_hash_node *hn;
     struct node_info *ninfo;
 
-    hash_iterate(hn, node_hash)
+    dm_hash_iterate(hn, node_hash)
     {
-	ninfo = hash_get_data(node_hash, hn);
+	ninfo = dm_hash_get_data(node_hash, hn);
 	if (strcmp(ninfo->name, name) == 0)
 	{
-	    memcpy(csid, hash_get_key(node_hash, hn), GULM_MAX_CSID_LEN);
+	    memcpy(csid, dm_hash_get_key(node_hash, hn), GULM_MAX_CSID_LEN);
 	    return 0;
 	}
     }
@@ -627,7 +626,7 @@ void gulm_add_up_node(char *csid)
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
+    ninfo = dm_hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
     if (!ninfo) {
 	    DEBUGLOG("gulm_add_up_node no node_hash entry for csid %s\n", print_csid(csid));
 	return;
@@ -647,7 +646,7 @@ void add_down_node(char *csid)
 {
     struct node_info *ninfo;
 
-    ninfo = hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
+    ninfo = dm_hash_lookup_binary(node_hash, csid, GULM_MAX_CSID_LEN);
     if (!ninfo)
 	return;
 
@@ -664,27 +663,27 @@ void add_down_node(char *csid)
 static int _cluster_do_node_callback(struct local_client *master_client,
 				     void (*callback)(struct local_client *, char *csid, int node_up))
 {
-    struct hash_node *hn;
+    struct dm_hash_node *hn;
     struct node_info *ninfo;
 
-    hash_iterate(hn, node_hash)
+    dm_hash_iterate(hn, node_hash)
     {
 	char csid[GULM_MAX_CSID_LEN];
 	struct local_client *client;
 
-	ninfo = hash_get_data(node_hash, hn);
-	memcpy(csid, hash_get_key(node_hash, hn), GULM_MAX_CSID_LEN);
+	ninfo = dm_hash_get_data(node_hash, hn);
+	memcpy(csid, dm_hash_get_key(node_hash, hn), GULM_MAX_CSID_LEN);
 
 	DEBUGLOG("down_callback. node %s, state = %d\n", ninfo->name, ninfo->state);
 
-	client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+	client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 	if (!client)
 	{
 	    /* If it's up but not connected, try to make contact */
 	    if (ninfo->state == NODE_UP)
 		    gulm_connect_csid(csid, &client);
 
-	    client = hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+	    client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 
 	}
 	if (ninfo->state != NODE_DOWN)
@@ -733,7 +732,7 @@ static int _lock_resource(char *resource, int mode, int flags, int *lockid)
     /* This needs to be converted from DLM/LVM2 value for GULM */
     if (flags == LCK_NONBLOCK) flags = lg_lock_flag_Try;
 
-    hash_insert(lock_hash, resource, &lwait);
+    dm_hash_insert(lock_hash, resource, &lwait);
     DEBUGLOG("lock_resource '%s', flags=%d, mode=%d\n", resource, flags, mode);
 
     status = lg_lock_state_req(gulm_if, resource, strlen(resource)+1,
@@ -749,7 +748,7 @@ static int _lock_resource(char *resource, int mode, int flags, int *lockid)
     pthread_cond_wait(&lwait.cond, &lwait.mutex);
     pthread_mutex_unlock(&lwait.mutex);
 
-    hash_remove(lock_hash, resource);
+    dm_hash_remove(lock_hash, resource);
     DEBUGLOG("lock-resource returning %d\n", lwait.status);
 
     return gulm_to_errno(lwait.status);
@@ -765,7 +764,7 @@ static int _unlock_resource(char *resource, int lockid)
     pthread_mutex_init(&lwait.mutex, NULL);
     pthread_mutex_lock(&lwait.mutex);
 
-    hash_insert(lock_hash, resource, &lwait);
+    dm_hash_insert(lock_hash, resource, &lwait);
 
     DEBUGLOG("unlock_resource %s\n", resource);
     status = lg_lock_state_req(gulm_if, resource, strlen(resource)+1,
@@ -788,7 +787,7 @@ static int _unlock_resource(char *resource, int lockid)
     pthread_cond_wait(&lwait.cond, &lwait.mutex);
     pthread_mutex_unlock(&lwait.mutex);
 
-    hash_remove(lock_hash, resource);
+    dm_hash_remove(lock_hash, resource);
 
     return gulm_to_errno(lwait.status);
 }
@@ -924,7 +923,7 @@ static int get_all_cluster_nodes()
 	    struct node_info *ninfo;
 
 	    /* If it's not in the list, then add it */
-	    ninfo = hash_lookup_binary(node_hash, nodeip, GULM_MAX_CSID_LEN);
+	    ninfo = dm_hash_lookup_binary(node_hash, nodeip, GULM_MAX_CSID_LEN);
 	    if (!ninfo)
 	    {
 		ninfo = malloc(sizeof(struct node_info));
@@ -937,7 +936,7 @@ static int get_all_cluster_nodes()
 		strcpy(ninfo->name, nodename);
 
 		ninfo->state = NODE_DOWN;
-		hash_insert_binary(node_hash, nodeip, GULM_MAX_CSID_LEN, ninfo);
+		dm_hash_insert_binary(node_hash, nodeip, GULM_MAX_CSID_LEN, ninfo);
 	    }
 	}
 	else
