@@ -35,6 +35,7 @@ enum {
 	SEG_STRIPED,
 	SEG_ZERO,
 };
+
 /* FIXME Add crypt and multipath support */
 
 struct {
@@ -54,7 +55,7 @@ struct {
 struct seg_area {
 	struct list list;
 
-	struct deptree_node *dev_node;
+	struct dm_tree_node *dev_node;
 
 	uint64_t offset;
 };
@@ -74,10 +75,10 @@ struct load_segment {
 
 	int persistent;			/* Snapshot */
 	uint32_t chunk_size;		/* Snapshot */
-	struct deptree_node *cow;	/* Snapshot */
-	struct deptree_node *origin;	/* Snapshot + Snapshot origin */
+	struct dm_tree_node *cow;	/* Snapshot */
+	struct dm_tree_node *origin;	/* Snapshot + Snapshot origin */
 
-	struct deptree_node *log;	/* Mirror */
+	struct dm_tree_node *log;	/* Mirror */
 	uint32_t region_size;		/* Mirror */
 	unsigned clustered;		/* Mirror */
 	unsigned mirror_area_count;	/* Mirror */
@@ -96,13 +97,13 @@ struct load_properties {
 };
 
 /* Two of these used to join two nodes with uses and used_by. */
-struct deptree_link {
+struct dm_tree_link {
 	struct list list;
-	struct deptree_node *node;
+	struct dm_tree_node *node;
 };
 
-struct deptree_node {
-	struct deptree *deptree;
+struct dm_tree_node {
+	struct dm_tree *dtree;
 
         const char *name;
         const char *uuid;
@@ -116,11 +117,11 @@ struct deptree_node {
 	struct load_properties props;	/* For creation/table (re)load */
 };
 
-struct deptree {
+struct dm_tree {
 	struct dm_pool *mem;
 	struct dm_hash_table *devs;
 	struct dm_hash_table *uuids;
-	struct deptree_node root;
+	struct dm_tree_node root;
 };
 
 /* FIXME Consider exporting this */
@@ -139,59 +140,59 @@ static int _dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
         return n;
 }
 
-struct deptree *dm_deptree_create(void)
+struct dm_tree *dm_tree_create(void)
 {
-	struct deptree *deptree;
+	struct dm_tree *dtree;
 
-	if (!(deptree = dm_malloc(sizeof(*deptree)))) {
-		log_error("dm_deptree_create malloc failed");
+	if (!(dtree = dm_malloc(sizeof(*dtree)))) {
+		log_error("dm_tree_create malloc failed");
 		return NULL;
 	}
 
-	memset(deptree, 0, sizeof(*deptree));
-	deptree->root.deptree = deptree;
-	list_init(&deptree->root.uses);
-	list_init(&deptree->root.used_by);
+	memset(dtree, 0, sizeof(*dtree));
+	dtree->root.dtree = dtree;
+	list_init(&dtree->root.uses);
+	list_init(&dtree->root.used_by);
 
-	if (!(deptree->mem = dm_pool_create("deptree", 1024))) {
-		log_error("deptree pool creation failed");
-		dm_free(deptree);
+	if (!(dtree->mem = dm_pool_create("dtree", 1024))) {
+		log_error("dtree pool creation failed");
+		dm_free(dtree);
 		return NULL;
 	}
 
-	if (!(deptree->devs = dm_hash_create(8))) {
-		log_error("deptree hash creation failed");
-		dm_pool_destroy(deptree->mem);
-		dm_free(deptree);
+	if (!(dtree->devs = dm_hash_create(8))) {
+		log_error("dtree hash creation failed");
+		dm_pool_destroy(dtree->mem);
+		dm_free(dtree);
 		return NULL;
 	}
 
-	if (!(deptree->uuids = dm_hash_create(32))) {
-		log_error("deptree uuid hash creation failed");
-		dm_hash_destroy(deptree->devs);
-		dm_pool_destroy(deptree->mem);
-		dm_free(deptree);
+	if (!(dtree->uuids = dm_hash_create(32))) {
+		log_error("dtree uuid hash creation failed");
+		dm_hash_destroy(dtree->devs);
+		dm_pool_destroy(dtree->mem);
+		dm_free(dtree);
 		return NULL;
 	}
 
-	return deptree;
+	return dtree;
 }
 
-void dm_deptree_free(struct deptree *deptree)
+void dm_tree_free(struct dm_tree *dtree)
 {
-	if (!deptree)
+	if (!dtree)
 		return;
 
-	dm_hash_destroy(deptree->uuids);
-	dm_hash_destroy(deptree->devs);
-	dm_pool_destroy(deptree->mem);
-	dm_free(deptree);
+	dm_hash_destroy(dtree->uuids);
+	dm_hash_destroy(dtree->devs);
+	dm_pool_destroy(dtree->mem);
+	dm_free(dtree);
 }
 
-static int _nodes_are_linked(struct deptree_node *parent,
-			     struct deptree_node *child)
+static int _nodes_are_linked(struct dm_tree_node *parent,
+			     struct dm_tree_node *child)
 {
-	struct deptree_link *dlink;
+	struct dm_tree_link *dlink;
 
 	list_iterate_items(dlink, &parent->uses)
 		if (dlink->node == child)
@@ -200,12 +201,12 @@ static int _nodes_are_linked(struct deptree_node *parent,
 	return 0;
 }
 
-static int _link(struct list *list, struct deptree_node *node)
+static int _link(struct list *list, struct dm_tree_node *node)
 {
-	struct deptree_link *dlink;
+	struct dm_tree_link *dlink;
 
-	if (!(dlink = dm_pool_alloc(node->deptree->mem, sizeof(*dlink)))) {
-		log_error("deptree link allocation failed");
+	if (!(dlink = dm_pool_alloc(node->dtree->mem, sizeof(*dlink)))) {
+		log_error("dtree link allocation failed");
 		return 0;
 	}
 
@@ -215,8 +216,8 @@ static int _link(struct list *list, struct deptree_node *node)
 	return 1;
 }
 
-static int _link_nodes(struct deptree_node *parent,
-		       struct deptree_node *child)
+static int _link_nodes(struct dm_tree_node *parent,
+		       struct dm_tree_node *child)
 {
 	if (_nodes_are_linked(parent, child))
 		return 1;
@@ -230,9 +231,9 @@ static int _link_nodes(struct deptree_node *parent,
 	return 1;
 }
 
-static void _unlink(struct list *list, struct deptree_node *node)
+static void _unlink(struct list *list, struct dm_tree_node *node)
 {
-	struct deptree_link *dlink;
+	struct dm_tree_link *dlink;
 
 	list_iterate_items(dlink, list)
 		if (dlink->node == node) {
@@ -241,8 +242,8 @@ static void _unlink(struct list *list, struct deptree_node *node)
 		}
 }
 
-static void _unlink_nodes(struct deptree_node *parent,
-			  struct deptree_node *child)
+static void _unlink_nodes(struct dm_tree_node *parent,
+			  struct dm_tree_node *child)
 {
 	if (!_nodes_are_linked(parent, child))
 		return;
@@ -251,37 +252,37 @@ static void _unlink_nodes(struct deptree_node *parent,
 	_unlink(&child->used_by, parent);
 }
 
-static int _add_to_toplevel(struct deptree_node *node)
+static int _add_to_toplevel(struct dm_tree_node *node)
 {
-	return _link_nodes(&node->deptree->root, node);
+	return _link_nodes(&node->dtree->root, node);
 }
 
-static void _remove_from_toplevel(struct deptree_node *node)
+static void _remove_from_toplevel(struct dm_tree_node *node)
 {
-	return _unlink_nodes(&node->deptree->root, node);
+	return _unlink_nodes(&node->dtree->root, node);
 }
 
-static int _add_to_bottomlevel(struct deptree_node *node)
+static int _add_to_bottomlevel(struct dm_tree_node *node)
 {
-	return _link_nodes(node, &node->deptree->root);
+	return _link_nodes(node, &node->dtree->root);
 }
 
-static void _remove_from_bottomlevel(struct deptree_node *node)
+static void _remove_from_bottomlevel(struct dm_tree_node *node)
 {
-	return _unlink_nodes(node, &node->deptree->root);
+	return _unlink_nodes(node, &node->dtree->root);
 }
 
-static int _link_tree_nodes(struct deptree_node *parent, struct deptree_node *child)
+static int _link_tree_nodes(struct dm_tree_node *parent, struct dm_tree_node *child)
 {
 	/* Don't link to root node if child already has a parent */
-	if ((parent == &parent->deptree->root)) {
-		if (dm_deptree_node_num_children(child, 1))
+	if ((parent == &parent->dtree->root)) {
+		if (dm_tree_node_num_children(child, 1))
 			return 1;
 	} else
 		_remove_from_toplevel(child);
 
-	if ((child == &child->deptree->root)) {
-		if (dm_deptree_node_num_children(parent, 0))
+	if ((child == &child->dtree->root)) {
+		if (dm_tree_node_num_children(parent, 0))
 			return 1;
 	} else
 		_remove_from_bottomlevel(parent);
@@ -289,21 +290,21 @@ static int _link_tree_nodes(struct deptree_node *parent, struct deptree_node *ch
 	return _link_nodes(parent, child);
 }
 
-static struct deptree_node *_create_deptree_node(struct deptree *deptree,
+static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 						 const char *name,
 						 const char *uuid,
 						 struct dm_info *info,
 						 void *context)
 {
-	struct deptree_node *node;
+	struct dm_tree_node *node;
 	uint64_t dev;
 
-	if (!(node = dm_pool_zalloc(deptree->mem, sizeof(*node)))) {
-		log_error("_create_deptree_node alloc failed");
+	if (!(node = dm_pool_zalloc(dtree->mem, sizeof(*node)))) {
+		log_error("_create_dm_tree_node alloc failed");
 		return NULL;
 	}
 
-	node->deptree = deptree;
+	node->dtree = dtree;
 
 	node->name = name;
 	node->uuid = uuid;
@@ -316,39 +317,39 @@ static struct deptree_node *_create_deptree_node(struct deptree *deptree,
 
 	dev = MKDEV(info->major, info->minor);
 
-	if (!dm_hash_insert_binary(deptree->devs, (const char *) &dev,
+	if (!dm_hash_insert_binary(dtree->devs, (const char *) &dev,
 				sizeof(dev), node)) {
-		log_error("deptree node hash insertion failed");
-		dm_pool_free(deptree->mem, node);
+		log_error("dtree node hash insertion failed");
+		dm_pool_free(dtree->mem, node);
 		return NULL;
 	}
 
 	if (uuid && *uuid &&
-	    !dm_hash_insert(deptree->uuids, uuid, node)) {
-		log_error("deptree uuid hash insertion failed");
-		dm_hash_remove_binary(deptree->devs, (const char *) &dev,
+	    !dm_hash_insert(dtree->uuids, uuid, node)) {
+		log_error("dtree uuid hash insertion failed");
+		dm_hash_remove_binary(dtree->devs, (const char *) &dev,
 				      sizeof(dev));
-		dm_pool_free(deptree->mem, node);
+		dm_pool_free(dtree->mem, node);
 		return NULL;
 	}
 
 	return node;
 }
 
-static struct deptree_node *_find_deptree_node(struct deptree *deptree,
+static struct dm_tree_node *_find_dm_tree_node(struct dm_tree *dtree,
 					       uint32_t major, uint32_t minor)
 {
 	uint64_t dev = MKDEV(major, minor);
 
-	return dm_hash_lookup_binary(deptree->devs, (const char *) &dev,
+	return dm_hash_lookup_binary(dtree->devs, (const char *) &dev,
 				  sizeof(dev));
 }
 
-static struct deptree_node *_find_deptree_node_by_uuid(struct deptree *deptree,
+static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 						       const char *uuid)
 {
 	/* FIXME Do we need to cope with missing LVM- prefix too? */
-	return dm_hash_lookup(deptree->uuids, uuid);
+	return dm_hash_lookup(dtree->uuids, uuid);
 }
 
 static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint32_t minor,
@@ -375,17 +376,29 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		return 0;
 	}
 
-	if (!dm_task_set_major(*dmt, major))
+	if (!dm_task_set_major(*dmt, major)) {
+		log_error("_deps: failed to set major for (%" PRIu32 ":%" PRIu32 ")",
+			  major, minor);
 		goto failed;
+	}
 
-	if (!dm_task_set_minor(*dmt, minor))
+	if (!dm_task_set_minor(*dmt, minor)) {
+		log_error("_deps: failed to set minor for (%" PRIu32 ":%" PRIu32 ")",
+			  major, minor);
 		goto failed;
+	}
 
-	if (!dm_task_run(*dmt))
+	if (!dm_task_run(*dmt)) {
+		log_error("_deps: task run failed for (%" PRIu32 ":%" PRIu32 ")",
+			  major, minor);
 		goto failed;
+	}
 
-	if (!dm_task_get_info(*dmt, info))
+	if (!dm_task_get_info(*dmt, info)) {
+		log_error("_deps: failed to get info for (%" PRIu32 ":%" PRIu32 ")",
+			  major, minor);
 		goto failed;
+	}
 
 	if (!info->exists) {
 		*name = "";
@@ -393,12 +406,12 @@ static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint
 		*deps = NULL;
 	} else {
 		if (info->major != major) {
-			log_error("Inconsistent deptree major number: %u != %u",
+			log_error("Inconsistent dtree major number: %u != %u",
 				  major, info->major);
 			goto failed;
 		}
 		if (info->minor != minor) {
-			log_error("Inconsistent deptree minor number: %u != %u",
+			log_error("Inconsistent dtree minor number: %u != %u",
 				  minor, info->minor);
 			goto failed;
 		}
@@ -420,8 +433,8 @@ failed:
 	return 0;
 }
 
-static struct deptree_node *_add_dev(struct deptree *deptree,
-				     struct deptree_node *parent,
+static struct dm_tree_node *_add_dev(struct dm_tree *dtree,
+				     struct dm_tree_node *parent,
 				     uint32_t major, uint32_t minor)
 {
 	struct dm_task *dmt = NULL;
@@ -429,24 +442,24 @@ static struct deptree_node *_add_dev(struct deptree *deptree,
 	struct dm_deps *deps = NULL;
 	const char *name = NULL;
 	const char *uuid = NULL;
-	struct deptree_node *node = NULL;
+	struct dm_tree_node *node = NULL;
 	uint32_t i;
 	int new = 0;
 
 	/* Already in tree? */
-	if (!(node = _find_deptree_node(deptree, major, minor))) {
-		if (!_deps(&dmt, deptree->mem, major, minor, &name, &uuid, &info, &deps))
-			return NULL;
+	if (!(node = _find_dm_tree_node(dtree, major, minor))) {
+		if (!_deps(&dmt, dtree->mem, major, minor, &name, &uuid, &info, &deps))
+			return_NULL;
 
-		if (!(node = _create_deptree_node(deptree, name, uuid,
+		if (!(node = _create_dm_tree_node(dtree, name, uuid,
 						  &info, NULL)))
-			goto out;
+			goto_out;
 		new = 1;
 	}
 
 	if (!_link_tree_nodes(parent, node)) {
 		node = NULL;
-		goto out;
+		goto_out;
 	}
 
 	/* If node was already in tree, no need to recurse. */
@@ -455,17 +468,19 @@ static struct deptree_node *_add_dev(struct deptree *deptree,
 
 	/* Can't recurse if not a mapped device or there are no dependencies */
 	if (!node->info.exists || !deps->count) {
-		if (!_add_to_bottomlevel(node))
+		if (!_add_to_bottomlevel(node)) {
+			stack;
 			node = NULL;
+		}
 		goto out;
 	}
 
 	/* Add dependencies to tree */
 	for (i = 0; i < deps->count; i++)
-		if (!_add_dev(deptree, node, MAJOR(deps->device[i]),
+		if (!_add_dev(dtree, node, MAJOR(deps->device[i]),
 			      MINOR(deps->device[i]))) {
 			node = NULL;
-			goto out;
+			goto_out;
 		}
 
 out:
@@ -475,7 +490,7 @@ out:
 	return node;
 }
 
-static int _node_clear_table(struct deptree_node *dnode)
+static int _node_clear_table(struct dm_tree_node *dnode)
 {
 	struct dm_task *dmt;
 	struct dm_info *info;
@@ -483,12 +498,12 @@ static int _node_clear_table(struct deptree_node *dnode)
 	int r;
 
 	if (!(info = &dnode->info)) {
-		stack;
+		log_error("_node_clear_table failed: missing info");
 		return 0;
 	}
 
-	if (!(name = dm_deptree_node_get_name(dnode))) {
-		stack;
+	if (!(name = dm_tree_node_get_name(dnode))) {
+		log_error("_node_clear_table failed: missing name");
 		return 0;
 	}
 
@@ -515,7 +530,7 @@ static int _node_clear_table(struct deptree_node *dnode)
 	r = dm_task_run(dmt);
 
 	if (!dm_task_get_info(dmt, info)) {
-		stack;
+		log_error("_node_clear_table failed: info missing after running task for %s", name);
 		r = 0;
 	}
 
@@ -524,7 +539,7 @@ static int _node_clear_table(struct deptree_node *dnode)
 	return r;
 }
 
-struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
+struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 					    const char *name,
 					    const char *uuid,
 					    uint32_t major, uint32_t minor,
@@ -532,18 +547,18 @@ struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
 					    int clear_inactive,
 					    void *context)
 {
-	struct deptree_node *dnode;
+	struct dm_tree_node *dnode;
 	struct dm_info info;
 	const char *name2;
 	const char *uuid2;
 
 	/* Do we need to add node to tree? */
-	if (!(dnode = dm_deptree_find_node_by_uuid(deptree, uuid))) {
-		if (!(name2 = dm_pool_strdup(deptree->mem, name))) {
+	if (!(dnode = dm_tree_find_node_by_uuid(dtree, uuid))) {
+		if (!(name2 = dm_pool_strdup(dtree->mem, name))) {
 			log_error("name pool_strdup failed");
 			return NULL;
 		}
-		if (!(uuid2 = dm_pool_strdup(deptree->mem, uuid))) {
+		if (!(uuid2 = dm_pool_strdup(dtree->mem, uuid))) {
 			log_error("uuid pool_strdup failed");
 			return NULL;
 		}
@@ -555,24 +570,20 @@ struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
 		info.inactive_table = 0;
 		info.read_only = 0;
 
-		if (!(dnode = _create_deptree_node(deptree, name2, uuid2,
-						   &info, context))) {
-			stack;
-			return NULL;
-		}
+		if (!(dnode = _create_dm_tree_node(dtree, name2, uuid2,
+						   &info, context)))
+			return_NULL;
 
 		/* Attach to root node until a table is supplied */
-		if (!_add_to_toplevel(dnode) || !_add_to_bottomlevel(dnode)) {
-			stack;
-			return NULL;
-		}
+		if (!_add_to_toplevel(dnode) || !_add_to_bottomlevel(dnode))
+			return_NULL;
 
 		dnode->props.major = major;
 		dnode->props.minor = minor;
 		dnode->props.new_name = NULL;
 	} else if (strcmp(name, dnode->name)) {
 		/* Do we need to rename node? */
-		if (!(dnode->props.new_name = dm_pool_strdup(deptree->mem, name))) {
+		if (!(dnode->props.new_name = dm_pool_strdup(dtree->mem, name))) {
 			log_error("name pool_strdup failed");
 			return 0;
 		}
@@ -580,50 +591,48 @@ struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
 
 	dnode->props.read_only = read_only ? 1 : 0;
 
-	if (clear_inactive && !_node_clear_table(dnode)) {
-		stack;
-		return NULL;
-	}
+	if (clear_inactive && !_node_clear_table(dnode))
+		return_NULL;
 
 	dnode->context = context;
 
 	return dnode;
 }
 
-int dm_deptree_add_dev(struct deptree *deptree, uint32_t major, uint32_t minor)
+int dm_tree_add_dev(struct dm_tree *dtree, uint32_t major, uint32_t minor)
 {
-	return _add_dev(deptree, &deptree->root, major, minor) ? 1 : 0;
+	return _add_dev(dtree, &dtree->root, major, minor) ? 1 : 0;
 }
 
-const char *dm_deptree_node_get_name(struct deptree_node *node)
+const char *dm_tree_node_get_name(struct dm_tree_node *node)
 {
 	return node->info.exists ? node->name : "";
 }
 
-const char *dm_deptree_node_get_uuid(struct deptree_node *node)
+const char *dm_tree_node_get_uuid(struct dm_tree_node *node)
 {
 	return node->info.exists ? node->uuid : "";
 }
 
-const struct dm_info *dm_deptree_node_get_info(struct deptree_node *node)
+const struct dm_info *dm_tree_node_get_info(struct dm_tree_node *node)
 {
 	return &node->info;
 }
 
-void *dm_deptree_node_get_context(struct deptree_node *node)
+void *dm_tree_node_get_context(struct dm_tree_node *node)
 {
 	return node->context;
 }
 
-int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted)
+int dm_tree_node_num_children(struct dm_tree_node *node, uint32_t inverted)
 {
 	if (inverted) {
-		if (_nodes_are_linked(&node->deptree->root, node))
+		if (_nodes_are_linked(&node->dtree->root, node))
 			return 0;
 		return list_size(&node->used_by);
 	}
 
-	if (_nodes_are_linked(node, &node->deptree->root))
+	if (_nodes_are_linked(node, &node->dtree->root))
 		return 0;
 
 	return list_size(&node->uses);
@@ -659,28 +668,28 @@ static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_
 /*
  * Returns 1 if no children.
  */
-static int _children_suspended(struct deptree_node *node,
+static int _children_suspended(struct dm_tree_node *node,
 			       uint32_t inverted,
 			       const char *uuid_prefix,
 			       size_t uuid_prefix_len)
 {
 	struct list *list;
-	struct deptree_link *dlink;
+	struct dm_tree_link *dlink;
 	const struct dm_info *dinfo;
 	const char *uuid;
 
 	if (inverted) {
-		if (_nodes_are_linked(&node->deptree->root, node))
+		if (_nodes_are_linked(&node->dtree->root, node))
 			return 1;
 		list = &node->used_by;
 	} else {
-		if (_nodes_are_linked(node, &node->deptree->root))
+		if (_nodes_are_linked(node, &node->dtree->root))
 			return 1;
 		list = &node->uses;
 	}
 
 	list_iterate_items(dlink, list) {
-		if (!(uuid = dm_deptree_node_get_uuid(dlink->node))) {
+		if (!(uuid = dm_tree_node_get_uuid(dlink->node))) {
 			stack;
 			continue;
 		}
@@ -689,8 +698,8 @@ static int _children_suspended(struct deptree_node *node,
 		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
-		if (!(dinfo = dm_deptree_node_get_info(dlink->node))) {
-			stack;
+		if (!(dinfo = dm_tree_node_get_info(dlink->node))) {
+			stack;	/* FIXME Is this normal? */
 			return 0;
 		}
 
@@ -704,34 +713,34 @@ static int _children_suspended(struct deptree_node *node,
 /*
  * Set major and minor to zero for root of tree.
  */
-struct deptree_node *dm_deptree_find_node(struct deptree *deptree,
+struct dm_tree_node *dm_tree_find_node(struct dm_tree *dtree,
 					  uint32_t major,
 					  uint32_t minor)
 {
 	if (!major && !minor)
-		return &deptree->root;
+		return &dtree->root;
 
-	return _find_deptree_node(deptree, major, minor);
+	return _find_dm_tree_node(dtree, major, minor);
 }
 
 /*
  * Set uuid to NULL for root of tree.
  */
-struct deptree_node *dm_deptree_find_node_by_uuid(struct deptree *deptree,
+struct dm_tree_node *dm_tree_find_node_by_uuid(struct dm_tree *dtree,
 						  const char *uuid)
 {
 	if (!uuid || !*uuid)
-		return &deptree->root;
+		return &dtree->root;
 
-	return _find_deptree_node_by_uuid(deptree, uuid);
+	return _find_dm_tree_node_by_uuid(dtree, uuid);
 }
 
 /*
  * First time set *handle to NULL.
  * Set inverted to invert the tree.
  */
-struct deptree_node *dm_deptree_next_child(void **handle,
-					   struct deptree_node *parent,
+struct dm_tree_node *dm_tree_next_child(void **handle,
+					   struct dm_tree_node *parent,
 					   uint32_t inverted)
 {
 	struct list **dlink = (struct list **) handle;
@@ -747,7 +756,7 @@ struct deptree_node *dm_deptree_next_child(void **handle,
 	else
 		*dlink = list_next(use_list, *dlink);
 
-	return (*dlink) ? list_item(*dlink, struct deptree_link)->node : NULL;
+	return (*dlink) ? list_item(*dlink, struct dm_tree_link)->node : NULL;
 }
 
 /*
@@ -831,10 +840,8 @@ static int _rename_node(const char *old_name, const char *new_name, uint32_t maj
 		goto out;
 	}
 
-	if (!dm_task_set_newname(dmt, new_name)) {
-                stack;
-                goto out;
-        }
+	if (!dm_task_set_newname(dmt, new_name))
+                goto_out;
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
@@ -846,7 +853,6 @@ out:
 
 	return r;
 }
-
 
 /* FIXME Merge with _suspend_node? */
 static int _resume_node(const char *name, uint32_t major, uint32_t minor,
@@ -909,29 +915,29 @@ static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
 	return r;
 }
 
-int dm_deptree_deactivate_children(struct deptree_node *dnode,
+int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len)
 {
 	void *handle = NULL;
-	struct deptree_node *child = dnode;
+	struct dm_tree_node *child = dnode;
 	struct dm_info info;
 	const struct dm_info *dinfo;
 	const char *name;
 	const char *uuid;
 
-	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
-		if (!(dinfo = dm_deptree_node_get_info(child))) {
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		if (!(dinfo = dm_tree_node_get_info(child))) {
 			stack;
 			continue;
 		}
 
-		if (!(name = dm_deptree_node_get_name(child))) {
+		if (!(name = dm_tree_node_get_name(child))) {
 			stack;
 			continue;
 		}
 
-		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+		if (!(uuid = dm_tree_node_get_uuid(child))) {
 			stack;
 			continue;
 		}
@@ -952,37 +958,37 @@ int dm_deptree_deactivate_children(struct deptree_node *dnode,
 			continue;
 		}
 
-		if (dm_deptree_node_num_children(child, 0))
-			dm_deptree_deactivate_children(child, uuid_prefix, uuid_prefix_len);
+		if (dm_tree_node_num_children(child, 0))
+			dm_tree_deactivate_children(child, uuid_prefix, uuid_prefix_len);
 	}
 
 	return 1;
 }
 
-int dm_deptree_suspend_children(struct deptree_node *dnode,
+int dm_tree_suspend_children(struct dm_tree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len)
 {
 	void *handle = NULL;
-	struct deptree_node *child = dnode;
+	struct dm_tree_node *child = dnode;
 	struct dm_info info, newinfo;
 	const struct dm_info *dinfo;
 	const char *name;
 	const char *uuid;
 
 	/* Suspend nodes at this level of the tree */
-	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
-		if (!(dinfo = dm_deptree_node_get_info(child))) {
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		if (!(dinfo = dm_tree_node_get_info(child))) {
 			stack;
 			continue;
 		}
 
-		if (!(name = dm_deptree_node_get_name(child))) {
+		if (!(name = dm_tree_node_get_name(child))) {
 			stack;
 			continue;
 		}
 
-		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+		if (!(uuid = dm_tree_node_get_uuid(child))) {
 			stack;
 			continue;
 		}
@@ -1013,8 +1019,8 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 	/* Then suspend any child nodes */
 	handle = NULL;
 
-	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
-		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		if (!(uuid = dm_tree_node_get_uuid(child))) {
 			stack;
 			continue;
 		}
@@ -1023,26 +1029,26 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
 		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
-		if (dm_deptree_node_num_children(child, 0))
-			dm_deptree_suspend_children(child, uuid_prefix, uuid_prefix_len);
+		if (dm_tree_node_num_children(child, 0))
+			dm_tree_suspend_children(child, uuid_prefix, uuid_prefix_len);
 	}
 
 	return 1;
 }
 
-int dm_deptree_activate_children(struct deptree_node *dnode,
+int dm_tree_activate_children(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
 				 size_t uuid_prefix_len)
 {
 	void *handle = NULL;
-	struct deptree_node *child = dnode;
+	struct dm_tree_node *child = dnode;
 	struct dm_info newinfo;
 	const char *name;
 	const char *uuid;
 
 	/* Activate children first */
-	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
-		if (!(uuid = dm_deptree_node_get_uuid(child))) {
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		if (!(uuid = dm_tree_node_get_uuid(child))) {
 			stack;
 			continue;
 		}
@@ -1050,10 +1056,10 @@ int dm_deptree_activate_children(struct deptree_node *dnode,
 		if (_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			return 1;
 
-		if (dm_deptree_node_num_children(child, 0))
-			dm_deptree_activate_children(child, uuid_prefix, uuid_prefix_len);
+		if (dm_tree_node_num_children(child, 0))
+			dm_tree_activate_children(child, uuid_prefix, uuid_prefix_len);
 
-		if (!(name = dm_deptree_node_get_name(child))) {
+		if (!(name = dm_tree_node_get_name(child))) {
 			stack;
 			continue;
 		}
@@ -1089,7 +1095,7 @@ int dm_deptree_activate_children(struct deptree_node *dnode,
 	return 1;
 }
 
-static int _create_node(struct deptree_node *dnode)
+static int _create_node(struct dm_tree_node *dnode)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -1136,7 +1142,7 @@ out:
 }
 
 
-static int _build_dev_string(char *devbuf, size_t bufsize, struct deptree_node *node)
+static int _build_dev_string(char *devbuf, size_t bufsize, struct dm_tree_node *node)
 {
 	if (!dm_format_dev(devbuf, bufsize, node->info.major, node->info.minor)) {
                 log_error("Failed to format %s device number for %s as dm "
@@ -1156,14 +1162,12 @@ static int _emit_areas_line(struct dm_task *dmt, struct load_segment *seg, char 
 	const char *prefix = "";
 
 	list_iterate_items(area, &seg->areas) {
-		if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node)) {
-			stack;
-			return 0;
-		}
+		if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node))
+			return_0;
 
 		if ((tw = _dm_snprintf(params + *pos, paramsize - *pos, "%s%s %" PRIu64,
 					prefix, devbuf, area->offset)) < 0) {
-                        stack;
+                        stack;	/* Out of space */
                         return -1;
                 }
 
@@ -1190,59 +1194,51 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 	case SEG_MIRRORED:
 		if (seg->clustered) {
 			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered ")) < 0) {
-                        	stack;
+                        	stack;	/* Out of space */
                         	return -1;
                 	}
 			pos += tw;
 		}
 		if (!seg->log) {
 			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "core 1 ")) < 0) {
-                        	stack;
+                        	stack;	/* Out of space */
                         	return -1;
                 	}
 			pos += tw;
 		} else {
-			if (!_build_dev_string(logbuf, sizeof(logbuf), seg->log)) {
-				stack;
-				return 0;
-			}
+			if (!_build_dev_string(logbuf, sizeof(logbuf), seg->log))
+				return_0;
 			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "disk 2 %s ", logbuf)) < 0) {
-                        	stack;
+                        	stack;	/* Out of space */
                         	return -1;
                 	}
 			pos += tw;
 		}
 		if ((tw = _dm_snprintf(params + pos, paramsize - pos, "%u %u ", seg->region_size, seg->mirror_area_count)) < 0) {
-                       	stack;
+                       	stack; /* Out of space */
                        	return -1;
                	}
 		pos += tw;
 		break;
 	case SEG_SNAPSHOT:
-		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin)) {
-			stack;
-			return 0;
-		}
-		if (!_build_dev_string(cowbuf, sizeof(cowbuf), seg->cow)) {
-			stack;
-			return 0;
-		}
+		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin))
+			return_0;
+		if (!_build_dev_string(cowbuf, sizeof(cowbuf), seg->cow))
+			return_0;
 		if ((pos = _dm_snprintf(params, paramsize, "%s %s %c %d",
                                         originbuf, cowbuf,
 					seg->persistent ? 'P' : 'N',
                                         seg->chunk_size)) < 0) {
-                        stack;
+                        stack;	/* Out of space */
                         return -1;
                 }
 		break;
 	case SEG_SNAPSHOT_ORIGIN:
-		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin)) {
-			stack;
-			return 0;
-		}
+		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin))
+			return_0;
 		if ((pos = _dm_snprintf(params, paramsize, "%s",
                                         originbuf)) < 0) {
-                        stack;
+                        stack;	/* Out of space */
                         return -1;
                 }
 		break;
@@ -1250,7 +1246,7 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 		if ((pos = _dm_snprintf(params, paramsize, "%u %u ",
                                          seg->area_count,
                                          seg->stripe_size)) < 0) {
-                        stack;
+                        stack;	/* Out of space */
                         return -1;
                 }
 		break;
@@ -1275,10 +1271,8 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 	log_debug("Adding target: %" PRIu64 " %" PRIu64 " %s %s",
 		  *seg_start, seg->size, dm_segtypes[seg->type].target, params);
 
-	if (!dm_task_add_target(dmt, *seg_start, seg->size, dm_segtypes[seg->type].target, params)) {
-		stack;
-		return 0;
-	}
+	if (!dm_task_add_target(dmt, *seg_start, seg->size, dm_segtypes[seg->type].target, params))
+		return_0;
 
 	*seg_start += seg->size;
 
@@ -1317,7 +1311,7 @@ static int _emit_segment(struct dm_task *dmt, struct load_segment *seg,
 	return 0;
 }
 
-static int _load_node(struct deptree_node *dnode)
+static int _load_node(struct dm_tree_node *dnode)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -1346,10 +1340,8 @@ static int _load_node(struct deptree_node *dnode)
 		log_error("Failed to disable open_count");
 
 	list_iterate_items(seg, &dnode->props.segs)
-		if (!_emit_segment(dmt, seg, &seg_start)) {
-			stack;
-			goto out;
-		}
+		if (!_emit_segment(dmt, seg, &seg_start))
+			goto_out;
 
 	if ((r = dm_task_run(dmt)))
 		r = dm_task_get_info(dmt, &dnode->info);
@@ -1363,17 +1355,17 @@ out:
 
 }
 
-int dm_deptree_preload_children(struct deptree_node *dnode,
+int dm_tree_preload_children(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
 				 size_t uuid_prefix_len)
 {
 	void *handle = NULL;
-	struct deptree_node *child;
+	struct dm_tree_node *child;
 	struct dm_info newinfo;
 	const char *name;
 
 	/* Preload children first */
-	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
 		/* Skip existing non-device-mapper devices */
 		if (!child->info.exists && child->info.major)
 			continue;
@@ -1383,10 +1375,10 @@ int dm_deptree_preload_children(struct deptree_node *dnode,
 		    strncmp(child->uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
-		if (dm_deptree_node_num_children(child, 0))
-			dm_deptree_preload_children(child, uuid_prefix, uuid_prefix_len);
+		if (dm_tree_node_num_children(child, 0))
+			dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len);
 
-		if (!(name = dm_deptree_node_get_name(child))) {
+		if (!(name = dm_tree_node_get_name(child))) {
 			stack;
 			continue;
 		}
@@ -1407,7 +1399,7 @@ int dm_deptree_preload_children(struct deptree_node *dnode,
 		}
 
 		/* Resume device immediately if it has parents */
-		if (!dm_deptree_node_num_children(child, 1))
+		if (!dm_tree_node_num_children(child, 1))
 			continue;
 
 		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
@@ -1426,29 +1418,28 @@ int dm_deptree_preload_children(struct deptree_node *dnode,
 	return 1;
 }
 
-
 /*
  * Returns 1 if unsure.
  */
-int dm_deptree_children_use_uuid(struct deptree_node *dnode,
+int dm_tree_children_use_uuid(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
 				 size_t uuid_prefix_len)
 {
 	void *handle = NULL;
-	struct deptree_node *child = dnode;
+	struct dm_tree_node *child = dnode;
 	const char *uuid;
 
-	while ((child = dm_deptree_next_child(&handle, dnode, 0))) {
-		if (!(uuid = dm_deptree_node_get_uuid(child))) {
-			log_error("Failed to get uuid for deptree node.");
+	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+		if (!(uuid = dm_tree_node_get_uuid(child))) {
+			log_error("Failed to get uuid for dtree node.");
 			return 1;
 		}
 
 		if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
 			return 1;
 
-		if (dm_deptree_node_num_children(child, 0))
-			dm_deptree_children_use_uuid(child, uuid_prefix, uuid_prefix_len);
+		if (dm_tree_node_num_children(child, 0))
+			dm_tree_children_use_uuid(child, uuid_prefix, uuid_prefix_len);
 	}
 
 	return 0;
@@ -1457,12 +1448,12 @@ int dm_deptree_children_use_uuid(struct deptree_node *dnode,
 /*
  * Target functions
  */
-static struct load_segment *_add_segment(struct deptree_node *dnode, unsigned type, uint64_t size)
+static struct load_segment *_add_segment(struct dm_tree_node *dnode, unsigned type, uint64_t size)
 {
 	struct load_segment *seg;
 
-	if (!(seg = dm_pool_zalloc(dnode->deptree->mem, sizeof(*seg)))) {
-		log_error("deptree node segment allocation failed");
+	if (!(seg = dm_pool_zalloc(dnode->dtree->mem, sizeof(*seg)))) {
+		log_error("dtree node segment allocation failed");
 		return NULL;
 	}
 
@@ -1482,33 +1473,29 @@ static struct load_segment *_add_segment(struct deptree_node *dnode, unsigned ty
 	return seg;
 }
 
-int dm_deptree_node_add_snapshot_origin_target(struct deptree_node *dnode,
+int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
                                                uint64_t size,
                                                const char *origin_uuid)
 {
 	struct load_segment *seg;
-	struct deptree_node *origin_node;
+	struct dm_tree_node *origin_node;
 
-	if (!(seg = _add_segment(dnode, SEG_SNAPSHOT_ORIGIN, size))) {
-		stack;
-		return 0;
-	}
+	if (!(seg = _add_segment(dnode, SEG_SNAPSHOT_ORIGIN, size)))
+		return_0;
 
-	if (!(origin_node = dm_deptree_find_node_by_uuid(dnode->deptree, origin_uuid))) {
+	if (!(origin_node = dm_tree_find_node_by_uuid(dnode->dtree, origin_uuid))) {
 		log_error("Couldn't find snapshot origin uuid %s.", origin_uuid);
 		return 0;
 	}
 
 	seg->origin = origin_node;
-	if (!_link_tree_nodes(dnode, origin_node)) {
-		stack;
-		return 0;
-	}
+	if (!_link_tree_nodes(dnode, origin_node))
+		return_0;
 
 	return 1;
 }
 
-int dm_deptree_node_add_snapshot_target(struct deptree_node *node,
+int dm_tree_node_add_snapshot_target(struct dm_tree_node *node,
                                         uint64_t size,
                                         const char *origin_uuid,
                                         const char *cow_uuid,
@@ -1516,34 +1503,28 @@ int dm_deptree_node_add_snapshot_target(struct deptree_node *node,
                                         uint32_t chunk_size)
 {
 	struct load_segment *seg;
-	struct deptree_node *origin_node, *cow_node;
+	struct dm_tree_node *origin_node, *cow_node;
 
-	if (!(seg = _add_segment(node, SEG_SNAPSHOT, size))) {
-		stack;
-		return 0;
-	}
+	if (!(seg = _add_segment(node, SEG_SNAPSHOT, size)))
+		return_0;
 
-	if (!(origin_node = dm_deptree_find_node_by_uuid(node->deptree, origin_uuid))) {
+	if (!(origin_node = dm_tree_find_node_by_uuid(node->dtree, origin_uuid))) {
 		log_error("Couldn't find snapshot origin uuid %s.", origin_uuid);
 		return 0;
 	}
 
 	seg->origin = origin_node;
-	if (!_link_tree_nodes(node, origin_node)) {
-		stack;
-		return 0;
-	}
+	if (!_link_tree_nodes(node, origin_node))
+		return_0;
 
-	if (!(cow_node = dm_deptree_find_node_by_uuid(node->deptree, cow_uuid))) {
+	if (!(cow_node = dm_tree_find_node_by_uuid(node->dtree, cow_uuid))) {
 		log_error("Couldn't find snapshot origin uuid %s.", cow_uuid);
 		return 0;
 	}
 
 	seg->cow = cow_node;
-	if (!_link_tree_nodes(node, cow_node)) {
-		stack;
-		return 0;
-	}
+	if (!_link_tree_nodes(node, cow_node))
+		return_0;
 
 	seg->persistent = persistent ? 1 : 0;
 	seg->chunk_size = chunk_size;
@@ -1551,62 +1532,54 @@ int dm_deptree_node_add_snapshot_target(struct deptree_node *node,
 	return 1;
 }
 
-int dm_deptree_node_add_error_target(struct deptree_node *node,
+int dm_tree_node_add_error_target(struct dm_tree_node *node,
                                      uint64_t size)
 {
-	if (!_add_segment(node, SEG_ERROR, size)) {
-		stack;
-		return 0;
-	}
+	if (!_add_segment(node, SEG_ERROR, size))
+		return_0;
 
 	return 1;
 }
 
-int dm_deptree_node_add_zero_target(struct deptree_node *node,
+int dm_tree_node_add_zero_target(struct dm_tree_node *node,
                                     uint64_t size)
 {
-	if (!_add_segment(node, SEG_ZERO, size)) {
-		stack;
-		return 0;
-	}
+	if (!_add_segment(node, SEG_ZERO, size))
+		return_0;
 
 	return 1;
 }
 
-int dm_deptree_node_add_linear_target(struct deptree_node *node,
+int dm_tree_node_add_linear_target(struct dm_tree_node *node,
                                       uint64_t size)
 {
-	if (!_add_segment(node, SEG_LINEAR, size)) {
-		stack;
-		return 0;
-	}
+	if (!_add_segment(node, SEG_LINEAR, size))
+		return_0;
 
 	return 1;
 }
 
-int dm_deptree_node_add_striped_target(struct deptree_node *node,
+int dm_tree_node_add_striped_target(struct dm_tree_node *node,
                                        uint64_t size,
                                        uint32_t stripe_size)
 {
 	struct load_segment *seg;
 
-	if (!(seg = _add_segment(node, SEG_STRIPED, size))) {
-		stack;
-		return 0;
-	}
+	if (!(seg = _add_segment(node, SEG_STRIPED, size)))
+		return_0;
 
 	seg->stripe_size = stripe_size;
 
 	return 1;
 }
 
-int dm_deptree_node_add_mirror_target_log(struct deptree_node *node,
+int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  uint32_t region_size,
 					  unsigned clustered, 
 					  const char *log_uuid,
 					  unsigned area_count)
 {
-	struct deptree_node *log_node;
+	struct dm_tree_node *log_node;
 	struct load_segment *seg;
 
 	if (!node->props.segment_count) {
@@ -1616,16 +1589,14 @@ int dm_deptree_node_add_mirror_target_log(struct deptree_node *node,
 
 	seg = list_item(list_last(&node->props.segs), struct load_segment);
 
-	if (!(log_node = dm_deptree_find_node_by_uuid(node->deptree, log_uuid))) {
+	if (!(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
 		log_error("Couldn't find snapshot log uuid %s.", log_uuid);
 		return 0;
 	}
 
 	seg->log = log_node;
-	if (!_link_tree_nodes(node, log_node)) {
-		stack;
-		return 0;
-	}
+	if (!_link_tree_nodes(node, log_node))
+		return_0;
 
 	seg->region_size = region_size;
 	seg->clustered = clustered;
@@ -1634,24 +1605,22 @@ int dm_deptree_node_add_mirror_target_log(struct deptree_node *node,
 	return 1;
 }
 
-int dm_deptree_node_add_mirror_target(struct deptree_node *node,
+int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
                                       uint64_t size)
 {
 	struct load_segment *seg;
 
-	if (!(seg = _add_segment(node, SEG_MIRRORED, size))) {
-		stack;
-		return 0;
-	}
+	if (!(seg = _add_segment(node, SEG_MIRRORED, size)))
+		return_0;
 
 	return 1;
 }
 
-static int _add_area(struct deptree_node *node, struct load_segment *seg, struct deptree_node *dev_node, uint64_t offset)
+static int _add_area(struct dm_tree_node *node, struct load_segment *seg, struct dm_tree_node *dev_node, uint64_t offset)
 {
 	struct seg_area *area;
 
-	if (!(area = dm_pool_zalloc(node->deptree->mem, sizeof (*area)))) {
+	if (!(area = dm_pool_zalloc(node->dtree->mem, sizeof (*area)))) {
 		log_error("Failed to allocate target segment area.");
 		return 0;
 	}
@@ -1665,29 +1634,27 @@ static int _add_area(struct deptree_node *node, struct load_segment *seg, struct
 	return 1;
 }
 
-int dm_deptree_node_add_target_area(struct deptree_node *node,
+int dm_tree_node_add_target_area(struct dm_tree_node *node,
                                     const char *dev_name,
                                     const char *uuid,
                                     uint64_t offset)
 {
 	struct load_segment *seg;
 	struct stat info;
-	struct deptree_node *dev_node;
+	struct dm_tree_node *dev_node;
 
 	if ((!dev_name || !*dev_name) && (!uuid || !*uuid)) {
-		log_error("dm_deptree_node_add_target_area called without device");
+		log_error("dm_tree_node_add_target_area called without device");
 		return 0;
 	}
 
 	if (uuid) {
-		if (!(dev_node = dm_deptree_find_node_by_uuid(node->deptree, uuid))) {
+		if (!(dev_node = dm_tree_find_node_by_uuid(node->dtree, uuid))) {
 			log_error("Couldn't find area uuid %s.", uuid);
 			return 0;
 		}
-		if (!_link_tree_nodes(node, dev_node)) {
-			stack;
-			return 0;
-		}
+		if (!_link_tree_nodes(node, dev_node))
+			return_0;
 	} else {
         	if (stat(dev_name, &info) < 0) {
 			log_error("Device %s not found.", dev_name);
@@ -1700,10 +1667,8 @@ int dm_deptree_node_add_target_area(struct deptree_node *node,
 		}
 
 		/* FIXME Check correct macro use */
-		if (!(dev_node = _add_dev(node->deptree, node, MAJOR(info.st_rdev), MINOR(info.st_rdev)))) {
-			stack;
-			return 0;
-		}
+		if (!(dev_node = _add_dev(node->dtree, node, MAJOR(info.st_rdev), MINOR(info.st_rdev))))
+			return_0;
 	}
 
 	if (!node->props.segment_count) {
@@ -1713,10 +1678,8 @@ int dm_deptree_node_add_target_area(struct deptree_node *node,
 
 	seg = list_item(list_last(&node->props.segs), struct load_segment);
 
-	if (!_add_area(node, seg, dev_node, offset)) {
-		stack;
-		return 0;
-	}
+	if (!_add_area(node, seg, dev_node, offset))
+		return_0;
 
 	return 1;
 }

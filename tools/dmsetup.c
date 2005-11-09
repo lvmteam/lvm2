@@ -107,7 +107,7 @@ static char *_uuid;
 static char *_fields;
 static char *_target;
 static char *_command;
-static struct deptree *_dtree;
+static struct dm_tree *_dtree;
 
 /*
  * Commands
@@ -1107,14 +1107,14 @@ static void _out_prefix(int depth)
 /*
  * Display tree
  */
-static void _display_tree_attributes(struct deptree_node *node)
+static void _display_tree_attributes(struct dm_tree_node *node)
 {
 	int attr = 0;
 	const char *uuid;
 	const struct dm_info *info;
 
-	uuid = dm_deptree_node_get_uuid(node);
-	info = dm_deptree_node_get_info(node);
+	uuid = dm_tree_node_get_uuid(node);
+	info = dm_tree_node_get_info(node);
 
 	if (!info->exists)
 		return;
@@ -1143,7 +1143,7 @@ static void _display_tree_attributes(struct deptree_node *node)
 		_out_char(']');
 }
 
-static void _display_tree_node(struct deptree_node *node, unsigned depth,
+static void _display_tree_node(struct dm_tree_node *node, unsigned depth,
 			       unsigned first_child, unsigned last_child,
 			       unsigned has_children)
 {
@@ -1156,7 +1156,7 @@ static void _display_tree_node(struct deptree_node *node, unsigned depth,
 	if (depth + 2 > MAX_DEPTH)
 		return;
 
-	name = dm_deptree_node_get_name(node);
+	name = dm_tree_node_get_name(node);
 
 	if ((!name || !*name) && !_tree_switches[TR_DEVICE])
 		return;
@@ -1181,7 +1181,7 @@ static void _display_tree_node(struct deptree_node *node, unsigned depth,
 	if (name)
 		_out_string(name);
 
-	info = dm_deptree_node_get_info(node);
+	info = dm_tree_node_get_info(node);
 
 	if (_tree_switches[TR_DEVICE]) {
 		_out_string(name ? " (" : "(");
@@ -1210,20 +1210,20 @@ static void _display_tree_node(struct deptree_node *node, unsigned depth,
 /*
  * Walk the dependency tree
  */
-static void _tree_walk_children(struct deptree_node *node, unsigned depth)
+static void _tree_walk_children(struct dm_tree_node *node, unsigned depth)
 {
-	struct deptree_node *child, *next_child;
+	struct dm_tree_node *child, *next_child;
 	void *handle = NULL;
 	uint32_t inverted = _tree_switches[TR_BOTTOMUP];
 	unsigned first_child = 1;
 	unsigned has_children;
 
-	next_child = dm_deptree_next_child(&handle, node, inverted);
+	next_child = dm_tree_next_child(&handle, node, inverted);
 
 	while ((child = next_child)) {
-		next_child = dm_deptree_next_child(&handle, node, inverted);
+		next_child = dm_tree_next_child(&handle, node, inverted);
 		has_children =
-		    dm_deptree_node_num_children(child, inverted) ? 1 : 0;
+		    dm_tree_node_num_children(child, inverted) ? 1 : 0;
 
 		_display_tree_node(child, depth, first_child,
 				   next_child ? 0 : 1, has_children);
@@ -1239,7 +1239,7 @@ static int _add_dep(int argc, char **argv, void *data)
 {
 	struct dm_names *names = (struct dm_names *) data;
 
-	if (!dm_deptree_add_dev(_dtree, MAJOR(names->dev), MINOR(names->dev)))
+	if (!dm_tree_add_dev(_dtree, MAJOR(names->dev), MINOR(names->dev)))
 		return 0;
 
 	return 1;
@@ -1250,15 +1250,15 @@ static int _add_dep(int argc, char **argv, void *data)
  */
 static int _tree(int argc, char **argv, void *data)
 {
-	if (!(_dtree = dm_deptree_create()))
+	if (!(_dtree = dm_tree_create()))
 		return 0;
 
 	if (!_process_all(argc, argv, _add_dep))
 		return 0;
 
-	_tree_walk_children(dm_deptree_find_node(_dtree, 0, 0), 0);
+	_tree_walk_children(dm_tree_find_node(_dtree, 0, 0), 0);
 
-	dm_deptree_free(_dtree);
+	dm_tree_free(_dtree);
 
 	return 1;
 }

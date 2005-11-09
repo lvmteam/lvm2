@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -26,6 +26,11 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
+
+/*****************************************************************
+ * The first section of this file provides direct access to the 
+ * individual device-mapper ioctls.
+ ****************************************************************/
 
 /*
  * Since it is quite laborious to build the ioctl
@@ -180,21 +185,17 @@ int dm_is_dm_major(uint32_t major);
 void dm_lib_release(void);
 void dm_lib_exit(void) __attribute((destructor));
 
-/***********************************************************************
- * Wrappers
- ***********************************************************************/
-
 /*
  * Use NULL for all devices.
  */
 int dm_mknodes(const char *name);
 int dm_driver_version(char *version, size_t size);
 
-/*****************************
- * Dependency tree functions *
- *****************************/
-struct deptree;
-struct deptree_node;
+/******************************************************
+ * Functions to build and manipulate trees of devices *
+ ******************************************************/
+struct dm_tree;
+struct dm_tree_node;
 
 /*
  * Initialise an empty dependency tree.
@@ -207,18 +208,18 @@ struct deptree_node;
  * The root node is the parent/child of every node that doesn't have other 
  * parents/children.
  */
-struct deptree *dm_deptree_create(void);
-void dm_deptree_free(struct deptree *deptree);
+struct dm_tree *dm_tree_create(void);
+void dm_tree_free(struct dm_tree *tree);
 
 /*
  * Add nodes to the tree for a given device and all the devices it uses.
  */
-int dm_deptree_add_dev(struct deptree *deptree, uint32_t major, uint32_t minor);
+int dm_tree_add_dev(struct dm_tree *tree, uint32_t major, uint32_t minor);
 
 /*
  * Add a new node to the tree if it doesn't already exist.
  */
-struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
+struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *tree,
                                             const char *name,
                                             const char *uuid,
                                             uint32_t major, uint32_t minor,
@@ -230,10 +231,10 @@ struct deptree_node *dm_deptree_add_new_dev(struct deptree *deptree,
  * Search for a node in the tree.
  * Set major and minor to 0 or uuid to NULL to get the root node.
  */
-struct deptree_node *dm_deptree_find_node(struct deptree *deptree,
+struct dm_tree_node *dm_tree_find_node(struct dm_tree *tree,
 					  uint32_t major,
 					  uint32_t minor);
-struct deptree_node *dm_deptree_find_node_by_uuid(struct deptree *deptree,
+struct dm_tree_node *dm_tree_find_node_by_uuid(struct dm_tree *tree,
 						  const char *uuid);
 
 /*
@@ -242,36 +243,36 @@ struct deptree_node *dm_deptree_find_node_by_uuid(struct deptree *deptree,
  * Returns NULL after the last child.
  * Set inverted to use inverted tree.
  */
-struct deptree_node *dm_deptree_next_child(void **handle,
-					   struct deptree_node *parent,
+struct dm_tree_node *dm_tree_next_child(void **handle,
+					   struct dm_tree_node *parent,
 					   uint32_t inverted);
 
 /*
  * Get properties of a node.
  */
-const char *dm_deptree_node_get_name(struct deptree_node *node);
-const char *dm_deptree_node_get_uuid(struct deptree_node *node);
-const struct dm_info *dm_deptree_node_get_info(struct deptree_node *node);
-void *dm_deptree_node_get_context(struct deptree_node *node);
+const char *dm_tree_node_get_name(struct dm_tree_node *node);
+const char *dm_tree_node_get_uuid(struct dm_tree_node *node);
+const struct dm_info *dm_tree_node_get_info(struct dm_tree_node *node);
+void *dm_tree_node_get_context(struct dm_tree_node *node);
 
 /*
  * Returns the number of children of the given node (excluding the root node).
  * Set inverted for the number of parents.
  */
-int dm_deptree_node_num_children(struct deptree_node *node, uint32_t inverted);
+int dm_tree_node_num_children(struct dm_tree_node *node, uint32_t inverted);
 
 /*
  * Deactivate a device plus all dependencies.
  * Ignores devices that don't have a uuid starting with uuid_prefix.
  */
-int dm_deptree_deactivate_children(struct deptree_node *dnode,
+int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len);
 /*
  * Preload/create a device plus all dependencies.
  * Ignores devices that don't have a uuid starting with uuid_prefix.
  */
-int dm_deptree_preload_children(struct deptree_node *dnode,
+int dm_tree_preload_children(struct dm_tree_node *dnode,
                                  const char *uuid_prefix,
                                  size_t uuid_prefix_len);
 
@@ -279,7 +280,7 @@ int dm_deptree_preload_children(struct deptree_node *dnode,
  * Resume a device plus all dependencies.
  * Ignores devices that don't have a uuid starting with uuid_prefix.
  */
-int dm_deptree_activate_children(struct deptree_node *dnode,
+int dm_tree_activate_children(struct dm_tree_node *dnode,
                                  const char *uuid_prefix,
                                  size_t uuid_prefix_len);
 
@@ -287,7 +288,7 @@ int dm_deptree_activate_children(struct deptree_node *dnode,
  * Suspend a device plus all dependencies.
  * Ignores devices that don't have a uuid starting with uuid_prefix.
  */
-int dm_deptree_suspend_children(struct deptree_node *dnode,
+int dm_tree_suspend_children(struct dm_tree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len);
 
@@ -296,39 +297,39 @@ int dm_deptree_suspend_children(struct deptree_node *dnode,
  * Only returns 0 if every node was checked successfully.
  * Returns 1 if the tree walk has to be aborted.
  */
-int dm_deptree_children_use_uuid(struct deptree_node *dnode,
+int dm_tree_children_use_uuid(struct dm_tree_node *dnode,
 				 const char *uuid_prefix,
 				 size_t uuid_prefix_len);
 
 /*
- * Construct tables for new nodes.
+ * Construct tables for new nodes before activating them.
  */
-int dm_deptree_node_add_snapshot_origin_target(struct deptree_node *dnode,
+int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
 					       uint64_t size,
 					       const char *origin_uuid);
-int dm_deptree_node_add_snapshot_target(struct deptree_node *node,
+int dm_tree_node_add_snapshot_target(struct dm_tree_node *node,
 					uint64_t size,
 					const char *origin_uuid,
 					const char *cow_uuid,
 					int persistent,
 					uint32_t chunk_size);
-int dm_deptree_node_add_error_target(struct deptree_node *node,
+int dm_tree_node_add_error_target(struct dm_tree_node *node,
 				     uint64_t size);
-int dm_deptree_node_add_zero_target(struct deptree_node *node,
+int dm_tree_node_add_zero_target(struct dm_tree_node *node,
 				    uint64_t size);
-int dm_deptree_node_add_linear_target(struct deptree_node *node,
+int dm_tree_node_add_linear_target(struct dm_tree_node *node,
 				      uint64_t size);
-int dm_deptree_node_add_striped_target(struct deptree_node *node,
+int dm_tree_node_add_striped_target(struct dm_tree_node *node,
 				       uint64_t size,
 				       uint32_t stripe_size);
-int dm_deptree_node_add_mirror_target(struct deptree_node *node,
+int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 				      uint64_t size);
-int dm_deptree_node_add_mirror_target_log(struct deptree_node *node,
+int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  uint32_t region_size,
 					  unsigned clustered,
 					  const char *log_uuid,
 					  unsigned area_count);
-int dm_deptree_node_add_target_area(struct deptree_node *node,
+int dm_tree_node_add_target_area(struct dm_tree_node *node,
 				    const char *dev_name,
 				    const char *dlid,
 				    uint64_t offset);
@@ -336,6 +337,10 @@ int dm_deptree_node_add_target_area(struct deptree_node *node,
 /*****************************************************************************
  * Library functions
  *****************************************************************************/
+
+/*******************
+ * Memory management
+ *******************/
 
 void *dm_malloc_aux(size_t s, const char *file, int line);
 #define dm_malloc(s) dm_malloc_aux((s), __FILE__, __LINE__)
@@ -360,10 +365,6 @@ void dm_bounds_check(void);
 #  define dm_bounds_check()
 
 #endif
-
-/******************
- * pool functions
- ******************/
 
 /*
  * The pool allocator is useful when you are going to allocate
@@ -533,7 +534,7 @@ struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_no
 
 #endif				/* LIB_DEVICE_MAPPER_H */
 
-/*
+/*********
  * selinux
- */
+ *********/
 int dm_set_selinux_context(const char *path, mode_t mode);
