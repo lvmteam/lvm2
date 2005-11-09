@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Added xen xvd devices.
   Clear up precommitted metadata better.
   A pvresize implementation.
   Fix contiguous allocation when there are no preceding segments.

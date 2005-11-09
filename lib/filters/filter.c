@@ -72,6 +72,7 @@ static const device_info_t device_info[] = {
 	{"ramdisk", 1},		/* RAM disk */
 	{"aoe", 16},		/* ATA over Ethernet */
 	{"device-mapper", 1},	/* Other mapped devices */
+	{"xvd", 16},		/* Xen virtual block device */
 	{NULL, 0}
 };
 
