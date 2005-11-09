@@ -41,10 +41,10 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 				struct config_tree *cft, void **target_state,
 				struct lv_segment *seg,
-				struct deptree_node *node, uint64_t len,
+				struct dm_tree_node *node, uint64_t len,
 				uint32_t *pvmove_mirror_count)
 {
-	return dm_deptree_node_add_error_target(node, len);
+	return dm_tree_node_add_error_target(node, len);
 }
 
 static int _target_present(void)

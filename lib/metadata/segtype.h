@@ -69,7 +69,7 @@ struct segtype_handler {
 	int (*add_target_line) (struct dev_manager *dm, struct dm_pool *mem,
                                 struct config_tree *cft, void **target_state,
                                 struct lv_segment *seg,
-                                struct deptree_node *node, uint64_t len,
+                                struct dm_tree_node *node, uint64_t len,
                                 uint32_t *pvmove_mirror_count);
 	int (*target_percent) (void **target_state, struct dm_pool * mem,
 			       struct config_tree * cft,

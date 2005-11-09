@@ -217,7 +217,7 @@ static int _target_percent(void **target_state, struct dm_pool *mem,
 }
 
 static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
-		    struct deptree_node *node, uint32_t area_count, uint32_t region_size)
+		    struct dm_tree_node *node, uint32_t area_count, uint32_t region_size)
 {
 	unsigned clustered = 0;
 	char *log_dlid = NULL;
@@ -238,13 +238,13 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 	}
 
 	/* FIXME Add sync parm? */
-	return dm_deptree_node_add_mirror_target_log(node, region_size, clustered, log_dlid, area_count);
+	return dm_tree_node_add_mirror_target_log(node, region_size, clustered, log_dlid, area_count);
 }
 
 static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
                                 struct config_tree *cft, void **target_state,
                                 struct lv_segment *seg,
-                                struct deptree_node *node, uint64_t len,
+                                struct dm_tree_node *node, uint64_t len,
                                 uint32_t *pvmove_mirror_count)
 {
 	struct mirror_state *mirr_state;
@@ -276,7 +276,7 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 	}
 
 	if (mirror_status != MIRR_RUNNING) {
-		if (!dm_deptree_node_add_linear_target(node, len))
+		if (!dm_tree_node_add_linear_target(node, len))
 			return_0;
 		goto done;
 	}
@@ -300,7 +300,7 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 		}
 	}
 
-	if (!dm_deptree_node_add_mirror_target(node, len))
+	if (!dm_tree_node_add_mirror_target(node, len))
 		return_0;
 
 	if ((r = _add_log(dm, seg, node, area_count, region_size)) <= 0) {

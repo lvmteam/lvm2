@@ -573,7 +573,7 @@ int dev_manager_lv_rmnodes(const struct logical_volume *lv)
 	return fs_del_lv(lv);
 }
 
-static int _add_dev_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
+static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			       struct logical_volume *lv, const char *layer)
 {
 	char *dlid, *name;
@@ -592,7 +592,7 @@ static int _add_dev_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
         }
 
 	if (info.exists && !dm_tree_add_dev(dtree, info.major, info.minor)) {
-		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to deptree",
+		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree",
 			  info.major, info.minor);
 		return 0;
 	}
@@ -603,39 +603,39 @@ static int _add_dev_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
 /*
  * Add LV and any known dependencies
  */
-static int _add_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv)
+static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struct logical_volume *lv)
 {
-	if (!_add_dev_to_deptree(dm, dtree, lv, NULL))
+	if (!_add_dev_to_dtree(dm, dtree, lv, NULL))
 		return_0;
 
 	/* FIXME Can we avoid doing this every time? */
-	if (!_add_dev_to_deptree(dm, dtree, lv, "real"))
+	if (!_add_dev_to_dtree(dm, dtree, lv, "real"))
 		return_0;
 
-	if (!_add_dev_to_deptree(dm, dtree, lv, "cow"))
+	if (!_add_dev_to_dtree(dm, dtree, lv, "cow"))
 		return_0;
 
 	return 1;
 }
 
-static struct dm_tree *_create_partial_deptree(struct dev_manager *dm, struct logical_volume *lv)
+static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct dm_tree *dtree;
 	struct list *snh, *snht;
 
 	if (!(dtree = dm_tree_create())) {
-		log_error("Partial deptree creation failed for %s.", lv->name);
+		log_error("Partial dtree creation failed for %s.", lv->name);
 		return NULL;
 	}
 
-	if (!_add_lv_to_deptree(dm, dtree, lv)) {
+	if (!_add_lv_to_dtree(dm, dtree, lv)) {
 		stack;
 		goto fail;
 	}
 
 	/* Add any snapshots of this LV */
 	list_iterate_safe(snh, snht, &lv->snapshot_segs)
-		if (!_add_lv_to_deptree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow)) {
+		if (!_add_lv_to_dtree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow)) {
 			stack;
 			goto fail;
 		}
@@ -686,7 +686,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 	return 1;
 }
 
-static int _add_origin_target_to_deptree(struct dev_manager *dm,
+static int _add_origin_target_to_dtree(struct dev_manager *dm,
 					 struct dm_tree *dtree,
 					 struct dm_tree_node *dnode,
 					 struct logical_volume *lv)
@@ -702,7 +702,7 @@ static int _add_origin_target_to_deptree(struct dev_manager *dm,
 	return 1;
 }
 
-static int _add_snapshot_target_to_deptree(struct dev_manager *dm,
+static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 					   struct dm_tree *dtree,
 					   struct dm_tree_node *dnode,
 					   struct logical_volume *lv)
@@ -731,7 +731,7 @@ static int _add_snapshot_target_to_deptree(struct dev_manager *dm,
 	return 1;
 }
 
-static int _add_target_to_deptree(struct dev_manager *dm,
+static int _add_target_to_dtree(struct dev_manager *dm,
 				  struct dm_tree *dtree,
 				  struct dm_tree_node *dnode,
 				  struct lv_segment *seg)
@@ -751,10 +751,10 @@ static int _add_target_to_deptree(struct dev_manager *dm,
 						  &dm-> pvmove_mirror_count);
 }
 
-static int _add_new_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
+static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				  struct logical_volume *lv, const char *layer);
 
-static int _add_segment_to_deptree(struct dev_manager *dm,
+static int _add_segment_to_dtree(struct dev_manager *dm,
 				   struct dm_tree *dtree,
 				   struct dm_tree_node *dnode,
 				   struct lv_segment *seg,
@@ -773,7 +773,7 @@ static int _add_segment_to_deptree(struct dev_manager *dm,
 
 	/* Add mirror log */
 	if (seg->log_lv &&
-	    !_add_new_lv_to_deptree(dm, dtree, seg->log_lv, NULL))
+	    !_add_new_lv_to_dtree(dm, dtree, seg->log_lv, NULL))
 		return_0;
 
 	/* If this is a snapshot origin, add real LV */
@@ -782,39 +782,39 @@ static int _add_segment_to_deptree(struct dev_manager *dm,
 			log_error("Clustered snapshots are not yet supported");
 			return 0;
 		}
-		if (!_add_new_lv_to_deptree(dm, dtree, seg->lv, "real"))
+		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, "real"))
 			return_0;
 	} else if (lv_is_cow(seg->lv) && !layer) {
-		if (!_add_new_lv_to_deptree(dm, dtree, seg->lv, "cow"))
+		if (!_add_new_lv_to_dtree(dm, dtree, seg->lv, "cow"))
 			return_0;
 	} else {
 		/* Add any LVs used by this segment */
 		for (s = 0; s < seg->area_count; s++)
 			if ((seg_type(seg, s) == AREA_LV) &&
-			    (!_add_new_lv_to_deptree(dm, dtree, seg_lv(seg, s), NULL)))
+			    (!_add_new_lv_to_dtree(dm, dtree, seg_lv(seg, s), NULL)))
 				return_0;
 	}
 
 	/* Now we've added its dependencies, we can add the target itself */
 	if (lv_is_origin(seg->lv) && !layer) {
-		if (!_add_origin_target_to_deptree(dm, dtree, dnode, seg->lv))
+		if (!_add_origin_target_to_dtree(dm, dtree, dnode, seg->lv))
 			return_0;
 	} else if (lv_is_cow(seg->lv) && !layer) {
-		if (!_add_snapshot_target_to_deptree(dm, dtree, dnode, seg->lv))
+		if (!_add_snapshot_target_to_dtree(dm, dtree, dnode, seg->lv))
 			return_0;
-	} else if (!_add_target_to_deptree(dm, dtree, dnode, seg))
+	} else if (!_add_target_to_dtree(dm, dtree, dnode, seg))
 		return_0;
 
 	if (lv_is_origin(seg->lv) && !layer)
 		/* Add any snapshots of this LV */
 		list_iterate(snh, &seg->lv->snapshot_segs)
-			if (!_add_new_lv_to_deptree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow, NULL))
+			if (!_add_new_lv_to_dtree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow, NULL))
 				return_0;
 
 	return 1;
 }
 
-static int _add_new_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
+static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				  struct logical_volume *lv, const char *layer)
 {
 	struct lv_segment *seg;
@@ -835,14 +835,14 @@ static int _add_new_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* FIXME How do we determine whether a pre-existing node need reloading or not? */
 	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
-		log_error("_add_new_lv_to_deptree: pool alloc failed for %s %s.", lv->name, layer);
+		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.", lv->name, layer);
 		return 0;
 	}
 
 	lvlayer->lv = lv;
 
 	/*
-	 * Add LV to deptree.
+	 * Add LV to dtree.
 	 * If we're working with precommitted metadata, clear any
 	 * existing inactive table left behind.
 	 * Major/minor settings only apply to the visible layer.
@@ -861,7 +861,7 @@ static int _add_new_lv_to_deptree(struct dev_manager *dm, struct dm_tree *dtree,
 	/* Create table */
 	dm->pvmove_mirror_count = 0u;
 	list_iterate_items(seg, &lv->segments) {
-		if (!_add_segment_to_deptree(dm, dtree, dnode, seg, layer))
+		if (!_add_segment_to_dtree(dm, dtree, dnode, seg, layer))
 			return_0;
 		/* These aren't real segments in the LVM2 metadata */
 		if (lv_is_origin(lv) && !layer)
@@ -942,7 +942,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	char *dlid;
 	int r = 0;
 
-	if (!(dtree = _create_partial_deptree(dm, lv)))
+	if (!(dtree = _create_partial_dtree(dm, lv)))
 		return_0;
 
 	if (!(root = dm_tree_find_node(dtree, 0, 0))) {
@@ -972,7 +972,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	case PRELOAD:
 	case ACTIVATE:
 		/* Add all required new devices to tree */
-		if (!_add_new_lv_to_deptree(dm, dtree, lv, NULL))
+		if (!_add_new_lv_to_dtree(dm, dtree, lv, NULL))
 			goto_out;
 
 		/* Preload any devices required before any suspensions */
@@ -1043,12 +1043,12 @@ int dev_manager_device_uses_vg(struct dev_manager *dm, struct device *dev,
 	int r = 1;
 
 	if (!(dtree = dm_tree_create())) {
-		log_error("partial deptree creation failed");
+		log_error("partial dtree creation failed");
 		return r;
 	}
 
 	if (!dm_tree_add_dev(dtree, MAJOR(dev->dev), MINOR(dev->dev))) {
-		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to deptree",
+		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to dtree",
 			  dev_name(dev), (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev));
 		goto out;
 	}

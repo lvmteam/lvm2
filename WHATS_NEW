@@ -1,5 +1,11 @@
 Version 2.02.00 - 
 ===================================
+  Stop lvcreate attempting to wipe zero or error segments.
+  Added new lvs table attributes.
+  Separated out activation preload.
+  Moved activation functions into libdevmapper.
+  Fixed build_dm_name.
+  Add return macros.
   Added xen xvd devices.
   Clear up precommitted metadata better.
   A pvresize implementation.

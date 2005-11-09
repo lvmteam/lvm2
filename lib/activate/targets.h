@@ -24,7 +24,7 @@ int compose_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		       int start_area, int areas);
 
 int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
-                   struct deptree_node *node, int start_area, int areas);
+                   struct dm_tree_node *node, int start_area, int areas);
 
 int build_dev_string(struct dev_manager *dm, char *dlid, char *devbuf,
 		     size_t bufsize, const char *desc);
