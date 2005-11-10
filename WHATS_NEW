@@ -1,5 +1,6 @@
 Version 2.02.00 - 
 ===================================
+  Extend allocation areas to avoid overflow with contiguous with other PVs.
   Stop lvcreate attempting to wipe zero or error segments.
   Added new lvs table attributes.
   Separated out activation preload.

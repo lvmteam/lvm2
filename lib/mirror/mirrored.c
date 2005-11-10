@@ -309,7 +309,7 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 	}
 
       done:
-	return add_areas_line(dm, seg, node, start_area, seg->area_count);
+	return add_areas_line(dm, seg, node, start_area, area_count);
 }
 
 static int _target_present(void)
