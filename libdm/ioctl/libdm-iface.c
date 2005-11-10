@@ -236,7 +236,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	}
 
 #ifdef HAVE_SELINUX
-        if (!set_selinux_context(control, S_IFCHR)) {
+        if (!dm_set_selinux_context(control, S_IFCHR)) {
                 stack;
                 return 0;
         }
