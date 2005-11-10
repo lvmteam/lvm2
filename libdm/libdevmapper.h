@@ -342,29 +342,33 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
  * Memory management
  *******************/
 
-void *dm_malloc_aux(size_t s, const char *file, int line);
-#define dm_malloc(s) dm_malloc_aux((s), __FILE__, __LINE__)
-
 char *dm_strdup(const char *str);
+
+void *dm_malloc_aux(size_t s, const char *file, int line);
+void *dm_malloc_aux_debug(size_t s, const char *file, int line);
+void dm_free_aux(void *p);
+void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line);
+int dm_dump_memory_debug(void);
+void dm_bounds_check_debug(void);
 
 #ifdef DEBUG_MEM
 
-void dm_free_aux(void *p);
-void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line);
-int dm_dump_memory(void);
-void dm_bounds_check(void);
-
+#  define dm_malloc(s) dm_malloc_aux_debug((s), __FILE__, __LINE__)
 #  define dm_free(p) dm_free_aux(p)
 #  define dm_realloc(p, s) dm_realloc_aux(p, s, __FILE__, __LINE__)
+#  define dm_dump_memory_debug()
+#  define dm_bounds_check_debug()
 
 #else
 
+#  define dm_malloc(s) dm_malloc_aux((s), __FILE__, __LINE__)
 #  define dm_free(p) free(p)
 #  define dm_realloc(p, s) realloc(p, s)
 #  define dm_dump_memory()
 #  define dm_bounds_check()
 
 #endif
+
 
 /*
  * The pool allocator is useful when you are going to allocate

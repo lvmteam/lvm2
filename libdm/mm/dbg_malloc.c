@@ -28,8 +28,6 @@ char *dm_strdup(const char *str)
 	return ret;
 }
 
-#ifdef DEBUG_MEM
-
 struct memblock {
 	struct memblock *prev, *next;	/* All allocated blocks are linked */
 	size_t length;		/* Size of the requested block */
@@ -51,7 +49,7 @@ static struct {
 static struct memblock *_head = 0;
 static struct memblock *_tail = 0;
 
-void *dm_malloc_aux(size_t s, const char *file, int line)
+void *dm_malloc_aux_debug(size_t s, const char *file, int line)
 {
 	struct memblock *nb;
 	size_t tsize = s + sizeof(*nb) + sizeof(unsigned long);
@@ -72,9 +70,7 @@ void *dm_malloc_aux(size_t s, const char *file, int line)
 	nb->file = file;
 	nb->line = line;
 
-#ifdef BOUNDS_CHECK
 	dm_bounds_check();
-#endif
 
 	/* setup fields */
 	nb->magic = nb + 1;
@@ -125,9 +121,7 @@ void dm_free_aux(void *p)
 	if (!p)
 		return;
 
-#ifdef BOUNDS_CHECK
 	dm_bounds_check();
-#endif
 
 	/* sanity check */
 	assert(mb->magic == p);
@@ -171,7 +165,7 @@ void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line)
 	void *r;
 	struct memblock *mb = ((struct memblock *) p) - 1;
 
-	r = dm_malloc_aux(s, file, line);
+	r = dm_malloc_aux_debug(s, file, line);
 
 	if (p) {
 		memcpy(r, p, mb->length);
@@ -181,7 +175,7 @@ void *dm_realloc_aux(void *p, unsigned int s, const char *file, int line)
 	return r;
 }
 
-int dm_dump_memory(void)
+int dm_dump_memory_debug(void)
 {
 	unsigned long tot = 0;
 	struct memblock *mb;
@@ -216,7 +210,7 @@ int dm_dump_memory(void)
 	return 1;
 }
 
-void dm_bounds_check(void)
+void dm_bounds_check_debug(void)
 {
 	struct memblock *mb = _head;
 	while (mb) {
@@ -230,8 +224,6 @@ void dm_bounds_check(void)
 	}
 }
 
-#else
-
 void *dm_malloc_aux(size_t s, const char *file, int line)
 {
 	if (s > 50000000) {
@@ -242,5 +234,3 @@ void *dm_malloc_aux(size_t s, const char *file, int line)
 
 	return malloc(s);
 }
-
-#endif
