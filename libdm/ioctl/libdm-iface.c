@@ -1409,8 +1409,6 @@ int dm_task_run(struct dm_task *dmt)
 		return _dm_task_run_v1(dmt);
 #endif
 
-dm_task_skip_lockfs(dmt); // AGK TEMP
-
 	if ((unsigned) dmt->type >=
 	    (sizeof(_cmd_data_v4) / sizeof(*_cmd_data_v4))) {
 		log_error("Internal error: unknown device-mapper task %d",
