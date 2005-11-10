@@ -346,8 +346,8 @@ static void set_node_state(struct node_info *ninfo, char *csid, uint8_t nodestat
      */
     tcp_remove_client(csid);
 
-    DEBUGLOG("set_node_state, '%s' state = %d (oldstate=%d), num_nodes=%d\n",
-	     ninfo->name, ninfo->state, oldstate, num_nodes);
+    DEBUGLOG("set_node_state, '%s' state = %d num_nodes=%d\n",
+	     ninfo->name, ninfo->state, num_nodes);
 }
 
 static struct node_info *add_or_set_node(char *name, struct in6_addr *ip, uint8_t state)
