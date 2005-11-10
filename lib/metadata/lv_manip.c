@@ -718,7 +718,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					already_found_one = 1;
 				}
 
-				areas[ix + ix_offset -1] = pva;
+				areas[ix + ix_offset - 1] = pva;
 
 				break;	/* Next PV */
 			}
@@ -810,6 +810,11 @@ static int _allocate(struct alloc_handle *ah,
 		}
 		areas_size = ah->area_count + ah->log_count;
 	}
+
+	/* Upper bound if none of the PVs in prev_lvseg is in pvms */
+	/* FIXME Work size out properly */
+	if (prev_lvseg)
+		areas_size += prev_lvseg->area_count;
 
 	/* Allocate an array of pv_areas to hold the largest space on each PV */
 	if (!(areas = dm_malloc(sizeof(*areas) * areas_size))) {
