@@ -61,11 +61,12 @@ dm_tree_node_add_target_area
 dm_is_dm_major
 dm_mknodes
 dm_malloc_aux
+dm_malloc_aux_debug
 dm_strdup
 dm_free_aux
 dm_realloc_aux
-dm_dump_memory
-dm_bounds_check
+dm_dump_memory_debug
+dm_bounds_check_debug
 dm_pool_create
 dm_pool_destroy
 dm_pool_alloc
