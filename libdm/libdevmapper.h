@@ -356,16 +356,16 @@ void dm_bounds_check_debug(void);
 #  define dm_malloc(s) dm_malloc_aux_debug((s), __FILE__, __LINE__)
 #  define dm_free(p) dm_free_aux(p)
 #  define dm_realloc(p, s) dm_realloc_aux(p, s, __FILE__, __LINE__)
-#  define dm_dump_memory_debug()
-#  define dm_bounds_check_debug()
+#  define dm_dump_memory() dm_dump_memory_debug()
+#  define dm_bounds_check() dm_bounds_check_debug()
 
 #else
 
 #  define dm_malloc(s) dm_malloc_aux((s), __FILE__, __LINE__)
 #  define dm_free(p) free(p)
 #  define dm_realloc(p, s) realloc(p, s)
-#  define dm_dump_memory()
-#  define dm_bounds_check()
+#  define dm_dump_memory() {}
+#  define dm_bounds_check() {}
 
 #endif
 
