@@ -761,6 +761,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 		if (!suspend_lv(cmd, org)) {
 			log_error("Failed to suspend origin %s", org->name);
+			vg_revert(vg);
 			return 0;
 		}
 
