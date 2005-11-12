@@ -25,6 +25,9 @@
 
 #define MAX_TARGET_PARAMSIZE 500000
 
+/* FIXME Fix interface so this is used only by LVM */
+#define UUID_PREFIX "LVM-"
+
 /* Supported segment types */
 enum {
 	SEG_ERROR, 
@@ -348,8 +351,15 @@ static struct dm_tree_node *_find_dm_tree_node(struct dm_tree *dtree,
 static struct dm_tree_node *_find_dm_tree_node_by_uuid(struct dm_tree *dtree,
 						       const char *uuid)
 {
-	/* FIXME Do we need to cope with missing LVM- prefix too? */
-	return dm_hash_lookup(dtree->uuids, uuid);
+	struct dm_tree_node *node;
+
+	if ((node = dm_hash_lookup(dtree->uuids, uuid)))
+		return node;
+
+	if (strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
+		return NULL;
+
+	return dm_hash_lookup(dtree->uuids, uuid + sizeof(UUID_PREFIX) - 1);
 }
 
 static int _deps(struct dm_task **dmt, struct dm_pool *mem, uint32_t major, uint32_t minor,
@@ -653,13 +663,13 @@ static int _uuid_prefix_matches(const char *uuid, const char *uuid_prefix, size_
 	if (uuid_prefix_len <= 4)
 		return 0;
 
-	if (!strncmp(uuid, "LVM-", 4))
+	if (!strncmp(uuid, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
 		return 0;
 
-	if (strncmp(uuid_prefix, "LVM-", 4))
+	if (strncmp(uuid_prefix, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
 		return 0;
 
-	if (!strncmp(uuid, uuid_prefix + 4, uuid_prefix_len - 4))
+	if (!strncmp(uuid, uuid_prefix + sizeof(UUID_PREFIX) - 1, uuid_prefix_len - (sizeof(UUID_PREFIX) - 1)))
 		return 1;
 
 	return 0;
@@ -1026,7 +1036,7 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 		}
 
 		/* Ignore if it doesn't belong to this VG */
-		if (uuid_prefix && strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
 		if (dm_tree_node_num_children(child, 0))
@@ -1371,8 +1381,8 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			continue;
 
 		/* Ignore if it doesn't belong to this VG */
-		if (uuid_prefix && child->info.exists &&
-		    strncmp(child->uuid, uuid_prefix, uuid_prefix_len))
+		if (child->info.exists &&
+		    !_uuid_prefix_matches(child->uuid, uuid_prefix, uuid_prefix_len))
 			continue;
 
 		if (dm_tree_node_num_children(child, 0))
@@ -1435,7 +1445,7 @@ int dm_tree_children_use_uuid(struct dm_tree_node *dnode,
 			return 1;
 		}
 
-		if (!strncmp(uuid, uuid_prefix, uuid_prefix_len))
+		if (_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
 			return 1;
 
 		if (dm_tree_node_num_children(child, 0))
