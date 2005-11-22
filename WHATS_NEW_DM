@@ -1,5 +1,7 @@
 Version 1.02.01 - 
 =============================
+  Drop leading zeros from dm_format_dev.
+  Suppress attempt to reload identical table.
   Additional LVM- prefix matching for transitional period.
 
 Version 1.02.00 - 10 Nov 2005

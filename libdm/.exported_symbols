@@ -22,6 +22,7 @@ dm_task_set_major
 dm_task_set_minor
 dm_task_set_sector
 dm_task_set_message
+dm_task_suppress_identical_reload
 dm_task_add_target
 dm_task_no_open_count
 dm_task_skip_lockfs

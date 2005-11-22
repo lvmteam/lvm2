@@ -875,7 +875,7 @@ int dm_format_dev(char *buf, int bufsize, uint32_t dev_major,
 	if (bufsize < 8)
 		return 0;
 
-	r = snprintf(buf, bufsize, "%03u:%03u", dev_major, dev_minor);
+	r = snprintf(buf, bufsize, "%u:%u", dev_major, dev_minor);
 	if (r < 0 || r > bufsize - 1)
 		return 0;
 
@@ -963,6 +963,12 @@ struct dm_versions *dm_task_get_versions(struct dm_task *dmt)
 int dm_task_set_ro(struct dm_task *dmt)
 {
 	dmt->read_only = 1;
+	return 1;
+}
+
+int dm_task_suppress_identical_reload(struct dm_task *dmt)
+{
+	dmt->suppress_identical_reload = 1;
 	return 1;
 }
 
@@ -1342,6 +1348,71 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	return r;
 }
 
+static int _reload_with_suppression_v4(struct dm_task *dmt)
+{
+	struct dm_task *task;
+	struct target *t1, *t2;
+	int matches = 1;
+	int r;
+
+	/* New task to get existing table information */
+	if (!(task = dm_task_create(DM_DEVICE_TABLE))) {
+		log_error("Failed to create device-mapper task struct");
+		return 0;
+	}
+
+	/* Copy across relevant fields */
+	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name)) {
+		dm_task_destroy(task);
+		return 0;
+	}
+
+	if (dmt->uuid && !dm_task_set_uuid(task, dmt->uuid)) {
+		dm_task_destroy(task);
+		return 0;
+	}
+
+	task->major = dmt->major;
+	task->minor = dmt->minor;
+
+	r = dm_task_run(task);
+
+	if (!r) {
+		dm_task_destroy(task);
+		return r;
+	}
+
+	t1 = dmt->head;
+	t2 = task->head;
+
+	while (t1 && t2) {
+		if ((t1->start != t2->start) ||
+		    (t1->length != t2->length) ||
+		    (strcmp(t1->type, t2->type)) ||
+		    (strcmp(t1->params, t2->params))) {
+			matches = 0;
+			break;
+		}
+		t1 = t1->next;
+		t2 = t2->next;
+	}
+	
+	if (matches && !t1 && !t2) {
+		dmt->dmi.v4 = task->dmi.v4;
+		task->dmi.v4 = NULL;
+		dm_task_destroy(task);
+		return 1;
+	}
+
+	dm_task_destroy(task);
+
+	/* Now do the original reload */
+	dmt->suppress_identical_reload = 0;
+	r = dm_task_run(dmt);
+
+	return r;
+}
+
 static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 				     unsigned repeat_count)
 {
@@ -1425,6 +1496,9 @@ int dm_task_run(struct dm_task *dmt)
 	if (dmt->type == DM_DEVICE_MKNODES && !dmt->dev_name &&
 	    !dmt->uuid && dmt->major <= 0)
 		return _mknodes_v4(dmt);
+
+	if ((dmt->type == DM_DEVICE_RELOAD) && dmt->suppress_identical_reload)
+		return _reload_with_suppression_v4(dmt);
 
 	if (!_open_control())
 		return 0;
