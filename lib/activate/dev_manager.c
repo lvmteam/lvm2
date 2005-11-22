@@ -845,7 +845,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    dm_tree_node_get_context(dnode))
 		return 1;
 
-	/* FIXME How do we determine whether a pre-existing node need reloading or not? */
 	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
 		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.", lv->name, layer);
 		return 0;
