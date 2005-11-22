@@ -1418,6 +1418,9 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		if (!dm_tree_node_num_children(child, 1))
 			continue;
 
+		if (!child->info.inactive_table && !child->info.suspended)
+			continue;
+
 		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
 			log_error("Unable to resume %s (%" PRIu32
 				  ":%" PRIu32 ")", name, child->info.major,
