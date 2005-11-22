@@ -115,6 +115,8 @@ struct dm_tree_node {
         struct list uses;       	/* Nodes this node uses */
         struct list used_by;    	/* Nodes that use this node */
 
+	int activation_priority;	/* 0 gets activated first */
+
 	void *context;			/* External supplied context */
 
 	struct load_properties props;	/* For creation/table (re)load */
@@ -313,6 +315,7 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 	node->uuid = uuid;
 	node->info = *info;
 	node->context = context;
+	node->activation_priority = 0;
 
 	list_init(&node->uses);
 	list_init(&node->used_by);
@@ -1055,6 +1058,7 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 	struct dm_info newinfo;
 	const char *name;
 	const char *uuid;
+	int priority;
 
 	/* Activate children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
@@ -1068,36 +1072,53 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 
 		if (dm_tree_node_num_children(child, 0))
 			dm_tree_activate_children(child, uuid_prefix, uuid_prefix_len);
+	}
 
-		if (!(name = dm_tree_node_get_name(child))) {
-			stack;
-			continue;
-		}
+	handle = NULL;
 
-		/* Rename? */
-		if (child->props.new_name) {
-			if (!_rename_node(name, child->props.new_name, child->info.major, child->info.minor)) {
-				log_error("Failed to rename %s (%" PRIu32
-					  ":%" PRIu32 ") to %s", name, child->info.major,
-					  child->info.minor, child->props.new_name);
-				return 0;
+	for (priority = 0; priority < 2; priority++) {
+		while ((child = dm_tree_next_child(&handle, dnode, 0))) {
+			if (!(uuid = dm_tree_node_get_uuid(child))) {
+				stack;
+				continue;
 			}
-			child->name = child->props.new_name;
-			child->props.new_name = NULL;
+
+			if (!_uuid_prefix_matches(uuid, uuid_prefix, uuid_prefix_len))
+				continue;
+
+			if (priority != child->activation_priority)
+				continue;
+
+			if (!(name = dm_tree_node_get_name(child))) {
+				stack;
+				continue;
+			}
+
+			/* Rename? */
+			if (child->props.new_name) {
+				if (!_rename_node(name, child->props.new_name, child->info.major, child->info.minor)) {
+					log_error("Failed to rename %s (%" PRIu32
+						  ":%" PRIu32 ") to %s", name, child->info.major,
+						  child->info.minor, child->props.new_name);
+					return 0;
+				}
+				child->name = child->props.new_name;
+				child->props.new_name = NULL;
+			}
+
+			if (!child->info.inactive_table && !child->info.suspended)
+				continue;
+
+			if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
+				log_error("Unable to resume %s (%" PRIu32
+					  ":%" PRIu32 ")", name, child->info.major,
+					  child->info.minor);
+				continue;
+			}
+
+			/* Update cached info */
+			child->info = newinfo;
 		}
-
-		if (!child->info.inactive_table && !child->info.suspended)
-			continue;
-
-		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
-			log_error("Unable to resume %s (%" PRIu32
-				  ":%" PRIu32 ")", name, child->info.major,
-				  child->info.minor);
-			continue;
-		}
-
-		/* Update cached info */
-		child->info = newinfo;
 	}
 
 	handle = NULL;
@@ -1510,6 +1531,9 @@ int dm_tree_node_add_snapshot_origin_target(struct dm_tree_node *dnode,
 	seg->origin = origin_node;
 	if (!_link_tree_nodes(dnode, origin_node))
 		return_0;
+
+	/* Resume snapshot origins after new snapshots */
+	dnode->activation_priority = 1;
 
 	return 1;
 }
