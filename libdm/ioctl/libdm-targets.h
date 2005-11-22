@@ -53,6 +53,7 @@ struct dm_task {
 	uint64_t sector;
 	int no_open_count;
 	int skip_lockfs;
+	int suppress_identical_reload;
 
 	char *uuid;
 };

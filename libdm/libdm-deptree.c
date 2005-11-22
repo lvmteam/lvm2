@@ -1353,8 +1353,15 @@ static int _load_node(struct dm_tree_node *dnode)
 		if (!_emit_segment(dmt, seg, &seg_start))
 			goto_out;
 
-	if ((r = dm_task_run(dmt)))
+	if (!dm_task_suppress_identical_reload(dmt))
+		log_error("Failed to suppress reload of identical tables.");
+
+	if ((r = dm_task_run(dmt))) {
 		r = dm_task_get_info(dmt, &dnode->info);
+		if (r && !dnode->info.inactive_table)
+			log_verbose("Suppressed %s identical table reload.",
+				    dnode->name);
+	}
 
 	dnode->props.segment_count = 0;
 
@@ -1362,7 +1369,6 @@ out:
 	dm_task_destroy(dmt);
 
 	return r;
-
 }
 
 int dm_tree_preload_children(struct dm_tree_node *dnode,
