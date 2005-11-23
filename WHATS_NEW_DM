@@ -1,4 +1,4 @@
-Version 1.02.01 - 
+Version 1.02.01 - 23 Nov 2005
 =============================
   Drop leading zeros from dm_format_dev.
   Suppress attempt to reload identical table.
