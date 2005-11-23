@@ -1,5 +1,6 @@
 Version 2.02.01 -
 ====================================
+  Fix lvdisplay cmdline to accept snapshots.
   Fix open RO->RW promotion.
   Fix missing vg_revert in lvcreate error path.
 
