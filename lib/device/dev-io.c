@@ -418,7 +418,6 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 	    ((fstat(dev->fd, &buf) < 0) || (buf.st_rdev != dev->dev))) {
 		log_error("%s: fstat failed: Has device name changed?", name);
 		dev_close_immediate(dev);
-		dev->open_count = 0;
 		return 0;
 	}
 
@@ -509,11 +508,9 @@ static int _dev_close(struct device *dev, int immediate)
 	if (dev->open_count > 0)
 		dev->open_count--;
 
-	if (immediate && dev->open_count) {
+	if (immediate && dev->open_count)
 		log_debug("%s: Immediate close attempt while still referenced",
 			  dev_name(dev));
-		dev->open_count = 0;
-	}
 
 	/* Close unless device is known to belong to a locked VG */
 	if (immediate ||
