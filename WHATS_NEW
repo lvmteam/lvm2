@@ -1,5 +1,6 @@
 Version 2.02.01 -
 ====================================
+  Fix open RO->RW promotion.
   Fix missing vg_revert in lvcreate error path.
 
 Version 2.02.00 - 10th November 2005
