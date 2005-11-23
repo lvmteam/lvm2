@@ -1,4 +1,4 @@
-Version 2.02.01 -
+Version 2.02.01 - 23rd November 2005
 ====================================
   Fix lvdisplay cmdline to accept snapshots.
   Fix open RO->RW promotion.
