@@ -607,7 +607,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 		if (!(ah = allocate_extents(vg, NULL, lp->segtype, lp->stripes,
 					    lp->mirrors, 1, lp->extents,
-					    NULL, 0, 0, pvh, lp->alloc))) {
+					    NULL, 0, 0, pvh, lp->alloc,
+					    NULL))) {
 			stack;
 			return 0;
 		}
