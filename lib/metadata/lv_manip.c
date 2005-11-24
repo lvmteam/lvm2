@@ -664,10 +664,12 @@ static int _find_segment_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			       struct list *pvms, struct pv_area **areas,
 			       uint32_t areas_size, unsigned can_split,
 			       struct lv_segment *prev_lvseg,
-			       uint32_t *allocated, uint32_t needed)
+			       uint32_t *allocated, uint32_t needed,
+			       struct list *parallel_pvs)
 {
 	struct pv_map *pvm;
 	struct pv_area *pva;
+	struct pv_list *pvl;
 	unsigned already_found_one = 0;
 	unsigned contiguous = 0, contiguous_count = 0;
 	unsigned ix;
@@ -699,10 +701,18 @@ static int _find_segment_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			if (list_empty(&pvm->areas))
 				continue;	/* Next PV */
 
-			/* Don't allocate onto the log pv */
-			if ((alloc != ALLOC_ANYWHERE) && ah->log_count &&
-			    (pvm->pv == ah->log_area.pv))
-				continue;	/* Next PV */
+			if (alloc != ALLOC_ANYWHERE) {
+				/* Don't allocate onto the log pv */
+				if (ah->log_count &&
+				    pvm->pv == ah->log_area.pv)
+					continue;	/* Next PV */
+
+				/* Avoid PVs used by existing parallel areas */
+				if (parallel_pvs)
+					list_iterate_items(pvl, parallel_pvs)
+						if (pvm->pv == pvl->pv)
+							goto next_pv;
+			}
 
 			already_found_one = 0;
 			/* First area in each list is the largest */
@@ -779,7 +789,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 {
 	return _find_segment_space(ah, alloc, pvms, areas, areas_size,
 				   can_split, prev_lvseg,
-				   allocated, needed);
+				   allocated, needed, NULL);
 }
 
 /*
@@ -804,7 +814,7 @@ static int _allocate(struct alloc_handle *ah,
 	struct list *pvms;
 	uint32_t areas_size;
 
-	if (allocated >= new_extents) {
+	if (allocated >= new_extents && !ah->log_count) {
 		log_error("_allocate called with no work to do!");
 		return 1;
 	}
@@ -1122,8 +1132,7 @@ int lv_add_more_mirrored_areas(struct logical_volume *lv,
 		return 0;
 	}
 
-	list_iterate_items(seg, &lv->segments)
-		break;
+	seg = first_seg(lv);
 
 	old_area_count = seg->area_count;
 	new_area_count = old_area_count + num_extra_areas;
