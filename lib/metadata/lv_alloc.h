@@ -52,7 +52,8 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
                                       uint32_t mirrored_pe,
                                       uint32_t status,
                                       struct list *allocatable_pvs,
-                                      alloc_policy_t alloc);
+				      alloc_policy_t alloc,
+				      struct list *parallel_areas);
 
 int lv_add_segment(struct alloc_handle *ah,
 		   uint32_t first_area, uint32_t num_areas,
@@ -82,5 +83,8 @@ int lv_add_more_mirrored_areas(struct logical_volume *lv,
                                uint32_t status);
 
 void alloc_destroy(struct alloc_handle *ah);
+
+struct list *build_parallel_areas_from_lv(struct cmd_context *cmd,
+					  struct logical_volume *lv);
 
 #endif

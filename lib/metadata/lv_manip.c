@@ -342,7 +342,7 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 }
 
 /*
- * Empty an LV
+ * Empty an LV.
  */
 int lv_empty(struct logical_volume *lv)
 {
@@ -350,7 +350,7 @@ int lv_empty(struct logical_volume *lv)
 }
 
 /*
- * Remove given number of extents from LV
+ * Remove given number of extents from LV.
  */
 int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
@@ -394,6 +394,10 @@ struct alloc_handle {
 	uint32_t log_count;		/* Number of parallel 1-extent logs */
 	uint32_t total_area_len;	/* Total number of parallel extents */
 
+	struct physical_volume *mirrored_pv;	/* FIXME Remove this */
+	uint32_t mirrored_pe;			/* FIXME Remove this */
+	struct list *parallel_areas;	/* PVs to avoid */
+
 	struct alloced_area log_area;	/* Extent used for log */
 	struct list alloced_areas[0];	/* Lists of areas in each stripe */
 };
@@ -407,7 +411,9 @@ static struct alloc_handle *_alloc_init(struct dm_pool *mem,
 					uint32_t mirrors,
 					uint32_t stripes,
 					uint32_t log_count,
-					struct physical_volume *mirrored_pv)
+					struct physical_volume *mirrored_pv,
+					uint32_t mirrored_pe,
+					struct list *parallel_areas)
 {
 	struct alloc_handle *ah;
 	uint32_t s, area_count;
@@ -460,6 +466,10 @@ static struct alloc_handle *_alloc_init(struct dm_pool *mem,
 
 	for (s = 0; s < ah->area_count; s++)
 		list_init(&ah->alloced_areas[s]);
+
+	ah->mirrored_pv = mirrored_pv;
+	ah->mirrored_pe = mirrored_pe;
+	ah->parallel_areas = parallel_areas;
 
 	return ah;
 }
@@ -779,13 +789,11 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
  */
 static int _allocate(struct alloc_handle *ah,
 		     struct volume_group *vg,
-			   struct logical_volume *lv, uint32_t status,
-			   uint32_t new_extents,
-			   struct list *allocatable_pvs,
-			   uint32_t stripes, uint32_t mirrors,
-			   struct segment_type *segtype,
-			   struct physical_volume *mirrored_pv,
-			   uint32_t mirrored_pe)
+		     struct logical_volume *lv, uint32_t status,
+		     uint32_t new_extents,
+		     struct list *allocatable_pvs,
+		     uint32_t stripes, uint32_t mirrors,
+		     struct segment_type *segtype)
 {
 	struct pv_area **areas;
 	uint32_t allocated = lv ? lv->le_count : 0;
@@ -801,7 +809,7 @@ static int _allocate(struct alloc_handle *ah,
 		return 1;
 	}
 
-	if (mirrored_pv || (ah->alloc == ALLOC_CONTIGUOUS))
+	if (ah->mirrored_pv || (ah->alloc == ALLOC_CONTIGUOUS))
 		can_split = 0;
 
 	if (lv && !list_empty(&lv->segments))
@@ -921,7 +929,8 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      uint32_t mirrored_pe,
 				      uint32_t status,
 				      struct list *allocatable_pvs,
-				      alloc_policy_t alloc)
+				      alloc_policy_t alloc,
+				      struct list *parallel_areas)
 {
 	struct alloc_handle *ah;
 
@@ -944,15 +953,15 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 		alloc = vg->alloc;
 
 	if (!(ah = _alloc_init(vg->cmd->mem, segtype, alloc, mirrors,
-			       stripes, log_count, mirrored_pv))) {
+			       stripes, log_count, mirrored_pv,
+			       mirrored_pe, parallel_areas))) {
 		stack;
 		return NULL;
 	}
 
 	if (!segtype_is_virtual(segtype) &&
 	    !_allocate(ah, vg, lv, status, (lv ? lv->le_count : 0) + extents,
-		       allocatable_pvs,
-		       stripes, mirrors, segtype, mirrored_pv, mirrored_pe)) {
+		       allocatable_pvs, stripes, mirrors, segtype)) {
 		stack;
 		alloc_destroy(ah);
 		return NULL;
@@ -1154,7 +1163,7 @@ int lv_extend(struct logical_volume *lv,
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors, 0,
 				    extents, mirrored_pv, mirrored_pe, status,
-				    allocatable_pvs, alloc))) {
+				    allocatable_pvs, alloc, NULL))) {
 		stack;
 		return 0;
 	}
@@ -1286,4 +1295,22 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	list_add(&vg->lvs, &ll->list);
 
 	return lv;
+}
+
+/*
+ * Construct list of segments of LVs showing which PVs they use.
+ */
+struct list *build_parallel_areas_from_lv(struct cmd_context *cmd,
+					  struct logical_volume *lv)
+{
+	struct list *parallel_areas;
+
+	if (!(parallel_areas = dm_pool_alloc(cmd->mem, sizeof(*parallel_areas)))) {
+		log_error("parallel_areas allocation failed");
+		return NULL;
+	}
+
+	list_init(parallel_areas);
+
+	return parallel_areas;
 }
