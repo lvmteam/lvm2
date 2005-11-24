@@ -346,9 +346,12 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
  */
 int lv_empty(struct logical_volume *lv)
 {
-	return _lv_reduce(lv, 0, lv->le_count);
+	return _lv_reduce(lv, lv->le_count, 0);
 }
 
+/*
+ * Remove given number of extents from LV
+ */
 int lv_reduce(struct logical_volume *lv, uint32_t extents)
 {
 	return _lv_reduce(lv, extents, 1);
