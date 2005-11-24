@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -647,11 +647,11 @@ static int _check_contiguous(struct lv_segment *prev_lvseg,
  * Choose sets of parallel areas to use, respecting any constraints.
  */
 /* FIXME Also accept existing areas new space must be parallel to */
-static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
-				struct list *pvms, struct pv_area **areas,
-				uint32_t areas_size, unsigned can_split,
-				struct lv_segment *prev_lvseg,
-				uint32_t *allocated, uint32_t needed)
+static int _find_segment_space(struct alloc_handle *ah, alloc_policy_t alloc,
+			       struct list *pvms, struct pv_area **areas,
+			       uint32_t areas_size, unsigned can_split,
+			       struct lv_segment *prev_lvseg,
+			       uint32_t *allocated, uint32_t needed)
 {
 	struct pv_map *pvm;
 	struct pv_area *pva;
@@ -700,7 +700,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 							      pvm->pv,
 							      pva, areas)) {
 						contiguous_count++;
-						break; /* Next PV */
+						goto next_pv;
 					}
 					continue;
 				}
@@ -710,7 +710,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 				    ((!can_split && !ah->log_count) ||
 				     (already_found_one &&
 				      !(alloc == ALLOC_ANYWHERE))))
-					break;	/* Next PV */
+					goto next_pv;
 
 				if (!already_found_one ||
 				    alloc == ALLOC_ANYWHERE) {
@@ -720,8 +720,9 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 
 				areas[ix + ix_offset - 1] = pva;
 
-				break;	/* Next PV */
+				goto next_pv;
 			}
+		next_pv:
 			if (ix >= areas_size)
 				break;
 		}
@@ -755,6 +756,17 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	} while (!contiguous && *allocated != needed && can_split);
 
 	return 1;
+}
+
+static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
+				struct list *pvms, struct pv_area **areas,
+				uint32_t areas_size, unsigned can_split,
+				struct lv_segment *prev_lvseg,
+				uint32_t *allocated, uint32_t needed)
+{
+	return _find_segment_space(ah, alloc, pvms, areas, areas_size,
+				   can_split, prev_lvseg,
+				   allocated, needed);
 }
 
 /*
