@@ -93,6 +93,12 @@ int validate_vg_name(struct cmd_context *cmd, const char *vg_name);
 int generate_log_name_format(struct volume_group *vg, const char *lv_name,
                              char *buffer, size_t size);
 
+struct logical_volume *create_mirror_log(struct cmd_context *cmd,
+					 struct volume_group *vg,
+					 struct alloc_handle *ah,
+					 alloc_policy_t alloc,
+					 const char *lv_name);
+
 int zero_lv(struct cmd_context *cmd, struct logical_volume *lv);
 
 #endif

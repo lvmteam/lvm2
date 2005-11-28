@@ -168,6 +168,10 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 1) + 1;
 		else
 			log_print("Mirrors not supported. Ignoring.");
+		if (arg_sign_value(cmd, mirrors_ARG, 0) == SIGN_MINUS) {
+			log_error("Mirrors argument may not be negative");
+			return 0;
+		}
 	}
 
 	if (arg_count(cmd, stripesize_ARG)) {
