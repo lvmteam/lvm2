@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lv_alloc.h"
 
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -1074,3 +1075,71 @@ int zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 	return 1;
 }
 
+struct logical_volume *create_mirror_log(struct cmd_context *cmd,
+					 struct volume_group *vg,
+					 struct alloc_handle *ah,
+					 alloc_policy_t alloc,
+					 const char *lv_name)
+{
+	struct logical_volume *log_lv;
+	char *log_name;
+	size_t len;
+
+	len = strlen(lv_name) + 32;
+	if (!(log_name = alloca(len)) ||
+	    !(generate_log_name_format(vg, lv_name, log_name, len))) {
+		log_error("log_name allocation failed. "
+			  "Remove new LV and retry.");
+		return NULL;
+	}
+
+	if (!(log_lv = lv_create_empty(vg->fid, log_name, NULL,
+				       VISIBLE_LV | LVM_READ | LVM_WRITE,
+				       alloc, 0, vg))) {
+		stack;
+		return NULL;
+	}
+
+	if (!lv_add_log_segment(ah, log_lv)) {
+		stack;
+		goto error;
+	}
+
+	/* store mirror log on disk(s) */
+	if (!vg_write(vg)) {
+		stack;
+		goto error;
+	}
+
+	backup(vg);
+
+	if (!vg_commit(vg)) {
+		stack;
+		goto error;
+	}
+
+	if (!activate_lv(cmd, log_lv)) {
+		log_error("Aborting. Failed to activate mirror log. "
+			  "Remove new LVs and retry.");
+		goto error;
+	}
+
+	if (activation() && !zero_lv(cmd, log_lv)) {
+		log_error("Aborting. Failed to wipe mirror log. "
+			  "Remove new LV and retry.");
+		goto error;
+	}
+
+	if (!deactivate_lv(cmd, log_lv)) {
+		log_error("Aborting. Failed to deactivate mirror log. "
+			  "Remove new LV and retry.");
+		goto error;
+	}
+
+	log_lv->status &= ~VISIBLE_LV;
+
+	return log_lv;
+error:
+	/* FIXME Attempt to clean up. */
+	return NULL;
+}
