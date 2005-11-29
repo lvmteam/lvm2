@@ -1,5 +1,10 @@
 Version 2.02.02
 ====================================
+  Add some activation logic to remove_mirror_images().
+  lvconvert can remove specified PVs from a mirror.
+  lvconvert turns an existing LV into a mirror.
+  Allow signed mirrors arguments.
+  Move create_mirror_log() into toollib.
   Determine parallel PVs to avoid with ALLOC_NORMAL allocation.
   Fix lv_empty.
 
