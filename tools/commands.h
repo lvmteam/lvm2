@@ -85,11 +85,12 @@ xx(lvconvert,
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
    "\t[-m|--mirrors Mirrors]\n"
+   "\t[-R|--regionsize MirrorLogRegionSize]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [PhysicalVolume[Path]...]\n",
 
-   alloc_ARG, mirrors_ARG, test_ARG)
+   alloc_ARG, mirrors_ARG, regionsize_ARG, test_ARG)
 
 xx(lvcreate,
    "Create a logical volume",

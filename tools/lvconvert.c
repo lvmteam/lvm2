@@ -13,10 +13,13 @@
  */
 
 #include "tools.h"
+#include "lv_alloc.h"
 
 struct lvconvert_params {
 	const char *lv_name;
 	uint32_t mirrors;
+	sign_t mirrors_sign;
+	uint32_t region_size;
 
 	alloc_policy_t alloc;
 
@@ -40,7 +43,29 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return 0;
 	}
 
-	lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0) + 1;
+	lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0);
+	lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, 0);
+
+	/*
+	 * --regionsize is only valid when converting an LV into a mirror.
+	 * This is checked when we know the state of the LV being converted.
+	 */
+	if (arg_count(cmd, regionsize_ARG)) {
+		if (arg_sign_value(cmd, regionsize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative regionsize is invalid");
+			return 0;
+		}
+		lp->region_size = 2 * arg_uint_value(cmd, regionsize_ARG, 0);
+	} else
+		lp->region_size = 2 * find_config_int(cmd->cft->root,
+					"activation/mirror_region_size",
+					DEFAULT_MIRROR_REGION_SIZE);
+
+	if (lp->region_size & (lp->region_size - 1)) {
+		log_error("Region size (%" PRIu32 ") must be a power of 2",
+			  lp->region_size);
+		return 0;
+	}
 
 	if (!argc) {
 		log_error("Please give logical volume path");
@@ -61,8 +86,33 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 {
 	struct lv_segment *seg;
 	uint32_t existing_mirrors;
-	// struct alloc_handle *ah = NULL;
-	// struct logical_volume *log_lv;
+	struct alloc_handle *ah = NULL;
+	struct logical_volume *log_lv;
+	struct list *parallel_areas;
+	struct segment_type *segtype;
+
+	seg = first_seg(lv);
+	existing_mirrors = seg->area_count;
+
+	/* Adjust required number of mirrors */
+	if (lp->mirrors_sign == SIGN_PLUS)
+		lp->mirrors = existing_mirrors + lp->mirrors;
+	else if (lp->mirrors_sign == SIGN_MINUS) {
+		if (lp->mirrors >= existing_mirrors) {
+			log_error("Logical volume %s only has %" PRIu32 " mirrors.",
+				  lv->name, existing_mirrors);
+			return 0;
+		}
+		lp->mirrors = existing_mirrors - lp->mirrors;
+	} else
+		lp->mirrors += 1;
+
+	if (arg_count(cmd, regionsize_ARG) && (lv->status & MIRRORED) &&
+	    (lp->region_size != seg->region_size)) {
+		log_error("Mirror log region size cannot be changed on "
+			  "an existing mirror.");
+		return 0;
+	}
 
 	if ((lp->mirrors == 1)) {
 		if (!(lv->status & MIRRORED)) {
@@ -70,8 +120,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				  lv->name);
 			return 1;
 		}
-		/* FIXME If allocatable_pvs supplied only remove those */
-		if (!remove_all_mirror_images(lv)) {
+
+		if (!remove_mirror_images(seg, 1, lp->pv_count ? lp->pvh : NULL, 1)) {
 			stack;
 			return 0;
 		}
@@ -82,8 +132,6 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					  "mirror segments.", lv->name);
 				return 0;
 			}
-			seg = first_seg(lv);
-			existing_mirrors = seg->area_count;
 			if (lp->mirrors == existing_mirrors) {
 				log_error("Logical volume %s already has %"
 					  PRIu32 " mirror(s).", lv->name,
@@ -100,18 +148,58 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					  "supported yet.");
 				return 0;
 			} else {
-				if (!remove_mirror_images(seg, lp->mirrors)) {
+				/* Reduce number of mirrors */
+				if (!remove_mirror_images(seg, lp->mirrors, lp->pv_count ? lp->pvh : NULL, 0)) {
 					stack;
 					return 0;
 				}
 			}
 		} else {
+			/* Make existing LV into mirror set */
 			/* FIXME Share code with lvcreate */
-			/* region size, log_name, create log_lv, zero it */
-			// Allocate (mirrors) new areas & log - replace mirrored_pv with mirrored_lv
-			// Restructure as mirror - add existing param to create_mirror_layers
-			log_error("Adding mirror images is not supported yet.");
-			return 0;
+
+			/* FIXME Why is this restriction here?  Fix it! */
+			list_iterate_items(seg, &lv->segments) {
+				if (seg_is_striped(seg) && seg->area_count > 1) {
+					log_error("Mirrors of striped volumes are not yet supported.");
+					return 0;
+				}
+			}
+
+			if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv))) {
+				stack;
+				return 0;
+			}
+
+			segtype = get_segtype_from_string(cmd, "striped");
+
+			if (!(ah = allocate_extents(lv->vg, NULL, segtype, 1,
+						    lp->mirrors - 1, 1,
+						    lv->le_count * (lp->mirrors - 1),
+						    NULL, 0, 0, lp->pvh,
+						    lp->alloc,
+						    parallel_areas))) {
+				stack;
+				return 0;
+			}
+
+			lp->region_size = adjusted_mirror_region_size(lv->vg->extent_size,
+								      lv->le_count,
+								      lp->region_size);
+
+			if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
+							 lp->alloc,
+							 lv->name))) {
+				log_error("Failed to create mirror log.");
+				return 0;
+			}
+
+			if (!create_mirror_layers(ah, 1, lp->mirrors, lv,
+						  segtype, 0, lp->region_size,
+						  log_lv)) {
+				stack;
+				return 0;
+			}
 		}
 	}
 
