@@ -3,6 +3,7 @@ Version 1.02.02 -
 
 Version 1.02.01 - 23 Nov 2005
 =============================
+  Resume snapshot-origins last.
   Drop leading zeros from dm_format_dev.
   Suppress attempt to reload identical table.
   Additional LVM- prefix matching for transitional period.
