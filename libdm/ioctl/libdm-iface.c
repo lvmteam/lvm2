@@ -672,11 +672,13 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 #ifdef DM_IOCTLS
 	else if (ioctl(_control_fd, command, dmi) < 0) {
 		if (_log_suppress)
-			log_verbose("device-mapper ioctl cmd %d failed: %s",
-				    _IOC_NR(command), strerror(errno));
+			log_verbose("device-mapper: %s ioctl failed: %s", 
+				    _cmd_data_v1[dmt->type].name,
+				    strerror(errno));
 		else
-			log_error("device-mapper ioctl cmd %d failed: %s",
-				  _IOC_NR(command), strerror(errno));
+			log_error("device-mapper: %s ioctl failed: %s",
+				  _cmd_data_v1[dmt->type].name,
+				  strerror(errno));
 		goto bad;
 	}
 #else /* Userspace alternative for testing */
@@ -1454,13 +1456,15 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			dmi->flags &= ~DM_EXISTS_FLAG;	/* FIXME */
 		else {
 			if (_log_suppress)
-				log_verbose("device-mapper ioctl "
-					    "cmd %d failed: %s",
-					    _IOC_NR(command), strerror(errno));
+				log_verbose("device-mapper: %s ioctl "
+					    "failed: %s",
+				    	    _cmd_data_v4[dmt->type].name,
+					    strerror(errno));
 			else
-				log_error("device-mapper ioctl "
-					  "cmd %d failed: %s",
-					  _IOC_NR(command), strerror(errno));
+				log_error("device-mapper: %s ioctl "
+					  "failed: %s",
+				    	   _cmd_data_v4[dmt->type].name,
+					  strerror(errno));
 			dm_free(dmi);
 			return NULL;
 		}
@@ -1468,6 +1472,11 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 #else /* Userspace alternative for testing */
 #endif
 	return dmi;
+}
+
+void dm_task_update_nodes(void)
+{
+	update_devs();
 }
 
 int dm_task_run(struct dm_task *dmt)

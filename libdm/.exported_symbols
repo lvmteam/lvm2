@@ -26,6 +26,7 @@ dm_task_suppress_identical_reload
 dm_task_add_target
 dm_task_no_open_count
 dm_task_skip_lockfs
+dm_task_update_nodes
 dm_task_run
 dm_get_next_target
 dm_set_dev_dir

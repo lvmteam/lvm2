@@ -1,5 +1,7 @@
 Version 1.02.02 - 
 =============================
+  Export dm_task_update_nodes.
+  Use names instead of numbers in messages when ioctls fail.
 
 Version 1.02.01 - 23 Nov 2005
 =============================
