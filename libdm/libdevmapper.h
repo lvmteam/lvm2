@@ -170,6 +170,12 @@ void *dm_get_next_target(struct dm_task *dmt,
 int dm_task_run(struct dm_task *dmt);
 
 /*
+ * Call this to make or remove the device nodes associated with previously
+ * issued commands.
+ */
+void dm_task_update_nodes(void);
+
+/*
  * Configure the device-mapper directory
  */
 int dm_set_dev_dir(const char *dir);
