@@ -310,7 +310,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=/usr
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP ALLOCA LIBOBJS POW_LIB MSGFMT MODPROBE_CMD JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP COPTIMISE_FLAG CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LDDEPS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL CLVMD CLUSTER FSADM LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CPP EGREP ALLOCA LIBOBJS POW_LIB MSGFMT MODPROBE_CMD JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP COPTIMISE_FLAG CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LDDEPS SOFLAG LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL CLVMD CLUSTER FSADM DMEVENTD LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -858,6 +858,7 @@ Optional Features:
   --disable-o_direct      Disable O_DIRECT
   --enable-cmdlib         Build shared command library
   --enable-fsadm          Enable fsadm
+  --enable-dmeventd       Enable dmeventd
   --enable-nls            Enable Native Language Support
 
 Optional Packages:
@@ -7429,6 +7430,25 @@ echo "$as_me:$LINENO: result: $FSADM" >&5
 echo "${ECHO_T}$FSADM" >&6
 
 ################################################################################
+echo "$as_me:$LINENO: checking whether to use dmeventd" >&5
+echo $ECHO_N "checking whether to use dmeventd... $ECHO_C" >&6
+# Check whether --enable-dmeventd or --disable-dmeventd was given.
+if test "${enable_dmeventd+set}" = set; then
+  enableval="$enable_dmeventd"
+  DMEVENTD=$enableval
+fi;
+echo "$as_me:$LINENO: result: $DMEVENTD" >&5
+echo "${ECHO_T}$DMEVENTD" >&6
+
+if test x$DMEVENTD = xyes && test x$MIRRORS != xinternal; then
+{ { echo "$as_me:$LINENO: error: --enable-dmeventd currently requires --with-mirrors=internal
+" >&5
+echo "$as_me: error: --enable-dmeventd currently requires --with-mirrors=internal
+" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+################################################################################
 if [ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ];
  then  exec_prefix="";
 fi;
@@ -10855,8 +10875,9 @@ fi
 
 
 
+
 ################################################################################
-                                                                                                                                                                                                                            ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h tools/fsadm/Makefile test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
+                                                                                                                                                                                                                                                ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile dmeventd/Makefile dmeventd/mirror/Makefile doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h tools/fsadm/Makefile test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -11412,6 +11433,8 @@ do
   "make.tmpl" ) CONFIG_FILES="$CONFIG_FILES make.tmpl" ;;
   "daemons/Makefile" ) CONFIG_FILES="$CONFIG_FILES daemons/Makefile" ;;
   "daemons/clvmd/Makefile" ) CONFIG_FILES="$CONFIG_FILES daemons/clvmd/Makefile" ;;
+  "dmeventd/Makefile" ) CONFIG_FILES="$CONFIG_FILES dmeventd/Makefile" ;;
+  "dmeventd/mirror/Makefile" ) CONFIG_FILES="$CONFIG_FILES dmeventd/mirror/Makefile" ;;
   "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
   "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
   "lib/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
@@ -11576,6 +11599,7 @@ s,@INTL@,$INTL,;t t
 s,@CLVMD@,$CLVMD,;t t
 s,@CLUSTER@,$CLUSTER,;t t
 s,@FSADM@,$FSADM,;t t
+s,@DMEVENTD@,$DMEVENTD,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 
@@ -11854,4 +11878,9 @@ fi
 if test x$FSADM == xyes; then
   { echo "$as_me:$LINENO: WARNING: fsadm support is untested" >&5
 echo "$as_me: WARNING: fsadm support is untested" >&2;}
+fi
+
+if test x$DMEVENTD == xyes; then
+  { echo "$as_me:$LINENO: WARNING: dmeventd support is untested" >&5
+echo "$as_me: WARNING: dmeventd support is untested" >&2;}
 fi

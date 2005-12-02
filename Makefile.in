@@ -24,8 +24,13 @@ endif
 
 SUBDIRS += lib tools daemons
 
+ifeq ("@DMEVENTD@", "yes")
+  SUBDIRS += dmeventd
+endif
+
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += daemons/clvmd \
+	     dmeventd \
 	     lib/format1 \
 	     lib/format_pool \
 	     lib/locking \
@@ -40,13 +45,15 @@ include make.tmpl
 daemons: lib
 lib: include
 tools: lib
-po: tools daemons
+dmeventd: tools
+po: tools daemons dmeventd
 
 ifeq ("@INTL@", "yes")
 lib.pofile: include.pofile
 tools.pofile: lib.pofile
 daemons.pofile: lib.pofile
-po.pofile: tools.pofile daemons.pofile
+dmeventd.pofile: tools.pofile
+po.pofile: tools.pofile daemons.pofile dmeventd.pofile
 pofile: po.pofile
 endif
 

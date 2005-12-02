@@ -1,5 +1,6 @@
-Version 2.02.02
+Version 2.02.02 - 
 ====================================
+  Add mirror dmeventd library.
   Add some activation logic to remove_mirror_images().
   lvconvert can remove specified PVs from a mirror.
   lvconvert turns an existing LV into a mirror.
