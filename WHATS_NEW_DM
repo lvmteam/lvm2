@@ -1,5 +1,5 @@
-Version 1.02.02 - 
-=============================
+Version 1.02.02 - 2 Dec 2005
+============================
   dmeventd added.
   Export dm_task_update_nodes.
   Use names instead of numbers in messages when ioctls fail.
