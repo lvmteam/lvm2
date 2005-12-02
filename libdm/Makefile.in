@@ -17,14 +17,6 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 interface = @interface@
 
-ifeq ("@DMEVENTD@", "yes")
-   SUBDIRS += event
-endif
-
-ifeq ($(MAKECMDGOALS),distclean)
-  SUBDIRS += event
-endif
-
 SOURCES =\
 	datastruct/bitset.c \
 	datastruct/hash.c \
