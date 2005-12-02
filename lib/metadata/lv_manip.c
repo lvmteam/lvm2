@@ -717,7 +717,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 				next_le = (prev_lvseg ? prev_lvseg->le + prev_lvseg->len : 0) + *allocated;
 				if (next_le >= spvs->le) {
 					if (next_le + max_parallel > spvs->le + spvs->len)
-						max_parallel = spvs->le + spvs->len - next_le;
+						max_parallel = (spvs->le + spvs->len - next_le) * ah->area_multiple;
 					parallel_pvs = &spvs->pvs;
 					break;
 				}

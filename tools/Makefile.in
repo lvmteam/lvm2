@@ -91,6 +91,10 @@ ifeq ("@DEVMAPPER@", "yes")
 	LVMLIBS += -ldevmapper
 endif
 
+ifeq ("@DMEVENTD@", "yes")
+	LVMLIBS += -ldevmapper-event
+endif
+
 CFLAGS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 
 include $(top_srcdir)/make.tmpl
