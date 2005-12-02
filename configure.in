@@ -369,6 +369,9 @@ AC_MSG_ERROR(
 )
 fi
 
+if test x$DMEVENTD = xyes; then
+	CFLAGS="$CFLAGS -DDMEVENTD"
+fi
 ################################################################################
 dnl -- Mess with default exec_prefix
 if [[ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ]];

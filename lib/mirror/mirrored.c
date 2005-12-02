@@ -25,6 +25,7 @@
 #include "lvm-string.h"
 #include "targets.h"
 #include "activate.h"
+#include "libdevmapper-event.h"
 
 enum {
 	MIRR_DISABLED,
@@ -324,7 +325,87 @@ static int _target_present(void)
 
 	return present;
 }
-#endif
+
+#ifdef DMEVENTD
+static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
+			       char **dso)
+{
+	/* FIXME Follow lvm2 searching rules (see sharedlib.c) */
+	/* FIXME Use naming convention in config file */
+	if (!(*dso = find_config_str(cft->root, "global/mirror_dso", NULL))) {
+		log_error("No mirror dso specified in config file");	/* FIXME readability */
+		return 0;
+	}
+
+	return 1;
+}
+
+/* FIXME This gets run while suspended and performs banned operations. */
+static int _target_register(struct dm_pool *mem, struct lv_segment *seg,
+			    struct config_tree *cft, int events)
+{
+	char *dso;
+	char dm_name[PATH_MAX];
+	struct logical_volume *lv;
+	struct volume_group *vg;
+	int err;
+
+	lv = seg->lv;
+	vg = lv->vg;
+
+	if (!_setup_registration(mem, cft, &dso)) {
+		stack;
+		return 0;
+	}
+
+	/* FIXME lvm_ error */
+	strncpy(dm_name, build_dm_name(mem, vg->name, lv->name, NULL),
+		PATH_MAX);
+
+	if((err = dm_event_register(dso, dm_name, ALL_ERRORS)) < 0) {
+		log_error("Unable to register %s for events: %s", dm_name,
+			  strerror(-err));
+		return 0;
+	}
+	log_info("Registered %s for events", dm_name);
+
+	return 1;
+}
+
+static int _target_unregister(struct dm_pool *mem, struct lv_segment *seg,
+			      struct config_tree *cft, int events)
+{
+	char *dso;
+	char devpath[PATH_MAX];
+	struct logical_volume *lv;
+	struct volume_group *vg;
+	int err;
+
+	lv = seg->lv;
+	vg = lv->vg;
+
+	if(!_setup_registration(mem, cft, &dso)) {
+		stack;
+		return 0;
+	}
+
+	/* FIXME lvm_ error */
+	strncpy(devpath, build_dm_name(mem, vg->name, lv->name, NULL),
+		PATH_MAX);
+
+	/* FIXME put MIR_DSO into config file */
+	if((err = dm_event_unregister(dso, devpath, DM_EVENT_ALL_ERRORS)) < 0) {
+		log_error("Unable to unregister %s for events: %s", devpath, strerror(-err));
+		return 0;
+	}
+
+	log_info("Unregistered %s for events", devpath);
+
+	return 1;
+}
+
+#endif /* DMEVENTD */
+#endif /* DEVMAPPER_SUPPORT */
 
 static void _destroy(const struct segment_type *segtype)
 {
@@ -341,6 +422,10 @@ static struct segtype_handler _mirrored_ops = {
 	add_target_line:_add_target_line,
 	target_percent:_target_percent,
 	target_present:_target_present,
+#endif
+#ifdef DMEVENTD
+	target_register:_target_register,
+	target_unregister:_target_unregister,
 #endif
 	destroy:_destroy,
 };
