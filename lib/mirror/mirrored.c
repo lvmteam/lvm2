@@ -341,8 +341,9 @@ static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
-static int _target_register(struct dm_pool *mem, struct lv_segment *seg,
-			    struct config_tree *cft, int events)
+static int _target_register_events(struct dm_pool *mem,
+				   struct lv_segment *seg,
+				   struct config_tree *cft, int events)
 {
 	char *dso;
 	char dm_name[PATH_MAX];
@@ -362,7 +363,7 @@ static int _target_register(struct dm_pool *mem, struct lv_segment *seg,
 	strncpy(dm_name, build_dm_name(mem, vg->name, lv->name, NULL),
 		PATH_MAX);
 
-	if((err = dm_event_register(dso, dm_name, ALL_ERRORS)) < 0) {
+	if((err = dm_event_register(dso, dm_name, DM_EVENT_ALL_ERRORS)) < 0) {
 		log_error("Unable to register %s for events: %s", dm_name,
 			  strerror(-err));
 		return 0;
@@ -372,8 +373,9 @@ static int _target_register(struct dm_pool *mem, struct lv_segment *seg,
 	return 1;
 }
 
-static int _target_unregister(struct dm_pool *mem, struct lv_segment *seg,
-			      struct config_tree *cft, int events)
+static int _target_unregister_events(struct dm_pool *mem,
+				     struct lv_segment *seg,
+				     struct config_tree *cft, int events)
 {
 	char *dso;
 	char devpath[PATH_MAX];
@@ -424,8 +426,8 @@ static struct segtype_handler _mirrored_ops = {
 	target_present:_target_present,
 #endif
 #ifdef DMEVENTD
-	target_register:_target_register,
-	target_unregister:_target_unregister,
+	target_register_events:_target_register_events,
+	target_unregister_events:_target_unregister_events,
 #endif
 	destroy:_destroy,
 };

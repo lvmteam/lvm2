@@ -577,10 +577,11 @@ static int _register_dev(struct cmd_context *cmd, struct logical_volume *lv,
 	list_iterate(tmp, &lv->segments) {
 		seg = list_item(tmp, struct lv_segment);
 
-		if (do_reg)
-			reg = seg->segtype->ops->target_register;
-		else
-			reg = seg->segtype->ops->target_unregister;
+		if (do_reg) {
+			if (seg->segtype->ops->target_register_events)
+				reg = seg->segtype->ops->target_register_events;
+		} else if(seg->setype->ops->target_unregister_events)
+			reg = seg->segtype->ops->target_unregister_events;
 
 		if (reg)
 			/* FIXME specify events */
@@ -589,6 +590,7 @@ static int _register_dev(struct cmd_context *cmd, struct logical_volume *lv,
 				return 0;
 			}
 	}
+
 	return 1;
 }
 #endif
