@@ -1,5 +1,6 @@
 Version 2.02.02 - 
 ====================================
+  Fix lvscan snapshot full display.
   Bring lvdisplay man page example into line.
   Add mirror dmeventd library.
   Add some activation logic to remove_mirror_images().

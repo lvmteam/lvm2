@@ -87,12 +87,12 @@ ifeq ("@CMDLIB@", "yes")
 	INSTALL_TARGETS += $(INSTALL_CMDLIB_TARGETS)
 endif
 
-ifeq ("@DEVMAPPER@", "yes")
-	LVMLIBS += -ldevmapper
+ifeq ("@DMEVENTD@", "yes")
+	LVMLIBS += -ldevmapper-event -lpthread
 endif
 
-ifeq ("@DMEVENTD@", "yes")
-	LVMLIBS += -ldevmapper-event
+ifeq ("@DEVMAPPER@", "yes")
+	LVMLIBS += -ldevmapper
 endif
 
 CFLAGS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"

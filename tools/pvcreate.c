@@ -78,7 +78,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	}
 
 	if (!dev) {
-		log_error("Device %s not found.", name);
+		log_error("Device %s not found (or ignored by filtering).", name);
 		return 0;
 	}
 
