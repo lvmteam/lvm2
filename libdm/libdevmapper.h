@@ -331,9 +331,16 @@ int dm_tree_node_add_striped_target(struct dm_tree_node *node,
 				       uint32_t stripe_size);
 int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 				      uint64_t size);
+ 
+/* Mirror log flags */
+#define DM_NOSYNC		0x00000001	/* Known already in sync */
+#define DM_FORCESYNC		0x00000002	/* Force resync */
+#define DM_BLOCK_ON_ERROR	0x00000004	/* On error, suspend I/O */
+
 int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  uint32_t region_size,
 					  unsigned clustered,
+					  uint32_t flags,
 					  const char *log_uuid,
 					  unsigned area_count);
 int dm_tree_node_add_target_area(struct dm_tree_node *node,
@@ -508,6 +515,17 @@ int dm_bit_get_next(dm_bitset_t bs, int last_bit);
 
 #define dm_bit_copy(bs1, bs2) \
    memcpy(bs1 + 1, bs2 + 1, ((*bs1 / DM_BITS_PER_INT) + 1) * sizeof(int))
+
+/* Returns number of set bits */
+static inline unsigned hweight32(uint32_t i)
+{
+	unsigned r = (i & 0x55555555) + ((i >> 1) & 0x55555555);
+
+	r =    (r & 0x33333333) + ((r >>  2) & 0x33333333);
+	r =    (r & 0x0F0F0F0F) + ((r >>  4) & 0x0F0F0F0F);
+	r =    (r & 0x00FF00FF) + ((r >>  8) & 0x00FF00FF);
+	return (r & 0x0000FFFF) + ((r >> 16) & 0x0000FFFF);
+}
 
 /****************
  * hash functions
