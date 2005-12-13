@@ -341,6 +341,7 @@ static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
+/* FIXME Merge these two functions */
 static int _target_register_events(struct dm_pool *mem,
 				   struct lv_segment *seg,
 				   struct config_tree *cft, int events)
@@ -396,7 +397,7 @@ static int _target_unregister_events(struct dm_pool *mem,
 		PATH_MAX);
 
 	/* FIXME put MIR_DSO into config file */
-	if((err = dm_event_unregister(dso, devpath, DM_EVENT_ALL_ERRORS)) < 0) {
+	if ((err = dm_event_unregister(dso, devpath, DM_EVENT_ALL_ERRORS)) < 0) {
 		log_error("Unable to unregister %s for events: %s", devpath, strerror(-err));
 		return 0;
 	}
@@ -424,10 +425,10 @@ static struct segtype_handler _mirrored_ops = {
 	add_target_line:_add_target_line,
 	target_percent:_target_percent,
 	target_present:_target_present,
-#endif
 #ifdef DMEVENTD
 	target_register_events:_target_register_events,
 	target_unregister_events:_target_unregister_events,
+#endif
 #endif
 	destroy:_destroy,
 };
