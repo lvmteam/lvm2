@@ -363,12 +363,13 @@ static int do_event(int cmd, struct dm_event_daemon_message *msg,
 	struct dm_event_fifos fifos;
 
 	/* FIXME Start the daemon here if it's not running e.g. exclusive lock file */
-
+	/* FIXME Move this to separate 'dm_event_register_handler' - if no daemon here, fail */
 	if (!init_client(&fifos)) {
 		stack;
 		return -ESRCH;
 	}
 
+	/* FIXME Use separate 'dm_event_register_handler' function to pass in dso? */
 	ret = daemon_talk(&fifos, msg, cmd, dso_name, device, events, timeout);
 
 	/* what is the opposite of init? */
@@ -377,6 +378,8 @@ static int do_event(int cmd, struct dm_event_daemon_message *msg,
 	return ret;
 }
 
+/* FIXME remove dso_name - use handle instead */
+/* FIXME Use uuid not path! */
 /* External library interface. */
 int dm_event_register(char *dso_name, char *device_path,
 			  enum dm_event_type events)
