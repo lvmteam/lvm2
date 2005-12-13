@@ -1,5 +1,7 @@
 Version 1.02.03 - 
 ============================
+  Add sync, nosync and block_on_error mirror log parameters.
+  Add hweight32.
   Fix dmeventd build.
 
 Version 1.02.02 - 2 Dec 2005

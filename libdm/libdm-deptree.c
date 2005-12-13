@@ -85,6 +85,7 @@ struct load_segment {
 	uint32_t region_size;		/* Mirror */
 	unsigned clustered;		/* Mirror */
 	unsigned mirror_area_count;	/* Mirror */
+	uint32_t flags;			/* Mirror log */
 };
 
 /* Per-device properties */
@@ -1211,10 +1212,12 @@ static int _emit_areas_line(struct dm_task *dmt, struct load_segment *seg, char 
 
 static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uint64_t *seg_start, char *params, size_t paramsize)
 {
+	unsigned log_parm_count;
         int pos = 0;
 	int tw;
         int r;
 	char originbuf[10], cowbuf[10], logbuf[10];
+	const char *logtype;
 
 	switch(seg->type) {
 	case SEG_ERROR:
@@ -1230,26 +1233,66 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
                 	}
 			pos += tw;
 		}
-		if (!seg->log) {
-			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "core 1 ")) < 0) {
-                        	stack;	/* Out of space */
-                        	return -1;
-                	}
-			pos += tw;
-		} else {
+
+		log_parm_count = hweight32(seg->flags) + 1;
+
+		if (!seg->log)
+			logtype = "core";
+		else {
+			logtype = "disk";
+			log_parm_count++;
 			if (!_build_dev_string(logbuf, sizeof(logbuf), seg->log))
 				return_0;
-			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "disk 2 %s ", logbuf)) < 0) {
+		}
+
+		if ((tw = _dm_snprintf(params + pos, paramsize - pos, "%s %u ", logtype, log_parm_count)) < 0) {
+                        stack;	/* Out of space */
+                        return -1;
+                }
+		pos += tw;
+
+		if (seg->log) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "%s ", logbuf)) < 0) {
                         	stack;	/* Out of space */
                         	return -1;
                 	}
 			pos += tw;
 		}
-		if ((tw = _dm_snprintf(params + pos, paramsize - pos, "%u %u ", seg->region_size, seg->mirror_area_count)) < 0) {
+
+		if ((tw = _dm_snprintf(params + pos, paramsize - pos, "%u ", seg->region_size)) < 0) {
                        	stack; /* Out of space */
                        	return -1;
                	}
 		pos += tw;
+
+		if ((seg->flags & DM_NOSYNC)) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "nosync ")) < 0) {
+                       		stack; /* Out of space */
+                       		return -1;
+               		}
+			pos += tw;
+		} else if ((seg->flags & DM_FORCESYNC)) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "sync ")) < 0) {
+                       		stack; /* Out of space */
+                       		return -1;
+               		}
+			pos += tw;
+		}
+
+		if ((seg->flags & DM_BLOCK_ON_ERROR)) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "block_on_error ")) < 0) {
+                       		stack; /* Out of space */
+                       		return -1;
+               		}
+			pos += tw;
+		}
+
+		if ((tw = _dm_snprintf(params + pos, paramsize - pos, "%u ", seg->mirror_area_count)) < 0) {
+                       	stack; /* Out of space */
+                       	return -1;
+               	}
+		pos += tw;
+
 		break;
 	case SEG_SNAPSHOT:
 		if (!_build_dev_string(originbuf, sizeof(originbuf), seg->origin))
@@ -1619,6 +1662,7 @@ int dm_tree_node_add_striped_target(struct dm_tree_node *node,
 int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  uint32_t region_size,
 					  unsigned clustered, 
+					  uint32_t flags,
 					  const char *log_uuid,
 					  unsigned area_count)
 {
@@ -1645,6 +1689,7 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 	seg->region_size = region_size;
 	seg->clustered = clustered;
 	seg->mirror_area_count = area_count;
+	seg->flags = flags;
 
 	return 1;
 }
