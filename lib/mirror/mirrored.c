@@ -222,6 +222,7 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 {
 	unsigned clustered = 0;
 	char *log_dlid = NULL;
+	uint32_t log_flags = 0;
 
 	/*
 	 * Use clustered mirror log for non-exclusive activation 
@@ -238,8 +239,12 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 		return 0;
 	}
 
-	/* FIXME Add sync parm? */
-	return dm_tree_node_add_mirror_target_log(node, region_size, clustered, log_dlid, area_count);
+	/* FIXME Only if the kernel supports this 
+	if (!(seg->status & PVMOVE))
+		log_flags |= DM_BLOCK_ON_ERROR;
+	*/
+
+	return dm_tree_node_add_mirror_target_log(node, region_size, clustered, log_flags, log_dlid, area_count);
 }
 
 static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
