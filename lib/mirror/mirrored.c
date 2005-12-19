@@ -27,6 +27,8 @@
 #include "activate.h"
 #include "libdevmapper-event.h"
 
+static int _block_on_error_available = 0;
+
 enum {
 	MIRR_DISABLED,
 	MIRR_RUNNING,
@@ -239,12 +241,10 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 		return 0;
 	}
 
-	/* FIXME Only if the kernel supports this 
-	if (!(seg->status & PVMOVE))
+	if (_block_on_error_available && !(seg->status & PVMOVE))
 		log_flags |= DM_BLOCK_ON_ERROR;
-	*/
 
-	return dm_tree_node_add_mirror_target_log(node, region_size, clustered, log_flags, log_dlid, area_count);
+	return dm_tree_node_add_mirror_target_log(node, region_size, clustered, log_dlid, area_count, log_flags);
 }
 
 static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
@@ -322,9 +322,26 @@ static int _target_present(void)
 {
 	static int checked = 0;
 	static int present = 0;
+	uint32_t maj, min, patchlevel;
+	unsigned maj2, min2;
+        char vsn[80];
 
-	if (!checked)
+	if (!checked) {
 		present = target_present("mirror", 1);
+
+		/*
+		 * block_on_error available with mirror target >= 1.1
+		 * or with 1.0 in RHEL4U3 driver >= 4.5
+		 */
+
+		if (target_version("mirror", &maj, &min, &patchlevel) &&
+		    maj == 1 && 
+		    (min >= 1 || 
+		     (min == 0 && driver_version(vsn, sizeof(vsn)) &&
+		      sscanf(vsn, "%u.%u", &maj2, &min2) == 2 &&
+		      maj2 >= 4 && min2 >= 5)))	/* RHEL4U3 */
+			_block_on_error_available = 1;
+	}
 
 	checked = 1;
 
