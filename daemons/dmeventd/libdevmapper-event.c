@@ -69,29 +69,46 @@ static int parse_message(struct dm_event_daemon_message *msg, char **dso_name,
 	return -ENOMEM;
 }
 
-/* Read message from daemon. */
+/*
+ * daemon_read
+ * @fifos
+ * @msg
+ *
+ * Read message from daemon.
+ *
+ * Returns: 0 on failure, 1 on success
+ */
 static int daemon_read(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
 {
 	int bytes = 0, ret = 0;
 	fd_set fds;
 
 	memset(msg, 0, sizeof(*msg));
-	errno = 0;
-	/* FIXME Fix error handling. Check 'ret' before errno. EINTR? EAGAIN? */
-	/* FIXME errno != EOF?   RTFM! */
-	while (bytes < sizeof(*msg) && errno != EOF) {
+	while (bytes < sizeof(*msg)) {
 		do {
 			/* Watch daemon read FIFO for input. */
 			FD_ZERO(&fds);
 			FD_SET(fifos->server, &fds);
-		/* FIXME Check for errors e.g. EBADF */
-		} while (select(fifos->server+1, &fds, NULL, NULL, NULL) != 1);
+			ret = select(fifos->server+1, &fds, NULL, NULL, NULL);
+			if (ret < 0 && errno != EINTR) {
+				/* FIXME Log error */
+				return 0;
+			}
+		} while (ret < 1);
 
 		ret = read(fifos->server, msg, sizeof(*msg) - bytes);
-		bytes += ret > 0 ? ret : 0;
+		if (ret < 0) {
+			if ((errno == EINTR) || (errno == EAGAIN))
+				continue;
+			else {
+				/* FIXME Log error */
+				return 0;
+			}
+		}
+
+		bytes += ret;
 	}
 
-// log_print("%s: \"%s\"\n", __func__, msg->msg);
 	return bytes == sizeof(*msg);
 }
 
@@ -101,20 +118,29 @@ static int daemon_write(struct dm_event_fifos *fifos, struct dm_event_daemon_mes
 	int bytes = 0, ret = 0;
 	fd_set fds;
 
-
-// log_print("%s: \"%s\"\n", __func__, msg->msg);
-	errno = 0;
-	/* FIXME Fix error handling. Check 'ret' before errno. EINTR? EAGAIN? */
-	while (bytes < sizeof(*msg) && errno != EIO) {
+	while (bytes < sizeof(*msg)) {
 		do {
 			/* Watch daemon write FIFO to be ready for output. */
 			FD_ZERO(&fds);
 			FD_SET(fifos->client, &fds);
-		/* FIXME Check for errors e.g. EBADF */
-		} while (select(fifos->client +1, NULL, &fds, NULL, NULL) != 1);
+			ret = select(fifos->client +1, NULL, &fds, NULL, NULL);
+			if ((ret < 0) && (errno != EINTR)) {
+				/* FIXME Log error */
+				return 0;
+			}
+		} while (ret < 1);
 
 		ret = write(fifos->client, msg, sizeof(*msg) - bytes);
-		bytes += ret > 0 ? ret : 0;
+		if (ret < 0) {
+			if ((errno == EINTR) || (errno == EAGAIN))
+				continue;
+			else {
+				/* fixme: log error */
+				return 0;
+			}
+		}
+
+		bytes += ret;
 	}
 
 	return bytes == sizeof(*msg);
@@ -178,8 +204,10 @@ static void daemon_running_signal_handler(int sig)
 static int start_daemon(void)
 {
 	int pid, ret=0;
-	int old_mask;
 	void *old_hand;
+#ifdef linux
+	int old_mask;
+#endif
 
 	/* Must be able to acquire signal */
 	old_hand = signal(SIGUSR1, &daemon_running_signal_handler);
@@ -238,9 +266,11 @@ static int start_daemon(void)
 	/* FIXME What if old_hand is SIG_ERR? */
 	if (signal(SIGUSR1, old_hand) == SIG_ERR)
 		log_error("Unable to reset signal handler.");
+#ifdef linux
 	sigsetmask(old_mask);
+#endif
 
-        return ret;
+	return ret;
 }
 
 /* Initialize client. */
@@ -251,15 +281,15 @@ static int init_client(struct dm_event_fifos *fifos)
 
 	/* init fifos */
 	memset(fifos, 0, sizeof(*fifos));
-        fifos->client_path = DM_EVENT_FIFO_CLIENT;
-        fifos->server_path = DM_EVENT_FIFO_SERVER;
+	fifos->client_path = DM_EVENT_FIFO_CLIENT;
+	fifos->server_path = DM_EVENT_FIFO_SERVER;
 
 	/* FIXME The server should be responsible for these, not the client. */
 	/* Create fifos */
 	if (((mkfifo(fifos->client_path, 0600) == -1) && errno != EEXIST) ||
 	    ((mkfifo(fifos->server_path, 0600) == -1) && errno != EEXIST)) {
 		log_error("%s: Failed to create a fifo.\n", __func__);
-                return 0;
+		return 0;
 	}
 
 	/* FIXME Warn/abort if perms are wrong - not something to fix silently. */
@@ -330,7 +360,7 @@ static int init_client(struct dm_event_fifos *fifos)
 static void dtr_client(struct dm_event_fifos *fifos)
 {
 	if (flock(fifos->server, LOCK_UN))
-                log_error("flock unlock %s\n", fifos->server_path);
+		log_error("flock unlock %s\n", fifos->server_path);
 
 	close(fifos->client);
 	close(fifos->server);
