@@ -86,9 +86,9 @@ enum dm_event_type {
 /* FIXME Replace device with standard name/uuid/devno choice */
 /* Interface changes: 
    First register a handler, passing in a unique ref for the device. */
-  int dm_event_register_handler(const char *dso_name, const char *device);
-  int dm_event_register(const char *dso_name, const char *name, const char *uuid, uint32_t major, uint32_t minor, enum dm_event_type events);
-Or (better?) add to task structure and use existing functions - run a task to register/unregister events - we may need to run task withe that with the new event mechanism anyway, then the dso calls just hook in.
+//  int dm_event_register_handler(const char *dso_name, const char *device);
+//  int dm_event_register(const char *dso_name, const char *name, const char *uuid, uint32_t major, uint32_t minor, enum dm_event_type events);
+/* Or (better?) add to task structure and use existing functions - run a task to register/unregister events - we may need to run task withe that with the new event mechanism anyway, then the dso calls just hook in.
 */
  
 /* FIXME Missing consts? */

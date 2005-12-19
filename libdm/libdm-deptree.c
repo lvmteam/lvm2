@@ -1662,9 +1662,9 @@ int dm_tree_node_add_striped_target(struct dm_tree_node *node,
 int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  uint32_t region_size,
 					  unsigned clustered, 
-					  uint32_t flags,
 					  const char *log_uuid,
-					  unsigned area_count)
+					  unsigned area_count,
+					  uint32_t flags)
 {
 	struct dm_tree_node *log_node = NULL;
 	struct load_segment *seg;
