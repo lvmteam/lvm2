@@ -37,6 +37,8 @@ int library_version(char *version, size_t size);
 int lvm1_present(struct cmd_context *cmd);
 
 int target_present(const char *target_name, int use_modprobe);
+int target_version(const char *target_name, uint32_t *maj,
+                   uint32_t *min, uint32_t *patchlevel);
 
 void activation_exit(void);
 

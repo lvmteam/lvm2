@@ -1,5 +1,7 @@
 Version 2.02.02 - 
 ====================================
+  Set block_on_error parameter if available.
+  Add target_version.
   Add details to format1 'Invalid LV in extent map' error message.
   Fix lvscan snapshot full display.
   Bring lvdisplay man page example into line.

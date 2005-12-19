@@ -76,6 +76,11 @@ int driver_version(char *version, size_t size)
 {
 	return 0;
 }
+int target_version(const char *target_name, uint32_t *maj,
+		   uint32_t *min, uint32_t *patchlevel)
+{
+	return 0;
+}
 int target_present(const char *target_name)
 {
 	return 0;
@@ -278,7 +283,8 @@ int driver_version(char *version, size_t size)
 	return dm_driver_version(version, size);
 }
 
-static int _target_present(const char *target_name)
+int target_version(const char *target_name, uint32_t *maj,
+		   uint32_t *min, uint32_t *patchlevel)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -301,6 +307,9 @@ static int _target_present(const char *target_name)
 
 		if (!strcmp(target_name, target->name)) {
 			r = 1;
+			*maj = target->version[0];
+			*min = target->version[1];
+			*patchlevel = target->version[2];
 			goto out;
 		}
 
@@ -315,6 +324,7 @@ static int _target_present(const char *target_name)
 
 int target_present(const char *target_name, int use_modprobe)
 {
+	uint32_t maj, min, patchlevel;
 #ifdef MODPROBE_CMD
 	char module[128];
 #endif
@@ -324,7 +334,7 @@ int target_present(const char *target_name, int use_modprobe)
 
 #ifdef MODPROBE_CMD
 	if (use_modprobe) {
-		if (_target_present(target_name))
+		if (target_version(target_name, &maj, &min, &patchlevel))
 			return 1;
 
 		if (lvm_snprintf(module, sizeof(module), "dm-%s", target_name)
@@ -339,7 +349,7 @@ int target_present(const char *target_name, int use_modprobe)
 	}
 #endif
 
-	return _target_present(target_name);
+	return target_version(target_name, &maj, &min, &patchlevel);
 }
 
 /*
@@ -580,7 +590,7 @@ static int _register_dev(struct cmd_context *cmd, struct logical_volume *lv,
 		if (do_reg) {
 			if (seg->segtype->ops->target_register_events)
 				reg = seg->segtype->ops->target_register_events;
-		} else if(seg->setype->ops->target_unregister_events)
+		} else if (seg->segtype->ops->target_unregister_events)
 			reg = seg->segtype->ops->target_unregister_events;
 
 		if (reg)
