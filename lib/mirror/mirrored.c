@@ -333,6 +333,7 @@ static int _target_present(void)
 		 * block_on_error available with mirror target >= 1.1
 		 * or with 1.0 in RHEL4U3 driver >= 4.5
 		 */
+		/* FIXME Move this into libdevmapper */
 
 		if (target_version("mirror", &maj, &min, &patchlevel) &&
 		    maj == 1 && 
