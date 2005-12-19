@@ -140,7 +140,12 @@ static int _fill_maps(struct dm_hash_table *maps, struct volume_group *vg,
 				lvm = lvms[lv_num];
 
 				if (!lvm) {
-					log_err("invalid lv in extent map");
+					log_error("Invalid LV in extent map "
+						  "(PV %s, PE %" PRIu32
+						  ", LV %" PRIu32
+						  ", LE %" PRIu32 ")",
+						  dev_name(pv->dev), i,
+						  lv_num, e[i].le_num);
 					return 0;
 				}
 
