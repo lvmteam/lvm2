@@ -56,6 +56,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lv_list *lvl;
 	uint32_t extents;
 	struct lvinfo info;
+	int first = 1;
 
 	log_verbose("%s/%s has missing extents: removing (including "
 		    "dependencies)", lv->vg->name, lv->name);
@@ -67,7 +68,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		log_verbose("Deactivating (if active) logical volume %s "
 			    "(origin of %s)", snap_seg->origin->name, lv->name);
 
-		if (!deactivate_lv(cmd, snap_seg->origin)) {
+		if (!test_mode() && !deactivate_lv(cmd, snap_seg->origin)) {
 			log_error("Failed to deactivate LV %s",
 				  snap_seg->origin->name);
 			return 0;
@@ -83,6 +84,13 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 					    origin_list);
 		cow = snap_seg->cow;
 
+		if (first && !test_mode() &&
+		    !deactivate_lv(cmd, snap_seg->origin)) {
+			log_error("Failed to deactivate LV %s",
+				  snap_seg->origin->name);
+			return 0;
+		}
+
 		*list_unsafe = 1;	/* May remove caller's lvht! */
 		if (!vg_remove_snapshot(cow)) {
 			stack;
@@ -94,6 +102,8 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 			return 0;
 		}
+
+		first = 0;
 	}
 
 	/*
@@ -199,11 +209,13 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			return 0;
 		}
 
-		/* Suspend lvs_changed */
-		if (!suspend_lvs(cmd, &lvs_changed)) {
-			stack;
-			vg_revert(vg);
-			return 0;
+		if (!test_mode()) {
+			/* Suspend lvs_changed */
+			if (!suspend_lvs(cmd, &lvs_changed)) {
+				stack;
+				vg_revert(vg);
+				return 0;
+			}
 		}
 
 		if (!vg_commit(vg)) {
@@ -213,22 +225,26 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			return 0;
 		}
 
-		if (!resume_lvs(cmd, &lvs_changed)) {
-			log_error("Failed to resume LVs using error segments.");
-			return 0;
+		if (!test_mode()) {
+			if (!resume_lvs(cmd, &lvs_changed)) {
+				log_error("Failed to resume LVs using error segments.");
+				return 0;
+			}
 		}
 
 /* FIXME If any lvs_changed belong to mirrors, reduce those mirrors */
 
 		/* Deactivate error LVs */
-		list_iterate_items(lvl, &lvs_changed) {
-			log_verbose("Deactivating (if active) logical volume %s",
-				    lvl->lv->name);
+		if (!test_mode) {
+			list_iterate_items(lvl, &lvs_changed) {
+				log_verbose("Deactivating (if active) logical volume %s",
+					    lvl->lv->name);
 
-			if (!deactivate_lv(cmd, lvl->lv)) {
-				log_error("Failed to deactivate LV %s",
-					  lvl->lv->name);
-				return 0;
+				if (!deactivate_lv(cmd, lvl->lv)) {
+					log_error("Failed to deactivate LV %s",
+						  lvl->lv->name);
+					return 0;
+				}
 			}
 		}
 
