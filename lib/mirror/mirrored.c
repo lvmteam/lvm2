@@ -25,7 +25,10 @@
 #include "lvm-string.h"
 #include "targets.h"
 #include "activate.h"
-#include "libdevmapper-event.h"
+
+#ifdef DMEVENTD
+#  include <libdevmapper-event.h>
+#endif
 
 static int _block_on_error_available = 0;
 
