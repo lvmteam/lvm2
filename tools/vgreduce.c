@@ -152,8 +152,9 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	struct physical_volume *pv;
 	struct lv_segment *seg;
 	unsigned int s;
-	int list_unsafe;
+	int list_unsafe, only_mirror_images_found;
 	LIST_INIT(lvs_changed);
+	only_mirror_images_found = 1;
 
 	/* Deactivate & remove necessary LVs */
       restart_loop:
@@ -172,6 +173,12 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 				pv = seg_pv(seg, s);
 				if (!pv || !pv->dev) {
+					if (arg_count(cmd, mirrorsonly_ARG) &&
+					    !(lv->status & MIRROR_IMAGE)) {
+						log_error("Non-mirror-image LV %s found: can't remove.", lv->name);
+						only_mirror_images_found = 0;
+						continue;
+					}
 					if (!_remove_lv(cmd, lv, &list_unsafe, &lvs_changed)) {
 						stack;
 						return 0;
@@ -181,6 +188,11 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				}
 			}
 		}
+	}
+
+	if (!only_mirror_images_found) {
+		log_error("Aborting because --mirrorsonly was specified.");
+		return 0;
 	}
 
 	/* Remove missing PVs */
@@ -235,7 +247,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 /* FIXME If any lvs_changed belong to mirrors, reduce those mirrors */
 
 		/* Deactivate error LVs */
-		if (!test_mode) {
+		if (!test_mode()) {
 			list_iterate_items(lvl, &lvs_changed) {
 				log_verbose("Deactivating (if active) logical volume %s",
 					    lvl->lv->name);
@@ -337,6 +349,12 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!argc & arg_count(cmd, removemissing_ARG)) {
 		log_error("Please give volume group name");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (arg_count(cmd, mirrorsonly_ARG) &&
+	    !arg_count(cmd, removemissing_ARG)) {
+		log_error("--mirrorsonly requires --removemissing");
 		return EINVALID_CMD_LINE;
 	}
 
