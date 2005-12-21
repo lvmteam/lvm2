@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lv_alloc.h"
 
 static int _remove_pv(struct volume_group *vg, struct pv_list *pvl)
 {
@@ -47,25 +48,22 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl)
 }
 
 static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
-		      int *list_unsafe)
+		      int *list_unsafe, struct list *lvs_changed)
 {
 	struct lv_segment *snap_seg;
 	struct list *snh, *snht;
 	struct logical_volume *cow;
+	struct lv_list *lvl;
+	uint32_t extents;
+	struct lvinfo info;
 
 	log_verbose("%s/%s has missing extents: removing (including "
 		    "dependencies)", lv->vg->name, lv->name);
 
-	/* Deactivate if necessary */
-	if (!lv_is_cow(lv)) {
-		log_verbose("Deactivating (if active) logical volume %s",
-			    lv->name);
+	/* FIXME Cope properly with stacked devices & snapshots. */
 
-		if (!deactivate_lv(cmd, lv)) {
-			log_error("Failed to deactivate LV %s", lv->name);
-			return 0;
-		}
-	} else if ((snap_seg = find_cow(lv))) {
+	/* If snapshot device is missing, deactivate origin. */
+	if (lv_is_cow(lv) && (snap_seg = find_cow(lv))) {
 		log_verbose("Deactivating (if active) logical volume %s "
 			    "(origin of %s)", snap_seg->origin->name, lv->name);
 
@@ -98,11 +96,37 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
-	/* Remove the LV itself */
-	log_verbose("Removing LV %s from VG %s", lv->name, lv->vg->name);
-	if (!lv_remove(lv)) {
-		stack;
-		return 0;
+	/*
+	 * If LV is active, replace it with error segment 
+	 * and add to list of LVs to be removed later.
+	 * Doesn't apply to snapshots/origins yet - they're already deactivated.
+	 */
+	if (lv_info(cmd, lv, &info, 0) && info.exists) {
+		extents = lv->le_count;
+		if (!lv_empty(lv)) {
+			stack;
+			return 0;
+		}
+		if (!lv_add_virtual_segment(lv, 0, extents,
+					    get_segtype_from_string(cmd,
+								    "error"))) {
+			stack;
+			return 0;
+		}
+
+		if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
+			log_error("lv_list alloc failed");
+			return 0;
+		}
+		lvl->lv = lv;
+		list_add(lvs_changed, &lvl->list);
+	} else {
+		/* Remove LV immediately. */
+		log_verbose("Removing LV %s from VG %s", lv->name, lv->vg->name);
+		if (!lv_remove(lv)) {
+			stack;
+			return 0;
+		}
 	}
 
 	return 1;
@@ -113,11 +137,13 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	struct list *pvh, *pvht;
 	struct list *lvh, *lvht;
 	struct pv_list *pvl;
+	struct lv_list *lvl;
 	struct logical_volume *lv;
 	struct physical_volume *pv;
 	struct lv_segment *seg;
 	unsigned int s;
 	int list_unsafe;
+	LIST_INIT(lvs_changed);
 
 	/* Deactivate & remove necessary LVs */
       restart_loop:
@@ -136,7 +162,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 				pv = seg_pv(seg, s);
 				if (!pv || !pv->dev) {
-					if (!_remove_lv(cmd, lv, &list_unsafe)) {
+					if (!_remove_lv(cmd, lv, &list_unsafe, &lvs_changed)) {
 						stack;
 						return 0;
 					}
@@ -155,6 +181,65 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		if (!_remove_pv(vg, pvl)) {
 			stack;
 			return 0;
+		}
+	}
+
+	/* VG is now consistent */
+	vg->status &= ~PARTIAL_VG;
+	vg->status |= LVM_WRITE;
+
+	init_partial(0);
+
+	/* FIXME Recovery.  For now people must clean up by hand. */
+
+	if (!list_empty(&lvs_changed)) {
+		if (!vg_write(vg)) {
+			log_error("Failed to write out a consistent VG for %s",
+				  vg->name);
+			return 0;
+		}
+
+		/* Suspend lvs_changed */
+		if (!suspend_lvs(cmd, &lvs_changed)) {
+			stack;
+			vg_revert(vg);
+			return 0;
+		}
+
+		if (!vg_commit(vg)) {
+			log_error("Failed to commit consistent VG for %s",
+				  vg->name);
+			vg_revert(vg);
+			return 0;
+		}
+
+		if (!resume_lvs(cmd, &lvs_changed)) {
+			log_error("Failed to resume LVs using error segments.");
+			return 0;
+		}
+
+/* FIXME If any lvs_changed belong to mirrors, reduce those mirrors */
+
+		/* Deactivate error LVs */
+		list_iterate_items(lvl, &lvs_changed) {
+			log_verbose("Deactivating (if active) logical volume %s",
+				    lvl->lv->name);
+
+			if (!deactivate_lv(cmd, lvl->lv)) {
+				log_error("Failed to deactivate LV %s",
+					  lvl->lv->name);
+				return 0;
+			}
+		}
+
+		/* Remove remaining LVs */
+		list_iterate_items(lvl, &lvs_changed) {
+			log_verbose("Removing LV %s from VG %s", lvl->lv->name,
+				    lvl->lv->vg->name);
+			if (!lv_remove(lvl->lv)) {
+				stack;
+				return 0;
+			}
 		}
 	}
 
@@ -190,7 +275,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		list_del(&pvl->list);
 
 	pv->vg_name = ORPHAN;
-        pv->status = ALLOCATABLE_PV;
+	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
 		log_error("%s: Couldn't get size.", dev_name(pv->dev));
@@ -299,11 +384,6 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;
 		}
-
-		init_partial(0);
-
-		vg->status &= ~PARTIAL_VG;
-		vg->status |= LVM_WRITE;
 
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			log_error("Failed to write out a consistent VG for %s",
