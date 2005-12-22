@@ -176,8 +176,8 @@ void set_activation(int act)
 		log_verbose("Activation enabled. Device-mapper kernel "
 			    "driver will be used.");
 	else
-		log_verbose("Activation disabled. No device-mapper "
-			    "interaction will be attempted.");
+		log_print("WARNING: Activation disabled. No device-mapper "
+			  "interaction will be attempted.");
 }
 
 int activation(void)

@@ -1,5 +1,6 @@
 Version 2.02.02 - 
 ====================================
+  Always print warning if activation is disabled.
   Add --mirrorsonly to vgreduce.
   vgreduce replaces active LVs with error segment before removing them.
   Set block_on_error parameter if available.
