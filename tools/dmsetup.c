@@ -502,7 +502,7 @@ static int _version(int argc, char **argv, void *data)
 	if (dm_get_library_version(version, sizeof(version)))
 		printf("Library version:   %s\n", version);
 
-	if (dm_driver_version(version, sizeof(version)))
+	if (!dm_driver_version(version, sizeof(version)))
 		return 0;
 
 	printf("Driver version:    %s\n", version);
