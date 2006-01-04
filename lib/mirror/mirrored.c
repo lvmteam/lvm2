@@ -326,7 +326,7 @@ static int _target_present(void)
 	static int checked = 0;
 	static int present = 0;
 	uint32_t maj, min, patchlevel;
-	unsigned maj2, min2;
+	unsigned maj2, min2, patchlevel2;
         char vsn[80];
 
 	if (!checked) {
@@ -342,8 +342,8 @@ static int _target_present(void)
 		    maj == 1 && 
 		    (min >= 1 || 
 		     (min == 0 && driver_version(vsn, sizeof(vsn)) &&
-		      sscanf(vsn, "%u.%u", &maj2, &min2) == 2 &&
-		      maj2 >= 4 && min2 >= 5)))	/* RHEL4U3 */
+		      sscanf(vsn, "%u.%u.%u", &maj2, &min2, &patchlevel2) == 3 &&
+		      maj2 == 4 && min2 == 5 && patchlevel2 == 0)))	/* RHEL4U3 */
 			_block_on_error_available = 1;
 	}
 
