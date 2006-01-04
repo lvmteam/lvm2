@@ -1,5 +1,7 @@
 Version 1.02.03 - 
 ============================
+  Don't inline _find in hash.c and tidy signed/unsigned etc.
+  Fix libdevmapper.h #endif.
   Fix dmsetup version driver version.
   Add sync, nosync and block_on_error mirror log parameters.
   Add hweight32.
