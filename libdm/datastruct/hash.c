@@ -18,13 +18,13 @@
 struct dm_hash_node {
 	struct dm_hash_node *next;
 	void *data;
-	int keylen;
+	unsigned keylen;
 	char key[0];
 };
 
 struct dm_hash_table {
-	int num_nodes;
-	int num_slots;
+	unsigned num_nodes;
+	unsigned num_slots;
 	struct dm_hash_node **slots;
 };
 
@@ -56,7 +56,7 @@ static unsigned char _nums[] = {
 	209
 };
 
-static struct dm_hash_node *_create_node(const char *str, int len)
+static struct dm_hash_node *_create_node(const char *str, unsigned len)
 {
 	struct dm_hash_node *n = dm_malloc(sizeof(*n) + len);
 
@@ -68,9 +68,10 @@ static struct dm_hash_node *_create_node(const char *str, int len)
 	return n;
 }
 
-static unsigned _hash(const char *str, uint32_t len)
+static unsigned long _hash(const char *str, unsigned len)
 {
-	unsigned long h = 0, g, i;
+	unsigned long h = 0, g;
+	unsigned i;
 
 	for (i = 0; i < len; i++) {
 		h <<= 4;
@@ -120,7 +121,7 @@ struct dm_hash_table *dm_hash_create(unsigned size_hint)
 static void _free_nodes(struct dm_hash_table *t)
 {
 	struct dm_hash_node *c, *n;
-	int i;
+	unsigned i;
 
 	for (i = 0; i < t->num_slots; i++)
 		for (c = t->slots[i]; c; c = n) {
@@ -136,8 +137,8 @@ void dm_hash_destroy(struct dm_hash_table *t)
 	dm_free(t);
 }
 
-static inline struct dm_hash_node **_find(struct dm_hash_table *t, const char *key,
-				       uint32_t len)
+static struct dm_hash_node **_find(struct dm_hash_table *t, const char *key,
+				   uint32_t len)
 {
 	unsigned h = _hash(key, len) & (t->num_slots - 1);
 	struct dm_hash_node **c;
@@ -153,11 +154,12 @@ void *dm_hash_lookup_binary(struct dm_hash_table *t, const char *key,
 			 uint32_t len)
 {
 	struct dm_hash_node **c = _find(t, key, len);
+
 	return *c ? (*c)->data : 0;
 }
 
 int dm_hash_insert_binary(struct dm_hash_table *t, const char *key,
-		       uint32_t len, void *data)
+			  uint32_t len, void *data)
 {
 	struct dm_hash_node **c = _find(t, key, len);
 
@@ -214,7 +216,7 @@ unsigned dm_hash_get_num_entries(struct dm_hash_table *t)
 void dm_hash_iter(struct dm_hash_table *t, dm_hash_iterate_fn f)
 {
 	struct dm_hash_node *c;
-	int i;
+	unsigned i;
 
 	for (i = 0; i < t->num_slots; i++)
 		for (c = t->slots[i]; c; c = c->next)
@@ -225,7 +227,7 @@ void dm_hash_wipe(struct dm_hash_table *t)
 {
 	_free_nodes(t);
 	memset(t->slots, 0, sizeof(struct dm_hash_node *) * t->num_slots);
-	t->num_nodes = 0;
+	t->num_nodes = 0u;
 }
 
 char *dm_hash_get_key(struct dm_hash_table *t, struct dm_hash_node *n)
@@ -241,7 +243,7 @@ void *dm_hash_get_data(struct dm_hash_table *t, struct dm_hash_node *n)
 static struct dm_hash_node *_next_slot(struct dm_hash_table *t, unsigned s)
 {
 	struct dm_hash_node *c = NULL;
-	int i;
+	unsigned i;
 
 	for (i = s; i < t->num_slots && !c; i++)
 		c = t->slots[i];
@@ -257,5 +259,6 @@ struct dm_hash_node *dm_hash_get_first(struct dm_hash_table *t)
 struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_node *n)
 {
 	unsigned h = _hash(n->key, n->keylen) & (t->num_slots - 1);
+
 	return n->next ? n->next : _next_slot(t, h + 1);
 }
