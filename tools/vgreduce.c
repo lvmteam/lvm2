@@ -50,7 +50,7 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl)
 static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		      int *list_unsafe, struct list *lvs_changed)
 {
-	struct lv_segment *snap_seg;
+	struct lv_segment *snap_seg, *mirror_seg;
 	struct list *snh, *snht;
 	struct logical_volume *cow;
 	struct lv_list *lvl;
@@ -113,6 +113,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (lv_info(cmd, lv, &info, 0) && info.exists) {
 		extents = lv->le_count;
+		mirror_seg = first_seg(lv)->mirror_seg;
 		if (!lv_empty(lv)) {
 			stack;
 			return 0;
@@ -122,6 +123,10 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 								    "error"))) {
 			stack;
 			return 0;
+		}
+		if (mirror_seg) {
+			first_seg(lv)->status |= MIRROR_IMAGE;
+			first_seg(lv)->mirror_seg = mirror_seg;
 		}
 
 		if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
@@ -147,11 +152,13 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	struct list *pvh, *pvht;
 	struct list *lvh, *lvht;
 	struct pv_list *pvl;
-	struct lv_list *lvl;
+	struct lv_list *lvl, *lvl2, *lvlt;
 	struct logical_volume *lv;
 	struct physical_volume *pv;
-	struct lv_segment *seg;
+	struct lv_segment *seg, *mirrored_seg;
+	struct lv_segment_area area;
 	unsigned int s;
+	uint32_t mimages;
 	int list_unsafe, only_mirror_images_found;
 	LIST_INIT(lvs_changed);
 	only_mirror_images_found = 1;
@@ -244,7 +251,44 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			}
 		}
 
-/* FIXME If any lvs_changed belong to mirrors, reduce those mirrors */
+		/* Remove lost mirror images from mirrors */
+		list_iterate_items(lvl, &vg->lvs) {
+			mirrored_seg = first_seg(lvl->lv);
+			if (!seg_is_mirrored(mirrored_seg))
+				continue;
+			mimages = mirrored_seg->area_count;
+			for (s = 0; s < mirrored_seg->area_count; s++) {
+				list_iterate_items_safe(lvl2, lvlt, &lvs_changed) {
+					if (seg_type(mirrored_seg, s) != AREA_LV ||
+					    lvl2->lv != seg_lv(mirrored_seg, s))
+						continue;
+					list_del(&lvl2->list);
+					area = mirrored_seg->areas[mimages - 1];
+					mirrored_seg->areas[mimages - 1] = mirrored_seg->areas[s];
+					mirrored_seg->areas[s] = area;
+					mimages--;	/* FIXME Assumes uniqueness */
+				}
+			}
+			if (mimages != mirrored_seg->area_count) {
+				if (!remove_mirror_images(mirrored_seg, mimages, NULL, 0)) {
+					stack;
+					return 0;
+				}
+
+				if (!vg_write(vg)) {
+					log_error("Failed to write out updated "
+						  "VG for %s", vg->name);
+					return 0;
+				}
+		
+				if (!vg_commit(vg)) {
+					log_error("Failed to commit updated VG "
+						  "for %s", vg->name);
+					vg_revert(vg);
+					return 0;
+				}
+			}
+		}
 
 		/* Deactivate error LVs */
 		if (!test_mode()) {
