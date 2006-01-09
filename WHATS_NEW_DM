@@ -1,5 +1,6 @@
 Version 1.02.03 - 
 ============================
+  Fix hash function to avoid using a negative array offset.
   Don't inline _find in hash.c and tidy signed/unsigned etc.
   Fix libdevmapper.h #endif.
   Fix dmsetup version driver version.
