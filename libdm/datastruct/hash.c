@@ -68,14 +68,14 @@ static struct dm_hash_node *_create_node(const char *str, unsigned len)
 	return n;
 }
 
-static unsigned long _hash(const char *str, unsigned len)
+static unsigned long _hash(const unsigned char *str, unsigned len)
 {
 	unsigned long h = 0, g;
 	unsigned i;
 
 	for (i = 0; i < len; i++) {
 		h <<= 4;
-		h += _nums[(int) *str++];
+		h += _nums[*str++];
 		g = h & ((unsigned long) 0xf << 16u);
 		if (g) {
 			h ^= g >> 16u;
