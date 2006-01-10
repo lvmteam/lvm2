@@ -64,7 +64,7 @@ dm_is_dm_major
 dm_mknodes
 dm_malloc_aux
 dm_malloc_aux_debug
-dm_strdup
+dm_strdup_aux
 dm_free_aux
 dm_realloc_aux
 dm_dump_memory_debug
