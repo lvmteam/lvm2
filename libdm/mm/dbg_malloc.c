@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <stdarg.h>
 
-char *dm_strdup(const char *str)
+char *dm_strdup_aux(const char *str)
 {
 	char *ret = dm_malloc(strlen(str) + 1);
 
