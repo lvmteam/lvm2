@@ -330,11 +330,11 @@ static int init_client(struct dm_event_fifos *fifos)
 	}
 
 	/* Anyone listening?  If not, errno will be ENXIO */
-	if ((fifos->client = open(fifos->client_path,
+	while ((fifos->client = open(fifos->client_path,
 				  O_WRONLY | O_NONBLOCK)) < 0) {
 		if (errno != ENXIO) {
-			log_error("%s: open client fifo %s\n",
-				__func__, fifos->client_path);
+			log_error("%s: Can't open client fifo %s: %s\n",
+				  __func__, fifos->client_path, strerror(errno));
 			close(fifos->server);
 			stack;
 			return 0;
@@ -342,17 +342,6 @@ static int init_client(struct dm_event_fifos *fifos)
 		
 		/* FIXME Unnecessary if daemon was started before calling this */
 		if (!start_daemon()) {
-			stack;
-			return 0;
-		}
-
-		/* FIXME Unnecessary if daemon was started before calling this */
-		/* Daemon is started, retry the open */
-		fifos->client = open(fifos->client_path, O_WRONLY | O_NONBLOCK);
-		if (fifos->client < 0) {
-			log_error("%s: open client fifo %s\n",
-				__func__, fifos->client_path);
-			close(fifos->server);
 			stack;
 			return 0;
 		}
