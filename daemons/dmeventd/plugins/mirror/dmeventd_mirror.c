@@ -61,12 +61,6 @@ static int _get_mirror_event(char *params)
 	log_status_str = args[4 + num_devs + log_argc];
 	sync_str = args[1 + num_devs];
 
-	syslog(LOG_DEBUG, " num_devs = %d", num_devs);
-	syslog(LOG_DEBUG, " dev_status_str: %s", dev_status_str);
-	syslog(LOG_DEBUG, " log_argc = %d", log_argc);
-	syslog(LOG_DEBUG, " log_status_str: %s", log_status_str);
-	syslog(LOG_DEBUG, " sync_str: %s", sync_str);
-
 	/* Check for bad mirror devices */
 	for (i = 0; i < num_devs; i++) {
 		if (dev_status_str[i] == 'D') {
@@ -87,23 +81,27 @@ static int _get_mirror_event(char *params)
 		goto out;
 	}
 
-	for(p = strstr(sync_str, "/"), i = (p - sync_str) - 1;
-	    p && (i >= 0);
-	    i--) {
-		syslog(LOG_DEBUG, "p[%d] (%c) ?= sync_str[%d] (%c)",
-		       i+1, p[i+1], i, sync_str[i]);
-		if(p[i+1] != sync_str[i]){
+	p = strstr(sync_str, "/");
+	if (p) {
+		p[0] = '\0';
+		if (strcmp(sync_str, p+1))
 			rtn = ME_IGNORE;
-			break;
-		}
+		p[0] = '/';
+	} else {
+		/*
+		 * How the hell did we get this?
+		 * Might mean all our parameters are screwed.
+		 */
+		syslog(LOG_ERR, "Unable to parse sync string.");
+		rtn = ME_IGNORE;
 	}
-
  out:
 	return rtn;
 }
 
 static void _temporary_log_fn(int level, const char *file, int line, const char *format)
 {
+	return;
 	syslog(LOG_DEBUG, "%s", format);
 }
 
@@ -115,7 +113,6 @@ static int _remove_failed_devices(const char *device)
 	char cmd_str[cmd_size];
 	char *vg = NULL, *lv = NULL, *layer = NULL;
 
-	// syslog(LOG_DEBUG, "Entering remove_failed_device\n");
 	if (strlen(device) > 200)
 		return -ENAMETOOLONG;
 
@@ -126,7 +123,6 @@ static int _remove_failed_devices(const char *device)
 	}
 
 	/* FIXME Is any sanity-checking required on %s? */
-	syslog(LOG_INFO, "vgreduce --removemissing %s\n", vg);
 	if (cmd_size <= snprintf(cmd_str, cmd_size, "vgreduce --removemissing %s", vg)) {
 		/* this error should be caught above, but doesn't hurt to check again */
 		syslog(LOG_ERR, "Unable to form LVM command: Device name too long");
@@ -138,16 +134,6 @@ static int _remove_failed_devices(const char *device)
 	handle = lvm2_init();
 	lvm2_log_level(handle, 1);
 	r = lvm2_run(handle, cmd_str);
-
-	syslog(LOG_INFO, "lvconvert -m0 %s/%s\n", vg, lv);
-	if (cmd_size <= snprintf(cmd_str, cmd_size, "lvconvert -m0 %s/%s\n", vg, lv)) {
-		/* this error should be caught above, but doesn't hurt to check again */
-		syslog(LOG_ERR, "Unable to form LVM command: Device name too long");
-		return -ENAMETOOLONG;
-	}
-	r = lvm2_run(handle, cmd_str);
-
-	// syslog(LOG_DEBUG, "Exiting remove_failed_device\n");
 
 	dm_pool_empty(mem_pool);  /* FIXME: not safe with multiple threads */
 	return (r == 1)? 0: -1;
@@ -201,9 +187,11 @@ void process_event(const char *device, enum dm_event_type event)
 			if (_remove_failed_devices(device))
 				syslog(LOG_ERR, "Failed to remove faulty devices in %s\n",
 				       device);
+			/* Should check before warning user that device is now linear
 			else
 				syslog(LOG_NOTICE, "%s is now a linear device.\n",
 					device);
+			*/
 			break;
 		case ME_IGNORE:
 			break;
