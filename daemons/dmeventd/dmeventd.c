@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -329,7 +328,7 @@ static int device_exists(char *device)
 /*
  * Find an existing thread for a device.
  *
- * Mutex must be hold when calling this.
+ * Mutex must be held when calling this.
  */
 static struct thread_status *lookup_thread_status(struct message_data *data)
 {
@@ -587,7 +586,7 @@ static void *monitor_thread(void *arg)
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	pthread_cleanup_push(monitor_unregister, thread);
 
-	/* Wait for do_process_reques() to finish its task. */
+	/* Wait for do_process_request() to finish its task. */
 	lock_mutex();
 	unlock_mutex();
 
@@ -595,6 +594,11 @@ static void *monitor_thread(void *arg)
 	while (1) {
 		thread->current_events = 0;
 
+		/*
+		 * FIXME: if unrecoverable error (ENODEV) happens,
+		 * we loop indefinitely.  event_wait should return
+		 * more than 0/1.
+		 */
 		if (!event_wait(thread))
 			continue;
 
@@ -605,6 +609,10 @@ static void *monitor_thread(void *arg)
 		 * the device got registered for those events AND
 		 * those events haven't been processed yet, call
 		 * the DSO's process_event() handler.
+		 *
+		 * FIXME: when does processed_events get cleared?  What if
+		 * the same type of event happens later... after the first
+		 * was handled properly?
 		 */
 		if (thread->events &
 		    thread->current_events &
@@ -1131,7 +1139,6 @@ static int do_process_request(struct dm_event_daemon_message *msg)
 		stack;
 		ret = -EINVAL;
 	} else {
-log_print("%s: %u \"%s\"\n", __func__, msg->opcode.cmd, message_data.msg->msg);
 		ret = handle_request(msg, &message_data);
 	}
 
@@ -1156,7 +1163,6 @@ static void process_request(struct dm_event_fifos *fifos)
 
 	msg.opcode.status = do_process_request(&msg);
 
-log_print("%s: status: %s\n", __func__, strerror(-msg.opcode.status));
 	if (!client_write(fifos, &msg))
 		stack;
 }

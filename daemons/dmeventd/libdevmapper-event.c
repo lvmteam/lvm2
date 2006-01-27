@@ -232,7 +232,6 @@ static int start_daemon(void)
 			sleep(1);
 
 		if (daemon_running) {
-			log_print("dmeventd started.\n");
 			ret = 1;
 		} else {
 			switch (WEXITSTATUS(status)) {
