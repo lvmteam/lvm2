@@ -205,9 +205,7 @@ static int start_daemon(void)
 {
 	int pid, ret=0;
 	void *old_hand;
-#ifdef linux
-	int old_mask;
-#endif
+	sigset_t set, oset;
 
 	/* Must be able to acquire signal */
 	old_hand = signal(SIGUSR1, &daemon_running_signal_handler);
@@ -216,12 +214,11 @@ static int start_daemon(void)
 		return 0;
 	}
 
-#ifdef linux
-	/* FIXME Deprecated. Try posix sigprocmask instead. */
-	old_mask = siggetmask();
-	old_mask &= ~sigmask(SIGUSR1);
-	old_mask = sigsetmask(old_mask);
-#endif
+	if (sigemptyset(&set) || sigaddset(&set, SIGUSR1)) {
+		log_error("Unable to fill signal set.");
+	} else if (sigprocmask(SIG_UNBLOCK, &set, &oset)) {
+		log_error("Can't unblock the potentially blocked signal SIGUSR1");
+	}
 	
 	pid = fork();
 
@@ -266,9 +263,9 @@ static int start_daemon(void)
 	/* FIXME What if old_hand is SIG_ERR? */
 	if (signal(SIGUSR1, old_hand) == SIG_ERR)
 		log_error("Unable to reset signal handler.");
-#ifdef linux
-	sigsetmask(old_mask);
-#endif
+
+	if (sigprocmask(SIG_SETMASK, &oset, NULL))
+		log_error("Unable to reset signal mask.");
 
 	return ret;
 }
