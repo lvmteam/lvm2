@@ -155,34 +155,11 @@ static int _remove_failed_devices(const char *device)
 
 void process_event(const char *device, enum dm_event_type event)
 {
-	int pid;
 	struct dm_task *dmt;
 	void *next = NULL;
 	uint64_t start, length;
 	char *target_type = NULL;
 	char *params;
-
-	/* FIXME Too late to fork here under low memory! */
-	/* FIXME This should run within a dmeventd thread instead. */
-	pid = fork();
-	if (pid > 0)
-		return;
-
-	/*
-	 * Fork twice to prevent the process from
-	 * becoming a zombie after exiting.
-	 */
-	pid = fork();
-	if(pid > 0) {
-		exit(EXIT_SUCCESS);
-	} else if (pid < 0) {
-		openlog("dmeventd (mirror_dso)", LOG_PID, LOG_DAEMON);
-		syslog(LOG_ERR, "Fork new process to handle device failure");
-		syslog(LOG_ERR, "Handling failure anyway (a harmless zombie process will result)");
-	} else {
-		setsid();
-		openlog("dmeventd (mirror_dso)", LOG_PID, LOG_DAEMON);
-	}
 
 	syslog(LOG_NOTICE, "An event occurred on %s\n", device);
 
@@ -238,8 +215,6 @@ void process_event(const char *device, enum dm_event_type event)
  fail:
 	if (dmt)
 		dm_task_destroy(dmt);
-
-	exit(0);
 }
 
 int register_device(const char *device)
