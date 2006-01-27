@@ -25,6 +25,7 @@
 #include "lvm-string.h"
 #include "targets.h"
 #include "activate.h"
+#include "sharedlib.h"
 
 #ifdef DMEVENTD
 #  include <libdevmapper-event.h>
@@ -356,9 +357,20 @@ static int _target_present(void)
 static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
 			       char **dso)
 {
-	/* FIXME Follow lvm2 searching rules (see sharedlib.c) */
-	*dso = find_config_str(cft->root, "dmeventd/mirror_library",
-			       DEFAULT_DMEVENTD_MIRROR_LIB);
+	char *path;
+	const char *libpath;
+
+	if (!(path = dm_pool_alloc(mem, PATH_MAX))) {
+		log_error("Failed to allocate dmeventd library path.");
+		return 0;
+	}
+
+	libpath = find_config_str(cft->root, "dmeventd/mirror_library",
+				  DEFAULT_DMEVENTD_MIRROR_LIB);
+
+	get_shared_library_path(cft, libpath, path, PATH_MAX);
+
+	*dso = path;
 
 	return 1;
 }
@@ -369,11 +381,9 @@ static int _target_register_events(struct dm_pool *mem,
 				   struct lv_segment *seg,
 				   struct config_tree *cft, int events)
 {
-	char *dso;
-	char dm_name[PATH_MAX];
+	char *dso, *name;
 	struct logical_volume *lv;
 	struct volume_group *vg;
-	int err;
 
 	lv = seg->lv;
 	vg = lv->vg;
@@ -383,16 +393,14 @@ static int _target_register_events(struct dm_pool *mem,
 		return 0;
 	}
 
-	/* FIXME lvm_ error */
-	strncpy(dm_name, build_dm_name(mem, vg->name, lv->name, NULL),
-		PATH_MAX);
+	if (!(name = build_dm_name(mem, vg->name, lv->name, NULL)))
+		return_0;
 
-	if ((err = dm_event_register(dso, dm_name, DM_EVENT_ALL_ERRORS)) < 0) {
-		log_error("Unable to register %s for events: %s", dm_name,
-			  strerror(-err));
-		return 0;
-	}
-	log_info("Registered %s for events", dm_name);
+	/* FIXME Save a returned handle here so we can unregister it later */
+	if (!dm_event_register(dso, name, DM_EVENT_ALL_ERRORS))
+		return_0;
+
+	log_info("Registered %s for events", name);
 
 	return 1;
 }
@@ -402,30 +410,25 @@ static int _target_unregister_events(struct dm_pool *mem,
 				     struct config_tree *cft, int events)
 {
 	char *dso;
-	char devpath[PATH_MAX];
+	char *name;
 	struct logical_volume *lv;
 	struct volume_group *vg;
-	int err;
 
 	lv = seg->lv;
 	vg = lv->vg;
 
-	if(!_setup_registration(mem, cft, &dso)) {
-		stack;
-		return 0;
-	}
+	/* FIXME Remove this and use handle to avoid config file race */
+	if (!_setup_registration(mem, cft, &dso))
+		return_0;
 
-	/* FIXME lvm_ error */
-	strncpy(devpath, build_dm_name(mem, vg->name, lv->name, NULL),
-		PATH_MAX);
+	if (!(name = build_dm_name(mem, vg->name, lv->name, NULL)))
+		return_0;
 
-	/* FIXME put MIR_DSO into config file */
-	if ((err = dm_event_unregister(dso, devpath, DM_EVENT_ALL_ERRORS)) < 0) {
-		log_error("Unable to unregister %s for events: %s", devpath, strerror(-err));
-		return 0;
-	}
+	/* FIXME Use handle returned by registration function instead of dso */
+	if (!dm_event_unregister(dso, name, DM_EVENT_ALL_ERRORS))
+		return_0;
 
-	log_info("Unregistered %s for events", devpath);
+	log_info("Unregistered %s for events", name);
 
 	return 1;
 }
