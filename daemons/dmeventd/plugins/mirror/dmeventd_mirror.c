@@ -25,12 +25,15 @@
 #include <pthread.h>
 #include <unistd.h>
 
-/* FIXME Replace syslog with multilog */
-#include <syslog.h>
+#include <syslog.h> /* FIXME Replace syslog with multilog */
 
 #define ME_IGNORE    0
 #define ME_INSYNC    1
 #define ME_FAILURE   2
+
+/* FIXME: We may need to lock around operations to these */
+static int register_count = 0;
+static struct dm_pool *mem_pool = NULL;
 
 static int _get_mirror_event(char *params)
 {
@@ -99,49 +102,6 @@ static int _get_mirror_event(char *params)
 	return rtn;
 }
 
-/* dmname_to_lvmname
- * @dmname: the device mapper name
- * @vg: the returned vg name
- * @lv: the returned lv name
- *
- * Caller must free strings when finished
- *
- * Returns: 0, -ENOMEM, -EINVAL
- */
-
-/* FIXME Replace with split_dm_name */
-
-static int _dmname_to_lvmname(char *dmname, char **vg, char **lv)
-{
-	int rtn = 0;
-	char *ptr1, *ptr2;
-	// syslog(LOG_DEBUG, "Entering dmname_to_lvmname\n");
-
-	for((ptr1 = dmname); (ptr2 = strstr(ptr1, "/")); ptr2++, (ptr1 = ptr2));
-	for(; (ptr2 = strstr(ptr1, "-")) && (ptr2[1] == '-'); ptr2+=2, ptr1 = ptr2);
-
-	if (!ptr2)
-		return -EINVAL;
-
-	ptr2[0] = '\0';
-	if(!(*vg = strdup(ptr1))) {
-		rtn = -ENOMEM;
-		goto fail;
-	}
-
-	ptr1 = ptr2+1;
-	if(!(*lv = strdup(ptr1))) {
-		rtn = -ENOMEM;
-		free(*vg);
-	}
-
-fail:
-	ptr2[0] = '-';
-
-	// syslog(LOG_DEBUG, "Exiting dmname_to_lvmname\n");
-	return rtn;
-}
-
 static void _temporary_log_fn(int level, const char *file, int line, const char *format)
 {
 	syslog(LOG_DEBUG, "%s", format);
@@ -153,17 +113,16 @@ static int _remove_failed_devices(const char *device)
 	void *handle;
 	int cmd_size = 256;	/* FIXME Use system restriction */
 	char cmd_str[cmd_size];
-	char *vg = NULL, *lv = NULL;
+	char *vg = NULL, *lv = NULL, *layer = NULL;
 
 	// syslog(LOG_DEBUG, "Entering remove_failed_device\n");
 	if (strlen(device) > 200)
 		return -ENAMETOOLONG;
 
-	if ((r = _dmname_to_lvmname(device, &vg, &lv))) {
-		syslog(LOG_ERR,
-		       "Unable to determine LVM name for %s",
+	if (!split_dm_name(mem_pool, device, &vg, &lv, &layer)) {
+		syslog(LOG_ERR, "Unable to determine VG name from %s",
 		       device);
-		return r;
+		return -ENOMEM;
 	}
 
 	/* FIXME Is any sanity-checking required on %s? */
@@ -171,6 +130,7 @@ static int _remove_failed_devices(const char *device)
 	if (cmd_size <= snprintf(cmd_str, cmd_size, "vgreduce --removemissing %s", vg)) {
 		/* this error should be caught above, but doesn't hurt to check again */
 		syslog(LOG_ERR, "Unable to form LVM command: Device name too long");
+		dm_pool_empty(mem_pool);  /* FIXME: not safe with multiple threads */
 		return -ENAMETOOLONG;
 	}
 
@@ -189,8 +149,7 @@ static int _remove_failed_devices(const char *device)
 
 	// syslog(LOG_DEBUG, "Exiting remove_failed_device\n");
 
-	free(vg);
-	free(lv);
+	dm_pool_empty(mem_pool);  /* FIXME: not safe with multiple threads */
 	return (r == 1)? 0: -1;
 }
 
@@ -285,16 +244,31 @@ void process_event(const char *device, enum dm_event_type event)
 
 int register_device(const char *device)
 {
-	syslog(LOG_INFO, "[%s] %s(%d) - Device: %s\n",
-                __FILE__, __func__, __LINE__, device);
+	syslog(LOG_INFO, "Monitoring %s for events\n", device);
+
+	/*
+	 * Need some space for allocations.  1024 should be more
+	 * than enough for what we need (device mapper name splitting)
+	 */
+	if (!mem_pool)
+		mem_pool = dm_pool_create("mirror_dso", 1024);
+
+	if (!mem_pool)
+		return 0;
+
+	register_count++;
 
         return 1;
 }
 
 int unregister_device(const char *device)
 {
-        syslog(LOG_INFO, "[%s] %s(%d) - Device: %s\n",
-                __FILE__, __func__, __LINE__, device);
+        syslog(LOG_INFO, "Stopped monitoring %s for events\n", device);
+
+	if (!(--register_count)) {
+		dm_pool_destroy(mem_pool);
+		mem_pool = NULL;
+	}
 
         return 1;
 }
