@@ -133,6 +133,7 @@ struct thread_status {
 	
 	char *device_path;	/* Mapped device path. */
 	int event_nr;           /* event number */
+	int processing;         /* Set when event is being processed */
 	enum dm_event_type events;	/* bitfield for event filter. */
 	enum dm_event_type current_events;/* bitfield for occured events. */
 	enum dm_event_type processed_events;/* bitfield for processed events. */
@@ -141,6 +142,7 @@ struct thread_status {
 	struct list timeout_list;
 };
 static LIST_INIT(thread_registry);
+static LIST_INIT(thread_registry_unused);
 
 static int timeout_running;
 static LIST_INIT(timeout_registry);
@@ -607,8 +609,14 @@ static void *monitor_thread(void *arg)
 		if (thread->events &
 		    thread->current_events &
 		    ~thread->processed_events) {
+			lock_mutex();
+			thread->processing = 1;
+			unlock_mutex();
 			do_process_event(thread);
 			thread->processed_events |= thread->current_events;
+			lock_mutex();
+			thread->processing = 0;
+			unlock_mutex();
 		}
 	}
 
@@ -875,27 +883,11 @@ static int unregister_for_event(struct message_data *message_data)
 	 * In case there's no events to monitor on this device ->
 	 * unlink and terminate its monitoring thread.
 	 */
-	if (!thread->events)
-		UNLINK_THREAD(thread);
-
-	unlock_mutex();
-
 	if (!thread->events) {
-		/* turn codes negative */
-		if ((ret = -terminate_thread(thread)))
-			stack;
-		else {
-			pthread_join(thread->thread, NULL);
-			free_thread_status(thread);
-			lib_put(thread->dso_data);
-
-			lock_mutex();
-			if (list_empty(&thread_registry))
-				exit_dm_lib();
-			unlock_mutex();
-		}
+		UNLINK_THREAD(thread);
+		LINK(thread, &thread_registry_unused);
 	}
-
+	unlock_mutex();
 
    out:
 	return ret;
@@ -1169,6 +1161,39 @@ log_print("%s: status: %s\n", __func__, strerror(-msg.opcode.status));
 		stack;
 }
 
+static void cleanup_unused_threads(void)
+{
+	int ret;
+	struct list *l;
+	struct thread_status *thread;
+
+	lock_mutex();
+	while ((l = list_first(&thread_registry_unused))) {
+		thread = list_item(l, struct thread_status);
+		if (thread->processing) {
+			goto out;  /* cleanup on the next round */
+		}
+		list_del(l);
+
+		if (!thread->events) {
+			/* turn codes negative -- should we be returning this? */
+			if ((ret = -terminate_thread(thread)))
+				stack;
+			else {
+				pthread_join(thread->thread, NULL);
+				lib_put(thread->dso_data);
+				free_thread_status(thread);
+			}
+		} else {
+			log_error("thread can't be on unused list unless !thread->events");
+			LINK_THREAD(thread);
+		}
+
+	}
+out:
+	unlock_mutex();
+}
+
 static void sig_alarm(int signum)
 {
 	pthread_testcancel();
@@ -1264,7 +1289,24 @@ void dmeventd(void)
 	 */
 	do {
 		process_request(&fifos);
+		cleanup_unused_threads();
 	} while(!list_empty(&thread_registry));
+
+	/*
+	 * There may still have been some threads that were doing work,
+	 * make sure these are cleaned up
+	 *
+	 * I don't necessarily like the sleep there, but otherwise,
+	 * cleanup_unused_threads could get called many many times.
+	 * It's worth noting that the likelyhood of it being called
+	 * here is slim.
+	 */
+	while(!list_empty(&thread_registry_unused)) {
+		sleep(1);
+		cleanup_unused_threads();
+	}
+
+	exit_dm_lib();
 
 #ifdef MCL_CURRENT
 	munlockall();
