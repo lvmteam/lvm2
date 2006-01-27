@@ -357,11 +357,8 @@ static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
 			       char **dso)
 {
 	/* FIXME Follow lvm2 searching rules (see sharedlib.c) */
-	/* FIXME Use naming convention in config file */
-	if (!(*dso = find_config_str(cft->root, "global/mirror_dso", NULL))) {
-		log_error("No mirror dso specified in config file");	/* FIXME readability */
-		return 0;
-	}
+	*dso = find_config_str(cft->root, "dmeventd/mirror_library",
+			       DEFAULT_DMEVENTD_MIRROR_LIB);
 
 	return 1;
 }
@@ -390,7 +387,7 @@ static int _target_register_events(struct dm_pool *mem,
 	strncpy(dm_name, build_dm_name(mem, vg->name, lv->name, NULL),
 		PATH_MAX);
 
-	if((err = dm_event_register(dso, dm_name, DM_EVENT_ALL_ERRORS)) < 0) {
+	if ((err = dm_event_register(dso, dm_name, DM_EVENT_ALL_ERRORS)) < 0) {
 		log_error("Unable to register %s for events: %s", dm_name,
 			  strerror(-err));
 		return 0;

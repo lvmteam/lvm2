@@ -34,6 +34,8 @@
 #define DEFAULT_LOCK_DIR "/var/lock/lvm"
 #define DEFAULT_LOCKING_LIB "lvm2_locking.so"
 
+#define DEFAULT_DMEVENTD_MIRROR_LIB "libdevmapper-event-lvm2mirror.so"
+
 #define DEFAULT_UMASK 0077
 
 #ifdef LVM1_FALLBACK
