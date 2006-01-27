@@ -250,6 +250,13 @@ static int start_daemon(void)
 				break;
 			}
 		}
+		/*
+		 * Sometimes, a single process may perform multiple calls
+		 * that result in a daemon starting and exiting.  If we
+		 * don't reset this, the second (or greater) time the daemon
+		 * is started will cause this logic not to work.
+		 */
+		daemon_running = 0;
 	} else {
 		signal(SIGUSR1, SIG_IGN); /* don't care about error */
 
