@@ -701,7 +701,7 @@ static int lookup_symbols(void *dl, struct dso_data *data)
 static char *create_dso_file_name(char *dso_name)
 {
 	char *ret;
-	static char prefix[] = "libdmeventd";
+	static char prefix[] = "libdevmapper-event-";
 	static char suffix[] = ".so";
 
 	if ((ret = dbg_malloc(strlen(prefix) +
