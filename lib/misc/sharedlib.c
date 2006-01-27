@@ -22,8 +22,8 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 
-static void _get_library_path(struct config_tree *cft, const char *libname,
-			      char *path, int path_len)
+void get_shared_library_path(struct config_tree *cft, const char *libname,
+			     char *path, int path_len)
 {
 	struct stat info;
 	const char *lib_dir;
@@ -43,7 +43,7 @@ void *load_shared_library(struct config_tree *cft, const char *libname,
 	char path[PATH_MAX];
 	void *library;
 
-	_get_library_path(cft, libname, path, sizeof(path));
+	get_shared_library_path(cft, libname, path, sizeof(path));
 
 	log_very_verbose("Opening shared %s library %s", desc, path);
 
