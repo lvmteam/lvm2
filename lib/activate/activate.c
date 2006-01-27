@@ -574,11 +574,10 @@ int lvs_in_vg_opened(struct volume_group *vg)
 	return count;
 }
 
-#ifdef DMEVENTD
-static int _register_dev(struct cmd_context *cmd, struct logical_volume *lv,
-                         int do_reg)
+static int _register_dev_for_events(struct cmd_context *cmd,
+				    struct logical_volume *lv, int do_reg)
 {
-
+#ifdef DMEVENTD
 	struct list *tmp;
 	struct lv_segment *seg;
 	int (*reg) (struct dm_pool *mem, struct lv_segment *,
@@ -586,6 +585,8 @@ static int _register_dev(struct cmd_context *cmd, struct logical_volume *lv,
 
 	list_iterate(tmp, &lv->segments) {
 		seg = list_item(tmp, struct lv_segment);
+
+		reg = NULL;
 
 		if (do_reg) {
 			if (seg->segtype->ops->target_register_events)
@@ -601,9 +602,9 @@ static int _register_dev(struct cmd_context *cmd, struct logical_volume *lv,
 			}
 	}
 
+#endif
 	return 1;
 }
-#endif
 
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		       int error_if_not_suspended)
@@ -637,9 +638,9 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		}
 	}
 
-#ifdef DMEVENTD
-	_register_dev(cmd, lv, 0);
-#endif
+	if (!_register_dev_for_events(cmd, lv, 0))
+		stack;
+
 	memlock_inc();
 	if (!_lv_suspend_lv(lv)) {
 		memlock_dec();
@@ -690,9 +691,8 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	memlock_dec();
 	fs_unlock();
 
-#ifdef DMEVENTD
-	_register_dev(cmd, lv, 1);
-#endif
+	if (!_register_dev_for_events(cmd, lv, 1))
+		stack;
 
 	return 1;
 }
@@ -737,9 +737,8 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-#ifdef DMEVENTD
-	_register_dev(cmd, lv, 0);
-#endif
+	if (!_register_dev_for_events(cmd, lv, 0))
+		stack;
 
 	memlock_inc();
 	r = _lv_deactivate(lv);
@@ -811,9 +810,8 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	memlock_dec();
 	fs_unlock();
 
-#ifdef DMEVENTD
-	_register_dev(cmd, lv, 1);
-#endif
+	if (!_register_dev_for_events(cmd, lv, 1))
+		stack;
 
 	return r;
 }
