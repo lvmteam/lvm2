@@ -412,27 +412,45 @@ static int do_event(int cmd, struct dm_event_daemon_message *msg,
 /* FIXME Use uuid not path! */
 /* External library interface. */
 int dm_event_register(char *dso_name, char *device_path,
-			  enum dm_event_type events)
+		      enum dm_event_type events)
 {
+	int ret;
 	struct dm_event_daemon_message msg;
 
-	if (!device_exists(device_path))
-		return -ENODEV;
+	if (!device_exists(device_path)) {
+		log_error("%s: device not found");
+		return 0;
+	}
 
-	return do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, &msg,
-			dso_name, device_path, events, 0);
+	if ((ret = do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, &msg,
+			    dso_name, device_path, events, 0)) < 0) {
+		log_error("%s: event registration failed: %s", device_path,
+			  strerror(-ret));
+		return 0;
+	}
+
+	return 1;
 }
 
 int dm_event_unregister(char *dso_name, char *device_path,
-			    enum dm_event_type events)
+			enum dm_event_type events)
 {
+	int ret;
 	struct dm_event_daemon_message msg;
 
-	if (!device_exists(device_path))
-		return -ENODEV;
+	if (!device_exists(device_path)) {
+		log_error("%s: device not found");
+		return 0;
+	}
 
-	return do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, &msg,
-			dso_name, device_path, events, 0);
+	if ((ret = do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, &msg,
+			    dso_name, device_path, events, 0)) < 0) {
+		log_error("%s: event deregistration failed: %s", device_path,
+			  strerror(-ret));
+		return 0;
+	}
+
+	return 1;
 }
 
 int dm_event_get_registered_device(char **dso_name, char **device_path,
