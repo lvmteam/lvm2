@@ -609,14 +609,17 @@ static int _register_dev_for_events(struct cmd_context *cmd,
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		       int error_if_not_suspended)
 {
-	struct logical_volume *lv;
+	struct logical_volume *lv, *lv_pre;
 	struct lvinfo info;
 
 	if (!activation())
 		return 1;
 
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
+		return 0;
+
 	/* Use precommitted metadata if present */
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 1)))
+	if (!(lv_pre = lv_from_lvid(cmd, lvid_s, 1)))
 		return 0;
 
 	if (test_mode()) {
@@ -631,8 +634,8 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		return error_if_not_suspended ? 0 : 1;
 
 	/* If VG was precommitted, preload devices for the LV */
-	if ((lv->vg->status & PRECOMMITTED)) {
-		if (!_lv_preload(lv)) {
+	if ((lv_pre->vg->status & PRECOMMITTED)) {
+		if (!_lv_preload(lv_pre)) {
 			/* FIXME Revert preloading */
 			return_0;
 		}
@@ -642,7 +645,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		stack;
 
 	memlock_inc();
-	if (!_lv_suspend_lv(lv)) {
+	if (!_lv_suspend_lv(lv_pre)) {
 		memlock_dec();
 		fs_unlock();
 		return 0;
