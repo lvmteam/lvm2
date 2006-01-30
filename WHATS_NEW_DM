@@ -1,5 +1,6 @@
 Version 1.02.03 - 
 ============================
+  Add dm_tree_skip_lockfs.
   Fix dm_strdup debug definition.
   Fix hash function to avoid using a negative array offset.
   Don't inline _find in hash.c and tidy signed/unsigned etc.

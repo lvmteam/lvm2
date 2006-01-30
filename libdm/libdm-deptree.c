@@ -128,6 +128,7 @@ struct dm_tree {
 	struct dm_hash_table *devs;
 	struct dm_hash_table *uuids;
 	struct dm_tree_node root;
+	int skip_lockfs;		/* 1 skips lockfs (for non-snapshots) */
 };
 
 /* FIXME Consider exporting this */
@@ -159,6 +160,7 @@ struct dm_tree *dm_tree_create(void)
 	dtree->root.dtree = dtree;
 	list_init(&dtree->root.uses);
 	list_init(&dtree->root.used_by);
+	dtree->skip_lockfs = 0;
 
 	if (!(dtree->mem = dm_pool_create("dtree", 1024))) {
 		log_error("dtree pool creation failed");
@@ -900,12 +902,13 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 }
 
 static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
-			 struct dm_info *newinfo)
+			 int skip_lockfs, struct dm_info *newinfo)
 {
 	struct dm_task *dmt;
 	int r;
 
-	log_verbose("Suspending %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
+	log_verbose("Suspending %s (%" PRIu32 ":%" PRIu32 ")%s", name, major,
+		    minor, skip_lockfs ? "" : " with filesystem sync.");
 
 	if (!(dmt = dm_task_create(DM_DEVICE_SUSPEND))) {
 		log_error("Suspend dm_task creation failed for %s", name);
@@ -920,6 +923,9 @@ static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
+
+	if (skip_lockfs && !dm_task_skip_lockfs(dmt))
+		log_error("Failed to set skip_lockfs flag.");
 
 	if ((r = dm_task_run(dmt)))
 		r = dm_task_get_info(dmt, newinfo);
@@ -979,6 +985,11 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
 	return 1;
 }
 
+void dm_tree_skip_lockfs(struct dm_tree_node *dnode)
+{
+	dnode->dtree->skip_lockfs = 1;
+}
+
 int dm_tree_suspend_children(struct dm_tree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len)
@@ -1019,7 +1030,8 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 		    !info.exists)
 			continue;
 
-		if (!_suspend_node(name, info.major, info.minor, &newinfo)) {
+		if (!_suspend_node(name, info.major, info.minor,
+				   child->dtree->skip_lockfs, &newinfo)) {
 			log_error("Unable to suspend %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);

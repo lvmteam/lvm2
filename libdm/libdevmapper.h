@@ -300,6 +300,13 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 				   size_t uuid_prefix_len);
 
 /*
+ * Skip the filesystem sync when suspending.
+ * Does nothing with other functions.
+ * Use this when no snapshots are involved.
+ */ 
+void dm_tree_skip_lockfs(struct dm_tree_node *dnode);
+
+/*
  * Is the uuid prefix present in the tree?
  * Only returns 0 if every node was checked successfully.
  * Returns 1 if the tree walk has to be aborted.

@@ -60,6 +60,7 @@ dm_tree_node_add_striped_target
 dm_tree_node_add_mirror_target
 dm_tree_node_add_mirror_target_log
 dm_tree_node_add_target_area
+dm_tree_skip_lockfs
 dm_is_dm_major
 dm_mknodes
 dm_malloc_aux
