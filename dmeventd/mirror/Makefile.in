@@ -21,11 +21,15 @@ CLDFLAGS += -ldevmapper -llvm2cmd
 
 SOURCES = dmeventd_mirror.c
 
-LIB_SHARED = libdevmapper-event-lvm2mirror.so
+ifeq ("@LIB_SUFFIX@","dylib")
+  LIB_SHARED = libdevmapper-event-lvm2mirror.dylib
+else
+  LIB_SHARED = libdevmapper-event-lvm2mirror.so
+endif
 
 include $(top_srcdir)/make.tmpl
 
-install: libdevmapper-event-lvm2mirror.so
+install: libdevmapper-event-lvm2mirror.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/$<.$(LIB_VERSION)
 	$(LN_S) -f $(libdir)/$<.$(LIB_VERSION) $(libdir)/$<
