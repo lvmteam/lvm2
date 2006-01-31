@@ -1,5 +1,7 @@
 Version 2.02.02 - 
 ====================================
+  Switchover library building to use LIB_SUFFIX.
+  Only do lockfs filesystem sync when suspending snapshots.
   Always print warning if activation is disabled.
   vgreduce removes mirror images.
   Add --mirrorsonly to vgreduce.

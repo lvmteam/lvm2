@@ -35,7 +35,7 @@ case "$host_os" in
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
 		LDDEPS="$LDDEPS .export.sym"
 		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
-		SOFLAG="-shared"
+		LIB_SUFFIX="so"
 		DEVMAPPER=yes
 		ODIRECT=yes
 		SELINUX=yes
@@ -49,7 +49,7 @@ case "$host_os" in
 		CLDNOWHOLEARCHIVE=
 		LDDEPS="$LDDEPS"
 		LDFLAGS="$LDFLAGS"
-		SOFLAG="-dynamiclib"
+		LIB_SUFFIX="dylib"
 		DEVMAPPER=yes
 		ODIRECT=no
 		SELINUX=no

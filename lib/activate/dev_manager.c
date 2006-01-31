@@ -977,6 +977,8 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 			goto_out;
 		break;
 	case SUSPEND:
+		if (!lv_is_origin(lv) && !lv_is_cow(lv))
+			dm_tree_skip_lockfs(root);
 		if (!dm_tree_suspend_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 		break;
