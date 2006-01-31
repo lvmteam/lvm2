@@ -61,14 +61,14 @@ static void _default_log(int level, const char *file, int line,
 		fprintf(stdout, "\n");
 }
 
-dm_log_fn _log = _default_log;
+dm_log_fn dm_log = _default_log;
 
 void dm_log_init(dm_log_fn fn)
 {
 	if (fn)
-		_log = fn;
+		dm_log = fn;
 	else
-		_log = _default_log;
+		dm_log = _default_log;
 }
 
 void dm_log_init_verbose(int level)
@@ -96,7 +96,8 @@ struct dm_task *dm_task_create(int type)
 	struct dm_task *dmt = dm_malloc(sizeof(*dmt));
 
 	if (!dmt) {
-		log_error("dm_task_create: malloc(%d) failed", sizeof(*dmt));
+		log_error("dm_task_create: malloc(%" PRIsize_t ") failed",
+			  sizeof(*dmt));
 		return NULL;
 	}
 

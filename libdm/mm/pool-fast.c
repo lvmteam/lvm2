@@ -85,7 +85,7 @@ void *dm_pool_alloc_aligned(struct dm_pool *p, size_t s, unsigned alignment)
 	/* have we got room ? */
 	if (!c || (c->begin > c->end) || (c->end - c->begin < s)) {
 		/* allocate new chunk */
-		int needed = s + alignment + sizeof(struct chunk);
+		size_t needed = s + alignment + sizeof(struct chunk);
 		c = _new_chunk(p, (needed > p->chunk_size) ?
 			       needed : p->chunk_size);
 

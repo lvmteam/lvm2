@@ -57,7 +57,7 @@ void dm_bit_union(dm_bitset_t out, dm_bitset_t in1, dm_bitset_t in2)
  */
 static inline int _test_word(uint32_t test, int bit)
 {
-	while (bit < DM_BITS_PER_INT) {
+	while (bit < (int) DM_BITS_PER_INT) {
 		if (test & (0x1 << bit))
 			return bit;
 		bit++;
@@ -73,7 +73,10 @@ int dm_bit_get_next(dm_bitset_t bs, int last_bit)
 
 	last_bit++;		/* otherwise we'll return the same bit again */
 
-	while (last_bit < bs[0]) {
+	/*
+	 * bs[0] holds number of bits
+	 */
+	while (last_bit < (int) bs[0]) {
 		word = last_bit >> INT_SHIFT;
 		test = bs[word + 1];
 		bit = last_bit & (DM_BITS_PER_INT - 1);

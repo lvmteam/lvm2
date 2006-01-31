@@ -44,7 +44,7 @@ static char *fetch_string(char **src)
 	if ((p = strchr(*src, delimiter)))
 		*p = 0;
 
-	if ((ret = strdup(*src)))
+	if ((ret = dm_strdup(*src)))
 		*src += strlen(ret) + 1;
 
 	if (p)
@@ -80,7 +80,8 @@ static int parse_message(struct dm_event_daemon_message *msg, char **dso_name,
  */
 static int daemon_read(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
 {
-	int bytes = 0, ret = 0;
+	unsigned bytes = 0;
+	int ret = 0;
 	fd_set fds;
 
 	memset(msg, 0, sizeof(*msg));
@@ -115,7 +116,8 @@ static int daemon_read(struct dm_event_fifos *fifos, struct dm_event_daemon_mess
 /* Write message to daemon. */
 static int daemon_write(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
 {
-	int bytes = 0, ret = 0;
+	unsigned bytes = 0;
+	int ret = 0;
 	fd_set fds;
 
 	while (bytes < sizeof(*msg)) {
@@ -158,11 +160,11 @@ static int daemon_talk(struct dm_event_fifos *fifos, struct dm_event_daemon_mess
 	 */
 	msg->opcode.cmd = cmd;
 
-	if (sizeof(msg->msg) <= snprintf(msg->msg, sizeof(msg->msg),
-					 "%s %s %u %"PRIu32,
-					 dso_name ? dso_name : "",
-					 device ? device : "",
-					 events, timeout)) {
+	if (sizeof(msg->msg) <= (unsigned) snprintf(msg->msg, sizeof(msg->msg),
+						    "%s %s %u %"PRIu32,
+						    dso_name ? dso_name : "",
+						    device ? device : "",
+						    events, timeout)) {
 		stack;
 		return -ENAMETOOLONG;
 	}
@@ -410,7 +412,7 @@ int dm_event_register(char *dso_name, char *device_path,
 	struct dm_event_daemon_message msg;
 
 	if (!device_exists(device_path)) {
-		log_error("%s: device not found");
+		log_error("%s: device not found", device_path);
 		return 0;
 	}
 
@@ -431,7 +433,7 @@ int dm_event_unregister(char *dso_name, char *device_path,
 	struct dm_event_daemon_message msg;
 
 	if (!device_exists(device_path)) {
-		log_error("%s: device not found");
+		log_error("%s: device not found", device_path);
 		return 0;
 	}
 
@@ -460,9 +462,9 @@ int dm_event_get_registered_device(char **dso_name, char **device_path,
 
 	if (next){
 		if (*dso_name)
-			free(*dso_name);
+			dm_free(*dso_name);
 		if (*device_path)
-			free(*device_path);
+			dm_free(*device_path);
 		*dso_name = dso_name_arg;
 		*device_path = device_path_arg;
 	} else {

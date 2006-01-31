@@ -198,9 +198,9 @@ int dm_dump_memory_debug(void)
 		}
 		str[sizeof(str) - 1] = '\0';
 
-		_log(_LOG_INFO, mb->file, mb->line,
-		     "block %d at %p, size %" PRIsize_t "\t [%s]",
-		     mb->id, mb->magic, mb->length, str);
+		dm_log(_LOG_INFO, mb->file, mb->line,
+		       "block %d at %p, size %" PRIsize_t "\t [%s]",
+		       mb->id, mb->magic, mb->length, str);
 		tot += mb->length;
 	}
 

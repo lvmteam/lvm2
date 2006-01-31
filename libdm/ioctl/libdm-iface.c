@@ -877,7 +877,7 @@ int dm_format_dev(char *buf, int bufsize, uint32_t dev_major,
 	if (bufsize < 8)
 		return 0;
 
-	r = snprintf(buf, bufsize, "%u:%u", dev_major, dev_minor);
+	r = snprintf(buf, (size_t) bufsize, "%u:%u", dev_major, dev_minor);
 	if (r < 0 || r > bufsize - 1)
 		return 0;
 
@@ -1028,7 +1028,8 @@ struct target *create_target(uint64_t start, uint64_t len, const char *type,
 	struct target *t = dm_malloc(sizeof(*t));
 
 	if (!t) {
-		log_error("create_target: malloc(%d) failed", sizeof(*t));
+		log_error("create_target: malloc(%" PRIsize_t ") failed",
+			  sizeof(*t));
 		return NULL;
 	}
 

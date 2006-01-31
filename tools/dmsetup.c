@@ -438,7 +438,8 @@ static int _rename(int argc, char **argv, void *data)
 
 static int _message(int argc, char **argv, void *data)
 {
-	int r = 0, sz = 1, i;
+	int r = 0, i;
+	size_t sz = 1;
 	struct dm_task *dmt;
 	char *str;
 
@@ -455,7 +456,7 @@ static int _message(int argc, char **argv, void *data)
 		argv++;
 	}
 
-	if (!dm_task_set_sector(dmt, atoll(argv[1])))
+	if (!dm_task_set_sector(dmt, (uint64_t) atoll(argv[1])))
 		goto out;
 
 	argc -= 2;
@@ -580,7 +581,7 @@ static int _wait(int argc, char **argv, void *data)
 	}
 
 	return _simple(DM_DEVICE_WAITEVENT, name,
-		       (argc > 1) ? atoi(argv[argc - 1]) : 0, 1);
+		       (argc > 1) ? (uint32_t) atoi(argv[argc - 1]) : 0, 1);
 }
 
 static int _process_all(int argc, char **argv,
@@ -622,7 +623,7 @@ static int _process_all(int argc, char **argv,
 	return r;
 }
 
-static void _display_dev(struct dm_task *dmt, char *name)
+static void _display_dev(struct dm_task *dmt, const char *name)
 {
 	struct dm_info info;
 
@@ -635,7 +636,7 @@ static int _mknodes(int argc, char **argv, void *data)
 	return dm_mknodes(argc > 1 ? argv[1] : NULL);
 }
 
-static int _exec_command(char *name)
+static int _exec_command(const char *name)
 {
 	int n;
 	static char path[PATH_MAX];
@@ -651,7 +652,7 @@ static int _exec_command(char *name)
 		return 0;
 
 	n = snprintf(path, sizeof(path), "%s/%s", dm_dir(), name);
-	if (n < 0 || n > sizeof(path) - 1)
+	if (n < 0 || n > (int) sizeof(path) - 1)
 		return 0;
 
 	if (!argc) {
@@ -704,7 +705,7 @@ static int _status(int argc, char **argv, void *data)
 	char *params;
 	int cmd;
 	struct dm_names *names = (struct dm_names *) data;
-	char *name = NULL;
+	const char *name = NULL;
 	int matched = 0;
 	int ls_only = 0;
 	struct dm_info info;
@@ -742,7 +743,7 @@ static int _status(int argc, char **argv, void *data)
 		goto out;
 
 	if (!name)
-		name = (char *) dm_task_get_name(dmt);
+		name = dm_task_get_name(dmt);
 
 	/* Fetch targets and print 'em */
 	do {
