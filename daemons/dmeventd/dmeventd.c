@@ -44,11 +44,6 @@
 #include <malloc.h>
 #endif
 
-/* FIXME Use dm library */
-#define	dbg_malloc(x...)	malloc(x)
-#define	dbg_strdup(x...)	strdup(x)
-#define	dbg_free(x...)		free(x)
-
 /* List (un)link macros. */
 #define	LINK(x, head)		list_add(head, &(x)->list)
 #define	LINK_DSO(dso)		LINK(dso, &dso_registry)
@@ -131,7 +126,7 @@ struct thread_status {
 	struct dso_data *dso_data;/* DSO this thread accesses. */
 	
 	char *device_path;	/* Mapped device path. */
-	int event_nr;           /* event number */
+	uint32_t event_nr;           /* event number */
 	int processing;         /* Set when event is being processed */
 	enum dm_event_type events;	/* bitfield for event filter. */
 	enum dm_event_type current_events;/* bitfield for occured events. */
@@ -152,12 +147,12 @@ static pthread_cond_t timeout_cond = PTHREAD_COND_INITIALIZER;
 static struct thread_status *alloc_thread_status(struct message_data *data,
 						 struct dso_data *dso_data)
 {
-	struct thread_status *ret = (typeof(ret)) dbg_malloc(sizeof(*ret));
+	struct thread_status *ret = (typeof(ret)) dm_malloc(sizeof(*ret));
 
 	if (ret) {
 		if (!memset(ret, 0, sizeof(*ret)) ||
-		    !(ret->device_path = dbg_strdup(data->device_path))) {
-			dbg_free(ret);
+		    !(ret->device_path = dm_strdup(data->device_path))) {
+			dm_free(ret);
 			ret = NULL;
 		} else {
 			ret->dso_data = dso_data;
@@ -172,19 +167,19 @@ static struct thread_status *alloc_thread_status(struct message_data *data,
 
 static void free_thread_status(struct thread_status *thread)
 {
-	dbg_free(thread->device_path);
-	dbg_free(thread);
+	dm_free(thread->device_path);
+	dm_free(thread);
 }
 
 /* Allocate/free DSO data. */
 static struct dso_data *alloc_dso_data(struct message_data *data)
 {
-	struct dso_data *ret = (typeof(ret)) dbg_malloc(sizeof(*ret));
+	struct dso_data *ret = (typeof(ret)) dm_malloc(sizeof(*ret));
 
 	if (ret) {
 		if (!memset(ret, 0, sizeof(*ret)) ||
-		    !(ret->dso_name = dbg_strdup(data->dso_name))) {
-			dbg_free(ret);
+		    !(ret->dso_name = dm_strdup(data->dso_name))) {
+			dm_free(ret);
 			ret = NULL;
 		}
 	}
@@ -194,8 +189,8 @@ static struct dso_data *alloc_dso_data(struct message_data *data)
 
 static void free_dso_data(struct dso_data *data)
 {
-	dbg_free(data->dso_name);
-	dbg_free(data);
+	dm_free(data->dso_name);
+	dm_free(data);
 }
 
 /* FIXME: Factor out. */
@@ -221,11 +216,11 @@ static int fetch_string(char **ptr, char **src)
 	if ((p = strchr(*src, delimiter)))
 		*p = 0;
 
-	if ((*ptr = dbg_strdup(*src))) {
+	if ((*ptr = dm_strdup(*src))) {
 		if ((len = strlen(*ptr)))
 			*src += len;
 		else {
-			dbg_free(*ptr);
+			dm_free(*ptr);
 			*ptr = NULL;
 		}
 
@@ -243,10 +238,10 @@ static int fetch_string(char **ptr, char **src)
 static void free_message(struct message_data *message_data)
 {
 	if (message_data->dso_name)
-		dbg_free(message_data->dso_name);
+		dm_free(message_data->dso_name);
 
 	if (message_data->device_path)
-		dbg_free(message_data->device_path);
+		dm_free(message_data->device_path);
 }
 
 /* Parse a register message from the client. */
@@ -269,12 +264,12 @@ static int parse_message(struct message_data *message_data)
 			 * Free string representaion of events.
 			 * Not needed an more.
 			 */
-			dbg_free(message_data->events.str);
+			dm_free(message_data->events.str);
 			message_data->events.field = i;
 		}
 		if (message_data->timeout.str) {
 			uint32_t secs = atoi(message_data->timeout.str);
-			dbg_free(message_data->timeout.str);
+			dm_free(message_data->timeout.str);
 			message_data->timeout.secs = secs ? secs :
 							    DM_EVENT_DEFAULT_TIMEOUT;
 		}
@@ -305,10 +300,10 @@ static int storepid(int lf)
 	if ((len = snprintf(pid, sizeof(pid), "%u\n", getpid())) < 0)
 		return 0;
 
-	if (len > sizeof(pid))
-		len = sizeof(pid);
+	if (len > (int) sizeof(pid))
+		len = (int) sizeof(pid);
 
-	if (write(lf, pid, len) != len)
+	if (write(lf, pid, (size_t) len) != len)
 		return 0;
 
 	fsync(lf);
@@ -580,6 +575,8 @@ static void monitor_unregister(void *arg)
 
 /* Device monitoring thread. */
 static void *monitor_thread(void *arg)
+    __attribute((noreturn));
+static void *monitor_thread(void *arg)
 {
 	struct thread_status *thread = arg;
 
@@ -712,7 +709,7 @@ static char *create_dso_file_name(char *dso_name)
 	static char prefix[] = "libdevmapper-event-";
 	static char suffix[] = ".so";
 
-	if ((ret = dbg_malloc(strlen(prefix) +
+	if ((ret = dm_malloc(strlen(prefix) +
 			      strlen(dso_name) +
 			      strlen(suffix) + 1)))
 		sprintf(ret, "%s%s%s", prefix, dso_name, suffix);
@@ -761,7 +758,7 @@ static struct dso_data *load_dso(struct message_data *data)
 	dlclose(dl);
 
    free_dso_file:
-	dbg_free(dso_file);
+	dm_free(dso_file);
 
 	return ret;
 }
@@ -1054,7 +1051,8 @@ static int open_fifos(struct dm_event_fifos *fifos)
  */
 static int client_read(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
 {
-	int bytes = 0, ret = 0;
+	unsigned bytes = 0;
+	int ret = 0;
 	fd_set fds;
 
 	errno = 0;
@@ -1077,7 +1075,8 @@ static int client_read(struct dm_event_fifos *fifos, struct dm_event_daemon_mess
  */
 static int client_write(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
 {
-	int bytes = 0, ret = 0;
+	unsigned bytes = 0;
+	int ret = 0;
 	fd_set fds;
 
 	errno = 0;

@@ -2,6 +2,7 @@ dm_lib_release
 dm_lib_exit
 dm_driver_version
 dm_get_library_version
+dm_log
 dm_log_init
 dm_log_init_verbose
 dm_task_create

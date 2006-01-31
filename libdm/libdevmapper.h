@@ -42,7 +42,8 @@
  */
 
 typedef void (*dm_log_fn) (int level, const char *file, int line,
-			   const char *f, ...);
+			   const char *f, ...)
+    __attribute__ ((format(printf, 4, 5)));
 
 /*
  * The library user may wish to register their own

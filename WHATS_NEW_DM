@@ -1,5 +1,6 @@
 Version 1.02.03 - 
 ============================
+  Rename _log to dm_log and export.
   Add dm_tree_skip_lockfs.
   Fix dm_strdup debug definition.
   Fix hash function to avoid using a negative array offset.

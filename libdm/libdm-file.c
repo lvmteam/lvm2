@@ -20,10 +20,6 @@
 #include <fcntl.h>
 #include <dirent.h>
 
-#ifdef linux
-#  include <malloc.h>
-#endif
-
 static int _create_dir_recursive(const char *dir)
 {
 	char *orig, *s;
@@ -31,7 +27,7 @@ static int _create_dir_recursive(const char *dir)
 
 	log_verbose("Creating directory \"%s\"", dir);
 	/* Create parent directories */
-	orig = s = strdup(dir);
+	orig = s = dm_strdup(dir);
 	while ((s = strchr(s, '/')) != NULL) {
 		*s = '\0';
 		if (*orig) {
@@ -39,13 +35,13 @@ static int _create_dir_recursive(const char *dir)
 			if (rc < 0 && errno != EEXIST) {
 				log_error("%s: mkdir failed: %s", orig,
 					  strerror(errno));
-				free(orig);
+				dm_free(orig);
 				return 0;
 			}
 		}
 		*s++ = '/';
 	}
-	free(orig);
+	dm_free(orig);
 
 	/* Create final directory */
 	rc = mkdir(dir, 0777);
