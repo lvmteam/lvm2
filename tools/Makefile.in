@@ -111,8 +111,6 @@ liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS)
 	$(AR) rs $@ $(OBJECTS)
 
 liblvm2cmd.so: liblvm2cmd.a $(LDDEPS)
-	$(CC) -o liblvm2cmd.so $(SOFLAG) $(CLDFLAGS) \
-		$(CLDWHOLEARCHIVE) liblvm2cmd.a $(CLDNOWHOLEARCHIVE)
 
 .commands: commands.h cmdnames.h Makefile
 	$(CC) -E -P cmdnames.h 2> /dev/null | \

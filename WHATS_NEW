@@ -1,5 +1,6 @@
 Version 2.02.02 - 
 ====================================
+  Add %.so: %.a make template rule.
   Switchover library building to use LIB_SUFFIX.
   Only do lockfs filesystem sync when suspending snapshots.
   Always print warning if activation is disabled.
