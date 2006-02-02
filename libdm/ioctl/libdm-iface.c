@@ -1435,7 +1435,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
-	log_debug("dm %s %s %s%s%s %s%0.0d%s%0.0d%s"
+	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"
 		  "%s%c %.0llu %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
