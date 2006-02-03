@@ -616,11 +616,11 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		return 1;
 
 	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
-		return 0;
+		return_0;
 
 	/* Use precommitted metadata if present */
 	if (!(lv_pre = lv_from_lvid(cmd, lvid_s, 1)))
-		return 0;
+		return_0;
 
 	if (test_mode()) {
 		_skip("Suspending '%s'.", lv->name);
@@ -645,7 +645,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		stack;
 
 	memlock_inc();
-	if (!_lv_suspend_lv(lv_pre)) {
+	if (!_lv_suspend_lv(lv)) {
 		memlock_dec();
 		fs_unlock();
 		return 0;

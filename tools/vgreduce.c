@@ -230,11 +230,14 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 		if (!test_mode()) {
 			/* Suspend lvs_changed */
+			init_partial(1);
 			if (!suspend_lvs(cmd, &lvs_changed)) {
 				stack;
+				init_partial(0);
 				vg_revert(vg);
 				return 0;
 			}
+			init_partial(0);
 		}
 
 		if (!vg_commit(vg)) {
