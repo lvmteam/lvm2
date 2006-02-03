@@ -17,7 +17,7 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 CFLAGS += -I${top_srcdir}/tools -I${top_srcdir}/include
-CLDFLAGS += -ldevmapper -llvm2cmd
+CLDFLAGS += -L${top_srcdir}/tools -ldevmapper -llvm2cmd
 
 SOURCES = dmeventd_mirror.c
 
