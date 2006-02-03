@@ -311,13 +311,23 @@ static int storepid(int lf)
 	return 1;
 }
 
-
+/* FIXME This is unreliable: should use DM_DEVICE_INFO ioctl instead. */
 /* Check, if a device exists. */
 static int device_exists(char *device)
 {
 	struct stat st_buf;
+	char path2[PATH_MAX];
 
-	return !stat(device, &st_buf) && S_ISBLK(st_buf.st_mode);
+	if (!device)
+		return 0;
+
+	if (device[0] == '/') /* absolute path */
+		return !stat(device, &st_buf) && S_ISBLK(st_buf.st_mode);
+
+	if (PATH_MAX <= snprintf(path2, PATH_MAX, "%s/%s", dm_dir(), device))
+		return 0;
+
+	return !stat(path2, &st_buf) && S_ISBLK(st_buf.st_mode);
 }
 
 /*
