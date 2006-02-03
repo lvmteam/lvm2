@@ -702,41 +702,27 @@ static int lookup_symbols(void *dl, struct dso_data *data)
 			     "unregister_device");
 }
 
-/* Create a DSO file name based on its name. */
-static char *create_dso_file_name(char *dso_name)
-{
-	char *ret;
-	static char prefix[] = "libdevmapper-event-";
-	static char suffix[] = ".so";
-
-	if ((ret = dm_malloc(strlen(prefix) +
-			      strlen(dso_name) +
-			      strlen(suffix) + 1)))
-		sprintf(ret, "%s%s%s", prefix, dso_name, suffix);
-
-	return ret;
-}
-
 /* Load an application specific DSO. */
 static struct dso_data *load_dso(struct message_data *data)
 {
 	void *dl;
 	struct dso_data *ret = NULL;
-	char *dso_file;
 
-	if (!(dso_file = create_dso_file_name(data->dso_name)))
-		return NULL;
-
-	if (!(dl = dlopen(dso_file, RTLD_NOW))){
+	if (!(dl = dlopen(data->dso_name, RTLD_NOW))){
 		log_error("%s\n", dlerror());
-		goto free_dso_file;
+		return NULL;
 	}
 
-	if (!(ret = alloc_dso_data(data)))
-		goto close;
+	if (!(ret = alloc_dso_data(data))) {
+		dlclose(dl);
+		return NULL;
+	}
 
-	if (!(lookup_symbols(dl, ret)))
-		goto free_all;
+	if (!(lookup_symbols(dl, ret))) {
+		free_dso_data(ret);
+		dlclose(dl);
+		return NULL;
+	}
 
 	/*
 	 * Keep handle to close the library once
@@ -748,17 +734,6 @@ static struct dso_data *load_dso(struct message_data *data)
 	lock_mutex();
 	LINK_DSO(ret);
 	unlock_mutex();
-
-	goto free_dso_file;
-
-   free_all:
-	free_dso_data(ret);
-
-   close:
-	dlclose(dl);
-
-   free_dso_file:
-	dm_free(dso_file);
 
 	return ret;
 }
