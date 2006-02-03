@@ -56,11 +56,11 @@ TARGETS = \
 LVMLIBS = -llvm
 
 ifeq ("@DMEVENTD@", "yes")
-        LVMLIBS += -ldevmapper-event -lpthread
+	LVMLIBS += -ldevmapper-event -lpthread
 endif
  
 ifeq ("@DEVMAPPER@", "yes")
-        LVMLIBS += -ldevmapper
+	LVMLIBS += -ldevmapper
 endif
 
 CFLAGS += -D_REENTRANT -fno-strict-aliasing
