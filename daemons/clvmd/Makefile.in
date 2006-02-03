@@ -53,10 +53,19 @@ endif
 TARGETS = \
 	clvmd
 
-include $(top_srcdir)/make.tmpl
+LVMLIBS = -llvm
+
+ifeq ("@DMEVENTD@", "yes")
+        LVMLIBS += -ldevmapper-event -lpthread
+endif
+ 
+ifeq ("@DEVMAPPER@", "yes")
+        LVMLIBS += -ldevmapper
+endif
 
 CFLAGS += -D_REENTRANT -fno-strict-aliasing
-LIBS += -ldevmapper -llvm -lpthread
+
+include $(top_srcdir)/make.tmpl
 
 INSTALL_TARGETS = \
 	install_clvmd
