@@ -1311,6 +1311,9 @@ static int _create_and_load_v4(struct dm_task *dmt)
 
 	task->major = dmt->major;
 	task->minor = dmt->minor;
+	task->uid = dmt->uid;
+	task->gid = dmt->gid;
+	task->mode = dmt->mode;
 
 	r = dm_task_run(task);
 	dm_task_destroy(task);

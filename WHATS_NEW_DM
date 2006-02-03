@@ -1,5 +1,6 @@
 Version 1.02.03 - 
 ============================
+  Add exported functions to set uid, gid and mode.
   Rename _log to dm_log and export.
   Add dm_tree_skip_lockfs.
   Fix dm_strdup debug definition.
