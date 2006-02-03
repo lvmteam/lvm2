@@ -181,6 +181,27 @@ int dm_task_set_minor(struct dm_task *dmt, int minor)
 	return 1;
 }
 
+int dm_task_set_uid(struct dm_task *dmt, uid_t uid)
+{
+	dmt->uid = uid;
+
+	return 1;
+}
+
+int dm_task_set_gid(struct dm_task *dmt, gid_t gid)
+{
+	dmt->gid = gid;
+
+	return 1;
+}
+
+int dm_task_set_mode(struct dm_task *dmt, mode_t mode)
+{
+	dmt->mode = mode;
+
+	return 1;
+}
+
 int dm_task_add_target(struct dm_task *dmt, uint64_t start, uint64_t size,
 		       const char *ttype, const char *params)
 {

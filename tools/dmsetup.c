@@ -86,8 +86,10 @@ enum {
 	READ_ONLY = 0,
 	COLS_ARG,
 	EXEC_ARG,
+	GID_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
+	MODE_ARG,
 	NOHEADINGS_ARG,
 	NOLOCKFS_ARG,
 	NOOPENCOUNT_ARG,
@@ -95,6 +97,7 @@ enum {
 	OPTIONS_ARG,
 	TARGET_ARG,
 	TREE_ARG,
+	UID_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
 	VERSION_ARG,
@@ -388,6 +391,15 @@ static int _create(int argc, char **argv, void *data)
 		goto out;
 
 	if (_switches[MINOR_ARG] && !dm_task_set_minor(dmt, _values[MINOR_ARG]))
+		goto out;
+
+	if (_switches[UID_ARG] && !dm_task_set_uid(dmt, _values[UID_ARG]))
+		goto out;
+
+	if (_switches[GID_ARG] && !dm_task_set_gid(dmt, _values[GID_ARG]))
+		goto out;
+
+	if (_switches[MODE_ARG] && !dm_task_set_mode(dmt, _values[MODE_ARG]))
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
@@ -1293,6 +1305,7 @@ struct command {
 
 static struct command _commands[] = {
 	{"create", "<dev_name> [-j|--major <major> -m|--minor <minor>]\n"
+	  "\t                  [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
 	  "\t                  [-u|uuid <uuid>] [--notable] [<table_file>]",
 	 1, 2, _create},
 	{"remove", "<device>", 0, 1, _remove},
@@ -1419,8 +1432,10 @@ static int _process_switches(int *argc, char ***argv)
 		{"readonly", 0, &ind, READ_ONLY},
 		{"columns", 0, &ind, COLS_ARG},
 		{"exec", 1, &ind, EXEC_ARG},
+		{"gid", 1, &ind, GID_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
+		{"mode", 1, &ind, MODE_ARG},
 		{"noheadings", 0, &ind, NOHEADINGS_ARG},
 		{"nolockfs", 0, &ind, NOLOCKFS_ARG},
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
@@ -1428,6 +1443,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"options", 1, &ind, OPTIONS_ARG},
 		{"target", 1, &ind, TARGET_ARG},
 		{"tree", 0, &ind, TREE_ARG},
+		{"uid", 1, &ind, UID_ARG},
 		{"uuid", 1, &ind, UUID_ARG},
 		{"verbose", 1, &ind, VERBOSE_ARG},
 		{"version", 0, &ind, VERSION_ARG},
@@ -1479,7 +1495,7 @@ static int _process_switches(int *argc, char ***argv)
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCj:m:no:ru:v",
+	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCGj:m:Mno:ru:Uv",
 					    long_options, NULL)) != -1) {
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
@@ -1504,6 +1520,19 @@ static int _process_switches(int *argc, char ***argv)
 		if (c == 'u' || ind == UUID_ARG) {
 			_switches[UUID_ARG]++;
 			_uuid = optarg;
+		}
+		if (c == 'G' || ind == GID_ARG) {
+			_switches[GID_ARG]++;
+			_values[GID_ARG] = atoi(optarg);
+		}
+		if (c == 'U' || ind == UID_ARG) {
+			_switches[UID_ARG]++;
+			_values[UID_ARG] = atoi(optarg);
+		}
+		if (c == 'M' || ind == MODE_ARG) {
+			_switches[MODE_ARG]++;
+			/* FIXME Accept modes as per chmod */
+			_values[MODE_ARG] = (int) strtol(optarg, NULL, 8);
 		}
 		if ((ind == EXEC_ARG)) {
 			_switches[EXEC_ARG]++;
