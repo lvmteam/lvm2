@@ -1239,14 +1239,15 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 		break;
 	case SEG_MIRRORED:
 		if (seg->clustered) {
-			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered ")) < 0) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered_")) < 0) {
                         	stack;	/* Out of space */
                         	return -1;
                 	}
 			pos += tw;
 		}
 
-		log_parm_count = hweight32(seg->flags) + 1;
+		log_parm_count = 1;	/* Region size */
+		log_parm_count = hweight32(seg->flags);	/* [no]sync, block_on_error etc. */
 
 		if (!seg->log)
 			logtype = "core";
