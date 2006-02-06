@@ -147,8 +147,6 @@ void process_event(const char *device, enum dm_event_type event)
 	char *target_type = NULL;
 	char *params;
 
-	syslog(LOG_NOTICE, "An event occurred on %s\n", device);
-
 	/* FIXME Move inside libdevmapper */
 	if (!(dmt = dm_task_create(DM_DEVICE_STATUS))) {
 		syslog(LOG_ERR, "Unable to create dm_task.\n");
