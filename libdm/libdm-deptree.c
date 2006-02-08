@@ -1240,7 +1240,7 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 		break;
 	case SEG_MIRRORED:
 		log_parm_count = 1;	/* Region size */
-		log_parm_count = hweight32(seg->flags);	/* [no]sync, block_on_error etc. */
+		log_parm_count += hweight32(seg->flags);	/* [no]sync, block_on_error etc. */
 
 		if (seg->clustered) {
 			if (seg->uuid)
