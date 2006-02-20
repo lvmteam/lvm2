@@ -116,6 +116,7 @@ static struct cmd_data _cmd_data_v1[] = {
 	{ "mknodes",	0,			{4, 0, 0} },
 	{ "versions",	0,			{4, 1, 0} },
 	{ "message",	0,			{4, 2, 0} },
+	{ "setgeometry",0,			{4, 6, 0} },
 };
 /* *INDENT-ON* */
 

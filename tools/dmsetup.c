@@ -508,6 +508,39 @@ static int _message(int argc, char **argv, void *data)
 	return r;
 }
 
+static int _setgeometry(int argc, char **argv, void *data)
+{
+	int r = 0;
+	struct dm_task *dmt;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_SET_GEOMETRY)))
+		return 0;
+
+	if (_switches[UUID_ARG] || _switches[MAJOR_ARG]) {
+		if (!_set_task_device(dmt, NULL, 0))
+			goto out;
+	} else {
+		if (!_set_task_device(dmt, argv[1], 0))
+			goto out;
+		argc--;
+		argv++;
+	}
+
+	if (!dm_task_set_geometry(dmt, argv[1], argv[2], argv[3], argv[4]))
+		goto out;
+
+	/* run the task */
+	if (!dm_task_run(dmt))
+		goto out;
+
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 static int _version(int argc, char **argv, void *data)
 {
 	char version[80];
@@ -1326,6 +1359,7 @@ static struct command _commands[] = {
 	{"mknodes", "[<device>]", 0, 1, _mknodes},
 	{"targets", "", 0, 0, _targets},
 	{"version", "", 0, 0, _version},
+	{"setgeometry", "<device> <cyl> <head> <sect> <start>", 5, 5, _setgeometry},
 	{NULL, NULL, 0, 0, NULL}
 };
 

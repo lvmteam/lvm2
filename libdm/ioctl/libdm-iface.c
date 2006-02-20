@@ -103,6 +103,9 @@ static struct cmd_data _cmd_data_v4[] = {
 #ifdef DM_TARGET_MSG
 	{"message",	DM_TARGET_MSG,		{4, 2, 0}},
 #endif
+#ifdef DM_DEV_SET_GEOMETRY
+	{"setgeometry",	DM_DEV_SET_GEOMETRY,	{4, 6, 0}},
+#endif
 };
 /* *INDENT-ON* */
 
@@ -1001,6 +1004,23 @@ int dm_task_set_sector(struct dm_task *dmt, uint64_t sector)
 	return 1;
 }
 
+int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads, const char *sectors, const char *start)
+{
+	size_t len = strlen(cylinders) + 1 + strlen(heads) + 1 + strlen(sectors) + 1 + strlen(start) + 1;
+
+	if (!(dmt->geometry = dm_malloc(len))) {
+		log_error("dm_task_set_geometry: dm_malloc failed");
+		return 0;
+	}
+
+	if (sprintf(dmt->geometry, "%s %s %s %s", cylinders, heads, sectors, start) < 0) {
+		log_error("dm_task_set_geometry: sprintf failed");
+		return 0;
+	}
+
+        return 1;
+}
+
 int dm_task_no_open_count(struct dm_task *dmt)
 {
 	dmt->no_open_count = 1;
@@ -1123,8 +1143,23 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		return NULL;
 	}
 
+	if (count && dmt->geometry) {
+		log_error("targets and geometry are incompatible");
+		return NULL;
+	}
+
 	if (dmt->newname && (dmt->sector || dmt->message)) {
 		log_error("message and newname are incompatible");
+		return NULL;
+	}
+
+	if (dmt->newname && dmt->geometry) {
+		log_error("geometry and newname are incompatible");
+		return NULL;
+	}
+
+	if (dmt->geometry && (dmt->sector || dmt->message)) {
+		log_error("geometry and message are incompatible");
 		return NULL;
 	}
 
@@ -1138,6 +1173,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 
 	if (dmt->message)
 		len += sizeof(struct dm_target_msg) + strlen(dmt->message) + 1;
+
+	if (dmt->geometry)
+		len += strlen(dmt->geometry) + 1;
 
 	/*
 	 * Give len a minimum size so that we have space to store
@@ -1204,6 +1242,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		tmsg->sector = dmt->sector;
 		strcpy(tmsg->message, dmt->message);
 	}
+
+	if (dmt->geometry)
+		strcpy(b, dmt->geometry);
 
 	return dmi;
 

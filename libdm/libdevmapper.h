@@ -80,7 +80,9 @@ enum {
 
 	DM_DEVICE_LIST_VERSIONS,
 	
-	DM_DEVICE_TARGET_MSG
+	DM_DEVICE_TARGET_MSG,
+
+	DM_DEVICE_SET_GEOMETRY
 };
 
 struct dm_task;
@@ -145,6 +147,7 @@ int dm_task_set_uid(struct dm_task *dmt, uid_t uid);
 int dm_task_set_gid(struct dm_task *dmt, gid_t gid);
 int dm_task_set_mode(struct dm_task *dmt, mode_t mode);
 int dm_task_set_event_nr(struct dm_task *dmt, uint32_t event_nr);
+int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char *heads, const char *sectors, const char *start);
 int dm_task_set_message(struct dm_task *dmt, const char *message);
 int dm_task_set_sector(struct dm_task *dmt, uint64_t sector);
 int dm_task_no_open_count(struct dm_task *dmt);
