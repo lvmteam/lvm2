@@ -50,6 +50,7 @@ struct dm_task {
 	} dmi;
 	char *newname;
 	char *message;
+	char *geometry;
 	uint64_t sector;
 	int no_open_count;
 	int skip_lockfs;

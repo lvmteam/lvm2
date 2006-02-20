@@ -108,3 +108,4 @@ dm_hash_get_data
 dm_hash_get_first
 dm_hash_get_next
 dm_set_selinux_context
+dm_task_set_geometry
