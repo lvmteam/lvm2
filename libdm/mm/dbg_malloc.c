@@ -18,9 +18,9 @@
 #include <assert.h>
 #include <stdarg.h>
 
-char *dm_strdup_aux(const char *str)
+char *dm_strdup_aux(const char *str, const char *file, int line)
 {
-	char *ret = dm_malloc(strlen(str) + 1);
+	char *ret = dm_malloc_aux_debug(strlen(str) + 1, file, line);
 
 	if (ret)
 		strcpy(ret, str);
