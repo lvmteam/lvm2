@@ -1,5 +1,6 @@
 Version 1.02.04 - 
 ============================
+  Add file & line to dm_strdup_aux().
   Add setgeometry.
 
 Version 1.02.03 - 7 Feb 2006
