@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  Fix archive file expiration.
   Fix dmeventd build.
 
 Version 2.02.02 - 7th February 2006

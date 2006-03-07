@@ -207,8 +207,8 @@ static void _remove_expired(struct list *archives, uint32_t archives_size,
 	/* Convert retain_days into the time after which we must retain */
 	retain_time = time(NULL) - (time_t) retain_days *SECS_PER_DAY;
 
-	/* Assume list is ordered oldest first (by index) */
-	list_iterate_items(bf, archives) {
+	/* Assume list is ordered newest first (by index) */
+	list_iterate_back_items(bf, archives) {
 		/* Get the mtime of the file and unlink if too old */
 		if (stat(bf->path, &sb)) {
 			log_sys_error("stat", bf->path);
