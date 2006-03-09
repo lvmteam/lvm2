@@ -1,5 +1,6 @@
 Version 1.02.04 - 
 ============================
+  dmeventd thread/fifo fixes.
   Add file & line to dm_strdup_aux().
   Add setgeometry.
 
