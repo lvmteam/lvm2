@@ -303,6 +303,9 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		}
 	}
 
+	if (lock_flags & LCK_PARTIAL_MODE)
+		init_partial(1);
+
 	switch (command) {
 	case LCK_LV_EXCLUSIVE:
 		status = do_activate_lv(resource, lock_flags, LKM_EXMODE);
@@ -330,6 +333,9 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		status = EINVAL;
 		break;
 	}
+
+	if (lock_flags & LCK_PARTIAL_MODE)
+		init_partial(0);
 
 	/* clean the pool for another command */
 	dm_pool_empty(cmd->mem);

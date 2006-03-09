@@ -330,6 +330,9 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	args[0] = flags & 0x7F; /* Maskoff lock flags */
 	args[1] = flags & 0xC0; /* Bitmap flags */
 
+	if (partial_mode())
+		args[1] |= LCK_PARTIAL_MODE;
+
 	/*
 	 * VG locks are just that: locks, and have no side effects
 	 * so we only need to do them on the local node because all
