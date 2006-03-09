@@ -68,6 +68,11 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_CLUSTER_VG	0x00000080	/* VG is clustered */
 
 /*
+ * Additional lock bits for cluster communication
+ */
+#define LCK_PARTIAL_MODE	0x00000001	/* Running in partial mode */
+
+/*
  * Common combinations
  */
 #define LCK_VG_READ		(LCK_VG | LCK_READ | LCK_HOLD)

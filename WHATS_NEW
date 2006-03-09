@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  Propagate partial mode around cluster.
   Fix archive file expiration.
   Fix dmeventd build.
 
