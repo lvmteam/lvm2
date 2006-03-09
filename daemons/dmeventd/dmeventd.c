@@ -1032,21 +1032,32 @@ static int open_fifos(struct dm_event_fifos *fifos)
 
 /*
  * Read message from client making sure that data is available
- * and a complete message is read.
+ * and a complete message is read.  Must not block indefinitely.
  */
 static int client_read(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
 {
+	struct timeval t;
 	unsigned bytes = 0;
 	int ret = 0;
 	fd_set fds;
 
 	errno = 0;
 	while (bytes < sizeof(*msg) && errno != EOF) {
-		do {
-			/* Watch client read FIFO for input. */
-			FD_ZERO(&fds);
-			FD_SET(fifos->client, &fds);
-		} while (select(fifos->client+1, &fds, NULL, NULL, NULL) != 1);
+		/* Watch client read FIFO for input. */
+		FD_ZERO(&fds);
+		FD_SET(fifos->client, &fds);
+		t.tv_sec = 1;
+		t.tv_usec = 0;
+		ret = select(fifos->client+1, &fds, NULL, NULL, &t);
+
+		if (!ret && !bytes) /* nothing to read */
+			return 0;
+
+		if (!ret)     /* trying to finish read */
+			continue;
+
+		if (ret < 0)  /* error */
+			return 0;
 
 		ret = read(fifos->client, msg, sizeof(*msg) - bytes);
 		bytes += ret > 0 ? ret : 0;
@@ -1138,12 +1149,16 @@ static void process_request(struct dm_event_fifos *fifos)
 
 	/* FIXME: better error handling */
 
-	/* Read the request from the client. */
-	if (!memset(&msg, 0, sizeof(msg)) ||
-	    !client_read(fifos, &msg)) {
-		stack;
+	memset(&msg, 0, sizeof(msg));
+
+	/*
+	 * Read the request from the client.
+	 * Of course, it's tough to tell what to do when
+	 * we use fucking retarded return codes like
+	 * 0 for error.
+	 */
+	if (!client_read(fifos, &msg))
 		return;
-	}
 
 	msg.opcode.status = do_process_request(&msg);
 
@@ -1276,25 +1291,25 @@ void dmeventd(void)
 	/*
 	 * We exit when there are no more devices to watch.
 	 * That is, when the last unregister happens.
+	 *
+	 * We must be careful though.  One of our threads which is
+	 * watching a device may receive an event and:
+	 * 1) Alter the device and unregister it
+	 * or
+	 * 2) Alter the device, unregister, [alter again,] and reregister
+	 *
+	 * We must be capable of answering a request to unregister
+	 * that comes from the very thread that must be unregistered.
+	 * Additionally, if that thread unregisters itself and it was the
+	 * only thread being monitored, we must also handle the case where
+	 * that thread may perform a register before exiting.  (In other
+	 * words, we can not simply exit if all threads have been unregistered
+	 * unless all threads are done processing.
 	 */
 	do {
 		process_request(&fifos);
 		cleanup_unused_threads();
-	} while(!list_empty(&thread_registry));
-
-	/*
-	 * There may still have been some threads that were doing work,
-	 * make sure these are cleaned up
-	 *
-	 * I don't necessarily like the sleep there, but otherwise,
-	 * cleanup_unused_threads could get called many many times.
-	 * It's worth noting that the likelyhood of it being called
-	 * here is slim.
-	 */
-	while(!list_empty(&thread_registry_unused)) {
-		sleep(1);
-		cleanup_unused_threads();
-	}
+	} while(!list_empty(&thread_registry) || !list_empty(&thread_registry_unused));
 
 	exit_dm_lib();
 
