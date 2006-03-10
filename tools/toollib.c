@@ -250,7 +250,6 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 				log_error("Volume group \"%s\" "
 					  "inconsistent", vgname);
 			if (!vg || !(vg = recover_vg(cmd, vgname, lock_type))) {
-				unlock_vg(cmd, vgname);
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
 				continue;
