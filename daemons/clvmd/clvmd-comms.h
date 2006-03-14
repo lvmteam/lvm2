@@ -56,15 +56,18 @@ struct cluster_ops *init_gulm_cluster(void);
 #endif
 
 #ifdef USE_CMAN
-#  include "cnxman-socket.h"
+#  include "libcman.h"
 #  define CMAN_MAX_CSID_LEN 4
 #  ifndef MAX_CSID_LEN
 #    define MAX_CSID_LEN CMAN_MAX_CSID_LEN
 #  endif
 #  undef MAX_CLUSTER_MEMBER_NAME_LEN
-#  define MAX_CLUSTER_MEMBER_NAME_LEN	CMAN_MAX_CLUSTER_MEMBER_NAME_LEN
+#  define MAX_CLUSTER_MEMBER_NAME_LEN   CMAN_MAX_NODENAME_LEN
+#  define CMAN_MAX_CLUSTER_MESSAGE 1500
+#  define CLUSTER_PORT_CLVMD 11
 struct cluster_ops *init_cman_cluster(void);
 #endif
+
 
 
 #endif

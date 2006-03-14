@@ -46,17 +46,17 @@ endif
 
 ifeq ("$(CMAN)", "yes")
 	SOURCES += clvmd-cman.c
-	LMLIBS += -ldlm
+	LMLIBS += -ldlm -lcman
 	CFLAGS += -DUSE_CMAN
 endif
 
 TARGETS = \
 	clvmd
 
-LVMLIBS = -llvm
+LVMLIBS = -llvm -lpthread
 
 ifeq ("@DMEVENTD@", "yes")
-	LVMLIBS += -ldevmapper-event -lpthread
+	LVMLIBS += -ldevmapper-event
 endif
  
 ifeq ("@DEVMAPPER@", "yes")
