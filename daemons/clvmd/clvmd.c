@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
 	if ((clops = init_cman_cluster())) {
 		max_csid_len = CMAN_MAX_CSID_LEN;
 		max_cluster_message = CMAN_MAX_CLUSTER_MESSAGE;
-		max_cluster_member_name_len = CMAN_MAX_CLUSTER_MEMBER_NAME_LEN;
+		max_cluster_member_name_len = CMAN_MAX_NODENAME_LEN;
 		syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to CMAN");
 	}
 #endif
@@ -509,6 +509,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 		int quorate = clops->is_quorate();
 
 		/* Wait on the cluster FD and all local sockets/pipes */
+		local_client_head.fd = clops->get_main_cluster_fd();
 		FD_ZERO(&in);
 		for (thisfd = &local_client_head; thisfd != NULL;
 		     thisfd = thisfd->next) {

@@ -46,19 +46,23 @@
 
 #define LOCKSPACE_NAME "clvmd"
 
-static int cluster_sock;
 static int num_nodes;
-static struct cl_cluster_node *nodes = NULL;
+static struct cman_node *nodes = NULL;
+static struct cman_node this_node;
 static int count_nodes; /* size of allocated nodes array */
 static int max_updown_nodes = 50;	/* Current size of the allocated array */
 /* Node up/down status, indexed by nodeid */
 static int *node_updown = NULL;
 static dlm_lshandle_t *lockspace;
+static cman_handle_t c_handle;
 
 static void count_clvmds_running(void);
 static void get_members(void);
 static int nodeid_from_csid(char *csid);
 static int name_from_nodeid(int nodeid, char *name);
+static void event_callback(cman_handle_t handle, void *private, int reason, int arg);
+static void data_callback(cman_handle_t handle, void *private,
+			  char *buf, int len, uint8_t port, int nodeid);
 
 struct lock_wait {
 	pthread_cond_t cond;
@@ -68,27 +72,20 @@ struct lock_wait {
 
 static int _init_cluster(void)
 {
-	struct sockaddr_cl saddr;
-	int port = CLUSTER_PORT_CLVMD;
-
 	/* Open the cluster communication socket */
-	cluster_sock = socket(AF_CLUSTER, SOCK_DGRAM, CLPROTO_CLIENT);
-	if (cluster_sock == -1) {
-		/* Don't print an error here because we could be just probing for CMAN */
+	c_handle = cman_init(NULL);
+	if (!c_handle) {
+		syslog(LOG_ERR, "Can't open cluster manager socket: %m");
 		return -1;
 	}
-	/* Set Close-on-exec */
-	fcntl(cluster_sock, F_SETFD, 1);
 
-	/* Bind to our port number on the cluster.
-	   Writes to this will block if the cluster loses quorum */
-	saddr.scl_family = AF_CLUSTER;
-	saddr.scl_port = port;
-
-	if (bind
-	    (cluster_sock, (struct sockaddr *) &saddr,
-	     sizeof(struct sockaddr_cl))) {
+	if (cman_start_recv_data(c_handle, data_callback, CLUSTER_PORT_CLVMD)) {
 		syslog(LOG_ERR, "Can't bind cluster socket: %m");
+		return -1;
+	}
+
+	if (cman_start_notification(c_handle, event_callback)) {
+		syslog(LOG_ERR, "Can't start cluster event listening");
 		return -1;
 	}
 
@@ -114,63 +111,46 @@ static void _cluster_init_completed(void)
 
 static int _get_main_cluster_fd()
 {
-	return cluster_sock;
+	return cman_get_fd(c_handle);
 }
 
 static int _get_num_nodes()
 {
-	return num_nodes;
+	int i;
+	int nnodes = 0;
+
+	/* return number of ACTIVE nodes */
+	for (i=0; i<num_nodes; i++) {
+		if (nodes[i].cn_member)
+			nnodes++;
+	}
+	return nnodes;
 }
 
 /* send_message with the fd check removed */
 static int _cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
 {
-	struct iovec iov[2];
-	struct msghdr msg;
-	struct sockaddr_cl saddr;
-	int len = 0;
+	int nodeid = 0;
 
-	msg.msg_control = NULL;
-	msg.msg_controllen = 0;
-	msg.msg_iovlen = 1;
-	msg.msg_iov = iov;
-	msg.msg_flags = 0;
-	iov[0].iov_len = msglen;
-	iov[0].iov_base = buf;
+	if (csid)
+		memcpy(&nodeid, csid, CMAN_MAX_CSID_LEN);
 
-	saddr.scl_family = AF_CLUSTER;
-	saddr.scl_port = CLUSTER_PORT_CLVMD;
-	if (csid) {
-		msg.msg_name = &saddr;
-		msg.msg_namelen = sizeof(saddr);
-		memcpy(&saddr.scl_nodeid, csid, CMAN_MAX_CSID_LEN);
-	} else {		/* Cluster broadcast */
-
-		msg.msg_name = NULL;
-		msg.msg_namelen = 0;
-	}
-
-	do {
-		len = sendmsg(cluster_sock, &msg, 0);
-		if (len < 0 && errno != EAGAIN)
+	if (cman_send_data(c_handle, buf, msglen, 0, CLUSTER_PORT_CLVMD, nodeid) <= 0)
+	{
 			log_error(errtext);
-
-	} while (len == -1 && errno == EAGAIN);
-	return len;
+	}
+	return msglen;
 }
 
 static void _get_our_csid(char *csid)
 {
-	int i;
-	memset(csid, 0, CMAN_MAX_CSID_LEN);
-
-	for (i = 0; i < num_nodes; i++) {
-		if (nodes[i].us)
-			memcpy(csid, &nodes[i].node_id, CMAN_MAX_CSID_LEN);
+	if (this_node.cn_nodeid == 0) {
+		cman_get_node(c_handle, 0, &this_node);
 	}
+	memcpy(csid, &this_node.cn_nodeid, CMAN_MAX_CSID_LEN);
 }
 
-/* Call a callback routine for each node that known (down mean not running a clvmd) */
+/* Call a callback routine for each node is that known (down means not running a clvmd) */
 static int _cluster_do_node_callback(struct local_client *client,
 			     void (*callback) (struct local_client *, char *,
 					       int))
@@ -179,8 +159,8 @@ static int _cluster_do_node_callback(struct local_client *client,
 	int somedown = 0;
 
 	for (i = 0; i < _get_num_nodes(); i++) {
-		callback(client, (char *)&nodes[i].node_id, node_updown[nodes[i].node_id]);
-		if (!node_updown[nodes[i].node_id])
+		callback(client, (char *)&nodes[i].cn_nodeid, node_updown[nodes[i].cn_nodeid]);
+		if (!node_updown[nodes[i].cn_nodeid])
 			somedown = -1;
 	}
 	return somedown;
@@ -188,78 +168,52 @@ static int _cluster_do_node_callback(struct local_client *client,
 
 /* Process OOB message from the cluster socket,
    this currently just means that a node has stopped listening on our port */
-static void process_oob_msg(char *buf, int len, int nodeid)
+static void event_callback(cman_handle_t handle, void *private, int reason, int arg)
 {
-	char namebuf[256];
-	switch (buf[0]) {
-        case CLUSTER_OOB_MSG_PORTCLOSED:
-		name_from_nodeid(nodeid, namebuf);
+	char namebuf[MAX_CLUSTER_NAME_LEN];
+
+	switch (reason) {
+        case CMAN_REASON_PORTCLOSED:
+		name_from_nodeid(arg, namebuf);
 		log_notice("clvmd on node %s has died\n", namebuf);
 		DEBUGLOG("Got OOB message, removing node %s\n", namebuf);
 
-		node_updown[nodeid] = 0;
+		node_updown[arg] = 0;
 		break;
 
-	case CLUSTER_OOB_MSG_STATECHANGE:
+	case CMAN_REASON_STATECHANGE:
 		DEBUGLOG("Got OOB message, Cluster state change\n");
 		get_members();
 		break;
 	default:
 		/* ERROR */
-		DEBUGLOG("Got unknown OOB message: %d\n", buf[0]);
+		DEBUGLOG("Got unknown event callback message: %d\n", reason);
+		break;
 	}
 }
 
-static int _cluster_fd_callback(struct local_client *client, char *buf, int len, char *csid,
+static struct local_client *cman_client;
+static int _cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid,
 			struct local_client **new_client)
 {
-	struct iovec iov[2];
-	struct msghdr msg;
-	struct sockaddr_cl saddr;
+
+	/* Save this for data_callback */
+	cman_client = fd;
 
 	/* We never return a new client */
 	*new_client = NULL;
 
-	msg.msg_control = NULL;
-	msg.msg_controllen = 0;
-	msg.msg_iovlen = 1;
-	msg.msg_iov = iov;
-	msg.msg_name = &saddr;
-	msg.msg_flags = 0;
-	msg.msg_namelen = sizeof(saddr);
-	iov[0].iov_len = len;
-	iov[0].iov_base = buf;
-
-	len = recvmsg(cluster_sock, &msg, MSG_OOB | O_NONBLOCK);
-	if (len < 0 && errno == EAGAIN)
-		return len;
-
-	DEBUGLOG("Read on cluster socket, len = %d\n", len);
-
-	/* A real error */
-	if (len < 0) {
-		log_error("read error on cluster socket: %m");
-		return 0;
+	return cman_dispatch(c_handle, 0);
 	}
 
-	/* EOF - we have left the cluster */
-	if (len == 0)
-		return 0;
 
-	/* Is it OOB? probably a node gone down */
-	if (msg.msg_flags & MSG_OOB) {
-		process_oob_msg(iov[0].iov_base, len, saddr.scl_nodeid);
-
-		/* Tell the upper layer to ignore this message */
-		len = -1;
-		errno = EAGAIN;
-	}
-	else {
-		memcpy(csid, &saddr.scl_nodeid, sizeof(saddr.scl_nodeid));
-		/* Send it back to clvmd */
-		process_message(client, buf, len, csid);
-	}
-	return len;
+static void data_callback(cman_handle_t handle, void *private,
+			  char *buf, int len, uint8_t port, int nodeid)
+{
+	/* Ignore looped back messages */
+	if (nodeid == this_node.cn_nodeid)
+		return;
+	process_message(cman_client, buf, len, (char *)&nodeid);
 }
 
 static void _add_up_node(char *csid)
@@ -290,19 +244,15 @@ static void _cluster_closedown()
 {
 	unlock_all();
 	dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
-	close(cluster_sock);
+	cman_finish(c_handle);
 }
 
 static int is_listening(int nodeid)
 {
-	struct cl_listen_request rq;
 	int status;
 
-	rq.port = CLUSTER_PORT_CLVMD;
-	rq.nodeid = nodeid;
-
 	do {
-		status = ioctl(cluster_sock, SIOCCLUSTER_ISLISTENING, &rq);
+		status = cman_is_listening(c_handle, nodeid, CLUSTER_PORT_CLVMD);
 		if (status < 0 && errno == EBUSY) {	/* Don't busywait */
 			sleep(1);
 			errno = EBUSY;	/* In case sleep trashes it */
@@ -320,19 +270,22 @@ static void count_clvmds_running(void)
 	int i;
 
 	for (i = 0; i < num_nodes; i++) {
-		node_updown[nodes[i].node_id] = is_listening(nodes[i].node_id);
+		node_updown[nodes[i].cn_nodeid] = is_listening(nodes[i].cn_nodeid);
 	}
 }
 
 /* Get a list of active cluster members */
 static void get_members()
 {
-	struct cl_cluster_nodelist nodelist;
+	int retnodes;
+	int status;
 
-	num_nodes = ioctl(cluster_sock, SIOCCLUSTER_GETMEMBERS, 0);
+	num_nodes = cman_get_node_count(c_handle);
 	if (num_nodes == -1) {
 		log_error("Unable to get node count");
-	} else {
+		return;
+	}
+
 	        /* Not enough room for new nodes list ? */
 	        if (num_nodes > count_nodes && nodes) {
 			free(nodes);
@@ -341,26 +294,17 @@ static void get_members()
 
 		if (nodes == NULL) {
 		        count_nodes = num_nodes + 10; /* Overallocate a little */
-		        nodes = malloc(count_nodes * sizeof(struct cl_cluster_node));
+		nodes = malloc(count_nodes * sizeof(struct cman_node));
 			if (!nodes) {
 			        log_error("Unable to allocate nodes array\n");
 				exit(5);
 			}
 		}
-		nodelist.max_members = count_nodes;
-		nodelist.nodes = nodes;
 
-		num_nodes = ioctl(cluster_sock, SIOCCLUSTER_GETMEMBERS, &nodelist);
-		if (num_nodes <= 0) {
+	status = cman_get_nodes(c_handle, count_nodes, &retnodes, nodes);
+	if (status < 0) {
 		        log_error("Unable to get node details");
 			exit(6);
-		}
-
-		/* Sanity check struct */
-		if (nodes[0].size != sizeof(struct cl_cluster_node)) {
-			log_error
-			    ("sizeof(cl_cluster_node) does not match size returned from the kernel: aborting\n");
-			exit(10);
 		}
 
 		if (node_updown == NULL) {
@@ -371,7 +315,6 @@ static void get_members()
 			       sizeof(int) * max(num_nodes, max_updown_nodes));
 		}
 	}
-}
 
 /* Convert a node name to a CSID */
 static int _csid_from_name(char *csid, char *name)
@@ -379,8 +322,8 @@ static int _csid_from_name(char *csid, char *name)
 	int i;
 
 	for (i = 0; i < num_nodes; i++) {
-		if (strcmp(name, nodes[i].name) == 0) {
-			memcpy(csid, &nodes[i].node_id, CMAN_MAX_CSID_LEN);
+		if (strcmp(name, nodes[i].cn_name) == 0) {
+			memcpy(csid, &nodes[i].cn_nodeid, CMAN_MAX_CSID_LEN);
 			return 0;
 		}
 	}
@@ -393,8 +336,8 @@ static int _name_from_csid(char *csid, char *name)
 	int i;
 
 	for (i = 0; i < num_nodes; i++) {
-		if (memcmp(csid, &nodes[i].node_id, CMAN_MAX_CSID_LEN) == 0) {
-			strcpy(name, nodes[i].name);
+		if (memcmp(csid, &nodes[i].cn_nodeid, CMAN_MAX_CSID_LEN) == 0) {
+			strcpy(name, nodes[i].cn_name);
 			return 0;
 		}
 	}
@@ -409,8 +352,8 @@ static int name_from_nodeid(int nodeid, char *name)
 	int i;
 
 	for (i = 0; i < num_nodes; i++) {
-		if (nodeid == nodes[i].node_id) {
-			strcpy(name, nodes[i].name);
+		if (nodeid == nodes[i].cn_nodeid) {
+			strcpy(name, nodes[i].cn_name);
 			return 0;
 		}
 	}
@@ -431,7 +374,7 @@ static int nodeid_from_csid(char *csid)
 
 static int _is_quorate()
 {
-	return ioctl(cluster_sock, SIOCCLUSTER_ISQUORATE, 0);
+	return cman_is_quorate(c_handle);
 }
 
 static void sync_ast_routine(void *arg)
