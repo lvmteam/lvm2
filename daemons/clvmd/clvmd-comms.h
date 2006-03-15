@@ -56,6 +56,7 @@ struct cluster_ops *init_gulm_cluster(void);
 #endif
 
 #ifdef USE_CMAN
+#  include <netinet/in.h>
 #  include "libcman.h"
 #  define CMAN_MAX_CSID_LEN 4
 #  ifndef MAX_CSID_LEN
