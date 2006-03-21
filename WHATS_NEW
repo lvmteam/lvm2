@@ -4,6 +4,7 @@ Version 2.02.03 -
   Fix archive file expiration.
   Fix dmeventd build.
   clvmd now uses libcman rather than cman ioctls.
+  clvmd will allow new cman to shutdown on request.
 
 Version 2.02.02 - 7th February 2006
 ===================================
