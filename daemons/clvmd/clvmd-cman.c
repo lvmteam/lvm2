@@ -176,15 +176,26 @@ static void event_callback(cman_handle_t handle, void *private, int reason, int 
         case CMAN_REASON_PORTCLOSED:
 		name_from_nodeid(arg, namebuf);
 		log_notice("clvmd on node %s has died\n", namebuf);
-		DEBUGLOG("Got OOB message, removing node %s\n", namebuf);
+		DEBUGLOG("Got port closed message, removing node %s\n", namebuf);
 
 		node_updown[arg] = 0;
 		break;
 
 	case CMAN_REASON_STATECHANGE:
-		DEBUGLOG("Got OOB message, Cluster state change\n");
+		DEBUGLOG("Got state change message, re-reading members list\n");
 		get_members();
 		break;
+
+#if defined(LIBCMAN_VERSION) && LIBCMAN_VERSION >= 2
+	case CMAN_REASON_PORTOPENED:
+		/* Ignore this, wait for startup message from clvmd itself */
+		break;
+
+	case CMAN_REASON_TRY_SHUTDOWN:
+		DEBUGLOG("Got try shutdown, sending OK\n");
+		cman_replyto_shutdown(c_handle, 1);
+		break;
+#endif
 	default:
 		/* ERROR */
 		DEBUGLOG("Got unknown event callback message: %d\n", reason);
@@ -204,7 +215,7 @@ static int _cluster_fd_callback(struct local_client *fd, char *buf, int len, cha
 	*new_client = NULL;
 
 	return cman_dispatch(c_handle, 0);
-	}
+}
 
 
 static void data_callback(cman_handle_t handle, void *private,
