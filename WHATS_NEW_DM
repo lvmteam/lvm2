@@ -1,5 +1,6 @@
 Version 1.02.04 - 
 ============================
+  If _create_and_load_v4 fails part way through, revert the creation.
   dmeventd thread/fifo fixes.
   Add file & line to dm_strdup_aux().
   Add setgeometry.
