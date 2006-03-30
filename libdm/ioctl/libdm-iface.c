@@ -1383,7 +1383,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	task->tail = NULL;
 	dm_task_destroy(task);
 	if (!r)
-		return r;
+		goto revert;
 
 	/* Use the original structure last so the info will be correct */
 	dmt->type = DM_DEVICE_RESUME;
@@ -1391,6 +1391,17 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dmt->uuid = NULL;
 
 	r = dm_task_run(dmt);
+
+	if (r)
+		return r;
+
+      revert:
+ 	dmt->type = DM_DEVICE_REMOVE;
+	dm_free(dmt->uuid);
+	dmt->uuid = NULL;
+
+	if (!dm_task_run(dmt))
+		log_error("Failed to revert device creation.");
 
 	return r;
 }
