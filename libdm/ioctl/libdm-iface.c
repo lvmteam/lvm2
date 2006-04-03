@@ -59,7 +59,9 @@
 #define NUMBER_OF_MAJORS 4096
 
 /* dm major version no for running kernel */
-static int _dm_version = DM_VERSION_MAJOR;
+static unsigned _dm_version = DM_VERSION_MAJOR;
+static unsigned _dm_version_minor = 0;
+static unsigned _dm_version_patchlevel = 0;
 static int _log_suppress = 0;
 
 static dm_bitset_t _dm_bitset = NULL;
@@ -239,10 +241,10 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 	}
 
 #ifdef HAVE_SELINUX
-        if (!dm_set_selinux_context(control, S_IFCHR)) {
-                stack;
-                return 0;
-        }
+	if (!dm_set_selinux_context(control, S_IFCHR)) {
+		stack;
+		return 0;
+	}
 #endif
 
 	return 1;
@@ -745,7 +747,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 {
-	unsigned int *v;
+	unsigned *v;
 
 #ifdef DM_COMPAT
 	if (_dm_version == 1)
@@ -759,6 +761,9 @@ int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size)
 
 	v = dmt->dmi.v4->version;
 	snprintf(version, size, "%u.%u.%u", v[0], v[1], v[2]);
+	_dm_version_minor = v[1];
+	_dm_version_patchlevel = v[2];
+
 	return 1;
 }
 
@@ -804,7 +809,7 @@ int dm_check_version(void)
 	if (!_dm_compat)
 		goto bad;
 
-	log_verbose("device-mapper ioctl protocol version %d failed. "
+	log_verbose("device-mapper ioctl protocol version %u failed. "
 		    "Trying protocol version 1.", _dm_version);
 	_dm_version = 1;
 	if (_check_version(dmversion, sizeof(dmversion), 0)) {
@@ -1018,7 +1023,7 @@ int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char 
 		return 0;
 	}
 
-        return 1;
+	return 1;
 }
 
 int dm_task_no_open_count(struct dm_task *dmt)
@@ -1115,6 +1120,40 @@ static void *_add_target(struct target *t, void *out, void *end)
 	return out;
 }
 
+static int _lookup_dev_name(uint64_t dev, char *buf, size_t len)
+{
+	struct dm_names *names;
+	unsigned next = 0;
+	struct dm_task *dmt;
+	int r = 0;
+ 
+	if (!(dmt = dm_task_create(DM_DEVICE_LIST)))
+		return 0;
+ 
+	if (!dm_task_run(dmt))
+		goto out;
+
+	if (!(names = dm_task_get_names(dmt)))
+		goto out;
+ 
+	if (!names->dev)
+		goto out;
+ 
+	do {
+		names = (void *) names + next;
+		if (names->dev == dev) {
+			strncpy(buf, names->name, len);
+			r = 1;
+			break;
+		}
+		next = names->next;
+	} while (next);
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
 static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 {
 	const size_t min_size = 16 * 1024;
@@ -1202,16 +1241,6 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	dmi->data_size = len;
 	dmi->data_start = sizeof(struct dm_ioctl);
 
-	if (dmt->dev_name)
-		strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
-
-	if (dmt->type == DM_DEVICE_SUSPEND)
-		dmi->flags |= DM_SUSPEND_FLAG;
-	if (dmt->read_only)
-		dmi->flags |= DM_READONLY_FLAG;
-	if (dmt->skip_lockfs)
-		dmi->flags |= DM_SKIP_LOCKFS_FLAG;
-
 	if (dmt->minor >= 0) {
 		if (dmt->major <= 0) {
 			log_error("Missing major number for persistent device.");
@@ -1221,8 +1250,30 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		dmi->dev = MKDEV(dmt->major, dmt->minor);
 	}
 
+	/* Does driver support device number referencing? */
+	if (_dm_version_minor < 3 && !dmt->dev_name && !dmt->uuid && dmi->dev) {
+		if (!_lookup_dev_name(dmi->dev, dmi->name, sizeof(dmi->name))) {
+			log_error("Unable to find name for device (%" PRIu32
+				  ":%" PRIu32 ")", dmt->major, dmt->minor);
+			goto bad;
+		}
+		log_verbose("device (%" PRIu32 ":%" PRIu32 ") is %s "
+			    "for compatibility with old kernel",
+			    dmt->major, dmt->minor, dmi->name);
+	}
+
+	if (dmt->dev_name)
+		strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
+
 	if (dmt->uuid)
 		strncpy(dmi->uuid, dmt->uuid, sizeof(dmi->uuid));
+
+	if (dmt->type == DM_DEVICE_SUSPEND)
+		dmi->flags |= DM_SUSPEND_FLAG;
+	if (dmt->read_only)
+		dmi->flags |= DM_READONLY_FLAG;
+	if (dmt->skip_lockfs)
+		dmi->flags |= DM_SKIP_LOCKFS_FLAG;
 
 	dmi->target_count = count;
 	dmi->event_nr = dmt->event_nr;
@@ -1623,6 +1674,9 @@ repeat_ioctl:
 		break;
 	}
 
+	/* Was structure reused? */
+	if (dmt->dmi.v4)
+		dm_free(dmt->dmi.v4);
 	dmt->dmi.v4 = dmi;
 	return 1;
 
