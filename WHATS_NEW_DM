@@ -1,5 +1,7 @@
 Version 1.02.04 - 
 ============================
+  Use name-based device refs if kernel doesn't support device number refs.
+  Fix memory leak (struct dm_ioctl) when struct dm_task is reused.
   If _create_and_load_v4 fails part way through, revert the creation.
   dmeventd thread/fifo fixes.
   Add file & line to dm_strdup_aux().
