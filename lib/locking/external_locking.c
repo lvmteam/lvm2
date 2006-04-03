@@ -72,7 +72,7 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 	libname = find_config_str(cft->root, "global/locking_library",
 				  DEFAULT_LOCKING_LIB);
 
-	if (!(_locking_lib = load_shared_library(cft, libname, "locking"))) {
+	if (!(_locking_lib = load_shared_library(cft, libname, "locking", 1))) {
 		stack;
 		return 0;
 	}

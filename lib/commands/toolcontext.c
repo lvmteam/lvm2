@@ -657,7 +657,7 @@ static int _init_formats(struct cmd_context *cmd)
 				return 0;
 			}
 			if (!(lib = load_shared_library(cmd->cft, cv->v.str,
-							"format"))) {
+							"format", 0))) {
 				stack;
 				return 0;
 			}
@@ -753,7 +753,7 @@ static int _init_segtypes(struct cmd_context *cmd)
 				return 0;
 			}
 			if (!(lib = load_shared_library(cmd->cft, cv->v.str,
-							"segment type"))) {
+							"segment type", 0))) {
 				stack;
 				return 0;
 			}

@@ -38,7 +38,7 @@ void get_shared_library_path(struct config_tree *cft, const char *libname,
 }
 
 void *load_shared_library(struct config_tree *cft, const char *libname,
-			  const char *desc)
+			  const char *desc, int silent)
 {
 	char path[PATH_MAX];
 	void *library;
@@ -47,8 +47,14 @@ void *load_shared_library(struct config_tree *cft, const char *libname,
 
 	log_very_verbose("Opening shared %s library %s", desc, path);
 
-	if (!(library = dlopen(path, RTLD_LAZY)))
-		log_error("Unable to open external %s library %s", desc, path);
+	if (!(library = dlopen(path, RTLD_LAZY))) {
+		if (silent && ignorelockingfailure())
+			log_verbose("Unable to open external %s library %s",
+				    desc, path);
+		else
+			log_error("Unable to open external %s library %s",
+				  desc, path);
+	}
 
 	return library;
 }

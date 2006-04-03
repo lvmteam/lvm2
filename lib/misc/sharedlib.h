@@ -19,4 +19,4 @@
 void get_shared_library_path(struct config_tree *cft, const char *libname,
 			     char *path, int path_len);
 void *load_shared_library(struct config_tree *cf, const char *libname,
-			  const char *what);
+			  const char *what, int silent);
