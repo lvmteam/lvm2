@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  pvremove without -f now fails if there's no PV label.
   Support lvconvert -s.
   Suppress locking library load failure message if --ignorelockingfailure.
   Propagate partial mode around cluster.

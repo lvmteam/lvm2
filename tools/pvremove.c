@@ -33,9 +33,14 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 		return 0;
 	}
 
-	/* is there a pv here already */
-	if (!(pv = pv_read(cmd, name, NULL, NULL, 1)))
-		return 1;
+	/* Is there a pv here already? */
+	/* If not, this is an error unless you used -f. */
+	if (!(pv = pv_read(cmd, name, NULL, NULL, 1))) {
+		if (arg_count(cmd, force_ARG))
+			return 1;
+		else
+			return 0;
+	}
 
 	/* orphan ? */
 	if (!pv->vg_name[0])
