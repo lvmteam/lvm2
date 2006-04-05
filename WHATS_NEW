@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  Support lvconvert -s.
   Suppress locking library load failure message if --ignorelockingfailure.
   Propagate partial mode around cluster.
   Fix archive file expiration.

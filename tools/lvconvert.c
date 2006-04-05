@@ -16,10 +16,20 @@
 #include "lv_alloc.h"
 
 struct lvconvert_params {
+	int snapshot;
+	int zero;
+
+	const char *origin;
 	const char *lv_name;
+	const char *vg_name;
+
+	uint32_t chunk_size;
+	uint32_t region_size;
+
 	uint32_t mirrors;
 	sign_t mirrors_sign;
-	uint32_t region_size;
+
+	struct segment_type *segtype;
 
 	alloc_policy_t alloc;
 
@@ -28,52 +38,164 @@ struct lvconvert_params {
 	struct list *pvh;
 };
 
+static int _read_name_params(struct lvconvert_params *lp,
+			     struct cmd_context *cmd, int *pargc, char ***pargv)
+{
+	char *ptr;
+	const char *vg_name;
+
+	if (lp->snapshot) {
+		if (!*pargc) {
+			log_error("Please specify a logical volume to act as "
+				  "the snapshot origin.");
+			return 0;
+		}
+
+		lp->origin = *pargv[0];
+		(*pargv)++, (*pargc)--;
+		if (!(lp->vg_name = extract_vgname(cmd, lp->origin))) {
+			log_error("The origin name should include the "
+				  "volume group.");
+			return 0;
+		}
+
+		/* Strip the volume group from the origin */
+		if ((ptr = strrchr(lp->origin, (int) '/')))
+			lp->origin = ptr + 1;
+	}
+
+	if (!*pargc) {
+		log_error("Please provide logical volume path");
+		return 0;
+	}
+
+	lp->lv_name = (*pargv)[0];
+	(*pargv)++, (*pargc)--;
+
+	if (strchr(lp->lv_name, '/') &&
+	    (vg_name = extract_vgname(cmd, lp->lv_name)) &&
+	    lp->vg_name && strcmp(vg_name, lp->vg_name)) {
+		log_error("Please use a single volume group name "
+			  "(\"%s\" or \"%s\")", vg_name, lp->vg_name);
+		return 0;
+	}
+
+	if (!lp->vg_name)
+		lp->vg_name = vg_name;
+
+	if (!validate_name(lp->vg_name)) {
+		log_error("Please provide a valid volume group name");
+		return 0;
+	}
+
+	if ((ptr = strrchr(lp->lv_name, '/')))
+		lp->lv_name = ptr + 1;
+
+	if (!apply_lvname_restrictions(lp->lv_name))
+		return_0;
+
+	return 1;
+}
+
 static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
 	memset(lp, 0, sizeof(*lp));
+
+	if (arg_count(cmd, mirrors_ARG) + arg_count(cmd, snapshot_ARG) != 1) {
+		log_error("Exactly one of --mirrors or --snapshot arguments "
+			  "required.");
+		return 0;
+	}
+
+	if (arg_count(cmd, snapshot_ARG))
+		lp->snapshot = 1;
+
+	if (arg_count(cmd, mirrors_ARG)) {
+		lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0);
+		lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, 0);
+	}
 
 	lp->alloc = ALLOC_INHERIT;
 	if (arg_count(cmd, alloc_ARG))
 		lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG,
 							    lp->alloc);
 
-	if (!arg_count(cmd, mirrors_ARG)) {
-		log_error("--mirrors argument required");
-		return 0;
-	}
-
-	lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 0);
-	lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, 0);
-
-	/*
-	 * --regionsize is only valid when converting an LV into a mirror.
-	 * This is checked when we know the state of the LV being converted.
-	 */
-	if (arg_count(cmd, regionsize_ARG)) {
-		if (arg_sign_value(cmd, regionsize_ARG, 0) == SIGN_MINUS) {
-			log_error("Negative regionsize is invalid");
+	if (lp->snapshot) {
+		if (arg_count(cmd, regionsize_ARG)) {
+			log_error("--regionsize is only available with mirrors");
 			return 0;
 		}
-		lp->region_size = 2 * arg_uint_value(cmd, regionsize_ARG, 0);
-	} else
-		lp->region_size = 2 * find_config_int(cmd->cft->root,
-					"activation/mirror_region_size",
-					DEFAULT_MIRROR_REGION_SIZE);
 
-	if (lp->region_size & (lp->region_size - 1)) {
-		log_error("Region size (%" PRIu32 ") must be a power of 2",
-			  lp->region_size);
+		if (arg_sign_value(cmd, chunksize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative chunk size is invalid");
+			return 0;
+		}
+		lp->chunk_size = 2 * arg_uint_value(cmd, chunksize_ARG, 8);
+		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
+		    (lp->chunk_size & (lp->chunk_size - 1))) {
+			log_error("Chunk size must be a power of 2 in the "
+				  "range 4K to 512K");
+			return 0;
+		}
+		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
+
+		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
+			return_0;
+
+		lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
+						(lp->segtype->flags &
+						 SEG_CANNOT_BE_ZEROED) ?
+						"n" : "y"), "n");
+
+	} else {	/* Mirrors */
+		if (arg_count(cmd, chunksize_ARG)) {
+			log_error("--chunksize is only available with "
+				  "snapshots");
+			return 0;
+		}
+
+		if (arg_count(cmd, zero_ARG)) {
+			log_error("--zero is only available with snapshots");
+			return 0;
+		}
+
+		/*
+	 	 * --regionsize is only valid if converting an LV into a mirror.
+	 	 * Checked when we know the state of the LV being converted.
+	 	 */
+		if (arg_count(cmd, regionsize_ARG)) {
+			if (arg_sign_value(cmd, regionsize_ARG, 0) ==
+				    SIGN_MINUS) {
+				log_error("Negative regionsize is invalid");
+				return 0;
+			}
+			lp->region_size = 2 * arg_uint_value(cmd,
+							     regionsize_ARG, 0);
+		} else
+			lp->region_size = 2 * find_config_int(cmd->cft->root,
+						"activation/mirror_region_size",
+						DEFAULT_MIRROR_REGION_SIZE);
+	
+		if (lp->region_size & (lp->region_size - 1)) {
+			log_error("Region size (%" PRIu32
+				  ") must be a power of 2", lp->region_size);
+			return 0;
+		}
+
+		if (!(lp->segtype = get_segtype_from_string(cmd, "striped")))
+			return_0;
+	}
+
+	if (activation() && lp->segtype->ops->target_present &&
+	    !lp->segtype->ops->target_present()) {
+		log_error("%s: Required device-mapper target(s) not "
+			  "detected in your kernel", lp->segtype->name);
 		return 0;
 	}
 
-	if (!argc) {
-		log_error("Please give logical volume path");
-		return 0;
-	}
-
-	lp->lv_name = argv[0];
-	argv++, argc--;
+	if (!_read_name_params(lp, cmd, &argc, &argv))
+		return_0;
 
 	lp->pv_count = argc;
 	lp->pvs = argv;
@@ -89,7 +211,6 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	struct alloc_handle *ah = NULL;
 	struct logical_volume *log_lv;
 	struct list *parallel_areas;
-	struct segment_type *segtype;
 
 	seg = first_seg(lv);
 	existing_mirrors = seg->area_count;
@@ -121,10 +242,9 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			return 1;
 		}
 
-		if (!remove_mirror_images(seg, 1, lp->pv_count ? lp->pvh : NULL, 1)) {
-			stack;
-			return 0;
-		}
+		if (!remove_mirror_images(seg, 1,
+					  lp->pv_count ? lp->pvh : NULL, 1))
+			return_0;
 	} else {		/* mirrors > 1 */
 		if ((lv->status & MIRRORED)) {
 			if (list_size(&lv->segments) != 1) {
@@ -149,10 +269,10 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				return 0;
 			} else {
 				/* Reduce number of mirrors */
-				if (!remove_mirror_images(seg, lp->mirrors, lp->pv_count ? lp->pvh : NULL, 0)) {
-					stack;
-					return 0;
-				}
+				if (!remove_mirror_images(seg, lp->mirrors,
+							  lp->pv_count ?
+							  lp->pvh : NULL, 0))
+					return_0;
 			}
 		} else {
 			/* Make existing LV into mirror set */
@@ -166,22 +286,16 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				}
 			}
 
-			if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv))) {
-				stack;
-				return 0;
-			}
+			if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv)))
+				return_0;
 
-			segtype = get_segtype_from_string(cmd, "striped");
-
-			if (!(ah = allocate_extents(lv->vg, NULL, segtype, 1,
-						    lp->mirrors - 1, 1,
+			if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype,
+						    1, lp->mirrors - 1, 1,
 						    lv->le_count * (lp->mirrors - 1),
 						    NULL, 0, 0, lp->pvh,
 						    lp->alloc,
-						    parallel_areas))) {
-				stack;
-				return 0;
-			}
+						    parallel_areas)))
+				return_0;
 
 			lp->region_size = adjusted_mirror_region_size(lv->vg->extent_size,
 								      lv->le_count,
@@ -195,20 +309,17 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			}
 
 			if (!create_mirror_layers(ah, 1, lp->mirrors, lv,
-						  segtype, 0, lp->region_size,
-						  log_lv)) {
-				stack;
-				return 0;
-			}
+						  lp->segtype, 0,
+						  lp->region_size,
+						  log_lv))
+				return_0;
 		}
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
-	if (!vg_write(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(lv->vg))
+		return_0;
 
 	backup(lv->vg);
 
@@ -231,6 +342,68 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	}
 
 	log_print("Logical volume %s converted.", lv->name);
+
+	return 1;
+}
+
+static int lvconvert_snapshot(struct cmd_context *cmd,
+			      struct logical_volume *lv,
+			      struct lvconvert_params *lp)
+{
+	struct logical_volume *org;
+
+	if (!(org = find_lv(lv->vg, lp->origin))) {
+		log_error("Couldn't find origin volume '%s'.", lp->origin);
+		return 0;
+	}
+
+	if (org->status & (LOCKED|PVMOVE) || lv_is_cow(org)) {
+		log_error("Unable to create a snapshot of a %s LV.",
+			  org->status & LOCKED ? "locked" :
+			  org->status & PVMOVE ? "pvmove" : "snapshot");
+		return 0;
+	}
+
+	if (!lp->zero)
+		log_error("WARNING: \"%s\" not zeroed", lv->name);
+	else if (!zero_lv(cmd, lv)) {
+			log_error("Aborting. Failed to wipe snapshot "
+				  "exception store.");
+			return 0;
+	}
+
+	if (!deactivate_lv(cmd, lv)) {
+		log_error("Couldn't deactivate LV %s.", lv->name);
+		return 0;
+	}
+
+	if (!vg_add_snapshot(lv->vg->fid, NULL, org, lv, NULL, org->le_count,
+			     lp->chunk_size)) {
+		log_error("Couldn't create snapshot.");
+		return 0;
+	}
+
+	/* store vg on disk(s) */
+	if (!vg_write(lv->vg))
+		return_0;
+
+	backup(lv->vg);
+
+	if (!suspend_lv(cmd, org)) {
+		log_error("Failed to suspend origin %s", org->name);
+		vg_revert(lv->vg);
+		return 0;
+	}
+
+	if (!vg_commit(lv->vg))
+		return_0;
+
+	if (!resume_lv(cmd, org)) {
+		log_error("Problem reactivating origin %s", org->name);
+		return 0;
+	}
+
+	log_print("Logical volume %s converted to snapshot.", lv->name);
 
 	return 1;
 }
@@ -267,6 +440,11 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_FAILED;
 		if (!lvconvert_mirrors(cmd, lv, lp))
 			return ECMD_FAILED;
+	} else if (lp->snapshot) {
+		if (!archive(lv->vg))
+			return ECMD_FAILED;
+		if (!lvconvert_snapshot(cmd, lv, lp))
+			return ECMD_FAILED;
 	}
 
 	return ECMD_PROCESSED;
@@ -274,8 +452,6 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 {
-	const char *vg_name;
-	char *st;
 	int consistent = 1;
 	struct volume_group *vg;
 	struct lv_list *lvl;
@@ -287,41 +463,31 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name = extract_vgname(cmd, lp.lv_name);
+	log_verbose("Checking for existing volume group \"%s\"", lp.vg_name);
 
-	if (!validate_name(vg_name)) {
-		log_error("Please provide a valid volume group name");
-		return EINVALID_CMD_LINE;
-	}
-
-	if ((st = strrchr(lp.lv_name, '/')))
-		lp.lv_name = st + 1;
-
-	log_verbose("Checking for existing volume group \"%s\"", vg_name);
-
-	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", vg_name);
+	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
+		log_error("Can't get lock for %s", lp.vg_name);
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name, &consistent))) {
-		log_error("Volume group \"%s\" doesn't exist", vg_name);
+	if (!(vg = vg_read(cmd, lp.vg_name, &consistent))) {
+		log_error("Volume group \"%s\" doesn't exist", lp.vg_name);
 		goto error;
 	}
 
 	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg_name);
+		log_error("Volume group \"%s\" is exported", lp.vg_name);
 		goto error;
 	}
 
 	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg_name);
+		log_error("Volume group \"%s\" is read-only", lp.vg_name);
 		goto error;
 	}
 
 	if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
 		log_error("Logical volume \"%s\" not found in "
-			  "volume group \"%s\"", lp.lv_name, vg_name);
+			  "volume group \"%s\"", lp.lv_name, lp.vg_name);
 		goto error;
 	}
 
@@ -337,6 +503,6 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	ret = lvconvert_single(cmd, lvl->lv, &lp);
 
 error:
-	unlock_vg(cmd, vg_name);
+	unlock_vg(cmd, lp.vg_name);
 	return ret;
 }
