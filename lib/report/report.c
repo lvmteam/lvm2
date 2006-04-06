@@ -324,7 +324,6 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
 	char *repstr;
-	struct lv_segment *snap_seg;
 	float snap_percent;
 
 	if (!(repstr = dm_pool_zalloc(rh->mem, 7))) {
@@ -344,7 +343,7 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 		repstr[0] = 'v';
 	else if (lv_is_origin(lv))
 		repstr[0] = 'o';
-	else if (find_cow(lv))
+	else if (lv_is_cow(lv))
 		repstr[0] = 's';
 	else
 		repstr[0] = '-';
@@ -377,8 +376,8 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 			repstr[4] = 'd';	/* Inactive without table */
 
 		/* Snapshot dropped? */
-		if (info.live_table && (snap_seg = find_cow(lv)) &&
-		    (!lv_snapshot_percent(snap_seg->cow, &snap_percent) ||
+		if (info.live_table && lv_is_cow(lv) &&
+		    (!lv_snapshot_percent(find_cow(lv)->cow, &snap_percent) ||
 		     snap_percent < 0 || snap_percent >= 100)) {
 			repstr[0] = toupper(repstr[0]);
 			if (info.suspended)
@@ -491,10 +490,9 @@ static int _origin_disp(struct report_handle *rh, struct field *field,
 			const void *data)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	struct lv_segment *snap_seg;
 
-	if ((snap_seg = find_cow(lv)))
-		return _string_disp(rh, field, &snap_seg->origin->name);
+	if (lv_is_cow(lv))
+		return _string_disp(rh, field, &origin_from_cow(lv)->name);
 
 	field->report_string = "";
 	field->sort_value = (const void *) field->report_string;
@@ -667,11 +665,10 @@ static int _chunksize_disp(struct report_handle *rh, struct field *field,
 			   const void *data)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
-	struct lv_segment *snap_seg;
 	uint64_t size;
 
-	if ((snap_seg = find_cow(seg->lv)))
-		size = (uint64_t) snap_seg->chunk_size;
+	if (lv_is_cow(seg->lv))
+		size = (uint64_t) find_cow(seg->lv)->chunk_size;
 	else
 		size = 0;
 

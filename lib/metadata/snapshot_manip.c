@@ -34,6 +34,12 @@ struct lv_segment *find_cow(const struct logical_volume *lv)
 	return lv->snapshot;
 }
 
+/* Given a cow LV, return its origin */
+struct logical_volume *origin_from_cow(const struct logical_volume *lv)
+{
+	return lv->snapshot->origin;
+}
+
 int vg_add_snapshot(struct format_instance *fid, const char *name,
 		    struct logical_volume *origin,
 		    struct logical_volume *cow, union lvid *lvid,

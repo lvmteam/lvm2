@@ -198,7 +198,7 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 
 	if (clustered) {
         	list_iterate_items(lvl, &vg->lvs) {
-                	if (lvl->lv->origin_count || lvl->lv->snapshot) {
+                	if (lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) {
 				log_error("Volume group %s contains snapshots "
 					  "that are not yet supported.",
 					  vg->name);

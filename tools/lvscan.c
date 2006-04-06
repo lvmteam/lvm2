@@ -43,9 +43,9 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 					snap_active = 0;
 		}
 		snap_seg = NULL;
-	} else if ((snap_seg = find_cow(lv))) {
+	} else if (lv_is_cow(lv)) {
 		if (inkernel &&
-		    (snap_active = lv_snapshot_percent(snap_seg->cow,
+		    (snap_active = lv_snapshot_percent(find_cow(lv)->cow,
 						       &snap_percent)))
 			if (snap_percent < 0 || snap_percent >= 100)
 				snap_active = 0;

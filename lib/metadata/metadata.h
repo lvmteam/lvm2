@@ -538,7 +538,11 @@ int lv_is_cow(const struct logical_volume *lv);
 
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv);
 
+/* Given a cow LV, return return the snapshot lv_segment that uses it */
 struct lv_segment *find_cow(const struct logical_volume *lv);
+
+/* Given a cow LV, return its origin */
+struct logical_volume *origin_from_cow(const struct logical_volume *lv);
 
 int vg_add_snapshot(struct format_instance *fid, const char *name,
 		    struct logical_volume *origin, struct logical_volume *cow,
