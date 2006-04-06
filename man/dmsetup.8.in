@@ -1,4 +1,4 @@
-.TH DMSETUP 8 "Sep 17 2003" "Linux" "MAINTENTANCE COMMANDS"
+.TH DMSETUP 8 "Apr 06 2006" "Linux" "MAINTENTANCE COMMANDS"
 .SH NAME
 dmsetup \- low level logical volume management
 .SH SYNOPSIS
@@ -12,7 +12,7 @@ dmsetup \- low level logical volume management
 .B dmsetup remove_all
 .br
 .B dmsetup suspend
-.I device_name
+.I [--nolockfs] device_name
 .br
 .B dmsetup resume
 .I device_name
@@ -29,7 +29,7 @@ dmsetup \- low level logical volume management
 .B dmsetup rename
 .I device_name new_name
 .br
-.B dmsetup ls [--target target_type] [--exec command]
+.B dmsetup ls [--target target_type] [--exec command] [--tree [-o options]]
 .br
 .B dmsetup info 
 .I [device_name]
@@ -147,10 +147,17 @@ Outputs some brief information about the device in the form:
 .IP \fBls
 .I [--target target_type]
 .I [--exec command]
+.I [--tree [-o options]]
 .br
 List device names.  Optionally only list devices that have at least
 one target of the specified type.  Optionally execute a command for
 each device.  The device name is appended to the supplied command.
+--tree displays dependencies between devices as a tree.
+It accepts a comma-separate list of options.
+Some specify the information displayed against each node:
+device/nodevice; active, open, rw, uuid.
+Others specify how the tree is displayed:
+ascii, utf, vt100; compact, inverted, notrunc.
 .IP \fBload|reload
 .I device_name [table_file]
 .br
@@ -183,11 +190,14 @@ Outputs status information for each of the device's targets.
 With --target, only information relating to the specified target type
 is displayed.
 .IP \fBsuspend
+.I [--nolockfs]
 .I device_name
 .br
 Suspends a device.  Any I/O that has already been mapped by the device
 but has not yet completed will be flushed.  Any further I/O to that
 device will be postponed for as long as the device is suspended.
+If there's a filesystem on the device which supports the operation, 
+an attempt will be made to sync it first unless --nolockfs is specified.
 .IP \fBtable
 .I [--target target_type]
 .I [device_name]

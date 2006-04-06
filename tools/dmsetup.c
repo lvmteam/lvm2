@@ -1350,7 +1350,7 @@ static struct command _commands[] = {
 	{"reload", "<device> [<table_file>]", 0, 2, _load},
 	{"rename", "<device> <new_name>", 1, 2, _rename},
 	{"message", "<device> <sector> <message>", 2, -1, _message},
-	{"ls", "[--target <target_type>] [--exec <command>] [--tree]", 0, 0, _ls},
+	{"ls", "[--target <target_type>] [--exec <command>] [--tree [-o options]]", 0, 0, _ls},
 	{"info", "[<device>]", 0, 1, _info},
 	{"deps", "[<device>]", 0, 1, _deps},
 	{"status", "[<device>] [--target <target_type>]", 0, 1, _status},
@@ -1374,7 +1374,9 @@ static void _usage(FILE *out)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
 		     "-j <major> -m <minor>\n");
-	fprintf(out, "Table_file contents may be supplied on stdin.\n\n");
+	fprintf(out, "Table_file contents may be supplied on stdin.\n");
+	fprintf(out, "Tree options are: ascii, utf, vt100; compact, inverted, notrunc;\n"
+		     "                  [no]device, active, open, rw and uuid.\n\n");
 	return;
 }
 
