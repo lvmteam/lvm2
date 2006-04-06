@@ -17,6 +17,8 @@ vgchange \- change attributes of a volume group
 .RB [ \-l | \-\-logicalvolume
 .IR MaxLogicalVolumes ]
 .RB [ \-P | \-\-partial]
+.RB [ \-s | \-\-physicalextentsize
+.IR PhysicalExtentSize [ \fBkKmMgGtT\fR ]]
 .RB [ -t | \-\-test]
 .RB [ \-v | \-\-verbose]
 .RB [ \-\-version ]
@@ -58,6 +60,27 @@ exclusively because they can only be used on one node at once.
 .BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes\fR
 Changes the maximum logical volume number of an existing inactive
 volume group.
+.TP
+.BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize\fR[\fBkKmMgGtT\fR]
+Changes the physical extent size on physical volumes of this volume group.
+A size suffix (k for kilobytes up to t for terabytes) is optional, megabytes
+is the default if no suffix is present.
+The default is 4 MB and it must be at least 1 KB and a power of 2.
+ 
+Before increasing the physical extent size, you might need to use lvresize,
+pvresize and/or pvmove so that everything fits.  For example, every
+contiguous range of extents used in a logical volume must start and 
+end on an extent boundary.
+ 
+If the volume group metadata uses lvm1 format, extents can vary in size from
+8KB to 16GB and there is a limit of 65534 extents in each logical volume.  The
+default of 4 MB leads to a maximum logical volume size of around 256GB.
+ 
+If the volume group metadata uses lvm2 format those restrictions do not apply,
+but having a large number of extents will slow down the tools but have no
+impact on I/O performance to the logical volume.  The smallest PE is 1KB.
+ 
+The 2.4 kernel has a limitation of 2TB per block device.
 .TP
 .BR \-x ", " \-\-resizeable { y | n }
 Enables or disables the extension/reduction of this volume group
