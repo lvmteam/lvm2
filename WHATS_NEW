@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  Update extent size information in vgchange and vgcreate man pages.
   Introduce origin_from_cow().
   pvremove without -f now fails if there's no PV label.
   Support lvconvert -s.
