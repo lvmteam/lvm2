@@ -70,9 +70,9 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 /*
  * Returns 1 if percent has been set, else 0.
  */
-int lv_snapshot_percent(struct logical_volume *lv, float *percent);
-int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv, int wait, float *percent,
-		      uint32_t *event_nr);
+int lv_snapshot_percent(const struct logical_volume *lv, float *percent);
+int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv,
+		      int wait, float *percent, uint32_t *event_nr);
 
 /*
  * Return number of LVs in the VG that are active.
