@@ -432,7 +432,8 @@ void dev_manager_exit(void)
 }
 
 int dev_manager_snapshot_percent(struct dev_manager *dm,
-				 struct logical_volume *lv, float *percent)
+				 const struct logical_volume *lv,
+				 float *percent)
 {
 	char *name;
 	const char *dlid;
