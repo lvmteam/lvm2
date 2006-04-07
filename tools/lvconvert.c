@@ -42,7 +42,7 @@ static int _read_name_params(struct lvconvert_params *lp,
 			     struct cmd_context *cmd, int *pargc, char ***pargv)
 {
 	char *ptr;
-	const char *vg_name;
+	const char *vg_name = NULL;
 
 	if (lp->snapshot) {
 		if (!*pargc) {
