@@ -535,6 +535,7 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le);
  */
 int lv_is_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
+int lv_is_visible(const struct logical_volume *lv);
 
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv);
 
