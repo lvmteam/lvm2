@@ -235,6 +235,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 		if (vgname_from_mda(info->fmt, &mdac->area, vgnamebuf,
 				    sizeof(vgnamebuf))) {
 			lvmcache_update_vgname(info, vgnamebuf);
+			/* FIXME Also store vgid */
 		}
 	}
 

@@ -58,11 +58,16 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 		 struct label **label)
 {
 	struct pv_disk *pvd = (struct pv_disk *) buf;
+	struct vg_disk vgd;
 	struct lvmcache_info *info;
+	const char *vgid = NULL;
 
 	munge_pvd(dev, pvd);
 
-	if (!(info = lvmcache_add(l, pvd->pv_uuid, dev, pvd->vg_name, NULL))) {
+	if (*pvd->vg_name && read_vgd(dev, &vgd, pvd))
+		vgid = vgd.vg_uuid;
+
+	if (!(info = lvmcache_add(l, pvd->pv_uuid, dev, pvd->vg_name, vgid))) {
 		stack;
 		return 0;
 	}
