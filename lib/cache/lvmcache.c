@@ -356,8 +356,10 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 
 	if (info->vginfo && *info->vginfo->vgid)
 		dm_hash_remove(_vgid_hash, info->vginfo->vgid);
-	if (!vgid)
+	if (!vgid) {
+		log_debug("lvmcache: %s: clearing VGID", dev_name(info->dev));
 		return 1;
+	}
 
 	strncpy(info->vginfo->vgid, vgid, sizeof(info->vginfo->vgid));
 	info->vginfo->vgid[sizeof(info->vginfo->vgid) - 1] = '\0';
@@ -366,6 +368,9 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 			  info->vginfo->vgid);
 		return 0;
 	}
+
+	log_debug("lvmcache: %s: setting VGID to %s", dev_name(info->dev),
+		  info->vginfo->vgid);
 
 	return 1;
 }

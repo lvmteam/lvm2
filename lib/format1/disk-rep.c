@@ -223,11 +223,11 @@ static int _read_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 	return 1;
 }
 
-static int _read_vgd(struct disk_list *data)
+int read_vgd(struct device *dev, struct vg_disk *vgd, struct pv_disk *pvd)
 {
-	struct vg_disk *vgd = &data->vgd;
-	uint64_t pos = data->pvd.vg_on_disk.base;
-	if (!dev_read(data->dev, pos, sizeof(*vgd), vgd))
+	uint64_t pos = pvd->vg_on_disk.base;
+
+	if (!dev_read(dev, pos, sizeof(*vgd), vgd))
 		fail;
 
 	_xlate_vgd(vgd);
@@ -319,13 +319,29 @@ static int _read_extents(struct disk_list *data)
 	return 1;
 }
 
+static void __update_lvmcache(const struct format_type *fmt,
+			      struct disk_list *dl,
+			      struct device *dev, const char *vgid)
+{
+	struct lvmcache_info *info;
+
+	if (!(info = lvmcache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
+				  dl->pvd.vg_name, vgid))) {
+		stack;
+		return;
+	}
+
+	info->device_size = xlate32(dl->pvd.pv_size) << SECTOR_SHIFT;
+	list_init(&info->mdas);
+	info->status &= ~CACHE_INVALID;
+}
+
 static struct disk_list *__read_disk(const struct format_type *fmt,
 				     struct device *dev, struct dm_pool *mem,
 				     const char *vg_name)
 {
-	struct disk_list *dl = dm_pool_alloc(mem, sizeof(*dl));
+	struct disk_list *dl = dm_pool_zalloc(mem, sizeof(*dl));
 	const char *name = dev_name(dev);
-	struct lvmcache_info *info;
 
 	if (!dl) {
 		stack;
@@ -342,40 +358,30 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 		goto bad;
 	}
 
-	if (!(info = lvmcache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
-				  dl->pvd.vg_name, NULL)))
-		stack;
-	else {
-		info->device_size = xlate32(dl->pvd.pv_size) << SECTOR_SHIFT;
-		list_init(&info->mdas);
-		info->status &= ~CACHE_INVALID;
-	}
-
 	/*
 	 * is it an orphan ?
 	 */
 	if (!*dl->pvd.vg_name) {
 		log_very_verbose("%s is not a member of any format1 VG", name);
 
-		/* Update VG cache */
-		/* vgcache_add(dl->pvd.vg_name, NULL, dev, fmt); */
-
+		__update_lvmcache(fmt, dl, dev, NULL);
 		return (vg_name) ? NULL : dl;
 	}
 
-	if (!_read_vgd(dl)) {
+	if (!read_vgd(dl->dev, &dl->vgd, &dl->pvd)) {
 		log_error("Failed to read VG data from PV (%s)", name);
+		__update_lvmcache(fmt, dl, dev, NULL);
 		goto bad;
 	}
-
-	/* Update VG cache with what we found */
-	/* vgcache_add(dl->pvd.vg_name, dl->vgd.vg_uuid, dev, fmt); */
 
 	if (vg_name && strcmp(vg_name, dl->pvd.vg_name)) {
 		log_very_verbose("%s is not a member of the VG %s",
 				 name, vg_name);
+		__update_lvmcache(fmt, dl, dev, NULL);
 		goto bad;
 	}
+
+	__update_lvmcache(fmt, dl, dev, dl->vgd.vg_uuid);
 
 	if (!_read_uuids(dl)) {
 		log_error("Failed to read PV uuid list from %s", name);

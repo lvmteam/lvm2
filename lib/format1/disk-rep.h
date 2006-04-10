@@ -237,6 +237,7 @@ void export_numbers(struct list *pvds, struct volume_group *vg);
 
 void export_pv_act(struct list *pvds);
 int munge_pvd(struct device *dev, struct pv_disk *pvd);
+int read_vgd(struct device *dev, struct vg_disk *vgd, struct pv_disk *pvd);
 
 /* blech */
 int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
