@@ -235,7 +235,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 {
 	struct list *vgnames;
-	struct lvmcache_vginfo *vgi;
+	struct lvmcache_vginfo *vginfo;
 
 	lvmcache_label_scan(cmd, full_scan);
 
@@ -244,9 +244,9 @@ struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 		return NULL;
 	}
 
-	list_iterate_items(vgi, &_vginfos) {
+	list_iterate_items(vginfo, &_vginfos) {
 		if (!str_list_add(cmd->mem, vgnames, 
-				  dm_pool_strdup(cmd->mem, vgi->vgname))) {
+				  dm_pool_strdup(cmd->mem, vginfo->vgname))) {
 			log_error("strlist allocation failed");
 			return NULL;
 		}

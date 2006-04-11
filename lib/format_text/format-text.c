@@ -1577,7 +1577,6 @@ static struct format_instance *_create_text_instance(const struct format_type
 
       out:
 	return fid;
-
 }
 
 void *create_text_context(struct cmd_context *cmd, const char *path,
