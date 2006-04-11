@@ -396,7 +396,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	struct lvmcache_info *info;
 
 	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
-				  pv->vg_name, NULL))) {
+				  pv->vg_name, NULL, 0))) {
 		stack;
 		return 0;
 	}

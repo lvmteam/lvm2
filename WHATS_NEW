@@ -1,6 +1,6 @@
 Version 2.02.03 - 
 ===================================
-  Whenever vgname is captured, also capture vgid.
+  Whenever vgname is captured, also capture vgid and whether exported.
   Remove an incorrect unlock_vg() from process_each_lv().
   Update extent size information in vgchange and vgcreate man pages.
   Introduce origin_from_cow() and lv_is_visible().
