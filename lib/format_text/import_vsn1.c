@@ -798,10 +798,39 @@ static void _read_desc(struct dm_pool *mem,
 	*when = u;
 }
 
+static const char *_read_vgname(const struct format_type *fmt,
+				struct config_tree *cft, struct id *vgid)
+{
+	struct config_node *vgn;
+	struct dm_pool *mem = fmt->cmd->mem;
+	char *vgname;
+
+	/* skip any top-level values */
+	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib) ;
+
+	if (!vgn) {
+		log_error("Couldn't find volume group in file.");
+		return 0;
+	}
+
+	if (!(vgname = dm_pool_strdup(mem, vgn->key)))
+		return_0;
+
+	vgn = vgn->child;
+
+	if (!_read_id(vgid, vgn, "id")) {
+		log_error("Couldn't read uuid for volume group %s.", vgname);
+		return 0;
+	}
+
+	return vgname;
+}
+
 static struct text_vg_version_ops _vsn1_ops = {
 	check_version:_check_version,
 	read_vg:_read_vg,
-	read_desc:_read_desc
+	read_desc:_read_desc,
+	read_vgname:_read_vgname
 };
 
 struct text_vg_version_ops *text_vg_vsn1_init(void)

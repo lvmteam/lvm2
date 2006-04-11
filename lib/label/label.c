@@ -117,15 +117,6 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	int found = 0;
 	char readbuf[LABEL_SCAN_SIZE];
 
-	if (!dev_open(dev)) {
-		stack;
-
-		if ((info = info_from_pvid(dev->pvid)))
-			lvmcache_update_vgname(info, ORPHAN);
-
-		return NULL;
-	}
-
 	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf)) {
 		log_debug("%s: Failed to read label area", dev_name(dev));
 		goto out;
@@ -187,9 +178,6 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 			lvmcache_update_vgname(info, ORPHAN);
 		log_very_verbose("%s: No label detected", dev_name(dev));
 	}
-
-	if (!dev_close(dev))
-		stack;
 
 	return r;
 }
@@ -272,15 +260,27 @@ int label_read(struct device *dev, struct label **result)
 	char buf[LABEL_SIZE];
 	struct labeller *l;
 	uint64_t sector;
-	int r;
+	struct lvmcache_info *info;
+	int r = 0;
 
-	if (!(l = _find_labeller(dev, buf, &sector))) {
+	if (!dev_open(dev)) {
 		stack;
-		return 0;
+
+		if ((info = info_from_pvid(dev->pvid)))
+			lvmcache_update_vgname(info, ORPHAN);
+
+		goto out;
 	}
+
+	if (!(l = _find_labeller(dev, buf, &sector)))
+		goto_out;
 
 	if ((r = (l->ops->read)(l, dev, buf, result)) && result && *result)
 		(*result)->sector = sector;
+
+      out:
+	if (!dev_close(dev))
+		stack;
 
 	return r;
 }
@@ -335,18 +335,34 @@ int label_write(struct device *dev, struct label *label)
 	return r;
 }
 
+/* Unused */
 int label_verify(struct device *dev)
 {
 	struct labeller *l;
 	char buf[LABEL_SIZE];
 	uint64_t sector;
+	struct lvmcache_info *info;
+	int r = 0;
 
-	if (!(l = _find_labeller(dev, buf, &sector))) {
+	if (!dev_open(dev)) {
 		stack;
-		return 0;
+
+		if ((info = info_from_pvid(dev->pvid)))
+			lvmcache_update_vgname(info, ORPHAN);
+
+		goto out;
 	}
 
-	return ((l->ops->verify) ? l->ops->verify(l, buf, sector) : 1);
+	if (!(l = _find_labeller(dev, buf, &sector)))
+		goto_out;
+
+	r = l->ops->verify ? l->ops->verify(l, buf, sector) : 1;
+
+      out:
+	if (!dev_close(dev))
+		stack;
+
+	return r;
 }
 
 void label_destroy(struct label *label)
