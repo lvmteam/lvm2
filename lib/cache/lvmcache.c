@@ -348,7 +348,7 @@ static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 	return 1;
 }
 
-int lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
+static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 {
 	if (!vgid || !info->vginfo || !strncmp(info->vginfo->vgid, vgid,
 					       sizeof(info->vginfo->vgid)))
@@ -375,7 +375,8 @@ int lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 	return 1;
 }
 
-int lvmcache_update_vgname(struct lvmcache_info *info, const char *vgname)
+static int _lvmcache_update_vgname(struct lvmcache_info *info,
+				   const char *vgname)
 {
 	struct lvmcache_vginfo *vginfo;
 
@@ -434,25 +435,30 @@ int lvmcache_update_vgname(struct lvmcache_info *info, const char *vgname)
 	return 1;
 }
 
+int lvmcache_update_vgname_and_id(struct lvmcache_info *info, const char *vgname, const char *vgid)
+{
+	if (!_lvmcache_update_vgname(info, vgname) ||
+	    !_lvmcache_update_vgid(info, vgid))
+		return_0;
+
+	return 1;
+}
+
 int lvmcache_update_vg(struct volume_group *vg)
 {
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
 	char pvid_s[ID_LEN + 1];
-	int vgid_updated = 0;
 
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
 
 	list_iterate_items(pvl, &vg->pvs) {
 		strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s) - 1);
 		/* FIXME Could pvl->pv->dev->pvid ever be different? */
-		if ((info = info_from_pvid(pvid_s))) {
-			lvmcache_update_vgname(info, vg->name);
-			if (!vgid_updated) {
-				lvmcache_update_vgid(info, (char *) &vg->id);
-				vgid_updated = 1;
-			}
-		}
+		if ((info = info_from_pvid(pvid_s)) &&
+		    !lvmcache_update_vgname_and_id(info, vg->name,
+						   (char *) &vg->id))
+			return_0;
 	}
 
 	return 1;
@@ -556,7 +562,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	if (!lvmcache_update_vgname(info, vgname)) {
+	if (!lvmcache_update_vgname_and_id(info, vgname, vgid)) {
 		if (!existing) {
 			dm_hash_remove(_pvid_hash, pvid_s);
 			strcpy(info->dev->pvid, "");
@@ -565,10 +571,6 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		}
 		return NULL;
 	}
-
-	if (!lvmcache_update_vgid(info, vgid))
-		/* Non-critical */
-		stack;
 
 	return info;
 }

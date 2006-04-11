@@ -219,7 +219,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 
       error:
 	if ((info = info_from_pvid(dev_area->dev->pvid)))
-		lvmcache_update_vgname(info, ORPHAN);
+		lvmcache_update_vgname_and_id(info, ORPHAN, NULL);
 
 	return NULL;
 }

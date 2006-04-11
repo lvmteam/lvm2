@@ -234,10 +234,9 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if ((vgname = vgname_from_mda(info->fmt, &mdac->area, 
-					      &vgid))) {
-			lvmcache_update_vgname(info, vgname);
-			lvmcache_update_vgid(info, (char *) &vgid);
-		}
+					      &vgid)) &&
+		    !lvmcache_update_vgname_and_id(info, vgname, (char *) &vgid))
+			return_0;
 	}
 
 	info->status &= ~CACHE_INVALID;
