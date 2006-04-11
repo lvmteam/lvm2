@@ -871,65 +871,72 @@ static int _scan_file(const struct format_type *fmt)
 	return 1;
 }
 
-int vgname_from_mda(const struct format_type *fmt, struct device_area *dev_area,
-		    char *buf, uint32_t size)
+const char *vgname_from_mda(const struct format_type *fmt,
+			    struct device_area *dev_area, struct id *vgid)
 {
 	struct raw_locn *rlocn;
 	struct mda_header *mdah;
-	unsigned int len;
-	int r = 0;
+	uint32_t wrap = 0;
+	const char *vgname = NULL;
 
 	if (!dev_open(dev_area->dev)) {
 		stack;
-		return 0;
+		return NULL;
 	}
 
-	if (!(mdah = _raw_read_mda_header(fmt, dev_area))) {
-		stack;
+	if (!(mdah = _raw_read_mda_header(fmt, dev_area)))
+		goto_out;
+
+	/* FIXME Cope with returning a list */
+	rlocn = mdah->raw_locns;
+
+	if (rlocn->offset + rlocn->size > mdah->size)
+		wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
+
+	if (wrap > rlocn->offset) {
+		log_error("%s: metadata too large for circular buffer",
+			  dev_name(dev_area->dev));
 		goto out;
 	}
 
-	rlocn = mdah->raw_locns;
+	/* FIXME 64-bit */
+	if (!(vgname = text_vgname_import(fmt, dev_area->dev,
+					  (off_t) (dev_area->start +
+						   rlocn->offset),
+					  (uint32_t) (rlocn->size - wrap),
+					  (off_t) (dev_area->start +
+						   MDA_HEADER_SIZE),
+					  wrap, calc_crc, rlocn->checksum,
+					  vgid)))
+		goto_out;
 
-	while (rlocn->offset) {
-		if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
-			      size, buf)) {
-			stack;
-			goto out;
-		}
-		len = 0;
-		while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
-		       len < (size - 1))
-			len++;
-		buf[len] = '\0';
-
-		/* Ignore this entry if the characters aren't permissible */
-		if (!validate_name(buf)) {
-			stack;
-			goto out;
-		}
-
-		r = 1;
-		break;
-
-		/* FIXME Cope with returning a list */
-		rlocn++;
+	/* Ignore this entry if the characters aren't permissible */
+	if (!validate_name(vgname)) {
+		stack;
+		vgname = NULL;
+		goto out;
 	}
+
+	log_debug("%s: Found metadata at %" PRIu64 " size %" PRIu64
+		  " for %s (%s)", 
+		  dev_name(dev_area->dev), dev_area->start + rlocn->offset,
+		  rlocn->size, vgname, vgid->uuid);
 
       out:
 	if (!dev_close(dev_area->dev))
 		stack;
 
-	return r;
+	return vgname;
 }
 
 static int _scan_raw(const struct format_type *fmt)
 {
 	struct raw_list *rl;
 	struct list *raw_list;
-	char vgnamebuf[NAME_LEN + 2];
+	const char *vgname;
 	struct volume_group *vg;
 	struct format_instance fid;
+	struct id vgid;
 
 	raw_list = &((struct mda_lists *) fmt->private)->raws;
 
@@ -938,9 +945,8 @@ static int _scan_raw(const struct format_type *fmt)
 
 	list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
-		if (vgname_from_mda(fmt, &rl->dev_area, vgnamebuf,
-				    sizeof(vgnamebuf))) {
-			if ((vg = _vg_read_raw_area(&fid, vgnamebuf,
+		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid))) {
+			if ((vg = _vg_read_raw_area(&fid, vgname,
 						    &rl->dev_area, 0)))
 				lvmcache_update_vg(vg);
 		}

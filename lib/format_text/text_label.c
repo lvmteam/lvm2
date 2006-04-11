@@ -195,13 +195,14 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
 	struct metadata_area *mda;
-	char vgnamebuf[NAME_LEN + 2];
+	struct id vgid;
 	struct mda_context *mdac;
+	const char *vgname;
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
 
 	if (!(info = lvmcache_add(l, pvhdr->pv_uuid, dev, NULL, NULL)))
-		return 0;
+		return_0;
 	*label = info->label;
 
 	info->device_size = xlate64(pvhdr->device_size_xl);
@@ -232,10 +233,10 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 
 	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
-		if (vgname_from_mda(info->fmt, &mdac->area, vgnamebuf,
-				    sizeof(vgnamebuf))) {
-			lvmcache_update_vgname(info, vgnamebuf);
-			/* FIXME Also store vgid */
+		if ((vgname = vgname_from_mda(info->fmt, &mdac->area, 
+					      &vgid))) {
+			lvmcache_update_vgname(info, vgname);
+			lvmcache_update_vgid(info, (char *) &vgid);
 		}
 	}
 

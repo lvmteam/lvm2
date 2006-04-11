@@ -69,6 +69,7 @@ void lvmcache_del(struct lvmcache_info *info);
 
 /* Update things */
 int lvmcache_update_vgname(struct lvmcache_info *info, const char *vgname);
+int lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid);
 int lvmcache_update_vg(struct volume_group *vg);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);

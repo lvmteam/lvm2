@@ -348,7 +348,7 @@ static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 	return 1;
 }
 
-static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
+int lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 {
 	if (!vgid || !info->vginfo || !strncmp(info->vginfo->vgid, vgid,
 					       sizeof(info->vginfo->vgid)))
@@ -369,8 +369,8 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 		return 0;
 	}
 
-	log_debug("lvmcache: %s: setting VGID to %s", dev_name(info->dev),
-		  info->vginfo->vgid);
+	log_debug("lvmcache: %s: setting %s VGID to %s", dev_name(info->dev),
+		  info->vginfo->vgname, info->vginfo->vgid);
 
 	return 1;
 }
@@ -425,8 +425,11 @@ int lvmcache_update_vgname(struct lvmcache_info *info, const char *vgname)
 	/* FIXME Check consistency of list! */
 	vginfo->fmt = info->fmt;
 
-	log_debug("lvmcache: %s now %s%s", dev_name(info->dev),
-		  *vgname ? "in VG " : "orphaned", vgname);
+	log_debug("lvmcache: %s: now %s%s%s%s%s", dev_name(info->dev),
+		  *vgname ? "in VG " : "orphaned", vgname,
+		  vginfo->vgid[0] ? " (" : "",
+		  vginfo->vgid[0] ? vginfo->vgid : "",
+		  vginfo->vgid[0] ? ")" : "");
 
 	return 1;
 }
@@ -446,7 +449,7 @@ int lvmcache_update_vg(struct volume_group *vg)
 		if ((info = info_from_pvid(pvid_s))) {
 			lvmcache_update_vgname(info, vg->name);
 			if (!vgid_updated) {
-				_lvmcache_update_vgid(info, (char *) &vg->id);
+				lvmcache_update_vgid(info, (char *) &vg->id);
 				vgid_updated = 1;
 			}
 		}
@@ -563,7 +566,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	if (!_lvmcache_update_vgid(info, vgid))
+	if (!lvmcache_update_vgid(info, vgid))
 		/* Non-critical */
 		stack;
 
