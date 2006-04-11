@@ -98,7 +98,7 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 	log_debug("Calculated uuid %s for %s", uuid, pd->pl_pool_name);
 
 	if (!(info = lvmcache_add(l, (char *) &pvid, dev, pd->pl_pool_name,
-				  (char *) &vgid))) {
+				  (char *) &vgid, 0))) {
 		stack;
 		return 0;
 	}

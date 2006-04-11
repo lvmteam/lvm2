@@ -321,12 +321,14 @@ static int _read_extents(struct disk_list *data)
 
 static void __update_lvmcache(const struct format_type *fmt,
 			      struct disk_list *dl,
-			      struct device *dev, const char *vgid)
+			      struct device *dev, const char *vgid,
+			      int exported)
 {
 	struct lvmcache_info *info;
 
 	if (!(info = lvmcache_add(fmt->labeller, dl->pvd.pv_uuid, dev,
-				  dl->pvd.vg_name, vgid))) {
+				  dl->pvd.vg_name, vgid,
+				  exported ? EXPORTED_VG : 0))) {
 		stack;
 		return;
 	}
@@ -364,24 +366,25 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 	if (!*dl->pvd.vg_name) {
 		log_very_verbose("%s is not a member of any format1 VG", name);
 
-		__update_lvmcache(fmt, dl, dev, NULL);
+		__update_lvmcache(fmt, dl, dev, NULL, 0);
 		return (vg_name) ? NULL : dl;
 	}
 
 	if (!read_vgd(dl->dev, &dl->vgd, &dl->pvd)) {
 		log_error("Failed to read VG data from PV (%s)", name);
-		__update_lvmcache(fmt, dl, dev, NULL);
+		__update_lvmcache(fmt, dl, dev, NULL, 0);
 		goto bad;
 	}
 
 	if (vg_name && strcmp(vg_name, dl->pvd.vg_name)) {
 		log_very_verbose("%s is not a member of the VG %s",
 				 name, vg_name);
-		__update_lvmcache(fmt, dl, dev, NULL);
+		__update_lvmcache(fmt, dl, dev, NULL, 0);
 		goto bad;
 	}
 
-	__update_lvmcache(fmt, dl, dev, dl->vgd.vg_uuid);
+	__update_lvmcache(fmt, dl, dev, dl->vgd.vg_uuid,
+			  dl->vgd.vg_status & VG_EXPORTED);
 
 	if (!_read_uuids(dl)) {
 		log_error("Failed to read PV uuid list from %s", name);

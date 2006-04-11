@@ -435,10 +435,28 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	return 1;
 }
 
-int lvmcache_update_vgname_and_id(struct lvmcache_info *info, const char *vgname, const char *vgid)
+static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstatus)
+{
+	if (!info || !info->vginfo)
+		return 1;
+
+	if ((info->vginfo->status & EXPORTED_VG) != (vgstatus & EXPORTED_VG))
+		log_debug("lvmcache: %s: VG %s exported",
+			  dev_name(info->dev),
+			  vgstatus & EXPORTED_VG ? "now" : "no longer");
+
+	info->vginfo->status = vgstatus;
+
+	return 1;
+}
+
+int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
+				  const char *vgname, const char *vgid,
+				  uint32_t vgstatus)
 {
 	if (!_lvmcache_update_vgname(info, vgname) ||
-	    !_lvmcache_update_vgid(info, vgid))
+	    !_lvmcache_update_vgid(info, vgid) ||
+	    !_lvmcache_update_vgstatus(info, vgstatus))
 		return_0;
 
 	return 1;
@@ -457,7 +475,8 @@ int lvmcache_update_vg(struct volume_group *vg)
 		/* FIXME Could pvl->pv->dev->pvid ever be different? */
 		if ((info = info_from_pvid(pvid_s)) &&
 		    !lvmcache_update_vgname_and_id(info, vg->name,
-						   (char *) &vg->id))
+						   (char *) &vg->id,
+						   vg->status))
 			return_0;
 	}
 
@@ -466,7 +485,8 @@ int lvmcache_update_vg(struct volume_group *vg)
 
 struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				   struct device *dev,
-				   const char *vgname, const char *vgid)
+				   const char *vgname, const char *vgid,
+				   uint32_t vgstatus)
 {
 	struct label *label;
 	struct lvmcache_info *existing, *info;
@@ -562,7 +582,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	if (!lvmcache_update_vgname_and_id(info, vgname, vgid)) {
+	if (!lvmcache_update_vgname_and_id(info, vgname, vgid, vgstatus)) {
 		if (!existing) {
 			dm_hash_remove(_pvid_hash, pvid_s);
 			strcpy(info->dev->pvid, "");

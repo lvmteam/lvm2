@@ -33,15 +33,18 @@ struct cmd_context;
 struct format_type;
 struct volume_group;
 
+/* One per VG */
 struct lvmcache_vginfo {
 	struct list list;	/* Join these vginfos together */
 	struct list infos;	/* List head for lvmcache_infos */
 	const struct format_type *fmt;
 	char *vgname;		/* "" == orphan */
+	uint32_t status;
 	char vgid[ID_LEN + 1];
 	char _padding[7];
 };
 
+/* One per device */
 struct lvmcache_info {
 	struct list list;	/* Join VG members together */
 	struct list mdas;	/* list head for metadata areas */
@@ -64,11 +67,14 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan);
 /* Add/delete a device */
 struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				   struct device *dev,
-				   const char *vgname, const char *vgid);
+				   const char *vgname, const char *vgid,
+				   uint32_t vgstatus);
 void lvmcache_del(struct lvmcache_info *info);
 
 /* Update things */
-int lvmcache_update_vgname_and_id(struct lvmcache_info *info, const char *vgname, const char *vgid);
+int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
+				  const char *vgname, const char *vgid,
+				  uint32_t vgstatus);
 int lvmcache_update_vg(struct volume_group *vg);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);

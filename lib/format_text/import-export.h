@@ -49,7 +49,7 @@ struct text_vg_version_ops {
 			   time_t *when, char **desc);
 	const char *(*read_vgname) (const struct format_type *fmt,
 				    struct config_tree *cft,
-				    struct id *vgid);
+				    struct id *vgid, uint32_t *vgstatus);
 };
 
 struct text_vg_version_ops *text_vg_vsn1_init(void);
@@ -78,6 +78,6 @@ const char *text_vgname_import(const struct format_type *fmt,
                                off_t offset, uint32_t size,
                                off_t offset2, uint32_t size2,
                                checksum_fn_t checksum_fn, uint32_t checksum,
-                               struct id *vgid);
+                               struct id *vgid, uint32_t *vgstatus);
 
 #endif

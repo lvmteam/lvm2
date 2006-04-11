@@ -28,7 +28,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 			       off_t offset, uint32_t size,
 			       off_t offset2, uint32_t size2,
 			       checksum_fn_t checksum_fn, uint32_t checksum,
-			       struct id *vgid)
+			       struct id *vgid, uint32_t *vgstatus)
 {
 	struct config_tree *cft;
 	struct text_vg_version_ops **vsn;
@@ -57,7 +57,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vgname = (*vsn)->read_vgname(fmt, cft, vgid)))
+		if (!(vgname = (*vsn)->read_vgname(fmt, cft, vgid, vgstatus)))
 			goto_out;
 
 		break;

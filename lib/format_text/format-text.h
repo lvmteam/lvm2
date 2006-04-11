@@ -55,6 +55,7 @@ int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct list *mda
 void del_mdas(struct list *mdas);
 
 const char *vgname_from_mda(const struct format_type *fmt,
-			    struct device_area *dev_area, struct id *vgid);
+			    struct device_area *dev_area, struct id *vgid,
+			    uint32_t *vgstatus);
 
 #endif

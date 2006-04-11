@@ -799,9 +799,10 @@ static void _read_desc(struct dm_pool *mem,
 }
 
 static const char *_read_vgname(const struct format_type *fmt,
-				struct config_tree *cft, struct id *vgid)
+				struct config_tree *cft, struct id *vgid,
+				uint32_t *vgstatus)
 {
-	struct config_node *vgn;
+	struct config_node *vgn, *cn;
 	struct dm_pool *mem = fmt->cmd->mem;
 	char *vgname;
 
@@ -820,6 +821,18 @@ static const char *_read_vgname(const struct format_type *fmt,
 
 	if (!_read_id(vgid, vgn, "id")) {
 		log_error("Couldn't read uuid for volume group %s.", vgname);
+		return 0;
+	}
+
+	if (!(cn = find_config_node(vgn, "status"))) {
+		log_error("Couldn't find status flags for volume group %s.",
+			  vgname);
+		return 0;
+	}
+
+	if (!(read_flags(vgstatus, VG_FLAGS, cn->v))) {
+		log_error("Couldn't read status flags for volume group %s.",
+			  vgname);
 		return 0;
 	}
 

@@ -219,7 +219,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 
       error:
 	if ((info = info_from_pvid(dev_area->dev->pvid)))
-		lvmcache_update_vgname_and_id(info, ORPHAN, NULL);
+		lvmcache_update_vgname_and_id(info, ORPHAN, NULL, 0);
 
 	return NULL;
 }
@@ -872,7 +872,8 @@ static int _scan_file(const struct format_type *fmt)
 }
 
 const char *vgname_from_mda(const struct format_type *fmt,
-			    struct device_area *dev_area, struct id *vgid)
+			    struct device_area *dev_area, struct id *vgid,
+			    uint32_t *vgstatus)
 {
 	struct raw_locn *rlocn;
 	struct mda_header *mdah;
@@ -907,7 +908,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 					  (off_t) (dev_area->start +
 						   MDA_HEADER_SIZE),
 					  wrap, calc_crc, rlocn->checksum,
-					  vgid)))
+					  vgid, vgstatus)))
 		goto_out;
 
 	/* Ignore this entry if the characters aren't permissible */
@@ -937,6 +938,7 @@ static int _scan_raw(const struct format_type *fmt)
 	struct volume_group *vg;
 	struct format_instance fid;
 	struct id vgid;
+	uint32_t vgstatus;
 
 	raw_list = &((struct mda_lists *) fmt->private)->raws;
 
@@ -945,7 +947,7 @@ static int _scan_raw(const struct format_type *fmt)
 
 	list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
-		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid))) {
+		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid, &vgstatus))) {
 			if ((vg = _vg_read_raw_area(&fid, vgname,
 						    &rl->dev_area, 0)))
 				lvmcache_update_vg(vg);
@@ -1115,7 +1117,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	/* FIXME Test mode don't update cache? */
 
 	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
-				  ORPHAN, NULL))) {
+				  ORPHAN, NULL, 0))) {
 		stack;
 		return 0;
 	}

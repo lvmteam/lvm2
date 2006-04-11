@@ -175,7 +175,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
       out:
 	if (!found) {
 		if ((info = info_from_pvid(dev->pvid)))
-			lvmcache_update_vgname_and_id(info, ORPHAN, NULL);
+			lvmcache_update_vgname_and_id(info, ORPHAN, NULL, 0);
 		log_very_verbose("%s: No label detected", dev_name(dev));
 	}
 
@@ -267,7 +267,7 @@ int label_read(struct device *dev, struct label **result)
 		stack;
 
 		if ((info = info_from_pvid(dev->pvid)))
-			lvmcache_update_vgname_and_id(info, ORPHAN, NULL);
+			lvmcache_update_vgname_and_id(info, ORPHAN, NULL, 0);
 
 		goto out;
 	}
@@ -348,7 +348,7 @@ int label_verify(struct device *dev)
 		stack;
 
 		if ((info = info_from_pvid(dev->pvid)))
-			lvmcache_update_vgname_and_id(info, ORPHAN, NULL);
+			lvmcache_update_vgname_and_id(info, ORPHAN, NULL, 0);
 
 		goto out;
 	}
