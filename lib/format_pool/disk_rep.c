@@ -314,7 +314,7 @@ int read_pool_pds(const struct format_type *fmt, const char *vg_name,
 		/*
 		 * If the cache scanning doesn't work, this will never work
 		 */
-		if (vg_name && (vginfo = vginfo_from_vgname(vg_name)) &&
+		if (vg_name && (vginfo = vginfo_from_vgname(vg_name, NULL)) &&
 		    vginfo->infos.n) {
 
 			if (_read_vg_pds(fmt, mem, vginfo, pdhead, &totaldevs)) {

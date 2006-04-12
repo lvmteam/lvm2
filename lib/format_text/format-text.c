@@ -879,6 +879,8 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	struct mda_header *mdah;
 	uint32_t wrap = 0;
 	const char *vgname = NULL;
+	unsigned int len = 0;
+	char buf[NAME_LEN + 1];
 
 	if (!dev_open(dev_area->dev)) {
 		stack;
@@ -891,6 +893,22 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	/* FIXME Cope with returning a list */
 	rlocn = mdah->raw_locns;
 
+	/* Do quick check for a vgname */
+	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
+		      NAME_LEN, buf))
+		goto_out;
+
+	while (buf[len] && !isspace(buf[len]) && buf[len] != '{' &&
+	       len < (NAME_LEN - 1))
+		len++;
+
+	buf[len] = '\0';
+
+	/* Ignore this entry if the characters aren't permissible */
+	if (!validate_name(buf))
+		goto_out;
+
+	/* We found a VG - now check the metadata */
 	if (rlocn->offset + rlocn->size > mdah->size)
 		wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
 
@@ -1543,7 +1561,7 @@ static struct format_instance *_create_text_instance(const struct format_type
 
 		/* Scan PVs in VG for any further MDAs */
 		lvmcache_label_scan(fmt->cmd, 0);
-		if (!(vginfo = vginfo_from_vgname(vgname))) {
+		if (!(vginfo = vginfo_from_vgname(vgname, NULL))) {
 			stack;
 			goto out;
 		}

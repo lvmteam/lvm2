@@ -42,6 +42,7 @@ struct lvmcache_vginfo {
 	uint32_t status;
 	char vgid[ID_LEN + 1];
 	char _padding[7];
+	struct lvmcache_vginfo *next; /* Another VG with same name? */
 };
 
 /* One per device */
@@ -82,7 +83,8 @@ void lvmcache_unlock_vgname(const char *vgname);
 
 /* Queries */
 const struct format_type *fmt_from_vgname(const char *vgname);
-struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname);
+struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname,
+					   const char *vgid);
 struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid);
 struct lvmcache_info *info_from_pvid(const char *pvid);
 struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid);

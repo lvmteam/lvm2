@@ -862,7 +862,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	struct volume_group *vg;
 	struct physical_volume *pv;
 
-	if (!(vginfo = vginfo_from_vgname(ORPHAN))) {
+	if (!(vginfo = vginfo_from_vgname(ORPHAN, NULL))) {
 		stack;
 		return NULL;
 	}
