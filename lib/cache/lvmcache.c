@@ -86,7 +86,8 @@ int vgs_locked(void)
 	return _vgs_locked;
 }
 
-struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname)
+/* If vgid supplied, require a match. */
+struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname, const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
 
@@ -95,6 +96,12 @@ struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname)
 
 	if (!(vginfo = dm_hash_lookup(_vgname_hash, vgname)))
 		return NULL;
+
+	if (vgid)
+		do 
+			if (!strncmp(vgid, vginfo->vgid, sizeof(vginfo->vgid)))
+				return vginfo;
+		while ((vginfo = vginfo->next));
 
 	return vginfo;
 }
@@ -107,8 +114,9 @@ const struct format_type *fmt_from_vgname(const char *vgname)
 	struct list *devh, *tmp;
 	struct list devs;
 	struct device_list *devl;
+	char vgid[ID_LEN + 1];
 
-	if (!(vginfo = vginfo_from_vgname(vgname)))
+	if (!(vginfo = vginfo_from_vgname(vgname, NULL)))
 		return NULL;
 
 	/* This function is normally called before reading metadata so
@@ -120,12 +128,19 @@ const struct format_type *fmt_from_vgname(const char *vgname)
 		list_add(&devs, &devl->list);
 	}
 
+	memcpy(vgid, vginfo->vgid, sizeof(vgid));
+
 	list_iterate_safe(devh, tmp, &devs) {
 		devl = list_item(devh, struct device_list);
 		label_read(devl->dev, &label);
 		list_del(&devl->list);
 		dm_free(devl);
 	}
+
+	/* If vginfo changed, caller needs to rescan */
+	if (!(vginfo = vginfo_from_vgname(vgname, NULL)) ||
+	    strncmp(vginfo->vgid, vgid, sizeof(vgid)))
+		return NULL;
 
 	return vginfo->fmt;
 }
@@ -297,7 +312,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	return NULL;
 }
 
-static void _drop_vginfo(struct lvmcache_info *info)
+static int _drop_vginfo(struct lvmcache_info *info)
 {
 	if (!list_empty(&info->list)) {
 		list_del(&info->list);
@@ -306,6 +321,14 @@ static void _drop_vginfo(struct lvmcache_info *info)
 
 	if (info->vginfo && list_empty(&info->vginfo->infos)) {
 		dm_hash_remove(_vgname_hash, info->vginfo->vgname);
+		if (info->vginfo->next) {
+                	if (!dm_hash_insert(_vgname_hash, info->vginfo->vgname, info->vginfo->next)) {
+                        	log_error("vg hash re-insertion failed: %s",
+					  info->vginfo->vgname);
+                        	return 0;
+			}
+                }
+
 		if (info->vginfo->vgname)
 			dm_free(info->vginfo->vgname);
 		if (*info->vginfo->vgid)
@@ -315,6 +338,8 @@ static void _drop_vginfo(struct lvmcache_info *info)
 	}
 
 	info->vginfo = NULL;
+
+	return 1;
 }
 
 /* Unused
@@ -375,10 +400,46 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 	return 1;
 }
 
-static int _lvmcache_update_vgname(struct lvmcache_info *info,
-				   const char *vgname)
+static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
+			  struct lvmcache_vginfo *primary_vginfo)
 {
-	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_vginfo *last_vginfo = primary_vginfo;
+
+	/* Pre-existing VG takes precedence. Unexported VG takes precedence. */
+	if (primary_vginfo) {
+		if (!(primary_vginfo->status & EXPORTED_VG) ||
+		    (new_vginfo->status & EXPORTED_VG)) {
+			while (last_vginfo->next)
+				last_vginfo = last_vginfo->next;
+			last_vginfo->next = new_vginfo;
+			log_debug("VG %s: %s takes precedence over %s",
+				  new_vginfo->vgname, primary_vginfo->vgid,
+				  vgid);
+			return 1;
+		} else
+			log_debug("VG %s: %s takes precedence over exported %s",
+				  new_vginfo->vgname, vgid,
+				  primary_vginfo->vgid);
+
+		dm_hash_remove(_vgname_hash, primary_vginfo->vgname);
+	}
+
+	if (!dm_hash_insert(_vgname_hash, new_vginfo->vgname, new_vginfo)) {
+		log_error("cache_update: vg hash insertion failed: %s",
+		  	new_vginfo->vgname);
+		return 0;
+	}
+
+	if (primary_vginfo)
+		new_vginfo->next = primary_vginfo;
+
+	return 1;
+}
+
+static int _lvmcache_update_vgname(struct lvmcache_info *info,
+				   const char *vgname, const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo, *primary_vginfo;
 
 	/* If vgname is NULL and we don't already have a vgname, 
 	 * assume ORPHAN - we want every entry to have a vginfo
@@ -394,7 +455,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	_drop_vginfo(info);
 
 	/* Get existing vginfo or create new one */
-	if (!(vginfo = vginfo_from_vgname(vgname))) {
+	if (!(vginfo = vginfo_from_vgname(vgname, vgid))) {
 		if (!(vginfo = dm_malloc(sizeof(*vginfo)))) {
 			log_error("lvmcache_update_vgname: list alloc failed");
 			return 0;
@@ -406,9 +467,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			return 0;
 		}
 		list_init(&vginfo->infos);
-		if (!dm_hash_insert(_vgname_hash, vginfo->vgname, vginfo)) {
-			log_error("cache_update: vg hash insertion failed: %s",
-				  vginfo->vgname);
+		primary_vginfo = vginfo_from_vgname(vgname, NULL);
+		if (!_insert_vginfo(vginfo, vgid, primary_vginfo)) {
 			dm_free(vginfo->vgname);
 			dm_free(vginfo);
 			return 0;
@@ -454,7 +514,7 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  const char *vgname, const char *vgid,
 				  uint32_t vgstatus)
 {
-	if (!_lvmcache_update_vgname(info, vgname) ||
+	if (!_lvmcache_update_vgname(info, vgname, vgid) ||
 	    !_lvmcache_update_vgid(info, vgid) ||
 	    !_lvmcache_update_vgstatus(info, vgstatus))
 		return_0;
@@ -606,9 +666,14 @@ static void _lvmcache_destroy_entry(struct lvmcache_info *info)
 
 static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 {
-	if (vginfo->vgname)
-		dm_free(vginfo->vgname);
-	dm_free(vginfo);
+	struct lvmcache_vginfo *next;
+
+	do {
+		next = vginfo->next;
+		if (vginfo->vgname)
+			dm_free(vginfo->vgname);
+		dm_free(vginfo);
+	} while ((vginfo = next));
 }
 
 static void _lvmcache_destroy_lockname(int present)

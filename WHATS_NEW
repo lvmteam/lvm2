@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  If two or more VGs are found with the same name, use one that is not exported.
   Whenever vgname is captured, also capture vgid and whether exported.
   Remove an incorrect unlock_vg() from process_each_lv().
   Update extent size information in vgchange and vgcreate man pages.

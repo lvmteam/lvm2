@@ -470,7 +470,7 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 	struct lvmcache_info *info;
 
 	/* Fast path if we already saw this VG and cached the list of PVs */
-	if (vg_name && (vginfo = vginfo_from_vgname(vg_name)) &&
+	if (vg_name && (vginfo = vginfo_from_vgname(vg_name, NULL)) &&
 	    vginfo->infos.n) {
 		list_iterate_items(info, &vginfo->infos) {
 			dev = info->dev;
