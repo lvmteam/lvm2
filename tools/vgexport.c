@@ -19,6 +19,9 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg, int consistent,
 			   void *handle)
 {
+	struct pv_list *pvl;
+	struct physical_volume *pv;
+
 	if (!vg) {
 		log_error("Unable to find volume group \"%s\"", vg_name);
 		goto error;
@@ -49,6 +52,11 @@ static int vgexport_single(struct cmd_context *cmd, const char *vg_name,
 		goto error;
 
 	vg->status |= EXPORTED_VG;
+
+	list_iterate_items(pvl, &vg->pvs) {
+		pv = pvl->pv;
+		pv->status |= EXPORTED_VG;
+	}
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto error;

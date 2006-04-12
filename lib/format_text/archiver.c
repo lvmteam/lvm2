@@ -257,7 +257,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 	if (!(context = create_text_context(cmd, file,
 					    cmd->cmd_line)) ||
 	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
-							 context))) {
+							 NULL, context))) {
 		log_error("Couldn't create text format object.");
 		return NULL;
 	}
@@ -286,7 +286,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 	/* Attempt to write out using currently active format */
 	if (!(vg->fid = cmd->fmt->ops->create_instance(cmd->fmt, vg->name,
-						       NULL))) {
+						       NULL, NULL))) {
 		log_error("Failed to allocate format instance");
 		return 0;
 	}
@@ -365,7 +365,7 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 
 	if (!(context = create_text_context(cmd, file, desc)) ||
 	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
-							 context))) {
+							 NULL, context))) {
 		log_error("Couldn't create backup object.");
 		return 0;
 	}

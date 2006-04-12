@@ -106,7 +106,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name, &consistent))) {
+	if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		goto error;
 	}

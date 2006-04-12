@@ -432,7 +432,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((!(vg = vg_read(cmd, vg_name, &consistent)) || !consistent) &&
+	if ((!(vg = vg_read(cmd, vg_name, NULL, &consistent)) || !consistent) &&
 	    !arg_count(cmd, removemissing_ARG)) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		unlock_vg(cmd, vg_name);
@@ -449,7 +449,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 		init_partial(1);
 		consistent = 0;
-		if (!(vg = vg_read(cmd, vg_name, &consistent))) {
+		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
 			log_error("Volume group \"%s\" not found", vg_name);
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;

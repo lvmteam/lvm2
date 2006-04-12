@@ -65,7 +65,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = vg_read(cmd, pv->vg_name, &consistent))) {
+	if (!(vg = vg_read(cmd, pv->vg_name, NULL, &consistent))) {
 		log_error("Can't read %s: skipping", pv->vg_name);
 		unlock_vg(cmd, pv->vg_name);
 		return ECMD_FAILED;
@@ -106,7 +106,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 			return ECMD_FAILED;
 		}
 
-		if (!(vg = vg_read(cmd, pv->vg_name, &consistent))) {
+		if (!(vg = vg_read(cmd, pv->vg_name, (char *)&pv->vgid, &consistent))) {
 			log_error("Can't read %s: skipping", pv->vg_name);
 			unlock_vg(cmd, pv->vg_name);
 			return ECMD_FAILED;

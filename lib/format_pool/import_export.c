@@ -165,6 +165,7 @@ int import_pool_pv(const struct format_type *fmt, struct dm_pool *mem,
 		log_error("Unable to duplicate vg_name string");
 		return 0;
 	}
+	memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
 	pv->status = 0;
 	pv->size = pd->pl_blocks;
 	pv->pe_size = POOL_PE_SIZE;

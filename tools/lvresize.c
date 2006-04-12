@@ -133,7 +133,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	char size_buf[SIZE_BUF];
 	char lv_path[PATH_MAX];
 
-	if (!(vg = vg_read(cmd, lp->vg_name, &consistent))) {
+	if (!(vg = vg_read(cmd, lp->vg_name, NULL, &consistent))) {
 		log_error("Volume group %s doesn't exist", lp->vg_name);
 		return ECMD_FAILED;
 	}

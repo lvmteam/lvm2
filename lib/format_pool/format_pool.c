@@ -268,6 +268,7 @@ static struct metadata_area_ops _metadata_format_pool_ops = {
 
 static struct format_instance *_create_instance(const struct format_type *fmt,
 						const char *vgname,
+						const char *vgid,
 						void *private)
 {
 	struct format_instance *fid;

@@ -311,7 +311,7 @@ static void _display_archive(struct cmd_context *cmd, struct archive_file *af)
 
 	if (!(context = create_text_context(cmd, af->path, NULL)) ||
 	    !(tf = cmd->fmt_backup->ops->create_instance(cmd->fmt_backup, NULL,
-							 context))) {
+							 NULL, context))) {
 		log_error("Couldn't create text instance object.");
 		return;
 	}

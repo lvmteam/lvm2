@@ -167,6 +167,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		return 0;
 	}
 
+	memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
+
 	if (!(cn = find_config_node(pvn, "status"))) {
 		log_error("Couldn't find status flags for physical volume.");
 		return 0;

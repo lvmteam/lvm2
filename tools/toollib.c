@@ -241,7 +241,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			consistent = 1;
 		else
 			consistent = 0;
-		if (!(vg = vg_read(cmd, vgname, &consistent)) || !consistent) {
+		if (!(vg = vg_read(cmd, vgname, NULL, &consistent)) || !consistent) {
 			unlock_vg(cmd, vgname);
 			if (!vg)
 				log_error("Volume group \"%s\" "
@@ -331,6 +331,7 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 }
 
 static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
+			   const char *vgid,
 			   struct list *tags, struct list *arg_vgnames,
 			   int lock_type, int consistent, void *handle,
 			   int ret_max,
@@ -348,7 +349,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
-	vg = vg_read(cmd, vg_name, &consistent);
+	vg = vg_read(cmd, vg_name, vgid, &consistent);
 
 	if (!list_empty(tags)) {
 		/* Only process if a tag matches or it's on arg_vgnames */
@@ -380,10 +381,10 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	int ret_max = 0;
 
 	struct str_list *sl;
-	struct list *vgnames;
+	struct list *vgnames, *vgids;
 	struct list arg_vgnames, tags;
 
-	const char *vg_name;
+	const char *vg_name, *vgid;
 	char *dev_dir = cmd->dev_dir;
 
 	list_init(&tags);
@@ -433,19 +434,29 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 
 	if (!argc || !list_empty(&tags)) {
 		log_verbose("Finding all volume groups");
-		if (!(vgnames = get_vgs(cmd, 0)) || list_empty(vgnames)) {
+		if (!(vgids = get_vgids(cmd, 0)) || list_empty(vgids)) {
 			log_error("No volume groups found");
 			return ret_max;
 		}
-	}
-
-	list_iterate_items(sl, vgnames) {
-		vg_name = sl->str;
-		if (!vg_name || !*vg_name)
-			continue;	/* FIXME Unnecessary? */
-		ret_max = _process_one_vg(cmd, vg_name, &tags, &arg_vgnames,
-					  lock_type, consistent, handle,
-					  ret_max, process_single);
+		list_iterate_items(sl, vgids) {
+			vgid = sl->str;
+			if (!vgid || !(vg_name = vgname_from_vgid(vgid)) || !*vg_name)
+				continue;
+			ret_max = _process_one_vg(cmd, vg_name, vgid, &tags,
+						  &arg_vgnames,
+					  	  lock_type, consistent, handle,
+					  	  ret_max, process_single);
+		}
+	} else {
+		list_iterate_items(sl, vgnames) {
+			vg_name = sl->str;
+			if (!vg_name || !*vg_name)
+				continue;	/* FIXME Unnecessary? */
+			ret_max = _process_one_vg(cmd, vg_name, NULL, &tags,
+						  &arg_vgnames,
+					  	  lock_type, consistent, handle,
+					  	  ret_max, process_single);
+		}
 	}
 
 	return ret_max;
@@ -581,7 +592,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		if (!list_empty(&tags) && (vgnames = get_vgs(cmd, 0)) &&
 		    !list_empty(vgnames)) {
 			list_iterate_items(sll, vgnames) {
-				vg = vg_read(cmd, sll->str, &consistent);
+				vg = vg_read(cmd, sll->str, NULL, &consistent);
 				if (!consistent)
 					continue;
 				ret = process_each_pv_in_vg(cmd, vg, &tags,
@@ -966,7 +977,7 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 		return NULL;
 	}
 
-	return vg_read(cmd, vgname, &consistent);
+	return vg_read(cmd, vgname, NULL, &consistent);
 }
 
 int apply_lvname_restrictions(const char *name)
@@ -1045,7 +1056,7 @@ int zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 	 * <clausen> also, more than 4k
 	 * <clausen> say, reiserfs puts it's superblock 32k in, IIRC
 	 * <ejt_> k, I'll drop a fixme to that effect
-	 *           (I know the device is at least 4k, but not 32k)
+	 *	   (I know the device is at least 4k, but not 32k)
 	 */
 	if (!(name = dm_pool_alloc(cmd->mem, PATH_MAX))) {
 		log_error("Name allocation failed - device not zeroed");

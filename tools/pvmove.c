@@ -62,7 +62,7 @@ static struct volume_group *_get_vg(struct cmd_context *cmd, const char *vgname)
 		return NULL;
 	}
 
-	if (!(vg = vg_read(cmd, vgname, &consistent)) || !consistent) {
+	if (!(vg = vg_read(cmd, vgname, NULL, &consistent)) || !consistent) {
 		log_error("Volume group \"%s\" doesn't exist", vgname);
 		unlock_vg(cmd, vgname);
 		return NULL;
