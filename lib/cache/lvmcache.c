@@ -106,7 +106,7 @@ struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname, const char *vgid)
 	return vginfo;
 }
 
-const struct format_type *fmt_from_vgname(const char *vgname)
+const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
@@ -114,9 +114,9 @@ const struct format_type *fmt_from_vgname(const char *vgname)
 	struct list *devh, *tmp;
 	struct list devs;
 	struct device_list *devl;
-	char vgid[ID_LEN + 1];
+	char vgid_found[ID_LEN + 1];
 
-	if (!(vginfo = vginfo_from_vgname(vgname, NULL)))
+	if (!(vginfo = vginfo_from_vgname(vgname, vgid)))
 		return NULL;
 
 	/* This function is normally called before reading metadata so
@@ -128,7 +128,7 @@ const struct format_type *fmt_from_vgname(const char *vgname)
 		list_add(&devs, &devl->list);
 	}
 
-	memcpy(vgid, vginfo->vgid, sizeof(vgid));
+	memcpy(vgid_found, vginfo->vgid, sizeof(vgid_found));
 
 	list_iterate_safe(devh, tmp, &devs) {
 		devl = list_item(devh, struct device_list);
@@ -138,8 +138,8 @@ const struct format_type *fmt_from_vgname(const char *vgname)
 	}
 
 	/* If vginfo changed, caller needs to rescan */
-	if (!(vginfo = vginfo_from_vgname(vgname, NULL)) ||
-	    strncmp(vginfo->vgid, vgid, sizeof(vgid)))
+	if (!(vginfo = vginfo_from_vgname(vgname, vgid_found)) ||
+	    strncmp(vginfo->vgid, vgid_found, sizeof(vgid_found)))
 		return NULL;
 
 	return vginfo->fmt;
@@ -161,6 +161,16 @@ struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid)
 		return NULL;
 
 	return vginfo;
+}
+
+const char *vgname_from_vgid(const char *vgid)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if ((vginfo = vginfo_from_vgid(vgid)))
+		return vginfo->vgname;
+
+	return NULL;
 }
 
 struct lvmcache_info *info_from_pvid(const char *pvid)
@@ -245,6 +255,29 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	_scanning_in_progress = 0;
 
 	return r;
+}
+
+struct list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan)
+{
+	struct list *vgids;
+	struct lvmcache_vginfo *vginfo;
+
+	lvmcache_label_scan(cmd, full_scan);
+
+	if (!(vgids = str_list_create(cmd->mem))) {
+		log_error("vgids list allocation failed");
+		return NULL;
+	}
+
+	list_iterate_items(vginfo, &_vginfos) {
+		if (!str_list_add(cmd->mem, vgids, 
+				  dm_pool_strdup(cmd->mem, vginfo->vgid))) {
+			log_error("strlist allocation failed");
+			return NULL;
+		}
+	}
+
+	return vgids;
 }
 
 struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
@@ -401,25 +434,36 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 }
 
 static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
+			  uint32_t vgstatus,
 			  struct lvmcache_vginfo *primary_vginfo)
 {
 	struct lvmcache_vginfo *last_vginfo = primary_vginfo;
-
+	char uuid_primary[64], uuid_new[64];
+	
 	/* Pre-existing VG takes precedence. Unexported VG takes precedence. */
 	if (primary_vginfo) {
+		if (!id_write_format((struct id *)vgid, uuid_new, sizeof(uuid_new)))
+			return_0;
+
+		if (!id_write_format((struct id *)&primary_vginfo->vgid, uuid_primary,
+				     sizeof(uuid_primary)))
+			return_0;
+
 		if (!(primary_vginfo->status & EXPORTED_VG) ||
-		    (new_vginfo->status & EXPORTED_VG)) {
+		    (vgstatus & EXPORTED_VG)) {
 			while (last_vginfo->next)
 				last_vginfo = last_vginfo->next;
 			last_vginfo->next = new_vginfo;
-			log_debug("VG %s: %s takes precedence over %s",
-				  new_vginfo->vgname, primary_vginfo->vgid,
-				  vgid);
+			log_error("WARNING: Duplicate VG name %s: "
+				  "%s takes precedence over %s",
+				  new_vginfo->vgname, uuid_primary,
+				  uuid_new);
 			return 1;
 		} else
-			log_debug("VG %s: %s takes precedence over exported %s",
-				  new_vginfo->vgname, vgid,
-				  primary_vginfo->vgid);
+			log_error("WARNING: Duplicate VG name %s: Existing "
+				  "%s takes precedence over exported %s",
+				  new_vginfo->vgname, uuid_new,
+				  uuid_primary);
 
 		dm_hash_remove(_vgname_hash, primary_vginfo->vgname);
 	}
@@ -437,7 +481,8 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 }
 
 static int _lvmcache_update_vgname(struct lvmcache_info *info,
-				   const char *vgname, const char *vgid)
+				   const char *vgname, const char *vgid,
+				   uint32_t vgstatus)
 {
 	struct lvmcache_vginfo *vginfo, *primary_vginfo;
 
@@ -445,8 +490,10 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	 * assume ORPHAN - we want every entry to have a vginfo
 	 * attached for scanning reasons.
 	 */
-	if (!vgname && !info->vginfo)
+	if (!vgname && !info->vginfo) {
 		vgname = ORPHAN;
+		vgid = ORPHAN;
+	}
 
 	if (!vgname || (info->vginfo && !strcmp(info->vginfo->vgname, vgname)))
 		return 1;
@@ -468,7 +515,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 		}
 		list_init(&vginfo->infos);
 		primary_vginfo = vginfo_from_vgname(vgname, NULL);
-		if (!_insert_vginfo(vginfo, vgid, primary_vginfo)) {
+		if (!_insert_vginfo(vginfo, vgid, vgstatus, primary_vginfo)) {
 			dm_free(vginfo->vgname);
 			dm_free(vginfo);
 			return 0;
@@ -514,7 +561,7 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  const char *vgname, const char *vgid,
 				  uint32_t vgstatus)
 {
-	if (!_lvmcache_update_vgname(info, vgname, vgid) ||
+	if (!_lvmcache_update_vgname(info, vgname, vgid, vgstatus) ||
 	    !_lvmcache_update_vgid(info, vgid) ||
 	    !_lvmcache_update_vgstatus(info, vgstatus))
 		return_0;

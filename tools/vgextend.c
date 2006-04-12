@@ -48,7 +48,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name, &consistent)) || !consistent) {
+	if (!(vg = vg_read(cmd, vg_name, NULL, &consistent)) || !consistent) {
 		log_error("Volume group \"%s\" not found.", vg_name);
 		goto error;
 	}

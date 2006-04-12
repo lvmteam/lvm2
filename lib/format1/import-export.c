@@ -49,7 +49,8 @@ static char *_create_lv_name(struct dm_pool *mem, const char *full_name)
 
 int import_pv(struct dm_pool *mem, struct device *dev,
 	      struct volume_group *vg,
-	      struct physical_volume *pv, struct pv_disk *pvd)
+	      struct physical_volume *pv, struct pv_disk *pvd,
+	      struct vg_disk *vgd)
 {
 	memset(pv, 0, sizeof(*pv));
 	memcpy(&pv->id, pvd->pv_uuid, ID_LEN);
@@ -59,6 +60,8 @@ int import_pv(struct dm_pool *mem, struct device *dev,
 		stack;
 		return 0;
 	}
+
+	memcpy(&pv->vgid, vgd->vg_uuid, sizeof(vg->id));
 
 	/* Store system_id from first PV if PV belongs to a VG */
 	if (vg && !*vg->system_id)
@@ -426,7 +429,7 @@ int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
 			return 0;
 		}
 
-		if (!import_pv(mem, dl->dev, vg, pvl->pv, &dl->pvd)) {
+		if (!import_pv(mem, dl->dev, vg, pvl->pv, &dl->pvd, &dl->vgd)) {
 			stack;
 			return 0;
 		}

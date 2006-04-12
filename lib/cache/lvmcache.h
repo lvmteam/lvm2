@@ -82,11 +82,12 @@ void lvmcache_lock_vgname(const char *vgname, int read_only);
 void lvmcache_unlock_vgname(const char *vgname);
 
 /* Queries */
-const struct format_type *fmt_from_vgname(const char *vgname);
+const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid);
 struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname,
 					   const char *vgid);
 struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid);
 struct lvmcache_info *info_from_pvid(const char *pvid);
+const char *vgname_from_vgid(const char *vgid);
 struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid);
 int vgs_locked(void);
 int vgname_is_locked(const char *vgname);
@@ -94,5 +95,9 @@ int vgname_is_locked(const char *vgname);
 /* Returns list of struct str_lists containing pool-allocated copy of vgnames */
 /* Set full_scan to 1 to reread every filtered device label */
 struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan);
+
+/* Returns list of struct str_lists containing pool-allocated copy of vgids */
+/* Set full_scan to 1 to reread every filtered device label */
+struct list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan);
 
 #endif

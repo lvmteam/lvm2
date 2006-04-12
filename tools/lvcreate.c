@@ -444,7 +444,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	/* does VG exist? */
 	log_verbose("Finding volume group \"%s\"", lp->vg_name);
 
-	if (!(vg = vg_read(cmd, lp->vg_name, &consistent))) {
+	if (!(vg = vg_read(cmd, lp->vg_name, NULL, &consistent))) {
 		log_error("Volume group \"%s\" doesn't exist", lp->vg_name);
 		return 0;
 	}

@@ -204,7 +204,8 @@ int write_disks(const struct format_type *fmt, struct list *pvds);
  */
 int import_pv(struct dm_pool *mem, struct device *dev,
 	      struct volume_group *vg,
-	      struct physical_volume *pv, struct pv_disk *pvd);
+	      struct physical_volume *pv, struct pv_disk *pvd,
+	      struct vg_disk *vgd);
 int export_pv(struct cmd_context *cmd, struct dm_pool *mem,
 	      struct volume_group *vg,
 	      struct pv_disk *pvd, struct physical_volume *pv);

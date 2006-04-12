@@ -122,6 +122,7 @@ struct physical_volume {
 	struct device *dev;
 	const struct format_type *fmt;
 	const char *vg_name;
+	struct id vgid;
 
 	uint32_t status;
 	uint64_t size;
@@ -382,6 +383,7 @@ struct format_handler {
 	 */
 	struct format_instance *(*create_instance) (const struct format_type *
 						    fmt, const char *vgname,
+						    const char *vgid,
 						    void *context);
 
 	/*
@@ -403,7 +405,7 @@ int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);
 int vg_revert(struct volume_group *vg);
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name,
-			     int *consistent);
+			     const char *vgid, int *consistent);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct list *mdas, uint64_t *label_sector,
 				int warnings);
@@ -411,6 +413,7 @@ struct list *get_pvs(struct cmd_context *cmd);
 
 /* Set full_scan to 1 to re-read every (filtered) device label */
 struct list *get_vgs(struct cmd_context *cmd, int full_scan);
+struct list *get_vgids(struct cmd_context *cmd, int full_scan);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector);
@@ -478,7 +481,8 @@ struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
 struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
 					      struct id *id);
 int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
-			 const char *id, struct physical_volume *pv);
+			 const char *vgid, const char *pvid,
+			 struct physical_volume *pv);
 
 /* Find an LV within a given VG */
 struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);

@@ -312,7 +312,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		goto out;
 	}
 
-	if (!import_pv(fmt->cmd->mem, dl->dev, NULL, pv, &dl->pvd)) {
+	if (!import_pv(fmt->cmd->mem, dl->dev, NULL, pv, &dl->pvd, &dl->vgd)) {
 		stack;
 		goto out;
 	}
@@ -502,6 +502,7 @@ static struct metadata_area_ops _metadata_format1_ops = {
 
 static struct format_instance *_create_instance(const struct format_type *fmt,
 						const char *vgname,
+						const char *vgid,
 						void *private)
 {
 	struct format_instance *fid;

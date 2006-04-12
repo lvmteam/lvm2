@@ -70,7 +70,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 
-		if (!(vg = vg_read(cmd, vg_name, &consistent))) {
+		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
 			unlock_vg(cmd, vg_name);
 			log_error("Unable to find volume group of \"%s\"",
 				  pv_name);

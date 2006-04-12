@@ -41,6 +41,7 @@
 
 static struct format_instance *_create_text_instance(const struct format_type
 						     *fmt, const char *vgname,
+						     const char *vgid,
 						     void *context);
 
 struct text_fid_context {
@@ -219,7 +220,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 
       error:
 	if ((info = info_from_pvid(dev_area->dev->pvid)))
-		lvmcache_update_vgname_and_id(info, ORPHAN, NULL, 0);
+		lvmcache_update_vgname_and_id(info, ORPHAN, ORPHAN, 0);
 
 	return NULL;
 }
@@ -858,7 +859,8 @@ static int _scan_file(const struct format_type *fmt)
 				}
 
 				/* FIXME stat file to see if it's changed */
-				fid = _create_text_instance(fmt, NULL, NULL);
+				fid = _create_text_instance(fmt, NULL, NULL,
+							    NULL);
 				if ((vg = _vg_read_file_name(fid, vgname,
 							     path)))
 					lvmcache_update_vg(vg);
@@ -1271,7 +1273,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 	/* Have we already cached vgname? */
 	if (info->vginfo && info->vginfo->vgname && *info->vginfo->vgname &&
 	    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
-				 info->dev->pvid, pv)) {
+				 info->vginfo->vgid, info->dev->pvid, pv)) {
 		return 1;
 	}
 
@@ -1282,6 +1284,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 		if (info->vginfo && info->vginfo->vgname &&
 		    *info->vginfo->vgname &&
 		    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
+					 info->vginfo->vgid,
 					 info->dev->pvid, pv)) {
 			return 1;
 		}
@@ -1476,6 +1479,7 @@ static int _pv_setup(const struct format_type *fmt,
 /* NULL vgname means use only the supplied context e.g. an archive file */
 static struct format_instance *_create_text_instance(const struct format_type
 						     *fmt, const char *vgname,
+						     const char *vgid,
 						     void *context)
 {
 	struct format_instance *fid;
@@ -1561,7 +1565,7 @@ static struct format_instance *_create_text_instance(const struct format_type
 
 		/* Scan PVs in VG for any further MDAs */
 		lvmcache_label_scan(fmt->cmd, 0);
-		if (!(vginfo = vginfo_from_vgname(vgname, NULL))) {
+		if (!(vginfo = vginfo_from_vgname(vgname, vgid))) {
 			stack;
 			goto out;
 		}
