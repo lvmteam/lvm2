@@ -199,6 +199,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	struct mda_context *mdac;
 	const char *vgname;
 	uint32_t vgstatus;
+	char *creation_host;
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
 
@@ -235,9 +236,10 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if ((vgname = vgname_from_mda(info->fmt, &mdac->area, 
-					      &vgid, &vgstatus)) &&
+					      &vgid, &vgstatus, &creation_host)) &&
 		    !lvmcache_update_vgname_and_id(info, vgname,
-						   (char *) &vgid, vgstatus))
+						   (char *) &vgid, vgstatus,
+						   creation_host))
 			return_0;
 	}
 

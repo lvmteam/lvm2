@@ -90,9 +90,13 @@ void init_syslog(int facility)
 	_syslog = 1;
 }
 
-void log_suppress(int suppress)
+int log_suppress(int suppress)
 {
+	int old_suppress = _log_suppress;
+
 	_log_suppress = suppress;
+
+	return old_suppress;
 }
 
 void release_log_memory(void)
@@ -252,6 +256,9 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 	int bufused, n;
 	const char *message;
 	const char *trformat;		/* Translated format string */
+
+	if (_log_suppress == 2)
+		return;
 
 	trformat = _(format);
 

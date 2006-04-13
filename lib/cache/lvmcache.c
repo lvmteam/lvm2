@@ -364,6 +364,8 @@ static int _drop_vginfo(struct lvmcache_info *info)
 
 		if (info->vginfo->vgname)
 			dm_free(info->vginfo->vgname);
+		if (info->vginfo->creation_host)
+			dm_free(info->vginfo->creation_host);
 		if (*info->vginfo->vgid)
 			dm_hash_remove(_vgid_hash, info->vginfo->vgid);
 		list_del(&info->vginfo->list);
@@ -434,11 +436,12 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 }
 
 static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
-			  uint32_t vgstatus,
+			  uint32_t vgstatus, const char *creation_host,
 			  struct lvmcache_vginfo *primary_vginfo)
 {
 	struct lvmcache_vginfo *last_vginfo = primary_vginfo;
 	char uuid_primary[64], uuid_new[64];
+	int use_new = 0;
 	
 	/* Pre-existing VG takes precedence. Unexported VG takes precedence. */
 	if (primary_vginfo) {
@@ -449,21 +452,56 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 				     sizeof(uuid_primary)))
 			return_0;
 
-		if (!(primary_vginfo->status & EXPORTED_VG) ||
-		    (vgstatus & EXPORTED_VG)) {
-			while (last_vginfo->next)
-				last_vginfo = last_vginfo->next;
-			last_vginfo->next = new_vginfo;
+		/*
+		 * If   Primary not exported, new exported => keep
+		 * Else Primary exported, new not exported => change
+		 * Else Primary has hostname for this machine => keep
+		 * Else Primary has no hostname, new has one => change
+		 * Else New has hostname for this machine => change
+		 * Else Keep primary.
+		 */
+		if (!(primary_vginfo->status & EXPORTED_VG) &&
+		    (vgstatus & EXPORTED_VG))
 			log_error("WARNING: Duplicate VG name %s: "
-				  "%s takes precedence over %s",
-				  new_vginfo->vgname, uuid_primary,
-				  uuid_new);
-			return 1;
-		} else
-			log_error("WARNING: Duplicate VG name %s: Existing "
+				  "Existing %s takes precedence over "
+				  "exported %s", new_vginfo->vgname,
+				  uuid_primary, uuid_new);
+		else if ((primary_vginfo->status & EXPORTED_VG) &&
+			   !(vgstatus & EXPORTED_VG)) {
+			log_error("WARNING: Duplicate VG name %s: "
 				  "%s takes precedence over exported %s",
 				  new_vginfo->vgname, uuid_new,
 				  uuid_primary);
+			use_new = 1;
+		} else if (primary_vginfo->creation_host &&
+			   !strcmp(primary_vginfo->creation_host,
+				   primary_vginfo->fmt->cmd->hostname))
+			log_error("WARNING: Duplicate VG name %s: "
+				  "Existing %s (created here) takes precedence "
+				  "over %s", new_vginfo->vgname, uuid_primary,
+				  uuid_new);
+		else if (!primary_vginfo->creation_host && creation_host) {
+			log_error("WARNING: Duplicate VG name %s: "
+				  "%s (with creation_host) takes precedence over %s",
+				  new_vginfo->vgname, uuid_new,
+				  uuid_primary);
+			use_new = 1;
+		} else if (creation_host &&
+			   !strcmp(creation_host,
+				   primary_vginfo->fmt->cmd->hostname)) {
+			log_error("WARNING: Duplicate VG name %s: "
+				  "%s (created here) takes precedence over %s",
+				  new_vginfo->vgname, uuid_new,
+				  uuid_primary);
+			use_new = 1;
+		}
+
+		if (!use_new) {
+			while (last_vginfo->next)
+				last_vginfo = last_vginfo->next;
+			last_vginfo->next = new_vginfo;
+			return 1;
+		}
 
 		dm_hash_remove(_vgname_hash, primary_vginfo->vgname);
 	}
@@ -482,7 +520,7 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 
 static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				   const char *vgname, const char *vgid,
-				   uint32_t vgstatus)
+				   uint32_t vgstatus, const char *creation_host)
 {
 	struct lvmcache_vginfo *vginfo, *primary_vginfo;
 
@@ -515,7 +553,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 		}
 		list_init(&vginfo->infos);
 		primary_vginfo = vginfo_from_vgname(vgname, NULL);
-		if (!_insert_vginfo(vginfo, vgid, vgstatus, primary_vginfo)) {
+		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host,
+				    primary_vginfo)) {
 			dm_free(vginfo->vgname);
 			dm_free(vginfo);
 			return 0;
@@ -542,28 +581,49 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	return 1;
 }
 
-static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstatus)
+static int _lvmcache_update_vgstatus(struct lvmcache_info *info, uint32_t vgstatus,
+				     const char *creation_host)
 {
 	if (!info || !info->vginfo)
 		return 1;
 
 	if ((info->vginfo->status & EXPORTED_VG) != (vgstatus & EXPORTED_VG))
-		log_debug("lvmcache: %s: VG %s exported",
-			  dev_name(info->dev),
+		log_debug("lvmcache: %s: VG %s %s exported",
+			  dev_name(info->dev), info->vginfo->vgname,
 			  vgstatus & EXPORTED_VG ? "now" : "no longer");
 
 	info->vginfo->status = vgstatus;
+
+	if (!creation_host)
+		return 1;
+
+	if (info->vginfo->creation_host && !strcmp(creation_host,
+						   info->vginfo->creation_host))
+		return 1;
+
+	if (info->vginfo->creation_host)
+		dm_free(info->vginfo->creation_host);
+
+	if (!(info->vginfo->creation_host = dm_strdup(creation_host))) {
+		log_error("cache creation host alloc failed for %s",
+			  creation_host);
+		return 0;
+	}
+
+	log_debug("lvmcache: %s: VG %s: Set creation host to %s.",
+		  dev_name(info->dev), info->vginfo->vgname, creation_host);
 
 	return 1;
 }
 
 int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  const char *vgname, const char *vgid,
-				  uint32_t vgstatus)
+				  uint32_t vgstatus, const char *creation_host)
 {
-	if (!_lvmcache_update_vgname(info, vgname, vgid, vgstatus) ||
+	if (!_lvmcache_update_vgname(info, vgname, vgid, vgstatus,
+				     creation_host) ||
 	    !_lvmcache_update_vgid(info, vgid) ||
-	    !_lvmcache_update_vgstatus(info, vgstatus))
+	    !_lvmcache_update_vgstatus(info, vgstatus, creation_host))
 		return_0;
 
 	return 1;
@@ -583,7 +643,7 @@ int lvmcache_update_vg(struct volume_group *vg)
 		if ((info = info_from_pvid(pvid_s)) &&
 		    !lvmcache_update_vgname_and_id(info, vg->name,
 						   (char *) &vg->id,
-						   vg->status))
+						   vg->status, NULL))
 			return_0;
 	}
 
@@ -689,7 +749,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		return NULL;
 	}
 
-	if (!lvmcache_update_vgname_and_id(info, vgname, vgid, vgstatus)) {
+	if (!lvmcache_update_vgname_and_id(info, vgname, vgid, vgstatus, NULL)) {
 		if (!existing) {
 			dm_hash_remove(_pvid_hash, pvid_s);
 			strcpy(info->dev->pvid, "");
@@ -719,6 +779,8 @@ static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 		next = vginfo->next;
 		if (vginfo->vgname)
 			dm_free(vginfo->vgname);
+		if (vginfo->creation_host)
+			dm_free(vginfo->creation_host);
 		dm_free(vginfo);
 	} while ((vginfo = next));
 }

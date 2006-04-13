@@ -43,6 +43,7 @@ struct lvmcache_vginfo {
 	char vgid[ID_LEN + 1];
 	char _padding[7];
 	struct lvmcache_vginfo *next; /* Another VG with same name? */
+	char *creation_host;
 };
 
 /* One per device */
@@ -75,7 +76,7 @@ void lvmcache_del(struct lvmcache_info *info);
 /* Update things */
 int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  const char *vgname, const char *vgid,
-				  uint32_t vgstatus);
+				  uint32_t vgstatus, const char *hostname);
 int lvmcache_update_vg(struct volume_group *vg);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);

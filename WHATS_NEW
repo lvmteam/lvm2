@@ -1,5 +1,7 @@
 Version 2.02.03 - 
 ===================================
+  When choosing between identically-named VGs, also consider creation_host.
+  Provide total log suppression with 2.
   Fix vgexport/vgimport to set/reset PV exported flag so pv_attr is correct.
   Add vgid to struct physical_volume and pass with vg_name to some functions.
   If two or more VGs are found with the same name, use one that is not exported.
