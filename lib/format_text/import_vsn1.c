@@ -802,11 +802,18 @@ static void _read_desc(struct dm_pool *mem,
 
 static const char *_read_vgname(const struct format_type *fmt,
 				struct config_tree *cft, struct id *vgid,
-				uint32_t *vgstatus)
+				uint32_t *vgstatus, char **creation_host)
 {
 	struct config_node *vgn, *cn;
 	struct dm_pool *mem = fmt->cmd->mem;
 	char *vgname;
+	int old_suppress;
+
+	old_suppress = log_suppress(2);
+	*creation_host = dm_pool_strdup(mem,
+					find_config_str(cft->root,
+						        "creation_host", ""));
+	log_suppress(old_suppress);
 
 	/* skip any top-level values */
 	for (vgn = cft->root; (vgn && vgn->v); vgn = vgn->sib) ;

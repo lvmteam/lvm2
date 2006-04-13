@@ -220,7 +220,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 
       error:
 	if ((info = info_from_pvid(dev_area->dev->pvid)))
-		lvmcache_update_vgname_and_id(info, ORPHAN, ORPHAN, 0);
+		lvmcache_update_vgname_and_id(info, ORPHAN, ORPHAN, 0, NULL);
 
 	return NULL;
 }
@@ -863,6 +863,7 @@ static int _scan_file(const struct format_type *fmt)
 							    NULL);
 				if ((vg = _vg_read_file_name(fid, vgname,
 							     path)))
+					/* FIXME Store creation host in vg */
 					lvmcache_update_vg(vg);
 			}
 
@@ -875,7 +876,7 @@ static int _scan_file(const struct format_type *fmt)
 
 const char *vgname_from_mda(const struct format_type *fmt,
 			    struct device_area *dev_area, struct id *vgid,
-			    uint32_t *vgstatus)
+			    uint32_t *vgstatus, char **creation_host)
 {
 	struct raw_locn *rlocn;
 	struct mda_header *mdah;
@@ -928,7 +929,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 					  (off_t) (dev_area->start +
 						   MDA_HEADER_SIZE),
 					  wrap, calc_crc, rlocn->checksum,
-					  vgid, vgstatus)))
+					  vgid, vgstatus, creation_host)))
 		goto_out;
 
 	/* Ignore this entry if the characters aren't permissible */
@@ -967,7 +968,8 @@ static int _scan_raw(const struct format_type *fmt)
 
 	list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
-		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid, &vgstatus))) {
+		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid, &vgstatus,
+					      NULL))) {
 			if ((vg = _vg_read_raw_area(&fid, vgname,
 						    &rl->dev_area, 0)))
 				lvmcache_update_vg(vg);

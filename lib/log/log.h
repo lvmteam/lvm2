@@ -86,8 +86,9 @@ int ignorelockingfailure(void);
 int lockingfailed(void);
 int security_level(void);
 
-/* Suppress messages to stdout/stderr */
-void log_suppress(int suppress);
+/* Suppress messages to stdout/stderr (1) or everywhere (2) */
+/* Returns previous setting */
+int log_suppress(int suppress);
 
 /* Suppress messages to syslog */
 void syslog_suppress(int suppress);
