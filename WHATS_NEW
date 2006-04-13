@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  Add --partial to pvs.
   When choosing between identically-named VGs, also consider creation_host.
   Provide total log suppression with 2.
   Fix vgexport/vgimport to set/reset PV exported flag so pv_attr is correct.
