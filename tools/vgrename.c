@@ -19,12 +19,15 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *dev_dir;
 	unsigned int length;
+	struct id id;
 	int consistent = 1;
-
-	char *vg_name_old, *vg_name_new;
-
+	int match = 0;
+	int found_id = 0;
+	struct list *vgids;
+	struct str_list *sl;
+	char *vg_name_new;
+	const char *vgid = NULL, *vg_name, *vg_name_old;
 	char old_path[NAME_LEN], new_path[NAME_LEN];
-
 	struct volume_group *vg_old, *vg_new;
 
 	if (argc != 2) {
@@ -64,22 +67,49 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 
+	/* Avoid duplicates */
+	if (!(vgids = get_vgids(cmd, 0)) || list_empty(vgids)) {
+		log_error("No complete volume groups found");
+		return ECMD_FAILED;
+	}
+
+	list_iterate_items(sl, vgids) {
+		vgid = sl->str;
+		if (!vgid || !(vg_name = vgname_from_vgid(NULL, vgid)) || !*vg_name)
+			continue;
+		if (!strcmp(vg_name, vg_name_old)) {
+			if (match) {
+				log_error("Found more than one VG called %s. "
+					  "Please supply VG uuid.", vg_name_old);
+				return ECMD_FAILED;
+			}
+			match = 1;
+		}
+	}
+
+	log_suppress(2);
+	found_id = id_read_format(&id, vg_name_old);
+	log_suppress(0);
+	if (found_id && (vg_name = vgname_from_vgid(cmd->mem, id.uuid))) {
+		vg_name_old = vg_name;
+		vgid = id.uuid;
+	} else
+		vgid = NULL;
+
 	if (!lock_vol(cmd, vg_name_old, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", vg_name_old);
 		return ECMD_FAILED;
 	}
 
-	if (!(vg_old = vg_read(cmd, vg_name_old, NULL, &consistent)) || !consistent) {
-		log_error("Volume group \"%s\" doesn't exist", vg_name_old);
+	if (!(vg_old = vg_read(cmd, vg_name_old, vgid, &consistent)) || !consistent) {
+		log_error("Volume group %s %s%s%snot found.", vg_name_old,
+		vgid ? "(" : "", vgid ? vgid : "", vgid ? ") " : "");
 		unlock_vg(cmd, vg_name_old);
 		return ECMD_FAILED;
 	}
 
-	if (vg_old->status & EXPORTED_VG) {
-		unlock_vg(cmd, vg_name_old);
-		log_error("Volume group \"%s\" is exported", vg_old->name);
-		return ECMD_FAILED;
-	}
+	if (vg_old->status & EXPORTED_VG)
+		log_info("Volume group \"%s\" is exported", vg_old->name);
 
 	if (!(vg_old->status & LVM_WRITE)) {
 		unlock_vg(cmd, vg_name_old);
@@ -145,6 +175,10 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Volume group \"%s\" successfully renamed to \"%s\"",
 		  vg_name_old, vg_name_new);
+
+	/* FIXME lvmcache corruption - vginfo duplicated instead of renamed */
+        persistent_filter_wipe(cmd->filter);
+        lvmcache_destroy();
 
 	return ECMD_PROCESSED;
 

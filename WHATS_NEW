@@ -1,5 +1,6 @@
 Version 2.02.03 - 
 ===================================
+  vgrename accepts vgid and exported VG.
   Add --partial to pvs.
   When choosing between identically-named VGs, also consider creation_host.
   Provide total log suppression with 2.

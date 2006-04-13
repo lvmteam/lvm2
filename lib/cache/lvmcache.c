@@ -163,12 +163,15 @@ struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid)
 	return vginfo;
 }
 
-const char *vgname_from_vgid(const char *vgid)
+const char *vgname_from_vgid(struct dm_pool *mem, const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
 
-	if ((vginfo = vginfo_from_vgid(vgid)))
+	if ((vginfo = vginfo_from_vgid(vgid))) {
+		if (mem)
+			return dm_pool_strdup(mem, vginfo->vgname);
 		return vginfo->vgname;
+	}
 
 	return NULL;
 }
@@ -523,6 +526,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				   uint32_t vgstatus, const char *creation_host)
 {
 	struct lvmcache_vginfo *vginfo, *primary_vginfo;
+	// struct lvmcache_vginfo  *old_vginfo, *next;
 
 	/* If vgname is NULL and we don't already have a vgname, 
 	 * assume ORPHAN - we want every entry to have a vginfo
@@ -541,6 +545,42 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 
 	/* Get existing vginfo or create new one */
 	if (!(vginfo = vginfo_from_vgname(vgname, vgid))) {
+/*** FIXME - vginfo ends up duplicated instead of renamed.
+		// Renaming?  This lookup fails.
+		if ((vginfo = vginfo_from_vgid(vgid))) {
+			next = vginfo->next;
+			old_vginfo = vginfo_from_vgname(vginfo->vgname, NULL);
+			if (old_vginfo == vginfo) {
+				dm_hash_remove(_vgname_hash, old_vginfo->vgname);
+				if (old_vginfo->next) {
+					if (!dm_hash_insert(_vgname_hash, old_vginfo->vgname, old_vginfo->next)) {
+                        			log_error("vg hash re-insertion failed: %s",
+							  old_vginfo->vgname);
+                        			return 0;
+					}
+				}
+			} else do {
+				if (old_vginfo->next == vginfo) {
+					old_vginfo->next = vginfo->next;
+					break;
+				}
+			} while ((old_vginfo = old_vginfo->next));
+			vginfo->next = NULL;
+
+			dm_free(vginfo->vgname);
+			if (!(vginfo->vgname = dm_strdup(vgname))) {
+				log_error("cache vgname alloc failed for %s", vgname);
+				return 0;
+			}
+
+			// Rename so can assume new name does not already exist 
+			if (!dm_hash_insert(_vgname_hash, vginfo->vgname, vginfo->next)) {
+				log_error("vg hash re-insertion failed: %s",
+					  vginfo->vgname);
+                      		return 0;
+			}
+		} else {
+***/
 		if (!(vginfo = dm_malloc(sizeof(*vginfo)))) {
 			log_error("lvmcache_update_vgname: list alloc failed");
 			return 0;
@@ -552,7 +592,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			return 0;
 		}
 		list_init(&vginfo->infos);
-		primary_vginfo = vginfo_from_vgname(vgname, NULL);
+			primary_vginfo = vginfo_from_vgname(vgname, NULL);
 		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host,
 				    primary_vginfo)) {
 			dm_free(vginfo->vgname);
@@ -564,6 +604,9 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			list_add(&_vginfos, &vginfo->list);
 		else
 			list_add_h(&_vginfos, &vginfo->list);
+/***
+		}
+***/
 	}
 
 	info->vginfo = vginfo;
