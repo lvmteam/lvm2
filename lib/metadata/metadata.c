@@ -1292,7 +1292,7 @@ struct list *get_pvs(struct cmd_context *cmd)
 		if (!vgid)
 			continue;	/* FIXME Unnecessary? */
 		consistent = 0;
-		if (!(vgname = vgname_from_vgid(vgid))) {
+		if (!(vgname = vgname_from_vgid(NULL, vgid))) {
 			stack;
 			continue;
 		}

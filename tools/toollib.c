@@ -440,7 +440,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 		}
 		list_iterate_items(sl, vgids) {
 			vgid = sl->str;
-			if (!vgid || !(vg_name = vgname_from_vgid(vgid)) || !*vg_name)
+			if (!vgid || !(vg_name = vgname_from_vgid(cmd->mem, vgid)) ||
+			    !*vg_name)
 				continue;
 			ret_max = _process_one_vg(cmd, vg_name, vgid, &tags,
 						  &arg_vgnames,
