@@ -1,5 +1,5 @@
-Version 2.02.03 - 
-===================================
+Version 2.02.03 - 14th April 2006
+=================================
   vgrename accepts vgid and exported VG.
   Add --partial to pvs.
   When choosing between identically-named VGs, also consider creation_host.
