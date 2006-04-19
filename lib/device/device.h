@@ -74,10 +74,8 @@ int dev_close_immediate(struct device *dev);
 void dev_close_all(void);
 int dev_test_excl(struct device *dev);
 
-static inline int dev_fd(struct device *dev)
-{
-	return dev->fd;
-}
+int dev_fd(struct device *dev);
+const char *dev_name(const struct device *dev);
 
 int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer);
 int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer);
@@ -87,12 +85,6 @@ void dev_flush(struct device *dev);
 
 struct device *dev_create_file(const char *filename, struct device *dev,
 			       struct str_list *alias, int use_malloc);
-
-static inline const char *dev_name(const struct device *dev)
-{
-	return (dev) ? list_item(dev->aliases.n, struct str_list)->str :
-	    "unknown device";
-}
 
 /* Return a valid device name from the alias list; NULL otherwise */
 const char *dev_name_confirmed(struct device *dev, int quiet);

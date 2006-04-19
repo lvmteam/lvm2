@@ -354,8 +354,7 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
  * Get the pv%d name from the formatters hash
  * table.
  */
-static inline const char *_get_pv_name(struct formatter *f,
-				       struct physical_volume *pv)
+static const char *_get_pv_name(struct formatter *f, struct physical_volume *pv)
 {
 	return (pv) ? (const char *)
 	    dm_hash_lookup(f->pv_names, dev_name(pv->dev)) : "Missing";

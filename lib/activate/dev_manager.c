@@ -85,7 +85,7 @@ char *build_dlid(struct dev_manager *dm, const char *lvid, const char *layer)
 	return _build_dlid(dm->mem, lvid, layer);
 }
 
-static inline int _read_only_lv(struct logical_volume *lv)
+static int _read_only_lv(struct logical_volume *lv)
 {
 	return (!(lv->vg->status & LVM_WRITE) || !(lv->status & LVM_WRITE));
 }

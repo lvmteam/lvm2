@@ -23,9 +23,9 @@
 
 #include "ctype.h"
 #include "dev-cache.h"
+#include "lvm-string.h"
 #include "uuid.h"
 
-#define NAME_LEN 128
 #define MAX_STRIPES 128
 #define SECTOR_SHIFT 9L
 #define SECTOR_SIZE ( 1L << SECTOR_SHIFT )
@@ -608,30 +608,5 @@ struct list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 uint32_t find_free_lvnum(struct logical_volume *lv);
 char *generate_lv_name(struct volume_group *vg, const char *format,
 		       char *buffer, size_t len);
-
-static inline int validate_name(const char *n)
-{
-	register char c;
-	register int len = 0;
-
-	if (!n || !*n)
-		return 0;
-
-	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
-	if (*n == '-')
-		return 0;
-
-	if (!strcmp(n, ".") || !strcmp(n, ".."))
-		return 0;
-
-	while ((len++, c = *n++))
-		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
-			return 0;
-
-	if (len > NAME_LEN)
-		return 0;
-
-	return 1;
-}
 
 #endif

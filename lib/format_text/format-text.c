@@ -39,7 +39,7 @@
 #define FMT_TEXT_NAME "lvm2"
 #define FMT_TEXT_ALIAS "text"
 
-static struct format_instance *_create_text_instance(const struct format_type
+static struct format_instance *_text_create_text_instance(const struct format_type
 						     *fmt, const char *vgname,
 						     const char *vgid,
 						     void *context);
@@ -69,7 +69,7 @@ struct text_context {
  * NOTE: Currently there can be only one vg per text file.
  */
 
-static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
+static int _text_vg_setup(struct format_instance *fid, struct volume_group *vg)
 {
 	if (vg->extent_size & (vg->extent_size - 1)) {
 		log_error("Extent size must be power of 2");
@@ -79,7 +79,7 @@ static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 	return 1;
 }
 
-static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
+static int _text_lv_setup(struct format_instance *fid, struct logical_volume *lv)
 {
 /******** FIXME Any LV size restriction? 
 	uint64_t max_size = UINT_MAX;
@@ -859,7 +859,7 @@ static int _scan_file(const struct format_type *fmt)
 				}
 
 				/* FIXME stat file to see if it's changed */
-				fid = _create_text_instance(fmt, NULL, NULL,
+				fid = _text_create_text_instance(fmt, NULL, NULL,
 							    NULL);
 				if ((vg = _vg_read_file_name(fid, vgname,
 							     path)))
@@ -979,7 +979,7 @@ static int _scan_raw(const struct format_type *fmt)
 	return 1;
 }
 
-static int _scan(const struct format_type *fmt)
+static int _text_scan(const struct format_type *fmt)
 {
 	return (_scan_file(fmt) & _scan_raw(fmt));
 }
@@ -1125,7 +1125,7 @@ static int _mda_setup(const struct format_type *fmt,
 
 /* Only for orphans */
 /* Set label_sector to -1 if rewriting existing label into same sector */
-static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
+static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		     struct list *mdas, int64_t label_sector)
 {
 	struct label *label;
@@ -1250,7 +1250,7 @@ static int _add_raw(struct list *raw_list, struct device_area *dev_area)
 	return 1;
 }
 
-static int _pv_read(const struct format_type *fmt, const char *pv_name,
+static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
 	struct label *label;
@@ -1332,7 +1332,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 	return 1;
 }
 
-static void _destroy_instance(struct format_instance *fid)
+static void _text_destroy_instance(struct format_instance *fid)
 {
 	return;
 }
@@ -1357,7 +1357,7 @@ static void _free_raws(struct list *raw_list)
 	}
 }
 
-static void _destroy(const struct format_type *fmt)
+static void _text_destroy(const struct format_type *fmt)
 {
 	if (fmt->private) {
 		_free_dirs(&((struct mda_lists *) fmt->private)->dirs);
@@ -1394,7 +1394,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 };
 
 /* pvmetadatasize in sectors */
-static int _pv_setup(const struct format_type *fmt,
+static int _text_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size,
 		     int pvmetadatacopies,
@@ -1411,7 +1411,7 @@ static int _pv_setup(const struct format_type *fmt,
 	/* FIXME if vg, adjust start/end of pe area to avoid mdas! */
 
 	/* FIXME Cope with pvchange */
-	/* FIXME Merge code with _create_text_instance */
+	/* FIXME Merge code with _text_create_text_instance */
 
 	/* If new vg, add any further mdas on this PV to the fid's mda list */
 	if (vg) {
@@ -1479,7 +1479,7 @@ static int _pv_setup(const struct format_type *fmt,
 }
 
 /* NULL vgname means use only the supplied context e.g. an archive file */
-static struct format_instance *_create_text_instance(const struct format_type
+static struct format_instance *_text_create_text_instance(const struct format_type
 						     *fmt, const char *vgname,
 						     const char *vgid,
 						     void *context)
@@ -1649,15 +1649,15 @@ void *create_text_context(struct cmd_context *cmd, const char *path,
 }
 
 static struct format_handler _text_handler = {
-	scan:_scan,
-	pv_read:_pv_read,
-	pv_setup:_pv_setup,
-	pv_write:_pv_write,
-	vg_setup:_vg_setup,
-	lv_setup:_lv_setup,
-	create_instance:_create_text_instance,
-	destroy_instance:_destroy_instance,
-	destroy:_destroy
+	scan:_text_scan,
+	pv_read:_text_pv_read,
+	pv_setup:_text_pv_setup,
+	pv_write:_text_pv_write,
+	vg_setup:_text_vg_setup,
+	lv_setup:_text_lv_setup,
+	create_instance:_text_create_text_instance,
+	destroy_instance:_text_destroy_instance,
+	destroy:_text_destroy
 };
 
 static int _add_dir(const char *dir, struct list *dir_list)

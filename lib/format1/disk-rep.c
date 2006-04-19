@@ -269,7 +269,7 @@ static int _read_uuids(struct disk_list *data)
 	return 1;
 }
 
-static inline int _check_lvd(struct lv_disk *lvd)
+static int _check_lvd(struct lv_disk *lvd)
 {
 	return !(lvd->lv_name[0] == '\0');
 }

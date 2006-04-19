@@ -23,13 +23,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static void _not_supported(const char *op)
+static void _pool_not_supported(const char *op)
 {
 	log_error("The '%s' operation is not supported for the pool labeller.",
 		  op);
 }
 
-static int _can_handle(struct labeller *l, char *buf, uint64_t sector)
+static int _pool_can_handle(struct labeller *l, char *buf, uint64_t sector)
 {
 
 	struct pool_disk pd;
@@ -50,13 +50,13 @@ static int _can_handle(struct labeller *l, char *buf, uint64_t sector)
 	return 0;
 }
 
-static int _write(struct label *label, char *buf)
+static int _pool_write(struct label *label, char *buf)
 {
-	_not_supported("write");
+	_pool_not_supported("write");
 	return 0;
 }
 
-static int _read(struct labeller *l, struct device *dev, char *buf,
+static int _pool_read(struct labeller *l, struct device *dev, char *buf,
 		 struct label **label)
 {
 	struct pool_list pl;
@@ -64,31 +64,31 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	return read_pool_label(&pl, l, dev, buf, label);
 }
 
-static int _initialise_label(struct labeller *l, struct label *label)
+static int _pool_initialise_label(struct labeller *l, struct label *label)
 {
 	strcpy(label->type, "POOL");
 
 	return 1;
 }
 
-static void _destroy_label(struct labeller *l, struct label *label)
+static void _pool_destroy_label(struct labeller *l, struct label *label)
 {
 	return;
 }
 
-static void _destroy(struct labeller *l)
+static void _label_pool_destroy(struct labeller *l)
 {
 	dm_free(l);
 }
 
 struct label_ops _pool_ops = {
-      can_handle:_can_handle,
-      write:_write,
-      read:_read,
-      verify:_can_handle,
-      initialise_label:_initialise_label,
-      destroy_label:_destroy_label,
-      destroy:_destroy
+      can_handle:_pool_can_handle,
+      write:_pool_write,
+      read:_pool_read,
+      verify:_pool_can_handle,
+      initialise_label:_pool_initialise_label,
+      destroy_label:_pool_destroy_label,
+      destroy:_label_pool_destroy
 };
 
 struct labeller *pool_labeller_create(struct format_type *fmt)

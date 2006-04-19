@@ -208,3 +208,27 @@ int split_dm_name(struct dm_pool *mem, const char *dmname,
 	return 1;
 }
 
+int validate_name(const char *n)
+{
+	register char c;
+	register int len = 0;
+
+	if (!n || !*n)
+		return 0;
+
+	/* Hyphen used as VG-LV separator - ambiguity if LV starts with it */
+	if (*n == '-')
+		return 0;
+
+	if (!strcmp(n, ".") || !strcmp(n, ".."))
+		return 0;
+
+	while ((len++, c = *n++))
+		if (!isalnum(c) && c != '.' && c != '_' && c != '-' && c != '+')
+			return 0;
+
+	if (len > NAME_LEN)
+		return 0;
+
+	return 1;
+}

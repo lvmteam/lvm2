@@ -57,3 +57,13 @@ po.pofile: tools.pofile daemons.pofile dmeventd.pofile
 pofile: po.pofile
 endif
 
+ifneq ("@CFLOW_CMD@", "")
+tools.cflow: lib.cflow
+cflow: tools.cflow
+endif
+
+ifneq ("@CSCOPE_CMD@", "")
+cscope.out: tools
+	@CSCOPE_CMD@ -b -R
+all: cscope.out
+endif

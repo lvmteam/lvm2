@@ -50,8 +50,9 @@ struct lvcreate_params {
 	char **pvs;
 };
 
-static int _read_name_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc, char ***pargv)
+static int _lvcreate_name_params(struct lvcreate_params *lp,
+				 struct cmd_context *cmd,
+				 int *pargc, char ***pargv)
 {
 	int argc = *pargc;
 	char **argv = *pargv, *ptr;
@@ -260,8 +261,8 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
-			int argc, char **argv)
+static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
+			    int argc, char **argv)
 {
 	int contiguous;
 
@@ -352,7 +353,7 @@ static int _read_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!_read_name_params(lp, cmd, &argc, &argv) ||
+	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, cmd, &argc, &argv) ||
 	    !_read_stripe_params(lp, cmd, &argc, &argv) ||
 	    !_read_mirror_params(lp, cmd, &argc, &argv)) {
@@ -755,7 +756,7 @@ int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	memset(&lp, 0, sizeof(lp));
 
-	if (!_read_params(&lp, cmd, argc, argv))
+	if (!_lvcreate_params(&lp, cmd, argc, argv))
 		return EINVALID_CMD_LINE;
 
 	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {

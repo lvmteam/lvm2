@@ -19,16 +19,18 @@
 /*
  * Only works with powers of 2.
  */
-static inline uint32_t _round_up(uint32_t n, uint32_t size)
+static uint32_t _round_up(uint32_t n, uint32_t size)
 {
 	size--;
 	return (n + size) & ~size;
 }
 
-static inline uint32_t _div_up(uint32_t n, uint32_t size)
+/* Unused.
+static uint32_t _div_up(uint32_t n, uint32_t size)
 {
 	return _round_up(n, size) / size;
 }
+*/
 
 /*
  * Each chunk of metadata should be aligned to

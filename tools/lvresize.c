@@ -45,8 +45,8 @@ struct lvresize_params {
 	char **argv;
 };
 
-static int _read_params(struct cmd_context *cmd, int argc, char **argv,
-			struct lvresize_params *lp)
+static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
+			    struct lvresize_params *lp)
 {
 	const char *cmd_name;
 	char *st;
@@ -561,7 +561,7 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 
 	memset(&lp, 0, sizeof(lp));
 
-	if (!_read_params(cmd, argc, argv, &lp))
+	if (!_lvresize_params(cmd, argc, argv, &lp))
 		return EINVALID_CMD_LINE;
 
 	log_verbose("Finding volume group %s", lp.vg_name);

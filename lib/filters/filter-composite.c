@@ -33,7 +33,7 @@ static int _and_p(struct dev_filter *f, struct device *dev)
 	return 1;
 }
 
-static void _destroy(struct dev_filter *f)
+static void _composite_destroy(struct dev_filter *f)
 {
 	struct dev_filter **filters = (struct dev_filter **) f->private;
 
@@ -70,7 +70,7 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 	}
 
 	cft->passes_filter = _and_p;
-	cft->destroy = _destroy;
+	cft->destroy = _composite_destroy;
 	cft->private = filters_copy;
 
 	return cft;

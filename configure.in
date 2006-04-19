@@ -65,6 +65,8 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+AC_PATH_PROG(CFLOW_CMD, cflow)
+AC_PATH_PROG(CSCOPE_CMD, cscope)
 
 ################################################################################
 dnl -- Checks for header files.
@@ -150,7 +152,7 @@ AC_ARG_ENABLE(lvm1_fallback, [  --enable-lvm1_fallback  Use this to fall back an
 AC_MSG_RESULT($LVM1_FALLBACK)
 
 if test x$LVM1_FALLBACK = xyes; then
-	CFLAGS="$CFLAGS -DLVM1_FALLBACK"
+	LVM_DEFS="$LVM_DEFS -DLVM1_FALLBACK"
 fi
 
 ################################################################################
@@ -170,7 +172,7 @@ if [[ "x$LVM1" != xnone -a "x$LVM1" != xinternal -a "x$LVM1" != xshared ]];
 fi;
 
 if test x$LVM1 = xinternal; then
-	CFLAGS="$CFLAGS -DLVM1_INTERNAL"
+	LVM_DEFS="$LVM_DEFS -DLVM1_INTERNAL"
 fi
 
 ################################################################################
@@ -190,7 +192,7 @@ if [[ "x$POOL" != xnone -a "x$POOL" != xinternal -a "x$POOL" != xshared ]];
 fi;
 
 if test x$POOL = xinternal; then
-	CFLAGS="$CFLAGS -DPOOL_INTERNAL"
+	LVM_DEFS="$LVM_DEFS -DPOOL_INTERNAL"
 fi
 
 ################################################################################
@@ -209,7 +211,7 @@ if [[ "x$CLUSTER" != xnone -a "x$CLUSTER" != xinternal -a "x$CLUSTER" != xshared
 fi;
 
 if test x$CLUSTER = xinternal; then
-	CFLAGS="$CFLAGS -DCLUSTER_LOCKING_INTERNAL"
+	LVM_DEFS="$LVM_DEFS -DCLUSTER_LOCKING_INTERNAL"
 fi
 
 ################################################################################
@@ -229,7 +231,7 @@ if [[ "x$SNAPSHOTS" != xnone -a "x$SNAPSHOTS" != xinternal -a "x$SNAPSHOTS" != x
 fi;
 
 if test x$SNAPSHOTS = xinternal; then
-	CFLAGS="$CFLAGS -DSNAPSHOT_INTERNAL"
+	LVM_DEFS="$LVM_DEFS -DSNAPSHOT_INTERNAL"
 fi
 
 ################################################################################
@@ -249,7 +251,7 @@ if [[ "x$MIRRORS" != xnone -a "x$MIRRORS" != xinternal -a "x$MIRRORS" != xshared
 fi;
 
 if test x$MIRRORS = xinternal; then
-	CFLAGS="$CFLAGS -DMIRRORED_INTERNAL"
+	LVM_DEFS="$LVM_DEFS -DMIRRORED_INTERNAL"
 fi
 
 ################################################################################
@@ -267,7 +269,7 @@ READLINE=$enableval, READLINE=no)
 AC_MSG_RESULT($READLINE)
 
 if test x$READLINE = xyes; then
-	CFLAGS="$CFLAGS -DREADLINE_SUPPORT"
+	LVM_DEFS="$LVM_DEFS -DREADLINE_SUPPORT"
 fi
 
 ################################################################################
@@ -305,6 +307,8 @@ AC_MSG_RESULT($DEBUG)
 dnl -- Normally turn off optimisation for debug builds
 if test x$DEBUG = xyes; then
 	COPTIMISE_FLAG=
+else
+	CSCOPE_CMD=
 fi
 
 ################################################################################
@@ -323,7 +327,7 @@ DEVMAPPER=$enableval)
 AC_MSG_RESULT($DEVMAPPER)
 
 if test x$DEVMAPPER = xyes; then
-	CFLAGS="$CFLAGS -DDEVMAPPER_SUPPORT"
+	LVM_DEFS="$LVM_DEFS -DDEVMAPPER_SUPPORT"
 fi
 
 ################################################################################
@@ -334,7 +338,7 @@ ODIRECT=$enableval)
 AC_MSG_RESULT($ODIRECT)
 
 if test x$ODIRECT = xyes; then
-	CFLAGS="$CFLAGS -DO_DIRECT_SUPPORT"
+	LVM_DEFS="$LVM_DEFS -DO_DIRECT_SUPPORT"
 fi
 
 ################################################################################
@@ -345,7 +349,7 @@ CMDLIB=$enableval, CMDLIB=no)
 AC_MSG_RESULT($CMDLIB)
 
 if test x$CMDLIB = xyes; then
-	CFLAGS="$CFLAGS -DCMDLIB"
+	LVM_DEFS="$LVM_DEFS -DCMDLIB"
 fi
 
 ################################################################################
@@ -370,7 +374,7 @@ AC_MSG_ERROR(
 fi
 
 if test x$DMEVENTD = xyes; then
-	CFLAGS="$CFLAGS -DDMEVENTD"
+	LVM_DEFS="$LVM_DEFS -DDMEVENTD"
 fi
 ################################################################################
 dnl -- Mess with default exec_prefix
@@ -407,7 +411,7 @@ dnl -- Check for dlopen
 AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
 
 if [[ "x$HAVE_LIBDL" = xyes ]]; then
-	CFLAGS="$CFLAGS -DHAVE_LIBDL"
+	LVM_DEFS="$LVM_DEFS -DHAVE_LIBDL"
 	LIBS="-ldl $LIBS"
 else
 	HAVE_LIBDL=no
@@ -424,14 +428,22 @@ Features cannot be 'shared' when building statically
 fi
 
 ################################################################################
-dnl -- Check for is_selinux_enabled
+dnl -- Check for selinux
 if test x$SELINUX = xyes; then
+	AC_MSG_CHECKING(for sepol_check_context function)
+	AC_CHECK_LIB(sepol, sepol_check_context, HAVE_SEPOL=yes, HAVE_SEPOL=no)
+	AC_MSG_RESULT($HAVE_SEPOL)
+
+	if test x$HAVE_SEPOL = xyes; then
+		LIBS="-lsepol $LIBS"
+	fi
+
 	AC_MSG_CHECKING(for is_selinux_enabled function)
 	AC_CHECK_LIB(selinux, is_selinux_enabled, HAVE_SELINUX=yes, HAVE_SELINUX=no)
 	AC_MSG_RESULT($HAVE_SELINUX)
 
 	if test x$HAVE_SELINUX = xyes; then
-		CFLAGS="$CFLAGS -DHAVE_SELINUX"
+		LVM_DEFS="$LVM_DEFS -DHAVE_SELINUX"
 		LIBS="-lselinux $LIBS"
 	else
 		AC_MSG_WARN(Disabling selinux)
@@ -440,7 +452,7 @@ fi
 
 ################################################################################
 dnl -- Check for getopt
-AC_CHECK_HEADERS(getopt.h, CFLAGS="$CFLAGS -DHAVE_GETOPTLONG")
+AC_CHECK_HEADERS(getopt.h, LVM_DEFS="$LVM_DEFS -DHAVE_GETOPTLONG")
 
 ################################################################################
 dnl -- Check for readline (Shamelessly copied from parted 1.4.17)
@@ -455,7 +467,7 @@ Note: if you are using precompiled packages you will also need the development
 package as well (which may be called readline-devel or something similar).
 )
 	)
-	AC_CHECK_FUNC(rl_completion_matches, CFLAGS="$CFLAGS -DHAVE_RL_COMPLETION_MATCHES")
+	AC_CHECK_FUNC(rl_completion_matches, LVM_DEFS="$LVM_DEFS -DHAVE_RL_COMPLETION_MATCHES")
 		
 fi
 
@@ -536,7 +548,7 @@ fi
 AC_PATH_PROG(MODPROBE_CMD, modprobe)
 
 if test x$MODPROBE_CMD != x; then
-	CFLAGS="$CFLAGS -DMODPROBE_CMD=\\\"$MODPROBE_CMD\\\""
+	LVM_DEFS="$LVM_DEFS -DMODPROBE_CMD=\\\"$MODPROBE_CMD\\\""
 fi
 
 ################################################################################
@@ -556,6 +568,7 @@ AC_SUBST(MIRRORS)
 AC_SUBST(OWNER)
 AC_SUBST(GROUP)
 AC_SUBST(CFLAGS)
+AC_SUBST(LVM_DEFS)
 AC_SUBST(COPTIMISE_FLAG)
 AC_SUBST(CLDFLAGS)
 AC_SUBST(CLDWHOLEARCHIVE)
@@ -581,6 +594,8 @@ AC_SUBST(CLVMD)
 AC_SUBST(CLUSTER)
 AC_SUBST(FSADM)
 AC_SUBST(DMEVENTD)
+AC_SUBST(CFLOW_CMD)
+AC_SUBST(CSCOPE_CMD)
 
 ################################################################################
 dnl -- First and last lines should not contain files to generate in order to 

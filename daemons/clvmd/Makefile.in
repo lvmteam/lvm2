@@ -35,19 +35,19 @@ ifeq ("@CLVMD@", "all")
 endif
 
 ifeq ("@DEBUG@", "yes")
-	CFLAGS += -DDEBUG
+	DEFS += -DDEBUG
 endif
 
 ifeq ("$(GULM)", "yes")
 	SOURCES += clvmd-gulm.c tcp-comms.c
 	LMLIBS += -lccs -lgulm
-	CFLAGS += -DUSE_GULM
+	DEFS += -DUSE_GULM
 endif
 
 ifeq ("$(CMAN)", "yes")
 	SOURCES += clvmd-cman.c
 	LMLIBS += -ldlm -lcman
-	CFLAGS += -DUSE_CMAN
+	DEFS += -DUSE_CMAN
 endif
 
 TARGETS = \
@@ -63,7 +63,8 @@ ifeq ("@DEVMAPPER@", "yes")
 	LVMLIBS += -ldevmapper
 endif
 
-CFLAGS += -D_REENTRANT -fno-strict-aliasing
+DEFS += -D_REENTRANT
+CFLAGS += -fno-strict-aliasing
 
 include $(top_srcdir)/make.tmpl
 

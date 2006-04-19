@@ -1,5 +1,9 @@
 Version 2.02.04 - 
 =================================
+  Check for libsepol.
+  Add some cflow & scope support.
+  Separate out DEFS from CFLAGS.
+  Remove inlines and use unique function names.
 
 Version 2.02.03 - 14th April 2006
 =================================

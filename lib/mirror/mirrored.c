@@ -43,12 +43,12 @@ struct mirror_state {
 	uint32_t default_region_size;
 };
 
-static const char *_name(const struct lv_segment *seg)
+static const char *_mirrored_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
 }
 
-static void _display(const struct lv_segment *seg)
+static void _mirrored_display(const struct lv_segment *seg)
 {
 	const char *size;
 	uint32_t s;
@@ -73,7 +73,7 @@ static void _display(const struct lv_segment *seg)
 	log_print(" ");
 }
 
-static int _text_import_area_count(struct config_node *sn, uint32_t *area_count)
+static int _mirrored_text_import_area_count(struct config_node *sn, uint32_t *area_count)
 {
 	if (!get_config_uint32(sn, "mirror_count", area_count)) {
 		log_error("Couldn't read 'mirror_count' for "
@@ -84,7 +84,7 @@ static int _text_import_area_count(struct config_node *sn, uint32_t *area_count)
 	return 1;
 }
 
-static int _text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _mirrored_text_import(struct lv_segment *seg, const struct config_node *sn,
 			struct dm_hash_table *pv_hash)
 {
 	const struct config_node *cn;
@@ -139,7 +139,7 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 	return text_import_areas(seg, sn, cn, pv_hash, MIRROR_IMAGE);
 }
 
-static int _text_export(const struct lv_segment *seg, struct formatter *f)
+static int _mirrored_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "mirror_count = %u", seg->area_count);
 	if (seg->status & PVMOVE)
@@ -154,7 +154,7 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static struct mirror_state *_init_target(struct dm_pool *mem,
+static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 					 struct config_tree *cft)
 {
 	struct mirror_state *mirr_state;
@@ -172,7 +172,7 @@ static struct mirror_state *_init_target(struct dm_pool *mem,
 	return mirr_state;
 }
 
-static int _target_percent(void **target_state, struct dm_pool *mem,
+static int _mirrored_target_percent(void **target_state, struct dm_pool *mem,
 			   struct config_tree *cft, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
 			   uint64_t *total_denominator, float *percent)
@@ -184,7 +184,7 @@ static int _target_percent(void **target_state, struct dm_pool *mem,
 	char *pos = params;
 
 	if (!*target_state)
-		*target_state = _init_target(mem, cft);
+		*target_state = _mirrored_init_target(mem, cft);
 
 	mirr_state = *target_state;
 
@@ -251,7 +251,7 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 	return dm_tree_node_add_mirror_target_log(node, region_size, clustered, log_dlid, area_count, log_flags);
 }
 
-static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
+static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
                                 struct config_tree *cft, void **target_state,
                                 struct lv_segment *seg,
                                 struct dm_tree_node *node, uint64_t len,
@@ -265,7 +265,7 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 	int r;
 
 	if (!*target_state)
-		*target_state = _init_target(mem, cft);
+		*target_state = _mirrored_init_target(mem, cft);
 
 	mirr_state = *target_state;
 
@@ -322,16 +322,16 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 	return add_areas_line(dm, seg, node, start_area, area_count);
 }
 
-static int _target_present(void)
+static int _mirrored_target_present(void)
 {
-	static int checked = 0;
-	static int present = 0;
+	static int _mirrored_checked = 0;
+	static int _mirrored_present = 0;
 	uint32_t maj, min, patchlevel;
 	unsigned maj2, min2, patchlevel2;
         char vsn[80];
 
-	if (!checked) {
-		present = target_present("mirror", 1);
+	if (!_mirrored_checked) {
+		_mirrored_present = target_present("mirror", 1);
 
 		/*
 		 * block_on_error available with mirror target >= 1.1
@@ -348,9 +348,9 @@ static int _target_present(void)
 			_block_on_error_available = 1;
 	}
 
-	checked = 1;
+	_mirrored_checked = 1;
 
-	return present;
+	return _mirrored_present;
 }
 
 #ifdef DMEVENTD
@@ -436,27 +436,27 @@ static int _target_unregister_events(struct dm_pool *mem,
 #endif /* DMEVENTD */
 #endif /* DEVMAPPER_SUPPORT */
 
-static void _destroy(const struct segment_type *segtype)
+static void _mirrored_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _mirrored_ops = {
-	name:_name,
-	display:_display,
-	text_import_area_count:_text_import_area_count,
-	text_import:_text_import,
-	text_export:_text_export,
+	name:_mirrored_name,
+	display:_mirrored_display,
+	text_import_area_count:_mirrored_text_import_area_count,
+	text_import:_mirrored_text_import,
+	text_export:_mirrored_text_export,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_add_target_line,
-	target_percent:_target_percent,
-	target_present:_target_present,
+	add_target_line:_mirrored_add_target_line,
+	target_percent:_mirrored_target_percent,
+	target_present:_mirrored_target_present,
 #ifdef DMEVENTD
 	target_register_events:_target_register_events,
 	target_unregister_events:_target_unregister_events,
 #endif
 #endif
-	destroy:_destroy,
+	destroy:_mirrored_destroy,
 };
 
 #ifdef MIRRORED_INTERNAL

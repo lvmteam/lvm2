@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static int _can_handle(struct labeller *l, char *buf, uint64_t sector)
+static int _text_can_handle(struct labeller *l, char *buf, uint64_t sector)
 {
 	struct label_header *lh = (struct label_header *) buf;
 
@@ -33,7 +33,7 @@ static int _can_handle(struct labeller *l, char *buf, uint64_t sector)
 	return 0;
 }
 
-static int _write(struct label *label, char *buf)
+static int _text_write(struct label *label, char *buf)
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
@@ -179,14 +179,14 @@ void del_mdas(struct list *mdas)
 	}
 }
 
-static int _initialise_label(struct labeller *l, struct label *label)
+static int _text_initialise_label(struct labeller *l, struct label *label)
 {
 	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
 
 	return 1;
 }
 
-static int _read(struct labeller *l, struct device *dev, char *buf,
+static int _text_read(struct labeller *l, struct device *dev, char *buf,
 		 struct label **label)
 {
 	struct label_header *lh = (struct label_header *) buf;
@@ -248,7 +248,7 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	return 1;
 }
 
-static void _destroy_label(struct labeller *l, struct label *label)
+static void _text_destroy_label(struct labeller *l, struct label *label)
 {
 	struct lvmcache_info *info = (struct lvmcache_info *) label->info;
 
@@ -258,19 +258,19 @@ static void _destroy_label(struct labeller *l, struct label *label)
 		del_das(&info->das);
 }
 
-static void _destroy(struct labeller *l)
+static void _fmt_text_destroy(struct labeller *l)
 {
 	dm_free(l);
 }
 
 struct label_ops _text_ops = {
-	can_handle:_can_handle,
-	write:_write,
-	read:_read,
-	verify:_can_handle,
-	initialise_label:_initialise_label,
-	destroy_label:_destroy_label,
-	destroy:_destroy
+	can_handle:_text_can_handle,
+	write:_text_write,
+	read:_text_read,
+	verify:_text_can_handle,
+	initialise_label:_text_initialise_label,
+	destroy_label:_text_destroy_label,
+	destroy:_fmt_text_destroy
 };
 
 struct labeller *text_labeller_create(const struct format_type *fmt)

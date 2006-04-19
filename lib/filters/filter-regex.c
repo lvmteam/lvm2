@@ -191,7 +191,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 	return !rejected;
 }
 
-static void _destroy(struct dev_filter *f)
+static void _regex_destroy(struct dev_filter *f)
 {
 	struct rfilter *rf = (struct rfilter *) f->private;
 	dm_pool_destroy(rf->mem);
@@ -226,7 +226,7 @@ struct dev_filter *regex_filter_create(struct config_value *patterns)
 	}
 
 	f->passes_filter = _accept_p;
-	f->destroy = _destroy;
+	f->destroy = _regex_destroy;
 	f->private = rf;
 	return f;
 

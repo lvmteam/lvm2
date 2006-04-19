@@ -38,8 +38,9 @@ struct lvconvert_params {
 	struct list *pvh;
 };
 
-static int _read_name_params(struct lvconvert_params *lp,
-			     struct cmd_context *cmd, int *pargc, char ***pargv)
+static int _lvconvert_name_params(struct lvconvert_params *lp,
+				  struct cmd_context *cmd,
+				  int *pargc, char ***pargv)
 {
 	char *ptr;
 	const char *vg_name = NULL;
@@ -194,7 +195,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!_read_name_params(lp, cmd, &argc, &argv))
+	if (!_lvconvert_name_params(lp, cmd, &argc, &argv))
 		return_0;
 
 	lp->pv_count = argc;
