@@ -24,12 +24,12 @@
 #include "lvm-string.h"
 #include "activate.h"
 
-static const char *_name(const struct lv_segment *seg)
+static const char *_errseg_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
 }
 
-static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
+static int _errseg_merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 {
 	seg1->len += seg2->len;
 	seg1->area_len += seg2->area_len;
@@ -38,7 +38,7 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
+static int _errseg_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 				struct config_tree *cft, void **target_state,
 				struct lv_segment *seg,
 				struct dm_tree_node *node, uint64_t len,
@@ -47,34 +47,34 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 	return dm_tree_node_add_error_target(node, len);
 }
 
-static int _target_present(void)
+static int _errseg_target_present(void)
 {
-	static int checked = 0;
-	static int present = 0;
+	static int _errseg_checked = 0;
+	static int _errseg_present = 0;
 
 	/* Reported truncated in older kernels */
-	if (!checked &&
+	if (!_errseg_checked &&
 	    (target_present("error", 0) || target_present("erro", 0)))
-		present = 1;
+		_errseg_present = 1;
 
-	checked = 1;
-	return present;
+	_errseg_checked = 1;
+	return _errseg_present;
 }
 #endif
 
-static void _destroy(const struct segment_type *segtype)
+static void _errseg_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _error_ops = {
-	name:_name,
-	merge_segments:_merge_segments,
+	name:_errseg_name,
+	merge_segments:_errseg_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_add_target_line,
-	target_present:_target_present,
+	add_target_line:_errseg_add_target_line,
+	target_present:_errseg_target_present,
 #endif
-	destroy:_destroy,
+	destroy:_errseg_destroy,
 };
 
 struct segment_type *init_error_segtype(struct cmd_context *cmd)

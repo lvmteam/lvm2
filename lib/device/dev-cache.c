@@ -479,7 +479,7 @@ static void _check_closed(struct device *dev)
 		log_err("Device '%s' has been left open.", dev_name(dev));
 }
 
-static inline void _check_for_open_devices(void)
+static void _check_for_open_devices(void)
 {
 	dm_hash_iter(_cache.names, (dm_hash_iterate_fn) _check_closed);
 }
@@ -664,7 +664,7 @@ void dev_iter_destroy(struct dev_iter *iter)
 	dm_free(iter);
 }
 
-static inline struct device *_iter_next(struct dev_iter *iter)
+static struct device *_iter_next(struct dev_iter *iter)
 {
 	struct device *d = btree_get_data(iter->current);
 	iter->current = btree_next(iter->current);
@@ -681,4 +681,15 @@ struct device *dev_iter_get(struct dev_iter *iter)
 	}
 
 	return NULL;
+}
+
+int dev_fd(struct device *dev)
+{
+	return dev->fd;
+}
+
+const char *dev_name(const struct device *dev)
+{
+	return (dev) ? list_item(dev->aliases.n, struct str_list)->str :
+	    "unknown device";
 }

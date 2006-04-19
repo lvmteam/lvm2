@@ -33,107 +33,61 @@ struct list {
  * The list head's next and previous pointers point back to itself.
  */
 #define LIST_INIT(name)	struct list name = { &(name), &(name) }
-static inline void list_init(struct list *head)
-{
-	head->n = head->p = head;
-}
+void list_init(struct list *head);
 
 /*
  * Insert an element before 'head'.
  * If 'head' is the list head, this adds an element to the end of the list.
  */
-static inline void list_add(struct list *head, struct list *elem)
-{
-	assert(head->n);
-
-	elem->n = head;
-	elem->p = head->p;
-
-	head->p->n = elem;
-	head->p = elem;
-}
+void list_add(struct list *head, struct list *elem);
 
 /*
  * Insert an element after 'head'.
  * If 'head' is the list head, this adds an element to the front of the list.
  */
-static inline void list_add_h(struct list *head, struct list *elem)
-{
-	assert(head->n);
-
-	elem->n = head->n;
-	elem->p = head;
-
-	head->n->p = elem;
-	head->n = elem;
-}
+void list_add_h(struct list *head, struct list *elem);
 
 /*
  * Delete an element from its list.
  * Note that this doesn't change the element itself - it may still be safe
  * to follow its pointers.
  */
-static inline void list_del(struct list *elem)
-{
-	elem->n->p = elem->p;
-	elem->p->n = elem->n;
-}
+void list_del(struct list *elem);
 
 /*
  * Is the list empty?
  */
-static inline int list_empty(struct list *head)
-{
-	return head->n == head;
-}
+int list_empty(struct list *head);
 
 /*
  * Is this the first element of the list?
  */
-static inline int list_start(struct list *head, struct list *elem)
-{
-	return elem->p == head;
-}
+int list_start(struct list *head, struct list *elem);
 
 /*
  * Is this the last element of the list?
  */
-static inline int list_end(struct list *head, struct list *elem)
-{
-	return elem->n == head;
-}
+int list_end(struct list *head, struct list *elem);
 
 /*
  * Return first element of the list or NULL if empty
  */
-static inline struct list *list_first(struct list *head)
-{
-	return (list_empty(head) ? NULL : head->n);
-}
+struct list *list_first(struct list *head);
 
 /*
  * Return last element of the list or NULL if empty
  */
-static inline struct list *list_last(struct list *head)
-{
-	return (list_empty(head) ? NULL : head->p);
-}
+struct list *list_last(struct list *head);
 
 /*
  * Return the previous element of the list, or NULL if we've reached the start.
  */
-static inline struct list *list_prev(struct list *head, struct list *elem)
-{
-	return (list_start(head, elem) ? NULL : elem->p);
-}
+struct list *list_prev(struct list *head, struct list *elem);
 
 /*
  * Return the next element of the list, or NULL if we've reached the end.
  */
-static inline struct list *list_next(struct list *head, struct list *elem)
-{
-	return (list_end(head, elem) ? NULL : elem->n);
-}
+struct list *list_next(struct list *head, struct list *elem);
 
 /*
  * Given the address v of an instance of 'struct list' called 'head' 
@@ -244,15 +198,6 @@ static inline struct list *list_next(struct list *head, struct list *elem)
 /*
  * Return the number of elements in a list by walking it.
  */
-static inline unsigned int list_size(const struct list *head)
-{
-	unsigned int s = 0;
-	const struct list *v;
-
-	list_iterate(v, head)
-	    s++;
-
-	return s;
-}
+unsigned int list_size(const struct list *head);
 
 #endif

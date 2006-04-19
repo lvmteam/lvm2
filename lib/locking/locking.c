@@ -102,7 +102,7 @@ void reset_locking(void)
 		_unblock_signals();
 }
 
-static inline void _update_vg_lock_count(int flags)
+static void _update_vg_lock_count(int flags)
 {
 	if ((flags & LCK_SCOPE_MASK) != LCK_VG)
 		return;

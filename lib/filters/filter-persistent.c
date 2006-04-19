@@ -217,7 +217,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 	return (l == PF_BAD_DEVICE) ? 0 : 1;
 }
 
-static void _destroy(struct dev_filter *f)
+static void _persistent_destroy(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 
@@ -258,7 +258,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	}
 
 	f->passes_filter = _lookup_p;
-	f->destroy = _destroy;
+	f->destroy = _persistent_destroy;
 	f->private = pf;
 
 	return f;

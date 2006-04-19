@@ -35,12 +35,12 @@ const char *text_vgname_import(const struct format_type *fmt,
 	struct text_vg_version_ops **vsn;
 	const char *vgname;
 
-	static int _initialised = 0;
+	static int _text_import_initialised = 0;
 
-	if (!_initialised) {
+	if (!_text_import_initialised) {
 		_text_vsn_list[0] = text_vg_vsn1_init();
 		_text_vsn_list[1] = NULL;
-		_initialised = 1;
+		_text_import_initialised = 1;
 	}
 
 	if (!(cft = create_config_tree(NULL)))
@@ -83,12 +83,12 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	struct config_tree *cft;
 	struct text_vg_version_ops **vsn;
 
-	static int _initialised = 0;
+	static int _text_vg_import_initialised = 0;
 
-	if (!_initialised) {
+	if (!_text_vg_import_initialised) {
 		_text_vsn_list[0] = text_vg_vsn1_init();
 		_text_vsn_list[1] = NULL;
-		_initialised = 1;
+		_text_vg_import_initialised = 1;
 	}
 
 	*desc = NULL;

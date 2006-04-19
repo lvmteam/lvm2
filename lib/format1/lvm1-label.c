@@ -30,7 +30,7 @@ static void _not_supported(const char *op)
 		op);
 }
 
-static int _can_handle(struct labeller *l, char *buf, uint64_t sector)
+static int _lvm1_can_handle(struct labeller *l, char *buf, uint64_t sector)
 {
 	struct pv_disk *pvd = (struct pv_disk *) buf;
 	uint32_t version;
@@ -48,13 +48,13 @@ static int _can_handle(struct labeller *l, char *buf, uint64_t sector)
 	return 0;
 }
 
-static int _write(struct label *label, char *buf)
+static int _lvm1_write(struct label *label, char *buf)
 {
 	_not_supported("write");
 	return 0;
 }
 
-static int _read(struct labeller *l, struct device *dev, char *buf,
+static int _lvm1_read(struct labeller *l, struct device *dev, char *buf,
 		 struct label **label)
 {
 	struct pv_disk *pvd = (struct pv_disk *) buf;
@@ -85,31 +85,31 @@ static int _read(struct labeller *l, struct device *dev, char *buf,
 	return 1;
 }
 
-static int _initialise_label(struct labeller *l, struct label *label)
+static int _lvm1_initialise_label(struct labeller *l, struct label *label)
 {
 	strcpy(label->type, "LVM1");
 
 	return 1;
 }
 
-static void _destroy_label(struct labeller *l, struct label *label)
+static void _lvm1_destroy_label(struct labeller *l, struct label *label)
 {
 	return;
 }
 
-static void _destroy(struct labeller *l)
+static void _lvm1_destroy(struct labeller *l)
 {
 	dm_free(l);
 }
 
 struct label_ops _lvm1_ops = {
-	can_handle:_can_handle,
-	write:_write,
-	read:_read,
-	verify:_can_handle,
-	initialise_label:_initialise_label,
-	destroy_label:_destroy_label,
-	destroy:_destroy
+	can_handle:_lvm1_can_handle,
+	write:_lvm1_write,
+	read:_lvm1_read,
+	verify:_lvm1_can_handle,
+	initialise_label:_lvm1_initialise_label,
+	destroy_label:_lvm1_destroy_label,
+	destroy:_lvm1_destroy
 };
 
 struct labeller *lvm1_labeller_create(struct format_type *fmt)

@@ -90,7 +90,7 @@ static void _release_memory(void)
 }
 
 /* Stop memory getting swapped out */
-static void _lock_memory(void)
+static void _lock_mem(void)
 {
 #ifdef MCL_CURRENT
 	if (mlockall(MCL_CURRENT | MCL_FUTURE))
@@ -109,7 +109,7 @@ static void _lock_memory(void)
 				  _default_priority, strerror(errno));
 }
 
-static void _unlock_memory(void)
+static void _unlock_mem(void)
 {
 #ifdef MCL_CURRENT
 	if (munlockall())
@@ -126,14 +126,14 @@ static void _unlock_memory(void)
 void memlock_inc(void)
 {
 	if (!_memlock_count++)
-		_lock_memory();
+		_lock_mem();
 	log_debug("memlock_count inc to %d", _memlock_count);
 }
 
 void memlock_dec(void)
 {
 	if (_memlock_count && (!--_memlock_count))
-		_unlock_memory();
+		_unlock_mem();
 	log_debug("memlock_count dec to %d", _memlock_count);
 }
 

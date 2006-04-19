@@ -26,12 +26,12 @@
 #include "activate.h"
 #include "pv_alloc.h"
 
-static const char *_name(const struct lv_segment *seg)
+static const char *_striped_name(const struct lv_segment *seg)
 {
 	return (seg->area_count == 1) ? "linear" : seg->segtype->name;
 }
 
-static void _display(const struct lv_segment *seg)
+static void _striped_display(const struct lv_segment *seg)
 {
 	uint32_t s;
 
@@ -49,7 +49,7 @@ static void _display(const struct lv_segment *seg)
 	log_print(" ");
 }
 
-static int _text_import_area_count(struct config_node *sn, uint32_t *area_count)
+static int _striped_text_import_area_count(struct config_node *sn, uint32_t *area_count)
 {
 	if (!get_config_uint32(sn, "stripe_count", area_count)) {
 		log_error("Couldn't read 'stripe_count' for "
@@ -60,7 +60,7 @@ static int _text_import_area_count(struct config_node *sn, uint32_t *area_count)
 	return 1;
 }
 
-static int _text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _striped_text_import(struct lv_segment *seg, const struct config_node *sn,
 			struct dm_hash_table *pv_hash)
 {
 	struct config_node *cn;
@@ -83,7 +83,7 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 	return text_import_areas(seg, sn, cn, pv_hash, 0);
 }
 
-static int _text_export(const struct lv_segment *seg, struct formatter *f)
+static int _striped_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 
 	outf(f, "stripe_count = %u%s", seg->area_count,
@@ -99,7 +99,7 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 /*
  * Test whether two segments could be merged by the current merging code
  */
-static int _segments_compatible(struct lv_segment *first,
+static int _striped_segments_compatible(struct lv_segment *first,
 				struct lv_segment *second)
 {
 	uint32_t width;
@@ -132,11 +132,11 @@ static int _segments_compatible(struct lv_segment *first,
 	return 1;
 }
 
-static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
+static int _striped_merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 {
 	uint32_t s;
 
-	if (!_segments_compatible(seg1, seg2))
+	if (!_striped_segments_compatible(seg1, seg2))
 		return 0;
 
 	seg1->len += seg2->len;
@@ -151,7 +151,7 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
+static int _striped_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
                                 struct config_tree *cft, void **target_state,
                                 struct lv_segment *seg,
                                 struct dm_tree_node *node, uint64_t len,
@@ -172,37 +172,38 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);
 }
 
-static int _target_present(void)
+static int _striped_target_present(void)
 {
-	static int checked = 0;
-	static int present = 0;
+	static int _striped_checked = 0;
+	static int _striped_present = 0;
 
-	if (!checked)
-		present = target_present("linear", 0) &&
+	if (!_striped_checked)
+		_striped_present = target_present("linear", 0) &&
 			  target_present("striped", 0);
 
-	checked = 1;
-	return present;
+	_striped_checked = 1;
+
+	return _striped_present;
 }
 #endif
 
-static void _destroy(const struct segment_type *segtype)
+static void _striped_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _striped_ops = {
-	name:_name,
-	display:_display,
-	text_import_area_count:_text_import_area_count,
-	text_import:_text_import,
-	text_export:_text_export,
-	merge_segments:_merge_segments,
+	name:_striped_name,
+	display:_striped_display,
+	text_import_area_count:_striped_text_import_area_count,
+	text_import:_striped_text_import,
+	text_export:_striped_text_export,
+	merge_segments:_striped_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_add_target_line,
-	target_present:_target_present,
+	add_target_line:_striped_add_target_line,
+	target_present:_striped_target_present,
 #endif
-	destroy:_destroy,
+	destroy:_striped_destroy,
 };
 
 struct segment_type *init_striped_segtype(struct cmd_context *cmd)

@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#define NAME_LEN 128
+
 struct pool;
 
 /*
@@ -39,5 +41,7 @@ char *build_dm_name(struct dm_pool *mem, const char *vg,
 
 int split_dm_name(struct dm_pool *mem, const char *dmname,
                   char **vgname, char **lvname, char **layer);
+
+int validate_name(const char *n);
 
 #endif

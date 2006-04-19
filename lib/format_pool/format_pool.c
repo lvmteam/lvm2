@@ -169,7 +169,7 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 	return vg;
 }
 
-static struct volume_group *_vg_read(struct format_instance *fid,
+static struct volume_group *_pool_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda)
 {
@@ -206,7 +206,7 @@ static struct volume_group *_vg_read(struct format_instance *fid,
 	return vg;
 }
 
-static int _pv_setup(const struct format_type *fmt,
+static int _pool_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size,
 		     int pvmetadatacopies,
@@ -216,7 +216,7 @@ static int _pv_setup(const struct format_type *fmt,
 	return 1;
 }
 
-static int _pv_read(const struct format_type *fmt, const char *pv_name,
+static int _pool_pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
 	struct dm_pool *mem = dm_pool_create("pool pv_read", 1024);
@@ -262,11 +262,11 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 
 /* *INDENT-OFF* */
 static struct metadata_area_ops _metadata_format_pool_ops = {
-	vg_read:_vg_read,
+	vg_read:_pool_vg_read,
 };
 /* *INDENT-ON* */
 
-static struct format_instance *_create_instance(const struct format_type *fmt,
+static struct format_instance *_pool_create_instance(const struct format_type *fmt,
 						const char *vgname,
 						const char *vgid,
 						void *private)
@@ -298,23 +298,23 @@ static struct format_instance *_create_instance(const struct format_type *fmt,
 	return fid;
 }
 
-static void _destroy_instance(struct format_instance *fid)
+static void _pool_destroy_instance(struct format_instance *fid)
 {
 	return;
 }
 
-static void _destroy(const struct format_type *fmt)
+static void _pool_destroy(const struct format_type *fmt)
 {
 	dm_free((void *) fmt);
 }
 
 /* *INDENT-OFF* */
 static struct format_handler _format_pool_ops = {
-	pv_read:_pv_read,
-	pv_setup:_pv_setup,
-	create_instance:_create_instance,
-	destroy_instance:_destroy_instance,
-	destroy:_destroy,
+	pv_read:_pool_pv_read,
+	pv_setup:_pool_pv_setup,
+	create_instance:_pool_create_instance,
+	destroy_instance:_pool_destroy_instance,
+	destroy:_pool_destroy,
 };
 /* *INDENT-ON */
 

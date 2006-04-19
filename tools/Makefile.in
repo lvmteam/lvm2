@@ -80,7 +80,7 @@ endif
 
 LVMLIBS = -llvm
 
-CLEAN_TARGETS = liblvm2cmd.so liblvm2cmd.a lvm lvm.static
+CLEAN_TARGETS = liblvm2cmd.so liblvm2cmd.a lvm lvm.static lvm.cflow lvm.xref lvm.tree lvm.rxref lvm.rtree
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.so
@@ -95,7 +95,7 @@ ifeq ("@DEVMAPPER@", "yes")
 	LVMLIBS += -ldevmapper
 endif
 
-CFLAGS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
+DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 
 include $(top_srcdir)/make.tmpl
 
@@ -118,6 +118,23 @@ liblvm2cmd.so: liblvm2cmd.a $(LDDEPS)
 
 .PHONY: install_cmdlib_dynamic install_cmdlib_static \
 	install_tools_dynamic install_tools_static
+
+ifneq ("@CFLOW_CMD@", "")
+CFLOW_FLAGS += --cpp="$(CC) -E"
+.PHONY: lvm.cflow
+-include $(top_srcdir)/lib/liblvm.cflow
+lvm.cflow: $(SOURCES)
+	@CFLOW_CMD@ -o$@ $(CFLOW_FLAGS) $(INCLUDES) $(DEFS) $(SOURCES)
+lvm.rxref: $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" -r --omit-arguments -x $(INCLUDES) $(DEFS) $(SOURCES)
+lvm.xref: $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" --omit-arguments -x $(INCLUDES) $(DEFS) $(SOURCES)
+lvm.rtree: $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" -r --omit-arguments -T -b $(INCLUDES) $(DEFS) $(SOURCES)
+lvm.tree: $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" --omit-arguments -T -b $(INCLUDES) $(DEFS) $(SOURCES)
+cflow: lvm.cflow lvm.xref lvm.tree lvm.rtree lvm.rxref
+endif
 
 install_cmdlib_dynamic: liblvm2cmd.so
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) liblvm2cmd.so \

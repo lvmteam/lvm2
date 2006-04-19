@@ -21,12 +21,12 @@
 #include "config.h"
 #include "activate.h"
 
-static const char *_name(const struct lv_segment *seg)
+static const char *_snap_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
 }
 
-static int _text_import(struct lv_segment *seg, const struct config_node *sn,
+static int _snap_text_import(struct lv_segment *seg, const struct config_node *sn,
 			struct dm_hash_table *pv_hash)
 {
 	uint32_t chunk_size;
@@ -77,7 +77,7 @@ static int _text_import(struct lv_segment *seg, const struct config_node *sn,
 	return 1;
 }
 
-static int _text_export(const struct lv_segment *seg, struct formatter *f)
+static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 {
 	outf(f, "chunk_size = %u", seg->chunk_size);
 	outf(f, "origin = \"%s\"", seg->origin->name);
@@ -87,7 +87,7 @@ static int _text_export(const struct lv_segment *seg, struct formatter *f)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _target_percent(void **target_state, struct dm_pool *mem,
+static int _snap_target_percent(void **target_state, struct dm_pool *mem,
 			   struct config_tree *cft, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
 			   uint64_t *total_denominator, float *percent)
@@ -109,35 +109,35 @@ static int _target_percent(void **target_state, struct dm_pool *mem,
 	return 1;
 }
 
-static int _target_present(void)
+static int _snap_target_present(void)
 {
-	static int checked = 0;
-	static int present = 0;
+	static int _snap_checked = 0;
+	static int _snap_present = 0;
 
-	if (!checked)
-		present = target_present("snapshot", 1) &&
+	if (!_snap_checked)
+		_snap_present = target_present("snapshot", 1) &&
 		    target_present("snapshot-origin", 0);
 
-	checked = 1;
+	_snap_checked = 1;
 
-	return present;
+	return _snap_present;
 }
 #endif
 
-static void _destroy(const struct segment_type *segtype)
+static void _snap_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _snapshot_ops = {
-	name:_name,
-	text_import:_text_import,
-	text_export:_text_export,
+	name:_snap_name,
+	text_import:_snap_text_import,
+	text_export:_snap_text_export,
 #ifdef DEVMAPPER_SUPPORT
-	target_percent:_target_percent,
-	target_present:_target_present,
+	target_percent:_snap_target_percent,
+	target_present:_snap_target_present,
 #endif
-	destroy:_destroy,
+	destroy:_snap_destroy,
 };
 
 #ifdef SNAPSHOT_INTERNAL

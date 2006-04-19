@@ -38,7 +38,7 @@ static void _single_char(struct parse_sp *ps, unsigned int c, const char *ptr)
  * Get the next token from the regular expression.
  * Returns: 1 success, 0 end of input, -1 error.
  */
-static int _get_token(struct parse_sp *ps)
+static int _rx_get_token(struct parse_sp *ps)
 {
 	int neg = 0, range = 0;
 	char c, lc = 0;
@@ -230,17 +230,17 @@ static struct rx_node *_term(struct parse_sp *ps)
 		}
 
 		dm_bit_copy(n->charset, ps->charset);
-		_get_token(ps);	/* match charset */
+		_rx_get_token(ps);	/* match charset */
 		break;
 
 	case '(':
-		_get_token(ps);	/* match '(' */
+		_rx_get_token(ps);	/* match '(' */
 		n = _or_term(ps);
 		if (ps->type != ')') {
 			log_error("missing ')' in regular expression");
 			return 0;
 		}
-		_get_token(ps);	/* match ')' */
+		_rx_get_token(ps);	/* match ')' */
 		break;
 
 	default:
@@ -280,7 +280,7 @@ static struct rx_node *_closure_term(struct parse_sp *ps)
 			return NULL;
 		}
 
-		_get_token(ps);
+		_rx_get_token(ps);
 		l = n;
 	}
 
@@ -316,7 +316,7 @@ static struct rx_node *_or_term(struct parse_sp *ps)
 	if (ps->type != '|')
 		return l;
 
-	_get_token(ps);		/* match '|' */
+	_rx_get_token(ps);		/* match '|' */
 
 	if (!(r = _or_term(ps))) {
 		log_error("Badly formed 'or' expression");
@@ -344,7 +344,7 @@ struct rx_node *rx_parse_tok(struct dm_pool *mem,
 	ps->charset = dm_bitset_create(mem, 256);
 	ps->cursor = begin;
 	ps->rx_end = end;
-	_get_token(ps);		/* load the first token */
+	_rx_get_token(ps);		/* load the first token */
 
 	if (!(r = _or_term(ps))) {
 		log_error("Parse error in regex");

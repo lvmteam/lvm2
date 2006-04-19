@@ -59,7 +59,7 @@ void *ttree_lookup(struct ttree *tt, unsigned *key)
 	return *c ? (*c)->data : NULL;
 }
 
-static struct node *_node(struct dm_pool *mem, unsigned int k)
+static struct node *_tree_node(struct dm_pool *mem, unsigned int k)
 {
 	struct node *n = dm_pool_zalloc(mem, sizeof(*n));
 
@@ -86,7 +86,7 @@ int ttree_insert(struct ttree *tt, unsigned int *key, void *data)
 		count++;
 
 		while (count--) {
-			if (!(*c = _node(tt->mem, k))) {
+			if (!(*c = _tree_node(tt->mem, k))) {
 				stack;
 				return 0;
 			}

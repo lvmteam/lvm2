@@ -107,7 +107,7 @@ void *btree_get_data(struct btree_iter *it)
 	return ((struct node *) it)->data;
 }
 
-static inline struct node *_left(struct node *n)
+static struct node *_left(struct node *n)
 {
 	while (n->l)
 		n = n->l;

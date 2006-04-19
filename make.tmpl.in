@@ -24,7 +24,7 @@ INSTALL = @INSTALL@
 MSGFMT = @MSGFMT@
 LN_S = @LN_S@
 LIBS = @LIBS@
-CFLAGS += @DEFS@
+DEFS += @DEFS@ @LVM_DEFS@
 CFLAGS += @CFLAGS@
 CLDFLAGS += @CLDFLAGS@
 LDDEPS += @LDDEPS@
@@ -54,7 +54,7 @@ ifndef MAKEFLAGS
 MAKEFLAGS = @JOBS@
 endif
 
-SUFFIXES = .c .d .o .so .a .po .pot .mo .dylib
+.SUFFIXES: .c .d .o .so .a .po .pot .mo .dylib
 
 CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline
 
@@ -63,18 +63,19 @@ CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-pr
 CFLAGS += @COPTIMISE_FLAG@
 
 ifeq ("@DEBUG@", "yes")
-  CFLAGS += -g -fno-omit-frame-pointer -DDEBUG
-  CFLAGS += -DDEBUG_MEM
+  CFLAGS += -g -fno-omit-frame-pointer
+  DEFS += -DDEBUG
+  DEFS += -DDEBUG_MEM
 endif
 
 ifeq ("@INTL@", "yes")
-  CFLAGS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
+  DEFS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
 endif
 
 LDFLAGS += -L$(top_srcdir)/lib -L$(libdir)
 
-#CFLAGS += -DDEBUG_POOL
-#CFLAGS += -DBOUNDS_CHECK
+#DEFS += -DDEBUG_POOL
+#DEFS += -DBOUNDS_CHECK
 
 #CFLAGS += -pg
 #LDFLAGS += -pg
@@ -98,13 +99,14 @@ DEPS = $(top_srcdir)/make.tmpl $(top_srcdir)/VERSION Makefile $(INC_LNS)
 OBJECTS = $(SOURCES:%.c=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
 
-.PHONY: all install install_cluster pofile distclean clean
+.PHONY: all install install_cluster pofile distclean clean cflow
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
-.PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster)
+.PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 
 SUBDIRS.install := $(SUBDIRS:=.install)
 SUBDIRS.install_cluster := $(SUBDIRS:=.install_cluster)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
+SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
 SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 
@@ -137,17 +139,24 @@ $(SUBDIRS.pofile):
 	$(MAKE) -C $(@:.pofile=) pofile
 endif
 
+ifneq ("@CFLOW_CMD@", "")
+cflow: $(SUBDIRS.cflow)
+
+$(SUBDIRS.cflow):
+	$(MAKE) -C $(@:.cflow=) cflow
+endif
+
 $(TARGETS): $(OBJECTS)
 
 %.o: %.c
-	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
+	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $< -o $@
 
 %.pot: %.c Makefile
 	$(CC) -E $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
-		$(CFLAGS) $< > $@
+		$(DEFS) $(CFLAGS) $< > $@
 
 %.so: %.o
-	$(CC) -c $(INCLUDES) $(CFLAGS) $< -o $@
+	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $< -o $@
 
 ifeq ("@LIB_SUFFIX@","so")
 $(LIB_SHARED): $(OBJECTS) $(LDDEPS)
@@ -173,7 +182,7 @@ $(LIB_STATIC): $(OBJECTS)
 	set -e; \
 	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
-	$(CC) -MM $(INCLUDES) $(CFLAGS) $< | \
+	$(CC) -MM $(INCLUDES) $(DEFS) $(CFLAGS) $< | \
 	sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" > $@; \
 	[ -s $@ ] || $(RM) $@
 

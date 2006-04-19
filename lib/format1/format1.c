@@ -173,7 +173,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	return NULL;
 }
 
-static struct volume_group *_vg_read(struct format_instance *fid,
+static struct volume_group *_format1_vg_read(struct format_instance *fid,
 				     const char *vg_name,
 				     struct metadata_area *mda)
 {
@@ -264,7 +264,7 @@ static int _flatten_vg(struct format_instance *fid, struct dm_pool *mem,
 	return 1;
 }
 
-static int _vg_write(struct format_instance *fid, struct volume_group *vg,
+static int _format1_vg_write(struct format_instance *fid, struct volume_group *vg,
 		     struct metadata_area *mda)
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 vg_write", 1024 * 10);
@@ -287,7 +287,7 @@ static int _vg_write(struct format_instance *fid, struct volume_group *vg,
 	return r;
 }
 
-static int _pv_read(const struct format_type *fmt, const char *pv_name,
+static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
 		    struct physical_volume *pv, struct list *mdas)
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 pv_read", 1024);
@@ -326,7 +326,7 @@ static int _pv_read(const struct format_type *fmt, const char *pv_name,
 	return r;
 }
 
-static int _pv_setup(const struct format_type *fmt,
+static int _format1_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size,
 		     int pvmetadatacopies,
@@ -364,7 +364,7 @@ static int _pv_setup(const struct format_type *fmt,
 	return 1;
 }
 
-static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
+static int _format1_lv_setup(struct format_instance *fid, struct logical_volume *lv)
 {
 	uint64_t max_size = UINT_MAX;
 
@@ -386,7 +386,7 @@ static int _lv_setup(struct format_instance *fid, struct logical_volume *lv)
 	return 1;
 }
 
-static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
+static int _format1_pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		     struct list *mdas, int64_t sector)
 {
 	struct dm_pool *mem;
@@ -449,7 +449,7 @@ static int _pv_write(const struct format_type *fmt, struct physical_volume *pv,
 	return 0;
 }
 
-static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
+static int _format1_vg_setup(struct format_instance *fid, struct volume_group *vg)
 {
 	/* just check max_pv and max_lv */
 	if (!vg->max_lv || vg->max_lv >= MAX_LV)
@@ -484,7 +484,7 @@ static int _vg_setup(struct format_instance *fid, struct volume_group *vg)
 	return 1;
 }
 
-static int _segtype_supported (struct format_instance *fid, 
+static int _format1_segtype_supported(struct format_instance *fid, 
 			       struct segment_type *segtype)
 {
 	if (!(segtype->flags & SEG_FORMAT1_SUPPORT)) {
@@ -496,11 +496,11 @@ static int _segtype_supported (struct format_instance *fid,
 }
 
 static struct metadata_area_ops _metadata_format1_ops = {
-	vg_read:_vg_read,
-	vg_write:_vg_write,
+	vg_read:_format1_vg_read,
+	vg_write:_format1_vg_write,
 };
 
-static struct format_instance *_create_instance(const struct format_type *fmt,
+static struct format_instance *_format1_create_instance(const struct format_type *fmt,
 						const char *vgname,
 						const char *vgid,
 						void *private)
@@ -530,26 +530,26 @@ static struct format_instance *_create_instance(const struct format_type *fmt,
 	return fid;
 }
 
-static void _destroy_instance(struct format_instance *fid)
+static void _format1_destroy_instance(struct format_instance *fid)
 {
 	return;
 }
 
-static void _destroy(const struct format_type *fmt)
+static void _format1_destroy(const struct format_type *fmt)
 {
 	dm_free((void *) fmt);
 }
 
 static struct format_handler _format1_ops = {
-	pv_read:_pv_read,
-	pv_setup:_pv_setup,
-	pv_write:_pv_write,
-	lv_setup:_lv_setup,
-	vg_setup:_vg_setup,
-	segtype_supported:_segtype_supported,
-	create_instance:_create_instance,
-	destroy_instance:_destroy_instance,
-	destroy:_destroy,
+	pv_read:_format1_pv_read,
+	pv_setup:_format1_pv_setup,
+	pv_write:_format1_pv_write,
+	lv_setup:_format1_lv_setup,
+	vg_setup:_format1_vg_setup,
+	segtype_supported:_format1_segtype_supported,
+	create_instance:_format1_create_instance,
+	destroy_instance:_format1_destroy_instance,
+	destroy:_format1_destroy,
 };
 
 #ifdef LVM1_INTERNAL

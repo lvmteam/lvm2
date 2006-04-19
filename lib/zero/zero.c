@@ -24,12 +24,12 @@
 #include "lvm-string.h"
 #include "activate.h"
 
-static const char *_name(const struct lv_segment *seg)
+static const char *_zero_name(const struct lv_segment *seg)
 {
 	return seg->segtype->name;
 }
 
-static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
+static int _zero_merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 {
 	seg1->len += seg2->len;
 	seg1->area_len += seg2->area_len;
@@ -38,7 +38,7 @@ static int _merge_segments(struct lv_segment *seg1, struct lv_segment *seg2)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
+static int _zero_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
                                 struct config_tree *cft, void **target_state,
                                 struct lv_segment *seg,
                                 struct dm_tree_node *node, uint64_t len,
@@ -47,32 +47,33 @@ static int _add_target_line(struct dev_manager *dm, struct dm_pool *mem,
 	return dm_tree_node_add_zero_target(node, len);
 }
 
-static int _target_present(void)
+static int _zero_target_present(void)
 {
-	static int checked = 0;
-	static int present = 0;
+	static int _zero_checked = 0;
+	static int _zero_present = 0;
 
-	if (!checked)
-		present = target_present("zero", 0);
+	if (!_zero_checked)
+		_zero_present = target_present("zero", 0);
 
-	checked = 1;
-	return present;
+	_zero_checked = 1;
+
+	return _zero_present;
 }
 #endif
 
-static void _destroy(const struct segment_type *segtype)
+static void _zero_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
 }
 
 static struct segtype_handler _zero_ops = {
-	name:_name,
-	merge_segments:_merge_segments,
+	name:_zero_name,
+	merge_segments:_zero_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_add_target_line,
-	target_present:_target_present,
+	add_target_line:_zero_add_target_line,
+	target_present:_zero_target_present,
 #endif
-	destroy:_destroy,
+	destroy:_zero_destroy,
 };
 
 struct segment_type *init_zero_segtype(struct cmd_context *cmd)

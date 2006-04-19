@@ -88,7 +88,7 @@ static struct dev_set *_dev_set_create(struct dm_pool *mem, const char *sys_bloc
 	return ds;
 }
 
-static inline unsigned _hash_dev(dev_t dev)
+static unsigned _hash_dev(dev_t dev)
 {
 	return (major(dev) ^ minor(dev)) & (SET_BUCKETS - 1);
 }

@@ -166,7 +166,7 @@ static void _calc_functions(struct matcher *m)
 	}
 }
 
-static inline struct dfa_state *_create_dfa_state(struct dm_pool *mem)
+static struct dfa_state *_create_dfa_state(struct dm_pool *mem)
 {
 	return dm_pool_zalloc(mem, sizeof(struct dfa_state));
 }
@@ -337,8 +337,7 @@ struct matcher *matcher_create(struct dm_pool *mem, const char **patterns,
 	return NULL;
 }
 
-static inline struct dfa_state *_step_matcher(int c,
-					      struct dfa_state *cs, int *r)
+static struct dfa_state *_step_matcher(int c, struct dfa_state *cs, int *r)
 {
 	if (!(cs = cs->lookup[(unsigned char) c]))
 		return NULL;
