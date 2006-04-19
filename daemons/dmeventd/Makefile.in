@@ -56,8 +56,8 @@ install_dynamic: libdevmapper-event.$(LIB_SUFFIX)
 		$(libdir)/libdevmapper-event.$(LIB_SUFFIX)
 
 install_pkgconfig:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 devmapper-event.pc \
-		$(usrlibdir)/pkgconfig/libdevmapper-event.pc
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper-event.pc \
+		$(usrlibdir)/pkgconfig/devmapper-event.pc
 
 install_static: libdevmapper-event.a
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
