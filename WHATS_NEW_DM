@@ -1,4 +1,4 @@
-Version 1.02.05 - 
+Version 1.02.05 - 19 Apr 2006
 =============================
   Separate install_include target in makefiles.
   Separate out DEFS from CFLAGS.
