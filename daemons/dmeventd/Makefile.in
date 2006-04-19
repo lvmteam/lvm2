@@ -30,12 +30,17 @@ include ../make.tmpl
 
 CLDFLAGS += -ldl -ldevmapper -lpthread
 
-.PHONY: install_dynamic install_static install_include
+.PHONY: install_dynamic install_static install_include \
+	install_pkgconfig
 
 INSTALL_TYPE = install_dynamic
 
 ifeq ("@STATIC_LINK@", "yes")
   INSTALL_TYPE += install_static
+endif
+
+ifeq ("@PKGCONFIG@", "yes")
+  INSTALL_TYPE += install_pkgconfig
 endif
 
 install: $(INSTALL_TYPE)
@@ -49,6 +54,8 @@ install_dynamic: libdevmapper-event.$(LIB_SUFFIX)
 		$(libdir)/libdevmapper-event.$(LIB_SUFFIX).$(LIB_VERSION)
 	$(LN_S) -f libdevmapper-event.$(LIB_SUFFIX).$(LIB_VERSION) \
 		$(libdir)/libdevmapper-event.$(LIB_SUFFIX)
+
+install_pkgconfig:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 devmapper-event.pc \
 		$(usrlibdir)/pkgconfig/libdevmapper-event.pc
 
@@ -56,4 +63,11 @@ install_static: libdevmapper-event.a
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper-event.a.$(LIB_VERSION)
 	$(LN_S) -f libdevmapper-event.a.$(LIB_VERSION) $(libdir)/libdevmapper-event.a
+
+.PHONY: distclean_lib distclean
+
+distclean_lib: 
+        $(RM) libdevmapper-event.pc
+
+distclean: distclean_lib
 
