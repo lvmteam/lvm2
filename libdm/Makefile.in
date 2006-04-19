@@ -43,12 +43,17 @@ CFLAGS += -DDEVICE_UID=@DEVICE_UID@ -DDEVICE_GID=@DEVICE_GID@ \
 include ../make.tmpl
 
 .PHONY: install_dynamic install_static install_include \
-	install_fs install_ioctl install_ioctl_static
+	install_fs install_ioctl install_ioctl_static \
+	install_pkgconfig
 
 INSTALL_TYPE = install_dynamic
 
 ifeq ("@STATIC_LINK@", "yes")
   INSTALL_TYPE += install_static
+endif
+
+ifeq ("@PKGCONFIG@", "yes")
+  INSTALL_TYPE += install_pkgconfig
 endif
 
 install: $(INSTALL_TYPE) install_include
@@ -71,6 +76,8 @@ install_fs: fs/libdevmapper.$(LIB_SUFFIX)
 install_ioctl: ioctl/libdevmapper.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
+
+install_pkgconfig:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 devmapper.pc \
 		$(usrlibdir)/pkgconfig/libdevmapper.pc
 
@@ -81,7 +88,7 @@ install_ioctl_static: ioctl/libdevmapper.a
 .PHONY: distclean_lib distclean
 
 distclean_lib: 
-	$(RM) libdm-common.h
+	$(RM) libdm-common.h libdevmapper.pc
 
 distclean: distclean_lib
 
