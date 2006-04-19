@@ -67,7 +67,7 @@ install_static: libdevmapper-event.a
 .PHONY: distclean_lib distclean
 
 distclean_lib: 
-        $(RM) libdevmapper-event.pc
+	$(RM) libdevmapper-event.pc
 
 distclean: distclean_lib
 
