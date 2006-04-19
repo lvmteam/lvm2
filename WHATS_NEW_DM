@@ -1,5 +1,9 @@
 Version 1.02.05 - 
 =============================
+  Separate install_include target in makefiles.
+  Separate out DEFS from CFLAGS.
+  Support pkg-config.
+  Check for libsepol.
 
 Version 1.02.04 - 14 Apr 2006
 =============================

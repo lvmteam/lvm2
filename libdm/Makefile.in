@@ -42,7 +42,7 @@ CFLAGS += -DDEVICE_UID=@DEVICE_UID@ -DDEVICE_GID=@DEVICE_GID@ \
 
 include ../make.tmpl
 
-.PHONY: install_dynamic install_static \
+.PHONY: install_dynamic install_static install_include \
 	install_fs install_ioctl install_ioctl_static
 
 INSTALL_TYPE = install_dynamic
@@ -51,18 +51,18 @@ ifeq ("@STATIC_LINK@", "yes")
   INSTALL_TYPE += install_static
 endif
 
-install: $(INSTALL_TYPE)
+install: $(INSTALL_TYPE) install_include
+
+install_include:
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.h \
+		$(includedir)/libdevmapper.h
 
 install_dynamic: install_@interface@
 	$(LN_S) -f libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION) \
 		$(libdir)/libdevmapper.$(LIB_SUFFIX)
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.h \
-		$(includedir)/libdevmapper.h
 
 install_static: install_@interface@_static
 	$(LN_S) -f libdevmapper.a.$(LIB_VERSION) $(libdir)/libdevmapper.a
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.h \
-		$(includedir)/libdevmapper.h
 
 install_fs: fs/libdevmapper.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
@@ -71,6 +71,8 @@ install_fs: fs/libdevmapper.$(LIB_SUFFIX)
 install_ioctl: ioctl/libdevmapper.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 devmapper.pc \
+		$(usrlibdir)/pkgconfig/libdevmapper.pc
 
 install_ioctl_static: ioctl/libdevmapper.a
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
