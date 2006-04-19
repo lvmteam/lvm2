@@ -74,7 +74,7 @@ extern char *optarg;
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
 
-#define LINE_SIZE 1024
+#define LINE_SIZE 4096
 #define ARGS_MAX 256
 
 #define err(msg, x...) fprintf(stderr, msg "\n", ##x)
