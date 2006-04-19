@@ -43,7 +43,7 @@ ifeq ("@PKGCONFIG@", "yes")
   INSTALL_TYPE += install_pkgconfig
 endif
 
-install: $(INSTALL_TYPE)
+install: $(INSTALL_TYPE) install_include
 
 install_include:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper-event.h \

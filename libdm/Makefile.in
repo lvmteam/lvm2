@@ -78,8 +78,8 @@ install_ioctl: ioctl/libdevmapper.$(LIB_SUFFIX)
 		$(libdir)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
 
 install_pkgconfig:
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 devmapper.pc \
-		$(usrlibdir)/pkgconfig/libdevmapper.pc
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.pc \
+		$(usrlibdir)/pkgconfig/devmapper.pc
 
 install_ioctl_static: ioctl/libdevmapper.a
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
