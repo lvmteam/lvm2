@@ -884,6 +884,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	const char *vgname = NULL;
 	unsigned int len = 0;
 	char buf[NAME_LEN + 1];
+        char uuid[64];
 
 	if (!dev_open(dev_area->dev)) {
 		stack;
@@ -939,10 +940,16 @@ const char *vgname_from_mda(const struct format_type *fmt,
 		goto out;
 	}
 
+	if (!id_write_format(vgid, uuid, sizeof(uuid))) {
+		stack;
+		vgname = NULL;
+		goto out;
+	}
+
 	log_debug("%s: Found metadata at %" PRIu64 " size %" PRIu64
 		  " for %s (%s)", 
 		  dev_name(dev_area->dev), dev_area->start + rlocn->offset,
-		  rlocn->size, vgname, vgid->uuid);
+		  rlocn->size, vgname, uuid);
 
       out:
 	if (!dev_close(dev_area->dev))
