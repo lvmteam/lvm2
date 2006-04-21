@@ -1,3 +1,7 @@
+Version 2.02.06 -
+=================================
+  Invalidate cache if composition of VG changed externally.
+
 Version 2.02.05 - 21st April 2006
 =================================
   Fix vgid string termination in recent cache code.

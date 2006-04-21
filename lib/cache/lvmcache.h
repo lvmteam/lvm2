@@ -101,4 +101,8 @@ struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan);
 /* Set full_scan to 1 to reread every filtered device label */
 struct list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan);
 
+/* Returns list of struct str_lists containing pool-allocated copy of pvids */
+struct list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
+				const char *vgid);
+
 #endif

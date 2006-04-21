@@ -919,6 +919,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct metadata_area *mda;
 	int inconsistent = 0;
 	int use_precommitted = precommitted;
+	struct list *pvids;
+	struct pv_list *pvl;
 
 	if (!*vgname) {
 		if (use_precommitted) {
@@ -950,6 +952,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (use_precommitted && !(fmt->features & FMT_PRECOMMIT))
 		use_precommitted = 0;
 
+	/* Store pvids for later so we can check if any are missing */
+	if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid))) {
+		stack;
+		return NULL;
+	}
+
 	/* create format instance with appropriate metadata area */
 	if (!(fid = fmt->ops->create_instance(fmt, vgname, vgid, NULL))) {
 		log_error("Failed to create format instance");
@@ -974,6 +982,22 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			inconsistent = 1;
 			if (vg->seqno > correct_vg->seqno)
 				correct_vg = vg;
+		}
+	}
+
+	/* Ensure every PV in the VG was in the cache */
+	if (correct_vg) {
+		if (list_size(&correct_vg->pvs) != list_size(pvids)) {
+			log_debug("Cached VG %s had incorrect PV list",
+				  vg->name);
+			correct_vg = NULL;
+		} else list_iterate_items(pvl, &correct_vg->pvs) {
+			if (!str_list_match_item(pvids, pvl->pv->dev->pvid)) {
+				log_debug("Cached VG %s had incorrect PV list",
+					  vg->name);
+				correct_vg = NULL;
+				break;
+			}
 		}
 	}
 

@@ -306,6 +306,32 @@ struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 	return vgnames;
 }
 
+struct list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
+				const char *vgid)
+{
+	struct list *pvids;
+	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
+
+	if (!(pvids = str_list_create(cmd->mem))) {
+		log_error("pvids list allocation failed");
+		return NULL;
+	}
+
+	if (!(vginfo = vginfo_from_vgname(vgname, vgid)))
+		return pvids;
+
+	list_iterate_items(info, &vginfo->infos) {
+		if (!str_list_add(cmd->mem, pvids, 
+				  dm_pool_strdup(cmd->mem, info->dev->pvid))) {
+			log_error("strlist allocation failed");
+			return NULL;
+		}
+	}
+
+	return pvids;
+}
+
 struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 {
 	struct label *label;
