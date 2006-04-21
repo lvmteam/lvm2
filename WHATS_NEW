@@ -1,5 +1,6 @@
-Version 2.02.05 - 
+Version 2.02.05 - 21st April 2006
 =================================
+  Fix vgid string termination in recent cache code.
 
 Version 2.02.04 - 19th April 2006
 =================================

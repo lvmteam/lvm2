@@ -99,7 +99,7 @@ struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname, const char *vgid)
 
 	if (vgid)
 		do 
-			if (!strncmp(vgid, vginfo->vgid, sizeof(vginfo->vgid)))
+			if (!strncmp(vgid, vginfo->vgid, ID_LEN))
 				return vginfo;
 		while ((vginfo = vginfo->next));
 
@@ -139,7 +139,7 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
 
 	/* If vginfo changed, caller needs to rescan */
 	if (!(vginfo = vginfo_from_vgname(vgname, vgid_found)) ||
-	    strncmp(vginfo->vgid, vgid_found, sizeof(vgid_found)))
+	    strncmp(vginfo->vgid, vgid_found, ID_LEN))
 		return NULL;
 
 	return vginfo->fmt;
@@ -413,8 +413,8 @@ static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 
 static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 {
-	if (!vgid || !info->vginfo || !strncmp(info->vginfo->vgid, vgid,
-					       sizeof(info->vginfo->vgid)))
+	if (!vgid || !info->vginfo ||
+	    !strncmp(info->vginfo->vgid, vgid, ID_LEN))
 		return 1;
 
 	if (info->vginfo && *info->vginfo->vgid)
@@ -424,8 +424,8 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 		return 1;
 	}
 
-	strncpy(info->vginfo->vgid, vgid, sizeof(info->vginfo->vgid));
-	info->vginfo->vgid[sizeof(info->vginfo->vgid) - 1] = '\0';
+	strncpy(info->vginfo->vgid, vgid, ID_LEN);
+	info->vginfo->vgid[ID_LEN] = '\0';
 	if (!dm_hash_insert(_vgid_hash, info->vginfo->vgid, info->vginfo)) {
 		log_error("_lvmcache_update: vgid hash insertion failed: %s",
 			  info->vginfo->vgid);
