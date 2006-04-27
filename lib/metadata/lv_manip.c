@@ -474,8 +474,6 @@ static struct alloc_handle *_alloc_init(struct dm_pool *mem,
 	ah->alloc = alloc;
 	ah->area_multiple = segtype_is_striped(segtype) ? ah->area_count : 1;
 
-	list_init(&ah->alloced_areas[0]);
-
 	for (s = 0; s < ah->area_count; s++)
 		list_init(&ah->alloced_areas[s]);
 
