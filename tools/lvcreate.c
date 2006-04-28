@@ -235,6 +235,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 {
 	int argc = *pargc;
 	int region_size;
+	int pagesize = getpagesize();
 
 	if (argc && (unsigned) argc < lp->mirrors) {
 		log_error("Too few physical volumes on "
@@ -263,6 +264,13 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	if (lp->region_size & (lp->region_size - 1)) {
 		log_error("Region size (%" PRIu32 ") must be a power of 2",
 			  lp->region_size);
+		return 0;
+	}
+
+	if (lp->region_size % (pagesize >> SECTOR_SHIFT)) {
+		log_error("Region size (%" PRIu32 ") must be a multiple of "
+			  "machine memory page size (%d)",
+			  lp->region_size, pagesize >> SECTOR_SHIFT);
 		return 0;
 	}
 

@@ -102,6 +102,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
 	int region_size;
+	int pagesize = getpagesize();
 
 	memset(lp, 0, sizeof(*lp));
 
@@ -188,12 +189,19 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			lp->region_size = region_size;
 		}
 
+		if (lp->region_size % (pagesize >> SECTOR_SHIFT)) {
+			log_error("Region size (%" PRIu32 ") must be "
+				  "a multiple of machine memory "
+				  "page size (%d)",
+				  lp->region_size, pagesize >> SECTOR_SHIFT);
+			return 0;
+		}
+
 		if (lp->region_size & (lp->region_size - 1)) {
 			log_error("Region size (%" PRIu32
 				  ") must be a power of 2", lp->region_size);
 			return 0;
 		}
-
 
 		if (!lp->region_size) {
 			log_error("Non-zero region size must be supplied.");
