@@ -616,6 +616,9 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struc
 	if (!_add_dev_to_dtree(dm, dtree, lv, "cow"))
 		return_0;
 
+	if (!_add_dev_to_dtree(dm, dtree, lv, "_mlog"))
+		return_0;
+
 	return 1;
 }
 

@@ -159,7 +159,9 @@ char *build_dm_name(struct dm_pool *mem, const char *vgname,
 	_quote_hyphens(&out, lvname);
 
 	if (layer && *layer) {
-		*out++ = '-';
+		/* No hyphen if the layer begins with _ e.g. _mlog */
+		if (*layer != '_')
+			*out++ = '-';
 		_quote_hyphens(&out, layer);
 	}
 	*out = '\0';
