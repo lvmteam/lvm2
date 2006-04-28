@@ -258,6 +258,11 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
+	if (!lp->region_size) {
+		log_error("Non-zero region size must be supplied.");
+		return 0;
+	}
+
 	return 1;
 }
 

@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Require non-zero regionsize and document parameter on lvcreate man page.
   Invalidate cache if composition of VG changed externally.
 
 Version 2.02.05 - 21st April 2006
