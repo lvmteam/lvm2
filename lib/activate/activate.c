@@ -594,12 +594,14 @@ static int _register_dev_for_events(struct cmd_context *cmd,
 		} else if (seg->segtype->ops->target_unregister_events)
 			reg = seg->segtype->ops->target_unregister_events;
 
-		if (reg)
+		if (!reg)
+			return_0;
+
 			/* FIXME specify events */
-			if (!reg(cmd->mem, seg, cmd->cft, 0)) {
-				stack;
-				return 0;
-			}
+		if (!reg(cmd->mem, seg, cmd->cft, 0)) {
+			stack;
+			return 0;
+		}
 	}
 
 #endif
@@ -642,6 +644,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	if (!_register_dev_for_events(cmd, lv, 0))
+		/* FIXME Consider aborting here */
 		stack;
 
 	memlock_inc();
