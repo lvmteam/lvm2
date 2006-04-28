@@ -184,6 +184,12 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
+
+		if (!lp->region_size) {
+			log_error("Non-zero region size must be supplied.");
+			return 0;
+		}
+
 		if (!(lp->segtype = get_segtype_from_string(cmd, "striped")))
 			return_0;
 	}

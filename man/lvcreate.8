@@ -13,6 +13,7 @@ lvcreate \- create a logical volume in an existing volume group
 [\-M/\-\-persistent y/n] [\-\-minor minor]
 [\-n/\-\-name LogicalVolumeName]
 [\-p/\-\-permission r/rw] [\-r/\-\-readahead ReadAheadSectors]
+[-R|--regionsize MirrorLogRegionSize]
 [\-t/\-\-test]
 [\-v/\-\-verbose] [\-Z/\-\-zero y/n]
 VolumeGroupName [PhysicalVolumePath...]
@@ -90,6 +91,10 @@ Default is read and write.
 .I \-r, \-\-readahead ReadAheadSectors
 Set read ahead sector count of this logical volume to a value between 2 and 120.
 Ignored by device-mapper.
+.TP
+.I \-R \-\-regionsize MirrorLogRegionSize
+A mirror is divided into regions of this size (in KB), and the mirror log 
+uses this granularity to track which regions are in sync.
 .TP
 .I \-s, \-\-snapshot
 Create a snapshot logical volume (or snapshot) for an existing, so called
