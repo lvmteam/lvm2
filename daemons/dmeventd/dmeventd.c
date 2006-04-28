@@ -318,7 +318,7 @@ static int device_exists(char *device)
 	struct stat st_buf;
 	char path2[PATH_MAX];
 
-	if (!device)
+	if (!device || !*device)
 		return 0;
 
 	if (device[0] == '/') /* absolute path */
@@ -718,8 +718,11 @@ static struct dso_data *load_dso(struct message_data *data)
 	void *dl;
 	struct dso_data *ret = NULL;
 
+	log_very_verbose("Opening shared library %s", data->dso_name);
+
 	if (!(dl = dlopen(data->dso_name, RTLD_NOW))){
-		log_error("%s\n", dlerror());
+		log_error("dmeventd %s dlopen failed: %s", data->dso_name,
+			  dlerror());
 		return NULL;
 	}
 
