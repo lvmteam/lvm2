@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Tighten region size validation.
   Ignore empty strings in config files.
   Require non-zero regionsize and document parameter on lvcreate man page.
   Invalidate cache if composition of VG changed externally.

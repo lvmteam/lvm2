@@ -234,6 +234,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 			       int *pargc, char ***pargv)
 {
 	int argc = *pargc;
+	int region_size;
 
 	if (argc && (unsigned) argc < lp->mirrors) {
 		log_error("Too few physical volumes on "
@@ -247,10 +248,17 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 			return 0;
 		}
 		lp->region_size = 2 * arg_uint_value(cmd, regionsize_ARG, 0);
-	} else
-		lp->region_size = 2 * find_config_int(cmd->cft->root,
+	} else {
+		region_size = 2 * find_config_int(cmd->cft->root,
 					"activation/mirror_region_size",
 					DEFAULT_MIRROR_REGION_SIZE);
+		if (region_size < 0) {
+			log_error("Negative regionsize in configuration file "
+				  "is invalid");
+			return 0;
+		}
+		lp->region_size = region_size;
+	}
 
 	if (lp->region_size & (lp->region_size - 1)) {
 		log_error("Region size (%" PRIu32 ") must be a power of 2",
