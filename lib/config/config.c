@@ -753,7 +753,7 @@ const char *find_config_str(const struct config_node *cn,
 	const struct config_node *n = find_config_node(cn, path);
 
 	/* Empty strings are ignored */
-	if ((n && n->v->type == CFG_STRING) && (*n->v->v.str))
+	if ((n && n->v->type == CFG_STRING) && (*n->v->v.str)) {
 		log_very_verbose("Setting %s to %s", path, n->v->v.str);
 		return n->v->v.str;
 	}
