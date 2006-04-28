@@ -1090,12 +1090,14 @@ int generate_log_name_format(struct volume_group *vg, const char *lv_name,
 		return 0;
 	}
 
+	/* FIXME I think we can cope without this.  Cf. _add_lv_to_dtree()
 	if (find_lv_in_vg(vg, buffer) &&
 	    lvm_snprintf(buffer, size, "%s_mlog_%%d",
 			 lv_name) < 0) {
 		stack;
 		return 0;
 	}
+	*******/
 
 	return 1;
 }

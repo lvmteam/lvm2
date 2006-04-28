@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Fix activation code to check for pre-existing mirror logs.
   Tighten region size validation.
   Ignore empty strings in config files.
   Require non-zero regionsize and document parameter on lvcreate man page.
