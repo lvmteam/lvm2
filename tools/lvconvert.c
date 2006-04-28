@@ -101,6 +101,8 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
+	int region_size;
+
 	memset(lp, 0, sizeof(*lp));
 
 	if (arg_count(cmd, mirrors_ARG) + arg_count(cmd, snapshot_ARG) != 1) {
@@ -165,6 +167,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	 	 * --regionsize is only valid if converting an LV into a mirror.
 	 	 * Checked when we know the state of the LV being converted.
 	 	 */
+
 		if (arg_count(cmd, regionsize_ARG)) {
 			if (arg_sign_value(cmd, regionsize_ARG, 0) ==
 				    SIGN_MINUS) {
@@ -173,11 +176,18 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			}
 			lp->region_size = 2 * arg_uint_value(cmd,
 							     regionsize_ARG, 0);
-		} else
-			lp->region_size = 2 * find_config_int(cmd->cft->root,
+		} else {
+			region_size = 2 * find_config_int(cmd->cft->root,
 						"activation/mirror_region_size",
 						DEFAULT_MIRROR_REGION_SIZE);
-	
+			if (region_size < 0) {
+				log_error("Negative regionsize in "
+					  "configuration file is invalid");
+				return 0;
+			}
+			lp->region_size = region_size;
+		}
+
 		if (lp->region_size & (lp->region_size - 1)) {
 			log_error("Region size (%" PRIu32
 				  ") must be a power of 2", lp->region_size);
