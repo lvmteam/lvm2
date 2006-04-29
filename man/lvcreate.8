@@ -58,7 +58,9 @@ the logical volume.
 .I \-I, \-\-stripesize StripeSize
 Gives the number of kilobytes for the granularity of the stripes.
 .br
-StripeSize must be 2^n (n = 2 to 9)
+StripeSize must be 2^n (n = 2 to 9) for metadata in LVM1 format.
+For metadata in LVM2 format, the stripe size may be a larger
+power of 2 but must not exceed the physical extent size.
 .TP
 .I \-l, \-\-extents LogicalExtentsNumber
 Gives the number of logical extents to allocate for the new
