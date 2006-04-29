@@ -178,14 +178,34 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			log_error("Stripesize may not be negative.");
 			return ECMD_FAILED;
 		}
-		if (vg->fid->fmt->features & FMT_SEGMENTS)
+
+		if (arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT) {
+			log_error("Stripe size cannot be larger than %s",
+				  display_size(cmd, STRIPE_SIZE_LIMIT, SIZE_SHORT));
+			return 0;
+		}
+
+		if (!(vg->fid->fmt->features & FMT_SEGMENTS))
+			log_print("Varied stripesize not supported. Ignoring.");
+		else if (arg_uint_value(cmd, stripesize_ARG, 0) > vg->extent_size) {
+                	log_error("Reducing stripe size %s to maximum, "
+				  "physical extent size %s",
+				  display_size(cmd,
+					arg_uint_value(cmd, stripesize_ARG, 0) * 2,
+					SIZE_SHORT),
+	                          display_size(cmd, vg->extent_size, SIZE_SHORT));
+                	lp->stripe_size = vg->extent_size;
+        	} else
 			lp->stripe_size = 2 * arg_uint_value(cmd,
 							     stripesize_ARG, 0);
-		else
-			log_print("Varied stripesize not supported. Ignoring.");
+
 		if (lp->mirrors) {
 			log_error("Mirrors and striping cannot be combined yet.");
 			return ECMD_FAILED;
+		}
+		if (lp->stripe_size & (lp->stripe_size - 1)) {
+			log_error("Stripe size must be power of 2");
+			return 0;
 		}
 	}
 
@@ -279,16 +299,18 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 		if (!lp->stripe_size && lp->stripes > 1) {
 			if (seg_stripesize) {
-				log_print("Using stripesize of last segment "
-					  "%dKB", seg_stripesize / 2);
+				log_print("Using stripesize of last segment %s",
+					  display_size(cmd, seg_stripesize,
+						       SIZE_SHORT));
 				lp->stripe_size = seg_stripesize;
 			} else {
 				lp->stripe_size =
 					find_config_int(cmd->cft->root,
 							"metadata/stripesize",
 							DEFAULT_STRIPESIZE) * 2;
-				log_print("Using default stripesize %dKB",
-					  lp->stripe_size / 2);
+				log_print("Using default stripesize %s",
+					  display_size(cmd, lp->stripe_size,
+						       SIZE_SHORT));
 			}
 		}
 	}
@@ -361,6 +383,12 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 				  "boundary size for segment (%d extents)",
 				  lp->extents, lp->extents - size_rest);
 			lp->extents = lp->extents - size_rest;
+		}
+
+		if (lp->stripe_size < STRIPE_SIZE_MIN) {
+			log_error("Invalid stripe size %s",
+				  display_size(cmd, lp->stripe_size, SIZE_SHORT));
+			return 0;
 		}
 	}
 

@@ -31,6 +31,7 @@
 #define SECTOR_SIZE ( 1L << SECTOR_SHIFT )
 #define STRIPE_SIZE_MIN ( getpagesize() >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
+#define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
 #define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define PE_ALIGN (65536UL >> SECTOR_SHIFT)	/* PE alignment */
 #define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
@@ -74,6 +75,7 @@
 #define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
 #define FMT_PRECOMMIT		0x00000040	/* Supports pre-commit? */
 #define FMT_RESIZE_PV		0x00000080	/* Supports pvresize? */
+#define FMT_UNLIMITED_STRIPESIZE 0x00000080	/* Unlimited stripe size? */
 
 typedef enum {
 	ALLOC_INVALID,
