@@ -75,7 +75,7 @@
 #define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
 #define FMT_PRECOMMIT		0x00000040	/* Supports pre-commit? */
 #define FMT_RESIZE_PV		0x00000080	/* Supports pvresize? */
-#define FMT_UNLIMITED_STRIPESIZE 0x00000080	/* Unlimited stripe size? */
+#define FMT_UNLIMITED_STRIPESIZE 0x00000100	/* Unlimited stripe size? */
 
 typedef enum {
 	ALLOC_INVALID,
