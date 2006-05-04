@@ -416,7 +416,7 @@ int export_extents(struct disk_list *dl, uint32_t lv_num,
 
 int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
 	       struct volume_group *vg,
-	       struct list *pvds, struct list *results, int *count)
+	       struct list *pvds, struct list *results, uint32_t *count)
 {
 	struct disk_list *dl;
 	struct pv_list *pvl;
