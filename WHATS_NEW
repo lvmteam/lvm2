@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Some signed fixes.
   Improve stripe size validation.
   Increase maximum stripe size limit to physical extent size for lvm2 metadata.
   Fix activation code to check for pre-existing mirror logs.
