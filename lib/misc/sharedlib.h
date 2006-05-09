@@ -13,10 +13,15 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef _LVM_SHAREDLIB_H
+#define _LVM_SHAREDLIB_H
+
 #include "config.h"
 #include <dlfcn.h>
 
 void get_shared_library_path(struct config_tree *cft, const char *libname,
-			     char *path, int path_len);
+			     char *path, size_t path_len);
 void *load_shared_library(struct config_tree *cf, const char *libname,
 			  const char *what, int silent);
+
+#endif

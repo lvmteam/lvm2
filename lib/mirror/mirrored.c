@@ -60,8 +60,7 @@ static void _mirrored_display(const struct lv_segment *seg)
 
 	if (seg->region_size) {
 		size = display_size(seg->lv->vg->cmd,
-				    (uint64_t) seg->region_size,
-				    SIZE_SHORT);
+				    (uint64_t) seg->region_size);
 		log_print("  Mirror region size\t%s", size);
 	}
 
@@ -259,7 +258,7 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 {
 	struct mirror_state *mirr_state;
 	uint32_t area_count = seg->area_count;
-	int start_area = 0u;
+	unsigned start_area = 0u;
 	int mirror_status = MIRR_RUNNING;
 	uint32_t region_size, region_max;
 	int r;
@@ -299,7 +298,7 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 		region_size = seg->region_size;
 	} else {
 		/* Find largest power of 2 region size unit we can use */
-		region_max = (1 << (ffs(seg->area_len) - 1)) *
+		region_max = (1 << (ffs((int)seg->area_len) - 1)) *
 		      seg->lv->vg->extent_size;
 
 		region_size = mirr_state->default_region_size;
@@ -442,21 +441,21 @@ static void _mirrored_destroy(const struct segment_type *segtype)
 }
 
 static struct segtype_handler _mirrored_ops = {
-	name:_mirrored_name,
-	display:_mirrored_display,
-	text_import_area_count:_mirrored_text_import_area_count,
-	text_import:_mirrored_text_import,
-	text_export:_mirrored_text_export,
+	.name = _mirrored_name,
+	.display = _mirrored_display,
+	.text_import_area_count = _mirrored_text_import_area_count,
+	.text_import = _mirrored_text_import,
+	.text_export = _mirrored_text_export,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_mirrored_add_target_line,
-	target_percent:_mirrored_target_percent,
-	target_present:_mirrored_target_present,
+	.add_target_line = _mirrored_add_target_line,
+	.target_percent = _mirrored_target_percent,
+	.target_present = _mirrored_target_present,
 #ifdef DMEVENTD
-	target_register_events:_target_register_events,
-	target_unregister_events:_target_unregister_events,
+	.target_register_events = _target_register_events,
+	.target_unregister_events = _target_unregister_events,
 #endif
 #endif
-	destroy:_mirrored_destroy,
+	.destroy = _mirrored_destroy,
 };
 
 #ifdef MIRRORED_INTERNAL

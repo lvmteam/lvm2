@@ -57,7 +57,7 @@ int init_comms(unsigned short port)
     struct sockaddr_in6 addr;
 
     sock_hash = dm_hash_create(100);
-    tcp_port = port ? port : DEFAULT_TCP_PORT;
+    tcp_port = port ? : DEFAULT_TCP_PORT;
 
     listen_fd = socket(AF_INET6, SOCK_STREAM, 0);
 

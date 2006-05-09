@@ -73,16 +73,16 @@ struct data_area {
 } __attribute__ ((packed));
 
 struct pv_disk {
-	uint8_t id[2];
+	int8_t id[2];
 	uint16_t version;	/* lvm version */
 	struct data_area pv_on_disk;
 	struct data_area vg_on_disk;
 	struct data_area pv_uuidlist_on_disk;
 	struct data_area lv_on_disk;
 	struct data_area pe_on_disk;
-	uint8_t pv_uuid[NAME_LEN];
-	uint8_t vg_name[NAME_LEN];
-	uint8_t system_id[NAME_LEN];	/* for vgexport/vgimport */
+	int8_t pv_uuid[NAME_LEN];
+	int8_t vg_name[NAME_LEN];
+	int8_t system_id[NAME_LEN];	/* for vgexport/vgimport */
 	uint32_t pv_major;
 	uint32_t pv_number;
 	uint32_t pv_status;
@@ -98,8 +98,8 @@ struct pv_disk {
 } __attribute__ ((packed));
 
 struct lv_disk {
-	uint8_t lv_name[NAME_LEN];
-	uint8_t vg_name[NAME_LEN];
+	int8_t lv_name[NAME_LEN];
+	int8_t vg_name[NAME_LEN];
 	uint32_t lv_access;
 	uint32_t lv_status;
 	uint32_t lv_open;
@@ -122,8 +122,8 @@ struct lv_disk {
 } __attribute__ ((packed));
 
 struct vg_disk {
-	uint8_t vg_uuid[ID_LEN];	/* volume group UUID */
-	uint8_t vg_name_dummy[NAME_LEN - ID_LEN];	/* rest of v1 VG name */
+	int8_t vg_uuid[ID_LEN];	/* volume group UUID */
+	int8_t vg_name_dummy[NAME_LEN - ID_LEN];	/* rest of v1 VG name */
 	uint32_t vg_number;	/* volume group number */
 	uint32_t vg_access;	/* read/write */
 	uint32_t vg_status;	/* active or not */

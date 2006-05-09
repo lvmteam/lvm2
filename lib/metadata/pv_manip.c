@@ -136,8 +136,8 @@ int pv_split_segment(struct physical_volume *pv, uint32_t pe)
 }
 
 static struct pv_segment null_pv_segment = {
-	pv: NULL,
-	pe: 0
+	.pv = NULL,
+	.pe = 0,
 };
 
 struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,

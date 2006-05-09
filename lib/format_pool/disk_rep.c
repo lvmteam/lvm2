@@ -248,7 +248,7 @@ static int _read_vg_pds(const struct format_type *fmt, struct dm_pool *mem,
 
 	uint32_t sp_count = 0;
 	uint32_t *sp_devs = NULL;
-	int i;
+	uint32_t i;
 
 	/* FIXME: maybe should return a different error in memory
 	 * allocation failure */

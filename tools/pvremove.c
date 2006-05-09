@@ -73,7 +73,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 }
 
 static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
-			   void *handle)
+			   void *handle __attribute((unused)))
 {
 	struct device *dev;
 

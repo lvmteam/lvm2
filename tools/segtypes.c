@@ -15,7 +15,8 @@
 
 #include "tools.h"
 
-int segtypes(struct cmd_context *cmd, int argc, char **argv)
+int segtypes(struct cmd_context *cmd, int argc __attribute((unused)),
+	     char **argv __attribute((unused)))
 {
 	display_segtypes(cmd);
 

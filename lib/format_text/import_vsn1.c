@@ -370,7 +370,7 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 		} else {
 			log_error("Couldn't find volume '%s' "
 				  "for segment '%s'.",
-				  cv->v.str ? cv->v.str : "NULL", seg_name);
+				  cv->v.str ? : "NULL", seg_name);
 			return 0;
 		}
 
@@ -849,13 +849,13 @@ static const char *_read_vgname(const struct format_type *fmt,
 }
 
 static struct text_vg_version_ops _vsn1_ops = {
-	check_version:_check_version,
-	read_vg:_read_vg,
-	read_desc:_read_desc,
-	read_vgname:_read_vgname
+	.check_version = _check_version,
+	.read_vg = _read_vg,
+	.read_desc = _read_desc,
+	.read_vgname = _read_vgname,
 };
 
 struct text_vg_version_ops *text_vg_vsn1_init(void)
 {
 	return &_vsn1_ops;
-};
+}

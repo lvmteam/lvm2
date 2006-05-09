@@ -13,6 +13,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef _LVM_LOCKING_H
+#define _LVM_LOCKING_H
+
 #include "uuid.h"
 #include "config.h"
 
@@ -109,3 +112,4 @@ int suspend_lvs(struct cmd_context *cmd, struct list *lvs);
 int resume_lvs(struct cmd_context *cmd, struct list *lvs);
 int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs);
 
+#endif

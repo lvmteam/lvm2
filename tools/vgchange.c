@@ -114,7 +114,7 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 {
 	alloc_policy_t alloc;
 
-	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
+	alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
 
 	if (alloc == ALLOC_INHERIT) {
 		log_error("Volume Group allocation policy cannot inherit "
@@ -290,7 +290,7 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 
 	if (extent_size == vg->extent_size) {
 		log_error("Physical extent size of VG %s is already %s",
-			  vg->name, display_size(cmd, extent_size, SIZE_SHORT));
+			  vg->name, display_size(cmd, (uint64_t) extent_size));
 		return ECMD_PROCESSED;
 	}
 
@@ -367,7 +367,8 @@ static int _vgchange_tag(struct cmd_context *cmd, struct volume_group *vg,
 	return ECMD_PROCESSED;
 }
 
-static int _vgchange_uuid(struct cmd_context *cmd, struct volume_group *vg)
+static int _vgchange_uuid(struct cmd_context *cmd __attribute((unused)),
+			  struct volume_group *vg)
 {
 	struct lv_list *lvl;
 
@@ -401,7 +402,7 @@ static int _vgchange_uuid(struct cmd_context *cmd, struct volume_group *vg)
 
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg, int consistent,
-			   void *handle)
+			   void *handle __attribute((unused)))
 {
 	int r = ECMD_FAILED;
 

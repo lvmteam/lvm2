@@ -19,10 +19,11 @@ int pv_max_name_len = 0;
 int vg_max_name_len = 0;
 
 static void _pvscan_display_single(struct cmd_context *cmd,
-				   struct physical_volume *pv, void *handle)
+				   struct physical_volume *pv,
+				   void *handle __attribute((unused)))
 {
 	char uuid[64];
-	unsigned int vg_name_len = 0;
+	unsigned vg_name_len = 0;
 
 	char pv_tmp_name[NAME_LEN] = { 0, };
 	char vg_tmp_name[NAME_LEN] = { 0, };
@@ -66,7 +67,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
 			  pv->fmt ? pv->fmt->name : "    ",
-			  display_size(cmd, pv->size, SIZE_SHORT));
+			  display_size(cmd, pv->size));
 		return;
 	}
 
@@ -77,10 +78,10 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 			  pv_max_name_len, pv_tmp_name,
 			  vg_name_this,
 			  display_size(cmd, (uint64_t) pv->pe_count *
-				       pv->pe_size, SIZE_SHORT),
+				       pv->pe_size),
 			  display_size(cmd, (uint64_t) (pv->pe_count -
 							pv->pe_alloc_count)
-				       * pv->pe_size, SIZE_SHORT));
+				       * pv->pe_size));
 		return;
 	}
 
@@ -88,16 +89,15 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 	log_print("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
 		  pv_tmp_name, vg_max_name_len, vg_tmp_name,
 		  pv->fmt ? pv->fmt->name : "    ",
-		  display_size(cmd, (uint64_t) pv->pe_count * pv->pe_size,
-			       SIZE_SHORT),
+		  display_size(cmd, (uint64_t) pv->pe_count * pv->pe_size),
 		  display_size(cmd,
 			       (uint64_t) (pv->pe_count - pv->pe_alloc_count) *
-					   pv->pe_size,
-			       SIZE_SHORT));
+					   pv->pe_size));
 	return;
 }
 
-int pvscan(struct cmd_context *cmd, int argc, char **argv)
+int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
+	   char **argv __attribute((unused)))
 {
 	int new_pvs_found = 0;
 	int pvs_found = 0;
@@ -185,10 +185,10 @@ int pvscan(struct cmd_context *cmd, int argc, char **argv)
 
 	log_print("Total: %d [%s] / in use: %d [%s] / in no VG: %d [%s]",
 		  pvs_found,
-		  display_size(cmd, size_total, SIZE_SHORT),
+		  display_size(cmd, size_total),
 		  pvs_found - new_pvs_found,
-		  display_size(cmd, (size_total - size_new), SIZE_SHORT),
-		  new_pvs_found, display_size(cmd, size_new, SIZE_SHORT));
+		  display_size(cmd, (size_total - size_new)),
+		  new_pvs_found, display_size(cmd, size_new));
 
 	return ECMD_PROCESSED;
 }

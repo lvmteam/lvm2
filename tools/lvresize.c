@@ -25,7 +25,7 @@ struct lvresize_params {
 	uint32_t stripe_size;
 	uint32_t mirrors;
 
-	struct segment_type *segtype;
+	const struct segment_type *segtype;
 
 	/* size */
 	uint32_t extents;
@@ -181,7 +181,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 		if (arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT) {
 			log_error("Stripe size cannot be larger than %s",
-				  display_size(cmd, STRIPE_SIZE_LIMIT, SIZE_SHORT));
+				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
 			return 0;
 		}
 
@@ -191,9 +191,8 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
                 	log_error("Reducing stripe size %s to maximum, "
 				  "physical extent size %s",
 				  display_size(cmd,
-					arg_uint_value(cmd, stripesize_ARG, 0) * 2,
-					SIZE_SHORT),
-	                          display_size(cmd, vg->extent_size, SIZE_SHORT));
+					(uint64_t) arg_uint_value(cmd, stripesize_ARG, 0) * 2),
+	                          display_size(cmd, (uint64_t) vg->extent_size));
                 	lp->stripe_size = vg->extent_size;
         	} else
 			lp->stripe_size = 2 * arg_uint_value(cmd,
@@ -216,7 +215,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		return ECMD_FAILED;
 	}
 
-	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lv->alloc);
+	alloc = arg_uint_value(cmd, alloc_ARG, lv->alloc);
 
 	if (lp->size) {
 		if (lp->size % vg->extent_size) {
@@ -227,8 +226,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 				    (lp->size % vg->extent_size);
 
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, (uint64_t) lp->size,
-					       SIZE_SHORT));
+				  display_size(cmd, (uint64_t) lp->size));
 		}
 
 		lp->extents = lp->size / vg->extent_size;
@@ -266,8 +264,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	}
 
 	/* FIXME Support LVs with mixed segment types */
-	if (lp->segtype != (struct segment_type *) arg_ptr_value(cmd, type_ARG,
-								 lp->segtype)) {
+	if (lp->segtype != arg_ptr_value(cmd, type_ARG, lp->segtype)) {
 		log_error("VolumeType does not match (%s)", lp->segtype->name);
 		return EINVALID_CMD_LINE;
 	}
@@ -300,8 +297,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		if (!lp->stripe_size && lp->stripes > 1) {
 			if (seg_stripesize) {
 				log_print("Using stripesize of last segment %s",
-					  display_size(cmd, seg_stripesize,
-						       SIZE_SHORT));
+					  display_size(cmd, (uint64_t) seg_stripesize));
 				lp->stripe_size = seg_stripesize;
 			} else {
 				lp->stripe_size =
@@ -309,8 +305,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 							"metadata/stripesize",
 							DEFAULT_STRIPESIZE) * 2;
 				log_print("Using default stripesize %s",
-					  display_size(cmd, lp->stripe_size,
-						       SIZE_SHORT));
+					  display_size(cmd, (uint64_t) lp->stripe_size));
 			}
 		}
 	}
@@ -387,7 +382,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 		if (lp->stripe_size < STRIPE_SIZE_MIN) {
 			log_error("Invalid stripe size %s",
-				  display_size(cmd, lp->stripe_size, SIZE_SHORT));
+				  display_size(cmd, (uint64_t) lp->stripe_size));
 			return 0;
 		}
 	}
@@ -467,8 +462,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			log_print("WARNING: Reducing active%s logical volume "
 				  "to %s", info.open_count ? " and open" : "",
 				  display_size(cmd, (uint64_t) lp->extents *
-						    vg->extent_size,
-					       SIZE_SHORT));
+						    vg->extent_size));
 
 			log_print("THIS MAY DESTROY YOUR DATA "
 				  "(filesystem etc.)");
@@ -523,8 +517,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	log_print("%sing logical volume %s to %s",
 		  (lp->resize == LV_REDUCE) ? "Reduc" : "Extend",
 		  lp->lv_name,
-		  display_size(cmd, (uint64_t) lp->extents * vg->extent_size,
-			       SIZE_SHORT));
+		  display_size(cmd, (uint64_t) lp->extents * vg->extent_size));
 
 	if (lp->resize == LV_REDUCE) {
 		if (!lv_reduce(lv, lv->le_count - lp->extents)) {

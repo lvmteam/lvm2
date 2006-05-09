@@ -20,7 +20,7 @@
 #define ID_LEN_S "32"
 
 struct id {
-	uint8_t uuid[ID_LEN];
+	int8_t uuid[ID_LEN];
 };
 
 /*

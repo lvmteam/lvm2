@@ -474,10 +474,10 @@ static int _insert_vginfo(struct lvmcache_vginfo *new_vginfo, const char *vgid,
 	
 	/* Pre-existing VG takes precedence. Unexported VG takes precedence. */
 	if (primary_vginfo) {
-		if (!id_write_format((struct id *)vgid, uuid_new, sizeof(uuid_new)))
+		if (!id_write_format((const struct id *)vgid, uuid_new, sizeof(uuid_new)))
 			return_0;
 
-		if (!id_write_format((struct id *)&primary_vginfo->vgid, uuid_primary,
+		if (!id_write_format((const struct id *)&primary_vginfo->vgid, uuid_primary,
 				     sizeof(uuid_primary)))
 			return_0;
 

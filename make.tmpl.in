@@ -24,7 +24,7 @@ INSTALL = @INSTALL@
 MSGFMT = @MSGFMT@
 LN_S = @LN_S@
 LIBS = @LIBS@
-DEFS += @DEFS@ @LVM_DEFS@
+DEFS += @DEFS@
 CFLAGS += @CFLAGS@
 CLDFLAGS += @CLDFLAGS@
 LDDEPS += @LDDEPS@
@@ -56,9 +56,10 @@ endif
 
 .SUFFIXES: .c .d .o .so .a .po .pot .mo .dylib
 
-CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline
+CFLAGS += -fPIC -Wall -Wundef -Wshadow -Wcast-align -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline -Wmissing-noreturn
 
-#CFLAGS += -W -Wconversion -Wpointer-arith -Wredundant-decls -Wbad-function-cast -Wcast-qual -Wmissing-noreturn
+#CFLAGS += -W -Wconversion -Wpointer-arith -Wredundant-decls -Wbad-function-cast -Wcast-qual
+#CFLAGS += -pedantic -std=gnu99
 
 CFLAGS += @COPTIMISE_FLAG@
 

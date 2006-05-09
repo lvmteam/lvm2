@@ -66,7 +66,7 @@ uint32_t find_free_lvnum(struct logical_volume *lv)
  * All lv_segments get created here.
  */
 struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
-				    struct segment_type *segtype,
+				    const struct segment_type *segtype,
 				    struct logical_volume *lv,
 				    uint32_t le, uint32_t len,
 				    uint32_t status,
@@ -124,7 +124,7 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 				      uint32_t status, uint32_t old_le_count)
 {
 	struct lv_segment *seg;
-	struct segment_type *segtype;
+	const struct segment_type *segtype;
 
 	segtype = get_segtype_from_string(lv->vg->cmd, "snapshot");
 	if (!segtype) {
@@ -418,7 +418,7 @@ struct alloc_handle {
  * Preparation for a specific allocation attempt
  */
 static struct alloc_handle *_alloc_init(struct dm_pool *mem,
-					struct segment_type *segtype,
+					const struct segment_type *segtype,
 					alloc_policy_t alloc,
 					uint32_t mirrors,
 					uint32_t stripes,
@@ -493,7 +493,7 @@ void alloc_destroy(struct alloc_handle *ah)
 static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 				  uint32_t area_count,
 				  uint32_t stripe_size,
-				  struct segment_type *segtype,
+				  const struct segment_type *segtype,
 				  struct alloced_area *aa,
 				  struct physical_volume *mirrored_pv,
 				  uint32_t mirrored_pe,
@@ -551,7 +551,7 @@ static int _setup_alloced_segments(struct logical_volume *lv,
 				   uint32_t area_count,
 				   uint32_t status,
 				   uint32_t stripe_size,
-				   struct segment_type *segtype,
+				   const struct segment_type *segtype,
 				   struct physical_volume *mirrored_pv,
 				   uint32_t mirrored_pe,
 				   uint32_t region_size,
@@ -823,7 +823,7 @@ static int _allocate(struct alloc_handle *ah,
 		     uint32_t new_extents,
 		     struct list *allocatable_pvs,
 		     uint32_t stripes, uint32_t mirrors,
-		     struct segment_type *segtype)
+		     const struct segment_type *segtype)
 {
 	struct pv_area **areas;
 	uint32_t allocated = lv ? lv->le_count : 0;
@@ -925,7 +925,7 @@ static int _allocate(struct alloc_handle *ah,
 }
 
 int lv_add_virtual_segment(struct logical_volume *lv, uint32_t status,
-			   uint32_t extents, struct segment_type *segtype)
+			   uint32_t extents, const struct segment_type *segtype)
 {
 	struct lv_segment *seg;
 
@@ -951,7 +951,7 @@ int lv_add_virtual_segment(struct logical_volume *lv, uint32_t status,
  */
 struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      struct logical_volume *lv,
-				      struct segment_type *segtype,
+				      const struct segment_type *segtype,
 				      uint32_t stripes,
 				      uint32_t mirrors, uint32_t log_count,
 				      uint32_t extents,
@@ -1006,7 +1006,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 int lv_add_segment(struct alloc_handle *ah,
 		   uint32_t first_area, uint32_t num_areas,
 		   struct logical_volume *lv,
-		   struct segment_type *segtype,
+		   const struct segment_type *segtype,
 		   uint32_t stripe_size,
 		   struct physical_volume *mirrored_pv,
 		   uint32_t mirrored_pe,
@@ -1094,7 +1094,7 @@ int lv_add_mirror_segment(struct alloc_handle *ah,
 			  struct logical_volume *lv,
 			  struct logical_volume **sub_lvs,
 			  uint32_t mirrors,
-			  struct segment_type *segtype,
+			  const struct segment_type *segtype,
 			  uint32_t status,
 			  uint32_t region_size,
 			  struct logical_volume *log_lv)
@@ -1175,7 +1175,7 @@ int lv_add_more_mirrored_areas(struct logical_volume *lv,
  * Entry point for single-step LV allocation + extension.
  */
 int lv_extend(struct logical_volume *lv,
-	      struct segment_type *segtype,
+	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t extents,
 	      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,

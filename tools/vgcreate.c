@@ -41,7 +41,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	vg_name = argv[0];
 	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
 	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
-	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
+	alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
 
 	if (alloc == ALLOC_INHERIT) {
 		log_error("Volume Group allocation policy cannot inherit "

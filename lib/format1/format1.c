@@ -337,8 +337,7 @@ static int _format1_pv_setup(const struct format_type *fmt,
 		pv->size--;
 	if (pv->size > MAX_PV_SIZE) {
 		log_error("Physical volumes cannot be bigger than %s",
-			  display_size(fmt->cmd, (uint64_t) MAX_PV_SIZE,
-				       SIZE_SHORT));
+			  display_size(fmt->cmd, (uint64_t) MAX_PV_SIZE));
 		return 0;
 	}
 
@@ -378,8 +377,7 @@ static int _format1_lv_setup(struct format_instance *fid, struct logical_volume 
 	}
 	if (lv->size > max_size) {
 		log_error("logical volumes cannot be larger than %s",
-			  display_size(fid->fmt->cmd, max_size,
-				       SIZE_SHORT));
+			  display_size(fid->fmt->cmd, max_size));
 		return 0;
 	}
 
@@ -460,18 +458,15 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
 
 	if (vg->extent_size > MAX_PE_SIZE || vg->extent_size < MIN_PE_SIZE) {
 		log_error("Extent size must be between %s and %s",
-			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE,
-				       SIZE_SHORT),
-			  display_size(fid->fmt->cmd, (uint64_t) MAX_PE_SIZE,
-				       SIZE_SHORT));
+			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE),
+			  display_size(fid->fmt->cmd, (uint64_t) MAX_PE_SIZE));
 
 		return 0;
 	}
 
 	if (vg->extent_size % MIN_PE_SIZE) {
 		log_error("Extent size must be multiple of %s",
-			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE,
-				       SIZE_SHORT));
+			  display_size(fid->fmt->cmd, (uint64_t) MIN_PE_SIZE));
 		return 0;
 	}
 
@@ -485,7 +480,7 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
 }
 
 static int _format1_segtype_supported(struct format_instance *fid, 
-			       struct segment_type *segtype)
+				      const struct segment_type *segtype)
 {
 	if (!(segtype->flags & SEG_FORMAT1_SUPPORT)) {
 		stack;
@@ -496,8 +491,8 @@ static int _format1_segtype_supported(struct format_instance *fid,
 }
 
 static struct metadata_area_ops _metadata_format1_ops = {
-	vg_read:_format1_vg_read,
-	vg_write:_format1_vg_write,
+	.vg_read = _format1_vg_read,
+	.vg_write = _format1_vg_write,
 };
 
 static struct format_instance *_format1_create_instance(const struct format_type *fmt,
@@ -541,15 +536,15 @@ static void _format1_destroy(const struct format_type *fmt)
 }
 
 static struct format_handler _format1_ops = {
-	pv_read:_format1_pv_read,
-	pv_setup:_format1_pv_setup,
-	pv_write:_format1_pv_write,
-	lv_setup:_format1_lv_setup,
-	vg_setup:_format1_vg_setup,
-	segtype_supported:_format1_segtype_supported,
-	create_instance:_format1_create_instance,
-	destroy_instance:_format1_destroy_instance,
-	destroy:_format1_destroy,
+	.pv_read = _format1_pv_read,
+	.pv_setup = _format1_pv_setup,
+	.pv_write = _format1_pv_write,
+	.lv_setup = _format1_lv_setup,
+	.vg_setup = _format1_vg_setup,
+	.segtype_supported = _format1_segtype_supported,
+	.create_instance = _format1_create_instance,
+	.destroy_instance = _format1_destroy_instance,
+	.destroy = _format1_destroy,
 };
 
 #ifdef LVM1_INTERNAL

@@ -20,11 +20,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static unsigned char _c[] =
+static char _c[] =
     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#";
 
 static int _built_inverse;
-static unsigned char _inverse_c[256];
+static char _inverse_c[256];
 
 int lvid_create(union lvid *lvid, struct id *vgid)
 {
@@ -63,7 +63,7 @@ int lvid_from_lvnum(union lvid *lvid, struct id *vgid, uint32_t lv_num)
 int lvnum_from_lvid(union lvid *lvid)
 {
 	int i, lv_num = 0;
-	unsigned char *c;
+	char *c;
 
 	for (i = 0; i < ID_LEN; i++) {
 		lv_num *= sizeof(_c) - 1;
@@ -76,7 +76,8 @@ int lvnum_from_lvid(union lvid *lvid)
 
 int id_create(struct id *id)
 {
-	int randomfile, i;
+	int randomfile;
+	unsigned i;
 	size_t len = sizeof(id->uuid);
 
 	memset(id->uuid, 0, len);
@@ -85,7 +86,7 @@ int id_create(struct id *id)
 		return 0;
 	}
 
-	if (read(randomfile, id->uuid, len) != len) {
+	if (read(randomfile, id->uuid, len) != (ssize_t) len) {
 		log_sys_error("read", "id_create: /dev/urandom");
 		if (close(randomfile))
 			stack;

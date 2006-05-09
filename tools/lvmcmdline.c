@@ -66,7 +66,7 @@ static struct command *_commands;
 
 static int _interactive;
 
-int yes_no_arg(struct cmd_context *cmd, struct arg *a)
+int yes_no_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	a->sign = SIGN_NONE;
 
@@ -86,7 +86,8 @@ int yes_no_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-int yes_no_excl_arg(struct cmd_context *cmd, struct arg *a)
+int yes_no_excl_arg(struct cmd_context *cmd __attribute((unused)),
+		    struct arg *a)
 {
 	a->sign = SIGN_NONE;
 
@@ -177,7 +178,7 @@ static int _get_int_arg(struct arg *a, char **ptr)
 	return 1;
 }
 
-static int _size_arg(struct cmd_context *cmd, struct arg *a, int factor)
+static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a, int factor)
 {
 	char *ptr;
 	int i;
@@ -238,7 +239,7 @@ int size_mb_arg(struct cmd_context *cmd, struct arg *a)
 	return _size_arg(cmd, a, 1024);
 }
 
-int int_arg(struct cmd_context *cmd, struct arg *a)
+int int_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -248,7 +249,7 @@ int int_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-int int_arg_with_sign(struct cmd_context *cmd, struct arg *a)
+int int_arg_with_sign(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -258,7 +259,7 @@ int int_arg_with_sign(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-int minor_arg(struct cmd_context *cmd, struct arg *a)
+int minor_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -273,7 +274,7 @@ int minor_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-int major_arg(struct cmd_context *cmd, struct arg *a)
+int major_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	char *ptr;
 
@@ -290,13 +291,13 @@ int major_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-int string_arg(struct cmd_context *cmd, struct arg *a)
+int string_arg(struct cmd_context *cmd __attribute((unused)),
+	       struct arg *a __attribute((unused)))
 {
-
 	return 1;
 }
 
-int tag_arg(struct cmd_context *cmd, struct arg *a)
+int tag_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	char *pos = a->value;
 
@@ -309,7 +310,7 @@ int tag_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-int permission_arg(struct cmd_context *cmd, struct arg *a)
+int permission_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	a->sign = SIGN_NONE;
 
@@ -325,7 +326,7 @@ int permission_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-int alloc_arg(struct cmd_context *cmd, struct arg *a)
+int alloc_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	alloc_policy_t alloc;
 
@@ -638,7 +639,9 @@ static int _merge_synonym(struct cmd_context *cmd, int oldarg, int newarg)
 	return 1;
 }
 
-int version(struct cmd_context *cmd, int argc, char **argv)
+int version(struct cmd_context *cmd __attribute((unused)),
+	    int argc __attribute((unused)),
+	    char **argv __attribute((unused)))
 {
 	char vsn[80];
 
@@ -744,7 +747,7 @@ static void _display_help(void)
 	}
 }
 
-int help(struct cmd_context *cmd, int argc, char **argv)
+int help(struct cmd_context *cmd __attribute((unused)), int argc, char **argv)
 {
 	if (!argc)
 		_display_help();
@@ -918,7 +921,7 @@ static int _split(char *str, int *argc, char **argv, int max)
 
 static void _init_rand(void)
 {
-	srand((unsigned int) time(NULL) + (unsigned int) getpid());
+	srand((unsigned) time(NULL) + (unsigned) getpid());
 }
 
 static void _close_stray_fds(void)
@@ -963,7 +966,7 @@ static struct cmd_context *_init_lvm(void)
 	return cmd;
 }
 
-static void _fin_commands(struct cmd_context *cmd)
+static void _fin_commands(void)
 {
 	int i;
 
@@ -975,7 +978,7 @@ static void _fin_commands(struct cmd_context *cmd)
 
 static void _fin(struct cmd_context *cmd)
 {
-	_fin_commands(cmd);
+	_fin_commands();
 	destroy_toolcontext(cmd);
 }
 
@@ -994,8 +997,10 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 		if (!magic_number) {
 			if (buffer[0] == '#' && buffer[1] == '!')
 				magic_number = 1;
-			else
-				return ENO_SUCH_CMD;
+			else {
+				ret = ENO_SUCH_CMD;
+				break;
+			}
 		}
 		if ((strlen(buffer) == sizeof(buffer) - 1)
 		    && (buffer[sizeof(buffer) - 1] - 2 != '\n')) {
@@ -1343,7 +1348,7 @@ static int _lvm1_fallback(struct cmd_context *cmd)
 	return 1;
 }
 
-static void _exec_lvm1_command(struct cmd_context *cmd, int argc, char **argv)
+static void _exec_lvm1_command(char **argv)
 {
 	char path[PATH_MAX];
 
@@ -1400,7 +1405,7 @@ int lvm2_main(int argc, char **argv, int is_static)
 				  "command specified.");
 			return ECMD_FAILED;
 		}
-		_exec_lvm1_command(cmd, argc, argv);
+		_exec_lvm1_command(argv);
 		return ECMD_FAILED;
 	}
 #ifdef READLINE_SUPPORT

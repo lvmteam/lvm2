@@ -15,7 +15,8 @@
 
 #include "tools.h"
 
-static int _pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
+static int _pvdisplay_single(struct cmd_context *cmd,
+			     struct volume_group *vg __attribute((unused)),
 			     struct physical_volume *pv, void *handle)
 {
 	uint64_t size;
@@ -29,7 +30,7 @@ static int _pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (arg_count(cmd, short_ARG)) {
 		log_print("Device \"%s\" has a capacity of %s", pv_name,
-			  display_size(cmd, size, SIZE_SHORT));
+			  display_size(cmd, size));
 		return ECMD_PROCESSED;
 	}
 
@@ -39,7 +40,7 @@ static int _pvdisplay_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!pv->vg_name)
 		log_print("\"%s\" is a new physical volume of \"%s\"",
-			  pv_name, display_size(cmd, size, SIZE_SHORT));
+			  pv_name, display_size(cmd, size));
 
 	if (arg_count(cmd, colon_ARG)) {
 		pvdisplay_colons(pv);

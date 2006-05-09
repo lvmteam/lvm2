@@ -19,6 +19,7 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
+#include <configure.h>
 #include <assert.h>
 #include <libdevmapper.h>
 
@@ -95,7 +96,7 @@ struct arg {
 
 	int (*fn) (struct cmd_context * cmd, struct arg * a);
 
-	unsigned int count;
+	unsigned count;
 	char *value;
 	int32_t i_value;
 	uint32_t ui_value;
@@ -143,7 +144,7 @@ const char *arg_value(struct cmd_context *cmd, int a);
 const char *arg_str_value(struct cmd_context *cmd, int a, const char *def);
 int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def); 
 uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def);
-int64_t arg_int64_value(struct cmd_context *cmd, int a, const uint64_t def);
+int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def);
 uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def);
 const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def);
 sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def);

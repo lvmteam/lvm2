@@ -26,10 +26,10 @@
 #include "lvm-string.h"
 #include "uuid.h"
 
-#define MAX_STRIPES 128
+#define MAX_STRIPES 128U
 #define SECTOR_SHIFT 9L
 #define SECTOR_SIZE ( 1L << SECTOR_SHIFT )
-#define STRIPE_SIZE_MIN ( getpagesize() >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
+#define STRIPE_SIZE_MIN ( (unsigned) getpagesize() >> SECTOR_SHIFT)	/* PAGESIZE in sectors */
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
 #define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
@@ -39,46 +39,46 @@
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
-#define PARTIAL_VG		0x00000001	/* VG */
-#define EXPORTED_VG          	0x00000002	/* VG PV */
-#define RESIZEABLE_VG        	0x00000004	/* VG */
+#define PARTIAL_VG		0x00000001U	/* VG */
+#define EXPORTED_VG          	0x00000002U	/* VG PV */
+#define RESIZEABLE_VG        	0x00000004U	/* VG */
 
 /* May any free extents on this PV be used or must they be left free? */
-#define ALLOCATABLE_PV         	0x00000008	/* PV */
+#define ALLOCATABLE_PV         	0x00000008U	/* PV */
 
-#define SPINDOWN_LV          	0x00000010	/* LV */
-#define BADBLOCK_ON       	0x00000020	/* LV */
-#define VISIBLE_LV		0x00000040	/* LV */
-#define FIXED_MINOR		0x00000080	/* LV */
+#define SPINDOWN_LV          	0x00000010U	/* LV */
+#define BADBLOCK_ON       	0x00000020U	/* LV */
+#define VISIBLE_LV		0x00000040U	/* LV */
+#define FIXED_MINOR		0x00000080U	/* LV */
 /* FIXME Remove when metadata restructuring is completed */
-#define SNAPSHOT		0x00001000	/* LV - internal use only */
-#define PVMOVE			0x00002000	/* VG LV SEG */
-#define LOCKED			0x00004000	/* LV */
-#define MIRRORED		0x00008000	/* LV - internal use only */
-#define VIRTUAL			0x00010000	/* LV - internal use only */
-#define MIRROR_LOG		0x00020000	/* LV */
-#define MIRROR_IMAGE		0x00040000	/* LV */
-#define ACTIVATE_EXCL		0x00080000	/* LV - internal use only */
-#define PRECOMMITTED		0x00100000	/* VG - internal use only */
+#define SNAPSHOT		0x00001000U	/* LV - internal use only */
+#define PVMOVE			0x00002000U	/* VG LV SEG */
+#define LOCKED			0x00004000U	/* LV */
+#define MIRRORED		0x00008000U	/* LV - internal use only */
+#define VIRTUAL			0x00010000U	/* LV - internal use only */
+#define MIRROR_LOG		0x00020000U	/* LV */
+#define MIRROR_IMAGE		0x00040000U	/* LV */
+#define ACTIVATE_EXCL		0x00080000U	/* LV - internal use only */
+#define PRECOMMITTED		0x00100000U	/* VG - internal use only */
 
-#define LVM_READ              	0x00000100	/* LV VG */
-#define LVM_WRITE             	0x00000200	/* LV VG */
-#define CLUSTERED         	0x00000400	/* VG */
-#define SHARED            	0x00000800	/* VG */
+#define LVM_READ              	0x00000100U	/* LV VG */
+#define LVM_WRITE             	0x00000200U	/* LV VG */
+#define CLUSTERED         	0x00000400U	/* VG */
+#define SHARED            	0x00000800U	/* VG */
 
 /* Format features flags */
-#define FMT_SEGMENTS		0x00000001	/* Arbitrary segment params? */
-#define FMT_MDAS		0x00000002	/* Proper metadata areas? */
-#define FMT_TAGS		0x00000004	/* Tagging? */
-#define FMT_UNLIMITED_VOLS	0x00000008	/* Unlimited PVs/LVs? */
-#define FMT_RESTRICTED_LVIDS	0x00000010	/* LVID <= 255 */
-#define FMT_ORPHAN_ALLOCATABLE	0x00000020	/* Orphan PV allocatable? */
-#define FMT_PRECOMMIT		0x00000040	/* Supports pre-commit? */
-#define FMT_RESIZE_PV		0x00000080	/* Supports pvresize? */
-#define FMT_UNLIMITED_STRIPESIZE 0x00000100	/* Unlimited stripe size? */
+#define FMT_SEGMENTS		0x00000001U	/* Arbitrary segment params? */
+#define FMT_MDAS		0x00000002U	/* Proper metadata areas? */
+#define FMT_TAGS		0x00000004U	/* Tagging? */
+#define FMT_UNLIMITED_VOLS	0x00000008U	/* Unlimited PVs/LVs? */
+#define FMT_RESTRICTED_LVIDS	0x00000010U	/* LVID <= 255 */
+#define FMT_ORPHAN_ALLOCATABLE	0x00000020U	/* Orphan PV allocatable? */
+#define FMT_PRECOMMIT		0x00000040U	/* Supports pre-commit? */
+#define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
+#define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
 
 typedef enum {
-	ALLOC_INVALID,
+	ALLOC_INVALID = 0,
 	ALLOC_INHERIT,
 	ALLOC_CONTIGUOUS,
 	ALLOC_NORMAL,
@@ -239,7 +239,7 @@ struct lv_segment {
 	struct list list;
 	struct logical_volume *lv;
 
-	struct segment_type *segtype;
+	const struct segment_type *segtype;
 	uint32_t le;
 	uint32_t len;
 
@@ -378,7 +378,7 @@ struct format_handler {
 	 * Check whether particular segment type is supported.
 	 */
 	int (*segtype_supported) (struct format_instance *fid,
-				  struct segment_type *segtype);
+				  const struct segment_type *segtype);
 
 	/*
 	 * Create format instance with a particular metadata area
@@ -463,7 +463,7 @@ int lv_empty(struct logical_volume *lv);
 
 /* Entry point for all LV extent allocations */
 int lv_extend(struct logical_volume *lv,
-	      struct segment_type *segtype,
+	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t extents,
 	      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
@@ -568,7 +568,7 @@ int create_mirror_layers(struct alloc_handle *ah,
 			 uint32_t first_area,
 			 uint32_t num_mirrors,
 			 struct logical_volume *lv,
-			 struct segment_type *segtype,
+			 const struct segment_type *segtype,
 			 uint32_t status,
 			 uint32_t region_size,
 			 struct logical_volume *log_lv);
@@ -576,7 +576,7 @@ int add_mirror_layers(struct alloc_handle *ah,
 		      uint32_t num_mirrors,
 		      uint32_t existing_mirrors,
 		      struct logical_volume *lv,
-		      struct segment_type *segtype);
+		      const struct segment_type *segtype);
 
 int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			 struct list *removable_pvs, int remove_log);

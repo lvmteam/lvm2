@@ -18,7 +18,7 @@
 /* FIXME Locking.  PVs in VG. */
 
 static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
-			    void *handle)
+			    void *handle __attribute((unused)))
 {
 	struct volume_group *vg = NULL;
 	struct pv_list *pvl;

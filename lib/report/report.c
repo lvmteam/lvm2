@@ -578,7 +578,7 @@ static int _size32_disp(struct report_handle *rh, struct field *field,
 	const char *disp;
 	uint64_t *sortval;
 
-	if (!*(disp = display_size(rh->cmd, (uint64_t) size, SIZE_UNIT))) {
+	if (!*(disp = display_size_units(rh->cmd, (uint64_t) size))) {
 		stack;
 		return 0;
 	}
@@ -606,7 +606,7 @@ static int _size64_disp(struct report_handle *rh, struct field *field,
 	const char *disp;
 	uint64_t *sortval;
 
-	if (!*(disp = display_size(rh->cmd, size, SIZE_UNIT))) {
+	if (!*(disp = display_size_units(rh->cmd, size))) {
 		stack;
 		return 0;
 	}

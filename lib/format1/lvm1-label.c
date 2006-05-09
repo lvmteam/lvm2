@@ -61,16 +61,16 @@ static int _lvm1_read(struct labeller *l, struct device *dev, char *buf,
 	struct vg_disk vgd;
 	struct lvmcache_info *info;
 	const char *vgid = NULL;
-	int exported = 0;
+	unsigned exported = 0;
 
 	munge_pvd(dev, pvd);
 
 	if (*pvd->vg_name && read_vgd(dev, &vgd, pvd)) {
-		vgid = vgd.vg_uuid;
+		vgid = (char *) vgd.vg_uuid;
 		exported = pvd->pv_status & VG_EXPORTED;
 	}
 
-	if (!(info = lvmcache_add(l, pvd->pv_uuid, dev, pvd->vg_name, vgid,
+	if (!(info = lvmcache_add(l, (char *)pvd->pv_uuid, dev, (char *)pvd->vg_name, vgid,
 				  exported))) {
 		stack;
 		return 0;
@@ -103,13 +103,13 @@ static void _lvm1_destroy(struct labeller *l)
 }
 
 struct label_ops _lvm1_ops = {
-	can_handle:_lvm1_can_handle,
-	write:_lvm1_write,
-	read:_lvm1_read,
-	verify:_lvm1_can_handle,
-	initialise_label:_lvm1_initialise_label,
-	destroy_label:_lvm1_destroy_label,
-	destroy:_lvm1_destroy
+	.can_handle = _lvm1_can_handle,
+	.write = _lvm1_write,
+	.read = _lvm1_read,
+	.verify = _lvm1_can_handle,
+	.initialise_label = _lvm1_initialise_label,
+	.destroy_label = _lvm1_destroy_label,
+	.destroy = _lvm1_destroy,
 };
 
 struct labeller *lvm1_labeller_create(struct format_type *fmt)

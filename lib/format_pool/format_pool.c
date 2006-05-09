@@ -79,7 +79,8 @@ static struct user_subpool *_build_usp(struct list *pls, struct dm_pool *mem,
 
 static int _check_usp(char *vgname, struct user_subpool *usp, int sp_count)
 {
-	int i, j;
+	int i;
+	unsigned j;
 
 	for (i = 0; i < sp_count; i++) {
 		if (!usp[i].initialized) {
@@ -88,7 +89,7 @@ static int _check_usp(char *vgname, struct user_subpool *usp, int sp_count)
 		}
 		for (j = 0; j < usp[i].num_devs; j++) {
 			if (!usp[i].devs[j].initialized) {
-				log_error("Missing device %d for subpool %d"
+				log_error("Missing device %u for subpool %d"
 					  " in pool %s", j, i, vgname);
 				return 0;
 			}
@@ -262,7 +263,7 @@ static int _pool_pv_read(const struct format_type *fmt, const char *pv_name,
 
 /* *INDENT-OFF* */
 static struct metadata_area_ops _metadata_format_pool_ops = {
-	vg_read:_pool_vg_read,
+	.vg_read = _pool_vg_read,
 };
 /* *INDENT-ON* */
 
@@ -310,11 +311,11 @@ static void _pool_destroy(const struct format_type *fmt)
 
 /* *INDENT-OFF* */
 static struct format_handler _format_pool_ops = {
-	pv_read:_pool_pv_read,
-	pv_setup:_pool_pv_setup,
-	create_instance:_pool_create_instance,
-	destroy_instance:_pool_destroy_instance,
-	destroy:_pool_destroy,
+	.pv_read = _pool_pv_read,
+	.pv_setup = _pool_pv_setup,
+	.create_instance = _pool_create_instance,
+	.destroy_instance = _pool_destroy_instance,
+	.destroy = _pool_destroy,
 };
 /* *INDENT-ON */
 

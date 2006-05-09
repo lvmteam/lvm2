@@ -93,7 +93,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 	memset(lvs, 0, sizeof(*lvs) * MAX_LV);
 
 	list_iterate_items(ll, &dl->lvds) {
-		if (!(lvm = dm_hash_lookup(maps, strrchr(ll->lvd.lv_name, '/')
+		if (!(lvm = dm_hash_lookup(maps, strrchr((char *)ll->lvd.lv_name, '/')
 					+ 1))) {
 			log_err("Physical volume (%s) contains an "
 				"unknown logical volume (%s).",

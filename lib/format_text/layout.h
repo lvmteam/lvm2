@@ -36,7 +36,7 @@ struct data_area_list {
 /* Fields with the suffix _xl should be xlate'd wherever they appear */
 /* On disk */
 struct pv_header {
-	uint8_t pv_uuid[ID_LEN];
+	int8_t pv_uuid[ID_LEN];
 
 	/* This size can be overridden if PV belongs to a VG */
 	uint64_t device_size_xl;	/* Bytes */
@@ -58,7 +58,7 @@ struct raw_locn {
 /* Structure size limited to one sector */
 struct mda_header {
 	uint32_t checksum_xl;	/* Checksum of rest of mda_header */
-	uint8_t magic[16];	/* To aid scans for metadata */
+	int8_t magic[16];	/* To aid scans for metadata */
 	uint32_t version;
 	uint64_t start;		/* Absolute start byte of mda_header */
 	uint64_t size;		/* Size of metadata area */
@@ -83,6 +83,6 @@ struct mda_context {
 #define FMTT_VERSION 1
 #define MDA_HEADER_SIZE 512
 #define LVM2_LABEL "LVM2 001"
-#define MDA_SIZE_MIN (8 * getpagesize())
+#define MDA_SIZE_MIN (8 * (unsigned) getpagesize())
 
 #endif

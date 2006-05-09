@@ -335,8 +335,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 			return ECMD_FAILED;
 		}
 
-		alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG,
-							ALLOC_INHERIT);
+		alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 		if (alloc == ALLOC_INHERIT)
 			alloc = vg->alloc;
 
@@ -483,11 +482,11 @@ static struct volume_group *_get_move_vg(struct cmd_context *cmd,
 }
 
 static struct poll_functions _pvmove_fns = {
-	get_copy_name_from_lv:get_pvmove_pvname_from_lv_mirr,
-	get_copy_vg:_get_move_vg,
-	get_copy_lv:find_pvmove_lv_from_pvname,
-	update_metadata:_update_metadata,
-	finish_copy:_finish_pvmove,
+	.get_copy_name_from_lv = get_pvmove_pvname_from_lv_mirr,
+	.get_copy_vg = _get_move_vg,
+	.get_copy_lv = find_pvmove_lv_from_pvname,
+	.update_metadata = _update_metadata,
+	.finish_copy = _finish_pvmove,
 };
 
 int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
@@ -525,5 +524,5 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	return pvmove_poll(cmd, pv_name,
-			   arg_count(cmd, background_ARG) ? 1 : 0);
+			   arg_count(cmd, background_ARG) ? 1U : 0);
 }

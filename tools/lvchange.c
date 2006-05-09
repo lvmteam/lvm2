@@ -150,7 +150,7 @@ static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 
 	want_contiguous = strcmp(arg_str_value(cmd, contiguous_ARG, "n"), "n");
 	alloc = want_contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
-	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, alloc);
+	alloc = arg_uint_value(cmd, alloc_ARG, alloc);
 
 	if (alloc == lv->alloc) {
 		log_error("Allocation policy of logical volume \"%s\" is "
@@ -186,7 +186,7 @@ static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 static int lvchange_readahead(struct cmd_context *cmd,
 			      struct logical_volume *lv)
 {
-	unsigned int read_ahead = 0;
+	unsigned read_ahead = 0;
 
 	read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
 
@@ -369,7 +369,7 @@ static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
-			   void *handle)
+			   void *handle __attribute((unused)))
 {
 	int doit = 0;
 	int archived = 0;
