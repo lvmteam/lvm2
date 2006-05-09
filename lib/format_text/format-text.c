@@ -85,7 +85,7 @@ static int _text_lv_setup(struct format_instance *fid, struct logical_volume *lv
 	uint64_t max_size = UINT_MAX;
 
 	if (lv->size > max_size) {
-		char *dummy = display_size(max_size, SIZE_SHORT);
+		char *dummy = display_size(max_size);
 		log_error("logical volumes cannot be larger than %s", dummy);
 		dm_free(dummy);
 		return 0;
@@ -143,7 +143,7 @@ static struct mda_header *_raw_read_mda_header(const struct format_type *fmt,
 
 	_xlate_mdah(mdah);
 
-	if (strncmp(mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
+	if (strncmp((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
 		log_error("Wrong magic number in metadata area header");
 		return NULL;
 	}
@@ -167,7 +167,7 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 				 struct device *dev,
 				 uint64_t start_byte, struct mda_header *mdah)
 {
-	strncpy(mdah->magic, FMTT_MAGIC, sizeof(mdah->magic));
+	strncpy((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic));
 	mdah->version = FMTT_VERSION;
 	mdah->start = start_byte;
 
@@ -1073,7 +1073,7 @@ static int _mda_setup(const struct format_type *fmt,
 
 		if (!dev_zero((struct device *) pv->dev, start1,
 			      (size_t) (mda_size1 >
-					wipe_size ? wipe_size : mda_size1))) {
+					wipe_size ? : mda_size1))) {
 			log_error("Failed to wipe new metadata area");
 			return 0;
 		}
@@ -1119,7 +1119,7 @@ static int _mda_setup(const struct format_type *fmt,
 			     mda_size2)) return 0;
 		if (!dev_zero(pv->dev, start2,
 			      (size_t) (mda_size1 >
-					wipe_size ? wipe_size : mda_size1))) {
+					wipe_size ? : mda_size1))) {
 			log_error("Failed to wipe new metadata area");
 			return 0;
 		}
@@ -1376,28 +1376,28 @@ static void _text_destroy(const struct format_type *fmt)
 }
 
 static struct metadata_area_ops _metadata_text_file_ops = {
-	vg_read:_vg_read_file,
-	vg_read_precommit:_vg_read_precommit_file,
-	vg_write:_vg_write_file,
-	vg_remove:_vg_remove_file,
-	vg_commit:_vg_commit_file
+	.vg_read = _vg_read_file,
+	.vg_read_precommit = _vg_read_precommit_file,
+	.vg_write = _vg_write_file,
+	.vg_remove = _vg_remove_file,
+	.vg_commit = _vg_commit_file
 };
 
 static struct metadata_area_ops _metadata_text_file_backup_ops = {
-	vg_read:_vg_read_file,
-	vg_write:_vg_write_file,
-	vg_remove:_vg_remove_file,
-	vg_commit:_vg_commit_file_backup
+	.vg_read = _vg_read_file,
+	.vg_write = _vg_write_file,
+	.vg_remove = _vg_remove_file,
+	.vg_commit = _vg_commit_file_backup
 };
 
 static struct metadata_area_ops _metadata_text_raw_ops = {
-	vg_read:_vg_read_raw,
-	vg_read_precommit:_vg_read_precommit_raw,
-	vg_write:_vg_write_raw,
-	vg_remove:_vg_remove_raw,
-	vg_precommit:_vg_precommit_raw,
-	vg_commit:_vg_commit_raw,
-	vg_revert:_vg_revert_raw
+	.vg_read = _vg_read_raw,
+	.vg_read_precommit = _vg_read_precommit_raw,
+	.vg_write = _vg_write_raw,
+	.vg_remove = _vg_remove_raw,
+	.vg_precommit = _vg_precommit_raw,
+	.vg_commit = _vg_commit_raw,
+	.vg_revert = _vg_revert_raw
 };
 
 /* pvmetadatasize in sectors */
@@ -1656,15 +1656,15 @@ void *create_text_context(struct cmd_context *cmd, const char *path,
 }
 
 static struct format_handler _text_handler = {
-	scan:_text_scan,
-	pv_read:_text_pv_read,
-	pv_setup:_text_pv_setup,
-	pv_write:_text_pv_write,
-	vg_setup:_text_vg_setup,
-	lv_setup:_text_lv_setup,
-	create_instance:_text_create_text_instance,
-	destroy_instance:_text_destroy_instance,
-	destroy:_text_destroy
+	.scan = _text_scan,
+	.pv_read = _text_pv_read,
+	.pv_setup = _text_pv_setup,
+	.pv_write = _text_pv_write,
+	.vg_setup = _text_vg_setup,
+	.lv_setup = _text_lv_setup,
+	.create_instance = _text_create_text_instance,
+	.destroy_instance = _text_destroy_instance,
+	.destroy = _text_destroy
 };
 
 static int _add_dir(const char *dir, struct list *dir_list)
@@ -1759,6 +1759,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 
 	if (!(mda_lists = dm_malloc(sizeof(struct mda_lists)))) {
 		log_error("Failed to allocate dir_list");
+		dm_free(fmt);
 		return NULL;
 	}
 
@@ -1770,11 +1771,13 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 
 	if (!(fmt->labeller = text_labeller_create(fmt))) {
 		log_error("Couldn't create text label handler.");
+		dm_free(fmt);
 		return NULL;
 	}
 
 	if (!(label_register_handler(FMT_TEXT_NAME, fmt->labeller))) {
 		log_error("Couldn't register text label handler.");
+		dm_free(fmt);
 		return NULL;
 	}
 

@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int _vgmknodes_single(struct cmd_context *cmd, struct logical_volume *lv,
-			     void *handle)
+			     void *handle __attribute((unused)))
 {
 	if (!lv_mknodes(cmd, lv))
 		return ECMD_FAILED;

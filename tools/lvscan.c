@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
-			 void *handle)
+			 void *handle __attribute((unused)))
 {
 	struct lvinfo info;
 	int lv_total = 0;
@@ -63,7 +63,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	log_print("%s%s '%s%s/%s' [%s] %s", active_str, snapshot_str,
 		  cmd->dev_dir, lv->vg->name, lv->name,
-		  display_size(cmd, lv->size, SIZE_SHORT),
+		  display_size(cmd, lv->size),
 		  get_alloc_string(lv->alloc));
 
 	lv_total++;

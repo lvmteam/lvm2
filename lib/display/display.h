@@ -20,12 +20,13 @@
 
 #include <stdint.h>
 
-typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1, SIZE_UNIT = 2 } size_len_t;
-
 uint64_t units_to_bytes(const char *units, char *unit_type);
 
 /* Specify size in KB */
-const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl);
+const char *display_size(struct cmd_context *cmd, uint64_t size);
+const char *display_size_long(struct cmd_context *cmd, uint64_t size);
+const char *display_size_units(struct cmd_context *cmd, uint64_t size);
+
 char *display_uuid(char *uuidstr);
 void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre);
 

@@ -203,7 +203,7 @@ static int _add_stripe_seg(struct dm_pool *mem,
 {
 	struct lv_segment *seg;
 	struct segment_type *segtype;
-	int j;
+	unsigned j;
 	uint32_t area_len;
 
 	if (usp->striping & (usp->striping - 1)) {
@@ -249,7 +249,7 @@ static int _add_linear_seg(struct dm_pool *mem,
 {
 	struct lv_segment *seg;
 	struct segment_type *segtype;
-	int j;
+	unsigned j;
 	uint32_t area_len;
 
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, "striped"))) {

@@ -13,7 +13,11 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef _LVM_EXEC_H
+#define _LVM_EXEC_H
+
 #include "lib.h"
 
 int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
 	     const char *size);
+#endif

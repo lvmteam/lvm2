@@ -27,7 +27,7 @@ static int _text_can_handle(struct labeller *l, char *buf, uint64_t sector)
 {
 	struct label_header *lh = (struct label_header *) buf;
 
-	if (!strncmp(lh->type, LVM2_LABEL, sizeof(lh->type)))
+	if (!strncmp((char *)lh->type, LVM2_LABEL, sizeof(lh->type)))
 		return 1;
 
 	return 0;
@@ -46,7 +46,7 @@ static int _text_write(struct label *label, char *buf)
 	/* FIXME Move to where label is created */
 	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
 
-	strncpy(lh->type, label->type, sizeof(label->type));
+	strncpy((char *)lh->type, label->type, sizeof(label->type));
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
 	info = (struct lvmcache_info *) label->info;
@@ -203,7 +203,7 @@ static int _text_read(struct labeller *l, struct device *dev, char *buf,
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
 
-	if (!(info = lvmcache_add(l, pvhdr->pv_uuid, dev, NULL, NULL, 0)))
+	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev, NULL, NULL, 0)))
 		return_0;
 	*label = info->label;
 
@@ -264,13 +264,13 @@ static void _fmt_text_destroy(struct labeller *l)
 }
 
 struct label_ops _text_ops = {
-	can_handle:_text_can_handle,
-	write:_text_write,
-	read:_text_read,
-	verify:_text_can_handle,
-	initialise_label:_text_initialise_label,
-	destroy_label:_text_destroy_label,
-	destroy:_fmt_text_destroy
+	.can_handle = _text_can_handle,
+	.write = _text_write,
+	.read = _text_read,
+	.verify = _text_can_handle,
+	.initialise_label = _text_initialise_label,
+	.destroy_label = _text_destroy_label,
+	.destroy = _fmt_text_destroy,
 };
 
 struct labeller *text_labeller_create(const struct format_type *fmt)

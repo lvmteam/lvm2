@@ -22,6 +22,8 @@
 
 #define SIZE_BUF 128
 
+typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1, SIZE_UNIT = 2 } size_len_t;
+
 static struct {
 	alloc_policy_t alloc;
 	const char *str;
@@ -132,7 +134,7 @@ alloc_policy_t get_alloc_from_string(const char *str)
 }
 
 /* Size supplied in sectors */
-const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
+static const char *_display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 {
 	int s;
 	int suffix = 1, precision;
@@ -200,6 +202,21 @@ const char *display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
 	return size_buf;
 }
 
+const char *display_size_long(struct cmd_context *cmd, uint64_t size)
+{
+	return _display_size(cmd, size, SIZE_LONG);
+}
+
+const char *display_size_units(struct cmd_context *cmd, uint64_t size)
+{
+	return _display_size(cmd, size, SIZE_UNIT);
+}
+
+const char *display_size(struct cmd_context *cmd, uint64_t size)
+{
+	return _display_size(cmd, size, SIZE_SHORT);
+}
+
 void pvdisplay_colons(struct physical_volume *pv)
 {
 	char uuid[64];
@@ -228,7 +245,7 @@ void pvdisplay_colons(struct physical_volume *pv)
 
 /* FIXME Include label fields */
 void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
-		    void *handle)
+		    void *handle __attribute((unused)))
 {
 	char uuid[64];
 	const char *size;
@@ -248,18 +265,17 @@ void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 	log_print("VG Name               %s%s", pv->vg_name,
 		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
-	size = display_size(cmd, (uint64_t) pv->size, SIZE_SHORT);
+	size = display_size(cmd, (uint64_t) pv->size);
 	if (pv->pe_size && pv->pe_count) {
 
 /******** FIXME display LVM on-disk data size
-		size2 = display_size(pv->size, SIZE_SHORT);
+		size2 = display_size(cmd, pv->size);
 ********/
 
 		log_print("PV Size               %s" " / not usable %s",	/*  [LVM: %s]", */
 			  size,
 			  display_size(cmd, (pv->size -
-				       (uint64_t) pv->pe_count * pv->pe_size),
-				       SIZE_SHORT));
+				       (uint64_t) pv->pe_count * pv->pe_size)));
 
 	} else
 		log_print("PV Size               %s", size);
@@ -288,8 +304,10 @@ void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 	return;
 }
 
-int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
-		    struct physical_volume *pv, void *handle)
+int pvdisplay_short(struct cmd_context *cmd __attribute((unused)),
+		    struct volume_group *vg __attribute((unused)),
+		    struct physical_volume *pv,
+		    void *handle __attribute((unused)))
 {
 	char uuid[64];
 
@@ -334,7 +352,7 @@ void lvdisplay_colons(struct logical_volume *lv)
 }
 
 int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
-		   void *handle)
+		   void *handle __attribute((unused)))
 {
 	struct lvinfo info;
 	int inkernel, snap_active = 0;
@@ -404,23 +422,21 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 
 	log_print("LV Size                %s",
 		  display_size(cmd,
-			       snap_seg ? snap_seg->origin->size : lv->size,
-			       SIZE_SHORT));
+			       snap_seg ? snap_seg->origin->size : lv->size));
 
 	log_print("Current LE             %u",
 		  snap_seg ? snap_seg->origin->le_count : lv->le_count);
 
 	if (snap_seg) {
 		log_print("COW-table size         %s",
-			  display_size(cmd, (uint64_t) lv->size, SIZE_SHORT));
+			  display_size(cmd, (uint64_t) lv->size));
 		log_print("COW-table LE           %u", lv->le_count);
 
 		if (snap_active)
 			log_print("Allocated to snapshot  %.2f%% ", snap_percent);	
 
 		log_print("Snapshot chunk size    %s",
-			  display_size(cmd, (uint64_t) snap_seg->chunk_size,
-				       SIZE_SHORT));
+			  display_size(cmd, (uint64_t) snap_seg->chunk_size));
 	}
 
 	log_print("Segments               %u", list_size(&lv->segments));
@@ -497,7 +513,7 @@ int lvdisplay_segments(struct logical_volume *lv)
 	return 1;
 }
 
-void vgdisplay_extents(struct volume_group *vg)
+void vgdisplay_extents(struct volume_group *vg __attribute((unused)))
 {
 	return;
 }
@@ -544,7 +560,7 @@ void vgdisplay_full(struct volume_group *vg)
 	log_print("Open LV               %u", lvs_in_vg_opened(vg));
 /****** FIXME Max LV Size
       log_print ( "MAX LV Size           %s",
-               ( s1 = display_size ( LVM_LV_SIZE_MAX(vg), SIZE_SHORT)));
+               ( s1 = display_size ( LVM_LV_SIZE_MAX(vg))));
       free ( s1);
 *********/
 	log_print("Max PV                %u", vg->max_pv);
@@ -553,12 +569,10 @@ void vgdisplay_full(struct volume_group *vg)
 
 	log_print("VG Size               %s",
 		  display_size(vg->cmd,
-			       (uint64_t) vg->extent_count * vg->extent_size,
-			       SIZE_SHORT));
+			       (uint64_t) vg->extent_count * vg->extent_size));
 
 	log_print("PE Size               %s",
-		  display_size(vg->cmd, (uint64_t) vg->extent_size,
-			       SIZE_SHORT));
+		  display_size(vg->cmd, (uint64_t) vg->extent_size));
 
 	log_print("Total PE              %u", vg->extent_count);
 
@@ -566,12 +580,11 @@ void vgdisplay_full(struct volume_group *vg)
 		  vg->extent_count - vg->free_count,
 		  display_size(vg->cmd,
 			       ((uint64_t) vg->extent_count - vg->free_count) *
-			       vg->extent_size, SIZE_SHORT));
+			       vg->extent_size));
 
 	log_print("Free  PE / Size       %u / %s", vg->free_count,
 		  display_size(vg->cmd,
-			       (uint64_t) vg->free_count * vg->extent_size,
-			       SIZE_SHORT));
+			       (uint64_t) vg->free_count * vg->extent_size));
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
 		stack;
@@ -641,15 +654,12 @@ void vgdisplay_short(struct volume_group *vg)
 	log_print("\"%s\" %-9s [%-9s used / %s free]", vg->name,
 /********* FIXME if "open" print "/used" else print "/idle"???  ******/
 		  display_size(vg->cmd,
-			       (uint64_t) vg->extent_count * vg->extent_size,
-			       SIZE_SHORT),
+			       (uint64_t) vg->extent_count * vg->extent_size),
 		  display_size(vg->cmd,
 			       ((uint64_t) vg->extent_count -
-				vg->free_count) * vg->extent_size,
-			       SIZE_SHORT),
+				vg->free_count) * vg->extent_size),
 		  display_size(vg->cmd,
-			       (uint64_t) vg->free_count * vg->extent_size,
-			       SIZE_SHORT));
+			       (uint64_t) vg->free_count * vg->extent_size));
 	return;
 }
 

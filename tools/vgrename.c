@@ -18,7 +18,7 @@
 int vgrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *dev_dir;
-	unsigned int length;
+	unsigned length;
 	struct id id;
 	int consistent = 1;
 	int match = 0;
@@ -90,9 +90,9 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 	log_suppress(2);
 	found_id = id_read_format(&id, vg_name_old);
 	log_suppress(0);
-	if (found_id && (vg_name = vgname_from_vgid(cmd->mem, id.uuid))) {
+	if (found_id && (vg_name = vgname_from_vgid(cmd->mem, (char *)id.uuid))) {
 		vg_name_old = vg_name;
-		vgid = id.uuid;
+		vgid = (char *)id.uuid;
 	} else
 		vgid = NULL;
 

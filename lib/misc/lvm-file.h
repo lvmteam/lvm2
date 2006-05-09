@@ -13,6 +13,9 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef _LVM_FILE_H
+#define _LVM_FILE_H
+
 /*
  * Create a temporary filename, and opens a descriptor to the file.
  */
@@ -44,3 +47,5 @@ int create_dir(const char *dir);
 
 /* Sync directory changes */
 void sync_dir(const char *file);
+
+#endif

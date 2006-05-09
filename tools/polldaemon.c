@@ -18,7 +18,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-static void _sigchld_handler(int sig)
+static void _sigchld_handler(int sig __attribute((unused)))
 {
 	while (wait4(-1, NULL, WNOHANG | WUNTRACED, NULL) > 0) ;
 }

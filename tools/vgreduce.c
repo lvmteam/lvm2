@@ -157,7 +157,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	struct physical_volume *pv;
 	struct lv_segment *seg, *mirrored_seg;
 	struct lv_segment_area area;
-	unsigned int s;
+	unsigned s;
 	uint32_t mimages;
 	int list_unsafe, only_mirror_images_found;
 	LIST_INIT(lvs_changed);
@@ -323,7 +323,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 /* Or take pv_name instead? */
 static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
-			    struct physical_volume *pv, void *handle)
+			    struct physical_volume *pv,
+			    void *handle __attribute((unused)))
 {
 	struct pv_list *pvl;
 	const char *name = dev_name(pv->dev);

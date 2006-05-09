@@ -17,7 +17,7 @@
 
 static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, int consistent,
-			    void *handle)
+			    void *handle __attribute((unused)))
 {
 	struct physical_volume *pv, *existing_pv;
 	struct logical_volume *lv;

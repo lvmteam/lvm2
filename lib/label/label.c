@@ -128,7 +128,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 		lh = (struct label_header *) (readbuf +
 					      (sector << SECTOR_SHIFT));
 
-		if (!strncmp(lh->id, LABEL_ID, sizeof(lh->id))) {
+		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
 			if (found) {
 				log_error("Ignoring additional label on %s at "
 					  "sector %" PRIu64, dev_name(dev),
@@ -222,7 +222,7 @@ int label_remove(struct device *dev)
 
 		wipe = 0;
 
-		if (!strncmp(lh->id, LABEL_ID, sizeof(lh->id))) {
+		if (!strncmp((char *)lh->id, LABEL_ID, sizeof(lh->id))) {
 			if (xlate64(lh->sector_xl) == sector)
 				wipe = 1;
 		} else {
@@ -307,7 +307,7 @@ int label_write(struct device *dev, struct label *label)
 
 	memset(buf, 0, LABEL_SIZE);
 
-	strncpy(lh->id, LABEL_ID, sizeof(lh->id));
+	strncpy((char *)lh->id, LABEL_ID, sizeof(lh->id));
 	lh->sector_xl = xlate64(label->sector);
 	lh->offset_xl = xlate32(sizeof(*lh));
 

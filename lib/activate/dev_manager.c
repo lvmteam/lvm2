@@ -664,7 +664,8 @@ fail:
 }
 
 int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
-		   struct dm_tree_node *node, int start_area, int areas)
+		   struct dm_tree_node *node, uint32_t start_area,
+		   uint32_t areas)
 {
 	uint64_t extent_size = seg->lv->vg->extent_size;
 	uint32_t s;

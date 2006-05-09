@@ -38,11 +38,13 @@ static int _zero_merge_segments(struct lv_segment *seg1, struct lv_segment *seg2
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _zero_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
-                                struct config_tree *cft, void **target_state,
-                                struct lv_segment *seg,
-                                struct dm_tree_node *node, uint64_t len,
-                                uint32_t *pvmove_mirror_count)
+static int _zero_add_target_line(struct dev_manager *dm __attribute((unused)),
+				struct dm_pool *mem __attribute((unused)),
+                                struct config_tree *cft __attribute((unused)),
+				void **target_state __attribute((unused)),
+                                struct lv_segment *seg __attribute((unused)),
+                                struct dm_tree_node *node,uint64_t len,
+                                uint32_t *pvmove_mirror_count __attribute((unused)))
 {
 	return dm_tree_node_add_zero_target(node, len);
 }
@@ -67,13 +69,13 @@ static void _zero_destroy(const struct segment_type *segtype)
 }
 
 static struct segtype_handler _zero_ops = {
-	name:_zero_name,
-	merge_segments:_zero_merge_segments,
+	.name = _zero_name,
+	.merge_segments = _zero_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_zero_add_target_line,
-	target_present:_zero_target_present,
+	.add_target_line = _zero_add_target_line,
+	.target_present = _zero_target_present,
 #endif
-	destroy:_zero_destroy,
+	.destroy = _zero_destroy,
 };
 
 struct segment_type *init_zero_segtype(struct cmd_context *cmd)

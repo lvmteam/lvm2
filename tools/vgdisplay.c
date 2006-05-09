@@ -17,7 +17,7 @@
 
 static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 			    struct volume_group *vg, int consistent,
-			    void *handle)
+			    void *handle __attribute((unused)))
 {
 	/* FIXME Do the active check here if activevolumegroups_ARG ? */
 	if (!vg) {

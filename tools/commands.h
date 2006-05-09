@@ -509,21 +509,6 @@ xx(pvremove,
 
    force_ARG, test_ARG, yes_ARG)
 
-xx(pvresize,
-   "Resize a physical volume in use by a volume group",
-   "Not implemented.  Use pvcreate options.",
-/***
-   "pvresize "
-   "[-A|--autobackup {y|n}] "
-   "[-d|--debug] "
-   "[-h|-?|--help]\n\t"
-   "[-s|--size PhysicalVolumeSize[kKmMgGtT]" "\n"
-   "[-v|--verbose] "
-   "[--version]\n\t"
-   "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
-***/
-   autobackup_ARG, physicalvolumesize_ARG)
-
 xx(pvs,
    "Display information about physical volumes",
    "pvs" "\n"

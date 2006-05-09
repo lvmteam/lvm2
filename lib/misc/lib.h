@@ -19,6 +19,8 @@
 #ifndef _LVM_LIB_H
 #define _LVM_LIB_H
 
+#include <configure.h>
+
 #define _REENTRANT
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64

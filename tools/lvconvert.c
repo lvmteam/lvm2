@@ -122,8 +122,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	lp->alloc = ALLOC_INHERIT;
 	if (arg_count(cmd, alloc_ARG))
-		lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG,
-							    lp->alloc);
+		lp->alloc = arg_uint_value(cmd, alloc_ARG, lp->alloc);
 
 	if (lp->snapshot) {
 		if (arg_count(cmd, regionsize_ARG)) {

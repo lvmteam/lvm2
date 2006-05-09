@@ -15,7 +15,8 @@
 
 #include "tools.h"
 
-int formats(struct cmd_context *cmd, int argc, char **argv)
+int formats(struct cmd_context *cmd, int argc __attribute((unused)),
+	    char **argv __attribute((unused)))
 {
 	display_formats(cmd);
 

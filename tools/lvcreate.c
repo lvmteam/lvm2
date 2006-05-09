@@ -36,7 +36,7 @@ struct lvcreate_params {
 
 	uint32_t mirrors;
 
-	struct segment_type *segtype;
+	const struct segment_type *segtype;
 
 	/* size */
 	uint32_t extents;
@@ -154,7 +154,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 }
 
 static int _read_size_params(struct lvcreate_params *lp,
-			     struct cmd_context *cmd, int *pargc, char ***pargv)
+			     struct cmd_context *cmd)
 {
 	if (arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG) != 1) {
 		log_error("Please specify either size or extents (not both)");
@@ -187,7 +187,7 @@ static int _read_size_params(struct lvcreate_params *lp,
  * up to the power of 2) */
 static int _read_stripe_params(struct lvcreate_params *lp,
 			       struct cmd_context *cmd,
-			       int *pargc, char ***pargv)
+			       int *pargc)
 {
 	int argc = *pargc;
 
@@ -199,7 +199,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 		/* Check to make sure we won't overflow lp->stripe_size */
 		if(arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT) {
 			log_error("Stripe size cannot be larger than %s",
-				  display_size(cmd, STRIPE_SIZE_LIMIT, SIZE_SHORT));
+				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
 			return 0;
 		}
 		lp->stripe_size = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
@@ -215,7 +215,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 						  "metadata/stripesize",
 						  DEFAULT_STRIPESIZE) * 2;
 		log_print("Using default stripesize %s",
-			  display_size(cmd, lp->stripe_size, SIZE_SHORT));
+			  display_size(cmd, (uint64_t) lp->stripe_size));
 	}
 
 	if (argc && (unsigned) argc < lp->stripes) {
@@ -234,7 +234,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 	if (lp->stripes > 1 && (lp->stripe_size < STRIPE_SIZE_MIN ||
 				lp->stripe_size & (lp->stripe_size - 1))) {
 		log_error("Invalid stripe size %s",
-			  display_size(cmd, lp->stripe_size, SIZE_SHORT));
+			  display_size(cmd, (uint64_t) lp->stripe_size));
 		return 0;
 	}
 
@@ -243,7 +243,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 
 static int _read_mirror_params(struct lvcreate_params *lp,
 			       struct cmd_context *cmd,
-			       int *pargc, char ***pargv)
+			       int *pargc)
 {
 	int argc = *pargc;
 	int region_size;
@@ -304,7 +304,7 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	/*
 	 * Check selected options are compatible and determine segtype
 	 */
-	lp->segtype = (struct segment_type *)
+	lp->segtype = (const struct segment_type *)
 	    arg_ptr_value(cmd, type_ARG,
 			  get_segtype_from_string(cmd, "striped"));
 
@@ -387,9 +387,9 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	}
 
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
-	    !_read_size_params(lp, cmd, &argc, &argv) ||
-	    !_read_stripe_params(lp, cmd, &argc, &argv) ||
-	    !_read_mirror_params(lp, cmd, &argc, &argv)) {
+	    !_read_size_params(lp, cmd) ||
+	    !_read_stripe_params(lp, cmd, &argc) ||
+	    !_read_mirror_params(lp, cmd, &argc)) {
 		stack;
 		return 0;
 	}
@@ -407,7 +407,7 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 
 	lp->alloc = contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
 
-	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lp->alloc);
+	lp->alloc = arg_uint_value(cmd, alloc_ARG, lp->alloc);
 
 	if (contiguous && (lp->alloc != ALLOC_CONTIGUOUS)) {
 		log_error("Conflicting contiguous and alloc arguments");
@@ -519,8 +519,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	if (lp->stripe_size > vg->extent_size) {
 		log_error("Reducing requested stripe size %s to maximum, "
 			  "physical extent size %s",
-			  display_size(cmd, lp->stripe_size, SIZE_SHORT),
-			  display_size(cmd, vg->extent_size, SIZE_SHORT));
+			  display_size(cmd, (uint64_t) lp->stripe_size),
+			  display_size(cmd, (uint64_t) vg->extent_size));
 		lp->stripe_size = vg->extent_size;
 	}
 
@@ -529,8 +529,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	    !(vg->fid->fmt->features & FMT_UNLIMITED_STRIPESIZE) &&
 	    (lp->stripe_size > STRIPE_SIZE_MAX)) {
 		log_error("Stripe size may not exceed %s",
-			  display_size(cmd, STRIPE_SIZE_MAX,
-				       SIZE_SHORT));
+			  display_size(cmd, (uint64_t) STRIPE_SIZE_MAX));
 		return 0;
 	}
 
@@ -542,7 +541,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			tmp_size += vg->extent_size - tmp_size %
 			    vg->extent_size;
 			log_print("Rounding up size to full physical extent %s",
-				  display_size(cmd, tmp_size, SIZE_SHORT));
+				  display_size(cmd, tmp_size));
 		}
 
 		lp->extents = tmp_size / vg->extent_size;

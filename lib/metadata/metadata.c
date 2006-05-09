@@ -1142,7 +1142,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	    vginfo->vgname && *vginfo->vgname) {
 		if ((vg = _vg_read(cmd, vginfo->vgname, vgid,
 				   &consistent, precommitted)) &&
-		    !strncmp(vg->id.uuid, vgid, ID_LEN)) {
+		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vginfo->vgname);
@@ -1173,7 +1173,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 		consistent = 0;
 		if ((vg = _vg_read(cmd, vgname, vgid, &consistent,
 				   precommitted)) &&
-		    !strncmp(vg->id.uuid, vgid, ID_LEN)) {
+		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vgname);
@@ -1197,7 +1197,7 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 	lvid = (const union lvid *) lvid_s;
 
 	log_very_verbose("Finding volume group for uuid %s", lvid_s);
-	if (!(vg = _vg_read_by_vgid(cmd, lvid->id[0].uuid, precommitted))) {
+	if (!(vg = _vg_read_by_vgid(cmd, (char *)lvid->id[0].uuid, precommitted))) {
 		log_error("Volume group for uuid not found: %s", lvid_s);
 		return NULL;
 	}

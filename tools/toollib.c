@@ -20,7 +20,7 @@
 #include <sys/wait.h>
 
 /* Command line args */
-unsigned int arg_count(struct cmd_context *cmd, int a)
+unsigned arg_count(struct cmd_context *cmd, int a)
 {
 	return cmd->args[a].count;
 }
@@ -45,7 +45,7 @@ uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def)
 	return arg_count(cmd, a) ? cmd->args[a].ui_value : def;
 }
 
-int64_t arg_int64_value(struct cmd_context *cmd, int a, const uint64_t def)
+int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def)
 {
 	return arg_count(cmd, a) ? cmd->args[a].i64_value : def;
 }
@@ -87,11 +87,11 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 {
 	int ret_max = 0;
 	int ret = 0;
-	int process_all = 0;
-	int process_lv = 0;
-	int tags_supplied = 0;
-	int lvargs_supplied = 0;
-	int lvargs_matched = 0;
+	unsigned process_all = 0;
+	unsigned process_lv = 0;
+	unsigned tags_supplied = 0;
+	unsigned lvargs_supplied = 0;
+	unsigned lvargs_matched = 0;
 
 	struct lv_list *lvl;
 
@@ -1082,8 +1082,8 @@ int validate_vg_name(struct cmd_context *cmd, const char *vg_name)
 	return 1;
 }
 
-int generate_log_name_format(struct volume_group *vg, const char *lv_name,
-			     char *buffer, size_t size)
+int generate_log_name_format(struct volume_group *vg __attribute((unused)),
+			     const char *lv_name, char *buffer, size_t size)
 {
 	if (lvm_snprintf(buffer, size, "%s_mlog", lv_name) < 0) {
 		stack;

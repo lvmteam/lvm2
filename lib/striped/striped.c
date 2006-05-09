@@ -193,17 +193,17 @@ static void _striped_destroy(const struct segment_type *segtype)
 }
 
 static struct segtype_handler _striped_ops = {
-	name:_striped_name,
-	display:_striped_display,
-	text_import_area_count:_striped_text_import_area_count,
-	text_import:_striped_text_import,
-	text_export:_striped_text_export,
-	merge_segments:_striped_merge_segments,
+	.name = _striped_name,
+	.display = _striped_display,
+	.text_import_area_count = _striped_text_import_area_count,
+	.text_import = _striped_text_import,
+	.text_export = _striped_text_export,
+	.merge_segments = _striped_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_striped_add_target_line,
-	target_present:_striped_target_present,
+	.add_target_line = _striped_add_target_line,
+	.target_present = _striped_target_present,
 #endif
-	destroy:_striped_destroy,
+	.destroy = _striped_destroy,
 };
 
 struct segment_type *init_striped_segtype(struct cmd_context *cmd)

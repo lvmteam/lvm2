@@ -25,13 +25,13 @@ struct config_node;
 struct dev_manager;
 
 /* Feature flags */
-#define SEG_CAN_SPLIT		0x00000001
-#define SEG_AREAS_STRIPED	0x00000002
-#define SEG_AREAS_MIRRORED	0x00000004
-#define SEG_SNAPSHOT		0x00000008
-#define SEG_FORMAT1_SUPPORT	0x00000010
-#define SEG_VIRTUAL		0x00000020
-#define SEG_CANNOT_BE_ZEROED	0x00000040
+#define SEG_CAN_SPLIT		0x00000001U
+#define SEG_AREAS_STRIPED	0x00000002U
+#define SEG_AREAS_MIRRORED	0x00000004U
+#define SEG_SNAPSHOT		0x00000008U
+#define SEG_FORMAT1_SUPPORT	0x00000010U
+#define SEG_VIRTUAL		0x00000020U
+#define SEG_CANNOT_BE_ZEROED	0x00000040U
 
 #define seg_is_mirrored(seg)	((seg)->segtype->flags & SEG_AREAS_MIRRORED ? 1 : 0)
 #define seg_is_striped(seg)	((seg)->segtype->flags & SEG_AREAS_STRIPED ? 1 : 0)

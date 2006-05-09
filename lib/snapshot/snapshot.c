@@ -130,14 +130,14 @@ static void _snap_destroy(const struct segment_type *segtype)
 }
 
 static struct segtype_handler _snapshot_ops = {
-	name:_snap_name,
-	text_import:_snap_text_import,
-	text_export:_snap_text_export,
+	.name = _snap_name,
+	.text_import = _snap_text_import,
+	.text_export = _snap_text_export,
 #ifdef DEVMAPPER_SUPPORT
-	target_percent:_snap_target_percent,
-	target_present:_snap_target_present,
+	.target_percent = _snap_target_percent,
+	.target_present = _snap_target_present,
 #endif
-	destroy:_snap_destroy,
+	.destroy = _snap_destroy,
 };
 
 #ifdef SNAPSHOT_INTERNAL

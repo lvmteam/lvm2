@@ -34,6 +34,7 @@
 ../lib/metadata/segtype.h
 ../lib/mm/memlock.h
 ../lib/mm/xlate.h
+../lib/misc/configure.h
 ../lib/misc/crc.h
 ../lib/misc/intl.h
 ../lib/misc/lib.h

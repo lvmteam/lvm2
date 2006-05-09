@@ -23,7 +23,7 @@
 #include <dlfcn.h>
 
 void get_shared_library_path(struct config_tree *cft, const char *libname,
-			     char *path, int path_len)
+			     char *path, size_t path_len)
 {
 	struct stat info;
 	const char *lib_dir;

@@ -68,13 +68,13 @@ static void _errseg_destroy(const struct segment_type *segtype)
 }
 
 static struct segtype_handler _error_ops = {
-	name:_errseg_name,
-	merge_segments:_errseg_merge_segments,
+	.name = _errseg_name,
+	.merge_segments = _errseg_merge_segments,
 #ifdef DEVMAPPER_SUPPORT
-	add_target_line:_errseg_add_target_line,
-	target_present:_errseg_target_present,
+	.add_target_line = _errseg_add_target_line,
+	.target_present = _errseg_target_present,
 #endif
-	destroy:_errseg_destroy,
+	.destroy = _errseg_destroy,
 };
 
 struct segment_type *init_error_segtype(struct cmd_context *cmd)

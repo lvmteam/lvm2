@@ -1,6 +1,10 @@
 Version 2.02.06 -
 =================================
-  Some signed fixes.
+  Make SIZE_SHORT the default for display_size().
+  Fix some memory leaks in error paths found by coverity.
+  Use C99 struct initialisers.
+  Move DEFS into configure.h.
+  Clean-ups to remove miscellaneous compiler warnings.
   Improve stripe size validation.
   Increase maximum stripe size limit to physical extent size for lvm2 metadata.
   Fix activation code to check for pre-existing mirror logs.

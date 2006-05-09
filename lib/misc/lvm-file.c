@@ -35,10 +35,10 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd)
 	pid_t pid;
 	char hostname[255];
 	struct flock lock = {
-		l_type:F_WRLCK,
-		l_whence:0,
-		l_start:0,
-		l_len:0
+		.l_type = F_WRLCK,
+		.l_whence = 0,
+		.l_start = 0,
+		.l_len = 0
 	};
 
 	num = rand();

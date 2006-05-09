@@ -36,7 +36,7 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 {
 	uint32_t region_max;
 
-	region_max = (1 << (ffs(extents) - 1)) * extent_size;
+	region_max = (1 << (ffs((int)extents) - 1)) * extent_size;
 
 	if (region_max < region_size) {
 		region_size = region_max;
@@ -234,7 +234,7 @@ static int _create_layers_for_mirror(struct alloc_handle *ah,
 				     uint32_t first_area,
 				     uint32_t num_mirrors,
 				     struct logical_volume *lv,
-				     struct segment_type *segtype,
+				     const struct segment_type *segtype,
 				     struct logical_volume **img_lvs)
 {
 	uint32_t m;
@@ -284,7 +284,7 @@ int create_mirror_layers(struct alloc_handle *ah,
 			 uint32_t first_area,
 			 uint32_t num_mirrors,
 			 struct logical_volume *lv,
-			 struct segment_type *segtype,
+			 const struct segment_type *segtype,
 			 uint32_t status,
 			 uint32_t region_size,
 			 struct logical_volume *log_lv)
@@ -328,7 +328,7 @@ int add_mirror_layers(struct alloc_handle *ah,
 		      uint32_t num_mirrors,
 		      uint32_t existing_mirrors,
 		      struct logical_volume *lv,
-		      struct segment_type *segtype)
+		      const struct segment_type *segtype)
 {
 	struct logical_volume **img_lvs;
 
@@ -367,7 +367,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	uint32_t pe;
 	int lv_used = 0;
 	uint32_t s, start_le, extent_count = 0u;
-	struct segment_type *segtype;
+	const struct segment_type *segtype;
 	struct pe_range *per;
 	uint32_t pe_start, pe_end, per_end, stripe_multiplier;
 
@@ -555,7 +555,7 @@ int remove_pvmove_mirrors(struct volume_group *vg,
 					return 0;
 				}
 
-				release_lv_segment_area(mir_seg, !c, mir_seg->area_len);
+				release_lv_segment_area(mir_seg, c ? 0 : 1U, mir_seg->area_len);
 
 				/* Replace mirror with error segment */
 				if (!

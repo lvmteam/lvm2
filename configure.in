@@ -19,6 +19,9 @@ dnl -- Process this file with autoconf to produce a configure script.
 AC_INIT(lib/device/dev-cache.h)
 
 ################################################################################
+AC_CONFIG_HEADERS(lib/misc/configure.h)
+
+################################################################################
 dnl -- Setup the directory where autoconf has auxilary files
 AC_CONFIG_AUX_DIR(autoconf) 
 
@@ -152,7 +155,7 @@ AC_ARG_ENABLE(lvm1_fallback, [  --enable-lvm1_fallback  Use this to fall back an
 AC_MSG_RESULT($LVM1_FALLBACK)
 
 if test x$LVM1_FALLBACK = xyes; then
-	LVM_DEFS="$LVM_DEFS -DLVM1_FALLBACK"
+	AC_DEFINE([LVM1_FALLBACK], 1, [Define to 1 if 'lvm' should fall back to using LVM1 binaries if device-mapper is missing from the kernel])
 fi
 
 ################################################################################
@@ -172,7 +175,7 @@ if [[ "x$LVM1" != xnone -a "x$LVM1" != xinternal -a "x$LVM1" != xshared ]];
 fi;
 
 if test x$LVM1 = xinternal; then
-	LVM_DEFS="$LVM_DEFS -DLVM1_INTERNAL"
+	AC_DEFINE([LVM1_INTERNAL], 1, [Define to 1 to include built-in support for LVM1 metadata.])
 fi
 
 ################################################################################
@@ -192,7 +195,7 @@ if [[ "x$POOL" != xnone -a "x$POOL" != xinternal -a "x$POOL" != xshared ]];
 fi;
 
 if test x$POOL = xinternal; then
-	LVM_DEFS="$LVM_DEFS -DPOOL_INTERNAL"
+	AC_DEFINE([POOL_INTERNAL], 1, [Define to 1 to include built-in support for GFS pool metadata.])
 fi
 
 ################################################################################
@@ -211,7 +214,7 @@ if [[ "x$CLUSTER" != xnone -a "x$CLUSTER" != xinternal -a "x$CLUSTER" != xshared
 fi;
 
 if test x$CLUSTER = xinternal; then
-	LVM_DEFS="$LVM_DEFS -DCLUSTER_LOCKING_INTERNAL"
+	AC_DEFINE([CLUSTER_LOCKING_INTERNAL], 1, [Define to 1 to include built-in support for clustered LVM locking.])
 fi
 
 ################################################################################
@@ -231,7 +234,7 @@ if [[ "x$SNAPSHOTS" != xnone -a "x$SNAPSHOTS" != xinternal -a "x$SNAPSHOTS" != x
 fi;
 
 if test x$SNAPSHOTS = xinternal; then
-	LVM_DEFS="$LVM_DEFS -DSNAPSHOT_INTERNAL"
+	AC_DEFINE([SNAPSHOT_INTERNAL], 1, [Define to 1 to include built-in support for snapshots.])
 fi
 
 ################################################################################
@@ -251,7 +254,7 @@ if [[ "x$MIRRORS" != xnone -a "x$MIRRORS" != xinternal -a "x$MIRRORS" != xshared
 fi;
 
 if test x$MIRRORS = xinternal; then
-	LVM_DEFS="$LVM_DEFS -DMIRRORED_INTERNAL"
+	AC_DEFINE([MIRRORED_INTERNAL], 1, [Define to 1 to include built-in support for mirrors.])
 fi
 
 ################################################################################
@@ -269,7 +272,7 @@ READLINE=$enableval, READLINE=no)
 AC_MSG_RESULT($READLINE)
 
 if test x$READLINE = xyes; then
-	LVM_DEFS="$LVM_DEFS -DREADLINE_SUPPORT"
+	AC_DEFINE([READLINE_SUPPORT], 1, [Define to 1 to include the LVM readline shell.])
 fi
 
 ################################################################################
@@ -327,7 +330,7 @@ DEVMAPPER=$enableval)
 AC_MSG_RESULT($DEVMAPPER)
 
 if test x$DEVMAPPER = xyes; then
-	LVM_DEFS="$LVM_DEFS -DDEVMAPPER_SUPPORT"
+	AC_DEFINE([DEVMAPPER_SUPPORT], 1, [Define to 1 to enable device-mapper interaction.])
 fi
 
 ################################################################################
@@ -338,7 +341,7 @@ ODIRECT=$enableval)
 AC_MSG_RESULT($ODIRECT)
 
 if test x$ODIRECT = xyes; then
-	LVM_DEFS="$LVM_DEFS -DO_DIRECT_SUPPORT"
+	AC_DEFINE([O_DIRECT_SUPPORT], 1, [Define to 1 to enable O_DIRECT support.])
 fi
 
 ################################################################################
@@ -349,7 +352,7 @@ CMDLIB=$enableval, CMDLIB=no)
 AC_MSG_RESULT($CMDLIB)
 
 if test x$CMDLIB = xyes; then
-	LVM_DEFS="$LVM_DEFS -DCMDLIB"
+	AC_DEFINE([CMDLIB], 1, [Define to 1 to build the shared command library.])
 fi
 
 ################################################################################
@@ -374,7 +377,7 @@ AC_MSG_ERROR(
 fi
 
 if test x$DMEVENTD = xyes; then
-	LVM_DEFS="$LVM_DEFS -DDMEVENTD"
+	AC_DEFINE([DMEVENTD], 1, [Define to 1 to enable the device-mapper event daemon.])
 fi
 ################################################################################
 dnl -- Mess with default exec_prefix
@@ -411,7 +414,7 @@ dnl -- Check for dlopen
 AC_CHECK_LIB(dl, dlopen, HAVE_LIBDL=yes, HAVE_LIBDL=no)
 
 if [[ "x$HAVE_LIBDL" = xyes ]]; then
-	LVM_DEFS="$LVM_DEFS -DHAVE_LIBDL"
+	AC_DEFINE([HAVE_LIBDL], 1, [Define to 1 if dynamic libraries are available.])
 	LIBS="-ldl $LIBS"
 else
 	HAVE_LIBDL=no
@@ -443,7 +446,7 @@ if test x$SELINUX = xyes; then
 	AC_MSG_RESULT($HAVE_SELINUX)
 
 	if test x$HAVE_SELINUX = xyes; then
-		LVM_DEFS="$LVM_DEFS -DHAVE_SELINUX"
+		AC_DEFINE([HAVE_SELINUX], 1, [Define to 1 to include support for selinux.])
 		LIBS="-lselinux $LIBS"
 	else
 		AC_MSG_WARN(Disabling selinux)
@@ -452,7 +455,7 @@ fi
 
 ################################################################################
 dnl -- Check for getopt
-AC_CHECK_HEADERS(getopt.h, LVM_DEFS="$LVM_DEFS -DHAVE_GETOPTLONG")
+AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 to if getopt_long is available.]))
 
 ################################################################################
 dnl -- Check for readline (Shamelessly copied from parted 1.4.17)
@@ -467,8 +470,7 @@ Note: if you are using precompiled packages you will also need the development
 package as well (which may be called readline-devel or something similar).
 )
 	)
-	AC_CHECK_FUNC(rl_completion_matches, LVM_DEFS="$LVM_DEFS -DHAVE_RL_COMPLETION_MATCHES")
-		
+	AC_CHECK_FUNC(rl_completion_matches, AC_DEFINE([HAVE_RL_COMPLETION_MATCHES], 1, [Define to 1 if rl_completion_matches() is available.]))
 fi
 
 ################################################################################
@@ -548,7 +550,7 @@ fi
 AC_PATH_PROG(MODPROBE_CMD, modprobe)
 
 if test x$MODPROBE_CMD != x; then
-	LVM_DEFS="$LVM_DEFS -DMODPROBE_CMD=\\\"$MODPROBE_CMD\\\""
+	AC_DEFINE_UNQUOTED([MODPROBE_CMD], ["$MODPROBE_CMD"], [The path to 'modprobe', if available.])
 fi
 
 ################################################################################
@@ -568,7 +570,6 @@ AC_SUBST(MIRRORS)
 AC_SUBST(OWNER)
 AC_SUBST(GROUP)
 AC_SUBST(CFLAGS)
-AC_SUBST(LVM_DEFS)
 AC_SUBST(COPTIMISE_FLAG)
 AC_SUBST(CLDFLAGS)
 AC_SUBST(CLDWHOLEARCHIVE)

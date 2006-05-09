@@ -80,7 +80,7 @@ endif
 
 LVMLIBS = -llvm
 
-CLEAN_TARGETS = liblvm2cmd.so liblvm2cmd.a lvm lvm.static lvm.cflow lvm.xref lvm.tree lvm.rxref lvm.rtree
+CLEAN_TARGETS = liblvm2cmd.so liblvm2cmd.a lvm lvm.o lvm.static lvm.cflow lvm.xref lvm.tree lvm.rxref lvm.rtree
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.so
