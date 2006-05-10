@@ -95,7 +95,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*when = 0;
 
 	if (!(cft = create_config_tree(file)))
-		return_NULL
+		return_NULL;
 
 	if ((!dev && !read_config_file(cft)) ||
 	    (dev && !read_config_fd(cft, dev, offset, size,
