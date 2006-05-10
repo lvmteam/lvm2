@@ -952,7 +952,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 
 	if (!(cmd->mem = dm_pool_create("command", 4 * 1024))) {
 		log_error("Command memory pool creation failed");
-		return 0;
+		goto error;
 	}
 
 	memlock_init(cmd);

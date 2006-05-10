@@ -688,14 +688,20 @@ static void _eat_space(struct parser *p)
 static struct config_value *_create_value(struct parser *p)
 {
 	struct config_value *v = dm_pool_alloc(p->mem, sizeof(*v));
-	memset(v, 0, sizeof(*v));
+
+	if (v)
+		memset(v, 0, sizeof(*v));
+
 	return v;
 }
 
 static struct config_node *_create_node(struct parser *p)
 {
 	struct config_node *n = dm_pool_alloc(p->mem, sizeof(*n));
-	memset(n, 0, sizeof(*n));
+
+	if (n)
+		memset(n, 0, sizeof(*n));
+
 	return n;
 }
 

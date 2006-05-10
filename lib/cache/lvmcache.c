@@ -123,7 +123,10 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
  	 * we check cached labels here. Unfortunately vginfo is volatile. */
 	list_init(&devs);
 	list_iterate_items(info, &vginfo->infos) {
-		devl = dm_malloc(sizeof(*devl));
+		if (!(devl = dm_malloc(sizeof(*devl)))) {
+			log_error("device_list element allocation failed");
+			return NULL;
+		}
 		devl->dev = info->dev;
 		list_add(&devs, &devl->list);
 	}

@@ -44,7 +44,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 	}
 
 	if (!(cft = create_config_tree(NULL)))
-		goto_out;
+		return_NULL;
 
 	if ((!dev && !read_config_file(cft)) ||
 	    (dev && !read_config_fd(cft, dev, offset, size,
@@ -94,10 +94,8 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*desc = NULL;
 	*when = 0;
 
-	if (!(cft = create_config_tree(file))) {
-		stack;
-		goto out;
-	}
+	if (!(cft = create_config_tree(file)))
+		return_NULL
 
 	if ((!dev && !read_config_file(cft)) ||
 	    (dev && !read_config_fd(cft, dev, offset, size,

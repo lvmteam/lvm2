@@ -266,7 +266,10 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	vg->seqno = 0;
 
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
-	vg->system_id = dm_pool_alloc(mem, NAME_LEN);
+	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN))) {
+		stack;
+		goto bad;
+	}
 	*vg->system_id = '\0';
 
 	vg->extent_size = extent_size;
