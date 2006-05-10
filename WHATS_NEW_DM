@@ -1,7 +1,8 @@
 Version 1.02.06 - 
 =============================
+  Move DEFS into configure.h.
   Fix leaks in error paths found by coverity.
-  Increase dmsetup line buffer to 4k.
+  Remove dmsetup line buffer limitation.
 
 Version 1.02.05 - 19 Apr 2006
 =============================
