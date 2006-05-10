@@ -23,7 +23,7 @@
 static int _create_dir_recursive(const char *dir)
 {
 	char *orig, *s;
-	int rc;
+	int rc, r = 0;
 
 	log_verbose("Creating directory \"%s\"", dir);
 	/* Create parent directories */
@@ -35,22 +35,24 @@ static int _create_dir_recursive(const char *dir)
 			if (rc < 0 && errno != EEXIST) {
 				log_error("%s: mkdir failed: %s", orig,
 					  strerror(errno));
-				dm_free(orig);
-				return 0;
+				goto out;
 			}
 		}
 		*s++ = '/';
 	}
-	dm_free(orig);
 
 	/* Create final directory */
 	rc = mkdir(dir, 0777);
 	if (rc < 0 && errno != EEXIST) {
 		log_error("%s: mkdir failed: %s", orig,
 			  strerror(errno));
-		return 0;
+		goto out;
 	}
-	return 1;
+
+	r = 1;
+out:
+	dm_free(orig);
+	return r;
 }
 
 int create_dir(const char *dir)

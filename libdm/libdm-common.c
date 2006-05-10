@@ -101,8 +101,10 @@ struct dm_task *dm_task_create(int type)
 		return NULL;
 	}
 
-	if (!dm_check_version())
+	if (!dm_check_version()) {
+		dm_free(dmt);
 		return NULL;
+	}
 
 	memset(dmt, 0, sizeof(*dmt));
 

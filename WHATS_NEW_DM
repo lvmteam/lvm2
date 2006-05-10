@@ -1,5 +1,6 @@
 Version 1.02.06 - 
 =============================
+  Fix leaks in error paths found by coverity.
   Increase dmsetup line buffer to 4k.
 
 Version 1.02.05 - 19 Apr 2006
