@@ -124,15 +124,13 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem,
 
 	memcpy(pvd->pv_uuid, pv->id.uuid, ID_LEN);
 
-	if (!_check_vg_name(pv->vg_name)) {
-		stack;
-		return 0;
-	}
-
-	memset(pvd->vg_name, 0, sizeof(pvd->vg_name));
-
-	if (pv->vg_name)
+	if (pv->vg_name) {
+		if (!_check_vg_name(pv->vg_name)) {
+			stack;
+			return 0;
+		}
 		strncpy((char *)pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));
+	}
 
 	/* Preserve existing system_id if it exists */
 	if (vg && *vg->system_id)

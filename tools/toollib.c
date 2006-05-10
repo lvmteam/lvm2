@@ -405,7 +405,11 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
-	vg = vg_read(cmd, vg_name, vgid, &consistent);
+	if (!(vg = vg_read(cmd, vg_name, vgid, &consistent))) {
+		log_error("Volume group \"%s\" not found", vg_name);
+		unlock_vg(cmd, vg_name);
+		return ret_max;
+	}
 
 	if (!list_empty(tags)) {
 		/* Only process if a tag matches or it's on arg_vgnames */
@@ -649,7 +653,11 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		if (!list_empty(&tags) && (vgnames = get_vgs(cmd, 0)) &&
 		    !list_empty(vgnames)) {
 			list_iterate_items(sll, vgnames) {
-				vg = vg_read(cmd, sll->str, NULL, &consistent);
+				if (!(vg = vg_read(cmd, sll->str, NULL, &consistent))) {
+					log_error("Volume group \"%s\" not found", sll->str);
+					ret_max = ECMD_FAILED;
+					continue;
+				}
 				if (!consistent)
 					continue;
 				ret = process_each_pv_in_vg(cmd, vg, &tags,

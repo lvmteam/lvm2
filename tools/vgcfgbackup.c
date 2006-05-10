@@ -23,7 +23,11 @@ static char *_expand_filename(const char *template, const char *vg_name,
 	if (security_level())
 		return dm_strdup(template);
 
-	filename = dm_malloc(PATH_MAX);
+	if (!(filename = dm_malloc(PATH_MAX))) {
+		log_error("Failed to allocate filename.");
+		return NULL;
+	}
+
 	if (snprintf(filename, PATH_MAX, template, vg_name) < 0) {
 		log_error("Error processing filename template %s",
 			   template);

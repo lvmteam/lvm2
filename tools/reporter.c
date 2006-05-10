@@ -214,8 +214,11 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 			return 0;
 		}
 		if (*opts == '+') {
-			str = dm_pool_alloc(cmd->mem,
-					 strlen(options) + strlen(opts) + 1);
+			if (!(str = dm_pool_alloc(cmd->mem,
+					 strlen(options) + strlen(opts) + 1))) {
+				log_error("options string allocation failed");
+				return 0;
+			}
 			strcpy(str, options);
 			strcat(str, ",");
 			strcat(str, opts + 1);

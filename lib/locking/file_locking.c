@@ -207,9 +207,11 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 {
 	char lockfile[PATH_MAX];
 
+	assert(resource);
+
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
-		if (!resource || !*resource)
+		if (!*resource)
 			lvm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/P_orphans", _lock_dir);
 		else

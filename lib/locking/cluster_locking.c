@@ -386,11 +386,12 @@ int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 	int cluster_cmd = 0;
 
 	assert(strlen(resource) < sizeof(lockname));
+	assert(resource);
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
 		/* If the VG name is empty then lock the unused PVs */
-		if (!resource || !*resource)
+		if (!*resource)
 			lvm_snprintf(lockname, sizeof(lockname), "P_orphans");
 		else
 			lvm_snprintf(lockname, sizeof(lockname), "V_%s",
