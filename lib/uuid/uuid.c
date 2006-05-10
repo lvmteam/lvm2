@@ -40,8 +40,6 @@ void uuid_from_num(char *uuid, uint32_t num)
 		uuid[i - 1] = _c[num % (sizeof(_c) - 1)];
 		num /= sizeof(_c) - 1;
 	}
-
-	uuid[ID_LEN] = '\0';
 }
 
 int lvid_from_lvnum(union lvid *lvid, struct id *vgid, uint32_t lv_num)

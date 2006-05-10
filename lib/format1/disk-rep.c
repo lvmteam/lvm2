@@ -153,8 +153,10 @@ static int _munge_formats(struct pv_disk *pvd)
         }
 
 	/* If UUID is missing, create one */
-	if (pvd->pv_uuid[0] == '\0')
+	if (pvd->pv_uuid[0] == '\0') {
 		uuid_from_num((char *)pvd->pv_uuid, pvd->pv_number);
+		pvd->pv_uuid[ID_LEN] = '\0';
+	}
 
 	return 1;
 }

@@ -33,7 +33,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 {
 	struct config_tree *cft;
 	struct text_vg_version_ops **vsn;
-	const char *vgname;
+	const char *vgname = NULL;
 
 	static int _text_import_initialised = 0;
 
