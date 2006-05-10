@@ -19,6 +19,8 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
+#include <configure.h>
+
 #include "libdevmapper.h"
 #include "log.h"
 
@@ -117,7 +119,9 @@ static struct dm_tree *_dtree;
  */
 static int _parse_file(struct dm_task *dmt, const char *file)
 {
-	char buffer[LINE_SIZE], ttype[LINE_SIZE], *ptr, *comment;
+	char *buffer = NULL;
+	size_t buffer_size = 0;
+	char ttype[LINE_SIZE], *ptr, *comment;
 	FILE *fp;
 	unsigned long long start, size;
 	int r = 0, n, line = 0;
@@ -132,7 +136,17 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	} else
 		fp = stdin;
 
-	while (fgets(buffer, sizeof(buffer), fp)) {
+#ifndef HAVE_GETLINE
+	buffer_size = LINE_SIZE;
+	if (!(buffer = malloc(buffer_size))) {
+		err("Failed to malloc line buffer.");
+		return 0;
+	}
+
+	while (fgets(buffer, buffer_size, fp)) {
+#else
+	while (getline(&buffer, &buffer_size, fp) > 0) {
+#endif
 		line++;
 
 		/* trim trailing space */
@@ -164,6 +178,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	r = 1;
 
       out:
+	free(buffer);
 	if (file)
 		fclose(fp);
 	return r;

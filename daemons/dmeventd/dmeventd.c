@@ -16,6 +16,9 @@
  * dmeventd - dm event daemon to monitor active mapped devices
  */
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
 #include "libdevmapper.h"
 #include "libdevmapper-event.h"
 #include "list.h"
