@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Fix uuid_from_num() buffer overrun.
   Make SIZE_SHORT the default for display_size().
   Fix some memory leaks in error paths found by coverity.
   Use C99 struct initialisers.
