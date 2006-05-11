@@ -333,9 +333,12 @@ static int _lvstatus_disp(struct report_handle *rh, struct field *field,
 
 	if (lv->status & PVMOVE)
 		repstr[0] = 'p';
-	else if (lv->status & MIRRORED)
-		repstr[0] = 'm';
-	else if (lv->status & MIRROR_IMAGE)
+	else if (lv->status & MIRRORED) {
+		if (lv->status & MIRROR_NOTSYNCED)
+			repstr[0] = 'M';
+		else
+			repstr[0] = 'm';
+	}else if (lv->status & MIRROR_IMAGE)
 		repstr[0] = 'i';
 	else if (lv->status & MIRROR_LOG)
 		repstr[0] = 'l';
