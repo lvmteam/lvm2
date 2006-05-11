@@ -174,7 +174,8 @@ static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 static int _mirrored_target_percent(void **target_state, struct dm_pool *mem,
 			   struct config_tree *cft, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
-			   uint64_t *total_denominator, float *percent)
+			   uint64_t *total_denominator,
+			   float *percent __attribute((unused)))
 {
 	struct mirror_state *mirr_state;
 	uint64_t numerator, denominator;

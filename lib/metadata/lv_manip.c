@@ -498,7 +498,7 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 				  struct physical_volume *mirrored_pv,
 				  uint32_t mirrored_pe,
 				  uint32_t region_size,
-				  struct logical_volume *log_lv)
+				  struct logical_volume *log_lv __attribute((unused)))
 {
 	uint32_t s, extents, area_multiple, extra_areas = 0;
 	struct lv_segment *seg;

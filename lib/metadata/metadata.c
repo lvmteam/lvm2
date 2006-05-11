@@ -60,7 +60,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	}
 
 	/* Ensure PV doesn't depend on another PV already in the VG */
-	if (pv_uses_vg(fid->fmt->cmd, pv, vg)) {
+	if (pv_uses_vg(pv, vg)) {
 		log_error("Physical volume %s might be constructed from same "
 			  "volume group %s", pv_name, vg->name);
 		return 0;
@@ -1342,7 +1342,7 @@ struct list *get_pvs(struct cmd_context *cmd)
 	return results;
 }
 
-int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
+int pv_write(struct cmd_context *cmd __attribute((unused)), struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector)
 {
 	if (!pv->fmt->ops->pv_write) {

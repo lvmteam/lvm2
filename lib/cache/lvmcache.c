@@ -50,7 +50,7 @@ int lvmcache_init(void)
 	return 1;
 }
 
-void lvmcache_lock_vgname(const char *vgname, int read_only)
+void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)))
 {
 	if (!_lock_hash && !lvmcache_init()) {
 		log_error("Internal cache initialisation failed");
@@ -857,7 +857,7 @@ static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 	} while ((vginfo = next));
 }
 
-static void _lvmcache_destroy_lockname(int present)
+static void _lvmcache_destroy_lockname(int present __attribute((unused)))
 {
 	/* Nothing to do */
 }

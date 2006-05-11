@@ -679,7 +679,7 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s)))
 			dm_tree_node_add_target_area(node,
 							dm->stripe_filler,
-							NULL, 0);
+							NULL, UINT64_C(0));
 		else if (seg_type(seg, s) == AREA_PV)
 			dm_tree_node_add_target_area(node,
 							dev_name(seg_dev(seg, s)),
@@ -704,7 +704,6 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 }
 
 static int _add_origin_target_to_dtree(struct dev_manager *dm,
-					 struct dm_tree *dtree,
 					 struct dm_tree_node *dnode,
 					 struct logical_volume *lv)
 {
@@ -720,7 +719,6 @@ static int _add_origin_target_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
-					   struct dm_tree *dtree,
 					   struct dm_tree_node *dnode,
 					   struct logical_volume *lv)
 {
@@ -749,7 +747,6 @@ static int _add_snapshot_target_to_dtree(struct dev_manager *dm,
 }
 
 static int _add_target_to_dtree(struct dev_manager *dm,
-				  struct dm_tree *dtree,
 				  struct dm_tree_node *dnode,
 				  struct lv_segment *seg)
 {
@@ -814,12 +811,12 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 
 	/* Now we've added its dependencies, we can add the target itself */
 	if (lv_is_origin(seg->lv) && !layer) {
-		if (!_add_origin_target_to_dtree(dm, dtree, dnode, seg->lv))
+		if (!_add_origin_target_to_dtree(dm, dnode, seg->lv))
 			return_0;
 	} else if (lv_is_cow(seg->lv) && !layer) {
-		if (!_add_snapshot_target_to_dtree(dm, dtree, dnode, seg->lv))
+		if (!_add_snapshot_target_to_dtree(dm, dnode, seg->lv))
 			return_0;
-	} else if (!_add_target_to_dtree(dm, dtree, dnode, seg))
+	} else if (!_add_target_to_dtree(dm, dnode, seg))
 		return_0;
 
 	if (lv_is_origin(seg->lv) && !layer)
@@ -864,10 +861,10 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	 * Major/minor settings only apply to the visible layer.
 	 */
 	if (!(dnode = dm_tree_add_new_dev(dtree, name, dlid,
-					     layer ? lv->major : 0,
-					     layer ? lv->minor : 0,
+					     layer ? (uint32_t) lv->major : UINT32_C(0),
+					     layer ? (uint32_t) lv->minor : UINT32_C(0),
 					     _read_only_lv(lv),
-					     lv->vg->status & PRECOMMITTED,
+					     (lv->vg->status & PRECOMMITTED) ? 1 : 0,
 					     lvlayer)))
 		return_0;
 
@@ -921,7 +918,7 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	return r;
 }
 
-static int _clean_tree(struct dev_manager *dm, struct logical_volume *lv, struct dm_tree_node *root)
+static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 {
 	void *handle = NULL;
 	struct dm_tree_node *child;
@@ -973,7 +970,7 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 	switch(action) {
 	case CLEAN:
 		/* Deactivate any unused non-toplevel nodes */
-		if (!_clean_tree(dm, lv, root))
+		if (!_clean_tree(dm, root))
 			goto_out;
 		break;
 	case DEACTIVATE:
@@ -1056,7 +1053,7 @@ int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
  * Does device use VG somewhere in its construction?
  * Returns 1 if uncertain.
  */
-int dev_manager_device_uses_vg(struct dev_manager *dm, struct device *dev,
+int dev_manager_device_uses_vg(struct device *dev,
 			       struct volume_group *vg)
 {
 	struct dm_tree *dtree;
@@ -1069,7 +1066,7 @@ int dev_manager_device_uses_vg(struct dev_manager *dm, struct device *dev,
 		return r;
 	}
 
-	if (!dm_tree_add_dev(dtree, MAJOR(dev->dev), MINOR(dev->dev))) {
+	if (!dm_tree_add_dev(dtree, (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev))) {
 		log_error("Failed to add device %s (%" PRIu32 ":%" PRIu32") to dtree",
 			  dev_name(dev), (uint32_t) MAJOR(dev->dev), (uint32_t) MINOR(dev->dev));
 		goto out;

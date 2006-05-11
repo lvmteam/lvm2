@@ -27,7 +27,7 @@ static const char *_snap_name(const struct lv_segment *seg)
 }
 
 static int _snap_text_import(struct lv_segment *seg, const struct config_node *sn,
-			struct dm_hash_table *pv_hash)
+			struct dm_hash_table *pv_hash __attribute((unused)))
 {
 	uint32_t chunk_size;
 	const char *org_name, *cow_name;
@@ -87,8 +87,10 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _snap_target_percent(void **target_state, struct dm_pool *mem,
-			   struct config_tree *cft, struct lv_segment *seg,
+static int _snap_target_percent(void **target_state __attribute((unused)),
+			   struct dm_pool *mem __attribute((unused)),
+			   struct config_tree *cft __attribute((unused)),
+			   struct lv_segment *seg __attribute((unused)),
 			   char *params, uint64_t *total_numerator,
 			   uint64_t *total_denominator, float *percent)
 {
@@ -126,7 +128,7 @@ static int _snap_target_present(void)
 
 static void _snap_destroy(const struct segment_type *segtype)
 {
-	dm_free((void *) segtype);
+	dm_free((void *)segtype);
 }
 
 static struct segtype_handler _snapshot_ops = {

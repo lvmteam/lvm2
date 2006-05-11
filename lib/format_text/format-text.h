@@ -46,7 +46,7 @@ struct labeller *text_labeller_create(const struct format_type *fmt);
 
 int pvhdr_read(struct device *dev, char *buf);
 
-int add_da(const struct format_type *fmt, struct dm_pool *mem, struct list *das,
+int add_da(struct dm_pool *mem, struct list *das,
 	   uint64_t start, uint64_t size);
 void del_das(struct list *das);
 

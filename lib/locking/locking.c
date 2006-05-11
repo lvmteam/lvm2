@@ -33,7 +33,7 @@ static int _vg_lock_count = 0;		/* Number of locks held */
 static int _vg_write_lock_held = 0;	/* VG write lock held? */
 static int _signals_blocked = 0;
 
-static void _block_signals(int flags)
+static void _block_signals(int flags __attribute((unused)))
 {
 	sigset_t set;
 

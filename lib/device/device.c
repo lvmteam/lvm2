@@ -62,7 +62,7 @@ static int _has_partition_table(struct device *dev)
 		return -1;
 	}
 
-	if (!dev_read(dev, 0, sizeof(buf), &buf)) {
+	if (!dev_read(dev, UINT64_C(0), sizeof(buf), &buf)) {
 		stack;
 		goto out;
 	}

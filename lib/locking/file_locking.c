@@ -105,7 +105,7 @@ static void _remove_ctrl_c_handler()
 		log_sys_error("signal", "_remove_ctrl_c_handler");
 }
 
-static void _trap_ctrl_c(int sig)
+static void _trap_ctrl_c(int sig __attribute((unused)))
 {
 	_remove_ctrl_c_handler();
 	log_error("CTRL-c detected: giving up waiting for lock");

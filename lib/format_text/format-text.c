@@ -69,7 +69,8 @@ struct text_context {
  * NOTE: Currently there can be only one vg per text file.
  */
 
-static int _text_vg_setup(struct format_instance *fid, struct volume_group *vg)
+static int _text_vg_setup(struct format_instance *fid __attribute((unused)),
+			  struct volume_group *vg)
 {
 	if (vg->extent_size & (vg->extent_size - 1)) {
 		log_error("Extent size must be power of 2");
@@ -79,7 +80,8 @@ static int _text_vg_setup(struct format_instance *fid, struct volume_group *vg)
 	return 1;
 }
 
-static int _text_lv_setup(struct format_instance *fid, struct logical_volume *lv)
+static int _text_lv_setup(struct format_instance *fid __attribute((unused)),
+			  struct logical_volume *lv)
 {
 /******** FIXME Any LV size restriction? 
 	uint64_t max_size = UINT_MAX;
@@ -1202,7 +1204,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		}
 	}
 	if (!add_da
-	    (fmt, NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0))) {
+	    (NULL, &info->das, pv->pe_start << SECTOR_SHIFT, UINT64_C(0))) {
 		stack;
 		return 0;
 	}
@@ -1339,7 +1341,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 	return 1;
 }
 
-static void _text_destroy_instance(struct format_instance *fid)
+static void _text_destroy_instance(struct format_instance *fid __attribute((unused)))
 {
 	return;
 }
@@ -1372,7 +1374,7 @@ static void _text_destroy(const struct format_type *fmt)
 		dm_free(fmt->private);
 	}
 
-	dm_free((void *) fmt);
+	dm_free((void *)fmt);
 }
 
 static struct metadata_area_ops _metadata_text_file_ops = {

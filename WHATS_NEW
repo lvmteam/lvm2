@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Add mirror_library description to example.conf.
   Fix uuid_from_num() buffer overrun.
   Make SIZE_SHORT the default for display_size().
   Fix some memory leaks in error paths found by coverity.
