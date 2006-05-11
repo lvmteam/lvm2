@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Propagate nosync flag around cluster.
   Allow vgreduce to handle mirror log failures.
   Add --corelog to lvcreate and lvconvert.
   Create a log header for replacement in-sync mirror log.

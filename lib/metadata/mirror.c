@@ -235,7 +235,7 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 {
 	int r;
 	int insync = 0;
-	int mirror_dev_failed = (mirrored_seg->area_count != num_mirrors);
+	// int mirror_dev_failed = (mirrored_seg->area_count != num_mirrors);
 	float sync_percent = 0;
 
 	/* was the mirror in-sync before problems? */
