@@ -1213,14 +1213,14 @@ static void sig_alarm(int signum)
 /* Init thread signal handling. */
 static void init_thread_signals(void)
 {
-	sigset_t sigset;
+	sigset_t my_sigset;
 	struct sigaction act;
 	
 	memset(&act, 0, sizeof(act));
 	act.sa_handler = sig_alarm;
 	sigaction(SIGALRM, &act, NULL);
-	sigfillset(&sigset);
-	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
+	sigfillset(&my_sigset);
+	pthread_sigmask(SIG_BLOCK, &my_sigset, NULL);
 }
 
 static int daemonize(void)

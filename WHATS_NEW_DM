@@ -1,5 +1,6 @@
 Version 1.02.07 - 
 =============================
+  Avoid a dmeventd compiler warning.
 
 Version 1.02.06 - 10 May 2006
 =============================
