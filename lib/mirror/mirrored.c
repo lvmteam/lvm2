@@ -238,11 +238,21 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 	      (seg->lv->vg->status & CLUSTERED)))
 		clustered = 1;
 
-	if (seg->log_lv &&
-	    !(log_dlid = build_dlid(dm, seg->log_lv->lvid.s, NULL))) {
-		log_error("Failed to build uuid for log LV %s.",
-			  seg->log_lv->name);
-		return 0;
+	if (seg->log_lv) {
+		/* If disk log, use its UUID */
+		if (!(log_dlid = build_dlid(dm, seg->log_lv->lvid.s, NULL))) {
+			log_error("Failed to build uuid for log LV %s.",
+				  seg->log_lv->name);
+			return 0;
+		}
+	} else {
+		/* If core log, use mirror's UUID and set DM_CORELOG flag */
+		if (!(log_dlid = build_dlid(dm, seg->lv->lvid.s, NULL))) {
+			log_error("Failed to build uuid for mirror LV %s.",
+				  seg->lv->name);
+			return 0;
+		}
+		log_flags |= DM_CORELOG;
 	}
 
 	if (mirror_in_sync() && !(seg->status & PVMOVE))

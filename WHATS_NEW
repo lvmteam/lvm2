@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Use mirror's uuid for a core log.
   Add mirror log fault-handling policy.
   Improve mirror warning messages and tidy dmeventd syslog output.
   Propagate nosync flag around cluster.
