@@ -74,6 +74,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
  * Additional lock bits for cluster communication
  */
 #define LCK_PARTIAL_MODE	0x00000001	/* Running in partial mode */
+#define LCK_MIRROR_NOSYNC_MODE	0x00000002	/* Mirrors don't require sync */
 
 /*
  * Common combinations

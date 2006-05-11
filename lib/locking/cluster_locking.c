@@ -333,6 +333,9 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	if (partial_mode())
 		args[1] |= LCK_PARTIAL_MODE;
 
+	if (mirror_sync())
+		args[1] |= LCK_MIRROR_NOSYNC_MODE;
+
 	/*
 	 * VG locks are just that: locks, and have no side effects
 	 * so we only need to do them on the local node because all
