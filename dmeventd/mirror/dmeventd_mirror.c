@@ -99,10 +99,13 @@ static int _get_mirror_event(char *params)
 	return rtn;
 }
 
-static void _temporary_log_fn(int level, const char *file, int line, const char *format)
+static void _temporary_log_fn(int level, const char *file,
+			      int line, const char *format)
 {
-	return;
-	syslog(LOG_DEBUG, "%s", format);
+	if (!strncmp(format, "WARNING: ", 9) && (level < 5))
+		syslog(LOG_CRIT, "%s", format);
+	else
+		syslog(LOG_DEBUG, "%s", format);
 }
 
 static int _remove_failed_devices(const char *device)
@@ -205,7 +208,7 @@ void process_event(const char *device, enum dm_event_type event)
 
 int register_device(const char *device)
 {
-	syslog(LOG_INFO, "Monitoring %s for events\n", device);
+	syslog(LOG_INFO, "Monitoring mirror device, %s for events\n", device);
 
 	/*
 	 * Need some space for allocations.  1024 should be more
@@ -224,8 +227,6 @@ int register_device(const char *device)
 
 int unregister_device(const char *device)
 {
-        syslog(LOG_INFO, "Stopped monitoring %s for events\n", device);
-
 	if (!(--register_count)) {
 		dm_pool_destroy(mem_pool);
 		mem_pool = NULL;
