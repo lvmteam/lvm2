@@ -236,6 +236,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	struct logical_volume *log_lv;
 	struct list *parallel_areas;
 	struct segment_type *segtype;  /* FIXME: could I just use lp->segtype */
+	float sync_percent;
 
 	seg = first_seg(lv);
 	existing_mirrors = seg->area_count;
@@ -289,6 +290,10 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					  }
 					*/
 					parallel_areas = NULL;
+					if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
+						log_error("Unable to determine mirror sync status.");
+						return 0;
+					}
 
 					segtype = get_segtype_from_string(cmd, "striped");
 
@@ -301,8 +306,13 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 						return 0;
 					}
 
+					if (sync_percent >= 100.0)
+						init_mirror_in_sync(1);
+
 					if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
-									 lp->alloc, lv->name, 0))) {
+									 lp->alloc, lv->name,
+									 (sync_percent >= 100.0) ?
+									 1 : 0))) {
 						log_error("Failed to create mirror log.");
 						return 0;
 					}
@@ -311,6 +321,14 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					first_seg(log_lv)->mirror_seg = seg;
 				} else if (seg->log_lv && arg_count(cmd, corelog_ARG)) {
 					/* Had disk log, switch to core. */
+					if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
+						log_error("Unable to determine mirror sync status.");
+						return 0;
+					}
+
+					if (sync_percent >= 100.0)
+						init_mirror_in_sync(1);
+
 					if (!remove_mirror_images(seg, lp->mirrors,
 								  lp->pv_count ?
 								  lp->pvh : NULL, 1))
