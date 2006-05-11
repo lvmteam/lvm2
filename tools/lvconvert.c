@@ -308,6 +308,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 					if (sync_percent >= 100.0)
 						init_mirror_in_sync(1);
+					else
+						init_mirror_in_sync(0);
 
 					if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
 									 lp->alloc, lv->name,
@@ -328,6 +330,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 					if (sync_percent >= 100.0)
 						init_mirror_in_sync(1);
+					else
+						init_mirror_in_sync(0);
 
 					if (!remove_mirror_images(seg, lp->mirrors,
 								  lp->pv_count ?

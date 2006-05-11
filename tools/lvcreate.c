@@ -25,6 +25,7 @@ struct lvcreate_params {
 	int major;
 	int minor;
 	int corelog;
+	int nosync;
 
 	char *origin;
 	const char *vg_name;
@@ -293,6 +294,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	}
 
 	lp->corelog = arg_count(cmd, corelog_ARG) ? 1 : 0;
+	lp->nosync = arg_count(cmd, nosync_ARG) ? 1 : 0;
 
 	return 1;
 }
@@ -383,6 +385,11 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	} else {
 		if (arg_count(cmd, corelog_ARG)) {
 			log_error("--corelog is only available with mirrors");
+			return 0;
+		}
+
+		if (arg_count(cmd, nosync_ARG)) {
+			log_error("--nosync is only available with mirrors");
 			return 0;
 		}
 	}
@@ -653,8 +660,16 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 							      lp->extents,
 							      lp->region_size);
 
+		init_mirror_in_sync(lp->nosync);
+
+		if (lp->nosync) {
+			log_print("WARNING: New mirror won't be synchronised. "
+				  "Don't read what you didn't write!");
+			status |= MIRROR_NOTSYNCED;
+		}
+
 		if (!(log_lv = create_mirror_log(cmd, vg, ah, lp->alloc,
-						 lv_name, 0))) {
+						 lv_name, lp->nosync))) {
 			log_error("Failed to create mirror log.");
 			return 0;
 		}
