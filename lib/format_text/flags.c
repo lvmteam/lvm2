@@ -53,6 +53,7 @@ static struct flag _lv_flags[] = {
 	{VISIBLE_LV, "VISIBLE"},
 	{PVMOVE, "PVMOVE"},
 	{LOCKED, "LOCKED"},
+	{MIRROR_NOTSYNCED, "NOTSYNCED"},
 	{MIRROR_IMAGE, NULL},
 	{MIRROR_LOG, NULL},
 	{MIRRORED, NULL},

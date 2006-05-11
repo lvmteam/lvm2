@@ -713,6 +713,8 @@ static int _get_settings(struct cmd_context *cmd)
 	    !_merge_synonym(cmd, allocation_ARG, resizeable_ARG))
 		return EINVALID_CMD_LINE;
 
+	init_mirror_in_sync(0);
+
 	/* Zero indicates success */
 	return 0;
 }
