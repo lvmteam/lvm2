@@ -23,7 +23,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static int _text_can_handle(struct labeller *l, char *buf, uint64_t sector)
+static int _text_can_handle(struct labeller *l __attribute((unused)),
+			    char *buf,
+			    uint64_t sector __attribute((unused)))
 {
 	struct label_header *lh = (struct label_header *) buf;
 
@@ -86,7 +88,7 @@ static int _text_write(struct label *label, char *buf)
 	return 1;
 }
 
-int add_da(const struct format_type *fmt, struct dm_pool *mem, struct list *das,
+int add_da(struct dm_pool *mem, struct list *das,
 	   uint64_t start, uint64_t size)
 {
 	struct data_area_list *dal;
@@ -179,7 +181,8 @@ void del_mdas(struct list *mdas)
 	}
 }
 
-static int _text_initialise_label(struct labeller *l, struct label *label)
+static int _text_initialise_label(struct labeller *l __attribute((unused)),
+				  struct label *label)
 {
 	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
 
@@ -220,7 +223,7 @@ static int _text_read(struct labeller *l, struct device *dev, char *buf,
 	/* Data areas holding the PEs */
 	dlocn_xl = pvhdr->disk_areas_xl;
 	while ((offset = xlate64(dlocn_xl->offset))) {
-		add_da(info->fmt, NULL, &info->das, offset,
+		add_da(NULL, &info->das, offset,
 		       xlate64(dlocn_xl->size));
 		dlocn_xl++;
 	}
@@ -248,7 +251,8 @@ static int _text_read(struct labeller *l, struct device *dev, char *buf,
 	return 1;
 }
 
-static void _text_destroy_label(struct labeller *l, struct label *label)
+static void _text_destroy_label(struct labeller *l __attribute((unused)),
+				struct label *label)
 {
 	struct lvmcache_info *info = (struct lvmcache_info *) label->info;
 

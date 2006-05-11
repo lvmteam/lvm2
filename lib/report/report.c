@@ -472,7 +472,8 @@ static int _vgstatus_disp(struct report_handle *rh, struct field *field,
 	return 1;
 }
 
-static int _segtype_disp(struct report_handle *rh, struct field *field,
+static int _segtype_disp(struct report_handle *rh __attribute((unused)),
+			 struct field *field,
 			 const void *data)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;

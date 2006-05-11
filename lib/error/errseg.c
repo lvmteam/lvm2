@@ -38,11 +38,13 @@ static int _errseg_merge_segments(struct lv_segment *seg1, struct lv_segment *se
 }
 
 #ifdef DEVMAPPER_SUPPORT
-static int _errseg_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
-				struct config_tree *cft, void **target_state,
-				struct lv_segment *seg,
+static int _errseg_add_target_line(struct dev_manager *dm __attribute((unused)),
+				struct dm_pool *mem __attribute((unused)),
+				struct config_tree *cft __attribute((unused)),
+				void **target_state __attribute((unused)),
+				struct lv_segment *seg __attribute((unused)),
 				struct dm_tree_node *node, uint64_t len,
-				uint32_t *pvmove_mirror_count)
+				uint32_t *pvmove_mirror_count __attribute((unused)))
 {
 	return dm_tree_node_add_error_target(node, len);
 }
@@ -64,7 +66,7 @@ static int _errseg_target_present(void)
 
 static void _errseg_destroy(const struct segment_type *segtype)
 {
-	dm_free((void *) segtype);
+	dm_free((void *)segtype);
 }
 
 static struct segtype_handler _error_ops = {
