@@ -1102,7 +1102,7 @@ int lv_add_mirror_segment(struct alloc_handle *ah,
 	struct lv_segment *seg;
 	uint32_t m;
 
-	if (list_empty(&log_lv->segments)) {
+	if (log_lv && list_empty(&log_lv->segments)) {
 		log_error("Log LV %s is empty.", log_lv->name);
 		return 0;
 	}

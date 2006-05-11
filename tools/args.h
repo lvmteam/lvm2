@@ -46,6 +46,7 @@ arg(alloc_ARG, '\0', "alloc", alloc_arg)
 arg(separator_ARG, '\0', "separator", string_arg)
 arg(mirrorsonly_ARG, '\0', "mirrorsonly", NULL)
 arg(nosync_ARG, '\0', "nosync", NULL)
+arg(corelog_ARG, '\0', "corelog", NULL)
 
 /* Allow some variations */
 arg(resizable_ARG, '\0', "resizable", yes_no_arg)

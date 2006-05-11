@@ -24,6 +24,7 @@ struct lvcreate_params {
 	int zero;
 	int major;
 	int minor;
+	int corelog;
 
 	char *origin;
 	const char *vg_name;
@@ -291,6 +292,8 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
+	lp->corelog = arg_count(cmd, corelog_ARG) ? 1 : 0;
+
 	return 1;
 }
 
@@ -375,6 +378,11 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 
 		if (!(lp->segtype = get_segtype_from_string(cmd, "mirror"))) {
 			stack;
+			return 0;
+		}
+	} else {
+		if (arg_count(cmd, corelog_ARG)) {
+			log_error("--corelog is only available with mirrors");
 			return 0;
 		}
 	}
@@ -634,9 +642,9 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* FIXME Calculate how many extents needed for the log */
 
 		if (!(ah = allocate_extents(vg, NULL, lp->segtype, lp->stripes,
-					    lp->mirrors, 1, lp->extents,
-					    NULL, 0, 0, pvh, lp->alloc,
-					    NULL))) {
+					    lp->mirrors, lp->corelog ? 0 : 1,
+					    lp->extents, NULL, 0, 0,
+					    pvh, lp->alloc, NULL))) {
 			stack;
 			return 0;
 		}

@@ -1,5 +1,6 @@
 Version 2.02.06 -
 =================================
+  Add --corelog to lvcreate and lvconvert.
   Create a log header for replacement in-sync mirror log.
   Use set_lv() and dev_set() to wipe sections of devices.
   Add mirror_in_sync() flag to avoid unnecessary resync on activation.
