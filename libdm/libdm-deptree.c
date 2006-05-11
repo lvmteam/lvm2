@@ -1243,8 +1243,8 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 		log_parm_count += hweight32(seg->flags);	/* [no]sync, block_on_error etc. */
 
 		if (seg->clustered) {
-			if (seg->uuid)
-				log_parm_count++;	/* uuid */
+			if (seg->uuid && !(seg->flags & DM_CORELOG))
+				log_parm_count++;	/* uuid (already counted for core log) */
 			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered_")) < 0) {
                         	stack;	/* Out of space */
                         	return -1;
@@ -1701,17 +1701,18 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 	seg = list_item(list_last(&node->props.segs), struct load_segment);
 
 	if (log_uuid) {
-		if (!(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
-			log_error("Couldn't find mirror log uuid %s.", log_uuid);
-			return 0;
-		}
-
-		if (!_link_tree_nodes(node, log_node))
-			return_0;
-
 		if (!(seg->uuid = dm_pool_strdup(node->dtree->mem, log_uuid))) {
 			log_error("log uuid pool_strdup failed");
 			return 0;
+		}
+		if (!(flags & DM_CORELOG)) {
+			if (!(log_node = dm_tree_find_node_by_uuid(node->dtree, log_uuid))) {
+				log_error("Couldn't find mirror log uuid %s.", log_uuid);
+				return 0;
+			}
+
+			if (!_link_tree_nodes(node, log_node))
+				return_0;
 		}
 	}
 
