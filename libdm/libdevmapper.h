@@ -350,6 +350,7 @@ int dm_tree_node_add_mirror_target(struct dm_tree_node *node,
 #define DM_NOSYNC		0x00000001	/* Known already in sync */
 #define DM_FORCESYNC		0x00000002	/* Force resync */
 #define DM_BLOCK_ON_ERROR	0x00000004	/* On error, suspend I/O */
+#define DM_CORELOG		0x00000008	/* In-memory log */
 
 int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 					  uint32_t region_size,
