@@ -602,7 +602,7 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 	return _aligned_io(&where, buffer, 1);
 }
 
-int dev_zero(struct device *dev, uint64_t offset, size_t len)
+int dev_set(struct device *dev, uint64_t offset, size_t len, int value)
 {
 	size_t s;
 	char buffer[4096];
@@ -620,7 +620,7 @@ int dev_zero(struct device *dev, uint64_t offset, size_t len)
 			  " sectors", dev_name(dev), offset >> SECTOR_SHIFT,
 			  len >> SECTOR_SHIFT);
 
-	memset(buffer, 0, sizeof(buffer));
+	memset(buffer, value, sizeof(buffer));
 	while (1) {
 		s = len > sizeof(buffer) ? sizeof(buffer) : len;
 		if (!dev_write(dev, offset, s, buffer))

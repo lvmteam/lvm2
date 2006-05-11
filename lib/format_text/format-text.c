@@ -1073,9 +1073,9 @@ static int _mda_setup(const struct format_type *fmt,
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start1,
 			     mda_size1)) return 0;
 
-		if (!dev_zero((struct device *) pv->dev, start1,
-			      (size_t) (mda_size1 >
-					wipe_size ? : mda_size1))) {
+		if (!dev_set((struct device *) pv->dev, start1,
+			     (size_t) (mda_size1 >
+				       wipe_size ? : mda_size1), 0)) {
 			log_error("Failed to wipe new metadata area");
 			return 0;
 		}
@@ -1119,9 +1119,9 @@ static int _mda_setup(const struct format_type *fmt,
 	if (mda_size2) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start2,
 			     mda_size2)) return 0;
-		if (!dev_zero(pv->dev, start2,
-			      (size_t) (mda_size1 >
-					wipe_size ? : mda_size1))) {
+		if (!dev_set(pv->dev, start2,
+			     (size_t) (mda_size1 >
+				       wipe_size ? : mda_size1), 0)) {
 			log_error("Failed to wipe new metadata area");
 			return 0;
 		}

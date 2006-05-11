@@ -15,9 +15,14 @@
 
 #include "tools.h"
 #include "lv_alloc.h"
+#include "xlate.h"
 
 #include <sys/stat.h>
 #include <sys/wait.h>
+
+/* From linux/drivers/md/dm-log.c */
+#define MIRROR_MAGIC 0x4D695272
+#define MIRROR_DISK_VERSION 2
 
 /* Command line args */
 unsigned arg_count(struct cmd_context *cmd, int a)
@@ -1111,9 +1116,9 @@ int generate_log_name_format(struct volume_group *vg __attribute((unused)),
 }
 
 /*
- * Volumes may be zeroed to remove old application data.
+ * Initialize the LV with 'value'.
  */
-int zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
+int set_lv(struct cmd_context *cmd, struct logical_volume *lv, int value)
 {
 	struct device *dev;
 	char *name;
@@ -1126,27 +1131,80 @@ int zero_lv(struct cmd_context *cmd, struct logical_volume *lv)
 	 *	   (I know the device is at least 4k, but not 32k)
 	 */
 	if (!(name = dm_pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Name allocation failed - device not zeroed");
+		log_error("Name allocation failed - device not cleared");
 		return 0;
 	}
 
 	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
 			 lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - device not zeroed (%s)", lv->name);
+		log_error("Name too long - device not cleared (%s)", lv->name);
 		return 0;
 	}
 
-	log_verbose("Zeroing start of logical volume \"%s\"", lv->name);
+	log_verbose("Clearing start of logical volume \"%s\"", lv->name);
 
 	if (!(dev = dev_cache_get(name, NULL))) {
-		log_error("%s: not found: device not zeroed", name);
+		log_error("%s: not found: device not cleared", name);
 		return 0;
 	}
 
 	if (!dev_open_quiet(dev))
 		return 0;
 
-	dev_zero(dev, UINT64_C(0), (size_t) 4096);
+	dev_set(dev, UINT64_C(0), (size_t) 4096, value);
+	dev_close_immediate(dev);
+
+	return 1;
+}
+
+
+/*
+ * This function writes a new header to the mirror log header to the lv
+ *
+ * Returns: 1 on success, 0 on failure
+ */
+static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	struct device *dev;
+	char *name;
+	struct { /* The mirror log header */
+		uint32_t magic;
+		uint32_t version;
+		uint64_t nr_regions;
+	} log_header;
+
+	log_header.magic = xlate32(MIRROR_MAGIC);
+	log_header.version = xlate32(MIRROR_DISK_VERSION);
+	log_header.nr_regions = xlate64((uint64_t)-1);
+
+	if (!(name = dm_pool_alloc(cmd->mem, PATH_MAX))) {
+		log_error("Name allocation failed - log header not written (%s)",
+			lv->name);
+		return 0;
+	}
+
+	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+			 lv->vg->name, lv->name) < 0) {
+		log_error("Name too long - log header not written (%s)", lv->name);
+		return 0;
+	}
+
+	log_verbose("Writing log header to device, %s", lv->name);
+
+	if (!(dev = dev_cache_get(name, NULL))) {
+		log_error("%s: not found: log header not written", name);
+		return 0;
+	}
+
+	if (!dev_open_quiet(dev))
+		return 0;
+
+	if (!dev_write(dev, UINT64_C(0), sizeof(log_header), &log_header)) {
+		log_error("Failed to write log header to %s", name);
+		dev_close_immediate(dev);
+		return 0;
+	}
+
 	dev_close_immediate(dev);
 
 	return 1;
@@ -1156,7 +1214,8 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 					 struct volume_group *vg,
 					 struct alloc_handle *ah,
 					 alloc_policy_t alloc,
-					 const char *lv_name)
+					 const char *lv_name,
+					 int in_sync)
 {
 	struct logical_volume *log_lv;
 	char *log_name;
@@ -1201,8 +1260,14 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 		goto error;
 	}
 
-	if (activation() && !zero_lv(cmd, log_lv)) {
+	if (activation() && !set_lv(cmd, log_lv, in_sync)) {
 		log_error("Aborting. Failed to wipe mirror log. "
+			  "Remove new LV and retry.");
+		goto error;
+	}
+
+	if (!_write_log_header(cmd, log_lv)) {
+		log_error("Aborting. Failed to write mirror log header. "
 			  "Remove new LV and retry.");
 		goto error;
 	}

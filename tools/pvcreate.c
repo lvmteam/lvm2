@@ -96,7 +96,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	     (yes_no_prompt("Software RAID md superblock "
 			    "detected on %s. Wipe it? [y/n] ", name) == 'y'))) {
 		log_print("Wiping software RAID md superblock on %s", name);
-		if (!dev_zero(dev, md_superblock, 4)) {
+		if (!dev_set(dev, md_superblock, 4, 0)) {
 			log_error("Failed to wipe RAID md superblock on %s",
 				  name);
 			return 0;
@@ -225,7 +225,7 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 			goto error;
 		}
 
-		if (!dev_zero(dev, UINT64_C(0), (size_t) 2048)) {
+		if (!dev_set(dev, UINT64_C(0), (size_t) 2048, 0)) {
 			log_error("%s not wiped: aborting", pv_name);
 			dev_close(dev);
 			goto error;

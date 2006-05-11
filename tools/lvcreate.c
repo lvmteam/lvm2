@@ -646,7 +646,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 							      lp->region_size);
 
 		if (!(log_lv = create_mirror_log(cmd, vg, ah, lp->alloc,
-						 lv_name))) {
+						 lv_name, 0))) {
 			log_error("Failed to create mirror log.");
 			return 0;
 		}
@@ -730,7 +730,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if ((lp->zero || lp->snapshot) && activation()) {
-		if (!zero_lv(cmd, lv) && lp->snapshot) {
+		if (!set_lv(cmd, lv, 0) && lp->snapshot) {
 			/* FIXME Remove the failed lv we just added */
 			log_error("Aborting. Failed to wipe snapshot "
 				  "exception store. Remove new LV and retry.");
