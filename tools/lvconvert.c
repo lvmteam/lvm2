@@ -235,6 +235,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	struct alloc_handle *ah = NULL;
 	struct logical_volume *log_lv;
 	struct list *parallel_areas;
+	struct segment_type *segtype;  /* FIXME: could I just use lp->segtype */
 
 	seg = first_seg(lv);
 	existing_mirrors = seg->area_count;
@@ -277,10 +278,50 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				return 0;
 			}
 			if (lp->mirrors == existing_mirrors) {
-				log_error("Logical volume %s already has %"
-					  PRIu32 " mirror(s).", lv->name,
-					  lp->mirrors - 1);
-				return 1;
+				if (!seg->log_lv && !arg_count(cmd, corelog_ARG)) {
+					/* No disk log present, add one. */
+					/* FIXME: Why doesn't this work?  Without
+					   it, we will probably put the log on the
+					   same device as a mirror leg.
+					  if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv))) {
+					  stack;
+					  return 0;
+					  }
+					*/
+					parallel_areas = NULL;
+
+					segtype = get_segtype_from_string(cmd, "striped");
+
+					if (!(ah = allocate_extents(lv->vg, NULL, segtype, 1,
+								    0, 1, 0,
+								    NULL, 0, 0, lp->pvh,
+								    lp->alloc,
+								    parallel_areas))) {
+						stack;
+						return 0;
+					}
+
+					if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
+									 lp->alloc, lv->name, 0))) {
+						log_error("Failed to create mirror log.");
+						return 0;
+					}
+					seg->log_lv = log_lv;
+					log_lv->status |= MIRROR_LOG;
+					first_seg(log_lv)->mirror_seg = seg;
+				} else if (seg->log_lv && arg_count(cmd, corelog_ARG)) {
+					/* Had disk log, switch to core. */
+					if (!remove_mirror_images(seg, lp->mirrors,
+								  lp->pv_count ?
+								  lp->pvh : NULL, 1))
+						return_0;
+				} else {
+					/* No change */
+					log_error("Logical volume %s already has %"
+						  PRIu32 " mirror(s).", lv->name,
+						  lp->mirrors - 1);
+					return 1;
+				}
 			}
 			if (lp->mirrors > existing_mirrors) {
 				/* FIXME Unless anywhere, remove PV of log_lv 
@@ -314,7 +355,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				return_0;
 
 			if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype,
-						    1, lp->mirrors - 1, 1,
+						    1, lp->mirrors - 1,
+						    arg_count(cmd, corelog_ARG) ? 0 : 1,
 						    lv->le_count * (lp->mirrors - 1),
 						    NULL, 0, 0, lp->pvh,
 						    lp->alloc,
@@ -325,7 +367,9 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 								      lv->le_count,
 								      lp->region_size);
 
-			if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
+			log_lv = NULL;
+			if (!arg_count(cmd, corelog_ARG) &&
+			    !(log_lv = create_mirror_log(cmd, lv->vg, ah,
 							 lp->alloc,
 							 lv->name, 0))) {
 				log_error("Failed to create mirror log.");
