@@ -1,5 +1,7 @@
 Version 2.02.06 -
 =================================
+  Add mirror log fault-handling policy.
+  Improve mirror warning messages and tidy dmeventd syslog output.
   Propagate nosync flag around cluster.
   Allow vgreduce to handle mirror log failures.
   Add --corelog to lvcreate and lvconvert.

@@ -23,6 +23,13 @@
 #include "lvm-string.h"
 #include "locking.h"	/* FIXME Should not be used in this file */
 
+#include "defaults.h" /* FIXME: should this be defaults.h? */
+
+/* These are the flags that represent the mirror failure restoration policies */
+#define MIRROR_REMOVE            0
+#define MIRROR_ALLOCATE          1
+#define MIRROR_ALLOCATE_ANYWHERE 2
+
 struct lv_segment *find_mirror_seg(struct lv_segment *seg)
 {
 	return seg->mirror_seg;
@@ -230,18 +237,112 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	return 1;
 }
 
+static int get_mirror_fault_policy(struct cmd_context *cmd, int log_policy)
+{
+	const char *policy;
+
+	if (log_policy)
+		policy = find_config_str(NULL, "activation/mirror_log_fault_policy",
+					 DEFAULT_MIRROR_LOG_FAULT_POLICY);
+	else
+		policy = find_config_str(NULL, "activation/mirror_dev_fault_policy",
+					 DEFAULT_MIRROR_DEV_FAULT_POLICY);
+
+	if (!strcmp(policy, "remove"))
+		return MIRROR_REMOVE;
+	else if (!strcmp(policy, "allocate"))
+		return MIRROR_ALLOCATE;
+	else if (!strcmp(policy, "allocate_anywhere"))
+		return MIRROR_ALLOCATE_ANYWHERE;
+
+	if (log_policy)
+		log_error("Bad activation/mirror_log_fault_policy");
+	else
+		log_error("Bad activation/mirror_dev_fault_policy");
+
+	return MIRROR_REMOVE;
+}
+
+static int get_mirror_log_fault_policy(struct cmd_context *cmd)
+{
+	return get_mirror_fault_policy(cmd, 1);
+}
+
+static int get_mirror_dev_fault_policy(struct cmd_context *cmd)
+{
+	return get_mirror_fault_policy(cmd, 0);
+}
+
+/*
+ * replace_mirror_images
+ * @mirrored_seg: segment (which may be linear now) to restore
+ * @num_mirrors: number of copies we should end up with
+ * @replace_log: replace log if not present
+ * @in_sync: was the original mirror in-sync?
+ *
+ * in_sync will be set to 0 if new mirror devices are being added
+ * In other words, it is only useful if the log (and only the log)
+ * is being restored.
+ *
+ * Returns: 0 on failure, 1 on reconfig, -1 if no reconfig done
+ */
+static int replace_mirror_images(struct lv_segment *mirrored_seg,
+				 uint32_t num_mirrors,
+				 int log_policy, int in_sync)
+{
+	int r = -1;
+	struct logical_volume *lv = mirrored_seg->lv;
+
+	/* FIXME: Use lvconvert rather than duplicating its code */
+
+	if (mirrored_seg->area_count < num_mirrors) {
+		log_error("WARNING: Failed to replace mirror device in %s/%s",
+			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+
+		if ((mirrored_seg->area_count > 1) && !mirrored_seg->log_lv)
+			log_error("WARNING: Use 'lvconvert -m %d %s/%s --corelog' to replace failed devices",
+				  num_mirrors - 1, lv->vg->name, lv->name);
+		else
+			log_error("WARNING: Use 'lvconvert -m %d %s/%s' to replace failed devices",
+				  num_mirrors - 1, lv->vg->name, lv->name);
+		r = 0;
+
+		/* REMEMBER/FIXME: set in_sync to 0 if a new mirror device was added */
+		in_sync = 0;
+	}
+
+	/*
+	 * FIXME: right now, we ignore the allocation policy specified to
+	 * allocate the new log.
+	 */
+	if ((mirrored_seg->area_count > 1) && !mirrored_seg->log_lv &&
+	    (log_policy != MIRROR_REMOVE)) {
+		log_error("WARNING: Failed to replace mirror log device in %s/%s",
+			  lv->vg->name, lv->name);
+
+		log_error("WARNING: Use 'lvconvert -m %d %s/%s' to replace failed devices",
+			  mirrored_seg->area_count - 1 , lv->vg->name, lv->name);
+		r = 0;
+	}
+
+	return r;
+}
+
 int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			      struct list *removable_pvs, int remove_log)
 {
 	int r;
 	int insync = 0;
-	// int mirror_dev_failed = (mirrored_seg->area_count != num_mirrors);
+	int log_policy, dev_policy;
+	uint32_t old_num_mirrors = mirrored_seg->area_count;
+	int had_log = (mirrored_seg->log_lv) ? 1 : 0;
 	float sync_percent = 0;
 
 	/* was the mirror in-sync before problems? */
 	if (!lv_mirror_percent(mirrored_seg->lv->vg->cmd,
 			       mirrored_seg->lv, 0, &sync_percent, NULL))
-		log_error("Unable to determine mirror sync status.");
+		log_error("WARNING: Unable to determine mirror sync status of %s/%s.",
+			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 	else if (sync_percent >= 100.0)
 		insync = 1;
 
@@ -258,6 +359,38 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 		/* Unable to remove bad devices */
 		return 0;
 
+	log_print("WARNING: Bad device removed from mirror volume, %s/%s",
+		  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+
+	log_policy = get_mirror_log_fault_policy(mirrored_seg->lv->vg->cmd);
+	dev_policy = get_mirror_dev_fault_policy(mirrored_seg->lv->vg->cmd);
+
+	r = replace_mirror_images(mirrored_seg,
+				  (dev_policy != MIRROR_REMOVE) ?
+				  old_num_mirrors : num_mirrors,
+				  log_policy, insync);
+
+	if (!r)
+		/* Failed to replace device(s) */
+		log_error("WARNING: Unable to find substitute device for mirror volume, %s/%s",
+			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+	else if (r > 0)
+		/* Success in replacing device(s) */
+		log_print("WARNING: Mirror volume, %s/%s restored - substitute for failed device found.",
+			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+	else
+		/* Bad device removed, but not replaced because of policy */
+		if (mirrored_seg->area_count == 1) {
+			log_print("WARNING: Mirror volume, %s/%s converted to linear due to device failure.",
+				  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+		} else if (had_log && !mirrored_seg->log_lv) {
+			log_print("WARNING: Mirror volume, %s/%s disk log removed due to device failure.",
+				  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
+		}
+	/*
+	 * If we made it here, we at least removed the bad device.
+	 * Consider this success.
+	 */
 	return 1;
 }
 
