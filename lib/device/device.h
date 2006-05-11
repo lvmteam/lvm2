@@ -80,7 +80,7 @@ const char *dev_name(const struct device *dev);
 int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer);
 int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer);
 int dev_append(struct device *dev, size_t len, void *buffer);
-int dev_zero(struct device *dev, uint64_t offset, size_t len);
+int dev_set(struct device *dev, uint64_t offset, size_t len, int value);
 void dev_flush(struct device *dev);
 
 struct device *dev_create_file(const char *filename, struct device *dev,

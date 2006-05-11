@@ -327,7 +327,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 			if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
 							 lp->alloc,
-							 lv->name))) {
+							 lv->name, 0))) {
 				log_error("Failed to create mirror log.");
 				return 0;
 			}
@@ -390,7 +390,7 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 
 	if (!lp->zero)
 		log_error("WARNING: \"%s\" not zeroed", lv->name);
-	else if (!zero_lv(cmd, lv)) {
+	else if (!set_lv(cmd, lv, 0)) {
 			log_error("Aborting. Failed to wipe snapshot "
 				  "exception store.");
 			return 0;

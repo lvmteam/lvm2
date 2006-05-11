@@ -45,6 +45,7 @@ static int _security_level = SECURITY_LEVEL;
 static char _cmd_name[30] = "";
 static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
+static int _mirror_in_sync = 0;
 
 static lvm2_log_fn_t _lvm2_log_fn = NULL;
 
@@ -175,6 +176,11 @@ void init_security_level(int level)
 	_security_level = level;
 }
 
+void init_mirror_in_sync(int in_sync)
+{
+	_mirror_in_sync = in_sync;
+}
+
 void init_cmd_name(int status)
 {
 	_log_cmd_name = status;
@@ -237,6 +243,11 @@ int ignorelockingfailure()
 int security_level()
 {
 	return _security_level;
+}
+
+int mirror_in_sync(void)
+{
+	return _mirror_in_sync;
 }
 
 void init_debug(int level)

@@ -245,6 +245,9 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 		return 0;
 	}
 
+	if (mirror_in_sync() && !(seg->status & PVMOVE))
+		log_flags |= DM_NOSYNC;
+
 	if (_block_on_error_available && !(seg->status & PVMOVE))
 		log_flags |= DM_BLOCK_ON_ERROR;
 

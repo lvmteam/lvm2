@@ -576,7 +576,7 @@ static int _write_lvs(struct disk_list *data)
 
 	pos = data->pvd.lv_on_disk.base;
 
-	if (!dev_zero(data->dev, pos, data->pvd.lv_on_disk.size)) {
+	if (!dev_set(data->dev, pos, data->pvd.lv_on_disk.size, 0)) {
 		log_error("Couldn't zero lv area on device '%s'",
 			  dev_name(data->dev));
 		return 0;

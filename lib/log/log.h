@@ -73,6 +73,7 @@ void init_indent(int indent);
 void init_ignorelockingfailure(int level);
 void init_lockingfailed(int level);
 void init_security_level(int level);
+void init_mirror_in_sync(int in_sync);
 
 void set_cmd_name(const char *cmd_name);
 
@@ -85,6 +86,7 @@ int debug_level(void);
 int ignorelockingfailure(void);
 int lockingfailed(void);
 int security_level(void);
+int mirror_in_sync(void);
 
 /* Suppress messages to stdout/stderr (1) or everywhere (2) */
 /* Returns previous setting */
