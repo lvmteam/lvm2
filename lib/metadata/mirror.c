@@ -230,6 +230,37 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	return 1;
 }
 
+int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
+			      struct list *removable_pvs, int remove_log)
+{
+	int r;
+	int insync = 0;
+	int mirror_dev_failed = (mirrored_seg->area_count != num_mirrors);
+	float sync_percent = 0;
+
+	/* was the mirror in-sync before problems? */
+	if (!lv_mirror_percent(mirrored_seg->lv->vg->cmd,
+			       mirrored_seg->lv, 0, &sync_percent, NULL))
+		log_error("Unable to determine mirror sync status.");
+	else if (sync_percent >= 100.0)
+		insync = 1;
+
+	/*
+	 * While we are only removing devices, we can have sync set.
+	 * Setting this is only useful if we are moving to core log
+	 * otherwise the disk log will contain the sync information
+	 */
+	init_mirror_in_sync(insync);
+
+	r = remove_mirror_images(mirrored_seg, num_mirrors,
+				 removable_pvs, remove_log);
+	if (!r)
+		/* Unable to remove bad devices */
+		return 0;
+
+	return 1;
+}
+
 static int _create_layers_for_mirror(struct alloc_handle *ah,
 				     uint32_t first_area,
 				     uint32_t num_mirrors,

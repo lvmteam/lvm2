@@ -580,6 +580,8 @@ int add_mirror_layers(struct alloc_handle *ah,
 
 int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			 struct list *removable_pvs, int remove_log);
+int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
+			      struct list *removable_pvs, int remove_log);
 /*
  * Given mirror image or mirror log segment, find corresponding mirror segment 
  */
