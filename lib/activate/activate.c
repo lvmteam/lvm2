@@ -152,7 +152,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 }
 
 int pv_uses_vg(struct cmd_context *cmd, struct physical_volume *pv,
-               struct volume_group *vg)
+	       struct volume_group *vg)
 {
 	return 0;
 }
@@ -574,14 +574,30 @@ int lvs_in_vg_opened(struct volume_group *vg)
 	return count;
 }
 
-static int _register_dev_for_events(struct cmd_context *cmd,
-				    struct logical_volume *lv, int do_reg)
+/*
+ * register_dev_for_events
+ *
+ * This function uses proper error codes (but breaks convention)
+ * to return:
+ *      -1 on error
+ *       0 if the lv's targets don't do event [un]registration
+ *       0 if the lv is already [un]registered -- FIXME: not implemented
+ *       1 if the lv had a segment which was [un]registered
+ *
+ * Returns: -1 on error
+ */
+int register_dev_for_events(struct cmd_context *cmd,
+			    struct logical_volume *lv, int do_reg)
 {
 #ifdef DMEVENTD
+	int r = 0;
 	struct list *tmp;
 	struct lv_segment *seg;
 	int (*reg) (struct dm_pool *mem, struct lv_segment *,
 		    struct config_tree *cft, int events);
+
+	if (do_reg && !dmeventd_register_mode())
+		return 1;
 
 	list_iterate(tmp, &lv->segments) {
 		seg = list_item(tmp, struct lv_segment);
@@ -595,17 +611,21 @@ static int _register_dev_for_events(struct cmd_context *cmd,
 			reg = seg->segtype->ops->target_unregister_events;
 
 		if (!reg)
-			return_0;
+			continue;
 
-			/* FIXME specify events */
+		/* FIXME specify events */
 		if (!reg(cmd->mem, seg, cmd->cft, 0)) {
 			stack;
-			return 0;
+			return -1;
 		}
+
+		r = 1;
 	}
 
-#endif
+	return r;
+#else
 	return 1;
+#endif
 }
 
 static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
@@ -643,7 +663,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		}
 	}
 
-	if (!_register_dev_for_events(cmd, lv, 0))
+	if (register_dev_for_events(cmd, lv, 0) != 1)
 		/* FIXME Consider aborting here */
 		stack;
 
@@ -697,7 +717,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	memlock_dec();
 	fs_unlock();
 
-	if (!_register_dev_for_events(cmd, lv, 1))
+	if (register_dev_for_events(cmd, lv, 1) != 1)
 		stack;
 
 	return 1;
@@ -743,7 +763,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-	if (!_register_dev_for_events(cmd, lv, 0))
+	if (register_dev_for_events(cmd, lv, 0) != 1)
 		stack;
 
 	memlock_inc();
@@ -816,7 +836,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	memlock_dec();
 	fs_unlock();
 
-	if (!_register_dev_for_events(cmd, lv, 1))
+	if (!register_dev_for_events(cmd, lv, 1) != 1)
 		stack;
 
 	return r;
@@ -863,7 +883,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
  * Returns 1 on failure.
  */
 int pv_uses_vg(struct physical_volume *pv,
-               struct volume_group *vg)
+	       struct volume_group *vg)
 {
 	if (!activation())
 		return 0;

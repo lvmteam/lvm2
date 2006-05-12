@@ -111,7 +111,13 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	 * and add to list of LVs to be removed later.
 	 * Doesn't apply to snapshots/origins yet - they're already deactivated.
 	 */
-	if (lv_info(cmd, lv, &info, 0) && info.exists) {
+	/*
+	 * If the LV is a part of mirror segment,
+	 * the mirrored LV also should be cleaned up.
+	 * Clean-up is currently done by caller (_make_vg_consistent()).
+	 */
+	if ((lv_info(cmd, lv, &info, 0) && info.exists)
+	    || first_seg(lv)->mirror_seg) {
 		extents = lv->le_count;
 		mirror_seg = first_seg(lv)->mirror_seg;
 		if (!lv_empty(lv)) {

@@ -1,5 +1,8 @@
 Version 2.02.06 -
 =================================
+  Propagate --monitor around cluster.
+  Add --monitor to vgcreate and lvcreate to control dmeventd registration.
+  Filter LCK_NONBLOCK in clvmd lock_vg.
   Add --nosync to lvcreate with LV flag NOTSYNCED.
   Use mirror's uuid for a core log.
   Add mirror log fault-handling policy.

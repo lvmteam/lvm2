@@ -15,6 +15,51 @@
 
 #include "tools.h"
 
+static int _register_lvs_in_vg(struct cmd_context *cmd,
+			       struct volume_group *vg, int reg)
+{
+	struct lv_list *lvl;
+	struct logical_volume *lv;
+	struct lvinfo info;
+	int lv_active;
+	int count = 0;
+	int r;
+
+	list_iterate_items(lvl, &vg->lvs) {
+		lv = lvl->lv;
+
+		if (!lv_info(cmd, lv, &info, 0))
+			lv_active = 0;
+		else
+			lv_active = info.exists;
+
+		/*
+		 * FIXME: Need to consider all cases... PVMOVE, etc
+		 */
+		if ((lv->status & PVMOVE) || !lv_active)
+			continue;
+
+		r = register_dev_for_events(cmd, lv, reg);
+
+		if (r < 0) {
+			log_error("Failed to %s logical volume, %s",
+				  (reg) ? "register" : "unregister",
+				  lv->name);
+			continue;
+		}
+
+		if (r)
+			count++;
+	}
+
+	/*
+	 * returns the number of monitored devices, not the number
+	 * of _new_ monitored devices
+	 */
+
+	return count;
+}
+
 static int _activate_lvs_in_vg(struct cmd_context *cmd,
 			       struct volume_group *vg, int activate)
 {
@@ -65,9 +110,23 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 	return count;
 }
 
+static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg)
+{
+	int active, monitored;
+
+	if ((active = lvs_in_vg_activated(vg))) {
+		monitored = _register_lvs_in_vg(cmd, vg, dmeventd_register_mode());
+		log_print("%d logical volume(s) in volume group "
+			    "\"%s\" now %smonitored",
+			    monitored, vg->name, (dmeventd_register_mode()) ? "" : "un");
+	}
+
+	return ECMD_PROCESSED;
+}
+
 static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 {
-	int lv_open, active;
+	int lv_open, active, monitored;
 	int available;
 	int activate = 1;
 
@@ -93,9 +152,15 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 	if (activate && !lockingfailed())
 		check_current_backup(vg);
 
-	if (activate && (active = lvs_in_vg_activated(vg)))
+	if (activate && (active = lvs_in_vg_activated(vg))) {
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
+		monitored = _register_lvs_in_vg(cmd, vg, dmeventd_register_mode());
+		log_verbose("%d existing logical volume(s) in volume "
+			    "group \"%s\" now %smonitored",
+			    monitored, vg->name,
+			    dmeventd_register_mode() ? "" : "un");
+	}
 
 	if (activate && _activate_lvs_in_vg(cmd, vg, available))
 		log_verbose("Activated logical volumes in "
@@ -429,8 +494,13 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
+	init_dmeventd_register(arg_int_value(cmd, monitor_ARG, DEFAULT_DMEVENTD_MONITOR));
+
 	if (arg_count(cmd, available_ARG))
 		r = _vgchange_available(cmd, vg);
+
+	else if (arg_count(cmd, monitor_ARG))
+		r = _vgchange_monitoring(cmd, vg);
 
 	else if (arg_count(cmd, resizeable_ARG))
 		r = _vgchange_resizeable(cmd, vg);
@@ -466,7 +536,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	     arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
 	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) +
 	     arg_count(cmd, physicalextentsize_ARG) +
-	     arg_count(cmd, clustered_ARG) + arg_count(cmd, alloc_ARG))) {
+	     arg_count(cmd, clustered_ARG) + arg_count(cmd, alloc_ARG) +
+	     arg_count(cmd, monitor_ARG))) {
 		log_error("One of -a, -c, -l, -s, -x, --uuid, --alloc, --addtag or "
 			  "--deltag required");
 		return EINVALID_CMD_LINE;

@@ -336,6 +336,9 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	if (mirror_in_sync())
 		args[1] |= LCK_MIRROR_NOSYNC_MODE;
 
+	if (dmeventd_register_mode())
+		args[1] |= LCK_DMEVENTD_REGISTER_MODE;
+
 	/*
 	 * VG locks are just that: locks, and have no side effects
 	 * so we only need to do them on the local node because all
