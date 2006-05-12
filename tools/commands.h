@@ -63,6 +63,7 @@ xx(lvchange,
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--monitor {y|n}]\n"
    "\t[-M|--persistent y|n] [--major major] [--minor minor]\n"
    "\t[-P|--partial] " "\n"
    "\t[-p|--permission r|rw]\n"
@@ -74,9 +75,9 @@ xx(lvchange,
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    alloc_ARG, autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
-   ignorelockingfailure_ARG, major_ARG, minor_ARG, partial_ARG, permission_ARG,
-   persistent_ARG, readahead_ARG, refresh_ARG, addtag_ARG, deltag_ARG,
-   test_ARG)
+   ignorelockingfailure_ARG, major_ARG, minor_ARG, monitor_ARG,
+   partial_ARG, permission_ARG, persistent_ARG, readahead_ARG,
+   refresh_ARG, addtag_ARG, deltag_ARG, test_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -347,7 +348,7 @@ xx(lvs,
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
-   
+
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, segments_ARG,
    separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
@@ -494,7 +495,7 @@ xx(pvmove,
    "\tSourcePhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]}\n"
    "\t[DestinationPhysicalVolume[:PhysicalExtent[-PhysicalExtent]...]...]\n",
 
-   abort_ARG, alloc_ARG, autobackup_ARG, background_ARG, 
+   abort_ARG, alloc_ARG, autobackup_ARG, background_ARG,
    interval_ARG, name_ARG, test_ARG)
 
 xx(pvremove,
@@ -531,7 +532,7 @@ xx(pvs,
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
    "\t[PhysicalVolume [PhysicalVolume...]]\n",
-   
+
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, segments_ARG,
    separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
@@ -595,6 +596,7 @@ xx(vgchange,
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--monitor {y|n}]\n"
    "\t[-t|--test]" "\n"
    "\t[-u|--uuid] " "\n"
    "\t[-v|--verbose] " "\n"
@@ -610,8 +612,8 @@ xx(vgchange,
 
    addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, available_ARG,
    clustered_ARG, deltag_ARG, ignorelockingfailure_ARG, logicalvolume_ARG,
-   partial_ARG, physicalextentsize_ARG, resizeable_ARG, resizable_ARG,
-   test_ARG, uuid_ARG)
+   monitor_ARG, partial_ARG, physicalextentsize_ARG, resizeable_ARG,
+   resizable_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
@@ -822,7 +824,7 @@ xx(vgs,
    "\t[-v|--verbose]\n"
    "\t[--version]\n"
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
-   
+
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, separator_ARG,
    sort_ARG, unbuffered_ARG, units_ARG)
@@ -835,7 +837,7 @@ xx(vgscan,
    "\t[--ignorelockingfailure]\n"
    "\t[--mknodes]\n"
    "\t[-P|--partial] " "\n"
-   "\t[-v|--verbose]\n" 
+   "\t[-v|--verbose]\n"
    "\t[--version]" "\n",
 
    ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)

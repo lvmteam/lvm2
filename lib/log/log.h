@@ -74,6 +74,7 @@ void init_ignorelockingfailure(int level);
 void init_lockingfailed(int level);
 void init_security_level(int level);
 void init_mirror_in_sync(int in_sync);
+void init_dmeventd_register(int reg);
 
 void set_cmd_name(const char *cmd_name);
 
@@ -87,6 +88,7 @@ int ignorelockingfailure(void);
 int lockingfailed(void);
 int security_level(void);
 int mirror_in_sync(void);
+int dmeventd_register_mode(void);
 
 /* Suppress messages to stdout/stderr (1) or everywhere (2) */
 /* Returns previous setting */

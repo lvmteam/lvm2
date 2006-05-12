@@ -180,7 +180,7 @@ static int lock_vg(struct local_client *client)
     }
     else {
 
-	status = sync_lock(lockname, (int)lock_cmd, (int)lock_flags, &lkid);
+	status = sync_lock(lockname, (int)lock_cmd, (lock_flags & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
 	if (status)
 	    status = errno;
 	else
