@@ -245,7 +245,7 @@ static int get_mirror_fault_policy(struct cmd_context *cmd, int log_policy)
 		policy = find_config_str(NULL, "activation/mirror_log_fault_policy",
 					 DEFAULT_MIRROR_LOG_FAULT_POLICY);
 	else
-		policy = find_config_str(NULL, "activation/mirror_dev_fault_policy",
+		policy = find_config_str(NULL, "activation/mirror_device_fault_policy",
 					 DEFAULT_MIRROR_DEV_FAULT_POLICY);
 
 	if (!strcmp(policy, "remove"))
@@ -258,7 +258,7 @@ static int get_mirror_fault_policy(struct cmd_context *cmd, int log_policy)
 	if (log_policy)
 		log_error("Bad activation/mirror_log_fault_policy");
 	else
-		log_error("Bad activation/mirror_dev_fault_policy");
+		log_error("Bad activation/mirror_device_fault_policy");
 
 	return MIRROR_REMOVE;
 }
@@ -268,7 +268,7 @@ static int get_mirror_log_fault_policy(struct cmd_context *cmd)
 	return get_mirror_fault_policy(cmd, 1);
 }
 
-static int get_mirror_dev_fault_policy(struct cmd_context *cmd)
+static int get_mirror_device_fault_policy(struct cmd_context *cmd)
 {
 	return get_mirror_fault_policy(cmd, 0);
 }
@@ -363,7 +363,7 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 		  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 
 	log_policy = get_mirror_log_fault_policy(mirrored_seg->lv->vg->cmd);
-	dev_policy = get_mirror_dev_fault_policy(mirrored_seg->lv->vg->cmd);
+	dev_policy = get_mirror_device_fault_policy(mirrored_seg->lv->vg->cmd);
 
 	r = replace_mirror_images(mirrored_seg,
 				  (dev_policy != MIRROR_REMOVE) ?
