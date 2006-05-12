@@ -1,5 +1,5 @@
-Version 2.02.06 -
-=================================
+Version 2.02.06 - 12th May 2006
+===============================
   Propagate --monitor around cluster.
   Add --monitor to vgcreate and lvcreate to control dmeventd registration.
   Filter LCK_NONBLOCK in clvmd lock_vg.
