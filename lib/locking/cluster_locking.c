@@ -333,7 +333,7 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	if (partial_mode())
 		args[1] |= LCK_PARTIAL_MODE;
 
-	if (mirror_sync())
+	if (mirror_in_sync())
 		args[1] |= LCK_MIRROR_NOSYNC_MODE;
 
 	/*
