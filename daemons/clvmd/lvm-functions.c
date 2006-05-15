@@ -45,6 +45,7 @@
 #include "log.h"
 #include "activate.h"
 #include "locking.h"
+#include "defaults.h"
 
 static struct cmd_context *cmd = NULL;
 static struct dm_hash_table *lv_hash = NULL;
