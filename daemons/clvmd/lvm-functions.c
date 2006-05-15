@@ -309,7 +309,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	if (lock_flags & LCK_MIRROR_NOSYNC_MODE)
 		init_mirror_in_sync(1);
 
-	if (!(lock_flags & LCK_DMEVENTD_MONITOR))
+	if (!(lock_flags & LCK_DMEVENTD_REGISTER_MODE))
 		init_dmeventd_register(0);
 
 	switch (command) {
