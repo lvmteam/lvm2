@@ -613,46 +613,27 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 	struct physical_volume *pv;
 	char buffer[32], *name;
 
-	if (!(f->mem = dm_pool_create("text pv_names", 512))) {
-		stack;
-		goto bad;
-	}
+	if (!(f->mem = dm_pool_create("text pv_names", 512)))
+		return_0;
 
-	if (!(f->pv_names = dm_hash_create(128))) {
-		stack;
-		goto bad;
-	}
+	if (!(f->pv_names = dm_hash_create(128)))
+		return_0;
 
 	list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 
 		/* FIXME But skip if there's already an LV called pv%d ! */
-		if (lvm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0) {
-			stack;
-			goto bad;
-		}
+		if (lvm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0)
+			return_0;
 
-		if (!(name = dm_pool_strdup(f->mem, buffer))) {
-			stack;
-			goto bad;
-		}
+		if (!(name = dm_pool_strdup(f->mem, buffer)))
+			return_0;
 
-		if (!dm_hash_insert(f->pv_names, dev_name(pv->dev), name)) {
-			stack;
-			goto bad;
-		}
+		if (!dm_hash_insert(f->pv_names, dev_name(pv->dev), name))
+			return_0;
 	}
 
 	return 1;
-
-      bad:
-	if (f->mem)
-		dm_pool_destroy(f->mem);
-
-	if (f->pv_names)
-		dm_hash_destroy(f->pv_names);
-
-	return 0;
 }
 
 static int _text_vg_export(struct formatter *f,
@@ -664,35 +645,33 @@ static int _text_vg_export(struct formatter *f,
 		stack;
 		goto out;
 	}
-#define fail do {stack; goto out;} while(0)
 
 	if (f->header && !_print_header(f, desc))
-		fail;
+		goto_out;
 
 	if (!out_text(f, "%s {", vg->name))
-		fail;
+		goto_out;
 
 	_inc_indent(f);
 
 	if (!_print_vg(f, vg))
-		fail;
+		goto_out;
 
 	outnl(f);
 	if (!_print_pvs(f, vg))
-		fail;
+		goto_out;
 
 	outnl(f);
 	if (!_print_lvs(f, vg))
-		fail;
+		goto_out;
 
 	_dec_indent(f);
 	if (!out_text(f, "}"))
-		fail;
+		goto_out;
 
 	if (!f->header && !_print_header(f, desc))
-		fail;
+		goto_out;
 
-#undef fail
 	r = 1;
 
       out:

@@ -195,8 +195,8 @@ clean: $(SUBDIRS.clean)
 	      $(SOURCES:%.c=%.pot) $(LDDEPS)
 
 distclean: $(SUBDIRS.distclean)
-	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES:%.c=%.pot) $(LDDEPS) \
+	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(DISTCLEAN_TARGETS) \
+	      $(SOURCES:%.c=%.d) $(SOURCES:%.c=%.pot) $(LDDEPS) \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
 	      version.h lvm2.po

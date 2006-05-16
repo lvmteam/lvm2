@@ -1,5 +1,7 @@
 Version 2.02.07 -
 =================================
+  Add DISTCLEAN_TARGETS to make template for configure.h.
+  More fixes to error paths.
   Fix lvcreate corelog validation.
   Add --config for overriding most config file settings from cmdline.
   Quote arguments when printing command line.

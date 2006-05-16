@@ -38,6 +38,7 @@ ifeq ($(MAKECMDGOALS),distclean)
 	     lib/snapshot \
 	     po \
 	     test/mm test/device test/format1 test/regex test/filters
+  DISTCLEAN_TARGETS += lib/misc/configure.h
 endif
 
 include make.tmpl

@@ -72,7 +72,7 @@ struct segtype_handler {
                                 struct dm_tree_node *node, uint64_t len,
                                 uint32_t *pvmove_mirror_count);
 	int (*target_percent) (void **target_state, struct dm_pool * mem,
-			       struct config_tree *cft,
+			       struct cmd_context *cmd,
 			       struct lv_segment *seg, char *params,
 			       uint64_t *total_numerator,
 			       uint64_t *total_denominator, float *percent);
