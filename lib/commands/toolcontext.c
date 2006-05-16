@@ -924,7 +924,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 
 	if (!(cmd->libmem = dm_pool_create("library", 4 * 1024))) {
 		log_error("Library memory pool creation failed");
-		return 0;
+		goto error;
 	}
 
 	if (!_init_lvm_conf(cmd))
