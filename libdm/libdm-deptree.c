@@ -1242,9 +1242,12 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 		log_parm_count = 1;	/* Region size */
 		log_parm_count += hweight32(seg->flags);	/* [no]sync, block_on_error etc. */
 
+		if (seg->flags & DM_CORELOG)
+			log_parm_count--;   /* DM_CORELOG does not count in the param list */
+
 		if (seg->clustered) {
-			if (seg->uuid && !(seg->flags & DM_CORELOG))
-				log_parm_count++;	/* uuid (already counted for core log) */
+			if (seg->uuid)
+				log_parm_count++;
 			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered_")) < 0) {
                         	stack;	/* Out of space */
                         	return -1;

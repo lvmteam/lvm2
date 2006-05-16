@@ -1,5 +1,7 @@
 Version 1.02.08 - 
 =============================
+  Fix corelog segment line.
+  Suppress some compiler warnings.
 
 Version 1.02.07 - 11 May 2006
 =============================

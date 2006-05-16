@@ -143,7 +143,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 		return 0;
 	}
 
-	while (fgets(buffer, buffer_size, fp)) {
+	while (fgets(buffer, (int) buffer_size, fp)) {
 #else
 	while (getline(&buffer, &buffer_size, fp) > 0) {
 #endif
@@ -321,7 +321,7 @@ static int _set_task_device(struct dm_task *dmt, const char *name, int optional)
 	return 1;
 }
 
-static int _load(int argc, char **argv, void *data)
+static int _load(int argc, char **argv, void *data __attribute((unused)))
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -378,7 +378,7 @@ static int _load(int argc, char **argv, void *data)
 	return r;
 }
 
-static int _create(int argc, char **argv, void *data)
+static int _create(int argc, char **argv, void *data __attribute((unused)))
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -434,7 +434,7 @@ static int _create(int argc, char **argv, void *data)
 	return r;
 }
 
-static int _rename(int argc, char **argv, void *data)
+static int _rename(int argc, char **argv, void *data __attribute((unused)))
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -463,7 +463,7 @@ static int _rename(int argc, char **argv, void *data)
 	return r;
 }
 
-static int _message(int argc, char **argv, void *data)
+static int _message(int argc, char **argv, void *data __attribute((unused)))
 {
 	int r = 0, i;
 	size_t sz = 1;
@@ -523,7 +523,7 @@ static int _message(int argc, char **argv, void *data)
 	return r;
 }
 
-static int _setgeometry(int argc, char **argv, void *data)
+static int _setgeometry(int argc, char **argv, void *data __attribute((unused)))
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -556,7 +556,7 @@ static int _setgeometry(int argc, char **argv, void *data)
 	return r;
 }
 
-static int _version(int argc, char **argv, void *data)
+static int _version(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
 	char version[80];
 
@@ -602,32 +602,32 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	return r;
 }
 
-static int _remove_all(int argc, char **argv, void *data)
+static int _remove_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
 	return _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0);
 }
 
-static int _remove(int argc, char **argv, void *data)
+static int _remove(int argc, char **argv, void *data __attribute((unused)))
 {
 	return _simple(DM_DEVICE_REMOVE, argc > 1 ? argv[1] : NULL, 0, 0);
 }
 
-static int _suspend(int argc, char **argv, void *data)
+static int _suspend(int argc, char **argv, void *data __attribute((unused)))
 {
 	return _simple(DM_DEVICE_SUSPEND, argc > 1 ? argv[1] : NULL, 0, 1);
 }
 
-static int _resume(int argc, char **argv, void *data)
+static int _resume(int argc, char **argv, void *data __attribute((unused)))
 {
 	return _simple(DM_DEVICE_RESUME, argc > 1 ? argv[1] : NULL, 0, 1);
 }
 
-static int _clear(int argc, char **argv, void *data)
+static int _clear(int argc, char **argv, void *data __attribute((unused)))
 {
 	return _simple(DM_DEVICE_CLEAR, argc > 1 ? argv[1] : NULL, 0, 1);
 }
 
-static int _wait(int argc, char **argv, void *data)
+static int _wait(int argc, char **argv, void *data __attribute((unused)))
 {
 	const char *name = NULL;
 
@@ -691,7 +691,7 @@ static void _display_dev(struct dm_task *dmt, const char *name)
 		printf("%s\t(%u, %u)\n", name, info.major, info.minor);
 }
 
-static int _mknodes(int argc, char **argv, void *data)
+static int _mknodes(int argc, char **argv, void *data __attribute((unused)))
 {
 	return dm_mknodes(argc > 1 ? argv[1] : NULL);
 }
@@ -847,7 +847,7 @@ static int _status(int argc, char **argv, void *data)
 }
 
 /* Show target names and their version numbers */
-static int _targets(int argc, char **argv, void *data)
+static int _targets(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -877,7 +877,6 @@ static int _targets(int argc, char **argv, void *data)
       out:
 	dm_task_destroy(dmt);
 	return r;
-
 }
 
 static int _info(int argc, char **argv, void *data)
@@ -982,7 +981,7 @@ static int _deps(int argc, char **argv, void *data)
 	return r;
 }
 
-static int _display_name(int argc, char **argv, void *data)
+static int _display_name(int argc __attribute((unused)), char **argv __attribute((unused)), void *data)
 {
 	struct dm_names *names = (struct dm_names *) data;
 
@@ -1088,19 +1087,19 @@ static int _termwidth = 80;	/* Maximum output width */
 static int _cur_x = 1;		/* Current horizontal output position */
 static char _last_char = 0;
 
-static void _out_char(char c)
+static void _out_char(const unsigned c)
 {
 	/* Only first UTF-8 char counts */
 	_cur_x += ((c & 0xc0) != 0x80);
 
 	if (!_tree_switches[TR_TRUNCATE]) {
-		putchar(c);
+		putchar((int) c);
 		return;
 	}
 
 	/* Truncation? */
 	if (_cur_x <= _termwidth)
-		putchar(c);
+		putchar((int) c);
 
 	if (_cur_x == _termwidth + 1 && ((c & 0xc0) != 0x80)) {
 		if (_last_char || (c & 0x80)) {
@@ -1114,7 +1113,7 @@ static void _out_char(char c)
 	}
 }
 
-static void _out_string(const char *str)
+static void _out_string(const unsigned char *str)
 {
 	while (*str)
 		_out_char(*str++);
@@ -1150,9 +1149,9 @@ static void _out_newline(void)
 	_cur_x = 1;
 }
 
-static void _out_prefix(int depth)
+static void _out_prefix(unsigned depth)
 {
-	int x, d;
+	unsigned x, d;
 
 	for (d = 0; d < depth; d++) {
 		for (x = _tree_width[d] + 1; x > 0; x--)
@@ -1192,7 +1191,7 @@ static void _display_tree_attributes(struct dm_tree_node *node)
 
 	if (_tree_switches[TR_OPENCOUNT]) {
 		_out_string(attr++ ? ", " : " [");
-		(void) _out_int(info->open_count);
+		(void) _out_int((unsigned) info->open_count);
 	}
 
 	if (_tree_switches[TR_UUID]) {
@@ -1205,8 +1204,8 @@ static void _display_tree_attributes(struct dm_tree_node *node)
 }
 
 static void _display_tree_node(struct dm_tree_node *node, unsigned depth,
-			       unsigned first_child, unsigned last_child,
-			       unsigned has_children)
+			       unsigned first_child __attribute((unused)),
+			       unsigned last_child, unsigned has_children)
 {
 	int offset;
 	const char *name;
@@ -1287,7 +1286,7 @@ static void _tree_walk_children(struct dm_tree_node *node, unsigned depth)
 		    dm_tree_node_num_children(child, inverted) ? 1 : 0;
 
 		_display_tree_node(child, depth, first_child,
-				   next_child ? 0 : 1, has_children);
+				   next_child ? 0U : 1U, has_children);
 
 		if (has_children)
 			_tree_walk_children(child, depth + 1);
@@ -1296,11 +1295,11 @@ static void _tree_walk_children(struct dm_tree_node *node, unsigned depth)
 	}
 }
 
-static int _add_dep(int argc, char **argv, void *data)
+static int _add_dep(int argc __attribute((unused)), char **argv __attribute((unused)), void *data)
 {
 	struct dm_names *names = (struct dm_names *) data;
 
-	if (!dm_tree_add_dev(_dtree, MAJOR(names->dev), MINOR(names->dev)))
+	if (!dm_tree_add_dev(_dtree, (unsigned) MAJOR(names->dev), (unsigned) MINOR(names->dev)))
 		return 0;
 
 	return 1;
@@ -1309,7 +1308,7 @@ static int _add_dep(int argc, char **argv, void *data)
 /*
  * Create and walk dependency tree
  */
-static int _tree(int argc, char **argv, void *data)
+static int _tree(int argc, char **argv, void *data __attribute((unused)))
 {
 	if (!(_dtree = dm_tree_create()))
 		return 0;
