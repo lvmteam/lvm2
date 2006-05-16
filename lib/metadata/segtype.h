@@ -67,23 +67,23 @@ struct segtype_handler {
 	int (*merge_segments) (struct lv_segment * seg1,
 			       struct lv_segment * seg2);
 	int (*add_target_line) (struct dev_manager *dm, struct dm_pool *mem,
-                                struct config_tree *cft, void **target_state,
+                                struct cmd_context *cmd, void **target_state,
                                 struct lv_segment *seg,
                                 struct dm_tree_node *node, uint64_t len,
                                 uint32_t *pvmove_mirror_count);
 	int (*target_percent) (void **target_state, struct dm_pool * mem,
-			       struct config_tree * cft,
-			       struct lv_segment * seg, char *params,
+			       struct config_tree *cft,
+			       struct lv_segment *seg, char *params,
 			       uint64_t *total_numerator,
 			       uint64_t *total_denominator, float *percent);
 	int (*target_present) (void);
 	void (*destroy) (const struct segment_type * segtype);
 	int (*target_register_events) (struct dm_pool *mem,
 				       struct lv_segment *seg,
-				       struct config_tree *cft, int events);
+				       struct cmd_context *cmd, int events);
 	int (*target_unregister_events) (struct dm_pool *mem,
 					 struct lv_segment *seg,
-					 struct config_tree *cft, int events);
+					 struct cmd_context *cmd, int events);
 };
 
 struct segment_type *get_segtype_from_string(struct cmd_context *cmd,

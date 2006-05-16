@@ -154,7 +154,7 @@ static int _mirrored_text_export(const struct lv_segment *seg, struct formatter 
 
 #ifdef DEVMAPPER_SUPPORT
 static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
-					 struct config_tree *cft)
+					 struct cmd_context *cmd)
 {
 	struct mirror_state *mirr_state;
 
@@ -164,7 +164,7 @@ static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 	}
 
 	mirr_state->default_region_size = 2 *
-	    find_config_int(cft->root,
+	    find_config_tree_int(cmd,
 			    "activation/mirror_region_size",
 			    DEFAULT_MIRROR_REGION_SIZE);
 
@@ -172,7 +172,7 @@ static struct mirror_state *_mirrored_init_target(struct dm_pool *mem,
 }
 
 static int _mirrored_target_percent(void **target_state, struct dm_pool *mem,
-			   struct config_tree *cft, struct lv_segment *seg,
+			   struct cmd_context *cmd, struct lv_segment *seg,
 			   char *params, uint64_t *total_numerator,
 			   uint64_t *total_denominator,
 			   float *percent __attribute((unused)))
@@ -184,7 +184,7 @@ static int _mirrored_target_percent(void **target_state, struct dm_pool *mem,
 	char *pos = params;
 
 	if (!*target_state)
-		*target_state = _mirrored_init_target(mem, cft);
+		*target_state = _mirrored_init_target(mem, cmd);
 
 	mirr_state = *target_state;
 
@@ -265,7 +265,7 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 }
 
 static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
-                                struct config_tree *cft, void **target_state,
+                                struct cmd_context *cmd, void **target_state,
                                 struct lv_segment *seg,
                                 struct dm_tree_node *node, uint64_t len,
                                 uint32_t *pvmove_mirror_count)
@@ -278,7 +278,7 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	int r;
 
 	if (!*target_state)
-		*target_state = _mirrored_init_target(mem, cft);
+		*target_state = _mirrored_init_target(mem, cmd);
 
 	mirr_state = *target_state;
 
@@ -367,7 +367,7 @@ static int _mirrored_target_present(void)
 }
 
 #ifdef DMEVENTD
-static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
+static int _setup_registration(struct dm_pool *mem, struct cmd_context *cmd,
 			       char **dso)
 {
 	char *path;
@@ -378,10 +378,10 @@ static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
 		return 0;
 	}
 
-	libpath = find_config_str(cft->root, "dmeventd/mirror_library",
-				  DEFAULT_DMEVENTD_MIRROR_LIB);
+	libpath = find_config_tree_str(cmd, "dmeventd/mirror_library",
+				       DEFAULT_DMEVENTD_MIRROR_LIB);
 
-	get_shared_library_path(cft, libpath, path, PATH_MAX);
+	get_shared_library_path(cmd, libpath, path, PATH_MAX);
 
 	*dso = path;
 
@@ -390,9 +390,10 @@ static int _setup_registration(struct dm_pool *mem, struct config_tree *cft,
 
 /* FIXME This gets run while suspended and performs banned operations. */
 /* FIXME Merge these two functions */
-static int _target_register_events(struct dm_pool *mem,
+static int _target_register_events(struct cmd_context *cmd,
+				   struct dm_pool *mem,
 				   struct lv_segment *seg,
-				   struct config_tree *cft, int events)
+				   int events)
 {
 	char *dso, *name;
 	struct logical_volume *lv;
@@ -401,7 +402,7 @@ static int _target_register_events(struct dm_pool *mem,
 	lv = seg->lv;
 	vg = lv->vg;
 
-	if (!_setup_registration(mem, cft, &dso)) {
+	if (!_setup_registration(mem, cmd, &dso)) {
 		stack;
 		return 0;
 	}
@@ -418,9 +419,10 @@ static int _target_register_events(struct dm_pool *mem,
 	return 1;
 }
 
-static int _target_unregister_events(struct dm_pool *mem,
+static int _target_unregister_events(struct cmd_context *cmd,
+				     struct dm_pool *mem,
 				     struct lv_segment *seg,
-				     struct config_tree *cft, int events)
+				     int events)
 {
 	char *dso;
 	char *name;
@@ -431,7 +433,7 @@ static int _target_unregister_events(struct dm_pool *mem,
 	vg = lv->vg;
 
 	/* FIXME Remove this and use handle to avoid config file race */
-	if (!_setup_registration(mem, cft, &dso))
+	if (!_setup_registration(mem, cmd, &dso))
 		return_0;
 
 	if (!(name = build_dm_name(mem, vg->name, lv->name, NULL)))

@@ -452,7 +452,7 @@ void reset_locking(void)
 }
 
 #ifdef CLUSTER_LOCKING_INTERNAL
-int init_cluster_locking(struct locking_type *locking, struct config_tree *cft)
+int init_cluster_locking(struct locking_type *locking, struct cmd_context *cmd)
 {
 	locking->lock_resource = _lock_resource;
 	locking->fin_locking = _locking_end;

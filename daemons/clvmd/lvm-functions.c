@@ -510,7 +510,7 @@ static void check_config()
 {
 	int locking_type;
 
-	locking_type = find_config_int(cmd->cft->root, "global/locking_type", 1);
+	locking_type = find_config_tree_int(cmd, "global/locking_type", 1);
 
 	if (locking_type == 3) /* compiled-in cluster support */
 		return;
@@ -518,7 +518,7 @@ static void check_config()
 	if (locking_type == 2) { /* External library, check name */
 		const char *libname;
 
-		libname = find_config_str(cmd->cft->root, "global/locking_library",
+		libname = find_config_tree_str(cmd, "global/locking_library",
 					  "");
 		if (strstr(libname, "liblvm2clusterlock.so"))
 			return;

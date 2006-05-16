@@ -91,9 +91,7 @@ ifeq ("@DMEVENTD@", "yes")
 	LVMLIBS += -ldevmapper-event -lpthread
 endif
 
-ifeq ("@DEVMAPPER@", "yes")
-	LVMLIBS += -ldevmapper
-endif
+LVMLIBS += -ldevmapper
 
 DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 

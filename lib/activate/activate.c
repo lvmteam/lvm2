@@ -157,6 +157,11 @@ int pv_uses_vg(struct cmd_context *cmd, struct physical_volume *pv,
 	return 0;
 }
 
+void activation_release(void)
+{
+	return;
+}
+
 void activation_exit(void)
 {
 	return;
@@ -193,7 +198,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 	char *str;
 	char path[PATH_MAX];
 
-	if (!(cn = find_config_node(cmd->cft->root, "activation/volume_list"))) {
+	if (!(cn = find_config_tree_node(cmd, "activation/volume_list"))) {
 		/* If no host tags defined, activate */
 		if (list_empty(&cmd->tags))
 			return 1;
@@ -892,6 +897,11 @@ int pv_uses_vg(struct physical_volume *pv,
 		return 0;
 
 	return dev_manager_device_uses_vg(pv->dev, vg);
+}
+
+void activation_release(void)
+{
+	dev_manager_release();
 }
 
 void activation_exit(void)

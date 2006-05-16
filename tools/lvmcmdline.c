@@ -449,7 +449,7 @@ static void _register_commands()
 					driverloaded_ARG, \
 					debug_ARG, help_ARG, help2_ARG, \
 					version_ARG, verbose_ARG, \
-					quiet_ARG, -1);
+					quiet_ARG, config_ARG, -1);
 #include "commands.h"
 #undef xx
 }
@@ -713,8 +713,6 @@ static int _get_settings(struct cmd_context *cmd)
 	    !_merge_synonym(cmd, allocation_ARG, resizeable_ARG))
 		return EINVALID_CMD_LINE;
 
-	init_mirror_in_sync(0);
-
 	/* Zero indicates success */
 	return 0;
 }
@@ -762,12 +760,23 @@ int help(struct cmd_context *cmd __attribute((unused)), int argc, char **argv)
 	return 0;
 }
 
+static int _override_settings(struct cmd_context *cmd)
+{
+	if (!(cmd->cft_override = create_config_tree_from_string(cmd, arg_str_value(cmd, config_ARG, "")))) {
+		log_error("Failed to set overridden configuration entries.");
+		return EINVALID_CMD_LINE;
+	}
+
+	return 0;
+}
+
 static void _apply_settings(struct cmd_context *cmd)
 {
 	init_debug(cmd->current_settings.debug);
 	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
 	init_test(cmd->current_settings.test);
 	init_full_scan_done(0);
+	init_mirror_in_sync(0);
 
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 	init_cmd_name(cmd->default_settings.cmd_name);
@@ -783,7 +792,7 @@ static void _apply_settings(struct cmd_context *cmd)
 
 static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 {
-	int i;
+	int i, space;
 
 	/*
 	 * Build up the complete command line, used as a
@@ -793,7 +802,15 @@ static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 		goto bad;
 
 	for (i = 0; i < argc; i++) {
+		space = strchr(argv[i], ' ') ? 1 : 0;
+
+		if (space && !dm_pool_grow_object(cmd->mem, "'", 1))
+			goto bad;
+
 		if (!dm_pool_grow_object(cmd->mem, argv[i], strlen(argv[i])))
+			goto bad;
+
+		if (space && !dm_pool_grow_object(cmd->mem, "'", 1))
 			goto bad;
 
 		if (i < (argc - 1))
@@ -835,7 +852,11 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	set_cmd_name(cmd->command->name);
 
-	if (!cmd->config_valid || config_files_changed(cmd)) {
+	if (arg_count(cmd, config_ARG))
+		if ((ret = _override_settings(cmd)))
+			goto_out;
+
+	if (arg_count(cmd, config_ARG) || !cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
 			log_error("Updated config file invalid. Aborting.");
@@ -844,7 +865,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if ((ret = _get_settings(cmd)))
-		goto out;
+		goto_out;
 	_apply_settings(cmd);
 
 	log_debug("Processing: %s", cmd->cmd_line);
@@ -854,15 +875,15 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 #endif
 
 	if ((ret = _process_common_commands(cmd)))
-		goto out;
+		goto_out;
 
 	if (arg_count(cmd, nolocking_ARG))
 		locking_type = 0;
 	else
-		locking_type = find_config_int(cmd->cft->root,
+		locking_type = find_config_tree_int(cmd,
 					       "global/locking_type", 1);
 
-	if (!init_locking(locking_type, cmd->cft)) {
+	if (!init_locking(locking_type, cmd)) {
 		log_error("Locking type %d initialisation failed.",
 			  locking_type);
 		ret = ECMD_FAILED;
@@ -879,6 +900,15 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 		lvmcache_destroy();
 	}
 
+	if (cmd->cft_override) {
+		destroy_config_tree(cmd->cft_override);
+		cmd->cft_override = NULL;
+		/* Move this? */
+		if (!refresh_toolcontext(cmd))
+			stack;
+	}
+ 
+	/* FIXME Move this? */
 	cmd->current_settings = cmd->default_settings;
 	_apply_settings(cmd);
 
@@ -889,6 +919,8 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	if (ret == EINVALID_CMD_LINE && !_interactive)
 		_usage(cmd->command->name);
+
+	log_debug("Completed: %s", cmd->cmd_line);
 
 	return ret;
 }
@@ -1163,7 +1195,7 @@ static void _read_history(struct cmd_context *cmd)
 	if (read_history(hist_file))
 		log_very_verbose("Couldn't read history from %s.", hist_file);
 
-	stifle_history(find_config_int(cmd->cft->root, "shell/history_size",
+	stifle_history(find_config_tree_int(cmd, "shell/history_size",
 				       DEFAULT_MAX_HISTORY));
 
 }
@@ -1335,7 +1367,7 @@ static int _lvm1_fallback(struct cmd_context *cmd)
 	char vsn[80];
 	int dm_present;
 
-	if (!find_config_int(cmd->cft->root, "global/fallback_to_lvm1",
+	if (!find_config_tree_int(cmd, "global/fallback_to_lvm1",
 			     DEFAULT_FALLBACK_TO_LVM1) ||
 	    strncmp(cmd->kernel_vsn, "2.4.", 4))
 		return 0;

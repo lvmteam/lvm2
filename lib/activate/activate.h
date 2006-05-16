@@ -40,6 +40,7 @@ int target_present(const char *target_name, int use_modprobe);
 int target_version(const char *target_name, uint32_t *maj,
                    uint32_t *min, uint32_t *patchlevel);
 
+void activation_release(void);
 void activation_exit(void);
 
 int lv_suspend(struct cmd_context *cmd, const char *lvid_s);

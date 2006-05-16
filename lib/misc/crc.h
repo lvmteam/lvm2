@@ -18,6 +18,6 @@
 
 #define INITIAL_CRC 0xf597a6cf
 
-uint32_t calc_crc(uint32_t initial, void *buf, uint32_t size);
+uint32_t calc_crc(uint32_t initial, const void *buf, uint32_t size);
 
 #endif

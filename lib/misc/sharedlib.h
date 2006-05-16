@@ -19,9 +19,9 @@
 #include "config.h"
 #include <dlfcn.h>
 
-void get_shared_library_path(struct config_tree *cft, const char *libname,
+void get_shared_library_path(struct cmd_context *cmd, const char *libname,
 			     char *path, size_t path_len);
-void *load_shared_library(struct config_tree *cf, const char *libname,
+void *load_shared_library(struct cmd_context *cmd, const char *libname,
 			  const char *what, int silent);
 
 #endif

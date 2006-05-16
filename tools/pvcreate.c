@@ -185,13 +185,13 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG, UINT64_C(0))
 	    * 2;
 	if (!pvmetadatasize)
-		pvmetadatasize = find_config_int(cmd->cft->root,
+		pvmetadatasize = find_config_tree_int(cmd,
 						 "metadata/pvmetadatasize",
 						 DEFAULT_PVMETADATASIZE);
 
 	pvmetadatacopies = arg_int_value(cmd, metadatacopies_ARG, -1);
 	if (pvmetadatacopies < 0)
-		pvmetadatacopies = find_config_int(cmd->cft->root,
+		pvmetadatacopies = find_config_tree_int(cmd,
 						   "metadata/pvmetadatacopies",
 						   DEFAULT_PVMETADATACOPIES);
 

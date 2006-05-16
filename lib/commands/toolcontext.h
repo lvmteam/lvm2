@@ -71,6 +71,7 @@ struct cmd_context {
 	struct list config_files;
 	int config_valid;
 	struct config_tree *cft;
+	struct config_tree *cft_override;
 	struct config_info default_settings;
 	struct config_info current_settings;
 

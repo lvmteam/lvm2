@@ -401,7 +401,7 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	dm->mem = mem;
 
 	if (!stripe_filler) {
-		stripe_filler = find_config_str(cmd->cft->root,
+		stripe_filler = find_config_tree_str(cmd,
 						"activation/missing_stripe_filler",
 						DEFAULT_STRIPE_FILLER);
 	}
@@ -424,6 +424,11 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 void dev_manager_destroy(struct dev_manager *dm)
 {
 	dm_pool_destroy(dm->mem);
+}
+
+void dev_manager_release(void)
+{
+	dm_lib_release();
 }
 
 void dev_manager_exit(void)
@@ -758,7 +763,7 @@ static int _add_target_to_dtree(struct dev_manager *dm,
 		return 0;
 	}
 
-	return seg->segtype->ops->add_target_line(dm, dm->mem, dm->cmd->cft,
+	return seg->segtype->ops->add_target_line(dm, dm->mem, dm->cmd,
 						  &dm->target_state, seg,
 						  dnode,
 						  extent_size * seg->len,

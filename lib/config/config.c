@@ -41,10 +41,10 @@ enum {
 };
 
 struct parser {
-	char *fb, *fe;		/* file limits */
+	const char *fb, *fe;		/* file limits */
 
 	int t;			/* token limits and type */
-	char *tb, *te;
+	const char *tb, *te;
 
 	int fd;			/* descriptor for file being parsed */
 	int line;		/* line number we are on */
@@ -77,7 +77,7 @@ static const int sep = '/';
 
 #define match(t) do {\
    if (!_match_aux(p, (t))) {\
-	log_error("Parse error at line %d: unexpected token", p->line); \
+	log_error("Parse error at byte %d (line %d): unexpected token", p->tb - p->fb + 1, p->line); \
       return 0;\
    } \
 } while(0);
@@ -101,12 +101,12 @@ struct config_tree *create_config_tree(const char *filename)
 	struct dm_pool *mem = dm_pool_create("config", 10 * 1024);
 
 	if (!mem) {
-		stack;
+		log_error("Failed to allocate config pool.");
 		return 0;
 	}
 
 	if (!(c = dm_pool_zalloc(mem, sizeof(*c)))) {
-		stack;
+		log_error("Failed to allocate config tree.");
 		dm_pool_destroy(mem);
 		return 0;
 	}
@@ -125,6 +125,46 @@ void destroy_config_tree(struct config_tree *cft)
 	dm_pool_destroy(((struct cs *) cft)->mem);
 }
 
+static int _parse_config_file(struct parser *p, struct config_tree *cft)
+{
+	p->tb = p->te = p->fb;
+	p->line = 1;
+	_get_token(p, TOK_SECTION_E);
+	if (!(cft->root = _file(p)))
+		return_0;
+
+	return 1;
+}
+
+struct config_tree *create_config_tree_from_string(struct cmd_context *cmd,
+						   const char *config_settings)
+{
+	struct cs *c;
+	struct config_tree *cft;
+	struct parser *p;
+
+	if (!(cft = create_config_tree(NULL)))
+		return_NULL;
+
+	c = (struct cs *) cft;
+	if (!(p = dm_pool_alloc(c->mem, sizeof(*p)))) {
+		log_error("Failed to allocate config tree parser.");
+		destroy_config_tree(cft);
+		return NULL;
+	}
+
+	p->mem = c->mem;
+	p->fb = config_settings;
+	p->fe = config_settings + strlen(config_settings);
+
+	if (!_parse_config_file(p, cft)) {
+		destroy_config_tree(cft);
+		return_NULL;
+	}
+
+	return cft;
+}
+
 int read_config_fd(struct config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
 		   checksum_fn_t checksum_fn, uint32_t checksum)
@@ -134,6 +174,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 	int r = 0;
 	int use_mmap = 1;
 	off_t mmap_offset = 0;
+	char *buf;
 
 	if (!(p = dm_pool_alloc(c->mem, sizeof(*p)))) {
 		stack;
@@ -156,22 +197,23 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 		}
 		p->fb = p->fb + mmap_offset;
 	} else {
-		if (!(p->fb = dm_malloc(size + size2))) {
+		if (!(buf = dm_malloc(size + size2))) {
 			stack;
 			return 0;
 		}
-		if (!dev_read(dev, (uint64_t) offset, size, p->fb)) {
+		if (!dev_read(dev, (uint64_t) offset, size, buf)) {
 			log_error("Read from %s failed", dev_name(dev));
 			goto out;
 		}
 		if (size2) {
 			if (!dev_read(dev, (uint64_t) offset2, size2,
-				      p->fb + size)) {
+				      buf + size)) {
 				log_error("Circular read from %s failed",
 					  dev_name(dev));
 				goto out;
 			}
 		}
+		p->fb = buf;
 	}
 
 	if (checksum_fn && checksum !=
@@ -183,11 +225,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 
 	p->fe = p->fb + size + size2;
 
-	/* parse */
-	p->tb = p->te = p->fb;
-	p->line = 1;
-	_get_token(p, TOK_SECTION_E);
-	if (!(cft->root = _file(p))) {
+	if (!_parse_config_file(p, cft)) {
 		stack;
 		goto out;
 	}
@@ -196,7 +234,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 
       out:
 	if (!use_mmap)
-		dm_free(p->fb);
+		dm_free(buf);
 	else {
 		/* unmap the file */
 		if (munmap((char *) (p->fb - mmap_offset), size + mmap_offset)) {
@@ -529,7 +567,7 @@ static struct config_value *_type(struct parser *p)
 		break;
 
 	default:
-		log_error("Parse error at line %d: expected a value", p->line);
+		log_error("Parse error at byte %d (line %d): expected a value", p->tb - p->fb + 1, p->line);
 		return 0;
 	}
 	return v;
@@ -721,8 +759,8 @@ static char *_dup_tok(struct parser *p)
 /*
  * utility functions
  */
-struct config_node *find_config_node(const struct config_node *cn,
-				     const char *path)
+static struct config_node *_find_config_node(const struct config_node *cn,
+					     const char *path)
 {
 	const char *e;
 
@@ -753,10 +791,32 @@ struct config_node *find_config_node(const struct config_node *cn,
 	return (struct config_node *) cn;
 }
 
-const char *find_config_str(const struct config_node *cn,
-			    const char *path, const char *fail)
+static struct config_node *_find_first_config_node(const struct config_node *cn1,
+						   const struct config_node *cn2,
+						   const char *path)
 {
-	const struct config_node *n = find_config_node(cn, path);
+	struct config_node *cn;
+
+	if (cn1 && (cn = _find_config_node(cn1, path)))
+		return cn;
+
+	if (cn2 && (cn = _find_config_node(cn2, path)))
+		return cn;
+
+	return NULL;
+}
+
+struct config_node *find_config_node(const struct config_node *cn,
+				     const char *path)
+{
+	return _find_config_node(cn, path);
+}
+
+static const char *_find_config_str(const struct config_node *cn1,
+				    const struct config_node *cn2,
+				    const char *path, const char *fail)
+{
+	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
 
 	/* Empty strings are ignored */
 	if ((n && n->v->type == CFG_STRING) && (*n->v->v.str)) {
@@ -770,9 +830,17 @@ const char *find_config_str(const struct config_node *cn,
 	return fail;
 }
 
-int find_config_int(const struct config_node *cn, const char *path, int fail)
+const char *find_config_str(const struct config_node *cn,
+			    const char *path, const char *fail)
 {
-	const struct config_node *n = find_config_node(cn, path);
+	return _find_config_str(cn, NULL, path, fail);
+}
+
+static int _find_config_int(const struct config_node *cn1,
+			    const struct config_node *cn2,
+			    const char *path, int fail)
+{
+	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
 
 	if (n && n->v->type == CFG_INT) {
 		log_very_verbose("Setting %s to %d", path, n->v->v.i);
@@ -784,10 +852,16 @@ int find_config_int(const struct config_node *cn, const char *path, int fail)
 	return fail;
 }
 
-float find_config_float(const struct config_node *cn, const char *path,
-			float fail)
+int find_config_int(const struct config_node *cn, const char *path, int fail)
 {
-	const struct config_node *n = find_config_node(cn, path);
+	return _find_config_int(cn, NULL, path, fail);
+}
+
+static float _find_config_float(const struct config_node *cn1,
+				const struct config_node *cn2,
+				const char *path, float fail)
+{
+	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
 
 	if (n && n->v->type == CFG_FLOAT) {
 		log_very_verbose("Setting %s to %f", path, n->v->v.r);
@@ -799,6 +873,36 @@ float find_config_float(const struct config_node *cn, const char *path,
 
 	return fail;
 
+}
+
+float find_config_float(const struct config_node *cn, const char *path,
+			float fail)
+{
+	return _find_config_float(cn, NULL, path, fail);
+}
+
+struct config_node *find_config_tree_node(struct cmd_context *cmd,
+                                          const char *path)
+{
+	return _find_first_config_node(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path);
+}
+
+const char *find_config_tree_str(struct cmd_context *cmd,
+                                 const char *path, const char *fail)
+{
+	return _find_config_str(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path, fail);
+}
+
+int find_config_tree_int(struct cmd_context *cmd, const char *path,
+                         int fail)
+{
+	return _find_config_int(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path, fail);
+}
+
+float find_config_tree_float(struct cmd_context *cmd, const char *path,
+                             float fail)
+{
+	return _find_config_float(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path, fail);
 }
 
 static int _str_in_array(const char *str, const char *values[])
@@ -827,9 +931,11 @@ static int _str_to_bool(const char *str, int fail)
 	return fail;
 }
 
-int find_config_bool(const struct config_node *cn, const char *path, int fail)
+static int _find_config_bool(const struct config_node *cn1,
+			     const struct config_node *cn2,
+			     const char *path, int fail)
 {
-	const struct config_node *n = find_config_node(cn, path);
+	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
 	struct config_value *v;
 
 	if (!n)
@@ -846,6 +952,16 @@ int find_config_bool(const struct config_node *cn, const char *path, int fail)
 	}
 
 	return fail;
+}
+
+int find_config_bool(const struct config_node *cn, const char *path, int fail)
+{
+	return _find_config_bool(cn, NULL, path, fail);
+}
+
+int find_config_tree_bool(struct cmd_context *cmd, const char *path, int fail)
+{
+	return _find_config_bool(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path, fail);
 }
 
 int get_config_uint32(const struct config_node *cn, const char *path,

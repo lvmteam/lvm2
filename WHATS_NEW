@@ -1,5 +1,12 @@
-Version 2.02.07 - 
-===============================
+Version 2.02.07 -
+=================================
+  Fix lvcreate corelog validation.
+  Add --config for overriding most config file settings from cmdline.
+  Quote arguments when printing command line.
+  Remove linefeed from 'initialising logging' message.
+  Add 'Completed' debug message.
+  Don't attempt library exit after reloading config files.
+  Always compile with libdevmapper, even if device-mapper is disabled.
 
 Version 2.02.06 - 12th May 2006
 ===============================
