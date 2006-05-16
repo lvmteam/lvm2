@@ -134,73 +134,73 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	int aligned, buffered, headings;
 
-	aligned = find_config_int(cmd->cft->root, "report/aligned",
+	aligned = find_config_tree_int(cmd, "report/aligned",
 				  DEFAULT_REP_ALIGNED);
-	buffered = find_config_int(cmd->cft->root, "report/buffered",
+	buffered = find_config_tree_int(cmd, "report/buffered",
 				   DEFAULT_REP_BUFFERED);
-	headings = find_config_int(cmd->cft->root, "report/headings",
+	headings = find_config_tree_int(cmd, "report/headings",
 				   DEFAULT_REP_HEADINGS);
-	separator = find_config_str(cmd->cft->root, "report/separator",
+	separator = find_config_tree_str(cmd, "report/separator",
 				    DEFAULT_REP_SEPARATOR);
 
 	switch (report_type) {
 	case LVS:
-		keys = find_config_str(cmd->cft->root, "report/lvs_sort",
+		keys = find_config_tree_str(cmd, "report/lvs_sort",
 				       DEFAULT_LVS_SORT);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/lvs_cols",
 						  DEFAULT_LVS_COLS);
 		else
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/lvs_cols_verbose",
 						  DEFAULT_LVS_COLS_VERB);
 		break;
 	case VGS:
-		keys = find_config_str(cmd->cft->root, "report/vgs_sort",
+		keys = find_config_tree_str(cmd, "report/vgs_sort",
 				       DEFAULT_VGS_SORT);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/vgs_cols",
 						  DEFAULT_VGS_COLS);
 		else
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/vgs_cols_verbose",
 						  DEFAULT_VGS_COLS_VERB);
 		break;
 	case PVS:
-		keys = find_config_str(cmd->cft->root, "report/pvs_sort",
+		keys = find_config_tree_str(cmd, "report/pvs_sort",
 				       DEFAULT_PVS_SORT);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/pvs_cols",
 						  DEFAULT_PVS_COLS);
 		else
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/pvs_cols_verbose",
 						  DEFAULT_PVS_COLS_VERB);
 		break;
 	case SEGS:
-		keys = find_config_str(cmd->cft->root, "report/segs_sort",
+		keys = find_config_tree_str(cmd, "report/segs_sort",
 				       DEFAULT_SEGS_SORT);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/segs_cols",
 						  DEFAULT_SEGS_COLS);
 		else
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/segs_cols_verbose",
 						  DEFAULT_SEGS_COLS_VERB);
 		break;
 	case PVSEGS:
-		keys = find_config_str(cmd->cft->root, "report/pvsegs_sort",
+		keys = find_config_tree_str(cmd, "report/pvsegs_sort",
 				       DEFAULT_PVSEGS_SORT);
 		if (!arg_count(cmd, verbose_ARG))
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/pvsegs_cols",
 						  DEFAULT_PVSEGS_COLS);
 		else
-			options = find_config_str(cmd->cft->root,
+			options = find_config_tree_str(cmd,
 						  "report/pvsegs_cols_verbose",
 						  DEFAULT_PVSEGS_COLS_VERB);
 		break;

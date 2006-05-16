@@ -271,7 +271,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	return 1;
 }
 
-int init_file_locking(struct locking_type *locking, struct config_tree *cft)
+int init_file_locking(struct locking_type *locking, struct cmd_context *cmd)
 {
 	locking->lock_resource = _file_lock_resource;
 	locking->reset_locking = _reset_file_locking;
@@ -279,8 +279,8 @@ int init_file_locking(struct locking_type *locking, struct config_tree *cft)
 	locking->flags = 0;
 
 	/* Get lockfile directory from config file */
-	strncpy(_lock_dir, find_config_str(cft->root, "global/locking_dir",
-					   DEFAULT_LOCK_DIR),
+	strncpy(_lock_dir, find_config_tree_str(cmd, "global/locking_dir",
+						DEFAULT_LOCK_DIR),
 		sizeof(_lock_dir));
 
 	if (!create_dir(_lock_dir))

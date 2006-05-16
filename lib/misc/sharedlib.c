@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 
-void get_shared_library_path(struct config_tree *cft, const char *libname,
+void get_shared_library_path(struct cmd_context *cmd, const char *libname,
 			     char *path, size_t path_len)
 {
 	struct stat info;
@@ -31,19 +31,19 @@ void get_shared_library_path(struct config_tree *cft, const char *libname,
 	/* If libname doesn't begin with '/' then use lib_dir/libname,
 	 * if present */
 	if (libname[0] == '/' ||
-	    !(lib_dir = find_config_str(cft->root, "global/library_dir", 0)) ||
+	    !(lib_dir = find_config_tree_str(cmd, "global/library_dir", 0)) ||
 	    (lvm_snprintf(path, path_len, "%s/%s", lib_dir,
 			  libname) == -1) || stat(path, &info) == -1)
 		strncpy(path, libname, path_len);
 }
 
-void *load_shared_library(struct config_tree *cft, const char *libname,
+void *load_shared_library(struct cmd_context *cmd, const char *libname,
 			  const char *desc, int silent)
 {
 	char path[PATH_MAX];
 	void *library;
 
-	get_shared_library_path(cft, libname, path, sizeof(path));
+	get_shared_library_path(cmd, libname, path, sizeof(path));
 
 	log_very_verbose("Opening shared %s library %s", desc, path);
 

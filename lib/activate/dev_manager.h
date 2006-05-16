@@ -29,6 +29,7 @@ struct device;
 struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 				       const char *vg_name);
 void dev_manager_destroy(struct dev_manager *dm);
+void dev_manager_release(void);
 void dev_manager_exit(void);
 
 /*

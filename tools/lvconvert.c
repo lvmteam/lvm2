@@ -177,7 +177,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			lp->region_size = 2 * arg_uint_value(cmd,
 							     regionsize_ARG, 0);
 		} else {
-			region_size = 2 * find_config_int(cmd->cft->root,
+			region_size = 2 * find_config_tree_int(cmd,
 						"activation/mirror_region_size",
 						DEFAULT_MIRROR_REGION_SIZE);
 			if (region_size < 0) {

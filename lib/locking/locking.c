@@ -122,26 +122,26 @@ static void _update_vg_lock_count(int flags)
 /*
  * Select a locking type
  */
-int init_locking(int type, struct config_tree *cft)
+int init_locking(int type, struct cmd_context *cmd)
 {
 	init_lockingfailed(0);
 
 	switch (type) {
 	case 0:
-		init_no_locking(&_locking, cft);
+		init_no_locking(&_locking, cmd);
 		log_print("WARNING: Locking disabled. Be careful! "
 			  "This could corrupt your metadata.");
 		return 1;
 
 	case 1:
-		if (!init_file_locking(&_locking, cft))
+		if (!init_file_locking(&_locking, cmd))
 			break;
 		log_very_verbose("File-based locking enabled.");
 		return 1;
 
 #ifdef HAVE_LIBDL
 	case 2:
-		if (!init_external_locking(&_locking, cft))
+		if (!init_external_locking(&_locking, cmd))
 			break;
 		log_very_verbose("External locking enabled.");
 		return 1;
@@ -149,7 +149,7 @@ int init_locking(int type, struct config_tree *cft)
 
 #ifdef CLUSTER_LOCKING_INTERNAL
 	case 3:
-		if (!init_cluster_locking(&_locking, cft))
+		if (!init_cluster_locking(&_locking, cmd))
 			break;
 		log_very_verbose("Cluster locking enabled.");
 		return 1;
@@ -166,7 +166,7 @@ int init_locking(int type, struct config_tree *cft)
 	/* FIXME Ensure only read ops are permitted */
 	log_verbose("Locking disabled - only read operations permitted.");
 
-	init_no_locking(&_locking, cft);
+	init_no_locking(&_locking, cmd);
 	init_lockingfailed(1);
 
 	return 1;

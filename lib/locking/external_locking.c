@@ -17,6 +17,7 @@
 #include "locking_types.h"
 #include "defaults.h"
 #include "sharedlib.h"
+#include "toolcontext.h"
 
 static void *_locking_lib = NULL;
 static void (*_reset_fn) (void) = NULL;
@@ -55,7 +56,7 @@ static void _reset_external_locking(void)
 		_reset_fn();
 }
 
-int init_external_locking(struct locking_type *locking, struct config_tree *cft)
+int init_external_locking(struct locking_type *locking, struct cmd_context *cmd)
 {
 	const char *libname;
 
@@ -69,10 +70,10 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 	locking->reset_locking = _reset_external_locking;
 	locking->flags = 0;
 
-	libname = find_config_str(cft->root, "global/locking_library",
-				  DEFAULT_LOCKING_LIB);
+	libname = find_config_tree_str(cmd, "global/locking_library",
+				       DEFAULT_LOCKING_LIB);
 
-	if (!(_locking_lib = load_shared_library(cft, libname, "locking", 1))) {
+	if (!(_locking_lib = load_shared_library(cmd, libname, "locking", 1))) {
 		stack;
 		return 0;
 	}
@@ -90,5 +91,5 @@ int init_external_locking(struct locking_type *locking, struct config_tree *cft)
 	}
 
 	log_verbose("Loaded external locking library %s", libname);
-	return _init_fn(2, cft, &locking->flags);
+	return _init_fn(2, cmd->cft, &locking->flags);
 }

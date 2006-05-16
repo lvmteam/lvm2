@@ -213,7 +213,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 	}
 
 	if (lp->stripes > 1 && !lp->stripe_size) {
-		lp->stripe_size = find_config_int(cmd->cft->root,
+		lp->stripe_size = find_config_tree_int(cmd,
 						  "metadata/stripesize",
 						  DEFAULT_STRIPESIZE) * 2;
 		log_print("Using default stripesize %s",
@@ -264,7 +264,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 		}
 		lp->region_size = 2 * arg_uint_value(cmd, regionsize_ARG, 0);
 	} else {
-		region_size = 2 * find_config_int(cmd->cft->root,
+		region_size = 2 * find_config_tree_int(cmd,
 					"activation/mirror_region_size",
 					DEFAULT_MIRROR_REGION_SIZE);
 		if (region_size < 0) {
@@ -668,7 +668,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			status |= MIRROR_NOTSYNCED;
 		}
 
-		if (!(log_lv = create_mirror_log(cmd, vg, ah, lp->alloc,
+		if (!lp->corelog &&
+		    !(log_lv = create_mirror_log(cmd, vg, ah, lp->alloc,
 						 lv_name, lp->nosync))) {
 			log_error("Failed to create mirror log.");
 			return 0;

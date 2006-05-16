@@ -71,14 +71,14 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 						  UINT64_C(0)) * 2;
 		if (!pvmetadatasize)
 			pvmetadatasize =
-			    find_config_int(cmd->cft->root,
+			    find_config_tree_int(cmd,
 					    "metadata/pvmetadatasize",
 					    DEFAULT_PVMETADATASIZE);
 
 		pvmetadatacopies = arg_int_value(cmd, metadatacopies_ARG, -1);
 		if (pvmetadatacopies < 0)
 			pvmetadatacopies =
-			    find_config_int(cmd->cft->root,
+			    find_config_tree_int(cmd,
 					    "metadata/pvmetadatacopies",
 					     DEFAULT_PVMETADATACOPIES);
 	}

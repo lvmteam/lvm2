@@ -153,7 +153,7 @@ static int _striped_merge_segments(struct lv_segment *seg1, struct lv_segment *s
 #ifdef DEVMAPPER_SUPPORT
 static int _striped_add_target_line(struct dev_manager *dm,
 				struct dm_pool *mem __attribute((unused)),
-                                struct config_tree *cft __attribute((unused)),
+                                struct cmd_context *cmd __attribute((unused)),
 				void **target_state __attribute((unused)),
                                 struct lv_segment *seg,
                                 struct dm_tree_node *node, uint64_t len,

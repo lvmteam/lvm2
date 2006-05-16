@@ -59,9 +59,7 @@ ifeq ("@DMEVENTD@", "yes")
 	LVMLIBS += -ldevmapper-event
 endif
  
-ifeq ("@DEVMAPPER@", "yes")
-	LVMLIBS += -ldevmapper
-endif
+LVMLIBS += -ldevmapper
 
 DEFS += -D_REENTRANT
 CFLAGS += -fno-strict-aliasing

@@ -301,7 +301,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 				lp->stripe_size = seg_stripesize;
 			} else {
 				lp->stripe_size =
-					find_config_int(cmd->cft->root,
+					find_config_tree_int(cmd,
 							"metadata/stripesize",
 							DEFAULT_STRIPESIZE) * 2;
 				log_print("Using default stripesize %s",

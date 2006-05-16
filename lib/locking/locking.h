@@ -19,7 +19,7 @@
 #include "uuid.h"
 #include "config.h"
 
-int init_locking(int type, struct config_tree *cf);
+int init_locking(int type, struct cmd_context *cmd);
 void fin_locking(void);
 void reset_locking(void);
 int vg_write_lock_held(void);

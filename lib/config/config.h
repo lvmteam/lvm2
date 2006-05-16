@@ -54,9 +54,11 @@ struct config_tree_list {
 };
 
 struct config_tree *create_config_tree(const char *filename);
+struct config_tree *create_config_tree_from_string(struct cmd_context *cmd,
+						   const char *config_settings);
 void destroy_config_tree(struct config_tree *cft);
 
-typedef uint32_t (*checksum_fn_t) (uint32_t initial, void *buf, uint32_t size);
+typedef uint32_t (*checksum_fn_t) (uint32_t initial, const void *buf, uint32_t size);
 
 int read_config_fd(struct config_tree *cft, struct device *dev,
 		   off_t offset, size_t size, off_t offset2, size_t size2,
@@ -71,20 +73,30 @@ int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
 
 struct config_node *find_config_node(const struct config_node *cn,
 				     const char *path);
-
 const char *find_config_str(const struct config_node *cn, const char *path,
 			    const char *fail);
-
 int find_config_int(const struct config_node *cn, const char *path, int fail);
-
 float find_config_float(const struct config_node *cn, const char *path,
 			float fail);
+
+/*
+ * These versions check an override tree, if present, first.
+ */
+struct config_node *find_config_tree_node(struct cmd_context *cmd,
+					  const char *path);
+const char *find_config_tree_str(struct cmd_context *cmd,
+				 const char *path, const char *fail);
+int find_config_tree_int(struct cmd_context *cmd, const char *path,
+			 int fail);
+float find_config_tree_float(struct cmd_context *cmd, const char *path,
+			     float fail);
 
 /*
  * Understands (0, ~0), (y, n), (yes, no), (on,
  * off), (true, false).
  */
 int find_config_bool(const struct config_node *cn, const char *path, int fail);
+int find_config_tree_bool(struct cmd_context *cmd, const char *path, int fail);
 
 int get_config_uint32(const struct config_node *cn, const char *path,
 		      uint32_t *result);

@@ -538,9 +538,7 @@ if test x$INTL = xyes; then
 	AC_CHECK_HEADERS(libintl.h,,AC_MSG_ERROR(bailing out))
 fi
 
-if test x$DEVMAPPER = xyes; then
-	AC_CHECK_HEADERS(libdevmapper.h,,AC_MSG_ERROR(bailing out))
-fi
+AC_CHECK_HEADERS(libdevmapper.h,,AC_MSG_ERROR(bailing out))
 
 if test x$HAVE_SELINUX = xyes; then
 	AC_CHECK_HEADERS(selinux/selinux.h,,AC_MSG_ERROR(bailing out))
