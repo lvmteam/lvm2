@@ -89,7 +89,7 @@ static int _snap_text_export(const struct lv_segment *seg, struct formatter *f)
 #ifdef DEVMAPPER_SUPPORT
 static int _snap_target_percent(void **target_state __attribute((unused)),
 			   struct dm_pool *mem __attribute((unused)),
-			   struct config_tree *cft __attribute((unused)),
+			   struct cmd_context *cmd __attribute((unused)),
 			   struct lv_segment *seg __attribute((unused)),
 			   char *params, uint64_t *total_numerator,
 			   uint64_t *total_denominator, float *percent)
