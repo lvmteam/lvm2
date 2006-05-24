@@ -1,5 +1,6 @@
 Version 2.02.07 -
 =================================
+  Prevent snapshots of mirrors.
   Add DISTCLEAN_TARGETS to make template for configure.h.
   More fixes to error paths.
   Fix lvcreate corelog validation.
