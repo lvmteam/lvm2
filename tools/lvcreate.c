@@ -595,6 +595,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 				  "supported yet");
 			return 0;
 		}
+		if (org->status & MIRROR_IMAGE ||
+		    org->status & MIRROR_LOG ||
+		    org->status & MIRRORED) {
+			log_error("Snapshots and mirrors may not yet be mixed.");
+			return 0;
+		}
+ 
 		/* Must zero cow */
 		status |= LVM_WRITE;
 	}
