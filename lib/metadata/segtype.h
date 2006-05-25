@@ -78,12 +78,8 @@ struct segtype_handler {
 			       uint64_t *total_denominator, float *percent);
 	int (*target_present) (void);
 	void (*destroy) (const struct segment_type * segtype);
-	int (*target_register_events) (struct dm_pool *mem,
-				       struct lv_segment *seg,
-				       struct cmd_context *cmd, int events);
-	int (*target_unregister_events) (struct dm_pool *mem,
-					 struct lv_segment *seg,
-					 struct cmd_context *cmd, int events);
+	int (*target_register_events) (struct lv_segment *seg, int events);
+	int (*target_unregister_events) (struct lv_segment *seg, int events);
 };
 
 struct segment_type *get_segtype_from_string(struct cmd_context *cmd,

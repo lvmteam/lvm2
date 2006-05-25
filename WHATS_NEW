@@ -1,5 +1,6 @@
 Version 2.02.07 -
 =================================
+  Fix target_register_events args.
   Prevent snapshots of mirrors.
   Add DISTCLEAN_TARGETS to make template for configure.h.
   More fixes to error paths.
