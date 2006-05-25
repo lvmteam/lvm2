@@ -598,8 +598,7 @@ int register_dev_for_events(struct cmd_context *cmd,
 	int r = 0;
 	struct list *tmp;
 	struct lv_segment *seg;
-	int (*reg) (struct dm_pool *mem, struct lv_segment *,
-		    struct config_tree *cft, int events);
+	int (*reg) (struct lv_segment *, int events);
 
 	if (do_reg && !dmeventd_register_mode())
 		return 1;
@@ -619,7 +618,7 @@ int register_dev_for_events(struct cmd_context *cmd,
 			continue;
 
 		/* FIXME specify events */
-		if (!reg(cmd->mem, seg, cmd->cft, 0)) {
+		if (!reg(seg, 0)) {
 			stack;
 			return -1;
 		}

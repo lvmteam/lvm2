@@ -390,9 +390,7 @@ static int _setup_registration(struct dm_pool *mem, struct cmd_context *cmd,
 
 /* FIXME This gets run while suspended and performs banned operations. */
 /* FIXME Merge these two functions */
-static int _target_register_events(struct cmd_context *cmd,
-				   struct dm_pool *mem,
-				   struct lv_segment *seg,
+static int _target_register_events(struct lv_segment *seg,
 				   int events)
 {
 	char *dso, *name;
@@ -402,12 +400,12 @@ static int _target_register_events(struct cmd_context *cmd,
 	lv = seg->lv;
 	vg = lv->vg;
 
-	if (!_setup_registration(mem, cmd, &dso)) {
+	if (!_setup_registration(vg->cmd->mem, vg->cmd, &dso)) {
 		stack;
 		return 0;
 	}
 
-	if (!(name = build_dm_name(mem, vg->name, lv->name, NULL)))
+	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
 	/* FIXME Save a returned handle here so we can unregister it later */
@@ -419,9 +417,7 @@ static int _target_register_events(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _target_unregister_events(struct cmd_context *cmd,
-				     struct dm_pool *mem,
-				     struct lv_segment *seg,
+static int _target_unregister_events(struct lv_segment *seg,
 				     int events)
 {
 	char *dso;
@@ -433,10 +429,10 @@ static int _target_unregister_events(struct cmd_context *cmd,
 	vg = lv->vg;
 
 	/* FIXME Remove this and use handle to avoid config file race */
-	if (!_setup_registration(mem, cmd, &dso))
+	if (!_setup_registration(vg->cmd->mem, vg->cmd, &dso))
 		return_0;
 
-	if (!(name = build_dm_name(mem, vg->name, lv->name, NULL)))
+	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
 	/* FIXME Use handle returned by registration function instead of dso */
