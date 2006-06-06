@@ -1,6 +1,5 @@
 Version 2.02.07 -
 =================================
-  Append patches to commit emails.
   Fix target_register_events args.
   Prevent snapshots of mirrors.
   Add DISTCLEAN_TARGETS to make template for configure.h.
