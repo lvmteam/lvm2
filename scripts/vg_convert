@@ -16,4 +16,3 @@ CMDS=`./pvscan -u | sed -ne "s/.*PV \(.*\) with UUID \(.*\) VG $1 .*/.\/pvcreate
 sh -x -c "$CMDS" || exit 1
 
 ./vgcfgrestore --file lvmbackup -M lvm2 $1 || exit 1
-
