@@ -1,5 +1,6 @@
 Version 2.02.07 -
 =================================
+  Fix an extra dev_close in a label_read error path.
   Append patches to commit emails.
   Fix target_register_events args.
   Prevent snapshots of mirrors.

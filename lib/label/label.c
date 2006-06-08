@@ -271,7 +271,7 @@ int label_read(struct device *dev, struct label **result)
 			lvmcache_update_vgname_and_id(info, ORPHAN, ORPHAN,
 						      0, NULL);
 
-		goto out;
+		return r;
 	}
 
 	if (!(l = _find_labeller(dev, buf, &sector)))
