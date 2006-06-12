@@ -256,7 +256,7 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 		strcpy(rarray[i].node, inptr);
 		inptr += strlen(inptr) + 1;
 
-		rarray[i].status = *(int *) inptr;
+		memcpy(&rarray[i].status, inptr, sizeof(int));
 		inptr += sizeof(int);
 
 		rarray[i].response = dm_malloc(strlen(inptr) + 1);

@@ -13,6 +13,7 @@ Version 2.02.07 -
   Add 'Completed' debug message.
   Don't attempt library exit after reloading config files.
   Always compile with libdevmapper, even if device-mapper is disabled.
+  Fixed unaligned access when using clvm.
 
 Version 2.02.06 - 12th May 2006
 ===============================
