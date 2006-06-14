@@ -1,5 +1,6 @@
 Version 1.02.08 - 
 =============================
+  Don't suppress identical table reloads if permission changes.
   Fix corelog segment line.
   Suppress some compiler warnings.
 
