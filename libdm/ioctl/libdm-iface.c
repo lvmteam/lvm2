@@ -1461,7 +1461,6 @@ static int _reload_with_suppression_v4(struct dm_task *dmt)
 {
 	struct dm_task *task;
 	struct target *t1, *t2;
-	int matches = 1;
 	int r;
 
 	/* New task to get existing table information */
@@ -1491,6 +1490,9 @@ static int _reload_with_suppression_v4(struct dm_task *dmt)
 		return r;
 	}
 
+	if ((task->dmi.v4->flags & DM_READONLY_FLAG) ? 1 : 0 != dmt->read_only)
+		goto no_match;
+
 	t1 = dmt->head;
 	t2 = task->head;
 
@@ -1498,21 +1500,20 @@ static int _reload_with_suppression_v4(struct dm_task *dmt)
 		if ((t1->start != t2->start) ||
 		    (t1->length != t2->length) ||
 		    (strcmp(t1->type, t2->type)) ||
-		    (strcmp(t1->params, t2->params))) {
-			matches = 0;
-			break;
-		}
+		    (strcmp(t1->params, t2->params)))
+			goto no_match;
 		t1 = t1->next;
 		t2 = t2->next;
 	}
 	
-	if (matches && !t1 && !t2) {
+	if (!t1 && !t2) {
 		dmt->dmi.v4 = task->dmi.v4;
 		task->dmi.v4 = NULL;
 		dm_task_destroy(task);
 		return 1;
 	}
 
+no_match:
 	dm_task_destroy(task);
 
 	/* Now do the original reload */
