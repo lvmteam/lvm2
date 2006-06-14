@@ -413,7 +413,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	if (!(vg = vg_read(cmd, vg_name, vgid, &consistent))) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		unlock_vg(cmd, vg_name);
-		return ret_max;
+		return ECMD_FAILED;
 	}
 
 	if (!list_empty(tags)) {
