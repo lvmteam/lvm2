@@ -1,5 +1,7 @@
 Version 2.02.07 - 
 =================================
+  Fix PV tools to include orphaned PVs in default output again.
+  Fixed unaligned access when using clvm.
   Fix an extra dev_close in a label_read error path.
   Append patches to commit emails.
   Fix target_register_events args.
@@ -13,7 +15,6 @@ Version 2.02.07 -
   Add 'Completed' debug message.
   Don't attempt library exit after reloading config files.
   Always compile with libdevmapper, even if device-mapper is disabled.
-  Fixed unaligned access when using clvm.
 
 Version 2.02.06 - 12th May 2006
 ===============================
