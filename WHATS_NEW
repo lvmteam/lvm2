@@ -1,5 +1,6 @@
 Version 2.02.07 - 
 =================================
+  Fix return code if VG specified on command line is not found.
   Fix PV tools to include orphaned PVs in default output again.
   Fixed unaligned access when using clvm.
   Fix an extra dev_close in a label_read error path.
