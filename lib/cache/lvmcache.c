@@ -169,14 +169,18 @@ struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid)
 const char *vgname_from_vgid(struct dm_pool *mem, const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
+	const char *vgname = NULL;
 
-	if ((vginfo = vginfo_from_vgid(vgid))) {
-		if (mem)
-			return dm_pool_strdup(mem, vginfo->vgname);
-		return vginfo->vgname;
-	}
+	if (!*vgid)
+		vgname = ORPHAN;
 
-	return NULL;
+	if ((vginfo = vginfo_from_vgid(vgid)))
+		vgname = vginfo->vgname;
+
+	if (mem && vgname)
+		return dm_pool_strdup(mem, vgname);
+
+	return vgname;
 }
 
 struct lvmcache_info *info_from_pvid(const char *pvid)
