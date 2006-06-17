@@ -604,7 +604,7 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 
 static int _remove_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
 {
-	return _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0);
+	return _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0) | dm_mknodes(NULL);
 }
 
 static int _remove(int argc, char **argv, void *data __attribute((unused)))

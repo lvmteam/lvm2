@@ -1,5 +1,6 @@
 Version 1.02.08 - 
 =============================
+  dmsetup remove_all also performs mknodes.
   Don't suppress identical table reloads if permission changes.
   Fix corelog segment line.
   Suppress some compiler warnings.
