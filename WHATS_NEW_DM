@@ -1,5 +1,7 @@
 Version 1.02.08 - 
 =============================
+  Update dmsetup man page.
+  Add --force to dmsetup remove* to load error target.
   dmsetup remove_all also performs mknodes.
   Don't suppress identical table reloads if permission changes.
   Fix corelog segment line.
