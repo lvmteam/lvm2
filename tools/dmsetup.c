@@ -636,7 +636,7 @@ static int _wait(int argc, char **argv, void *data __attribute((unused)))
 		       (argc > 1) ? (uint32_t) atoi(argv[argc - 1]) : 0, 1);
 }
 
-static int _process_all(int argc, char **argv,
+static int _process_all(int argc, char **argv, int silent,
 			int (*fn) (int argc, char **argv, void *data))
 {
 	int r = 1;
@@ -659,7 +659,8 @@ static int _process_all(int argc, char **argv,
 	}
 
 	if (!names->dev) {
-		printf("No devices found\n");
+		if (!silent)
+			printf("No devices found\n");
 		goto out;
 	}
 
@@ -681,10 +682,13 @@ static uint64_t _get_device_size(const char *name)
 	struct dm_info info;
 	char *target_type, *params;
 	struct dm_task *dmt;
-	void *next;
+	void *next = NULL;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
 		return 0;
+
+	if (!_set_task_device(dmt, name, 0))
+		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
@@ -712,6 +716,7 @@ static int _error_device(int argc __attribute((unused)), char **argv __attribute
 	struct dm_task *dmt;
 	const char *name;
 	uint64_t size;
+	int r = 0;
 
 	if (data)
 		name = names->name;
@@ -723,30 +728,31 @@ static int _error_device(int argc __attribute((unused)), char **argv __attribute
         if (!(dmt = dm_task_create(DM_DEVICE_RELOAD)))
                 return 0;
 
+	if (!_set_task_device(dmt, name, 0))
+		goto err;
+
         if (!dm_task_add_target(dmt, 0, size, "error", ""))
-		goto err_task;
+		goto err;
 
         if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
-                goto err_task;
+                goto err;
 
         if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
-                goto err_task;
+                goto err;
 
         if (!dm_task_run(dmt))
-                goto err_task;
+                goto err;
 
-	if (!_simple(DM_DEVICE_RESUME, name, 0, 0))
-		goto err_clear;
+	if (!_simple(DM_DEVICE_RESUME, name, 0, 0)) {
+		_simple(DM_DEVICE_CLEAR, name, 0, 0);
+		goto err;
+	}
 
-	return 1;
+	r = 1;
 
-err_task:
+err:
 	dm_task_destroy(dmt);
-	return 0;
-
-err_clear:
-	_simple(DM_DEVICE_CLEAR, name, 0, 0);
-	return 0;
+	return r;
 }
 
 static int _remove(int argc, char **argv, void *data __attribute((unused)))
@@ -777,21 +783,21 @@ static int _remove_all(int argc __attribute((unused)), char **argv __attribute((
 		return r;
 
 	_num_devices = 0;
-	r |= _process_all(argc, argv, _count_devices);
+	r |= _process_all(argc, argv, 1, _count_devices);
 
 	/* No devices left? */
 	if (!_num_devices)
 		return r;
 
-	r |= _process_all(argc, argv, _error_device);
+	r |= _process_all(argc, argv, 1, _error_device);
 	r |= _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0) | dm_mknodes(NULL);
 
 	_num_devices = 0;
-	r |= _process_all(argc, argv, _count_devices);
+	r |= _process_all(argc, argv, 1, _count_devices);
 	if (!_num_devices)
 		return r;
 
-	fprintf(stderr, "Unable to remove %d devices.", _num_devices);
+	fprintf(stderr, "Unable to remove %d device(s).\n", _num_devices);
 
 	return r;
 }
@@ -887,7 +893,7 @@ static int _status(int argc, char **argv, void *data)
 		name = names->name;
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
-			return _process_all(argc, argv, _status);
+			return _process_all(argc, argv, 0, _status);
 		if (argc == 2)
 			name = argv[1];
 	}
@@ -1004,7 +1010,7 @@ static int _info(int argc, char **argv, void *data)
 		name = names->name;
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
-			return _process_all(argc, argv, _info);
+			return _process_all(argc, argv, 0, _info);
 		if (argc == 2)
 			name = argv[1];
 	}
@@ -1042,7 +1048,7 @@ static int _deps(int argc, char **argv, void *data)
 		name = names->name;
 	else {
 		if (argc == 1 && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
-			return _process_all(argc, argv, _deps);
+			return _process_all(argc, argv, 0, _deps);
 		if (argc == 2)
 			name = argv[1];
 	}
@@ -1426,7 +1432,7 @@ static int _tree(int argc, char **argv, void *data __attribute((unused)))
 	if (!(_dtree = dm_tree_create()))
 		return 0;
 
-	if (!_process_all(argc, argv, _add_dep))
+	if (!_process_all(argc, argv, 0, _add_dep))
 		return 0;
 
 	_tree_walk_children(dm_tree_find_node(_dtree, 0, 0), 0);
@@ -1447,7 +1453,7 @@ static int _ls(int argc, char **argv, void *data)
 	else if ((_switches[TREE_ARG]))
 		return _tree(argc, argv, data);
 	else
-		return _process_all(argc, argv, _display_name);
+		return _process_all(argc, argv, 0, _display_name);
 }
 
 /*
