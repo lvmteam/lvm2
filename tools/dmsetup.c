@@ -88,6 +88,7 @@ enum {
 	READ_ONLY = 0,
 	COLS_ARG,
 	EXEC_ARG,
+	FORCE_ARG,
 	GID_ARG,
 	MAJOR_ARG,
 	MINOR_ARG,
@@ -108,6 +109,7 @@ enum {
 
 static int _switches[NUM_SWITCHES];
 static int _values[NUM_SWITCHES];
+static int _num_devices;
 static char *_uuid;
 static char *_fields;
 static char *_target;
@@ -386,7 +388,7 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 
 	if (argc == 3)
 		file = argv[2];
- 
+
 	if (!(dmt = dm_task_create(DM_DEVICE_CREATE)))
 		return 0;
 
@@ -602,16 +604,6 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	return r;
 }
 
-static int _remove_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
-{
-	return _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0) | dm_mknodes(NULL);
-}
-
-static int _remove(int argc, char **argv, void *data __attribute((unused)))
-{
-	return _simple(DM_DEVICE_REMOVE, argc > 1 ? argv[1] : NULL, 0, 0);
-}
-
 static int _suspend(int argc, char **argv, void *data __attribute((unused)))
 {
 	return _simple(DM_DEVICE_SUSPEND, argc > 1 ? argv[1] : NULL, 0, 1);
@@ -680,6 +672,127 @@ static int _process_all(int argc, char **argv,
 
       out:
 	dm_task_destroy(dmt);
+	return r;
+}
+
+static uint64_t _get_device_size(const char *name)
+{
+	uint64_t start, length, size = UINT64_C(0);
+	struct dm_info info;
+	char *target_type, *params;
+	struct dm_task *dmt;
+	void *next;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
+		return 0;
+
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
+	if (!dm_task_run(dmt))
+		goto out;
+
+	if (!dm_task_get_info(dmt, &info) || !info.exists)
+		goto out;
+
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length,
+					  &target_type, &params);
+		size += length;
+	} while (next);
+
+      out:
+	dm_task_destroy(dmt);
+	return size;
+}
+
+static int _error_device(int argc __attribute((unused)), char **argv __attribute((unused)), void *data)
+{
+	struct dm_names *names = (struct dm_names *) data;
+	struct dm_task *dmt;
+	const char *name;
+	uint64_t size;
+
+	if (data)
+		name = names->name;
+	else
+		name = argv[1];
+
+	size = _get_device_size(name);
+
+        if (!(dmt = dm_task_create(DM_DEVICE_RELOAD)))
+                return 0;
+
+        if (!dm_task_add_target(dmt, 0, size, "error", ""))
+		goto err_task;
+
+        if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
+                goto err_task;
+
+        if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+                goto err_task;
+
+        if (!dm_task_run(dmt))
+                goto err_task;
+
+	if (!_simple(DM_DEVICE_RESUME, name, 0, 0))
+		goto err_clear;
+
+	return 1;
+
+err_task:
+	dm_task_destroy(dmt);
+	return 0;
+
+err_clear:
+	_simple(DM_DEVICE_CLEAR, name, 0, 0);
+	return 0;
+}
+
+static int _remove(int argc, char **argv, void *data __attribute((unused)))
+{
+	int r;
+
+	if (_switches[FORCE_ARG] && argc > 1)
+		r = _error_device(argc, argv, NULL);
+
+	return _simple(DM_DEVICE_REMOVE, argc > 1 ? argv[1] : NULL, 0, 0);
+}
+
+static int _count_devices(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
+{
+	_num_devices++;
+
+	return 1;
+}
+
+static int _remove_all(int argc __attribute((unused)), char **argv __attribute((unused)), void *data __attribute((unused)))
+{
+	int r;
+
+	/* Remove all closed devices */
+	r =  _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0) | dm_mknodes(NULL);
+
+	if (!_switches[FORCE_ARG])
+		return r;
+
+	_num_devices = 0;
+	r |= _process_all(argc, argv, _count_devices);
+
+	/* No devices left? */
+	if (!_num_devices)
+		return r;
+
+	r |= _process_all(argc, argv, _error_device);
+	r |= _simple(DM_DEVICE_REMOVE_ALL, "", 0, 0) | dm_mknodes(NULL);
+
+	_num_devices = 0;
+	r |= _process_all(argc, argv, _count_devices);
+	if (!_num_devices)
+		return r;
+
+	fprintf(stderr, "Unable to remove %d devices.", _num_devices);
+
 	return r;
 }
 
@@ -1355,8 +1468,8 @@ static struct command _commands[] = {
 	  "\t                  [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
 	  "\t                  [-u|uuid <uuid>] [--notable] [<table_file>]",
 	 1, 2, _create},
-	{"remove", "<device>", 0, 1, _remove},
-	{"remove_all", "", 0, 0, _remove_all},
+	{"remove", "[-f|--force] <device>", 0, 1, _remove},
+	{"remove_all", "[-f|--force]", 0, 0, _remove_all},
 	{"suspend", "<device>", 0, 1, _suspend},
 	{"resume", "<device>", 0, 1, _resume},
 	{"load", "<device> [<table_file>]", 0, 2, _load},
@@ -1482,6 +1595,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"readonly", 0, &ind, READ_ONLY},
 		{"columns", 0, &ind, COLS_ARG},
 		{"exec", 1, &ind, EXEC_ARG},
+		{"force", 0, &ind, FORCE_ARG},
 		{"gid", 1, &ind, GID_ARG},
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
@@ -1526,7 +1640,7 @@ static int _process_switches(int *argc, char ***argv)
 			_values[MINOR_ARG] = atoi((*argv)[2]);
 			*argc -= 2;
 			*argv += 2;
-		} else if ((*argc == 2) && 
+		} else if ((*argc == 2) &&
 			   (2 == sscanf((*argv)[1], "%i:%i",
 					&_values[MAJOR_ARG],
 					&_values[MINOR_ARG]))) {
@@ -1545,10 +1659,12 @@ static int _process_switches(int *argc, char ***argv)
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCGj:m:Mno:ru:Uv",
+	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfGj:m:Mno:ru:Uv",
 					    long_options, NULL)) != -1) {
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
+		if (c == 'f' || ind == FORCE_ARG)
+			_switches[FORCE_ARG]++;
 		if (c == 'r' || ind == READ_ONLY)
 			_switches[READ_ONLY]++;
 		if (c == 'j' || ind == MAJOR_ARG) {

@@ -7,9 +7,10 @@ dmsetup \- low level logical volume management
 .I device_name [-u uuid] [--notable] [table_file]
 .br
 .B dmsetup remove
-.I device_name
+.I [-f|--force] device_name
 .br
 .B dmsetup remove_all
+.I [-f|--force]
 .br
 .B dmsetup suspend
 .I [--nolockfs] device_name
@@ -103,7 +104,7 @@ Set the table being loaded read-only.
 .IP \fB-u|--uuid
 .br
 Specify the uuid.
-.IP \fB-v|--verbose [-v|--verbose]
+.IP \fB-v|--verbose\ [-v|--verbose]
 .br
 Produce additional output.
 .IP \fB--version
@@ -163,15 +164,34 @@ ascii, utf, vt100; compact, inverted, notrunc.
 .br
 Loads table_file into the inactive table slot for device_name.
 If table_file is not supplied, reads a table from standard input.
-.IP \fBremove
-.I device_name
+.IP \fBmknodes
+.I [device_name]
 .br
-Removes a device.  It will no longer be visible to dmsetup and
-will be deleted when its open_count is zero.
+Ensure that the node in /dev/mapper for device_name is correct.
+If no device_name is supplied, ensure that all nodes in /dev/mapper 
+correspond to mapped devices currently loaded by the device-mapper kernel
+driver, adding, changing or removing nodes as necessary.
+.IP \fBremove
+.I [-f|--force] device_name
+.br
+Removes a device.  It will no longer be visible to dmsetup.
+Open devices cannot be removed except with older kernels
+that contain a version of device-mapper prior to 4.8.0.
+In this case the device will be deleted when its open_count 
+drops to zero.  From version 4.8.0 onwards, if a device can't
+be removed because an uninterruptible process is waiting for
+I/O to return from it, adding --force will replace the table 
+with one that fails all I/O, which might allow the 
+process to be killed.
 .IP \fBremove_all
+.I [-f|--force]
 .br
 Attempts to remove all device definitions i.e. reset the driver.
-Use with care!
+Use with care!  From version 4.8.0 onwards, if devices can't
+be removed because uninterruptible processess are waiting for
+I/O to return from them, adding --force will replace the table 
+with one that fails all I/O, which might allow the 
+process to be killed.  This also runs \fBmknodes\fP afterwards.
 .IP \fBrename
 .I device_name new_name
 .br
