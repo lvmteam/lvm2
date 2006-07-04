@@ -476,7 +476,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 			log_error("Volume group \"%s\" is already consistent",
 				  vg_name);
 			unlock_vg(cmd, vg_name);
-			return ECMD_FAILED;
+			return ECMD_PROCESSED;
 		}
 
 		init_partial(1);
