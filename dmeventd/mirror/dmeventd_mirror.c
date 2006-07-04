@@ -31,6 +31,8 @@
 #define ME_INSYNC    1
 #define ME_FAILURE   2
 
+static pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
+
 /* FIXME: We may need to lock around operations to these */
 static int register_count = 0;
 static struct dm_pool *mem_pool = NULL;
@@ -150,6 +152,10 @@ void process_event(const char *device, enum dm_event_type event)
 	char *target_type = NULL;
 	char *params;
 
+	if (pthread_mutex_trylock(&_lock)) {
+		syslog(LOG_NOTICE, "Another thread is handling an event.  Waiting...");
+		pthread_mutex_lock(&_lock);
+	}
 	/* FIXME Move inside libdevmapper */
 	if (!(dmt = dm_task_create(DM_DEVICE_STATUS))) {
 		syslog(LOG_ERR, "Unable to create dm_task.\n");
@@ -204,6 +210,7 @@ void process_event(const char *device, enum dm_event_type event)
  fail:
 	if (dmt)
 		dm_task_destroy(dmt);
+	pthread_mutex_unlock(&_lock);
 }
 
 int register_device(const char *device)
