@@ -993,7 +993,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (list_size(&correct_vg->pvs) != list_size(pvids)) {
 			log_debug("Cached VG %s had incorrect PV list",
 				  vg->name);
-			correct_vg = NULL;
+
+			if (memlock())
+				inconsistent = 1;
+			else
+				correct_vg = NULL;
 		} else list_iterate_items(pvl, &correct_vg->pvs) {
 			if (!str_list_match_item(pvids, pvl->pv->dev->pvid)) {
 				log_debug("Cached VG %s had incorrect PV list",
@@ -1008,6 +1012,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (!correct_vg) {
 		inconsistent = 0;
 
+		if (memlock()) {
+			stack;
+			return NULL;
+		}
 		lvmcache_label_scan(cmd, 2);
 		if (!(fmt = fmt_from_vgname(vgname, vgid))) {
 			stack;
@@ -1149,7 +1157,8 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
 					  "inconsistent", vginfo->vgname);
-				return NULL;
+				if (!partial_mode())
+					return NULL;
 			}
 			return vg;
 		}
