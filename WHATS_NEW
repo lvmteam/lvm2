@@ -1,5 +1,7 @@
 Version 2.02.07 - 
 =================================
+  Add mutex to dmeventd_mirror to avoid concurrent execution.
+  Fix vgreduce --removemissing to return success if VG is already consistent.
   Fix return code if VG specified on command line is not found.
   Fix PV tools to include orphaned PVs in default output again.
   Fixed unaligned access when using clvm.
