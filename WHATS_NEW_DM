@@ -1,5 +1,6 @@
 Version 1.02.08 - 
 =============================
+  Append full patch to check in emails.
   Avoid duplicate dmeventd subdir with 'make distclean'.
   Update dmsetup man page.
   Add --force to dmsetup remove* to load error target.
