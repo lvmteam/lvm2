@@ -1,4 +1,4 @@
-Version 1.02.08 -  
+Version 1.02.08 - 
 =============================
   Append full patch to check in emails.
   Avoid duplicate dmeventd subdir with 'make distclean'.
