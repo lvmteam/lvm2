@@ -1,5 +1,6 @@
 Version 1.02.08 - 
 =============================
+  Avoid duplicate dmeventd subdir with 'make distclean'.
   Update dmsetup man page.
   Add --force to dmsetup remove* to load error target.
   dmsetup remove_all also performs mknodes.
