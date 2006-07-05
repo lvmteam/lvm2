@@ -49,8 +49,8 @@ void *load_shared_library(struct cmd_context *cmd, const char *libname,
 
 	if (!(library = dlopen(path, RTLD_LAZY | RTLD_GLOBAL))) {
 		if (silent && ignorelockingfailure())
-			log_verbose("Unable to open external %s library %s",
-				    desc, path);
+			log_verbose("Unable to open external %s library %s: %s",
+				    desc, path, dlerror());
 		else
 			log_error("Unable to open external %s library %s: %s",
 				  desc, path, dlerror());
