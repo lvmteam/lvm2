@@ -315,14 +315,7 @@ static int lvchange_persistent(struct cmd_context *cmd,
 		lv->major = arg_int_value(cmd, major_ARG, lv->major);
 		log_verbose("Setting persistent device number to (%d, %d) "
 			    "for \"%s\"", lv->major, lv->minor, lv->name);
-		if (active) {
-			log_verbose("Re-activating logical volume \"%s\"",
-				    lv->name);
-			if (!activate_lv(cmd, lv)) {
-				log_error("%s: reactivation failed", lv->name);
-				return 0;
-			}
-		}
+
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
@@ -333,21 +326,17 @@ static int lvchange_persistent(struct cmd_context *cmd,
 
 	backup(lv->vg);
 
-	if (!suspend_lv(cmd, lv)) {
-		log_error("Failed to lock %s", lv->name);
-		vg_revert(lv->vg);
-		return 0;
-	}
-
 	if (!vg_commit(lv->vg)) {
-		resume_lv(cmd, lv);
+		stack;
 		return 0;
 	}
 
-	log_very_verbose("Updating permissions for \"%s\" in kernel", lv->name);
-	if (!resume_lv(cmd, lv)) {
-		log_error("Problem reactivating %s", lv->name);
-		return 0;
+	if (active) {
+		log_verbose("Re-activating logical volume \"%s\"", lv->name);
+		if (!activate_lv(cmd, lv)) {
+			log_error("%s: reactivation failed", lv->name);
+			return 0;
+		}
 	}
 
 	return 1;
