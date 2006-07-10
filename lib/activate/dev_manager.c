@@ -866,8 +866,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	 * Major/minor settings only apply to the visible layer.
 	 */
 	if (!(dnode = dm_tree_add_new_dev(dtree, name, dlid,
-					     layer ? (uint32_t) lv->major : UINT32_C(0),
-					     layer ? (uint32_t) lv->minor : UINT32_C(0),
+					     layer ? UINT32_C(0) : (uint32_t) lv->major,
+					     layer ? UINT32_C(0) : (uint32_t) lv->minor,
 					     _read_only_lv(lv),
 					     (lv->vg->status & PRECOMMITTED) ? 1 : 0,
 					     lvlayer)))

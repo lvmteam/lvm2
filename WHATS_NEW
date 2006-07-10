@@ -1,5 +1,6 @@
 Version 2.02.07 - 
 =================================
+  Don't ignore persistent minor numbers when activating.
   Use RTLD_GLOBAL when loading shared libraries.
   Add some forgotten memlock checks to _vg_read to protect against full scans.
   Add mutex to dmeventd_mirror to avoid concurrent execution.
