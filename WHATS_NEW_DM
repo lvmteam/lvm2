@@ -1,5 +1,5 @@
-Version 1.02.08 - 
-=============================
+Version 1.02.08 - 17 July 2006
+==============================
   Append full patch to check in emails.
   Avoid duplicate dmeventd subdir with 'make distclean'.
   Update dmsetup man page.
