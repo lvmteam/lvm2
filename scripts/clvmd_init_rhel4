@@ -119,9 +119,9 @@ case "$1" in
 
   status)
 	status clvmd
+	rtrn=$?
 	vols=$( $LVDISPLAY -C --nohead 2> /dev/null | awk '($3 ~ /....a./) {print $1}' )
 	echo active volumes: ${vols:-"(none)"}
-	rtrn=0
 	;;
 
   *)
