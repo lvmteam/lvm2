@@ -199,6 +199,12 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 
 	/* Delete the 'orphan' LVs */
 	for (m = num_mirrors; m < old_area_count; m++) {
+		/* LV is now independent of the mirror so must acquire lock. */
+		if (!activate_lv(mirrored_seg->lv->vg->cmd, seg_lv(mirrored_seg, m))) {
+			stack;
+			return 0;
+		}
+
 		if (!deactivate_lv(mirrored_seg->lv->vg->cmd, seg_lv(mirrored_seg, m))) {
 			stack;
 			return 0;
@@ -211,6 +217,11 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	}
 
 	if (lv1) {
+		if (!activate_lv(mirrored_seg->lv->vg->cmd, lv1)) {
+			stack;
+			return 0;
+		}
+
 		if (!deactivate_lv(mirrored_seg->lv->vg->cmd, lv1)) {
 			stack;
 			return 0;
@@ -223,6 +234,11 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	}
 
 	if (log_lv) {
+		if (!activate_lv(mirrored_seg->lv->vg->cmd, log_lv)) {
+			stack;
+			return 0;
+		}
+
 		if (!deactivate_lv(mirrored_seg->lv->vg->cmd, log_lv)) {
 			stack;
 			return 0;

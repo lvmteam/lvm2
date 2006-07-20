@@ -1,5 +1,6 @@
 Version 2.02.08 - 
 ================================
+  Fix locking for mimage removal.
   Fix clvmd_init_rhel4 'status' exit code.
 
 Version 2.02.07 - 17th July 2006
