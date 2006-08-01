@@ -32,6 +32,7 @@ static int _partial = 0;
 static int _md_filtering = 0;
 static int _pvmove = 0;
 static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
+static int _trust_cache = 0; /* Don't scan when incomplete VGs encountered */
 static int _debug_level = 0;
 static int _syslog = 0;
 static int _log_to_file = 0;
@@ -163,6 +164,11 @@ void init_full_scan_done(int level)
 	_full_scan_done = level;
 }
 
+void init_trust_cache(int trustcache)
+{
+	_trust_cache = trustcache;
+}
+
 void init_ignorelockingfailure(int level)
 {
 	_ignorelockingfailure = level;
@@ -235,6 +241,11 @@ int pvmove_mode()
 int full_scan_done()
 {
 	return _full_scan_done;
+}
+
+int trust_cache()
+{
+	return _trust_cache;
 }
 
 int lockingfailed()

@@ -241,7 +241,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 		goto out;
 	}
 
-	if (!(iter = dev_iter_create(cmd->filter, (full_scan == 2) ? 1: 0))) {
+	if (!(iter = dev_iter_create(cmd->filter, (full_scan == 2) ? 1 : 0))) {
 		log_error("dev_iter creation failed");
 		goto out;
 	}

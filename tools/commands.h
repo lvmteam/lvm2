@@ -343,6 +343,7 @@ xx(lvs,
    "\t[-P|--partial] " "\n"
    "\t[--segments]\n"
    "\t[--separator Separator]\n"
+   "\t[--trustcache]\n"
    "\t[--unbuffered]\n"
    "\t[--units hsbkmgtHKMGT]\n"
    "\t[-v|--verbose]\n"
@@ -351,7 +352,7 @@ xx(lvs,
 
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, segments_ARG,
-   separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
+   separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG)
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
@@ -527,6 +528,7 @@ xx(pvs,
    "\t[-P|--partial] " "\n"
    "\t[--segments]\n"
    "\t[--separator Separator]\n"
+   "\t[--trustcache]\n"
    "\t[--unbuffered]\n"
    "\t[--units hsbkmgtHKMGT]\n"
    "\t[-v|--verbose]\n"
@@ -535,7 +537,7 @@ xx(pvs,
 
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, segments_ARG,
-   separator_ARG, sort_ARG, unbuffered_ARG, units_ARG)
+   separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG)
 
 xx(pvscan,
    "List all physical volumes",
@@ -819,6 +821,7 @@ xx(vgs,
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
    "\t[-P|--partial] " "\n"
    "\t[--separator Separator]\n"
+   "\t[--trustcache]\n"
    "\t[--unbuffered]\n"
    "\t[--units hsbkmgtHKMGT]\n"
    "\t[-v|--verbose]\n"
@@ -827,7 +830,7 @@ xx(vgs,
 
    aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
    nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, separator_ARG,
-   sort_ARG, unbuffered_ARG, units_ARG)
+   sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgscan,
    "Search for all volume groups",
