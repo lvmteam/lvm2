@@ -1543,7 +1543,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
 	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c %.0llu %s [%u]",
+		  "%s%c%s %.0llu %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
@@ -1554,6 +1554,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
 		  dmt->major > 0 ? ") " : "",
 		  dmt->no_open_count ? 'N' : 'O',
+		  dmt->skip_lockfs ? "S " : "",
 		  dmt->sector, dmt->message ? dmt->message : "",
 		  dmi->data_size);
 #ifdef DM_IOCTLS
