@@ -528,7 +528,7 @@ static int _lv_deactivate(struct logical_volume *lv)
 	return r;
 }
 
-static int _lv_suspend_lv(struct logical_volume *lv)
+static int _lv_suspend_lv(struct logical_volume *lv, int lockfs)
 {
 	int r;
 	struct dev_manager *dm;
@@ -536,7 +536,7 @@ static int _lv_suspend_lv(struct logical_volume *lv)
 	if (!(dm = dev_manager_create(lv->vg->cmd, lv->vg->name)))
 		return_0;
 
-	if (!(r = dev_manager_suspend(dm, lv)))
+	if (!(r = dev_manager_suspend(dm, lv, lockfs)))
 		stack;
 
 	dev_manager_destroy(dm);
@@ -637,6 +637,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 {
 	struct logical_volume *lv, *lv_pre;
 	struct lvinfo info;
+	int lockfs = 0;
 
 	if (!activation())
 		return 1;
@@ -672,7 +673,11 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		stack;
 
 	memlock_inc();
-	if (!_lv_suspend_lv(lv)) {
+
+	if (lv_is_origin(lv_pre) || lv_is_cow(lv_pre))
+		lockfs = 1;
+
+	if (!_lv_suspend_lv(lv, lockfs)) {
 		memlock_dec();
 		fs_unlock();
 		return 0;
