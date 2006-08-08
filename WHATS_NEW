@@ -1,5 +1,6 @@
 Version 2.02.08 - 
 ================================
+  Fix missing lockfs on first snapshot creation.
   Add unreliable --trustcache option to reporting commands.
   Fix locking for mimage removal.
   Fix clvmd_init_rhel4 'status' exit code.

@@ -37,6 +37,7 @@ typedef enum {
 	ACTIVATE,
 	DEACTIVATE,
 	SUSPEND,
+	SUSPEND_WITH_LOCKFS,
 	CLEAN
 } action_t;
 
@@ -984,8 +985,8 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 			goto_out;
 		break;
 	case SUSPEND:
-		if (!lv_is_origin(lv) && !lv_is_cow(lv))
-			dm_tree_skip_lockfs(root);
+		dm_tree_skip_lockfs(root);
+	case SUSPEND_WITH_LOCKFS:
 		if (!dm_tree_suspend_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
 		break;
@@ -1049,9 +1050,10 @@ int dev_manager_deactivate(struct dev_manager *dm, struct logical_volume *lv)
 	return r;
 }
 
-int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv)
+int dev_manager_suspend(struct dev_manager *dm, struct logical_volume *lv,
+			int lockfs)
 {
-	return _tree_action(dm, lv, SUSPEND);
+	return _tree_action(dm, lv, lockfs ? SUSPEND_WITH_LOCKFS : SUSPEND);
 }
 
 /*
