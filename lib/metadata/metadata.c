@@ -722,23 +722,68 @@ int vg_remove(struct volume_group *vg)
 
 int vg_validate(struct volume_group *vg)
 {
-	struct lv_list *lvl;
+	struct pv_list *pvl, *pvl2;
+	struct lv_list *lvl, *lvl2;
+	char uuid[64];
+	int r = 1;
+
+	list_iterate_items(pvl, &vg->pvs) {
+		list_iterate_items(pvl2, &vg->pvs) {
+			if (pvl == pvl2)
+				break;
+			if (id_equal(&pvl->pv->id,
+				     &pvl2->pv->id)) {
+				if (!id_write_format(&pvl->pv->id, uuid,
+						     sizeof(uuid)))
+					 stack;
+				log_error("Internal error: Duplicate PV id "
+					  "%s detected for %s in %s.",
+					  uuid, dev_name(pvl->pv->dev),
+					  vg->name);
+				r = 0;
+			}
+		}
+	}
 
 	if (!check_pv_segments(vg)) {
 		log_error("Internal error: PV segments corrupted in %s.",
 			  vg->name);
-		return 0;
+		r = 0;
+	}
+
+	list_iterate_items(lvl, &vg->lvs) {
+		list_iterate_items(lvl2, &vg->lvs) {
+			if (lvl == lvl2)
+				break;
+			if (!strcmp(lvl->lv->name, lvl2->lv->name)) {
+				log_error("Internal error: Duplicate LV name "
+					  "%s detected in %s.", lvl->lv->name,
+					  vg->name);
+				r = 0;
+			}
+			if (id_equal(&lvl->lv->lvid.id[1],
+				     &lvl2->lv->lvid.id[1])) {
+				if (!id_write_format(&lvl->lv->lvid.id[1], uuid,
+						     sizeof(uuid)))
+					 stack;
+				log_error("Internal error: Duplicate LV id "
+					  "%s detected for %s and %s in %s.",
+					  uuid, lvl->lv->name, lvl2->lv->name,
+					  vg->name);
+				r = 0;
+			}
+		}
 	}
 
 	list_iterate_items(lvl, &vg->lvs) {
 		if (!check_lv_segments(lvl->lv, 1)) {
 			log_error("Internal error: LV segments corrupted in %s.",
 				  lvl->lv->name);
-			return 0;
+			r = 0;
 		}
 	}
 
-	return 1;
+	return r;
 }
 
 /*
