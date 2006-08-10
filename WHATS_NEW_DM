@@ -1,5 +1,7 @@
 Version 1.02.09 -
 ==============================
+  Add --table argument to dmsetup for a one-line table.
+  Abort if errors are found during cmdline option processing.
   Add lockfs indicator to debug output.
 
 Version 1.02.08 - 17 July 2006

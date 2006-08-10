@@ -4,7 +4,7 @@ dmsetup \- low level logical volume management
 .SH SYNOPSIS
 .ad l
 .B dmsetup create 
-.I device_name [-u uuid] [--notable] [table_file]
+.I device_name [-u uuid] [--notable | --table <table> | table_file]
 .br
 .B dmsetup remove
 .I [-f|--force] device_name
@@ -19,13 +19,13 @@ dmsetup \- low level logical volume management
 .I device_name
 .br
 .B dmsetup load
-.I device_name [table_file]
+.I device_name [--table <table> | table_file]
 .br
 .B dmsetup clear
 .I device_name
 .br
 .B dmsetup reload
-.I device_name [table_file]
+.I device_name [--table <table> | table_file]
 .br
 .B dmsetup rename
 .I device_name new_name
@@ -101,6 +101,9 @@ Specify which fields to display.  Only \fB-o\ name\fP is supported.
 .IP \fB-r|--readonly
 .br
 Set the table being loaded read-only.
+.IP \fB--table\ <table>
+.br
+Specify a one-line table directly on the command line.
 .IP \fB-u|--uuid
 .br
 Specify the uuid.
@@ -112,10 +115,10 @@ Produce additional output.
 Display the library and kernel driver version.
 .SH COMMANDS
 .IP \fBcreate
-.I device_name [-u uuid] [--notable] [table_file]
+.I device_name [-u uuid] [--notable | --table <table> | table_file]
 .br
 Creates a device with the given name.
-If table_file is supplied, the table is loaded and made live.
+If table_file or <table> is supplied, the table is loaded and made live.
 Otherwise a table is read from standard input unless --notable is used.
 The optional uuid can be used in place of
 device_name in subsequent dmsetup commands.  
@@ -160,10 +163,10 @@ device/nodevice; active, open, rw, uuid.
 Others specify how the tree is displayed:
 ascii, utf, vt100; compact, inverted, notrunc.
 .IP \fBload|reload
-.I device_name [table_file]
+.I device_name [--table <table> | table_file]
 .br
-Loads table_file into the inactive table slot for device_name.
-If table_file is not supplied, reads a table from standard input.
+Loads <table> or table_file into the inactive table slot for device_name.
+If neither is supplied, reads a table from standard input.
 .IP \fBmknodes
 .I [device_name]
 .br
