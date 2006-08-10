@@ -1684,7 +1684,7 @@ static int _process_switches(int *argc, char ***argv)
 	optind = OPTIND_INIT;
 	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfGj:m:Mno:ru:Uv",
 					    long_options, NULL)) != -1) {
-		if (ind == -1 || ind == ':' || ind == '?')
+		if (c == ':' || c == '?')
 			return 0;
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
