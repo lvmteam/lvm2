@@ -98,6 +98,7 @@ enum {
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	OPTIONS_ARG,
+	TABLE_ARG,
 	TARGET_ARG,
 	TREE_ARG,
 	UID_ARG,
@@ -112,6 +113,7 @@ static int _values[NUM_SWITCHES];
 static int _num_devices;
 static char *_uuid;
 static char *_fields;
+static char *_table;
 static char *_target;
 static char *_command;
 static struct dm_tree *_dtree;
@@ -119,17 +121,55 @@ static struct dm_tree *_dtree;
 /*
  * Commands
  */
+static int _parse_line(struct dm_task *dmt, char *buffer, const char *file,
+		       int line)
+{
+	char ttype[LINE_SIZE], *ptr, *comment;
+	unsigned long long start, size;
+	int n;
+
+	/* trim trailing space */
+	for (ptr = buffer + strlen(buffer) - 1; ptr >= buffer; ptr--)
+		if (!isspace((int) *ptr))
+			break;
+	ptr++;
+	*ptr = '\0';
+
+	/* trim leading space */
+	for (ptr = buffer; *ptr && isspace((int) *ptr); ptr++)
+		;
+
+	if (!*ptr || *ptr == '#')
+		return 1;
+
+	if (sscanf(ptr, "%llu %llu %s %n",
+		   &start, &size, ttype, &n) < 3) {
+		err("Invalid format on line %d of table %s", line, file);
+		return 0;
+	}
+
+	ptr += n;
+	if ((comment = strchr(ptr, (int) '#')))
+		*comment = '\0';
+
+	if (!dm_task_add_target(dmt, start, size, ttype, ptr))
+		return 0;
+
+	return 1;
+}
+
 static int _parse_file(struct dm_task *dmt, const char *file)
 {
 	char *buffer = NULL;
 	size_t buffer_size = 0;
-	char ttype[LINE_SIZE], *ptr, *comment;
 	FILE *fp;
-	unsigned long long start, size;
-	int r = 0, n, line = 0;
+	int r = 0, line = 0;
+
+	/* one-line table on cmdline */
+	if (_table)
+		return _parse_line(dmt, _table, "", ++line);
 
 	/* OK for empty stdin */
-
 	if (file) {
 		if (!(fp = fopen(file, "r"))) {
 			err("Couldn't open '%s' for reading", file);
@@ -145,38 +185,13 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 		return 0;
 	}
 
-	while (fgets(buffer, (int) buffer_size, fp)) {
+	while (fgets(buffer, (int) buffer_size, fp))
 #else
-	while (getline(&buffer, &buffer_size, fp) > 0) {
+	while (getline(&buffer, &buffer_size, fp) > 0)
 #endif
-		line++;
-
-		/* trim trailing space */
-		for (ptr = buffer + strlen(buffer) - 1; ptr >= buffer; ptr--)
-			if (!isspace((int) *ptr))
-				break;
-		ptr++;
-		*ptr = '\0';
-
-		/* trim leading space */
-		for (ptr = buffer; *ptr && isspace((int) *ptr); ptr++) ;
-
-		if (!*ptr || *ptr == '#')
-			continue;
-
-		if (sscanf(ptr, "%llu %llu %s %n",
-			   &start, &size, ttype, &n) < 3) {
-			err("%s:%d Invalid format", file, line);
+		if (!_parse_line(dmt, buffer, file ? : "on stdin", ++line))
 			goto out;
-		}
 
-		ptr += n;
-		if ((comment = strchr(ptr, (int) '#')))
-			*comment = '\0';
-
-		if (!dm_task_add_target(dmt, start, size, ttype, ptr))
-			goto out;
-	}
 	r = 1;
 
       out:
@@ -725,23 +740,23 @@ static int _error_device(int argc __attribute((unused)), char **argv __attribute
 
 	size = _get_device_size(name);
 
-        if (!(dmt = dm_task_create(DM_DEVICE_RELOAD)))
-                return 0;
+	if (!(dmt = dm_task_create(DM_DEVICE_RELOAD)))
+		return 0;
 
 	if (!_set_task_device(dmt, name, 0))
 		goto err;
 
-        if (!dm_task_add_target(dmt, 0, size, "error", ""))
+	if (!dm_task_add_target(dmt, 0, size, "error", ""))
 		goto err;
 
-        if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
-                goto err;
+	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
+		goto err;
 
-        if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
-                goto err;
+	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto err;
 
-        if (!dm_task_run(dmt))
-                goto err;
+	if (!dm_task_run(dmt))
+		goto err;
 
 	if (!_simple(DM_DEVICE_RESUME, name, 0, 0)) {
 		_simple(DM_DEVICE_CLEAR, name, 0, 0);
@@ -1472,7 +1487,8 @@ struct command {
 static struct command _commands[] = {
 	{"create", "<dev_name> [-j|--major <major> -m|--minor <minor>]\n"
 	  "\t                  [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
-	  "\t                  [-u|uuid <uuid>] [--notable] [<table_file>]",
+	  "\t                  [-u|uuid <uuid>]"
+	  "\t                  [--notable | --table <table> | <table_file>]",
 	 1, 2, _create},
 	{"remove", "[-f|--force] <device>", 0, 1, _remove},
 	{"remove_all", "[-f|--force]", 0, 0, _remove_all},
@@ -1611,6 +1627,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
+		{"table", 1, &ind, TABLE_ARG},
 		{"target", 1, &ind, TARGET_ARG},
 		{"tree", 0, &ind, TREE_ARG},
 		{"uid", 1, &ind, UID_ARG},
@@ -1667,6 +1684,8 @@ static int _process_switches(int *argc, char ***argv)
 	optind = OPTIND_INIT;
 	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfGj:m:Mno:ru:Uv",
 					    long_options, NULL)) != -1) {
+		if (ind == -1 || ind == ':' || ind == '?')
+			return 0;
 		if (c == 'c' || c == 'C' || ind == COLS_ARG)
 			_switches[COLS_ARG]++;
 		if (c == 'f' || ind == FORCE_ARG)
@@ -1720,6 +1739,10 @@ static int _process_switches(int *argc, char ***argv)
 			_switches[NOLOCKFS_ARG]++;
 		if ((ind == NOOPENCOUNT_ARG))
 			_switches[NOOPENCOUNT_ARG]++;
+		if ((ind == TABLE_ARG)) {
+			_switches[TABLE_ARG]++;
+			_table = optarg;
+		}
 		if ((ind == TREE_ARG))
 			_switches[TREE_ARG]++;
 		if ((ind == VERSION_ARG))
@@ -1745,6 +1768,11 @@ static int _process_switches(int *argc, char ***argv)
 	if (_switches[TREE_ARG] && !_process_tree_options(_fields))
 		return 0;
 
+	if (_switches[TABLE_ARG] && _switches[NOTABLE_ARG]) {
+		fprintf(stderr, "--table and --notable are incompatible.\n");
+		return 0;
+	}
+
 	*argv += optind;
 	*argc -= optind;
 	return 1;
@@ -1755,7 +1783,7 @@ int main(int argc, char **argv)
 	struct command *c;
 	int r = 1;
 
-        (void) setlocale(LC_ALL, "");
+	(void) setlocale(LC_ALL, "");
 
 	if (!_process_switches(&argc, &argv)) {
 		fprintf(stderr, "Couldn't process command line.\n");
