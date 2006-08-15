@@ -1,4 +1,4 @@
-Version 1.02.09 -
+Version 1.02.09 - 15 Aug 2006
 ==============================
   Add --table argument to dmsetup for a one-line table.
   Abort if errors are found during cmdline option processing.
