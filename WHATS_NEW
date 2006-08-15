@@ -1,5 +1,5 @@
-Version 2.02.08 - 
-================================
+Version 2.02.08 - 15th August 2006
+==================================
   Add checks for duplicate LV name, lvid and PV id before writing metadata.
   Report all sanity check failures, not just the first.
   Fix missing lockfs on first snapshot creation.
