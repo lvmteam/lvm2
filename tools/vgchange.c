@@ -312,7 +312,7 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 
 	if (max_lv && max_lv < vg->lv_count) {
 		log_error("MaxLogicalVolume is less than the current number "
-			  "%d of logical volume(s) for \"%s\"", vg->lv_count,
+			  "%d of LVs for \"%s\"", vg->lv_count,
 			  vg->name);
 		return ECMD_FAILED;
 	}
@@ -321,6 +321,53 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 		return ECMD_FAILED;
 
 	vg->max_lv = max_lv;
+
+	if (!vg_write(vg) || !vg_commit(vg))
+		return ECMD_FAILED;
+
+	backup(vg);
+
+	log_print("Volume group \"%s\" successfully changed", vg->name);
+
+	return ECMD_PROCESSED;
+}
+
+static int _vgchange_physicalvolumes(struct cmd_context *cmd,
+				     struct volume_group *vg)
+{
+	uint32_t max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
+
+	if (!(vg->status & RESIZEABLE_VG)) {
+		log_error("Volume group \"%s\" must be resizeable "
+			  "to change MaxPhysicalVolumes", vg->name);
+		return ECMD_FAILED;
+	}
+
+	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, 0) == SIGN_MINUS) {
+		log_error("MaxPhysicalVolumes may not be negative");
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!(vg->fid->fmt->features & FMT_UNLIMITED_VOLS)) {
+		if (!max_pv)
+			max_pv = 255;
+		else if (max_pv > 255) {
+			log_error("MaxPhysicalVolume limit is 255");
+			return ECMD_FAILED;
+		}
+	}
+
+	if (max_pv && max_pv < vg->pv_count) {
+		log_error("MaxPhysicalVolumes is less than the current number "
+			  "%d of PVs for \"%s\"", vg->pv_count,
+			  vg->name);
+		return ECMD_FAILED;
+	}
+
+	if (!archive(vg))
+		return ECMD_FAILED;
+
+	vg->max_pv = max_pv;
 
 	if (!vg_write(vg) || !vg_commit(vg))
 		return ECMD_FAILED;
@@ -508,6 +555,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	else if (arg_count(cmd, logicalvolume_ARG))
 		r = _vgchange_logicalvolume(cmd, vg);
 
+	else if (arg_count(cmd, maxphysicalvolumes_ARG))
+		r = _vgchange_physicalvolumes(cmd, vg);
+
 	else if (arg_count(cmd, addtag_ARG))
 		r = _vgchange_tag(cmd, vg, addtag_ARG);
 
@@ -533,24 +583,26 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 {
 	if (!
 	    (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
+	     arg_count(cmd, maxphysicalvolumes_ARG) +
 	     arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
 	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) +
 	     arg_count(cmd, physicalextentsize_ARG) +
 	     arg_count(cmd, clustered_ARG) + arg_count(cmd, alloc_ARG) +
 	     arg_count(cmd, monitor_ARG))) {
-		log_error("One of -a, -c, -l, -s, -x, --uuid, --alloc, --addtag or "
-			  "--deltag required");
+		log_error("One of -a, -c, -l, -p, -s, -x, --uuid, --alloc, "
+			  "--addtag or --deltag required");
 		return EINVALID_CMD_LINE;
 	}
 
 	/* FIXME Cope with several changes at once! */
 	if (arg_count(cmd, available_ARG) + arg_count(cmd, logicalvolume_ARG) +
+	    arg_count(cmd, maxphysicalvolumes_ARG) +
 	    arg_count(cmd, resizeable_ARG) + arg_count(cmd, deltag_ARG) +
 	    arg_count(cmd, addtag_ARG) + arg_count(cmd, alloc_ARG) +
 	    arg_count(cmd, uuid_ARG) + arg_count(cmd, clustered_ARG) +
 	    arg_count(cmd, physicalextentsize_ARG) > 1) {
-		log_error("Only one of -a, -c, -l, -s, -x, --uuid, --alloc, "
-			  "--addtag or --deltag allowed");
+		log_error("Only one of -a, -c, -l, -p, -s, -x, --uuid, "
+			  "--alloc, --addtag or --deltag allowed");
 		return EINVALID_CMD_LINE;
 	}
 
