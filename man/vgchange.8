@@ -16,6 +16,8 @@ vgchange \- change attributes of a volume group
 .RB [ \-\-ignorelockingfailure]
 .RB [ \-l | \-\-logicalvolume
 .IR MaxLogicalVolumes ]
+.RB [ -p | \-\-maxphysicalvolumes
+.IR MaxPhysicalVolumes ]
 .RB [ \-P | \-\-partial]
 .RB [ \-s | \-\-physicalextentsize
 .IR PhysicalExtentSize [ \fBkKmMgGtT\fR ]]
@@ -60,6 +62,18 @@ exclusively because they can only be used on one node at once.
 .BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes\fR
 Changes the maximum logical volume number of an existing inactive
 volume group.
+.TP
+.BR \-p ", " \-\-maxphysicalvolumes " " \fIMaxPhysicalVolumes\fR
+Changes the maximum number of physical volumes that can belong
+to this volume group.
+For volume groups with metadata in lvm1 format, the limit is 255.
+If the metadata uses lvm2 format, the value 0
+removes this restriction: there is then no limit.
+If you have a large number of physical volumes in
+a volume group with metadata in lvm2 format,
+for tool performance reasons, you should consider
+some use of \fB--metadatacopies 0\fP
+as described in \fBpvcreate(8)\fP.
 .TP
 .BR \-s ", " \-\-physicalextentsize " " \fIPhysicalExtentSize\fR[\fBkKmMgGtT\fR]
 Changes the physical extent size on physical volumes of this volume group.
