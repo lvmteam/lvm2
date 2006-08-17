@@ -172,6 +172,7 @@ struct disk_list {
  * Layout constants.
  */
 #define METADATA_ALIGN 4096UL
+#define LVM1_PE_ALIGN (65536UL >> SECTOR_SHIFT)      /* PE alignment */
 
 #define	METADATA_BASE 0UL
 #define	PV_SIZE 1024UL
