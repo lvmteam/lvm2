@@ -33,7 +33,6 @@
 #define STRIPE_SIZE_MAX ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
 #define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
-#define PE_ALIGN (65536UL >> SECTOR_SHIFT)	/* PE alignment */
 #define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 
 /* Various flags */
@@ -403,6 +402,7 @@ struct format_handler {
 /*
  * Utility functions
  */
+unsigned long pe_align(void);
 int vg_validate(struct volume_group *vg);
 int vg_write(struct volume_group *vg);
 int vg_commit(struct volume_group *vg);

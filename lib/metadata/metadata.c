@@ -24,6 +24,11 @@
 #include "pv_alloc.h"
 #include "activate.h"
 
+unsigned long pe_align(void)
+{
+	return (65536UL >> SECTOR_SHIFT);
+}
+
 static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 			 const char *pv_name)
 {
@@ -78,8 +83,8 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 
 	/* FIXME Do proper rounding-up alignment? */
 	/* Reserved space for label; this holds 0 for PVs created by LVM1 */
-	if (pv->pe_start < PE_ALIGN)
-		pv->pe_start = PE_ALIGN;
+	if (pv->pe_start < pe_align())
+		pv->pe_start = pe_align();
 
 	/*
 	 * The next two fields should be corrected
