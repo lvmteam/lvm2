@@ -994,7 +994,7 @@ static int _text_scan(const struct format_type *fmt)
 }
 
 /* For orphan, creates new mdas according to policy.
-   Always have an mda between end-of-label and PE_ALIGN boundary */
+   Always have an mda between end-of-label and pe_align() boundary */
 static int _mda_setup(const struct format_type *fmt,
 		      uint64_t pe_start, uint64_t pe_end,
 		      int pvmetadatacopies,
@@ -1009,11 +1009,11 @@ static int _mda_setup(const struct format_type *fmt,
 
 	if (!pvmetadatacopies) {
 		/* Space available for PEs */
-		pv->size -= PE_ALIGN;
+		pv->size -= pe_align();
 		return 1;
 	}
 
-	alignment = PE_ALIGN << SECTOR_SHIFT;
+	alignment = pe_align() << SECTOR_SHIFT;
 	disk_size = pv->size << SECTOR_SHIFT;
 	pe_start <<= SECTOR_SHIFT;
 	pe_end <<= SECTOR_SHIFT;
@@ -1055,7 +1055,7 @@ static int _mda_setup(const struct format_type *fmt,
 		pvmetadatacopies = 1;
 	}
 
-	/* Round up to PE_ALIGN boundary */
+	/* Round up to pe_align() boundary */
 	mda_adjustment = (mda_size1 + start1) % alignment;
 	if (mda_adjustment)
 		mda_size1 += (alignment - mda_adjustment);
@@ -1189,7 +1189,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 
 	/* Set pe_start to first aligned sector after any metadata 
 	 * areas that begin before pe_start */
-	pv->pe_start = PE_ALIGN;
+	pv->pe_start = pe_align();
 	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
@@ -1198,9 +1198,9 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		     (pv->pe_start << SECTOR_SHIFT))) {
 			pv->pe_start = (mdac->area.start + mdac->area.size)
 			    >> SECTOR_SHIFT;
-			adjustment = pv->pe_start % PE_ALIGN;
+			adjustment = pv->pe_start % pe_align();
 			if (adjustment)
-				pv->pe_start += (PE_ALIGN - adjustment);
+				pv->pe_start += (pe_align() - adjustment);
 		}
 	}
 	if (!add_da
