@@ -408,7 +408,7 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 
 	/* Ensure any residual PE structure is gone */
 	pv->pe_size = pv->pe_count = 0;
-	pv->pe_start = PE_ALIGN;
+	pv->pe_start = LVM1_PE_ALIGN;
 
 	if (!(mem = dm_pool_create("lvm1 pv_write", 1024))) {
 		stack;
@@ -431,7 +431,7 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	   dev_write in order to make other disk tools happy */
 	dl->pvd.pv_on_disk.base = METADATA_BASE;
 	dl->pvd.pv_on_disk.size = PV_SIZE;
-	dl->pvd.pe_on_disk.base = PE_ALIGN << SECTOR_SHIFT;
+	dl->pvd.pe_on_disk.base = LVM1_PE_ALIGN << SECTOR_SHIFT;
 
 	list_add(&pvs, &dl->list);
 	if (!write_disks(fmt, &pvs)) {
