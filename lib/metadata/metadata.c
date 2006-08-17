@@ -24,9 +24,11 @@
 #include "pv_alloc.h"
 #include "activate.h"
 
+#include <sys/param.h>
+
 unsigned long pe_align(void)
 {
-	return (65536UL >> SECTOR_SHIFT);
+	return MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
 }
 
 static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
