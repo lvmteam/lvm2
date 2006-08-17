@@ -1,4 +1,4 @@
-Version 2.02.09 - 
+Version 2.02.09 - 17th August 2006
 ==================================
   Fix PE_ALIGN for pagesize over 32KB.
   Separate out LVM1_PE_ALIGN and pe_align().
