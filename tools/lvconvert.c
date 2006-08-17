@@ -102,7 +102,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
 	int region_size;
-	int pagesize = getpagesize();
+	int pagesize = lvm_getpagesize();
 
 	memset(lp, 0, sizeof(*lp));
 

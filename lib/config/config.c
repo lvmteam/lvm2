@@ -187,7 +187,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 		use_mmap = 0;
 
 	if (use_mmap) {
-		mmap_offset = offset % getpagesize();
+		mmap_offset = offset % lvm_getpagesize();
 		/* memory map the file */
 		p->fb = mmap((caddr_t) 0, size + mmap_offset, PROT_READ,
 			     MAP_PRIVATE, dev_fd(dev), offset - mmap_offset);

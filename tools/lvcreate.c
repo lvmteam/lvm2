@@ -249,7 +249,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 {
 	int argc = *pargc;
 	int region_size;
-	int pagesize = getpagesize();
+	int pagesize = lvm_getpagesize();
 
 	if (argc && (unsigned) argc < lp->mirrors) {
 		log_error("Too few physical volumes on "

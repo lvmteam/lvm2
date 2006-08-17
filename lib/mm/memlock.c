@@ -58,7 +58,7 @@ static int _default_priority;
 
 static void _touch_memory(void *mem, size_t size)
 {
-	size_t pagesize = getpagesize();
+	size_t pagesize = lvm_getpagesize();
 	void *pos = mem;
 	void *end = mem + size - sizeof(long);
 

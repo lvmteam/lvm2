@@ -1005,7 +1005,7 @@ static int _mda_setup(const struct format_type *fmt,
 	uint64_t start1, mda_size1;	/* First area - start of disk */
 	uint64_t start2, mda_size2;	/* Second area - end of disk */
 	uint64_t wipe_size = 8 << SECTOR_SHIFT;
-	size_t pagesize = getpagesize();
+	size_t pagesize = lvm_getpagesize();
 
 	if (!pvmetadatacopies) {
 		/* Space available for PEs */
