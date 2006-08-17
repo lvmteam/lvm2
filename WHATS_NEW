@@ -1,3 +1,6 @@
+Version 2.02.10 - 
+==================================
+
 Version 2.02.09 - 17th August 2006
 ==================================
   Fix PE_ALIGN for pagesize over 32KB.
