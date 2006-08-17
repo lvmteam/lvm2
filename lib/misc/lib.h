@@ -28,6 +28,7 @@
 #include "log.h"
 #include "intl.h"
 #include "lvm-types.h"
+#include "lvm-wrappers.h"
 
 #include <libdevmapper.h>
 

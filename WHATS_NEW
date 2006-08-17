@@ -1,5 +1,6 @@
 Version 2.02.09 - 
 ==================================
+  Add lvm_getpagesize wrapper.
   Add --maxphysicalvolumes to vgchange.
 
 Version 2.02.08 - 15th August 2006

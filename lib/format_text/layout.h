@@ -83,6 +83,6 @@ struct mda_context {
 #define FMTT_VERSION 1
 #define MDA_HEADER_SIZE 512
 #define LVM2_LABEL "LVM2 001"
-#define MDA_SIZE_MIN (8 * (unsigned) getpagesize())
+#define MDA_SIZE_MIN (8 * (unsigned) lvm_getpagesize())
 
 #endif

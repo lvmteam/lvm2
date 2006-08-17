@@ -176,7 +176,7 @@ static int _aligned_io(struct device_area *where, void *buffer,
 	}
 
 	if (!block_size)
-		block_size = getpagesize();
+		block_size = lvm_getpagesize();
 
 	_widen_region(block_size, where, &widened);
 
