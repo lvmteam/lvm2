@@ -21,15 +21,14 @@ running lvreduce so that the extents that are to be removed are not in use.
 Shrinking snapshot logical volumes (see
 .B lvcreate(8)
 for information to create snapshots) is supported as well.
+But to change the number of copies in a mirrored logical
+volume use 
+.B lvconvert (8).
 .br
 Sizes will be rounded if necessary - for example, the volume size must
 be an exact number of extents and the size of a striped segment must
 be a multiple of the number of stripes.
 .br
-You can not use lvreduce to reduce the number of mirrors in a
-mirrored logical volume.  For that, see
-.BR lvconvert (8).
-
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
