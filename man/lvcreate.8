@@ -11,6 +11,7 @@ lvcreate \- create a logical volume in an existing volume group
 {\-l/\-\-extents LogicalExtentsNumber |
  \-L/\-\-size LogicalVolumeSize[kKmMgGtT]}
 [\-M/\-\-persistent y/n] [\-\-minor minor]
+[\-m/\-\-mirrors Mirrors [\-\-nosync] [\-\-corelog]]
 [\-n/\-\-name LogicalVolumeName]
 [\-p/\-\-permission r/rw] [\-r/\-\-readahead ReadAheadSectors]
 [-R|--regionsize MirrorLogRegionSize]
@@ -79,6 +80,23 @@ Set the minor number.
 .I \-M, \-\-persistent y/n
 Set to y to make the minor number specified persistent.
 .TP
+.I \-m, \-\-mirrors Mirrors
+Creates a mirrored logical volume with "Mirrors" copies.  For example,
+specifying "-m 1" would result in a mirror with two-sides; that is, a
+linear volume plus one copy.
+
+Specifying the optional argument "--nosync" will cause the creation
+of the mirror to skip the initial resynchronization.  Any data written
+afterwards will be mirrored, but the original contents will not be
+copied.  This is useful for skipping a potentially long and resource
+intensive initial sync.
+
+Specifying the optional argument "--corelog" will create a mirror with
+an in-memory log verses a disk-based (persistent) log.  While this
+removes the need for an extra log device and *may* be slightly faster,
+it requires that the entire mirror be resynchronized upon each
+instantiation (e.g. a reboot).
+.TP
 .I \-n, \-\-name LogicalVolumeName
 The name for the new logical volume.
 .br
@@ -122,9 +140,14 @@ Default is yes.
 Warning: trying to mount an unzeroed logical volume can cause the system to
 hang.
 .SH Examples
-"lvcreate -i 3 -I 8 -L 100 vg00" tries to create a striped logical
+"lvcreate -i 3 -I 8 -L 100M vg00" tries to create a striped logical
 volume with 3 stripes, a stripesize of 8KB and a size of 100MB in the volume
 group named vg00. The logical volume name will be chosen by lvcreate.
+
+"lvcreate -m1 -L 500M vg00" tries to create a mirror logical volume
+with 2 sides with a useable size of 500 MiB.  This operation would
+require 3 devices - two for the mirror devices and one for the disk
+log.
 
 "lvcreate --size 100m --snapshot --name snap /dev/vg00/lvol1"
 .br

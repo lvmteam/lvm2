@@ -1,5 +1,7 @@
 Version 2.02.10 - 
 ==================================
+  Add lvconvert man page.
+  Add mirror options to man pages.
   Prevent mirror renames.
   Move CMDLIB code into separate file and record whether static build.
 

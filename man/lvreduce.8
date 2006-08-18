@@ -25,6 +25,11 @@ for information to create snapshots) is supported as well.
 Sizes will be rounded if necessary - for example, the volume size must
 be an exact number of extents and the size of a striped segment must
 be a multiple of the number of stripes.
+.br
+You can not use lvreduce to reduce the number of mirrors in a
+mirrored logical volume.  For that, see
+.BR lvconvert (8).
+
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -49,6 +54,7 @@ an absolute size.
 in volume group vg00 by 3 logical extents.
 .SH SEE ALSO
 .BR lvchange (8),
+.BR lvconvert (8), 
 .BR lvcreate (8), 
 .BR lvextend (8), 
 .BR lvm (8), 

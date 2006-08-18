@@ -9,6 +9,7 @@ vgchange \- change attributes of a volume group
 .IR AllocationPolicy ]
 .RB [ \-A | \-\-autobackup " {" y | n }]
 .RB [ \-a | \-\-available " [e|l] {" y | n }]
+.RB [ \-\-monitor " {" y | n }]
 .RB [ \-d | \-\-debug]
 .RB [ \-\-deltag
 .IR Tag ]
@@ -58,6 +59,12 @@ exclusively on one node or 'l' to activate/deactivate only
 on the local node.  
 Logical volumes with single-host snapshots are always activated
 exclusively because they can only be used on one node at once.
+.TP
+.BR \-\-monitor { y | n }
+Controls whether the mirrored logical volumes in the volume
+group are monitored by dmeventd.  If monitored (the default),
+a failed mirror device will automatically be removed from the
+volume group.
 .TP
 .BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes\fR
 Changes the maximum logical volume number of an existing inactive

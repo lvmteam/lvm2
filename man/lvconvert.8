@@ -1,0 +1,59 @@
+.TH LVCONVERT 8 "LVM TOOLS" "Red Hat, Inc" \" -*- nroff -*-
+.SH NAME
+lvconvert \- convert a logical volume between linear and mirror
+.SH SYNOPSIS
+.B lvconvert
+[\-m/\-\-mirrors Mirrors [\-\-corelog]]
+[\-A/\-\-alloc AllocationPolicy]
+[\-h/\-?/\-\-help]
+[\-v/\-\-verbose]
+[\-\-version]
+LogicalVolume[Path] [PhysicalVolume[Path]...]
+.br
+
+.SH DESCRIPTION
+lvconvert will change a linear logical volume to a mirror
+logical volume or vis versa.  It is also used to add and
+remove disk logs from mirror devices.
+.SH OPTIONS
+See \fBlvm\fP for common options.
+.TP
+.I \-m, \-\-mirrors Mirrors
+Specifies the degree of the mirror you wish to create.
+For example, "-m 1" would convert the original logical
+volume to a mirror volume with 2-sides; that is, a
+linear volume plus one copy.
+.TP
+.I \-\-corelog
+This optional argument tells lvconvert to switch the
+mirror from using a disk-based (persistent) log to
+an in-memory log.  You may only specify this option
+when the \-\-mirror argument is the same degree of
+the mirror you are changing.
+.SH Examples
+"lvconvert -m1 vg00/lvol1"
+.br
+converts the linear logical volume "vg00/lvol1" to
+a mirror logical volume.  This command could also
+be used to convert a two-way mirror with an
+in-memory log to a two-way mirror with a disk log.
+
+"lvconvert -m1 --corelog vg00/lvol1"
+.br
+converts a two-way mirror with a disk log to a
+two-way mirror with an in-memory log.
+
+"lvconvert -m0 vg00/lvol1"
+.br
+converts a mirror logical volume to a linear logical
+volume.
+
+.SH SEE ALSO
+.BR lvm (8),
+.BR vgcreate (8),
+.BR lvremove (8),
+.BR lvrename (8),
+.BR lvextend (8),
+.BR lvreduce (8),
+.BR lvdisplay (8),
+.BR lvscan (8)
