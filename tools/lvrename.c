@@ -140,6 +140,14 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
+	if ((lv->status & MIRRORED) ||
+	    (lv->status & MIRROR_LOG) ||
+	    (lv->status & MIRROR_IMAGE)) {
+		log_error("Mirrored LV, \"%s\" cannot be renamed: %s",
+			  lv->name, strerror(ENOSYS));
+		goto error;
+	}
+
 	if (!archive(lv->vg)) {
 		stack;
 		goto error;
