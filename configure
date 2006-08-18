@@ -7534,14 +7534,6 @@ fi;
 echo "$as_me:$LINENO: result: $CMDLIB" >&5
 echo "${ECHO_T}$CMDLIB" >&6
 
-if test x$CMDLIB = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define CMDLIB 1
-_ACEOF
-
-fi
-
 ################################################################################
 echo "$as_me:$LINENO: checking whether to build fsadm" >&5
 echo $ECHO_N "checking whether to build fsadm... $ECHO_C" >&6

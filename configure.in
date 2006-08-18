@@ -351,10 +351,6 @@ AC_ARG_ENABLE(cmdlib, [  --enable-cmdlib         Build shared command library],
 CMDLIB=$enableval, CMDLIB=no)
 AC_MSG_RESULT($CMDLIB)
 
-if test x$CMDLIB = xyes; then
-	AC_DEFINE([CMDLIB], 1, [Define to 1 to build the shared command library.])
-fi
-
 ################################################################################
 dnl -- Enable fsadm
 AC_MSG_CHECKING(whether to build fsadm)

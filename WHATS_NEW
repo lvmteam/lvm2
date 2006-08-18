@@ -1,5 +1,6 @@
 Version 2.02.10 - 
 ==================================
+  Move CMDLIB code into separate file and record whether static build.
 
 Version 2.02.09 - 17th August 2006
 ==================================
