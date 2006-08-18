@@ -19,6 +19,9 @@ shrunk first so that the extents that are to be removed are not in use.
 Resizing snapshot logical volumes (see
 .B lvcreate(8)
 for information about creating snapshots) is supported as well.
+But to change the number of copies in a mirrored logical
+volume use 
+.BR lvconvert (8).
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -49,6 +52,7 @@ must use a single value throughout.
 StripeSize must be 2^n (n = 2 to 9)
 .SH SEE ALSO
 .BR lvm (8), 
+.BR lvconvert (8),
 .BR lvcreate (8), 
 .BR lvreduce (8), 
 .BR lvchange (8)

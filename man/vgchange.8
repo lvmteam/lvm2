@@ -60,11 +60,16 @@ on the local node.
 Logical volumes with single-host snapshots are always activated
 exclusively because they can only be used on one node at once.
 .TP
-.BR \-\-monitor { y | n }
-Controls whether the mirrored logical volumes in the volume
-group are monitored by dmeventd.  If monitored (the default),
-a failed mirror device will automatically be removed from the
-volume group.
+.BR \-\-monitor " " { y | n }
+Controls whether or not a mirrored logical volume is monitored by
+dmeventd, if it is installed.
+If a device used by a monitored mirror reports an I/O error,
+the failure is handled according to 
+.BR mirror_image_fault_policy
+and 
+.BR mirror_log_fault_policy
+set in 
+.BR lvm.conf (8).
 .TP
 .BR \-l ", " \-\-logicalvolume " " \fIMaxLogicalVolumes\fR
 Changes the maximum logical volume number of an existing inactive
