@@ -9,6 +9,7 @@ lvchange \- change attributes of a logical volume
 [\-C/\-\-contiguous y/n] [\-d/\-\-debug] [\-\-deltag Tag]
 [\-h/\-?/\-\-help]
 [\-\-ignorelockingfailure]
+[\-\-monitor {y|n}]
 [\-M/\-\-persistent y/n] [\-\-minor minor]
 [\-P/\-\-partial y/n]
 [\-p/\-\-permission r/w] [\-r/\-\-readahead ReadAheadSectors]
@@ -41,6 +42,11 @@ allocated physical extents are already contiguous.
 .TP
 .I \-\-minor minor
 Set the minor number.
+.TP
+.I \-\-monitor y/n
+Controls whether the mirrored logical volume is monitored by
+dmeventd.  If monitored (the default), a failed mirror device
+will automatically be removed from the volume group.
 .TP
 .I \-M, \-\-persistent y/n
 Set to y to make the minor number specified persistent.

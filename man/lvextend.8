@@ -15,6 +15,11 @@ lvextend allows you to extend the size of a logical volume.
 Extension of snapshot logical volumes (see
 .B lvcreate(8)
 for information to create snapshots) is supported as well.
+
+You can not use lvextend to increase the number of mirrors in a
+mirrored logical volume.  For that, see
+.BR lvconvert (8).
+
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
@@ -48,6 +53,7 @@ there are enough free physical extents in it.
 .SH SEE ALSO
 .BR lvm (8), 
 .BR lvcreate (8), 
+.BR lvconvert (8), 
 .BR lvreduce (8), 
 .BR lvresize (8), 
 .BR lvchange (8)
