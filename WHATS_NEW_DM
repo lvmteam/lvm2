@@ -1,5 +1,6 @@
 Version 1.02.10 - 
 ==============================
+  Reorder mm bounds_check code to reduce window for a dmeventd race.
 
 Version 1.02.09 - 15 Aug 2006
 ==============================

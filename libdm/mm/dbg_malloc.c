@@ -77,15 +77,6 @@ void *dm_malloc_aux_debug(size_t s, const char *file, int line)
 	nb->length = s;
 	nb->id = ++_mem_stats.block_serialno;
 	nb->next = 0;
-	nb->prev = _tail;
-
-	/* link to tail of the list */
-	if (!_head)
-		_head = _tail = nb;
-	else {
-		_tail->next = nb;
-		_tail = nb;
-	}
 
 	/* stomp a pretty pattern across the new memory
 	   and fill in the boundary bytes */
@@ -97,6 +88,16 @@ void *dm_malloc_aux_debug(size_t s, const char *file, int line)
 
 		for (i = 0; i < sizeof(unsigned long); i++)
 			*ptr++ = (char) nb->id;
+	}
+
+	nb->prev = _tail;
+
+	/* link to tail of the list */
+	if (!_head)
+		_head = _tail = nb;
+	else {
+		_tail->next = nb;
+		_tail = nb;
 	}
 
 	_mem_stats.blocks_allocated++;
