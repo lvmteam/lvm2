@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -16,6 +16,16 @@
 #ifndef _LVM_CMDLINE_H
 #define _LVM_CMDLINE_H
 
-int lvm2_main(int argc, char **argv, int is_static);
+struct cmd_context;
+
+int lvm2_main(int argc, char **argv, unsigned is_static);
+
+void *cmdlib_lvm2_init(unsigned is_static);
+void lvm_fin(struct cmd_context *cmd);
+
+struct cmd_context *init_lvm(unsigned is_static);
+void lvm_register_commands(void);
+int lvm_split(char *str, int *argc, char **argv, int max);
+int lvm_run_command(struct cmd_context *cmd, int argc, char **argv);
 
 #endif

@@ -443,7 +443,7 @@ static void _register_command(const char *name, command_fn fn,
 	_create_new_command(name, fn, desc, usagestr, nargs, args);
 }
 
-static void _register_commands()
+void lvm_register_commands(void)
 {
 #define xx(a, b, c...) _register_command(# a, a, b, ## c, \
 					driverloaded_ARG, \
@@ -843,7 +843,7 @@ static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 	return NULL;
 }
 
-static int _run_command(struct cmd_context *cmd, int argc, char **argv)
+int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret = 0;
 	int locking_type;
@@ -936,7 +936,7 @@ static int _run_command(struct cmd_context *cmd, int argc, char **argv)
 	return ret;
 }
 
-static int _split(char *str, int *argc, char **argv, int max)
+int lvm_split(char *str, int *argc, char **argv, int max)
 {
 	char *b = str, *e;
 	*argc = 0;
@@ -995,11 +995,11 @@ static void _close_stray_fds(void)
 	}
 }
 
-static struct cmd_context *_init_lvm(void)
+struct cmd_context *init_lvm(unsigned is_static)
 {
 	struct cmd_context *cmd;
 
-	if (!(cmd = create_toolcontext(&the_args[0]))) {
+	if (!(cmd = create_toolcontext(&the_args[0], is_static))) {
 		stack;
 		return NULL;
 	}
@@ -1021,7 +1021,7 @@ static void _fin_commands(void)
 	dm_free(_commands);
 }
 
-static void _fin(struct cmd_context *cmd)
+void lvm_fin(struct cmd_context *cmd)
 {
 	_fin_commands();
 	destroy_toolcontext(cmd);
@@ -1055,7 +1055,7 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 			ret = EINVALID_CMD_LINE;
 			break;
 		}
-		if (_split(buffer, &argc, argv, MAX_ARGS) == MAX_ARGS) {
+		if (lvm_split(buffer, &argc, argv, MAX_ARGS) == MAX_ARGS) {
 			buffer[50] = '\0';
 			log_error("Too many arguments: %s", buffer);
 			ret = EINVALID_CMD_LINE;
@@ -1065,7 +1065,7 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 			continue;
 		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit"))
 			break;
-		_run_command(cmd, argc, argv);
+		lvm_run_command(cmd, argc, argv);
 	}
 
 	fclose(script);
@@ -1251,7 +1251,7 @@ static int _shell(struct cmd_context *cmd)
 
 		argv = args;
 
-		if (_split(input, &argc, argv, MAX_ARGS) == MAX_ARGS) {
+		if (lvm_split(input, &argc, argv, MAX_ARGS) == MAX_ARGS) {
 			log_error("Too many arguments, sorry.");
 			continue;
 		}
@@ -1270,7 +1270,7 @@ static int _shell(struct cmd_context *cmd)
 			break;
 		}
 
-		ret = _run_command(cmd, argc, argv);
+		ret = lvm_run_command(cmd, argc, argv);
 		if (ret == ENO_SUCH_CMD)
 			log_error("No such command '%s'.  Try 'help'.",
 				  argv[0]);
@@ -1280,92 +1280,6 @@ static int _shell(struct cmd_context *cmd)
 
 	free(input);
 	return 0;
-}
-
-#endif
-
-#ifdef CMDLIB
-
-void *lvm2_init(void)
-{
-	struct cmd_context *cmd;
-
-	_register_commands();
-
-	if (!(cmd = _init_lvm()))
-		return NULL;
-
-	return (void *) cmd;
-}
-
-int lvm2_run(void *handle, const char *cmdline)
-{
-	int argc, ret, oneoff = 0;
-	char *args[MAX_ARGS], **argv, *cmdcopy = NULL;
-	struct cmd_context *cmd;
-
-	argv = args;
-
-	if (!handle) {
-		oneoff = 1;
-		if (!(handle = lvm2_init())) {
-			log_error("Handle initialisation failed.");
-			return ECMD_FAILED;
-		}
-	}
-
-	cmd = (struct cmd_context *) handle;
-
-	cmd->argv = argv;
-
-	if (!(cmdcopy = dm_strdup(cmdline))) {
-		log_error("Cmdline copy failed.");
-		ret = ECMD_FAILED;
-		goto out;
-	}
-
-	if (_split(cmdcopy, &argc, argv, MAX_ARGS) == MAX_ARGS) {
-		log_error("Too many arguments.  Limit is %d.", MAX_ARGS);
-		ret = EINVALID_CMD_LINE;
-		goto out;
-	}
-
-	if (!argc) {
-		log_error("No command supplied");
-		ret = EINVALID_CMD_LINE;
-		goto out;
-	}
-
-	ret = _run_command(cmd, argc, argv);
-
-      out:
-	dm_free(cmdcopy);
-
-	if (oneoff)
-		lvm2_exit(handle);
-
-	return ret;
-}
-
-void lvm2_log_level(void *handle, int level)
-{
-	struct cmd_context *cmd = (struct cmd_context *) handle;
-
-	cmd->default_settings.verbose = level - VERBOSE_BASE_LEVEL;
-
-	return;
-}
-
-void lvm2_log_fn(lvm2_log_fn_t log_fn)
-{
-	init_log_fn(log_fn);
-}
-
-void lvm2_exit(void *handle)
-{
-	struct cmd_context *cmd = (struct cmd_context *) handle;
-
-	_fin(cmd);
 }
 
 #endif
@@ -1406,7 +1320,7 @@ static void _exec_lvm1_command(char **argv)
 	log_sys_error("execvp", path);
 }
 
-int lvm2_main(int argc, char **argv, int is_static)
+int lvm2_main(int argc, char **argv, unsigned is_static)
 {
 	char *namebase, *base;
 	int ret, alias = 0;
@@ -1432,11 +1346,11 @@ int lvm2_main(int argc, char **argv, int is_static)
 
 	free(namebase);
 
-	if (!(cmd = _init_lvm()))
+	if (!(cmd = init_lvm(is_static)))
 		return -1;
 
 	cmd->argv = argv;
-	_register_commands();
+	lvm_register_commands();
 
 	if (_lvm1_fallback(cmd)) {
 		/* Attempt to run equivalent LVM1 tool instead */
@@ -1472,14 +1386,14 @@ int lvm2_main(int argc, char **argv, int is_static)
 		argv++;
 	}
 
-	ret = _run_command(cmd, argc, argv);
+	ret = lvm_run_command(cmd, argc, argv);
 	if ((ret == ENO_SUCH_CMD) && (!alias))
 		ret = _run_script(cmd, argc, argv);
 	if (ret == ENO_SUCH_CMD)
 		log_error("No such command.  Try 'help'.");
 
       out:
-	_fin(cmd);
+	lvm_fin(cmd);
 	if (ret == ECMD_PROCESSED)
 		ret = 0;
 	return ret;

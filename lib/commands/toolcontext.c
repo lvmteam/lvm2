@@ -879,7 +879,7 @@ static int _init_backup(struct cmd_context *cmd)
 }
 
 /* Entry point */
-struct cmd_context *create_toolcontext(struct arg *the_args)
+struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static)
 {
 	struct cmd_context *cmd;
 
@@ -902,6 +902,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args)
 	}
 	memset(cmd, 0, sizeof(*cmd));
 	cmd->args = the_args;
+	cmd->is_static = is_static;
 	cmd->hosttags = 0;
 	list_init(&cmd->formats);
 	list_init(&cmd->segtypes);

@@ -64,6 +64,7 @@ struct cmd_context {
 	struct command *command;
 	struct arg *args;
 	char **argv;
+	unsigned is_static;	/* Static binary? */
 
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
@@ -87,7 +88,7 @@ struct cmd_context {
 	char proc_dir[PATH_MAX];
 };
 
-struct cmd_context *create_toolcontext(struct arg *the_args);
+struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static);
 void destroy_toolcontext(struct cmd_context *cmd);
 int refresh_toolcontext(struct cmd_context *cmd);
 int config_files_changed(struct cmd_context *cmd);
