@@ -17,6 +17,7 @@
 #define LIB_DEVICE_MAPPER_H
 
 #include <inttypes.h>
+#include <stdarg.h>
 #include <sys/types.h>
 
 #ifdef linux
@@ -600,5 +601,10 @@ int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
 int dm_split_words(char *buffer, unsigned max,
 		   unsigned ignore_comments, /* Not implemented */
 		   char **argv);
+
+/* 
+ * Returns -1 if buffer too small
+ */
+int dm_snprintf(char *buf, size_t bufsize, const char *format, ...);
 
 #endif				/* LIB_DEVICE_MAPPER_H */
