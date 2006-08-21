@@ -398,9 +398,9 @@ int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
 	case LCK_VG:
 		/* If the VG name is empty then lock the unused PVs */
 		if (!*resource)
-			lvm_snprintf(lockname, sizeof(lockname), "P_orphans");
+			dm_snprintf(lockname, sizeof(lockname), "P_orphans");
 		else
-			lvm_snprintf(lockname, sizeof(lockname), "V_%s",
+			dm_snprintf(lockname, sizeof(lockname), "V_%s",
 				     resource);
 
 		cluster_cmd = CLVMD_CMD_LOCK_VG;

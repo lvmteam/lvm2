@@ -233,7 +233,7 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 	for (i = 0; (d > 1024.0) && _units[i]; i++)
 		d /= 1024.0;
 
-	return lvm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
+	return dm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
 }
 
 /*
@@ -623,7 +623,7 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 		pv = pvl->pv;
 
 		/* FIXME But skip if there's already an LV called pv%d ! */
-		if (lvm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0)
+		if (dm_snprintf(buffer, sizeof(buffer), "pv%d", count++) < 0)
 			return_0;
 
 		if (!(name = dm_pool_strdup(f->mem, buffer)))

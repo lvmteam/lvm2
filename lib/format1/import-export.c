@@ -103,7 +103,7 @@ int import_pv(struct dm_pool *mem, struct device *dev,
 static int _system_id(struct cmd_context *cmd, char *s, const char *prefix)
 {
 
-	if (lvm_snprintf(s, NAME_LEN, "%s%s%lu",
+	if (dm_snprintf(s, NAME_LEN, "%s%s%lu",
 			 prefix, cmd->hostname, time(NULL)) < 0) {
 		log_error("Generated system_id too long");
 		return 0;

@@ -67,7 +67,7 @@ static int _get_env_vars(struct cmd_context *cmd)
 
 	/* Set to "" to avoid using any system directory */
 	if ((e = getenv("LVM_SYSTEM_DIR"))) {
-		if (lvm_snprintf(cmd->sys_dir, sizeof(cmd->sys_dir),
+		if (dm_snprintf(cmd->sys_dir, sizeof(cmd->sys_dir),
 				 "%s", e) < 0) {
 			log_error("LVM_SYSTEM_DIR environment variable "
 				  "is too long.");
@@ -167,7 +167,7 @@ static int _process_config(struct cmd_context *cmd)
 		log_verbose("Set umask to %04o", cmd->default_settings.umask);
 
 	/* dev dir */
-	if (lvm_snprintf(cmd->dev_dir, sizeof(cmd->dev_dir), "%s/",
+	if (dm_snprintf(cmd->dev_dir, sizeof(cmd->dev_dir), "%s/",
 			 find_config_tree_str(cmd, "devices/dir",
 					 DEFAULT_DEV_DIR)) < 0) {
 		log_error("Device directory given in config file too long");
@@ -178,7 +178,7 @@ static int _process_config(struct cmd_context *cmd)
 #endif
 
 	/* proc dir */
-	if (lvm_snprintf(cmd->proc_dir, sizeof(cmd->proc_dir), "%s",
+	if (dm_snprintf(cmd->proc_dir, sizeof(cmd->proc_dir), "%s",
 			 find_config_tree_str(cmd, "global/proc",
 					 DEFAULT_PROC_DIR)) < 0) {
 		log_error("Device directory given in config file too long");
@@ -319,7 +319,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 	if (*tag)
 		filler = "_";
 
-	if (lvm_snprintf(config_file, sizeof(config_file), "%s/lvm%s%s.conf",
+	if (dm_snprintf(config_file, sizeof(config_file), "%s/lvm%s%s.conf",
 			 cmd->sys_dir, filler, tag) < 0) {
 		log_error("LVM_SYSTEM_DIR or tag was too long");
 		return 0;
@@ -587,7 +587,7 @@ static int _init_filters(struct cmd_context *cmd)
 	if (!(f3 = _init_filter_components(cmd)))
 		return 0;
 
-	if (lvm_snprintf(cache_file, sizeof(cache_file),
+	if (dm_snprintf(cache_file, sizeof(cache_file),
 			 "%s/.cache", cmd->sys_dir) < 0) {
 		log_error("Persistent cache filename too long ('%s/.cache').",
 			  cmd->sys_dir);
@@ -839,7 +839,7 @@ static int _init_backup(struct cmd_context *cmd)
 	min = (uint32_t) find_config_tree_int(cmd, "backup/retain_min",
 					 DEFAULT_ARCHIVE_NUMBER);
 
-	if (lvm_snprintf
+	if (dm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
 	     DEFAULT_ARCHIVE_SUBDIR) == -1) {
 		log_err("Couldn't create default archive path '%s/%s'.",
@@ -860,7 +860,7 @@ static int _init_backup(struct cmd_context *cmd)
 	    find_config_tree_bool(cmd, "backup/backup",
 			     DEFAULT_BACKUP_ENABLED);
 
-	if (lvm_snprintf
+	if (dm_snprintf
 	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
 	     DEFAULT_BACKUP_SUBDIR) == -1) {
 		log_err("Couldn't create default backup path '%s/%s'.",

@@ -32,7 +32,7 @@ static int _locate_sysfs_blocks(const char *proc, char *path, size_t len)
 		return 0;
 	}
 		
-	if (lvm_snprintf(proc_mounts, sizeof(proc_mounts),
+	if (dm_snprintf(proc_mounts, sizeof(proc_mounts),
 			 "%s/mounts", proc) < 0) {
 		log_error("Failed to create /proc/mounts string");
 		return 0;
@@ -46,7 +46,7 @@ static int _locate_sysfs_blocks(const char *proc, char *path, size_t len)
 	while (fgets(buffer, sizeof(buffer), fp)) {
 		if (dm_split_words(buffer, 4, 0, split) == 4 &&
 		    !strcmp(split[2], "sysfs")) {
-			if (lvm_snprintf(path, len, "%s/%s", split[1],
+			if (dm_snprintf(path, len, "%s/%s", split[1],
 					 "block") >= 0) {
 				r = 1;
 			}
@@ -183,7 +183,7 @@ static int _read_devs(struct dev_set *ds, const char *dir)
                 if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
 			continue;
 
-		if (lvm_snprintf(path, sizeof(path), "%s/%s", dir,
+		if (dm_snprintf(path, sizeof(path), "%s/%s", dir,
 				 d->d_name) < 0) {
 			log_error("sysfs path name too long: %s in %s",
 				  d->d_name, dir);

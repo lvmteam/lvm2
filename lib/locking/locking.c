@@ -189,7 +189,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
 	if (!*vgname)
 		return 1;
 
-	if (lvm_snprintf(path, sizeof(path), "%s/lvm/VGs/%s", cmd->proc_dir,
+	if (dm_snprintf(path, sizeof(path), "%s/lvm/VGs/%s", cmd->proc_dir,
 			 vgname) < 0) {
 		log_error("LVM1 proc VG pathname too long for %s", vgname);
 		return 0;

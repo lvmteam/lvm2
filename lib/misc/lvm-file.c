@@ -50,7 +50,7 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd)
 
 	for (i = 0; i < 20; i++, num++) {
 
-		if (lvm_snprintf(buffer, len, "%s/.lvm_%s_%d_%d",
+		if (dm_snprintf(buffer, len, "%s/.lvm_%s_%d_%d",
 				 dir, hostname, pid, num) == -1) {
 			log_err("Not enough space to build temporary file "
 				"string.");

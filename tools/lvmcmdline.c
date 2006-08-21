@@ -1188,7 +1188,7 @@ static int _hist_file(char *buffer, size_t size)
 {
 	char *e = getenv("HOME");
 
-	if (lvm_snprintf(buffer, size, "%s/.lvm_history", e) < 0) {
+	if (dm_snprintf(buffer, size, "%s/.lvm_history", e) < 0) {
 		log_error("$HOME/.lvm_history: path too long");
 		return 0;
 	}
@@ -1311,7 +1311,7 @@ static void _exec_lvm1_command(char **argv)
 {
 	char path[PATH_MAX];
 
-	if (lvm_snprintf(path, sizeof(path), "%s.lvm1", argv[0]) < 0) {
+	if (dm_snprintf(path, sizeof(path), "%s.lvm1", argv[0]) < 0) {
 		log_error("Failed to create LVM1 tool pathname");
 		return;
 	}

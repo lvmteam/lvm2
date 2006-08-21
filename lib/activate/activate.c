@@ -39,7 +39,7 @@ int lvm1_present(struct cmd_context *cmd)
 {
 	char path[PATH_MAX];
 
-	if (lvm_snprintf(path, sizeof(path), "%s/lvm/global", cmd->proc_dir)
+	if (dm_snprintf(path, sizeof(path), "%s/lvm/global", cmd->proc_dir)
 	    < 0) {
 		log_error("LVM1 proc global snprintf failed");
 		return 0;
@@ -257,9 +257,9 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 				continue;
 		}
 		/* vgname/lvname */
-		if (lvm_snprintf(path, sizeof(path), "%s/%s", lv->vg->name,
+		if (dm_snprintf(path, sizeof(path), "%s/%s", lv->vg->name,
 				 lv->name) < 0) {
-			log_error("lvm_snprintf error from %s/%s", lv->vg->name,
+			log_error("dm_snprintf error from %s/%s", lv->vg->name,
 				  lv->name);
 			continue;
 		}
@@ -342,7 +342,7 @@ int target_present(const char *target_name, int use_modprobe)
 		if (target_version(target_name, &maj, &min, &patchlevel))
 			return 1;
 
-		if (lvm_snprintf(module, sizeof(module), "dm-%s", target_name)
+		if (dm_snprintf(module, sizeof(module), "dm-%s", target_name)
 		    < 0) {
 			log_error("target_present module name too long: %s",
 				  target_name);

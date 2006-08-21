@@ -277,7 +277,7 @@ int archive_vg(struct volume_group *vg,
 	}
 
 	for (i = 0; i < 10; i++) {
-		if (lvm_snprintf(archive_name, sizeof(archive_name),
+		if (dm_snprintf(archive_name, sizeof(archive_name),
 				 "%s/%s_%05u.vg", dir, vg->name, ix) < 0) {
 			log_error("Archive file name too long.");
 			return 0;

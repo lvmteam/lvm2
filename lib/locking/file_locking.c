@@ -212,10 +212,10 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
 		if (!*resource)
-			lvm_snprintf(lockfile, sizeof(lockfile),
+			dm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/P_orphans", _lock_dir);
 		else
-			lvm_snprintf(lockfile, sizeof(lockfile),
+			dm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/V_%s", _lock_dir, resource);
 
 		if (!_lock_file(lockfile, flags))
