@@ -1,6 +1,6 @@
 Version 1.02.10 - 
 ==============================
-  Add dm_split_words() and dm_split_lvm_name() to libdevmapper.
+  Add dm_snprintf(), dm_split_words() and dm_split_lvm_name() to libdevmapper.
   Reorder mm bounds_check code to reduce window for a dmeventd race.
 
 Version 1.02.09 - 15 Aug 2006

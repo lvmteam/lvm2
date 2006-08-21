@@ -99,3 +99,25 @@ int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
 
 	return 1;
 }
+
+/*
+ * On error, up to glibc 2.0.6, snprintf returned -1 if buffer was too small;
+ * From glibc 2.1 it returns number of chars (excl. trailing null) that would 
+ * have been written had there been room.
+ *
+ * dm_snprintf reverts to the old behaviour.
+ */
+int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
+{
+	int n;
+	va_list ap;
+
+	va_start(ap, format);
+	n = vsnprintf(buf, bufsize, format, ap);
+	va_end(ap);
+
+	if (n < 0 || (n > bufsize - 1))
+		return -1;
+
+	return n;
+}
