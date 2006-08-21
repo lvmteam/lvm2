@@ -1,5 +1,6 @@
 Version 2.02.10 - 
 ==================================
+  Move split_words() and split_dm_name() into libdevmapper.
   Add lvconvert man page.
   Add mirror options to man pages.
   Prevent mirror renames.

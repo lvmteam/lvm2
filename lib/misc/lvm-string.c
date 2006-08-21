@@ -17,8 +17,6 @@
 #include "lvm-types.h"
 #include "lvm-string.h"
 
-#include <ctype.h>
-
 /*
  * On error, up to glibc 2.0.6, snprintf returned -1 if buffer was too small;
  * From glibc 2.1 it returns number of chars (excl. trailing null) that would 
@@ -56,47 +54,6 @@ int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
 	*buffer += n;
 	*size -= n;
 	return 1;
-}
-
-/*
- * consume characters while they match the predicate function.
- */
-static char *_consume(char *buffer, int (*fn) (int))
-{
-	while (*buffer && fn(*buffer))
-		buffer++;
-
-	return buffer;
-}
-
-static int _isword(int c)
-{
-	return !isspace(c);
-}
-
-/*
- * Split buffer into NULL-separated words in argv.
- * Returns number of words.
- */
-int split_words(char *buffer, unsigned max, char **argv)
-{
-	unsigned arg;
-
-	for (arg = 0; arg < max; arg++) {
-		buffer = _consume(buffer, isspace);
-		if (!*buffer)
-			break;
-
-		argv[arg] = buffer;
-		buffer = _consume(buffer, _isword);
-
-		if (*buffer) {
-			*buffer = '\0';
-			buffer++;
-		}
-	}
-
-	return arg;
 }
 
 /*
@@ -167,47 +124,6 @@ char *build_dm_name(struct dm_pool *mem, const char *vgname,
 	*out = '\0';
 
 	return r;
-}
-
-/*
- * Remove hyphen quoting from a component of a name.
- * NULL-terminates the component and returns start of next component.
- */
-static char *_unquote(char *component)
-{
-	char *c = component;
-	char *o = c;
-	char *r;
-
-	while (*c) {
-		if (*(c + 1)) {
-			if (*c == '-') {
-				if (*(c + 1) == '-')
-					c++;
-				else
-					break;
-			}
-		}
-		*o = *c;
-		o++;
-		c++;
-	}
-
-	r = (*c) ? c + 1 : c;
-	*o = '\0';
-
-	return r;
-}
-
-int split_dm_name(struct dm_pool *mem, const char *dmname,
-		  char **vgname, char **lvname, char **layer)
-{
-	if (!(*vgname = dm_pool_strdup(mem, dmname)))
-		return 0;
-
-	_unquote(*layer = _unquote(*lvname = _unquote(*vgname)));
-
-	return 1;
 }
 
 int validate_name(const char *n)

@@ -48,7 +48,7 @@ static int _get_mirror_event(char *params)
 	char *p;
 	int log_argc, num_devs, num_failures=0;
 
-	if (max_args <= split_words(params, max_args, args)) {
+	if (max_args <= dm_split_words(params, max_args, 0, args)) {
 		syslog(LOG_ERR, "Unable to split mirror parameters: Arg list too long");
 		return -E2BIG;
 	}
@@ -121,7 +121,7 @@ static int _remove_failed_devices(const char *device)
 	if (strlen(device) > 200)
 		return -ENAMETOOLONG;
 
-	if (!split_dm_name(mem_pool, device, &vg, &lv, &layer)) {
+	if (!dm_split_lvm_name(mem_pool, device, &vg, &lv, &layer)) {
 		syslog(LOG_ERR, "Unable to determine VG name from %s",
 		       device);
 		return -ENOMEM;

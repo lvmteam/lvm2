@@ -44,7 +44,7 @@ static int _locate_sysfs_blocks(const char *proc, char *path, size_t len)
 	}
 
 	while (fgets(buffer, sizeof(buffer), fp)) {
-		if (split_words(buffer, 4, split) == 4 &&
+		if (dm_split_words(buffer, 4, 0, split) == 4 &&
 		    !strcmp(split[2], "sysfs")) {
 			if (lvm_snprintf(path, len, "%s/%s", split[1],
 					 "block") >= 0) {

@@ -912,7 +912,7 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 		name = dm_tree_node_get_name(child);
 
 		if (name && lvlayer->old_name && *lvlayer->old_name && strcmp(name, lvlayer->old_name)) {
-	        	if (!split_dm_name(dm->mem, lvlayer->old_name, &vgname, &lvname, &layer)) {
+	        	if (!dm_split_lvm_name(dm->mem, lvlayer->old_name, &vgname, &lvname, &layer)) {
                 		log_error("_create_lv_symlinks: Couldn't split up old device name %s", lvlayer->old_name);
                 		return 0;
         		}
@@ -938,7 +938,7 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 		if (!(uuid = dm_tree_node_get_uuid(child)))
 			continue;
 
-        	if (!split_dm_name(dm->mem, name, &vgname, &lvname, &layer)) {
+        	if (!dm_split_lvm_name(dm->mem, name, &vgname, &lvname, &layer)) {
                 	log_error("_clean_tree: Couldn't split up device name %s.", name);
                 	return 0;
         	}
