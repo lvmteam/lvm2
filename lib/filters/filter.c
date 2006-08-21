@@ -145,7 +145,7 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 	/* All types unrecognised initially */
 	memset(_max_partitions_by_major, 0, sizeof(int) * NUMBER_OF_MAJORS);
 
-	if (lvm_snprintf(proc_devices, sizeof(proc_devices),
+	if (dm_snprintf(proc_devices, sizeof(proc_devices),
 			 "%s/devices", proc) < 0) {
 		log_error("Failed to create /proc/devices string");
 		return 0;

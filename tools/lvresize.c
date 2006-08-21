@@ -480,14 +480,14 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	}
 
 	if (lp->resizefs) {
-		if (lvm_snprintf(lv_path, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+		if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", cmd->dev_dir,
 				 lp->vg_name, lp->lv_name) < 0) {
 			log_error("Couldn't create LV path for %s",
 				  lp->lv_name);
 			return ECMD_FAILED;
 		}
 
-		if (lvm_snprintf(size_buf, SIZE_BUF, "%" PRIu64,
+		if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64,
 				 (uint64_t) lp->extents * vg->extent_size / 2)
 				 < 0) {
 			log_error("Couldn't generate new LV size string");

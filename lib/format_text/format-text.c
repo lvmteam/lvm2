@@ -853,7 +853,7 @@ static int _scan_file(const struct format_type *fmt)
 			     tmp != dirent->d_name + strlen(dirent->d_name)
 			     - 4)) {
 				vgname = dirent->d_name;
-				if (lvm_snprintf(path, PATH_MAX, "%s/%s",
+				if (dm_snprintf(path, PATH_MAX, "%s/%s",
 						 dl->dir, vgname) < 0) {
 					log_error("Name too long %s/%s",
 						  dl->dir, vgname);
@@ -1533,7 +1533,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 		dir_list = &((struct mda_lists *) fmt->private)->dirs;
 
 		list_iterate_items(dl, dir_list) {
-			if (lvm_snprintf(path, PATH_MAX, "%s/%s",
+			if (dm_snprintf(path, PATH_MAX, "%s/%s",
 					 dl->dir, vgname) < 0) {
 				log_error("Name too long %s/%s", dl->dir,
 					  vgname);

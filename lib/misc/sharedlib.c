@@ -32,7 +32,7 @@ void get_shared_library_path(struct cmd_context *cmd, const char *libname,
 	 * if present */
 	if (libname[0] == '/' ||
 	    !(lib_dir = find_config_tree_str(cmd, "global/library_dir", 0)) ||
-	    (lvm_snprintf(path, path_len, "%s/%s", lib_dir,
+	    (dm_snprintf(path, path_len, "%s/%s", lib_dir,
 			  libname) == -1) || stat(path, &info) == -1)
 		strncpy(path, libname, path_len);
 }

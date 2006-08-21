@@ -268,7 +268,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			} else {
 				vglv_sz = strlen(vgname) + strlen(lv_name) + 2;
 				if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
-				    lvm_snprintf(vglv, vglv_sz, "%s/%s", vgname,
+				    dm_snprintf(vglv, vglv_sz, "%s/%s", vgname,
 						 lv_name) < 0) {
 					log_error("vg/lv string alloc failed");
 					return ECMD_FAILED;
@@ -1098,14 +1098,14 @@ int validate_vg_name(struct cmd_context *cmd, const char *vg_name)
 int generate_log_name_format(struct volume_group *vg __attribute((unused)),
 			     const char *lv_name, char *buffer, size_t size)
 {
-	if (lvm_snprintf(buffer, size, "%s_mlog", lv_name) < 0) {
+	if (dm_snprintf(buffer, size, "%s_mlog", lv_name) < 0) {
 		stack;
 		return 0;
 	}
 
 	/* FIXME I think we can cope without this.  Cf. _add_lv_to_dtree()
 	if (find_lv_in_vg(vg, buffer) &&
-	    lvm_snprintf(buffer, size, "%s_mlog_%%d",
+	    dm_snprintf(buffer, size, "%s_mlog_%%d",
 			 lv_name) < 0) {
 		stack;
 		return 0;
@@ -1135,7 +1135,7 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv, int value)
 		return 0;
 	}
 
-	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
 			 lv->vg->name, lv->name) < 0) {
 		log_error("Name too long - device not cleared (%s)", lv->name);
 		return 0;
@@ -1183,7 +1183,7 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 		return 0;
 	}
 
-	if (lvm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
 			 lv->vg->name, lv->name) < 0) {
 		log_error("Name too long - log header not written (%s)", lv->name);
 		return 0;

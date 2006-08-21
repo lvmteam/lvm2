@@ -172,9 +172,9 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 			return 0;
 		}
 
-		if (lvm_snprintf(extent_str, sizeof(extent_str), "(%" PRIu32
+		if (dm_snprintf(extent_str, sizeof(extent_str), "(%" PRIu32
 				 ")", extent) < 0) {
-			log_error("Extent number lvm_snprintf failed");
+			log_error("Extent number dm_snprintf failed");
 			return 0;
 		}
 
@@ -276,7 +276,7 @@ static int _int_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (lvm_snprintf(repstr, 12, "%d", value) < 0) {
+	if (dm_snprintf(repstr, 12, "%d", value) < 0) {
 		log_error("int too big: %d", value);
 		return 0;
 	}
@@ -540,7 +540,7 @@ static int _lvname_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (lvm_snprintf(repstr, len, "[%s]", lv->name) < 0) {
+	if (dm_snprintf(repstr, len, "[%s]", lv->name) < 0) {
 		log_error("lvname snprintf failed");
 		return 0;
 	}
@@ -784,7 +784,7 @@ static int _uint32_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (lvm_snprintf(repstr, 11, "%u", value) < 0) {
+	if (dm_snprintf(repstr, 11, "%u", value) < 0) {
 		log_error("uint32 too big: %u", value);
 		return 0;
 	}
@@ -813,7 +813,7 @@ static int _int32_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (lvm_snprintf(repstr, 12, "%d", value) < 0) {
+	if (dm_snprintf(repstr, 12, "%d", value) < 0) {
 		log_error("int32 too big: %d", value);
 		return 0;
 	}
@@ -870,7 +870,7 @@ static int _snpercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (lvm_snprintf(repstr, 7, "%.2f", snap_percent) < 0) {
+	if (dm_snprintf(repstr, 7, "%.2f", snap_percent) < 0) {
 		log_error("snapshot percentage too large");
 		return 0;
 	}
@@ -910,7 +910,7 @@ static int _copypercent_disp(struct report_handle *rh, struct field *field,
 		return 0;
 	}
 
-	if (lvm_snprintf(repstr, 7, "%.2f", percent) < 0) {
+	if (dm_snprintf(repstr, 7, "%.2f", percent) < 0) {
 		log_error("copy percentage too large");
 		return 0;
 	}
@@ -1324,7 +1324,7 @@ static int _report_headings(void *handle)
 
 		heading = _fields[fp->field_num].heading;
 		if (rh->flags & RH_ALIGNED) {
-			if (lvm_snprintf(buf, sizeof(buf), "%-*.*s",
+			if (dm_snprintf(buf, sizeof(buf), "%-*.*s",
 					 fp->width, fp->width, heading) < 0) {
 				log_error("snprintf heading failed");
 				dm_pool_end_object(rh->mem);
@@ -1467,7 +1467,7 @@ int report_output(void *handle)
 						      strlen(repstr)))
 					goto bad;
 			} else if (field->props->flags & FLD_ALIGN_LEFT) {
-				if (lvm_snprintf(buf, sizeof(buf), "%-*.*s",
+				if (dm_snprintf(buf, sizeof(buf), "%-*.*s",
 						 width, width, repstr) < 0) {
 					log_error("snprintf repstr failed");
 					dm_pool_end_object(rh->mem);
@@ -1476,7 +1476,7 @@ int report_output(void *handle)
 				if (!dm_pool_grow_object(rh->mem, buf, width))
 					goto bad;
 			} else if (field->props->flags & FLD_ALIGN_RIGHT) {
-				if (lvm_snprintf(buf, sizeof(buf), "%*.*s",
+				if (dm_snprintf(buf, sizeof(buf), "%*.*s",
 						 width, width, repstr) < 0) {
 					log_error("snprintf repstr failed");
 					dm_pool_end_object(rh->mem);

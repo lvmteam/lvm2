@@ -190,7 +190,7 @@ static int __backup(struct volume_group *vg)
 		return 0;
 	}
 
-	if (lvm_snprintf(name, sizeof(name), "%s/%s",
+	if (dm_snprintf(name, sizeof(name), "%s/%s",
 			 vg->cmd->backup_params->dir, vg->name) < 0) {
 		log_error("Failed to generate volume group metadata backup "
 			  "filename.");
@@ -233,7 +233,7 @@ int backup_remove(struct cmd_context *cmd, const char *vg_name)
 {
 	char path[PATH_MAX];
 
-	if (lvm_snprintf(path, sizeof(path), "%s/%s",
+	if (dm_snprintf(path, sizeof(path), "%s/%s",
 			 cmd->backup_params->dir, vg_name) < 0) {
 		log_err("Failed to generate backup filename (for removal).");
 		return 0;
@@ -342,7 +342,7 @@ int backup_restore(struct cmd_context *cmd, const char *vg_name)
 {
 	char path[PATH_MAX];
 
-	if (lvm_snprintf(path, sizeof(path), "%s/%s",
+	if (dm_snprintf(path, sizeof(path), "%s/%s",
 			 cmd->backup_params->dir, vg_name) < 0) {
 		log_err("Failed to generate backup filename (for restore).");
 		return 0;
@@ -397,7 +397,7 @@ void check_current_backup(struct volume_group *vg)
 	if ((vg->status & PARTIAL_VG) || (vg->status & EXPORTED_VG))
 		return;
 
-	if (lvm_snprintf(path, sizeof(path), "%s/%s",
+	if (dm_snprintf(path, sizeof(path), "%s/%s",
 			 vg->cmd->backup_params->dir, vg->name) < 0) {
 		log_debug("Failed to generate backup filename.");
 		return;

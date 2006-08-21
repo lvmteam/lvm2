@@ -428,7 +428,7 @@ static int _create_layers_for_mirror(struct alloc_handle *ah,
 		return 0;
 	}
 
-	if (lvm_snprintf(img_name, len, "%s_mimage_%%d", lv->name) < 0) {
+	if (dm_snprintf(img_name, len, "%s_mimage_%%d", lv->name) < 0) {
 		log_error("img_name allocation failed. "
 			  "Remove new LV and retry.");
 		return 0;

@@ -318,7 +318,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
       log_it:
 	if (!_log_suppress) {
 		if (_verbose_level > _LOG_DEBUG)
-			lvm_snprintf(locn, sizeof(locn), "#%s:%d ",
+			dm_snprintf(locn, sizeof(locn), "#%s:%d ",
 				     file, line);
 		else
 			locn[0] = '\0';
@@ -413,7 +413,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 		_already_logging = 1;
 		memset(&buf, ' ', sizeof(buf));
 		bufused = 0;
-		if ((n = lvm_snprintf(buf, sizeof(buf) - bufused - 1,
+		if ((n = dm_snprintf(buf, sizeof(buf) - bufused - 1,
 				      "%s:%d %s%s", file, line, _cmd_name,
 				      _msg_prefix)) == -1)
 			goto done;
