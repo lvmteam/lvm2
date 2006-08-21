@@ -582,4 +582,23 @@ struct dm_hash_node *dm_hash_get_next(struct dm_hash_table *t, struct dm_hash_no
  *********/
 int dm_set_selinux_context(const char *path, mode_t mode);
 
+/*********************
+ * string manipulation
+ *********************/
+
+/*
+ * Break up the name of a mapped device into its constituent
+ * Volume Group, Logical Volume and Layer (if present).
+ */
+int dm_split_lvm_name(struct dm_pool *mem, const char *dmname,
+		      char **vgname, char **lvname, char **layer);
+
+/*
+ * Destructively split buffer into NULL-separated words in argv.
+ * Returns number of words.
+ */
+int dm_split_words(char *buffer, unsigned max,
+		   unsigned ignore_comments, /* Not implemented */
+		   char **argv);
+
 #endif				/* LIB_DEVICE_MAPPER_H */

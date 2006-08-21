@@ -34,13 +34,8 @@ int lvm_snprintf(char *buf, size_t bufsize, const char *format, ...);
 
 int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...);
 
-int split_words(char *buffer, unsigned max, char **argv);
-
 char *build_dm_name(struct dm_pool *mem, const char *vg,
                     const char *lv, const char *layer);
-
-int split_dm_name(struct dm_pool *mem, const char *dmname,
-                  char **vgname, char **lvname, char **layer);
 
 int validate_name(const char *n);
 
