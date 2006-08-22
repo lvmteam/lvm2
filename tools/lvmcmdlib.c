@@ -18,7 +18,6 @@
 #include "label.h"
 #include "version.h"
 
-#include "stub.h"
 #include "lvm2cmd.h"
 
 #include <signal.h>
