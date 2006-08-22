@@ -539,7 +539,7 @@ void init_lvhash()
 /* Called to initialise the LVM context of the daemon */
 int init_lvm(int using_gulm)
 {
-	if (!(cmd = create_toolcontext(NULL))) {
+	if (!(cmd = create_toolcontext(NULL, 0))) {
 		log_error("Failed to allocate command context");
 		return 0;
 	}
