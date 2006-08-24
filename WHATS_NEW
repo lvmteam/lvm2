@@ -5,6 +5,7 @@ Version 2.02.10 -
   Add mirror options to man pages.
   Prevent mirror renames.
   Move CMDLIB code into separate file and record whether static build.
+  Stop clvmd complaining about nodes that have left the cluster
 
 Version 2.02.09 - 17th August 2006
 ==================================
