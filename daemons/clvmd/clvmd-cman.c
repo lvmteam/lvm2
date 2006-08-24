@@ -137,7 +137,7 @@ static int _cluster_send_message(void *buf, int msglen, char *csid, const char *
 
 	if (cman_send_data(c_handle, buf, msglen, 0, CLUSTER_PORT_CLVMD, nodeid) <= 0)
 	{
-			log_error(errtext);
+		log_error(errtext);
 	}
 	return msglen;
 }
@@ -152,16 +152,18 @@ static void _get_our_csid(char *csid)
 
 /* Call a callback routine for each node is that known (down means not running a clvmd) */
 static int _cluster_do_node_callback(struct local_client *client,
-			     void (*callback) (struct local_client *, char *,
-					       int))
+				     void (*callback) (struct local_client *, char *,
+						       int))
 {
 	int i;
 	int somedown = 0;
 
 	for (i = 0; i < _get_num_nodes(); i++) {
-		callback(client, (char *)&nodes[i].cn_nodeid, node_updown[nodes[i].cn_nodeid]);
-		if (!node_updown[nodes[i].cn_nodeid])
-			somedown = -1;
+		if (nodes[i].cn_member) {
+			callback(client, (char *)&nodes[i].cn_nodeid, node_updown[nodes[i].cn_nodeid]);
+			if (!node_updown[nodes[i].cn_nodeid])
+				somedown = -1;
+		}
 	}
 	return somedown;
 }
@@ -205,7 +207,7 @@ static void event_callback(cman_handle_t handle, void *private, int reason, int 
 
 static struct local_client *cman_client;
 static int _cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid,
-			struct local_client **new_client)
+				struct local_client **new_client)
 {
 
 	/* Save this for data_callback */
@@ -243,7 +245,7 @@ static void _add_up_node(char *csid)
 				 max_updown_nodes);
 		} else {
 			log_error
-			    ("Realloc failed. Node status for clvmd will be wrong. quitting\n");
+				("Realloc failed. Node status for clvmd will be wrong. quitting\n");
 			exit(999);
 		}
 	}
@@ -297,35 +299,36 @@ static void get_members()
 		return;
 	}
 
-	        /* Not enough room for new nodes list ? */
-	        if (num_nodes > count_nodes && nodes) {
-			free(nodes);
-			nodes = NULL;
-		}
+	/* Not enough room for new nodes list ? */
+	if (num_nodes > count_nodes && nodes) {
+		free(nodes);
+		nodes = NULL;
+	}
 
-		if (nodes == NULL) {
-		        count_nodes = num_nodes + 10; /* Overallocate a little */
+	if (nodes == NULL) {
+		count_nodes = num_nodes + 10; /* Overallocate a little */
 		nodes = malloc(count_nodes * sizeof(struct cman_node));
-			if (!nodes) {
-			        log_error("Unable to allocate nodes array\n");
-				exit(5);
-			}
+		if (!nodes) {
+			log_error("Unable to allocate nodes array\n");
+			exit(5);
 		}
+	}
 
 	status = cman_get_nodes(c_handle, count_nodes, &retnodes, nodes);
 	if (status < 0) {
-		        log_error("Unable to get node details");
-			exit(6);
-		}
-
-		if (node_updown == NULL) {
-			node_updown =
-			    (int *) malloc(sizeof(int) *
-					   max(num_nodes, max_updown_nodes));
-			memset(node_updown, 0,
-			       sizeof(int) * max(num_nodes, max_updown_nodes));
-		}
+		log_error("Unable to get node details");
+		exit(6);
 	}
+
+	if (node_updown == NULL) {
+		node_updown =
+			(int *) malloc(sizeof(int) *
+				       max(num_nodes, max_updown_nodes));
+		memset(node_updown, 0,
+		       sizeof(int) * max(num_nodes, max_updown_nodes));
+	}
+}
+
 
 /* Convert a node name to a CSID */
 static int _csid_from_name(char *csid, char *name)
