@@ -81,6 +81,28 @@ const char *command_name(struct cmd_context *cmd)
 }
 
 /*
+ * Strip dev_dir if present
+ */
+char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name)
+{
+	/* FIXME Do this properly */
+
+	if (*vg_name == '/') {
+		while (*vg_name == '/')
+			vg_name++;
+		vg_name--;
+	}
+
+	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir))) {
+		vg_name += strlen(cmd->dev_dir);
+		while (*vg_name == '/')
+			vg_name++;
+	}
+
+	return (char *) vg_name;
+}
+
+/*
  * Metadata iteration functions
  */
 int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
@@ -450,7 +472,6 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	struct list arg_vgnames, tags;
 
 	const char *vg_name, *vgid;
-	char *dev_dir = cmd->dev_dir;
 
 	list_init(&tags);
 	list_init(&arg_vgnames);
@@ -475,13 +496,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			}
 
-			if (*vg_name == '/') {
-				while (*vg_name == '/')
-					vg_name++;
-				vg_name--;
-			}
-			if (!strncmp(vg_name, dev_dir, strlen(dev_dir)))
-				vg_name += strlen(dev_dir);
+			vg_name = skip_dev_dir(cmd, vg_name);
 			if (strchr(vg_name, '/')) {
 				log_error("Invalid volume group name: %s",
 					  vg_name);
@@ -768,21 +783,13 @@ const char *extract_vgname(struct cmd_context *cmd, const char *lv_name)
 char *default_vgname(struct cmd_context *cmd)
 {
 	char *vg_path;
-	char *dev_dir = cmd->dev_dir;
 
 	/* Take default VG from environment? */
 	vg_path = getenv("LVM_VG_NAME");
 	if (!vg_path)
 		return 0;
 
-	/* Strip dev_dir (optional) */
-	if (*vg_path == '/') {
-		while (*vg_path == '/')
-			vg_path++;
-		vg_path--;
-	}
-	if (!strncmp(vg_path, dev_dir, strlen(dev_dir)))
-		vg_path += strlen(dev_dir);
+	vg_path = skip_dev_dir(cmd, vg_path);
 
 	if (strchr(vg_path, '/')) {
 		log_error("Environment Volume Group in LVM_VG_NAME invalid: "

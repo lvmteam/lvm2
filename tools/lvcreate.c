@@ -94,19 +94,7 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 			}
 
 		} else {
-			vg_name = argv[0];
-			/* Strip dev_dir (optional) */
-			if (*vg_name == '/') {
-				while (*vg_name == '/')
-					vg_name++;
-				vg_name--;
-			}
-			if (!strncmp(vg_name, cmd->dev_dir,
-				     strlen(cmd->dev_dir))) {
-				vg_name += strlen(cmd->dev_dir);
-				while (*vg_name == '/')
-					vg_name++;
-			}
+			vg_name = skip_dev_dir(cmd, argv[0]);
 			if (strrchr(vg_name, '/')) {
 				log_error("Volume group name expected "
 					  "(no slash)");

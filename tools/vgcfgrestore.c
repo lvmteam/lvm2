@@ -24,10 +24,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	vg_name = argv[0];
-
-	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
-		vg_name += strlen(cmd->dev_dir);
+	vg_name = skip_dev_dir(cmd, argv[0]);
 
 	if (!validate_name(vg_name)) {
 		log_error("Volume group name \"%s\" is invalid", vg_name);
