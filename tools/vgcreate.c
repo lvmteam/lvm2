@@ -38,7 +38,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name = argv[0];
+	vg_name = skip_dev_dir(cmd, argv[0]);
 	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
 	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
 	alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
@@ -83,10 +83,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Physical extent size may not be zero");
 		return EINVALID_CMD_LINE;
 	}
-
-	/* Strip dev_dir if present */
-	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
-		vg_name += strlen(cmd->dev_dir);
 
 	if (!validate_vg_name(cmd, vg_name)) {
 		log_error("New volume group name \"%s\" is invalid", vg_name);

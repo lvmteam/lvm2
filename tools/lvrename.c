@@ -29,9 +29,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	struct lv_list *lvl;
 
 	if (argc == 3) {
-		vg_name = argv[0];
-		if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir)))
-			vg_name += strlen(cmd->dev_dir);
+		vg_name = skip_dev_dir(cmd, argv[0]);
 		lv_name_old = argv[1];
 		lv_name_new = argv[2];
 		if (strchr(lv_name_old, '/') &&

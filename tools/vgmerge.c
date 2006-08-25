@@ -231,7 +231,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 {
-	char *vg_name_to;
+	char *vg_name_to, *vg_name_from;
 	int opt = 0;
 	int ret = 0, ret_max = 0;
 
@@ -240,12 +240,14 @@ int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name_to = argv[0];
+	vg_name_to = skip_dev_dir(cmd, argv[0]);
 	argc--;
 	argv++;
 
 	for (; opt < argc; opt++) {
-		ret = _vgmerge_single(cmd, vg_name_to, argv[opt]);
+		vg_name_from = skip_dev_dir(cmd, argv[opt]);
+
+		ret = _vgmerge_single(cmd, vg_name_to, vg_name_from);
 		if (ret > ret_max)
 			ret_max = ret;
 	}
