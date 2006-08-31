@@ -134,24 +134,27 @@ int init_locking(int type, struct cmd_context *cmd)
 		return 1;
 
 	case 1:
+		log_very_verbose("File-based locking selected.");
 		if (!init_file_locking(&_locking, cmd))
 			break;
-		log_very_verbose("File-based locking enabled.");
 		return 1;
 
 #ifdef HAVE_LIBDL
 	case 2:
-		if (!init_external_locking(&_locking, cmd))
-			break;
-		log_very_verbose("External locking enabled.");
-		return 1;
+		if (!cmd->is_static) {
+			log_very_verbose("External locking selected.");
+			if (!init_external_locking(&_locking, cmd))
+				break;
+			return 1;
+		}
+		/* Fall through */
 #endif
 
 #ifdef CLUSTER_LOCKING_INTERNAL
 	case 3:
+		log_very_verbose("Cluster locking selected.");
 		if (!init_cluster_locking(&_locking, cmd))
 			break;
-		log_very_verbose("Cluster locking enabled.");
 		return 1;
 #endif
 
