@@ -17,6 +17,7 @@
 #include "config.h"
 #include "lvm-string.h"
 #include "sharedlib.h"
+#include "toolcontext.h"
 
 #include <limits.h>
 #include <sys/stat.h>
@@ -42,6 +43,12 @@ void *load_shared_library(struct cmd_context *cmd, const char *libname,
 {
 	char path[PATH_MAX];
 	void *library;
+
+	if (cmd->is_static) {
+		log_error("Not loading shared %s library %s in static mode.",
+			  desc, libname);
+		return NULL;
+	}
 
 	get_shared_library_path(cmd, libname, path, sizeof(path));
 

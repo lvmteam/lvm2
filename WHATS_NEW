@@ -1,5 +1,7 @@
 Version 2.02.10 - 
 ==================================
+  lvm.static uses built-in cluster locking instead of external locking.
+  Don't attempt to load shared libraries if built statically.
   Change default locking_lib to liblvm2clusterlock.so.
   Add skip_dev_dir() to process command line VGs.
   Stop clvmd complaining about nodes that have left the cluster.

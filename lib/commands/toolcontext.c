@@ -646,8 +646,9 @@ static int _init_formats(struct cmd_context *cmd)
 #endif
 
 #ifdef HAVE_LIBDL
-	/* Load any formats in shared libs */
-	if ((cn = find_config_tree_node(cmd, "global/format_libraries"))) {
+	/* Load any formats in shared libs if not static */
+	if (!cmd->is_static &&
+	    (cn = find_config_tree_node(cmd, "global/format_libraries"))) {
 
 		struct config_value *cv;
 		struct format_type *(*init_format_fn) (struct cmd_context *);
@@ -740,8 +741,9 @@ static int _init_segtypes(struct cmd_context *cmd)
 #endif
 
 #ifdef HAVE_LIBDL
-	/* Load any formats in shared libs */
-	if ((cn = find_config_tree_node(cmd, "global/segment_libraries"))) {
+	/* Load any formats in shared libs unless static */
+	if (!cmd->is_static &&
+	    (cn = find_config_tree_node(cmd, "global/segment_libraries"))) {
 
 		struct config_value *cv;
 		struct segment_type *(*init_segtype_fn) (struct cmd_context *);
