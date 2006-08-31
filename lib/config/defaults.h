@@ -32,7 +32,7 @@
 #define DEFAULT_MD_COMPONENT_DETECTION 1
 
 #define DEFAULT_LOCK_DIR "/var/lock/lvm"
-#define DEFAULT_LOCKING_LIB "lvm2_locking.so"
+#define DEFAULT_LOCKING_LIB "liblvm2clusterlock.so"
 
 #define DEFAULT_MIRROR_LOG_FAULT_POLICY "allocate"
 #define DEFAULT_MIRROR_DEV_FAULT_POLICY "remove"

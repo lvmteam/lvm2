@@ -1,5 +1,6 @@
 Version 2.02.10 - 
 ==================================
+  Change default locking_lib to liblvm2clusterlock.so.
   Add skip_dev_dir() to process command line VGs.
   Stop clvmd complaining about nodes that have left the cluster.
   Move lvm_snprintf(), split_words() and split_dm_name() into libdevmapper.
