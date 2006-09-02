@@ -138,6 +138,12 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		return ECMD_FAILED;
 	}
 
+	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg->name);
+		return ECMD_FAILED;
+	}
+
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group %s is exported", vg->name);
 		return ECMD_FAILED;

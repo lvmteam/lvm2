@@ -1,5 +1,7 @@
 Version 2.02.10 - 
 ==================================
+  When using local file locking, skip clustered VGs.
+  Add fallback_to_clustered_locking and fallback_to_local_locking parameters.
   lvm.static uses built-in cluster locking instead of external locking.
   Don't attempt to load shared libraries if built statically.
   Change default locking_lib to liblvm2clusterlock.so.

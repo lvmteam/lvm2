@@ -476,6 +476,13 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg->name);
+		unlock_vg(cmd, vg_name);
+		return ECMD_FAILED;
+	}
+
 	if (arg_count(cmd, removemissing_ARG)) {
 		if (vg && consistent) {
 			log_error("Volume group \"%s\" is already consistent",
@@ -488,6 +495,13 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		consistent = 0;
 		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
 			log_error("Volume group \"%s\" not found", vg_name);
+			unlock_vg(cmd, vg_name);
+			return ECMD_FAILED;
+		}
+		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+		    !lockingfailed()) {
+			log_error("Skipping clustered volume group %s",
+				  vg->name);
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;
 		}

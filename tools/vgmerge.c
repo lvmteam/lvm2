@@ -41,6 +41,13 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
+	if ((vg_to->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg_name_to);
+		unlock_vg(cmd, vg_name_to);
+		return ECMD_FAILED;
+	}
+
 	if (vg_to->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg_to->name);
 		unlock_vg(cmd, vg_name_to);
@@ -65,6 +72,12 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
 		goto error;
 	}
+
+        if ((vg_from->status & CLUSTERED) && !locking_is_clustered() &&
+            !lockingfailed()) {
+                log_error("Skipping clustered volume group %s", vg_name_from);
+                goto error;
+        }
 
 	if (vg_from->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg_from->name);

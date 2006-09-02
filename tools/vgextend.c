@@ -53,6 +53,12 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
+	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg->name);
+		goto error;
+	}
+
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg->name);
 		goto error;
