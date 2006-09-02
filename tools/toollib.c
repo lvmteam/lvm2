@@ -329,14 +329,34 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			if (!vg)
 				log_error("Volume group \"%s\" "
 					  "not found", vgname);
-			else
+			else {
+				if ((vg->status & CLUSTERED) &&
+			    	    !locking_is_clustered() &&
+				    !lockingfailed()) {
+					log_error("Skipping clustered volume "
+						  "group %s", vgname);
+					if (ret_max < ECMD_FAILED)
+						ret_max = ECMD_FAILED;
+					continue;
+				}
 				log_error("Volume group \"%s\" "
 					  "inconsistent", vgname);
+			}
+
 			if (!vg || !(vg = recover_vg(cmd, vgname, lock_type))) {
 				if (ret_max < ECMD_FAILED)
 					ret_max = ECMD_FAILED;
 				continue;
 			}
+		}
+
+		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+		    !lockingfailed()) {
+			unlock_vg(cmd, vgname);
+			log_error("Skipping clustered volume group %s", vgname);
+			if (ret_max < ECMD_FAILED)
+				ret_max = ECMD_FAILED;
+			continue;
 		}
 
 		tags_arg = &tags;
@@ -434,6 +454,13 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	log_verbose("Finding volume group \"%s\"", vg_name);
 	if (!(vg = vg_read(cmd, vg_name, vgid, &consistent))) {
 		log_error("Volume group \"%s\" not found", vg_name);
+		unlock_vg(cmd, vg_name);
+		return ECMD_FAILED;
+	}
+
+	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg_name);
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
@@ -680,6 +707,15 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				}
 				if (!consistent)
 					continue;
+
+				if ((vg->status & CLUSTERED) &&
+				    !locking_is_clustered() &&
+				    !lockingfailed()) {
+					log_error("Skipping clustered volume "
+						  "group %s", sll->str);
+					continue;
+				}
+
 				ret = process_each_pv_in_vg(cmd, vg, &tags,
 							    handle,
 							    process_single);
@@ -1044,6 +1080,10 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 				int lock_type)
 {
 	int consistent = 1;
+
+	/* Don't attempt automatic recovery without proper locking */
+	if (lockingfailed())
+		return NULL;
 
 	lock_type &= ~LCK_TYPE_MASK;
 	lock_type |= LCK_WRITE;

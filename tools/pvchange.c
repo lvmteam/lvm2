@@ -67,6 +67,12 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return 0;
 		}
 
+		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+		    !lockingfailed()) {
+			log_error("Skipping clustered volume group %s", vg->name);
+			return 0;
+		}
+
 		if (vg->status & EXPORTED_VG) {
 			unlock_vg(cmd, pv->vg_name);
 			log_error("Volume group \"%s\" is exported", vg->name);

@@ -20,6 +20,7 @@
 #include "activate.h"
 #include "toolcontext.h"
 #include "memlock.h"
+#include "defaults.h"
 
 #include <signal.h>
 #include <sys/stat.h>
@@ -147,6 +148,10 @@ int init_locking(int type, struct cmd_context *cmd)
 				break;
 			return 1;
 		}
+		if (!find_config_tree_int(cmd, "locking/fallback_to_clustered_locking",
+					  DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING))
+			break;
+		log_very_verbose("Falling back to clustered locking.");
 		/* Fall through */
 #endif
 
@@ -161,6 +166,16 @@ int init_locking(int type, struct cmd_context *cmd)
 	default:
 		log_error("Unknown locking type requested.");
 		return 0;
+	}
+
+	if ((type == 2 || type == 3) &&
+            find_config_tree_int(cmd, "locking/fallback_to_local_locking",
+				 DEFAULT_FALLBACK_TO_LOCAL_LOCKING)) {
+		log_print("WARNING: Falling back to local file-based locking.");
+		log_print("Volume Groups with the clustered attribute will "
+			  "be inaccessible.");
+		if (init_file_locking(&_locking, cmd))
+			return 1;
 	}
 
 	if (!ignorelockingfailure())

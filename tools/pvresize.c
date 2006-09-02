@@ -77,6 +77,13 @@ static int _pvresize_single(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 
+		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+		    !lockingfailed()) {
+			unlock_vg(cmd, vg_name);
+			log_error("Skipping clustered volume group %s", vg->name);
+			return ECMD_FAILED;
+		}
+
 		if (vg->status & EXPORTED_VG) {
 			unlock_vg(cmd, vg_name);
 			log_error("Volume group \"%s\" is exported", vg->name);

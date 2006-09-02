@@ -33,6 +33,8 @@
 
 #define DEFAULT_LOCK_DIR "/var/lock/lvm"
 #define DEFAULT_LOCKING_LIB "liblvm2clusterlock.so"
+#define DEFAULT_FALLBACK_TO_LOCAL_LOCKING 1
+#define DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING 1
 
 #define DEFAULT_MIRROR_LOG_FAULT_POLICY "allocate"
 #define DEFAULT_MIRROR_DEV_FAULT_POLICY "remove"

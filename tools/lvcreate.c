@@ -486,6 +486,12 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
+	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", lp->vg_name);
+		return 0;
+	}
+
 	if (vg->status & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", lp->vg_name);
 		return 0;

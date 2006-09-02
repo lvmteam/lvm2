@@ -102,6 +102,13 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if ((vg_old->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg_old->name);
+		unlock_vg(cmd, vg_name_old);
+		return ECMD_FAILED;
+	}
+
 	if (vg_old->status & EXPORTED_VG)
 		log_info("Volume group \"%s\" is exported", vg_old->name);
 

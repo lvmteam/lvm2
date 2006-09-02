@@ -68,13 +68,20 @@ static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!(vg = vg_read(cmd, pv->vg_name, NULL, &consistent))) {
 		log_error("Can't read %s: skipping", pv->vg_name);
-		unlock_vg(cmd, pv->vg_name);
-		return ECMD_FAILED;
+		goto out;
+	}
+
+	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg->name);
+		ret = ECMD_FAILED;
+		goto out;
 	}
 
 	if (!report_object(handle, vg, NULL, pv, NULL, pvseg))
 		ret = ECMD_FAILED;
 
+out:
 	unlock_vg(cmd, pv->vg_name);
 	return ret;
 }
@@ -109,14 +116,22 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (!(vg = vg_read(cmd, pv->vg_name, (char *)&pv->vgid, &consistent))) {
 			log_error("Can't read %s: skipping", pv->vg_name);
-			unlock_vg(cmd, pv->vg_name);
-			return ECMD_FAILED;
+			goto out;
+		}
+
+		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+		    !lockingfailed()) {
+			log_error("Skipping clustered volume group %s",
+				  vg->name);
+			ret = ECMD_FAILED;
+			goto out;
 		}
 	}
 
 	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
 		ret = ECMD_FAILED;
 
+out:
 	if (pv->vg_name)
 		unlock_vg(cmd, pv->vg_name);
 
