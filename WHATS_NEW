@@ -1,5 +1,6 @@
 Version 2.02.10 - 
 ==================================
+  Don't attempt automatic recovery without proper locking.
   When using local file locking, skip clustered VGs.
   Add fallback_to_clustered_locking and fallback_to_local_locking parameters.
   lvm.static uses built-in cluster locking instead of external locking.

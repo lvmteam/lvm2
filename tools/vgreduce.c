@@ -476,7 +476,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	if (vg && (vg->status & CLUSTERED) && !locking_is_clustered() &&
 	    !lockingfailed()) {
 		log_error("Skipping clustered volume group %s", vg->name);
 		unlock_vg(cmd, vg_name);
