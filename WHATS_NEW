@@ -1,5 +1,9 @@
 Version 2.02.10 - 
 ==================================
+  Fix several incorrect comparisons in parallel area avoidance code.
+  Fix segment lengths when flattening existing parallel areas.
+  Log existing parallel areas prior to allocation.
+  Fix mirror log creation when activation disabled.
   Don't attempt automatic recovery without proper locking.
   When using local file locking, skip clustered VGs.
   Add fallback_to_clustered_locking and fallback_to_local_locking parameters.

@@ -1204,7 +1204,6 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv, int value)
 	return 1;
 }
 
-
 /*
  * This function writes a new header to the mirror log header to the lv
  *
@@ -1301,6 +1300,12 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 		goto error;
 	}
 
+	if (!activation() && in_sync) {
+		log_error("Aborting. Unable to create in-sync mirror log "
+			  "while activation is disabled.");
+		goto error;
+	}
+
 	if (!activate_lv(cmd, log_lv)) {
 		log_error("Aborting. Failed to activate mirror log. "
 			  "Remove new LVs and retry.");
@@ -1313,7 +1318,7 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 		goto error;
 	}
 
-	if (!_write_log_header(cmd, log_lv)) {
+	if (activation() && !_write_log_header(cmd, log_lv)) {
 		log_error("Aborting. Failed to write mirror log header. "
 			  "Remove new LV and retry.");
 		goto error;
