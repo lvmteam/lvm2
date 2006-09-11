@@ -657,7 +657,7 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 	if (log_area) {
 		ah->log_area.pv = log_area->map->pv;
 		ah->log_area.pe = log_area->start;
-		ah->log_area.len = 1;	/* FIXME Calculate & check this */
+		ah->log_area.len = MIRROR_LOG_SIZE;	/* FIXME Calculate & check this */
 		consume_pv_area(log_area, ah->log_area.len);
 	}
 
@@ -685,14 +685,21 @@ static int _comp_area(const void *l, const void *r)
  */
 static int _check_contiguous(struct lv_segment *prev_lvseg,
 			     struct physical_volume *pv, struct pv_area *pva,
-			     struct pv_area **areas)
+			     struct pv_area **areas, uint32_t areas_size)
 {
 	struct pv_segment *prev_pvseg;
+	struct lv_segment *lastseg;
 	uint32_t s;
 
-	for (s = 0; s < prev_lvseg->area_count; s++) {
-		if (seg_type(prev_lvseg, s) != AREA_PV)
-			continue;	/* FIXME Broken */
+	for (s = 0; s < prev_lvseg->area_count && s < areas_size; s++) {
+		if (seg_type(prev_lvseg, s) == AREA_LV) {
+			lastseg = list_item(list_last(&seg_lv(prev_lvseg, s)->segments), struct lv_segment);
+			/* FIXME For more areas supply flattened prev_lvseg to ensure consistency */
+			if (lastseg->area_count == 1 &&
+			    _check_contiguous(lastseg, pv, pva, &areas[s], 1))
+				return 1;
+			continue;
+		}
 
 		if (!(prev_pvseg = seg_pvseg(prev_lvseg, s)))
 			continue; /* FIXME Broken */
@@ -796,7 +803,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					if (prev_lvseg &&
 					    _check_contiguous(prev_lvseg,
 							      pvm->pv,
-							      pva, areas)) {
+							      pva, areas,
+							      areas_size)) {
 						contiguous_count++;
 						goto next_pv;
 					}
@@ -1374,11 +1382,15 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	return lv;
 }
 
-/* Recursively process each PV used by part of an LV */
+/*
+ * Call fn for each AREA_PV used by the LV segment at lv:le of length *max_seg_len.
+ * If any constituent area contains more than one segment, max_seg_len is
+ * reduced to cover only the first.
+ */
 static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
-			uint32_t le, uint32_t len,
-			int (*fn)(struct cmd_context *cmd, struct pv_segment *peg, struct seg_pvs *spvs),
-			struct seg_pvs *spvs)
+			uint32_t le, uint32_t len, uint32_t *max_seg_len,
+			int (*fn)(struct cmd_context *cmd, struct pv_segment *peg, void *data),
+			void *data)
 {
 	struct lv_segment *seg;
 	uint32_t s;
@@ -1396,36 +1408,41 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 	if (remaining_seg_len > len)
 		remaining_seg_len = len;
 
-	if (spvs->len > remaining_seg_len)
-		spvs->len = remaining_seg_len;
+	if (max_seg_len && *max_seg_len > remaining_seg_len)
+		*max_seg_len = remaining_seg_len;
 
 	area_multiple = segtype_is_striped(seg->segtype) ? seg->area_count : 1;
-	area_len = remaining_seg_len / area_multiple;
+	area_len = remaining_seg_len / area_multiple ? : 1;
 
-	for (s = 0; s < seg->area_count; s++) {
+	for (s = 0; s < seg->area_count; s++)
 		if (seg_type(seg, s) == AREA_LV) {
 			if (!_for_each_pv(cmd, seg_lv(seg, s),
 					  seg_le(seg, s) + (le - seg->le) / area_multiple,
-					  area_len, fn, spvs)) {
-				stack;
-				return 0;
-			}
-		} else if (seg_type(seg, s) == AREA_PV) {
-			if (!fn(cmd, seg_pvseg(seg, s), spvs)) {
-				stack;
-				return 0;
-			}
-		}
-	}
+					  area_len, max_seg_len, fn, data))
+				return_0;
+		} else if ((seg_type(seg, s) == AREA_PV) &&
+			   !fn(cmd, seg_pvseg(seg, s), data))
+			return_0;
+
+	if (seg_is_mirrored(seg) && 
+	    !_for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
+			  NULL, fn, data))
+		return_0;
+
+	/* FIXME Add snapshot cow LVs etc. */
 
 	return 1;
 }
 
-static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg, struct seg_pvs *spvs)
+static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg, void *data)
 {
+	struct seg_pvs *spvs = (struct seg_pvs *) data;
 	struct pv_list *pvl;
 
-	/* FIXME Don't add again if it's already on the list! */
+	/* Don't add again if it's already on list. */
+	list_iterate_items(pvl, &spvs->pvs)
+		if (pvl->pv == peg->pv)
+			return 1;
 
 	if (!(pvl = dm_pool_alloc(cmd->mem, sizeof(*pvl)))) {
 		log_error("pv_list allocation failed");
@@ -1434,10 +1451,7 @@ static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg, struct seg_
 
 	pvl->pv = peg->pv;
 
-	/* FIXME Use ordered list to facilitate comparison */
 	list_add(&spvs->pvs, &pvl->list);
-
-	/* FIXME Add mirror logs, snapshot cow LVs etc. */
 
 	return 1;
 }
@@ -1474,7 +1488,7 @@ struct list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 
 		/* Find next segment end */
 		/* FIXME Unnecessary nesting! */
-		if (!_for_each_pv(cmd, lv, current_le, lv->le_count - current_le, _add_pvs, spvs)) {
+		if (!_for_each_pv(cmd, lv, current_le, spvs->len, &spvs->len, _add_pvs, (void *) spvs)) {
 			stack;
 			return NULL;
 		}
