@@ -1,5 +1,10 @@
 Version 2.02.10 - 
 ==================================
+  Extend _check_contiguous() to detect single-area LVs.
+  Include mirror log (untested) in _for_each_pv() processing.
+  Use MIRROR_LOG_SIZE constant.
+  Remove struct seg_pvs from _for_each_pv() to generalise.
+  Avoid adding duplicates to list of parallel PVs to avoid.
   Fix several incorrect comparisons in parallel area avoidance code.
   Fix segment lengths when flattening existing parallel areas.
   Log existing parallel areas prior to allocation.
