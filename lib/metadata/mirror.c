@@ -161,9 +161,11 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 		remove_log = 1;
 	}
 
-	if (remove_log) {
+	if (remove_log && mirrored_seg->log_lv) {
 		log_lv = mirrored_seg->log_lv;
 		mirrored_seg->log_lv = NULL;
+		log_lv->status &= ~MIRROR_LOG;
+		log_lv->status |= VISIBLE_LV;
 	}
 
 	/*
