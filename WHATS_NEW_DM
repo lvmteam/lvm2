@@ -1,10 +1,10 @@
-Version 1.02.10 - 
-==============================
+Version 1.02.10 - 19 Sep 2006
+=============================
   Add dm_snprintf(), dm_split_words() and dm_split_lvm_name() to libdevmapper.
   Reorder mm bounds_check code to reduce window for a dmeventd race.
 
 Version 1.02.09 - 15 Aug 2006
-==============================
+=============================
   Add --table argument to dmsetup for a one-line table.
   Abort if errors are found during cmdline option processing.
   Add lockfs indicator to debug output.
