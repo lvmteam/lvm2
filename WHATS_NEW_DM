@@ -1,3 +1,6 @@
+Version 1.02.11 - 
+=============================
+
 Version 1.02.10 - 19 Sep 2006
 =============================
   Add dm_snprintf(), dm_split_words() and dm_split_lvm_name() to libdevmapper.
