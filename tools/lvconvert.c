@@ -344,8 +344,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 						  lp->mirrors - 1);
 					return 1;
 				}
-			}
-			if (lp->mirrors > existing_mirrors) {
+			} else if (lp->mirrors > existing_mirrors) {
 				/* FIXME Unless anywhere, remove PV of log_lv 
 				 * from allocatable_pvs & allocate 
 				 * (mirrors - existing_mirrors) new areas

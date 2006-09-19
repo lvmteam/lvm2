@@ -1,5 +1,7 @@
 Version 2.02.10 - 
 ==================================
+  Fix lvconvert mirror change case detection logic.
+  Fix mirror log detachment so it correctly becomes a standalone LV.
   Extend _check_contiguous() to detect single-area LVs.
   Include mirror log (untested) in _for_each_pv() processing.
   Use MIRROR_LOG_SIZE constant.
