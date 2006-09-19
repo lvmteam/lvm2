@@ -135,12 +135,6 @@ void dm_free_aux(void *p)
 
 	/* have we freed this before ? */
 	assert(mb->id != 0);
-	mb->id = 0;
-
-	/* stomp a different pattern across the memory */
-	ptr = ((char *) mb) + sizeof(struct memblock);
-	for (i = 0; i < mb->length; i++)
-		*ptr++ = i & 1 ? (char) 0xde : (char) 0xad;
 
 	/* unlink */
 	if (mb->prev)
@@ -152,6 +146,13 @@ void dm_free_aux(void *p)
 		mb->next->prev = mb->prev;
 	else
 		_tail = mb->prev;
+
+	mb->id = 0;
+
+	/* stomp a different pattern across the memory */
+	ptr = ((char *) mb) + sizeof(struct memblock);
+	for (i = 0; i < mb->length; i++)
+		*ptr++ = i & 1 ? (char) 0xde : (char) 0xad;
 
 	assert(_mem_stats.blocks_allocated);
 	_mem_stats.blocks_allocated--;
