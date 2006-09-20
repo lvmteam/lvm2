@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
 #
 # This file is part of the lvm2-cluster package.
 #
@@ -21,8 +21,9 @@ function usage
     echo "usage: $0 <command>"
     echo ""
     echo "Commands:"
-    echo "Enable clvm:  --enable-cluster --lockinglibdir <dir> [--lockinglib <lib>]"
+    echo "Enable clvm:  --enable-cluster [--lockinglibdir <dir>] [--lockinglib <lib>]"
     echo "Disable clvm: --disable-cluster"
+    echo "Set locking library: --lockinglibdir <dir> [--lockinglib <lib>]"
     echo ""
     echo "Global options:"
     echo "Config file location: --file <configfile>"
@@ -86,14 +87,13 @@ function validate_args
             exit 10
     fi
 
-    if [ -z "$LOCKING_TYPE" ]; then
+    if [ -z "$LOCKING_TYPE" ] && [ -z "$LOCKINGLIBDIR" ]; then
         usage
         exit 1
     fi
 
-    if [ "$LOCKING_TYPE" == "2" ]; then
+    if [ -n "$LOCKINGLIBDIR" ]; then
 
-        [ -z "$LOCKINGLIBDIR" ] && usage && exit 1    
         [ -z "$LOCKINGLIB" ] && LOCKINGLIB="liblvm2clusterlock.so"
             
         if [ "${LOCKINGLIBDIR:0:1}" != "/" ]
@@ -108,6 +108,10 @@ function validate_args
             exit 11
         fi
         
+    fi
+
+    if [ "$LOCKING_TYPE" = "1" ] && [ -n "$LOCKINGLIBDIR" -o -n "$LOCKINGLIB" ]; then
+	echo "Superfluous locking lib parameter, ignoring"
     fi
 }
 
@@ -153,11 +157,19 @@ then
     fi
 fi
 
+if [ "$LOCKING_TYPE" = "2" ] && [ -z "$LOCKINGLIBDIR" ] && [ "$have_dir" = "1" ]; then
+	echo "no library_dir specified in $CONFIGFILE"
+	exit 16
+fi
+
 # So if we don't have "global {" we need to create one and 
 # populate it
 
 if [ "$have_global" = "1" ]
 then
+    if [ -z "$LOCKING_TYPE" ]; then
+	LOCKING_TYPE=1
+    fi
     if [ "$LOCKING_TYPE" = "2" ]; then
         cat $CONFIGFILE - <<EOF > $TMPFILE
 global {
@@ -180,14 +192,16 @@ else
     # locking entries as appropriate
     #
 
-    if [ "$have_type" = "0" ] 
-    then
-	SEDCMD=" s/^[[:blank:]]*locking_type[[:blank:]]*=.*/\ \ \ \ locking_type = $LOCKING_TYPE/g"
-    else
-	SEDCMD=" /global[[:blank:]]*{/a\ \ \ \ locking_type = $LOCKING_TYPE"
+    if [ -n "$LOCKING_TYPE" ]; then
+	if [ "$have_type" = "0" ] 
+	then
+	    SEDCMD=" s/^[[:blank:]]*locking_type[[:blank:]]*=.*/\ \ \ \ locking_type = $LOCKING_TYPE/g"
+	else
+	    SEDCMD=" /global[[:blank:]]*{/a\ \ \ \ locking_type = $LOCKING_TYPE"
+	fi
     fi
     
-    if [ "$LOCKING_TYPE" = "2" ]; then
+    if [ -n "$LOCKINGLIBDIR" ]; then
         if [ "$have_dir" = "0" ] 
             then
             SEDCMD="${SEDCMD}\ns'^[[:blank:]]*library_dir[[:blank:]]*=.*'\ \ \ \ library_dir = \"$LOCKINGLIBDIR\"'g"
@@ -201,7 +215,9 @@ else
         else
             SEDCMD="${SEDCMD}\n/global[[:blank:]]*{/a\ \ \ \ locking_library = \"$LOCKINGLIB\""
         fi
-    else
+    fi
+
+    if [ "$LOCKING_TYPE" = "1" ]; then
         # if we're not using cluster locking, remove the library dir and locking library name
         if [ "$have_dir" = "0" ] 
             then
