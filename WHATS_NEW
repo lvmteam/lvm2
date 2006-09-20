@@ -1,5 +1,6 @@
 Version 2.02.11 - 
 =====================================
+  Separate --enable-cluster from locking lib options in lvmconf.sh.
   Add a missing comma in lvcreate man page.
 
 Version 2.02.10 - 19th September 2006
