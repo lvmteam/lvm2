@@ -1044,7 +1044,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (correct_vg) {
 		if (list_size(&correct_vg->pvs) != list_size(pvids)) {
 			log_debug("Cached VG %s had incorrect PV list",
-				  vg->name);
+				  vgname);
 
 			if (memlock())
 				inconsistent = 1;
@@ -1053,7 +1053,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		} else list_iterate_items(pvl, &correct_vg->pvs) {
 			if (!str_list_match_item(pvids, pvl->pv->dev->pvid)) {
 				log_debug("Cached VG %s had incorrect PV list",
-					  vg->name);
+					  vgname);
 				correct_vg = NULL;
 				break;
 			}
