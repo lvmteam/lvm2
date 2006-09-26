@@ -4,7 +4,8 @@ lvreduce \- reduce the size of a logical volume
 .SH SYNOPSIS
 .B lvreduce
 [\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-f/\-\-force]
-[\-h/\-?/\-\-help] {\-l/\-\-extents [\-]LogicalExtentsNumber |
+[\-h/\-?/\-\-help]
+{\-l/\-\-extents [\-]LogicalExtentsNumber[%{VG|LV|FREE}] |
 \-L/\-\-size [\-]LogicalVolumeSize[kKmMgGtT]}
 [\-t/\-\-test]
 [\-v/\-\-verbose] LogicalVolume[Path]
@@ -35,11 +36,15 @@ See \fBlvm\fP for common options.
 .I \-f, \-\-force
 Force size reduction without any question.
 .TP
-.I \-l, \-\-extents [\-]LogicalExtentsNumber
+.I \-l, \-\-extents [\-]LogicalExtentsNumber[%{VG|LV|FREE}]
 Reduce or set the logical volume size in units of logical extents.
 With the - sign the value will be subtracted from
 the logical volume's actual size and without it the will be taken as
 an absolute size.
+The number can also be expressed as a percentage of the total space
+in the Volume Group with the suffix %VG or relative to the existing
+size of the Logical Volume with the suffix %LV or as a percentage of the remaining
+free space in the Volume Group with the suffix %FREE.
 .TP
 .I \-L, \-\-size [\-]LogicalVolumeSize[kKmMgGtT]
 Reduce or set the logical volume size in units of megabyte by default.

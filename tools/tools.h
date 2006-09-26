@@ -80,6 +80,13 @@ typedef enum {
 	SIGN_MINUS = 2
 } sign_t;
 
+typedef enum {
+	PERCENT_NONE = 0,
+	PERCENT_VG,
+	PERCENT_FREE,
+	PERCENT_LV
+} percent_t;
+
 enum {
 	CHANGE_AY = 0,
 	CHANGE_AN = 1,
@@ -103,6 +110,7 @@ struct arg {
 	int64_t i64_value;
 	uint64_t ui64_value;
 	sign_t sign;
+	percent_t percent;
 	void *ptr;
 };
 
@@ -126,6 +134,7 @@ int size_kb_arg(struct cmd_context *cmd, struct arg *a);
 int size_mb_arg(struct cmd_context *cmd, struct arg *a);
 int int_arg(struct cmd_context *cmd, struct arg *a);
 int int_arg_with_sign(struct cmd_context *cmd, struct arg *a);
+int int_arg_with_sign_and_percent(struct cmd_context *cmd, struct arg *a);
 int major_arg(struct cmd_context *cmd, struct arg *a);
 int minor_arg(struct cmd_context *cmd, struct arg *a);
 int string_arg(struct cmd_context *cmd, struct arg *a);
@@ -148,6 +157,7 @@ int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def);
 uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def);
 const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def);
 sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def);
+percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def);
 int arg_count_increment(struct cmd_context *cmd, int a);
 
 const char *command_name(struct cmd_context *cmd);

@@ -43,6 +43,7 @@ struct lvcreate_params {
 	/* size */
 	uint32_t extents;
 	uint64_t size;
+	percent_t percent;
 
 	uint32_t permission;
 	uint32_t read_ahead;
@@ -157,6 +158,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 			return 0;
 		}
 		lp->extents = arg_uint_value(cmd, extents_ARG, 0);
+		lp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
 	}
 
 	/* Size returned in kilobyte units; held in sectors */
@@ -166,6 +168,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 			return 0;
 		}
 		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)) * 2;
+		lp->percent = PERCENT_NONE;
 	}
 
 	return 1;
@@ -554,6 +557,20 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		}
 
 		lp->extents = tmp_size / vg->extent_size;
+	}
+
+	switch(lp->percent) {
+		case PERCENT_VG:
+			lp->extents = lp->extents * vg->extent_count / 100;
+			break;
+		case PERCENT_FREE:
+			lp->extents = lp->extents * vg->free_count / 100;
+			break;
+		case PERCENT_LV:
+			log_error("Please express size as %%VG or %%FREE.");
+			return 0;
+		case PERCENT_NONE:
+			break;
 	}
 
 	if ((size_rest = lp->extents % lp->stripes)) {
