@@ -69,6 +69,7 @@ static int _interactive;
 int yes_no_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	a->sign = SIGN_NONE;
+	a->percent = PERCENT_NONE;
 
 	if (!strcmp(a->value, "y")) {
 		a->i_value = 1;
@@ -90,6 +91,7 @@ int yes_no_excl_arg(struct cmd_context *cmd __attribute((unused)),
 		    struct arg *a)
 {
 	a->sign = SIGN_NONE;
+	a->percent = PERCENT_NONE;
 
 	if (!strcmp(a->value, "e") || !strcmp(a->value, "ey") ||
 	    !strcmp(a->value, "ye")) {
@@ -148,6 +150,8 @@ static int _get_int_arg(struct arg *a, char **ptr)
 	char *val;
 	long v;
 
+	a->percent = PERCENT_NONE;
+
 	val = a->value;
 	switch (*val) {
 	case '+':
@@ -185,6 +189,8 @@ static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *
 	static const char *suffixes = "kmgt";
 	char *val;
 	double v;
+
+	a->percent = PERCENT_NONE;
 
 	val = a->value;
 	switch (*val) {
@@ -254,6 +260,33 @@ int int_arg_with_sign(struct cmd_context *cmd __attribute((unused)), struct arg 
 	char *ptr;
 
 	if (!_get_int_arg(a, &ptr) || (*ptr))
+		return 0;
+
+	return 1;
+}
+
+int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute((unused)),
+				  struct arg *a)
+{
+	char *ptr;
+
+	if (!_get_int_arg(a, &ptr))
+		return 0;
+
+	if (!*ptr)
+		return 1;
+
+	if (*ptr++ != '%')
+		return 0;
+
+	if (!strcasecmp(ptr, "V") || !strcasecmp(ptr, "VG"))
+		a->percent = PERCENT_VG;
+	else if (!strcasecmp(ptr, "L") || !strcasecmp(ptr, "LV"))
+		a->percent = PERCENT_LV;
+	else if (!strcasecmp(ptr, "F") || !strcasecmp(ptr, "FR") ||
+		 !strcasecmp(ptr, "FREE"))
+		a->percent = PERCENT_FREE;
+	else
 		return 0;
 
 	return 1;

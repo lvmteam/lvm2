@@ -31,6 +31,7 @@ struct lvresize_params {
 	uint32_t extents;
 	uint64_t size;
 	sign_t sign;
+	percent_t percent;
 
 	enum {
 		LV_ANY = 0,
@@ -68,12 +69,14 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	if (arg_count(cmd, extents_ARG)) {
 		lp->extents = arg_uint_value(cmd, extents_ARG, 0);
 		lp->sign = arg_sign_value(cmd, extents_ARG, SIGN_NONE);
+		lp->percent = arg_percent_value(cmd, extents_ARG, PERCENT_NONE);
 	}
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG)) {
 		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)) * 2;
 		lp->sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
+		lp->percent = PERCENT_NONE;
 	}
 
 	if (lp->resize == LV_EXTEND && lp->sign == SIGN_MINUS) {
@@ -236,6 +239,20 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		}
 
 		lp->extents = lp->size / vg->extent_size;
+	}
+
+	switch(lp->percent) {
+		case PERCENT_VG:
+			lp->extents = lp->extents * vg->extent_count / 100;
+			break;
+		case PERCENT_FREE:
+			lp->extents = lp->extents * vg->free_count / 100;
+			break;
+		case PERCENT_LV:
+			lp->extents = lp->extents * lv->le_count / 100;
+			break;
+		case PERCENT_NONE:
+			break;
 	}
 
 	if (lp->sign == SIGN_PLUS)
