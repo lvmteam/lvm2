@@ -1,5 +1,6 @@
 Version 2.02.11 - 
 =====================================
+  Add timestamp functions with --disable-realtime configure option.
   Add %VG, %LV and %FREE suffices to lvcreate/lvresize --extents arg.
   Fix two potential NULL pointer derefs in error cases in vg_read().
   Separate --enable-cluster from locking lib options in lvmconf.sh.

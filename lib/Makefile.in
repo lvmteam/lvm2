@@ -79,6 +79,7 @@ SOURCES =\
 	misc/lvm-file.c \
 	misc/lvm-string.c \
 	misc/lvm-wrappers.c \
+	misc/timestamp.c \
 	mm/memlock.c \
 	regex/matcher.c \
 	regex/parse_rx.c \

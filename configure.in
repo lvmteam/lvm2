@@ -42,6 +42,7 @@ case "$host_os" in
 		DEVMAPPER=yes
 		ODIRECT=yes
 		SELINUX=yes
+		REALTIME=yes
 		CLUSTER=internal
 		FSADM=no ;;
 	darwin*)
@@ -56,6 +57,7 @@ case "$host_os" in
 		DEVMAPPER=yes
 		ODIRECT=no
 		SELINUX=no
+		REALTIME=no
 		CLUSTER=none
 		FSADM=no ;;
 esac
@@ -283,6 +285,13 @@ SELINUX=$enableval)
 AC_MSG_RESULT($SELINUX)
 
 ################################################################################
+dnl -- Disable realtime clock support
+AC_MSG_CHECKING(whether to enable realtime support)
+AC_ARG_ENABLE(realtime, [  --disable-realtime       Disable realtime clock support],
+REALTIME=$enableval)
+AC_MSG_RESULT($REALTIME)
+
+################################################################################
 dnl -- Build cluster LVM daemon
 AC_MSG_CHECKING(whether to build cluster LVM daemon)
 AC_ARG_WITH(clvmd,
@@ -450,6 +459,21 @@ if test x$SELINUX = xyes; then
 fi
 
 ################################################################################
+dnl -- Check for realtime clock support
+if test x$REALTIME = xyes; then
+	AC_MSG_CHECKING(for clock_gettime function)
+	AC_CHECK_LIB(rt, clock_gettime, HAVE_REALTIME=yes, HAVE_REALTIME=no)
+	AC_MSG_RESULT($HAVE_REALTIME)
+
+	if test x$HAVE_REALTIME = xyes; then
+		AC_DEFINE([HAVE_REALTIME], 1, [Define to 1 to include support for realtime clock.])
+		LIBS="-lrt $LIBS"
+	else
+		AC_MSG_WARN(Disabling realtime clock)
+	fi
+fi
+
+################################################################################
 dnl -- Check for getopt
 AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 to if getopt_long is available.]))
 
@@ -578,6 +602,7 @@ AC_SUBST(DEBUG)
 AC_SUBST(DEVMAPPER)
 AC_SUBST(HAVE_LIBDL)
 AC_SUBST(HAVE_SELINUX)
+AC_SUBST(HAVE_REALTIME)
 AC_SUBST(CMDLIB)
 AC_SUBST(MSGFMT)
 AC_SUBST(LOCALEDIR)
