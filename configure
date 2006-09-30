@@ -310,7 +310,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=/usr
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CFLOW_CMD CSCOPE_CMD CPP EGREP ALLOCA LIBOBJS POW_LIB MSGFMT MODPROBE_CMD JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP COPTIMISE_FLAG CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LDDEPS LIB_SUFFIX LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL CLVMD CLUSTER FSADM DMEVENTD LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CFLOW_CMD CSCOPE_CMD CPP EGREP ALLOCA LIBOBJS POW_LIB MSGFMT MODPROBE_CMD JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP COPTIMISE_FLAG CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LDDEPS LIB_SUFFIX LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX HAVE_REALTIME CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL CLVMD CLUSTER FSADM DMEVENTD LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -853,6 +853,7 @@ Optional Features:
                           statically.  Default is dynamic linking
   --enable-readline       Enable readline support
   --disable-selinux       Disable selinux support
+  --disable-realtime       Disable realtime clock support
   --enable-debug          Enable debugging
   --disable-devmapper     Disable device-mapper interaction
   --disable-o_direct      Disable O_DIRECT
@@ -1459,6 +1460,7 @@ case "$host_os" in
 		DEVMAPPER=yes
 		ODIRECT=yes
 		SELINUX=yes
+		REALTIME=yes
 		CLUSTER=internal
 		FSADM=no ;;
 	darwin*)
@@ -1473,6 +1475,7 @@ case "$host_os" in
 		DEVMAPPER=yes
 		ODIRECT=no
 		SELINUX=no
+		REALTIME=no
 		CLUSTER=none
 		FSADM=no ;;
 esac
@@ -7432,6 +7435,17 @@ echo "$as_me:$LINENO: result: $SELINUX" >&5
 echo "${ECHO_T}$SELINUX" >&6
 
 ################################################################################
+echo "$as_me:$LINENO: checking whether to enable realtime support" >&5
+echo $ECHO_N "checking whether to enable realtime support... $ECHO_C" >&6
+# Check whether --enable-realtime or --disable-realtime was given.
+if test "${enable_realtime+set}" = set; then
+  enableval="$enable_realtime"
+  REALTIME=$enableval
+fi;
+echo "$as_me:$LINENO: result: $REALTIME" >&5
+echo "${ECHO_T}$REALTIME" >&6
+
+################################################################################
 echo "$as_me:$LINENO: checking whether to build cluster LVM daemon" >&5
 echo $ECHO_N "checking whether to build cluster LVM daemon... $ECHO_C" >&6
 
@@ -8417,6 +8431,96 @@ _ACEOF
 	else
 		{ echo "$as_me:$LINENO: WARNING: Disabling selinux" >&5
 echo "$as_me: WARNING: Disabling selinux" >&2;}
+	fi
+fi
+
+################################################################################
+if test x$REALTIME = xyes; then
+	echo "$as_me:$LINENO: checking for clock_gettime function" >&5
+echo $ECHO_N "checking for clock_gettime function... $ECHO_C" >&6
+	echo "$as_me:$LINENO: checking for clock_gettime in -lrt" >&5
+echo $ECHO_N "checking for clock_gettime in -lrt... $ECHO_C" >&6
+if test "${ac_cv_lib_rt_clock_gettime+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lrt  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char clock_gettime ();
+int
+main ()
+{
+clock_gettime ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_rt_clock_gettime=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_rt_clock_gettime=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_rt_clock_gettime" >&5
+echo "${ECHO_T}$ac_cv_lib_rt_clock_gettime" >&6
+if test $ac_cv_lib_rt_clock_gettime = yes; then
+  HAVE_REALTIME=yes
+else
+  HAVE_REALTIME=no
+fi
+
+	echo "$as_me:$LINENO: result: $HAVE_REALTIME" >&5
+echo "${ECHO_T}$HAVE_REALTIME" >&6
+
+	if test x$HAVE_REALTIME = xyes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_REALTIME 1
+_ACEOF
+
+		LIBS="-lrt $LIBS"
+	else
+		{ echo "$as_me:$LINENO: WARNING: Disabling realtime clock" >&5
+echo "$as_me: WARNING: Disabling realtime clock" >&2;}
 	fi
 fi
 
@@ -11097,6 +11201,7 @@ fi
 
 
 
+
 ################################################################################
                                                                                                                                                                                                                                                 ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile dmeventd/Makefile dmeventd/mirror/Makefile doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile tools/Makefile tools/version.h tools/fsadm/Makefile test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
 cat >confcache <<\_ACEOF
@@ -11789,6 +11894,7 @@ s,@DEBUG@,$DEBUG,;t t
 s,@DEVMAPPER@,$DEVMAPPER,;t t
 s,@HAVE_LIBDL@,$HAVE_LIBDL,;t t
 s,@HAVE_SELINUX@,$HAVE_SELINUX,;t t
+s,@HAVE_REALTIME@,$HAVE_REALTIME,;t t
 s,@CMDLIB@,$CMDLIB,;t t
 s,@LOCALEDIR@,$LOCALEDIR,;t t
 s,@CONFDIR@,$CONFDIR,;t t
