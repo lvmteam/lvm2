@@ -948,6 +948,44 @@ static struct {
 
 const unsigned int _num_fields = sizeof(_fields) / sizeof(_fields[0]);
 
+static void _display_fields(void)
+{
+	uint32_t f;
+	const char *type, *last_type = "";
+
+	for (f = 0; f < _num_fields; f++) {
+		switch (_fields[f].type) {
+		case PVS:
+			type = "Physical Volume";
+			break;
+		case LVS:
+			type = "Logical Volume";
+			break;
+		case VGS:
+			type = "Volume Group";
+			break;
+		case SEGS:
+			type = "Logical Volume Segment";
+			break;
+		case PVSEGS:
+			type = "Physical Volume Segment";
+			break;
+		default:
+			type = " ";
+		}
+
+		if (type != last_type) {
+			if (*last_type)
+				log_print(" ");
+			log_print("%s Fields", type);
+		}
+
+		log_print("- %s", _fields[f].id);
+
+		last_type = type;
+	}
+}
+
 /*
  * Initialise report handle
  */
@@ -1080,6 +1118,8 @@ static int _parse_options(struct report_handle *rh, const char *format)
 		while (*we && *we != ',')
 			we++;
 		if (!_field_match(rh, ws, (size_t) (we - ws))) {
+			_display_fields();
+			log_print(" ");
 			log_error("Unrecognised field: %.*s", (int) (we - ws),
 				  ws);
 			return 0;
