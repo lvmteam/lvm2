@@ -54,7 +54,7 @@ extern char *optarg;
  */
 struct arg the_args[ARG_COUNT + 1] = {
 
-#define arg(a, b, c, d) {b, "", "--" c, d, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), 0, NULL},
+#define arg(a, b, c, d) {b, "", "--" c, d, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), SIGN_NONE, PERCENT_NONE, NULL},
 #include "args.h"
 #undef arg
 
