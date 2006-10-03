@@ -21,6 +21,7 @@
 #include "display.h"
 #include "activate.h"
 #include "segtype.h"
+#include "str_list.h"
 
 /* 
  * For macro use
@@ -200,6 +201,7 @@ static int _devices_disp(struct report_handle *rh, struct field *field,
 
 	return 1;
 }
+
 static int _tags_disp(struct report_handle *rh, struct field *field,
 		      const void *data)
 {
@@ -228,6 +230,23 @@ static int _tags_disp(struct report_handle *rh, struct field *field,
 	field->sort_value = (const void *) field->report_string;
 
 	return 1;
+}
+
+static int _modules_disp(struct report_handle *rh, struct field *field,
+			 const void *data)
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct list *modules;
+
+	if (!(modules = str_list_create(rh->mem))) {
+		log_error("modules str_list allocation failed");
+		return 0;
+	}
+
+	if (!list_lv_modules(rh->mem, lv, modules))
+		return_0;
+
+	return _tags_disp(rh, field, modules);
 }
 
 static int _vgfmt_disp(struct report_handle *rh, struct field *field,
