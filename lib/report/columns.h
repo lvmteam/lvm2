@@ -33,6 +33,7 @@ FIELD(LVS, lv, NUM, "Copy%", lvid, 6, copypercent, "copy_percent")
 FIELD(LVS, lv, STR, "Move", lvid, 4, movepv, "move_pv")
 FIELD(LVS, lv, STR, "LV Tags", tags, 7, tags, "lv_tags")
 FIELD(LVS, lv, STR, "Log", lvid, 3, loglv, "mirror_log")
+FIELD(LVS, lv, STR, "Modules", lvid, 7, modules, "modules")
 
 FIELD(PVS, pv, STR, "Fmt", id, 3, pvfmt, "pv_fmt")
 FIELD(PVS, pv, STR, "PV UUID", id, 38, uuid, "pv_uuid")

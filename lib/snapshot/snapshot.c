@@ -20,6 +20,7 @@
 #include "text_export.h"
 #include "config.h"
 #include "activate.h"
+#include "str_list.h"
 
 static const char *_snap_name(const struct lv_segment *seg)
 {
@@ -126,6 +127,18 @@ static int _snap_target_present(void)
 }
 #endif
 
+static int _snap_modules_needed(struct dm_pool *mem,
+				const struct lv_segment *seg,
+				struct list *modules)
+{
+	if (!str_list_add(mem, modules, "snapshot")) {
+		log_error("snapshot string list allocation failed");
+		return 0;
+	}
+
+	return 1;
+}
+
 static void _snap_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *)segtype);
@@ -139,6 +152,7 @@ static struct segtype_handler _snapshot_ops = {
 	.target_percent = _snap_target_percent,
 	.target_present = _snap_target_present,
 #endif
+	.modules_needed = _snap_modules_needed,
 	.destroy = _snap_destroy,
 };
 

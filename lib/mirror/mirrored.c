@@ -26,6 +26,7 @@
 #include "targets.h"
 #include "activate.h"
 #include "sharedlib.h"
+#include "str_list.h"
 
 #ifdef DMEVENTD
 #  include <libdevmapper-event.h>
@@ -447,6 +448,28 @@ static int _target_unregister_events(struct lv_segment *seg,
 #endif /* DMEVENTD */
 #endif /* DEVMAPPER_SUPPORT */
 
+static int _mirrored_modules_needed(struct dm_pool *mem,
+				    const struct lv_segment *seg,
+				    struct list *modules)
+{
+	if (seg->log_lv &&
+	    !list_segment_modules(mem, first_seg(seg->log_lv), modules))
+		return_0;
+
+	if ((seg->lv->vg->status & CLUSTERED) &&
+	    !str_list_add(mem, modules, "clog")) {
+		log_error("cluster log string list allocation failed");
+		return 0;
+	}
+
+	if (!str_list_add(mem, modules, "mirror")) {
+		log_error("mirror string list allocation failed");
+		return 0;
+	}
+
+	return 1;
+}
+
 static void _mirrored_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
@@ -467,6 +490,7 @@ static struct segtype_handler _mirrored_ops = {
 	.target_unregister_events = _target_unregister_events,
 #endif
 #endif
+	.modules_needed = _mirrored_modules_needed,
 	.destroy = _mirrored_destroy,
 };
 

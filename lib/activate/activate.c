@@ -51,6 +51,66 @@ int lvm1_present(struct cmd_context *cmd)
 		return 0;
 }
 
+int list_segment_modules(struct dm_pool *mem, const struct lv_segment *seg,
+			 struct list *modules)
+{
+	unsigned int s;
+	struct lv_segment *seg2, *snap_seg;
+	struct list *snh;
+
+	if (seg->segtype->ops->modules_needed &&
+	    !seg->segtype->ops->modules_needed(mem, seg, modules)) {
+		log_error("module string allocation failed");
+		return 0;
+	}
+
+	if (lv_is_origin(seg->lv))
+		list_iterate(snh, &seg->lv->snapshot_segs)
+			if (!list_lv_modules(mem,
+					     list_struct_base(snh,
+							      struct lv_segment,
+							      origin_list)->cow,
+					     modules))
+				return_0;
+
+	if (lv_is_cow(seg->lv)) {
+		snap_seg = find_cow(seg->lv);
+		if (snap_seg->segtype->ops->modules_needed &&
+		    !snap_seg->segtype->ops->modules_needed(mem, snap_seg,
+							    modules)) {
+			log_error("snap_seg module string allocation failed");
+			return 0;
+		}
+	}
+
+	for (s = 0; s < seg->area_count; s++) {
+		switch (seg_type(seg, s)) {
+		case AREA_LV:
+			seg2 = find_seg_by_le(seg_lv(seg, s), seg_le(seg, s));
+			if (seg2 && !list_segment_modules(mem, seg2, modules))
+				return_0;
+			break;
+		case AREA_PV:
+		case AREA_UNASSIGNED:
+			;
+		}
+	}
+
+	return 1;
+}
+
+int list_lv_modules(struct dm_pool *mem, const struct logical_volume *lv,
+		    struct list *modules)
+{
+	struct lv_segment *seg;
+
+	list_iterate_items(seg, &lv->segments)
+		if (!list_segment_modules(mem, seg, modules))
+			return_0;
+
+	return 1;
+}
+
 #ifndef DEVMAPPER_SUPPORT
 void set_activation(int act)
 {

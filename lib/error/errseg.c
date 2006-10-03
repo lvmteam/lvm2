@@ -23,6 +23,7 @@
 #include "targets.h"
 #include "lvm-string.h"
 #include "activate.h"
+#include "str_list.h"
 
 static const char *_errseg_name(const struct lv_segment *seg)
 {
@@ -64,6 +65,18 @@ static int _errseg_target_present(void)
 }
 #endif
 
+static int _errseg_modules_needed(struct dm_pool *mem,
+				  const struct lv_segment *seg,
+				  struct list *modules)
+{
+	if (!str_list_add(mem, modules, "error")) {
+		log_error("error module string list allocation failed");
+		return 0;
+	}
+
+	return 1;
+}
+ 
 static void _errseg_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *)segtype);
@@ -76,6 +89,7 @@ static struct segtype_handler _error_ops = {
 	.add_target_line = _errseg_add_target_line,
 	.target_present = _errseg_target_present,
 #endif
+	.modules_needed = _errseg_modules_needed,
 	.destroy = _errseg_destroy,
 };
 

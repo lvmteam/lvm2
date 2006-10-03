@@ -63,6 +63,18 @@ static int _zero_target_present(void)
 }
 #endif
 
+static int _zero_modules_needed(struct dm_pool *mem,
+				const struct lv_segment *seg,
+				struct list *modules)
+{
+	if (!str_list_add(mem, modules, "zero")) {
+		log_error("zero module string list allocation failed");
+		return 0;
+	}
+
+	return 1;
+}
+
 static void _zero_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *) segtype);
@@ -75,6 +87,7 @@ static struct segtype_handler _zero_ops = {
 	.add_target_line = _zero_add_target_line,
 	.target_present = _zero_target_present,
 #endif
+	.modules_needed = _zero_modules_needed,
 	.destroy = _zero_destroy,
 };
 
