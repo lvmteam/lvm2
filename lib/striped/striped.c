@@ -189,17 +189,6 @@ static int _striped_target_present(void)
 }
 #endif
 
-static int _striped_modules_needed(struct dm_pool *mem,
-				   const struct lv_segment *seg,
-				   struct list *modules)
-{
-	const char *module;
-
-	module = (seg->area_count == 1) ? "linear" : "striped";
-
-	return str_list_add(mem, modules, module);
-}
-
 static void _striped_destroy(const struct segment_type *segtype)
 {
 	dm_free((void *)segtype);
@@ -216,7 +205,6 @@ static struct segtype_handler _striped_ops = {
 	.add_target_line = _striped_add_target_line,
 	.target_present = _striped_target_present,
 #endif
-	.modules_needed = _striped_modules_needed,
 	.destroy = _striped_destroy,
 };
 
