@@ -416,6 +416,13 @@ int do_check_lvm1(char *vgname)
 	return status == 1 ? 0 : EBUSY;
 }
 
+int do_refresh_cache()
+{
+	DEBUGLOG("Refreshing context\n");
+	log_notice("Refreshing context");
+	return refresh_toolcontext(cmd)==1?0:-1;
+}
+
 
 /* Only called at gulm startup. Drop any leftover VG or P_orphan locks
    that might be hanging around if we died for any reason

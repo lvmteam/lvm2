@@ -1,5 +1,6 @@
 Version 2.02.11 - 
 =====================================
+  Add -R to clvmd which tells running clvmds to reload their device cache.
   Add LV column to reports listing kernel modules needed for activation.
   Show available fields if report given invalid field. (e.g. lvs -o list)
   Add timestamp functions with --disable-realtime configure option.
