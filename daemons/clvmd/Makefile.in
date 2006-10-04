@@ -19,6 +19,7 @@ SOURCES = \
 	clvmd-command.c  \
 	clvmd.c          \
 	lvm-functions.c  \
+	refresh_clvmd.c \
 	system-lv.c
 
 ifeq ("@CLVMD@", "gulm")

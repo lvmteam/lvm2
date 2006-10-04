@@ -42,6 +42,7 @@
 #include "clvm.h"
 #include "version.h"
 #include "clvmd.h"
+#include "refresh_clvmd.h"
 #include "libdlm.h"
 #include "system-lv.h"
 #include "list.h"
@@ -143,6 +144,7 @@ static void usage(char *prog, FILE *file)
 	fprintf(file, "   -V       Show version of clvmd\n");
 	fprintf(file, "   -h       Show this help information\n");
 	fprintf(file, "   -d       Don't fork, run in the foreground\n");
+	fprintf(file, "   -R       Tell all running clvmds in the cluster to reload their device cache\n");
 	fprintf(file, "   -t<secs> Command timeout (default 60 seconds)\n");
 	fprintf(file, "\n");
 }
@@ -173,7 +175,7 @@ int main(int argc, char *argv[])
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
-	while ((opt = getopt(argc, argv, "?vVhdt:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?vVhdt:R")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -182,6 +184,9 @@ int main(int argc, char *argv[])
 		case '?':
 			usage(argv[0], stderr);
 			exit(0);
+
+		case 'R':
+			return refresh_clvmd();
 
 		case 'd':
 			debug++;

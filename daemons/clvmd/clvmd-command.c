@@ -122,6 +122,10 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		}
 		break;
 
+	case CLVMD_CMD_REFRESH:
+		do_refresh_cache();
+		break;
+
 	default:
 		/* Won't get here because command is validated in pre_command */
 		break;
@@ -220,6 +224,9 @@ int do_pre_command(struct local_client *client)
 		lock_flags = args[1];
 		lockname = &args[2];
 		status = pre_lock_lv(lock_cmd, lock_flags, lockname);
+		break;
+
+	case CLVMD_CMD_REFRESH:
 		break;
 
 	default:
