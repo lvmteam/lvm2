@@ -18,14 +18,6 @@
 
 #ifdef linux
 
-/* Lifted from <linux/raid/md_p.h> because of difficulty including it */
-
-#define MD_SB_MAGIC 0xa92b4efc
-#define MD_RESERVED_BYTES (64 * 1024)
-#define MD_RESERVED_SECTORS (MD_RESERVED_BYTES / 512)
-#define MD_NEW_SIZE_SECTORS(x) ((x & ~(MD_RESERVED_SECTORS - 1)) \
-				- MD_RESERVED_SECTORS)
-
 static int _ignore_md(struct dev_filter *f, struct device *dev)
 {
 	int ret;
