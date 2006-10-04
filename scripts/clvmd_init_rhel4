@@ -93,6 +93,24 @@ stop()
 	return $rtrn
 }
 
+wait_for_finish()
+{
+	count=0
+
+	while [ "$count" -le 10 -a -n "`pidof clvmd`" ]
+	do
+		sleep 1
+		count=$((count + 1))
+	done
+	
+	if [ `pidof clvmd` ]
+	then
+		return 1
+	else
+		return 0
+	fi
+}
+
 rtrn=1
 
 # See how we were called.
@@ -112,6 +130,7 @@ case "$1" in
   restart)
 	if stop
 	then
+		wait_for_finish
 		start
 	fi 
 	rtrn=$?
