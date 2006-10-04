@@ -1,5 +1,6 @@
 Version 2.02.11 - 
 =====================================
+  Make clvmd restart init script wait until clvmd has died before starting it.
   Add -R to clvmd which tells running clvmds to reload their device cache.
   Add LV column to reports listing kernel modules needed for activation.
   Show available fields if report given invalid field. (e.g. lvs -o list)
