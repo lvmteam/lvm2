@@ -4,6 +4,7 @@ clvmd \- cluster LVM daemon
 .SH SYNOPSIS
 .B clvmd
 [\-d] [\-h]
+[\-R]
 [\-t <timeout>]
 [\-V]
 .SH DESCRIPTION
@@ -21,6 +22,11 @@ Specifies the timeout for commands to run around the cluster. This should not
 be so small that commands with many disk updates to do will fail, so you
 may need to increase this on systems with very large disk farms. 
 The default is 30 seconds.
+.TP
+.I \-R
+Tells all the running clvmd in the cluster to reload their device cache and
+re-read the lvm configuration file. This command should be run whenever the
+devices on a cluster system are changed.
 .TP
 .I \-V
 Display the version of the cluster LVM daemon.
