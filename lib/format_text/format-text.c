@@ -1007,11 +1007,8 @@ static int _mda_setup(const struct format_type *fmt,
 	uint64_t wipe_size = 8 << SECTOR_SHIFT;
 	size_t pagesize = lvm_getpagesize();
 
-	if (!pvmetadatacopies) {
-		/* Space available for PEs */
-		pv->size -= pe_align();
+	if (!pvmetadatacopies)
 		return 1;
-	}
 
 	alignment = pe_align() << SECTOR_SHIFT;
 	disk_size = pv->size << SECTOR_SHIFT;
@@ -1027,9 +1024,6 @@ static int _mda_setup(const struct format_type *fmt,
 	/* Requested metadatasize */
 	mda_size1 = pvmetadatasize << SECTOR_SHIFT;
 
-	/* Space available for PEs (before any mdas created) */
-	pv->size -= LABEL_SCAN_SECTORS;
-
 	/* Place mda straight after label area at start of disk */
 	start1 = LABEL_SCAN_SIZE;
 
@@ -1037,11 +1031,8 @@ static int _mda_setup(const struct format_type *fmt,
 	if ((!pe_start && !pe_end) ||
 	    ((pe_start > start1) && (pe_start - start1 >= MDA_SIZE_MIN))) {
 		mda_adjustment = start1 % pagesize;
-		if (mda_adjustment) {
+		if (mda_adjustment)
 			start1 += (pagesize - mda_adjustment);
-			pv->size -= ((pagesize - mda_adjustment) >>
-				     SECTOR_SHIFT);
-		}
 	}
 
 	/* Ensure it's not going to be bigger than the disk! */
@@ -1071,7 +1062,8 @@ static int _mda_setup(const struct format_type *fmt,
 	/* FIXME If creating new mdas, wipe them! */
 	if (mda_size1) {
 		if (!add_mda(fmt, fmt->cmd->mem, mdas, pv->dev, start1,
-			     mda_size1)) return 0;
+			     mda_size1))
+			return 0;
 
 		if (!dev_set((struct device *) pv->dev, start1,
 			     (size_t) (mda_size1 >
@@ -1080,7 +1072,6 @@ static int _mda_setup(const struct format_type *fmt,
 			return 0;
 		}
 
-		pv->size -= mda_size1 >> SECTOR_SHIFT;
 		if (pvmetadatacopies == 1)
 			return 1;
 	} else
@@ -1125,7 +1116,6 @@ static int _mda_setup(const struct format_type *fmt,
 			log_error("Failed to wipe new metadata area");
 			return 0;
 		}
-		pv->size -= mda_size2 >> SECTOR_SHIFT;
 	} else
 		return 0;
 
@@ -1416,8 +1406,8 @@ static int _text_pv_setup(const struct format_type *fmt,
 	struct lvmcache_info *info;
 	int found;
 	uint64_t pe_end = 0;
-
-	/* FIXME if vg, adjust start/end of pe area to avoid mdas! */
+	unsigned mda_count = 0;
+	uint64_t mda_size2 = 0;
 
 	/* FIXME Cope with pvchange */
 	/* FIXME Merge code with _text_create_text_instance */
@@ -1428,10 +1418,15 @@ static int _text_pv_setup(const struct format_type *fmt,
 		if ((info = info_from_pvid(pv->dev->pvid))) {
 			pvmdas = &info->mdas;
 			list_iterate_items(mda, pvmdas) {
+				mda_count++;
 				mdac =
 				    (struct mda_context *) mda->metadata_locn;
 
 				/* FIXME Check it isn't already in use */
+
+				/* Reduce usable device size */
+				if (mda_count > 1)
+					mda_size2 = mdac->area.size >> SECTOR_SHIFT;
 
 				/* Ensure it isn't already on list */
 				found = 0;
@@ -1469,6 +1464,9 @@ static int _text_pv_setup(const struct format_type *fmt,
 				list_add(mdas, &mda_new->list);
 			}
 		}
+
+		/* Recalculate number of extents that will fit */
+		pv->pe_count = (pv->size - pv->pe_start - mda_size2) / vg->extent_size;
 
 		/* Unlike LVM1, we don't store this outside a VG */
 		/* FIXME Default from config file? vgextend cmdline flag? */
