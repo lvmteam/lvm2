@@ -1424,7 +1424,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 			   !fn(cmd, seg_pvseg(seg, s), data))
 			return_0;
 
-	if (seg_is_mirrored(seg) && 
+	if (seg_is_mirrored(seg) && seg->log_lv &&
 	    !_for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
 			  NULL, fn, data))
 		return_0;
