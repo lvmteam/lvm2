@@ -50,11 +50,17 @@
 static struct cmd_context *cmd = NULL;
 static struct dm_hash_table *lv_hash = NULL;
 static pthread_mutex_t lv_hash_lock;
+static char last_error[1024];
 
 struct lv_info {
 	int lock_id;
 	int lock_mode;
 };
+
+char *get_last_lvm_error()
+{
+	return last_error;
+}
 
 /* Return the mode a lock is currently held at (or -1 if not held) */
 static int get_current_lock(char *resource)
@@ -201,8 +207,17 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 	/* Try to get the lock if it's a clustered volume group */
 	if (lock_flags & LCK_CLUSTER_VG) {
 		status = hold_lock(resource, mode, LKF_NOQUEUE);
-		if (status)
+		if (status) {
+			/* Return an LVM-sensible error for this.
+			 * Forcing EIO makes the upper level return this text
+			 * rather than the strerror text for EAGAIN.
+			 */
+			if (errno == EAGAIN) {
+				sprintf(last_error, "Volume is busy on another node");
+				errno = EIO;
+			}
 			return errno;
+		}
 	}
 
 	/* If it's suspended then resume it */
@@ -512,6 +527,19 @@ static void *get_initial_state()
 	return NULL;
 }
 
+static void lvm2_log_fn(int level, const char *file, int line,
+			const char *message)
+{
+	/*
+	 * Ignore non-error messages, but store the latest one for returning 
+	 * to the user.
+	 */
+	if (level != _LOG_ERR && level != _LOG_FATAL)
+		return;
+
+	strcpy(last_error, message);
+}
+
 /* This checks some basic cluster-LVM configuration stuff */
 static void check_config()
 {
@@ -563,6 +591,9 @@ int init_lvm(int using_gulm)
 		drop_vg_locks();
 
 	get_initial_state();
+
+	/* Trap log messages so we can pass them back to the user */
+	init_log_fn(lvm2_log_fn);
 
 	return 1;
 }

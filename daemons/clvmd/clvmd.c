@@ -1689,6 +1689,7 @@ static void *lvm_thread_fn(void *arg)
 		}
 		pthread_mutex_unlock(&lvm_thread_mutex);
 	}
+	return NULL;
 }
 
 /* Pass down some work to the LVM thread */

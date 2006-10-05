@@ -1,5 +1,6 @@
 Version 2.02.11 - 
 =====================================
+  Capture error messages in clvmd and pass them back to the user.
   Remove unused #defines from filter-md.c.
   Make clvmd restart init script wait until clvmd has died before starting it.
   Add -R to clvmd which tells running clvmds to reload their device cache.
