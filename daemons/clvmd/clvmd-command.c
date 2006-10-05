@@ -117,7 +117,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		if (status == EIO) {
 			*retlen =
 			    1 + snprintf(*buf, buflen,
-					 "Internal lvm error, check syslog");
+					 get_last_lvm_error());
 			return EIO;
 		}
 		break;
