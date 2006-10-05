@@ -734,6 +734,8 @@ int vg_validate(struct volume_group *vg)
 	char uuid[64];
 	int r = 1;
 
+	/* FIXME Also check there's no data/metadata overlap */
+
 	list_iterate_items(pvl, &vg->pvs) {
 		list_iterate_items(pvl2, &vg->pvs) {
 			if (pvl == pvl2)
