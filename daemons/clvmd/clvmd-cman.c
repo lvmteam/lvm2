@@ -172,7 +172,7 @@ static int _cluster_do_node_callback(struct local_client *client,
    this currently just means that a node has stopped listening on our port */
 static void event_callback(cman_handle_t handle, void *private, int reason, int arg)
 {
-	char namebuf[MAX_CLUSTER_NAME_LEN];
+	char namebuf[MAX_CLUSTER_MEMBER_NAME_LEN];
 
 	switch (reason) {
         case CMAN_REASON_PORTCLOSED:
