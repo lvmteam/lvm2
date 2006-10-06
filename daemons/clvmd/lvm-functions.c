@@ -537,7 +537,8 @@ static void lvm2_log_fn(int level, const char *file, int line,
 	if (level != _LOG_ERR && level != _LOG_FATAL)
 		return;
 
-	strcpy(last_error, message);
+	strncpy(last_error, message, sizeof(last_error));
+	last_error[sizeof(last_error)-1] = '\0';
 }
 
 /* This checks some basic cluster-LVM configuration stuff */
