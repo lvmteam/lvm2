@@ -3,7 +3,7 @@
 lvconvert \- convert a logical volume between linear and mirror
 .SH SYNOPSIS
 .B lvconvert
-[\-m/\-\-mirrors Mirrors [\-\-corelog]]
+[\-m/\-\-mirrors Mirrors [\-\-corelog] [\-R/\-\-regionsize MirrorLogRegionSize]]
 [\-A/\-\-alloc AllocationPolicy]
 [\-h/\-?/\-\-help]
 [\-v/\-\-verbose]
@@ -28,6 +28,10 @@ mirror from using a disk-based (persistent) log to
 an in-memory log.  You may only specify this option
 when the \-\-mirror argument is the same degree of
 the mirror you are changing.
+.TP
+.I \-R, \-\-regionsize MirrorLogRegionSize
+A mirror is divided into regions of this size (in MB), and the mirror log
+uses this granularity to track which regions are in sync.
 .SH Examples
 "lvconvert -m1 vg00/lvol1"
 .br
