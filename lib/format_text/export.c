@@ -409,6 +409,11 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 			outf(f, "tags = %s", buffer);
 		}
 
+		if (!out_size(f, pv->size, "dev_size = %" PRIu64, pv->size)) {
+			stack;
+			return 0;
+		}
+
 		outf(f, "pe_start = %" PRIu64, pv->pe_start);
 		if (!out_size(f, vg->extent_size * (uint64_t) pv->pe_count,
 			      "pe_count = %u", pv->pe_count)) {

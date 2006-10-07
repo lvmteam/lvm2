@@ -1465,8 +1465,16 @@ static int _text_pv_setup(const struct format_type *fmt,
 			}
 		}
 
+		/* FIXME Cope with genuine pe_count 0 */
+
+		/* If missing, estimate pv->size from file-based metadata */
+		if (!pv->size && pv->pe_count)
+			pv->size = pv->pe_count * (uint64_t) vg->extent_size +
+				   pv->pe_start + mda_size2;
+
 		/* Recalculate number of extents that will fit */
-		pv->pe_count = (pv->size - pv->pe_start - mda_size2) / vg->extent_size;
+		if (!pv->pe_count)
+			pv->pe_count = (pv->size - pv->pe_start - mda_size2) / vg->extent_size;
 
 		/* Unlike LVM1, we don't store this outside a VG */
 		/* FIXME Default from config file? vgextend cmdline flag? */
