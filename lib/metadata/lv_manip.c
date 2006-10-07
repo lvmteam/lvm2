@@ -681,7 +681,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lv_segment *seg;
 	uint32_t s;
 	uint32_t remaining_seg_len, area_len, area_multiple;
-	int r;
+	int r = 1;
 
 	if (!(seg = find_seg_by_le(lv, le))) {
 		log_error("Failed to find segment for %s extent %" PRIu32,
@@ -712,7 +712,6 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 		} else if (seg_type(seg, s) == AREA_PV)
 			if (!(r = fn(cmd, seg_pvseg(seg, s), data)))
 				stack;
-
 		if (r != 1)
 			return r;
 	}
@@ -758,36 +757,50 @@ static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
 	return 1;
 }
 
+static int _check_pv_contiguous(struct logical_volume *prev_lv, uint32_t prev_le, struct pv_area *pva,
+				struct pv_area **areas, uint32_t areas_size)
+{
+	struct lv_segment *seg;
+	uint32_t s;
+	int r;
+
+	if (!(seg = find_seg_by_le(prev_lv, prev_le))) {
+		log_error("Failed to find segment for %s extent %" PRIu32,
+			  prev_lv->name, prev_le);
+		return 0;
+	}
+
+	for (s = 0; s < seg->area_count && s < areas_size; s++) {
+		if (seg_type(seg, s) == AREA_LV) {
+			/* FIXME For more areas supply flattened seg to ensure consistency */
+			if (seg->area_count == 1) {
+				if (!(r = _check_pv_contiguous(seg->lv, seg->le + seg->len - 1, pva, &areas[s], 1)))
+					stack;
+				if (r != 1)
+					return r;
+			}
+		} else if (seg_type(seg, s) == AREA_PV)
+			if (_is_contiguous(seg_pvseg(seg, s), pva)) {
+				areas[s] = pva;
+				return 2; /* Finished */
+			}
+	}
+
+	return 1; /* Continue search */
+}
+
 /*
  * Is pva contiguous to any existing areas or on the same PV?
  */
 static int _check_contiguous(struct lv_segment *prev_lvseg, struct pv_area *pva,
 			     struct pv_area **areas, uint32_t areas_size)
 {
-	struct pv_segment *prev_pvseg;
-	struct lv_segment *lastseg;
-	uint32_t s;
+	int r;
 
-	for (s = 0; s < prev_lvseg->area_count && s < areas_size; s++) {
-		if (seg_type(prev_lvseg, s) == AREA_LV) {
-			lastseg = list_item(list_last(&seg_lv(prev_lvseg, s)->segments), struct lv_segment);
-			/* FIXME For more areas supply flattened prev_lvseg to ensure consistency */
-			if (lastseg->area_count == 1 &&
-			    _check_contiguous(lastseg, pva, &areas[s], 1))
-				return 1;
-			continue;
-		}
+	if (!(r = _check_pv_contiguous(prev_lvseg->lv, prev_lvseg->le + prev_lvseg->len - 1, pva, areas, areas_size)))
+		stack;
 
-		if (!(prev_pvseg = seg_pvseg(prev_lvseg, s)))
-			continue; /* FIXME Broken */
-
-		if (_is_contiguous(prev_pvseg, pva)) {
-			areas[s] = pva;
-			return 1;
-		}
-	}
-
-	return 0;
+	return r ? 1 : 0;
 }
 
 /*
