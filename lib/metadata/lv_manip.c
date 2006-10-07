@@ -666,6 +666,58 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 	return 1;
 }
 
+/*
+ * Call fn for each AREA_PV used by the LV segment at lv:le of length *max_seg_len.
+ * If any constituent area contains more than one segment, max_seg_len is
+ * reduced to cover only the first.
+ */
+static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
+			uint32_t le, uint32_t len, uint32_t *max_seg_len,
+			int (*fn)(struct cmd_context *cmd, struct pv_segment *peg, void *data),
+			void *data)
+{
+	struct lv_segment *seg;
+	uint32_t s;
+	uint32_t remaining_seg_len, area_len, area_multiple;
+
+	if (!(seg = find_seg_by_le(lv, le))) {
+		log_error("Failed to find segment for %s extent %" PRIu32,
+			  lv->name, le);
+		return 0;
+	}
+
+	/* Remaining logical length of segment */
+	remaining_seg_len = seg->len - (le - seg->le);
+
+	if (remaining_seg_len > len)
+		remaining_seg_len = len;
+
+	if (max_seg_len && *max_seg_len > remaining_seg_len)
+		*max_seg_len = remaining_seg_len;
+
+	area_multiple = segtype_is_striped(seg->segtype) ? seg->area_count : 1;
+	area_len = remaining_seg_len / area_multiple ? : 1;
+
+	for (s = 0; s < seg->area_count; s++)
+		if (seg_type(seg, s) == AREA_LV) {
+			if (!_for_each_pv(cmd, seg_lv(seg, s),
+					  seg_le(seg, s) + (le - seg->le) / area_multiple,
+					  area_len, max_seg_len, fn, data))
+				return_0;
+		} else if ((seg_type(seg, s) == AREA_PV) &&
+			   !fn(cmd, seg_pvseg(seg, s), data))
+			return_0;
+
+	if (seg_is_mirrored(seg) && seg->log_lv &&
+	    !_for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
+			  NULL, fn, data))
+		return_0;
+
+	/* FIXME Add snapshot cow LVs etc. */
+
+	return 1;
+}
+
 static int _comp_area(const void *l, const void *r)
 {
 	const struct pv_area *lhs = *((const struct pv_area **) l);
@@ -1378,58 +1430,6 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	list_add(&vg->lvs, &ll->list);
 
 	return lv;
-}
-
-/*
- * Call fn for each AREA_PV used by the LV segment at lv:le of length *max_seg_len.
- * If any constituent area contains more than one segment, max_seg_len is
- * reduced to cover only the first.
- */
-static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
-			uint32_t le, uint32_t len, uint32_t *max_seg_len,
-			int (*fn)(struct cmd_context *cmd, struct pv_segment *peg, void *data),
-			void *data)
-{
-	struct lv_segment *seg;
-	uint32_t s;
-	uint32_t remaining_seg_len, area_len, area_multiple;
-
-	if (!(seg = find_seg_by_le(lv, le))) {
-		log_error("Failed to find segment for %s extent %" PRIu32,
-			  lv->name, le);
-		return 0;
-	}
-
-	/* Remaining logical length of segment */
-	remaining_seg_len = seg->len - (le - seg->le);
-
-	if (remaining_seg_len > len)
-		remaining_seg_len = len;
-
-	if (max_seg_len && *max_seg_len > remaining_seg_len)
-		*max_seg_len = remaining_seg_len;
-
-	area_multiple = segtype_is_striped(seg->segtype) ? seg->area_count : 1;
-	area_len = remaining_seg_len / area_multiple ? : 1;
-
-	for (s = 0; s < seg->area_count; s++)
-		if (seg_type(seg, s) == AREA_LV) {
-			if (!_for_each_pv(cmd, seg_lv(seg, s),
-					  seg_le(seg, s) + (le - seg->le) / area_multiple,
-					  area_len, max_seg_len, fn, data))
-				return_0;
-		} else if ((seg_type(seg, s) == AREA_PV) &&
-			   !fn(cmd, seg_pvseg(seg, s), data))
-			return_0;
-
-	if (seg_is_mirrored(seg) && seg->log_lv &&
-	    !_for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
-			  NULL, fn, data))
-		return_0;
-
-	/* FIXME Add snapshot cow LVs etc. */
-
-	return 1;
 }
 
 static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg, void *data)
