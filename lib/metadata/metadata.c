@@ -89,11 +89,8 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 		pv->pe_start = pe_align();
 
 	/*
-	 * The next two fields should be corrected
-	 * by fid->pv_setup.
+	 * pe_count must always be calculated by pv_setup
 	 */
-	pv->pe_count = (pv->size - pv->pe_start) / vg->extent_size;
-
 	pv->pe_alloc_count = 0;
 
 	if (!fid->fmt->ops->pv_setup(fid->fmt, UINT64_C(0), 0,
