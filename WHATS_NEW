@@ -1,5 +1,7 @@
 Version 2.02.11 - 
 =====================================
+  Add report columns with underscore before field names ending 'size'.
+  Correct regionsize default on lvcreate man page (MB).
   Fix clvmd bug that could cause it to die when a node with a long name crashed.
   Fix format_text mda_setup pv->size and pv_setup pe_count calculations.
   Fix _for_each_pv() for mirror with core log.
