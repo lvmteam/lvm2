@@ -179,6 +179,9 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		return 0;
 	}
 
+	/* Late addition */
+	_read_int64(pvn, "dev_size", &pv->size);
+
 	if (!_read_int64(pvn, "pe_start", &pv->pe_start)) {
 		log_error("Couldn't read extent size for volume group.");
 		return 0;
@@ -206,7 +209,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	vg->free_count += pv->pe_count;
 
 	pv->pe_size = vg->extent_size;
-	pv->size = vg->extent_size * (uint64_t) pv->pe_count;
+
 	pv->pe_alloc_count = 0;
 	pv->fmt = fid->fmt;
 
