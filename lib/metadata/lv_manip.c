@@ -398,6 +398,7 @@ struct alloced_area {
  * Details of an allocation attempt
  */
 struct alloc_handle {
+	struct cmd_context *cmd;
 	struct dm_pool *mem;
 
 	alloc_policy_t alloc;		/* Overall policy */
@@ -417,7 +418,8 @@ struct alloc_handle {
 /*
  * Preparation for a specific allocation attempt
  */
-static struct alloc_handle *_alloc_init(struct dm_pool *mem,
+static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
+					struct dm_pool *mem,
 					const struct segment_type *segtype,
 					alloc_policy_t alloc,
 					uint32_t mirrors,
@@ -463,6 +465,8 @@ static struct alloc_handle *_alloc_init(struct dm_pool *mem,
 
 	if (segtype_is_virtual(segtype))
 		return ah;
+
+	ah->cmd = cmd;
 
 	if (!(ah->mem = dm_pool_create("allocation", 1024))) {
 		log_error("allocation pool creation failed");
@@ -675,7 +679,12 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
  */
 static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 			uint32_t le, uint32_t len, uint32_t *max_seg_len,
-			int (*fn)(struct cmd_context *cmd, struct pv_segment *peg, void *data),
+			uint32_t first_area, uint32_t max_areas,
+			int top_level_area_index,
+			int only_single_area_segments,
+			int (*fn)(struct cmd_context *cmd,
+				  struct pv_segment *peg, uint32_t s,
+				  void *data),
 			void *data)
 {
 	struct lv_segment *seg;
@@ -701,24 +710,32 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 	area_multiple = segtype_is_striped(seg->segtype) ? seg->area_count : 1;
 	area_len = remaining_seg_len / area_multiple ? : 1;
 
-	for (s = 0; s < seg->area_count; s++) {
+	for (s = first_area;
+	     s < seg->area_count && (!max_areas || s <= max_areas);
+	     s++) {
 		if (seg_type(seg, s) == AREA_LV) {
 			if (!(r = _for_each_pv(cmd, seg_lv(seg, s),
 					       seg_le(seg, s) +
 					       (le - seg->le) / area_multiple,
-					       area_len, max_seg_len, fn,
+					       area_len, max_seg_len,
+					       only_single_area_segments ? 0 : 0,
+					       only_single_area_segments ? 1 : 0,
+					       top_level_area_index != -1 ? top_level_area_index : s,
+					       only_single_area_segments, fn,
 					       data)))
 				stack;
 		} else if (seg_type(seg, s) == AREA_PV)
-			if (!(r = fn(cmd, seg_pvseg(seg, s), data)))
+			if (!(r = fn(cmd, seg_pvseg(seg, s), top_level_area_index != -1 ? top_level_area_index : s, data)))
 				stack;
 		if (r != 1)
 			return r;
 	}
 
-	if (seg_is_mirrored(seg) && seg->log_lv) {
+	/* FIXME only_single_area_segments used as workaround to skip log LV - needs new param? */
+	if (!only_single_area_segments && seg_is_mirrored(seg) && seg->log_lv) {
 		if (!(r = _for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
-				       NULL, fn, data)))
+				       NULL, 0, 0, 0, only_single_area_segments,
+				       fn, data)))
 			stack;
 		if (r != 1)
 			return r;
@@ -744,6 +761,18 @@ static int _comp_area(const void *l, const void *r)
 }
 
 /*
+ * Search for pvseg that matches condition
+ */
+struct pv_match {
+	int (*condition)(struct pv_segment *pvseg, struct pv_area *pva);
+
+	struct pv_area **areas;
+	struct pv_area *pva;
+	uint32_t areas_size;
+	int s;	/* Area index of match */
+};
+
+/*
  * Is PV area contiguous to PV segment?
  */
 static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
@@ -757,50 +786,49 @@ static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
 	return 1;
 }
 
-static int _check_pv_contiguous(struct logical_volume *prev_lv, uint32_t prev_le, struct pv_area *pva,
-				struct pv_area **areas, uint32_t areas_size)
+static int _is_contiguous_condition(struct cmd_context *cmd,
+				    struct pv_segment *pvseg, uint32_t s,
+				    void *data)
 {
-	struct lv_segment *seg;
-	uint32_t s;
-	int r;
+	struct pv_match *pvmatch = data;
 
-	if (!(seg = find_seg_by_le(prev_lv, prev_le))) {
-		log_error("Failed to find segment for %s extent %" PRIu32,
-			  prev_lv->name, prev_le);
-		return 0;
-	}
+	if (!pvmatch->condition(pvseg, pvmatch->pva))
+		return 1;	/* Continue */
 
-	for (s = 0; s < seg->area_count && s < areas_size; s++) {
-		if (seg_type(seg, s) == AREA_LV) {
-			/* FIXME For more areas supply flattened seg to ensure consistency */
-			if (seg->area_count == 1) {
-				if (!(r = _check_pv_contiguous(seg->lv, seg->le + seg->len - 1, pva, &areas[s], 1)))
-					stack;
-				if (r != 1)
-					return r;
-			}
-		} else if (seg_type(seg, s) == AREA_PV)
-			if (_is_contiguous(seg_pvseg(seg, s), pva)) {
-				areas[s] = pva;
-				return 2; /* Finished */
-			}
-	}
+	if (s >= pvmatch->areas_size)
+		return 1;
 
-	return 1; /* Continue search */
+	pvmatch->areas[s] = pvmatch->pva;
+
+	return 2;	/* Finished */
 }
 
 /*
  * Is pva contiguous to any existing areas or on the same PV?
  */
-static int _check_contiguous(struct lv_segment *prev_lvseg, struct pv_area *pva,
+static int _check_contiguous(struct cmd_context *cmd,
+			     struct lv_segment *prev_lvseg, struct pv_area *pva,
 			     struct pv_area **areas, uint32_t areas_size)
 {
+	struct pv_match pvmatch;
 	int r;
 
-	if (!(r = _check_pv_contiguous(prev_lvseg->lv, prev_lvseg->le + prev_lvseg->len - 1, pva, areas, areas_size)))
+	pvmatch.condition = _is_contiguous;
+	pvmatch.areas = areas;
+	pvmatch.areas_size = areas_size;
+	pvmatch.pva = pva;
+
+	/* FIXME Cope with stacks by flattening */
+	if (!(r = _for_each_pv(cmd, prev_lvseg->lv,
+			       prev_lvseg->le + prev_lvseg->len - 1, 1, NULL,
+			       0, 0, -1, 1,
+			       _is_contiguous_condition, &pvmatch)))
 		stack;
 
-	return r ? 1 : 0;
+	if (r != 2)
+		return 0;
+
+	return 1;
 }
 
 /*
@@ -888,7 +916,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 			list_iterate_items(pva, &pvm->areas) {
 				if (contiguous) {
 					if (prev_lvseg &&
-					    _check_contiguous(prev_lvseg,
+					    _check_contiguous(ah->cmd,
+							      prev_lvseg,
 							      pva, areas,
 							      areas_size)) {
 						contiguous_count++;
@@ -1124,7 +1153,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 	if (alloc == ALLOC_INHERIT)
 		alloc = vg->alloc;
 
-	if (!(ah = _alloc_init(vg->cmd->mem, segtype, alloc, mirrors,
+	if (!(ah = _alloc_init(vg->cmd, vg->cmd->mem, segtype, alloc, mirrors,
 			       stripes, log_count, mirrored_pv,
 			       mirrored_pe, parallel_areas))) {
 		stack;
@@ -1468,7 +1497,8 @@ struct logical_volume *lv_create_empty(struct format_instance *fi,
 	return lv;
 }
 
-static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg, void *data)
+static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg,
+		    uint32_t s __attribute((unused)), void *data)
 {
 	struct seg_pvs *spvs = (struct seg_pvs *) data;
 	struct pv_list *pvl;
@@ -1522,7 +1552,8 @@ struct list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 
 		/* Find next segment end */
 		/* FIXME Unnecessary nesting! */
-		if (!_for_each_pv(cmd, lv, current_le, spvs->len, &spvs->len, _add_pvs, (void *) spvs)) {
+		if (!_for_each_pv(cmd, lv, current_le, spvs->len, &spvs->len,
+				  0, 0, -1, 0, _add_pvs, (void *) spvs)) {
 			stack;
 			return NULL;
 		}

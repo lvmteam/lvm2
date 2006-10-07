@@ -7,6 +7,7 @@ Version 2.02.11 -
   Add report columns with underscore before field names ending 'size'.
   Correct regionsize default on lvcreate man page (MB).
   Fix clvmd bug that could cause it to die when a node with a long name crashed.
+  Add device size to text metadata.
   Fix format_text mda_setup pv->size and pv_setup pe_count calculations.
   Fix _for_each_pv() for mirror with core log.
   Add lvm_dump.sh script to create a tarball of debugging info from a system.
