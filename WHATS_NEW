@@ -1,5 +1,6 @@
 Version 2.02.11 - 
 =====================================
+  Change _check_contiguous() to use _for_each_pv().
   Extend _for_each_pv() to allow termination without error.
   Abstract _is_contiguous().
   Remove duplicated pv arg from _check_contiguous().
