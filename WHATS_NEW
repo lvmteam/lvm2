@@ -1,5 +1,6 @@
 Version 2.02.11 - 
 =====================================
+  Remove duplicated pv arg from _check_contiguous().
   Accept regionsize with lvconvert.
   Add report columns with underscore before field names ending 'size'.
   Correct regionsize default on lvcreate man page (MB).

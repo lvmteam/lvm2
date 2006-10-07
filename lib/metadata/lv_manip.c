@@ -683,8 +683,7 @@ static int _comp_area(const void *l, const void *r)
 /*
  * Is pva contiguous to any existing areas or on the same PV?
  */
-static int _check_contiguous(struct lv_segment *prev_lvseg,
-			     struct physical_volume *pv, struct pv_area *pva,
+static int _check_contiguous(struct lv_segment *prev_lvseg, struct pv_area *pva,
 			     struct pv_area **areas, uint32_t areas_size)
 {
 	struct pv_segment *prev_pvseg;
@@ -696,7 +695,7 @@ static int _check_contiguous(struct lv_segment *prev_lvseg,
 			lastseg = list_item(list_last(&seg_lv(prev_lvseg, s)->segments), struct lv_segment);
 			/* FIXME For more areas supply flattened prev_lvseg to ensure consistency */
 			if (lastseg->area_count == 1 &&
-			    _check_contiguous(lastseg, pv, pva, &areas[s], 1))
+			    _check_contiguous(lastseg, pva, &areas[s], 1))
 				return 1;
 			continue;
 		}
@@ -704,7 +703,7 @@ static int _check_contiguous(struct lv_segment *prev_lvseg,
 		if (!(prev_pvseg = seg_pvseg(prev_lvseg, s)))
 			continue; /* FIXME Broken */
 
-		if ((prev_pvseg->pv != pv))
+		if ((prev_pvseg->pv != pva->map->pv))
 			continue;
 
 		if (prev_pvseg->pe + prev_pvseg->len == pva->start) {
@@ -802,7 +801,6 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 				if (contiguous) {
 					if (prev_lvseg &&
 					    _check_contiguous(prev_lvseg,
-							      pvm->pv,
 							      pva, areas,
 							      areas_size)) {
 						contiguous_count++;
