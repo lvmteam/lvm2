@@ -670,6 +670,8 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
  * Call fn for each AREA_PV used by the LV segment at lv:le of length *max_seg_len.
  * If any constituent area contains more than one segment, max_seg_len is
  * reduced to cover only the first.
+ * fn should return 0 on error, 1 to continue scanning or >1 to terminate without error.
+ * In the last case, this function passes on the return code.
  */
 static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 			uint32_t le, uint32_t len, uint32_t *max_seg_len,
@@ -679,6 +681,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lv_segment *seg;
 	uint32_t s;
 	uint32_t remaining_seg_len, area_len, area_multiple;
+	int r;
 
 	if (!(seg = find_seg_by_le(lv, le))) {
 		log_error("Failed to find segment for %s extent %" PRIu32,
@@ -698,20 +701,29 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 	area_multiple = segtype_is_striped(seg->segtype) ? seg->area_count : 1;
 	area_len = remaining_seg_len / area_multiple ? : 1;
 
-	for (s = 0; s < seg->area_count; s++)
+	for (s = 0; s < seg->area_count; s++) {
 		if (seg_type(seg, s) == AREA_LV) {
-			if (!_for_each_pv(cmd, seg_lv(seg, s),
-					  seg_le(seg, s) + (le - seg->le) / area_multiple,
-					  area_len, max_seg_len, fn, data))
-				return_0;
-		} else if ((seg_type(seg, s) == AREA_PV) &&
-			   !fn(cmd, seg_pvseg(seg, s), data))
-			return_0;
+			if (!(r = _for_each_pv(cmd, seg_lv(seg, s),
+					       seg_le(seg, s) +
+					       (le - seg->le) / area_multiple,
+					       area_len, max_seg_len, fn,
+					       data)))
+				stack;
+		} else if (seg_type(seg, s) == AREA_PV)
+			if (!(r = fn(cmd, seg_pvseg(seg, s), data)))
+				stack;
 
-	if (seg_is_mirrored(seg) && seg->log_lv &&
-	    !_for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
-			  NULL, fn, data))
-		return_0;
+		if (r != 1)
+			return r;
+	}
+
+	if (seg_is_mirrored(seg) && seg->log_lv) {
+		if (!(r = _for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
+				       NULL, fn, data)))
+			stack;
+		if (r != 1)
+			return r;
+	}
 
 	/* FIXME Add snapshot cow LVs etc. */
 
