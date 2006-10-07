@@ -83,6 +83,7 @@ xx(lvconvert,
    "Change logical volume layout",
    "lvconvert "
    "[-m|--mirrors Mirrors [--corelog]]\n"
+   "\t[-R|--regionsize MirrorLogRegionSize]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
@@ -100,7 +101,7 @@ xx(lvconvert,
    "\t[--version]" "\n"
    "\tOriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]\n",
 
-   alloc_ARG, chunksize_ARG, mirrors_ARG, corelog_ARG,
+   alloc_ARG, chunksize_ARG, mirrors_ARG, corelog_ARG, regionsize_ARG,
    snapshot_ARG, test_ARG, zero_ARG)
 
 xx(lvcreate,
