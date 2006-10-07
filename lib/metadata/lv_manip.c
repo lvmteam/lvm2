@@ -733,6 +733,20 @@ static int _comp_area(const void *l, const void *r)
 }
 
 /*
+ * Is PV area contiguous to PV segment?
+ */
+static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
+{
+	if (pvseg->pv != pva->map->pv)
+		return 0;
+
+	if (pvseg->pe + pvseg->len != pva->start)
+		return 0;
+
+	return 1;
+}
+
+/*
  * Is pva contiguous to any existing areas or on the same PV?
  */
 static int _check_contiguous(struct lv_segment *prev_lvseg, struct pv_area *pva,
@@ -755,10 +769,7 @@ static int _check_contiguous(struct lv_segment *prev_lvseg, struct pv_area *pva,
 		if (!(prev_pvseg = seg_pvseg(prev_lvseg, s)))
 			continue; /* FIXME Broken */
 
-		if ((prev_pvseg->pv != pva->map->pv))
-			continue;
-
-		if (prev_pvseg->pe + prev_pvseg->len == pva->start) {
+		if (_is_contiguous(prev_pvseg, pva)) {
 			areas[s] = pva;
 			return 1;
 		}
