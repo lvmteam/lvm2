@@ -136,7 +136,7 @@ Characters allowed in tags are: A-Z a-z 0-9 _ + . -
 Delete the tag \fBtag\fP from a PV, VG or LV, if it's present.
 .TP
 \fB--alloc AllocationPolicy\fP
-The allocation policy to use: \fBcontiguous\fP, \fBnormal\fP, \fBanywhere\fP or \fBinherit\fP.
+The allocation policy to use: \fBcontiguous\fP, \fBcling\fP, \fBnormal\fP, \fBanywhere\fP or \fBinherit\fP.
 When a command needs to allocate physical extents from the volume group,
 the allocation policy controls how they are chosen.  
 Each volume group and logical volume has an allocation policy.
@@ -146,15 +146,18 @@ physical volume.  The default for a logical volume is \fBinherit\fP
 which applies the same policy as for the volume group.  These policies can
 be changed using \fBlvchange\fP (8) and \fBvgchange\fP (8) or over-ridden
 on the command line of any command that performs allocation.
-The \fBcontiguous\fP policy requires that new extents are adjacent to
-existing extents. If there are sufficient free extents to satisfy
+The \fBcontiguous\fP policy requires that new extents be placed adjacent
+to existing extents. 
+The \fBcling\fP policy places new extents on the same physical
+volume as existing extents in the same stripe of the Logical Volume.
+If there are sufficient free extents to satisfy
 an allocation request but \fBnormal\fP doesn't use them,
 \fBanywhere\fP will - even if that reduces performance by
 placing two stripes on the same physical volume.
 .IP
 N.B. The policies described above are not implemented fully yet.
-In particular, \fBcontiguous\fP does not place new extents adjacent to existing
-extents and \fBanywhere\fP is not implemented at all.
+In particular, contiguous free space cannot be broken up to
+satisfy allocation attempts.
 .SH ENVIRONMENT VARIABLES
 .TP
 \fBLVM_SYSTEM_DIR\fP 

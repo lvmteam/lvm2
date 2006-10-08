@@ -773,6 +773,17 @@ struct pv_match {
 };
 
 /*
+ * Is PV area on the same PV?
+ */
+static int _is_same_pv(struct pv_segment *pvseg, struct pv_area *pva)
+{
+	if (pvseg->pv != pva->map->pv)
+		return 0;
+
+	return 1;
+}
+
+/*
  * Is PV area contiguous to PV segment?
  */
 static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
@@ -786,9 +797,9 @@ static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
 	return 1;
 }
 
-static int _is_contiguous_condition(struct cmd_context *cmd,
-				    struct pv_segment *pvseg, uint32_t s,
-				    void *data)
+static int _is_condition(struct cmd_context *cmd,
+			 struct pv_segment *pvseg, uint32_t s,
+			 void *data)
 {
 	struct pv_match *pvmatch = data;
 
@@ -801,6 +812,34 @@ static int _is_contiguous_condition(struct cmd_context *cmd,
 	pvmatch->areas[s] = pvmatch->pva;
 
 	return 2;	/* Finished */
+}
+
+/*
+ * Is pva on same PV as any existing areas?
+ */
+static int _check_cling(struct cmd_context *cmd,
+			struct lv_segment *prev_lvseg, struct pv_area *pva,
+			struct pv_area **areas, uint32_t areas_size)
+{
+	struct pv_match pvmatch;
+	int r;
+
+	pvmatch.condition = _is_same_pv;
+	pvmatch.areas = areas;
+	pvmatch.areas_size = areas_size;
+	pvmatch.pva = pva;
+
+	/* FIXME Cope with stacks by flattening */
+	if (!(r = _for_each_pv(cmd, prev_lvseg->lv,
+			       prev_lvseg->le + prev_lvseg->len - 1, 1, NULL,
+			       0, 0, -1, 1,
+			       _is_condition, &pvmatch)))
+		stack;
+
+	if (r != 2)
+		return 0;
+
+	return 1;
 }
 
 /*
@@ -822,7 +861,7 @@ static int _check_contiguous(struct cmd_context *cmd,
 	if (!(r = _for_each_pv(cmd, prev_lvseg->lv,
 			       prev_lvseg->le + prev_lvseg->len - 1, 1, NULL,
 			       0, 0, -1, 1,
-			       _is_contiguous_condition, &pvmatch)))
+			       _is_condition, &pvmatch)))
 		stack;
 
 	if (r != 2)
@@ -844,9 +883,9 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	struct pv_area *pva;
 	struct pv_list *pvl;
 	unsigned already_found_one = 0;
-	unsigned contiguous = 0, contiguous_count = 0;
+	unsigned contiguous = 0, cling = 0, preferred_count = 0;
 	unsigned ix;
-	unsigned ix_offset = 0;	/* Offset for non-contiguous allocations */
+	unsigned ix_offset = 0;	/* Offset for non-preferred allocations */
 	uint32_t max_parallel;	/* Maximum extents to allocate */
 	uint32_t next_le;
 	struct seg_pvs *spvs;
@@ -856,9 +895,14 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	/* FIXME Select log PV appropriately if there isn't one yet */
 
 	/* Are there any preceding segments we must follow on from? */
-	if ((alloc == ALLOC_CONTIGUOUS) && prev_lvseg) {
-		contiguous = 1;
+	if (prev_lvseg) {
 		ix_offset = prev_lvseg->area_count;
+		if ((alloc == ALLOC_CONTIGUOUS))
+			contiguous = 1;
+		else if ((alloc == ALLOC_CLING))
+			cling = 1;
+		else
+			ix_offset = 0;
 	}
 
 	/* FIXME This algorithm needs a lot of cleaning up! */
@@ -867,6 +911,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	/* ix holds the number of areas found on other PVs */
 	do {
 		ix = 0;
+		preferred_count = 0;
 
 		parallel_pvs = NULL;
 		max_parallel = needed;
@@ -920,10 +965,21 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 							      prev_lvseg,
 							      pva, areas,
 							      areas_size)) {
-						contiguous_count++;
+						preferred_count++;
 						goto next_pv;
 					}
 					continue;
+				}
+
+				if (cling) {
+					if (prev_lvseg &&
+					    _check_cling(ah->cmd,
+							   prev_lvseg,
+							   pva, areas,
+							   areas_size)) {
+						preferred_count++;
+					}
+					goto next_pv;
 				}
 
 				/* Is it big enough on its own? */
@@ -949,7 +1005,7 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 				break;
 		}
 
-		if (contiguous && (contiguous_count < ix_offset))
+		if ((contiguous || cling) && (preferred_count < ix_offset))
 			break;
 
 		/* Only allocate log_area the first time around */
@@ -1055,6 +1111,18 @@ static int _allocate(struct alloc_handle *ah,
 	}
 
 	if ((allocated == new_extents) || (ah->alloc == ALLOC_CONTIGUOUS) ||
+	    (!can_split && (allocated != old_allocated)))
+		goto finished;
+
+	old_allocated = allocated;
+	if (!_find_parallel_space(ah, ALLOC_CLING, pvms, areas,
+				  areas_size, can_split,
+				  prev_lvseg, &allocated, new_extents)) {
+		stack;
+		goto out;
+	}
+
+	if ((allocated == new_extents) || (ah->alloc == ALLOC_CLING) ||
 	    (!can_split && (allocated != old_allocated)))
 		goto finished;
 
