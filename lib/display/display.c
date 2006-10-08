@@ -30,6 +30,7 @@ static struct {
 } _policies[] = {
 	{
 	ALLOC_CONTIGUOUS, "contiguous"}, {
+	ALLOC_CLING, "cling"}, {
 	ALLOC_NORMAL, "normal"}, {
 	ALLOC_ANYWHERE, "anywhere"}, {
 	ALLOC_INHERIT, "inherit"}

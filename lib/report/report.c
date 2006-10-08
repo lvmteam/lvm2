@@ -104,6 +104,8 @@ static char _alloc_policy_char(alloc_policy_t alloc)
 	switch (alloc) {
 	case ALLOC_CONTIGUOUS:
 		return 'c';
+	case ALLOC_CLING:
+		return 'C';
 	case ALLOC_NORMAL:
 		return 'n';
 	case ALLOC_ANYWHERE:
