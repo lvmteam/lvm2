@@ -973,6 +973,12 @@ static int _cluster_send_message(void *buf, int msglen, char *csid, const char *
 	return gulm_cluster_send_message(buf, msglen, csid, errtext);
 }
 
+static int _get_cluster_name(char *buf, int buflen)
+{
+	strncpy(buf, cluster_name, buflen);
+	return 0;
+}
+
 static struct cluster_ops _cluster_gulm_ops = {
 	.cluster_init_completed   = NULL,
 	.cluster_send_message     = _cluster_send_message,
@@ -987,6 +993,7 @@ static struct cluster_ops _cluster_gulm_ops = {
 	.add_up_node              = gulm_add_up_node,
 	.reread_config            = _reread_config,
 	.cluster_closedown        = _cluster_closedown,
+	.get_cluster_name         = _get_cluster_name,
 	.sync_lock                = _sync_lock,
 	.sync_unlock              = _sync_unlock,
 };
