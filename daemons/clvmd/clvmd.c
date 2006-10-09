@@ -67,7 +67,7 @@ static struct local_client local_client_head;
 
 static unsigned short global_xid = 0;	/* Last transaction ID issued */
 
-static struct cluster_ops *clops = NULL;
+struct cluster_ops *clops = NULL;
 
 static char our_csid[MAX_CSID_LEN];
 static unsigned max_csid_len;

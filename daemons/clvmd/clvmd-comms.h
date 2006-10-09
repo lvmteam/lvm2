@@ -43,6 +43,8 @@ struct cluster_ops {
 	void (*reread_config) (void);
 	void (*cluster_closedown) (void);
 
+	int (*get_cluster_name)(char *buf, int buflen);
+
 	int (*sync_lock) (const char *resource, int mode, int flags, int *lockid);
 	int (*sync_unlock) (const char *resource, int lockid);
 

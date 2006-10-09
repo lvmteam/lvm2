@@ -471,6 +471,18 @@ static int _sync_unlock(const char *resource /* UNUSED */, int lockid)
 
 }
 
+static int _get_cluster_name(char *buf, int buflen)
+{
+	cman_cluster_t cluster_info;
+	int status;
+
+	status = cman_get_cluster(c_handle, &cluster_info);
+	if (!status) {
+		strncpy(buf, cluster_info.ci_name, buflen);
+	}
+	return status;
+}
+
 static struct cluster_ops _cluster_cman_ops = {
 	.cluster_init_completed   = _cluster_init_completed,
 	.cluster_send_message     = _cluster_send_message,
@@ -484,6 +496,7 @@ static struct cluster_ops _cluster_cman_ops = {
 	.get_our_csid             = _get_our_csid,
 	.add_up_node              = _add_up_node,
 	.cluster_closedown        = _cluster_closedown,
+	.get_cluster_name         = _get_cluster_name,
 	.sync_lock                = _sync_lock,
 	.sync_unlock              = _sync_unlock,
 };

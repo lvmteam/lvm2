@@ -75,6 +75,8 @@
 #include "clvmd.h"
 #include "libdlm.h"
 
+extern struct cluster_ops *clops;
+
 /* This is where all the real work happens:
    NOTE: client will be NULL when this is executed on a remote node */
 int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
@@ -124,6 +126,12 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	case CLVMD_CMD_REFRESH:
 		do_refresh_cache();
+		break;
+
+	case CLVMD_CMD_GET_CLUSTERNAME:
+		status = clops->get_cluster_name(*buf, buflen);
+		if (!status)
+			*retlen = strlen(*buf);
 		break;
 
 	default:
@@ -227,6 +235,7 @@ int do_pre_command(struct local_client *client)
 		break;
 
 	case CLVMD_CMD_REFRESH:
+	case CLVMD_CMD_GET_CLUSTERNAME:
 		break;
 
 	default:
