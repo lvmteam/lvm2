@@ -1,5 +1,5 @@
-Version 2.02.11 -  
-=====================================
+Version 2.02.11 - 12th October 2006
+===================================
   Add clvmd function to return the cluster name. not used by LVM yet.
   Add cling allocation policy.
   Change _check_contiguous() to use _for_each_pv().
