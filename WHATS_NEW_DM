@@ -2,7 +2,7 @@ Version 1.02.11 -  12 Oct 2006
 ==============================
   Add suspend noflush support.
   Add basic dmsetup loop support.
-  Switch dmsetup to use dm_malloc etc.
+  Switch dmsetup to use dm_malloc and dm_free.
 
 Version 1.02.10 - 19 Sep 2006
 =============================
