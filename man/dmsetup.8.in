@@ -13,7 +13,7 @@ dmsetup \- low level logical volume management
 .I [-f|--force]
 .br
 .B dmsetup suspend
-.I [--nolockfs] device_name
+.I [--nolockfs] [--noflush] device_name
 .br
 .B dmsetup resume
 .I device_name
@@ -213,7 +213,7 @@ Outputs status information for each of the device's targets.
 With --target, only information relating to the specified target type
 is displayed.
 .IP \fBsuspend
-.I [--nolockfs]
+.I [--nolockfs] [--noflush]
 .I device_name
 .br
 Suspends a device.  Any I/O that has already been mapped by the device
@@ -221,6 +221,9 @@ but has not yet completed will be flushed.  Any further I/O to that
 device will be postponed for as long as the device is suspended.
 If there's a filesystem on the device which supports the operation, 
 an attempt will be made to sync it first unless --nolockfs is specified.
+Some targets such as recent (October 2006) versions of multipath may support
+the --noflush option.  This lets outstanding I/O that has not yet reached the
+device to remain unflushed.
 .IP \fBtable
 .I [--target target_type]
 .I [device_name]

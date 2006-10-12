@@ -1026,6 +1026,13 @@ int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char 
 	return 1;
 }
 
+int dm_task_no_flush(struct dm_task *dmt)
+{
+	dmt->noflush = 1;
+
+	return 1;
+}
+
 int dm_task_no_open_count(struct dm_task *dmt)
 {
 	dmt->no_open_count = 1;
@@ -1270,6 +1277,8 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 
 	if (dmt->type == DM_DEVICE_SUSPEND)
 		dmi->flags |= DM_SUSPEND_FLAG;
+	if (dmt->noflush)
+		dmi->flags |= DM_NOFLUSH_FLAG;
 	if (dmt->read_only)
 		dmi->flags |= DM_READONLY_FLAG;
 	if (dmt->skip_lockfs)
