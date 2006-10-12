@@ -1028,7 +1028,7 @@ int dm_task_set_geometry(struct dm_task *dmt, const char *cylinders, const char 
 
 int dm_task_no_flush(struct dm_task *dmt)
 {
-	dmt->noflush = 1;
+	dmt->no_flush = 1;
 
 	return 1;
 }
@@ -1277,7 +1277,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 
 	if (dmt->type == DM_DEVICE_SUSPEND)
 		dmi->flags |= DM_SUSPEND_FLAG;
-	if (dmt->noflush)
+	if (dmt->no_flush)
 		dmi->flags |= DM_NOFLUSH_FLAG;
 	if (dmt->read_only)
 		dmi->flags |= DM_READONLY_FLAG;
@@ -1552,7 +1552,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
 	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%s %.0llu %s [%u]",
+		  "%s%c%c%s %.0llu %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
@@ -1563,6 +1563,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		  dmt->major > 0 && dmt->minor == 0 ? "0" : "",
 		  dmt->major > 0 ? ") " : "",
 		  dmt->no_open_count ? 'N' : 'O',
+		  dmt->no_flush ? 'N' : 'F',
 		  dmt->skip_lockfs ? "S " : "",
 		  dmt->sector, dmt->message ? dmt->message : "",
 		  dmi->data_size);
