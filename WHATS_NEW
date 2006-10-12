@@ -1,3 +1,6 @@
+Version 2.02.12 -
+===================================
+
 Version 2.02.11 - 12th October 2006
 ===================================
   Add clvmd function to return the cluster name. not used by LVM yet.
