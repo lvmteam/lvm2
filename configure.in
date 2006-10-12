@@ -287,7 +287,7 @@ AC_MSG_RESULT($SELINUX)
 ################################################################################
 dnl -- Disable realtime clock support
 AC_MSG_CHECKING(whether to enable realtime support)
-AC_ARG_ENABLE(realtime, [  --disable-realtime       Disable realtime clock support],
+AC_ARG_ENABLE(realtime, [  --disable-realtime      Disable realtime clock support],
 REALTIME=$enableval)
 AC_MSG_RESULT($REALTIME)
 

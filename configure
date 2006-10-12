@@ -853,7 +853,7 @@ Optional Features:
                           statically.  Default is dynamic linking
   --enable-readline       Enable readline support
   --disable-selinux       Disable selinux support
-  --disable-realtime       Disable realtime clock support
+  --disable-realtime      Disable realtime clock support
   --enable-debug          Enable debugging
   --disable-devmapper     Disable device-mapper interaction
   --disable-o_direct      Disable O_DIRECT
