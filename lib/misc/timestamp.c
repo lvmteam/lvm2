@@ -39,7 +39,6 @@ struct timestamp {
 struct timestamp *get_timestamp(void)
 {
 	struct timestamp *ts = NULL;
-	int err = 0;
 
 	if (!(ts = dm_malloc(sizeof(*ts))))
 		return_NULL;
@@ -89,12 +88,11 @@ struct timestamp {
 struct timestamp *get_timestamp(void)
 {
 	struct timestamp *ts = NULL;
-	int err = 0;
 
 	if (!(ts = dm_malloc(sizeof(*ts))))
 		return_NULL;
 
-	if ((err = gettimeofday(&ts->t, NULL))) {
+	if (gettimeofday(&ts->t, NULL)) {
 		log_sys_error("gettimeofday", "get_timestamp");
 		return NULL;
 	}
