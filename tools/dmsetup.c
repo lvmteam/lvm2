@@ -1506,12 +1506,12 @@ struct command {
 static struct command _commands[] = {
 	{"create", "<dev_name> [-j|--major <major> -m|--minor <minor>]\n"
 	  "\t                  [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
-	  "\t                  [-u|uuid <uuid>]"
+	  "\t                  [-u|uuid <uuid>]\n"
 	  "\t                  [--notable | --table <table> | <table_file>]",
 	 1, 2, _create},
 	{"remove", "[-f|--force] <device>", 0, 1, _remove},
 	{"remove_all", "[-f|--force]", 0, 0, _remove_all},
-	{"suspend", "<device>", 0, 1, _suspend},
+	{"suspend", "[--noflush] <device>", 0, 1, _suspend},
 	{"resume", "<device>", 0, 1, _resume},
 	{"load", "<device> [<table_file>]", 0, 2, _load},
 	{"clear", "<device>", 0, 1, _clear},
@@ -1537,8 +1537,7 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
-		"        [--noflush]\n\n");
+		"        [-r|--readonly] [--noopencount] [--nolockfs]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
