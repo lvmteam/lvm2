@@ -1,5 +1,5 @@
-Version 1.02.11 -  
-=============================
+Version 1.02.11 -  12 Oct 2006
+==============================
   Add suspend noflush support.
   Add basic dmsetup loop support.
 
