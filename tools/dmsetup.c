@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2005 NEC Corperation
  *
  * This file is part of the device-mapper userspace tools.
@@ -37,6 +37,16 @@
 #include <sys/param.h>
 #include <locale.h>
 #include <langinfo.h>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+
+/* FIXME Unused so far */
+#undef HAVE_SYS_STATVFS_H
+
+#ifdef HAVE_SYS_STATVFS_H
+#  include <sys/statvfs.h>
+#endif
 
 #ifdef HAVE_SYS_IOCTL_H
 #  include <sys/ioctl.h>
@@ -78,6 +88,11 @@ extern char *optarg;
 
 #define LINE_SIZE 4096
 #define ARGS_MAX 256
+#define LOOP_TABLE_SIZE (PATH_MAX + 255)
+
+/* FIXME Should be elsewhere */
+#define SECTOR_SHIFT 9L
+#define DEV_PATH "/dev/"
 
 #define err(msg, x...) fprintf(stderr, msg "\n", ##x)
 
@@ -93,6 +108,7 @@ enum {
 	MAJOR_ARG,
 	MINOR_ARG,
 	MODE_ARG,
+	NOFLUSH_ARG,
 	NOHEADINGS_ARG,
 	NOLOCKFS_ARG,
 	NOOPENCOUNT_ARG,
@@ -180,7 +196,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 
 #ifndef HAVE_GETLINE
 	buffer_size = LINE_SIZE;
-	if (!(buffer = malloc(buffer_size))) {
+	if (!(buffer = dm_malloc(buffer_size))) {
 		err("Failed to malloc line buffer.");
 		return 0;
 	}
@@ -195,7 +211,7 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	r = 1;
 
       out:
-	free(buffer);
+	dm_free(buffer);
 	if (file)
 		fclose(fp);
 	return r;
@@ -512,7 +528,7 @@ static int _message(int argc, char **argv, void *data __attribute((unused)))
 	for (i = 0; i < argc; i++)
 		sz += strlen(argv[i]) + 1;
 
-	str = malloc(sz);
+	str = dm_malloc(sz);
 	memset(str, 0, sz);
 
 	for (i = 0; i < argc; i++) {
@@ -524,7 +540,7 @@ static int _message(int argc, char **argv, void *data __attribute((unused)))
 	if (!dm_task_set_message(dmt, str))
 		goto out;
 
-	free(str);
+	dm_free(str);
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
@@ -601,6 +617,9 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 		goto out;
 
 	if (event_nr && !dm_task_set_event_nr(dmt, event_nr))
+		goto out;
+
+	if (_switches[NOFLUSH_ARG] && !dm_task_no_flush(dmt))
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
@@ -744,28 +763,28 @@ static int _error_device(int argc __attribute((unused)), char **argv __attribute
 		return 0;
 
 	if (!_set_task_device(dmt, name, 0))
-		goto err;
+		goto error;
 
 	if (!dm_task_add_target(dmt, 0, size, "error", ""))
-		goto err;
+		goto error;
 
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
-		goto err;
+		goto error;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
-		goto err;
+		goto error;
 
 	if (!dm_task_run(dmt))
-		goto err;
+		goto error;
 
 	if (!_simple(DM_DEVICE_RESUME, name, 0, 0)) {
 		_simple(DM_DEVICE_CLEAR, name, 0, 0);
-		goto err;
+		goto error;
 	}
 
 	r = 1;
 
-err:
+error:
 	dm_task_destroy(dmt);
 	return r;
 }
@@ -1518,7 +1537,8 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly] [--noopencount] [--nolockfs]\n\n");
+		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
+		"        [--noflush]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
@@ -1527,6 +1547,13 @@ static void _usage(FILE *out)
 	fprintf(out, "Tree options are: ascii, utf, vt100; compact, inverted, notrunc;\n"
 		     "                  [no]device, active, open, rw and uuid.\n\n");
 	return;
+}
+
+static void _losetup_usage(FILE *out)
+{
+	fprintf(out, "Usage:\n\n");
+	fprintf(out, "losetup [-d|-a] [-e encryption] "
+		     "[-o offset] [-f|loop_device] [file]\n\n");
 }
 
 static struct command *_find_command(const char *name)
@@ -1606,11 +1633,225 @@ static int _process_tree_options(const char *options)
 	return 1;
 }
 
+/*
+ * Returns the full absolute path, or NULL if the path could
+ * not be resolved.
+ */
+static char *_get_abspath(char *path)
+{
+	char *_path;
+
+#ifdef HAVE_CANONICALIZE_FILE_NAME
+	_path = canonicalize_file_name(path);
+#else
+	/* FIXME Provide alternative */
+#endif
+	return _path;
+}
+
+static char *parse_loop_device_name(char *dev)
+{
+	char *buf;
+	char *device;
+
+	if (!(buf = dm_malloc(PATH_MAX)));
+		return NULL;
+
+	if (dev[0] == '/') {
+		if (!(device = _get_abspath(dev)))
+			goto error;
+
+		if (strncmp(device, DEV_PATH, strlen(DEV_PATH)))
+			goto error;
+
+		strncpy(buf, strrchr(device, '/') + 1, PATH_MAX);
+		dm_free(device);
+
+	} else {
+		/* check for device number */
+		if (!strncmp(dev, "loop", strlen("loop")))
+			strncpy(buf, dev, PATH_MAX);
+		else
+			goto error;
+	}
+
+	return buf;
+
+error:
+	return NULL;
+}
+
+/*
+ *  create a table for a mapped device using the loop target.
+ */
+static int _loop_table(char *table, size_t tlen, char *file, char *dev, off_t off)
+{
+	struct stat fbuf;
+	off_t size, sectors;
+	int fd = -1;
+#ifdef HAVE_SYS_STATVFS_H
+	struct statvfs fsbuf;
+	off_t blksize;
+#endif
+
+	if (!_switches[READ_ONLY])
+		fd = open(file, O_RDWR);
+
+	if (fd < 0) {
+		_switches[READ_ONLY]++;
+		fd = open(file, O_RDONLY);
+	}
+
+	if (fd < 0)
+		goto error;
+
+	if (fstat(fd, &fbuf))
+		goto error;
+
+	size = (fbuf.st_size - off);
+	sectors = size >> SECTOR_SHIFT;
+
+	if (_switches[VERBOSE_ARG])
+		fprintf(stderr, "losetup: set loop size to %llukB (%llu sectors)\n",
+			sectors >> 1, sectors);
+
+#ifdef HAVE_SYS_STATVFS_H
+	if (fstatvfs(fd, &fsbuf))
+		goto error;       
+
+	/* FIXME Fragment size currently unused */
+	blksize = fsbuf.f_frsize;
+#endif
+
+	close(fd);
+
+	if (dm_snprintf(table, tlen, "%llu %llu loop %s %llu\n", 0ULL, 
+			(long long unsigned)sectors, file, off) < 0)
+		return 0;
+
+	if (_switches[VERBOSE_ARG] > 1)
+		fprintf(stderr, "Table: %s\n", table);
+
+	return 1;
+
+error:
+	if (fd > -1)
+		close(fd);
+	return 0;
+}
+
+static int _process_losetup_switches(const char *base, int *argc, char ***argv)
+{
+	static int ind;
+	int c;
+	int encrypt_loop = 0, delete = 0, find = 0, show_all = 0;
+	char *device_name = NULL;
+	char *loop_file = NULL;
+	off_t offset = 0;
+
+#ifdef HAVE_GETOPTLONG
+	static struct option long_options[] = {
+		{0, 0, 0, 0}
+	};
+#endif
+
+	optarg = 0;
+	optind = OPTIND_INIT;
+	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "ade:fo:v",
+					    long_options, NULL)) != -1 ) {
+		if (c == ':' || c == '?')
+			return 0;
+		if (c == 'a')
+			show_all++;
+		if (c == 'd')
+			delete++;
+		if (c == 'e')
+			encrypt_loop++;
+		if (c == 'f')
+			find++;
+		if (c == 'o')
+			offset = atoi(optarg);
+		if (c == 'v')
+			_switches[VERBOSE_ARG]++;
+	}
+
+	*argv += optind ;
+	*argc -= optind ;
+
+	if (encrypt_loop){
+		fprintf(stderr, "%s: Sorry, cryptoloop is not yet implemented "
+				"in this version.\n", base);
+		return 0;
+	}
+
+	if (show_all) {
+		fprintf(stderr, "%s: Sorry, show all is not yet implemented "
+				"in this version.\n", base);
+		return 0;
+	}
+
+	if (find) {
+		fprintf(stderr, "%s: Sorry, find is not yet implemented "
+				"in this version.\n", base);
+		if (!*argc)
+			return 0;
+	}
+
+	if (!*argc) {
+		fprintf(stderr, "%s: Please specify loop_device.\n", base);
+		_losetup_usage(stderr);
+		return 0;
+	}
+
+	if (!(device_name = parse_loop_device_name((*argv)[0]))) {
+		fprintf(stderr, "%s: Could not parse loop_device %s\n",
+			base, (*argv)[0]);
+		_losetup_usage(stderr);
+		return 0;
+	}
+
+	if (delete) {
+		*argc = 2;
+
+		(*argv)[1] = device_name;
+		(*argv)[0] = (char *) "remove";
+
+		return 1;
+	}
+
+	if (*argc != 2) {
+		fprintf(stderr, "%s: Too few arguments\n", base);
+		_losetup_usage(stderr);
+		return 0;
+	}
+
+	/* FIXME move these to make them available to native dmsetup */
+	if (!(loop_file = _get_abspath((*argv)[(find) ? 0 : 1]))) {
+		fprintf(stderr, "%s: Could not parse loop file name %s\n",
+			base, (*argv)[1]);
+		_losetup_usage(stderr);
+		return 0;
+	}
+
+	/* FIXME Missing free */
+	_table = dm_malloc(LOOP_TABLE_SIZE);
+	if (!_loop_table(_table, LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
+		fprintf(stderr, "Could not build device-mapper table for %s\n", (*argv)[0]);
+		return 0;
+	}
+	_switches[TABLE_ARG]++;
+
+	(*argv)[0] = (char *) "create";
+	(*argv)[1] = device_name ;
+
+	return 1;
+}
+
 static int _process_switches(int *argc, char ***argv)
 {
 	char *base, *namebase;
 	static int ind;
-	int c;
+	int c, r;
 
 #ifdef HAVE_GETOPTLONG
 	static struct option long_options[] = {
@@ -1622,6 +1863,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"major", 1, &ind, MAJOR_ARG},
 		{"minor", 1, &ind, MINOR_ARG},
 		{"mode", 1, &ind, MODE_ARG},
+		{"noflush", 0, &ind, NOFLUSH_ARG},
 		{"noheadings", 0, &ind, NOHEADINGS_ARG},
 		{"nolockfs", 0, &ind, NOLOCKFS_ARG},
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
@@ -1676,6 +1918,12 @@ static int _process_switches(int *argc, char ***argv)
 
 		(*argv)[0] = (char *) "info";
 		return 1;
+	}
+
+	if(!strcmp(base, "losetup") || !strcmp(base, "dmlosetup")){
+		r = _process_losetup_switches(base, argc, argv);
+		free(namebase);
+		return r;
 	}
 
 	free(namebase);
@@ -1733,6 +1981,8 @@ static int _process_switches(int *argc, char ***argv)
 			_switches[TARGET_ARG]++;
 			_target = optarg;
 		}
+		if ((ind == NOFLUSH_ARG))
+			_switches[NOFLUSH_ARG]++;
 		if ((ind == NOHEADINGS_ARG))
 			_switches[NOHEADINGS_ARG]++;
 		if ((ind == NOLOCKFS_ARG))

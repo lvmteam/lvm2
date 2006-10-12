@@ -52,6 +52,7 @@ struct dm_task {
 	char *message;
 	char *geometry;
 	uint64_t sector;
+	int noflush;
 	int no_open_count;
 	int skip_lockfs;
 	int suppress_identical_reload;
