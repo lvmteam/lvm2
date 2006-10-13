@@ -1,5 +1,6 @@
 Version 1.02.12 -
 ==============================
+  Avoid deptree attempting to suspend a device that's already suspended.
 
 Version 1.02.11 -  12 Oct 2006
 ==============================

@@ -1028,7 +1028,7 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (!_info_by_dev(dinfo->major, dinfo->minor, 0, &info) ||
-		    !info.exists)
+		    !info.exists || info.suspended)
 			continue;
 
 		if (!_suspend_node(name, info.major, info.minor,
