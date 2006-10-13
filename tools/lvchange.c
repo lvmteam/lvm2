@@ -294,16 +294,15 @@ static int lvchange_persistent(struct cmd_context *cmd,
 			log_error("Major number must be specified with -My");
 			return 0;
 		}
-		if (lv_info(cmd, lv, &info, 0) && info.exists &&
-		    !arg_count(cmd, force_ARG)) {
-			if (yes_no_prompt("Logical volume %s will be "
-					  "deactivated temporarily. "
-					  "Continue? [y/n]: ", lv->name) == 'n') {
-				log_print("%s device number not changed.",
-					  lv->name);
-				return 0;
-			}
+		if (lv_info(cmd, lv, &info, 0) && info.exists)
 			active = 1;
+		if (active && !arg_count(cmd, force_ARG) &&
+		    yes_no_prompt("Logical volume %s will be "
+				  "deactivated temporarily. "
+				  "Continue? [y/n]: ", lv->name) == 'n') {
+			log_print("%s device number not changed.",
+				  lv->name);
+			return 0;
 		}
 		log_verbose("Ensuring %s is inactive.", lv->name);
 		if (!deactivate_lv(cmd, lv)) {

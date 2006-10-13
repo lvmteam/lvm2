@@ -1,6 +1,7 @@
 Version 2.02.12 -
 ===================================
-  Propogate clustered flag in vgsplit and require resizeable flag.
+  Retain activation state after changing LV minor number with --force.
+  Propagate clustered flag in vgsplit and require resizeable flag.
 
 Version 2.02.11 - 12th October 2006
 ===================================
