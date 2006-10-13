@@ -209,6 +209,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!(vg_from->status & RESIZEABLE_VG)) {
+		log_error("Volume group \"%s\" is not resizeable", vg_from->name);
+		unlock_vg(cmd, vg_name_from);
+		return ECMD_FAILED;
+	}
+
 	if (!(vg_from->status & LVM_WRITE)) {
 		log_error("Volume group \"%s\" is read-only", vg_from->name);
 		unlock_vg(cmd, vg_name_from);
@@ -247,6 +253,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 				vg_from->max_pv, vg_from->max_lv,
 				vg_from->alloc, 0, NULL)))
 		goto error;
+
+	if (vg_from->status & CLUSTERED)
+		vg_to->status |= CLUSTERED;
 
 	/* Archive vg_from before changing it */
 	if (!archive(vg_from))
