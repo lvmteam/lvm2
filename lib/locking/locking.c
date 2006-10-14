@@ -144,18 +144,18 @@ int init_locking(int type, struct cmd_context *cmd)
 	case 2:
 		if (!cmd->is_static) {
 			log_very_verbose("External locking selected.");
-			if (!init_external_locking(&_locking, cmd))
-				break;
-			return 1;
+			if (init_external_locking(&_locking, cmd))
+				return 1;
 		}
 		if (!find_config_tree_int(cmd, "locking/fallback_to_clustered_locking",
 					  DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING))
 			break;
-		log_very_verbose("Falling back to clustered locking.");
-		/* Fall through */
 #endif
 
 #ifdef CLUSTER_LOCKING_INTERNAL
+		log_very_verbose("Falling back to internal clustered locking.");
+		/* Fall through */
+
 	case 3:
 		log_very_verbose("Cluster locking selected.");
 		if (!init_cluster_locking(&_locking, cmd))
