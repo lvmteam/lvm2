@@ -1,5 +1,6 @@
 Version 2.02.12 -
 ===================================
+  Fix pvdisplay to use vg_read() for non-orphans.
   Fall back to internal locking if external locking lib is missing or fails.
   Retain activation state after changing LV minor number with --force.
   Propagate clustered flag in vgsplit and require resizeable flag.
