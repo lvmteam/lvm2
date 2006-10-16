@@ -637,11 +637,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (lp->mirrors > 1 && !activation()) {
-		log_error("Can't create mirror without using "
-			  "device-mapper kernel driver.");
-		return 0;
-	}
+	////if (lp->mirrors > 1 && !activation()) {
+		//log_error("Can't create mirror without using "
+			  //"device-mapper kernel driver.");
+		//return 0;
+	//}
 
 	/* The snapshot segment gets created later */
 	if (lp->snapshot &&
