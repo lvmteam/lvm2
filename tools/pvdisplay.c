@@ -19,9 +19,31 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 			     struct volume_group *vg __attribute((unused)),
 			     struct physical_volume *pv, void *handle)
 {
+	int consistent = 0;
+	int ret = ECMD_PROCESSED;
 	uint64_t size;
 
 	const char *pv_name = dev_name(pv->dev);
+
+	 if (pv->vg_name) {
+	         if (!lock_vol(cmd, pv->vg_name, LCK_VG_READ)) {
+	                 log_error("Can't lock %s: skipping", pv->vg_name);
+	                 return ECMD_FAILED;
+	         }
+
+	         if (!(vg = vg_read(cmd, pv->vg_name, (char *)&pv->vgid, &consistent))) {
+	                 log_error("Can't read %s: skipping", pv->vg_name);
+	                 goto out;
+	         }
+
+	         if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
+	             !lockingfailed()) {
+	                 log_error("Skipping clustered volume group %s",
+	                           vg->name);
+	                 ret = ECMD_FAILED;
+	                 goto out;
+	         }
+	 }
 
 	if (!*pv->vg_name)
 		size = pv->size;
@@ -31,7 +53,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	if (arg_count(cmd, short_ARG)) {
 		log_print("Device \"%s\" has a capacity of %s", pv_name,
 			  display_size(cmd, size));
-		return ECMD_PROCESSED;
+		goto out;
 	}
 
 	if (pv->status & EXPORTED_VG)
@@ -44,15 +66,19 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 
 	if (arg_count(cmd, colon_ARG)) {
 		pvdisplay_colons(pv);
-		return ECMD_PROCESSED;
+		goto out;
 	}
 
 	pvdisplay_full(cmd, pv, handle);
 
 	if (!arg_count(cmd, maps_ARG))
-		return ECMD_PROCESSED;
+		goto out;
 
-	return ECMD_PROCESSED;
+out:
+        if (pv->vg_name)
+                unlock_vg(cmd, pv->vg_name);
+
+	return ret;
 }
 
 int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
