@@ -1,4 +1,4 @@
-Version 2.02.12 -
+Version 2.02.12 - 16th October 2006
 ===================================
   Fix pvdisplay to use vg_read() for non-orphans.
   Fall back to internal locking if external locking lib is missing or fails.
