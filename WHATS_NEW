@@ -1,3 +1,6 @@
+Version 2.02.13 -
+===================================
+
 Version 2.02.12 - 16th October 2006
 ===================================
   Fix pvdisplay to use vg_read() for non-orphans.
