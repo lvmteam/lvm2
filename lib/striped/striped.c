@@ -174,7 +174,7 @@ static int _striped_add_target_line(struct dev_manager *dm,
 	return add_areas_line(dm, seg, node, 0u, seg->area_count);
 }
 
-static int _striped_target_present(void)
+static int _striped_target_present(const struct lv_segment *seg __attribute((unused)))
 {
 	static int _striped_checked = 0;
 	static int _striped_present = 0;

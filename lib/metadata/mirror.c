@@ -562,7 +562,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	}
 
         if (activation() && segtype->ops->target_present &&
-            !segtype->ops->target_present()) {
+            !segtype->ops->target_present(NULL)) {
                 log_error("%s: Required device-mapper target(s) not "
                           "detected in your kernel", segtype->name);
                 return 0;

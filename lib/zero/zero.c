@@ -49,7 +49,7 @@ static int _zero_add_target_line(struct dev_manager *dm __attribute((unused)),
 	return dm_tree_node_add_zero_target(node, len);
 }
 
-static int _zero_target_present(void)
+static int _zero_target_present(const struct lv_segment *seg __attribute((unused)))
 {
 	static int _zero_checked = 0;
 	static int _zero_present = 0;

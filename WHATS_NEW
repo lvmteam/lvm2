@@ -1,5 +1,6 @@
 Version 2.02.13 -
 ===================================
+  Add segment parameter to target_present functions.
 
 Version 2.02.12 - 16th October 2006
 ===================================

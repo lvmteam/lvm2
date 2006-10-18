@@ -336,7 +336,7 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	return add_areas_line(dm, seg, node, start_area, area_count);
 }
 
-static int _mirrored_target_present(void)
+static int _mirrored_target_present(const struct lv_segment *seg __attribute((unused)))
 {
 	static int _mirrored_checked = 0;
 	static int _mirrored_present = 0;
