@@ -785,7 +785,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 
 	/* Ensure required device-mapper targets are loaded */
 	if (seg->segtype->ops->target_present &&
-	    !seg->segtype->ops->target_present()) {
+	    !seg->segtype->ops->target_present(seg)) {
 		log_error("Can't expand LV %s: %s target support missing "
 			  "from kernel?", seg->lv->name, seg->segtype->name);
 		return 0;

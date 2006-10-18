@@ -112,7 +112,7 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 	return 1;
 }
 
-static int _snap_target_present(void)
+static int _snap_target_present(const struct lv_segment *seg __attribute((unused)))
 {
 	static int _snap_checked = 0;
 	static int _snap_present = 0;

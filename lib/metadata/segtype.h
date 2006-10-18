@@ -76,7 +76,7 @@ struct segtype_handler {
 			       struct lv_segment *seg, char *params,
 			       uint64_t *total_numerator,
 			       uint64_t *total_denominator, float *percent);
-	int (*target_present) (void);
+	int (*target_present) (const struct lv_segment *seg);
 	int (*modules_needed) (struct dm_pool *mem,
 			       const struct lv_segment *seg,
 			       struct list *modules);
