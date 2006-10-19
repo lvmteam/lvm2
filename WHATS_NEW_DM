@@ -1,5 +1,6 @@
 Version 1.02.13 - 
 =============================
+  Fix dmsetup free after getline with debug.
   Suppress encryption key in 'dmsetup table' output unless --showkeys supplied.
 
 Version 1.02.12 - 13 Oct 2006
