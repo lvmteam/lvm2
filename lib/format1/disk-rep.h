@@ -203,8 +203,8 @@ int write_disks(const struct format_type *fmt, struct list *pvds);
  * Functions to translate to between disk and in
  * core structures.
  */
-int import_pv(struct dm_pool *mem, struct device *dev,
-	      struct volume_group *vg,
+int import_pv(const struct format_type *fmt, struct dm_pool *mem,
+	      struct device *dev, struct volume_group *vg,
 	      struct physical_volume *pv, struct pv_disk *pvd,
 	      struct vg_disk *vgd);
 int export_pv(struct cmd_context *cmd, struct dm_pool *mem,

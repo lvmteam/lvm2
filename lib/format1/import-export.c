@@ -24,6 +24,7 @@
 #include "toolcontext.h"
 #include "segtype.h"
 #include "pv_alloc.h"
+#include "display.h"
 
 #include <time.h>
 
@@ -47,11 +48,13 @@ static char *_create_lv_name(struct dm_pool *mem, const char *full_name)
 	return dm_pool_strdup(mem, ptr);
 }
 
-int import_pv(struct dm_pool *mem, struct device *dev,
-	      struct volume_group *vg,
+int import_pv(const struct format_type *fmt, struct dm_pool *mem,
+	      struct device *dev, struct volume_group *vg,
 	      struct physical_volume *pv, struct pv_disk *pvd,
 	      struct vg_disk *vgd)
 {
+	uint64_t size;
+
 	memset(pv, 0, sizeof(*pv));
 	memcpy(&pv->id, pvd->pv_uuid, ID_LEN);
 
@@ -88,6 +91,25 @@ int import_pv(struct dm_pool *mem, struct device *dev,
 	pv->pe_start = pvd->pe_start;
 	pv->pe_count = pvd->pe_total;
 	pv->pe_alloc_count = 0;
+
+	/* Fix up pv size if missing */
+	if (!pv->size) {
+		if (!dev_get_size(dev, &pv->size)) {
+			log_error("%s: Couldn't get size.", dev_name(pv->dev));
+			return 0;
+		}
+		log_verbose("Fixing up missing format1 size (%s) "
+			    "for PV %s", display_size(fmt->cmd, pv->size),
+			    dev_name(pv->dev));
+		if (vg) {
+			size = pv->pe_count * (uint64_t) vg->extent_size +
+			       pv->pe_start;
+			if (size > pv->size)
+				log_error("WARNING: Physical Volume %s is too "
+					  "large for underlying device",
+					  dev_name(pv->dev));
+		}
+	}
 
 	list_init(&pv->tags);
 	list_init(&pv->segments);
@@ -427,7 +449,7 @@ int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
 			return 0;
 		}
 
-		if (!import_pv(mem, dl->dev, vg, pvl->pv, &dl->pvd, &dl->vgd)) {
+		if (!import_pv(fmt, mem, dl->dev, vg, pvl->pv, &dl->pvd, &dl->vgd)) {
 			stack;
 			return 0;
 		}
