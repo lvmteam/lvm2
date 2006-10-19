@@ -312,7 +312,7 @@ static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
 		goto out;
 	}
 
-	if (!import_pv(fmt->cmd->mem, dl->dev, NULL, pv, &dl->pvd, &dl->vgd)) {
+	if (!import_pv(fmt, fmt->cmd->mem, dl->dev, NULL, pv, &dl->pvd, &dl->vgd)) {
 		stack;
 		goto out;
 	}
