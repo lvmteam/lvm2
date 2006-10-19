@@ -114,6 +114,7 @@ enum {
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	OPTIONS_ARG,
+	SHOWKEYS_ARG,
 	TABLE_ARG,
 	TARGET_ARG,
 	TREE_ARG,
@@ -211,7 +212,11 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 	r = 1;
 
       out:
+#ifndef HAVE_GETLINE
 	dm_free(buffer);
+#else
+	free(buffer);
+#endif
 	if (file)
 		fclose(fp);
 	return r;
@@ -915,7 +920,7 @@ static int _status(int argc, char **argv, void *data)
 	void *next = NULL;
 	uint64_t start, length;
 	char *target_type = NULL;
-	char *params;
+	char *params, *c;
 	int cmd;
 	struct dm_names *names = (struct dm_names *) data;
 	const char *name = NULL;
@@ -978,6 +983,17 @@ static int _status(int argc, char **argv, void *data)
 			if (data && !_switches[VERBOSE_ARG])
 				printf("%s: ", name);
 			if (target_type) {
+
+			/* Suppress encryption key */
+			if (!_switches[SHOWKEYS_ARG] &&
+			    !strcmp(target_type, "crypt")) {
+				c = params;
+				while (*c && *c != ' ')
+					c++;
+				c++;
+				while (*c && *c != ' ')
+					*c++ = '0';
+			}
 				printf("%" PRIu64 " %" PRIu64 " %s %s",
 				       start, length, target_type, params);
 			}
@@ -1522,7 +1538,7 @@ static struct command _commands[] = {
 	{"info", "[<device>]", 0, 1, _info},
 	{"deps", "[<device>]", 0, 1, _deps},
 	{"status", "[<device>] [--target <target_type>]", 0, 1, _status},
-	{"table", "[<device>] [--target <target_type>]", 0, 1, _status},
+	{"table", "[<device>] [--target <target_type>] [--showkeys]", 0, 1, _status},
 	{"wait", "<device> [<event_nr>]", 0, 2, _wait},
 	{"mknodes", "[<device>]", 0, 1, _mknodes},
 	{"targets", "", 0, 0, _targets},
@@ -1868,6 +1884,7 @@ static int _process_switches(int *argc, char ***argv)
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
+		{"showkeys", 0, &ind, SHOWKEYS_ARG},
 		{"table", 1, &ind, TABLE_ARG},
 		{"target", 1, &ind, TARGET_ARG},
 		{"tree", 0, &ind, TREE_ARG},
@@ -1988,6 +2005,8 @@ static int _process_switches(int *argc, char ***argv)
 			_switches[NOLOCKFS_ARG]++;
 		if ((ind == NOOPENCOUNT_ARG))
 			_switches[NOOPENCOUNT_ARG]++;
+		if ((ind == SHOWKEYS_ARG))
+			_switches[SHOWKEYS_ARG]++;
 		if ((ind == TABLE_ARG)) {
 			_switches[TABLE_ARG]++;
 			_table = optarg;
