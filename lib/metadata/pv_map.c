@@ -19,6 +19,8 @@
 
 /*
  * Areas are maintained in size order, largest first.
+ *
+ * FIXME Cope with overlap.
  */
 static void _insert_area(struct list *head, struct pv_area *a)
 {
@@ -126,22 +128,31 @@ static int _create_all_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 
 static int _create_maps(struct dm_pool *mem, struct list *pvs, struct list *pvms)
 {
-	struct pv_map *pvm;
+	struct pv_map *pvm, *pvm2;
 	struct pv_list *pvl;
 
 	list_iterate_items(pvl, pvs) {
 		if (!(pvl->pv->status & ALLOCATABLE_PV))
 			continue;
 
-		if (!(pvm = dm_pool_zalloc(mem, sizeof(*pvm)))) {
-			stack;
-			return 0;
+		pvm = NULL;
+
+		list_iterate_items(pvm2, pvms)
+			if (pvm2->pv->dev == pvl->pv->dev) {
+				pvm = pvm2;
+				break;
+			}
+
+		if (!pvm) {
+			if (!(pvm = dm_pool_zalloc(mem, sizeof(*pvm)))) {
+				stack;
+				return 0;
+			}
+
+			pvm->pv = pvl->pv;
+			list_init(&pvm->areas);
+			list_add(pvms, &pvm->list);
 		}
-
-		pvm->pv = pvl->pv;
-
-		list_init(&pvm->areas);
-		list_add(pvms, &pvm->list);
 
 		if (!_create_all_areas_for_pv(mem, pvm, pvl->pe_ranges)) {
 			stack;

@@ -1,5 +1,6 @@
 Version 2.02.13 -
 ===================================
+  Cope if same PV is included more than once in cmdline PE range list.
   Set PV size to current device size if it is found to be zero.
   Add segment parameter to target_present functions.
 
