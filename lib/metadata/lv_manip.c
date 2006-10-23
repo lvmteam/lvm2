@@ -890,8 +890,17 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 	uint32_t next_le;
 	struct seg_pvs *spvs;
 	struct list *parallel_pvs;
+	uint32_t free_pes;
 
-	/* FIXME Do calculations on free extent counts before selecting space */
+	/* Is there enough total space? */
+	free_pes = pv_maps_size(pvms);
+	if (needed > free_pes) {
+		log_error("Insufficient free space: %" PRIu32 " extents needed,"
+			  " but only %" PRIu32 " available", needed,
+			  free_pes);
+		return 0;
+	}
+
 	/* FIXME Select log PV appropriately if there isn't one yet */
 
 	/* Are there any preceding segments we must follow on from? */
