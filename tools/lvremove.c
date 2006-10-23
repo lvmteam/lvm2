@@ -75,6 +75,16 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!archive(vg))
 		return ECMD_FAILED;
 
+	/* If the VG is clustered then make sure no-one else is using the LV
+	   we are about to remove */
+	if (vg->status & CLUSTERED) {
+		if (!activate_lv_excl(cmd, lv)) {
+			log_error("Can't get exclusive access to volume \"%s\"",
+				  lv->name);
+			return ECMD_FAILED;
+		}
+	}
+
 	/* FIXME Snapshot commit out of sequence if it fails after here? */
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate logical volume \"%s\"",
