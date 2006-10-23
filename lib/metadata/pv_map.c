@@ -32,6 +32,7 @@ static void _insert_area(struct list *head, struct pv_area *a)
 	}
 
 	list_add(&pva->list, &a->list);
+	a->map->pe_count += a->count;
 }
 
 static int _create_single_area(struct dm_pool *mem, struct pv_map *pvm,
@@ -191,6 +192,7 @@ struct list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 void consume_pv_area(struct pv_area *pva, uint32_t to_go)
 {
 	list_del(&pva->list);
+	pva->map->pe_count -= pva->count;
 
 	assert(to_go <= pva->count);
 
@@ -200,4 +202,15 @@ void consume_pv_area(struct pv_area *pva, uint32_t to_go)
 		pva->count -= to_go;
 		_insert_area(&pva->map->areas, pva);
 	}
+}
+
+uint32_t pv_maps_size(struct list *pvms)
+{
+	struct pv_map *pvm;
+	uint32_t pe_count = 0;
+
+	list_iterate_items(pvm, pvms)
+		pe_count += pvm->pe_count;
+
+	return pe_count;
 }

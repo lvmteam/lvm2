@@ -37,6 +37,7 @@ struct pv_area {
 struct pv_map {
 	struct physical_volume *pv;
 	struct list areas;		/* struct pv_areas */
+	uint32_t pe_count;		/* Total number of PEs */
 
 	struct list list;
 };
@@ -48,5 +49,7 @@ struct list *create_pv_maps(struct dm_pool *mem, struct volume_group *vg,
 			    struct list *allocatable_pvs);
 
 void consume_pv_area(struct pv_area *area, uint32_t to_go);
+
+uint32_t pv_maps_size(struct list *pvms);
 
 #endif
