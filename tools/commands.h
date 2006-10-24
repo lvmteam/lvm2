@@ -61,7 +61,6 @@ xx(lvchange,
    "\t[-d|--debug]\n"
    "\t[--deltag Tag]\n"
    "\t[-f|--force]\n"
-   "\t[--resync]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
    "\t[--monitor {y|n}]\n"
@@ -70,6 +69,7 @@ xx(lvchange,
    "\t[-p|--permission r|rw]\n"
    "\t[-r|--readahead ReadAheadSectors]\n"
    "\t[--refresh]\n"
+   "\t[--resync]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[-y|--yes]\n"
@@ -77,8 +77,8 @@ xx(lvchange,
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    alloc_ARG, autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
-   resync_ARG, ignorelockingfailure_ARG, major_ARG, minor_ARG, monitor_ARG,
-   partial_ARG, permission_ARG, persistent_ARG, readahead_ARG,
+   ignorelockingfailure_ARG, major_ARG, minor_ARG, monitor_ARG,
+   partial_ARG, permission_ARG, persistent_ARG, readahead_ARG, resync_ARG,
    refresh_ARG, addtag_ARG, deltag_ARG, test_ARG, yes_ARG)
 
 xx(lvconvert,
