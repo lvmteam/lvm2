@@ -243,7 +243,7 @@ static int do_resume_lv(char *resource)
 	/* Is it open ? */
 	oldmode = get_current_lock(resource);
 	if (oldmode == -1) {
-		DEBUGLOG("do_deactivate_lock, lock not already held\n");
+		DEBUGLOG("do_resume_lv, lock not already held\n");
 		return 0;	/* We don't need to do anything */
 	}
 
