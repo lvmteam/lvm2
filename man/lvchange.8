@@ -42,12 +42,12 @@ logical volume's allocation policy to contiguous, if all of the
 allocated physical extents are already contiguous.
 .TP
 .I \-\-forcesync
-This option only make sense if the logical volume being operated
-on is a mirrored logical volume.  This option is used to
-resynchronize the devices in a mirrored logical volume.  Since
-resynchronization can take considerable time and resources, you
-should consider using this option only if you have reason to
-believe that the devices in your mirror are no longer the same.
+Forces the complete resynchronization of a mirror.  In normal
+circumstances you should not need this option because synchronization
+happens automatically.  Data is read from the primary mirror device
+and copied to the others, so this can take a considerable amount of
+time - and during this time you are without a complete redundant copy
+of your data.
 .TP
 .I \-\-minor minor
 Set the minor number.
