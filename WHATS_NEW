@@ -1,5 +1,6 @@
 Version 2.02.13 -
 ===================================
+  Add dev_flush() to set_lv().
   Add lvchange --resync.
   Perform high-level free space check before each allocation attempt.
   Don't allow a node to remove an LV that's exclusively active on anther node.
