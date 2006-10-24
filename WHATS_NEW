@@ -1,5 +1,6 @@
 Version 2.02.13 -
 ===================================
+  Fix a clvmd debug message.
   Add dev_flush() to set_lv().
   Add lvchange --resync.
   Perform high-level free space check before each allocation attempt.
