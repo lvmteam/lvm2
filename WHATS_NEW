@@ -1,6 +1,6 @@
 Version 2.02.13 -
 ===================================
-  Add lvchange --forcesync.
+  Add lvchange --resync.
   Perform high-level free space check before each allocation attempt.
   Don't allow a node to remove an LV that's exclusively active on anther node.
   Cope if same PV is included more than once in cmdline PE range list.

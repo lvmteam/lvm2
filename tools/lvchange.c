@@ -175,7 +175,7 @@ static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 	return 1;
 }
 
-static int lvchange_forcesync(struct cmd_context *cmd,
+static int lvchange_resync(struct cmd_context *cmd,
 			      struct logical_volume *lv)
 {
 	int active = 0;
@@ -648,8 +648,8 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (doit)
 		log_print("Logical volume \"%s\" changed", lv->name);
 
-	if (arg_count(cmd, forcesync_ARG))
-		if (!lvchange_forcesync(cmd, lv))
+	if (arg_count(cmd, resync_ARG))
+		if (!lvchange_resync(cmd, lv))
 			return ECMD_FAILED;
 
 	/* availability change */
@@ -680,9 +680,9 @@ int lvchange(struct cmd_context *cmd, int argc, char **argv)
 	    && !arg_count(cmd, persistent_ARG) && !arg_count(cmd, addtag_ARG)
 	    && !arg_count(cmd, deltag_ARG) && !arg_count(cmd, refresh_ARG)
 	    && !arg_count(cmd, alloc_ARG) && !arg_count(cmd, monitor_ARG)
-	    && !arg_count(cmd, forcesync_ARG)) {
+	    && !arg_count(cmd, resync_ARG)) {
 		log_error("Need 1 or more of -a, -C, -j, -m, -M, -p, -r, "
-			  "--forcesync, --refresh, --alloc, --addtag, --deltag "
+			  "--resync, --refresh, --alloc, --addtag, --deltag "
 			  "or --monitor");
 		return EINVALID_CMD_LINE;
 	}

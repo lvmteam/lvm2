@@ -7,7 +7,7 @@ lvchange \- change attributes of a logical volume
 [\-A/\-\-autobackup y/n] [\-a/\-\-available y/n/ey/en/ly/ln]
 [\-\-alloc AllocationPolicy]
 [\-C/\-\-contiguous y/n] [\-d/\-\-debug] [\-\-deltag Tag]
-[\-\-forcesync]
+[\-\-resync]
 [\-h/\-?/\-\-help]
 [\-\-ignorelockingfailure]
 [\-\-monitor {y|n}]
@@ -41,7 +41,7 @@ logical volumes. It's only possible to change a non-contiguous
 logical volume's allocation policy to contiguous, if all of the
 allocated physical extents are already contiguous.
 .TP
-.I \-\-forcesync
+.I \-\-resync
 Forces the complete resynchronization of a mirror.  In normal
 circumstances you should not need this option because synchronization
 happens automatically.  Data is read from the primary mirror device
