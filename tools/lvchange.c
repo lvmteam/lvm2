@@ -205,17 +205,18 @@ static int lvchange_forcesync(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 
-		if (info.exists && !arg_count(cmd, yes_ARG)) {
-			if (yes_no_prompt("Do you really want to deactivate "
+		if (info.exists) {
+			if (!arg_count(cmd, yes_ARG) &&
+			    yes_no_prompt("Do you really want to deactivate "
 					  "logical volume %s to resync it? [y/n]: ",
 					  lv->name) == 'n') {
 				log_print("Logical volume \"%s\" not resynced",
 					  lv->name);
 				return ECMD_FAILED;
 			}
-		}
 
-		active = 1;
+			active = 1;
+		}
 	}
 
 	if ((lv->vg->status & CLUSTERED) && !activate_lv_excl(cmd, lv)) {
