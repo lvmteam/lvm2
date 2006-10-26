@@ -761,13 +761,14 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
-	if (!activate_lv(cmd, lv)) {
-		if (lp->snapshot)
-			/* FIXME Remove the failed lv we just added */
+	if (lp->snapshot) {
+		if (!activate_lv_excl(cmd, lv)) {
 			log_error("Aborting. Failed to activate snapshot "
 				  "exception store. Remove new LV and retry.");
-		else
-			log_error("Failed to activate new LV.");
+			return 0;
+		}
+	} else if (!activate_lv(cmd, lv)) {
+		log_error("Failed to activate new LV.");
 		return 0;
 	}
 
@@ -787,10 +788,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
-		if (!deactivate_lv(cmd, lv)) {
-			log_err("Couldn't deactivate new snapshot.");
-			return 0;
-		}
+
+		/* cow LV remains active and becomes snapshot LV */
 
 		if (!vg_add_snapshot(vg->fid, NULL, org, lv, NULL,
 				     org->le_count, lp->chunk_size)) {
