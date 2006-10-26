@@ -82,7 +82,8 @@ LVMLIBS = -llvm
 
 CLEAN_TARGETS = liblvm2cmd.so liblvm2cmd.a liblvm2cmd-static.a lvm lvm.o \
 		lvm2cmd.o lvm2cmd-static.o lvm2cmdlib.o lvm.static \
-		lvm.cflow lvm.xref lvm.tree lvm.rxref lvm.rtree
+		lvm.cflow lvm.xref lvm.tree lvm.rxref lvm.rtree \
+		lvmcmdlib.o lvm-static.o
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.so
