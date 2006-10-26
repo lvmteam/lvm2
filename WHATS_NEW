@@ -1,5 +1,6 @@
 Version 2.02.13 -
 ===================================
+  Add couple of missing files to tools/Makefile CLEAN_TARGETS.
   When adding snapshot leave cow LV mapped device active after zeroing.
   Fix a clvmd debug message.
   Add dev_flush() to set_lv().
