@@ -1,4 +1,4 @@
-Version 2.02.13 -
+Version 2.02.13 - 27th October 2006
 ===================================
   Add couple of missing files to tools/Makefile CLEAN_TARGETS.
   When adding snapshot leave cow LV mapped device active after zeroing.
