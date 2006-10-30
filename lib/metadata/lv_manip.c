@@ -894,10 +894,10 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 
 	/* Is there enough total space? */
 	free_pes = pv_maps_size(pvms);
-	if (needed > free_pes) {
+	if (needed - *allocated > free_pes) {
 		log_error("Insufficient free space: %" PRIu32 " extents needed,"
-			  " but only %" PRIu32 " available", needed,
-			  free_pes);
+			  " but only %" PRIu32 " available",
+			  needed - *allocated, free_pes);
 		return 0;
 	}
 
