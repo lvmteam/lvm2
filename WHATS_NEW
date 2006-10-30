@@ -1,5 +1,6 @@
 Version 2.02.14 - 
 ===================================
+  Fix high-level free space check for partial allocations.
 
 Version 2.02.13 - 27th October 2006
 ===================================
