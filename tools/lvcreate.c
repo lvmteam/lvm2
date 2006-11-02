@@ -773,7 +773,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if ((lp->zero || lp->snapshot) && activation()) {
-		if (!set_lv(cmd, lv, 0) && lp->snapshot) {
+		if (!set_lv(cmd, lv, 0, 0) && lp->snapshot) {
 			/* FIXME Remove the failed lv we just added */
 			log_error("Aborting. Failed to wipe snapshot "
 				  "exception store. Remove new LV and retry.");
