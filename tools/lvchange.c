@@ -294,7 +294,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 		}
 
 		log_very_verbose("Clearing log device %s", log_lv->name);
-		if (!set_lv(cmd, log_lv, 0)) {
+		if (!set_lv(cmd, log_lv, (size_t) log_lv->size, 0)) {
 			log_error("Unable to reset sync status for %s", lv->name);
 			if (!deactivate_lv(cmd, log_lv))
 				log_error("Failed to deactivate log LV after "
