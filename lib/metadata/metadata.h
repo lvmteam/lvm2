@@ -285,7 +285,7 @@ struct logical_volume {
 	int32_t major;
 	int32_t minor;
 
-	uint64_t size;
+	uint64_t size;		/* Sectors */
 	uint32_t le_count;
 
 	uint32_t origin_count;
