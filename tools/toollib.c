@@ -1223,7 +1223,8 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 
 	dev_set(dev, UINT64_C(0),
-		sectors ? (size_t) sectors >> SECTOR_SHIFT : (size_t) 4096, value);
+		sectors ? (size_t) sectors << SECTOR_SHIFT : (size_t) 4096,
+		value);
 	dev_flush(dev);
 	dev_close_immediate(dev);
 
