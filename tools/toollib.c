@@ -1188,8 +1188,8 @@ int generate_log_name_format(struct volume_group *vg __attribute((unused)),
 /*
  * Initialize the LV with 'value'.
  */
-int set_lv(struct cmd_context *cmd, struct logical_volume *lv, size_t len,
-	   int value)
+int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
+	   uint64_t sectors, int value)
 {
 	struct device *dev;
 	char *name;
@@ -1222,7 +1222,8 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv, size_t len,
 	if (!dev_open_quiet(dev))
 		return 0;
 
-	dev_set(dev, UINT64_C(0), len ?: (size_t) 4096, value);
+	dev_set(dev, UINT64_C(0),
+		sectors ? (size_t) sectors >> SECTOR_SHIFT : (size_t) 4096, value);
 	dev_flush(dev);
 	dev_close_immediate(dev);
 
@@ -1337,7 +1338,7 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 		goto error;
 	}
 
-	if (activation() && !set_lv(cmd, log_lv, (size_t) log_lv->size,
+	if (activation() && !set_lv(cmd, log_lv, log_lv->size,
 				    in_sync ? -1 : 0)) {
 		log_error("Aborting. Failed to wipe mirror log. "
 			  "Remove new LV and retry.");
