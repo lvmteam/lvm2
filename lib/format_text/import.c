@@ -43,7 +43,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 		_text_import_initialised = 1;
 	}
 
-	if (!(cft = create_config_tree(NULL)))
+	if (!(cft = create_config_tree(NULL, 0)))
 		return_NULL;
 
 	if ((!dev && !read_config_file(cft)) ||
@@ -94,7 +94,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	*desc = NULL;
 	*when = 0;
 
-	if (!(cft = create_config_tree(file)))
+	if (!(cft = create_config_tree(file, 0)))
 		return_NULL;
 
 	if ((!dev && !read_config_file(cft)) ||

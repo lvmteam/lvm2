@@ -53,7 +53,7 @@ struct config_tree_list {
 	struct config_tree *cft;
 };
 
-struct config_tree *create_config_tree(const char *filename);
+struct config_tree *create_config_tree(const char *filename, int keep_open);
 struct config_tree *create_config_tree_from_string(struct cmd_context *cmd,
 						   const char *config_settings);
 void destroy_config_tree(struct config_tree *cft);

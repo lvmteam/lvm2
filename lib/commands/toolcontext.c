@@ -330,7 +330,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	if (!(cfl->cft = create_config_tree(config_file))) {
+	if (!(cfl->cft = create_config_tree(config_file, 0))) {
 		log_error("config_tree allocation failed");
 		return 0;
 	}
@@ -370,7 +370,7 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 {
 	/* No config file if LVM_SYSTEM_DIR is empty */
 	if (!*cmd->sys_dir) {
-		if (!(cmd->cft = create_config_tree(NULL))) {
+		if (!(cmd->cft = create_config_tree(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -408,7 +408,7 @@ static int _merge_config_files(struct cmd_context *cmd)
 
 	/* Replace temporary duplicate copy of lvm.conf */
 	if (cmd->cft->root) {
-		if (!(cmd->cft = create_config_tree(NULL))) {
+		if (!(cmd->cft = create_config_tree(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
 		}
@@ -609,8 +609,8 @@ static int _init_filters(struct cmd_context *cmd)
 		cmd->dump_filter = 0;
 
 	if (!stat(dev_cache, &st) &&
-	    (st.st_mtime > config_file_timestamp(cmd->cft)) &&
-	    !persistent_filter_load(f4))
+	    (st.st_ctime != config_file_timestamp(cmd->cft)) &&
+	    !persistent_filter_load(f4, NULL))
 		log_verbose("Failed to load existing device cache from %s",
 			    dev_cache);
 

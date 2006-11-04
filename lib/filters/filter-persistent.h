@@ -22,7 +22,7 @@ struct dev_filter *persistent_filter_create(struct dev_filter *f,
 					    const char *file);
 
 int persistent_filter_wipe(struct dev_filter *f);
-int persistent_filter_load(struct dev_filter *f);
+int persistent_filter_load(struct dev_filter *f, struct config_tree **cft_out);
 int persistent_filter_dump(struct dev_filter *f);
 
 #endif

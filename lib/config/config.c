@@ -58,6 +58,8 @@ struct cs {
 	time_t timestamp;
 	char *filename;
 	int exists;
+	int keep_open;
+	struct device *dev;
 };
 
 static void _get_token(struct parser *p, int tok_prev);
@@ -95,7 +97,7 @@ static int _tok_match(const char *str, const char *b, const char *e)
 /*
  * public interface
  */
-struct config_tree *create_config_tree(const char *filename)
+struct config_tree *create_config_tree(const char *filename, int keep_open)
 {
 	struct cs *c;
 	struct dm_pool *mem = dm_pool_create("config", 10 * 1024);
@@ -115,6 +117,8 @@ struct config_tree *create_config_tree(const char *filename)
 	c->cft.root = (struct config_node *) NULL;
 	c->timestamp = 0;
 	c->exists = 0;
+	c->keep_open = keep_open;
+	c->dev = 0;
 	if (filename)
 		c->filename = dm_pool_strdup(c->mem, filename);
 	return &c->cft;
@@ -122,7 +126,12 @@ struct config_tree *create_config_tree(const char *filename)
 
 void destroy_config_tree(struct config_tree *cft)
 {
-	dm_pool_destroy(((struct cs *) cft)->mem);
+	struct cs *c = (struct cs *) cft;
+
+	if (c->dev)
+		dev_close(c->dev);
+
+	dm_pool_destroy(c->mem);
 }
 
 static int _parse_config_file(struct parser *p, struct config_tree *cft)
@@ -143,7 +152,7 @@ struct config_tree *create_config_tree_from_string(struct cmd_context *cmd,
 	struct config_tree *cft;
 	struct parser *p;
 
-	if (!(cft = create_config_tree(NULL)))
+	if (!(cft = create_config_tree(NULL, 0)))
 		return_NULL;
 
 	c = (struct cs *) cft;
@@ -250,7 +259,6 @@ int read_config_file(struct config_tree *cft)
 {
 	struct cs *c = (struct cs *) cft;
 	struct stat info;
-	struct device *dev;
 	int r = 1;
 
 	if (stat(c->filename, &info)) {
@@ -272,22 +280,23 @@ int read_config_file(struct config_tree *cft)
 		return 1;
 	}
 
-	if (!(dev = dev_create_file(c->filename, NULL, NULL, 1))) {
-		stack;
-		return 0;
+	if (!c->dev) {
+		if (!(c->dev = dev_create_file(c->filename, NULL, NULL, 1)))
+			return_0;
+
+		if (!dev_open_flags(c->dev, O_RDONLY, 0, 0))
+			return_0;
 	}
 
-	if (!dev_open_flags(dev, O_RDONLY, 0, 0)) {
-		stack;
-		return 0;
-	}
-
-	r = read_config_fd(cft, dev, 0, (size_t) info.st_size, 0, 0,
+	r = read_config_fd(cft, c->dev, 0, (size_t) info.st_size, 0, 0,
 			   (checksum_fn_t) NULL, 0);
 
-	dev_close(dev);
+	if (!c->keep_open) {
+		dev_close(c->dev);
+		c->dev = 0;
+	}
 
-	c->timestamp = info.st_mtime;
+	c->timestamp = info.st_ctime;
 
 	return r;
 }
@@ -331,7 +340,7 @@ int config_file_changed(struct config_tree *cft)
 	}
 
 	/* Unchanged? */
-	if (c->timestamp == info.st_mtime)
+	if (c->timestamp == info.st_ctime)
 		return 0;
 
       reload:
