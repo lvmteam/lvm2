@@ -1,5 +1,7 @@
 Version 2.02.14 - 
 ===================================
+  Protect .cache manipulations with fcntl locking.
+  Change .cache timestamp comparisons to use ctime.
   Fix mirror log LV writing to set all bits in whole LV.
   Fix clustered VG detection and default runlevels in clvmd_init_rhel4.
   Fix high-level free space check for partial allocations.

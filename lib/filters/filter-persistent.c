@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -17,6 +17,7 @@
 #include "config.h"
 #include "dev-cache.h"
 #include "filter-persistent.h"
+#include "lvm-file.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -26,11 +27,12 @@ struct pfilter {
 	char *file;
 	struct dm_hash_table *devices;
 	struct dev_filter *real;
+	time_t ctime;
 };
 
 /*
- * entries in the table can be in one of these
- * states.
+ * The hash table holds one of these two states
+ * against each entry.
  */
 #define PF_BAD_DEVICE ((void *) 1)
 #define PF_GOOD_DEVICE ((void *) 2)
@@ -93,22 +95,26 @@ static int _read_array(struct pfilter *pf, struct config_tree *cft,
 	return 1;
 }
 
-int persistent_filter_load(struct dev_filter *f)
+int persistent_filter_load(struct dev_filter *f, struct config_tree **cft_out)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
-
-	int r = 0;
 	struct config_tree *cft;
+        struct stat info;
+	int r = 0;
 
-	if (!(cft = create_config_tree(pf->file))) {
-		stack;
-		return 0;
+        if (!stat(pf->file, &info))
+		pf->ctime = info.st_ctime;
+	else {
+                log_very_verbose("%s: stat failed: %s", pf->file,
+				 strerror(errno));
+		return_0;
 	}
 
-	if (!read_config_file(cft)) {
-		stack;
-		goto out;
-	}
+	if (!(cft = create_config_tree(pf->file, 1)))
+		return_0;
+
+	if (!read_config_file(cft))
+		goto_out;
 
 	_read_array(pf, cft, "persistent_filter_cache/valid_devices",
 		    PF_GOOD_DEVICE);
@@ -126,7 +132,10 @@ int persistent_filter_load(struct dev_filter *f)
 	log_very_verbose("Loaded persistent filter cache from %s", pf->file);
 
       out:
-	destroy_config_tree(cft);
+	if (r && cft_out)
+		*cft_out = cft;
+	else
+		destroy_config_tree(cft);
 	return r;
 }
 
@@ -163,8 +172,12 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 int persistent_filter_dump(struct dev_filter *f)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
-
+	char *tmp_file;
+	struct stat info, info2;
+	struct config_tree *cft = NULL;
 	FILE *fp;
+	int lockfd;
+	int r = 0;
 
 	if (!dm_hash_get_num_entries(pf->devices)) {
 		log_very_verbose("Internal persistent device cache empty "
@@ -179,11 +192,43 @@ int persistent_filter_dump(struct dev_filter *f)
 
 	log_very_verbose("Dumping persistent device cache to %s", pf->file);
 
-	fp = fopen(pf->file, "w");
-	if (!fp) {
-		if (errno != EROFS)
-			log_sys_error("fopen", pf->file);
-		return 0;
+	while (1) {
+		if ((lockfd = fcntl_lock_file(pf->file, F_WRLCK, 0)) < 0)
+			return_0;
+
+		/*
+		 * Ensure we locked the file we expected
+		 */
+		if (fstat(lockfd, &info)) {
+			log_sys_error("fstat", pf->file);
+			goto out;
+		}
+		if (stat(pf->file, &info2)) {
+			log_sys_error("stat", pf->file);
+			goto out;
+		}
+
+		if (!memcmp(&info.st_ino, &info2.st_ino, sizeof(ino_t)))
+			break;
+	
+		fcntl_unlock_file(lockfd);
+	}
+
+	/*
+	 * If file contents changed since we loaded it, merge new contents
+	 */
+	if (info.st_ctime != pf->ctime)
+		/* Keep cft open to avoid losing lock */
+		persistent_filter_load(f, &cft);
+
+	tmp_file = alloca(strlen(pf->file) + 5);
+	sprintf(tmp_file, "%s.tmp", pf->file);
+
+	if (!(fp = fopen(tmp_file, "w"))) {
+		/* EACCES has been reported over NFS */
+		if (errno != EROFS && errno != EACCES)
+			log_sys_error("fopen", tmp_file);
+		goto out;
 	}
 
 	fprintf(fp, "# This file is automatically maintained by lvm.\n\n");
@@ -195,7 +240,20 @@ int persistent_filter_dump(struct dev_filter *f)
 
 	fprintf(fp, "}\n");
 	fclose(fp);
-	return 1;
+
+	if (rename(tmp_file, pf->file))
+		log_error("%s: rename to %s failed: %s", tmp_file, pf->file,
+			  strerror(errno));
+
+	r = 1;
+
+out:
+	fcntl_unlock_file(lockfd);
+
+	if (cft)
+		destroy_config_tree(cft);
+
+	return r;
 }
 
 static int _lookup_p(struct dev_filter *f, struct device *dev)

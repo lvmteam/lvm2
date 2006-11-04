@@ -48,4 +48,8 @@ int create_dir(const char *dir);
 /* Sync directory changes */
 void sync_dir(const char *file);
 
+/* fcntl locking wrappers */
+int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only);
+void fcntl_unlock_file(int lockfd);
+
 #endif
