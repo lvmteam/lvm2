@@ -1,5 +1,6 @@
 Version 2.02.14 - 
 ===================================
+  lvremove man page: volumes must be cluster inactive before being removed.
   Protect .cache manipulations with fcntl locking.
   Change .cache timestamp comparisons to use ctime.
   Fix mirror log LV writing to set all bits in whole LV.

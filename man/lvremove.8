@@ -12,6 +12,10 @@ lvremove \- remove a logical volume
 Confirmation will be requested before deactivating any active logical
 volume prior to removal.  Logical volumes cannot be deactivated
 or removed while they are open (e.g. if they contain a mounted filesystem).
+.sp
+If the logical volume is clustered then it must be deactivated on all
+nodes in the cluster before it can be removed. A single lvchange command
+issued from one node can do this.
 .SH OPTIONS
 See \fBlvm\fP(8) for common options.
 .TP
@@ -28,7 +32,8 @@ Remove all logical volumes in volume group vg00:
 \	\fBlvremove vg00\fP
 .SH SEE ALSO
 .BR lvcreate (8), 
-.BR lvdisplay (8), 
+.BR lvdisplay (8),
+.BR lvchange (8),  
 .BR lvm (8), 
 .BR lvs (8),
 .BR lvscan (8),
