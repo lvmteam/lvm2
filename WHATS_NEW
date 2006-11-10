@@ -1,3 +1,6 @@
+Version 2.02.15 -
+====================================
+
 Version 2.02.14 - 10th November 2006
 ====================================
   Fix adjusted_mirror_region_size() to handle 64-bit size.
