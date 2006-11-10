@@ -221,6 +221,8 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 		"Megabytes",
 		"Gigabytes",
 		"Terabytes",
+		"Petabytes",
+		"Exabytes",
 		NULL
 	};
 

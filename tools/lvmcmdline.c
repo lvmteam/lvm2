@@ -186,7 +186,7 @@ static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *
 {
 	char *ptr;
 	int i;
-	static const char *suffixes = "kmgt";
+	static const char *suffixes = "kmgtpe";
 	char *val;
 	double v;
 

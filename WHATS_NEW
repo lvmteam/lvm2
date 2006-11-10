@@ -1,5 +1,8 @@
 Version 2.02.14 - 
 ===================================
+  Add some missing bounds checks on 32 bit extent counters.
+  Add Petabyte and Exabyte support.
+  Fix lvcreate error message when 0 extents requested.
   lvremove man page: volumes must be cluster inactive before being removed.
   Protect .cache manipulations with fcntl locking.
   Change .cache timestamp comparisons to use ctime.

@@ -23,6 +23,7 @@
 #include "str_list.h"
 #include "pv_alloc.h"
 #include "activate.h"
+#include "display.h"
 
 #include <sys/param.h>
 
@@ -121,6 +122,15 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 
 	pvl->pv = pv;
 	list_add(&vg->pvs, &pvl->list);
+
+	if ((uint64_t) vg->extent_count + pv->pe_count > UINT32_MAX) {
+		log_error("Unable to add %s to %s: new extent count (%"
+			  PRIu64 ") exceeds limit (%" PRIu32 ").",
+			  pv_name, vg->name,
+			  (uint64_t) vg->extent_count + pv->pe_count,
+			  UINT32_MAX);
+		return 0;
+	}
 
 	vg->pv_count++;
 	vg->extent_count += pv->pe_count;

@@ -556,7 +556,16 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 				  display_size(cmd, tmp_size));
 		}
 
-		lp->extents = tmp_size / vg->extent_size;
+		if (tmp_size > (uint64_t) UINT32_MAX * vg->extent_size) {
+			log_error("Volume too large (%s) for extent size %s. "
+				  "Upper limit is %s.",
+				  display_size(cmd, tmp_size),
+				  display_size(cmd, vg->extent_size),
+				  display_size(cmd, (uint64_t) UINT32_MAX *
+						   vg->extent_size));
+			return 0;
+		}
+		lp->extents = (uint64_t) tmp_size / vg->extent_size;
 	}
 
 	switch(lp->percent) {
@@ -618,8 +627,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if (!lp->extents) {
-		log_error("Unable to create logical volume %s with no extents",
-			  lp->lv_name);
+		log_error("Unable to create new logical volume with no extents");
 		return 0;
 	}
 
