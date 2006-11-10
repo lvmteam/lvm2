@@ -1,6 +1,7 @@
 Version 2.02.14 - 
 ===================================
-  Add some missing bounds checks on 32 bit extent counters.
+  Fix adjusted_mirror_region_size() to handle 64-bit size.
+  Add some missing bounds checks on 32-bit extent counters.
   Add Petabyte and Exabyte support.
   Fix lvcreate error message when 0 extents requested.
   lvremove man page: volumes must be cluster inactive before being removed.
