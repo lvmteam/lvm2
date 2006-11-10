@@ -1,5 +1,5 @@
-Version 2.02.14 - 
-===================================
+Version 2.02.14 - 10th November 2006
+====================================
   Fix adjusted_mirror_region_size() to handle 64-bit size.
   Add some missing bounds checks on 32-bit extent counters.
   Add Petabyte and Exabyte support.
