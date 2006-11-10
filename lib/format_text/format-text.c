@@ -1408,6 +1408,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 	uint64_t pe_end = 0;
 	unsigned mda_count = 0;
 	uint64_t mda_size2 = 0;
+	uint64_t pe_count;
 
 	/* FIXME Cope with pvchange */
 	/* FIXME Merge code with _text_create_text_instance */
@@ -1473,8 +1474,17 @@ static int _text_pv_setup(const struct format_type *fmt,
 				   pv->pe_start + mda_size2;
 
 		/* Recalculate number of extents that will fit */
-		if (!pv->pe_count)
-			pv->pe_count = (pv->size - pv->pe_start - mda_size2) / vg->extent_size;
+		if (!pv->pe_count) {
+			pe_count = (pv->size - pv->pe_start - mda_size2) /
+				   vg->extent_size;
+			if (pe_count > UINT32_MAX) {
+				log_error("PV %s too large for extent size %s.",
+					  dev_name(pv->dev),
+					  display_size(vg->cmd, (uint64_t) vg->extent_size));
+				return 0;
+			}
+			pv->pe_count = (uint32_t) pe_count;
+		}
 
 		/* Unlike LVM1, we don't store this outside a VG */
 		/* FIXME Default from config file? vgextend cmdline flag? */

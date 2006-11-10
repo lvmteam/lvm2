@@ -30,10 +30,12 @@ in the Volume Group with the suffix %VG or relative to the existing
 size of the Logical Volume with the suffix %LV or as a percentage of the remaining
 free space in the Volume Group with the suffix %FREE.
 .TP
-.I \-L, \-\-size [+]LogicalVolumeSize[kKmMgGtT]
+.I \-L, \-\-size [+]LogicalVolumeSize[kKmMgGtTpPeE]
 Extend or set the logical volume size in units in units of megabytes.
-A size suffix of M for megabytes, G for gigabytes or T for terabytes is
-optional.  With the + sign the value is added to the actual size
+A size suffix of M for megabytes,
+G for gigabytes, T for terabytes, P for petabytes 
+or E for exabytes is optional.
+With the + sign the value is added to the actual size
 of the logical volume and without it, the value is taken as an absolute one.
 .TP
 .I \-i, \-\-stripes Stripes

@@ -82,6 +82,12 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 	case 't':
 		v *= KILO * KILO * KILO * KILO;
 		break;
+	case 'p':
+		v *= KILO * KILO * KILO * KILO * KILO;
+		break;
+	case 'e':
+		v *= KILO * KILO * KILO * KILO * KILO * KILO;
+		break;
 #undef KILO
 #define KILO UINT64_C(1000)
 	case 'K':
@@ -95,6 +101,12 @@ uint64_t units_to_bytes(const char *units, char *unit_type)
 		break;
 	case 'T':
 		v *= KILO * KILO * KILO * KILO;
+		break;
+	case 'P':
+		v *= KILO * KILO * KILO * KILO * KILO;
+		break;
+	case 'E':
+		v *= KILO * KILO * KILO * KILO * KILO * KILO;
 		break;
 #undef KILO
 	default:
@@ -143,6 +155,8 @@ static const char *_display_size(struct cmd_context *cmd, uint64_t size, size_le
 	uint64_t units = UINT64_C(1024);
 	char *size_buf = NULL;
 	const char *size_str[][3] = {
+		{" Exabyte", " EB", "E"},
+		{" Petabyte", " PB", "P"},
 		{" Terabyte", " TB", "T"},
 		{" Gigabyte", " GB", "G"},
 		{" Megabyte", " MB", "M"},
@@ -161,7 +175,7 @@ static const char *_display_size(struct cmd_context *cmd, uint64_t size, size_le
 
 	suffix = cmd->current_settings.suffix;
 
-	for (s = 0; s < 8; s++)
+	for (s = 0; s < 10; s++)
 		if (toupper((int) cmd->current_settings.unit_type) ==
 		    *size_str[s][2])
 			break;
@@ -171,7 +185,7 @@ static const char *_display_size(struct cmd_context *cmd, uint64_t size, size_le
 		return size_buf;
 	}
 
-	if (s < 8) {
+	if (s < 10) {
 		byte = cmd->current_settings.unit_factor;
 		size *= UINT64_C(512);
 	} else {
@@ -181,7 +195,7 @@ static const char *_display_size(struct cmd_context *cmd, uint64_t size, size_le
 			units = UINT64_C(1000);
 		else
 			units = UINT64_C(1024);
-		byte = units * units * units;
+		byte = units * units * units * units * units;
 		s = 0;
 		while (size_str[s] && size < byte)
 			s++, byte /= units;
