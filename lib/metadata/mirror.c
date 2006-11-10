@@ -36,20 +36,20 @@ struct lv_segment *find_mirror_seg(struct lv_segment *seg)
 }
 
 /*
- * Ensure region size is compatible with volume size.
+ * Reduce the region size if necessary to ensure
+ * the volume size is a multiple of the region size.
  */
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 				     uint32_t region_size)
 {
-	uint32_t region_max;
+	uint64_t region_max;
 
 	region_max = (1 << (ffs((int)extents) - 1)) * extent_size;
 
-	if (region_max < region_size) {
-		region_size = region_max;
+	if (region_max < UINT32_MAX && region_size > region_max) {
+		region_size = (uint32_t) region_max;
 		log_print("Using reduced mirror region size of %" PRIu32
-			  " sectors", region_max);
-		return region_max;
+			  " sectors", region_size);
 	}
 
 	return region_size;
