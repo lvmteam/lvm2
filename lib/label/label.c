@@ -347,13 +347,11 @@ int label_verify(struct device *dev)
 	int r = 0;
 
 	if (!dev_open(dev)) {
-		stack;
-
 		if ((info = info_from_pvid(dev->pvid)))
 			lvmcache_update_vgname_and_id(info, ORPHAN, ORPHAN,
 						      0, NULL);
 
-		goto out;
+		return_0;
 	}
 
 	if (!(l = _find_labeller(dev, buf, &sector)))

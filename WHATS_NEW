@@ -1,5 +1,6 @@
 Version 2.02.15 -
 ====================================
+  Fix a label_verify error path.
 
 Version 2.02.14 - 10th November 2006
 ====================================
