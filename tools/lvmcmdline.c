@@ -712,10 +712,8 @@ static int _get_settings(struct cmd_context *cmd)
 				  cmd->default_settings.activation);
 	}
 
-	if (arg_count(cmd, autobackup_ARG)) {
-		cmd->current_settings.archive = 1;
-		cmd->current_settings.backup = 1;
-	}
+	cmd->current_settings.archive = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.archive);
+	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
 
 	if (arg_count(cmd, partial_ARG)) {
 		init_partial(1);
