@@ -1,5 +1,6 @@
 Version 2.02.15 -
 ====================================
+  Enhance lvm_dump.sh for sysreport integration and add man page.
   Fix --autobackup argument which could never disable backups.
   Fix a label_verify error path.
 
