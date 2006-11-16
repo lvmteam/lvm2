@@ -772,6 +772,7 @@ static struct config_node *_find_config_node(const struct config_node *cn,
 					     const char *path)
 {
 	const char *e;
+	const struct config_node *cn_found;
 
 	while (cn) {
 		/* trim any leading slashes */
@@ -782,22 +783,30 @@ static struct config_node *_find_config_node(const struct config_node *cn,
 		for (e = path; *e && (*e != sep); e++) ;
 
 		/* hunt for the node */
+		cn_found = NULL;
 		while (cn) {
-			if (_tok_match(cn->key, path, e))
-				break;
+			if (_tok_match(cn->key, path, e)) {
+				/* Inefficient */
+				if (!cn_found)
+					cn_found = cn;
+				else
+					log_error("WARNING: Ignoring duplicate"
+						  " config node: %s ("
+						  "seeking %s)", cn->key, path);
+			}
 
 			cn = cn->sib;
 		}
 
-		if (cn && *e)
-			cn = cn->child;
+		if (cn_found && *e)
+			cn = cn_found->child;
 		else
 			break;	/* don't move into the last node */
 
 		path = e;
 	}
 
-	return (struct config_node *) cn;
+	return (struct config_node *) cn_found;
 }
 
 static struct config_node *_find_first_config_node(const struct config_node *cn1,
