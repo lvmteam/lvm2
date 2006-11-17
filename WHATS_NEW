@@ -1,5 +1,6 @@
 Version 2.02.15 -
 ====================================
+  Fix pvremove error path for case when PV is in use.
   Warn if certain duplicate config file entries are seen.
   Enhance lvm_dump.sh for sysreport integration and add man page.
   Fix --autobackup argument which could never disable backups.
