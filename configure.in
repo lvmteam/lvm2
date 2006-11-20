@@ -637,6 +637,7 @@ lib/mirror/Makefile							\
 lib/snapshot/Makefile							\
 man/Makefile							 	\
 po/Makefile								\
+scripts/Makefile								\
 tools/Makefile							 	\
 tools/version.h								\
 tools/fsadm/Makefile							\
