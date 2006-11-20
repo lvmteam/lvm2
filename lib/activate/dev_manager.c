@@ -782,12 +782,19 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 {
 	uint32_t s;
 	struct list *snh;
+	struct lv_segment *seg_present;
 
 	/* Ensure required device-mapper targets are loaded */
-	if (seg->segtype->ops->target_present &&
-	    !seg->segtype->ops->target_present(seg)) {
+	seg_present = find_cow(seg->lv) ? : seg;
+
+	log_debug("Checking kernel supports %s segment type for %s%s%s",
+		  seg_present->segtype->name, seg->lv->name,
+		  layer ? "-" : "", layer ? : "");
+
+	if (seg_present->segtype->ops->target_present &&
+	    !seg_present->segtype->ops->target_present(seg_present)) {
 		log_error("Can't expand LV %s: %s target support missing "
-			  "from kernel?", seg->lv->name, seg->segtype->name);
+			  "from kernel?", seg->lv->name, seg_present->segtype->name);
 		return 0;
 	}
 
