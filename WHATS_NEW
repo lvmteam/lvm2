@@ -1,8 +1,9 @@
 Version 2.02.16 -
 ====================================
 
-Version 2.02.15 - 20th November 2006
+Version 2.02.15 - 21st November 2006
 ====================================
+  Fix clvmd_init_rhel4 line truncation (2.02.14).
   Install lvmdump by default.
   Fix check for snapshot module when activating snapshot.
   Fix pvremove error path for case when PV is in use.

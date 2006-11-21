@@ -73,7 +73,7 @@ stop()
 			done
 		else
 			# Hack to only deactivate clustered volumes
-			clustervgs=`$VGDISPLAY 2> /dev/null | awk 'BEGIN {RS="VG Name"} {if (/Clustered/) print $1;}'
+			clustervgs=`$VGDISPLAY 2> /dev/null | awk 'BEGIN {RS="VG Name"} {if (/Clustered/) print $1;}'`
 			for vg in $clustervgs; do
 				if ! action "Deactivating VG $vg:" $VGCHANGE -anl $vg
 				then
