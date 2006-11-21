@@ -772,7 +772,7 @@ static struct config_node *_find_config_node(const struct config_node *cn,
 					     const char *path)
 {
 	const char *e;
-	const struct config_node *cn_found;
+	const struct config_node *cn_found = NULL;
 
 	while (cn) {
 		/* trim any leading slashes */
