@@ -1,5 +1,6 @@
 Version 2.02.16 -
 ====================================
+  Improve lvm_dump.sh robustness.
   Update lvm2create_initrd to support gentoo.
 
 Version 2.02.15 - 21st November 2006
