@@ -37,4 +37,14 @@ This option generates a 1:1 dump of the metadata area from all PVs visible to th
 By default, lvmdump will produce a single compressed tarball containing all the information. Using this option, it can be instructed to only produce the raw dump tree, rooted in \fBdirectory\fP.
 .TP
 \fB\-c\fR \(em if clvmd is running, gather cluster data as well
+.SH ENVIRONMENT VARIABLES
+.TP
+\fBLVM_BINARY\fP 
+The LVM2 binary to use.
+Defaults to "lvm".
+Sometimes you might need to set this to "/sbin/lvm.static", for example.
+.TP
+\fBDMSETUP_BINARY\fP 
+The dmsetup binary to use.
+Defaults to "dmsetup".
 .PP
