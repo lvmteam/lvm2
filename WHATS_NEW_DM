@@ -1,5 +1,6 @@
 Version 1.02.13 - 
 =============================
+  Update dmsetup man page (setgeometry & message).
   Fix dmsetup free after getline with debug.
   Suppress encryption key in 'dmsetup table' output unless --showkeys supplied.
 
