@@ -84,6 +84,7 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			 struct list *removable_pvs, int remove_log)
 {
 	uint32_t m;
+	uint32_t extents;
 	uint32_t s, s1;
 	struct logical_volume *sub_lv;
 	struct logical_volume *log_lv = NULL;
@@ -95,6 +96,7 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	struct pv_list *pvl;
 	uint32_t old_area_count = mirrored_seg->area_count;
 	uint32_t new_area_count = mirrored_seg->area_count;
+	struct segment_type *segtype;
 
 	log_very_verbose("Reducing mirror set from %" PRIu32 " to %"
 			 PRIu32 " image(s)%s.",
@@ -156,9 +158,14 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	/* If no more mirrors, remove mirror layer */
 	if (num_mirrors == 1) {
 		lv1 = seg_lv(mirrored_seg, 0);
+		extents = lv1->le_count;
 		_move_lv_segments(mirrored_seg->lv, lv1);
 		mirrored_seg->lv->status &= ~MIRRORED;
 		remove_log = 1;
+		/* Replace mirror with error segment */
+		segtype = get_segtype_from_string(mirrored_seg->lv->vg->cmd, "error");
+		if (!lv_add_virtual_segment(lv1, 0, extents, segtype))
+			return_0;
 	}
 
 	if (remove_log && mirrored_seg->log_lv) {
@@ -173,8 +180,6 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	 * remove the LVs from the mirror set, commit that metadata
 	 * then deactivate and remove them fully.
 	 */
-
-	/* FIXME lv1 has no segments here so shouldn't be written to disk! */
 
 	if (!vg_write(mirrored_seg->lv->vg)) {
 		log_error("intermediate VG write failed.");
