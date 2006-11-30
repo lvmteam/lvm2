@@ -15,6 +15,7 @@ VGCHANGE="/usr/sbin/vgchange"
 VGSCAN="/usr/sbin/vgscan"
 VGDISPLAY="/usr/sbin/vgdisplay"
 VGS="/usr/sbin/vgs"
+CLVMDOPTS="-T20"
 
 [ -f /etc/sysconfig/cluster ] && . /etc/sysconfig/cluster
 
@@ -27,7 +28,7 @@ start()
 		if ! pidof clvmd > /dev/null 
 		then 
 			echo -n "Starting clvmd: "
-			daemon clvmd
+			daemon clvmd $CLVMDOPTS
 			rtrn=$?
 			echo
 			if [ $rtrn -ne 0 ]
