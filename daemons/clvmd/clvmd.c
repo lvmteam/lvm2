@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -85,6 +86,7 @@ struct lvm_thread_cmd {
 	int msglen;
 	unsigned short xid;
 };
+static int debug = 0;
 static pthread_t lvm_thread;
 static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
@@ -163,13 +165,27 @@ static void child_init_signal(int status)
 }
 
 
+void debuglog(const char *fmt, ...)
+{
+	time_t P;
+	va_list ap;
+
+	if (!debug)
+		return;
+
+	va_start(ap,fmt);
+	time(&P);
+ 	fprintf(stderr, "CLVMD[%x]: %.15s ", (int)pthread_self(), ctime(&P)+4 );
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+}
+
 int main(int argc, char *argv[])
 {
 	int local_sock;
 	struct local_client *newfd;
 	struct utsname nodeinfo;
 	signed char opt;
-	int debug = 0;
 	int cmd_timeout = DEFAULT_CMD_TIMEOUT;
 	int start_timeout = 0;
 	sigset_t ss;
