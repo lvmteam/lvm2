@@ -29,7 +29,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	const char *pv_name = dev_name(pv->dev);
 	const char *tag = NULL;
 	const char *orig_vg_name;
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 
 	int consistent = 1;
 	int allocatable = 0;

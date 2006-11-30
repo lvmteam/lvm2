@@ -30,7 +30,7 @@ static void _not_supported(const char *op)
 		op);
 }
 
-static int _lvm1_can_handle(struct labeller *l, char *buf, uint64_t sector)
+static int _lvm1_can_handle(struct labeller *l, void *buf, uint64_t sector)
 {
 	struct pv_disk *pvd = (struct pv_disk *) buf;
 	uint32_t version;
@@ -48,13 +48,13 @@ static int _lvm1_can_handle(struct labeller *l, char *buf, uint64_t sector)
 	return 0;
 }
 
-static int _lvm1_write(struct label *label, char *buf)
+static int _lvm1_write(struct label *label, void *buf)
 {
 	_not_supported("write");
 	return 0;
 }
 
-static int _lvm1_read(struct labeller *l, struct device *dev, char *buf,
+static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
 		 struct label **label)
 {
 	struct pv_disk *pvd = (struct pv_disk *) buf;

@@ -234,7 +234,7 @@ const char *display_size(struct cmd_context *cmd, uint64_t size)
 
 void pvdisplay_colons(struct physical_volume *pv)
 {
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 
 	if (!pv)
 		return;
@@ -262,7 +262,7 @@ void pvdisplay_colons(struct physical_volume *pv)
 void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 		    void *handle __attribute((unused)))
 {
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 	const char *size;
 
 	uint32_t pe_free;
@@ -324,7 +324,7 @@ int pvdisplay_short(struct cmd_context *cmd __attribute((unused)),
 		    struct physical_volume *pv,
 		    void *handle __attribute((unused)))
 {
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 
 	if (!pv)
 		return 0;
@@ -371,7 +371,7 @@ int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	struct lvinfo info;
 	int inkernel, snap_active = 0;
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 	struct lv_segment *snap_seg = NULL;
 	float snap_percent;	/* fused, fsize; */
 
@@ -537,7 +537,7 @@ void vgdisplay_full(struct volume_group *vg)
 {
 	uint32_t access;
 	uint32_t active_pvs;
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 
 	if (vg->status & PARTIAL_VG)
 		active_pvs = list_size(&vg->pvs);
@@ -616,7 +616,7 @@ void vgdisplay_colons(struct volume_group *vg)
 {
 	uint32_t active_pvs;
 	const char *access;
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 
 	if (vg->status & PARTIAL_VG)
 		active_pvs = list_size(&vg->pvs);

@@ -176,7 +176,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	/* Fix up LVIDs */
 	list_iterate_items(lvl1, &vg_to->lvs) {
 		union lvid *lvid1 = &lvl1->lv->lvid;
-		char uuid[64];
+		char uuid[64] __attribute((aligned(8)));
 
 		list_iterate_items(lvl2, &vg_from->lvs) {
 			union lvid *lvid2 = &lvl2->lv->lvid;

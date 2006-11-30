@@ -36,7 +36,7 @@ static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
 			    struct dm_pool *mem, struct pool_list *pl,
 			    const char *vg_name)
 {
-	char buf[512];
+	char buf[512] __attribute((aligned(8)));
 
 	/* FIXME: Need to check the cache here first */
 	if (!dev_read(dev, UINT64_C(0), 512, buf)) {
@@ -59,7 +59,7 @@ static void _add_pl_to_list(struct list *head, struct pool_list *data)
 
 	list_iterate_items(pl, head) {
 		if (id_equal(&data->pv_uuid, &pl->pv_uuid)) {
-			char uuid[ID_LEN + 7];
+			char uuid[ID_LEN + 7] __attribute((aligned(8)));
 
 			id_write_format(&pl->pv_uuid, uuid, ID_LEN + 7);
 
@@ -84,7 +84,7 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 	struct lvmcache_info *info;
 	struct id pvid;
 	struct id vgid;
-	char uuid[ID_LEN + 7];
+	char uuid[ID_LEN + 7] __attribute((aligned(8)));
 	struct pool_disk *pd = &pl->pd;
 
 	pool_label_in(pd, buf);
@@ -128,7 +128,7 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
  * be able to interpret ondisk labels correctly.  Always use
  * this function before writing to disk.
  */
-void pool_label_out(struct pool_disk *pl, char *buf)
+void pool_label_out(struct pool_disk *pl, void *buf)
 {
 	struct pool_disk *bufpl = (struct pool_disk *) buf;
 
@@ -163,7 +163,7 @@ void pool_label_out(struct pool_disk *pl, char *buf)
  * correctly.  Always use this function before using labels that
  * were read from disk.
  */
-void pool_label_in(struct pool_disk *pl, char *buf)
+void pool_label_in(struct pool_disk *pl, void *buf)
 {
 	struct pool_disk *bufpl = (struct pool_disk *) buf;
 

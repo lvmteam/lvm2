@@ -738,7 +738,7 @@ int vg_validate(struct volume_group *vg)
 {
 	struct pv_list *pvl, *pvl2;
 	struct lv_list *lvl, *lvl2;
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 	int r = 1;
 
 	/* FIXME Also check there's no data/metadata overlap */

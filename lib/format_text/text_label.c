@@ -24,7 +24,7 @@
 #include <fcntl.h>
 
 static int _text_can_handle(struct labeller *l __attribute((unused)),
-			    char *buf,
+			    void *buf,
 			    uint64_t sector __attribute((unused)))
 {
 	struct label_header *lh = (struct label_header *) buf;
@@ -35,7 +35,7 @@ static int _text_can_handle(struct labeller *l __attribute((unused)),
 	return 0;
 }
 
-static int _text_write(struct label *label, char *buf)
+static int _text_write(struct label *label, void *buf)
 {
 	struct label_header *lh = (struct label_header *) buf;
 	struct pv_header *pvhdr;
@@ -189,7 +189,7 @@ static int _text_initialise_label(struct labeller *l __attribute((unused)),
 	return 1;
 }
 
-static int _text_read(struct labeller *l, struct device *dev, char *buf,
+static int _text_read(struct labeller *l, struct device *dev, void *buf,
 		 struct label **label)
 {
 	struct label_header *lh = (struct label_header *) buf;

@@ -134,8 +134,8 @@ struct user_device {
 
 int read_pool_label(struct pool_list *pl, struct labeller *l,
 		    struct device *dev, char *buf, struct label **label);
-void pool_label_out(struct pool_disk *pl, char *buf);
-void pool_label_in(struct pool_disk *pl, char *buf);
+void pool_label_out(struct pool_disk *pl, void *buf);
+void pool_label_in(struct pool_disk *pl, void *buf);
 void get_pool_uuid(char *uuid, uint64_t poolid, uint32_t spid, uint32_t devid);
 int import_pool_vg(struct volume_group *vg, struct dm_pool *mem, struct list *pls);
 int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem,

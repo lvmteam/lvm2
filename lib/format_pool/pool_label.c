@@ -29,7 +29,7 @@ static void _pool_not_supported(const char *op)
 		  op);
 }
 
-static int _pool_can_handle(struct labeller *l, char *buf, uint64_t sector)
+static int _pool_can_handle(struct labeller *l, void *buf, uint64_t sector)
 {
 
 	struct pool_disk pd;
@@ -50,13 +50,13 @@ static int _pool_can_handle(struct labeller *l, char *buf, uint64_t sector)
 	return 0;
 }
 
-static int _pool_write(struct label *label, char *buf)
+static int _pool_write(struct label *label, void *buf)
 {
 	_pool_not_supported("write");
 	return 0;
 }
 
-static int _pool_read(struct labeller *l, struct device *dev, char *buf,
+static int _pool_read(struct labeller *l, struct device *dev, void *buf,
 		 struct label **label)
 {
 	struct pool_list pl;
