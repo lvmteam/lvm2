@@ -1,5 +1,6 @@
 Version 2.02.16 -
 ====================================
+  Add -T (startup timeout) switch to clvmd.
   Improve lvm_dump.sh robustness.
   Update lvm2create_initrd to support gentoo.
 
