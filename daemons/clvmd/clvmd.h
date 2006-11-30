@@ -95,11 +95,7 @@ struct local_client {
 	} bits;
 };
 
-#ifdef DEBUG
-#define DEBUGLOG(fmt, args...) {time_t P; time(&P); fprintf(stderr, "CLVMD[%x]: %.15s ", (int)pthread_self(), ctime(&P)+4 ); fprintf(stderr, fmt, ## args);}
-#else
-#define DEBUGLOG(fmt, args...)
-#endif
+#define DEBUGLOG(fmt, args...) debuglog(fmt, ## args);
 
 #ifndef max
 #define max(a,b) ((a)>(b)?(a):(b))
@@ -117,6 +113,7 @@ extern int add_client(struct local_client *new_client);
 
 extern void clvmd_cluster_init_completed(void);
 extern void process_message(struct local_client *client, char *buf, int len, char *csid);
+extern void debuglog(const char *fmt, ... );
 
 int sync_lock(const char *resource, int mode, int flags, int *lockid);
 int sync_unlock(const char *resource, int lockid);
