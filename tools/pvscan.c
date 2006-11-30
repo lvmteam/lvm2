@@ -22,7 +22,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 				   struct physical_volume *pv,
 				   void *handle __attribute((unused)))
 {
-	char uuid[64];
+	char uuid[64] __attribute((aligned(8)));
 	unsigned vg_name_len = 0;
 
 	char pv_tmp_name[NAME_LEN] = { 0, };

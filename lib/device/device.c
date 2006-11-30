@@ -53,7 +53,7 @@ static int _has_partition_table(struct device *dev)
 {
 	int ret = 0;
 	unsigned p;
-	uint8_t buf[SECTOR_SIZE];
+	uint16_t buf[SECTOR_SIZE/sizeof(uint16_t)];
 	uint16_t *part_magic;
 	struct partition *part;
 
@@ -70,7 +70,7 @@ static int _has_partition_table(struct device *dev)
 	/* FIXME Check for other types of partition table too */
 
 	/* Check for msdos partition table */
-	part_magic = (uint16_t *)(buf + PART_MAGIC_OFFSET);
+	part_magic = buf + PART_MAGIC_OFFSET/sizeof(buf[0]);
 	if ((*part_magic == xlate16(PART_MAGIC))) {
 		part = (struct partition *) (buf + PART_OFFSET);
 		for (p = 0; p < 4; p++, part++) {

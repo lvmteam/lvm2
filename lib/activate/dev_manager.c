@@ -1072,7 +1072,7 @@ int dev_manager_device_uses_vg(struct device *dev,
 {
 	struct dm_tree *dtree;
 	struct dm_tree_node *root;
-	char dlid[sizeof(UUID_PREFIX) + sizeof(struct id) - 1];
+	char dlid[sizeof(UUID_PREFIX) + sizeof(struct id) - 1] __attribute((aligned(8)));
 	int r = 1;
 
 	if (!(dtree = dm_tree_create())) {

@@ -49,23 +49,23 @@ struct label_ops {
 	/*
 	 * Is the device labelled with this format ?
 	 */
-	int (*can_handle) (struct labeller * l, char *buf, uint64_t sector);
+	int (*can_handle) (struct labeller * l, void *buf, uint64_t sector);
 
 	/*
 	 * Write a label to a volume.
 	 */
-	int (*write) (struct label * label, char *buf);
+	int (*write) (struct label * label, void *buf);
 
 	/*
 	 * Read a label from a volume.
 	 */
 	int (*read) (struct labeller * l, struct device * dev,
-		     char *buf, struct label ** label);
+		     void *buf, struct label ** label);
 
 	/*
 	 * Additional consistency checks for the paranoid.
 	 */
-	int (*verify) (struct labeller * l, char *buf, uint64_t sector);
+	int (*verify) (struct labeller * l, void *buf, uint64_t sector);
 
 	/*
 	 * Populate label_type etc.

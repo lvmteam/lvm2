@@ -249,7 +249,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
 
 int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
 {
-	char resource[258];
+	char resource[258] __attribute((aligned(8)));
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:

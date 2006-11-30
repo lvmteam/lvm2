@@ -193,7 +193,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 				       int *precommitted)
 {
 	size_t len;
-	char vgnamebuf[NAME_LEN + 2];
+	char vgnamebuf[NAME_LEN + 2] __attribute((aligned(8)));
 	struct raw_locn *rlocn, *rlocn_precommitted;
 	struct lvmcache_info *info;
 
@@ -885,8 +885,8 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	uint32_t wrap = 0;
 	const char *vgname = NULL;
 	unsigned int len = 0;
-	char buf[NAME_LEN + 1];
-        char uuid[64];
+	char buf[NAME_LEN + 1] __attribute((aligned(8)));
+	char uuid[64] __attribute((aligned(8)));
 
 	if (!dev_open(dev_area->dev)) {
 		stack;
@@ -1131,7 +1131,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	struct lvmcache_info *info;
 	struct mda_context *mdac;
 	struct metadata_area *mda;
-	char buf[MDA_HEADER_SIZE];
+	char buf[MDA_HEADER_SIZE] __attribute((aligned(8)));
 	struct mda_header *mdah = (struct mda_header *) buf;
 	uint64_t adjustment;
 
@@ -1742,7 +1742,7 @@ static int _get_config_disk_area(struct cmd_context *cmd,
 	}
 
 	if (!(dev_area.dev = device_from_pvid(cmd, &id))) {
-		char buffer[64];
+		char buffer[64] __attribute((aligned(8)));
 
 		if (!id_write_format(&id, buffer, sizeof(buffer)))
 			log_err("Couldn't find device.");

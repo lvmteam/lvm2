@@ -94,7 +94,7 @@ static int _open_local_sock(void)
 /* Send a request and return the status */
 static int _send_request(char *inbuf, int inlen, char **retbuf)
 {
-	char outbuf[PIPE_BUF];
+	char outbuf[PIPE_BUF] __attribute((aligned(8)));
 	struct clvm_header *outheader = (struct clvm_header *) outbuf;
 	int len;
 	int off;
@@ -195,7 +195,7 @@ static void _build_header(struct clvm_header *head, int cmd, const char *node,
 static int _cluster_request(char cmd, const char *node, void *data, int len,
 			   lvm_response_t ** response, int *num)
 {
-	char outbuf[sizeof(struct clvm_header) + len + strlen(node) + 1];
+	char outbuf[sizeof(struct clvm_header) + len + strlen(node) + 1] __attribute((aligned(8)));
 	int *outptr;
 	char *inptr;
 	char *retbuf = NULL;

@@ -149,7 +149,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	 * Convert the uuid into a device.
 	 */
 	if (!(pv->dev = device_from_pvid(fid->fmt->cmd, &pv->id))) {
-		char buffer[64];
+		char buffer[64] __attribute((aligned(8)));
 
 		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
 			log_error("Couldn't find device.");
