@@ -1,5 +1,6 @@
 Version 2.02.16 -
 ====================================
+  Fix mirror segment removal to use temporary error segment.
   Always compile debug logging into clvmd.
   Add startup timeout to RHEL4 clvmd startup script.
   Add -T (startup timeout) switch to clvmd.
