@@ -1,5 +1,6 @@
 Version 2.02.16 -
 ====================================
+  Fix VG clustered read locks to use PR not CR.
   Adjust some alignments for ia64/sparc.
   Fix mirror segment removal to use temporary error segment.
   Always compile debug logging into clvmd.
