@@ -191,7 +191,11 @@ static int lock_vg(struct local_client *client)
 	    dm_hash_remove(lock_hash, lockname);
     }
     else {
-
+	/* Read locks need to be PR; other modes get passed through */
+	if ((lock_cmd & LCK_TYPE_MASK) == LCK_READ) {
+	    lock_cmd &= ~LCK_TYPE_MASK;
+	    lock_cmd |= LKM_PRMODE;
+	}
 	status = sync_lock(lockname, (int)lock_cmd, (lock_flags & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
 	if (status)
 	    status = errno;
