@@ -325,7 +325,8 @@ int main(int argc, char *argv[])
 	/* This needs to be started after cluster initialisation
 	   as it may need to take out locks */
 	DEBUGLOG("starting LVM thread\n");
-	pthread_create(&lvm_thread, NULL, lvm_thread_fn, (void *)using_gulm);
+	pthread_create(&lvm_thread, NULL, lvm_thread_fn, 
+			(void *)(long)using_gulm);
 
 	/* Tell the rest of the cluster our version number */
 	/* CMAN can do this immediately, gulm needs to wait until
@@ -412,16 +413,17 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 
 	len = read(thisfd->fd, buffer, sizeof(int));
 
-	DEBUGLOG("read on PIPE %d: %d bytes: status: %d\n",
-		 thisfd->fd, len, *(int *) buffer);
-
 	if (len == sizeof(int)) {
-		status = *(int *) buffer;
+		memcpy(&status, buffer, sizeof(int));
 	}
+
+	DEBUGLOG("read on PIPE %d: %d bytes: status: %d\n",
+		 thisfd->fd, len, status);
 
 	/* EOF on pipe or an error, close it */
 	if (len <= 0) {
 		int jstat;
+		void *ret = &status;
 		close(thisfd->fd);
 
 		/* Clear out the cross-link */
@@ -431,9 +433,7 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 
 		/* Reap child thread */
 		if (thisfd->bits.pipe.threadid) {
-			jstat =
-			    pthread_join(thisfd->bits.pipe.threadid,
-					 (void **) &status);
+			jstat = pthread_join(thisfd->bits.pipe.threadid, &ret);
 			thisfd->bits.pipe.threadid = 0;
 			if (thisfd->bits.pipe.client != NULL)
 				thisfd->bits.pipe.client->bits.localsock.
@@ -674,7 +674,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 	close(local_sock);
 }
 
-static void wait_for_child(int c_pipe, int timeout)
+static __attribute__ ((noreturn)) void wait_for_child(int c_pipe, int timeout)
 {
 	int child_status;
 	int sstat;
@@ -1139,8 +1139,8 @@ static int distribute_command(struct local_client *thisfd)
 }
 
 /* Process a command from a remote node and return the result */
-void process_remote_command(struct clvm_header *msg, int msglen, int fd,
-			    char *csid)
+static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
+			    	   char *csid)
 {
 	char *replyargs;
 	char nodename[max_cluster_member_name_len];
@@ -1164,11 +1164,12 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 		    (struct clvm_header *) malloc(msg->arglen +
 						  sizeof(struct clvm_header));
 		if (newmsg) {
-			if (system_lv_read_data
-			    (nodename, (char *) newmsg,
-			     (size_t *) &msglen) == 0) {
+			ssize_t len;
+			if (system_lv_read_data(nodename, (char *) newmsg,
+			     			&len) == 0) {
 				msg = newmsg;
 				msg_malloced = 1;
+				msglen = len;
 			} else {
 				struct clvm_header head;
 				DEBUGLOG("System LV read failed\n");
@@ -1214,8 +1215,11 @@ void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 	/* Version check is internal - don't bother exposing it in
 	   clvmd-command.c */
 	if (msg->cmd == CLVMD_CMD_VERSION) {
-		int *version_nums = (int *) msg->args;
+		int version_nums[3]; 
 		char node[256];
+
+		memcpy(version_nums, msg->args, sizeof(version_nums));
+
 		clops->name_from_csid(csid, node);
 		DEBUGLOG("Remote node %s is version %d.%d.%d\n",
 			 node,
@@ -1387,7 +1391,7 @@ static void add_reply_to_list(struct local_client *client, int status,
 }
 
 /* This is the thread that runs the PRE and post commands for a particular connection */
-static void *pre_and_post_thread(void *arg)
+static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 {
 	struct local_client *client = (struct local_client *) arg;
 	int status;
@@ -1455,7 +1459,6 @@ static void *pre_and_post_thread(void *arg)
 	}
 	DEBUGLOG("Subthread finished\n");
 	pthread_exit((void *) 0);
-	return 0;
 }
 
 /* Process a command on the local node and store the result */
@@ -1564,7 +1567,7 @@ static void send_local_reply(struct local_client *client, int status, int fd)
 		if (thisreply->status)
 			clientreply->flags |= CLVMD_FLAG_NODEERRS;
 
-		*(int *) ptr = thisreply->status;
+		memcpy(ptr, &thisreply->status, sizeof(int));
 		ptr += sizeof(int);
 
 		if (thisreply->replymsg) {
@@ -1620,19 +1623,22 @@ static void send_version_message()
 {
 	char message[sizeof(struct clvm_header) + sizeof(int) * 3];
 	struct clvm_header *msg = (struct clvm_header *) message;
-	int *version_nums = (int *) msg->args;
+	int version_nums[3];
 
 	msg->cmd = CLVMD_CMD_VERSION;
 	msg->status = 0;
 	msg->flags = 0;
 	msg->clientid = 0;
-	msg->arglen = sizeof(int) * 3;
+	msg->arglen = sizeof(version_nums);
 
 	version_nums[0] = htonl(CLVMD_MAJOR_VERSION);
 	version_nums[1] = htonl(CLVMD_MINOR_VERSION);
 	version_nums[2] = htonl(CLVMD_PATCH_VERSION);
 
+	memcpy(&msg->args, version_nums, sizeof(version_nums));
+
 	hton_clvm(msg);
+
 	clops->cluster_send_message(message, sizeof(message), NULL,
 			     "Error Sending version number");
 }
@@ -1689,11 +1695,11 @@ static int process_work_item(struct lvm_thread_cmd *cmd)
 /*
  * Routine that runs in the "LVM thread".
  */
-static void *lvm_thread_fn(void *arg)
+static __attribute__ ((noreturn)) void *lvm_thread_fn(void *arg)
 {
 	struct list *cmdl, *tmp;
 	sigset_t ss;
-	int using_gulm = (int)arg;
+	int using_gulm = (int)(long)arg;
 
 	/* Don't let anyone else to do work until we are started */
 	pthread_mutex_lock(&lvm_start_mutex);
@@ -1737,7 +1743,6 @@ static void *lvm_thread_fn(void *arg)
 		}
 		pthread_mutex_unlock(&lvm_thread_mutex);
 	}
-	return NULL;
 }
 
 /* Pass down some work to the LVM thread */

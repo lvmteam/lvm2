@@ -196,7 +196,6 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 			   lvm_response_t ** response, int *num)
 {
 	char outbuf[sizeof(struct clvm_header) + len + strlen(node) + 1] __attribute((aligned(8)));
-	int *outptr;
 	char *inptr;
 	char *retbuf = NULL;
 	int status;
@@ -236,17 +235,13 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 	 * With an extra pair of INTs on the front to sanity
 	 * check the pointer when we are given it back to free
 	 */
-	outptr = dm_malloc(sizeof(lvm_response_t) * num_responses +
-			    sizeof(int) * 2);
-	if (!outptr) {
+	*response = dm_malloc(sizeof(lvm_response_t) * num_responses);
+	if (!*response) {
 		errno = ENOMEM;
 		status = 0;
 		goto out;
 	}
 
-	*response = (lvm_response_t *) (outptr + 2);
-	outptr[0] = LVM_SIGNATURE;
-	outptr[1] = num_responses;
 	rarray = *response;
 
 	/* Unpack the response into an lvm_response_t array */
@@ -265,7 +260,7 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 			int j;
 			for (j = 0; j < i; j++)
 				dm_free(rarray[i].response);
-			free(outptr);
+			free(*response);
 			errno = ENOMEM;
 			status = -1;
 			goto out;
@@ -287,25 +282,15 @@ static int _cluster_request(char cmd, const char *node, void *data, int len,
 }
 
 /* Free reply array */
-static int _cluster_free_request(lvm_response_t * response)
+static int _cluster_free_request(lvm_response_t * response, int num)
 {
-	int *ptr = (int *) response - 2;
 	int i;
-	int num;
-
-	/* Check it's ours to free */
-	if (response == NULL || *ptr != LVM_SIGNATURE) {
-		errno = EINVAL;
-		return 0;
-	}
-
-	num = ptr[1];
 
 	for (i = 0; i < num; i++) {
 		dm_free(response[i].response);
 	}
 
-	dm_free(ptr);
+	dm_free(response);
 
 	return 1;
 }
@@ -374,7 +359,7 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 	}
 
 	saved_errno = errno;
-	_cluster_free_request(response);
+	_cluster_free_request(response, num_responses);
 	errno = saved_errno;
 
 	return status;
