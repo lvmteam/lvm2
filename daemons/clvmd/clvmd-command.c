@@ -200,7 +200,7 @@ static int lock_vg(struct local_client *client)
 	if (status)
 	    status = errno;
 	else
-	    dm_hash_insert(lock_hash, lockname, (void *)lkid);
+	    dm_hash_insert(lock_hash, lockname, (void *)(long)lkid);
     }
 
     return status;
@@ -224,7 +224,7 @@ int do_pre_command(struct local_client *client)
 	switch (header->cmd) {
 	case CLVMD_CMD_TEST:
 		status = sync_lock("CLVMD_TEST", LKM_EXMODE, 0, &lockid);
-		client->bits.localsock.private = (void *) lockid;
+		client->bits.localsock.private = (void *)(long)lockid;
 		break;
 
 	case CLVMD_CMD_LOCK_VG:
