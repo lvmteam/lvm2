@@ -1,3 +1,6 @@
+Version 2.02.17 -
+===================================
+
 Version 2.02.16 - 1st December 2006
 ===================================
   Fix VG clustered read locks to use PR not CR.
