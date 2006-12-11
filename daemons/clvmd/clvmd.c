@@ -1426,6 +1426,8 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 		DEBUGLOG("Writing status %d down pipe %d\n", status, pipe_fd);
 		/* Tell the parent process we have finished this bit */
 		write(pipe_fd, &status, sizeof(int));
+		if (status)
+			continue; /* Wait for another PRE command */
 
 		/* We may need to wait for the condition variable before running the post command */
 		pthread_mutex_lock(&client->bits.localsock.mutex);
