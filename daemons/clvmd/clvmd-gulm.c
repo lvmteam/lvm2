@@ -730,7 +730,7 @@ static int _lock_resource(char *resource, int mode, int flags, int *lockid)
     pthread_mutex_lock(&lwait.mutex);
 
     /* This needs to be converted from DLM/LVM2 value for GULM */
-    if (flags == LCK_NONBLOCK) flags = lg_lock_flag_Try;
+    if (flags & LKF_NOQUEUE) flags = lg_lock_flag_Try;
 
     dm_hash_insert(lock_hash, resource, &lwait);
     DEBUGLOG("lock_resource '%s', flags=%d, mode=%d\n", resource, flags, mode);
@@ -828,6 +828,7 @@ static int _sync_lock(const char *resource, int mode, int flags, int *lockid)
         }
 	break;
 
+    case LCK_PREAD:
     case LCK_READ:
 	status = _lock_resource(lock1, lg_lock_state_Shared, flags, lockid);
 	if (status)
@@ -864,6 +865,7 @@ static int _sync_unlock(const char *resource, int lockid)
     /* The held lock mode is in the lock id */
     assert(lockid == LCK_EXCL ||
 	   lockid == LCK_READ ||
+	   lockid == LCK_PREAD ||
 	   lockid == LCK_WRITE);
 
     status = _unlock_resource(lock1, lockid);

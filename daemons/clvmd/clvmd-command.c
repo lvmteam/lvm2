@@ -194,7 +194,7 @@ static int lock_vg(struct local_client *client)
 	/* Read locks need to be PR; other modes get passed through */
 	if ((lock_cmd & LCK_TYPE_MASK) == LCK_READ) {
 	    lock_cmd &= ~LCK_TYPE_MASK;
-	    lock_cmd |= LKM_PRMODE;
+	    lock_cmd |= LCK_PREAD;
 	}
 	status = sync_lock(lockname, (int)lock_cmd, (lock_flags & LCK_NONBLOCK) ? LKF_NOQUEUE : 0, &lkid);
 	if (status)

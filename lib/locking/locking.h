@@ -50,7 +50,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_NULL	0x00000000	/* LCK$_NLMODE */
 #define LCK_READ	0x00000001	/* LCK$_CRMODE */
 					/* LCK$_CWMODE */
-					/* LCK$_PRMODE */
+#define LCK_PREAD       0x00000003      /* LCK$_PRMODE */
 #define LCK_WRITE	0x00000004	/* LCK$_PWMODE */
 #define LCK_EXCL	0x00000005	/* LCK$_EXMODE */
 #define LCK_UNLOCK      0x00000006	/* This is ours */

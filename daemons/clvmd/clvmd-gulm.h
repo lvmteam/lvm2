@@ -1,5 +1,6 @@
 
-
+/* DLM constant that clvmd uses as a generic NONBLOCK lock flag */
+#define LKF_NOQUEUE 1
 
 extern int get_next_node_csid(void **context, char *csid);
 extern void add_down_node(char *csid);
