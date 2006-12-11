@@ -1,5 +1,6 @@
 Version 2.02.17 -
 ===================================
+  Fix gulm operation of clvmd, including a hang when doing lvchange -aey
   Fix hang in clvmd if a pre-command failed.
 
 Version 2.02.16 - 1st December 2006
