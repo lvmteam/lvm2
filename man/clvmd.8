@@ -6,6 +6,7 @@ clvmd \- cluster LVM daemon
 [\-d] [\-h]
 [\-R]
 [\-t <timeout>]
+[\-T <start timeout>]
 [\-V]
 .SH DESCRIPTION
 clvmd is the daemon that distributes LVM metadata updates around a cluster.
@@ -22,6 +23,23 @@ Specifies the timeout for commands to run around the cluster. This should not
 be so small that commands with many disk updates to do will fail, so you
 may need to increase this on systems with very large disk farms. 
 The default is 30 seconds.
+.TP
+.I \-T <start timeout>
+Specifies the timeout for clvmd daemon startup. If the daemon does not report 
+that it has started up within this time then the parent command will exit with 
+status of 5. This does NOT mean that clvmd has not started! What it means is 
+that the startup of clvmd has been delayed for some reason; the most likely 
+cause of this is an inquorate cluster though it could be due to locking 
+latencies on a cluster with large numbers of logical volumes. If you get the 
+return code of 5 it is usually not necessary to restart clvmd - it will start
+as soon as that blockage has cleared. This flag is to allow startup scripts
+to exit in a timely fashion even if the cluster is stalled for some reason.
+<br>
+The default is 0 (no timeout) and the value is in seconds. Don't set this too
+small or you will experience spurious errors. 10 or 20 seconds might be
+sensible.
+<br>
+This timeout will be ignored if you start clvmd with the -d switch.
 .TP
 .I \-R
 Tells all the running clvmd in the cluster to reload their device cache and
