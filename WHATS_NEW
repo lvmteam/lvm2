@@ -1,5 +1,6 @@
 Version 2.02.17 -
 ===================================
+  Add manpage entry for clvmd -T
   Fix gulm operation of clvmd, including a hang when doing lvchange -aey
   Fix hang in clvmd if a pre-command failed.
 
