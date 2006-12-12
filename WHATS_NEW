@@ -1,5 +1,6 @@
 Version 2.02.17 -
 ===================================
+  Fix detection of smallest area in _alloc_parallel_area() for cling policy.
   Add manpage entry for clvmd -T
   Fix gulm operation of clvmd, including a hang when doing lvchange -aey
   Fix hang in clvmd if a pre-command failed.

@@ -628,17 +628,17 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 				struct pv_area **areas,
 				uint32_t *ix, struct pv_area *log_area)
 {
-	uint32_t area_len, smallest, remaining;
+	uint32_t area_len, remaining;
 	uint32_t s;
 	struct alloced_area *aa;
 
 	remaining = needed - *ix;
 	area_len = remaining / ah->area_multiple;
 
-	smallest = areas[ah->area_count - 1]->count;
-
-	if (area_len > smallest)
-		area_len = smallest;
+	/* Reduce area_len to the smallest of the areas */
+	for (s = 0; s < ah->area_count; s++)
+		if (area_len > areas[s]->count)
+			area_len = areas[s]->count;
 
 	if (!(aa = dm_pool_alloc(ah->mem, sizeof(*aa) *
 			      (ah->area_count + (log_area ? 1 : 0))))) {
