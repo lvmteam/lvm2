@@ -78,17 +78,18 @@
 #define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
 #define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
 
+/* Ordered list - see lv_manip.c */
 typedef enum {
-	ALLOC_INVALID = 0,
-	ALLOC_INHERIT,
+	ALLOC_INVALID,
 	ALLOC_CONTIGUOUS,
 	ALLOC_CLING,
 	ALLOC_NORMAL,
-	ALLOC_ANYWHERE
+	ALLOC_ANYWHERE,
+	ALLOC_INHERIT
 } alloc_policy_t;
 
 typedef enum {
-	AREA_UNASSIGNED = 0,
+	AREA_UNASSIGNED,
 	AREA_PV,
 	AREA_LV
 } area_type_t;
