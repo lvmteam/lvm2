@@ -415,6 +415,15 @@ struct alloc_handle {
 	struct list alloced_areas[0];	/* Lists of areas in each stripe */
 };
 
+static uint32_t calc_area_multiple(const struct segment_type *segtype,
+				   const uint32_t area_count)
+{
+	if (!segtype_is_striped(segtype) || !area_count)
+		return 1;
+
+	return area_count;
+}
+
 /*
  * Preparation for a specific allocation attempt
  */
@@ -476,7 +485,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	ah->area_count = area_count;
 	ah->log_count = log_count;
 	ah->alloc = alloc;
-	ah->area_multiple = segtype_is_striped(segtype) ? ah->area_count : 1;
+	ah->area_multiple = calc_area_multiple(segtype, area_count);
 
 	for (s = 0; s < ah->area_count; s++)
 		list_init(&ah->alloced_areas[s]);
@@ -553,7 +562,7 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 	if (mirrored_pv)
 		extra_areas = 1;
 
-	area_multiple = segtype_is_striped(segtype) ? area_count : 1;
+	area_multiple = calc_area_multiple(segtype, area_count);
 
 	/* log_lv gets set up elsehere */
 	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem, segtype, lv,
@@ -707,7 +716,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 	if (max_seg_len && *max_seg_len > remaining_seg_len)
 		*max_seg_len = remaining_seg_len;
 
-	area_multiple = segtype_is_striped(seg->segtype) ? seg->area_count : 1;
+	area_multiple = calc_area_multiple(seg->segtype, seg->area_count);
 	area_len = remaining_seg_len / area_multiple ? : 1;
 
 	for (s = first_area;
@@ -1066,6 +1075,7 @@ static int _allocate(struct alloc_handle *ah,
 	int r = 0;
 	struct list *pvms;
 	uint32_t areas_size;
+	alloc_policy_t alloc;
 
 	if (allocated >= new_extents && !ah->log_count) {
 		log_error("_allocate called with no work to do!");
@@ -1111,50 +1121,18 @@ static int _allocate(struct alloc_handle *ah,
 		return 0;
 	}
 
-	old_allocated = allocated;
-	if (!_find_parallel_space(ah, ALLOC_CONTIGUOUS, pvms, areas,
-				  areas_size, can_split,
-				  prev_lvseg, &allocated, new_extents)) {
-		stack;
-		goto out;
+	/* Attempt each defined allocation policy in turn */
+	for (alloc = ALLOC_CONTIGUOUS; alloc < ALLOC_INHERIT; alloc++) {
+		old_allocated = allocated;
+		if (!_find_parallel_space(ah, alloc, pvms, areas,
+					  areas_size, can_split,
+					  prev_lvseg, &allocated, new_extents))
+			goto_out;
+		if ((allocated == new_extents) || (ah->alloc == alloc) ||
+		    (!can_split && (allocated != old_allocated)))
+			break;
 	}
 
-	if ((allocated == new_extents) || (ah->alloc == ALLOC_CONTIGUOUS) ||
-	    (!can_split && (allocated != old_allocated)))
-		goto finished;
-
-	old_allocated = allocated;
-	if (!_find_parallel_space(ah, ALLOC_CLING, pvms, areas,
-				  areas_size, can_split,
-				  prev_lvseg, &allocated, new_extents)) {
-		stack;
-		goto out;
-	}
-
-	if ((allocated == new_extents) || (ah->alloc == ALLOC_CLING) ||
-	    (!can_split && (allocated != old_allocated)))
-		goto finished;
-
-	old_allocated = allocated;
-	if (!_find_parallel_space(ah, ALLOC_NORMAL, pvms, areas,
-				  areas_size, can_split,
-				  prev_lvseg, &allocated, new_extents)) {
-		stack;
-		goto out;
-	}
-
-	if ((allocated == new_extents) || (ah->alloc == ALLOC_NORMAL) ||
-	    (!can_split && (allocated != old_allocated)))
-		goto finished;
-
-	if (!_find_parallel_space(ah, ALLOC_ANYWHERE, pvms, areas,
-				  areas_size, can_split,
-				  prev_lvseg, &allocated, new_extents)) {
-		stack;
-		goto out;
-	}
-
-      finished:
 	if (allocated != new_extents) {
 		log_error("Insufficient suitable %sallocatable extents "
 			  "for logical volume %s: %u more required",
@@ -1162,6 +1140,13 @@ static int _allocate(struct alloc_handle *ah,
 			  lv ? lv->name : "",
 			  (new_extents - allocated) * ah->area_count
 			  / ah->area_multiple);
+		goto out;
+	}
+
+	if (ah->log_count && !ah->log_area.len) {
+		log_error("Insufficient extents for log allocation "
+			  "for logical volume %s.",
+			  lv ? lv->name : "");
 		goto out;
 	}
 

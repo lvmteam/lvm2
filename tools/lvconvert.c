@@ -281,15 +281,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			if (lp->mirrors == existing_mirrors) {
 				if (!seg->log_lv && !arg_count(cmd, corelog_ARG)) {
 					/* No disk log present, add one. */
-					/* FIXME: Why doesn't this work?  Without
-					   it, we will probably put the log on the
-					   same device as a mirror leg.
-					  if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv))) {
-					  stack;
-					  return 0;
-					  }
-					*/
-					parallel_areas = NULL;
+					if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv)))
+						return_0;
 					if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
 						log_error("Unable to determine mirror sync status.");
 						return 0;
@@ -297,7 +290,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 					segtype = get_segtype_from_string(cmd, "striped");
 
-					if (!(ah = allocate_extents(lv->vg, NULL, segtype, 1,
+					if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0,
 								    0, 1, 0,
 								    NULL, 0, 0, lp->pvh,
 								    lp->alloc,

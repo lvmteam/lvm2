@@ -1,5 +1,10 @@
 Version 2.02.17 -
 ===================================
+  When lvconvert allocates a mirror log, respect parallel area constraints.
+  Use loop to iterate through the now-ordered policy list in _allocate().
+  Check for failure to allocate just the mirror log.
+  Introduce calc_area_multiple().
+  Support mirror log allocation when there is only one PV: area_count now 0.
   Fix detection of smallest area in _alloc_parallel_area() for cling policy.
   Add manpage entry for clvmd -T
   Fix gulm operation of clvmd, including a hang when doing lvchange -aey
