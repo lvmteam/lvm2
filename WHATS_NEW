@@ -1,3 +1,6 @@
+Version 2.02.18 -
+====================================
+
 Version 2.02.17 - 14th December 2006
 ====================================
   Add missing pvremove error message when device doesn't exist.
