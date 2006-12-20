@@ -129,8 +129,8 @@ struct thread_status {
 	struct dso_data *dso_data;/* DSO this thread accesses. */
 	
 	char *device_path;	/* Mapped device path. */
-	uint32_t event_nr;           /* event number */
-	int processing;         /* Set when event is being processed */
+	uint32_t event_nr;	/* event number */
+	int processing;		/* Set when event is being processed */
 	enum dm_event_type events;	/* bitfield for event filter. */
 	enum dm_event_type current_events;/* bitfield for occured events. */
 	enum dm_event_type processed_events;/* bitfield for processed events. */
@@ -179,12 +179,13 @@ static struct dso_data *alloc_dso_data(struct message_data *data)
 {
 	struct dso_data *ret = (typeof(ret)) dm_malloc(sizeof(*ret));
 
-	if (ret) {
-		if (!memset(ret, 0, sizeof(*ret)) ||
-		    !(ret->dso_name = dm_strdup(data->dso_name))) {
-			dm_free(ret);
-			ret = NULL;
-		}
+	if (!ret)
+		return NULL;
+
+	if (!memset(ret, 0, sizeof(*ret)) ||
+	    !(ret->dso_name = dm_strdup(data->dso_name))) {
+		dm_free(ret);
+		return NULL;
 	}
 
 	return ret;
@@ -342,10 +343,9 @@ static struct thread_status *lookup_thread_status(struct message_data *data)
 {
 	struct thread_status *thread;
 
-	list_iterate_items(thread, &thread_registry) {
+	list_iterate_items(thread, &thread_registry)
 		if (!strcmp(data->device_path, thread->device_path))
 			return thread;
-	}
 
 	return NULL;
 }
@@ -546,6 +546,15 @@ static int event_wait(struct thread_status *thread)
 		thread->current_events |= DM_EVENT_TIMEOUT;
 		ret = 1;
 		thread->processed_events = 0;
+	} else {
+		/* FIXME replace with log_* macro */
+		syslog(LOG_NOTICE, "dm_task_run failed, errno = %d, %s",
+		       errno, strerror(errno));
+		if (errno == ENXIO) {
+			/* FIXME replace with log_* macro */
+			syslog(LOG_ERR, "%s disappeared, detaching", thread->device_path);
+			ret = 2;	/* FIXME What does 2 mean?  Use macro. */
+		}
 	}
 
 	pthread_sigmask(SIG_SETMASK, &set, NULL);
@@ -592,6 +601,7 @@ static void *monitor_thread(void *arg)
 static void *monitor_thread(void *arg)
 {
 	struct thread_status *thread = arg;
+	int wait_error = 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	pthread_cleanup_push(monitor_unregister, thread);
@@ -605,12 +615,17 @@ static void *monitor_thread(void *arg)
 		thread->current_events = 0;
 
 		/*
-		 * FIXME: if unrecoverable error (ENODEV) happens,
+		 * FIXME If unrecoverable error (ENODEV) happens
 		 * we loop indefinitely.  event_wait should return
 		 * more than 0/1.
 		 */
-		if (!event_wait(thread))
+		wait_error = event_wait(thread);
+		if (!wait_error)
 			continue;
+
+		/* FIXME Give a DSO a chance to clean up. */
+		if (wait_error == 2)
+			break;
 
 		/*
 		 * Check against filter.
@@ -680,13 +695,12 @@ static struct dso_data *lookup_dso(struct message_data *data)
 
 	lock_mutex();
 
-	list_iterate_items(dso_data, &dso_registry) {
+	list_iterate_items(dso_data, &dso_registry)
 		if (!strcmp(data->dso_name, dso_data->dso_name)) {
 			lib_get(dso_data);
 			ret = dso_data;
 			break;
 		}
-	}
 
 	unlock_mutex();
 
@@ -935,31 +949,29 @@ static int _get_registered_device(struct message_data *message_data, int next)
 	lock_mutex();
 
 	/* Iterate list of threads checking if we want a particular one. */
-	list_iterate_items(thread, &thread_registry) {
+	list_iterate_items(thread, &thread_registry)
 		if ((hit = want_registered_device(message_data->dso_name,
 						  message_data->device_path,
 						  thread)))
 			break;
-	}
 
 	/*
 	 * If we got a registered device and want the next one ->
 	 * fetch next conforming element off the list.
 	 */
-	if (hit) {
-		if (next) {
-			do {
-				if (list_end(&thread_registry, &thread->list))
-					goto out;
-				
-				thread = list_item(thread->list.n,
-						   struct thread_status);
-			} while (!want_registered_device(message_data->dso_name,
-							 NULL, thread));
-		}
+	if (!hit || !next)
+		goto out;
 
-		return registered_device(message_data, thread);
-	}
+	do {
+		if (list_end(&thread_registry, &thread->list))
+			goto out;
+		
+		thread = list_item(thread->list.n,
+				   struct thread_status);
+	} while (!want_registered_device(message_data->dso_name,
+					 NULL, thread));
+
+	return registered_device(message_data, thread);
 
    out:
 	unlock_mutex();
@@ -1118,10 +1130,9 @@ static int handle_request(struct dm_event_daemon_message *msg,
 		{ DM_EVENT_CMD_ACTIVE,                     active },
 	}, *req;
 
-	for (req = requests; req < requests + sizeof(requests); req++) {
+	for (req = requests; req < requests + sizeof(requests); req++)
 		if (req->cmd == msg->opcode.cmd)
 			return req->f(message_data);
-	}
 
 	return -EINVAL;
 }
@@ -1139,9 +1150,8 @@ static int do_process_request(struct dm_event_daemon_message *msg)
 	    !parse_message(&message_data)) {
 		stack;
 		ret = -EINVAL;
-	} else {
+	} else
 		ret = handle_request(msg, &message_data);
-	}
 
 	free_message(&message_data);
 
@@ -1242,7 +1252,7 @@ static int daemonize(void)
 static int lock_pidfile(void)
 {
 	int lf;
-	char pidfile[] = "/var/run/dmeventd.pid";
+	char pidfile[] = "/var/run/dmeventd.pid"; /* FIXME Must be configurable at compile-time! */
 
 	if ((lf = open(pidfile, O_CREAT | O_RDWR, 0644)) < 0)
 		return -EXIT_OPEN_PID_FAILURE;
@@ -1326,14 +1336,3 @@ void dmeventd(void)
 
 	exit(EXIT_SUCCESS);
 }
-
-/*
- * Overrides for Emacs so that we follow Linus's tabbing style.
- * Emacs will notice this stuff at the end of the file and automatically
- * adjust the settings for this buffer only.  This must remain at the end
- * of the file.
- * ---------------------------------------------------------------------------
- * Local variables:
- * c-file-style: "linux"
- * End:
- */
