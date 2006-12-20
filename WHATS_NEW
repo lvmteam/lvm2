@@ -1,5 +1,6 @@
 Version 2.02.18 -
 ====================================
+  Fix some activate.c prototypes when compiled without devmapper.
   Fix dmeventd mirror to cope if monitored device disappears.
 
 Version 2.02.17 - 14th December 2006

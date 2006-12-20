@@ -141,7 +141,7 @@ int target_version(const char *target_name, uint32_t *maj,
 {
 	return 0;
 }
-int target_present(const char *target_name)
+int target_present(const char *target_name, int use_modprobe)
 {
 	return 0;
 }
@@ -211,7 +211,7 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	return 1;
 }
 
-int pv_uses_vg(struct cmd_context *cmd, struct physical_volume *pv,
+int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg)
 {
 	return 0;
