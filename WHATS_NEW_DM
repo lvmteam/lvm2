@@ -1,5 +1,7 @@
 Version 1.02.14 - 
 =============================
+  Some dmevent cleanups.
+  Fix dmeventd to cope if monitored device disappears.
 
 Version 1.02.13 - 28 Nov 2006
 =============================
