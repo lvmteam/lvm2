@@ -1,5 +1,6 @@
 Version 2.02.18 -
 ====================================
+  Fix create mirror with name longer than 22 chars.
   Fix some activate.c prototypes when compiled without devmapper.
   Fix dmeventd mirror to cope if monitored device disappears.
 
