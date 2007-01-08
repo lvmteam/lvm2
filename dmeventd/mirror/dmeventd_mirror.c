@@ -32,19 +32,30 @@
 #define ME_INSYNC    1
 #define ME_FAILURE   2
 
-static pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
+/*
+ * register_device() is called first and performs initialisation.
+ * Only one device may be registered or unregistered at a time.
+ */
+static pthread_mutex_t _register_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* FIXME: We may need to lock around operations to these */
+/*
+ * Number of active registrations.
+ */
 static int _register_count = 0;
 
-/* FIXME Unsafe static? */
 static struct dm_pool *_mem_pool = NULL;
+static void *_lvm_handle = NULL;
+
+/*
+ * Currently only one event can be processed at a time.
+ */
+static pthread_mutex_t _event_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int _get_mirror_event(char *params)
 {
 	int i, r = ME_INSYNC;
 
-#define MAX_ARGS 30;  /* should support at least 8-way mirrors */
+#define MAX_ARGS 30	/* should support at least 8-way mirrors */
 /* FIXME Remove unnecessary limit.  It tells you how many devices there are - use it! */
 
 	char *args[MAX_ARGS];
@@ -122,7 +133,6 @@ static void _temporary_log_fn(int level, const char *file,
 static int _remove_failed_devices(const char *device)
 {
 	int r;
-	void *handle;
 #define CMD_SIZE 256	/* FIXME Use system restriction */
 	char cmd_str[CMD_SIZE];
 	char *vg = NULL, *lv = NULL, *layer = NULL;
@@ -144,10 +154,7 @@ static int _remove_failed_devices(const char *device)
 		return -ENAMETOOLONG; /* FIXME Replace with generic error return - reason for failure has already got logged */
 	}
 
-	lvm2_log_fn(_temporary_log_fn);
-	handle = lvm2_init();
-	lvm2_log_level(handle, 1);
-	r = lvm2_run(handle, cmd_str);
+	r = lvm2_run(_lvm_handle, cmd_str);
 
 	dm_pool_empty(_mem_pool);  /* FIXME: not safe with multiple threads */
 	return (r == 1) ? 0 : -1;
@@ -161,9 +168,9 @@ void process_event(const char *device, enum dm_event_type event)
 	char *target_type = NULL;
 	char *params;
 
-	if (pthread_mutex_trylock(&_lock)) {
+	if (pthread_mutex_trylock(&_event_mutex)) {
 		syslog(LOG_NOTICE, "Another thread is handling an event.  Waiting...");
-		pthread_mutex_lock(&_lock);
+		pthread_mutex_lock(&_event_mutex);
 	}
 	/* FIXME Move inside libdevmapper */
 	if (!(dmt = dm_task_create(DM_DEVICE_STATUS))) {
@@ -185,9 +192,10 @@ void process_event(const char *device, enum dm_event_type event)
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
 
-		if (!target_type)
+		if (!target_type) {
 			syslog(LOG_INFO, "%s mapping lost.\n", device);
 			continue;
+		}
 
 		if (strcmp(target_type, "mirror")) {
 			syslog(LOG_INFO, "%s has unmirrored portion.\n", device);
@@ -225,11 +233,15 @@ void process_event(const char *device, enum dm_event_type event)
  fail:
 	if (dmt)
 		dm_task_destroy(dmt);
-	pthread_mutex_unlock(&_lock);
+	pthread_mutex_unlock(&_event_mutex);
 }
 
 int register_device(const char *device)
 {
+	int r = 0;
+
+	pthread_mutex_lock(&_register_mutex);
+
 	syslog(LOG_INFO, "Monitoring mirror device, %s for events\n", device);
 
 	/*
@@ -237,19 +249,42 @@ int register_device(const char *device)
 	 * than enough for what we need (device mapper name splitting)
 	 */
 	if (!_mem_pool && !(_mem_pool = dm_pool_create("mirror_dso", 1024)))
-		return 0;
+		goto out;
+
+	if (!_lvm_handle) {
+		lvm2_log_fn(_temporary_log_fn);
+		if (!(_lvm_handle = lvm2_init())) {
+			dm_pool_destroy(_mem_pool);
+			_mem_pool = NULL;
+			goto out;
+		}
+		lvm2_log_level(_lvm_handle, LVM2_LOG_SUPPRESS);
+		/* FIXME Temporary: move to dmeventd core */
+		lvm2_run(_lvm_handle, "_memlock_inc");
+	}
 
 	_register_count++;
+	r = 1;
 
-        return 1;
+out:
+	pthread_mutex_unlock(&_register_mutex);
+
+	return r;
 }
 
 int unregister_device(const char *device)
 {
+	pthread_mutex_lock(&_register_mutex);
+
 	if (!--_register_count) {
 		dm_pool_destroy(_mem_pool);
 		_mem_pool = NULL;
+		lvm2_run(_lvm_handle, "_memlock_dec");
+		lvm2_exit(_lvm_handle);
+		_lvm_handle = NULL;
 	}
 
-        return 1;
+	pthread_mutex_unlock(&_register_mutex);
+
+	return 1;
 }
