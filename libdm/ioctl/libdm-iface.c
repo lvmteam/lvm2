@@ -1506,6 +1506,8 @@ static int _reload_with_suppression_v4(struct dm_task *dmt)
 	t2 = task->head;
 
 	while (t1 && t2) {
+		while (t2->params[strlen(t2->params) - 1] == ' ')
+			t2->params[strlen(t2->params) - 1] = '\0';
 		if ((t1->start != t2->start) ||
 		    (t1->length != t2->length) ||
 		    (strcmp(t1->type, t2->type)) ||

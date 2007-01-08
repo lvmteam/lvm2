@@ -1,6 +1,8 @@
 Version 1.02.14 - 
 =============================
-  Some dmevent cleanups.
+  Lots of dmevent changes.
+  Export dm_basename().
+  Cope with a trailing space when comparing tables prior to possible reload.
   Fix dmeventd to cope if monitored device disappears.
 
 Version 1.02.13 - 28 Nov 2006

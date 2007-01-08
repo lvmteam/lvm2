@@ -23,45 +23,6 @@
 
 #include <stdint.h>
 
-/* FIXME This stuff must be configurable. */
-
-#define	DM_EVENT_DAEMON		"/sbin/dmeventd"
-#define DM_EVENT_LOCKFILE	"/var/lock/dmeventd"
-#define	DM_EVENT_FIFO_CLIENT	"/var/run/dmeventd-client"
-#define	DM_EVENT_FIFO_SERVER	"/var/run/dmeventd-server"
-#define DM_EVENT_PIDFILE	"/var/run/dmeventd.pid"
-
-#define DM_EVENT_DEFAULT_TIMEOUT 10
-
-/* Commands for the daemon passed in the message below. */
-enum dm_event_command {
-	DM_EVENT_CMD_ACTIVE = 1,
-	DM_EVENT_CMD_REGISTER_FOR_EVENT,
-	DM_EVENT_CMD_UNREGISTER_FOR_EVENT,
-	DM_EVENT_CMD_GET_REGISTERED_DEVICE,
-	DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE,
-	DM_EVENT_CMD_SET_TIMEOUT,
-	DM_EVENT_CMD_GET_TIMEOUT,
-};
-
-/* Message passed between client and daemon. */
-struct dm_event_daemon_message {
-	union {
-		unsigned int cmd;	/* FIXME Use fixed size. */
-		int	 status;	/* FIXME Use fixed size. */
-	} opcode;
-	char msg[252];		/* FIXME Why is this 252 ? */
-} __attribute__((packed));	/* FIXME Do this properly! */
-
-/* FIXME Is this meant to be exported?  I can't see where the interface uses it. */
-/* Fifos for client/daemon communication. */
-struct dm_event_fifos {
-	int client;
-	int server;
-	const char *client_path;
-	const char *server_path;
-};
-
 /* Event type definitions. */
 /* FIXME Use masks to separate the types and provide for extension. */
 enum dm_event_type {
@@ -75,6 +36,7 @@ enum dm_event_type {
 
 	DM_EVENT_SYNC_STATUS	= 0x40, /* Mirror synchronization completed/failed. */
 	DM_EVENT_TIMEOUT	= 0x80, /* Timeout has occured */
+	DM_EVENT_REGISTRATION_PENDING        = 0X100, /* Monitor thread is setting-up/shutting-down */
 };
 
 /* FIXME Use a mask. */
@@ -86,19 +48,22 @@ enum dm_event_type {
 /* FIXME Replace device with standard name/uuid/devno choice */
 /* Interface changes: 
    First register a handler, passing in a unique ref for the device. */
+
 //  int dm_event_register_handler(const char *dso_name, const char *device);
 //  int dm_event_register(const char *dso_name, const char *name, const char *uuid, uint32_t major, uint32_t minor, enum dm_event_type events);
-/* Or (better?) add to task structure and use existing functions - run a task to register/unregister events - we may need to run task withe that with the new event mechanism anyway, then the dso calls just hook in.
-*/
+
+/* Or (better?) add to task structure and use existing functions - run
+   a task to register/unregister events - we may need to run task
+   withe that with the new event mechanism anyway, then the dso calls
+   just hook in. */
  
-/* FIXME Missing consts? */
-int dm_event_register(char *dso_name, char *device, enum dm_event_type events);
-int dm_event_unregister(char *dso_name, char *device,
+int dm_event_register(const char *dso_name, const char *device, enum dm_event_type events);
+int dm_event_unregister(const char *dso_name, const char *device,
 			enum dm_event_type events);
 int dm_event_get_registered_device(char **dso_name, char **device,
 				   enum dm_event_type *events, int next);
-int dm_event_set_timeout(char *device, uint32_t timeout);
-int dm_event_get_timeout(char *device, uint32_t *timeout);
+int dm_event_set_timeout(const char *device, uint32_t timeout);
+int dm_event_get_timeout(const char *device, uint32_t *timeout);
 
 /* Prototypes for DSO interface. */
 void process_event(const char *device, enum dm_event_type event);
