@@ -40,6 +40,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+
+#include <sys/resource.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <arpa/inet.h> /* for htonl, ntohl */
@@ -1453,7 +1455,7 @@ int main(int argc, char *argv[])
 
 	init_fifos(&fifos);
 
-	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_init(&_global_mutex, NULL);
 
 #ifdef MCL_CURRENT
 	if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1)
@@ -1481,7 +1483,7 @@ int main(int argc, char *argv[])
 #ifdef MCL_CURRENT
 	munlockall();
 #endif
-	pthread_mutex_destroy(&_mutex);
+	pthread_mutex_destroy(&_global_mutex);
 
 	syslog(LOG_INFO, "dmeventd shutting down.");
 	closelog();
