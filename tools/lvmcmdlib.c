@@ -77,7 +77,13 @@ int lvm2_run(void *handle, const char *cmdline)
 		goto out;
 	}
 
-	ret = lvm_run_command(cmd, argc, argv);
+	/* FIXME Temporary - move to libdevmapper */
+	if (!strcmp(cmdline, "_memlock_inc"))
+		memlock_inc();
+	if (!strcmp(cmdline, "_memlock_dec"))
+		memlock_dec();
+	else
+		ret = lvm_run_command(cmd, argc, argv);
 
       out:
 	dm_free(cmdcopy);
