@@ -121,3 +121,11 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
 
 	return n;
 }
+
+char *dm_basename(const char *path)
+{
+	char *p = strrchr(path, '/');
+
+	return p ? p + 1 : path;
+}
+

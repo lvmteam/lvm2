@@ -113,3 +113,4 @@ dm_task_set_geometry
 dm_split_lvm_name
 dm_split_words
 dm_snprintf
+dm_basename

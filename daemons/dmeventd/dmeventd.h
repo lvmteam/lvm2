@@ -1,13 +1,51 @@
 #ifndef __DMEVENTD_DOT_H__
 #define __DMEVENTD_DOT_H__
 
+/* FIXME This stuff must be configurable. */
+
+#define	DM_EVENT_DAEMON		"/sbin/dmeventd"
+#define DM_EVENT_LOCKFILE	"/var/lock/dmeventd"
+#define	DM_EVENT_FIFO_CLIENT	"/var/run/dmeventd-client"
+#define	DM_EVENT_FIFO_SERVER	"/var/run/dmeventd-server"
+#define DM_EVENT_PIDFILE	"/var/run/dmeventd.pid"
+
+#define DM_EVENT_DEFAULT_TIMEOUT 10
+
+/* Commands for the daemon passed in the message below. */
+enum dm_event_command {
+	DM_EVENT_CMD_ACTIVE = 1,
+	DM_EVENT_CMD_REGISTER_FOR_EVENT,
+	DM_EVENT_CMD_UNREGISTER_FOR_EVENT,
+	DM_EVENT_CMD_GET_REGISTERED_DEVICE,
+	DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE,
+	DM_EVENT_CMD_SET_TIMEOUT,
+	DM_EVENT_CMD_GET_TIMEOUT,
+};
+
+/* Message passed between client and daemon. */
+struct dm_event_daemon_message {
+	uint32_t cmd;
+	uint32_t size;
+	char *data;
+};
+
+/* FIXME Is this meant to be exported?  I can't see where the
+   interface uses it. */
+/* Fifos for client/daemon communication. */
+struct dm_event_fifos {
+	int client;
+	int server;
+	const char *client_path;
+	const char *server_path;
+};
+
+/*      EXIT_SUCCESS             0 -- stdlib.h */
+/*      EXIT_FAILURE             1 -- stdlib.h */
 #define EXIT_LOCKFILE_INUSE      2
 #define EXIT_DESC_CLOSE_FAILURE  3
-#define EXIT_OPEN_PID_FAILURE    4
-#define EXIT_FIFO_FAILURE        5
-#define EXIT_CHDIR_FAILURE       6
-
-void dmeventd(void)
-    __attribute((noreturn));
+#define EXIT_DESC_OPEN_FAILURE   4
+#define EXIT_OPEN_PID_FAILURE    5
+#define EXIT_FIFO_FAILURE        6
+#define EXIT_CHDIR_FAILURE       7
 
 #endif /* __DMEVENTD_DOT_H__ */

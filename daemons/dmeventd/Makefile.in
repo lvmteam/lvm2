@@ -15,8 +15,7 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-SOURCES = libdevmapper-event.c \
-	  dmeventd.c
+SOURCES = libdevmapper-event.c
 
 LIB_STATIC = libdevmapper-event.a
 
@@ -26,12 +25,20 @@ else
   LIB_SHARED = libdevmapper-event.so
 endif
 
+TARGETS = dmeventd
+CLEAN_TARGETS = dmeventd.o
+
 include ../make.tmpl
 
+LDFLAGS += -ldl -ldevmapper -lpthread
 CLDFLAGS += -ldl -ldevmapper -lpthread
 
+dmeventd: $(LIB_SHARED) dmeventd.o
+	$(CC) -o $@ dmeventd.o $(LDFLAGS) \
+	-L. -ldevmapper-event $(LIBS) -rdynamic
+
 .PHONY: install_dynamic install_static install_include \
-	install_pkgconfig
+	install_pkgconfig install_dmeventd
 
 INSTALL_TYPE = install_dynamic
 
@@ -43,7 +50,7 @@ ifeq ("@PKGCONFIG@", "yes")
   INSTALL_TYPE += install_pkgconfig
 endif
 
-install: $(INSTALL_TYPE) install_include
+install: $(INSTALL_TYPE) install_include install_dmeventd
 
 install_include:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper-event.h \
@@ -54,6 +61,9 @@ install_dynamic: libdevmapper-event.$(LIB_SUFFIX)
 		$(libdir)/libdevmapper-event.$(LIB_SUFFIX).$(LIB_VERSION)
 	$(LN_S) -f libdevmapper-event.$(LIB_SUFFIX).$(LIB_VERSION) \
 		$(libdir)/libdevmapper-event.$(LIB_SUFFIX)
+
+install_dmeventd: dmeventd
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< $(sbindir)/$<
 
 install_pkgconfig:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper-event.pc \
