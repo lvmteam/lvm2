@@ -65,7 +65,8 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 		   checksum_fn_t checksum_fn, uint32_t checksum);
 
 int read_config_file(struct config_tree *cft);
-int write_config_file(struct config_tree *cft, const char *file);
+int write_config_file(struct config_tree *cft, const char *file,
+		      int argc, char **argv);
 time_t config_file_timestamp(struct config_tree *cft);
 int config_file_changed(struct config_tree *cft);
 int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,

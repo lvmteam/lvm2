@@ -19,15 +19,10 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 {
 	const char *file = NULL;
 
-	if (argc == 1)
-		file = argv[0];
+	if (arg_count(cmd, file_ARG))
+		file = arg_str_value(cmd, file_ARG, "");
 
-	if (argc > 1) {
-		log_error("Please specify one file for output");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!write_config_file(cmd->cft, file))
+	if (!write_config_file(cmd->cft, file, argc, argv))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;

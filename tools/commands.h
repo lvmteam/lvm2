@@ -30,7 +30,10 @@ xx(e2fsadm,
 
 xx(dumpconfig,
    "Dump active configuration",
-   "dumpconfig <filename>\n")
+   "dumpconfig "
+   "\t[-f|--file filename] " "\n"
+   "[ConfigurationVariable...]\n",
+   file_ARG)
 
 xx(formats,
    "List available metadata formats",

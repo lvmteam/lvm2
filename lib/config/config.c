@@ -373,7 +373,8 @@ static void _write_value(FILE *fp, struct config_value *v)
 	}
 }
 
-static int _write_config(struct config_node *n, FILE *fp, int level)
+static int _write_config(struct config_node *n, int only_one, FILE *fp,
+			 int level)
 {
 	char space[MAX_INDENT + 1];
 	int l = (level < MAX_INDENT) ? level : MAX_INDENT;
@@ -386,12 +387,12 @@ static int _write_config(struct config_node *n, FILE *fp, int level)
 		space[i] = '\t';
 	space[i] = '\0';
 
-	while (n) {
+	do {
 		fprintf(fp, "%s%s", space, n->key);
 		if (!n->v) {
 			/* it's a sub section */
 			fprintf(fp, " {\n");
-			_write_config(n->child, fp, level + 1);
+			_write_config(n->child, 0, fp, level + 1);
 			fprintf(fp, "%s}", space);
 		} else {
 			/* it's a value */
@@ -411,13 +412,15 @@ static int _write_config(struct config_node *n, FILE *fp, int level)
 		}
 		fprintf(fp, "\n");
 		n = n->sib;
-	}
+	} while (n && !only_one);
 	/* FIXME: add error checking */
 	return 1;
 }
 
-int write_config_file(struct config_tree *cft, const char *file)
+int write_config_file(struct config_tree *cft, const char *file,
+		      int argc, char **argv)
 {
+	struct config_node *cn;
 	int r = 1;
 	FILE *fp;
 
@@ -430,9 +433,22 @@ int write_config_file(struct config_tree *cft, const char *file)
 	}
 
 	log_verbose("Dumping configuration to %s", file);
-	if (!_write_config(cft->root, fp, 0)) {
-		log_error("Failure while writing configuration");
-		r = 0;
+	if (!argc) {
+		if (!_write_config(cft->root, 0, fp, 0)) {
+			log_error("Failure while writing configuration");
+			r = 0;
+		}
+	} else while (argc--) {
+		if ((cn = find_config_node(cft->root, *argv))) {
+			if (!_write_config(cn, 1, fp, 0)) {
+				log_error("Failure while writing configuration");
+				r = 0;
+			}
+		} else {
+			log_error("Configuration node %s not found", *argv);
+			r = 0;
+		}
+		argv++;
 	}
 
 	if (fp != stdout)

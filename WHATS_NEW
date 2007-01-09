@@ -1,5 +1,7 @@
 Version 2.02.18 -
 ====================================
+  dumpconfig accepts a list of configuration variables to display.
+  Change dumpconfig to use --file to redirect output to a file.
   Avoid vgreduce error when mirror code removes the log LV.
   Remove 3 redundant AC_MSG_RESULTs from configure.in.
   Free memory in _raw_read_mda_header() error paths.
