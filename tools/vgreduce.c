@@ -347,7 +347,9 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		list_iterate_items(lvl, &lvs_changed) {
 			log_verbose("Removing LV %s from VG %s", lvl->lv->name,
 				    lvl->lv->vg->name);
-			if (!lv_remove(lvl->lv)) {
+				/* Skip LVs already removed by mirror code */
+				if (find_lv_in_vg(vg, lvl->lv->name) &&
+				    !lv_remove(lvl->lv)) {
 				stack;
 				return 0;
 			}
