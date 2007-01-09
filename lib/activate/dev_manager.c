@@ -993,6 +993,8 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
 		break;
 	case SUSPEND:
 		dm_tree_skip_lockfs(root);
+		if ((lv->status & MIRRORED) && !(lv->status & PVMOVE))
+			dm_tree_use_no_flush_suspend(root);
 	case SUSPEND_WITH_LOCKFS:
 		if (!dm_tree_suspend_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;

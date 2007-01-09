@@ -526,6 +526,11 @@ AC_ARG_WITH(staticdir,
   	    [ STATICDIR="$withval" ],
  	    [ STATICDIR='${exec_prefix}/sbin' ])
 
+AC_ARG_WITH(dmdir,
+	    [  --with-dmdir=DIR        Build against device-mapper source tree in DIR],
+  	    [ DMDIR="$withval" ],
+	    [ DMDIR= ])
+
 ################################################################################
 dnl -- Ensure additional headers required
 if test x$READLINE = xyes; then
@@ -608,6 +613,7 @@ AC_SUBST(MSGFMT)
 AC_SUBST(LOCALEDIR)
 AC_SUBST(CONFDIR)
 AC_SUBST(STATICDIR)
+AC_SUBST(DMDIR)
 AC_SUBST(INTL_PACKAGE)
 AC_SUBST(INTL)
 AC_SUBST(CLVMD)

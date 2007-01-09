@@ -310,7 +310,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=/usr
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CFLOW_CMD CSCOPE_CMD CPP EGREP ALLOCA LIBOBJS POW_LIB MSGFMT MODPROBE_CMD JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP COPTIMISE_FLAG CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LDDEPS LIB_SUFFIX LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX HAVE_REALTIME CMDLIB LOCALEDIR CONFDIR STATICDIR INTL_PACKAGE INTL CLVMD CLUSTER FSADM DMEVENTD LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN_S SET_MAKE RANLIB ac_ct_RANLIB CFLOW_CMD CSCOPE_CMD CPP EGREP ALLOCA LIBOBJS POW_LIB MSGFMT MODPROBE_CMD JOBS STATIC_LINK LVM1 POOL SNAPSHOTS MIRRORS OWNER GROUP COPTIMISE_FLAG CLDFLAGS CLDWHOLEARCHIVE CLDNOWHOLEARCHIVE LDDEPS LIB_SUFFIX LVM_VERSION LVM1_FALLBACK DEBUG DEVMAPPER HAVE_LIBDL HAVE_SELINUX HAVE_REALTIME CMDLIB LOCALEDIR CONFDIR STATICDIR DMDIR INTL_PACKAGE INTL CLVMD CLUSTER FSADM DMEVENTD LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -883,6 +883,7 @@ Optional Packages:
   --with-localedir=DIR    Translation files in DIR PREFIX/share/locale
   --with-confdir=DIR      Configuration files in DIR /etc
   --with-staticdir=DIR    Static binary in DIR EXEC_PREFIX/sbin
+  --with-dmdir=DIR        Build against device-mapper source tree in DIR
 
 Some influential environment variables:
   CC          C compiler command
@@ -8964,6 +8965,15 @@ else
    STATICDIR='${exec_prefix}/sbin'
 fi;
 
+
+# Check whether --with-dmdir or --without-dmdir was given.
+if test "${with_dmdir+set}" = set; then
+  withval="$with_dmdir"
+   DMDIR="$withval"
+else
+   DMDIR=
+fi;
+
 ################################################################################
 if test x$READLINE = xyes; then
 
@@ -11202,6 +11212,7 @@ fi
 
 
 
+
 ################################################################################
                                                                                                                                                                                                                                                           ac_config_files="$ac_config_files Makefile make.tmpl daemons/Makefile daemons/clvmd/Makefile dmeventd/Makefile dmeventd/mirror/Makefile doc/Makefile include/Makefile lib/Makefile lib/format1/Makefile lib/format_pool/Makefile lib/locking/Makefile lib/mirror/Makefile lib/snapshot/Makefile man/Makefile po/Makefile scripts/Makefile tools/Makefile tools/version.h tools/fsadm/Makefile test/mm/Makefile test/device/Makefile test/format1/Makefile test/regex/Makefile test/filters/Makefile"
 cat >confcache <<\_ACEOF
@@ -11900,6 +11911,7 @@ s,@CMDLIB@,$CMDLIB,;t t
 s,@LOCALEDIR@,$LOCALEDIR,;t t
 s,@CONFDIR@,$CONFDIR,;t t
 s,@STATICDIR@,$STATICDIR,;t t
+s,@DMDIR@,$DMDIR,;t t
 s,@INTL_PACKAGE@,$INTL_PACKAGE,;t t
 s,@INTL@,$INTL,;t t
 s,@CLVMD@,$CLVMD,;t t
