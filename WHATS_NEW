@@ -1,5 +1,7 @@
 Version 2.02.18 -
 ====================================
+  Add configure --with-dmdir to compile against a device-mapper source tree.
+  Use no flush suspending for mirrors.
   Add dmeventd_mirror register_mutex, tidy initialisation & add memlock.
   Fix create mirror with name longer than 22 chars.
   Fix some activate.c prototypes when compiled without devmapper.
