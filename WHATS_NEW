@@ -1,5 +1,8 @@
 Version 2.02.18 -
 ====================================
+  Free memory in _raw_read_mda_header() error paths.
+  Fix ambiguous vgsplit error message for split LV.
+  Fix lvextend man page typo.
   Add configure --with-dmdir to compile against a device-mapper source tree.
   Use no flush suspending for mirrors.
   Add dmeventd_mirror register_mutex, tidy initialisation & add memlock.

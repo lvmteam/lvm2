@@ -132,37 +132,40 @@ static struct mda_header *_raw_read_mda_header(const struct format_type *fmt,
 
 	if (!dev_read(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah)) {
 		stack;
-		dm_pool_free(fmt->cmd->mem, mdah);
-		return NULL;
+		goto error;
 	}
 
 	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, mdah->magic,
 						  MDA_HEADER_SIZE -
 						  sizeof(mdah->checksum_xl)))) {
 		log_error("Incorrect metadata area header checksum");
-		return NULL;
+		goto error;
 	}
 
 	_xlate_mdah(mdah);
 
 	if (strncmp((char *)mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
 		log_error("Wrong magic number in metadata area header");
-		return NULL;
+		goto error;
 	}
 
 	if (mdah->version != FMTT_VERSION) {
 		log_error("Incompatible metadata area header version: %d",
 			  mdah->version);
-		return NULL;
+		goto error;
 	}
 
 	if (mdah->start != dev_area->start) {
 		log_error("Incorrect start sector in metadata area header: %"
 			  PRIu64, mdah->start);
-		return NULL;
+		goto error;
 	}
 
 	return mdah;
+
+error:
+	dm_pool_free(fmt->cmd->mem, mdah);
+	return NULL;
 }
 
 static int _raw_write_mda_header(const struct format_type *fmt,
