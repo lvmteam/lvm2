@@ -130,6 +130,7 @@ struct dm_tree {
 	struct dm_hash_table *uuids;
 	struct dm_tree_node root;
 	int skip_lockfs;		/* 1 skips lockfs (for non-snapshots) */
+	int no_flush;		/* 1 sets noflush (mirrors/multipath) */
 };
 
 /* FIXME Consider exporting this */
@@ -162,6 +163,7 @@ struct dm_tree *dm_tree_create(void)
 	list_init(&dtree->root.uses);
 	list_init(&dtree->root.used_by);
 	dtree->skip_lockfs = 0;
+	dtree->no_flush = 0;
 
 	if (!(dtree->mem = dm_pool_create("dtree", 1024))) {
 		log_error("dtree pool creation failed");
@@ -903,13 +905,15 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 }
 
 static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
-			 int skip_lockfs, struct dm_info *newinfo)
+			 int skip_lockfs, int no_flush, struct dm_info *newinfo)
 {
 	struct dm_task *dmt;
 	int r;
 
-	log_verbose("Suspending %s (%" PRIu32 ":%" PRIu32 ")%s", name, major,
-		    minor, skip_lockfs ? "" : " with filesystem sync.");
+	log_verbose("Suspending %s (%" PRIu32 ":%" PRIu32 ")%s%s",
+		    name, major, minor,
+		    skip_lockfs ? "" : " with filesystem sync",
+		    no_flush ? "" : " without device flush");
 
 	if (!(dmt = dm_task_create(DM_DEVICE_SUSPEND))) {
 		log_error("Suspend dm_task creation failed for %s", name);
@@ -927,6 +931,9 @@ static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
 
 	if (skip_lockfs && !dm_task_skip_lockfs(dmt))
 		log_error("Failed to set skip_lockfs flag.");
+
+	if (no_flush && !dm_task_no_flush(dmt))
+		log_error("Failed to set no_flush flag.");
 
 	if ((r = dm_task_run(dmt)))
 		r = dm_task_get_info(dmt, newinfo);
@@ -991,6 +998,11 @@ void dm_tree_skip_lockfs(struct dm_tree_node *dnode)
 	dnode->dtree->skip_lockfs = 1;
 }
 
+void dm_tree_use_no_flush_suspend(struct dm_tree_node *dnode)
+{
+	dnode->dtree->no_flush = 1;
+}
+
 int dm_tree_suspend_children(struct dm_tree_node *dnode,
 				   const char *uuid_prefix,
 				   size_t uuid_prefix_len)
@@ -1032,7 +1044,8 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 			continue;
 
 		if (!_suspend_node(name, info.major, info.minor,
-				   child->dtree->skip_lockfs, &newinfo)) {
+				   child->dtree->skip_lockfs,
+				   child->dtree->no_flush, &newinfo)) {
 			log_error("Unable to suspend %s (%" PRIu32
 				  ":%" PRIu32 ")", name, info.major,
 				  info.minor);
