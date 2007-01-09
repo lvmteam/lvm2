@@ -316,6 +316,16 @@ int dm_tree_suspend_children(struct dm_tree_node *dnode,
 void dm_tree_skip_lockfs(struct dm_tree_node *dnode);
 
 /*
+ * Set the 'noflush' flag when suspending devices.
+ * If the kernel supports it, instead of erroring outstanding I/O that
+ * cannot be completed, the I/O is queued and resubmitted when the
+ * device is resumed.  This affects multipath devices when all paths
+ * have failed and queue_if_no_path is set, and mirror devices when
+ * block_on_error is set and the mirror log has failed.
+ */
+void dm_tree_use_no_flush_suspend(struct dm_tree_node *dnode);
+
+/*
  * Is the uuid prefix present in the tree?
  * Only returns 0 if every node was checked successfully.
  * Returns 1 if the tree walk has to be aborted.
