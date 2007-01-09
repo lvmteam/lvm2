@@ -438,17 +438,13 @@ fi
 ################################################################################
 dnl -- Check for selinux
 if test x$SELINUX = xyes; then
-	AC_MSG_CHECKING(for sepol_check_context function)
 	AC_CHECK_LIB(sepol, sepol_check_context, HAVE_SEPOL=yes, HAVE_SEPOL=no)
-	AC_MSG_RESULT($HAVE_SEPOL)
 
 	if test x$HAVE_SEPOL = xyes; then
 		LIBS="-lsepol $LIBS"
 	fi
 
-	AC_MSG_CHECKING(for is_selinux_enabled function)
 	AC_CHECK_LIB(selinux, is_selinux_enabled, HAVE_SELINUX=yes, HAVE_SELINUX=no)
-	AC_MSG_RESULT($HAVE_SELINUX)
 
 	if test x$HAVE_SELINUX = xyes; then
 		AC_DEFINE([HAVE_SELINUX], 1, [Define to 1 to include support for selinux.])
@@ -461,9 +457,7 @@ fi
 ################################################################################
 dnl -- Check for realtime clock support
 if test x$REALTIME = xyes; then
-	AC_MSG_CHECKING(for clock_gettime function)
 	AC_CHECK_LIB(rt, clock_gettime, HAVE_REALTIME=yes, HAVE_REALTIME=no)
-	AC_MSG_RESULT($HAVE_REALTIME)
 
 	if test x$HAVE_REALTIME = xyes; then
 		AC_DEFINE([HAVE_REALTIME], 1, [Define to 1 to include support for realtime clock.])
