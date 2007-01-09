@@ -84,9 +84,9 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 				pv = seg_pv(seg, s);
 				if (vg_with) {
 					if (!pv_is_in_vg(vg_with, pv)) {
-						log_error("Logical Volume %s "
-							  "split between "
-							  "Volume Groups",
+						log_error("Can't split Logical "
+							  "Volume %s between "
+							  "two Volume Groups",
 							  lv->name);
 						return 0;
 					}
