@@ -1,5 +1,6 @@
 Version 2.02.18 -
 ====================================
+  Remove 3 redundant AC_MSG_RESULTs from configure.in.
   Free memory in _raw_read_mda_header() error paths.
   Fix ambiguous vgsplit error message for split LV.
   Fix lvextend man page typo.

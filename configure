@@ -8268,8 +8268,6 @@ fi
 
 ################################################################################
 if test x$SELINUX = xyes; then
-	echo "$as_me:$LINENO: checking for sepol_check_context function" >&5
-echo $ECHO_N "checking for sepol_check_context function... $ECHO_C" >&6
 	echo "$as_me:$LINENO: checking for sepol_check_context in -lsepol" >&5
 echo $ECHO_N "checking for sepol_check_context in -lsepol... $ECHO_C" >&6
 if test "${ac_cv_lib_sepol_sepol_check_context+set}" = set; then
@@ -8340,15 +8338,11 @@ else
   HAVE_SEPOL=no
 fi
 
-	echo "$as_me:$LINENO: result: $HAVE_SEPOL" >&5
-echo "${ECHO_T}$HAVE_SEPOL" >&6
 
 	if test x$HAVE_SEPOL = xyes; then
 		LIBS="-lsepol $LIBS"
 	fi
 
-	echo "$as_me:$LINENO: checking for is_selinux_enabled function" >&5
-echo $ECHO_N "checking for is_selinux_enabled function... $ECHO_C" >&6
 	echo "$as_me:$LINENO: checking for is_selinux_enabled in -lselinux" >&5
 echo $ECHO_N "checking for is_selinux_enabled in -lselinux... $ECHO_C" >&6
 if test "${ac_cv_lib_selinux_is_selinux_enabled+set}" = set; then
@@ -8419,8 +8413,6 @@ else
   HAVE_SELINUX=no
 fi
 
-	echo "$as_me:$LINENO: result: $HAVE_SELINUX" >&5
-echo "${ECHO_T}$HAVE_SELINUX" >&6
 
 	if test x$HAVE_SELINUX = xyes; then
 
@@ -8437,8 +8429,6 @@ fi
 
 ################################################################################
 if test x$REALTIME = xyes; then
-	echo "$as_me:$LINENO: checking for clock_gettime function" >&5
-echo $ECHO_N "checking for clock_gettime function... $ECHO_C" >&6
 	echo "$as_me:$LINENO: checking for clock_gettime in -lrt" >&5
 echo $ECHO_N "checking for clock_gettime in -lrt... $ECHO_C" >&6
 if test "${ac_cv_lib_rt_clock_gettime+set}" = set; then
@@ -8509,8 +8499,6 @@ else
   HAVE_REALTIME=no
 fi
 
-	echo "$as_me:$LINENO: result: $HAVE_REALTIME" >&5
-echo "${ECHO_T}$HAVE_REALTIME" >&6
 
 	if test x$HAVE_REALTIME = xyes; then
 
