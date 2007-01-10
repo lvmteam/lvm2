@@ -1,7 +1,8 @@
 Version 2.02.18 -
 ====================================
-  Print warning instead of error message if cannot zero volume
-  Update lvconvert man page (snapshot option)
+  Prevent permission changes on active mirrors.
+  Print warning instead of error message if lvconvert cannot zero volume.
+  Add snapshot options to lvconvert man page.
   dumpconfig accepts a list of configuration variables to display.
   Change dumpconfig to use --file to redirect output to a file.
   Avoid vgreduce error when mirror code removes the log LV.
