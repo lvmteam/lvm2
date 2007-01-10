@@ -434,6 +434,10 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	else
 		lp->permission = LVM_READ | LVM_WRITE;
 
+	/* Must not zero read only volume */
+	if (!(lp->permission & LVM_WRITE))
+		lp->zero = 0;
+
 	lp->minor = arg_int_value(cmd, minor_ARG, -1);
 	lp->major = arg_int_value(cmd, major_ARG, -1);
 

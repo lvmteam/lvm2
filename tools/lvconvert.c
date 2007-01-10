@@ -446,8 +446,8 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lp->zero)
-		log_error("WARNING: \"%s\" not zeroed", lv->name);
+	if (!lp->zero || !(lv->status & LVM_WRITE))
+		log_print("WARNING: \"%s\" not zeroed", lv->name);
 	else if (!set_lv(cmd, lv, 0, 0)) {
 			log_error("Aborting. Failed to wipe snapshot "
 				  "exception store.");
