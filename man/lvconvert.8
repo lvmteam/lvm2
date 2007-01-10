@@ -1,20 +1,35 @@
 .TH LVCONVERT 8 "LVM TOOLS" "Red Hat, Inc" \" -*- nroff -*-
 .SH NAME
-lvconvert \- convert a logical volume between linear and mirror
+lvconvert \- convert a logical volume from linear to mirror or snapshot
 .SH SYNOPSIS
 .B lvconvert
-[\-m/\-\-mirrors Mirrors [\-\-corelog] [\-R/\-\-regionsize MirrorLogRegionSize]]
+\-m/\-\-mirrors Mirrors [\-\-corelog] [\-R/\-\-regionsize MirrorLogRegionSize]
 [\-A/\-\-alloc AllocationPolicy]
 [\-h/\-?/\-\-help]
 [\-v/\-\-verbose]
 [\-\-version]
+.br
 LogicalVolume[Path] [PhysicalVolume[Path]...]
+.br
+
+.br
+.B lvconvert
+\-s/\-\-snapshot [\-c/\-\-chunksize ChunkSize]
+[\-h/\-?/\-\-help]
+[\-v/\-\-verbose]
+[\-Z/\-\-zero y/n]
+[\-\-version]
+.br
+OriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]
 .SH DESCRIPTION
 lvconvert will change a linear logical volume to a mirror
-logical volume or vis versa.  It is also used to add and
-remove disk logs from mirror devices.
+logical volume or to a snapshot of linear volume and vice versa.
+It is also used to add and remove disk logs from mirror devices.
 .SH OPTIONS
 See \fBlvm\fP for common options.
+.br
+Exactly one of \-\-mirrors or \-\-snapshot arguments required.
+.br
 .TP
 .I \-m, \-\-mirrors Mirrors
 Specifies the degree of the mirror you wish to create.
@@ -32,6 +47,19 @@ the mirror you are changing.
 .I \-R, \-\-regionsize MirrorLogRegionSize
 A mirror is divided into regions of this size (in MB), and the mirror log
 uses this granularity to track which regions are in sync.
+.br
+.TP
+.I \-s, \-\-snapshot
+Create a snapshot from existing logical volume using another
+existing logical volume as its origin.
+.TP
+.I \-c, \-\-chunksize ChunkSize
+Power of 2 chunk size for the snapshot logical volume between 4k and 512k.
+.TP
+.I \-Z, \-\-zero y/n
+Controls zeroing of the first KB of data in the snapshot.
+If the volume is read only snapshot will not be zeroed.
+.br
 .SH Examples
 "lvconvert -m1 vg00/lvol1"
 .br
@@ -49,6 +77,12 @@ two-way mirror with an in-memory log.
 .br
 converts a mirror logical volume to a linear logical
 volume.
+.br
+
+.br
+"lvconvert -s vg00/lvol1 vg00/lvol2"
+.br
+converts logical volume "vg00/lvol2" to snapshot of original volume "vg00/lvol1"
 
 .SH SEE ALSO
 .BR lvm (8),

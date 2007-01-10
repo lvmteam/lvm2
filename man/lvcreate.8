@@ -139,6 +139,10 @@ on the snapshot in order to check how much data is allocated to it.
 Controls zeroing of the first KB of data in the new logical volume.
 .br
 Default is yes.
+.br
+Volume will not be zeroed if read only flag is set.
+.br
+Snapshot volumes are zeroed always.
 
 .br
 Warning: trying to mount an unzeroed logical volume can cause the system to
