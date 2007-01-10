@@ -19,6 +19,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 			       struct logical_volume *lv)
 {
 	uint32_t lv_access;
+	struct lvinfo info;
 
 	lv_access = arg_uint_value(cmd, permission_ARG, 0);
 
@@ -31,6 +32,13 @@ static int lvchange_permission(struct cmd_context *cmd,
 	if (!(lv_access & LVM_WRITE) && !(lv->status & LVM_WRITE)) {
 		log_error("Logical volume \"%s\" is already read only",
 			  lv->name);
+		return 0;
+	}
+
+	if ((lv->status & MIRRORED) && (lv->vg->status & CLUSTERED) &&
+	    lv_info(cmd, lv, &info, 0) && info.exists) {
+		log_error("Cannot change permissions of mirror \"%s\" "
+			  "while active.", lv->name);
 		return 0;
 	}
 
