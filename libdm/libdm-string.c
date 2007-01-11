@@ -129,3 +129,33 @@ char *dm_basename(const char *path)
 	return p ? p + 1 : (char *) path;
 }
 
+int dm_saprintf(char **result, const char *format, ...)
+{
+	int n, ok = 0, size = 32;
+	va_list ap;
+	char *buf = dm_malloc(size);
+
+	*result = 0;
+
+	if (!buf)
+		return -1;
+
+	while (!ok) {
+		va_start(ap, format);
+		n = vsnprintf(buf, size, format, ap);
+		if (0 <= n && n < size)
+			ok = 1;
+		else {
+			dm_free(buf);
+			size *= 2;
+			buf = dm_malloc(size);
+			if (!buf)
+				return -1;
+		};
+		va_end(ap);
+	}
+
+	*result = dm_strdup(buf);
+	dm_free(buf);
+	return n + 1;
+}
