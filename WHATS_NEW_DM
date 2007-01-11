@@ -1,5 +1,6 @@
 Version 1.02.14 - 
 =============================
+  Use CFLAGS when linking so mixed sparc builds can supply -m64.
   Add dm_tree_use_no_flush_suspend().
   Lots of dmevent changes.
   Export dm_basename().
