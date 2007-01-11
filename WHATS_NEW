@@ -1,5 +1,5 @@
-Version 2.02.18 -
-====================================
+Version 2.02.18 - 11th January 2007
+===================================
   Revised libdevmapper-event interface for dmeventd.
   Remove dmeventd mirror status line word limit.
   Use CFLAGS when linking so mixed sparc builds can supply -m64.
