@@ -34,7 +34,7 @@ LDFLAGS += -ldl -ldevmapper -lpthread
 CLDFLAGS += -ldl -ldevmapper -lpthread
 
 dmeventd: $(LIB_SHARED) dmeventd.o
-	$(CC) -o $@ dmeventd.o $(LDFLAGS) \
+	$(CC) -o $@ dmeventd.o $(CFLAGS) $(LDFLAGS) \
 	-L. -ldevmapper-event $(LIBS) -rdynamic
 
 .PHONY: install_dynamic install_static install_include \
