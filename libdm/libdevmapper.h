@@ -623,4 +623,10 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...);
  */
 char *dm_basename(const char *path);
 
+/*
+ * Returns size of a buffer which is allocated with dm_malloc.
+ * Pointer to the buffer is stored in *buf.
+ */
+int dm_saprintf(char **buf, const char *format, ...);
+
 #endif				/* LIB_DEVICE_MAPPER_H */

@@ -1,8 +1,9 @@
 Version 1.02.14 - 
 =============================
+  Add dm_saprintf().
   Use CFLAGS when linking so mixed sparc builds can supply -m64.
   Add dm_tree_use_no_flush_suspend().
-  Lots of dmevent changes.
+  Lots of dmevent changes including revised interface.
   Export dm_basename().
   Cope with a trailing space when comparing tables prior to possible reload.
   Fix dmeventd to cope if monitored device disappears.

@@ -19,6 +19,7 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
+#include "configure.h"
 #include "libdevmapper.h"
 #include "libdevmapper-event.h"
 #include "list.h"
@@ -44,17 +45,17 @@
 #include <sys/resource.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include <arpa/inet.h> /* for htonl, ntohl */
+#include <arpa/inet.h>		/* for htonl, ntohl */
 
 #ifdef linux
 #include <malloc.h>
 #endif
 
-/* We must use syslog for now, because multilog is not yet implemented */
+/* FIXME We use syslog for now, because multilog is not yet implemented */
 #include <syslog.h>
 
-static volatile sig_atomic_t _exit_now = 0; /* set to '1' when signal is given to exit */
-static volatile sig_atomic_t _thread_registries_empty = 1; /* registries are empty initially */
+static volatile sig_atomic_t _exit_now = 0;	/* set to '1' when signal is given to exit */
+static volatile sig_atomic_t _thread_registries_empty = 1;	/* registries are empty initially */
 
 /* List (un)link macros. */
 #define	LINK(x, head)		list_add(head, &(x)->list)
@@ -78,19 +79,24 @@ static pthread_mutex_t _global_mutex;
 struct dso_data {
 	struct list list;
 
-	char *dso_name; /* DSO name (eg, "evms", "dmraid", "lvm2"). */
+	char *dso_name;		/* DSO name (eg, "evms", "dmraid", "lvm2"). */
 
-	void *dso_handle; /* Opaque handle as returned from dlopen(). */
-	unsigned int ref_count; /* Library reference count. */
+	void *dso_handle;	/* Opaque handle as returned from dlopen(). */
+	unsigned int ref_count;	/* Library reference count. */
 
 	/*
 	 * Event processing.
 	 *
-	 * The DSO can do whatever appropriate steps if an event happens
-	 * such as changing the mapping in case a mirror fails, update
-	 * the application metadata etc.
+	 * The DSO can do whatever appropriate steps if an event
+	 * happens such as changing the mapping in case a mirror
+	 * fails, update the application metadata etc.
+	 *
+	 * This function gets a dm_task that is a result of
+	 * DM_DEVICE_WAITEVENT ioctl (results equivalent to
+	 * DM_DEVICE_STATUS). It should not destroy it.
+	 * The caller must dispose of the task.
 	 */
-	void (*process_event)(const char *device, enum dm_event_type event);
+	void (*process_event)(struct dm_task *dmt, enum dm_event_type event);
 
 	/*
 	 * Device registration.
@@ -100,7 +106,8 @@ struct dso_data {
 	 * the process_event() function is sane (eg, read metadata
 	 * and activate a mapping).
 	 */
-	int (*register_device)(const char *device);
+	int (*register_device)(const char *device, const char *uuid, int major,
+			       int minor);
 
 	/*
 	 * Device unregistration.
@@ -109,14 +116,15 @@ struct dso_data {
 	 * for events, the DSO can recognize this and carry out appropriate
 	 * steps (eg, deactivate mapping, metadata update).
 	 */
-	int (*unregister_device)(const char *device);
+	int (*unregister_device)(const char *device, const char *uuid,
+				 int major, int minor);
 };
 static LIST_INIT(_dso_registry);
 
 /* Structure to keep parsed register variables from client message. */
 struct message_data {
 	char *dso_name;		/* Name of DSO. */
-	char *device_path;	/* Mapped device path. */
+	char *device_uuid;	/* Mapped device path. */
 	union {
 		char *str;	/* Events string as fetched from message. */
 		enum dm_event_type field;	/* Events bitfield. */
@@ -139,15 +147,19 @@ struct thread_status {
 
 	pthread_t thread;
 
-	struct dso_data *dso_data;/* DSO this thread accesses. */
-	
-	char *device_path;	/* Mapped device path. */
+	struct dso_data *dso_data;	/* DSO this thread accesses. */
+
+	struct {
+		char *uuid;
+		char *name;
+		int major, minor;
+	} device;
 	uint32_t event_nr;	/* event number */
 	int processing;		/* Set when event is being processed */
 	int status;		/* running/shutdown/done */
 	enum dm_event_type events;	/* bitfield for event filter. */
-	enum dm_event_type current_events;/* bitfield for occured events. */
-	enum dm_event_type processed_events;/* bitfield for processed events. */
+	enum dm_event_type current_events;	/* bitfield for occured events. */
+	struct dm_task *current_task;
 	time_t next_time;
 	uint32_t timeout;
 	struct list timeout_list;
@@ -168,13 +180,16 @@ static struct thread_status *alloc_thread_status(struct message_data *data,
 
 	if (ret) {
 		if (!memset(ret, 0, sizeof(*ret)) ||
-		    !(ret->device_path = dm_strdup(data->device_path))) {
+		    !(ret->device.uuid = dm_strdup(data->device_uuid))) {
 			dm_free(ret);
 			ret = NULL;
 		} else {
+			ret->current_task = NULL;
+			ret->device.name = NULL;
+			ret->device.major = ret->device.minor = 0;
 			ret->dso_data = dso_data;
-			ret->events   = data->events.field;
-			ret->timeout  = data->timeout.secs;
+			ret->events = data->events.field;
+			ret->timeout = data->timeout.secs;
 			list_init(&ret->timeout_list);
 		}
 	}
@@ -184,7 +199,8 @@ static struct thread_status *alloc_thread_status(struct message_data *data,
 
 static void free_thread_status(struct thread_status *thread)
 {
-	dm_free(thread->device_path);
+	dm_free(thread->device.uuid);
+	dm_free(thread->device.name);
 	dm_free(thread);
 }
 
@@ -213,9 +229,10 @@ static void free_dso_data(struct dso_data *data)
 
 /*
  * Fetch a string off src and duplicate it into *ptr.
- * Pay attention to 0 lenght strings.
+ * Pay attention to zero-length strings.
  */
-/* FIXME: move to separate module to share with the client lib. */
+/* FIXME? move to libdevmapper to share with the client lib (need to
+   make delimiter a parameter then) */
 static const char delimiter = ' ';
 static int fetch_string(char **ptr, char **src)
 {
@@ -250,8 +267,8 @@ static void free_message(struct message_data *message_data)
 	if (message_data->dso_name)
 		dm_free(message_data->dso_name);
 
-	if (message_data->device_path)
-		dm_free(message_data->device_path);
+	if (message_data->device_uuid)
+		dm_free(message_data->device_uuid);
 
 }
 
@@ -270,7 +287,7 @@ static int parse_message(struct message_data *message_data)
 	 * path and events # string from message.
 	 */
 	if (fetch_string(&message_data->dso_name, &p) &&
-	    fetch_string(&message_data->device_path, &p) &&
+	    fetch_string(&message_data->device_uuid, &p) &&
 	    fetch_string(&message_data->events.str, &p) &&
 	    fetch_string(&message_data->timeout.str, &p)) {
 		if (message_data->events.str) {
@@ -287,7 +304,7 @@ static int parse_message(struct message_data *message_data)
 			uint32_t secs = atoi(message_data->timeout.str);
 			dm_free(message_data->timeout.str);
 			message_data->timeout.secs = secs ? secs :
-							    DM_EVENT_DEFAULT_TIMEOUT;
+			    DM_EVENT_DEFAULT_TIMEOUT;
 		}
 
 		ret = 1;
@@ -330,23 +347,43 @@ static int storepid(int lf)
 	return 1;
 }
 
-/* FIXME This is unreliable: should use DM_DEVICE_INFO ioctl instead. */
 /* Check, if a device exists. */
-static int device_exists(char *device)
+static int fill_device_data(struct thread_status *ts)
 {
-	struct stat st_buf;
-	char path2[PATH_MAX];
+	struct dm_task *dmt;
+	struct dm_info dmi;
 
-	if (!device || !*device)
+	if (!ts->device.uuid)
 		return 0;
 
-	if (device[0] == '/') /* absolute path */
-		return !stat(device, &st_buf) && S_ISBLK(st_buf.st_mode);
+	ts->device.name = NULL;
+	ts->device.major = ts->device.minor = 0;
 
-	if (PATH_MAX <= snprintf(path2, PATH_MAX, "%s/%s", dm_dir(), device))
+	dmt = dm_task_create(DM_DEVICE_INFO);
+	if (!dmt)
 		return 0;
 
-	return !stat(path2, &st_buf) && S_ISBLK(st_buf.st_mode);
+	dm_task_set_uuid(dmt, ts->device.uuid);
+	if (!dm_task_run(dmt))
+		goto fail;
+
+	ts->device.name = dm_strdup(dm_task_get_name(dmt));
+	if (!ts->device.name)
+		goto fail;
+
+	if (!dm_task_get_info(dmt, &dmi))
+		goto fail;
+
+	ts->device.major = dmi.major;
+	ts->device.minor = dmi.minor;
+
+	dm_task_destroy(dmt);
+	return 1;
+
+      fail:
+	dm_task_destroy(dmt);
+	dm_free(ts->device.name);
+	return 0;
 }
 
 /*
@@ -359,12 +396,11 @@ static struct thread_status *lookup_thread_status(struct message_data *data)
 	struct thread_status *thread;
 
 	list_iterate_items(thread, &_thread_registry)
-		if (!strcmp(data->device_path, thread->device_path))
-			return thread;
+	    if (!strcmp(data->device_uuid, thread->device.uuid))
+		return thread;
 
 	return NULL;
 }
-
 
 /* Cleanup at exit. */
 static void exit_dm_lib(void)
@@ -392,11 +428,10 @@ static void *timeout_thread(void *unused)
 	while (!list_empty(&timeout_registry)) {
 		struct thread_status *thread;
 
-		timeout.tv_sec = (time_t)-1;
+		timeout.tv_sec = (time_t) -1;
 		curr_time = time(NULL);
 
-		list_iterate_items_gen(thread, &timeout_registry,
-				       timeout_list) {
+		list_iterate_items_gen(thread, &timeout_registry, timeout_list) {
 			if (thread->next_time < curr_time) {
 				thread->next_time = curr_time + thread->timeout;
 				pthread_kill(thread->thread, SIGALRM);
@@ -406,7 +441,8 @@ static void *timeout_thread(void *unused)
 				timeout.tv_sec = thread->next_time;
 		}
 
-		pthread_cond_timedwait(&_timeout_cond, &_timeout_mutex, &timeout);
+		pthread_cond_timedwait(&_timeout_cond, &_timeout_mutex,
+				       &timeout);
 	}
 
 	pthread_cleanup_pop(1);
@@ -452,7 +488,7 @@ static void unregister_for_timeout(struct thread_status *thread)
 }
 
 static void no_intr_log(int level, const char *file, int line,
-		       const char *f, ...)
+			const char *f, ...)
 {
 	va_list ap;
 
@@ -491,23 +527,22 @@ static sigset_t unblock_sigalrm(void)
 #define DM_WAIT_FATAL 2
 
 /* Wait on a device until an event occurs. */
-static int event_wait(struct thread_status *thread)
+static int event_wait(struct thread_status *thread, struct dm_task **task)
 {
 	sigset_t set;
 	int ret = DM_WAIT_RETRY;
-/*
-	void *next = NULL;
-	char *params, *target_type;
-	uint64_t start, length;
-*/
 	struct dm_task *dmt;
 	struct dm_info info;
+
+	*task = 0;
 
 	if (!(dmt = dm_task_create(DM_DEVICE_WAITEVENT)))
 		return DM_WAIT_RETRY;
 
-	if (!(ret = dm_task_set_name(dmt, dm_basename(thread->device_path))) ||
-	    !(ret = dm_task_set_event_nr(dmt, thread->event_nr)))
+	thread->current_task = dmt;
+
+	if (!dm_task_set_uuid(dmt, thread->device.uuid) ||
+	    !dm_task_set_event_nr(dmt, thread->event_nr))
 		goto out;
 
 	/*
@@ -517,31 +552,21 @@ static int event_wait(struct thread_status *thread)
 	set = unblock_sigalrm();
 	dm_log_init(no_intr_log);
 	errno = 0;
-	if ((ret = dm_task_run(dmt))) {
+	if (dm_task_run(dmt)) {
 		thread->current_events |= DM_EVENT_DEVICE_ERROR;
 		ret = DM_WAIT_INTR;
-
-		/*
-		 * FIXME:  I am setting processed_events to zero here
-		 * because it is causing problems.  for example, the
-		 * mirror target emits a signal for INSYNC, then
-		 * subsequent events (device failures) are not handled
-		 */
-		thread->processed_events = 0;
 
 		if ((ret = dm_task_get_info(dmt, &info)))
 			thread->event_nr = info.event_nr;
 	} else if (thread->events & DM_EVENT_TIMEOUT && errno == EINTR) {
 		thread->current_events |= DM_EVENT_TIMEOUT;
 		ret = DM_WAIT_INTR;
-		thread->processed_events = 0;
 	} else {
-		/* FIXME replace with log_* macro */
 		syslog(LOG_NOTICE, "dm_task_run failed, errno = %d, %s",
 		       errno, strerror(errno));
 		if (errno == ENXIO) {
-			/* FIXME replace with log_* macro */
-			syslog(LOG_ERR, "%s disappeared, detaching", thread->device_path);
+			syslog(LOG_ERR, "%s disappeared, detaching",
+			       thread->device.name);
 			ret = DM_WAIT_FATAL;
 		}
 	}
@@ -549,8 +574,12 @@ static int event_wait(struct thread_status *thread)
 	pthread_sigmask(SIG_SETMASK, &set, NULL);
 	dm_log_init(NULL);
 
-   out:
-	dm_task_destroy(dmt);
+      out:
+	if (ret == DM_WAIT_FATAL || ret == DM_WAIT_RETRY) {
+		dm_task_destroy(dmt);
+		thread->current_task = NULL;
+	} else
+		*task = dmt;
 
 	return ret;
 }
@@ -558,20 +587,25 @@ static int event_wait(struct thread_status *thread)
 /* Register a device with the DSO. */
 static int do_register_device(struct thread_status *thread)
 {
-	return thread->dso_data->register_device(thread->device_path);
+	return thread->dso_data->register_device(thread->device.name,
+						 thread->device.uuid,
+						 thread->device.major,
+						 thread->device.minor);
 }
 
 /* Unregister a device with the DSO. */
 static int do_unregister_device(struct thread_status *thread)
 {
-	return thread->dso_data->unregister_device(thread->device_path);
+	return thread->dso_data->unregister_device(thread->device.name,
+						   thread->device.uuid,
+						   thread->device.major,
+						   thread->device.minor);
 }
 
 /* Process an event in the DSO. */
-static void do_process_event(struct thread_status *thread)
+static void do_process_event(struct thread_status *thread, struct dm_task *task)
 {
-	thread->dso_data->process_event(thread->device_path,
-					thread->current_events);
+	thread->dso_data->process_event(task, thread->current_events);
 }
 
 /* Thread cleanup handler to unregister device. */
@@ -581,7 +615,10 @@ static void monitor_unregister(void *arg)
 
 	if (!do_unregister_device(thread))
 		syslog(LOG_ERR, "%s: %s unregister failed\n", __func__,
-			thread->device_path);
+		       thread->device.name);
+	if (thread->current_task)
+		dm_task_destroy(thread->current_task);
+	thread->current_task = NULL;
 }
 
 /* Device monitoring thread. */
@@ -589,6 +626,7 @@ static void *monitor_thread(void *arg)
 {
 	struct thread_status *thread = arg;
 	int wait_error = 0;
+	struct dm_task *task;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	pthread_cleanup_push(monitor_unregister, thread);
@@ -602,13 +640,17 @@ static void *monitor_thread(void *arg)
 	while (1) {
 		thread->current_events = 0;
 
-		wait_error = event_wait(thread);
+		wait_error = event_wait(thread, &task);
 		if (wait_error == DM_WAIT_RETRY)
 			continue;
 
-		/* FIXME Give a DSO a chance to clean up. */
 		if (wait_error == DM_WAIT_FATAL)
 			break;
+
+		/*
+		 * We know that wait succeeded and stored a
+		 * pointer to dm_task with device status into task.
+		 */
 
 		/*
 		 * Check against filter.
@@ -617,10 +659,6 @@ static void *monitor_thread(void *arg)
 		 * the device got registered for those events AND
 		 * those events haven't been processed yet, call
 		 * the DSO's process_event() handler.
-		 *
-		 * FIXME: when does processed_events get cleared?  What if
-		 * the same type of event happens later... after the first
-		 * was handled properly?
 		 */
 		lock_mutex();
 		if (thread->status == DM_THREAD_SHUTDOWN) {
@@ -629,17 +667,21 @@ static void *monitor_thread(void *arg)
 		}
 		unlock_mutex();
 
-		if (thread->events &
-		    thread->current_events &
-		    ~thread->processed_events) {
+		if (thread->events & thread->current_events) {
 			lock_mutex();
 			thread->processing = 1;
 			unlock_mutex();
-			do_process_event(thread);
-			thread->processed_events |= thread->current_events;
+
+			do_process_event(thread, task);
+			dm_task_destroy(task);
+			thread->current_task = NULL;
+
 			lock_mutex();
 			thread->processing = 0;
 			unlock_mutex();
+		} else {
+			dm_task_destroy(task);
+			thread->current_task = NULL;
 		}
 	}
 
@@ -647,12 +689,12 @@ static void *monitor_thread(void *arg)
 	thread->status = DM_THREAD_DONE;
 	unlock_mutex();
 
-	pthread_cleanup_pop(0);
+	pthread_cleanup_pop(1);
+
 	return NULL;
 }
 
 /* Create a device monitoring thread. */
-/* FIXME: call this with mutex hold ? */
 static int create_thread(struct thread_status *thread)
 {
 	return pthread_create(&thread->thread, NULL, monitor_thread, thread);
@@ -691,11 +733,11 @@ static struct dso_data *lookup_dso(struct message_data *data)
 	lock_mutex();
 
 	list_iterate_items(dso_data, &_dso_registry)
-		if (!strcmp(data->dso_name, dso_data->dso_name)) {
-			lib_get(dso_data);
-			ret = dso_data;
-			break;
-		}
+	    if (!strcmp(data->dso_name, dso_data->dso_name)) {
+		lib_get(dso_data);
+		ret = dso_data;
+		break;
+	}
 
 	unlock_mutex();
 
@@ -714,12 +756,12 @@ static int lookup_symbol(void *dl, struct dso_data *data,
 
 static int lookup_symbols(void *dl, struct dso_data *data)
 {
-	return lookup_symbol(dl, data, (void*) &data->process_event,
+	return lookup_symbol(dl, data, (void *) &data->process_event,
 			     "process_event") &&
-	       lookup_symbol(dl, data, (void*) &data->register_device,
-			     "register_device") &&
-	       lookup_symbol(dl, data, (void*) &data->unregister_device,
-			     "unregister_device");
+	    lookup_symbol(dl, data, (void *) &data->register_device,
+			  "register_device") &&
+	    lookup_symbol(dl, data, (void *) &data->unregister_device,
+			  "unregister_device");
 }
 
 /* Load an application specific DSO. */
@@ -728,13 +770,13 @@ static struct dso_data *load_dso(struct message_data *data)
 	void *dl;
 	struct dso_data *ret = NULL;
 
-	if (!(dl = dlopen(data->dso_name, RTLD_NOW))){
+	if (!(dl = dlopen(data->dso_name, RTLD_NOW))) {
 		const char *dlerr = dlerror();
-		syslog(LOG_ERR, "dmeventd %s dlopen failed: %s", data->dso_name, dlerr);
-		char buf[1024]; /* FIXME */
-		snprintf(buf, 1024, "%s dlopen failed: %s", data->dso_name, dlerr);
-		data->msg->size = strlen(buf) + 1;
-		data->msg->data = dm_strdup(buf);
+		syslog(LOG_ERR, "dmeventd %s dlopen failed: %s", data->dso_name,
+		       dlerr);
+		data->msg->size =
+		    dm_saprintf(&(data->msg->data), "%s dlopen failed: %s",
+				data->dso_name, dlerr);
 		return NULL;
 	}
 
@@ -763,7 +805,6 @@ static struct dso_data *load_dso(struct message_data *data)
 	return ret;
 }
 
-
 /* Return success on daemon active check. */
 static int active(struct message_data *message_data)
 {
@@ -782,16 +823,9 @@ static int register_for_event(struct message_data *message_data)
 	struct thread_status *thread, *thread_new = NULL;
 	struct dso_data *dso_data;
 
-	if (!device_exists(message_data->device_path)) {
-		stack;
-		ret = -ENODEV;
-		goto out;
-	}
-
 	if (!(dso_data = lookup_dso(message_data)) &&
 	    !(dso_data = load_dso(message_data))) {
 		stack;
-/* FIXME */
 #ifdef ELIBACC
 		ret = -ELIBACC;
 #else
@@ -799,11 +833,17 @@ static int register_for_event(struct message_data *message_data)
 #endif
 		goto out;
 	}
-		
+
 	/* Preallocate thread status struct to avoid deadlock. */
 	if (!(thread_new = alloc_thread_status(message_data, dso_data))) {
 		stack;
 		ret = -ENOMEM;
+		goto out;
+	}
+
+	if (!fill_device_data(thread_new)) {
+		stack;
+		ret = -ENODEV;
 		goto out;
 	}
 
@@ -812,10 +852,6 @@ static int register_for_event(struct message_data *message_data)
 	if (!(thread = lookup_thread_status(message_data))) {
 		unlock_mutex();
 
-		/*
-		 * FIXME: better do this asynchronously in the
-		 *        monitoring thread ?
-		 */
 		if (!(ret = do_register_device(thread_new)))
 			goto out;
 
@@ -836,7 +872,7 @@ static int register_for_event(struct message_data *message_data)
 	/* Or event # into events bitfield. */
 	thread->events |= message_data->events.field;
 
-	unlock_mutex(); 
+	unlock_mutex();
 
 	/* FIXME - If you fail to register for timeout events, you
 	   still monitor all the other events. Is this the right
@@ -847,7 +883,7 @@ static int register_for_event(struct message_data *message_data)
 	if (thread->events & DM_EVENT_TIMEOUT)
 		ret = -register_for_timeout(thread);
 
-   out:
+      out:
 	/*
 	 * Deallocate thread status after releasing
 	 * the lock in case we haven't used it.
@@ -894,7 +930,7 @@ static int unregister_for_event(struct message_data *message_data)
 	}
 	unlock_mutex();
 
-   out:
+      out:
 	return ret;
 }
 
@@ -906,42 +942,40 @@ static int unregister_for_event(struct message_data *message_data)
 static int registered_device(struct message_data *message_data,
 			     struct thread_status *thread)
 {
-	char test[1];
 	struct dm_event_daemon_message *msg = message_data->msg;
 
 	const char *fmt = "%s %s %u";
 	const char *dso = thread->dso_data->dso_name;
-	const char *dev = thread->device_path;
-	unsigned events = ((thread->status == DM_THREAD_RUNNING) && (thread->events)) ?
-			  thread->events : thread->events | DM_EVENT_REGISTRATION_PENDING;
+	const char *dev = thread->device.uuid;
+	unsigned events = ((thread->status == DM_THREAD_RUNNING)
+			   && (thread->events)) ? thread->events : thread->
+	    events | DM_EVENT_REGISTRATION_PENDING;
 
 	if (msg->data)
 		dm_free(msg->data);
 
-	msg->size = snprintf(test, 1, fmt, dso, dev, events);
-	msg->data = dm_malloc(msg->size);
-	snprintf(msg->data, msg->size, fmt, dso, dev, events);
+	msg->size = dm_saprintf(&(msg->data), fmt, dso, dev, events);
 
 	unlock_mutex();
 
 	return 0;
 }
 
-static int want_registered_device(char *dso_name, char *device_path,
+static int want_registered_device(char *dso_name, char *device_uuid,
 				  struct thread_status *thread)
 {
 	/* If DSO names and device paths are equal. */
-	if (dso_name && device_path)
+	if (dso_name && device_uuid)
 		return !strcmp(dso_name, thread->dso_data->dso_name) &&
-		       !strcmp(device_path, thread->device_path);
+		    !strcmp(device_uuid, thread->device.uuid);
 
 	/* If DSO names are equal. */
 	if (dso_name)
 		return !strcmp(dso_name, thread->dso_data->dso_name);
-		
+
 	/* If device paths are equal. */
-	if (device_path)
-		return !strcmp(device_path, thread->device_path);
+	if (device_uuid)
+		return !strcmp(device_uuid, thread->device.uuid);
 
 	return 1;
 }
@@ -955,10 +989,10 @@ static int _get_registered_device(struct message_data *message_data, int next)
 
 	/* Iterate list of threads checking if we want a particular one. */
 	list_iterate_items(thread, &_thread_registry)
-		if ((hit = want_registered_device(message_data->dso_name,
-						  message_data->device_path,
-						  thread)))
-			break;
+	    if ((hit = want_registered_device(message_data->dso_name,
+					      message_data->device_uuid,
+					      thread)))
+		break;
 
 	/*
 	 * If we got a registered device and want the next one ->
@@ -970,15 +1004,13 @@ static int _get_registered_device(struct message_data *message_data, int next)
 	do {
 		if (list_end(&_thread_registry, &thread->list))
 			goto out;
-		
-		thread = list_item(thread->list.n,
-				   struct thread_status);
-	} while (!want_registered_device(message_data->dso_name,
-					 NULL, thread));
+
+		thread = list_item(thread->list.n, struct thread_status);
+	} while (!want_registered_device(message_data->dso_name, NULL, thread));
 
 	return registered_device(message_data, thread);
 
-   out:
+      out:
 	unlock_mutex();
 
 	return -ENOENT;
@@ -1000,7 +1032,7 @@ static int set_timeout(struct message_data *message_data)
 
 	lock_mutex();
 	if ((thread = lookup_thread_status(message_data)))
-		thread->timeout = message_data->timeout.secs; 
+		thread->timeout = message_data->timeout.secs;
 	unlock_mutex();
 
 	return thread ? 0 : -ENODEV;
@@ -1016,9 +1048,8 @@ static int get_timeout(struct message_data *message_data)
 
 	lock_mutex();
 	if ((thread = lookup_thread_status(message_data))) {
-		msg->data = dm_malloc(8*sizeof(uint32_t)); /* FIXME */
-		msg->size = snprintf(msg->data, 8*sizeof(uint32_t),
-				     "%"PRIu32, thread->timeout);
+		msg->size =
+		    dm_saprintf(&(msg->data), "%" PRIu32, thread->timeout);
 	} else {
 		msg->data = NULL;
 		msg->size = 0;
@@ -1027,7 +1058,6 @@ static int get_timeout(struct message_data *message_data)
 
 	return thread ? 0 : -ENODEV;
 }
-	
 
 /* Initialize a fifos structure with path names. */
 static void init_fifos(struct dm_event_fifos *fifos)
@@ -1049,17 +1079,27 @@ static int open_fifos(struct dm_event_fifos *fifos)
 		return -errno;
 	}
 
-	/* FIXME Warn/abort if perms are wrong - not something to fix silently. */
+	struct stat st;
+
+	/* Warn about wrong permissions if applicable */
+	if ((!stat(fifos->client_path, &st)) && (st.st_mode & 0777) != 0600)
+		syslog(LOG_WARNING, "Fixing wrong permissions on %s",
+		       fifos->client_path);
+
+	if ((!stat(fifos->server_path, &st)) && (st.st_mode & 0777) != 0600)
+		syslog(LOG_WARNING, "Fixing wrong permissions on %s",
+		       fifos->server_path);
+
 	/* If they were already there, make sure permissions are ok. */
 	if (chmod(fifos->client_path, 0600)) {
 		syslog(LOG_ERR, "Unable to set correct file permissions on %s",
-			  fifos->client_path);
+		       fifos->client_path);
 		return -errno;
 	}
 
 	if (chmod(fifos->server_path, 0600)) {
 		syslog(LOG_ERR, "Unable to set correct file permissions on %s",
-			  fifos->server_path);
+		       fifos->server_path);
 		return -errno;
 	}
 
@@ -1083,7 +1123,8 @@ static int open_fifos(struct dm_event_fifos *fifos)
  * Read message from client making sure that data is available
  * and a complete message is read.  Must not block indefinitely.
  */
-static int client_read(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
+static int client_read(struct dm_event_fifos *fifos,
+		       struct dm_event_daemon_message *msg)
 {
 	struct timeval t;
 	unsigned bytes = 0;
@@ -1102,22 +1143,22 @@ static int client_read(struct dm_event_fifos *fifos, struct dm_event_daemon_mess
 		FD_SET(fifos->client, &fds);
 		t.tv_sec = 1;
 		t.tv_usec = 0;
-		ret = select(fifos->client+1, &fds, NULL, NULL, &t);
+		ret = select(fifos->client + 1, &fds, NULL, NULL, &t);
 
-		if (!ret && !bytes) /* nothing to read */
+		if (!ret && !bytes)	/* nothing to read */
 			return 0;
 
-		if (!ret)     /* trying to finish read */
+		if (!ret)	/* trying to finish read */
 			continue;
 
-		if (ret < 0)  /* error */
+		if (ret < 0)	/* error */
 			return 0;
 
 		ret = read(fifos->client, buf + bytes, size - bytes);
 		bytes += ret > 0 ? ret : 0;
-		if (bytes == 2*sizeof(uint32_t) && header) {
-			msg->cmd = ntohl(*((uint32_t *)buf));
-			msg->size = ntohl(*((uint32_t *)buf + 1));
+		if (bytes == 2 * sizeof(uint32_t) && header) {
+			msg->cmd = ntohl(*((uint32_t *) buf));
+			msg->size = ntohl(*((uint32_t *) buf + 1));
 			buf = msg->data = dm_malloc(msg->size);
 			size = msg->size;
 			bytes = 0;
@@ -1129,6 +1170,7 @@ static int client_read(struct dm_event_fifos *fifos, struct dm_event_daemon_mess
 		if (msg->data)
 			dm_free(msg->data);
 		msg->data = NULL;
+		msg->size = 0;
 	}
 
 	return bytes == size;
@@ -1137,18 +1179,20 @@ static int client_read(struct dm_event_fifos *fifos, struct dm_event_daemon_mess
 /*
  * Write a message to the client making sure that it is ready to write.
  */
-static int client_write(struct dm_event_fifos *fifos, struct dm_event_daemon_message *msg)
+static int client_write(struct dm_event_fifos *fifos,
+			struct dm_event_daemon_message *msg)
 {
 	unsigned bytes = 0;
 	int ret = 0;
 	fd_set fds;
 
-	size_t size = 2*sizeof(uint32_t) + msg->size;
+	size_t size = 2 * sizeof(uint32_t) + msg->size;
 	char *buf = alloca(size);
 
 	*((uint32_t *)buf) = htonl(msg->cmd);
 	*((uint32_t *)buf + 1) = htonl(msg->size);
-	memcpy(buf + 2*sizeof(uint32_t), msg->data, msg->size);
+	if (msg->data)
+		memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
 
 	errno = 0;
 	while (bytes < size && errno != EIO) {
@@ -1156,7 +1200,8 @@ static int client_write(struct dm_event_fifos *fifos, struct dm_event_daemon_mes
 			/* Watch client write FIFO to be ready for output. */
 			FD_ZERO(&fds);
 			FD_SET(fifos->server, &fds);
-		} while (select(fifos->server +1, NULL, &fds, NULL, NULL) != 1);
+		} while (select(fifos->server + 1, NULL, &fds, NULL, NULL) !=
+			 1);
 
 		ret = write(fifos->server, buf + bytes, size - bytes);
 		bytes += ret > 0 ? ret : 0;
@@ -1176,15 +1221,16 @@ static int handle_request(struct dm_event_daemon_message *msg,
 {
 	static struct {
 		unsigned int cmd;
-		int (*f)(struct message_data*);
+		int (*f)(struct message_data *);
 	} requests[] = {
-		{ DM_EVENT_CMD_REGISTER_FOR_EVENT,	   register_for_event },
-		{ DM_EVENT_CMD_UNREGISTER_FOR_EVENT,       unregister_for_event },
-		{ DM_EVENT_CMD_GET_REGISTERED_DEVICE,      get_registered_device },
-		{ DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE, get_next_registered_device },
-		{ DM_EVENT_CMD_SET_TIMEOUT,		   set_timeout },
-		{ DM_EVENT_CMD_GET_TIMEOUT,		   get_timeout },
-		{ DM_EVENT_CMD_ACTIVE,			   active },
+		{ DM_EVENT_CMD_REGISTER_FOR_EVENT, register_for_event},
+		{ DM_EVENT_CMD_UNREGISTER_FOR_EVENT, unregister_for_event},
+		{ DM_EVENT_CMD_GET_REGISTERED_DEVICE, get_registered_device},
+		{ DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE,
+			get_next_registered_device},
+		{ DM_EVENT_CMD_SET_TIMEOUT, set_timeout},
+		{ DM_EVENT_CMD_GET_TIMEOUT, get_timeout},
+		{ DM_EVENT_CMD_ACTIVE, active},
 	}, *req;
 
 	for (req = requests; req < requests + sizeof(requests); req++)
@@ -1203,8 +1249,7 @@ static int do_process_request(struct dm_event_daemon_message *msg)
 	/* Parse the message. */
 	memset(&message_data, 0, sizeof(message_data));
 	message_data.msg = msg;
-	if (msg->cmd != DM_EVENT_CMD_ACTIVE &&
-	    !parse_message(&message_data)) {
+	if (msg->cmd != DM_EVENT_CMD_ACTIVE && !parse_message(&message_data)) {
 		stack;
 		ret = -EINVAL;
 	} else
@@ -1220,15 +1265,11 @@ static void process_request(struct dm_event_fifos *fifos)
 {
 	struct dm_event_daemon_message msg;
 
-	/* FIXME: better error handling */
-
 	memset(&msg, 0, sizeof(msg));
 
 	/*
-	 * Read the request from the client.
-	 * Of course, it's tough to tell what to do when
-	 * we use fucking retarded return codes like
-	 * 0 for error.
+	 * Read the request from the client (client_read, client_write
+	 * give true on success and false on failure).
 	 */
 	if (!client_read(fifos, &msg))
 		return;
@@ -1236,7 +1277,12 @@ static void process_request(struct dm_event_fifos *fifos)
 	msg.cmd = do_process_request(&msg);
 	if (!msg.data) {
 		msg.data = dm_strdup(strerror(-msg.cmd));
-		msg.size = strlen(msg.data) + 1;
+		if (msg.data)
+			msg.size = strlen(msg.data) + 1;
+		else {
+			msg.size = 0;
+			stack;
+		}
 	}
 
 	if (!client_write(fifos, &msg))
@@ -1256,7 +1302,7 @@ static void cleanup_unused_threads(void)
 	while ((l = list_first(&_thread_registry_unused))) {
 		thread = list_item(l, struct thread_status);
 		if (thread->processing) {
-			goto out;  /* cleanup on the next round */
+			goto out;	/* cleanup on the next round */
 		}
 
 		if (thread->status == DM_THREAD_RUNNING) {
@@ -1270,14 +1316,16 @@ static void cleanup_unused_threads(void)
 				if (ret == ESRCH) {
 					thread->status = DM_THREAD_DONE;
 				} else if (ret) {
-					syslog(LOG_ERR, "Unable to terminate thread: %s\n",
+					syslog(LOG_ERR,
+					       "Unable to terminate thread: %s\n",
 					       strerror(-ret));
 					stack;
 				}
 				goto out;
 			} else {
 				list_del(l);
-				syslog(LOG_ERR, "thread can't be on unused list unless !thread->events");
+				syslog(LOG_ERR,
+				       "thread can't be on unused list unless !thread->events");
 				thread->status = DM_THREAD_RUNNING;
 				LINK_THREAD(thread);
 			}
@@ -1288,7 +1336,7 @@ static void cleanup_unused_threads(void)
 			free_thread_status(thread);
 		}
 	}
-out:
+      out:
 	unlock_mutex();
 }
 
@@ -1302,7 +1350,7 @@ static void init_thread_signals(void)
 {
 	sigset_t my_sigset;
 	struct sigaction act;
-	
+
 	memset(&act, 0, sizeof(act));
 	act.sa_handler = sig_alarm;
 	sigaction(SIGALRM, &act, NULL);
@@ -1344,7 +1392,7 @@ static void exit_handler(int sig)
 static int lock_pidfile(void)
 {
 	int lf;
-	char pidfile[] = "/var/run/dmeventd.pid"; /* FIXME Must be configurable at compile-time! */
+	char pidfile[] = DMEVENTD_PIDFILE;
 
 	if ((lf = open(pidfile, O_CREAT | O_RDWR, 0644)) < 0)
 		exit(EXIT_OPEN_PID_FAILURE);
@@ -1383,11 +1431,11 @@ static void daemonize(void)
 		/* Wait for response from child */
 		while (!waitpid(pid, &status, WNOHANG) && !_exit_now) {
 			tval.tv_sec = 0;
-			tval.tv_usec = 250000; /* .25 sec */
+			tval.tv_usec = 250000;	/* .25 sec */
 			select(0, NULL, NULL, NULL, &tval);
 		}
 
-		if (_exit_now) /* Child has signaled it is ok - we can exit now */
+		if (_exit_now)	/* Child has signaled it is ok - we can exit now */
 			exit(EXIT_SUCCESS);
 
 		/* Problem with child.  Determine what it is by exit code */
@@ -1408,7 +1456,7 @@ static void daemonize(void)
 			break;
 		}
 
-		exit(EXIT_FAILURE);  /* Redundant */
+		exit(EXIT_FAILURE);	/* Redundant */
 	}
 
 	setsid();
@@ -1416,7 +1464,7 @@ static void daemonize(void)
 		exit(EXIT_CHDIR_FAILURE);
 
 	if (getrlimit(RLIMIT_NOFILE, &rlim) < 0)
-		fd = 256;  /* just have to guess */
+		fd = 256;	/* just have to guess */
 	else
 		fd = rlim.rlim_cur;
 
@@ -1430,7 +1478,7 @@ static void daemonize(void)
 
 	openlog("dmeventd", LOG_PID, LOG_DAEMON);
 
-	lock_pidfile();  /* exits if failure */
+	lock_pidfile();		/* exits if failure */
 
 	/* Set the rest of the signals to cause '_exit_now' to be set */
 	signal(SIGINT, &exit_handler);
@@ -1472,7 +1520,8 @@ int main(int argc, char *argv[])
 	while (!_exit_now) {
 		process_request(&fifos);
 		cleanup_unused_threads();
-		if (!list_empty(&_thread_registry) || !list_empty(&_thread_registry_unused))
+		if (!list_empty(&_thread_registry)
+		    || !list_empty(&_thread_registry_unused))
 			_thread_registries_empty = 0;
 		else
 			_thread_registries_empty = 1;
