@@ -75,6 +75,9 @@ endif
 
 ifneq ("@DMDIR@", "")
   LDFLAGS += -L@DMDIR@/lib/ioctl
+  ifeq ("@DMEVENTD@", "yes")
+    LDFLAGS += -L@DMDIR@/dmeventd
+  endif
 endif
 
 LDFLAGS += -L$(top_srcdir)/lib -L$(libdir)
@@ -170,18 +173,19 @@ $(TARGETS): $(OBJECTS)
 ifeq ("@LIB_SUFFIX@","so")
 $(LIB_SHARED): $(OBJECTS) $(LDDEPS)
 	$(CC) -shared -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
-	$(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
+	$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
 endif
 
 ifeq ("@LIB_SUFFIX@","dylib")
 $(LIB_SHARED): $(OBJECTS) $(LDDEPS)
 	$(CC) -dynamiclib -dylib_current_version,$(LIB_VERSION) \
-	$(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
+	$(CFLAGS) $(CLDFLAGS) $(OBJECTS) $(LIBS) -o $@
 endif
 
 %.so: %.a
 	$(CC) -shared -Wl,-soname,$(notdir $@).$(LIB_VERSION) \
-	$(CLDFLAGS) $(LIBS) -o $@ @CLDWHOLEARCHIVE@ $< @CLDNOWHOLEARCHIVE@
+	$(CFLAGS) $(CLDFLAGS) $(LIBS) -o $@ \
+	@CLDWHOLEARCHIVE@ $< @CLDNOWHOLEARCHIVE@
 
 $(LIB_STATIC): $(OBJECTS)
 	$(RM) $@

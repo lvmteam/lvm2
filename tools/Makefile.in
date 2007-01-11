@@ -101,11 +101,12 @@ DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 include $(top_srcdir)/make.tmpl
 
 lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o $@ $(OBJECTS) lvm.o $(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm.o \
+		$(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
 
 lvm.static: $(OBJECTS) lvm-static.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o $@ $(OBJECTS) lvm-static.o -static $(LDFLAGS) $(LVMLIBS) \
-		$(LIBS) -rdynamic
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm-static.o -static \
+		$(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
 
 liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
 	cat $(top_srcdir)/lib/liblvm.a > $@

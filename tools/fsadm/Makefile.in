@@ -23,7 +23,7 @@ TARGETS = fsadm
 include $(top_srcdir)/make.tmpl
 
 fsadm: $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) -rdynamic
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) -rdynamic
 
 install: fsadm
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) fsadm \

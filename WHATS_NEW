@@ -1,5 +1,6 @@
 Version 2.02.18 -
 ====================================
+  Use CFLAGS when linking so mixed sparc builds can supply -m64.
   Prevent permission changes on active mirrors.
   Print warning instead of error message if lvconvert cannot zero volume.
   Add snapshot options to lvconvert man page.
