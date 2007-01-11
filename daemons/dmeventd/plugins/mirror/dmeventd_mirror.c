@@ -58,7 +58,7 @@ static int _get_mirror_event(char *params)
 	char *dev_status_str;
 	char *log_status_str;
 	char *sync_str;
-	char *p;
+	char *p = NULL;
 	int log_argc, num_devs;
 
 	/*
@@ -70,12 +70,13 @@ static int _get_mirror_event(char *params)
 	if (!dm_split_words(params, 1, 0, &p))
 		goto out_parse;
 
-	num_devs = atoi(p);
+	if (!(num_devs = atoi(p)))
+		goto out_parse;
 	p += strlen(p) + 1;
 
 	/* devices names + max log parameters */
 	args = dm_malloc((num_devs + 8) * sizeof(char *));
-	if (!args || dm_split_words(p, num_devs + 8, 0, args) < num_devs)
+	if (!args || dm_split_words(p, num_devs + 8, 0, args) < num_devs + 8)
 		goto out_parse;
 
 	dev_status_str = args[2 + num_devs];
