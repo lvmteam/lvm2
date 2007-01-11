@@ -397,6 +397,7 @@ static int _target_register_events(struct lv_segment *seg,
 	char *dso, *name;
 	struct logical_volume *lv;
 	struct volume_group *vg;
+	struct dm_event_handler *handler;
 
 	lv = seg->lv;
 	vg = lv->vg;
@@ -409,9 +410,17 @@ static int _target_register_events(struct lv_segment *seg,
 	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
-	/* FIXME Save a returned handle here so we can unregister it later */
-	if (!dm_event_register(dso, name, DM_EVENT_ALL_ERRORS))
+	if (!(handler = dm_event_handler_create()))
 		return_0;
+
+	dm_event_handler_set_dso(handler, dso);
+	dm_event_handler_set_name(handler, name);
+	dm_event_handler_set_events(handler, DM_EVENT_ALL_ERRORS);
+	if (!dm_event_register(handler)) {
+		dm_event_handler_destroy(handler);
+		return_0;
+	}
+	dm_event_handler_destroy(handler);
 
 	log_info("Registered %s for events", name);
 
@@ -425,6 +434,7 @@ static int _target_unregister_events(struct lv_segment *seg,
 	char *name;
 	struct logical_volume *lv;
 	struct volume_group *vg;
+	struct dm_event_handler *handler;
 
 	lv = seg->lv;
 	vg = lv->vg;
@@ -436,9 +446,17 @@ static int _target_unregister_events(struct lv_segment *seg,
 	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
-	/* FIXME Use handle returned by registration function instead of dso */
-	if (!dm_event_unregister(dso, name, DM_EVENT_ALL_ERRORS))
+	if (!(handler = dm_event_handler_create()))
 		return_0;
+
+	dm_event_handler_set_dso(handler, dso);
+	dm_event_handler_set_name(handler, name);
+	dm_event_handler_set_events(handler, DM_EVENT_ALL_ERRORS);
+	if (!dm_event_unregister(handler)) {
+		dm_event_handler_destroy(handler);
+		return_0;
+	}
+	dm_event_handler_destroy(handler);
 
 	log_info("Unregistered %s for events", name);
 

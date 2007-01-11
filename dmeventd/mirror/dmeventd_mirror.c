@@ -161,34 +161,18 @@ static int _remove_failed_devices(const char *device)
 	return (r == 1) ? 0 : -1;
 }
 
-void process_event(const char *device, enum dm_event_type event)
+void process_event(struct dm_task *dmt, enum dm_event_type event)
 {
-	struct dm_task *dmt;
 	void *next = NULL;
 	uint64_t start, length;
 	char *target_type = NULL;
 	char *params;
+	const char *device = dm_task_get_name(dmt);
 
 	if (pthread_mutex_trylock(&_event_mutex)) {
 		syslog(LOG_NOTICE, "Another thread is handling an event.  Waiting...");
 		pthread_mutex_lock(&_event_mutex);
 	}
-	/* FIXME Move inside libdevmapper */
-	if (!(dmt = dm_task_create(DM_DEVICE_STATUS))) {
-		syslog(LOG_ERR, "Unable to create dm_task.\n");
-		goto fail;
-	}
-
-	if (!dm_task_set_name(dmt, device)) {
-		syslog(LOG_ERR, "Unable to set device name.\n");
-		goto fail;
-	}
-
-	if (!dm_task_run(dmt)) {
-		syslog(LOG_ERR, "Unable to run task.\n");
-		goto fail;
-	}
-
 	do {
 		next = dm_get_next_target(dmt, next, &start, &length,
 					  &target_type, &params);
@@ -226,24 +210,21 @@ void process_event(const char *device, enum dm_event_type event)
 		case ME_IGNORE:
 			break;
 		default:
-			/* FIXME Wrong: it can also return -E2BIG but it's never used! */
+			/* FIXME Provide value then! */
 			syslog(LOG_INFO, "Unknown event received.\n");
 		}
 	} while (next);
 
- fail:
-	if (dmt)
-		dm_task_destroy(dmt);
 	pthread_mutex_unlock(&_event_mutex);
 }
 
-int register_device(const char *device)
+int register_device(const char *device, const char *uuid, int major, int minor)
 {
 	int r = 0;
 
 	pthread_mutex_lock(&_register_mutex);
 
-	syslog(LOG_INFO, "Monitoring mirror device, %s for events\n", device);
+	syslog(LOG_INFO, "Monitoring mirror device %s for events\n", device);
 
 	/*
 	 * Need some space for allocations.  1024 should be more
@@ -273,9 +254,12 @@ out:
 	return r;
 }
 
-int unregister_device(const char *device)
+int unregister_device(const char *device, const char *uuid, int major, int minor)
 {
 	pthread_mutex_lock(&_register_mutex);
+
+	syslog(LOG_INFO, "No longer monitoring mirror device %s for events\n",
+	       device);
 
 	if (!--_register_count) {
 		dm_pool_destroy(_mem_pool);
