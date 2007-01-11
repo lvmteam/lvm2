@@ -1,5 +1,6 @@
 Version 2.02.18 -
 ====================================
+  Remove dmeventd mirror status line word limit.
   Use CFLAGS when linking so mixed sparc builds can supply -m64.
   Prevent permission changes on active mirrors.
   Print warning instead of error message if lvconvert cannot zero volume.
