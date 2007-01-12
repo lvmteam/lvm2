@@ -15,7 +15,6 @@
 #include "libdevmapper.h"
 #include "libdevmapper-event.h"
 #include "lvm2cmd.h"
-#include "lvm-string.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -62,8 +61,12 @@ static int _get_mirror_event(char *params)
 	int log_argc, num_devs;
 
 	/*
-	 * Unused:  0 409600 mirror
-	 * Used  :  2 253:4 253:5 400/400 1 AA 3 cluster 253:3 A
+	 * dm core parms:	     0 409600 mirror
+	 * Mirror core parms:	     2 253:4 253:5 400/400
+	 * New-style failure params: 1 AA
+	 * New-style log params:     3 cluster 253:3 A
+	 *			 or  3 disk 253:3 A
+	 *			 or  1 core
 	 */
 
 	/* number of devices */
@@ -74,9 +77,9 @@ static int _get_mirror_event(char *params)
 		goto out_parse;
 	p += strlen(p) + 1;
 
-	/* devices names + max log parameters */
-	args = dm_malloc((num_devs + 8) * sizeof(char *));
-	if (!args || dm_split_words(p, num_devs + 8, 0, args) < num_devs + 8)
+	/* devices names + "400/400" + "1 AA" + 1 or 3 log parms + NULL */
+	args = dm_malloc((num_devs + 7) * sizeof(char *));
+	if (!args || dm_split_words(p, num_devs + 7, 0, args) < num_devs + 5)
 		goto out_parse;
 
 	dev_status_str = args[2 + num_devs];

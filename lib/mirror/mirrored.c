@@ -368,13 +368,12 @@ static int _mirrored_target_present(const struct lv_segment *seg __attribute((un
 }
 
 #ifdef DMEVENTD
-static int _setup_registration(struct dm_pool *mem, struct cmd_context *cmd,
-			       char **dso)
+static int _setup_registration(struct cmd_context *cmd, char **dso)
 {
 	char *path;
 	const char *libpath;
 
-	if (!(path = dm_pool_alloc(mem, PATH_MAX))) {
+	if (!(path = dm_pool_alloc(cmd->mem, PATH_MAX))) {
 		log_error("Failed to allocate dmeventd library path.");
 		return 0;
 	}
@@ -389,9 +388,40 @@ static int _setup_registration(struct dm_pool *mem, struct cmd_context *cmd,
 	return 1;
 }
 
+static int _target_registered(struct lv_segment *seg, int *pending)
+{
+	char *dso, *name;
+	struct logical_volume *lv;
+	struct volume_group *vg;
+	enum dm_event_type events = 0;
+
+	lv = seg->lv;
+	vg = lv->vg;
+
+	*pending = 0;
+	if (!_setup_registration(vg->cmd, &dso)) {
+		stack;
+		return 0;
+	}
+
+	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
+		return_0;
+
+	if (!dm_event_get_registered_device(&dso, &name, &events, 0))
+		return 0;
+
+	if (events & DM_EVENT_REGISTRATION_PENDING) {
+		*pending = 1;
+		events &= ~DM_EVENT_REGISTRATION_PENDING;
+	}
+
+	return events;
+}
+
 /* FIXME This gets run while suspended and performs banned operations. */
 /* FIXME Merge these two functions */
-static int _target_register_events(struct lv_segment *seg,
+static int _target_register_events(struct cmd_context *cmd,
+				   struct lv_segment *seg,
 				   int events)
 {
 	char *dso, *name;
@@ -402,12 +432,12 @@ static int _target_register_events(struct lv_segment *seg,
 	lv = seg->lv;
 	vg = lv->vg;
 
-	if (!_setup_registration(vg->cmd->mem, vg->cmd, &dso)) {
+	if (!_setup_registration(cmd, &dso)) {
 		stack;
 		return 0;
 	}
 
-	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
+	if (!(name = build_dm_name(cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
 	if (!(handler = dm_event_handler_create()))
@@ -427,7 +457,8 @@ static int _target_register_events(struct lv_segment *seg,
 	return 1;
 }
 
-static int _target_unregister_events(struct lv_segment *seg,
+static int _target_unregister_events(struct cmd_context *cmd,
+				     struct lv_segment *seg,
 				     int events)
 {
 	char *dso;
@@ -440,10 +471,10 @@ static int _target_unregister_events(struct lv_segment *seg,
 	vg = lv->vg;
 
 	/* FIXME Remove this and use handle to avoid config file race */
-	if (!_setup_registration(vg->cmd->mem, vg->cmd, &dso))
+	if (!_setup_registration(cmd, &dso))
 		return_0;
 
-	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
+	if (!(name = build_dm_name(cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
 	if (!(handler = dm_event_handler_create()))
@@ -504,6 +535,7 @@ static struct segtype_handler _mirrored_ops = {
 	.target_percent = _mirrored_target_percent,
 	.target_present = _mirrored_target_present,
 #ifdef DMEVENTD
+	.target_registered = _target_registered,
 	.target_register_events = _target_register_events,
 	.target_unregister_events = _target_unregister_events,
 #endif
@@ -530,7 +562,7 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	segtype->ops = &_mirrored_ops;
 	segtype->name = "mirror";
 	segtype->private = NULL;
-	segtype->flags = SEG_AREAS_MIRRORED;
+	segtype->flags = SEG_AREAS_MIRRORED | SEG_MONITORED;
 
 	log_very_verbose("Initialised segtype: %s", segtype->name);
 

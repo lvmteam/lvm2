@@ -1,5 +1,7 @@
 Version 2.02.19 - 
 ===================================
+  Report dmeventd mirror monitoring status.
+  Fix dmeventd mirror status line processing.
 
 Version 2.02.18 - 11th January 2007
 ===================================

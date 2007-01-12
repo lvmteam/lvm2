@@ -104,8 +104,10 @@ static int lvchange_registration(struct cmd_context *cmd,
 			  (dmeventd_register_mode()) ? "" : "un", lv->name);
 		r = 0;
 	} else if (!r) {
-		log_verbose("Logical volume %s needs no monitoring.",
-			    lv->name);
+		log_verbose("Logical volume %s needs no %smonitoring, or is already %smonitored",
+			    (dmeventd_register_mode()) ? "" : "un",
+			    lv->name,
+			    (dmeventd_register_mode()) ? "" : "un");
 		r = 1;
 	}
 
