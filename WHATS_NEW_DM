@@ -1,5 +1,6 @@
 Version 1.02.15 -
 ===================================
+  Reinstate dm_event_get_registered_device.
 
 Version 1.02.14 - 11th January 2007
 ===================================

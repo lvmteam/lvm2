@@ -78,6 +78,10 @@ int dm_event_handler_get_major(const struct dm_event_handler *h);
 int dm_event_handler_get_minor(const struct dm_event_handler *h);
 enum dm_event_type dm_event_handler_get_events(const struct dm_event_handler *h);
 
+/* FIXME */
+int dm_event_get_registered_device(char **dso_name, char **device_path,
+				   enum dm_event_type *events, int next);
+
 /* Call out to dmeventd to register or unregister a handler. If
    dmeventd is not running, it is spawned first. */
 int dm_event_register(const struct dm_event_handler *h);
