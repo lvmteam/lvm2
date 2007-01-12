@@ -53,8 +53,7 @@ static int _register_lvs_in_vg(struct cmd_context *cmd,
 	}
 
 	/*
-	 * returns the number of monitored devices, not the number
-	 * of _new_ monitored devices
+	 * returns the number of _new_ monitored devices
 	 */
 
 	return count;
@@ -117,7 +116,7 @@ static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg
 	if ((active = lvs_in_vg_activated(vg))) {
 		monitored = _register_lvs_in_vg(cmd, vg, dmeventd_register_mode());
 		log_print("%d logical volume(s) in volume group "
-			    "\"%s\" now %smonitored",
+			    "\"%s\" %smonitored",
 			    monitored, vg->name, (dmeventd_register_mode()) ? "" : "un");
 	}
 
@@ -157,7 +156,7 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 			    "already active", active, vg->name);
 		monitored = _register_lvs_in_vg(cmd, vg, dmeventd_register_mode());
 		log_verbose("%d existing logical volume(s) in volume "
-			    "group \"%s\" now %smonitored",
+			    "group \"%s\" %smonitored",
 			    monitored, vg->name,
 			    dmeventd_register_mode() ? "" : "un");
 	}

@@ -655,10 +655,11 @@ int register_dev_for_events(struct cmd_context *cmd,
 			    struct logical_volume *lv, int do_reg)
 {
 #ifdef DMEVENTD
+	int i, pending = 0, registered;
 	int r = 0;
 	struct list *tmp;
 	struct lv_segment *seg;
-	int (*reg) (struct lv_segment *, int events);
+	int (*reg) (struct cmd_context *c, struct lv_segment *s, int e);
 
 	if (do_reg && !dmeventd_register_mode())
 		return 1;
@@ -666,24 +667,59 @@ int register_dev_for_events(struct cmd_context *cmd,
 	list_iterate(tmp, &lv->segments) {
 		seg = list_item(tmp, struct lv_segment);
 
+		if (!seg_monitored(seg) || (seg->status & PVMOVE))
+			continue;
 		reg = NULL;
 
-		if (do_reg) {
-			if (seg->segtype->ops->target_register_events)
-				reg = seg->segtype->ops->target_register_events;
-		} else if (seg->segtype->ops->target_unregister_events)
-			reg = seg->segtype->ops->target_unregister_events;
+		/* Check monitoring status */
+		if (seg->segtype->ops->target_registered)
+			registered = seg->segtype->ops->target_registered(seg, &pending);
+		else
+			continue;  /* segtype doesn't support registration */
 
+		/*
+		 * FIXME: We should really try again if pending
+		 */
+		registered = (pending) ? 0 : registered;
+
+		if (do_reg) {
+			if (registered)
+				log_verbose("%s/%s already monitored.", lv->vg->name, lv->name);
+			else if (seg->segtype->ops->target_register_events)
+				reg = seg->segtype->ops->target_register_events;
+		} else {
+			if (!registered)
+				log_verbose("%s/%s already not monitored.", lv->vg->name, lv->name);
+			else if (seg->segtype->ops->target_unregister_events)
+				reg = seg->segtype->ops->target_unregister_events;
+		}
+
+		/* Do [un]monitor */
 		if (!reg)
 			continue;
 
 		/* FIXME specify events */
-		if (!reg(seg, 0)) {
+		if (!reg(cmd, seg, 0)) {
 			stack;
 			return -1;
 		}
 
-		r = 1;
+		/* Check [un]monitor results */
+		/* Try a couple times if pending, but not forever... */
+		for (i = 0; i < 10; i++) {
+			pending = 0;
+			registered = seg->segtype->ops->target_registered(seg, &pending);
+			if (pending ||
+			    (!registered && do_reg) ||
+			    (registered && !do_reg))
+				log_very_verbose("%s/%s %smonitoring still pending.",
+						 lv->vg->name, lv->name, do_reg ? "" : "un");
+			else
+				break;
+			sleep(1);
+		}
+
+		r = (registered && do_reg) || (!registered && !do_reg);
 	}
 
 	return r;
@@ -728,7 +764,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		}
 	}
 
-	if (register_dev_for_events(cmd, lv, 0) != 1)
+	if (register_dev_for_events(cmd, lv, 0) < 0)
 		/* FIXME Consider aborting here */
 		stack;
 
@@ -786,7 +822,7 @@ static int _lv_resume(struct cmd_context *cmd, const char *lvid_s,
 	memlock_dec();
 	fs_unlock();
 
-	if (register_dev_for_events(cmd, lv, 1) != 1)
+	if (register_dev_for_events(cmd, lv, 1) < 0)
 		stack;
 
 	return 1;
@@ -832,7 +868,7 @@ int lv_deactivate(struct cmd_context *cmd, const char *lvid_s)
 		return 0;
 	}
 
-	if (register_dev_for_events(cmd, lv, 0) != 1)
+	if (register_dev_for_events(cmd, lv, 0) < 0)
 		stack;
 
 	memlock_inc();
@@ -905,7 +941,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	memlock_dec();
 	fs_unlock();
 
-	if (!register_dev_for_events(cmd, lv, 1) != 1)
+	if (!register_dev_for_events(cmd, lv, 1) < 0)
 		stack;
 
 	return r;

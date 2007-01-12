@@ -32,6 +32,7 @@ struct dev_manager;
 #define SEG_FORMAT1_SUPPORT	0x00000010U
 #define SEG_VIRTUAL		0x00000020U
 #define SEG_CANNOT_BE_ZEROED	0x00000040U
+#define SEG_MONITORED		0x00000080U
 
 #define seg_is_mirrored(seg)	((seg)->segtype->flags & SEG_AREAS_MIRRORED ? 1 : 0)
 #define seg_is_striped(seg)	((seg)->segtype->flags & SEG_AREAS_STRIPED ? 1 : 0)
@@ -39,6 +40,7 @@ struct dev_manager;
 #define seg_is_virtual(seg)	((seg)->segtype->flags & SEG_VIRTUAL ? 1 : 0)
 #define seg_can_split(seg)	((seg)->segtype->flags & SEG_CAN_SPLIT ? 1 : 0)
 #define seg_cannot_be_zeroed(seg) ((seg)->segtype->flags & SEG_CANNOT_BE_ZEROED ? 1 : 0)
+#define seg_monitored(seg)	((seg)->segtype->flags & SEG_MONITORED ? 1 : 0)
 
 #define segtype_is_striped(segtype)	((segtype)->flags & SEG_AREAS_STRIPED ? 1 : 0)
 #define segtype_is_mirrored(segtype)	((segtype)->flags & SEG_AREAS_MIRRORED ? 1 : 0)
@@ -81,8 +83,11 @@ struct segtype_handler {
 			       const struct lv_segment *seg,
 			       struct list *modules);
 	void (*destroy) (const struct segment_type * segtype);
-	int (*target_register_events) (struct lv_segment *seg, int events);
-	int (*target_unregister_events) (struct lv_segment *seg, int events);
+	int (*target_registered) (struct lv_segment *seg, int *pending);
+	int (*target_register_events) (struct cmd_context *cmd,
+				       struct lv_segment *seg, int events);
+	int (*target_unregister_events) (struct cmd_context *cmd,
+					 struct lv_segment *seg, int events);
 };
 
 struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
