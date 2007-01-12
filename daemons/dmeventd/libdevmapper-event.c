@@ -510,8 +510,6 @@ int dm_event_unregister(const struct dm_event_handler *h)
 	return ret;
 }
 
-#if 0				/* left out for now */
-
 /* Fetch a string off src and duplicate it into *dest. */
 /* FIXME: move to seperate module to share with the daemon. */
 static const char delimiter = ' ';
@@ -591,6 +589,8 @@ int dm_event_get_registered_device(char **dso_name, char **device_path,
 
 	return ret;
 }
+
+#if 0				/* left out for now */
 
 int dm_event_set_timeout(const char *device_path, uint32_t timeout)
 {
