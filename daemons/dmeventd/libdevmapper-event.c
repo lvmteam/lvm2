@@ -341,8 +341,7 @@ static int _start_daemon(struct dm_event_fifos *fifos)
 		log_error("Unable to fork.");
 
 	else if (!pid) {
-		/* FIXME configure path (cf. lvm2 modprobe) */
-		execvp("dmeventd", NULL);
+		execvp(DMEVENTD_PATH, NULL);
 		exit(EXIT_FAILURE);
 	} else {
 		if (waitpid(pid, &status, 0) < 0)
