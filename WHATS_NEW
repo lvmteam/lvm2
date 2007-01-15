@@ -1,5 +1,6 @@
 Version 2.02.19 - 
 ===================================
+  Some libdevmapper-event interface changes.
   Report dmeventd mirror monitoring status.
   Fix dmeventd mirror status line processing.
 
