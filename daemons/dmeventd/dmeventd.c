@@ -96,7 +96,7 @@ struct dso_data {
 	 * DM_DEVICE_STATUS). It should not destroy it.
 	 * The caller must dispose of the task.
 	 */
-	void (*process_event)(struct dm_task *dmt, enum dm_event_type event);
+	void (*process_event)(struct dm_task *dmt, enum dm_event_mask event);
 
 	/*
 	 * Device registration.
@@ -127,7 +127,7 @@ struct message_data {
 	char *device_uuid;	/* Mapped device path. */
 	union {
 		char *str;	/* Events string as fetched from message. */
-		enum dm_event_type field;	/* Events bitfield. */
+		enum dm_event_mask field;	/* Events bitfield. */
 	} events;
 	union {
 		char *str;
@@ -157,8 +157,8 @@ struct thread_status {
 	uint32_t event_nr;	/* event number */
 	int processing;		/* Set when event is being processed */
 	int status;		/* running/shutdown/done */
-	enum dm_event_type events;	/* bitfield for event filter. */
-	enum dm_event_type current_events;	/* bitfield for occured events. */
+	enum dm_event_mask events;	/* bitfield for event filter. */
+	enum dm_event_mask current_events;	/* bitfield for occured events. */
 	struct dm_task *current_task;
 	time_t next_time;
 	uint32_t timeout;
@@ -291,7 +291,7 @@ static int parse_message(struct message_data *message_data)
 	    fetch_string(&message_data->events.str, &p) &&
 	    fetch_string(&message_data->timeout.str, &p)) {
 		if (message_data->events.str) {
-			enum dm_event_type i = atoi(message_data->events.str);
+			enum dm_event_mask i = atoi(message_data->events.str);
 
 			/*
 			 * Free string representaion of events.
@@ -775,7 +775,7 @@ static struct dso_data *load_dso(struct message_data *data)
 		syslog(LOG_ERR, "dmeventd %s dlopen failed: %s", data->dso_name,
 		       dlerr);
 		data->msg->size =
-		    dm_saprintf(&(data->msg->data), "%s dlopen failed: %s",
+		    dm_asprintf(&(data->msg->data), "%s dlopen failed: %s",
 				data->dso_name, dlerr);
 		return NULL;
 	}
@@ -954,7 +954,7 @@ static int registered_device(struct message_data *message_data,
 	if (msg->data)
 		dm_free(msg->data);
 
-	msg->size = dm_saprintf(&(msg->data), fmt, dso, dev, events);
+	msg->size = dm_asprintf(&(msg->data), fmt, dso, dev, events);
 
 	unlock_mutex();
 
@@ -1049,7 +1049,7 @@ static int get_timeout(struct message_data *message_data)
 	lock_mutex();
 	if ((thread = lookup_thread_status(message_data))) {
 		msg->size =
-		    dm_saprintf(&(msg->data), "%" PRIu32, thread->timeout);
+		    dm_asprintf(&(msg->data), "%" PRIu32, thread->timeout);
 	} else {
 		msg->data = NULL;
 		msg->size = 0;

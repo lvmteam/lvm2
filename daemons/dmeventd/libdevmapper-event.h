@@ -23,8 +23,11 @@
 
 #include <stdint.h>
 
-/* Event type definitions. */
-enum dm_event_type {
+/*
+ * Event library interface.
+ */
+
+enum dm_event_mask {
 	DM_EVENT_SETTINGS_MASK  = 0x0000FF,
 	DM_EVENT_SINGLE		= 0x000001, /* Report multiple errors just once. */
 	DM_EVENT_MULTI		= 0x000002, /* Report all of them. */
@@ -33,7 +36,7 @@ enum dm_event_type {
 	DM_EVENT_SECTOR_ERROR	= 0x000100, /* Failure on a particular sector. */
 	DM_EVENT_DEVICE_ERROR	= 0x000200, /* Device failure. */
 	DM_EVENT_PATH_ERROR	= 0x000400, /* Failure on an io path. */
-	DM_EVENT_ADAPTOR_ERROR	= 0x000800, /* Failure off a host adaptor. */
+	DM_EVENT_ADAPTOR_ERROR	= 0x000800, /* Failure of a host adaptor. */
 
 	DM_EVENT_STATUS_MASK    = 0xFF0000,
 	DM_EVENT_SYNC_STATUS	= 0x010000, /* Mirror synchronization completed/failed. */
@@ -44,54 +47,55 @@ enum dm_event_type {
 
 #define DM_EVENT_ALL_ERRORS DM_EVENT_ERROR_MASK
 
-/* Prototypes for event lib interface. */
-
 struct dm_event_handler;
 
-/* Create and destroy dm_event_handler struct, which is passed to
-   register/unregister functions below */
 struct dm_event_handler *dm_event_handler_create(void);
-void dm_event_handler_destroy(struct dm_event_handler *h);
+void dm_event_handler_destroy(struct dm_event_handler *dmevh);
 
-/* Set parameters of a handler:
-   - dso - shared library path to handle the events
-   (only one of the following three needs to be set)
-   - name - device name or path
-   - uuid - device uuid
-   - major and minor - device major/minor numbers
-   - events - a bitfield defining which events to handle (see
-              enum dm_event_type above)
-*/
-void dm_event_handler_set_dso(struct dm_event_handler *h, const char *path);
-void dm_event_handler_set_name(struct dm_event_handler *h, const char *name);
-void dm_event_handler_set_uuid(struct dm_event_handler *h, const char *uuid);
-void dm_event_handler_set_major(struct dm_event_handler *h, int major);
-void dm_event_handler_set_minor(struct dm_event_handler *h, int minor);
-void dm_event_handler_set_events(struct dm_event_handler *h,
-				 enum dm_event_type event);
+/*
+ * Path of shared library to handle events.
+ */
+void dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path);
 
-/* Get parameters of a handler, same as above */
-const char *dm_event_handler_get_dso(const struct dm_event_handler *h);
-const char *dm_event_handler_get_name(const struct dm_event_handler *h);
-const char *dm_event_handler_get_uuid(const struct dm_event_handler *h);
-int dm_event_handler_get_major(const struct dm_event_handler *h);
-int dm_event_handler_get_minor(const struct dm_event_handler *h);
-enum dm_event_type dm_event_handler_get_events(const struct dm_event_handler *h);
+/*
+ * Identify the device to monitor by exactly one of
+ * devname, uuid or device number.
+ */
+void dm_event_handler_set_devname(struct dm_event_handler *dmevh, const char *devname);
 
-/* FIXME */
+void dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid);
+
+void dm_event_handler_set_major(struct dm_event_handler *dmevh, int major);
+void dm_event_handler_set_minor(struct dm_event_handler *dmevh, int minor);
+
+/*
+ * Specify mask for events to monitor.
+ */
+void dm_event_handler_set_event_mask(struct dm_event_handler *dmevh,
+				     enum dm_event_mask evmask);
+
+const char *dm_event_handler_get_dso(const struct dm_event_handler *dmevh);
+const char *dm_event_handler_get_devname(const struct dm_event_handler *dmevh);
+const char *dm_event_handler_get_uuid(const struct dm_event_handler *dmevh);
+int dm_event_handler_get_major(const struct dm_event_handler *dmevh);
+int dm_event_handler_get_minor(const struct dm_event_handler *dmevh);
+enum dm_event_mask dm_event_handler_get_event_mask(const struct dm_event_handler *dmevh);
+
+/* FIXME Review interface */
 int dm_event_get_registered_device(char **dso_name, char **device_path,
-				   enum dm_event_type *events, int next);
+				   enum dm_event_mask *evmask, int next);
 
-/* Call out to dmeventd to register or unregister a handler. If
-   dmeventd is not running, it is spawned first. */
-int dm_event_register(const struct dm_event_handler *h);
-int dm_event_unregister(const struct dm_event_handler *h);
+/*
+ * Initiate monitoring using dmeventd.
+ */
+int dm_event_register_handler(const struct dm_event_handler *dmevh);
+int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
 
 /* Prototypes for DSO interface, see dmeventd.c, struct dso_data for
    detailed descriptions. */
-void process_event(struct dm_task *dmt, enum dm_event_type event);
-int register_device(const char *device, const char *uuid, int major, int minor);
-int unregister_device(const char *device, const char *uuid, int major,
+void process_event(struct dm_task *dmt, enum dm_event_mask evmask);
+int register_device(const char *devname, const char *uuid, int major, int minor);
+int unregister_device(const char *devname, const char *uuid, int major,
 		      int minor);
 
 #endif
