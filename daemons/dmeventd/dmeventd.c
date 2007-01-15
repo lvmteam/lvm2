@@ -1295,14 +1295,15 @@ static void _cleanup_unused_threads(void)
 	_lock_mutex();
 	while ((l = list_first(&_thread_registry_unused))) {
 		thread = list_item(l, struct thread_status);
-		if (thread->processing) {
-			goto out;	/* cleanup on the next round */
-		}
+		if (thread->processing)
+			break;	/* cleanup on the next round */
 
 		if (thread->status == DM_THREAD_RUNNING) {
 			thread->status = DM_THREAD_SHUTDOWN;
-			goto out;
-		} else if (thread->status == DM_THREAD_SHUTDOWN) {
+			break;
+		} 
+
+		if (thread->status == DM_THREAD_SHUTDOWN) {
 			if (!thread->events) {
 				/* turn codes negative -- should we be returning this? */
 				ret = _terminate_thread(thread);
@@ -1315,22 +1316,26 @@ static void _cleanup_unused_threads(void)
 					       strerror(-ret));
 					stack;
 				}
-				goto out;
-			} else {
-				list_del(l);
-				syslog(LOG_ERR,
-				       "thread can't be on unused list unless !thread->events");
-				thread->status = DM_THREAD_RUNNING;
-				LINK_THREAD(thread);
-			}
-		} else if (thread->status == DM_THREAD_DONE) {
+				break;
+			} 
+
+			list_del(l);
+			syslog(LOG_ERR,
+			       "thread can't be on unused list unless !thread->events");
+			thread->status = DM_THREAD_RUNNING;
+			LINK_THREAD(thread);
+
+			continue;
+		}
+
+		if (thread->status == DM_THREAD_DONE) {
 			list_del(l);
 			pthread_join(thread->thread, NULL);
 			_lib_put(thread->dso_data);
 			_free_thread_status(thread);
 		}
 	}
-      out:
+
 	_unlock_mutex();
 }
 
