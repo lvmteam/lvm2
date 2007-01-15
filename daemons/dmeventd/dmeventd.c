@@ -855,7 +855,7 @@ static int _register_for_event(struct message_data *message_data)
 	   events. However, if timeout thread cannot be started, it
 	   usually means we are so starved on resources that we are
 	   almost as good as dead already... */
-	if (thread->events & DM_EVENT_TIMEOUT) {
+	if (thread_new->events & DM_EVENT_TIMEOUT) {
 		ret = -_register_for_timeout(thread);
                 if (ret) {
                     _unlock_mutex();
