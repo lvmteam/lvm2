@@ -20,9 +20,14 @@
 
 char *dm_strdup_aux(const char *str, const char *file, int line)
 {
-	char *ret = dm_malloc_aux_debug(strlen(str) + 1, file, line);
+	char *ret;
 
-	if (ret)
+	if (!str) {
+		log_error("Internal error: dm_strdup called with NULL pointer");
+		return NULL;
+	}
+
+	if ((ret = dm_malloc_aux_debug(strlen(str) + 1, file, line)))
 		strcpy(ret, str);
 
 	return ret;
