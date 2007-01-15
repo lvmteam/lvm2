@@ -426,6 +426,7 @@ static struct dm_task *_get_device_info(const struct dm_event_handler *dmevh)
 	else if (dmevh->major && dmevh->minor) {
 		dm_task_set_major(dmt, dmevh->major);
 		dm_task_set_minor(dmt, dmevh->minor);
+        }
 
 	/* FIXME Add name or uuid or devno to messages */
 	if (!dm_task_run(dmt)) {
@@ -433,7 +434,7 @@ static struct dm_task *_get_device_info(const struct dm_event_handler *dmevh)
 		goto failed;
 	}
 
-	if (!dm_task_get_info(dmt, &info))
+	if (!dm_task_get_info(dmt, &info)) {
 		log_error("_get_device_info: failed to get info for device");
 		goto failed;
 	}
