@@ -32,108 +32,114 @@
 
 struct dm_event_handler {
 	const char *dso;
-	const char *device;
+
+	const char *devname;
+
 	const char *uuid;
 	int major;
 	int minor;
-	enum dm_event_type events;
+
+	enum dm_event_mask mask;
 };
 
-static void dm_event_handler_clear_device(struct dm_event_handler *h)
+static void dm_event_handler_clear_devname(struct dm_event_handler *dmevh)
 {
-	h->device = h->uuid = NULL;
-	h->major = h->minor = 0;
+	dmevh->devname = dmevh->uuid = NULL;
+	dmevh->major = dmevh->minor = 0;
 }
 
 struct dm_event_handler *dm_event_handler_create(void)
 {
-	struct dm_event_handler *ret = 0;
+	struct dm_event_handler *dmevh = NULL;
 
-	if (!(ret = dm_malloc(sizeof(*ret))))
+	if (!(dmevh = dm_malloc(sizeof(*dmevh))))
 		return NULL;
 
-	ret->dso = ret->device = ret->uuid = NULL;
-	ret->major = ret->minor = 0;
-	ret->events = 0;
+	dmevh->dso = dmevh->devname = dmevh->uuid = NULL;
+	dmevh->major = dmevh->minor = 0;
+	dmevh->mask = 0;
 
-	return ret;
+	return dmevh;
 }
 
-void dm_event_handler_destroy(struct dm_event_handler *h)
+void dm_event_handler_destroy(struct dm_event_handler *dmevh)
 {
-	dm_free(h);
+	dm_free(dmevh);
 }
 
-void dm_event_handler_set_dso(struct dm_event_handler *h, const char *path)
+void dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path)
 {
-	h->dso = path;
+	dmevh->dso = path;
 }
 
-void dm_event_handler_set_name(struct dm_event_handler *h, const char *name)
+void dm_event_handler_set_devname(struct dm_event_handler *dmevh, const char *devname)
 {
-	dm_event_handler_clear_device(h);
-	h->device = name;
+	dm_event_handler_clear_devname(dmevh);
+
+	dmevh->devname = devname;
 }
 
-void dm_event_handler_set_uuid(struct dm_event_handler *h, const char *uuid)
+void dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid)
 {
-	dm_event_handler_clear_device(h);
-	h->uuid = uuid;
+	dm_event_handler_clear_devname(dmevh);
+
+	dmevh->uuid = uuid;
 }
 
-void dm_event_handler_set_major(struct dm_event_handler *h, int major)
+void dm_event_handler_set_major(struct dm_event_handler *dmevh, int major)
 {
-	int minor = h->minor;
+	int minor = dmevh->minor;
 
-	dm_event_handler_clear_device(h);
-	h->major = major;
-	h->minor = minor;
+	dm_event_handler_clear_devname(dmevh);
+
+	dmevh->major = major;
+	dmevh->minor = minor;
 }
 
-void dm_event_handler_set_minor(struct dm_event_handler *h, int minor)
+void dm_event_handler_set_minor(struct dm_event_handler *dmevh, int minor)
 {
-	int major = h->major;
+	int major = dmevh->major;
 
-	dm_event_handler_clear_device(h);
+	dm_event_handler_clear_devname(dmevh);
 
-	h->major = major;
-	h->minor = minor;
+	dmevh->major = major;
+	dmevh->minor = minor;
 }
 
-void dm_event_handler_set_events(struct dm_event_handler *h,
-				 enum dm_event_type event)
+void dm_event_handler_set_event_mask(struct dm_event_handler *dmevh,
+				     enum dm_event_mask evmask)
 {
-	h->events = event;
+	dmevh->mask = evmask;
 }
 
-const char *dm_event_handler_get_dso(const struct dm_event_handler *h)
+const char *dm_event_handler_get_dso(const struct dm_event_handler *dmevh)
 {
-	return h->dso;
+	return dmevh->dso;
 }
 
-const char *dm_event_handler_get_name(const struct dm_event_handler *h)
+const char *dm_event_handler_get_devname(const struct dm_event_handler *dmevh)
 {
-	return h->device;
+	return dmevh->devname;
 }
 
-const char *dm_event_handler_get_uuid(const struct dm_event_handler *h)
+const char *dm_event_handler_get_uuid(const struct dm_event_handler *dmevh)
 {
-	return h->uuid;
+	return dmevh->uuid;
 }
 
-int dm_event_handler_get_major(const struct dm_event_handler *h)
+int dm_event_handler_get_major(const struct dm_event_handler *dmevh)
 {
-	return h->major;
+	return dmevh->major;
 }
 
-int dm_event_handler_get_minor(const struct dm_event_handler *h)
+int dm_event_handler_get_minor(const struct dm_event_handler *dmevh)
 {
-	return h->minor;
+	return dmevh->minor;
 }
 
-enum dm_event_type dm_event_handler_get_events(const struct dm_event_handler *h)
+enum dm_event_mask dm_event_handler_get_event_mask(const struct dm_event_handler *dmevh)
 {
-	return h->events;
+	return dmevh->mask;
 }
 
 /*
@@ -145,8 +151,8 @@ enum dm_event_type dm_event_handler_get_events(const struct dm_event_handler *h)
  *
  * Returns: 0 on failure, 1 on success
  */
-static int daemon_read(struct dm_event_fifos *fifos,
-		       struct dm_event_daemon_message *msg)
+static int _daemon_read(struct dm_event_fifos *fifos,
+			struct dm_event_daemon_message *msg)
 {
 	unsigned bytes = 0;
 	int ret, i;
@@ -205,8 +211,8 @@ static int daemon_read(struct dm_event_fifos *fifos,
 }
 
 /* Write message to daemon. */
-static int daemon_write(struct dm_event_fifos *fifos,
-			struct dm_event_daemon_message *msg)
+static int _daemon_write(struct dm_event_fifos *fifos,
+			 struct dm_event_daemon_message *msg)
 {
 	unsigned bytes = 0;
 	int ret = 0;
@@ -248,13 +254,13 @@ static int daemon_write(struct dm_event_fifos *fifos,
 	return bytes == size;
 }
 
-static int daemon_talk(struct dm_event_fifos *fifos,
-		       struct dm_event_daemon_message *msg, int cmd,
-		       const char *dso_name, const char *device,
-		       enum dm_event_type events, uint32_t timeout)
+static int _daemon_talk(struct dm_event_fifos *fifos,
+			struct dm_event_daemon_message *msg, int cmd,
+			const char *dso_name, const char *devname,
+			enum dm_event_mask evmask, uint32_t timeout)
 {
 	const char *dso = dso_name ? dso_name : "";
-	const char *dev = device ? device : "";
+	const char *dev = devname ? devname : "";
 	const char *fmt = "%s %s %u %" PRIu32;
 	memset(msg, 0, sizeof(*msg));
 
@@ -263,18 +269,21 @@ static int daemon_talk(struct dm_event_fifos *fifos,
 	 * into ASCII message string.
 	 */
 	msg->cmd = cmd;
-	msg->size = dm_saprintf(&(msg->data), fmt, dso, dev, events, timeout);
+	if ((msg->size = dm_asprintf(&(msg->data), fmt, dso, dev, evmask,
+				     timeout)) < 0) {
+		log_error("_daemon_talk: message allocation failed");
+	}
 
 	/*
 	 * Write command and message to and
 	 * read status return code from daemon.
 	 */
-	if (!daemon_write(fifos, msg)) {
+	if (!_daemon_write(fifos, msg)) {
 		stack;
 		return -EIO;
 	}
 
-	if (!daemon_read(fifos, msg)) {
+	if (!_daemon_read(fifos, msg)) {
 		stack;
 		return -EIO;
 	}
@@ -294,7 +303,7 @@ static int daemon_talk(struct dm_event_fifos *fifos,
  *
  * Returns: 1 on success, 0 otherwise
  */
-static int start_daemon(struct dm_event_fifos *fifos)
+static int _start_daemon(struct dm_event_fifos *fifos)
 {
 	int pid, ret = 0;
 	int status;
@@ -349,7 +358,7 @@ static int start_daemon(struct dm_event_fifos *fifos)
 }
 
 /* Initialize client. */
-static int init_client(struct dm_event_fifos *fifos)
+static int _init_client(struct dm_event_fifos *fifos)
 {
 	/* FIXME? Is fifo the most suitable method? Why not share
 	   comms/daemon code with something else e.g. multipath? */
@@ -359,7 +368,7 @@ static int init_client(struct dm_event_fifos *fifos)
 	fifos->client_path = DM_EVENT_FIFO_CLIENT;
 	fifos->server_path = DM_EVENT_FIFO_SERVER;
 
-	if (!start_daemon(fifos)) {
+	if (!_start_daemon(fifos)) {
 		stack;
 		return 0;
 	}
@@ -391,7 +400,7 @@ static int init_client(struct dm_event_fifos *fifos)
 	return 1;
 }
 
-static void dtr_client(struct dm_event_fifos *fifos)
+static void _dtr_client(struct dm_event_fifos *fifos)
 {
 	if (flock(fifos->server, LOCK_UN))
 		log_error("flock unlock %s", fifos->server_path);
@@ -400,76 +409,91 @@ static void dtr_client(struct dm_event_fifos *fifos)
 	close(fifos->server);
 }
 
-/* Get uuid of a device, if it exists (otherwise NULL). */
-static struct dm_task *get_device_info(const struct dm_event_handler *h)
+/* Get uuid of a device */
+static struct dm_task *_get_device_info(const struct dm_event_handler *dmevh)
 {
-	struct dm_task *dmt = dm_task_create(DM_DEVICE_INFO);
-	struct dm_task *ret;
+	struct dm_task *dmt;
+	struct dm_info info;
 
-	if (!dmt)
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
+		log_error("_get_device_info: dm_task creation for info failed");
 		return NULL;
-
-	if (h->uuid)
-		dm_task_set_uuid(dmt, h->uuid);
-	else if (h->device)
-		dm_task_set_name(dmt, h->device);
-	else if (h->major && h->minor) {
-		dm_task_set_major(dmt, h->major);
-		dm_task_set_minor(dmt, h->minor);
 	}
 
-	if (!dm_task_run(dmt))
-		ret = NULL;
-	else
-		ret = dmt;
+	if (dmevh->uuid)
+		dm_task_set_uuid(dmt, dmevh->uuid);
+	else if (dmevh->devname)
+		dm_task_set_name(dmt, dmevh->devname);
+	else if (dmevh->major && dmevh->minor) {
+		dm_task_set_major(dmt, dmevh->major);
+		dm_task_set_minor(dmt, dmevh->minor);
 
-	return ret;
+	/* FIXME Add name or uuid or devno to messages */
+	if (!dm_task_run(dmt)) {
+		log_error("_get_device_info: dm_task_run() failed");
+		goto failed;
+	}
+
+	if (!dm_task_get_info(dmt, &info))
+		log_error("_get_device_info: failed to get info for device");
+		goto failed;
+	}
+
+	if (!info.exists) {
+		log_error("_get_device_info: device not found");
+		goto failed;
+	}
+
+	return dmt;
+
+failed:
+	dm_task_destroy(dmt);
+	return NULL;
 }
 
 /* Handle the event (de)registration call and return negative error codes. */
-static int do_event(int cmd, struct dm_event_daemon_message *msg,
-		    const char *dso_name, const char *device,
-		    enum dm_event_type events, uint32_t timeout)
+static int _do_event(int cmd, struct dm_event_daemon_message *msg,
+		    const char *dso_name, const char *devname,
+		    enum dm_event_mask evmask, uint32_t timeout)
 {
 	int ret;
 	struct dm_event_fifos fifos;
 
-	if (!init_client(&fifos)) {
+	if (!_init_client(&fifos)) {
 		stack;
 		return -ESRCH;
 	}
 
-	ret = daemon_talk(&fifos, msg, cmd, dso_name, device, events, timeout);
+	ret = _daemon_talk(&fifos, msg, cmd, dso_name, devname, evmask, timeout);
 
 	/* what is the opposite of init? */
-	dtr_client(&fifos);
+	_dtr_client(&fifos);
 
 	return ret;
 }
 
 /* External library interface. */
-int dm_event_register(const struct dm_event_handler *h)
+int dm_event_register_handler(const struct dm_event_handler *dmevh)
 {
-	int ret, err;
+	int ret = 1, err;
 	const char *uuid;
 	struct dm_task *dmt;
 	struct dm_event_daemon_message msg;
 
-	if (!(dmt = get_device_info(h))) {
-		log_error("%s: device not found", h->device);
+	if (!(dmt = _get_device_info(dmevh))) {
+		stack;
 		return 0;
 	}
 
 	uuid = dm_task_get_uuid(dmt);
 
-	if ((err = do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, &msg,
-			    h->dso, uuid, h->events, 0)) < 0) {
+	if ((err = _do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, &msg,
+			     dmevh->dso, uuid, dmevh->mask, 0)) < 0) {
 		log_error("%s: event registration failed: %s",
 			  dm_task_get_name(dmt),
 			  msg.data ? msg.data : strerror(-err));
 		ret = 0;
-	} else
-		ret = 1;
+	}
 
 	if (msg.data)
 		dm_free(msg.data);
@@ -479,28 +503,27 @@ int dm_event_register(const struct dm_event_handler *h)
 	return ret;
 }
 
-int dm_event_unregister(const struct dm_event_handler *h)
+int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 {
-	int ret, err;
+	int ret = 1, err;
 	const char *uuid;
 	struct dm_task *dmt;
 	struct dm_event_daemon_message msg;
 
-	if (!(dmt = get_device_info(h))) {
-		log_error("%s: device not found", dm_task_get_name(dmt));
+	if (!(dmt = _get_device_info(dmevh))) {
+		stack;
 		return 0;
 	}
 
 	uuid = dm_task_get_uuid(dmt);
 
-	if ((err = do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, &msg,
-			    h->dso, uuid, h->events, 0)) < 0) {
+	if ((err = _do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, &msg,
+			    dmevh->dso, uuid, dmevh->mask, 0)) < 0) {
 		log_error("%s: event deregistration failed: %s",
 			  dm_task_get_name(dmt),
 			  msg.data ? msg.data : strerror(-err));
 		ret = 0;
-	} else
-		ret = 1;
+	}
 
 	if (msg.data)
 		dm_free(msg.data);
@@ -511,9 +534,8 @@ int dm_event_unregister(const struct dm_event_handler *h)
 }
 
 /* Fetch a string off src and duplicate it into *dest. */
-/* FIXME: move to seperate module to share with the daemon. */
-static const char delimiter = ' ';
-static char *fetch_string(char **src)
+/* FIXME: move to separate module to share with the daemon. */
+static char *_fetch_string(char **src, const char delimiter)
 {
 	char *p, *ret;
 
@@ -530,13 +552,14 @@ static char *fetch_string(char **src)
 }
 
 /* Parse a device message from the daemon. */
-static int parse_message(struct dm_event_daemon_message *msg, char **dso_name,
-			 char **device, enum dm_event_type *events)
+static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
+			 char **devname, enum dm_event_mask *evmask)
 {
 	char *p = msg->data;
 
-	if ((*dso_name = fetch_string(&p)) && (*device = fetch_string(&p))) {
-		*events = atoi(p);
+	if ((*dso_name = _fetch_string(&p, ' ')) &&
+	    (*devname = _fetch_string(&p, ' '))) {
+		*evmask = atoi(p);
 
 		return 0;
 	}
@@ -548,7 +571,7 @@ static int parse_message(struct dm_event_daemon_message *msg, char **dso_name,
  * dm_event_get_registered_device
  * @dso_name
  * @device_path
- * @events
+ * @mask
  * @next
  *
  * FIXME: This function sucks.
@@ -556,17 +579,17 @@ static int parse_message(struct dm_event_daemon_message *msg, char **dso_name,
  * Returns: 1 if device found, 0 otherwise (even on error)
  */
 int dm_event_get_registered_device(char **dso_name, char **device_path,
-				   enum dm_event_type *events, int next)
+				   enum dm_event_mask *mask, int next)
 {
 	int ret;
 	char *dso_name_arg = NULL, *device_path_arg = NULL;
 	struct dm_event_daemon_message msg;
 
-	if (!(ret = do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
+	if (!(ret = _do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
 			     DM_EVENT_CMD_GET_REGISTERED_DEVICE,
-			     &msg, *dso_name, *device_path, *events, 0))) {
-		ret = !parse_message(&msg, &dso_name_arg, &device_path_arg,
-				     events);
+			     &msg, *dso_name, *device_path, *mask, 0))) {
+		ret = !_parse_message(&msg, &dso_name_arg, &device_path_arg,
+				     mask);
 	} else			/* FIXME: Make sure this is ENOENT */
 		ret = 0;
 
@@ -598,7 +621,7 @@ int dm_event_set_timeout(const char *device_path, uint32_t timeout)
 
 	if (!device_exists(device_path))
 		return -ENODEV;
-	return do_event(DM_EVENT_CMD_SET_TIMEOUT, &msg,
+	return _do_event(DM_EVENT_CMD_SET_TIMEOUT, &msg,
 			NULL, device_path, 0, timeout);
 }
 
@@ -609,7 +632,7 @@ int dm_event_get_timeout(const char *device_path, uint32_t *timeout)
 
 	if (!device_exists(device_path))
 		return -ENODEV;
-	if (!(ret = do_event(DM_EVENT_CMD_GET_TIMEOUT, &msg, NULL, device_path,
+	if (!(ret = _do_event(DM_EVENT_CMD_GET_TIMEOUT, &msg, NULL, device_path,
 			     0, 0)))
 		*timeout = atoi(msg.data);
 	if (msg.data)

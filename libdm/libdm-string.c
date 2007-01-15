@@ -129,7 +129,7 @@ char *dm_basename(const char *path)
 	return p ? p + 1 : (char *) path;
 }
 
-int dm_saprintf(char **result, const char *format, ...)
+int dm_asprintf(char **result, const char *format, ...)
 {
 	int n, ok = 0, size = 32;
 	va_list ap;
