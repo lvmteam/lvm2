@@ -1,5 +1,6 @@
 Version 1.02.15 -
 ===================================
+  Fix a malloc error path in dmsetup message.
   More libdevmapper-event interface changes and fixes.
   Rename dm_saprintf() to dm_asprintf().
   Report error if NULL pointer is supplied to dm_strdup_aux().

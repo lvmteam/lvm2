@@ -533,7 +533,11 @@ static int _message(int argc, char **argv, void *data __attribute((unused)))
 	for (i = 0; i < argc; i++)
 		sz += strlen(argv[i]) + 1;
 
-	str = dm_malloc(sz);
+	if (!(str = dm_malloc(sz))) {
+		err("message string allocation failed");
+		goto out;
+	}
+
 	memset(str, 0, sz);
 
 	for (i = 0; i < argc; i++) {
