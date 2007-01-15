@@ -849,6 +849,20 @@ static int _register_for_event(struct message_data *message_data)
 
 	_lock_mutex();
 
+	/* If creation of timeout thread fails (as it may), we fail
+	   here completely. The client is responsible for either
+	   retrying later or trying to register without timeout
+	   events. However, if timeout thread cannot be started, it
+	   usually means we are so starved on resources that we are
+	   almost as good as dead already... */
+	if (thread->events & DM_EVENT_TIMEOUT) {
+		ret = -_register_for_timeout(thread);
+                if (ret) {
+                    _unlock_mutex();
+                    goto out;
+                }
+        }
+
 	if (!(thread = _lookup_thread_status(message_data))) {
 		_unlock_mutex();
 
@@ -873,15 +887,6 @@ static int _register_for_event(struct message_data *message_data)
 	thread->events |= message_data->events.field;
 
 	_unlock_mutex();
-
-	/* FIXME - If you fail to register for timeout events, you
-	   still monitor all the other events. Is this the right
-	   action for newly created devices?  Also, you are still
-	   on the timeout registry, so if a timeout thread is
-	   successfully started up later, you will start receiving
-	   DM_EVENT_TIMEOUT events */
-	if (thread->events & DM_EVENT_TIMEOUT)
-		ret = -_register_for_timeout(thread);
 
       out:
 	/*
