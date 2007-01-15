@@ -393,7 +393,7 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 	char *dso, *name;
 	struct logical_volume *lv;
 	struct volume_group *vg;
-	enum dm_event_type events = 0;
+	enum dm_event_mask evmask = 0;
 
 	lv = seg->lv;
 	vg = lv->vg;
@@ -407,27 +407,27 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
-	if (!dm_event_get_registered_device(&dso, &name, &events, 0))
+	if (!dm_event_get_registered_device(&dso, &name, &evmask, 0))
 		return 0;
 
-	if (events & DM_EVENT_REGISTRATION_PENDING) {
+	if (evmask & DM_EVENT_REGISTRATION_PENDING) {
 		*pending = 1;
-		events &= ~DM_EVENT_REGISTRATION_PENDING;
+		evmask &= ~DM_EVENT_REGISTRATION_PENDING;
 	}
 
-	return events;
+	return evmask;
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
 /* FIXME Merge these two functions */
 static int _target_register_events(struct cmd_context *cmd,
 				   struct lv_segment *seg,
-				   int events)
+				   int evmask)
 {
 	char *dso, *name;
 	struct logical_volume *lv;
 	struct volume_group *vg;
-	struct dm_event_handler *handler;
+	struct dm_event_handler *dmevh;
 
 	lv = seg->lv;
 	vg = lv->vg;
@@ -440,17 +440,17 @@ static int _target_register_events(struct cmd_context *cmd,
 	if (!(name = build_dm_name(cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
-	if (!(handler = dm_event_handler_create()))
+	if (!(dmevh = dm_event_handler_create()))
 		return_0;
 
-	dm_event_handler_set_dso(handler, dso);
-	dm_event_handler_set_name(handler, name);
-	dm_event_handler_set_events(handler, DM_EVENT_ALL_ERRORS);
-	if (!dm_event_register(handler)) {
-		dm_event_handler_destroy(handler);
+	dm_event_handler_set_dso(dmevh, dso);
+	dm_event_handler_set_devname(dmevh, name);
+	dm_event_handler_set_event_mask(dmevh, DM_EVENT_ALL_ERRORS);
+	if (!dm_event_register_handler(dmevh)) {
+		dm_event_handler_destroy(dmevh);
 		return_0;
 	}
-	dm_event_handler_destroy(handler);
+	dm_event_handler_destroy(dmevh);
 
 	log_info("Registered %s for events", name);
 
@@ -459,13 +459,13 @@ static int _target_register_events(struct cmd_context *cmd,
 
 static int _target_unregister_events(struct cmd_context *cmd,
 				     struct lv_segment *seg,
-				     int events)
+				     int evmask)
 {
 	char *dso;
 	char *name;
 	struct logical_volume *lv;
 	struct volume_group *vg;
-	struct dm_event_handler *handler;
+	struct dm_event_handler *dmevh;
 
 	lv = seg->lv;
 	vg = lv->vg;
@@ -477,17 +477,17 @@ static int _target_unregister_events(struct cmd_context *cmd,
 	if (!(name = build_dm_name(cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
-	if (!(handler = dm_event_handler_create()))
+	if (!(dmevh = dm_event_handler_create()))
 		return_0;
 
-	dm_event_handler_set_dso(handler, dso);
-	dm_event_handler_set_name(handler, name);
-	dm_event_handler_set_events(handler, DM_EVENT_ALL_ERRORS);
-	if (!dm_event_unregister(handler)) {
-		dm_event_handler_destroy(handler);
+	dm_event_handler_set_dso(dmevh, dso);
+	dm_event_handler_set_devname(dmevh, name);
+	dm_event_handler_set_event_mask(dmevh, DM_EVENT_ALL_ERRORS);
+	if (!dm_event_unregister_handler(dmevh)) {
+		dm_event_handler_destroy(dmevh);
 		return_0;
 	}
-	dm_event_handler_destroy(handler);
+	dm_event_handler_destroy(dmevh);
 
 	log_info("Unregistered %s for events", name);
 
