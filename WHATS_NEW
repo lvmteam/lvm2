@@ -1,5 +1,7 @@
 Version 2.02.19 - 
 ===================================
+  Fix partition table processing after sparc changes (2.02.16).
+  Fix cmdline PE range processing segfault (2.02.13).
   Some libdevmapper-event interface changes.
   Report dmeventd mirror monitoring status.
   Fix dmeventd mirror status line processing.

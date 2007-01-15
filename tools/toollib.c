@@ -993,7 +993,7 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 	}
 
 	/* Determine selected physical extents */
-	if (!_parse_pes(mem, colon, pe_ranges, dev_name(pvl->pv->dev),
+	if (!_parse_pes(mem, colon, new_pvl->pe_ranges, dev_name(pvl->pv->dev),
 			pvl->pv->pe_count)) {
 		stack;
 		return 0;
