@@ -66,6 +66,8 @@ static pthread_mutex_t _global_mutex;
 #define DM_THREAD_SHUTDOWN 1
 #define DM_THREAD_DONE     2
 
+#define THREAD_STACK_SIZE 300*1024
+
 /* Data kept about a DSO. */
 struct dso_data {
 	struct list list;
@@ -211,6 +213,15 @@ static struct dso_data *_alloc_dso_data(struct message_data *data)
 	}
 
 	return ret;
+}
+
+/* Create a device monitoring thread. */
+static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *arg)
+{
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE);
+	return pthread_create(t, &attr, fun, arg);
 }
 
 static void _free_dso_data(struct dso_data *data)
@@ -458,8 +469,7 @@ static int _register_for_timeout(struct thread_status *thread)
 	if (!_timeout_running) {
 		pthread_t timeout_id;
 
-		if (!(ret = -pthread_create(&timeout_id, NULL,
-					    _timeout_thread, NULL)))
+		if (!(ret = -_pthread_create_smallstack(&timeout_id, _timeout_thread, NULL)))
 			_timeout_running = 1;
 	}
 
@@ -688,7 +698,7 @@ static void *_monitor_thread(void *arg)
 /* Create a device monitoring thread. */
 static int _create_thread(struct thread_status *thread)
 {
-	return pthread_create(&thread->thread, NULL, _monitor_thread, thread);
+	return _pthread_create_smallstack(&thread->thread, _monitor_thread, thread);
 }
 
 static int _terminate_thread(struct thread_status *thread)
@@ -1407,6 +1417,21 @@ static int _lock_pidfile(void)
 	return 0;
 }
 
+static int _set_oom_adj(int val)
+{
+	FILE *fp;
+
+	fp = fopen("/proc/self/oom_adj", "w");
+
+	if (!fp)
+		return 0;
+
+	fprintf(fp, "%i", val);
+	fclose(fp);
+
+	return 1;
+}
+
 static void _daemonize(void)
 {
 	int status;
@@ -1494,6 +1519,9 @@ int main(int argc, char *argv[])
 	//struct sys_log logdata = {DAEMON_NAME, LOG_DAEMON};
 
 	_daemonize();
+
+	if (!_set_oom_adj(-16))
+		syslog(LOG_ERR, "Failed to set oom_adj to protect against OOM killer");
 
 	_init_thread_signals();
 
