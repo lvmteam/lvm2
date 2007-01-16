@@ -262,6 +262,7 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
 	const char *dso = dso_name ? dso_name : "";
 	const char *dev = dev_name ? dev_name : "";
 	const char *fmt = "%s %s %u %" PRIu32;
+	int msg_size;
 	memset(msg, 0, sizeof(*msg));
 
 	/*
@@ -269,10 +270,12 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
 	 * into ASCII message string.
 	 */
 	msg->cmd = cmd;
-	if ((msg->size = dm_asprintf(&(msg->data), fmt, dso, dev, evmask,
+	if ((msg_size = dm_asprintf(&(msg->data), fmt, dso, dev, evmask,
 				     timeout)) < 0) {
 		log_error("_daemon_talk: message allocation failed");
+		return -ENOMEM;
 	}
+	msg->size = msg_size;
 
 	/*
 	 * Write command and message to and
@@ -535,7 +538,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 
 /* Fetch a string off src and duplicate it into *dest. */
 /* FIXME: move to separate module to share with the daemon. */
-static char *_fetch_string(char **src, const char delimiter)
+static char *_fetch_string(char **src, const int delimiter)
 {
 	char *p, *ret;
 
