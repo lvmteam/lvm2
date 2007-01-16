@@ -16,6 +16,7 @@
 #include "tools.h"
 #include "lvm2cmdline.h"
 #include "label.h"
+#include "memlock.h"
 #include "version.h"
 
 #include "lvm2cmd.h"
