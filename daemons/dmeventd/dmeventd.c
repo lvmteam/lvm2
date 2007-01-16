@@ -59,14 +59,21 @@ static volatile sig_atomic_t _thread_registries_empty = 1;	/* registries are emp
 
 #define DAEMON_NAME "dmeventd"
 
-/* Global mutex for list accesses. */
+/*
+  Global mutex for thread list access. Has to be held when: 
+  - iterating thread list
+  - adding or removing elements from thread list
+  - changing or reading thread_status's fields:
+    processing, status, events
+  Use _lock_mutex() and _unlock_mutex() to hold/release it
+*/
 static pthread_mutex_t _global_mutex;
 
 #define DM_THREAD_RUNNING  0
 #define DM_THREAD_SHUTDOWN 1
 #define DM_THREAD_DONE     2
 
-#define THREAD_STACK_SIZE 300*1024
+#define THREAD_STACK_SIZE (300*1024)
 
 /* Data kept about a DSO. */
 struct dso_data {
@@ -220,6 +227,9 @@ static int _pthread_create_smallstack(pthread_t *t, void *(*fun)(void *), void *
 {
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
+	/*
+	 * We use a smaller stack since it gets preallocated in its entirety
+	 */
 	pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE);
 	return pthread_create(t, &attr, fun, arg);
 }
@@ -318,7 +328,8 @@ static int _parse_message(struct message_data *message_data)
 	return ret;
 };
 
-/* Global mutex to lock access to lists et al. */
+/* Global mutex to lock access to lists et al. See _global_mutex
+   above. */
 static int _lock_mutex(void)
 {
 	return pthread_mutex_lock(&_global_mutex);
@@ -612,7 +623,7 @@ static void _do_process_event(struct thread_status *thread, struct dm_task *task
 /* Thread cleanup handler to unregister device. */
 static void _monitor_unregister(void *arg)
 {
-	struct thread_status *thread = arg;
+	struct thread_status *thread = arg, *thread_iter;
 
 	if (!_do_unregister_device(thread))
 		syslog(LOG_ERR, "%s: %s unregister failed\n", __func__,
@@ -620,6 +631,28 @@ static void _monitor_unregister(void *arg)
 	if (thread->current_task)
 		dm_task_destroy(thread->current_task);
 	thread->current_task = NULL;
+
+	_lock_mutex();
+	if (thread->events & DM_EVENT_TIMEOUT) {
+		/* _unregister_for_timeout locks another mutex, we
+		   don't want to deadlock so we release our mutex for
+		   a bit */
+		_unlock_mutex();
+		_unregister_for_timeout(thread);
+		_lock_mutex();
+	}
+	/* we may have been relinked to unused registry since we were
+	   called, so check that */
+	list_iterate_items(thread_iter, &_thread_registry_unused)
+		if (thread_iter == thread) {
+			thread->status = DM_THREAD_DONE;
+			_unlock_mutex();
+			return;
+		}
+	thread->status = DM_THREAD_DONE;
+	UNLINK_THREAD(thread);
+	LINK(thread, &_thread_registry_unused);
+	_unlock_mutex();
 }
 
 /* Device monitoring thread. */
@@ -686,10 +719,6 @@ static void *_monitor_thread(void *arg)
 		}
 	}
 
-	_lock_mutex();
-	thread->status = DM_THREAD_DONE;
-	_unlock_mutex();
-
 	pthread_cleanup_pop(1);
 
 	return NULL;
@@ -711,7 +740,7 @@ static int _terminate_thread(struct thread_status *thread)
 	return pthread_kill(thread->thread, SIGALRM);
 }
 
-/* DSO reference counting. */
+/* DSO reference counting. Call with _global_mutex locked! */
 static void _lib_get(struct dso_data *data)
 {
 	data->ref_count++;
@@ -731,16 +760,12 @@ static struct dso_data *_lookup_dso(struct message_data *data)
 {
 	struct dso_data *dso_data, *ret = NULL;
 
-	_lock_mutex();
-
 	list_iterate_items(dso_data, &_dso_registry)
 	    if (!strcmp(data->dso_name, dso_data->dso_name)) {
 		_lib_get(dso_data);
 		ret = dso_data;
 		break;
 	}
-
-	_unlock_mutex();
 
 	return ret;
 }
@@ -920,6 +945,13 @@ static int _unregister_for_event(struct message_data *message_data)
 		_unlock_mutex();
 		ret = -ENODEV;
 		goto out;
+	}
+
+	if (thread->status == DM_THREAD_DONE) {
+		/* the thread has terminated while we were not
+		   watching */
+		_unlock_mutex();
+		return 0;
 	}
 
 	thread->events &= ~message_data->events.field;
