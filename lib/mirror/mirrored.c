@@ -394,6 +394,7 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 	struct logical_volume *lv;
 	struct volume_group *vg;
 	enum dm_event_mask evmask = 0;
+	struct dm_event_handler *dmevh;
 
 	lv = seg->lv;
 	vg = lv->vg;
@@ -407,13 +408,25 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
-	if (!dm_event_get_registered_device(&dso, &name, &evmask, 0))
-		return 0;
+	if (!(dmevh = dm_event_handler_create()))
+		return_0;
 
+	dm_event_handler_set_dso(dmevh, dso);
+	dm_event_handler_set_dev_name(dmevh, name);
+	dm_event_handler_set_event_mask(dmevh, DM_EVENT_ALL_ERRORS);
+
+	if (dm_event_get_registered_device(dmevh, 0)) {
+		dm_event_handler_destroy(dmevh);
+		return 0;
+	}
+
+	evmask = dm_event_handler_get_event_mask(dmevh);
 	if (evmask & DM_EVENT_REGISTRATION_PENDING) {
 		*pending = 1;
 		evmask &= ~DM_EVENT_REGISTRATION_PENDING;
 	}
+
+	dm_event_handler_destroy(dmevh);
 
 	return evmask;
 }
