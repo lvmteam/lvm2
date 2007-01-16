@@ -1005,39 +1005,54 @@ static int _want_registered_device(char *dso_name, char *device_uuid,
 	/* If DSO names and device paths are equal. */
 	if (dso_name && device_uuid)
 		return !strcmp(dso_name, thread->dso_data->dso_name) &&
-		    !strcmp(device_uuid, thread->device.uuid);
+		    !strcmp(device_uuid, thread->device.uuid) &&
+			(thread->status == DM_THREAD_RUNNING ||
+			 (thread->events & DM_EVENT_REGISTRATION_PENDING));
 
 	/* If DSO names are equal. */
 	if (dso_name)
-		return !strcmp(dso_name, thread->dso_data->dso_name);
+		return !strcmp(dso_name, thread->dso_data->dso_name) &&
+			(thread->status == DM_THREAD_RUNNING ||
+			 (thread->events & DM_EVENT_REGISTRATION_PENDING));
 
 	/* If device paths are equal. */
 	if (device_uuid)
-		return !strcmp(device_uuid, thread->device.uuid);
+		return !strcmp(device_uuid, thread->device.uuid) &&
+			(thread->status == DM_THREAD_RUNNING ||
+			 (thread->events & DM_EVENT_REGISTRATION_PENDING));
 
 	return 1;
 }
 
 static int _get_registered_dev(struct message_data *message_data, int next)
 {
-	int hit = 0;
-	struct thread_status *thread;
+	struct thread_status *thread, *hit = NULL;
 
 	_lock_mutex();
 
 	/* Iterate list of threads checking if we want a particular one. */
 	list_iterate_items(thread, &_thread_registry)
-	    if ((hit = _want_registered_device(message_data->dso_name,
-					      message_data->device_uuid,
-					      thread)))
-		break;
+		if (_want_registered_device(message_data->dso_name,
+					    message_data->device_uuid,
+					    thread)) {
+			hit = thread;
+			break;
+		}
 
 	/*
 	 * If we got a registered device and want the next one ->
 	 * fetch next conforming element off the list.
 	 */
-	if (!hit || !next)
+	if (hit && !next) {
+		_unlock_mutex();
+		return _registered_device(message_data, hit);
+	}
+
+	if (!hit)
 		goto out;
+
+	goto out; /* FIXME the next == 1 thing is currently horridly
+		     broken, do something about it... */
 
 	do {
 		if (list_end(&_thread_registry, &thread->list))
@@ -1046,6 +1061,7 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 		thread = list_item(thread->list.n, struct thread_status);
 	} while (!_want_registered_device(message_data->dso_name, NULL, thread));
 
+	_unlock_mutex();
 	return _registered_device(message_data, thread);
 
       out:
