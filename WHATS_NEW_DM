@@ -1,5 +1,6 @@
 Version 1.02.15 -
 ===================================
+  Add basic reporting functions to libdevmapper.
   Fix a malloc error path in dmsetup message.
   More libdevmapper-event interface changes and fixes.
   Rename dm_saprintf() to dm_asprintf().

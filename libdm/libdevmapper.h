@@ -124,10 +124,10 @@ struct dm_names {
 };
 
 struct dm_versions {
-        uint32_t next;		/* Offset to next struct from start of this struct */
-        uint32_t version[3];
+	uint32_t next;		/* Offset to next struct from start of this struct */
+	uint32_t version[3];
 
-        char name[0];
+	char name[0];
 };
 
 int dm_get_library_version(char *version, size_t size);
@@ -236,12 +236,12 @@ int dm_tree_add_dev(struct dm_tree *tree, uint32_t major, uint32_t minor);
  * Add a new node to the tree if it doesn't already exist.
  */
 struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *tree,
-                                            const char *name,
-                                            const char *uuid,
-                                            uint32_t major, uint32_t minor,
-                                            int read_only,
-                                            int clear_inactive,
-                                            void *context);
+					 const char *name,
+					 const char *uuid,
+					 uint32_t major, uint32_t minor,
+					 int read_only,
+					 int clear_inactive,
+					 void *context);
 
 /*
  * Search for a node in the tree.
@@ -289,16 +289,16 @@ int dm_tree_deactivate_children(struct dm_tree_node *dnode,
  * Ignores devices that don't have a uuid starting with uuid_prefix.
  */
 int dm_tree_preload_children(struct dm_tree_node *dnode,
-                                 const char *uuid_prefix,
-                                 size_t uuid_prefix_len);
+			     const char *uuid_prefix,
+			     size_t uuid_prefix_len);
 
 /*
  * Resume a device plus all dependencies.
  * Ignores devices that don't have a uuid starting with uuid_prefix.
  */
 int dm_tree_activate_children(struct dm_tree_node *dnode,
-                                 const char *uuid_prefix,
-                                 size_t uuid_prefix_len);
+			      const char *uuid_prefix,
+			      size_t uuid_prefix_len);
 
 /*
  * Suspend a device plus all dependencies.
@@ -629,5 +629,82 @@ char *dm_basename(const char *path);
  * Returns -1 on failure leaving buf undefined.
  */
 int dm_asprintf(char **buf, const char *format, ...);
+
+/*********************
+ * reporting functions
+ *********************/
+
+struct dm_report_object_type {
+	uint32_t id;			/* Powers of 2 */
+	const char *desc;
+	const char *prefix;		/* field id string prefix (optional) */
+	void *(*data_fn)(void *object);	/* callback from report_object() */
+};
+
+struct dm_report_field;
+
+/*
+ * dm_report_field_type flags
+ */
+#define DM_REPORT_FIELD_MASK		0x0000000F
+#define DM_REPORT_FIELD_ALIGN_LEFT	0x00000001
+#define DM_REPORT_FIELD_ALIGN_RIGHT	0x00000002
+#define DM_REPORT_FIELD_STRING		0x00000004
+#define DM_REPORT_FIELD_NUMBER		0x00000008
+
+struct dm_report;
+struct dm_report_field_type {
+	uint32_t type;		/* object type id */
+	const char id[32];	/* string used to specify the field */
+	unsigned int offset;	/* byte offset in the object */
+	const char heading[32];	/* string printed in header */
+	int width;		/* default width */
+	uint32_t flags;		/* DM_REPORT_FIELD_* */
+	int (*report_fn)(struct dm_report *rh, struct dm_pool *mem,
+			 struct dm_report_field *field, const void *data,
+			 void *private);
+};
+
+/*
+ * dm_report_init output_flags
+ */
+#define DM_REPORT_OUTPUT_MASK		0x00000007
+#define DM_REPORT_OUTPUT_ALIGNED	0x00000001
+#define DM_REPORT_OUTPUT_BUFFERED	0x00000002
+#define DM_REPORT_OUTPUT_HEADINGS	0x00000004
+
+struct dm_report *dm_report_init(uint32_t *report_types,
+				 const struct dm_report_object_type *types,
+				 const struct dm_report_field_type *fields,
+				 const char *output_fields,
+				 const char *output_separator,
+				 uint32_t output_flags,
+				 const char *sort_keys,
+				 void *private);
+int dm_report_object(struct dm_report *rh, void *object);
+int dm_report_output(struct dm_report *rh);
+void dm_report_free(struct dm_report *rh);
+
+/* report functions for common types */
+int dm_report_field_string(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field, const void *data);
+int dm_report_field_int32(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field, const void *data);
+int dm_report_field_uint32(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field, const void *data);
+int dm_report_field_int(struct dm_report *rh, struct dm_pool *mem,
+			struct dm_report_field *field, const void *data);
+int dm_report_field_uint64(struct dm_report *rh, struct dm_pool *mem,
+			struct dm_report_field *field, const void *data);
+
+/*
+ * Helper function for custom reporting functions
+ */
+
+/*
+ * sortvalue may be NULL if it's the same as value
+ */
+void dm_report_field_set_value(struct dm_report_field *field,
+			       const void *value, const void *sortvalue);
 
 #endif				/* LIB_DEVICE_MAPPER_H */

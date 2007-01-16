@@ -59,9 +59,9 @@ void dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path);
 
 /*
  * Identify the device to monitor by exactly one of
- * devname, uuid or device number.
+ * dev_name, uuid or device number.
  */
-void dm_event_handler_set_devname(struct dm_event_handler *dmevh, const char *devname);
+void dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *dev_name);
 
 void dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid);
 
@@ -75,7 +75,7 @@ void dm_event_handler_set_event_mask(struct dm_event_handler *dmevh,
 				     enum dm_event_mask evmask);
 
 const char *dm_event_handler_get_dso(const struct dm_event_handler *dmevh);
-const char *dm_event_handler_get_devname(const struct dm_event_handler *dmevh);
+const char *dm_event_handler_get_dev_name(const struct dm_event_handler *dmevh);
 const char *dm_event_handler_get_uuid(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_major(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_minor(const struct dm_event_handler *dmevh);
@@ -94,8 +94,8 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
 /* Prototypes for DSO interface, see dmeventd.c, struct dso_data for
    detailed descriptions. */
 void process_event(struct dm_task *dmt, enum dm_event_mask evmask);
-int register_device(const char *devname, const char *uuid, int major, int minor);
-int unregister_device(const char *devname, const char *uuid, int major,
+int register_device(const char *dev_name, const char *uuid, int major, int minor);
+int unregister_device(const char *dev_name, const char *uuid, int major,
 		      int minor);
 
 #endif

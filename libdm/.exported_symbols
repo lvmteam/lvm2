@@ -116,3 +116,14 @@ dm_split_words
 dm_snprintf
 dm_basename
 dm_asprintf
+dm_report_init
+dm_report_object
+dm_report_output
+dm_report_free
+dm_report_get_private
+dm_report_field_string
+dm_report_field_int
+dm_report_field_int32
+dm_report_field_uint32
+dm_report_field_uint64
+dm_report_field_set_value
