@@ -60,6 +60,8 @@ void dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path);
 /*
  * Identify the device to monitor by exactly one of
  * dev_name, uuid or device number.
+ * FIXME we should give guarantees about how dev_name and uuid
+ * pontiers are handled, eg dm_strdup them
  */
 void dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *dev_name);
 
@@ -81,9 +83,8 @@ int dm_event_handler_get_major(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_minor(const struct dm_event_handler *dmevh);
 enum dm_event_mask dm_event_handler_get_event_mask(const struct dm_event_handler *dmevh);
 
-/* FIXME Review interface */
-int dm_event_get_registered_device(char **dso_name, char **device_path,
-				   enum dm_event_mask *evmask, int next);
+/* FIXME Review interface (what about this next thing?) */
+int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next);
 
 /*
  * Initiate monitoring using dmeventd.

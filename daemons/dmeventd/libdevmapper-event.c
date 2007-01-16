@@ -556,12 +556,12 @@ static char *_fetch_string(char **src, const int delimiter)
 
 /* Parse a device message from the daemon. */
 static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
-			 char **dev_name, enum dm_event_mask *evmask)
+			 char **uuid, enum dm_event_mask *evmask)
 {
 	char *p = msg->data;
 
 	if ((*dso_name = _fetch_string(&p, ' ')) &&
-	    (*dev_name = _fetch_string(&p, ' '))) {
+	    (*uuid = _fetch_string(&p, ' '))) {
 		*evmask = atoi(p);
 
 		return 0;
@@ -577,41 +577,45 @@ static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
  * @mask
  * @next
  *
- * FIXME: This function sucks.
- *
- * Returns: 1 if device found, 0 otherwise (even on error)
+ * Returns: 0 if handler found, error (-ENOMEM, -ENOENT) otherwise
  */
-int dm_event_get_registered_device(char **dso_name, char **device_path,
-				   enum dm_event_mask *mask, int next)
+int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 {
 	int ret;
-	char *dso_name_arg = NULL, *device_path_arg = NULL;
+	char *uuid = NULL;
+	char *reply_dso = NULL, *reply_uuid = NULL;
+	enum dm_event_mask reply_mask;
+	struct dm_task *dmt;
 	struct dm_event_daemon_message msg;
+
+	if (!(dmt = _get_device_info(dmevh))) {
+		stack;
+		return 0;
+	}
+
+	uuid = dm_task_get_uuid(dmt);
 
 	if (!(ret = _do_event(next ? DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE :
 			     DM_EVENT_CMD_GET_REGISTERED_DEVICE,
-			     &msg, *dso_name, *device_path, *mask, 0))) {
-		ret = !_parse_message(&msg, &dso_name_arg, &device_path_arg,
-				     mask);
-	} else			/* FIXME: Make sure this is ENOENT */
-		ret = 0;
+			      &msg, dmevh->dso, uuid, dmevh->mask, 0))) {
+		/* FIXME this will probably horribly break if we get
+		   ill-formatted reply */
+		ret = _parse_message(&msg, &reply_dso, &reply_uuid, &reply_mask);
+	} else
+		ret = -ENOENT;
 
 	if (msg.data)
 		dm_free(msg.data);
 
-	if (next) {
-		if (*dso_name)
-			dm_free(*dso_name);
-		if (*device_path)
-			dm_free(*device_path);
-		*dso_name = dso_name_arg;
-		*device_path = device_path_arg;
-	} else {
-		if (!(*dso_name))
-			*dso_name = dso_name_arg;
-		if (!(*device_path))
-			*device_path = device_path_arg;
-	}
+	dm_event_handler_set_uuid(dmevh, reply_uuid);
+	dm_event_handler_set_dso(dmevh, reply_dso);
+	dm_event_handler_set_event_mask(dmevh, reply_mask);
+	/* FIXME also fill in name and device number */
+	/* FIXME this probably leaks memory, since noone is going to
+	   dm_free the bits in dmevh -- needs changes to
+	   dm_event_handle_set behaviour */
+
+	dm_task_destroy(dmt);
 
 	return ret;
 }
