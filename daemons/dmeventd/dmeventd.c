@@ -31,8 +31,10 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
-
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
 

@@ -33,7 +33,7 @@
 struct dm_event_handler {
 	const char *dso;
 
-	const char *devname;
+	const char *dev_name;
 
 	const char *uuid;
 	int major;
@@ -42,9 +42,9 @@ struct dm_event_handler {
 	enum dm_event_mask mask;
 };
 
-static void dm_event_handler_clear_devname(struct dm_event_handler *dmevh)
+static void dm_event_handler_clear_dev_name(struct dm_event_handler *dmevh)
 {
-	dmevh->devname = dmevh->uuid = NULL;
+	dmevh->dev_name = dmevh->uuid = NULL;
 	dmevh->major = dmevh->minor = 0;
 }
 
@@ -55,7 +55,7 @@ struct dm_event_handler *dm_event_handler_create(void)
 	if (!(dmevh = dm_malloc(sizeof(*dmevh))))
 		return NULL;
 
-	dmevh->dso = dmevh->devname = dmevh->uuid = NULL;
+	dmevh->dso = dmevh->dev_name = dmevh->uuid = NULL;
 	dmevh->major = dmevh->minor = 0;
 	dmevh->mask = 0;
 
@@ -72,16 +72,16 @@ void dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path)
 	dmevh->dso = path;
 }
 
-void dm_event_handler_set_devname(struct dm_event_handler *dmevh, const char *devname)
+void dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *dev_name)
 {
-	dm_event_handler_clear_devname(dmevh);
+	dm_event_handler_clear_dev_name(dmevh);
 
-	dmevh->devname = devname;
+	dmevh->dev_name = dev_name;
 }
 
 void dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid)
 {
-	dm_event_handler_clear_devname(dmevh);
+	dm_event_handler_clear_dev_name(dmevh);
 
 	dmevh->uuid = uuid;
 }
@@ -90,7 +90,7 @@ void dm_event_handler_set_major(struct dm_event_handler *dmevh, int major)
 {
 	int minor = dmevh->minor;
 
-	dm_event_handler_clear_devname(dmevh);
+	dm_event_handler_clear_dev_name(dmevh);
 
 	dmevh->major = major;
 	dmevh->minor = minor;
@@ -100,7 +100,7 @@ void dm_event_handler_set_minor(struct dm_event_handler *dmevh, int minor)
 {
 	int major = dmevh->major;
 
-	dm_event_handler_clear_devname(dmevh);
+	dm_event_handler_clear_dev_name(dmevh);
 
 	dmevh->major = major;
 	dmevh->minor = minor;
@@ -117,9 +117,9 @@ const char *dm_event_handler_get_dso(const struct dm_event_handler *dmevh)
 	return dmevh->dso;
 }
 
-const char *dm_event_handler_get_devname(const struct dm_event_handler *dmevh)
+const char *dm_event_handler_get_dev_name(const struct dm_event_handler *dmevh)
 {
-	return dmevh->devname;
+	return dmevh->dev_name;
 }
 
 const char *dm_event_handler_get_uuid(const struct dm_event_handler *dmevh)
@@ -256,11 +256,11 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 
 static int _daemon_talk(struct dm_event_fifos *fifos,
 			struct dm_event_daemon_message *msg, int cmd,
-			const char *dso_name, const char *devname,
+			const char *dso_name, const char *dev_name,
 			enum dm_event_mask evmask, uint32_t timeout)
 {
 	const char *dso = dso_name ? dso_name : "";
-	const char *dev = devname ? devname : "";
+	const char *dev = dev_name ? dev_name : "";
 	const char *fmt = "%s %s %u %" PRIu32;
 	memset(msg, 0, sizeof(*msg));
 
@@ -421,8 +421,8 @@ static struct dm_task *_get_device_info(const struct dm_event_handler *dmevh)
 
 	if (dmevh->uuid)
 		dm_task_set_uuid(dmt, dmevh->uuid);
-	else if (dmevh->devname)
-		dm_task_set_name(dmt, dmevh->devname);
+	else if (dmevh->dev_name)
+		dm_task_set_name(dmt, dmevh->dev_name);
 	else if (dmevh->major && dmevh->minor) {
 		dm_task_set_major(dmt, dmevh->major);
 		dm_task_set_minor(dmt, dmevh->minor);
@@ -453,7 +453,7 @@ failed:
 
 /* Handle the event (de)registration call and return negative error codes. */
 static int _do_event(int cmd, struct dm_event_daemon_message *msg,
-		    const char *dso_name, const char *devname,
+		    const char *dso_name, const char *dev_name,
 		    enum dm_event_mask evmask, uint32_t timeout)
 {
 	int ret;
@@ -464,7 +464,7 @@ static int _do_event(int cmd, struct dm_event_daemon_message *msg,
 		return -ESRCH;
 	}
 
-	ret = _daemon_talk(&fifos, msg, cmd, dso_name, devname, evmask, timeout);
+	ret = _daemon_talk(&fifos, msg, cmd, dso_name, dev_name, evmask, timeout);
 
 	/* what is the opposite of init? */
 	_dtr_client(&fifos);
@@ -553,12 +553,12 @@ static char *_fetch_string(char **src, const char delimiter)
 
 /* Parse a device message from the daemon. */
 static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
-			 char **devname, enum dm_event_mask *evmask)
+			 char **dev_name, enum dm_event_mask *evmask)
 {
 	char *p = msg->data;
 
 	if ((*dso_name = _fetch_string(&p, ' ')) &&
-	    (*devname = _fetch_string(&p, ' '))) {
+	    (*dev_name = _fetch_string(&p, ' '))) {
 		*evmask = atoi(p);
 
 		return 0;

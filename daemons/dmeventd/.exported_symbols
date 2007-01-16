@@ -1,7 +1,7 @@
 dm_event_handler_create
 dm_event_handler_destroy
 dm_event_handler_set_dso
-dm_event_handler_set_devname
+dm_event_handler_set_dev_name
 dm_event_handler_set_uuid
 dm_event_handler_set_major
 dm_event_handler_set_minor
