@@ -444,7 +444,7 @@ static int _target_register_events(struct cmd_context *cmd,
 		return_0;
 
 	dm_event_handler_set_dso(dmevh, dso);
-	dm_event_handler_set_devname(dmevh, name);
+	dm_event_handler_set_dev_name(dmevh, name);
 	dm_event_handler_set_event_mask(dmevh, DM_EVENT_ALL_ERRORS);
 	if (!dm_event_register_handler(dmevh)) {
 		dm_event_handler_destroy(dmevh);
@@ -481,7 +481,7 @@ static int _target_unregister_events(struct cmd_context *cmd,
 		return_0;
 
 	dm_event_handler_set_dso(dmevh, dso);
-	dm_event_handler_set_devname(dmevh, name);
+	dm_event_handler_set_dev_name(dmevh, name);
 	dm_event_handler_set_event_mask(dmevh, DM_EVENT_ALL_ERRORS);
 	if (!dm_event_unregister_handler(dmevh)) {
 		dm_event_handler_destroy(dmevh);

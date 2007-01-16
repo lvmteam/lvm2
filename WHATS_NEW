@@ -1,5 +1,6 @@
 Version 2.02.19 - 
 ===================================
+  Move basic reporting functions into libdevmapper.
   Fix partition table processing after sparc changes (2.02.16).
   Fix cmdline PE range processing segfault (2.02.13).
   Some libdevmapper-event interface changes.
