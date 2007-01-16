@@ -246,7 +246,7 @@ static void _free_dso_data(struct dso_data *data)
  */
 /* FIXME? move to libdevmapper to share with the client lib (need to
    make delimiter a parameter then) */
-static int _fetch_string(char **ptr, char **src, const char delimiter)
+static int _fetch_string(char **ptr, char **src, const int delimiter)
 {
 	int ret = 0;
 	char *p;

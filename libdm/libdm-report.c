@@ -60,7 +60,7 @@ struct field_properties {
 	struct list list;
 	uint32_t field_num;
 	uint32_t sort_posn;
-	int width;
+	unsigned width;
 	const struct dm_report_object_type *type;
 	uint32_t flags;
 };
@@ -667,7 +667,7 @@ static int _row_compare(const void *a, const void *b)
 	const struct row *rowa = *(const struct row **) a;
 	const struct row *rowb = *(const struct row **) b;
 	const struct dm_report_field *sfa, *sfb;
-	int32_t cnt = -1;
+	uint32_t cnt;
 
 	for (cnt = 0; cnt < rowa->rh->keys_count; cnt++) {
 		sfa = (*rowa->sort_fields)[cnt];
@@ -739,7 +739,7 @@ int dm_report_output(struct dm_report *rh)
 	struct dm_report_field *field;
 	const char *repstr;
 	char buf[4096];
-	int width;
+	unsigned width;
 
 	if (list_empty(&rh->rows))
 		return 1;

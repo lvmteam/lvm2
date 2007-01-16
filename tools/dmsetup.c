@@ -1673,7 +1673,7 @@ static char *parse_loop_device_name(char *dev)
 	char *buf;
 	char *device;
 
-	if (!(buf = dm_malloc(PATH_MAX)));
+	if (!(buf = dm_malloc(PATH_MAX)))
 		return NULL;
 
 	if (dev[0] == '/') {
