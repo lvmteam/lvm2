@@ -1,3 +1,6 @@
+Version 2.02.20 -
+===================================
+
 Version 2.02.19 - 17th January 2007
 ===================================
   Fix a segfault if an empty config file section encountered.
