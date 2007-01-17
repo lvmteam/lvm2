@@ -1,4 +1,4 @@
-Version 1.02.15 -
+Version 1.02.15 - 17th January 2007
 ===================================
   Add basic reporting functions to libdevmapper.
   Fix a malloc error path in dmsetup message.

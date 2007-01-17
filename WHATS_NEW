@@ -1,4 +1,4 @@
-Version 2.02.19 - 
+Version 2.02.19 - 17th January 2007
 ===================================
   Fix a segfault if an empty config file section encountered.
   Move basic reporting functions into libdevmapper.
