@@ -31,19 +31,23 @@
 #include <arpa/inet.h>		/* for htonl, ntohl */
 
 struct dm_event_handler {
-	const char *dso;
+	char *dso;
 
-	const char *dev_name;
+	char *dev_name;
 
-	const char *uuid;
+	char *uuid;
 	int major;
 	int minor;
 
 	enum dm_event_mask mask;
 };
 
-static void dm_event_handler_clear_dev_name(struct dm_event_handler *dmevh)
+static void _dm_event_handler_clear_dev_info(struct dm_event_handler *dmevh)
 {
+	if (dmevh->dev_name)
+		dm_free(dmevh->dev_name);
+	if (dmevh->uuid)
+		dm_free(dmevh->uuid);
 	dmevh->dev_name = dmevh->uuid = NULL;
 	dmevh->major = dmevh->minor = 0;
 }
@@ -64,33 +68,57 @@ struct dm_event_handler *dm_event_handler_create(void)
 
 void dm_event_handler_destroy(struct dm_event_handler *dmevh)
 {
+	_dm_event_handler_clear_dev_info(dmevh);
+	if (dmevh->dso)
+		dm_free(dmevh->dso);
 	dm_free(dmevh);
 }
 
-void dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path)
+int dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path)
 {
-	dmevh->dso = path;
+	if (!path) /* noop */
+		return 0;
+	if (dmevh->dso)
+		dm_free(dmevh->dso);
+
+	dmevh->dso = dm_strdup(path);
+	if (!dmevh->dso)
+		return -ENOMEM;
+
+	return 0;
 }
 
-void dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *dev_name)
+int dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *dev_name)
 {
-	dm_event_handler_clear_dev_name(dmevh);
+	if (!dev_name)
+		return 0;
 
-	dmevh->dev_name = dev_name;
+	_dm_event_handler_clear_dev_info(dmevh);
+
+	dmevh->dev_name = dm_strdup(dev_name);
+	if (!dmevh->dev_name)
+		return -ENOMEM;
+	return 0;
 }
 
-void dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid)
+int dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid)
 {
-	dm_event_handler_clear_dev_name(dmevh);
+	if (!uuid)
+		return 0;
 
-	dmevh->uuid = uuid;
+	_dm_event_handler_clear_dev_info(dmevh);
+
+	dmevh->uuid = dm_strdup(uuid);
+	if (!dmevh->dev_name)
+		return -ENOMEM;
+	return 0;
 }
 
 void dm_event_handler_set_major(struct dm_event_handler *dmevh, int major)
 {
 	int minor = dmevh->minor;
 
-	dm_event_handler_clear_dev_name(dmevh);
+	_dm_event_handler_clear_dev_info(dmevh);
 
 	dmevh->major = major;
 	dmevh->minor = minor;
@@ -100,7 +128,7 @@ void dm_event_handler_set_minor(struct dm_event_handler *dmevh, int minor)
 {
 	int major = dmevh->major;
 
-	dm_event_handler_clear_dev_name(dmevh);
+	_dm_event_handler_clear_dev_info(dmevh);
 
 	dmevh->major = major;
 	dmevh->minor = minor;
@@ -582,7 +610,7 @@ static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
 int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 {
 	int ret;
-	char *uuid = NULL;
+	const char *uuid = NULL;
 	char *reply_dso = NULL, *reply_uuid = NULL;
 	enum dm_event_mask reply_mask;
 	struct dm_task *dmt;
@@ -601,22 +629,56 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 		/* FIXME this will probably horribly break if we get
 		   ill-formatted reply */
 		ret = _parse_message(&msg, &reply_dso, &reply_uuid, &reply_mask);
-	} else
+	} else {
 		ret = -ENOENT;
-
-	if (msg.data)
-		dm_free(msg.data);
-
-	dm_event_handler_set_uuid(dmevh, reply_uuid);
-	dm_event_handler_set_dso(dmevh, reply_dso);
-	dm_event_handler_set_event_mask(dmevh, reply_mask);
-	/* FIXME also fill in name and device number */
-	/* FIXME this probably leaks memory, since noone is going to
-	   dm_free the bits in dmevh -- needs changes to
-	   dm_event_handle_set behaviour */
+		goto fail;
+	}
 
 	dm_task_destroy(dmt);
 
+	if (msg.data) {
+		dm_free(msg.data);
+		msg.data = NULL;
+	}
+
+	_dm_event_handler_clear_dev_info(dmevh);
+	dmevh->uuid = dm_strdup(reply_uuid);
+	if (!dmevh->uuid) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	if (!(dmt = _get_device_info(dmevh))) {
+		ret = -ENXIO; /* dmeventd probably gave us bogus uuid back */
+		goto fail;
+	}
+
+	dm_event_handler_set_dso(dmevh, reply_dso);
+	dm_event_handler_set_event_mask(dmevh, reply_mask);
+	dmevh->dev_name = dm_strdup(dm_task_get_name(dmt));
+	if (!dmevh->dev_name) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	struct dm_info info;
+	if (!dm_task_get_info(dmt, &info)) {
+		ret = -1;
+		goto fail;
+	}
+
+	dmevh->major = info.major;
+	dmevh->minor = info.minor;
+
+	dm_task_destroy(dmt);
+
+	return ret;
+
+ fail:
+	if (msg.data)
+		dm_free(msg.data);
+	_dm_event_handler_clear_dev_info(dmevh);
+	dm_task_destroy(dmt);
 	return ret;
 }
 

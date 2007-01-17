@@ -1469,15 +1469,20 @@ static int _set_oom_adj(int val)
 {
 	FILE *fp;
 
+	struct stat st;
+
+	if (stat("/proc/self/oom_adj", &st) == -1)
+		return -errno;
+
 	fp = fopen("/proc/self/oom_adj", "w");
 
 	if (!fp)
-		return 0;
+		return -1;
 
 	fprintf(fp, "%i", val);
 	fclose(fp);
 
-	return 1;
+	return 0;
 }
 
 static void _daemonize(void)
@@ -1568,7 +1573,10 @@ int main(int argc, char *argv[])
 
 	_daemonize();
 
-	if (!_set_oom_adj(-16))
+	/*
+	 * ENOENT means the kernel does not support oom_adj
+	 */
+	if (_set_oom_adj(-16) != -ENOENT)
 		syslog(LOG_ERR, "Failed to set oom_adj to protect against OOM killer");
 
 	_init_thread_signals();
