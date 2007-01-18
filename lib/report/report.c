@@ -866,8 +866,8 @@ static const struct dm_report_object_type _report_types[] = {
  * Import column definitions
  */
 
-#define STR (DM_REPORT_FIELD_STRING | DM_REPORT_FIELD_ALIGN_LEFT)
-#define NUM (DM_REPORT_FIELD_NUMBER | DM_REPORT_FIELD_ALIGN_RIGHT)
+#define STR DM_REPORT_FIELD_TYPE_STRING
+#define NUM DM_REPORT_FIELD_TYPE_NUMBER
 #define FIELD(type, strct, sorttype, head, field, width, func, id) {type, id, (off_t)((void *)&_dummy._ ## strct.field - (void *)&_dummy._ ## strct), head, width, sorttype, &_ ## func ## _disp},
 
 static struct dm_report_field_type _fields[] = {
