@@ -35,11 +35,13 @@ lv_uuid, lv_name, lv_attr, lv_major, lv_minor, lv_kernel_major, lv_kernel_minor,
 lv_size, seg_count, origin, snap_percent,
 copy_percent, move_pv, lv_tags,
 segtype, stripes,
-stripesize, chunksize, seg_start, seg_size, seg_tags, devices.
+stripesize, chunksize, seg_start, seg_size, seg_tags, devices,
+regionsize, mirror_log, modules.
 .IP
 With \-\-segments, any "seg_" prefixes are optional; otherwise any "lv_"
 prefixes are optional.  Columns mentioned in \fBvgs (8)\fP 
 can also be chosen.
+Use \fb-o help\fP to view the full list of fields available.
 .IP
 The lv_attr bits are: 
 .RS
