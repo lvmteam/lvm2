@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
- * Copyright (C) 2005 NEC Corperation
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2007 NEC Corperation
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -114,7 +114,9 @@ enum {
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	OPTIONS_ARG,
+	SEPARATOR_ARG,
 	SHOWKEYS_ARG,
+	SORT_ARG,
 	TABLE_ARG,
 	TARGET_ARG,
 	TREE_ARG,
@@ -126,10 +128,10 @@ enum {
 };
 
 static int _switches[NUM_SWITCHES];
-static int _values[NUM_SWITCHES];
+static int _int_args[NUM_SWITCHES];
+static char *_string_args[NUM_SWITCHES];
 static int _num_devices;
 static char *_uuid;
-static char *_fields;
 static char *_table;
 static char *_target;
 static char *_command;
@@ -348,8 +350,8 @@ static int _set_task_device(struct dm_task *dmt, const char *name, int optional)
 		if (!dm_task_set_uuid(dmt, _uuid))
 			return 0;
 	} else if (_switches[MAJOR_ARG] && _switches[MINOR_ARG]) {
-		if (!dm_task_set_major(dmt, _values[MAJOR_ARG]) ||
-		    !dm_task_set_minor(dmt, _values[MINOR_ARG]))
+		if (!dm_task_set_major(dmt, _int_args[MAJOR_ARG]) ||
+		    !dm_task_set_minor(dmt, _int_args[MINOR_ARG]))
 			return 0;
 	} else if (!optional) {
 		fprintf(stderr, "No device specified.\n");
@@ -440,19 +442,19 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
 		goto out;
 
-	if (_switches[MAJOR_ARG] && !dm_task_set_major(dmt, _values[MAJOR_ARG]))
+	if (_switches[MAJOR_ARG] && !dm_task_set_major(dmt, _int_args[MAJOR_ARG]))
 		goto out;
 
-	if (_switches[MINOR_ARG] && !dm_task_set_minor(dmt, _values[MINOR_ARG]))
+	if (_switches[MINOR_ARG] && !dm_task_set_minor(dmt, _int_args[MINOR_ARG]))
 		goto out;
 
-	if (_switches[UID_ARG] && !dm_task_set_uid(dmt, _values[UID_ARG]))
+	if (_switches[UID_ARG] && !dm_task_set_uid(dmt, _int_args[UID_ARG]))
 		goto out;
 
-	if (_switches[GID_ARG] && !dm_task_set_gid(dmt, _values[GID_ARG]))
+	if (_switches[GID_ARG] && !dm_task_set_gid(dmt, _int_args[GID_ARG]))
 		goto out;
 
-	if (_switches[MODE_ARG] && !dm_task_set_mode(dmt, _values[MODE_ARG]))
+	if (_switches[MODE_ARG] && !dm_task_set_mode(dmt, _int_args[MODE_ARG]))
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
@@ -1736,7 +1738,7 @@ static int _loop_table(char *table, size_t tlen, char *file, char *dev, off_t of
 
 #ifdef HAVE_SYS_STATVFS_H
 	if (fstatvfs(fd, &fsbuf))
-		goto error;       
+		goto error;
 
 	/* FIXME Fragment size currently unused */
 	blksize = fsbuf.f_frsize;
@@ -1744,7 +1746,7 @@ static int _loop_table(char *table, size_t tlen, char *file, char *dev, off_t of
 
 	close(fd);
 
-	if (dm_snprintf(table, tlen, "%llu %llu loop %s %llu\n", 0ULL, 
+	if (dm_snprintf(table, tlen, "%llu %llu loop %s %llu\n", 0ULL,
 			(long long unsigned)sectors, file, off) < 0)
 		return 0;
 
@@ -1888,7 +1890,9 @@ static int _process_switches(int *argc, char ***argv)
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
+		{"separator", 1, &ind, SEPARATOR_ARG},
 		{"showkeys", 0, &ind, SHOWKEYS_ARG},
+		{"sort", 1, &ind, SORT_ARG},
 		{"table", 1, &ind, TABLE_ARG},
 		{"target", 1, &ind, TARGET_ARG},
 		{"tree", 0, &ind, TREE_ARG},
@@ -1906,7 +1910,7 @@ static int _process_switches(int *argc, char ***argv)
 	 * Zero all the index counts.
 	 */
 	memset(&_switches, 0, sizeof(_switches));
-	memset(&_values, 0, sizeof(_values));
+	memset(&_int_args, 0, sizeof(_int_args));
 
 	namebase = strdup((*argv)[0]);
 	base = basename(namebase);
@@ -1918,17 +1922,17 @@ static int _process_switches(int *argc, char ***argv)
 		_switches[OPTIONS_ARG]++;
 		_switches[MAJOR_ARG]++;
 		_switches[MINOR_ARG]++;
-		_fields = (char *) "name";
+		_string_args[OPTIONS_ARG] = (char *) "name";
 
 		if (*argc == 3) {
-			_values[MAJOR_ARG] = atoi((*argv)[1]);
-			_values[MINOR_ARG] = atoi((*argv)[2]);
+			_int_args[MAJOR_ARG] = atoi((*argv)[1]);
+			_int_args[MINOR_ARG] = atoi((*argv)[2]);
 			*argc -= 2;
 			*argv += 2;
 		} else if ((*argc == 2) &&
 			   (2 == sscanf((*argv)[1], "%i:%i",
-					&_values[MAJOR_ARG],
-					&_values[MINOR_ARG]))) {
+					&_int_args[MAJOR_ARG],
+					&_int_args[MINOR_ARG]))) {
 			*argc -= 1;
 			*argv += 1;
 		} else {
@@ -1950,7 +1954,7 @@ static int _process_switches(int *argc, char ***argv)
 
 	optarg = 0;
 	optind = OPTIND_INIT;
-	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfGj:m:Mno:ru:Uv",
+	while ((ind = -1, c = GETOPTLONG_FN(*argc, *argv, "cCfGj:m:Mno:O:ru:Uv",
 					    long_options, NULL)) != -1) {
 		if (c == ':' || c == '?')
 			return 0;
@@ -1962,17 +1966,25 @@ static int _process_switches(int *argc, char ***argv)
 			_switches[READ_ONLY]++;
 		if (c == 'j' || ind == MAJOR_ARG) {
 			_switches[MAJOR_ARG]++;
-			_values[MAJOR_ARG] = atoi(optarg);
+			_int_args[MAJOR_ARG] = atoi(optarg);
 		}
 		if (c == 'm' || ind == MINOR_ARG) {
 			_switches[MINOR_ARG]++;
-			_values[MINOR_ARG] = atoi(optarg);
+			_int_args[MINOR_ARG] = atoi(optarg);
 		}
 		if (c == 'n' || ind == NOTABLE_ARG)
 			_switches[NOTABLE_ARG]++;
 		if (c == 'o' || ind == OPTIONS_ARG) {
 			_switches[OPTIONS_ARG]++;
-			_fields = optarg;
+			_string_args[OPTIONS_ARG] = optarg;
+		}
+		if (ind == SEPARATOR_ARG) {
+			_switches[SEPARATOR_ARG]++;
+			_string_args[SEPARATOR_ARG] = optarg;
+		}
+		if (c == 'O' || ind == SORT_ARG) {
+			_switches[SORT_ARG]++;
+			_string_args[SORT_ARG] = optarg;
 		}
 		if (c == 'v' || ind == VERBOSE_ARG)
 			_switches[VERBOSE_ARG]++;
@@ -1982,16 +1994,16 @@ static int _process_switches(int *argc, char ***argv)
 		}
 		if (c == 'G' || ind == GID_ARG) {
 			_switches[GID_ARG]++;
-			_values[GID_ARG] = atoi(optarg);
+			_int_args[GID_ARG] = atoi(optarg);
 		}
 		if (c == 'U' || ind == UID_ARG) {
 			_switches[UID_ARG]++;
-			_values[UID_ARG] = atoi(optarg);
+			_int_args[UID_ARG] = atoi(optarg);
 		}
 		if (c == 'M' || ind == MODE_ARG) {
 			_switches[MODE_ARG]++;
 			/* FIXME Accept modes as per chmod */
-			_values[MODE_ARG] = (int) strtol(optarg, NULL, 8);
+			_int_args[MODE_ARG] = (int) strtol(optarg, NULL, 8);
 		}
 		if ((ind == EXEC_ARG)) {
 			_switches[EXEC_ARG]++;
@@ -2032,12 +2044,12 @@ static int _process_switches(int *argc, char ***argv)
 	}
 
 	if (_switches[COLS_ARG] && _switches[OPTIONS_ARG] &&
-	    strcmp(_fields, "name")) {
+	    strcmp(_string_args[OPTIONS_ARG], "name")) {
 		fprintf(stderr, "Only -o name is supported so far.\n");
 		return 0;
 	}
 
-	if (_switches[TREE_ARG] && !_process_tree_options(_fields))
+	if (_switches[TREE_ARG] && !_process_tree_options(_string_args[OPTIONS_ARG]))
 		return 0;
 
 	if (_switches[TABLE_ARG] && _switches[NOTABLE_ARG]) {

@@ -672,7 +672,7 @@ static int _row_compare(const void *a, const void *b)
 	for (cnt = 0; cnt < rowa->rh->keys_count; cnt++) {
 		sfa = (*rowa->sort_fields)[cnt];
 		sfb = (*rowb->sort_fields)[cnt];
-		if (sfa->props->flags & DM_REPORT_FIELD_NUMBER) {
+		if (sfa->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) {
 			const uint64_t numa =
 			    *(const uint64_t *) sfa->sort_value;
 			const uint64_t numb =
@@ -686,7 +686,7 @@ static int _row_compare(const void *a, const void *b)
 			} else {	/* FLD_DESCENDING */
 				return (numa < numb) ? 1 : -1;
 			}
-		} else {	/* DM_REPORT_FIELD_STRING */
+		} else {	/* DM_REPORT_FIELD_TYPE_STRING */
 			const char *stra = (const char *) sfa->sort_value;
 			const char *strb = (const char *) sfb->sort_value;
 			int cmp = strcmp(stra, strb);
@@ -740,6 +740,7 @@ int dm_report_output(struct dm_report *rh)
 	const char *repstr;
 	char buf[4096];
 	unsigned width;
+	uint32_t align;
 
 	if (list_empty(&rh->rows))
 		return 1;
@@ -771,18 +772,23 @@ int dm_report_output(struct dm_report *rh)
 				if (!dm_pool_grow_object(rh->mem, repstr,
 						      strlen(repstr)))
 					goto bad_grow;
-			} else if (field->props->flags & DM_REPORT_FIELD_ALIGN_LEFT) {
-				if (dm_snprintf(buf, sizeof(buf), "%-*.*s",
-						 width, width, repstr) < 0)
-					goto bad_snprintf;
-				if (!dm_pool_grow_object(rh->mem, buf, width))
-					goto bad_grow;
-			} else if (field->props->flags & DM_REPORT_FIELD_ALIGN_RIGHT) {
-				if (dm_snprintf(buf, sizeof(buf), "%*.*s",
-						 width, width, repstr) < 0)
-					goto bad_snprintf;
-				if (!dm_pool_grow_object(rh->mem, buf, width))
-					goto bad_grow;
+			} else {
+				if (!(align = field->props->flags & DM_REPORT_FIELD_ALIGN_MASK))
+					align = (field->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ? 
+						DM_REPORT_FIELD_ALIGN_RIGHT : DM_REPORT_FIELD_ALIGN_LEFT;
+				if (align & DM_REPORT_FIELD_ALIGN_LEFT) {
+					if (dm_snprintf(buf, sizeof(buf), "%-*.*s",
+							 width, width, repstr) < 0)
+						goto bad_snprintf;
+					if (!dm_pool_grow_object(rh->mem, buf, width))
+						goto bad_grow;
+				} else if (field->props->flags & DM_REPORT_FIELD_ALIGN_RIGHT) {
+					if (dm_snprintf(buf, sizeof(buf), "%*.*s",
+							 width, width, repstr) < 0)
+						goto bad_snprintf;
+					if (!dm_pool_grow_object(rh->mem, buf, width))
+						goto bad_grow;
+				}
 			}
 
 			if (!list_end(&row->fields, fh))
