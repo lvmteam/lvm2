@@ -31,9 +31,16 @@ if processing the output.
 Comma-separated ordered list of columns.  Precede the list with '+' to append
 to the default selection of columns.  Column names are: pv_fmt, pv_uuid,
 pv_size, dev_size, pv_free, pv_used, pv_name, pv_attr, pv_pe_count, 
-pv_pe_alloc_count, pv_tags.
-The "pv_" prefix is optional.  Columns mentioned in \fBvgs (8)\fP can also
+pv_pe_alloc_count, pv_tags, pvseg_start, pvseg_size, pe_start.
+With --segments, any "pvseg_" prefixes are optional; otherwise any
+"pv_" prefixes are optional.  Columns mentioned in \fBvgs (8)\fP can also
 be chosen. The pv_attr bits are: (a)llocatable and e(x)ported.
+Use \fb-o help\fP to view the full list of fields available.
+.TP
+.I \-\-segments
+Produces one line of output for each contiguous allocation of space on each
+Physical Volume, showing the start (pvseg_start) and length (pvseg_size) in
+units of physical extents.
 .TP
 .I \-O, \-\-sort
 Comma-separated ordered list of columns to sort by.  Replaces the default
