@@ -1,5 +1,6 @@
 Version 1.02.16 -
 ===================================
+  Suppress 'Unrecognised field' error if report field is 'help'.
   Add --separator and --sort to dmsetup (unused).
   Make alignment flag optional when specifying report fields.
 

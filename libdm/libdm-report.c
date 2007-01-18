@@ -416,8 +416,9 @@ static int _parse_options(struct dm_report *rh, const char *format)
 		if (!_field_match(rh, ws, (size_t) (we - ws))) {
 			_display_fields(rh);
 			log_print(" ");
-			log_error("dm_report: Unrecognised field: %.*s",
-				  (int) (we - ws), ws);
+			if (strcasecmp(ws, "help") && strcmp(ws, "?"))
+				log_error("Unrecognised field: %.*s",
+					  (int) (we - ws), ws);
 			return 0;
 		}
 	}
