@@ -782,7 +782,7 @@ int dm_report_output(struct dm_report *rh)
 						goto bad_snprintf;
 					if (!dm_pool_grow_object(rh->mem, buf, width))
 						goto bad_grow;
-				} else if (field->props->flags & DM_REPORT_FIELD_ALIGN_RIGHT) {
+				} else if (align & DM_REPORT_FIELD_ALIGN_RIGHT) {
 					if (dm_snprintf(buf, sizeof(buf), "%*.*s",
 							 width, width, repstr) < 0)
 						goto bad_snprintf;
