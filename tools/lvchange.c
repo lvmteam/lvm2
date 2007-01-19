@@ -80,10 +80,9 @@ static int lvchange_permission(struct cmd_context *cmd,
 	return 1;
 }
 
-static int lvchange_registration(struct cmd_context *cmd,
-				 struct logical_volume *lv)
+static int lvchange_monitoring(struct cmd_context *cmd,
+			       struct logical_volume *lv)
 {
-	int r;
 	struct lvinfo info;
 
 	if (!lv_info(cmd, lv, &info, 0) || !info.exists) {
@@ -91,27 +90,14 @@ static int lvchange_registration(struct cmd_context *cmd,
 		return 0;
 	}
 
-	/* do not register pvmove lv's */
+	/* do not monitor pvmove lv's */
 	if (lv->status & PVMOVE)
 		return 1;
 
-	log_verbose("%smonitoring logical volume \"%s\"",
-		    (dmeventd_register_mode()) ? "" : "Not ", lv->name);
-	r = register_dev_for_events(cmd, lv, dmeventd_register_mode());
+	if (!monitor_dev_for_events(cmd, lv, dmeventd_monitor_mode()))
+		stack;
 
-	if (r < 0) {
-		log_error("Unable to %smonitor logical volume, %s",
-			  (dmeventd_register_mode()) ? "" : "un", lv->name);
-		r = 0;
-	} else if (!r) {
-		log_verbose("Logical volume %s needs no %smonitoring, or is already %smonitored",
-			    (dmeventd_register_mode()) ? "" : "un",
-			    lv->name,
-			    (dmeventd_register_mode()) ? "" : "un");
-		r = 1;
-	}
-
-	return r;
+	return 1;
 }
 
 static int lvchange_availability(struct cmd_context *cmd,
@@ -605,7 +591,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	init_dmeventd_register(arg_int_value(cmd, monitor_ARG, DEFAULT_DMEVENTD_MONITOR));
+	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG, DEFAULT_DMEVENTD_MONITOR));
 
 	/* access permission change */
 	if (arg_count(cmd, permission_ARG)) {
@@ -675,7 +661,7 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!arg_count(cmd, available_ARG) &&
 	    !arg_count(cmd, refresh_ARG) &&
 	    arg_count(cmd, monitor_ARG)) {
-		if (!lvchange_registration(cmd, lv))
+		if (!lvchange_monitoring(cmd, lv))
 			return ECMD_FAILED;
 	}
 

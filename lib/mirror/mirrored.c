@@ -411,7 +411,7 @@ fail:
 	return NULL;
 }
 
-static int _target_registered(struct lv_segment *seg, int *pending)
+static int _target_monitored(struct lv_segment *seg, int *pending)
 {
 	char *dso, *name;
 	struct logical_volume *lv;
@@ -476,19 +476,19 @@ static int _target_set_events(struct cmd_context *cmd,
 	if (!r)
 		return_0;
 
-	log_info("%s %s for events", set ? "Registered" : "Unregistered", name);
+	log_info("%s %s for events", set ? "Monitored" : "Unmonitored", name);
 
 	return 1;
 }
 
-static int _target_register_events(struct cmd_context *cmd,
+static int _target_monitor_events(struct cmd_context *cmd,
 				     struct lv_segment *seg,
 				     int events)
 {
 	return _target_set_events(cmd, seg, events, 1);
 }
 
-static int _target_unregister_events(struct cmd_context *cmd,
+static int _target_unmonitor_events(struct cmd_context *cmd,
 				     struct lv_segment *seg,
 				     int events)
 {
@@ -536,9 +536,9 @@ static struct segtype_handler _mirrored_ops = {
 	.target_percent = _mirrored_target_percent,
 	.target_present = _mirrored_target_present,
 #ifdef DMEVENTD
-	.target_registered = _target_registered,
-	.target_register_events = _target_register_events,
-	.target_unregister_events = _target_unregister_events,
+	.target_monitored = _target_monitored,
+	.target_monitor_events = _target_monitor_events,
+	.target_unmonitor_events = _target_unmonitor_events,
 #endif
 #endif
 	.modules_needed = _mirrored_modules_needed,

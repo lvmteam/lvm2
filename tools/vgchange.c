@@ -15,7 +15,7 @@
 
 #include "tools.h"
 
-static int _register_lvs_in_vg(struct cmd_context *cmd,
+static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 			       struct volume_group *vg, int reg)
 {
 	struct lv_list *lvl;
@@ -23,7 +23,6 @@ static int _register_lvs_in_vg(struct cmd_context *cmd,
 	struct lvinfo info;
 	int lv_active;
 	int count = 0;
-	int r;
 
 	list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
@@ -39,16 +38,9 @@ static int _register_lvs_in_vg(struct cmd_context *cmd,
 		if ((lv->status & PVMOVE) || !lv_active)
 			continue;
 
-		r = register_dev_for_events(cmd, lv, reg);
-
-		if (r < 0) {
-			log_error("Failed to %s logical volume, %s",
-				  (reg) ? "register" : "unregister",
-				  lv->name);
+		if (!monitor_dev_for_events(cmd, lv, reg)) {
 			continue;
-		}
-
-		if (r)
+		} else
 			count++;
 	}
 
@@ -114,10 +106,10 @@ static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg
 	int active, monitored;
 
 	if ((active = lvs_in_vg_activated(vg))) {
-		monitored = _register_lvs_in_vg(cmd, vg, dmeventd_register_mode());
+		monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
 		log_print("%d logical volume(s) in volume group "
 			    "\"%s\" %smonitored",
-			    monitored, vg->name, (dmeventd_register_mode()) ? "" : "un");
+			    monitored, vg->name, (dmeventd_monitor_mode()) ? "" : "un");
 	}
 
 	return ECMD_PROCESSED;
@@ -154,11 +146,11 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 	if (activate && (active = lvs_in_vg_activated(vg))) {
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
-		monitored = _register_lvs_in_vg(cmd, vg, dmeventd_register_mode());
+		monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
 		log_verbose("%d existing logical volume(s) in volume "
 			    "group \"%s\" %smonitored",
 			    monitored, vg->name,
-			    dmeventd_register_mode() ? "" : "un");
+			    dmeventd_monitor_mode() ? "" : "un");
 	}
 
 	if (activate && _activate_lvs_in_vg(cmd, vg, available))
@@ -540,7 +532,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	init_dmeventd_register(arg_int_value(cmd, monitor_ARG, DEFAULT_DMEVENTD_MONITOR));
+	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG, DEFAULT_DMEVENTD_MONITOR));
 
 	if (arg_count(cmd, available_ARG))
 		r = _vgchange_available(cmd, vg);
