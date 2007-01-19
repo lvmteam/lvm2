@@ -1,5 +1,6 @@
 Version 1.02.16 -
 ===================================
+  Add cmdline debug & version options to dmeventd.
   Add DM_LIB_VERSION definition to configure.h.
   Suppress 'Unrecognised field' error if report field is 'help'.
   Add --separator and --sort to dmsetup (unused).
