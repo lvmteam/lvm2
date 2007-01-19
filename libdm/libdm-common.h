@@ -28,6 +28,4 @@ int rm_dev_node(const char *dev_name);
 int rename_dev_node(const char *old_name, const char *new_name);
 void update_devs(void);
 
-#define DM_LIB_VERSION @DM_LIB_VERSION@
-
 #endif
