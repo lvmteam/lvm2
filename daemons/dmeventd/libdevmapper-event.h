@@ -55,17 +55,17 @@ void dm_event_handler_destroy(struct dm_event_handler *dmevh);
 /*
  * Path of shared library to handle events.
  *
- * All of dso, dev_name and uuid strings are duplicated, you do not
+ * All of dso, device_name and uuid strings are duplicated, you do not
  * need to keep the pointers valid after the call succeeds. Thes may
  * return -ENOMEM though.
  */
 int dm_event_handler_set_dso(struct dm_event_handler *dmevh, const char *path);
 
 /*
- * Identify the device to monitor by exactly one of dev_name, uuid or
+ * Identify the device to monitor by exactly one of device_name, uuid or
  * device number. String arguments are duplicated, see above.
  */
-int dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *dev_name);
+int dm_event_handler_set_dev_name(struct dm_event_handler *dmevh, const char *device_name);
 
 int dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid);
 
@@ -97,8 +97,8 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
 /* Prototypes for DSO interface, see dmeventd.c, struct dso_data for
    detailed descriptions. */
 void process_event(struct dm_task *dmt, enum dm_event_mask evmask);
-int register_device(const char *dev_name, const char *uuid, int major, int minor);
-int unregister_device(const char *dev_name, const char *uuid, int major,
+int register_device(const char *device_name, const char *uuid, int major, int minor);
+int unregister_device(const char *device_name, const char *uuid, int major,
 		      int minor);
 
 #endif
