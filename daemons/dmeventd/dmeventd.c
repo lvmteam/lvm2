@@ -1558,22 +1558,19 @@ static void _daemonize(void)
 		/* Problem with child.  Determine what it is by exit code */
 		switch (WEXITSTATUS(child_status)) {
 		case EXIT_LOCKFILE_INUSE:
+			fprintf(stderr, "Another dmeventd daemon is already running\n");
 			break;
 		case EXIT_DESC_CLOSE_FAILURE:
-			break;
 		case EXIT_DESC_OPEN_FAILURE:
-			break;
 		case EXIT_OPEN_PID_FAILURE:
-			break;
 		case EXIT_FIFO_FAILURE:
-			break;
 		case EXIT_CHDIR_FAILURE:
-			break;
 		default:
+			fprintf(stderr, "Child exited with code %d\n", WEXITSTATUS(child_status));
 			break;
 		}
 
-		exit(child_status);
+		exit(WEXITSTATUS(child_status));
 	}
 
 	if (chdir("/"))
