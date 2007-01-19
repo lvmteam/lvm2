@@ -48,7 +48,7 @@ static char _cmd_name[30] = "";
 static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
 static int _mirror_in_sync = 0;
-static int _dmeventd_register = DEFAULT_DMEVENTD_MONITOR;
+static int _dmeventd_monitor = DEFAULT_DMEVENTD_MONITOR;
 
 static lvm2_log_fn_t _lvm2_log_fn = NULL;
 
@@ -189,9 +189,9 @@ void init_mirror_in_sync(int in_sync)
 	_mirror_in_sync = in_sync;
 }
 
-void init_dmeventd_register(int reg)
+void init_dmeventd_monitor(int reg)
 {
-	_dmeventd_register = reg;
+	_dmeventd_monitor = reg;
 }
 
 void init_cmd_name(int status)
@@ -268,9 +268,9 @@ int mirror_in_sync(void)
 	return _mirror_in_sync;
 }
 
-int dmeventd_register_mode(void)
+int dmeventd_monitor_mode(void)
 {
-	return _dmeventd_register;
+	return _dmeventd_monitor;
 }
 
 void init_debug(int level)
