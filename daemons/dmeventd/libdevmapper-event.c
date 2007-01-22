@@ -38,6 +38,7 @@ struct dm_event_handler {
 	char *uuid;
 	int major;
 	int minor;
+	uint32_t timeout;
 
 	enum dm_event_mask mask;
 };
@@ -62,6 +63,7 @@ struct dm_event_handler *dm_event_handler_create(void)
 	dmevh->dso = dmevh->dev_name = dmevh->uuid = NULL;
 	dmevh->major = dmevh->minor = 0;
 	dmevh->mask = 0;
+	dmevh->timeout = 0;
 
 	return dmevh;
 }
@@ -140,6 +142,11 @@ void dm_event_handler_set_event_mask(struct dm_event_handler *dmevh,
 	dmevh->mask = evmask;
 }
 
+void dm_event_handler_set_timeout(struct dm_event_handler *dmevh, int timeout)
+{
+	dmevh->timeout = timeout;
+}
+
 const char *dm_event_handler_get_dso(const struct dm_event_handler *dmevh)
 {
 	return dmevh->dso;
@@ -163,6 +170,11 @@ int dm_event_handler_get_major(const struct dm_event_handler *dmevh)
 int dm_event_handler_get_minor(const struct dm_event_handler *dmevh)
 {
 	return dmevh->minor;
+}
+
+int dm_event_handler_get_timeout(const struct dm_event_handler *dmevh)
+{
+	return dmevh->timeout;
 }
 
 enum dm_event_mask dm_event_handler_get_event_mask(const struct dm_event_handler *dmevh)
@@ -484,8 +496,8 @@ failed:
 
 /* Handle the event (de)registration call and return negative error codes. */
 static int _do_event(int cmd, struct dm_event_daemon_message *msg,
-		    const char *dso_name, const char *dev_name,
-		    enum dm_event_mask evmask, uint32_t timeout)
+		     const char *dso_name, const char *dev_name,
+		     enum dm_event_mask evmask, uint32_t timeout)
 {
 	int ret;
 	struct dm_event_fifos fifos;
@@ -519,7 +531,7 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 	uuid = dm_task_get_uuid(dmt);
 
 	if ((err = _do_event(DM_EVENT_CMD_REGISTER_FOR_EVENT, &msg,
-			     dmevh->dso, uuid, dmevh->mask, 0)) < 0) {
+			     dmevh->dso, uuid, dmevh->mask, dmevh->timeout)) < 0) {
 		log_error("%s: event registration failed: %s",
 			  dm_task_get_name(dmt),
 			  msg.data ? msg.data : strerror(-err));
@@ -549,7 +561,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 	uuid = dm_task_get_uuid(dmt);
 
 	if ((err = _do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, &msg,
-			    dmevh->dso, uuid, dmevh->mask, 0)) < 0) {
+			    dmevh->dso, uuid, dmevh->mask, dmevh->timeout)) < 0) {
 		log_error("%s: event deregistration failed: %s",
 			  dm_task_get_name(dmt),
 			  msg.data ? msg.data : strerror(-err));
@@ -690,8 +702,9 @@ int dm_event_set_timeout(const char *device_path, uint32_t timeout)
 
 	if (!device_exists(device_path))
 		return -ENODEV;
+
 	return _do_event(DM_EVENT_CMD_SET_TIMEOUT, &msg,
-			NULL, device_path, 0, timeout);
+			 NULL, device_path, 0, timeout);
 }
 
 int dm_event_get_timeout(const char *device_path, uint32_t *timeout)

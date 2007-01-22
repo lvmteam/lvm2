@@ -15,3 +15,5 @@ dm_event_handler_get_event_mask
 dm_event_register_handler
 dm_event_unregister_handler
 dm_event_get_registered_device
+dm_event_handler_set_timeout
+dm_event_handler_get_timeout

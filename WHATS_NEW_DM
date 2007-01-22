@@ -1,5 +1,7 @@
 Version 1.02.16 -
 ===================================
+  Add dm_event_handler_[gs]et_timeout functions.
+  Streamline dm_report_field_* interface.
   Add cmdline debug & version options to dmeventd.
   Add DM_LIB_VERSION definition to configure.h.
   Suppress 'Unrecognised field' error if report field is 'help'.

@@ -38,8 +38,8 @@ static int _verbose = 0;
  * Library users can provide their own logging
  * function.
  */
-static void _default_log(int level, const char *file, int line,
-			 const char *f, ...)
+static void _default_log(int level, const char *file __attribute((unused)),
+			 int line __attribute((unused)), const char *f, ...)
 {
 	va_list ap;
 

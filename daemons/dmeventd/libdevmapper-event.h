@@ -71,6 +71,7 @@ int dm_event_handler_set_uuid(struct dm_event_handler *dmevh, const char *uuid);
 
 void dm_event_handler_set_major(struct dm_event_handler *dmevh, int major);
 void dm_event_handler_set_minor(struct dm_event_handler *dmevh, int minor);
+void dm_event_handler_set_timeout(struct dm_event_handler *dmevh, int timeout);
 
 /*
  * Specify mask for events to monitor.
@@ -83,6 +84,7 @@ const char *dm_event_handler_get_dev_name(const struct dm_event_handler *dmevh);
 const char *dm_event_handler_get_uuid(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_major(const struct dm_event_handler *dmevh);
 int dm_event_handler_get_minor(const struct dm_event_handler *dmevh);
+int dm_event_handler_get_timeout(const struct dm_event_handler *dmevh);
 enum dm_event_mask dm_event_handler_get_event_mask(const struct dm_event_handler *dmevh);
 
 /* FIXME Review interface (what about this next thing?) */

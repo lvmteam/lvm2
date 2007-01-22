@@ -99,12 +99,12 @@ static const struct dm_report_object_type *_find_type(struct dm_report *rh,
  * Data-munging functions to prepare each data type for display and sorting
  */
 
-int dm_report_field_string(struct dm_report *rh, struct dm_pool *mem,
-			   struct dm_report_field *field, const void *data)
+int dm_report_field_string(struct dm_report *rh,
+			   struct dm_report_field *field, const char **data)
 {
 	char *repstr;
 
-	if (!(repstr = dm_pool_strdup(rh->mem, *(const char **) data))) {
+	if (!(repstr = dm_pool_strdup(rh->mem, *data))) {
 		log_error("dm_report_field_string: dm_pool_strdup failed");
 		return 0;
 	}
@@ -115,10 +115,10 @@ int dm_report_field_string(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
-int dm_report_field_int(struct dm_report *rh, struct dm_pool *mem,
-			struct dm_report_field *field, const void *data)
+int dm_report_field_int(struct dm_report *rh,
+			struct dm_report_field *field, const int *data)
 {
-	const int value = *(const int *) data;
+	const int value = *data;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -144,10 +144,10 @@ int dm_report_field_int(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
-int dm_report_field_uint32(struct dm_report *rh, struct dm_pool *mem,
-			   struct dm_report_field *field, const void *data)
+int dm_report_field_uint32(struct dm_report *rh,
+			   struct dm_report_field *field, const uint32_t *data)
 {
-	const uint32_t value = *(const uint32_t *) data;
+	const uint32_t value = *data;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -173,10 +173,10 @@ int dm_report_field_uint32(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
-int dm_report_field_int32(struct dm_report *rh, struct dm_pool *mem,
-			  struct dm_report_field *field, const void *data)
+int dm_report_field_int32(struct dm_report *rh,
+			  struct dm_report_field *field, const int32_t *data)
 {
-	const int32_t value = *(const int32_t *) data;
+	const int32_t value = *data;
 	uint64_t *sortval;
 	char *repstr;
 
@@ -202,10 +202,10 @@ int dm_report_field_int32(struct dm_report *rh, struct dm_pool *mem,
 	return 1;
 }
 
-int dm_report_field_uint64(struct dm_report *rh, struct dm_pool *mem,
-			   struct dm_report_field *field, const void *data)
+int dm_report_field_uint64(struct dm_report *rh,
+			   struct dm_report_field *field, const uint64_t *data)
 {
-	const int value = *(const uint64_t *) data;
+	const int value = *data;
 	uint64_t *sortval;
 	char *repstr;
 

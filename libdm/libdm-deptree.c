@@ -1212,7 +1212,9 @@ static int _build_dev_string(char *devbuf, size_t bufsize, struct dm_tree_node *
 	return 1;
 }
 
-static int _emit_areas_line(struct dm_task *dmt, struct load_segment *seg, char *params, size_t paramsize, int *pos)
+static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
+			    struct load_segment *seg, char *params,
+			    size_t paramsize, int *pos)
 {
 	struct seg_area *area;
 	char devbuf[10];

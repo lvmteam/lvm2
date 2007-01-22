@@ -37,7 +37,8 @@ static int _isword(int c)
  * Split buffer into NULL-separated words in argv.
  * Returns number of words.
  */
-int dm_split_words(char *buffer, unsigned max, unsigned ignore_comments,
+int dm_split_words(char *buffer, unsigned max,
+		   unsigned ignore_comments __attribute((unused)),
 		   char **argv)
 {
 	unsigned arg;

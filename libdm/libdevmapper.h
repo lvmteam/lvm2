@@ -687,26 +687,27 @@ int dm_report_object(struct dm_report *rh, void *object);
 int dm_report_output(struct dm_report *rh);
 void dm_report_free(struct dm_report *rh);
 
-/* report functions for common types */
-int dm_report_field_string(struct dm_report *rh, struct dm_pool *mem,
-			   struct dm_report_field *field, const void *data);
-int dm_report_field_int32(struct dm_report *rh, struct dm_pool *mem,
-			  struct dm_report_field *field, const void *data);
-int dm_report_field_uint32(struct dm_report *rh, struct dm_pool *mem,
-			   struct dm_report_field *field, const void *data);
-int dm_report_field_int(struct dm_report *rh, struct dm_pool *mem,
-			struct dm_report_field *field, const void *data);
-int dm_report_field_uint64(struct dm_report *rh, struct dm_pool *mem,
-			struct dm_report_field *field, const void *data);
+/*
+ * Report functions are provided for simple data types.
+ * They take care of allocating copies of the data.
+ */
+int dm_report_field_string(struct dm_report *rh, struct dm_report_field *field,
+			   const char **data);
+int dm_report_field_int32(struct dm_report *rh, struct dm_report_field *field,
+			  const int32_t *data);
+int dm_report_field_uint32(struct dm_report *rh, struct dm_report_field *field,
+			   const uint32_t *data);
+int dm_report_field_int(struct dm_report *rh, struct dm_report_field *field,
+			const int *data);
+int dm_report_field_uint64(struct dm_report *rh, struct dm_report_field *field,
+			   const uint64_t *data);
 
 /*
- * Helper function for custom reporting functions
+ * For custom fields, allocate the data in 'mem' and use
+ * dm_report_field_set_value().
+ * 'sortvalue' may be NULL if it matches 'value'
  */
-
-/*
- * sortvalue may be NULL if it's the same as value
- */
-void dm_report_field_set_value(struct dm_report_field *field,
-			       const void *value, const void *sortvalue);
+void dm_report_field_set_value(struct dm_report_field *field, const void *value,
+			       const void *sortvalue);
 
 #endif				/* LIB_DEVICE_MAPPER_H */
