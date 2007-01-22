@@ -1,5 +1,6 @@
 Version 2.02.20 -
 ===================================
+  Streamline dm_report_field_* interface.
   Change remaining dmeventd terminology 'register' to 'monitor'.
   Update reporting man pages.
   No longer necessary to specify alignment for report fields.

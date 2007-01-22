@@ -66,7 +66,7 @@ static int _string_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
 {
-	return dm_report_field_string(rh, mem, field, data);
+	return dm_report_field_string(rh, field, (const char **) data);
 }
 
 static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -75,7 +75,7 @@ static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	const char *name = dev_name(*(const struct device **) data);
 
-	return dm_report_field_string(rh, mem, field, &name);
+	return dm_report_field_string(rh, field, &name);
 }
 
 static int _devices_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -227,9 +227,9 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint64_t minusone = UINT64_C(-1);
 
 	if (lv_info(lv->vg->cmd, lv, &info, 0) && info.exists)
-		return dm_report_field_int(rh, mem, field, &info.major);
+		return dm_report_field_int(rh, field, &info.major);
 
-	return dm_report_field_int(rh, mem, field, &minusone);
+	return dm_report_field_uint64(rh, field, &minusone);
 }
 
 static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -241,9 +241,9 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint64_t minusone = UINT64_C(-1);
 
 	if (lv_info(lv->vg->cmd, lv, &info, 0) && info.exists)
-		return dm_report_field_int(rh, mem, field, &info.minor);
+		return dm_report_field_int(rh, field, &info.minor);
 
-	return dm_report_field_int(rh, mem, field, &minusone);
+	return dm_report_field_uint64(rh, field, &minusone);
 }
 
 static int _lvstatus_disp(struct dm_report *rh, struct dm_pool *mem,
@@ -423,8 +423,8 @@ static int _origin_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 
 	if (lv_is_cow(lv))
-		return dm_report_field_string(rh, mem, field,
-					      &origin_from_cow(lv)->name);
+		return dm_report_field_string(rh, field,
+					      (const char **) &origin_from_cow(lv)->name);
 
 	dm_report_field_set_value(field, "", NULL);
 	return 1;
@@ -440,8 +440,8 @@ static int _loglv_disp(struct dm_report *rh, struct dm_pool *mem,
 	list_iterate_items(seg, &lv->segments) {
 		if (!seg_is_mirrored(seg) || !seg->log_lv)
 			continue;
-		return dm_report_field_string(rh, mem, field,
-					      &seg->log_lv->name);
+		return dm_report_field_string(rh, field,
+					      (const char **) &seg->log_lv->name);
 	}
 
 	dm_report_field_set_value(field, "", NULL);
@@ -458,7 +458,7 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (lv_is_visible(lv)) {
 		repstr = lv->name;
-		return dm_report_field_string(rh, mem, field, &repstr);
+		return dm_report_field_string(rh, field, (const char **) &repstr);
 	}
 
 	len = strlen(lv->name) + 3;
@@ -494,7 +494,7 @@ static int _movepv_disp(struct dm_report *rh, struct dm_pool *mem,
 		if (!(seg->status & PVMOVE))
 			continue;
 		name = dev_name(seg_dev(seg, 0));
-		return dm_report_field_string(rh, mem, field, &name);
+		return dm_report_field_string(rh, field, &name);
 	}
 
 	dm_report_field_set_value(field, "", NULL);
@@ -708,14 +708,14 @@ static int _uint32_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
 {
-	return dm_report_field_uint32(rh, mem, field, data);
+	return dm_report_field_uint32(rh, field, data);
 }
 
 static int _int32_disp(struct dm_report *rh, struct dm_pool *mem,
 		       struct dm_report_field *field,
 		       const void *data, void *private)
 {
-	return dm_report_field_int32(rh, mem, field, data);
+	return dm_report_field_int32(rh, field, data);
 }
 
 static int _lvsegcount_disp(struct dm_report *rh, struct dm_pool *mem,
