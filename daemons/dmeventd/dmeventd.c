@@ -41,6 +41,8 @@
 #ifdef linux
 #  include <malloc.h>
 
+#  define OOM_ADJ_FILE "/proc/self/oom_adj"
+
 /* From linux/oom.h */
 #  define OOM_DISABLE (-17)
 #  define OOM_ADJUST_MIN (-16)
@@ -64,7 +66,6 @@ static int _debug = 0;
 #define	UNLINK_THREAD(x)	UNLINK(x)
 
 #define DAEMON_NAME "dmeventd"
-#define OOM_ADJ_FILE "/proc/self/oom_adj"
 
 /*
   Global mutex for thread list access. Has to be held when:
@@ -192,7 +193,7 @@ static void _debuglog(const char *fmt, ...)
         va_start(ap,fmt);
 
         time(&P);
-        fprintf(stderr, "dmeventd[%x]: %.15s ", (int)pthread_self(), ctime(&P)+4 );
+        fprintf(stderr, "dmeventd[%p]: %.15s ", (void *) pthread_self(), ctime(&P)+4 );
         vfprintf(stderr, fmt, ap);
 	fprintf(stderr, "\n");
 
@@ -449,14 +450,14 @@ static void _exit_dm_lib(void)
 	dm_lib_exit();
 }
 
-static void _exit_timeout(void *unused)
+static void _exit_timeout(void *unused __attribute((unused)))
 {
 	_timeout_running = 0;
 	pthread_mutex_unlock(&_timeout_mutex);
 }
 
 /* Wake up monitor threads every so often. */
-static void *_timeout_thread(void *unused)
+static void *_timeout_thread(void *unused __attribute((unused)))
 {
 	struct timespec timeout;
 	time_t curr_time;
@@ -468,16 +469,16 @@ static void *_timeout_thread(void *unused)
 	while (!list_empty(&_timeout_registry)) {
 		struct thread_status *thread;
 
-		timeout.tv_sec = (time_t) -1;
+		timeout.tv_sec = 0;
 		curr_time = time(NULL);
 
 		list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
-			if (thread->next_time < curr_time) {
+			if (thread->next_time <= curr_time) {
 				thread->next_time = curr_time + thread->timeout;
 				pthread_kill(thread->thread, SIGALRM);
 			}
 
-			if (thread->next_time < timeout.tv_sec)
+			if (thread->next_time < timeout.tv_sec || !timeout.tv_sec)
 				timeout.tv_sec = thread->next_time;
 		}
 
@@ -682,6 +683,23 @@ static void _monitor_unregister(void *arg)
 	_unlock_mutex();
 }
 
+static struct dm_task *_get_device_status(struct thread_status *ts)
+{
+	struct dm_task *dmt = dm_task_create(DM_DEVICE_STATUS);
+
+	if (!dmt)
+		return NULL;
+
+	dm_task_set_uuid(dmt, ts->device.uuid);
+
+	if (!dm_task_run(dmt)) {
+		dm_task_destroy(dmt);
+		return NULL;
+	}
+
+	return dmt;
+}
+
 /* Device monitoring thread. */
 static void *_monitor_thread(void *arg)
 {
@@ -707,6 +725,18 @@ static void *_monitor_thread(void *arg)
 
 		if (wait_error == DM_WAIT_FATAL)
 			break;
+
+		/* Timeout occurred, task is not filled properly.
+		 * We get device status here for processing it in DSO.
+		 */
+		if (wait_error == DM_WAIT_INTR &&
+		    thread->current_events & DM_EVENT_TIMEOUT) {
+			dm_task_destroy(task);
+			task = _get_device_status(thread);
+			/* FIXME: syslog fail here ? */
+			if (!(thread->current_task = task))
+				continue;
+		}
 
 		/*
 		 * We know that wait succeeded and stored a
@@ -798,8 +828,7 @@ static struct dso_data *_lookup_dso(struct message_data *data)
 }
 
 /* Lookup DSO symbols we need. */
-static int _lookup_symbol(void *dl, struct dso_data *data,
-			 void **symbol, const char *name)
+static int _lookup_symbol(void *dl, void **symbol, const char *name)
 {
 	if ((*symbol = dlsym(dl, name)))
 		return 1;
@@ -809,11 +838,11 @@ static int _lookup_symbol(void *dl, struct dso_data *data,
 
 static int lookup_symbols(void *dl, struct dso_data *data)
 {
-	return _lookup_symbol(dl, data, (void *) &data->process_event,
+	return _lookup_symbol(dl, (void *) &data->process_event,
 			     "process_event") &&
-	    _lookup_symbol(dl, data, (void *) &data->register_device,
+	    _lookup_symbol(dl, (void *) &data->register_device,
 			  "register_device") &&
-	    _lookup_symbol(dl, data, (void *) &data->unregister_device,
+	    _lookup_symbol(dl, (void *) &data->unregister_device,
 			  "unregister_device");
 }
 
@@ -909,7 +938,7 @@ static int _register_for_event(struct message_data *message_data)
 	   usually means we are so starved on resources that we are
 	   almost as good as dead already... */
 	if (thread_new->events & DM_EVENT_TIMEOUT) {
-		ret = -_register_for_timeout(thread);
+		ret = -_register_for_timeout(thread_new);
 		if (ret) {
 		    _unlock_mutex();
 		    goto out;
@@ -1426,7 +1455,7 @@ static void _cleanup_unused_threads(void)
 	_unlock_mutex();
 }
 
-static void _sig_alarm(int signum)
+static void _sig_alarm(int signum __attribute((unused)))
 {
 	pthread_testcancel();
 }
@@ -1458,7 +1487,7 @@ static void _init_thread_signals(void)
  * Set the global variable which the process should
  * be watching to determine when to exit.
  */
-static void _exit_handler(int sig)
+static void _exit_handler(int sig __attribute((unused)))
 {
 	/*
 	 * We exit when '_exit_now' is set.
@@ -1492,6 +1521,7 @@ static int _lock_pidfile(void)
 	return 0;
 }
 
+#ifdef linux
 /*
  * Protection against OOM killer if kernel supports it
  */
@@ -1519,6 +1549,7 @@ static int _set_oom_adj(int val)
 
 	return 1;
 }
+#endif
 
 static void _daemonize(void)
 {
@@ -1643,8 +1674,10 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, &_exit_handler);
 	signal(SIGQUIT, &_exit_handler);
 
+#ifdef linux
 	if (!_set_oom_adj(OOM_DISABLE) && !_set_oom_adj(OOM_ADJUST_MIN))
 		syslog(LOG_ERR, "Failed to set oom_adj to protect against OOM killer");
+#endif
 
 	_init_thread_signals();
 

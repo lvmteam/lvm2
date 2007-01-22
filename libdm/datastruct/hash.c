@@ -230,12 +230,14 @@ void dm_hash_wipe(struct dm_hash_table *t)
 	t->num_nodes = 0u;
 }
 
-char *dm_hash_get_key(struct dm_hash_table *t, struct dm_hash_node *n)
+char *dm_hash_get_key(struct dm_hash_table *t __attribute((unused)),
+		      struct dm_hash_node *n)
 {
 	return n->key;
 }
 
-void *dm_hash_get_data(struct dm_hash_table *t, struct dm_hash_node *n)
+void *dm_hash_get_data(struct dm_hash_table *t __attribute((unused)),
+		       struct dm_hash_node *n)
 {
 	return n->data;
 }

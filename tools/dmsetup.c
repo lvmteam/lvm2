@@ -1705,7 +1705,8 @@ error:
 /*
  *  create a table for a mapped device using the loop target.
  */
-static int _loop_table(char *table, size_t tlen, char *file, char *dev, off_t off)
+static int _loop_table(char *table, size_t tlen, char *file,
+		       char *dev __attribute((unused)), off_t off)
 {
 	struct stat fbuf;
 	off_t size, sectors;
