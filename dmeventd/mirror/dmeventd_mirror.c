@@ -164,7 +164,8 @@ static int _remove_failed_devices(const char *device)
 	return (r == 1) ? 0 : -1;
 }
 
-void process_event(struct dm_task *dmt, enum dm_event_mask event)
+void process_event(struct dm_task *dmt, enum dm_event_mask event,
+		   void **unused __attribute((unused)))
 {
 	void *next = NULL;
 	uint64_t start, length;
@@ -221,7 +222,8 @@ void process_event(struct dm_task *dmt, enum dm_event_mask event)
 	pthread_mutex_unlock(&_event_mutex);
 }
 
-int register_device(const char *device, const char *uuid, int major, int minor)
+int register_device(const char *device, const char *uuid, int major, int minor,
+		   void **unused __attribute((unused)))
 {
 	int r = 0;
 
@@ -257,7 +259,8 @@ out:
 	return r;
 }
 
-int unregister_device(const char *device, const char *uuid, int major, int minor)
+int unregister_device(const char *device, const char *uuid, int major, int minor,
+		   void **unused __attribute((unused)))
 {
 	pthread_mutex_lock(&_register_mutex);
 
