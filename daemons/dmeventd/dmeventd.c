@@ -77,6 +77,19 @@ static int _debug = 0;
 */
 static pthread_mutex_t _global_mutex;
 
+/*
+  There are three states a thread can attain (see struct
+  thread_status, field int status):
+
+  - DM_THREAD_RUNNING: thread has started up and is either working or
+  waiting for events... transitions to either SHUTDOWN or DONE
+  - DM_THREAD_SHUTDOWN: thread is still doing something, but it is
+  supposed to terminate (and transition to DONE) as soon as it
+  finishes whatever it was doing at the point of flipping state to
+  SHUTDOWN... the thread is still on the thread list
+  - DM_THREAD_DONE: thread has terminated and has been moved over to
+  unused thread list, cleanup pending
+ */
 #define DM_THREAD_RUNNING  0
 #define DM_THREAD_SHUTDOWN 1
 #define DM_THREAD_DONE     2
@@ -106,7 +119,7 @@ struct dso_data {
 	 * DM_DEVICE_STATUS). It should not destroy it.
 	 * The caller must dispose of the task.
 	 */
-	void (*process_event)(struct dm_task *dmt, enum dm_event_mask event);
+	void (*process_event)(struct dm_task *dmt, enum dm_event_mask event, void **user);
 
 	/*
 	 * Device registration.
@@ -117,7 +130,7 @@ struct dso_data {
 	 * and activate a mapping).
 	 */
 	int (*register_device)(const char *device, const char *uuid, int major,
-			       int minor);
+			       int minor, void **user);
 
 	/*
 	 * Device unregistration.
@@ -127,7 +140,7 @@ struct dso_data {
 	 * steps (eg, deactivate mapping, metadata update).
 	 */
 	int (*unregister_device)(const char *device, const char *uuid,
-				 int major, int minor);
+				 int major, int minor, void **user);
 };
 static LIST_INIT(_dso_registry);
 
@@ -166,13 +179,16 @@ struct thread_status {
 	} device;
 	uint32_t event_nr;	/* event number */
 	int processing;		/* Set when event is being processed */
-	int status;		/* running/shutdown/done */
+
+	int status;		/* see DM_THREAD_{RUNNING,SHUTDOWN,DONE}
+				   constants above */
 	enum dm_event_mask events;	/* bitfield for event filter. */
 	enum dm_event_mask current_events;	/* bitfield for occured events. */
 	struct dm_task *current_task;
 	time_t next_time;
 	uint32_t timeout;
 	struct list timeout_list;
+	void *dso_private; /* dso per-thread status variable */
 };
 static LIST_INIT(_thread_registry);
 static LIST_INIT(_thread_registry_unused);
@@ -630,7 +646,8 @@ static int _do_register_device(struct thread_status *thread)
 	return thread->dso_data->register_device(thread->device.name,
 						 thread->device.uuid,
 						 thread->device.major,
-						 thread->device.minor);
+						 thread->device.minor,
+						 &(thread->dso_private));
 }
 
 /* Unregister a device with the DSO. */
@@ -639,13 +656,14 @@ static int _do_unregister_device(struct thread_status *thread)
 	return thread->dso_data->unregister_device(thread->device.name,
 						   thread->device.uuid,
 						   thread->device.major,
-						   thread->device.minor);
+						   thread->device.minor,
+						   &(thread->dso_private));
 }
 
 /* Process an event in the DSO. */
 static void _do_process_event(struct thread_status *thread, struct dm_task *task)
 {
-	thread->dso_data->process_event(task, thread->current_events);
+	thread->dso_data->process_event(task, thread->current_events, &(thread->dso_private));
 }
 
 /* Thread cleanup handler to unregister device. */
@@ -1107,22 +1125,25 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 	if (!hit)
 		goto out;
 
-	goto out; /* FIXME the next == 1 thing is currently horridly
-		     broken, do something about it... */
+	thread = hit;
 
-	do {
+	while (1) {
 		if (list_end(&_thread_registry, &thread->list))
 			goto out;
 
 		thread = list_item(thread->list.n, struct thread_status);
-	} while (!_want_registered_device(message_data->dso_name, NULL, thread));
+		if (_want_registered_device(message_data->dso_name, NULL, thread)) {
+			hit = thread;
+			break;
+		}
+	}
 
 	_unlock_mutex();
-	return _registered_device(message_data, thread);
+	return _registered_device(message_data, hit);
 
       out:
 	_unlock_mutex();
-
+	
 	return -ENOENT;
 }
 

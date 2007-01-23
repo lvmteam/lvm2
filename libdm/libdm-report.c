@@ -757,8 +757,7 @@ int dm_report_output(struct dm_report *rh)
 	/* Print and clear buffer */
 	list_iterate_safe(rowh, rtmp, &rh->rows) {
 		if (!dm_pool_begin_object(rh->mem, 512)) {
-			log_error("dm_report: "
-				  "dm_pool_begin_object failed for row");
+			log_error("dm_report: Unable to allocate output line");
 			return 0;
 		}
 		row = list_item(rowh, struct row);
@@ -771,35 +770,48 @@ int dm_report_output(struct dm_report *rh)
 			width = field->props->width;
 			if (!(rh->flags & DM_REPORT_OUTPUT_ALIGNED)) {
 				if (!dm_pool_grow_object(rh->mem, repstr,
-						      strlen(repstr)))
-					goto bad_grow;
+						      strlen(repstr))) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
 			} else {
 				if (!(align = field->props->flags & DM_REPORT_FIELD_ALIGN_MASK))
 					align = (field->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ? 
 						DM_REPORT_FIELD_ALIGN_RIGHT : DM_REPORT_FIELD_ALIGN_LEFT;
 				if (align & DM_REPORT_FIELD_ALIGN_LEFT) {
 					if (dm_snprintf(buf, sizeof(buf), "%-*.*s",
-							 width, width, repstr) < 0)
-						goto bad_snprintf;
-					if (!dm_pool_grow_object(rh->mem, buf, width))
-						goto bad_grow;
+							 width, width, repstr) < 0) {
+						log_error("dm_report: left-aligned snprintf() failed");
+						goto bad;
+					}
+					if (!dm_pool_grow_object(rh->mem, buf, width)) {
+						log_error("dm_report: Unable to extend output line");
+						goto bad;
+					}
 				} else if (align & DM_REPORT_FIELD_ALIGN_RIGHT) {
 					if (dm_snprintf(buf, sizeof(buf), "%*.*s",
-							 width, width, repstr) < 0)
-						goto bad_snprintf;
+							 width, width, repstr) < 0) {
+						log_error("dm_report: right-aligned snprintf() failed");
+						goto bad;
+					}
 					if (!dm_pool_grow_object(rh->mem, buf, width))
-						goto bad_grow;
+						log_error("dm_report: Unable to extend output line");
+						goto bad;
 				}
 			}
 
 			if (!list_end(&row->fields, fh))
 				if (!dm_pool_grow_object(rh->mem, rh->separator,
-						      strlen(rh->separator)))
-					goto bad_grow;
+						      strlen(rh->separator))) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
 			list_del(&field->list);
 		}
-		if (!dm_pool_grow_object(rh->mem, "\0", 1))
-			goto bad_grow;
+		if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
+			log_error("dm_report: Unable to terminate output line");
+			goto bad;
+		}
 		log_print("%s", (char *) dm_pool_end_object(rh->mem));
 		list_del(&row->list);
 	}
@@ -809,10 +821,7 @@ int dm_report_output(struct dm_report *rh)
 
 	return 1;
 
-      bad_snprintf:
-	log_error("dm_report: snprintf row failed");
-      bad_grow:
-	log_error("dm_report: Failed to generate row for printing");
+      bad:
 	dm_pool_abandon_object(rh->mem);
 	return 0;
 }
