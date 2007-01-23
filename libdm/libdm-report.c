@@ -248,6 +248,11 @@ static void _display_fields(struct dm_report *rh)
 	uint32_t f;
 	const struct dm_report_object_type *type;
 	const char *desc, *last_desc = "";
+	size_t id_len = 0;
+
+	for (f = 0; rh->fields[f].report_fn; f++)
+		if (strlen(rh->fields[f].id) > id_len)
+			id_len = strlen(rh->fields[f].id);
 
 	for (f = 0; rh->fields[f].report_fn; f++) {
 		if ((type = _find_type(rh, rh->fields[f].type)) && type->desc)
@@ -260,7 +265,7 @@ static void _display_fields(struct dm_report *rh)
 			log_print("%s Fields", desc);
 		}
 
-		log_print("- %s", rh->fields[f].id);
+		log_print("- %-*s: %s", (int) id_len, rh->fields[f].id, rh->fields[f].desc);
 		last_desc = desc;
 	}
 }
