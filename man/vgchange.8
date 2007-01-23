@@ -10,6 +10,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-A | \-\-autobackup " {" y | n }]
 .RB [ \-a | \-\-available " [e|l] {" y | n }]
 .RB [ \-\-monitor " {" y | n }]
+.RB [ \-c | \-\-clustered " {" y | n }]
 .RB [ \-d | \-\-debug]
 .RB [ \-\-deltag
 .IR Tag ]
@@ -44,12 +45,12 @@ snapshots should be removed (see
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .TP
-.BR \-A ", " \-\-autobackup { y | n }
+.BR \-A ", " \-\-autobackup " " { y | n }
 Controls automatic backup of metadata after the change.  See
 .B vgcfgbackup (8).
 Default is yes.
 .TP
-.BR \-a ", " \-\-available [e|l] { y | n }
+.BR \-a ", " \-\-available " " [e|l] { y | n }
 Controls the availability of the logical volumes in the volume 
 group for input/output.
 In other words, makes the logical volumes known/unknown to the kernel.
@@ -59,6 +60,14 @@ exclusively on one node or 'l' to activate/deactivate only
 on the local node.  
 Logical volumes with single-host snapshots are always activated
 exclusively because they can only be used on one node at once.
+.TP
+.BR \-c ", " \-\-clustered " " { y | n }
+If clustered locking is enabled, this indicates whether this
+Volume Group is shared with other nodes in the cluster or whether
+it contains only local disks that are not visible on the other nodes.
+If the cluster infrastructure is unavailable on a particular node at a
+particular time, you may still be able to use Volume Groups that
+are not marked as clustered.
 .TP
 .BR \-\-monitor " " { y | n }
 Controls whether or not a mirrored logical volume is monitored by
@@ -108,7 +117,7 @@ impact on I/O performance to the logical volume.  The smallest PE is 1KB.
  
 The 2.4 kernel has a limitation of 2TB per block device.
 .TP
-.BR \-x ", " \-\-resizeable { y | n }
+.BR \-x ", " \-\-resizeable " " { y | n }
 Enables or disables the extension/reduction of this volume group
 with/by physical volumes.
 .SH EXAMPLES
