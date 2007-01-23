@@ -575,7 +575,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	    filters[0] : composite_filter_create(nr_filt, filters);
 }
 
-static int _init_filters(struct cmd_context *cmd)
+static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
 	const char *dev_cache;
 	struct dev_filter *f3, *f4;
@@ -608,8 +608,13 @@ static int _init_filters(struct cmd_context *cmd)
 	if (!*cmd->sys_dir)
 		cmd->dump_filter = 0;
 
-	if (!stat(dev_cache, &st) &&
-	    (st.st_ctime != config_file_timestamp(cmd->cft)) &&
+	/*
+	 * Only load persistent filter device cache on startup if it is newer
+	 * than the config file and this is not a long-lived process.
+	 */
+	if (load_persistent_cache && !cmd->is_long_lived &&
+	    !stat(dev_cache, &st) &&
+	    (st.st_ctime > config_file_timestamp(cmd->cft)) &&
 	    !persistent_filter_load(f4, NULL))
 		log_verbose("Failed to load existing device cache from %s",
 			    dev_cache);
@@ -881,7 +886,8 @@ static int _init_backup(struct cmd_context *cmd)
 }
 
 /* Entry point */
-struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static)
+struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
+				       unsigned is_long_lived)
 {
 	struct cmd_context *cmd;
 
@@ -905,6 +911,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static)
 	memset(cmd, 0, sizeof(*cmd));
 	cmd->args = the_args;
 	cmd->is_static = is_static;
+	cmd->is_long_lived = is_long_lived;
 	cmd->hosttags = 0;
 	list_init(&cmd->formats);
 	list_init(&cmd->segtypes);
@@ -953,7 +960,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static)
 	if (!_init_dev_cache(cmd))
 		goto error;
 
-	if (!_init_filters(cmd))
+	if (!_init_filters(cmd, 1))
 		goto error;
 
 	if (!(cmd->mem = dm_pool_create("command", 4 * 1024))) {
@@ -1022,10 +1029,10 @@ int refresh_toolcontext(struct cmd_context *cmd)
 {
 	log_verbose("Reloading config files");
 
-	if (cmd->config_valid) {
-		if (cmd->dump_filter)
-			persistent_filter_dump(cmd->filter);
-	}
+	/*
+	 * Don't update the persistent filter cache as we will
+	 * perform a full rescan.
+	 */
 
 	activation_release();
 	lvmcache_destroy();
@@ -1064,7 +1071,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_dev_cache(cmd))
 		return 0;
 
-	if (!_init_filters(cmd))
+	if (!_init_filters(cmd, 0))
 		return 0;
 
 	if (!_init_formats(cmd))

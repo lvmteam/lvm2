@@ -1030,7 +1030,7 @@ struct cmd_context *init_lvm(unsigned is_static)
 {
 	struct cmd_context *cmd;
 
-	if (!(cmd = create_toolcontext(&the_args[0], is_static))) {
+	if (!(cmd = create_toolcontext(&the_args[0], is_static, 0))) {
 		stack;
 		return NULL;
 	}

@@ -1,5 +1,7 @@
 Version 2.02.20 -
 ===================================
+  Fix refresh_toolcontext() always to wipe persistent device filter cache.
+  Add is_long_lived to toolcontext.
   Add --clustered to man pages.
   Streamline dm_report_field_* interface.
   Change remaining dmeventd terminology 'register' to 'monitor'.
