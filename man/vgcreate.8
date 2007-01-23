@@ -8,6 +8,7 @@ vgcreate \- create a volume group
 .RB [ \-\-alloc 
 .IR AllocationPolicy ]
 .RB [ \-A | \-\-autobackup " {" y | n }]
+.RB [ \-c | \-\-clustered " {" y | n }]
 .RB [ \-d | \-\-debug ]
 .RB [ \-h | \-\-help ]
 .RB [ \-l | \-\-maxlogicalvolumes
@@ -32,6 +33,14 @@ previously configured for LVM with
 .BR pvcreate (8).
 .SH OPTIONS
 See \fBlvm\fP for common options.
+.TP
+.BR \-c ", " \-\-clustered " " { y | n }
+If clustered locking is enabled, this indicates whether this
+Volume Group is shared with other nodes in the cluster or whether
+it contains only local disks that are not visible on the other nodes.
+If the cluster infrastructure is unavailable on a particular node at a
+particular time, you may still be able to use Volume Groups that
+are not marked as clustered.
 .TP
 .BR \-l ", " \-\-maxlogicalvolumes " " \fIMaxLogicalVolumes\fR
 Sets the maximum number of logical volumes allowed in this

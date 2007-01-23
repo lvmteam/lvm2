@@ -657,7 +657,7 @@ xx(vgcreate,
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--addtag Tag] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
-   "\t[-c|--clustered] " "\n"
+   "\t[-c|--clustered {y|n}] " "\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|--help]" "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
