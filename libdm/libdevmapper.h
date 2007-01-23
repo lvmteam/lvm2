@@ -665,6 +665,7 @@ struct dm_report_field_type {
 	int (*report_fn)(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field, const void *data,
 			 void *private);
+	const char *desc;	/* description of the field */
 };
 
 /*

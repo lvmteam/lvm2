@@ -1,5 +1,6 @@
 Version 1.02.16 -
 ===================================
+  Add descriptions to reporting field definitions.
   Add a dso-private variable to dmeventd dso interface.
   Add dm_event_handler_[gs]et_timeout functions.
   Streamline dm_report_field_* interface.
