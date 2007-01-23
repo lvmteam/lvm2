@@ -98,9 +98,9 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh);
 
 /* Prototypes for DSO interface, see dmeventd.c, struct dso_data for
    detailed descriptions. */
-void process_event(struct dm_task *dmt, enum dm_event_mask evmask);
-int register_device(const char *device_name, const char *uuid, int major, int minor);
+void process_event(struct dm_task *dmt, enum dm_event_mask evmask, void **user);
+int register_device(const char *device_name, const char *uuid, int major, int minor, void **user);
 int unregister_device(const char *device_name, const char *uuid, int major,
-		      int minor);
+		      int minor, void **user);
 
 #endif
