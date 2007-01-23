@@ -799,9 +799,10 @@ int dm_report_output(struct dm_report *rh)
 						log_error("dm_report: right-aligned snprintf() failed");
 						goto bad;
 					}
-					if (!dm_pool_grow_object(rh->mem, buf, width))
+					if (!dm_pool_grow_object(rh->mem, buf, width)) {
 						log_error("dm_report: Unable to extend output line");
 						goto bad;
+					}
 				}
 			}
 
