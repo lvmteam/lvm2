@@ -1,5 +1,6 @@
 Version 2.02.20 -
 ===================================
+  Long-lived processes write out persistent dev cache in refresh_toolcontext().
   Fix refresh_toolcontext() always to wipe persistent device filter cache.
   Add is_long_lived to toolcontext.
   Add --clustered to man pages.

@@ -1080,6 +1080,13 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_segtypes(cmd))
 		return 0;
 
+	/*
+	 * If we are a long-lived process, write out the updated persistent
+	 * device cache for the benefit of short-lived processes.
+	 */
+	if (cmd->is_long_lived && cmd->dump_filter)
+		persistent_filter_dump(cmd->filter);
+
 	cmd->config_valid = 1;
 	return 1;
 }
