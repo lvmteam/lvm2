@@ -651,7 +651,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	int r = 1;
 	struct list *tmp;
 	struct lv_segment *seg;
-	int (*monitor_fn) (struct cmd_context *c, struct lv_segment *s, int e);
+	int (*monitor_fn) (struct lv_segment *s, int e);
 
 	/*
 	 * Nothing to do if dmeventd configured not to be used.
