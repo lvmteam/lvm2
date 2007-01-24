@@ -697,7 +697,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 		log_verbose("%sonitoring %s/%s", monitor ? "M" : "Not m", lv->vg->name, lv->name);
 
 		/* FIXME specify events */
-		if (!monitor_fn(cmd, seg, 0)) {
+		if (!monitor_fn(seg, 0)) {
 			log_error("%s/%s: %s segment monitoring function failed.",
 				  lv->vg->name, lv->name, seg->segtype->name);
 			return 0;

@@ -449,9 +449,7 @@ static int _target_monitored(struct lv_segment *seg, int *pending)
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
-static int _target_set_events(struct cmd_context *cmd,
-				   struct lv_segment *seg,
-				   int evmask, int set)
+static int _target_set_events(struct lv_segment *seg, int evmask, int set)
 {
 	char *dso, *name;
 	struct logical_volume *lv;
@@ -462,10 +460,10 @@ static int _target_set_events(struct cmd_context *cmd,
 	lv = seg->lv;
 	vg = lv->vg;
 
-	if (!_get_mirror_dso_path(cmd, &dso))
+	if (!_get_mirror_dso_path(vg->cmd, &dso))
 		return_0;
 
-	if (!(name = build_dm_name(cmd->mem, vg->name, lv->name, NULL)))
+	if (!(name = build_dm_name(vg->cmd->mem, vg->name, lv->name, NULL)))
 		return_0;
 
 	if (!(dmevh = _create_dm_event_handler(name, dso, DM_EVENT_ALL_ERRORS)))
@@ -481,18 +479,14 @@ static int _target_set_events(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _target_monitor_events(struct cmd_context *cmd,
-				     struct lv_segment *seg,
-				     int events)
+static int _target_monitor_events(struct lv_segment *seg, int events)
 {
-	return _target_set_events(cmd, seg, events, 1);
+	return _target_set_events(seg, events, 1);
 }
 
-static int _target_unmonitor_events(struct cmd_context *cmd,
-				     struct lv_segment *seg,
-				     int events)
+static int _target_unmonitor_events(struct lv_segment *seg, int events)
 {
-	return _target_set_events(cmd, seg, events, 0);
+	return _target_set_events(seg, events, 0);
 }
 
 #endif /* DMEVENTD */

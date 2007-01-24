@@ -1,5 +1,7 @@
 Version 2.02.20 -
 ===================================
+  Add field definitions to report help text.
+  Remove unnecessary cmd arg from target_*monitor_events().
   Add private variable to dmeventd shared library interface.
   Long-lived processes write out persistent dev cache in refresh_toolcontext().
   Fix refresh_toolcontext() always to wipe persistent device filter cache.
