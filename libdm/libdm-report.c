@@ -263,9 +263,14 @@ static void _display_fields(struct dm_report *rh)
 			if (*last_desc)
 				log_print(" ");
 			log_print("%s Fields", desc);
+			log_print("%*.*s", (int) strlen(desc) + 7,
+				  (int) strlen(desc) + 7,
+				  "------------------------------------------");
+				  
 		}
 
-		log_print("- %-*s: %s", (int) id_len, rh->fields[f].id, rh->fields[f].desc);
+		/* FIXME Add line-wrapping at terminal width (or 80 cols) */
+		log_print("  %-*s - %s", (int) id_len, rh->fields[f].id, rh->fields[f].desc);
 		last_desc = desc;
 	}
 }
