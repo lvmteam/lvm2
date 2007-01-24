@@ -84,10 +84,8 @@ struct segtype_handler {
 			       struct list *modules);
 	void (*destroy) (const struct segment_type * segtype);
 	int (*target_monitored) (struct lv_segment *seg, int *pending);
-	int (*target_monitor_events) (struct cmd_context *cmd,
-				       struct lv_segment *seg, int events);
-	int (*target_unmonitor_events) (struct cmd_context *cmd,
-					 struct lv_segment *seg, int events);
+	int (*target_monitor_events) (struct lv_segment *seg, int events);
+	int (*target_unmonitor_events) (struct lv_segment *seg, int events);
 };
 
 struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
