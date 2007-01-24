@@ -90,6 +90,8 @@ int ignorelockingfailure(void);
 int lockingfailed(void);
 int security_level(void);
 int mirror_in_sync(void);
+
+#define DMEVENTD_MONITOR_IGNORE -1
 int dmeventd_monitor_mode(void);
 
 /* Suppress messages to stdout/stderr (1) or everywhere (2) */

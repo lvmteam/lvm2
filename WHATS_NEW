@@ -1,5 +1,6 @@
 Version 2.02.20 -
 ===================================
+  lvm.static no longer interacts with dmeventd unless explicitly asked to.
   Add field definitions to report help text.
   Remove unnecessary cmd arg from target_*monitor_events().
   Add private variable to dmeventd shared library interface.

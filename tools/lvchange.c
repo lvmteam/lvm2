@@ -94,7 +94,8 @@ static int lvchange_monitoring(struct cmd_context *cmd,
 	if (lv->status & PVMOVE)
 		return 1;
 
-	if (!monitor_dev_for_events(cmd, lv, dmeventd_monitor_mode()))
+	if ((dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) &&
+	    !monitor_dev_for_events(cmd, lv, dmeventd_monitor_mode()))
 		stack;
 
 	return 1;
@@ -591,7 +592,9 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG, DEFAULT_DMEVENTD_MONITOR));
+	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG,
+					    cmd->is_static ?
+					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
 
 	/* access permission change */
 	if (arg_count(cmd, permission_ARG)) {
