@@ -653,6 +653,10 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	struct lv_segment *seg;
 	int (*monitor_fn) (struct lv_segment *s, int e);
 
+	/* skip dmeventd code altogether */
+	if (dmeventd_monitor_mode() == DMEVENTD_MONITOR_IGNORE)
+		return 1;
+
 	/*
 	 * Nothing to do if dmeventd configured not to be used.
 	 */

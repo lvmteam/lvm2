@@ -105,7 +105,8 @@ static int _vgchange_monitoring(struct cmd_context *cmd, struct volume_group *vg
 {
 	int active, monitored;
 
-	if ((active = lvs_in_vg_activated(vg))) {
+	if ((active = lvs_in_vg_activated(vg)) &&
+	    dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
 		monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
 		log_print("%d logical volume(s) in volume group "
 			    "\"%s\" %smonitored",
@@ -146,11 +147,13 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 	if (activate && (active = lvs_in_vg_activated(vg))) {
 		log_verbose("%d logical volume(s) in volume group \"%s\" "
 			    "already active", active, vg->name);
-		monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
-		log_verbose("%d existing logical volume(s) in volume "
-			    "group \"%s\" %smonitored",
-			    monitored, vg->name,
-			    dmeventd_monitor_mode() ? "" : "un");
+		if (dmeventd_monitor_mode() != DMEVENTD_MONITOR_IGNORE) {
+			monitored = _monitor_lvs_in_vg(cmd, vg, dmeventd_monitor_mode());
+			log_verbose("%d existing logical volume(s) in volume "
+				    "group \"%s\" %smonitored",
+				    monitored, vg->name,
+				    dmeventd_monitor_mode() ? "" : "un");
+		}
 	}
 
 	if (activate && _activate_lvs_in_vg(cmd, vg, available))
@@ -532,7 +535,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG, DEFAULT_DMEVENTD_MONITOR));
+	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG,
+					    cmd->is_static ?
+					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
 
 	if (arg_count(cmd, available_ARG))
 		r = _vgchange_available(cmd, vg);
