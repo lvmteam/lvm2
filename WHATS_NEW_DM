@@ -1,5 +1,6 @@
 Version 1.02.16 -
 ===================================
+  Migrate dmsetup column-based output over to new libdevmapper report framework.
   Add descriptions to reporting field definitions.
   Add a dso-private variable to dmeventd dso interface.
   Add dm_event_handler_[gs]et_timeout functions.
