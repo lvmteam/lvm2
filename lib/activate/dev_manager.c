@@ -159,9 +159,14 @@ int device_is_usable(dev_t dev)
 {
 	struct dm_task *dmt;
 	struct dm_info info;
+	const char *name;
+        uint64_t start, length;
+        char *target_type = NULL;
+        char *params;
+	void *next = NULL;
 	int r = 0;
 
-	if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
+	if (!(dmt = dm_task_create(DM_DEVICE_STATUS))) {
 		log_error("Failed to allocate dm_task struct to check dev status");
 		return 0;
 	}
@@ -180,7 +185,18 @@ int device_is_usable(dev_t dev)
 	if (!info.exists || info.suspended)
 		goto out;
 
+	name = dm_task_get_name(dmt);
+
 	/* FIXME Also check for mirror block_on_error and mpath no paths */
+	/* For now, we exclude all mirrors */
+
+        do {
+                next = dm_get_next_target(dmt, next, &start, &length,
+                                          &target_type, &params);
+                /* Skip if target type doesn't match */
+                if (!strcmp(target_type, "mirror"))
+			goto out;
+        } while (next);
 
 	/* FIXME Also check dependencies? */
 
