@@ -1,3 +1,6 @@
+Version 1.02.17 -
+===================================
+
 Version 1.02.16 - 25th January 2007
 ===================================
   Add some missing close() and fclose() return value checks.
