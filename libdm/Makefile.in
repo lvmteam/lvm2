@@ -90,7 +90,7 @@ install_ioctl_static: ioctl/libdevmapper.a
 .PHONY: distclean_lib distclean
 
 distclean_lib: 
-	$(RM) libdm-common.h libdevmapper.pc
+	$(RM) libdevmapper.pc
 
 distclean: distclean_lib
 
