@@ -435,13 +435,13 @@ int write_config_file(struct config_tree *cft, const char *file,
 	log_verbose("Dumping configuration to %s", file);
 	if (!argc) {
 		if (!_write_config(cft->root, 0, fp, 0)) {
-			log_error("Failure while writing configuration");
+			log_error("Failure while writing to %s", file);
 			r = 0;
 		}
 	} else while (argc--) {
 		if ((cn = find_config_node(cft->root, *argv))) {
 			if (!_write_config(cn, 1, fp, 0)) {
-				log_error("Failure while writing configuration");
+				log_error("Failure while writing to %s", file);
 				r = 0;
 			}
 		} else {
@@ -451,8 +451,10 @@ int write_config_file(struct config_tree *cft, const char *file,
 		argv++;
 	}
 
-	if (fp != stdout)
-		fclose(fp);
+	if ((fp != stdout) && fclose(fp)) {
+		log_sys_error("fclose", file);
+		r = 0;
+	}
 
 	return r;
 }

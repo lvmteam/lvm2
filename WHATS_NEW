@@ -1,5 +1,7 @@
 Version 2.02.20 -
 ===================================
+  Add some missing close() and fclose() return code checks.
+  Fix exit statuses of reporting tools (2.02.19).
   Add init script for dmeventd monitoring.
   lvm.static no longer interacts with dmeventd unless explicitly asked to.
   Add field definitions to report help text.

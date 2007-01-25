@@ -292,11 +292,14 @@ int dev_get_sectsize(struct device *dev, uint32_t *size)
 
 	if (ioctl(fd, BLKSSZGET, &s) < 0) {
 		log_sys_error("ioctl BLKSSZGET", name);
-		close(fd);
+		if (close(fd))
+			log_sys_error("close", name);
 		return 0;
 	}
 
-	close(fd);
+	if (close(fd))
+		log_sys_error("close", name);
+
 	*size = (uint32_t) s;
 
 	log_very_verbose("%s: sector size is %" PRIu32 " bytes", name, *size);

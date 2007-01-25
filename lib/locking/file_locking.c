@@ -163,8 +163,8 @@ static int _lock_file(const char *file, int flags)
 	log_very_verbose("Locking %s %c%c", ll->res, state,
 			 flags & LCK_NONBLOCK ? ' ' : 'B');
 	do {
-		if (ll->lf > -1)
-			close(ll->lf);
+		if ((ll->lf > -1) && close(ll->lf))
+			log_sys_error("close", file);
 
 		if ((ll->lf = open(file, O_CREAT | O_APPEND | O_RDWR, 0777))
 		    < 0) {

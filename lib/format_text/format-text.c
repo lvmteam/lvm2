@@ -710,7 +710,8 @@ static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
 
 	if (!(fp = fdopen(fd, "w"))) {
 		log_sys_error("fdopen", temp_file);
-		close(fd);
+		if (close(fd))
+			log_sys_error("fclose", temp_file);
 		return 0;
 	}
 
@@ -718,13 +719,15 @@ static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
 
 	if (!text_vg_export_file(vg, tc->desc, fp)) {
 		log_error("Failed to write metadata to %s.", temp_file);
-		fclose(fp);
+		if (fclose(fp))
+			log_sys_error("fclose", temp_file);
 		return 0;
 	}
 
 	if (fsync(fd) && (errno != EROFS) && (errno != EINVAL)) {
 		log_sys_error("fsync", tc->path_edit);
-		fclose(fp);
+		if (fclose(fp))
+			log_sys_error("fclose", tc->path_edit);
 		return 0;
 	}
 

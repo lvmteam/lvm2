@@ -204,7 +204,8 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 			if (cv->type != CFG_STRING) {
 				log_error("Expecting string in devices/types "
 					  "in config file");
-				fclose(pd);
+				if (fclose(pd))
+					log_sys_error("fclose", proc_devices);
 				return 0;
 			}
 			dev_len = strlen(cv->v.str);
@@ -214,14 +215,16 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 				log_error("Max partition count missing for %s "
 					  "in devices/types in config file",
 					  name);
-				fclose(pd);
+				if (fclose(pd))
+					log_sys_error("fclose", proc_devices);
 				return 0;
 			}
 			if (!cv->v.i) {
 				log_error("Zero partition count invalid for "
 					  "%s in devices/types in config file",
 					  name);
-				fclose(pd);
+				if (fclose(pd))
+					log_sys_error("fclose", proc_devices);
 				return 0;
 			}
 			if (dev_len <= strlen(line + i) &&
@@ -232,7 +235,10 @@ static int _scan_proc_dev(const char *proc, const struct config_node *cn)
 			}
 		}
 	}
-	fclose(pd);
+
+	if (fclose(pd))
+		log_sys_error("fclose", proc_devices);
+
 	return 1;
 }
 

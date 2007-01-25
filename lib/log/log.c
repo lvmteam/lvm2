@@ -120,7 +120,8 @@ void fin_log(void)
 	}
 
 	if (_log_to_file) {
-		fclose(_log_file);
+		if (fclose(_log_file))
+			fprintf(stderr, "fclose() on log file failed: %s", strerror(errno));
 		_log_to_file = 0;
 	}
 }

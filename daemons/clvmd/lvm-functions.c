@@ -473,7 +473,8 @@ static void drop_vg_locks()
 		sync_unlock(vg, LCK_EXCL);
 
 	}
-	fclose(vgs);
+	if (fclose(vgs))
+		DEBUGLOG("vgs fclose failed: %s\n", strerror(errno));
 }
 
 /*
@@ -523,7 +524,8 @@ static void *get_initial_state()
 			}
 		}
 	}
-	fclose(lvs);
+	if (fclose(lvs))
+		DEBUGLOG("lvs fclose failed: %s\n", strerror(errno));
 	return NULL;
 }
 

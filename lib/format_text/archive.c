@@ -249,17 +249,23 @@ int archive_vg(struct volume_group *vg,
 
 	if (!(fp = fdopen(fd, "w"))) {
 		log_err("Couldn't create FILE object for archive.");
-		close(fd);
+		if (close(fd))
+			log_sys_error("close", temp_file);
 		return 0;
 	}
 
 	if (!text_vg_export_file(vg, desc, fp)) {
 		stack;
-		fclose(fp);
+		if (fclose(fp))
+			log_sys_error("fclose", temp_file);
 		return 0;
 	}
 
-	fclose(fp);
+	if (fclose(fp)) {
+		log_sys_error("fclose", temp_file);
+		/* Leave file behind as evidence of failure */
+		return 0;
+	}
 
 	/*
 	 * Now we want to rename this file to <vg>_index.vg.
