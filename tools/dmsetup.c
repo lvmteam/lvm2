@@ -231,8 +231,9 @@ static int _parse_file(struct dm_task *dmt, const char *file)
 #else
 	free(buffer);
 #endif
-	if (file)
-		fclose(fp);
+	if (file && fclose(fp))
+		fprintf(stderr, "%s: fclose failed: %s", file, strerror(errno));
+
 	return r;
 }
 
@@ -1479,7 +1480,7 @@ static int _tree(int argc, char **argv, void *data __attribute((unused)))
 static int _int32_disp(struct dm_report *rh,
 		       struct dm_pool *mem __attribute((unused)),
 		       struct dm_report_field *field, const void *data,
-		       void *private)
+		       void *private __attribute((unused)))
 {
 	const int32_t value = *(const int32_t *)data;
 
@@ -1489,7 +1490,7 @@ static int _int32_disp(struct dm_report *rh,
 static int _uint32_disp(struct dm_report *rh,
 			struct dm_pool *mem __attribute((unused)),
 		        struct dm_report_field *field, const void *data,
-		        void *private)
+		        void *private __attribute((unused)))
 {
 	const uint32_t value = *(const int32_t *)data;
 
@@ -1499,7 +1500,7 @@ static int _uint32_disp(struct dm_report *rh,
 static int _dm_name_disp(struct dm_report *rh,
 			 struct dm_pool *mem __attribute((unused)),
 			 struct dm_report_field *field, const void *data,
-			 void *private)
+			 void *private __attribute((unused)))
 {
 	const char *name = dm_task_get_name((struct dm_task *) data);
 
@@ -1509,7 +1510,7 @@ static int _dm_name_disp(struct dm_report *rh,
 static int _dm_uuid_disp(struct dm_report *rh,
 			 struct dm_pool *mem __attribute((unused)),
 			 struct dm_report_field *field,
-			 const void *data, void *private)
+			 const void *data, void *private __attribute((unused)))
 {
 	const char *uuid = dm_task_get_uuid((struct dm_task *) data);
 
@@ -1522,7 +1523,7 @@ static int _dm_uuid_disp(struct dm_report *rh,
 static int _dm_info_status_disp(struct dm_report *rh,
 				struct dm_pool *mem __attribute((unused)),
 				struct dm_report_field *field, const void *data,
-				void *private)
+				void *private __attribute((unused)))
 {
 	char buf[5];
 	const char *s = buf;
@@ -1607,7 +1608,7 @@ static int _report_init(struct command *c)
 			options = _string_args[OPTIONS_ARG];
 		else {
 			len = strlen(default_report_options) +
-			      strlen(_string_args[OPTIONS_ARG]);
+			      strlen(_string_args[OPTIONS_ARG]) + 1;
 			if (!(options = dm_malloc(len))) {
 				err("Failed to allocate option string.");
 				return 0;

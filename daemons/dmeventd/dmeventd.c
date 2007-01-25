@@ -1566,7 +1566,8 @@ static int _set_oom_adj(int val)
 	}
 
 	fprintf(fp, "%i", val);
-	fclose(fp);
+	if (fclose(fp))
+		perror(OOM_ADJ_FILE ": fclose failed");
 
 	return 1;
 }
@@ -1583,7 +1584,7 @@ static void _daemonize(void)
 
 	sigemptyset(&my_sigset);
 	if (sigprocmask(SIG_SETMASK, &my_sigset, NULL) < 0) {
-		fprintf(stderr, "Unable to restore signals.");
+		fprintf(stderr, "Unable to restore signals.\n");
 		exit(EXIT_FAILURE);
 	}
 	signal(SIGTERM, &_exit_handler);
