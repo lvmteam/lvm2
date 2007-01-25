@@ -1,5 +1,6 @@
 Version 2.02.20 -
 ===================================
+  dmeventd mirror sets ignore_suspended_devices and avoids scanning mirrors.
   Add devices/ignore_suspended_devices to ignore suspended dm devices.
   Add some missing close() and fclose() return code checks.
   Fix exit statuses of reporting tools (2.02.19).
