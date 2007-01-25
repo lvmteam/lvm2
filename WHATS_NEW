@@ -1,4 +1,4 @@
-Version 2.02.20 -
+Version 2.02.20 - 25th January 2007
 ===================================
   dmeventd mirror sets ignore_suspended_devices and avoids scanning mirrors.
   Add devices/ignore_suspended_devices to ignore suspended dm devices.
