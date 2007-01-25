@@ -149,7 +149,8 @@ static int _get_proc_number(const char *file, const char *name,
 			if (!strcmp(name, nm)) {
 				if (number) {
 					*number = num;
-					fclose(fl);
+					if (fclose(fl))
+						log_error("%s: fclose failed: %s", file, strerror(errno));
 					return 1;
 				}
 				dm_bit_set(_dm_bitset, num);
@@ -158,7 +159,8 @@ static int _get_proc_number(const char *file, const char *name,
 			c = fgetc(fl);
 		} while (c != EOF && c != '\n');
 	}
-	fclose(fl);
+	if (fclose(fl))
+		log_error("%s: fclose failed: %s", file, strerror(errno));
 
 	if (number) {
 		log_error("%s: No entry for %s found", file, name);
@@ -1322,7 +1324,7 @@ static int _process_mapper_dir(struct dm_task *dmt)
 
 	dir = dm_dir();
 	if (!(d = opendir(dir))) {
-		fprintf(stderr, "opendir %s: %s", dir, strerror(errno));
+		log_error("opendir %s: %s", dir, strerror(errno));
 		return 0;
 	}
 
@@ -1335,9 +1337,8 @@ static int _process_mapper_dir(struct dm_task *dmt)
 		dm_task_run(dmt);
 	}
 
-	if (closedir(d)) {
-		fprintf(stderr, "closedir %s: %s", dir, strerror(errno));
-	}
+	if (closedir(d))
+		log_error("closedir %s: %s", dir, strerror(errno));
 
 	return r;
 }
