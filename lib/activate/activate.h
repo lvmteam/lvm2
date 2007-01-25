@@ -95,4 +95,9 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 int pv_uses_vg(struct physical_volume *pv,
 	       struct volume_group *vg);
 
+/*
+ * Returns 1 if mapped device is not suspended.
+ */
+int device_is_usable(dev_t dev);
+
 #endif

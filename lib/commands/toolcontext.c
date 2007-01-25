@@ -592,6 +592,9 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		return 0;
 	}
 
+	init_ignore_suspended_devices(find_config_tree_int(cmd,
+	    "devices/ignore_suspended_devices", DEFAULT_IGNORE_SUSPENDED_DEVICES));
+
 	dev_cache = find_config_tree_str(cmd, "devices/cache",
 				    cache_file);
 	if (!(f4 = persistent_filter_create(f3, dev_cache))) {

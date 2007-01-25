@@ -1,5 +1,6 @@
 Version 2.02.20 -
 ===================================
+  Add devices/ignore_suspended_devices to ignore suspended dm devices.
   Add some missing close() and fclose() return code checks.
   Fix exit statuses of reporting tools (2.02.19).
   Add init script for dmeventd monitoring.

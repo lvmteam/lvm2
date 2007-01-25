@@ -30,6 +30,7 @@
 #define DEFAULT_PROC_DIR "/proc"
 #define DEFAULT_SYSFS_SCAN 1
 #define DEFAULT_MD_COMPONENT_DETECTION 1
+#define DEFAULT_IGNORE_SUSPENDED_DEVICES 1
 
 #define DEFAULT_LOCK_DIR "/var/lock/lvm"
 #define DEFAULT_LOCKING_LIB "liblvm2clusterlock.so"
