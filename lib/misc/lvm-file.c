@@ -66,7 +66,8 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd)
 		if (!fcntl(*fd, F_SETLK, &lock))
 			return 1;
 
-		close(*fd);
+		if (close(*fd))
+			log_sys_error("close", buffer);
 	}
 
 	return 0;
@@ -239,7 +240,8 @@ void sync_dir(const char *file)
 	if (fsync(fd) && (errno != EROFS) && (errno != EINVAL))
 		log_sys_error("fsync", dir);
 
-	close(fd);
+	if (close(fd))
+		log_sys_error("close", dir);
 
       out:
 	dm_free(dir);

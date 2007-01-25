@@ -1065,8 +1065,9 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 	char buffer[CMD_LEN];
 	int ret = 0;
 	int magic_number = 0;
+	char *script_file = argv[0];
 
-	if ((script = fopen(argv[0], "r")) == NULL)
+	if ((script = fopen(script_file, "r")) == NULL)
 		return ENO_SUCH_CMD;
 
 	while (fgets(buffer, sizeof(buffer), script) != NULL) {
@@ -1099,7 +1100,9 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 		lvm_run_command(cmd, argc, argv);
 	}
 
-	fclose(script);
+	if (fclose(script))
+		log_sys_error("fclose", script_file);
+
 	return ret;
 }
 

@@ -54,7 +54,9 @@ static int _locate_sysfs_blocks(const char *proc, char *path, size_t len)
 		}
 	}
 
-	fclose(fp);
+	if (fclose(fp))
+		log_sys_error("fclose", proc_mounts);
+
 	return r;
 }
 
@@ -156,7 +158,9 @@ static int _read_dev(const char *file, dev_t *result)
 	}
 
 	r = _parse_dev(file, fp, result);
-	fclose(fp);
+
+	if (fclose(fp))
+		log_sys_error("fclose", file);
 
 	return r;
 }

@@ -59,8 +59,6 @@
 #  include <malloc.h>
 #endif
 
-static FILE *_log;
-
 static int _get_env_vars(struct cmd_context *cmd)
 {
 	const char *e;
@@ -1114,8 +1112,4 @@ void destroy_toolcontext(struct cmd_context *cmd)
 	activation_exit();
 	fin_log();
 	fin_syslog();
-
-	if (_log)
-		fclose(_log);
-
 }

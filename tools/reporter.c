@@ -25,7 +25,7 @@ static int _vgs_single(struct cmd_context *cmd __attribute((unused)),
 		return ECMD_FAILED;
 	}
 
-	if (!report_object(handle, vg, NULL, NULL, NULL, NULL));
+	if (!report_object(handle, vg, NULL, NULL, NULL, NULL))
 		return ECMD_FAILED;
 
 	check_current_backup(vg);
@@ -39,7 +39,7 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
 
-	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL));
+	if (!report_object(handle, lv->vg, lv, NULL, NULL, NULL))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -48,7 +48,7 @@ static int _lvs_single(struct cmd_context *cmd, struct logical_volume *lv,
 static int _segs_single(struct cmd_context *cmd __attribute((unused)),
 			struct lv_segment *seg, void *handle)
 {
-	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL));
+	if (!report_object(handle, seg->lv->vg, seg->lv, NULL, seg, NULL))
 		return ECMD_FAILED;
 
 	return ECMD_PROCESSED;
@@ -78,7 +78,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
 		goto out;
 	}
 
-	if (!report_object(handle, vg, NULL, pv, NULL, pvseg));
+	if (!report_object(handle, vg, NULL, pv, NULL, pvseg))
 		ret = ECMD_FAILED;
 
 out:
@@ -128,7 +128,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (!report_object(handle, vg, NULL, pv, NULL, NULL));
+	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
 		ret = ECMD_FAILED;
 
 out:
