@@ -1,4 +1,4 @@
-Version 1.02.16 -
+Version 1.02.16 - 25th January 2007
 ===================================
   Add some missing close() and fclose() return value checks.
   Migrate dmsetup column-based output over to new libdevmapper report framework.
