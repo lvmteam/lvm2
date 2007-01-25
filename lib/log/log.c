@@ -49,6 +49,7 @@ static char _msg_prefix[30] = "  ";
 static int _already_logging = 0;
 static int _mirror_in_sync = 0;
 static int _dmeventd_monitor = DEFAULT_DMEVENTD_MONITOR;
+static int _ignore_suspended_devices = 0;
 
 static lvm2_log_fn_t _lvm2_log_fn = NULL;
 
@@ -195,6 +196,11 @@ void init_dmeventd_monitor(int reg)
 	_dmeventd_monitor = reg;
 }
 
+void init_ignore_suspended_devices(int ignore)
+{
+	_ignore_suspended_devices = ignore;
+}
+
 void init_cmd_name(int status)
 {
 	_log_cmd_name = status;
@@ -272,6 +278,11 @@ int mirror_in_sync(void)
 int dmeventd_monitor_mode(void)
 {
 	return _dmeventd_monitor;
+}
+
+int ignore_suspended_devices(void)
+{
+	return _ignore_suspended_devices;
 }
 
 void init_debug(int level)

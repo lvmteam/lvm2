@@ -25,6 +25,7 @@
 #include "targets.h"
 #include "config.h"
 #include "filter.h"
+#include "activate.h"
 
 #include <limits.h>
 #include <dirent.h>
@@ -147,6 +148,42 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 			goto_out;
 		*uuid_out = dm_pool_strdup(mem, u);
 	}
+	r = 1;
+
+      out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+int device_is_usable(dev_t dev)
+{
+	struct dm_task *dmt;
+	struct dm_info info;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_INFO))) {
+		log_error("Failed to allocate dm_task struct to check dev status");
+		return 0;
+	}
+
+	if (!dm_task_set_major(dmt, MAJOR(dev)) || !dm_task_set_minor(dmt, MINOR(dev)))
+		goto_out;
+
+	if (!dm_task_run(dmt)) {
+		log_error("Failed to get state of mapped device");
+		goto out;
+	}
+
+	if (!dm_task_get_info(dmt, &info))
+		goto_out;
+
+	if (!info.exists || info.suspended)
+		goto out;
+
+	/* FIXME Also check for mirror block_on_error and mpath no paths */
+
+	/* FIXME Also check dependencies? */
+
 	r = 1;
 
       out:
