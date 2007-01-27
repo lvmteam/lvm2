@@ -138,6 +138,18 @@ out:
 	return ret;
 }
 
+static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
+		      struct volume_group *vg, int consistent,
+		      void *handle)
+{
+	if (!vg) {
+		log_error("Volume group %s not found", vg_name);
+		return ECMD_FAILED;
+	}                     
+
+	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvs_single);
+}
+
 static int _report(struct cmd_context *cmd, int argc, char **argv,
 		   report_type_t report_type)
 {
@@ -146,8 +158,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	char *str;
 	const char *keys = NULL, *options = NULL, *separator;
 	int r = ECMD_PROCESSED;
-
 	int aligned, buffered, headings;
+	unsigned args_are_pvs;
 
 	aligned = find_config_tree_int(cmd, "report/aligned",
 				  DEFAULT_REP_ALIGNED);
@@ -157,6 +169,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 				   DEFAULT_REP_HEADINGS);
 	separator = find_config_tree_str(cmd, "report/separator",
 				    DEFAULT_REP_SEPARATOR);
+
+	args_are_pvs = (report_type == PVS || report_type == PVSEGS) ? 1 : 0;
 
 	switch (report_type) {
 	case LVS:
@@ -292,16 +306,24 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 				    report_handle, &_vgs_single);
 		break;
 	case PVS:
-		r = process_each_pv(cmd, argc, argv, NULL, report_handle,
-				    &_pvs_single);
+		if (args_are_pvs)
+			r = process_each_pv(cmd, argc, argv, NULL,
+					    report_handle, &_pvs_single);
+		else
+			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
+					    report_handle, &_pvs_in_vg);
 		break;
 	case SEGS:
 		r = process_each_lv(cmd, argc, argv, LCK_VG_READ, report_handle,
 				    &_lvsegs_single);
 		break;
 	case PVSEGS:
-		r = process_each_pv(cmd, argc, argv, NULL, report_handle,
-				    &_pvsegs_single);
+		if (args_are_pvs)
+			r = process_each_pv(cmd, argc, argv, NULL,
+					    report_handle, &_pvsegs_single);
+		else
+			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
+					    report_handle, &_pvs_in_vg);
 		break;
 	}
 
