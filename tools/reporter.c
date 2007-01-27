@@ -150,6 +150,18 @@ static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvs_single);
 }
 
+static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
+			 struct volume_group *vg, int consistent,
+			 void *handle)
+{
+	if (!vg) {
+		log_error("Volume group %s not found", vg_name);
+		return ECMD_FAILED;
+	}                     
+
+	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvsegs_single);
+}
+
 static int _report(struct cmd_context *cmd, int argc, char **argv,
 		   report_type_t report_type)
 {
@@ -323,7 +335,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 					    report_handle, &_pvsegs_single);
 		else
 			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
-					    report_handle, &_pvs_in_vg);
+					    report_handle, &_pvsegs_in_vg);
 		break;
 	}
 
