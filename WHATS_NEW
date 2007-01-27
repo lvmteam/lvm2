@@ -1,5 +1,6 @@
 Version 2.02.21 -
 ===================================
+  Fix vgs to treat args as VGs even when PV fields are displayed.
   Fix md signature check to handle both endiannesses.
 
 Version 2.02.20 - 25th January 2007
