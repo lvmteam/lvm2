@@ -1,5 +1,7 @@
 Version 1.02.17 -
 ===================================
+  Add recent reporting options to dmsetup man page.
+  Revise some report fields names.
   Add dmsetup 'help' command and update usage text.
   Use fixed-size fields in report interface and reorder.
 
