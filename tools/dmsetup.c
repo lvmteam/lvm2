@@ -1735,7 +1735,9 @@ static void _losetup_usage(FILE *out)
 		     "[-o offset] [-f|loop_device] [file]\n\n");
 }
 
-static int _help(int argc, char **argv, void *data)
+static int _help(int argc __attribute((unused)),
+		 char **argv __attribute((unused)),
+		 void *data __attribute((unused)))
 {
 	_usage(stderr);
 
