@@ -1561,8 +1561,8 @@ static const struct dm_report_object_type _report_types[] = {
 #define OFFSET_OF(strct, field) ((unsigned int) &((struct strct *)NULL)->field)
 #define STR (DM_REPORT_FIELD_TYPE_STRING)
 #define NUM (DM_REPORT_FIELD_TYPE_NUMBER)
-#define FIELD_O(type, strct, sorttype, head, field, width, func, id, desc) {DR_ ## type, id, OFFSET_OF(strct, field), head, width, sorttype, &_ ## func ## _disp, desc},
-#define FIELD_F(type, sorttype, head, width, func, id, desc) {DR_ ## type, id, 0, head, width, sorttype, &_ ## func ## _disp, desc},
+#define FIELD_O(type, strct, sorttype, head, field, width, func, id, desc) {DR_ ## type, sorttype, OFFSET_OF(strct, field), width, id, head, &_ ## func ## _disp, desc},
+#define FIELD_F(type, sorttype, head, width, func, id, desc) {DR_ ## type, sorttype, 0, width, id, head, &_ ## func ## _disp, desc},
 
 static const struct dm_report_field_type _report_fields[] = {
 /* *INDENT-OFF* */
@@ -1574,7 +1574,7 @@ FIELD_O(INFO, dm_info, NUM, "Min", minor, 3, int32, "minor", "Minor number.")
 FIELD_O(INFO, dm_info, NUM, "Open", open_count, 4, int32, "open_count", "Number of references to open device, if requested.")
 FIELD_O(INFO, dm_info, NUM, "Targ", target_count, 4, int32, "target_count", "Number of segments in live table, if present.")
 FIELD_O(INFO, dm_info, NUM, "Event", event_nr, 6, uint32, "event_nr", "Current event number.")
-{0, "", 0, "", 0, 0, NULL, NULL},
+{0, 0, 0, 0, "", "", NULL, NULL},
 /* *INDENT-ON* */
 };
 
