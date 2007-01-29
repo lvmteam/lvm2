@@ -657,11 +657,11 @@ struct dm_report_field;
 struct dm_report;
 struct dm_report_field_type {
 	uint32_t type;		/* object type id */
-	const char id[32];	/* string used to specify the field */
-	unsigned int offset;	/* byte offset in the object */
-	const char heading[32];	/* string printed in header */
-	int width;		/* default width */
 	uint32_t flags;		/* DM_REPORT_FIELD_* */
+	uint32_t offset;	/* byte offset in the object */
+	int32_t width;		/* default width */
+	const char id[32];	/* string used to specify the field */
+	const char heading[32];	/* string printed in header */
 	int (*report_fn)(struct dm_report *rh, struct dm_pool *mem,
 			 struct dm_report_field *field, const void *data,
 			 void *private);
