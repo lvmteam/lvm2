@@ -1625,7 +1625,7 @@ static int _report_init(struct command *c)
 	if (_switches[SORT_ARG] && _string_args[SORT_ARG]) {
 		keys = _string_args[SORT_ARG];
 		buffered = 1;
-		if (!strcmp(c->name, "status") || !strcmp(c->name, "table")) {
+		if (c && (!strcmp(c->name, "status") || !strcmp(c->name, "table"))) {
 			err("--sort is not yet supported with status and table");
 			goto out;
 		}
@@ -1714,12 +1714,13 @@ static void _usage(FILE *out)
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
-		"        [-c|--columns] [-o <fields>] [--noheadings] [--separator <separator>]\n\n");
+		"        [-c|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
+		"        [--noheadings] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
 		     "-j <major> -m <minor>\n");
-	fprintf(out, "<fields> are comma-separated.  Use -c -o help for list.\n");
+	fprintf(out, "<fields> are comma-separated.  Use 'help -c' for list.\n");
 	fprintf(out, "Table_file contents may be supplied on stdin.\n");
 	fprintf(out, "Tree options are: ascii, utf, vt100; compact, inverted, notrunc;\n"
 		     "                  [no]device, active, open, rw and uuid.\n");
@@ -1737,6 +1738,14 @@ static void _losetup_usage(FILE *out)
 static int _help(int argc, char **argv, void *data)
 {
 	_usage(stderr);
+
+	if (_switches[COLS_ARG]) {
+		_switches[OPTIONS_ARG] = 1;
+		_string_args[OPTIONS_ARG] = (char *) "help";
+		_switches[SORT_ARG] = 0;
+	
+		(void) _report_init(NULL);
+	}
 
 	return 1;
 }
