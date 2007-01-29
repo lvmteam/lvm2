@@ -868,11 +868,11 @@ static const struct dm_report_object_type _report_types[] = {
 
 #define STR DM_REPORT_FIELD_TYPE_STRING
 #define NUM DM_REPORT_FIELD_TYPE_NUMBER
-#define FIELD(type, strct, sorttype, head, field, width, func, id, desc) {type, id, (off_t)((void *)&_dummy._ ## strct.field - (void *)&_dummy._ ## strct), head, width, sorttype, &_ ## func ## _disp, desc},
+#define FIELD(type, strct, sorttype, head, field, width, func, id, desc) {type, sorttype, (off_t)((void *)&_dummy._ ## strct.field - (void *)&_dummy._ ## strct), width, id, head, &_ ## func ## _disp, desc},
 
 static struct dm_report_field_type _fields[] = {
 #include "columns.h"
-{0, "", 0, "", 0, 0, NULL, NULL},
+{0, 0, 0, 0, "", "", NULL, NULL},
 };
 
 #undef STR
