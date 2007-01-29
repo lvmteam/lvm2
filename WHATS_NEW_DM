@@ -1,5 +1,6 @@
 Version 1.02.17 -
 ===================================
+  Add dmsetup 'help' command and update usage text.
   Use fixed-size fields in report interface and reorder.
 
 Version 1.02.16 - 25th January 2007
