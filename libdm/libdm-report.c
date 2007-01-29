@@ -60,7 +60,7 @@ struct field_properties {
 	struct list list;
 	uint32_t field_num;
 	uint32_t sort_posn;
-	unsigned width;
+	int32_t width;
 	const struct dm_report_object_type *type;
 	uint32_t flags;
 };
@@ -750,7 +750,7 @@ int dm_report_output(struct dm_report *rh)
 	struct dm_report_field *field;
 	const char *repstr;
 	char buf[4096];
-	unsigned width;
+	int32_t width;
 	uint32_t align;
 
 	if (list_empty(&rh->rows))
