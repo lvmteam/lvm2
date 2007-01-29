@@ -1,5 +1,7 @@
 Version 2.02.21 -
 ===================================
+  Fix vgsplit to handle mirrors.
+  Reorder fields in reporting field definitions.
   Fix vgs to treat args as VGs even when PV fields are displayed.
   Fix md signature check to handle both endiannesses.
 
