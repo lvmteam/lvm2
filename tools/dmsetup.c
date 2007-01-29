@@ -1679,7 +1679,7 @@ static int _help(int argc, char **argv, void *data);
  * Dispatch table
  */
 static struct command _commands[] = {
-	{"help", "\n", 0, 0, _help},
+	{"help", "[-c|-C|--columns]", 0, 0, _help},
 	{"create", "<dev_name> [-j|--major <major> -m|--minor <minor>]\n"
 	  "\t                  [-U|--uid <uid>] [-G|--gid <gid>] [-M|--mode <octal_mode>]\n"
 	  "\t                  [-u|uuid <uuid>]\n"
@@ -1714,7 +1714,7 @@ static void _usage(FILE *out)
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
 		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
-		"        [-c|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
+		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--noheadings] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
