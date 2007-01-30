@@ -1,5 +1,6 @@
 Version 2.02.21 -
 ===================================
+  Add warning to lvm2_monitoring_init_rhel4 if attempting to stop monitoring.
   Fix vgsplit to handle mirrors.
   Reorder fields in reporting field definitions.
   Fix vgs to treat args as VGs even when PV fields are displayed.
