@@ -25,11 +25,11 @@
 . /etc/init.d/functions
 
 VGCHANGE="/usr/sbin/vgchange"
+WARN=1
 
 start()
 {
-    for ret in 0
-    do
+	ret=0
 	# TODO do we want to separate out already active groups only?
 	VGS=`vgs --noheadings -o name`
 	for vg in $VGS
@@ -40,50 +40,58 @@ start()
 	    fi
 	done
 
-    done
-
-    return $ret
+	return $ret
 }
 
 
 stop()
 {
-    for ret in 0
-    do
+	ret=0
 	# TODO do we want to separate out already active groups only?
+	if test "$WARN" = "1"; then
+	   echo "Not stopping monitoring, this is a dangerous operation. Please use force-stop to override."
+	   return 1
+	fi
 	VGS=`vgs --noheadings -o name`
 	for vg in $VGS
 	do
-	    if ! action "Starting monitoring for VG $vg:" $VGCHANGE --monitor n $vg
+	    if ! action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n $vg
 	    then
 		ret=$?
 	    fi
 	done
-
-    done
-
+	return $ret
 }
 
-ret=1
+result=1
 
 # See how we were called.
 case "$1" in
   start)
 	start
-	ret=$?
+	result=$?
+	;;
+
+  force-stop)
+	WARN=0
+	stop
+	result=$?
 	;;
 
   stop)
+	test "$runlevel" = "0" && WARN=0
+	test "$runlevel" = "6" && WARN=0
 	stop
-	ret=$?
+	result=$?
 	;;
 
   restart)
+	WARN=0
 	if stop
 	then
 		start
 	fi 
-	ret=$?
+	result=$?
 	;;
 
   status)
@@ -91,8 +99,8 @@ case "$1" in
 	;;
 
   *)
-	echo $"Usage: $0 {start|stop|restart|status}"
+	echo $"Usage: $0 {start|stop|restart|status|force-stop}"
 	;;
 esac
 
-exit $ret
+exit $result
