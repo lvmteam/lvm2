@@ -1,5 +1,6 @@
 Version 2.02.22 - 
 ===================================
+  Fix some vgreduce --removemissing command line validation.
 
 Version 2.02.21 - 30th January 2007
 ===================================

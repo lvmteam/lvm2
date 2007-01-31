@@ -427,13 +427,13 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	int ret = 1;
 	int consistent = 1;
 
-	if (!argc & !arg_count(cmd, removemissing_ARG)) {
+	if (!argc && !arg_count(cmd, removemissing_ARG)) {
 		log_error("Please give volume group name and "
 			  "physical volume paths");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!argc & arg_count(cmd, removemissing_ARG)) {
+	if (!argc && arg_count(cmd, removemissing_ARG)) {
 		log_error("Please give volume group name");
 		return EINVALID_CMD_LINE;
 	}
