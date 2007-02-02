@@ -20,6 +20,7 @@ enum dm_event_command {
 	DM_EVENT_CMD_GET_NEXT_REGISTERED_DEVICE,
 	DM_EVENT_CMD_SET_TIMEOUT,
 	DM_EVENT_CMD_GET_TIMEOUT,
+	DM_EVENT_CMD_HELLO,
 };
 
 /* Message passed between client and daemon. */
