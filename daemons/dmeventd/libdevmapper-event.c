@@ -30,6 +30,8 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
 
+static int _sequence_nr = 0;
+
 struct dm_event_handler {
 	char *dso;
 
@@ -182,6 +184,21 @@ enum dm_event_mask dm_event_handler_get_event_mask(const struct dm_event_handler
 	return dmevh->mask;
 }
 
+static int _check_message_id(struct dm_event_daemon_message *msg)
+{
+	int pid, seq_nr;
+
+	if ((sscanf(msg->data, "%d:%d", &pid, &seq_nr) != 2) ||
+	    (pid != getpid()) || (seq_nr != _sequence_nr)) {
+		log_error("Ignoring out-of-sequence reply from dmeventd. "
+			  "Expected %d:%d but received %s", getpid(),
+			  _sequence_nr, msg->data);
+		return 0;
+	}
+
+	return 1;
+}
+
 /*
  * daemon_read
  * @fifos
@@ -260,10 +277,27 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 
 	size_t size = 2 * sizeof(uint32_t) + msg->size;
 	char *buf = alloca(size);
+	char drainbuf[128];
+	struct timeval tval = { 0, 0 };
 
 	*((uint32_t *)buf) = htonl(msg->cmd);
 	*((uint32_t *)buf + 1) = htonl(msg->size);
 	memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
+
+	/* drain the answer fifo */
+	while (1) {
+		FD_ZERO(&fds);
+		FD_SET(fifos->server, &fds);
+		tval.tv_usec = 100;
+		ret = select(fifos->server + 1, &fds, NULL, NULL, &tval);
+		if ((ret < 0) && (errno != EINTR)) {
+			log_error("Unable to talk to event daemon");
+			return 0;
+		}
+		if (ret == 0)
+			break;
+		read(fifos->server, drainbuf, 127);
+	}
 
 	while (bytes < size) {
 		do {
@@ -301,7 +335,7 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
 {
 	const char *dso = dso_name ? dso_name : "";
 	const char *dev = dev_name ? dev_name : "";
-	const char *fmt = "%s %s %u %" PRIu32;
+	const char *fmt = "%d:%d %s %s %u %" PRIu32;
 	int msg_size;
 	memset(msg, 0, sizeof(*msg));
 
@@ -310,8 +344,10 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
 	 * into ASCII message string.
 	 */
 	msg->cmd = cmd;
-	if ((msg_size = dm_asprintf(&(msg->data), fmt, dso, dev, evmask,
-				     timeout)) < 0) {
+	if (cmd == DM_EVENT_CMD_HELLO)
+		fmt = "%d:%d HELLO";
+	if ((msg_size = dm_asprintf(&(msg->data), fmt, getpid(), _sequence_nr,
+				    dso, dev, evmask, timeout)) < 0) {
 		log_error("_daemon_talk: message allocation failed");
 		return -ENOMEM;
 	}
@@ -326,10 +362,14 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
 		return -EIO;
 	}
 
-	if (!_daemon_read(fifos, msg)) {
-		stack;
-		return -EIO;
-	}
+	do {
+		if (!_daemon_read(fifos, msg)) {
+			stack;
+			return -EIO;
+		}
+	} while (!_check_message_id(msg));
+
+	_sequence_nr++;
 
 	return (int32_t) msg->cmd;
 }
@@ -507,7 +547,9 @@ static int _do_event(int cmd, struct dm_event_daemon_message *msg,
 		return -ESRCH;
 	}
 
-	ret = _daemon_talk(&fifos, msg, cmd, dso_name, dev_name, evmask, timeout);
+	ret = _daemon_talk(&fifos, msg, DM_EVENT_CMD_HELLO, 0, 0, 0, 0);
+	if (!ret)
+		ret = _daemon_talk(&fifos, msg, cmd, dso_name, dev_name, evmask, timeout);
 
 	/* what is the opposite of init? */
 	_dtr_client(&fifos);
@@ -521,7 +563,7 @@ int dm_event_register_handler(const struct dm_event_handler *dmevh)
 	int ret = 1, err;
 	const char *uuid;
 	struct dm_task *dmt;
-	struct dm_event_daemon_message msg;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
 
 	if (!(dmt = _get_device_info(dmevh))) {
 		stack;
@@ -551,7 +593,7 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 	int ret = 1, err;
 	const char *uuid;
 	struct dm_task *dmt;
-	struct dm_event_daemon_message msg;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
 
 	if (!(dmt = _get_device_info(dmevh))) {
 		stack;
@@ -598,15 +640,20 @@ static char *_fetch_string(char **src, const int delimiter)
 static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
 			 char **uuid, enum dm_event_mask *evmask)
 {
+	char *id = NULL;
 	char *p = msg->data;
 
-	if ((*dso_name = _fetch_string(&p, ' ')) &&
+	if ((id = _fetch_string(&p, ' ')) &&
+	    (*dso_name = _fetch_string(&p, ' ')) &&
 	    (*uuid = _fetch_string(&p, ' '))) {
 		*evmask = atoi(p);
 
+		dm_free(id);
 		return 0;
 	}
 
+	if (id)
+		dm_free(id);
 	return -ENOMEM;
 }
 
@@ -621,12 +668,12 @@ static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
  */
 int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 {
-	int ret;
+	int ret = 0;
 	const char *uuid = NULL;
 	char *reply_dso = NULL, *reply_uuid = NULL;
-	enum dm_event_mask reply_mask;
-	struct dm_task *dmt;
-	struct dm_event_daemon_message msg;
+	enum dm_event_mask reply_mask = 0;
+	struct dm_task *dmt = NULL;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
 
 	if (!(dmt = _get_device_info(dmevh))) {
 		stack;
@@ -696,9 +743,17 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 
 #if 0				/* left out for now */
 
+static char *_skip_string(char *src, const int delimiter)
+{
+	src = srtchr(src, delimiter);
+	if (src && *(src + 1))
+		return src + 1;
+	return NULL;
+}
+
 int dm_event_set_timeout(const char *device_path, uint32_t timeout)
 {
-	struct dm_event_daemon_message msg;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
 
 	if (!device_exists(device_path))
 		return -ENODEV;
@@ -710,13 +765,20 @@ int dm_event_set_timeout(const char *device_path, uint32_t timeout)
 int dm_event_get_timeout(const char *device_path, uint32_t *timeout)
 {
 	int ret;
-	struct dm_event_daemon_message msg;
+	struct dm_event_daemon_message msg = { 0, 0, NULL };
 
 	if (!device_exists(device_path))
 		return -ENODEV;
 	if (!(ret = _do_event(DM_EVENT_CMD_GET_TIMEOUT, &msg, NULL, device_path,
-			     0, 0)))
-		*timeout = atoi(msg.data);
+			     0, 0))) {
+		char *p = _skip_string(msg.data, ' ');
+		if (!p) {
+			log_error("malformed reply from dmeventd '%s'\n",
+				  msg.data);
+			return -EIO;
+		}
+		*timeout = atoi(p);
+	}
 	if (msg.data)
 		dm_free(msg.data);
 	return ret;

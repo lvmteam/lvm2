@@ -146,6 +146,7 @@ static LIST_INIT(_dso_registry);
 
 /* Structure to keep parsed register variables from client message. */
 struct message_data {
+	char *id;
 	char *dso_name;		/* Name of DSO. */
 	char *device_uuid;	/* Mapped device path. */
 	union {
@@ -320,6 +321,8 @@ static int _fetch_string(char **ptr, char **src, const int delimiter)
 /* Free message memory. */
 static void _free_message(struct message_data *message_data)
 {
+	if (message_data->id)
+		dm_free(message_data->id);
 	if (message_data->dso_name)
 		dm_free(message_data->dso_name);
 
@@ -342,7 +345,8 @@ static int _parse_message(struct message_data *message_data)
 	 * Retrieve application identifier, mapped device
 	 * path and events # string from message.
 	 */
-	if (_fetch_string(&message_data->dso_name, &p, ' ') &&
+	if (_fetch_string(&message_data->id, &p, ' ') &&
+	    _fetch_string(&message_data->dso_name, &p, ' ') &&
 	    _fetch_string(&message_data->device_uuid, &p, ' ') &&
 	    _fetch_string(&message_data->events.str, &p, ' ') &&
 	    _fetch_string(&message_data->timeout.str, &p, ' ')) {
@@ -875,8 +879,8 @@ static struct dso_data *_load_dso(struct message_data *data)
 		syslog(LOG_ERR, "dmeventd %s dlopen failed: %s", data->dso_name,
 		       dlerr);
 		data->msg->size =
-		    dm_asprintf(&(data->msg->data), "%s dlopen failed: %s",
-				data->dso_name, dlerr);
+		    dm_asprintf(&(data->msg->data), "%s %s dlopen failed: %s",
+				data->id, data->dso_name, dlerr);
 		return NULL;
 	}
 
@@ -1056,7 +1060,8 @@ static int _registered_device(struct message_data *message_data,
 {
 	struct dm_event_daemon_message *msg = message_data->msg;
 
-	const char *fmt = "%s %s %u";
+	const char *fmt = "%s %s %s %u";
+	const char *id = message_data->id;
 	const char *dso = thread->dso_data->dso_name;
 	const char *dev = thread->device.uuid;
 	unsigned events = ((thread->status == DM_THREAD_RUNNING)
@@ -1066,7 +1071,7 @@ static int _registered_device(struct message_data *message_data,
 	if (msg->data)
 		dm_free(msg->data);
 
-	msg->size = dm_asprintf(&(msg->data), fmt, dso, dev, events);
+	msg->size = dm_asprintf(&(msg->data), fmt, id, dso, dev, events);
 
 	_unlock_mutex();
 
@@ -1180,7 +1185,8 @@ static int _get_timeout(struct message_data *message_data)
 	_lock_mutex();
 	if ((thread = _lookup_thread_status(message_data))) {
 		msg->size =
-		    dm_asprintf(&(msg->data), "%" PRIu32, thread->timeout);
+		    dm_asprintf(&(msg->data), "%s %" PRIu32, message_data->id,
+				thread->timeout);
 	} else {
 		msg->data = NULL;
 		msg->size = 0;
@@ -1375,16 +1381,31 @@ static int _handle_request(struct dm_event_daemon_message *msg,
 static int _do_process_request(struct dm_event_daemon_message *msg)
 {
 	int ret;
+	char *answer;
 	static struct message_data message_data;
 
 	/* Parse the message. */
 	memset(&message_data, 0, sizeof(message_data));
 	message_data.msg = msg;
-	if (msg->cmd != DM_EVENT_CMD_ACTIVE && !_parse_message(&message_data)) {
+	if (msg->cmd == DM_EVENT_CMD_HELLO)  {
+		ret = 0;
+		answer = dm_strdup(msg->data);
+		if (answer) {
+			msg->size = dm_asprintf(&(msg->data), "%s HELLO", answer);
+			dm_free(answer);
+		} else {
+			msg->size = 0;
+			msg->data = NULL;
+		}
+	} else if (msg->cmd != DM_EVENT_CMD_ACTIVE && !_parse_message(&message_data)) {
 		stack;
 		ret = -EINVAL;
 	} else
 		ret = _handle_request(msg, &message_data);
+
+	msg->cmd = ret;
+	if (!msg->data)
+		msg->size = dm_asprintf(&(msg->data), "%s %s", message_data.id, strerror(-ret));
 
 	_free_message(&message_data);
 
@@ -1405,16 +1426,9 @@ static void _process_request(struct dm_event_fifos *fifos)
 	if (!_client_read(fifos, &msg))
 		return;
 
-	msg.cmd = _do_process_request(&msg);
-	if (!msg.data) {
-		msg.data = dm_strdup(strerror(-msg.cmd));
-		if (msg.data)
-			msg.size = strlen(msg.data) + 1;
-		else {
-			msg.size = 0;
-			stack;
-		}
-	}
+	/* _do_process_request fills in msg (if memory allows for
+	   data, otherwise just cmd and size = 0) */
+	_do_process_request(&msg);
 
 	if (!_client_write(fifos, &msg))
 		stack;
