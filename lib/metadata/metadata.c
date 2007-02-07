@@ -963,6 +963,30 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	return vg;
 }
 
+static int _update_pv_list(struct list *all_pvs, struct volume_group *vg)
+{
+	struct pv_list *pvl, *pvl2;
+
+	list_iterate_items(pvl, &vg->pvs) {
+		list_iterate_items(pvl2, all_pvs) {
+			if (pvl->pv->dev == pvl2->pv->dev)
+				goto next_pv;
+		}
+		/* PV is not on list so add it.  Note that we don't copy it. */
+       		if (!(pvl2 = dm_pool_zalloc(vg->cmd->mem, sizeof(*pvl2)))) {
+			log_error("pv_list allocation for '%s' failed",
+				  dev_name(pvl->pv->dev));
+			return 0;
+		}
+		pvl2->pv = pvl->pv;
+		list_add(all_pvs, &pvl2->list);
+  next_pv:
+		;
+	}
+
+	return 1;
+}
+
 /* Caller sets consistent to 1 if it's safe for vg_read to correct
  * inconsistent metadata on disk (i.e. the VG write lock is held).
  * This guarantees only consistent metadata is returned unless PARTIAL_VG.
@@ -982,9 +1006,12 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct volume_group *vg, *correct_vg = NULL;
 	struct metadata_area *mda;
 	int inconsistent = 0;
+	int inconsistent_vgid = 0;
 	int use_precommitted = precommitted;
 	struct list *pvids;
-	struct pv_list *pvl;
+	struct pv_list *pvl, *pvl2;
+	struct list all_pvs;
+	char uuid[64] __attribute((aligned(8)));
 
 	if (!*vgname) {
 		if (use_precommitted) {
@@ -1069,6 +1096,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 	}
 
+	list_init(&all_pvs);
+
 	/* Failed to find VG where we expected it - full scan and retry */
 	if (!correct_vg) {
 		inconsistent = 0;
@@ -1104,13 +1133,25 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			}
 			if (!correct_vg) {
 				correct_vg = vg;
+				if (!_update_pv_list(&all_pvs, correct_vg))
+					return_NULL;
 				continue;
 			}
+
+			if (strncmp((char *)vg->id.uuid,
+			    (char *)correct_vg->id.uuid, ID_LEN)) {
+				inconsistent = 1;
+				inconsistent_vgid = 1;
+			}
+
 			/* FIXME Also ensure contents same - checksums same? */
 			if (correct_vg->seqno != vg->seqno) {
 				inconsistent = 1;
-				if (vg->seqno > correct_vg->seqno)
+				if (vg->seqno > correct_vg->seqno) {
+					if (!_update_pv_list(&all_pvs, vg))
+						return_NULL;
 					correct_vg = vg;
+				}
 			}
 		}
 
@@ -1143,16 +1184,41 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return correct_vg;
 		}
 
-		log_print("Inconsistent metadata copies found - updating "
-			  "to use version %u", correct_vg->seqno);
+		/* Don't touch if vgids didn't match */
+		if (inconsistent_vgid) {
+			log_error("Inconsistent metadata UUIDs found for "
+				  "volume group %s", vgname);
+			*consistent = 0;
+			return correct_vg;
+		}
+
+		log_print("Inconsistent metadata found for VG %s - updating "
+			  "to use version %u", vgname, correct_vg->seqno);
+
 		if (!vg_write(correct_vg)) {
 			log_error("Automatic metadata correction failed");
 			return NULL;
 		}
+
 		if (!vg_commit(correct_vg)) {
 			log_error("Automatic metadata correction commit "
 				  "failed");
 			return NULL;
+		}
+
+		list_iterate_items(pvl, &all_pvs) {
+			list_iterate_items(pvl2, &correct_vg->pvs) {
+				if (pvl->pv->dev == pvl2->pv->dev)
+					goto next_pv;
+			}
+			if (!id_write_format(&pvl->pv->id, uuid, sizeof(uuid)))
+				return_NULL;
+			log_error("Removing PV %s (%s) that no longer belongs to VG %s",
+				  dev_name(pvl->pv->dev), uuid, correct_vg->name);
+			if (!pv_write_orphan(cmd, pvl->pv))
+				return_NULL;
+      next_pv:
+			;
 		}
 	}
 
@@ -1428,6 +1494,28 @@ int pv_write(struct cmd_context *cmd __attribute((unused)), struct physical_volu
 
 	if (!pv->fmt->ops->pv_write(pv->fmt, pv, mdas, label_sector)) {
 		stack;
+		return 0;
+	}
+
+	return 1;
+}
+
+int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
+{
+	const char *old_vg_name = pv->vg_name;
+
+	pv->vg_name = ORPHAN;
+	pv->status = ALLOCATABLE_PV;
+
+	if (!dev_get_size(pv->dev, &pv->size)) {
+		log_error("%s: Couldn't get size.", dev_name(pv->dev));
+		return 0;
+	}
+
+	if (!pv_write(cmd, pv, NULL, INT64_C(-1))) {
+		log_error("Failed to clear metadata from physical "
+			  "volume \"%s\" after removal from \"%s\"",
+			  dev_name(pv->dev), old_vg_name);
 		return 0;
 	}
 
