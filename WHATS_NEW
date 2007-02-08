@@ -1,5 +1,6 @@
 Version 2.02.22 - 
 ===================================
+  Fix loading of segment_libraries.
   If a PV reappears after it was removed from its VG, make it an orphan.
   Don't update metadata automatically if VGIDs don't match.
   Fix some vgreduce --removemissing command line validation.
