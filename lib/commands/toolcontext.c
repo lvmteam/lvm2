@@ -754,7 +754,6 @@ static int _init_segtypes(struct cmd_context *cmd)
 		struct config_value *cv;
 		struct segment_type *(*init_segtype_fn) (struct cmd_context *);
 		void *lib;
-		struct list *sgtl, *tmp;
 		struct segment_type *segtype2;
 
 		for (cv = cn->v; cv; cv = cv->next) {
@@ -781,18 +780,16 @@ static int _init_segtypes(struct cmd_context *cmd)
 			segtype->library = lib;
 			list_add(&cmd->segtypes, &segtype->list);
 
-			list_iterate_safe(sgtl, tmp, &cmd->segtypes) {
-				segtype2 = list_item(sgtl, struct segment_type);
-				if (!strcmp(segtype2->name, segtype->name)) {
-					log_error("Duplicate segment type %s: "
-						  "unloading shared library %s",
-						  segtype->name, cv->v.str);
-					list_del(&segtype->list);
-					segtype->ops->destroy(segtype);
-					dlclose(lib);
-					break;
-				}
-
+			list_iterate_items(segtype2, &cmd->segtypes) {
+				if ((segtype == segtype2) ||
+				     strcmp(segtype2->name, segtype->name))
+					continue;
+				log_error("Duplicate segment type %s: "
+					  "unloading shared library %s",
+					  segtype->name, cv->v.str);
+				list_del(&segtype->list);
+				segtype->ops->destroy(segtype);
+				dlclose(lib);
 			}
 		}
 	}
