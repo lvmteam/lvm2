@@ -1,5 +1,5 @@
-Version 1.02.18 -
-===================================
+Version 1.02.18 - 13th February 2007
+====================================
   Improve dmeventd messaging protocol: drain pipe and tag messages.
 
 Version 1.02.17 - 29th January 2007
