@@ -5,7 +5,7 @@ pvmove \- move physical extents
 .B pvmove
 [\-\-abort]
 [\-\-alloc AllocationPolicy]
-[\-\-background]
+[\-b/\-\-background]
 [\-d/\-\-debug] [\-h/\-\-help] [\-i/\-\-interval Seconds] [\-v/\-\-verbose]
 [\-n/\-\-name LogicalVolume] 
 [SourcePhysicalVolume[:PE[-PE]...] [DestinationPhysicalVolume[:PE[-PE]...]...]]
@@ -73,7 +73,7 @@ type of on-disk metadata.  Metadata can be converted using \fBvgconvert\fP(8).
 .I \-\-abort
 Abort any moves in progress.
 .TP
-.I \-\-background
+.I \-b, \-\-background
 Run the daemon in the background.
 .TP
 .I \-i, \-\-interval Seconds

@@ -1,5 +1,7 @@
 Version 2.02.22 - 
 ===================================
+  Correct -b and -P on a couple of man pages.
+  Add global/units to example.conf.
   Fix loading of segment_libraries.
   If a PV reappears after it was removed from its VG, make it an orphan.
   Don't update metadata automatically if VGIDs don't match.
