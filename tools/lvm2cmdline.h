@@ -18,6 +18,14 @@
 
 struct cmd_context;
 
+struct cmdline_context {
+        struct arg *the_args;
+        struct command *commands;
+        int num_commands;
+        int commands_size;
+        int interactive;
+};
+
 int lvm2_main(int argc, char **argv, unsigned is_static);
 
 void *cmdlib_lvm2_init(unsigned is_static);
@@ -27,5 +35,6 @@ struct cmd_context *init_lvm(unsigned is_static);
 void lvm_register_commands(void);
 int lvm_split(char *str, int *argc, char **argv, int max);
 int lvm_run_command(struct cmd_context *cmd, int argc, char **argv);
+int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline);
 
 #endif

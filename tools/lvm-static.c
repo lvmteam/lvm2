@@ -19,3 +19,8 @@ int main(int argc, char **argv)
 {
 	return lvm2_main(argc, argv, 1);
 }
+
+int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
+{
+	return 0;
+}
