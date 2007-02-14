@@ -504,15 +504,20 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 
 	if (!(rh->mem = dm_pool_create("report", 10 * 1024))) {
 		log_error("dm_report_init: allocation of memory pool failed");
+		dm_free(rh);
 		return NULL;
 	}
 
 	/* Generate list of fields for output based on format string & flags */
-	if (!_parse_options(rh, output_fields))
+	if (!_parse_options(rh, output_fields)) {
+		dm_report_free(rh);
 		return NULL;
+	}
 
-	if (!_parse_keys(rh, sort_keys))
+	if (!_parse_keys(rh, sort_keys)) {
+		dm_report_free(rh);
 		return NULL;
+	}
 
 	/* Return updated types value for further compatility check by caller */
 	if (report_types)

@@ -1,5 +1,6 @@
 Version 1.02.19 -
 ====================================
+  Fix a few leaks in reporting error paths. [1.02.15+]
 
 Version 1.02.18 - 13th February 2007
 ====================================
