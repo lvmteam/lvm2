@@ -2019,6 +2019,7 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv)
 	if (*argc != 2) {
 		fprintf(stderr, "%s: Too few arguments\n", base);
 		_losetup_usage(stderr);
+		dm_free(device_name);
 		return 0;
 	}
 
@@ -2027,6 +2028,7 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv)
 		fprintf(stderr, "%s: Could not parse loop file name %s\n",
 			base, (*argv)[1]);
 		_losetup_usage(stderr);
+		dm_free(device_name);
 		return 0;
 	}
 
@@ -2034,6 +2036,7 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv)
 	_table = dm_malloc(LOOP_TABLE_SIZE);
 	if (!_loop_table(_table, LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
 		fprintf(stderr, "Could not build device-mapper table for %s\n", (*argv)[0]);
+		dm_free(device_name);
 		return 0;
 	}
 	_switches[TABLE_ARG]++;
