@@ -1,5 +1,6 @@
 Version 2.02.23 - 
 ====================================
+  Fix a leak in a reporting error path (2.02.19).
 
 Version 2.02.22 - 13th February 2007
 ====================================

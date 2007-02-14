@@ -286,7 +286,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	if (!(report_handle = report_init(cmd, options, keys, &report_type,
 					  separator, aligned, buffered,
 					  headings)))
-		return 0;
+		return_0;
 
 	/* Ensure options selected are compatible */
 	if (report_type & SEGS)
@@ -295,6 +295,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		report_type |= PVS;
 	if ((report_type & LVS) && (report_type & PVS)) {
 		log_error("Can't report LV and PV fields at the same time");
+		dm_report_free(report_handle);
 		return 0;
 	}
 
