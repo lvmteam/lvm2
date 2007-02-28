@@ -95,8 +95,8 @@ pattern it is rejected; otherwise it is accepted.
 As an example, to ignore /dev/cdrom you could use:
 \fBdevices { filter=["r|cdrom|"] }\fP 
 .IP
-\fBcache\fP \(em Persistent filter cache file.
-Defaults to "/etc/lvm/.cache".
+\fBcache_dir\fP \(em Persistent filter cache file directory.
+Defaults to "/etc/lvm/cache".
 .IP
 \fBwrite_cache_state\fP \(em Set to 0 to disable the writing out of the 
 persistent filter cache file when \fBlvm\fP exits.
@@ -364,9 +364,9 @@ understand how things work: to make changes you should always use
 the tools as normal, or else vgcfgbackup, edit backup, vgcfgrestore.
 .SH FILES
 .I /etc/lvm/lvm.conf
-.I /etc/lvm/.cache
 .I /etc/lvm/archive
 .I /etc/lvm/backup
+.I /etc/lvm/cache/.cache
 .I /var/lock/lvm
 .SH SEE ALSO
 .BR lvm (8),

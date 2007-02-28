@@ -575,7 +575,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache)
 {
-	const char *dev_cache;
+	const char *dev_cache = NULL, *cache_dir, *cache_file_prefix;
 	struct dev_filter *f3, *f4;
 	struct stat st;
 	char cache_file[PATH_MAX];
@@ -585,19 +585,35 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	if (!(f3 = _init_filter_components(cmd)))
 		return 0;
 
-	if (dm_snprintf(cache_file, sizeof(cache_file),
-			 "%s/.cache", cmd->sys_dir) < 0) {
-		log_error("Persistent cache filename too long ('%s/.cache').",
-			  cmd->sys_dir);
-		return 0;
-	}
-
 	init_ignore_suspended_devices(find_config_tree_int(cmd,
 	    "devices/ignore_suspended_devices", DEFAULT_IGNORE_SUSPENDED_DEVICES));
 
-	dev_cache = find_config_tree_str(cmd, "devices/cache",
-				    cache_file);
-	if (!(f4 = persistent_filter_create(f3, dev_cache))) {
+	/*
+	 * If 'cache_dir' or 'cache_file_prefix' is set, ignore 'cache'.
+	 */
+	cache_dir = find_config_tree_str(cmd, "devices/cache_dir", NULL);
+	cache_file_prefix = find_config_tree_str(cmd, "devices/cache_file_prefix", NULL);
+
+	if (cache_dir || cache_file_prefix) {
+		if (dm_snprintf(cache_file, sizeof(cache_file),
+		    "%s%s%s/%s.cache",
+		    cache_dir ? "" : cmd->sys_dir,
+		    cache_dir ? "" : "/",
+		    cache_dir ? : DEFAULT_CACHE_SUBDIR,
+		    cache_file_prefix ? : DEFAULT_CACHE_FILE_PREFIX) < 0) {
+			log_error("Persistent cache filename too long.");
+			return 0;
+		}
+	} else if (!(dev_cache = find_config_tree_str(cmd, "devices/cache", NULL)) &&
+		   (dm_snprintf(cache_file, sizeof(cache_file),
+				"%s/%s/%s.cache",
+				cmd->sys_dir, DEFAULT_CACHE_SUBDIR,
+				DEFAULT_CACHE_FILE_PREFIX) < 0)) {
+		log_error("Persistent cache filename too long.");
+		return 0;
+	}
+
+	if (!(f4 = persistent_filter_create(f3, dev_cache ? : cache_file))) {
 		log_error("Failed to create persistent device filter");
 		return 0;
 	}
