@@ -256,12 +256,25 @@ void sync_dir(const char *file)
 int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 {
 	int lockfd;
+	char *dir;
+	char *c;
 	struct flock lock = {
 		.l_type = lock_type,
 		.l_whence = 0,
 		.l_start = 0,
 		.l_len = 0
 	};
+
+	if (!(dir = dm_strdup(file))) {
+		log_error("fcntl_lock_file failed in strdup.");
+		return -1;
+	}
+
+	if ((c = strrchr(dir, '/')))
+		*c = '\0';
+
+	if (!create_dir(dir))
+		return -1;
 
 	log_very_verbose("Locking %s (%s, %hd)", file,
 			 (lock_type == F_WRLCK) ? "F_WRLCK" : "F_RDLCK",
