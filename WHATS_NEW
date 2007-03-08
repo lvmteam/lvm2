@@ -1,5 +1,6 @@
 Version 2.02.23 - 
 ====================================
+  Fix two more segfaults if an empty config file section encountered.
   Move .cache file into a new /etc/lvm/cache directory by default.
   Add devices/cache_dir & devices/cache_file_prefix, deprecating devices/cache.
   Create directory in fcntl_lock_file() if required.

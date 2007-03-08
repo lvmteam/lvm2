@@ -878,7 +878,7 @@ static int _find_config_int(const struct config_node *cn1,
 {
 	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
 
-	if (n && n->v->type == CFG_INT) {
+	if (n && n->v && n->v->type == CFG_INT) {
 		log_very_verbose("Setting %s to %d", path, n->v->v.i);
 		return n->v->v.i;
 	}
@@ -899,7 +899,7 @@ static float _find_config_float(const struct config_node *cn1,
 {
 	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
 
-	if (n && n->v->type == CFG_FLOAT) {
+	if (n && n->v && n->v->type == CFG_FLOAT) {
 		log_very_verbose("Setting %s to %f", path, n->v->v.r);
 		return n->v->v.r;
 	}
