@@ -1,5 +1,6 @@
 Version 2.02.23 - 
 ====================================
+  Fix vgrename active LV check to ignore differing vgids.
   Remove no-longer-used uuid_out parameter from activation info functions.
   Fix two more segfaults if an empty config file section encountered.
   Move .cache file into a new /etc/lvm/cache directory by default.

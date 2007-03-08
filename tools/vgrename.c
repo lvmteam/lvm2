@@ -118,7 +118,7 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (lvs_in_vg_activated(vg_old)) {
+	if (lvs_in_vg_activated_by_uuid_only(vg_old)) {
 		unlock_vg(cmd, vg_name_old);
 		log_error("Volume group \"%s\" still has active LVs",
 			  vg_name_old);
