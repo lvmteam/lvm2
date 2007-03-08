@@ -1,4 +1,4 @@
-Version 2.02.23 - 
+Version 2.02.23 - 8th March 2008
 ====================================
   Fix vgrename active LV check to ignore differing vgids.
   Remove no-longer-used uuid_out parameter from activation info functions.
