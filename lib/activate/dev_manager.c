@@ -118,12 +118,10 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 }
 
 static int _info_run(const char *name, const char *dlid, struct dm_info *info,
-		     int mknodes, int with_open_count, struct dm_pool *mem,
-		     char **uuid_out)
+		     int mknodes, int with_open_count)
 {
 	int r = 0;
 	struct dm_task *dmt;
-	const char *u;
 	int dmtask;
 
 	dmtask = mknodes ? DM_DEVICE_MKNODES : DM_DEVICE_INFO;
@@ -143,11 +141,6 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 	if (!dm_task_get_info(dmt, info))
 		goto_out;
 
-	if (info->exists && uuid_out) {
-		if (!(u = dm_task_get_uuid(dmt)))
-			goto_out;
-		*uuid_out = dm_pool_strdup(mem, u);
-	}
 	r = 1;
 
       out:
@@ -208,23 +201,20 @@ int device_is_usable(dev_t dev)
 }
 
 static int _info(const char *name, const char *dlid, int mknodes,
-		 int with_open_count, struct dm_info *info,
-		 struct dm_pool *mem, char **uuid_out)
+		 int with_open_count, struct dm_info *info)
 {
 	if (!mknodes && dlid && *dlid) {
-		if (_info_run(NULL, dlid, info, 0, with_open_count, mem,
-			      uuid_out) &&
+		if (_info_run(NULL, dlid, info, 0, with_open_count) &&
 	    	    info->exists)
 			return 1;
 		else if (_info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
-				   0, with_open_count, mem, uuid_out) &&
+				   0, with_open_count) &&
 			 info->exists)
 			return 1;
 	}
 
 	if (name)
-		return _info_run(name, NULL, info, mknodes, with_open_count,
-				 mem, uuid_out);
+		return _info_run(name, NULL, info, mknodes, with_open_count);
 
 	return 0;
 }
@@ -240,8 +230,7 @@ int dev_manager_info(struct dm_pool *mem, const char *name,
 		return 0;
 	}
 
-	return _info(name, dlid, with_mknodes, with_open_count, info,
-		     NULL, NULL);
+	return _info(name, dlid, with_mknodes, with_open_count, info);
 }
 
 /* FIXME Interface must cope with multiple targets */
@@ -646,7 +635,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
         log_debug("Getting device info for %s [%s]", name, dlid);
-        if (!_info(name, dlid, 0, 1, &info, dm->mem, NULL)) {
+        if (!_info(name, dlid, 0, 1, &info)) {
                 log_error("Failed to get info for %s [%s].", name, dlid);
                 return 0;
         }
