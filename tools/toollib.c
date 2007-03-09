@@ -88,21 +88,53 @@ const char *command_name(struct cmd_context *cmd)
 /*
  * Strip dev_dir if present
  */
-char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name)
+char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
+		   unsigned *dev_dir_found)
 {
-	/* FIXME Do this properly */
+	const char *dmdir = dm_dir();
+	size_t dmdir_len = strlen(dmdir), vglv_sz;
+	char *vgname, *lvname, *layer, *vglv;
 
+	/* FIXME Do this properly */
 	if (*vg_name == '/') {
 		while (*vg_name == '/')
 			vg_name++;
 		vg_name--;
 	}
 
+	/* Reformat string if /dev/mapper found */
+	if (!strncmp(vg_name, dmdir, dmdir_len) && vg_name[dmdir_len] == '/') {
+		if (dev_dir_found)
+			*dev_dir_found = 1;
+		vg_name += dmdir_len;
+		while (*vg_name == '/')
+			vg_name++;
+
+		if (!dm_split_lvm_name(cmd->mem, vg_name, &vgname, &lvname, &layer) ||
+		    *layer) {
+			log_error("skip_dev_dir: Couldn't split up device name %s",
+				  vg_name);
+			return (char *) vg_name;
+		}
+		vglv_sz = strlen(vgname) + strlen(lvname) + 2;
+		if (!(vglv = dm_pool_alloc(cmd->mem, vglv_sz)) ||
+		    dm_snprintf(vglv, vglv_sz, "%s%s%s", vgname,
+				 *lvname ? "/" : "",
+				 lvname) < 0) {
+			log_error("vg/lv string alloc failed");
+			return (char *) vg_name;
+		}
+		return vglv;
+	}
+
 	if (!strncmp(vg_name, cmd->dev_dir, strlen(cmd->dev_dir))) {
+		if (dev_dir_found)
+			*dev_dir_found = 1;
 		vg_name += strlen(cmd->dev_dir);
 		while (*vg_name == '/')
 			vg_name++;
-	}
+	} else if (dev_dir_found)
+		*dev_dir_found = 0;
 
 	return (char *) vg_name;
 }
@@ -222,7 +254,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		for (; opt < argc; opt++) {
 			const char *lv_name = argv[opt];
 			char *vgname_def;
-			int dev_dir_found = 0;
+			unsigned dev_dir_found = 0;
 
 			/* Do we have a tag or vgname or lvname? */
 			vgname = lv_name;
@@ -243,18 +275,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			}
 
 			/* FIXME Jumbled parsing */
-			if (*vgname == '/') {
-				while (*vgname == '/')
-					vgname++;
-				vgname--;
-			}
-			if (!strncmp(vgname, cmd->dev_dir,
-				     strlen(cmd->dev_dir))) {
-				vgname += strlen(cmd->dev_dir);
-				dev_dir_found = 1;
-				while (*vgname == '/')
-					vgname++;
-			}
+			vgname = skip_dev_dir(cmd, vgname, &dev_dir_found);
+
 			if (*vgname == '/') {
 				log_error("\"%s\": Invalid path for Logical "
 					  "Volume", argv[opt]);
@@ -528,7 +550,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 				continue;
 			}
 
-			vg_name = skip_dev_dir(cmd, vg_name);
+			vg_name = skip_dev_dir(cmd, vg_name, NULL);
 			if (strchr(vg_name, '/')) {
 				log_error("Invalid volume group name: %s",
 					  vg_name);
@@ -830,7 +852,7 @@ char *default_vgname(struct cmd_context *cmd)
 	if (!vg_path)
 		return 0;
 
-	vg_path = skip_dev_dir(cmd, vg_path);
+	vg_path = skip_dev_dir(cmd, vg_path, NULL);
 
 	if (strchr(vg_path, '/')) {
 		log_error("Environment Volume Group in LVM_VG_NAME invalid: "

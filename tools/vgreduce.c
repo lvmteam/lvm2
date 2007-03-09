@@ -461,7 +461,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name = skip_dev_dir(cmd, argv[0]);
+	vg_name = skip_dev_dir(cmd, argv[0], NULL);
 	argv++;
 	argc--;
 
