@@ -1,5 +1,6 @@
 Version 2.02.24 -
 ====================================
+  Add a few missing pieces of vgname command line validation.
   Support the /dev/mapper prefix on most command lines.
 
 Version 2.02.23 - 8th March 2007
