@@ -35,8 +35,8 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name_old = skip_dev_dir(cmd, argv[0]);
-	vg_name_new = skip_dev_dir(cmd, argv[1]);
+	vg_name_old = skip_dev_dir(cmd, argv[0], NULL);
+	vg_name_new = skip_dev_dir(cmd, argv[1], NULL);
 
 	dev_dir = cmd->dev_dir;
 	length = strlen(dev_dir);

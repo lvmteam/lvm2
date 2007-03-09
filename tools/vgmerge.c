@@ -253,12 +253,12 @@ int vgmerge(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name_to = skip_dev_dir(cmd, argv[0]);
+	vg_name_to = skip_dev_dir(cmd, argv[0], NULL);
 	argc--;
 	argv++;
 
 	for (; opt < argc; opt++) {
-		vg_name_from = skip_dev_dir(cmd, argv[opt]);
+		vg_name_from = skip_dev_dir(cmd, argv[opt], NULL);
 
 		ret = _vgmerge_single(cmd, vg_name_to, vg_name_from);
 		if (ret > ret_max)

@@ -38,7 +38,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name = skip_dev_dir(cmd, argv[0]);
+	vg_name = skip_dev_dir(cmd, argv[0], NULL);
 	max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
 	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
 	alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);

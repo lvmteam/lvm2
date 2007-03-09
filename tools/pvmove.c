@@ -27,7 +27,7 @@ static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
 	if (!strchr(arg, '/'))
 		return arg;
 
-	lvname = skip_dev_dir(cmd, arg);
+	lvname = skip_dev_dir(cmd, arg, NULL);
 	while (*lvname == '/')
 		lvname++;
 	if (!strchr(lvname, '/')) {
