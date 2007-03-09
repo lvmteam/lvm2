@@ -41,6 +41,12 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!validate_name(vg_name)) {
+		log_error("Volume group name \"%s\" is invalid",
+			  vg_name);
+		return ECMD_FAILED;
+	}
+
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		unlock_vg(cmd, ORPHAN);

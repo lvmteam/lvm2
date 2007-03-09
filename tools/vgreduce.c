@@ -465,6 +465,12 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	argv++;
 	argc--;
 
+	if (!validate_name(vg_name)) {
+		log_error("Volume group name \"%s\" is invalid",
+			  vg_name);
+		return ECMD_FAILED;
+	}
+
 	log_verbose("Finding volume group \"%s\"", vg_name);
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
 		log_error("Can't get lock for %s", vg_name);

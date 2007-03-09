@@ -219,10 +219,16 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name_from = argv[0];
-	vg_name_to = argv[1];
+	vg_name_from = skip_dev_dir(cmd, argv[0], NULL);
+	vg_name_to = skip_dev_dir(cmd, argv[1], NULL);
 	argc -= 2;
 	argv += 2;
+
+	if (!validate_name(vg_name_from)) {
+		log_error("Volume group name \"%s\" is invalid",
+			  vg_name_from);
+		return ECMD_FAILED;
+	}
 
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name \"%s\"", vg_name_from);
