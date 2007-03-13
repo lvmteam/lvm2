@@ -81,7 +81,7 @@ int init_no_locking(struct locking_type *locking, struct cmd_context *cmd)
 	locking->lock_resource = _no_lock_resource;
 	locking->reset_locking = _no_reset_locking;
 	locking->fin_locking = _no_fin_locking;
-	locking->flags = 0;
+	locking->flags = LCK_CLUSTERED;
 
 	return 1;
 }
