@@ -1,9 +1,9 @@
 Version 2.02.24 -
 ====================================
+  Fix reading of striped LVs in LVM1 format.
+  Flag nolocking as clustered so clvmd startup sees clustered LVs. (2.02.10)
   Add a few missing pieces of vgname command line validation.
   Support the /dev/mapper prefix on most command lines.
-  Flag nolocking as a clustered locking module as we need to be able
-    to look at clustered LVs at clvmd startup (2.02.10)
 
 Version 2.02.23 - 8th March 2007
 ================================
