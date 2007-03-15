@@ -87,6 +87,11 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
 
+	if (!argc) {
+		log_error("Please enter one or more volume group paths");
+		return EINVALID_CMD_LINE;
+	}
+
 	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
