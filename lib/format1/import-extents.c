@@ -203,6 +203,19 @@ static int _check_maps_are_complete(struct dm_hash_table *maps)
 	return 1;
 }
 
+static uint32_t _area_length(struct lv_map *lvm, uint32_t le)
+{
+	uint32_t len = 0;
+
+	do
+		len++;
+	while ((lvm->map[le + len].pv == lvm->map[le].pv) &&
+		 (lvm->map[le].pv &&
+		  lvm->map[le + len].pe == lvm->map[le].pe + len));
+
+	return len;
+}
+
 static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 {
 	uint32_t le = 0, len;
@@ -215,13 +228,7 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 	}
 
 	while (le < lvm->lv->le_count) {
-		len = 0;
-
-		do
-			len++;
-		while ((lvm->map[le + len].pv == lvm->map[le].pv) &&
-			 (lvm->map[le].pv &&
-			  lvm->map[le + len].pe == lvm->map[le].pe + len));
+		len = _area_length(lvm, le);
 
 		if (!(seg = alloc_lv_segment(cmd->mem, segtype, lvm->lv, le,
 					     len, 0, 0, NULL, 1, len, 0, 0, 0))) {
@@ -230,10 +237,8 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 		}
 
 		if (!set_lv_segment_area_pv(seg, 0, lvm->map[le].pv,
-					    lvm->map[le].pe)) {
-			stack;
-			return 0;
-		}
+					    lvm->map[le].pe))
+			return_0;
 
 		list_add(&lvm->lv->segments, &seg->list);
 
@@ -244,7 +249,8 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 }
 
 static int _check_stripe(struct lv_map *lvm, uint32_t area_count,
-			 uint32_t seg_len, uint32_t base_le, uint32_t len)
+			 uint32_t area_len, uint32_t base_le,
+			 uint32_t total_area_len)
 {
 	uint32_t st;
 
@@ -252,11 +258,11 @@ static int _check_stripe(struct lv_map *lvm, uint32_t area_count,
 	 * Is the next physical extent in every stripe adjacent to the last?
 	 */
 	for (st = 0; st < area_count; st++)
-		if ((lvm->map[base_le + st * len + seg_len].pv !=
-		     lvm->map[base_le + st * len].pv) ||
-		    (lvm->map[base_le + st * len].pv &&
-		     lvm->map[base_le + st * len + seg_len].pe !=
-		     lvm->map[base_le + st * len].pe + seg_len))
+		if ((lvm->map[base_le + st * total_area_len + area_len].pv !=
+		     lvm->map[base_le + st * total_area_len].pv) ||
+		    (lvm->map[base_le + st * total_area_len].pv &&
+		     lvm->map[base_le + st * total_area_len + area_len].pe !=
+		     lvm->map[base_le + st * total_area_len].pe + area_len))
 			return 0;
 
 	return 1;
@@ -264,7 +270,7 @@ static int _check_stripe(struct lv_map *lvm, uint32_t area_count,
 
 static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 {
-	uint32_t st, le = 0, len;
+	uint32_t st, first_area_le = 0, total_area_len;
 	uint32_t area_len;
 	struct lv_segment *seg;
 	struct segment_type *segtype;
@@ -277,26 +283,25 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 			  "with logical extent count (%u) for %s",
 			  lvm->stripes, lvm->lv->le_count, lvm->lv->name);
 	}
-	len = lvm->lv->le_count / lvm->stripes;
 
-	if (!(segtype = get_segtype_from_string(cmd, "striped"))) {
-		stack;
-		return 0;
-	}
+	total_area_len = lvm->lv->le_count / lvm->stripes;
 
-	while (le < len) {
+	if (!(segtype = get_segtype_from_string(cmd, "striped")))
+		return_0;
+
+	while (first_area_le < total_area_len) {
 		area_len = 1;
 
 		/* 
-		 * Find how many blocks are contiguous in all stripes
+		 * Find how many extents are contiguous in all stripes
 		 * and so can form part of this segment
 		 */
 		while (_check_stripe(lvm, lvm->stripes,
-				     area_len * lvm->stripes, le, len))
+				     area_len, first_area_le, total_area_len))
 			area_len++;
 
 		if (!(seg = alloc_lv_segment(cmd->mem, segtype, lvm->lv,
-					     lvm->stripes * le,
+					     lvm->stripes * first_area_le,
 					     lvm->stripes * area_len,
 					     0, lvm->stripe_size, NULL,
 					     lvm->stripes,
@@ -310,15 +315,13 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 		 */
 		for (st = 0; st < seg->area_count; st++)
 			if (!set_lv_segment_area_pv(seg, st,
-						    lvm->map[le + st * len].pv,
-						    lvm->map[le + st * len].pe)) {
-				stack;
-				return 0;
-			}
+			      lvm->map[first_area_le + st * total_area_len].pv,
+			      lvm->map[first_area_le + st * total_area_len].pe))
+				return_0;
 
 		list_add(&lvm->lv->segments, &seg->list);
 
-		le += seg->len;
+		first_area_le += area_len;
 	}
 
 	return 1;
