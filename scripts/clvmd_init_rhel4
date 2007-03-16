@@ -43,16 +43,10 @@ start()
 		then
 			for vg in $LVM_VGS
 			do
-				if ! action "Activating VG $vg:" $VGCHANGE -ayl $vg
-				then
-					rtrn=$?
-                                fi
+				action "Activating VG $vg:" $VGCHANGE -ayl $vg || rtrn=$?
 			done
 		else
-			if ! action "Activating VGs:" $VGCHANGE -ayl
-			then
-				rtrn=$?
-                        fi
+			action "Activating VGs:" $VGCHANGE -ayl || rtrn=$?
 		fi
 	done
 
@@ -67,19 +61,13 @@ stop()
 		then
 			for vg in $LVM_VGS
 			do
-				if ! action "Deactivating VG $vg:" $VGCHANGE -anl $vg
-				then
-					rtrn=$?
-				fi
+				action "Deactivating VG $vg:" $VGCHANGE -anl $vg || rtrn=$?
 			done
 		else
 			# Hack to only deactivate clustered volumes
 			clustervgs=`$VGDISPLAY 2> /dev/null | awk 'BEGIN {RS="VG Name"} {if (/Clustered/) print $1;}'`
 			for vg in $clustervgs; do
-				if ! action "Deactivating VG $vg:" $VGCHANGE -anl $vg
-				then
-					rtrn=$?
-				fi
+				action "Deactivating VG $vg:" $VGCHANGE -anl $vg || rtrn=$?
 			done
 		fi
 

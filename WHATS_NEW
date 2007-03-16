@@ -1,5 +1,6 @@
 Version 2.02.24 -
 ====================================
+  Fix processing of exit status in init scripts
   Fix vgremove to require at least one vg argument.
   Fix reading of striped LVs in LVM1 format.
   Flag nolocking as clustered so clvmd startup sees clustered LVs. (2.02.10)
