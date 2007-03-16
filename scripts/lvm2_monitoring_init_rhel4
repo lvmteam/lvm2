@@ -34,10 +34,7 @@ start()
 	VGS=`vgs --noheadings -o name`
 	for vg in $VGS
 	do
-	    if ! action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y $vg
-	    then
-		ret=$?
-	    fi
+	    action "Starting monitoring for VG $vg:" $VGCHANGE --monitor y $vg || ret=$?
 	done
 
 	return $ret
@@ -55,10 +52,7 @@ stop()
 	VGS=`vgs --noheadings -o name`
 	for vg in $VGS
 	do
-	    if ! action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n $vg
-	    then
-		ret=$?
-	    fi
+	    action "Stopping monitoring for VG $vg:" $VGCHANGE --monitor n $vg || ret=$?
 	done
 	return $ret
 }
