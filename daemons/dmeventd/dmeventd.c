@@ -226,8 +226,8 @@ static struct thread_status *_alloc_thread_status(struct message_data *data,
 	if (!ret)
 		return NULL;
 
-	if (!memset(ret, 0, sizeof(*ret)) ||
-	    !(ret->device.uuid = dm_strdup(data->device_uuid))) {
+	memset(ret, 0, sizeof(*ret));
+	if (!(ret->device.uuid = dm_strdup(data->device_uuid))) {
 		dm_free(ret);
 		return NULL;
 	}
@@ -258,8 +258,8 @@ static struct dso_data *_alloc_dso_data(struct message_data *data)
 	if (!ret)
 		return NULL;
 
-	if (!memset(ret, 0, sizeof(*ret)) ||
-	    !(ret->dso_name = dm_strdup(data->dso_name))) {
+	memset(ret, 0, sizeof(*ret));
+	if (!(ret->dso_name = dm_strdup(data->dso_name))) {
 		dm_free(ret);
 		return NULL;
 	}
