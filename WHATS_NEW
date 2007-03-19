@@ -1,5 +1,5 @@
-Version 2.02.24 -
-====================================
+Version 2.02.24 - 19th March 2007
+=================================
   Fix processing of exit status in init scripts
   Fix vgremove to require at least one vg argument.
   Fix reading of striped LVs in LVM1 format.
