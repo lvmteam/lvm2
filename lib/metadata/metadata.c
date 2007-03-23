@@ -505,6 +505,34 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
+int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
+		  struct volume_group *vg_to)
+{
+	struct metadata_area *mda, *mda2;
+	struct list *mdas_from, *mdas_to;
+	int common_mda = 0;
+
+	mdas_from = &vg_from->fid->metadata_areas;
+	mdas_to = &vg_to->fid->metadata_areas;
+
+	list_iterate_items_safe(mda, mda2, mdas_from) {
+		if (!mda->ops->mda_in_vg) {
+			common_mda = 1;
+			continue;
+		}
+
+		if (!mda->ops->mda_in_vg(vg_from->fid, vg_from, mda)) {
+			list_del(&mda->list);
+			list_add(mdas_to, &mda->list);
+		}
+	}
+
+	if (list_empty(mdas_from) || list_empty(mdas_to))
+		return common_mda;
+
+	return 1;
+}
+
 /* Sizes in sectors */
 struct physical_volume *pv_create(const struct format_type *fmt,
 				  struct device *dev,
@@ -758,6 +786,12 @@ int vg_validate(struct volume_group *vg)
 					  vg->name);
 				r = 0;
 			}
+		}
+
+		if (strcmp(pvl->pv->vg_name, vg->name)) {
+			log_error("Internal error: VG name for PV %s is corrupted",
+				  dev_name(pvl->pv->dev));
+			r = 0;
 		}
 	}
 

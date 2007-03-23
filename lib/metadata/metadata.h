@@ -178,6 +178,11 @@ struct metadata_area_ops {
 			  struct volume_group * vg, struct metadata_area * mda);
 	int (*vg_remove) (struct format_instance * fi, struct volume_group * vg,
 			  struct metadata_area * mda);
+	/*
+	 * Check if metadata area belongs to vg
+	 */
+	int (*mda_in_vg) (struct format_instance * fi,
+			    struct volume_group * vg, struct metadata_area *mda);
 };
 
 struct metadata_area {
@@ -450,6 +455,8 @@ int vg_extend(struct format_instance *fi, struct volume_group *vg,
 	      int pv_count, char **pv_names);
 int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 		     uint32_t new_extent_size);
+int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
+		  struct volume_group *vg_to);
 
 /* Manipulate LVs */
 struct logical_volume *lv_create_empty(struct format_instance *fi,
