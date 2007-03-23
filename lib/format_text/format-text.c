@@ -80,6 +80,22 @@ static int _text_vg_setup(struct format_instance *fid __attribute((unused)),
 	return 1;
 }
 
+/*
+ * Check if metadata area belongs to vg
+ */
+static int _mda_in_vg_raw(struct format_instance *fid __attribute((unused)),
+			     struct volume_group *vg, struct metadata_area *mda)
+{
+	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+	struct pv_list *pvl;
+
+	list_iterate_items(pvl, &vg->pvs)
+		if (pvl->pv->dev == mdac->area.dev)
+			return 1;
+
+	return 0;
+}
+
 static int _text_lv_setup(struct format_instance *fid __attribute((unused)),
 			  struct logical_volume *lv)
 {
@@ -1395,7 +1411,8 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.vg_remove = _vg_remove_raw,
 	.vg_precommit = _vg_precommit_raw,
 	.vg_commit = _vg_commit_raw,
-	.vg_revert = _vg_revert_raw
+	.vg_revert = _vg_revert_raw,
+	.mda_in_vg = _mda_in_vg_raw,
 };
 
 /* pvmetadatasize in sectors */

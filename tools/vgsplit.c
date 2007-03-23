@@ -299,6 +299,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
+	/* Set metadata format of original VG */
+	/* FIXME: need some common logic */
+	cmd->fmt = vg_from->fid->fmt;
+
 	/* Create new VG structure */
 	if (!(vg_to = vg_create(cmd, vg_name_to, vg_from->extent_size,
 				vg_from->max_pv, vg_from->max_lv,
@@ -330,11 +334,15 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!(_move_mirrors(vg_from, vg_to)))
 		goto error;
 
-	/* FIXME Split mdas properly somehow too! */
-	/* Currently we cheat by sharing the format instance and relying on 
-	 * vg_write to ignore mdas outside the VG!  Done this way, with text 
-	 * format, vg_from disappears for a short time. */
-	vg_to->fid = vg_from->fid;
+	/* Split metadata areas and check if both vgs have at least one area */
+	if (!(vg_split_mdas(cmd, vg_from, vg_to))) {
+		log_error("Cannot split: Nowhere to store metadata for new Volume Group");
+		goto error;
+	}
+
+	/* Set proper name for all PVs in new VG */
+	if (!vg_rename(cmd, vg_to, vg_name_to))
+		goto error;
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume groups");
