@@ -100,7 +100,8 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 					 struct alloc_handle *ah,
 					 alloc_policy_t alloc,
 					 const char *lv_name,
-					 int in_sync);
+					 int in_sync,
+					 struct list *tags);
 
 int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	   uint64_t sectors, int value);

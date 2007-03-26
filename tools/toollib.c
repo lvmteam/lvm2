@@ -1310,11 +1310,13 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 					 struct alloc_handle *ah,
 					 alloc_policy_t alloc,
 					 const char *lv_name,
-					 int in_sync)
+					 int in_sync,
+					 struct list *tags)
 {
 	struct logical_volume *log_lv;
 	char *log_name;
 	size_t len;
+	struct str_list *sl;
 
 	len = strlen(lv_name) + 32;
 	if (!(log_name = alloca(len)) ||
@@ -1335,6 +1337,13 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 		stack;
 		goto error;
 	}
+
+	/* Temporary tag mirror log */
+	list_iterate_items(sl, tags)
+		if (!str_list_add(cmd->mem, &log_lv->tags, sl->str)) {
+			log_error("Aborting. Unable to tag mirror log.");
+			goto error;
+		}
 
 	/* store mirror log on disk(s) */
 	if (!vg_write(vg)) {
@@ -1360,6 +1369,11 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 			  "Remove new LVs and retry.");
 		goto error;
 	}
+
+	list_iterate_items(sl, tags)
+		if (!str_list_del(&log_lv->tags, sl->str))
+			log_error("Failed to remove tag %s from mirror log.",
+				  sl->str);
 
 	if (activation() && !set_lv(cmd, log_lv, log_lv->size,
 				    in_sync ? -1 : 0)) {

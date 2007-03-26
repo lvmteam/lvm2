@@ -307,7 +307,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
 									 lp->alloc, lv->name,
 									 (sync_percent >= 100.0) ?
-									 1 : 0))) {
+									 1 : 0, &lv->tags))) {
 						log_error("Failed to create mirror log.");
 						return 0;
 					}
@@ -385,7 +385,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			if (!arg_count(cmd, corelog_ARG) &&
 			    !(log_lv = create_mirror_log(cmd, lv->vg, ah,
 							 lp->alloc,
-							 lv->name, 0))) {
+							 lv->name, 0, &lv->tags))) {
 				log_error("Failed to create mirror log.");
 				return 0;
 			}
