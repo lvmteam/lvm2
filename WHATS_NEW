@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Fix creation and conversion of mirrors with tags.
   Fix vgsplit for lvm1 format (set and validate VG name in PVs metadata).
   Split metadata areas in vgsplit properly.
 

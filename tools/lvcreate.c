@@ -476,8 +476,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	uint64_t tmp_size;
 	struct volume_group *vg;
 	struct logical_volume *lv, *org = NULL, *log_lv = NULL;
-	struct list *pvh;
-	const char *tag;
+	struct list *pvh, tags;
+	const char *tag = NULL;
 	int consistent = 1;
 	struct alloc_handle *ah = NULL;
 	char lv_name_buf[128];
@@ -675,6 +675,19 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		lv_name = &lv_name_buf[0];
 	}
 
+	if (arg_count(cmd, addtag_ARG)) {
+		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
+			log_error("Failed to get tag");
+			return 0;
+		}
+
+		if (!(vg->fid->fmt->features & FMT_TAGS)) {
+			log_error("Volume group %s does not support tags",
+				  vg->name);
+			return 0;
+		}
+	}
+
 	if (lp->mirrors > 1) {
 		/* FIXME Calculate how many extents needed for the log */
 
@@ -698,9 +711,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			status |= MIRROR_NOTSYNCED;
 		}
 
+		list_init(&tags);
+		if (tag)
+			str_list_add(cmd->mem, &tags, tag);
+
 		if (!lp->corelog &&
 		    !(log_lv = create_mirror_log(cmd, vg, ah, lp->alloc,
-						 lv_name, lp->nosync))) {
+						 lv_name, lp->nosync, &tags))) {
 			log_error("Failed to create mirror log.");
 			return 0;
 		}
@@ -725,23 +742,10 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			    lv->minor);
 	}
 
-	if (arg_count(cmd, addtag_ARG)) {
-		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {
-			log_error("Failed to get tag");
-			goto error;
-		}
-
-		if (!(lv->vg->fid->fmt->features & FMT_TAGS)) {
-			log_error("Volume group %s does not support tags",
-				  lv->vg->name);
-			goto error;
-		}
-
-		if (!str_list_add(cmd->mem, &lv->tags, tag)) {
-			log_error("Failed to add tag %s to %s/%s",
-				  tag, lv->vg->name, lv->name);
-			goto error;
-		}
+	if (tag && !str_list_add(cmd->mem, &lv->tags, tag)) {
+		log_error("Failed to add tag %s to %s/%s",
+			  tag, lv->vg->name, lv->name);
+		goto error;
 	}
 
 	if (lp->mirrors > 1) {

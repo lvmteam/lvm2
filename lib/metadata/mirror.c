@@ -21,6 +21,7 @@
 #include "activate.h"
 #include "lv_alloc.h"
 #include "lvm-string.h"
+#include "str_list.h"
 #include "locking.h"	/* FIXME Should not be used in this file */
 
 #include "defaults.h" /* FIXME: should this be defaults.h? */
@@ -75,6 +76,42 @@ static void _move_lv_segments(struct logical_volume *lv_to, struct logical_volum
 
 	lv_from->le_count = 0;
 	lv_from->size = 0;
+}
+
+
+/*
+ * Delete independent/orphan LV, it must acquire lock.
+ */
+static int _delete_lv(struct lv_segment *mirrored_seg, struct logical_volume *lv)
+{
+	struct cmd_context *cmd = mirrored_seg->lv->vg->cmd;
+	struct str_list *sl;
+
+	/* Inherit tags - maybe needed for activation */
+	if (!str_list_match_list(&mirrored_seg->lv->tags, &lv->tags)) {
+		list_iterate_items(sl, &mirrored_seg->lv->tags)
+			if (!str_list_add(cmd->mem, &lv->tags, sl->str)) {
+				log_error("Aborting. Unable to tag.");
+				return 0;
+			}
+
+		if (!vg_write(mirrored_seg->lv->vg) ||
+		    !vg_commit(mirrored_seg->lv->vg)) {
+			log_error("Intermediate VG commit for orphan volume failed.");
+			return 0;
+		}
+	}
+
+	if (!activate_lv(cmd, lv))
+		return_0;
+
+	if (!deactivate_lv(cmd, lv))
+		return_0;
+
+	if (!lv_remove(lv))
+		return_0;
+
+	return 1;
 }
 
 /*
@@ -205,57 +242,15 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	}
 
 	/* Delete the 'orphan' LVs */
-	for (m = num_mirrors; m < old_area_count; m++) {
-		/* LV is now independent of the mirror so must acquire lock. */
-		if (!activate_lv(mirrored_seg->lv->vg->cmd, seg_lv(mirrored_seg, m))) {
-			stack;
+	for (m = num_mirrors; m < old_area_count; m++)
+		if (!_delete_lv(mirrored_seg, seg_lv(mirrored_seg, m)))
 			return 0;
-		}
 
-		if (!deactivate_lv(mirrored_seg->lv->vg->cmd, seg_lv(mirrored_seg, m))) {
-			stack;
-			return 0;
-		}
+	if (lv1 && !_delete_lv(mirrored_seg, lv1))
+		return 0;
 
-		if (!lv_remove(seg_lv(mirrored_seg, m))) {
-			stack;
-			return 0;
-		}
-	}
-
-	if (lv1) {
-		if (!activate_lv(mirrored_seg->lv->vg->cmd, lv1)) {
-			stack;
-			return 0;
-		}
-
-		if (!deactivate_lv(mirrored_seg->lv->vg->cmd, lv1)) {
-			stack;
-			return 0;
-		}
-
-		if (!lv_remove(lv1)) {
-			stack;
-			return 0;
-		}
-	}
-
-	if (log_lv) {
-		if (!activate_lv(mirrored_seg->lv->vg->cmd, log_lv)) {
-			stack;
-			return 0;
-		}
-
-		if (!deactivate_lv(mirrored_seg->lv->vg->cmd, log_lv)) {
-			stack;
-			return 0;
-		}
-
-		if (!lv_remove(log_lv)) {
-			stack;
-			return 0;
-		}
-	}
+	if (log_lv && !_delete_lv(mirrored_seg, log_lv))
+		return 0;
 
 	return 1;
 }
