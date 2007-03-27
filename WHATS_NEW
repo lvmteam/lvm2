@@ -1,5 +1,7 @@
 Version 2.02.25 -
 =================================
+  Update lists of attribute characters in man pages.
+  Change cling alloc policy attribute character from 'C' to l'.
   Fix creation and conversion of mirrors with tags.
   Fix vgsplit for lvm1 format (set and validate VG name in PVs metadata).
   Split metadata areas in vgsplit properly.

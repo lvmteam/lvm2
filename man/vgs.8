@@ -36,9 +36,24 @@ vg_free_count, max_lv, max_pv, pv_count, lv_count, snap_count, vg_seqno,
 vg_tags.
 Any "vg_" prefixes are optional.  Columns mentioned in either \fBpvs (8)\fP 
 or \fBlvs (8)\fP can also be chosen, but columns cannot be taken from both
-at the same time.  The vg_attr bits are: (w)riteable, (r)eadonly, 
-resi(z)eable, e(x)ported, (p)artial and (c)lustered.
+at the same time.  
 Use \fb-o help\fP to view the full list of fields available.
+.IP
+The vg_attr bits are:
+.RS
+.IP 1 3
+Permissions: (w)riteable, (r)ead-only
+.IP 2 3
+Resi(z)eable
+.IP 3 3
+E(x)ported
+.IP 4 3
+(p)artial
+.IP 5 3
+Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere, (i)nherited
+.IP 6 3
+(c)lustered
+.RE
 .TP
 .I \-O, \-\-sort
 Comma-separated ordered list of columns to sort by.  Replaces the default

@@ -49,7 +49,7 @@ static char _alloc_policy_char(alloc_policy_t alloc)
 	case ALLOC_CONTIGUOUS:
 		return 'c';
 	case ALLOC_CLING:
-		return 'C';
+		return 'l';
 	case ALLOC_NORMAL:
 		return 'n';
 	case ALLOC_ANYWHERE:
