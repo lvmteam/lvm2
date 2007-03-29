@@ -56,6 +56,8 @@
 #define FALSE 0
 #endif
 
+#define MAX_RETRIES 4
+
 /* The maximum size of a message that will fit into a packet. Anything bigger
    than this is sent via the system LV */
 #define MAX_INLINE_MESSAGE (max_cluster_message-sizeof(struct clvm_header))
@@ -325,7 +327,7 @@ int main(int argc, char *argv[])
 	/* This needs to be started after cluster initialisation
 	   as it may need to take out locks */
 	DEBUGLOG("starting LVM thread\n");
-	pthread_create(&lvm_thread, NULL, lvm_thread_fn, 
+	pthread_create(&lvm_thread, NULL, lvm_thread_fn,
 			(void *)(long)using_gulm);
 
 	/* Tell the rest of the cluster our version number */
@@ -375,6 +377,9 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 	socklen_t sl = sizeof(socka);
 	int client_fd = accept(thisfd->fd, (struct sockaddr *) &socka, &sl);
 
+	if (client_fd == -1 && errno == EINTR)
+		return 1;
+
 	if (client_fd >= 0) {
 		newfd = malloc(sizeof(struct local_client));
 		if (!newfd) {
@@ -412,6 +417,8 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
 	int status = -1;	/* in error by default */
 
 	len = read(thisfd->fd, buffer, sizeof(int));
+	if (len == -1 && errno == EINTR)
+		return 1;
 
 	if (len == sizeof(int)) {
 		memcpy(&status, buffer, sizeof(int));
@@ -786,6 +793,8 @@ static int read_from_local_sock(struct local_client *thisfd)
 	char buffer[PIPE_BUF];
 
 	len = read(thisfd->fd, buffer, sizeof(buffer));
+	if (len == -1 && errno == EINTR)
+		return 1;
 
 	DEBUGLOG("Read on local socket %d, len = %d\n", thisfd->fd, len);
 
@@ -901,8 +910,12 @@ static int read_from_local_sock(struct local_client *thisfd)
 		    len - strlen(inheader->node) - sizeof(struct clvm_header);
 		missing_len = inheader->arglen - argslen;
 
+		if (missing_len < 0)
+			missing_len = 0;
+
 		/* Save the message */
 		thisfd->bits.localsock.cmd = malloc(len + missing_len);
+
 		if (!thisfd->bits.localsock.cmd) {
 			struct clvm_header reply;
 			reply.cmd = CLVMD_CMD_REPLY;
@@ -927,9 +940,8 @@ static int read_from_local_sock(struct local_client *thisfd)
 				DEBUGLOG
 				    ("got %d bytes, need another %d (total %d)\n",
 				     argslen, missing_len, inheader->arglen);
-				len =
-				    read(thisfd->fd, argptr + argslen,
-					 missing_len);
+				len = read(thisfd->fd, argptr + argslen,
+					   missing_len);
 				if (len >= 0) {
 					missing_len -= len;
 					argslen += len;
@@ -1215,7 +1227,7 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 	/* Version check is internal - don't bother exposing it in
 	   clvmd-command.c */
 	if (msg->cmd == CLVMD_CMD_VERSION) {
-		int version_nums[3]; 
+		int version_nums[3];
 		char node[256];
 
 		memcpy(version_nums, msg->args, sizeof(version_nums));
@@ -1395,6 +1407,7 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 {
 	struct local_client *client = (struct local_client *) arg;
 	int status;
+	int write_status;
 	sigset_t ss;
 	int pipe_fd = client->bits.localsock.pipe;
 
@@ -1424,8 +1437,19 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 			client->bits.localsock.all_success = 0;
 
 		DEBUGLOG("Writing status %d down pipe %d\n", status, pipe_fd);
+
 		/* Tell the parent process we have finished this bit */
-		write(pipe_fd, &status, sizeof(int));
+		do {
+			write_status = write(pipe_fd, &status, sizeof(int));
+			if (write_status == sizeof(int))
+				break;
+			if (write_status < 0 &&
+			    (errno == EINTR || errno == EAGAIN))
+				continue;
+			log_error("Error sending to pipe: %m\n");
+			break;
+		} while(1);
+
 		if (status)
 			continue; /* Wait for another PRE command */
 
@@ -1446,7 +1470,16 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 		status = 0;
 		do_post_command(client);
 
-		write(pipe_fd, &status, sizeof(int));
+		do {
+			write_status = write(pipe_fd, &status, sizeof(int));
+			if (write_status == sizeof(int))
+				break;
+			if (write_status < 0 &&
+			    (errno == EINTR || errno == EAGAIN))
+				continue;
+			log_error("Error sending to pipe: %m\n");
+			break;
+		} while(1);
 
 		DEBUGLOG("Waiting for next pre command\n");
 
@@ -1650,6 +1683,11 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 			const char *errtext)
 {
 	int len;
+	int saved_errno = 0;
+	struct timespec delay;
+	struct timespec remtime;
+
+	int retry_cnt = 0;
 
 	/* Send remote messages down the cluster socket */
 	if (csid == NULL || !ISLOCAL_CSID(csid)) {
@@ -1660,14 +1698,38 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 
 		/* Make sure it all goes */
 		do {
+			if (retry_cnt > MAX_RETRIES)
+			{
+				errno = saved_errno;
+				log_error(errtext);
+				errno = saved_errno;
+				break;
+			}
+
 			len = write(fd, buf + ptr, msglen - ptr);
 
 			if (len <= 0) {
+				if (errno == EINTR)
+					continue;
+				if (errno == EAGAIN ||
+				    errno == EIO ||
+				    errno == ENOSPC) {
+					saved_errno = errno;
+					retry_cnt++;
+
+					delay.tv_sec = 0;
+					delay.tv_nsec = 100000;
+					remtime.tv_sec = 0;
+					remtime.tv_nsec = 0;
+					(void) nanosleep (&delay, &remtime);
+
+					continue;
+				}
 				log_error(errtext);
 				break;
 			}
 			ptr += len;
-		} while (len < msglen);
+		} while (ptr < msglen);
 	}
 	return len;
 }
