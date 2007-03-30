@@ -407,6 +407,15 @@ xx(pvresize,
 
    physicalvolumesize_ARG, test_ARG)
 
+xx(pvck,
+   "Check the consistency of physical volume(s)",
+   "pvck "
+   "\t[-d|--debug]\n"
+   "\t[-h|--help]\n"
+   "\t[-v|--verbose]\n"
+   "\t[--version]" "\n"
+   "\tPhysicalVolume [PhysicalVolume...]\n" )
+
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
    "pvcreate " "\n"

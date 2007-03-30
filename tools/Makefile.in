@@ -38,6 +38,7 @@ SOURCES =\
 	lvscan.c \
 	polldaemon.c \
 	pvchange.c \
+	pvck.c \
 	pvcreate.c \
 	pvdisplay.c \
 	pvmove.c \
