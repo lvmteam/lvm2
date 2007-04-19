@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Add dev_read_circular.
   Add pvck command stub.
   Update lists of attribute characters in man pages.
   Change cling alloc policy attribute character from 'C' to l'.

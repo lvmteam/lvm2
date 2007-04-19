@@ -210,17 +210,9 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 			stack;
 			return 0;
 		}
-		if (!dev_read(dev, (uint64_t) offset, size, buf)) {
-			log_error("Read from %s failed", dev_name(dev));
+		if (!dev_read_circular(dev, (uint64_t) offset, size,
+				       (uint64_t) offset2, size2, buf)) {
 			goto out;
-		}
-		if (size2) {
-			if (!dev_read(dev, (uint64_t) offset2, size2,
-				      buf + size)) {
-				log_error("Circular read from %s failed",
-					  dev_name(dev));
-				goto out;
-			}
 		}
 		p->fb = buf;
 	}

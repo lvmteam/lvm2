@@ -564,6 +564,35 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 	return _aligned_io(&where, buffer, 0);
 }
 
+/*
+ * Read from 'dev' into 'buf', possibly in 2 distinct regions, denoted
+ * by (offset,len) and (offset2,len2).  Thus, the total size of
+ * 'buf' should be len+len2.
+ */
+int dev_read_circular(struct device *dev, uint64_t offset, size_t len,
+		      uint64_t offset2, size_t len2, void *buf)
+{
+	if (!dev_read(dev, offset, len, buf)) {
+		log_error("Read from %s failed", dev_name(dev));
+		return 0;
+	}
+
+	/*
+	 * The second region is optional, and allows for
+	 * a circular buffer on the device.
+	 */
+	if (!len2)
+		return 1;
+
+	if (!dev_read(dev, offset2, len2, buf + len)) {
+		log_error("Circular read from %s failed",
+			  dev_name(dev));
+		return 0;
+	}
+
+	return 1;
+}
+
 /* FIXME If O_DIRECT can't extend file, dev_extend first; dev_truncate after.
  *       But fails if concurrent processes writing
  */
