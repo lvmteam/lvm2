@@ -359,10 +359,17 @@ static int _daemon_talk(struct dm_event_fifos *fifos,
 	 */
 	if (!_daemon_write(fifos, msg)) {
 		stack;
+		dm_free(msg->data);
+		msg->data = 0;
 		return -EIO;
 	}
 
 	do {
+
+		if (msg->data)
+			dm_free(msg->data);
+		msg->data = 0;
+
 		if (!_daemon_read(fifos, msg)) {
 			stack;
 			return -EIO;
@@ -548,6 +555,11 @@ static int _do_event(int cmd, struct dm_event_daemon_message *msg,
 	}
 
 	ret = _daemon_talk(&fifos, msg, DM_EVENT_CMD_HELLO, 0, 0, 0, 0);
+
+	if (msg->data)
+		dm_free(msg->data);
+	msg->data = 0;
+
 	if (!ret)
 		ret = _daemon_talk(&fifos, msg, cmd, dso_name, dev_name, evmask, timeout);
 
@@ -714,6 +726,12 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 
 	dm_event_handler_set_dso(dmevh, reply_dso);
 	dm_event_handler_set_event_mask(dmevh, reply_mask);
+
+	if (reply_dso)
+		dm_free(reply_dso);
+	if (reply_uuid)
+		dm_free(reply_uuid);
+
 	dmevh->dev_name = dm_strdup(dm_task_get_name(dmt));
 	if (!dmevh->dev_name) {
 		ret = -ENOMEM;
@@ -736,6 +754,10 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
  fail:
 	if (msg.data)
 		dm_free(msg.data);
+	if (reply_dso)
+		dm_free(reply_dso);
+	if (reply_uuid)
+		dm_free(reply_uuid);
 	_dm_event_handler_clear_dev_info(dmevh);
 	dm_task_destroy(dmt);
 	return ret;
