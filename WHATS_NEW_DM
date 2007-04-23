@@ -1,7 +1,7 @@
 Version 1.02.19 -
 ====================================
   Introduce _add_field() and _is_same_field() to libdm-report.c.
-  Fix some libdevmapper-event memory leaks.
+  Fix some libdevmapper-event and dmeventd memory leaks.
   Remove unnecessary memset() return value checks.
   Fix a few leaks in reporting error paths. [1.02.15+]
 
