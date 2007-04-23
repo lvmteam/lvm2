@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Make clvmd cope with quorum devices on RHEL5
   Add dev_read_circular.
   Add pvck command stub.
   Update lists of attribute characters in man pages.

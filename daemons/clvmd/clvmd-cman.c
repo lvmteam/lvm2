@@ -121,7 +121,7 @@ static int _get_num_nodes()
 
 	/* return number of ACTIVE nodes */
 	for (i=0; i<num_nodes; i++) {
-		if (nodes[i].cn_member)
+		if (nodes[i].cn_member && nodes[i].cn_nodeid)
 			nnodes++;
 	}
 	return nnodes;
@@ -159,7 +159,7 @@ static int _cluster_do_node_callback(struct local_client *client,
 	int somedown = 0;
 
 	for (i = 0; i < _get_num_nodes(); i++) {
-		if (nodes[i].cn_member) {
+		if (nodes[i].cn_member && nodes[i].cn_nodeid) {
 			callback(client, (char *)&nodes[i].cn_nodeid, node_updown[nodes[i].cn_nodeid]);
 			if (!node_updown[nodes[i].cn_nodeid])
 				somedown = -1;
@@ -168,8 +168,7 @@ static int _cluster_do_node_callback(struct local_client *client,
 	return somedown;
 }
 
-/* Process OOB message from the cluster socket,
-   this currently just means that a node has stopped listening on our port */
+/* Process OOB messages from the cluster socket */
 static void event_callback(cman_handle_t handle, void *private, int reason, int arg)
 {
 	char namebuf[MAX_CLUSTER_MEMBER_NAME_LEN];
