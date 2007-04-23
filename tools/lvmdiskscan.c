@@ -112,7 +112,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute((unused)),
 	/* Do scan */
 	for (dev = dev_iter_get(iter); dev; dev = dev_iter_get(iter)) {
 		/* Try if it is a PV first */
-		if ((label_read(dev, &label))) {
+		if ((label_read(dev, &label, UINT64_C(0)))) {
 			if (!dev_get_size(dev, &size)) {
 				log_error("Couldn't get size of \"%s\"",
 					  dev_name(dev));

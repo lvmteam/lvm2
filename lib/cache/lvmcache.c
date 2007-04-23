@@ -135,7 +135,7 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid)
 
 	list_iterate_safe(devh, tmp, &devs) {
 		devl = list_item(devh, struct device_list);
-		label_read(devl->dev, &label);
+		label_read(devl->dev, &label, UINT64_C(0));
 		list_del(&devl->list);
 		dm_free(devl);
 	}
@@ -205,7 +205,7 @@ static void _rescan_entry(struct lvmcache_info *info)
 	struct label *label;
 
 	if (info->status & CACHE_INVALID)
-		label_read(info->dev, &label);
+		label_read(info->dev, &label, UINT64_C(0));
 }
 
 static int _scan_invalid(void)
@@ -247,7 +247,7 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	}
 
 	while ((dev = dev_iter_get(iter)))
-		label_read(dev, &label);
+		label_read(dev, &label, UINT64_C(0));
 
 	dev_iter_destroy(iter);
 
@@ -346,7 +346,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 
 	/* Already cached ? */
 	if ((info = info_from_pvid((char *) pvid))) {
-		if (label_read(info->dev, &label)) {
+		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
 				return info->dev;
@@ -357,7 +357,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 
 	/* Try again */
 	if ((info = info_from_pvid((char *) pvid))) {
-		if (label_read(info->dev, &label)) {
+		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
 				return info->dev;
@@ -371,7 +371,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 
 	/* Try again */
 	if ((info = info_from_pvid((char *) pvid))) {
-		if (label_read(info->dev, &label)) {
+		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
 				return info->dev;
