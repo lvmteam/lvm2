@@ -1287,7 +1287,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 	}
 
 	/* FIXME Optimise out repeated reading when cache lock held */
-	if (!(label_read(dev, &label))) {
+	if (!(label_read(dev, &label, UINT64_C(0)))) {
 		stack;
 		return 0;
 	}

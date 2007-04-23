@@ -1403,7 +1403,7 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 		return NULL;
 	}
 
-	if (!(label_read(dev, &label))) {
+	if (!(label_read(dev, &label, UINT64_C(0)))) {
 		if (warnings)
 			log_error("No physical volume label read from %s",
 				  pv_name);

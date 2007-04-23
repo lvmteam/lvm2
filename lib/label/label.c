@@ -107,7 +107,8 @@ struct labeller *label_get_handler(const char *name)
 }
 
 static struct labeller *_find_labeller(struct device *dev, char *buf,
-				       uint64_t *label_sector)
+				       uint64_t *label_sector,
+				       uint64_t scan_sector)
 {
 	struct labeller_i *li;
 	struct labeller *r = NULL;
@@ -117,12 +118,13 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	int found = 0;
 	char readbuf[LABEL_SCAN_SIZE] __attribute((aligned(8)));
 
-	if (!dev_read(dev, UINT64_C(0), LABEL_SCAN_SIZE, readbuf)) {
+	if (!dev_read(dev, scan_sector << SECTOR_SHIFT,
+		      LABEL_SCAN_SIZE, readbuf)) {
 		log_debug("%s: Failed to read label area", dev_name(dev));
 		goto out;
 	}
 
-	/* Scan first few sectors for a valid label */
+	/* Scan a few sectors for a valid label */
 	for (sector = 0; sector < LABEL_SCAN_SECTORS;
 	     sector += LABEL_SIZE >> SECTOR_SHIFT) {
 		lh = (struct label_header *) (readbuf +
@@ -132,13 +134,14 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 			if (found) {
 				log_error("Ignoring additional label on %s at "
 					  "sector %" PRIu64, dev_name(dev),
-					  sector);
+					  sector + scan_sector);
 			}
-			if (xlate64(lh->sector_xl) != sector) {
+			if (xlate64(lh->sector_xl) != sector + scan_sector) {
 				log_info("%s: Label for sector %" PRIu64
 					 " found at sector %" PRIu64
 					 " - ignoring", dev_name(dev),
-					 xlate64(lh->sector_xl), sector);
+					 xlate64(lh->sector_xl),
+					 sector + scan_sector);
 				continue;
 			}
 			if (calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
@@ -153,19 +156,21 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 		}
 
 		list_iterate_items(li, &_labellers) {
-			if (li->l->ops->can_handle(li->l, (char *) lh, sector)) {
+			if (li->l->ops->can_handle(li->l, (char *) lh,
+						   sector + scan_sector)) {
 				log_very_verbose("%s: %s label detected",
 						 dev_name(dev), li->name);
 				if (found) {
 					log_error("Ignoring additional label "
 						  "on %s at sector %" PRIu64,
-						  dev_name(dev), sector);
+						  dev_name(dev),
+						  sector + scan_sector);
 					continue;
 				}
 				r = li->l;
 				memcpy(buf, lh, LABEL_SIZE);
 				if (label_sector)
-					*label_sector = sector;
+					*label_sector = sector + scan_sector;
 				found = 1;
 				break;
 			}
@@ -256,7 +261,8 @@ int label_remove(struct device *dev)
 }
 
 /* FIXME Avoid repeated re-reading if cache lock held */
-int label_read(struct device *dev, struct label **result)
+int label_read(struct device *dev, struct label **result,
+		uint64_t scan_sector)
 {
 	char buf[LABEL_SIZE] __attribute((aligned(8)));
 	struct labeller *l;
@@ -274,7 +280,7 @@ int label_read(struct device *dev, struct label **result)
 		return r;
 	}
 
-	if (!(l = _find_labeller(dev, buf, &sector)))
+	if (!(l = _find_labeller(dev, buf, &sector, scan_sector)))
 		goto_out;
 
 	if ((r = (l->ops->read)(l, dev, buf, result)) && result && *result)
@@ -354,7 +360,7 @@ int label_verify(struct device *dev)
 		return_0;
 	}
 
-	if (!(l = _find_labeller(dev, buf, &sector)))
+	if (!(l = _find_labeller(dev, buf, &sector, UINT64_C(0))))
 		goto_out;
 
 	r = l->ops->verify ? l->ops->verify(l, buf, sector) : 1;
