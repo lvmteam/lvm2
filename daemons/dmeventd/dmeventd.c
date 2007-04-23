@@ -245,6 +245,8 @@ static struct thread_status *_alloc_thread_status(struct message_data *data,
 
 static void _free_thread_status(struct thread_status *thread)
 {
+	if (thread->current_task)
+		dm_task_destroy(thread->current_task);
 	dm_free(thread->device.uuid);
 	dm_free(thread->device.name);
 	dm_free(thread);
@@ -811,11 +813,6 @@ static int _create_thread(struct thread_status *thread)
 
 static int _terminate_thread(struct thread_status *thread)
 {
-	int ret;
-
-	if ((ret = pthread_cancel(thread->thread)))
-		return ret;
-
 	return pthread_kill(thread->thread, SIGALRM);
 }
 
@@ -1389,7 +1386,7 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 	message_data.msg = msg;
 	if (msg->cmd == DM_EVENT_CMD_HELLO)  {
 		ret = 0;
-		answer = dm_strdup(msg->data);
+		answer = msg->data;
 		if (answer) {
 			msg->size = dm_asprintf(&(msg->data), "%s HELLO", answer);
 			dm_free(answer);
