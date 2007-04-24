@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Fix thread race in clvmd.
   Add scan_sector param to label_read and _find_labeller.
   Make clvmd cope with quorum devices on RHEL5
   Add dev_read_circular.

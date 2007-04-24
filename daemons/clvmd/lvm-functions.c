@@ -50,6 +50,7 @@
 static struct cmd_context *cmd = NULL;
 static struct dm_hash_table *lv_hash = NULL;
 static pthread_mutex_t lv_hash_lock;
+static pthread_mutex_t lvm_lock;
 static char last_error[1024];
 
 struct lv_info {
@@ -311,10 +312,12 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	DEBUGLOG("do_lock_lv: resource '%s', cmd = 0x%x, flags = %x\n",
 		 resource, command, lock_flags);
 
+	pthread_mutex_lock(&lvm_lock);
 	if (!cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (!refresh_toolcontext(cmd)) {
 			log_error("Updated config file invalid. Aborting.");
+			pthread_mutex_unlock(&lvm_lock);
 			return EINVAL;
 		}
 	}
@@ -367,6 +370,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	/* clean the pool for another command */
 	dm_pool_empty(cmd->mem);
+	pthread_mutex_unlock(&lvm_lock);
 
 	DEBUGLOG("Command return is %d\n", status);
 	return status;
@@ -393,6 +397,8 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 int post_lock_lv(unsigned char command, unsigned char lock_flags,
 		 char *resource)
 {
+	int status;
+
 	/* Opposite of above, done on resume after a metadata update */
 	if (command == LCK_LV_RESUME) {
 		int oldmode;
@@ -406,7 +412,10 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 		if (oldmode == LKM_PWMODE) {
 			struct lvinfo lvi;
 
-			if (!lv_info_by_lvid(cmd, resource, &lvi, 0))
+			pthread_mutex_lock(&lvm_lock);
+			status = lv_info_by_lvid(cmd, resource, &lvi, 0);
+			pthread_mutex_unlock(&lvm_lock);
+			if (!status)
 				return EIO;
 
 			if (lvi.exists) {
@@ -533,7 +542,7 @@ static void lvm2_log_fn(int level, const char *file, int line,
 			const char *message)
 {
 	/*
-	 * Ignore non-error messages, but store the latest one for returning 
+	 * Ignore non-error messages, but store the latest one for returning
 	 * to the user.
 	 */
 	if (level != _LOG_ERR && level != _LOG_FATAL)
@@ -572,6 +581,7 @@ void init_lvhash()
 	/* Create hash table for keeping LV locks & status */
 	lv_hash = dm_hash_create(100);
 	pthread_mutex_init(&lv_hash_lock, NULL);
+	pthread_mutex_init(&lvm_lock, NULL);
 }
 
 /* Called to initialise the LVM context of the daemon */
