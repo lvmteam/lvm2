@@ -623,6 +623,8 @@ static int _event_wait(struct thread_status *thread, struct dm_task **task)
 	} else if (thread->events & DM_EVENT_TIMEOUT && errno == EINTR) {
 		thread->current_events |= DM_EVENT_TIMEOUT;
 		ret = DM_WAIT_INTR;
+	} else if (thread->status == DM_THREAD_SHUTDOWN && errno == EINTR) {
+		ret = DM_WAIT_FATAL;
 	} else {
 		syslog(LOG_NOTICE, "dm_task_run failed, errno = %d, %s",
 		       errno, strerror(errno));
