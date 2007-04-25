@@ -19,12 +19,16 @@
 #include "device.h"
 #include "str_list.h"
 #include "toolcontext.h"
+#include "lvm-string.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
+
+#define SECTION_B_CHAR '{'
+#define SECTION_E_CHAR '}'
 
 enum {
 	TOK_INT,
@@ -474,7 +478,7 @@ static struct config_node *_file(struct parser *p)
 
 static struct config_node *_section(struct parser *p)
 {
-	/* IDENTIFIER '{' VALUE* '}' */
+	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
 	struct config_node *root, *n, *l = NULL;
 	if (!(root = _create_node(p))) {
 		stack;
@@ -623,12 +627,12 @@ static void _get_token(struct parser *p, int tok_prev)
 	p->t = TOK_INT;		/* fudge so the fall through for
 				   floats works */
 	switch (*p->te) {
-	case '{':
+	case SECTION_B_CHAR:
 		p->t = TOK_SECTION_B;
 		p->te++;
 		break;
 
-	case '}':
+	case SECTION_E_CHAR:
 		p->t = TOK_SECTION_E;
 		p->te++;
 		break;
@@ -708,8 +712,9 @@ static void _get_token(struct parser *p, int tok_prev)
 	default:
 		p->t = TOK_IDENTIFIER;
 		while ((p->te != p->fe) && (*p->te) && !isspace(*p->te) &&
-		       (*p->te != '#') && (*p->te != '=') && (*p->te != '{') &&
-		       (*p->te != '}'))
+		       (*p->te != '#') && (*p->te != '=') &&
+		       (*p->te != SECTION_B_CHAR) &&
+		       (*p->te != SECTION_E_CHAR))
 			p->te++;
 		break;
 	}
@@ -1145,4 +1150,62 @@ int merge_config_tree(struct cmd_context *cmd, struct config_tree *cft,
 	}
 
 	return 1;
+}
+
+/*
+ * Convert a token type to the char it represents.
+ */
+static char _token_type_to_char(int type)
+{
+	switch (type) {
+		case TOK_SECTION_B:
+			return SECTION_B_CHAR;
+		case TOK_SECTION_E:
+			return SECTION_E_CHAR;
+		default:
+			return 0;
+	}
+}
+
+/*
+ * Returns:
+ *  # of 'type' tokens in 'str'.
+ */
+static unsigned _count_tokens (const char *str, unsigned len, int type)
+{
+	char c;
+
+	c = _token_type_to_char(type);
+
+	return(count_chars_len(str, len, c));
+}
+
+/*
+ * Heuristic function to make a quick guess as to whether a text
+ * region probably contains a valid config "section".  (Useful for
+ * scanning areas of the disk for old metadata.)
+ * Config sections contain various tokens, may contain other sections
+ * and strings, and are delimited by begin (type 'TOK_SECTION_B') and
+ * end (type 'TOK_SECTION_E') tokens.  As a quick heuristic, we just
+ * count the number of begin and end tokens, and see if they are
+ * non-zero and the counts match.
+ * Full validation of the section should be done with another function
+ * (for example, read_config_fd).
+ *
+ * Returns:
+ *  0 - probably is not a valid config section
+ *  1 - probably _is_ a valid config section
+ */
+unsigned maybe_config_section(const char *str, unsigned len)
+{
+	int begin_count;
+	int end_count;
+
+	begin_count = _count_tokens(str, len, TOK_SECTION_B);
+	end_count = _count_tokens(str, len, TOK_SECTION_E);
+
+	if (begin_count && end_count && (begin_count - end_count == 0))
+		return 1;
+	else
+		return 0;
 }
