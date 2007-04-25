@@ -1555,3 +1555,35 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 
 	return 1;
 }
+/*
+ * Returns:
+ *  0 - fail
+ *  1 - success
+ */
+int pv_analyze(struct cmd_context *cmd, const char *pv_name,
+	       int64_t label_sector)
+{
+	struct label *label;
+	struct device *dev;
+
+	dev = dev_cache_get(pv_name, cmd->filter);
+	if (!dev) {
+		log_error("Device %s not found (or ignored by filtering).",
+			  pv_name);
+		return 0;
+	}
+
+	/*
+	 * First, scan for LVM labels.
+	 */
+	if (!label_read(dev, &label, label_sector)) {
+		log_error("Could not find LVM label on %s",
+			  pv_name);
+		return 0;
+	}
+
+	log_print("Found label on %s, sector %"PRIu64", type=%s",
+		  pv_name, label->sector, label->type);
+
+	return 1;
+}
