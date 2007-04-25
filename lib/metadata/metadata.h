@@ -443,6 +443,8 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 				  uint64_t pvmetadatasize, struct list *mdas);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
               uint32_t new_pe_count);
+int pv_analyze(struct cmd_context *cmd, const char *pv_name,
+	       int64_t label_sector);
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t extent_size, uint32_t max_pv,

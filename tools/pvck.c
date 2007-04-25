@@ -15,16 +15,26 @@
 
 #include "tools.h"
 
-static int _pvck_single(struct cmd_context * cmd,
-			struct volume_group * vg,
-			struct physical_volume * pv,
-			void *handle)
-{
-	return ECMD_PROCESSED;
-}
-
 int pvck(struct cmd_context *cmd, int argc, char **argv)
 {
-	/* FIXME: Correlate findings of each PV */
-	return process_each_pv(cmd, argc, argv, NULL, NULL, _pvck_single);
+	int i;
+
+	/* FIXME: validate cmdline options */
+	/* FIXME: what does the cmdline look like? */
+	/*
+	 * Use what's on the cmdline directly, and avoid calling into
+	 * some of the other infrastructure functions, so as to avoid
+	 * hitting some of the lvmcache behavior, scanning other devices,
+	 * etc.
+	 */
+	for (i = 0; i < argc; i++) {
+		/* FIXME: warning and/or check if in use? */
+		log_verbose("Scanning %s", argv[i]);
+
+		pv_analyze(cmd, argv[i],
+			   arg_int64_value(cmd, labelsector_ARG,
+					   UINT64_C(0)));
+	}
+
+	return ECMD_PROCESSED;
 }
