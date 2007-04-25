@@ -1,5 +1,7 @@
 Version 2.02.25 -
 =================================
+  Add /sys/block listings to lvm_dump.sh
+  Make lvm_dump.sh list /dev recursively
   Fix thread race in clvmd.
   Add scan_sector param to label_read and _find_labeller.
   Make clvmd cope with quorum devices on RHEL5
@@ -11,7 +13,6 @@ Version 2.02.25 -
   Fix vgsplit for lvm1 format (set and validate VG name in PVs metadata).
   Split metadata areas in vgsplit properly.
   Add extra internal error checking to clvmd
-  Make lvm_dump.sh list /dev recursively
 
 Version 2.02.24 - 19th March 2007
 =================================
