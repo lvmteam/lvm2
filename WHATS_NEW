@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Add count_chars and count_chars_len functions
   Add /sys/block listings to lvm_dump.sh
   Make lvm_dump.sh list /dev recursively
   Fix thread race in clvmd.

@@ -30,4 +30,8 @@ char *build_dm_name(struct dm_pool *mem, const char *vg,
 
 int validate_name(const char *n);
 
+void count_chars(const char *str, size_t *len, int *count,
+		 char c);
+unsigned count_chars_len(const char *str, size_t size, char c);
+
 #endif

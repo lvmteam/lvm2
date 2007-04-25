@@ -36,18 +36,38 @@ int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
 }
 
 /*
- * Device layer names are all of the form <vg>-<lv>-<layer>, any
- * other hyphens that appear in these names are quoted with yet
- * another hyphen.  The top layer of any device has no layer
- * name.  eg, vg0-lvol0.
+ * Count occurences of 'c' in 'str' until we reach a null char.
+ *
+ * Returns:
+ *  len - incremented for each char we encounter, whether 'c' or not.
+ *  count - number of occurences of 'c'
  */
-static void _count_hyphens(const char *str, size_t *len, int *hyphens)
+void count_chars(const char *str, size_t *len, int *count,
+		 const char c)
 {
 	const char *ptr;
 
 	for (ptr = str; *ptr; ptr++, (*len)++)
-		if (*ptr == '-')
-			(*hyphens)++;
+		if (*ptr == c)
+			(*count)++;
+}
+
+/*
+ * Count occurences of 'c' in 'str' of length 'size'.
+ *
+ * Returns:
+ *   # of occurences of 'c'
+ */
+unsigned count_chars_len(const char *str, size_t size, const char c)
+{
+	int i;
+	unsigned count=0;
+
+	for (i=0; i < size; i++)
+		if (str[i] == c)
+			count++;
+	return count;
+
 }
 
 /*
@@ -73,11 +93,11 @@ char *build_dm_name(struct dm_pool *mem, const char *vgname,
 	int hyphens = 1;
 	char *r, *out;
 
-	_count_hyphens(vgname, &len, &hyphens);
-	_count_hyphens(lvname, &len, &hyphens);
+	count_chars(vgname, &len, &hyphens, '-');
+	count_chars(lvname, &len, &hyphens, '-');
 
 	if (layer && *layer) {
-		_count_hyphens(layer, &len, &hyphens);
+		count_chars(layer, &len, &hyphens, '-');
 		hyphens++;
 	}
 
@@ -105,6 +125,12 @@ char *build_dm_name(struct dm_pool *mem, const char *vgname,
 	return r;
 }
 
+/*
+ * Device layer names are all of the form <vg>-<lv>-<layer>, any
+ * other hyphens that appear in these names are quoted with yet
+ * another hyphen.  The top layer of any device has no layer
+ * name.  eg, vg0-lvol0.
+ */
 int validate_name(const char *n)
 {
 	register char c;
