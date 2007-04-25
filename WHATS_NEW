@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Update pvck to include text metadata area and record detection
   Add support functions for analysis of config sections
   Update pvck to read labels on disk, with --labelsector parameter
   Add count_chars and count_chars_len functions

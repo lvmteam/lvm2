@@ -183,6 +183,12 @@ struct metadata_area_ops {
 	 */
 	int (*mda_in_vg) (struct format_instance * fi,
 			    struct volume_group * vg, struct metadata_area *mda);
+	/*
+	 * Analyze a metadata area on a PV.
+	 */
+	int (*pv_analyze_mda) (const struct format_type * fmt,
+			       struct metadata_area *mda);
+
 };
 
 struct metadata_area {

@@ -1565,6 +1565,8 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 {
 	struct label *label;
 	struct device *dev;
+	struct metadata_area *mda;
+	struct lvmcache_info *info;
 
 	dev = dev_cache_get(pv_name, cmd->filter);
 	if (!dev) {
@@ -1584,6 +1586,13 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 
 	log_print("Found label on %s, sector %"PRIu64", type=%s",
 		  pv_name, label->sector, label->type);
+
+	/*
+	 * Next, loop through metadata areas
+	 */
+	info = label->info;
+	list_iterate_items(mda, &info->mdas)
+		mda->ops->pv_analyze_mda(info->fmt, mda);
 
 	return 1;
 }
