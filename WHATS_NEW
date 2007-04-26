@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Fix warnings on x86_64 involving ptrdiff_t in log_error messages
   Update pvck to include text metadata area and record detection
   Add support functions for analysis of config sections
   Update pvck to read labels on disk, with --labelsector parameter

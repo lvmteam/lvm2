@@ -23,6 +23,7 @@
 
 /* Define some portable printing types */
 #define PRIsize_t "zu"
+#define PRIptrdiff_t "td"
 
 struct str_list {
 	struct list list;

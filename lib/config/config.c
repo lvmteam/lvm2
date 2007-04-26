@@ -83,7 +83,8 @@ static const int sep = '/';
 
 #define match(t) do {\
    if (!_match_aux(p, (t))) {\
-	log_error("Parse error at byte %d (line %d): unexpected token", p->tb - p->fb + 1, p->line); \
+	log_error("Parse error at byte %" PRIptrdiff_t " (line %d): unexpected token", \
+		  p->tb - p->fb + 1, p->line); \
       return 0;\
    } \
 } while(0);
@@ -590,7 +591,8 @@ static struct config_value *_type(struct parser *p)
 		break;
 
 	default:
-		log_error("Parse error at byte %d (line %d): expected a value", p->tb - p->fb + 1, p->line);
+		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): expected a value",
+			  p->tb - p->fb + 1, p->line);
 		return 0;
 	}
 	return v;
