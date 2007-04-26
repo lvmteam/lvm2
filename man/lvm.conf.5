@@ -81,6 +81,11 @@ LVM physical volumes.
 Devices in directories outside this hierarchy will be ignored.
 Defaults to "/dev".
 .IP
+\fBpreferred_names\fP \(em List of patterns compared in turn against
+all the pathnames referencing the same device in in the scanned directories.
+The pathname that matches the earliest pattern in the list is the
+one used in any output.
+.IP
 \fBfilter\fP \(em List of patterns to apply to devices found by a scan.
 Patterns are regular expressions delimited by any character and preceded
 by \fBa\fP (for accept) or \fBr\fP (for reject).  The list is traversed

@@ -155,6 +155,9 @@ static int _compare_paths(const char *path0, const char *path1)
 	char *s0, *s1;
 	struct stat stat0, stat1;
 
+	/*
+	 * FIXME Better to compare patterns one-at-a-time against all names.
+	 */
 	if (_cache.preferred_names_matcher) {
 		m0 = matcher_run(_cache.preferred_names_matcher, path0);
 		m1 = matcher_run(_cache.preferred_names_matcher, path1);
