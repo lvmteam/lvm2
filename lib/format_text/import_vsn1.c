@@ -660,15 +660,11 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	/* eg Set to instance of fmt1 here if reading a format1 backup? */
 	vg->fid = fid;
 
-	if (!(vg->name = dm_pool_strdup(mem, vgn->key))) {
-		stack;
-		goto bad;
-	}
+	if (!(vg->name = dm_pool_strdup(mem, vgn->key)))
+		goto_bad;
 
-	if (!(vg->system_id = dm_pool_zalloc(mem, NAME_LEN))) {
-		stack;
-		goto bad;
-	}
+	if (!(vg->system_id = dm_pool_zalloc(mem, NAME_LEN)))
+		goto_bad;
 
 	vgn = vgn->child;
 

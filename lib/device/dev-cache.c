@@ -19,6 +19,8 @@
 #include "btree.h"
 #include "filter.h"
 #include "filter-persistent.h"
+#include "matcher.h"
+#include "toolcontext.h"
 
 #include <unistd.h>
 #include <sys/param.h>
@@ -38,6 +40,7 @@ static struct {
 	struct dm_pool *mem;
 	struct dm_hash_table *names;
 	struct btree *devices;
+	struct matcher *preferred_names_matcher;
 
 	int has_scanned;
 	struct list dirs;
@@ -129,14 +132,48 @@ static struct device *_dev_create(dev_t d)
 	return dev;
 }
 
+void dev_set_preferred_name(struct str_list *sl, struct device *dev)
+{
+	/*
+	 * Don't interfere with ordering specified in config file.
+	 */
+	if (_cache.preferred_names_matcher)
+		return;
+
+	log_debug("%s: New preferred name", sl->str);
+	list_del(&sl->list);
+	list_add_h(&dev->aliases, &sl->list);
+}
+
 /* Return 1 if we prefer path1 else return 0 */
 static int _compare_paths(const char *path0, const char *path1)
 {
 	int slash0 = 0, slash1 = 0;
+	int m0, m1;
 	const char *p;
 	char p0[PATH_MAX], p1[PATH_MAX];
 	char *s0, *s1;
 	struct stat stat0, stat1;
+
+	if (_cache.preferred_names_matcher) {
+		m0 = matcher_run(_cache.preferred_names_matcher, path0);
+		m1 = matcher_run(_cache.preferred_names_matcher, path1);
+
+		if (m0 != m1) {
+			if (m0 < 0)
+				return 1;
+			if (m1 < 0)
+				return 0;
+			if (m0 < m1)
+				return 1;
+			if (m1 < m0)
+				return 0;
+		}
+	}
+
+	/*
+	 * Built-in rules.
+	 */
 
 	/* Return the path with fewer slashes */
 	for (p = path0; p++; p = (const char *) strchr(p, '/'))
@@ -441,7 +478,65 @@ void dev_cache_scan(int do_scan)
 		_full_scan(1);
 }
 
-int dev_cache_init(void)
+static int _init_preferred_names(struct cmd_context *cmd)
+{
+	const struct config_node *cn;
+	struct config_value *v;
+	struct dm_pool *scratch = NULL;
+	char **regex;
+	unsigned count = 0;
+	int i, r = 0;
+
+	_cache.preferred_names_matcher = NULL;
+
+	if (!(cn = find_config_tree_node(cmd, "devices/preferred_names")) ||
+	    cn->v->type == CFG_EMPTY_ARRAY) {
+		log_very_verbose("devices/preferred_names not found in config file: "
+				 "using built-in preferences");
+		return 1;
+	}
+
+	for (v = cn->v; v; v = v->next) {
+		if (v->type != CFG_STRING) {
+			log_error("preferred_names patterns must be enclosed in quotes");
+			return 0;
+		}       
+
+		count++;
+	}
+
+	if (!(scratch = dm_pool_create("preferred device name matcher", 1024)))
+		return_0;
+
+	if (!(regex = dm_pool_alloc(scratch, sizeof(*regex) * count))) {
+		log_error("Failed to allocate preferred device name "
+			  "pattern list.");
+		goto out;
+	}
+
+	for (v = cn->v, i = count - 1; v; v = v->next, i--) {
+		if (!(regex[i] = dm_pool_strdup(scratch, v->v.str))) {
+			log_error("Failed to allocate a preferred device name "
+				  "pattern.");
+			goto out;
+		}
+	}
+
+	if (!(_cache.preferred_names_matcher =
+		matcher_create(_cache.mem,(const char **) regex, count))) {
+		log_error("Preferred device name pattern matcher creation failed.");
+		goto out;
+	}
+
+	r = 1;
+
+out:
+	dm_pool_destroy(scratch);
+
+	return r;
+}
+
+int dev_cache_init(struct cmd_context *cmd)
 {
 	_cache.names = NULL;
 	_cache.has_scanned = 0;
@@ -466,6 +561,9 @@ int dev_cache_init(void)
 	list_init(&_cache.dirs);
 	list_init(&_cache.files);
 
+	if (!_init_preferred_names(cmd))
+		goto_bad;
+
 	return 1;
 
       bad:
@@ -488,6 +586,9 @@ void dev_cache_exit(void)
 {
 	if (_cache.names)
 		_check_for_open_devices();
+
+	if (_cache.preferred_names_matcher)
+		_cache.preferred_names_matcher = NULL;
 
 	if (_cache.mem) {
 		dm_pool_destroy(_cache.mem);

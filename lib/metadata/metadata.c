@@ -280,10 +280,9 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	vg->seqno = 0;
 
 	vg->status = (RESIZEABLE_VG | LVM_READ | LVM_WRITE);
-	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN))) {
-		stack;
-		goto bad;
-	}
+	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN)))
+		goto_bad;
+
 	*vg->system_id = '\0';
 
 	vg->extent_size = extent_size;
@@ -320,7 +319,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 
 	/* attach the pv's */
 	if (!vg_extend(vg->fid, vg, pv_count, pv_names))
-		goto bad;
+		goto_bad;
 
 	return vg;
 
@@ -561,10 +560,8 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 
 	pv->dev = dev;
 
-	if (!(pv->vg_name = dm_pool_zalloc(mem, NAME_LEN))) {
-		stack;
-		goto bad;
-	}
+	if (!(pv->vg_name = dm_pool_zalloc(mem, NAME_LEN)))
+		goto_bad;
 
 	pv->status = ALLOCATABLE_PV;
 

@@ -131,10 +131,10 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	int partial;
 
 	if (!vg)
-		goto bad;
+		goto_bad;
 
 	if (list_empty(pvs))
-		goto bad;
+		goto_bad;
 
 	memset(vg, 0, sizeof(*vg));
 
@@ -146,24 +146,24 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	list_init(&vg->tags);
 
 	if (!_check_vgs(pvs, &partial))
-		goto bad;
+		goto_bad;
 
 	dl = list_item(pvs->n, struct disk_list);
 
 	if (!import_vg(mem, vg, dl, partial))
-		goto bad;
+		goto_bad;
 
 	if (!import_pvs(fid->fmt, mem, vg, pvs, &vg->pvs, &vg->pv_count))
-		goto bad;
+		goto_bad;
 
 	if (!import_lvs(mem, vg, pvs))
-		goto bad;
+		goto_bad;
 
 	if (!import_extents(fid->fmt->cmd, vg, pvs))
-		goto bad;
+		goto_bad;
 
 	if (!import_snapshots(mem, vg, pvs))
-		goto bad;
+		goto_bad;
 
 	return vg;
 
@@ -191,15 +191,11 @@ static struct volume_group *_format1_vg_read(struct format_instance *fid,
 	vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
 
 	if (!read_pvs_in_vg
-	    (fid->fmt, vg_name, fid->fmt->cmd->filter, mem, &pvs)) {
-		stack;
-		goto bad;
-	}
+	    (fid->fmt, vg_name, fid->fmt->cmd->filter, mem, &pvs))
+		goto_bad;
 
-	if (!(vg = _build_vg(fid, &pvs))) {
-		stack;
-		goto bad;
-	}
+	if (!(vg = _build_vg(fid, &pvs)))
+		goto_bad;
 
       bad:
 	dm_pool_destroy(mem);
@@ -415,17 +411,14 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 		return 0;
 	}
 
-	if (!(dl = dm_pool_alloc(mem, sizeof(*dl)))) {
-		stack;
-		goto bad;
-	}
+	if (!(dl = dm_pool_alloc(mem, sizeof(*dl))))
+		goto_bad;
+
 	dl->mem = mem;
 	dl->dev = pv->dev;
 
-	if (!export_pv(fmt->cmd, mem, NULL, &dl->pvd, pv)) {
-		stack;
-		goto bad;
-	}
+	if (!export_pv(fmt->cmd, mem, NULL, &dl->pvd, pv))
+		goto_bad;
 
 	/* must be set to be able to zero gap after PV structure in
 	   dev_write in order to make other disk tools happy */
@@ -434,10 +427,8 @@ static int _format1_pv_write(const struct format_type *fmt, struct physical_volu
 	dl->pvd.pe_on_disk.base = LVM1_PE_ALIGN << SECTOR_SHIFT;
 
 	list_add(&pvs, &dl->list);
-	if (!write_disks(fmt, &pvs)) {
-		stack;
-		goto bad;
-	}
+	if (!write_disks(fmt, &pvs))
+		goto_bad;
 
 	dm_pool_destroy(mem);
 	return 1;

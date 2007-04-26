@@ -301,10 +301,9 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	}
 	memset(pf, 0, sizeof(*pf));
 
-	if (!(pf->file = dm_malloc(strlen(file) + 1))) {
-		stack;
-		goto bad;
-	}
+	if (!(pf->file = dm_malloc(strlen(file) + 1)))
+		goto_bad;
+
 	strcpy(pf->file, file);
 	pf->real = real;
 
@@ -313,10 +312,8 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 		goto bad;
 	}
 
-	if (!(f = dm_malloc(sizeof(*f)))) {
-		stack;
-		goto bad;
-	}
+	if (!(f = dm_malloc(sizeof(*f))))
+		goto_bad;
 
 	f->passes_filter = _lookup_p;
 	f->destroy = _persistent_destroy;

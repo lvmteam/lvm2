@@ -59,22 +59,16 @@ static struct dm_hash_table *_create_lv_maps(struct dm_pool *mem,
 		if (ll->lv->status & SNAPSHOT)
 			continue;
 
-		if (!(lvm = dm_pool_alloc(mem, sizeof(*lvm)))) {
-			stack;
-			goto bad;
-		}
+		if (!(lvm = dm_pool_alloc(mem, sizeof(*lvm))))
+			goto_bad;
 
 		lvm->lv = ll->lv;
 		if (!(lvm->map = dm_pool_zalloc(mem, sizeof(*lvm->map)
-					     * ll->lv->le_count))) {
-			stack;
-			goto bad;
-		}
+					     * ll->lv->le_count)))
+			goto_bad;
 
-		if (!dm_hash_insert(maps, ll->lv->name, lvm)) {
-			stack;
-			goto bad;
-		}
+		if (!dm_hash_insert(maps, ll->lv->name, lvm))
+			goto_bad;
 	}
 
 	return maps;

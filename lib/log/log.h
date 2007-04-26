@@ -138,5 +138,6 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 #define return_0	do { stack; return 0; } while (0)
 #define return_NULL	do { stack; return NULL; } while (0)
 #define goto_out	do { stack; goto out; } while (0)
+#define goto_bad	do { stack; goto bad; } while (0)
 
 #endif

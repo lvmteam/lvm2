@@ -273,8 +273,12 @@ int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 	if ((c = strrchr(dir, '/')))
 		*c = '\0';
 
-	if (!create_dir(dir))
+	if (!create_dir(dir)) {
+		dm_free(dir);
 		return -1;
+	}
+
+	dm_free(dir);
 
 	log_very_verbose("Locking %s (%s, %hd)", file,
 			 (lock_type == F_WRLCK) ? "F_WRLCK" : "F_RDLCK",
