@@ -273,15 +273,12 @@ struct matcher *matcher_create(struct dm_pool *mem, const char **patterns,
 	struct dm_pool *scratch = dm_pool_create("regex matcher", 10 * 1024);
 	struct matcher *m;
 
-	if (!scratch) {
-		stack;
-		return NULL;
-	}
+	if (!scratch)
+		return_NULL;
 
 	if (!(m = dm_pool_alloc(mem, sizeof(*m)))) {
-		stack;
 		dm_pool_destroy(scratch);
-		return NULL;
+		return_NULL;
 	}
 
 	memset(m, 0, sizeof(*m));
@@ -292,10 +289,8 @@ struct matcher *matcher_create(struct dm_pool *mem, const char **patterns,
 
 	ptr = all = dm_pool_alloc(scratch, len + 1);
 
-	if (!all) {
-		stack;
-		goto bad;
-	}
+	if (!all)
+		goto_bad;
 
 	for (i = 0; i < num; i++) {
 		ptr += sprintf(ptr, "(.*(%s)%c)", patterns[i], TARGET_TRANS);
@@ -314,10 +309,8 @@ struct matcher *matcher_create(struct dm_pool *mem, const char **patterns,
 	m->num_nodes = _count_nodes(rx);
 	m->nodes = dm_pool_alloc(scratch, sizeof(*m->nodes) * m->num_nodes);
 
-	if (!m->nodes) {
-		stack;
-		goto bad;
-	}
+	if (!m->nodes)
+		goto_bad;
 
 	_fill_table(m, rx);
 	_create_bitsets(m);
@@ -330,7 +323,7 @@ struct matcher *matcher_create(struct dm_pool *mem, const char **patterns,
 
       bad:
 	dm_pool_destroy(scratch);
-	dm_pool_destroy(mem);
+	dm_pool_free(mem, m);
 	return NULL;
 }
 

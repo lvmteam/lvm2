@@ -98,18 +98,15 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	unsigned count = 0;
 	int i, r = 0;
 
-	if (!(scratch = dm_pool_create("filter matcher", 1024))) {
-		stack;
-		return 0;
-	}
+	if (!(scratch = dm_pool_create("filter matcher", 1024)))
+		return_0;
 
 	/*
 	 * count how many patterns we have.
 	 */
 	for (v = val; v; v = v->next) {
-
 		if (v->type != CFG_STRING) {
-			log_info("filter patterns must be enclosed in quotes");
+			log_error("filter patterns must be enclosed in quotes");
 			goto out;
 		}
 
@@ -119,10 +116,8 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	/*
 	 * allocate space for them
 	 */
-	if (!(regex = dm_pool_alloc(scratch, sizeof(*regex) * count))) {
-		stack;
-		goto out;
-	}
+	if (!(regex = dm_pool_alloc(scratch, sizeof(*regex) * count)))
+		goto_out;
 
 	/*
 	 * create the accept/reject bitset
@@ -136,7 +131,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	 */
 	for (v = val, i = count - 1; v; v = v->next, i--)
 		if (!_extract_pattern(scratch, v->v.str, regex, rf->accept, i)) {
-			log_info("invalid filter pattern");
+			log_error("invalid filter pattern");
 			goto out;
 		}
 
@@ -164,13 +159,8 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 
 		if (m >= 0) {
 			if (dm_bit(rf->accept, m)) {
-
-				if (!first) {
-					log_debug("%s: New preferred name",
-						  sl->str);
-					list_del(&sl->list);
-					list_add_h(&dev->aliases, &sl->list);
-				}
+				if (!first)
+					dev_set_preferred_name(sl, dev);
 
 				return 1;
 			}
@@ -208,22 +198,16 @@ struct dev_filter *regex_filter_create(struct config_value *patterns)
 		return NULL;
 	}
 
-	if (!(rf = dm_pool_alloc(mem, sizeof(*rf)))) {
-		stack;
-		goto bad;
-	}
+	if (!(rf = dm_pool_alloc(mem, sizeof(*rf))))
+		goto_bad;
 
 	rf->mem = mem;
 
-	if (!_build_matcher(rf, patterns)) {
-		stack;
-		goto bad;
-	}
+	if (!_build_matcher(rf, patterns))
+		goto_bad;
 
-	if (!(f = dm_pool_zalloc(mem, sizeof(*f)))) {
-		stack;
-		goto bad;
-	}
+	if (!(f = dm_pool_zalloc(mem, sizeof(*f))))
+		goto_bad;
 
 	f->passes_filter = _accept_p;
 	f->destroy = _regex_destroy;

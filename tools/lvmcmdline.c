@@ -827,30 +827,30 @@ static char *_copy_command_line(struct cmd_context *cmd, int argc, char **argv)
 	 * description for backups.
 	 */
 	if (!dm_pool_begin_object(cmd->mem, 128))
-		goto bad;
+		goto_bad;
 
 	for (i = 0; i < argc; i++) {
 		space = strchr(argv[i], ' ') ? 1 : 0;
 
 		if (space && !dm_pool_grow_object(cmd->mem, "'", 1))
-			goto bad;
+			goto_bad;
 
 		if (!dm_pool_grow_object(cmd->mem, argv[i], strlen(argv[i])))
-			goto bad;
+			goto_bad;
 
 		if (space && !dm_pool_grow_object(cmd->mem, "'", 1))
-			goto bad;
+			goto_bad;
 
 		if (i < (argc - 1))
 			if (!dm_pool_grow_object(cmd->mem, " ", 1))
-				goto bad;
+				goto_bad;
 	}
 
 	/*
 	 * Terminate.
 	 */
 	if (!dm_pool_grow_object(cmd->mem, "\0", 1))
-		goto bad;
+		goto_bad;
 
 	return dm_pool_end_object(cmd->mem);
 

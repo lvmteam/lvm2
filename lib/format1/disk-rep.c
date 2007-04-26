@@ -357,10 +357,8 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 	list_init(&dl->uuids);
 	list_init(&dl->lvds);
 
-	if (!_read_pvd(dev, &dl->pvd)) {
-		stack;
-		goto bad;
-	}
+	if (!_read_pvd(dev, &dl->pvd))
+		goto_bad;
 
 	/*
 	 * is it an orphan ?

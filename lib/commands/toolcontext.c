@@ -465,10 +465,8 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	const struct config_node *cn;
 	struct config_value *cv;
 
-	if (!dev_cache_init()) {
-		stack;
-		return 0;
-	}
+	if (!dev_cache_init(cmd))
+		return_0;
 
 	if (!(cn = find_config_tree_node(cmd, "devices/scan"))) {
 		if (!dev_cache_add_dir("/dev")) {

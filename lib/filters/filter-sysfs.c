@@ -284,10 +284,8 @@ struct dev_filter *sysfs_filter_create(const char *proc)
 		goto bad;
 	}
 
-	if (!(f = dm_pool_zalloc(mem, sizeof(*f)))) {
-		stack;
-		goto bad;
-	}
+	if (!(f = dm_pool_zalloc(mem, sizeof(*f))))
+		goto_bad;
 
 	f->passes_filter = _accept_p;
 	f->destroy = _destroy;

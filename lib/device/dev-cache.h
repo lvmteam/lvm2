@@ -30,7 +30,8 @@ struct dev_filter {
 /*
  * The global device cache.
  */
-int dev_cache_init(void);
+struct cmd_context;
+int dev_cache_init(struct cmd_context *cmd);
 void dev_cache_exit(void);
 
 /* Trigger(1) or avoid(0) a scan */
@@ -40,6 +41,8 @@ int dev_cache_has_scanned(void);
 int dev_cache_add_dir(const char *path);
 int dev_cache_add_loopfile(const char *path);
 struct device *dev_cache_get(const char *name, struct dev_filter *f);
+
+void dev_set_preferred_name(struct str_list *sl, struct device *dev);
 
 /*
  * Object for iterating through the cache.

@@ -1,15 +1,20 @@
 Version 2.02.25 -
 =================================
-  Fix warnings on x86_64 involving ptrdiff_t in log_error messages
-  Update pvck to include text metadata area and record detection
-  Add support functions for analysis of config sections
-  Update pvck to read labels on disk, with --labelsector parameter
-  Add count_chars and count_chars_len functions
-  Add /sys/block listings to lvm_dump.sh
-  Make lvm_dump.sh list /dev recursively
+  Add devices/preferred_names config regex list for displayed device names.
+  Free a temporary dir string in fcntl_lock_file() after use.
+  Fix a dm_pool_destroy() in matcher_create().
+  Introduce goto_bad macro.
+  Fix warnings on x86_64 involving ptrdiff_t in log_error messages.
+  Update pvck to include text metadata area and record detection.
+  Add support functions for token counting in config file extracts.
+  Update pvck to read labels on disk, with --labelsector parameter.
+  Add count_chars and count_chars_len functions.
+  Add /sys/block listings to lvm_dump.sh.
+  Make lvm_dump.sh list /dev recursively.
   Fix thread race in clvmd.
   Add scan_sector param to label_read and _find_labeller.
-  Make clvmd cope with quorum devices on RHEL5
+  Make clvmd cope with quorum devices.
+  Add extra internal error checking to clvmd.
   Add dev_read_circular.
   Add pvck command stub.
   Update lists of attribute characters in man pages.
@@ -17,7 +22,6 @@ Version 2.02.25 -
   Fix creation and conversion of mirrors with tags.
   Fix vgsplit for lvm1 format (set and validate VG name in PVs metadata).
   Split metadata areas in vgsplit properly.
-  Add extra internal error checking to clvmd
 
 Version 2.02.24 - 19th March 2007
 =================================

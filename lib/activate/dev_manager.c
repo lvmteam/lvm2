@@ -435,10 +435,8 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(dm = dm_pool_alloc(mem, sizeof(*dm)))) {
-		stack;
-		goto bad;
-	}
+	if (!(dm = dm_pool_alloc(mem, sizeof(*dm))))
+		goto_bad;
 
 	dm->cmd = cmd;
 	dm->mem = mem;
@@ -450,10 +448,8 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	}
 	dm->stripe_filler = stripe_filler;
 
-	if (!(dm->vg_name = dm_pool_strdup(dm->mem, vg_name))) {
-		stack;
-		goto bad;
-	}
+	if (!(dm->vg_name = dm_pool_strdup(dm->mem, vg_name)))
+		goto_bad;
 
 	dm->target_state = NULL;
 
