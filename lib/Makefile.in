@@ -81,9 +81,6 @@ SOURCES =\
 	misc/lvm-wrappers.c \
 	misc/timestamp.c \
 	mm/memlock.c \
-	regex/matcher.c \
-	regex/parse_rx.c \
-	regex/ttree.c \
 	report/report.c \
 	striped/striped.c \
 	uuid/uuid.c \

@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Move regex functions into libdevmapper.
   Change some #include lines to search only standard system directories.
   Add devices/preferred_names config regex list for displayed device names.
   Free a temporary dir string in fcntl_lock_file() after use.

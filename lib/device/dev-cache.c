@@ -19,7 +19,6 @@
 #include "btree.h"
 #include "filter.h"
 #include "filter-persistent.h"
-#include "matcher.h"
 #include "toolcontext.h"
 
 #include <unistd.h>
@@ -40,7 +39,7 @@ static struct {
 	struct dm_pool *mem;
 	struct dm_hash_table *names;
 	struct btree *devices;
-	struct matcher *preferred_names_matcher;
+	struct dm_regex *preferred_names_matcher;
 
 	int has_scanned;
 	struct list dirs;
@@ -159,8 +158,8 @@ static int _compare_paths(const char *path0, const char *path1)
 	 * FIXME Better to compare patterns one-at-a-time against all names.
 	 */
 	if (_cache.preferred_names_matcher) {
-		m0 = matcher_run(_cache.preferred_names_matcher, path0);
-		m1 = matcher_run(_cache.preferred_names_matcher, path1);
+		m0 = dm_regex_match(_cache.preferred_names_matcher, path0);
+		m1 = dm_regex_match(_cache.preferred_names_matcher, path1);
 
 		if (m0 != m1) {
 			if (m0 < 0)
@@ -526,7 +525,7 @@ static int _init_preferred_names(struct cmd_context *cmd)
 	}
 
 	if (!(_cache.preferred_names_matcher =
-		matcher_create(_cache.mem,(const char **) regex, count))) {
+		dm_regex_create(_cache.mem,(const char **) regex, count))) {
 		log_error("Preferred device name pattern matcher creation failed.");
 		goto out;
 	}
