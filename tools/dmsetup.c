@@ -19,7 +19,7 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include <configure.h>
+#include "configure.h"
 
 #include "libdevmapper.h"
 #include "log.h"
