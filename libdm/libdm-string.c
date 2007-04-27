@@ -117,7 +117,7 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...)
 	n = vsnprintf(buf, bufsize, format, ap);
 	va_end(ap);
 
-	if (n < 0 || (n > bufsize - 1))
+	if (n < 0 || ((unsigned) n + 1 > bufsize))
 		return -1;
 
 	return n;
