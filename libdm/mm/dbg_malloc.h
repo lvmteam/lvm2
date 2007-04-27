@@ -13,8 +13,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_DBG_MALLOC_H
-#define _LVM_DBG_MALLOC_H
+#ifndef _DM_DBG_MALLOC_H
+#define _DM_DBG_MALLOC_H
 
 #include <stdlib.h>
 #include <string.h>

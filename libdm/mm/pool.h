@@ -13,8 +13,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_POOL_H
-#define _LVM_POOL_H
+#ifndef _DM_POOL_H
+#define _DM_POOL_H
 
 #include <string.h>
 #include <stdlib.h>

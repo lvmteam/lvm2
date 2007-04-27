@@ -1,5 +1,6 @@
 Version 1.02.19 -
 ====================================
+  Standardise protective include file #defines.
   Add regex functions to library.
   Avoid trailing separator in reports when there are hidden sort fields.
   Fix segfault in 'dmsetup status' without --showkeys against crypt target.

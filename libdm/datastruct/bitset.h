@@ -13,8 +13,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_BITSET_H
-#define _LVM_BITSET_H
+#ifndef _DM_BITSET_H
+#define _DM_BITSET_H
 
 #include "pool.h"
 
