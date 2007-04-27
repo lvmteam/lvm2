@@ -962,17 +962,18 @@ static int _status(int argc, char **argv, void *data)
 			if (data && !_switches[VERBOSE_ARG])
 				printf("%s: ", name);
 			if (target_type) {
-
-			/* Suppress encryption key */
-			if (!_switches[SHOWKEYS_ARG] &&
-			    !strcmp(target_type, "crypt")) {
-				c = params;
-				while (*c && *c != ' ')
-					c++;
-				c++;
-				while (*c && *c != ' ')
-					*c++ = '0';
-			}
+				/* Suppress encryption key */
+				if (!_switches[SHOWKEYS_ARG] &&
+				    cmd == DM_DEVICE_TABLE &&
+				    !strcmp(target_type, "crypt")) {
+					c = params;
+					while (*c && *c != ' ')
+						c++;
+					if (*c)
+						c++;
+					while (*c && *c != ' ')
+						*c++ = '0';
+				}
 				printf("%" PRIu64 " %" PRIu64 " %s %s",
 				       start, length, target_type, params);
 			}
