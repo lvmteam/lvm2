@@ -12,10 +12,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "libdevmapper.h"
-#include "libdevmapper-event.h"
 #include "lvm2cmd.h"
 
+#include <libdevmapper.h>
+#include <libdevmapper-event.h>
 #include <errno.h>
 #include <signal.h>
 #include <string.h>

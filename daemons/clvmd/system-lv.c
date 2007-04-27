@@ -36,8 +36,11 @@
 #include <dirent.h>
 #include <errno.h>
 #include <mntent.h>
+#include <libdlm.h>
+#ifdef HAVE_CCS
+#include <ccs.h>
+#endif
 
-#include "libdlm.h"
 #include "log.h"
 #include "list.h"
 #include "locking.h"
@@ -45,9 +48,6 @@
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"
-#ifdef HAVE_CCS
-#include "ccs.h"
-#endif
 
 #define SYSTEM_LV_FILESYSTEM "ext2"
 #define SYSTEM_LV_MOUNTPOINT "/tmp/.clvmd-XXXXXX"

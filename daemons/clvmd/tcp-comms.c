@@ -34,8 +34,8 @@
 #include <syslog.h>
 #include <netdb.h>
 #include <assert.h>
+#include <libdevmapper.h>
 
-#include "libdevmapper.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"

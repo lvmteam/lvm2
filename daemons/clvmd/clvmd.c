@@ -37,6 +37,7 @@
 #include <getopt.h>
 #include <syslog.h>
 #include <errno.h>
+#include <libdlm.h>
 
 #include "clvmd-comms.h"
 #include "lvm-functions.h"
@@ -44,7 +45,6 @@
 #include "version.h"
 #include "clvmd.h"
 #include "refresh_clvmd.h"
-#include "libdlm.h"
 #include "system-lv.h"
 #include "list.h"
 #include "log.h"

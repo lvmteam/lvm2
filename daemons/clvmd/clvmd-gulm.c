@@ -40,9 +40,10 @@
 #include <utmpx.h>
 #include <syslog.h>
 #include <assert.h>
+#include <libdevmapper.h>
+#include <ccs.h>
+#include <libgulm.h>
 
-#include "libdevmapper.h"
-#include "ccs.h"
 #include "list.h"
 #include "locking.h"
 #include "log.h"
@@ -51,7 +52,6 @@
 #include "lvm-functions.h"
 #include "clvmd.h"
 #include "clvmd-gulm.h"
-#include "libgulm.h"
 
 /* Hash list of nodes in the cluster */
 static struct dm_hash_table *node_hash;
