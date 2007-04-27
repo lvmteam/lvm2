@@ -1,5 +1,6 @@
 Version 1.02.19 -
 ====================================
+  Add regex functions to library.
   Avoid trailing separator in reports when there are hidden sort fields.
   Fix segfault in 'dmsetup status' without --showkeys against crypt target.
   Deal with some more compiler warnings.
