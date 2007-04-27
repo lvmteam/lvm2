@@ -1,4 +1,4 @@
-Version 2.02.25 -
+Version 2.02.25 - 27th April 2007
 =================================
   Fix get_config_uint64() to read a 64-bit value not a 32-bit one.
   Add -Wformat-security and change one fprintf() to fputs().

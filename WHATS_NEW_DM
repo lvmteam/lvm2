@@ -1,5 +1,5 @@
-Version 1.02.19 -
-====================================
+Version 1.02.19 - 27th April 2007
+=================================
   Standardise protective include file #defines.
   Add regex functions to library.
   Avoid trailing separator in reports when there are hidden sort fields.
