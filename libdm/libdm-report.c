@@ -316,7 +316,15 @@ static struct field_properties * _add_field(struct dm_report *rh,
 	}
 
 	fp->flags |= flags;
-	list_add(&rh->field_props, &fp->list);
+
+	/*
+	 * Place hidden fields at the front so list_end() will
+	 * tell us when we've reached the last visible field.
+	 */
+	if (fp->flags & FLD_HIDDEN)
+		list_add_h(&rh->field_props, &fp->list);
+	else
+		list_add(&rh->field_props, &fp->list);
 
 	return fp;
 }
