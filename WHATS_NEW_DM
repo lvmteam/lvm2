@@ -1,5 +1,6 @@
 Version 1.02.19 -
 ====================================
+  Fix segfault in 'dmsetup status' without --showkeys against crypt target.
   Deal with some more compiler warnings.
   Introduce _add_field() and _is_same_field() to libdm-report.c.
   Fix some libdevmapper-event and dmeventd memory leaks.
