@@ -749,7 +749,7 @@ static int _error_device(int argc __attribute((unused)), char **argv __attribute
 	if (!_set_task_device(dmt, name, 0))
 		goto error;
 
-	if (!dm_task_add_target(dmt, 0, size, "error", ""))
+	if (!dm_task_add_target(dmt, UINT64_C(0), size, "error", ""))
 		goto error;
 
 	if (_switches[READ_ONLY] && !dm_task_set_ro(dmt))
@@ -1261,10 +1261,10 @@ static void _out_char(const unsigned c)
 	}
 }
 
-static void _out_string(const unsigned char *str)
+static void _out_string(const char *str)
 {
 	while (*str)
-		_out_char(*str++);
+		_out_char((unsigned char) *str++);
 }
 
 /* non-negative integers only */
@@ -1502,7 +1502,7 @@ static int _dm_name_disp(struct dm_report *rh,
 			 struct dm_report_field *field, const void *data,
 			 void *private __attribute((unused)))
 {
-	const char *name = dm_task_get_name((struct dm_task *) data);
+	const char *name = dm_task_get_name((const struct dm_task *) data);
 
 	return dm_report_field_string(rh, field, &name);
 }
@@ -1512,7 +1512,7 @@ static int _dm_uuid_disp(struct dm_report *rh,
 			 struct dm_report_field *field,
 			 const void *data, void *private __attribute((unused)))
 {
-	const char *uuid = dm_task_get_uuid((struct dm_task *) data);
+	const char *uuid = dm_task_get_uuid((const struct dm_task *) data);
 
 	if (!uuid || !*uuid)
 		uuid = "";
@@ -1527,7 +1527,7 @@ static int _dm_info_status_disp(struct dm_report *rh,
 {
 	char buf[5];
 	const char *s = buf;
-	struct dm_info *info = (struct dm_info *) data;
+	const struct dm_info *info = data;
 
 	buf[0] = info->live_table ? 'L' : '-';
 	buf[1] = info->inactive_table ? 'I' : '-';
@@ -1767,7 +1767,7 @@ static int _process_tree_options(const char *options)
 {
 	const char *s, *end;
 	struct winsize winsz;
-	int len;
+	size_t len;
 
 	/* Symbol set default */
 	if (!strcmp(nl_langinfo(CODESET), "UTF-8"))
@@ -1823,7 +1823,7 @@ static int _process_tree_options(const char *options)
 
 	/* Truncation doesn't work well with vt100 drawing char */
 	if (_tsym != &_tsym_vt100)
-		if (ioctl(1, TIOCGWINSZ, &winsz) >= 0 && winsz.ws_col > 3)
+		if (ioctl(1, (unsigned long) TIOCGWINSZ, &winsz) >= 0 && winsz.ws_col > 3)
 			_termwidth = winsz.ws_col - 3;
 
 	return 1;
@@ -1860,13 +1860,13 @@ static char *parse_loop_device_name(char *dev)
 		if (strncmp(device, DEV_PATH, strlen(DEV_PATH)))
 			goto error;
 
-		strncpy(buf, strrchr(device, '/') + 1, PATH_MAX);
+		strncpy(buf, strrchr(device, '/') + 1, (size_t) PATH_MAX);
 		dm_free(device);
 
 	} else {
 		/* check for device number */
 		if (!strncmp(dev, "loop", strlen("loop")))
-			strncpy(buf, dev, PATH_MAX);
+			strncpy(buf, dev, (size_t) PATH_MAX);
 		else
 			goto error;
 	}
@@ -1909,8 +1909,9 @@ static int _loop_table(char *table, size_t tlen, char *file,
 	sectors = size >> SECTOR_SHIFT;
 
 	if (_switches[VERBOSE_ARG])
-		fprintf(stderr, "losetup: set loop size to %llukB (%llu sectors)\n",
-			sectors >> 1, sectors);
+		fprintf(stderr, "losetup: set loop size to %llukB "
+			"(%llu sectors)\n", (long long unsigned) sectors >> 1,
+			(long long unsigned) sectors);
 
 #ifdef HAVE_SYS_STATVFS_H
 	if (fstatvfs(fd, &fsbuf))
@@ -2034,7 +2035,7 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv)
 
 	/* FIXME Missing free */
 	_table = dm_malloc(LOOP_TABLE_SIZE);
-	if (!_loop_table(_table, LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
+	if (!_loop_table(_table, (size_t) LOOP_TABLE_SIZE, loop_file, device_name, offset)) {
 		fprintf(stderr, "Could not build device-mapper table for %s\n", (*argv)[0]);
 		dm_free(device_name);
 		return 0;

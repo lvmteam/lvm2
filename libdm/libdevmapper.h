@@ -133,8 +133,8 @@ struct dm_versions {
 int dm_get_library_version(char *version, size_t size);
 int dm_task_get_driver_version(struct dm_task *dmt, char *version, size_t size);
 int dm_task_get_info(struct dm_task *dmt, struct dm_info *dmi);
-const char *dm_task_get_name(struct dm_task *dmt);
-const char *dm_task_get_uuid(struct dm_task *dmt);
+const char *dm_task_get_name(const struct dm_task *dmt);
+const char *dm_task_get_uuid(const struct dm_task *dmt);
 
 struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 struct dm_names *dm_task_get_names(struct dm_task *dmt);

@@ -433,12 +433,12 @@ static int _dm_task_get_info_v1(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
-static const char *_dm_task_get_name_v1(struct dm_task *dmt)
+static const char *_dm_task_get_name_v1(const struct dm_task *dmt)
 {
 	return (dmt->dmi.v1->name);
 }
 
-static const char *_dm_task_get_uuid_v1(struct dm_task *dmt)
+static const char *_dm_task_get_uuid_v1(const struct dm_task *dmt)
 {
 	return (dmt->dmi.v1->uuid);
 }
@@ -924,7 +924,7 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
-const char *dm_task_get_name(struct dm_task *dmt)
+const char *dm_task_get_name(const struct dm_task *dmt)
 {
 #ifdef DM_COMPAT
 	if (_dm_version == 1)
@@ -934,7 +934,7 @@ const char *dm_task_get_name(struct dm_task *dmt)
 	return (dmt->dmi.v4->name);
 }
 
-const char *dm_task_get_uuid(struct dm_task *dmt)
+const char *dm_task_get_uuid(const struct dm_task *dmt)
 {
 #ifdef DM_COMPAT
 	if (_dm_version == 1)
@@ -1555,7 +1555,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
 	log_debug("dm %s %s %s%s%s %s%.0d%s%.0d%s"
-		  "%s%c%c%s %.0llu %s [%u]",
+		  "%s%c%c%s %.0" PRIu64 " %s [%u]",
 		  _cmd_data_v4[dmt->type].name,
 		  dmi->name, dmi->uuid, dmt->newname ? " " : "",
 		  dmt->newname ? dmt->newname : "",
