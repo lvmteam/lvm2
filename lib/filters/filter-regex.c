@@ -15,13 +15,12 @@
 
 #include "lib.h"
 #include "filter-regex.h"
-#include "matcher.h"
 #include "device.h"
 
 struct rfilter {
 	struct dm_pool *mem;
 	dm_bitset_t accept;
-	struct matcher *engine;
+	struct dm_regex *engine;
 };
 
 static int _extract_pattern(struct dm_pool *mem, const char *pat,
@@ -98,7 +97,7 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	unsigned count = 0;
 	int i, r = 0;
 
-	if (!(scratch = dm_pool_create("filter matcher", 1024)))
+	if (!(scratch = dm_pool_create("filter dm_regex", 1024)))
 		return_0;
 
 	/*
@@ -138,8 +137,8 @@ static int _build_matcher(struct rfilter *rf, struct config_value *val)
 	/*
 	 * build the matcher.
 	 */
-	if (!(rf->engine = matcher_create(rf->mem, (const char **) regex,
-					  count)))
+	if (!(rf->engine = dm_regex_create(rf->mem, (const char **) regex,
+					   count)))
 		stack;
 	r = 1;
 
@@ -155,7 +154,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 	struct str_list *sl;
 
 	list_iterate_items(sl, &dev->aliases) {
-		m = matcher_run(rf->engine, sl->str);
+		m = dm_regex_match(rf->engine, sl->str);
 
 		if (m >= 0) {
 			if (dm_bit(rf->accept, m)) {
