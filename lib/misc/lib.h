@@ -19,7 +19,7 @@
 #ifndef _LVM_LIB_H
 #define _LVM_LIB_H
 
-#include <configure.h>
+#include "configure.h"
 
 #define _REENTRANT
 #define _GNU_SOURCE

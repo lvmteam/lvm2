@@ -36,10 +36,10 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <errno.h>
+#include <libdlm.h>
 
 #include "clvmd-comms.h"
 #include "clvm.h"
-#include "libdlm.h"
 #include "log.h"
 #include "clvmd.h"
 #include "lvm-functions.h"

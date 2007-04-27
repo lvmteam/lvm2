@@ -94,7 +94,7 @@ STRIP=
 LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
 		 awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
-INCLUDES += -I. -I$(top_srcdir)/include
+INCLUDES += -I$(top_srcdir)/include
 
 ifneq ("@DMDIR@", "")
   INCLUDES += -I@DMDIR@/include

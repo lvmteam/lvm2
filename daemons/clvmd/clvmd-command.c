@@ -64,8 +64,9 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <errno.h>
+#include <libdevmapper.h>
+#include <libdlm.h>
 
-#include "libdevmapper.h"
 #include "list.h"
 #include "locking.h"
 #include "log.h"
@@ -73,7 +74,6 @@
 #include "clvmd-comms.h"
 #include "clvm.h"
 #include "clvmd.h"
-#include "libdlm.h"
 
 extern struct cluster_ops *clops;
 

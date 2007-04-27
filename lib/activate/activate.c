@@ -168,7 +168,7 @@ int lvs_in_vg_activated(struct volume_group *vg)
 {
 	return 0;
 }
-int lvs_in_vg_activated_by_uuid_only(struct volume_group *vg);
+int lvs_in_vg_activated_by_uuid_only(struct volume_group *vg)
 {
 	return 0;
 }

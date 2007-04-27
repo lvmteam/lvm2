@@ -30,11 +30,11 @@
 #include <errno.h>
 #include <syslog.h>
 #include <assert.h>
+#include <libdevmapper.h>
+#include <libdlm.h>
 
-#include "libdevmapper.h"
 #include "list.h"
 #include "lvm-types.h"
-#include "libdlm.h"
 #include "clvm.h"
 #include "clvmd-comms.h"
 #include "clvmd.h"
