@@ -631,6 +631,25 @@ char *dm_basename(const char *path);
 int dm_asprintf(char **buf, const char *format, ...);
 
 /*********************
+ * regular expressions
+ *********************/
+struct dm_regex;
+
+/*
+ * Initialise an array of num patterns for matching.
+ * Uses memory from mem.
+ */
+struct dm_regex *dm_regex_create(struct dm_pool *mem, const char **patterns,
+				 unsigned num_patterns);
+
+/*
+ * Match string s against the patterns.
+ * Returns the index of the highest pattern in the array that matches,
+ * or -1 if none match.
+ */
+int dm_regex_match(struct dm_regex *regex, const char *s);
+
+/*********************
  * reporting functions
  *********************/
 
