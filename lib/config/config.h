@@ -31,7 +31,7 @@ enum {
 struct config_value {
 	int type;
 	union {
-		int i;
+		int64_t i;
 		float r;
 		char *str;
 	} v;

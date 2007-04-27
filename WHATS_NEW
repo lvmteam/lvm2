@@ -1,5 +1,6 @@
 Version 2.02.25 -
 =================================
+  Fix get_config_uint64() to read a 64-bit value not a 32-bit one.
   Add -Wformat-security and change one fprintf() to fputs().
   Move regex functions into libdevmapper.
   Change some #include lines to search only standard system directories.

@@ -357,7 +357,7 @@ static void _write_value(FILE *fp, struct config_value *v)
 		break;
 
 	case CFG_INT:
-		fprintf(fp, "%d", v->v.i);
+		fprintf(fp, "%" PRId64, v->v.i);
 		break;
 
 	case CFG_EMPTY_ARRAY:
@@ -568,7 +568,7 @@ static struct config_value *_type(struct parser *p)
 	switch (p->t) {
 	case TOK_INT:
 		v->type = CFG_INT;
-		v->v.i = strtol(p->tb, NULL, 0);	/* FIXME: check error */
+		v->v.i = strtoll(p->tb, NULL, 0);	/* FIXME: check error */
 		match(TOK_INT);
 		break;
 
@@ -871,25 +871,26 @@ const char *find_config_str(const struct config_node *cn,
 	return _find_config_str(cn, NULL, path, fail);
 }
 
-static int _find_config_int(const struct config_node *cn1,
-			    const struct config_node *cn2,
-			    const char *path, int fail)
+static int64_t _find_config_int64(const struct config_node *cn1,
+				  const struct config_node *cn2,
+				  const char *path, int64_t fail)
 {
 	const struct config_node *n = _find_first_config_node(cn1, cn2, path);
 
 	if (n && n->v && n->v->type == CFG_INT) {
-		log_very_verbose("Setting %s to %d", path, n->v->v.i);
+		log_very_verbose("Setting %s to %" PRId64, path, n->v->v.i);
 		return n->v->v.i;
 	}
 
-	log_very_verbose("%s not found in config: defaulting to %d",
+	log_very_verbose("%s not found in config: defaulting to %" PRId64,
 			 path, fail);
 	return fail;
 }
 
 int find_config_int(const struct config_node *cn, const char *path, int fail)
 {
-	return _find_config_int(cn, NULL, path, fail);
+	/* FIXME Add log_error message on overflow */
+	return (int) _find_config_int64(cn, NULL, path, (int64_t) fail);
 }
 
 static float _find_config_float(const struct config_node *cn1,
@@ -931,7 +932,8 @@ const char *find_config_tree_str(struct cmd_context *cmd,
 int find_config_tree_int(struct cmd_context *cmd, const char *path,
                          int fail)
 {
-	return _find_config_int(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path, fail);
+	/* FIXME Add log_error message on overflow */
+	return (int) _find_config_int64(cmd->cft_override ? cmd->cft_override->root : NULL, cmd->cft->root, path, (int64_t) fail);
 }
 
 float find_config_tree_float(struct cmd_context *cmd, const char *path,
@@ -1023,7 +1025,6 @@ int get_config_uint64(const struct config_node *cn, const char *path,
 	if (!n || !n->v || n->v->type != CFG_INT)
 		return 0;
 
-	/* FIXME Support 64-bit value! */
 	*result = (uint64_t) n->v->v.i;
 	return 1;
 }
