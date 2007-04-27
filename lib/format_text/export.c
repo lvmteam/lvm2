@@ -160,7 +160,7 @@ static int _out_with_comment_file(struct formatter *f, const char *comment,
 	for (i = 0; i < f->indent; i++)
 		white_space[i] = '\t';
 	white_space[i] = '\0';
-	fprintf(f->data.fp, white_space);
+	fputs(white_space, f->data.fp);
 	i = vfprintf(f->data.fp, fmt, ap);
 
 	if (comment) {
@@ -176,7 +176,7 @@ static int _out_with_comment_file(struct formatter *f, const char *comment,
 
 		while (++i < COMMENT_TAB);
 
-		fprintf(f->data.fp, comment);
+		fputs(comment, f->data.fp);
 	}
 	fputc('\n', f->data.fp);
 
