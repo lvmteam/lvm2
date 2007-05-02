@@ -76,7 +76,8 @@ struct netsock_bits {
 };
 
 typedef int (*fd_callback_t) (struct local_client * fd, char *buf, int len,
-			      char *csid, struct local_client ** new_client);
+			      const char *csid,
+			      struct local_client ** new_client);
 
 /* One of these for each fd we are listening on */
 struct local_client {
@@ -112,7 +113,8 @@ extern void cmd_client_cleanup(struct local_client *client);
 extern int add_client(struct local_client *new_client);
 
 extern void clvmd_cluster_init_completed(void);
-extern void process_message(struct local_client *client, char *buf, int len, char *csid);
+extern void process_message(struct local_client *client, const char *buf,
+			    int len, const char *csid);
 extern void debuglog(const char *fmt, ... );
 
 int sync_lock(const char *resource, int mode, int flags, int *lockid);

@@ -95,13 +95,22 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		/* Just a test message */
 	case CLVMD_CMD_TEST:
 		if (arglen > buflen) {
+			char *new_buf;
 			buflen = arglen + 200;
-			*buf = realloc(*buf, buflen);
+			new_buf = realloc(*buf, buflen);
+			if (new_buf == NULL) {
+				status = errno;
+				free (*buf);
+			}
+			*buf = new_buf;
 		}
-		uname(&nodeinfo);
-		*retlen = 1 + snprintf(*buf, buflen, "TEST from %s: %s v%s",
-				       nodeinfo.nodename, args,
-				       nodeinfo.release);
+		if (*buf) {
+			uname(&nodeinfo);
+			*retlen = 1 + snprintf(*buf, buflen,
+					       "TEST from %s: %s v%s",
+					       nodeinfo.nodename, args,
+					       nodeinfo.release);
+		}
 		break;
 
 	case CLVMD_CMD_LOCK_VG:
@@ -118,7 +127,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		/* Replace EIO with something less scary */
 		if (status == EIO) {
 			*retlen =
-			    1 + snprintf(*buf, buflen,
+			    1 + snprintf(*buf, buflen, "%s",
 					 get_last_lvm_error());
 			return EIO;
 		}
@@ -131,7 +140,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 	case CLVMD_CMD_GET_CLUSTERNAME:
 		status = clops->get_cluster_name(*buf, buflen);
 		if (!status)
-			*retlen = strlen(*buf);
+			*retlen = strlen(*buf)+1;
 		break;
 
 	default:
@@ -141,7 +150,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	/* Check the status of the command and return the error text */
 	if (status) {
-		*retlen = 1 + snprintf(*buf, buflen, strerror(status));
+		*retlen = 1 + snprintf(*buf, buflen, "%s", strerror(status));
 	}
 
 	return status;
