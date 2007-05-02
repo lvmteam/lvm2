@@ -78,6 +78,7 @@ static int _init_cluster(void)
 		syslog(LOG_ERR, "Can't open cluster manager socket: %m");
 		return -1;
 	}
+	DEBUGLOG("Connected to CMAN\n");
 
 	if (cman_start_recv_data(c_handle, data_callback, CLUSTER_PORT_CLVMD)) {
 		syslog(LOG_ERR, "Can't bind cluster socket: %m");
@@ -93,6 +94,8 @@ static int _init_cluster(void)
 	get_members();
 	count_clvmds_running();
 
+	DEBUGLOG("CMAN initialisation complete\n");
+
 	/* Create a lockspace for LV & VG locks to live in */
 	lockspace = dlm_create_lockspace(LOCKSPACE_NAME, 0600);
 	if (!lockspace) {
@@ -100,7 +103,7 @@ static int _init_cluster(void)
 		return -1;
 	}
 	dlm_ls_pthread_init(lockspace);
-
+	DEBUGLOG("DLM initialisation complete\n");
 	return 0;
 }
 
