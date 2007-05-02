@@ -115,31 +115,32 @@ static void send_local_reply(struct local_client *client, int status,
 static void free_reply(struct local_client *client);
 static void send_version_message(void);
 static void *pre_and_post_thread(void *arg);
-static int send_message(void *buf, int msglen, char *csid, int fd,
+static int send_message(void *buf, int msglen, const char *csid, int fd,
 			const char *errtext);
 static int read_from_local_sock(struct local_client *thisfd);
 static int process_local_command(struct clvm_header *msg, int msglen,
 				 struct local_client *client,
 				 unsigned short xid);
 static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
-				   char *csid);
-static int process_reply(struct clvm_header *msg, int msglen, char *csid);
+				   const char *csid);
+static int process_reply(const struct clvm_header *msg, int msglen,
+			 const char *csid);
 static int open_local_sock(void);
 static struct local_client *find_client(int clientid);
 static void main_loop(int local_sock, int cmd_timeout);
 static void be_daemon(int start_timeout);
 static int check_all_clvmds_running(struct local_client *client);
 static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
-				     int len, char *csid,
+				     int len, const char *csid,
 				     struct local_client **new_client);
 static void *lvm_thread_fn(void *);
 static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
-			   int msglen, char *csid);
+			   int msglen, const char *csid);
 static int distribute_command(struct local_client *thisfd);
 static void hton_clvm(struct clvm_header *hdr);
 static void ntoh_clvm(struct clvm_header *hdr);
 static void add_reply_to_list(struct local_client *client, int status,
-			      char *csid, const char *buf, int len);
+			      const char *csid, const char *buf, int len);
 
 static void usage(char *prog, FILE *file)
 {
@@ -359,7 +360,8 @@ void clvmd_cluster_init_completed()
 
 /* Data on a connected socket */
 static int local_sock_callback(struct local_client *thisfd, char *buf, int len,
-			       char *csid, struct local_client **new_client)
+			       const char *csid,
+			       struct local_client **new_client)
 {
 	*new_client = NULL;
 	return read_from_local_sock(thisfd);
@@ -367,7 +369,7 @@ static int local_sock_callback(struct local_client *thisfd, char *buf, int len,
 
 /* Data on a connected socket */
 static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
-				     int len, char *csid,
+				     int len, const char *csid,
 				     struct local_client **new_client)
 {
 	/* Someone connected to our local socket, accept it. */
@@ -408,7 +410,7 @@ static int local_rendezvous_callback(struct local_client *thisfd, char *buf,
 }
 
 static int local_pipe_callback(struct local_client *thisfd, char *buf,
-			       int maxlen, char *csid,
+			       int maxlen, const char *csid,
 			       struct local_client **new_client)
 {
 	int len;
@@ -484,7 +486,7 @@ static int local_pipe_callback(struct local_client *thisfd, char *buf,
    add one with "ETIMEDOUT".
    NOTE: This won't race with real replies because they happen in the same thread.
 */
-static void timedout_callback(struct local_client *client, char *csid,
+static void timedout_callback(struct local_client *client, const char *csid,
 			      int node_up)
 {
 	if (node_up) {
@@ -1152,7 +1154,7 @@ static int distribute_command(struct local_client *thisfd)
 
 /* Process a command from a remote node and return the result */
 static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
-			    	   char *csid)
+			    	   const char *csid)
 {
 	char *replyargs;
 	char nodename[max_cluster_member_name_len];
@@ -1352,7 +1354,7 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
    If we have got a full set then send them to the waiting client down the local
    socket */
 static void add_reply_to_list(struct local_client *client, int status,
-			      char *csid, const char *buf, int len)
+			      const char *csid, const char *buf, int len)
 {
 	struct node_reply *reply;
 
@@ -1529,7 +1531,7 @@ static int process_local_command(struct clvm_header *msg, int msglen,
 	return status;
 }
 
-static int process_reply(struct clvm_header *msg, int msglen, char *csid)
+static int process_reply(const struct clvm_header *msg, int msglen, const char *csid)
 {
 	struct local_client *client = NULL;
 
@@ -1679,7 +1681,7 @@ static void send_version_message()
 }
 
 /* Send a message to either a local client or another server */
-static int send_message(void *buf, int msglen, char *csid, int fd,
+static int send_message(void *buf, int msglen, const char *csid, int fd,
 			const char *errtext)
 {
 	int len;
@@ -1701,7 +1703,7 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 			if (retry_cnt > MAX_RETRIES)
 			{
 				errno = saved_errno;
-				log_error(errtext);
+				log_error("%s", errtext);
 				errno = saved_errno;
 				break;
 			}
@@ -1725,7 +1727,7 @@ static int send_message(void *buf, int msglen, char *csid, int fd,
 
 					continue;
 				}
-				log_error(errtext);
+				log_error("%s", errtext);
 				break;
 			}
 			ptr += len;
@@ -1811,7 +1813,7 @@ static __attribute__ ((noreturn)) void *lvm_thread_fn(void *arg)
 
 /* Pass down some work to the LVM thread */
 static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
-			   int msglen, char *csid)
+			   int msglen, const char *csid)
 {
 	struct lvm_thread_cmd *cmd;
 
@@ -1889,7 +1891,8 @@ static int open_local_sock()
 	return local_socket;
 }
 
-void process_message(struct local_client *client, char *buf, int len, char *csid)
+void process_message(struct local_client *client, const char *buf, int len,
+		     const char *csid)
 {
 	struct clvm_header *inheader;
 
@@ -1902,7 +1905,7 @@ void process_message(struct local_client *client, char *buf, int len, char *csid
 }
 
 
-static void check_all_callback(struct local_client *client, char *csid,
+static void check_all_callback(struct local_client *client, const char *csid,
 			       int node_up)
 {
 	if (!node_up)

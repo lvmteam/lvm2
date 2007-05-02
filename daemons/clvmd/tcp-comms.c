@@ -92,41 +92,37 @@ int init_comms(unsigned short port)
     return 0;
 }
 
-void tcp_remove_client(char *csid)
- {
+void tcp_remove_client(const char *c_csid)
+{
     struct local_client *client;
+    char csid[GULM_MAX_CSID_LEN];
+    unsigned int i;
+    memcpy(csid, c_csid, sizeof csid);
     DEBUGLOG("tcp_remove_client\n");
 
     /* Don't actually close the socket here - that's the
        job of clvmd.c whch will do the job when it notices the
        other end has gone. We just need to remove the client(s) from
        the hash table so we don't try to use it for sending any more */
-    client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
-    if (client)
+    for (i = 0; i < 2; i++)
     {
-	dm_hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
-	client->removeme = 1;
-	close(client->fd);
+	client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+	if (client)
+	{
+	    dm_hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
+	    client->removeme = 1;
+	    close(client->fd);
+	}
+	/* Look for a mangled one too, on the 2nd iteration. */
+	csid[0] ^= 0x80;
     }
-
-    /* Look for a mangled one too */
-    csid[0] ^= 0x80;
-
-    client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
-    if (client)
-    {
-	dm_hash_remove_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
-	client->removeme = 1;
-	close(client->fd);
-    }
-
-    /* Put it back as we found it */
-    csid[0] ^= 0x80;
 }
 
-int alloc_client(int fd, char *csid, struct local_client **new_client)
+int alloc_client(int fd, const char *c_csid, struct local_client **new_client)
 {
     struct local_client *client;
+    char csid[GULM_MAX_CSID_LEN];
+    memcpy(csid, c_csid, sizeof csid);
 
     DEBUGLOG("alloc_client %d csid = %s\n", fd, print_csid(csid));
 
@@ -315,7 +311,7 @@ static int read_from_tcpsock(struct local_client *client, char *buf, int len, ch
     return status;
 }
 
-int gulm_connect_csid(char *csid, struct local_client **newclient)
+int gulm_connect_csid(const char *csid, struct local_client **newclient)
 {
     int fd;
     struct sockaddr_in6 addr;
@@ -366,7 +362,7 @@ int gulm_connect_csid(char *csid, struct local_client **newclient)
 }
 
 /* Send a message to a known CSID */
-static int tcp_send_message(void *buf, int msglen, unsigned char *csid, const char *errtext)
+static int tcp_send_message(void *buf, int msglen, const char *csid, const char *errtext)
 {
     int status;
     struct local_client *client;
@@ -465,7 +461,7 @@ static void map_v4_to_v6(struct in_addr *ip4, struct in6_addr *ip6)
 }
 
 /* Get someone else's IP address from DNS */
-int get_ip_address(char *node, char *addr)
+int get_ip_address(const char *node, char *addr)
 {
     struct hostent *he;
 
@@ -493,7 +489,7 @@ int get_ip_address(char *node, char *addr)
     return 0;
 }
 
-char *print_csid(char *csid)
+char *print_csid(const char *csid)
 {
     static char buf[128];
     int *icsid = (int *)csid;

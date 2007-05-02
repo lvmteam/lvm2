@@ -5,9 +5,9 @@
 #define GULM_MAX_CLUSTER_MEMBER_NAME_LEN 128
 
 extern int init_comms(unsigned short);
-extern char *print_csid(char *);
+extern char *print_csid(const char *);
 int get_main_gulm_cluster_fd(void);
 int cluster_fd_gulm_callback(struct local_client *fd, char *buf, int len, char *csid, struct local_client **new_client);
 int gulm_cluster_send_message(void *buf, int msglen, char *csid, const char *errtext);
 void get_our_gulm_csid(char *csid);
-int gulm_connect_csid(char *csid, struct local_client **newclient);
+int gulm_connect_csid(const char *csid, struct local_client **newclient);

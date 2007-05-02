@@ -25,27 +25,31 @@ struct local_client;
 struct cluster_ops {
 	void (*cluster_init_completed) (void);
 
-	int (*cluster_send_message) (void *buf, int msglen, char *csid,
-				const char *errtext);
-	int (*name_from_csid) (char *csid, char *name);
-	int (*csid_from_name) (char *csid, char *name);
+	int (*cluster_send_message) (const void *buf, int msglen,
+				     const char *csid,
+				     const char *errtext);
+	int (*name_from_csid) (const char *csid, char *name);
+	int (*csid_from_name) (char *csid, const char *name);
 	int (*get_num_nodes) (void);
 	int (*cluster_fd_callback) (struct local_client *fd, char *buf, int len,
-			       char *csid, struct local_client **new_client);
+				    const char *csid,
+				    struct local_client **new_client);
 	int (*get_main_cluster_fd) (void);	/* gets accept FD or cman cluster socket */
 	int (*cluster_do_node_callback) (struct local_client *client,
-				    void (*callback) (struct local_client *,
-						      char *csid, int node_up));
+					 void (*callback) (struct local_client *,
+							   const char *csid,
+							   int node_up));
 	int (*is_quorate) (void);
 
 	void (*get_our_csid) (char *csid);
-	void (*add_up_node) (char *csid);
+	void (*add_up_node) (const char *csid);
 	void (*reread_config) (void);
 	void (*cluster_closedown) (void);
 
 	int (*get_cluster_name)(char *buf, int buflen);
 
-	int (*sync_lock) (const char *resource, int mode, int flags, int *lockid);
+	int (*sync_lock) (const char *resource, int mode,
+			  int flags, int *lockid);
 	int (*sync_unlock) (const char *resource, int lockid);
 
 };

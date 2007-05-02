@@ -1,6 +1,7 @@
 Version 2.02.26 -
 =================================
   Add some more debuglogs to clvmd startup.
+  Misc clvmd cleanups
 
 Version 2.02.25 - 27th April 2007
 =================================
