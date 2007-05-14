@@ -187,7 +187,7 @@ int device_is_usable(dev_t dev)
                 next = dm_get_next_target(dmt, next, &start, &length,
                                           &target_type, &params);
                 /* Skip if target type doesn't match */
-                if (!strcmp(target_type, "mirror"))
+                if (target_type && !strcmp(target_type, "mirror"))
 			goto out;
         } while (next);
 
