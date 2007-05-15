@@ -145,13 +145,16 @@ static int _move_snapshots(struct volume_group *vg_from,
 		list_iterate_items(seg, &lv->segments) {
 			cow_from = _lv_is_in_vg(vg_from, seg->cow);
 			origin_from = _lv_is_in_vg(vg_from, seg->origin);
+
+			if (cow_from && origin_from)
+				continue;
+			if ((!cow_from && origin_from) ||
+			     (cow_from && !origin_from)) {
+				log_error("Can't split snapshot %s between"
+					  " two Volume Groups", seg->cow->name);
+				return 0;
+			}
 		}
-		if (cow_from && origin_from)
-			continue;
-		if ((!cow_from && origin_from) || (cow_from && !origin_from)) {
-			log_error("Snapshot %s split", seg->cow->name);
-			return 0;
-		}	
 
 		/* Move this snapshot */
 		list_del(lvh);
@@ -190,7 +193,8 @@ static int _move_mirrors(struct volume_group *vg_from,
 		if ((seg_in && seg_in < seg->area_count) || 
 		    (seg_in && seg->log_lv && !log_in) || 
 		    (!seg_in && seg->log_lv && log_in)) {
-			log_error("Mirror %s split", lv->name);
+			log_error("Can't split mirror %s between "
+				  "two Volume Groups", lv->name);
 			return 0;
 		}
 
