@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Remove symlinks if parent volume is deactivated.
   Fix and clarify vgsplit error messages.
   Fix a segfault if a device has no target (no table)
   Add some more debuglogs to clvmd startup.

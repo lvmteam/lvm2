@@ -25,6 +25,7 @@
  */
 int fs_add_lv(const struct logical_volume *lv, const char *dev);
 int fs_del_lv(const struct logical_volume *lv);
+int fs_del_lv_byname(const char *dev_dir, const char *vg_name, const char *lv_name);
 int fs_rename_lv(struct logical_volume *lv,
 		 const char *dev, const char *old_name);
 void fs_unlock(void);

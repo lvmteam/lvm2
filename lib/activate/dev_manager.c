@@ -937,6 +937,10 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	return 1;
 }
 
+/* FIXME: symlinks should be created/destroyed at the same time
+ * as the kernel devices but we can't do that from within libdevmapper
+ * at present so we must walk the tree twice instead. */
+
 /*
  * Create LV symlinks for children of supplied root node.
  */
@@ -964,6 +968,32 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 			fs_rename_lv(lvlayer->lv, name, lvname);
 		} else if (!dev_manager_lv_mknodes(lvlayer->lv))
 			r = 0;
+	}
+
+	return r;
+}
+
+/*
+ * Remove LV symlinks for children of supplied root node.
+ */
+static int _remove_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root)
+{
+	void *handle = NULL;
+	struct dm_tree_node *child;
+	char *vgname, *lvname, *layer;
+	int r = 1;
+
+	while ((child = dm_tree_next_child(&handle, root, 0))) {
+        	if (!dm_split_lvm_name(dm->mem, dm_tree_node_get_name(child), &vgname, &lvname, &layer)) {
+			r = 0;
+			continue;
+		}
+
+		/* only top level layer has symlinks */
+		if (*layer)
+			continue;
+
+		fs_del_lv_byname(dm->cmd->dev_dir, vgname, lvname);
 	}
 
 	return r;
@@ -1028,6 +1058,8 @@ static int _tree_action(struct dev_manager *dm, struct logical_volume *lv, actio
  		/* Deactivate LV and all devices it references that nothing else has open. */
 		if (!dm_tree_deactivate_children(root, dlid, ID_LEN + sizeof(UUID_PREFIX) - 1))
 			goto_out;
+		if (!_remove_lv_symlinks(dm, root))
+			log_error("Failed to remove all device symlinks associated with %s.", lv->name);
 		break;
 	case SUSPEND:
 		dm_tree_skip_lockfs(root);
