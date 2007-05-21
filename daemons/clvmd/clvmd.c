@@ -296,6 +296,15 @@ int main(int argc, char *argv[])
 			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to GULM");
 		}
 #endif
+#ifdef USE_OPENAIS
+	if (!clops)
+		if ((clops = init_openais_cluster())) {
+			max_csid_len = OPENAIS_CSID_LEN;
+			max_cluster_message = OPENAIS_MAX_CLUSTER_MESSAGE;
+			max_cluster_member_name_len = OPENAIS_MAX_CLUSTER_MEMBER_NAME_LEN;
+			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to OpenAIS");
+		}
+#endif
 
 	if (!clops) {
 		DEBUGLOG("Can't initialise cluster interface\n");
