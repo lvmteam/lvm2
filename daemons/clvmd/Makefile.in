@@ -30,9 +30,16 @@ ifeq ("@CLVMD@", "cman")
 	CMAN = yes
 endif
 
+ifeq ("@CLVMD@", "openais")
+	OPENAIS = yes
+	GULM = no
+	CMAN = no
+endif
+
 ifeq ("@CLVMD@", "all")
 	GULM = yes
 	CMAN = yes
+	OPENAIS = no
 endif
 
 ifeq ("@DEBUG@", "yes")
@@ -49,6 +56,12 @@ ifeq ("$(CMAN)", "yes")
 	SOURCES += clvmd-cman.c
 	LMLIBS += -ldlm -lcman
 	DEFS += -DUSE_CMAN
+endif
+
+ifeq ("$(OPENAIS)", "yes")
+	SOURCES += clvmd-openais.c
+	LMLIBS += -lSaLck -lSaClm -lcpg
+	DEFS += -DUSE_OPENAIS
 endif
 
 TARGETS = \
