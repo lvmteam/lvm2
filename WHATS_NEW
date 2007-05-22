@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Fix vgrename man page to include UUID and be consistent with lvrename.
   Add (experimental) OpenAIS support to clvmd.
   Remove symlinks if parent volume is deactivated.
   Fix and clarify vgsplit error messages.

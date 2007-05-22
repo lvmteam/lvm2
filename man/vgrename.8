@@ -8,11 +8,15 @@ vgrename \- rename a volume group
 [\-h/\-?/\-\-help]
 [\-t/\-\-test]
 [\-v/\-\-verbose]
-OldVolumeGroupPath/\-Name NewVolumeGroupPath/\-Name
+.IR OldVolumeGroup { Path | Name | UUID }
+.IR NewVolumeGroup { Path | Name }
 .SH DESCRIPTION
 vgrename renames an existing (see
 .B vgcreate(8)
-) volume group.
+) volume group from
+.IR OldVolumeGroup { Name | Path | UUID }
+to
+.IR NewVolumeGroup { Name | Path }.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .SH Examples
@@ -20,6 +24,9 @@ See \fBlvm\fP for common options.
 volume group "vg02" to "my_volume_group".
 .TP
 "vgrename vg02 my_volume_group" does the same.
+.TP
+"vgrename Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 VolGroup00_tmp" renames a volume group with UUID Zvlifi-Ep3t-e0Ng-U42h-o0ye-KHu1-nl7Ns4 to the volume group named "VolGroup00_tmp".  Using the UUID option to name a volume group may be useful in cases where one machine has two physical volumes, each with the same volume group name, but a separate volume group UUID (this situation will cause error messages with lvm commands).  One way duplicate volume group names occur is if an old disk with a root volume is moved to a new machine with its own root volume.  In this case, both volume groups may have the same name (for example, "VolGroup00"), but different UUIDs.
+.TP
 .SH SEE ALSO
 .BR lvm (8), 
 .BR vgchange (8), 
