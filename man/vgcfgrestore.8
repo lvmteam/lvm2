@@ -5,17 +5,16 @@ vgcfgrestore \- restore volume group descriptor area
 .B vgcfgrestore
 .RB [ \-d | \-\-debug ]
 .RB [ \-f | \-\-file " filename" ]
-.RB [ \-l[l] | \-\-list [--list] ]
+.RB [ \-l[l] | \-\-list ]
 .RB [ \-h | \-\-help ]
 .RB [ \-M | \-\-Metadatatype 1|2]
-.RB [ \-n | \-\-name " VolumeGroupName" ]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
-.RI [ VolumeGroupName ...]
+.RI VolumeGroupName
 .SH DESCRIPTION
 .B vgcfgrestore
 allows you to restore the metadata 
-of your volume groups from a text backup file produced by \fBvgcfgbackup\fP.
+of a volume group from a text backup file produced by \fBvgcfgbackup\fP.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .SH REPLACING PHYSICAL VOLUMES
