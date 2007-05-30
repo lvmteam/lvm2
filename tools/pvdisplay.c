@@ -71,8 +71,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 
 	pvdisplay_full(cmd, pv, handle);
 
-	if (!arg_count(cmd, maps_ARG))
-		goto out;
+	if (arg_count(cmd, maps_ARG))
+		pvdisplay_segments(pv);
 
 out:
         if (pv->vg_name)
