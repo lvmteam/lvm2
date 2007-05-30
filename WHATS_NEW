@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Add --maps feature to pvdisplay, showing PE to LE mappings.
   Fix vgcfgrestore man pg to show mandatory VG name and remove LVM1 options.
   Fix vgrename man page to include UUID and be consistent with lvrename.
   Add (experimental) OpenAIS support to clvmd.

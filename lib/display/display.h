@@ -31,6 +31,7 @@ char *display_uuid(char *uuidstr);
 void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre);
 
 void pvdisplay_colons(struct physical_volume *pv);
+void pvdisplay_segments(struct physical_volume *pv);
 void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 		    void *handle);
 int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
