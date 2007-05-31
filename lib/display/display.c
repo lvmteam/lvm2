@@ -262,7 +262,8 @@ void pvdisplay_segments(struct physical_volume *pv)
 {
 	struct pv_segment *pvseg;
 
-	log_print("--- Physical Segments ---");
+	if (pv->pe_size)
+		log_print("--- Physical Segments ---");
 
 	list_iterate_items(pvseg, &pv->segments) {
 		log_print("Physical extent %u to %u:",
