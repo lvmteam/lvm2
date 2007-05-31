@@ -271,8 +271,6 @@ void pvdisplay_segments(struct physical_volume *pv)
 			  pvseg->pe, pvseg->pe + pvseg->len - 1);
 
 		if (pvseg->lvseg) {
-			log_print("  Type\t\t%s",
-				  pvseg->lvseg->segtype->ops->name(pvseg->lvseg));
 			log_print("  Logical volume\t%s%s/%s",
 				  pvseg->lvseg->lv->vg->cmd->dev_dir,
 				  pvseg->lvseg->lv->vg->name,
