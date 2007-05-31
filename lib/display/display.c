@@ -260,26 +260,26 @@ void pvdisplay_colons(struct physical_volume *pv)
 
 void pvdisplay_segments(struct physical_volume *pv)
 {
-	struct pv_segment *seg;
+	struct pv_segment *pvseg;
 
-	log_print("--- Segments ---");
+	log_print("--- Physical Segments ---");
 
-	list_iterate_items(seg, &pv->segments) {
-		if (seg->len == pv->pe_count)
+	list_iterate_items(pvseg, &pv->segments) {
+		if (pvseg->len == pv->pe_count)
 			continue;
 		log_print("Physical extent %u to %u:",
-			  seg->pe, seg->pe + seg->len - 1);
+			  pvseg->pe, pvseg->pe + pvseg->len - 1);
 
-		if (seg->lvseg) {
+		if (pvseg->lvseg) {
 			log_print("  Type\t\t%s",
-				  seg->lvseg->segtype->ops->name(seg->lvseg));
+				  pvseg->lvseg->segtype->ops->name(pvseg->lvseg));
 			log_print("  Logical volume\t%s%s/%s",
-				  seg->lvseg->lv->vg->cmd->dev_dir,
-				  seg->lvseg->lv->vg->name,
-				  seg->lvseg->lv->name);
+				  pvseg->lvseg->lv->vg->cmd->dev_dir,
+				  pvseg->lvseg->lv->vg->name,
+				  pvseg->lvseg->lv->name);
 			log_print("  Logical extents\t%d to %d",
-				  seg->lvseg->le, seg->lvseg->le +
-				  seg->lvseg->len - 1);
+				  pvseg->lvseg->le, pvseg->lvseg->le +
+				  pvseg->lvseg->len - 1);
 		} else
 			log_print("  FREE");
 	}
