@@ -19,10 +19,10 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 			     struct volume_group *vg __attribute((unused)),
 			     struct physical_volume *pv, void *handle)
 {
+	struct pv_list *pvl;
 	int consistent = 0;
 	int ret = ECMD_PROCESSED;
 	uint64_t size;
-	struct physical_volume *pv_temp;
 
 	const char *pv_name = dev_name(pv->dev);
 
@@ -49,15 +49,14 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		  * Replace possibly incomplete PV structure with new one
 		  * allocated in vg_read() path.
 		  */
-		 pv_temp = find_pv(vg, pv->dev);
-		 if (!pv_temp) {
-			 log_error("Unable to find physical volume %s "
-				   "in volume group %s",
-				   pv_name, pv->vg_name);
+		 if (!(pvl = find_pv_in_vg(vg, pv_name))) {
+			 log_error("Unable to find \"%s\" in volume group \"%s\"",
+				   pv_name, vg->name);
 	                 ret = ECMD_FAILED;
-			 goto out;
+	                 goto out;
 		 }
-		 pv = pv_temp;
+
+		 pv = pvl->pv;
 	}
 
 	if (!*pv->vg_name)
