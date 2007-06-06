@@ -578,6 +578,8 @@ int vg_add_snapshot(struct format_instance *fid, const char *name,
 
 int vg_remove_snapshot(struct logical_volume *cow);
 
+int vg_check_status(struct volume_group *vg, uint32_t status_flags);
+
 /*
  * Mirroring functions
  */

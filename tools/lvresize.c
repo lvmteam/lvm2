@@ -141,21 +141,8 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		return ECMD_FAILED;
 	}
 
-	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg->name);
+	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE))
 		return ECMD_FAILED;
-	}
-
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group %s is exported", vg->name);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", lp->vg_name);
-		return ECMD_FAILED;
-	}
 
 	/* does LV exist? */
 	if (!(lvl = find_lv_in_vg(vg, lp->lv_name))) {

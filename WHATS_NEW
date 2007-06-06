@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Add vg_check_status to consolidate vg status checks and error messages.
   Add pvdisplay --maps implementation.
   Fix vgcfgrestore man pg to show mandatory VG name and remove LVM1 options.
   Fix vgrename man page to include UUID and be consistent with lvrename.

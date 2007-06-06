@@ -67,21 +67,9 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return 0;
 		}
 
-		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-		    !lockingfailed()) {
-			log_error("Skipping clustered volume group %s", vg->name);
-			return 0;
-		}
-
-		if (vg->status & EXPORTED_VG) {
+		if (!vg_check_status(vg,
+				     CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
 			unlock_vg(cmd, pv->vg_name);
-			log_error("Volume group \"%s\" is exported", vg->name);
-			return 0;
-		}
-
-		if (!(vg->status & LVM_WRITE)) {
-			unlock_vg(cmd, pv->vg_name);
-			log_error("Volume group \"%s\" is read-only", vg->name);
 			return 0;
 		}
 

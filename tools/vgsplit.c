@@ -251,27 +251,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((vg_from->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg_from->name);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
-
-	if (vg_from->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg_from->name);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg_from->status & RESIZEABLE_VG)) {
-		log_error("Volume group \"%s\" is not resizeable", vg_from->name);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg_from->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg_from->name);
+	if (!vg_check_status(vg_from, CLUSTERED | EXPORTED_VG |
+				      RESIZEABLE_VG | LVM_WRITE)) {
 		unlock_vg(cmd, vg_name_from);
 		return ECMD_FAILED;
 	}

@@ -71,9 +71,7 @@ static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
 		goto out;
 	}
 
-	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg->name);
+	if (!vg_check_status(vg, CLUSTERED)) {
 		ret = ECMD_FAILED;
 		goto out;
 	}
@@ -119,10 +117,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 			goto out;
 		}
 
-		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-		    !lockingfailed()) {
-			log_error("Skipping clustered volume group %s",
-				  vg->name);
+		if (!vg_check_status(vg, CLUSTERED)) {
 			ret = ECMD_FAILED;
 			goto out;
 		}

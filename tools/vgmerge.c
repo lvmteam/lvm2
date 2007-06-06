@@ -41,21 +41,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
-	if ((vg_to->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg_name_to);
-		unlock_vg(cmd, vg_name_to);
-		return ECMD_FAILED;
-	}
-
-	if (vg_to->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg_to->name);
-		unlock_vg(cmd, vg_name_to);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg_to->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg_to->name);
+	if (!vg_check_status(vg_to, CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
 		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
 	}
@@ -73,21 +59,8 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		goto error;
 	}
 
-        if ((vg_from->status & CLUSTERED) && !locking_is_clustered() &&
-            !lockingfailed()) {
-                log_error("Skipping clustered volume group %s", vg_name_from);
+	if (!vg_check_status(vg_from, CLUSTERED | EXPORTED_VG | LVM_WRITE))
                 goto error;
-        }
-
-	if (vg_from->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg_from->name);
-		goto error;
-	}
-
-	if (!(vg_from->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg_from->name);
-		goto error;
-	}
 
 	if ((active = lvs_in_vg_activated(vg_from))) {
 		log_error("Logical volumes in \"%s\" must be inactive",
