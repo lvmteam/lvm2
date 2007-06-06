@@ -102,21 +102,13 @@ int vgrename(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((vg_old->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg_old->name);
+	if (!vg_check_status(vg_old, CLUSTERED | LVM_WRITE)) {
 		unlock_vg(cmd, vg_name_old);
 		return ECMD_FAILED;
 	}
 
-	if (vg_old->status & EXPORTED_VG)
-		log_info("Volume group \"%s\" is exported", vg_old->name);
-
-	if (!(vg_old->status & LVM_WRITE)) {
-		unlock_vg(cmd, vg_name_old);
-		log_error("Volume group \"%s\" is read-only", vg_old->name);
-		return ECMD_FAILED;
-	}
+	/* Don't return failure for EXPORTED_VG */
+	vg_check_status(vg_old, EXPORTED_VG);
 
 	if (lvs_in_vg_activated_by_uuid_only(vg_old)) {
 		unlock_vg(cmd, vg_name_old);

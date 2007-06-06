@@ -37,10 +37,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	                 goto out;
 	         }
 
-	         if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-	             !lockingfailed()) {
-	                 log_error("Skipping clustered volume group %s",
-	                           vg->name);
+		 if (!vg_check_status(vg, CLUSTERED)) {
 	                 ret = ECMD_FAILED;
 	                 goto out;
 	         }

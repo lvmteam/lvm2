@@ -59,26 +59,9 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 	}
 
-	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg->name);
+	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG |
+				 LVM_WRITE | RESIZEABLE_VG))
 		goto error;
-	}
-
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg->name);
-		goto error;
-	}
-
-	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg_name);
-		goto error;
-	}
-
-	if (!(vg->status & RESIZEABLE_VG)) {
-		log_error("Volume group \"%s\" is not resizeable.", vg_name);
-		goto error;
-	}
 
 /********** FIXME
 	log_print("maximum logical volume size is %s",

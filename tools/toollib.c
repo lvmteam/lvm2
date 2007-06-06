@@ -357,11 +357,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 				log_error("Volume group \"%s\" "
 					  "not found", vgname);
 			else {
-				if ((vg->status & CLUSTERED) &&
-			    	    !locking_is_clustered() &&
-				    !lockingfailed()) {
-					log_error("Skipping clustered volume "
-						  "group %s", vgname);
+				if (!vg_check_status(vg, CLUSTERED)) {
 					if (ret_max < ECMD_FAILED)
 						ret_max = ECMD_FAILED;
 					continue;
@@ -377,10 +373,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			}
 		}
 
-		if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-		    !lockingfailed()) {
+		if (!vg_check_status(vg, CLUSTERED)) {
 			unlock_vg(cmd, vgname);
-			log_error("Skipping clustered volume group %s", vgname);
 			if (ret_max < ECMD_FAILED)
 				ret_max = ECMD_FAILED;
 			continue;
@@ -485,9 +479,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg_name);
+	if (!vg_check_status(vg, CLUSTERED)) {
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
@@ -735,13 +727,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				if (!consistent)
 					continue;
 
-				if ((vg->status & CLUSTERED) &&
-				    !locking_is_clustered() &&
-				    !lockingfailed()) {
-					log_error("Skipping clustered volume "
-						  "group %s", sll->str);
+				if (!vg_check_status(vg, CLUSTERED))
 					continue;
-				}
 
 				ret = process_each_pv_in_vg(cmd, vg, &tags,
 							    handle,

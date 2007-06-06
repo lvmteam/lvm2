@@ -24,6 +24,7 @@
 #include "pv_alloc.h"
 #include "activate.h"
 #include "display.h"
+#include "locking.h"
 
 #include <sys/param.h>
 
@@ -1590,6 +1591,47 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	info = label->info;
 	list_iterate_items(mda, &info->mdas)
 		mda->ops->pv_analyze_mda(info->fmt, mda);
+
+	return 1;
+}
+
+
+
+/**
+ * vg_check_status - check volume group status flags and log error
+ *
+ * @vg - volume group to check status flags
+ * @status_flags - specific status flags to check (e.g. EXPORTED_VG)
+ *
+ * Returns:
+ * 0 - fail
+ * 1 - success
+ */
+int vg_check_status(struct volume_group *vg, uint32_t status_flags)
+{
+	if ((status_flags & CLUSTERED) &&
+	    (vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg->name);
+		return 0;
+	}
+
+	if ((status_flags & EXPORTED_VG) &&
+	    (vg->status & EXPORTED_VG)) {
+		log_error("Volume group %s is exported", vg->name);
+		return 0;
+	}
+
+	if ((status_flags & LVM_WRITE) &&
+	    !(vg->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg->name);
+		return 0;
+	}
+	if ((status_flags & RESIZEABLE_VG) &&
+	    !(vg->status & RESIZEABLE_VG)) {
+		log_error("Volume group %s is not resizeable.", vg->name);
+		return 0;
+	}
 
 	return 1;
 }

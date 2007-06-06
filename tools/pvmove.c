@@ -66,20 +66,7 @@ static struct volume_group *_get_vg(struct cmd_context *cmd, const char *vgname)
 		return NULL;
 	}
 
-	if ((vg->status & CLUSTERED) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vgname);
-		return NULL;
-	}
-
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vgname);
-		unlock_vg(cmd, vgname);
-		return NULL;
-	}
-
-	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vgname);
+	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
 		unlock_vg(cmd, vgname);
 		return NULL;
 	}
