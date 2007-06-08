@@ -362,6 +362,22 @@ int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 	return 1;
 }
 
+int archive_list_file(struct cmd_context *cmd, const char *file)
+{
+	struct archive_file af;
+
+	af.path = (char *)file;
+
+	if (!path_exists(af.path)) {
+		log_err("Archive file %s not found.", af.path);
+		return 0;
+	}
+
+	_display_archive(cmd, &af);
+
+	return 1;
+}
+
 int backup_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 {
 	struct archive_file af;

@@ -148,6 +148,17 @@ int archive_display(struct cmd_context *cmd, const char *vg_name)
 	return r1 && r2;
 }
 
+int archive_display_file(struct cmd_context *cmd, const char *file)
+{
+	int r;
+
+	init_partial(1);
+	r = archive_list_file(cmd, file);
+	init_partial(0);
+
+	return r;
+}
+
 int backup_init(struct cmd_context *cmd, const char *dir)
 {
 	if (!(cmd->backup_params = dm_pool_zalloc(cmd->libmem,

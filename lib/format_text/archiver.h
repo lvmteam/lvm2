@@ -38,6 +38,7 @@ void archive_exit(struct cmd_context *cmd);
 void archive_enable(struct cmd_context *cmd, int flag);
 int archive(struct volume_group *vg);
 int archive_display(struct cmd_context *cmd, const char *vg_name);
+int archive_display_file(struct cmd_context *cmd, const char *file);
 
 int backup_init(struct cmd_context *cmd, const char *dir);
 void backup_exit(struct cmd_context *cmd);
