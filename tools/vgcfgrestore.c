@@ -19,15 +19,14 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *vg_name;
 
-	if (argc != 1) {
+	if (argc == 1) {
+		vg_name = skip_dev_dir(cmd, argv[0], NULL);
+		if (!validate_name(vg_name)) {
+			log_error("Volume group name \"%s\" is invalid", vg_name);
+			return ECMD_FAILED;
+		}
+	} else if (!(arg_count(cmd, list_ARG) && arg_count(cmd, file_ARG))) {
 		log_err("Please specify a *single* volume group to restore.");
-		return ECMD_FAILED;
-	}
-
-	vg_name = skip_dev_dir(cmd, argv[0], NULL);
-
-	if (!validate_name(vg_name)) {
-		log_error("Volume group name \"%s\" is invalid", vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -36,9 +35,11 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	 * list of archive files for a particular vg
 	 */
 	if (arg_count(cmd, list_ARG)) {
-		if (!archive_display(cmd, vg_name))
+		if (!(arg_count(cmd,file_ARG) ?
+			archive_display_file(cmd,
+					arg_str_value(cmd, file_ARG, "")) :
+			archive_display(cmd, vg_name)))
 			return ECMD_FAILED;
-
 		return ECMD_PROCESSED;
 	}
 

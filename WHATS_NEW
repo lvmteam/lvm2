@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Allow vgcfgrestore to list metadata backup files using -f
   Add vg_check_status to consolidate vg status checks and error messages.
   Add pvdisplay --maps implementation.
   Fix vgcfgrestore man pg to show mandatory VG name and remove LVM1 options.
