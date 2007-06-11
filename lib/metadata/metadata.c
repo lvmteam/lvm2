@@ -28,6 +28,33 @@
 
 #include <sys/param.h>
 
+static struct physical_volume *_pv_read(struct cmd_context *cmd, 
+					const char *pv_name,
+					struct list *mdas, 
+					uint64_t *label_sector,
+					int warnings);
+
+static struct physical_volume *_pv_create(const struct format_type *fmt,
+				  struct device *dev,
+				  struct id *id, uint64_t size,
+				  uint64_t pe_start,
+				  uint32_t existing_extent_count,
+				  uint32_t existing_extent_size,
+				  int pvmetadatacopies,
+				  uint64_t pvmetadatasize, struct list *mdas);
+
+static int _pv_write(struct cmd_context *cmd __attribute((unused)), 
+		     struct physical_volume *pv,
+	     	     struct list *mdas, int64_t label_sector);
+
+static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
+			 			const char *pv_name);
+
+static struct pv_list *_find_pv_in_vg(struct volume_group *vg, const char *pv_name);
+
+static struct physical_volume *_find_pv_in_vg_by_uuid(struct volume_group *vg,
+						      struct id *id);
+
 unsigned long pe_align(void)
 {
 	return MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
@@ -50,7 +77,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 	}
 
 	list_init(&mdas);
-	if (!(pv = pv_read(fid->fmt->cmd, pv_name, &mdas, NULL, 1))) {
+	if (!(pv = _pv_read(fid->fmt->cmd, pv_name, &mdas, NULL, 1))) {
 		log_error("%s not identified as an existing physical volume",
 			  pv_name);
 		return 0;
@@ -103,7 +130,7 @@ static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 	}
 
-	if (find_pv_in_vg(vg, pv_name)) {
+	if (_find_pv_in_vg(vg, pv_name)) {
 		log_error("Physical volume '%s' listed more than once.",
 			  pv_name);
 		return 0;
@@ -533,8 +560,25 @@ int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 	return 1;
 }
 
-/* Sizes in sectors */
+/* FIXME: liblvm todo - make into function that returns handle */
 struct physical_volume *pv_create(const struct format_type *fmt,
+				  struct device *dev,
+				  struct id *id, uint64_t size,
+				  uint64_t pe_start,
+				  uint32_t existing_extent_count,
+				  uint32_t existing_extent_size,
+				  int pvmetadatacopies,
+				  uint64_t pvmetadatasize, struct list *mdas)
+{
+	return _pv_create(fmt, dev, id, size, pe_start, 
+			  existing_extent_count,
+			  existing_extent_size,
+			  pvmetadatacopies,
+			  pvmetadatasize, mdas);
+}
+
+/* Sizes in sectors */
+static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  struct device *dev,
 				  struct id *id, uint64_t size,
 				  uint64_t pe_start,
@@ -610,7 +654,13 @@ struct physical_volume *pv_create(const struct format_type *fmt,
 	return NULL;
 }
 
+/* FIXME: liblvm todo - make into function that returns handle */
 struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
+{
+	return _find_pv_in_vg(vg, pv_name);
+}
+
+static struct pv_list *_find_pv_in_vg(struct volume_group *vg, const char *pv_name)
 {
 	struct pv_list *pvl;
 
@@ -632,8 +682,16 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
 	return 0;
 }
 
+/* FIXME: liblvm todo - make into function that returns handle */
 struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
 					      struct id *id)
+{
+	return _find_pv_in_vg_by_uuid(vg, id);
+}
+
+
+static struct physical_volume *_find_pv_in_vg_by_uuid(struct volume_group *vg,
+						      struct id *id)
 {
 	struct pv_list *pvl;
 
@@ -691,12 +749,20 @@ struct physical_volume *find_pv(struct volume_group *vg, struct device *dev)
 	return NULL;
 }
 
+/* FIXME: liblvm todo - make into function that returns handle */
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 					const char *pv_name)
 {
+	return _find_pv_by_name(cmd, pv_name);
+}
+
+
+static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
+			 			const char *pv_name)
+{
 	struct physical_volume *pv;
 
-	if (!(pv = pv_read(cmd, pv_name, NULL, NULL, 1))) {
+	if (!(pv = _pv_read(cmd, pv_name, NULL, NULL, 1))) {
 		log_error("Physical volume %s not found", pv_name);
 		return NULL;
 	}
@@ -980,7 +1046,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	}
 
 	list_iterate_items(info, &vginfo->infos) {
-		if (!(pv = pv_read(cmd, dev_name(info->dev), NULL, NULL, 1))) {
+		if (!(pv = _pv_read(cmd, dev_name(info->dev), NULL, NULL, 1))) {
 			continue;
 		}
 		if (!(pvl = dm_pool_zalloc(cmd->mem, sizeof(*pvl)))) {
@@ -1386,10 +1452,20 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 	return lvl->lv;
 }
 
-/* FIXME Use label functions instead of PV functions */
+/* FIXME: liblvm todo - make into function that returns handle */
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct list *mdas, uint64_t *label_sector,
 				int warnings)
+{
+	return _pv_read(cmd, pv_name, mdas, label_sector, warnings);
+}
+
+/* FIXME Use label functions instead of PV functions */
+static struct physical_volume *_pv_read(struct cmd_context *cmd, 
+					const char *pv_name,
+					struct list *mdas, 
+					uint64_t *label_sector,
+					int warnings)
 {
 	struct physical_volume *pv;
 	struct label *label;
@@ -1510,8 +1586,17 @@ struct list *get_pvs(struct cmd_context *cmd)
 	return results;
 }
 
-int pv_write(struct cmd_context *cmd __attribute((unused)), struct physical_volume *pv,
+/* FIXME: liblvm todo - make into function that takes handle */
+int pv_write(struct cmd_context *cmd __attribute((unused)),
+	     struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector)
+{
+	return _pv_write(cmd, pv, mdas, label_sector);
+}
+
+static int _pv_write(struct cmd_context *cmd __attribute((unused)), 
+		     struct physical_volume *pv,
+	     	     struct list *mdas, int64_t label_sector)
 {
 	if (!pv->fmt->ops->pv_write) {
 		log_error("Format does not support writing physical volumes");
@@ -1544,7 +1629,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 		return 0;
 	}
 
-	if (!pv_write(cmd, pv, NULL, INT64_C(-1))) {
+	if (!_pv_write(cmd, pv, NULL, INT64_C(-1))) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" after removal from \"%s\"",
 			  dev_name(pv->dev), old_vg_name);
