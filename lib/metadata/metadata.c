@@ -28,6 +28,12 @@
 
 #include <sys/param.h>
 
+/*
+ * FIXME: Check for valid handle before dereferencing member or log error?
+ */
+#define PV_HANDLE_DEREF(H, M)				\
+	(((struct physical_volume *)H)->M)
+
 static struct physical_volume *_pv_read(struct cmd_context *cmd, 
 					const char *pv_name,
 					struct list *mdas, 
@@ -1452,7 +1458,21 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
 	return lvl->lv;
 }
 
-/* FIXME: liblvm todo - make into function that returns handle */
+/**
+ * pv_read - read and return a handle to a physical volume
+ * @cmd: LVM command initiating the pv_read
+ * @pv_name: full device name of the PV, including the path
+ * @mdas: list of metadata areas of the PV
+ * @label_sector: sector number where the PV label is stored on @pv_name
+ * @warnings:
+ *
+ * Returns:
+ *   PV handle - valid pv_name and successful read of the PV, or
+ *   NULL - invalid parameter or error in reading the PV
+ *
+ * Note:
+ *   FIXME - liblvm todo - make into function that returns handle
+ */
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct list *mdas, uint64_t *label_sector,
 				int warnings)
@@ -1684,7 +1704,6 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 
 /**
  * vg_check_status - check volume group status flags and log error
- *
  * @vg - volume group to check status flags
  * @status_flags - specific status flags to check (e.g. EXPORTED_VG)
  *
@@ -1719,4 +1738,63 @@ int vg_check_status(struct volume_group *vg, uint32_t status_flags)
 	}
 
 	return 1;
+}
+
+
+/*
+ * Gets/Sets for external LVM library
+ */
+struct id get_pv_id (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, id);
+}
+
+const struct format_type *get_pv_format_type (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, fmt);
+}
+
+struct id get_pv_vgid (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, vgid);
+}
+
+struct device *get_pv_dev (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, dev);
+}
+
+const char *get_pv_vg_name (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, vg_name);
+}
+
+uint64_t get_pv_size(void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, size);
+}
+
+uint32_t get_pv_status (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, status);
+}
+
+uint32_t get_pv_pe_size (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, pe_size);
+}
+
+uint64_t get_pv_pe_start (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, pe_start);
+}
+
+uint32_t get_pv_pe_count (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, pe_count);
+}
+
+uint32_t get_pv_pe_alloc_count (void *pv_handle)
+{
+	return PV_HANDLE_DEREF(pv_handle, pe_alloc_count);
 }
