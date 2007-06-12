@@ -118,7 +118,8 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 			   void *handle)
 {
 	struct pvcreate_params *pp = (struct pvcreate_params *) handle;
-	struct physical_volume *pv, *existing_pv;
+	void *pv;
+	void *existing_pv;
 	struct id id, *idp = NULL;
 	const char *uuid = NULL;
 	uint64_t size = 0;
@@ -159,9 +160,9 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 				  uuid, restorefile);
 			return ECMD_FAILED;
 		}
-		pe_start = existing_pv->pe_start;
-		extent_size = existing_pv->pe_size;
-		extent_count = existing_pv->pe_count;
+		pe_start = get_pv_pe_start(existing_pv);
+		extent_size = get_pv_pe_size(existing_pv);
+		extent_count = get_pv_pe_count(existing_pv);
 	}
 
 	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
@@ -210,10 +211,10 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	log_verbose("Set up physical volume for \"%s\" with %" PRIu64
-		    " available sectors", pv_name, pv->size);
+		    " available sectors", pv_name, get_pv_size(pv));
 
 	/* Wipe existing label first */
-	if (!label_remove(pv->dev)) {
+	if (!label_remove(get_pv_dev(pv))) {
 		log_error("Failed to wipe existing label on %s", pv_name);
 		goto error;
 	}
@@ -235,7 +236,8 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
-	if (!(pv_write(cmd, pv, &mdas, arg_int64_value(cmd, labelsector_ARG,
+	if (!(pv_write(cmd, (struct physical_volume *)pv, &mdas,
+		       arg_int64_value(cmd, labelsector_ARG,
 						       DEFAULT_LABELSECTOR)))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		goto error;
