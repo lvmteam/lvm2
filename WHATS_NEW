@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Add get_pv_* functions to return PV members (external LVM library).
   Add wrappers to some functions in preparation for external LVM library.
   Allow vgcfgrestore to list metadata backup files using -f
   Add vg_check_status to consolidate vg status checks and error messages.

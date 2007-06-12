@@ -635,4 +635,19 @@ uint32_t find_free_lvnum(struct logical_volume *lv);
 char *generate_lv_name(struct volume_group *vg, const char *format,
 		       char *buffer, size_t len);
 
+/*
+ * Gets/Sets for external LVM library
+ */
+struct id get_pv_id (void *pv_handle);
+const struct format_type *get_pv_format_type (void *pv_handle);
+struct id get_pv_vgid (void *pv_handle);
+struct device *get_pv_dev (void *pv_handle);
+const char *get_pv_vg_name (void *pv_handle);
+uint64_t get_pv_size(void *pv_handle);
+uint32_t get_pv_status (void *pv_handle);
+uint32_t get_pv_pe_size (void *pv_handle);
+uint64_t get_pv_pe_start (void *pv_handle);
+uint32_t get_pv_pe_count (void *pv_handle);
+uint32_t get_pv_pe_alloc_count (void *pv_handle);
+
 #endif
