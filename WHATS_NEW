@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Convert find_pv_in_vg_by_uuid and pv_create to use PV handles.
   Add get_pv_* functions to return PV members (external LVM library).
   Add wrappers to some functions in preparation for external LVM library.
   Allow vgcfgrestore to list metadata backup files using -f

@@ -438,15 +438,15 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
  * areas can avoid overlap */
-struct physical_volume *pv_create(const struct format_type *fmt,
-				  struct device *dev,
-				  struct id *id,
-				  uint64_t size,
-				  uint64_t pe_start,
-				  uint32_t existing_extent_count,
-				  uint32_t existing_extent_size,
-				  int pvmetadatacopies,
-				  uint64_t pvmetadatasize, struct list *mdas);
+void *pv_create(const struct format_type *fmt,
+		struct device *dev,
+		struct id *id,
+		uint64_t size,
+		uint64_t pe_start,
+		uint32_t existing_extent_count,
+		uint32_t existing_extent_size,
+		int pvmetadatacopies,
+		uint64_t pvmetadatasize, struct list *mdas);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
               uint32_t new_pe_count);
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
@@ -500,8 +500,7 @@ struct physical_volume *pv_find(struct volume_group *vg, const char *pv_name);
 
 /* Find a PV within a given VG */
 struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
-struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
-					      struct id *id);
+void *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id);
 int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 			 const char *vgid, const char *pvid,
 			 struct physical_volume *pv);

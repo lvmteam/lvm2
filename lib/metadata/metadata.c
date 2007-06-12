@@ -566,15 +566,34 @@ int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 	return 1;
 }
 
-/* FIXME: liblvm todo - make into function that returns handle */
-struct physical_volume *pv_create(const struct format_type *fmt,
-				  struct device *dev,
-				  struct id *id, uint64_t size,
-				  uint64_t pe_start,
-				  uint32_t existing_extent_count,
-				  uint32_t existing_extent_size,
-				  int pvmetadatacopies,
-				  uint64_t pvmetadatasize, struct list *mdas)
+/**
+ * pv_create - initialize a physical volume for use with a volume group
+ * @fmt: format type
+ * @dev: PV device to initialize
+ * @id: PV UUID to use for initialization
+ * @size: size of the PV in sectors
+ * @pe_start: physical extent start
+ * @existing_extent_count
+ * @existing_extent_size
+ * @pvmetadatacopies
+ * @pvmetadatasize
+ * @mdas
+ *
+ * Returns:
+ *   PV handle - physical volume initialized successfully
+ *   NULL - invalid parameter or problem initializing the physical volume
+ *
+ * Note:
+ *   FIXME - liblvm todo - tidy up arguments for external use (fmt, mdas, etc)
+ */
+void *pv_create(const struct format_type *fmt,
+		struct device *dev,
+		struct id *id, uint64_t size,
+		uint64_t pe_start,
+		uint32_t existing_extent_count,
+		uint32_t existing_extent_size,
+		int pvmetadatacopies,
+		uint64_t pvmetadatasize, struct list *mdas)
 {
 	return _pv_create(fmt, dev, id, size, pe_start, 
 			  existing_extent_count,
@@ -688,9 +707,19 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
 	return 0;
 }
 
-/* FIXME: liblvm todo - make into function that returns handle */
-struct physical_volume *find_pv_in_vg_by_uuid(struct volume_group *vg,
-					      struct id *id)
+/**
+ * find_pv_in_vg_by_uuid - Find PV in VG by PV UUID
+ * @vg: volume group to search
+ * @id: UUID of the PV to match
+ *
+ * Returns:
+ *   PV handle - if UUID of PV found in VG
+ *   NULL - invalid parameter or UUID of PV not found in VG
+ *
+ * Note
+ *   FIXME - liblvm todo - make into function that takes VG handle
+ */
+void *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id)
 {
 	return _find_pv_in_vg_by_uuid(vg, id);
 }
