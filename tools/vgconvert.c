@@ -114,18 +114,18 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	list_iterate_items(pvl, &vg->pvs) {
 		existing_pv = pvl->pv;
 
-		pe_start = existing_pv->pe_start;
-		pe_end = existing_pv->pe_count * existing_pv->pe_size
+		pe_start = get_pv_pe_start(existing_pv);
+		pe_end = get_pv_pe_count(existing_pv) * get_pv_pe_size(existing_pv)
 		    + pe_start - 1;
 
 		list_init(&mdas);
-		if (!(pv = pv_create(cmd->fmt, existing_pv->dev,
+		if (!(pv = pv_create(cmd->fmt, get_pv_dev(existing_pv),
 				     &existing_pv->id, size,
-				     pe_start, existing_pv->pe_count,
-				     existing_pv->pe_size, pvmetadatacopies,
+				     pe_start, get_pv_pe_count(existing_pv),
+				     get_pv_pe_size(existing_pv), pvmetadatacopies,
 				     pvmetadatasize, &mdas))) {
 			log_error("Failed to setup physical volume \"%s\"",
-				  dev_name(existing_pv->dev));
+				  dev_name(get_pv_dev(existing_pv)));
 			if (change_made)
 				log_error("Use pvcreate and vgcfgrestore to "
 					  "repair from archived metadata.");
