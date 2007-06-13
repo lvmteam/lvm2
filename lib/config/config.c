@@ -188,7 +188,7 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 	int r = 0;
 	int use_mmap = 1;
 	off_t mmap_offset = 0;
-	char *buf;
+	char *buf = NULL;
 
 	if (!(p = dm_pool_alloc(c->mem, sizeof(*p)))) {
 		stack;

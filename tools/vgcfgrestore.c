@@ -17,7 +17,7 @@
 
 int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 {
-	char *vg_name;
+	char *vg_name = NULL;
 
 	if (argc == 1) {
 		vg_name = skip_dev_dir(cmd, argv[0], NULL);
