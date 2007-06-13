@@ -142,7 +142,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 			log_error("%s: Size must leave space for at "
 				  "least one physical extent of "
 				  "%" PRIu32 " sectors.", pv_name,
-				  pv->pe_size);
+				  get_pv_pe_size(pv));
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;
 		}
