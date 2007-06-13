@@ -33,7 +33,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 	uint64_t size = 0;
 	uint32_t new_pe_count = 0;
 	struct list mdas;
-	const char *pv_name = dev_name(pv->dev);
+	const char *pv_name = dev_name(get_pv_dev(pv));
 	struct pvresize_params *params = (struct pvresize_params *) handle;
 	const char *vg_name;
 
@@ -103,7 +103,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 	}
 
 	/* Get new size */
-	if (!dev_get_size(pv->dev, &size)) {
+	if (!dev_get_size(get_pv_dev(pv), &size)) {
 		log_error("%s: Couldn't get size.", pv_name);
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;

@@ -26,7 +26,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	uint64_t sector;
 	uint32_t orig_pe_alloc_count;
 
-	const char *pv_name = dev_name(pv->dev);
+	const char *pv_name = dev_name(get_pv_dev(pv));
 	const char *tag = NULL;
 	const char *orig_vg_name;
 	char uuid[64] __attribute((aligned(8)));

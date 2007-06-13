@@ -54,12 +54,12 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 		log_verbose("Removing physical volume \"%s\" from "
-			    "volume group \"%s\"", dev_name(pv->dev), vg_name);
+			    "volume group \"%s\"", dev_name(get_pv_dev(pv)), vg_name);
 		pv->vg_name = ORPHAN;
 		pv->status = ALLOCATABLE_PV;
 
-		if (!dev_get_size(pv->dev, &pv->size)) {
-			log_error("%s: Couldn't get size.", dev_name(pv->dev));
+		if (!dev_get_size(get_pv_dev(pv), &pv->size)) {
+			log_error("%s: Couldn't get size.", dev_name(get_pv_dev(pv)));
 			ret = ECMD_FAILED;
 			continue;
 		}
@@ -68,7 +68,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		if (!pv_write(cmd, pv, NULL, INT64_C(-1))) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
-				  dev_name(pv->dev), vg_name);
+				  dev_name(get_pv_dev(pv)), vg_name);
 			ret = ECMD_FAILED;
 		}
 	}
