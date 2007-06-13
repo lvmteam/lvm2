@@ -48,7 +48,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 
 	memset(pv_tmp_name, 0, sizeof(pv_tmp_name));
 
-	vg_name_len = strlen(pv->vg_name) + 1;
+	vg_name_len = strlen(get_pv_vg_name(pv)) + 1;
 
 	if (arg_count(cmd, uuid_ARG)) {
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
@@ -62,7 +62,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		sprintf(pv_tmp_name, "%s", dev_name(get_pv_dev(pv)));
 	}
 
-	if (!*pv->vg_name) {
+	if (!*get_pv_vg_name(pv)) {
 		log_print("PV %-*s    %-*s %s [%s]",
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
@@ -85,7 +85,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		return;
 	}
 
-	sprintf(vg_tmp_name, "%s", pv->vg_name);
+	sprintf(vg_tmp_name, "%s", get_pv_vg_name(pv));
 	log_print("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
 		  pv_tmp_name, vg_max_name_len, vg_tmp_name,
 		  pv->fmt ? pv->fmt->name : "    ",
@@ -137,7 +137,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 
 		if ((arg_count(cmd, exported_ARG)
 		     && !(get_pv_status(pv) & EXPORTED_VG))
-		    || (arg_count(cmd, novolumegroup_ARG) && (*pv->vg_name))) {
+		    || (arg_count(cmd, novolumegroup_ARG) && (*get_pv_vg_name(pv)))) {
 			list_del(&pvl->list);
 			continue;
 		}
@@ -154,7 +154,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 ********/
 		pvs_found++;
 
-		if (!*pv->vg_name) {
+		if (!*get_pv_vg_name(pv)) {
 			new_pvs_found++;
 			size_new += get_pv_size(pv);
 			size_total += get_pv_size(pv);
@@ -169,7 +169,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 		len = strlen(dev_name(get_pv_dev(pv)));
 		if (pv_max_name_len < len)
 			pv_max_name_len = len;
-		len = strlen(pv->vg_name);
+		len = strlen(get_pv_vg_name(pv));
 		if (vg_max_name_len < len)
 			vg_max_name_len = len;
 	}
