@@ -397,8 +397,8 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	vg->pv_count--;
-	vg->free_count -= pv->pe_count - get_pv_pe_alloc_count(pv);
-	vg->extent_count -= pv->pe_count;
+	vg->free_count -= get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv);
+	vg->extent_count -= get_pv_pe_count(pv);
 
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("Removal of physical volume \"%s\" from "
