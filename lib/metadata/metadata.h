@@ -142,6 +142,7 @@ struct physical_volume {
 	struct list tags;
 };
 
+typedef struct physical_volume * pv_handle_t;
 struct metadata_area;
 struct format_instance;
 
@@ -438,15 +439,15 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
  * areas can avoid overlap */
-void *pv_create(const struct format_type *fmt,
-		struct device *dev,
-		struct id *id,
-		uint64_t size,
-		uint64_t pe_start,
-		uint32_t existing_extent_count,
-		uint32_t existing_extent_size,
-		int pvmetadatacopies,
-		uint64_t pvmetadatasize, struct list *mdas);
+pv_handle_t pv_create(const struct format_type *fmt,
+		      struct device *dev,
+		      struct id *id,
+		      uint64_t size,
+		      uint64_t pe_start,
+		      uint32_t existing_extent_count,
+		      uint32_t existing_extent_size,
+		      int pvmetadatacopies,
+		      uint64_t pvmetadatasize, struct list *mdas);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
               uint32_t new_pe_count);
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
@@ -500,7 +501,7 @@ struct physical_volume *pv_find(struct volume_group *vg, const char *pv_name);
 
 /* Find a PV within a given VG */
 struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
-void *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id);
+pv_handle_t find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id);
 int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 			 const char *vgid, const char *pvid,
 			 struct physical_volume *pv);
@@ -637,16 +638,16 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 /*
  * Gets/Sets for external LVM library
  */
-struct id get_pv_id (void *pv_handle);
-const struct format_type *get_pv_format_type (void *pv_handle);
-struct id get_pv_vgid (void *pv_handle);
-struct device *get_pv_dev (void *pv_handle);
-const char *get_pv_vg_name (void *pv_handle);
-uint64_t get_pv_size(void *pv_handle);
-uint32_t get_pv_status (void *pv_handle);
-uint32_t get_pv_pe_size (void *pv_handle);
-uint64_t get_pv_pe_start (void *pv_handle);
-uint32_t get_pv_pe_count (void *pv_handle);
-uint32_t get_pv_pe_alloc_count (void *pv_handle);
+struct id get_pv_id (pv_handle_t pv_handle);
+const struct format_type *get_pv_format_type (pv_handle_t pv_handle);
+struct id get_pv_vgid (pv_handle_t pv_handle);
+struct device *get_pv_dev (pv_handle_t pv_handle);
+const char *get_pv_vg_name (pv_handle_t pv_handle);
+uint64_t get_pv_size(pv_handle_t pv_handle);
+uint32_t get_pv_status (pv_handle_t pv_handle);
+uint32_t get_pv_pe_size (pv_handle_t pv_handle);
+uint64_t get_pv_pe_start (pv_handle_t pv_handle);
+uint32_t get_pv_pe_count (pv_handle_t pv_handle);
+uint32_t get_pv_pe_alloc_count (pv_handle_t pv_handle);
 
 #endif

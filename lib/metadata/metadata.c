@@ -586,7 +586,7 @@ int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
  * Note:
  *   FIXME - liblvm todo - tidy up arguments for external use (fmt, mdas, etc)
  */
-void *pv_create(const struct format_type *fmt,
+pv_handle_t pv_create(const struct format_type *fmt,
 		struct device *dev,
 		struct id *id, uint64_t size,
 		uint64_t pe_start,
@@ -595,11 +595,11 @@ void *pv_create(const struct format_type *fmt,
 		int pvmetadatacopies,
 		uint64_t pvmetadatasize, struct list *mdas)
 {
-	return _pv_create(fmt, dev, id, size, pe_start, 
-			  existing_extent_count,
-			  existing_extent_size,
-			  pvmetadatacopies,
-			  pvmetadatasize, mdas);
+	return (pv_handle_t) _pv_create(fmt, dev, id, size, pe_start, 
+					existing_extent_count,
+					existing_extent_size,
+					pvmetadatacopies,
+					pvmetadatasize, mdas);
 }
 
 /* Sizes in sectors */
@@ -719,9 +719,9 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
  * Note
  *   FIXME - liblvm todo - make into function that takes VG handle
  */
-void *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id)
+pv_handle_t find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id)
 {
-	return _find_pv_in_vg_by_uuid(vg, id);
+	return (pv_handle_t) _find_pv_in_vg_by_uuid(vg, id);
 }
 
 
@@ -1773,57 +1773,57 @@ int vg_check_status(struct volume_group *vg, uint32_t status_flags)
 /*
  * Gets/Sets for external LVM library
  */
-struct id get_pv_id (void *pv_handle)
+struct id get_pv_id (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, id);
 }
 
-const struct format_type *get_pv_format_type (void *pv_handle)
+const struct format_type *get_pv_format_type (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, fmt);
 }
 
-struct id get_pv_vgid (void *pv_handle)
+struct id get_pv_vgid (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, vgid);
 }
 
-struct device *get_pv_dev (void *pv_handle)
+struct device *get_pv_dev (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, dev);
 }
 
-const char *get_pv_vg_name (void *pv_handle)
+const char *get_pv_vg_name (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, vg_name);
 }
 
-uint64_t get_pv_size(void *pv_handle)
+uint64_t get_pv_size(pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, size);
 }
 
-uint32_t get_pv_status (void *pv_handle)
+uint32_t get_pv_status (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, status);
 }
 
-uint32_t get_pv_pe_size (void *pv_handle)
+uint32_t get_pv_pe_size (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, pe_size);
 }
 
-uint64_t get_pv_pe_start (void *pv_handle)
+uint64_t get_pv_pe_start (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, pe_start);
 }
 
-uint32_t get_pv_pe_count (void *pv_handle)
+uint32_t get_pv_pe_count (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, pe_count);
 }
 
-uint32_t get_pv_pe_alloc_count (void *pv_handle)
+uint32_t get_pv_pe_alloc_count (pv_handle_t pv_handle)
 {
 	return pv_field(pv_handle, pe_alloc_count);
 }
