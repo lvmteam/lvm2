@@ -71,7 +71,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		return;
 	}
 
-	if (pv->status & EXPORTED_VG) {
+	if (get_pv_status(pv) & EXPORTED_VG) {
 		strncpy(vg_name_this, pv->vg_name, vg_name_len);
 		log_print("PV %-*s  is in exported VG %s "
 			  "[%s / %s free]",
@@ -136,7 +136,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 		pv = pvl->pv;
 
 		if ((arg_count(cmd, exported_ARG)
-		     && !(pv->status & EXPORTED_VG))
+		     && !(get_pv_status(pv) & EXPORTED_VG))
 		    || (arg_count(cmd, novolumegroup_ARG) && (*pv->vg_name))) {
 			list_del(&pvl->list);
 			continue;
