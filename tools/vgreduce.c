@@ -397,7 +397,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	vg->pv_count--;
-	vg->free_count -= pv->pe_count - pv->pe_alloc_count;
+	vg->free_count -= pv->pe_count - get_pv_pe_alloc_count(pv);
 	vg->extent_count -= pv->pe_count;
 
 	if (!vg_write(vg) || !vg_commit(vg)) {

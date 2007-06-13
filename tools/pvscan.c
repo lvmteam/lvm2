@@ -91,7 +91,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		  pv->fmt ? pv->fmt->name : "    ",
 		  display_size(cmd, (uint64_t) pv->pe_count * pv->pe_size),
 		  display_size(cmd,
-			       (uint64_t) (pv->pe_count - pv->pe_alloc_count) *
+			       (uint64_t) (pv->pe_count - get_pv_pe_alloc_count(pv)) *
 					   pv->pe_size));
 	return;
 }

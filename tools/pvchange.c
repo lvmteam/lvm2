@@ -182,7 +182,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
 		if (*pv->vg_name) {
 			orig_vg_name = pv->vg_name;
-			orig_pe_alloc_count = pv->pe_alloc_count;
+			orig_pe_alloc_count = get_pv_pe_alloc_count(pv);
 			pv->vg_name = ORPHAN;
 			pv->pe_alloc_count = 0;
 			if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
