@@ -68,7 +68,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (pv->status & EXPORTED_VG)
+	if (get_pv_status(pv) & EXPORTED_VG)
 		log_print("Physical volume \"%s\" of volume group \"%s\" "
 			  "is exported", pv_name, pv->vg_name);
 
