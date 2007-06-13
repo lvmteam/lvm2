@@ -595,11 +595,11 @@ pv_t *pv_create(const struct format_type *fmt,
 		int pvmetadatacopies,
 		uint64_t pvmetadatasize, struct list *mdas)
 {
-	return (pv_t *) _pv_create(fmt, dev, id, size, pe_start, 
-					existing_extent_count,
-					existing_extent_size,
-					pvmetadatacopies,
-					pvmetadatasize, mdas);
+	return _pv_create(fmt, dev, id, size, pe_start, 
+			  existing_extent_count,
+			  existing_extent_size,
+			  pvmetadatacopies,
+			  pvmetadatasize, mdas);
 }
 
 /* Sizes in sectors */
@@ -721,7 +721,7 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
  */
 pv_t *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id)
 {
-	return (pv_t *) _find_pv_in_vg_by_uuid(vg, id);
+	return _find_pv_in_vg_by_uuid(vg, id);
 }
 
 
