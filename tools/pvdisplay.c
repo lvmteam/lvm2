@@ -26,14 +26,14 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 
 	const char *pv_name = dev_name(get_pv_dev(pv));
 
-	 if (pv->vg_name) {
+	 if (get_pv_vg_name(pv)) {
 	         if (!lock_vol(cmd, pv->vg_name, LCK_VG_READ)) {
-	                 log_error("Can't lock %s: skipping", pv->vg_name);
+	                 log_error("Can't lock %s: skipping", get_pv_vg_name(pv));
 	                 return ECMD_FAILED;
 	         }
 
 	         if (!(vg = vg_read(cmd, pv->vg_name, (char *)&pv->vgid, &consistent))) {
-	                 log_error("Can't read %s: skipping", pv->vg_name);
+	                 log_error("Can't read %s: skipping", get_pv_vg_name(pv));
 	                 goto out;
 	         }
 
@@ -56,7 +56,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		 pv = pvl->pv;
 	}
 
-	if (!*pv->vg_name)
+	if (!*get_pv_vg_name(pv))
 		size = get_pv_size(pv);
 	else
 		size = (get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv)) * 
@@ -70,9 +70,9 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 
 	if (get_pv_status(pv) & EXPORTED_VG)
 		log_print("Physical volume \"%s\" of volume group \"%s\" "
-			  "is exported", pv_name, pv->vg_name);
+			  "is exported", pv_name, get_pv_vg_name(pv));
 
-	if (!pv->vg_name)
+	if (!get_pv_vg_name(pv))
 		log_print("\"%s\" is a new physical volume of \"%s\"",
 			  pv_name, display_size(cmd, size));
 
@@ -87,8 +87,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		pvdisplay_segments(pv);
 
 out:
-        if (pv->vg_name)
-                unlock_vg(cmd, pv->vg_name);
+        if (get_pv_vg_name(pv))
+                unlock_vg(cmd, get_pv_vg_name(pv));
 
 	return ret;
 }

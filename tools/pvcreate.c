@@ -47,13 +47,13 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	/* We must have -ff to overwrite a non orphan */
 	if (pv && pv->vg_name[0] && arg_count(cmd, force_ARG) != 2) {
 		log_error("Can't initialize physical volume \"%s\" of "
-			  "volume group \"%s\" without -ff", name, pv->vg_name);
+			  "volume group \"%s\" without -ff", name, get_pv_vg_name(pv));
 		return 0;
 	}
 
 	/* prompt */
 	if (pv && pv->vg_name[0] && !arg_count(cmd, yes_ARG) &&
-	    yes_no_prompt(_really_init, name, pv->vg_name) == 'n') {
+	    yes_no_prompt(_really_init, name, get_pv_vg_name(pv)) == 'n') {
 		log_print("%s: physical volume not initialized", name);
 		return 0;
 	}

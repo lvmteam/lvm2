@@ -41,7 +41,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 
 	params->total++;
 
-	if (!*pv->vg_name) {
+	if (!*get_pv_vg_name(pv)) {
 		vg_name = ORPHAN;
 
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
@@ -66,7 +66,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 		vg_name = pv->vg_name;
 
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
-			log_error("Can't get lock for %s", pv->vg_name);
+			log_error("Can't get lock for %s", get_pv_vg_name(pv));
 			return ECMD_FAILED;
 		}
 
@@ -158,9 +158,9 @@ static int _pvresize_single(struct cmd_context *cmd,
 		    pv_name, get_pv_size(pv));
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
-	if (*pv->vg_name) {
+	if (*get_pv_vg_name(pv)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
-			unlock_vg(cmd, pv->vg_name);
+			unlock_vg(cmd, get_pv_vg_name(pv));
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
 			return ECMD_FAILED;
