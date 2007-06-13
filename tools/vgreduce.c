@@ -367,7 +367,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	struct pv_list *pvl;
 	const char *name = dev_name(pv->dev);
 
-	if (pv->pe_alloc_count) {
+	if (get_pv_pe_alloc_count(pv)) {
 		log_error("Physical volume \"%s\" still in use", name);
 		return ECMD_FAILED;
 	}

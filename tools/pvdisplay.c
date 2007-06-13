@@ -57,7 +57,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	}
 
 	if (!*pv->vg_name)
-		size = pv->size;
+		size = get_pv_size(pv);
 	else
 		size = (get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv)) * 
 			get_pv_pe_size(pv);

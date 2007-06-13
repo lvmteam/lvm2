@@ -136,7 +136,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		change_made = 1;
 
 		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
-			    " available sectors", dev_name(pv->dev), pv->size);
+			    " available sectors", dev_name(pv->dev), get_pv_size(pv));
 
 		/* Wipe existing label first */
 		if (!label_remove(pv->dev)) {

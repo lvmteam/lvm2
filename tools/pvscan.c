@@ -67,7 +67,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
 			  pv->fmt ? pv->fmt->name : "    ",
-			  display_size(cmd, pv->size));
+			  display_size(cmd, get_pv_size(pv)));
 		return;
 	}
 
@@ -156,8 +156,8 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 
 		if (!*pv->vg_name) {
 			new_pvs_found++;
-			size_new += pv->size;
-			size_total += pv->size;
+			size_new += get_pv_size(pv);
+			size_total += get_pv_size(pv);
 		} else
 			size_total += get_pv_pe_count(pv) * get_pv_pe_size(pv);
 	}
