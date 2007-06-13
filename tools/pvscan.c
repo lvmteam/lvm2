@@ -78,10 +78,10 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 			  pv_max_name_len, pv_tmp_name,
 			  vg_name_this,
 			  display_size(cmd, (uint64_t) get_pv_pe_count(pv) *
-				       pv->pe_size),
-			  display_size(cmd, (uint64_t) (pv->pe_count -
-							pv->pe_alloc_count)
-				       * pv->pe_size));
+				       get_pv_pe_size(pv)),
+			  display_size(cmd, (uint64_t) (get_pv_pe_count(pv) -
+						get_pv_pe_alloc_count(pv))
+				       * get_pv_pe_size(pv)));
 		return;
 	}
 
@@ -89,10 +89,11 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 	log_print("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
 		  pv_tmp_name, vg_max_name_len, vg_tmp_name,
 		  pv->fmt ? pv->fmt->name : "    ",
-		  display_size(cmd, (uint64_t) get_pv_pe_count(pv) * pv->pe_size),
-		  display_size(cmd,
-			       (uint64_t) (pv->pe_count - get_pv_pe_alloc_count(pv)) *
-					   pv->pe_size));
+		  display_size(cmd, (uint64_t) get_pv_pe_count(pv) * 
+					       get_pv_pe_size(pv)),
+		  display_size(cmd, (uint64_t) (get_pv_pe_count(pv) - 
+						get_pv_pe_alloc_count(pv)) *
+					   get_pv_pe_size(pv)));
 	return;
 }
 
@@ -158,7 +159,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 			size_new += pv->size;
 			size_total += pv->size;
 		} else
-			size_total += get_pv_pe_count(pv) * pv->pe_size;
+			size_total += get_pv_pe_count(pv) * get_pv_pe_size(pv);
 	}
 
 	/* find maximum pv name length */

@@ -59,7 +59,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	if (!*pv->vg_name)
 		size = pv->size;
 	else
-		size = (pv->pe_count - get_pv_pe_alloc_count(pv)) * pv->pe_size;
+		size = (get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv)) * 
+			get_pv_pe_size(pv);
 
 	if (arg_count(cmd, short_ARG)) {
 		log_print("Device \"%s\" has a capacity of %s", pv_name,
