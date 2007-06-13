@@ -105,7 +105,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 					continue;
 				}
 				log_error("Physical Volume %s not found",
-					  dev_name(pv->dev));
+					  dev_name(get_pv_dev(pv)));
 				return 0;
 			}
 

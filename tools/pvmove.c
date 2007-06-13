@@ -100,7 +100,7 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 		pvl = list_item(pvh, struct pv_list);
 
 		/* Don't allocate onto the PV we're clearing! */
-		if ((alloc != ALLOC_ANYWHERE) && (pvl->pv->dev == pv->dev)) {
+		if ((alloc != ALLOC_ANYWHERE) && (pvl->pv->dev == get_pv_dev(pv))) {
 			list_del(&pvl->list);
 			continue;
 		}
@@ -296,7 +296,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		return ECMD_FAILED;
 	}
 
-	if ((lv_mirr = find_pvmove_lv(vg, pv->dev, PVMOVE))) {
+	if ((lv_mirr = find_pvmove_lv(vg, get_pv_dev(pv), PVMOVE))) {
 		log_print("Detected pvmove in progress for %s", pv_name);
 		if (argc || lv_name)
 			log_error("Ignoring remaining command line arguments");
