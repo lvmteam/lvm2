@@ -114,7 +114,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 			log_print("WARNING: %s: Overriding real size. "
 				  "You could lose data.", pv_name);
 		log_verbose("%s: Pretending size is %" PRIu64 " not %" PRIu64
-			    " sectors.", pv_name, params->new_size, pv->size);
+			    " sectors.", pv_name, params->new_size, get_pv_size(pv));
 		size = params->new_size;
 	}
 
@@ -136,7 +136,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 
 	if (vg) {
 		pv->size -= get_pv_pe_start(pv);
-		new_pe_count = pv->size / vg->extent_size;
+		new_pe_count = get_pv_size(pv) / vg->extent_size;
 		
  		if (!new_pe_count) {
 			log_error("%s: Size must leave space for at "
@@ -155,7 +155,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 	}
 
 	log_verbose("Resizing volume \"%s\" to %" PRIu64 " sectors.",
-		    pv_name, pv->size);
+		    pv_name, get_pv_size(pv));
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (*pv->vg_name) {
