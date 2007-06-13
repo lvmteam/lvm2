@@ -125,9 +125,9 @@ static int _pvresize_single(struct cmd_context *cmd,
 		return ECMD_FAILED;
 	}
 
-	if (size < pv->pe_start) {
+	if (size < get_pv_pe_start(pv)) {
 		log_error("%s: Size must exceed physical extent start of "
-			  "%" PRIu64 " sectors.", pv_name, pv->pe_start);
+			  "%" PRIu64 " sectors.", pv_name, get_pv_pe_start(pv));
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
@@ -135,7 +135,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 	pv->size = size;
 
 	if (vg) {
-		pv->size -= pv->pe_start;
+		pv->size -= get_pv_pe_start(pv);
 		new_pe_count = pv->size / vg->extent_size;
 		
  		if (!new_pe_count) {
