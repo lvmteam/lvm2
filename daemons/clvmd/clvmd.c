@@ -45,7 +45,6 @@
 #include "version.h"
 #include "clvmd.h"
 #include "refresh_clvmd.h"
-#include "system-lv.h"
 #include "list.h"
 #include "log.h"
 
@@ -57,10 +56,6 @@
 #endif
 
 #define MAX_RETRIES 4
-
-/* The maximum size of a message that will fit into a packet. Anything bigger
-   than this is sent via the system LV */
-#define MAX_INLINE_MESSAGE (max_cluster_message-sizeof(struct clvm_header))
 
 #define ISLOCAL_CSID(c) (memcmp(c, our_csid, max_csid_len) == 0)
 
@@ -1062,31 +1057,6 @@ int add_client(struct local_client *new_client)
 	return 0;
 }
 
-
-/*
- * Send a long message using the System LV
- */
-static int send_long_message(struct local_client *thisfd, struct clvm_header *inheader, int len)
-{
-    struct clvm_header new_header;
-    int status;
-
-    DEBUGLOG("Long message: being sent via system LV:\n");
-
-    /* Use System LV */
-    status = system_lv_write_data((char *)inheader, len);
-    if (status < 0)
-	    return errno;
-
-    /* Send message indicating System-LV is being used */
-    memcpy(&new_header, inheader, sizeof(new_header));
-    new_header.flags |= CLVMD_FLAG_SYSTEMLV;
-    new_header.xid = thisfd->xid;
-
-    return send_message(&new_header, sizeof(new_header), NULL, -1,
-		 "Error forwarding long message to cluster");
-}
-
 /* Called when the pre-command has completed successfully - we
    now execute the real command on all the requested nodes */
 static int distribute_command(struct local_client *thisfd)
@@ -1113,13 +1083,9 @@ static int distribute_command(struct local_client *thisfd)
 			add_to_lvmqueue(thisfd, inheader, len, NULL);
 
 			DEBUGLOG("Sending message to all cluster nodes\n");
-			if (len > MAX_INLINE_MESSAGE) {
-			        send_long_message(thisfd, inheader, len );
-			} else {
-				inheader->xid = thisfd->xid;
-				send_message(inheader, len, NULL, -1,
-					     "Error forwarding message to cluster");
-			}
+			inheader->xid = thisfd->xid;
+			send_message(inheader, len, NULL, -1,
+				     "Error forwarding message to cluster");
 		} else {
                         /* Do it on a single node */
 			char csid[MAX_CSID_LEN];
@@ -1140,14 +1106,10 @@ static int distribute_command(struct local_client *thisfd)
 				} else {
 					DEBUGLOG("Sending message to single node: %s\n",
 						 inheader->node);
-					if (len > MAX_INLINE_MESSAGE) {
-					        send_long_message(thisfd, inheader, len );
-					} else {
-						inheader->xid = thisfd->xid;
-						send_message(inheader, len,
-							     csid, -1,
-							     "Error forwarding message to cluster node");
-					}
+					inheader->xid = thisfd->xid;
+					send_message(inheader, len,
+						     csid, -1,
+						     "Error forwarding message to cluster node");
 				}
 			}
 		}
@@ -1177,55 +1139,6 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 
 	DEBUGLOG("process_remote_command %d for clientid 0x%x XID %d on node %s\n",
 		 msg->cmd, msg->clientid, msg->xid, nodename);
-
-	/* Is the data to be found in the system LV ? */
-	if (msg->flags & CLVMD_FLAG_SYSTEMLV) {
-		struct clvm_header *newmsg;
-
-		DEBUGLOG("Reading message from system LV\n");
-		newmsg =
-		    (struct clvm_header *) malloc(msg->arglen +
-						  sizeof(struct clvm_header));
-		if (newmsg) {
-			ssize_t len;
-			if (system_lv_read_data(nodename, (char *) newmsg,
-			     			&len) == 0) {
-				msg = newmsg;
-				msg_malloced = 1;
-				msglen = len;
-			} else {
-				struct clvm_header head;
-				DEBUGLOG("System LV read failed\n");
-
-				/* Return a failure response */
-				head.cmd = CLVMD_CMD_REPLY;
-				head.status = EFBIG;
-				head.flags = 0;
-				head.clientid = msg->clientid;
-				head.arglen = 0;
-				head.node[0] = '\0';
-				send_message(&head, sizeof(struct clvm_header),
-					     csid, fd,
-					     "Error sending ENOMEM command reply");
-				return;
-			}
-		} else {
-			struct clvm_header head;
-			DEBUGLOG
-			    ("Error attempting to malloc %d bytes for system LV read\n",
-			     msg->arglen);
-			/* Return a failure response */
-			head.cmd = CLVMD_CMD_REPLY;
-			head.status = ENOMEM;
-			head.flags = 0;
-			head.clientid = msg->clientid;
-			head.arglen = 0;
-			head.node[0] = '\0';
-			send_message(&head, sizeof(struct clvm_header), csid,
-				     fd, "Error sending ENOMEM command reply");
-			return;
-		}
-	}
 
 	/* Check for GOAWAY and sulk */
 	if (msg->cmd == CLVMD_CMD_GOAWAY) {
@@ -1301,40 +1214,16 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 				replyargs, replylen);
 
 			agghead->xid = msg->xid;
-
-			/* Use the system LV ? */
-			if (replylen > MAX_INLINE_MESSAGE) {
-				agghead->cmd = CLVMD_CMD_REPLY;
-				agghead->status = status;
-				agghead->flags = CLVMD_FLAG_SYSTEMLV;
-				agghead->clientid = msg->clientid;
-				agghead->arglen = replylen;
-				agghead->node[0] = '\0';
-
-				/* If System LV operation failed then report it as EFBIG but only do it
-				   if the data buffer has something in it. */
-				if (system_lv_write_data(aggreply,
-							 replylen + sizeof(struct clvm_header)) < 0
-				    && replylen > 0)
-					agghead->status = EFBIG;
-
-				send_message(agghead,
-					     sizeof(struct clvm_header), csid,
-					     fd,
-					     "Error sending long command reply");
-
-			} else {
-				agghead->cmd = CLVMD_CMD_REPLY;
-				agghead->status = status;
-				agghead->flags = 0;
-				agghead->clientid = msg->clientid;
-				agghead->arglen = replylen;
-				agghead->node[0] = '\0';
-				send_message(aggreply,
-					     sizeof(struct clvm_header) +
-					     replylen, csid, fd,
-					     "Error sending command reply");
-			}
+			agghead->cmd = CLVMD_CMD_REPLY;
+			agghead->status = status;
+			agghead->flags = 0;
+			agghead->clientid = msg->clientid;
+			agghead->arglen = replylen;
+			agghead->node[0] = '\0';
+			send_message(aggreply,
+				     sizeof(struct clvm_header) +
+				     replylen, csid, fd,
+				     "Error sending command reply");
 		} else {
 			struct clvm_header head;
 
