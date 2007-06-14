@@ -43,7 +43,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	}
 
 	/* orphan ? */
-	if (!is_orphan(pv))
+	if (is_orphan(pv))
 		return 1;
 
 	/* Allow partial & exported VGs to be destroyed. */
