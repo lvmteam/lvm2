@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Remove system-lv code from clvmd. It's highly dodgy and never used.
   Convert a lot of code pv dereferences to use get_pv_* functions.
   Suppress a couple benign warnings by adding variable initializations.
   Convert find_pv_in_vg_by_uuid and pv_create to use PV handles.
