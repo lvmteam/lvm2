@@ -436,6 +436,7 @@ struct list *get_vgids(struct cmd_context *cmd, int full_scan);
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector);
 int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
+int is_orphan(pv_t *pv);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
  * areas can avoid overlap */

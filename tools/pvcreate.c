@@ -45,14 +45,14 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* We must have -ff to overwrite a non orphan */
-	if (pv && pv->vg_name[0] && arg_count(cmd, force_ARG) != 2) {
+	if (pv && !is_orphan(pv) && arg_count(cmd, force_ARG) != 2) {
 		log_error("Can't initialize physical volume \"%s\" of "
 			  "volume group \"%s\" without -ff", name, get_pv_vg_name(pv));
 		return 0;
 	}
 
 	/* prompt */
-	if (pv && pv->vg_name[0] && !arg_count(cmd, yes_ARG) &&
+	if (pv && !is_orphan(pv) && !arg_count(cmd, yes_ARG) &&
 	    yes_no_prompt(_really_init, name, get_pv_vg_name(pv)) == 'n') {
 		log_print("%s: physical volume not initialized", name);
 		return 0;
@@ -103,12 +103,12 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 		}
 	}
 
-	if (pv && pv->vg_name[0] && arg_count(cmd, force_ARG)) {
+	if (pv && !is_orphan(pv) && arg_count(cmd, force_ARG)) {
 		log_print("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
-			  pv->vg_name[0] ? " of volume group \"" : "",
-			  pv->vg_name[0] ? pv->vg_name : "",
-			  pv->vg_name[0] ? "\"" : "");
+			  !is_orphan(pv) ? " of volume group \"" : "",
+			  !is_orphan(pv) ? get_pv_vg_name(pv) : "",
+			  !is_orphan(pv) ? "\"" : "");
 	}
 
 	return 1;
