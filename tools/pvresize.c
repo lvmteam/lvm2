@@ -63,7 +63,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 	} else {
-		vg_name = pv->vg_name;
+		vg_name = get_pv_vg_name(pv);
 
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
 			log_error("Can't get lock for %s", get_pv_vg_name(pv));
