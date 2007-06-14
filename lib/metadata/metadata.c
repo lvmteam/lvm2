@@ -1687,6 +1687,17 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 
 	return 1;
 }
+
+/**
+ * is_orphan - Determine whether a pv is an orphan based on its vg_name
+ * @pv: handle to the physical volume
+ */
+int is_orphan(pv_t *pv)
+{
+	return (pv_field(pv, vg_name)[0] ? 0 : 1);
+}
+
+
 /*
  * Returns:
  *  0 - fail

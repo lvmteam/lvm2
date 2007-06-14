@@ -43,7 +43,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	}
 
 	/* orphan ? */
-	if (!pv->vg_name[0])
+	if (!is_orphan(pv))
 		return 1;
 
 	/* Allow partial & exported VGs to be destroyed. */
@@ -64,9 +64,9 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	if (arg_count(cmd, force_ARG)) {
 		log_print("WARNING: Wiping physical volume label from "
 			  "%s%s%s%s", name,
-			  pv->vg_name[0] ? " of volume group \"" : "",
-			  pv->vg_name[0] ? get_pv_vg_name(pv) : "",
-			  pv->vg_name[0] ? "\"" : "");
+			  !is_orphan(pv) ? " of volume group \"" : "",
+			  !is_orphan(pv) ? get_pv_vg_name(pv) : "",
+			  !is_orphan(pv) ? "\"" : "");
 	}
 
 	return 1;
