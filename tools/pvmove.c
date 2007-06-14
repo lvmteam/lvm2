@@ -281,7 +281,7 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	if (arg_count(cmd, name_ARG)) {
-		if (!(lv_name = _extract_lvname(cmd, pv->vg_name,
+		if (!(lv_name = _extract_lvname(cmd, get_pv_vg_name(pv),
 						arg_value(cmd, name_ARG)))) {
 			stack;
 			return EINVALID_CMD_LINE;

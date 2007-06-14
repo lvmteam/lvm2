@@ -55,12 +55,12 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		log_verbose("Finding volume group of physical volume \"%s\"",
 			    pv_name);
 
-		if (!lock_vol(cmd, pv->vg_name, LCK_VG_WRITE)) {
+		if (!lock_vol(cmd, get_pv_vg_name(pv), LCK_VG_WRITE)) {
 			log_error("Can't get lock for %s", get_pv_vg_name(pv));
 			return 0;
 		}
 
-		if (!(vg = vg_read(cmd, pv->vg_name, NULL, &consistent))) {
+		if (!(vg = vg_read(cmd, get_pv_vg_name(pv), NULL, &consistent))) {
 			unlock_vg(cmd, get_pv_vg_name(pv));
 			log_error("Unable to find volume group of \"%s\"",
 				  pv_name);
@@ -115,7 +115,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	}
 
 	if (arg_count(cmd, allocatable_ARG)) {
-		if (!*pv->vg_name &&
+		if (!*get_pv_vg_name(pv) &&
 		    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
 			log_error("Allocatability not supported by orphan "
 				  "%s format PV %s", pv->fmt->name, pv_name);
@@ -181,7 +181,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		}
 		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
 		if (*get_pv_vg_name(pv)) {
-			orig_vg_name = pv->vg_name;
+			orig_vg_name = get_pv_vg_name(pv);
 			orig_pe_alloc_count = get_pv_pe_alloc_count(pv);
 			pv->vg_name = ORPHAN;
 			pv->pe_alloc_count = 0;

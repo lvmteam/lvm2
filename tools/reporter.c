@@ -61,12 +61,12 @@ static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
 	struct physical_volume *pv = pvseg->pv;
 	int ret = ECMD_PROCESSED;
 
-	if (!lock_vol(cmd, pv->vg_name, LCK_VG_READ)) {
+	if (!lock_vol(cmd, get_pv_vg_name(pv), LCK_VG_READ)) {
 		log_error("Can't lock %s: skipping", get_pv_vg_name(pv));
 		return ECMD_FAILED;
 	}
 
-	if (!(vg = vg_read(cmd, pv->vg_name, NULL, &consistent))) {
+	if (!(vg = vg_read(cmd, get_pv_vg_name(pv), NULL, &consistent))) {
 		log_error("Can't read %s: skipping", get_pv_vg_name(pv));
 		goto out;
 	}
@@ -107,12 +107,12 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	int ret = ECMD_PROCESSED;
 
 	if (get_pv_vg_name(pv)) {
-		if (!lock_vol(cmd, pv->vg_name, LCK_VG_READ)) {
+		if (!lock_vol(cmd, get_pv_vg_name(pv), LCK_VG_READ)) {
 			log_error("Can't lock %s: skipping", get_pv_vg_name(pv));
 			return ECMD_FAILED;
 		}
 
-		if (!(vg = vg_read(cmd, pv->vg_name, (char *)&pv->vgid, &consistent))) {
+		if (!(vg = vg_read(cmd, get_pv_vg_name(pv), (char *)&pv->vgid, &consistent))) {
 			log_error("Can't read %s: skipping", get_pv_vg_name(pv));
 			goto out;
 		}

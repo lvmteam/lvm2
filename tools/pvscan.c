@@ -72,7 +72,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 	}
 
 	if (get_pv_status(pv) & EXPORTED_VG) {
-		strncpy(vg_name_this, pv->vg_name, vg_name_len);
+		strncpy(vg_name_this, get_pv_vg_name(pv), vg_name_len);
 		log_print("PV %-*s  is in exported VG %s "
 			  "[%s / %s free]",
 			  pv_max_name_len, pv_tmp_name,
