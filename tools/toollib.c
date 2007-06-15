@@ -209,6 +209,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		ret = process_single(cmd, lvl->lv, handle);
 		if (ret > ret_max)
 			ret_max = ret;
+		if (sigint_caught())
+			return ret_max;
 	}
 
 	if (lvargs_supplied && lvargs_matched != list_size(arg_lvnames)) {
@@ -407,6 +409,8 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 		unlock_vg(cmd, vgname);
 		if (ret > ret_max)
 			ret_max = ret;
+		if (sigint_caught())
+			return ret_max;
 	}
 
 	return ret_max;
@@ -429,6 +433,8 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		ret = process_single(cmd, vg, pvseg, handle);
 		if (ret > ret_max)
 			ret_max = ret;
+		if (sigint_caught())
+			return ret_max;
 	}
 
 	return ret_max;
@@ -449,6 +455,8 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 		ret = process_single(cmd, seg, handle);
 		if (ret > ret_max)
 			ret_max = ret;
+		if (sigint_caught())
+			return ret_max;
 	}
 
 	return ret_max;
@@ -497,6 +505,9 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 				  handle)) > ret_max) {
 		ret_max = ret;
 	}
+
+	if (sigint_caught())
+		return ret_max;
 
 	unlock_vg(cmd, vg_name);
 
@@ -573,6 +584,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 						  &arg_vgnames,
 					  	  lock_type, consistent, handle,
 					  	  ret_max, process_single);
+			if (sigint_caught())
+				return ret_max;
 		}
 	} else {
 		list_iterate_items(sl, vgnames) {
@@ -583,6 +596,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 						  &arg_vgnames,
 					  	  lock_type, consistent, handle,
 					  	  ret_max, process_single);
+			if (sigint_caught())
+				return ret_max;
 		}
 	}
 
@@ -607,6 +622,8 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		}
 		if ((ret = process_single(cmd, vg, pvl->pv, handle)) > ret_max)
 			ret_max = ret;
+		if (sigint_caught())
+			return ret_max;
 	}
 
 	return ret_max;
@@ -643,6 +660,8 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 		ret = process_single(cmd, NULL, pv, handle);
 		if (ret > ret_max)
 			ret_max = ret;
+		if (sigint_caught())
+			return ret_max;
 	}
 
 	dev_iter_destroy(iter);
@@ -715,6 +734,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			ret = process_single(cmd, vg, pv, handle);
 			if (ret > ret_max)
 				ret_max = ret;
+			if (sigint_caught())
+				return ret_max;
 		}
 		if (!list_empty(&tags) && (vgnames = get_vgs(cmd, 0)) &&
 		    !list_empty(vgnames)) {
@@ -735,6 +756,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 							    process_single);
 				if (ret > ret_max)
 					ret_max = ret;
+				if (sigint_caught())
+					return ret_max;
 			}
 		}
 	} else {
@@ -745,10 +768,14 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 						    process_single);
 			if (ret > ret_max)
 				ret_max = ret;
+			if (sigint_caught())
+				return ret_max;
 		} else if (arg_count(cmd, all_ARG)) {
 			ret = _process_all_devs(cmd, handle, process_single);
 			if (ret > ret_max)
 				ret_max = ret;
+			if (sigint_caught())
+				return ret_max;
 		} else {
 			log_verbose("Scanning for physical volume names");
 			if (!(pvslist = get_pvs(cmd)))
@@ -759,6 +786,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 						     handle);
 				if (ret > ret_max)
 					ret_max = ret;
+				if (sigint_caught())
+					return ret_max;
 			}
 		}
 	}
