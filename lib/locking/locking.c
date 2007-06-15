@@ -44,46 +44,50 @@ static void _catch_sigint(int unused __attribute__((unused)))
 	_sigint_caught = 1;
 }
 
-int sigint_caught() {
+int sigint_caught(void) {
 	return _sigint_caught;
 }
 
-void sigint_clear()
+void sigint_clear(void)
 {
 	_sigint_caught = 0;
 }
 
-/* Temporarily allow keyboard interrupts to be intercepted and noted;
-   saves interrupt handler state for sigint_restore(). Users should
-   use the sigint_caught() predicate to check whether interrupt was
-   requested and act appropriately. Interrupt flags are never
-   automatically cleared by this code, but lvm_run_command() clears
-   the flag before running any command. All other places where the
-   flag needs to be cleared need to call sigint_clear(). */
+/*
+ * Temporarily allow keyboard interrupts to be intercepted and noted;
+ * saves interrupt handler state for sigint_restore().  Users should
+ * use the sigint_caught() predicate to check whether interrupt was
+ * requested and act appropriately.  Interrupt flags are never
+ * cleared automatically by this code, but the tools clear the flag
+ * before running each command in lvm_run_command().  All other places
+ * where the flag needs to be cleared need to call sigint_clear().
+ */
 
-void sigint_allow()
+void sigint_allow(void)
 {
 	struct sigaction handler;
 	sigset_t sigs;
 
-	/* do not overwrite the backed up handler data with our
-	   override ones; we just increase nesting count */
+	/*
+	 * Do not overwrite the backed-up handler data -
+	 * just increase nesting count.
+	 */
 	if (_handler_installed) {
 		_handler_installed++;
 		return;
 	}
 
-	/* grab old sigaction for SIGINT; shall not fail */
+	/* Grab old sigaction for SIGINT: shall not fail. */
 	sigaction(SIGINT, NULL, &handler);
-	handler.sa_flags &= ~SA_RESTART; /* clear restart flag */
+	handler.sa_flags &= ~SA_RESTART; /* Clear restart flag */
 	handler.sa_handler = _catch_sigint;
 
 	_handler_installed = 1;
 
-	/* override the signal handler; shall not fail */
+	/* Override the signal handler: shall not fail. */
 	sigaction(SIGINT, &handler, &_oldhandler);
 
-	/* unmask SIGINT, remember to mask it again on restore */
+	/* Unmask SIGINT.  Remember to mask it again on restore. */
 	sigprocmask(0, NULL, &sigs);
 	if ((_oldmasked = sigismember(&sigs, SIGINT))) {
 		sigdelset(&sigs, SIGINT);
@@ -91,9 +95,8 @@ void sigint_allow()
 	}
 }
 
-void sigint_restore()
+void sigint_restore(void)
 {
-	/* extra call, ignore */
 	if (!_handler_installed)
 		return;
 
@@ -102,7 +105,7 @@ void sigint_restore()
 		return;
 	}
 
-	/* nesting count went down to 0 */
+	/* Nesting count went down to 0. */
 	_handler_installed = 0;
 
 	if (_oldmasked) {
