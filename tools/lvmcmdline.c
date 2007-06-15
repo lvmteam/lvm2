@@ -373,6 +373,7 @@ char yes_no_prompt(const char *prompt, ...)
 	int c = 0, ret = 0;
 	va_list ap;
 
+	sigint_allow();
 	do {
 		if (c == '\n' || !c) {
 			va_start(ap, prompt);
@@ -389,6 +390,8 @@ char yes_no_prompt(const char *prompt, ...)
 		if ((c == 'y') || (c == 'n'))
 			ret = c;
 	} while (!ret || c != '\n');
+
+	sigint_restore();
 
 	if (c != '\n')
 		printf("\n");
@@ -864,6 +867,9 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret = 0;
 	int locking_type;
+
+	/* each command should start out with sigint flag cleared */
+	sigint_clear();
 
 	if (!(cmd->cmd_line = _copy_command_line(cmd, argc, argv)))
 		return ECMD_FAILED;

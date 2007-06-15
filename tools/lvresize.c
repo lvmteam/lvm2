@@ -485,6 +485,8 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 						  "reduced", lp->lv_name);
 					return ECMD_FAILED;
 				}
+				if (sigint_caught())
+					return ECMD_FAILED;
 			}
 		}
 	}

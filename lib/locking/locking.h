@@ -115,4 +115,11 @@ int suspend_lvs(struct cmd_context *cmd, struct list *lvs);
 int resume_lvs(struct cmd_context *cmd, struct list *lvs);
 int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs);
 
+/* interrupt handling */
+
+void sigint_clear();
+void sigint_allow();
+void sigint_restore();
+int sigint_caught();
+
 #endif

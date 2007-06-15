@@ -212,6 +212,9 @@ static int lvchange_resync(struct cmd_context *cmd,
 				return ECMD_FAILED;
 			}
 
+			if (sigint_caught())
+				return ECMD_FAILED;
+
 			active = 1;
 		}
 	}
@@ -454,6 +457,10 @@ static int lvchange_persistent(struct cmd_context *cmd,
 				  lv->name);
 			return 0;
 		}
+
+		if (sigint_caught())
+			return 0;
+
 		log_verbose("Ensuring %s is inactive.", lv->name);
 		if (!deactivate_lv(cmd, lv)) {
 			log_error("%s: deactivation failed", lv->name);
@@ -626,6 +633,8 @@ static int lvchange_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return ECMD_FAILED;
 		archived = 1;
 		doit += lvchange_persistent(cmd, lv);
+		if (sigint_caught())
+			return ECMD_FAILED;
 	}
 
 	/* add tag */

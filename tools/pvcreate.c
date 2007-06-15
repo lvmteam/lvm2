@@ -58,6 +58,9 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 		return 0;
 	}
 
+	if (sigint_caught())
+		return 0;
+
 	dev = dev_cache_get(name, cmd->filter);
 
 	/* Is there an md superblock here? */
@@ -102,6 +105,9 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 			return 0;
 		}
 	}
+
+	if (sigint_caught())
+		return 0;
 
 	if (pv && !is_orphan(pv) && arg_count(cmd, force_ARG)) {
 		log_print("WARNING: Forcing physical volume creation on "
@@ -171,6 +177,9 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	if (!pvcreate_check(cmd, pv_name))
+		goto error;
+
+	if (sigint_caught())
 		goto error;
 
 	if (arg_sign_value(cmd, physicalvolumesize_ARG, 0) == SIGN_MINUS) {
@@ -309,6 +318,8 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 		r = pvcreate_single(cmd, argv[i], &pp);
 		if (r > ret)
 			ret = r;
+		if (sigint_caught())
+			return ret;
 	}
 
 	return ret;

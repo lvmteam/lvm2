@@ -34,6 +34,87 @@ static int _vg_lock_count = 0;		/* Number of locks held */
 static int _vg_write_lock_held = 0;	/* VG write lock held? */
 static int _signals_blocked = 0;
 
+static volatile sig_atomic_t _sigint_caught = 0;
+static volatile sig_atomic_t _handler_installed;
+static struct sigaction _oldhandler;
+static int _oldmasked;
+
+static void _catch_sigint(int unused __attribute__((unused)))
+{
+	_sigint_caught = 1;
+}
+
+int sigint_caught() {
+	return _sigint_caught;
+}
+
+void sigint_clear()
+{
+	_sigint_caught = 0;
+}
+
+/* Temporarily allow keyboard interrupts to be intercepted and noted;
+   saves interrupt handler state for sigint_restore(). Users should
+   use the sigint_caught() predicate to check whether interrupt was
+   requested and act appropriately. Interrupt flags are never
+   automatically cleared by this code, but lvm_run_command() clears
+   the flag before running any command. All other places where the
+   flag needs to be cleared need to call sigint_clear(). */
+
+void sigint_allow()
+{
+	struct sigaction handler;
+	sigset_t sigs;
+
+	/* do not overwrite the backed up handler data with our
+	   override ones; we just increase nesting count */
+	if (_handler_installed) {
+		_handler_installed++;
+		return;
+	}
+
+	/* grab old sigaction for SIGINT; shall not fail */
+	sigaction(SIGINT, NULL, &handler);
+	handler.sa_flags &= ~SA_RESTART; /* clear restart flag */
+	handler.sa_handler = _catch_sigint;
+
+	_handler_installed = 1;
+
+	/* override the signal handler; shall not fail */
+	sigaction(SIGINT, &handler, &_oldhandler);
+
+	/* unmask SIGINT, remember to mask it again on restore */
+	sigprocmask(0, NULL, &sigs);
+	if ((_oldmasked = sigismember(&sigs, SIGINT))) {
+		sigdelset(&sigs, SIGINT);
+		sigprocmask(SIG_SETMASK, &sigs, NULL);
+	}
+}
+
+void sigint_restore()
+{
+	/* extra call, ignore */
+	if (!_handler_installed)
+		return;
+
+	if (_handler_installed > 1) {
+		_handler_installed--;
+		return;
+	}
+
+	/* nesting count went down to 0 */
+	_handler_installed = 0;
+
+	if (_oldmasked) {
+		sigset_t sigs;
+		sigprocmask(0, NULL, &sigs);
+		sigaddset(&sigs, SIGINT);
+		sigprocmask(SIG_SETMASK, &sigs, NULL);
+	}
+
+	sigaction(SIGINT, &_oldhandler, NULL);
+}
+
 static void _block_signals(int flags __attribute((unused)))
 {
 	sigset_t set;
