@@ -1784,57 +1784,57 @@ int vg_check_status(struct volume_group *vg, uint32_t status_flags)
 /*
  * Gets/Sets for external LVM library
  */
-struct id get_pv_id(pv_t *pv)
+struct id pv_id(pv_t *pv)
 {
 	return pv_field(pv, id);
 }
 
-const struct format_type *get_pv_format_type(pv_t *pv)
+const struct format_type *pv_format_type(pv_t *pv)
 {
 	return pv_field(pv, fmt);
 }
 
-struct id get_pv_vgid(pv_t *pv)
+struct id pv_vgid(pv_t *pv)
 {
 	return pv_field(pv, vgid);
 }
 
-struct device *get_pv_dev(pv_t *pv)
+struct device *pv_dev(pv_t *pv)
 {
 	return pv_field(pv, dev);
 }
 
-const char *get_pv_vg_name(pv_t *pv)
+const char *pv_vg_name(pv_t *pv)
 {
 	return pv_field(pv, vg_name);
 }
 
-uint64_t get_pv_size(pv_t *pv)
+uint64_t pv_size(pv_t *pv)
 {
 	return pv_field(pv, size);
 }
 
-uint32_t get_pv_status(pv_t *pv)
+uint32_t pv_status(pv_t *pv)
 {
 	return pv_field(pv, status);
 }
 
-uint32_t get_pv_pe_size(pv_t *pv)
+uint32_t pv_pe_size(pv_t *pv)
 {
 	return pv_field(pv, pe_size);
 }
 
-uint64_t get_pv_pe_start(pv_t *pv)
+uint64_t pv_pe_start(pv_t *pv)
 {
 	return pv_field(pv, pe_start);
 }
 
-uint32_t get_pv_pe_count(pv_t *pv)
+uint32_t pv_pe_count(pv_t *pv)
 {
 	return pv_field(pv, pe_count);
 }
 
-uint32_t get_pv_pe_alloc_count(pv_t *pv)
+uint32_t pv_pe_alloc_count(pv_t *pv)
 {
 	return pv_field(pv, pe_alloc_count);
 }

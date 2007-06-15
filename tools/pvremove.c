@@ -50,13 +50,13 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	/* we must have -ff to overwrite a non orphan */
 	if (arg_count(cmd, force_ARG) < 2) {
 		log_error("Can't pvremove physical volume \"%s\" of "
-			  "volume group \"%s\" without -ff", name, get_pv_vg_name(pv));
+			  "volume group \"%s\" without -ff", name, pv_vg_name(pv));
 		return 0;
 	}
 
 	/* prompt */
 	if (!arg_count(cmd, yes_ARG) &&
-	    yes_no_prompt(_really_wipe, name, get_pv_vg_name(pv)) == 'n') {
+	    yes_no_prompt(_really_wipe, name, pv_vg_name(pv)) == 'n') {
 		log_print("%s: physical volume label not removed", name);
 		return 0;
 	}
@@ -65,7 +65,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 		log_print("WARNING: Wiping physical volume label from "
 			  "%s%s%s%s", name,
 			  !is_orphan(pv) ? " of volume group \"" : "",
-			  !is_orphan(pv) ? get_pv_vg_name(pv) : "",
+			  !is_orphan(pv) ? pv_vg_name(pv) : "",
 			  !is_orphan(pv) ? "\"" : "");
 	}
 

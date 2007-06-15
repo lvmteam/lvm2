@@ -35,11 +35,11 @@ static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 
 	pv = list_item(pvl, struct pv_list)->pv;
 
-	vg_from->extent_count -= get_pv_pe_count(pv);
-	vg_to->extent_count += get_pv_pe_count(pv);
+	vg_from->extent_count -= pv_pe_count(pv);
+	vg_to->extent_count += pv_pe_count(pv);
 
-	vg_from->free_count -= get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv);
-	vg_to->free_count += get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv);
+	vg_from->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
+	vg_to->free_count += pv_pe_count(pv) - pv_pe_alloc_count(pv);
 
 	return 1;
 }
@@ -105,7 +105,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 					continue;
 				}
 				log_error("Physical Volume %s not found",
-					  dev_name(get_pv_dev(pv)));
+					  dev_name(pv_dev(pv)));
 				return 0;
 			}
 

@@ -33,7 +33,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 	uint64_t size = 0;
 	uint32_t new_pe_count = 0;
 	struct list mdas;
-	const char *pv_name = dev_name(get_pv_dev(pv));
+	const char *pv_name = dev_name(pv_dev(pv));
 	struct pvresize_params *params = (struct pvresize_params *) handle;
 	const char *vg_name;
 
@@ -41,7 +41,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 
 	params->total++;
 
-	if (!*get_pv_vg_name(pv)) {
+	if (!*pv_vg_name(pv)) {
 		vg_name = ORPHAN;
 
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
@@ -63,10 +63,10 @@ static int _pvresize_single(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 	} else {
-		vg_name = get_pv_vg_name(pv);
+		vg_name = pv_vg_name(pv);
 
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
-			log_error("Can't get lock for %s", get_pv_vg_name(pv));
+			log_error("Can't get lock for %s", pv_vg_name(pv));
 			return ECMD_FAILED;
 		}
 
@@ -103,7 +103,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 	}
 
 	/* Get new size */
-	if (!dev_get_size(get_pv_dev(pv), &size)) {
+	if (!dev_get_size(pv_dev(pv), &size)) {
 		log_error("%s: Couldn't get size.", pv_name);
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
@@ -114,7 +114,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 			log_print("WARNING: %s: Overriding real size. "
 				  "You could lose data.", pv_name);
 		log_verbose("%s: Pretending size is %" PRIu64 " not %" PRIu64
-			    " sectors.", pv_name, params->new_size, get_pv_size(pv));
+			    " sectors.", pv_name, params->new_size, pv_size(pv));
 		size = params->new_size;
 	}
 
@@ -125,9 +125,9 @@ static int _pvresize_single(struct cmd_context *cmd,
 		return ECMD_FAILED;
 	}
 
-	if (size < get_pv_pe_start(pv)) {
+	if (size < pv_pe_start(pv)) {
 		log_error("%s: Size must exceed physical extent start of "
-			  "%" PRIu64 " sectors.", pv_name, get_pv_pe_start(pv));
+			  "%" PRIu64 " sectors.", pv_name, pv_pe_start(pv));
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
 	}
@@ -135,14 +135,14 @@ static int _pvresize_single(struct cmd_context *cmd,
 	pv->size = size;
 
 	if (vg) {
-		pv->size -= get_pv_pe_start(pv);
-		new_pe_count = get_pv_size(pv) / vg->extent_size;
+		pv->size -= pv_pe_start(pv);
+		new_pe_count = pv_size(pv) / vg->extent_size;
 		
  		if (!new_pe_count) {
 			log_error("%s: Size must leave space for at "
 				  "least one physical extent of "
 				  "%" PRIu32 " sectors.", pv_name,
-				  get_pv_pe_size(pv));
+				  pv_pe_size(pv));
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;
 		}
@@ -155,12 +155,12 @@ static int _pvresize_single(struct cmd_context *cmd,
 	}
 
 	log_verbose("Resizing volume \"%s\" to %" PRIu64 " sectors.",
-		    pv_name, get_pv_size(pv));
+		    pv_name, pv_size(pv));
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
-	if (*get_pv_vg_name(pv)) {
+	if (*pv_vg_name(pv)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
-			unlock_vg(cmd, get_pv_vg_name(pv));
+			unlock_vg(cmd, pv_vg_name(pv));
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
 			return ECMD_FAILED;
