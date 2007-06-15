@@ -114,18 +114,18 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	list_iterate_items(pvl, &vg->pvs) {
 		existing_pv = pvl->pv;
 
-		pe_start = get_pv_pe_start(existing_pv);
-		pe_end = get_pv_pe_count(existing_pv) * get_pv_pe_size(existing_pv)
+		pe_start = pv_pe_start(existing_pv);
+		pe_end = pv_pe_count(existing_pv) * pv_pe_size(existing_pv)
 		    + pe_start - 1;
 
 		list_init(&mdas);
-		if (!(pv = pv_create(cmd->fmt, get_pv_dev(existing_pv),
+		if (!(pv = pv_create(cmd->fmt, pv_dev(existing_pv),
 				     &existing_pv->id, size,
-				     pe_start, get_pv_pe_count(existing_pv),
-				     get_pv_pe_size(existing_pv), pvmetadatacopies,
+				     pe_start, pv_pe_count(existing_pv),
+				     pv_pe_size(existing_pv), pvmetadatacopies,
 				     pvmetadatasize, &mdas))) {
 			log_error("Failed to setup physical volume \"%s\"",
-				  dev_name(get_pv_dev(existing_pv)));
+				  dev_name(pv_dev(existing_pv)));
 			if (change_made)
 				log_error("Use pvcreate and vgcfgrestore to "
 					  "repair from archived metadata.");
@@ -136,30 +136,30 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		change_made = 1;
 
 		log_verbose("Set up physical volume for \"%s\" with %" PRIu64
-			    " available sectors", dev_name(get_pv_dev(pv)), get_pv_size(pv));
+			    " available sectors", dev_name(pv_dev(pv)), pv_size(pv));
 
 		/* Wipe existing label first */
-		if (!label_remove(get_pv_dev(pv))) {
+		if (!label_remove(pv_dev(pv))) {
 			log_error("Failed to wipe existing label on %s",
-				  dev_name(get_pv_dev(pv)));
+				  dev_name(pv_dev(pv)));
 			log_error("Use pvcreate and vgcfgrestore to repair "
 				  "from archived metadata.");
 			return ECMD_FAILED;
 		}
 
 		log_very_verbose("Writing physical volume data to disk \"%s\"",
-				 dev_name(get_pv_dev(pv)));
+				 dev_name(pv_dev(pv)));
 		if (!(pv_write(cmd, pv, &mdas,
 			       arg_int64_value(cmd, labelsector_ARG,
 					       DEFAULT_LABELSECTOR)))) {
 			log_error("Failed to write physical volume \"%s\"",
-				  dev_name(get_pv_dev(pv)));
+				  dev_name(pv_dev(pv)));
 			log_error("Use pvcreate and vgcfgrestore to repair "
 				  "from archived metadata.");
 			return ECMD_FAILED;
 		}
 		log_verbose("Physical volume \"%s\" successfully created",
-			    dev_name(get_pv_dev(pv)));
+			    dev_name(pv_dev(pv)));
 
 	}
 

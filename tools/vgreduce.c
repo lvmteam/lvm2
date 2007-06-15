@@ -185,7 +185,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				/* FIXME Also check for segs on deleted LVs */
 
 				pv = seg_pv(seg, s);
-				if (!pv || !get_pv_dev(pv)) {
+				if (!pv || !pv_dev(pv)) {
 					if (arg_count(cmd, mirrorsonly_ARG) &&
 					    !(lv->status & MIRROR_IMAGE)) {
 						log_error("Non-mirror-image LV %s found: can't remove.", lv->name);
@@ -365,9 +365,9 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 			    void *handle __attribute((unused)))
 {
 	struct pv_list *pvl;
-	const char *name = dev_name(get_pv_dev(pv));
+	const char *name = dev_name(pv_dev(pv));
 
-	if (get_pv_pe_alloc_count(pv)) {
+	if (pv_pe_alloc_count(pv)) {
 		log_error("Physical volume \"%s\" still in use", name);
 		return ECMD_FAILED;
 	}
@@ -391,14 +391,14 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	pv->vg_name = ORPHAN;
 	pv->status = ALLOCATABLE_PV;
 
-	if (!dev_get_size(get_pv_dev(pv), &pv->size)) {
-		log_error("%s: Couldn't get size.", dev_name(get_pv_dev(pv)));
+	if (!dev_get_size(pv_dev(pv), &pv->size)) {
+		log_error("%s: Couldn't get size.", dev_name(pv_dev(pv)));
 		return ECMD_FAILED;
 	}
 
 	vg->pv_count--;
-	vg->free_count -= get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv);
-	vg->extent_count -= get_pv_pe_count(pv);
+	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
+	vg->extent_count -= pv_pe_count(pv);
 
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("Removal of physical volume \"%s\" from "

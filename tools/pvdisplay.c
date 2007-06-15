@@ -24,16 +24,16 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	int ret = ECMD_PROCESSED;
 	uint64_t size;
 
-	const char *pv_name = dev_name(get_pv_dev(pv));
+	const char *pv_name = dev_name(pv_dev(pv));
 
-	 if (get_pv_vg_name(pv)) {
-	         if (!lock_vol(cmd, get_pv_vg_name(pv), LCK_VG_READ)) {
-	                 log_error("Can't lock %s: skipping", get_pv_vg_name(pv));
+	 if (pv_vg_name(pv)) {
+	         if (!lock_vol(cmd, pv_vg_name(pv), LCK_VG_READ)) {
+	                 log_error("Can't lock %s: skipping", pv_vg_name(pv));
 	                 return ECMD_FAILED;
 	         }
 
-	         if (!(vg = vg_read(cmd, get_pv_vg_name(pv), (char *)&pv->vgid, &consistent))) {
-	                 log_error("Can't read %s: skipping", get_pv_vg_name(pv));
+	         if (!(vg = vg_read(cmd, pv_vg_name(pv), (char *)&pv->vgid, &consistent))) {
+	                 log_error("Can't read %s: skipping", pv_vg_name(pv));
 	                 goto out;
 	         }
 
@@ -56,11 +56,11 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		 pv = pvl->pv;
 	}
 
-	if (!*get_pv_vg_name(pv))
-		size = get_pv_size(pv);
+	if (!*pv_vg_name(pv))
+		size = pv_size(pv);
 	else
-		size = (get_pv_pe_count(pv) - get_pv_pe_alloc_count(pv)) * 
-			get_pv_pe_size(pv);
+		size = (pv_pe_count(pv) - pv_pe_alloc_count(pv)) * 
+			pv_pe_size(pv);
 
 	if (arg_count(cmd, short_ARG)) {
 		log_print("Device \"%s\" has a capacity of %s", pv_name,
@@ -68,11 +68,11 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		goto out;
 	}
 
-	if (get_pv_status(pv) & EXPORTED_VG)
+	if (pv_status(pv) & EXPORTED_VG)
 		log_print("Physical volume \"%s\" of volume group \"%s\" "
-			  "is exported", pv_name, get_pv_vg_name(pv));
+			  "is exported", pv_name, pv_vg_name(pv));
 
-	if (!get_pv_vg_name(pv))
+	if (!pv_vg_name(pv))
 		log_print("\"%s\" is a new physical volume of \"%s\"",
 			  pv_name, display_size(cmd, size));
 
@@ -87,8 +87,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		pvdisplay_segments(pv);
 
 out:
-        if (get_pv_vg_name(pv))
-                unlock_vg(cmd, get_pv_vg_name(pv));
+        if (pv_vg_name(pv))
+                unlock_vg(cmd, pv_vg_name(pv));
 
 	return ret;
 }

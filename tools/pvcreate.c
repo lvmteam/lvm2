@@ -47,13 +47,13 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	/* We must have -ff to overwrite a non orphan */
 	if (pv && !is_orphan(pv) && arg_count(cmd, force_ARG) != 2) {
 		log_error("Can't initialize physical volume \"%s\" of "
-			  "volume group \"%s\" without -ff", name, get_pv_vg_name(pv));
+			  "volume group \"%s\" without -ff", name, pv_vg_name(pv));
 		return 0;
 	}
 
 	/* prompt */
 	if (pv && !is_orphan(pv) && !arg_count(cmd, yes_ARG) &&
-	    yes_no_prompt(_really_init, name, get_pv_vg_name(pv)) == 'n') {
+	    yes_no_prompt(_really_init, name, pv_vg_name(pv)) == 'n') {
 		log_print("%s: physical volume not initialized", name);
 		return 0;
 	}
@@ -113,7 +113,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 		log_print("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
 			  !is_orphan(pv) ? " of volume group \"" : "",
-			  !is_orphan(pv) ? get_pv_vg_name(pv) : "",
+			  !is_orphan(pv) ? pv_vg_name(pv) : "",
 			  !is_orphan(pv) ? "\"" : "");
 	}
 
@@ -166,9 +166,9 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 				  uuid, restorefile);
 			return ECMD_FAILED;
 		}
-		pe_start = get_pv_pe_start(existing_pv);
-		extent_size = get_pv_pe_size(existing_pv);
-		extent_count = get_pv_pe_count(existing_pv);
+		pe_start = pv_pe_start(existing_pv);
+		extent_size = pv_pe_size(existing_pv);
+		extent_count = pv_pe_count(existing_pv);
 	}
 
 	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
@@ -220,10 +220,10 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	log_verbose("Set up physical volume for \"%s\" with %" PRIu64
-		    " available sectors", pv_name, get_pv_size(pv));
+		    " available sectors", pv_name, pv_size(pv));
 
 	/* Wipe existing label first */
-	if (!label_remove(get_pv_dev(pv))) {
+	if (!label_remove(pv_dev(pv))) {
 		log_error("Failed to wipe existing label on %s", pv_name);
 		goto error;
 	}
