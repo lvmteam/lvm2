@@ -14,10 +14,10 @@ vgcfgrestore \- restore volume group descriptor area
 .SH DESCRIPTION
 .B vgcfgrestore
 allows you to restore the metadata of \fIVolumeGroupName\fP from a text 
-backup file produced by \fBvgcfgbackup\fP.  You can specify a backup file to
-use with the \fP-f\fP option.  If no backup file is specified, the latest
-backup file is used.  A list of backup and archive files of 
-\fIVolumeGroupName\fP may be listed with the \fB-l\fP option.
+backup file produced by \fBvgcfgbackup\fP.  You can specify a backup file 
+with \fP--file\fP.  If no backup file is specified, the most recent
+one is used.  Use \fB--list\fP for a list of the available
+backup and archive files of \fIVolumeGroupName\fP.
 .SH OPTIONS
 .TP
 \fB-l | --list\fP \(em List files pertaining to \fIVolumeGroupName\fP
