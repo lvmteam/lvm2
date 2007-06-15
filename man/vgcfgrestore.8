@@ -10,12 +10,24 @@ vgcfgrestore \- restore volume group descriptor area
 .RB [ \-M | \-\-Metadatatype 1|2]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
-.RI VolumeGroupName
+.RI \fIVolumeGroupName\fP
 .SH DESCRIPTION
 .B vgcfgrestore
-allows you to restore the metadata 
-of a volume group from a text backup file produced by \fBvgcfgbackup\fP.
+allows you to restore the metadata of \fIVolumeGroupName\fP from a text 
+backup file produced by \fBvgcfgbackup\fP.  You can specify a backup file to
+use with the \fP-f\fP option.  If no backup file is specified, the latest
+backup file is used.  A list of backup and archive files of 
+\fIVolumeGroupName\fP may be listed with the \fB-l\fP option.
 .SH OPTIONS
+.TP
+\fB-l | --list\fP \(em List files pertaining to \fIVolumeGroupName\fP
+List metadata backup and archive files pertaining to \fIVolumeGroupName\fP.
+May be used with the \fB-f\fP option.  Does not restore \fIVolumeGroupName\fP.
+.TP
+\fB-f | --file\fP filename \(em Name of LVM metadata backup file
+Specifies a metadata backup or archive file to be used for restoring 
+VolumeGroupName.  Often this file has been created with \fBvgcfgbackup\fP.
+.TP
 See \fBlvm\fP for common options.
 .SH REPLACING PHYSICAL VOLUMES
 \fBvgdisplay --partial --verbose\fP will show you the UUIDs and sizes of

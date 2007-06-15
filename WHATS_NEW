@@ -1,5 +1,6 @@
 Version 2.02.26 -
 =================================
+  Update vgcfgrestore man page.
   Allow keyboard interrupt in user prompts where appropriate.
   Remove system-lv code from clvmd. It's highly dodgy and never used.
   Convert a lot of code pv dereferences to use get_pv_* functions.
