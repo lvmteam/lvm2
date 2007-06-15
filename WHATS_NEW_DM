@@ -1,6 +1,7 @@
 Version 1.02.20 -
 =================================
-  Add capability for tree-based fields to dmsetup reports.
+  Fix default dmsetup report buffering and add --unbuffered.
+  Add tree-based and dependency fields to dmsetup reports.
 
 Version 1.02.19 - 27th April 2007
 =================================
