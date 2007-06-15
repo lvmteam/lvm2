@@ -1,5 +1,5 @@
-Version 1.02.20 -
-=================================
+Version 1.02.20 - 15th June 2007
+================================
   Fix default dmsetup report buffering and add --unbuffered.
   Add tree-based and dependency fields to dmsetup reports.
 
