@@ -536,7 +536,7 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	init_dmeventd_monitor(arg_int_value(cmd, monitor_ARG,
-					    cmd->is_static ?
+					    (cmd->is_static || arg_count(cmd, ignoremonitoring_ARG)) ?
 					    DMEVENTD_MONITOR_IGNORE : DEFAULT_DMEVENTD_MONITOR));
 
 	if (arg_count(cmd, available_ARG))

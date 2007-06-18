@@ -66,6 +66,7 @@ xx(lvchange,
    "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
    "\t[-M|--persistent y|n] [--major major] [--minor minor]\n"
    "\t[-P|--partial] " "\n"
@@ -80,9 +81,9 @@ xx(lvchange,
    "\tLogicalVolume[Path] [LogicalVolume[Path]...]\n",
 
    alloc_ARG, autobackup_ARG, available_ARG, contiguous_ARG, force_ARG,
-   ignorelockingfailure_ARG, major_ARG, minor_ARG, monitor_ARG,
-   partial_ARG, permission_ARG, persistent_ARG, readahead_ARG, resync_ARG,
-   refresh_ARG, addtag_ARG, deltag_ARG, test_ARG, yes_ARG)
+   ignorelockingfailure_ARG, ignoremonitoring_ARG, major_ARG, minor_ARG,
+   monitor_ARG, partial_ARG, permission_ARG, persistent_ARG, readahead_ARG,
+   resync_ARG, refresh_ARG, addtag_ARG, deltag_ARG, test_ARG, yes_ARG)
 
 xx(lvconvert,
    "Change logical volume layout",
@@ -617,6 +618,7 @@ xx(vgchange,
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
    "\t[-t|--test]" "\n"
    "\t[-u|--uuid] " "\n"
@@ -633,9 +635,9 @@ xx(vgchange,
    "\t[VolumeGroupName...]\n",
 
    addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, available_ARG,
-   clustered_ARG, deltag_ARG, ignorelockingfailure_ARG, logicalvolume_ARG,
-   maxphysicalvolumes_ARG, monitor_ARG, partial_ARG, physicalextentsize_ARG,
-   resizeable_ARG, resizable_ARG, test_ARG, uuid_ARG)
+   clustered_ARG, deltag_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
+   logicalvolume_ARG, maxphysicalvolumes_ARG, monitor_ARG, partial_ARG,
+   physicalextentsize_ARG, resizeable_ARG, resizable_ARG, test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
