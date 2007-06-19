@@ -1,5 +1,6 @@
 Version 2.02.27 - 
 ================================
+  Fix missing lvm_shell symbol in lvm2cmd library. (2.02.23)
   Add vg_status function and clean up vg->status in tools directory.
   Add --ignoremonitoring to disable all dmeventd interaction.
   Remove get_ prefix from get_pv_* functions.

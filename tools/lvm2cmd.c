@@ -19,3 +19,8 @@ void *lvm2_init(void)
 {
 	return cmdlib_lvm2_init(0);
 }
+
+int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
+{
+	return 0;
+}
