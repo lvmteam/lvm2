@@ -23,7 +23,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	struct pv_list *pvl;
 	int ret = ECMD_PROCESSED;
 
-	if (!vg || !consistent || (vg->status & PARTIAL_VG)) {
+	if (!vg || !consistent || (vg_status(vg) & PARTIAL_VG)) {
 		log_error("Volume group \"%s\" not found or inconsistent.",
 			  vg_name);
 		log_error("Consider vgreduce --removemissing if metadata "
@@ -31,10 +31,8 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg->name);
+	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
-	}
 
 	if (vg->lv_count) {
 		log_error("Volume group \"%s\" still contains %d "

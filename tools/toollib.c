@@ -159,10 +159,8 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 
 	struct lv_list *lvl;
 
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg->name);
+	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
-	}
 
 	if (tags && !list_empty(tags))
 		tags_supplied = 1;

@@ -24,10 +24,8 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	vg = lv->vg;
 
-	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg->name);
+	if (!vg_check_status(vg, LVM_WRITE))
 		return ECMD_FAILED;
-	}
 
 	if (lv_is_origin(lv)) {
 		log_error("Can't remove logical volume \"%s\" under snapshot",
@@ -77,7 +75,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* If the VG is clustered then make sure no-one else is using the LV
 	   we are about to remove */
-	if (vg->status & CLUSTERED) {
+	if (vg_status(vg) & CLUSTERED) {
 		if (!activate_lv_excl(cmd, lv)) {
 			log_error("Can't get exclusive access to volume \"%s\"",
 				  lv->name);

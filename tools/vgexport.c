@@ -33,13 +33,7 @@ static int vgexport_single(struct cmd_context *cmd __attribute((unused)),
 		goto error;
 	}
 
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is already exported", vg_name);
-		goto error;
-	}
-
-	if (!(vg->status & LVM_WRITE)) {
-		log_error("Volume group \"%s\" is read-only", vg_name);
+	if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE)) {
 		goto error;
 	}
 

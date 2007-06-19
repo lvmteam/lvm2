@@ -532,21 +532,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		log_print("Wrote out consistent volume group %s", vg_name);
 
 	} else {
-		if (vg->status & EXPORTED_VG) {
-			log_error("Volume group \"%s\" is exported", vg->name);
-			unlock_vg(cmd, vg_name);
-			return ECMD_FAILED;
-		}
-
-		if (!(vg->status & LVM_WRITE)) {
-			log_error("Volume group \"%s\" is read-only", vg_name);
-			unlock_vg(cmd, vg_name);
-			return ECMD_FAILED;
-		}
-
-		if (!(vg->status & RESIZEABLE_VG)) {
-			log_error("Volume group \"%s\" is not reducible",
-				  vg_name);
+		if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE | RESIZEABLE_VG)) {
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;
 		}

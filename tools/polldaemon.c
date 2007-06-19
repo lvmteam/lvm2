@@ -191,10 +191,8 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 		return ECMD_FAILED;
 	}
 
-	if (vg->status & EXPORTED_VG) {
-		log_error("Volume group \"%s\" is exported", vg->name);
+	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
-	}
 
 	list_iterate_items(lvl, &vg->lvs) {
 		lv_mirr = lvl->lv;
