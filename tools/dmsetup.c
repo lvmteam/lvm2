@@ -1629,7 +1629,7 @@ static int _dm_info_devno_disp(struct dm_report *rh, struct dm_pool *mem,
 		goto out_abandon;
 	}
 
-	if (!dm_pool_grow_object(mem, buf, strlen(buf))) {
+	if (!dm_pool_grow_object(mem, buf, strlen(buf) + 1)) {
 		log_error("dm_pool_grow_object failed");
 		goto out_abandon;
 	}
@@ -1662,7 +1662,7 @@ static int _dm_tree_names(struct dm_report *rh, struct dm_pool *mem,
 		name = dm_tree_node_get_name(parent);
 		if (!name || !*name)
 			continue;
-		if (!first_node && !dm_pool_grow_object(mem, ",", 1)) {
+		if (!first_node && !dm_pool_grow_object(mem, ",", 2)) {
 			log_error("dm_pool_grow_object failed");
 			goto out_abandon;
 		}
