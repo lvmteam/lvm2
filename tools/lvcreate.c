@@ -587,7 +587,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			return 0;
 		}
 		/* FIXME Allow exclusive activation. */
-		if (vg->status & CLUSTERED) {
+		if (vg_status(vg) & CLUSTERED) {
 			log_error("Clustered snapshots are not yet supported.");
 			return 0;
 		}

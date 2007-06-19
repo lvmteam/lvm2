@@ -235,6 +235,8 @@ struct volume_group {
 	struct list tags;
 };
 
+typedef struct volume_group vg_t;
+
 /* There will be one area for each stripe */
 struct lv_segment_area {
 	area_type_t type;
@@ -649,5 +651,7 @@ uint32_t pv_pe_size(pv_t *pv);
 uint64_t pv_pe_start(pv_t *pv);
 uint32_t pv_pe_count(pv_t *pv);
 uint32_t pv_pe_alloc_count(pv_t *pv);
+
+uint32_t vg_status(vg_t *vg);
 
 #endif
