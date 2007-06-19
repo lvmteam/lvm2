@@ -245,14 +245,13 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-int vg_extend(struct format_instance *fid,
-	      struct volume_group *vg, int pv_count, char **pv_names)
+int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 {
 	int i;
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++)
-		if (!_add_pv_to_vg(fid, vg, pv_names[i])) {
+		if (!_add_pv_to_vg(vg->fid, vg, pv_names[i])) {
 			log_error("Unable to add physical volume '%s' to "
 				  "volume group '%s'.", pv_names[i], vg->name);
 			return 0;
@@ -352,7 +351,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	/* attach the pv's */
-	if (!vg_extend(vg->fid, vg, pv_count, pv_names))
+	if (!vg_extend(vg, pv_count, pv_names))
 		goto_bad;
 
 	return vg;
