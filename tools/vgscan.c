@@ -34,7 +34,7 @@ static int vgscan_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_print("Found %svolume group \"%s\" using metadata type %s",
-		  (vg->status & EXPORTED_VG) ? "exported " : "", vg_name,
+		  (vg_status(vg) & EXPORTED_VG) ? "exported " : "", vg_name,
 		  vg->fid->fmt->name);
 
 	check_current_backup(vg);

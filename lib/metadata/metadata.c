@@ -1837,3 +1837,8 @@ uint32_t pv_pe_alloc_count(pv_t *pv)
 {
 	return pv_field(pv, pe_alloc_count);
 }
+
+uint32_t vg_status(vg_t *vg)
+{
+	return vg->status;
+}

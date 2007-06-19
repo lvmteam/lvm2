@@ -1,6 +1,8 @@
 Version 2.02.27 - 
 ================================
+  Add vg_status function and clean up vg->status in tools directory.
   Add --ignoremonitoring to disable all dmeventd interaction.
+  Remove get_ prefix from get_pv_* functions.
 
 Version 2.02.26 - 15th June 2007
 ================================

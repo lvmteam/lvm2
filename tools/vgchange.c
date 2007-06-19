@@ -134,7 +134,7 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		return ECMD_FAILED;
 	}
 
-	if (activate && lockingfailed() && (vg->status & CLUSTERED)) {
+	if (activate && lockingfailed() && (vg_status(vg) & CLUSTERED)) {
 		log_error("Locking inactive: ignoring clustered "
 			  "volume group %s", vg->name);
 		return ECMD_FAILED;
@@ -207,13 +207,13 @@ static int _vgchange_resizeable(struct cmd_context *cmd,
 {
 	int resizeable = !strcmp(arg_str_value(cmd, resizeable_ARG, "n"), "y");
 
-	if (resizeable && (vg->status & RESIZEABLE_VG)) {
+	if (resizeable && (vg_status(vg) & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" is already resizeable",
 			  vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (!resizeable && !(vg->status & RESIZEABLE_VG)) {
+	if (!resizeable && !(vg_status(vg) & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" is already not resizeable",
 			  vg->name);
 		return ECMD_FAILED;
@@ -243,13 +243,13 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 	int clustered = !strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
 	struct lv_list *lvl;
 
-	if (clustered && (vg->status & CLUSTERED)) {
+	if (clustered && (vg_status(vg) & CLUSTERED)) {
 		log_error("Volume group \"%s\" is already clustered",
 			  vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (!clustered && !(vg->status & CLUSTERED)) {
+	if (!clustered && !(vg_status(vg) & CLUSTERED)) {
 		log_error("Volume group \"%s\" is already not clustered",
 			  vg->name);
 		return ECMD_FAILED;
@@ -289,7 +289,7 @@ static int _vgchange_logicalvolume(struct cmd_context *cmd,
 {
 	uint32_t max_lv = arg_uint_value(cmd, logicalvolume_ARG, 0);
 
-	if (!(vg->status & RESIZEABLE_VG)) {
+	if (!(vg_status(vg) & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" must be resizeable "
 			  "to change MaxLogicalVolume", vg->name);
 		return ECMD_FAILED;
@@ -331,7 +331,7 @@ static int _vgchange_physicalvolumes(struct cmd_context *cmd,
 {
 	uint32_t max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
 
-	if (!(vg->status & RESIZEABLE_VG)) {
+	if (!(vg_status(vg) & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" must be resizeable "
 			  "to change MaxPhysicalVolumes", vg->name);
 		return ECMD_FAILED;
@@ -377,7 +377,7 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 {
 	uint32_t extent_size;
 
-	if (!(vg->status & RESIZEABLE_VG)) {
+	if (!(vg_status(vg) & RESIZEABLE_VG)) {
 		log_error("Volume group \"%s\" must be resizeable "
 			  "to change PE size", vg->name);
 		return ECMD_FAILED;
@@ -525,12 +525,12 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			return ECMD_FAILED;
 	}
 
-	if (!(vg->status & LVM_WRITE) && !arg_count(cmd, available_ARG)) {
+	if (!(vg_status(vg) & LVM_WRITE) && !arg_count(cmd, available_ARG)) {
 		log_error("Volume group \"%s\" is read-only", vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (vg->status & EXPORTED_VG) {
+	if (vg_status(vg) & EXPORTED_VG) {
 		log_error("Volume group \"%s\" is exported", vg_name);
 		return ECMD_FAILED;
 	}

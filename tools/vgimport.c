@@ -29,12 +29,12 @@ static int vgimport_single(struct cmd_context *cmd __attribute((unused)),
 		goto error;
 	}
 
-	if (!(vg->status & EXPORTED_VG)) {
+	if (!(vg_status(vg) & EXPORTED_VG)) {
 		log_error("Volume group \"%s\" is not exported", vg_name);
 		goto error;
 	}
 
-	if (vg->status & PARTIAL_VG) {
+	if (vg_status(vg) & PARTIAL_VG) {
 		log_error("Volume group \"%s\" is partially missing", vg_name);
 		goto error;
 	}
