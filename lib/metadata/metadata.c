@@ -1744,33 +1744,33 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 /**
  * vg_check_status - check volume group status flags and log error
  * @vg - volume group to check status flags
- * @status_flags - specific status flags to check (e.g. EXPORTED_VG)
+ * @status - specific status flags to check (e.g. EXPORTED_VG)
  *
  * Returns:
  * 0 - fail
  * 1 - success
  */
-int vg_check_status(struct volume_group *vg, uint32_t status_flags)
+int vg_check_status(struct volume_group *vg, uint32_t status)
 {
-	if ((status_flags & CLUSTERED) &&
+	if ((status & CLUSTERED) &&
 	    (vg->status & CLUSTERED) && !locking_is_clustered() &&
 	    !lockingfailed()) {
 		log_error("Skipping clustered volume group %s", vg->name);
 		return 0;
 	}
 
-	if ((status_flags & EXPORTED_VG) &&
+	if ((status & EXPORTED_VG) &&
 	    (vg->status & EXPORTED_VG)) {
 		log_error("Volume group %s is exported", vg->name);
 		return 0;
 	}
 
-	if ((status_flags & LVM_WRITE) &&
+	if ((status & LVM_WRITE) &&
 	    !(vg->status & LVM_WRITE)) {
 		log_error("Volume group %s is read-only", vg->name);
 		return 0;
 	}
-	if ((status_flags & RESIZEABLE_VG) &&
+	if ((status & RESIZEABLE_VG) &&
 	    !(vg->status & RESIZEABLE_VG)) {
 		log_error("Volume group %s is not resizeable.", vg->name);
 		return 0;
