@@ -21,10 +21,10 @@
 
 #include "tools.h"
 
-int disks_found = 0;
-int parts_found = 0;
-int pv_disks_found = 0;
-int pv_parts_found = 0;
+int disks_found;
+int parts_found;
+int pv_disks_found;
+int pv_parts_found;
 int max_len;
 
 static int _get_max_dev_name_len(struct dev_filter *filter)
@@ -98,6 +98,12 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute((unused)),
 	struct dev_iter *iter;
 	struct device *dev;
 	struct label *label;
+
+	/* initialise these here to avoid problems with the lvm shell */
+	disks_found = 0;
+	parts_found = 0;
+	pv_disks_found = 0;
+	pv_parts_found = 0;
 
 	if (arg_count(cmd, lvmpartition_ARG))
 		log_print("WARNING: only considering LVM devices");
