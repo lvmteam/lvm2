@@ -59,7 +59,7 @@ endif
 
 ifeq ("$(OPENAIS)", "yes")
 	SOURCES += clvmd-openais.c
-	LMLIBS += -lSaLck -lSaClm -lcpg
+	LMLIBS += -lSaLck -lcpg
 	DEFS += -DUSE_OPENAIS
 endif
 
