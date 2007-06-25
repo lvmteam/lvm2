@@ -98,9 +98,6 @@ SaLckCallbacksT lck_callbacks = {
         .saLckResourceUnlockCallback = lck_unlock_callback
 };
 
-/* We only call Clm to get our node id */
-SaClmCallbacksT clm_callbacks;
-
 struct node_info
 {
 	enum {NODE_UNKNOWN, NODE_DOWN, NODE_UP, NODE_CLVMD} state;
@@ -348,7 +345,6 @@ static int _init_cluster(void)
 {
 	SaAisErrorT err;
 	SaVersionT  ver = { 'B', 1, 1 };
-	SaClmHandleT clm_handle;
 	int select_fd;
 	SaClmClusterNodeT cluster_node;
 
@@ -387,26 +383,14 @@ static int _init_cluster(void)
 		return ais_to_errno(err);
 	}
 
-	/* A brief foray into Clm to get our node id */
-	err = saClmInitialize(&clm_handle, &clm_callbacks, &ver);
-	if (err != SA_AIS_OK) {
-		syslog(LOG_ERR, "Could not initialize OpenAIS membership service %d\n", err);
-		DEBUGLOG("Could not initialize OpenAIS Membership service %d\n", err);
-		return ais_to_errno(err);
-	}
-
-	err = saClmClusterNodeGet(clm_handle,
-				  SA_CLM_LOCAL_NODE_ID,
-				  TIMEOUT,
-				  &cluster_node);
+	err = cpg_local_get(cpg_handle,
+			    &cluster_node);
 	if (err != SA_AIS_OK) {
 		cpg_finalize(cpg_handle);
 		saLckFinalize(lck_handle);
-		saClmFinalize(clm_handle);
 		syslog(LOG_ERR, "Cannot get local node id\n");
 		return ais_to_errno(err);
 	}
-	saClmFinalize(clm_handle);
 	our_nodeid = cluster_node.nodeId;
 	DEBUGLOG("Our local node id is %d\n", our_nodeid);
 
@@ -424,7 +408,7 @@ static void _cluster_closedown(void)
 	unlock_all();
 
 	saLckFinalize(lck_handle);
-	cpg_inalize(cpg_handle);
+	cpg_finalize(cpg_handle);
 }
 
 static void _get_our_csid(char *csid)
