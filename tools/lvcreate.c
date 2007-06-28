@@ -693,7 +693,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		init_mirror_in_sync(lp->nosync);
 
 		if (lp->nosync) {
-			log_print("WARNING: New mirror won't be synchronised. "
+			log_warn("WARNING: New mirror won't be synchronised. "
 				  "Don't read what you didn't write!");
 			status |= MIRROR_NOTSYNCED;
 		}

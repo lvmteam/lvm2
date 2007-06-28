@@ -1204,8 +1204,8 @@ static int _mda_setup(const struct format_type *fmt,
 
 	/* Ensure it's not going to be bigger than the disk! */
 	if (start1 + mda_size1 > disk_size) {
-		log_print("Warning: metadata area fills disk leaving no "
-			  "space for data on %s.", dev_name(pv->dev));
+		log_warn("WARNING: metadata area fills disk leaving no "
+			 "space for data on %s.", dev_name(pv->dev));
 		/* Leave some free space for rounding */
 		/* Avoid empty data area as could cause tools problems */
 		mda_size1 = disk_size - start1 - alignment * 2;

@@ -110,7 +110,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 		return 0;
 
 	if (pv && !is_orphan(pv) && arg_count(cmd, force_ARG)) {
-		log_print("WARNING: Forcing physical volume creation on "
+		log_warn("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
 			  !is_orphan(pv) ? " of volume group \"" : "",
 			  !is_orphan(pv) ? pv_vg_name(pv) : "",

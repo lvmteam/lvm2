@@ -377,7 +377,7 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 		/* Unable to remove bad devices */
 		return 0;
 
-	log_print("WARNING: Bad device removed from mirror volume, %s/%s",
+	log_warn("WARNING: Bad device removed from mirror volume, %s/%s",
 		  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 
 	log_policy = get_mirror_log_fault_policy(mirrored_seg->lv->vg->cmd);
@@ -394,15 +394,15 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 	else if (r > 0)
 		/* Success in replacing device(s) */
-		log_print("WARNING: Mirror volume, %s/%s restored - substitute for failed device found.",
+		log_warn("WARNING: Mirror volume, %s/%s restored - substitute for failed device found.",
 			  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 	else
 		/* Bad device removed, but not replaced because of policy */
 		if (mirrored_seg->area_count == 1) {
-			log_print("WARNING: Mirror volume, %s/%s converted to linear due to device failure.",
+			log_warn("WARNING: Mirror volume, %s/%s converted to linear due to device failure.",
 				  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 		} else if (had_log && !mirrored_seg->log_lv) {
-			log_print("WARNING: Mirror volume, %s/%s disk log removed due to device failure.",
+			log_warn("WARNING: Mirror volume, %s/%s disk log removed due to device failure.",
 				  mirrored_seg->lv->vg->name, mirrored_seg->lv->name);
 		}
 	/*

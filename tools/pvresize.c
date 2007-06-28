@@ -111,7 +111,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 	
 	if (params->new_size) {
 		if (params->new_size > size)
-			log_print("WARNING: %s: Overriding real size. "
+			log_warn("WARNING: %s: Overriding real size. "
 				  "You could lose data.", pv_name);
 		log_verbose("%s: Pretending size is %" PRIu64 " not %" PRIu64
 			    " sectors.", pv_name, params->new_size, pv_size(pv));

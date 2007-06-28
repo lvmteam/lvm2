@@ -214,7 +214,7 @@ int init_locking(int type, struct cmd_context *cmd)
 	switch (type) {
 	case 0:
 		init_no_locking(&_locking, cmd);
-		log_print("WARNING: Locking disabled. Be careful! "
+		log_warn("WARNING: Locking disabled. Be careful! "
 			  "This could corrupt your metadata.");
 		return 1;
 
@@ -255,8 +255,8 @@ int init_locking(int type, struct cmd_context *cmd)
 	if ((type == 2 || type == 3) &&
             find_config_tree_int(cmd, "locking/fallback_to_local_locking",
 				 DEFAULT_FALLBACK_TO_LOCAL_LOCKING)) {
-		log_print("WARNING: Falling back to local file-based locking.");
-		log_print("Volume Groups with the clustered attribute will "
+		log_warn("WARNING: Falling back to local file-based locking.");
+		log_warn("Volume Groups with the clustered attribute will "
 			  "be inaccessible.");
 		if (init_file_locking(&_locking, cmd))
 			return 1;

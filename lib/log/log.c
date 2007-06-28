@@ -302,6 +302,9 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 	int bufused, n;
 	const char *message;
 	const char *trformat;		/* Translated format string */
+	int use_stderr = level & _LOG_STDERR;
+
+	level &= ~_LOG_STDERR;
 
 	if (_log_suppress == 2)
 		return;
@@ -373,9 +376,9 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			break;
 		case _LOG_WARN:
 			if (_verbose_level >= _LOG_WARN) {
-				printf("%s%s", _cmd_name, _msg_prefix);
-				vprintf(trformat, ap);
-				putchar('\n');
+				fprintf(use_stderr ? stderr : stdout, "%s%s", _cmd_name, _msg_prefix);
+				vfprintf(use_stderr ? stderr : stdout, trformat, ap);
+				fputc('\n', use_stderr ? stderr : stdout);
 			}
 			break;
 		case _LOG_ERR:

@@ -214,7 +214,7 @@ static int __backup(struct volume_group *vg)
 int backup(struct volume_group *vg)
 {
 	if (!vg->cmd->backup_params->enabled || !vg->cmd->backup_params->dir) {
-		log_print("WARNING: This metadata update is NOT backed up");
+		log_warn("WARNING: This metadata update is NOT backed up");
 		return 1;
 	}
 

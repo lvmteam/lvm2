@@ -155,14 +155,14 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
 			lp->stripes = arg_uint_value(cmd, stripes_ARG, 1);
 		else
-			log_print("Varied striping not supported. Ignoring.");
+			log_warn("Varied striping not supported. Ignoring.");
 	}
 
 	if (arg_count(cmd, mirrors_ARG)) {
 		if (vg->fid->fmt->features & FMT_SEGMENTS)
 			lp->mirrors = arg_uint_value(cmd, mirrors_ARG, 1) + 1;
 		else
-			log_print("Mirrors not supported. Ignoring.");
+			log_warn("Mirrors not supported. Ignoring.");
 		if (arg_sign_value(cmd, mirrors_ARG, 0) == SIGN_MINUS) {
 			log_error("Mirrors argument may not be negative");
 			return 0;
@@ -182,7 +182,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		}
 
 		if (!(vg->fid->fmt->features & FMT_SEGMENTS))
-			log_print("Varied stripesize not supported. Ignoring.");
+			log_warn("Varied stripesize not supported. Ignoring.");
 		else if (arg_uint_value(cmd, stripesize_ARG, 0) > vg->extent_size) {
                 	log_error("Reducing stripe size %s to maximum, "
 				  "physical extent size %s",
@@ -447,7 +447,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	if (lp->resize == LV_REDUCE) {
 		if (lp->argc)
-			log_print("Ignoring PVs on command line when reducing");
+			log_warn("Ignoring PVs on command line when reducing");
 	} else if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
 						     lp->argv, 1) : &vg->pvs)) {
 		stack;
@@ -469,13 +469,13 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		}
 
 		if (info.exists && !lp->resizefs && (lp->resize == LV_REDUCE)) {
-			log_print("WARNING: Reducing active%s logical volume "
+			log_warn("WARNING: Reducing active%s logical volume "
 				  "to %s", info.open_count ? " and open" : "",
 				  display_size(cmd, (uint64_t) lp->extents *
 						    vg->extent_size));
 
-			log_print("THIS MAY DESTROY YOUR DATA "
-				  "(filesystem etc.)");
+			log_warn("THIS MAY DESTROY YOUR DATA "
+				 "(filesystem etc.)");
 
 			if (!arg_count(cmd, force_ARG)) {
 				if (yes_no_prompt("Do you really want to "

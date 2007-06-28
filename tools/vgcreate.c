@@ -95,12 +95,12 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 
 	if (max_lv != vg->max_lv)
-		log_error("Warning: Setting maxlogicalvolumes to %d "
-			  "(0 means unlimited)", vg->max_lv);
+		log_warn("WARNING: Setting maxlogicalvolumes to %d "
+			 "(0 means unlimited)", vg->max_lv);
 
 	if (max_pv != vg->max_pv)
-		log_error("Warning: Setting maxphysicalvolumes to %d "
-			  "(0 means unlimited)", vg->max_pv);
+		log_warn("WARNING: Setting maxphysicalvolumes to %d "
+			 "(0 means unlimited)", vg->max_pv);
 
 	if (arg_count(cmd, addtag_ARG)) {
 		if (!(tag = arg_str_value(cmd, addtag_ARG, NULL))) {

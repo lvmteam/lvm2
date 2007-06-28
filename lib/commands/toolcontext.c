@@ -184,7 +184,7 @@ static int _process_config(struct cmd_context *cmd)
 	}
 
 	if (*cmd->proc_dir && !dir_exists(cmd->proc_dir)) {
-		log_error("Warning: proc dir %s not found - some checks will be bypassed",
+		log_error("WARNING: proc dir %s not found - some checks will be bypassed",
 			  cmd->proc_dir);
 		cmd->proc_dir[0] = '\0';
 	}
