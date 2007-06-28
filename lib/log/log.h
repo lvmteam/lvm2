@@ -41,6 +41,8 @@
 #include <string.h>		/* strerror() */
 #include <errno.h>
 
+#define _LOG_STDERR 128 /* force things to go to stderr, even if loglevel
+			   would make them go to stdout */
 #define _LOG_DEBUG 7
 #define _LOG_INFO 6
 #define _LOG_NOTICE 5
@@ -116,14 +118,14 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 #define log_debug(x...) plog(_LOG_DEBUG, x)
 #define log_info(x...) plog(_LOG_INFO, x)
 #define log_notice(x...) plog(_LOG_NOTICE, x)
-#define log_warn(x...) plog(_LOG_WARN, x)
+#define log_warn(x...) plog(_LOG_WARN | _LOG_STDERR, x)
 #define log_err(x...) plog(_LOG_ERR, x)
 #define log_fatal(x...) plog(_LOG_FATAL, x)
 
 #define stack log_debug("<backtrace>")	/* Backtrace on error */
 
 #define log_error(args...) log_err(args)
-#define log_print(args...) log_warn(args)
+#define log_print(args...) plog(_LOG_WARN, args)
 #define log_verbose(args...) log_notice(args)
 #define log_very_verbose(args...) log_info(args)
 

@@ -61,7 +61,7 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (!consistent)
-		log_error("Warning: Volume group \"%s\" inconsistent", vg_name);
+		log_error("WARNING: Volume group \"%s\" inconsistent", vg_name);
 
 	if (arg_count(cmd, file_ARG)) {
 		if (!(filename = _expand_filename(arg_value(cmd, file_ARG),

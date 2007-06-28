@@ -6,6 +6,7 @@ Version 2.02.27 -
   Add --ignoremonitoring to disable all dmeventd interaction.
   Remove get_ prefix from get_pv_* functions.
   clvmd-openais now uses cpg_local_get() to get nodeid, rather than Clm.
+  Print warnings to stderr instead of stdout.
 
 Version 2.02.26 - 15th June 2007
 ================================

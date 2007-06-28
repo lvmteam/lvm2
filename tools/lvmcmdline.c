@@ -733,7 +733,7 @@ static int _get_settings(struct cmd_context *cmd)
 			return EINVALID_CMD_LINE;
 		}
 		init_trust_cache(1);
-		log_print("WARNING: Cache file of PVs will be trusted.  "
+		log_warn("WARNING: Cache file of PVs will be trusted.  "
 			  "New devices holding PVs may get ignored.");
 	} else
 		init_trust_cache(0);

@@ -207,8 +207,8 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 	}
 
 	if (!consistent)
-		log_error("Warning: Volume group %s is not consistent",
-			  vg_name);
+		log_warn("WARNING: Volume group %s is not consistent",
+			 vg_name);
 
 	list_iterate_items(pvl, &vg->pvs) {
 		if (id_equal(&pvl->pv->id, (const struct id *) pvid)) {
@@ -641,7 +641,7 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 
 	if (size) {
 		if (size > pv->size)
-			log_print("WARNING: %s: Overriding real size. "
+			log_warn("WARNING: %s: Overriding real size. "
 				  "You could lose data.", dev_name(pv->dev));
 		log_verbose("%s: Pretending size is %" PRIu64 " sectors.",
 			    dev_name(pv->dev), size);
@@ -1324,8 +1324,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return correct_vg;
 		}
 
-		log_print("Inconsistent metadata found for VG %s - updating "
-			  "to use version %u", vgname, correct_vg->seqno);
+		log_warn("WARNING: Inconsistent metadata found for VG %s - updating "
+			 "to use version %u", vgname, correct_vg->seqno);
 
 		if (!vg_write(correct_vg)) {
 			log_error("Automatic metadata correction failed");
@@ -1620,8 +1620,8 @@ struct list *get_pvs(struct cmd_context *cmd)
 			continue;
 		}
 		if (!consistent)
-			log_print("Warning: Volume Group %s is not consistent",
-				  vgname);
+			log_warn("WARNING: Volume Group %s is not consistent",
+				 vgname);
 
 		/* Move PVs onto results list */
 		list_iterate_safe(pvh, tmp, &vg->pvs) {

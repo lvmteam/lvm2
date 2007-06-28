@@ -106,7 +106,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute((unused)),
 	pv_parts_found = 0;
 
 	if (arg_count(cmd, lvmpartition_ARG))
-		log_print("WARNING: only considering LVM devices");
+		log_warn("WARNING: only considering LVM devices");
 
 	max_len = _get_max_dev_name_len(cmd->filter);
 
