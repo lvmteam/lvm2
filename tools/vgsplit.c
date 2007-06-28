@@ -320,7 +320,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		goto error;
 
 	/* Split metadata areas and check if both vgs have at least one area */
-	if (!(vg_split_mdas(cmd, vg_from, vg_to))) {
+	if (!(vg_split_mdas(cmd, vg_from, vg_to)) && vg_from->pv_count) {
 		log_error("Cannot split: Nowhere to store metadata for new Volume Group");
 		goto error;
 	}
@@ -344,10 +344,12 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	backup(vg_to);
 
 	/* Write out updated old VG */
-	if (!vg_write(vg_from) || !vg_commit(vg_from))
-		goto error;
+	if (vg_from->pv_count) {
+		if (!vg_write(vg_from) || !vg_commit(vg_from))
+			goto error;
 
-	backup(vg_from);
+		backup(vg_from);
+	}
 
 	/* Remove EXPORTED flag from new VG */
 	consistent = 1;

@@ -1,5 +1,6 @@
 Version 2.02.27 - 
 ================================
+  Fix vgsplit if splitting all PVs from VG.
   Fix lvmdiskscan volume reporting when run in the lvm shell
   Fix missing lvm_shell symbol in lvm2cmd library. (2.02.23)
   Add vg_status function and clean up vg->status in tools directory.
