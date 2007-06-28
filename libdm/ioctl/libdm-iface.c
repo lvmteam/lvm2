@@ -592,9 +592,9 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 	struct stat buf;
 	char path[PATH_MAX];
 
-	log_print("Warning: Device list may be incomplete with interface "
+	log_warn("WARNING: Device list may be incomplete with interface "
 		  "version 1.");
-	log_print("Please upgrade your kernel device-mapper driver.");
+	log_warn("Please upgrade your kernel device-mapper driver.");
 
 	if (!(d = opendir(dev_dir))) {
 		log_error("%s: opendir failed: %s", dev_dir, strerror(errno));
@@ -693,7 +693,7 @@ static int _dm_task_run_v1(struct dm_task *dmt)
 
 	if (dmi->flags & DM_BUFFER_FULL_FLAG)
 		/* FIXME Increase buffer size and retry operation (if query) */
-		log_error("Warning: libdevmapper buffer too small for data");
+		log_error("WARNING: libdevmapper buffer too small for data");
 
 	switch (dmt->type) {
 	case DM_DEVICE_CREATE:
@@ -1650,7 +1650,7 @@ repeat_ioctl:
 			dm_free(dmi);
 			goto repeat_ioctl;
 		default:
-			log_error("Warning: libdevmapper buffer too small for data");
+			log_error("WARNING: libdevmapper buffer too small for data");
 		}
 	}
 

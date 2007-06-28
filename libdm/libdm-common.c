@@ -42,6 +42,9 @@ static void _default_log(int level, const char *file __attribute((unused)),
 			 int line __attribute((unused)), const char *f, ...)
 {
 	va_list ap;
+	int use_stderr = level & _LOG_STDERR;
+
+	level &= ~_LOG_STDERR;
 
 	if (level > _LOG_WARN && !_verbose)
 		return;
@@ -51,14 +54,14 @@ static void _default_log(int level, const char *file __attribute((unused)),
 	if (level < _LOG_WARN)
 		vfprintf(stderr, f, ap);
 	else
-		vprintf(f, ap);
+		vfprintf(use_stderr ? stderr : stdout, f, ap);
 
 	va_end(ap);
 
 	if (level < _LOG_WARN)
 		fprintf(stderr, "\n");
 	else
-		fprintf(stdout, "\n");
+		fprintf(use_stderr ? stderr : stdout, "\n");
 }
 
 dm_log_fn dm_log = _default_log;
