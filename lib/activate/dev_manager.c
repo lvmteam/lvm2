@@ -561,7 +561,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	log_debug("Getting device info for %s", dl->name);
 
 	/* Rename? */
-		if ((suffix = rindex(dl->dlid + sizeof(UUID_PREFIX) - 1, '-')))
+		if ((suffix = strrchr(dl->dlid + sizeof(UUID_PREFIX) - 1, '-')))
 			suffix++;
 		newname = build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
 					suffix);

@@ -850,7 +850,7 @@ static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
 	char *slash;
 	char temp_file[PATH_MAX], temp_dir[PATH_MAX];
 
-	slash = rindex(tc->path_edit, '/');
+	slash = strrchr(tc->path_edit, '/');
 
 	if (slash == 0)
 		strcpy(temp_dir, ".");
@@ -948,7 +948,7 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 
 	/* vgrename? */
-	if ((slash = rindex(tc->path_live, '/')))
+	if ((slash = strrchr(tc->path_live, '/')))
 		slash = slash + 1;
 	else
 		slash = tc->path_live;

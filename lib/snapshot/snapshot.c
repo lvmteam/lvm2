@@ -98,7 +98,7 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 	float percent2;
 	uint64_t numerator, denominator;
 
-	if (index(params, '/')) {
+	if (strchr(params, '/')) {
 		if (sscanf(params, "%" PRIu64 "/%" PRIu64,
 			   &numerator, &denominator) == 2) {
 			*total_numerator += numerator;

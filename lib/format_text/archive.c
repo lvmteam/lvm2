@@ -71,7 +71,7 @@ static int _split_vg(const char *filename, char *vgname, size_t vg_size,
 	if (strcmp(".vg", dot))
 		return 0;
 
-	if (!(underscore = rindex(filename, '_')))
+	if (!(underscore = strrchr(filename, '_')))
 		return 0;
 
 	if (sscanf(underscore + 1, "%u", ix) != 1)
