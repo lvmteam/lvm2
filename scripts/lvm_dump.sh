@@ -18,6 +18,7 @@ DD=dd
 CUT=cut
 DATE=date
 BASENAME=basename
+UNAME=uname
 
 # user may override lvm and dmsetup location by setting LVM_BINARY
 # and DMSETUP_BINARY respectively
@@ -131,6 +132,10 @@ echo "LVM VERSION:" > $dir/versions
 $LVM lvs --version >> $dir/versions 2>> $log
 echo "DEVICE MAPPER VERSION:" >> $dir/versions
 $DMSETUP --version >> $dir/versions 2>> $log
+echo "KERNEL VERSION:" >> $dir/versions
+$UNAME -a >> $dir/versions 2>> $log
+echo "DM TARGETS VERSIONS:" >> $dir/versions
+$DMSETUP targets >> $dir/versions 2>> $log
 
 myecho "Gathering dmsetup info..."
 log "$DMSETUP info -c > $dir/dmsetup_info 2>> $log"

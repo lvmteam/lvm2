@@ -1,5 +1,6 @@
 Version 2.02.27 - 
 ================================
+  Add kernel and device-mapper targets versions report to lvmdump.
   Don't use index and rindex functions marked by SUSv3 as legacy.
   Fix vgsplit if splitting all PVs from VG.
   Fix lvmdiskscan volume reporting when run in the lvm shell
