@@ -66,11 +66,11 @@ unsigned long pe_align(void)
 	return MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
 }
 
-static int _add_pv_to_vg(struct format_instance *fid, struct volume_group *vg,
-			 const char *pv_name)
+static int _add_pv_to_vg(struct volume_group *vg, const char *pv_name)
 {
 	struct pv_list *pvl;
 	struct physical_volume *pv;
+	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = fid->fmt->cmd->mem;
 	struct list mdas;
 
@@ -251,7 +251,7 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++)
-		if (!_add_pv_to_vg(vg->fid, vg, pv_names[i])) {
+		if (!_add_pv_to_vg(vg, pv_names[i])) {
 			log_error("Unable to add physical volume '%s' to "
 				  "volume group '%s'.", pv_names[i], vg->name);
 			return 0;
