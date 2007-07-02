@@ -313,7 +313,7 @@ static int _passes_activation_filter(struct cmd_context *cmd,
 			else
 				continue;
 		}
-		if (!index(str, '/')) {
+		if (!strchr(str, '/')) {
 			/* vgname supplied */
 			if (!strcmp(str, lv->vg->name))
 				return 1;
