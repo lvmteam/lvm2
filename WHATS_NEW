@@ -1,10 +1,11 @@
 Version 2.02.27 - 
 ================================
+  Fix dumpconfig to use log_print instead of stdout directly.
   Remove unused parameter 'fid' from _add_pv_to_vg.
-  Add kernel and device-mapper targets versions report to lvmdump.
-  Don't use index and rindex functions marked by SUSv3 as legacy.
-  Fix vgsplit if splitting all PVs from VG.
-  Fix lvmdiskscan volume reporting when run in the lvm shell
+  Add kernel and device-mapper targets versions to lvmdump.
+  Replace BSD (r)index with C89 str(r)chr.
+  Handle vgsplit of an entire VG as a vgrename.
+  Reinitialise internal lvmdiskscan variables when called repeatedly.
   Fix missing lvm_shell symbol in lvm2cmd library. (2.02.23)
   Add vg_status function and clean up vg->status in tools directory.
   Add --ignoremonitoring to disable all dmeventd interaction.
