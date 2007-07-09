@@ -718,6 +718,31 @@ static int _int32_disp(struct dm_report *rh, struct dm_pool *mem,
 	return dm_report_field_int32(rh, field, data);
 }
 
+static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
+			struct dm_report_field *field,
+			const void *data, void *private)
+{
+	struct lvmcache_info *info; 
+	uint32_t count;
+
+	info = info_from_pvid((const char *)(&((struct id *) data)->uuid));
+	count = list_size(&info->mdas);
+
+	return _uint32_disp(rh, mem, field, &count, private);
+}
+
+static int _vgmdas_disp(struct dm_report *rh, struct dm_pool *mem,
+			struct dm_report_field *field,
+			const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+	uint32_t count;
+
+	count = list_size(&vg->fid->metadata_areas);
+
+	return _uint32_disp(rh, mem, field, &count, private);
+}
+
 static int _lvsegcount_disp(struct dm_report *rh, struct dm_pool *mem,
 			    struct dm_report_field *field,
 			    const void *data, void *private)
