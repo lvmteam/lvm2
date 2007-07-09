@@ -1,5 +1,6 @@
 Version 2.02.27 - 
 ================================
+  Add vg_mda_count and pv_mda_count columns to reports.
   Fix dumpconfig to use log_print instead of stdout directly.
   Remove unused parameter 'fid' from _add_pv_to_vg.
   Add kernel and device-mapper targets versions to lvmdump.
