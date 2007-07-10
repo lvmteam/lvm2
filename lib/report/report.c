@@ -723,10 +723,11 @@ static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 			const void *data, void *private)
 {
 	struct lvmcache_info *info; 
-	uint32_t count;
+	uint32_t count = 0;
+	const char *pvid = (const char *)(&((struct id *) data)->uuid);
 
-	info = info_from_pvid((const char *)(&((struct id *) data)->uuid));
-	count = list_size(&info->mdas);
+	info = info_from_pvid(pvid);
+	count = info ? list_size(&info->mdas) : 0;
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }
