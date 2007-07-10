@@ -659,7 +659,7 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 		if (ret > ret_max)
 			ret_max = ret;
 		if (sigint_caught())
-			return ret_max;
+			break;
 	}
 
 	dev_iter_destroy(iter);
