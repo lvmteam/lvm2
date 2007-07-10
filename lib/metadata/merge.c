@@ -146,9 +146,9 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 
 				if (complete_vg && seg_lv(seg, s) &&
 				    (seg_lv(seg, s)->status & MIRROR_IMAGE) &&
-				    (find_seg_by_le(seg_lv(seg, s),
-						    seg_le(seg, s))->mirror_seg
-							!= seg)) {
+				    (!(seg2 = find_seg_by_le(seg_lv(seg, s),
+							    seg_le(seg, s))) ||
+				     seg2->mirror_seg != seg)) {
 					log_error("LV %s: segment %u mirror "
 						  "image %u missing mirror ptr",
 						  lv->name, seg_count, s);
