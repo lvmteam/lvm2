@@ -638,7 +638,7 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 		       char *buffer, size_t len);
 
 /*
- * Gets/Sets for external LVM library
+ * Begin skeleton for external LVM library
  */
 struct id pv_id(pv_t *pv);
 const struct format_type *pv_format_type(pv_t *pv);
@@ -653,5 +653,7 @@ uint32_t pv_pe_count(pv_t *pv);
 uint32_t pv_pe_alloc_count(pv_t *pv);
 
 uint32_t vg_status(vg_t *vg);
+
+pv_t *pv_read_path(const struct cmd_context *cmd, const char *pv_name);
 
 #endif
