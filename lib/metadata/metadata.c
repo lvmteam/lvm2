@@ -72,7 +72,6 @@ static int _add_pv_to_vg(struct volume_group *vg, const char *pv_name)
 	struct physical_volume *pv;
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = fid->fmt->cmd->mem;
-	struct list mdas;
 
 	log_verbose("Adding physical volume '%s' to volume group '%s'",
 		    pv_name, vg->name);
@@ -82,8 +81,7 @@ static int _add_pv_to_vg(struct volume_group *vg, const char *pv_name)
 		return 0;
 	}
 
-	list_init(&mdas);
-	if (!(pv = _pv_read(fid->fmt->cmd, pv_name, &mdas, NULL, 1))) {
+	if (!(pv = pv_read_path(fid->fmt->cmd, pv_name))) {
 		log_error("%s not identified as an existing physical volume",
 			  pv_name);
 		return 0;
@@ -1841,4 +1839,23 @@ uint32_t pv_pe_alloc_count(pv_t *pv)
 uint32_t vg_status(vg_t *vg)
 {
 	return vg->status;
+}
+
+
+/**
+ * pv_read_path - Given a device path return a PV handle if it is a PV
+ * @cmd - handle to the LVM command instance
+ * @pv_name - device path to read for the PV
+ *
+ * Returns:
+ *  NULL - device path does not contain a valid PV
+ *  non-NULL - PV handle corresponding to device path
+ *
+ */
+pv_t *pv_read_path(const struct cmd_context *cmd, const char *pv_name)
+{
+	struct list mdas;
+	
+	list_init(&mdas);
+	return _pv_read(cmd, pv_name, &mdas, NULL, 1);
 }
