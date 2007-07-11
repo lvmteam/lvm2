@@ -1,5 +1,6 @@
 Version 2.02.27 - 
 ================================
+  Tidy clvmd-openais of redundant bits, and improve an error report.
   Cope with find_seg_by_le() failure in check_lv_segments().
   Call dev_iter_destroy() if _process_all_devs() is interrupted by sigint.
   Add vg_mda_count and pv_mda_count columns to reports.

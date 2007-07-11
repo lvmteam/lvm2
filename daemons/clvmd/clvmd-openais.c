@@ -37,7 +37,6 @@
 
 #include <openais/saAis.h>
 #include <openais/saLck.h>
-#include <openais/saClm.h>
 #include <openais/cpg.h>
 
 #include "list.h"
@@ -346,7 +345,6 @@ static int _init_cluster(void)
 	SaAisErrorT err;
 	SaVersionT  ver = { 'B', 1, 1 };
 	int select_fd;
-	SaClmClusterNodeT cluster_node;
 
 	node_hash = dm_hash_create(100);
 	lock_hash = dm_hash_create(10);
@@ -379,19 +377,18 @@ static int _init_cluster(void)
 		cpg_finalize(cpg_handle);
 		saLckFinalize(lck_handle);
 		syslog(LOG_ERR, "Cannot join clvmd process group");
-		DEBUGLOG("Cannot join clvmd process group\n");
+		DEBUGLOG("Cannot join clvmd process group: %d\n", err);
 		return ais_to_errno(err);
 	}
 
 	err = cpg_local_get(cpg_handle,
-			    &cluster_node);
+			    &our_nodeid);
 	if (err != SA_AIS_OK) {
 		cpg_finalize(cpg_handle);
 		saLckFinalize(lck_handle);
 		syslog(LOG_ERR, "Cannot get local node id\n");
 		return ais_to_errno(err);
 	}
-	our_nodeid = cluster_node.nodeId;
 	DEBUGLOG("Our local node id is %d\n", our_nodeid);
 
 	saLckSelectionObjectGet(lck_handle, (SaSelectionObjectT *)&select_fd);
