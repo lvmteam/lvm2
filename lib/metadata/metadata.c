@@ -66,10 +66,21 @@ unsigned long pe_align(void)
 	return MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
 }
 
-static int _add_pv_to_vg(struct volume_group *vg, const char *pv_name)
+/**
+ * add_pv_to_vg - Add a physical volume to a volume group
+ * @vg - volume group to add to
+ * @pv_name - name of the pv (to be removed)
+ * @pv - physical volume to add to volume group
+ *
+ * Returns:
+ *  0 - failure
+ *  1 - success
+ * FIXME: remove pv_name - obtain safely from pv
+ */
+int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
+		 struct physical_volume *pv)
 {
 	struct pv_list *pvl;
-	struct physical_volume *pv;
 	struct format_instance *fid = vg->fid;
 	struct dm_pool *mem = fid->fmt->cmd->mem;
 
@@ -78,12 +89,6 @@ static int _add_pv_to_vg(struct volume_group *vg, const char *pv_name)
 
 	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl)))) {
 		log_error("pv_list allocation for '%s' failed", pv_name);
-		return 0;
-	}
-
-	if (!(pv = pv_read_path(fid->fmt->cmd, pv_name))) {
-		log_error("%s not identified as an existing physical volume",
-			  pv_name);
 		return 0;
 	}
 
@@ -246,11 +251,19 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 {
 	int i;
+	struct physical_volume *pv;
 
 	/* attach each pv */
-	for (i = 0; i < pv_count; i++)
-		if (!_add_pv_to_vg(vg, pv_names[i]))
+	for (i = 0; i < pv_count; i++) {
+		if (!(pv = pv_read_path(vg->fid->fmt->cmd, pv_names[i]))) {
+			log_error("%s not identified as an existing "
+				  "physical volume", pv_names[i]);
 			goto bad;
+		}
+		
+		if (!add_pv_to_vg(vg, pv_names[i], pv))
+			goto bad;
+	}
 
 /* FIXME Decide whether to initialise and add new mdahs to format instance */
 
@@ -1854,7 +1867,7 @@ uint32_t vg_status(vg_t *vg)
  *  non-NULL - PV handle corresponding to device path
  *
  */
-pv_t *pv_read_path(const struct cmd_context *cmd, const char *pv_name)
+pv_t *pv_read_path(struct cmd_context *cmd, const char *pv_name)
 {
 	struct list mdas;
 	

@@ -1,6 +1,7 @@
 Version 2.02.27 - 
 ================================
-  Add pv_read_path external library function.
+  Turn _add_pv_to_vg() into external library function add_pv_to_vg().
+  Add pv_read_path() external library function.
   Tidy clvmd-openais of redundant bits, and improve an error report.
   Cope with find_seg_by_le() failure in check_lv_segments().
   Call dev_iter_destroy() if _process_all_devs() is interrupted by sigint.
