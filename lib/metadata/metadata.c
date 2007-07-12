@@ -255,7 +255,7 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++) {
-		if (!(pv = pv_read_path(vg->fid->fmt->cmd, pv_names[i]))) {
+		if (!(pv = pv_by_path(vg->fid->fmt->cmd, pv_names[i]))) {
 			log_error("%s not identified as an existing "
 				  "physical volume", pv_names[i]);
 			goto bad;
@@ -1858,7 +1858,7 @@ uint32_t vg_status(vg_t *vg)
 
 
 /**
- * pv_read_path - Given a device path return a PV handle if it is a PV
+ * pv_by_path - Given a device path return a PV handle if it is a PV
  * @cmd - handle to the LVM command instance
  * @pv_name - device path to read for the PV
  *
@@ -1866,8 +1866,9 @@ uint32_t vg_status(vg_t *vg)
  *  NULL - device path does not contain a valid PV
  *  non-NULL - PV handle corresponding to device path
  *
+ * FIXME: merge with find_pv_by_name ?
  */
-pv_t *pv_read_path(struct cmd_context *cmd, const char *pv_name)
+pv_t *pv_by_path(struct cmd_context *cmd, const char *pv_name)
 {
 	struct list mdas;
 	
