@@ -249,15 +249,17 @@ int vg_extend(struct volume_group *vg, int pv_count, char **pv_names)
 
 	/* attach each pv */
 	for (i = 0; i < pv_count; i++)
-		if (!_add_pv_to_vg(vg, pv_names[i])) {
-			log_error("Unable to add physical volume '%s' to "
-				  "volume group '%s'.", pv_names[i], vg->name);
-			return 0;
-		}
+		if (!_add_pv_to_vg(vg, pv_names[i]))
+			goto bad;
 
 /* FIXME Decide whether to initialise and add new mdahs to format instance */
 
 	return 1;
+	
+      bad:
+	log_error("Unable to add physical volume '%s' to "
+		  "volume group '%s'.", pv_names[i], vg->name);
+	return 0;
 }
 
 const char *strip_dir(const char *vg_name, const char *dev_dir)
