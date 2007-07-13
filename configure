@@ -8957,7 +8957,7 @@ fi;
 # Check whether --with-dmdir or --without-dmdir was given.
 if test "${with_dmdir+set}" = set; then
   withval="$with_dmdir"
-   DMDIR="$withval"
+   DMDIR="$withval" CPPFLAGS="$CPPFLAGS -I$DMDIR/include"
 else
    DMDIR=
 fi;

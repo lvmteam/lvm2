@@ -522,7 +522,7 @@ AC_ARG_WITH(staticdir,
 
 AC_ARG_WITH(dmdir,
 	    [  --with-dmdir=DIR        Build against device-mapper source tree in DIR],
-  	    [ DMDIR="$withval" ],
+  	    [ DMDIR="$withval" CPPFLAGS="$CPPFLAGS -I$DMDIR/include"],
 	    [ DMDIR= ])
 
 ################################################################################
