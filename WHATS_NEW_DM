@@ -1,3 +1,6 @@
+Version 1.02.22 - 
+================================
+
 Version 1.02.21 - 13th July 2007
 ================================
   Introduce _LOG_STDERR to send log_warn() messages to stderr not stdout.
