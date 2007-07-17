@@ -1,4 +1,4 @@
-Version 2.02.27 - 
+Version 2.02.27 - 17th July 2007
 ================================
   Fix snapshot cow area deactivation if origin is not active. (2.02.13)
   Fix configure libdevmapper.h check when --with-dmdir is used.
