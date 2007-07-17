@@ -1,3 +1,6 @@
+Version 2.02.28 -
+================================
+
 Version 2.02.27 - 17th July 2007
 ================================
   Fix snapshot cow area deactivation if origin is not active. (2.02.13)
