@@ -1,5 +1,6 @@
 Version 2.02.27 - 
 ================================
+  Fix snapshot cow area deactivation if origin is not active. (2.02.13)
   Fix configure libdevmapper.h check when --with-dmdir is used.
   Turn _add_pv_to_vg() into external library function add_pv_to_vg().
   Add pv_by_path() external library function.

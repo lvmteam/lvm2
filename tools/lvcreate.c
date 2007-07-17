@@ -478,10 +478,11 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	struct logical_volume *lv, *org = NULL, *log_lv = NULL;
 	struct list *pvh, tags;
 	const char *tag = NULL;
-	int consistent = 1;
+	int consistent = 1, origin_active = 0;
 	struct alloc_handle *ah = NULL;
 	char lv_name_buf[128];
 	const char *lv_name;
+	struct lvinfo info;
 
 	status |= lp->permission | VISIBLE_LV;
 
@@ -615,6 +616,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
  
 		/* Must zero cow */
 		status |= LVM_WRITE;
+
+		if (!lv_info(cmd, org, &info, 0)) {
+			log_error("Check for existence of snapshot origin "
+				  "'%s' failed.", org->name);
+			return 0;
+		}
+		origin_active = info.exists;
 	}
 
 	if (!lp->extents) {
@@ -791,6 +799,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* Reset permission after zeroing */
 		if (!(lp->permission & LVM_WRITE))
 			lv->status &= ~LVM_WRITE;
+
+		/* COW area must be deactivated if origin is not active */
+		if (!origin_active && !deactivate_lv(cmd, lv)) {
+			log_error("Aborting. Couldn't deactivate snapshot "
+				  "COW area.");
+			return 0;
+		}
 
 		/* cow LV remains active and becomes snapshot LV */
 
