@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -16,7 +16,7 @@
 #ifndef _LVM_TOOL_ARCHIVE_H
 #define _LVM_TOOL_ARCHIVE_H
 
-#include "metadata.h"
+#include "metadata-exported.h"
 
 /*
  * There are two operations that come under the general area of

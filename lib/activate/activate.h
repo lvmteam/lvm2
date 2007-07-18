@@ -16,7 +16,7 @@
 #ifndef LVM_ACTIVATE_H
 #define LVM_ACTIVATE_H
 
-#include "metadata.h"
+#include "metadata-exported.h"
 
 struct lvinfo {
 	int exists;

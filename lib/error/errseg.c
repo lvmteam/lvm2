@@ -24,6 +24,7 @@
 #include "lvm-string.h"
 #include "activate.h"
 #include "str_list.h"
+#include "metadata.h"
 
 static const char *_errseg_name(const struct lv_segment *seg)
 {

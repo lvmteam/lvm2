@@ -16,7 +16,7 @@
 #ifndef _LVM_TOOLLIB_H
 #define _LVM_TOOLLIB_H
 
-#include "metadata.h"
+#include "metadata-exported.h"
 
 int autobackup_set(void);
 int autobackup_init(const char *backup_dir, int keep_days, int keep_number,

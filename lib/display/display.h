@@ -16,7 +16,7 @@
 #ifndef _LVM_DISPLAY_H
 #define _LVM_DISPLAY_H
 
-#include "metadata.h"
+#include "metadata-exported.h"
 
 #include <stdint.h>
 

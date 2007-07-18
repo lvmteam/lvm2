@@ -25,6 +25,7 @@
 #include "lvm-string.h"
 #include "activate.h"
 #include "pv_alloc.h"
+#include "metadata.h"
 
 static const char *_striped_name(const struct lv_segment *seg)
 {

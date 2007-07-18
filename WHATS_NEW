@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Split metadata-external.h out from metadata.h for the tools to use.
 
 Version 2.02.27 - 17th July 2007
 ================================
