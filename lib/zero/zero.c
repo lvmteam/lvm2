@@ -23,6 +23,7 @@
 #include "targets.h"
 #include "lvm-string.h"
 #include "activate.h"
+#include "metadata.h"
 
 static const char *_zero_name(const struct lv_segment *seg)
 {

@@ -16,7 +16,7 @@
 #ifndef _LVM_REPORT_H
 #define _LVM_REPORT_H
 
-#include "metadata.h"
+#include "metadata-exported.h"
 
 typedef enum { LVS = 1, PVS = 2, VGS = 4, SEGS = 8, PVSEGS = 16 } report_type_t;
 

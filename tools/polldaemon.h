@@ -16,7 +16,7 @@
 #ifndef _LVM_TOOL_POLLDAEMON_H
 #define _LVM_TOOL_POLLDAEMON_H
 
-#include "metadata.h"
+#include "metadata-exported.h"
 
 struct poll_functions {
 	const char *(*get_copy_name_from_lv) (struct logical_volume * lv_mirr);
