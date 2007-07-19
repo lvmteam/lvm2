@@ -75,6 +75,7 @@ static const device_info_t device_info[] = {
 	{"aoe", 16},		/* ATA over Ethernet */
 	{"device-mapper", 1},	/* Other mapped devices */
 	{"xvd", 16},		/* Xen virtual block device */
+	{"vdisk", 8},		/* SUN's LDOM virtual block device */
 	{NULL, 0}
 };
 
