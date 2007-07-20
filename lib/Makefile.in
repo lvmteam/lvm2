@@ -80,6 +80,7 @@ SOURCES =\
 	misc/lvm-string.c \
 	misc/lvm-wrappers.c \
 	misc/timestamp.c \
+	misc/util.c \
 	mm/memlock.c \
 	report/report.c \
 	striped/striped.c \

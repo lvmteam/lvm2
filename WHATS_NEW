@@ -1,4 +1,5 @@
 Version 2.02.28 -
+  Eliminate uses of strdup+basename.  Use last_path_component instead.
   Use gcc's printf attribute wherever possible.
   In _line_append, use "sizeof buf - 1" rather than equivalent "4095"
   Introduce is_same_inode macro, now including a comparison of st_dev.

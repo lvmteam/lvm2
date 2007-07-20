@@ -479,17 +479,14 @@ void lvm_register_commands(void)
 static struct command *_find_command(const char *name)
 {
 	int i;
-	char *namebase, *base;
+	char *base;
 
-	namebase = strdup(name);
-	base = basename(namebase);
+	base = last_path_component(name);
 
 	for (i = 0; i < _cmdline.num_commands; i++) {
 		if (!strcmp(base, _cmdline.commands[i].name))
 			break;
 	}
-
-	free(namebase);
 
 	if (i >= _cmdline.num_commands)
 		return 0;
@@ -1138,14 +1135,13 @@ static void _exec_lvm1_command(char **argv)
 
 int lvm2_main(int argc, char **argv, unsigned is_static)
 {
-	char *namebase, *base;
+	char *base;
 	int ret, alias = 0;
 	struct cmd_context *cmd;
 
 	_close_stray_fds();
 
-	namebase = strdup(argv[0]);
-	base = basename(namebase);
+	base = last_path_component(argv[0]);
 	while (*base == '/')
 		base++;
 	if (strcmp(base, "lvm") && strcmp(base, "lvm.static") &&
@@ -1159,8 +1155,6 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 		execvp(LVM_SHARED_PATH, argv);
 		unsetenv("LVM_DID_EXEC");
 	}
-
-	free(namebase);
 
 	if (!(cmd = init_lvm(is_static)))
 		return -1;
