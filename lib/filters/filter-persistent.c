@@ -208,7 +208,7 @@ int persistent_filter_dump(struct dev_filter *f)
 			goto out;
 		}
 
-		if (!memcmp(&info.st_ino, &info2.st_ino, sizeof(ino_t)))
+		if (is_same_inode(info, info2))
 			break;
 	
 		fcntl_unlock_file(lockfd);
