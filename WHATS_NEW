@@ -1,4 +1,5 @@
 Version 2.02.28 -
+  In _line_append, use "sizeof buf - 1" rather than equivalent "4095"
   Introduce is_same_inode macro, now including a comparison of st_dev.
   Don't leak a file descriptor in _lock_file(), when flock fails.
   Add SUN's LDOM virtual block device to filters

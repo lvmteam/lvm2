@@ -367,8 +367,8 @@ static int _line_append(struct output_line *outline, const char *fmt, ...)
 	int n;
 
 	va_start(ap, fmt);
-	n = vsnprintf(&buf[0], 4095, fmt, ap);
-	if (n < 0 || n > 4095) {
+	n = vsnprintf(&buf[0], sizeof buf - 1, fmt, ap);
+	if (n < 0 || n > sizeof buf - 1) {
 		log_error("vsnprintf failed for config line");
 		return 0;
 	}
