@@ -23,7 +23,8 @@
 
 struct pool;
 
-int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...);
+int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
+  __attribute__ ((format(printf, 3, 4)));
 
 char *build_dm_name(struct dm_pool *mem, const char *vg,
                     const char *lv, const char *layer);

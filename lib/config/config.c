@@ -361,6 +361,8 @@ static int _line_start(struct output_line *outline)
 }
 
 static int _line_append(struct output_line *outline, const char *fmt, ...)
+  __attribute__ ((format(printf, 2, 3)));
+static int _line_append(struct output_line *outline, const char *fmt, ...)
 {
 	char buf[4096];
 	va_list ap;
