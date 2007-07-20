@@ -1,5 +1,5 @@
 Version 2.02.28 -
-================================
+  Introduce is_same_inode macro, now including a comparison of st_dev.
   Don't leak a file descriptor in _lock_file(), when flock fails.
   Add SUN's LDOM virtual block device to filters
   Split metadata-external.h out from metadata.h for the tools to use.

@@ -52,4 +52,8 @@ void sync_dir(const char *file);
 int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only);
 void fcntl_unlock_file(int lockfd);
 
+#define is_same_inode(buf1, buf2) \
+  ((buf1).st_ino == (buf2).st_ino && \
+   (buf1).st_dev == (buf2).st_dev)
+
 #endif

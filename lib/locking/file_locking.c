@@ -64,7 +64,7 @@ static int _release_lock(const char *file, int unlock)
 			if (!flock(ll->lf, LOCK_NB | LOCK_EX) &&
 			    !stat(ll->res, &buf1) &&
 			    !fstat(ll->lf, &buf2) &&
-			    !memcmp(&buf1.st_ino, &buf2.st_ino, sizeof(ino_t)))
+			    is_same_inode(buf1, buf2))
 				if (unlink(ll->res))
 					log_sys_error("unlink", ll->res);
 
@@ -190,7 +190,7 @@ static int _lock_file(const char *file, int flags)
 		}
 
 		if (!stat(ll->res, &buf1) && !fstat(ll->lf, &buf2) &&
-		    !memcmp(&buf1.st_ino, &buf2.st_ino, sizeof(ino_t)))
+		    is_same_inode(buf1, buf2))
 			break;
 	} while (!(flags & LCK_NONBLOCK));
 
