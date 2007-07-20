@@ -185,6 +185,7 @@ static int _lock_file(const char *file, int flags)
 		if (r) {
 			errno = old_errno;
 			log_sys_error("flock", ll->res);
+			close(ll->lf);
 			goto err;
 		}
 
