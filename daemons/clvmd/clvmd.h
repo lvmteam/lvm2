@@ -115,7 +115,8 @@ extern int add_client(struct local_client *new_client);
 extern void clvmd_cluster_init_completed(void);
 extern void process_message(struct local_client *client, const char *buf,
 			    int len, const char *csid);
-extern void debuglog(const char *fmt, ... );
+extern void debuglog(const char *fmt, ... )
+  __attribute__ ((format(printf, 1, 2)));
 
 int sync_lock(const char *resource, int mode, int flags, int *lockid);
 int sync_unlock(const char *resource, int lockid);
