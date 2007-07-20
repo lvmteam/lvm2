@@ -32,6 +32,8 @@
 #include <sys/mount.h>
 #include <sys/vfs.h>
 
+#include "util.h"
+
 #define log_error(str, x...) fprintf(stderr, "%s(%u):  " str "\n", __FILE__, __LINE__, x)
 
 /* Filesystem related information */
@@ -45,7 +47,7 @@ struct fsinfo {
 static void _usage(const char *cmd)
 {
 	log_error("Usage: %s [check <filesystem> | resize <filesystem> <size>]",
-		  basename(cmd));
+		  last_path_component(cmd));
 }
 
 /* FIXME Make this more robust - /proc, multiple mounts, TMPDIR + security etc. */

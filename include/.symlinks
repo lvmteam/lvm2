@@ -38,6 +38,7 @@
 ../lib/misc/configure.h
 ../lib/misc/crc.h
 ../lib/misc/intl.h
+../lib/misc/util.h
 ../lib/misc/lib.h
 ../lib/misc/lvm-exec.h
 ../lib/misc/lvm-file.h

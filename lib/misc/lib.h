@@ -29,6 +29,7 @@
 #include "intl.h"
 #include "lvm-types.h"
 #include "lvm-wrappers.h"
+#include "util.h"
 
 #include <libdevmapper.h>
 
