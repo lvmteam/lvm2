@@ -19,7 +19,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *vg_name;
 	struct volume_group *vg = NULL;
-	int consistent = 1;
 
 	if (!argc) {
 		log_error("Please enter volume group name and "
@@ -48,21 +47,12 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name);
-	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
-		unlock_vg(cmd, ORPHAN);
-		log_error("Can't get lock for %s", vg_name);
-		goto error;
-	}
-
-	if (!(vg = vg_read(cmd, vg_name, NULL, &consistent)) || !consistent) {
-		log_error("Volume group \"%s\" not found.", vg_name);
-		goto error;
-	}
-
-	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG |
-				 LVM_WRITE | RESIZEABLE_VG))
-		goto error;
-
+	if (!(vg = vg_lock_and_read(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK,
+				    CLUSTERED | EXPORTED_VG | 
+				    LVM_WRITE | RESIZEABLE_VG))) {
+		 unlock_vg(cmd, ORPHAN);
+		return ECMD_FAILED;
+	 }
 /********** FIXME
 	log_print("maximum logical volume size is %s",
 		  (dummy = lvm_show_size(LVM_LV_SIZE_MAX(vg) / 2, LONG)));

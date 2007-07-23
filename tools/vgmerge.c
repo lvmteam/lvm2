@@ -22,7 +22,6 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	struct lv_list *lvl1, *lvl2;
 	struct pv_list *pvl;
 	int active;
-	int consistent = 1;
 
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name \"%s\"", vg_name_from);
@@ -30,37 +29,17 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_to);
-	if (!lock_vol(cmd, vg_name_to, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", vg_name_to);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg_to = vg_read(cmd, vg_name_to, NULL, &consistent)) || !consistent) {
-		log_error("Volume group \"%s\" doesn't exist", vg_name_to);
-		unlock_vg(cmd, vg_name_to);
-		return ECMD_FAILED;
-	}
-
-	if (!vg_check_status(vg_to, CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
-		unlock_vg(cmd, vg_name_to);
-		return ECMD_FAILED;
-	}
+	if (!(vg_to = vg_lock_and_read(cmd, vg_name_to, LCK_VG_WRITE,
+				    CLUSTERED | EXPORTED_VG | LVM_WRITE)))
+		 return ECMD_FAILED;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
-	if (!lock_vol(cmd, vg_name_from, LCK_VG_WRITE | LCK_NONBLOCK)) {
-		log_error("Can't get lock for %s", vg_name_from);
+	if (!(vg_from = vg_lock_and_read(cmd, vg_name_from,
+					 LCK_VG_WRITE | LCK_NONBLOCK,
+					 CLUSTERED | EXPORTED_VG | LVM_WRITE))) {
 		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
 	}
-
-	consistent = 1;
-	if (!(vg_from = vg_read(cmd, vg_name_from, NULL, &consistent)) || !consistent) {
-		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
-		goto error;
-	}
-
-	if (!vg_check_status(vg_from, CLUSTERED | EXPORTED_VG | LVM_WRITE))
-                goto error;
 
 	if ((active = lvs_in_vg_activated(vg_from))) {
 		log_error("Logical volumes in \"%s\" must be inactive",
