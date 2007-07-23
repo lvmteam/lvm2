@@ -16,6 +16,9 @@
  * Return the address of the last file name component of NAME.
  * If NAME ends in a slash, return the empty string.
  */
+
+#include "lib.h"
+
 char *last_path_component(char const *name)
 {
 	char const *slash = strrchr (name, '/');
