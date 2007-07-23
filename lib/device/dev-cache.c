@@ -205,11 +205,11 @@ static int _compare_paths(const char *path0, const char *path1)
 			*s1 = '\0';
 		}
 		if (lstat(p0, &stat0)) {
-			log_sys_error("lstat", p0);
+			log_sys_very_verbose("lstat", p0);
 			return 1;
 		}
 		if (lstat(p1, &stat1)) {
-			log_sys_error("lstat", p1);
+			log_sys_very_verbose("lstat", p1);
 			return 0;
 		}
 		if (S_ISLNK(stat0.st_mode) && !S_ISLNK(stat1.st_mode))
