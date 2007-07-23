@@ -22,7 +22,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *lv_name_old, *lv_name_new;
 	const char *vg_name, *vg_name_new, *vg_name_old;
 	char *st;
-	int consistent = 1;
 
 	struct volume_group *vg;
 	struct logical_volume *lv;
@@ -99,18 +98,10 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name);
 
-	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", vg_name);
+	if (!(vg = vg_lock_and_read(cmd, vg_name, LCK_VG_WRITE,
+				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
+				    CORRECT_INCONSISTENT)))
 		return ECMD_FAILED;
-	}
-
-	if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
-		log_error("Volume group \"%s\" doesn't exist", vg_name);
-		goto error;
-	}
-
-	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE))
-		goto error;
 
 	if (find_lv_in_vg(vg, lv_name_new)) {
 		log_error("Logical volume \"%s\" already exists in "
