@@ -534,7 +534,6 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 {
-	int consistent = 1;
 	struct volume_group *vg;
 	struct lv_list *lvl;
 	struct lvconvert_params lp;
@@ -547,18 +546,10 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", lp.vg_name);
 
-	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", lp.vg_name);
+	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, LCK_VG_WRITE,
+				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
+				    CORRECT_INCONSISTENT)))
 		return ECMD_FAILED;
-	}
-
-	if (!(vg = vg_read(cmd, lp.vg_name, NULL, &consistent))) {
-		log_error("Volume group \"%s\" doesn't exist", lp.vg_name);
-		goto error;
-	}
-
-	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE))
-		goto error;
 
 	if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
 		log_error("Logical volume \"%s\" not found in "
