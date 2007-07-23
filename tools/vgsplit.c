@@ -242,7 +242,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 	if (!(vg_to = vg_lock_and_read(cmd, vg_name_from, LCK_VG_WRITE,
 				       CLUSTERED | EXPORTED_VG |
-				       RESIZEABLE_VG | LVM_WRITE)))
+				       RESIZEABLE_VG | LVM_WRITE,
+				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		 return ECMD_FAILED;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_to);

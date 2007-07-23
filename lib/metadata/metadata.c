@@ -1798,23 +1798,29 @@ int vg_check_status(struct volume_group *vg, uint32_t status)
  * @vg_name - name of the volume group to lock and read
  * @lock_flags - locking flags to use
  * @status_flags - status flags to check
+ * @misc_flags - function modifier flags
  *
  * Returns:
  * NULL - failure
  * non-NULL - success; volume group handle
  */
 vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
-		       uint32_t lock_flags, uint32_t status_flags)
+		       uint32_t lock_flags, uint32_t status_flags,
+		       uint32_t misc_flags)
 {
 	struct volume_group *vg;
 	int consistent = 1;
-	
+
+	if (!(misc_flags & CORRECT_INCONSISTENT))
+		consistent = 0;
+
 	if (!lock_vol(cmd, vg_name, lock_flags)) {
 		log_error("Can't get lock for %s", vg_name);
 		return NULL;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name, NULL, &consistent)) || !consistent) {
+	if (!(vg = vg_read(cmd, vg_name, NULL, &consistent)) ||
+	    ((misc_flags & FAIL_INCONSISTENT) && !consistent)) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		unlock_vg(cmd, vg_name);
 		return NULL;

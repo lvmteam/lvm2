@@ -83,6 +83,10 @@ struct pv_segment;
 #define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
 #define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
 
+/* LVM2 external library flags */
+#define CORRECT_INCONSISTENT    0x00000001U /* Correct inconsistent metadata */
+#define FAIL_INCONSISTENT       0x00000002U /* Fail if metadata inconsistent */
+
 /* Ordered list - see lv_manip.c */
 typedef enum {
 	ALLOC_INVALID,
@@ -293,7 +297,8 @@ int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector);
 int is_orphan(pv_t *pv);
 vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
-		       uint32_t lock_flags, uint32_t status_flags);
+		       uint32_t lock_flags, uint32_t status_flags,
+		       uint32_t misc_flags);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */

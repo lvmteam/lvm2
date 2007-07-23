@@ -49,7 +49,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Checking for volume group \"%s\"", vg_name);
 	if (!(vg = vg_lock_and_read(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK,
 				    CLUSTERED | EXPORTED_VG | 
-				    LVM_WRITE | RESIZEABLE_VG))) {
+				    LVM_WRITE | RESIZEABLE_VG,
+				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
 		 unlock_vg(cmd, ORPHAN);
 		return ECMD_FAILED;
 	 }
