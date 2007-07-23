@@ -611,7 +611,10 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 		return 0;
 	}
 
-	if (!(f4 = persistent_filter_create(f3, dev_cache ? : cache_file))) {
+	if (!dev_cache)
+		dev_cache = cache_file;
+
+	if (!(f4 = persistent_filter_create(f3, dev_cache))) {
 		log_error("Failed to create persistent device filter");
 		return 0;
 	}
