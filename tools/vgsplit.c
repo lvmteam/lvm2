@@ -240,22 +240,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
-	if (!lock_vol(cmd, vg_name_from, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", vg_name_from);
-		return ECMD_FAILED;
-	}
-
-	if (!(vg_from = vg_read(cmd, vg_name_from, NULL, &consistent)) || !consistent) {
-		log_error("Volume group \"%s\" doesn't exist", vg_name_from);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
-
-	if (!vg_check_status(vg_from, CLUSTERED | EXPORTED_VG |
-				      RESIZEABLE_VG | LVM_WRITE)) {
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
+	if (!(vg_to = vg_lock_and_read(cmd, vg_name_from, LCK_VG_WRITE,
+				       CLUSTERED | EXPORTED_VG |
+				       RESIZEABLE_VG | LVM_WRITE)))
+		 return ECMD_FAILED;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_to);
 	if (!lock_vol(cmd, vg_name_to, LCK_VG_WRITE | LCK_NONBLOCK)) {

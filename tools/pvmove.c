@@ -50,26 +50,13 @@ static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
 
 static struct volume_group *_get_vg(struct cmd_context *cmd, const char *vgname)
 {
-	int consistent = 1;
 	struct volume_group *vg;
 
 	dev_close_all();
 
-	if (!lock_vol(cmd, vgname, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", vgname);
-		return NULL;
-	}
-
-	if (!(vg = vg_read(cmd, vgname, NULL, &consistent)) || !consistent) {
-		log_error("Volume group \"%s\" doesn't exist", vgname);
-		unlock_vg(cmd, vgname);
-		return NULL;
-	}
-
-	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
-		unlock_vg(cmd, vgname);
-		return NULL;
-	}
+	if (!(vg = vg_lock_and_read(cmd, vgname, LCK_VG_WRITE,
+				    CLUSTERED | EXPORTED_VG | LVM_WRITE)))
+		 return NULL;
 
 	return vg;
 }
