@@ -30,13 +30,15 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_to);
 	if (!(vg_to = vg_lock_and_read(cmd, vg_name_to, LCK_VG_WRITE,
-				    CLUSTERED | EXPORTED_VG | LVM_WRITE)))
+				       CLUSTERED | EXPORTED_VG | LVM_WRITE,
+				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		 return ECMD_FAILED;
 
 	log_verbose("Checking for volume group \"%s\"", vg_name_from);
 	if (!(vg_from = vg_lock_and_read(cmd, vg_name_from,
 					 LCK_VG_WRITE | LCK_NONBLOCK,
-					 CLUSTERED | EXPORTED_VG | LVM_WRITE))) {
+					 CLUSTERED | EXPORTED_VG | LVM_WRITE,
+					 CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
 		unlock_vg(cmd, vg_name_to);
 		return ECMD_FAILED;
 	}

@@ -55,7 +55,8 @@ static struct volume_group *_get_vg(struct cmd_context *cmd, const char *vgname)
 	dev_close_all();
 
 	if (!(vg = vg_lock_and_read(cmd, vgname, LCK_VG_WRITE,
-				    CLUSTERED | EXPORTED_VG | LVM_WRITE)))
+				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
+				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		 return NULL;
 
 	return vg;
