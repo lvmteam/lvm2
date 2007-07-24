@@ -27,6 +27,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /*****************************************************************
  * The first section of this file provides direct access to the 
@@ -622,6 +623,21 @@ int dm_snprintf(char *buf, size_t bufsize, const char *format, ...);
  * Returns pointer to the last component of the path.
  */
 char *dm_basename(const char *path);
+
+/**************************
+ * file/stream manipulation
+ **************************/
+
+/*
+ * Close a stream, with nicer error checking than fclose's.
+ * Derived from gnulib's close-stream.c.
+ *
+ * Close "stream".  Return 0 if successful, and EOF (setting errno)
+ * otherwise.  Upon failure, set errno to 0 if the error number
+ * cannot be determined.  Useful mainly for writable streams.
+ */
+int dm_fclose(FILE *stream);
+
 
 /*
  * Returns size of a buffer which is allocated with dm_malloc.
