@@ -1579,7 +1579,7 @@ static int _set_oom_adj(int val)
 	}
 
 	fprintf(fp, "%i", val);
-	if (fclose(fp))
+	if (dm_fclose(fp))
 		perror(OOM_ADJ_FILE ": fclose failed");
 
 	return 1;
