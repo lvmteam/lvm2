@@ -321,3 +321,13 @@ void fcntl_unlock_file(int lockfd)
 			  strerror(errno));
 }
 
+int lvm_fclose(FILE *fp, const char *filename)
+{
+	if (!dm_fclose(fp))
+		return 0;
+	if (errno == 0)
+		log_error("%s: write error", filename);
+	else
+		log_sys_error("write error", filename);
+	return EOF;
+}

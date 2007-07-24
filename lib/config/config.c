@@ -20,6 +20,7 @@
 #include "str_list.h"
 #include "toolcontext.h"
 #include "lvm-string.h"
+#include "lvm-file.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -520,8 +521,8 @@ int write_config_file(struct config_tree *cft, const char *file,
 		argv++;
 	}
 
-	if (outline.fp && fclose(outline.fp)) {
-		log_sys_error("fclose", file);
+	if (outline.fp && lvm_fclose(outline.fp, file)) {
+		stack;
 		r = 0;
 	}
 

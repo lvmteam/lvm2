@@ -892,10 +892,8 @@ static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
 		return 0;
 	}
 
-	if (fclose(fp)) {
-		log_sys_error("fclose", tc->path_edit);
-		return 0;
-	}
+	if (lvm_fclose(fp, tc->path_edit))
+		return_0;
 
 	if (rename(temp_file, tc->path_edit)) {
 		log_debug("Renaming %s to %s", temp_file, tc->path_edit);

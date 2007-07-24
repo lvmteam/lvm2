@@ -17,6 +17,7 @@
 #include "device.h"
 #include "memlock.h"
 #include "lvm-string.h"
+#include "lvm-file.h"
 #include "defaults.h"
 
 #include <stdarg.h>
@@ -121,8 +122,14 @@ void fin_log(void)
 	}
 
 	if (_log_to_file) {
-		if (fclose(_log_file))
-			fprintf(stderr, "fclose() on log file failed: %s", strerror(errno));
+		if (dm_fclose(_log_file)) {
+			if (errno)
+			      fprintf(stderr, "failed to write log file: %s\n",
+				      strerror(errno));
+			else
+			      fprintf(stderr, "failed to write log file\n");
+
+		}
 		_log_to_file = 0;
 	}
 }

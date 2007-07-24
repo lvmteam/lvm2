@@ -239,10 +239,8 @@ int persistent_filter_dump(struct dev_filter *f)
 	/* _write_array(pf, fp, "invalid_devices", PF_BAD_DEVICE); */
 
 	fprintf(fp, "}\n");
-	if (fclose(fp)) {
-		log_sys_error("fclose", tmp_file);
-		goto out;
-	}
+	if (lvm_fclose(fp, tmp_file))
+		goto_out;
 
 	if (rename(tmp_file, pf->file))
 		log_error("%s: rename to %s failed: %s", tmp_file, pf->file,
