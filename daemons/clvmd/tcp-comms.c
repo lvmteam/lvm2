@@ -177,7 +177,7 @@ int get_main_gulm_cluster_fd()
 
 
 /* Read on main comms (listen) socket, accept it */
-int cluster_fd_gulm_callback(struct local_client *fd, char *buf, int len, char *csid,
+int cluster_fd_gulm_callback(struct local_client *fd, char *buf, int len, const char *csid,
 			struct local_client **new_client)
 {
     int newfd;
@@ -390,7 +390,7 @@ static int tcp_send_message(void *buf, int msglen, const char *csid, const char 
 }
 
 
-int gulm_cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
+int gulm_cluster_send_message(void *buf, int msglen, const char *csid, const char *errtext)
 {
     int status=0;
 
