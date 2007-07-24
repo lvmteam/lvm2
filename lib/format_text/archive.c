@@ -261,11 +261,8 @@ int archive_vg(struct volume_group *vg,
 		return 0;
 	}
 
-	if (fclose(fp)) {
-		log_sys_error("fclose", temp_file);
-		/* Leave file behind as evidence of failure */
-		return 0;
-	}
+	if (lvm_fclose(fp, temp_file))
+		return_0; /* Leave file behind as evidence of failure */
 
 	/*
 	 * Now we want to rename this file to <vg>_index.vg.

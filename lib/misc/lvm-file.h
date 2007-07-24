@@ -56,4 +56,13 @@ void fcntl_unlock_file(int lockfd);
   ((buf1).st_ino == (buf2).st_ino && \
    (buf1).st_dev == (buf2).st_dev)
 
+/*
+ * Close the specified stream, taking care to detect and diagnose any write
+ * error.  If there is an error, use the supplied file name in a diagnostic
+ * that is reported via log_error or log_sys_error, as appropriate.
+ * Use this function to close a stream when you've written data to it via
+ * unchecked fprintf, fputc, etc. calls.  Return 0 on success, EOF on failure.
+ */
+int lvm_fclose(FILE *fp, const char *filename);
+
 #endif
