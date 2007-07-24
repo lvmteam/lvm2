@@ -86,12 +86,12 @@ struct lock_wait
 };
 
 /* Forward */
-static int read_from_core_sock(struct local_client *client, char *buf, int len, char *csid,
+static int read_from_core_sock(struct local_client *client, char *buf, int len, const char *csid,
 			       struct local_client **new_client);
-static int read_from_lock_sock(struct local_client *client, char *buf, int len, char *csid,
+static int read_from_lock_sock(struct local_client *client, char *buf, int len, const char *csid,
 			       struct local_client **new_client);
 static int get_all_cluster_nodes(void);
-static int _csid_from_name(char *csid, char *name);
+static int _csid_from_name(char *csid, const char *name);
 static void _cluster_closedown(void);
 
 /* In tcp-comms.c */
@@ -278,7 +278,7 @@ static void drop_expired_locks(char *nodename)
 }
 
 
-static int read_from_core_sock(struct local_client *client, char *buf, int len, char *csid,
+static int read_from_core_sock(struct local_client *client, char *buf, int len, const char *csid,
 			       struct local_client **new_client)
 {
     int status;
@@ -288,7 +288,7 @@ static int read_from_core_sock(struct local_client *client, char *buf, int len, 
     return status<0 ? status : 1;
 }
 
-static int read_from_lock_sock(struct local_client *client, char *buf, int len, char *csid,
+static int read_from_lock_sock(struct local_client *client, char *buf, int len, const char *csid,
 			       struct local_client **new_client)
 {
     int status;
@@ -582,7 +582,7 @@ int get_next_node_csid(void **context, char *csid)
     return 1;
 }
 
-int gulm_name_from_csid(char *csid, char *name)
+int gulm_name_from_csid(const char *csid, char *name)
 {
     struct node_info *ninfo;
 
@@ -598,7 +598,7 @@ int gulm_name_from_csid(char *csid, char *name)
 }
 
 
-static int _csid_from_name(char *csid, char *name)
+static int _csid_from_name(char *csid, const char *name)
 {
     struct dm_hash_node *hn;
     struct node_info *ninfo;
@@ -622,7 +622,7 @@ static int _get_num_nodes()
 }
 
 /* Node is now known to be running a clvmd */
-void gulm_add_up_node(char *csid)
+void gulm_add_up_node(const char *csid)
 {
     struct node_info *ninfo;
 
@@ -661,7 +661,7 @@ void add_down_node(char *csid)
 
 /* Call a callback for each node, so the caller knows whether it's up or down */
 static int _cluster_do_node_callback(struct local_client *master_client,
-				     void (*callback)(struct local_client *, char *csid, int node_up))
+				     void (*callback)(struct local_client *, const char *csid, int node_up))
 {
     struct dm_hash_node *hn;
     struct node_info *ninfo;
@@ -965,14 +965,14 @@ static int _get_main_cluster_fd(void)
 	return get_main_gulm_cluster_fd();
 }
 
-static int _cluster_fd_callback(struct local_client *fd, char *buf, int len, char *csid, struct local_client **new_client)
+static int _cluster_fd_callback(struct local_client *fd, char *buf, int len, const char *csid, struct local_client **new_client)
 {
 	return cluster_fd_gulm_callback(fd, buf, len, csid, new_client);
 }
 
-static int _cluster_send_message(void *buf, int msglen, char *csid, const char *errtext)
+static int _cluster_send_message(const void *buf, int msglen, const char *csid, const char *errtext)
 {
-	return gulm_cluster_send_message(buf, msglen, csid, errtext);
+	return gulm_cluster_send_message((char *)buf, msglen, csid, errtext);
 }
 
 static int _get_cluster_name(char *buf, int buflen)
