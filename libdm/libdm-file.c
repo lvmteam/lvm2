@@ -72,3 +72,16 @@ int create_dir(const char *dir)
 	return 0;
 }
 
+int dm_fclose(FILE *stream)
+{
+	int prev_fail = ferror(stream);
+	int fclose_fail = fclose(stream);
+
+	/* If there was a previous failure, but fclose succeeded,
+	   clear errno, since ferror does not set it, and its value
+	   may be unrelated to the ferror-reported failure.  */
+	if (prev_fail && !fclose_fail)
+		errno = 0;
+
+	return prev_fail || fclose_fail ? EOF : 0;
+}
