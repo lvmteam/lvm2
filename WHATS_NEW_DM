@@ -1,6 +1,7 @@
 Version 1.02.22 - 
 ================================
   dm_fclose: new function
+  libdevmapper, dmeventd: be paranoid about detecting write failure
 
 Version 1.02.21 - 13th July 2007
 ================================
