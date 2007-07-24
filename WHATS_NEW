@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Trivial fix to lvdisplay man page.
   Add vg_lock_and_read() external library function.
   Fix loading of persistent cache if cache_dir is used. (2.02.23)
   Eliminate uses of strdup+basename.  Use last_path_component instead.
