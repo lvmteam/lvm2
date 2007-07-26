@@ -76,6 +76,7 @@ static const device_info_t device_info[] = {
 	{"device-mapper", 1},	/* Other mapped devices */
 	{"xvd", 16},		/* Xen virtual block device */
 	{"vdisk", 8},		/* SUN's LDOM virtual block device */
+	{"ps3disk", 16},	/* PlayStation 3 internal disk */
 	{NULL, 0}
 };
 
