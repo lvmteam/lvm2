@@ -140,7 +140,7 @@ static int _get_proc_number(const char *file, const char *name,
 	uint32_t num;
 
 	if (!(fl = fopen(file, "r"))) {
-		log_error("%s: fopen failed: %s", file, strerror(errno));
+		log_sys_error("fopen", file);
 		return 0;
 	}
 
@@ -150,7 +150,7 @@ static int _get_proc_number(const char *file, const char *name,
 				if (number) {
 					*number = num;
 					if (fclose(fl))
-						log_error("%s: fclose failed: %s", file, strerror(errno));
+						log_sys_error("fclose", file);
 					return 1;
 				}
 				dm_bit_set(_dm_bitset, num);
@@ -160,7 +160,7 @@ static int _get_proc_number(const char *file, const char *name,
 		} while (c != EOF && c != '\n');
 	}
 	if (fclose(fl))
-		log_error("%s: fclose failed: %s", file, strerror(errno));
+		log_sys_error("fclose", file);
 
 	if (number) {
 		log_error("%s: No entry for %s found", file, name);
@@ -190,8 +190,7 @@ static int _control_exists(const char *control, uint32_t major, uint32_t minor)
 
 	if (stat(control, &buf) < 0) {
 		if (errno != ENOENT)
-			log_error("%s: stat failed: %s", control,
-				  strerror(errno));
+			log_sys_error("stat", control);
 		return 0;
 	}
 
@@ -199,8 +198,7 @@ static int _control_exists(const char *control, uint32_t major, uint32_t minor)
 		log_verbose("%s: Wrong inode type", control);
 		if (!unlink(control))
 			return 0;
-		log_error("%s: unlink failed: %s", control,
-			  strerror(errno));
+		log_sys_error("unlink", control);
 		return -1;
 	}
 
@@ -211,8 +209,7 @@ static int _control_exists(const char *control, uint32_t major, uint32_t minor)
 			    major, minor);
 		if (!unlink(control))
 			return 0;
-		log_error("%s: unlink failed: %s", control,
-			  strerror(errno));
+		log_sys_error("unlink", control);
 		return -1;
 	}
 
@@ -238,7 +235,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 
 	if (mknod(control, S_IFCHR | S_IRUSR | S_IWUSR,
 		  MKDEV(major, minor)) < 0)  {
-		log_error("%s: mknod failed: %s", control, strerror(errno));
+		log_sys_error("mknod", control);
 		return 0;
 	}
 
@@ -301,7 +298,7 @@ static int _open_control(void)
 		goto error;
 
 	if ((_control_fd = open(control, O_RDWR)) < 0) {
-		log_error("%s: open failed: %s", control, strerror(errno));
+		log_sys_error("open", control);
 		goto error;
 	}
 
@@ -597,7 +594,7 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 	log_warn("Please upgrade your kernel device-mapper driver.");
 
 	if (!(d = opendir(dev_dir))) {
-		log_error("%s: opendir failed: %s", dev_dir, strerror(errno));
+		log_sys_error("opendir", dev_dir);
 		return 0;
 	}
 
@@ -616,7 +613,7 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 						      (void *) old_names);
 		snprintf(path, sizeof(path), "%s/%s", dev_dir, name);
 		if (stat(path, &buf)) {
-			log_error("%s: stat failed: %s", path, strerror(errno));
+			log_sys_error("stat", path);
 			continue;
 		}
 		if (!S_ISBLK(buf.st_mode))
@@ -637,7 +634,7 @@ static int _dm_names_v1(struct dm_ioctl_v1 *dmi)
 	}
 
 	if (closedir(d))
-		log_error("%s: closedir failed: %s", dev_dir, strerror(errno));
+		log_sys_error("closedir", dev_dir);
 
 	return r;
 }
@@ -1324,7 +1321,7 @@ static int _process_mapper_dir(struct dm_task *dmt)
 
 	dir = dm_dir();
 	if (!(d = opendir(dir))) {
-		log_error("opendir %s: %s", dir, strerror(errno));
+		log_sys_error("opendir", dir);
 		return 0;
 	}
 
@@ -1338,7 +1335,7 @@ static int _process_mapper_dir(struct dm_task *dmt)
 	}
 
 	if (closedir(d))
-		log_error("closedir %s: %s", dir, strerror(errno));
+		log_sys_error("closedir", dir);
 
 	return r;
 }
