@@ -55,7 +55,7 @@ out:
 	return r;
 }
 
-int create_dir(const char *dir)
+int dm_create_dir(const char *dir)
 {
 	struct stat info;
 

@@ -225,7 +225,7 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 		return 0;
 
 	old_umask = umask(0022);
-	ret = create_dir(dm_dir());
+	ret = dm_create_dir(dm_dir());
 	umask(old_umask);
 
 	if (!ret)

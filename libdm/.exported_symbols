@@ -1,6 +1,7 @@
 dm_lib_release
 dm_lib_exit
 dm_driver_version
+dm_create_dir
 dm_fclose
 dm_get_library_version
 dm_log
