@@ -33,7 +33,8 @@ static int _create_dir_recursive(const char *dir)
 		if (*orig) {
 			rc = mkdir(orig, 0777);
 			if (rc < 0 && errno != EEXIST) {
-				log_sys_error("mkdir", orig);
+				if (errno != EROFS)
+					log_sys_error("mkdir", orig);
 				goto out;
 			}
 		}
@@ -43,7 +44,8 @@ static int _create_dir_recursive(const char *dir)
 	/* Create final directory */
 	rc = mkdir(dir, 0777);
 	if (rc < 0 && errno != EEXIST) {
-		log_sys_error("mkdir", orig);
+		if (errno != EROFS)
+			log_sys_error("mkdir", orig);
 		goto out;
 	}
 

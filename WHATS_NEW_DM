@@ -1,5 +1,6 @@
 Version 1.02.22 - 
 ================================
+  Don't log mkdir fail-with-EROFS, to make create_dir equiv to the one in LVM2
   Introduce and use log_sys_* macros from LVM2
   dm_fclose: new function
   libdevmapper, dmeventd: be paranoid about detecting write failure
