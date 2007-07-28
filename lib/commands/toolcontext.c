@@ -939,7 +939,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 		goto error;
 
 	/* Create system directory if it doesn't already exist */
-	if (*cmd->sys_dir && !create_dir(cmd->sys_dir)) {
+	if (*cmd->sys_dir && !dm_create_dir(cmd->sys_dir)) {
 		log_error("Failed to create LVM2 system dir for metadata backups, config "
 			  "files and internal cache.");
 		log_error("Set environment variable LVM_SYSTEM_DIR to alternative location "

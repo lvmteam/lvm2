@@ -39,12 +39,6 @@ int dir_exists(const char *path);
  */
 int is_empty_dir(const char *dir);
 
-/*
- * Create directory (recursively) if necessary.  Return 1
- * if directory was successfully created (or already exists), else 0.
- */
-int create_dir(const char *dir);
-
 /* Sync directory changes */
 void sync_dir(const char *file);
 
