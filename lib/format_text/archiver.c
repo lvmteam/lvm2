@@ -117,7 +117,7 @@ int archive(struct volume_group *vg)
 		return 1;
 	}
 
-	if (!create_dir(vg->cmd->archive_params->dir))
+	if (!dm_create_dir(vg->cmd->archive_params->dir))
 		return 0;
 
 	/* Trap a read-only file system */
@@ -223,7 +223,7 @@ int backup(struct volume_group *vg)
 		return 1;
 	}
 
-	if (!create_dir(vg->cmd->backup_params->dir))
+	if (!dm_create_dir(vg->cmd->backup_params->dir))
 		return 0;
 
 	/* Trap a read-only file system */

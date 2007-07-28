@@ -284,7 +284,7 @@ int init_file_locking(struct locking_type *locking, struct cmd_context *cmd)
 						DEFAULT_LOCK_DIR),
 		sizeof(_lock_dir));
 
-	if (!create_dir(_lock_dir))
+	if (!dm_create_dir(_lock_dir))
 		return 0;
 
 	/* Trap a read-only file system */

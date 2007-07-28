@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Remove create_dir function; use now-equivalent dm_create_dir instead
   Detect stream write failure reliably; new fn: lvm_fclose; use dm_fclose
   Fix clvmd if compiled with gulm support. (2.02.26)
   Trivial fix to lvdisplay man page.

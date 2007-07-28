@@ -140,56 +140,6 @@ int dir_exists(const char *path)
 	return 1;
 }
 
-static int _create_dir_recursive(const char *dir)
-{
-	char *orig, *s;
-	int rc;
-
-	log_verbose("Creating directory \"%s\"", dir);
-	/* Create parent directories */
-	orig = s = dm_strdup(dir);
-	while ((s = strchr(s, '/')) != NULL) {
-		*s = '\0';
-		if (*orig) {
-			rc = mkdir(orig, 0777);
-			if (rc < 0 && errno != EEXIST) {
-				if (errno != EROFS)
-					log_sys_error("mkdir", orig);
-				dm_free(orig);
-				return 0;
-			}
-		}
-		*s++ = '/';
-	}
-	dm_free(orig);
-
-	/* Create final directory */
-	rc = mkdir(dir, 0777);
-	if (rc < 0 && errno != EEXIST) {
-		if (errno != EROFS)
-			log_sys_error("mkdir", dir);
-		return 0;
-	}
-	return 1;
-}
-
-int create_dir(const char *dir)
-{
-	struct stat info;
-
-	if (!*dir)
-		return 1;
-
-	if (stat(dir, &info) < 0)
-		return _create_dir_recursive(dir);
-
-	if (S_ISDIR(info.st_mode))
-		return 1;
-
-	log_error("Directory \"%s\" not found", dir);
-	return 0;
-}
-
 int is_empty_dir(const char *dir)
 {
 	struct dirent *dirent;
@@ -273,7 +223,7 @@ int fcntl_lock_file(const char *file, short lock_type, int warn_if_read_only)
 	if ((c = strrchr(dir, '/')))
 		*c = '\0';
 
-	if (!create_dir(dir)) {
+	if (!dm_create_dir(dir)) {
 		dm_free(dir);
 		return -1;
 	}

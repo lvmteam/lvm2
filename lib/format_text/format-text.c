@@ -1856,7 +1856,7 @@ static int _add_dir(const char *dir, struct list *dir_list)
 {
 	struct dir_list *dl;
 
-	if (create_dir(dir)) {
+	if (dm_create_dir(dir)) {
 		if (!(dl = dm_malloc(sizeof(struct list) + strlen(dir) + 1))) {
 			log_error("_add_dir allocation failed");
 			return 0;
