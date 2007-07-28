@@ -242,7 +242,7 @@ int dm_set_selinux_context(const char *path, mode_t mode)
 	log_debug("Setting SELinux context for %s to %s.", path, scontext);
 
 	if ((lsetfilecon(path, scontext) < 0) && (errno != ENOTSUP)) {
-		log_error("%s: lsetfilecon failed: %s", path, strerror(errno));
+		log_sys_error("lsetfilecon", path);
 		freecon(scontext);
 		return 0;
 	}
@@ -288,7 +288,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	umask(old_mask);
 
 	if (chown(path, uid, gid) < 0) {
-		log_error("%s: chown failed: %s", path, strerror(errno));
+		log_sys_error("chown", path);
 		return 0;
 	}
 
