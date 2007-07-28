@@ -629,6 +629,12 @@ char *dm_basename(const char *path);
  **************************/
 
 /*
+ * Create a directory (with parent directories if necessary).
+ * Returns 1 on success, 0 on failure.
+ */
+int dm_create_dir(const char *dir);
+
+/*
  * Close a stream, with nicer error checking than fclose's.
  * Derived from gnulib's close-stream.c.
  *
