@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Don't try to monitor devices which we failed to create.
   Don't leak a file descriptor in fcntl_lock_file(), when fcntl fails.
   Remove create_dir function; use now-equivalent dm_create_dir instead
   Detect stream write failure reliably; new fn: lvm_fclose; use dm_fclose

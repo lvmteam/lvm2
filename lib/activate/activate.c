@@ -963,7 +963,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	memlock_dec();
 	fs_unlock();
 
-	if (!monitor_dev_for_events(cmd, lv, 1))
+	if (r && !monitor_dev_for_events(cmd, lv, 1))
 		stack;
 
 	return r;
