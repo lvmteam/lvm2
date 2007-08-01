@@ -241,6 +241,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	int argc = *pargc;
 	int region_size;
 	int pagesize = lvm_getpagesize();
+	const char *log_arg;
 
 	if (argc && (unsigned) argc < lp->mirrors) {
 		log_error("Too few physical volumes on "
@@ -284,7 +285,25 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	lp->corelog = arg_count(cmd, corelog_ARG) ? 1 : 0;
+	if (arg_count(cmd, corelog_ARG)) {
+		log_verbose("Setting logging type to \"core\"");
+		lp->corelog = 1;
+	}
+
+	if (arg_count(cmd, log_ARG)) {
+		log_arg = arg_str_value(cmd, log_ARG, "disk");
+		if (!strcmp("disk", log_arg)) {
+			log_verbose("Setting logging type to \"disk\"");
+			lp->corelog = 0;
+		} else if (!strcmp("core", log_arg)) {
+			log_verbose("Setting logging type to \"core\"");
+			lp->corelog = 1;
+		} else {
+			log_error("Unknown logging type, \"%s\"", log_arg);
+			return 0;
+		}
+	}
+
 	lp->nosync = arg_count(cmd, nosync_ARG) ? 1 : 0;
 
 	return 1;
