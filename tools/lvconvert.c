@@ -101,14 +101,31 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
+	int count;
 	int region_size;
 	int pagesize = lvm_getpagesize();
 
 	memset(lp, 0, sizeof(*lp));
 
-	if (arg_count(cmd, mirrors_ARG) + arg_count(cmd, snapshot_ARG) != 1) {
-		log_error("Exactly one of --mirrors or --snapshot arguments "
-			  "required.");
+	if (arg_count(cmd, log_ARG) > 1) {
+		log_error("Too many --log arguments supplied.");
+		return 0;
+	}
+	if (arg_count(cmd, mirrors_ARG) > 1) {
+		log_error("Too many --mirrors arguments supplied.");
+		return 0;
+	}
+	if (arg_count(cmd, snapshot_ARG) > 1) {
+		log_error("Too many --snapshot arguments supplied.");
+		return 0;
+	}
+	if (arg_count(cmd, log_ARG) || arg_count(cmd, mirrors_ARG))
+		count = 1;
+	count += arg_count(cmd, snapshot_ARG);
+
+	if (count != 1) {
+		log_error("--snapshots argument cannot be mixed "
+			  "with --mirrors or --log");
 		return 0;
 	}
 
@@ -237,6 +254,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	struct list *parallel_areas;
 	struct segment_type *segtype;  /* FIXME: could I just use lp->segtype */
 	float sync_percent;
+	const char *log_arg;
+	int corelog = 0;
 
 	seg = first_seg(lv);
 	existing_mirrors = seg->area_count;
@@ -267,6 +286,31 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 		return 0;
 	}
 
+	/*
+	 * Adjust log type
+	 */
+	if (arg_count(cmd, corelog_ARG)) {
+		log_verbose("Setting logging type to \"core\"");
+		corelog = 1;
+	}
+
+	if (arg_count(cmd, log_ARG)) {
+		log_arg = arg_str_value(cmd, log_ARG, "disk");
+		if (!strcmp("disk", log_arg)) {
+			log_verbose("Setting logging type to \"disk\"");
+			corelog = 0;
+		} else if (!strcmp("core", log_arg)) {
+			log_verbose("Setting logging type to \"core\"");
+			corelog = 1;
+		} else {
+			log_error("Unknown logging type, \"%s\"", log_arg);
+			return 0;
+		}
+	}
+
+	/*
+	 * Region size must not change on existing mirrors
+	 */
 	if (arg_count(cmd, regionsize_ARG) && (lv->status & MIRRORED) &&
 	    (lp->region_size != seg->region_size)) {
 		log_error("Mirror log region size cannot be changed on "
@@ -309,7 +353,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 		if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype,
 					    1, lp->mirrors - 1,
-					    arg_count(cmd, corelog_ARG) ? 0 : 1,
+					    corelog ? 0 : 1,
 					    lv->le_count * (lp->mirrors - 1),
 					    NULL, 0, 0, lp->pvh,
 					    lp->alloc,
@@ -321,7 +365,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 							      lp->region_size);
 
 		log_lv = NULL;
-		if (!arg_count(cmd, corelog_ARG) &&
+		if (!corelog &&
 		    !(log_lv = create_mirror_log(cmd, lv->vg, ah,
 						 lp->alloc,
 						 lv->name, 0, &lv->tags))) {
@@ -348,7 +392,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	}
 
 	if (lp->mirrors == existing_mirrors) {
-		if (!seg->log_lv && !arg_count(cmd, corelog_ARG)) {
+		if (!seg->log_lv && !corelog) {
 			/* No disk log present, add one. */
 			if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv)))
 				return_0;
@@ -383,7 +427,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			seg->log_lv = log_lv;
 			log_lv->status |= MIRROR_LOG;
 			first_seg(log_lv)->mirror_seg = seg;
-		} else if (seg->log_lv && arg_count(cmd, corelog_ARG)) {
+		} else if (seg->log_lv && corelog) {
 			/* Had disk log, switch to core. */
 			if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
 				log_error("Unable to determine mirror sync status.");
@@ -543,7 +587,8 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (arg_count(cmd, mirrors_ARG)) {
+	if (arg_count(cmd, mirrors_ARG) ||
+	    ((lv->status & MIRRORED) && arg_count(cmd, log_ARG))) {
 		if (!archive(lv->vg))
 			return ECMD_FAILED;
 		if (!lvconvert_mirrors(cmd, lv, lp))
