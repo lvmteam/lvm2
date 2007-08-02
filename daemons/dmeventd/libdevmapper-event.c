@@ -706,6 +706,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	}
 
 	dm_task_destroy(dmt);
+	dmt = 0;
 
 	if (msg.data) {
 		dm_free(msg.data);
@@ -759,7 +760,8 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	if (reply_uuid)
 		dm_free(reply_uuid);
 	_dm_event_handler_clear_dev_info(dmevh);
-	dm_task_destroy(dmt);
+	if (dmt)
+		dm_task_destroy(dmt);
 	return ret;
 }
 
