@@ -1,5 +1,6 @@
 Version 1.02.22 - 
 ================================
+  Fix a possible segfault in libdevmapper-event
   Export dm_create_dir (was create_dir) to help fix LVM2 link error
   Don't log mkdir fail-with-EROFS, to make create_dir equiv to the one in LVM2
   Introduce and use log_sys_* macros from LVM2
