@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Factor out core of lvrename() to lv_rename lvm library function.
   Add --log argument to specify log type for mirrors.
   Don't try to monitor devices which we failed to create.
   Don't leak a file descriptor in fcntl_lock_file(), when fcntl fails.
