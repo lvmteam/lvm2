@@ -23,6 +23,7 @@
 #include "pv_alloc.h"
 #include "display.h"
 #include "segtype.h"
+#include "archiver.h"
 
 /*
  * PVs used by a segment of an LV
@@ -1457,6 +1458,66 @@ int lv_extend(struct logical_volume *lv,
       out:
 	alloc_destroy(ah);
 	return r;
+}
+
+/*
+ * Core of LV renaming routine.
+ * VG must be locked by caller.
+ * Returns 0 on failure, 1 on success.
+ */
+int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
+	      char *newname)
+{
+	struct volume_group *vg = lv->vg;
+
+	if (find_lv_in_vg(vg, newname)) {
+		log_error("Logical volume \"%s\" already exists in "
+			  "volume group \"%s\"", newname, vg->name);
+		return 0;
+	}
+
+	if (lv->status & LOCKED) {
+		log_error("Cannot rename locked LV %s", lv->name);
+		return 0;
+	}
+
+	if ((lv->status & MIRRORED) ||
+	    (lv->status & MIRROR_LOG) ||
+	    (lv->status & MIRROR_IMAGE)) {
+		log_error("Mirrored LV, \"%s\" cannot be renamed: %s",
+			  lv->name, strerror(ENOSYS));
+		return 0;
+	}
+
+	if (!archive(vg))
+		return_0;
+
+	if (!(lv->name = dm_pool_strdup(cmd->mem, newname))) {
+		log_error("Failed to allocate space for new name");
+		return 0;
+	}
+
+	log_verbose("Writing out updated volume group");
+	if (!vg_write(vg))
+		return_0;
+
+	backup(vg);
+
+	if (!suspend_lv(cmd, lv)) {
+		stack;
+		vg_revert(vg);
+		return 0;
+	}
+
+	if (!vg_commit(vg)) {
+		stack;
+		resume_lv(cmd, lv);
+		return 0;
+	}
+
+	resume_lv(cmd, lv);
+
+	return 1;
 }
 
 char *generate_lv_name(struct volume_group *vg, const char *format,

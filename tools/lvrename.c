@@ -16,6 +16,11 @@
 #include "tools.h"
 #include "lvm-types.h"
 
+
+/*
+ * lvrename command implementation.
+ * Check arguments and call lv_rename() to execute the request.
+ */
 int lvrename(struct cmd_context *cmd, int argc, char **argv)
 {
 	size_t maxlen;
@@ -24,7 +29,6 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 	char *st;
 
 	struct volume_group *vg;
-	struct logical_volume *lv;
 	struct lv_list *lvl;
 
 	if (argc == 3) {
@@ -103,72 +107,14 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 				    CORRECT_INCONSISTENT)))
 		return ECMD_FAILED;
 
-	if (find_lv_in_vg(vg, lv_name_new)) {
-		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", lv_name_new, vg_name);
-		goto error;
-	}
-
 	if (!(lvl = find_lv_in_vg(vg, lv_name_old))) {
 		log_error("Existing logical volume \"%s\" not found in "
 			  "volume group \"%s\"", lv_name_old, vg_name);
 		goto error;
 	}
 
-	lv = lvl->lv;
-
-	if (lv->status & LOCKED) {
-		log_error("Cannot rename locked LV %s", lv->name);
+	if (!lv_rename(cmd, lvl->lv, lv_name_new))
 		goto error;
-	}
-
-	if ((lv->status & MIRRORED) ||
-	    (lv->status & MIRROR_LOG) ||
-	    (lv->status & MIRROR_IMAGE)) {
-		log_error("Mirrored LV, \"%s\" cannot be renamed: %s",
-			  lv->name, strerror(ENOSYS));
-		goto error;
-	}
-
-	if ((lv->status & MIRRORED) ||
-	    (lv->status & MIRROR_LOG) ||
-	    (lv->status & MIRROR_IMAGE)) {
-		log_error("Mirrored LV, \"%s\" cannot be renamed: %s",
-			  lv->name, strerror(ENOSYS));
-		goto error;
-	}
-
-	if (!archive(lv->vg)) {
-		stack;
-		goto error;
-	}
-
-	if (!(lv->name = dm_pool_strdup(cmd->mem, lv_name_new))) {
-		log_error("Failed to allocate space for new name");
-		goto error;
-	}
-
-	log_verbose("Writing out updated volume group");
-	if (!vg_write(vg)) {
-		stack;
-		goto error;
-	}
-
-	backup(lv->vg);
-
-	if (!suspend_lv(cmd, lv)) {
-		stack;
-		vg_revert(vg);
-		goto error;
-	}
-
-	if (!vg_commit(vg)) {
-		stack;
-		resume_lv(cmd, lv);
-		goto error;
-	}
-
-	resume_lv(cmd, lv);
 
 	unlock_vg(cmd, vg_name);
 
