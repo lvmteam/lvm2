@@ -670,13 +670,7 @@ static int _parse_message(struct dm_event_daemon_message *msg, char **dso_name,
 }
 
 /*
- * dm_event_get_registered_device
- * @dso_name
- * @device_path
- * @mask
- * @next
- *
- * Returns: 0 if handler found, error (-ENOMEM, -ENOENT) otherwise
+ * Returns 0 if handler found; error (-ENOMEM, -ENOENT) otherwise.
  */
 int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 {
@@ -706,7 +700,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	}
 
 	dm_task_destroy(dmt);
-	dmt = 0;
+	dmt = NULL;
 
 	if (msg.data) {
 		dm_free(msg.data);
