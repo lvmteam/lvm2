@@ -1466,7 +1466,7 @@ int lv_extend(struct logical_volume *lv,
  * Returns 0 on failure, 1 on success.
  */
 int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
-	      char *newname)
+	      const char *newname)
 {
 	struct volume_group *vg = lv->vg;
 

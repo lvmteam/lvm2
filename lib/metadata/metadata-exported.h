@@ -357,7 +357,7 @@ int lv_extend(struct logical_volume *lv,
 int lv_remove(struct logical_volume *lv);
 
 int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
-	      char *newname);
+	      const char *newname);
 
 /* Find a PV within a given VG */
 struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
