@@ -1466,13 +1466,13 @@ int lv_extend(struct logical_volume *lv,
  * Returns 0 on failure, 1 on success.
  */
 int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
-	      const char *newname)
+	      const char *new_name)
 {
 	struct volume_group *vg = lv->vg;
 
-	if (find_lv_in_vg(vg, newname)) {
+	if (find_lv_in_vg(vg, new_name)) {
 		log_error("Logical volume \"%s\" already exists in "
-			  "volume group \"%s\"", newname, vg->name);
+			  "volume group \"%s\"", new_name, vg->name);
 		return 0;
 	}
 
@@ -1492,7 +1492,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!archive(vg))
 		return_0;
 
-	if (!(lv->name = dm_pool_strdup(cmd->mem, newname))) {
+	if (!(lv->name = dm_pool_strdup(cmd->mem, new_name))) {
 		log_error("Failed to allocate space for new name");
 		return 0;
 	}
