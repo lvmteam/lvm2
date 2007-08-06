@@ -1792,13 +1792,8 @@ int vg_check_status(struct volume_group *vg, uint32_t status)
 	return 1;
 }
 
-/**
- * vg_lock_and_read - Attempt to lock a volume group, read, and check status
- * @cmd - command context
- * @vg_name - name of the volume group to lock and read
- * @lock_flags - locking flags to use
- * @status_flags - status flags to check
- * @misc_flags - function modifier flags
+/*
+ * vg_lock_and_read - consolidate vg locking, reading, and status flag checking
  *
  * Returns:
  * NULL - failure
