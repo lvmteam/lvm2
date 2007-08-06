@@ -563,7 +563,7 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 	/* Rename? */
 		if ((suffix = strrchr(dl->dlid + sizeof(UUID_PREFIX) - 1, '-')))
 			suffix++;
-		newname = build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
+		new_name = build_dm_name(dm->mem, dm->vg_name, dl->lv->name,
 					suffix);
 
 static int _belong_to_vg(const char *vgname, const char *name)

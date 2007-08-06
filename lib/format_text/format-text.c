@@ -939,7 +939,7 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 	char *slash;
-	char newname[PATH_MAX];
+	char new_name[PATH_MAX];
 	size_t len;
 
 	if (!_vg_commit_file_backup(fid, vg, mda))
@@ -953,17 +953,17 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 
 	if (strcmp(slash, vg->name)) {
 		len = slash - tc->path_live;
-		strncpy(newname, tc->path_live, len);
-		strcpy(newname + len, vg->name);
-		log_debug("Renaming %s to %s", tc->path_live, newname);
+		strncpy(new_name, tc->path_live, len);
+		strcpy(new_name + len, vg->name);
+		log_debug("Renaming %s to %s", tc->path_live, new_name);
 		if (test_mode())
 			log_verbose("Test mode: Skipping rename");
 		else {
-			if (rename(tc->path_live, newname)) {
+			if (rename(tc->path_live, new_name)) {
 				log_error("%s: rename to %s failed: %s",
-					  tc->path_live, newname,
+					  tc->path_live, new_name,
 					  strerror(errno));
-				sync_dir(newname);
+				sync_dir(new_name);
 				return 0;
 			}
 		}
