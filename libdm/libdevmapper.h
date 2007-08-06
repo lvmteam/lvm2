@@ -644,7 +644,6 @@ int dm_create_dir(const char *dir);
  */
 int dm_fclose(FILE *stream);
 
-
 /*
  * Returns size of a buffer which is allocated with dm_malloc.
  * Pointer to the buffer is stored in *buf.
