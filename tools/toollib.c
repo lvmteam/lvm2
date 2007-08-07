@@ -25,7 +25,7 @@
 #define MIRROR_DISK_VERSION 2
 
 /* Command line args */
-unsigned arg_count(struct cmd_context *cmd, int a)
+unsigned arg_count(const struct cmd_context *cmd, int a)
 {
 	return cmd->args[a].count;
 }
@@ -142,12 +142,12 @@ char *skip_dev_dir(struct cmd_context *cmd, const char *vg_name,
 /*
  * Metadata iteration functions
  */
-int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  struct list *arg_lvnames, struct list *tags,
+int process_each_lv_in_vg(struct cmd_context *cmd,
+			  const struct volume_group *vg,
+			  const struct list *arg_lvnames,
+			  const struct list *tags,
 			  void *handle,
-			  int (*process_single) (struct cmd_context * cmd,
-						 struct logical_volume * lv,
-						 void *handle))
+			  process_single_lv_fn_t process_single)
 {
 	int ret_max = 0;
 	int ret = 0;
@@ -603,11 +603,8 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 }
 
 int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  struct list *tags, void *handle,
-			  int (*process_single) (struct cmd_context * cmd,
-						 struct volume_group * vg,
-						 struct physical_volume * pv,
-						 void *handle))
+			  const struct list *tags, void *handle,
+			  process_single_pv_fn_t process_single)
 {
 	int ret_max = 0;
 	int ret = 0;

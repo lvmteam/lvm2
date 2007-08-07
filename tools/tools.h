@@ -147,7 +147,7 @@ int alloc_arg(struct cmd_context *cmd, struct arg *a);
 char yes_no_prompt(const char *prompt, ...);
 
 /* we use the enums to access the switches */
-unsigned int arg_count(struct cmd_context *cmd, int a);
+unsigned int arg_count(const struct cmd_context *cmd, int a);
 const char *arg_value(struct cmd_context *cmd, int a);
 const char *arg_str_value(struct cmd_context *cmd, int a, const char *def);
 int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def); 

@@ -642,9 +642,9 @@ int lvs_in_vg_activated(struct volume_group *vg)
 	return _lvs_in_vg_activated(vg, 0);
 }
 
-int lvs_in_vg_opened(struct volume_group *vg)
+int lvs_in_vg_opened(const struct volume_group *vg)
 {
-	struct lv_list *lvl;
+	const struct lv_list *lvl;
 	int count = 0;
 
 	if (!activation())

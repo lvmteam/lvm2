@@ -46,10 +46,11 @@ static int vgdisplay_single(struct cmd_context *cmd, const char *vg_name,
 		vgdisplay_extents(vg);
 
 		process_each_lv_in_vg(cmd, vg, NULL, NULL, NULL,
-				      &lvdisplay_full);
+				      (process_single_lv_fn_t)lvdisplay_full);
 
 		log_print("--- Physical volumes ---");
-		process_each_pv_in_vg(cmd, vg, NULL, NULL, &pvdisplay_short);
+		process_each_pv_in_vg(cmd, vg, NULL, NULL,
+				      (process_single_pv_fn_t)pvdisplay_short);
 	}
 
 	check_current_backup(vg);
@@ -98,7 +99,7 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 **********/
 
 	process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
-			&vgdisplay_single);
+			vgdisplay_single);
 
 /******** FIXME Need to count number processed 
 	  Add this to process_each_vg if arg_count(cmd,activevolumegroups_ARG) ? 

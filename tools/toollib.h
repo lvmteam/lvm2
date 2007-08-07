@@ -60,19 +60,25 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 						      struct lv_segment * seg,
 						      void *handle));
 
-int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  struct list *tags, void *handle,
-			  int (*process_single) (struct cmd_context * cmd,
-						 struct volume_group * vg,
-						 struct physical_volume * pv,
-						 void *handle));
+typedef int (*process_single_pv_fn_t) (struct cmd_context *cmd,
+				  struct volume_group *vg,
+				  struct physical_volume *pv,
+				  void *handle);
 
-int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
-			  struct list *arg_lvnames, struct list *tags,
+int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
+			  const struct list *tags, void *handle,
+			  process_single_pv_fn_t process_single);
+
+typedef int (*process_single_lv_fn_t) (struct cmd_context *cmd,
+				  struct logical_volume *lv,
+				  void *handle);
+
+int process_each_lv_in_vg(struct cmd_context *cmd,
+			  const struct volume_group *vg,
+			  const struct list *arg_lvnames,
+			  const struct list *tags,
 			  void *handle,
-			  int (*process_single) (struct cmd_context * cmd,
-						 struct logical_volume * lv,
-						 void *handle));
+			  process_single_lv_fn_t process_single);
 
 char *default_vgname(struct cmd_context *cmd);
 const char *extract_vgname(struct cmd_context *cmd, const char *lv_name);

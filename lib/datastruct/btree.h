@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004, 2007 Sistina Software, Inc. All rights reserved.  
  * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -20,13 +20,13 @@ struct btree;
 
 struct btree *btree_create(struct dm_pool *mem);
 
-void *btree_lookup(struct btree *t, uint32_t k);
+void *btree_lookup(const struct btree *t, uint32_t k);
 int btree_insert(struct btree *t, uint32_t k, void *data);
 
 struct btree_iter;
-void *btree_get_data(struct btree_iter *it);
+void *btree_get_data(const struct btree_iter *it);
 
-struct btree_iter *btree_first(struct btree *t);
-struct btree_iter *btree_next(struct btree_iter *it);
+struct btree_iter *btree_first(const struct btree *t);
+struct btree_iter *btree_next(const struct btree_iter *it);
 
 #endif

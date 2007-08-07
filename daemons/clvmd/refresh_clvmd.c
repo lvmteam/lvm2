@@ -79,7 +79,7 @@ static int _open_local_sock(void)
 }
 
 /* Send a request and return the status */
-static int _send_request(char *inbuf, int inlen, char **retbuf)
+static int _send_request(const char *inbuf, int inlen, char **retbuf)
 {
 	char outbuf[PIPE_BUF];
 	struct clvm_header *outheader = (struct clvm_header *) outbuf;
