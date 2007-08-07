@@ -66,7 +66,8 @@ int str_list_del(struct list *sll, const char *str)
 	return 1;
 }
 
-int str_list_dup(struct dm_pool *mem, struct list *sllnew, struct list *sllold)
+int str_list_dup(struct dm_pool *mem, struct list *sllnew,
+		 const struct list *sllold)
 {
 	struct str_list *sl;
 
@@ -85,7 +86,7 @@ int str_list_dup(struct dm_pool *mem, struct list *sllnew, struct list *sllold)
 /*
  * Is item on list?
  */
-int str_list_match_item(struct list *sll, const char *str)
+int str_list_match_item(const struct list *sll, const char *str)
 {
 	struct str_list *sl;
 
@@ -99,7 +100,7 @@ int str_list_match_item(struct list *sll, const char *str)
 /*
  * Is at least one item on both lists?
  */
-int str_list_match_list(struct list *sll, struct list *sll2)
+int str_list_match_list(const struct list *sll, const struct list *sll2)
 {
 	struct str_list *sl;
 
@@ -113,7 +114,7 @@ int str_list_match_list(struct list *sll, struct list *sll2)
 /*
  * Do both lists contain the same set of items?
  */
-int str_list_lists_equal(struct list *sll, struct list *sll2)
+int str_list_lists_equal(const struct list *sll, const struct list *sll2)
 {
 	struct str_list *sl;
 

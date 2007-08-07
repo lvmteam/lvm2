@@ -1763,7 +1763,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
  * 0 - fail
  * 1 - success
  */
-int vg_check_status(struct volume_group *vg, uint32_t status)
+int vg_check_status(const struct volume_group *vg, uint32_t status)
 {
 	if ((status & CLUSTERED) &&
 	    (vg->status & CLUSTERED) && !locking_is_clustered() &&

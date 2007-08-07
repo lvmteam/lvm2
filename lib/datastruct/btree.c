@@ -55,7 +55,8 @@ static uint32_t _shuffle(uint32_t k)
 #endif
 }
 
-static struct node **_lookup(struct node **c, uint32_t key, struct node **p)
+static struct node **_lookup(struct node *const *c, uint32_t key,
+			     struct node **p)
 {
 	*p = NULL;
 	while (*c) {
@@ -70,10 +71,10 @@ static struct node **_lookup(struct node **c, uint32_t key, struct node **p)
 			c = &(*c)->r;
 	}
 
-	return c;
+	return (struct node **)c;
 }
 
-void *btree_lookup(struct btree *t, uint32_t k)
+void *btree_lookup(const struct btree *t, uint32_t k)
 {
 	uint32_t key = _shuffle(k);
 	struct node *p, **c = _lookup(&t->root, key, &p);
@@ -102,7 +103,7 @@ int btree_insert(struct btree *t, uint32_t k, void *data)
 	return 1;
 }
 
-void *btree_get_data(struct btree_iter *it)
+void *btree_get_data(const struct btree_iter *it)
 {
 	return ((struct node *) it)->data;
 }
@@ -114,7 +115,7 @@ static struct node *_left(struct node *n)
 	return n;
 }
 
-struct btree_iter *btree_first(struct btree *t)
+struct btree_iter *btree_first(const struct btree *t)
 {
 	if (!t->root)
 		return NULL;
@@ -122,7 +123,7 @@ struct btree_iter *btree_first(struct btree *t)
 	return (struct btree_iter *) _left(t->root);
 }
 
-struct btree_iter *btree_next(struct btree_iter *it)
+struct btree_iter *btree_next(const struct btree_iter *it)
 {
 	struct node *n = (struct node *) it;
 	uint32_t k = n->key;

@@ -23,32 +23,34 @@
 uint64_t units_to_bytes(const char *units, char *unit_type);
 
 /* Specify size in KB */
-const char *display_size(struct cmd_context *cmd, uint64_t size);
-const char *display_size_long(struct cmd_context *cmd, uint64_t size);
-const char *display_size_units(struct cmd_context *cmd, uint64_t size);
+const char *display_size(const struct cmd_context *cmd, uint64_t size);
+const char *display_size_long(const struct cmd_context *cmd, uint64_t size);
+const char *display_size_units(const struct cmd_context *cmd, uint64_t size);
 
 char *display_uuid(char *uuidstr);
 void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre);
 
-void pvdisplay_colons(struct physical_volume *pv);
-void pvdisplay_segments(struct physical_volume *pv);
-void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
+void pvdisplay_colons(const struct physical_volume *pv);
+void pvdisplay_segments(const struct physical_volume *pv);
+void pvdisplay_full(const struct cmd_context *cmd,
+		    const struct physical_volume *pv,
 		    void *handle);
-int pvdisplay_short(struct cmd_context *cmd, struct volume_group *vg,
-		    struct physical_volume *pv, void *handle);
+int pvdisplay_short(const struct cmd_context *cmd,
+		    const struct volume_group *vg,
+		    const struct physical_volume *pv, void *handle);
 
-void lvdisplay_colons(struct logical_volume *lv);
-int lvdisplay_segments(struct logical_volume *lv);
-int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
+void lvdisplay_colons(const struct logical_volume *lv);
+int lvdisplay_segments(const struct logical_volume *lv);
+int lvdisplay_full(struct cmd_context *cmd, const struct logical_volume *lv,
 		   void *handle);
 
-void vgdisplay_extents(struct volume_group *vg);
-void vgdisplay_full(struct volume_group *vg);
-void vgdisplay_colons(struct volume_group *vg);
-void vgdisplay_short(struct volume_group *vg);
+void vgdisplay_extents(const struct volume_group *vg);
+void vgdisplay_full(const struct volume_group *vg);
+void vgdisplay_colons(const struct volume_group *vg);
+void vgdisplay_short(const struct volume_group *vg);
 
-void display_formats(struct cmd_context *cmd);
-void display_segtypes(struct cmd_context *cmd);
+void display_formats(const struct cmd_context *cmd);
+void display_segtypes(const struct cmd_context *cmd);
 
 /*
  * Allocation policy display conversion routines.

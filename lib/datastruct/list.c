@@ -68,7 +68,7 @@ void list_del(struct list *elem)
 /*
  * Is the list empty?
  */
-int list_empty(struct list *head)
+int list_empty(const struct list *head)
 {
 	return head->n == head;
 }
@@ -76,7 +76,7 @@ int list_empty(struct list *head)
 /*
  * Is this the first element of the list?
  */
-int list_start(struct list *head, struct list *elem)
+int list_start(const struct list *head, const struct list *elem)
 {
 	return elem->p == head;
 }
@@ -84,7 +84,7 @@ int list_start(struct list *head, struct list *elem)
 /*
  * Is this the last element of the list?
  */
-int list_end(struct list *head, struct list *elem)
+int list_end(const struct list *head, const struct list *elem)
 {
 	return elem->n == head;
 }
@@ -92,7 +92,7 @@ int list_end(struct list *head, struct list *elem)
 /*
  * Return first element of the list or NULL if empty
  */
-struct list *list_first(struct list *head)
+struct list *list_first(const struct list *head)
 {
 	return (list_empty(head) ? NULL : head->n);
 }
@@ -100,7 +100,7 @@ struct list *list_first(struct list *head)
 /*
  * Return last element of the list or NULL if empty
  */
-struct list *list_last(struct list *head)
+struct list *list_last(const struct list *head)
 {
 	return (list_empty(head) ? NULL : head->p);
 }
@@ -108,7 +108,7 @@ struct list *list_last(struct list *head)
 /*
  * Return the previous element of the list, or NULL if we've reached the start.
  */
-struct list *list_prev(struct list *head, struct list *elem)
+struct list *list_prev(const struct list *head, const struct list *elem)
 {
 	return (list_start(head, elem) ? NULL : elem->p);
 }
@@ -116,7 +116,7 @@ struct list *list_prev(struct list *head, struct list *elem)
 /*
  * Return the next element of the list, or NULL if we've reached the end.
  */
-struct list *list_next(struct list *head, struct list *elem)
+struct list *list_next(const struct list *head, const struct list *elem)
 {
 	return (list_end(head, elem) ? NULL : elem->n);
 }

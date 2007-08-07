@@ -431,7 +431,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 }
 
 /* Check if a VG is un use by LVM1 so we don't stomp on it */
-int do_check_lvm1(char *vgname)
+int do_check_lvm1(const char *vgname)
 {
 	int status;
 

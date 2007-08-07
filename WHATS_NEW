@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Add const attributes where possible, first cut.
   Add support for renaming mirrored LVs.
   Factor out core of lvrename() to lv_rename lvm library function.
   Add --log argument to specify log type for mirrors.

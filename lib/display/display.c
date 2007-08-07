@@ -147,7 +147,8 @@ alloc_policy_t get_alloc_from_string(const char *str)
 }
 
 /* Size supplied in sectors */
-static const char *_display_size(struct cmd_context *cmd, uint64_t size, size_len_t sl)
+static const char *_display_size(const struct cmd_context *cmd,
+				 uint64_t size, size_len_t sl)
 {
 	int s;
 	int suffix = 1, precision;
@@ -217,22 +218,22 @@ static const char *_display_size(struct cmd_context *cmd, uint64_t size, size_le
 	return size_buf;
 }
 
-const char *display_size_long(struct cmd_context *cmd, uint64_t size)
+const char *display_size_long(const struct cmd_context *cmd, uint64_t size)
 {
 	return _display_size(cmd, size, SIZE_LONG);
 }
 
-const char *display_size_units(struct cmd_context *cmd, uint64_t size)
+const char *display_size_units(const struct cmd_context *cmd, uint64_t size)
 {
 	return _display_size(cmd, size, SIZE_UNIT);
 }
 
-const char *display_size(struct cmd_context *cmd, uint64_t size)
+const char *display_size(const struct cmd_context *cmd, uint64_t size)
 {
 	return _display_size(cmd, size, SIZE_SHORT);
 }
 
-void pvdisplay_colons(struct physical_volume *pv)
+void pvdisplay_colons(const struct physical_volume *pv)
 {
 	char uuid[64] __attribute((aligned(8)));
 
@@ -258,9 +259,9 @@ void pvdisplay_colons(struct physical_volume *pv)
 	return;
 }
 
-void pvdisplay_segments(struct physical_volume *pv)
+void pvdisplay_segments(const struct physical_volume *pv)
 {
-	struct pv_segment *pvseg;
+	const struct pv_segment *pvseg;
 
 	if (pv->pe_size)
 		log_print("--- Physical Segments ---");
@@ -286,7 +287,8 @@ void pvdisplay_segments(struct physical_volume *pv)
 }
 
 /* FIXME Include label fields */
-void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
+void pvdisplay_full(const struct cmd_context *cmd,
+		    const struct physical_volume *pv,
 		    void *handle __attribute((unused)))
 {
 	char uuid[64] __attribute((aligned(8)));
@@ -346,9 +348,9 @@ void pvdisplay_full(struct cmd_context *cmd, struct physical_volume *pv,
 	return;
 }
 
-int pvdisplay_short(struct cmd_context *cmd __attribute((unused)),
-		    struct volume_group *vg __attribute((unused)),
-		    struct physical_volume *pv,
+int pvdisplay_short(const struct cmd_context *cmd __attribute((unused)),
+		    const struct volume_group *vg __attribute((unused)),
+		    const struct physical_volume *pv,
 		    void *handle __attribute((unused)))
 {
 	char uuid[64] __attribute((aligned(8)));
@@ -373,7 +375,7 @@ int pvdisplay_short(struct cmd_context *cmd __attribute((unused)),
 	return 0;
 }
 
-void lvdisplay_colons(struct logical_volume *lv)
+void lvdisplay_colons(const struct logical_volume *lv)
 {
 	int inkernel;
 	struct lvinfo info;
@@ -393,7 +395,8 @@ void lvdisplay_colons(struct logical_volume *lv)
 	return;
 }
 
-int lvdisplay_full(struct cmd_context *cmd, struct logical_volume *lv,
+int lvdisplay_full(struct cmd_context *cmd,
+		   const struct logical_volume *lv,
 		   void *handle __attribute((unused)))
 {
 	struct lvinfo info;
@@ -535,9 +538,9 @@ void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre)
 	}
 }
 
-int lvdisplay_segments(struct logical_volume *lv)
+int lvdisplay_segments(const struct logical_volume *lv)
 {
-	struct lv_segment *seg;
+	const struct lv_segment *seg;
 
 	log_print("--- Segments ---");
 
@@ -555,12 +558,12 @@ int lvdisplay_segments(struct logical_volume *lv)
 	return 1;
 }
 
-void vgdisplay_extents(struct volume_group *vg __attribute((unused)))
+void vgdisplay_extents(const struct volume_group *vg __attribute((unused)))
 {
 	return;
 }
 
-void vgdisplay_full(struct volume_group *vg)
+void vgdisplay_full(const struct volume_group *vg)
 {
 	uint32_t access;
 	uint32_t active_pvs;
@@ -639,7 +642,7 @@ void vgdisplay_full(struct volume_group *vg)
 	return;
 }
 
-void vgdisplay_colons(struct volume_group *vg)
+void vgdisplay_colons(const struct volume_group *vg)
 {
 	uint32_t active_pvs;
 	const char *access;
@@ -691,7 +694,7 @@ void vgdisplay_colons(struct volume_group *vg)
 	return;
 }
 
-void vgdisplay_short(struct volume_group *vg)
+void vgdisplay_short(const struct volume_group *vg)
 {
 	log_print("\"%s\" %-9s [%-9s used / %s free]", vg->name,
 /********* FIXME if "open" print "/used" else print "/idle"???  ******/
@@ -705,18 +708,18 @@ void vgdisplay_short(struct volume_group *vg)
 	return;
 }
 
-void display_formats(struct cmd_context *cmd)
+void display_formats(const struct cmd_context *cmd)
 {
-	struct format_type *fmt;
+	const struct format_type *fmt;
 
 	list_iterate_items(fmt, &cmd->formats) {
 		log_print("%s", fmt->name);
 	}
 }
 
-void display_segtypes(struct cmd_context *cmd)
+void display_segtypes(const struct cmd_context *cmd)
 {
-	struct segment_type *segtype;
+	const struct segment_type *segtype;
 
 	list_iterate_items(segtype, &cmd->segtypes) {
 		log_print("%s", segtype->name);
