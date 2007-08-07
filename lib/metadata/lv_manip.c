@@ -25,6 +25,11 @@
 #include "segtype.h"
 #include "archiver.h"
 
+struct lv_names {
+	const char *old;
+	const char *new;
+};
+
 /*
  * PVs used by a segment of an LV
  */
@@ -1548,9 +1553,9 @@ static int _rename_sub_lv(struct cmd_context *cmd,
 static int _rename_cb(struct cmd_context *cmd, struct logical_volume *lv,
 		      void *data)
 {
-	char **names = (char **) data;
+	struct lv_names *lv_names = (struct lv_names *) data;
 
-	return _rename_sub_lv(cmd, lv, names[0], names[1]);
+	return _rename_sub_lv(cmd, lv, lv_names->old, lv_names->new);
 }
 
 /*
@@ -1588,10 +1593,10 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	      const char *new_name)
 {
 	struct volume_group *vg = lv->vg;
-	const char *names[2];
+	struct lv_names lv_names;
 
 	/* rename is not allowed on sub LVs */
-	if ((lv->status & MIRROR_LOG) || (lv->status & MIRROR_IMAGE)) {
+	if (!lv_is_visible(lv)) {
 		log_error("Cannot rename internal LV \"%s\".", lv->name);
 		return 0;
 	}
@@ -1611,9 +1616,9 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 
 	/* rename sub LVs */
-	names[0] = lv->name;
-	names[1] = new_name;
-	if (!_for_each_sub_lv(cmd, lv, _rename_cb, (void *) names))
+	lv_names.old = lv->name;
+	lv_names.new = new_name;
+	if (!_for_each_sub_lv(cmd, lv, _rename_cb, (void *) &lv_names))
 		return 0;
 
 	/* rename main LV */
