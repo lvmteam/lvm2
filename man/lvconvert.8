@@ -3,7 +3,7 @@
 lvconvert \- convert a logical volume from linear to mirror or snapshot
 .SH SYNOPSIS
 .B lvconvert
-\-m/\-\-mirrors Mirrors [\-\-log {disk|core}] [\-R/\-\-regionsize MirrorLogRegionSize]
+\-m/\-\-mirrors Mirrors [\-\-log {disk|core}] [\-\-corelog] [\-R/\-\-regionsize MirrorLogRegionSize]
 [\-A/\-\-alloc AllocationPolicy]
 [\-h/\-?/\-\-help]
 [\-v/\-\-verbose]
@@ -38,9 +38,12 @@ volume to a mirror volume with 2-sides; that is, a
 linear volume plus one copy.
 .TP
 .I \-\-log disk/core
-This optional argument gives the ability to switch the
-logging type that is used by a mirror.  The logging type
-can be either "disk" (persistent) or "core" (non-persistent).
+This optional argument switches the logging type of a
+mirror.  The logging type can be either "disk" (persistent)
+or "core" (non-persistent).  The default logging type is "disk".
+.TP
+.I \-\-corelog
+The optional argument "--corelog" is the same as specifying "--log core".
 .TP
 .I \-R, \-\-regionsize MirrorLogRegionSize
 A mirror is divided into regions of this size (in MB), and the mirror log
@@ -62,7 +65,7 @@ If the volume is read-only the snapshot will not be zeroed.
 "lvconvert -m1 vg00/lvol1"
 .br
 converts the linear logical volume "vg00/lvol1" to
-a two-legged mirror logical volume.
+a two-way mirror logical volume.
 
 "lvconvert --log core vg00/lvol1"
 .br
