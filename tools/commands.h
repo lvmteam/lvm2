@@ -107,7 +107,7 @@ xx(lvconvert,
    "\t[--version]" "\n"
    "\tOriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]\n",
 
-   alloc_ARG, chunksize_ARG, mirrors_ARG, corelog_ARG, log_ARG,
+   alloc_ARG, chunksize_ARG, mirrors_ARG, corelog_ARG, mirrorlog_ARG,
    regionsize_ARG, snapshot_ARG, test_ARG, zero_ARG)
 
 xx(lvcreate,
@@ -156,7 +156,7 @@ xx(lvcreate,
    "\tOriginalLogicalVolume[Path] [PhysicalVolumePath...]\n\n",
 
    addtag_ARG, alloc_ARG, autobackup_ARG, chunksize_ARG, contiguous_ARG,
-   corelog_ARG, log_ARG, extents_ARG, major_ARG, minor_ARG, mirrors_ARG, name_ARG,
+   corelog_ARG, mirrorlog_ARG, extents_ARG, major_ARG, minor_ARG, mirrors_ARG, name_ARG,
    nosync_ARG, permission_ARG, persistent_ARG, readahead_ARG, regionsize_ARG,
    size_ARG, snapshot_ARG, stripes_ARG, stripesize_ARG, test_ARG, type_ARG,
    zero_ARG)

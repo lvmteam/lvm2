@@ -107,7 +107,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 
 	memset(lp, 0, sizeof(*lp));
 
-	if (arg_count(cmd, log_ARG) > 1) {
+	if (arg_count(cmd, mirrorlog_ARG) > 1) {
 		log_error("Too many --log arguments supplied.");
 		return 0;
 	}
@@ -119,7 +119,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 		log_error("Too many --snapshot arguments supplied.");
 		return 0;
 	}
-	if (arg_count(cmd, log_ARG) || arg_count(cmd, mirrors_ARG))
+	if (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG))
 		count = 1;
 	count += arg_count(cmd, snapshot_ARG);
 
@@ -294,8 +294,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 		corelog = 1;
 	}
 
-	if (arg_count(cmd, log_ARG)) {
-		log_arg = arg_str_value(cmd, log_ARG, "disk");
+	if (arg_count(cmd, mirrorlog_ARG)) {
+		log_arg = arg_str_value(cmd, mirrorlog_ARG, "disk");
 		if (!strcmp("disk", log_arg)) {
 			log_verbose("Setting logging type to \"disk\"");
 			corelog = 0;
@@ -588,7 +588,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (arg_count(cmd, mirrors_ARG) ||
-	    ((lv->status & MIRRORED) && arg_count(cmd, log_ARG))) {
+	    ((lv->status & MIRRORED) && arg_count(cmd, mirrorlog_ARG))) {
 		if (!archive(lv->vg))
 			return ECMD_FAILED;
 		if (!lvconvert_mirrors(cmd, lv, lp))
