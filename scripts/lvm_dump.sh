@@ -116,15 +116,45 @@ fi
 
 if (( $clustered )); then
 	myecho "Gathering cluster info..."
+	echo "NODES: " > $dir/cluster_info
+	echo "----------------------------------" >> $dir/cluster_info
+	log "cman_tool nodes >> $dir/cluster_info 2>> $log"
+	echo " " >> $dir/cluster_info
+
 	echo "STATUS: " > $dir/cluster_info
 	echo "----------------------------------" >> $dir/cluster_info
 	log "cman_tool status >> $dir/cluster_info 2>> $log"
-	echo " " >> $dir/lvm_info
+	echo " " >> $dir/cluster_info
 
 	echo "SERVICES: " >> $dir/cluster_info
 	echo "----------------------------------" >> $dir/cluster_info
 	log "cman_tool services >> $dir/cluster_info 2>> $log"
-	echo " " >> $dir/lvm_info
+	echo " " >> $dir/cluster_info
+
+	echo "LOCKS: "  >> $dir/cluster_info
+	echo "----------------------------------" >> $dir/cluster_info
+	if [ -f /proc/cluster/dlm_locks ]
+	then
+		echo "clvmd" > /proc/cluster/dlm_locks
+		cat /proc/cluster/dlm_locks >> $dir/cluster_info
+		echo " " >> $dir/cluster_info
+		echo "RESOURCE DIR: "  >> $dir/cluster_info
+		cat /proc/cluster/dlm_dir >> $dir/cluster_info
+		echo " " >> $dir/cluster_info
+		echo "DEBUG LOG: "  >> $dir/cluster_info
+		cat /proc/cluster/dlm_debug >> $dir/cluster_info
+		echo " " >> $dir/cluster_info
+	fi
+	if [ -f /debug/dlm/clvmd ]
+	then
+		cat /debug/dlm/clvmd >> $dir/cluster_info
+		echo " " >> $dir/cluster_info
+		echo "WAITERS: "  >> $dir/cluster_info
+		cat /debug/dlm/clvmd_waiters >> $dir/cluster_info
+		echo " " >> $dir/cluster_info
+		echo "MASTER: "  >> $dir/cluster_info
+		cat /debug/dlm/clvmd_master >> $dir/cluster_info
+	fi
 fi
 
 myecho "Gathering LVM & device-mapper version info..."

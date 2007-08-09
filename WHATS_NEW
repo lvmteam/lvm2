@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Add more cluster info to lvmdump
   Add const attributes where possible, first cut.
   Add support for renaming mirrored LVs.
   Factor out core of lvrename() to lv_rename lvm library function.
