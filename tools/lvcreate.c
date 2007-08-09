@@ -290,8 +290,8 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 		lp->corelog = 1;
 	}
 
-	if (arg_count(cmd, log_ARG)) {
-		log_arg = arg_str_value(cmd, log_ARG, "disk");
+	if (arg_count(cmd, mirrorlog_ARG)) {
+		log_arg = arg_str_value(cmd, mirrorlog_ARG, "disk");
 		if (!strcmp("disk", log_arg)) {
 			log_verbose("Setting logging type to \"disk\"");
 			lp->corelog = 0;
