@@ -101,7 +101,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
-	int count;
+	int count = 0;
 	int region_size;
 	int pagesize = lvm_getpagesize();
 
