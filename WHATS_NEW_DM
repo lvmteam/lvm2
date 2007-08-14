@@ -1,5 +1,6 @@
 Version 1.02.22 - 
 ================================
+  Update to use autoconf 2.61, while still supporting 2.57.
   Avoid repeated dm_task free on some dm_event_get_registered_device errors.
   Introduce log_sys_* macros from LVM2.
   Export dm_fclose and dm_create_dir.
