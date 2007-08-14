@@ -13,10 +13,11 @@
 ## Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ################################################################################
 
-AC_PREREQ(2.53)
+AC_PREREQ(2.57)
 ################################################################################
 dnl -- Process this file with autoconf to produce a configure script.
-AC_INIT(lib/device/dev-cache.h)
+AC_INIT
+AC_CONFIG_SRCDIR([lib/device/dev-cache.h])
 
 ################################################################################
 AC_CONFIG_HEADERS(lib/misc/configure.h)
@@ -27,7 +28,7 @@ AC_CONFIG_AUX_DIR(autoconf)
 
 ################################################################################
 dnl -- Get system type
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET([])
 
 case "$host_os" in
 	linux*)
@@ -98,7 +99,7 @@ AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_MODE_T
-AC_STRUCT_ST_RDEV
+AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_STRUCT_TM
 
 ################################################################################
@@ -620,7 +621,7 @@ AC_SUBST(CSCOPE_CMD)
 ################################################################################
 dnl -- First and last lines should not contain files to generate in order to 
 dnl -- keep utility scripts running properly
-AC_OUTPUT( 								\
+AC_CONFIG_FILES([\
 Makefile								\
 make.tmpl								\
 daemons/Makefile							\
@@ -646,7 +647,8 @@ test/device/Makefile							\
 test/format1/Makefile							\
 test/regex/Makefile                                                     \
 test/filters/Makefile                                                   \
-)
+])
+AC_OUTPUT
 
 if test x$ODIRECT != xyes; then
   AC_MSG_WARN(Warning: O_DIRECT disabled: low-memory pvmove may lock up)

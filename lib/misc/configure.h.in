@@ -6,9 +6,6 @@
 /* Define to 1 to include built-in support for clustered LVM locking. */
 #undef CLUSTER_LOCKING_INTERNAL
 
-/* Define to 1 to build the shared command library. */
-#undef CMDLIB
-
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */
@@ -156,6 +153,9 @@
 /* Define to 1 if you have the <readline/readline.h> header file. */
 #undef HAVE_READLINE_READLINE_H
 
+/* Define to 1 to include support for realtime clock. */
+#undef HAVE_REALTIME
+
 /* Define to 1 if rl_completion_matches() is available. */
 #undef HAVE_RL_COMPLETION_MATCHES
 
@@ -173,9 +173,6 @@
 
 /* Define to 1 if you have the <selinux/selinux.h> header file. */
 #undef HAVE_SELINUX_SELINUX_H
-
-/* define to 1 to include support for realtime clock */
-#undef HAVE_REALTIME
 
 /* Define to 1 if you have the `setlocale' function. */
 #undef HAVE_SETLOCALE
@@ -237,10 +234,6 @@
 
 /* Define to 1 if `st_rdev' is member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_RDEV
-
-/* Define to 1 if your `struct stat' has `st_rdev'. Deprecated, use
-   `HAVE_STRUCT_STAT_ST_RDEV' instead. */
-#undef HAVE_ST_RDEV
 
 /* Define to 1 if you have the <syslog.h> header file. */
 #undef HAVE_SYSLOG_H
@@ -389,7 +382,7 @@
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
-   automatically deduced at run-time.
+   automatically deduced at runtime.
 	STACK_DIRECTION > 0 => grows toward higher addresses
 	STACK_DIRECTION < 0 => grows toward lower addresses
 	STACK_DIRECTION = 0 => direction of growth unknown */
@@ -419,13 +412,13 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef mode_t
 
-/* Define to `long' if <sys/types.h> does not define. */
+/* Define to `long int' if <sys/types.h> does not define. */
 #undef off_t
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define as `fork' if `vfork' does not work. */
