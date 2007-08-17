@@ -35,6 +35,8 @@ struct node_reply {
 	struct node_reply *next;
 };
 
+typedef enum {DEBUG_OFF, DEBUG_STDERR, DEBUG_SYSLOG} debug_t;
+
 /*
  * These exist for the use of local sockets only when we are
  * collecting responses from all cluster nodes

@@ -75,6 +75,7 @@
 #include "clvm.h"
 #include "clvmd.h"
 
+extern debug_t debug;
 extern struct cluster_ops *clops;
 
 /* This is where all the real work happens:
@@ -135,6 +136,10 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 
 	case CLVMD_CMD_REFRESH:
 		do_refresh_cache();
+		break;
+
+	case CLVMD_CMD_SET_DEBUG:
+		debug = args[0];
 		break;
 
 	case CLVMD_CMD_GET_CLUSTERNAME:
@@ -249,6 +254,7 @@ int do_pre_command(struct local_client *client)
 
 	case CLVMD_CMD_REFRESH:
 	case CLVMD_CMD_GET_CLUSTERNAME:
+	case CLVMD_CMD_SET_DEBUG:
 		break;
 
 	default:

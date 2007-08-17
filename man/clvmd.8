@@ -3,7 +3,7 @@
 clvmd \- cluster LVM daemon
 .SH SYNOPSIS
 .B clvmd
-[\-d] [\-h]
+[\-d [<value>]] [\-C] [\-h]
 [\-R]
 [\-t <timeout>]
 [\-T <start timeout>]
@@ -14,9 +14,27 @@ It must be running on all nodes in the cluster and will give an error
 if a node in the cluster does not have this daemon running.
 .SH OPTIONS
 .TP
-.I \-d
-Runs in the foreground and prints debugging information (if compiled in) to
-stderr. By default, clvmd will fork into the background when invoked.
+.I \-d [<value>]
+Enable debug logging. Value can be 0, 1 or 2.
+.br
+0 disables debug logging in a running clvmd
+.br
+1 sends debug logs to stderr (clvmd will not fork in this case)
+.br
+2 sends debug logs to syslog
+.br
+If 
+.B -d 
+is specified without a value then 1 is assumed if you are starting a
+new clvmd, 2 if you are enabling debug in a running clvmd.
+.TP
+.I \-C
+Only valid if 
+.B -d 
+is also specified. Tells all clvmds in a cluster to enable/disable debug logging.
+Without this switch, only the local clvmd will change its debug level to that
+given with 
+.B -d.
 .TP
 .I \-t <timeout>
 Specifies the timeout for commands to run around the cluster. This should not
@@ -42,7 +60,7 @@ sensible.
 This timeout will be ignored if you start clvmd with the -d switch.
 .TP
 .I \-R
-Tells all the running clvmd in the cluster to reload their device cache and
+Tells all the running clvmds in the cluster to reload their device cache and
 re-read the lvm configuration file. This command should be run whenever the
 devices on a cluster system are changed.
 .TP
