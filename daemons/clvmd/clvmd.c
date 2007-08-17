@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -83,7 +83,8 @@ struct lvm_thread_cmd {
 	int msglen;
 	unsigned short xid;
 };
-static int debug = 0;
+
+debug_t debug;
 static pthread_t lvm_thread;
 static pthread_mutex_t lvm_thread_mutex;
 static pthread_cond_t lvm_thread_cond;
@@ -121,6 +122,7 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 static int process_reply(const struct clvm_header *msg, int msglen,
 			 const char *csid);
 static int open_local_sock(void);
+static int check_local_clvmd(void);
 static struct local_client *find_client(int clientid);
 static void main_loop(int local_sock, int cmd_timeout);
 static void be_daemon(int start_timeout);
@@ -167,15 +169,23 @@ void debuglog(const char *fmt, ...)
 {
 	time_t P;
 	va_list ap;
+	static int syslog_init = 0;
 
-	if (!debug)
-		return;
+	if (debug == DEBUG_STDERR) {
+		va_start(ap,fmt);
+		time(&P);
+		fprintf(stderr, "CLVMD[%x]: %.15s ", (int)pthread_self(), ctime(&P)+4 );
+		vfprintf(stderr, fmt, ap);
+		va_end(ap);
+	}
+	if (debug == DEBUG_SYSLOG) {
+		if (!syslog_init)
+			openlog("clvmd", LOG_PID, LOG_DAEMON);
 
-	va_start(ap,fmt);
-	time(&P);
- 	fprintf(stderr, "CLVMD[%x]: %.15s ", (int)pthread_self(), ctime(&P)+4 );
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
+		va_start(ap,fmt);
+		vsyslog(LOG_DEBUG, fmt, ap);
+		va_end(ap);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -188,11 +198,13 @@ int main(int argc, char *argv[])
 	int start_timeout = 0;
 	sigset_t ss;
 	int using_gulm = 0;
+	int debug_opt = 0;
+	int clusterwide_opt = 0;
 
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
-	while ((opt = getopt(argc, argv, "?vVhdt:RT:")) != EOF) {
+	while ((opt = getopt(argc, argv, "?vVhd::t:RT:C")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -205,8 +217,16 @@ int main(int argc, char *argv[])
 		case 'R':
 			return refresh_clvmd();
 
+		case 'C':
+			clusterwide_opt = 1;
+			break;
+
 		case 'd':
-			debug++;
+			debug_opt = 1;
+			if (optarg)
+				debug = atoi(optarg);
+			else
+				debug = DEBUG_STDERR;
 			break;
 
 		case 't':
@@ -237,8 +257,17 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* Setting debug options on an existing clvmd */
+	if (debug_opt && !check_local_clvmd()) {
+
+		/* Sending to stderr makes no sense for a detached daemon */
+		if (debug == DEBUG_STDERR)
+			debug = DEBUG_SYSLOG;
+		return debug_clvmd(debug, clusterwide_opt);
+	}
+
 	/* Fork into the background (unless requested not to) */
-	if (!debug) {
+	if (debug != DEBUG_STDERR) {
 		be_daemon(start_timeout);
 	}
 
@@ -1752,6 +1781,32 @@ static int add_to_lvmqueue(struct local_client *client, struct clvm_header *msg,
 
 	return 0;
 }
+
+/* Return 0 if we can talk to an existing clvmd */
+static int check_local_clvmd(void)
+{
+	int local_socket;
+	struct sockaddr_un sockaddr;
+	int ret = 0;
+
+	/* Open local socket */
+	if ((local_socket = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+		return -1;
+	}
+
+	memset(&sockaddr, 0, sizeof(sockaddr));
+	memcpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(CLVMD_SOCKNAME));
+	sockaddr.sun_family = AF_UNIX;
+
+	if (connect(local_socket,(struct sockaddr *) &sockaddr,
+		    sizeof(sockaddr))) {
+		ret = -1;
+	}
+
+	close(local_socket);
+	return ret;
+}
+
 
 /* Open the local socket, that's the one we talk to libclvm down */
 static int open_local_sock()

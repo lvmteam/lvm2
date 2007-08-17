@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Allow clvmd debug to be turned on in a running daemon using clvmd -d
   Update to use autoconf 2.61, while still supporting 2.57.
   Add more cluster info to lvmdump
   Add const attributes where possible, first cut.

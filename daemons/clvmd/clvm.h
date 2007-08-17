@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -66,5 +66,5 @@ static const char CLVMD_SOCKNAME[] = "\0clvmd";
 /* Misc functions */
 #define CLVMD_CMD_REFRESH	    40
 #define CLVMD_CMD_GET_CLUSTERNAME   41
-
+#define CLVMD_CMD_SET_DEBUG	    42
 #endif
