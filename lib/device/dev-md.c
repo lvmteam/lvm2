@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2004 Luca Berra
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
