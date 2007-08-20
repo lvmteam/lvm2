@@ -108,8 +108,8 @@ typedef enum {
  */
 typedef enum {
 	DONT_FORCE = 0,
-	FORCE = 1,
-	FORCE_2 = 2
+	FORCE_NO_CONFIRM = 1, /* skip yes/no confirmation of operation */
+	FORCE_OVERRIDE = 2 /* skip confirmation and bypass a second condition */
 } force_t;
 
 struct cmd_context;
@@ -364,6 +364,9 @@ int lv_extend(struct logical_volume *lv,
 
 /* lv must be part of lv->vg->lvs */
 int lv_remove(struct logical_volume *lv);
+
+int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
+		     force_t force);
 
 int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	      const char *new_name);

@@ -17,6 +17,7 @@
 #define _LVM_DISPLAY_H
 
 #include "metadata-exported.h"
+#include "locking.h"
 
 #include <stdint.h>
 
@@ -57,5 +58,7 @@ void display_segtypes(const struct cmd_context *cmd);
  */
 const char *get_alloc_string(alloc_policy_t alloc);
 alloc_policy_t get_alloc_from_string(const char *str);
+
+char yes_no_prompt(const char *prompt, ...);
 
 #endif
