@@ -103,6 +103,15 @@ typedef enum {
 	AREA_LV
 } area_type_t;
 
+/*
+ * Whether or not to force an operation.
+ */
+typedef enum {
+	DONT_FORCE = 0,
+	FORCE = 1,
+	FORCE_2 = 2
+} force_t;
+
 struct cmd_context;
 struct format_handler;
 struct labeller;

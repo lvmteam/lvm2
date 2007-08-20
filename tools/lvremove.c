@@ -15,8 +15,9 @@
 
 #include "tools.h"
 
-static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
-			   void *handle __attribute((unused)))
+/* TODO: Next checkin, move to lvm library (lv_manip.c, metadata-exported.h) */
+static int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
+			    force_t force)
 {
 	struct volume_group *vg;
 	struct lvinfo info;
@@ -25,29 +26,29 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	vg = lv->vg;
 
 	if (!vg_check_status(vg, LVM_WRITE))
-		return ECMD_FAILED;
+		return 0;
 
 	if (lv_is_origin(lv)) {
 		log_error("Can't remove logical volume \"%s\" under snapshot",
 			  lv->name);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (lv->status & MIRROR_IMAGE) {
 		log_error("Can't remove logical volume %s used by a mirror",
 			  lv->name);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (lv->status & MIRROR_LOG) {
 		log_error("Can't remove logical volume %s used as mirror log",
 			  lv->name);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (lv->status & LOCKED) {
 		log_error("Can't remove locked LV %s", lv->name);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	/* FIXME Ensure not referred to by another existing LVs */
@@ -56,22 +57,22 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (info.open_count) {
 			log_error("Can't remove open logical volume \"%s\"",
 				  lv->name);
-			return ECMD_FAILED;
+			return 0;
 		}
 
-		if (info.exists && !arg_count(cmd, force_ARG)) {
+		if (info.exists && (force == DONT_FORCE)) {
 			if (yes_no_prompt("Do you really want to remove active "
 					  "logical volume \"%s\"? [y/n]: ",
 					  lv->name) == 'n') {
 				log_print("Logical volume \"%s\" not removed",
 					  lv->name);
-				return ECMD_FAILED;
+				return 0;
 			}
 		}
 	}
 
 	if (!archive(vg))
-		return ECMD_FAILED;
+		return 0;
 
 	/* If the VG is clustered then make sure no-one else is using the LV
 	   we are about to remove */
@@ -79,7 +80,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!activate_lv_excl(cmd, lv)) {
 			log_error("Can't get exclusive access to volume \"%s\"",
 				  lv->name);
-			return ECMD_FAILED;
+			return 0;
 		}
 	}
 
@@ -87,7 +88,7 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate logical volume \"%s\"",
 			  lv->name);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (lv_is_cow(lv)) {
@@ -95,24 +96,24 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		log_verbose("Removing snapshot %s", lv->name);
 		if (!vg_remove_snapshot(lv)) {
 			stack;
-			return ECMD_FAILED;
+			return 0;
 		}
 	}
 
 	log_verbose("Releasing logical volume \"%s\"", lv->name);
 	if (!lv_remove(lv)) {
 		log_error("Error releasing logical volume \"%s\"", lv->name);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	/* store it on disks */
 	if (!vg_write(vg))
-		return ECMD_FAILED;
+		return 0;
 
 	backup(vg);
 
 	if (!vg_commit(vg))
-		return ECMD_FAILED;
+		return 0;
 
 	/* If no snapshots left, reload without -real. */
 	if (origin && !lv_is_origin(origin)) {
@@ -123,7 +124,16 @@ static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	log_print("Logical volume \"%s\" successfully removed", lv->name);
-	return ECMD_PROCESSED;
+	return 1;
+}
+
+static int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
+			   void *handle __attribute((unused)))
+{
+	if (!lv_remove_single(cmd, lv, arg_count(cmd, force_ARG)))
+		return ECMD_FAILED;
+	else
+		return ECMD_PROCESSED;
 }
 
 int lvremove(struct cmd_context *cmd, int argc, char **argv)
