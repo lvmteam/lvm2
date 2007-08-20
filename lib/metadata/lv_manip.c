@@ -24,6 +24,7 @@
 #include "display.h"
 #include "segtype.h"
 #include "archiver.h"
+#include "activate.h"
 
 struct lv_names {
 	const char *old;
@@ -1803,4 +1804,115 @@ struct list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 	/* FIXME Merge adjacent segments with identical PV lists (avoids need for contiguous allocation attempts between successful allocations) */
 
 	return parallel_areas;
+}
+
+int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
+		     force_t force)
+{
+	struct volume_group *vg;
+	struct lvinfo info;
+	struct logical_volume *origin = NULL;
+
+	vg = lv->vg;
+
+	if (!vg_check_status(vg, LVM_WRITE))
+		return 0;
+
+	if (lv_is_origin(lv)) {
+		log_error("Can't remove logical volume \"%s\" under snapshot",
+			  lv->name);
+		return 0;
+	}
+
+	if (lv->status & MIRROR_IMAGE) {
+		log_error("Can't remove logical volume %s used by a mirror",
+			  lv->name);
+		return 0;
+	}
+
+	if (lv->status & MIRROR_LOG) {
+		log_error("Can't remove logical volume %s used as mirror log",
+			  lv->name);
+		return 0;
+	}
+
+	if (lv->status & LOCKED) {
+		log_error("Can't remove locked LV %s", lv->name);
+		return 0;
+	}
+
+	/* FIXME Ensure not referred to by another existing LVs */
+
+	if (lv_info(cmd, lv, &info, 1)) {
+		if (info.open_count) {
+			log_error("Can't remove open logical volume \"%s\"",
+				  lv->name);
+			return 0;
+		}
+
+		if (info.exists && (force == DONT_FORCE)) {
+			if (yes_no_prompt("Do you really want to remove active "
+					  "logical volume \"%s\"? [y/n]: ",
+					  lv->name) == 'n') {
+				log_print("Logical volume \"%s\" not removed",
+					  lv->name);
+				return 0;
+			}
+		}
+	}
+
+	if (!archive(vg))
+		return 0;
+
+	/* If the VG is clustered then make sure no-one else is using the LV
+	   we are about to remove */
+	if (vg_status(vg) & CLUSTERED) {
+		if (!activate_lv_excl(cmd, lv)) {
+			log_error("Can't get exclusive access to volume \"%s\"",
+				  lv->name);
+			return 0;
+		}
+	}
+
+	/* FIXME Snapshot commit out of sequence if it fails after here? */
+	if (!deactivate_lv(cmd, lv)) {
+		log_error("Unable to deactivate logical volume \"%s\"",
+			  lv->name);
+		return 0;
+	}
+
+	if (lv_is_cow(lv)) {
+		origin = origin_from_cow(lv);
+		log_verbose("Removing snapshot %s", lv->name);
+		if (!vg_remove_snapshot(lv)) {
+			stack;
+			return 0;
+		}
+	}
+
+	log_verbose("Releasing logical volume \"%s\"", lv->name);
+	if (!lv_remove(lv)) {
+		log_error("Error releasing logical volume \"%s\"", lv->name);
+		return 0;
+	}
+
+	/* store it on disks */
+	if (!vg_write(vg))
+		return 0;
+
+	backup(vg);
+
+	if (!vg_commit(vg))
+		return 0;
+
+	/* If no snapshots left, reload without -real. */
+	if (origin && !lv_is_origin(origin)) {
+		if (!suspend_lv(cmd, origin))
+			log_error("Failed to refresh %s without snapshot.", origin->name);
+		else if (!resume_lv(cmd, origin))
+			log_error("Failed to resume %s.", origin->name);
+	}
+
+	log_print("Logical volume \"%s\" successfully removed", lv->name);
+	return 1;
 }

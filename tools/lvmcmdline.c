@@ -368,37 +368,6 @@ int segtype_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
-char yes_no_prompt(const char *prompt, ...)
-{
-	int c = 0, ret = 0;
-	va_list ap;
-
-	sigint_allow();
-	do {
-		if (c == '\n' || !c) {
-			va_start(ap, prompt);
-			vprintf(prompt, ap);
-			va_end(ap);
-		}
-
-		if ((c = getchar()) == EOF) {
-			ret = 'n';
-			break;
-		}
-
-		c = tolower(c);
-		if ((c == 'y') || (c == 'n'))
-			ret = c;
-	} while (!ret || c != '\n');
-
-	sigint_restore();
-
-	if (c != '\n')
-		printf("\n");
-
-	return ret;
-}
-
 static void __alloc(int size)
 {
 	if (!(_cmdline.commands = dm_realloc(_cmdline.commands, sizeof(*_cmdline.commands) * size))) {
