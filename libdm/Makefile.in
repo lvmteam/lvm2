@@ -48,7 +48,7 @@ DEFS += -DDEVICE_UID=@DEVICE_UID@ -DDEVICE_GID=@DEVICE_GID@ \
 include ../make.tmpl
 
 .PHONY: install_dynamic install_static install_include \
-	install_fs install_ioctl install_ioctl_static \
+	install_ioctl install_ioctl_static \
 	install_pkgconfig
 
 INSTALL_TYPE = install_dynamic
@@ -73,10 +73,6 @@ install_dynamic: install_@interface@
 
 install_static: install_@interface@_static
 	$(LN_S) -f libdevmapper.a.$(LIB_VERSION) $(libdir)/libdevmapper.a
-
-install_fs: fs/libdevmapper.$(LIB_SUFFIX)
-	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
 
 install_ioctl: ioctl/libdevmapper.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
