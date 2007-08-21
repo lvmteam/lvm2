@@ -1,3 +1,8 @@
+DO NOT RELEASE UNTIL FOLLOWING FIXED/REVIEWED:
+
+changed text also needs fixing - some poor English
+lvcreate page needs fixing too - emphasis on best behaviour (disk log) got inverted!
+
 Version 2.02.28 -
 ================================
   Only permit --force, --verbose and --debug arguments to be repeated.
