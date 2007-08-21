@@ -330,6 +330,9 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t max_lv, alloc_policy_t alloc,
 			       int pv_count, char **pv_names);
 int vg_remove(struct volume_group *vg);
+int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
+		     struct volume_group *vg, int consistent,
+		     force_t force);
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	      const char *new_name);
 int vg_extend(struct volume_group *vg, int pv_count, char **pv_names);
