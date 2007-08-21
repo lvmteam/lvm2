@@ -68,7 +68,7 @@ typedef int (*command_fn) (struct cmd_context * cmd, int argc, char **argv);
 
 /* define the enums for the command line switches */
 enum {
-#define arg(a, b, c, d) a ,
+#define arg(a, b, c, d, e) a ,
 #include "args.h"
 #undef arg
 };
@@ -94,6 +94,8 @@ enum {
 	CHANGE_ALN = 4
 };
 
+#define ARG_REPEATABLE 0x00000001
+
 /* a global table of possible arguments */
 struct arg {
 	const char short_arg;
@@ -101,6 +103,7 @@ struct arg {
 	const char *long_arg;
 
 	int (*fn) (struct cmd_context * cmd, struct arg * a);
+	uint32_t flags;
 
 	unsigned count;
 	char *value;

@@ -241,7 +241,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	int argc = *pargc;
 	int region_size;
 	int pagesize = lvm_getpagesize();
-	const char *log_arg;
+	const char *mirrorlog;
 
 	if (argc && (unsigned) argc < lp->mirrors) {
 		log_error("Too few physical volumes on "
@@ -285,24 +285,25 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 		return 0;
 	}
 
-	if (arg_count(cmd, corelog_ARG)) {
-		log_verbose("Setting logging type to \"core\"");
+	if (arg_count(cmd, corelog_ARG))
 		lp->corelog = 1;
-	}
 
-	if (arg_count(cmd, mirrorlog_ARG)) {
-		log_arg = arg_str_value(cmd, mirrorlog_ARG, "disk");
-		if (!strcmp("disk", log_arg)) {
-			log_verbose("Setting logging type to \"disk\"");
-			lp->corelog = 0;
-		} else if (!strcmp("core", log_arg)) {
-			log_verbose("Setting logging type to \"core\"");
-			lp->corelog = 1;
-		} else {
-			log_error("Unknown logging type, \"%s\"", log_arg);
+	mirrorlog = arg_str_value(cmd, mirrorlog_ARG, DEFAULT_MIRRORLOG);
+	if (!strcmp("disk", mirrorlog)) {
+		if (lp->corelog) {
+			log_error("--mirrorlog disk and --corelog "
+				  "are incompatible");
 			return 0;
 		}
+		lp->corelog = 0;
+	} else if (!strcmp("core", mirrorlog))
+		lp->corelog = 1;
+	else {
+		log_error("Unknown mirrorlog type: %s", mirrorlog);
+		return 0;
 	}
+
+	log_verbose("Setting logging type to %s", mirrorlog);
 
 	lp->nosync = arg_count(cmd, nosync_ARG) ? 1 : 0;
 

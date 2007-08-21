@@ -45,7 +45,7 @@ extern char *optarg;
  * Table of valid switches
  */
 static struct arg _the_args[ARG_COUNT + 1] = {
-#define arg(a, b, c, d) {b, "", "--" c, d, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), SIGN_NONE, PERCENT_NONE, NULL},
+#define arg(a, b, c, d, e) {b, "", "--" c, d, e, 0, NULL, 0, 0, INT64_C(0), UINT64_C(0), SIGN_NONE, PERCENT_NONE, NULL},
 #include "args.h"
 #undef arg
 };
@@ -568,16 +568,16 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 			return 0;
 		}
 
-		if (a->fn) {
-			if (a->count) {
-				log_error("Option%s%c%s%s may not be repeated",
-					  a->short_arg ? " -" : "",
-					  a->short_arg ? : ' ',
-					  (a->short_arg && a->long_arg) ?
-					  "/" : "", a->long_arg ? : "");
-				return 0;
-			}
+		if (a->count && !(a->flags & ARG_REPEATABLE)) {
+			log_error("Option%s%c%s%s may not be repeated",
+				  a->short_arg ? " -" : "",
+				  a->short_arg ? : ' ',
+				  (a->short_arg && a->long_arg) ?
+				  "/" : "", a->long_arg ? : "");
+			return 0;
+		}
 
+		if (a->fn) {
 			if (!optarg) {
 				log_error("Option requires argument.");
 				return 0;
