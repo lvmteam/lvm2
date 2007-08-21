@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Only permit --force, --verbose and --debug arguments to be repeated.
   Move guts of vgremove into library.
   Fix inconsistent licence notices: executables are GPLv2; libraries LGPLv2.1.
   Move guts of lvremove into library.
@@ -9,10 +10,10 @@ Version 2.02.28 -
   Add const attributes where possible, first cut.
   Add support for renaming mirrored LVs.
   Factor out core of lvrename() to lv_rename lvm library function.
-  Add --log argument to specify log type for mirrors.
+  Add --mirrorlog argument to specify log type for mirrors.
   Don't try to monitor devices which we failed to create.
   Don't leak a file descriptor in fcntl_lock_file(), when fcntl fails.
-  Remove create_dir function; use now-equivalent dm_create_dir instead
+  Replace create_dir with dm_create_dir.
   Detect stream write failure reliably; new fn: lvm_fclose; use dm_fclose
   Fix clvmd if compiled with gulm support. (2.02.26)
   Trivial fix to lvdisplay man page.

@@ -1574,7 +1574,6 @@ static int _for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 /*
  * Core of LV renaming routine.
  * VG must be locked by caller.
- * Returns 0 on failure, 1 on success.
  */
 int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	      const char *new_name)

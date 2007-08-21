@@ -101,29 +101,13 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			int argc, char **argv)
 {
-	int count = 0;
 	int region_size;
 	int pagesize = lvm_getpagesize();
 
 	memset(lp, 0, sizeof(*lp));
 
-	if (arg_count(cmd, mirrorlog_ARG) > 1) {
-		log_error("Too many --log arguments supplied.");
-		return 0;
-	}
-	if (arg_count(cmd, mirrors_ARG) > 1) {
-		log_error("Too many --mirrors arguments supplied.");
-		return 0;
-	}
-	if (arg_count(cmd, snapshot_ARG) > 1) {
-		log_error("Too many --snapshot arguments supplied.");
-		return 0;
-	}
-	if (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG))
-		count = 1;
-	count += arg_count(cmd, snapshot_ARG);
-
-	if (count != 1) {
+	if (arg_count(cmd, snapshot_ARG) &&
+	    (arg_count(cmd, mirrorlog_ARG) || arg_count(cmd, mirrors_ARG))) {
 		log_error("--snapshots argument cannot be mixed "
 			  "with --mirrors or --log");
 		return 0;
@@ -254,8 +238,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	struct list *parallel_areas;
 	struct segment_type *segtype;  /* FIXME: could I just use lp->segtype */
 	float sync_percent;
-	const char *log_arg;
-	int corelog = 0;
+	const char *mirrorlog;
+	unsigned corelog = 0;
 
 	seg = first_seg(lv);
 	existing_mirrors = seg->area_count;
@@ -289,24 +273,25 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	/*
 	 * Adjust log type
 	 */
-	if (arg_count(cmd, corelog_ARG)) {
-		log_verbose("Setting logging type to \"core\"");
+	if (arg_count(cmd, corelog_ARG))
 		corelog = 1;
-	}
 
-	if (arg_count(cmd, mirrorlog_ARG)) {
-		log_arg = arg_str_value(cmd, mirrorlog_ARG, "disk");
-		if (!strcmp("disk", log_arg)) {
-			log_verbose("Setting logging type to \"disk\"");
-			corelog = 0;
-		} else if (!strcmp("core", log_arg)) {
-			log_verbose("Setting logging type to \"core\"");
-			corelog = 1;
-		} else {
-			log_error("Unknown logging type, \"%s\"", log_arg);
+	mirrorlog = arg_str_value(cmd, mirrorlog_ARG, DEFAULT_MIRRORLOG);
+	if (!strcmp("disk", mirrorlog)) {
+		if (corelog) {
+			log_error("--mirrorlog disk and --corelog "
+				  "are incompatible");
 			return 0;
 		}
+		corelog = 0;
+	} else if (!strcmp("core", mirrorlog))
+		corelog = 1;
+	else {
+		log_error("Unknown mirrorlog type: %s", mirrorlog);
+		return 0;
 	}
+
+	log_verbose("Setting logging type to %s", mirrorlog);
 
 	/*
 	 * Region size must not change on existing mirrors
