@@ -1850,7 +1850,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 
-		if (info.exists && (force == DONT_FORCE)) {
+		if (info.exists && (force == PROMPT)) {
 			if (yes_no_prompt("Do you really want to remove active "
 					  "logical volume \"%s\"? [y/n]: ",
 					  lv->name) == 'n') {

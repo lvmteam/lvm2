@@ -15,37 +15,37 @@
 
 #include "tools.h"
 
-static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
-			   struct volume_group *vg, int consistent,
-			   void *handle __attribute((unused)))
+static int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
+			    struct volume_group *vg, int consistent,
+			    force_t force)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
-	int ret = ECMD_PROCESSED;
+	int ret = 1;
 
 	if (!vg || !consistent || (vg_status(vg) & PARTIAL_VG)) {
 		log_error("Volume group \"%s\" not found or inconsistent.",
 			  vg_name);
 		log_error("Consider vgreduce --removemissing if metadata "
 			  "is inconsistent.");
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (!vg_check_status(vg, EXPORTED_VG))
-		return ECMD_FAILED;
+		return 0;
 
 	if (vg->lv_count) {
 		log_error("Volume group \"%s\" still contains %d "
 			  "logical volume(s)", vg_name, vg->lv_count);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (!archive(vg))
-		return ECMD_FAILED;
+		return 0;
 
 	if (!vg_remove(vg)) {
 		log_error("vg_remove %s failed", vg_name);
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	/* init physical volumes */
@@ -58,7 +58,7 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 
 		if (!dev_get_size(pv_dev(pv), &pv->size)) {
 			log_error("%s: Couldn't get size.", dev_name(pv_dev(pv)));
-			ret = ECMD_FAILED;
+			ret = 0;
 			continue;
 		}
 
@@ -67,18 +67,28 @@ static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
 				  dev_name(pv_dev(pv)), vg_name);
-			ret = ECMD_FAILED;
+			ret = 0;
 		}
 	}
 
 	backup_remove(cmd, vg_name);
 
-	if (ret == ECMD_PROCESSED)
+	if (ret)
 		log_print("Volume group \"%s\" successfully removed", vg_name);
 	else
 		log_error("Volume group \"%s\" not properly removed", vg_name);
 
 	return ret;
+}
+static int vgremove_single(struct cmd_context *cmd, const char *vg_name,
+			   struct volume_group *vg, int consistent,
+			   void *handle __attribute((unused)))
+{
+	if (!vg_remove_single(cmd, vg_name, vg, consistent,
+			      arg_count(cmd, force_ARG)))
+		return ECMD_FAILED;
+
+	return ECMD_PROCESSED;
 }
 
 int vgremove(struct cmd_context *cmd, int argc, char **argv)

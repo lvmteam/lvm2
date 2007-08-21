@@ -107,9 +107,9 @@ typedef enum {
  * Whether or not to force an operation.
  */
 typedef enum {
-	DONT_FORCE = 0,
-	FORCE_NO_CONFIRM = 1, /* skip yes/no confirmation of operation */
-	FORCE_OVERRIDE = 2 /* skip confirmation and bypass a second condition */
+	PROMPT = 0, /* Issue yes/no prompt to confirm operation */
+	DONT_PROMPT = 1, /* Skip yes/no prompt */
+	DONT_PROMPT_OVERRIDE = 2 /* Skip prompt + override a second condition */
 } force_t;
 
 struct cmd_context;
