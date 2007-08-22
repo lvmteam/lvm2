@@ -242,7 +242,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	unsigned corelog = 0;
 
 	seg = first_seg(lv);
-	existing_mirrors = seg->area_count;
+	existing_mirrors = (lv->status & MIRRORED) ? seg->area_count : 1;
 
 	/*
 	 * Adjust required number of mirrors

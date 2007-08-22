@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Fix lvconvert_mirrors detection of number of existing mirrors.
   Clean up numerous compiler warnings that crept in recently.
   Remove several unused parameters from _allocate().
   Only permit --force, --verbose and --debug arguments to be repeated.
