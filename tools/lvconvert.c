@@ -208,7 +208,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, "striped")))
+		if (!(lp->segtype = get_segtype_from_string(cmd, "mirror")))
 			return_0;
 	}
 
@@ -236,7 +236,6 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	struct alloc_handle *ah = NULL;
 	struct logical_volume *log_lv;
 	struct list *parallel_areas;
-	struct segment_type *segtype;  /* FIXME: could I just use lp->segtype */
 	float sync_percent;
 	const char *mirrorlog;
 	unsigned corelog = 0;
@@ -339,7 +338,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 		if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype,
 					    1, lp->mirrors - 1,
 					    corelog ? 0U : 1U,
-					    lv->le_count * (lp->mirrors - 1),
+					    lv->le_count,
 					    NULL, 0, lp->pvh,
 					    lp->alloc,
 					    parallel_areas)))
@@ -386,9 +385,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				return 0;
 			}
 
-			segtype = get_segtype_from_string(cmd, "striped");
-
-			if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0,
+			if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype, 0,
 						    0, 1, 0,
 						    NULL, 0, lp->pvh,
 						    lp->alloc,
