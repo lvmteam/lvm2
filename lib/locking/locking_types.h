@@ -17,7 +17,7 @@
 #include "config.h"
 
 typedef int (*lock_resource_fn) (struct cmd_context * cmd, const char *resource,
-				 int flags);
+				 uint32_t flags);
 
 typedef void (*fin_lock_fn) (void);
 typedef void (*reset_lock_fn) (void);

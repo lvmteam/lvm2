@@ -37,7 +37,7 @@ static void _no_reset_locking(void)
 }
 
 static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
-			     int flags)
+			     uint32_t flags)
 {
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
@@ -76,7 +76,7 @@ static int _no_lock_resource(struct cmd_context *cmd, const char *resource,
 	return 1;
 }
 
-int init_no_locking(struct locking_type *locking, struct cmd_context *cmd)
+int init_no_locking(struct locking_type *locking, struct cmd_context *cmd __attribute((unused)))
 {
 	locking->lock_resource = _no_lock_resource;
 	locking->reset_locking = _no_reset_locking;

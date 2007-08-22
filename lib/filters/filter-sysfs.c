@@ -299,7 +299,7 @@ struct dev_filter *sysfs_filter_create(const char *proc)
 
 #else
 
-struct dev_filter *sysfs_filter_create(const char *proc)
+struct dev_filter *sysfs_filter_create(const char *proc __attribute((unused)))
 {
 	return NULL;
 }

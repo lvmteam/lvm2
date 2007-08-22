@@ -27,7 +27,7 @@ int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
 	n = vsnprintf(*buffer, *size, fmt, ap);
 	va_end(ap);
 
-	if (n < 0 || (n == *size))
+	if (n < 0 || ((size_t)n == *size))
 		return 0;
 
 	*buffer += n;
@@ -40,10 +40,10 @@ int emit_to_buffer(char **buffer, size_t *size, const char *fmt, ...)
  *
  * Returns:
  *  len - incremented for each char we encounter, whether 'c' or not.
- *  count - number of occurences of 'c'
+ *  count - number of occurrences of 'c'
  */
 void count_chars(const char *str, size_t *len, int *count,
-		 const char c)
+		 const int c)
 {
 	const char *ptr;
 
@@ -56,18 +56,18 @@ void count_chars(const char *str, size_t *len, int *count,
  * Count occurences of 'c' in 'str' of length 'size'.
  *
  * Returns:
- *   # of occurences of 'c'
+ *   Number of occurrences of 'c'
  */
-unsigned count_chars_len(const char *str, size_t size, const char c)
+unsigned count_chars_len(const char *str, size_t len, const int c)
 {
-	int i;
-	unsigned count=0;
+	size_t i;
+	unsigned count = 0;
 
-	for (i=0; i < size; i++)
+	for (i = 0; i < len; i++)
 		if (str[i] == c)
 			count++;
-	return count;
 
+	return count;
 }
 
 /*

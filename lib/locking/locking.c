@@ -118,7 +118,7 @@ void sigint_restore(void)
 	sigaction(SIGINT, &_oldhandler, NULL);
 }
 
-static void _block_signals(int flags __attribute((unused)))
+static void _block_signals(uint32_t flags __attribute((unused)))
 {
 	sigset_t set;
 
@@ -156,7 +156,7 @@ static void _unblock_signals(void)
 	return;
 }
 
-static void _lock_memory(int flags)
+static void _lock_memory(uint32_t flags)
 {
 	if (!(_locking.flags & LCK_PRE_MEMLOCK))
 		return;
@@ -165,7 +165,7 @@ static void _lock_memory(int flags)
 		memlock_inc();
 }
 
-static void _unlock_memory(int flags)
+static void _unlock_memory(uint32_t flags)
 {
 	if (!(_locking.flags & LCK_PRE_MEMLOCK))
 		return;
@@ -187,7 +187,7 @@ void reset_locking(void)
 		_unblock_signals();
 }
 
-static void _update_vg_lock_count(int flags)
+static void _update_vg_lock_count(uint32_t flags)
 {
 	if ((flags & LCK_SCOPE_MASK) != LCK_VG)
 		return;
@@ -313,7 +313,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
  * VG locking is by VG name.
  * FIXME This should become VG uuid.
  */
-static int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
+static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t flags)
 {
 	_block_signals(flags);
 	_lock_memory(flags);
@@ -331,7 +331,7 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, int flags)
 	return 1;
 }
 
-int lock_vol(struct cmd_context *cmd, const char *vol, int flags)
+int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 {
 	char resource[258] __attribute((aligned(8)));
 

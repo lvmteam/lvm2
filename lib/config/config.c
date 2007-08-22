@@ -156,7 +156,7 @@ static int _parse_config_file(struct parser *p, struct config_tree *cft)
 	return 1;
 }
 
-struct config_tree *create_config_tree_from_string(struct cmd_context *cmd,
+struct config_tree *create_config_tree_from_string(struct cmd_context *cmd __attribute((unused)),
 						   const char *config_settings)
 {
 	struct cs *c;
@@ -371,7 +371,7 @@ static int _line_append(struct output_line *outline, const char *fmt, ...)
 
 	va_start(ap, fmt);
 	n = vsnprintf(&buf[0], sizeof buf - 1, fmt, ap);
-	if (n < 0 || n > sizeof buf - 1) {
+	if (n < 0 || n > (int) sizeof buf - 1) {
 		log_error("vsnprintf failed for config line");
 		return 0;
 	}
@@ -1248,13 +1248,13 @@ static char _token_type_to_char(int type)
  * Returns:
  *  # of 'type' tokens in 'str'.
  */
-static unsigned _count_tokens (const char *str, unsigned len, int type)
+static unsigned _count_tokens(const char *str, unsigned len, int type)
 {
 	char c;
 
 	c = _token_type_to_char(type);
 
-	return(count_chars_len(str, len, c));
+	return count_chars_len(str, len, c);
 }
 
 /*

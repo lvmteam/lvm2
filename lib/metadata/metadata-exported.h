@@ -323,7 +323,7 @@ pv_t *pv_create(const struct format_type *fmt,
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
              uint32_t new_pe_count);
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
-	       int64_t label_sector);
+	       uint64_t label_sector);
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t extent_size, uint32_t max_pv,
@@ -430,9 +430,9 @@ int create_mirror_layers(struct alloc_handle *ah,
 			 struct logical_volume *log_lv);
 
 int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
-			 struct list *removable_pvs, int remove_log);
+			 struct list *removable_pvs, unsigned remove_log);
 int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
-			      struct list *removable_pvs, int remove_log);
+			      struct list *removable_pvs, unsigned remove_log);
 
 int insert_pvmove_mirrors(struct cmd_context *cmd,
 			  struct logical_volume *lv_mirr,

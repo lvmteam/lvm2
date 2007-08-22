@@ -111,7 +111,8 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 
 static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
-		    struct config_node *vgn, struct dm_hash_table *pv_hash)
+		    struct config_node *vgn __attribute((unused)),
+		    struct dm_hash_table *pv_hash)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -383,12 +384,12 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 
 		/* FIXME Cope if LV not yet read in */
 		if ((pv = dm_hash_lookup(pv_hash, cv->v.str))) {
-			if (!set_lv_segment_area_pv(seg, s, pv, cv->next->v.i)) {
+			if (!set_lv_segment_area_pv(seg, s, pv, (uint32_t) cv->next->v.i)) {
 				stack;
 				return 0;
 			}
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
-			set_lv_segment_area_lv(seg, s, lv1, cv->next->v.i,
+			set_lv_segment_area_lv(seg, s, lv1, (uint32_t) cv->next->v.i,
 					       flags);
 		} else {
 			log_error("Couldn't find volume '%s' "
@@ -469,9 +470,11 @@ static int _read_segments(struct dm_pool *mem, struct volume_group *vg,
 	return 1;
 }
 
-static int _read_lvnames(struct format_instance *fid, struct dm_pool *mem,
+static int _read_lvnames(struct format_instance *fid __attribute((unused)),
+			 struct dm_pool *mem,
 			 struct volume_group *vg, struct config_node *lvn,
-			 struct config_node *vgn, struct dm_hash_table *pv_hash)
+			 struct config_node *vgn __attribute((unused)),
+			 struct dm_hash_table *pv_hash __attribute((unused)))
 {
 	struct logical_volume *lv;
 	struct lv_list *lvl;
@@ -544,9 +547,11 @@ static int _read_lvnames(struct format_instance *fid, struct dm_pool *mem,
 	return 1;
 }
 
-static int _read_lvsegs(struct format_instance *fid, struct dm_pool *mem,
+static int _read_lvsegs(struct format_instance *fid __attribute((unused)),
+			struct dm_pool *mem,
 			struct volume_group *vg, struct config_node *lvn,
-			struct config_node *vgn, struct dm_hash_table *pv_hash)
+			struct config_node *vgn __attribute((unused)),
+			struct dm_hash_table *pv_hash)
 {
 	struct logical_volume *lv;
 	struct lv_list *lvl;

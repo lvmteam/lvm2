@@ -572,7 +572,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 			log_error("Volume too large (%s) for extent size %s. "
 				  "Upper limit is %s.",
 				  display_size(cmd, tmp_size),
-				  display_size(cmd, vg->extent_size),
+				  display_size(cmd, (uint64_t) vg->extent_size),
 				  display_size(cmd, (uint64_t) UINT32_MAX *
 						   vg->extent_size));
 			return 0;
@@ -707,8 +707,8 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* FIXME Calculate how many extents needed for the log */
 
 		if (!(ah = allocate_extents(vg, NULL, lp->segtype, lp->stripes,
-					    lp->mirrors, lp->corelog ? 0 : 1,
-					    lp->extents, NULL, 0, 0,
+					    lp->mirrors, lp->corelog ? 0U : 1U,
+					    lp->extents, NULL, 0,
 					    pvh, lp->alloc, NULL))) {
 			stack;
 			return 0;
@@ -804,7 +804,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	}
 
 	if ((lp->zero || lp->snapshot) && activation()) {
-		if (!set_lv(cmd, lv, 0, 0) && lp->snapshot) {
+		if (!set_lv(cmd, lv, UINT64_C(0), 0) && lp->snapshot) {
 			/* FIXME Remove the failed lv we just added */
 			log_error("Aborting. Failed to wipe snapshot "
 				  "exception store. Remove new LV and retry.");

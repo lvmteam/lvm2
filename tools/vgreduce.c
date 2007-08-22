@@ -301,7 +301,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				}
 			}
 
-			if ((mimages != mirrored_seg->area_count) || (remove_log)){
+			if ((mimages != mirrored_seg->area_count) || remove_log){
 				if (!reconfigure_mirror_images(mirrored_seg, mimages,
 							       NULL, remove_log)) {
 					stack;
