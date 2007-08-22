@@ -175,7 +175,7 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 
 static struct volume_group *_format1_vg_read(struct format_instance *fid,
 				     const char *vg_name,
-				     struct metadata_area *mda)
+				     struct metadata_area *mda __attribute((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 vg_read", 1024 * 10);
 	struct list pvs;
@@ -261,7 +261,7 @@ static int _flatten_vg(struct format_instance *fid, struct dm_pool *mem,
 }
 
 static int _format1_vg_write(struct format_instance *fid, struct volume_group *vg,
-		     struct metadata_area *mda)
+		     struct metadata_area *mda __attribute((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 vg_write", 1024 * 10);
 	struct list pvds;
@@ -284,7 +284,7 @@ static int _format1_vg_write(struct format_instance *fid, struct volume_group *v
 }
 
 static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct list *mdas)
+		    struct physical_volume *pv, struct list *mdas __attribute((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 pv_read", 1024);
 	struct disk_list *dl;
@@ -325,9 +325,9 @@ static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
 static int _format1_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size,
-		     int pvmetadatacopies,
-		     uint64_t pvmetadatasize, struct list *mdas,
-		     struct physical_volume *pv, struct volume_group *vg)
+		     int pvmetadatacopies __attribute((unused)),
+		     uint64_t pvmetadatasize __attribute((unused)), struct list *mdas __attribute((unused)),
+		     struct physical_volume *pv, struct volume_group *vg __attribute((unused)))
 {
 	if (pv->size > MAX_PV_SIZE)
 		pv->size--;
@@ -381,7 +381,7 @@ static int _format1_lv_setup(struct format_instance *fid, struct logical_volume 
 }
 
 static int _format1_pv_write(const struct format_type *fmt, struct physical_volume *pv,
-		     struct list *mdas, int64_t sector)
+		     struct list *mdas __attribute((unused)), int64_t sector __attribute((unused)))
 {
 	struct dm_pool *mem;
 	struct disk_list *dl;
@@ -470,7 +470,7 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
 	return 1;
 }
 
-static int _format1_segtype_supported(struct format_instance *fid, 
+static int _format1_segtype_supported(struct format_instance *fid __attribute((unused)), 
 				      const struct segment_type *segtype)
 {
 	if (!(segtype->flags & SEG_FORMAT1_SUPPORT)) {
@@ -487,9 +487,9 @@ static struct metadata_area_ops _metadata_format1_ops = {
 };
 
 static struct format_instance *_format1_create_instance(const struct format_type *fmt,
-						const char *vgname,
-						const char *vgid,
-						void *private)
+						const char *vgname __attribute((unused)),
+						const char *vgid __attribute((unused)),
+						void *private __attribute((unused)))
 {
 	struct format_instance *fid;
 	struct metadata_area *mda;
@@ -516,7 +516,7 @@ static struct format_instance *_format1_create_instance(const struct format_type
 	return fid;
 }
 
-static void _format1_destroy_instance(struct format_instance *fid)
+static void _format1_destroy_instance(struct format_instance *fid __attribute((unused)))
 {
 	return;
 }

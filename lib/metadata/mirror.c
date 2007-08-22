@@ -118,7 +118,7 @@ static int _delete_lv(struct lv_segment *mirrored_seg, struct logical_volume *lv
  * Reduce mirrored_seg to num_mirrors images.
  */
 int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
-			 struct list *removable_pvs, int remove_log)
+			 struct list *removable_pvs, unsigned remove_log)
 {
 	uint32_t m;
 	uint32_t extents;
@@ -255,7 +255,8 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 	return 1;
 }
 
-static int get_mirror_fault_policy(struct cmd_context *cmd, int log_policy)
+static int get_mirror_fault_policy(struct cmd_context *cmd __attribute((unused)),
+				   int log_policy)
 {
 	const char *policy;
 
@@ -347,7 +348,7 @@ static int replace_mirror_images(struct lv_segment *mirrored_seg,
 }
 
 int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
-			      struct list *removable_pvs, int remove_log)
+			      struct list *removable_pvs, unsigned remove_log)
 {
 	int r;
 	int insync = 0;
@@ -416,7 +417,7 @@ static int _create_layers_for_mirror(struct alloc_handle *ah,
 				     uint32_t first_area,
 				     uint32_t num_mirrors,
 				     struct logical_volume *lv,
-				     const struct segment_type *segtype,
+				     const struct segment_type *segtype __attribute((unused)),
 				     struct logical_volume **img_lvs)
 {
 	uint32_t m;
@@ -467,7 +468,7 @@ int create_mirror_layers(struct alloc_handle *ah,
 			 uint32_t num_mirrors,
 			 struct logical_volume *lv,
 			 const struct segment_type *segtype,
-			 uint32_t status,
+			 uint32_t status __attribute((unused)),
 			 uint32_t region_size,
 			 struct logical_volume *log_lv)
 {
@@ -508,7 +509,7 @@ int create_mirror_layers(struct alloc_handle *ah,
 
 int add_mirror_layers(struct alloc_handle *ah,
 		      uint32_t num_mirrors,
-		      uint32_t existing_mirrors,
+		      uint32_t existing_mirrors __attribute((unused)),
 		      struct logical_volume *lv,
 		      const struct segment_type *segtype)
 {

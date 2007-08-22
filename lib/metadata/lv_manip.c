@@ -735,13 +735,13 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 					       (le - seg->le) / area_multiple,
 					       area_len, max_seg_len,
 					       only_single_area_segments ? 0 : 0,
-					       only_single_area_segments ? 1 : 0,
-					       top_level_area_index != -1 ? top_level_area_index : s,
+					       only_single_area_segments ? 1U : 0U,
+					       top_level_area_index != -1 ? top_level_area_index : (int) s,
 					       only_single_area_segments, fn,
 					       data)))
 				stack;
 		} else if (seg_type(seg, s) == AREA_PV)
-			if (!(r = fn(cmd, seg_pvseg(seg, s), top_level_area_index != -1 ? top_level_area_index : s, data)))
+			if (!(r = fn(cmd, seg_pvseg(seg, s), top_level_area_index != -1 ? (uint32_t) top_level_area_index : s, data)))
 				stack;
 		if (r != 1)
 			return r;
@@ -813,7 +813,7 @@ static int _is_contiguous(struct pv_segment *pvseg, struct pv_area *pva)
 	return 1;
 }
 
-static int _is_condition(struct cmd_context *cmd,
+static int _is_condition(struct cmd_context *cmd __attribute((unused)),
 			 struct pv_segment *pvseg, uint32_t s,
 			 void *data)
 {
@@ -1068,11 +1068,9 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
  */
 static int _allocate(struct alloc_handle *ah,
 		     struct volume_group *vg,
-		     struct logical_volume *lv, uint32_t status,
+		     struct logical_volume *lv,
 		     uint32_t new_extents,
-		     struct list *allocatable_pvs,
-		     uint32_t stripes, uint32_t mirrors,
-		     const struct segment_type *segtype)
+		     struct list *allocatable_pvs)
 {
 	struct pv_area **areas;
 	uint32_t allocated = lv ? lv->le_count : 0;
@@ -1197,7 +1195,6 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      uint32_t extents,
 				      struct physical_volume *mirrored_pv,
 				      uint32_t mirrored_pe,
-				      uint32_t status,
 				      struct list *allocatable_pvs,
 				      alloc_policy_t alloc,
 				      struct list *parallel_areas)
@@ -1230,8 +1227,8 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 	}
 
 	if (!segtype_is_virtual(segtype) &&
-	    !_allocate(ah, vg, lv, status, (lv ? lv->le_count : 0) + extents,
-		       allocatable_pvs, stripes, mirrors, segtype)) {
+	    !_allocate(ah, vg, lv, (lv ? lv->le_count : 0) + extents,
+		       allocatable_pvs)) {
 		stack;
 		alloc_destroy(ah);
 		return NULL;
@@ -1334,8 +1331,8 @@ int lv_add_mirror_segment(struct alloc_handle *ah,
 			  struct logical_volume *lv,
 			  struct logical_volume **sub_lvs,
 			  uint32_t mirrors,
-			  const struct segment_type *segtype,
-			  uint32_t status,
+			  const struct segment_type *segtype __attribute((unused)),
+			  uint32_t status __attribute((unused)),
 			  uint32_t region_size,
 			  struct logical_volume *log_lv)
 {
@@ -1431,7 +1428,7 @@ int lv_extend(struct logical_volume *lv,
 		return lv_add_virtual_segment(lv, status, extents, segtype);
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors, 0,
-				    extents, mirrored_pv, mirrored_pe, status,
+				    extents, mirrored_pv, mirrored_pe,
 				    allocatable_pvs, alloc, NULL))) {
 		stack;
 		return 0;
@@ -1556,7 +1553,7 @@ static int _for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 			    void *data)
 {
 	struct lv_segment *seg;
-	int s;
+	uint32_t s;
 
 	list_iterate_items(seg, &lv->segments) {
 		if (seg->log_lv && !func(cmd, seg->log_lv, data))

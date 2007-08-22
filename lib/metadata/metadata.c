@@ -251,7 +251,7 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 
 int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 		     struct volume_group *vg, int consistent,
-		     force_t force)
+		     force_t force __attribute((unused)))
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
@@ -466,8 +466,8 @@ static int _recalc_extents(uint32_t *extents, const char *desc1,
 	return 1;
 }
 
-int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
-		     uint32_t new_size)
+int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
+		     struct volume_group *vg, uint32_t new_size)
 {
 	uint32_t old_size = vg->extent_size;
 	struct pv_list *pvl;
@@ -617,8 +617,8 @@ int vg_change_pesize(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
-		  struct volume_group *vg_to)
+int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
+		  struct volume_group *vg_from, struct volume_group *vg_to)
 {
 	struct metadata_area *mda, *mda2;
 	struct list *mdas_from, *mdas_to;
@@ -1783,7 +1783,7 @@ int is_orphan(pv_t *pv)
  *  1 - success
  */
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
-	       int64_t label_sector)
+	       uint64_t label_sector)
 {
 	struct label *label;
 	struct device *dev;

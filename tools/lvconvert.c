@@ -338,9 +338,9 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 		if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype,
 					    1, lp->mirrors - 1,
-					    corelog ? 0 : 1,
+					    corelog ? 0U : 1U,
 					    lv->le_count * (lp->mirrors - 1),
-					    NULL, 0, 0, lp->pvh,
+					    NULL, 0, lp->pvh,
 					    lp->alloc,
 					    parallel_areas)))
 			return_0;
@@ -390,7 +390,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 			if (!(ah = allocate_extents(lv->vg, NULL, segtype, 0,
 						    0, 1, 0,
-						    NULL, 0, 0, lp->pvh,
+						    NULL, 0, lp->pvh,
 						    lp->alloc,
 						    parallel_areas))) {
 				stack;
@@ -503,7 +503,7 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 
 	if (!lp->zero || !(lv->status & LVM_WRITE))
 		log_warn("WARNING: \"%s\" not zeroed", lv->name);
-	else if (!set_lv(cmd, lv, 0, 0)) {
+	else if (!set_lv(cmd, lv, UINT64_C(0), 0)) {
 		log_error("Aborting. Failed to wipe snapshot "
 			  "exception store.");
 		return 0;

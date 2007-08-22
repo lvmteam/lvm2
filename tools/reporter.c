@@ -134,7 +134,8 @@ out:
 }
 
 static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
-		      struct volume_group *vg, int consistent,
+		      struct volume_group *vg,
+		      int consistent __attribute((unused)),
 		      void *handle)
 {
 	if (!vg) {
@@ -146,7 +147,8 @@ static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 }
 
 static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
-			 struct volume_group *vg, int consistent,
+			 struct volume_group *vg,
+			 int consistent __attribute((unused)),
 			 void *handle)
 {
 	if (!vg) {

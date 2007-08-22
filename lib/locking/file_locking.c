@@ -124,7 +124,7 @@ static void _install_ctrl_c_handler()
 	siginterrupt(SIGINT, 1);
 }
 
-static int _lock_file(const char *file, int flags)
+static int _lock_file(const char *file, uint32_t flags)
 {
 	int operation;
 	int r = 1;
@@ -204,7 +204,7 @@ static int _lock_file(const char *file, int flags)
 }
 
 static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
-			       int flags)
+			       uint32_t flags)
 {
 	char lockfile[PATH_MAX];
 

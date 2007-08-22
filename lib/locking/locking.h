@@ -35,7 +35,7 @@ int locking_is_clustered(void);
  *   Lock/unlock an individual logical volume
  *   char *vol holds lvid
  */
-int lock_vol(struct cmd_context *cmd, const char *vol, int flags);
+int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags);
 
 /*
  * Does the LVM1 driver have this VG active?
@@ -45,37 +45,37 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 /*
  * Lock type - these numbers are the same as VMS and the IBM DLM
  */
-#define LCK_TYPE_MASK	0x00000007
+#define LCK_TYPE_MASK	0x00000007U
 
-#define LCK_NULL	0x00000000	/* LCK$_NLMODE */
-#define LCK_READ	0x00000001	/* LCK$_CRMODE */
+#define LCK_NULL	0x00000000U	/* LCK$_NLMODE */
+#define LCK_READ	0x00000001U	/* LCK$_CRMODE */
 					/* LCK$_CWMODE */
-#define LCK_PREAD       0x00000003      /* LCK$_PRMODE */
-#define LCK_WRITE	0x00000004	/* LCK$_PWMODE */
-#define LCK_EXCL	0x00000005	/* LCK$_EXMODE */
-#define LCK_UNLOCK      0x00000006	/* This is ours */
+#define LCK_PREAD       0x00000003U	/* LCK$_PRMODE */
+#define LCK_WRITE	0x00000004U	/* LCK$_PWMODE */
+#define LCK_EXCL	0x00000005U	/* LCK$_EXMODE */
+#define LCK_UNLOCK      0x00000006U	/* This is ours */
 
 /*
  * Lock scope
  */
-#define LCK_SCOPE_MASK	0x00000008
-#define LCK_VG		0x00000000
-#define LCK_LV		0x00000008
+#define LCK_SCOPE_MASK	0x00000008U
+#define LCK_VG		0x00000000U
+#define LCK_LV		0x00000008U
 
 /*
  * Lock bits
  */
-#define LCK_NONBLOCK	0x00000010	/* Don't block waiting for lock? */
-#define LCK_HOLD	0x00000020	/* Hold lock when lock_vol returns? */
-#define LCK_LOCAL	0x00000040	/* Don't propagate to other nodes */
-#define LCK_CLUSTER_VG	0x00000080	/* VG is clustered */
+#define LCK_NONBLOCK	0x00000010U	/* Don't block waiting for lock? */
+#define LCK_HOLD	0x00000020U	/* Hold lock when lock_vol returns? */
+#define LCK_LOCAL	0x00000040U	/* Don't propagate to other nodes */
+#define LCK_CLUSTER_VG	0x00000080U	/* VG is clustered */
 
 /*
  * Additional lock bits for cluster communication
  */
-#define LCK_PARTIAL_MODE	0x00000001	/* Running in partial mode */
-#define LCK_MIRROR_NOSYNC_MODE	0x00000002	/* Mirrors don't require sync */
-#define LCK_DMEVENTD_MONITOR_MODE	0x00000004	/* Register with dmeventd */
+#define LCK_PARTIAL_MODE	0x00000001U	/* Running in partial mode */
+#define LCK_MIRROR_NOSYNC_MODE	0x00000002U	/* Mirrors don't require sync */
+#define LCK_DMEVENTD_MONITOR_MODE	0x00000004U	/* Register with dmeventd */
 
 
 /*

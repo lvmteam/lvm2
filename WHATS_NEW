@@ -1,10 +1,7 @@
-DO NOT RELEASE UNTIL FOLLOWING FIXED/REVIEWED:
-
-changed text also needs fixing - some poor English
-lvcreate page needs fixing too - emphasis on best behaviour (disk log) got inverted!
-
 Version 2.02.28 -
 ================================
+  Clean up numerous compiler warnings that crept in recently.
+  Remove several unused parameters from _allocate().
   Only permit --force, --verbose and --debug arguments to be repeated.
   Move guts of vgremove into library.
   Fix inconsistent licence notices: executables are GPLv2; libraries LGPLv2.1.

@@ -67,7 +67,7 @@ static int _errseg_target_present(const struct lv_segment *seg __attribute((unus
 #endif
 
 static int _errseg_modules_needed(struct dm_pool *mem,
-				  const struct lv_segment *seg,
+				  const struct lv_segment *seg __attribute((unused)),
 				  struct list *modules)
 {
 	if (!str_list_add(mem, modules, "error")) {

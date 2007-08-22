@@ -140,8 +140,8 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	int i;
 	uint64_t offset;
 	uint64_t offset2;
-	uint64_t size;
-	uint64_t size2;
+	size_t size;
+	size_t size2;
 	char *buf=NULL;
 	struct device_area *area;
 	struct mda_context *mdac;
@@ -149,9 +149,8 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 
 	mdac = (struct mda_context *) mda->metadata_locn;
 
-	log_print("Found text metadata area, offset=%"PRIu64", size=%"PRIu64,
-		  mdac->area.start,
-		  mdac->area.size);
+	log_print("Found text metadata area: offset=%" PRIu64 ", size=%"
+		  PRIu64, mdac->area.start, mdac->area.size);
 	area = &mdac->area;
 
 	if (!dev_open(area->dev))
@@ -201,12 +200,12 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 		/*
 		 * FIXME: We could add more sophisticated metadata detection
 		 */
-		if (maybe_config_section(buf, size+size2)) {
+		if (maybe_config_section(buf, size + size2)) {
 			/* FIXME: Validate region, pull out timestamp?, etc */
 			/* FIXME: Do something with this region */
 			log_verbose ("Found LVM2 metadata record at "
-				     "offset=%"PRIu64", size=%"PRIu64", "
-				     "offset2=%"PRIu64" size2=%"PRIu64,
+				     "offset=%"PRIu64", size=%"PRIsize_t", "
+				     "offset2=%"PRIu64" size2=%"PRIsize_t,
 				     offset, size, offset2, size2);
 			offset = prev_sector;
 			size = SECTOR_SIZE;
@@ -840,8 +839,8 @@ static struct volume_group *_vg_read_precommit_file(struct format_instance *fid,
 	return vg;
 }
 
-static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
-			  struct metadata_area *mda)
+static int _vg_write_file(struct format_instance *fid __attribute((unused)),
+			  struct volume_group *vg, struct metadata_area *mda)
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
 
@@ -905,7 +904,7 @@ static int _vg_write_file(struct format_instance *fid, struct volume_group *vg,
 	return 1;
 }
 
-static int _vg_commit_file_backup(struct format_instance *fid,
+static int _vg_commit_file_backup(struct format_instance *fid __attribute((unused)),
 				  struct volume_group *vg,
 				  struct metadata_area *mda)
 {
@@ -972,7 +971,8 @@ static int _vg_commit_file(struct format_instance *fid, struct volume_group *vg,
 	return 1;
 }
 
-static int _vg_remove_file(struct format_instance *fid, struct volume_group *vg,
+static int _vg_remove_file(struct format_instance *fid __attribute((unused)),
+			   struct volume_group *vg __attribute((unused)),
 			   struct metadata_area *mda)
 {
 	struct text_context *tc = (struct text_context *) mda->metadata_locn;
@@ -1164,7 +1164,8 @@ static int _mda_setup(const struct format_type *fmt,
 		      uint64_t pe_start, uint64_t pe_end,
 		      int pvmetadatacopies,
 		      uint64_t pvmetadatasize, struct list *mdas,
-		      struct physical_volume *pv, struct volume_group *vg)
+		      struct physical_volume *pv,
+		      struct volume_group *vg __attribute((unused)))
 {
 	uint64_t mda_adjustment, disk_size, alignment;
 	uint64_t start1, mda_size1;	/* First area - start of disk */

@@ -23,12 +23,12 @@ static void *_locking_lib = NULL;
 static void (*_reset_fn) (void) = NULL;
 static void (*_end_fn) (void) = NULL;
 static int (*_lock_fn) (struct cmd_context * cmd, const char *resource,
-			int flags) = NULL;
+			uint32_t flags) = NULL;
 static int (*_init_fn) (int type, struct config_tree * cft,
 			uint32_t *flags) = NULL;
 
 static int _lock_resource(struct cmd_context *cmd, const char *resource,
-			  int flags)
+			  uint32_t flags)
 {
 	if (_lock_fn)
 		return _lock_fn(cmd, resource, flags);

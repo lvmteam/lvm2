@@ -172,7 +172,7 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 
 static struct volume_group *_pool_vg_read(struct format_instance *fid,
 				     const char *vg_name,
-				     struct metadata_area *mda)
+				     struct metadata_area *mda __attribute((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("pool vg_read", 1024);
 	struct list pds;
@@ -207,18 +207,22 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 	return vg;
 }
 
-static int _pool_pv_setup(const struct format_type *fmt,
-		     uint64_t pe_start, uint32_t extent_count,
-		     uint32_t extent_size,
-		     int pvmetadatacopies,
-		     uint64_t pvmetadatasize, struct list *mdas,
-		     struct physical_volume *pv, struct volume_group *vg)
+static int _pool_pv_setup(const struct format_type *fmt __attribute((unused)),
+			  uint64_t pe_start __attribute((unused)),
+			  uint32_t extent_count __attribute((unused)),
+			  uint32_t extent_size __attribute((unused)),
+			  int pvmetadatacopies __attribute((unused)),
+			  uint64_t pvmetadatasize __attribute((unused)),
+			  struct list *mdas __attribute((unused)),
+			  struct physical_volume *pv __attribute((unused)),
+			  struct volume_group *vg __attribute((unused)))
 {
 	return 1;
 }
 
 static int _pool_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct list *mdas)
+			 struct physical_volume *pv,
+			 struct list *mdas __attribute((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("pool pv_read", 1024);
 	struct pool_list *pl;
@@ -268,9 +272,9 @@ static struct metadata_area_ops _metadata_format_pool_ops = {
 /* *INDENT-ON* */
 
 static struct format_instance *_pool_create_instance(const struct format_type *fmt,
-						const char *vgname,
-						const char *vgid,
-						void *private)
+						const char *vgname __attribute((unused)),
+						const char *vgid __attribute((unused)),
+						void *private __attribute((unused)))
 {
 	struct format_instance *fid;
 	struct metadata_area *mda;
@@ -299,7 +303,7 @@ static struct format_instance *_pool_create_instance(const struct format_type *f
 	return fid;
 }
 
-static void _pool_destroy_instance(struct format_instance *fid)
+static void _pool_destroy_instance(struct format_instance *fid __attribute((unused)))
 {
 	return;
 }

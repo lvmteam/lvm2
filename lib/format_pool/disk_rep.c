@@ -33,8 +33,8 @@
 #define CPOUT_64(x, y) {(y) = xlate64_be((x));}
 
 static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
-			    struct dm_pool *mem, struct pool_list *pl,
-			    const char *vg_name)
+			    struct dm_pool *mem __attribute((unused)), struct pool_list *pl,
+			    const char *vg_name __attribute((unused)))
 {
 	char buf[512] __attribute((aligned(8)));
 

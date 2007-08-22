@@ -32,7 +32,7 @@ int pvck(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Scanning %s", argv[i]);
 
 		pv_analyze(cmd, argv[i],
-			   arg_int64_value(cmd, labelsector_ARG,
+			   arg_uint64_value(cmd, labelsector_ARG,
 					   UINT64_C(0)));
 	}
 

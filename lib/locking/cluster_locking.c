@@ -31,7 +31,7 @@
 #include <unistd.h>
 
 #ifndef CLUSTER_LOCKING_INTERNAL
-int lock_resource(struct cmd_context *cmd, const char *resource, int flags);
+int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags);
 void locking_end(void);
 int locking_init(int type, struct config_tree *cf, uint32_t *flags);
 #endif
@@ -295,7 +295,7 @@ static int _cluster_free_request(lvm_response_t * response, int num)
 	return 1;
 }
 
-static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
+static int _lock_for_cluster(unsigned char cmd, uint32_t flags, char *name)
 {
 	int status;
 	int i;
@@ -368,9 +368,9 @@ static int _lock_for_cluster(unsigned char cmd, unsigned int flags, char *name)
 /* API entry point for LVM */
 #ifdef CLUSTER_LOCKING_INTERNAL
 static int _lock_resource(struct cmd_context *cmd, const char *resource,
-			  int flags)
+			  uint32_t flags)
 #else
-int lock_resource(struct cmd_context *cmd, const char *resource, int flags)
+int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 #endif
 {
 	char lockname[PATH_MAX];

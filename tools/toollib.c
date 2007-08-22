@@ -221,7 +221,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 }
 
 int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
-		    int lock_type, void *handle,
+		    uint32_t lock_type, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct logical_volume * lv,
 					   void *handle))
@@ -392,7 +392,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 				list_init(&lvnames);
 				break;
 			} else if (!strncmp(vg_name, vgname, strlen(vgname)) &&
-				   strlen(vgname) == lv_name - vg_name) {
+				   strlen(vgname) == (size_t) (lv_name - vg_name)) {
 				if (!str_list_add(cmd->mem, &lvnames,
 						  dm_pool_strdup(cmd->mem,
 							      lv_name + 1))) {
@@ -463,7 +463,7 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 			   const char *vgid,
 			   struct list *tags, struct list *arg_vgnames,
-			   int lock_type, int consistent, void *handle,
+			   uint32_t lock_type, int consistent, void *handle,
 			   int ret_max,
 			   int (*process_single) (struct cmd_context * cmd,
 						  const char *vg_name,
@@ -513,7 +513,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 }
 
 int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
-		    int lock_type, int consistent, void *handle,
+		    uint32_t lock_type, int consistent, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   const char *vg_name,
 					   struct volume_group * vg,
@@ -1133,7 +1133,7 @@ struct list *clone_pv_list(struct dm_pool *mem, struct list *pvsl)
  * Attempt metadata recovery
  */
 struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
-				int lock_type)
+				uint32_t lock_type)
 {
 	int consistent = 1;
 
