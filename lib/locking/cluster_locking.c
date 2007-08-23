@@ -330,11 +330,14 @@ static int _lock_for_cluster(unsigned char cmd, uint32_t flags, char *name)
 	 * locks are cluster-wide.
 	 * Also, if the lock is exclusive it makes no sense to try to
 	 * acquire it on all nodes, so just do that on the local node too.
+	 * One exception, is that P_ locks /do/ get distributed across 
+	 * the cluster because they might have side-effects.
 	 */
-	if (cmd == CLVMD_CMD_LOCK_VG ||
-	    (flags & LCK_TYPE_MASK) == LCK_EXCL ||
-	    (flags & LCK_LOCAL) ||
-	    !(flags & LCK_CLUSTER_VG))
+	if (strncmp(name, "P_", 2) &&
+	    (cmd == CLVMD_CMD_LOCK_VG ||
+	     (flags & LCK_TYPE_MASK) == LCK_EXCL ||
+	     (flags & LCK_LOCAL) ||
+	     !(flags & LCK_CLUSTER_VG)))
 		node = ".";
 
 	status = _cluster_request(cmd, node, args, len,
