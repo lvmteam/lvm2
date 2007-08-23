@@ -28,7 +28,7 @@ int locking_is_clustered(void);
 /*
  * LCK_VG:
  *   Lock/unlock on-disk volume group data
- *   Use "" to lock orphan PVs
+ *   Use VG_ORPHANS to lock orphan PVs
  *   char *vol holds volume group name
  *
  * LCK_LV:
@@ -77,6 +77,11 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_MIRROR_NOSYNC_MODE	0x00000002U	/* Mirrors don't require sync */
 #define LCK_DMEVENTD_MONITOR_MODE	0x00000004U	/* Register with dmeventd */
 
+/*
+ * Special cases of VG locks.
+ */
+#define VG_ORPHANS	"#orphans"
+#define VG_GLOBAL	"#global"
 
 /*
  * Common combinations

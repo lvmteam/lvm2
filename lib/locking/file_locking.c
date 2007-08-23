@@ -212,9 +212,12 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
-		if (!*resource)
+		if (!*resource)	/* FIXME Deprecated */
 			dm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/P_orphans", _lock_dir);
+		else if (*resource == '#')
+			dm_snprintf(lockfile, sizeof(lockfile),
+				     "%s/P_%s", _lock_dir, resource + 1);
 		else
 			dm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/V_%s", _lock_dir, resource);

@@ -124,12 +124,19 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 			  arg_count(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 
+	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE)) {
+		log_error("Unable to obtain global lock.");
+		return ECMD_FAILED;
+	}
+
 	persistent_filter_wipe(cmd->filter);
 	lvmcache_destroy();
 
 	log_verbose("Walking through all physical volumes");
-	if (!(pvslist = get_pvs(cmd)))
+	if (!(pvslist = get_pvs(cmd))) {
+		unlock_vg(cmd, VG_GLOBAL);
 		return ECMD_FAILED;
+	}
 
 	/* eliminate exported/new if required */
 	list_iterate_items(pvl, pvslist) {
@@ -181,6 +188,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 
 	if (!pvs_found) {
 		log_print("No matching physical volumes found");
+		unlock_vg(cmd, VG_GLOBAL);
 		return ECMD_PROCESSED;
 	}
 
@@ -190,6 +198,8 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 		  pvs_found - new_pvs_found,
 		  display_size(cmd, (size_total - size_new)),
 		  new_pvs_found, display_size(cmd, size_new));
+
+	unlock_vg(cmd, VG_GLOBAL);
 
 	return ECMD_PROCESSED;
 }

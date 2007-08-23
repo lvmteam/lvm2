@@ -51,6 +51,11 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	if (!lock_vol(cmd, VG_GLOBAL, LCK_VG_WRITE)) {
+		log_error("Unable to obtain global lock.");
+		return ECMD_FAILED;
+	}
+
 	persistent_filter_wipe(cmd->filter);
 	lvmcache_destroy();
 
@@ -65,5 +70,6 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 			maxret = ret;
 	}
 
+	unlock_vg(cmd, VG_GLOBAL);
 	return maxret;
 }
