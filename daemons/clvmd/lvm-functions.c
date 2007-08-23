@@ -42,6 +42,7 @@
 
 /* LVM2 headers */
 #include "toolcontext.h"
+#include "lvmcache.h"
 #include "log.h"
 #include "activate.h"
 #include "locking.h"
@@ -448,6 +449,7 @@ int do_refresh_cache()
 
 	ret = refresh_toolcontext(cmd);
 	init_full_scan_done(0);
+	lvmcache_label_scan(cmd, 2);
 
 	return ret==1?0:-1;
 }
