@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Fix clvmd -R, so it fully refreshes the caches.
   Change lvconvert_mirrors to use mirror segtype not striped.
   Fix lvconvert_mirrors detection of number of existing mirrors.
   Clean up numerous compiler warnings that crept in recently.
