@@ -442,9 +442,14 @@ int do_check_lvm1(const char *vgname)
 
 int do_refresh_cache()
 {
+	int ret;
 	DEBUGLOG("Refreshing context\n");
 	log_notice("Refreshing context");
-	return refresh_toolcontext(cmd)==1?0:-1;
+
+	ret = refresh_toolcontext(cmd);
+	init_full_scan_done(0);
+
+	return ret==1?0:-1;
 }
 
 
