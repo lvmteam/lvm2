@@ -1,5 +1,6 @@
 Version 2.02.28 -
 ================================
+  Fix clvmd logging so you can get lvm-level debugging out of it.
   Introduce VG_GLOBAL lock type for vgscan/pvscan to trigger clvmd -R.
   Fix clvmd -R, so it fully refreshes the caches.
   Change lvconvert_mirrors to use mirror segtype not striped.

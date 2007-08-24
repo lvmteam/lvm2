@@ -548,6 +548,15 @@ static void *get_initial_state()
 static void lvm2_log_fn(int level, const char *file, int line,
 			const char *message)
 {
+
+	/* Send messages to the normal LVM2 logging system too,
+	   so we get debug output when it's asked for. 
+ 	   We need to NULL the function ptr otherwise it will just call
+	   back into here! */
+	init_log_fn(NULL);
+	print_log(level, file, line, "%s", message);
+	init_log_fn(lvm2_log_fn);
+
 	/*
 	 * Ignore non-error messages, but store the latest one for returning
 	 * to the user.
@@ -601,7 +610,10 @@ int init_lvm(int using_gulm)
 
 	/* Use LOG_DAEMON for syslog messages instead of LOG_USER */
 	init_syslog(LOG_DAEMON);
-	init_debug(_LOG_ERR);
+	openlog("clvmd", LOG_PID, LOG_DAEMON);
+	init_debug(cmd->current_settings.debug);
+	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
+	set_activation(cmd->current_settings.activation);
 
 	/* Check lvm.conf is setup for cluster-LVM */
 	check_config();
