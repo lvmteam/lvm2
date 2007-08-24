@@ -1,36 +1,37 @@
-Version 2.02.28 -
-================================
+Version 2.02.28 - 24th August 2007
+==================================
   Fix clvmd logging so you can get lvm-level debugging out of it.
   Introduce VG_GLOBAL lock type for vgscan/pvscan to trigger clvmd -R.
+  Change locking_flags from int to uint32_t.
   Fix clvmd -R, so it fully refreshes the caches.
   Change lvconvert_mirrors to use mirror segtype not striped.
   Fix lvconvert_mirrors detection of number of existing mirrors.
-  Clean up numerous compiler warnings that crept in recently.
+  Clean up numerous compiler warnings that appeared in recent releases.
   Remove several unused parameters from _allocate().
   Only permit --force, --verbose and --debug arguments to be repeated.
-  Move guts of vgremove into library.
   Fix inconsistent licence notices: executables are GPLv2; libraries LGPLv2.1.
-  Move guts of lvremove into library.
-  Allow clvmd debug to be turned on in a running daemon using clvmd -d
+  Move guts of vgremove and lvremove into library, including yes_no_prompt.
+  Allow clvmd debug to be turned on in a running daemon using clvmd -d [-C].
   Update to use autoconf 2.61, while still supporting 2.57.
-  Add more cluster info to lvmdump
-  Add const attributes where possible, first cut.
+  Add more cluster info to lvmdump.
+  Add further const attributes throughout.
   Add support for renaming mirrored LVs.
-  Factor out core of lvrename() to lv_rename lvm library function.
+  Factor out core of lvrename() to library function.
   Add --mirrorlog argument to specify log type for mirrors.
-  Don't try to monitor devices which we failed to create.
-  Don't leak a file descriptor in fcntl_lock_file(), when fcntl fails.
+  Don't attempt to monitor devices if their creation failed in _lv_activate.
+  Don't leak a file descriptor in fcntl_lock_file() when fcntl fails.
   Replace create_dir with dm_create_dir.
-  Detect stream write failure reliably; new fn: lvm_fclose; use dm_fclose
+  Detect stream write failure reliably with lvm_fclose using dm_fclose.
   Fix clvmd if compiled with gulm support. (2.02.26)
-  Trivial fix to lvdisplay man page.
+  Fix lvdisplay man page to say LV size is reported in sectors, not KB.
   Add vg_lock_and_read() external library function.
   Fix loading of persistent cache if cache_dir is used. (2.02.23)
-  Eliminate uses of strdup+basename.  Use last_path_component instead.
+  Reduce _compare_paths lstat error message from log_error to log_very_verbose.
+  Create util.h with last_path_component replacing strdup + basename.
   Use gcc's printf attribute wherever possible.
-  In _line_append, use "sizeof buf - 1" rather than equivalent "4095"
+  In _line_append, use "sizeof buf - 1" rather than equivalent "4095".
   Introduce is_same_inode macro, now including a comparison of st_dev.
-  Don't leak a file descriptor in _lock_file(), when flock fails.
+  Don't leak a file descriptor in _lock_file() when flock fails.
   Add SUN's LDOM virtual block device (vdisk) and ps3disk to filters.
   Split metadata-external.h out from metadata.h for the tools to use.
 
