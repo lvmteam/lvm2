@@ -807,13 +807,14 @@ xx(vgremove,
    "Remove volume group(s)",
    "vgremove\n"
    "\t[-d|--debug]\n"
+   "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tVolumeGroupName [VolumeGroupName...]\n",
 
-   test_ARG)
+   force_ARG, test_ARG)
 
 xx(vgrename,
    "Rename a volume group",

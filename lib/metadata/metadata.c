@@ -249,6 +249,20 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
+static int remove_lvs_in_vg(struct cmd_context *cmd,
+			    struct volume_group *vg,
+			    force_t force)
+{
+	struct lv_list *lvl;
+
+	list_iterate_items(lvl, &vg->lvs)
+		if (!lv_remove_single(cmd, lvl->lv, force))
+			return 0;
+
+	return 1;
+}
+
+/* FIXME: remove redundant vg_name */
 int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 		     struct volume_group *vg, int consistent,
 		     force_t force __attribute((unused)))
@@ -268,6 +282,19 @@ int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return 0;
 
+	if (vg->lv_count) {
+		if ((force == PROMPT) &&
+		    (yes_no_prompt("Do you really want to remove volume "
+				   "group \"%s\" containing %d "
+				   "logical volumes? [y/n]: ",
+				   vg_name, vg->lv_count) == 'n')) {
+			log_print("Volume group \"%s\" not removed", vg_name);
+			return 0;
+		}
+		if (!remove_lvs_in_vg(cmd, vg, force))
+			return 0;
+	}
+	
 	if (vg->lv_count) {
 		log_error("Volume group \"%s\" still contains %d "
 			  "logical volume(s)", vg_name, vg->lv_count);
