@@ -1,6 +1,8 @@
 Version 2.02.29 -
 ==================================
-
+  Modify lvremove to prompt for removal if LV active on other cluster nodes.
+  Add '-f' to vgremove to force removal of VG even if LVs exist.
+  
 Version 2.02.28 - 24th August 2007
 ==================================
   Fix clvmd logging so you can get lvm-level debugging out of it.
