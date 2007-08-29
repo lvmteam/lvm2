@@ -198,6 +198,7 @@ int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 		extents = lv1->le_count;
 		_move_lv_segments(mirrored_seg->lv, lv1);
 		mirrored_seg->lv->status &= ~MIRRORED;
+		mirrored_seg->lv->status &= ~MIRROR_NOTSYNCED;
 		remove_log = 1;
 		/* Replace mirror with error segment */
 		segtype = get_segtype_from_string(mirrored_seg->lv->vg->cmd, "error");
