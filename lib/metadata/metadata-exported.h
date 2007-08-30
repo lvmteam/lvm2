@@ -322,6 +322,10 @@ pv_t *pv_create(const struct format_type *fmt,
 		      uint64_t pvmetadatasize, struct list *mdas);
 int pv_resize(struct physical_volume *pv, struct volume_group *vg,
              uint32_t new_pe_count);
+int pv_resize_single(struct cmd_context *cmd,
+		     struct volume_group *vg,
+		     struct physical_volume *pv,
+		     uint64_t new_size);
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	       uint64_t label_sector);
 
