@@ -275,7 +275,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	if (arg_count(cmd, corelog_ARG))
 		corelog = 1;
 
-	mirrorlog = arg_str_value(cmd, mirrorlog_ARG, DEFAULT_MIRRORLOG);
+	mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
+				  corelog ? "core" : DEFAULT_MIRRORLOG);
 	if (!strcmp("disk", mirrorlog)) {
 		if (corelog) {
 			log_error("--mirrorlog disk and --corelog "
