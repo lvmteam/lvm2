@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Clear MIRROR_NOTSYNCED lv flag when converting from mirror to linear.
   Modify lvremove to prompt for removal if LV active on other cluster nodes.
   Add '-f' to vgremove to force removal of VG even if LVs exist.
   
