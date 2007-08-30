@@ -102,7 +102,7 @@ data being mirrored. Using core means the mirror is regenerated
 by copying the data from the first device again each time the
 device is activated, for example, after every reboot.
 
-The optional argument --corelog is equivalent to --log core.
+The optional argument --corelog is equivalent to --mirrorlog core.
 
 .TP
 .I \-n, \-\-name LogicalVolumeName
@@ -161,7 +161,7 @@ with 2 sides with a useable size of 500 MiB.  This operation would
 require 3 devices - two for the mirror devices and one for the disk
 log.
 
-"lvcreate -m1 --log core -L 500M vg00" tries to create a mirror logical volume
+"lvcreate -m1 --mirrorlog core -L 500M vg00" tries to create a mirror logical volume
 with 2 sides with a useable size of 500 MiB.  This operation would
 require 2 devices - the log is "in-memory".
 

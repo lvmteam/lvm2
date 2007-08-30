@@ -288,7 +288,9 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 	if (arg_count(cmd, corelog_ARG))
 		lp->corelog = 1;
 
-	mirrorlog = arg_str_value(cmd, mirrorlog_ARG, DEFAULT_MIRRORLOG);
+	mirrorlog = arg_str_value(cmd, mirrorlog_ARG,
+				  lp->corelog ? "core" : DEFAULT_MIRRORLOG);
+
 	if (!strcmp("disk", mirrorlog)) {
 		if (lp->corelog) {
 			log_error("--mirrorlog disk and --corelog "
