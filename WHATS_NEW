@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Move guts of pvresize into library.
   Avoid error when --corelog is provided without --mirrorlog. (2.02.28)
   Correct --mirrorlog argument name in man pages (not --log).
   Clear MIRROR_NOTSYNCED LV flag when converting from mirror to linear.
