@@ -132,7 +132,6 @@ static int confirm_resizefs_reduce(struct cmd_context *cmd,
 }
 
 static int do_resizefs_reduce(struct cmd_context *cmd, struct volume_group *vg,
-			      struct logical_volume *lv,
 			      struct lvresize_params *lp)
 {
 	char lv_path[PATH_MAX];
@@ -552,7 +551,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	}
 
 	if (lp->resizefs) {
-		if (!do_resizefs_reduce(cmd, vg, lv_path, lp))
+		if (!do_resizefs_reduce(cmd, vg, lp))
 		    return ECMD_FAILED;
 	}
 
