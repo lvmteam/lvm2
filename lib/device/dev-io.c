@@ -359,10 +359,15 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 		return 0;
 	}
 
-	if (!(dev->flags & DEV_REGULAR) &&
-	    ((stat(name, &buf) < 0) || (buf.st_rdev != dev->dev))) {
-		log_error("%s: stat failed: Has device name changed?", name);
-		return 0;
+	if (!(dev->flags & DEV_REGULAR)) {
+		if (stat(name, &buf) < 0) {
+			log_sys_error("%s: stat failed", name);
+			return 0;
+		}
+		if (buf.st_rdev != dev->dev) {
+			log_error("%s: device changed", name);
+			return 0;
+		}
 	}
 
 #ifdef O_DIRECT_SUPPORT
