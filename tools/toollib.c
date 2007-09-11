@@ -911,6 +911,18 @@ static int _add_pe_range(struct dm_pool *mem, const char *pvname,
 	return 1;
 }
 
+static int xstrtouint32(const char *s, char **p, int base, uint32_t *result)
+{
+	unsigned long ul;
+
+	errno = 0;
+	ul = strtoul(s, p, base);
+	if (errno || *p == s || (uint32_t) ul != ul)
+		return -1;
+	*result = ul;
+	return 0;
+}
+
 static int _parse_pes(struct dm_pool *mem, char *c, struct list *pe_ranges,
 		      const char *pvname, uint32_t size)
 {
@@ -942,8 +954,7 @@ static int _parse_pes(struct dm_pool *mem, char *c, struct list *pe_ranges,
 
 		/* Start extent given? */
 		if (isdigit(*c)) {
-			start = (uint32_t) strtoul(c, &endptr, 10);
-			if (endptr == c)
+			if (xstrtouint32(c, &endptr, 10, &start))
 				goto error;
 			c = endptr;
 			/* Just one number given? */
@@ -954,8 +965,7 @@ static int _parse_pes(struct dm_pool *mem, char *c, struct list *pe_ranges,
 		if (*c == '-') {
 			c++;
 			if (isdigit(*c)) {
-				end = (uint32_t) strtoul(c, &endptr, 10);
-				if (endptr == c)
+				if (xstrtouint32(c, &endptr, 10, &end))
 					goto error;
 				c = endptr;
 			}
