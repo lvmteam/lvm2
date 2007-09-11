@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Diagnose invalid PE values given on the pvmove command line (64-bit systems).
   Include strerror string in dev_open_flags' stat failure message.
   Move guts of pvresize into library.
   Avoid error when --corelog is provided without --mirrorlog. (2.02.28)
