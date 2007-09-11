@@ -83,5 +83,4 @@ FIELD(SEGS, seg, STR, "Devices", list, 5, devices, "devices", "Underlying device
 
 FIELD(PVSEGS, pvseg, NUM, "Start", pe, 5, uint32, "pvseg_start", "Physical Extent number of start of segment.")
 FIELD(PVSEGS, pvseg, NUM, "SSize", len, 5, uint32, "pvseg_size", "Number of extents in segment.")
-FIELD(PVSEGS, pvseg, STR, "Free", lvseg, 5, lvseg, "pvseg_free", "Whether the segment is free or allocated to an LV.")
 /* *INDENT-ON* */
