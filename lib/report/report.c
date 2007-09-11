@@ -62,15 +62,6 @@ static char _alloc_policy_char(alloc_policy_t alloc)
 /*
  * Data-munging functions to prepare each data type for display and sorting
  */
-static int _lvseg_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
-		       struct dm_report_field *field,
-		       const void *data, void *private __attribute((unused)))
-{
-	const struct lv_segment *seg = *(const struct lv_segment **) data;
-	dm_report_field_set_value(field, seg ? "N" : "Y", NULL);
-	return 1;
-}
-
 static int _string_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
 			struct dm_report_field *field,
 			const void *data, void *private __attribute((unused)))
