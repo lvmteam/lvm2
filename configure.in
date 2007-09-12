@@ -453,6 +453,18 @@ if test x$SELINUX = xyes; then
 	else
 		AC_MSG_WARN(Disabling selinux)
 	fi
+
+	# With --enable-static_link and selinux enabled, linking lvm.static
+	# fails on at least Debian unstable due to unsatisfied references
+	# to pthread_mutex_lock and _unlock.  See if we need -lpthread.
+	if test "$STATIC_LINK-$HAVE_SELINUX" = yes-yes; then
+		lvm_saved_libs=$LIBS
+		LIBS="$LIBS -static"
+		AC_SEARCH_LIBS([pthread_mutex_lock], [pthread],
+		  [test "$ac_cv_search_pthread_mutex_lock" = "none required" ||
+				LIB_PTHREAD=-lpthread])
+		LIBS=$lvm_saved_libs
+	fi
 fi
 
 ################################################################################
@@ -617,6 +629,7 @@ AC_SUBST(FSADM)
 AC_SUBST(DMEVENTD)
 AC_SUBST(CFLOW_CMD)
 AC_SUBST(CSCOPE_CMD)
+AC_SUBST([LIB_PTHREAD])
 
 ################################################################################
 dnl -- First and last lines should not contain files to generate in order to 
