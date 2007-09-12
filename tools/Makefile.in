@@ -105,9 +105,10 @@ lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm.o \
 		$(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
 
+LIB_PTHREAD = @LIB_PTHREAD@
 lvm.static: $(OBJECTS) lvm-static.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm-static.o -static \
-		$(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
+		$(LDFLAGS) $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
 
 liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
 	cat $(top_srcdir)/lib/liblvm.a > $@
@@ -173,4 +174,3 @@ install_tools_static: lvm.static
 		$(staticdir)/lvm.static
 
 install: $(INSTALL_TARGETS)
-
