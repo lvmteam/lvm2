@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Fix strdup memory leak in str_list_dup().
   Avoid static link failure with some SELinux libraries.
   Diagnose invalid PE values given on the pvmove command line (64-bit systems).
   Include strerror string in dev_open_flags' stat failure message.
