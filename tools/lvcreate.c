@@ -180,10 +180,8 @@ static int _read_size_params(struct lvcreate_params *lp,
  * up to the power of 2) */
 static int _read_stripe_params(struct lvcreate_params *lp,
 			       struct cmd_context *cmd,
-			       int *pargc)
+			       int *pargc __attribute((unused)))
 {
-	int argc = *pargc;
-
 	if (arg_count(cmd, stripesize_ARG)) {
 		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
 			log_error("Negative stripesize is invalid");
@@ -211,12 +209,6 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 			  display_size(cmd, (uint64_t) lp->stripe_size));
 	}
 
-	if (argc && (unsigned) argc < lp->stripes) {
-		log_error("Too few physical volumes on "
-			  "command line for %d-way striping", lp->stripes);
-		return 0;
-	}
-
 	if (lp->stripes < 1 || lp->stripes > MAX_STRIPES) {
 		log_error("Number of stripes (%d) must be between %d and %d",
 			  lp->stripes, 1, MAX_STRIPES);
@@ -236,18 +228,11 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 
 static int _read_mirror_params(struct lvcreate_params *lp,
 			       struct cmd_context *cmd,
-			       int *pargc)
+			       int *pargc __attribute((unused)))
 {
-	int argc = *pargc;
 	int region_size;
 	int pagesize = lvm_getpagesize();
 	const char *mirrorlog;
-
-	if (argc && (unsigned) argc < lp->mirrors) {
-		log_error("Too few physical volumes on "
-			  "command line for %d-way mirroring", lp->mirrors);
-		return 0;
-	}
 
 	if (arg_count(cmd, regionsize_ARG)) {
 		if (arg_sign_value(cmd, regionsize_ARG, 0) == SIGN_MINUS) {
