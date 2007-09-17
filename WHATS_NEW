@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Remove no-longer-correct restrictions on PV arg count with stripes/mirrors.
   Fix strdup memory leak in str_list_dup().
   Link with -lpthread when static SELinux libraries require that.
   Detect command line PE values that exceed their 32-bit range.
