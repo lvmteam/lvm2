@@ -74,7 +74,7 @@ int str_list_dup(struct dm_pool *mem, struct list *sllnew,
 	list_init(sllnew);
 
 	list_iterate_items(sl, sllold) {
-		if (!str_list_add(mem, sllnew, strdup(sl->str))) {
+		if (!str_list_add(mem, sllnew, dm_pool_strdup(mem, sl->str))) {
 			stack;
 			return 0;
 		}

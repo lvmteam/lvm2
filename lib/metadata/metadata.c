@@ -908,6 +908,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 		return NULL;
 	}
 
+	/* FIXME Can fail when no PV mda */
 	if (!pv->vg_name[0]) {
 		log_error("Physical volume %s not in a volume group", pv_name);
 		return NULL;
