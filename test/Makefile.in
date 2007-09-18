@@ -1,0 +1,75 @@
+#TEST_OPTS=--verbose --debug
+SHELL_PATH ?= $(SHELL)
+TAR ?= $(TAR)
+RM ?= rm -f
+
+subdir := $(shell pwd|sed 's,.*/,,')
+
+srcdir = .
+top_srcdir = ..
+top_builddir = ..
+abs_srcdir := $(shell cd $(srcdir) && pwd)
+abs_top_builddir := $(shell cd $(top_srcdir) && pwd)
+abs_top_srcdir = $(abs_top_builddir)
+# FIXME: for now, we assume top_srcdir == top_builddir,
+# but to permit non-srcdir builds, that will change.
+
+all: init.sh
+init.sh: Makefile.in .bin-dir-stamp
+	rm -f $@-t $@
+	echo 'top_srcdir=$(top_srcdir)' >> $@-t
+	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
+	echo 'abs_top_srcdir=$(abs_top_builddir)' >> $@-t
+	echo 'PATH=$(abs_top_builddir)/test/bin:$$PATH' >> $@-t
+	echo 'abs_srcdir=$(abs_srcdir)' >> $@-t
+	echo 'export PATH' >> $@-t
+	chmod a-w $@-t
+	mv $@-t $@
+
+# Shell quote;
+SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
+
+# T = $(wildcard t[0-9][0-9][0-9][0-9]-*.sh)
+T = \
+  t0000-basic.sh \
+  t3000-lvcreate-pvtags.sh \
+  t4000-pv-range-overflow.sh
+
+Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+
+$(T): init.sh
+	@echo "*** $@ ***"; '$(SHELL_PATH_SQ)' \
+	  $(TESTS_ENVIRONMENT) $@ $(GIT_TEST_OPTS)
+
+dmdir = $(abs_top_srcdir)/../device-mapper
+so_name = $(dmdir)/lib/ioctl/libdevmapper.so.1.02
+
+# Having to create this link is a huge kludge,
+# and a major argument for including device-mapper in lvm.
+.bin-dir-stamp: lvm-wrapper
+	ln -fs libdevmapper.so $(so_name)
+	rm -rf bin
+	mkdir bin
+	for i in lvm $$(cat $(top_srcdir)/tools/.commands); do \
+	  ln -s ../lvm-wrapper bin/$$i; \
+	done
+	touch $@
+
+lvm-wrapper: Makefile
+	rm -f $@-t $@
+	echo '#!/bin/sh' >> $@-t
+	echo 'export LD_LIBRARY_PATH="$(dmdir)/lib/ioctl"' >> $@-t
+	echo 'cmd=$$(echo ./$$0|sed "s,.*/,,")' >> $@-t
+	echo 'test "$$cmd" = lvm &&' >> $@-t
+	echo 'exec "$(abs_top_builddir)/tools/lvm"         "$$@"' >> $@-t
+	echo 'exec "$(abs_top_builddir)/tools/lvm" "$$cmd" "$$@"' >> $@-t
+	chmod a-w,a+x $@-t
+	mv $@-t $@
+
+clean:
+	rm -rf init.sh lvm-wrapper bin .bin-dir-stamp
+
+all: $(T)
+.PHONY: $(T) clean
+.NOTPARALLEL:

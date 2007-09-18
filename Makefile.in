@@ -68,3 +68,6 @@ cscope.out: tools
 	@CSCOPE_CMD@ -b -R
 all: cscope.out
 endif
+
+check: all
+	$(MAKE) -C test all
