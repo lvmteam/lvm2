@@ -32,6 +32,7 @@ SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 # T = $(wildcard t[0-9][0-9][0-9][0-9]-*.sh)
 T = \
   t0000-basic.sh \
+  t1000-lvcreate-usage.sh \
   t3000-lvcreate-pvtags.sh \
   t4000-pv-range-overflow.sh
 
