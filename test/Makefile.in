@@ -65,7 +65,7 @@ lvm-wrapper: Makefile
 	rm -f $@-t $@
 	echo '#!/bin/sh'                                          >  $@-t
 	test -n "@DMDIR@" \
-	  && echo 'export LD_LIBRARY_PATH="@DMDIR@/lib/ioctl"'    >> $@-t
+	  && echo 'export LD_LIBRARY_PATH="@DMDIR@/lib"'          >> $@-t
 	echo 'cmd=$$(echo ./$$0|sed "s,.*/,,")'                   >> $@-t
 	echo 'test "$$cmd" = lvm &&'                              >> $@-t
 	echo 'exec "$(abs_top_builddir)/tools/lvm" "$$@"'         >> $@-t
