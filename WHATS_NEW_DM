@@ -1,5 +1,6 @@
 Version 1.02.23 - 
 ==================================
+  Create e.g., libdevmapper.so.1.02, in build dir alongside the .so file.
   Avoid static link failure with some SELinux libraries.
   Remove obsolete dmfs code from tree and update INSTALL.
 
