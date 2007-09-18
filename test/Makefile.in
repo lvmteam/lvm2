@@ -42,13 +42,13 @@ $(T): init.sh
 	@echo "*** $@ ***"; '$(SHELL_PATH_SQ)' \
 	  $(TESTS_ENVIRONMENT) $@ $(GIT_TEST_OPTS)
 
-dmdir = $(abs_top_srcdir)/../device-mapper
-so_name = $(dmdir)/lib/ioctl/libdevmapper.so.1.02
+so_name = @DMDIR@/lib/ioctl/libdevmapper.so.1.02
 
-# Having to create this link is a huge kludge,
+# Having to create this symlink is an ugly kludge,
 # and a major argument for including device-mapper in lvm.
 .bin-dir-stamp: lvm-wrapper
-	ln -fs libdevmapper.so $(so_name)
+	test -n "@DMDIR@" \
+	  && ln -fs libdevmapper.so $(so_name)
 	rm -rf bin
 	mkdir bin
 	for i in lvm $$(cat $(top_srcdir)/tools/.commands); do \
@@ -59,7 +59,8 @@ so_name = $(dmdir)/lib/ioctl/libdevmapper.so.1.02
 lvm-wrapper: Makefile
 	rm -f $@-t $@
 	echo '#!/bin/sh' >> $@-t
-	echo 'export LD_LIBRARY_PATH="$(dmdir)/lib/ioctl"' >> $@-t
+	test -n "@DMDIR@" \
+	  && echo 'export LD_LIBRARY_PATH="@DMDIR@/lib/ioctl"' >> $@-t
 	echo 'cmd=$$(echo ./$$0|sed "s,.*/,,")' >> $@-t
 	echo 'test "$$cmd" = lvm &&' >> $@-t
 	echo 'exec "$(abs_top_builddir)/tools/lvm"         "$$@"' >> $@-t
