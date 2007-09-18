@@ -24,7 +24,7 @@ AC_CONFIG_HEADERS(lib/misc/configure.h)
 
 ################################################################################
 dnl -- Setup the directory where autoconf has auxilary files
-AC_CONFIG_AUX_DIR(autoconf) 
+AC_CONFIG_AUX_DIR(autoconf)
 
 ################################################################################
 dnl -- Get system type
@@ -638,35 +638,30 @@ AC_SUBST(CSCOPE_CMD)
 AC_SUBST([LIB_PTHREAD])
 
 ################################################################################
-dnl -- First and last lines should not contain files to generate in order to 
+dnl -- First and last lines should not contain files to generate in order to
 dnl -- keep utility scripts running properly
-AC_CONFIG_FILES([\
-Makefile								\
-make.tmpl								\
-daemons/Makefile							\
-daemons/clvmd/Makefile							\
-dmeventd/Makefile							\
-dmeventd/mirror/Makefile						\
-doc/Makefile								\
-include/Makefile						 	\
-lib/Makefile							 	\
-lib/format1/Makefile						 	\
-lib/format_pool/Makefile						\
-lib/locking/Makefile							\
-lib/mirror/Makefile							\
-lib/snapshot/Makefile							\
-test/Makefile                                                           \
-man/Makefile							 	\
-po/Makefile								\
-scripts/Makefile								\
-tools/Makefile							 	\
-tools/version.h								\
-tools/fsadm/Makefile							\
-test/mm/Makefile							\
-test/device/Makefile							\
-test/format1/Makefile							\
-test/regex/Makefile                                                     \
-test/filters/Makefile                                                   \
+AC_CONFIG_FILES([
+Makefile
+make.tmpl
+daemons/Makefile
+daemons/clvmd/Makefile
+dmeventd/Makefile
+dmeventd/mirror/Makefile
+doc/Makefile
+include/Makefile
+lib/Makefile
+lib/format1/Makefile
+lib/format_pool/Makefile
+lib/locking/Makefile
+lib/mirror/Makefile
+lib/snapshot/Makefile
+test/Makefile
+man/Makefile
+po/Makefile
+scripts/Makefile
+tools/Makefile
+tools/version.h
+tools/fsadm/Makefile
 ])
 AC_OUTPUT
 
