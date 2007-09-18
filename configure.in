@@ -538,6 +538,12 @@ AC_ARG_WITH(dmdir,
   	    [ DMDIR="$withval" CPPFLAGS="$CPPFLAGS -I$DMDIR/include"],
 	    [ DMDIR= ])
 
+# Convert a relative dir name to absolute.
+case $DMDIR in
+  /*) ;;
+  *) DMDIR="`pwd`/$DMDIR" ;;
+esac
+
 ################################################################################
 dnl -- Ensure additional headers required
 if test x$READLINE = xyes; then
