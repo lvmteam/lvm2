@@ -1,4 +1,13 @@
 #!/bin/sh
+# Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+#
+# This copyrighted material is made available to anyone wishing to use,
+# modify, copy, or redistribute it subject to the terms and conditions
+# of the GNU General Public License v.2.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 test_description='Exercise some lvcreate diagnostics'
 privileges_required_=1
@@ -11,7 +20,7 @@ cleanup_()
     vgchange -an "$vg"
     lvremove -ff "$vg"
     vgremove "$vg"
-  } > /dev/null
+  } > "$test_dir_/cleanup.log"
   test -n "$d1" && losetup -d "$d1"
   test -n "$d2" && losetup -d "$d2"
   rm -f "$f1" "$f2"
@@ -28,12 +37,12 @@ test_expect_success \
 lv=lvcreate-usage-$$
 
 test_expect_success \
-  'lvcreate w/negative stripesize must fail' \
+  'lvcreate rejects a negative stripesize' \
   'lvcreate -L 64M -n $lv -i2 --stripesize -4 $vg 2>err; test $? = 3 &&
    grep "^  Negative stripesize is invalid\$" err'
 
 test_expect_success \
-  'lvcreate w/too-large stripesize must fail' \
+  'lvcreate rejects a too-large stripesize' \
   'lvcreate -L 64M -n $lv -i2 --stripesize 4294967291 $vg 2>err; test $? = 3 &&
    grep "^  Stripe size cannot be larger than 512.00 GB\$" err'
 
@@ -53,13 +62,13 @@ test_expect_success \
    lvremove -ff $vg'
 
 test_expect_success \
-  'lvcreate w/invalid number of stripes must fail' \
+  'lvcreate rejects an invalid number of stripes' \
   'lvcreate -L 64M -n $lv -i129 $vg 2>err; test $? = 3 &&
    grep "^  Number of stripes (129) must be between 1 and 128\$" err'
 
 # The case on lvdisplay output is to verify that the LV was not created.
 test_expect_success \
-  'lvcreate w/invalid stripe size must fail' \
+  'lvcreate rejects an invalid stripe size' \
   'lvcreate -L 64M -n $lv -i2 --stripesize 3 $vg 2>err; test $? = 3 &&
    grep "^  Invalid stripe size 3\.00 KB\$" err &&
    case "$(lvdisplay $vg)" in "") true ;; *) false ;; esac'
