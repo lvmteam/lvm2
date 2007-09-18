@@ -41,6 +41,7 @@ ifeq ("@LIB_SUFFIX@","dylib")
 else
   LIB_SHARED = $(interface)/libdevmapper.so
 endif
+VERSIONED_SHLIB = $(interface)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
 
 DEFS += -DDEVICE_UID=@DEVICE_UID@ -DDEVICE_GID=@DEVICE_GID@ \
 	-DDEVICE_MODE=@DEVICE_MODE@
