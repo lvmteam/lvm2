@@ -15,6 +15,16 @@
 #ifndef _LVM_UTIL_H
 #define _LVM_UTIL_H
 
+#define min(a, b) ({ typeof(a) _a = (a); \
+		     typeof(b) _b = (b); \
+		     (void) (&_a == &_b); \
+		     _a < _b ? _a : _b; })
+
+#define max(a, b) ({ typeof(a) _a = (a); \
+		     typeof(b) _b = (b); \
+		     (void) (&_a == &_b); \
+		     _a > _b ? _a : _b; })
+
 char *last_path_component(char const *name);
 
 #endif

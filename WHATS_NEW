@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Add %PVS extents option to lvresize, lvextend, and lvcreate.
   Moved the obsolete test subdirectory to old-tests.
   Remove no-longer-correct restrictions on PV arg count with stripes/mirrors.
   Fix strdup memory leak in str_list_dup().

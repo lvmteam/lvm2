@@ -182,8 +182,20 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	if (!strcmp(cmd_name, "lvextend"))
 		lp->resize = LV_EXTEND;
 
-	if (arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG) != 1) {
-		log_error("Please specify either size or extents (not both)");
+	/*
+	 * Allow omission of extents and size if the user has given us
+	 * one or more PVs.  Most likely, the intent was "resize this
+	 * LV the best you can with these PVs"
+	 */
+	if ((arg_count(cmd, extents_ARG) + arg_count(cmd, size_ARG) == 0) &&
+	    (argc >= 2)) {
+		lp->extents = 100;
+		lp->percent = PERCENT_PVS;
+		lp->sign = SIGN_PLUS;
+	} else if ((arg_count(cmd, extents_ARG) +
+		    arg_count(cmd, size_ARG) != 1)) {
+		log_error("Please specify either size or extents but not "
+			  "both.");
 		return 0;
 	}
 
@@ -246,6 +258,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	uint32_t seg_mirrors = 0;
 	uint32_t extents_used = 0;
 	uint32_t size_rest;
+	uint32_t pv_extent_count = 0;
 	alloc_policy_t alloc;
 	struct logical_volume *lock_lv;
 	struct lv_list *lvl;
@@ -319,6 +332,12 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 		lp->extents = lp->size / vg->extent_size;
 	}
 
+	if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
+						     lp->argv, 1) : &vg->pvs)) {
+		stack;
+		return ECMD_FAILED;
+	}
+
 	switch(lp->percent) {
 		case PERCENT_VG:
 			lp->extents = lp->extents * vg->extent_count / 100;
@@ -328,6 +347,10 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 			break;
 		case PERCENT_LV:
 			lp->extents = lp->extents * lv->le_count / 100;
+			break;
+		case PERCENT_PVS:
+			pv_extent_count = pv_list_extents_free(pvh);
+			lp->extents = lp->extents * pv_extent_count / 100;
 			break;
 		case PERCENT_NONE:
 			break;
@@ -539,10 +562,6 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	if (lp->resize == LV_REDUCE) {
 		if (lp->argc)
 			log_warn("Ignoring PVs on command line when reducing");
-	} else if (!(pvh = lp->argc ? create_pv_list(cmd->mem, vg, lp->argc,
-						     lp->argv, 1) : &vg->pvs)) {
-		stack;
-		return ECMD_FAILED;
 	}
 
 	if (lp->resize == LV_REDUCE || lp->resizefs) {
