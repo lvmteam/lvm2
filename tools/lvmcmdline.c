@@ -269,6 +269,9 @@ int int_arg_with_sign_and_percent(struct cmd_context *cmd __attribute((unused)),
 		a->percent = PERCENT_VG;
 	else if (!strcasecmp(ptr, "L") || !strcasecmp(ptr, "LV"))
 		a->percent = PERCENT_LV;
+	else if (!strcasecmp(ptr, "P") || !strcasecmp(ptr, "PV") ||
+		 !strcasecmp(ptr, "PVS"))
+		a->percent = PERCENT_PVS;
 	else if (!strcasecmp(ptr, "F") || !strcasecmp(ptr, "FR") ||
 		 !strcasecmp(ptr, "FREE"))
 		a->percent = PERCENT_FREE;

@@ -490,6 +490,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	char lv_name_buf[128];
 	const char *lv_name;
 	struct lvinfo info;
+	uint32_t pv_extent_count;
 
 	status |= lp->permission | VISIBLE_LV;
 
@@ -574,8 +575,18 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		case PERCENT_FREE:
 			lp->extents = lp->extents * vg->free_count / 100;
 			break;
+		case PERCENT_PVS:
+			if (!lp->pv_count) {
+				log_error("Please specify physical volume(s) "
+					  "with %%PVS");
+				return 0;
+			}
+			pv_extent_count = pv_list_extents_free(pvh);
+			lp->extents = lp->extents * pv_extent_count / 100;
+			break;
 		case PERCENT_LV:
-			log_error("Please express size as %%VG or %%FREE.");
+			log_error("Please express size as %%VG, %%PVS, or "
+				  "%%FREE.");
 			return 0;
 		case PERCENT_NONE:
 			break;

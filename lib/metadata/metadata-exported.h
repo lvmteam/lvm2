@@ -329,6 +329,9 @@ int pv_resize_single(struct cmd_context *cmd,
 int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	       uint64_t label_sector);
 
+/* FIXME: move internal to library */
+uint32_t pv_list_extents_free(struct list *pvh);
+
 struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t extent_size, uint32_t max_pv,
 			       uint32_t max_lv, alloc_policy_t alloc,

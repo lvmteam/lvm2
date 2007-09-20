@@ -8,7 +8,7 @@ lvcreate \- create a logical volume in an existing volume group
 [\-A/\-\-autobackup y/n] [\-C/\-\-contiguous y/n] [\-d/\-\-debug]
 [\-h/\-?/\-\-help]
 [\-i/\-\-stripes Stripes [\-I/\-\-stripesize StripeSize]]
-{\-l/\-\-extents LogicalExtentsNumber[%{VG|FREE}] |
+{\-l/\-\-extents LogicalExtentsNumber[%{VG|PVS|FREE}] |
  \-L/\-\-size LogicalVolumeSize[kKmMgGtT]}
 [\-M/\-\-persistent y/n] [\-\-minor minor]
 [\-m/\-\-mirrors Mirrors [\-\-nosync] [\-\-mirrorlog {disk|log}] [\-\-corelog]
@@ -63,12 +63,14 @@ StripeSize must be 2^n (n = 2 to 9) for metadata in LVM1 format.
 For metadata in LVM2 format, the stripe size may be a larger
 power of 2 but must not exceed the physical extent size.
 .TP
-.I \-l, \-\-extents LogicalExtentsNumber[%{VG|FREE}]
+.I \-l, \-\-extents LogicalExtentsNumber[%{VG|PVS|FREE}]
 Gives the number of logical extents to allocate for the new
 logical volume.
 This can also be expressed as a percentage of the total space
-in the Volume Group with the suffix %VG or of the remaining free space
-with the suffix %FREE.
+in the Volume Group with the suffix %VG, of the remaining
+free space in the Volume Group with the suffix %FREE, or
+of the remaining free space for the specified PhysicalVolume(s)
+with the suffix %PVS,
 .TP
 .I \-L, \-\-size LogicalVolumeSize[kKmMgGtTpPeE]
 Gives the size to allocate for the new logical volume.
