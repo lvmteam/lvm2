@@ -466,6 +466,11 @@ static struct command *_find_command(const char *name)
 	return _cmdline.commands + i;
 }
 
+static void _short_usage(const char *name)
+{
+	log_error("Run `%s --help' for more information.\n", name);
+}
+
 static void _usage(const char *name)
 {
 	struct command *com = _find_command(name);
@@ -921,7 +926,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	dm_pool_empty(cmd->mem);
 
 	if (ret == EINVALID_CMD_LINE && !_cmdline.interactive)
-		_usage(cmd->command->name);
+		_short_usage(cmd->command->name);
 
 	log_debug("Completed: %s", cmd->cmd_line);
 
