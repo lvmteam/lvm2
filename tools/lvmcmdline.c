@@ -478,7 +478,7 @@ static void _usage(const char *name)
 	if (!com)
 		return;
 
-	log_error("%s: %s\n\n%s", com->name, com->desc, com->usage);
+	log_print("%s: %s\n\n%s", com->name, com->desc, com->usage);
 }
 
 /*
