@@ -468,7 +468,7 @@ static struct command *_find_command(const char *name)
 
 static void _short_usage(const char *name)
 {
-	log_error("Run `%s --help' for more information.\n", name);
+	log_error("Run `%s --help' for more information.", name);
 }
 
 static void _usage(const char *name)
