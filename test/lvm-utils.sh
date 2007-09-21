@@ -54,3 +54,14 @@ loop_setup_()
   echo "$dev"
   return 0;
 }
+
+
+check_pv_size_()
+{
+  return $(test $(pvs --noheadings -o pv_free $1) == $2)
+}
+
+check_lv_size_()
+{
+  return $(test $(lvs --noheadings -o lv_size $1) == $2)
+}
