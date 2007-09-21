@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  All tools: print --help output to stdout, not stderr.
   After a diagnostic, suggest --help, rather than printing all --help output.
   Add %PVS extents option to lvresize, lvextend, and lvcreate.
   Moved the obsolete test subdirectory to old-tests.
