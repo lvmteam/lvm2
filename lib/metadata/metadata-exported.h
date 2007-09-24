@@ -330,7 +330,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	       uint64_t label_sector);
 
 /* FIXME: move internal to library */
-uint32_t pv_list_extents_free(struct list *pvh);
+uint32_t pv_list_extents_free(const struct list *pvh);
 
 struct volume_group *vg_create(struct cmd_context *cmd, const char *name,
 			       uint32_t extent_size, uint32_t max_pv,
