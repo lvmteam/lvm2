@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Refactor lvcreate stripe and mirror parameter validation.
   All tools: print --help output to stdout, not stderr.
   After a diagnostic, suggest --help, rather than printing all --help output.
   Add %PVS extents option to lvresize, lvextend, and lvcreate.

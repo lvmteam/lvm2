@@ -174,28 +174,13 @@ static int _read_size_params(struct lvcreate_params *lp,
 	return 1;
 }
 
-/* The stripe size is limited by the size of a uint32_t, but since the
- * value given by the user is doubled, and the final result must be a
- * power of 2, we must divide UINT_MAX by four and add 1 (to round it
- * up to the power of 2) */
-static int _read_stripe_params(struct lvcreate_params *lp,
-			       struct cmd_context *cmd,
-			       int *pargc __attribute((unused)))
+/*
+ * Generic stripe parameter checks.
+ * FIXME: Should eventually be moved into lvm library.
+ */
+static int _validate_stripe_params(struct cmd_context *cmd,
+				   struct lvcreate_params *lp)
 {
-	if (arg_count(cmd, stripesize_ARG)) {
-		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
-			log_error("Negative stripesize is invalid");
-			return 0;
-		}
-		/* Check to make sure we won't overflow lp->stripe_size */
-		if(arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT) {
-			log_error("Stripe size cannot be larger than %s",
-				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
-			return 0;
-		}
-		lp->stripe_size = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
-	}
-
 	if (lp->stripes == 1 && lp->stripe_size) {
 		log_print("Ignoring stripesize argument with single stripe");
 		lp->stripe_size = 0;
@@ -222,6 +207,35 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 			  display_size(cmd, (uint64_t) lp->stripe_size));
 		return 0;
 	}
+
+	return 1;
+}
+
+/* The stripe size is limited by the size of a uint32_t, but since the
+ * value given by the user is doubled, and the final result must be a
+ * power of 2, we must divide UINT_MAX by four and add 1 (to round it
+ * up to the power of 2) */
+static int _read_stripe_params(struct lvcreate_params *lp,
+			       struct cmd_context *cmd,
+			       int *pargc __attribute((unused)))
+{
+	if (arg_count(cmd, stripesize_ARG)) {
+		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
+			log_error("Negative stripesize is invalid");
+			return 0;
+		}
+		/* Check to make sure we won't overflow lp->stripe_size */
+		if(arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT) {
+			log_error("Stripe size cannot be larger than %s",
+				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
+			return 0;
+		}
+		lp->stripe_size = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
+	}
+
+
+	if (!_validate_stripe_params(cmd, lp))
+		return 0;
 
 	return 1;
 }
