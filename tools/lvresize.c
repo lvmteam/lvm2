@@ -47,7 +47,7 @@ struct lvresize_params {
 };
 
 static int validate_stripesize(struct cmd_context *cmd,
-			       struct volume_group *vg,
+			       const struct volume_group *vg,
 			       struct lvresize_params *lp)
 {
 	if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
@@ -87,9 +87,9 @@ static int validate_stripesize(struct cmd_context *cmd,
 }
 
 static int confirm_resizefs_reduce(struct cmd_context *cmd,
-				   struct volume_group *vg,
-				   struct logical_volume *lv,
-				   struct lvresize_params *lp)
+				   const struct volume_group *vg,
+				   const struct logical_volume *lv,
+				   const struct lvresize_params *lp)
 {
 	struct lvinfo info;
 
@@ -131,8 +131,9 @@ static int confirm_resizefs_reduce(struct cmd_context *cmd,
 	return 1;
 }
 
-static int do_resizefs_reduce(struct cmd_context *cmd, struct volume_group *vg,
-			      struct lvresize_params *lp)
+static int do_resizefs_reduce(const struct cmd_context *cmd, 
+			      const struct volume_group *vg,
+			      const struct lvresize_params *lp)
 {
 	char lv_path[PATH_MAX];
 	char size_buf[SIZE_BUF];

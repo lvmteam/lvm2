@@ -1803,7 +1803,7 @@ struct list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 }
 
 int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
-		     force_t force)
+		     const force_t force)
 {
 	struct volume_group *vg;
 	struct lvinfo info;

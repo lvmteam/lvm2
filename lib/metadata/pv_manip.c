@@ -218,8 +218,8 @@ void merge_pv_segments(struct pv_segment *peg1, struct pv_segment *peg2)
  * Calculate the overlap, in extents, between a struct pv_segment and
  * a struct pe_range.
  */
-static uint32_t _overlap_pe(struct pv_segment *pvseg,
-			    struct pe_range *per)
+static uint32_t _overlap_pe(const struct pv_segment *pvseg,
+			    const struct pe_range *per)
 {
 	uint32_t start;
 	uint32_t end;
@@ -235,7 +235,7 @@ static uint32_t _overlap_pe(struct pv_segment *pvseg,
 /*
  * Returns: number of free PEs in a struct pv_list
  */
-uint32_t pv_list_extents_free(struct list *pvh)
+uint32_t pv_list_extents_free(const struct list *pvh)
 {
 	struct pv_list *pvl;
 	struct pe_range *per;
@@ -443,7 +443,7 @@ int pv_resize(struct physical_volume *pv,
 int pv_resize_single(struct cmd_context *cmd,
 		     struct volume_group *vg,
 		     struct physical_volume *pv,
-		     uint64_t new_size)
+		     const uint64_t new_size)
 {
 	struct pv_list *pvl;
 	int consistent = 1;
