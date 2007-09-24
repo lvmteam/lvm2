@@ -28,8 +28,8 @@ cleanup_()
 
 test_expect_success \
   'set up temp files, loopback devices, PVs, and a VG' \
-  'f1="$(pwd)/1" && d1=$(loop_setup_ "$f1") &&
-   f2="$(pwd)/2" && d2=$(loop_setup_ "$f2") &&
+  'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
+   f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
    pvcreate $d1 $d2      &&
    vg=$(this_test_)-test-vg-$$  &&
    vgcreate $vg $d1 $d2 &&
@@ -65,7 +65,7 @@ test_expect_success \
   check_pv_size_ $d2 "0"'
 
 # Exercise the range overlap code.  Allocate every 2 extents.
-# 
+#
 #      Physical Extents
 #           1         2
 #012345678901234567890123

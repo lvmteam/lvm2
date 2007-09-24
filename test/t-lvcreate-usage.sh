@@ -28,8 +28,8 @@ cleanup_()
 
 test_expect_success \
   'set up temp files, loopback devices, PVs, and a VG' \
-  'f1="$(pwd)/1" && d1=$(loop_setup_ "$f1") &&
-   f2="$(pwd)/2" && d2=$(loop_setup_ "$f2") &&
+  'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
+   f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
    pvcreate $d1 $d2      &&
    vg=$(this_test_)-test-vg-$$  &&
    vgcreate $vg $d1 $d2'
@@ -71,7 +71,7 @@ test_expect_success \
   'lvcreate rejects an invalid stripe size' \
   'lvcreate -L 64M -n $lv -i2 --stripesize 3 $vg 2>err; test $? = 3 &&
    grep "^  Invalid stripe size 3\.00 KB\$" err &&
-   case "$(lvdisplay $vg)" in "") true ;; *) false ;; esac'
+   case $(lvdisplay $vg) in "") true ;; *) false ;; esac'
 
 test_done
 # Local Variables:
