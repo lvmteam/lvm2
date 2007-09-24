@@ -35,7 +35,7 @@ pvsize=$((200 * 1024 * 2))
 
 test_expect_success \
   'set up temp file and loopback device' \
-  'lofile="$(pwd)/lofile" && lodev=$(loop_setup_ "$lofile")'
+  'lofile=$(pwd)/lofile && lodev=$(loop_setup_ "$lofile")'
 
 offset=0
 pvs=

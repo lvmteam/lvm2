@@ -28,8 +28,8 @@ cleanup_()
 
 test_expect_success \
   'set up temp files, loopback devices, PVs, VG, LV' \
-  'f1="$(pwd)/1" && d1=$(loop_setup_ "$f1") &&
-   f2="$(pwd)/2" && d2=$(loop_setup_ "$f2") &&
+  'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
+   f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
    pvcreate $d1 $d2              &&
    vg=pvmove-demo-vg-$$          &&
    vgcreate "$vg" $d1 $d2        &&
