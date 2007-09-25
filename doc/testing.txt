@@ -22,8 +22,8 @@ LVM2 that is running the LV's on my development box.
    }
 
 
-   The important this to note is the devices section which makes sure that
-   only the loopback devices are considered for LVM2 operations.
+   The important thing to note is the devices section which makes sure
+   that only the loopback devices are considered for LVM2 operations.
 
 4) When you want to use this test setup just set the environment
    variable LVM_SYSTEM_DIR to point to your config directory
@@ -39,8 +39,3 @@ LVM2 that is running the LV's on my development box.
 7) Test away.  Make sure that you are explicit about which lvm
    executable you want to execute (eg, ./lvm if you are in
    LVM2/tools).
-
-   
-
-
-
