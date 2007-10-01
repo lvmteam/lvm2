@@ -216,8 +216,7 @@ static int _validate_stripe_params(struct cmd_context *cmd,
  * power of 2, we must divide UINT_MAX by four and add 1 (to round it
  * up to the power of 2) */
 static int _read_stripe_params(struct lvcreate_params *lp,
-			       struct cmd_context *cmd,
-			       int *pargc __attribute((unused)))
+			       struct cmd_context *cmd)
 {
 	if (arg_count(cmd, stripesize_ARG)) {
 		if (arg_sign_value(cmd, stripesize_ARG, 0) == SIGN_MINUS) {
@@ -271,8 +270,7 @@ static int _validate_mirror_params(const struct cmd_context *cmd,
 }
 
 static int _read_mirror_params(struct lvcreate_params *lp,
-			       struct cmd_context *cmd,
-			       int *pargc __attribute((unused)))
+			       struct cmd_context *cmd)
 {
 	int region_size;
 	const char *mirrorlog;
@@ -429,8 +427,8 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, cmd) ||
-	    !_read_stripe_params(lp, cmd, &argc) ||
-	    !_read_mirror_params(lp, cmd, &argc)) {
+	    !_read_stripe_params(lp, cmd) ||
+	    !_read_mirror_params(lp, cmd)) {
 		stack;
 		return 0;
 	}
