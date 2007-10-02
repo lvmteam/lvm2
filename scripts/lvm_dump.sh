@@ -91,11 +91,11 @@ log="$dir/lvmdump.log"
 
 myecho() {
 	echo "$@"
-	echo "$@" >> $log
+	echo "$@" >> "$log"
 }
 
 log() {
-	echo "$@" >> $log
+	echo "$@" >> "$log"
 	eval "$@"
 }
 
@@ -107,19 +107,19 @@ if (( $advanced )); then
 	myecho "Gathering LVM volume info..."
 
 	myecho "  vgscan..."
-	log "$LVM vgscan -vvvv > $dir/vgscan 2>&1"
+	log "\"$LVM\" vgscan -vvvv > \"$dir/vgscan\" 2>&1"
 
 	myecho "  pvscan..."
-	log "$LVM pvscan -v >> $dir/pvscan 2>> $log"
+	log "\"$LVM\" pvscan -v >> \"$dir/pvscan\" 2>> \"$log\""
 
 	myecho "  lvs..."
-	log "$LVM lvs -a -o +devices >> $dir/lvs 2>> $log"
+	log "\"$LVM\" lvs -a -o +devices >> \"$dir/lvs\" 2>> \"$log\""
 
 	myecho "  pvs..."
-	log "$LVM pvs -a -v > $dir/pvs 2>> $log"
+	log "\"$LVM\" pvs -a -v > \"$dir/pvs\" 2>> \"$log\""
 
-	echo "  vgs..."
-	log "$LVM vgs -v > $dir/vgs 2>> $log"
+	myecho "  vgs..."
+	log "\"$LVM\" vgs -v > \"$dir/vgs\" 2>> \"$log\""
 fi
 
 if (( $clustered )); then
@@ -129,7 +129,7 @@ if (( $clustered )); then
 	for i in nodes status services; do
 		cap_i=$(echo $i|tr a-z A-Z)
 		printf "$cap_i:\n----------------------------------\n"
-		log "cman_tool $i 2>> $log"
+		log "cman_tool $i 2>> \"$log\""
 		echo
 	done
 
@@ -161,50 +161,50 @@ if (( $clustered )); then
 fi
 
 myecho "Gathering LVM & device-mapper version info..."
-echo "LVM VERSION:" > $dir/versions
-"$LVM" lvs --version >> $dir/versions 2>> $log
-echo "DEVICE MAPPER VERSION:" >> $dir/versions
-"$DMSETUP" --version >> $dir/versions 2>> $log
-echo "KERNEL VERSION:" >> $dir/versions
-"$UNAME" -a >> $dir/versions 2>> $log
-echo "DM TARGETS VERSIONS:" >> $dir/versions
-"$DMSETUP" targets >> $dir/versions 2>> $log
+echo "LVM VERSION:" > "$dir/versions"
+"$LVM" lvs --version >> "$dir/versions" 2>> "$log"
+echo "DEVICE MAPPER VERSION:" >> "$dir/versions"
+"$DMSETUP" --version >> "$dir/versions" 2>> "$log"
+echo "KERNEL VERSION:" >> "$dir/versions"
+"$UNAME" -a >> "$dir/versions" 2>> "$log"
+echo "DM TARGETS VERSIONS:" >> "$dir/versions"
+"$DMSETUP" targets >> "$dir/versions" 2>> "$log"
 
 myecho "Gathering dmsetup info..."
-log "$DMSETUP info -c > $dir/dmsetup_info 2>> $log"
-log "$DMSETUP table > $dir/dmsetup_table 2>> $log"
-log "$DMSETUP status > $dir/dmsetup_status 2>> $log"
+log "\"$DMSETUP\" info -c > \"$dir/dmsetup_info\" 2>> \"$log\""
+log "\"$DMSETUP\" table > \"$dir/dmsetup_table\" 2>> \"$log\""
+log "\"$DMSETUP\" status > \"$dir/dmsetup_status\" 2>> \"$log\""
 
 myecho "Gathering process info..."
-log "$PS alx > $dir/ps_info 2>> $log"
+log "$PS alx > \"$dir/ps_info\" 2>> \"$log\""
 
 myecho "Gathering console messages..."
-log "$TAIL -n 75 /var/log/messages > $dir/messages 2>> $log"
+log "$TAIL -n 75 /var/log/messages > \"$dir/messages\" 2>> \"$log\""
 
 myecho "Gathering /etc/lvm info..."
-log "$CP -a /etc/lvm $dir/lvm 2>> $log"
+log "$CP -a /etc/lvm \"$dir/lvm\" 2>> \"$log\""
 
 myecho "Gathering /dev listing..."
-log "$LS -laR /dev > $dir/dev_listing 2>> $log"
+log "$LS -laR /dev > \"$dir/dev_listing\" 2>> \"$log\""
 
 myecho "Gathering /sys/block listing..."
-log "$LS -laR /sys/block > $dir/sysblock_listing"
+log "$LS -laR /sys/block > \"$dir/sysblock_listing\""
 
 if (( $metadata )); then
 	myecho "Gathering LVM metadata from Physical Volumes..."
 
-	log "$MKDIR -p $dir/metadata"
+	log "$MKDIR -p \"$dir/metadata\""
 
-	pvs="$($LVM pvs --separator , --noheadings --units s --nosuffix -o \
-	    name,pe_start 2>> $log | $SED -e 's/^ *//')"
+	pvs="$("$LVM" pvs --separator , --noheadings --units s --nosuffix -o \
+	    name,pe_start 2>> "$log" | $SED -e 's/^ *//')"
 	for line in "$pvs"
 	do
 		test -z "$line" && continue
 		pv="$(echo $line | $CUT -d, -f1)"
 		pe_start="$(echo $line | $CUT -d, -f2)"
-		name="$($BASENAME $pv)"
+		name="$($BASENAME "$pv")"
 		myecho "  $pv"
-		log "$DD if=$pv of=$dir/metadata/$name bs=512 count=$pe_start 2>> $log"
+		log "$DD if=$pv \"of=$dir/metadata/$name\" bs=512 count=$pe_start 2>> \"$log\""
 	done
 fi
 
@@ -212,8 +212,8 @@ if test -z "$userdir"; then
 	lvm_dump="$dirbase.tgz"
 	myecho "Creating report tarball in $HOME/$lvm_dump..."
 	cd "$HOME"
-	"$TAR" czf $lvm_dump $dirbase 2>/dev/null
-	"$RM" -rf $dir
+	"$TAR" czf "$lvm_dump" "$dirbase" 2>/dev/null
+	"$RM" -rf "$dir"
 fi
 
 if test "$UID" != "0" && test "$EUID" != "0"; then
