@@ -17,7 +17,7 @@
 #           the debugging of lvm issues.
 
 # following external commands are used throughout the script
-# which, echo and test are internal in bash at least
+# echo and test are internal in bash at least
 MKDIR=mkdir # need -p
 TAR=tar # need czf
 RM=rm # need -rf
@@ -43,12 +43,8 @@ die() {
     exit $code
 }
 
-# which should error out if the binary is not executable, although i
-# am not sure we can rely on this
-which $LVM >& /dev/null || die 2 "Fatal: could not find lvm binary '$LVM'"
-test -x `which $LVM` || die 2 "Fatal: lvm binary '$LVM' not executable"
-which $DMSETUP >& /dev/null || die 2 "Fatal: could not find dmsetup binary '$DMSETUP'"
-test -x `which $DMSETUP` || die 2 "Fatal: dmsetup binary '$DMSETUP' not executable"
+"$LVM" version >& /dev/null || die 2 "Could not run lvm binary '$LVM'"
+"$DMSETUP" help >& /dev/null || die 2 "Fatal: could not run dmsetup binary '$DMSETUP'"
 
 function usage {
 	echo "$0 [options]"
@@ -166,13 +162,13 @@ fi
 
 myecho "Gathering LVM & device-mapper version info..."
 echo "LVM VERSION:" > $dir/versions
-$LVM lvs --version >> $dir/versions 2>> $log
+"$LVM" lvs --version >> $dir/versions 2>> $log
 echo "DEVICE MAPPER VERSION:" >> $dir/versions
-$DMSETUP --version >> $dir/versions 2>> $log
+"$DMSETUP" --version >> $dir/versions 2>> $log
 echo "KERNEL VERSION:" >> $dir/versions
-$UNAME -a >> $dir/versions 2>> $log
+"$UNAME" -a >> $dir/versions 2>> $log
 echo "DM TARGETS VERSIONS:" >> $dir/versions
-$DMSETUP targets >> $dir/versions 2>> $log
+"$DMSETUP" targets >> $dir/versions 2>> $log
 
 myecho "Gathering dmsetup info..."
 log "$DMSETUP info -c > $dir/dmsetup_info 2>> $log"
@@ -215,9 +211,9 @@ fi
 if test -z "$userdir"; then
 	lvm_dump="$dirbase.tgz"
 	myecho "Creating report tarball in $HOME/$lvm_dump..."
-	cd $HOME
-	$TAR czf $lvm_dump $dirbase 2>/dev/null
-	$RM -rf $dir
+	cd "$HOME"
+	"$TAR" czf $lvm_dump $dirbase 2>/dev/null
+	"$RM" -rf $dir
 fi
 
 if test "$UID" != "0" && test "$EUID" != "0"; then
