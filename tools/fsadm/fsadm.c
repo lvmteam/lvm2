@@ -39,6 +39,7 @@
 #include <sys/vfs.h>
 
 #include "util.h"
+#include "last-path-component.h"
 
 #define log_error(str, x...) fprintf(stderr, "%s(%u):  " str "\n", __FILE__, __LINE__, x)
 

@@ -20,6 +20,7 @@
 
 #include "stub.h"
 #include "lvm2cmd.h"
+#include "last-path-component.h"
 
 #include <signal.h>
 #include <syslog.h>

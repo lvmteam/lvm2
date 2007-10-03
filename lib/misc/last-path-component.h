@@ -12,17 +12,16 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LVM_UTIL_H
-#define _LVM_UTIL_H
+/*
+ * Return the address of the last file name component of NAME.
+ * If NAME ends in a slash, return the empty string.
+ */
 
-#define min(a, b) ({ typeof(a) _a = (a); \
-		     typeof(b) _b = (b); \
-		     (void) (&_a == &_b); \
-		     _a < _b ? _a : _b; })
+#include <string.h>
 
-#define max(a, b) ({ typeof(a) _a = (a); \
-		     typeof(b) _b = (b); \
-		     (void) (&_a == &_b); \
-		     _a > _b ? _a : _b; })
-
-#endif
+static inline char *last_path_component(char const *name)
+{
+	char const *slash = strrchr (name, '/');
+	char const *res = slash ? slash + 1 : name;
+	return (char *) res;
+}

@@ -19,9 +19,4 @@
 
 #include "lib.h"
 
-char *last_path_component(char const *name)
-{
-	char const *slash = strrchr (name, '/');
-	char const *res = slash ? slash + 1 : name;
-	return (char *) res;
-}
+/* empty for now.  */
