@@ -44,7 +44,7 @@ die() {
 }
 
 "$LVM" version >& /dev/null || die 2 "Could not run lvm binary '$LVM'"
-"$DMSETUP" help >& /dev/null || die 2 "Fatal: could not run dmsetup binary '$DMSETUP'"
+"$DMSETUP" version >& /dev/null || DMSETUP=:
 
 function usage {
 	echo "$0 [options]"
@@ -99,7 +99,16 @@ log() {
 	eval "$@"
 }
 
-echo " "
+warnings() {
+	if test "$UID" != "0" && test "$EUID" != "0"; then
+		myecho "WARNING! Running as non-privileged user, dump is likely incomplete!"
+	elif test "$DMSETUP" = ":"; then
+		myecho "WARNING! Could not run dmsetup, dump is likely incomplete."
+	fi
+}
+
+warnings
+
 myecho "Creating dump directory: $dir"
 echo " "
 
@@ -211,15 +220,14 @@ fi
 if test -z "$userdir"; then
 	lvm_dump="$dirbase.tgz"
 	myecho "Creating report tarball in $HOME/$lvm_dump..."
+fi
+
+warnings
+
+if test -z "$userdir"; then
 	cd "$HOME"
 	"$TAR" czf "$lvm_dump" "$dirbase" 2>/dev/null
 	"$RM" -rf "$dir"
-fi
-
-if test "$UID" != "0" && test "$EUID" != "0"; then
-	myecho
-	myecho "WARNING! Running as non-privileged user, dump is likely incomplete!"
-	myecho
 fi
 
 exit 0
