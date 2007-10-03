@@ -20,10 +20,12 @@ SOURCES = fsadm.c
 
 TARGETS = fsadm
 
+LVMLIBS = -llvm
+
 include $(top_srcdir)/make.tmpl
 
 fsadm: $(OBJECTS)
-	$(CC) -o $@ $(CFLAGS) $(OBJECTS) -rdynamic
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LDFLAGS) $(LVMLIBS) -rdynamic
 
 install: fsadm
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) fsadm \
