@@ -90,6 +90,8 @@ extern char *optarg;
 #define ARGS_MAX 256
 #define LOOP_TABLE_SIZE (PATH_MAX + 255)
 
+#define DEFAULT_DM_DEV_DIR "/dev"
+
 /* FIXME Should be imported */
 #ifndef DM_MAX_TYPE_NAME
 #  define DM_MAX_TYPE_NAME 16
@@ -97,7 +99,6 @@ extern char *optarg;
 
 /* FIXME Should be elsewhere */
 #define SECTOR_SHIFT 9L
-#define DEV_PATH "/dev/"
 
 #define err(msg, x...) fprintf(stderr, msg "\n", ##x)
 
@@ -2129,7 +2130,7 @@ static int _process_tree_options(const char *options)
  * Returns the full absolute path, or NULL if the path could
  * not be resolved.
  */
-static char *_get_abspath(char *path)
+static char *_get_abspath(const char *path)
 {
 	char *_path;
 
@@ -2141,7 +2142,7 @@ static char *_get_abspath(char *path)
 	return _path;
 }
 
-static char *parse_loop_device_name(char *dev)
+static char *parse_loop_device_name(const char *dev, const char *dev_dir)
 {
 	char *buf;
 	char *device;
@@ -2153,7 +2154,13 @@ static char *parse_loop_device_name(char *dev)
 		if (!(device = _get_abspath(dev)))
 			goto error;
 
-		if (strncmp(device, DEV_PATH, strlen(DEV_PATH)))
+		if (strncmp(device, dev_dir, strlen(dev_dir)))
+			goto error;
+
+		/* If dev_dir does not end in a slash, ensure that the
+		   following byte in the device string is "/".  */
+		if (dev_dir[strlen(dev_dir) - 1] != '/'
+		    && device[strlen(dev_dir)] != '/')
 			goto error;
 
 		strncpy(buf, strrchr(device, '/') + 1, (size_t) PATH_MAX);
@@ -2234,7 +2241,8 @@ error:
 	return 0;
 }
 
-static int _process_losetup_switches(const char *base, int *argc, char ***argv)
+static int _process_losetup_switches(const char *base, int *argc, char ***argv,
+				     const char *dev_dir)
 {
 	static int ind;
 	int c;
@@ -2297,7 +2305,7 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv)
 		return 0;
 	}
 
-	if (!(device_name = parse_loop_device_name((*argv)[0]))) {
+	if (!(device_name = parse_loop_device_name((*argv)[0], dev_dir))) {
 		fprintf(stderr, "%s: Could not parse loop_device %s\n",
 			base, (*argv)[0]);
 		_losetup_usage(stderr);
@@ -2344,7 +2352,7 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv)
 	return 1;
 }
 
-static int _process_switches(int *argc, char ***argv)
+static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 {
 	char *base, *namebase;
 	static int ind;
@@ -2422,7 +2430,7 @@ static int _process_switches(int *argc, char ***argv)
 	}
 
 	if (!strcmp(base, "losetup") || !strcmp(base, "dmlosetup")){
-		r = _process_losetup_switches(base, argc, argv);
+		r = _process_losetup_switches(base, argc, argv, dev_dir);
 		free(namebase);
 		return r;
 	}
@@ -2539,10 +2547,21 @@ int main(int argc, char **argv)
 {
 	struct command *c;
 	int r = 1;
+	const char *dev_dir;
 
 	(void) setlocale(LC_ALL, "");
 
-	if (!_process_switches(&argc, &argv)) {
+	dev_dir = getenv ("DM_DEV_DIR");
+	if (dev_dir && *dev_dir) {
+		if (!dm_set_dev_dir(dev_dir)) {
+			fprintf(stderr, "Invalid DM_DEV_DIR envvar value.\n");
+			goto out;
+		}
+	} else {
+		dev_dir = DEFAULT_DM_DEV_DIR;
+	}
+
+	if (!_process_switches(&argc, &argv, dev_dir)) {
 		fprintf(stderr, "Couldn't process command line.\n");
 		goto out;
 	}

@@ -341,6 +341,12 @@ for creating devices with holes in them.
 .br
 2056320 2875602 linear /dev/hdb 1028160
 
+.SH ENVIRONMENT VARIABLES
+.TP
+\fBDM_DEV_DIR\fP
+The device directory name.
+Defaults to "/dev" and must be an absolute name.
+
 .SH AUTHORS
 Original version: Joe Thornber (thornber@sistina.com)
 
