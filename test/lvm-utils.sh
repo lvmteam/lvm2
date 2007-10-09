@@ -19,19 +19,14 @@ warn() { echo >&2 "$ME: $@"; }
 unsafe_losetup_()
 {
   f=$1
-  # Prefer the race-free losetup from recent util-linux-ng.
-  dev=$(losetup --find --show "$f" 2>/dev/null) \
-      && { echo "$dev"; return 0; }
 
-  # If that fails, try to use util-linux-ng's -f "find-device" option.
-  dev=$(losetup -f 2>/dev/null) \
-      && losetup "$dev" "$f" \
-      && { echo "$dev"; return 0; }
+  test -n "$G_dev_" \
+    || error "Internal error: unsafe_losetup_ called before init_root_dir_"
 
-  # Last resort: iterate through /dev/loop{,/}{0,1,2,3,4,5,6,7,8,9}
+  # Iterate through $G_dev_/loop{,/}{0,1,2,3,4,5,6,7,8,9}
   for slash in '' /; do
     for i in 0 1 2 3 4 5 6 7 8 9; do
-      dev=/dev/loop$slash$i
+      dev=$G_dev_/loop$slash$i
       losetup $dev > /dev/null 2>&1 && continue;
       losetup "$dev" "$f" > /dev/null && { echo "$dev"; return 0; }
       break
@@ -55,7 +50,6 @@ loop_setup_()
   return 0;
 }
 
-
 check_pv_size_()
 {
   return $(test $(pvs --noheadings -o pv_free $1) == $2)
@@ -65,3 +59,45 @@ check_lv_size_()
 {
   return $(test $(lvs --noheadings -o lv_size $1) == $2)
 }
+
+dmsetup_has_dm_devdir_support_()
+{
+  # Detect support for the envvar.  If it's supported, the
+  # following command will fail with the expected diagnostic.
+  out=$(DM_DEV_DIR=j dmsetup version 2>&1)
+  test "$?:$out" = "1:Invalid DM_DEV_DIR envvar value."
+}
+
+# set up private /dev and /etc
+init_root_dir_()
+{
+  test -n "$test_dir_rand_" \
+    || error "Internal error: called init_root_dir_ before" \
+      " defining $test_dir_rand_"
+
+  # Define these two globals.
+  G_root_=$test_dir_rand_/root
+  G_dev_=$G_root_/dev
+
+  export LVM_SYSTEM_DIR=$G_root_/etc
+  export DM_DEV_DIR=$G_dev_
+
+  # Only the first caller does anything.
+  mkdir -p $G_root_/etc $G_dev_ $G_dev_/mapper
+  for i in 0 1 2 3 4 5 6 7; do
+    mknod $G_root_/dev/loop$i b 7 $i
+  done
+  cat > $G_root_/etc/lvm.conf <<-EOF
+  devices {
+    dir = "$G_dev_"
+    scan = "$G_dev_"
+    filter = [ "a/loop/", "a/mirror/", "a/mapper/", "r/.*/" ]
+    cache_dir = "$G_root_/etc"
+    sysfs_scan = 0
+  }
+EOF
+}
+
+if test $(this_test_) != 000-basic; then
+  init_root_dir_
+fi

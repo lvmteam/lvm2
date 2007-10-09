@@ -30,15 +30,16 @@ test_expect_success \
   'set up temp files, loopback devices, PVs, and a VG' \
   'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
    f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
-   pvcreate $d1 $d2      &&
-   vg=$(this_test_)-test-vg-$$  &&
+   pvcreate $d1 $d2                       &&
+   vg=$(this_test_)-test-vg-$$            &&
    vgcreate $vg $d1 $d2'
 
 lv=lvcreate-usage-$$
 
 test_expect_success \
   'lvcreate rejects a negative stripesize' \
-  'lvcreate -L 64M -n $lv -i2 --stripesize -4 $vg 2>err; test $? = 3 &&
+  'lvcreate -L 64M -n $lv -i2 --stripesize -4 $vg 2>err;
+   status=$?; echo status=$?; test $status = 3 &&
    grep "^  Negative stripesize is invalid\$" err'
 
 test_expect_success \

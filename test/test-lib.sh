@@ -37,7 +37,7 @@ say () {
 	echo "* $*"
 }
 
-this_test_() { expr "./$0" : '.*/\(t[0-9]*\)-[^/]*$'; }
+this_test_() { expr "./$0" : '.*/t-\([^/]*\)\.sh$'; }
 
 test "${test_description}" != "" ||
 error "Test script did not set test_description."
@@ -193,8 +193,6 @@ test_done () {
 	esac
 }
 
-. lvm-utils.sh
-
 this_test=$(this_test_)
 
 skip_=0
@@ -208,8 +206,6 @@ if test "$privileges_required_" != ''; then
     fi
 fi
 
-# Test the binaries we have just built.
-abs_top_srcdir=$(cd .. && pwd)
 pwd_=`pwd`
 
 test_dir_=${LVM_TEST_DIR-.}
@@ -239,16 +235,20 @@ do
 	esac
 done
 
-t0=$($abs_srcdir/mkdtemp $test_dir_ lvm-$this_test.XXXXXXXXXX) \
+test_dir_rand_=$($abs_srcdir/mkdtemp $test_dir_ lvm-$this_test.XXXXXXXXXX) \
     || error "failed to create temporary directory in $test_dir_"
 
 # Run each test from within a temporary sub-directory named after the
 # test itself, and arrange to remove it upon exception or normal exit.
-trap 'st=$?; cleanup_; d='"$t0"';
+trap 'st=$?; cleanup_; d='"$test_dir_rand_"';
     cd '"$test_dir_"' && chmod -R u+rwx "$d" && rm -rf "$d" && exit $st' 0
 trap '(exit $?); exit $?' 1 2 13 15
 
-cd $t0 || error "failed to cd to $t0"
+cd $test_dir_rand_ || error "failed to cd to $test_dir_rand_"
+
+if test $skip_ = 0; then
+  . $abs_srcdir/lvm-utils.sh || exit 1
+fi
 
 if ( diff --version < /dev/null 2>&1 | grep GNU ) 2>&1 > /dev/null; then
   compare='diff -u'

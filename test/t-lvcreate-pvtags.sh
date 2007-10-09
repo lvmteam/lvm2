@@ -14,6 +14,13 @@ privileges_required_=1
 
 . ./test-lib.sh
 
+dmsetup_has_dm_devdir_support_ ||
+{
+  say "Your version of dmsetup lacks support for changing DM_DEVDIR."
+  say "Skipping this test"
+  exit 0
+}
+
 cleanup_()
 {
   test -n "$vg" && {
@@ -48,7 +55,7 @@ for n in $(seq 1 $nr_pvs); do
 done
 
 for n in $(seq 1 $nr_pvs); do
-  pvs="$pvs /dev/mapper/pv$n"
+  pvs="$pvs $G_dev_/mapper/pv$n"
 done
 
 test_expect_success \
@@ -66,7 +73,7 @@ test_expect_success '3 stripes with 3 PVs (selected by tag, @fast) is fine' \
 test_expect_failure 'too many stripes(4) for 3 PVs' \
   'lvcreate -l4 -i4 $vg @fast'
 test_expect_failure '2 stripes is too many with just one PV' \
-  'lvcreate -l2 -i2 $vg /dev/mapper/pv1'
+  'lvcreate -l2 -i2 $vg $G_dev_/mapper/pv1'
 
 test_expect_success 'lvcreate mirror' \
   'lvcreate -l1 -m1 $vg @fast'
@@ -77,6 +84,6 @@ test_expect_failure 'lvcreate mirror w/no free PVs' \
 test_expect_failure 'lvcreate mirror (corelog, w/no free PVs)' \
   'lvcreate -l1 -m3 --corelog $vg @fast'
 test_expect_failure 'lvcreate mirror with a single PV arg' \
-  'lvcreate -l1 -m1 --corelog $vg /dev/mapper/pv1'
+  'lvcreate -l1 -m1 --corelog $vg $G_dev_/mapper/pv1'
 
 test_done
