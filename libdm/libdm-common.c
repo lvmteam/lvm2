@@ -463,9 +463,25 @@ void update_devs(void)
 	_pop_node_ops();
 }
 
-int dm_set_dev_dir(const char *dir)
+int dm_set_dev_dir(const char *dev_dir)
 {
-	snprintf(_dm_dir, sizeof(_dm_dir), "%s%s", dir, DM_DIR);
+	size_t len;
+	const char *slash;
+	if (*dev_dir != '/') {
+		log_debug("Invalid dev_dir value, %s: "
+			  "not an absolute name.", dev_dir);
+		return 0;
+	}
+
+	len = strlen(dev_dir);
+	slash = dev_dir[len-1] == '/' ? "" : "/";
+
+	if (snprintf(_dm_dir, sizeof _dm_dir, "%s%s%s", dev_dir, slash, DM_DIR)
+	    >= sizeof _dm_dir) {
+		log_debug("Invalid dev_dir value, %s: name too long.", dev_dir);
+		return 0;
+	}
+
 	return 1;
 }
 
