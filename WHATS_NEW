@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Handle new sysfs subsystem/block/devices directory structure.
   Tests are run with LVM_SYSTEM_DIR pointing to private root and /dev dirs.
   Fix a bug in lvm_dump.sh checks for lvm/dmsetup binaries.
   Fix underquotations in lvm_dump.sh.
