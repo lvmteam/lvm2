@@ -1656,14 +1656,14 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 /*
  * Create a new empty LV.
  */
-struct logical_volume *lv_create_empty(struct format_instance *fi,
-				       const char *name,
+struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,
 				       int import,
 				       struct volume_group *vg)
 {
+	struct format_instance *fi = vg->fid;
 	struct cmd_context *cmd = vg->cmd;
 	struct lv_list *ll = NULL;
 	struct logical_volume *lv;

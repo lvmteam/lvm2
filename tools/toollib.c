@@ -1347,7 +1347,7 @@ struct logical_volume *create_mirror_log(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(log_lv = lv_create_empty(vg->fid, log_name, NULL,
+	if (!(log_lv = lv_create_empty(log_name, NULL,
 				       VISIBLE_LV | LVM_READ | LVM_WRITE,
 				       alloc, 0, vg))) {
 		stack;

@@ -439,7 +439,7 @@ static int _create_layers_for_mirror(struct alloc_handle *ah,
 	}
 
 	for (m = 0; m < num_mirrors; m++) {
-		if (!(img_lvs[m] = lv_create_empty(lv->vg->fid, img_name,
+		if (!(img_lvs[m] = lv_create_empty(img_name,
 					     NULL, LVM_READ | LVM_WRITE,
 					     ALLOC_INHERIT, 0, lv->vg))) {
 			log_error("Aborting. Failed to create mirror image LV. "
