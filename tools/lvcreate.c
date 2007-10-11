@@ -853,7 +853,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 		/* cow LV remains active and becomes snapshot LV */
 
-		if (!vg_add_snapshot(vg->fid, NULL, org, lv, NULL,
+		if (!vg_add_snapshot(vg, NULL, org, lv, NULL,
 				     org->le_count, lp->chunk_size)) {
 			log_err("Couldn't create snapshot.");
 			return 0;

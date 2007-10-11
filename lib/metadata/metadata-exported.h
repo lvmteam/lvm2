@@ -412,7 +412,7 @@ struct lv_segment *find_cow(const struct logical_volume *lv);
 /* Given a cow LV, return its origin */
 struct logical_volume *origin_from_cow(const struct logical_volume *lv);
 
-int vg_add_snapshot(struct format_instance *fid, const char *name,
+int vg_add_snapshot(struct volume_group *vg, const char *name,
 		    struct logical_volume *origin, struct logical_volume *cow,
 		    union lvid *lvid, uint32_t extent_count,
 		    uint32_t chunk_size);

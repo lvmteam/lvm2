@@ -69,7 +69,7 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 		return 0;
 	}
 
-	if (!vg_add_snapshot(seg->lv->vg->fid, seg->lv->name, org, cow,
+	if (!vg_add_snapshot(seg->lv->vg, seg->lv->name, org, cow,
 			     &seg->lv->lvid, seg->len, chunk_size)) {
 		stack;
 		return 0;

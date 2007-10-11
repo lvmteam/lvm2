@@ -644,7 +644,7 @@ int import_snapshots(struct dm_pool *mem __attribute((unused)), struct volume_gr
 				continue;
 
 			/* insert the snapshot */
-			if (!vg_add_snapshot(vg->fid, NULL, org, cow, NULL,
+			if (!vg_add_snapshot(vg, NULL, org, cow, NULL,
 					     org->le_count, 
 					     lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");
