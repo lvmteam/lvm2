@@ -349,8 +349,7 @@ int vg_split_mdas(struct cmd_context *cmd, struct volume_group *vg_from,
 		  struct volume_group *vg_to);
 
 /* Manipulate LVs */
-struct logical_volume *lv_create_empty(struct format_instance *fi,
-				       const char *name,
+struct logical_volume *lv_create_empty(const char *name,
 				       union lvid *lvid,
 				       uint32_t status,
 				       alloc_policy_t alloc,

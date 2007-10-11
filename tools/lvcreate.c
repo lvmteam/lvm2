@@ -762,7 +762,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		}
 	}
 
-	if (!(lv = lv_create_empty(vg->fid, lv_name ? lv_name : "lvol%d", NULL,
+	if (!(lv = lv_create_empty(lv_name ? lv_name : "lvol%d", NULL,
 				   status, lp->alloc, 0, vg))) {
 		stack;
 		goto error;

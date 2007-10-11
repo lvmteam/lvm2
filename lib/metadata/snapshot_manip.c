@@ -53,7 +53,6 @@ int vg_add_snapshot(struct volume_group *vg, const char *name,
 		    struct logical_volume *cow, union lvid *lvid,
 		    uint32_t extent_count, uint32_t chunk_size)
 {
-	struct format_instance *fid = vg->fid;
 	struct logical_volume *snap;
 	struct lv_segment *seg;
 
@@ -65,7 +64,7 @@ int vg_add_snapshot(struct volume_group *vg, const char *name,
 		return 0;
 	}
 
-	if (!(snap = lv_create_empty(fid, name ? name : "snapshot%d",
+	if (!(snap = lv_create_empty(name ? name : "snapshot%d",
 				     lvid, LVM_READ | LVM_WRITE | VISIBLE_LV,
 				     ALLOC_INHERIT, 1, origin->vg))) {
 		stack;
