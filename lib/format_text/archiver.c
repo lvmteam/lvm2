@@ -307,19 +307,19 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 		pv = pvl->pv;
 		if (!(info = info_from_pvid(pv->dev->pvid))) {
 			log_error("PV %s missing from cache",
-				  dev_name(pv->dev));
+				  pv_dev_name(pv));
 			return 0;
 		}
 		if (cmd->fmt != info->fmt) {
 			log_error("PV %s is a different format (seqno %s)",
-				  dev_name(pv->dev), info->fmt->name);
+				  pv_dev_name(pv), info->fmt->name);
 			return 0;
 		}
 		if (!vg->fid->fmt->ops->
 		    pv_setup(vg->fid->fmt, UINT64_C(0), 0, 0, 0,
 			     UINT64_C(0), &vg->fid->metadata_areas, pv, vg)) {
 			log_error("Format-specific setup for %s failed",
-				  dev_name(pv->dev));
+				  pv_dev_name(pv));
 			return 0;
 		}
 	}

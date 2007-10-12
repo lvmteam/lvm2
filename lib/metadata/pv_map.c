@@ -46,7 +46,7 @@ static int _create_single_area(struct dm_pool *mem, struct pv_map *pvm,
 	}
 
 	log_debug("Allowing allocation on %s start PE %" PRIu32 " length %"
-		  PRIu32, dev_name(pvm->pv->dev), start, length);
+		  PRIu32, pv_dev_name(pvm->pv), start, length);
 	pva->map = pvm;
 	pva->start = start;
 	pva->count = length;

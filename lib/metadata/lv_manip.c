@@ -526,7 +526,7 @@ static int _log_parallel_areas(struct dm_pool *mem, struct list *parallel_areas)
 
 	list_iterate_items(spvs, parallel_areas) {
 		list_iterate_items(pvl, &spvs->pvs) {
-			if (!dm_pool_grow_object(mem, dev_name(pvl->pv->dev), strlen(dev_name(pvl->pv->dev)))) {
+			if (!dm_pool_grow_object(mem, pv_dev_name(pvl->pv), strlen(pv_dev_name(pvl->pv)))) {
 				log_error("dm_pool_grow_object failed");
 				dm_pool_abandon_object(mem);
 				return 0;

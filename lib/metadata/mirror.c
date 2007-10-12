@@ -651,7 +651,7 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 				pv = seg_pv(seg, s);
 				pe = seg_pe(seg, s);
 				log_very_verbose("Moving %s:%u-%u of %s/%s",
-						 dev_name(pvl->pv->dev),
+						 pv_dev_name(pvl->pv),
 						 pe, pe + seg->area_len - 1,
 						 lv->vg->name, lv->name);
 

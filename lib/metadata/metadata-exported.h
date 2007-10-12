@@ -470,6 +470,7 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 */
 struct device *pv_dev(const pv_t *pv);
 const char *pv_vg_name(const pv_t *pv);
+const char *pv_dev_name(const pv_t *pv);
 uint64_t pv_size(const pv_t *pv);
 uint32_t pv_status(const pv_t *pv);
 uint32_t pv_pe_size(const pv_t *pv);

@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Add pv_dev_name() to access PV device name.
   Add const attributes to pv accessor functions.
   Refactor vg_add_snapshot and lv_create_empty.
   Handle new sysfs subsystem/block/devices directory structure.

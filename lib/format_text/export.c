@@ -360,7 +360,7 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 static const char *_get_pv_name(struct formatter *f, struct physical_volume *pv)
 {
 	return (pv) ? (const char *)
-	    dm_hash_lookup(f->pv_names, dev_name(pv->dev)) : "Missing";
+	    dm_hash_lookup(f->pv_names, pv_dev_name(pv)) : "Missing";
 }
 
 static int _print_pvs(struct formatter *f, struct volume_group *vg)
@@ -391,7 +391,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 		}
 
 		outf(f, "id = \"%s\"", buffer);
-		if (!out_hint(f, "device = \"%s\"", dev_name(pv->dev))) {
+		if (!out_hint(f, "device = \"%s\"", pv_dev_name(pv))) {
 			stack;
 			return 0;
 		}
@@ -636,7 +636,7 @@ static int _build_pv_names(struct formatter *f, struct volume_group *vg)
 		if (!(name = dm_pool_strdup(f->mem, buffer)))
 			return_0;
 
-		if (!dm_hash_insert(f->pv_names, dev_name(pv->dev), name))
+		if (!dm_hash_insert(f->pv_names, pv_dev_name(pv), name))
 			return_0;
 	}
 

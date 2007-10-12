@@ -139,7 +139,7 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 
 	if (pvd->pe_total < PE_SIZE_PV_SIZE_REL) {
 		log_error("Too few extents on %s.  Try smaller extent size.",
-			  dev_name(pv->dev));
+			  pv_dev_name(pv));
 		dm_free(pvd);
 		return 0;
 	}
@@ -160,7 +160,7 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 
 	if (pvd->pe_total > MAX_PE_TOTAL) {
 		log_error("Metadata extent limit (%u) exceeded for %s - "
-			  "%u required", MAX_PE_TOTAL, dev_name(pv->dev),
+			  "%u required", MAX_PE_TOTAL, pv_dev_name(pv),
 			  pvd->pe_total);
 		dm_free(pvd);
 		return 0;
