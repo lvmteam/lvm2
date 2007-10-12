@@ -304,9 +304,9 @@ int fixup_imported_mirrors(struct volume_group *vg);
 /*
  * Begin skeleton for external LVM library
  */
-struct id pv_id(pv_t *pv);
-const struct format_type *pv_format_type(pv_t *pv);
-struct id pv_vgid(pv_t *pv);
+struct id pv_id(const pv_t *pv);
+const struct format_type *pv_format_type(const pv_t *pv);
+struct id pv_vgid(const pv_t *pv);
 
 pv_t *pv_by_path(struct cmd_context *cmd, const char *pv_name);
 int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
