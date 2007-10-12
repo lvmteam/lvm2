@@ -468,15 +468,15 @@ char *generate_lv_name(struct volume_group *vg, const char *format,
 /*
 * Begin skeleton for external LVM library
 */
-struct device *pv_dev(pv_t *pv);
-const char *pv_vg_name(pv_t *pv);
-uint64_t pv_size(pv_t *pv);
-uint32_t pv_status(pv_t *pv);
-uint32_t pv_pe_size(pv_t *pv);
-uint64_t pv_pe_start(pv_t *pv);
-uint32_t pv_pe_count(pv_t *pv);
-uint32_t pv_pe_alloc_count(pv_t *pv);
+struct device *pv_dev(const pv_t *pv);
+const char *pv_vg_name(const pv_t *pv);
+uint64_t pv_size(const pv_t *pv);
+uint32_t pv_status(const pv_t *pv);
+uint32_t pv_pe_size(const pv_t *pv);
+uint64_t pv_pe_start(const pv_t *pv);
+uint32_t pv_pe_count(const pv_t *pv);
+uint32_t pv_pe_alloc_count(const pv_t *pv);
 
-uint32_t vg_status(vg_t *vg);
+uint32_t vg_status(const vg_t *vg);
 
 #endif
