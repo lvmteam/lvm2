@@ -710,12 +710,6 @@ pv_t *pv_create(const struct format_type *fmt,
 
 static void _free_pv(struct dm_pool *mem, struct physical_volume *pv)
 {
-	/*
-	 * FIXME: leak pv->vg_name
-	 * Adding dm_pool_free(mem, pv->vg_name) - causes warning w/'const'
-	 * Perhaps pv->vg_name should be initialized to ORPHAN, not alloc'd
-	 * memory?
-	 */
 	dm_pool_free(mem, pv);
 }
 
