@@ -708,6 +708,45 @@ pv_t *pv_create(const struct format_type *fmt,
 			  pvmetadatasize, mdas);
 }
 
+static void _free_pv(struct dm_pool *mem, struct physical_volume *pv)
+{
+	/*
+	 * FIXME: leak pv->vg_name
+	 * Adding dm_pool_free(mem, pv->vg_name) - causes warning w/'const'
+	 * Perhaps pv->vg_name should be initialized to ORPHAN, not alloc'd
+	 * memory?
+	 */
+	dm_pool_free(mem, pv);
+}
+
+static struct physical_volume *_alloc_pv(struct dm_pool *mem)
+{
+	struct physical_volume *pv = dm_pool_zalloc(mem, sizeof(*pv));
+
+	if (!pv) {
+		stack;
+		return NULL;
+	}
+
+	if (!(pv->vg_name = dm_pool_zalloc(mem, NAME_LEN))) {
+		dm_pool_free(mem, pv);
+		return NULL;
+	}
+
+	pv->pe_size = 0;
+	pv->pe_start = 0;
+	pv->pe_count = 0;
+	pv->pe_alloc_count = 0;
+	pv->fmt = NULL;
+
+	pv->status = ALLOCATABLE_PV;
+
+	list_init(&pv->tags);
+	list_init(&pv->segments);
+
+	return pv;
+}
+
 /* Sizes in sectors */
 static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  struct device *dev,
@@ -719,27 +758,20 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  uint64_t pvmetadatasize, struct list *mdas)
 {
 	struct dm_pool *mem = fmt->cmd->mem;
-	struct physical_volume *pv = dm_pool_zalloc(mem, sizeof(*pv));
+	struct physical_volume *pv = _alloc_pv(mem);
 
-	if (!pv) {
-		stack;
+	if (!pv)
 		return NULL;
-	}
 
 	if (id)
 		memcpy(&pv->id, id, sizeof(*id));
 	else if (!id_create(&pv->id)) {
 		log_error("Failed to create random uuid for %s.",
 			  dev_name(dev));
-		return NULL;
+		goto bad;
 	}
 
 	pv->dev = dev;
-
-	if (!(pv->vg_name = dm_pool_zalloc(mem, NAME_LEN)))
-		goto_bad;
-
-	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
 		log_error("%s: Couldn't get size.", pv_dev_name(pv));
@@ -761,14 +793,7 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 		goto bad;
 	}
 
-	pv->pe_size = 0;
-	pv->pe_start = 0;
-	pv->pe_count = 0;
-	pv->pe_alloc_count = 0;
 	pv->fmt = fmt;
-
-	list_init(&pv->tags);
-	list_init(&pv->segments);
 
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
 				existing_extent_size,
@@ -781,7 +806,7 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 	return pv;
 
       bad:
-	dm_pool_free(mem, pv);
+	_free_pv(mem, pv);
 	return NULL;
 }
 
