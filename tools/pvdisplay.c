@@ -24,7 +24,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	int ret = ECMD_PROCESSED;
 	uint64_t size;
 
-	const char *pv_name = dev_name(pv_dev(pv));
+	const char *pv_name = pv_dev_name(pv);
 
 	 if (pv_vg_name(pv)) {
 	         if (!lock_vol(cmd, pv_vg_name(pv), LCK_VG_READ)) {

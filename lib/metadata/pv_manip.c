@@ -122,7 +122,7 @@ int pv_split_segment(struct physical_volume *pv, uint32_t pe)
 
 	if (!(peg = find_peg_by_pe(pv, pe))) {
 		log_error("Segment with extent %" PRIu32 " in PV %s not found",
-			  pe, dev_name(pv->dev));
+			  pe, pv_dev_name(pv));
 		return 0;
 	}
 
@@ -162,7 +162,7 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 
 	if (!(peg = find_peg_by_pe(pv, pe))) {
 		log_error("Missing PV segment on %s at %u.",
-			  dev_name(pv->dev), pe);
+			  pv_dev_name(pv), pe);
 		return NULL;
 	}
 
@@ -179,7 +179,7 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 {
 	if (!peg->lvseg) {
 		log_error("release_pv_segment with unallocated segment: "
-			  "%s PE %" PRIu32, dev_name(peg->pv->dev), peg->pe);
+			  "%s PE %" PRIu32, pv_dev_name(peg->pv), peg->pe);
 		return 0;
 	}
 
@@ -279,7 +279,7 @@ int check_pv_segments(struct volume_group *vg)
 
 			/* FIXME Remove this next line eventually */
 			log_debug("%s %u: %6u %6u: %s(%u:%u)",
-				  dev_name(pv->dev), segno++, peg->pe, peg->len,
+				  pv_dev_name(pv), segno++, peg->pe, peg->len,
 				  peg->lvseg ? peg->lvseg->lv->name : "NULL",
 				  peg->lvseg ? peg->lvseg->le : 0, s);
 			/* FIXME Add details here on failure instead */
@@ -353,7 +353,7 @@ static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg, uint3
 	if (new_pe_count < pv->pe_alloc_count) {
 		log_error("%s: cannot resize to %" PRIu32 " extents "
 			  "as %" PRIu32 " are allocated.",
-			  dev_name(pv->dev), new_pe_count,
+			  pv_dev_name(pv), new_pe_count,
 			  pv->pe_alloc_count);
 		return 0;
 	}
@@ -366,7 +366,7 @@ static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg, uint3
 		if (peg->lvseg) {
 			log_error("%s: cannot resize to %" PRIu32 " extents as "
 				  "later ones are allocated.",
-				  dev_name(pv->dev), new_pe_count);
+				  pv_dev_name(pv), new_pe_count);
 			return 0;
 		}
 	}
@@ -397,7 +397,7 @@ static int _extend_pv(struct physical_volume *pv, struct volume_group *vg,
 
 	if ((uint64_t) new_pe_count * pv->pe_size > pv->size ) {
 		log_error("%s: cannot resize to %" PRIu32 " extents as there "
-			  "is only room for %" PRIu64 ".", dev_name(pv->dev),
+			  "is only room for %" PRIu64 ".", pv_dev_name(pv),
 			  new_pe_count, pv->size / pv->pe_size);
 		return 0;
 	}
@@ -426,13 +426,13 @@ int pv_resize(struct physical_volume *pv,
 {
 	if ((new_pe_count == pv->pe_count)) {
 		log_verbose("No change to size of physical volume %s.",
-			    dev_name(pv->dev));
+			    pv_dev_name(pv));
 		return 1;
 	}
 
 	log_verbose("Resizing physical volume %s from %" PRIu32
 		    " to %" PRIu32 " extents.",
-		    dev_name(pv->dev), pv->pe_count, new_pe_count);
+		    pv_dev_name(pv), pv->pe_count, new_pe_count);
 
 	if (new_pe_count > pv->pe_count)
 		return _extend_pv(pv, vg, new_pe_count);
@@ -450,7 +450,7 @@ int pv_resize_single(struct cmd_context *cmd,
 	uint64_t size = 0;
 	uint32_t new_pe_count = 0;
 	struct list mdas;
-	const char *pv_name = dev_name(pv_dev(pv));
+	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name;
 
 	list_init(&mdas);

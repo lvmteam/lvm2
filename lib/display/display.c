@@ -246,7 +246,7 @@ void pvdisplay_colons(const struct physical_volume *pv)
 	}
 
 	log_print("%s:%s:%" PRIu64 ":-1:%u:%u:-1:%" PRIu32 ":%u:%u:%u:%s",
-		  dev_name(pv->dev), pv->vg_name, pv->size,
+		  pv_dev_name(pv), pv->vg_name, pv->size,
 		  /* FIXME pv->pv_number, Derive or remove? */
 		  pv->status,	/* FIXME Support old or new format here? */
 		  pv->status & ALLOCATABLE_PV,	/* FIXME remove? */
@@ -305,7 +305,7 @@ void pvdisplay_full(const struct cmd_context *cmd,
 	}
 
 	log_print("--- %sPhysical volume ---", pv->pe_size ? "" : "NEW ");
-	log_print("PV Name               %s", dev_name(pv->dev));
+	log_print("PV Name               %s", pv_dev_name(pv));
 	log_print("VG Name               %s%s", pv->vg_name,
 		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
@@ -363,7 +363,7 @@ int pvdisplay_short(const struct cmd_context *cmd __attribute((unused)),
 		return 0;
 	}
 
-	log_print("PV Name               %s     ", dev_name(pv->dev));
+	log_print("PV Name               %s     ", pv_dev_name(pv));
 	/* FIXME  pv->pv_number); */
 	log_print("PV UUID               %s", *uuid ? uuid : "none");
 	log_print("PV Status             %sallocatable",
@@ -515,7 +515,7 @@ void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre)
 		/* FIXME Re-check the conditions for 'Missing' */
 		log_print("%sPhysical volume\t%s", pre,
 			  seg_pv(seg, s) ?
-			  dev_name(seg_dev(seg, s)) :
+			  pv_dev_name(seg_pv(seg, s)) :
 			    "Missing");
 
 		if (seg_pv(seg, s))

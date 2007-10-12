@@ -241,7 +241,7 @@ int vg_rename(struct cmd_context *cmd, struct volume_group *vg,
 	list_iterate_items(pvl, &vg->pvs) {
 		if (!(pvl->pv->vg_name = dm_pool_strdup(mem, new_name))) {
 			log_error("pv->vg_name allocation failed for '%s'",
-				  dev_name(pvl->pv->dev));
+				  pv_dev_name(pvl->pv));
 			return 0;
 		}
 	}
@@ -313,12 +313,12 @@ int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 	list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 		log_verbose("Removing physical volume \"%s\" from "
-			    "volume group \"%s\"", dev_name(pv_dev(pv)), vg_name);
+			    "volume group \"%s\"", pv_dev_name(pv), vg_name);
 		pv->vg_name = ORPHAN;
 		pv->status = ALLOCATABLE_PV;
 
 		if (!dev_get_size(pv_dev(pv), &pv->size)) {
-			log_error("%s: Couldn't get size.", dev_name(pv_dev(pv)));
+			log_error("%s: Couldn't get size.", pv_dev_name(pv));
 			ret = 0;
 			continue;
 		}
@@ -327,7 +327,7 @@ int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 		if (!pv_write(cmd, pv, NULL, INT64_C(-1))) {
 			log_error("Failed to remove physical volume \"%s\""
 				  " from volume group \"%s\"",
-				  dev_name(pv_dev(pv)), vg_name);
+				  pv_dev_name(pv), vg_name);
 			ret = 0;
 		}
 	}
@@ -530,13 +530,13 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 		pv = pvl->pv;
 
 		pv->pe_size = new_size;
-		if (!_recalc_extents(&pv->pe_count, dev_name(pv->dev), "",
+		if (!_recalc_extents(&pv->pe_count, pv_dev_name(pv), "",
 				     old_size, new_size)) {
 			stack;
 			return 0;
 		}
 
-		if (!_recalc_extents(&pv->pe_alloc_count, dev_name(pv->dev),
+		if (!_recalc_extents(&pv->pe_alloc_count, pv_dev_name(pv),
 				     " allocated space", old_size, new_size)) {
 			stack;
 			return 0;
@@ -547,13 +547,13 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 			if (pvseg->lvseg)
 				continue;
 
-			if (!_recalc_extents(&pvseg->pe, dev_name(pv->dev),
+			if (!_recalc_extents(&pvseg->pe, pv_dev_name(pv),
 					     " PV segment start", old_size,
 					     new_size)) {
 				stack;
 				return 0;
 			}
-			if (!_recalc_extents(&pvseg->len, dev_name(pv->dev),
+			if (!_recalc_extents(&pvseg->len, pv_dev_name(pv),
 					     " PV segment length", old_size,
 					     new_size)) {
 				stack;
@@ -742,22 +742,22 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
-		log_error("%s: Couldn't get size.", dev_name(pv->dev));
+		log_error("%s: Couldn't get size.", pv_dev_name(pv));
 		goto bad;
 	}
 
 	if (size) {
 		if (size > pv->size)
 			log_warn("WARNING: %s: Overriding real size. "
-				  "You could lose data.", dev_name(pv->dev));
+				  "You could lose data.", pv_dev_name(pv));
 		log_verbose("%s: Pretending size is %" PRIu64 " sectors.",
-			    dev_name(pv->dev), size);
+			    pv_dev_name(pv), size);
 		pv->size = size;
 	}
 
 	if (pv->size < PV_MIN_SIZE) {
 		log_error("%s: Size must exceed minimum of %ld sectors.",
-			  dev_name(pv->dev), PV_MIN_SIZE);
+			  pv_dev_name(pv), PV_MIN_SIZE);
 		goto bad;
 	}
 
@@ -775,7 +775,7 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 				pvmetadatacopies, pvmetadatasize, mdas,
 				pv, NULL)) {
 		log_error("%s: Format-specific setup of physical volume "
-			  "failed.", dev_name(pv->dev));
+			  "failed.", pv_dev_name(pv));
 		goto bad;
 	}
 	return pv;
@@ -988,7 +988,7 @@ int vg_validate(struct volume_group *vg)
 					 stack;
 				log_error("Internal error: Duplicate PV id "
 					  "%s detected for %s in %s.",
-					  uuid, dev_name(pvl->pv->dev),
+					  uuid, pv_dev_name(pvl->pv),
 					  vg->name);
 				r = 0;
 			}
@@ -996,7 +996,7 @@ int vg_validate(struct volume_group *vg)
 
 		if (strcmp(pvl->pv->vg_name, vg->name)) {
 			log_error("Internal error: VG name for PV %s is corrupted",
-				  dev_name(pvl->pv->dev));
+				  pv_dev_name(pvl->pv));
 			r = 0;
 		}
 	}
@@ -1215,7 +1215,7 @@ static int _update_pv_list(struct list *all_pvs, struct volume_group *vg)
 		/* PV is not on list so add it.  Note that we don't copy it. */
        		if (!(pvl2 = dm_pool_zalloc(vg->cmd->mem, sizeof(*pvl2)))) {
 			log_error("pv_list allocation for '%s' failed",
-				  dev_name(pvl->pv->dev));
+				  pv_dev_name(pvl->pv));
 			return 0;
 		}
 		pvl2->pv = pvl->pv;
@@ -1454,7 +1454,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			if (!id_write_format(&pvl->pv->id, uuid, sizeof(uuid)))
 				return_NULL;
 			log_error("Removing PV %s (%s) that no longer belongs to VG %s",
-				  dev_name(pvl->pv->dev), uuid, correct_vg->name);
+				  pv_dev_name(pvl->pv), uuid, correct_vg->name);
 			if (!pv_write_orphan(cmd, pvl->pv))
 				return_NULL;
       next_pv:
@@ -1781,14 +1781,14 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
-		log_error("%s: Couldn't get size.", dev_name(pv->dev));
+		log_error("%s: Couldn't get size.", pv_dev_name(pv));
 		return 0;
 	}
 
 	if (!_pv_write(cmd, pv, NULL, INT64_C(-1))) {
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" after removal from \"%s\"",
-			  dev_name(pv->dev), old_vg_name);
+			  pv_dev_name(pv), old_vg_name);
 		return 0;
 	}
 
@@ -1950,6 +1950,11 @@ struct device *pv_dev(const pv_t *pv)
 const char *pv_vg_name(const pv_t *pv)
 {
 	return pv_field(pv, vg_name);
+}
+
+const char *pv_dev_name(const pv_t *pv)
+{
+	return dev_name(pv_dev(pv));
 }
 
 uint64_t pv_size(const pv_t *pv)

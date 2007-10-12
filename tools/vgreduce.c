@@ -365,7 +365,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 			    void *handle __attribute((unused)))
 {
 	struct pv_list *pvl;
-	const char *name = dev_name(pv_dev(pv));
+	const char *name = pv_dev_name(pv);
 
 	if (pv_pe_alloc_count(pv)) {
 		log_error("Physical volume \"%s\" still in use", name);
@@ -392,7 +392,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv_dev(pv), &pv->size)) {
-		log_error("%s: Couldn't get size.", dev_name(pv_dev(pv)));
+		log_error("%s: Couldn't get size.", pv_dev_name(pv));
 		return ECMD_FAILED;
 	}
 

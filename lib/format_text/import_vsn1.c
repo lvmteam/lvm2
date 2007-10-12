@@ -202,7 +202,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	if ((cn = find_config_node(pvn, "tags")) &&
 	    !(read_tags(mem, &pv->tags, cn->v))) {
 		log_error("Couldn't read tags for physical volume %s in %s.",
-			  dev_name(pv->dev), vg->name);
+			  pv_dev_name(pv), vg->name);
 		return 0;
 	}
 
@@ -218,19 +218,19 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
         /* Fix up pv size if missing */
         if (!pv->size && pv->dev) {
                 if (!dev_get_size(pv->dev, &pv->size)) {
-                        log_error("%s: Couldn't get size.", dev_name(pv->dev));
+                        log_error("%s: Couldn't get size.", pv_dev_name(pv));
                         return 0;
                 }
                 log_verbose("Fixing up missing format1 size (%s) "
                             "for PV %s", display_size(fid->fmt->cmd, pv->size),
-                            dev_name(pv->dev));
+                            pv_dev_name(pv));
                 if (vg) {
                         size = pv->pe_count * (uint64_t) vg->extent_size +
                                pv->pe_start;
                         if (size > pv->size)
                                 log_error("WARNING: Physical Volume %s is too "
                                           "large for underlying device",
-                                          dev_name(pv->dev));
+                                          pv_dev_name(pv));
                 }
         }
 

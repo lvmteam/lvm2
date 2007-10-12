@@ -74,7 +74,7 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	    strncmp(vg->system_id, (char *)pvd->system_id, sizeof(pvd->system_id)))
 		    log_very_verbose("System ID %s on %s differs from %s for "
 				     "volume group", pvd->system_id,
-				     dev_name(pv->dev), vg->system_id);
+				     pv_dev_name(pv), vg->system_id);
 
 	/*
 	 * If exported, we still need to flag in pv->status too because
@@ -95,19 +95,19 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	/* Fix up pv size if missing */
 	if (!pv->size) {
 		if (!dev_get_size(dev, &pv->size)) {
-			log_error("%s: Couldn't get size.", dev_name(pv->dev));
+			log_error("%s: Couldn't get size.", pv_dev_name(pv));
 			return 0;
 		}
 		log_verbose("Fixing up missing format1 size (%s) "
 			    "for PV %s", display_size(fmt->cmd, pv->size),
-			    dev_name(pv->dev));
+			    pv_dev_name(pv));
 		if (vg) {
 			size = pv->pe_count * (uint64_t) vg->extent_size +
 			       pv->pe_start;
 			if (size > pv->size)
 				log_error("WARNING: Physical Volume %s is too "
 					  "large for underlying device",
-					  dev_name(pv->dev));
+					  pv_dev_name(pv));
 		}
 	}
 

@@ -95,7 +95,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		if (pv_uses_vg(pvl->pv, vg_from)) {
 			log_error("Physical volume %s might be constructed "
 				  "from same volume group %s.",
-				  dev_name(pvl->pv->dev), vg_from->name);
+				  pv_dev_name(pvl->pv), vg_from->name);
 			goto error;
 		}
 	}
@@ -104,7 +104,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		if (pv_uses_vg(pvl->pv, vg_to)) {
 			log_error("Physical volume %s might be constructed "
 				  "from same volume group %s.",
-				  dev_name(pvl->pv->dev), vg_to->name);
+				  pv_dev_name(pvl->pv), vg_to->name);
 			goto error;
 		}
 	}

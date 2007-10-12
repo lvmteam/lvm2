@@ -1000,7 +1000,7 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 	struct pv_list *new_pvl = NULL, *pvl2;
 	struct list *pe_ranges;
 
-	pvname = dev_name(pvl->pv->dev);
+	pvname = pv_dev_name(pvl->pv);
 	if (allocatable_only && !(pvl->pv->status & ALLOCATABLE_PV)) {
 		log_error("Physical volume %s not allocatable", pvname);
 		return 1;
@@ -1036,7 +1036,7 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 	}
 
 	/* Determine selected physical extents */
-	if (!_parse_pes(mem, colon, new_pvl->pe_ranges, dev_name(pvl->pv->dev),
+	if (!_parse_pes(mem, colon, new_pvl->pe_ranges, pv_dev_name(pvl->pv),
 			pvl->pv->pe_count)) {
 		stack;
 		return 0;

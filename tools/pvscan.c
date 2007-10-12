@@ -31,7 +31,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 
 	/* short listing? */
 	if (arg_count(cmd, short_ARG) > 0) {
-		log_print("%s", dev_name(pv_dev(pv)));
+		log_print("%s", pv_dev_name(pv));
 		return;
 	}
 
@@ -57,9 +57,9 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		}
 
 		sprintf(pv_tmp_name, "%-*s with UUID %s",
-			pv_max_name_len - 2, dev_name(pv_dev(pv)), uuid);
+			pv_max_name_len - 2, pv_dev_name(pv), uuid);
 	} else {
-		sprintf(pv_tmp_name, "%s", dev_name(pv_dev(pv)));
+		sprintf(pv_tmp_name, "%s", pv_dev_name(pv));
 	}
 
 	if (!*pv_vg_name(pv)) {
@@ -173,7 +173,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 	pv_max_name_len = vg_max_name_len = 0;
 	list_iterate_items(pvl, pvslist) {
 		pv = pvl->pv;
-		len = strlen(dev_name(pv_dev(pv)));
+		len = strlen(pv_dev_name(pv));
 		if (pv_max_name_len < len)
 			pv_max_name_len = len;
 		len = strlen(pv_vg_name(pv));
