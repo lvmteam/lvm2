@@ -17,6 +17,8 @@
 #include "metadata.h"
 #include "xlate.h"
 
+#ifdef linux
+
 /* Lifted from <linux/raid/md_p.h> because of difficulty including it */
 
 #define MD_SB_MAGIC 0xa92b4efc
@@ -25,14 +27,25 @@
 #define MD_NEW_SIZE_SECTORS(x) ((x & ~(MD_RESERVED_SECTORS - 1)) \
 				- MD_RESERVED_SECTORS)
 
+static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
+{
+	uint32_t md_magic;
+
+	/* Version 1 is little endian; version 0.90.0 is machine endian */
+	if (dev_read(dev, sb_offset, sizeof(uint32_t), &md_magic) &&
+	    ((md_magic == xlate32(MD_SB_MAGIC)) ||
+	     (md_magic == MD_SB_MAGIC)))
+		return 1;
+
+	return 0;
+}
+
 /*
  * Returns -1 on error
  */
 int dev_is_md(struct device *dev, uint64_t *sb)
 {
 	int ret = 0;
-
-#ifdef linux
 
 	uint64_t size, sb_offset;
 	uint32_t md_magic;
@@ -53,10 +66,7 @@ int dev_is_md(struct device *dev, uint64_t *sb)
 	sb_offset = MD_NEW_SIZE_SECTORS(size) << SECTOR_SHIFT;
 
 	/* Check if it is an md component device. */
-	/* Version 1 is little endian; version 0.90.0 is machine endian */
-	if (dev_read(dev, sb_offset, sizeof(uint32_t), &md_magic) &&
-	    ((md_magic == xlate32(MD_SB_MAGIC)) ||
-	     (md_magic == MD_SB_MAGIC))) {
+	if (_dev_has_md_magic(dev, sb_offset)) {
 		if (sb)
 			*sb = sb_offset;
 		ret = 1;
@@ -65,7 +75,14 @@ int dev_is_md(struct device *dev, uint64_t *sb)
 	if (!dev_close(dev))
 		stack;
 
-#endif
 	return ret;
 }
 
+#else
+
+int dev_is_md(struct device *dev __attribute((unused)), uint64_t *sb __attribute((unused)))
+{
+	return 0;
+}
+
+#endif
