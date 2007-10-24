@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Detect md superblocks version 1.0, 1.1 and 1.2.
   Add _alloc_pv() and _free_pv() from _pv_create() code and fix error paths.
   Add pv_dev_name() to access PV device name.
   Add const attributes to pv accessor functions.

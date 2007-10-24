@@ -40,15 +40,35 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 	return 0;
 }
 
+/* FIXME Explain this algorithm */
+static uint64_t _v1_sb_offset(uint64_t size, int minor_version)
+{
+	uint64_t sb_offset;
+
+	switch(minor_version) {
+	case 0:
+		sb_offset = (size - 8 * 2) & ~(4 * 2 - 1);
+		break;
+	case 1:
+		sb_offset = 0;
+		break;
+	case 2:
+		sb_offset = 4 * 2;
+		break;
+	}
+	sb_offset <<= SECTOR_SHIFT;
+
+	return sb_offset;
+}
+
 /*
  * Returns -1 on error
  */
 int dev_is_md(struct device *dev, uint64_t *sb)
 {
-	int ret = 0;
-
+	int ret = 1;
+	unsigned minor = 0;
 	uint64_t size, sb_offset;
-	uint32_t md_magic;
 
 	if (!dev_get_size(dev, &size)) {
 		stack;
@@ -63,24 +83,35 @@ int dev_is_md(struct device *dev, uint64_t *sb)
 		return -1;
 	}
 
-	sb_offset = MD_NEW_SIZE_SECTORS(size) << SECTOR_SHIFT;
-
 	/* Check if it is an md component device. */
-	if (_dev_has_md_magic(dev, sb_offset)) {
-		if (sb)
-			*sb = sb_offset;
-		ret = 1;
-	}
+	/* Version 0.90.0 */
+	sb_offset = MD_NEW_SIZE_SECTORS(size) << SECTOR_SHIFT;
+	if (_dev_has_md_magic(dev, sb_offset))
+		goto out;
 
+	/* Version 1, try v1.0 -> v1.2 */
+	do {
+		sb_offset = _v1_sb_offset(size, minor);
+		if (_dev_has_md_magic(dev, sb_offset))
+			goto out;
+	} while (++minor <= 2);
+
+	ret = 0;
+
+out:
 	if (!dev_close(dev))
 		stack;
+
+	if (ret && sb)
+		*sb = sb_offset;
 
 	return ret;
 }
 
 #else
 
-int dev_is_md(struct device *dev __attribute((unused)), uint64_t *sb __attribute((unused)))
+int dev_is_md(struct device *dev __attribute((unused)),
+	      uint64_t *sb __attribute((unused)))
 {
 	return 0;
 }
