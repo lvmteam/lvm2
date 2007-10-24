@@ -22,7 +22,7 @@
 /* Lifted from <linux/raid/md_p.h> because of difficulty including it */
 
 #define MD_SB_MAGIC 0xa92b4efc
-#define MD_RESERVED_BYTES (64 * 1024)
+#define MD_RESERVED_BYTES (64 * 1024ULL)
 #define MD_RESERVED_SECTORS (MD_RESERVED_BYTES / 512)
 #define MD_NEW_SIZE_SECTORS(x) ((x & ~(MD_RESERVED_SECTORS - 1)) \
 				- MD_RESERVED_SECTORS)
@@ -40,14 +40,21 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 	return 0;
 }
 
-/* FIXME Explain this algorithm */
-static uint64_t _v1_sb_offset(uint64_t size, int minor_version)
+/*
+ * Calculate the position of the superblock.
+ * It is always aligned to a 4K boundary and
+ * depending on minor_version, it can be:
+ * 0: At least 8K, but less than 12K, from end of device
+ * 1: At start of device
+ * 2: 4K from start of device.
+ */
+static uint64_t _v1_sb_offset(uint64_t size, unsigned minor_version)
 {
 	uint64_t sb_offset;
 
 	switch(minor_version) {
 	case 0:
-		sb_offset = (size - 8 * 2) & ~(4 * 2 - 1);
+		sb_offset = (size - 8 * 2) & ~(4 * 2 - 1ULL);
 		break;
 	case 1:
 		sb_offset = 0;
