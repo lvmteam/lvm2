@@ -93,7 +93,7 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		return 0;
 	}
 
-	if (*pv->vg_name) {
+	if (!is_orphan_vg(pv->vg_name)) {
 		log_error("Physical volume '%s' is already in volume group "
 			  "'%s'", pv_name, pv->vg_name);
 		return 0;
@@ -928,7 +928,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 	}
 
 	/* FIXME Can fail when no PV mda */
-	if (!pv->vg_name[0]) {
+	if (is_orphan_vg(pv->vg_name)) {
 		log_error("Physical volume %s not in a volume group", pv_name);
 		return NULL;
 	}
@@ -1272,7 +1272,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct list all_pvs;
 	char uuid[64] __attribute((aligned(8)));
 
-	if (!*vgname) {
+	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
 			log_error("Internal error: vg_read requires vgname "
 				  "with pre-commit.");
@@ -1536,7 +1536,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 
 	/* Is corresponding vgname already cached? */
 	if ((vginfo = vginfo_from_vgid(vgid)) &&
-	    vginfo->vgname && *vginfo->vgname) {
+	    vginfo->vgname && !is_orphan_vg(vginfo->vgname)) {
 		if ((vg = _vg_read(cmd, vginfo->vgname, vgid,
 				   &consistent, precommitted)) &&
 		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
@@ -1566,7 +1566,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 
 	list_iterate_items(strl, vgnames) {
 		vgname = strl->str;
-		if (!vgname || !*vgname)
+		if (!vgname || is_orphan_vg(vgname))
 			continue;	// FIXME Unnecessary? 
 		consistent = 0;
 		if ((vg = _vg_read(cmd, vgname, vgid, &consistent,
@@ -1778,7 +1778,7 @@ static int _pv_write(struct cmd_context *cmd __attribute((unused)),
 		return 0;
 	}
 
-	if (*pv->vg_name || pv->pe_alloc_count) {
+	if (!is_orphan_vg(pv->vg_name) || pv->pe_alloc_count) {
 		log_error("Assertion failed: can't _pv_write non-orphan PV "
 			  "(in VG %s)", pv->vg_name);
 		return 0;
@@ -1815,14 +1815,22 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 }
 
 /**
+ * is_orphan_vg - Determine whether a vg_name is an orphan
+ * @vg_name: pointer to the vg_name
+ */
+int is_orphan_vg(const char *vg_name)
+{
+	return (vg_name[0] ? 0 : 1);
+}
+
+/**
  * is_orphan - Determine whether a pv is an orphan based on its vg_name
  * @pv: handle to the physical volume
  */
 int is_orphan(pv_t *pv)
 {
-	return (pv_field(pv, vg_name)[0] ? 0 : 1);
+	return is_orphan_vg(pv_field(pv, vg_name));
 }
-
 
 /*
  * Returns:

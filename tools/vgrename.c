@@ -65,7 +65,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 
 	list_iterate_items(sl, vgids) {
 		vgid = sl->str;
-		if (!vgid || !(vg_name = vgname_from_vgid(NULL, vgid)) || !*vg_name)
+		if (!vgid || !(vg_name = vgname_from_vgid(NULL, vgid))
+					|| is_orphan_vg(vg_name))
 			continue;
 		if (!strcmp(vg_name, vg_name_old)) {
 			if (match) {
