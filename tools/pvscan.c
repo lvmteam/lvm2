@@ -62,7 +62,7 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 		sprintf(pv_tmp_name, "%s", pv_dev_name(pv));
 	}
 
-	if (!*pv_vg_name(pv)) {
+	if (is_orphan(pv)) {
 		log_print("PV %-*s    %-*s %s [%s]",
 			  pv_max_name_len, pv_tmp_name,
 			  vg_max_name_len, " ",
@@ -144,7 +144,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 
 		if ((arg_count(cmd, exported_ARG)
 		     && !(pv_status(pv) & EXPORTED_VG))
-		    || (arg_count(cmd, novolumegroup_ARG) && (*pv_vg_name(pv)))) {
+		    || (arg_count(cmd, novolumegroup_ARG) && (!is_orphan(pv)))) {
 			list_del(&pvl->list);
 			continue;
 		}
@@ -161,7 +161,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 ********/
 		pvs_found++;
 
-		if (!*pv_vg_name(pv)) {
+		if (is_orphan(pv)) {
 			new_pvs_found++;
 			size_new += pv_size(pv);
 			size_total += pv_size(pv);

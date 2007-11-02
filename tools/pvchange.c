@@ -51,7 +51,8 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	}
 
 	/* If in a VG, must change using volume group. */
-	if (*pv_vg_name(pv)) {
+	/* FIXME: handle PVs with no MDAs */
+	if (!is_orphan(pv)) {
 		log_verbose("Finding volume group of physical volume \"%s\"",
 			    pv_name);
 
@@ -115,7 +116,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	}
 
 	if (arg_count(cmd, allocatable_ARG)) {
-		if (!*pv_vg_name(pv) &&
+		if (is_orphan(pv) &&
 		    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
 			log_error("Allocatability not supported by orphan "
 				  "%s format PV %s", pv->fmt->name, pv_name);
@@ -127,7 +128,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (allocatable && (pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "allocatable", pv_name);
-			if (*pv_vg_name(pv))
+			if (!is_orphan(pv))
 				unlock_vg(cmd, pv_vg_name(pv));
 			else
 				unlock_vg(cmd, ORPHAN);
@@ -137,7 +138,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (!allocatable && !(pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "unallocatable", pv_name);
-			if (*pv_vg_name(pv))
+			if (!is_orphan(pv))
 				unlock_vg(cmd, pv_vg_name(pv));
 			else
 				unlock_vg(cmd, ORPHAN);
@@ -180,7 +181,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return 0;
 		}
 		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
-		if (*pv_vg_name(pv)) {
+		if (!is_orphan(pv)) {
 			orig_vg_name = pv_vg_name(pv);
 			orig_pe_alloc_count = pv_pe_alloc_count(pv);
 			pv->vg_name = ORPHAN;
@@ -196,7 +197,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	}
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
-	if (*pv_vg_name(pv)) {
+	if (!is_orphan(pv)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			unlock_vg(cmd, pv_vg_name(pv));
 			log_error("Failed to store physical volume \"%s\" in "
