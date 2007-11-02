@@ -456,8 +456,7 @@ int pv_resize_single(struct cmd_context *cmd,
 	list_init(&mdas);
 
 	if (is_orphan_vg(pv_vg_name(pv))) {
-		vg_name = ORPHAN;
-
+		vg_name = VG_ORPHANS;
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
 			log_error("Can't get lock for orphans");
 			return 0;
@@ -583,7 +582,7 @@ int pv_resize_single(struct cmd_context *cmd,
 		unlock_vg(cmd, vg_name);
 	} else {
 		if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
-			unlock_vg(cmd, ORPHAN);
+			unlock_vg(cmd, VG_ORPHANS);
 			log_error("Failed to store physical volume \"%s\"",
 				  pv_name);
 			return 0;

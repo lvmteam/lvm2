@@ -35,14 +35,8 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	argc--;
 	argv++;
 
-	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
-		return ECMD_FAILED;
-	}
-
-	if (!validate_name(vg_name)) {
-		log_error("Volume group name \"%s\" is invalid",
-			  vg_name);
 		return ECMD_FAILED;
 	}
 
@@ -51,7 +45,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 				    CLUSTERED | EXPORTED_VG | 
 				    LVM_WRITE | RESIZEABLE_VG,
 				    CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
-		 unlock_vg(cmd, ORPHAN);
+		 unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	 }
 /********** FIXME
@@ -79,7 +73,7 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	backup(vg);
 
 	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, ORPHAN);
+	unlock_vg(cmd, VG_ORPHANS);
 
 	log_print("Volume group \"%s\" successfully extended", vg_name);
 
@@ -87,6 +81,6 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
       error:
 	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, ORPHAN);
+	unlock_vg(cmd, VG_ORPHANS);
 	return ECMD_FAILED;
 }

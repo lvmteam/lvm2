@@ -125,6 +125,12 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 		}
 	}
 
+	if (!validate_name(lp->vg_name)) {
+		log_error("Volume group name %s has invalid characters",
+			  lp->vg_name);
+		return 0;
+	}
+
 	if (lp->lv_name) {
 		if ((ptr = strrchr(lp->lv_name, '/')))
 			lp->lv_name = ptr + 1;
@@ -853,7 +859,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 		/* cow LV remains active and becomes snapshot LV */
 
-		if (!vg_add_snapshot(vg, NULL, org, lv, NULL,
+		if (!vg_add_snapshot(NULL, org, lv, NULL,
 				     org->le_count, lp->chunk_size)) {
 			log_err("Couldn't create snapshot.");
 			return 0;

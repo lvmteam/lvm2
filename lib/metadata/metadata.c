@@ -33,7 +33,7 @@
  * FIXME: Check for valid handle before dereferencing field or log error?
  */
 #define pv_field(handle, field)				\
-	(((struct physical_volume *)(handle))->field)
+	(((const struct physical_volume *)(handle))->field)
 
 static struct physical_volume *_pv_read(struct cmd_context *cmd, 
 					const char *pv_name,
@@ -1930,6 +1930,12 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 
 	if (!(misc_flags & CORRECT_INCONSISTENT))
 		consistent = 0;
+
+	if (!validate_name(vg_name)) {
+		log_error("Volume group name %s has invalid characters",
+			  vg_name);
+		return NULL;
+	}
 
 	if (!lock_vol(cmd, vg_name, lock_flags)) {
 		log_error("Can't get lock for %s", vg_name);

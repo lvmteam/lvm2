@@ -103,17 +103,21 @@ static int _pvsegs_single(struct cmd_context *cmd, struct volume_group *vg,
 static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 		       struct physical_volume *pv, void *handle)
 {
+	struct pv_list *pvl;
 	int consistent = 0;
 	int ret = ECMD_PROCESSED;
+	const char *vg_name = NULL;
 
-	if (pv_vg_name(pv)) {
-		if (!lock_vol(cmd, pv_vg_name(pv), LCK_VG_READ)) {
-			log_error("Can't lock %s: skipping", pv_vg_name(pv));
+	if (!is_orphan(pv)) {
+		vg_name = pv_vg_name(pv);
+
+		if (!lock_vol(cmd, vg_name, LCK_VG_READ)) {
+			log_error("Can't lock %s: skipping", vg_name);
 			return ECMD_FAILED;
 		}
 
-		if (!(vg = vg_read(cmd, pv_vg_name(pv), (char *)&pv->vgid, &consistent))) {
-			log_error("Can't read %s: skipping", pv_vg_name(pv));
+		if (!(vg = vg_read(cmd, vg_name, (char *)&pv->vgid, &consistent))) {
+			log_error("Can't read %s: skipping", vg_name);
 			goto out;
 		}
 
@@ -121,14 +125,27 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 			ret = ECMD_FAILED;
 			goto out;
 		}
+
+		/*
+		 * Replace possibly incomplete PV structure with new one
+		 * allocated in vg_read() path.
+		*/
+		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
+			log_error("Unable to find \"%s\" in volume group \"%s\"",
+				  pv_dev_name(pv), vg->name);
+			ret = ECMD_FAILED;
+			goto out;
+		}
+
+                 pv = pvl->pv;
 	}
 
 	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
 		ret = ECMD_FAILED;
 
 out:
-	if (pv_vg_name(pv))
-		unlock_vg(cmd, pv_vg_name(pv));
+	if (vg_name)
+		unlock_vg(cmd, vg_name);
 
 	return ret;
 }

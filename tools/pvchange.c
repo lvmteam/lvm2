@@ -21,6 +21,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			    void *handle __attribute((unused)))
 {
 	struct volume_group *vg = NULL;
+	const char *vg_name = NULL;
 	struct pv_list *pvl;
 	struct list mdas;
 	uint64_t sector;
@@ -56,13 +57,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		log_verbose("Finding volume group of physical volume \"%s\"",
 			    pv_name);
 
-		if (!lock_vol(cmd, pv_vg_name(pv), LCK_VG_WRITE)) {
-			log_error("Can't get lock for %s", pv_vg_name(pv));
+		vg_name = pv_vg_name(pv);
+		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
+			log_error("Can't get lock for %s", vg_name);
 			return 0;
 		}
 
-		if (!(vg = vg_read(cmd, pv_vg_name(pv), NULL, &consistent))) {
-			unlock_vg(cmd, pv_vg_name(pv));
+		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
+			unlock_vg(cmd, vg_name);
 			log_error("Unable to find volume group of \"%s\"",
 				  pv_name);
 			return 0;
@@ -70,25 +72,25 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 		if (!vg_check_status(vg,
 				     CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
-			unlock_vg(cmd, pv_vg_name(pv));
+			unlock_vg(cmd, vg_name);
 			return 0;
 		}
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
-			unlock_vg(cmd, pv_vg_name(pv));
+			unlock_vg(cmd, vg_name);
 			log_error
 			    ("Unable to find \"%s\" in volume group \"%s\"",
 			     pv_name, vg->name);
 			return 0;
 		}
 		if (tagarg && !(vg->fid->fmt->features & FMT_TAGS)) {
-			unlock_vg(cmd, pv_vg_name(pv));
+			unlock_vg(cmd, vg_name);
 			log_error("Volume group containing %s does not "
 				  "support tags", pv_name);
 			return 0;
 		}
 		if (arg_count(cmd, uuid_ARG) && lvs_in_vg_activated(vg)) {
-			unlock_vg(cmd, pv_vg_name(pv));
+			unlock_vg(cmd, vg_name);
 			log_error("Volume group containing %s has active "
 				  "logical volumes", pv_name);
 			return 0;
@@ -102,17 +104,19 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 				  "in volume group", pv_name);
 			return 0;
 		}
-		if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+
+		vg_name = VG_ORPHANS;
+
+		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
 			log_error("Can't get lock for orphans");
 			return 0;
 		}
 
 		if (!(pv = pv_read(cmd, pv_name, &mdas, &sector, 1))) {
-			unlock_vg(cmd, ORPHAN);
+			unlock_vg(cmd, vg_name);
 			log_error("Unable to read PV \"%s\"", pv_name);
 			return 0;
 		}
-
 	}
 
 	if (arg_count(cmd, allocatable_ARG)) {
@@ -120,7 +124,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		    !(pv->fmt->features & FMT_ORPHAN_ALLOCATABLE)) {
 			log_error("Allocatability not supported by orphan "
 				  "%s format PV %s", pv->fmt->name, pv_name);
-			unlock_vg(cmd, ORPHAN);
+			unlock_vg(cmd, vg_name);
 			return 0;
 		}
 
@@ -128,20 +132,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (allocatable && (pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "allocatable", pv_name);
-			if (!is_orphan(pv))
-				unlock_vg(cmd, pv_vg_name(pv));
-			else
-				unlock_vg(cmd, ORPHAN);
+			unlock_vg(cmd, vg_name);
 			return 1;
 		}
 
 		if (!allocatable && !(pv_status(pv) & ALLOCATABLE_PV)) {
 			log_error("Physical volume \"%s\" is already "
 				  "unallocatable", pv_name);
-			if (!is_orphan(pv))
-				unlock_vg(cmd, pv_vg_name(pv));
-			else
-				unlock_vg(cmd, ORPHAN);
+			unlock_vg(cmd, vg_name);
 			return 1;
 		}
 
@@ -160,12 +158,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			if (!str_list_add(cmd->mem, &pv->tags, tag)) {
 				log_error("Failed to add tag %s to physical "
 					  "volume %s", tag, pv_name);
+				unlock_vg(cmd, vg_name);
 				return 0;
 			}
 		} else {
 			if (!str_list_del(&pv->tags, tag)) {
 				log_error("Failed to remove tag %s from "
 					  "physical volume" "%s", tag, pv_name);
+				unlock_vg(cmd, vg_name);
 				return 0;
 			}
 		}
@@ -174,10 +174,12 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (!id_create(&pv->id)) {
 			log_error("Failed to generate new random UUID for %s.",
 				  pv_name);
+			unlock_vg(cmd, vg_name);
 			return 0;
 		}
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
 			stack;
+			unlock_vg(cmd, vg_name);
 			return 0;
 		}
 		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
@@ -189,6 +191,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
 				log_error("pv_write with new uuid failed "
 					  "for %s.", pv_name);
+				unlock_vg(cmd, vg_name);
 				return 0;
 			}
 			pv->vg_name = orig_vg_name;
@@ -199,22 +202,20 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	log_verbose("Updating physical volume \"%s\"", pv_name);
 	if (!is_orphan(pv)) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
-			unlock_vg(cmd, pv_vg_name(pv));
+			unlock_vg(cmd, vg_name);
 			log_error("Failed to store physical volume \"%s\" in "
 				  "volume group \"%s\"", pv_name, vg->name);
 			return 0;
 		}
 		backup(vg);
-		unlock_vg(cmd, pv_vg_name(pv));
-	} else {
-		if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
-			unlock_vg(cmd, ORPHAN);
-			log_error("Failed to store physical volume \"%s\"",
-				  pv_name);
-			return 0;
-		}
-		unlock_vg(cmd, ORPHAN);
+	} else if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
+		unlock_vg(cmd, vg_name);
+		log_error("Failed to store physical volume \"%s\"",
+			  pv_name);
+		return 0;
 	}
+
+	unlock_vg(cmd, vg_name);
 
 	log_print("Physical volume \"%s\" changed", pv_name);
 

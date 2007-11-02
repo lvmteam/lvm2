@@ -43,14 +43,14 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_PROCESSED;
 	}
 
-	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Unable to lock orphans");
 		return ECMD_FAILED;
 	}
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		log_error("Unable to lock volume group %s", vg_name);
-		unlock_vg(cmd, ORPHAN);
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
@@ -59,7 +59,7 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 				       arg_str_value(cmd, file_ARG, "")) :
 	      backup_restore(cmd, vg_name))) {
 		unlock_vg(cmd, vg_name);
-		unlock_vg(cmd, ORPHAN);
+		unlock_vg(cmd, VG_ORPHANS);
 		log_err("Restore failed.");
 		return ECMD_FAILED;
 	}
@@ -67,6 +67,6 @@ int vgcfgrestore(struct cmd_context *cmd, int argc, char **argv)
 	log_print("Restored volume group %s", vg_name);
 
 	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, ORPHAN);
+	unlock_vg(cmd, VG_ORPHANS);
 	return ECMD_PROCESSED;
 }

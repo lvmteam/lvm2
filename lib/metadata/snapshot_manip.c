@@ -48,8 +48,7 @@ struct logical_volume *origin_from_cow(const struct logical_volume *lv)
 	return lv->snapshot->origin;
 }
 
-int vg_add_snapshot(struct volume_group *vg, const char *name,
-		    struct logical_volume *origin,
+int vg_add_snapshot(const char *name, struct logical_volume *origin,
 		    struct logical_volume *cow, union lvid *lvid,
 		    uint32_t extent_count, uint32_t chunk_size)
 {

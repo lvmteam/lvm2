@@ -76,8 +76,9 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 			   void *handle __attribute((unused)))
 {
 	struct device *dev;
+	int ret = ECMD_FAILED;
 
-	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
@@ -106,12 +107,12 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	log_print("Labels on physical volume \"%s\" successfully wiped",
 		  pv_name);
 
-	unlock_vg(cmd, ORPHAN);
-	return ECMD_PROCESSED;
+	ret = ECMD_PROCESSED;
 
       error:
-	unlock_vg(cmd, ORPHAN);
-	return ECMD_FAILED;
+	unlock_vg(cmd, VG_ORPHANS);
+
+	return ret;
 }
 
 int pvremove(struct cmd_context *cmd, int argc, char **argv)
