@@ -455,7 +455,7 @@ int pv_resize_single(struct cmd_context *cmd,
 
 	list_init(&mdas);
 
-	if (!*pv_vg_name(pv)) {
+	if (is_orphan_vg(pv_vg_name(pv))) {
 		vg_name = ORPHAN;
 
 		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
@@ -572,7 +572,7 @@ int pv_resize_single(struct cmd_context *cmd,
 		    pv_name, pv_size(pv));
 
 	log_verbose("Updating physical volume \"%s\"", pv_name);
-	if (*pv_vg_name(pv)) {
+	if (!is_orphan_vg(pv_vg_name(pv))) {
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			unlock_vg(cmd, pv_vg_name(pv));
 			log_error("Failed to store physical volume \"%s\" in "

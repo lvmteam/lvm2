@@ -480,7 +480,7 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 		}
 
 		/* Did we find the whole VG? */
-		if (!vg_name || !*vg_name ||
+		if (!vg_name || is_orphan_vg(vg_name) ||
 		    (data && *data->pvd.vg_name &&
 		     list_size(head) == data->vgd.pv_cur))
 			return 1;

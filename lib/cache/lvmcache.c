@@ -633,7 +633,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			return 0;
 		}
 		/* Ensure orphans appear last on list_iterate */
-		if (!*vgname)
+		if (is_orphan_vg(vgname))
 			list_add(&_vginfos, &vginfo->list);
 		else
 			list_add_h(&_vginfos, &vginfo->list);
@@ -649,7 +649,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	vginfo->fmt = info->fmt;
 
 	log_debug("lvmcache: %s: now %s%s%s%s%s", dev_name(info->dev),
-		  *vgname ? "in VG " : "orphaned", vgname,
+		  is_orphan_vg(vgname) ? "in VG " : "orphaned", vgname,
 		  vginfo->vgid[0] ? " (" : "",
 		  vginfo->vgid[0] ? vginfo->vgid : "",
 		  vginfo->vgid[0] ? ")" : "");

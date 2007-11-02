@@ -1438,7 +1438,8 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 	info = (struct lvmcache_info *) label->info;
 
 	/* Have we already cached vgname? */
-	if (info->vginfo && info->vginfo->vgname && *info->vginfo->vgname &&
+	if (info->vginfo && info->vginfo->vgname &&
+	    !is_orphan_vg(info->vginfo->vgname) &&
 	    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
 				 info->vginfo->vgid, info->dev->pvid, pv)) {
 		return 1;
@@ -1449,7 +1450,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		lvmcache_label_scan(fmt->cmd, 2);
 
 		if (info->vginfo && info->vginfo->vgname &&
-		    *info->vginfo->vgname &&
+		    !is_orphan_vg(info->vginfo->vgname) &&
 		    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
 					 info->vginfo->vgid,
 					 info->dev->pvid, pv)) {

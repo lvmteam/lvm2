@@ -180,7 +180,7 @@ struct format_handler {
 
 	/*
 	 * Write a PV structure to disk. Fails if the PV is in a VG ie
-	 * pv->vg_name must be null.
+	 * pv->vg_name must be a valid orphan VG name
 	 */
 	int (*pv_write) (const struct format_type * fmt,
 			 struct physical_volume * pv, struct list * mdas,
