@@ -415,19 +415,19 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 			    struct dm_pool *mem, const char *vg_name)
 {
-	struct disk_list *r;
+	struct disk_list *dl;
 
 	if (!dev_open(dev)) {
 		stack;
 		return NULL;
 	}
 
-	r = __read_disk(fmt, dev, mem, vg_name);
+	dl = __read_disk(fmt, dev, mem, vg_name);
 
 	if (!dev_close(dev))
 		stack;
 
-	return r;
+	return dl;
 }
 
 static void _add_pv_to_list(struct list *head, struct disk_list *data)

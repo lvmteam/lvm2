@@ -44,7 +44,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		return 0;
 	}
 
-	if (!validate_vg_name(cmd, vg_name_new)) {
+	if (!validate_new_vg_name(cmd, vg_name_new)) {
 		log_error("New volume group name \"%s\" is invalid",
 			  vg_name_new);
 		return 0;
@@ -65,8 +65,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 
 	list_iterate_items(sl, vgids) {
 		vgid = sl->str;
-		if (!vgid || !(vg_name = vgname_from_vgid(NULL, vgid))
-					|| is_orphan_vg(vg_name))
+		if (!vgid || !(vg_name = vgname_from_vgid(NULL, vgid)) ||
+		    is_orphan_vg(vg_name))
 			continue;
 		if (!strcmp(vg_name, vg_name_old)) {
 			if (match) {

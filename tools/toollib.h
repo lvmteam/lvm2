@@ -96,7 +96,7 @@ struct list *clone_pv_list(struct dm_pool *mem, struct list *pvs);
 
 int apply_lvname_restrictions(const char *name);
 
-int validate_vg_name(struct cmd_context *cmd, const char *vg_name);
+int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name);
 
 int generate_log_name_format(struct volume_group *vg, const char *lv_name,
                              char *buffer, size_t size);

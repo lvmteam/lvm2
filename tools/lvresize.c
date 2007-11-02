@@ -239,6 +239,12 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 		log_error("Please provide a volume group name");
 		return 0;
 	}
+	
+	if (!validate_name(lp->vg_name)) {
+		log_error("Volume group name %s has invalid characters",
+			  lp->vg_name);
+		return NULL;
+	}
 
 	if ((st = strrchr(lp->lv_name, '/')))
 		lp->lv_name = st + 1;

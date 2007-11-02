@@ -228,12 +228,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	argc -= 2;
 	argv += 2;
 
-	if (!validate_name(vg_name_from)) {
-		log_error("Volume group name \"%s\" is invalid",
-			  vg_name_from);
-		return ECMD_FAILED;
-	}
-
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name \"%s\"", vg_name_from);
 		return ECMD_FAILED;
@@ -253,16 +247,17 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
+	if (!validate_new_vg_name(cmd, vg_name_to)) {
+		log_error("New volume group name \"%s\" is invalid",
+			   vg_name_to);
+		unlock_vg(cmd, vg_name_from);
+		return ECMD_FAILED;
+	}
+
 	consistent = 0;
 	if ((vg_to = vg_read(cmd, vg_name_to, NULL, &consistent))) {
 		/* FIXME Remove this restriction */
 		log_error("Volume group \"%s\" already exists", vg_name_to);
-		goto error;
-	}
-
-	if (!validate_vg_name(cmd, vg_name_to)) {
-		log_error("New volume group name \"%s\" is invalid",
-			   vg_name_to);
 		goto error;
 	}
 

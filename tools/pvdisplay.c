@@ -25,15 +25,17 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	uint64_t size;
 
 	const char *pv_name = pv_dev_name(pv);
+	const char *vg_name = NULL;
 
-	 if (pv_vg_name(pv)) {
-	         if (!lock_vol(cmd, pv_vg_name(pv), LCK_VG_READ)) {
-	                 log_error("Can't lock %s: skipping", pv_vg_name(pv));
+	 if (!is_orphan(pv)) {
+		vg_name = pv_vg_name(pv);
+	         if (!lock_vol(cmd, vg_name, LCK_VG_READ)) {
+	                 log_error("Can't lock %s: skipping", vg_name);
 	                 return ECMD_FAILED;
 	         }
 
-	         if (!(vg = vg_read(cmd, pv_vg_name(pv), (char *)&pv->vgid, &consistent))) {
-	                 log_error("Can't read %s: skipping", pv_vg_name(pv));
+	         if (!(vg = vg_read(cmd, vg_name, (char *)&pv->vgid, &consistent))) {
+	                 log_error("Can't read %s: skipping", vg_name);
 	                 goto out;
 	         }
 
@@ -87,8 +89,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		pvdisplay_segments(pv);
 
 out:
-        if (pv_vg_name(pv))
-                unlock_vg(cmd, pv_vg_name(pv));
+        if (vg_name)
+                unlock_vg(cmd, vg_name);
 
 	return ret;
 }

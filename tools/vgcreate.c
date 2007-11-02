@@ -84,7 +84,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (!validate_vg_name(cmd, vg_name)) {
+	if (!validate_new_vg_name(cmd, vg_name)) {
 		log_error("New volume group name \"%s\" is invalid", vg_name);
 		return ECMD_FAILED;
 	}
@@ -131,32 +131,32 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	else
 		vg->status &= ~CLUSTERED;
 
-	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
 
 	if (!lock_vol(cmd, vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
 		log_error("Can't get lock for %s", vg_name);
-		unlock_vg(cmd, ORPHAN);
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
 	if (!archive(vg)) {
 		unlock_vg(cmd, vg_name);
-		unlock_vg(cmd, ORPHAN);
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
 	/* Store VG on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		unlock_vg(cmd, vg_name);
-		unlock_vg(cmd, ORPHAN);
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
 	unlock_vg(cmd, vg_name);
-	unlock_vg(cmd, ORPHAN);
+	unlock_vg(cmd, VG_ORPHANS);
 
 	backup(vg);
 

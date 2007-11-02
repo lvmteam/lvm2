@@ -25,6 +25,7 @@
 #include "segtype.h"
 #include "pv_alloc.h"
 #include "display.h"
+#include "lvmcache.h"
 
 #include <time.h>
 
@@ -59,8 +60,10 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	memcpy(&pv->id, pvd->pv_uuid, ID_LEN);
 
 	pv->dev = dev;
-	if (!(pv->vg_name = dm_pool_strdup(mem, (char *)pvd->vg_name))) {
-		stack;
+	if (!*pvd->vg_name)
+		pv->vg_name = ORPHAN;
+	else if (!(pv->vg_name = dm_pool_strdup(mem, (char *)pvd->vg_name))) {
+		log_error("Volume Group name allocation failed.");
 		return 0;
 	}
 
@@ -644,7 +647,7 @@ int import_snapshots(struct dm_pool *mem __attribute((unused)), struct volume_gr
 				continue;
 
 			/* insert the snapshot */
-			if (!vg_add_snapshot(vg, NULL, org, cow, NULL,
+			if (!vg_add_snapshot(NULL, org, cow, NULL,
 					     org->le_count, 
 					     lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");

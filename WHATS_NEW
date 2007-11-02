@@ -1,7 +1,13 @@
 Version 2.02.29 -
 ==================================
+  Fix orphan-related locking in pvdisplay and pvs.
+  Fix missing VG unlocks in some pvchange error paths.
+  Add some missing validation of VG names.
+  Rename validate_vg_name() to validate_new_vg_name().
+  Change orphan lock to VG_ORPHANS.
+  Change format1 to use ORPHAN as orphan VG name.
   Convert pvchange, pvdisplay, pvscan to use is_orphan()
-  Add is_orphan_vg() and change all hardcoded checks to use it.
+  Add is_orphan_vg() and change all hard-coded checks to use it.
   Detect md superblocks version 1.0, 1.1 and 1.2.
   Add _alloc_pv() and _free_pv() from _pv_create() code and fix error paths.
   Add pv_dev_name() to access PV device name.

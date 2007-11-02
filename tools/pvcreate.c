@@ -65,13 +65,13 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 
 	/* Is there an md superblock here? */
 	if (!dev && md_filtering()) {
-		unlock_vg(cmd, ORPHAN);
+		unlock_vg(cmd, VG_ORPHANS);
 
 		persistent_filter_wipe(cmd->filter);
 		lvmcache_destroy();
 
 		init_md_filtering(0);
-		if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+		if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 			log_error("Can't get lock for orphan PVs");
 			init_md_filtering(1);
 			return 0;
@@ -171,7 +171,7 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		extent_count = pv_pe_count(existing_pv);
 	}
 
-	if (!lock_vol(cmd, ORPHAN, LCK_VG_WRITE)) {
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
 		return ECMD_FAILED;
 	}
@@ -254,11 +254,11 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 
 	log_print("Physical volume \"%s\" successfully created", pv_name);
 
-	unlock_vg(cmd, ORPHAN);
+	unlock_vg(cmd, VG_ORPHANS);
 	return ECMD_PROCESSED;
 
       error:
-	unlock_vg(cmd, ORPHAN);
+	unlock_vg(cmd, VG_ORPHANS);
 	return ECMD_FAILED;
 }
 

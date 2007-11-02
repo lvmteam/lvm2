@@ -341,7 +341,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 
 	list_iterate_items(strl, vgnames) {
 		vgname = strl->str;
-		if (!vgname || is_orphan_vg(vgname))
+		if (is_orphan_vg(vgname))
 			continue;	/* FIXME Unnecessary? */
 		if (!lock_vol(cmd, vgname, lock_type)) {
 			log_error("Can't lock %s: skipping", vgname);
@@ -474,7 +474,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	int ret = 0;
 
 	if (!lock_vol(cmd, vg_name, lock_type)) {
-		log_error("Can't lock %s: skipping", vg_name);
+		log_error("Can't lock volume group %s: skipping", vg_name);
 		return ret_max;
 	}
 
@@ -588,7 +588,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 	} else {
 		list_iterate_items(sl, vgnames) {
 			vg_name = sl->str;
-			if (!vg_name || is_orphan_vg(vg_name))
+			if (is_orphan_vg(vg_name))
 				continue;	/* FIXME Unnecessary? */
 			ret_max = _process_one_vg(cmd, vg_name, NULL, &tags,
 						  &arg_vgnames,
@@ -1192,14 +1192,11 @@ int apply_lvname_restrictions(const char *name)
 	return 1;
 }
 
-int validate_vg_name(struct cmd_context *cmd, const char *vg_name)
+int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
 {
 	char vg_path[PATH_MAX];
 
 	if (!validate_name(vg_name))
-		return 0;
-
-	if (is_orphan_vg(vg_name))
 		return 0;
 
 	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
