@@ -56,7 +56,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		 pv = pvl->pv;
 	}
 
-	if (!*pv_vg_name(pv))
+	if (is_orphan(pv))
 		size = pv_size(pv);
 	else
 		size = (pv_pe_count(pv) - pv_pe_alloc_count(pv)) * 
@@ -72,7 +72,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		log_print("Physical volume \"%s\" of volume group \"%s\" "
 			  "is exported", pv_name, pv_vg_name(pv));
 
-	if (!pv_vg_name(pv))
+	if (is_orphan(pv))
 		log_print("\"%s\" is a new physical volume of \"%s\"",
 			  pv_name, display_size(cmd, size));
 

@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Convert pvchange, pvdisplay, pvscan to use is_orphan()
   Add is_orphan_vg() and change all hardcoded checks to use it.
   Detect md superblocks version 1.0, 1.1 and 1.2.
   Add _alloc_pv() and _free_pv() from _pv_create() code and fix error paths.
