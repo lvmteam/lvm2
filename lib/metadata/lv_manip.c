@@ -1839,45 +1839,37 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* FIXME Ensure not referred to by another existing LVs */
 
-	/*
-	 * If we can't get information about the LV from the kernel, or
-	 * someone has the LV device open, fail.
-	 */
-	if (!lv_info(cmd, lv, &info, 1)) {
-		log_error("Unable to obtain status for logical volume \"%s\"",
-			  lv->name);
-		return 0;
-	}
-	if (info.open_count) {
-		log_error("Can't remove open logical volume \"%s\"",
-			  lv->name);
-		return 0;
-	}
-
-	/*
-	 * Check for confirmation prompts in the following cases:
-	 * 1) Clustered VG, and some remote nodes have the LV active
-	 * 2) Non-clustered VG, but LV active locally
-	 */
-	if ((vg_status(vg) & CLUSTERED) && !activate_lv_excl(cmd, lv) &&
-	    (force == PROMPT)) {
-		if (yes_no_prompt("Logical volume \"%s\" is active on other "
-				  "cluster nodes.  Really remove? [y/n]: ",
-				  lv->name) == 'n') {
-			log_print("Logical volume \"%s\" not removed",
+	if (lv_info(cmd, lv, &info, 1)) {
+		if (info.open_count) {
+			log_error("Can't remove open logical volume \"%s\"",
 				  lv->name);
 			return 0;
 		}
-	} else if (info.exists && (force == PROMPT)) {
-		 if (yes_no_prompt("Do you really want to remove active "
-				   "logical volume \"%s\"? [y/n]: ",
-				   lv->name) == 'n') {
-			 log_print("Logical volume \"%s\" not removed",
-				  lv->name);
-			 return 0;
-		 }
-	}
 
+		/*
+		 * Check for confirmation prompts in the following cases:
+		 * 1) Clustered VG, and some remote nodes have the LV active
+		 * 2) Non-clustered VG, but LV active locally
+		 */
+		if ((vg_status(vg) & CLUSTERED) && !activate_lv_excl(cmd, lv) &&
+		    (force == PROMPT)) {
+			if (yes_no_prompt("Logical volume \"%s\" is active on other "
+					  "cluster nodes.  Really remove? [y/n]: ",
+					  lv->name) == 'n') {
+				log_print("Logical volume \"%s\" not removed",
+					  lv->name);
+				return 0;
+			}
+		} else if (info.exists && (force == PROMPT)) {
+			 if (yes_no_prompt("Do you really want to remove active "
+					   "logical volume \"%s\"? [y/n]: ",
+					   lv->name) == 'n') {
+				 log_print("Logical volume \"%s\" not removed",
+					  lv->name);
+				 return 0;
+			 }
+		}
+	}
 
 	if (!archive(vg))
 		return 0;
