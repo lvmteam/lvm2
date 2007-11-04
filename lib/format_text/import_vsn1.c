@@ -221,7 +221,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
                         log_error("%s: Couldn't get size.", pv_dev_name(pv));
                         return 0;
                 }
-                log_verbose("Fixing up missing format1 size (%s) "
+                log_verbose("Fixing up missing size (%s) "
                             "for PV %s", display_size(fid->fmt->cmd, pv->size),
                             pv_dev_name(pv));
                 if (vg) {
