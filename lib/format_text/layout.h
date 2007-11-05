@@ -75,6 +75,7 @@ struct mda_lists {
 
 struct mda_context {
 	struct device_area area;
+	uint64_t free_sectors;
 	struct raw_locn rlocn;	/* Store inbetween write and commit */
 };
 

@@ -745,6 +745,53 @@ static int _vgmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _uint32_disp(rh, mem, field, &count, private);
 }
 
+static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	struct lvmcache_info *info; 
+	uint64_t freespace = UINT64_MAX, mda_free;
+	const char *pvid = (const char *)(&((struct id *) data)->uuid);
+	struct metadata_area *mda;
+
+	info = info_from_pvid(pvid);
+
+	list_iterate_items(mda, &info->mdas) {
+		if (!mda->ops->mda_free_sectors)
+			continue;
+		mda_free = mda->ops->mda_free_sectors(mda);
+		if (mda_free < freespace)
+			freespace = mda_free;
+	}
+
+	if (freespace == UINT64_MAX)
+		freespace = UINT64_C(0);
+
+	return _size64_disp(rh, mem, field, &freespace, private);
+}
+
+static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
+			   struct dm_report_field *field,
+			   const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+	uint64_t freespace = UINT64_MAX, mda_free;
+	struct metadata_area *mda;
+
+	list_iterate_items(mda, &vg->fid->metadata_areas) {
+		if (!mda->ops->mda_free_sectors)
+			continue;
+		mda_free = mda->ops->mda_free_sectors(mda);
+		if (mda_free < freespace)
+			freespace = mda_free;
+	}
+
+	if (freespace == UINT64_MAX)
+		freespace = UINT64_C(0);
+
+	return _size64_disp(rh, mem, field, &freespace, private);
+}
+
 static int _lvsegcount_disp(struct dm_report *rh, struct dm_pool *mem,
 			    struct dm_report_field *field,
 			    const void *data, void *private)
