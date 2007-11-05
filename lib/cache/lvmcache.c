@@ -649,7 +649,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	vginfo->fmt = info->fmt;
 
 	log_debug("lvmcache: %s: now %s%s%s%s%s", dev_name(info->dev),
-		  is_orphan_vg(vgname) ? "in VG " : "orphaned", vgname,
+		  !is_orphan_vg(vgname) ? "in VG " : "orphaned", vgname,
 		  vginfo->vgid[0] ? " (" : "",
 		  vginfo->vgid[0] ? vginfo->vgid : "",
 		  vginfo->vgid[0] ? ")" : "");
