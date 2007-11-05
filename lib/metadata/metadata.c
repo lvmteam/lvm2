@@ -1820,7 +1820,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
  */
 int is_orphan_vg(const char *vg_name)
 {
-	return (vg_name[0] ? 0 : 1);
+	return (!strcmp(vg_name, ORPHAN) ? 1 : 0);
 }
 
 /**

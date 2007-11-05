@@ -162,6 +162,7 @@ int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct list *mda
 	mdac->area.dev = dev;
 	mdac->area.start = start;
 	mdac->area.size = size;
+	mdac->free_sectors = UINT64_C(0);
 	memset(&mdac->rlocn, 0, sizeof(mdac->rlocn));
 
 	list_add(mdas, &mdal->list);
@@ -239,7 +240,8 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if ((vgname = vgname_from_mda(info->fmt, &mdac->area, 
-					      &vgid, &vgstatus, &creation_host)) &&
+					      &vgid, &vgstatus, &creation_host,
+					      &mdac->free_sectors)) &&
 		    !lvmcache_update_vgname_and_id(info, vgname,
 						   (char *) &vgid, vgstatus,
 						   creation_host))

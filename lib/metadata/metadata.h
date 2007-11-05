@@ -113,6 +113,12 @@ struct metadata_area_ops {
 			  struct volume_group * vg, struct metadata_area * mda);
 	int (*vg_remove) (struct format_instance * fi, struct volume_group * vg,
 			  struct metadata_area * mda);
+
+	/*
+	 * Returns number of free sectors in given metadata area.
+	 */
+	uint64_t (*mda_free_sectors) (struct metadata_area *mda);
+
 	/*
 	 * Check if metadata area belongs to vg
 	 */

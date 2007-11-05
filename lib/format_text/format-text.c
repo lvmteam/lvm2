@@ -83,6 +83,13 @@ static int _text_vg_setup(struct format_instance *fid __attribute((unused)),
 	return 1;
 }
 
+static uint64_t _mda_free_sectors_raw(struct metadata_area *mda)
+{
+	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+
+	return mdac->free_sectors;
+}
+
 /*
  * Check if metadata area belongs to vg
  */
@@ -1043,7 +1050,8 @@ static int _scan_file(const struct format_type *fmt)
 
 const char *vgname_from_mda(const struct format_type *fmt,
 			    struct device_area *dev_area, struct id *vgid,
-			    uint32_t *vgstatus, char **creation_host)
+			    uint32_t *vgstatus, char **creation_host,
+			    uint64_t *mda_free_sectors)
 {
 	struct raw_locn *rlocn;
 	struct mda_header *mdah;
@@ -1052,6 +1060,10 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	unsigned int len = 0;
 	char buf[NAME_LEN + 1] __attribute((aligned(8)));
 	char uuid[64] __attribute((aligned(8)));
+	uint64_t buffer_size, current_usage;
+
+	if (mda_free_sectors)
+		*mda_free_sectors = ((dev_area->size - MDA_HEADER_SIZE) / 2) >> SECTOR_SHIFT;
 
 	if (!dev_open(dev_area->dev)) {
 		stack;
@@ -1114,9 +1126,21 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	}
 
 	log_debug("%s: Found metadata at %" PRIu64 " size %" PRIu64
-		  " for %s (%s)", 
+		  " (in area at %" PRIu64 " size %" PRIu64
+		  ") for %s (%s)", 
 		  dev_name(dev_area->dev), dev_area->start + rlocn->offset,
-		  rlocn->size, vgname, uuid);
+		  rlocn->size, dev_area->start, dev_area->size, vgname, uuid);
+
+	if (mda_free_sectors) {
+		current_usage = (rlocn->size + SECTOR_SIZE - UINT64_C(1)) -
+				 (rlocn->size + SECTOR_SIZE - UINT64_C(1)) % SECTOR_SIZE;
+		buffer_size = mdah->size - MDA_HEADER_SIZE;
+
+		if (current_usage * 2 >= buffer_size)
+			*mda_free_sectors = UINT64_C(0);
+		else
+			*mda_free_sectors = ((buffer_size - 2 * current_usage) / 2) >> SECTOR_SHIFT;
+	}
 
       out:
 	if (!dev_close(dev_area->dev))
@@ -1143,7 +1167,7 @@ static int _scan_raw(const struct format_type *fmt)
 	list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
 		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid, &vgstatus,
-					      NULL))) {
+					      NULL, NULL))) {
 			if ((vg = _vg_read_raw_area(&fid, vgname,
 						    &rl->dev_area, 0)))
 				lvmcache_update_vg(vg);
@@ -1557,6 +1581,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.vg_precommit = _vg_precommit_raw,
 	.vg_commit = _vg_commit_raw,
 	.vg_revert = _vg_revert_raw,
+	.mda_free_sectors = _mda_free_sectors_raw,
 	.mda_in_vg = _mda_in_vg_raw,
 	.pv_analyze_mda = _pv_analyze_mda_raw,
 };

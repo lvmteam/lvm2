@@ -57,6 +57,7 @@ void del_mdas(struct list *mdas);
 
 const char *vgname_from_mda(const struct format_type *fmt,
 			    struct device_area *dev_area, struct id *vgid,
-			    uint32_t *vgstatus, char **creation_host);
+			    uint32_t *vgstatus, char **creation_host,
+			    uint64_t *mda_free_sectors);
 
 #endif
