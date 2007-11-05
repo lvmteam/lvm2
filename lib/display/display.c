@@ -186,17 +186,17 @@ static const char *_display_size(const struct cmd_context *cmd,
 		return size_buf;
 	}
 
-	if (s < 10) {
+	size *= UINT64_C(512);
+
+	if (s < 10)
 		byte = cmd->current_settings.unit_factor;
-		size *= UINT64_C(512);
-	} else {
-		size /= 2;
+	else {
 		suffix = 1;
 		if (cmd->current_settings.unit_type == 'H')
 			units = UINT64_C(1000);
 		else
 			units = UINT64_C(1024);
-		byte = units * units * units * units * units;
+		byte = units * units * units * units * units * units;
 		s = 0;
 		while (size_str[s] && size < byte)
 			s++, byte /= units;
