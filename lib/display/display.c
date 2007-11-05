@@ -295,6 +295,7 @@ void pvdisplay_full(const struct cmd_context *cmd,
 	const char *size;
 
 	uint32_t pe_free;
+	uint64_t used_size, pvsize, unusable;
 
 	if (!pv)
 		return;
@@ -309,19 +310,20 @@ void pvdisplay_full(const struct cmd_context *cmd,
 	log_print("VG Name               %s%s", pv->vg_name,
 		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
-	size = display_size(cmd, (uint64_t) pv->size);
-	if (pv->pe_size && pv->pe_count) {
+	used_size = (uint64_t) pv->pe_count * pv->pe_size;
+	if (pv->size > used_size) {
+		pvsize = pv->size;
+		unusable = pvsize - used_size;
+	} else {
+		pvsize = used_size;
+		unusable = used_size - pv->size;
+	}
 
-/******** FIXME display LVM on-disk data size
-		size2 = display_size(cmd, pv->size);
-********/
-
-		log_print("PV Size               %s" " / not usable %s",	/*  [LVM: %s]", */
-			  size,
-			  display_size(cmd, (pv->size -
-				       (uint64_t) pv->pe_count * pv->pe_size)));
-
-	} else
+	size = display_size(cmd, pvsize);
+	if (used_size)
+		log_print("PV Size               %s / not usable %s",	/*  [LVM: %s]", */
+			  size, display_size(cmd, unusable));
+	else
 		log_print("PV Size               %s", size);
 
 	/* PV number not part of LVM2 design

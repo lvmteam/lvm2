@@ -95,8 +95,8 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	pv->pe_count = pvd->pe_total;
 	pv->pe_alloc_count = 0;
 
-	/* Fix up pv size if missing */
-	if (!pv->size) {
+	/* Fix up pv size if missing or impossibly large */
+	if (!pv->size || pv->size > (1ULL << 62)) {
 		if (!dev_get_size(dev, &pv->size)) {
 			log_error("%s: Couldn't get size.", pv_dev_name(pv));
 			return 0;
