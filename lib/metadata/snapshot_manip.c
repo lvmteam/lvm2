@@ -63,6 +63,11 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 		return 0;
 	}
 
+	if (cow == origin) {
+		log_error("Snapshot and origin LVs must differ.");
+		return 0;
+	}
+
 	if (!(snap = lv_create_empty(name ? name : "snapshot%d",
 				     lvid, LVM_READ | LVM_WRITE | VISIBLE_LV,
 				     ALLOC_INHERIT, 1, origin->vg))) {

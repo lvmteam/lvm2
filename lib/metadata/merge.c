@@ -119,6 +119,15 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			}
 		}
 
+		if (seg_is_snapshot(seg)) {
+			if (seg->cow && seg->cow == seg->origin) {
+				log_error("LV %s: segment %u has same LV %s for "
+					  "both origin and snapshot",
+					  lv->name, seg_count, seg->cow->name);
+				r = 0;
+			}
+		}
+
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) == AREA_UNASSIGNED) {
 				log_error("LV %s: segment %u has unassigned "

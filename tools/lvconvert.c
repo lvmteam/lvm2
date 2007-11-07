@@ -495,6 +495,12 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
+	if (org == lv) {
+		log_error("Unable to use \"%s\" as both snapshot and origin.",
+			  lv->name);
+		return 0;
+	}
+
 	if (org->status & (LOCKED|PVMOVE) || lv_is_cow(org)) {
 		log_error("Unable to create a snapshot of a %s LV.",
 			  org->status & LOCKED ? "locked" :
