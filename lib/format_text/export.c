@@ -272,6 +272,19 @@ int out_hint(struct formatter *f, const char *fmt, ...)
 }
 
 /*
+ * Appends a comment
+ */
+static int _out_comment(struct formatter *f, const char *comment, const char *fmt, ...)
+{
+	va_list ap;
+	int r;
+
+	_out_with_comment(f, comment, fmt, ap);
+
+	return r;
+}
+
+/*
  * The normal output function.
  */
 int out_text(struct formatter *f, const char *fmt, ...)
@@ -546,8 +559,17 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 		outf(f, "allocation_policy = \"%s\"",
 		     get_alloc_string(lv->alloc));
 
-	if (lv->read_ahead)
+	switch (lv->read_ahead) {
+	case DM_READ_AHEAD_NONE:
+		_out_comment(f, "# None", "read_ahead = -1");
+		break;
+	case DM_READ_AHEAD_AUTO:
+		/* No output - use default */
+		break;
+	default:
 		outf(f, "read_ahead = %u", lv->read_ahead);
+	}
+
 	if (lv->major >= 0)
 		outf(f, "major = %d", lv->major);
 	if (lv->minor >= 0)

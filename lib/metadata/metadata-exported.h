@@ -82,6 +82,7 @@ struct pv_segment;
 //#define FMT_PRECOMMIT		0x00000040U	/* Supports pre-commit? */
 #define FMT_RESIZE_PV		0x00000080U	/* Supports pvresize? */
 #define FMT_UNLIMITED_STRIPESIZE 0x00000100U	/* Unlimited stripe size? */
+#define FMT_RESTRICTED_READAHEAD 0x00000200U	/* Readahead restricted to 2-120? */
 
 /* LVM2 external library flags */
 #define CORRECT_INCONSISTENT    0x00000001U /* Correct inconsistent metadata */

@@ -59,6 +59,8 @@ static char _alloc_policy_char(alloc_policy_t alloc)
 	}
 }
 
+static const uint64_t _minusone = UINT64_C(-1);
+
 /*
  * Data-munging functions to prepare each data type for display and sorting
  */
@@ -224,12 +226,11 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
-	uint64_t minusone = UINT64_C(-1);
 
 	if (lv_info(lv->vg->cmd, lv, &info, 0) && info.exists)
 		return dm_report_field_int(rh, field, &info.major);
 
-	return dm_report_field_uint64(rh, field, &minusone);
+	return dm_report_field_uint64(rh, field, &_minusone);
 }
 
 static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
@@ -238,12 +239,11 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
-	uint64_t minusone = UINT64_C(-1);
 
 	if (lv_info(lv->vg->cmd, lv, &info, 0) && info.exists)
 		return dm_report_field_int(rh, field, &info.minor);
 
-	return dm_report_field_uint64(rh, field, &minusone);
+	return dm_report_field_uint64(rh, field, &_minusone);
 }
 
 static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
@@ -559,6 +559,32 @@ static int _size64_disp(struct dm_report *rh __attribute((unused)),
 	dm_report_field_set_value(field, repstr, sortval);
 
 	return 1;
+}
+
+static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
+			     struct dm_report_field *field,
+			     const void *data, void *private __attribute((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	uint64_t size;
+
+	if (lv->read_ahead == DM_READ_AHEAD_AUTO) {
+		dm_report_field_set_value(field, "auto", &_minusone);
+		return 1;
+	}
+
+	size = (uint64_t) lv->read_ahead;
+
+	return _size64_disp(rh, mem, field, &size, private);
+}
+
+static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
+			      struct dm_report_field *field,
+			      const void *data,
+			      void *private __attribute((unused)))
+{
+	// FIXME after dm support is added
+	return dm_report_field_uint64(rh, field, &_minusone);
 }
 
 static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,

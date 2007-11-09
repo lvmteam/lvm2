@@ -349,7 +349,11 @@ int import_lv(struct dm_pool *mem, struct logical_volume *lv, struct lv_disk *lv
 	else
 		lv->alloc = ALLOC_NORMAL;
 
-	lv->read_ahead = lvd->lv_read_ahead;
+	if (!lvd->lv_read_ahead)
+		lv->read_ahead = lv->vg->cmd->default_settings.read_ahead;
+	else
+		lv->read_ahead = lvd->lv_read_ahead;
+
 	lv->size = lvd->lv_size;
 	lv->le_count = lvd->lv_allocated_le;
 
@@ -386,7 +390,12 @@ static void _export_lv(struct lv_disk *lvd, struct volume_group *vg,
 		lvd->lv_dev = MKDEV(LVM_BLK_MAJOR, lvnum_from_lvid(&lv->lvid));
 	}
 
-	lvd->lv_read_ahead = lv->read_ahead;
+	if (lv->read_ahead == DM_READ_AHEAD_AUTO ||
+	    lv->read_ahead == DM_READ_AHEAD_NONE)
+		lvd->lv_read_ahead = 0;
+	else
+		lvd->lv_read_ahead = lv->read_ahead;
+
 	lvd->lv_stripes =
 	    list_item(lv->segments.n, struct lv_segment)->area_count;
 	lvd->lv_stripesize =

@@ -1,5 +1,8 @@
 Version 2.02.29 -
 ==================================
+  Add activation/readahead configuration option and FMT_RESTRICTED_READAHEAD.
+  Extend readahead arg to accept "auto" and "none".
+  Add lv_read_ahead and lv_kernel_read_ahead fields to reports.
   Prevent lvconvert -s from using same LV as origin and snapshot.
   Fix human-readable output of odd numbers of sectors.
   Add pv_mda_free and vg_mda_free fields to reports for raw text format.

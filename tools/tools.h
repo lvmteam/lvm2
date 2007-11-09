@@ -147,7 +147,7 @@ int metadatatype_arg(struct cmd_context *cmd, struct arg *a);
 int units_arg(struct cmd_context *cmd, struct arg *a);
 int segtype_arg(struct cmd_context *cmd, struct arg *a);
 int alloc_arg(struct cmd_context *cmd, struct arg *a);
-
+int readahead_arg(struct cmd_context *cmd, struct arg *a);
 
 /* we use the enums to access the switches */
 unsigned int arg_count(const struct cmd_context *cmd, int a);

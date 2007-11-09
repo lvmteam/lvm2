@@ -14,7 +14,7 @@ lvchange \- change attributes of a logical volume
 [\-\-monitor {y|n}]
 [\-M/\-\-persistent y/n] [\-\-minor minor]
 [\-P/\-\-partial]
-[\-p/\-\-permission r/w] [\-r/\-\-readahead ReadAheadSectors]
+[\-p/\-\-permission r/w] [\-r/\-\-readahead ReadAheadSectors|auto|none]
 [\-\-refresh]
 [\-t/\-\-test]
 [\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
@@ -72,9 +72,14 @@ Set to y to make the minor number specified persistent.
 .I \-p, \-\-permission r/w
 Change access permission to read-only or read/write.
 .TP
-.I \-r, \-\-readahead ReadAheadSectors
-Change read ahead sector count per logical between 2 and 120.
-For compatability with LVM1 only. Ignored by LVM2.
+.I \-r, \-\-readahead ReadAheadSectors|auto|none
+Set read ahead sector count of this logical volume.
+For volume groups with metadata in lvm1 format, this must
+be a value between 2 and 120.
+The default value is "auto" which allows the kernel to choose
+a suitable value automatically.
+"None" is equivalent to specifying zero.
+N.B. This setting is currently disregarded and "auto" is always used.
 .TP
 .I \-\-refresh
 If the logical volume is active, reload its metadata.

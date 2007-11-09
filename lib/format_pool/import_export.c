@@ -24,6 +24,7 @@
 #include "str_list.h"
 #include "display.h"
 #include "segtype.h"
+#include "toolcontext.h"
 
 /* This file contains only imports at the moment... */
 
@@ -77,7 +78,7 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct list *p
 	lv->size = 0;
 	lv->name = NULL;
 	lv->le_count = 0;
-	lv->read_ahead = 0;
+	lv->read_ahead = vg->cmd->default_settings.read_ahead;
 	lv->snapshot = NULL;
 	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);

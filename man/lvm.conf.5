@@ -306,6 +306,11 @@ such devices.
 \fBmirror_region_size\fP \(em Unit size in KB for copy operations
 when mirroring.
 .IP
+\fBreadahead\fP \(em Used when there is no readahead value stored 
+in the volume group metadata.  Set to \fBnone\fP to disable
+readahead in these circumstances or \fBauto\fP to use the default
+value chosen by the kernel.
+.IP
 \fBreserved_memory\fP, \fBreserved_stack\fP \(em How many KB to reserve 
 for LVM2 to use while logical volumes are suspended.  If insufficient 
 memory is reserved before suspension, there is a risk of machine deadlock.

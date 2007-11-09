@@ -372,6 +372,27 @@ int segtype_arg(struct cmd_context *cmd, struct arg *a)
 	return 1;
 }
 
+/*
+ * Positive integer, zero or "auto".
+ */
+int readahead_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
+{
+	if (int_arg(cmd, a))
+		return 1;
+
+	if (!strcasecmp(a->value, "auto")) {
+		a->ui_value = DM_READ_AHEAD_AUTO;
+		return 1;
+	}
+
+	if (!strcasecmp(a->value, "none")) {
+		a->ui_value = DM_READ_AHEAD_NONE;
+		return 1;
+	}
+
+	return 0;
+}
+
 static void __alloc(int size)
 {
 	if (!(_cmdline.commands = dm_realloc(_cmdline.commands, sizeof(*_cmdline.commands) * size))) {

@@ -153,6 +153,7 @@ static void _init_logging(struct cmd_context *cmd)
 static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
+	const char *read_ahead;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd,
@@ -204,6 +205,16 @@ static int _process_config(struct cmd_context *cmd)
 					     DEFAULT_UNITS),
 			     &cmd->default_settings.unit_type))) {
 		log_error("Invalid units specification");
+		return 0;
+	}
+
+	read_ahead = find_config_tree_str(cmd, "activation/readahead", DEFAULT_READ_AHEAD);
+	if (!strcasecmp(read_ahead, "auto"))
+		cmd->default_settings.read_ahead = DM_READ_AHEAD_AUTO;
+	else if (!strcasecmp(read_ahead, "none"))
+		cmd->default_settings.read_ahead = DM_READ_AHEAD_NONE;
+	else {
+		log_error("Invalid readahead specification");
 		return 0;
 	}
 

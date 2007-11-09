@@ -556,7 +556,8 @@ struct format_type *init_format(struct cmd_context *cmd)
 	fmt->ops = &_format1_ops;
 	fmt->name = FMT_LVM1_NAME;
 	fmt->alias = NULL;
-	fmt->features = FMT_RESTRICTED_LVIDS | FMT_ORPHAN_ALLOCATABLE;
+	fmt->features = FMT_RESTRICTED_LVIDS | FMT_ORPHAN_ALLOCATABLE |
+			FMT_RESTRICTED_READAHEAD;
 	fmt->private = NULL;
 
 	if (!(fmt->labeller = lvm1_labeller_create(fmt))) {
