@@ -548,6 +548,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		return 0;
 	}
 
+	if (lp->read_ahead != DM_READ_AHEAD_AUTO &&
+	    (vg->fid->fmt->features & FMT_RESTRICTED_READAHEAD) &&
+	    (lp->read_ahead < 2 || lp->read_ahead > 120)) {
+		log_error("Metadata only supports readahead values between 2 and 120.");
+		return 0;
+	}
+
 	/*
 	 * Create the pv list.
 	 */

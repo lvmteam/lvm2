@@ -1705,7 +1705,7 @@ struct logical_volume *lv_create_empty(const char *name,
 
 	lv->status = status;
 	lv->alloc = alloc;
-	lv->read_ahead = 0;
+	lv->read_ahead = vg->cmd->default_settings.read_ahead;
 	lv->major = -1;
 	lv->minor = -1;
 	lv->size = UINT64_C(0);

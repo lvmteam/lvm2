@@ -523,9 +523,21 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 		}
 	}
 
-	/* read_ahead defaults to 0 */
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead))
-		lv->read_ahead = 0;
+		/* If not present, choice of auto or none is configurable */
+		lv->read_ahead = vg->cmd->default_settings.read_ahead;
+	else {
+		switch (lv->read_ahead) {
+		case 0:
+			lv->read_ahead = DM_READ_AHEAD_AUTO;
+			break;
+		case -1:
+			lv->read_ahead = DM_READ_AHEAD_NONE;
+			break;
+		default:
+			;
+		}
+	}
 
 	lv->snapshot = NULL;
 	list_init(&lv->snapshot_segs);

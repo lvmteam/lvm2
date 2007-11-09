@@ -375,12 +375,12 @@ static int lvchange_readahead(struct cmd_context *cmd,
 
 	read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
 
-/******* FIXME Ranges?
-	if (read_ahead < LVM_MIN_READ_AHEAD || read_ahead > LVM_MAX_READ_AHEAD) {
-		log_error("read ahead sector argument is invalid");
+	if (read_ahead != DM_READ_AHEAD_AUTO &&
+	    (lv->vg->fid->fmt->features & FMT_RESTRICTED_READAHEAD) &&
+	    (read_ahead < 2 || read_ahead > 120)) {
+		log_error("Metadata only supports readahead values between 2 and 120.");
 		return 0;
 	}
-********/
 
 	if (lv->read_ahead == read_ahead) {
 		log_error("Read ahead is already %u for \"%s\"",
