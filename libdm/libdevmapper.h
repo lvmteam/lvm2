@@ -141,6 +141,9 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 struct dm_names *dm_task_get_names(struct dm_task *dmt);
 struct dm_versions *dm_task_get_versions(struct dm_task *dmt);
 
+#define DM_READ_AHEAD_AUTO UINT32_MAX	/* Use kernel default readahead */
+#define DM_READ_AHEAD_NONE 0		/* Disable readahead */
+
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
 int dm_task_set_minor(struct dm_task *dmt, int minor);
