@@ -249,7 +249,7 @@ static int _read_stripe_params(struct lvcreate_params *lp,
  * Generic mirror parameter checks.
  * FIXME: Should eventually be moved into lvm library.
  */
-static int _validate_mirror_params(const struct cmd_context *cmd,
+static int _validate_mirror_params(const struct cmd_context *cmd __attribute((unused)),
 				   const struct lvcreate_params *lp)
 {
 	int pagesize = lvm_getpagesize();
@@ -638,6 +638,12 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		lp->extents = lp->extents - size_rest + lp->stripes;
 	}
 
+	if (lp->zero && !activation) {
+		log_error("Can't wipe start of new LV without using "
+			  "device-mapper kernel driver");
+		return 0;
+	}
+
 	if (lp->snapshot) {
 		if (!activation()) {
 			log_error("Can't create snapshot without using "
@@ -811,45 +817,41 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		alloc_destroy(ah);
 		ah = NULL;
 	} else if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
-		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc)) {
-		stack;
-		return 0;
-	}
+		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc))
+		return_0;
 
 	/* store vg on disk(s) */
-	if (!vg_write(vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(vg))
+		return_0;
 
 	backup(vg);
 
-	if (!vg_commit(vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_commit(vg))
+		return_0;
 
 	if (lp->snapshot) {
 		if (!activate_lv_excl(cmd, lv)) {
 			log_error("Aborting. Failed to activate snapshot "
-				  "exception store. Remove new LV and retry.");
-			return 0;
+				  "exception store.");
+			goto revert_new_lv;
 		}
 	} else if (!activate_lv(cmd, lv)) {
+		if (lp->zero) {
+			log_error("Aborting. Failed to activate new LV to wipe "
+				  "the start of it.");
+			goto revert_new_lv;
+		}
 		log_error("Failed to activate new LV.");
 		return 0;
 	}
 
-	if ((lp->zero || lp->snapshot) && activation()) {
-		if (!set_lv(cmd, lv, UINT64_C(0), 0) && lp->snapshot) {
-			/* FIXME Remove the failed lv we just added */
-			log_error("Aborting. Failed to wipe snapshot "
-				  "exception store. Remove new LV and retry.");
-			return 0;
-		}
-	} else {
+	if (!lp->zero && !lp->snapshot)
 		log_error("WARNING: \"%s\" not zeroed", lv->name);
-		/* FIXME Remove the failed lv we just added */
+	else if (!set_lv(cmd, lv, UINT64_C(0), 0)) {
+		log_error("Aborting. Failed to wipe %s.",
+			  lp->snapshot ? "snapshot exception store" :
+					 "start of new LV");
+		goto deactivate_and_revert_new_lv;
 	}
 
 	if (lp->snapshot) {
@@ -860,7 +862,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* COW area must be deactivated if origin is not active */
 		if (!origin_active && !deactivate_lv(cmd, lv)) {
 			log_error("Aborting. Couldn't deactivate snapshot "
-				  "COW area.");
+				  "COW area. Manual intervention required.");
 			return 0;
 		}
 
@@ -868,13 +870,13 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 
 		if (!vg_add_snapshot(NULL, org, lv, NULL,
 				     org->le_count, lp->chunk_size)) {
-			log_err("Couldn't create snapshot.");
+			log_error("Couldn't create snapshot.");
 			return 0;
 		}
 
 		/* store vg on disk(s) */
 		if (!vg_write(vg))
-			return 0;
+			return_0;
 
 		if (!suspend_lv(cmd, org)) {
 			log_error("Failed to suspend origin %s", org->name);
@@ -883,7 +885,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		}
 
 		if (!vg_commit(vg))
-			return 0;
+			return_0;
 
 		if (!resume_lv(cmd, org)) {
 			log_error("Problem reactivating origin %s", org->name);
@@ -905,6 +907,20 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 error:
 	if (ah)
 		alloc_destroy(ah);
+	return 0;
+
+deactivate_and_revert_new_lv:
+	if (!deactivate_lv(cmd, lv)) {
+		log_error("Unable to deactivate failed new LV. "
+			  "Manual intervention required.");
+		return 0;
+	}
+
+revert_new_lv:
+	/* FIXME Better to revert to backup of metadata? */
+	if (!lv_remove(lv) || !vg_write(vg) || backup(vg), !vg_commit(vg))
+		log_error("Manual intervention may be required to remove "
+			  "abandoned LV(s) before retrying.");
 	return 0;
 }
 
