@@ -116,7 +116,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	 * the mirrored LV also should be cleaned up.
 	 * Clean-up is currently done by caller (_make_vg_consistent()).
 	 */
-	if ((lv_info(cmd, lv, &info, 0) && info.exists)
+	if ((lv_info(cmd, lv, &info, 0, 0) && info.exists)
 	    || first_seg(lv)->mirror_seg) {
 		extents = lv->le_count;
 		mirror_seg = first_seg(lv)->mirror_seg;

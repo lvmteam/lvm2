@@ -381,7 +381,7 @@ void lvdisplay_colons(const struct logical_volume *lv)
 {
 	int inkernel;
 	struct lvinfo info;
-	inkernel = lv_info(lv->vg->cmd, lv, &info, 1) && info.exists;
+	inkernel = lv_info(lv->vg->cmd, lv, &info, 1, 0) && info.exists;
 
 	log_print("%s%s/%s:%s:%d:%d:-1:%d:%" PRIu64 ":%d:-1:%d:%d:%d:%d",
 		  lv->vg->cmd->dev_dir,
@@ -412,7 +412,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 		return 0;
 	}
 
-	inkernel = lv_info(cmd, lv, &info, 1) && info.exists;
+	inkernel = lv_info(cmd, lv, &info, 1, 1) && info.exists;
 
 	log_print("--- Logical volume ---");
 
@@ -493,7 +493,15 @@ int lvdisplay_full(struct cmd_context *cmd,
 ***********/
 
 	log_print("Allocation             %s", get_alloc_string(lv->alloc));
-	log_print("Read ahead sectors     %u", lv->read_ahead);
+	if (lv->read_ahead == DM_READ_AHEAD_AUTO)
+		log_print("Read ahead sectors     auto");
+	else if (lv->read_ahead == DM_READ_AHEAD_NONE)
+		log_print("Read ahead sectors     0");
+	else
+		log_print("Read ahead sectors     %u", lv->read_ahead);
+
+	if (inkernel && lv->read_ahead != info.read_ahead)
+		log_print("- currently set to     %u", info.read_ahead);
 
 	if (lv->status & FIXED_MINOR) {
 		if (lv->major >= 0)

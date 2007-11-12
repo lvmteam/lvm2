@@ -118,7 +118,8 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 }
 
 static int _info_run(const char *name, const char *dlid, struct dm_info *info,
-		     int mknodes, int with_open_count)
+		     uint32_t *read_ahead, int mknodes, int with_open_count,
+		     int with_read_ahead)
 {
 	int r = 0;
 	struct dm_task *dmt;
@@ -140,6 +141,12 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 
 	if (!dm_task_get_info(dmt, info))
 		goto_out;
+
+	if (!with_read_ahead) {
+		if (read_ahead)
+			*read_ahead = DM_READ_AHEAD_NONE;
+	} else
+		; // FIXME *read_ahead = dm_task_get_read_ahead(dmt);
 
 	r = 1;
 
@@ -201,27 +208,32 @@ int device_is_usable(dev_t dev)
 }
 
 static int _info(const char *name, const char *dlid, int mknodes,
-		 int with_open_count, struct dm_info *info)
+		 int with_open_count, int with_read_ahead,
+		 struct dm_info *info, uint32_t *read_ahead)
 {
 	if (!mknodes && dlid && *dlid) {
-		if (_info_run(NULL, dlid, info, 0, with_open_count) &&
+		if (_info_run(NULL, dlid, info, read_ahead, 0, with_open_count,
+			      with_read_ahead) &&
 	    	    info->exists)
 			return 1;
 		else if (_info_run(NULL, dlid + sizeof(UUID_PREFIX) - 1, info,
-				   0, with_open_count) &&
+				   read_ahead, 0, with_open_count,
+				   with_read_ahead) &&
 			 info->exists)
 			return 1;
 	}
 
 	if (name)
-		return _info_run(name, NULL, info, mknodes, with_open_count);
+		return _info_run(name, NULL, info, read_ahead, mknodes,
+				 with_open_count, with_read_ahead);
 
 	return 0;
 }
 
 int dev_manager_info(struct dm_pool *mem, const char *name,
 		     const struct logical_volume *lv, int with_mknodes,
-		     int with_open_count, struct dm_info *info)
+		     int with_open_count, int with_read_ahead,
+		     struct dm_info *info, uint32_t *read_ahead)
 {
 	const char *dlid;
 
@@ -230,7 +242,8 @@ int dev_manager_info(struct dm_pool *mem, const char *name,
 		return 0;
 	}
 
-	return _info(name, dlid, with_mknodes, with_open_count, info);
+	return _info(name, dlid, with_mknodes, with_open_count, with_read_ahead,
+		     info, read_ahead);
 }
 
 /* FIXME Interface must cope with multiple targets */
@@ -631,7 +644,7 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		return_0;
 
         log_debug("Getting device info for %s [%s]", name, dlid);
-        if (!_info(name, dlid, 0, 1, &info)) {
+        if (!_info(name, dlid, 0, 1, 0, &info, NULL)) {
                 log_error("Failed to get info for %s [%s].", name, dlid);
                 return 0;
         }
@@ -886,6 +899,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	struct lv_layer *lvlayer;
 	struct dm_tree_node *dnode;
 	char *name, *dlid;
+	uint32_t max_stripe_size = UINT32_C(0);
+	uint32_t read_ahead = lv->read_ahead;
+	uint32_t flags = UINT32_C(0);
 
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
@@ -932,7 +948,16 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			break;
 		if (lv_is_cow(lv) && !layer)
 			break;
+		if (max_stripe_size < seg->stripe_size)
+			max_stripe_size = seg->stripe_size;
 	}
+
+	if (read_ahead == DM_READ_AHEAD_AUTO)
+		read_ahead = max_stripe_size;
+	else
+		flags = DM_READ_AHEAD_MINIMUM_FLAG;
+
+	// FIXME dm_tree_node_set_read_ahead(dnode, read_ahead, flags);
 
 	return 1;
 }

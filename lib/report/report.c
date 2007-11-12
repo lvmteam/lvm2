@@ -227,7 +227,7 @@ static int _lvkmaj_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
 
-	if (lv_info(lv->vg->cmd, lv, &info, 0) && info.exists)
+	if (lv_info(lv->vg->cmd, lv, &info, 0, 0) && info.exists)
 		return dm_report_field_int(rh, field, &info.major);
 
 	return dm_report_field_uint64(rh, field, &_minusone);
@@ -240,7 +240,7 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
 
-	if (lv_info(lv->vg->cmd, lv, &info, 0) && info.exists)
+	if (lv_info(lv->vg->cmd, lv, &info, 0, 0) && info.exists)
 		return dm_report_field_int(rh, field, &info.minor);
 
 	return dm_report_field_uint64(rh, field, &_minusone);
@@ -297,7 +297,7 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	else
 		repstr[3] = '-';
 
-	if (lv_info(lv->vg->cmd, lv, &info, 1) && info.exists) {
+	if (lv_info(lv->vg->cmd, lv, &info, 1, 0) && info.exists) {
 		if (info.suspended)
 			repstr[4] = 's';	/* Suspended */
 		else if (info.live_table)
@@ -583,7 +583,12 @@ static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 			      const void *data,
 			      void *private __attribute((unused)))
 {
-	// FIXME after dm support is added
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	struct lvinfo info;
+
+	if (lv_info(lv->vg->cmd, lv, &info, 0, 1) && info.exists)
+		return dm_report_field_int(rh, field, &info.read_ahead);
+
 	return dm_report_field_uint64(rh, field, &_minusone);
 }
 
@@ -852,7 +857,7 @@ static int _snpercent_disp(struct dm_report *rh __attribute((unused)), struct dm
 	}
 
 	if (!lv_is_cow(lv) ||
-	    (lv_info(lv->vg->cmd, lv, &info, 0) && !info.exists)) {
+	    (lv_info(lv->vg->cmd, lv, &info, 0, 0) && !info.exists)) {
 		*sortval = UINT64_C(0);
 		dm_report_field_set_value(field, "", sortval);
 		return 1;

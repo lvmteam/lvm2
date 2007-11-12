@@ -30,7 +30,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!arg_count(cmd, all_ARG) && !lv_is_visible(lv))
 		return ECMD_PROCESSED;
 
-	inkernel = lv_info(cmd, lv, &info, 1) && info.exists;
+	inkernel = lv_info(cmd, lv, &info, 1, 0) && info.exists;
 	if (lv_is_origin(lv)) {
 		list_iterate_items_gen(snap_seg, &lv->snapshot_segs,
 				       origin_list) {

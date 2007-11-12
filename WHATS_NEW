@@ -1,9 +1,10 @@
 Version 2.02.29 -
 ==================================
   Attempt to remove incomplete LVs with lvcreate zeroing/activation problems.
+  Add read_ahead activation code.
   Add activation/readahead configuration option and FMT_RESTRICTED_READAHEAD.
   Extend readahead arg to accept "auto" and "none".
-  Add lv_read_ahead and lv_kernel_read_ahead fields to reports.
+  Add lv_read_ahead and lv_kernel_read_ahead fields to reports and lvdisplay.
   Prevent lvconvert -s from using same LV as origin and snapshot.
   Fix human-readable output of odd numbers of sectors.
   Add pv_mda_free and vg_mda_free fields to reports for raw text format.
