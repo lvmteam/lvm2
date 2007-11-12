@@ -243,7 +243,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	if (!validate_name(lp->vg_name)) {
 		log_error("Volume group name %s has invalid characters",
 			  lp->vg_name);
-		return NULL;
+		return 0;
 	}
 
 	if ((st = strrchr(lp->lv_name, '/')))
