@@ -27,7 +27,7 @@ static int _monitor_lvs_in_vg(struct cmd_context *cmd,
 	list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
 
-		if (!lv_info(cmd, lv, &info, 0))
+		if (!lv_info(cmd, lv, &info, 0, 0))
 			lv_active = 0;
 		else
 			lv_active = info.exists;

@@ -27,6 +27,7 @@ struct lvinfo {
 	int read_only;
 	int live_table;
 	int inactive_table;
+	uint32_t read_ahead;
 };
 
 void set_activation(int activation);
@@ -62,9 +63,9 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv);
  * Returns 1 if info structure has been populated, else 0.
  */
 int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, struct lvinfo *info,
-	    int with_open_count);
+	    int with_open_count, int with_read_ahead);
 int lv_info_by_lvid(struct cmd_context *cmd, const char *lvid_s,
-		    struct lvinfo *info, int with_open_count);
+		    struct lvinfo *info, int with_open_count, int with_read_ahead);
 
 /*
  * Returns 1 if activate_lv has been set: 1 = activate; 0 = don't.

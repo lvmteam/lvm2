@@ -1839,7 +1839,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* FIXME Ensure not referred to by another existing LVs */
 
-	if (lv_info(cmd, lv, &info, 1)) {
+	if (lv_info(cmd, lv, &info, 1, 0)) {
 		if (info.open_count) {
 			log_error("Can't remove open logical volume \"%s\"",
 				  lv->name);

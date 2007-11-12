@@ -680,7 +680,7 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 		/* Must zero cow */
 		status |= LVM_WRITE;
 
-		if (!lv_info(cmd, org, &info, 0)) {
+		if (!lv_info(cmd, org, &info, 0, 0)) {
 			log_error("Check for existence of snapshot origin "
 				  "'%s' failed.", org->name);
 			return 0;
@@ -918,7 +918,7 @@ deactivate_and_revert_new_lv:
 
 revert_new_lv:
 	/* FIXME Better to revert to backup of metadata? */
-	if (!lv_remove(lv) || !vg_write(vg) || backup(vg) || !vg_commit(vg))
+	if (!lv_remove(lv) || !vg_write(vg) || backup(vg), !vg_commit(vg))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned LV(s) before retrying.");
 	return 0;

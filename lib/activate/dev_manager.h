@@ -40,7 +40,8 @@ void dev_manager_exit(void);
  */
 int dev_manager_info(struct dm_pool *mem, const char *name,
 		     const struct logical_volume *lv,
-		     int mknodes, int with_open_count, struct dm_info *info);
+		     int mknodes, int with_open_count, int with_read_ahead,
+		     struct dm_info *info, uint32_t *read_ahead);
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
 				 float *percent);
