@@ -918,7 +918,7 @@ deactivate_and_revert_new_lv:
 
 revert_new_lv:
 	/* FIXME Better to revert to backup of metadata? */
-	if (!lv_remove(lv) || !vg_write(vg) || backup(vg), !vg_commit(vg))
+	if (!lv_remove(lv) || !vg_write(vg) || (backup(vg), !vg_commit(vg)))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned LV(s) before retrying.");
 	return 0;

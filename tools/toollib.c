@@ -1415,7 +1415,7 @@ deactivate_and_revert_new_lv:
 	}
 
 revert_new_lv:
-	if (!lv_remove(log_lv) || !vg_write(vg) || backup(vg), !vg_commit(vg))
+	if (!lv_remove(log_lv) || !vg_write(vg) || (backup(vg), !vg_commit(vg)))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned log LV before retrying.");
 	return NULL;
