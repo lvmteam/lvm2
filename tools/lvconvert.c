@@ -135,7 +135,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			log_error("Negative chunk size is invalid");
 			return 0;
 		}
-		lp->chunk_size = 2 * arg_uint_value(cmd, chunksize_ARG, 8);
+		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
 		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
 		    (lp->chunk_size & (lp->chunk_size - 1))) {
 			log_error("Chunk size must be a power of 2 in the "
@@ -175,8 +175,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 				log_error("Negative regionsize is invalid");
 				return 0;
 			}
-			lp->region_size = 2 * arg_uint_value(cmd,
-							     regionsize_ARG, 0);
+			lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
 		} else {
 			region_size = 2 * find_config_tree_int(cmd,
 						"activation/mirror_region_size",

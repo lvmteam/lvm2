@@ -169,6 +169,7 @@ static int _get_int_arg(struct arg *a, char **ptr)
 	return 1;
 }
 
+/* Size stored in sectors */
 static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a, int factor)
 {
 	char *ptr;
@@ -211,6 +212,8 @@ static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *
 
 		while (i-- > 0)
 			v *= 1024;
+
+		v *= 2;
 	} else
 		v *= factor;
 
@@ -224,12 +227,12 @@ static int _size_arg(struct cmd_context *cmd __attribute((unused)), struct arg *
 
 int size_kb_arg(struct cmd_context *cmd, struct arg *a)
 {
-	return _size_arg(cmd, a, 1);
+	return _size_arg(cmd, a, 2);
 }
 
 int size_mb_arg(struct cmd_context *cmd, struct arg *a)
 {
-	return _size_arg(cmd, a, 1024);
+	return _size_arg(cmd, a, 2048);
 }
 
 int int_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
@@ -377,9 +380,6 @@ int segtype_arg(struct cmd_context *cmd, struct arg *a)
  */
 int readahead_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
-	if (int_arg(cmd, a))
-		return 1;
-
 	if (!strcasecmp(a->value, "auto")) {
 		a->ui_value = DM_READ_AHEAD_AUTO;
 		return 1;
@@ -390,7 +390,13 @@ int readahead_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 		return 1;
 	}
 
-	return 0;
+	if (!_size_arg(cmd, a, 1))
+		return 0;
+
+	if (a->sign == SIGN_MINUS)
+		return 0;
+
+	return 1;
 }
 
 static void __alloc(int size)

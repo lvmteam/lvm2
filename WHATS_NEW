@@ -1,5 +1,7 @@
 Version 2.02.29 -
 ==================================
+  Accept sizes with --readahead argument.
+  Store size arguments as sectors internally.
   Attempt to remove incomplete LVs with lvcreate zeroing/activation problems.
   Add read_ahead activation code.
   Add activation/readahead configuration option and FMT_RESTRICTED_READAHEAD.

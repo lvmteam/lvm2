@@ -55,7 +55,7 @@ static int validate_stripesize(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT) {
+	if (arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT * 2) {
 		log_error("Stripe size cannot be larger than %s",
 			  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
 		return 0;
@@ -63,16 +63,15 @@ static int validate_stripesize(struct cmd_context *cmd,
 
 	if (!(vg->fid->fmt->features & FMT_SEGMENTS))
 		log_warn("Varied stripesize not supported. Ignoring.");
-	else if (arg_uint_value(cmd, stripesize_ARG, 0) > vg->extent_size) {
+	else if (arg_uint_value(cmd, stripesize_ARG, 0) > vg->extent_size * 2) {
 		log_error("Reducing stripe size %s to maximum, "
 			  "physical extent size %s",
 			  display_size(cmd,
-				       (uint64_t) arg_uint_value(cmd, stripesize_ARG, 0) * 2),
+				       (uint64_t) arg_uint_value(cmd, stripesize_ARG, 0)),
 			  display_size(cmd, (uint64_t) vg->extent_size));
 		lp->stripe_size = vg->extent_size;
 	} else
-		lp->stripe_size = 2 * arg_uint_value(cmd,
-						     stripesize_ARG, 0);
+		lp->stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 
 	if (lp->mirrors) {
 		log_error("Mirrors and striping cannot be combined yet.");
@@ -208,7 +207,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 
 	/* Size returned in kilobyte units; held in sectors */
 	if (arg_count(cmd, size_ARG)) {
-		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)) * 2;
+		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0));
 		lp->sign = arg_sign_value(cmd, size_ARG, SIGN_NONE);
 		lp->percent = PERCENT_NONE;
 	}

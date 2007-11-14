@@ -61,7 +61,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		}
 
 		pvmetadatasize = arg_uint64_value(cmd, metadatasize_ARG,
-						  UINT64_C(0)) * 2;
+						  UINT64_C(0));
 		if (!pvmetadatasize)
 			pvmetadatasize =
 			    find_config_tree_int(cmd,

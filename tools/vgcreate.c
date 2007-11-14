@@ -77,7 +77,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Units of 512-byte sectors */
 	extent_size =
-	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT) * 2;
+	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT);
 
 	if (!extent_size) {
 		log_error("Physical extent size may not be zero");
