@@ -34,7 +34,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 					   int consistent, void *handle));
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    struct volume_group *vg, void *handle,
+		    struct volume_group *vg, uint32_t lock_type, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct volume_group * vg,
 					   struct physical_volume * pv,

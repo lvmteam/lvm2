@@ -54,33 +54,15 @@ static int _segs_single(struct cmd_context *cmd __attribute((unused)),
 	return ECMD_PROCESSED;
 }
 
-static int _pvsegs_sub_single(struct cmd_context *cmd, struct volume_group *vg,
+static int _pvsegs_sub_single(struct cmd_context *cmd __attribute((unused)),
+			      struct volume_group *vg,
 			      struct pv_segment *pvseg, void *handle)
 {
-	int consistent = 0;
-	struct physical_volume *pv = pvseg->pv;
 	int ret = ECMD_PROCESSED;
 
-	if (!lock_vol(cmd, pv_vg_name(pv), LCK_VG_READ)) {
-		log_error("Can't lock %s: skipping", pv_vg_name(pv));
-		return ECMD_FAILED;
-	}
-
-	if (!(vg = vg_read(cmd, pv_vg_name(pv), NULL, &consistent))) {
-		log_error("Can't read %s: skipping", pv_vg_name(pv));
-		goto out;
-	}
-
-	if (!vg_check_status(vg, CLUSTERED)) {
-		ret = ECMD_FAILED;
-		goto out;
-	}
-
-	if (!report_object(handle, vg, NULL, pv, NULL, pvseg))
+	if (!report_object(handle, vg, NULL, pvseg->pv, NULL, pvseg))
 		ret = ECMD_FAILED;
 
-out:
-	unlock_vg(cmd, pv_vg_name(pv));
 	return ret;
 }
 
@@ -108,7 +90,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	int ret = ECMD_PROCESSED;
 	const char *vg_name = NULL;
 
-	if (!is_orphan(pv)) {
+	if (!is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
 
 		if (!lock_vol(cmd, vg_name, LCK_VG_READ)) {
@@ -334,7 +316,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		break;
 	case PVS:
 		if (args_are_pvs)
-			r = process_each_pv(cmd, argc, argv, NULL,
+			r = process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ,
 					    report_handle, &_pvs_single);
 		else
 			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
@@ -346,7 +328,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		break;
 	case PVSEGS:
 		if (args_are_pvs)
-			r = process_each_pv(cmd, argc, argv, NULL,
+			r = process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ,
 					    report_handle, &_pvsegs_single);
 		else
 			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
