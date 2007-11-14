@@ -16,7 +16,7 @@
 #include "tools.h"
 
 static int _pvdisplay_single(struct cmd_context *cmd,
-			     struct volume_group *vg __attribute((unused)),
+			     struct volume_group *vg,
 			     struct physical_volume *pv, void *handle)
 {
 	struct pv_list *pvl;
@@ -27,27 +27,27 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name = NULL;
 
-	 if (!is_orphan(pv)) {
+	 if (!is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
-	         if (!lock_vol(cmd, vg_name, LCK_VG_READ)) {
-	                 log_error("Can't lock %s: skipping", vg_name);
-	                 return ECMD_FAILED;
-	         }
+         	if (!lock_vol(cmd, vg_name, LCK_VG_READ)) {
+                 	log_error("Can't lock %s: skipping", vg_name);
+                 	return ECMD_FAILED;
+         	}
 
-	         if (!(vg = vg_read(cmd, vg_name, (char *)&pv->vgid, &consistent))) {
-	                 log_error("Can't read %s: skipping", vg_name);
-	                 goto out;
-	         }
+         	if (!(vg = vg_read(cmd, vg_name, (char *)&pv->vgid, &consistent))) {
+                 	log_error("Can't read %s: skipping", vg_name);
+                 	goto out;
+         	}
 
-		 if (!vg_check_status(vg, CLUSTERED)) {
-	                 ret = ECMD_FAILED;
-	                 goto out;
-	         }
+		if (!vg_check_status(vg, CLUSTERED)) {
+			ret = ECMD_FAILED;
+			goto out;
+		}
 
-		 /*
-		  * Replace possibly incomplete PV structure with new one
-		  * allocated in vg_read() path.
-		  */
+	 	/*
+		 * Replace possibly incomplete PV structure with new one
+		 * allocated in vg_read() path.
+		 */
 		 if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			 log_error("Unable to find \"%s\" in volume group \"%s\"",
 				   pv_name, vg->name);
@@ -119,5 +119,6 @@ int pvdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	return process_each_pv(cmd, argc, argv, NULL, NULL, _pvdisplay_single);
+	return process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ, NULL,
+			       _pvdisplay_single);
 }

@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Avoid nested vg_reads when processing PVs in VGs and fix associated locking.
   Accept sizes with --readahead argument.
   Store size arguments as sectors internally.
   Attempt to remove incomplete LVs with lvcreate zeroing/activation problems.

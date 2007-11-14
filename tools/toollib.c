@@ -424,8 +424,28 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 						      void *handle))
 {
 	struct pv_segment *pvseg;
+	const char *vg_name = NULL;
 	int ret_max = 0;
 	int ret;
+	int consistent = 0;
+
+	if (!vg) {
+		vg_name = pv_vg_name(pv);
+		if (!lock_vol(cmd, vg_name, LCK_VG_READ)) {
+			log_error("Can't lock %s: skipping", vg_name);
+			return ECMD_FAILED;
+		}
+
+		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
+			log_error("Can't read %s: skipping", vg_name);
+			goto out;
+		}
+
+		if (!vg_check_status(vg, CLUSTERED)) {
+			ret = ECMD_FAILED;
+			goto out;
+		}
+	}
 
 	list_iterate_items(pvseg, &pv->segments) {
 		ret = process_single(cmd, vg, pvseg, handle);
@@ -434,6 +454,10 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 		if (sigint_caught())
 			return ret_max;
 	}
+
+out:
+	if (vg_name)
+		unlock_vg(cmd, vg_name);
 
 	return ret_max;
 }
@@ -665,7 +689,7 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 }
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    struct volume_group *vg, void *handle,
+		    struct volume_group *vg, uint32_t lock_type, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct volume_group * vg,
 					   struct physical_volume * pv,
@@ -735,20 +759,32 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 		if (!list_empty(&tags) && (vgnames = get_vgs(cmd, 0)) &&
 		    !list_empty(vgnames)) {
 			list_iterate_items(sll, vgnames) {
+				if (!lock_vol(cmd, sll->str, lock_type)) {
+					log_error("Can't lock %s: skipping", sll->str);
+					continue;
+				}
 				if (!(vg = vg_read(cmd, sll->str, NULL, &consistent))) {
 					log_error("Volume group \"%s\" not found", sll->str);
+					unlock_vg(cmd, sll->str);
 					ret_max = ECMD_FAILED;
 					continue;
 				}
-				if (!consistent)
+				if (!consistent) {
+					unlock_vg(cmd, sll->str);
 					continue;
+				}
 
-				if (!vg_check_status(vg, CLUSTERED))
+				if (!vg_check_status(vg, CLUSTERED)) {
+					unlock_vg(cmd, sll->str);
 					continue;
+				}
 
 				ret = process_each_pv_in_vg(cmd, vg, &tags,
 							    handle,
 							    process_single);
+
+				unlock_vg(cmd, sll->str);
+
 				if (ret > ret_max)
 					ret_max = ret;
 				if (sigint_caught())
