@@ -223,7 +223,7 @@ static int do_activate_lv(char *resource, unsigned char lock_flags, int mode)
 	}
 
 	/* If it's suspended then resume it */
-	if (!lv_info_by_lvid(cmd, resource, &lvi, 0))
+	if (!lv_info_by_lvid(cmd, resource, &lvi, 0, 0))
 		return EIO;
 
 	if (lvi.suspended)
@@ -269,7 +269,7 @@ static int do_suspend_lv(char *resource)
 	}
 
 	/* Only suspend it if it exists */
-	if (!lv_info_by_lvid(cmd, resource, &lvi, 0))
+	if (!lv_info_by_lvid(cmd, resource, &lvi, 0, 0))
 		return EIO;
 
 	if (lvi.exists) {
@@ -414,7 +414,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 			struct lvinfo lvi;
 
 			pthread_mutex_lock(&lvm_lock);
-			status = lv_info_by_lvid(cmd, resource, &lvi, 0);
+			status = lv_info_by_lvid(cmd, resource, &lvi, 0, 0);
 			pthread_mutex_unlock(&lvm_lock);
 			if (!status)
 				return EIO;
