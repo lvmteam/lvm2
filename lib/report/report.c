@@ -566,30 +566,27 @@ static int _lvreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 			     const void *data, void *private __attribute((unused)))
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
-	uint64_t size;
 
 	if (lv->read_ahead == DM_READ_AHEAD_AUTO) {
 		dm_report_field_set_value(field, "auto", &_minusone);
 		return 1;
 	}
 
-	size = (uint64_t) lv->read_ahead;
-
-	return _size64_disp(rh, mem, field, &size, private);
+	return _size32_disp(rh, mem, field, &lv->read_ahead, private);
 }
 
 static int _lvkreadahead_disp(struct dm_report *rh, struct dm_pool *mem,
 			      struct dm_report_field *field,
 			      const void *data,
-			      void *private __attribute((unused)))
+			      void *private)
 {
 	const struct logical_volume *lv = (const struct logical_volume *) data;
 	struct lvinfo info;
 
-	if (lv_info(lv->vg->cmd, lv, &info, 0, 1) && info.exists)
-		return dm_report_field_int(rh, field, &info.read_ahead);
+	if (!lv_info(lv->vg->cmd, lv, &info, 0, 1) || !info.exists)
+		return dm_report_field_uint64(rh, field, &_minusone);
 
-	return dm_report_field_uint64(rh, field, &_minusone);
+	return _size32_disp(rh, mem, field, &info.read_ahead, private);
 }
 
 static int _vgsize_disp(struct dm_report *rh, struct dm_pool *mem,

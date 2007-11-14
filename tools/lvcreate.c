@@ -173,7 +173,7 @@ static int _read_size_params(struct lvcreate_params *lp,
 			log_error("Negative size is invalid");
 			return 0;
 		}
-		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0)) * 2;
+		lp->size = arg_uint64_value(cmd, size_ARG, UINT64_C(0));
 		lp->percent = PERCENT_NONE;
 	}
 
@@ -195,7 +195,7 @@ static int _validate_stripe_params(struct cmd_context *cmd,
 	if (lp->stripes > 1 && !lp->stripe_size) {
 		lp->stripe_size = find_config_tree_int(cmd,
 						  "metadata/stripesize",
-						  DEFAULT_STRIPESIZE) * 2;
+						  DEFAULT_STRIPESIZE);
 		log_print("Using default stripesize %s",
 			  display_size(cmd, (uint64_t) lp->stripe_size));
 	}
@@ -230,12 +230,12 @@ static int _read_stripe_params(struct lvcreate_params *lp,
 			return 0;
 		}
 		/* Check to make sure we won't overflow lp->stripe_size */
-		if(arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT) {
+		if(arg_uint_value(cmd, stripesize_ARG, 0) > STRIPE_SIZE_LIMIT * 2) {
 			log_error("Stripe size cannot be larger than %s",
 				  display_size(cmd, (uint64_t) STRIPE_SIZE_LIMIT));
 			return 0;
 		}
-		lp->stripe_size = 2 * arg_uint_value(cmd, stripesize_ARG, 0);
+		lp->stripe_size = arg_uint_value(cmd, stripesize_ARG, 0);
 	}
 
 
@@ -310,7 +310,7 @@ static int _read_mirror_params(struct lvcreate_params *lp,
 			log_error("Negative regionsize is invalid");
 			return 0;
 		}
-		lp->region_size = 2 * arg_uint_value(cmd, regionsize_ARG, 0);
+		lp->region_size = arg_uint_value(cmd, regionsize_ARG, 0);
 	} else {
 		region_size = 2 * find_config_tree_int(cmd,
 					"activation/mirror_region_size",
@@ -375,7 +375,7 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			log_error("Negative chunk size is invalid");
 			return 0;
 		}
-		lp->chunk_size = 2 * arg_uint_value(cmd, chunksize_ARG, 8);
+		lp->chunk_size = arg_uint_value(cmd, chunksize_ARG, 8);
 		if (lp->chunk_size < 8 || lp->chunk_size > 1024 ||
 		    (lp->chunk_size & (lp->chunk_size - 1))) {
 			log_error("Chunk size must be a power of 2 in the "

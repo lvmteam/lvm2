@@ -56,7 +56,7 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	params.new_size = arg_uint64_value(cmd, physicalvolumesize_ARG,
-					   UINT64_C(0)) * 2;
+					   UINT64_C(0));
 
 	params.done = 0;
 	params.total = 0;

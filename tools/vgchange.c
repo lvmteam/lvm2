@@ -388,7 +388,7 @@ static int _vgchange_pesize(struct cmd_context *cmd, struct volume_group *vg)
 		return EINVALID_CMD_LINE;
 	}
 
-	extent_size = arg_uint_value(cmd, physicalextentsize_ARG, 0) * 2;
+	extent_size = arg_uint_value(cmd, physicalextentsize_ARG, 0);
 	if (!extent_size) {
 		log_error("Physical extent size may not be zero");
 		return EINVALID_CMD_LINE;
