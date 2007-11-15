@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Stop clvmd going haywire if a pre_function fails.
   Convert some vg_reads into vg_lock_and_reads.
   Avoid nested vg_reads when processing PVs in VGs and fix associated locking.
   Accept sizes with --readahead argument.

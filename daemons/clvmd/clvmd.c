@@ -1379,8 +1379,10 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 			break;
 		} while(1);
 
-		if (status)
-			continue; /* Wait for another PRE command */
+		if (status) {
+			client->bits.localsock.state = POST_COMMAND;
+			goto next_pre;
+		}
 
 		/* We may need to wait for the condition variable before running the post command */
 		pthread_mutex_lock(&client->bits.localsock.mutex);
@@ -1409,7 +1411,7 @@ static __attribute__ ((noreturn)) void *pre_and_post_thread(void *arg)
 			log_error("Error sending to pipe: %m\n");
 			break;
 		} while(1);
-
+next_pre:
 		DEBUGLOG("Waiting for next pre command\n");
 
 		pthread_mutex_lock(&client->bits.localsock.mutex);
