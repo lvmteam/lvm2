@@ -243,6 +243,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
 				      LCK_VG_WRITE | LCK_NONBLOCK,
 				      0, 0))) {
+		/* FIXME Remove this restriction */
 		log_error("Volume group \"%s\" already exists", vg_name_to);
 		unlock_vg(cmd, vg_name_from);
 		return ECMD_FAILED;
