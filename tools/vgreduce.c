@@ -539,7 +539,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 		/* FIXME: Pass private struct through to all these functions */
 		/* and update in batch here? */
-		ret = process_each_pv(cmd, argc, argv, vg, LCK_VG_WRITE, NULL,
+		ret = process_each_pv(cmd, argc, argv, vg, LCK_NONE, NULL,
 				      _vgreduce_single);
 
 	}

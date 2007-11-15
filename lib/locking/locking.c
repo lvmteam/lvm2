@@ -335,6 +335,11 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 {
 	char resource[258] __attribute((aligned(8)));
 
+	if (flags == LCK_NONE) {
+		log_debug("Internal error: %s: LCK_NONE lock requested", vol);
+		return 1;
+	}
+
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
 		/* Lock VG to change on-disk metadata. */
