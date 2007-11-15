@@ -254,9 +254,9 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	return 1;
 }
 
-static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
+static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
+		     struct lvresize_params *lp)
 {
-	struct volume_group *vg;
 	struct logical_volume *lv;
 	struct lvinfo info;
 	uint32_t stripesize_extents = 0;
@@ -268,21 +268,12 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 	alloc_policy_t alloc;
 	struct logical_volume *lock_lv;
 	struct lv_list *lvl;
-	int consistent = 1;
 	struct lv_segment *seg;
 	uint32_t seg_extents;
 	uint32_t sz, str;
 	struct list *pvh = NULL;
 	char size_buf[SIZE_BUF];
 	char lv_path[PATH_MAX];
-
-	if (!(vg = vg_read(cmd, lp->vg_name, NULL, &consistent))) {
-		log_error("Volume group %s doesn't exist", lp->vg_name);
-		return ECMD_FAILED;
-	}
-
-	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE))
-		return ECMD_FAILED;
 
 	/* does LV exist? */
 	if (!(lvl = find_lv_in_vg(vg, lp->lv_name))) {
@@ -649,6 +640,7 @@ static int _lvresize(struct cmd_context *cmd, struct lvresize_params *lp)
 int lvresize(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct lvresize_params lp;
+	struct volume_group *vg;
 	int r;
 
 	memset(&lp, 0, sizeof(lp));
@@ -657,12 +649,14 @@ int lvresize(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 
 	log_verbose("Finding volume group %s", lp.vg_name);
-	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", lp.vg_name);
+	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, NULL, LCK_VG_WRITE,
+				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
+				    CORRECT_INCONSISTENT))) {
+		log_error("Volume group %s doesn't exist", lp.vg_name);
 		return ECMD_FAILED;
 	}
 
-	if (!(r = _lvresize(cmd, &lp)))
+	if (!(r = _lvresize(cmd, vg, &lp)))
 		stack;
 
 	unlock_vg(cmd, lp.vg_name);

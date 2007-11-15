@@ -308,6 +308,7 @@ int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 int is_orphan_vg(const char *vg_name);
 int is_orphan(pv_t *pv);
 vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
+		       const char *vgid,
 		       uint32_t lock_flags, uint32_t status_flags,
 		       uint32_t misc_flags);
 

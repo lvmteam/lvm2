@@ -608,7 +608,7 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 
 	log_verbose("Checking for existing volume group \"%s\"", lp.vg_name);
 
-	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, LCK_VG_WRITE,
+	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, NULL, LCK_VG_WRITE,
 				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
 				    CORRECT_INCONSISTENT)))
 		return ECMD_FAILED;
