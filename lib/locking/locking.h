@@ -86,6 +86,8 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 /*
  * Common combinations
  */
+#define LCK_NONE		0
+
 #define LCK_VG_READ		(LCK_VG | LCK_READ | LCK_HOLD)
 #define LCK_VG_WRITE		(LCK_VG | LCK_WRITE | LCK_HOLD)
 #define LCK_VG_UNLOCK		(LCK_VG | LCK_UNLOCK)
