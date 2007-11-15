@@ -333,6 +333,8 @@ int tag_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 	if (!validate_name(pos))
 		return 0;
 
+	a->value = pos;
+
 	return 1;
 }
 
