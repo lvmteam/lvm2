@@ -216,7 +216,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	struct volume_group *vg_to, *vg_from;
 	int opt;
 	int active;
-	int consistent = 1;
 
 	if (argc < 3) {
 		log_error("Existing VG, new VG and physical volumes required.");
@@ -240,25 +239,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		 return ECMD_FAILED;
 
-	log_verbose("Checking for volume group \"%s\"", vg_name_to);
-	if (!lock_vol(cmd, vg_name_to, LCK_VG_WRITE | LCK_NONBLOCK)) {
-		log_error("Can't get lock for %s", vg_name_to);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
-
-	if (!validate_new_vg_name(cmd, vg_name_to)) {
-		log_error("New volume group name \"%s\" is invalid",
-			   vg_name_to);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
-
-	consistent = 0;
-	if ((vg_to = vg_read(cmd, vg_name_to, NULL, &consistent))) {
-		/* FIXME Remove this restriction */
+	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
+	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
+				      LCK_VG_WRITE | LCK_NONBLOCK,
+				      0, 0))) {
 		log_error("Volume group \"%s\" already exists", vg_name_to);
-		goto error;
+		unlock_vg(cmd, vg_name_from);
+		return ECMD_FAILED;
 	}
 
 	if ((active = lvs_in_vg_activated(vg_from))) {
@@ -336,8 +323,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* Remove EXPORTED flag from new VG */
-	consistent = 1;
-	if (!(vg_to = vg_read(cmd, vg_name_to, NULL, &consistent)) || !consistent) {
+	if (!(vg_to = vg_lock_and_read(cmd, vg_name_to, NULL, LCK_NONE, 0,
+				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
 		log_error("Volume group \"%s\" became inconsistent: please "
 			  "fix manually", vg_name_to);
 		goto error;
