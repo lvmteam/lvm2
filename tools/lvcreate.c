@@ -508,16 +508,16 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	return 1;
 }
 
-static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
+static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
+		     struct lvcreate_params *lp)
 {
 	uint32_t size_rest;
 	uint32_t status = 0;
 	uint64_t tmp_size;
-	struct volume_group *vg;
 	struct logical_volume *lv, *org = NULL, *log_lv = NULL;
 	struct list *pvh, tags;
 	const char *tag = NULL;
-	int consistent = 1, origin_active = 0;
+	int origin_active = 0;
 	struct alloc_handle *ah = NULL;
 	char lv_name_buf[128];
 	const char *lv_name;
@@ -525,17 +525,6 @@ static int _lvcreate(struct cmd_context *cmd, struct lvcreate_params *lp)
 	uint32_t pv_extent_count;
 
 	status |= lp->permission | VISIBLE_LV;
-
-	/* does VG exist? */
-	log_verbose("Finding volume group \"%s\"", lp->vg_name);
-
-	if (!(vg = vg_read(cmd, lp->vg_name, NULL, &consistent))) {
-		log_error("Volume group \"%s\" doesn't exist", lp->vg_name);
-		return 0;
-	}
-
-	if (!vg_check_status(vg, CLUSTERED | EXPORTED_VG | LVM_WRITE))
-		return 0;
 
 	if (lp->lv_name && find_lv_in_vg(vg, lp->lv_name)) {
 		log_error("Logical volume \"%s\" already exists in "
@@ -926,27 +915,24 @@ revert_new_lv:
 
 int lvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
-	int r = ECMD_FAILED;
+	int r = ECMD_PROCESSED;
 	struct lvcreate_params lp;
+	struct volume_group *vg;
 
 	memset(&lp, 0, sizeof(lp));
 
 	if (!_lvcreate_params(&lp, cmd, argc, argv))
 		return EINVALID_CMD_LINE;
 
-	if (!lock_vol(cmd, lp.vg_name, LCK_VG_WRITE)) {
-		log_error("Can't get lock for %s", lp.vg_name);
+	log_verbose("Finding volume group \"%s\"", lp.vg_name);
+	if (!(vg = vg_lock_and_read(cmd, lp.vg_name, NULL, LCK_VG_WRITE,
+				    CLUSTERED | EXPORTED_VG | LVM_WRITE,
+				    CORRECT_INCONSISTENT)))
 		return ECMD_FAILED;
-	}
 
-	if (!_lvcreate(cmd, &lp)) {
-		stack;
-		goto out;
-	}
+	if (!_lvcreate(cmd, vg, &lp))
+		r = ECMD_FAILED;
 
-	r = ECMD_PROCESSED;
-
-      out:
 	unlock_vg(cmd, lp.vg_name);
 	return r;
 }

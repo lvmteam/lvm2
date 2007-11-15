@@ -32,7 +32,6 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	const char *orig_vg_name;
 	char uuid[64] __attribute((aligned(8)));
 
-	int consistent = 1;
 	int allocatable = 0;
 	int tagarg = 0;
 
@@ -54,27 +53,14 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	/* If in a VG, must change using volume group. */
 	/* FIXME: handle PVs with no MDAs */
 	if (!is_orphan(pv)) {
-		log_verbose("Finding volume group of physical volume \"%s\"",
-			    pv_name);
-
 		vg_name = pv_vg_name(pv);
-		if (!lock_vol(cmd, vg_name, LCK_VG_WRITE)) {
-			log_error("Can't get lock for %s", vg_name);
-			return 0;
-		}
 
-		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
-			unlock_vg(cmd, vg_name);
-			log_error("Unable to find volume group of \"%s\"",
-				  pv_name);
-			return 0;
-		}
-
-		if (!vg_check_status(vg,
-				     CLUSTERED | EXPORTED_VG | LVM_WRITE)) {
-			unlock_vg(cmd, vg_name);
-			return 0;
-		}
+		log_verbose("Finding volume group %s of physical volume %s",
+			    vg_name, pv_name);
+		if (!(vg = vg_lock_and_read(cmd, vg_name, NULL, LCK_VG_WRITE,
+					    CLUSTERED | EXPORTED_VG | LVM_WRITE,
+					    CORRECT_INCONSISTENT)))
+			return_0;
 
 		if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			unlock_vg(cmd, vg_name);

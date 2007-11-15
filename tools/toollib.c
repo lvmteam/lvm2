@@ -427,23 +427,14 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 	const char *vg_name = NULL;
 	int ret_max = 0;
 	int ret;
-	int consistent = 0;
 
 	if (!vg) {
 		vg_name = pv_vg_name(pv);
-		if (!lock_vol(cmd, vg_name, LCK_VG_READ)) {
-			log_error("Can't lock %s: skipping", vg_name);
+
+		if (!(vg = vg_lock_and_read(cmd, vg_name, NULL, LCK_VG_READ,
+					    CLUSTERED, 0))) {
+			log_error("Skipping volume group %s", vg_name);
 			return ECMD_FAILED;
-		}
-
-		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
-			log_error("Can't read %s: skipping", vg_name);
-			goto out;
-		}
-
-		if (!vg_check_status(vg, CLUSTERED)) {
-			ret = ECMD_FAILED;
-			goto out;
 		}
 	}
 

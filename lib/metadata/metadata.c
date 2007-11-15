@@ -1922,6 +1922,7 @@ int vg_check_status(const struct volume_group *vg, uint32_t status)
  * non-NULL - success; volume group handle
  */
 vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
+		       const char *vgid,
 		       uint32_t lock_flags, uint32_t status_flags,
 		       uint32_t misc_flags)
 {
@@ -1942,7 +1943,7 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		return NULL;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name, NULL, &consistent)) ||
+	if (!(vg = vg_read(cmd, vg_name, vgid, &consistent)) ||
 	    ((misc_flags & FAIL_INCONSISTENT) && !consistent)) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		unlock_vg(cmd, vg_name);
@@ -1953,9 +1954,9 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		unlock_vg(cmd, vg_name);
 		return NULL;
 	}
+
 	return vg;
 }
-
 
 /*
  * Gets/Sets for external LVM library
