@@ -1,5 +1,7 @@
 Version 2.02.29 -
 ==================================
+  Decode cluster locking state in log message.
+  Change file locking state messages from debug to very verbose.
   Fix --addtag to drop @ prefix from name.
   Stop clvmd going haywire if a pre_function fails.
   Convert some vg_reads into vg_lock_and_reads.

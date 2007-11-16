@@ -378,6 +378,8 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 {
 	char lockname[PATH_MAX];
 	int cluster_cmd = 0;
+	const char *lock_scope;
+	const char *lock_type = "";
 
 	assert(strlen(resource) < sizeof(lockname));
 	assert(resource);
@@ -393,6 +395,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 			dm_snprintf(lockname, sizeof(lockname), "V_%s",
 				     resource);
 
+		lock_scope = "VG";
 		cluster_cmd = CLVMD_CMD_LOCK_VG;
 		flags &= LCK_TYPE_MASK;
 		break;
@@ -400,6 +403,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 	case LCK_LV:
 		cluster_cmd = CLVMD_CMD_LOCK_LV;
 		strcpy(lockname, resource);
+		lock_scope = "LV";
 		flags &= 0xffdf;	/* Mask off HOLD flag */
 		break;
 
@@ -409,9 +413,40 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		return 0;
 	}
 
-	/* Send a message to the cluster manager */
-	log_very_verbose("Locking %s at 0x%x", lockname, flags);
+	switch(flags & LCK_TYPE_MASK) {
+	case LCK_UNLOCK:
+		lock_type = "UN";
+		break;
+	case LCK_NULL:
+		lock_type = "NL";
+		break;
+	case LCK_READ:
+		lock_type = "CR";
+		break;
+	case LCK_PREAD:
+		lock_type = "PR";
+		break;
+	case LCK_WRITE:
+		lock_type = "PW";
+		break;
+	case LCK_EXCL:
+		lock_type = "EX";
+		break;
+	default:
+		log_error("Unrecognised lock type: %u",
+			  flags & LCK_TYPE_MASK);
+		return 0;
+	}
 
+	log_very_verbose("Locking %s %s %s %s%s%s%s (0x%x)", lock_scope, lockname,
+			 lock_type,
+			 flags & LCK_NONBLOCK ? "" : "B", 
+			 flags & LCK_HOLD ? "H" : "", 
+			 flags & LCK_LOCAL ? "L" : "", 
+			 flags & LCK_CLUSTER_VG ? "C" : "", 
+			 flags);
+
+	/* Send a message to the cluster manager */
 	return _lock_for_cluster(cluster_cmd, flags, lockname);
 }
 

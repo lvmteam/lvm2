@@ -23,10 +23,10 @@ struct pvresize_params {
 	unsigned total;
 };
 
-int pv_resize_single(struct cmd_context *cmd,
-		     struct volume_group *vg,
-		     struct physical_volume *pv,
-		     const uint64_t new_size)
+static int _pv_resize_single(struct cmd_context *cmd,
+			     struct volume_group *vg,
+			     struct physical_volume *pv,
+			     const uint64_t new_size)
 {
 	struct pv_list *pvl;
 	int consistent = 1;
@@ -186,7 +186,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 
 	params->total++;
 
-	if (!pv_resize_single(cmd, vg, pv, params->new_size))
+	if (!_pv_resize_single(cmd, vg, pv, params->new_size))
 		return ECMD_FAILED;
 	
 	params->done++;
