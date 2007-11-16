@@ -208,8 +208,6 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 {
 	char lockfile[PATH_MAX];
 
-	assert(resource);
-
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
 		if (!*resource)	/* FIXME Deprecated */
@@ -238,27 +236,30 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
-			log_debug("Unlocking LV %s", resource);
+			log_very_verbose("Unlocking LV %s", resource);
 			if (!lv_resume_if_active(cmd, resource))
 				return 0;
 			break;
 		case LCK_NULL:
-			log_debug("Locking LV %s (NL)", resource);
+			log_very_verbose("Locking LV %s (NL)", resource);
 			if (!lv_deactivate(cmd, resource))
 				return 0;
 			break;
 		case LCK_READ:
-			log_debug("Locking LV %s (R)", resource);
+			log_very_verbose("Locking LV %s (R)", resource);
 			if (!lv_activate_with_filter(cmd, resource, 0))
 				return 0;
 			break;
+		case LCK_PREAD:
+			log_very_verbose("Locking LV %s (PR) - ignored", resource);
+			break;
 		case LCK_WRITE:
-			log_debug("Locking LV %s (W)", resource);
+			log_very_verbose("Locking LV %s (W)", resource);
 			if (!lv_suspend_if_active(cmd, resource))
 				return 0;
 			break;
 		case LCK_EXCL:
-			log_debug("Locking LV %s (EX)", resource);
+			log_very_verbose("Locking LV %s (EX)", resource);
 			if (!lv_activate_with_filter(cmd, resource, 1))
 				return 0;
 			break;

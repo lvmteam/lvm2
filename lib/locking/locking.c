@@ -318,6 +318,8 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t fla
 	_block_signals(flags);
 	_lock_memory(flags);
 
+	assert(resource);
+
 	if (!(_locking.lock_resource(cmd, resource, flags))) {
 		_unlock_memory(flags);
 		_unblock_signals();
