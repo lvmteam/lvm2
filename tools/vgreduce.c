@@ -182,7 +182,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				if (seg_type(seg, s) != AREA_PV)
 					continue;
 
-				/* FIXME Also check for segs on deleted LVs */
+				/* FIXME Also check for segs on deleted LVs (incl pvmove) */
 
 				pv = seg_pv(seg, s);
 				if (!pv || !pv_dev(pv)) {
