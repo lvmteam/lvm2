@@ -86,6 +86,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	}
 
 	if (!dev_test_excl(dev)) {
+		/* FIXME Detect whether device-mapper itself is still using it */
 		log_error("Can't open %s exclusively.  Mounted filesystem?",
 			  name);
 		return 0;
