@@ -48,8 +48,6 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
                                       uint32_t stripes,
                                       uint32_t mirrors, uint32_t log_count,
 				      uint32_t extents,
-                                      struct physical_volume *mirrored_pv,
-                                      uint32_t mirrored_pe,
                                       struct list *allocatable_pvs,
 				      alloc_policy_t alloc,
 				      struct list *parallel_areas);

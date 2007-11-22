@@ -414,8 +414,6 @@ struct alloc_handle {
 	uint32_t log_count;		/* Number of parallel 1-extent logs */
 	uint32_t total_area_len;	/* Total number of parallel extents */
 
-	struct physical_volume *mirrored_pv;	/* FIXME Remove this */
-	uint32_t mirrored_pe;			/* FIXME Remove this */
 	struct list *parallel_areas;	/* PVs to avoid */
 
 	struct alloced_area log_area;	/* Extent used for log */
@@ -441,8 +439,6 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 					uint32_t mirrors,
 					uint32_t stripes,
 					uint32_t log_count,
-					struct physical_volume *mirrored_pv,
-					uint32_t mirrored_pe,
 					struct list *parallel_areas)
 {
 	struct alloc_handle *ah;
@@ -453,15 +449,8 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if ((stripes > 1 || mirrors > 1) && mirrored_pv) {
-		log_error("Can't mix striping or mirroring with "
-			  "creation of a mirrored PV yet");
-		return NULL;
-	}
-
-	if (log_count && (stripes > 1 || mirrored_pv)) {
-		log_error("Can't mix striping or pvmove with "
-			  "a mirror log yet.");
+	if (log_count && stripes > 1) {
+		log_error("Can't mix striping with a mirror log yet.");
 		return NULL;
 	}
 
@@ -469,8 +458,6 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 		area_count = 0;
 	else if (mirrors > 1)
 		area_count = mirrors;
-	else if (mirrored_pv)
-		area_count = 1;
 	else
 		area_count = stripes;
 
@@ -497,8 +484,6 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 	for (s = 0; s < ah->area_count; s++)
 		list_init(&ah->alloced_areas[s]);
 
-	ah->mirrored_pv = mirrored_pv;
-	ah->mirrored_pe = mirrored_pe;
 	ah->parallel_areas = parallel_areas;
 
 	return ah;
@@ -1087,7 +1072,7 @@ static int _allocate(struct alloc_handle *ah,
 		return 1;
 	}
 
-	if (ah->mirrored_pv || (ah->alloc == ALLOC_CONTIGUOUS))
+	if (ah->alloc == ALLOC_CONTIGUOUS)
 		can_split = 0;
 
 	if (lv && !list_empty(&lv->segments))
@@ -1193,8 +1178,6 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      uint32_t stripes,
 				      uint32_t mirrors, uint32_t log_count,
 				      uint32_t extents,
-				      struct physical_volume *mirrored_pv,
-				      uint32_t mirrored_pe,
 				      struct list *allocatable_pvs,
 				      alloc_policy_t alloc,
 				      struct list *parallel_areas)
@@ -1220,11 +1203,8 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 		alloc = vg->alloc;
 
 	if (!(ah = _alloc_init(vg->cmd, vg->cmd->mem, segtype, alloc, mirrors,
-			       stripes, log_count, mirrored_pv,
-			       mirrored_pe, parallel_areas))) {
-		stack;
-		return NULL;
-	}
+			       stripes, log_count, parallel_areas)))
+		return_NULL;
 
 	if (!segtype_is_virtual(segtype) &&
 	    !_allocate(ah, vg, lv, (lv ? lv->le_count : 0) + extents,
@@ -1427,12 +1407,13 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, status, extents, segtype);
 
+	/* FIXME Temporary restriction during code reorganisation */
+	if (mirrored_pv)
+		alloc = ALLOC_CONTIGUOUS;
+
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors, 0,
-				    extents, mirrored_pv, mirrored_pe,
-				    allocatable_pvs, alloc, NULL))) {
-		stack;
-		return 0;
-	}
+				    extents, allocatable_pvs, alloc, NULL)))
+		return_0;
 
 	if (mirrors < 2) {
 		if (!lv_add_segment(ah, 0, ah->area_count, lv, segtype, stripe_size,
