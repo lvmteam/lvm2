@@ -532,6 +532,37 @@ int add_mirror_layers(struct alloc_handle *ah,
 	return lv_add_more_mirrored_areas(lv, img_lvs, num_mirrors, 0);
 }
 
+static int _alloc_and_insert_pvmove_seg(struct logical_volume *lv_mirr,
+					struct lv_segment *seg, uint32_t s,
+					struct list *allocatable_pvs,
+					alloc_policy_t alloc,
+					const struct segment_type *segtype)
+{
+	struct physical_volume *pv = seg_pv(seg, s);
+	uint32_t start_le = lv_mirr->le_count;
+	uint32_t pe = seg_pe(seg, s);
+
+	log_very_verbose("Moving %s:%u-%u of %s/%s", pv_dev_name(pv),
+			 pe, pe + seg->area_len - 1,
+			 seg->lv->vg->name, seg->lv->name);
+
+	release_lv_segment_area(seg, s, seg->area_len);
+
+	if (!lv_extend(lv_mirr, segtype, 1,
+	       	seg->area_len, 0u, seg->area_len,
+	       	pv, pe,
+	       	PVMOVE, allocatable_pvs,
+	       	alloc)) {
+		log_error("Unable to allocate "
+			  "temporary LV for pvmove.");
+		return 0;
+	}
+
+	set_lv_segment_area_lv(seg, s, lv_mirr, start_le, 0);
+
+	return 1;
+}
+
 /* 
  * Replace any LV segments on given PV with temporary mirror.
  * Returns list of LVs changed.
@@ -547,10 +578,8 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 	struct lv_segment *seg;
 	struct lv_list *lvl;
 	struct pv_list *pvl;
-	struct physical_volume *pv;
-	uint32_t pe;
 	int lv_used = 0;
-	uint32_t s, start_le, extent_count = 0u;
+	uint32_t s, extent_count = 0u;
 	const struct segment_type *segtype;
 	struct pe_range *per;
 	uint32_t pe_start, pe_end, per_end, stripe_multiplier;
@@ -648,27 +677,11 @@ int insert_pvmove_mirrors(struct cmd_context *cmd,
 					lv_used = 1;
 				}
 	
-				pv = seg_pv(seg, s);
-				pe = seg_pe(seg, s);
-				log_very_verbose("Moving %s:%u-%u of %s/%s",
-						 pv_dev_name(pvl->pv),
-						 pe, pe + seg->area_len - 1,
-						 lv->vg->name, lv->name);
+				if (!_alloc_and_insert_pvmove_seg(lv_mirr, seg, s,
+								  allocatable_pvs,
+								  alloc, segtype))
+					return_0;
 
-				start_le = lv_mirr->le_count;
-				/* FIXME Clean this up */
-				release_lv_segment_area(seg, s, seg->area_len);
-				if (!lv_extend(lv_mirr, segtype, 1,
-				       	seg->area_len, 0u, seg->area_len,
-				       	pv, pe,
-				       	PVMOVE, allocatable_pvs,
-				       	alloc)) {
-					log_error("Unable to allocate "
-						  "temporary LV for pvmove.");
-					return 0;
-				}
-				set_lv_segment_area_lv(seg, s, lv_mirr, start_le, 0);
-	
 				extent_count += seg->area_len;
 	
 				lv->status |= LOCKED;
