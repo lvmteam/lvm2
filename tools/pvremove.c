@@ -93,6 +93,7 @@ static int pvremove_single(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	if (!dev_test_excl(dev)) {
+		/* FIXME Detect whether device-mapper is still using the device */
 		log_error("Can't open %s exclusively - not removing. "
 			  "Mounted filesystem?", dev_name(dev));
 		goto error;
