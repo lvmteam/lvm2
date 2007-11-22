@@ -338,9 +338,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 		if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype,
 					    1, lp->mirrors - 1,
 					    corelog ? 0U : 1U,
-					    lv->le_count,
-					    NULL, 0, lp->pvh,
-					    lp->alloc,
+					    lv->le_count, lp->pvh, lp->alloc,
 					    parallel_areas)))
 			return_0;
 
@@ -386,9 +384,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			}
 
 			if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype, 0,
-						    0, 1, 0,
-						    NULL, 0, lp->pvh,
-						    lp->alloc,
+						    0, 1, 0, lp->pvh, lp->alloc,
 						    parallel_areas))) {
 				stack;
 				return 0;
