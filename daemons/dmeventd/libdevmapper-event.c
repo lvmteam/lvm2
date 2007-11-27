@@ -722,10 +722,15 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	dm_event_handler_set_dso(dmevh, reply_dso);
 	dm_event_handler_set_event_mask(dmevh, reply_mask);
 
-	if (reply_dso)
+	if (reply_dso) {
 		dm_free(reply_dso);
-	if (reply_uuid)
+		reply_dso = NULL;
+	}
+
+	if (reply_uuid) {
 		dm_free(reply_uuid);
+		reply_uuid = NULL;
+	}
 
 	dmevh->dev_name = dm_strdup(dm_task_get_name(dmt));
 	if (!dmevh->dev_name) {

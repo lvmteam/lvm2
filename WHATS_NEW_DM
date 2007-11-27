@@ -1,5 +1,6 @@
 Version 1.02.23 - 
 ==================================
+  Fix possible double-free in libdevmapper-event.
   Define DM_READ_AHEAD_* values and flags.
   Fix configure --with-dmeventd-path substitution.
   Allow $DM_DEV_DIR envvar to override default of "/dev".
