@@ -920,6 +920,14 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
+uint32_t dm_task_get_read_ahead(const struct dm_task *dmt)
+{              
+	uint32_t read_ahead = 0; //FIXME default?  How cope with failure below?
+	// FIXME (void) dm_blockdev_get_read_ahead(dmt->dev_name, &read_ahead);
+
+	return read_ahead;
+}
+
 const char *dm_task_get_name(const struct dm_task *dmt)
 {
 #ifdef DM_COMPAT
@@ -971,6 +979,15 @@ struct dm_versions *dm_task_get_versions(struct dm_task *dmt)
 int dm_task_set_ro(struct dm_task *dmt)
 {
 	dmt->read_only = 1;
+	return 1;
+}
+
+int dm_task_set_read_ahead(struct dm_task *dmt, uint32_t read_ahead,
+			   uint32_t read_ahead_flags)
+{
+	dmt->read_ahead = read_ahead;
+	dmt->read_ahead_flags = read_ahead_flags;
+
 	return 1;
 }
 

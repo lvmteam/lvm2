@@ -1,7 +1,8 @@
 Version 1.02.23 - 
 ==================================
-  Fix possible double-free in libdevmapper-event.
-  Define DM_READ_AHEAD_* values and flags.
+  Add --readahead to dmsetup.
+  Add external read_ahead library functions and DM_READ_AHEAD_* definitions.
+  Fix double free in a libdevmapper-event error path.
   Fix configure --with-dmeventd-path substitution.
   Allow $DM_DEV_DIR envvar to override default of "/dev".
   Create e.g., libdevmapper.so.1.02, in build dir alongside the .so file.
