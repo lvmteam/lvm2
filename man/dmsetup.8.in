@@ -114,6 +114,9 @@ Specify which fields to display.
 .IP \fB-r|--readonly
 .br
 Set the table being loaded read-only.
+.IP \fB--readahead\ <sectors>
+.br    
+Specify read ahead size in units of sectors.
 .IP \fB--table\ <table>
 .br
 Specify a one-line table directly on the command line.

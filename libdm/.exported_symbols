@@ -18,6 +18,7 @@ dm_task_get_name
 dm_task_get_names
 dm_task_get_versions
 dm_task_get_uuid
+dm_task_get_read_ahead
 dm_task_set_ro
 dm_task_set_newname
 dm_task_set_event_nr
@@ -28,6 +29,7 @@ dm_task_set_message
 dm_task_set_uid
 dm_task_set_gid
 dm_task_set_mode
+dm_task_set_read_ahead
 dm_task_suppress_identical_reload
 dm_task_add_target
 dm_task_no_flush
@@ -67,6 +69,7 @@ dm_tree_node_add_striped_target
 dm_tree_node_add_mirror_target
 dm_tree_node_add_mirror_target_log
 dm_tree_node_add_target_area
+dm_tree_node_set_read_ahead
 dm_tree_skip_lockfs
 dm_tree_use_no_flush_suspend
 dm_is_dm_major

@@ -141,11 +141,6 @@ struct dm_deps *dm_task_get_deps(struct dm_task *dmt);
 struct dm_names *dm_task_get_names(struct dm_task *dmt);
 struct dm_versions *dm_task_get_versions(struct dm_task *dmt);
 
-#define DM_READ_AHEAD_AUTO UINT32_MAX	/* Use kernel default readahead */
-#define DM_READ_AHEAD_NONE 0		/* Disable readahead */
-
-#define DM_READ_AHEAD_MINIMUM_FLAG	0x1	/* Value supplied is minimum */
-
 int dm_task_set_ro(struct dm_task *dmt);
 int dm_task_set_newname(struct dm_task *dmt, const char *newname);
 int dm_task_set_minor(struct dm_task *dmt, int minor);
@@ -161,6 +156,18 @@ int dm_task_no_flush(struct dm_task *dmt);
 int dm_task_no_open_count(struct dm_task *dmt);
 int dm_task_skip_lockfs(struct dm_task *dmt);
 int dm_task_suppress_identical_reload(struct dm_task *dmt);
+
+/*
+ * Control read_ahead.
+ */
+#define DM_READ_AHEAD_AUTO UINT32_MAX	/* Use kernel default readahead */
+#define DM_READ_AHEAD_NONE 0		/* Disable readahead */
+
+#define DM_READ_AHEAD_MINIMUM_FLAG	0x1	/* Value supplied is minimum */
+
+int dm_task_set_read_ahead(struct dm_task *dmt, uint32_t read_ahead,
+			   uint32_t read_ahead_flags);
+uint32_t dm_task_get_read_ahead(const struct dm_task *dmt);
 
 /*
  * Use these to prepare for a create or reload.
@@ -380,6 +387,13 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 				    const char *dev_name,
 				    const char *dlid,
 				    uint64_t offset);
+
+/*
+ * Set readahead (in sectors) after loading the node.
+ */
+void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
+				 uint32_t read_ahead,
+				 uint32_t read_ahead_flags);
 
 /*****************************************************************************
  * Library functions

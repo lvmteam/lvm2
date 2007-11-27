@@ -95,6 +95,9 @@ struct load_properties {
 	uint32_t major;
 	uint32_t minor;
 
+	uint32_t read_ahead;
+	uint32_t read_ahead_flags;
+
 	unsigned segment_count;
 	struct list segs;
 
@@ -609,6 +612,8 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 	}
 
 	dnode->props.read_only = read_only ? 1 : 0;
+	dnode->props.read_ahead = DM_READ_AHEAD_AUTO;
+	dnode->props.read_ahead_flags = 0;
 
 	if (clear_inactive && !_node_clear_table(dnode))
 		return_NULL;
@@ -616,6 +621,14 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 	dnode->context = context;
 
 	return dnode;
+}
+
+void dm_tree_node_set_read_ahead(struct dm_tree_node *dnode,
+				 uint32_t read_ahead,
+				 uint32_t read_ahead_flags)
+{                          
+	dnode->props.read_ahead = read_ahead;
+	dnode->props.read_ahead_flags = read_ahead_flags;
 }
 
 int dm_tree_add_dev(struct dm_tree *dtree, uint32_t major, uint32_t minor)
@@ -875,6 +888,7 @@ out:
 
 /* FIXME Merge with _suspend_node? */
 static int _resume_node(const char *name, uint32_t major, uint32_t minor,
+			uint32_t read_ahead, uint32_t read_ahead_flags,
 			struct dm_info *newinfo)
 {
 	struct dm_task *dmt;
@@ -895,6 +909,9 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
+
+	if (!dm_task_set_read_ahead(dmt, read_ahead, read_ahead_flags))
+		log_error("Failed to set read ahead");
 
 	if ((r = dm_task_run(dmt)))
 		r = dm_task_get_info(dmt, newinfo);
@@ -1136,7 +1153,9 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			if (!child->info.inactive_table && !child->info.suspended)
 				continue;
 
-			if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
+			if (!_resume_node(name, child->info.major, child->info.minor,
+					  child->props.read_ahead,
+					  child->props.read_ahead_flags, &newinfo)) {
 				log_error("Unable to resume %s (%" PRIu32
 					  ":%" PRIu32 ")", name, child->info.major,
 					  child->info.minor);
@@ -1527,7 +1546,9 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		if (!child->info.inactive_table && !child->info.suspended)
 			continue;
 
-		if (!_resume_node(name, child->info.major, child->info.minor, &newinfo)) {
+		if (!_resume_node(name, child->info.major, child->info.minor,
+				  child->props.read_ahead,
+				  child->props.read_ahead_flags, &newinfo)) {
 			log_error("Unable to resume %s (%" PRIu32
 				  ":%" PRIu32 ")", name, child->info.major,
 				  child->info.minor);

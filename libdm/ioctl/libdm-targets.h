@@ -44,6 +44,8 @@ struct dm_task {
 	uid_t uid;
 	gid_t gid;
 	mode_t mode;
+	uint32_t read_ahead;
+	uint32_t read_ahead_flags;
 	union {
 		struct dm_ioctl *v4;
 		struct dm_ioctl_v1 *v1;

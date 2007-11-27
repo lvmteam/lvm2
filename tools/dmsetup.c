@@ -120,6 +120,7 @@ enum {
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	OPTIONS_ARG,
+	READAHEAD_ARG,
 	SEPARATOR_ARG,
 	SHOWKEYS_ARG,
 	SORT_ARG,
@@ -336,6 +337,8 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 	       info->suspended ? "SUSPENDED" : "ACTIVE",
 	       info->read_only ? " (READ-ONLY)" : "");
 
+	printf("Read Ahead:       %d\n", (int) dm_task_get_read_ahead(dmt));
+
 	if (!info->live_table && !info->inactive_table)
 		printf("Tables present:    None\n");
 	else
@@ -492,6 +495,11 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 		goto out;
 
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
+		goto out;
+
+	/* FIXME Provide way to set read_ahead_flags */
+	if (_switches[READAHEAD_ARG] &&
+	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG], 0))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -671,6 +679,11 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 		goto out;
 
 	if (_switches[NOLOCKFS_ARG] && !dm_task_skip_lockfs(dmt))
+		goto out;
+
+	/* FIXME Provide way to set read_ahead_flags */
+	if (_switches[READAHEAD_ARG] &&
+	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG], 0))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -1594,6 +1607,16 @@ static int _dm_uuid_disp(struct dm_report *rh,
 	return dm_report_field_string(rh, field, &uuid);
 }
 
+static int _dm_read_ahead_disp(struct dm_report *rh,
+			       struct dm_pool *mem __attribute((unused)),
+			       struct dm_report_field *field, const void *data,
+			       void *private __attribute((unused)))
+{
+	int32_t value = (int32_t) dm_task_get_read_ahead((const struct dm_task *) data);
+
+	return dm_report_field_int32(rh, field, &value);
+}
+
 static int _dm_info_status_disp(struct dm_report *rh,
 				struct dm_pool *mem __attribute((unused)),
 				struct dm_report_field *field, const void *data,
@@ -1849,6 +1872,10 @@ static const struct dm_report_field_type _report_fields[] = {
 /* *INDENT-OFF* */
 FIELD_F(TASK, STR, "Name", 16, dm_name, "name", "Name of mapped device.")
 FIELD_F(TASK, STR, "UUID", 32, dm_uuid, "uuid", "Unique (optional) identifier for mapped device.")
+
+/* FIXME Next one should be INFO */
+FIELD_F(TASK, NUM, "RAhead", 6, dm_read_ahead, "readahead", "Read ahead in sectors.")
+
 FIELD_F(INFO, STR, "Stat", 4, dm_info_status, "attr", "(L)ive, (I)nactive, (s)uspended, (r)ead-only, read-(w)rite.")
 FIELD_F(INFO, STR, "DevNo", 5, dm_info_devno, "devno", "Device major and minor numbers")
 FIELD_O(INFO, dm_info, NUM, "Maj", major, 3, int32, "major", "Block device major number.")
@@ -2010,7 +2037,8 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
+		"        [-r|--readonly] [--noopencount] [--nolockfs] "
+		    "[--readahead <sectors>]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--noheadings] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
@@ -2374,6 +2402,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
+		{"readahead", 1, &ind, READAHEAD_ARG},
 		{"separator", 1, &ind, SEPARATOR_ARG},
 		{"showkeys", 0, &ind, SHOWKEYS_ARG},
 		{"sort", 1, &ind, SORT_ARG},
@@ -2506,6 +2535,11 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[NOLOCKFS_ARG]++;
 		if ((ind == NOOPENCOUNT_ARG))
 			_switches[NOOPENCOUNT_ARG]++;
+		/* FIXME Accept auto/none & set read_ahead_flags too */
+		if ((ind == READAHEAD_ARG)) {
+			_switches[READAHEAD_ARG]++;
+			_int_args[READAHEAD_ARG] = atoi(optarg);
+		}
 		if ((ind == SHOWKEYS_ARG))
 			_switches[SHOWKEYS_ARG]++;
 		if ((ind == TABLE_ARG)) {
