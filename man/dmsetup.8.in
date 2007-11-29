@@ -114,9 +114,14 @@ Specify which fields to display.
 .IP \fB-r|--readonly
 .br
 Set the table being loaded read-only.
-.IP \fB--readahead\ <sectors>
+.IP \fB--readahead\ [+]<sectors>|auto|none
 .br    
 Specify read ahead size in units of sectors.
+The default value is "auto" which allows the kernel to choose
+a suitable value automatically.  The + prefix lets you
+specify a minimum value which will not be used if it is
+smaller than the value chosen by the kernel.
+"None" is equivalent to specifying zero.
 .IP \fB--table\ <table>
 .br
 Specify a one-line table directly on the command line.

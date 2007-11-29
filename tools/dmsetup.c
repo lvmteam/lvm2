@@ -150,6 +150,7 @@ static char *_uuid;
 static char *_table;
 static char *_target;
 static char *_command;
+static uint32_t _read_ahead_flags;
 static struct dm_tree *_dtree;
 static struct dm_report *_report;
 static report_type_t _report_type;
@@ -497,9 +498,9 @@ static int _create(int argc, char **argv, void *data __attribute((unused)))
 	if (_switches[NOOPENCOUNT_ARG] && !dm_task_no_open_count(dmt))
 		goto out;
 
-	/* FIXME Provide way to set read_ahead_flags */
 	if (_switches[READAHEAD_ARG] &&
-	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG], 0))
+	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG],
+				    _read_ahead_flags))
 		goto out;
 
 	if (!dm_task_run(dmt))
@@ -681,9 +682,9 @@ static int _simple(int task, const char *name, uint32_t event_nr, int display)
 	if (_switches[NOLOCKFS_ARG] && !dm_task_skip_lockfs(dmt))
 		goto out;
 
-	/* FIXME Provide way to set read_ahead_flags */
 	if (_switches[READAHEAD_ARG] &&
-	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG], 0))
+	    !dm_task_set_read_ahead(dmt, _int_args[READAHEAD_ARG],
+				    _read_ahead_flags))
 		goto out;
 
 	r = dm_task_run(dmt);
@@ -2037,8 +2038,8 @@ static void _usage(FILE *out)
 
 	fprintf(out, "Usage:\n\n");
 	fprintf(out, "dmsetup [--version] [-v|--verbose [-v|--verbose ...]]\n"
-		"        [-r|--readonly] [--noopencount] [--nolockfs] "
-		    "[--readahead <sectors>]\n"
+		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
+		"        [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
 		"        [--noheadings] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
@@ -2382,7 +2383,7 @@ static int _process_losetup_switches(const char *base, int *argc, char ***argv,
 
 static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 {
-	char *base, *namebase;
+	char *base, *namebase, *s;
 	static int ind;
 	int c, r;
 
@@ -2425,6 +2426,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 	 */
 	memset(&_switches, 0, sizeof(_switches));
 	memset(&_int_args, 0, sizeof(_int_args));
+	_read_ahead_flags = 0;
 
 	namebase = strdup((*argv)[0]);
 	base = basename(namebase);
@@ -2535,10 +2537,25 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[NOLOCKFS_ARG]++;
 		if ((ind == NOOPENCOUNT_ARG))
 			_switches[NOOPENCOUNT_ARG]++;
-		/* FIXME Accept auto/none & set read_ahead_flags too */
 		if ((ind == READAHEAD_ARG)) {
 			_switches[READAHEAD_ARG]++;
-			_int_args[READAHEAD_ARG] = atoi(optarg);
+			if (!strcasecmp(optarg, "auto"))
+				_int_args[READAHEAD_ARG] = DM_READ_AHEAD_AUTO;
+			else if (!strcasecmp(optarg, "none"))
+                		_int_args[READAHEAD_ARG] = DM_READ_AHEAD_NONE;
+			else {
+				for (s = optarg; isspace(*s); s++)
+					;
+				if (*s == '+')
+					_read_ahead_flags = DM_READ_AHEAD_MINIMUM_FLAG;
+				_int_args[READAHEAD_ARG] = atoi(optarg);
+				if (_int_args[READAHEAD_ARG] < -1) {
+					log_error("Negative read ahead value "
+						  "(%d) is not understood.",
+						  _int_args[READAHEAD_ARG]);
+					return 0;
+				}
+			}
 		}
 		if ((ind == SHOWKEYS_ARG))
 			_switches[SHOWKEYS_ARG]++;
