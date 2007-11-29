@@ -142,11 +142,10 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 	if (!dm_task_get_info(dmt, info))
 		goto_out;
 
-	if (!with_read_ahead) {
-		if (read_ahead)
-			*read_ahead = DM_READ_AHEAD_NONE;
-	} else
-		; // FIXME *read_ahead = dm_task_get_read_ahead(dmt);
+	if (with_read_ahead)
+		*read_ahead = dm_task_get_read_ahead(dmt);
+	else if (read_ahead)
+		*read_ahead = DM_READ_AHEAD_NONE;
 
 	r = 1;
 
@@ -901,7 +900,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	char *name, *dlid;
 	uint32_t max_stripe_size = UINT32_C(0);
 	uint32_t read_ahead = lv->read_ahead;
-	uint32_t flags = UINT32_C(0);
+	uint32_t read_ahead_flags = UINT32_C(0);
 
 	if (!(name = build_dm_name(dm->mem, lv->vg->name, lv->name, layer)))
 		return_0;
@@ -955,9 +954,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (read_ahead == DM_READ_AHEAD_AUTO)
 		read_ahead = max_stripe_size;
 	else
-		flags = DM_READ_AHEAD_MINIMUM_FLAG;
+		read_ahead_flags = DM_READ_AHEAD_MINIMUM_FLAG;
 
-	// FIXME dm_tree_node_set_read_ahead(dnode, read_ahead, flags);
+	dm_tree_node_set_read_ahead(dnode, read_ahead, read_ahead_flags);
 
 	return 1;
 }
