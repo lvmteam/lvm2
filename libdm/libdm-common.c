@@ -21,8 +21,13 @@
 
 #include <stdarg.h>
 #include <sys/param.h>
+#include <fcntl.h>
 
 #include <linux/dm-ioctl.h>
+
+#ifdef linux
+#  include <linux/fs.h>
+#endif
 
 #ifdef HAVE_SELINUX
 #  include <selinux/selinux.h>
@@ -356,16 +361,61 @@ static int _rm_dev_node(const char *dev_name)
 	return 1;
 }
 
+#ifdef linux
+static int _open_dev_node(const char *dev_name)
+{
+	int fd = -1;
+	char path[PATH_MAX];
+
+	_build_dev_path(path, sizeof(path), dev_name);
+
+	if ((fd = open(path, O_RDONLY, 0)) < 0)
+		log_sys_error("open", path);
+
+	return fd;
+}
+
 int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
 {
+	int r = 1;
+	int fd;
+
+	if ((fd = _open_dev_node(dev_name)) < 0)
+		; // return_0;
+
 	*read_ahead = 0;
 
-	return 1;
+	if (!ioctl(fd, BLKRAGET, read_ahead)) {
+		log_sys_error("BLKRAGET", dev_name);
+		r = 0;
+	}  else
+		log_debug("%s: read ahead is %" PRIu32, dev_name, *read_ahead);
+
+	if (!close(fd))
+		stack;
+
+	return r;
 }
 
 static int _set_read_ahead(const char *dev_name, uint32_t read_ahead)
 {
-	return 1;
+	int r = 1;
+	int fd;
+
+	if ((fd = _open_dev_node(dev_name)) < 0)
+		return_0;
+
+	log_debug("%s: Setting read ahead to %" PRIu32, dev_name, read_ahead);
+
+	if (ioctl(fd, BLKRASET, read_ahead)) {
+		log_sys_error("BLKRASET", dev_name);
+		r = 0;
+	}
+
+	if (!close(fd))
+		stack;
+
+	return r;
 }
 
 static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
@@ -393,6 +443,22 @@ static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 
 	return _set_read_ahead(dev_name, read_ahead);
 }
+
+#else
+
+int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
+{
+	*read_ahead = 0;
+
+	return 1;
+}
+
+static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
+				    uint32_t read_ahead_flags)
+{
+	return 1;
+}
+#endif
 
 typedef enum {
 	NODE_ADD,
