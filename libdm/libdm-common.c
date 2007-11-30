@@ -381,7 +381,7 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
 	int fd;
 
 	if ((fd = _open_dev_node(dev_name)) < 0)
-		; // return_0;
+		return_0;
 
 	*read_ahead = 0;
 
