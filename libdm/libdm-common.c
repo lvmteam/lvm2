@@ -356,15 +356,55 @@ static int _rm_dev_node(const char *dev_name)
 	return 1;
 }
 
+int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
+{
+	*read_ahead = 0;
+
+	return 1;
+}
+
+static int _set_read_ahead(const char *dev_name, uint32_t read_ahead)
+{
+	return 1;
+}
+
+static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
+				    uint32_t read_ahead_flags)
+{
+	uint32_t current_read_ahead;
+
+	if (read_ahead == DM_READ_AHEAD_AUTO)
+		return 1;
+
+	if (read_ahead == DM_READ_AHEAD_NONE)
+		read_ahead = 0;
+
+	if (read_ahead_flags & DM_READ_AHEAD_MINIMUM_FLAG) {
+		if (!get_dev_node_read_ahead(dev_name, &current_read_ahead))
+			return_0;
+
+		if (current_read_ahead > read_ahead) {
+			log_debug("%s: read ahead %" PRIu32
+				  " below minimum of %" PRIu32,
+				  dev_name, current_read_ahead, read_ahead);
+			return 1;
+		}
+	}
+
+	return _set_read_ahead(dev_name, read_ahead);
+}
+
 typedef enum {
 	NODE_ADD,
 	NODE_DEL,
-	NODE_RENAME
+	NODE_RENAME,
+	NODE_READ_AHEAD
 } node_op_t;
 
 static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 		       uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
-		       const char *old_name)
+		       const char *old_name, uint32_t read_ahead,
+		       uint32_t read_ahead_flags)
 {
 	switch (type) {
 	case NODE_ADD:
@@ -373,6 +413,9 @@ static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 		return _rm_dev_node(dev_name);
 	case NODE_RENAME:
 		return _rename_dev_node(old_name, dev_name);
+	case NODE_READ_AHEAD:
+		return _set_dev_node_read_ahead(dev_name, read_ahead,
+						read_ahead_flags);
 	}
 
 	return 1;
@@ -389,6 +432,8 @@ struct node_op_parms {
 	uid_t uid;
 	gid_t gid;
 	mode_t mode;
+	uint32_t read_ahead;
+	uint32_t read_ahead_flags;
 	char *old_name;
 	char names[0];
 };
@@ -402,7 +447,8 @@ static void _store_str(char **pos, char **ptr, const char *str)
 
 static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 			  uint32_t minor, uid_t uid, gid_t gid, mode_t mode,
-			  const char *old_name)
+			  const char *old_name, uint32_t read_ahead,
+			  uint32_t read_ahead_flags)
 {
 	struct node_op_parms *nop;
 	size_t len = strlen(dev_name) + strlen(old_name) + 2;
@@ -420,6 +466,8 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	nop->uid = uid;
 	nop->gid = gid;
 	nop->mode = mode;
+	nop->read_ahead = read_ahead;
+	nop->read_ahead_flags = read_ahead_flags;
 
 	_store_str(&pos, &nop->dev_name, dev_name);
 	_store_str(&pos, &nop->old_name, old_name);
@@ -437,7 +485,8 @@ static void _pop_node_ops(void)
 	list_iterate_safe(noph, nopht, &_node_ops) {
 		nop = list_item(noph, struct node_op_parms);
 		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
-			    nop->uid, nop->gid, nop->mode, nop->old_name);
+			    nop->uid, nop->gid, nop->mode, nop->old_name,
+			    nop->read_ahead, nop->read_ahead_flags);
 		list_del(&nop->list);
 		dm_free(nop);
 	}
@@ -447,17 +496,28 @@ int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		 uid_t uid, gid_t gid, mode_t mode)
 {
 	return _stack_node_op(NODE_ADD, dev_name, major, minor, uid, gid, mode,
-			      "");
+			      "", 0, 0);
 }
 
 int rename_dev_node(const char *old_name, const char *new_name)
 {
-	return _stack_node_op(NODE_RENAME, new_name, 0, 0, 0, 0, 0, old_name);
+	return _stack_node_op(NODE_RENAME, new_name, 0, 0, 0, 0, 0, old_name,
+			      0, 0);
 }
 
 int rm_dev_node(const char *dev_name)
 {
-	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0, 0, 0, "");
+	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0, 0, 0, "", 0, 0);
+}
+
+int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
+			    uint32_t read_ahead_flags)
+{
+	if (read_ahead == DM_READ_AHEAD_AUTO)
+		return 1;
+
+	return _stack_node_op(NODE_READ_AHEAD, dev_name, 0, 0, 0, 0, 0, "",
+			      read_ahead, read_ahead_flags);
 }
 
 void update_devs(void)

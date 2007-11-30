@@ -920,12 +920,9 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 	return 1;
 }
 
-uint32_t dm_task_get_read_ahead(const struct dm_task *dmt)
+uint32_t dm_task_get_read_ahead(const struct dm_task *dmt, uint32_t *read_ahead)
 {              
-	uint32_t read_ahead = 0; //FIXME default?  How cope with failure below?
-	// FIXME (void) dm_blockdev_get_read_ahead(dmt->dev_name, &read_ahead);
-
-	return read_ahead;
+	return get_dev_node_read_ahead(dmt->dev_name, read_ahead);
 }
 
 const char *dm_task_get_name(const struct dm_task *dmt)
@@ -1685,6 +1682,11 @@ repeat_ioctl:
 			rename_dev_node(dmt->dev_name, dmt->newname);
 		break;
 
+	case DM_DEVICE_RESUME:
+		set_dev_node_read_ahead(dmi->name, dmt->read_ahead,
+					dmt->read_ahead_flags);
+		break;
+	
 	case DM_DEVICE_MKNODES:
 		if (dmi->flags & DM_EXISTS_FLAG)
 			add_dev_node(dmi->name, MAJOR(dmi->dev),
