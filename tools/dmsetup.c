@@ -326,6 +326,7 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 {
 	const char *uuid;
+	uint32_t read_ahead;
 
 	if (!info->exists) {
 		printf("Device does not exist.\n");
@@ -338,7 +339,8 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 	       info->suspended ? "SUSPENDED" : "ACTIVE",
 	       info->read_only ? " (READ-ONLY)" : "");
 
-	printf("Read Ahead:       %d\n", (int) dm_task_get_read_ahead(dmt));
+	if (dm_task_get_read_ahead(dmt, &read_ahead))
+		printf("Read Ahead:       %" PRIu32 "\n", read_ahead);
 
 	if (!info->live_table && !info->inactive_table)
 		printf("Tables present:    None\n");
@@ -1613,9 +1615,12 @@ static int _dm_read_ahead_disp(struct dm_report *rh,
 			       struct dm_report_field *field, const void *data,
 			       void *private __attribute((unused)))
 {
-	int32_t value = (int32_t) dm_task_get_read_ahead((const struct dm_task *) data);
+	uint32_t value;
 
-	return dm_report_field_int32(rh, field, &value);
+	if (!dm_task_get_read_ahead((const struct dm_task *) data, &value))
+		value = 0;
+
+	return dm_report_field_uint32(rh, field, &value);
 }
 
 static int _dm_info_status_disp(struct dm_report *rh,
