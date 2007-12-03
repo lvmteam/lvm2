@@ -340,7 +340,7 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 	       info->read_only ? " (READ-ONLY)" : "");
 
 	if (dm_task_get_read_ahead(dmt, &read_ahead))
-		printf("Read Ahead:       %" PRIu32 "\n", read_ahead);
+		printf("Read Ahead:        %" PRIu32 "\n", read_ahead);
 
 	if (!info->live_table && !info->inactive_table)
 		printf("Tables present:    None\n");

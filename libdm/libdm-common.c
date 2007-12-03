@@ -386,13 +386,13 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
 
 	*read_ahead = 0;
 
-	if (!ioctl(fd, BLKRAGET, read_ahead)) {
+	if (ioctl(fd, BLKRAGET, read_ahead)) {
 		log_sys_error("BLKRAGET", dev_name);
 		r = 0;
 	}  else
 		log_debug("%s: read ahead is %" PRIu32, dev_name, *read_ahead);
 
-	if (!close(fd))
+	if (close(fd))
 		stack;
 
 	return r;
@@ -413,7 +413,7 @@ static int _set_read_ahead(const char *dev_name, uint32_t read_ahead)
 		r = 0;
 	}
 
-	if (!close(fd))
+	if (close(fd))
 		stack;
 
 	return r;
