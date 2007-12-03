@@ -901,6 +901,13 @@ static int _resume_node(const char *name, uint32_t major, uint32_t minor,
 		return 0;
 	}
 
+	/* FIXME Kernel should fill in name on return instead */
+	if (!dm_task_set_name(dmt, name)) {
+		log_error("Failed to set readahead device name for %s", name);
+		dm_task_destroy(dmt);
+		return 0;
+	}
+
 	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
 		log_error("Failed to set device number for %s resumption.", name);
 		dm_task_destroy(dmt);

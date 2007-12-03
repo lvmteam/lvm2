@@ -1281,7 +1281,9 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 			    dmt->major, dmt->minor, dmi->name);
 	}
 
-	if (dmt->dev_name)
+	/* FIXME Until resume ioctl supplies name, use dev_name for readahead */
+	if (dmt->dev_name && (dmt->type != DM_DEVICE_RESUME || dmt->minor < 0 ||
+			      dmt->major < 0))
 		strncpy(dmi->name, dmt->dev_name, sizeof(dmi->name));
 
 	if (dmt->uuid)
@@ -1683,7 +1685,8 @@ repeat_ioctl:
 		break;
 
 	case DM_DEVICE_RESUME:
-		set_dev_node_read_ahead(dmi->name, dmt->read_ahead,
+		/* FIXME Kernel needs to fill in dmi->name */
+		set_dev_node_read_ahead(dmt->dev_name, dmt->read_ahead,
 					dmt->read_ahead_flags);
 		break;
 	
