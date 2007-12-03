@@ -21,6 +21,7 @@
 
 #include <stdarg.h>
 #include <sys/param.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 
 #include <linux/dm-ioctl.h>
