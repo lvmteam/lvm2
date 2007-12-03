@@ -339,6 +339,7 @@ static void _display_info_long(struct dm_task *dmt, struct dm_info *info)
 	       info->suspended ? "SUSPENDED" : "ACTIVE",
 	       info->read_only ? " (READ-ONLY)" : "");
 
+	/* FIXME Old value is being printed when it's being changed. */
 	if (dm_task_get_read_ahead(dmt, &read_ahead))
 		printf("Read Ahead:        %" PRIu32 "\n", read_ahead);
 
