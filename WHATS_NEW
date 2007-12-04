@@ -1,5 +1,6 @@
 Version 2.02.29 -
 ==================================
+  Make clvmd backup vg metadata on remote nodes.
   Refactor pvmove allocation code.
   Decode cluster locking state in log message.
   Change file locking state messages from debug to very verbose.
