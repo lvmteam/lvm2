@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -46,6 +46,7 @@
 #include "log.h"
 #include "activate.h"
 #include "locking.h"
+#include "archiver.h"
 #include "defaults.h"
 
 static struct cmd_context *cmd = NULL;
@@ -550,7 +551,7 @@ static void lvm2_log_fn(int level, const char *file, int line,
 {
 
 	/* Send messages to the normal LVM2 logging system too,
-	   so we get debug output when it's asked for. 
+	   so we get debug output when it's asked for.
  	   We need to NULL the function ptr otherwise it will just call
 	   back into here! */
 	init_log_fn(NULL);
@@ -600,6 +601,21 @@ void init_lvhash()
 	pthread_mutex_init(&lvm_lock, NULL);
 }
 
+/* Backups up the LVM metadata if it's changed */
+void lvm_do_backup(char *vgname)
+{
+	struct volume_group * vg;
+	int consistent;
+
+	DEBUGLOG("Triggering backup of VG metadata for %s\n", vgname);
+
+	vg = vg_read(cmd, vgname, NULL /*vgid*/, &consistent);
+	if (vg)
+		check_current_backup(vg);
+	else
+		log_error("Error backing up metadata, can't find VG for group %s", vgname);
+}
+
 /* Called to initialise the LVM context of the daemon */
 int init_lvm(int using_gulm)
 {
@@ -614,6 +630,9 @@ int init_lvm(int using_gulm)
 	init_debug(cmd->current_settings.debug);
 	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
 	set_activation(cmd->current_settings.activation);
+	archive_enable(cmd, cmd->current_settings.archive);
+	backup_enable(cmd, cmd->current_settings.backup);
+	cmd->cmd_line = (char *)"clvmd";
 
 	/* Check lvm.conf is setup for cluster-LVM */
 	check_config();

@@ -295,7 +295,7 @@ static int _cluster_free_request(lvm_response_t * response, int num)
 	return 1;
 }
 
-static int _lock_for_cluster(unsigned char cmd, uint32_t flags, char *name)
+static int _lock_for_cluster(unsigned char cmd, uint32_t flags, const char *name)
 {
 	int status;
 	int i;
@@ -378,6 +378,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 {
 	char lockname[PATH_MAX];
 	int cluster_cmd = 0;
+	int ret;
 	const char *lock_scope;
 	const char *lock_type = "";
 
@@ -447,7 +448,13 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 			 flags);
 
 	/* Send a message to the cluster manager */
-	return _lock_for_cluster(cluster_cmd, flags, lockname);
+	ret = _lock_for_cluster(cluster_cmd, flags, lockname);
+
+	/* If we are unlocking a VG, then trigger remote metadata backups */
+	if (ret && cluster_cmd == CLVMD_CMD_LOCK_VG && ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)) {
+		ret = _lock_for_cluster(CLVMD_CMD_VG_BACKUP, LCK_CLUSTER_VG, resource);
+	}
+	return ret;
 }
 
 #ifdef CLUSTER_LOCKING_INTERNAL

@@ -153,6 +153,10 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 			*retlen = strlen(*buf)+1;
 		break;
 
+	case CLVMD_CMD_VG_BACKUP:
+		lvm_do_backup(&args[2]);
+		break;
+
 	default:
 		/* Won't get here because command is validated in pre_command */
 		break;
@@ -260,6 +264,7 @@ int do_pre_command(struct local_client *client)
 	case CLVMD_CMD_REFRESH:
 	case CLVMD_CMD_GET_CLUSTERNAME:
 	case CLVMD_CMD_SET_DEBUG:
+	case CLVMD_CMD_VG_BACKUP:
 		break;
 
 	default:
@@ -289,6 +294,7 @@ int do_post_command(struct local_client *client)
 		break;
 
 	case CLVMD_CMD_LOCK_VG:
+	case CLVMD_CMD_VG_BACKUP:
 		/* Nothing to do here */
 		break;
 
