@@ -28,7 +28,7 @@ extern int do_check_lvm1(const char *vgname);
 extern int do_refresh_cache(void);
 extern int init_lvm(int using_gulm);
 extern void init_lvhash(void);
-extern void lvm_do_backup(char *vgname);
+extern void lvm_do_backup(const char *vgname);
 extern int hold_unlock(char *resource);
 extern int hold_lock(char *resource, int mode, int flags);
 extern void unlock_all(void);
