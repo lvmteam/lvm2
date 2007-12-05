@@ -8,7 +8,7 @@ Version 1.02.23 - 5th December 2007
   Add readahead support to libdevmapper and dmsetup.
   Fix double free in a libdevmapper-event error path.
   Fix configure --with-dmeventd-path substitution.
-  Allow a DM_DEV_DIR environment variable to override /dev.
+  Allow a DM_DEV_DIR environment variable to override /dev in dmsetup.
   Create a libdevmapper.so.$LIB_VERSION symlink within the build tree.
   Avoid static link failure with some SELinux libraries that require libpthread.
   Remove obsolete dmfs code from tree and update INSTALL.
