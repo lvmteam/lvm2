@@ -1055,13 +1055,13 @@ static int _allocate(struct alloc_handle *ah,
 		     struct volume_group *vg,
 		     struct logical_volume *lv,
 		     uint32_t new_extents,
+		     unsigned can_split,
 		     struct list *allocatable_pvs)
 {
 	struct pv_area **areas;
 	uint32_t allocated = lv ? lv->le_count : 0;
 	uint32_t old_allocated;
 	struct lv_segment *prev_lvseg = NULL;
-	unsigned can_split = 1;	/* Are we allowed more than one segment? */
 	int r = 0;
 	struct list *pvms;
 	uint32_t areas_size;
@@ -1180,6 +1180,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      uint32_t extents,
 				      struct list *allocatable_pvs,
 				      alloc_policy_t alloc,
+				      unsigned can_split,
 				      struct list *parallel_areas)
 {
 	struct alloc_handle *ah;
@@ -1208,7 +1209,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 
 	if (!segtype_is_virtual(segtype) &&
 	    !_allocate(ah, vg, lv, (lv ? lv->le_count : 0) + extents,
-		       allocatable_pvs)) {
+		       can_split, allocatable_pvs)) {
 		stack;
 		alloc_destroy(ah);
 		return NULL;
@@ -1403,16 +1404,18 @@ int lv_extend(struct logical_volume *lv,
 	uint32_t m;
 	struct alloc_handle *ah;
 	struct lv_segment *seg;
+	unsigned can_split = 1;
 
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, status, extents, segtype);
 
 	/* FIXME Temporary restriction during code reorganisation */
 	if (mirrored_pv)
-		alloc = ALLOC_CONTIGUOUS;
+		can_split = 0;
 
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors, 0,
-				    extents, allocatable_pvs, alloc, NULL)))
+				    extents, allocatable_pvs, alloc, can_split,
+				    NULL)))
 		return_0;
 
 	if (mirrors < 2) {

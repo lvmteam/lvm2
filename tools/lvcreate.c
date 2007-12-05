@@ -750,7 +750,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (!(ah = allocate_extents(vg, NULL, lp->segtype, lp->stripes,
 					    lp->mirrors, lp->corelog ? 0U : 1U,
-					    lp->extents, pvh, lp->alloc, NULL)))
+					    lp->extents, pvh, lp->alloc, 1, NULL)))
 			return_0;
 
 		lp->region_size = adjusted_mirror_region_size(vg->extent_size,

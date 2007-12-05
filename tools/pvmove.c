@@ -161,6 +161,11 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			log_print("Skipping locked LV %s", lv->name);
 			continue;
 		}
+		/* FIXME Just insert the layer below - no allocation */
+		// This knows nothing about pvmove
+		// insert_layer_for_segments_on_pv(cmd, lv, source_pvl, lv_mirr, *lvs_changed)
+		//   - for each lv segment using that pv
+		//     - call new fn insert_internal_layer()
 		if (!insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
 					   allocatable_pvs, alloc,
 					   *lvs_changed)) {
@@ -174,6 +179,10 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		log_error("No data to move for %s", vg->name);
 		return NULL;
 	}
+
+	/* FIXME Do allocation and convert to mirror */
+	// again, this knows nothing about pvmove: it's a normal lvconvert lv_mirr to mirror with in-core log
+	// - a flag passed in requires that parent segs get split after the allocation (with failure if not possible)
 
 	return lv_mirr;
 }
