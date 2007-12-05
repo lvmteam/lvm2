@@ -75,11 +75,10 @@ Change access permission to read-only or read/write.
 .I \-r, \-\-readahead ReadAheadSectors|auto|none
 Set read ahead sector count of this logical volume.
 For volume groups with metadata in lvm1 format, this must
-be a value between 2 and 120.
+be a value between 2 and 120 sectors.
 The default value is "auto" which allows the kernel to choose
 a suitable value automatically.
 "None" is equivalent to specifying zero.
-N.B. This setting is currently disregarded and "auto" is always used.
 .TP
 .I \-\-refresh
 If the logical volume is active, reload its metadata.

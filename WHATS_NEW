@@ -43,7 +43,9 @@ Version 2.02.29 -
   All tools: print --help output to stdout, not stderr.
   After a diagnostic, suggest --help, rather than printing all --help output.
   Add %PVS extents option to lvresize, lvextend, and lvcreate.
+  Add 'make check' to run tests in new subdirectory 'test'.
   Moved the obsolete test subdirectory to old-tests.
+  Cope with relative paths in configure --with-dmdir.
   Remove no-longer-correct restrictions on PV arg count with stripes/mirrors.
   Fix strdup memory leak in str_list_dup().
   Link with -lpthread when static SELinux libraries require that.
