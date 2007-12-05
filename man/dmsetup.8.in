@@ -353,7 +353,7 @@ for creating devices with holes in them.
 .TP
 \fBDM_DEV_DIR\fP
 The device directory name.
-Defaults to "/dev" and must be an absolute name.
+Defaults to "/dev" and must be an absolute path.
 
 .SH AUTHORS
 Original version: Joe Thornber (thornber@sistina.com)

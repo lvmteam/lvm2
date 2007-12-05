@@ -1,13 +1,12 @@
-Version 1.02.23 - 
-==================================
+Version 1.02.23 - 5th December 2007
+===================================
   Update dm-ioctl.h after removal of compat code.
-  Add --readahead to dmsetup.
-  Add external read_ahead library functions and DM_READ_AHEAD_* definitions.
+  Add readahead support to libdevmapper and dmsetup.
   Fix double free in a libdevmapper-event error path.
   Fix configure --with-dmeventd-path substitution.
-  Allow $DM_DEV_DIR envvar to override default of "/dev".
-  Create e.g., libdevmapper.so.1.02, in build dir alongside the .so file.
-  Avoid static link failure with some SELinux libraries.
+  Allow a DM_DEV_DIR environment variable to override /dev.
+  Create a libdevmapper.so.$LIB_VERSION symlink within the build tree.
+  Avoid static link failure with some SELinux libraries that require libpthread.
   Remove obsolete dmfs code from tree and update INSTALL.
 
 Version 1.02.22 - 21st August 2007
