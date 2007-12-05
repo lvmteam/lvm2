@@ -438,8 +438,8 @@ static int _set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 			return_0;
 
 		if (current_read_ahead > read_ahead) {
-			log_debug("%s: read ahead %" PRIu32
-				  " below minimum of %" PRIu32,
+			log_debug("%s: retaining kernel read ahead of %" PRIu32
+				  " (requested %" PRIu32 ")",           
 				  dev_name, current_read_ahead, read_ahead);
 			return 1;
 		}
