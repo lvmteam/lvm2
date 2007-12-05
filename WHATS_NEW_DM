@@ -1,5 +1,6 @@
 Version 1.02.23 - 
 ==================================
+  Update dm-ioctl.h after removal of compat code.
   Add --readahead to dmsetup.
   Add external read_ahead library functions and DM_READ_AHEAD_* definitions.
   Fix double free in a libdevmapper-event error path.

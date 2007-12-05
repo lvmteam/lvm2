@@ -380,17 +380,19 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
 {
 	int r = 1;
 	int fd;
+	long read_ahead_long;
 
 	if ((fd = _open_dev_node(dev_name)) < 0)
 		return_0;
 
-	*read_ahead = 0;
-
-	if (ioctl(fd, BLKRAGET, read_ahead)) {
+	if (ioctl(fd, BLKRAGET, &read_ahead_long)) {
 		log_sys_error("BLKRAGET", dev_name);
+		*read_ahead = 0;
 		r = 0;
-	}  else
+	}  else {
+		*read_ahead = (uint32_t) read_ahead_long;
 		log_debug("%s: read ahead is %" PRIu32, dev_name, *read_ahead);
+	}
 
 	if (close(fd))
 		stack;
@@ -402,13 +404,14 @@ static int _set_read_ahead(const char *dev_name, uint32_t read_ahead)
 {
 	int r = 1;
 	int fd;
+	long read_ahead_long = (long) read_ahead;
 
 	if ((fd = _open_dev_node(dev_name)) < 0)
 		return_0;
 
 	log_debug("%s: Setting read ahead to %" PRIu32, dev_name, read_ahead);
 
-	if (ioctl(fd, BLKRASET, read_ahead)) {
+	if (ioctl(fd, BLKRASET, read_ahead_long)) {
 		log_sys_error("BLKRASET", dev_name);
 		r = 0;
 	}
