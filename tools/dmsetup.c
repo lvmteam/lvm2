@@ -2194,8 +2194,8 @@ static char *parse_loop_device_name(const char *dev, const char *dev_dir)
 
 		/* If dev_dir does not end in a slash, ensure that the
 		   following byte in the device string is "/".  */
-		if (dev_dir[strlen(dev_dir) - 1] != '/'
-		    && device[strlen(dev_dir)] != '/')
+		if (dev_dir[strlen(dev_dir) - 1] != '/' &&
+		    device[strlen(dev_dir)] != '/')
 			goto error;
 
 		strncpy(buf, strrchr(device, '/') + 1, (size_t) PATH_MAX);
@@ -2611,12 +2611,11 @@ int main(int argc, char **argv)
 	dev_dir = getenv ("DM_DEV_DIR");
 	if (dev_dir && *dev_dir) {
 		if (!dm_set_dev_dir(dev_dir)) {
-			fprintf(stderr, "Invalid DM_DEV_DIR envvar value.\n");
+			fprintf(stderr, "Invalid DM_DEV_DIR environment variable value.\n");
 			goto out;
 		}
-	} else {
+	} else
 		dev_dir = DEFAULT_DM_DEV_DIR;
-	}
 
 	if (!_process_switches(&argc, &argv, dev_dir)) {
 		fprintf(stderr, "Couldn't process command line.\n");
