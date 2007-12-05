@@ -922,7 +922,29 @@ int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
 
 uint32_t dm_task_get_read_ahead(const struct dm_task *dmt, uint32_t *read_ahead)
 {              
-	return get_dev_node_read_ahead(dmt->dev_name, read_ahead);
+	const char *dev_name;
+
+	*read_ahead = 0;
+
+#ifdef DM_COMPAT
+	/* Not supporting this */
+        if (_dm_version == 1)
+                return 1;
+#endif  
+
+        if (!dmt->dmi.v4 || !(dmt->dmi.v4->flags & DM_EXISTS_FLAG))
+		return 0;
+
+	if (*dmt->dmi.v4->name)
+		dev_name = dmt->dmi.v4->name;
+	else if (dmt->dev_name)
+		dev_name = dmt->dev_name;
+	else {
+		log_error("Get read ahead request failed: device name unrecorded.");
+		return 0;
+	}
+
+	return get_dev_node_read_ahead(dev_name, read_ahead);
 }
 
 const char *dm_task_get_name(const struct dm_task *dmt)
