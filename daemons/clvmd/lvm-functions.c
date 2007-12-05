@@ -54,6 +54,7 @@ static struct dm_hash_table *lv_hash = NULL;
 static pthread_mutex_t lv_hash_lock;
 static pthread_mutex_t lvm_lock;
 static char last_error[1024];
+static int suspended = 0;
 
 struct lv_info {
 	int lock_id;
@@ -340,11 +341,15 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 
 	case LCK_LV_SUSPEND:
 		status = do_suspend_lv(resource);
+		if (!status)
+			suspended++;
 		break;
 
 	case LCK_UNLOCK:
 	case LCK_LV_RESUME:	/* if active */
 		status = do_resume_lv(resource);
+		if (!status)
+			suspended--;
 		break;
 
 	case LCK_LV_ACTIVATE:
@@ -602,18 +607,21 @@ void init_lvhash()
 }
 
 /* Backups up the LVM metadata if it's changed */
-void lvm_do_backup(char *vgname)
+void lvm_do_backup(const char *vgname)
 {
 	struct volume_group * vg;
-	int consistent;
+	int consistent = 0;
 
-	DEBUGLOG("Triggering backup of VG metadata for %s\n", vgname);
+	DEBUGLOG("Triggering backup of VG metadata for %s. suspended=%d\n", vgname, suspended);
 
 	vg = vg_read(cmd, vgname, NULL /*vgid*/, &consistent);
-	if (vg)
-		check_current_backup(vg);
-	else
+	if (vg) {
+		if (consistent)
+			check_current_backup(vg);
+	}
+	else {
 		log_error("Error backing up metadata, can't find VG for group %s", vgname);
+	}
 }
 
 /* Called to initialise the LVM context of the daemon */
