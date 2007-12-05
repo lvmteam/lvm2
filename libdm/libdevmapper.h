@@ -165,6 +165,9 @@ int dm_task_suppress_identical_reload(struct dm_task *dmt);
 
 #define DM_READ_AHEAD_MINIMUM_FLAG	0x1	/* Value supplied is minimum */
 
+/*
+ * Read ahead is set with DM_DEVICE_CREATE with a table or DM_DEVICE_RESUME.
+ */
 int dm_task_set_read_ahead(struct dm_task *dmt, uint32_t read_ahead,
 			   uint32_t read_ahead_flags);
 uint32_t dm_task_get_read_ahead(const struct dm_task *dmt,
