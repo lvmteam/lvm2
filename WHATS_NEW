@@ -1,5 +1,5 @@
-Version 2.02.29 -
-==================================
+Version 2.02.29 - 5th December 2007
+===================================
   Make clvmd backup vg metadata on remote nodes.
   Refactor pvmove allocation code.
   Decode cluster locking state in log message.
@@ -36,12 +36,12 @@ Version 2.02.29 -
   Add const attributes to pv accessor functions.
   Refactor vg_add_snapshot() and lv_create_empty().
   Handle new sysfs subsystem/block/devices directory structure.
-  Tests are run with LVM_SYSTEM_DIR pointing to private root and /dev dirs.
+  Run test with LVM_SYSTEM_DIR pointing to private root and /dev dirs.
   Fix a bug in lvm_dump.sh checks for lvm/dmsetup binaries.
   Fix underquotations in lvm_dump.sh.
   Refactor lvcreate stripe and mirror parameter validation.
-  All tools: print --help output to stdout, not stderr.
-  After a diagnostic, suggest --help, rather than printing all --help output.
+  Print --help output to stdout, not stderr.
+  After a cmdline processing error, don't print help text but suggest --help.
   Add %PVS extents option to lvresize, lvextend, and lvcreate.
   Add 'make check' to run tests in new subdirectory 'test'.
   Moved the obsolete test subdirectory to old-tests.
