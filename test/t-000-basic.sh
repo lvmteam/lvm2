@@ -13,8 +13,8 @@ test_description='Basics: see if tools are built, etc.'
 
 . ./test-lib.sh
 
-lvm >/dev/null 2>&1
-if test $? != 3; then
+lvm version >/dev/null 2>&1
+if test $? != 0; then
     echo >&2 'You do not seem to have built lvm yet.'
     exit 1
 fi
