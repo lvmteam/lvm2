@@ -372,6 +372,7 @@ static int lvchange_readahead(struct cmd_context *cmd,
 			      struct logical_volume *lv)
 {
 	unsigned read_ahead = 0;
+	unsigned pagesize = (unsigned) lvm_getpagesize() >> SECTOR_SHIFT;
 
 	read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
 
@@ -380,6 +381,13 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	    (read_ahead < 2 || read_ahead > 120)) {
 		log_error("Metadata only supports readahead values between 2 and 120.");
 		return 0;
+	}
+
+	if (read_ahead != DM_READ_AHEAD_AUTO &&
+	    read_ahead != DM_READ_AHEAD_NONE && read_ahead % pagesize) {
+		read_ahead = (read_ahead / pagesize) * pagesize;
+		log_verbose("Rounding down readahead to %u sectors, a multiple "
+			    "of page size %u.", read_ahead, pagesize);
 	}
 
 	if (lv->read_ahead == read_ahead) {
