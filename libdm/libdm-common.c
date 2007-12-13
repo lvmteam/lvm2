@@ -382,6 +382,11 @@ int get_dev_node_read_ahead(const char *dev_name, uint32_t *read_ahead)
 	int fd;
 	long read_ahead_long;
 
+	if (!*dev_name) {
+		log_error("Empty device name passed to BLKRAGET");
+		return 0;
+	}
+
 	if ((fd = _open_dev_node(dev_name)) < 0)
 		return_0;
 
@@ -405,6 +410,11 @@ static int _set_read_ahead(const char *dev_name, uint32_t read_ahead)
 	int r = 1;
 	int fd;
 	long read_ahead_long = (long) read_ahead;
+
+	if (!*dev_name) {
+		log_error("Empty device name passed to BLKRAGET");
+		return 0;
+	}
 
 	if ((fd = _open_dev_node(dev_name)) < 0)
 		return_0;
