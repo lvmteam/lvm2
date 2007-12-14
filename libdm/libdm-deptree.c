@@ -1160,11 +1160,11 @@ int dm_tree_activate_children(struct dm_tree_node *dnode,
 			if (!child->info.inactive_table && !child->info.suspended)
 				continue;
 
-			if (!_resume_node(name, child->info.major, child->info.minor,
+			if (!_resume_node(child->name, child->info.major, child->info.minor,
 					  child->props.read_ahead,
 					  child->props.read_ahead_flags, &newinfo)) {
 				log_error("Unable to resume %s (%" PRIu32
-					  ":%" PRIu32 ")", name, child->info.major,
+					  ":%" PRIu32 ")", child->name, child->info.major,
 					  child->info.minor);
 				continue;
 			}
