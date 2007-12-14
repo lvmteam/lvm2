@@ -80,9 +80,8 @@ static int _dev_name_disp(struct dm_report *rh, struct dm_pool *mem __attribute(
 	return dm_report_field_string(rh, field, &name);
 }
 
-static int _devices_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
-			 struct dm_report_field *field,
-			 const void *data, void *private __attribute((unused)))
+static int _format_pvsegs(struct dm_pool *mem, struct dm_report_field *field,
+			  const void *data, int range_format)
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 	unsigned int s;
@@ -115,19 +114,32 @@ static int _devices_disp(struct dm_report *rh __attribute((unused)), struct dm_p
 			return 0;
 		}
 
-		if (dm_snprintf(extent_str, sizeof(extent_str), "(%" PRIu32
-				 ")", extent) < 0) {
+		if (dm_snprintf(extent_str, sizeof(extent_str),
+			        "%s%" PRIu32 "%s",
+				range_format ? ":" : "(", extent,
+				range_format ? "-"  : ")") < 0) {
 			log_error("Extent number dm_snprintf failed");
 			return 0;
 		}
-
 		if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
 			log_error("dm_pool_grow_object failed");
 			return 0;
 		}
 
+		if (range_format) {
+			if (dm_snprintf(extent_str, sizeof(extent_str),
+				        "%" PRIu32, extent + seg->area_len - 1) < 0) {
+				log_error("Extent number dm_snprintf failed");
+				return 0;
+			}
+			if (!dm_pool_grow_object(mem, extent_str, strlen(extent_str))) {
+				log_error("dm_pool_grow_object failed");
+				return 0;
+			}
+		}
+
 		if ((s != seg->area_count - 1) &&
-		    !dm_pool_grow_object(mem, ",", 1)) {
+		    !dm_pool_grow_object(mem, range_format ? " " : ",", 1)) {
 			log_error("dm_pool_grow_object failed");
 			return 0;
 		}
@@ -141,6 +153,20 @@ static int _devices_disp(struct dm_report *rh __attribute((unused)), struct dm_p
 	dm_report_field_set_value(field, dm_pool_end_object(mem), NULL);
 
 	return 1;
+}
+
+static int _devices_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+			 struct dm_report_field *field,
+			 const void *data, void *private __attribute((unused)))
+{
+	return _format_pvsegs(mem, field, data, 0);
+}
+
+static int _peranges_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private __attribute((unused)))
+{
+	return _format_pvsegs(mem, field, data, 1);
 }
 
 static int _tags_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
@@ -611,6 +637,15 @@ static int _segstart_disp(struct dm_report *rh, struct dm_pool *mem,
 	start = (uint64_t) seg->le * seg->lv->vg->extent_size;
 
 	return _size64_disp(rh, mem, field, &start, private);
+}
+
+static int _segstartpe_disp(struct dm_report *rh, struct dm_pool *mem,
+			  struct dm_report_field *field,
+			  const void *data, void *private)
+{
+	const struct lv_segment *seg = (const struct lv_segment *) data;
+
+	return dm_report_field_uint32(rh, field, &seg->le);
 }
 
 static int _segsize_disp(struct dm_report *rh, struct dm_pool *mem,

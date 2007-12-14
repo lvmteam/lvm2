@@ -1,5 +1,8 @@
 Version 2.02.30 -
 ===================================
+  Append fields to report/pvsegs_cols_verbose.
+  Permit LV segment fields with PV segment reports.
+  Add seg_start_pe and seg_pe_ranges to reports.
 
 Version 2.02.29 - 5th December 2007
 ===================================

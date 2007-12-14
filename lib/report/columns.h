@@ -81,8 +81,10 @@ FIELD(SEGS, seg, NUM, "Region", region_size, 6, size32, "region_size", "For mirr
 FIELD(SEGS, seg, NUM, "Chunk", list, 5, chunksize, "chunksize", "For snapshots, the unit of data used when tracking changes.")
 FIELD(SEGS, seg, NUM, "Chunk", list, 5, chunksize, "chunk_size", "For snapshots, the unit of data used when tracking changes.")
 FIELD(SEGS, seg, NUM, "Start", list, 5, segstart, "seg_start", "Offset within the LV to the start of the segment in current units.")
+FIELD(SEGS, seg, NUM, "Start", list, 5, segstartpe, "seg_start_pe", "Offset within the LV to the start of the segment in physical extents.")
 FIELD(SEGS, seg, NUM, "SSize", list, 5, segsize, "seg_size", "Size of segment in current units.")
 FIELD(SEGS, seg, STR, "Seg Tags", tags, 8, tags, "seg_tags", "Tags, if any.")
+FIELD(SEGS, seg, STR, "PE Ranges", list, 9, peranges, "seg_pe_ranges", "Ranges of Physical Extents of underlying devices in command line format.")
 FIELD(SEGS, seg, STR, "Devices", list, 5, devices, "devices", "Underlying devices used with starting extent numbers.")
 
 FIELD(PVSEGS, pvseg, NUM, "Start", pe, 5, uint32, "pvseg_start", "Physical Extent number of start of segment.")
