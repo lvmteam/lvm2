@@ -59,8 +59,10 @@ static int _pvsegs_sub_single(struct cmd_context *cmd __attribute((unused)),
 			      struct pv_segment *pvseg, void *handle)
 {
 	int ret = ECMD_PROCESSED;
+	struct lv_segment *seg = pvseg->lvseg;
 
-	if (!report_object(handle, vg, NULL, pvseg->pv, NULL, pvseg))
+	if (!report_object(handle, vg, seg ? seg->lv : NULL, pvseg->pv, seg,
+			   pvseg))
 		ret = ECMD_FAILED;
 
 	return ret;
@@ -279,21 +281,22 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		report_type |= LVS;
 	if (report_type & PVSEGS)
 		report_type |= PVS;
-	if ((report_type & LVS) && (report_type & PVS)) {
+	if ((report_type & LVS) && (report_type & PVS) && !args_are_pvs) {
 		log_error("Can't report LV and PV fields at the same time");
 		dm_report_free(report_handle);
 		return 0;
 	}
 
 	/* Change report type if fields specified makes this necessary */
-	if (report_type & SEGS)
-		report_type = SEGS;
-	else if (report_type & LVS)
-		report_type = LVS;
-	else if (report_type & PVSEGS)
+	if ((report_type & PVSEGS) ||
+	    (report_type & PVS) && (report_type & LVS))
 		report_type = PVSEGS;
 	else if (report_type & PVS)
 		report_type = PVS;
+	else if (report_type & SEGS)
+		report_type = SEGS;
+	else if (report_type & LVS)
+		report_type = LVS;
 
 	switch (report_type) {
 	case LVS:
