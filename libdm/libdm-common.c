@@ -300,6 +300,8 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		return 0;
 	}
 
+	log_debug("Created %s", path);
+
 #ifdef HAVE_SELINUX
 	if (!dm_set_selinux_context(path, S_IFBLK))
 		return 0;
@@ -341,6 +343,8 @@ static int _rename_dev_node(const char *old_name, const char *new_name)
 		return 0;
 	}
 
+	log_debug("Renamed %s to %s", oldpath, newpath);
+
 	return 1;
 }
 
@@ -358,6 +362,8 @@ static int _rm_dev_node(const char *dev_name)
 		log_error("Unable to unlink device node for '%s'", dev_name);
 		return 0;
 	}
+
+	log_debug("Removed %s", path);
 
 	return 1;
 }
@@ -531,8 +537,22 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 			  uint32_t read_ahead_flags)
 {
 	struct node_op_parms *nop;
+	struct list *noph, *nopht;
 	size_t len = strlen(dev_name) + strlen(old_name) + 2;
 	char *pos;
+
+	/*
+	 * Ignore any outstanding operations on the node if deleting it
+	 */
+	if (type == NODE_DEL) {
+		list_iterate_safe(noph, nopht, &_node_ops) {
+			nop = list_item(noph, struct node_op_parms);
+			if (!strcmp(dev_name, nop->dev_name)) {
+				list_del(&nop->list);
+				dm_free(nop);
+			}
+		}
+	}
 
 	if (!(nop = dm_malloc(sizeof(*nop) + len))) {
 		log_error("Insufficient memory to stack mknod operation");
@@ -592,7 +612,7 @@ int rename_dev_node(const char *old_name, const char *new_name)
 
 int rm_dev_node(const char *dev_name)
 {
-	log_debug("%s: Stacking NODE_DEL", dev_name);
+	log_debug("%s: Stacking NODE_DEL (replaces other stacked ops)", dev_name);
 
 	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0, 0, 0, "", 0, 0);
 }

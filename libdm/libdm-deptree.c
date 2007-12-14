@@ -1510,7 +1510,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 	void *handle = NULL;
 	struct dm_tree_node *child;
 	struct dm_info newinfo;
-	const char *name;
 
 	/* Preload children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
@@ -1525,11 +1524,6 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 		if (dm_tree_node_num_children(child, 0))
 			dm_tree_preload_children(child, uuid_prefix, uuid_prefix_len);
-
-		if (!(name = dm_tree_node_get_name(child))) {
-			stack;
-			continue;
-		}
 
 		/* FIXME Cope if name exists with no uuid? */
 		if (!child->info.exists) {
@@ -1553,11 +1547,11 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		if (!child->info.inactive_table && !child->info.suspended)
 			continue;
 
-		if (!_resume_node(name, child->info.major, child->info.minor,
+		if (!_resume_node(child->name, child->info.major, child->info.minor,
 				  child->props.read_ahead,
 				  child->props.read_ahead_flags, &newinfo)) {
 			log_error("Unable to resume %s (%" PRIu32
-				  ":%" PRIu32 ")", name, child->info.major,
+				  ":%" PRIu32 ")", child->name, child->info.major,
 				  child->info.minor);
 			continue;
 		}
