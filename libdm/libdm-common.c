@@ -575,18 +575,25 @@ static void _pop_node_ops(void)
 int add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		 uid_t uid, gid_t gid, mode_t mode)
 {
+	log_debug("%s: Stacking NODE_ADD (%" PRIu32 ",%" PRIu32 ") %u:%u 0%o",
+		  dev_name, major, minor, uid, gid, mode);
+
 	return _stack_node_op(NODE_ADD, dev_name, major, minor, uid, gid, mode,
 			      "", 0, 0);
 }
 
 int rename_dev_node(const char *old_name, const char *new_name)
 {
+	log_debug("%s: Stacking NODE_RENAME to %s", old_name, new_name);
+
 	return _stack_node_op(NODE_RENAME, new_name, 0, 0, 0, 0, 0, old_name,
 			      0, 0);
 }
 
 int rm_dev_node(const char *dev_name)
 {
+	log_debug("%s: Stacking NODE_DEL", dev_name);
+
 	return _stack_node_op(NODE_DEL, dev_name, 0, 0, 0, 0, 0, "", 0, 0);
 }
 
@@ -595,6 +602,9 @@ int set_dev_node_read_ahead(const char *dev_name, uint32_t read_ahead,
 {
 	if (read_ahead == DM_READ_AHEAD_AUTO)
 		return 1;
+
+	log_debug("%s: Stacking NODE_READ_AHEAD %" PRIu32 " (flags=%" PRIu32
+		  ")", dev_name, read_ahead, read_ahead_flags);
 
 	return _stack_node_op(NODE_READ_AHEAD, dev_name, 0, 0, 0, 0, 0, "",
 			      read_ahead, read_ahead_flags);
