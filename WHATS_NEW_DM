@@ -1,5 +1,6 @@
 Version 1.02.24 -
 ===================================
+  Add node operation stack debug messages.
   Report error when empty device name passed to readahead functions.
   Fix minimum readahead debug message.
 
