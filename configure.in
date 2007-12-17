@@ -363,7 +363,7 @@ AC_MSG_RESULT($CMDLIB)
 
 ################################################################################
 dnl -- Enable fsadm
-AC_MSG_CHECKING(whether to build fsadm)
+AC_MSG_CHECKING(whether to install fsadm)
 AC_ARG_ENABLE(fsadm, [  --enable-fsadm          Enable fsadm],
 FSADM=$enableval)
 AC_MSG_RESULT($FSADM)
@@ -558,11 +558,6 @@ if test x$CLVMD != xnone; then
 	AC_FUNC_SELECT_ARGTYPES
 fi
 
-if test x$FSADM = xyes; then
-	AC_CHECK_HEADERS(fstab.h sys/mount.h sys/vfs.h,,AC_MSG_ERROR(bailing out))
-	AC_CHECK_FUNCS(memmove,,AC_MSG_ERROR(bailing out))
-fi
-
 if test x$CLUSTER != xnone; then
 	AC_CHECK_HEADERS(sys/socket.h sys/un.h,,AC_MSG_ERROR(bailing out))
 	AC_CHECK_FUNCS(socket,,AC_MSG_ERROR(bailing out))
@@ -661,7 +656,6 @@ po/Makefile
 scripts/Makefile
 tools/Makefile
 tools/version.h
-tools/fsadm/Makefile
 ])
 AC_OUTPUT
 
