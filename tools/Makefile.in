@@ -16,10 +16,6 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
-ifeq ("@FSADM@", "yes")
-  SUBDIRS += fsadm
-endif
-
 SOURCES =\
 	dumpconfig.c \
 	formats.c \
