@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Replace tools/fsadm with scripts/fsadm.sh.
   Append fields to report/pvsegs_cols_verbose.
   Permit LV segment fields with PV segment reports.
   Add seg_start_pe and seg_pe_ranges to reports.
