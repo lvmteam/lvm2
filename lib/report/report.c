@@ -639,9 +639,11 @@ static int _segstart_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &start, private);
 }
 
-static int _segstartpe_disp(struct dm_report *rh, struct dm_pool *mem,
-			  struct dm_report_field *field,
-			  const void *data, void *private)
+static int _segstartpe_disp(struct dm_report *rh,
+			    struct dm_pool *mem __attribute((unused)),
+			    struct dm_report_field *field,
+			    const void *data,
+			    void *private __attribute((unused)))
 {
 	const struct lv_segment *seg = (const struct lv_segment *) data;
 
