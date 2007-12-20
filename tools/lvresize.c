@@ -435,7 +435,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	if ((lp->extents > lv->le_count)) {
 		list_iterate_back_items(seg, &lv->segments) {
 			if (seg_is_mirrored(seg))
-				seg_mirrors = seg->area_count;
+				seg_mirrors = lv_mirror_count(seg->lv);
 			else
 				seg_mirrors = 0;
 			break;
@@ -469,7 +469,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 			}
 
 			if (seg_is_mirrored(seg))
-				seg_mirrors = seg->area_count;
+				seg_mirrors = lv_mirror_count(seg->lv);
 			else
 				seg_mirrors = 0;
 

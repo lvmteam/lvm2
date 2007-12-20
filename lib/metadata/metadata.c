@@ -937,7 +937,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 }
 
 /* Find segment at a given logical extent in an LV */
-struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le)
+struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le)
 {
 	struct lv_segment *seg;
 
@@ -948,7 +948,7 @@ struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le)
 	return NULL;
 }
 
-struct lv_segment *first_seg(struct logical_volume *lv)
+struct lv_segment *first_seg(const struct logical_volume *lv)
 {
 	struct lv_segment *seg = NULL;
 
@@ -959,7 +959,7 @@ struct lv_segment *first_seg(struct logical_volume *lv)
 }
 
 /* Find segment at a given physical extent in a PV */
-struct pv_segment *find_peg_by_pe(struct physical_volume *pv, uint32_t pe)
+struct pv_segment *find_peg_by_pe(const struct physical_volume *pv, uint32_t pe)
 {
 	struct pv_segment *peg;
 

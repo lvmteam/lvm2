@@ -1222,6 +1222,12 @@ int apply_lvname_restrictions(const char *name)
 		return 0;
 	}
 
+	if (strstr(name, "_resync")) {
+		log_error("Names including \"_resync\" are reserved. "
+			  "Please choose a different LV name.");
+		return 0;
+	}
+
 	return 1;
 }
 

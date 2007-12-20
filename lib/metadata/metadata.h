@@ -264,10 +264,10 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd,
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
 
 /* Find LV segment containing given LE */
-struct lv_segment *find_seg_by_le(struct logical_volume *lv, uint32_t le);
+struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le);
 
 /* Find PV segment containing given LE */
-struct pv_segment *find_peg_by_pe(struct physical_volume *pv, uint32_t pe);
+struct pv_segment *find_peg_by_pe(const struct physical_volume *pv, uint32_t pe);
 
 /*
  * Remove a dev_dir if present.

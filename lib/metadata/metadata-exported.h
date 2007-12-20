@@ -398,7 +398,10 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 				   struct list *lvs_changed);
 int split_parent_segments_for_layer(struct cmd_context *cmd,
 				    struct logical_volume *layer_lv);
-int remove_layer_from_lv(struct logical_volume *lv);
+struct logical_volume *find_parent_for_layer(struct logical_volume *lv,
+					     struct logical_volume *layer_lv);
+int remove_layer_from_lv(struct logical_volume *lv,
+			 struct logical_volume *layer_lv);
 struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   struct logical_volume *lv_where,
 					   uint32_t status,
@@ -417,7 +420,7 @@ struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 					const char *pv_name);
 
 /* Find LV segment containing given LE */
-struct lv_segment *first_seg(struct logical_volume *lv);
+struct lv_segment *first_seg(const struct logical_volume *lv);
 
 
 /*
@@ -458,8 +461,8 @@ int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 #define MIRROR_BY_SEG	0x00000001U	/* segment-by-segment mirror */
 #define MIRROR_BY_LV	0x00000002U	/* mirror by mimage LVs */
 
-uint32_t lv_mirror_count(struct logical_volume *lv);
-struct alloc_handle;
+int is_temporary_mirror_layer(const struct logical_volume *lv);
+uint32_t lv_mirror_count(const struct logical_volume *lv);
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
                                     uint32_t region_size);
 int remove_mirrors_from_segments(struct logical_volume *lv,
@@ -468,7 +471,7 @@ int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
 			    uint32_t mirrors, uint32_t region_size,
 			    struct list *allocatable_pvs, alloc_policy_t alloc);
 
-int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
+int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 			 struct list *removable_pvs, unsigned remove_log);
 int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t stripes, uint32_t region_size,
@@ -482,6 +485,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 
 int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			      struct list *removable_pvs, unsigned remove_log);
+int collapse_mirrored_lv(struct logical_volume *lv);
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint32_t lv_type);
