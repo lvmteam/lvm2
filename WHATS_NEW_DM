@@ -1,5 +1,5 @@
-Version 1.02.24 -
-===================================
+Version 1.02.24 - 20th December 2007
+====================================
   Fix deptree to pass new name to _resume_node after a rename.
   Suppress other node operations if node is deleted.
   Add node operation stack debug messages.
