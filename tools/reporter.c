@@ -289,7 +289,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	/* Change report type if fields specified makes this necessary */
 	if ((report_type & PVSEGS) ||
-	    (report_type & PVS) && (report_type & LVS))
+	    ((report_type & PVS) && (report_type & LVS)))
 		report_type = PVSEGS;
 	else if (report_type & PVS)
 		report_type = PVS;
