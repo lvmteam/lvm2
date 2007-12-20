@@ -1238,8 +1238,6 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	if (log_count)
 		_add_mirror_log(lv, log_lv);
 
-	lv->status |= MIRRORED;
-
 	alloc_destroy(ah);
 	return 1;
 
