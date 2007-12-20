@@ -1410,6 +1410,8 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 		sub_lvs[m - old_area_count]->status &= ~VISIBLE_LV;
 	}
 
+	lv->status |= MIRRORED;
+
 	return 1;
 }
 
@@ -2176,11 +2178,18 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 	return 1;
 }
 
-static void _move_lv_segments(struct logical_volume *lv_to,
-			      struct logical_volume *lv_from,
-			      uint32_t set_status, uint32_t reset_status)
+static int _move_lv_segments(struct logical_volume *lv_to,
+			     struct logical_volume *lv_from,
+			     uint32_t set_status, uint32_t reset_status)
 {
 	struct lv_segment *seg;
+
+	list_iterate_items(seg, &lv_to->segments) {
+		if (seg->origin) {
+			log_error("Can't move snapshot segment");
+			return 0;
+		}
+	}
 
 	lv_to->segments = lv_from->segments;
 	lv_to->segments.n->p = &lv_to->segments;
@@ -2192,8 +2201,6 @@ static void _move_lv_segments(struct logical_volume *lv_to,
 		seg->status |= set_status;
 	}
 
-	/* FIXME: how to handle snapshot segments? */
-
 	list_init(&lv_from->segments);
 
 	lv_to->le_count = lv_from->le_count;
@@ -2201,6 +2208,8 @@ static void _move_lv_segments(struct logical_volume *lv_to,
 
 	lv_from->le_count = 0;
 	lv_from->size = 0;
+
+	return 1;
 }
 
 /*
@@ -2253,7 +2262,8 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	    parent->le_count != layer_lv->le_count)
 		return_0;
 
-	_move_lv_segments(parent, layer_lv, 0, 0);
+	if (!_move_lv_segments(parent, layer_lv, 0, 0))
+		return_0;
 
 	/* Replace the empty layer with error segment */
 	segtype = get_segtype_from_string(lv->vg->cmd, "error");
@@ -2307,7 +2317,8 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	log_very_verbose("Inserting layer %s for %s",
 			 layer_lv->name, lv_where->name);
 
-	_move_lv_segments(layer_lv, lv_where, 0, 0);
+	if (!_move_lv_segments(layer_lv, lv_where, 0, 0))
+		return_NULL;
 
 	/* allocate a new linear segment */
 	if (!(mapseg = alloc_lv_segment(cmd->mem, segtype,
