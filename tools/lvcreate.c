@@ -409,7 +409,7 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, "mirror"))) {
+		if (!(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
 			stack;
 			return 0;
 		}
@@ -524,11 +524,10 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t size_rest;
 	uint32_t status = 0;
 	uint64_t tmp_size;
-	struct logical_volume *lv, *org = NULL, *log_lv = NULL;
+	struct logical_volume *lv, *org = NULL;
 	struct list *pvh, tags;
 	const char *tag = NULL;
 	int origin_active = 0;
-	struct alloc_handle *ah = NULL;
 	char lv_name_buf[128];
 	const char *lv_name;
 	struct lvinfo info;
@@ -745,38 +744,6 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (lp->mirrors > 1) {
-		/* FIXME Calculate how many extents needed for the log */
-
-		if (!(ah = allocate_extents(vg, NULL, lp->segtype, lp->stripes,
-					    lp->mirrors, lp->corelog ? 0U : 1U,
-					    lp->extents, pvh, lp->alloc, 1, NULL)))
-			return_0;
-
-		lp->region_size = adjusted_mirror_region_size(vg->extent_size,
-							      lp->extents,
-							      lp->region_size);
-
-		init_mirror_in_sync(lp->nosync);
-
-		if (lp->nosync) {
-			log_warn("WARNING: New mirror won't be synchronised. "
-				  "Don't read what you didn't write!");
-			status |= MIRROR_NOTSYNCED;
-		}
-
-		list_init(&tags);
-		if (tag)
-			str_list_add(cmd->mem, &tags, tag);
-
-		if (!lp->corelog &&
-		    !(log_lv = create_mirror_log(cmd, vg, ah, lp->alloc,
-						 lv_name, lp->nosync, &tags))) {
-			log_error("Failed to create mirror log.");
-			return 0;
-		}
-	}
-
 	if (!(lv = lv_create_empty(lv_name ? lv_name : "lvol%d", NULL,
 				   status, lp->alloc, 0, vg))) {
 		stack;
@@ -802,19 +769,34 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		goto error;
 	}
 
+	if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
+		       1, lp->extents, NULL, 0u, 0u, pvh, lp->alloc))
+		return_0;
+
 	if (lp->mirrors > 1) {
-		if (!create_mirror_layers(ah, 0, lp->mirrors, lv,
-					  lp->segtype, 0,
-					  lp->region_size, log_lv)) {
-			stack;
-			goto error;
+		init_mirror_in_sync(lp->nosync);
+
+		if (lp->nosync) {
+			log_warn("WARNING: New mirror won't be synchronised. "
+				  "Don't read what you didn't write!");
+			status |= MIRROR_NOTSYNCED;
 		}
 
-		alloc_destroy(ah);
-		ah = NULL;
-	} else if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
-		       lp->mirrors, lp->extents, NULL, 0u, 0u, pvh, lp->alloc))
-		return_0;
+		list_init(&tags);
+		if (tag)
+			str_list_add(cmd->mem, &tags, tag);
+
+		if (!lv_add_mirrors(cmd, lv, lp->mirrors - 1, lp->stripes,
+				    adjusted_mirror_region_size(
+						vg->extent_size,
+						lv->le_count,
+						lp->region_size),
+				    lp->corelog ? 0U : 1U, pvh, lp->alloc,
+				    MIRROR_BY_LV)) {
+			stack;
+			goto revert_new_lv;
+		}
+	}
 
 	/* store vg on disk(s) */
 	if (!vg_write(vg))
@@ -901,8 +883,6 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 
 error:
-	if (ah)
-		alloc_destroy(ah);
 	return 0;
 
 deactivate_and_revert_new_lv:

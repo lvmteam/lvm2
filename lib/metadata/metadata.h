@@ -295,11 +295,6 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le);
 /*
  * Mirroring functions
  */
-int add_mirror_layers(struct alloc_handle *ah,
-		      uint32_t num_mirrors,
-		      uint32_t existing_mirrors,
-		      struct logical_volume *lv,
-		      const struct segment_type *segtype);
 
 /*
  * Given mirror image or mirror log segment, find corresponding mirror segment 

@@ -40,8 +40,8 @@ MOUNT=mount
 UMOUNT=umount
 MKDIR=mkdir
 RM=rm
-BLOCKDEV=blockdev
-BLKID=blkid
+BLOCKDEV=echo 
+BLKID=echo
 GREP=grep
 READLINK=readlink
 FSCK=fsck
@@ -133,7 +133,7 @@ decode_size() {
 # detect filesystem on the given device
 # dereference device name if it is symbolic link
 detect_fs() {
-	VOLUME=$($READLINK -e -n "$1")
+	VOLUME=$($READLINK -n "$1")
 	# use /dev/null as cache file to be sure about the result
 	FSTYPE=$($BLKID -c /dev/null -o value -s TYPE "$VOLUME" || error "Cannot get FSTYPE of \"$VOLUME\"")
 	verbose "\"$FSTYPE\" filesystem found on \"$VOLUME\""
