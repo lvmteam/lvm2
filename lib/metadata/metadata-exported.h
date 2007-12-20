@@ -88,6 +88,10 @@ struct pv_segment;
 #define CORRECT_INCONSISTENT    0x00000001U /* Correct inconsistent metadata */
 #define FAIL_INCONSISTENT       0x00000002U /* Fail if metadata inconsistent */
 
+/* Mirror conversion type flags */
+#define MIRROR_BY_SEG		0x00000001U	/* segment-by-segment mirror */
+#define MIRROR_BY_LV		0x00000002U	/* mirror by mimage LVs */
+
 /* Ordered list - see lv_manip.c */
 typedef enum {
 	ALLOC_INVALID,
@@ -355,6 +359,10 @@ struct logical_volume *lv_create_empty(const char *name,
 				       int import,
 				       struct volume_group *vg);
 
+/* Write out LV contents */
+int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
+           uint64_t sectors, int value);
+
 /* Reduce the size of an LV by extents */
 int lv_reduce(struct logical_volume *lv, uint32_t extents);
 
@@ -457,9 +465,6 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count,
 		      struct list *pvs, uint32_t status_mask);
-/* conversion flags */
-#define MIRROR_BY_SEG	0x00000001U	/* segment-by-segment mirror */
-#define MIRROR_BY_LV	0x00000002U	/* mirror by mimage LVs */
 
 int is_temporary_mirror_layer(const struct logical_volume *lv);
 uint32_t lv_mirror_count(const struct logical_volume *lv);

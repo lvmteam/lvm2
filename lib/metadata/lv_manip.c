@@ -2280,7 +2280,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;
 
-	if (!(segtype = get_segtype_from_string(lv_where->vg->cmd, "striped")))
+	if (!(segtype = get_segtype_from_string(cmd, "striped")))
 		return_NULL;
 
 	/* create an empty layer LV */
@@ -2310,7 +2310,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	_move_lv_segments(layer_lv, lv_where, 0, 0);
 
 	/* allocate a new linear segment */
-	if (!(mapseg = alloc_lv_segment(lv_where->vg->cmd->mem, segtype,
+	if (!(mapseg = alloc_lv_segment(cmd->mem, segtype,
 					lv_where, 0, layer_lv->le_count,
 					status, 0, NULL, 1, layer_lv->le_count,
 					0, 0, 0)))
@@ -2520,3 +2520,51 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 
 	return 1;
 }
+
+/*
+ * Initialize the LV with 'value'.
+ */
+int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
+	   uint64_t sectors, int value)
+{
+	struct device *dev;
+	char *name;
+
+	/*
+	 * FIXME:
+	 * <clausen> also, more than 4k
+	 * <clausen> say, reiserfs puts it's superblock 32k in, IIRC
+	 * <ejt_> k, I'll drop a fixme to that effect
+	 *	   (I know the device is at least 4k, but not 32k)
+	 */
+	if (!(name = dm_pool_alloc(cmd->mem, PATH_MAX))) {
+		log_error("Name allocation failed - device not cleared");
+		return 0;
+	}
+
+	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+			 lv->vg->name, lv->name) < 0) {
+		log_error("Name too long - device not cleared (%s)", lv->name);
+		return 0;
+	}
+
+	log_verbose("Clearing start of logical volume \"%s\"", lv->name);
+
+	if (!(dev = dev_cache_get(name, NULL))) {
+		log_error("%s: not found: device not cleared", name);
+		return 0;
+	}
+
+	if (!dev_open_quiet(dev))
+		return 0;
+
+	dev_set(dev, UINT64_C(0),
+		sectors ? (size_t) sectors << SECTOR_SHIFT : (size_t) 4096,
+		value);
+	dev_flush(dev);
+	dev_close_immediate(dev);
+
+	return 1;
+}
+
+

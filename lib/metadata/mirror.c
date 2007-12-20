@@ -27,6 +27,11 @@
 
 #include "defaults.h" /* FIXME: should this be defaults.h? */
 
+/* These are necessary for _write_log_header() */
+#include "xlate.h"
+#define MIRROR_MAGIC 0x4D695272
+#define MIRROR_DISK_VERSION 2
+
 /* These are the flags that represent the mirror failure restoration policies */
 #define MIRROR_REMOVE            0
 #define MIRROR_ALLOCATE          1
@@ -332,7 +337,7 @@ static int _mirrored_lv_in_sync(struct logical_volume *lv)
 static int _merge_mirror_images(struct logical_volume *lv,
 				const struct list *mimages)
 {
-	int addition = list_size(mimages);
+	uint32_t addition = list_size(mimages);
 	struct logical_volume **img_lvs;
 	struct lv_list *lvl;
 	int i = 0;
@@ -893,60 +898,10 @@ int remove_mirror_log(struct cmd_context *cmd,
 }
 
 /*
- * Initialize the LV with 'value'.
- */
-static int _set_lv(struct cmd_context *cmd, struct logical_volume *lv,
-	   uint64_t sectors, int value)
-{
-	struct device *dev;
-	char *name;
-
-	/*
-	 * FIXME:
-	 * <clausen> also, more than 4k
-	 * <clausen> say, reiserfs puts it's superblock 32k in, IIRC
-	 * <ejt_> k, I'll drop a fixme to that effect
-	 *	   (I know the device is at least 4k, but not 32k)
-	 */
-	if (!(name = dm_pool_alloc(cmd->mem, PATH_MAX))) {
-		log_error("Name allocation failed - device not cleared");
-		return 0;
-	}
-
-	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
-			 lv->vg->name, lv->name) < 0) {
-		log_error("Name too long - device not cleared (%s)", lv->name);
-		return 0;
-	}
-
-	log_verbose("Clearing start of logical volume \"%s\"", lv->name);
-
-	if (!(dev = dev_cache_get(name, NULL))) {
-		log_error("%s: not found: device not cleared", name);
-		return 0;
-	}
-
-	if (!dev_open_quiet(dev))
-		return 0;
-
-	dev_set(dev, UINT64_C(0),
-		sectors ? (size_t) sectors << SECTOR_SHIFT : (size_t) 4096,
-		value);
-	dev_flush(dev);
-	dev_close_immediate(dev);
-
-	return 1;
-}
-
-/*
  * This function writes a new header to the mirror log header to the lv
  *
  * Returns: 1 on success, 0 on failure
  */
-#include "xlate.h"
-#define MIRROR_MAGIC 0x4D695272
-#define MIRROR_DISK_VERSION 2
-
 static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	struct device *dev;
@@ -1036,7 +991,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 			log_error("Failed to remove tag %s from mirror log.",
 				  sl->str);
 
-	if (activation() && !_set_lv(cmd, log_lv, log_lv->size,
+	if (activation() && !set_lv(cmd, log_lv, log_lv->size,
 				    in_sync ? -1 : 0)) {
 		log_error("Aborting. Failed to wipe mirror log.");
 		goto deactivate_and_revert_new_lv;
@@ -1072,11 +1027,10 @@ revert_new_lv:
 	return 0;
 }
 
-static struct logical_volume *_create_mirror_log(struct cmd_context *cmd,
-					 struct logical_volume *lv,
-					 struct alloc_handle *ah,
-					 alloc_policy_t alloc,
-					 const char *lv_name)
+static struct logical_volume *_create_mirror_log(struct logical_volume *lv,
+						 struct alloc_handle *ah,
+						 alloc_policy_t alloc,
+						 const char *lv_name)
 {
 	struct logical_volume *log_lv;
 	char *log_name;
@@ -1108,7 +1062,7 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 						 struct alloc_handle *ah,
 						 struct logical_volume *lv,
 						 uint32_t log_count,
-						 uint32_t region_size,
+						 uint32_t region_size __attribute((unused)),
 						 alloc_policy_t alloc,
 						 int in_sync)
 {
@@ -1116,7 +1070,12 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 
 	init_mirror_in_sync(in_sync);
 
-	if (!(log_lv = _create_mirror_log(cmd, lv, ah, alloc, lv->name))) {
+	if (log_count != 1) {
+		log_error("log_count != 1 is not supported.");
+		return NULL;
+	}
+
+	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv->name))) {
 		log_error("Failed to create mirror log.");
 		return NULL;
 	}
@@ -1341,7 +1300,8 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
  * 'mirror' is the number of mirrors to be removed.
  * 'pvs' is removable pvs.
  */
-int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
+int lv_remove_mirrors(struct cmd_context *cmd __attribute((unused)),
+		      struct logical_volume *lv,
 		      uint32_t mirrors, uint32_t log_count, struct list *pvs,
 		      uint32_t status_mask)
 {
