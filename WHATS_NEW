@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Add support for stacked mirrors.
   Major restructuring of pvmove and lvconvert layer manipulation code.
   Replace tools/fsadm with scripts/fsadm.sh.
   Append fields to report/pvsegs_cols_verbose.

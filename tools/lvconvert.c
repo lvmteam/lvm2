@@ -369,14 +369,20 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			return 1;
 		}
 	} else if (lp->mirrors > existing_mirrors) {
-		/* FIXME Unless anywhere, remove PV of log_lv
-		 * from allocatable_pvs & allocate
-		 * (mirrors - existing_mirrors) new areas
-		 */
-		/* FIXME Create mirror hierarchy to sync */
-		log_error("Adding mirror images is not "
-			  "supported yet.");
-		return 0;
+		/* FIXME: can't have multiple mlogs. force corelog. */
+		corelog = 1;
+		if (!insert_layer_for_lv(cmd, lv, 0, "_resync%d")) {
+			log_error("Failed to insert resync layer");
+			return 0;
+		}
+		if (!lv_add_mirrors(cmd, lv, lp->mirrors - existing_mirrors, 1,
+				    adjusted_mirror_region_size(
+						lv->vg->extent_size,
+						lv->le_count,
+						lp->region_size),
+				    corelog ? 0U : 1U, lp->pvh, lp->alloc,
+				    MIRROR_BY_LV))
+			return_0;
 	} else {
 		/* Reduce number of mirrors */
 		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,

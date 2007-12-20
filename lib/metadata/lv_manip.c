@@ -1407,6 +1407,7 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 	for (m = old_area_count; m < new_area_count; m++) {
 		set_lv_segment_area_lv(seg, m, sub_lvs[m - old_area_count], 0, status);
 		first_seg(sub_lvs[m - old_area_count])->mirror_seg = seg;
+		sub_lvs[m - old_area_count]->status &= ~VISIBLE_LV;
 	}
 
 	return 1;
@@ -1451,6 +1452,39 @@ int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv)
 	return 1;
 }
 
+static int _lv_extend_mirror(struct alloc_handle *ah,
+			     struct logical_volume *lv,
+			     uint32_t extents, uint32_t first_area)
+{
+	struct lv_segment *seg;
+	uint32_t m, s;
+
+	seg = first_seg(lv);
+	for (m = first_area, s = 0; s < seg->area_count; s++) {
+		if (is_temporary_mirror_layer(seg_lv(seg, s))) {
+			if (!_lv_extend_mirror(ah, seg_lv(seg, s), extents, m))
+				return_0;
+			m += lv_mirror_count(seg_lv(seg, s));
+			continue;
+		}
+
+		if (!lv_add_segment(ah, m++, 1, seg_lv(seg, s),
+				    get_segtype_from_string(lv->vg->cmd,
+							    "striped"),
+				    0, 0, 0, NULL)) {
+			log_error("Aborting. Failed to extend %s.",
+				  seg_lv(seg, s)->name);
+			return 0;
+		}
+	}
+	seg->area_len += extents;
+	seg->len += extents;
+	lv->le_count += extents;
+	lv->size += (uint64_t) extents *lv->vg->extent_size;
+
+	return 1;
+}
+
 /*
  * Entry point for single-step LV allocation + extension.
  */
@@ -1464,9 +1498,7 @@ int lv_extend(struct logical_volume *lv,
 	      alloc_policy_t alloc)
 {
 	int r = 1;
-	uint32_t m;
 	struct alloc_handle *ah;
-	struct lv_segment *seg;
 
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, status, extents, segtype);
@@ -1482,21 +1514,8 @@ int lv_extend(struct logical_volume *lv,
 			goto out;
 		}
 	} else {
-		seg = first_seg(lv);
-		for (m = 0; m < mirrors; m++) {
-			if (!lv_add_segment(ah, m, 1, seg_lv(seg, m),
-					    get_segtype_from_string(lv->vg->cmd,
-								    "striped"),
-					    0, 0, 0, NULL)) {
-				log_error("Aborting. Failed to extend %s.",
-					  seg_lv(seg, m)->name);
-				return 0;
-			}
-		}
-		seg->area_len += extents;
-		seg->len += extents;
-		lv->le_count += extents;
-		lv->size += (uint64_t) extents *lv->vg->extent_size;
+		if (!_lv_extend_mirror(ah, lv, extents, 0))
+			return_0;
 	}
 
       out:
@@ -1599,10 +1618,14 @@ static int _for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	list_iterate_items(seg, &lv->segments) {
 		if (seg->log_lv && !func(cmd, seg->log_lv, data))
 			return 0;
-		for (s = 0; s < seg->area_count; s++)
-			if (seg_type(seg, s) == AREA_LV &&
-			    !func(cmd, seg_lv(seg, s), data))
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_LV)
+				continue;
+			if (!func(cmd, seg_lv(seg, s), data))
 				return 0;
+			if (!_for_each_sub_lv(cmd, seg_lv(seg, s), func, data))
+				return 0;
+		}
 	}
 
 	return 1;
@@ -2180,23 +2203,62 @@ static void _move_lv_segments(struct logical_volume *lv_to,
 	lv_from->size = 0;
 }
 
-/* Remove a layer from the LV */
-/* FIXME: how to specify what should be removed if multiple layers stacked? */
-int remove_layer_from_lv(struct logical_volume *lv)
+/*
+ * Find a parent LV for the layer_lv in the lv
+ */
+struct logical_volume *find_parent_for_layer(struct logical_volume *lv,
+                                            struct logical_volume *layer_lv)
 {
-	struct logical_volume *orig_lv;
+	struct logical_volume *parent;
+	struct lv_segment *seg;
+	uint32_t s;
+
+	list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_LV)
+				continue;
+			if (seg_lv(seg, s) == layer_lv)
+				return lv;
+			parent = find_parent_for_layer(seg_lv(seg, s),
+						       layer_lv);
+			if (parent)
+				return parent;
+		}
+	}
+	return NULL;
+}
+
+/* Remove a layer from the LV */
+int remove_layer_from_lv(struct logical_volume *lv,
+			 struct logical_volume *layer_lv)
+{
+	struct logical_volume *parent;
+	struct segment_type *segtype;
+
+	parent = find_parent_for_layer(lv, layer_lv);
+	if (!parent) {
+		log_error("Failed to find layer %s in %s",
+		layer_lv->name, lv->name);
+		return 0;
+	}
 
 	/*
 	 * Before removal, the layer should be cleaned up,
 	 * i.e. additional segments and areas should have been removed.
 	 */
-	if (list_size(&lv->segments) != 1 ||
-	    first_seg(lv)->area_count != 1 ||
-	    seg_type(first_seg(lv), 0) != AREA_LV)
-		return 0;
+	if (list_size(&parent->segments) != 1 ||
+	    first_seg(parent)->area_count != 1 ||
+	    seg_type(first_seg(parent), 0) != AREA_LV ||
+	    layer_lv != seg_lv(first_seg(parent), 0) ||
+	    parent->le_count != layer_lv->le_count)
+		return_0;
 
-	orig_lv = seg_lv(first_seg(lv), 0);
-	_move_lv_segments(lv, orig_lv, 0, 0);
+	_move_lv_segments(parent, layer_lv, 0, 0);
+
+	/* Replace the empty layer with error segment */
+	segtype = get_segtype_from_string(lv->vg->cmd, "error");
+	if (!lv_add_virtual_segment(layer_lv, 0, parent->le_count, segtype))
+		return_0;
 
 	return 1;
 }
