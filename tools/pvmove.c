@@ -106,6 +106,40 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 	return allocatable_pvs;
 }
 
+/*
+ * Replace any LV segments on given PV with temporary mirror.
+ * Returns list of LVs changed.
+ */
+static int _insert_pvmove_mirrors(struct cmd_context *cmd,
+				  struct logical_volume *lv_mirr,
+				  struct list *source_pvl,
+				  struct logical_volume *lv,
+				  struct list *lvs_changed)
+
+{
+	struct pv_list *pvl;
+	uint32_t prev_le_count;
+
+	/* Only 1 PV may feature in source_pvl */
+	pvl = list_item(source_pvl->n, struct pv_list);
+
+	prev_le_count = lv_mirr->le_count;
+	if (!insert_layer_for_segments_on_pv(cmd, lv, lv_mirr, PVMOVE,
+					     pvl, lvs_changed))
+		return_0;
+
+	/* check if layer was inserted */
+	if (lv_mirr->le_count - prev_le_count) {
+		lv->status |= LOCKED;
+
+		log_verbose("Moving %u extents of logical volume %s/%s",
+			    lv_mirr->le_count - prev_le_count,
+			    lv->vg->name, lv->name);
+	}
+
+	return 1;
+}
+
 /* Create new LV with mirror segments for the required copies */
 static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 						struct volume_group *vg,
@@ -117,6 +151,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 {
 	struct logical_volume *lv_mirr, *lv;
 	struct lv_list *lvl;
+	uint32_t log_count = 0;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty("pvmove%d", NULL,
@@ -161,14 +196,8 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			log_print("Skipping locked LV %s", lv->name);
 			continue;
 		}
-		/* FIXME Just insert the layer below - no allocation */
-		// This knows nothing about pvmove
-		// insert_layer_for_segments_on_pv(cmd, lv, source_pvl, lv_mirr, *lvs_changed)
-		//   - for each lv segment using that pv
-		//     - call new fn insert_internal_layer()
-		if (!insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
-					   allocatable_pvs, alloc,
-					   *lvs_changed)) {
+		if (!_insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
+					    *lvs_changed)) {
 			stack;
 			return NULL;
 		}
@@ -180,9 +209,16 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	/* FIXME Do allocation and convert to mirror */
-	// again, this knows nothing about pvmove: it's a normal lvconvert lv_mirr to mirror with in-core log
-	// - a flag passed in requires that parent segs get split after the allocation (with failure if not possible)
+	if (!lv_add_mirrors(cmd, lv_mirr, 1, 1, 0, log_count,
+			    allocatable_pvs, alloc, MIRROR_BY_SEG)) {
+		log_error("Failed to convert pvmove LV to mirrored");
+		return_NULL;
+	}
+
+	if (!split_parent_segments_for_layer(cmd, lv_mirr)) {
+		log_error("Failed to split segments being moved");
+		return_NULL;
+	}
 
 	return lv_mirr;
 }
@@ -381,12 +417,21 @@ static int _finish_pvmove(struct cmd_context *cmd, struct volume_group *vg,
 			  struct list *lvs_changed)
 {
 	int r = 1;
+	struct list lvs_completed;
+	struct lv_list *lvl;
 
 	/* Update metadata to remove mirror segments and break dependencies */
-	if (!remove_pvmove_mirrors(vg, lv_mirr)) {
+	list_init(&lvs_completed);
+	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0, NULL, PVMOVE) ||
+	    !remove_layers_for_segments_all(cmd, lv_mirr, PVMOVE,
+					    &lvs_completed)) {
 		log_error("ABORTING: Removal of temporary mirror failed");
 		return 0;
 	}
+
+	list_iterate_items(lvl, &lvs_completed)
+		/* FIXME Assumes only one pvmove at a time! */
+		lvl->lv->status &= ~LOCKED;
 
 	/* Store metadata without dependencies on mirror segments */
 	if (!vg_write(vg)) {
@@ -488,6 +533,17 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	char *pv_name = NULL;
 	char *colon;
 	int ret;
+	const struct segment_type *segtype;
+
+	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+		return_0;
+
+        if (activation() && segtype->ops->target_present &&
+            !segtype->ops->target_present(NULL)) {
+                log_error("%s: Required device-mapper target(s) not "
+                          "detected in your kernel", segtype->name);
+                return 0;
+        }
 
 	if (argc) {
 		pv_name = argv[0];

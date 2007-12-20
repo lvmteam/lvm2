@@ -379,6 +379,31 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	      const char *new_name);
 
+/*
+ * Functions for layer manipulation
+ */
+int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
+				    struct logical_volume *lv_where,
+				    struct logical_volume *layer_lv,
+				    uint32_t status,
+				    struct pv_list *pv,
+				    struct list *lvs_changed);
+int remove_layers_for_segments(struct cmd_context *cmd,
+			       struct logical_volume *lv,
+			       struct logical_volume *layer_lv,
+			       uint32_t status_mask, struct list *lvs_changed);
+int remove_layers_for_segments_all(struct cmd_context *cmd,
+				   struct logical_volume *layer_lv,
+				   uint32_t status_mask,
+				   struct list *lvs_changed);
+int split_parent_segments_for_layer(struct cmd_context *cmd,
+				    struct logical_volume *layer_lv);
+int remove_layer_from_lv(struct logical_volume *lv);
+struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
+					   struct logical_volume *lv_where,
+					   uint32_t status,
+					   const char *layer_suffix);
+
 /* Find a PV within a given VG */
 struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
 pv_t *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id);
@@ -422,32 +447,42 @@ int vg_check_status(const struct volume_group *vg, uint32_t status);
 /*
 * Mirroring functions
 */
+int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
+		   uint32_t mirrors, uint32_t stripes,
+		   uint32_t region_size, uint32_t log_count,
+		   struct list *pvs, alloc_policy_t alloc, uint32_t flags);
+int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
+		      uint32_t mirrors, uint32_t log_count,
+		      struct list *pvs, uint32_t status_mask);
+/* conversion flags */
+#define MIRROR_BY_SEG	0x00000001U	/* segment-by-segment mirror */
+#define MIRROR_BY_LV	0x00000002U	/* mirror by mimage LVs */
+
+uint32_t lv_mirror_count(struct logical_volume *lv);
 struct alloc_handle;
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
                                     uint32_t region_size);
-int create_mirror_layers(struct alloc_handle *ah,
-			 uint32_t first_area,
-			 uint32_t num_mirrors,
-			 struct logical_volume *lv,
-			 const struct segment_type *segtype,
-			 uint32_t status,
-			 uint32_t region_size,
-			 struct logical_volume *log_lv);
+int remove_mirrors_from_segments(struct logical_volume *lv,
+				 uint32_t new_mirrors, uint32_t status_mask);
+int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
+			    uint32_t mirrors, uint32_t region_size,
+			    struct list *allocatable_pvs, alloc_policy_t alloc);
 
 int remove_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			 struct list *removable_pvs, unsigned remove_log);
+int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
+		      uint32_t mirrors, uint32_t stripes, uint32_t region_size,
+		      struct list *allocatable_pvs, alloc_policy_t alloc,
+		      uint32_t log_count);
+int remove_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
+		      struct list *removable_pvs);
+int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
+		   uint32_t log_count, uint32_t region_size,
+		   struct list *allocatable_pvs, alloc_policy_t alloc);
+
 int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			      struct list *removable_pvs, unsigned remove_log);
 
-int insert_pvmove_mirrors(struct cmd_context *cmd,
-			  struct logical_volume *lv_mirr,
-			  struct list *source_pvl,
-			  struct logical_volume *lv,
-			  struct list *allocatable_pvs,
-			  alloc_policy_t alloc,
-			  struct list *lvs_changed);
-int remove_pvmove_mirrors(struct volume_group *vg,
-			  struct logical_volume *lv_mirr);
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint32_t lv_type);
 struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,

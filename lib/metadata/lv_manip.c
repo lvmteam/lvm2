@@ -43,6 +43,17 @@ struct seg_pvs {
 	uint32_t len;
 };
 
+static struct seg_pvs *_find_seg_pvs_by_le(struct list *list, uint32_t le)
+{
+	struct seg_pvs *spvs;
+
+	list_iterate_items(spvs, list)
+		if (le >= spvs->le && le < spvs->le + spvs->len)
+			return spvs;
+
+	return NULL;
+}
+
 /*
  * Find first unused LV number.
  */
@@ -160,7 +171,9 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 		return;
 
 	if (seg_type(seg, s) == AREA_PV) {
-		release_pv_segment(seg_pvseg(seg, s), area_reduction);
+		if (release_pv_segment(seg_pvseg(seg, s), area_reduction) &&
+		    seg->area_len == area_reduction)
+			seg_type(seg, s) = AREA_UNASSIGNED;
 		return;
 	}
 
@@ -543,16 +556,11 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 				  uint32_t stripe_size,
 				  const struct segment_type *segtype,
 				  struct alloced_area *aa,
-				  struct physical_volume *mirrored_pv,
-				  uint32_t mirrored_pe,
 				  uint32_t region_size,
 				  struct logical_volume *log_lv __attribute((unused)))
 {
-	uint32_t s, extents, area_multiple, extra_areas = 0;
+	uint32_t s, extents, area_multiple;
 	struct lv_segment *seg;
-
-	if (mirrored_pv)
-		extra_areas = 1;
 
 	area_multiple = calc_area_multiple(segtype, area_count);
 
@@ -561,22 +569,14 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 				     lv->le_count,
 				     aa[0].len * area_multiple,
 				     status, stripe_size, NULL,
-				     area_count + extra_areas,
+				     area_count,
 				     aa[0].len, 0u, region_size, 0u))) {
 		log_error("Couldn't allocate new LV segment.");
 		return 0;
 	}
 
-	if (extra_areas) {
-		if (!set_lv_segment_area_pv(seg, 0, mirrored_pv, mirrored_pe)) {
-			stack;
-			return 0;
-		}
-	}
-
 	for (s = 0; s < area_count; s++) {
-		if (!set_lv_segment_area_pv(seg, s + extra_areas, aa[s].pv,
-					    aa[s].pe)) {
+		if (!set_lv_segment_area_pv(seg, s, aa[s].pv, aa[s].pe)) {
 			stack;
 			return 0;
 		}
@@ -600,8 +600,6 @@ static int _setup_alloced_segments(struct logical_volume *lv,
 				   uint32_t status,
 				   uint32_t stripe_size,
 				   const struct segment_type *segtype,
-				   struct physical_volume *mirrored_pv,
-				   uint32_t mirrored_pe,
 				   uint32_t region_size,
 				   struct logical_volume *log_lv)
 {
@@ -610,7 +608,6 @@ static int _setup_alloced_segments(struct logical_volume *lv,
 	list_iterate_items(aa, &alloced_areas[0]) {
 		if (!_setup_alloced_segment(lv, status, area_count,
 					    stripe_size, segtype, aa,
-					    mirrored_pv, mirrored_pe,
 					    region_size, log_lv)) {
 			stack;
 			return 0;
@@ -1180,7 +1177,6 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      uint32_t extents,
 				      struct list *allocatable_pvs,
 				      alloc_policy_t alloc,
-				      unsigned can_split,
 				      struct list *parallel_areas)
 {
 	struct alloc_handle *ah;
@@ -1209,7 +1205,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 
 	if (!segtype_is_virtual(segtype) &&
 	    !_allocate(ah, vg, lv, (lv ? lv->le_count : 0) + extents,
-		       can_split, allocatable_pvs)) {
+		       1, allocatable_pvs)) {
 		stack;
 		alloc_destroy(ah);
 		return NULL;
@@ -1226,8 +1222,6 @@ int lv_add_segment(struct alloc_handle *ah,
 		   struct logical_volume *lv,
 		   const struct segment_type *segtype,
 		   uint32_t stripe_size,
-		   struct physical_volume *mirrored_pv,
-		   uint32_t mirrored_pe,
 		   uint32_t status,
 		   uint32_t region_size,
 		   struct logical_volume *log_lv)
@@ -1245,7 +1239,6 @@ int lv_add_segment(struct alloc_handle *ah,
 	if (!_setup_alloced_segments(lv, &ah->alloced_areas[first_area],
 				     num_areas, status,
 				     stripe_size, segtype,
-				     mirrored_pv, mirrored_pe,
 				     region_size, log_lv)) {
 		stack;
 		return 0;
@@ -1261,6 +1254,159 @@ int lv_add_segment(struct alloc_handle *ah,
 	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
 		stack;
 		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * "mirror" segment type doesn't support split.
+ * So, when adding mirrors to linear LV segment, first split it,
+ * then convert it to "mirror" and add areas.
+ */
+static struct lv_segment *_convert_seg_to_mirror(struct lv_segment *seg,
+						 uint32_t region_size,
+						 struct logical_volume *log_lv)
+{
+	struct lv_segment *newseg;
+	uint32_t s;
+
+	if (!seg_is_striped(seg)) {
+		log_error("Can't convert non-striped segment to mirrored.");
+		return NULL;
+	}
+
+	if (seg->area_count > 1) {
+		log_error("Can't convert striped segment with multiple areas "
+			  "to mirrored.");
+		return NULL;
+	}
+
+	if (!(newseg = alloc_lv_segment(seg->lv->vg->cmd->mem,
+					get_segtype_from_string(seg->lv->vg->cmd, "mirror"),
+					seg->lv, seg->le, seg->len,
+					seg->status, seg->stripe_size,
+					log_lv,
+					seg->area_count, seg->area_len,
+					seg->chunk_size, region_size,
+					seg->extents_copied))) {
+		log_error("Couldn't allocate converted LV segment");
+		return NULL;
+	}
+
+	for (s = 0; s < seg->area_count; s++)
+		if (!move_lv_segment_area(newseg, s, seg, s))
+			return_NULL;
+
+	list_add(&seg->list, &newseg->list);
+	list_del(&seg->list);
+
+	return newseg;
+}
+
+/*
+ * Add new areas to mirrored segments
+ */
+int lv_add_mirror_areas(struct alloc_handle *ah,
+			struct logical_volume *lv, uint32_t le,
+			uint32_t region_size)
+{
+	struct alloced_area *aa;
+	struct lv_segment *seg;
+	uint32_t current_le = le;
+	uint32_t s, old_area_count, new_area_count;
+
+	list_iterate_items(aa, &ah->alloced_areas[0]) {
+		if (!(seg = find_seg_by_le(lv, current_le))) {
+			log_error("Failed to find segment for %s extent %"
+				  PRIu32, lv->name, current_le);
+			return 0;
+		}
+
+		/* Allocator assures aa[0].len <= seg->area_len */
+		if (aa[0].len < seg->area_len) {
+			if (!lv_split_segment(lv, seg->le + aa[0].len)) {
+				log_error("Failed to split segment at %s "
+					  "extent %" PRIu32, lv->name, le);
+				return 0;
+			}
+		}
+
+		if (!seg_is_mirrored(seg) &&
+		    (!(seg = _convert_seg_to_mirror(seg, region_size, NULL))))
+				return_0;
+
+		old_area_count = seg->area_count;
+		new_area_count = old_area_count + ah->area_count;
+
+		if (!_lv_segment_add_areas(lv, seg, new_area_count))
+			return_0;
+
+		for (s = 0; s < ah->area_count; s++) {
+			if (!set_lv_segment_area_pv(seg, s + old_area_count,
+						    aa[s].pv, aa[s].pe))
+				return_0;
+		}
+
+		current_le += seg->area_len;
+	}
+
+	lv->status |= MIRRORED;
+
+	if (lv->vg->fid->fmt->ops->lv_setup &&
+	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
+		return_0;
+
+	return 1;
+}
+
+/*
+ * Add mirror image LVs to mirrored segments
+ */
+int lv_add_mirror_lvs(struct logical_volume *lv,
+		      struct logical_volume **sub_lvs,
+		      uint32_t num_extra_areas,
+		      uint32_t status, uint32_t region_size)
+{
+	struct lv_segment *seg;
+	uint32_t old_area_count, new_area_count;
+	uint32_t m;
+	struct segment_type *mirror_segtype;
+
+	seg = first_seg(lv);
+
+	if (list_size(&lv->segments) != 1 || seg_type(seg, 0) != AREA_LV) {
+		log_error("Mirror layer must be inserted before adding mirrors");
+		return_0;
+	}
+
+	mirror_segtype = get_segtype_from_string(lv->vg->cmd, "mirror");
+	if (seg->segtype != mirror_segtype)
+		if (!(seg = _convert_seg_to_mirror(seg, region_size, NULL)))
+			return_0;
+
+	if (region_size && region_size != seg->region_size) {
+		log_error("Conflicting region_size");
+		return 0;
+	}
+
+	old_area_count = seg->area_count;
+	new_area_count = old_area_count + num_extra_areas;
+
+	if (!_lv_segment_add_areas(lv, seg, new_area_count)) {
+		log_error("Failed to allocate widened LV segment for %s.",
+			  lv->name);
+		return 0;
+	}
+
+	for (m = 0; m < old_area_count; m++) {
+		seg_lv(seg, m)->status |= status;
+		first_seg(seg_lv(seg, m))->mirror_seg = seg;
+	}
+
+	for (m = old_area_count; m < new_area_count; m++) {
+		set_lv_segment_area_lv(seg, m, sub_lvs[m - old_area_count], 0, status);
+		first_seg(sub_lvs[m - old_area_count])->mirror_seg = seg;
 	}
 
 	return 1;
@@ -1306,97 +1452,14 @@ int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv)
 }
 
 /*
- * Add a mirror segment
- */
-int lv_add_mirror_segment(struct alloc_handle *ah,
-			  struct logical_volume *lv,
-			  struct logical_volume **sub_lvs,
-			  uint32_t mirrors,
-			  const struct segment_type *segtype __attribute((unused)),
-			  uint32_t status __attribute((unused)),
-			  uint32_t region_size,
-			  struct logical_volume *log_lv)
-{
-	struct lv_segment *seg;
-	uint32_t m;
-
-	if (log_lv && list_empty(&log_lv->segments)) {
-		log_error("Log LV %s is empty.", log_lv->name);
-		return 0;
-	}
-
-	if (!(seg = alloc_lv_segment(lv->vg->cmd->mem,
-				     get_segtype_from_string(lv->vg->cmd,
-							     "mirror"),
-				     lv, lv->le_count, ah->total_area_len, 0,
-				     0, log_lv, mirrors, ah->total_area_len, 0,
-				     region_size, 0))) {
-		log_error("Couldn't allocate new mirror segment.");
-		return 0;
-	}
-
-	for (m = 0; m < mirrors; m++) {
-		set_lv_segment_area_lv(seg, m, sub_lvs[m], 0, MIRROR_IMAGE);
-		first_seg(sub_lvs[m])->mirror_seg = seg;
-	}
-
-	list_add(&lv->segments, &seg->list);
-	lv->le_count += ah->total_area_len;
-	lv->size += (uint64_t) lv->le_count *lv->vg->extent_size;
-
-	if (lv->vg->fid->fmt->ops->lv_setup &&
-	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
-		stack;
-		return 0;
-	}
-
-	return 1;
-}
-
-/*
- * Add parallel areas to an existing mirror
- */
-int lv_add_more_mirrored_areas(struct logical_volume *lv,
-			       struct logical_volume **sub_lvs,
-			       uint32_t num_extra_areas,
-			       uint32_t status)
-{
-	struct lv_segment *seg;
-	uint32_t old_area_count, new_area_count;
-	uint32_t m;
-
-	if (list_size(&lv->segments) != 1) {
-		log_error("Mirrored LV must only have one segment.");
-		return 0;
-	}
-
-	seg = first_seg(lv);
-
-	old_area_count = seg->area_count;
-	new_area_count = old_area_count + num_extra_areas;
-
-	if (!_lv_segment_add_areas(lv, seg, new_area_count)) {
-		log_error("Failed to allocate widened LV segment for %s.",
-			  lv->name);
-		return 0;
-	}
-
-	for (m = old_area_count; m < new_area_count; m++) {
-		set_lv_segment_area_lv(seg, m, sub_lvs[m - old_area_count], 0, status);
-		first_seg(sub_lvs[m - old_area_count])->mirror_seg = seg;
-	}
-
-	return 1;
-}
-
-/*
  * Entry point for single-step LV allocation + extension.
  */
 int lv_extend(struct logical_volume *lv,
 	      const struct segment_type *segtype,
 	      uint32_t stripes, uint32_t stripe_size,
 	      uint32_t mirrors, uint32_t extents,
-	      struct physical_volume *mirrored_pv, uint32_t mirrored_pe,
+	      struct physical_volume *mirrored_pv __attribute((unused)),
+	      uint32_t mirrored_pe __attribute((unused)),
 	      uint32_t status, struct list *allocatable_pvs,
 	      alloc_policy_t alloc)
 {
@@ -1404,23 +1467,17 @@ int lv_extend(struct logical_volume *lv,
 	uint32_t m;
 	struct alloc_handle *ah;
 	struct lv_segment *seg;
-	unsigned can_split = 1;
 
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, status, extents, segtype);
 
-	/* FIXME Temporary restriction during code reorganisation */
-	if (mirrored_pv)
-		can_split = 0;
-
 	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors, 0,
-				    extents, allocatable_pvs, alloc, can_split,
-				    NULL)))
+				    extents, allocatable_pvs, alloc, NULL)))
 		return_0;
 
 	if (mirrors < 2) {
 		if (!lv_add_segment(ah, 0, ah->area_count, lv, segtype, stripe_size,
-			    mirrored_pv, mirrored_pe, status, 0, NULL)) {
+			    status, 0, NULL)) {
 			stack;
 			goto out;
 		}
@@ -1430,7 +1487,7 @@ int lv_extend(struct logical_volume *lv,
 			if (!lv_add_segment(ah, m, 1, seg_lv(seg, m),
 					    get_segtype_from_string(lv->vg->cmd,
 								    "striped"),
-					    0, NULL, 0, 0, 0, NULL)) {
+					    0, 0, 0, NULL)) {
 				log_error("Aborting. Failed to extend %s.",
 					  seg_lv(seg, m)->name);
 				return 0;
@@ -1898,5 +1955,506 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	log_print("Logical volume \"%s\" successfully removed", lv->name);
+	return 1;
+}
+
+/*
+ * insert_layer_for_segments_on_pv() inserts a layer segment for a segment area.
+ * However, layer modification could split the underlying layer segment.
+ * This function splits the parent area according to keep the 1:1 relationship
+ * between the parent area and the underlying layer segment.
+ * Since the layer LV might have other layers below, build_parallel_areas()
+ * is used to find the lowest-level segment boundaries.
+ */
+static int _split_parent_area(struct lv_segment *seg, uint32_t s,
+			      struct list *layer_seg_pvs)
+{
+	uint32_t parent_area_len, parent_le, layer_le;
+	uint32_t area_multiple;
+	struct seg_pvs *spvs;
+
+	if (seg_is_striped(seg))
+		area_multiple = seg->area_count;
+	else
+		area_multiple = 1;
+
+	parent_area_len = seg->area_len;
+	parent_le = seg->le;
+	layer_le = seg_le(seg, s);
+
+	while (parent_area_len > 0) {
+		/* Find the layer segment pointed at */
+		if (!(spvs = _find_seg_pvs_by_le(layer_seg_pvs, layer_le))) {
+			log_error("layer segment for %s:%" PRIu32 " not found",
+				  seg->lv->name, parent_le);
+			return 0;
+		}
+
+		if (spvs->le != layer_le) {
+			log_error("Incompatible layer boundary: "
+				  "%s:%" PRIu32 "[%" PRIu32 "] on %s:%" PRIu32,
+				  seg->lv->name, parent_le, s,
+				  seg_lv(seg, s)->name, layer_le);
+			return 0;
+		}
+
+		if (spvs->len < parent_area_len) {
+			parent_le += spvs->len * area_multiple;
+			if (!lv_split_segment(seg->lv, parent_le))
+				return_0;
+		}
+
+		parent_area_len -= spvs->len;
+		layer_le += spvs->len;
+	}
+
+	return 1;
+}
+
+/*
+ * Split the parent LV segments if the layer LV below it is splitted.
+ */
+int split_parent_segments_for_layer(struct cmd_context *cmd,
+				    struct logical_volume *layer_lv)
+{
+	struct lv_list *lvl;
+	struct logical_volume *parent_lv;
+	struct lv_segment *seg;
+	uint32_t s;
+	struct list *parallel_areas;
+
+	if (!(parallel_areas = build_parallel_areas_from_lv(cmd, layer_lv)))
+		return_0;
+
+	/* Loop through all LVs except itself */
+	list_iterate_items(lvl, &layer_lv->vg->lvs) {
+		parent_lv = lvl->lv;
+		if (parent_lv == layer_lv)
+			continue;
+
+		/* Find all segments that point at the layer LV */
+		list_iterate_items(seg, &parent_lv->segments) {
+			for (s = 0; s < seg->area_count; s++) {
+				if (seg_type(seg, s) != AREA_LV ||
+				    seg_lv(seg, s) != layer_lv)
+					continue;
+
+				if (!_split_parent_area(seg, s, parallel_areas))
+					return_0;
+			}
+		}
+	}
+
+	return 1;
+}
+
+/* Remove a layer from the LV */
+int remove_layers_for_segments(struct cmd_context *cmd,
+			       struct logical_volume *lv,
+			       struct logical_volume *layer_lv,
+			       uint32_t status_mask, struct list *lvs_changed)
+{
+	struct lv_segment *seg, *lseg;
+	uint32_t s;
+	int lv_changed = 0;
+	struct lv_list *lvl;
+
+	/* Find all segments that point at the temporary mirror */
+	list_iterate_items(seg, &lv->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_LV ||
+			    seg_lv(seg, s) != layer_lv)
+				continue;
+
+			/* Find the layer segment pointed at */
+			if (!(lseg = find_seg_by_le(layer_lv, seg_le(seg, s)))) {
+				log_error("Layer segment found: %s:%" PRIu32,
+					  layer_lv->name, seg_le(seg, s));
+				return 0;
+			}
+
+			/* Check the segment params are compatible */
+			if (!seg_is_striped(lseg) || lseg->area_count != 1) {
+				log_error("Layer is not linear: %s:%" PRIu32,
+					  layer_lv->name, lseg->le);
+				return 0;
+			}
+			if ((lseg->status & status_mask) != status_mask) {
+				log_error("Layer status does not match: "
+					  "%s:%" PRIu32 " status: 0x%x/0x%x",
+					  layer_lv->name, lseg->le,
+					  lseg->status, status_mask);
+				return 0;
+			}
+			if (lseg->le != seg_le(seg, s) ||
+			    lseg->area_len != seg->area_len) {
+				log_error("Layer boundary mismatch: "
+					  "%s:%" PRIu32 "-%" PRIu32 " on "
+					  "%s:%" PRIu32 " / "
+					  "%" PRIu32 "-%" PRIu32 " / ",
+					  lv->name, seg->le, seg->area_len,
+					  layer_lv->name, seg_le(seg, s),
+					  lseg->le, lseg->area_len);
+				return 0;
+			}
+
+			if (!move_lv_segment_area(seg, s, lseg, 0))
+				return_0;
+
+			/* Replace mirror with error segment */
+			if (!(lseg->segtype =
+			      get_segtype_from_string(lv->vg->cmd, "error"))) {
+				log_error("Missing error segtype");
+				return 0;
+			}
+			lseg->area_count = 0;
+
+			/* First time, add LV to list of LVs affected */
+			if (!lv_changed && lvs_changed) {
+				if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
+					log_error("lv_list alloc failed");
+					return 0;
+				}
+				lvl->lv = lv;
+				list_add(lvs_changed, &lvl->list);
+				lv_changed = 1;
+			}
+		}
+	}
+	if (lv_changed && !lv_merge_segments(lv))
+		stack;
+
+	return 1;
+}
+
+/* Remove a layer */
+int remove_layers_for_segments_all(struct cmd_context *cmd,
+				   struct logical_volume *layer_lv,
+				   uint32_t status_mask,
+				   struct list *lvs_changed)
+{
+	struct lv_list *lvl;
+	struct logical_volume *lv1;
+
+	/* Loop through all LVs except the temporary mirror */
+	list_iterate_items(lvl, &layer_lv->vg->lvs) {
+		lv1 = lvl->lv;
+		if (lv1 == layer_lv)
+			continue;
+
+		if (!remove_layers_for_segments(cmd, lv1, layer_lv,
+						status_mask, lvs_changed))
+			return 0;
+	}
+
+	if (!lv_empty(layer_lv))
+		return_0;
+
+	return 1;
+}
+
+static void _move_lv_segments(struct logical_volume *lv_to,
+			      struct logical_volume *lv_from,
+			      uint32_t set_status, uint32_t reset_status)
+{
+	struct lv_segment *seg;
+
+	lv_to->segments = lv_from->segments;
+	lv_to->segments.n->p = &lv_to->segments;
+	lv_to->segments.p->n = &lv_to->segments;
+
+	list_iterate_items(seg, &lv_to->segments) {
+		seg->lv = lv_to;
+		seg->status &= ~reset_status;
+		seg->status |= set_status;
+	}
+
+	/* FIXME: how to handle snapshot segments? */
+
+	list_init(&lv_from->segments);
+
+	lv_to->le_count = lv_from->le_count;
+	lv_to->size = lv_from->size;
+
+	lv_from->le_count = 0;
+	lv_from->size = 0;
+}
+
+/* Remove a layer from the LV */
+/* FIXME: how to specify what should be removed if multiple layers stacked? */
+int remove_layer_from_lv(struct logical_volume *lv)
+{
+	struct logical_volume *orig_lv;
+
+	/*
+	 * Before removal, the layer should be cleaned up,
+	 * i.e. additional segments and areas should have been removed.
+	 */
+	if (list_size(&lv->segments) != 1 ||
+	    first_seg(lv)->area_count != 1 ||
+	    seg_type(first_seg(lv), 0) != AREA_LV)
+		return 0;
+
+	orig_lv = seg_lv(first_seg(lv), 0);
+	_move_lv_segments(lv, orig_lv, 0, 0);
+
+	return 1;
+}
+
+/*
+ * Create and insert a linear LV "above" lv_where.
+ * After the insertion, a new LV named lv_where->name + suffix is created
+ * and all segments of lv_where is moved to the new LV.
+ * lv_where will have a single segment which maps linearly to the new LV.
+ */
+struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
+					   struct logical_volume *lv_where,
+					   uint32_t status,
+					   const char *layer_suffix)
+{
+	struct logical_volume *layer_lv;
+	char *name;
+	size_t len;
+	struct segment_type *segtype;
+	struct lv_segment *mapseg;
+
+	if (!(segtype = get_segtype_from_string(lv_where->vg->cmd, "striped")))
+		return_NULL;
+
+	/* create an empty layer LV */
+
+	len = strlen(lv_where->name) + 32;
+	if (!(name = alloca(len))) {
+		log_error("layer name allocation failed. "
+			  "Remove new LV and retry.");
+		return NULL;
+	}
+
+	if (dm_snprintf(name, len, "%s%s", lv_where->name, layer_suffix) < 0) {
+		log_error("layer name allocation failed. "
+			  "Remove new LV and retry.");
+		return NULL;
+	}
+
+	if (!(layer_lv = lv_create_empty(name, NULL, LVM_READ | LVM_WRITE,
+					 ALLOC_INHERIT, 0, lv_where->vg))) {
+		log_error("Creation of layer LV failed");
+		return NULL;
+	}
+
+	log_very_verbose("Inserting layer %s for %s",
+			 layer_lv->name, lv_where->name);
+
+	_move_lv_segments(layer_lv, lv_where, 0, 0);
+
+	/* allocate a new linear segment */
+	if (!(mapseg = alloc_lv_segment(lv_where->vg->cmd->mem, segtype,
+					lv_where, 0, layer_lv->le_count,
+					status, 0, NULL, 1, layer_lv->le_count,
+					0, 0, 0)))
+		return_NULL;
+
+	/* map the new segment to the original underlying are */
+	set_lv_segment_area_lv(mapseg, 0, layer_lv, 0, 0);
+
+	/* add the new segment to the layer LV */
+	list_add(&lv_where->segments, &mapseg->list);
+	lv_where->le_count = layer_lv->le_count;
+	lv_where->size = lv_where->le_count * lv_where->vg->extent_size;
+
+	return layer_lv;
+}
+
+/*
+ * Extend and insert a linear layer LV beneath the source segment area.
+ */
+static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
+					struct lv_segment *seg, uint32_t s,
+					uint32_t status)
+{
+	struct lv_segment *mapseg;
+	struct segment_type *segtype;
+	struct physical_volume *src_pv = seg_pv(seg, s);
+	uint32_t src_pe = seg_pe(seg, s);
+
+	if (seg_type(seg, s) != AREA_PV && seg_type(seg, s) != AREA_LV)
+		return_0;
+
+	if (!(segtype = get_segtype_from_string(layer_lv->vg->cmd, "striped")))
+		return_0;
+
+	/* FIXME Incomplete message? Needs more context */
+	log_very_verbose("Inserting %s:%" PRIu32 "-%" PRIu32 " of %s/%s",
+			 pv_dev_name(src_pv),
+			 src_pe, src_pe + seg->area_len - 1,
+			 seg->lv->vg->name, seg->lv->name);
+
+	/* allocate a new segment */
+	if (!(mapseg = alloc_lv_segment(layer_lv->vg->cmd->mem, segtype,
+					layer_lv, layer_lv->le_count,
+					seg->area_len, status, 0,
+					NULL, 1, seg->area_len, 0, 0, 0)))
+		return_0;
+
+	/* map the new segment to the original underlying are */
+	if (!move_lv_segment_area(mapseg, 0, seg, s))
+		return_0;
+
+	/* add the new segment to the layer LV */
+	list_add(&layer_lv->segments, &mapseg->list);
+	layer_lv->le_count += seg->area_len;
+	layer_lv->size += seg->area_len * layer_lv->vg->extent_size;
+
+	/* map the original area to the new segment */
+	set_lv_segment_area_lv(seg, s, layer_lv, mapseg->le, 0);
+
+	return 1;
+}
+
+/*
+ * Match the segment area to PEs in the pvl
+ * (the segment area boundary should be aligned to PE ranges by
+ *  _adjust_layer_segments() so that there is no partial overlap.)
+ */
+static int _match_seg_area_to_pe_range(struct lv_segment *seg, uint32_t s,
+				       struct pv_list *pvl)
+{
+	struct pe_range *per;
+	uint32_t pe_start, per_end;
+
+	if (!pvl)
+		return 1;
+
+	if (seg_type(seg, s) != AREA_PV || seg_dev(seg, s) != pvl->pv->dev)
+		return 0;
+
+	pe_start = seg_pe(seg, s);
+
+	/* Do these PEs match to any of the PEs in pvl? */
+	list_iterate_items(per, pvl->pe_ranges) {
+		per_end = per->start + per->count - 1;
+
+		if ((pe_start < per->start) || (pe_start > per_end))
+			continue;
+
+		/* FIXME Missing context in this message - add LV/seg details */
+		log_debug("Matched PE range %s:%" PRIu32 "-%" PRIu32 " against "
+			  "%s %" PRIu32 " len %" PRIu32, dev_name(pvl->pv->dev),
+			  per->start, per_end, dev_name(seg_dev(seg, s)),
+			  seg_pe(seg, s), seg->area_len);
+
+		return 1;
+	}
+
+	return 0;
+}
+
+/*
+ * For each segment in lv_where that uses a PV in pvl directly,
+ * split the segment if it spans more than one underlying PV.
+ */
+static int _align_segment_boundary_to_pe_range(struct logical_volume *lv_where,
+					       struct pv_list *pvl)
+{
+	struct lv_segment *seg;
+	struct pe_range *per;
+	uint32_t pe_start, pe_end, per_end, stripe_multiplier, s;
+
+	if (!pvl)
+		return 1;
+
+	/* Split LV segments to match PE ranges */
+	list_iterate_items(seg, &lv_where->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_PV ||
+			    seg_dev(seg, s) != pvl->pv->dev)
+				continue;
+
+			/* Do these PEs match with the condition? */
+			list_iterate_items(per, pvl->pe_ranges) {
+				pe_start = seg_pe(seg, s);
+				pe_end = pe_start + seg->area_len - 1;
+				per_end = per->start + per->count - 1;
+
+				/* No overlap? */
+				if ((pe_end < per->start) ||
+				    (pe_start > per_end))
+					continue;
+
+				if (seg_is_striped(seg))
+					stripe_multiplier = seg->area_count;
+				else
+					stripe_multiplier = 1;
+
+				if ((per->start != pe_start &&
+				     per->start > pe_start) &&
+				    !lv_split_segment(lv_where, seg->le +
+						      (per->start - pe_start) *
+						      stripe_multiplier))
+					return_0;
+
+				if ((per_end != pe_end &&
+				     per_end < pe_end) &&
+				    !lv_split_segment(lv_where, seg->le +
+						      (per_end - pe_start + 1) *
+						      stripe_multiplier))
+					return_0;
+			}
+		}
+	}
+
+	return 1;
+}
+
+/*
+ * Scan lv_where for segments on a PV in pvl, and for each one found
+ * append a linear segment to lv_layer and insert it between the two.
+ *
+ * If pvl is empty, a layer is placed under the whole of lv_where.
+ * If the layer is inserted, lv_where is added to lvs_changed.
+ */
+int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
+				    struct logical_volume *lv_where,
+				    struct logical_volume *layer_lv,
+				    uint32_t status,
+				    struct pv_list *pvl,
+				    struct list *lvs_changed)
+{
+	struct lv_segment *seg;
+	struct lv_list *lvl;
+	int lv_used = 0;
+	uint32_t s;
+
+	if (!_align_segment_boundary_to_pe_range(lv_where, pvl))
+		return_0;
+
+	/* Work through all segments on the supplied PV */
+	list_iterate_items(seg, &lv_where->segments) {
+		for (s = 0; s < seg->area_count; s++) {
+			if (!_match_seg_area_to_pe_range(seg, s, pvl))
+				continue;
+
+			/* First time, add LV to list of LVs affected */
+			if (!lv_used && lvs_changed) {
+				if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
+					log_error("lv_list alloc failed");
+					return 0;
+				}
+				lvl->lv = lv_where;
+				list_add(lvs_changed, &lvl->list);
+				lv_used = 1;
+			}
+
+			if (!_extend_layer_lv_for_segment(layer_lv, seg, s,
+							  status)) {
+				log_error("Failed to insert segment in layer "
+					  "LV %s under %s:%" PRIu32 "-%" PRIu32,
+					  layer_lv->name, lv_where->name,
+					  seg->le, seg->le + seg->len);
+				return 0;
+			}
+		}
+	}
+
 	return 1;
 }

@@ -232,10 +232,6 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 {
 	struct lv_segment *seg;
 	uint32_t existing_mirrors;
-	struct alloc_handle *ah = NULL;
-	struct logical_volume *log_lv;
-	struct list *parallel_areas;
-	float sync_percent;
 	const char *mirrorlog;
 	unsigned corelog = 0;
 
@@ -312,8 +308,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			return 1;
 		}
 
-		if (!remove_mirror_images(seg, 1,
-					  lp->pv_count ? lp->pvh : NULL, 1))
+		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - 1, 1,
+				       lp->pv_count ? lp->pvh : NULL, 0))
 			return_0;
 		goto commit_changes;
 	}
@@ -332,33 +328,13 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			}
 		}
 
-		if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv)))
-			return_0;
-
-		if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype,
-					    1, lp->mirrors - 1,
-					    corelog ? 0U : 1U,
-					    lv->le_count, lp->pvh, lp->alloc,
-					    1, parallel_areas)))
-			return_0;
-
-		lp->region_size = adjusted_mirror_region_size(lv->vg->extent_size,
-							      lv->le_count,
-							      lp->region_size);
-
-		log_lv = NULL;
-		if (!corelog &&
-		    !(log_lv = create_mirror_log(cmd, lv->vg, ah,
-						 lp->alloc,
-						 lv->name, 0, &lv->tags))) {
-			log_error("Failed to create mirror log.");
-			return 0;
-		}
-
-		if (!create_mirror_layers(ah, 1, lp->mirrors, lv,
-					  lp->segtype, 0,
-					  lp->region_size,
-					  log_lv))
+		if (!lv_add_mirrors(cmd, lv, lp->mirrors - 1, 1,
+				    adjusted_mirror_region_size(
+						lv->vg->extent_size,
+						lv->le_count,
+						lp->region_size),
+				    corelog ? 0U : 1U, lp->pvh, lp->alloc,
+				    MIRROR_BY_LV))
 			return_0;
 		goto commit_changes;
 	}
@@ -375,54 +351,15 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 	if (lp->mirrors == existing_mirrors) {
 		if (!seg->log_lv && !corelog) {
-			/* No disk log present, add one. */
-			if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv)))
+			if (!add_mirror_log(cmd, lv, 1,
+					    adjusted_mirror_region_size(
+							lv->vg->extent_size,
+							lv->le_count,
+							lp->region_size),
+					    lp->pvh, lp->alloc))
 				return_0;
-			if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
-				log_error("Unable to determine mirror sync status.");
-				return 0;
-			}
-
-			if (!(ah = allocate_extents(lv->vg, NULL, lp->segtype, 0,
-						    0, 1, 0, lp->pvh, lp->alloc,
-						    1, parallel_areas))) {
-				stack;
-				return 0;
-			}
-
-			if (sync_percent >= 100.0)
-				init_mirror_in_sync(1);
-			else
-				init_mirror_in_sync(0);
-
-			if (!(log_lv = create_mirror_log(cmd, lv->vg, ah,
-							 lp->alloc, lv->name,
-							 (sync_percent >= 100.0) ?
-							 1 : 0, &lv->tags))) {
-				log_error("Failed to create mirror log.");
-				return 0;
-			}
-			seg->log_lv = log_lv;
-			log_lv->status |= MIRROR_LOG;
-			first_seg(log_lv)->mirror_seg = seg;
 		} else if (seg->log_lv && corelog) {
-			/* Had disk log, switch to core. */
-			if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
-				log_error("Unable to determine mirror sync status.");
-				return 0;
-			}
-
-			if (sync_percent >= 100.0)
-				init_mirror_in_sync(1);
-			else {
-				/* A full resync will take place */
-				lv->status &= ~MIRROR_NOTSYNCED;
-				init_mirror_in_sync(0);
-			}
-
-			if (!remove_mirror_images(seg, lp->mirrors,
-						  lp->pv_count ?
-						  lp->pvh : NULL, 1))
+			if (!remove_mirror_log(cmd, lv, lp->pvh))
 				return_0;
 		} else {
 			/* No change */
@@ -442,9 +379,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 		return 0;
 	} else {
 		/* Reduce number of mirrors */
-		if (!remove_mirror_images(seg, lp->mirrors,
-					  lp->pv_count ?
-					  lp->pvh : NULL, 0))
+		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
+				       0, lp->pv_count ? lp->pvh : NULL, 0))
 			return_0;
 	}
 
