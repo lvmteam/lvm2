@@ -236,7 +236,14 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	unsigned corelog = 0;
 
 	seg = first_seg(lv);
-	existing_mirrors = (lv->status & MIRRORED) ? seg->area_count : 1;
+	existing_mirrors = lv_mirror_count(lv);
+
+	/* If called with no argument, try collapsing the resync layers */
+	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG)) {
+		if (!collapse_mirrored_lv(lv))
+			return_0;
+		goto commit_changes;
+	}
 
 	/*
 	 * Adjust required number of mirrors
@@ -516,8 +523,7 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (arg_count(cmd, mirrors_ARG) ||
-	    ((lv->status & MIRRORED) && arg_count(cmd, mirrorlog_ARG))) {
+	if (arg_count(cmd, mirrors_ARG) || (lv->status & MIRRORED)) {
 		if (!archive(lv->vg))
 			return ECMD_FAILED;
 		if (!lvconvert_mirrors(cmd, lv, lp))
