@@ -13,6 +13,7 @@
  */
 
 #include "tools.h"
+#include "polldaemon.h"
 #include "lv_alloc.h"
 
 struct lvconvert_params {
@@ -21,7 +22,9 @@ struct lvconvert_params {
 
 	const char *origin;
 	const char *lv_name;
+	const char *lv_name_full;
 	const char *vg_name;
+	int wait_daemon;
 
 	uint32_t chunk_size;
 	uint32_t region_size;
@@ -70,11 +73,11 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 		return 0;
 	}
 
-	lp->lv_name = (*pargv)[0];
+	lp->lv_name = lp->lv_name_full = (*pargv)[0];
 	(*pargv)++, (*pargc)--;
 
-	if (strchr(lp->lv_name, '/') &&
-	    (vg_name = extract_vgname(cmd, lp->lv_name)) &&
+	if (strchr(lp->lv_name_full, '/') &&
+	    (vg_name = extract_vgname(cmd, lp->lv_name_full)) &&
 	    lp->vg_name && strcmp(vg_name, lp->vg_name)) {
 		log_error("Please use a single volume group name "
 			  "(\"%s\" or \"%s\")", vg_name, lp->vg_name);
@@ -89,7 +92,7 @@ static int _lvconvert_name_params(struct lvconvert_params *lp,
 		return 0;
 	}
 
-	if ((ptr = strrchr(lp->lv_name, '/')))
+	if ((ptr = strrchr(lp->lv_name_full, '/')))
 		lp->lv_name = ptr + 1;
 
 	if (!apply_lvname_restrictions(lp->lv_name))
@@ -227,6 +230,90 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	return 1;
 }
 
+
+static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
+					      const char *lv_name)
+{
+        dev_close_all();
+
+        return vg_lock_and_read(cmd, extract_vgname(cmd, lv_name),
+				NULL, LCK_VG_WRITE,
+ 				CLUSTERED | EXPORTED_VG | LVM_WRITE,
+				CORRECT_INCONSISTENT | FAIL_INCONSISTENT);
+}
+
+static struct logical_volume *_get_lvconvert_lv(struct cmd_context *cmd __attribute((unused)),
+						struct volume_group *vg,
+						const char *name,
+						uint32_t lv_type __attribute((unused)))
+{
+	return find_lv(vg, name);
+}
+
+static int _update_lvconvert_mirror(struct cmd_context *cmd __attribute((unused)),
+				    struct volume_group *vg __attribute((unused)),
+				    struct logical_volume *lv __attribute((unused)),
+				    struct list *lvs_changed __attribute((unused)),
+				    int first_time __attribute((unused)))
+{
+	/* lvconvert mirror doesn't require periodical metadata update */
+	return 1;
+}
+
+static int _finish_lvconvert_mirror(struct cmd_context *cmd,
+				    struct volume_group *vg,
+				    struct logical_volume *lv,
+				    struct list *lvs_changed __attribute((unused)))
+{
+	if (!collapse_mirrored_lv(lv)) {
+		log_error("Failed to remove temporary sync layer.");
+		return 0;
+	}
+
+	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
+
+	if (!vg_write(vg))
+		return_0;
+
+	backup(vg);
+
+	if (!suspend_lv(cmd, lv)) {
+		log_error("Failed to lock %s", lv->name);
+		vg_revert(vg);
+		return 0;
+	}
+
+	if (!vg_commit(vg)) {
+		resume_lv(cmd, lv);
+		return 0;
+	}
+
+	log_very_verbose("Updating \"%s\" in kernel", lv->name);
+
+	if (!resume_lv(cmd, lv)) {
+		log_error("Problem reactivating %s", lv->name);
+		return 0;
+	}
+
+	log_print("Logical volume %s converted.", lv->name);
+
+	return 1;
+}
+
+static struct poll_functions _lvconvert_mirror_fns = {
+	.get_copy_vg = _get_lvconvert_vg,
+	.get_copy_lv = _get_lvconvert_lv,
+	.update_metadata = _update_lvconvert_mirror,
+	.finish_copy = _finish_lvconvert_mirror,
+};
+
+static int _lvconvert_poll(struct cmd_context *cmd, const char *lv_name,
+			   unsigned background)
+{
+	return poll_daemon(cmd, lv_name, background, 0, &_lvconvert_mirror_fns,
+			   "Converted");
+}
+
 static int _insert_lvconvert_layer(struct cmd_context *cmd,
 				   struct logical_volume *lv)
 {
@@ -284,9 +371,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 	/* If called with no argument, try collapsing the resync layers */
 	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG)) {
-		if (!collapse_mirrored_lv(lv))
-			return_0;
-		goto commit_changes;
+		lp->wait_daemon = 1;
+		return 1;
 	}
 
 	/*
@@ -439,6 +525,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				    corelog ? 0U : 1U, lp->pvh, lp->alloc,
 				    MIRROR_BY_LV))
 			return_0;
+		lp->wait_daemon = 1;
 	} else {
 		/* Reduce number of mirrors */
 		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
@@ -472,7 +559,8 @@ commit_changes:
 		return 0;
 	}
 
-	log_print("Logical volume %s converted.", lv->name);
+	if (!lp->wait_daemon)
+		log_print("Logical volume %s converted.", lv->name);
 
 	return 1;
 }
@@ -625,5 +713,9 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 
 error:
 	unlock_vg(cmd, lp.vg_name);
+
+	if (lp.wait_daemon)
+		ret = _lvconvert_poll(cmd, lp.lv_name_full,
+				      arg_count(cmd, background_ARG) ? 1U : 0);
 	return ret;
 }

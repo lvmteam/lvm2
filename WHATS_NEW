@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Extend lvconvert to use polldaemon.
   Add support for stacked mirrors.
   Major restructuring of pvmove and lvconvert layer manipulation code.
   Replace tools/fsadm with scripts/fsadm.sh.

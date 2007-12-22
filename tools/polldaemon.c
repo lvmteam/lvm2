@@ -93,9 +93,11 @@ static int _check_mirror_status(struct cmd_context *cmd,
 
 	overall_percent = copy_percent(lv_mirr);
 	if (parms->progress_display)
-		log_print("%s: Moved: %.1f%%", name, overall_percent);
+		log_print("%s: %s: %.1f%%", name, parms->progress_title,
+			  overall_percent);
 	else
-		log_verbose("%s: Moved: %.1f%%", name, overall_percent);
+		log_verbose("%s: %s: %.1f%%", name, parms->progress_title,
+			    overall_percent);
 
 	if (segment_percent < 100.0) {
 		/* The only case the caller *should* try again later */
@@ -224,7 +226,8 @@ static void _poll_for_all_vgs(struct cmd_context *cmd,
 }
 
 int poll_daemon(struct cmd_context *cmd, const char *name, unsigned background,
-		uint32_t lv_type, struct poll_functions *poll_fns)
+		uint32_t lv_type, struct poll_functions *poll_fns,
+		const char *progress_title)
 {
 	struct daemon_parms parms;
 
@@ -232,6 +235,7 @@ int poll_daemon(struct cmd_context *cmd, const char *name, unsigned background,
 	parms.background = background;
 	parms.interval = arg_uint_value(cmd, interval_ARG, DEFAULT_INTERVAL);
 	parms.progress_display = 1;
+	parms.progress_title = progress_title;
 	parms.lv_type = lv_type;
 	parms.poll_fns = poll_fns;
 

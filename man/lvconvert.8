@@ -5,6 +5,7 @@ lvconvert \- convert a logical volume from linear to mirror or snapshot
 .B lvconvert
 \-m/\-\-mirrors Mirrors [\-\-mirrorlog {disk|core}] [\-\-corelog] [\-R/\-\-regionsize MirrorLogRegionSize]
 [\-A/\-\-alloc AllocationPolicy]
+[\-b/\-\-background] [\-i/\-\-interval Seconds]
 [\-h/\-?/\-\-help]
 [\-v/\-\-verbose]
 [\-\-version]
@@ -52,6 +53,12 @@ The optional argument "--corelog" is the same as specifying "--mirrorlog core".
 .I \-R, \-\-regionsize MirrorLogRegionSize
 A mirror is divided into regions of this size (in MB), and the mirror log
 uses this granularity to track which regions are in sync.
+.TP
+.I \-b, \-\-background
+Run the daemon in the background.
+.TP
+.I \-i, \-\-interval Seconds
+Report progress as a percentage at regular intervals.
 .br
 .TP
 .I \-s, \-\-snapshot

@@ -42,11 +42,13 @@ struct daemon_parms {
 	unsigned background;
 	unsigned outstanding_count;
 	unsigned progress_display;
+	const char *progress_title;
 	uint32_t lv_type;
 	struct poll_functions *poll_fns;
 };
 
 int poll_daemon(struct cmd_context *cmd, const char *name, unsigned background,
-		uint32_t lv_type, struct poll_functions *poll_fns);
+		uint32_t lv_type, struct poll_functions *poll_fns,
+		const char *progress_title);
 
 #endif

@@ -1068,6 +1068,8 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 						 int in_sync)
 {
 	struct logical_volume *log_lv;
+	const char *suffix;
+	struct lv_segment *seg;
 
 	init_mirror_in_sync(in_sync);
 
@@ -1076,9 +1078,15 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv->name,
-					  strstr(lv->name, MIRROR_SYNC_LAYER)
-						? "_mlogtmp_%d" : "_mlog"))) {
+	/* Check if the log is for temporary sync layer. */
+	seg = first_seg(lv);
+	if (seg_type(seg, 0) == AREA_LV &&
+	    strstr(seg_lv(seg, 0)->name, MIRROR_SYNC_LAYER))
+		suffix = "_mlogtmp_%d";
+	else
+		suffix = "_mlog";
+
+	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv->name, suffix))) {
 		log_error("Failed to create mirror log.");
 		return NULL;
 	}
