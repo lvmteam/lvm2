@@ -525,7 +525,8 @@ static struct poll_functions _pvmove_fns = {
 int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		unsigned background)
 {
-	return poll_daemon(cmd, pv_name, background, PVMOVE, &_pvmove_fns);
+	return poll_daemon(cmd, pv_name, background, PVMOVE, &_pvmove_fns,
+			   "Moved");
 }
 
 int pvmove(struct cmd_context *cmd, int argc, char **argv)

@@ -91,8 +91,10 @@ xx(lvconvert,
    "[-m|--mirrors Mirrors [{--mirrorlog {disk|core}|--corelog}]]\n"
    "\t[-R|--regionsize MirrorLogRegionSize]\n"
    "\t[--alloc AllocationPolicy]\n"
+   "\t[-b|--background]\n"
    "\t[-d|--debug]\n"
    "\t[-h|-?|--help]\n"
+   "\t[-i|--interval seconds]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [PhysicalVolume[Path]...]\n\n"
@@ -107,8 +109,8 @@ xx(lvconvert,
    "\t[--version]" "\n"
    "\tOriginalLogicalVolume[Path] SnapshotLogicalVolume[Path]\n",
 
-   alloc_ARG, chunksize_ARG, corelog_ARG, mirrorlog_ARG, mirrors_ARG,
-   regionsize_ARG, snapshot_ARG, test_ARG, zero_ARG)
+   alloc_ARG, background_ARG, chunksize_ARG, corelog_ARG, interval_ARG,
+   mirrorlog_ARG, mirrors_ARG, regionsize_ARG, snapshot_ARG, test_ARG, zero_ARG)
 
 xx(lvcreate,
    "Create a logical volume",
