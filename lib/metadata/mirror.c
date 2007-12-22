@@ -1030,7 +1030,8 @@ revert_new_lv:
 static struct logical_volume *_create_mirror_log(struct logical_volume *lv,
 						 struct alloc_handle *ah,
 						 alloc_policy_t alloc,
-						 const char *lv_name)
+						 const char *lv_name,
+						 const char *suffix)
 {
 	struct logical_volume *log_lv;
 	char *log_name;
@@ -1042,7 +1043,7 @@ static struct logical_volume *_create_mirror_log(struct logical_volume *lv,
 		return NULL;
 	}
 
-	if (dm_snprintf(log_name, len, "%s_mlog", lv->name) < 0) {
+	if (dm_snprintf(log_name, len, "%s%s", lv->name, suffix) < 0) {
 		log_error("log_name allocation failed.");
 		return NULL;
 	}
@@ -1075,7 +1076,9 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv->name))) {
+	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv->name,
+					  strstr(lv->name, MIRROR_SYNC_LAYER)
+						? "_mlogtmp_%d" : "_mlog"))) {
 		log_error("Failed to create mirror log.");
 		return NULL;
 	}

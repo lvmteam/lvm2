@@ -227,6 +227,50 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 	return 1;
 }
 
+static int _insert_lvconvert_layer(struct cmd_context *cmd,
+				   struct logical_volume *lv)
+{
+	char *format, *layer_name;
+	size_t len;
+	int i;
+
+	/*
+ 	 * We would like to give the same number for this layer
+ 	 * and the newly added mimage.
+ 	 * However, LV name of newly added mimage is determined *after*
+	 * the LV name of this layer is determined.
+	 *
+	 * So, use generate_lv_name() to generate mimage name first
+	 * and take the number from it.
+	 */
+
+	len = strlen(lv->name) + 32;
+	if (!(format = alloca(len)) ||
+	    !(layer_name = alloca(len)) ||
+	    dm_snprintf(format, len, "%s_mimage_%%d", lv->name) < 0) {
+		log_error("lvconvert: layer name allocation failed.");
+		return 0;
+	}
+
+	if (!generate_lv_name(lv->vg, format, layer_name, len) ||
+	    sscanf(layer_name, format, &i) != 1) {
+		log_error("lvconvert: layer name generation failed.");
+		return 0;
+	}
+
+	if (dm_snprintf(layer_name, len, MIRROR_SYNC_LAYER "_%d", i) < 0) {
+		log_error("layer name allocation failed.");
+		return 0;
+	}
+
+	if (!insert_layer_for_lv(cmd, lv, 0, layer_name)) {
+		log_error("Failed to insert resync layer");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * lv,
 			     struct lvconvert_params *lp)
 {
@@ -376,9 +420,14 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			return 1;
 		}
 	} else if (lp->mirrors > existing_mirrors) {
+		if (lv->status & MIRROR_NOTSYNCED) {
+			log_error("Not adding mirror to mirrored LV "
+				  "without initial resync");
+			return 0;
+		}
 		/* FIXME: can't have multiple mlogs. force corelog. */
 		corelog = 1;
-		if (!insert_layer_for_lv(cmd, lv, 0, "_resync%d")) {
+		if (!_insert_lvconvert_layer(cmd, lv)) {
 			log_error("Failed to insert resync layer");
 			return 0;
 		}

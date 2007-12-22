@@ -272,6 +272,24 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	return dm_report_field_uint64(rh, field, &_minusone);
 }
 
+static int _lv_mimage_in_sync(struct logical_volume *lv)
+{
+	float percent;
+	struct lv_segment *seg = first_seg(lv);
+
+	if (!(lv->status & MIRROR_IMAGE) || !seg->mirror_seg)
+		return_0;
+
+	if (!lv_mirror_percent(lv->vg->cmd, seg->mirror_seg->lv, 0,
+			       &percent, NULL))
+		return_0;
+
+	if (percent >= 100.0)
+		return 1;
+
+	return 0;
+}
+
 static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_pool *mem,
 			  struct dm_report_field *field,
 			  const void *data, void *private __attribute((unused)))
@@ -294,7 +312,10 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 		else
 			repstr[0] = 'm';
 	}else if (lv->status & MIRROR_IMAGE)
-		repstr[0] = 'i';
+		if (_lv_mimage_in_sync(lv))
+			repstr[0] = 'i';
+		else
+			repstr[0] = 'I';
 	else if (lv->status & MIRROR_LOG)
 		repstr[0] = 'l';
 	else if (lv->status & VIRTUAL)

@@ -525,7 +525,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t status = 0;
 	uint64_t tmp_size;
 	struct logical_volume *lv, *org = NULL;
-	struct list *pvh, tags;
+	struct list *pvh;
 	const char *tag = NULL;
 	int origin_active = 0;
 	char lv_name_buf[128];
@@ -744,6 +744,16 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
+	if (lp->mirrors > 1) {
+		init_mirror_in_sync(lp->nosync);
+
+		if (lp->nosync) {
+			log_warn("WARNING: New mirror won't be synchronised. "
+				  "Don't read what you didn't write!");
+			status |= MIRROR_NOTSYNCED;
+		}
+	}
+
 	if (!(lv = lv_create_empty(lv_name ? lv_name : "lvol%d", NULL,
 				   status, lp->alloc, 0, vg))) {
 		stack;
@@ -774,18 +784,6 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		return_0;
 
 	if (lp->mirrors > 1) {
-		init_mirror_in_sync(lp->nosync);
-
-		if (lp->nosync) {
-			log_warn("WARNING: New mirror won't be synchronised. "
-				  "Don't read what you didn't write!");
-			status |= MIRROR_NOTSYNCED;
-		}
-
-		list_init(&tags);
-		if (tag)
-			str_list_add(cmd->mem, &tags, tag);
-
 		if (!lv_add_mirrors(cmd, lv, lp->mirrors - 1, lp->stripes,
 				    adjusted_mirror_region_size(
 						vg->extent_size,

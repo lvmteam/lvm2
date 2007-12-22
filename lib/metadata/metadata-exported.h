@@ -41,6 +41,9 @@ struct pv_segment;
 #define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 #define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
 
+/* Layer suffix */
+#define MIRROR_SYNC_LAYER "_mimagetmp"
+
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
 
