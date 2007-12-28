@@ -1,4 +1,4 @@
-.TH DMSETUP 8 "Apr 06 2006" "Linux" "MAINTENTANCE COMMANDS"
+.TH DMSETUP 8 "Apr 06 2006" "Linux" "MAINTENANCE COMMANDS"
 .SH NAME
 dmsetup \- low level logical volume management
 .SH SYNOPSIS
