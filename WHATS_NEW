@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Fix vgreduce PV list processing not to process every PV in the VG. (2.02.29)
   Extend lvconvert to use polldaemon.
   Add support for stacked mirrors.
   Major restructuring of pvmove and lvconvert layer manipulation code.

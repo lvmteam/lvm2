@@ -746,14 +746,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 			if (sigint_caught())
 				return ret_max;
 		}
-		if (vg) {
-			ret = process_each_pv_in_vg(cmd, vg, &tags,
-						    handle, process_single);
-			if (ret > ret_max)
-				ret_max = ret;
-			if (sigint_caught())
-				return ret_max;
-		} else if (!list_empty(&tags) && (vgnames = get_vgs(cmd, 0)) &&
+		if (!list_empty(&tags) && (vgnames = get_vgs(cmd, 0)) &&
 			   !list_empty(vgnames)) {
 			list_iterate_items(sll, vgnames) {
 				if (!lock_vol(cmd, sll->str, lock_type)) {
