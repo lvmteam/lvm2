@@ -8,7 +8,8 @@ pvchange \- change attributes of a physical volume
 [\-\-deltag Tag]
 [\-h/\-?/\-\-help]
 [\-t/\-\-test]
-[\-v/\-\-verbose] [\-a/\-\-all] [\-x/\-\-allocatable y/n] [PhysicalVolumePath...]
+[\-v/\-\-verbose] [\-a/\-\-all] [\-x/\-\-allocatable y/n]
+[\-u/\-\-uuid] [PhysicalVolumePath...]
 .SH DESCRIPTION
 pvchange allows you to change the allocation permissions of one or
 more physical volumes.
@@ -18,6 +19,9 @@ See \fBlvm\fP for common options.
 .I \-a, \-\-all
 If PhysicalVolumePath is not specified on the command line all
 physical volumes are searched for and used.
+.TP
+.I \-u, \-\-uuid
+Generate new random UUID for specified physical volumes.
 .TP
 .I \-x, \-\-allocatable y/n
 Enable or disable allocation of physical extents on this physical volume.
