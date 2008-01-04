@@ -11,6 +11,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-a | \-\-available " [e|l] {" y | n }]
 .RB [ \-\-monitor " {" y | n }]
 .RB [ \-c | \-\-clustered " {" y | n }]
+.RB [ \-u | \-\-uuid ]
 .RB [ \-d | \-\-debug]
 .RB [ \-\-deltag
 .IR Tag ]
@@ -69,6 +70,9 @@ it contains only local disks that are not visible on the other nodes.
 If the cluster infrastructure is unavailable on a particular node at a
 particular time, you may still be able to use Volume Groups that
 are not marked as clustered.
+.TP
+.BR \-u ", " \-\-uuid
+Generate new random UUID for specified Volume Groups.
 .TP
 .BR \-\-monitor " " { y | n }
 Controls whether or not a mirrored logical volume is monitored by
