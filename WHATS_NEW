@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Fix a segfault if using pvs with --all argument. (2.02.29)
   Update --uuid argument description in man pages.
   Fix vgreduce PV list processing not to process every PV in the VG. (2.02.29)
   Extend lvconvert to use polldaemon.
