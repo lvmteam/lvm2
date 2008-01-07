@@ -312,6 +312,7 @@ struct list *get_vgids(struct cmd_context *cmd, int full_scan);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector);
+int is_pv(pv_t *pv);
 int is_orphan_vg(const char *vg_name);
 int is_orphan(pv_t *pv);
 vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,

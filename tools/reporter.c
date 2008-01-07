@@ -91,7 +91,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 	int ret = ECMD_PROCESSED;
 	const char *vg_name = NULL;
 
-	if (!is_orphan(pv) && !vg) {
+	if (is_pv(pv) && !is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
 
 		if (!(vg = vg_lock_and_read(cmd, vg_name, (char *)&pv->vgid,

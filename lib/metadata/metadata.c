@@ -1832,6 +1832,15 @@ int is_orphan(pv_t *pv)
 	return is_orphan_vg(pv_field(pv, vg_name));
 }
 
+/**
+ * is_pv - Determine whether a pv is a real pv or dummy one
+ * @pv: handle to device
+ */
+int is_pv(pv_t *pv)
+{
+	return (pv_field(pv, vg_name) ? 1 : 0);
+}
+
 /*
  * Returns:
  *  0 - fail
