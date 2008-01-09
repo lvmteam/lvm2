@@ -642,6 +642,7 @@ daemons/Makefile
 daemons/clvmd/Makefile
 dmeventd/Makefile
 dmeventd/mirror/Makefile
+dmeventd/snapshot/Makefile
 doc/Makefile
 include/Makefile
 lib/Makefile

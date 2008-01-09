@@ -669,7 +669,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 #ifdef DMEVENTD
 	int i, pending = 0, monitored;
 	int r = 1;
-	struct list *tmp;
+	struct list *tmp, *snh, *snht;
 	struct lv_segment *seg;
 	int (*monitor_fn) (struct lv_segment *s, int e);
 
@@ -682,6 +682,29 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	 */
 	if (monitor && !dmeventd_monitor_mode())
 		return 1;
+
+	/*
+	 * In case of a snapshot device, we monitor lv->snapshot->lv,
+	 * not the actual LV itself.
+	 */
+	if (lv_is_cow(lv))
+		return monitor_dev_for_events(cmd, lv->snapshot->lv, monitor);
+
+	/*
+	 * In case this LV is a snapshot origin, we instead monitor
+	 * each of its respective snapshots (the origin itself does
+	 * not need to be monitored).
+	 *
+	 * TODO: This may change when snapshots of mirrors are allowed.
+	 */
+	if (lv_is_origin(lv)) {
+		list_iterate_safe(snh, snht, &lv->snapshot_segs)
+			if (!monitor_dev_for_events(
+				cmd, list_struct_base(snh,
+					struct lv_segment, origin_list)->cow, monitor))
+				r=0;
+		return r;
+	}
 
 	list_iterate(tmp, &lv->segments) {
 		seg = list_item(tmp, struct lv_segment);
