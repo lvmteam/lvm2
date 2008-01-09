@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Add snapshot dmeventd library (enables dmeventd snapshot monitoring).
   Prevent pvcreate from overwriting MDA-less PVs belonging to active VGs.
   Fix a segfault if using pvs with --all argument. (2.02.29)
   Update --uuid argument description in man pages.
