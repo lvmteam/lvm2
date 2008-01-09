@@ -1140,6 +1140,12 @@ static void _exec_lvm1_command(char **argv)
 	log_sys_error("execvp", path);
 }
 
+static void _nonroot_warning()
+{
+	if (getuid() || geteuid())
+		log_warn("WARNING: Running as a non-root user. Functionality may be unavailable.");
+}
+
 int lvm2_main(int argc, char **argv, unsigned is_static)
 {
 	char *base;
@@ -1186,6 +1192,7 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 	}
 #ifdef READLINE_SUPPORT
 	if (!alias && argc == 1) {
+		_nonroot_warning();
 		ret = lvm_shell(cmd, &_cmdline);
 		goto out;
 	}
@@ -1203,6 +1210,7 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 		argv++;
 	}
 
+	_nonroot_warning();
 	ret = lvm_run_command(cmd, argc, argv);
 	if ((ret == ENO_SUCH_CMD) && (!alias))
 		ret = _run_script(cmd, argc, argv);
