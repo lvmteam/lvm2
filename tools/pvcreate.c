@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "metadata.h"
 
 struct pvcreate_params {
 	int zero;
@@ -42,6 +43,17 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	/* Is there a pv here already? */
 	/* FIXME Use partial mode here? */
 	pv = pv_read(cmd, name, NULL, NULL, 0);
+
+	/*
+         * If a PV has no MDAs it may appear to be an orphan until the
+         * metadata is read off another PV in the same VG.  Detecting
+         * this means checking every VG by scanning every PV on the
+         * system.
+	 */
+	if (pv && is_orphan(pv)) {
+		(void) get_vgs(cmd, 1);
+		pv = pv_read(cmd, name, NULL, NULL, 0);
+	}
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* We must have -ff to overwrite a non orphan */
