@@ -272,7 +272,7 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 	return dm_report_field_uint64(rh, field, &_minusone);
 }
 
-static int _lv_mimage_in_sync(struct logical_volume *lv)
+static int _lv_mimage_in_sync(const struct logical_volume *lv)
 {
 	float percent;
 	struct lv_segment *seg = first_seg(lv);
@@ -306,6 +306,8 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 
 	if (lv->status & PVMOVE)
 		repstr[0] = 'p';
+	else if (lv->status & CONVERTING)
+		repstr[0] = 'c';
 	else if (lv->status & MIRRORED) {
 		if (lv->status & MIRROR_NOTSYNCED)
 			repstr[0] = 'M';
@@ -543,6 +545,32 @@ static int _movepv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 		name = dev_name(seg_dev(seg, 0));
 		return dm_report_field_string(rh, field, &name);
 	}
+
+	dm_report_field_set_value(field, "", NULL);
+	return 1;
+}
+
+static int _convertlv_disp(struct dm_report *rh, struct dm_pool *mem __attribute((unused)),
+			   struct dm_report_field *field,
+			   const void *data, void *private __attribute((unused)))
+{
+	const struct logical_volume *lv = (const struct logical_volume *) data;
+	const char *name = NULL;
+	struct lv_segment *seg;
+
+	if (lv->status & CONVERTING) {
+		if (lv->status & MIRRORED) {
+			seg = first_seg(lv);
+
+			/* Temporary mirror is always area_num == 0 */
+			if (seg_type(seg, 0) == AREA_LV &&
+			    is_temporary_mirror_layer(seg_lv(seg, 0)))
+				name = seg_lv(seg, 0)->name;
+		}
+	}
+
+	if (name)
+		return dm_report_field_string(rh, field, &name);
 
 	dm_report_field_set_value(field, "", NULL);
 	return 1;

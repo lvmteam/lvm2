@@ -60,6 +60,7 @@ static struct flag _lv_flags[] = {
 	{VIRTUAL, NULL},
 	{SNAPSHOT, NULL},
 	{ACTIVATE_EXCL, NULL},
+	{CONVERTING, NULL},
 	{0, NULL}
 };
 
