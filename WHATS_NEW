@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Add new lv_convert field to lvs output.
   Print warning when lvm tools are running as non-root.
   Add snapshot dmeventd library (enables dmeventd snapshot monitoring).
   Prevent pvcreate from overwriting MDA-less PVs belonging to active VGs.
