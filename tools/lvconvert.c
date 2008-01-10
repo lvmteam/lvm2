@@ -270,6 +270,8 @@ static int _finish_lvconvert_mirror(struct cmd_context *cmd,
 		return 0;
 	}
 
+	lv->status &= ~CONVERTING;
+
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
 	if (!vg_write(vg))
@@ -307,8 +309,8 @@ static struct poll_functions _lvconvert_mirror_fns = {
 	.finish_copy = _finish_lvconvert_mirror,
 };
 
-static int _lvconvert_poll(struct cmd_context *cmd, const char *lv_name,
-			   unsigned background)
+int lvconvert_poll(struct cmd_context *cmd, const char *lv_name,
+		   unsigned background)
 {
 	return poll_daemon(cmd, lv_name, background, 0, &_lvconvert_mirror_fns,
 			   "Converted");
@@ -370,7 +372,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	existing_mirrors = lv_mirror_count(lv);
 
 	/* If called with no argument, try collapsing the resync layers */
-	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG)) {
+	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
+	    !arg_count(cmd, corelog_ARG)) {
 		lp->wait_daemon = 1;
 		return 1;
 	}
@@ -496,7 +499,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					    lp->pvh, lp->alloc))
 				return_0;
 		} else if (seg->log_lv && corelog) {
-			if (!remove_mirror_log(cmd, lv, lp->pvh))
+			if (!remove_mirror_log(cmd, lv,
+					       lp->pv_count ? lp->pvh : NULL))
 				return_0;
 		} else {
 			/* No change */
@@ -511,25 +515,46 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				  "without initial resync");
 			return 0;
 		}
-		/* FIXME: can't have multiple mlogs. force corelog. */
-		corelog = 1;
-		if (!_insert_lvconvert_layer(cmd, lv)) {
+		/*
+		 * Log addition/removal should be done before the layer
+		 * insertion to make the end result consistent with
+		 * linear-to-mirror conversion.
+		 */
+		if (!seg->log_lv && !corelog) {
+			if (!add_mirror_log(cmd, lv, 1,
+					    adjusted_mirror_region_size(
+							lv->vg->extent_size,
+							lv->le_count,
+							lp->region_size),
+					    lp->pvh, lp->alloc))
+				return_0;
+		} else if (seg->log_lv && corelog) {
+			if (!remove_mirror_log(cmd, lv,
+					       lp->pv_count ? lp->pvh : NULL))
+				return_0;
+		}
+		/* Insert a temporary layer for syncing,
+		 * only if the original lv is using disk log. */
+		if (seg->log_lv && !_insert_lvconvert_layer(cmd, lv)) {
 			log_error("Failed to insert resync layer");
 			return 0;
 		}
+		/* FIXME: can't have multiple mlogs. force corelog. */
 		if (!lv_add_mirrors(cmd, lv, lp->mirrors - existing_mirrors, 1,
 				    adjusted_mirror_region_size(
 						lv->vg->extent_size,
 						lv->le_count,
 						lp->region_size),
-				    corelog ? 0U : 1U, lp->pvh, lp->alloc,
+				    0U, lp->pvh, lp->alloc,
 				    MIRROR_BY_LV))
 			return_0;
+		lv->status |= CONVERTING;
 		lp->wait_daemon = 1;
 	} else {
 		/* Reduce number of mirrors */
 		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
-				       0, lp->pv_count ? lp->pvh : NULL, 0))
+				       corelog ? 1U : 0U,
+				       lp->pv_count ? lp->pvh : NULL, 0))
 			return_0;
 	}
 
@@ -681,6 +706,7 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	struct lv_list *lvl;
 	struct lvconvert_params lp;
 	int ret = ECMD_FAILED;
+	struct lvinfo info;
 
 	if (!_read_params(&lp, cmd, argc, argv)) {
 		stack;
@@ -714,8 +740,14 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 error:
 	unlock_vg(cmd, lp.vg_name);
 
-	if (lp.wait_daemon)
-		ret = _lvconvert_poll(cmd, lp.lv_name_full,
-				      arg_count(cmd, background_ARG) ? 1U : 0);
+	if (ret == ECMD_PROCESSED && lp.wait_daemon) {
+		if (!lv_info(cmd, lvl->lv, &info, 1, 0) || !info.exists) {
+			log_print("Conversion starts after activation");
+			return ret;
+		}
+		ret = lvconvert_poll(cmd, lp.lv_name_full,
+				     arg_count(cmd, background_ARG) ? 1U : 0);
+	}
+
 	return ret;
 }

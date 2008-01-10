@@ -86,6 +86,22 @@ static int _check_version(struct config_tree *cft)
 	return 1;
 }
 
+static int _is_converting(struct logical_volume *lv)
+{
+	struct lv_segment *seg;
+
+	if (lv->status & MIRRORED) {
+		seg = first_seg(lv);
+		/* Can't use is_temporary_mirror() because the metadata for
+		 * seg_lv may not be read in and flags may not be set yet. */
+		if (seg_type(seg, 0) == AREA_LV &&
+		    strstr(seg_lv(seg, 0)->name, MIRROR_SYNC_LAYER))
+			return 1;
+	}
+
+	return 0;
+}
+
 static int _read_id(struct id *id, struct config_node *cn, const char *path)
 {
 	struct config_value *cv;
@@ -342,6 +358,9 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 
 	if (seg_is_virtual(seg))
 		lv->status |= VIRTUAL;
+
+	if (_is_converting(lv))
+		lv->status |= CONVERTING;
 
 	return 1;
 }
