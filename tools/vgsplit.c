@@ -239,6 +239,14 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		 return ECMD_FAILED;
 
+	if ((active = lvs_in_vg_activated(vg_from))) {
+		/* FIXME Remove this restriction */
+		log_error("Logical volumes in \"%s\" must be inactive",
+			  vg_name_from);
+		unlock_vg(cmd, vg_name_from);
+		return ECMD_FAILED;
+	}
+
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
 	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
 				      LCK_VG_WRITE | LCK_NONBLOCK,
@@ -247,13 +255,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		log_error("Volume group \"%s\" already exists", vg_name_to);
 		unlock_vg(cmd, vg_name_from);
 		return ECMD_FAILED;
-	}
-
-	if ((active = lvs_in_vg_activated(vg_from))) {
-		/* FIXME Remove this restriction */
-		log_error("Logical volumes in \"%s\" must be inactive",
-			  vg_name_from);
-		goto error;
 	}
 
 	/* Set metadata format of original VG */
