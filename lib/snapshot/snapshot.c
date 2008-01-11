@@ -300,7 +300,9 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 #endif
 {
 	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
+#ifdef DMEVENTD
 	char *dso;
+#endif
 
 	if (!segtype) {
 		stack;
