@@ -17,6 +17,43 @@
 
 #define DEFAULT_EXTENT 4096	/* In KB */
 
+static int validate_vg_create_params(struct cmd_context *cmd,
+				     const char *vg_name,
+				     const uint32_t extent_size,
+				     size_t *max_pv,
+				     size_t *max_lv,
+				     const alloc_policy_t alloc)
+{
+	if (!validate_new_vg_name(cmd, vg_name)) {
+		log_error("New volume group name \"%s\" is invalid", vg_name);
+		return 0;
+	}
+
+	if (alloc == ALLOC_INHERIT) {
+		log_error("Volume Group allocation policy cannot inherit "
+			  "from anything");
+		return 0;
+	}
+
+	if (!extent_size) {
+		log_error("Physical extent size may not be zero");
+		return 0;
+	}
+
+	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
+		if (!*max_lv)
+			*max_lv = 255;
+		if (!*max_pv)
+			*max_pv = 255;
+		if (*max_lv > 255 || *max_pv > 255) {
+			log_error("Number of volumes may not exceed 255");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 {
 	size_t max_lv, max_pv;
@@ -43,23 +80,6 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
 	alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
 
-	if (alloc == ALLOC_INHERIT) {
-		log_error("Volume Group allocation policy cannot inherit "
-			  "from anything");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
-		if (!max_lv)
-			max_lv = 255;
-		if (!max_pv)
-			max_pv = 255;
-		if (max_lv > 255 || max_pv > 255) {
-			log_error("Number of volumes may not exceed 255");
-			return EINVALID_CMD_LINE;
-		}
-	}
-
 	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
 		log_error("Physical extent size may not be negative");
 		return EINVALID_CMD_LINE;
@@ -79,15 +99,9 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	extent_size =
 	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_EXTENT);
 
-	if (!extent_size) {
-		log_error("Physical extent size may not be zero");
-		return EINVALID_CMD_LINE;
-	}
-
-	if (!validate_new_vg_name(cmd, vg_name)) {
-		log_error("New volume group name \"%s\" is invalid", vg_name);
-		return ECMD_FAILED;
-	}
+	if (!validate_vg_create_params(cmd, vg_name, extent_size,
+				       &max_pv, &max_lv, alloc))
+	    return EINVALID_CMD_LINE;
 
 	/* Create the new VG */
 	if (!(vg = vg_create(cmd, vg_name, extent_size, max_pv, max_lv, alloc,
