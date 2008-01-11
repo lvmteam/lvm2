@@ -251,24 +251,24 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
 				      LCK_VG_WRITE | LCK_NONBLOCK,
 				      0, 0))) {
-		/* FIXME Remove this restriction */
-		log_error("Volume group \"%s\" already exists", vg_name_to);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
+		log_warn("Volume group \"%s\" already exists", vg_name_to);
+		/* FIXME: check compatibility with existing vg, esp attribs */
+	} else {
+
+		/* Set metadata format of original VG */
+		/* FIXME: need some common logic */
+		cmd->fmt = vg_from->fid->fmt;
+
+		/* Create new VG structure */
+		/* FIXME: allow user input same params as to vgcreate tool */
+		if (!(vg_to = vg_create(cmd, vg_name_to, vg_from->extent_size,
+					vg_from->max_pv, vg_from->max_lv,
+					vg_from->alloc, 0, NULL)))
+			goto error;
+
+		if (vg_from->status & CLUSTERED)
+			vg_to->status |= CLUSTERED;
 	}
-
-	/* Set metadata format of original VG */
-	/* FIXME: need some common logic */
-	cmd->fmt = vg_from->fid->fmt;
-
-	/* Create new VG structure */
-	if (!(vg_to = vg_create(cmd, vg_name_to, vg_from->extent_size,
-				vg_from->max_pv, vg_from->max_lv,
-				vg_from->alloc, 0, NULL)))
-		goto error;
-
-	if (vg_from->status & CLUSTERED)
-		vg_to->status |= CLUSTERED;
 
 	/* Archive vg_from before changing it */
 	if (!archive(vg_from))
