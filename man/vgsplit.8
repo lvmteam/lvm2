@@ -10,20 +10,22 @@ vgsplit \- split a volume group into two
 [\-M/\-\-metadatatype 1/2]
 [\-t/\-\-test] 
 [\-v/\-\-verbose] 
-ExistingVolumeGroupName NewVolumeGroupName
+SourceVolumeGroupName DestinationVolumeGroupName
 PhysicalVolumePath [PhysicalVolumePath...]
 .SH DESCRIPTION
 .B vgsplit 
-creates 
-.I NewVolumeGroupName
-and moves
+moves
 .IR PhysicalVolumePath (s)
 from
-.I ExistingVolumeGroupName
-into it.
+.I SourceVolumeGroupName
+into
+.I DestinationVolumeGroupName\fP.
+If
+.I DestinationVolumeGroupName
+does not exist, it will be created.
 Logical Volumes cannot be split between Volume Groups.
-Each existing Logical Volumes must be entirely on the Physical Volumes forming
-either the old or the new Volume Group.
+Each existing Logical Volume must be entirely on the Physical Volumes forming
+either the source or the destination Volume Group.
 .SH OPTIONS
 See \fBlvm\fP for common options.
 .SH SEE ALSO
