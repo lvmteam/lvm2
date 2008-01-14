@@ -3,13 +3,23 @@
 vgsplit \- split a volume group into two
 .SH SYNOPSIS
 .B vgsplit
-[\-A/\-\-autobackup y/n] 
-[\-d/\-\-debug] 
-[\-h/\-?/\-\-help] 
-[\-l/\-\-list]
-[\-M/\-\-metadatatype 1/2]
-[\-t/\-\-test] 
-[\-v/\-\-verbose] 
+.RB [ \-\-alloc
+.IR AllocationPolicy ]
+.RB [ \-A | \-\-autobackup " {" y | n }]
+.RB [ \-c | \-\-clustered " {" y | n }]
+.RB [ \-d | \-\-debug ]
+.RB [ \-h | \-\-help ]
+.RB [ \-l | \-\-list ]
+.RB [ \-\-maxlogicalvolumes
+.IR MaxLogicalVolumes ]
+.RB [ -M | \-\-metadatatype
+.IR type ]
+.RB [ -p | \-\-maxphysicalvolumes
+.IR MaxPhysicalVolumes ]
+.RB [ \-s | \-\-physicalextentsize
+.IR PhysicalExtentSize [ \fBkKmMgGtT\fR ]]
+.RB [ \-t | \-\-test ]
+.RB [ \-v | \-\-verbose ]
 SourceVolumeGroupName DestinationVolumeGroupName
 PhysicalVolumePath [PhysicalVolumePath...]
 .SH DESCRIPTION

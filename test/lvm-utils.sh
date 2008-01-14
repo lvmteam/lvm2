@@ -50,6 +50,11 @@ loop_setup_()
   return 0;
 }
 
+check_vg_field_()
+{
+  return $(test $(vgs --noheadings -o $2 $1) == $3)
+}
+
 check_pv_size_()
 {
   return $(test $(pvs --noheadings -o pv_free $1) == $2)

@@ -378,6 +378,45 @@ const char *strip_dir(const char *vg_name, const char *dev_dir)
 	return vg_name;
 }
 
+/*
+ * Validate parameters to vg_create() before calling.
+ * FIXME: move this inside the library, maybe inside vg_create
+ * - TODO: resolve error codes
+ */
+int validate_vg_create_params(struct cmd_context *cmd,
+			      struct vgcreate_params *vp)
+{
+	if (!validate_new_vg_name(cmd, vp->vg_name)) {
+		log_error("New volume group name \"%s\" is invalid",
+			  vp->vg_name);
+		return 1;
+	}
+
+	if (vp->alloc == ALLOC_INHERIT) {
+		log_error("Volume Group allocation policy cannot inherit "
+			  "from anything");
+		return 1;
+	}
+
+	if (!vp->extent_size) {
+		log_error("Physical extent size may not be zero");
+		return 1;
+	}
+
+	if (!(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
+		if (!vp->max_lv)
+			vp->max_lv = 255;
+		if (!vp->max_pv)
+			vp->max_pv = 255;
+		if (vp->max_lv > 255 || vp->max_pv > 255) {
+			log_error("Number of volumes may not exceed 255");
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 			       uint32_t extent_size, uint32_t max_pv,
 			       uint32_t max_lv, alloc_policy_t alloc,

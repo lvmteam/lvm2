@@ -528,4 +528,16 @@ uint32_t pv_pe_alloc_count(const pv_t *pv);
 
 uint32_t vg_status(const vg_t *vg);
 
+struct vgcreate_params {
+	char *vg_name;
+	uint32_t extent_size;
+	size_t max_pv;
+	size_t max_lv;
+	alloc_policy_t alloc;
+	int clustered; /* FIXME: put this into a 'status' variable instead? */
+};
+
+int validate_vg_create_params(struct cmd_context *cmd,
+			      struct vgcreate_params *vp);
+
 #endif

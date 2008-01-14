@@ -48,6 +48,36 @@ test_expect_success \
    vgremove $vg1 &&
    vgremove $vg2'
 
+#test_expect_success \
+# 'vgcreate accepts 8.00M physicalextentsize for VG' \
+#  'vgcreate $vg --physicalextentsize 8.00M $d1 $d2 &&
+#   check_vg_field_ $vg vg_extent_size 8.00M &&
+#   vgremove $vg'
+
+test_expect_success \
+  'vgsplit accepts 8.00M physicalextentsize for new VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   vgsplit --physicalextentsize 8.00M $vg1 $vg2 $d1 &&
+   check_vg_field_ $vg2 vg_extent_size 8.00M &&
+   vgremove $vg1 &&
+   vgremove $vg2'
+
+test_expect_success \
+  'vgsplit accepts --maxphysicalvolumes 128 on new VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   vgsplit --maxphysicalvolumes 128 $vg1 $vg2 $d1 &&
+   check_vg_field_ $vg2 max_pv 128 &&
+   vgremove $vg1 &&
+   vgremove $vg2'
+
+test_expect_success \
+  'vgsplit accepts --maxlogicalvolumes 128 on new VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   vgsplit --maxlogicalvolumes 128 $vg1 $vg2 $d1 &&
+   check_vg_field_ $vg2 max_lv 128 &&
+   vgremove $vg1 &&
+   vgremove $vg2'
+
 test_done
 # Local Variables:
 # indent-tabs-mode: nil

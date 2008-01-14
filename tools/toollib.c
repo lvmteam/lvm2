@@ -1233,3 +1233,49 @@ int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
 
 	return 1;
 }
+
+
+/*
+ * Set members of struct vgcreate_params from cmdline.
+ * Do preliminary validation with arg_*() interface.
+ * Further, more generic validation is done in validate_vgcreate_params().
+ * This function is to remain in tools directory, while
+ * validate_vgcreate_params() will be moved into the LVM library.
+ */
+int fill_vg_create_params(struct cmd_context *cmd,
+			  char *vg_name, struct vgcreate_params *vp)
+{
+	vp->vg_name = skip_dev_dir(cmd, vg_name, NULL);
+	vp->max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
+	vp->max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
+	vp->alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
+
+	/* Units of 512-byte sectors */
+	vp->extent_size =
+	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_PE_SIZE);
+
+	if (arg_count(cmd, clustered_ARG))
+        	vp->clustered =
+			!strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
+	else
+		/* Default depends on current locking type */
+		vp->clustered = locking_is_clustered();
+
+	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
+		log_error("Physical extent size may not be negative");
+		return 1;
+	}
+
+	if (arg_sign_value(cmd, maxlogicalvolumes_ARG, 0) == SIGN_MINUS) {
+		log_error("Max Logical Volumes may not be negative");
+		return 1;
+	}
+
+	if (arg_sign_value(cmd, maxphysicalvolumes_ARG, 0) == SIGN_MINUS) {
+		log_error("Max Physical Volumes may not be negative");
+		return 1;
+	}
+
+	return 0;
+}
+
