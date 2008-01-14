@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  lvconvert waits for completion of initial sync by default.
   Refactor vgcreate for parameter validation and add tests.
   Add new convert_lv field to lvs output.
   Print warning when lvm tools are running as non-root.

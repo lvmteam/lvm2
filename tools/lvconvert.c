@@ -24,7 +24,8 @@ struct lvconvert_params {
 	const char *lv_name;
 	const char *lv_name_full;
 	const char *vg_name;
-	int wait_daemon;
+	int wait_completion;
+	int need_polling;
 
 	uint32_t chunk_size;
 	uint32_t region_size;
@@ -115,6 +116,9 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 			  "with --mirrors or --log");
 		return 0;
 	}
+
+	if (!arg_count(cmd, background_ARG))
+		lp->wait_completion = 1;
 
 	if (arg_count(cmd, snapshot_ARG))
 		lp->snapshot = 1;
@@ -374,7 +378,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	/* If called with no argument, try collapsing the resync layers */
 	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
 	    !arg_count(cmd, corelog_ARG)) {
-		lp->wait_daemon = 1;
+		lp->need_polling = 1;
 		return 1;
 	}
 
@@ -476,6 +480,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				    corelog ? 0U : 1U, lp->pvh, lp->alloc,
 				    MIRROR_BY_LV))
 			return_0;
+		if (lp->wait_completion)
+			lp->need_polling = 1;
 		goto commit_changes;
 	}
 
@@ -549,7 +555,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 				    MIRROR_BY_LV))
 			return_0;
 		lv->status |= CONVERTING;
-		lp->wait_daemon = 1;
+		lp->need_polling = 1;
 	} else {
 		/* Reduce number of mirrors */
 		if (!lv_remove_mirrors(cmd, lv, existing_mirrors - lp->mirrors,
@@ -584,7 +590,7 @@ commit_changes:
 		return 0;
 	}
 
-	if (!lp->wait_daemon)
+	if (!lp->need_polling)
 		log_print("Logical volume %s converted.", lv->name);
 
 	return 1;
@@ -740,13 +746,13 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 error:
 	unlock_vg(cmd, lp.vg_name);
 
-	if (ret == ECMD_PROCESSED && lp.wait_daemon) {
+	if (ret == ECMD_PROCESSED && lp.need_polling) {
 		if (!lv_info(cmd, lvl->lv, &info, 1, 0) || !info.exists) {
 			log_print("Conversion starts after activation");
 			return ret;
 		}
 		ret = lvconvert_poll(cmd, lp.lv_name_full,
-				     arg_count(cmd, background_ARG) ? 1U : 0);
+				     lp.wait_completion ? 0 : 1U);
 	}
 
 	return ret;
