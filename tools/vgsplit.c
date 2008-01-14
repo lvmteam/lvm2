@@ -212,6 +212,7 @@ static int _move_mirrors(struct volume_group *vg_from,
 
 int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 {
+	struct vgcreate_params vp;
 	char *vg_name_from, *vg_name_to;
 	struct volume_group *vg_to, *vg_from;
 	int opt;
@@ -259,11 +260,18 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		/* FIXME: need some common logic */
 		cmd->fmt = vg_from->fid->fmt;
 
+		/* FIXME: original code took defaults from vg_from */
+		if (fill_vg_create_params(cmd, vg_name_to, &vp))
+			return EINVALID_CMD_LINE;
+
+		if (validate_vg_create_params(cmd, &vp))
+			return EINVALID_CMD_LINE;
+
 		/* Create new VG structure */
 		/* FIXME: allow user input same params as to vgcreate tool */
-		if (!(vg_to = vg_create(cmd, vg_name_to, vg_from->extent_size,
-					vg_from->max_pv, vg_from->max_lv,
-					vg_from->alloc, 0, NULL)))
+		if (!(vg_to = vg_create(cmd, vg_name_to, vp.extent_size,
+					vp.max_pv, vp.max_lv,
+					vp.alloc, 0, NULL)))
 			goto error;
 
 		if (vg_from->status & CLUSTERED)

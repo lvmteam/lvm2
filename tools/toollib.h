@@ -98,4 +98,6 @@ int apply_lvname_restrictions(const char *name);
 
 int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name);
 
+int fill_vg_create_params(struct cmd_context *cmd,
+			  char *vg_name, struct vgcreate_params *vp);
 #endif

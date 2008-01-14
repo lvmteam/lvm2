@@ -31,6 +31,24 @@ test_expect_success \
 lv=vgcreate-usage-$$
 
 test_expect_success \
+  'vgcreate accepts 8.00M physicalextentsize for VG' \
+  'vgcreate $vg --physicalextentsize 8.00M $d1 $d2 &&
+   check_vg_field_ $vg vg_extent_size 8.00M &&
+   vgremove $vg'
+
+test_expect_success \
+  'vgcreate accepts smaller (128) maxlogicalvolumes for VG' \
+  'vgcreate $vg --maxlogicalvolumes 128 $d1 $d2 &&
+   check_vg_field_ $vg max_lv 128 &&
+   vgremove $vg'
+
+test_expect_success \
+  'vgcreate accepts smaller (128) maxphysicalvolumes for VG' \
+  'vgcreate $vg --maxphysicalvolumes 128 $d1 $d2 &&
+   check_vg_field_ $vg max_pv 128 &&
+   vgremove $vg'
+
+test_expect_success \
   'vgcreate rejects a zero physical extent size' \
   'vgcreate --physicalextentsize 0 $vg $d1 $d2 2>err;
    status=$?; echo status=$?; test $status = 3 &&
@@ -50,14 +68,14 @@ test_expect_success \
 
 test_expect_success \
   'vgcreate rejects vgname greater than 128 characters' \
-  'vg=thisnameisridiculouslylongtotestvalidationcodecheckingmaximumsizethisiswhathappenswhenprogrammersgetboredandorarenotcreativedonttrythisathome;
-   vgcreate $vg $d1 $d2 2>err;
+  'vginvalid=thisnameisridiculouslylongtotestvalidationcodecheckingmaximumsizethisiswhathappenswhenprogrammersgetboredandorarenotcreativedonttrythisathome;
+   vgcreate $vginvalid $d1 $d2 2>err;
    status=$?; echo status=$?; test $status = 3 &&
-   grep "New volume group name \"$vg\" is invalid\$" err'
+   grep "New volume group name \"$vginvalid\" is invalid\$" err'
 
 test_expect_success \
-  'vgcreate rejects already existing vgname "/dev/fd0"' \
-  'vg=/dev/fd0; vgcreate $vg $d1 $d2 2>err;
+  'vgcreate rejects already existing vgname "/tmp/$vg"' \
+  'touch /tmp/$vg; vgcreate $vg $d1 $d2 2>err;
    status=$?; echo status=$?; test $status = 3 &&
    grep "New volume group name \"$vg\" is invalid\$" err'
 
