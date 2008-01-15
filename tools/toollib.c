@@ -1218,23 +1218,6 @@ int apply_lvname_restrictions(const char *name)
 	return 1;
 }
 
-int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
-{
-	char vg_path[PATH_MAX];
-
-	if (!validate_name(vg_name))
-		return 0;
-
-	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
-	if (path_exists(vg_path)) {
-		log_error("%s: already exists in filesystem", vg_path);
-		return 0;
-	}
-
-	return 1;
-}
-
-
 /*
  * Set members of struct vgcreate_params from cmdline.
  * Do preliminary validation with arg_*() interface.
@@ -1243,23 +1226,27 @@ int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
  * validate_vgcreate_params() will be moved into the LVM library.
  */
 int fill_vg_create_params(struct cmd_context *cmd,
-			  char *vg_name, struct vgcreate_params *vp)
+			  char *vg_name, struct vgcreate_params *vp_new,
+			  struct vgcreate_params *vp_def)
 {
-	vp->vg_name = skip_dev_dir(cmd, vg_name, NULL);
-	vp->max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG, 0);
-	vp->max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG, 0);
-	vp->alloc = arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
+	vp_new->vg_name = skip_dev_dir(cmd, vg_name, NULL);
+	vp_new->max_lv = arg_uint_value(cmd, maxlogicalvolumes_ARG,
+					vp_def->max_lv);
+	vp_new->max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG,
+					vp_def->max_pv);
+	vp_new->alloc = arg_uint_value(cmd, alloc_ARG, vp_def->alloc);
 
 	/* Units of 512-byte sectors */
-	vp->extent_size =
-	    arg_uint_value(cmd, physicalextentsize_ARG, DEFAULT_PE_SIZE);
+	vp_new->extent_size =
+	    arg_uint_value(cmd, physicalextentsize_ARG, vp_def->extent_size);
 
 	if (arg_count(cmd, clustered_ARG))
-        	vp->clustered =
-			!strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
+        	vp_new->clustered =
+			!strcmp(arg_str_value(cmd, clustered_ARG,
+					      vp_def->clustered ? "y":"n"), "y");
 	else
 		/* Default depends on current locking type */
-		vp->clustered = locking_is_clustered();
+		vp_new->clustered = locking_is_clustered();
 
 	if (arg_sign_value(cmd, physicalextentsize_ARG, 0) == SIGN_MINUS) {
 		log_error("Physical extent size may not be negative");
@@ -1278,4 +1265,3 @@ int fill_vg_create_params(struct cmd_context *cmd,
 
 	return 0;
 }
-

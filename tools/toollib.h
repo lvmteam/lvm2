@@ -96,8 +96,7 @@ struct list *clone_pv_list(struct dm_pool *mem, struct list *pvs);
 
 int apply_lvname_restrictions(const char *name);
 
-int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name);
-
 int fill_vg_create_params(struct cmd_context *cmd,
-			  char *vg_name, struct vgcreate_params *vp);
+			  char *vg_name, struct vgcreate_params *vp_new,
+			  struct vgcreate_params *vp_def);
 #endif

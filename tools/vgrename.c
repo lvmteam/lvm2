@@ -19,7 +19,6 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 			  const char *new_vg_path)
 {
 	char *dev_dir;
-	unsigned length;
 	struct id id;
 	int consistent = 1;
 	int match = 0;
@@ -35,25 +34,9 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	vg_name_new = skip_dev_dir(cmd, new_vg_path, NULL);
 
 	dev_dir = cmd->dev_dir;
-	length = strlen(dev_dir);
 
-	/* Check sanity of new name */
-	if (strlen(vg_name_new) > NAME_LEN - length - 2) {
-		log_error("New volume group path exceeds maximum length "
-			  "of %d!", NAME_LEN - length - 2);
+	if (!validate_vg_rename_params(cmd, vg_name_old, vg_name_new))
 		return 0;
-	}
-
-	if (!validate_new_vg_name(cmd, vg_name_new)) {
-		log_error("New volume group name \"%s\" is invalid",
-			  vg_name_new);
-		return 0;
-	}
-
-	if (!strcmp(vg_name_old, vg_name_new)) {
-		log_error("Old and new volume group names must differ");
-		return 0;
-	}
 
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 

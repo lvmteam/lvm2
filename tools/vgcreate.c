@@ -17,7 +17,8 @@
 
 int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 {
-	struct vgcreate_params vp;
+	struct vgcreate_params vp_new;
+	struct vgcreate_params vp_def;
 	struct volume_group *vg;
 	const char *tag;
 
@@ -32,23 +33,29 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (fill_vg_create_params(cmd, argv[0], &vp))
+	vp_def.vg_name = NULL;
+	vp_def.extent_size = DEFAULT_PE_SIZE;
+	vp_def.max_pv = 0;
+	vp_def.max_lv = 0;
+	vp_def.alloc = ALLOC_NORMAL;
+	vp_def.clustered = 0;
+	if (fill_vg_create_params(cmd, argv[0], &vp_new, &vp_def))
 		return EINVALID_CMD_LINE;
 
-	if (validate_vg_create_params(cmd, &vp))
+	if (validate_vg_create_params(cmd, &vp_new))
 	    return EINVALID_CMD_LINE;
 
 	/* Create the new VG */
-	if (!(vg = vg_create(cmd, vp.vg_name, vp.extent_size, vp.max_pv,
-			     vp.max_lv, vp.alloc,
+	if (!(vg = vg_create(cmd, vp_new.vg_name, vp_new.extent_size,
+			     vp_new.max_pv, vp_new.max_lv, vp_new.alloc,
 			     argc - 1, argv + 1)))
 		return ECMD_FAILED;
 
-	if (vp.max_lv != vg->max_lv)
+	if (vp_new.max_lv != vg->max_lv)
 		log_warn("WARNING: Setting maxlogicalvolumes to %d "
 			 "(0 means unlimited)", vg->max_lv);
 
-	if (vp.max_pv != vg->max_pv)
+	if (vp_new.max_pv != vg->max_pv)
 		log_warn("WARNING: Setting maxphysicalvolumes to %d "
 			 "(0 means unlimited)", vg->max_pv);
 
@@ -65,13 +72,13 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 		if (!str_list_add(cmd->mem, &vg->tags, tag)) {
 			log_error("Failed to add tag %s to volume group %s",
-				  tag, vp.vg_name);
+				  tag, vp_new.vg_name);
 			return ECMD_FAILED;
 		}
 	}
 
 	/* FIXME: move this inside vg_create? */
-	if (vp.clustered)
+	if (vp_new.clustered)
 		vg->status |= CLUSTERED;
 	else
 		vg->status &= ~CLUSTERED;
@@ -81,26 +88,26 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (!lock_vol(cmd, vp.vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
-		log_error("Can't get lock for %s", vp.vg_name);
+	if (!lock_vol(cmd, vp_new.vg_name, LCK_VG_WRITE | LCK_NONBLOCK)) {
+		log_error("Can't get lock for %s", vp_new.vg_name);
 		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
 	if (!archive(vg)) {
-		unlock_vg(cmd, vp.vg_name);
+		unlock_vg(cmd, vp_new.vg_name);
 		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
 	/* Store VG on disk(s) */
 	if (!vg_write(vg) || !vg_commit(vg)) {
-		unlock_vg(cmd, vp.vg_name);
+		unlock_vg(cmd, vp_new.vg_name);
 		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
-	unlock_vg(cmd, vp.vg_name);
+	unlock_vg(cmd, vp_new.vg_name);
 	unlock_vg(cmd, VG_ORPHANS);
 
 	backup(vg);
