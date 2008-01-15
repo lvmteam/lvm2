@@ -1289,7 +1289,7 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 		if (seg->clustered) {
 			if (seg->uuid)
 				log_parm_count++;
-			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered_")) < 0) {
+			if ((tw = _dm_snprintf(params + pos, paramsize - pos, "clustered-")) < 0) {
                         	stack;	/* Out of space */
                         	return -1;
                 	}
