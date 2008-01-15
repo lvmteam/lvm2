@@ -18,6 +18,7 @@
 #include "metadata.h"
 #include "toolcontext.h"
 #include "lvm-string.h"
+#include "lvm-file.h"
 #include "lvmcache.h"
 #include "memlock.h"
 #include "str_list.h"
@@ -225,6 +226,54 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 	}
 
 	return 0;
+}
+
+static int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
+{
+	char vg_path[PATH_MAX];
+
+	if (!validate_name(vg_name))
+		return 0;
+
+	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
+	if (path_exists(vg_path)) {
+		log_error("%s: already exists in filesystem", vg_path);
+		return 0;
+	}
+
+	return 1;
+}
+
+
+int validate_vg_rename_params(struct cmd_context *cmd,
+			      const char *vg_name_old,
+			      const char *vg_name_new)
+{
+	unsigned length;
+	char *dev_dir;
+
+	dev_dir = cmd->dev_dir;
+	length = strlen(dev_dir);
+
+	/* Check sanity of new name */
+	if (strlen(vg_name_new) > NAME_LEN - length - 2) {
+		log_error("New volume group path exceeds maximum length "
+			  "of %d!", NAME_LEN - length - 2);
+		return 0;
+	}
+
+	if (!validate_new_vg_name(cmd, vg_name_new)) {
+		log_error("New volume group name \"%s\" is invalid",
+			  vg_name_new);
+		return 0;
+	}
+
+	if (!strcmp(vg_name_old, vg_name_new)) {
+		log_error("Old and new volume group names must differ");
+		return 0;
+	}
+
+	return 1;
 }
 
 int vg_rename(struct cmd_context *cmd, struct volume_group *vg,

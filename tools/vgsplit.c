@@ -212,7 +212,8 @@ static int _move_mirrors(struct volume_group *vg_from,
 
 int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 {
-	struct vgcreate_params vp;
+	struct vgcreate_params vp_new;
+	struct vgcreate_params vp_def;
 	char *vg_name_from, *vg_name_to;
 	struct volume_group *vg_to, *vg_from;
 	int opt;
@@ -260,18 +261,24 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		/* FIXME: need some common logic */
 		cmd->fmt = vg_from->fid->fmt;
 
-		/* FIXME: original code took defaults from vg_from */
-		if (fill_vg_create_params(cmd, vg_name_to, &vp))
+		vp_def.vg_name = NULL;
+		vp_def.extent_size = vg_from->extent_size;
+		vp_def.max_pv = vg_from->max_pv;
+		vp_def.max_lv = vg_from->max_lv;
+		vp_def.alloc = vg_from->alloc;
+		vp_def.clustered = 0;
+
+		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def))
 			return EINVALID_CMD_LINE;
 
-		if (validate_vg_create_params(cmd, &vp))
+		if (validate_vg_create_params(cmd, &vp_new))
 			return EINVALID_CMD_LINE;
 
 		/* Create new VG structure */
 		/* FIXME: allow user input same params as to vgcreate tool */
-		if (!(vg_to = vg_create(cmd, vg_name_to, vp.extent_size,
-					vp.max_pv, vp.max_lv,
-					vp.alloc, 0, NULL)))
+		if (!(vg_to = vg_create(cmd, vg_name_to, vp_new.extent_size,
+					vp_new.max_pv, vp_new.max_lv,
+					vp_new.alloc, 0, NULL)))
 			goto error;
 
 		if (vg_from->status & CLUSTERED)
