@@ -1,5 +1,7 @@
 Version 2.02.30 -
 ===================================
+  Update vgsplit to include vgcreate-style options when new VG is destination.
+  Update vgsplit to accept existing VG as destination.
   lvconvert waits for completion of initial sync by default.
   Refactor vgcreate for parameter validation and add tests.
   Add new convert_lv field to lvs output.
