@@ -429,8 +429,8 @@ const char *strip_dir(const char *vg_name, const char *dev_dir)
 
 /*
  * Validate parameters to vg_create() before calling.
- * FIXME: move this inside the library, maybe inside vg_create
- * - TODO: resolve error codes
+ * FIXME: Move inside vg_create library function.
+ * FIXME: Change vgcreate_params struct to individual gets/sets
  */
 int validate_vg_create_params(struct cmd_context *cmd,
 			      struct vgcreate_params *vp)
@@ -1083,6 +1083,91 @@ int vg_remove(struct volume_group *vg)
 
 	return 1;
 }
+
+
+/*
+ * Determine whether two vgs are compatible for merging.
+ */
+int vgs_are_compatible(struct cmd_context *cmd,
+		       struct volume_group *vg_from,
+		       struct volume_group *vg_to)
+{
+	struct lv_list *lvl1, *lvl2;
+	struct pv_list *pvl;
+
+	if (lvs_in_vg_activated(vg_from)) {
+		log_error("Logical volumes in \"%s\" must be inactive",
+			  vg_from->name);
+		goto error;
+	}
+
+	/* Check compatibility */
+	if (vg_to->extent_size != vg_from->extent_size) {
+		log_error("Extent sizes differ: %d (%s) and %d (%s)",
+			  vg_to->extent_size, vg_to->name,
+			  vg_from->extent_size, vg_from->name);
+		goto error;
+	}
+
+	if (vg_to->max_pv &&
+	    (vg_to->max_pv < vg_to->pv_count + vg_from->pv_count)) {
+		log_error("Maximum number of physical volumes (%d) exceeded "
+			  " for \"%s\" and \"%s\"", vg_to->max_pv, vg_to->name,
+			  vg_from->name);
+		goto error;
+	}
+
+	if (vg_to->max_lv &&
+	    (vg_to->max_lv < vg_to->lv_count + vg_from->lv_count)) {
+		log_error("Maximum number of logical volumes (%d) exceeded "
+			  " for \"%s\" and \"%s\"", vg_to->max_lv, vg_to->name,
+			  vg_from->name);
+		goto error;
+	}
+
+	/* Check no conflicts with LV names */
+	list_iterate_items(lvl1, &vg_to->lvs) {
+		char *name1 = lvl1->lv->name;
+
+		list_iterate_items(lvl2, &vg_from->lvs) {
+			char *name2 = lvl2->lv->name;
+
+			if (!strcmp(name1, name2)) {
+				log_error("Duplicate logical volume "
+					  "name \"%s\" "
+					  "in \"%s\" and \"%s\"",
+					  name1, vg_to->name, vg_from->name);
+				goto error;
+			}
+		}
+	}
+
+	/* Check no PVs are constructed from either VG */
+	list_iterate_items(pvl, &vg_to->pvs) {
+		if (pv_uses_vg(pvl->pv, vg_from)) {
+			log_error("Physical volume %s might be constructed "
+				  "from same volume group %s.",
+				  pv_dev_name(pvl->pv), vg_from->name);
+			goto error;
+		}
+	}
+
+	list_iterate_items(pvl, &vg_from->pvs) {
+		if (pv_uses_vg(pvl->pv, vg_to)) {
+			log_error("Physical volume %s might be constructed "
+				  "from same volume group %s.",
+				  pv_dev_name(pvl->pv), vg_to->name);
+			goto error;
+		}
+	}
+
+	return 1;
+
+error:
+	return 0;
+}
+
+
 
 int vg_validate(struct volume_group *vg)
 {

@@ -20,8 +20,6 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 {
 	struct volume_group *vg_to, *vg_from;
 	struct lv_list *lvl1, *lvl2;
-	struct pv_list *pvl;
-	int active;
 
 	if (!strcmp(vg_name_to, vg_name_from)) {
 		log_error("Duplicate volume group name \"%s\"", vg_name_from);
@@ -43,71 +41,8 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		return ECMD_FAILED;
 	}
 
-	if ((active = lvs_in_vg_activated(vg_from))) {
-		log_error("Logical volumes in \"%s\" must be inactive",
-			  vg_name_from);
-		goto error;
-	}
-
-	/* Check compatibility */
-	if (vg_to->extent_size != vg_from->extent_size) {
-		log_error("Extent sizes differ: %d (%s) and %d (%s)",
-			  vg_to->extent_size, vg_to->name,
-			  vg_from->extent_size, vg_from->name);
-		goto error;
-	}
-
-	if (vg_to->max_pv &&
-	    (vg_to->max_pv < vg_to->pv_count + vg_from->pv_count)) {
-		log_error("Maximum number of physical volumes (%d) exceeded "
-			  " for \"%s\" and \"%s\"", vg_to->max_pv, vg_to->name,
-			  vg_from->name);
-		goto error;
-	}
-
-	if (vg_to->max_lv &&
-	    (vg_to->max_lv < vg_to->lv_count + vg_from->lv_count)) {
-		log_error("Maximum number of logical volumes (%d) exceeded "
-			  " for \"%s\" and \"%s\"", vg_to->max_lv, vg_to->name,
-			  vg_from->name);
-		goto error;
-	}
-
-	/* Check no conflicts with LV names */
-	list_iterate_items(lvl1, &vg_to->lvs) {
-		char *name1 = lvl1->lv->name;
-
-		list_iterate_items(lvl2, &vg_from->lvs) {
-			char *name2 = lvl2->lv->name;
-
-			if (!strcmp(name1, name2)) {
-				log_error("Duplicate logical volume "
-					  "name \"%s\" "
-					  "in \"%s\" and \"%s\"",
-					  name1, vg_to->name, vg_from->name);
-				goto error;
-			}
-		}
-	}
-
-	/* Check no PVs are constructed from either VG */
-	list_iterate_items(pvl, &vg_to->pvs) {
-		if (pv_uses_vg(pvl->pv, vg_from)) {
-			log_error("Physical volume %s might be constructed "
-				  "from same volume group %s.",
-				  pv_dev_name(pvl->pv), vg_from->name);
-			goto error;
-		}
-	}
-
-	list_iterate_items(pvl, &vg_from->pvs) {
-		if (pv_uses_vg(pvl->pv, vg_to)) {
-			log_error("Physical volume %s might be constructed "
-				  "from same volume group %s.",
-				  pv_dev_name(pvl->pv), vg_to->name);
-			goto error;
-		}
-	}
+	if (!vgs_are_compatible(cmd, vg_from, vg_to))
+	    goto error;
 
 	/* FIXME List arg: vg_show_with_pv_and_lv(vg_to); */
 

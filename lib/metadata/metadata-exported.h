@@ -317,6 +317,9 @@ int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 int is_pv(pv_t *pv);
 int is_orphan_vg(const char *vg_name);
 int is_orphan(pv_t *pv);
+int vgs_are_compatible(struct cmd_context *cmd,
+		       struct volume_group *vg_from,
+		       struct volume_group *vg_to);
 vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		       const char *vgid,
 		       uint32_t lock_flags, uint32_t status_flags,
