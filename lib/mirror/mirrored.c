@@ -348,14 +348,14 @@ static int _mirrored_target_present(const struct lv_segment *seg __attribute((un
 		_mirrored_present = target_present("mirror", 1);
 
 		/*
-		 * block_on_error available with mirror target >= 1.1
+		 * block_on_error available with mirror target >= 1.1 and <= 1.11
 		 * or with 1.0 in RHEL4U3 driver >= 4.5
 		 */
 		/* FIXME Move this into libdevmapper */
 
 		if (target_version("mirror", &maj, &min, &patchlevel) &&
 		    maj == 1 && 
-		    (min >= 1 || 
+		    ((min >= 1 && min <= 11) || 
 		     (min == 0 && driver_version(vsn, sizeof(vsn)) &&
 		      sscanf(vsn, "%u.%u.%u", &maj2, &min2, &patchlevel2) == 3 &&
 		      maj2 == 4 && min2 == 5 && patchlevel2 == 0)))	/* RHEL4U3 */
