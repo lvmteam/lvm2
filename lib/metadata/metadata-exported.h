@@ -472,6 +472,7 @@ int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		      struct list *pvs, uint32_t status_mask);
 
 int is_temporary_mirror_layer(const struct logical_volume *lv);
+struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);
 uint32_t lv_mirror_count(const struct logical_volume *lv);
 uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
                                     uint32_t region_size);
