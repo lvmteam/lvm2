@@ -1,5 +1,7 @@
 Version 2.02.30 -
 ===================================
+  Maintain lists of stacked LV segments using each LV.
+  Change vgsplit -l (for unimplemented --list) into --maxlogicalvolumes.
   Fix process_all_pvs to detect non-orphans with no MDAs correctly.
   Don't use block_on_error with mirror targets version 1.12 and above.
   Update vgsplit to include vgcreate-style options when new VG is destination.

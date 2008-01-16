@@ -50,7 +50,7 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl)
 static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		      int *list_unsafe, struct list *lvs_changed)
 {
-	struct lv_segment *snap_seg, *mirror_seg;
+	struct lv_segment *snap_seg;
 	struct list *snh, *snht;
 	struct logical_volume *cow;
 	struct lv_list *lvl;
@@ -117,9 +117,8 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	 * Clean-up is currently done by caller (_make_vg_consistent()).
 	 */
 	if ((lv_info(cmd, lv, &info, 0, 0) && info.exists)
-	    || first_seg(lv)->mirror_seg) {
+	    || find_mirror_seg(first_seg(lv))) {
 		extents = lv->le_count;
-		mirror_seg = first_seg(lv)->mirror_seg;
 		if (!lv_empty(lv)) {
 			stack;
 			return 0;
@@ -129,10 +128,6 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 								    "error"))) {
 			stack;
 			return 0;
-		}
-		if (mirror_seg) {
-			first_seg(lv)->status |= MIRROR_IMAGE;
-			first_seg(lv)->mirror_seg = mirror_seg;
 		}
 
 		if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {

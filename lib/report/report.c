@@ -275,13 +275,12 @@ static int _lvkmin_disp(struct dm_report *rh, struct dm_pool *mem __attribute((u
 static int _lv_mimage_in_sync(const struct logical_volume *lv)
 {
 	float percent;
-	struct lv_segment *seg = first_seg(lv);
+	struct lv_segment *mirror_seg = find_mirror_seg(first_seg(lv));
 
-	if (!(lv->status & MIRROR_IMAGE) || !seg->mirror_seg)
+	if (!(lv->status & MIRROR_IMAGE) || !mirror_seg)
 		return_0;
 
-	if (!lv_mirror_percent(lv->vg->cmd, seg->mirror_seg->lv, 0,
-			       &percent, NULL))
+	if (!lv_mirror_percent(lv->vg->cmd, mirror_seg->lv, 0, &percent, NULL))
 		return_0;
 
 	if (percent >= 100.0)

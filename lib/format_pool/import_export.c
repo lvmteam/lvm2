@@ -83,6 +83,7 @@ int import_pool_lvs(struct volume_group *vg, struct dm_pool *mem, struct list *p
 	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
+	list_init(&lv->segs_using_this_lv);
 
 	list_iterate_items(pl, pls) {
 		lv->size += pl->pd.pl_blocks;

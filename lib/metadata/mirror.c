@@ -76,7 +76,22 @@ uint32_t lv_mirror_count(const struct logical_volume *lv)
 
 struct lv_segment *find_mirror_seg(struct lv_segment *seg)
 {
-	return seg->mirror_seg;
+	struct lv_segment *mirror_seg;
+
+	mirror_seg = get_only_segment_using_this_lv(seg->lv);
+
+	if (!mirror_seg) {
+		log_error("Failed to find mirror_seg for %s", seg->lv->name);
+		return NULL;
+	}
+
+	if (!seg_is_mirrored(mirror_seg)) {
+		log_error("%s on %s is not a mirror segments",
+			  mirror_seg->lv->name, seg->lv->name);
+		return NULL;
+	}
+
+	return mirror_seg;
 }
 
 /*
@@ -153,6 +168,20 @@ static int _merge_mirror_images(struct logical_volume *lv,
 
 	return lv_add_mirror_lvs(lv, img_lvs, addition,
 				 MIRROR_IMAGE, first_seg(lv)->region_size);
+}
+
+/* Unlink the relationship between the segment and its log_lv */
+static void _remove_mirror_log(struct lv_segment *mirrored_seg)
+{
+	struct logical_volume *log_lv;
+
+	if (!mirrored_seg->log_lv)
+		return;
+
+	log_lv = mirrored_seg->log_lv;
+	mirrored_seg->log_lv = NULL;
+	log_lv->status &= ~MIRROR_LOG;
+	remove_seg_from_segs_using_this_lv(log_lv, mirrored_seg);
 }
 
 /*
@@ -244,6 +273,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		}
 		lvl->lv = seg_lv(mirrored_seg, m);
 		list_add(&tmp_orphan_lvs, &lvl->list);
+		release_lv_segment_area(mirrored_seg, m, mirrored_seg->area_len);
 	}
 	mirrored_seg->area_count = new_area_count;
 
@@ -254,7 +284,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	/* If no more mirrors, remove mirror layer */
 	if (new_area_count == 1) {
 		lv1 = seg_lv(mirrored_seg, 0);
-		mirrored_seg->log_lv = NULL;
+		_remove_mirror_log(mirrored_seg);
 		if (!remove_layer_from_lv(lv, lv1))
 			return_0;
 		lv->status &= ~MIRRORED;
@@ -265,12 +295,10 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			return 0;
 		}
 	} else if (remove_log)
-		mirrored_seg->log_lv = NULL;
+		_remove_mirror_log(mirrored_seg);
 
-	if (remove_log && log_lv) {
-		log_lv->status &= ~MIRROR_LOG;
+	if (remove_log && log_lv)
 		log_lv->status |= VISIBLE_LV;
-	}
 
 	/*
 	 * To successfully remove these unwanted LVs we need to
@@ -395,18 +423,25 @@ static struct logical_volume *_find_tmp_mirror(struct logical_volume *lv)
  */
 int collapse_mirrored_lv(struct logical_volume *lv)
 {
-	struct logical_volume *tmp_lv, *parent_lv;
+	struct logical_volume *tmp_lv;
+	struct lv_segment *mirror_seg;
 
 	while ((tmp_lv = _find_tmp_mirror(lv))) {
-		parent_lv = find_parent_for_layer(lv, tmp_lv);
-		if (!_mirrored_lv_in_sync(parent_lv)) {
+		mirror_seg = find_mirror_seg(first_seg(tmp_lv));
+		if (!mirror_seg) {
+			log_error("Failed to find mirrored LV for %s",
+				  tmp_lv->name);
+			return 0;
+		}
+
+		if (!_mirrored_lv_in_sync(mirror_seg->lv)) {
 			log_verbose("Not collapsing %s: out-of-sync",
-				    parent_lv->name);
+				    mirror_seg->lv->name);
 			return 1;
 		}
 
-		if (!_remove_mirror_images(parent_lv,
-					   first_seg(parent_lv)->area_count - 1,
+		if (!_remove_mirror_images(mirror_seg->lv,
+					   mirror_seg->area_count - 1,
 					   NULL, 1, 1)) {
 			log_error("Failed to release mirror images");
 			return 0;
@@ -801,7 +836,6 @@ int fixup_imported_mirrors(struct volume_group *vg)
 {
 	struct lv_list *lvl;
 	struct lv_segment *seg;
-	uint32_t s;
 
 	list_iterate_items(lvl, &vg->lvs) {
 		list_iterate_items(seg, &lvl->lv->segments) {
@@ -809,12 +843,8 @@ int fixup_imported_mirrors(struct volume_group *vg)
 			    get_segtype_from_string(vg->cmd, "mirror"))
 				continue;
 
-			if (seg->log_lv)
-				first_seg(seg->log_lv)->mirror_seg = seg;
-			for (s = 0; s < seg->area_count; s++)
-				if (seg_type(seg, s) == AREA_LV)
-					first_seg(seg_lv(seg, s))->mirror_seg
-					    = seg;
+			if (seg->log_lv && !add_seg_to_segs_using_this_lv(seg->log_lv, seg))
+				return_0;
 		}
 	}
 
@@ -1103,7 +1133,7 @@ static void _add_mirror_log(struct logical_volume *lv,
 {
 	first_seg(lv)->log_lv = log_lv;
 	log_lv->status |= MIRROR_LOG;
-	first_seg(log_lv)->mirror_seg = first_seg(lv);
+	add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
 }
 
 int add_mirror_log(struct cmd_context *cmd,

@@ -242,7 +242,6 @@ struct lv_segment {
 	uint32_t region_size;	/* For mirrors - in sectors */
 	uint32_t extents_copied;
 	struct logical_volume *log_lv;
-	struct lv_segment *mirror_seg;
 
 	struct list tags;
 
@@ -274,6 +273,7 @@ struct logical_volume {
 
 	struct list segments;
 	struct list tags;
+	struct list segs_using_this_lv;
 };
 
 struct pe_range {
@@ -412,8 +412,6 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 				   struct list *lvs_changed);
 int split_parent_segments_for_layer(struct cmd_context *cmd,
 				    struct logical_volume *layer_lv);
-struct logical_volume *find_parent_for_layer(struct logical_volume *lv,
-					     struct logical_volume *layer_lv);
 int remove_layer_from_lv(struct logical_volume *lv,
 			 struct logical_volume *layer_lv);
 struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
@@ -464,6 +462,7 @@ int vg_check_status(const struct volume_group *vg, uint32_t status);
 /*
 * Mirroring functions
 */
+struct lv_segment *find_mirror_seg(struct lv_segment *seg);
 int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		   uint32_t mirrors, uint32_t stripes,
 		   uint32_t region_size, uint32_t log_count,
