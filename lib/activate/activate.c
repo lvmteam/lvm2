@@ -508,6 +508,13 @@ int lv_mirror_percent(struct cmd_context *cmd, struct logical_volume *lv,
 	struct dev_manager *dm;
 	struct lvinfo info;
 
+	/* If mirrored LV is temporarily shrinked to 1 area (= linear),
+	 * it should be considered in-sync. */
+	if (list_size(&lv->segments) == 1 && first_seg(lv)->area_count == 1) {
+		*percent = 100.0;
+		return 1;
+	}
+
 	if (!activation())
 		return 0;
 

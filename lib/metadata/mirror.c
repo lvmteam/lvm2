@@ -956,7 +956,7 @@ float copy_percent(struct logical_volume *lv_mirr)
 	list_iterate_items(seg, &lv_mirr->segments) {
 		denominator += seg->area_len;
 
-		if (seg_is_mirrored(seg))
+		if (seg_is_mirrored(seg) && seg->area_count > 1)
 			numerator += seg->extents_copied;
 		else
 			numerator += seg->area_len;
