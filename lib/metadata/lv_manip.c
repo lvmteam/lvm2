@@ -91,6 +91,13 @@ struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv)
 
 	sl = list_item(list_first(&lv->segs_using_this_lv), struct seg_list);
 
+	if (sl->count != 1) {
+		log_error("%s is expected to have only one segment using it, "
+			  "while %s:%" PRIu32 " uses it %d times",
+			  lv->name, sl->seg->lv->name, sl->seg->le, sl->count);
+		return NULL;
+	}
+
 	return sl->seg;
 }
 
