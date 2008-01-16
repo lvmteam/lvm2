@@ -56,6 +56,7 @@ $(T): init.sh
 	for i in lvm $$(cat $(top_srcdir)/tools/.commands); do \
 	  ln -s ../lvm-wrapper bin/$$i; \
 	done
+	test -n "@DMDIR@" && ln -s "@DMDIR@/dmsetup/dmsetup" bin/dmsetup
 	touch $@
 
 lvm-wrapper: Makefile
