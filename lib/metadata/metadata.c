@@ -1899,7 +1899,7 @@ static int _get_pvs(struct cmd_context *cmd, struct list **pvslist)
 	if (pvslist) {
 		if (!(results = dm_pool_alloc(cmd->mem, sizeof(*results)))) {
 			log_error("PV list allocation failed");
-			return NULL;
+			return 0;
 		}
 
 		list_init(results);
