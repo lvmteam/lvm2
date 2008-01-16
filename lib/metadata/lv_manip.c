@@ -31,6 +31,69 @@ struct lv_names {
 	const char *new;
 };
 
+int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg)
+{
+	struct seg_list *sl;
+
+	list_iterate_items(sl, &lv->segs_using_this_lv) {
+		if (sl->seg == seg) {
+			sl->count++;
+			return 1;
+		}
+	}
+
+	if (!(sl = dm_pool_zalloc(lv->vg->cmd->mem, sizeof(*sl)))) {
+		log_error("Failed to allocate segment list");
+		return 0;
+	}
+
+	sl->count = 1;
+	sl->seg = seg;
+	list_add(&lv->segs_using_this_lv, &sl->list);
+
+	return 1;
+}
+
+int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg)
+{
+	struct seg_list *sl;
+
+	list_iterate_items(sl, &lv->segs_using_this_lv) {
+		if (sl->seg != seg)
+			continue;
+		if (sl->count > 1)
+			sl->count--;
+		else
+			list_del(&sl->list);
+		return 1;
+	}
+
+	return 0;
+}
+
+/*
+ * This is a function specialized for the common case where there is
+ * only one segment which uses the LV.
+ * e.g. the LV is a layer inserted by insert_layer_for_lv().
+ *
+ * In general, walk through lv->segs_using_this_lv.
+ */
+struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv)
+{
+	struct seg_list *sl;
+
+	if (list_size(&lv->segs_using_this_lv) != 1) {
+		log_error("%s is expected to have only one segment using it, "
+			  "while it has %d", lv->name,
+			  list_size(&lv->segs_using_this_lv));
+		return NULL;
+	}
+
+	sl = list_item(list_first(&lv->segs_using_this_lv), struct seg_list);
+
+	return sl->seg;
+}
+
 /*
  * PVs used by a segment of an LV
  */
@@ -127,12 +190,12 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	seg->region_size = region_size;
 	seg->extents_copied = extents_copied;
 	seg->log_lv = log_lv;
-	seg->mirror_seg = NULL;
 	list_init(&seg->tags);
 
 	if (log_lv) {
 		log_lv->status |= MIRROR_LOG;
-		first_seg(log_lv)->mirror_seg = seg;
+		if (!add_seg_to_segs_using_this_lv(log_lv, seg))
+			return_NULL;
 	}
 
 	return seg;
@@ -183,6 +246,7 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 	}
 
 	if (area_reduction == seg->area_len) {
+		remove_seg_from_segs_using_this_lv(seg_lv(seg, s), seg);
 		seg_lv(seg, s) = NULL;
 		seg_le(seg, s) = 0;
 		seg_type(seg, s) = AREA_UNASSIGNED;
@@ -223,7 +287,8 @@ int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
 					seg_from->area_len);
 		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
 
-		set_lv_segment_area_lv(seg_to, area_to, lv, le, 0);
+		if (!set_lv_segment_area_lv(seg_to, area_to, lv, le, 0))
+			return_0;
 
 		break;
 
@@ -254,14 +319,19 @@ int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 /*
  * Link one LV segment to another.  Assumes sizes already match.
  */
-void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
-			    struct logical_volume *lv, uint32_t le,
-			    uint32_t flags)
+int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
+			   struct logical_volume *lv, uint32_t le,
+			   uint32_t flags)
 {
 	seg->areas[area_num].type = AREA_LV;
 	seg_lv(seg, area_num) = lv;
 	seg_le(seg, area_num) = le;
 	lv->status |= flags;
+
+	if (!add_seg_to_segs_using_this_lv(lv, seg))
+		return_0;
+
+	return 1;
 }
 
 /*
@@ -1399,14 +1469,13 @@ int lv_add_mirror_lvs(struct logical_volume *lv,
 		return 0;
 	}
 
-	for (m = 0; m < old_area_count; m++) {
+	for (m = 0; m < old_area_count; m++)
 		seg_lv(seg, m)->status |= status;
-		first_seg(seg_lv(seg, m))->mirror_seg = seg;
-	}
 
 	for (m = old_area_count; m < new_area_count; m++) {
-		set_lv_segment_area_lv(seg, m, sub_lvs[m - old_area_count], 0, status);
-		first_seg(sub_lvs[m - old_area_count])->mirror_seg = seg;
+		if (!set_lv_segment_area_lv(seg, m, sub_lvs[m - old_area_count],
+					    0, status))
+			return_0;
 		sub_lvs[m - old_area_count]->status &= ~VISIBLE_LV;
 	}
 
@@ -1780,6 +1849,7 @@ struct logical_volume *lv_create_empty(const char *name,
 	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
+	list_init(&lv->segs_using_this_lv);
 
 	if (lvid)
 		lv->lvid = *lvid;
@@ -2212,53 +2282,29 @@ static int _move_lv_segments(struct logical_volume *lv_to,
 	return 1;
 }
 
-/*
- * Find a parent LV for the layer_lv in the lv
- */
-struct logical_volume *find_parent_for_layer(struct logical_volume *lv,
-                                            struct logical_volume *layer_lv)
-{
-	struct logical_volume *parent;
-	struct lv_segment *seg;
-	uint32_t s;
-
-	list_iterate_items(seg, &lv->segments) {
-		for (s = 0; s < seg->area_count; s++) {
-			if (seg_type(seg, s) != AREA_LV)
-				continue;
-			if (seg_lv(seg, s) == layer_lv)
-				return lv;
-			parent = find_parent_for_layer(seg_lv(seg, s),
-						       layer_lv);
-			if (parent)
-				return parent;
-		}
-	}
-	return NULL;
-}
-
 /* Remove a layer from the LV */
 int remove_layer_from_lv(struct logical_volume *lv,
 			 struct logical_volume *layer_lv)
 {
 	struct logical_volume *parent;
+	struct lv_segment *parent_seg;
 	struct segment_type *segtype;
 
-	parent = find_parent_for_layer(lv, layer_lv);
-	if (!parent) {
+	if (!(parent_seg = get_only_segment_using_this_lv(layer_lv))) {
 		log_error("Failed to find layer %s in %s",
 		layer_lv->name, lv->name);
 		return 0;
 	}
+	parent = parent_seg->lv;
 
 	/*
 	 * Before removal, the layer should be cleaned up,
 	 * i.e. additional segments and areas should have been removed.
 	 */
 	if (list_size(&parent->segments) != 1 ||
-	    first_seg(parent)->area_count != 1 ||
-	    seg_type(first_seg(parent), 0) != AREA_LV ||
-	    layer_lv != seg_lv(first_seg(parent), 0) ||
+	    parent_seg->area_count != 1 ||
+	    seg_type(parent_seg, 0) != AREA_LV ||
+	    layer_lv != seg_lv(parent_seg, 0) ||
 	    parent->le_count != layer_lv->le_count)
 		return_0;
 
@@ -2328,7 +2374,8 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		return_NULL;
 
 	/* map the new segment to the original underlying are */
-	set_lv_segment_area_lv(mapseg, 0, layer_lv, 0, 0);
+	if (!set_lv_segment_area_lv(mapseg, 0, layer_lv, 0, 0))
+		return_NULL;
 
 	/* add the new segment to the layer LV */
 	list_add(&lv_where->segments, &mapseg->list);
@@ -2379,7 +2426,8 @@ static int _extend_layer_lv_for_segment(struct logical_volume *layer_lv,
 	layer_lv->size += seg->area_len * layer_lv->vg->extent_size;
 
 	/* map the original area to the new segment */
-	set_lv_segment_area_lv(seg, s, layer_lv, mapseg->le, 0);
+	if (!set_lv_segment_area_lv(seg, s, layer_lv, mapseg->le, 0))
+		return_0;
 
 	return 1;
 }

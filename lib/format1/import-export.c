@@ -361,6 +361,7 @@ int import_lv(struct dm_pool *mem, struct logical_volume *lv, struct lv_disk *lv
 	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
+	list_init(&lv->segs_using_this_lv);
 
 	return 1;
 }

@@ -408,8 +408,10 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 				return 0;
 			}
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
-			set_lv_segment_area_lv(seg, s, lv1, (uint32_t) cv->next->v.i,
-					       flags);
+			if (!set_lv_segment_area_lv(seg, s, lv1,
+						    (uint32_t) cv->next->v.i,
+						    flags))
+				return_0;
 		} else {
 			log_error("Couldn't find volume '%s' "
 				  "for segment '%s'.",
@@ -562,6 +564,7 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 	list_init(&lv->snapshot_segs);
 	list_init(&lv->segments);
 	list_init(&lv->tags);
+	list_init(&lv->segs_using_this_lv);
 
 	/* Optional tags */
 	if ((cn = find_config_node(lvn, "tags")) &&

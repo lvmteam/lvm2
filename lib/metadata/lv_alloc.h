@@ -33,9 +33,9 @@ struct lv_segment *alloc_snapshot_seg(struct logical_volume *lv,
 
 int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 			   struct physical_volume *pv, uint32_t pe);
-void set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
-			    struct logical_volume *lv, uint32_t le,
-			    uint32_t flags);
+int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
+			   struct logical_volume *lv, uint32_t le,
+			   uint32_t flags);
 int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
 			 struct lv_segment *seg_from, uint32_t area_from);
 void release_lv_segment_area(struct lv_segment *seg, uint32_t s,

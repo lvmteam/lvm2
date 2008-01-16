@@ -158,6 +158,12 @@ struct peg_list {
 	struct pv_segment *peg;
 };
 
+struct seg_list {
+	struct list list;
+	unsigned count;
+	struct lv_segment *seg;
+};
+
 /*
  * Ownership of objects passes to caller.
  */
@@ -293,13 +299,20 @@ int lv_merge_segments(struct logical_volume *lv);
 int lv_split_segment(struct logical_volume *lv, uint32_t le);
 
 /*
+ * Add/remove upward link from underlying LV to the segment using it
+ * FIXME: ridiculously long name
+ */
+int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
+int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg);
+struct lv_segment *get_only_segment_using_this_lv(struct logical_volume *lv);
+
+/*
  * Mirroring functions
  */
 
 /*
  * Given mirror image or mirror log segment, find corresponding mirror segment 
  */
-struct lv_segment *find_mirror_seg(struct lv_segment *seg);
 int fixup_imported_mirrors(struct volume_group *vg);
 
 /*
