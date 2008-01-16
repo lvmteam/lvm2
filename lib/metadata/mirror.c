@@ -347,9 +347,12 @@ static int _is_mirror_image_removable(struct logical_volume *mimage_lv,
 
 	list_iterate_items(seg, &mimage_lv->segments) {
 		for (s = 0; s < seg->area_count; s++) {
-			if (seg_type(seg, s) != AREA_PV)
-				/* FIXME Recurse for AREA_LV */
-				continue;
+			if (seg_type(seg, s) != AREA_PV) {
+				/* FIXME Recurse for AREA_LV? */
+				/* Structure of seg_lv is unknown.
+				 * Not removing this LV for safety. */
+				return 0;
+			}
 
 			pv = seg_pv(seg, s);
 
