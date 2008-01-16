@@ -51,7 +51,8 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
          * system.
 	 */
 	if (pv && is_orphan(pv)) {
-		(void) get_vgs(cmd, 1);
+		if (!scan_vgs_for_pvs(cmd))
+			return_0;
 		pv = pv_read(cmd, name, NULL, NULL, 0);
 	}
 

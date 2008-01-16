@@ -26,7 +26,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name = NULL;
 
-	 if (!is_orphan(pv) && !vg) {
+	if (!is_orphan(pv) && !vg) {
 		vg_name = pv_vg_name(pv);
 		if (!(vg = vg_lock_and_read(cmd, vg_name, (char *)&pv->vgid,
 					    LCK_VG_READ, CLUSTERED, 0))) {

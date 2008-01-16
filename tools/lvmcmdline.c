@@ -584,7 +584,6 @@ static int _process_command_line(struct cmd_context *cmd, int *argc,
 		a->ui64_value = 0;
 	}
 
-	memset(str, 0, sizeof(str));
 	/* fill in the short and long opts */
 	for (i = 0; i < cmd->command->num_args; i++)
 		_add_getopt_arg(cmd->command->valid_args[i], &ptr, &o);
