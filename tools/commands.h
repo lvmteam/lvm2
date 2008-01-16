@@ -878,7 +878,6 @@ xx(vgsplit,
    "\t[-c|--clustered {y|n}] " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-h|--help] " "\n"
-   "\t[-l|--list]" "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
    "\t[-M|--metadatatype 1|2] " "\n"
    "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
@@ -889,7 +888,7 @@ xx(vgsplit,
    "\tSourceVolumeGroupName DestinationVolumeGroupName" "\n"
    "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
 
-   alloc_ARG, autobackup_ARG, clustered_ARG, list_ARG,
+   alloc_ARG, autobackup_ARG, clustered_ARG,
    maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
    metadatatype_ARG, physicalextentsize_ARG, test_ARG)
 
