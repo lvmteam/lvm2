@@ -70,30 +70,31 @@ test_expect_success \
    vgremove $vg2 &&
    vgremove $vg1'
 
-# FIXME: error with device mapper
-#test_expect_success \
-#  'vgmerge rejects vgmerge because max_lv is exceeded' \
-#  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
-#   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
-#   lvcreate -l 4 -n lv1 $vg1 &&
-#   lvcreate -l 4 -n lv2 $vg1 &&
-#   lvcreate -l 4 -n lv3 $vg2 &&
-#   vgmerge $vg1 $vg2 2>err;
-#   status=$?; echo status=$?; test $status = 5 &&
-#   grep "^  Maximum number of logical volumes (2) exceeded" err &&
-#   vgremove $vg2 &&
-#   vgremove $vg1'
+test_expect_success \
+  'vgmerge rejects vg with active lv' \
+  'vgcreate $vg1 $d1 $d2 &&
+   vgcreate $vg2 $d3 $d4 &&
+   lvcreate -l 4 -n lv1 $vg2 &&
+   vgmerge $vg1 $vg2 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Logical volumes in \"$vg2\" must be inactive\$" err &&
+   vgremove -f $vg2 &&
+   vgremove -f $vg1'
 
-#test_expect_success \
-#  'vgmerge rejects vg with active lv' \
-#  'vgcreate $vg1 $d1 $d2 &&
-#   vgcreate $vg2 $d3 $d4 &&
-#   lvcreate -l 64 -n lv1 $vg1 &&
-#   vgmerge $vg1 $vg1 2>err;
-#   status=$?; echo status=$?; test $status = 5 &&
-#   grep "^  Logical volumes in \"$vg1\" must be inactive\$" err &&
-#   vgremove -f $vg2 &&
-#   vgremove -f $vg1'
+test_expect_success \
+  'vgmerge rejects vgmerge because max_lv is exceeded' \
+  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
+   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
+   lvcreate -l 4 -n lv1 $vg1 &&
+   lvcreate -l 4 -n lv2 $vg1 &&
+   lvcreate -l 4 -n lv3 $vg2 &&
+   vgchange -an $vg1 &&
+   vgchange -an $vg2 &&
+   vgmerge $vg1 $vg2 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Maximum number of logical volumes (2) exceeded" err &&
+   vgremove -f $vg2 &&
+   vgremove -f $vg1'
 
 test_done
 # Local Variables:
