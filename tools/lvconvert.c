@@ -364,6 +364,17 @@ static int _insert_lvconvert_layer(struct cmd_context *cmd,
 	return 1;
 }
 
+/* walk down the stacked mirror LV to the original mirror LV */
+static struct logical_volume *_original_lv(struct logical_volume *lv)
+{
+	struct logical_volume *next_lv = lv, *tmp_lv;
+
+	while ((tmp_lv = find_temporary_mirror(next_lv)))
+		next_lv = tmp_lv;
+
+	return next_lv;
+}
+
 static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * lv,
 			     struct lvconvert_params *lp)
 {
@@ -371,6 +382,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	uint32_t existing_mirrors;
 	const char *mirrorlog;
 	unsigned corelog = 0;
+	struct logical_volume *original_lv;
 
 	seg = first_seg(lv);
 	existing_mirrors = lv_mirror_count(lv);
@@ -496,8 +508,9 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	}
 
 	if (lp->mirrors == existing_mirrors) {
+		original_lv = _original_lv(lv);
 		if (!seg->log_lv && !corelog) {
-			if (!add_mirror_log(cmd, lv, 1,
+			if (!add_mirror_log(cmd, original_lv, 1,
 					    adjusted_mirror_region_size(
 							lv->vg->extent_size,
 							lv->le_count,
@@ -505,7 +518,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					    lp->pvh, lp->alloc))
 				return_0;
 		} else if (seg->log_lv && corelog) {
-			if (!remove_mirror_log(cmd, lv,
+			if (!remove_mirror_log(cmd, original_lv,
 					       lp->pv_count ? lp->pvh : NULL))
 				return_0;
 		} else {
@@ -526,8 +539,9 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 		 * insertion to make the end result consistent with
 		 * linear-to-mirror conversion.
 		 */
+		original_lv = _original_lv(lv);
 		if (!seg->log_lv && !corelog) {
-			if (!add_mirror_log(cmd, lv, 1,
+			if (!add_mirror_log(cmd, original_lv, 1,
 					    adjusted_mirror_region_size(
 							lv->vg->extent_size,
 							lv->le_count,
@@ -535,7 +549,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 					    lp->pvh, lp->alloc))
 				return_0;
 		} else if (seg->log_lv && corelog) {
-			if (!remove_mirror_log(cmd, lv,
+			if (!remove_mirror_log(cmd, original_lv,
 					       lp->pv_count ? lp->pvh : NULL))
 				return_0;
 		}
