@@ -509,7 +509,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 	if (lp->mirrors == existing_mirrors) {
 		original_lv = _original_lv(lv);
-		if (!seg->log_lv && !corelog) {
+		if (!first_seg(original_lv)->log_lv && !corelog) {
 			if (!add_mirror_log(cmd, original_lv, 1,
 					    adjusted_mirror_region_size(
 							lv->vg->extent_size,
@@ -517,7 +517,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 							lp->region_size),
 					    lp->pvh, lp->alloc))
 				return_0;
-		} else if (seg->log_lv && corelog) {
+		} else if (first_seg(original_lv)->log_lv && corelog) {
 			if (!remove_mirror_log(cmd, original_lv,
 					       lp->pv_count ? lp->pvh : NULL))
 				return_0;
