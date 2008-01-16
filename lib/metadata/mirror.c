@@ -1187,7 +1187,7 @@ int add_mirror_log(struct cmd_context *cmd,
 			      0, 0, log_count, 0,
 			      allocatable_pvs, alloc, parallel_areas);
 	if (!ah) {
-		log_error("Unable to allocate temporary LV for pvmove.");
+		log_error("Unable to allocate extents for mirror log.");
 		return 0;
 	}
 
