@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-test_description='Exercise some vgsplit diagnostics'
+test_description='Exercise some vgmerge diagnostics'
 privileges_required_=1
 
 . ./test-lib.sh
@@ -34,69 +34,66 @@ test_expect_success \
    pvcreate $d1 $d2 $d3 $d4'
 
 test_expect_success \
-  'vgsplit accepts new vg as destination of split' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgsplit $vg1 $vg2 $d1 &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-test_expect_success \
-  'vgsplit accepts existing vg as destination of split' \
+  'vgmerge normal operation' \
   'vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
-   vgsplit $vg1 $vg2 $d1 &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-#test_expect_success \
-# 'vgcreate accepts 8.00M physicalextentsize for VG' \
-#  'vgcreate $vg --physicalextentsize 8.00M $d1 $d2 &&
-#   check_vg_field_ $vg vg_extent_size 8.00M &&
-#   vgremove $vg'
+   vgmerge $vg1 $vg2 &&
+   vgremove $vg1'
 
 test_expect_success \
-  'vgsplit accepts 8.00M physicalextentsize for new VG' \
+  'vgmerge rejects duplicate vg name' \
   'vgcreate $vg1 $d1 $d2 &&
-   vgsplit --physicalextentsize 8.00M $vg1 $vg2 $d1 &&
-   check_vg_field_ $vg2 vg_extent_size 8.00M &&
-   vgremove $vg1 &&
-   vgremove $vg2'
+   vgcreate $vg2 $d3 $d4 &&
+   vgmerge $vg1 $vg1 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Duplicate volume group name \"$vg1\"\$" err &&
+   vgremove $vg2 &&
+   vgremove $vg1'
 
 test_expect_success \
-  'vgsplit accepts --maxphysicalvolumes 128 on new VG' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgsplit --maxphysicalvolumes 128 $vg1 $vg2 $d1 &&
-   check_vg_field_ $vg2 max_pv 128 &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-test_expect_success \
-  'vgsplit accepts --maxlogicalvolumes 128 on new VG' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgsplit --maxlogicalvolumes 128 $vg1 $vg2 $d1 &&
-   check_vg_field_ $vg2 max_lv 128 &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-test_expect_success \
-  'vgsplit rejects vgs with incompatible extent_size' \
+  'vgmerge rejects vgs with incompatible extent_size' \
   'vgcreate --physicalextentsize 4M $vg1 $d1 $d2 &&
    vgcreate --physicalextentsize 8M $vg2 $d3 $d4 &&
-   vgsplit $vg1 $vg2 $d1 2>err;
+   vgmerge $vg1 $vg2 2>err;
    status=$?; echo status=$?; test $status = 5 &&
    grep "^  Extent sizes differ" err &&
    vgremove $vg2 &&
    vgremove $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because max_pv of destination would be exceeded' \
+  'vgmerge rejects vgmerge because max_pv is exceeded' \
   'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
-   vgsplit $vg1 $vg2 $d1 2>err;
+   vgmerge $vg1 $vg2 2>err;
    status=$?; echo status=$?; test $status = 5 &&
    grep "^  Maximum number of physical volumes (2) exceeded" err &&
    vgremove $vg2 &&
    vgremove $vg1'
+
+# FIXME: error with device mapper
+#test_expect_success \
+#  'vgmerge rejects vgmerge because max_lv is exceeded' \
+#  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
+#   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
+#   lvcreate -l 4 -n lv1 $vg1 &&
+#   lvcreate -l 4 -n lv2 $vg1 &&
+#   lvcreate -l 4 -n lv3 $vg2 &&
+#   vgmerge $vg1 $vg2 2>err;
+#   status=$?; echo status=$?; test $status = 5 &&
+#   grep "^  Maximum number of logical volumes (2) exceeded" err &&
+#   vgremove $vg2 &&
+#   vgremove $vg1'
+
+#test_expect_success \
+#  'vgmerge rejects vg with active lv' \
+#  'vgcreate $vg1 $d1 $d2 &&
+#   vgcreate $vg2 $d3 $d4 &&
+#   lvcreate -l 64 -n lv1 $vg1 &&
+#   vgmerge $vg1 $vg1 2>err;
+#   status=$?; echo status=$?; test $status = 5 &&
+#   grep "^  Logical volumes in \"$vg1\" must be inactive\$" err &&
+#   vgremove -f $vg2 &&
+#   vgremove -f $vg1'
 
 test_done
 # Local Variables:

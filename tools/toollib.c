@@ -1247,8 +1247,7 @@ int apply_lvname_restrictions(const char *name)
  * Set members of struct vgcreate_params from cmdline.
  * Do preliminary validation with arg_*() interface.
  * Further, more generic validation is done in validate_vgcreate_params().
- * This function is to remain in tools directory, while
- * validate_vgcreate_params() will be moved into the LVM library.
+ * This function is to remain in tools directory.
  */
 int fill_vg_create_params(struct cmd_context *cmd,
 			  char *vg_name, struct vgcreate_params *vp_new,

@@ -254,7 +254,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 				      LCK_VG_WRITE | LCK_NONBLOCK,
 				      0, 0))) {
 		log_warn("Volume group \"%s\" already exists", vg_name_to);
-		/* FIXME: check compatibility with existing vg, esp attribs */
+		if (!vgs_are_compatible(cmd, vg_from,vg_to))
+			goto error;
 	} else {
 
 		/* Set metadata format of original VG */
@@ -274,8 +275,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (validate_vg_create_params(cmd, &vp_new))
 			return EINVALID_CMD_LINE;
 
-		/* Create new VG structure */
-		/* FIXME: allow user input same params as to vgcreate tool */
 		if (!(vg_to = vg_create(cmd, vg_name_to, vp_new.extent_size,
 					vp_new.max_pv, vp_new.max_lv,
 					vp_new.alloc, 0, NULL)))
