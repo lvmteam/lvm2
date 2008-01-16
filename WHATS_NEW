@@ -1,5 +1,6 @@
 Version 2.02.30 -
 ===================================
+  Don't use block_on_error with mirror targets above version 1.12.
   Update vgsplit to include vgcreate-style options when new VG is destination.
   Update vgsplit to accept existing VG as destination.
   lvconvert waits for completion of initial sync by default.
