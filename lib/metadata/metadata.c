@@ -1015,7 +1015,16 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	/* FIXME Can fail when no PV mda */
+	if (is_orphan_vg(pv->vg_name)) {
+		/* If a PV has no MDAs - need to search all VGs for it */
+		if (!scan_vgs_for_pvs(cmd))
+			return_NULL;
+		if (!(pv = _pv_read(cmd, pv_name, NULL, NULL, 1))) {
+			log_error("Physical volume %s not found", pv_name);
+			return NULL;
+		}
+	}
+
 	if (is_orphan_vg(pv->vg_name)) {
 		log_error("Physical volume %s not in a volume group", pv_name);
 		return NULL;
@@ -1788,7 +1797,7 @@ struct list *get_vgids(struct cmd_context *cmd, int full_scan)
 	return lvmcache_get_vgids(cmd, full_scan);
 }
 
-struct list *get_pvs(struct cmd_context *cmd)
+static int _get_pvs(struct cmd_context *cmd, struct list **pvslist)
 {
 	struct str_list *strl;
 	struct list *results;
@@ -1802,17 +1811,19 @@ struct list *get_pvs(struct cmd_context *cmd)
 
 	lvmcache_label_scan(cmd, 0);
 
-	if (!(results = dm_pool_alloc(cmd->mem, sizeof(*results)))) {
-		log_error("PV list allocation failed");
-		return NULL;
-	}
+	if (pvslist) {
+		if (!(results = dm_pool_alloc(cmd->mem, sizeof(*results)))) {
+			log_error("PV list allocation failed");
+			return NULL;
+		}
 
-	list_init(results);
+		list_init(results);
+	}
 
 	/* Get list of VGs */
 	if (!(vgids = get_vgids(cmd, 0))) {
 		log_error("get_pvs: get_vgs failed");
-		return NULL;
+		return 0;
 	}
 
 	/* Read every VG to ensure cache consistency */
@@ -1839,14 +1850,34 @@ struct list *get_pvs(struct cmd_context *cmd)
 				 vgname);
 
 		/* Move PVs onto results list */
-		list_iterate_safe(pvh, tmp, &vg->pvs) {
-			list_add(results, pvh);
-		}
+		if (pvslist)
+			list_iterate_safe(pvh, tmp, &vg->pvs)
+				list_add(results, pvh);
 	}
 	init_pvmove(old_pvmove);
 	init_partial(old_partial);
 
+	if (pvslist)
+		*pvslist = results;
+	else
+		dm_pool_free(cmd->mem, vgids);
+
+	return 1;
+}
+
+struct list *get_pvs(struct cmd_context *cmd)
+{
+	struct list *results;
+
+	if (!_get_pvs(cmd, &results))
+		return NULL;
+
 	return results;
+}
+
+int scan_vgs_for_pvs(struct cmd_context *cmd)
+{
+	return _get_pvs(cmd, NULL);
 }
 
 /* FIXME: liblvm todo - make into function that takes handle */

@@ -310,6 +310,7 @@ struct list *get_pvs(struct cmd_context *cmd);
 /* Set full_scan to 1 to re-read every (filtered) device label */
 struct list *get_vgs(struct cmd_context *cmd, int full_scan);
 struct list *get_vgids(struct cmd_context *cmd, int full_scan);
+int scan_vgs_for_pvs(struct cmd_context *cmd);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector);

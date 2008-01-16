@@ -696,6 +696,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 	struct str_list *sll;
 	char *tagname;
 	int consistent = 1;
+	int scanned = 0;
 
 	list_init(&tags);
 
@@ -737,6 +738,30 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 						  "volume \"%s\"", argv[opt]);
 					ret_max = ECMD_FAILED;
 					continue;
+				}
+
+        			/*
+			         * If a PV has no MDAs it may appear to be an
+				 * orphan until the metadata is read off
+				 * another PV in the same VG.  Detecting this
+				 * means checking every VG by scanning every
+				 * PV on the system.
+			         */
+				if (!scanned && is_orphan(pv)) {
+					if (!scan_vgs_for_pvs(cmd)) {
+						stack;
+						ret_max = ECMD_FAILED;
+						continue;
+					}
+					scanned = 1;
+					if (!(pv = pv_read(cmd, argv[opt],
+							   NULL, NULL, 1))) {
+						log_error("Failed to read "
+							  "physical volume "
+							  "\"%s\"", argv[opt]);
+						ret_max = ECMD_FAILED;
+						continue;
+					}
 				}
 			}
 
