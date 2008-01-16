@@ -54,7 +54,7 @@ int is_temporary_mirror_layer(const struct logical_volume *lv)
  * Return a temporary LV for resyncing added mirror image.
  * Add other mirror legs to lvs list.
  */
-static struct logical_volume *_find_tmp_mirror(struct logical_volume *lv)
+struct logical_volume *find_temporary_mirror(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
@@ -562,7 +562,7 @@ int collapse_mirrored_lv(struct logical_volume *lv)
 	struct logical_volume *tmp_lv;
 	struct lv_segment *mirror_seg;
 
-	while ((tmp_lv = _find_tmp_mirror(lv))) {
+	while ((tmp_lv = find_temporary_mirror(lv))) {
 		mirror_seg = find_mirror_seg(first_seg(tmp_lv));
 		if (!mirror_seg) {
 			log_error("Failed to find mirrored LV for %s",
