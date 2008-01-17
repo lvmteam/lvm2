@@ -521,7 +521,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		_remove_mirror_log(mirrored_seg);
 		lv->status &= ~MIRRORED;
 		lv->status &= ~MIRROR_NOTSYNCED;
-		if (!lv_remap_error(lv))
+		if (!replace_lv_with_error_segment(lv))
 			return_0;
 		remove_log = 1;
 	} else if (remove_log)
@@ -616,7 +616,7 @@ int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 			/* Some mirrors are removed from the temporary mirror,
 			 * but the temporary layer still exists.
 			 * Down the stack and retry for remainder. */
-			next_lv = find_tmp_mirror(next_lv);
+			next_lv = find_temporary_mirror(next_lv);
 		}
 
 		num_removed -= r;

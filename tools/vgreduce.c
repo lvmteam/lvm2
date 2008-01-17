@@ -54,7 +54,6 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	struct list *snh, *snht;
 	struct logical_volume *cow;
 	struct lv_list *lvl;
-	uint32_t extents;
 	struct lvinfo info;
 	int first = 1;
 
@@ -116,19 +115,10 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	 * the mirrored LV also should be cleaned up.
 	 * Clean-up is currently done by caller (_make_vg_consistent()).
 	 */
-	if ((lv_info(cmd, lv, &info, 0, 0) && info.exists)
-	    || find_mirror_seg(first_seg(lv))) {
-		extents = lv->le_count;
-		if (!lv_empty(lv)) {
-			stack;
-			return 0;
-		}
-		if (!lv_add_virtual_segment(lv, 0, extents,
-					    get_segtype_from_string(cmd,
-								    "error"))) {
-			stack;
-			return 0;
-		}
+	if ((lv_info(cmd, lv, &info, 0, 0) && info.exists) ||
+	    find_mirror_seg(first_seg(lv))) {
+		if (!replace_lv_with_error_segment(lv))
+			return_0;
 
 		if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
 			log_error("lv_list alloc failed");
