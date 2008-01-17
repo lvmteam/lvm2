@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-test_description="ensure that pvmove works with basic options"
+test_description="ensure that basic operations on mirrored LV works"
 privileges_required_=1
 
 . ./test-lib.sh
