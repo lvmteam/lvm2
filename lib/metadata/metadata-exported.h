@@ -379,7 +379,7 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents);
 int lv_empty(struct logical_volume *lv);
 
 /* Empty an LV and add error segment */
-int lv_remap_error(struct logical_volume *lv);
+int replace_lv_with_error_segment(struct logical_volume *lv);
 
 /* Entry point for all LV extent allocations */
 int lv_extend(struct logical_volume *lv,
