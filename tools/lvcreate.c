@@ -195,7 +195,7 @@ static int _validate_stripe_params(struct cmd_context *cmd,
 	if (lp->stripes > 1 && !lp->stripe_size) {
 		lp->stripe_size = find_config_tree_int(cmd,
 						  "metadata/stripesize",
-						  DEFAULT_STRIPESIZE);
+						  DEFAULT_STRIPESIZE) * 2;
 		log_print("Using default stripesize %s",
 			  display_size(cmd, (uint64_t) lp->stripe_size));
 	}
