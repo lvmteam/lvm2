@@ -1,10 +1,10 @@
-Version 2.02.30 -
+Version 2.02.30 - 17th January 2008
 ===================================
-  Maintain lists of stacked LV segments using each LV.
+  Add lists of stacked LV segments using each LV to the internal metadata.
   Change vgsplit -l (for unimplemented --list) into --maxlogicalvolumes.
   Fix process_all_pvs to detect non-orphans with no MDAs correctly.
   Don't use block_on_error with mirror targets version 1.12 and above.
-  Update vgsplit to include vgcreate-style options when new VG is destination.
+  Update vgsplit to accept vgcreate options when new VG is destination.
   Update vgsplit to accept existing VG as destination.
   lvconvert waits for completion of initial sync by default.
   Refactor vgcreate for parameter validation and add tests.
