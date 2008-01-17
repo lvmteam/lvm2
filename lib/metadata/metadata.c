@@ -233,7 +233,7 @@ static int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
 	char vg_path[PATH_MAX];
 
 	if (!validate_name(vg_name))
-		return 0;
+		return_0;
 
 	snprintf(vg_path, PATH_MAX, "%s%s", cmd->dev_dir, vg_name);
 	if (path_exists(vg_path)) {
@@ -243,7 +243,6 @@ static int validate_new_vg_name(struct cmd_context *cmd, const char *vg_name)
 
 	return 1;
 }
-
 
 int validate_vg_rename_params(struct cmd_context *cmd,
 			      const char *vg_name_old,
@@ -1084,7 +1083,6 @@ int vg_remove(struct volume_group *vg)
 	return 1;
 }
 
-
 /*
  * Determine whether two vgs are compatible for merging.
  */
@@ -1094,11 +1092,12 @@ int vgs_are_compatible(struct cmd_context *cmd,
 {
 	struct lv_list *lvl1, *lvl2;
 	struct pv_list *pvl;
+	char *name1, *name2;
 
 	if (lvs_in_vg_activated(vg_from)) {
 		log_error("Logical volumes in \"%s\" must be inactive",
 			  vg_from->name);
-		goto error;
+		return 0;
 	}
 
 	/* Check compatibility */
@@ -1106,7 +1105,7 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		log_error("Extent sizes differ: %d (%s) and %d (%s)",
 			  vg_to->extent_size, vg_to->name,
 			  vg_from->extent_size, vg_from->name);
-		goto error;
+		return 0;
 	}
 
 	if (vg_to->max_pv &&
@@ -1114,7 +1113,7 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		log_error("Maximum number of physical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_pv, vg_to->name,
 			  vg_from->name);
-		goto error;
+		return 0;
 	}
 
 	if (vg_to->max_lv &&
@@ -1122,22 +1121,22 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		log_error("Maximum number of logical volumes (%d) exceeded "
 			  " for \"%s\" and \"%s\"", vg_to->max_lv, vg_to->name,
 			  vg_from->name);
-		goto error;
+		return 0;
 	}
 
 	/* Check no conflicts with LV names */
 	list_iterate_items(lvl1, &vg_to->lvs) {
-		char *name1 = lvl1->lv->name;
+		name1 = lvl1->lv->name;
 
 		list_iterate_items(lvl2, &vg_from->lvs) {
-			char *name2 = lvl2->lv->name;
+			name2 = lvl2->lv->name;
 
 			if (!strcmp(name1, name2)) {
 				log_error("Duplicate logical volume "
 					  "name \"%s\" "
 					  "in \"%s\" and \"%s\"",
 					  name1, vg_to->name, vg_from->name);
-				goto error;
+				return 0;
 			}
 		}
 	}
@@ -1148,7 +1147,7 @@ int vgs_are_compatible(struct cmd_context *cmd,
 			log_error("Physical volume %s might be constructed "
 				  "from same volume group %s.",
 				  pv_dev_name(pvl->pv), vg_from->name);
-			goto error;
+			return 0;
 		}
 	}
 
@@ -1157,17 +1156,12 @@ int vgs_are_compatible(struct cmd_context *cmd,
 			log_error("Physical volume %s might be constructed "
 				  "from same volume group %s.",
 				  pv_dev_name(pvl->pv), vg_to->name);
-			goto error;
+			return 0;
 		}
 	}
 
 	return 1;
-
-error:
-	return 0;
 }
-
-
 
 int vg_validate(struct volume_group *vg)
 {

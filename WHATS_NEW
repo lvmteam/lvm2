@@ -1,5 +1,6 @@
 Version 2.02.30 - 17th January 2008
 ===================================
+  Set default readahead to twice maximium stripe size.
   Reinstate VG extent size and stripe size defaults (halved). (2.02.29)
   Add lists of stacked LV segments using each LV to the internal metadata.
   Change vgsplit -l (for unimplemented --list) into --maxlogicalvolumes.

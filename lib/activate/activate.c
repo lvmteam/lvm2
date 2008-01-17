@@ -706,10 +706,9 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	 */
 	if (lv_is_origin(lv)) {
 		list_iterate_safe(snh, snht, &lv->snapshot_segs)
-			if (!monitor_dev_for_events(
-				cmd, list_struct_base(snh,
-					struct lv_segment, origin_list)->cow, monitor))
-				r=0;
+			if (!monitor_dev_for_events(cmd, list_struct_base(snh,
+				    struct lv_segment, origin_list)->cow, monitor))
+				r = 0;
 		return r;
 	}
 

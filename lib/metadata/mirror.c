@@ -1485,10 +1485,9 @@ int lv_remove_mirrors(struct cmd_context *cmd __attribute((unused)),
 
 	/* MIRROR_BY_LV */
 	if (seg_type(seg, 0) == AREA_LV &&
-	    seg_lv(seg, 0)->status & MIRROR_IMAGE) {
+	    seg_lv(seg, 0)->status & MIRROR_IMAGE)
 		return remove_mirror_images(lv, new_mirrors + 1,
 					    pvs, log_count ? 1U : 0);
-	}
 
 	/* MIRROR_BY_SEG */
 	if (log_count) {

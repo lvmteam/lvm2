@@ -283,8 +283,10 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 
 	mirr_state = *target_state;
 
-	/* Mirror segment could have only 1 area temporarily,
-	 * if the segment is under conversion. */
+	/*
+	 * Mirror segment could have only 1 area temporarily
+	 * if the segment is under conversion.
+	 */
  	if (seg->area_count == 1)
 		mirror_status = MIRR_DISABLED;
 

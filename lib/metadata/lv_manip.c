@@ -31,7 +31,8 @@ struct lv_names {
 	const char *new;
 };
 
-int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg)
+int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
+				  struct lv_segment *seg)
 {
 	struct seg_list *sl;
 
@@ -54,7 +55,8 @@ int add_seg_to_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *
 	return 1;
 }
 
-int remove_seg_from_segs_using_this_lv(struct logical_volume *lv, struct lv_segment *seg)
+int remove_seg_from_segs_using_this_lv(struct logical_volume *lv,
+				       struct lv_segment *seg)
 {
 	struct seg_list *sl;
 
@@ -1429,7 +1431,7 @@ int lv_add_mirror_areas(struct alloc_handle *ah,
 
 		if (!seg_is_mirrored(seg) &&
 		    (!(seg = _convert_seg_to_mirror(seg, region_size, NULL))))
-				return_0;
+			return_0;
 
 		old_area_count = seg->area_count;
 		new_area_count = old_area_count + ah->area_count;
@@ -1530,20 +1532,16 @@ int lv_add_log_segment(struct alloc_handle *ah, struct logical_volume *log_lv)
 		return 0;
 	}
 
-	if (!set_lv_segment_area_pv(seg, 0, ah->log_area.pv, ah->log_area.pe)) {
-		stack;
-		return 0;
-	}
+	if (!set_lv_segment_area_pv(seg, 0, ah->log_area.pv, ah->log_area.pe))
+		return_0;
 
 	list_add(&log_lv->segments, &seg->list);
 	log_lv->le_count += ah->log_area.len;
-	log_lv->size += (uint64_t) log_lv->le_count *log_lv->vg->extent_size;
+	log_lv->size += (uint64_t) log_lv->le_count * log_lv->vg->extent_size;
 
 	if (log_lv->vg->fid->fmt->ops->lv_setup &&
-	    !log_lv->vg->fid->fmt->ops->lv_setup(log_lv->vg->fid, log_lv)) {
-		stack;
-		return 0;
-	}
+	    !log_lv->vg->fid->fmt->ops->lv_setup(log_lv->vg->fid, log_lv))
+		return_0;
 
 	return 1;
 }
@@ -1668,7 +1666,7 @@ static int _rename_sub_lv(struct cmd_context *cmd,
 	}
 	suffix = lv->name + len;
 
- 	/*
+	/*
 	 * Compose a new name for sub lv:
 	 *   e.g. new name is "lvol1_mlog"
 	 *        if the sub LV is "lvol0_mlog" and
@@ -2025,9 +2023,9 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 			 if (yes_no_prompt("Do you really want to remove active "
 					   "logical volume \"%s\"? [y/n]: ",
 					   lv->name) == 'n') {
-				 log_print("Logical volume \"%s\" not removed",
+				log_print("Logical volume \"%s\" not removed",
 					  lv->name);
-				 return 0;
+				return 0;
 			 }
 		}
 	}
@@ -2264,7 +2262,7 @@ int remove_layers_for_segments_all(struct cmd_context *cmd,
 
 		if (!remove_layers_for_segments(cmd, lv1, layer_lv,
 						status_mask, lvs_changed))
-			return 0;
+			return_0;
 	}
 
 	if (!lv_empty(layer_lv))
@@ -2627,7 +2625,7 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (dm_snprintf(name, PATH_MAX, "%s%s/%s", cmd->dev_dir,
-			 lv->vg->name, lv->name) < 0) {
+			lv->vg->name, lv->name) < 0) {
 		log_error("Name too long - device not cleared (%s)", lv->name);
 		return 0;
 	}
@@ -2640,7 +2638,7 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (!dev_open_quiet(dev))
-		return 0;
+		return_0;
 
 	dev_set(dev, UINT64_C(0),
 		sectors ? (size_t) sectors << SECTOR_SHIFT : (size_t) 4096,
@@ -2650,5 +2648,3 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 
 	return 1;
 }
-
-
