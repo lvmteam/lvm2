@@ -37,7 +37,7 @@ test_expect_success \
 lv=lvcreate-usage-$$
 
 test_expect_success \
-  'lvcreate rejects a negative stripesize' \
+  'lvcreate rejects a negative stripe_size' \
   'lvcreate -L 64M -n $lv -i2 --stripesize -4 $vg 2>err;
    status=$?; echo status=$?; test $status = 3 &&
    grep "^  Negative stripesize is invalid\$" err'
@@ -56,10 +56,11 @@ test_expect_success \
    lvremove -ff $vg'
 
 test_expect_success \
-  'lvcreate w/no stripe size succeeds with diagnostics to stdout' \
+  'lvcreate w/default (64KB) stripe size succeeds with diagnostics to stdout' \
   'lvcreate -L 64M -n $lv -i2 $vg > out &&
    grep "^  Using default stripesize" out &&
    lvdisplay $vg &&
+   check_lv_field_ $vg/$lv stripesize "64.00K" &&
    lvremove -ff $vg'
 
 test_expect_success \

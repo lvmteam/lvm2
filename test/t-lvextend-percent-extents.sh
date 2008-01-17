@@ -50,7 +50,7 @@ test_expect_success \
   'lvextend accepts no size or extents but one PV - bz154691' \
   'lvextend $vg/$lv $d1 >out; test $? = 0 &&
   grep "^  Logical volume $lv successfully resized\$" out &&
-  check_pv_size_ $d1 "0"'
+  check_pv_field_ $d1 pv_free "0"'
 
 test_expect_success \
   'Reset LV to original size' \
@@ -61,8 +61,8 @@ test_expect_success \
   'lvextend accepts no size but extents 100%PVS and two PVs - bz154691' \
   'lvextend -l +100%PVS $vg/$lv $d1 $d2 >out; test $? = 0 &&
   grep "^  Logical volume $lv successfully resized\$" out &&
-  check_pv_size_ $d1 "0" &&
-  check_pv_size_ $d2 "0"'
+  check_pv_field_ $d1 pv_free "0" &&
+  check_pv_field_ $d2 pv_free "0"'
 
 # Exercise the range overlap code.  Allocate every 2 extents.
 #
@@ -89,14 +89,14 @@ test_expect_success \
   'create_pvs=`for i in $(seq 0 4 20); do echo -n "\$d1:$i-$(($i + 1)) "; done` &&
    lvremove -f $vg/$lv; test $? = 0 &&
    lvcreate -l 12 -n $lv $vg $create_pvs; test $? = 0 &&
-   check_lv_size_ $vg/$lv "48.00M"'
+   check_lv_field_ $vg/$lv lv_size "48.00M"'
 
 test_expect_success \
   'lvextend with partially allocated PVs and extents 100%PVS with PE ranges' \
   'extend_pvs=`for i in $(seq 0 6 18); do echo -n "\$d1:$i-$(($i + 2)) "; done` &&
   lvextend -l +100%PVS $vg/$lv $extend_pvs >out; test $? = 0 &&
   grep "^  Logical volume $lv successfully resized\$" out &&
-  check_lv_size_ $vg/$lv "72.00M"'
+  check_lv_field_ $vg/$lv lv_size "72.00M"'
 
 
 test_done
