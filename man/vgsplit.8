@@ -29,9 +29,24 @@ from
 .I SourceVolumeGroupName
 into
 .I DestinationVolumeGroupName\fP.
+
 If
 .I DestinationVolumeGroupName
-does not exist, it will be created.
+does not exist, a new volume group will be created.  The default attributes
+for the new volume group can be specified with \fB\-\-alloc\fR,
+\fB\-\-clustered\fR, \fB\-\-maxlogicalvolumes\fR, \fB\-\-metadatatype\fR,
+\fB\-\-maxphysicalvolumes\fR, and \fB\-\-physicalextentsize\fR
+(see \fBvgcreate(8)\fR for a description of these options).
+If any of these options are not given, the default attribute(s) are taken
+from
+.I SourceVolumeGroupName\fP.
+
+If
+.I DestinationVolumeGroupName
+does exist, it will be checked for compatibility with
+.I SourceVolumeGroupName
+before the physical volumes are moved.
+
 Logical Volumes cannot be split between Volume Groups.
 Each existing Logical Volume must be entirely on the Physical Volumes forming
 either the source or the destination Volume Group.
