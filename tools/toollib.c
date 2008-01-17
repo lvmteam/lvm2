@@ -20,10 +20,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-/* From linux/drivers/md/dm-log.c */
-#define MIRROR_MAGIC 0x4D695272
-#define MIRROR_DISK_VERSION 2
-
 /* Command line args */
 unsigned arg_count(const struct cmd_context *cmd, int a)
 {
