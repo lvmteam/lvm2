@@ -34,7 +34,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	vp_def.vg_name = NULL;
-	vp_def.extent_size = DEFAULT_PE_SIZE;
+	vp_def.extent_size = DEFAULT_EXTENT_SIZE * 2;
 	vp_def.max_pv = 0;
 	vp_def.max_lv = 0;
 	vp_def.alloc = ALLOC_NORMAL;
