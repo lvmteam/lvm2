@@ -10,7 +10,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-test_description="ensure that pvmove works with basic options"
+test_description="ensure that lvconvert for mirrored LV works"
 privileges_required_=1
 
 . ./test-lib.sh
@@ -44,7 +44,7 @@ cleanup_()
 nr_pvs=5
 pvsize=$((80 * 1024 * 2))
 
-vg=mirror-basic-vg-$$
+vg=mirror-lvconvert-vg-$$
 lv1=lv1
 lv2=lv2
 lv3=lv3
