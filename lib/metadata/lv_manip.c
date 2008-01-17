@@ -459,6 +459,24 @@ int lv_empty(struct logical_volume *lv)
 }
 
 /*
+ * Empty an LV and add error segment.
+ */
+int lv_remap_error(struct logical_volume *lv)
+{
+	uint32_t len = lv->le_count;
+
+	if (!lv_empty(lv))
+		return_0;
+
+	if (!lv_add_virtual_segment(lv, 0, len,
+				    get_segtype_from_string(lv->vg->cmd,
+							    "error")))
+		return_0;
+
+	return 1;
+}
+
+/*
  * Remove given number of extents from LV.
  */
 int lv_reduce(struct logical_volume *lv, uint32_t extents)

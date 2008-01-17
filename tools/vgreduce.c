@@ -255,8 +255,10 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			}
 		}
 
+  lvs_changed_altered:
 		/* Remove lost mirror images from mirrors */
 		list_iterate_items(lvl, &vg->lvs) {
+  mirrored_seg_altered:
 			mirrored_seg = first_seg(lvl->lv);
 			if (!seg_is_mirrored(mirrored_seg))
 				continue;
@@ -315,6 +317,23 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 					vg_revert(vg);
 					return 0;
 				}
+
+				/* mirrored LV no longer has valid mimages.
+				 * So add it to lvs_changed for removal.
+				 * For this LV may be an area of other mirror,
+				 * restart the loop. */
+				if (!mimages) {
+					if (!_remove_lv(cmd, lvl->lv,
+						 &list_unsafe, &lvs_changed))
+						return_0;
+					goto lvs_changed_altered;
+				}
+
+				/* As a result of reconfigure_mirror_images(),
+				 * first_seg(lv) may now be different seg.
+				 * e.g. a temporary layer might be removed.
+				 * So check the mirrored_seg again. */
+				goto mirrored_seg_altered;
 			}
 		}
 
