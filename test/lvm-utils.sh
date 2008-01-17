@@ -52,17 +52,29 @@ loop_setup_()
 
 check_vg_field_()
 {
+if test "$verbose" = "t"
+then
+  echo "check_vg_field_ actual: `vgs --noheadings -o $2 $1` expected $3"
+fi
   return $(test $(vgs --noheadings -o $2 $1) == $3)
 }
 
-check_pv_size_()
+check_pv_field_()
 {
-  return $(test $(pvs --noheadings -o pv_free $1) == $2)
+if test "$verbose" = "t"
+then
+  echo "check_pv_field_ actual: `pvs --noheadings -o $2 $1` expected $3"
+fi
+  return $(test $(pvs --noheadings -o $2 $1) == $3)
 }
 
-check_lv_size_()
+check_lv_field_()
 {
-  return $(test $(lvs --noheadings -o lv_size $1) == $2)
+if test "$verbose" = "t"
+then
+  echo "check_lv_field_ actual: `lvs --noheadings -o $2 $1` expected $3"
+fi
+  return $(test $(lvs --noheadings -o $2 $1) == $3)
 }
 
 dmsetup_has_dm_devdir_support_()
