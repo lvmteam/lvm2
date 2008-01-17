@@ -67,7 +67,7 @@ test_expect_success \
 # Exercise the range overlap code.  Allocate every 2 extents.
 #
 #      Physical Extents
-#           1         2
+#          1         2
 #012345678901234567890123
 #
 #aaXXaaXXaaXXaaXXaaXXaaXX - (a)llocated
@@ -88,7 +88,8 @@ test_expect_success \
   'Reset LV to 12 extents, allocate every other 2 extents' \
   'create_pvs=`for i in $(seq 0 4 20); do echo -n "\$d1:$i-$(($i + 1)) "; done` &&
    lvremove -f $vg/$lv; test $? = 0 &&
-   lvcreate -l 12 -n $lv $vg $create_pvs; test $? = 0'
+   lvcreate -l 12 -n $lv $vg $create_pvs; test $? = 0 &&
+   check_lv_size_ $vg/$lv "48.00M"'
 
 test_expect_success \
   'lvextend with partially allocated PVs and extents 100%PVS with PE ranges' \
