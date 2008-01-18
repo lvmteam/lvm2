@@ -95,6 +95,7 @@ struct pv_segment;
 /* Mirror conversion type flags */
 #define MIRROR_BY_SEG		0x00000001U	/* segment-by-segment mirror */
 #define MIRROR_BY_LV		0x00000002U	/* mirror using whole mimage LVs */
+#define MIRROR_SKIP_INIT_SYNC	0x00000010U	/* skip initial sync */
 
 /* Ordered list - see lv_manip.c */
 typedef enum {

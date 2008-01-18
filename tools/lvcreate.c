@@ -789,7 +789,8 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 						lv->le_count,
 						lp->region_size),
 				    lp->corelog ? 0U : 1U, pvh, lp->alloc,
-				    MIRROR_BY_LV)) {
+				    MIRROR_BY_LV |
+				    (lp->nosync ? MIRROR_SKIP_INIT_SYNC : 0))) {
 			stack;
 			goto revert_new_lv;
 		}
