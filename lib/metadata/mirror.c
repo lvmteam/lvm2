@@ -516,6 +516,8 @@ static int _remove_mirror_images(struct logical_volume *lv,
 			return 0;
 		}
 	} else if (new_area_count == 0) {
+		log_very_verbose("All mimages of %s are gone", lv->name);
+
 		/* All mirror images are gone.
 		 * It can happen for vgreduce --removemissing. */
 		_remove_mirror_log(mirrored_seg);
@@ -585,6 +587,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 
 	if (removed)
 		*removed = old_area_count - new_area_count;
+
+	log_very_verbose("%" PRIu32 " image(s) removed from %s",
+			 old_area_count - num_removed, lv->name);
 
 	return 1;
 }

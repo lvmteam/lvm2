@@ -43,6 +43,9 @@ int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
 		}
 	}
 
+	log_very_verbose("Adding %s:%" PRIu32 " as an user of %s",
+			 seg->lv->name, seg->le, lv->name);
+
 	if (!(sl = dm_pool_zalloc(lv->vg->cmd->mem, sizeof(*sl)))) {
 		log_error("Failed to allocate segment list");
 		return 0;
@@ -65,8 +68,12 @@ int remove_seg_from_segs_using_this_lv(struct logical_volume *lv,
 			continue;
 		if (sl->count > 1)
 			sl->count--;
-		else
+		else {
+			log_very_verbose("%s:%" PRIu32 " is no longer a user "
+					 "of %s", seg->lv->name, seg->le,
+					 lv->name);
 			list_del(&sl->list);
+		}
 		return 1;
 	}
 
@@ -255,6 +262,11 @@ void release_lv_segment_area(struct lv_segment *seg, uint32_t s,
 	}
 
 	if (area_reduction == seg->area_len) {
+		log_very_verbose("Remove %s:%" PRIu32 "[%" PRIu32 "] from "
+				 "the top of LV %s:%" PRIu32,
+				 seg->lv->name, seg->le, s,
+				 seg_lv(seg, s)->name, seg_le(seg, s));
+
 		remove_seg_from_segs_using_this_lv(seg_lv(seg, s), seg);
 		seg_lv(seg, s) = NULL;
 		seg_le(seg, s) = 0;
@@ -332,6 +344,9 @@ int set_lv_segment_area_lv(struct lv_segment *seg, uint32_t area_num,
 			   struct logical_volume *lv, uint32_t le,
 			   uint32_t flags)
 {
+	log_very_verbose("Stack %s:%" PRIu32 "[%" PRIu32 "] on LV %s:%" PRIu32,
+			 seg->lv->name, seg->le, area_num, lv->name, le);
+
 	seg->areas[area_num].type = AREA_LV;
 	seg_lv(seg, area_num) = lv;
 	seg_le(seg, area_num) = le;
@@ -2177,6 +2192,9 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 	int lv_changed = 0;
 	struct lv_list *lvl;
 
+	log_very_verbose("Removing layer %s for segments of %s",
+			 layer_lv->name, lv->name);
+
 	/* Find all segments that point at the temporary mirror */
 	list_iterate_items(seg, &lv->segments) {
 		for (s = 0; s < seg->area_count; s++) {
@@ -2312,6 +2330,8 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	struct logical_volume *parent;
 	struct lv_segment *parent_seg;
 	struct segment_type *segtype;
+
+	log_very_verbose("Removing layer %s for %s", layer_lv->name, lv->name);
 
 	if (!(parent_seg = get_only_segment_using_this_lv(layer_lv))) {
 		log_error("Failed to find layer %s in %s",
@@ -2568,6 +2588,10 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 	struct lv_list *lvl;
 	int lv_used = 0;
 	uint32_t s;
+
+	log_very_verbose("Inserting layer %s for segments of %s on %s",
+			 layer_lv->name, lv_where->name,
+			 pvl ? pv_dev_name(pvl->pv) : "any");
 
 	if (!_align_segment_boundary_to_pe_range(lv_where, pvl))
 		return_0;
