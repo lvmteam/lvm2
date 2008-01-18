@@ -1,3 +1,7 @@
+Version 2.02.31 -
+===================================
+  Avoid error message when using default setting of lvcreate -M1. (2.02.30)
+
 Version 2.02.30 - 17th January 2008
 ===================================
   Set default readahead to twice maximium stripe size.
