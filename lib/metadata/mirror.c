@@ -1356,8 +1356,8 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	 * create and initialize mirror log
 	 */
 	if (log_count &&
-	    !(log_lv = _set_up_mirror_log(cmd, ah, lv, log_count,
-					  region_size, alloc, 0)))
+	    !(log_lv = _set_up_mirror_log(cmd, ah, lv, log_count, region_size,
+					  alloc, mirror_in_sync())))
 		return_0;
 
 	/* The log initialization involves vg metadata commit.
@@ -1427,7 +1427,10 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 	 * the global mirror_in_sync status. As we are adding
 	 * a new mirror, it should be set as 'out-of-sync'
 	 * so that the sync starts. */
-	if (!log_count)
+	/* However, MIRROR_SKIP_INIT_SYNC even overrides it. */
+	if (flags & MIRROR_SKIP_INIT_SYNC)
+		init_mirror_in_sync(1);
+	else if (!log_count)
 		init_mirror_in_sync(0);
 
 	if (flags & MIRROR_BY_SEG) {
