@@ -463,16 +463,14 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	/*
 	 * Read ahead.
 	 */
-	if (arg_count(cmd, readahead_ARG)) {
-		lp->read_ahead = arg_uint_value(cmd, readahead_ARG, 0);
-		pagesize = lvm_getpagesize() >> SECTOR_SHIFT;
-		if (lp->read_ahead != DM_READ_AHEAD_AUTO &&
-		    lp->read_ahead != DM_READ_AHEAD_NONE &&
-		    lp->read_ahead % pagesize) {
-			lp->read_ahead = (lp->read_ahead / pagesize) * pagesize;
-			log_verbose("Rounding down readahead to %u sectors, a multiple "
-				    "of page size %u.", lp->read_ahead, pagesize);
-		}
+	lp->read_ahead = arg_uint_value(cmd, readahead_ARG, DM_READ_AHEAD_NONE);
+	pagesize = lvm_getpagesize() >> SECTOR_SHIFT;
+	if (lp->read_ahead != DM_READ_AHEAD_AUTO &&
+	    lp->read_ahead != DM_READ_AHEAD_NONE &&
+	    lp->read_ahead % pagesize) {
+		lp->read_ahead = (lp->read_ahead / pagesize) * pagesize;
+		log_verbose("Rounding down readahead to %u sectors, a multiple "
+			    "of page size %u.", lp->read_ahead, pagesize);
 	}
 
 	/*
@@ -547,6 +545,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (lp->read_ahead != DM_READ_AHEAD_AUTO &&
+	    lp->read_ahead != DM_READ_AHEAD_NONE &&
 	    (vg->fid->fmt->features & FMT_RESTRICTED_READAHEAD) &&
 	    (lp->read_ahead < 2 || lp->read_ahead > 120)) {
 		log_error("Metadata only supports readahead values between 2 and 120.");
