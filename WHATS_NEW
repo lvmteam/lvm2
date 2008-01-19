@@ -1,3 +1,6 @@
+Version 2.02.32 -
+===================================
+
 Version 2.02.31 - 19th January 2008
 ===================================
   Fix lvcreate --nosync not to wait for non-happening sync. (2.02.30)
