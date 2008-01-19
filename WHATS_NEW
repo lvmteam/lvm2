@@ -1,8 +1,8 @@
-Version 2.02.31 -
+Version 2.02.31 - 19th January 2008
 ===================================
   Fix lvcreate --nosync not to wait for non-happening sync. (2.02.30)
   Add very_verbose lvconvert messages.
-  Avoid error message when using default setting of lvcreate -M1. (2.02.30)
+  Avoid error message when using default setting of lvcreate -M1. (2.02.29)
 
 Version 2.02.30 - 17th January 2008
 ===================================
