@@ -260,16 +260,16 @@ static void _display_fields(struct dm_report *rh)
 			desc = " ";
 		if (desc != last_desc) {
 			if (*last_desc)
-				log_print(" ");
-			log_print("%s Fields", desc);
-			log_print("%*.*s", (int) strlen(desc) + 7,
-				  (int) strlen(desc) + 7,
-				  "------------------------------------------");
+				log_warn(" ");
+			log_warn("%s Fields", desc);
+			log_warn("%*.*s", (int) strlen(desc) + 7,
+				 (int) strlen(desc) + 7,
+				 "------------------------------------------");
 				  
 		}
 
 		/* FIXME Add line-wrapping at terminal width (or 80 cols) */
-		log_print("  %-*s - %s", (int) id_len, rh->fields[f].id, rh->fields[f].desc);
+		log_warn("  %-*s - %s", (int) id_len, rh->fields[f].id, rh->fields[f].desc);
 		last_desc = desc;
 	}
 }
@@ -444,7 +444,7 @@ static int _parse_options(struct dm_report *rh, const char *format)
 
 		if (!_field_match(rh, ws, (size_t) (we - ws))) {
 			_display_fields(rh);
-			log_print(" ");
+			log_warn(" ");
 			if (strcasecmp(ws, "help") && strcmp(ws, "?"))
 				log_error("Unrecognised field: %.*s",
 					  (int) (we - ws), ws);

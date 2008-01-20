@@ -1,5 +1,6 @@
 Version 1.02.25 - 
 ====================================
+  Use log_warn for reporting field help text instead of log_print.
   Change cluster mirror log type name (s/clustered_/clustered-/)
 
 Version 1.02.24 - 20th December 2007
