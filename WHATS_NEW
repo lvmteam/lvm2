@@ -1,5 +1,6 @@
 Version 2.02.32 -
 ===================================
+  Fix pvs, vgs, lvs error exit status on some error paths.
 
 Version 2.02.31 - 19th January 2008
 ===================================

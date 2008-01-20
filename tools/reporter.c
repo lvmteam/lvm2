@@ -240,13 +240,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		opts = arg_str_value(cmd, options_ARG, "");
 		if (!opts || !*opts) {
 			log_error("Invalid options string: %s", opts);
-			return 0;
+			return EINVALID_CMD_LINE;
 		}
 		if (*opts == '+') {
 			if (!(str = dm_pool_alloc(cmd->mem,
 					 strlen(options) + strlen(opts) + 1))) {
 				log_error("options string allocation failed");
-				return 0;
+				return ECMD_FAILED;
 			}
 			strcpy(str, options);
 			strcat(str, ",");
@@ -273,8 +273,10 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	if (!(report_handle = report_init(cmd, options, keys, &report_type,
 					  separator, aligned, buffered,
-					  headings)))
-		return_0;
+					  headings))) {
+		stack;
+		return ECMD_FAILED;
+	}
 
 	/* Ensure options selected are compatible */
 	if (report_type & SEGS)
@@ -284,7 +286,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	if ((report_type & LVS) && (report_type & PVS) && !args_are_pvs) {
 		log_error("Can't report LV and PV fields at the same time");
 		dm_report_free(report_handle);
-		return 0;
+		return ECMD_FAILED;
 	}
 
 	/* Change report type if fields specified makes this necessary */
