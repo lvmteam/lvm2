@@ -361,7 +361,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* Remove EXPORTED flag from new VG */
-	if (!(vg_to = vg_lock_and_read(cmd, vg_name_to, NULL, LCK_NONE, 0,
+	if (!test_mode() &&
+	    !(vg_to = vg_lock_and_read(cmd, vg_name_to, NULL, LCK_NONE, 0,
 				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
 		log_error("Volume group \"%s\" became inconsistent: please "
 			  "fix manually", vg_name_to);
