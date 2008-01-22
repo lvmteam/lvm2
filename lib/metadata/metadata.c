@@ -1086,7 +1086,7 @@ int vg_remove(struct volume_group *vg)
 /*
  * Determine whether two vgs are compatible for merging.
  */
-int vgs_are_compatible(struct cmd_context *cmd,
+int vgs_are_compatible(struct cmd_context *cmd __attribute((unused)),
 		       struct volume_group *vg_from,
 		       struct volume_group *vg_to)
 {
