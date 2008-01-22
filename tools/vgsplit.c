@@ -210,6 +210,17 @@ static int _move_mirrors(struct volume_group *vg_from,
 	return 1;
 }
 
+/*
+ * Has the user given an option related to a new vg as the split destination?
+ */
+static int new_vg_option_specified(struct cmd_context *cmd)
+{
+	return(arg_count(cmd, clustered_ARG) ||
+	       arg_count(cmd, alloc_ARG) ||
+	       arg_count(cmd, maxphysicalvolumes_ARG) ||
+	       arg_count(cmd, maxlogicalvolumes_ARG));
+}
+
 int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct vgcreate_params vp_new;
@@ -253,7 +264,11 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
 				      LCK_VG_WRITE | LCK_NONBLOCK,
 				      0, 0))) {
-		log_warn("Volume group \"%s\" already exists", vg_name_to);
+		if (new_vg_option_specified(cmd)) {
+			log_error("Volume group \"%s\" exists, but new VG "
+				    "option specified", vg_name_to);
+			goto error;
+		}
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto error;
 	} else {

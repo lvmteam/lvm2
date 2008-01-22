@@ -23,6 +23,9 @@ cleanup_()
   rm -f "$f1" "$f2" "$f3" "$f4"
 }
 
+# FIXME: paramaterize lvm1 vs lvm2 metadata; most of these tests should run
+# fine with lvm1 metadata as well; for now, just add disks 5 and 6 as lvm1
+# metadata
 test_expect_success \
   'set up temp files, loopback devices, PVs, vgnames' \
   'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
@@ -48,20 +51,6 @@ test_expect_success \
    vgremove $vg1 &&
    vgremove $vg2'
 
-#test_expect_success \
-# 'vgcreate accepts 8.00M physicalextentsize for VG' \
-#  'vgcreate $vg --physicalextentsize 8.00M $d1 $d2 &&
-#   check_vg_field_ $vg vg_extent_size 8.00M &&
-#   vgremove $vg'
-
-test_expect_success \
-  'vgsplit accepts 8.00M physicalextentsize for new VG' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgsplit --physicalextentsize 8.00M $vg1 $vg2 $d1 &&
-   check_vg_field_ $vg2 vg_extent_size 8.00M &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
 test_expect_success \
   'vgsplit accepts --maxphysicalvolumes 128 on new VG' \
   'vgcreate $vg1 $d1 $d2 &&
@@ -79,22 +68,64 @@ test_expect_success \
    vgremove $vg2'
 
 test_expect_success \
-  'vgsplit rejects vgs with incompatible extent_size' \
-  'vgcreate --physicalextentsize 4M $vg1 $d1 $d2 &&
-   vgcreate --physicalextentsize 8M $vg2 $d3 $d4 &&
-   vgsplit $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Extent sizes differ" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
   'vgsplit rejects split because max_pv of destination would be exceeded' \
   'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
    vgsplit $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$?; test $status = 5 &&
    grep "^  Maximum number of physical volumes (2) exceeded" err &&
+   vgremove $vg2 &&
+   vgremove $vg1'
+
+test_expect_success \
+  'vgsplit rejects split because maxphysicalvolumes given with existing vg' \
+  'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
+   vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
+   vgsplit --maxphysicalvolumes 2 $vg1 $vg2 $d1 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
+   vgremove $vg2 &&
+   vgremove $vg1'
+
+test_expect_success \
+  'vgsplit rejects split because maxlogicalvolumes given with existing vg' \
+  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
+   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
+   vgsplit --maxlogicalvolumes 2 $vg1 $vg2 $d1 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
+   vgremove $vg2 &&
+   vgremove $vg1'
+
+test_expect_success \
+  'vgsplit rejects split because alloc given with existing vg' \
+  'vgcreate --alloc cling $vg1 $d1 $d2 &&
+   vgcreate --alloc cling $vg2 $d3 $d4 &&
+   vgsplit --alloc cling $vg1 $vg2 $d1 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
+   vgremove $vg2 &&
+   vgremove $vg1'
+
+test_expect_success \
+  'vgsplit rejects split because clustered given with existing vg' \
+  'vgcreate --clustered n $vg1 $d1 $d2 &&
+   vgcreate --clustered n $vg2 $d3 $d4 &&
+   vgsplit --clustered n $vg1 $vg2 $d1 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
+   vgremove $vg2 &&
+   vgremove $vg1'
+
+test_expect_success \
+  'vgsplit rejects split because metadata types differ' \
+  'pvcreate -ff -M1 $d3 $d4 &&
+   pvcreate -ff -M2 $d1 $d2 &&
+   vgcreate -M1 $vg1 $d3 $d4 &&
+   vgcreate -M2 $vg2 $d1 $d2 &&
+   vgsplit $vg1 $vg2 $d3 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Metadata types differ" err &&
    vgremove $vg2 &&
    vgremove $vg1'
 

@@ -1124,6 +1124,20 @@ int vgs_are_compatible(struct cmd_context *cmd,
 		return 0;
 	}
 
+	/* Metadata types must be the same */
+	if (vg_to->fid->fmt != vg_from->fid->fmt) {
+		log_error("Metadata types differ for \"%s\" and \"%s\"",
+			  vg_to->name, vg_from->name);
+		return 0;
+	}
+
+	/* Clustering attribute must be the same */
+	if ((vg_to->status & CLUSTERED) != (vg_from->status & CLUSTERED)) {
+		log_error("Clustered attribute differs for \"%s\" and \"%s\"",
+			  vg_to->name, vg_from->name);
+		return 0;
+	}
+
 	/* Check no conflicts with LV names */
 	list_iterate_items(lvl1, &vg_to->lvs) {
 		name1 = lvl1->lv->name;
