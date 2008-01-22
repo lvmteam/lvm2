@@ -135,7 +135,8 @@ test_expect_success \
 
 test_expect_success \
   'vgsplit rejects vg with active lv' \
-  'vgcreate $vg1 $d1 $d2 &&
+  'pvcreate -ff -M2 $d3 $d4 &&
+   vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
    lvcreate -l 4 -n lv1 $vg1 &&
    vgsplit $vg1 $vg2 $d1 2>err;
