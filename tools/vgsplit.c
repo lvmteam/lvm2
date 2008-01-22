@@ -229,6 +229,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	struct volume_group *vg_to, *vg_from;
 	int opt;
 	int active;
+	int existing_vg;
 
 	if (argc < 3) {
 		log_error("Existing VG, new VG and physical volumes required.");
@@ -264,6 +265,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
 				      LCK_VG_WRITE | LCK_NONBLOCK,
 				      0, 0))) {
+		existing_vg = 1;
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
 				    "option specified", vg_name_to);
@@ -272,6 +274,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto error;
 	} else {
+		existing_vg = 0;
 
 		/* Set metadata format of original VG */
 		/* FIXME: need some common logic */
@@ -284,11 +287,15 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		vp_def.alloc = vg_from->alloc;
 		vp_def.clustered = 0;
 
-		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def))
+		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def)) {
+			unlock_vg(cmd, vg_name_from);
 			return EINVALID_CMD_LINE;
+		}
 
-		if (validate_vg_create_params(cmd, &vp_new))
+		if (validate_vg_create_params(cmd, &vp_new)) {
+			unlock_vg(cmd, vg_name_from);
 			return EINVALID_CMD_LINE;
+		}
 
 		if (!(vg_to = vg_create(cmd, vg_name_to, vp_new.extent_size,
 					vp_new.max_pv, vp_new.max_lv,
@@ -371,7 +378,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	unlock_vg(cmd, vg_name_from);
 	unlock_vg(cmd, vg_name_to);
 
-	log_print("Volume group \"%s\" successfully split from \"%s\"",
+	log_print("%s volume group \"%s\" successfully split from \"%s\"",
+		  existing_vg ? "Existing" : "New",
 		  vg_to->name, vg_from->name);
 	return ECMD_PROCESSED;
 

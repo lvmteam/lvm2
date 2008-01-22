@@ -39,7 +39,9 @@ test_expect_success \
 test_expect_success \
   'vgsplit accepts new vg as destination of split' \
   'vgcreate $vg1 $d1 $d2 &&
-   vgsplit $vg1 $vg2 $d1 &&
+   vgsplit $vg1 $vg2 $d1 1>err;
+   status=$?; echo status=$?; test $status = 0 &&
+   grep "New volume group \"$vg2\" successfully split from \"$vg1\"" err &&
    vgremove $vg1 &&
    vgremove $vg2'
 
@@ -47,7 +49,9 @@ test_expect_success \
   'vgsplit accepts existing vg as destination of split' \
   'vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
-   vgsplit $vg1 $vg2 $d1 &&
+   vgsplit $vg1 $vg2 $d1 1>err;
+   status=$?; echo status=$?; test $status = 0 &&
+   grep "Existing volume group \"$vg2\" successfully split from \"$vg1\"" err &&
    vgremove $vg1 &&
    vgremove $vg2'
 
