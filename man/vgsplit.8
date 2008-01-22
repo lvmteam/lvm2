@@ -15,8 +15,6 @@ vgsplit \- split a volume group into two
 .IR type ]
 .RB [ -p | \-\-maxphysicalvolumes
 .IR MaxPhysicalVolumes ]
-.RB [ \-s | \-\-physicalextentsize
-.IR PhysicalExtentSize [ \fBkKmMgGtT\fR ]]
 .RB [ \-t | \-\-test ]
 .RB [ \-v | \-\-verbose ]
 SourceVolumeGroupName DestinationVolumeGroupName
@@ -35,17 +33,18 @@ If
 does not exist, a new volume group will be created.  The default attributes
 for the new volume group can be specified with \fB\-\-alloc\fR,
 \fB\-\-clustered\fR, \fB\-\-maxlogicalvolumes\fR, \fB\-\-metadatatype\fR,
-\fB\-\-maxphysicalvolumes\fR, and \fB\-\-physicalextentsize\fR
-(see \fBvgcreate(8)\fR for a description of these options).
-If any of these options are not given, the default attribute(s) are taken
-from
+and \fB\-\-maxphysicalvolumes\fR (see \fBvgcreate(8)\fR for a description
+of these options).  If any of these options are not given, default
+attribute(s) are taken from
 .I SourceVolumeGroupName\fP.
 
 If
 .I DestinationVolumeGroupName
 does exist, it will be checked for compatibility with
 .I SourceVolumeGroupName
-before the physical volumes are moved.
+before the physical volumes are moved. Specifying any of the above default
+volume group attributes with an existing destination volume group is an error,
+and no split will occur.
 
 Logical Volumes cannot be split between Volume Groups.
 Each existing Logical Volume must be entirely on the Physical Volumes forming

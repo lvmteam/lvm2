@@ -871,7 +871,7 @@ xx(vgscan,
    ignorelockingfailure_ARG, mknodes_ARG, partial_ARG)
 
 xx(vgsplit,
-   "Move physical volumes into a new volume group",
+   "Move physical volumes into a new or existing volume group",
    "vgsplit " "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
@@ -881,7 +881,6 @@ xx(vgsplit,
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
    "\t[-M|--metadatatype 1|2] " "\n"
    "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
-   "\t[-s|--physicalextentsize PhysicalExtentSize[kKmMgGtTpPeE]] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
@@ -890,7 +889,7 @@ xx(vgsplit,
 
    alloc_ARG, autobackup_ARG, clustered_ARG,
    maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
-   metadatatype_ARG, physicalextentsize_ARG, test_ARG)
+   metadatatype_ARG, test_ARG)
 
 xx(version,
    "Display software and driver version information",
