@@ -355,17 +355,20 @@ static int _merge_mirror_images(struct logical_volume *lv,
 }
 
 /* Unlink the relationship between the segment and its log_lv */
-static void _remove_mirror_log(struct lv_segment *mirrored_seg)
+struct logical_volume *detach_mirror_log(struct lv_segment *mirrored_seg)
 {
 	struct logical_volume *log_lv;
 
 	if (!mirrored_seg->log_lv)
-		return;
+		return NULL;
 
 	log_lv = mirrored_seg->log_lv;
 	mirrored_seg->log_lv = NULL;
+	log_lv->status |= VISIBLE_LV;
 	log_lv->status &= ~MIRROR_LOG;
 	remove_seg_from_segs_using_this_lv(log_lv, mirrored_seg);
+
+	return log_lv;
 }
 
 /* Check if mirror image LV is removable with regard to given removable_pvs */
@@ -438,7 +441,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	uint32_t m;
 	uint32_t s;
 	struct logical_volume *sub_lv;
-	struct logical_volume *log_lv = NULL;
+	struct logical_volume *detached_log_lv = NULL;
 	struct logical_volume *lv1 = NULL;
 	struct lv_segment *mirrored_seg = first_seg(lv);
 	struct lv_segment_area area;
@@ -495,22 +498,17 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	}
 	mirrored_seg->area_count = new_area_count;
 
-	/* Save log_lv as mirrored_seg may not be available after
-	 * remove_layer_from_lv(), */
-	log_lv = mirrored_seg->log_lv;
-
 	/* If no more mirrors, remove mirror layer */
 	/* As an exceptional case, if the lv is temporary layer,
 	 * leave the LV as mirrored and let the lvconvert completion
 	 * to remove the layer. */
 	if (new_area_count == 1 && !is_temporary_mirror_layer(lv)) {
 		lv1 = seg_lv(mirrored_seg, 0);
-		_remove_mirror_log(mirrored_seg);
+		detached_log_lv = detach_mirror_log(mirrored_seg);
 		if (!remove_layer_from_lv(lv, lv1))
 			return_0;
 		lv->status &= ~MIRRORED;
 		lv->status &= ~MIRROR_NOTSYNCED;
-		remove_log = 1;
 		if (collapse && !_merge_mirror_images(lv, &tmp_orphan_lvs)) {
 			log_error("Failed to add mirror images");
 			return 0;
@@ -520,17 +518,13 @@ static int _remove_mirror_images(struct logical_volume *lv,
 
 		/* All mirror images are gone.
 		 * It can happen for vgreduce --removemissing. */
-		_remove_mirror_log(mirrored_seg);
+		detached_log_lv = detach_mirror_log(mirrored_seg);
 		lv->status &= ~MIRRORED;
 		lv->status &= ~MIRROR_NOTSYNCED;
 		if (!replace_lv_with_error_segment(lv))
 			return_0;
-		remove_log = 1;
 	} else if (remove_log)
-		_remove_mirror_log(mirrored_seg);
-
-	if (remove_log && log_lv)
-		log_lv->status |= VISIBLE_LV;
+		detached_log_lv = detach_mirror_log(mirrored_seg);
 
 	/*
 	 * To successfully remove these unwanted LVs we need to
@@ -565,19 +559,20 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	if (!collapse) {
 		list_iterate_items(lvl, &tmp_orphan_lvs)
 			if (!_delete_lv(lv, lvl->lv))
-				return 0;
+				return_0;
 	}
 
 	if (lv1 && !_delete_lv(lv, lv1))
-		return 0;
+		return_0;
 
-	if (remove_log && log_lv && !_delete_lv(lv, log_lv))
-		return 0;
+	if (detached_log_lv && !_delete_lv(lv, detached_log_lv))
+		return_0;
 
 	/* Mirror with only 1 area is 'in sync'. */
-	if (!remove_log && log_lv &&
-	    new_area_count == 1 && is_temporary_mirror_layer(lv)) {
-		if (!_init_mirror_log(lv->vg->cmd, log_lv, 1, &lv->tags, 0)) {
+	if (new_area_count == 1 && is_temporary_mirror_layer(lv)) {
+		if (first_seg(lv)->log_lv &&
+		    !_init_mirror_log(lv->vg->cmd, first_seg(lv)->log_lv,
+				      1, &lv->tags, 0)) {
 			/* As a result, unnecessary sync may run after
 			 * collapsing. But safe.*/
 			log_error("Failed to initialize log device");
@@ -1245,12 +1240,12 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 	return log_lv;
 }
 
-static void _add_mirror_log(struct logical_volume *lv,
-			    struct logical_volume *log_lv)
+int attach_mirror_log(struct lv_segment *seg, struct logical_volume *log_lv)
 {
-	first_seg(lv)->log_lv = log_lv;
+	seg->log_lv = log_lv;
 	log_lv->status |= MIRROR_LOG;
-	add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
+	log_lv->status &= ~VISIBLE_LV;
+	return add_seg_to_segs_using_this_lv(log_lv, seg);
 }
 
 int add_mirror_log(struct cmd_context *cmd,
@@ -1310,7 +1305,8 @@ int add_mirror_log(struct cmd_context *cmd,
 					  region_size, alloc, in_sync)))
 		return_0;
 
-	_add_mirror_log(lv, log_lv);
+	if (!attach_mirror_log(first_seg(lv), log_lv))
+		return_0;
 
 	alloc_destroy(ah);
 	return 1;
@@ -1392,8 +1388,8 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 		goto out_remove_imgs;
 	}
 
-	if (log_count)
-		_add_mirror_log(lv, log_lv);
+	if (log_count && !attach_mirror_log(first_seg(lv), log_lv))
+		stack;
 
 	alloc_destroy(ah);
 	return 1;

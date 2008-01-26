@@ -208,11 +208,8 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	seg->log_lv = log_lv;
 	list_init(&seg->tags);
 
-	if (log_lv) {
-		log_lv->status |= MIRROR_LOG;
-		if (!add_seg_to_segs_using_this_lv(log_lv, seg))
-			return_NULL;
-	}
+	if (log_lv && !attach_mirror_log(seg, log_lv))
+		return_NULL;
 
 	return seg;
 }
