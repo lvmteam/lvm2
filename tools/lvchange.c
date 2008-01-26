@@ -274,6 +274,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 		first_seg(lv)->log_lv = NULL;
 		log_lv->status &= ~MIRROR_LOG;
 		log_lv->status |= VISIBLE_LV;
+		remove_seg_from_segs_using_this_lv(log_lv, first_seg(lv));
 
 		if (!vg_write(lv->vg)) {
 			log_error("Failed to write intermediate VG metadata.");
@@ -281,6 +282,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 				first_seg(lv)->log_lv = log_lv;
 				log_lv->status |= MIRROR_LOG;
 				log_lv->status &= ~VISIBLE_LV;
+				add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
 				if (!activate_lv(cmd, lv))
 					stack;
 			}
@@ -295,6 +297,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 				first_seg(lv)->log_lv = log_lv;
 				log_lv->status |= MIRROR_LOG;
 				log_lv->status &= ~VISIBLE_LV;
+				add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
 				if (!activate_lv(cmd, lv))
 					stack;
 			}
@@ -326,6 +329,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 		first_seg(lv)->log_lv = log_lv;
 		log_lv->status |= MIRROR_LOG;
 		log_lv->status &= ~VISIBLE_LV;
+		add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
