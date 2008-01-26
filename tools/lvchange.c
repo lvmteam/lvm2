@@ -271,21 +271,14 @@ static int lvchange_resync(struct cmd_context *cmd,
 
 	if (log_lv) {
 		/* Separate mirror log so we can clear it */
-		first_seg(lv)->log_lv = NULL;
-		log_lv->status &= ~MIRROR_LOG;
-		log_lv->status |= VISIBLE_LV;
-		remove_seg_from_segs_using_this_lv(log_lv, first_seg(lv));
+		detach_mirror_log(first_seg(lv));
 
 		if (!vg_write(lv->vg)) {
 			log_error("Failed to write intermediate VG metadata.");
-			if (active) {
-				first_seg(lv)->log_lv = log_lv;
-				log_lv->status |= MIRROR_LOG;
-				log_lv->status &= ~VISIBLE_LV;
-				add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
-				if (!activate_lv(cmd, lv))
-					stack;
-			}
+			if (!attach_mirror_log(first_seg(lv), log_lv))
+				stack;
+			if (active && !activate_lv(cmd, lv))
+				stack;
 			return 0;
 		}
 
@@ -293,14 +286,10 @@ static int lvchange_resync(struct cmd_context *cmd,
 
 		if (!vg_commit(lv->vg)) {
 			log_error("Failed to commit intermediate VG metadata.");
-			if (active) {
-				first_seg(lv)->log_lv = log_lv;
-				log_lv->status |= MIRROR_LOG;
-				log_lv->status &= ~VISIBLE_LV;
-				add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
-				if (!activate_lv(cmd, lv))
-					stack;
-			}
+			if (!attach_mirror_log(first_seg(lv), log_lv))
+				stack;
+			if (active && !activate_lv(cmd, lv))
+				stack;
 			return 0;
 		}
 
@@ -326,10 +315,8 @@ static int lvchange_resync(struct cmd_context *cmd,
 		}
 
 		/* Put mirror log back in place */
-		first_seg(lv)->log_lv = log_lv;
-		log_lv->status |= MIRROR_LOG;
-		log_lv->status &= ~VISIBLE_LV;
-		add_seg_to_segs_using_this_lv(log_lv, first_seg(lv));
+		if (!attach_mirror_log(first_seg(lv), log_lv))
+			stack;
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
