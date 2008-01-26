@@ -1,5 +1,6 @@
 Version 2.02.32 -
 ===================================
+  Fix internal metadata corruption in lvchange --resync. (2.02.30)
   Fix new parameter validation in vgsplit and test mode. (2.02.30)
   Remove redundant cnxman-socket.h file from clvmd directory.
   Fix pvs, vgs, lvs error exit status on some error paths.
