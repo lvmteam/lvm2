@@ -302,6 +302,27 @@ test_expect_failure "convert linear to 2-way mirror with 1 PV" \
 test_expect_success "(cleanup previous test)" \
   'check_and_cleanup_lvs_'
 
+# ---
+# resync
+# FIXME: using dm-delay to properly check whether the resync really started
+
+test_expect_success "force resync 2-way active mirror" \
+  'prepare_lvs_ &&
+   lvcreate -l2 -m1 -n $lv1 $vg $(pv_ 1) $(pv_ 2) $(pv_ 3):0-1 &&
+   mirrorlog_is_on_ $vg/$lv1 $(pv_ 3) &&
+   yes | lvchange --resync $vg/$lv1 &&
+   mirrorlog_is_on_ $vg/$lv1 $(pv_ 3) &&
+   check_and_cleanup_lvs_'
+
+test_expect_success "force resync 2-way inactive mirror" \
+  'prepare_lvs_ &&
+   lvcreate -l2 -m1 -n $lv1 $vg $(pv_ 1) $(pv_ 2) $(pv_ 3):0-1 &&
+   lvchange -an $vg/$lv1 &&
+   mirrorlog_is_on_ $vg/$lv1 $(pv_ 3) &&
+   lvchange --resync $vg/$lv1 &&
+   mirrorlog_is_on_ $vg/$lv1 $(pv_ 3) &&
+   check_and_cleanup_lvs_'
+
 # ---------------------------------------------------------------------
 
 test_done
