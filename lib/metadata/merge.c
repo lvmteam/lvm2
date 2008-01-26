@@ -210,17 +210,18 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 		if (seg->log_lv == lv)
 			seg_found++;
 		if (!seg_found) {
-			log_error("LV %s is used by LV %s:%" PRIu32 ", "
-				  "but missing ptr from %s to %s",
+			log_error("LV %s is used by LV %s:%" PRIu32 "-%" PRIu32
+				  ", but missing ptr from %s to %s",
 				  lv->name, seg->lv->name, seg->le,
+				  seg->le + seg->len - 1,
 				  seg->lv->name, lv->name);
 			r = 0;
 		} else if (seg_found != sl->count) {
 			log_error("Reference count mismatch: LV %s has %d "
-				  "links to LV %s:%" PRIu32
+				  "links to LV %s:%" PRIu32 "-%" PRIu32
 				  ", which has %d links",
-				  lv->name, sl->count,
-				  seg->lv->name, seg->le, seg_found);
+				  lv->name, sl->count, seg->lv->name, seg->le,
+				  seg->le + seg->len - 1, seg_found);
 			r = 0;
 		}
 	}
