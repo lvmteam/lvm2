@@ -49,6 +49,41 @@ int lvmcache_init(void)
 	return 1;
 }
 
+static void _update_cache_info_lock_state(struct lvmcache_info *info, int locked)
+{
+	int was_locked = (info->status & CACHE_LOCKED) ? 1 : 0;
+
+	/*
+	 * Cache becomes invalid whenever lock state changes
+	 */
+	if (was_locked != locked)
+		info->status |= CACHE_INVALID;
+
+	if (locked)
+		info->status |= CACHE_LOCKED;
+	else
+		info->status &= ~CACHE_LOCKED;
+}
+
+static void _update_cache_vginfo_lock_state(struct lvmcache_vginfo *vginfo,
+					    int locked)
+{
+	struct lvmcache_info *info;
+
+	list_iterate_items(info, &vginfo->infos)
+		_update_cache_info_lock_state(info, locked);
+}
+
+static void _update_cache_lock_state(const char *vgname, int locked)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = vginfo_from_vgname(vgname, NULL)))
+		return;
+
+	_update_cache_vginfo_lock_state(vginfo, locked);
+}
+
 void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)))
 {
 	if (!_lock_hash && !lvmcache_init()) {
@@ -58,6 +93,8 @@ void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)
 
 	if (!dm_hash_insert(_lock_hash, vgname, (void *) 1))
 		log_error("Cache locking failure for %s", vgname);
+
+	_update_cache_lock_state(vgname, 1);
 
 	_vgs_locked++;
 }
@@ -72,7 +109,8 @@ int vgname_is_locked(const char *vgname)
 
 void lvmcache_unlock_vgname(const char *vgname)
 {
-	/* FIXME: Clear all CACHE_LOCKED flags in this vg */
+	_update_cache_lock_state(vgname, 0);
+
 	dm_hash_remove(_lock_hash, vgname);
 
 	/* FIXME Do this per-VG */
@@ -182,7 +220,22 @@ const char *vgname_from_vgid(struct dm_pool *mem, const char *vgid)
 	return vgname;
 }
 
-struct lvmcache_info *info_from_pvid(const char *pvid)
+static int _info_is_valid(struct lvmcache_info *info)
+{
+	if (info->status & CACHE_INVALID)
+		return 0;
+
+	if (!(info->status & CACHE_LOCKED))
+		return 0;
+
+	return 1;
+}
+
+/*
+ * If valid_only is set, data will only be returned if the cached data is
+ * known still to be valid.
+ */
+struct lvmcache_info *info_from_pvid(const char *pvid, int valid_only)
 {
 	struct lvmcache_info *info;
 	char id[ID_LEN + 1] __attribute((aligned(8)));
@@ -194,6 +247,9 @@ struct lvmcache_info *info_from_pvid(const char *pvid)
 	id[ID_LEN] = '\0';
 
 	if (!(info = dm_hash_lookup(_pvid_hash, id)))
+		return NULL;
+
+	if (valid_only && !_info_is_valid(info))
 		return NULL;
 
 	return info;
@@ -344,7 +400,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	struct lvmcache_info *info;
 
 	/* Already cached ? */
-	if ((info = info_from_pvid((char *) pvid))) {
+	if ((info = info_from_pvid((char *) pvid, 0))) {
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
@@ -355,7 +411,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	lvmcache_label_scan(cmd, 0);
 
 	/* Try again */
-	if ((info = info_from_pvid((char *) pvid))) {
+	if ((info = info_from_pvid((char *) pvid, 0))) {
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
@@ -369,7 +425,7 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	lvmcache_label_scan(cmd, 2);
 
 	/* Try again */
-	if ((info = info_from_pvid((char *) pvid))) {
+	if ((info = info_from_pvid((char *) pvid, 0))) {
 		if (label_read(info->dev, &label, UINT64_C(0))) {
 			info = (struct lvmcache_info *) label->info;
 			if (id_equal(pvid, (struct id *) &info->dev->pvid))
@@ -645,6 +701,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	info->vginfo = vginfo;
 	list_add(&vginfo->infos, &info->list);
 
+	_update_cache_vginfo_lock_state(vginfo, vgname_is_locked(vgname));
+
 	/* FIXME Check consistency of list! */
 	vginfo->fmt = info->fmt;
 
@@ -716,7 +774,7 @@ int lvmcache_update_vg(struct volume_group *vg)
 	list_iterate_items(pvl, &vg->pvs) {
 		strncpy(pvid_s, (char *) &pvl->pv->id, sizeof(pvid_s) - 1);
 		/* FIXME Could pvl->pv->dev->pvid ever be different? */
-		if ((info = info_from_pvid(pvid_s)) &&
+		if ((info = info_from_pvid(pvid_s, 0)) &&
 		    !lvmcache_update_vgname_and_id(info, vg->name,
 						   (char *) &vg->id,
 						   vg->status, NULL))
@@ -743,8 +801,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 	strncpy(pvid_s, pvid, sizeof(pvid_s));
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
 
-	if (!(existing = info_from_pvid(pvid_s)) &&
-	    !(existing = info_from_pvid(dev->pvid))) {
+	if (!(existing = info_from_pvid(pvid_s, 0)) &&
+	    !(existing = info_from_pvid(dev->pvid, 0))) {
 		if (!(label = label_create(labeller))) {
 			stack;
 			return NULL;

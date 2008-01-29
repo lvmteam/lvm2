@@ -840,7 +840,7 @@ static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint32_t count;
 	const char *pvid = (const char *)(&((struct id *) data)->uuid);
 
-	info = info_from_pvid(pvid);
+	info = info_from_pvid(pvid, 0);
 	count = info ? list_size(&info->mdas) : 0;
 
 	return _uint32_disp(rh, mem, field, &count, private);
@@ -867,7 +867,7 @@ static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 	const char *pvid = (const char *)(&((struct id *) data)->uuid);
 	struct metadata_area *mda;
 
-	info = info_from_pvid(pvid);
+	info = info_from_pvid(pvid, 0);
 
 	list_iterate_items(mda, &info->mdas) {
 		if (!mda->ops->mda_free_sectors)

@@ -391,7 +391,7 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 	}
 
       error:
-	if ((info = info_from_pvid(dev_area->dev->pvid)))
+	if ((info = info_from_pvid(dev_area->dev->pvid, 0)))
 		lvmcache_update_vgname_and_id(info, ORPHAN, ORPHAN, 0, NULL);
 
 	return NULL;
@@ -1610,7 +1610,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 	/* If new vg, add any further mdas on this PV to the fid's mda list */
 	if (vg) {
 		/* Iterate through all mdas on this PV */
-		if ((info = info_from_pvid(pv->dev->pvid))) {
+		if ((info = info_from_pvid(pv->dev->pvid, 0))) {
 			pvmdas = &info->mdas;
 			list_iterate_items(mda, pvmdas) {
 				mda_count++;

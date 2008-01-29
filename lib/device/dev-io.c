@@ -523,7 +523,7 @@ static int _dev_close(struct device *dev, int immediate)
 	/* Close unless device is known to belong to a locked VG */
 	if (immediate ||
 	    (dev->open_count < 1 && 
-	     (!(info = info_from_pvid(dev->pvid)) ||
+	     (!(info = info_from_pvid(dev->pvid, 0)) ||
 	      !info->vginfo ||
 	      !vgname_is_locked(info->vginfo->vgname))))
 		_close(dev);
