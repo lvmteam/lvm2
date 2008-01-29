@@ -1,4 +1,4 @@
-Version 2.02.32 -
+Version 2.02.32 - 29th January 2008
 ===================================
   Fix two check_lv_segments error messages to show whole segment.
   Refactor mirror log attachment code.
