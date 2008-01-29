@@ -86,7 +86,7 @@ const struct format_type *fmt_from_vgname(const char *vgname, const char *vgid);
 struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname,
 					   const char *vgid);
 struct lvmcache_vginfo *vginfo_from_vgid(const char *vgid);
-struct lvmcache_info *info_from_pvid(const char *pvid);
+struct lvmcache_info *info_from_pvid(const char *pvid, int valid_only);
 const char *vgname_from_vgid(struct dm_pool *mem, const char *vgid);
 struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid);
 int vgs_locked(void);

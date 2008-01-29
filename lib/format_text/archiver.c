@@ -305,7 +305,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 	/* Add any metadata areas on the PVs */
 	list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
-		if (!(info = info_from_pvid(pv->dev->pvid))) {
+		if (!(info = info_from_pvid(pv->dev->pvid, 0))) {
 			log_error("PV %s missing from cache",
 				  pv_dev_name(pv));
 			return 0;
