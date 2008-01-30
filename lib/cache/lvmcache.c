@@ -225,6 +225,16 @@ static int _info_is_valid(struct lvmcache_info *info)
 	if (info->status & CACHE_INVALID)
 		return 0;
 
+	/*
+	 * The caller must hold the VG lock to manipulate metadata.
+	 * In a cluster, remote nodes sometimes read metadata in the
+	 * knowledge that the controlling node is holding the lock.
+	 * So if the VG appears to be unlocked here, it should be safe
+	 * to use the cached value.
+	 */
+	if (info->vginfo && !vgname_is_locked(info->vginfo->vgname))
+		return 1;
+
 	if (!(info->status & CACHE_LOCKED))
 		return 0;
 
