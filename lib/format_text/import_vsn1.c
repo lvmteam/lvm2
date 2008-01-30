@@ -136,10 +136,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	uint64_t size;
 
 	if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
-	    !(pvl->pv = dm_pool_zalloc(mem, sizeof(*pvl->pv)))) {
-		stack;
-		return 0;
-	}
+	    !(pvl->pv = dm_pool_zalloc(mem, sizeof(*pvl->pv))))
+		return_0;
 
 	pv = pvl->pv;
 
@@ -147,10 +145,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	 * Add the pv to the pv hash for quick lookup when we read
 	 * the lv segments.
 	 */
-	if (!dm_hash_insert(pv_hash, pvn->key, pv)) {
-		stack;
-		return 0;
-	}
+	if (!dm_hash_insert(pv_hash, pvn->key, pv))
+		return_0;
 
 	if (!(pvn = pvn->child)) {
 		log_error("Empty pv section.");
@@ -180,10 +176,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 			return 0;
 	}
 
-	if (!(pv->vg_name = dm_pool_strdup(mem, vg->name))) {
-		stack;
-		return 0;
-	}
+	if (!(pv->vg_name = dm_pool_strdup(mem, vg->name)))
+		return_0;
 
 	memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
 
@@ -250,10 +244,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
                 }
         }
 
-	if (!alloc_pv_segment_whole_pv(mem, pv)) {
-		stack;
-		return 0;
-	}
+	if (!alloc_pv_segment_whole_pv(mem, pv))
+		return_0;
 
 	vg->pv_count++;
 	list_add(&vg->pvs, &pvl->list);
@@ -316,16 +308,12 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 		segtype_str = cv->v.str;
 	}
 
-	if (!(segtype = get_segtype_from_string(vg->cmd, segtype_str))) {
-		stack;
-		return 0;
-	}
+	if (!(segtype = get_segtype_from_string(vg->cmd, segtype_str)))
+		return_0;
 
 	if (segtype->ops->text_import_area_count &&
-	    !segtype->ops->text_import_area_count(sn, &area_count)) {
-		stack;
-		return 0;
-	}
+	    !segtype->ops->text_import_area_count(sn, &area_count))
+		return_0;
 
 	if (!(seg = alloc_lv_segment(mem, segtype, lv, start_extent,
 				     extent_count, 0, 0, NULL, area_count,
@@ -335,10 +323,8 @@ static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
 	}
 
 	if (seg->segtype->ops->text_import &&
-	    !seg->segtype->ops->text_import(seg, sn, pv_hash)) {
-		stack;
-		return 0;
-	}
+	    !seg->segtype->ops->text_import(seg, sn, pv_hash))
+		return_0;
 
 	/* Optional tags */
 	if ((cn = find_config_node(sn, "tags")) &&
@@ -403,10 +389,8 @@ int text_import_areas(struct lv_segment *seg, const struct config_node *sn,
 
 		/* FIXME Cope if LV not yet read in */
 		if ((pv = dm_hash_lookup(pv_hash, cv->v.str))) {
-			if (!set_lv_segment_area_pv(seg, s, pv, (uint32_t) cv->next->v.i)) {
-				stack;
-				return 0;
-			}
+			if (!set_lv_segment_area_pv(seg, s, pv, (uint32_t) cv->next->v.i))
+				return_0;
 		} else if ((lv1 = find_lv(seg->lv->vg, cv->v.str))) {
 			if (!set_lv_segment_area_lv(seg, s, lv1,
 						    (uint32_t) cv->next->v.i,
@@ -447,10 +431,8 @@ static int _read_segments(struct dm_pool *mem, struct volume_group *vg,
 		 * All sub-sections are assumed to be segments.
 		 */
 		if (!sn->v) {
-			if (!_read_segment(mem, vg, lv, sn, pv_hash)) {
-				stack;
-				return 0;
-			}
+			if (!_read_segment(mem, vg, lv, sn, pv_hash))
+				return_0;
 
 			count++;
 		}
@@ -475,18 +457,14 @@ static int _read_segments(struct dm_pool *mem, struct volume_group *vg,
 	/*
 	 * Check there are no gaps or overlaps in the lv.
 	 */
-	if (!check_lv_segments(lv, 0)) {
-		stack;
-		return 0;
-	}
+	if (!check_lv_segments(lv, 0))
+		return_0;
 
 	/*
 	 * Merge segments in case someones been editing things by hand.
 	 */
-	if (!lv_merge_segments(lv)) {
-		stack;
-		return 0;
-	}
+	if (!lv_merge_segments(lv))
+		return_0;
 
 	return 1;
 }
@@ -502,17 +480,13 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 	struct config_node *cn;
 
 	if (!(lvl = dm_pool_zalloc(mem, sizeof(*lvl))) ||
-	    !(lvl->lv = dm_pool_zalloc(mem, sizeof(*lvl->lv)))) {
-		stack;
-		return 0;
-	}
+	    !(lvl->lv = dm_pool_zalloc(mem, sizeof(*lvl->lv))))
+		return_0;
 
 	lv = lvl->lv;
 
-	if (!(lv->name = dm_pool_strdup(mem, lvn->key))) {
-		stack;
-		return 0;
-	}
+	if (!(lv->name = dm_pool_strdup(mem, lvn->key)))
+		return_0;
 
 	if (!(lvn = lvn->child)) {
 		log_error("Empty logical volume section.");
@@ -538,10 +512,8 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 		}
 
 		lv->alloc = get_alloc_from_string(cv->v.str);
-		if (lv->alloc == ALLOC_INVALID) {
-			stack;
-			return 0;
-		}
+		if (lv->alloc == ALLOC_INVALID)
+			return_0;
 	}
 
 	if (!_read_int32(lvn, "read_ahead", &lv->read_ahead))
@@ -611,10 +583,8 @@ static int _read_lvsegs(struct format_instance *fid __attribute((unused)),
 
 	memcpy(&lv->lvid.id[0], &lv->vg->id, sizeof(lv->lvid.id[0]));
 
-	if (!_read_segments(mem, vg, lv, lvn, pv_hash)) {
-		stack;
-		return 0;
-	}
+	if (!_read_segments(mem, vg, lv, lvn, pv_hash))
+		return_0;
 
 	lv->size = (uint64_t) lv->le_count * (uint64_t) vg->extent_size;
 
@@ -664,10 +634,8 @@ static int _read_sections(struct format_instance *fid,
 	}
 
 	for (n = n->child; n; n = n->sib) {
-		if (!fn(fid, mem, vg, n, vgn, pv_hash)) {
-			stack;
-			return 0;
-		}
+		if (!fn(fid, mem, vg, n, vgn, pv_hash))
+			return_0;
 	}
 
 	return 1;
@@ -689,10 +657,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		return NULL;
 	}
 
-	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg)))) {
-		stack;
-		return NULL;
-	}
+	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
+		return_NULL;
 	vg->cmd = fid->fmt->cmd;
 
 	/* FIXME Determine format type from file contents */
@@ -770,10 +736,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		}
 
 		vg->alloc = get_alloc_from_string(cv->v.str);
-		if (vg->alloc == ALLOC_INVALID) {
-			stack;
-			return 0;
-		}
+		if (vg->alloc == ALLOC_INVALID)
+			return_0;
 	}
 
 	/*

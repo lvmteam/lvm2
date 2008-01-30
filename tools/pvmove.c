@@ -71,18 +71,13 @@ static struct list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 	struct list *allocatable_pvs, *pvht, *pvh;
 	struct pv_list *pvl;
 
-	if (argc) {
-		if (!(allocatable_pvs = create_pv_list(cmd->mem, vg, argc,
-						       argv, 1))) {
-			stack;
-			return NULL;
-		}
-	} else {
-		if (!(allocatable_pvs = clone_pv_list(cmd->mem, &vg->pvs))) {
-			stack;
-			return NULL;
-		}
-	}
+	if (argc)
+		allocatable_pvs = create_pv_list(cmd->mem, vg, argc, argv, 1);
+	else
+		allocatable_pvs = clone_pv_list(cmd->mem, &vg->pvs);
+
+	if (!allocatable_pvs)
+		return_NULL;
 
 	list_iterate_safe(pvh, pvht, allocatable_pvs) {
 		pvl = list_item(pvh, struct pv_list);
@@ -197,10 +192,8 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			continue;
 		}
 		if (!_insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
-					    *lvs_changed)) {
-			stack;
-			return NULL;
-		}
+					    *lvs_changed))
+			return_NULL;
 	}
 
 	/* Is temporary mirror empty? */
@@ -236,10 +229,8 @@ static int _update_metadata(struct cmd_context *cmd, struct volume_group *vg,
 	backup(vg);
 
 	/* Suspend lvs_changed */
-	if (!suspend_lvs(cmd, lvs_changed)) {
-		stack;
-		return 0;
-	}
+	if (!suspend_lvs(cmd, lvs_changed))
+		return_0;
 
 	/* Suspend mirrors on subsequent calls */
 	if (!first_time) {

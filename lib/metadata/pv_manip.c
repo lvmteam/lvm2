@@ -53,10 +53,8 @@ int alloc_pv_segment_whole_pv(struct dm_pool *mem, struct physical_volume *pv)
 		return 1;
 
 	/* FIXME Cope with holes in PVs */
-	if (!(peg = _alloc_pv_segment(mem, pv, 0, pv->pe_count, NULL, 0))) {
-		stack;
-		return 0;
-	}
+	if (!(peg = _alloc_pv_segment(mem, pv, 0, pv->pe_count, NULL, 0)))
+		return_0;
 
 	list_add(&pv->segments, &peg->list);
 
@@ -72,10 +70,8 @@ int peg_dup(struct dm_pool *mem, struct list *peg_new, struct list *peg_old)
 	list_iterate_items(pego, peg_old) {
 		if (!(peg = _alloc_pv_segment(mem, pego->pv, pego->pe,
 					      pego->len, pego->lvseg,
-					      pego->lv_area))) {
-			stack;
-			return 0;
-		} 
+					      pego->lv_area)))
+			return_0;
 		list_add(peg_new, &peg->list);
 	}
 
@@ -93,10 +89,8 @@ static int _pv_split_segment(struct physical_volume *pv, struct pv_segment *peg,
 
 	if (!(peg_new = _alloc_pv_segment(pv->fmt->cmd->mem, peg->pv, pe,
 					  peg->len + peg->pe - pe,
-					  NULL, 0))) {
-		stack;
-		return 0;
-	}
+					  NULL, 0)))
+		return_0;
 
 	peg->len = peg->len - peg_new->len;
 
@@ -130,10 +124,8 @@ int pv_split_segment(struct physical_volume *pv, uint32_t pe)
 	if (pe == peg->pe)
 		return 1;
 
-	if (!_pv_split_segment(pv, peg, pe)) {
-		stack;
-		return 0;
-	}
+	if (!_pv_split_segment(pv, peg, pe))
+		return_0;
 
 	return 1;
 }
@@ -155,10 +147,8 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 		return &null_pv_segment;
 
 	if (!pv_split_segment(pv, pe) || 
-	    !pv_split_segment(pv, pe + area_len)) {
-		stack;
-		return NULL;
-	}
+	    !pv_split_segment(pv, pe + area_len))
+		return_NULL;
 
 	if (!(peg = find_peg_by_pe(pv, pe))) {
 		log_error("Missing PV segment on %s at %u.",
@@ -196,10 +186,8 @@ int release_pv_segment(struct pv_segment *peg, uint32_t area_reduction)
 	}
 
 	if (!pv_split_segment(peg->pv, peg->pe + peg->lvseg->area_len -
-				       area_reduction)) {
-		stack;
-		return 0;
-	}
+				       area_reduction))
+		return_0;
 
 	return 1;
 }
@@ -371,10 +359,8 @@ static int _reduce_pv(struct physical_volume *pv, struct volume_group *vg, uint3
 		}
 	}
 
-	if (!pv_split_segment(pv, new_pe_count)) {
-		stack;
-		return 0;
-	}
+	if (!pv_split_segment(pv, new_pe_count))
+		return_0;
 
 	list_iterate_items_safe(peg, pegt, &pv->segments) {
  		if (peg->pe + peg->len > new_pe_count)

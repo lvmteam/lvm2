@@ -135,10 +135,8 @@ static int _lvcreate_name_params(struct lvcreate_params *lp,
 		if ((ptr = strrchr(lp->lv_name, '/')))
 			lp->lv_name = ptr + 1;
 
-		if (!apply_lvname_restrictions(lp->lv_name)) {
-			stack;
-			return 0;
-		}
+		if (!apply_lvname_restrictions(lp->lv_name))
+			return_0;
 
 		if (!validate_name(lp->lv_name)) {
 			log_error("Logical volume name \"%s\" is invalid",
@@ -385,10 +383,8 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 		}
 		log_verbose("Setting chunksize to %d sectors.", lp->chunk_size);
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot"))) {
-			stack;
-			return 0;
-		}
+		if (!(lp->segtype = get_segtype_from_string(cmd, "snapshot")))
+			return_0;
 	} else {
 		if (arg_count(cmd, chunksize_ARG)) {
 			log_error("-c is only available with snapshots");
@@ -409,10 +405,8 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
-			stack;
-			return 0;
-		}
+		if (!(lp->segtype = get_segtype_from_string(cmd, "striped")))
+			return_0;
 	} else {
 		if (arg_count(cmd, corelog_ARG)) {
 			log_error("--corelog is only available with mirrors");
@@ -435,10 +429,8 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	if (!_lvcreate_name_params(lp, cmd, &argc, &argv) ||
 	    !_read_size_params(lp, cmd) ||
 	    !_read_stripe_params(lp, cmd) ||
-	    !_read_mirror_params(lp, cmd)) {
-		stack;
-		return 0;
-	}
+	    !_read_mirror_params(lp, cmd))
+		return_0;
 
 	/*
 	 * Should we zero the lv.
@@ -557,10 +549,8 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	 */
 	if (lp->pv_count) {
 		if (!(pvh = create_pv_list(cmd->mem, vg,
-					   lp->pv_count, lp->pvs, 1))) {
-			stack;
-			return 0;
-		}
+					   lp->pv_count, lp->pvs, 1)))
+			return_0;
 	} else
 		pvh = &vg->pvs;
 
@@ -712,10 +702,8 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 
 	/* The snapshot segment gets created later */
 	if (lp->snapshot &&
-	    !(lp->segtype = get_segtype_from_string(cmd, "striped"))) {
-		stack;
-		return 0;
-	}
+	    !(lp->segtype = get_segtype_from_string(cmd, "striped")))
+		return_0;
 
 	if (!archive(vg))
 		return 0;
@@ -754,10 +742,8 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	if (!(lv = lv_create_empty(lv_name ? lv_name : "lvol%d", NULL,
-				   status, lp->alloc, 0, vg))) {
-		stack;
-		goto error;
-	}
+				   status, lp->alloc, 0, vg)))
+		return_0;
 
 	if (lp->read_ahead) {
 		log_verbose("Setting read ahead sectors");
@@ -775,7 +761,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	if (tag && !str_list_add(cmd->mem, &lv->tags, tag)) {
 		log_error("Failed to add tag %s to %s/%s",
 			  tag, lv->vg->name, lv->name);
-		goto error;
+		return 0;
 	}
 
 	if (!lv_extend(lv, lp->segtype, lp->stripes, lp->stripe_size,
@@ -879,9 +865,6 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	 */
 
 	return 1;
-
-error:
-	return 0;
 
 deactivate_and_revert_new_lv:
 	if (!deactivate_lv(cmd, lv)) {

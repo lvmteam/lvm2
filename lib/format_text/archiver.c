@@ -78,17 +78,13 @@ static char *_build_desc(struct dm_pool *mem, const char *line, int before)
 	size_t len = strlen(line) + 32;
 	char *buffer;
 
-	if (!(buffer = dm_pool_zalloc(mem, strlen(line) + 32))) {
-		stack;
-		return NULL;
-	}
+	if (!(buffer = dm_pool_zalloc(mem, strlen(line) + 32)))
+		return_NULL;
 
 	if (snprintf(buffer, len,
 		     "Created %s executing '%s'",
-		     before ? "*before*" : "*after*", line) < 0) {
-		stack;
-		return NULL;
-	}
+		     before ? "*before*" : "*after*", line) < 0)
+		return_NULL;
 
 	return buffer;
 }
@@ -97,10 +93,8 @@ static int __archive(struct volume_group *vg)
 {
 	char *desc;
 
-	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 1))) {
-		stack;
-		return 0;
-	}
+	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 1)))
+		return_0;
 
 	return archive_vg(vg, vg->cmd->archive_params->dir, desc,
 			  vg->cmd->archive_params->keep_days,
@@ -196,10 +190,8 @@ static int __backup(struct volume_group *vg)
 	char name[PATH_MAX];
 	char *desc;
 
-	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 0))) {
-		stack;
-		return 0;
-	}
+	if (!(desc = _build_desc(vg->cmd->mem, vg->cmd->cmd_line, 0)))
+		return_0;
 
 	if (dm_snprintf(name, sizeof(name), "%s/%s",
 			 vg->cmd->backup_params->dir, vg->name) < 0) {
@@ -324,10 +316,8 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 		}
 	}
 
-	if (!vg_write(vg) || !vg_commit(vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(vg) || !vg_commit(vg))
+		return_0;
 
 	return 1;
 }
@@ -341,10 +331,8 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 	/*
 	 * Read in the volume group from the text file.
 	 */
-	if (!(vg = backup_read_vg(cmd, vg_name, file))) {
-		stack;
-		return 0;
-	}
+	if (!(vg = backup_read_vg(cmd, vg_name, file)))
+		return_0;
 
 	return backup_restore_vg(cmd, vg);
 }

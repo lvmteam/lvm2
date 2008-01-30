@@ -144,9 +144,8 @@ static int _pv_resize_single(struct cmd_context *cmd,
 		}
 
 		if (!pv_resize(pv, vg, new_pe_count)) {
-			stack;
 			unlock_vg(cmd, vg_name);
-			return 0;
+			return_0;
 		}
 	}
 

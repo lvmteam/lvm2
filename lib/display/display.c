@@ -360,10 +360,8 @@ int pvdisplay_short(const struct cmd_context *cmd __attribute((unused)),
 	if (!pv)
 		return 0;
 
-	if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
-		stack;
-		return 0;
-	}
+	if (!id_write_format(&pv->id, uuid, sizeof(uuid)))
+		return_0;
 
 	log_print("PV Name               %s     ", pv_dev_name(pv));
 	/* FIXME  pv->pv_number); */
@@ -407,10 +405,8 @@ int lvdisplay_full(struct cmd_context *cmd,
 	struct lv_segment *snap_seg = NULL;
 	float snap_percent;	/* fused, fsize; */
 
-	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid))) {
-		stack;
-		return 0;
-	}
+	if (!id_write_format(&lv->lvid.id[1], uuid, sizeof(uuid)))
+		return_0;
 
 	inkernel = lv_info(cmd, lv, &info, 1, 1) && info.exists;
 

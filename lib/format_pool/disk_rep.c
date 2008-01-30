@@ -45,10 +45,8 @@ static int __read_pool_disk(const struct format_type *fmt, struct device *dev,
 		return 0;
 	}
 
-	if (!read_pool_label(pl, fmt->labeller, dev, buf, NULL)) {
-		stack;
-		return 0;
-	}
+	if (!read_pool_label(pl, fmt->labeller, dev, buf, NULL))
+		return_0;
 
 	return 1;
 }
@@ -98,10 +96,8 @@ int read_pool_label(struct pool_list *pl, struct labeller *l,
 	log_debug("Calculated uuid %s for %s", uuid, pd->pl_pool_name);
 
 	if (!(info = lvmcache_add(l, (char *) &pvid, dev, pd->pl_pool_name,
-				  (char *) &vgid, 0))) {
-		stack;
-		return 0;
-	}
+				  (char *) &vgid, 0)))
+		return_0;
 	if (label)
 		*label = info->label;
 
@@ -252,10 +248,8 @@ static int _read_vg_pds(const struct format_type *fmt, struct dm_pool *mem,
 
 	/* FIXME: maybe should return a different error in memory
 	 * allocation failure */
-	if (!(tmpmem = dm_pool_create("pool read_vg", 512))) {
-		stack;
-		return 0;
-	}
+	if (!(tmpmem = dm_pool_create("pool read_vg", 512)))
+		return_0;
 
 	list_iterate_items(info, &vginfo->infos) {
 		if (info->dev &&
@@ -354,20 +348,16 @@ struct pool_list *read_pool_disk(const struct format_type *fmt,
 {
 	struct pool_list *pl;
 
-	if (!dev_open(dev)) {
-		stack;
-		return NULL;
-	}
+	if (!dev_open(dev))
+		return_NULL;
 
 	if (!(pl = dm_pool_zalloc(mem, sizeof(*pl)))) {
 		log_error("Unable to allocate pool list structure");
 		return 0;
 	}
 
-	if (!__read_pool_disk(fmt, dev, mem, pl, vg_name)) {
-		stack;
-		return NULL;
-	}
+	if (!__read_pool_disk(fmt, dev, mem, pl, vg_name))
+		return_NULL;
 
 	if (!dev_close(dev))
 		stack;

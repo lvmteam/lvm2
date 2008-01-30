@@ -70,17 +70,13 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 
 	if (!(snap = lv_create_empty(name ? name : "snapshot%d",
 				     lvid, LVM_READ | LVM_WRITE | VISIBLE_LV,
-				     ALLOC_INHERIT, 1, origin->vg))) {
-		stack;
-		return 0;
-	}
+				     ALLOC_INHERIT, 1, origin->vg)))
+		return_0;
 
 	snap->le_count = extent_count;
 
-	if (!(seg = alloc_snapshot_seg(snap, 0, 0))) {
-		stack;
-		return 0;
-	}
+	if (!(seg = alloc_snapshot_seg(snap, 0, 0)))
+		return_0;
 
 	seg->chunk_size = chunk_size;
 	seg->origin = origin;

@@ -96,10 +96,8 @@ struct segment_type *init_zero_segtype(struct cmd_context *cmd)
 {
 	struct segment_type *segtype = dm_malloc(sizeof(*segtype));
 
-	if (!segtype) {
-		stack;
-		return NULL;
-	}
+	if (!segtype)
+		return_NULL;
 
 	segtype->cmd = cmd;
 	segtype->ops = &_zero_ops;

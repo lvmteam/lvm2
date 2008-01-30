@@ -70,10 +70,8 @@ static int _extract_pattern(struct dm_pool *mem, const char *pat,
 	/*
 	 * copy the regex
 	 */
-	if (!(r = dm_pool_strdup(mem, pat))) {
-		stack;
-		return 0;
-	}
+	if (!(r = dm_pool_strdup(mem, pat)))
+		return_0;
 
 	/*
 	 * trim the trailing character, having checked it's sep.
@@ -192,10 +190,8 @@ struct dev_filter *regex_filter_create(struct config_value *patterns)
 	struct rfilter *rf;
 	struct dev_filter *f;
 
-	if (!mem) {
-		stack;
-		return NULL;
-	}
+	if (!mem)
+		return_NULL;
 
 	if (!(rf = dm_pool_alloc(mem, sizeof(*rf))))
 		goto_bad;

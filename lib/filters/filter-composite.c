@@ -50,10 +50,8 @@ struct dev_filter *composite_filter_create(int n, struct dev_filter **filters)
 {
 	struct dev_filter **filters_copy, *cft;
 
-	if (!filters) {
-		stack;
-		return NULL;
-	}
+	if (!filters)
+		return_NULL;
 
 	if (!(filters_copy = dm_malloc(sizeof(*filters) * (n + 1)))) {
 		log_error("composite filters allocation failed");

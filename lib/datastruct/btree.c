@@ -87,10 +87,8 @@ int btree_insert(struct btree *t, uint32_t k, void *data)
 	struct node *p, **c = _lookup(&t->root, key, &p), *n;
 
 	if (!*c) {
-		if (!(n = dm_pool_alloc(t->mem, sizeof(*n)))) {
-			stack;
-			return 0;
-		}
+		if (!(n = dm_pool_alloc(t->mem, sizeof(*n))))
+			return_0;
 
 		n->key = key;
 		n->data = data;

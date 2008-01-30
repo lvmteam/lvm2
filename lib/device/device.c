@@ -62,10 +62,8 @@ static int _has_partition_table(struct device *dev)
 		return -1;
 	}
 
-	if (!dev_read(dev, UINT64_C(0), sizeof(buf), &buf)) {
-		stack;
-		goto out;
-	}
+	if (!dev_read(dev, UINT64_C(0), sizeof(buf), &buf))
+		goto_out;
 
 	/* FIXME Check for other types of partition table too */
 

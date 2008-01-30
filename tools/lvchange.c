@@ -53,10 +53,8 @@ static int lvchange_permission(struct cmd_context *cmd,
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(lv->vg))
+		return_0;
 
 	backup(lv->vg);
 
@@ -114,16 +112,12 @@ static int lvchange_availability(struct cmd_context *cmd,
 	if (activate == CHANGE_ALN) {
 		log_verbose("Deactivating logical volume \"%s\" locally",
 			    lv->name);
-		if (!deactivate_lv_local(cmd, lv)) {
-			stack;
-			return 0;
-		}
+		if (!deactivate_lv_local(cmd, lv))
+			return_0;
 	} else if (activate == CHANGE_AN) {
 		log_verbose("Deactivating logical volume \"%s\"", lv->name);
-		if (!deactivate_lv(cmd, lv)) {
-			stack;
-			return 0;
-		}
+		if (!deactivate_lv(cmd, lv))
+			return_0;
 	} else {
 		if (lockingfailed() && (lv->vg->status & CLUSTERED)) {
 			log_verbose("Locking failed: ignoring clustered "
@@ -134,24 +128,18 @@ static int lvchange_availability(struct cmd_context *cmd,
 		if (lv_is_origin(lv) || (activate == CHANGE_AE)) {
 			log_verbose("Activating logical volume \"%s\" "
 				    "exclusively", lv->name);
-			if (!activate_lv_excl(cmd, lv)) {
-				stack;
-				return 0;
-			}
+			if (!activate_lv_excl(cmd, lv))
+				return_0;
 		} else if (activate == CHANGE_ALY) {
 			log_verbose("Activating logical volume \"%s\" locally",
 				    lv->name);
-			if (!activate_lv_local(cmd, lv)) {
-				stack;
-				return 0;
-			}
+			if (!activate_lv_local(cmd, lv))
+				return_0;
 		} else {
 			log_verbose("Activating logical volume \"%s\"",
 				    lv->name);
-			if (!activate_lv(cmd, lv)) {
-				stack;
-				return 0;
-			}
+			if (!activate_lv(cmd, lv))
+				return_0;
 		}
 
 		if ((lv->status & LOCKED) &&
@@ -357,18 +345,14 @@ static int lvchange_alloc(struct cmd_context *cmd, struct logical_volume *lv)
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
 
-	if (!vg_write(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(lv->vg))
+		return_0;
 
 	backup(lv->vg);
 
 	/* No need to suspend LV for this change */
-	if (!vg_commit(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_commit(lv->vg))
+		return_0;
 
 	return 1;
 }
@@ -407,10 +391,8 @@ static int lvchange_readahead(struct cmd_context *cmd,
 		    lv->name);
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(lv->vg))
+		return_0;
 
 	backup(lv->vg);
 
@@ -488,17 +470,13 @@ static int lvchange_persistent(struct cmd_context *cmd,
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(lv->vg))
+		return_0;
 
 	backup(lv->vg);
 
-	if (!vg_commit(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_commit(lv->vg))
+		return_0;
 
 	if (active) {
 		log_verbose("Re-activating logical volume \"%s\"", lv->name);
@@ -542,18 +520,14 @@ static int lvchange_tag(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	log_very_verbose("Updating logical volume \"%s\" on disk(s)", lv->name);
-	if (!vg_write(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_write(lv->vg))
+		return_0;
 
 	backup(lv->vg);
 
 	/* No need to suspend LV for this change */
-	if (!vg_commit(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_commit(lv->vg))
+		return_0;
 
 	return 1;
 }

@@ -24,30 +24,22 @@ int print_tags(struct list *tags, char *buffer, size_t size)
 	struct str_list *sl;
 	int first = 1;
 
-	if (!emit_to_buffer(&buffer, &size, "[")) {
-		stack;
-		return 0;
-	}
+	if (!emit_to_buffer(&buffer, &size, "["))
+		return_0;
 
 	list_iterate_items(sl, tags) {
 		if (!first) {
-			if (!emit_to_buffer(&buffer, &size, ", ")) {
-				stack;
-				return 0;
-			}
+			if (!emit_to_buffer(&buffer, &size, ", "))
+				return_0;
 		} else
 			first = 0;
 
-		if (!emit_to_buffer(&buffer, &size, "\"%s\"", sl->str)) {
-			stack;
-			return 0;
-		}
+		if (!emit_to_buffer(&buffer, &size, "\"%s\"", sl->str))
+			return_0;
 	}
 
-	if (!emit_to_buffer(&buffer, &size, "]")) {
-		stack;
-		return 0;
-	}
+	if (!emit_to_buffer(&buffer, &size, "]"))
+		return_0;
 
 	return 1;
 }
@@ -63,10 +55,8 @@ int read_tags(struct dm_pool *mem, struct list *tags, struct config_value *cv)
 			return 0;
 		}
 
-		if (!str_list_add(mem, tags, dm_pool_strdup(mem, cv->v.str))) {
-			stack;
-			return 0;
-		}
+		if (!str_list_add(mem, tags, dm_pool_strdup(mem, cv->v.str)))
+			return_0;
 
 		cv = cv->next;
 	}

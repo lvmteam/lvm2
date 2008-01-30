@@ -21,7 +21,6 @@
 
 #include <fcntl.h>
 
-#define fail do {stack; return 0;} while(0)
 #define xx16(v) disk->v = xlate16(disk->v)
 #define xx32(v) disk->v = xlate32(disk->v)
 #define xx64(v) disk->v = xlate64(disk->v)
@@ -218,7 +217,7 @@ static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 static int _read_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 {
 	if (!dev_read(dev, pos, sizeof(*disk), disk))
-		fail;
+		return_0;
 
 	_xlate_lvd(disk);
 
@@ -230,12 +229,12 @@ int read_vgd(struct device *dev, struct vg_disk *vgd, struct pv_disk *pvd)
 	uint64_t pos = pvd->vg_on_disk.base;
 
 	if (!dev_read(dev, pos, sizeof(*vgd), vgd))
-		fail;
+		return_0;
 
 	_xlate_vgd(vgd);
 
 	if ((vgd->lv_max > MAX_LV) || (vgd->pv_max > MAX_PV))
-		fail;
+		return_0;
 		
 	/* If UUID is missing, create one */
 	if (vgd->vg_uuid[0] == '\0')
@@ -254,10 +253,10 @@ static int _read_uuids(struct disk_list *data)
 
 	while (pos < end && num_read < data->vgd.pv_cur) {
 		if (!dev_read(data->dev, pos, sizeof(buffer), buffer))
-			fail;
+			return_0;
 
 		if (!(ul = dm_pool_alloc(data->mem, sizeof(*ul))))
-			fail;
+			return_0;
 
 		memcpy(ul->uuid, buffer, NAME_LEN);
 		ul->uuid[NAME_LEN - 1] = '\0';
@@ -288,10 +287,10 @@ static int _read_lvs(struct disk_list *data)
 		ll = dm_pool_alloc(data->mem, sizeof(*ll));
 
 		if (!ll)
-			fail;
+			return_0;
 
 		if (!_read_lvd(data->dev, pos, &ll->lvd))
-			fail;
+			return_0;
 
 		if (!_check_lvd(&ll->lvd))
 			continue;
@@ -310,10 +309,10 @@ static int _read_extents(struct disk_list *data)
 	uint64_t pos = data->pvd.pe_on_disk.base;
 
 	if (!extents)
-		fail;
+		return_0;
 
 	if (!dev_read(data->dev, pos, len, extents))
-		fail;
+		return_0;
 
 	_xlate_extents(extents, data->pvd.pe_total);
 	data->extents = extents;
@@ -347,10 +346,8 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 	struct disk_list *dl = dm_pool_zalloc(mem, sizeof(*dl));
 	const char *name = dev_name(dev);
 
-	if (!dl) {
-		stack;
-		return NULL;
-	}
+	if (!dl)
+		return_NULL;
 
 	dl->dev = dev;
 	dl->mem = mem;
@@ -417,10 +414,8 @@ struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 {
 	struct disk_list *dl;
 
-	if (!dev_open(dev)) {
-		stack;
-		return NULL;
-	}
+	if (!dev_open(dev))
+		return_NULL;
 
 	dl = __read_disk(fmt, dev, mem, vg_name);
 
@@ -519,7 +514,7 @@ static int _write_vgd(struct disk_list *data)
 
 	_xlate_vgd(vgd);
 	if (!dev_write(data->dev, pos, sizeof(*vgd), vgd))
-		fail;
+		return_0;
 
 	_xlate_vgd(vgd);
 
@@ -544,7 +539,7 @@ static int _write_uuids(struct disk_list *data)
 			  pos, NAME_LEN);
 
 		if (!dev_write(data->dev, pos, NAME_LEN, ul->uuid))
-			fail;
+			return_0;
 
 		pos += NAME_LEN;
 	}
@@ -560,7 +555,7 @@ static int _write_lvd(struct device *dev, uint64_t pos, struct lv_disk *disk)
 
 	_xlate_lvd(disk);
 	if (!dev_write(dev, pos, sizeof(*disk), disk))
-		fail;
+		return_0;
 
 	_xlate_lvd(disk);
 
@@ -588,7 +583,7 @@ static int _write_lvs(struct disk_list *data)
 		}
 
 		if (!_write_lvd(data->dev, pos + offset, &ll->lvd))
-			fail;
+			return_0;
 	}
 
 	return 1;
@@ -606,7 +601,7 @@ static int _write_extents(struct disk_list *data)
 
 	_xlate_extents(extents, data->pvd.pe_total);
 	if (!dev_write(data->dev, pos, len, extents))
-		fail;
+		return_0;
 
 	_xlate_extents(extents, data->pvd.pe_total);
 
@@ -643,7 +638,7 @@ static int _write_pvd(struct disk_list *data)
 	_xlate_pvd((struct pv_disk *) buf);
 	if (!dev_write(data->dev, pos, size, buf)) {
 		dm_free(buf);
-		fail;
+		return_0;
 	}
 
 	dm_free(buf);
@@ -707,10 +702,8 @@ static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data)
 {
 	int r;
 
-	if (!dev_open(data->dev)) {
-		stack;
-		return 0;
-	}
+	if (!dev_open(data->dev))
+		return_0;
 
 	r = __write_all_pvd(fmt, data);
 
@@ -731,7 +724,7 @@ int write_disks(const struct format_type *fmt, struct list *pvs)
 
 	list_iterate_items(dl, pvs) {
 		if (!(_write_all_pvd(fmt, dl)))
-			fail;
+			return_0;
 
 		log_very_verbose("Successfully wrote data to %s",
 				 dev_name(dl->dev));
