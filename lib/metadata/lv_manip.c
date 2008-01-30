@@ -1752,13 +1752,15 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	backup(vg);
 
 	if (!suspend_lv(cmd, lv)) {
+		stack;
 		vg_revert(vg);
-		return_0;
+		return 0;
 	}
 
 	if (!vg_commit(vg)) {
+		stack;
 		resume_lv(cmd, lv);
-		return_0;
+		return 0;
 	}
 
 	resume_lv(cmd, lv);
