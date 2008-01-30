@@ -128,44 +128,32 @@ static struct volume_group *_build_vg_from_pds(struct format_instance
 	list_init(&vg->lvs);
 	list_init(&vg->tags);
 
-	if (!import_pool_vg(vg, smem, pds)) {
-		stack;
-		return NULL;
-	}
+	if (!import_pool_vg(vg, smem, pds))
+		return_NULL;
 
-	if (!import_pool_pvs(fid->fmt, vg, &vg->pvs, smem, pds)) {
-		stack;
-		return NULL;
-	}
+	if (!import_pool_pvs(fid->fmt, vg, &vg->pvs, smem, pds))
+		return_NULL;
 
-	if (!import_pool_lvs(vg, smem, pds)) {
-		stack;
-		return NULL;
-	}
+	if (!import_pool_lvs(vg, smem, pds))
+		return_NULL;
 
 	/*
 	 * I need an intermediate subpool structure that contains all the
 	 * relevant info for this.  Then i can iterate through the subpool
 	 * structures for checking, and create the segments
 	 */
-	if (!(usp = _build_usp(pds, mem, &sp_count))) {
-		stack;
-		return NULL;
-	}
+	if (!(usp = _build_usp(pds, mem, &sp_count)))
+		return_NULL;
 
 	/*
 	 * check the subpool structures - we can't handle partial VGs in
 	 * the pool format, so this will error out if we're missing PVs
 	 */
-	if (!_check_usp(vg->name, usp, sp_count)) {
-		stack;
-		return NULL;
-	}
+	if (!_check_usp(vg->name, usp, sp_count))
+		return_NULL;
 
-	if (!import_pool_segments(&vg->lvs, smem, usp, sp_count)) {
-		stack;
-		return NULL;
-	}
+	if (!import_pool_segments(&vg->lvs, smem, usp, sp_count))
+		return_NULL;
 
 	return vg;
 }
@@ -182,25 +170,19 @@ static struct volume_group *_pool_vg_read(struct format_instance *fid,
 
 	/* We can safely ignore the mda passed in */
 
-	if (!mem) {
-		stack;
-		return NULL;
-	}
+	if (!mem)
+		return_NULL;
 
 	/* Strip dev_dir if present */
 	vg_name = strip_dir(vg_name, fid->fmt->cmd->dev_dir);
 
 	/* Read all the pvs in the vg */
-	if (!read_pool_pds(fid->fmt, vg_name, mem, &pds)) {
-		stack;
-		goto out;
-	}
+	if (!read_pool_pds(fid->fmt, vg_name, mem, &pds))
+		goto_out;
 
 	/* Do the rest of the vg stuff */
-	if (!(vg = _build_vg_from_pds(fid, mem, &pds))) {
-		stack;
-		goto out;
-	}
+	if (!(vg = _build_vg_from_pds(fid, mem, &pds)))
+		goto_out;
 
       out:
 	dm_pool_destroy(mem);
@@ -231,30 +213,22 @@ static int _pool_pv_read(const struct format_type *fmt, const char *pv_name,
 
 	log_very_verbose("Reading physical volume data %s from disk", pv_name);
 
-	if (!mem) {
-		stack;
-		return 0;
-	}
+	if (!mem)
+		return_0;
 
-	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter))) {
-		stack;
-		goto out;
-	}
+	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter)))
+		goto_out;
 
 	/*
 	 * I need to read the disk and populate a pv structure here
 	 * I'll probably need to abstract some of this later for the
 	 * vg_read code
 	 */
-	if (!(pl = read_pool_disk(fmt, dev, mem, NULL))) {
-		stack;
-		goto out;
-	}
+	if (!(pl = read_pool_disk(fmt, dev, mem, NULL)))
+		goto_out;
 
-	if (!import_pool_pv(fmt, fmt->cmd->mem, NULL, pv, pl)) {
-		stack;
-		goto out;
-	}
+	if (!import_pool_pv(fmt, fmt->cmd->mem, NULL, pv, pl))
+		goto_out;
 
 	pv->fmt = fmt;
 

@@ -73,10 +73,8 @@ int init_external_locking(struct locking_type *locking, struct cmd_context *cmd)
 	libname = find_config_tree_str(cmd, "global/locking_library",
 				       DEFAULT_LOCKING_LIB);
 
-	if (!(_locking_lib = load_shared_library(cmd, libname, "locking", 1))) {
-		stack;
-		return 0;
-	}
+	if (!(_locking_lib = load_shared_library(cmd, libname, "locking", 1)))
+		return_0;
 
 	/* Get the functions we need */
 	if (!(_init_fn = dlsym(_locking_lib, "locking_init")) ||

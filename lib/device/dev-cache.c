@@ -236,10 +236,8 @@ static int _add_alias(struct device *dev, const char *path)
 	const char *oldpath;
 	int prefer_old = 1;
 
-	if (!sl) {
-		stack;
-		return 0;
-	}
+	if (!sl)
+		return_0;
 
 	/* Is name already there? */
 	list_iterate_items(strl, &dev->aliases) {
@@ -249,10 +247,8 @@ static int _add_alias(struct device *dev, const char *path)
 		}
 	}
 
-	if (!(sl->str = dm_pool_strdup(_cache.mem, path))) {
-		stack;
-		return 0;
-	}
+	if (!(sl->str = dm_pool_strdup(_cache.mem, path)))
+		return_0;
 
 	if (!list_empty(&dev->aliases)) {
 		oldpath = list_item(dev->aliases.n, struct str_list)->str;
@@ -294,14 +290,10 @@ static int _insert_dev(const char *path, dev_t d)
 						   (uint32_t) d))) {
 		/* create new device */
 		if (loopfile) {
-			if (!(dev = dev_create_file(path, NULL, NULL, 0))) {
-				stack;
-				return 0;
-			}
-		} else if (!(dev = _dev_create(d))) {
-			stack;
-			return 0;
-		}
+			if (!(dev = dev_create_file(path, NULL, NULL, 0)))
+				return_0;
+		} else if (!(dev = _dev_create(d)))
+			return_0;
 
 		if (!(btree_insert(_cache.devices, (uint32_t) d, dev))) {
 			log_err("Couldn't insert device into binary tree.");
@@ -369,10 +361,8 @@ static int _insert_dir(const char *dir)
 				continue;
 			}
 
-			if (!(path = _join(dir, dirent[n]->d_name))) {
-				stack;
-				return 0;
-			}
+			if (!(path = _join(dir, dirent[n]->d_name)))
+				return_0;
 
 			_collapse_slashes(path);
 			r &= _insert(path, 1);
@@ -400,10 +390,8 @@ static int _insert_file(const char *path)
 		return 0;
 	}
 
-	if (!_insert_dev(path, 0)) {
-		stack;
-		return 0;
-	}
+	if (!_insert_dev(path, 0))
+		return_0;
 
 	return 1;
 }
@@ -439,10 +427,8 @@ static int _insert(const char *path, int rec)
 			return 0;
 		}
 
-		if (!_insert_dev(path, info.st_rdev)) {
-			stack;
-			return 0;
-		}
+		if (!_insert_dev(path, info.st_rdev))
+			return_0;
 
 		r = 1;
 	}
@@ -543,16 +529,13 @@ int dev_cache_init(struct cmd_context *cmd)
 	_cache.names = NULL;
 	_cache.has_scanned = 0;
 
-	if (!(_cache.mem = dm_pool_create("dev_cache", 10 * 1024))) {
-		stack;
-		return 0;
-	}
+	if (!(_cache.mem = dm_pool_create("dev_cache", 10 * 1024)))
+		return_0;
 
 	if (!(_cache.names = dm_hash_create(128))) {
-		stack;
 		dm_pool_destroy(_cache.mem);
 		_cache.mem = 0;
-		return 0;
+		return_0;
 	}
 
 	if (!(_cache.devices = btree_create(_cache.mem))) {

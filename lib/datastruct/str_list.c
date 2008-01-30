@@ -20,10 +20,8 @@ struct list *str_list_create(struct dm_pool *mem)
 {
 	struct list *sl;
 
-	if (!(sl = dm_pool_alloc(mem, sizeof(struct list)))) {
-		stack;
-		return NULL;
-	}
+	if (!(sl = dm_pool_alloc(mem, sizeof(struct list))))
+		return_NULL;
 
 	list_init(sl);
 
@@ -34,19 +32,15 @@ int str_list_add(struct dm_pool *mem, struct list *sll, const char *str)
 {
 	struct str_list *sln;
 
-	if (!str) {
-		stack;
-		return 0;
-	}
+	if (!str)
+		return_0;
 
 	/* Already in list? */
 	if (str_list_match_item(sll, str))
 		return 1;
 
-	if (!(sln = dm_pool_alloc(mem, sizeof(*sln)))) {
-		stack;
-		return 0;
-	}
+	if (!(sln = dm_pool_alloc(mem, sizeof(*sln))))
+		return_0;
 
 	sln->str = str;
 	list_add(sll, &sln->list);
@@ -74,10 +68,8 @@ int str_list_dup(struct dm_pool *mem, struct list *sllnew,
 	list_init(sllnew);
 
 	list_iterate_items(sl, sllold) {
-		if (!str_list_add(mem, sllnew, dm_pool_strdup(mem, sl->str))) {
-			stack;
-			return 0;
-		}
+		if (!str_list_add(mem, sllnew, dm_pool_strdup(mem, sl->str)))
+			return_0;
 	}
 
 	return 1;

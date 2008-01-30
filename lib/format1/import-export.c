@@ -117,10 +117,8 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	list_init(&pv->tags);
 	list_init(&pv->segments);
 
-	if (!alloc_pv_segment_whole_pv(mem, pv)) {
-		stack;
-		return 0;
-	}
+	if (!alloc_pv_segment_whole_pv(mem, pv))
+		return_0;
 
 	return 1;
 }
@@ -150,10 +148,8 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused))
 	memcpy(pvd->pv_uuid, pv->id.uuid, ID_LEN);
 
 	if (pv->vg_name) {
-		if (!_check_vg_name(pv->vg_name)) {
-			stack;
-			return 0;
-		}
+		if (!_check_vg_name(pv->vg_name))
+			return_0;
 		strncpy((char *)pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));
 	}
 
@@ -167,10 +163,8 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused))
 		if (!*vg->system_id ||
 		    strncmp(vg->system_id, EXPORTED_TAG,
 			    sizeof(EXPORTED_TAG) - 1)) {
-			if (!_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG)) {
-				stack;
-				return 0;
-			}
+			if (!_system_id(cmd, (char *)pvd->system_id, EXPORTED_TAG))
+				return_0;
 		}
 		if (strlen((char *)pvd->vg_name) + sizeof(EXPORTED_TAG) >
 		    sizeof(pvd->vg_name)) {
@@ -184,18 +178,14 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused))
 	/* Is VG being imported? */
 	if (vg && !(vg->status & EXPORTED_VG) && *vg->system_id &&
 	    !strncmp(vg->system_id, EXPORTED_TAG, sizeof(EXPORTED_TAG) - 1)) {
-		if (!_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG)) {
-			stack;
-			return 0;
-		}
+		if (!_system_id(cmd, (char *)pvd->system_id, IMPORTED_TAG))
+			return_0;
 	}
 
 	/* Generate system_id if PV is in VG */
 	if (!pvd->system_id || !*pvd->system_id)
-		if (!_system_id(cmd, (char *)pvd->system_id, "")) {
-			stack;
-			return 0;
-		}
+		if (!_system_id(cmd, (char *)pvd->system_id, ""))
+			return_0;
 
 	/* Update internal system_id if we changed it */
 	if (vg &&
@@ -227,20 +217,14 @@ int import_vg(struct dm_pool *mem,
 	struct vg_disk *vgd = &dl->vgd;
 	memcpy(vg->id.uuid, vgd->vg_uuid, ID_LEN);
 
-	if (!_check_vg_name((char *)dl->pvd.vg_name)) {
-		stack;
-		return 0;
-	}
+	if (!_check_vg_name((char *)dl->pvd.vg_name))
+		return_0;
 
-	if (!(vg->name = dm_pool_strdup(mem, (char *)dl->pvd.vg_name))) {
-		stack;
-		return 0;
-	}
+	if (!(vg->name = dm_pool_strdup(mem, (char *)dl->pvd.vg_name)))
+		return_0;
 
-	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN))) {
-		stack;
-		return 0;
-	}
+	if (!(vg->system_id = dm_pool_alloc(mem, NAME_LEN)))
+		return_0;
 
 	*vg->system_id = '\0';
 
@@ -315,10 +299,8 @@ int import_lv(struct dm_pool *mem, struct logical_volume *lv, struct lv_disk *lv
 {
 	lvid_from_lvnum(&lv->lvid, &lv->vg->id, lvd->lv_number);
 
-	if (!(lv->name = _create_lv_name(mem, (char *)lvd->lv_name))) {
-		stack;
-		return 0;
-	}
+	if (!(lv->name = _create_lv_name(mem, (char *)lvd->lv_name)))
+		return_0;
 
 	lv->status |= VISIBLE_LV;
 
@@ -457,15 +439,11 @@ int import_pvs(const struct format_type *fmt, struct dm_pool *mem,
 	*count = 0;
 	list_iterate_items(dl, pvds) {
 		if (!(pvl = dm_pool_zalloc(mem, sizeof(*pvl))) ||
-		    !(pvl->pv = dm_pool_alloc(mem, sizeof(*pvl->pv)))) {
-			stack;
-			return 0;
-		}
+		    !(pvl->pv = dm_pool_alloc(mem, sizeof(*pvl->pv))))
+			return_0;
 
-		if (!import_pv(fmt, mem, dl->dev, vg, pvl->pv, &dl->pvd, &dl->vgd)) {
-			stack;
-			return 0;
-		}
+		if (!import_pv(fmt, mem, dl->dev, vg, pvl->pv, &dl->pvd, &dl->vgd))
+			return_0;
 
 		pvl->pv->fmt = fmt;
 		list_add(results, &pvl->list);
@@ -483,17 +461,13 @@ static struct logical_volume *_add_lv(struct dm_pool *mem,
 	struct logical_volume *lv;
 
 	if (!(ll = dm_pool_zalloc(mem, sizeof(*ll))) ||
-	    !(ll->lv = dm_pool_zalloc(mem, sizeof(*ll->lv)))) {
-		stack;
-		return NULL;
-	}
+	    !(ll->lv = dm_pool_zalloc(mem, sizeof(*ll->lv))))
+		return_NULL;
 	lv = ll->lv;
 	lv->vg = vg;
 
-	if (!import_lv(mem, lv, lvd)) {
-		stack;
-		return NULL;
-	}
+	if (!import_lv(mem, lv, lvd))
+		return_NULL;
 
 	list_add(&vg->lvs, &ll->list);
 	vg->lv_count++;
@@ -512,10 +486,8 @@ int import_lvs(struct dm_pool *mem, struct volume_group *vg, struct list *pvds)
 			lvd = &ll->lvd;
 
 			if (!find_lv(vg, (char *)lvd->lv_name) &&
-			    !_add_lv(mem, vg, lvd)) {
-				stack;
-				return 0;
-			}
+			    !_add_lv(mem, vg, lvd))
+				return_0;
 		}
 	}
 
@@ -533,49 +505,37 @@ int export_lvs(struct disk_list *dl, struct volume_group *vg,
 	uint32_t lv_num;
 	struct dm_hash_table *lvd_hash;
 
-	if (!_check_vg_name(vg->name)) {
-		stack;
-		return 0;
-	}
+	if (!_check_vg_name(vg->name))
+		return_0;
 
-	if (!(lvd_hash = dm_hash_create(32))) {
-		stack;
-		return 0;
-	}
+	if (!(lvd_hash = dm_hash_create(32)))
+		return_0;
 
 	/*
 	 * setup the pv's extents array
 	 */
 	len = sizeof(struct pe_disk) * dl->pvd.pe_total;
-	if (!(dl->extents = dm_pool_alloc(dl->mem, len))) {
-		stack;
-		goto out;
-	}
+	if (!(dl->extents = dm_pool_alloc(dl->mem, len)))
+		goto_out;
 	memset(dl->extents, 0, len);
 
 	list_iterate_items(ll, &vg->lvs) {
 		if (ll->lv->status & SNAPSHOT)
 			continue;
 
-		if (!(lvdl = dm_pool_alloc(dl->mem, sizeof(*lvdl)))) {
-			stack;
-			goto out;
-		}
+		if (!(lvdl = dm_pool_alloc(dl->mem, sizeof(*lvdl))))
+			goto_out;
 
 		_export_lv(&lvdl->lvd, vg, ll->lv, dev_dir);
 
 		lv_num = lvnum_from_lvid(&ll->lv->lvid);
 		lvdl->lvd.lv_number = lv_num;
 
-		if (!dm_hash_insert(lvd_hash, ll->lv->name, &lvdl->lvd)) {
-			stack;
-			goto out;
-		}
+		if (!dm_hash_insert(lvd_hash, ll->lv->name, &lvdl->lvd))
+			goto_out;
 
-		if (!export_extents(dl, lv_num + 1, ll->lv, pv)) {
-			stack;
-			goto out;
-		}
+		if (!export_extents(dl, lv_num + 1, ll->lv, pv))
+			goto_out;
 
 		if (lv_is_origin(ll->lv))
 			lvdl->lvd.lv_access |= LV_SNAPSHOT_ORG;
@@ -675,10 +635,8 @@ int export_uuids(struct disk_list *dl, struct volume_group *vg)
 	struct pv_list *pvl;
 
 	list_iterate_items(pvl, &vg->pvs) {
-		if (!(ul = dm_pool_alloc(dl->mem, sizeof(*ul)))) {
-			stack;
-			return 0;
-		}
+		if (!(ul = dm_pool_alloc(dl->mem, sizeof(*ul))))
+			return_0;
 
 		memset(ul->uuid, 0, sizeof(ul->uuid));
 		memcpy(ul->uuid, pvl->pv->id.uuid, ID_LEN);
@@ -723,10 +681,8 @@ int export_vg_number(struct format_instance *fid, struct list *pvds,
 	struct disk_list *dl;
 	int vg_num;
 
-	if (!get_free_vg_number(fid, filter, vg_name, &vg_num)) {
-		stack;
-		return 0;
-	}
+	if (!get_free_vg_number(fid, filter, vg_name, &vg_num))
+		return_0;
 
 	list_iterate_items(dl, pvds)
 		dl->vgd.vg_number = vg_num;

@@ -42,12 +42,12 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	}
 
 	if (!vgs_are_compatible(cmd, vg_from, vg_to))
-	    goto error;
+		goto_bad;
 
 	/* FIXME List arg: vg_show_with_pv_and_lv(vg_to); */
 
 	if (!archive(vg_from) || !archive(vg_to))
-		goto error;
+		goto_bad;
 
 	/* Merge volume groups */
 	while (!list_empty(&vg_from->pvs)) {
@@ -75,13 +75,11 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 					log_error("Failed to generate new "
 						  "random LVID for %s",
 						  lvl2->lv->name);
-					goto error;
+					goto bad;
 				}
                 		if (!id_write_format(&lvid2->id[1], uuid,
-						     sizeof(uuid))) {
-                        		stack;
-                        		goto error;
-		                }
+						     sizeof(uuid)))
+                        		goto_bad;
 
 				log_verbose("Changed LVID for %s to %s",
 					    lvl2->lv->name, uuid);
@@ -110,9 +108,8 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
-	if (!vg_write(vg_to) || !vg_commit(vg_to)) {
-		goto error;
-	}
+	if (!vg_write(vg_to) || !vg_commit(vg_to))
+		goto_bad;
 
 	/* FIXME Remove /dev/vgfrom */
 
@@ -125,7 +122,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		  vg_from->name, vg_to->name);
 	return ECMD_PROCESSED;
 
-      error:
+      bad:
 	unlock_vg(cmd, vg_name_from);
 	unlock_vg(cmd, vg_name_to);
 	return ECMD_FAILED;

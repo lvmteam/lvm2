@@ -164,9 +164,8 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return 0;
 		}
 		if (!id_write_format(&pv->id, uuid, sizeof(uuid))) {
-			stack;
 			unlock_vg(cmd, vg_name);
-			return 0;
+			return_0;
 		}
 		log_verbose("Changing uuid of %s to %s.", pv_name, uuid);
 		if (!is_orphan(pv)) {

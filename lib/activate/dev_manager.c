@@ -100,10 +100,8 @@ static struct dm_task *_setup_task(const char *name, const char *uuid,
 {
 	struct dm_task *dmt;
 
-	if (!(dmt = dm_task_create(task))) {
-		stack;
-		return NULL;
-	}
+	if (!(dmt = dm_task_create(task)))
+		return_NULL;
 
 	if (name)
 		dm_task_set_name(dmt, name);
@@ -127,10 +125,8 @@ static int _info_run(const char *name, const char *dlid, struct dm_info *info,
 
 	dmtask = mknodes ? DM_DEVICE_MKNODES : DM_DEVICE_INFO;
 
-	if (!(dmt = _setup_task(name, dlid, 0, dmtask))) {
-		stack;
-		return 0;
-	}
+	if (!(dmt = _setup_task(name, dlid, 0, dmtask)))
+		return_0;
 
 	if (!with_open_count)
 		if (!dm_task_no_open_count(dmt))
@@ -259,10 +255,8 @@ static int _status_run(const char *name, const char *uuid,
 	char *type = NULL;
 	char *params = NULL;
 
-	if (!(dmt = _setup_task(name, uuid, 0, DM_DEVICE_STATUS))) {
-		stack;
-		return 0;
-	}
+	if (!(dmt = _setup_task(name, uuid, 0, DM_DEVICE_STATUS)))
+		return_0;
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
@@ -348,10 +342,8 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	*percent = -1;
 
 	if (!(dmt = _setup_task(name, dlid, event_nr,
-				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS))) {
-		stack;
-		return 0;
-	}
+				wait ? DM_DEVICE_WAITEVENT : DM_DEVICE_STATUS)))
+		return_0;
 
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
@@ -443,10 +435,8 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	struct dm_pool *mem;
 	struct dev_manager *dm;
 
-	if (!(mem = dm_pool_create("dev_manager", 16 * 1024))) {
-		stack;
-		return NULL;
-	}
+	if (!(mem = dm_pool_create("dev_manager", 16 * 1024)))
+		return_NULL;
 
 	if (!(dm = dm_pool_alloc(mem, sizeof(*dm))))
 		goto_bad;
@@ -509,10 +499,8 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	 */
 	log_debug("Getting device status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "snapshot", 0, NULL, percent,
-		       NULL))) {
-		stack;
-		return 0;
-	}
+		       NULL)))
+		return_0;
 
 	/* FIXME dm_pool_free ? */
 
@@ -544,10 +532,8 @@ int dev_manager_mirror_percent(struct dev_manager *dm,
 
 	log_debug("Getting device mirror status percentage for %s", name);
 	if (!(_percent(dm, name, dlid, "mirror", wait, lv, percent,
-		       event_nr))) {
-		stack;
-		return 0;
-	}
+		       event_nr)))
+		return_0;
 
 	return 1;
 }
@@ -691,31 +677,25 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 		return NULL;
 	}
 
-	if (!_add_lv_to_dtree(dm, dtree, lv)) {
-		stack;
-		goto fail;
-	}
+	if (!_add_lv_to_dtree(dm, dtree, lv))
+		goto_bad;
 
 	/* Add any snapshots of this LV */
 	list_iterate_safe(snh, snht, &lv->snapshot_segs)
-		if (!_add_lv_to_dtree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow)) {
-			stack;
-			goto fail;
-		}
+		if (!_add_lv_to_dtree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow))
+			goto_bad;
 
 	/* Add any LVs used by segments in this LV */
 	list_iterate_items(seg, &lv->segments)
 		for (s = 0; s < seg->area_count; s++)
 			if (seg_type(seg, s) == AREA_LV && seg_lv(seg, s)) {
-				if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, s))) {
-					stack;
-					goto fail;
-				}
+				if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, s)))
+					goto_bad;
 			}
 
 	return dtree;
 
-fail:
+bad:
 	dm_tree_free(dtree);
 	return NULL;
 }

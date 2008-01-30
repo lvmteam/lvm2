@@ -978,10 +978,8 @@ static int _parse_pes(struct dm_pool *mem, char *c, struct list *pe_ranges,
 
 	/* Default to whole PV */
 	if (!c) {
-		if (!_add_pe_range(mem, pvname, pe_ranges, UINT32_C(0), size)) {
-			stack;
-			return 0;
-		}
+		if (!_add_pe_range(mem, pvname, pe_ranges, UINT32_C(0), size))
+			return_0;
 		return 1;
 	}
 
@@ -1026,10 +1024,8 @@ static int _parse_pes(struct dm_pool *mem, char *c, struct list *pe_ranges,
 			return 0;
 		}
 
-		if (!_add_pe_range(mem, pvname, pe_ranges, start, end - start + 1)) {
-			stack;
-			return 0;
-		}
+		if (!_add_pe_range(mem, pvname, pe_ranges, start, end - start + 1))
+			return_0;
 
 	}
 
@@ -1084,10 +1080,8 @@ static int _create_pv_entry(struct dm_pool *mem, struct pv_list *pvl,
 
 	/* Determine selected physical extents */
 	if (!_parse_pes(mem, colon, new_pvl->pe_ranges, pv_dev_name(pvl->pv),
-			pvl->pv->pe_count)) {
-		stack;
-		return 0;
-	}
+			pvl->pv->pe_count))
+		return_0;
 
 	return 1;
 }
@@ -1124,10 +1118,8 @@ struct list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int ar
 							tagname)) {
 					if (!_create_pv_entry(mem, pvl, NULL,
 							      allocatable_only,
-							      r)) {
-						stack;
-						return NULL;
-					}
+							      r))
+						return_NULL;
 				}
 			}
 			continue;
@@ -1149,10 +1141,8 @@ struct list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int ar
 				"Volume Group \"%s\"", pvname, vg->name);
 			return NULL;
 		}
-		if (!_create_pv_entry(mem, pvl, colon, allocatable_only, r)) {
-			stack;
-			return NULL;
-		}
+		if (!_create_pv_entry(mem, pvl, colon, allocatable_only, r))
+			return_NULL;
 	}
 
 	if (list_empty(r))

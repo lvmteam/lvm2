@@ -111,10 +111,8 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		if (!(*vsn)->check_version(cft))
 			continue;
 
-		if (!(vg = (*vsn)->read_vg(fid, cft))) {
-			stack;
-			goto out;
-		}
+		if (!(vg = (*vsn)->read_vg(fid, cft)))
+			goto_out;
 
 		(*vsn)->read_desc(fid->fmt->cmd->mem, cft, when, desc);
 		break;

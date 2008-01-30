@@ -1,5 +1,6 @@
 Version 2.02.33 -
 ===================================
+  Use stack return macros throughout.
   Rely upon internally-cached PV labels while corresponding VG lock is held.
 
 Version 2.02.32 - 29th January 2008

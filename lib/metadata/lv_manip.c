@@ -178,15 +178,12 @@ struct lv_segment *alloc_lv_segment(struct dm_pool *mem,
 	struct lv_segment *seg;
 	uint32_t areas_sz = area_count * sizeof(*seg->areas);
 
-	if (!(seg = dm_pool_zalloc(mem, sizeof(*seg)))) {
-		stack;
-		return NULL;
-	}
+	if (!(seg = dm_pool_zalloc(mem, sizeof(*seg))))
+		return_NULL;
 
 	if (!(seg->areas = dm_pool_zalloc(mem, areas_sz))) {
 		dm_pool_free(mem, seg);
-		stack;
-		return NULL;
+		return_NULL;
 	}
 
 	if (!segtype) {
@@ -290,10 +287,8 @@ int move_lv_segment_area(struct lv_segment *seg_to, uint32_t area_to,
 					seg_from->area_len);
 		release_lv_segment_area(seg_to, area_to, seg_to->area_len);
 
-		if (!set_lv_segment_area_pv(seg_to, area_to, pv, pe)) {
-			stack;
-			return 0;
-		}
+		if (!set_lv_segment_area_pv(seg_to, area_to, pv, pe))
+			return_0;
 
 		break;
 
@@ -326,10 +321,8 @@ int set_lv_segment_area_pv(struct lv_segment *seg, uint32_t area_num,
 	seg->areas[area_num].type = AREA_PV;
 
 	if (!(seg_pvseg(seg, area_num) =
-	      assign_peg_to_lvseg(pv, pe, seg->area_len, seg, area_num))) {
-		stack;
-		return 0;
-	}
+	      assign_peg_to_lvseg(pv, pe, seg->area_len, seg, area_num)))
+		return_0;
 
 	return 1;
 }
@@ -365,10 +358,8 @@ static int _lv_segment_add_areas(struct logical_volume *lv,
 	struct lv_segment_area *newareas;
 	uint32_t areas_sz = new_area_count * sizeof(*newareas);
 
-	if (!(newareas = dm_pool_zalloc(lv->vg->cmd->mem, areas_sz))) {
-		stack;
-		return 0;
-	}
+	if (!(newareas = dm_pool_zalloc(lv->vg->cmd->mem, areas_sz)))
+		return_0;
 
 	memcpy(newareas, seg->areas, seg->area_count * sizeof(*seg->areas));
 
@@ -423,19 +414,15 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 		if (seg->len <= count) {
 			/* remove this segment completely */
 			/* FIXME Check this is safe */
-			if (seg->log_lv && !lv_remove(seg->log_lv)) {
-				stack;
-				return 0;
-			}
+			if (seg->log_lv && !lv_remove(seg->log_lv))
+				return_0;
 			list_del(&seg->list);
 			reduction = seg->len;
 		} else
 			reduction = count;
 
-		if (!_lv_segment_reduce(seg, reduction)) {
-			stack;
-			return 0;
-		}
+		if (!_lv_segment_reduce(seg, reduction))
+			return_0;
 		count -= reduction;
 	}
 
@@ -447,19 +434,15 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 
 	/* Remove the LV if it is now empty */
 	if (!lv->le_count) {
-		if (!(lvl = find_lv_in_vg(lv->vg, lv->name))) {
-			stack;
-			return 0;
-		}
+		if (!(lvl = find_lv_in_vg(lv->vg, lv->name)))
+			return_0;
 
 		list_del(&lvl->list);
 
 		lv->vg->lv_count--;
 	} else if (lv->vg->fid->fmt->ops->lv_setup &&
-		   !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
-		stack;
-		return 0;
-	}
+		   !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
+		return_0;
 
 	return 1;
 }
@@ -504,10 +487,8 @@ int lv_reduce(struct logical_volume *lv, uint32_t extents)
 int lv_remove(struct logical_volume *lv)
 {
 
-	if (!lv_reduce(lv, lv->le_count)) {
-		stack;
-		return 0;
-	}
+	if (!lv_reduce(lv, lv->le_count))
+		return_0;
 
 	return 1;
 }
@@ -684,12 +665,9 @@ static int _setup_alloced_segment(struct logical_volume *lv, uint32_t status,
 		return 0;
 	}
 
-	for (s = 0; s < area_count; s++) {
-		if (!set_lv_segment_area_pv(seg, s, aa[s].pv, aa[s].pe)) {
-			stack;
-			return 0;
-		}
-	}
+	for (s = 0; s < area_count; s++)
+		if (!set_lv_segment_area_pv(seg, s, aa[s].pv, aa[s].pe))
+			return_0;
 
 	list_add(&lv->segments, &seg->list);
 
@@ -717,10 +695,8 @@ static int _setup_alloced_segments(struct logical_volume *lv,
 	list_iterate_items(aa, &alloced_areas[0]) {
 		if (!_setup_alloced_segment(lv, status, area_count,
 					    stripe_size, segtype, aa,
-					    region_size, log_lv)) {
-			stack;
-			return 0;
-		}
+					    region_size, log_lv))
+			return_0;
 	}
 
 	return 1;
@@ -1142,10 +1118,8 @@ static int _find_parallel_space(struct alloc_handle *ah, alloc_policy_t alloc,
 					  allocated,
 					  (ah->log_count && !ah->log_area.len) ?
 						*(areas + ix_offset + ix - 1) :
-						NULL)) {
-			stack;
-			return 0;
-		}
+						NULL))
+			return_0;
 
 	} while (!contiguous && *allocated != needed && can_split);
 
@@ -1187,10 +1161,8 @@ static int _allocate(struct alloc_handle *ah,
 	/*
 	 * Build the sets of available areas on the pv's.
 	 */
-	if (!(pvms = create_pv_maps(ah->mem, vg, allocatable_pvs))) {
-		stack;
-		return 0;
-	}
+	if (!(pvms = create_pv_maps(ah->mem, vg, allocatable_pvs)))
+		return_0;
 
 	if (!_log_parallel_areas(ah->mem, ah->parallel_areas))
 		stack;
@@ -1315,9 +1287,8 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 	if (!segtype_is_virtual(segtype) &&
 	    !_allocate(ah, vg, lv, (lv ? lv->le_count : 0) + extents,
 		       1, allocatable_pvs)) {
-		stack;
 		alloc_destroy(ah);
-		return NULL;
+		return_NULL;
 	}
 
 	return ah;
@@ -1348,10 +1319,8 @@ int lv_add_segment(struct alloc_handle *ah,
 	if (!_setup_alloced_segments(lv, &ah->alloced_areas[first_area],
 				     num_areas, status,
 				     stripe_size, segtype,
-				     region_size, log_lv)) {
-		stack;
-		return 0;
-	}
+				     region_size, log_lv))
+		return_0;
 
 	if ((segtype->flags & SEG_CAN_SPLIT) && !lv_merge_segments(lv)) {
 		log_err("Couldn't merge segments after extending "
@@ -1360,10 +1329,8 @@ int lv_add_segment(struct alloc_handle *ah,
 	}
 
 	if (lv->vg->fid->fmt->ops->lv_setup &&
-	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv)) {
-		stack;
-		return 0;
-	}
+	    !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
+		return_0;
 
 	return 1;
 }
@@ -1615,10 +1582,8 @@ int lv_extend(struct logical_volume *lv,
 
 	if (mirrors < 2) {
 		if (!lv_add_segment(ah, 0, ah->area_count, lv, segtype, stripe_size,
-			    status, 0, NULL)) {
-			stack;
-			goto out;
-		}
+			    status, 0, NULL))
+			goto_out;
 	} else {
 		if (!_lv_extend_mirror(ah, lv, extents, 0))
 			return_0;
@@ -1787,15 +1752,13 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	backup(vg);
 
 	if (!suspend_lv(cmd, lv)) {
-		stack;
 		vg_revert(vg);
-		return 0;
+		return_0;
 	}
 
 	if (!vg_commit(vg)) {
-		stack;
 		resume_lv(cmd, lv);
-		return 0;
+		return_0;
 	}
 
 	resume_lv(cmd, lv);
@@ -1890,10 +1853,9 @@ struct logical_volume *lv_create_empty(const char *name,
 		lv->lvid = *lvid;
 
 	if (fi->fmt->ops->lv_setup && !fi->fmt->ops->lv_setup(fi, lv)) {
-		stack;
 		if (ll)
 			dm_pool_free(cmd->mem, ll);
-		return NULL;
+		return_NULL;
 	}
 
 	if (!import)
@@ -1960,10 +1922,8 @@ struct list *build_parallel_areas_from_lv(struct cmd_context *cmd,
 		/* Find next segment end */
 		/* FIXME Unnecessary nesting! */
 		if (!_for_each_pv(cmd, lv, current_le, spvs->len, &spvs->len,
-				  0, 0, -1, 0, _add_pvs, (void *) spvs)) {
-			stack;
-			return NULL;
-		}
+				  0, 0, -1, 0, _add_pvs, (void *) spvs))
+			return_NULL;
 
 		current_le = spvs->le + spvs->len;
 	} while (current_le < lv->le_count);
@@ -2055,10 +2015,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (lv_is_cow(lv)) {
 		origin = origin_from_cow(lv);
 		log_verbose("Removing snapshot %s", lv->name);
-		if (!vg_remove_snapshot(lv)) {
-			stack;
-			return 0;
-		}
+		if (!vg_remove_snapshot(lv))
+			return_0;
 	}
 
 	log_verbose("Releasing logical volume \"%s\"", lv->name);

@@ -86,10 +86,8 @@ int label_register_handler(const char *name, struct labeller *handler)
 {
 	struct labeller_i *li;
 
-	if (!(li = _alloc_li(name, handler))) {
-		stack;
-		return 0;
-	}
+	if (!(li = _alloc_li(name, handler)))
+		return_0;
 
 	list_add(&_labellers, &li->list);
 	return 1;
@@ -203,10 +201,8 @@ int label_remove(struct device *dev)
 
 	log_very_verbose("Scanning for labels to wipe from %s", dev_name(dev));
 
-	if (!dev_open(dev)) {
-		stack;
-		return 0;
-	}
+	if (!dev_open(dev))
+		return_0;
 
 	/*
 	 * We flush the device just in case someone is stupid
@@ -322,18 +318,14 @@ int label_write(struct device *dev, struct label *label)
 	lh->sector_xl = xlate64(label->sector);
 	lh->offset_xl = xlate32(sizeof(*lh));
 
-	if (!(label->labeller->ops->write)(label, buf)) {
-		stack;
-		return 0;
-	}
+	if (!(label->labeller->ops->write)(label, buf))
+		return_0;
 
 	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, &lh->offset_xl, LABEL_SIZE -
 				      ((void *) &lh->offset_xl - (void *) lh)));
 
-	if (!dev_open(dev)) {
-		stack;
-		return 0;
-	}
+	if (!dev_open(dev))
+		return_0;
 
 	log_info("%s: Writing label to sector %" PRIu64, dev_name(dev),
 		 label->sector);

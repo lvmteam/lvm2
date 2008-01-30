@@ -583,10 +583,8 @@ static int _size32_disp(struct dm_report *rh __attribute((unused)), struct dm_po
 	const char *disp, *repstr;
 	uint64_t *sortval;
 
-	if (!*(disp = display_size_units(private, (uint64_t) size))) {
-		stack;
-		return 0;
-	}
+	if (!*(disp = display_size_units(private, (uint64_t) size)))
+		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, disp))) {
 		log_error("dm_pool_strdup failed");
@@ -614,10 +612,8 @@ static int _size64_disp(struct dm_report *rh __attribute((unused)),
 	const char *disp, *repstr;
 	uint64_t *sortval;
 
-	if (!*(disp = display_size_units(private, size))) {
-		stack;
-		return 0;
-	}
+	if (!*(disp = display_size_units(private, size)))
+		return_0;
 
 	if (!(repstr = dm_pool_strdup(mem, disp))) {
 		log_error("dm_pool_strdup failed");
@@ -809,10 +805,8 @@ static int _uuid_disp(struct dm_report *rh __attribute((unused)), struct dm_pool
 		return 0;
 	}
 
-	if (!id_write_format((const struct id *) data, repstr, 40)) {
-		stack;
-		return 0;
-	}
+	if (!id_write_format((const struct id *) data, repstr, 40))
+		return_0;
 
 	dm_report_field_set_value(field, repstr, NULL);
 	return 1;

@@ -91,10 +91,8 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 	int f, first = 1;
 	struct flag *flags;
 
-	if (!(flags = _get_flags(type))) {
-		stack;
-		return 0;
-	}
+	if (!(flags = _get_flags(type)))
+		return_0;
 
 	if (!emit_to_buffer(&buffer, &size, "["))
 		return 0;
@@ -135,10 +133,8 @@ int read_flags(uint32_t *status, int type, struct config_value *cv)
 	uint32_t s = 0;
 	struct flag *flags;
 
-	if (!(flags = _get_flags(type))) {
-		stack;
-		return 0;
-	}
+	if (!(flags = _get_flags(type)))
+		return_0;
 
 	if (cv->type == CFG_EMPTY_ARRAY)
 		goto out;

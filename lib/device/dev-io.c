@@ -170,10 +170,8 @@ static int _aligned_io(struct device_area *where, void *buffer,
 	struct device_area widened;
 
 	if (!(where->dev->flags & DEV_REGULAR) &&
-	    !_get_block_size(where->dev, &block_size)) {
-		stack;
-		return 0;
-	}
+	    !_get_block_size(where->dev, &block_size))
+		return_0;
 
 	if (!block_size)
 		block_size = lvm_getpagesize();
@@ -200,10 +198,8 @@ static int _aligned_io(struct device_area *where, void *buffer,
 
 	/* channel the io through the bounce buffer */
 	if (!_io(&widened, bounce, 0)) {
-		if (!should_write) {
-			stack;
-			return 0;
-		}
+		if (!should_write)
+			return_0;
 		/* FIXME pre-extend the file */
 		memset(bounce, '\n', widened.size);
 	}
@@ -354,10 +350,8 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 	if (dev->flags & DEV_REGULAR)
 		name = dev_name(dev);
-	else if (!(name = dev_name_confirmed(dev, quiet))) {
-		stack;
-		return 0;
-	}
+	else if (!(name = dev_name_confirmed(dev, quiet)))
+		return_0;
 
 	if (!(dev->flags & DEV_REGULAR)) {
 		if (stat(name, &buf) < 0) {
@@ -557,10 +551,8 @@ int dev_read(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
 	struct device_area where;
 
-	if (!dev->open_count) {
-		stack;
-		return 0;
-	}
+	if (!dev->open_count)
+		return_0;
 
 	where.dev = dev;
 	where.start = offset;
@@ -607,10 +599,8 @@ int dev_append(struct device *dev, size_t len, void *buffer)
 {
 	int r;
 
-	if (!dev->open_count) {
-		stack;
-		return 0;
-	}
+	if (!dev->open_count)
+		return_0;
 
 	r = dev_write(dev, dev->end, len, buffer);
 	dev->end += (uint64_t) len;
@@ -625,10 +615,8 @@ int dev_write(struct device *dev, uint64_t offset, size_t len, void *buffer)
 {
 	struct device_area where;
 
-	if (!dev->open_count) {
-		stack;
-		return 0;
-	}
+	if (!dev->open_count)
+		return_0;
 
 	where.dev = dev;
 	where.start = offset;
@@ -644,10 +632,8 @@ int dev_set(struct device *dev, uint64_t offset, size_t len, int value)
 	size_t s;
 	char buffer[4096] __attribute((aligned(8)));
 
-	if (!dev_open(dev)) {
-		stack;
-		return 0;
-	}
+	if (!dev_open(dev))
+		return_0;
 
 	if ((offset % SECTOR_SIZE) || (len % SECTOR_SIZE))
 		log_debug("Wiping %s at %" PRIu64 " length %" PRIsize_t,

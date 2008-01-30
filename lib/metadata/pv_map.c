@@ -40,10 +40,8 @@ static int _create_single_area(struct dm_pool *mem, struct pv_map *pvm,
 {
 	struct pv_area *pva;
 
-	if (!(pva = dm_pool_zalloc(mem, sizeof(*pva)))) {
-		stack;
-		return 0;
-	}
+	if (!(pva = dm_pool_zalloc(mem, sizeof(*pva))))
+		return_0;
 
 	log_debug("Allowing allocation on %s start PE %" PRIu32 " length %"
 		  PRIu32, pv_dev_name(pvm->pv), start, length);
@@ -88,10 +86,8 @@ static int _create_alloc_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 		area_len = (end >= peg->pe + peg->len - 1) ?
 			   peg->len - (pe - peg->pe) : end - pe + 1;
 
-		if (!_create_single_area(mem, pvm, pe, area_len)) {
-			stack;
-			return 0;
-		}
+		if (!_create_single_area(mem, pvm, pe, area_len))
+			return_0;
 
       next:
 		pe = peg->pe + peg->len;
@@ -108,20 +104,16 @@ static int _create_all_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 	if (!pe_ranges) {
 		/* Use whole PV */
 		if (!_create_alloc_areas_for_pv(mem, pvm, UINT32_C(0),
-						pvm->pv->pe_count)) {
-			stack;
-			return 0;
-		}
+						pvm->pv->pe_count))
+			return_0;
 
 		return 1;
 	}
 
 	list_iterate_items(aa, pe_ranges) {
 		if (!_create_alloc_areas_for_pv(mem, pvm, aa->start,
-						aa->count)) {
-			stack;
-			return 0;
-		}
+						aa->count))
+			return_0;
 	}
 
 	return 1;
@@ -145,20 +137,16 @@ static int _create_maps(struct dm_pool *mem, struct list *pvs, struct list *pvms
 			}
 
 		if (!pvm) {
-			if (!(pvm = dm_pool_zalloc(mem, sizeof(*pvm)))) {
-				stack;
-				return 0;
-			}
+			if (!(pvm = dm_pool_zalloc(mem, sizeof(*pvm))))
+				return_0;
 
 			pvm->pv = pvl->pv;
 			list_init(&pvm->areas);
 			list_add(pvms, &pvm->list);
 		}
 
-		if (!_create_all_areas_for_pv(mem, pvm, pvl->pe_ranges)) {
-			stack;
-			return 0;
-		}
+		if (!_create_all_areas_for_pv(mem, pvm, pvl->pe_ranges))
+			return_0;
 	}
 
 	return 1;

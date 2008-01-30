@@ -74,10 +74,8 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 	}
 
 	if (!vg_add_snapshot(seg->lv->name, org, cow,
-			     &seg->lv->lvid, seg->len, chunk_size)) {
-		stack;
-		return 0;
-	}
+			     &seg->lv->lvid, seg->len, chunk_size))
+		return_0;
 
 	return 1;
 }
@@ -304,10 +302,8 @@ struct segment_type *init_segtype(struct cmd_context *cmd)
 	char *dso;
 #endif
 
-	if (!segtype) {
-		stack;
-		return NULL;
-	}
+	if (!segtype)
+		return_NULL;
 
 	segtype->cmd = cmd;
 	segtype->ops = &_snapshot_ops;

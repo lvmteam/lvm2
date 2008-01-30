@@ -282,10 +282,8 @@ static int _init_tags(struct cmd_context *cmd, struct config_tree *cft)
 	if (!cmd->hosttags && find_config_int(cft->root, "tags/hosttags",
 					      DEFAULT_HOSTTAGS)) {
 		/* FIXME Strip out invalid chars: only A-Za-z0-9_+.- */
-		if (!_set_tag(cmd, cmd->hostname)) {
-			stack;
-			return 0;
-		}
+		if (!_set_tag(cmd, cmd->hostname))
+			return_0;
 		cmd->hosttags = 1;
 	}
 
@@ -301,17 +299,13 @@ static int _init_tags(struct cmd_context *cmd, struct config_tree *cft)
 		}
 		if (cn->child) {
 			passes = 0;
-			if (!_check_host_filters(cmd, cn->child, &passes)) {
-				stack;
-				return 0;
-			}
+			if (!_check_host_filters(cmd, cn->child, &passes))
+				return_0;
 			if (!passes)
 				continue;
 		}
-		if (!_set_tag(cmd, tag)) {
-			stack;
-			return 0;
-		}
+		if (!_set_tag(cmd, tag))
+			return_0;
 	}
 
 	return 1;
@@ -385,10 +379,8 @@ static int _init_lvm_conf(struct cmd_context *cmd)
 		return 1;
 	}
 
-	if (!_load_config_file(cmd, "")) {
-		stack;
-		return 0;
-	}
+	if (!_load_config_file(cmd, ""))
+		return_0;
 
 	return 1;
 }
@@ -400,11 +392,8 @@ static int _init_tag_configs(struct cmd_context *cmd)
 
 	/* Tag list may grow while inside this loop */
 	list_iterate_items(sl, &cmd->tags) {
-		if (!_load_config_file(cmd, sl->str)) {
-			stack;
-			return 0;
-		}
-
+		if (!_load_config_file(cmd, sl->str))
+			return_0;
 	}
 
 	return 1;
@@ -424,10 +413,8 @@ static int _merge_config_files(struct cmd_context *cmd)
 
 	list_iterate_items(cfl, &cmd->config_files) {
 		/* Merge all config trees into cmd->cft using merge/tag rules */
-		if (!merge_config_tree(cmd, cmd->cft, cfl->cft)) {
-			stack;
-			return 0;
-		}
+		if (!merge_config_tree(cmd, cmd->cft, cfl->cft))
+			return_0;
 	}
 
 	return 1;
@@ -694,10 +681,8 @@ static int _init_formats(struct cmd_context *cmd)
 				return 0;
 			}
 			if (!(lib = load_shared_library(cmd, cv->v.str,
-							"format", 0))) {
-				stack;
-				return 0;
-			}
+							"format", 0)))
+				return_0;
 
 			if (!(init_format_fn = dlsym(lib, "init_format"))) {
 				log_error("Shared library %s does not contain "
@@ -790,10 +775,8 @@ static int _init_segtypes(struct cmd_context *cmd)
 				return 0;
 			}
 			if (!(lib = load_shared_library(cmd, cv->v.str,
-							"segment type", 0))) {
-				stack;
-				return 0;
-			}
+							"segment type", 0)))
+				return_0;
 
 			if (!(init_segtype_fn = dlsym(lib, "init_segtype"))) {
 				log_error("Shared library %s does not contain "

@@ -154,10 +154,8 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 		return 0;
 	}
 
-	if (!alloc_pv_segment_whole_pv(mem, pv)) {
-		stack;
-		return 0;
-	}
+	if (!alloc_pv_segment_whole_pv(mem, pv))
+		return_0;
 
 	pvl->pv = pv;
 	list_add(&vg->pvs, &pvl->list);
@@ -189,10 +187,8 @@ static int _copy_pv(struct physical_volume *pv_to,
 	}
 
 	if (!peg_dup(pv_to->fmt->cmd->mem, &pv_to->segments,
-		     &pv_from->segments)) {
-		stack;
-		return 0;
-	}
+		     &pv_from->segments))
+		return_0;
 
 	return 1;
 }
@@ -217,10 +213,8 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 
 	list_iterate_items(pvl, &vg->pvs) {
 		if (id_equal(&pvl->pv->id, (const struct id *) pvid)) {
-			if (!_copy_pv(pv, pvl->pv)) {
-				stack;
-				return 0;
-			}
+			if (!_copy_pv(pv, pvl->pv))
+				return_0;
 			return 1;
 		}
 	}
@@ -475,10 +469,8 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 	int consistent = 0;
 	int old_partial;
 
-	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg)))) {
-		stack;
-		return NULL;
-	}
+	if (!(vg = dm_pool_zalloc(mem, sizeof(*vg))))
+		return_NULL;
 
 	/* is this vg name already in use ? */
 	old_partial = partial_mode();
@@ -499,10 +491,8 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 
 	vg->cmd = cmd;
 
-	if (!(vg->name = dm_pool_strdup(mem, vg_name))) {
-		stack;
-		goto bad;
-	}
+	if (!(vg->name = dm_pool_strdup(mem, vg_name)))
+		goto_bad;
 
 	vg->seqno = 0;
 
@@ -595,22 +585,16 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 	vg->extent_size = new_size;
 
 	if (vg->fid->fmt->ops->vg_setup &&
-	    !vg->fid->fmt->ops->vg_setup(vg->fid, vg)) {
-		stack;
-		return 0;
-	}
+	    !vg->fid->fmt->ops->vg_setup(vg->fid, vg))
+		return_0;
 
 	if (!_recalc_extents(&vg->extent_count, vg->name, "", old_size,
-			     new_size)) {
-		stack;
-		return 0;
-	}
+			     new_size))
+		return_0;
 
 	if (!_recalc_extents(&vg->free_count, vg->name, " free space",
-			     old_size, new_size)) {
-		stack;
-		return 0;
-	}
+			     old_size, new_size))
+		return_0;
 
 	/* foreach PV */
 	list_iterate_items(pvl, &vg->pvs) {
@@ -618,16 +602,12 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 
 		pv->pe_size = new_size;
 		if (!_recalc_extents(&pv->pe_count, pv_dev_name(pv), "",
-				     old_size, new_size)) {
-			stack;
-			return 0;
-		}
+				     old_size, new_size))
+			return_0;
 
 		if (!_recalc_extents(&pv->pe_alloc_count, pv_dev_name(pv),
-				     " allocated space", old_size, new_size)) {
-			stack;
-			return 0;
-		}
+				     " allocated space", old_size, new_size))
+			return_0;
 
 		/* foreach free PV Segment */
 		list_iterate_items(pvseg, &pv->segments) {
@@ -636,16 +616,12 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 
 			if (!_recalc_extents(&pvseg->pe, pv_dev_name(pv),
 					     " PV segment start", old_size,
-					     new_size)) {
-				stack;
-				return 0;
-			}
+					     new_size))
+				return_0;
 			if (!_recalc_extents(&pvseg->len, pv_dev_name(pv),
 					     " PV segment length", old_size,
-					     new_size)) {
-				stack;
-				return 0;
-			}
+					     new_size))
+				return_0;
 		}
 	}
 
@@ -654,39 +630,29 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 		lv = lvl->lv;
 
 		if (!_recalc_extents(&lv->le_count, lv->name, "", old_size,
-				     new_size)) {
-			stack;
-			return 0;
-		}
+				     new_size))
+			return_0;
 
 		list_iterate_items(seg, &lv->segments) {
 			if (!_recalc_extents(&seg->le, lv->name,
 					     " segment start", old_size,
-					     new_size)) {
-				stack;
-				return 0;
-			}
+					     new_size))
+				return_0;
 
 			if (!_recalc_extents(&seg->len, lv->name,
 					     " segment length", old_size,
-					     new_size)) {
-				stack;
-				return 0;
-			}
+					     new_size))
+				return_0;
 
 			if (!_recalc_extents(&seg->area_len, lv->name,
 					     " area length", old_size,
-					     new_size)) {
-				stack;
-				return 0;
-			}
+					     new_size))
+				return_0;
 
 			if (!_recalc_extents(&seg->extents_copied, lv->name,
 					     " extents moved", old_size,
-					     new_size)) {
-				stack;
-				return 0;
-			}
+					     new_size))
+				return_0;
 
 			/* foreach area */
 			for (s = 0; s < seg->area_count; s++) {
@@ -696,27 +662,21 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 					    (&seg_pe(seg, s),
 					     lv->name,
 					     " pvseg start", old_size,
-					     new_size)) {
-						stack;
-						return 0;
-					}
+					     new_size))
+						return_0;
 					if (!_recalc_extents
 					    (&seg_pvseg(seg, s)->len,
 					     lv->name,
 					     " pvseg length", old_size,
-					     new_size)) {
-						stack;
-						return 0;
-					}
+					     new_size))
+						return_0;
 					break;
 				case AREA_LV:
 					if (!_recalc_extents
 					    (&seg_le(seg, s), lv->name,
 					     " area start", old_size,
-					     new_size)) {
-						stack;
-						return 0;
-					}
+					     new_size))
+						return_0;
 					break;
 				case AREA_UNASSIGNED:
 					log_error("Unassigned area %u found in "
@@ -804,10 +764,8 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem)
 {
 	struct physical_volume *pv = dm_pool_zalloc(mem, sizeof(*pv));
 
-	if (!pv) {
-		stack;
-		return NULL;
-	}
+	if (!pv)
+		return_NULL;
 
 	if (!(pv->vg_name = dm_pool_zalloc(mem, NAME_LEN))) {
 		dm_pool_free(mem, pv);
@@ -1074,10 +1032,8 @@ int vg_remove(struct volume_group *vg)
 	/* Remove each copy of the metadata */
 	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		if (mda->ops->vg_remove &&
-		    !mda->ops->vg_remove(vg->fid, vg, mda)) {
-			stack;
-			return 0;
-		}
+		    !mda->ops->vg_remove(vg->fid, vg, mda))
+			return_0;
 	}
 
 	return 1;
@@ -1260,10 +1216,8 @@ int vg_write(struct volume_group *vg)
 	struct list *mdah;
 	struct metadata_area *mda;
 
-	if (!vg_validate(vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_validate(vg))
+		return_0;
 
 	if (vg->status & PARTIAL_VG) {
 		log_error("Cannot change metadata for partial volume group %s",
@@ -1378,10 +1332,8 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	struct volume_group *vg;
 	struct physical_volume *pv;
 
-	if (!(vginfo = vginfo_from_vgname(ORPHAN, NULL))) {
-		stack;
-		return NULL;
-	}
+	if (!(vginfo = vginfo_from_vgname(ORPHAN, NULL)))
+		return_NULL;
 
 	if (!(vg = dm_pool_zalloc(cmd->mem, sizeof(*vg)))) {
 		log_error("vg allocation failed");
@@ -1477,15 +1429,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (!(fmt = fmt_from_vgname(vgname, vgid))) {
 		lvmcache_label_scan(cmd, 0);
 		if (!(fmt = fmt_from_vgname(vgname, vgid))) {
-			if (memlock()) {
-				stack;
-				return NULL;
-			}
+			if (memlock())
+				return_NULL;
 			lvmcache_label_scan(cmd, 2);
-			if (!(fmt = fmt_from_vgname(vgname, vgid))) {
-				stack;
-				return NULL;
-			}
+			if (!(fmt = fmt_from_vgname(vgname, vgid)))
+				return_NULL;
 		}
 	}
 
@@ -1493,10 +1441,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		use_precommitted = 0;
 
 	/* Store pvids for later so we can check if any are missing */
-	if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid))) {
-		stack;
-		return NULL;
-	}
+	if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid)))
+		return_NULL;
 
 	/* create format instance with appropriate metadata area */
 	if (!(fid = fmt->ops->create_instance(fmt, vgname, vgid, NULL))) {
@@ -1551,15 +1497,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (!correct_vg) {
 		inconsistent = 0;
 
-		if (memlock()) {
-			stack;
-			return NULL;
-		}
+		if (memlock())
+			return_NULL;
 		lvmcache_label_scan(cmd, 2);
-		if (!(fmt = fmt_from_vgname(vgname, vgid))) {
-			stack;
-			return NULL;
-		}
+		if (!(fmt = fmt_from_vgname(vgname, vgid)))
+			return_NULL;
 
 		if (precommitted && !(fmt->features & FMT_PRECOMMIT))
 			use_precommitted = 0;
@@ -1605,10 +1547,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 
 		/* Give up looking */
-		if (!correct_vg) {
-			stack;
-			return NULL;
-		}
+		if (!correct_vg)
+			return_NULL;
 	}
 
 	lvmcache_update_vg(correct_vg);
@@ -1837,10 +1777,8 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	struct lvmcache_info *info;
 	struct device *dev;
 
-	if (!(dev = dev_cache_get(pv_name, cmd->filter))) {
-		stack;
-		return NULL;
-	}
+	if (!(dev = dev_cache_get(pv_name, cmd->filter)))
+		return_NULL;
 
 	if (!(label_read(dev, &label, UINT64_C(0)))) {
 		if (warnings)
@@ -1871,10 +1809,8 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	if (!pv->size)
 		return NULL;
 	
-	if (!alloc_pv_segment_whole_pv(cmd->mem, pv)) {
-		stack;
-		return NULL;
-	}
+	if (!alloc_pv_segment_whole_pv(cmd->mem, pv))
+		return_NULL;
 
 	return pv;
 }
@@ -1996,10 +1932,8 @@ static int _pv_write(struct cmd_context *cmd __attribute((unused)),
 		return 0;
 	}
 
-	if (!pv->fmt->ops->pv_write(pv->fmt, pv, mdas, label_sector)) {
-		stack;
-		return 0;
-	}
+	if (!pv->fmt->ops->pv_write(pv->fmt, pv, mdas, label_sector))
+		return_0;
 
 	return 1;
 }

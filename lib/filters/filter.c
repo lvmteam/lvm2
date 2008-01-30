@@ -277,9 +277,8 @@ struct dev_filter *lvm_type_filter_create(const char *proc,
 	f->private = NULL;
 
 	if (!_scan_proc_dev(proc, cn)) {
-		stack;
 		dm_free(f);
-		return NULL;
+		return_NULL;
 	}
 
 	return f;

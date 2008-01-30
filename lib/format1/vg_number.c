@@ -33,15 +33,11 @@ int get_free_vg_number(struct format_instance *fid, struct dev_filter *filter,
 
 	list_init(&all_pvs);
 
-	if (!mem) {
-		stack;
-		return 0;
-	}
+	if (!mem)
+		return_0;
 
-	if (!read_pvs_in_vg(fid->fmt, NULL, filter, mem, &all_pvs)) {
-		stack;
-		goto out;
-	}
+	if (!read_pvs_in_vg(fid->fmt, NULL, filter, mem, &all_pvs))
+		goto_out;
 
 	memset(numbers, 0, sizeof(numbers));
 

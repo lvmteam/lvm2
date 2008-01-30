@@ -135,10 +135,8 @@ static int _nl_raw(struct formatter *f)
 {
 	/* If metadata doesn't fit, extend buffer */
 	if ((f->data.buf.used + 2 > f->data.buf.size) &&
-	    (!_extend_buffer(f))) {
-		stack;
-		return 0;
-	}
+	    (!_extend_buffer(f)))
+		return_0;
 
 	*(f->data.buf.start + f->data.buf.used) = '\n';
 	f->data.buf.used += 1;
@@ -195,10 +193,8 @@ static int _out_with_comment_raw(struct formatter *f,
 
 	/* If metadata doesn't fit, extend buffer */
 	if (n < 0 || (n + f->data.buf.used + 2 > f->data.buf.size)) {
-		if (!_extend_buffer(f)) {
-			stack;
-			return 0;
-		}
+		if (!_extend_buffer(f))
+			return_0;
 		return -1; /* Retry */
 	}
 
@@ -323,26 +319,20 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 {
 	char buffer[4096];
 
-	if (!id_write_format(&vg->id, buffer, sizeof(buffer))) {
-		stack;
-		return 0;
-	}
+	if (!id_write_format(&vg->id, buffer, sizeof(buffer)))
+		return_0;
 
 	outf(f, "id = \"%s\"", buffer);
 
 	outf(f, "seqno = %u", vg->seqno);
 
-	if (!print_flags(vg->status, VG_FLAGS, buffer, sizeof(buffer))) {
-		stack;
-		return 0;
-	}
+	if (!print_flags(vg->status, VG_FLAGS, buffer, sizeof(buffer)))
+		return_0;
 	outf(f, "status = %s", buffer);
 
 	if (!list_empty(&vg->tags)) {
-		if (!print_tags(&vg->tags, buffer, sizeof(buffer))) {
-			stack;
-			return 0;
-		}
+		if (!print_tags(&vg->tags, buffer, sizeof(buffer)))
+			return_0;
 		outf(f, "tags = %s", buffer);
 	}
 
@@ -350,10 +340,8 @@ static int _print_vg(struct formatter *f, struct volume_group *vg)
 		outf(f, "system_id = \"%s\"", vg->system_id);
 
 	if (!out_size(f, (uint64_t) vg->extent_size, "extent_size = %u",
-		      vg->extent_size)) {
-		stack;
-		return 0;
-	}
+		      vg->extent_size))
+		return_0;
 	outf(f, "max_lv = %u", vg->max_lv);
 	outf(f, "max_pv = %u", vg->max_pv);
 
@@ -390,52 +378,38 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 	list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 
-		if (!(name = _get_pv_name(f, pv))) {
-			stack;
-			return 0;
-		}
+		if (!(name = _get_pv_name(f, pv)))
+			return_0;
 
 		outnl(f);
 		outf(f, "%s {", name);
 		_inc_indent(f);
 
-		if (!id_write_format(&pv->id, buffer, sizeof(buffer))) {
-			stack;
-			return 0;
-		}
+		if (!id_write_format(&pv->id, buffer, sizeof(buffer)))
+			return_0;
 
 		outf(f, "id = \"%s\"", buffer);
-		if (!out_hint(f, "device = \"%s\"", pv_dev_name(pv))) {
-			stack;
-			return 0;
-		}
+		if (!out_hint(f, "device = \"%s\"", pv_dev_name(pv)))
+			return_0;
 		outnl(f);
 
-		if (!print_flags(pv->status, PV_FLAGS, buffer, sizeof(buffer))) {
-			stack;
-			return 0;
-		}
+		if (!print_flags(pv->status, PV_FLAGS, buffer, sizeof(buffer)))
+			return_0;
 		outf(f, "status = %s", buffer);
 
 		if (!list_empty(&pv->tags)) {
-			if (!print_tags(&pv->tags, buffer, sizeof(buffer))) {
-				stack;
-				return 0;
-			}
+			if (!print_tags(&pv->tags, buffer, sizeof(buffer)))
+				return_0;
 			outf(f, "tags = %s", buffer);
 		}
 
-		if (!out_size(f, pv->size, "dev_size = %" PRIu64, pv->size)) {
-			stack;
-			return 0;
-		}
+		if (!out_size(f, pv->size, "dev_size = %" PRIu64, pv->size))
+			return_0;
 
 		outf(f, "pe_start = %" PRIu64, pv->pe_start);
 		if (!out_size(f, vg->extent_size * (uint64_t) pv->pe_count,
-			      "pe_count = %u", pv->pe_count)) {
-			stack;
-			return 0;
-		}
+			      "pe_count = %u", pv->pe_count))
+			return_0;
 
 		_dec_indent(f);
 		outf(f, "}");
@@ -456,27 +430,21 @@ static int _print_segment(struct formatter *f, struct volume_group *vg,
 
 	outf(f, "start_extent = %u", seg->le);
 	if (!out_size(f, (uint64_t) seg->len * vg->extent_size,
-		      "extent_count = %u", seg->len)) {
-		stack;
-		return 0;
-	}
+		      "extent_count = %u", seg->len))
+		return_0;
 
 	outnl(f);
 	outf(f, "type = \"%s\"", seg->segtype->name);
 
 	if (!list_empty(&seg->tags)) {
-		if (!print_tags(&seg->tags, buffer, sizeof(buffer))) {
-			stack;
-			return 0;
-		}
+		if (!print_tags(&seg->tags, buffer, sizeof(buffer)))
+			return_0;
 		outf(f, "tags = %s", buffer);
 	}
 
 	if (seg->segtype->ops->text_export &&
-	    !seg->segtype->ops->text_export(seg, f)) {
-		stack;
-		return 0;
-	}
+	    !seg->segtype->ops->text_export(seg, f))
+		return_0;
 
 	_dec_indent(f);
 	outf(f, "}");
@@ -498,10 +466,8 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 	for (s = 0; s < seg->area_count; s++) {
 		switch (seg_type(seg, s)) {
 		case AREA_PV:
-			if (!(name = _get_pv_name(f, seg_pv(seg, s)))) {
-				stack;
-				return 0;
-			}
+			if (!(name = _get_pv_name(f, seg_pv(seg, s))))
+				return_0;
 
 			outf(f, "\"%s\", %u%s", name,
 			     seg_pe(seg, s),
@@ -534,24 +500,18 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 	_inc_indent(f);
 
 	/* FIXME: Write full lvid */
-	if (!id_write_format(&lv->lvid.id[1], buffer, sizeof(buffer))) {
-		stack;
-		return 0;
-	}
+	if (!id_write_format(&lv->lvid.id[1], buffer, sizeof(buffer)))
+		return_0;
 
 	outf(f, "id = \"%s\"", buffer);
 
-	if (!print_flags(lv->status, LV_FLAGS, buffer, sizeof(buffer))) {
-		stack;
-		return 0;
-	}
+	if (!print_flags(lv->status, LV_FLAGS, buffer, sizeof(buffer)))
+		return_0;
 	outf(f, "status = %s", buffer);
 
 	if (!list_empty(&lv->tags)) {
-		if (!print_tags(&lv->tags, buffer, sizeof(buffer))) {
-			stack;
-			return 0;
-		}
+		if (!print_tags(&lv->tags, buffer, sizeof(buffer)))
+			return_0;
 		outf(f, "tags = %s", buffer);
 	}
 
@@ -579,10 +539,8 @@ static int _print_lv(struct formatter *f, struct logical_volume *lv)
 
 	seg_count = 1;
 	list_iterate_items(seg, &lv->segments) {
-		if (!_print_segment(f, lv->vg, seg_count++, seg)) {
-			stack;
-			return 0;
-		}
+		if (!_print_segment(f, lv->vg, seg_count++, seg))
+			return_0;
 	}
 
 	_dec_indent(f);
@@ -610,19 +568,15 @@ static int _print_lvs(struct formatter *f, struct volume_group *vg)
 	list_iterate_items(lvl, &vg->lvs) {
 		if (!(lvl->lv->status & VISIBLE_LV))
 			continue;
-		if (!_print_lv(f, lvl->lv)) {
-			stack;
-			return 0;
-		}
+		if (!_print_lv(f, lvl->lv))
+			return_0;
 	}
 
 	list_iterate_items(lvl, &vg->lvs) {
 		if ((lvl->lv->status & VISIBLE_LV))
 			continue;
-		if (!_print_lv(f, lvl->lv)) {
-			stack;
-			return 0;
-		}
+		if (!_print_lv(f, lvl->lv))
+			return_0;
 	}
 
 	_dec_indent(f);
@@ -671,10 +625,8 @@ static int _text_vg_export(struct formatter *f,
 {
 	int r = 0;
 
-	if (!_build_pv_names(f, vg)) {
-		stack;
-		goto out;
-	}
+	if (!_build_pv_names(f, vg))
+		goto_out;
 
 	if (f->header && !_print_header(f, desc))
 		goto_out;
@@ -721,10 +673,8 @@ int text_vg_export_file(struct volume_group *vg, const char *desc, FILE *fp)
 
 	_init();
 
-	if (!(f = dm_malloc(sizeof(*f)))) {
-		stack;
-		return 0;
-	}
+	if (!(f = dm_malloc(sizeof(*f))))
+		return_0;
 
 	memset(f, 0, sizeof(*f));
 	f->data.fp = fp;
@@ -748,10 +698,8 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 
 	_init();
 
-	if (!(f = dm_malloc(sizeof(*f)))) {
-		stack;
-		return 0;
-	}
+	if (!(f = dm_malloc(sizeof(*f))))
+		return_0;
 
 	memset(f, 0, sizeof(*f));
 
@@ -767,9 +715,8 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 	f->nl = &_nl_raw;
 
 	if (!_text_vg_export(f, vg, desc)) {
-		stack;
 		dm_free(f->data.buf.start);
-		goto out;
+		goto_out;
 	}
 
 	r = f->data.buf.used + 1;

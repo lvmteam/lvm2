@@ -42,10 +42,8 @@ static int _init_hash(struct pfilter *pf)
 	if (pf->devices)
 		dm_hash_destroy(pf->devices);
 
-	if (!(pf->devices = dm_hash_create(128))) {
-		stack;
-		return 0;
-	}
+	if (!(pf->devices = dm_hash_create(128)))
+		return_0;
 
 	return 1;
 }
@@ -293,10 +291,8 @@ struct dev_filter *persistent_filter_create(struct dev_filter *real,
 	struct pfilter *pf;
 	struct dev_filter *f = NULL;
 
-	if (!(pf = dm_malloc(sizeof(*pf)))) {
-		stack;
-		return NULL;
-	}
+	if (!(pf = dm_malloc(sizeof(*pf))))
+		return_NULL;
 	memset(pf, 0, sizeof(*pf));
 
 	if (!(pf->file = dm_malloc(strlen(file) + 1)))

@@ -196,10 +196,8 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 	off_t mmap_offset = 0;
 	char *buf = NULL;
 
-	if (!(p = dm_pool_alloc(c->mem, sizeof(*p)))) {
-		stack;
-		return 0;
-	}
+	if (!(p = dm_pool_alloc(c->mem, sizeof(*p))))
+		return_0;
 	p->mem = c->mem;
 
 	/* Only use mmap with regular files */
@@ -217,10 +215,8 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 		}
 		p->fb = p->fb + mmap_offset;
 	} else {
-		if (!(buf = dm_malloc(size + size2))) {
-			stack;
-			return 0;
-		}
+		if (!(buf = dm_malloc(size + size2)))
+			return_0;
 		if (!dev_read_circular(dev, (uint64_t) offset, size,
 				       (uint64_t) offset2, size2, buf)) {
 			goto out;
@@ -237,10 +233,8 @@ int read_config_fd(struct config_tree *cft, struct device *dev,
 
 	p->fe = p->fb + size + size2;
 
-	if (!_parse_config_file(p, cft)) {
-		stack;
-		goto out;
-	}
+	if (!_parse_config_file(p, cft))
+		goto_out;
 
 	r = 1;
 
@@ -537,10 +531,8 @@ static struct config_node *_file(struct parser *p)
 {
 	struct config_node *root = NULL, *n, *l = NULL;
 	while (p->t != TOK_EOF) {
-		if (!(n = _section(p))) {
-			stack;
-			return 0;
-		}
+		if (!(n = _section(p)))
+			return_0;
 
 		if (!root)
 			root = n;
@@ -555,25 +547,19 @@ static struct config_node *_section(struct parser *p)
 {
 	/* IDENTIFIER SECTION_B_CHAR VALUE* SECTION_E_CHAR */
 	struct config_node *root, *n, *l = NULL;
-	if (!(root = _create_node(p))) {
-		stack;
-		return 0;
-	}
+	if (!(root = _create_node(p)))
+		return_0;
 
-	if (!(root->key = _dup_tok(p))) {
-		stack;
-		return 0;
-	}
+	if (!(root->key = _dup_tok(p)))
+		return_0;
 
 	match(TOK_IDENTIFIER);
 
 	if (p->t == TOK_SECTION_B) {
 		match(TOK_SECTION_B);
 		while (p->t != TOK_SECTION_E) {
-			if (!(n = _section(p))) {
-				stack;
-				return 0;
-			}
+			if (!(n = _section(p)))
+				return_0;
 
 			if (!root->child)
 				root->child = n;
@@ -584,10 +570,8 @@ static struct config_node *_section(struct parser *p)
 		match(TOK_SECTION_E);
 	} else {
 		match(TOK_EQ);
-		if (!(root->v = _value(p))) {
-			stack;
-			return 0;
-		}
+		if (!(root->v = _value(p)))
+			return_0;
 	}
 
 	return root;
@@ -600,10 +584,8 @@ static struct config_value *_value(struct parser *p)
 	if (p->t == TOK_ARRAY_B) {
 		match(TOK_ARRAY_B);
 		while (p->t != TOK_ARRAY_E) {
-			if (!(l = _type(p))) {
-				stack;
-				return 0;
-			}
+			if (!(l = _type(p)))
+				return_0;
 
 			if (!h)
 				h = l;
@@ -656,10 +638,8 @@ static struct config_value *_type(struct parser *p)
 		v->type = CFG_STRING;
 
 		p->tb++, p->te--;	/* strip "'s */
-		if (!(v->v.str = _dup_tok(p))) {
-			stack;
-			return 0;
-		}
+		if (!(v->v.str = _dup_tok(p)))
+			return_0;
 		p->te++;
 		match(TOK_STRING);
 		break;
@@ -847,10 +827,8 @@ static char *_dup_tok(struct parser *p)
 {
 	size_t len = p->te - p->tb;
 	char *str = dm_pool_alloc(p->mem, len + 1);
-	if (!str) {
-		stack;
-		return 0;
-	}
+	if (!str)
+		return_0;
 	strncpy(str, p->tb, len);
 	str[len] = '\0';
 	return str;

@@ -25,10 +25,8 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl)
 		return 0;
 	}
 
-	if (!id_write_format(&pvl->pv->id, uuid, sizeof(uuid))) {
-		stack;
-		return 0;
-	}
+	if (!id_write_format(&pvl->pv->id, uuid, sizeof(uuid)))
+		return_0;
 
 	log_verbose("Removing PV with UUID %s from VG %s", uuid, vg->name);
 
@@ -91,16 +89,12 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 
 		*list_unsafe = 1;	/* May remove caller's lvht! */
-		if (!vg_remove_snapshot(cow)) {
-			stack;
-			return 0;
-		}
+		if (!vg_remove_snapshot(cow))
+			return_0;
 		log_verbose("Removing LV %s from VG %s", cow->name,
 			    lv->vg->name);
-		if (!lv_remove(cow)) {
-			stack;
-			return 0;
-		}
+		if (!lv_remove(cow))
+			return_0;
 
 		first = 0;
 	}
@@ -129,10 +123,8 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	} else {
 		/* Remove LV immediately. */
 		log_verbose("Removing LV %s from VG %s", lv->name, lv->vg->name);
-		if (!lv_remove(lv)) {
-			stack;
-			return 0;
-		}
+		if (!lv_remove(lv))
+			return_0;
 	}
 
 	return 1;
@@ -177,10 +169,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 						only_mirror_images_found = 0;
 						continue;
 					}
-					if (!_remove_lv(cmd, lv, &list_unsafe, &lvs_changed)) {
-						stack;
-						return 0;
-					}
+					if (!_remove_lv(cmd, lv, &list_unsafe, &lvs_changed))
+						return_0;
 					if (list_unsafe)
 						goto restart_loop;
 				}
@@ -198,10 +188,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		pvl = list_item(pvh, struct pv_list);
 		if (pvl->pv->dev)
 			continue;
-		if (!_remove_pv(vg, pvl)) {
-			stack;
-			return 0;
-		}
+		if (!_remove_pv(vg, pvl))
+			return_0;
 	}
 
 	/* VG is now consistent */
@@ -223,10 +211,9 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			/* Suspend lvs_changed */
 			init_partial(1);
 			if (!suspend_lvs(cmd, &lvs_changed)) {
-				stack;
 				init_partial(0);
 				vg_revert(vg);
-				return 0;
+				return_0;
 			}
 			init_partial(0);
 		}
@@ -290,10 +277,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 			if ((mimages != mirrored_seg->area_count) || remove_log){
 				if (!reconfigure_mirror_images(mirrored_seg, mimages,
-							       NULL, remove_log)) {
-					stack;
-					return 0;
-				}
+							       NULL, remove_log))
+					return_0;
 
 				if (!vg_write(vg)) {
 					log_error("Failed to write out updated "
@@ -353,10 +338,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				    lvl->lv->vg->name);
 				/* Skip LVs already removed by mirror code */
 				if (find_lv_in_vg(vg, lvl->lv->name) &&
-				    !lv_remove(lvl->lv)) {
-				stack;
-				return 0;
-			}
+				    !lv_remove(lvl->lv))
+					return_0;
 		}
 	}
 

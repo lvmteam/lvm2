@@ -122,10 +122,8 @@ int calculate_extent_count(struct physical_volume *pv, uint32_t extent_size,
 	struct pv_disk *pvd = dm_malloc(sizeof(*pvd));
 	uint32_t end;
 
-	if (!pvd) {
-		stack;
-		return 0;
-	}
+	if (!pvd)
+		return_0;
 
 	/*
 	 * Guess how many extents will fit, bearing in mind that

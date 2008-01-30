@@ -743,21 +743,19 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 	if (!(lvl = find_lv_in_vg(vg, lp.lv_name))) {
 		log_error("Logical volume \"%s\" not found in "
 			  "volume group \"%s\"", lp.lv_name, lp.vg_name);
-		goto error;
+		goto bad;
 	}
 
 	if (lp.pv_count) {
 		if (!(lp.pvh = create_pv_list(cmd->mem, vg, lp.pv_count,
-					      lp.pvs, 1))) {
-			stack;
-			goto error;
-		}
+					      lp.pvs, 1)))
+			goto_bad;
 	} else
 		lp.pvh = &vg->pvs;
 
 	ret = lvconvert_single(cmd, lvl->lv, &lp);
 
-error:
+bad:
 	unlock_vg(cmd, lp.vg_name);
 
 	if (ret == ECMD_PROCESSED && lp.need_polling) {

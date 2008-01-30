@@ -305,10 +305,8 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 						     seg->area_len,
 						 seg_pvseg(seg, s)->len -
 						     seg->area_len,
-						 split_seg, s))) {
-				stack;
-				return 0;
-			}
+						 split_seg, s)))
+				return_0;
 			log_debug("Split %s:%u[%u] at %u: %s PE %u", lv->name,
 				  seg->le, s, le,
 				  dev_name(seg_dev(seg, s)),
@@ -344,15 +342,11 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le)
 	if (le == seg->le)
 		return 1;
 
-	if (!_lv_split_segment(lv, seg, le)) {
-		stack;
-		return 0;
-	}
+	if (!_lv_split_segment(lv, seg, le))
+		return_0;
 
-	if (!vg_validate(lv->vg)) {
-		stack;
-		return 0;
-	}
+	if (!vg_validate(lv->vg))
+		return_0;
 
 	return 1;
 }

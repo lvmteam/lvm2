@@ -803,10 +803,8 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 
 	if (!(existing = info_from_pvid(pvid_s, 0)) &&
 	    !(existing = info_from_pvid(dev->pvid, 0))) {
-		if (!(label = label_create(labeller))) {
-			stack;
-			return NULL;
-		}
+		if (!(label = label_create(labeller)))
+			return_NULL;
 		if (!(info = dm_malloc(sizeof(*info)))) {
 			log_error("lvmcache_info allocation failed");
 			label_destroy(label);
@@ -862,11 +860,9 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 		/* Has labeller changed? */
 		if (info->label->labeller != labeller) {
 			label_destroy(info->label);
-			if (!(info->label = label_create(labeller))) {
+			if (!(info->label = label_create(labeller)))
 				/* FIXME leaves info without label! */
-				stack;
-				return NULL;
-			}
+				return_NULL;
 			info->label->info = info;
 		}
 		label = info->label;

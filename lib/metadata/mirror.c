@@ -1002,10 +1002,8 @@ struct logical_volume *find_pvmove_lv_from_pvname(struct cmd_context *cmd,
 {
 	struct physical_volume *pv;
 
-	if (!(pv = find_pv_by_name(cmd, name))) {
-		stack;
-		return NULL;
-	}
+	if (!(pv = find_pv_by_name(cmd, name)))
+		return_NULL;
 
 	return find_pvmove_lv(vg, pv->dev, lv_type);
 }

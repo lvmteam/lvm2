@@ -1028,10 +1028,8 @@ struct cmd_context *init_lvm(unsigned is_static)
 
 	_cmdline.the_args = &_the_args[0];
 
-	if (!(cmd = create_toolcontext(_cmdline.the_args, is_static, 0))) {
-		stack;
-		return NULL;
-	}
+	if (!(cmd = create_toolcontext(_cmdline.the_args, is_static, 0)))
+		return_NULL;
 
 	_init_rand();
 

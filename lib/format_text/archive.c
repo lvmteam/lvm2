@@ -113,10 +113,8 @@ static char *_join_file_to_dir(struct dm_pool *mem, const char *dir, const char 
 	    !dm_pool_grow_object(mem, dir, strlen(dir)) ||
 	    !dm_pool_grow_object(mem, "/", 1) ||
 	    !dm_pool_grow_object(mem, name, strlen(name)) ||
-	    !dm_pool_grow_object(mem, "\0", 1)) {
-		stack;
-		return NULL;
-	}
+	    !dm_pool_grow_object(mem, "\0", 1))
+		return_NULL;
 
 	return dm_pool_end_object(mem);
 }
@@ -134,10 +132,8 @@ static struct list *_scan_archive(struct dm_pool *mem,
 	struct archive_file *af;
 	struct list *results;
 
-	if (!(results = dm_pool_alloc(mem, sizeof(*results)))) {
-		stack;
-		return NULL;
-	}
+	if (!(results = dm_pool_alloc(mem, sizeof(*results))))
+		return_NULL;
 
 	list_init(results);
 
@@ -161,10 +157,8 @@ static struct list *_scan_archive(struct dm_pool *mem,
 		if (strcmp(vgname, vgname_found))
 			continue;
 
-		if (!(path = _join_file_to_dir(mem, dir, dirent[i]->d_name))) {
-			stack;
-			goto out;
-		}
+		if (!(path = _join_file_to_dir(mem, dir, dirent[i]->d_name)))
+			goto_out;
 
 		/*
 		 * Create a new archive_file.
@@ -255,10 +249,9 @@ int archive_vg(struct volume_group *vg,
 	}
 
 	if (!text_vg_export_file(vg, desc, fp)) {
-		stack;
 		if (fclose(fp))
 			log_sys_error("fclose", temp_file);
-		return 0;
+		return_0;
 	}
 
 	if (lvm_fclose(fp, temp_file))
@@ -267,10 +260,8 @@ int archive_vg(struct volume_group *vg,
 	/*
 	 * Now we want to rename this file to <vg>_index.vg.
 	 */
-	if (!(archives = _scan_archive(vg->cmd->mem, vg->name, dir))) {
-		stack;
-		return 0;
-	}
+	if (!(archives = _scan_archive(vg->cmd->mem, vg->name, dir)))
+		return_0;
 
 	if (list_empty(archives))
 		ix = 0;
@@ -343,10 +334,8 @@ int archive_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 	struct list *archives;
 	struct archive_file *af;
 
-	if (!(archives = _scan_archive(cmd->mem, vgname, dir))) {
-		stack;
-		return 0;
-	}
+	if (!(archives = _scan_archive(cmd->mem, vgname, dir)))
+		return_0;
 
 	if (list_empty(archives))
 		log_print("No archives found in %s.", dir);
@@ -379,10 +368,8 @@ int backup_list(struct cmd_context *cmd, const char *dir, const char *vgname)
 {
 	struct archive_file af;
 
-	if (!(af.path = _join_file_to_dir(cmd->mem, dir, vgname))) {
-		stack;
-		return 0;
-	}
+	if (!(af.path = _join_file_to_dir(cmd->mem, dir, vgname)))
+		return_0;
 
 	if (path_exists(af.path))
 		_display_archive(cmd, &af);

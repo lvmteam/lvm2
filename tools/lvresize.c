@@ -150,19 +150,13 @@ static int do_resizefs_reduce(const struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (!lp->nofsck) {
-		if (!exec_cmd("fsadm", "check", lv_path, NULL)) {
-			stack;
-			return 0;
-		}
-	}
+	if (!lp->nofsck)
+		if (!exec_cmd("fsadm", "check", lv_path, NULL))
+			return_0;
 
-	if (lp->resize == LV_REDUCE) {
-		if (!exec_cmd("fsadm", "resize", lv_path, size_buf)) {
-			stack;
-			return 0;
-		}
-	}
+	if (lp->resize == LV_REDUCE)
+		if (!exec_cmd("fsadm", "resize", lv_path, size_buf))
+			return_0;
 
 	return 1;
 }
