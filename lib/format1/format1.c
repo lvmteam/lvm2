@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -444,7 +444,7 @@ static int _format1_vg_setup(struct format_instance *fid, struct volume_group *v
 	return 1;
 }
 
-static int _format1_segtype_supported(struct format_instance *fid __attribute((unused)), 
+static int _format1_segtype_supported(struct format_instance *fid __attribute((unused)),
 				      const struct segment_type *segtype)
 {
 	if (!(segtype->flags & SEG_FORMAT1_SUPPORT))

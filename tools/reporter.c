@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -111,7 +111,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 			goto out;
 		}
 
-                 pv = pvl->pv;
+		 pv = pvl->pv;
 	}
 
 	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
@@ -132,7 +132,7 @@ static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 	if (!vg) {
 		log_error("Volume group %s not found", vg_name);
 		return ECMD_FAILED;
-	}                     
+	}
 
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvs_single);
 }
@@ -145,7 +145,7 @@ static int _pvsegs_in_vg(struct cmd_context *cmd, const char *vg_name,
 	if (!vg) {
 		log_error("Volume group %s not found", vg_name);
 		return ECMD_FAILED;
-	}                     
+	}
 
 	return process_each_pv_in_vg(cmd, vg, NULL, handle, &_pvsegs_single);
 }

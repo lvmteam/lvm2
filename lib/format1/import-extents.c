@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -280,7 +280,7 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 	while (first_area_le < total_area_len) {
 		area_len = 1;
 
-		/* 
+		/*
 		 * Find how many extents are contiguous in all stripes
 		 * and so can form part of this segment
 		 */

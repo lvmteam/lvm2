@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -181,7 +181,7 @@ static int _move_mirrors(struct volume_group *vg_from,
 		if (!(lv->status & MIRRORED))
 			continue;
 
-		seg = first_seg(lv); 
+		seg = first_seg(lv);
 
 		seg_in = 0;
 		for (s = 0; s < seg->area_count; s++)
@@ -190,8 +190,8 @@ static int _move_mirrors(struct volume_group *vg_from,
 
 		log_in = (!seg->log_lv || _lv_is_in_vg(vg_to, seg->log_lv));
 		
-		if ((seg_in && seg_in < seg->area_count) || 
-		    (seg_in && seg->log_lv && !log_in) || 
+		if ((seg_in && seg_in < seg->area_count) ||
+		    (seg_in && seg->log_lv && !log_in) ||
 		    (!seg_in && seg->log_lv && log_in)) {
 			log_error("Can't split mirror %s between "
 				  "two Volume Groups", lv->name);

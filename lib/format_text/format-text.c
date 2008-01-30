@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.   
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -250,7 +250,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 static int _text_lv_setup(struct format_instance *fid __attribute((unused)),
 			  struct logical_volume *lv)
 {
-/******** FIXME Any LV size restriction? 
+/******** FIXME Any LV size restriction?
 	uint64_t max_size = UINT_MAX;
 
 	if (lv->size > max_size) {
@@ -581,7 +581,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		if (!dev_write(mdac->area.dev,
 			       mdac->area.start + MDA_HEADER_SIZE,
 			       (size_t) new_wrap,
-			       fidtc->raw_metadata_buf + 
+			       fidtc->raw_metadata_buf +
 			       mdac->rlocn.size - new_wrap))
 			goto_out;
 	}
@@ -1092,7 +1092,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 
 	log_debug("%s: Found metadata at %" PRIu64 " size %" PRIu64
 		  " (in area at %" PRIu64 " size %" PRIu64
-		  ") for %s (%s)", 
+		  ") for %s (%s)",
 		  dev_name(dev_area->dev), dev_area->start + rlocn->offset,
 		  rlocn->size, dev_area->start, dev_area->size, vgname, uuid);
 
@@ -1330,7 +1330,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	else
 		list_init(&info->das);
 
-	/* Set pe_start to first aligned sector after any metadata 
+	/* Set pe_start to first aligned sector after any metadata
 	 * areas that begin before pe_start */
 	pv->pe_start = pe_align();
 	list_iterate_items(mda, &info->mdas) {

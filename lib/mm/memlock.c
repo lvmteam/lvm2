@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -151,8 +151,8 @@ void memlock_init(struct cmd_context *cmd)
 					   "activation/reserved_memory",
 					   DEFAULT_RESERVED_MEMORY) * 1024;
 	_default_priority = find_config_tree_int(cmd,
-				            "activation/process_priority",
-				            DEFAULT_PROCESS_PRIORITY);
+					    "activation/process_priority",
+					    DEFAULT_PROCESS_PRIORITY);
 }
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -37,7 +37,7 @@ typedef int (*nl_fn) (struct formatter * f);
  * Then argument list is reset and out_with_comment_fn is called again.
  */
 #define _out_with_comment(f, buffer, fmt, ap) \
-        do { \
+	do { \
 		va_start(ap, fmt); \
 		r = f->out_with_comment(f, buffer, fmt, ap); \
 		va_end(ap); \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -618,7 +618,7 @@ int import_snapshots(struct dm_pool *mem __attribute((unused)), struct volume_gr
 
 			/* insert the snapshot */
 			if (!vg_add_snapshot(NULL, org, cow, NULL,
-					     org->le_count, 
+					     org->le_count,
 					     lvd->lv_chunk_size)) {
 				log_err("Couldn't add snapshot.");
 				return 0;

@@ -1679,8 +1679,8 @@ static int _rename_cb(struct cmd_context *cmd, struct logical_volume *lv,
  */
 static int _for_each_sub_lv(struct cmd_context *cmd, struct logical_volume *lv,
 			    int (*func)(struct cmd_context *cmd,
-				        struct logical_volume *lv,
-				        void *data),
+					struct logical_volume *lv,
+					void *data),
 			    void *data)
 {
 	struct lv_segment *seg;

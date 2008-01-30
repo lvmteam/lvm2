@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -93,10 +93,10 @@ int id_create(struct id *id)
 	if (close(randomfile))
 		stack;
 
-        /*
-         * Skip out the last 2 chars in randomized creation for LVM1
-         * backwards compatibility.
-         */
+	/*
+	 * Skip out the last 2 chars in randomized creation for LVM1
+	 * backwards compatibility.
+	 */
 	for (i = 0; i < len; i++)
 		id->uuid[i] = _c[id->uuid[i] % (sizeof(_c) - 3)];
 

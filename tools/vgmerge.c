@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -70,23 +70,23 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		list_iterate_items(lvl2, &vg_from->lvs) {
 			union lvid *lvid2 = &lvl2->lv->lvid;
 
-                	if (id_equal(&lvid1->id[1], &lvid2->id[1])) {
+			if (id_equal(&lvid1->id[1], &lvid2->id[1])) {
 				if (!id_create(&lvid2->id[1])) {
 					log_error("Failed to generate new "
 						  "random LVID for %s",
 						  lvl2->lv->name);
 					goto bad;
 				}
-                		if (!id_write_format(&lvid2->id[1], uuid,
+				if (!id_write_format(&lvid2->id[1], uuid,
 						     sizeof(uuid)))
-                        		goto_bad;
+					goto_bad;
 
 				log_verbose("Changed LVID for %s to %s",
 					    lvl2->lv->name, uuid);
 			}
 		}
 	}
- 
+
 	while (!list_empty(&vg_from->lvs)) {
 		struct list *lvh = vg_from->lvs.n;
 

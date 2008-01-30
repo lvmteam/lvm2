@@ -24,7 +24,7 @@
 /*
  * Attempt to merge two adjacent segments.
  * Currently only supports striped segments on AREA_PV.
- * Returns success if successful, in which case 'first' 
+ * Returns success if successful, in which case 'first'
  * gets adjusted to contain both areas.
  */
 static int _merge(struct lv_segment *first, struct lv_segment *second)
@@ -76,7 +76,7 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 			r = 0;
 		}
 
-		area_multiplier = segtype_is_striped(seg->segtype) ? 
+		area_multiplier = segtype_is_striped(seg->segtype) ?
 					seg->area_count : 1;
 
 		if (seg->area_len * area_multiplier != seg->len) {

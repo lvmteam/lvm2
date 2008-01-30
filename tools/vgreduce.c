@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -100,7 +100,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/*
-	 * If LV is active, replace it with error segment 
+	 * If LV is active, replace it with error segment
 	 * and add to list of LVs to be removed later.
 	 * Doesn't apply to snapshots/origins yet - they're already deactivated.
 	 */

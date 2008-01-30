@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.

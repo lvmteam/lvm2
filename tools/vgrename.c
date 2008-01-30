@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -150,8 +150,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		  vg_name_old, vg_name_new);
 
 	/* FIXME lvmcache corruption - vginfo duplicated instead of renamed */
-        persistent_filter_wipe(cmd->filter);
-        lvmcache_destroy();
+	persistent_filter_wipe(cmd->filter);
+	lvmcache_destroy();
 
 	return 1;
 

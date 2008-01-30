@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -529,7 +529,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 
 	/*
 	 * sysfs filter. Only available on 2.6 kernels.  Non-critical.
-	 * Listed first because it's very efficient at eliminating 
+	 * Listed first because it's very efficient at eliminating
 	 * unavailable devices.
 	 */
 	if (find_config_tree_bool(cmd, "devices/sysfs_scan",

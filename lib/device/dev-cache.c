@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -488,7 +488,7 @@ static int _init_preferred_names(struct cmd_context *cmd)
 		if (v->type != CFG_STRING) {
 			log_error("preferred_names patterns must be enclosed in quotes");
 			return 0;
-		}       
+		}
 
 		count++;
 	}

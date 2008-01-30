@@ -89,9 +89,9 @@ static void _pvscan_display_single(struct cmd_context *cmd,
 	log_print("PV %-*s VG %-*s %s [%s / %s free]", pv_max_name_len,
 		  pv_tmp_name, vg_max_name_len, vg_tmp_name,
 		  pv->fmt ? pv->fmt->name : "    ",
-		  display_size(cmd, (uint64_t) pv_pe_count(pv) * 
+		  display_size(cmd, (uint64_t) pv_pe_count(pv) *
 					       pv_pe_size(pv)),
-		  display_size(cmd, (uint64_t) (pv_pe_count(pv) - 
+		  display_size(cmd, (uint64_t) (pv_pe_count(pv) -
 						pv_pe_alloc_count(pv)) *
 					   pv_pe_size(pv)));
 	return;

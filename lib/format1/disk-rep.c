@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -133,15 +133,15 @@ static int _munge_formats(struct pv_disk *pvd)
 		return 0;
 	}
 
-        /* UUID too long? */
-        if (pvd->pv_uuid[ID_LEN]) {
+	/* UUID too long? */
+	if (pvd->pv_uuid[ID_LEN]) {
 		/* Retain ID_LEN chars from end */
-                for (e = ID_LEN; e < sizeof(pvd->pv_uuid); e++) {
-                        if (!pvd->pv_uuid[e]) {
-                                e--;
-                                break;
-                        }
-                }
+		for (e = ID_LEN; e < sizeof(pvd->pv_uuid); e++) {
+			if (!pvd->pv_uuid[e]) {
+				e--;
+				break;
+			}
+		}
 		for (b = 0; b < ID_LEN; b++) {
 			pvd->pv_uuid[b] = pvd->pv_uuid[++e - ID_LEN];
 			/* FIXME Remove all invalid chars */
@@ -149,7 +149,7 @@ static int _munge_formats(struct pv_disk *pvd)
 				pvd->pv_uuid[b] = '#';
 		}
 		memset(&pvd->pv_uuid[ID_LEN], 0, sizeof(pvd->pv_uuid) - ID_LEN);
-        }
+	}
 
 	/* If UUID is missing, create one */
 	if (pvd->pv_uuid[0] == '\0') {
@@ -160,8 +160,8 @@ static int _munge_formats(struct pv_disk *pvd)
 	return 1;
 }
 
-/* 
- * If exported, remove "PV_EXP" from end of VG name 
+/*
+ * If exported, remove "PV_EXP" from end of VG name
  */
 static void _munge_exported_vg(struct pv_disk *pvd)
 {
@@ -177,8 +177,8 @@ static void _munge_exported_vg(struct pv_disk *pvd)
 	s = sizeof(EXPORTED_TAG);
 	if (!strncmp((char *)pvd->vg_name + l - s + 1, EXPORTED_TAG, s)) {
 		pvd->vg_name[l - s + 1] = '\0';
-                pvd->pv_status |= VG_EXPORTED;
-        }
+		pvd->pv_status |= VG_EXPORTED;
+	}
 }
 
 int munge_pvd(struct device *dev, struct pv_disk *pvd)

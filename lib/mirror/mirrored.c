@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -110,19 +110,19 @@ static int _mirrored_text_import(struct lv_segment *seg, const struct config_nod
 		}
 	}
 
-        if ((cn = find_config_node(sn, "mirror_log"))) {
-                if (!cn->v || !cn->v->v.str) {
-                        log_error("Mirror log type must be a string.");
-                        return 0;
-                }
-                logname = cn->v->v.str;
+	if ((cn = find_config_node(sn, "mirror_log"))) {
+		if (!cn->v || !cn->v->v.str) {
+			log_error("Mirror log type must be a string.");
+			return 0;
+		}
+		logname = cn->v->v.str;
 		if (!(seg->log_lv = find_lv(seg->lv->vg, logname))) {
 			log_error("Unrecognised mirror log in segment %s.",
 				  sn->key);
 			return 0;
 		}
 		seg->log_lv->status |= MIRROR_LOG;
-        }
+	}
 
 	if (logname && !seg->region_size) {
 		log_error("Missing region size for mirror log for segment "
@@ -232,7 +232,7 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 	uint32_t log_flags = 0;
 
 	/*
-	 * Use clustered mirror log for non-exclusive activation 
+	 * Use clustered mirror log for non-exclusive activation
 	 * in clustered VG.
 	 */
 	if ((!(seg->lv->status & ACTIVATE_EXCL) &&
@@ -266,10 +266,10 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 }
 
 static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem,
-                                struct cmd_context *cmd, void **target_state,
-                                struct lv_segment *seg,
-                                struct dm_tree_node *node, uint64_t len,
-                                uint32_t *pvmove_mirror_count)
+				struct cmd_context *cmd, void **target_state,
+				struct lv_segment *seg,
+				struct dm_tree_node *node, uint64_t len,
+				uint32_t *pvmove_mirror_count)
 {
 	struct mirror_state *mirr_state;
 	uint32_t area_count = seg->area_count;
@@ -349,7 +349,7 @@ static int _mirrored_target_present(const struct lv_segment *seg __attribute((un
 	static int _mirrored_present = 0;
 	uint32_t maj, min, patchlevel;
 	unsigned maj2, min2, patchlevel2;
-        char vsn[80];
+	char vsn[80];
 
 	if (!_mirrored_checked) {
 		_mirrored_present = target_present("mirror", 1);
@@ -361,8 +361,8 @@ static int _mirrored_target_present(const struct lv_segment *seg __attribute((un
 		/* FIXME Move this into libdevmapper */
 
 		if (target_version("mirror", &maj, &min, &patchlevel) &&
-		    maj == 1 && 
-		    ((min >= 1 && min <= 11) || 
+		    maj == 1 &&
+		    ((min >= 1 && min <= 11) ||
 		     (min == 0 && driver_version(vsn, sizeof(vsn)) &&
 		      sscanf(vsn, "%u.%u.%u", &maj2, &min2, &patchlevel2) == 3 &&
 		      maj2 == 4 && min2 == 5 && patchlevel2 == 0)))	/* RHEL4U3 */

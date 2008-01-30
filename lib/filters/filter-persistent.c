@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -97,13 +97,13 @@ int persistent_filter_load(struct dev_filter *f, struct config_tree **cft_out)
 {
 	struct pfilter *pf = (struct pfilter *) f->private;
 	struct config_tree *cft;
-        struct stat info;
+	struct stat info;
 	int r = 0;
 
-        if (!stat(pf->file, &info))
+	if (!stat(pf->file, &info))
 		pf->ctime = info.st_ctime;
 	else {
-                log_very_verbose("%s: stat failed: %s", pf->file,
+		log_very_verbose("%s: stat failed: %s", pf->file,
 				 strerror(errno));
 		return_0;
 	}

@@ -146,7 +146,7 @@ struct pv_segment *assign_peg_to_lvseg(struct physical_volume *pv,
 	if (!pv)
 		return &null_pv_segment;
 
-	if (!pv_split_segment(pv, pe) || 
+	if (!pv_split_segment(pv, pe) ||
 	    !pv_split_segment(pv, pe + area_len))
 		return_NULL;
 

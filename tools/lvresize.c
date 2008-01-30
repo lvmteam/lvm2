@@ -130,7 +130,7 @@ static int confirm_resizefs_reduce(struct cmd_context *cmd,
 	return 1;
 }
 
-static int do_resizefs_reduce(const struct cmd_context *cmd, 
+static int do_resizefs_reduce(const struct cmd_context *cmd,
 			      const struct volume_group *vg,
 			      const struct lvresize_params *lp)
 {

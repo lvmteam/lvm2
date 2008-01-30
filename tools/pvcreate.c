@@ -45,10 +45,10 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	pv = pv_read(cmd, name, NULL, NULL, 0);
 
 	/*
-         * If a PV has no MDAs it may appear to be an orphan until the
-         * metadata is read off another PV in the same VG.  Detecting
-         * this means checking every VG by scanning every PV on the
-         * system.
+	 * If a PV has no MDAs it may appear to be an orphan until the
+	 * metadata is read off another PV in the same VG.  Detecting
+	 * this means checking every VG by scanning every PV on the
+	 * system.
 	 */
 	if (pv && is_orphan(pv)) {
 		if (!scan_vgs_for_pvs(cmd))
@@ -109,7 +109,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	if (dev_is_md(dev, &md_superblock) &&
 	    ((!arg_count(cmd, uuidstr_ARG) &&
 	      !arg_count(cmd, restorefile_ARG)) ||
-	     arg_count(cmd, yes_ARG) || 
+	     arg_count(cmd, yes_ARG) ||
 	     (yes_no_prompt("Software RAID md superblock "
 			    "detected on %s. Wipe it? [y/n] ", name) == 'y'))) {
 		log_print("Wiping software RAID md superblock on %s", name);

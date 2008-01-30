@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -225,24 +225,24 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	pv->pe_alloc_count = 0;
 	pv->fmt = fid->fmt;
 
-        /* Fix up pv size if missing or impossibly large */
-        if ((!pv->size || pv->size > (1ULL << 62)) && pv->dev) {
-                if (!dev_get_size(pv->dev, &pv->size)) {
-                        log_error("%s: Couldn't get size.", pv_dev_name(pv));
-                        return 0;
-                }
-                log_verbose("Fixing up missing size (%s) "
-                            "for PV %s", display_size(fid->fmt->cmd, pv->size),
-                            pv_dev_name(pv));
-                if (vg) {
-                        size = pv->pe_count * (uint64_t) vg->extent_size +
-                               pv->pe_start;
-                        if (size > pv->size)
-                                log_error("WARNING: Physical Volume %s is too "
-                                          "large for underlying device",
-                                          pv_dev_name(pv));
-                }
-        }
+	/* Fix up pv size if missing or impossibly large */
+	if ((!pv->size || pv->size > (1ULL << 62)) && pv->dev) {
+		if (!dev_get_size(pv->dev, &pv->size)) {
+			log_error("%s: Couldn't get size.", pv_dev_name(pv));
+			return 0;
+		}
+		log_verbose("Fixing up missing size (%s) "
+			    "for PV %s", display_size(fid->fmt->cmd, pv->size),
+			    pv_dev_name(pv));
+		if (vg) {
+			size = pv->pe_count * (uint64_t) vg->extent_size +
+			       pv->pe_start;
+			if (size > pv->size)
+				log_error("WARNING: Physical Volume %s is too "
+					  "large for underlying device",
+					  pv_dev_name(pv));
+		}
+	}
 
 	if (!alloc_pv_segment_whole_pv(mem, pv))
 		return_0;
@@ -834,7 +834,7 @@ static const char *_read_vgname(const struct format_type *fmt,
 	old_suppress = log_suppress(2);
 	*creation_host = dm_pool_strdup(mem,
 					find_config_str(cft->root,
-						        "creation_host", ""));
+							"creation_host", ""));
 	log_suppress(old_suppress);
 
 	/* skip any top-level values */

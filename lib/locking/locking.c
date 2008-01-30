@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -253,7 +253,7 @@ int init_locking(int type, struct cmd_context *cmd)
 	}
 
 	if ((type == 2 || type == 3) &&
-            find_config_tree_int(cmd, "locking/fallback_to_local_locking",
+	    find_config_tree_int(cmd, "locking/fallback_to_local_locking",
 				 DEFAULT_FALLBACK_TO_LOCAL_LOCKING)) {
 		log_warn("WARNING: Falling back to local file-based locking.");
 		log_warn("Volume Groups with the clustered attribute will "

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -33,8 +33,8 @@
 #define MIRROR_DISK_VERSION 2
 
 /* These are the flags that represent the mirror failure restoration policies */
-#define MIRROR_REMOVE            0
-#define MIRROR_ALLOCATE          1
+#define MIRROR_REMOVE		 0
+#define MIRROR_ALLOCATE		 1
 #define MIRROR_ALLOCATE_ANYWHERE 2
 
 /*

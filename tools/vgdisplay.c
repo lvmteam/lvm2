@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -89,8 +89,8 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 
 	/* FIXME -D disk_ARG is now redundant */
 
-/********* FIXME: Do without this - or else 2(+) passes! 
-	   Figure out longest volume group name 
+/********* FIXME: Do without this - or else 2(+) passes!
+	   Figure out longest volume group name
 	for (c = opt; opt < argc; opt++) {
 		len = strlen(argv[opt]);
 		if (len > max_len)
@@ -101,8 +101,8 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 	process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
 			vgdisplay_single);
 
-/******** FIXME Need to count number processed 
-	  Add this to process_each_vg if arg_count(cmd,activevolumegroups_ARG) ? 
+/******** FIXME Need to count number processed
+	  Add this to process_each_vg if arg_count(cmd,activevolumegroups_ARG) ?
 
 	if (opt == argc) {
 		log_print("no ");

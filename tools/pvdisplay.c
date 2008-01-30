@@ -30,10 +30,10 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		vg_name = pv_vg_name(pv);
 		if (!(vg = vg_lock_and_read(cmd, vg_name, (char *)&pv->vgid,
 					    LCK_VG_READ, CLUSTERED, 0))) {
-                 	log_error("Skipping volume group %s", vg_name);
+		 	log_error("Skipping volume group %s", vg_name);
 			/* FIXME If CLUSTERED should return ECMD_PROCESSED here */
-                 	return ECMD_FAILED;
-         	}
+		 	return ECMD_FAILED;
+	 	}
 
 	 	/*
 		 * Replace possibly incomplete PV structure with new one
@@ -42,8 +42,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		 if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			 log_error("Unable to find \"%s\" in volume group \"%s\"",
 				   pv_name, vg->name);
-	                 ret = ECMD_FAILED;
-	                 goto out;
+			 ret = ECMD_FAILED;
+			 goto out;
 		 }
 
 		 pv = pvl->pv;
@@ -52,7 +52,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 	if (is_orphan(pv))
 		size = pv_size(pv);
 	else
-		size = (pv_pe_count(pv) - pv_pe_alloc_count(pv)) * 
+		size = (pv_pe_count(pv) - pv_pe_alloc_count(pv)) *
 			pv_pe_size(pv);
 
 	if (arg_count(cmd, short_ARG)) {
@@ -80,8 +80,8 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 		pvdisplay_segments(pv);
 
 out:
-        if (vg_name)
-                unlock_vg(cmd, vg_name);
+	if (vg_name)
+		unlock_vg(cmd, vg_name);
 
 	return ret;
 }
