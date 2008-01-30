@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.   
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -36,9 +36,9 @@
 #define pv_field(handle, field)				\
 	(((const struct physical_volume *)(handle))->field)
 
-static struct physical_volume *_pv_read(struct cmd_context *cmd, 
+static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					const char *pv_name,
-					struct list *mdas, 
+					struct list *mdas,
 					uint64_t *label_sector,
 					int warnings);
 
@@ -51,7 +51,7 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  int pvmetadatacopies,
 				  uint64_t pvmetadatasize, struct list *mdas);
 
-static int _pv_write(struct cmd_context *cmd __attribute((unused)), 
+static int _pv_write(struct cmd_context *cmd __attribute((unused)),
 		     struct physical_volume *pv,
 	     	     struct list *mdas, int64_t label_sector);
 
@@ -748,7 +748,7 @@ pv_t *pv_create(const struct format_type *fmt,
 		int pvmetadatacopies,
 		uint64_t pvmetadatasize, struct list *mdas)
 {
-	return _pv_create(fmt, dev, id, size, pe_start, 
+	return _pv_create(fmt, dev, id, size, pe_start,
 			  existing_extent_count,
 			  existing_extent_size,
 			  pvmetadatacopies,
@@ -1392,7 +1392,7 @@ static int _update_pv_list(struct list *all_pvs, struct volume_group *vg)
  * inconsistent metadata on disk (i.e. the VG write lock is held).
  * This guarantees only consistent metadata is returned unless PARTIAL_VG.
  * If consistent is 0, caller must check whether consistent == 1 on return
- * and take appropriate action if it isn't (e.g. abort; get write lock 
+ * and take appropriate action if it isn't (e.g. abort; get write lock
  * and call vg_read again).
  *
  * If precommitted is set, use precommitted metadata if present.
@@ -1649,8 +1649,8 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 	return vg;
 }
 
-/* This is only called by lv_from_lvid, which is only called from 
- * activate.c so we know the appropriate VG lock is already held and 
+/* This is only called by lv_from_lvid, which is only called from
+ * activate.c so we know the appropriate VG lock is already held and
  * the vg_read is therefore safe.
  */
 static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
@@ -1688,7 +1688,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	/* FIXME Disabled vgrenames while active for now because we aren't
 	 *       allowed to do a full scan here any more. */
 
-	// The slow way - full scan required to cope with vgrename 
+	// The slow way - full scan required to cope with vgrename
 	if (!(vgnames = get_vgs(cmd, 2))) {
 		log_error("vg_read_by_vgid: get_vgs failed");
 		return NULL;
@@ -1697,7 +1697,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	list_iterate_items(strl, vgnames) {
 		vgname = strl->str;
 		if (!vgname || is_orphan_vg(vgname))
-			continue;	// FIXME Unnecessary? 
+			continue;	// FIXME Unnecessary?
 		consistent = 0;
 		if ((vg = _vg_read(cmd, vgname, vgid, &consistent,
 				   precommitted)) &&
@@ -1766,9 +1766,9 @@ struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 }
 
 /* FIXME Use label functions instead of PV functions */
-static struct physical_volume *_pv_read(struct cmd_context *cmd, 
+static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					const char *pv_name,
-					struct list *mdas, 
+					struct list *mdas,
 					uint64_t *label_sector,
 					int warnings)
 {
@@ -1917,7 +1917,7 @@ int pv_write(struct cmd_context *cmd __attribute((unused)),
 	return _pv_write(cmd, pv, mdas, label_sector);
 }
 
-static int _pv_write(struct cmd_context *cmd __attribute((unused)), 
+static int _pv_write(struct cmd_context *cmd __attribute((unused)),
 		     struct physical_volume *pv,
 	     	     struct list *mdas, int64_t label_sector)
 {

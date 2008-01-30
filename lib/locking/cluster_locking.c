@@ -104,8 +104,8 @@ static int _send_request(char *inbuf, int inlen, char **retbuf)
 	/* Send it to CLVMD */
  rewrite:
 	if ( (err = write(_clvmd_sock, inbuf, inlen)) != inlen) {
-	        if (err == -1 && errno == EINTR)
-		        goto rewrite;
+		if (err == -1 && errno == EINTR)
+			goto rewrite;
 		log_error("Error writing data to clvmd: %s", strerror(errno));
 		return 0;
 	}
@@ -113,8 +113,8 @@ static int _send_request(char *inbuf, int inlen, char **retbuf)
 	/* Get the response */
  reread:
 	if ((len = read(_clvmd_sock, outbuf, sizeof(struct clvm_header))) < 0) {
-	        if (errno == EINTR)
-		        goto reread;
+		if (errno == EINTR)
+			goto reread;
 		log_error("Error reading data from clvmd: %s", strerror(errno));
 		return 0;
 	}
@@ -330,7 +330,7 @@ static int _lock_for_cluster(unsigned char cmd, uint32_t flags, const char *name
 	 * locks are cluster-wide.
 	 * Also, if the lock is exclusive it makes no sense to try to
 	 * acquire it on all nodes, so just do that on the local node too.
-	 * One exception, is that P_ locks /do/ get distributed across 
+	 * One exception, is that P_ locks /do/ get distributed across
 	 * the cluster because they might have side-effects.
 	 */
 	if (strncmp(name, "P_", 2) &&
@@ -446,10 +446,10 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 
 	log_very_verbose("Locking %s %s %s %s%s%s%s (0x%x)", lock_scope, lockname,
 			 lock_type,
-			 flags & LCK_NONBLOCK ? "" : "B", 
-			 flags & LCK_HOLD ? "H" : "", 
-			 flags & LCK_LOCAL ? "L" : "", 
-			 flags & LCK_CLUSTER_VG ? "C" : "", 
+			 flags & LCK_NONBLOCK ? "" : "B",
+			 flags & LCK_HOLD ? "H" : "",
+			 flags & LCK_LOCAL ? "L" : "",
+			 flags & LCK_CLUSTER_VG ? "C" : "",
 			 flags);
 
 	/* Send a message to the cluster manager */
@@ -479,7 +479,7 @@ void reset_locking(void)
 
 	_clvmd_sock = _open_local_sock();
 	if (_clvmd_sock == -1)
-	        stack;
+		stack;
 }
 
 #ifdef CLUSTER_LOCKING_INTERNAL

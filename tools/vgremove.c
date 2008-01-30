@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -41,7 +41,7 @@ int vgremove(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	ret = process_each_vg(cmd, argc, argv,
-			      LCK_VG_WRITE | LCK_NONBLOCK, 1, 
+			      LCK_VG_WRITE | LCK_NONBLOCK, 1,
 			      NULL, &vgremove_single);
 
 	unlock_vg(cmd, VG_ORPHANS);

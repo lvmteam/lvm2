@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -135,7 +135,7 @@ struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname, const char *vgid)
 		return NULL;
 
 	if (vgid)
-		do 
+		do
 			if (!strncmp(vgid, vginfo->vgid, ID_LEN))
 				return vginfo;
 		while ((vginfo = vginfo->next));
@@ -335,7 +335,7 @@ struct list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan)
 	}
 
 	list_iterate_items(vginfo, &_vginfos) {
-		if (!str_list_add(cmd->mem, vgids, 
+		if (!str_list_add(cmd->mem, vgids,
 				  dm_pool_strdup(cmd->mem, vginfo->vgid))) {
 			log_error("strlist allocation failed");
 			return NULL;
@@ -358,7 +358,7 @@ struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan)
 	}
 
 	list_iterate_items(vginfo, &_vginfos) {
-		if (!str_list_add(cmd->mem, vgnames, 
+		if (!str_list_add(cmd->mem, vgnames,
 				  dm_pool_strdup(cmd->mem, vginfo->vgname))) {
 			log_error("strlist allocation failed");
 			return NULL;
@@ -384,7 +384,7 @@ struct list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 		return pvids;
 
 	list_iterate_items(info, &vginfo->infos) {
-		if (!str_list_add(cmd->mem, pvids, 
+		if (!str_list_add(cmd->mem, pvids,
 				  dm_pool_strdup(cmd->mem, info->dev->pvid))) {
 			log_error("strlist allocation failed");
 			return NULL;
@@ -446,12 +446,12 @@ static int _drop_vginfo(struct lvmcache_info *info)
 	if (info->vginfo && list_empty(&info->vginfo->infos)) {
 		dm_hash_remove(_vgname_hash, info->vginfo->vgname);
 		if (info->vginfo->next) {
-                	if (!dm_hash_insert(_vgname_hash, info->vginfo->vgname, info->vginfo->next)) {
-                        	log_error("vg hash re-insertion failed: %s",
+			if (!dm_hash_insert(_vgname_hash, info->vginfo->vgname, info->vginfo->next)) {
+				log_error("vg hash re-insertion failed: %s",
 					  info->vginfo->vgname);
-                        	return 0;
+				return 0;
 			}
-                }
+		}
 
 		if (info->vginfo->vgname)
 			dm_free(info->vginfo->vgname);
@@ -477,7 +477,7 @@ void lvmcache_del(struct lvmcache_info *info)
 	_drop_vginfo(info);
 
 	info->label->labeller->ops->destroy_label(info->label->labeller,
-						info->label); 
+						info->label);
 	dm_free(info);
 
 	return;
@@ -617,7 +617,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	struct lvmcache_vginfo *vginfo, *primary_vginfo;
 	// struct lvmcache_vginfo  *old_vginfo, *next;
 
-	/* If vgname is NULL and we don't already have a vgname, 
+	/* If vgname is NULL and we don't already have a vgname,
 	 * assume ORPHAN - we want every entry to have a vginfo
 	 * attached for scanning reasons.
 	 */
@@ -643,9 +643,9 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				dm_hash_remove(_vgname_hash, old_vginfo->vgname);
 				if (old_vginfo->next) {
 					if (!dm_hash_insert(_vgname_hash, old_vginfo->vgname, old_vginfo->next)) {
-                        			log_error("vg hash re-insertion failed: %s",
+						log_error("vg hash re-insertion failed: %s",
 							  old_vginfo->vgname);
-                        			return 0;
+						return 0;
 					}
 				}
 			} else do {
@@ -662,11 +662,11 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				return 0;
 			}
 
-			// Rename so can assume new name does not already exist 
+			// Rename so can assume new name does not already exist
 			if (!dm_hash_insert(_vgname_hash, vginfo->vgname, vginfo->next)) {
 				log_error("vg hash re-insertion failed: %s",
 					  vginfo->vgname);
-                      		return 0;
+		      		return 0;
 			}
 		} else {
 ***/

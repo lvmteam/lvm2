@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -156,9 +156,9 @@ int device_is_usable(dev_t dev)
 	struct dm_task *dmt;
 	struct dm_info info;
 	const char *name;
-        uint64_t start, length;
-        char *target_type = NULL;
-        char *params;
+	uint64_t start, length;
+	char *target_type = NULL;
+	char *params;
 	void *next = NULL;
 	int r = 0;
 
@@ -186,13 +186,13 @@ int device_is_usable(dev_t dev)
 	/* FIXME Also check for mirror block_on_error and mpath no paths */
 	/* For now, we exclude all mirrors */
 
-        do {
-                next = dm_get_next_target(dmt, next, &start, &length,
-                                          &target_type, &params);
-                /* Skip if target type doesn't match */
-                if (target_type && !strcmp(target_type, "mirror"))
+	do {
+		next = dm_get_next_target(dmt, next, &start, &length,
+					  &target_type, &params);
+		/* Skip if target type doesn't match */
+		if (target_type && !strcmp(target_type, "mirror"))
 			goto out;
-        } while (next);
+	} while (next);
 
 	/* FIXME Also check dependencies? */
 
@@ -629,11 +629,11 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if (!(dlid = build_dlid(dm, lv->lvid.s, layer)))
 		return_0;
 
-        log_debug("Getting device info for %s [%s]", name, dlid);
-        if (!_info(name, dlid, 0, 1, 0, &info, NULL)) {
-                log_error("Failed to get info for %s [%s].", name, dlid);
-                return 0;
-        }
+	log_debug("Getting device info for %s [%s]", name, dlid);
+	if (!_info(name, dlid, 0, 1, 0, &info, NULL)) {
+		log_error("Failed to get info for %s [%s].", name, dlid);
+		return 0;
+	}
 
 	if (info.exists && !dm_tree_add_dev(dtree, info.major, info.minor)) {
 		log_error("Failed to add device (%" PRIu32 ":%" PRIu32") to dtree",
@@ -967,10 +967,10 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 		name = dm_tree_node_get_name(child);
 
 		if (name && lvlayer->old_name && *lvlayer->old_name && strcmp(name, lvlayer->old_name)) {
-	        	if (!dm_split_lvm_name(dm->mem, lvlayer->old_name, &vgname, &lvname, &layer)) {
-                		log_error("_create_lv_symlinks: Couldn't split up old device name %s", lvlayer->old_name);
-                		return 0;
-        		}
+			if (!dm_split_lvm_name(dm->mem, lvlayer->old_name, &vgname, &lvname, &layer)) {
+				log_error("_create_lv_symlinks: Couldn't split up old device name %s", lvlayer->old_name);
+				return 0;
+			}
 			fs_rename_lv(lvlayer->lv, name, lvname);
 		} else if (!dev_manager_lv_mknodes(lvlayer->lv))
 			r = 0;
@@ -990,7 +990,7 @@ static int _remove_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	int r = 1;
 
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
-        	if (!dm_split_lvm_name(dm->mem, dm_tree_node_get_name(child), &vgname, &lvname, &layer)) {
+		if (!dm_split_lvm_name(dm->mem, dm_tree_node_get_name(child), &vgname, &lvname, &layer)) {
 			r = 0;
 			continue;
 		}
@@ -1019,10 +1019,10 @@ static int _clean_tree(struct dev_manager *dm, struct dm_tree_node *root)
 		if (!(uuid = dm_tree_node_get_uuid(child)))
 			continue;
 
-        	if (!dm_split_lvm_name(dm->mem, name, &vgname, &lvname, &layer)) {
-                	log_error("_clean_tree: Couldn't split up device name %s.", name);
-                	return 0;
-        	}
+		if (!dm_split_lvm_name(dm->mem, name, &vgname, &lvname, &layer)) {
+			log_error("_clean_tree: Couldn't split up device name %s.", name);
+			return 0;
+		}
 
 		/* Not meant to be top level? */
 		if (!*layer)

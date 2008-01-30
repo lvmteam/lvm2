@@ -27,16 +27,16 @@
 #define PART_OFFSET UINT64_C(0x1BE)
 
 struct partition {
-        uint8_t boot_ind;
-        uint8_t head;
-        uint8_t sector;
-        uint8_t cyl;
-        uint8_t sys_ind;	/* partition type */
-        uint8_t end_head;
-        uint8_t end_sector;
-        uint8_t end_cyl;
-        uint32_t start_sect;
-        uint32_t nr_sects;
+	uint8_t boot_ind;
+	uint8_t head;
+	uint8_t sector;
+	uint8_t cyl;
+	uint8_t sys_ind;	/* partition type */
+	uint8_t end_head;
+	uint8_t end_sector;
+	uint8_t end_cyl;
+	uint32_t start_sect;
+	uint32_t nr_sects;
 } __attribute__((packed));
 
 static int _is_partitionable(struct device *dev)

@@ -115,7 +115,7 @@ static int _format_pvsegs(struct dm_pool *mem, struct dm_report_field *field,
 		}
 
 		if (dm_snprintf(extent_str, sizeof(extent_str),
-			        "%s%" PRIu32 "%s",
+				"%s%" PRIu32 "%s",
 				range_format ? ":" : "(", extent,
 				range_format ? "-"  : ")") < 0) {
 			log_error("Extent number dm_snprintf failed");
@@ -128,7 +128,7 @@ static int _format_pvsegs(struct dm_pool *mem, struct dm_report_field *field,
 
 		if (range_format) {
 			if (dm_snprintf(extent_str, sizeof(extent_str),
-				        "%" PRIu32, extent + seg->area_len - 1) < 0) {
+					"%" PRIu32, extent + seg->area_len - 1) < 0) {
 				log_error("Extent number dm_snprintf failed");
 				return 0;
 			}
@@ -830,7 +830,7 @@ static int _pvmdas_disp(struct dm_report *rh, struct dm_pool *mem,
 			struct dm_report_field *field,
 			const void *data, void *private)
 {
-	struct lvmcache_info *info; 
+	struct lvmcache_info *info;
 	uint32_t count;
 	const char *pvid = (const char *)(&((struct id *) data)->uuid);
 
@@ -856,7 +856,7 @@ static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 			   struct dm_report_field *field,
 			   const void *data, void *private)
 {
-	struct lvmcache_info *info; 
+	struct lvmcache_info *info;
 	uint64_t freespace = UINT64_MAX, mda_free;
 	const char *pvid = (const char *)(&((struct id *) data)->uuid);
 	struct metadata_area *mda;

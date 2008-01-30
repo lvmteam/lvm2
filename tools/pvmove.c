@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -530,12 +530,12 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
 		return_0;
 
-        if (activation() && segtype->ops->target_present &&
-            !segtype->ops->target_present(NULL)) {
-                log_error("%s: Required device-mapper target(s) not "
-                          "detected in your kernel", segtype->name);
-                return 0;
-        }
+	if (activation() && segtype->ops->target_present &&
+	    !segtype->ops->target_present(NULL)) {
+		log_error("%s: Required device-mapper target(s) not "
+			  "detected in your kernel", segtype->name);
+		return 0;
+	}
 
 	if (argc) {
 		pv_name = argv[0];

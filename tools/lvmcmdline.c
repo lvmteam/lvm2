@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.   
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -945,7 +945,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 		if (!refresh_toolcontext(cmd))
 			stack;
 	}
- 
+
 	/* FIXME Move this? */
 	cmd->current_settings = cmd->default_settings;
 	_apply_settings(cmd);
@@ -1159,7 +1159,7 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 	    strcmp(base, "initrd-lvm"))
 		alias = 1;
 
-	if (is_static && strcmp(base, "lvm.static") && 
+	if (is_static && strcmp(base, "lvm.static") &&
 	    path_exists(LVM_SHARED_PATH) &&
 	    !getenv("LVM_DID_EXEC")) {
 		setenv("LVM_DID_EXEC", base, 1);

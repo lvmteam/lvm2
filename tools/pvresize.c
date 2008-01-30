@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2005 Zak Kipling. All rights reserved.
  *

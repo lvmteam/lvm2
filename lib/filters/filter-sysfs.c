@@ -236,21 +236,21 @@ static int _read_dev(const char *file, dev_t *result)
  */
 static int _read_devs(struct dev_set *ds, const char *dir, unsigned sysfs_depth)
 {
-        struct dirent *d;
-        DIR *dr;
+	struct dirent *d;
+	DIR *dr;
 	struct stat info;
 	char path[PATH_MAX];
 	char file[PATH_MAX];
 	dev_t dev = { 0 };
 	int r = 1;
 
-        if (!(dr = opendir(dir))) {
-                log_sys_error("opendir", dir);
-                return 0;
-        }
+	if (!(dr = opendir(dir))) {
+		log_sys_error("opendir", dir);
+		return 0;
+	}
 
-        while ((d = readdir(dr))) {
-                if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
+	while ((d = readdir(dr))) {
+		if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
 			continue;
 
 		if (dm_snprintf(path, sizeof(path), "%s/%s", dir,
@@ -278,8 +278,8 @@ static int _read_devs(struct dev_set *ds, const char *dir, unsigned sysfs_depth)
 		}
 	}
 
-        if (closedir(dr))
-                log_sys_error("closedir", dir);
+	if (closedir(dr))
+		log_sys_error("closedir", dir);
 
 	return r;
 }

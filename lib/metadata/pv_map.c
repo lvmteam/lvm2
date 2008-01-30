@@ -56,7 +56,7 @@ static int _create_single_area(struct dm_pool *mem, struct pv_map *pvm,
 static int _create_alloc_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 				      uint32_t start, uint32_t count)
 {
-        struct pv_segment *peg;
+	struct pv_segment *peg;
 	uint32_t pe, end, area_len;
 
 	/* Only select extents from start to end inclusive */
@@ -67,7 +67,7 @@ static int _create_alloc_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 	pe = start;
 
 	/* Walk through complete ordered list of device segments */
-        list_iterate_items(peg, &pvm->pv->segments) {
+	list_iterate_items(peg, &pvm->pv->segments) {
 		/* pe holds the next extent we want to check */
 
 		/* Beyond the range we're interested in? */
@@ -91,7 +91,7 @@ static int _create_alloc_areas_for_pv(struct dm_pool *mem, struct pv_map *pvm,
 
       next:
 		pe = peg->pe + peg->len;
-        }
+	}
 
 	return 1;
 }

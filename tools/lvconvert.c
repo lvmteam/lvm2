@@ -238,7 +238,7 @@ static int _read_params(struct lvconvert_params *lp, struct cmd_context *cmd,
 static struct volume_group *_get_lvconvert_vg(struct cmd_context *cmd,
 					      const char *lv_name)
 {
-        dev_close_all();
+	dev_close_all();
 
         return vg_lock_and_read(cmd, extract_vgname(cmd, lv_name),
 				NULL, LCK_VG_WRITE,

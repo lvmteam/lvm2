@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -115,9 +115,9 @@ int archive(struct volume_group *vg)
 		return 0;
 
 	/* Trap a read-only file system */
-        if ((access(vg->cmd->archive_params->dir, R_OK | W_OK | X_OK) == -1) &&
+	if ((access(vg->cmd->archive_params->dir, R_OK | W_OK | X_OK) == -1) &&
 	     (errno == EROFS))
-                return 0;
+		return 0;
 
 	log_verbose("Archiving volume group \"%s\" metadata (seqno %u).", vg->name,
 		    vg->seqno);
@@ -219,9 +219,9 @@ int backup(struct volume_group *vg)
 		return 0;
 
 	/* Trap a read-only file system */
-        if ((access(vg->cmd->backup_params->dir, R_OK | W_OK | X_OK) == -1) &&
+	if ((access(vg->cmd->backup_params->dir, R_OK | W_OK | X_OK) == -1) &&
 	    (errno == EROFS))
-                return 0;
+		return 0;
 
 	if (!__backup(vg)) {
 		log_error("Backup of volume group %s metadata failed.",

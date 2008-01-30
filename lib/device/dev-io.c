@@ -336,7 +336,7 @@ int dev_open_flags(struct device *dev, int flags, int direct, int quiet)
 
 		if (dev->open_count && !need_excl) {
 			/* FIXME Ensure we never get here */
-			log_debug("WARNING: %s already opened read-only", 
+			log_debug("WARNING: %s already opened read-only",
 				  dev_name(dev));
 			dev->open_count++;
 		}
@@ -516,7 +516,7 @@ static int _dev_close(struct device *dev, int immediate)
 
 	/* Close unless device is known to belong to a locked VG */
 	if (immediate ||
-	    (dev->open_count < 1 && 
+	    (dev->open_count < 1 &&
 	     (!(info = info_from_pvid(dev->pvid, 0)) ||
 	      !info->vginfo ||
 	      !vgname_is_locked(info->vginfo->vgname))))

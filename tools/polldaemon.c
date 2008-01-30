@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -202,7 +202,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 			continue;
 		if (!(name = parms->poll_fns->get_copy_name_from_lv(lv_mirr)))
 			continue;
-		/* FIXME Need to do the activation from _set_up_pvmove here 
+		/* FIXME Need to do the activation from _set_up_pvmove here
 		 *       if it's not running and we're not aborting */
 		if (_check_mirror_status(cmd, vg, lv_mirr, name,
 					 parms, &finished) && !finished)

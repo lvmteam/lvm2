@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -51,7 +51,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 				    offset2, size2, checksum_fn, checksum)))
 		goto_out;
 
-	/* 
+	/*
 	 * Find a set of version functions that can read this file
 	 */
 	for (vsn = &_text_vsn_list[0]; *vsn; vsn++) {
@@ -104,7 +104,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 		goto out;
 	}
 
-	/* 
+	/*
 	 * Find a set of version functions that can read this file
 	 */
 	for (vsn = &_text_vsn_list[0]; *vsn; vsn++) {

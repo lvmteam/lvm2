@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -154,11 +154,11 @@ static int _striped_merge_segments(struct lv_segment *seg1, struct lv_segment *s
 #ifdef DEVMAPPER_SUPPORT
 static int _striped_add_target_line(struct dev_manager *dm,
 				struct dm_pool *mem __attribute((unused)),
-                                struct cmd_context *cmd __attribute((unused)),
+				struct cmd_context *cmd __attribute((unused)),
 				void **target_state __attribute((unused)),
-                                struct lv_segment *seg,
-                                struct dm_tree_node *node, uint64_t len,
-                                uint32_t *pvmove_mirror_count __attribute((unused)))
+				struct lv_segment *seg,
+				struct dm_tree_node *node, uint64_t len,
+				uint32_t *pvmove_mirror_count __attribute((unused)))
 {
 	if (!seg->area_count) {
 		log_error("Internal error: striped add_target_line called "

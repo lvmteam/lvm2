@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -256,8 +256,8 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 	}
 
 	if (clustered) {
-        	list_iterate_items(lvl, &vg->lvs) {
-                	if (lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) {
+		list_iterate_items(lvl, &vg->lvs) {
+			if (lv_is_origin(lvl->lv) || lv_is_cow(lvl->lv)) {
 				log_error("Volume group %s contains snapshots "
 					  "that are not yet supported.",
 					  vg->name);

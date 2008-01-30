@@ -694,7 +694,7 @@ void vgdisplay_colons(const struct volume_group *vg)
 		(uint64_t) vg->extent_count * (vg->extent_size / 2),
 		vg->extent_size / 2,
 		vg->extent_count,
-		vg->extent_count - vg->free_count, 
+		vg->extent_count - vg->free_count,
 		vg->free_count,
 		uuid[0] ? uuid : "none");
 	return;

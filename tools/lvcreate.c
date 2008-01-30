@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved. 
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -435,7 +435,7 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 	/*
 	 * Should we zero the lv.
 	 */
-	lp->zero = strcmp(arg_str_value(cmd, zero_ARG, 
+	lp->zero = strcmp(arg_str_value(cmd, zero_ARG,
 		(lp->segtype->flags & SEG_CANNOT_BE_ZEROED) ? "n" : "y"), "n");
 
 	/*
@@ -663,7 +663,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 			log_error("Snapshots and mirrors may not yet be mixed.");
 			return 0;
 		}
- 
+
 		/* Must zero cow */
 		status |= LVM_WRITE;
 

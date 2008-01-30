@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
+ * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
  * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
@@ -736,13 +736,13 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					continue;
 				}
 
-        			/*
-			         * If a PV has no MDAs it may appear to be an
+				/*
+				 * If a PV has no MDAs it may appear to be an
 				 * orphan until the metadata is read off
 				 * another PV in the same VG.  Detecting this
 				 * means checking every VG by scanning every
 				 * PV on the system.
-			         */
+				 */
 				if (!scanned && is_orphan(pv)) {
 					if (!scan_vgs_for_pvs(cmd)) {
 						stack;
@@ -1251,7 +1251,7 @@ int fill_vg_create_params(struct cmd_context *cmd,
 	    arg_uint_value(cmd, physicalextentsize_ARG, vp_def->extent_size);
 
 	if (arg_count(cmd, clustered_ARG))
-        	vp_new->clustered =
+		vp_new->clustered =
 			!strcmp(arg_str_value(cmd, clustered_ARG,
 					      vp_def->clustered ? "y":"n"), "y");
 	else

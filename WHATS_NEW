@@ -1,5 +1,6 @@
 Version 2.02.33 -
 ===================================
+  Some whitespace tidy-ups.
   Use stack return macros throughout.
   Rely upon internally-cached PV labels while corresponding VG lock is held.
 
