@@ -1,4 +1,4 @@
-Version 2.02.33 -
+Version 2.02.33 - 31st January 2008
 ===================================
   Fix mirror log name construction during lvconvert. (2.02.30)
   Make monitor_dev_for_events recurse through the stack of LVs.
