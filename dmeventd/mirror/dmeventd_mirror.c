@@ -125,8 +125,9 @@ out_parse:
 	return ME_IGNORE;
 }
 
-static void _temporary_log_fn(int level, const char *file,
-			      int line, const char *format)
+static void _temporary_log_fn(int level, const char *file __attribute((unused)),
+			      int line __attribute((unused)),
+			      const char *format)
 {
 	if (!strncmp(format, "WARNING: ", 9) && (level < 5))
 		syslog(LOG_CRIT, "%s", format);
@@ -164,7 +165,8 @@ static int _remove_failed_devices(const char *device)
 	return (r == 1) ? 0 : -1;
 }
 
-void process_event(struct dm_task *dmt, enum dm_event_mask event,
+void process_event(struct dm_task *dmt,
+		   enum dm_event_mask event __attribute((unused)),
 		   void **unused __attribute((unused)))
 {
 	void *next = NULL;
@@ -222,8 +224,11 @@ void process_event(struct dm_task *dmt, enum dm_event_mask event,
 	pthread_mutex_unlock(&_event_mutex);
 }
 
-int register_device(const char *device, const char *uuid, int major, int minor,
-		   void **unused __attribute((unused)))
+int register_device(const char *device,
+		    const char *uuid __attribute((unused)),
+		    int major __attribute((unused)),
+		    int minor __attribute((unused)),
+		    void **unused __attribute((unused)))
 {
 	int r = 0;
 
@@ -259,8 +264,11 @@ out:
 	return r;
 }
 
-int unregister_device(const char *device, const char *uuid, int major, int minor,
-		   void **unused __attribute((unused)))
+int unregister_device(const char *device,
+		      const char *uuid __attribute((unused)),
+		      int major __attribute((unused)),
+		      int minor __attribute((unused)),
+		      void **unused __attribute((unused)))
 {
 	pthread_mutex_lock(&_register_mutex);
 

@@ -1,5 +1,8 @@
 Version 2.02.33 -
 ===================================
+  Fix mirror log name construction during lvconvert. (2.02.30)
+  Make monitor_dev_for_events recurse through the stack of LVs.
+  Clean up some more compiler warnings.
   Some whitespace tidy-ups.
   Use stack return macros throughout.
   Rely upon internally-cached PV labels while corresponding VG lock is held.
