@@ -679,6 +679,7 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 	struct list *tmp, *snh, *snht;
 	struct lv_segment *seg;
 	int (*monitor_fn) (struct lv_segment *s, int e);
+	uint32_t s;
 
 	/* skip dmeventd code altogether */
 	if (dmeventd_monitor_mode() == DMEVENTD_MONITOR_IGNORE)
@@ -714,6 +715,19 @@ int monitor_dev_for_events(struct cmd_context *cmd,
 
 	list_iterate(tmp, &lv->segments) {
 		seg = list_item(tmp, struct lv_segment);
+
+		/* Recurse for AREA_LV */
+		for (s = 0; s < seg->area_count; s++) {
+			if (seg_type(seg, s) != AREA_LV)
+				continue;
+			if (!monitor_dev_for_events(cmd, seg_lv(seg, s),
+						    monitor)) {
+				log_error("Failed to %smonitor %s",
+					  monitor ? "" : "un",
+					  seg_lv(seg, s)->name);
+				r = 0;
+			}
+		}
 
 		if (!seg_monitored(seg) || (seg->status & PVMOVE))
 			continue;

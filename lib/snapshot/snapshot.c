@@ -213,7 +213,8 @@ static int _target_registered(struct lv_segment *seg, int *pending)
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
-static int _target_set_events(struct lv_segment *seg, int events, int set)
+static int _target_set_events(struct lv_segment *seg,
+			      int events __attribute((unused)), int set)
 {
 	char *dso, *name;
 	struct volume_group *vg = seg->lv->vg;

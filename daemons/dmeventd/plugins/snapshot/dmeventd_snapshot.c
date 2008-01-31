@@ -54,8 +54,10 @@ struct snap_status {
  */
 static pthread_mutex_t _event_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static void _temporary_log_fn(int level, const char *file,
-			      int line, const char *format)
+static void _temporary_log_fn(int level,
+			      const char *file __attribute((unused)),
+			      int line __attribute((unused)),
+			      const char *format)
 {
 	if (!strncmp(format, "WARNING: ", 9) && (level < 5))
 		syslog(LOG_CRIT, "%s", format);
@@ -115,7 +117,8 @@ fail:
 	dm_event_handler_destroy(dmevh);
 }
 
-void process_event(struct dm_task *dmt, enum dm_event_mask event,
+void process_event(struct dm_task *dmt,
+		   enum dm_event_mask event __attribute((unused)),
 		   void **private)
 {
 	void *next = NULL;
@@ -161,8 +164,11 @@ out:
 	pthread_mutex_unlock(&_event_mutex);
 }
 
-int register_device(const char *device, const char *uuid, int major, int minor,
-		   void **private)
+int register_device(const char *device,
+		    const char *uuid __attribute((unused)),
+		    int major __attribute((unused)),
+		    int minor __attribute((unused)),
+		    void **private)
 {
 	int r = 0;
 	int *percent_warning = (int*)private;
@@ -201,8 +207,11 @@ out:
 	return r;
 }
 
-int unregister_device(const char *device, const char *uuid, int major, int minor,
-		   void **unused __attribute((unused)))
+int unregister_device(const char *device,
+		      const char *uuid __attribute((unused)),
+		      int major __attribute((unused)),
+		      int minor __attribute((unused)),
+		      void **unused __attribute((unused)))
 {
 	pthread_mutex_lock(&_register_mutex);
 

@@ -456,7 +456,8 @@ static int _target_monitored(struct lv_segment *seg, int *pending)
 }
 
 /* FIXME This gets run while suspended and performs banned operations. */
-static int _target_set_events(struct lv_segment *seg, int evmask, int set)
+static int _target_set_events(struct lv_segment *seg,
+			      int evmask __attribute((unused)), int set)
 {
 	char *dso, *name;
 	struct logical_volume *lv;

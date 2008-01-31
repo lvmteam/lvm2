@@ -1182,7 +1182,7 @@ static struct logical_volume *_create_mirror_log(struct logical_volume *lv,
 		return NULL;
 	}
 
-	if (dm_snprintf(log_name, len, "%s%s", lv->name, suffix) < 0) {
+	if (dm_snprintf(log_name, len, "%s%s", lv_name, suffix) < 0) {
 		log_error("log_name allocation failed.");
 		return NULL;
 	}
@@ -1207,7 +1207,9 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 						 int in_sync)
 {
 	struct logical_volume *log_lv;
-	const char *suffix;
+	const char *suffix, *c;
+	char *lv_name;
+	size_t len;
 	struct lv_segment *seg;
 
 	init_mirror_in_sync(in_sync);
@@ -1217,15 +1219,34 @@ static struct logical_volume *_set_up_mirror_log(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	/* Check if the log is for temporary sync layer. */
+	/* Mirror log name is lv_name + suffix, determined as the following:
+	 *   1. suffix is:
+	 *        o "_mlog" for the original mirror LV.
+	 *        o "_mlogtmp_%d" for temporary mirror LV,
+	 *   2. lv_name is:
+	 *        o lv->name, if the log is temporary
+	 *        o otherwise, the top-level LV name
+	 */
 	seg = first_seg(lv);
 	if (seg_type(seg, 0) == AREA_LV &&
-	    strstr(seg_lv(seg, 0)->name, MIRROR_SYNC_LAYER))
+	    strstr(seg_lv(seg, 0)->name, MIRROR_SYNC_LAYER)) {
+		lv_name = lv->name;
 		suffix = "_mlogtmp_%d";
-	else
+	} else if ((c = strstr(lv->name, MIRROR_SYNC_LAYER))) {
+		len = c - lv->name + 1;
+		if (!(lv_name = alloca(len)) ||
+		    !dm_snprintf(lv_name, len, "%s", lv->name)) {
+			log_error("mirror log name allocation failed");
+			return 0;
+		}
 		suffix = "_mlog";
+	} else {
+		lv_name = lv->name;
+		suffix = "_mlog";
+	}
 
-	if (!(log_lv = _create_mirror_log(lv, ah, alloc, lv->name, suffix))) {
+	if (!(log_lv = _create_mirror_log(lv, ah, alloc,
+					  (const char *) lv_name, suffix))) {
 		log_error("Failed to create mirror log.");
 		return NULL;
 	}
