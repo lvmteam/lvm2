@@ -524,7 +524,7 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 		case 0:
 			lv->read_ahead = DM_READ_AHEAD_AUTO;
 			break;
-		case -1:
+		case (uint32_t) -1:
 			lv->read_ahead = DM_READ_AHEAD_NONE;
 			break;
 		default:
