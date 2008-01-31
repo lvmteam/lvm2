@@ -1,3 +1,6 @@
+Version 2.02.34 -
+===================================
+
 Version 2.02.33 - 31st January 2008
 ===================================
   Fix mirror log name construction during lvconvert. (2.02.30)
