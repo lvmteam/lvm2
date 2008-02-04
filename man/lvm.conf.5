@@ -84,7 +84,10 @@ Defaults to "/dev".
 \fBpreferred_names\fP \(em List of patterns compared in turn against
 all the pathnames referencing the same device in in the scanned directories.
 The pathname that matches the earliest pattern in the list is the
-one used in any output.
+one used in any output.  As an example, if device mapper multipathing
+is used, the following will select multipath device names:
+.br
+\fBdevices { preferred_names = [ "^/dev/mapper/mpath" ] }\fP
 .IP
 \fBfilter\fP \(em List of patterns to apply to devices found by a scan.
 Patterns are regular expressions delimited by any character and preceded
@@ -98,6 +101,7 @@ in /dev), if any name matches any \fBa\fP pattern, the
 device is accepted; otherwise if any name matches any \fBr\fP
 pattern it is rejected; otherwise it is accepted.
 As an example, to ignore /dev/cdrom you could use:
+.br
 \fBdevices { filter=["r|cdrom|"] }\fP 
 .IP
 \fBcache_dir\fP \(em Persistent filter cache file directory.
