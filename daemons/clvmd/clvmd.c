@@ -146,8 +146,10 @@ static void usage(char *prog, FILE *file)
 	fprintf(file, "\n");
 	fprintf(file, "   -V       Show version of clvmd\n");
 	fprintf(file, "   -h       Show this help information\n");
-	fprintf(file, "   -d       Don't fork, run in the foreground\n");
+	fprintf(file, "   -d       Set debug level\n");
+	fprintf(file, "            If starting clvmd then don't fork, run in the foreground\n");
 	fprintf(file, "   -R       Tell all running clvmds in the cluster to reload their device cache\n");
+	fprintf(file, "   -C       Sets debug level (from -d) on all clvmd instances clusterwide\n");
 	fprintf(file, "   -t<secs> Command timeout (default 60 seconds)\n");
 	fprintf(file, "   -T<secs> Startup timeout (default none)\n");
 	fprintf(file, "\n");

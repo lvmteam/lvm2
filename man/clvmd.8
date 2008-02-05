@@ -35,6 +35,16 @@ is also specified. Tells all clvmds in a cluster to enable/disable debug logging
 Without this switch, only the local clvmd will change its debug level to that
 given with 
 .B -d.
+.br
+This does not work correctly if specified on the command-line that starts clvmd.
+If you want to start clvmd 
+.B and 
+enable cluster-wide logging then the command needs to be issued twice, eg:
+.br
+clvmd
+.br
+clvmd -d2
+.br
 .TP
 .I \-t <timeout>
 Specifies the timeout for commands to run around the cluster. This should not
@@ -52,11 +62,11 @@ latencies on a cluster with large numbers of logical volumes. If you get the
 return code of 5 it is usually not necessary to restart clvmd - it will start
 as soon as that blockage has cleared. This flag is to allow startup scripts
 to exit in a timely fashion even if the cluster is stalled for some reason.
-<br>
+.br
 The default is 0 (no timeout) and the value is in seconds. Don't set this too
 small or you will experience spurious errors. 10 or 20 seconds might be
 sensible.
-<br>
+.br
 This timeout will be ignored if you start clvmd with the -d switch.
 .TP
 .I \-R
