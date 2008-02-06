@@ -19,6 +19,10 @@
 #include "lvm-types.h"
 #include "metadata.h"
 
+#define FMT_TEXT_NAME "lvm2"
+#define FMT_TEXT_ALIAS "text"
+#define FMT_TEXT_ORPHAN_VG_NAME ORPHAN_VG_NAME(FMT_TEXT_NAME)
+
 /*
  * Archives a vg config.  'retain_days' is the minimum number of
  * days that an archive file must be held for.  'min_archives' is

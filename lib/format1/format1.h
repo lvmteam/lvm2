@@ -17,6 +17,10 @@
 #define _LVM_FORMAT1_H
 
 #include "metadata.h"
+#include "lvmcache.h"
+
+#define FMT_LVM1_NAME "lvm1"
+#define FMT_LVM1_ORPHAN_VG_NAME ORPHAN_VG_NAME(FMT_LVM1_NAME)
 
 #ifdef LVM1_INTERNAL
 struct format_type *init_lvm1_format(struct cmd_context *cmd);

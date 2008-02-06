@@ -171,7 +171,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 		if (!is_orphan(pv)) {
 			orig_vg_name = pv_vg_name(pv);
 			orig_pe_alloc_count = pv_pe_alloc_count(pv);
-			pv->vg_name = ORPHAN;
+			pv->vg_name = pv->fmt->orphan_vg_name;
 			pv->pe_alloc_count = 0;
 			if (!(pv_write(cmd, pv, NULL, INT64_C(-1)))) {
 				log_error("pv_write with new uuid failed "

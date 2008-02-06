@@ -356,7 +356,7 @@ int vg_remove_single(struct cmd_context *cmd, const char *vg_name,
 		pv = pvl->pv;
 		log_verbose("Removing physical volume \"%s\" from "
 			    "volume group \"%s\"", pv_dev_name(pv), vg_name);
-		pv->vg_name = ORPHAN;
+		pv->vg_name = vg->fid->fmt->orphan_vg_name;
 		pv->status = ALLOCATABLE_PV;
 
 		if (!dev_get_size(pv_dev(pv), &pv->size)) {
@@ -833,6 +833,7 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 	}
 
 	pv->fmt = fmt;
+	pv->vg_name = fmt->orphan_vg_name;
 
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
 				existing_extent_size,
@@ -1324,7 +1325,8 @@ int vg_revert(struct volume_group *vg)
 }
 
 /* Make orphan PVs look like a VG */
-static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
+static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
+					     const char *orphan_vgname)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
@@ -1332,7 +1334,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	struct volume_group *vg;
 	struct physical_volume *pv;
 
-	if (!(vginfo = vginfo_from_vgname(ORPHAN, NULL)))
+	if (!(vginfo = vginfo_from_vgname(orphan_vgname, NULL)))
 		return_NULL;
 
 	if (!(vg = dm_pool_zalloc(cmd->mem, sizeof(*vg)))) {
@@ -1343,7 +1345,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd)
 	list_init(&vg->lvs);
 	list_init(&vg->tags);
 	vg->cmd = cmd;
-	if (!(vg->name = dm_pool_strdup(cmd->mem, ORPHAN))) {
+	if (!(vg->name = dm_pool_strdup(cmd->mem, orphan_vgname))) {
 		log_error("vg name allocation failed");
 		return NULL;
 	}
@@ -1421,7 +1423,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return NULL;
 		}
 		*consistent = 1;
-		return _vg_read_orphans(cmd);
+		return _vg_read_orphans(cmd, vgname);
 	}
 
 	/* Find the vgname in the cache */
@@ -1942,7 +1944,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 {
 	const char *old_vg_name = pv->vg_name;
 
-	pv->vg_name = ORPHAN;
+	pv->vg_name = cmd->fmt->orphan_vg_name;
 	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
@@ -1966,7 +1968,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
  */
 int is_orphan_vg(const char *vg_name)
 {
-	return (!strcmp(vg_name, ORPHAN) ? 1 : 0);
+	return (vg_name && vg_name[0] == ORPHAN_PREFIX[0]) ? 1 : 0;
 }
 
 /**

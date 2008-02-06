@@ -26,6 +26,7 @@
 #include "pv_alloc.h"
 #include "display.h"
 #include "lvmcache.h"
+#include "metadata.h"
 
 #include <time.h>
 
@@ -61,7 +62,7 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 
 	pv->dev = dev;
 	if (!*pvd->vg_name)
-		pv->vg_name = ORPHAN;
+		pv->vg_name = fmt->orphan_vg_name;
 	else if (!(pv->vg_name = dm_pool_strdup(mem, (char *)pvd->vg_name))) {
 		log_error("Volume Group name allocation failed.");
 		return 0;
@@ -147,7 +148,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused))
 
 	memcpy(pvd->pv_uuid, pv->id.uuid, ID_LEN);
 
-	if (pv->vg_name) {
+	if (pv->vg_name && !is_orphan(pv)) {
 		if (!_check_vg_name(pv->vg_name))
 			return_0;
 		strncpy((char *)pvd->vg_name, pv->vg_name, sizeof(pvd->vg_name));

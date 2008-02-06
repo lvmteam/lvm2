@@ -208,9 +208,6 @@ const char *vgname_from_vgid(struct dm_pool *mem, const char *vgid)
 	struct lvmcache_vginfo *vginfo;
 	const char *vgname = NULL;
 
-	if (!*vgid)
-		vgname = ORPHAN;
-
 	if ((vginfo = vginfo_from_vgid(vgid)))
 		vgname = vginfo->vgname;
 
@@ -530,8 +527,10 @@ static int _lvmcache_update_vgid(struct lvmcache_info *info, const char *vgid)
 		return 0;
 	}
 
-	log_debug("lvmcache: %s: setting %s VGID to %s", dev_name(info->dev),
-		  info->vginfo->vgname, info->vginfo->vgid);
+	if (!is_orphan_vg(info->vginfo->vgname))
+		log_debug("lvmcache: %s: setting %s VGID to %s",
+			  dev_name(info->dev), info->vginfo->vgname,
+			  info->vginfo->vgid);
 
 	return 1;
 }
@@ -627,15 +626,6 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	struct lvmcache_vginfo *vginfo, *primary_vginfo;
 	// struct lvmcache_vginfo  *old_vginfo, *next;
 
-	/* If vgname is NULL and we don't already have a vgname,
-	 * assume ORPHAN - we want every entry to have a vginfo
-	 * attached for scanning reasons.
-	 */
-	if (!vgname && !info->vginfo) {
-		vgname = ORPHAN;
-		vgid = ORPHAN;
-	}
-
 	if (!vgname || (info->vginfo && !strcmp(info->vginfo->vgname, vgname)))
 		return 1;
 
@@ -716,9 +706,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	/* FIXME Check consistency of list! */
 	vginfo->fmt = info->fmt;
 
-	log_debug("lvmcache: %s: now %s%s%s%s%s", dev_name(info->dev),
-		  !is_orphan_vg(vgname) ? "in VG " : "orphaned", vgname,
-		  vginfo->vgid[0] ? " (" : "",
+	log_debug("lvmcache: %s: now in VG %s%s%s%s", dev_name(info->dev),
+		  vgname, vginfo->vgid[0] ? " (" : "",
 		  vginfo->vgid[0] ? vginfo->vgid : "",
 		  vginfo->vgid[0] ? ")" : "");
 
@@ -764,6 +753,12 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  const char *vgname, const char *vgid,
 				  uint32_t vgstatus, const char *creation_host)
 {
+	if (!vgname && !info->vginfo) {
+		log_error("Internal error: NULL vgname handed to cache");
+		/* FIXME Remove this */
+		vgname = info->fmt->orphan_vg_name;
+		vgid = vgname;
+	}
 	if (!_lvmcache_update_vgname(info, vgname, vgid, vgstatus,
 				     creation_host) ||
 	    !_lvmcache_update_vgid(info, vgid) ||

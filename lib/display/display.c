@@ -307,7 +307,8 @@ void pvdisplay_full(const struct cmd_context *cmd,
 
 	log_print("--- %sPhysical volume ---", pv->pe_size ? "" : "NEW ");
 	log_print("PV Name               %s", pv_dev_name(pv));
-	log_print("VG Name               %s%s", pv->vg_name,
+	log_print("VG Name               %s%s",
+		  is_orphan(pv) ? "" : pv->vg_name,
 		  pv->status & EXPORTED_VG ? " (exported)" : "");
 
 	data_size = (uint64_t) pv->pe_count * pv->pe_size;
