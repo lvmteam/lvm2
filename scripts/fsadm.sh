@@ -47,11 +47,14 @@ READLINK=readlink
 FSCK=fsck
 XFS_CHECK=xfs_check
 
+LVRESIZE=lvresize
+
 YES=
 DRY=0
-VERB=0
+VERB=
 FORCE=
 EXTOFF=0
+DO_LVRESIZE=0
 FSTYPE=unknown
 VOLUME=unknown
 TEMPDIR="${TMPDIR:-/tmp}/${TOOL}_${RANDOM}$$/m"
@@ -78,6 +81,7 @@ tool_usage() {
 	echo "    -e | --ext-offline  unmount filesystem before Ext2/3 resize"
 	echo "    -f | --force        Bypass sanity checks"
 	echo "    -n | --dry-run      Print commands without running them"
+	echo "    -l | --lvresize     Resize given device (if it is LVM device)"
 	echo "    -y | --yes          Answer \"yes\" at any prompts"
 	echo
 	echo "  new_size - Absolute number of filesystem blocks to be in the filesystem,"
@@ -88,7 +92,7 @@ tool_usage() {
 }
 
 verbose() {
-	test "$VERB" -eq 1 && echo "$TOOL: $@" || true
+	test -n "$VERB" && echo "$TOOL: $@" || true
 }
 
 error() {
@@ -115,7 +119,12 @@ cleanup() {
 	fi
 	IFS=$IFS_OLD
 	trap 2
-	exit $1
+
+	# start LVRESIZE with the filesystem modification flag
+	# and allow recursive call of fsadm
+	unset FSADM_RUNNING
+	test "$DO_LVRESIZE" -eq 2 && exec $LVRESIZE $VERB -r -L$(( $NEWSIZE / 1048576 )) $VOLUME
+	exit ${1:-0}
 }
 
 # convert parameter from Exa/Peta/Tera/Giga/Mega/Kilo/Bytes and blocks
@@ -133,12 +142,19 @@ decode_size() {
 	esac
 	#NEWBLOCKCOUNT=$(round_block_size $NEWSIZE $2)
 	NEWBLOCKCOUNT=$(( $NEWSIZE / $2 ))
+
+	if [ $DO_LVRESIZE -eq 1 ]; then
+		# start lvresize, but first cleanup mounted dirs
+		DO_LVRESIZE=2
+		cleanup 0
+	fi
 }
 
 # detect filesystem on the given device
 # dereference device name if it is symbolic link
 detect_fs() {
-	VOLUME=$($READLINK -e -n "$1") || error "Cannot get readlink $1"
+        VOLUME=${1#/dev/}
+	VOLUME=$($READLINK -e -n "/dev/$VOLUME") || error "Cannot get readlink $1"
 	# use /dev/null as cache file to be sure about the result
 	FSTYPE=$($BLKID -c /dev/null -o value -s TYPE "$VOLUME") || error "Cannot get FSTYPE of \"$VOLUME\""
 	verbose "\"$FSTYPE\" filesystem found on \"$VOLUME\""
@@ -291,11 +307,12 @@ resize_xfs() {
 # Resize filesystem
 ####################
 resize() {
+	NEWSIZE=$2
 	detect_fs "$1"
 	detect_device_size
 	verbose "Device \"$VOLUME\" has $DEVSIZE bytes"
 	# if the size parameter is missing use device size
-	NEWSIZE=$2
+	#if [ -n "$NEWSIZE" -a $NEWSIZE <
 	test -z "$NEWSIZE" && NEWSIZE=${DEVSIZE}b
 	trap cleanup 2
 	#IFS=$'\n'  # don't use bash-ism ??
@@ -306,7 +323,7 @@ resize() {
 	  "xfs") resize_xfs $NEWSIZE ;;
 	  *) error "Filesystem \"$FSTYPE\" on device \"$VOLUME\" is not supported by this tool" ;;
 	esac || error "Resize $FSTYPE failed"
-	cleanup
+	cleanup 0
 }
 
 ###################
@@ -325,11 +342,15 @@ check() {
 # - parsing parameters
 #############################
 
+# test if we are not invoked recursively
+test -n "$FSADM_RUNNING" && exit 0
+
 # test some prerequisities
 test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REISER" \
   -a -n "$TUNE_XFS" -a -n "$RESIZE_XFS" -a -n "$MOUNT" -a -n "$UMOUNT" -a -n "$MKDIR" \
   -a -n "$RMDIR" -a -n "$BLOCKDEV" -a -n "$BLKID" -a -n "$GREP" -a -n "$READLINK" \
-  -a -n "$FSCK" -a -n "$XFS_CHECK" || error "Required command definitions in the script are missing!"
+  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVRESIZE" \
+  || error "Required command definitions in the script are missing!"
 $($READLINK -e -n / >/dev/null 2>&1) || error "$READLINK does not support options -e -n"
 TEST64BIT=$(( 1000 * 1000000000000 ))
 test $TEST64BIT -eq 1000000000000000 || error "Shell does not handle 64bit arithmetic"
@@ -344,11 +365,12 @@ while [ "$1" != "" ]
 do
 	case "$1" in
 	 "-h"|"--help") tool_usage ;;
-	 "-v"|"--verbose") VERB=1 ;;
+	 "-v"|"--verbose") VERB="-v" ;;
 	 "-n"|"--dry-run") DRY=1 ;;
 	 "-f"|"--force") FORCE="-f" ;;
 	 "-e"|"--ext-offline") EXTOFF=1 ;;
 	 "-y"|"--yes") YES="-y" ;;
+	 "-l"|"--lvresize") DO_LVRESIZE=1 ;;
 	 "check") shift; CHECK=$1 ;;
 	 "resize") shift; RESIZE=$1; shift; NEWSIZE=$1 ;;
 	 *) error "Wrong argument \"$1\". (see: $TOOL --help)"
@@ -359,6 +381,7 @@ done
 if [ -n "$CHECK" ]; then
 	check "$CHECK"
 elif [ -n "$RESIZE" ]; then
+	export FSADM_RUNNING="fsadm"
 	resize "$RESIZE" "$NEWSIZE"
 else
 	error "Missing command. (see: $TOOL --help)"
