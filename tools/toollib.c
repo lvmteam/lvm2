@@ -648,6 +648,11 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	int ret_max = 0;
 	int ret = 0;
 
+	if (!scan_vgs_for_pvs(cmd)) {
+		stack;
+		return ECMD_FAILED;
+	}
+
 	if (!(iter = dev_iter_create(cmd->filter, 1))) {
 		log_error("dev_iter creation failed");
 		return ECMD_FAILED;
