@@ -20,7 +20,8 @@
 #include "uuid.h"
 #include "label.h"
 
-#define ORPHAN ""
+#define ORPHAN_PREFIX "#"
+#define ORPHAN_VG_NAME(fmt) ORPHAN_PREFIX "orphans_" fmt
 
 #define CACHE_INVALID	0x00000001
 #define CACHE_LOCKED	0x00000002

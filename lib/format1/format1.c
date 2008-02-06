@@ -18,12 +18,9 @@
 #include "limits.h"
 #include "display.h"
 #include "toolcontext.h"
-#include "lvmcache.h"
 #include "lvm1-label.h"
 #include "format1.h"
 #include "segtype.h"
-
-#define FMT_LVM1_NAME "lvm1"
 
 /* VG consistency checks */
 static int _check_vgs(struct list *pvs, int *partial)
@@ -523,6 +520,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 	fmt->ops = &_format1_ops;
 	fmt->name = FMT_LVM1_NAME;
 	fmt->alias = NULL;
+	fmt->orphan_vg_name = FMT_LVM1_ORPHAN_VG_NAME;
 	fmt->features = FMT_RESTRICTED_LVIDS | FMT_ORPHAN_ALLOCATABLE |
 			FMT_RESTRICTED_READAHEAD;
 	fmt->private = NULL;

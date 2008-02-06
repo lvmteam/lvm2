@@ -207,7 +207,9 @@ static int _text_read(struct labeller *l, struct device *dev, void *buf,
 
 	pvhdr = (struct pv_header *) ((void *) buf + xlate32(lh->offset_xl));
 
-	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev, NULL, NULL, 0)))
+	if (!(info = lvmcache_add(l, (char *)pvhdr->pv_uuid, dev,
+				  FMT_TEXT_ORPHAN_VG_NAME,
+				  FMT_TEXT_ORPHAN_VG_NAME, 0)))
 		return_0;
 	*label = info->label;
 

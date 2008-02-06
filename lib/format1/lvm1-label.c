@@ -19,7 +19,7 @@
 #include "label.h"
 #include "metadata.h"
 #include "xlate.h"
-#include "lvmcache.h"
+#include "format1.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -60,17 +60,21 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
 	struct pv_disk *pvd = (struct pv_disk *) buf;
 	struct vg_disk vgd;
 	struct lvmcache_info *info;
-	const char *vgid = NULL;
+	const char *vgid = FMT_LVM1_ORPHAN_VG_NAME;
+	const char *vgname = FMT_LVM1_ORPHAN_VG_NAME;
 	unsigned exported = 0;
 
 	munge_pvd(dev, pvd);
 
-	if (*pvd->vg_name && read_vgd(dev, &vgd, pvd)) {
+	if (*pvd->vg_name) {
+		if (!read_vgd(dev, &vgd, pvd))
+			return_0;
 		vgid = (char *) vgd.vg_uuid;
+		vgname = (char *) pvd->vg_name;
 		exported = pvd->pv_status & VG_EXPORTED;
 	}
 
-	if (!(info = lvmcache_add(l, (char *)pvd->pv_uuid, dev, (char *)pvd->vg_name, vgid,
+	if (!(info = lvmcache_add(l, (char *)pvd->pv_uuid, dev, vgname, vgid,
 				  exported)))
 		return_0;
 	*label = info->label;

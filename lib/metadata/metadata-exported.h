@@ -133,6 +133,7 @@ struct format_type {
 	struct labeller *labeller;
 	const char *name;
 	const char *alias;
+	const char *orphan_vg_name;
 	uint32_t features;
 	void *library;
 	void *private;

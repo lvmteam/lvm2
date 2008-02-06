@@ -36,9 +36,6 @@
 #include <dirent.h>
 #include <ctype.h>
 
-#define FMT_TEXT_NAME "lvm2"
-#define FMT_TEXT_ALIAS "text"
-
 static struct mda_header *_raw_read_mda_header(const struct format_type *fmt,
 					       struct device_area *dev_area);
 
@@ -387,7 +384,8 @@ static struct raw_locn *_find_vg_rlocn(struct device_area *dev_area,
 
       bad:
 	if ((info = info_from_pvid(dev_area->dev->pvid, 0)))
-		lvmcache_update_vgname_and_id(info, ORPHAN, ORPHAN, 0, NULL);
+		lvmcache_update_vgname_and_id(info, FMT_TEXT_ORPHAN_VG_NAME,
+					      FMT_TEXT_ORPHAN_VG_NAME, 0, NULL);
 
 	return NULL;
 }
@@ -1293,7 +1291,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	/* FIXME Test mode don't update cache? */
 
 	if (!(info = lvmcache_add(fmt->labeller, (char *) &pv->id, pv->dev,
-				  ORPHAN, NULL, 0)))
+				  FMT_TEXT_ORPHAN_VG_NAME, NULL, 0)))
 		return_0;
 	label = info->label;
 
@@ -1438,7 +1436,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 	pv->dev = info->dev;
 	pv->fmt = info->fmt;
 	pv->size = info->device_size >> SECTOR_SHIFT;
-	pv->vg_name = ORPHAN;
+	pv->vg_name = FMT_TEXT_ORPHAN_VG_NAME;
 	memcpy(&pv->id, &info->dev->pvid, sizeof(pv->id));
 
 	/* Currently only support exactly one data area */
@@ -1887,6 +1885,7 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 	fmt->ops = &_text_handler;
 	fmt->name = FMT_TEXT_NAME;
 	fmt->alias = FMT_TEXT_ALIAS;
+	fmt->orphan_vg_name = ORPHAN_VG_NAME(FMT_TEXT_NAME);
 	fmt->features = FMT_SEGMENTS | FMT_MDAS | FMT_TAGS | FMT_PRECOMMIT |
 			FMT_UNLIMITED_VOLS | FMT_RESIZE_PV |
 			FMT_UNLIMITED_STRIPESIZE;

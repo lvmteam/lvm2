@@ -1004,7 +1004,7 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)), struct 
 
 /* necessary for displaying something for PVs not belonging to VG */
 static struct volume_group _dummy_vg = {
-	.name = (char *) ORPHAN,
+	.name = (char *) "",
 };
 
 static void *_obj_get_vg(void *obj)

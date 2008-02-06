@@ -376,7 +376,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	if (pvl)
 		list_del(&pvl->list);
 
-	pv->vg_name = ORPHAN;
+	pv->vg_name = vg->fid->fmt->orphan_vg_name;
 	pv->status = ALLOCATABLE_PV;
 
 	if (!dev_get_size(pv_dev(pv), &pv->size)) {
