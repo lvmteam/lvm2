@@ -166,6 +166,7 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 {
 	const char *cmd_name;
 	char *st;
+	unsigned dev_dir_found = 0;
 
 	lp->sign = SIGN_NONE;
 	lp->resize = LV_ANY;
@@ -228,11 +229,12 @@ static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
 	argv++;
 	argc--;
 
-	if (!(lp->vg_name = extract_vgname(cmd, lp->lv_name))) {
+	if (!(lp->lv_name = skip_dev_dir(cmd, lp->lv_name, &dev_dir_found))
+	    || (!(lp->vg_name = extract_vgname(cmd, lp->lv_name)))) {
 		log_error("Please provide a volume group name");
 		return 0;
 	}
-	
+
 	if (!validate_name(lp->vg_name)) {
 		log_error("Volume group name %s has invalid characters",
 			  lp->vg_name);
@@ -267,7 +269,6 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t sz, str;
 	struct list *pvh = NULL;
 	char size_buf[SIZE_BUF];
-	char lv_path[PATH_MAX];
 
 	/* does LV exist? */
 	if (!(lvl = find_lv_in_vg(vg, lp->lv_name))) {
@@ -622,6 +623,14 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	log_print("Logical volume %s successfully resized", lp->lv_name);
 
 	if (lp->resizefs && (lp->resize == LV_EXTEND)) {
+		char lv_path[PATH_MAX];
+
+		if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", cmd->dev_dir,
+				lp->vg_name, lp->lv_name) < 0) {
+			log_error("Couldn't create LV path for %s",
+				  lp->lv_name);
+			return ECMD_FAILED;
+		}
 		if (!exec_cmd("fsadm", "resize", lv_path, size_buf)) {
 			stack;
 			return ECMD_FAILED;

@@ -2,6 +2,10 @@ Version 2.02.34 -
 ===================================
   Update usage message for clvmd.
   Fix clvmd man page printing <br>, clarified debug options.
+  Fix lvresize to support /dev/mapper prefix in the lvname
+  Fix unfilled paramater passed to fsadm from lvresize
+  Update fsadm to call lvresize if the partition size differs (with option -l)
+  Fix fsadm to support vg/lv name (like the rest of lv-tools)
 
 Version 2.02.33 - 31st January 2008
 ===================================
