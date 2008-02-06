@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Fix 'pvs -a' to detect VGs of PVs without metadata areas.
   Divide up internal orphan volume group by format type.
   Update usage message for clvmd.
   Fix clvmd man page printing <br>, clarified debug options.
