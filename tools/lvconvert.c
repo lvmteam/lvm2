@@ -389,7 +389,7 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 
 	/* If called with no argument, try collapsing the resync layers */
 	if (!arg_count(cmd, mirrors_ARG) && !arg_count(cmd, mirrorlog_ARG) &&
-	    !arg_count(cmd, corelog_ARG)) {
+	    !arg_count(cmd, corelog_ARG) && !arg_count(cmd, regionsize_ARG)) {
 		lp->need_polling = 1;
 		return 1;
 	}
