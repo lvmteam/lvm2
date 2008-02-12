@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Avoid automatic lvconvert polldaemon invocation when -R specified. (2.02.30)
   Fix 'pvs -a' to detect VGs of PVs without metadata areas.
   Divide up internal orphan volume group by format type.
   Update usage message for clvmd.
