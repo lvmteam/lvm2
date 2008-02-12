@@ -526,6 +526,8 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 			log_error("Logical volume %s already has %"
 				  PRIu32 " mirror(s).", lv->name,
 				  lp->mirrors - 1);
+			if (lv->status & CONVERTING)
+				lp->need_polling = 1;
 			return 1;
 		}
 	} else if (lp->mirrors > existing_mirrors) {
