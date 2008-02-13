@@ -1975,7 +1975,7 @@ int is_orphan_vg(const char *vg_name)
  * is_orphan - Determine whether a pv is an orphan based on its vg_name
  * @pv: handle to the physical volume
  */
-int is_orphan(pv_t *pv)
+int is_orphan(const pv_t *pv)
 {
 	return is_orphan_vg(pv_field(pv, vg_name));
 }
