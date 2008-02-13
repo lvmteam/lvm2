@@ -318,7 +318,7 @@ int pv_write(struct cmd_context *cmd, struct physical_volume *pv,
 	     struct list *mdas, int64_t label_sector);
 int is_pv(pv_t *pv);
 int is_orphan_vg(const char *vg_name);
-int is_orphan(pv_t *pv);
+int is_orphan(const pv_t *pv);
 int vgs_are_compatible(struct cmd_context *cmd,
 		       struct volume_group *vg_from,
 		       struct volume_group *vg_to);
