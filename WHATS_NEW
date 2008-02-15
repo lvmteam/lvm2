@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Remove redundant if-before-free tests in clvmd.c.
   Avoid a compiler warning: make is_orphan's parameter "const".
   Fix lvconvert detection of mirror conversion in progress. (2.02.30)
   Avoid automatic lvconvert polldaemon invocation when -R specified. (2.02.30)
