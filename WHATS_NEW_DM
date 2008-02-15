@@ -1,5 +1,6 @@
 Version 1.02.25 - 
 ====================================
+  Remove redundant if-before-free tests.
   Use log_warn for reporting field help text instead of log_print.
   Change cluster mirror log type name (s/clustered_/clustered-/)
 
@@ -35,7 +36,7 @@ Version 1.02.22 - 21st August 2007
 Version 1.02.21 - 13th July 2007
 ================================
   Introduce _LOG_STDERR to send log_warn() messages to stderr not stdout.
-  Fix dmsetup -o devno string termination. (1.02.20) 
+  Fix dmsetup -o devno string termination. (1.02.20)
 
 Version 1.02.20 - 15th June 2007
 ================================
@@ -323,4 +324,3 @@ Version 1.00.08 - 27 Feb 2004
   Fixed DESTDIR for make install/install_static_lib.
   Updated README/INSTALL to reflect move to sources.redhat.com.
   Updated autoconf files to 2003-06-17.
-
