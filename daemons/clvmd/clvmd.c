@@ -903,8 +903,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		}
 
 		/* Free the command buffer */
-		if (thisfd->bits.localsock.cmd)
-			free(thisfd->bits.localsock.cmd);
+		free(thisfd->bits.localsock.cmd);
 
 		/* Clear out the cross-link */
 		if (thisfd->bits.localsock.pipe_client != NULL)
@@ -939,8 +938,7 @@ static int read_from_local_sock(struct local_client *thisfd)
 		}
 
 		/* Free any old buffer space */
-		if (thisfd->bits.localsock.cmd)
-			free(thisfd->bits.localsock.cmd);
+		free(thisfd->bits.localsock.cmd);
 
 		/* See if we have the whole message */
 		argslen =
@@ -1547,8 +1545,7 @@ static void send_local_reply(struct local_client *client, int status, int fd)
 		}
 		thisreply = thisreply->next;
 
-		if (tempreply->replymsg)
-			free(tempreply->replymsg);
+		free(tempreply->replymsg);
 		free(tempreply);
 	}
 
@@ -1579,8 +1576,7 @@ static void free_reply(struct local_client *client)
 
 		thisreply = thisreply->next;
 
-		if (tempreply->replymsg)
-			free(tempreply->replymsg);
+		free(tempreply->replymsg);
 		free(tempreply);
 	}
 	client->bits.localsock.replies = NULL;
@@ -1732,8 +1728,7 @@ static __attribute__ ((noreturn)) void *lvm_thread_fn(void *arg)
 			pthread_mutex_unlock(&lvm_thread_mutex);
 
 			process_work_item(cmd);
-			if (cmd->msg)
-				free(cmd->msg);
+			free(cmd->msg);
 			free(cmd);
 
 			pthread_mutex_lock(&lvm_thread_mutex);
