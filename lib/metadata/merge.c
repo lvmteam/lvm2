@@ -224,6 +224,20 @@ int check_lv_segments(struct logical_volume *lv, int complete_vg)
 				  seg->le + seg->len - 1, seg_found);
 			r = 0;
 		}
+
+		seg_found = 0;
+		list_iterate_items(seg2, &seg->lv->segments)
+			if (sl->seg == seg2) {
+				seg_found++;
+				break;
+			}
+		if (!seg_found) {
+			log_error("LV segment %s:%" PRIu32 "-%" PRIu32
+				  "is incorrectly listed as being used by LV %s",
+				  seg->lv->name, seg->le, seg->le + seg->len - 1,
+				  lv->name);
+			r = 0;
+		}
 	}
 
 	if (le != lv->le_count) {
