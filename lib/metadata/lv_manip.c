@@ -2308,6 +2308,9 @@ int remove_layer_from_lv(struct logical_volume *lv,
 	    parent->le_count != layer_lv->le_count)
 		return_0;
 
+	if (!lv_empty(parent))
+		return_0;
+
 	if (!_move_lv_segments(parent, layer_lv, 0, 0))
 		return_0;
 
