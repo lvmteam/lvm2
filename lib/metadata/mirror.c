@@ -504,6 +504,8 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * to remove the layer. */
 	if (new_area_count == 1 && !is_temporary_mirror_layer(lv)) {
 		lv1 = seg_lv(mirrored_seg, 0);
+		lv1->status &= ~MIRROR_IMAGE;
+		lv1->status |= VISIBLE_LV;
 		detached_log_lv = detach_mirror_log(mirrored_seg);
 		if (!remove_layer_from_lv(lv, lv1))
 			return_0;
