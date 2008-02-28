@@ -35,6 +35,8 @@ test_expect_success \
    vg1=$(this_test_)-test-vg1-$$          &&
    vg2=$(this_test_)-test-vg2-$$          &&
    lv1=$(this_test_)-test-lv1-$$          &&
+   lv2=$(this_test_)-test-lv2-$$          &&
+   lv3=$(this_test_)-test-lv3-$$          &&
    pvcreate $d1 $d2 $d3 $d4'
 
 test_expect_success \
@@ -151,8 +153,8 @@ test_expect_success \
   'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
-   lvcreate -l 4 -n lv2 $vg1 &&
-   lvcreate -l 4 -n lv3 $vg2 &&
+   lvcreate -l 4 -n $lv2 $vg1 &&
+   lvcreate -l 4 -n $lv3 $vg2 &&
    vgchange -an $vg1 &&
    vgchange -an $vg2 &&
    vgsplit $vg1 $vg2 $d1 2>err;
