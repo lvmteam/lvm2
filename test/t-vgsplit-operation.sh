@@ -34,6 +34,7 @@ test_expect_success \
    f4=$(pwd)/4 && d4=$(loop_setup_ "$f4") &&
    vg1=$(this_test_)-test-vg1-$$          &&
    vg2=$(this_test_)-test-vg2-$$          &&
+   lv1=$(this_test_)-test-lv1-$$          &&
    pvcreate $d1 $d2 $d3 $d4'
 
 test_expect_success \
@@ -138,7 +139,7 @@ test_expect_success \
   'pvcreate -ff -M2 $d3 $d4 &&
    vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
-   lvcreate -l 4 -n lv1 $vg1 &&
+   lvcreate -l 4 -n $lv1 $vg1 &&
    vgsplit $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$?; test $status = 5 &&
    grep "^  Logical volumes in \"$vg1\" must be inactive\$" err &&
@@ -149,7 +150,7 @@ test_expect_success \
   'vgsplit rejects split because max_lv is exceeded' \
   'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
-   lvcreate -l 4 -n lv1 $vg1 &&
+   lvcreate -l 4 -n $lv1 $vg1 &&
    lvcreate -l 4 -n lv2 $vg1 &&
    lvcreate -l 4 -n lv3 $vg2 &&
    vgchange -an $vg1 &&
