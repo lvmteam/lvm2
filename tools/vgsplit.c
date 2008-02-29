@@ -15,17 +15,10 @@
 
 #include "tools.h"
 
-static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
-		    char *pv_name)
+static void _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
+		     struct pv_list *pvl)
 {
-	struct pv_list *pvl;
 	struct physical_volume *pv;
-
-	if (!(pvl = find_pv_in_vg(vg_from, pv_name))) {
-		log_error("Physical volume %s not in volume group %s",
-			  pv_name, vg_from->name);
-		return 0;
-	}
 
 	list_del(&pvl->list);
 	list_add(&vg_to->pvs, &pvl->list);
@@ -40,8 +33,6 @@ static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 
 	vg_from->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
 	vg_to->free_count += pv_pe_count(pv) - pv_pe_alloc_count(pv);
-
-	return 1;
 }
 
 /* FIXME Why not (lv->vg == vg) ? */
@@ -230,6 +221,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	int opt;
 	int active;
 	int existing_vg;
+	struct pv_list *pvl;
 
 	if (argc < 3) {
 		log_error("Existing VG, new VG and physical volumes required.");
@@ -312,8 +304,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Move PVs across to new structure */
 	for (opt = 0; opt < argc; opt++) {
-		if (!_move_pv(vg_from, vg_to, argv[opt]))
+		if (!(pvl = find_pv_in_vg(vg_from, argv[opt]))) {
+			log_error("Physical volume %s not in volume group %s",
+				  argv[opt], vg_from->name);
 			goto error;
+		}
+
+		_move_pv(vg_from, vg_to, pvl);
 	}
 
 	/* Move required LVs across, checking consistency */
