@@ -163,6 +163,19 @@ test_expect_success \
    vgremove -f $vg2 &&
    vgremove -f $vg1'
 
+test_expect_success \
+  'vgsplit rejects split because PV not in VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   vgcreate $vg2 $d3 $d4 &&
+   lvcreate -l 4 -n $lv1 $vg1 &&
+   lvcreate -l 4 -n $lv2 $vg1 &&
+   vgchange -an $vg1 &&
+   vgsplit $vg1 $vg2 $d3 2>err;
+   status=$?; echo status=$?; test $status = 5 &&
+   grep "^  Physical volume $d3 not in volume group $vg1" err &&
+   vgremove -f $vg2 &&
+   vgremove -f $vg1'
+
 test_done
 # Local Variables:
 # indent-tabs-mode: nil
