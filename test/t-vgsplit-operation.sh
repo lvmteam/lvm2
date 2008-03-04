@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-test_description='Exercise some vgsplit diagnostics'
+test_description='Test vgsplit operation, including different LV types'
 privileges_required_=1
 
 . ./test-lib.sh
@@ -40,141 +40,47 @@ test_expect_success \
    pvcreate $d1 $d2 $d3 $d4'
 
 test_expect_success \
-  'vgsplit accepts new vg as destination of split' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgsplit $vg1 $vg2 $d1 1>err;
-   status=$?; echo status=$?; test $status = 0 &&
-   grep "New volume group \"$vg2\" successfully split from \"$vg1\"" err &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-test_expect_success \
-  'vgsplit accepts existing vg as destination of split' \
+  'vgsplit correctly splits single linear LV into existing VG' \
   'vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
-   vgsplit $vg1 $vg2 $d1 1>err;
-   status=$?; echo status=$?; test $status = 0 &&
-   grep "Existing volume group \"$vg2\" successfully split from \"$vg1\"" err &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-test_expect_success \
-  'vgsplit accepts --maxphysicalvolumes 128 on new VG' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgsplit --maxphysicalvolumes 128 $vg1 $vg2 $d1 &&
-   check_vg_field_ $vg2 max_pv 128 &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-test_expect_success \
-  'vgsplit accepts --maxlogicalvolumes 128 on new VG' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgsplit --maxlogicalvolumes 128 $vg1 $vg2 $d1 &&
-   check_vg_field_ $vg2 max_lv 128 &&
-   vgremove $vg1 &&
-   vgremove $vg2'
-
-test_expect_success \
-  'vgsplit rejects split because max_pv of destination would be exceeded' \
-  'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
-   vgsplit $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Maximum number of physical volumes (2) exceeded" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
-  'vgsplit rejects split because maxphysicalvolumes given with existing vg' \
-  'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
-   vgsplit --maxphysicalvolumes 2 $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
-  'vgsplit rejects split because maxlogicalvolumes given with existing vg' \
-  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
-   vgsplit --maxlogicalvolumes 2 $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
-  'vgsplit rejects split because alloc given with existing vg' \
-  'vgcreate --alloc cling $vg1 $d1 $d2 &&
-   vgcreate --alloc cling $vg2 $d3 $d4 &&
-   vgsplit --alloc cling $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
-  'vgsplit rejects split because clustered given with existing vg' \
-  'vgcreate --clustered n $vg1 $d1 $d2 &&
-   vgcreate --clustered n $vg2 $d3 $d4 &&
-   vgsplit --clustered n $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
-  'vgsplit rejects split because metadata types differ' \
-  'pvcreate -ff -M1 $d3 $d4 &&
-   pvcreate -ff -M2 $d1 $d2 &&
-   vgcreate -M1 $vg1 $d3 $d4 &&
-   vgcreate -M2 $vg2 $d1 $d2 &&
-   vgsplit $vg1 $vg2 $d3 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Metadata types differ" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
-  'vgsplit rejects vg with active lv' \
-  'pvcreate -ff -M2 $d3 $d4 &&
-   vgcreate $vg1 $d1 $d2 &&
-   vgcreate $vg2 $d3 $d4 &&
-   lvcreate -l 4 -n $lv1 $vg1 &&
-   vgsplit $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Logical volumes in \"$vg1\" must be inactive\$" err &&
-   vgremove -f $vg2 &&
-   vgremove -f $vg1'
-
-test_expect_success \
-  'vgsplit rejects split because max_lv is exceeded' \
-  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
-   lvcreate -l 4 -n $lv1 $vg1 &&
-   lvcreate -l 4 -n $lv2 $vg1 &&
-   lvcreate -l 4 -n $lv3 $vg2 &&
+   lvcreate -l 4 -n $lv1 $vg1 $d1 &&
    vgchange -an $vg1 &&
-   vgchange -an $vg2 &&
-   vgsplit $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Maximum number of logical volumes (2) exceeded" err &&
+   vgsplit $vg1 $vg2 $d1 &&
+   lvremove -f $vg2/$lv1 &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because PV not in VG' \
+  'vgsplit correctly splits single striped LV into existing VG' \
   'vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
-   lvcreate -l 4 -n $lv1 $vg1 &&
-   lvcreate -l 4 -n $lv2 $vg1 &&
+   lvcreate -l 4 -i 2 -n $lv1 $vg1 $d1 $d2 &&
    vgchange -an $vg1 &&
-   vgsplit $vg1 $vg2 $d3 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Physical volume $d3 not in volume group $vg1" err &&
-   vgremove -f $vg2 &&
-   vgremove -f $vg1'
+   vgsplit $vg1 $vg2 $d1 $d2 &&
+   lvremove -f $vg2/$lv1 &&
+   vgremove -f $vg2'
+
+test_expect_success \
+  'vgsplit correctly splits origin and snapshot LV into existing VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   vgcreate $vg2 $d3 $d4 &&
+   lvcreate -l 64 -i 2 -n $lv1 $vg1 $d1 $d2 &&
+   lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 &&
+   vgchange -an $vg1 &&
+   vgsplit $vg1 $vg2 $d1 $d2 &&
+   lvremove -f $vg2/$lv2 &&
+   lvremove -f $vg2/$lv1 &&
+   vgremove -f $vg2'
+
+test_expect_success \
+  'vgsplit correctly splits mirror LV into existing VG' \
+  'vgcreate $vg1 $d1 $d2 $d3 &&
+   vgcreate $vg2 $d4 &&
+   lvcreate -l 64 -m1 -n $lv1 $vg1 $d1 $d2 $d3 &&
+   vgchange -an $vg1 &&
+   vgsplit $vg1 $vg2 $d1 $d2 $d3 &&
+   lvremove -f $vg2/$lv1 &&
+   vgremove -f $vg2'
 
 test_done
 # Local Variables:
