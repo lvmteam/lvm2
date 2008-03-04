@@ -23,6 +23,18 @@ cleanup_()
   rm -f "$f1" "$f2" "$f3" "$f4"
 }
 
+validate_vg_pvlv_counts_()
+{
+	local local_vg=$1
+	local num_pvs=$2
+	local num_lvs=$3
+	local num_snaps=$4
+
+	check_vg_field_ $local_vg pv_count $num_pvs &&
+	check_vg_field_ $local_vg lv_count $num_lvs &&
+	check_vg_field_ $local_vg snap_count $num_snaps
+}
+
 # FIXME: paramaterize lvm1 vs lvm2 metadata; most of these tests should run
 # fine with lvm1 metadata as well; for now, just add disks 5 and 6 as lvm1
 # metadata
@@ -46,6 +58,8 @@ test_expect_success \
    lvcreate -l 4 -n $lv1 $vg1 $d1 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d1 &&
+   validate_vg_pvlv_counts_ $vg1 1 0 0 &&
+   validate_vg_pvlv_counts_ $vg2 3 1 0 &&
    lvremove -f $vg2/$lv1 &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
@@ -57,6 +71,7 @@ test_expect_success \
    lvcreate -l 4 -i 2 -n $lv1 $vg1 $d1 $d2 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d1 $d2 &&
+   validate_vg_pvlv_counts_ $vg2 4 1 0 &&
    lvremove -f $vg2/$lv1 &&
    vgremove -f $vg2'
 
@@ -68,6 +83,7 @@ test_expect_success \
    lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d1 $d2 &&
+   validate_vg_pvlv_counts_ $vg2 4 1 1 &&
    lvremove -f $vg2/$lv2 &&
    lvremove -f $vg2/$lv1 &&
    vgremove -f $vg2'
@@ -79,6 +95,7 @@ test_expect_success \
    lvcreate -l 64 -m1 -n $lv1 $vg1 $d1 $d2 $d3 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d1 $d2 $d3 &&
+   validate_vg_pvlv_counts_ $vg2 4 4 0 &&
    lvremove -f $vg2/$lv1 &&
    vgremove -f $vg2'
 
