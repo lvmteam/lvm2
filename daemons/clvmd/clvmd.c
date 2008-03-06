@@ -37,6 +37,7 @@
 #include <getopt.h>
 #include <syslog.h>
 #include <errno.h>
+#include <limits.h>
 #include <libdlm.h>
 
 #include "clvmd-comms.h"

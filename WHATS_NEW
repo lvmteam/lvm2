@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Include limits.h in clvmd so it compiles with newer headers.
   Add VirtIO disks (vd) to filters.
   Fix resetting of MIRROR_IMAGE and VISIBLE_LV after removal of LV. (2.02.30)
   Fix remove_layer_from_lv to empty the LV before removing it. (2.02.30)
