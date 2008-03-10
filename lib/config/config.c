@@ -372,7 +372,7 @@ static int _line_append(struct output_line *outline, const char *fmt, ...)
 	va_end(ap);
 
 	if (!dm_pool_grow_object(outline->mem, &buf[0], strlen(buf))) {
-		log_error("dm_pool_grew_object failed for config line");
+		log_error("dm_pool_grow_object failed for config line");
 		return 0;
 	}
 

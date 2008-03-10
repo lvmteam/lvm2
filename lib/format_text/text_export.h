@@ -16,8 +16,8 @@
 #ifndef _LVM_TEXT_EXPORT_H
 #define _LVM_TEXT_EXPORT_H
 
-#define outf(args...) do {if (!out_text(args)) {stack; return 0;}} while (0)
-#define outnl(f) do {if (!f->nl(f)) {stack; return 0;}} while (0)
+#define outf(args...) do {if (!out_text(args)) return_0;} while (0)
+#define outnl(f) do {if (!f->nl(f)) return_0;} while (0)
 
 struct formatter;
 struct lv_segment;
