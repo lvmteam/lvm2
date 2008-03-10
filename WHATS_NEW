@@ -1,5 +1,7 @@
 Version 2.02.34 -
 ===================================
+  Use return_0 in a couple more places.
+  Correct a function name typo in _line_append error message.
   Include limits.h in clvmd so it compiles with newer headers.
   Add VirtIO disks (vd) to filters.
   Fix resetting of MIRROR_IMAGE and VISIBLE_LV after removal of LV. (2.02.30)
