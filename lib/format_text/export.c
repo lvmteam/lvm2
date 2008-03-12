@@ -296,6 +296,7 @@ int out_text(struct formatter *f, const char *fmt, ...)
 static int _print_header(struct formatter *f,
 			 const char *desc)
 {
+	char *buf;
 	time_t t;
 
 	t = time(NULL);
@@ -305,7 +306,12 @@ static int _print_header(struct formatter *f,
 	outf(f, FORMAT_VERSION_FIELD " = %d", FORMAT_VERSION_VALUE);
 	outnl(f);
 
-	outf(f, "description = \"%s\"", desc);
+	if (!(buf = alloca(escaped_len(desc)))) {
+		log_error("temporary stack allocation for description"
+			  "string failed");
+		return 0;
+	}
+	outf(f, "description = \"%s\"", escape_double_quotes(buf, desc));
 	outnl(f);
 	outf(f, "creation_host = \"%s\"\t# %s %s %s %s %s", _utsname.nodename,
 	     _utsname.sysname, _utsname.nodename, _utsname.release,
@@ -370,6 +376,7 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 	struct pv_list *pvl;
 	struct physical_volume *pv;
 	char buffer[4096];
+	char *buf;
 	const char *name;
 
 	outf(f, "physical_volumes {");
@@ -389,7 +396,15 @@ static int _print_pvs(struct formatter *f, struct volume_group *vg)
 			return_0;
 
 		outf(f, "id = \"%s\"", buffer);
-		if (!out_hint(f, "device = \"%s\"", pv_dev_name(pv)))
+
+		if (!(buf = alloca(escaped_len(pv_dev_name(pv))))) {
+			log_error("temporary stack allocation for device name"
+				  "string failed");
+			return 0;
+		}
+
+		if (!out_hint(f, "device = \"%s\"",
+			      escape_double_quotes(buf, pv_dev_name(pv))))
 			return_0;
 		outnl(f);
 

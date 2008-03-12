@@ -34,7 +34,8 @@
 enum {
 	TOK_INT,
 	TOK_FLOAT,
-	TOK_STRING,
+	TOK_STRING,		/* Single quotes */
+	TOK_STRING_ESCAPED,	/* Double quotes */
 	TOK_EQ,
 	TOK_SECTION_B,
 	TOK_SECTION_E,
@@ -401,9 +402,16 @@ static int _line_end(struct output_line *outline)
 
 static int _write_value(struct output_line *outline, struct config_value *v)
 {
+	char *buf;
+
 	switch (v->type) {
 	case CFG_STRING:
-		line_append("\"%s\"", v->v.str);
+		if (!(buf = alloca(escaped_len(v->v.str)))) {
+			log_error("temporary stack allocation for a config "
+				  "string failed");
+			return 0;
+		}
+		line_append("\"%s\"", escape_double_quotes(buf, v->v.str));
 		break;
 
 	case CFG_FLOAT:
@@ -644,6 +652,17 @@ static struct config_value *_type(struct parser *p)
 		match(TOK_STRING);
 		break;
 
+	case TOK_STRING_ESCAPED:
+		v->type = CFG_STRING;
+
+		p->tb++, p->te--;	/* strip "'s */
+		if (!(v->v.str = _dup_tok(p)))
+			return_0;
+		unescape_double_quotes(v->v.str);
+		p->te++;
+		match(TOK_STRING_ESCAPED);
+		break;
+
 	default:
 		log_error("Parse error at byte %" PRIptrdiff_t " (line %d): expected a value",
 			  p->tb - p->fb + 1, p->line);
@@ -714,7 +733,7 @@ static void _get_token(struct parser *p, int tok_prev)
 		break;
 
 	case '"':
-		p->t = TOK_STRING;
+		p->t = TOK_STRING_ESCAPED;
 		p->te++;
 		while ((p->te != p->fe) && (*p->te) && (*p->te != '"')) {
 			if ((*p->te == '\\') && (p->te + 1 != p->fe) &&
@@ -1232,7 +1251,7 @@ static unsigned _count_tokens(const char *str, unsigned len, int type)
 
 	c = _token_type_to_char(type);
 
-	return count_chars_len(str, len, c);
+	return count_chars(str, len, c);
 }
 
 /*
