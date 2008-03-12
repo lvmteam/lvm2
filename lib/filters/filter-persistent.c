@@ -18,6 +18,7 @@
 #include "dev-cache.h"
 #include "filter-persistent.h"
 #include "lvm-file.h"
+#include "lvm-string.h"
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -142,6 +143,7 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 {
 	void *d;
 	int first = 1;
+	char *buf, *str;
 	struct dm_hash_node *n;
 
 	for (n = dm_hash_get_first(pf->devices); n;
@@ -158,7 +160,13 @@ static void _write_array(struct pfilter *pf, FILE *fp, const char *path,
 			first = 0;
 		}
 
-		fprintf(fp, "\t\t\"%s\"", dm_hash_get_key(pf->devices, n));
+		str = dm_hash_get_key(pf->devices, n);
+		if (!(buf = alloca(escaped_len(str)))) {
+			log_error("persistent filter device path stack "
+				  "allocation failed");
+			return;
+		}
+		fprintf(fp, "\t\t\"%s\"", escape_double_quotes(buf, str));
 	}
 
 	if (!first)

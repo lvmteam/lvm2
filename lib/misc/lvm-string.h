@@ -31,8 +31,27 @@ char *build_dm_name(struct dm_pool *mem, const char *vg,
 
 int validate_name(const char *n);
 
-void count_chars(const char *str, size_t *len, int *count,
-		 const int c);
-unsigned count_chars_len(const char *str, size_t len, const int c);
+/*
+ * Returns number of occurrences of c in first len characters of str.
+ */
+unsigned count_chars(const char *str, size_t len, const int c);
+
+/*
+ * Returns what length of escaped string would be including terminating NUL.
+ */
+size_t escaped_len(const char *str);
+
+/*
+ * Copies a string from src to out. 
+ * Double quotation marks and backslashes are quoted with a backslash.
+ * Caller must ensure *out has enough space - see escaped_len().
+ * Returns *out.
+ */
+char *escape_double_quotes(char *out, const char *src);
+
+/*
+ * Removes quoting of double quotation marks and backslashes in situ.
+ */
+void unescape_double_quotes(char *src);
 
 #endif
