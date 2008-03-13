@@ -23,6 +23,18 @@
 /* FIXME Use tidier inclusion method */
 static struct text_vg_version_ops *(_text_vsn_list[2]);
 
+static int _text_import_initialised = 0;
+
+static void _init_text_import()
+{
+	if (_text_import_initialised)
+		return;
+
+	_text_vsn_list[0] = text_vg_vsn1_init();
+	_text_vsn_list[1] = NULL;
+	_text_import_initialised = 1;
+}
+
 const char *text_vgname_import(const struct format_type *fmt,
 			       struct device *dev,
 			       off_t offset, uint32_t size,
@@ -35,13 +47,7 @@ const char *text_vgname_import(const struct format_type *fmt,
 	struct text_vg_version_ops **vsn;
 	const char *vgname = NULL;
 
-	static int _text_import_initialised = 0;
-
-	if (!_text_import_initialised) {
-		_text_vsn_list[0] = text_vg_vsn1_init();
-		_text_vsn_list[1] = NULL;
-		_text_import_initialised = 1;
-	}
+	_init_text_import();
 
 	if (!(cft = create_config_tree(NULL, 0)))
 		return_NULL;
@@ -83,13 +89,7 @@ struct volume_group *text_vg_import_fd(struct format_instance *fid,
 	struct config_tree *cft;
 	struct text_vg_version_ops **vsn;
 
-	static int _text_vg_import_initialised = 0;
-
-	if (!_text_vg_import_initialised) {
-		_text_vsn_list[0] = text_vg_vsn1_init();
-		_text_vsn_list[1] = NULL;
-		_text_vg_import_initialised = 1;
-	}
+	_init_text_import();
 
 	*desc = NULL;
 	*when = 0;
