@@ -58,10 +58,11 @@ static int _pv_write(struct cmd_context *cmd __attribute((unused)),
 static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 			 			const char *pv_name);
 
-static struct pv_list *_find_pv_in_vg(struct volume_group *vg, const char *pv_name);
+static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
+				      const char *pv_name);
 
-static struct physical_volume *_find_pv_in_vg_by_uuid(struct volume_group *vg,
-						      struct id *id);
+static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
+						      const struct id *id);
 
 unsigned long pe_align(void)
 {
@@ -851,12 +852,14 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 }
 
 /* FIXME: liblvm todo - make into function that returns handle */
-struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name)
+struct pv_list *find_pv_in_vg(const struct volume_group *vg,
+			      const char *pv_name)
 {
 	return _find_pv_in_vg(vg, pv_name);
 }
 
-static struct pv_list *_find_pv_in_vg(struct volume_group *vg, const char *pv_name)
+static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
+				      const char *pv_name)
 {
 	struct pv_list *pvl;
 
@@ -890,14 +893,15 @@ int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
  * Note
  *   FIXME - liblvm todo - make into function that takes VG handle
  */
-pv_t *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id)
+pv_t *find_pv_in_vg_by_uuid(const struct volume_group *vg,
+			    const struct id *id)
 {
 	return _find_pv_in_vg_by_uuid(vg, id);
 }
 
 
-static struct physical_volume *_find_pv_in_vg_by_uuid(struct volume_group *vg,
-						      struct id *id)
+static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
+						      const struct id *id)
 {
 	struct pv_list *pvl;
 
@@ -908,7 +912,8 @@ static struct physical_volume *_find_pv_in_vg_by_uuid(struct volume_group *vg,
 	return NULL;
 }
 
-struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name)
+struct lv_list *find_lv_in_vg(const struct volume_group *vg,
+			      const char *lv_name)
 {
 	struct lv_list *lvl;
 	const char *ptr;
@@ -938,7 +943,8 @@ struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg,
 	return NULL;
 }
 
-struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name)
+struct logical_volume *find_lv(const struct volume_group *vg,
+			       const char *lv_name)
 {
 	struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
 	return lvl ? lvl->lv : NULL;

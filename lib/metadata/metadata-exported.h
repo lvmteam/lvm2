@@ -428,14 +428,18 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 					   const char *layer_suffix);
 
 /* Find a PV within a given VG */
-struct pv_list *find_pv_in_vg(struct volume_group *vg, const char *pv_name);
-pv_t *find_pv_in_vg_by_uuid(struct volume_group *vg, struct id *id);
+struct pv_list *find_pv_in_vg(const struct volume_group *vg,
+			      const char *pv_name);
+pv_t *find_pv_in_vg_by_uuid(const struct volume_group *vg,
+			    const struct id *id);
 
 /* Find an LV within a given VG */
-struct lv_list *find_lv_in_vg(struct volume_group *vg, const char *lv_name);
+struct lv_list *find_lv_in_vg(const struct volume_group *vg,
+			      const char *lv_name);
 
 /* FIXME Merge these functions with ones above */
-struct logical_volume *find_lv(struct volume_group *vg, const char *lv_name);
+struct logical_volume *find_lv(const struct volume_group *vg,
+			       const char *lv_name);
 struct physical_volume *find_pv_by_name(struct cmd_context *cmd,
 					const char *pv_name);
 
