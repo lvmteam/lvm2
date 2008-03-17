@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -44,6 +44,9 @@ struct lvmcache_vginfo {
 	char _padding[7];
 	struct lvmcache_vginfo *next; /* Another VG with same name? */
 	char *creation_host;
+	char *vgmetadata;	/* Copy of VG metadata as format_text string */
+	struct format_instance *fid;	/* fid associated with vgmetadata */
+	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
 };
 
 /* One per device */
@@ -77,7 +80,8 @@ void lvmcache_del(struct lvmcache_info *info);
 int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  const char *vgname, const char *vgid,
 				  uint32_t vgstatus, const char *hostname);
-int lvmcache_update_vg(struct volume_group *vg);
+int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted);
+void lvmcache_drop_vg(const char *vgname);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);
 void lvmcache_unlock_vgname(const char *vgname);
