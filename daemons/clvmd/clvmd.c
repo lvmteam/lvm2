@@ -1416,7 +1416,8 @@ next_pre:
 		DEBUGLOG("Waiting for next pre command\n");
 
 		pthread_mutex_lock(&client->bits.localsock.mutex);
-		if (client->bits.localsock.state != PRE_COMMAND) {
+		if (client->bits.localsock.state != PRE_COMMAND &&
+		    !client->bits.localsock.finished) {
 			pthread_cond_wait(&client->bits.localsock.cond,
 					  &client->bits.localsock.mutex);
 		}
@@ -1822,8 +1823,9 @@ static int open_local_sock()
 		log_error("Can't create local socket: %m");
 		return -1;
 	}
-	/* Set Close-on-exec */
+	/* Set Close-on-exec & non-blocking */
 	fcntl(local_socket, F_SETFD, 1);
+	fcntl(local_socket, F_SETFL, fcntl(local_socket, F_GETFL, 0) | O_NONBLOCK);
 
 	memset(&sockaddr, 0, sizeof(sockaddr));
 	memcpy(sockaddr.sun_path, CLVMD_SOCKNAME, sizeof(CLVMD_SOCKNAME));
