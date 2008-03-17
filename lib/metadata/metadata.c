@@ -1296,6 +1296,9 @@ int vg_commit(struct volume_group *vg)
 	int cache_updated = 0;
 	int failed = 0;
 
+	/* Forget all cached instances of vg and force reread */
+	lvmcache_drop_vg(vg->name);             
+
 	/* Commit to each copy of the metadata area */
 	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		failed = 0;
@@ -1306,7 +1309,7 @@ int vg_commit(struct volume_group *vg)
 		}
 		/* Update cache first time we succeed */
 		if (!failed && !cache_updated) {
-			lvmcache_update_vg(vg);
+			lvmcache_update_vg(vg, 0);
 			cache_updated = 1;
 		}
 	}
@@ -1408,7 +1411,7 @@ static int _update_pv_list(struct list *all_pvs, struct volume_group *vg)
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
 				     const char *vgid,
-				     int *consistent, int precommitted)
+				     int *consistent, unsigned precommitted)
 {
 	struct format_instance *fid;
 	const struct format_type *fmt;
@@ -1416,7 +1419,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct metadata_area *mda;
 	int inconsistent = 0;
 	int inconsistent_vgid = 0;
-	int use_precommitted = precommitted;
+	unsigned use_precommitted = precommitted;
 	struct list *pvids;
 	struct pv_list *pvl, *pvl2;
 	struct list all_pvs;
@@ -1559,7 +1562,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			return_NULL;
 	}
 
-	lvmcache_update_vg(correct_vg);
+	lvmcache_update_vg(correct_vg, use_precommitted);
 
 	if (inconsistent) {
 		/* FIXME Test should be if we're *using* precommitted metadata not if we were searching for it */
@@ -1663,7 +1666,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
  */
 static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 					    const char *vgid,
-					    int precommitted)
+					    unsigned precommitted)
 {
 	const char *vgname;
 	struct list *vgnames;
@@ -1724,7 +1727,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 
 /* Only called by activate.c */
 struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
-				    int precommitted)
+				    unsigned precommitted)
 {
 	struct lv_list *lvl;
 	struct volume_group *vg;

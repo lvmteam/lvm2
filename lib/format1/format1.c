@@ -263,7 +263,7 @@ static int _format1_vg_write(struct format_instance *fid, struct volume_group *v
 			 fid->fmt->cmd->filter) &&
 	     write_disks(fid->fmt, &pvds));
 
-	lvmcache_update_vg(vg);
+	lvmcache_update_vg(vg, 0);
 	dm_pool_destroy(mem);
 	return r;
 }

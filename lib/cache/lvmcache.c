@@ -490,6 +490,20 @@ void lvmcache_del(struct lvmcache_info *info)
 	return;
 } */
 
+int lvmcache_store_vg(struct lvmcache_vginfo *vginfo, struct volume_group *vg,
+		      unsigned precommitted)
+{
+	return 1;
+}
+
+void lvmcache_drop_vg(const char *vgname)
+{
+	struct lvmcache_vginfo *vginfo;
+
+	if (!(vginfo = vginfo_from_vgname(vgname, NULL)))
+		return;
+}
+
 static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 {
 	if (!strcmp(info->dev->pvid, pvid))
@@ -768,10 +782,11 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 	return 1;
 }
 
-int lvmcache_update_vg(struct volume_group *vg)
+int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 {
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
+	struct lvmcache_vginfo *vginfo;
 	char pvid_s[ID_LEN + 1] __attribute((aligned(8)));
 
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
@@ -785,6 +800,10 @@ int lvmcache_update_vg(struct volume_group *vg)
 						   vg->status, NULL))
 			return_0;
 	}
+
+	/* store text representation of vg to cache */
+	if ((vginfo = vginfo_from_vgname(vg->name, NULL)))
+		lvmcache_store_vg(vginfo, vg, precommitted);
 
 	return 1;
 }

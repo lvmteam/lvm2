@@ -1005,7 +1005,7 @@ static int _scan_file(const struct format_type *fmt)
 				if ((vg = _vg_read_file_name(fid, vgname,
 							     path)))
 					/* FIXME Store creation host in vg */
-					lvmcache_update_vg(vg);
+					lvmcache_update_vg(vg, 0);
 			}
 
 		if (closedir(d))
@@ -1133,7 +1133,7 @@ static int _scan_raw(const struct format_type *fmt)
 					      NULL, NULL))) {
 			if ((vg = _vg_read_raw_area(&fid, vgname,
 						    &rl->dev_area, 0)))
-				lvmcache_update_vg(vg);
+				lvmcache_update_vg(vg, 0);
 		}
 	}
 
