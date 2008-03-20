@@ -257,6 +257,16 @@ is invoked.
 The volume group name that is assumed for 
 any reference to a logical volume that doesn't specify a path.
 Not set by default.
+.SH VALID NAMES
+The following characters are valid for VG and LV names:
+\fBa-z A-Z 0-9 + _ . -\fP
+.LP
+VG and LV names cannot begin with a hyphen.
+There are also various reserved names that are used internally by lvm that can not be used as LV or VG names.
+A VG cannot be called anything that exists in /dev/ at the time of creation, nor can it be called '.' or '..'.
+A LV cannot be called '.' '..' 'snapshot' or 'pvmove'. The LV name may also not contain the strings '_mlog' or '_mimage'
+
+
 .SH DIAGNOSTICS
 All tools return a status code of zero on success or non-zero on failure.
 .SH FILES
