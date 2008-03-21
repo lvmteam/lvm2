@@ -172,7 +172,6 @@ test_expect_success \
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d3 2>err;
    status=$?; echo status=$?; test $status = 5 &&
-   grep "^  Physical volume $d3 not in volume group $vg1" err &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
 

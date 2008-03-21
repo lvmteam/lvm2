@@ -64,7 +64,7 @@ test_expect_success \
    fi &&
    lvcreate -l 4 -n $lv1 $vg1 $d1 &&
    vgchange -an $vg1 &&
-   vgsplit --force $vg1 $vg2 $d1 &&
+   vgsplit $vg1 $vg2 $d1 &&
    vg_validate_pvlv_counts_ $vg1 1 0 0 &&
    if [ $i == existing ]; then
       vg_validate_pvlv_counts_ $vg2 3 1 0
@@ -83,7 +83,7 @@ test_expect_success \
    fi &&
    lvcreate -l 4 -i 2 -n $lv1 $vg1 $d1 $d2 &&
    vgchange -an $vg1 &&
-   vgsplit --force $vg1 $vg2 $d1 $d2 &&
+   vgsplit $vg1 $vg2 $d1 $d2 &&
    if [ $i == existing ]; then
      vg_validate_pvlv_counts_ $vg2 4 1 0
    else
@@ -101,7 +101,7 @@ test_expect_success \
    lvcreate -l 64 -i 2 -n $lv1 $vg1 $d1 $d2 &&
    lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 &&
    vgchange -an $vg1 &&
-   vgsplit --force $vg1 $vg2 $d1 $d2 &&
+   vgsplit $vg1 $vg2 $d1 $d2 &&
    if [ $i == existing ]; then
      vg_validate_pvlv_counts_ $vg2 4 1 1
    else
@@ -119,7 +119,7 @@ test_expect_success \
    fi &&
    lvcreate -l 64 -m1 -n $lv1 $vg1 $d1 $d2 $d3 &&
    vgchange -an $vg1 &&
-   vgsplit --force $vg1 $vg2 $d1 $d2 $d3 &&
+   vgsplit $vg1 $vg2 $d1 $d2 $d3 &&
    if [ $i == existing ]; then
      vg_validate_pvlv_counts_ $vg2 4 4 0
    else
