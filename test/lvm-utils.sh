@@ -50,6 +50,15 @@ loop_setup_()
   return 0;
 }
 
+compare_vg_field_()
+{
+if test "$verbose" = "t"
+then
+  echo "compare_vg_field_ VG1: `vgs --noheadings -o $3 $1` VG2: `vgs --noheadings -o $3 $2`"
+fi
+  return $(test $(vgs --noheadings -o $3 $1) == $(vgs --noheadings -o $3 $2) )
+}
+
 check_vg_field_()
 {
 if test "$verbose" = "t"
