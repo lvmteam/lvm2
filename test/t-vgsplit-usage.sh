@@ -164,6 +164,36 @@ test_expect_success \
    vgremove -f $vg1'
 
 test_expect_success \
+  'verify default - max_lv attribute from new VG is same as source VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   lvcreate -l 4 -n $lv1 $vg1 &&
+   vgchange -an $vg1 &&
+   vgsplit $vg1 $vg2 $d1 &&
+   compare_vg_field_ $vg1 $vg2 max_lv &&
+   vgremove -f $vg2 &&
+   vgremove -f $vg1'
+
+test_expect_success \
+  'verify default - max_pv attribute from new VG is same as source VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   lvcreate -l 4 -n $lv1 $vg1 &&
+   vgchange -an $vg1 &&
+   vgsplit $vg1 $vg2 $d1 &&
+   compare_vg_field_ $vg1 $vg2 max_pv &&
+   vgremove -f $vg2 &&
+   vgremove -f $vg1'
+
+test_expect_success \
+  'verify default - vg_fmt attribute from new VG is same as source VG' \
+  'vgcreate $vg1 $d1 $d2 &&
+   lvcreate -l 4 -n $lv1 $vg1 &&
+   vgchange -an $vg1 &&
+   vgsplit $vg1 $vg2 $d1 &&
+   compare_vg_field_ $vg1 $vg2 vg_fmt &&
+   vgremove -f $vg2 &&
+   vgremove -f $vg1'
+
+test_expect_success \
   'vgsplit rejects split because PV not in VG' \
   'vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
