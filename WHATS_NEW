@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Correct command name in lvmdiskscan man page.
   clvmd no longer crashes if it sees nodeids over 50.
   Fix potential deadlock in clvmd thread handling.
   Refactor text format initialisation into _init_text_import.
