@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  clvmd no longer crashes if it sees nodeids over 50.
   Fix potential deadlock in clvmd thread handling.
   Refactor text format initialisation into _init_text_import.
   Escape double quotes and backslashes in external metadata and config data.
