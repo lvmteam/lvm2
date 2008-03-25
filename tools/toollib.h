@@ -95,6 +95,7 @@ struct list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int ar
 struct list *clone_pv_list(struct dm_pool *mem, struct list *pvs);
 
 int apply_lvname_restrictions(const char *name);
+int is_reserved_lvname(const char *name);
 
 int fill_vg_create_params(struct cmd_context *cmd,
 			  char *vg_name, struct vgcreate_params *vp_new,

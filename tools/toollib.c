@@ -1234,6 +1234,19 @@ int apply_lvname_restrictions(const char *name)
 	return 1;
 }
 
+int is_reserved_lvname(const char *name)
+{
+	int rc, old_suppress;
+
+	old_suppress = log_suppress(2);
+	rc = !apply_lvname_restrictions(name);
+	log_suppress(old_suppress);
+
+	return rc;
+}
+
+
+
 /*
  * Set members of struct vgcreate_params from cmdline.
  * Do preliminary validation with arg_*() interface.
