@@ -241,7 +241,7 @@ static void _add_up_node(const char *csid)
 
 	if (nodeid >= max_updown_nodes) {
 	        int new_size = nodeid + 10;
-		int *new_updown = realloc(node_updown, new_size);
+		int *new_updown = realloc(node_updown, sizeof(int) * new_size);
 
 		if (new_updown) {
 			node_updown = new_updown;
@@ -326,7 +326,10 @@ static void get_members()
 	}
 
 	if (node_updown == NULL) {
-		size_t buf_len = sizeof(int) * max(num_nodes, max_updown_nodes);
+		size_t buf_len;
+		if (num_nodes > max_updown_nodes)
+			max_updown_nodes = num_nodes;
+		buf_len = sizeof(int) * max_updown_nodes;
 		node_updown = malloc(buf_len);
 		if (node_updown)
 			memset(node_updown, 0, buf_len);
