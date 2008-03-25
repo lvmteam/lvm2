@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Add 'is_reserved_lvname()' helper function.
   Correct command name in lvmdiskscan man page.
   clvmd no longer crashes if it sees nodeids over 50.
   Fix potential deadlock in clvmd thread handling.
