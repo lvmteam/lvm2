@@ -20,8 +20,7 @@ static void _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 {
 	struct physical_volume *pv;
 
-	list_del(&pvl->list);
-	list_add(&vg_to->pvs, &pvl->list);
+	list_move(&pvl->list, &vg_to->pvs);
 
 	vg_from->pv_count--;
 	vg_to->pv_count++;
