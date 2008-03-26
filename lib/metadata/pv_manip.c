@@ -233,7 +233,7 @@ uint32_t pv_list_extents_free(const struct list *pvh)
 	list_iterate_items(pvl, pvh) {
 		list_iterate_items(per, pvl->pe_ranges) {
 			list_iterate_items(pvseg, &pvl->pv->segments) {
-				if (!pvseg->lvseg) /* free space */
+				if (!pvseg_is_allocated(pvseg))
 					extents += _overlap_pe(pvseg, per);
 			}
 		}

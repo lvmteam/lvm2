@@ -270,7 +270,7 @@ void pvdisplay_segments(const struct physical_volume *pv)
 		log_print("Physical extent %u to %u:",
 			  pvseg->pe, pvseg->pe + pvseg->len - 1);
 
-		if (pvseg->lvseg) {
+		if (pvseg_is_allocated(pvseg)) {
 			log_print("  Logical volume\t%s%s/%s",
 				  pvseg->lvseg->lv->vg->cmd->dev_dir,
 				  pvseg->lvseg->lv->vg->name,

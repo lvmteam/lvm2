@@ -612,7 +612,7 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 
 		/* foreach free PV Segment */
 		list_iterate_items(pvseg, &pv->segments) {
-			if (pvseg->lvseg)
+			if (pvseg_is_allocated(pvseg))
 				continue;
 
 			if (!_recalc_extents(&pvseg->pe, pv_dev_name(pv),

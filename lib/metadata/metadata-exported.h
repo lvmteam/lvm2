@@ -151,6 +151,8 @@ struct pv_segment {
 	uint32_t lv_area;	/* Index to area in LV segment */
 };
 
+#define pvseg_is_allocated(pvseg) ((pvseg)->lvseg)
+
 struct physical_volume {
 	struct id id;
 	struct device *dev;
