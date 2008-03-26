@@ -9,7 +9,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-test_description='Exercise some vgmerge diagnostics'
+test_description='Test vgmerge command options for validity'
 privileges_required_=1
 
 . ./test-lib.sh
