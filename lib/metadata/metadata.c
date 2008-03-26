@@ -708,10 +708,8 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
 			continue;
 		}
 
-		if (!mda->ops->mda_in_vg(vg_from->fid, vg_from, mda)) {
-			list_del(&mda->list);
-			list_add(mdas_to, &mda->list);
-		}
+		if (!mda->ops->mda_in_vg(vg_from->fid, vg_from, mda))
+			list_move(&mda->list, mdas_to);
 	}
 
 	if (list_empty(mdas_from) || list_empty(mdas_to))

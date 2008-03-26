@@ -54,8 +54,7 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		struct list *pvh = vg_from->pvs.n;
 		struct physical_volume *pv;
 
-		list_del(pvh);
-		list_add(&vg_to->pvs, pvh);
+		list_move(pvh, &vg_to->pvs);
 
 		pv = list_item(pvh, struct pv_list)->pv;
 		pv->vg_name = dm_pool_strdup(cmd->mem, vg_to->name);
@@ -90,15 +89,13 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	while (!list_empty(&vg_from->lvs)) {
 		struct list *lvh = vg_from->lvs.n;
 
-		list_del(lvh);
-		list_add(&vg_to->lvs, lvh);
+		list_move(lvh, &vg_to->lvs);
 	}
 
 	while (!list_empty(&vg_from->fid->metadata_areas)) {
 		struct list *mdah = vg_from->fid->metadata_areas.n;
 
-		list_del(mdah);
-		list_add(&vg_to->fid->metadata_areas, mdah);
+		list_move(mdah, &vg_to->fid->metadata_areas);
 	}
 
 	vg_to->lv_count += vg_from->lv_count;
