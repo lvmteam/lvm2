@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Add pvseg_is_allocated() for identifying a PV segment allocated to a LV.
   Add list_move() for moving elements from one list to another.
   Add 'is_reserved_lvname()' for identifying hidden LVs.
   Correct command name in lvmdiskscan man page.
