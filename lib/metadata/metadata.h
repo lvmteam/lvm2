@@ -257,6 +257,9 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 struct lv_list *find_lv_in_vg_by_lvid(struct volume_group *vg,
 				      const union lvid *lvid);
 
+struct lv_list *find_lv_in_lv_list(const struct list *ll,
+				   const struct logical_volume *lv);
+
 /* Return the VG that contains a given LV (based on path given in lv_name) */
 /* or environment var */
 struct volume_group *find_vg_with_lv(const char *lv_name);
@@ -268,6 +271,9 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd,
 
 /* FIXME Merge these functions with ones above */
 struct physical_volume *find_pv(struct volume_group *vg, struct device *dev);
+
+struct pv_list *find_pv_in_pv_list(const struct list *pl,
+				   const struct physical_volume *pv);
 
 /* Find LV segment containing given LE */
 struct lv_segment *find_seg_by_le(const struct logical_volume *lv, uint32_t le);

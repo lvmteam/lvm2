@@ -1875,8 +1875,7 @@ static int _add_pvs(struct cmd_context *cmd, struct pv_segment *peg,
 	struct pv_list *pvl;
 
 	/* Don't add again if it's already on list. */
-	list_iterate_items(pvl, &spvs->pvs)
-		if (pvl->pv == peg->pv)
+	if (find_pv_in_pv_list(&spvs->pvs, peg->pv))
 			return 1;
 
 	if (!(pvl = dm_pool_alloc(cmd->mem, sizeof(*pvl)))) {

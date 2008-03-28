@@ -868,6 +868,17 @@ static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
 	return NULL;
 }
 
+struct pv_list *find_pv_in_pv_list(const struct list *pl,
+				   const struct physical_volume *pv)
+{
+	struct pv_list *pvl;
+
+	list_iterate_items(pvl, pl)
+		if (pvl->pv == pv)
+			return pvl;
+	return NULL;
+}
+
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv)
 {
 	struct pv_list *pvl;
@@ -926,6 +937,17 @@ struct lv_list *find_lv_in_vg(const struct volume_group *vg,
 		if (!strcmp(lvl->lv->name, ptr))
 			return lvl;
 
+	return NULL;
+}
+
+struct lv_list *find_lv_in_lv_list(const struct list *ll,
+				   const struct logical_volume *lv)
+{
+	struct lv_list *lvl;
+
+	list_iterate_items(lvl, ll)
+		if (lvl->lv == lv)
+			return lvl;
 	return NULL;
 }
 
