@@ -633,7 +633,7 @@ static void main_loop(int local_sock, int cmd_timeout)
 				}
 
 				if (FD_ISSET(thisfd->fd, &in)) {
-					struct local_client *newfd;
+					struct local_client *newfd = NULL;
 					int ret;
 
 					/* Do callback */
@@ -1613,7 +1613,7 @@ static void send_version_message()
 static int send_message(void *buf, int msglen, const char *csid, int fd,
 			const char *errtext)
 {
-	int len;
+	int len = 0;
 	int saved_errno = 0;
 	struct timespec delay;
 	struct timespec remtime;
