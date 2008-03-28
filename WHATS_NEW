@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Fix uninitialised variable in clvmd that could cause odd hangs.
   Add vgmerge tests.
   Add pvseg_is_allocated() for identifying a PV segment allocated to a LV.
   Add list_move() for moving elements from one list to another.
