@@ -297,6 +297,8 @@ static void get_members()
 {
 	int retnodes;
 	int status;
+	int i;
+	int high_nodeid = 0;
 
 	num_nodes = cman_get_node_count(c_handle);
 	if (num_nodes == -1) {
@@ -325,10 +327,16 @@ static void get_members()
 		exit(6);
 	}
 
+	/* Get the highest nodeid */
+	for (i=0; i<retnodes; i++) {
+		if (nodes[i].cn_nodeid > high_nodeid)
+			high_nodeid = nodes[i].cn_nodeid;
+	}
+
 	if (node_updown == NULL) {
 		size_t buf_len;
-		if (num_nodes > max_updown_nodes)
-			max_updown_nodes = num_nodes;
+		if (high_nodeid >= max_updown_nodes)
+			max_updown_nodes = high_nodeid + 1;
 		buf_len = sizeof(int) * max_updown_nodes;
 		node_updown = malloc(buf_len);
 		if (node_updown)
