@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Fix redundant lvresize message if vg doesn't exist.
   Fix another allocation bug with clvmd and large node IDs.
   Add find_lv_in_lv_list() and find_pv_in_pv_list().
   Fix uninitialised variable in clvmd that could cause odd hangs.
