@@ -109,4 +109,7 @@ struct list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan);
 struct list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 				const char *vgid);
 
+/* Returns cached volume group metadata. */
+struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted);
+
 #endif

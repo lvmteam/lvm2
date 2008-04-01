@@ -742,5 +742,10 @@ int text_vg_export_raw(struct volume_group *vg, const char *desc, char **buf)
 	return r;
 }
 
+int export_vg_to_buffer(struct volume_group *vg, char **buf)
+{
+	return text_vg_export_raw(vg, "", buf);
+}
+
 #undef outf
 #undef outnl

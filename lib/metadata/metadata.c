@@ -1316,9 +1316,6 @@ int vg_commit(struct volume_group *vg)
 	int cache_updated = 0;
 	int failed = 0;
 
-	/* Forget all cached instances of vg and force reread */
-	lvmcache_drop_vg(vg->name);             
-
 	/* Commit to each copy of the metadata area */
 	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		failed = 0;
@@ -1453,6 +1450,11 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		}
 		*consistent = 1;
 		return _vg_read_orphans(cmd, vgname);
+	}
+
+	if ((correct_vg = lvmcache_get_vg(vgid, precommitted))) {
+		*consistent = 1;
+		return correct_vg;
 	}
 
 	/* Find the vgname in the cache */
