@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2006 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -129,4 +129,28 @@ struct volume_group *text_vg_import_file(struct format_instance *fid,
 {
 	return text_vg_import_fd(fid, file, NULL, (off_t)0, 0, (off_t)0, 0, NULL, 0,
 				 when, desc);
+}
+
+struct volume_group *import_vg_from_buffer(char *buf,
+                                           struct format_instance *fid)
+{
+	struct volume_group *vg = NULL;
+	struct config_tree *cft;
+	struct text_vg_version_ops **vsn;
+
+	_init_text_import();
+
+	if (!(cft = create_config_tree_from_string(fid->fmt->cmd, buf)))
+		return_NULL;
+
+	for (vsn = &_text_vsn_list[0]; *vsn; vsn++) {
+		if (!(*vsn)->check_version(cft))
+			continue;
+		if (!(vg = (*vsn)->read_vg(fid, cft)))
+			stack;
+		break;
+	}
+
+	destroy_config_tree(cft);
+	return vg;
 }

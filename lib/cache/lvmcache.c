@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -49,15 +49,53 @@ int lvmcache_init(void)
 	return 1;
 }
 
-static void _update_cache_info_lock_state(struct lvmcache_info *info, int locked)
+/* Volume Group metadata cache functions */
+static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
+{
+	if (!vginfo || !vginfo->vgmetadata)
+		return;
+
+	dm_free(vginfo->vgmetadata);
+
+	vginfo->vgmetadata = NULL;
+	vginfo->fid = NULL;
+
+	log_debug("Metadata cache: VG %s wiped.", vginfo->vgname);
+}
+
+static void _store_metadata(struct lvmcache_vginfo *vginfo,
+			    struct volume_group *vg, unsigned precommitted)
+{
+	int size;
+
+	if (vginfo->vgmetadata)
+		_free_cached_vgmetadata(vginfo);
+
+	if (!(size = export_vg_to_buffer(vg, &vginfo->vgmetadata))) {
+		stack;
+		return;
+	}
+
+	vginfo->fid = vg->fid;
+	vginfo->precommitted = precommitted;
+
+	log_debug("Metadata cache: VG %s stored (%d bytes%s).", vginfo->vgname,
+		  size, precommitted ? ", precommitted" : "");
+}
+
+static void _update_cache_info_lock_state(struct lvmcache_info *info,
+					  int locked,
+					  int *cached_vgmetadata_valid)
 {
 	int was_locked = (info->status & CACHE_LOCKED) ? 1 : 0;
 
 	/*
 	 * Cache becomes invalid whenever lock state changes
 	 */
-	if (was_locked != locked)
+	if (was_locked != locked) {
 		info->status |= CACHE_INVALID;
+		*cached_vgmetadata_valid = 0;
+	}
 
 	if (locked)
 		info->status |= CACHE_LOCKED;
@@ -69,9 +107,14 @@ static void _update_cache_vginfo_lock_state(struct lvmcache_vginfo *vginfo,
 					    int locked)
 {
 	struct lvmcache_info *info;
+	int cached_vgmetadata_valid = 1;
 
 	list_iterate_items(info, &vginfo->infos)
-		_update_cache_info_lock_state(info, locked);
+		_update_cache_info_lock_state(info, locked,
+					      &cached_vgmetadata_valid);
+
+	if (!cached_vgmetadata_valid)
+		_free_cached_vgmetadata(vginfo);
 }
 
 static void _update_cache_lock_state(const char *vgname, int locked)
@@ -238,6 +281,17 @@ static int _info_is_valid(struct lvmcache_info *info)
 	return 1;
 }
 
+static int _vginfo_is_valid(struct lvmcache_vginfo *vginfo)
+{
+	struct lvmcache_info *info;
+
+	list_iterate_items(info, &vginfo->infos)
+		if (!_info_is_valid(info))
+			return 0;
+
+	return 1;
+}
+
 /*
  * If valid_only is set, data will only be returned if the cached data is
  * known still to be valid.
@@ -327,6 +381,32 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	_scanning_in_progress = 0;
 
 	return r;
+}
+
+struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
+{
+	struct lvmcache_vginfo *vginfo;
+	struct volume_group *vg;
+
+	if (!vgid || !(vginfo = vginfo_from_vgid(vgid)) || !vginfo->vgmetadata)
+		return NULL;
+
+	if (!_vginfo_is_valid(vginfo))
+		return NULL;
+
+	if ((precommitted && !vginfo->precommitted) ||
+	    (!precommitted && vginfo->precommitted))
+		return NULL;
+
+	if (!(vg = import_vg_from_buffer(vginfo->vgmetadata, vginfo->fid)) ||
+	    !vg_validate(vg)) {
+		_free_cached_vgmetadata(vginfo);
+		return_NULL;
+	}
+
+	log_debug("Using cached metadata for VG %s.", vginfo->vgname);
+
+	return vg;
 }
 
 struct list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan)
@@ -489,20 +569,6 @@ void lvmcache_del(struct lvmcache_info *info)
 
 	return;
 } */
-
-int lvmcache_store_vg(struct lvmcache_vginfo *vginfo, struct volume_group *vg,
-		      unsigned precommitted)
-{
-	return 1;
-}
-
-void lvmcache_drop_vg(const char *vgname)
-{
-	struct lvmcache_vginfo *vginfo;
-
-	if (!(vginfo = vginfo_from_vgname(vgname, NULL)))
-		return;
-}
 
 static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 {
@@ -803,7 +869,7 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 
 	/* store text representation of vg to cache */
 	if ((vginfo = vginfo_from_vgname(vg->name, NULL)))
-		lvmcache_store_vg(vginfo, vg, precommitted);
+		_store_metadata(vginfo, vg, precommitted);
 
 	return 1;
 }
@@ -935,6 +1001,7 @@ static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 			dm_free(vginfo->vgname);
 		if (vginfo->creation_host)
 			dm_free(vginfo->creation_host);
+		_free_cached_vgmetadata(vginfo);
 		dm_free(vginfo);
 	} while ((vginfo = next));
 }
