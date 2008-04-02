@@ -1,5 +1,7 @@
 Version 2.02.34 -
 ===================================
+  Suppress excess messages when vgsplit into a new vg.
+  Suppress duplicate message when lvresize fails because of invalid vgname.
   Cache VG metadata internally while VG lock is held.
   Fix redundant lvresize message if vg doesn't exist.
   Fix another allocation bug with clvmd and large node IDs.
