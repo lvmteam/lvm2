@@ -987,6 +987,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 	if (!_init_backup(cmd))
 		goto error;
 
+	cmd->default_settings.cache_vgmetadata = 1;
 	cmd->current_settings = cmd->default_settings;
 
 	cmd->config_valid = 1;
