@@ -117,12 +117,16 @@ struct arg {
 	void *ptr;
 };
 
+#define CACHE_VGMETADATA 0x00000001
+
 /* a register of the lvm commands */
 struct command {
 	const char *name;
 	const char *desc;
 	const char *usage;
 	command_fn fn;
+
+	unsigned flags;
 
 	int num_args;
 	int *valid_args;
