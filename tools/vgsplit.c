@@ -220,6 +220,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	int opt;
 	int active;
 	int existing_vg;
+	int old_suppress;
 	struct pv_list *pvl;
 
 	if (argc < 3) {
@@ -253,9 +254,11 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
+	old_suppress = log_suppress(2);
 	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
 				      LCK_VG_WRITE | LCK_NONBLOCK,
 				      0, 0))) {
+		log_suppress(old_suppress);
 		existing_vg = 1;
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
@@ -265,6 +268,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto error;
 	} else {
+		log_suppress(old_suppress);
 		existing_vg = 0;
 
 		/* Set metadata format of original VG */
