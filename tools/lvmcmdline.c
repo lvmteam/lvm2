@@ -421,6 +421,7 @@ static void _alloc_command(void)
 }
 
 static void _create_new_command(const char *name, command_fn command,
+				unsigned flags,
 				const char *desc, const char *usagestr,
 				int nargs, int *args)
 {
@@ -434,12 +435,13 @@ static void _create_new_command(const char *name, command_fn command,
 	nc->desc = desc;
 	nc->usage = usagestr;
 	nc->fn = command;
+	nc->flags = flags;
 	nc->num_args = nargs;
 	nc->valid_args = args;
 }
 
-static void _register_command(const char *name, command_fn fn,
-			      const char *desc, const char *usagestr, ...)
+static void _register_command(const char *name, command_fn fn, const char *desc,
+			      unsigned flags, const char *usagestr, ...)
 {
 	int nargs = 0, i;
 	int *args;
@@ -464,16 +466,16 @@ static void _register_command(const char *name, command_fn fn,
 	va_end(ap);
 
 	/* enter the command in the register */
-	_create_new_command(name, fn, desc, usagestr, nargs, args);
+	_create_new_command(name, fn, flags, desc, usagestr, nargs, args);
 }
 
 void lvm_register_commands(void)
 {
-#define xx(a, b, c...) _register_command(# a, a, b, ## c, \
-					driverloaded_ARG, \
-					debug_ARG, help_ARG, help2_ARG, \
-					version_ARG, verbose_ARG, \
-					quiet_ARG, config_ARG, -1);
+#define xx(a, b, c, d...) _register_command(# a, a, b, c, ## d, \
+					    driverloaded_ARG, \
+					    debug_ARG, help_ARG, help2_ARG, \
+					    version_ARG, verbose_ARG, \
+					    quiet_ARG, config_ARG, -1);
 #include "commands.h"
 #undef xx
 }
@@ -707,6 +709,7 @@ static int _get_settings(struct cmd_context *cmd)
 
 	cmd->current_settings.archive = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.archive);
 	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
+	cmd->current_settings.cache_vgmetadata = cmd->command->flags & CACHE_VGMETADATA ? 1 : 0;
 
 	if (arg_count(cmd, partial_ARG)) {
 		init_partial(1);

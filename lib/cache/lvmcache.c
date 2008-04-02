@@ -868,7 +868,8 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 	}
 
 	/* store text representation of vg to cache */
-	if ((vginfo = vginfo_from_vgname(vg->name, NULL)))
+	if (vg->cmd->current_settings.cache_vgmetadata &&
+	    (vginfo = vginfo_from_vgname(vg->name, NULL)))
 		_store_metadata(vginfo, vg, precommitted);
 
 	return 1;

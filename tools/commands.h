@@ -30,6 +30,7 @@ xx(e2fsadm,
 
 xx(dumpconfig,
    "Dump active configuration",
+   0,
    "dumpconfig "
    "\t[-f|--file filename] " "\n"
    "[ConfigurationVariable...]\n",
@@ -37,10 +38,12 @@ xx(dumpconfig,
 
 xx(formats,
    "List available metadata formats",
+   0,
    "formats\n")
 
 xx(help,
    "Display help for commands",
+   0,
    "help <command>" "\n")
 
 /*********
@@ -55,6 +58,7 @@ xx(lvactivate,
 
 xx(lvchange,
    "Change the attributes of logical volume(s)",
+   CACHE_VGMETADATA,
    "lvchange\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-a|--available [e|l]y|n]\n"
@@ -87,6 +91,7 @@ xx(lvchange,
 
 xx(lvconvert,
    "Change logical volume layout",
+   0,
    "lvconvert "
    "[-m|--mirrors Mirrors [{--mirrorlog {disk|core}|--corelog}]]\n"
    "\t[-R|--regionsize MirrorLogRegionSize]\n"
@@ -114,6 +119,7 @@ xx(lvconvert,
 
 xx(lvcreate,
    "Create a logical volume",
+   0,
    "lvcreate " "\n"
    "\t[-A|--autobackup {y|n}]\n"
    "\t[--addtag Tag]\n"
@@ -165,6 +171,7 @@ xx(lvcreate,
 
 xx(lvdisplay,
    "Display information about a logical volume",
+   0,
    "lvdisplay\n"
    "\t[-a|--all]\n"
    "\t[-c|--colon]\n"
@@ -205,6 +212,7 @@ xx(lvdisplay,
 
 xx(lvextend,
    "Add space to a logical volume",
+   0,
    "lvextend\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--alloc AllocationPolicy]\n"
@@ -228,6 +236,7 @@ xx(lvextend,
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
+   0,
    "lvmchange\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -239,6 +248,7 @@ xx(lvmchange,
 
 xx(lvmdiskscan,
    "List devices that may be used as physical volumes",
+   0,
    "lvmdiskscan\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -249,6 +259,7 @@ xx(lvmdiskscan,
 
 xx(lvmsadc,
    "Collect activity data",
+   0,
    "lvmsadc\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -258,6 +269,7 @@ xx(lvmsadc,
 
 xx(lvmsar,
    "Create activity report",
+   0,
    "lvmsar\n"
    "\t[-d|--debug]\n"
    "\t[-f|--full]\n"
@@ -271,6 +283,7 @@ xx(lvmsar,
 
 xx(lvreduce,
    "Reduce the size of a logical volume",
+   0,
    "lvreduce\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
@@ -291,6 +304,7 @@ xx(lvreduce,
 
 xx(lvremove,
    "Remove logical volume(s) from the system",
+   0,
    "lvremove\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
@@ -305,6 +319,7 @@ xx(lvremove,
 
 xx(lvrename,
    "Rename a logical volume",
+   0,
    "lvrename "
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[-d|--debug] " "\n"
@@ -319,6 +334,7 @@ xx(lvrename,
 
 xx(lvresize,
    "Resize a logical volume",
+   0,
    "lvresize\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[--alloc AllocationPolicy]\n"
@@ -340,6 +356,7 @@ xx(lvresize,
 
 xx(lvs,
    "Display information about logical volumes",
+   0,
    "lvs" "\n"
    "\t[-a|--all]\n"
    "\t[--aligned]\n"
@@ -366,6 +383,7 @@ xx(lvs,
 
 xx(lvscan,
    "List all logical volumes in all volume groups",
+   0,
    "lvscan " "\n"
    "\t[-a|--all]\n"
    "\t[-b|--blockdevice] " "\n"
@@ -380,6 +398,7 @@ xx(lvscan,
 
 xx(pvchange,
    "Change attributes of physical volume(s)",
+   0,
    "pvchange\n"
    "\t[-a|--all]\n"
    "\t[-A|--autobackup y|n]\n"
@@ -399,6 +418,7 @@ xx(pvchange,
 
 xx(pvresize,
    "Resize physical volume(s)",
+   0,
    "pvresize " "\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|-?|--help] " "\n"
@@ -412,6 +432,7 @@ xx(pvresize,
 
 xx(pvck,
    "Check the consistency of physical volume(s)",
+   0,
    "pvck "
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -424,6 +445,7 @@ xx(pvck,
 
 xx(pvcreate,
    "Initialize physical volume(s) for use by LVM",
+   0,
    "pvcreate " "\n"
    "\t[--restorefile file]\n"
    "\t[-d|--debug]" "\n"
@@ -448,6 +470,7 @@ xx(pvcreate,
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",
+   0,
    "pvdata " "\n"
    "\t[-a|--all] " "\n"
    "\t[-d|--debug] " "\n"
@@ -466,6 +489,7 @@ xx(pvdata,
 
 xx(pvdisplay,
    "Display various attributes of physical volume(s)",
+   0,
    "pvdisplay\n"
    "\t[-c|--colon]\n"
    "\t[-d|--debug]\n"
@@ -502,6 +526,7 @@ xx(pvdisplay,
 
 xx(pvmove,
    "Move extents from one physical volume to another",
+   0,
    "pvmove " "\n"
    "\t[--abort]\n"
    "\t[-A|--autobackup {y|n}]\n"
@@ -523,6 +548,7 @@ xx(pvmove,
 
 xx(pvremove,
    "Remove LVM label(s) from physical volume(s)",
+   0,
    "pvremove " "\n"
    "\t[-d|--debug]" "\n"
    "\t[-f[f]|--force [--force]] " "\n"
@@ -537,6 +563,7 @@ xx(pvremove,
 
 xx(pvs,
    "Display information about physical volumes",
+   0,
    "pvs" "\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
@@ -563,6 +590,7 @@ xx(pvs,
 
 xx(pvscan,
    "List all physical volumes",
+   0,
    "pvscan " "\n"
    "\t[-d|--debug] " "\n"
    "\t{-e|--exported | -n|--novolumegroup} " "\n"
@@ -579,10 +607,12 @@ xx(pvscan,
 
 xx(segtypes,
    "List available segment types",
+   0,
    "segtypes\n")
 
 xx(vgcfgbackup,
    "Backup volume group configuration(s)",
+   0,
    "vgcfgbackup " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
@@ -597,6 +627,7 @@ xx(vgcfgbackup,
 
 xx(vgcfgrestore,
    "Restore volume group configuration",
+   0,
    "vgcfgrestore " "\n"
    "\t[-d|--debug] " "\n"
    "\t[-f|--file filename] " "\n"
@@ -613,6 +644,7 @@ xx(vgcfgrestore,
 
 xx(vgchange,
    "Change volume group attributes",
+   CACHE_VGMETADATA,
    "vgchange" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
@@ -643,6 +675,7 @@ xx(vgchange,
 
 xx(vgck,
    "Check the consistency of volume group(s)",
+   0,
    "vgck "
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -652,6 +685,7 @@ xx(vgck,
 
 xx(vgconvert,
    "Change volume group metadata format",
+   0,
    "vgconvert  " "\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|--help] " "\n"
@@ -669,6 +703,7 @@ xx(vgconvert,
 
 xx(vgcreate,
    "Create a volume group",
+   0,
    "vgcreate" "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--addtag Tag] " "\n"
@@ -690,6 +725,7 @@ xx(vgcreate,
 
 xx(vgdisplay,
    "Display volume group information",
+   0,
    "vgdisplay " "\n"
    "\t[-c|--colon | -s|--short | -v|--verbose]" "\n"
    "\t[-d|--debug] " "\n"
@@ -725,6 +761,7 @@ xx(vgdisplay,
 
 xx(vgexport,
    "Unregister volume group(s) from the system",
+   0,
    "vgexport " "\n"
    "\t[-a|--all] " "\n"
    "\t[-d|--debug] " "\n"
@@ -737,6 +774,7 @@ xx(vgexport,
 
 xx(vgextend,
    "Add physical volumes to a volume group",
+   0,
    "vgextend\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
@@ -750,6 +788,7 @@ xx(vgextend,
 
 xx(vgimport,
    "Register exported volume group with system",
+   0,
    "vgimport " "\n"
    "\t[-a|--all]\n"
    "\t[-d|--debug] " "\n"
@@ -764,6 +803,7 @@ xx(vgimport,
 
 xx(vgmerge,
    "Merge volume groups",
+   0,
    "vgmerge\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
@@ -778,6 +818,7 @@ xx(vgmerge,
 
 xx(vgmknodes,
    "Create the special files for volume group devices in /dev",
+   0,
    "vgmknodes\n"
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -790,6 +831,7 @@ xx(vgmknodes,
 
 xx(vgreduce,
    "Remove physical volume(s) from a volume group",
+   0,
    "vgreduce\n"
    "\t[-a|--all]\n"
    "\t[-A|--autobackup y|n]\n"
@@ -807,6 +849,7 @@ xx(vgreduce,
 
 xx(vgremove,
    "Remove volume group(s)",
+   0,
    "vgremove\n"
    "\t[-d|--debug]\n"
    "\t[-f|--force]\n"
@@ -820,6 +863,7 @@ xx(vgremove,
 
 xx(vgrename,
    "Rename a volume group",
+   0,
    "vgrename\n"
    "\t[-A|--autobackup y|n]\n"
    "\t[-d|--debug]\n"
@@ -834,6 +878,7 @@ xx(vgrename,
 
 xx(vgs,
    "Display information about volume groups",
+   0,
    "vgs" "\n"
    "\t[--aligned]\n"
    "\t[-a|--all]\n"
@@ -859,6 +904,7 @@ xx(vgs,
 
 xx(vgscan,
    "Search for all volume groups",
+   0,
    "vgscan "
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
@@ -872,6 +918,7 @@ xx(vgscan,
 
 xx(vgsplit,
    "Move physical volumes into a new or existing volume group",
+   0,
    "vgsplit " "\n"
    "\t[-A|--autobackup {y|n}] " "\n"
    "\t[--alloc AllocationPolicy] " "\n"
@@ -893,5 +940,6 @@ xx(vgsplit,
 
 xx(version,
    "Display software and driver version information",
+   0,
    "version\n" )
 
