@@ -222,6 +222,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	int existing_vg;
 	int old_suppress;
 	struct pv_list *pvl;
+	int consistent;
 
 	if (argc < 3) {
 		log_error("Existing VG, new VG and physical volumes required.");
@@ -254,11 +255,14 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
-	old_suppress = log_suppress(2);
-	if ((vg_to = vg_lock_and_read(cmd, vg_name_to, NULL,
-				      LCK_VG_WRITE | LCK_NONBLOCK,
-				      0, 0))) {
-		log_suppress(old_suppress);
+	if (!lock_vol(cmd, vg_name_to, LCK_VG_WRITE | LCK_NONBLOCK)) {
+		log_error("Can't get lock for %s", vg_name_to);
+		unlock_vg(cmd, vg_name_from);
+		return ECMD_FAILED;
+	}
+
+	consistent = 0;
+	if ((vg_to = vg_read(cmd, vg_name_to, NULL, &consistent))) {
 		existing_vg = 1;
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
@@ -341,7 +345,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	/* store it on disks */
 	log_verbose("Writing out updated volume groups");
 
-	/* Write out new VG as EXPORTED */
+	/*
+	 * First, write out the new VG as EXPORTED.  We do this first in case
+	 * there is a crash - we will still have the new VG information, in an
+	 * exported state.  Recovery after this point would be removal of the
+	 * new VG and redoing the vgsplit.
+	 * FIXME: recover automatically or instruct the user?
+	 */
 	vg_to->status |= EXPORTED_VG;
 
 	if (!archive(vg_to))
@@ -352,7 +362,11 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg_to);
 
-	/* Write out updated old VG */
+	/*
+	 * Next, write out the updated old VG.  If we crash after this point,
+	 * recovery is a vgimport on the new VG.
+	 * FIXME: recover automatically or instruct the user the user?
+	 */
 	if (vg_from->pv_count) {
 		if (!vg_write(vg_from) || !vg_commit(vg_from))
 			goto error;
@@ -360,10 +374,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		backup(vg_from);
 	}
 
-	/* Remove EXPORTED flag from new VG */
+	/*
+	 * Finally, remove the EXPORTED flag from the new VG and write it out.
+	 */
+	consistent = 1;
 	if (!test_mode() &&
-	    !(vg_to = vg_lock_and_read(cmd, vg_name_to, NULL, LCK_NONE, 0,
-				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT))) {
+	    (!(vg_to = vg_read(cmd, vg_name_to, NULL, &consistent))
+	     || !consistent)) {
 		log_error("Volume group \"%s\" became inconsistent: please "
 			  "fix manually", vg_name_to);
 		goto error;
