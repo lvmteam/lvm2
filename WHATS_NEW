@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Add some basic internal VG lock validation.
   Add per-command flags to control which commands use the VG metadata cache.
   Fix vgsplit locking of new VG (2.02.30).
   Avoid erroneous vgsplit error message for new VG. (2.02.29)
