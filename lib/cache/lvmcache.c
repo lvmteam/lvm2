@@ -17,6 +17,7 @@
 #include "lvmcache.h"
 #include "toolcontext.h"
 #include "dev-cache.h"
+#include "locking.h"
 #include "metadata.h"
 #include "filter.h"
 #include "memlock.h"
@@ -29,6 +30,7 @@ static struct dm_hash_table *_lock_hash = NULL;
 static struct list _vginfos;
 static int _has_scanned = 0;
 static int _vgs_locked = 0;
+static int _vg_global_lock_held = 0;	/* Global lock held when cache wiped? */
 
 int lvmcache_init(void)
 {
@@ -45,6 +47,9 @@ int lvmcache_init(void)
 
 	if (!(_lock_hash = dm_hash_create(128)))
 		return 0;
+
+	if (_vg_global_lock_held)
+		lvmcache_lock_vgname(VG_GLOBAL, 0);
 
 	return 1;
 }
@@ -134,6 +139,10 @@ void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)
 		return;
 	}
 
+	if (dm_hash_lookup(_lock_hash, vgname))
+		log_error("Internal error: Nested locking attempted on VG %s.",
+			  vgname);
+		
 	if (!dm_hash_insert(_lock_hash, vgname, (void *) 1))
 		log_error("Cache locking failure for %s", vgname);
 
@@ -152,6 +161,10 @@ int vgname_is_locked(const char *vgname)
 
 void lvmcache_unlock_vgname(const char *vgname)
 {
+	if (!dm_hash_lookup(_lock_hash, vgname))
+		log_error("Internal error: Attempt to unlock unlocked VG %s.",
+			  vgname);
+
 	_update_cache_lock_state(vgname, 0);
 
 	dm_hash_remove(_lock_hash, vgname);
@@ -1007,13 +1020,25 @@ static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 	} while ((vginfo = next));
 }
 
-static void _lvmcache_destroy_lockname(int present __attribute((unused)))
+static void _lvmcache_destroy_lockname(struct dm_hash_node *n)
 {
-	/* Nothing to do */
+	char *vgname;
+
+	if (!dm_hash_get_data(_lock_hash, n))
+		return;
+
+	vgname = dm_hash_get_key(_lock_hash, n);
+
+	if (!strcmp(vgname, VG_GLOBAL))
+		_vg_global_lock_held = 1;
+	else
+		log_error("Internal error: Volume Group %s was not unlocked",
+			  dm_hash_get_key(_lock_hash, n));
 }
 
 void lvmcache_destroy(void)
 {
+	struct dm_hash_node *n;
 	log_verbose("Wiping internal VG cache");
 
 	_has_scanned = 0;
@@ -1037,7 +1062,8 @@ void lvmcache_destroy(void)
 	}
 
 	if (_lock_hash) {
-		dm_hash_iter(_lock_hash, (dm_hash_iterate_fn) _lvmcache_destroy_lockname);
+		dm_hash_iterate(n, _lock_hash)
+			_lvmcache_destroy_lockname(n);
 		dm_hash_destroy(_lock_hash);
 		_lock_hash = NULL;
 	}

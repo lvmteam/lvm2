@@ -221,7 +221,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 				     "%s/V_%s", _lock_dir, resource);
 
 		if (!_lock_file(lockfile, flags))
-			return 0;
+			return_0;
 
 		switch (flags & LCK_TYPE_MASK) {
 		case LCK_UNLOCK:
