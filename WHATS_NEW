@@ -1,7 +1,7 @@
 Version 2.02.34 -
 ===================================
   Add per-command flags to control which commands use the VG metadata cache.
-  Fix vgsplit locking, remove unneeded error messages when split into new VG.
+  Fix vgsplit locking of new VG and avoid erroneous error message. (2.02.29)
   Suppress duplicate message when lvresize fails because of invalid vgname.
   Cache VG metadata internally while VG lock is held.
   Fix redundant lvresize message if vg doesn't exist.
