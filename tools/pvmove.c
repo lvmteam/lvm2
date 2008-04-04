@@ -147,6 +147,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	struct logical_volume *lv_mirr, *lv;
 	struct lv_list *lvl;
 	uint32_t log_count = 0;
+	int lv_found = 0;
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty("pvmove%d", NULL,
@@ -168,9 +169,13 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	/* Find segments to be moved and set up mirrors */
 	list_iterate_items(lvl, &vg->lvs) {
 		lv = lvl->lv;
-		if ((lv == lv_mirr) ||
-		    (lv_name && strcmp(lv->name, lv_name)))
+		if ((lv == lv_mirr))
 			continue;
+		if (lv_name) {
+			if (strcmp(lv->name, lv_name))
+				continue;
+			lv_found = 1;
+		}
 		if (lv_is_origin(lv) || lv_is_cow(lv)) {
 			log_print("Skipping snapshot-related LV %s", lv->name);
 			continue;
@@ -194,6 +199,11 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 		if (!_insert_pvmove_mirrors(cmd, lv_mirr, source_pvl, lv,
 					    *lvs_changed))
 			return_NULL;
+	}
+
+	if (lv_name && !lv_found) {
+		log_error("Logical volume %s not found.", lv_name);
+		return NULL;
 	}
 
 	/* Is temporary mirror empty? */
@@ -308,6 +318,11 @@ static int _set_up_pvmove(struct cmd_context *cmd, const char *pv_name,
 		if (!(lv_name = _extract_lvname(cmd, pv_vg_name(pv),
 						arg_value(cmd, name_ARG)))) {
 			stack;
+			return EINVALID_CMD_LINE;
+		}
+
+		if (!validate_name(lv_name)) {
+			log_error("Logical volume name %s is invalid", lv_name);
 			return EINVALID_CMD_LINE;
 		}
 	}
