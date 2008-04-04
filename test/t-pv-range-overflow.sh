@@ -37,14 +37,13 @@ test_expect_success \
    lvcreate -L4 -n"$lv" "$vg"'
 
 # Test for the bogus diagnostic reported in BZ 284771
-# http://bugzilla.redhat.com/284771.  Once the BZ is fixed,
-# update the code below to expect an improved diagnostic.
+# http://bugzilla.redhat.com/284771.
 test_expect_success \
   'run pvmove with an unrecognized LV name to show bad diagnostic' \
   'pvmove -v -nbogus $d1 $d2 2> err
    test $? = 5 &&
    tail -n1 err > out &&
-   echo "  No data to move for $vg" > expected &&
+   echo "  Logical volume bogus not found." > expected &&
    diff -u out expected'
 
 # With lvm-2.02.28 and earlier, on a system with 64-bit "long int",
