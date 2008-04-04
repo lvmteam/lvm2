@@ -1316,6 +1316,12 @@ int vg_commit(struct volume_group *vg)
 	int cache_updated = 0;
 	int failed = 0;
 
+	if (!vgname_is_locked(vg->name)) {
+		log_error("Internal error: Attempt to write new VG metadata "
+			  "without locking %s", vg->name);
+		return cache_updated;
+	}
+
 	/* Commit to each copy of the metadata area */
 	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		failed = 0;
