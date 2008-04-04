@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -318,7 +318,7 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	pthread_mutex_lock(&lvm_lock);
 	if (!cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
-		if (!refresh_toolcontext(cmd)) {
+		if (do_refresh_cache()) {
 			log_error("Updated config file invalid. Aborting.");
 			pthread_mutex_unlock(&lvm_lock);
 			return EINVAL;
@@ -437,7 +437,7 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 	return 0;
 }
 
-/* Check if a VG is un use by LVM1 so we don't stomp on it */
+/* Check if a VG is in use by LVM1 so we don't stomp on it */
 int do_check_lvm1(const char *vgname)
 {
 	int status;
