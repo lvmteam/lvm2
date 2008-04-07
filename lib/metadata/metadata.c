@@ -1382,6 +1382,15 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 		return NULL;
 	}
 
+	/* create format instance with appropriate metadata area */
+	if (!(vg->fid = vginfo->fmt->ops->create_instance(vginfo->fmt,
+							  orphan_vgname, NULL,
+							  NULL))) {
+		log_error("Failed to create format instance");
+		dm_pool_free(cmd->mem, vg);
+		return NULL;
+	}
+
 	list_iterate_items(info, &vginfo->infos) {
 		if (!(pv = _pv_read(cmd, dev_name(info->dev), NULL, NULL, 1))) {
 			continue;
