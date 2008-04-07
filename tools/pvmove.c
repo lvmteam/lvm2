@@ -17,6 +17,30 @@
 #include "polldaemon.h"
 #include "display.h"
 
+static int pvmove_target_present(struct cmd_context *cmd, int clustered)
+{
+	const struct segment_type *segtype;
+	unsigned attr = 0;
+
+	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
+		return_0;
+
+	if (activation() && segtype->ops->target_present &&
+	    !segtype->ops->target_present(NULL, clustered ? &attr : NULL)) {
+		log_error("%s: Required device-mapper target(s) not "
+			  "detected in your kernel", segtype->name);
+		return 0;
+	}
+
+	if (clustered && !(attr & MIRROR_LOG_CLUSTERED)) {
+		log_error("%s: Required device-mapper clustered log "
+			  "module not detected in your kernel", segtype->name);
+		return 0;
+	}
+
+	return 1;
+}
+
 /* Allow /dev/vgname/lvname, vgname/lvname or lvname */
 static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
 				   const char *arg)
@@ -540,17 +564,9 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	char *pv_name = NULL;
 	char *colon;
 	int ret;
-	const struct segment_type *segtype;
 
-	if (!(segtype = get_segtype_from_string(cmd, "mirror")))
-		return_0;
-
-	if (activation() && segtype->ops->target_present &&
-	    !segtype->ops->target_present(NULL)) {
-		log_error("%s: Required device-mapper target(s) not "
-			  "detected in your kernel", segtype->name);
+	if (!pvmove_target_present(cmd, 0))
 		return 0;
-	}
 
 	if (argc) {
 		pv_name = argv[0];

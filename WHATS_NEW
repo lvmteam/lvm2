@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Add detection of clustered mirror log capability.
   Add check to vg_commit() ensuring VG lock held before writing new VG metadata.
   Add validation of LV name to pvmove -n.
   Make clvmd refresh the context correctly when lvm.conf is updated.

@@ -33,6 +33,7 @@
 #endif
 
 static int _block_on_error_available = 0;
+static unsigned _mirror_attributes = 0;
 
 enum {
 	MIRR_DISABLED,
@@ -343,7 +344,8 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	return add_areas_line(dm, seg, node, start_area, area_count);
 }
 
-static int _mirrored_target_present(const struct lv_segment *seg __attribute((unused)))
+static int _mirrored_target_present(const struct lv_segment *seg __attribute((unused)),
+				    unsigned *attributes)
 {
 	static int _mirrored_checked = 0;
 	static int _mirrored_present = 0;
@@ -369,6 +371,15 @@ static int _mirrored_target_present(const struct lv_segment *seg __attribute((un
 			_block_on_error_available = 1;
 	}
 
+	/*
+	 * Check only for modules if atttributes requested and no previous check.
+	 * FIXME: need better check
+	 */
+	if (attributes) {
+		if (!_mirror_attributes && module_present("cmirror"))
+			_mirror_attributes |= MIRROR_LOG_CLUSTERED;
+		*attributes = _mirror_attributes;
+	}
 	_mirrored_checked = 1;
 
 	return _mirrored_present;

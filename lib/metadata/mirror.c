@@ -1300,7 +1300,7 @@ int add_mirror_log(struct cmd_context *cmd,
 		return_0;
 
 	if (activation() && segtype->ops->target_present &&
-	    !segtype->ops->target_present(NULL)) {
+	    !segtype->ops->target_present(NULL, NULL)) {
 		log_error("%s: Required device-mapper target(s) not "
 			  "detected in your kernel", segtype->name);
 		return 0;
