@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Create a fid for internal orphan VGs.
   Update lvmcache VG lock state for all locking types now.
   Fix output if overriding command_names on cmdline.
   Add detection of clustered mirror log capability.
