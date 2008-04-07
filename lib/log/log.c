@@ -215,10 +215,16 @@ void init_cmd_name(int status)
 
 void set_cmd_name(const char *cmd)
 {
-	if (!_log_cmd_name)
-		return;
 	strncpy(_cmd_name, cmd, sizeof(_cmd_name));
 	_cmd_name[sizeof(_cmd_name) - 1] = '\0';
+}
+
+static const char *_command_name()
+{
+	if (!_log_cmd_name)
+		return "";
+
+	return _cmd_name;
 }
 
 void init_msg_prefix(const char *prefix)
@@ -352,7 +358,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			    _verbose_level <= _LOG_DEBUG)
 				break;
 			if (_verbose_level >= _LOG_DEBUG) {
-				fprintf(stderr, "%s%s%s", locn, _cmd_name,
+				fprintf(stderr, "%s%s%s", locn, _command_name(),
 					_msg_prefix);
 				if (_indent)
 					fprintf(stderr, "      ");
@@ -363,7 +369,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 
 		case _LOG_INFO:
 			if (_verbose_level >= _LOG_INFO) {
-				fprintf(stderr, "%s%s%s", locn, _cmd_name,
+				fprintf(stderr, "%s%s%s", locn, _command_name(),
 					_msg_prefix);
 				if (_indent)
 					fprintf(stderr, "    ");
@@ -373,7 +379,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			break;
 		case _LOG_NOTICE:
 			if (_verbose_level >= _LOG_NOTICE) {
-				fprintf(stderr, "%s%s%s", locn, _cmd_name,
+				fprintf(stderr, "%s%s%s", locn, _command_name(),
 					_msg_prefix);
 				if (_indent)
 					fprintf(stderr, "  ");
@@ -383,14 +389,15 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 			break;
 		case _LOG_WARN:
 			if (_verbose_level >= _LOG_WARN) {
-				fprintf(use_stderr ? stderr : stdout, "%s%s", _cmd_name, _msg_prefix);
+				fprintf(use_stderr ? stderr : stdout, "%s%s",
+					_command_name(), _msg_prefix);
 				vfprintf(use_stderr ? stderr : stdout, trformat, ap);
 				fputc('\n', use_stderr ? stderr : stdout);
 			}
 			break;
 		case _LOG_ERR:
 			if (_verbose_level >= _LOG_ERR) {
-				fprintf(stderr, "%s%s%s", locn, _cmd_name,
+				fprintf(stderr, "%s%s%s", locn, _command_name(),
 					_msg_prefix);
 				vfprintf(stderr, trformat, ap);
 				fputc('\n', stderr);
@@ -399,7 +406,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 		case _LOG_FATAL:
 		default:
 			if (_verbose_level >= _LOG_FATAL) {
-				fprintf(stderr, "%s%s%s", locn, _cmd_name,
+				fprintf(stderr, "%s%s%s", locn, _command_name(),
 					_msg_prefix);
 				vfprintf(stderr, trformat, ap);
 				fputc('\n', stderr);
@@ -413,7 +420,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 		return;
 
 	if (_log_to_file && (_log_while_suspended || !memlock())) {
-		fprintf(_log_file, "%s:%d %s%s", file, line, _cmd_name,
+		fprintf(_log_file, "%s:%d %s%s", file, line, _command_name(),
 			_msg_prefix);
 
 		va_start(ap, format);
@@ -436,7 +443,7 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 		memset(&buf, ' ', sizeof(buf));
 		bufused = 0;
 		if ((n = dm_snprintf(buf, sizeof(buf) - bufused - 1,
-				      "%s:%d %s%s", file, line, _cmd_name,
+				      "%s:%d %s%s", file, line, _command_name(),
 				      _msg_prefix)) == -1)
 			goto done;
 
