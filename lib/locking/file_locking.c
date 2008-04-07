@@ -21,7 +21,6 @@
 #include "defaults.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
-#include "lvmcache.h"
 
 #include <limits.h>
 #include <unistd.h>
@@ -222,16 +221,6 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 
 		if (!_lock_file(lockfile, flags))
 			return_0;
-
-		switch (flags & LCK_TYPE_MASK) {
-		case LCK_UNLOCK:
-			lvmcache_unlock_vgname(resource);
-			break;
-		default:
-			lvmcache_lock_vgname(resource,
-					     (flags & LCK_TYPE_MASK) ==
-					     LCK_READ);
-		}
 		break;
 	case LCK_LV:
 		switch (flags & LCK_TYPE_MASK) {

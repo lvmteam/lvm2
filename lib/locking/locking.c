@@ -21,6 +21,7 @@
 #include "toolcontext.h"
 #include "memlock.h"
 #include "defaults.h"
+#include "lvmcache.h"
 
 #include <signal.h>
 #include <sys/stat.h>
@@ -315,22 +316,29 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
  */
 static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t flags)
 {
+	int ret = 0;
+
 	_block_signals(flags);
 	_lock_memory(flags);
 
 	assert(resource);
 
-	if (!(_locking.lock_resource(cmd, resource, flags))) {
-		_unlock_memory(flags);
-		_unblock_signals();
-		return 0;
+	if ((ret = _locking.lock_resource(cmd, resource, flags))) {
+		if ((flags & LCK_SCOPE_MASK) == LCK_VG) {
+			if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
+				lvmcache_unlock_vgname(resource);
+			else
+				lvmcache_lock_vgname(resource, (flags & LCK_TYPE_MASK)
+								== LCK_READ);
+		}
+
+		_update_vg_lock_count(flags);
 	}
 
-	_update_vg_lock_count(flags);
 	_unlock_memory(flags);
 	_unblock_signals();
 
-	return 1;
+	return ret;
 }
 
 int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
