@@ -30,6 +30,9 @@ struct lvinfo {
 	uint32_t read_ahead;
 };
 
+/* target attribute flags */
+#define MIRROR_LOG_CLUSTERED	0x00000001U
+
 void set_activation(int activation);
 int activation(void);
 
@@ -37,6 +40,7 @@ int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 int lvm1_present(struct cmd_context *cmd);
 
+int module_present(const char *target_name);
 int target_present(const char *target_name, int use_modprobe);
 int target_version(const char *target_name, uint32_t *maj,
                    uint32_t *min, uint32_t *patchlevel);

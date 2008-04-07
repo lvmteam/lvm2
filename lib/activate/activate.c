@@ -391,12 +391,26 @@ int target_version(const char *target_name, uint32_t *maj,
 	return r;
 }
 
+int module_present(const char *target_name)
+{
+	int ret = 0;
+#ifdef MODPROBE_CMD
+	char module[128];
+
+	if (dm_snprintf(module, sizeof(module), "dm-%s", target_name) < 0) {
+		log_error("module_present module name too long: %s",
+			  target_name);
+		return 0;
+	}
+
+	ret = exec_cmd(MODPROBE_CMD, module, "", "");
+#endif
+	return ret;
+}
+
 int target_present(const char *target_name, int use_modprobe)
 {
 	uint32_t maj, min, patchlevel;
-#ifdef MODPROBE_CMD
-	char module[128];
-#endif
 
 	if (!activation())
 		return 0;
@@ -406,14 +420,7 @@ int target_present(const char *target_name, int use_modprobe)
 		if (target_version(target_name, &maj, &min, &patchlevel))
 			return 1;
 
-		if (dm_snprintf(module, sizeof(module), "dm-%s", target_name)
-		    < 0) {
-			log_error("target_present module name too long: %s",
-				  target_name);
-			return 0;
-		}
-
-		if (!exec_cmd(MODPROBE_CMD, module, "", ""))
+		if (!module_present(target_name))
 			return_0;
 	}
 #endif
