@@ -35,12 +35,13 @@ previously configured for LVM with
 See \fBlvm\fP for common options.
 .TP
 .BR \-c ", " \-\-clustered " " { y | n }
-If clustered locking is enabled, this indicates whether this
-Volume Group is shared with other nodes in the cluster or whether
-it contains only local disks that are not visible on the other nodes.
+If clustered locking is enabled, this defaults to \fBy\fP indicating that 
+this Volume Group is shared with other nodes in the cluster.
+
+If the new Volume Group contains only local disks that are not visible 
+on the other nodes, you must specify \fB\-\-clustered\ n\fP.
 If the cluster infrastructure is unavailable on a particular node at a
-particular time, you may still be able to use Volume Groups that
-are not marked as clustered.
+particular time, you may still be able to use such Volume Groups.
 .TP
 .BR \-l ", " \-\-maxlogicalvolumes " " \fIMaxLogicalVolumes\fR
 Sets the maximum number of logical volumes allowed in this
