@@ -470,7 +470,7 @@ static void drop_vg_locks()
 	char line[255];
 	FILE *vgs =
 	    popen
-	    ("lvm pvs --nolocking --noheadings -o vg_name", "r");
+	    ("lvm pvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_name", "r");
 
 	sync_unlock("P_orphans", LCK_EXCL);
 
@@ -511,7 +511,7 @@ static void *get_initial_state()
 	char line[255];
 	FILE *lvs =
 	    popen
-	    ("lvm lvs --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
+	    ("lvm lvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_uuid,lv_uuid,lv_attr,vg_attr",
 	     "r");
 
 	if (!lvs)
