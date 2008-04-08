@@ -220,7 +220,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	int opt;
 	int active;
 	int existing_vg;
-	int old_suppress;
 	struct pv_list *pvl;
 	int consistent;
 
@@ -272,7 +271,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
 			goto error;
 	} else {
-		log_suppress(old_suppress);
 		existing_vg = 0;
 
 		/* Set metadata format of original VG */
