@@ -692,6 +692,10 @@ int vg_change_pesize(struct cmd_context *cmd __attribute((unused)),
 	return 1;
 }
 
+/*
+ * Separate metadata areas after splitting a VG.
+ * Also accepts orphan VG as destination (for vgreduce).
+ */
 int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
 		  struct volume_group *vg_from, struct volume_group *vg_to)
 {
@@ -708,11 +712,16 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
 			continue;
 		}
 
-		if (!mda->ops->mda_in_vg(vg_from->fid, vg_from, mda))
-			list_move(&mda->list, mdas_to);
+		if (!mda->ops->mda_in_vg(vg_from->fid, vg_from, mda)) {
+			if (is_orphan_vg(vg_to->name))
+				list_del(&mda->list);
+			else
+				list_move(&mda->list, mdas_to);
+		}
 	}
 
-	if (list_empty(mdas_from) || list_empty(mdas_to))
+	if (list_empty(mdas_from) ||
+	    (!is_orphan_vg(vg_to->name) && list_empty(mdas_to)))
 		return common_mda;
 
 	return 1;
@@ -1365,6 +1374,8 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	struct pv_list *pvl;
 	struct volume_group *vg;
 	struct physical_volume *pv;
+
+	lvmcache_label_scan(cmd, 0);
 
 	if (!(vginfo = vginfo_from_vgname(orphan_vgname, NULL)))
 		return_NULL;

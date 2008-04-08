@@ -1,5 +1,8 @@
 Version 2.02.34 -
 ===================================
+  Fix vgreduce to use vg_split_mdas to check sufficient mdas remain.
+  Add (empty) orphan VGs to lvmcache during initialisation.
+  Fix orphan VG name used for format_pool.
   Create a fid for internal orphan VGs.
   Update lvmcache VG lock state for all locking types now.
   Fix output if overriding command_names on cmdline.

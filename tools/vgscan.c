@@ -57,7 +57,7 @@ int vgscan(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	persistent_filter_wipe(cmd->filter);
-	lvmcache_destroy();
+	lvmcache_destroy(cmd, 1);
 
 	log_print("Reading all physical volumes.  This may take a while...");
 

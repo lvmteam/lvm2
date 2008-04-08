@@ -24,8 +24,6 @@
 #include "format_pool.h"
 #include "pool_label.h"
 
-#define FMT_POOL_NAME "pool"
-
 /* Must be called after pvs are imported */
 static struct user_subpool *_build_usp(struct list *pls, struct dm_pool *mem,
 				       int *sps)
@@ -316,7 +314,7 @@ struct format_type *init_format(struct cmd_context *cmd)
 	fmt->ops = &_format_pool_ops;
 	fmt->name = FMT_POOL_NAME;
 	fmt->alias = NULL;
-	fmt->orphan_vg_name = ORPHAN_VG_NAME(FMT_POOL_NAME);
+	fmt->orphan_vg_name = FMT_POOL_ORPHAN_VG_NAME;
 	fmt->features = 0;
 	fmt->private = NULL;
 

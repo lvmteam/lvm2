@@ -130,7 +130,7 @@ int pvscan(struct cmd_context *cmd, int argc __attribute((unused)),
 	}
 
 	persistent_filter_wipe(cmd->filter);
-	lvmcache_destroy();
+	lvmcache_destroy(cmd, 1);
 
 	log_verbose("Walking through all physical volumes");
 	if (!(pvslist = get_pvs(cmd))) {

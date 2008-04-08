@@ -353,6 +353,8 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 			    void *handle __attribute((unused)))
 {
 	struct pv_list *pvl;
+	struct volume_group *orphan_vg;
+	int consistent = 1;
 	const char *name = pv_dev_name(pv);
 
 	if (pv_pe_alloc_count(pv)) {
@@ -366,10 +368,17 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
+	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE | LCK_NONBLOCK)) {
+		log_error("Can't get lock for orphan PVs");
+		return ECMD_FAILED;
+	}
+
 	pvl = find_pv_in_vg(vg, name);
 
-	if (!archive(vg))
+	if (!archive(vg)) {
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
+	}
 
 	log_verbose("Removing \"%s\" from volume group \"%s\"", name, vg->name);
 
@@ -381,6 +390,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!dev_get_size(pv_dev(pv), &pv->size)) {
 		log_error("%s: Couldn't get size.", pv_dev_name(pv));
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
@@ -388,9 +398,24 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
 	vg->extent_count -= pv_pe_count(pv);
 
+	if(!(orphan_vg = vg_read(cmd, vg->fid->fmt->orphan_vg_name, NULL, &consistent)) ||
+	   !consistent) {
+		log_error("Unable to read existing orphan PVs");
+		unlock_vg(cmd, VG_ORPHANS);
+		return ECMD_FAILED;
+	}
+
+	if (!vg_split_mdas(cmd, vg, orphan_vg) || !vg->pv_count) {
+		log_error("Cannot remove final metadata area on \"%s\" from \"%s\"",
+			  name, vg->name);
+		unlock_vg(cmd, VG_ORPHANS);
+		return ECMD_FAILED;
+	}
+
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		log_error("Removal of physical volume \"%s\" from "
 			  "\"%s\" failed", name, vg->name);
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
@@ -398,9 +423,11 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 		log_error("Failed to clear metadata from physical "
 			  "volume \"%s\" "
 			  "after removal from \"%s\"", name, vg->name);
+		unlock_vg(cmd, VG_ORPHANS);
 		return ECMD_FAILED;
 	}
 
+	unlock_vg(cmd, VG_ORPHANS);
 	backup(vg);
 
 	log_print("Removed \"%s\" from volume group \"%s\"", name, vg->name);

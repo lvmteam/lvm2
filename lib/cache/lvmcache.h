@@ -63,7 +63,7 @@ struct lvmcache_info {
 };
 
 int lvmcache_init(void);
-void lvmcache_destroy(void);
+void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans);
 
 /* Set full_scan to 1 to reread every filtered device label or
  * 2 to rescan /dev for new devices */
@@ -74,6 +74,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 				   struct device *dev,
 				   const char *vgname, const char *vgid,
 				   uint32_t vgstatus);
+int lvmcache_add_orphan_vginfo(const char *vgname, struct format_type *fmt);
 void lvmcache_del(struct lvmcache_info *info);
 
 /* Update things */
