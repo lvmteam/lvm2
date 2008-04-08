@@ -288,11 +288,13 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 		if (fill_vg_create_params(cmd, vg_name_to, &vp_new, &vp_def)) {
 			unlock_vg(cmd, vg_name_from);
+			unlock_vg(cmd, vg_name_to);
 			return EINVALID_CMD_LINE;
 		}
 
 		if (validate_vg_create_params(cmd, &vp_new)) {
 			unlock_vg(cmd, vg_name_from);
+			unlock_vg(cmd, vg_name_to);
 			return EINVALID_CMD_LINE;
 		}
 
