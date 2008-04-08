@@ -21,6 +21,7 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	struct vgcreate_params vp_def;
 	struct volume_group *vg;
 	const char *tag;
+	const char *clustered_message = "";
 
 	if (!argc) {
 		log_error("Please provide volume group name and "
@@ -78,10 +79,14 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/* FIXME: move this inside vg_create? */
-	if (vp_new.clustered)
+	if (vp_new.clustered) {
 		vg->status |= CLUSTERED;
-	else
+		clustered_message = "Clustered ";
+	} else {
 		vg->status &= ~CLUSTERED;
+		if (locking_is_clustered())
+			clustered_message = "Non-clustered ";
+	}
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
@@ -112,7 +117,8 @@ int vgcreate(struct cmd_context *cmd, int argc, char **argv)
 
 	backup(vg);
 
-	log_print("Volume group \"%s\" successfully created", vg->name);
+	log_print("%s%colume group \"%s\" successfully created",
+		  clustered_message, *clustered_message ? 'v' : 'V', vg->name);
 
 	return ECMD_PROCESSED;
 }
