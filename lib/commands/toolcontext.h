@@ -95,5 +95,6 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 void destroy_toolcontext(struct cmd_context *cmd);
 int refresh_toolcontext(struct cmd_context *cmd);
 int config_files_changed(struct cmd_context *cmd);
+int init_lvmcache_orphans(struct cmd_context *cmd);
 
 #endif

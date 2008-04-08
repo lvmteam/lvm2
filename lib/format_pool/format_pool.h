@@ -18,6 +18,9 @@
 
 #include "metadata.h"
 
+#define FMT_POOL_NAME "pool"
+#define FMT_POOL_ORPHAN_VG_NAME ORPHAN_VG_NAME(FMT_POOL_NAME)
+
 #ifdef POOL_INTERNAL
 struct format_type *init_pool_format(struct cmd_context *cmd);
 #endif

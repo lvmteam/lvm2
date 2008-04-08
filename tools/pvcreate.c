@@ -81,7 +81,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 		unlock_vg(cmd, VG_ORPHANS);
 
 		persistent_filter_wipe(cmd->filter);
-		lvmcache_destroy();
+		lvmcache_destroy(cmd, 1);
 
 		init_md_filtering(0);
 		if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {

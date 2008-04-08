@@ -721,6 +721,17 @@ static int _init_formats(struct cmd_context *cmd)
 	return 0;
 }
 
+int init_lvmcache_orphans(struct cmd_context *cmd)
+{
+	struct format_type *fmt;
+
+	list_iterate_items(fmt, &cmd->formats)
+		if (!lvmcache_add_orphan_vginfo(fmt->orphan_vg_name, fmt))
+			return_0;
+
+	return 1;
+}
+
 static int _init_segtypes(struct cmd_context *cmd)
 {
 	struct segment_type *segtype;
@@ -981,6 +992,9 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 	if (!_init_formats(cmd))
 		goto error;
 
+	if (!init_lvmcache_orphans(cmd))
+		goto error;
+
 	if (!_init_segtypes(cmd))
 		goto error;
 
@@ -1044,7 +1058,7 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	 */
 
 	activation_release();
-	lvmcache_destroy();
+	lvmcache_destroy(cmd, 0);
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(&cmd->formats);
@@ -1086,6 +1100,9 @@ int refresh_toolcontext(struct cmd_context *cmd)
 	if (!_init_formats(cmd))
 		return 0;
 
+	if (!init_lvmcache_orphans(cmd))
+		return 0;
+
 	if (!_init_segtypes(cmd))
 		return 0;
 
@@ -1107,7 +1124,7 @@ void destroy_toolcontext(struct cmd_context *cmd)
 
 	archive_exit(cmd);
 	backup_exit(cmd);
-	lvmcache_destroy();
+	lvmcache_destroy(cmd, 0);
 	label_exit();
 	_destroy_segtypes(&cmd->segtypes);
 	_destroy_formats(&cmd->formats);

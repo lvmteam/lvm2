@@ -938,7 +938,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
       out:
 	if (test_mode()) {
 		log_verbose("Test mode: Wiping internal cache");
-		lvmcache_destroy();
+		lvmcache_destroy(cmd, 1);
 	}
 
 	if (cmd->cft_override) {
