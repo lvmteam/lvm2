@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Fix vgsplit to only move hidden 'snapshotN' LVs when necessary.
   Update vgsplit tests for lvnames on the cmdline.
   Update vgsplit man page to reflect lvnames on the cmdline.
   Update vgsplit to take "-n LogicalVolumeName" on the cmdline.
