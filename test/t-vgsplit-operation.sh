@@ -149,6 +149,35 @@ test_expect_success \
    lvremove -f $vg2/$lv1 &&
    vgremove -f $vg2'
 
+test_expect_success \
+  "vgsplit correctly splits linear LV but not snap+origin LV into $i VG ($j args)" \
+  'vgcreate $vg1 $d1 $d2 &&
+   if [ $i == existing ]; then
+     vgcreate $vg2 $d3
+   fi &&
+   lvcreate -l 64 -i 2 -n $lv1 $vg1 &&
+   lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 &&
+   vgextend $vg1 $d4 &&
+   lvcreate -l 64 -n $lv3 $vg1 $d4 &&
+   vgchange -an $vg1 &&
+   if [ $j == PV ]; then
+     vgsplit $vg1 $vg2 $d4
+   else
+     vgsplit -n $lv3 $vg1 $vg2
+   fi &&
+   if [ $i == existing ]; then
+     vg_validate_pvlv_counts_ $vg2 2 1 0
+     vg_validate_pvlv_counts_ $vg1 2 1 1
+   else
+     vg_validate_pvlv_counts_ $vg2 1 1 0
+     vg_validate_pvlv_counts_ $vg1 2 1 1
+   fi &&
+   lvremove -f $vg1/$lv2 &&
+   lvremove -f $vg1/$lv1 &&
+   lvremove -f $vg2/$lv3 &&
+   vgremove -f $vg1 &&
+   vgremove -f $vg2'
+
 done
 done
 

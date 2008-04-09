@@ -164,6 +164,9 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 	return 1;
 }
 
+/*
+ * Move the hidden / internal "snapshotN" LVs.from 'vg_from' to 'vg_to'.
+ */
 static int _move_snapshots(struct volume_group *vg_from,
 			   struct volume_group *vg_to)
 {
@@ -191,14 +194,21 @@ static int _move_snapshots(struct volume_group *vg_from,
 					  " two Volume Groups", seg->cow->name);
 				return 0;
 			}
+
+			/*
+			 * At this point, the cow and origin should already be
+			 * in vg_to.
+			 */
+			if (_lv_is_in_vg(vg_to, seg->cow) &&
+			    _lv_is_in_vg(vg_to, seg->origin)) {
+				list_del(lvh);
+				list_add(&vg_to->lvs, lvh);
+				
+				vg_from->snapshot_count--;
+				vg_to->snapshot_count++;
+			}
 		}
 
-		/* Move this snapshot */
-		list_del(lvh);
-		list_add(&vg_to->lvs, lvh);
-
-		vg_from->snapshot_count--;
-		vg_to->snapshot_count++;
 	}
 
 	return 1;
