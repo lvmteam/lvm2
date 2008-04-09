@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Use clustered mirror log with pvmove in clustered VGs, if available.
   Fix some pvmove error status codes.
   Fix vgsplit error paths to release vg_to lock.
   Indicate whether or not VG is clustered in vgcreate log message.

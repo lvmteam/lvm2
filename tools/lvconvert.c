@@ -258,7 +258,7 @@ static int _update_lvconvert_mirror(struct cmd_context *cmd __attribute((unused)
 				    struct volume_group *vg __attribute((unused)),
 				    struct logical_volume *lv __attribute((unused)),
 				    struct list *lvs_changed __attribute((unused)),
-				    int first_time __attribute((unused)))
+				    unsigned flags __attribute((unused)))
 {
 	/* lvconvert mirror doesn't require periodical metadata update */
 	return 1;

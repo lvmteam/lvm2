@@ -412,19 +412,23 @@ int suspend_lvs(struct cmd_context *cmd, struct list *lvs)
 }
 
 /* Lock a list of LVs */
-int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs)
+int activate_lvs(struct cmd_context *cmd, struct list *lvs, unsigned exclusive)
 {
 	struct list *lvh;
 	struct lv_list *lvl;
 
 	list_iterate_items(lvl, lvs) {
-		if (!activate_lv_excl(cmd, lvl->lv)) {
+		if (!exclusive) {
+			if (!activate_lv(cmd, lvl->lv)) {
+				log_error("Failed to activate %s", lvl->lv->name);
+				return 0;
+			}
+		} else if (!activate_lv_excl(cmd, lvl->lv)) {
 			log_error("Failed to activate %s", lvl->lv->name);
 			list_uniterate(lvh, lvs, &lvl->list) {
 				lvl = list_item(lvh, struct lv_list);
 				activate_lv(cmd, lvl->lv);
 			}
-
 			return 0;
 		}
 	}

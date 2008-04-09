@@ -120,7 +120,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 /* Process list of LVs */
 int suspend_lvs(struct cmd_context *cmd, struct list *lvs);
 int resume_lvs(struct cmd_context *cmd, struct list *lvs);
-int activate_lvs_excl(struct cmd_context *cmd, struct list *lvs);
+int activate_lvs(struct cmd_context *cmd, struct list *lvs, unsigned exclusive);
 
 /* Interrupt handling */
 void sigint_clear(void);
