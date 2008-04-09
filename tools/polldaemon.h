@@ -29,7 +29,7 @@ struct poll_functions {
 	int (*update_metadata) (struct cmd_context *cmd,
 				struct volume_group *vg,
 				struct logical_volume *lv_mirr,
-				struct list *lvs_changed, int first_time);
+				struct list *lvs_changed, unsigned flags);
 	int (*finish_copy) (struct cmd_context *cmd,
 			    struct volume_group *vg,
 			    struct logical_volume *lv_mirr,
