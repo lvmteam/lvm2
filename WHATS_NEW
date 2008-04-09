@@ -1,5 +1,6 @@
 Version 2.02.34 -
 ===================================
+  Fix some pvmove error status codes.
   Fix vgsplit error paths to release vg_to lock.
   Indicate whether or not VG is clustered in vgcreate log message.
   Mention default --clustered setting in vgcreate man page.

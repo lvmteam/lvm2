@@ -565,8 +565,10 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	char *colon;
 	int ret;
 
-	if (!pvmove_target_present(cmd, 0))
-		return 0;
+	if (!pvmove_target_present(cmd, 0)) {
+		stack;
+		return ECMD_FAILED;
+	}
 
 	if (argc) {
 		pv_name = argv[0];
@@ -577,7 +579,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 						     (unsigned) (colon -
 								 pv_name)))) {
 				log_error("Failed to clone PV name");
-				return 0;
+				return ECMD_FAILED;
 			}
 		}
 
@@ -587,7 +589,6 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 			stack;
 			return ret;
 		}
-
 	}
 
 	return pvmove_poll(cmd, pv_name,
