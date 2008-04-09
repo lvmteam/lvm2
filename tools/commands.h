@@ -927,16 +927,17 @@ xx(vgsplit,
    "\t[-h|--help] " "\n"
    "\t[-l|--maxlogicalvolumes MaxLogicalVolumes]" "\n"
    "\t[-M|--metadatatype 1|2] " "\n"
+   "\t[-n|--name LogicalVolumeName]\n"
    "\t[-p|--maxphysicalvolumes MaxPhysicalVolumes] " "\n"
    "\t[-t|--test] " "\n"
    "\t[-v|--verbose] " "\n"
    "\t[--version]" "\n"
    "\tSourceVolumeGroupName DestinationVolumeGroupName" "\n"
-   "\tPhysicalVolumePath [PhysicalVolumePath...]\n",
+   "\t[PhysicalVolumePath...]\n",
 
    alloc_ARG, autobackup_ARG, clustered_ARG,
    maxlogicalvolumes_ARG, maxphysicalvolumes_ARG,
-   metadatatype_ARG, test_ARG)
+   metadatatype_ARG, name_ARG, test_ARG)
 
 xx(version,
    "Display software and driver version information",
