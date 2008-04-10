@@ -1,5 +1,8 @@
 Version 2.02.35 - 
 =================================
+  Update vgsplit tests to verify loosening of active LV restriction.
+  Update vgsplit to only restrict split with active LVs involved in split.
+  Add lv_is_active() to determine whether an lv is active.
 
 Version 2.02.34 - 10th April 2008
 =================================

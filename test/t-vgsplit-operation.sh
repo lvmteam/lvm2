@@ -276,6 +276,65 @@ test_expect_success \
    status=$?; echo status=$status; test $status = 5 &&
    vgremove -ff $vg1'
 
+#
+# Verify vgsplit rejects active LVs only when active LVs involved in split
+#
+test_expect_success \
+  "vgsplit fails, active mirror involved in split" \
+  'vgcreate $vg1 $d1 $d2 $d3 $d4 &&
+   lvcreate -l 16 -n $lv1 -m1 $vg1 $d1 $d2 $d3 &&
+   lvcreate -l 16 -n $lv2 $vg1 $d4 &&
+   lvchange -an $vg1/$lv2 &&
+   vg_validate_pvlv_counts_ $vg1 4 2 0 &&
+   vgsplit -n $lv1 $vg1 $vg2;
+   status=$?; echo status=$status; test $status = 5 &&
+   vg_validate_pvlv_counts_ $vg1 4 2 0 &&
+   vgremove -ff $vg1'
+
+test_expect_success \
+  "vgsplit succeeds, active mirror not involved in split" \
+  'vgcreate $vg1 $d1 $d2 $d3 $d4 &&
+   lvcreate -l 16 -n $lv1 -m1 $vg1 $d1 $d2 $d3 &&
+   lvcreate -l 16 -n $lv2 $vg1 $d4 &&
+   lvchange -an $vg1/$lv2 &&
+   vg_validate_pvlv_counts_ $vg1 4 2 0 &&
+   vgsplit -n $lv2 $vg1 $vg2 &&
+   vg_validate_pvlv_counts_ $vg1 3 1 0 &&
+   vg_validate_pvlv_counts_ $vg2 1 1 0 &&
+   vgremove -ff $vg1 &&
+   vgremove -ff $vg2'
+
+test_expect_success \
+  "vgsplit fails, active snapshot involved in split" \
+  'vgcreate $vg1 $d1 $d2 $d3 $d4 &&
+   lvcreate -l 64 -i 2 -n $lv1 $vg1 $d1 $d2 &&
+   lvcreate -l 4 -i 2 -s -n $lv2 $vg1/$lv1 &&
+   lvcreate -l 64 -i 2 -n $lv3 $vg1 $d3 $d4 &&
+   lvchange -an $vg1/$lv3 &&
+   vg_validate_pvlv_counts_ $vg1 4 3 1 &&
+   vgsplit -n $lv2 $vg1 $vg2;
+   status=$?; echo status=$status; test $status = 5 &&
+   vg_validate_pvlv_counts_ $vg1 4 3 1 &&
+   lvremove -f $vg1/$lv2 &&
+   vgremove -ff $vg1'
+
+test_expect_success \
+  "vgsplit succeeds, active snapshot not involved in split" \
+  'vgcreate $vg1 $d1 $d2 $d3 &&
+   lvcreate -l 64 -i 2 -n $lv1 $vg1 $d1 $d2 &&
+   lvcreate -l 4 -s -n $lv2 $vg1/$lv1 &&
+   vgextend $vg1 $d4 &&
+   lvcreate -l 64 -n $lv3 $vg1 $d4 &&
+   lvchange -an $vg1/$lv3 &&
+   vg_validate_pvlv_counts_ $vg1 4 3 1 &&
+   vgsplit -n $lv3 $vg1 $vg2 &&
+   vg_validate_pvlv_counts_ $vg1 3 2 1 &&
+   vg_validate_pvlv_counts_ $vg2 1 1 0 &&
+   vgchange -an $vg1 &&
+   lvremove -f $vg1/$lv2 &&
+   vgremove -ff $vg1 &&
+   vgremove -ff $vg2'
+
 
 test_done
 
