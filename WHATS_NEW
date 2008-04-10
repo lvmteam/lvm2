@@ -1,5 +1,5 @@
-Version 2.02.34 -
-===================================
+Version 2.02.34 - 10th April 2008
+=================================
   Fix vgdisplay 'Cur LV' field to match lvdisplay output.
   Fix lv_count report field to exclude hidden LVs.
   Add vg_is_clustered() helper function.
