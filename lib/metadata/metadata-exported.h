@@ -544,6 +544,7 @@ uint32_t pv_pe_count(const pv_t *pv);
 uint32_t pv_pe_alloc_count(const pv_t *pv);
 
 uint32_t vg_status(const vg_t *vg);
+#define vg_is_clustered(vg) (vg_status((vg)) & CLUSTERED)
 
 struct vgcreate_params {
 	char *vg_name;

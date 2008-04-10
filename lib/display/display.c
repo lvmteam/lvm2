@@ -602,7 +602,7 @@ void vgdisplay_full(const struct volume_group *vg)
 	/* vg number not part of LVM2 design
 	   log_print ("VG #                  %u\n", vg->vg_number);
 	 */
-	if (vg->status & CLUSTERED) {
+	if (vg_is_clustered(vg)) {
 		log_print("Clustered             yes");
 		log_print("Shared                %s",
 			  vg->status & SHARED ? "yes" : "no");

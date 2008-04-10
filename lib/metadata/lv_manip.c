@@ -1983,7 +1983,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		 * 1) Clustered VG, and some remote nodes have the LV active
 		 * 2) Non-clustered VG, but LV active locally
 		 */
-		if ((vg_status(vg) & CLUSTERED) && !activate_lv_excl(cmd, lv) &&
+		if (vg_is_clustered(vg) && !activate_lv_excl(cmd, lv) &&
 		    (force == PROMPT)) {
 			if (yes_no_prompt("Logical volume \"%s\" is active on other "
 					  "cluster nodes.  Really remove? [y/n]: ",

@@ -439,7 +439,7 @@ static int _vgstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 
 	repstr[4] = _alloc_policy_char(vg->alloc);
 
-	if (vg->status & CLUSTERED)
+	if (vg_is_clustered(vg))
 		repstr[5] = 'c';
 	else
 		repstr[5] = '-';

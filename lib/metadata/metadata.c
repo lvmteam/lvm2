@@ -1124,7 +1124,7 @@ int vgs_are_compatible(struct cmd_context *cmd __attribute((unused)),
 	}
 
 	/* Clustering attribute must be the same */
-	if ((vg_to->status & CLUSTERED) != (vg_from->status & CLUSTERED)) {
+	if (vg_is_clustered(vg_to) != vg_is_clustered(vg_from)) {
 		log_error("Clustered attribute differs for \"%s\" and \"%s\"",
 			  vg_to->name, vg_from->name);
 		return 0;
@@ -2102,7 +2102,7 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 int vg_check_status(const struct volume_group *vg, uint32_t status)
 {
 	if ((status & CLUSTERED) &&
-	    (vg->status & CLUSTERED) && !locking_is_clustered() &&
+	    (vg_is_clustered(vg)) && !locking_is_clustered() &&
 	    !lockingfailed()) {
 		log_error("Skipping clustered volume group %s", vg->name);
 		return 0;
@@ -2239,7 +2239,6 @@ uint32_t vg_status(const vg_t *vg)
 {
 	return vg->status;
 }
-
 
 /**
  * pv_by_path - Given a device path return a PV handle if it is a PV

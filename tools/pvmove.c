@@ -49,7 +49,7 @@ static int _pvmove_target_present(struct cmd_context *cmd, int clustered)
 static unsigned _pvmove_is_exclusive(struct cmd_context *cmd,
 				     struct volume_group *vg)
 {
-	if (vg_status(vg) & CLUSTERED)
+	if (vg_is_clustered(vg))
 		if (!_pvmove_target_present(cmd, 1))
 			return 1;
 
