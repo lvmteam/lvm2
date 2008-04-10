@@ -222,7 +222,7 @@ test_expect_success \
    lvcreate -l 4 -n $lv3 -i 2 $vg1 $d3 $d4 &&
    vgchange -an $vg1 &&
    vgsplit -n $lv1 $vg1 $vg2;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    vgremove -ff $vg1'
 
 test_expect_success \
@@ -234,7 +234,7 @@ test_expect_success \
    vg_validate_pvlv_counts_ $vg1 4 1 2 &&
    vgchange -an $vg1 &&
    vgsplit -n $lv1 $vg1 $vg2;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    lvremove -f $vg1/$lv2 &&
    lvremove -f $vg1/$lv3 &&
    lvremove -f $vg1/$lv1 &&
@@ -249,7 +249,7 @@ test_expect_success \
    vg_validate_pvlv_counts_ $vg1 4 1 2 &&
    vgchange -an $vg1 &&
    vgsplit -n $lv2 $vg1 $vg2;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    lvremove -f $vg1/$lv2 &&
    lvremove -f $vg1/$lv3 &&
    lvremove -f $vg1/$lv1 &&
@@ -262,7 +262,7 @@ test_expect_success \
    vg_validate_pvlv_counts_ $vg1 4 4 0 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d2 &&
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    vgremove -ff $vg1'
 
 test_expect_success \
@@ -273,7 +273,7 @@ test_expect_success \
    vg_validate_pvlv_counts_ $vg1 4 5 0 &&
    vgchange -an $vg1 &&
    vgsplit -n $lv2 $vg1 $vg2 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    vgremove -ff $vg1'
 
 

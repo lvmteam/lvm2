@@ -42,7 +42,7 @@ test_expect_success \
   'no parse errors and VG really exists' \
   'vgs 2>err                                    &&
   grep "Parse error" err;
-  status=$?; echo status=$?; test $status -ne 0 &&
+  status=$?; echo status=$status; test $status -ne 0 &&
   vgs $vg'
 
 test_done

@@ -39,7 +39,7 @@ lv=lvcreate-usage-$$
 test_expect_success \
   'lvcreate rejects a negative stripe_size' \
   'lvcreate -L 64M -n $lv -i2 --stripesize -4 $vg 2>err;
-   status=$?; echo status=$?; test $status = 3 &&
+   status=$?; echo status=$status; test $status = 3 &&
    grep "^  Negative stripesize is invalid\$" err'
 
 test_expect_success \

@@ -43,7 +43,7 @@ test_expect_success \
   'vgsplit accepts new vg as destination of split' \
   'vgcreate $vg1 $d1 $d2 &&
    vgsplit $vg1 $vg2 $d1 1>err;
-   status=$?; echo status=$?; test $status = 0 &&
+   status=$?; echo status=$status; test $status = 0 &&
    grep "New volume group \"$vg2\" successfully split from \"$vg1\"" err &&
    vgremove $vg1 &&
    vgremove $vg2'
@@ -53,7 +53,7 @@ test_expect_success \
   'vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
    vgsplit $vg1 $vg2 $d1 1>err;
-   status=$?; echo status=$?; test $status = 0 &&
+   status=$?; echo status=$status; test $status = 0 &&
    grep "Existing volume group \"$vg2\" successfully split from \"$vg1\"" err &&
    vgremove $vg1 &&
    vgremove $vg2'
@@ -79,7 +79,7 @@ test_expect_success \
   'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
    vgsplit $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Maximum number of physical volumes (2) exceeded" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -89,7 +89,7 @@ test_expect_success \
   'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
    vgsplit --maxphysicalvolumes 2 $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -99,7 +99,7 @@ test_expect_success \
   'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
    vgsplit --maxlogicalvolumes 2 $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -109,7 +109,7 @@ test_expect_success \
   'vgcreate --alloc cling $vg1 $d1 $d2 &&
    vgcreate --alloc cling $vg2 $d3 $d4 &&
    vgsplit --alloc cling $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -119,7 +119,7 @@ test_expect_success \
   'vgcreate --clustered n $vg1 $d1 $d2 &&
    vgcreate --clustered n $vg2 $d3 $d4 &&
    vgsplit --clustered n $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -131,7 +131,7 @@ test_expect_success \
    vgcreate -M1 $vg1 $d3 $d4 &&
    vgcreate -M2 $vg2 $d1 $d2 &&
    vgsplit $vg1 $vg2 $d3 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Metadata types differ" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -143,7 +143,7 @@ test_expect_success \
    vgcreate $vg2 $d3 $d4 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
    vgsplit $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Logical volumes in \"$vg1\" must be inactive\$" err &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
@@ -158,7 +158,7 @@ test_expect_success \
    vgchange -an $vg1 &&
    vgchange -an $vg2 &&
    vgsplit $vg1 $vg2 $d1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Maximum number of logical volumes (2) exceeded" err &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
@@ -201,7 +201,7 @@ test_expect_success \
    lvcreate -l 4 -n $lv2 $vg1 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d3 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
 

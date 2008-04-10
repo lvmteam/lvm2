@@ -51,32 +51,32 @@ test_expect_success \
 test_expect_success \
   'vgcreate rejects a zero physical extent size' \
   'vgcreate --physicalextentsize 0 $vg $d1 $d2 2>err;
-   status=$?; echo status=$?; test $status = 3 &&
+   status=$?; echo status=$status; test $status = 3 &&
    grep "^  Physical extent size may not be zero\$" err'
 
 test_expect_success \
   'vgcreate rejects "inherit" allocation policy' \
   'vgcreate --alloc inherit $vg $d1 $d2 2>err;
-   status=$?; echo status=$?; test $status = 3 &&
+   status=$?; echo status=$status; test $status = 3 &&
    grep "^  Volume Group allocation policy cannot inherit from anything\$" err'
 
 test_expect_success \
   'vgcreate rejects vgname "."' \
   'vg=.; vgcreate $vg $d1 $d2 2>err;
-   status=$?; echo status=$?; test $status = 3 &&
+   status=$?; echo status=$status; test $status = 3 &&
    grep "New volume group name \"$vg\" is invalid\$" err'
 
 test_expect_success \
   'vgcreate rejects vgname greater than 128 characters' \
   'vginvalid=thisnameisridiculouslylongtotestvalidationcodecheckingmaximumsizethisiswhathappenswhenprogrammersgetboredandorarenotcreativedonttrythisathome;
    vgcreate $vginvalid $d1 $d2 2>err;
-   status=$?; echo status=$?; test $status = 3 &&
+   status=$?; echo status=$status; test $status = 3 &&
    grep "New volume group name \"$vginvalid\" is invalid\$" err'
 
 test_expect_success \
   'vgcreate rejects already existing vgname "/tmp/$vg"' \
   'touch /tmp/$vg; vgcreate $vg $d1 $d2 2>err;
-   status=$?; echo status=$?; test $status = 3 &&
+   status=$?; echo status=$status; test $status = 3 &&
    grep "New volume group name \"$vg\" is invalid\$" err'
 
 # FIXME: Not sure why this fails
@@ -84,7 +84,7 @@ test_expect_success \
 #  'vgcreate rejects MaxLogicalVolumes > 255' \
 #  'vgcreate --metadatatype 1 --maxlogicalvolumes 1024 $vg $d1 $d2 2>err;
 #   cp err save;
-#   status=$?; echo status=$?; test $status = 3 &&
+#   status=$?; echo status=$status; test $status = 3 &&
 #   grep "^  Number of volumes may not exceed 255\$" err'
 
 test_done
