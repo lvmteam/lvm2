@@ -271,7 +271,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 	if (vg->status & LVM_WRITE)
 		vgd->vg_access |= VG_WRITE;
 
-	if (vg->status & CLUSTERED)
+	if (vg_is_clustered(vg))
 		vgd->vg_access |= VG_CLUSTERED;
 
 	if (vg->status & SHARED)

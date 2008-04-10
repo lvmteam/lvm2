@@ -836,7 +836,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 
 	/* If this is a snapshot origin, add real LV */
 	if (lv_is_origin(seg->lv) && !layer) {
-		if (seg->lv->vg->status & CLUSTERED) {
+		if (vg_is_clustered(seg->lv->vg)) {
 			log_error("Clustered snapshots are not yet supported");
 			return 0;
 		}

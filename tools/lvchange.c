@@ -35,7 +35,7 @@ static int lvchange_permission(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if ((lv->status & MIRRORED) && (lv->vg->status & CLUSTERED) &&
+	if ((lv->status & MIRRORED) && (vg_is_clustered(lv->vg)) &&
 	    lv_info(cmd, lv, &info, 0, 0) && info.exists) {
 		log_error("Cannot change permissions of mirror \"%s\" "
 			  "while active.", lv->name);
@@ -119,7 +119,7 @@ static int lvchange_availability(struct cmd_context *cmd,
 		if (!deactivate_lv(cmd, lv))
 			return_0;
 	} else {
-		if (lockingfailed() && (lv->vg->status & CLUSTERED)) {
+		if (lockingfailed() && (vg_is_clustered(lv->vg))) {
 			log_verbose("Locking failed: ignoring clustered "
 				    "logical volume %s", lv->name);
 			return 0;
@@ -221,7 +221,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 		}
 	}
 
-	if ((lv->vg->status & CLUSTERED) && !activate_lv_excl(cmd, lv)) {
+	if (vg_is_clustered(lv->vg) && !activate_lv_excl(cmd, lv)) {
 		log_error("Can't get exclusive access to clustered volume %s",
 			  lv->name);
 		return ECMD_FAILED;
@@ -236,7 +236,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 
 	log_very_verbose("Starting resync of %s%s%s mirror \"%s\"",
 			 (active) ? "active " : "",
-			 (lv->vg->status & CLUSTERED) ? "clustered " : "",
+			 vg_is_clustered(lv->vg) ? "clustered " : "",
 			 (log_lv) ? "disk-logged" : "core-logged",
 			 lv->name);
 

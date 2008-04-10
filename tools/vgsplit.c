@@ -379,7 +379,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 					vp_new.alloc, 0, NULL)))
 			goto bad;
 
-		if (vg_from->status & CLUSTERED)
+		if (vg_is_clustered(vg_from))
 			vg_to->status |= CLUSTERED;
 	}
 

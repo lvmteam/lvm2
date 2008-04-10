@@ -134,7 +134,7 @@ static int _vgchange_available(struct cmd_context *cmd, struct volume_group *vg)
 		return ECMD_FAILED;
 	}
 
-	if (activate && lockingfailed() && (vg_status(vg) & CLUSTERED)) {
+	if (activate && lockingfailed() && (vg_is_clustered(vg))) {
 		log_error("Locking inactive: ignoring clustered "
 			  "volume group %s", vg->name);
 		return ECMD_FAILED;
@@ -243,13 +243,13 @@ static int _vgchange_clustered(struct cmd_context *cmd,
 	int clustered = !strcmp(arg_str_value(cmd, clustered_ARG, "n"), "y");
 	struct lv_list *lvl;
 
-	if (clustered && (vg_status(vg) & CLUSTERED)) {
+	if (clustered && (vg_is_clustered(vg))) {
 		log_error("Volume group \"%s\" is already clustered",
 			  vg->name);
 		return ECMD_FAILED;
 	}
 
-	if (!clustered && !(vg_status(vg) & CLUSTERED)) {
+	if (!clustered && !(vg_is_clustered(vg))) {
 		log_error("Volume group \"%s\" is already not clustered",
 			  vg->name);
 		return ECMD_FAILED;

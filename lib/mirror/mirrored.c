@@ -237,7 +237,7 @@ static int _add_log(struct dev_manager *dm, struct lv_segment *seg,
 	 * in clustered VG.
 	 */
 	if ((!(seg->lv->status & ACTIVATE_EXCL) &&
-	      (seg->lv->vg->status & CLUSTERED)))
+	      (vg_is_clustered(seg->lv->vg))))
 		clustered = 1;
 
 	if (seg->log_lv) {
@@ -519,7 +519,7 @@ static int _mirrored_modules_needed(struct dm_pool *mem,
 	    !list_segment_modules(mem, first_seg(seg->log_lv), modules))
 		return_0;
 
-	if ((seg->lv->vg->status & CLUSTERED) &&
+	if (vg_is_clustered(seg->lv->vg) &&
 	    !str_list_add(mem, modules, "clog")) {
 		log_error("cluster log string list allocation failed");
 		return 0;
