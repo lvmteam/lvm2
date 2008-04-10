@@ -373,7 +373,7 @@ static int _mirrored_target_present(const struct lv_segment *seg __attribute((un
 
 	/*
 	 * Check only for modules if atttributes requested and no previous check.
-	 * FIXME: need better check
+	 * FIXME: Fails incorrectly if cmirror was built into kernel.
 	 */
 	if (attributes) {
 		if (!_mirror_attributes && module_present("cmirror"))
