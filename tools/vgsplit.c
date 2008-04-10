@@ -93,6 +93,25 @@ static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 	return 0;
 }
 
+static int _move_one_lv(struct volume_group *vg_from,
+			struct volume_group *vg_to,
+			struct list *lvh)
+{
+	struct logical_volume *lv;
+
+	lv = list_item(lvh, struct lv_list)->lv;
+	list_del(lvh);
+	list_add(&vg_to->lvs, lvh);
+	
+	if (lv->status & SNAPSHOT) {
+		vg_from->snapshot_count--;
+		vg_to->snapshot_count++;
+	} else {
+		vg_from->lv_count--;
+		vg_to->lv_count++;
+	}
+	return 1;
+}	
 
 static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 {
@@ -152,11 +171,8 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 			continue;
 
 		/* Move this LV */
-		list_del(lvh);
-		list_add(&vg_to->lvs, lvh);
-
-		vg_from->lv_count--;
-		vg_to->lv_count++;
+		if (!_move_one_lv(vg_from, vg_to, lvh))
+			return 0;
 	}
 
 	/* FIXME Ensure no LVs contain segs pointing at LVs in the other VG */
@@ -201,11 +217,8 @@ static int _move_snapshots(struct volume_group *vg_from,
 			 */
 			if (_lv_is_in_vg(vg_to, seg->cow) &&
 			    _lv_is_in_vg(vg_to, seg->origin)) {
-				list_del(lvh);
-				list_add(&vg_to->lvs, lvh);
-				
-				vg_from->snapshot_count--;
-				vg_to->snapshot_count++;
+				if (!_move_one_lv(vg_from, vg_to, lvh))
+					return 0;
 			}
 		}
 
@@ -246,11 +259,8 @@ static int _move_mirrors(struct volume_group *vg_from,
 		}
 
 		if (seg_in == seg->area_count && log_in) {
-			list_del(lvh);
-			list_add(&vg_to->lvs, lvh);
-
-			vg_from->lv_count--;
-			vg_to->lv_count++;
+			if (!_move_one_lv(vg_from, vg_to, lvh))
+				return 0;
 		}
 	}
 
