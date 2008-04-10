@@ -55,14 +55,9 @@ void list_add_h(struct list *head, struct list *elem);
 void list_del(struct list *elem);
 
 /*
- * Move an element from an existing list to list 'head'.
- * Insert the element before 'head'.
+ * Remove an element from existing list and insert before 'head'.
  */
-static inline void list_move(struct list *item, struct list *head)
-{
-        list_del(item);
-        list_add(head, item);
-}
+void list_move(struct list *head, struct list *elem);
 
 /*
  * Is the list empty?

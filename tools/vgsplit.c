@@ -28,7 +28,7 @@ static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 		return 0;
 	}
 
-	list_move(&pvl->list, &vg_to->pvs);
+	list_move(&vg_to->pvs, &pvl->list);
 
 	vg_from->pv_count--;
 	vg_to->pv_count++;
@@ -100,7 +100,7 @@ static int _move_one_lv(struct volume_group *vg_from,
 	struct logical_volume *lv;
 
 	lv = list_item(lvh, struct lv_list)->lv;
-	list_move(lvh, &vg_to->lvs);
+	list_move(&vg_to->lvs, lvh);
 	
 	if (lv->status & SNAPSHOT) {
 		vg_from->snapshot_count--;

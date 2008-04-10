@@ -66,6 +66,15 @@ void list_del(struct list *elem)
 }
 
 /*
+ * Remove an element from existing list and insert before 'head'.
+ */
+void list_move(struct list *head, struct list *elem)
+{
+        list_del(elem);
+        list_add(head, elem);
+}
+
+/*
  * Is the list empty?
  */
 int list_empty(const struct list *head)

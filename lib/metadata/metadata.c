@@ -716,7 +716,7 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
 			if (is_orphan_vg(vg_to->name))
 				list_del(&mda->list);
 			else
-				list_move(&mda->list, mdas_to);
+				list_move(mdas_to, &mda->list);
 		}
 	}
 
