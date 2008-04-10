@@ -674,6 +674,38 @@ int lvs_in_vg_opened(const struct volume_group *vg)
 }
 
 /*
+ * Determine whether an LV is active locally or in a cluster.
+ * Assumes vg lock held.
+ * Returns:
+ * 0 - not active locally or on any node in cluster
+ * 1 - active either locally or some node in the cluster
+ */
+int lv_is_active(struct logical_volume *lv)
+{
+	if (_lv_active(lv->vg->cmd, lv, 0))
+		return 1;
+
+	if (!vg_is_clustered(lv->vg))
+		return 0;
+
+	/*
+	 * FIXME: Cluster does not report per-node LV activation status.
+	 * Currently the best we can do is try exclusive local activation.
+	 * If that succeeds, we know the LV is not active elsewhere in the
+	 * cluster.
+	 */
+	if (activate_lv_excl(lv->vg->cmd, lv)) {
+		deactivate_lv(lv->vg->cmd, lv);
+		return 0;
+	}
+
+	/*
+	 * Exclusive local activation failed so assume it is active elsewhere.
+	 */
+	return 1;
+}
+
+/*
  * Returns 0 if an attempt to (un)monitor the device failed.
  * Returns 1 otherwise.
  */
