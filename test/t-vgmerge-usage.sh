@@ -45,7 +45,7 @@ test_expect_success \
   'vgcreate $vg1 $d1 $d2 &&
    vgcreate $vg2 $d3 $d4 &&
    vgmerge $vg1 $vg1 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Duplicate volume group name \"$vg1\"\$" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -55,7 +55,7 @@ test_expect_success \
   'vgcreate --physicalextentsize 4M $vg1 $d1 $d2 &&
    vgcreate --physicalextentsize 8M $vg2 $d3 $d4 &&
    vgmerge $vg1 $vg2 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Extent sizes differ" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -65,7 +65,7 @@ test_expect_success \
   'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
    vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
    vgmerge $vg1 $vg2 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Maximum number of physical volumes (2) exceeded" err &&
    vgremove $vg2 &&
    vgremove $vg1'
@@ -76,7 +76,7 @@ test_expect_success \
    vgcreate $vg2 $d3 $d4 &&
    lvcreate -l 4 -n lv1 $vg2 &&
    vgmerge $vg1 $vg2 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Logical volumes in \"$vg2\" must be inactive\$" err &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
@@ -91,7 +91,7 @@ test_expect_success \
    vgchange -an $vg1 &&
    vgchange -an $vg2 &&
    vgmerge $vg1 $vg2 2>err;
-   status=$?; echo status=$?; test $status = 5 &&
+   status=$?; echo status=$status; test $status = 5 &&
    grep "^  Maximum number of logical volumes (2) exceeded" err &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
