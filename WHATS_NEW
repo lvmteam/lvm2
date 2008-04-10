@@ -1,5 +1,7 @@
 Version 2.02.34 -
 ===================================
+  Fix vgdisplay 'Cur LV' field to match lvdisplay output.
+  Fix lv_count report field to exclude hidden LVs.
   Add vg_is_clustered() helper function.
   Fix vgsplit to only move hidden 'snapshotN' LVs when necessary.
   Update vgsplit tests for lvnames on the cmdline.

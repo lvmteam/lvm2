@@ -574,6 +574,8 @@ void vgdisplay_full(const struct volume_group *vg)
 {
 	uint32_t access;
 	uint32_t active_pvs;
+	uint32_t lv_count = 0;
+	struct lv_list *lvl;
 	char uuid[64] __attribute((aligned(8)));
 
 	if (vg->status & PARTIAL_VG)
@@ -607,8 +609,13 @@ void vgdisplay_full(const struct volume_group *vg)
 		log_print("Shared                %s",
 			  vg->status & SHARED ? "yes" : "no");
 	}
+
+	list_iterate_items(lvl, &vg->lvs)
+		if (lv_is_visible(lvl->lv) && !(lvl->lv->status & SNAPSHOT))
+			lv_count++;
+
 	log_print("MAX LV                %u", vg->max_lv);
-	log_print("Cur LV                %u", vg->lv_count + vg->snapshot_count);
+	log_print("Cur LV                %u", lv_count);
 	log_print("Open LV               %u", lvs_in_vg_opened(vg));
 /****** FIXME Max LV Size
       log_print ( "MAX LV Size           %s",
@@ -652,6 +659,8 @@ void vgdisplay_full(const struct volume_group *vg)
 void vgdisplay_colons(const struct volume_group *vg)
 {
 	uint32_t active_pvs;
+	uint32_t lv_count;
+	struct lv_list *lvl;
 	const char *access;
 	char uuid[64] __attribute((aligned(8)));
 
@@ -659,6 +668,10 @@ void vgdisplay_colons(const struct volume_group *vg)
 		active_pvs = list_size(&vg->pvs);
 	else
 		active_pvs = vg->pv_count;
+
+	list_iterate_items(lvl, &vg->lvs)
+		if (lv_is_visible(lvl->lv) || (lvl->lv->status & SNAPSHOT))
+			lv_count++;
 
 	switch (vg->status & (LVM_READ | LVM_WRITE)) {
 		case LVM_READ | LVM_WRITE:

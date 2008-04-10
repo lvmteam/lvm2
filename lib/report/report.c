@@ -899,6 +899,21 @@ static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 	return _size64_disp(rh, mem, field, &freespace, private);
 }
 
+static int _lvcount_disp(struct dm_report *rh, struct dm_pool *mem,
+			 struct dm_report_field *field,
+			 const void *data, void *private)
+{
+	const struct volume_group *vg = (const struct volume_group *) data;
+        struct lv_list *lvl;
+	uint32_t count = 0;
+
+        list_iterate_items(lvl, &vg->lvs)
+		if (lv_is_visible(lvl->lv) && !(lvl->lv->status & SNAPSHOT))
+			count++;
+
+	return _uint32_disp(rh, mem, field, &count, private);
+}
+
 static int _lvsegcount_disp(struct dm_report *rh, struct dm_pool *mem,
 			    struct dm_report_field *field,
 			    const void *data, void *private)
