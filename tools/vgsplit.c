@@ -252,10 +252,8 @@ static int _move_mirrors(struct volume_group *vg_from,
 			return 0;
 		}
 
-		if (seg_in == seg->area_count && log_in) {
-			if (!_move_one_lv(vg_from, vg_to, lvh))
-				return 0;
-		}
+		if (seg_in == seg->area_count && log_in)
+			_move_one_lv(vg_from, vg_to, lvh);
 	}
 
 	return 1;
