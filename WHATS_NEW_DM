@@ -1,5 +1,5 @@
-Version 1.02.25 - 
-====================================
+Version 1.02.25 - 10th April 2008
+=================================
   Remove redundant if-before-free tests.
   Use log_warn for reporting field help text instead of log_print.
   Change cluster mirror log type name (s/clustered_/clustered-/)
