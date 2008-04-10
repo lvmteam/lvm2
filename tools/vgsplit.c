@@ -93,7 +93,7 @@ static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 	return 0;
 }
 
-static void _move_one_lv(struct volume_group *vg_from,
+static int _move_one_lv(struct volume_group *vg_from,
 			 struct volume_group *vg_to,
 			 struct list *lvh)
 {
@@ -101,6 +101,11 @@ static void _move_one_lv(struct volume_group *vg_from,
 
 	list_move(&vg_to->lvs, lvh);
 	
+	if (lv_is_active(lv)) {
+		log_error("Logical volume \"%s\" must be inactive", lv->name);
+		return 0;
+	}
+
 	if (lv->status & SNAPSHOT) {
 		vg_from->snapshot_count--;
 		vg_to->snapshot_count++;
@@ -108,6 +113,7 @@ static void _move_one_lv(struct volume_group *vg_from,
 		vg_from->lv_count--;
 		vg_to->lv_count++;
 	}
+	return 1;
 }	
 
 static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
@@ -168,7 +174,8 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 			continue;
 
 		/* Move this LV */
-		_move_one_lv(vg_from, vg_to, lvh);
+		if (!_move_one_lv(vg_from, vg_to, lvh))
+			return 0;
 	}
 
 	/* FIXME Ensure no LVs contain segs pointing at LVs in the other VG */
@@ -212,8 +219,10 @@ static int _move_snapshots(struct volume_group *vg_from,
 			 * in vg_to.
 			 */
 			if (_lv_is_in_vg(vg_to, seg->cow) &&
-			    _lv_is_in_vg(vg_to, seg->origin))
-				_move_one_lv(vg_from, vg_to, lvh);
+			    _lv_is_in_vg(vg_to, seg->origin)) {
+				if (!_move_one_lv(vg_from, vg_to, lvh))
+					return 0;
+			}
 		}
 
 	}
@@ -252,8 +261,10 @@ static int _move_mirrors(struct volume_group *vg_from,
 			return 0;
 		}
 
-		if (seg_in == seg->area_count && log_in)
-			_move_one_lv(vg_from, vg_to, lvh);
+		if (seg_in == seg->area_count && log_in) {
+			if (!_move_one_lv(vg_from, vg_to, lvh))
+				return 0;
+		}
 	}
 
 	return 1;
@@ -277,7 +288,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	char *vg_name_from, *vg_name_to;
 	struct volume_group *vg_to, *vg_from;
 	int opt;
-	int active;
 	int existing_vg;
 	int consistent;
 	const char *lv_name;
@@ -315,14 +325,6 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 				       RESIZEABLE_VG | LVM_WRITE,
 				       CORRECT_INCONSISTENT | FAIL_INCONSISTENT)))
 		 return ECMD_FAILED;
-
-	if ((active = lvs_in_vg_activated(vg_from))) {
-		/* FIXME Remove this restriction */
-		log_error("Logical volumes in \"%s\" must be inactive",
-			  vg_name_from);
-		unlock_vg(cmd, vg_name_from);
-		return ECMD_FAILED;
-	}
 
 	log_verbose("Checking for new volume group \"%s\"", vg_name_to);
 	if (!lock_vol(cmd, vg_name_to, LCK_VG_WRITE | LCK_NONBLOCK)) {
