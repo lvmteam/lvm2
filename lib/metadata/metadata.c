@@ -885,6 +885,7 @@ struct pv_list *find_pv_in_pv_list(const struct list *pl,
 	list_iterate_items(pvl, pl)
 		if (pvl->pv == pv)
 			return pvl;
+
 	return NULL;
 }
 
@@ -957,6 +958,7 @@ struct lv_list *find_lv_in_lv_list(const struct list *ll,
 	list_iterate_items(lvl, ll)
 		if (lvl->lv == lv)
 			return lvl;
+
 	return NULL;
 }
 

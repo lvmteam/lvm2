@@ -93,13 +93,12 @@ static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 	return 0;
 }
 
-static int _move_one_lv(struct volume_group *vg_from,
-			struct volume_group *vg_to,
-			struct list *lvh)
+static void _move_one_lv(struct volume_group *vg_from,
+			 struct volume_group *vg_to,
+			 struct list *lvh)
 {
-	struct logical_volume *lv;
+	struct logical_volume *lv = list_item(lvh, struct lv_list)->lv;
 
-	lv = list_item(lvh, struct lv_list)->lv;
 	list_move(&vg_to->lvs, lvh);
 	
 	if (lv->status & SNAPSHOT) {
@@ -109,7 +108,6 @@ static int _move_one_lv(struct volume_group *vg_from,
 		vg_from->lv_count--;
 		vg_to->lv_count++;
 	}
-	return 1;
 }	
 
 static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
@@ -170,8 +168,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 			continue;
 
 		/* Move this LV */
-		if (!_move_one_lv(vg_from, vg_to, lvh))
-			return 0;
+		_move_one_lv(vg_from, vg_to, lvh);
 	}
 
 	/* FIXME Ensure no LVs contain segs pointing at LVs in the other VG */
@@ -215,10 +212,8 @@ static int _move_snapshots(struct volume_group *vg_from,
 			 * in vg_to.
 			 */
 			if (_lv_is_in_vg(vg_to, seg->cow) &&
-			    _lv_is_in_vg(vg_to, seg->origin)) {
-				if (!_move_one_lv(vg_from, vg_to, lvh))
-					return 0;
-			}
+			    _lv_is_in_vg(vg_to, seg->origin))
+				_move_one_lv(vg_from, vg_to, lvh);
 		}
 
 	}
@@ -344,10 +339,10 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
 				    "option specified", vg_name_to);
-			goto bad;
+			goto_bad;
 		}
 		if (!vgs_are_compatible(cmd, vg_from,vg_to))
-			goto bad;
+			goto_bad;
 	} else {
 		existing_vg = 0;
 
@@ -377,7 +372,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		if (!(vg_to = vg_create(cmd, vg_name_to, vp_new.extent_size,
 					vp_new.max_pv, vp_new.max_lv,
 					vp_new.alloc, 0, NULL)))
-			goto bad;
+			goto_bad;
 
 		if (vg_is_clustered(vg_from))
 			vg_to->status |= CLUSTERED;
@@ -385,41 +380,39 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 
 	/* Archive vg_from before changing it */
 	if (!archive(vg_from))
-		goto bad;
+		goto_bad;
 
 	/* Move PVs across to new structure */
 	for (opt = 0; opt < argc; opt++) {
 		if (!_move_pv(vg_from, vg_to, argv[opt]))
-			goto bad;
+			goto_bad;
 	}
 
 	/* If an LV given on the cmdline, move used_by PVs */
-	if (lv_name) {
-		if (!_move_pvs_used_by_lv(vg_from, vg_to, lv_name))
-			goto bad;
-	}
+	if (lv_name && !_move_pvs_used_by_lv(vg_from, vg_to, lv_name))
+		goto_bad;
 
 	/* Move required LVs across, checking consistency */
 	if (!(_move_lvs(vg_from, vg_to)))
-		goto bad;
+		goto_bad;
 
 	/* Move required snapshots across */
 	if (!(_move_snapshots(vg_from, vg_to)))
-		goto bad;
+		goto_bad;
 
 	/* Move required mirrors across */
 	if (!(_move_mirrors(vg_from, vg_to)))
-		goto bad;
+		goto_bad;
 
 	/* Split metadata areas and check if both vgs have at least one area */
 	if (!(vg_split_mdas(cmd, vg_from, vg_to)) && vg_from->pv_count) {
 		log_error("Cannot split: Nowhere to store metadata for new Volume Group");
-		goto bad;
+		goto_bad;
 	}
 
 	/* Set proper name for all PVs in new VG */
 	if (!vg_rename(cmd, vg_to, vg_name_to))
-		goto bad;
+		goto_bad;
 
 	/* store it on disks */
 	log_verbose("Writing out updated volume groups");
@@ -434,21 +427,21 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	vg_to->status |= EXPORTED_VG;
 
 	if (!archive(vg_to))
-		goto bad;
+		goto_bad;
 
 	if (!vg_write(vg_to) || !vg_commit(vg_to))
-		goto bad;
+		goto_bad;
 
 	backup(vg_to);
 
 	/*
 	 * Next, write out the updated old VG.  If we crash after this point,
 	 * recovery is a vgimport on the new VG.
-	 * FIXME: recover automatically or instruct the user the user?
+	 * FIXME: recover automatically or instruct the user?
 	 */
 	if (vg_from->pv_count) {
 		if (!vg_write(vg_from) || !vg_commit(vg_from))
-			goto bad;
+			goto_bad;
 
 		backup(vg_from);
 	}
@@ -458,17 +451,17 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	consistent = 1;
 	if (!test_mode() &&
-	    (!(vg_to = vg_read(cmd, vg_name_to, NULL, &consistent))
-	     || !consistent)) {
+	    (!(vg_to = vg_read(cmd, vg_name_to, NULL, &consistent)) ||
+	     !consistent)) {
 		log_error("Volume group \"%s\" became inconsistent: please "
 			  "fix manually", vg_name_to);
-		goto bad;
+		goto_bad;
 	}
 
 	vg_to->status &= ~EXPORTED_VG;
 
 	if (!vg_write(vg_to) || !vg_commit(vg_to))
-		goto bad;
+		goto_bad;
 
 	backup(vg_to);
 

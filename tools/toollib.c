@@ -1245,8 +1245,6 @@ int is_reserved_lvname(const char *name)
 	return rc;
 }
 
-
-
 /*
  * Set members of struct vgcreate_params from cmdline.
  * Do preliminary validation with arg_*() interface.
