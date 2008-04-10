@@ -670,7 +670,7 @@ void vgdisplay_colons(const struct volume_group *vg)
 		active_pvs = vg->pv_count;
 
 	list_iterate_items(lvl, &vg->lvs)
-		if (lv_is_visible(lvl->lv) || (lvl->lv->status & SNAPSHOT))
+		if (lv_is_visible(lvl->lv) && !(lvl->lv->status & SNAPSHOT))
 			lv_count++;
 
 	switch (vg->status & (LVM_READ | LVM_WRITE)) {
