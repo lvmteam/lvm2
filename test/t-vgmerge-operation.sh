@@ -23,18 +23,6 @@ cleanup_()
   rm -f "$f1" "$f2" "$f3" "$f4"
 }
 
-vg_validate_pvlv_counts_()
-{
-	local local_vg=$1
-	local num_pvs=$2
-	local num_lvs=$3
-	local num_snaps=$4
-
-	check_vg_field_ $local_vg pv_count $num_pvs &&
-	check_vg_field_ $local_vg lv_count $num_lvs &&
-	check_vg_field_ $local_vg snap_count $num_snaps
-}
-
 test_expect_success \
   'set up temp files, loopback devices, PVs, vgnames' \
   'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
@@ -81,10 +69,10 @@ test_expect_success \
    lvcreate -l 16 -n $lv1 $vg1 &&
    lvcreate -l 4 -s -n $lv2 $vg1/$lv1 &&
    vgchange -an $vg1 &&
-   vg_validate_pvlv_counts_ $vg1 2 1 1 &&
+   vg_validate_pvlv_counts_ $vg1 2 2 1 &&
    vg_validate_pvlv_counts_ $vg2 2 0 0 &&
    vgmerge $vg2 $vg1 &&
-   vg_validate_pvlv_counts_ $vg2 4 1 1 &&
+   vg_validate_pvlv_counts_ $vg2 4 2 1 &&
    lvremove -f $vg2/$lv2 &&
    vgremove -f $vg2'
 
@@ -94,10 +82,10 @@ test_expect_success \
    vgcreate $vg2 $d4 &&
    lvcreate -l 4 -n $lv1 -m1 $vg1 &&
    vgchange -an $vg1 &&
-   vg_validate_pvlv_counts_ $vg1 3 4 0 &&
+   vg_validate_pvlv_counts_ $vg1 3 1 0 &&
    vg_validate_pvlv_counts_ $vg2 1 0 0 &&
    vgmerge $vg2 $vg1 &&
-   vg_validate_pvlv_counts_ $vg2 4 4 0 &&
+   vg_validate_pvlv_counts_ $vg2 4 1 0 &&
    lvremove -f $vg2/$lv1 &&
    vgremove -f $vg2'
 

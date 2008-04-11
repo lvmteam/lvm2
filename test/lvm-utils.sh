@@ -86,6 +86,18 @@ fi
   return $(test $(lvs --noheadings -o $2 $1) == $3)
 }
 
+vg_validate_pvlv_counts_()
+{
+	local local_vg=$1
+	local num_pvs=$2
+	local num_lvs=$3
+	local num_snaps=$4
+
+	check_vg_field_ $local_vg pv_count $num_pvs &&
+	check_vg_field_ $local_vg lv_count $num_lvs &&
+	check_vg_field_ $local_vg snap_count $num_snaps
+}
+
 dmsetup_has_dm_devdir_support_()
 {
   # Detect support for the envvar.  If it's supported, the

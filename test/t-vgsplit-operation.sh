@@ -24,18 +24,6 @@ cleanup_()
   rm -f "$f1" "$f2" "$f3" "$f4" "$f5"
 }
 
-vg_validate_pvlv_counts_()
-{
-	local local_vg=$1
-	local num_pvs=$2
-	local num_lvs=$3
-	local num_snaps=$4
-
-	check_vg_field_ $local_vg pv_count $num_pvs &&
-	check_vg_field_ $local_vg lv_count $num_lvs &&
-	check_vg_field_ $local_vg snap_count $num_snaps
-}
-
 # FIXME: paramaterize lvm1 vs lvm2 metadata; most of these tests should run
 # fine with lvm1 metadata as well; for now, just add disks 5 and 6 as lvm1
 # metadata
