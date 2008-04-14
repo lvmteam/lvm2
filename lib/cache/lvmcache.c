@@ -63,7 +63,6 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 	dm_free(vginfo->vgmetadata);
 
 	vginfo->vgmetadata = NULL;
-	vginfo->fid = NULL;
 
 	log_debug("Metadata cache: VG %s wiped.", vginfo->vgname);
 }
@@ -81,7 +80,6 @@ static void _store_metadata(struct lvmcache_vginfo *vginfo,
 		return;
 	}
 
-	vginfo->fid = vg->fid;
 	vginfo->precommitted = precommitted;
 
 	log_debug("Metadata cache: VG %s stored (%d bytes%s).", vginfo->vgname,
@@ -400,6 +398,7 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 {
 	struct lvmcache_vginfo *vginfo;
 	struct volume_group *vg;
+	struct format_instance *fid;
 
 	if (!vgid || !(vginfo = vginfo_from_vgid(vgid)) || !vginfo->vgmetadata)
 		return NULL;
@@ -411,7 +410,12 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	    (!precommitted && vginfo->precommitted))
 		return NULL;
 
-	if (!(vg = import_vg_from_buffer(vginfo->vgmetadata, vginfo->fid)) ||
+	fid =  vginfo->fmt->ops->create_instance(vginfo->fmt, vginfo->vgname,
+						 vgid, NULL);
+	if (!fid)
+		return NULL;
+
+	if (!(vg = import_vg_from_buffer(vginfo->vgmetadata, fid)) ||
 	    !vg_validate(vg)) {
 		_free_cached_vgmetadata(vginfo);
 		return_NULL;
