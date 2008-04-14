@@ -438,8 +438,10 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		return 0;
 	}
 
-	/* If we are unlocking a VG, then trigger remote metadata backups */
-	if (cluster_cmd == CLVMD_CMD_LOCK_VG && ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)) {
+	/* If we are unlocking a clustered VG, then trigger remote metadata backups */
+	if (cluster_cmd == CLVMD_CMD_LOCK_VG &&
+	    ((flags & LCK_TYPE_MASK) == LCK_UNLOCK) &&
+	    (flags & LCK_CLUSTER_VG)) {
 		log_very_verbose("Requesing backup of VG metadata for %s", resource);
 		_lock_for_cluster(CLVMD_CMD_VG_BACKUP, LCK_CLUSTER_VG, resource);
 	}
