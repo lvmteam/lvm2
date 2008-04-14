@@ -45,7 +45,6 @@ struct lvmcache_vginfo {
 	struct lvmcache_vginfo *next; /* Another VG with same name? */
 	char *creation_host;
 	char *vgmetadata;	/* Copy of VG metadata as format_text string */
-	struct format_instance *fid;	/* fid associated with vgmetadata */
 	unsigned precommitted;	/* Is vgmetadata live or precommitted? */
 };
 
