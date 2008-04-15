@@ -324,7 +324,8 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t fla
 	assert(resource);
 
 	if ((ret = _locking.lock_resource(cmd, resource, flags))) {
-		if ((flags & LCK_SCOPE_MASK) == LCK_VG) {
+		if ((flags & LCK_SCOPE_MASK) == LCK_VG &&
+		    !(flags & LCK_CACHE)) {
 			if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
 				lvmcache_unlock_vgname(resource);
 			else

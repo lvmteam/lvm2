@@ -389,7 +389,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		/* If the VG name is empty then lock the unused PVs */
 		if (!*resource)	/* FIXME Deprecated */
 			dm_snprintf(lockname, sizeof(lockname), "P_orphans");
-		else if (*resource == '#')
+		else if (*resource == '#' || (flags & LCK_CACHE))
 			dm_snprintf(lockname, sizeof(lockname), "P_%s", resource);
 		else
 			dm_snprintf(lockname, sizeof(lockname), "V_%s",

@@ -21,6 +21,7 @@
 #include "defaults.h"
 #include "lvm-file.h"
 #include "lvm-string.h"
+#include "lvmcache.h"
 
 #include <limits.h>
 #include <unistd.h>
@@ -209,6 +210,10 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
+		if (flags & LCK_CACHE) {
+			lvmcache_drop_metadata(resource);
+			break;
+		}
 		if (!*resource)	/* FIXME Deprecated */
 			dm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/P_orphans", _lock_dir);
