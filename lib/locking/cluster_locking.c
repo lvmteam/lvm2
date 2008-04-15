@@ -390,7 +390,7 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 		if (!*resource)	/* FIXME Deprecated */
 			dm_snprintf(lockname, sizeof(lockname), "P_orphans");
 		else if (*resource == '#')
-			dm_snprintf(lockname, sizeof(lockname), "P_%s", resource + 1);
+			dm_snprintf(lockname, sizeof(lockname), "P_%s", resource);
 		else
 			dm_snprintf(lockname, sizeof(lockname), "V_%s",
 				     resource);

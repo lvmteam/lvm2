@@ -1,5 +1,6 @@
 Version 2.02.35 - 
 =================================
+  Rename P_global to P_#global.
   Don't attempt remote metadata backups of non-clustered VGs. (2.02.29)
   Don't store fid in VG metadata cache to avoid clvmd segfault. (2.02.34)
   Update vgsplit tests to verify loosening of active LV restriction.
