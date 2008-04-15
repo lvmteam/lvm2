@@ -1,3 +1,6 @@
+Version 2.02.36 - 
+=================================
+
 Version 2.02.35 - 15th April 2008
 =================================
   Drop cached VG metadata before and after committing changes to it.
