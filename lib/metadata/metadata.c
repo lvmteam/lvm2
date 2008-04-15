@@ -1333,6 +1333,11 @@ int vg_commit(struct volume_group *vg)
 		return cache_updated;
 	}
 
+	if (!drop_cached_metadata(vg)) {
+		log_error("Unable to drop cached metadata for VG %s.", vg->name);
+		return 0;
+	}
+
 	/* Commit to each copy of the metadata area */
 	list_iterate_items(mda, &vg->fid->metadata_areas) {
 		failed = 0;
@@ -1347,6 +1352,10 @@ int vg_commit(struct volume_group *vg)
 			cache_updated = 1;
 		}
 	}
+
+	if (!drop_cached_metadata(vg))
+		log_error("Attempt to drop cached metadata failed "
+			  "after commit for VG %s.", vg->name);
 
 	/* If at least one mda commit succeeded, it was committed */
 	return cache_updated;

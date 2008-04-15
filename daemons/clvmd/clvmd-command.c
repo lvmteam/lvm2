@@ -121,6 +121,8 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		/* P_#global causes a cache refresh */
 		if (strcmp(lockname, "P_#global") == 0)
 		      do_refresh_cache();
+		else if (strncmp(lockname, "P_", 2) == 0)
+			lvmcache_drop_metadata(lockname + 2);
 
 		break;
 
