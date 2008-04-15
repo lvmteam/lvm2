@@ -420,10 +420,10 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	    (!precommitted && vginfo->precommitted))
 		return NULL;
 
-	fid =  vginfo->fmt->ops->create_instance(vginfo->fmt, vginfo->vgname,
-						 vgid, NULL);
-	if (!fid)
-		return NULL;
+	if (!(fid =  vginfo->fmt->ops->create_instance(vginfo->fmt,
+						       vginfo->vgname,
+						       vgid, NULL)))
+		return_NULL;
 
 	if (!(vg = import_vg_from_buffer(vginfo->vgmetadata, fid)) ||
 	    !vg_validate(vg)) {

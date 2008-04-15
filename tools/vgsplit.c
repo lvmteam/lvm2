@@ -175,7 +175,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 
 		/* Move this LV */
 		if (!_move_one_lv(vg_from, vg_to, lvh))
-			return 0;
+			return_0;
 	}
 
 	/* FIXME Ensure no LVs contain segs pointing at LVs in the other VG */
@@ -221,7 +221,7 @@ static int _move_snapshots(struct volume_group *vg_from,
 			if (_lv_is_in_vg(vg_to, seg->cow) &&
 			    _lv_is_in_vg(vg_to, seg->origin)) {
 				if (!_move_one_lv(vg_from, vg_to, lvh))
-					return 0;
+					return_0;
 			}
 		}
 
@@ -263,7 +263,7 @@ static int _move_mirrors(struct volume_group *vg_from,
 
 		if (seg_in == seg->area_count && log_in) {
 			if (!_move_one_lv(vg_from, vg_to, lvh))
-				return 0;
+				return_0;
 		}
 	}
 
