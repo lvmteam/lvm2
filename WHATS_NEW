@@ -1,4 +1,4 @@
-Version 2.02.35 - 
+Version 2.02.35 - 15th April 2008
 =================================
   Drop cached VG metadata before and after committing changes to it.
   Rename P_global to P_#global.
