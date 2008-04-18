@@ -1,5 +1,6 @@
 Version 2.02.36 - 
 =================================
+  Fix lvconvert -m0 allocatable space check.
 
 Version 2.02.35 - 15th April 2008
 =================================

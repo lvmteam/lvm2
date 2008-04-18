@@ -750,7 +750,7 @@ int lvconvert(struct cmd_context * cmd, int argc, char **argv)
 
 	if (lp.pv_count) {
 		if (!(lp.pvh = create_pv_list(cmd->mem, vg, lp.pv_count,
-					      lp.pvs, 1)))
+					      lp.pvs, 0)))
 			goto_bad;
 	} else
 		lp.pvh = &vg->pvs;
