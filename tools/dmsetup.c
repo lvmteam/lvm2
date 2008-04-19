@@ -1697,7 +1697,7 @@ static int _dm_tree_names(struct dm_report *rh, struct dm_pool *mem,
 			log_error("dm_pool_grow_object failed");
 			goto out_abandon;
 		}
-		if (!dm_pool_grow_object(mem, name, strlen(name))) {
+		if (!dm_pool_grow_object(mem, name, 0)) {
 			log_error("dm_pool_grow_object failed");
 			goto out_abandon;
 		}
@@ -1763,7 +1763,7 @@ static int _dm_tree_parents_devs_disp(struct dm_report *rh, struct dm_pool *mem,
 			log_error("dm_snprintf failed");
 			goto out_abandon;
 		}
-		if (!dm_pool_grow_object(mem, buf, strlen(buf))) {
+		if (!dm_pool_grow_object(mem, buf, 0)) {
 			log_error("dm_pool_grow_object failed");
 			goto out_abandon;
 		}
@@ -1816,7 +1816,7 @@ static int _dm_deps_disp(struct dm_report *rh, struct dm_pool *mem,
 			log_error("dm_snprintf failed");
 			goto out_abandon;
 		}
-		if (!dm_pool_grow_object(mem, buf, strlen(buf))) {
+		if (!dm_pool_grow_object(mem, buf, 0)) {
 			log_error("dm_pool_grow_object failed");
 			goto out_abandon;
 		}
