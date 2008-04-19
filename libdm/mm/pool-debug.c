@@ -216,10 +216,10 @@ int dm_pool_begin_object(struct dm_pool *p, size_t init_size)
 	return 1;
 }
 
-int dm_pool_grow_object(struct dm_pool *p, const void *buffer, size_t delta)
+int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta)
 {
 	struct block *new;
-	size_t size = delta;
+	size_t size = delta ? : strlen(extra);
 
 	assert(p->begun);
 
@@ -238,7 +238,7 @@ int dm_pool_grow_object(struct dm_pool *p, const void *buffer, size_t delta)
 	}
 	p->object = new;
 
-	memcpy(new->data + size - delta, buffer, delta);
+	memcpy(new->data + size - delta, extra, delta);
 
 	return 1;
 }

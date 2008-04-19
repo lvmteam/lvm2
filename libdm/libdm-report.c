@@ -668,15 +668,13 @@ static int _report_headings(struct dm_report *rh)
 				log_error("dm_report: Failed to generate report headings for printing");
 				goto bad;
 			}
-		} else if (!dm_pool_grow_object(rh->mem, heading,
-						strlen(heading))) {
+		} else if (!dm_pool_grow_object(rh->mem, heading, 0)) {
 			log_error("dm_report: Failed to generate report headings for printing");
 			goto bad;
 		}
 
 		if (!list_end(&rh->field_props, &fp->list))
-			if (!dm_pool_grow_object(rh->mem, rh->separator,
-					      strlen(rh->separator))) {
+			if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
 				log_error("dm_report: Failed to generate report headings for printing");
 				goto bad;
 			}
@@ -803,8 +801,7 @@ int dm_report_output(struct dm_report *rh)
 			repstr = field->report_string;
 			width = field->props->width;
 			if (!(rh->flags & DM_REPORT_OUTPUT_ALIGNED)) {
-				if (!dm_pool_grow_object(rh->mem, repstr,
-						      strlen(repstr))) {
+				if (!dm_pool_grow_object(rh->mem, repstr, 0)) {
 					log_error("dm_report: Unable to extend output line");
 					goto bad;
 				}
@@ -836,8 +833,7 @@ int dm_report_output(struct dm_report *rh)
 			}
 
 			if (!list_end(&row->fields, fh))
-				if (!dm_pool_grow_object(rh->mem, rh->separator,
-						      strlen(rh->separator))) {
+				if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
 					log_error("dm_report: Unable to extend output line");
 					goto bad;
 				}

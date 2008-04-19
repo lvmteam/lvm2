@@ -500,7 +500,7 @@ void dm_pool_free(struct dm_pool *p, void *ptr);
  *
  *      for (i = 0; i < 50; i++) {
  *              snprintf(buffer, sizeof(buffer), "%d, ", i);
- *              if (!dm_pool_grow_object(mem, buffer, strlen(buffer)))
+ *              if (!dm_pool_grow_object(mem, buffer, 0))
  *                      goto bad;
  *      }
  *
@@ -524,6 +524,7 @@ void dm_pool_free(struct dm_pool *p, void *ptr);
  * dm_pool_grow_object.  Finally get your object with
  * a call to dm_pool_end_object.
  *
+ * Setting delta to 0 means it will use strlen(extra).
  */
 int dm_pool_begin_object(struct dm_pool *p, size_t hint);
 int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta);

@@ -162,14 +162,17 @@ int dm_pool_begin_object(struct dm_pool *p, size_t hint)
 	return 1;
 }
 
-int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t n)
+int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t delta)
 {
 	struct chunk *c = p->chunk, *nc;
 
-	if (c->end - (c->begin + p->object_len) < n) {
+	if (!delta)
+		delta = strlen(extra);
+
+	if (c->end - (c->begin + p->object_len) < delta) {
 		/* move into a new chunk */
-		if (p->object_len + n > (p->chunk_size / 2))
-			nc = _new_chunk(p, (p->object_len + n) * 2);
+		if (p->object_len + delta > (p->chunk_size / 2))
+			nc = _new_chunk(p, (p->object_len + delta) * 2);
 		else
 			nc = _new_chunk(p, p->chunk_size);
 
@@ -181,8 +184,8 @@ int dm_pool_grow_object(struct dm_pool *p, const void *extra, size_t n)
 		c = p->chunk;
 	}
 
-	memcpy(c->begin + p->object_len, extra, n);
-	p->object_len += n;
+	memcpy(c->begin + p->object_len, extra, delta);
+	p->object_len += delta;
 	return 1;
 }
 
