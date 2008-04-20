@@ -1,5 +1,6 @@
 Version 2.02.36 - 
 =================================
+  Add --prefixes to reporting tools for field name prefix output format.
   Fix lvconvert -m0 allocatable space check.
 
 Version 2.02.35 - 15th April 2008
