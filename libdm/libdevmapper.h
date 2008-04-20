@@ -735,10 +735,11 @@ struct dm_report_field_type {
 /*
  * dm_report_init output_flags
  */
-#define DM_REPORT_OUTPUT_MASK		0x000000FF
-#define DM_REPORT_OUTPUT_ALIGNED	0x00000001
-#define DM_REPORT_OUTPUT_BUFFERED	0x00000002
-#define DM_REPORT_OUTPUT_HEADINGS	0x00000004
+#define DM_REPORT_OUTPUT_MASK			0x000000FF
+#define DM_REPORT_OUTPUT_ALIGNED		0x00000001
+#define DM_REPORT_OUTPUT_BUFFERED		0x00000002
+#define DM_REPORT_OUTPUT_HEADINGS		0x00000004
+#define DM_REPORT_OUTPUT_FIELD_NAME_PREFIX	0x00000008
 
 struct dm_report *dm_report_init(uint32_t *report_types,
 				 const struct dm_report_object_type *types,
@@ -751,6 +752,12 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 int dm_report_object(struct dm_report *rh, void *object);
 int dm_report_output(struct dm_report *rh);
 void dm_report_free(struct dm_report *rh);
+
+/*
+ * Prefix added to each field name with DM_REPORT_OUTPUT_FIELD_NAME_PREFIX
+ */
+int dm_report_set_output_field_name_prefix(struct dm_report *rh,
+					   const char *report_prefix);
 
 /*
  * Report functions are provided for simple data types.

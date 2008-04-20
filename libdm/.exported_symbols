@@ -132,5 +132,6 @@ dm_report_field_int32
 dm_report_field_uint32
 dm_report_field_uint64
 dm_report_field_set_value
+dm_report_set_output_field_name_prefix
 dm_regex_create
 dm_regex_match
