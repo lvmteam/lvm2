@@ -1,5 +1,6 @@
 Version 1.02.26 - 
 =================================
+  Add field name prefix option to reporting functions.
   Calculate string size within dm_pool_grow_object.
 
 Version 1.02.25 - 10th April 2008

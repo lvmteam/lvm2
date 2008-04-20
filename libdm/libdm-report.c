@@ -17,6 +17,8 @@
 #include "list.h"
 #include "log.h"
 
+#include <ctype.h>
+
 /*
  * Internal flags
  */
@@ -27,6 +29,7 @@ struct dm_report {
 	struct dm_pool *mem;
 
 	uint32_t report_types;
+	const char *output_field_name_prefix;
 	const char *field_prefix;
 	uint32_t flags;
 	const char *separator;
@@ -551,6 +554,31 @@ void dm_report_free(struct dm_report *rh)
 	dm_free(rh);
 }
 
+static char *_toupperstr(char *str)
+{
+	char *u = str;
+
+	do
+		*u = toupper(*u);
+	while (*u++);
+
+	return str;
+}
+
+int dm_report_set_output_field_name_prefix(struct dm_report *rh, const char *output_field_name_prefix)
+{
+	char *prefix;
+
+	if (!(prefix = dm_pool_strdup(rh->mem, output_field_name_prefix))) {
+		log_error("dm_report_set_output_field_name_prefix: dm_pool_strdup failed");
+		return 0;
+	}
+
+	rh->output_field_name_prefix = _toupperstr(prefix);
+	
+	return 1;
+}
+
 /*
  * Create a row of data for an object
  */
@@ -771,6 +799,7 @@ int dm_report_output(struct dm_report *rh)
 	struct row *row = NULL;
 	struct dm_report_field *field;
 	const char *repstr;
+	char *field_id;
 	char buf[4096];
 	int32_t width;
 	uint32_t align;
@@ -797,6 +826,30 @@ int dm_report_output(struct dm_report *rh)
 			field = list_item(fh, struct dm_report_field);
 			if (field->props->flags & FLD_HIDDEN)
 				continue;
+
+			if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) {
+				if (!(field_id = strdup(rh->fields[field->props->field_num].id))) {
+					log_error("dm_report: Failed to copy field name");
+					goto bad;
+				}
+
+				if (!dm_pool_grow_object(rh->mem, rh->output_field_name_prefix, 0)) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
+
+				if (!dm_pool_grow_object(rh->mem, _toupperstr(field_id), 0)) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
+
+				free(field_id);
+
+				if (!dm_pool_grow_object(rh->mem, "=\"", 2)) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
+			}
 
 			repstr = field->report_string;
 			width = field->props->width;
@@ -832,6 +885,12 @@ int dm_report_output(struct dm_report *rh)
 				}
 			}
 
+			if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX)
+				if (!dm_pool_grow_object(rh->mem, "\"", 1)) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
+				
 			if (!list_end(&row->fields, fh))
 				if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
 					log_error("dm_report: Unable to extend output line");
