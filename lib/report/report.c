@@ -386,7 +386,7 @@ static int _pvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	const uint32_t status = *(const uint32_t *) data;
 	char *repstr;
 
-	if (!(repstr = dm_pool_zalloc(mem, 4))) {
+	if (!(repstr = dm_pool_zalloc(mem, 3))) {
 		log_error("dm_pool_alloc failed");
 		return 0;
 	}
@@ -1077,9 +1077,10 @@ static struct dm_report_field_type _fields[] = {
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  report_type_t *report_type, const char *separator,
-		  int aligned, int buffered, int headings)
+		  int aligned, int buffered, int headings, int field_prefixes)
 {
 	uint32_t report_flags = 0;
+	void *rh;
 
 	if (aligned)
 		report_flags |= DM_REPORT_OUTPUT_ALIGNED;
@@ -1090,8 +1091,16 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	if (headings)
 		report_flags |= DM_REPORT_OUTPUT_HEADINGS;
 
-	return dm_report_init(report_type, _report_types, _fields, format,
-			      separator, report_flags, keys, cmd);
+	if (field_prefixes)
+		report_flags |= DM_REPORT_OUTPUT_FIELD_NAME_PREFIX;
+
+	rh = dm_report_init(report_type, _report_types, _fields, format,
+			    separator, report_flags, keys, cmd);
+
+	if (field_prefixes)
+		dm_report_set_output_field_name_prefix(rh, "lvm2_");
+
+	return rh;
 }
 
 /*
