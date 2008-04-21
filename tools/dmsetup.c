@@ -120,6 +120,7 @@ enum {
 	NOOPENCOUNT_ARG,
 	NOTABLE_ARG,
 	OPTIONS_ARG,
+	PREFIXES_ARG,
 	READAHEAD_ARG,
 	SEPARATOR_ARG,
 	SHOWKEYS_ARG,
@@ -1914,7 +1915,7 @@ static int _report_init(struct command *c)
 	char *options = (char *) default_report_options;
 	const char *keys = "";
 	const char *separator = " ";
-	int aligned = 1, headings = 1, buffered = 1;
+	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0;
 	uint32_t flags = 0;
 	size_t len = 0;
 	int r = 0;
@@ -1928,6 +1929,11 @@ static int _report_init(struct command *c)
 
 	if (_switches[UNBUFFERED_ARG])
 		buffered = 0;
+
+	if (_switches[PREFIXES_ARG]) {
+		aligned = 0;
+		field_prefixes = 1;
+	}
 
 	if (_switches[OPTIONS_ARG] && _string_args[OPTIONS_ARG]) {
 		if (*_string_args[OPTIONS_ARG] != '+')
@@ -1971,6 +1977,9 @@ static int _report_init(struct command *c)
 	if (headings)
 		flags |= DM_REPORT_OUTPUT_HEADINGS;
 
+	if (field_prefixes)
+		flags |= DM_REPORT_OUTPUT_FIELD_NAME_PREFIX;
+
 	if (!(_report = dm_report_init(&_report_type,
 				       _report_types, _report_fields,
 				       options, separator, flags, keys, NULL)))
@@ -1980,6 +1989,9 @@ static int _report_init(struct command *c)
 		err("Internal device dependency tree creation failed.");
 		goto out;
 	}
+
+	if (field_prefixes)
+		dm_report_set_output_field_name_prefix(_report, "dm_");
 
 	r = 1;
 
@@ -2047,7 +2059,7 @@ static void _usage(FILE *out)
 		"        [-r|--readonly] [--noopencount] [--nolockfs]\n"
 		"        [--readahead [+]<sectors>|auto|none]\n"
 		"        [-c|-C|--columns] [-o <fields>] [-O|--sort <sort_fields>]\n"
-		"        [--noheadings] [--separator <separator>]\n\n");
+		"        [--noheadings] [--prefixes] [--separator <separator>]\n\n");
 	for (i = 0; _commands[i].name; i++)
 		fprintf(out, "\t%s %s\n", _commands[i].name, _commands[i].help);
 	fprintf(out, "\n<device> may be device name or -u <uuid> or "
@@ -2409,6 +2421,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"noopencount", 0, &ind, NOOPENCOUNT_ARG},
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
+		{"prefixes", 0, &ind, PREFIXES_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
 		{"separator", 1, &ind, SEPARATOR_ARG},
 		{"showkeys", 0, &ind, SHOWKEYS_ARG},
@@ -2543,6 +2556,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 			_switches[NOLOCKFS_ARG]++;
 		if ((ind == NOOPENCOUNT_ARG))
 			_switches[NOOPENCOUNT_ARG]++;
+		if ((ind == PREFIXES_ARG))
+			_switches[PREFIXES_ARG]++;
 		if ((ind == READAHEAD_ARG)) {
 			_switches[READAHEAD_ARG]++;
 			if (!strcasecmp(optarg, "auto"))
