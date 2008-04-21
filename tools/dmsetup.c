@@ -1678,7 +1678,7 @@ static int _dm_info_suspended_disp(struct dm_report *rh,
 	if (info->suspended)
 		dm_report_field_set_value(field, "Suspended", NULL);
 	else
-		dm_report_field_set_value(field, "", NULL);
+		dm_report_field_set_value(field, "Active", NULL);
 
 	return 1;
 }
