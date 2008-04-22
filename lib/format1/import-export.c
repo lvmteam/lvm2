@@ -284,7 +284,7 @@ int export_vg(struct vg_disk *vgd, struct volume_group *vg)
 		vgd->vg_status |= VG_EXTENDABLE;
 
 	vgd->lv_max = vg->max_lv;
-	vgd->lv_cur = vg->lv_count;
+	vgd->lv_cur = vg->lv_count + vg->snapshot_count;
 
 	vgd->pv_max = vg->max_pv;
 	vgd->pv_cur = vg->pv_count;
