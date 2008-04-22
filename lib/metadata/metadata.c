@@ -1177,6 +1177,7 @@ int vg_validate(struct volume_group *vg)
 	struct lv_list *lvl, *lvl2;
 	char uuid[64] __attribute((aligned(8)));
 	int r = 1;
+	uint32_t lv_count;
 
 	/* FIXME Also check there's no data/metadata overlap */
 
@@ -1207,6 +1208,15 @@ int vg_validate(struct volume_group *vg)
 	if (!check_pv_segments(vg)) {
 		log_error("Internal error: PV segments corrupted in %s.",
 			  vg->name);
+		r = 0;
+	}
+
+	if ((lv_count = (uint32_t) list_size(&vg->lvs)) !=
+	    vg->lv_count + 2 * vg->snapshot_count) {
+		log_error("Internal error: #internal LVs (%u) != #LVs (%"
+			  PRIu32 ") + 2 * #snapshots (%" PRIu32 ") in VG %s",
+			  list_size(&vg->lvs), vg->lv_count,
+			  vg->snapshot_count, vg->name);
 		r = 0;
 	}
 
