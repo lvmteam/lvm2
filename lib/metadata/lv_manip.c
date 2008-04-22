@@ -439,7 +439,8 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 
 		list_del(&lvl->list);
 
-		lv->vg->lv_count--;
+		if (!(lv->status & SNAPSHOT))
+			lv->vg->lv_count--;
 	} else if (lv->vg->fid->fmt->ops->lv_setup &&
 		   !lv->vg->fid->fmt->ops->lv_setup(lv->vg->fid, lv))
 		return_0;

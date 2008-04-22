@@ -1,5 +1,7 @@
 Version 2.02.36 - 
 =================================
+  Check lv_count in vg_validate.
+  Fix internal LV counter when a snapshot is removed.
   Fix metadata corruption writing lvm1-formatted metadata with snapshots.
   Add --prefixes to reporting tools for field name prefix output format.
   Fix lvconvert -m0 allocatable space check.
