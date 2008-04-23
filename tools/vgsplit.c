@@ -109,7 +109,7 @@ static int _move_one_lv(struct volume_group *vg_from,
 	if (lv->status & SNAPSHOT) {
 		vg_from->snapshot_count--;
 		vg_to->snapshot_count++;
-	} else {
+	} else if (!lv_is_cow(lv)) {
 		vg_from->lv_count--;
 		vg_to->lv_count++;
 	}

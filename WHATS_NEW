@@ -1,5 +1,6 @@
 Version 2.02.36 - 
 =================================
+  Fix vgsplit internal counting of snapshot LVs.
   Fix internal snapshot_count when vgmerge with snapshots in source VG.
   Simply clvmd-openais by using non-async saLckResourceLock.
   Check lv_count in vg_validate.
