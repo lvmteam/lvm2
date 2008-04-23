@@ -1,5 +1,6 @@
 Version 2.02.36 - 
 =================================
+  Simply clvmd-openais by using non-async saLckResourceLock.
   Check lv_count in vg_validate.
   Fix internal LV counter when a snapshot is removed.
   Fix metadata corruption writing lvm1-formatted metadata with snapshots.
