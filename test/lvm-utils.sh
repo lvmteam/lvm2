@@ -63,7 +63,7 @@ check_vg_field_()
 {
 if test "$verbose" = "t"
 then
-  echo "check_vg_field_ VG: $1 actual: `vgs --noheadings -o $2 $1` expected $3"
+  echo "check_vg_field_ VG=$1, field=$2, actual=`vgs --noheadings -o $2 $1`, expected=$3"
 fi
   return $(test $(vgs --noheadings -o $2 $1) == $3)
 }
@@ -72,7 +72,7 @@ check_pv_field_()
 {
 if test "$verbose" = "t"
 then
-  echo "check_pv_field_ PV: $1 actual: `pvs --noheadings -o $2 $1` expected $3"
+  echo "check_pv_field_ PV=$1, field=$2, actual=`pvs --noheadings -o $2 $1`, expected=$3"
 fi
   return $(test $(pvs --noheadings -o $2 $1) == $3)
 }
@@ -81,7 +81,7 @@ check_lv_field_()
 {
 if test "$verbose" = "t"
 then
-  echo "check_lv_field_ LV: $1 actual: `lvs --noheadings -o $2 $1` expected $3"
+  echo "check_lv_field_ LV=$1, field=$2, actual=`lvs --noheadings -o $2 $1`, expected=$3"
 fi
   return $(test $(lvs --noheadings -o $2 $1) == $3)
 }
