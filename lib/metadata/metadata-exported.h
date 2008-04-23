@@ -202,7 +202,23 @@ struct volume_group {
 	uint32_t pv_count;
 	struct list pvs;
 
-	/* logical volumes */
+	/*
+	 * logical volumes
+	 * The following relationship should always hold:
+	 * list_size(lvs) = lv_count + 2 * snapshot_count
+	 *
+	 * Snapshots consist of 2 instances of "struct logical_volume":
+	 * - cow (lv_name is visible to the user)
+	 * - snapshot (lv_name is 'snapshotN')
+	 * Neither of these instances is reflected in lv_count, but we
+	 * multiply the snapshot_count by 2.
+	 *
+	 * Mirrors consist of multiple instances of "struct logical_volume":
+	 * - one for the mirror log
+	 * - one for each mirror leg
+	 * - one for the user-visible mirror LV
+	 * all of the instances are reflected in lv_count.
+	 */
 	uint32_t lv_count;
 	uint32_t snapshot_count;
 	struct list lvs;
