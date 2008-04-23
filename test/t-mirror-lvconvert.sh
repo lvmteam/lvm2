@@ -387,6 +387,16 @@ test_expect_success "remove from original mirror (the original becomes linear)" 
    mirrorlog_is_on_ $vg/$lv1 $(pv_ 3) &&
    check_and_cleanup_lvs_'
 
+test_expect_success "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated" \
+  'prepare_lvs_ &&
+   lvcreate -l`pvs --noheadings -ope_count $(pv_ 1)` -m1 -n $lv1 $vg $(pv_ 1) $(pv_ 2) $(pv_ 3):0 &&
+   check_mirror_count_ $vg/$lv1 2 &&
+   check_mirror_log_ $vg/$lv1 &&
+   lvconvert -m0 $vg/$lv1 $(pv_ 1) &&
+   check_no_tmplvs_ $vg/$lv1 &&
+   check_mirror_count_ $vg/$lv1 1 &&
+   check_and_cleanup_lvs_'
+
 # ---------------------------------------------------------------------
 
 test_done
