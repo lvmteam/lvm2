@@ -156,7 +156,8 @@ void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)
 
 	_update_cache_lock_state(vgname, 1);
 
-	_vgs_locked++;
+	if (strcmp(vgname, VG_GLOBAL))
+		_vgs_locked++;
 }
 
 int vgname_is_locked(const char *vgname)
@@ -178,7 +179,7 @@ void lvmcache_unlock_vgname(const char *vgname)
 	dm_hash_remove(_lock_hash, vgname);
 
 	/* FIXME Do this per-VG */
-	if (!--_vgs_locked)
+	if (strcmp(vgname, VG_GLOBAL) && !--_vgs_locked)
 		dev_close_all();
 }
 
