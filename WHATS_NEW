@@ -1,5 +1,6 @@
 Version 2.02.36 - 
 =================================
+  Fix nodes list in clvmd-openais, and allow for broadcast messages.
   Exclude VG_GLOBAL from internal concurrent VG lock counter.
   Fix vgsplit internal counting of snapshot LVs.
   Fix vgmerge snapshot_count when source VG contains snapshots.
