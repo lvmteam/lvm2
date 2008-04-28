@@ -245,12 +245,13 @@ static void cpg_deliver_callback (cpg_handle_t handle,
 
 	memcpy(&target_nodeid, msg, OPENAIS_CSID_LEN);
 
-	DEBUGLOG("Got message from nodeid %d for %d. len %d\n",
-		 nodeid, target_nodeid, msg_len-4);
+	DEBUGLOG("%u got message from nodeid %d for %d. len %d\n",
+		 our_nodeid, nodeid, target_nodeid, msg_len-4);
 
-	if (target_nodeid == our_nodeid)
-		process_message(cluster_client, (char *)msg+OPENAIS_CSID_LEN,
-				msg_len-OPENAIS_CSID_LEN, (char*)&nodeid);
+	if (nodeid != our_nodeid)
+		if (target_nodeid == our_nodeid || target_nodeid == 0)
+			process_message(cluster_client, (char *)msg+OPENAIS_CSID_LEN,
+					msg_len-OPENAIS_CSID_LEN, (char*)&nodeid);
 }
 
 static void cpg_confchg_callback(cpg_handle_t handle,
@@ -292,9 +293,28 @@ static void cpg_confchg_callback(cpg_handle_t handle,
 			ninfo->state = NODE_DOWN;
 	}
 
+	for (i=0; i<member_list_entries; i++) {
+		if (member_list[i].nodeid == 0) continue;
+		ninfo = dm_hash_lookup_binary(node_hash,
+				(char *)&member_list[i].nodeid,
+				OPENAIS_CSID_LEN);
+		if (!ninfo) {
+			ninfo = malloc(sizeof(struct node_info));
+			if (!ninfo) {
+				break;
+			}
+			else {
+				ninfo->nodeid = member_list[i].nodeid;
+				dm_hash_insert_binary(node_hash,
+						(char *)&ninfo->nodeid,
+						OPENAIS_CSID_LEN, ninfo);
+			}
+		}
+		ninfo->state = NODE_CLVMD;
+	}
+
 	num_nodes = joined_list_entries;
 }
-
 
 static int lck_dispatch(struct local_client *client, char *buf, int len,
 			const char *csid, struct local_client **new_client)
