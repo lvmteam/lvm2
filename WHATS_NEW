@@ -1,18 +1,16 @@
-Version 2.02.36 - 
+Version 2.02.36 - 29th April 2008
 =================================
+  Fix fsadm.sh to work with older blockdev, blkid & readlink binaries.
+  Fix lvresize to pass new size to fsadm when extending device.
   Remove unused struct in clvmd-openais, and use correct node count.
   Fix nodes list in clvmd-openais, and allow for broadcast messages.
   Exclude VG_GLOBAL from internal concurrent VG lock counter.
   Fix vgsplit internal counting of snapshot LVs.
   Fix vgmerge snapshot_count when source VG contains snapshots.
   Simplify clvmd-openais by using non-async saLckResourceLock.
-  Check lv_count in vg_validate.
   Fix internal LV counter when a snapshot is removed.
   Fix metadata corruption writing lvm1-formatted metadata with snapshots.
-  Add --prefixes to reporting tools for field name prefix output format.
   Fix lvconvert -m0 allocatable space check.
-  Fix fsadm.sh to work with older blockdev,blkid,readlink
-  Fix lvresize - extension was not passing new size to fsadm
 
 Version 2.02.35 - 15th April 2008
 =================================

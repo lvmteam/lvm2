@@ -159,7 +159,7 @@ detect_fs() {
 	VOLUME=$($READLINK $READLINK_E -n "/dev/$VOLUME") || error "Cannot get readlink $1"
 	# use /dev/null as cache file to be sure about the result
 	# use 'cut' to be compatible with older version of blkid that does not provide option '-o value'
-	FSTYPE=$($BLKID -c /dev/null -s TYPE "$VOLUME" | cut -d \" -f 2) || error "Cannot get FSTYPE of \"$VOLUME\""
+	FSTYPE=$($BLKID -c /dev/null -s TYPE "$VOLUME" | $CUT -d \" -f 2) || error "Cannot get FSTYPE of \"$VOLUME\""
 	verbose "\"$FSTYPE\" filesystem found on \"$VOLUME\""
 }
 
