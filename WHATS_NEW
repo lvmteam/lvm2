@@ -1,3 +1,8 @@
+Version 2.02.37 - 
+=================================
+  Check lv_count in vg_validate.
+  Add --prefixes to reporting tools for field name prefix output format.
+
 Version 2.02.36 - 29th April 2008
 =================================
   Fix fsadm.sh to work with older blockdev, blkid & readlink binaries.
