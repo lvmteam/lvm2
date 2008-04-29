@@ -630,6 +630,11 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				  lp->lv_name);
 			return ECMD_FAILED;
 		}
+		if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64,
+				(uint64_t) lp->extents * vg->extent_size / 2) < 0) {
+		    log_error("Couldn't generate new LV size string");
+		    return ECMD_FAILED;
+		}
 		if (!exec_cmd("fsadm", "resize", lv_path, size_buf)) {
 			stack;
 			return ECMD_FAILED;

@@ -43,7 +43,9 @@ RMDIR=rmdir
 BLOCKDEV=blockdev
 BLKID=blkid
 GREP=grep
+CUT=cut
 READLINK=readlink
+READLINK_E="-e"
 FSCK=fsck
 XFS_CHECK=xfs_check
 
@@ -154,9 +156,10 @@ decode_size() {
 # dereference device name if it is symbolic link
 detect_fs() {
         VOLUME=${1#/dev/}
-	VOLUME=$($READLINK -e -n "/dev/$VOLUME") || error "Cannot get readlink $1"
+	VOLUME=$($READLINK $READLINK_E -n "/dev/$VOLUME") || error "Cannot get readlink $1"
 	# use /dev/null as cache file to be sure about the result
-	FSTYPE=$($BLKID -c /dev/null -o value -s TYPE "$VOLUME") || error "Cannot get FSTYPE of \"$VOLUME\""
+	# use 'cut' to be compatible with older version of blkid that does not provide option '-o value'
+	FSTYPE=$($BLKID -c /dev/null -s TYPE "$VOLUME" | cut -d \" -f 2) || error "Cannot get FSTYPE of \"$VOLUME\""
 	verbose "\"$FSTYPE\" filesystem found on \"$VOLUME\""
 }
 
@@ -171,7 +174,15 @@ detect_mounted()  {
 
 # get the full size of device in bytes
 detect_device_size() {
-	DEVSIZE=$($BLOCKDEV --getsize64 "$VOLUME") || error "Cannot read device \"$VOLUME\""
+	# check if blockdev supports getsize64
+	$BLOCKDEV 2>&1 | $GREP getsize64 >/dev/null 
+	if test $? -eq 0; then 
+		DEVSIZE=$($BLOCKDEV --getsize64 "$VOLUME") || error "Cannot read size of device \"$VOLUME\""
+	else
+		DEVSIZE=$($BLOCKDEV --getsize "$VOLUME") || error "Cannot read size of device \"$VOLUME\""
+		SSSIZE=$($BLOCKDEV --getss "$VOLUME") || error "Cannot block size read device \"$VOLUME\""
+		DEVSIZE=$(($DEVSIZE * $SSSIZE))
+	fi
 }
 
 # round up $1 / $2
@@ -349,9 +360,10 @@ test -n "$FSADM_RUNNING" && exit 0
 test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REISER" \
   -a -n "$TUNE_XFS" -a -n "$RESIZE_XFS" -a -n "$MOUNT" -a -n "$UMOUNT" -a -n "$MKDIR" \
   -a -n "$RMDIR" -a -n "$BLOCKDEV" -a -n "$BLKID" -a -n "$GREP" -a -n "$READLINK" \
-  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVRESIZE" \
+  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVRESIZE" -a -n "$CUT" \
   || error "Required command definitions in the script are missing!"
-$($READLINK -e -n / >/dev/null 2>&1) || error "$READLINK does not support options -e -n"
+
+$($READLINK -e -n / >/dev/null 2>&1) || READLINK_E="-f"
 TEST64BIT=$(( 1000 * 1000000000000 ))
 test $TEST64BIT -eq 1000000000000000 || error "Shell does not handle 64bit arithmetic"
 $(echo Y | $GREP Y >/dev/null) || error "Grep does not work properly"
