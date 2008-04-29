@@ -100,13 +100,6 @@ struct lock_info
 	SaNameT              lock_name;
 };
 
-struct lock_wait
-{
-	pthread_cond_t cond;
-	pthread_mutex_t mutex;
-	int status;
-};
-
 /* Set errno to something approximating the right value and return 0 or -1 */
 static int ais_to_errno(SaAisErrorT err)
 {
@@ -313,7 +306,7 @@ static void cpg_confchg_callback(cpg_handle_t handle,
 		ninfo->state = NODE_CLVMD;
 	}
 
-	num_nodes = joined_list_entries;
+	num_nodes = member_list_entries;
 }
 
 static int lck_dispatch(struct local_client *client, char *buf, int len,
