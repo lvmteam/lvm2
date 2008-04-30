@@ -122,7 +122,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	sprintf(old_path, "%s%s", dev_dir, vg_name_old);
 	sprintf(new_path, "%s%s", dev_dir, vg_name_new);
 
-	if (dir_exists(old_path)) {
+	if (activation() && dir_exists(old_path)) {
 		log_verbose("Renaming \"%s\" to \"%s\"", old_path, new_path);
 		if (test_mode())
 			log_verbose("Test mode: Skipping rename.");
