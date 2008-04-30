@@ -1,5 +1,6 @@
 Version 2.02.37 - 
 =================================
+  Don't touch /dev in vgrename if activation is disabled.
   Check lv_count in vg_validate.
   Add --prefixes to reporting tools for field name prefix output format.
 
