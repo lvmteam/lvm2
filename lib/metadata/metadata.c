@@ -1278,6 +1278,11 @@ int vg_write(struct volume_group *vg)
 		return 0;
 	}
 
+	if (!drop_cached_metadata(vg)) {
+		log_error("Unable to drop cached metadata for VG %s.", vg->name);
+		return 0;
+	}
+
 	vg->seqno++;
 
 	/* Write to each copy of the metadata area */
@@ -1341,11 +1346,6 @@ int vg_commit(struct volume_group *vg)
 		log_error("Internal error: Attempt to write new VG metadata "
 			  "without locking %s", vg->name);
 		return cache_updated;
-	}
-
-	if (!drop_cached_metadata(vg)) {
-		log_error("Unable to drop cached metadata for VG %s.", vg->name);
-		return 0;
 	}
 
 	/* Commit to each copy of the metadata area */

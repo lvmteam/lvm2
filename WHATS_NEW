@@ -1,8 +1,12 @@
-Version 2.02.37 - 
+Version 2.02.38 - 
 =================================
-  Don't touch /dev in vgrename if activation is disabled.
   Check lv_count in vg_validate.
   Add --prefixes to reporting tools for field name prefix output format.
+
+Version 2.02.37 - 
+=================================
+  Drop metadata cache before writing precommitted metadata instead of after.
+  Don't touch /dev in vgrename if activation is disabled.
 
 Version 2.02.36 - 29th April 2008
 =================================
