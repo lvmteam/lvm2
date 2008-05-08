@@ -22,6 +22,9 @@
 #include "filter.h"
 #include "memlock.h"
 #include "str_list.h"
+#include "format-text.h"
+#include "format_pool.h"
+#include "format1.h"
 
 static struct dm_hash_table *_pvid_hash = NULL;
 static struct dm_hash_table *_vgid_hash = NULL;
@@ -130,14 +133,37 @@ static void _update_cache_lock_state(const char *vgname, int locked)
 	_update_cache_vginfo_lock_state(vginfo, locked);
 }
 
-void lvmcache_drop_metadata(const char *vgname)
+static void _drop_metadata(const char *vgname)
 {
 	struct lvmcache_vginfo *vginfo;
+	struct lvmcache_info *info;
 
 	if (!(vginfo = vginfo_from_vgname(vgname, NULL)))
 		return;
 
+	/*
+	 * Invalidate cached PV labels.
+	 * If cached precommitted metadata exists that means we
+	 * already invalidated the PV labels (before caching it)
+	 * and we must not do it again.
+	 */
+
+	if (!vginfo->precommitted)
+		list_iterate_items(info, &vginfo->infos)
+			info->status |= CACHE_INVALID;
+
 	_free_cached_vgmetadata(vginfo);
+}
+
+void lvmcache_drop_metadata(const char *vgname)
+{
+	/* For VG_ORPHANS, we need to invalidate all labels on orphan PVs. */
+	if (strcmp(vgname, VG_ORPHANS)) {
+		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME);
+		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME);
+		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME);
+	} else
+		_drop_metadata(vgname);
 }
 
 void lvmcache_lock_vgname(const char *vgname, int read_only __attribute((unused)))
