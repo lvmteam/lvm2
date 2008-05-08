@@ -5,6 +5,7 @@ Version 2.02.38 -
 
 Version 2.02.37 - 
 =================================
+  Avoid unnecessary unlock attempts with LCK_CACHE pseudo-locks.
   When asked to drop cached committed VG metadata, invalidate cached PV labels.
   Drop metadata cache before writing precommitted metadata instead of after.
   Don't touch /dev in vgrename if activation is disabled.

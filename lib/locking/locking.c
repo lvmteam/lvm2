@@ -370,8 +370,12 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags)
 	if (!_lock_vol(cmd, resource, flags))
 		return 0;
 
-	/* Perform immediate unlock unless LCK_HOLD set */
-	if (!(flags & LCK_HOLD) && ((flags & LCK_TYPE_MASK) != LCK_UNLOCK)) {
+	/*
+	 * If a real lock was acquired (i.e. not LCK_CACHE),
+	 * perform an immediate unlock unless LCK_HOLD was requested.
+	 */
+	if (!(flags & LCK_CACHE) && !(flags & LCK_HOLD) &&
+	    ((flags & LCK_TYPE_MASK) != LCK_UNLOCK)) {
 		if (!_lock_vol(cmd, resource,
 			       (flags & ~LCK_TYPE_MASK) | LCK_UNLOCK))
 			return 0;
