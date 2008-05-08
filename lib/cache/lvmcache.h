@@ -81,7 +81,6 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 				  const char *vgname, const char *vgid,
 				  uint32_t vgstatus, const char *hostname);
 int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted);
-void lvmcache_drop_vg(const char *vgname);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);
 void lvmcache_unlock_vgname(const char *vgname);
