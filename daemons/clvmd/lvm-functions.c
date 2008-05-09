@@ -500,6 +500,16 @@ static void drop_vg_locks()
 }
 
 /*
+ * Drop lvmcache metadata
+ */
+void drop_metadata(const char *vgname)
+{
+	pthread_mutex_lock(&lvm_lock);
+	lvmcache_drop_metadata(vgname);
+	pthread_mutex_unlock(&lvm_lock);
+}
+
+/*
  * Ideally, clvmd should be started before any LVs are active
  * but this may not be the case...
  * I suppose this also comes in handy if clvmd crashes, not that it would!

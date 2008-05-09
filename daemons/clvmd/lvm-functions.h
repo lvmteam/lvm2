@@ -33,5 +33,6 @@ extern int hold_unlock(char *resource);
 extern int hold_lock(char *resource, int mode, int flags);
 extern void unlock_all(void);
 extern char *get_last_lvm_error(void);
+extern void drop_metadata(const char *vgname);
 
 #endif

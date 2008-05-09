@@ -122,7 +122,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		if (strcmp(lockname, "P_#global") == 0)
 		      do_refresh_cache();
 		else if (strncmp(lockname, "P_", 2) == 0)
-			lvmcache_drop_metadata(lockname + 2);
+			drop_metadata(lockname + 2);
 
 		break;
 
@@ -253,7 +253,11 @@ int do_pre_command(struct local_client *client)
 		break;
 
 	case CLVMD_CMD_LOCK_VG:
-       	        status = lock_vg(client);
+		lockname = &args[2];
+		/* Do not use lock for cache related commands */
+		if (!strncmp(lockname, "V_", 2) ||
+		    !strcmp(lockname, "P_#global"))
+			status = lock_vg(client);
 		break;
 
 	case CLVMD_CMD_LOCK_LV:
