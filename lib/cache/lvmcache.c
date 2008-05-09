@@ -158,7 +158,7 @@ static void _drop_metadata(const char *vgname)
 void lvmcache_drop_metadata(const char *vgname)
 {
 	/* For VG_ORPHANS, we need to invalidate all labels on orphan PVs. */
-	if (strcmp(vgname, VG_ORPHANS)) {
+	if (!strcmp(vgname, VG_ORPHANS)) {
 		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME);
 		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME);
 		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME);
