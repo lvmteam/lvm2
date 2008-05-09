@@ -119,7 +119,7 @@ int do_command(struct local_client *client, struct clvm_header *msg, int msglen,
 		/* Check to see if the VG is in use by LVM1 */
 		status = do_check_lvm1(lockname);
 		/* P_#global causes a full cache refresh */
-		if (!strcmp(lockname, "P_#global"))
+		if (!strcmp(lockname, "P_" VG_GLOBAL))
 			do_refresh_cache();
 		else
 			drop_metadata(lockname + 2);
