@@ -530,7 +530,7 @@ static void timedout_callback(struct local_client *client, const char *csid,
 		char nodename[max_cluster_member_name_len];
 
 		clops->name_from_csid(csid, nodename);
-		DEBUGLOG("PJC: checking for a reply from %s\n", nodename);
+		DEBUGLOG("Checking for a reply from %s\n", nodename);
 		pthread_mutex_lock(&client->bits.localsock.reply_mutex);
 
 		reply = client->bits.localsock.replies;
@@ -541,7 +541,7 @@ static void timedout_callback(struct local_client *client, const char *csid,
 		pthread_mutex_unlock(&client->bits.localsock.reply_mutex);
 
 		if (!reply) {
-			DEBUGLOG("PJC: node %s timed-out\n", nodename);
+			DEBUGLOG("Node %s timed-out\n", nodename);
 			add_reply_to_list(client, ETIMEDOUT, csid,
 					  "Command timed out", 18);
 		}
@@ -985,6 +985,14 @@ static int read_from_local_sock(struct local_client *thisfd)
 			}
 		}
 
+		/* Initialise and lock the mutex so the subthread will wait after
+		   finishing the PRE routine */
+		if (!thisfd->bits.localsock.threadid) {
+			pthread_mutex_init(&thisfd->bits.localsock.mutex, NULL);
+			pthread_cond_init(&thisfd->bits.localsock.cond, NULL);
+			pthread_mutex_init(&thisfd->bits.localsock.reply_mutex, NULL);
+		}
+
 		/* Only run the command if all the cluster nodes are running CLVMD */
 		if (((inheader->flags & CLVMD_FLAG_LOCAL) == 0) &&
 		    (check_all_clvmds_running(thisfd) == -1)) {
@@ -1055,12 +1063,6 @@ static int read_from_local_sock(struct local_client *thisfd)
 		thisfd->bits.localsock.pipe_client = newfd;
 
 		thisfd->bits.localsock.pipe = comms_pipe[1];
-
-		/* Initialise and lock the mutex so the subthread will wait after
-		   finishing the PRE routine */
-		pthread_mutex_init(&thisfd->bits.localsock.mutex, NULL);
-		pthread_cond_init(&thisfd->bits.localsock.cond, NULL);
-		pthread_mutex_init(&thisfd->bits.localsock.reply_mutex, NULL);
 
 		/* Make sure the thread has a copy of it's own ID */
 		newfd->bits.pipe.threadid = thisfd->bits.localsock.threadid;
