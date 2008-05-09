@@ -27,15 +27,24 @@ int locking_is_clustered(void);
 
 /*
  * LCK_VG:
- *   Lock/unlock on-disk volume group data
- *   Use VG_ORPHANS to lock orphan PVs
- *   char *vol holds volume group name
+ *   Lock/unlock on-disk volume group data.
+ *   Use VG_ORPHANS to lock all orphan PVs.
+ *   Use VG_GLOBAL as a global lock and to wipe the internal cache.
+ *   char *vol holds volume group name.
+ *   Set the LCK_CACHE flag to invalidate 'vol' in the internal cache.
  *
  * LCK_LV:
  *   Lock/unlock an individual logical volume
  *   char *vol holds lvid
  */
 int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags);
+
+/*
+ * Internal locking representation.
+ *   LCK_VG: Uses prefix V_ unless the vol begins with # (i.e. #global or #orphans)
+ *           or the LCK_CACHE flag is set when it uses the prefix P_.
+ * If LCK_CACHE is set, we do not take out a real lock.
+ */
 
 /*
  * Does the LVM1 driver have this VG active?
@@ -69,7 +78,7 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname);
 #define LCK_HOLD	0x00000020U	/* Hold lock when lock_vol returns? */
 #define LCK_LOCAL	0x00000040U	/* Don't propagate to other nodes */
 #define LCK_CLUSTER_VG	0x00000080U	/* VG is clustered */
-#define LCK_CACHE	0x00000100U	/* Operation on cache using P_ lock */
+#define LCK_CACHE	0x00000100U	/* Operation on cache only using P_ lock */
 
 /*
  * Additional lock bits for cluster communication
