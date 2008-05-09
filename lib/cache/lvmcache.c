@@ -162,6 +162,9 @@ void lvmcache_drop_metadata(const char *vgname)
 		_drop_metadata(FMT_TEXT_ORPHAN_VG_NAME);
 		_drop_metadata(FMT_LVM1_ORPHAN_VG_NAME);
 		_drop_metadata(FMT_POOL_ORPHAN_VG_NAME);
+
+		/* Indicate that PVs could now be missing from the cache */
+		init_full_scan_done(0);
 	} else
 		_drop_metadata(vgname);
 }

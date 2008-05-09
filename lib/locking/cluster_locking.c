@@ -387,13 +387,12 @@ int lock_resource(struct cmd_context *cmd, const char *resource, uint32_t flags)
 	switch (flags & LCK_SCOPE_MASK) {
 	case LCK_VG:
 		/* If the VG name is empty then lock the unused PVs */
-		if (!*resource)	/* FIXME Deprecated */
-			dm_snprintf(lockname, sizeof(lockname), "P_orphans");
-		else if (*resource == '#' || (flags & LCK_CACHE))
-			dm_snprintf(lockname, sizeof(lockname), "P_%s", resource);
+		if (*resource == '#' || (flags & LCK_CACHE))
+			dm_snprintf(lockname, sizeof(lockname), "P_%s",
+				    resource);
 		else
 			dm_snprintf(lockname, sizeof(lockname), "V_%s",
-				     resource);
+				    resource);
 
 		lock_scope = "VG";
 		cluster_cmd = CLVMD_CMD_LOCK_VG;
