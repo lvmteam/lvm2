@@ -1,5 +1,6 @@
 Version 2.02.38 - 
 =================================
+  Make clvmd-cman use a hash rather than an array for node updown info.
   Check lv_count in vg_validate.
   Add --prefixes to reporting tools for field name prefix output format.
 

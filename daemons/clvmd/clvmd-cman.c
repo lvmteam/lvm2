@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <errno.h>
+#include <libdevmapper.h>
 #include <libdlm.h>
 
 #include "clvmd-comms.h"
@@ -46,13 +47,17 @@
 
 #define LOCKSPACE_NAME "clvmd"
 
+struct clvmd_node
+{
+	struct cman_node *node;
+	int clvmd_up;
+};
+
 static int num_nodes;
 static struct cman_node *nodes = NULL;
 static struct cman_node this_node;
 static int count_nodes; /* size of allocated nodes array */
-static int max_updown_nodes = 50;	/* Current size of the allocated array */
-/* Node up/down status, indexed by nodeid */
-static int *node_updown = NULL;
+static struct dm_hash_table *node_updown_hash;
 static dlm_lshandle_t *lockspace;
 static cman_handle_t c_handle;
 
@@ -72,6 +77,8 @@ struct lock_wait {
 
 static int _init_cluster(void)
 {
+	node_updown_hash = dm_hash_create(100);
+
 	/* Open the cluster communication socket */
 	c_handle = cman_init(NULL);
 	if (!c_handle) {
@@ -165,8 +172,10 @@ static int _cluster_do_node_callback(struct local_client *client,
 
 	for (i = 0; i < _get_num_nodes(); i++) {
 		if (nodes[i].cn_member && nodes[i].cn_nodeid) {
-			callback(client, (char *)&nodes[i].cn_nodeid, node_updown[nodes[i].cn_nodeid]);
-			if (!node_updown[nodes[i].cn_nodeid])
+			int up = (int)(long)dm_hash_lookup_binary(node_updown_hash, (char *)&nodes[i].cn_nodeid, sizeof(int));
+
+			callback(client, (char *)&nodes[i].cn_nodeid, up);
+			if (!up)
 				somedown = -1;
 		}
 	}
@@ -184,7 +193,7 @@ static void event_callback(cman_handle_t handle, void *private, int reason, int 
 		log_notice("clvmd on node %s has died\n", namebuf);
 		DEBUGLOG("Got port closed message, removing node %s\n", namebuf);
 
-		node_updown[arg] = 0;
+		dm_hash_insert_binary(node_updown_hash, (char *)&arg, sizeof(int), (void *)0);
 		break;
 
 	case CMAN_REASON_STATECHANGE:
@@ -239,22 +248,7 @@ static void _add_up_node(const char *csid)
 	/* It's up ! */
 	int nodeid = nodeid_from_csid(csid);
 
-	if (nodeid >= max_updown_nodes) {
-	        int new_size = nodeid + 10;
-		int *new_updown = realloc(node_updown, sizeof(int) * new_size);
-
-		if (new_updown) {
-			node_updown = new_updown;
-			max_updown_nodes = new_size;
-			DEBUGLOG("realloced more space for nodes. now %d\n",
-				 max_updown_nodes);
-		} else {
-			log_error
-				("Realloc failed. Node status for clvmd will be wrong. quitting\n");
-			exit(999);
-		}
-	}
-	node_updown[nodeid] = 1;
+	dm_hash_insert_binary(node_updown_hash, (char *)&nodeid, sizeof(int), (void *)1);
 	DEBUGLOG("Added new node %d to updown list\n", nodeid);
 }
 
@@ -288,7 +282,12 @@ static void count_clvmds_running(void)
 	int i;
 
 	for (i = 0; i < num_nodes; i++) {
-		node_updown[nodes[i].cn_nodeid] = is_listening(nodes[i].cn_nodeid);
+		int nodeid = nodes[i].cn_nodeid;
+
+		if (is_listening(nodeid) == 1)
+			dm_hash_insert_binary(node_updown_hash, (void *)&nodeid, sizeof(int), (void*)1);
+		else
+			dm_hash_insert_binary(node_updown_hash, (void *)&nodeid, sizeof(int), (void*)0);
 	}
 }
 
@@ -331,16 +330,6 @@ static void get_members()
 	for (i=0; i<retnodes; i++) {
 		if (nodes[i].cn_nodeid > high_nodeid)
 			high_nodeid = nodes[i].cn_nodeid;
-	}
-
-	if (node_updown == NULL) {
-		size_t buf_len;
-		if (high_nodeid >= max_updown_nodes)
-			max_updown_nodes = high_nodeid + 1;
-		buf_len = sizeof(int) * max_updown_nodes;
-		node_updown = malloc(buf_len);
-		if (node_updown)
-			memset(node_updown, 0, buf_len);
 	}
 }
 
