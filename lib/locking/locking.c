@@ -323,6 +323,16 @@ static int _lock_vol(struct cmd_context *cmd, const char *resource, uint32_t fla
 
 	assert(resource);
 
+	if (!*resource) {
+		log_error("Internal error: Use of P_orphans is deprecated.");
+		return 0;
+	}
+
+	if (*resource == '#' && (flags & LCK_CACHE)) {
+		log_error("Internal error: P_%s referenced", resource);
+		return 0;
+	}
+
 	if ((ret = _locking.lock_resource(cmd, resource, flags))) {
 		if ((flags & LCK_SCOPE_MASK) == LCK_VG &&
 		    !(flags & LCK_CACHE)) {

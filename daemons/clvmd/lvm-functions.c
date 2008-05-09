@@ -472,7 +472,8 @@ static void drop_vg_locks()
 	    popen
 	    ("lvm pvs  --config 'log{command_names=0 prefix=\"\"}' --nolocking --noheadings -o vg_name", "r");
 
-	sync_unlock("P_orphans", LCK_EXCL);
+	sync_unlock("P_#orphans", LCK_EXCL);
+	sync_unlock("P_#global", LCK_EXCL);
 
 	if (!vgs)
 		return;

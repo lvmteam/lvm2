@@ -214,10 +214,7 @@ static int _file_lock_resource(struct cmd_context *cmd, const char *resource,
 			lvmcache_drop_metadata(resource);
 			break;
 		}
-		if (!*resource)	/* FIXME Deprecated */
-			dm_snprintf(lockfile, sizeof(lockfile),
-				     "%s/P_orphans", _lock_dir);
-		else if (*resource == '#')
+		if (*resource == '#')
 			dm_snprintf(lockfile, sizeof(lockfile),
 				     "%s/P_%s", _lock_dir, resource + 1);
 		else
