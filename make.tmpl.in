@@ -26,6 +26,7 @@ LN_S = @LN_S@
 LIBS = @LIBS@
 DEFS += @DEFS@
 CFLAGS += @CFLAGS@
+CPPFLAGS += @CPPFLAGS@
 CLDFLAGS += @CLDFLAGS@
 LDDEPS += @LDDEPS@
 LDFLAGS += @LDFLAGS@
@@ -94,14 +95,14 @@ STRIP=
 LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
 		 awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
-INCLUDES += -I$(top_srcdir)/include
+CPPFLAGS := -I$(top_srcdir)/include $(CPPFLAGS)
 
 ifneq ("@DMDIR@", "")
-  INCLUDES += -I@DMDIR@/include
+  CPPFLAGS += -I@DMDIR@/include
 endif
 
 ifdef DESTDIR
-  INCLUDES += -I$(DESTDIR)/usr/include
+  CPPFLAGS += -I$(DESTDIR)/usr/include
 endif
 
 INC_LNS = $(top_srcdir)/include/.symlinks_created
@@ -161,14 +162,14 @@ endif
 $(TARGETS): $(OBJECTS)
 
 %.o: %.c
-	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $< -o $@
+	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $< -o $@
 
 %.pot: %.c Makefile
-	$(CC) -E $(INCLUDES) -include $(top_srcdir)/include/pogen.h \
+	$(CC) -E $(CPPFLAGS) -include $(top_srcdir)/include/pogen.h \
 		$(DEFS) $(CFLAGS) $< > $@
 
 %.so: %.o
-	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $< -o $@
+	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $< -o $@
 
 ifeq ("@LIB_SUFFIX@","so")
 $(LIB_SHARED): $(OBJECTS) $(LDDEPS)
@@ -195,7 +196,7 @@ $(LIB_STATIC): $(OBJECTS)
 	set -e; \
 	FILE=`echo $@ | sed 's/\\//\\\\\\//g;s/\\.d//g'`; \
 	DEPS=`echo $(DEPS) | sed -e 's/\\//\\\\\\//g'`; \
-	$(CC) -MM $(INCLUDES) $(DEFS) $(CFLAGS) $< | \
+	$(CC) -MM $(CPPFLAGS) $(DEFS) $(CFLAGS) $< | \
 	sed "s/\(.*\)\.o[ :]*/$$FILE.o $$FILE.d $$FILE.pot: $$DEPS /g" > $@; \
 	[ -s $@ ] || $(RM) $@
 

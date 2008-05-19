@@ -98,12 +98,12 @@ DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 include $(top_srcdir)/make.tmpl
 
 lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm.o \
+	$(CC) -o $@ $(CPPFLAGS) $(CFLAGS) $(OBJECTS) lvm.o \
 		$(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
 
 LIB_PTHREAD = @LIB_PTHREAD@
 lvm.static: $(OBJECTS) lvm-static.o $(top_srcdir)/lib/liblvm.a
-	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm-static.o -static \
+	$(CC) -o $@ $(CPPFLAGS) $(CFLAGS) $(OBJECTS) lvm-static.o -static \
 		$(LDFLAGS) $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
 
 liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
@@ -128,15 +128,15 @@ CFLOW_FLAGS += --cpp="$(CC) -E"
 .PHONY: lvm.cflow
 -include $(top_srcdir)/lib/liblvm.cflow
 lvm.cflow: $(SOURCES)
-	@CFLOW_CMD@ -o$@ $(CFLOW_FLAGS) $(INCLUDES) $(DEFS) $(SOURCES)
+	@CFLOW_CMD@ -o$@ $(CFLOW_FLAGS) $(CPPFLAGS) $(DEFS) $(SOURCES)
 lvm.rxref: $(SOURCES)
-	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" -r --omit-arguments -x $(INCLUDES) $(DEFS) $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" -r --omit-arguments -x $(CPPFLAGS) $(DEFS) $(SOURCES)
 lvm.xref: $(SOURCES)
-	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" --omit-arguments -x $(INCLUDES) $(DEFS) $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" --omit-arguments -x $(CPPFLAGS) $(DEFS) $(SOURCES)
 lvm.rtree: $(SOURCES)
-	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" -r --omit-arguments -T -b $(INCLUDES) $(DEFS) $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" -r --omit-arguments -T -b $(CPPFLAGS) $(DEFS) $(SOURCES)
 lvm.tree: $(SOURCES)
-	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" --omit-arguments -T -b $(INCLUDES) $(DEFS) $(SOURCES)
+	@CFLOW_CMD@ -o$@ --cpp="$(CC) -E" --omit-arguments -T -b $(CPPFLAGS) $(DEFS) $(SOURCES)
 cflow: lvm.cflow lvm.xref lvm.tree lvm.rtree lvm.rxref
 endif
 

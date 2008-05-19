@@ -217,6 +217,23 @@ int vgs_locked(void)
 	return _vgs_locked;
 }
 
+static void _vginfo_attach_info(struct lvmcache_vginfo *vginfo,
+				struct lvmcache_info *info)
+{
+	info->vginfo = vginfo;
+	list_add(&vginfo->infos, &info->list);
+}
+
+static void _vginfo_detach_info(struct lvmcache_info *info)
+{
+	if (!list_empty(&info->list)) {
+		list_del(&info->list);
+		list_init(&info->list);
+	}
+
+	info->vginfo = NULL;
+}
+
 /* If vgid supplied, require a match. */
 struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname, const char *vgid)
 {
@@ -336,6 +353,7 @@ static int _vginfo_is_valid(struct lvmcache_vginfo *vginfo)
 {
 	struct lvmcache_info *info;
 
+	/* Invalid if any info is invalid */
 	list_iterate_items(info, &vginfo->infos)
 		if (!_info_is_valid(info))
 			return 0;
@@ -580,38 +598,51 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 	return NULL;
 }
 
+static int _free_vginfo(struct lvmcache_vginfo *vginfo)
+{
+	int r = 1;
+
+	_free_cached_vgmetadata(vginfo);
+
+	dm_hash_remove(_vgname_hash, vginfo->vgname);
+	if (vginfo->next && !dm_hash_insert(_vgname_hash, vginfo->vgname,
+					    vginfo->next)) {
+		log_error("_vgname_hash re-insertion for %s failed",
+			  vginfo->vgname);
+		r = 0;
+	}
+
+	if (vginfo->vgname)
+		dm_free(vginfo->vgname);
+
+	if (vginfo->creation_host)
+		dm_free(vginfo->creation_host);
+
+	if (*vginfo->vgid && _vgid_hash)
+		dm_hash_remove(_vgid_hash, vginfo->vgid);
+
+	list_del(&vginfo->list);
+
+	dm_free(vginfo);
+
+	return r;
+}
+
 /*
  * vginfo must be info->vginfo unless info is NULL
  */
 static int _drop_vginfo(struct lvmcache_info *info, struct lvmcache_vginfo *vginfo)
 {
-	if (info && !list_empty(&info->list)) {
-		list_del(&info->list);
-		list_init(&info->list);
-	}
-
-	if (vginfo && !is_orphan_vg(vginfo->vgname) && list_empty(&vginfo->infos)) {
-		dm_hash_remove(_vgname_hash, vginfo->vgname);
-		if (vginfo->next) {
-			if (!dm_hash_insert(_vgname_hash, vginfo->vgname, vginfo->next)) {
-				log_error("vg hash re-insertion failed: %s",
-					  vginfo->vgname);
-				return 0;
-			}
-		}
-
-		if (vginfo->vgname)
-			dm_free(vginfo->vgname);
-		if (vginfo->creation_host)
-			dm_free(vginfo->creation_host);
-		if (*vginfo->vgid)
-			dm_hash_remove(_vgid_hash, vginfo->vgid);
-		list_del(&vginfo->list);
-		dm_free(info->vginfo);
-	}
-
 	if (info)
-		info->vginfo = NULL;
+		_vginfo_detach_info(info);
+
+	/* vginfo still referenced? */
+	if (!vginfo || is_orphan_vg(vginfo->vgname) ||
+	    !list_empty(&vginfo->infos))
+		return 1;
+
+	if (!_free_vginfo(vginfo))
+		return_0;
 
 	return 1;
 }
@@ -829,7 +860,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			return 0;
 		}
 		list_init(&vginfo->infos);
-			primary_vginfo = vginfo_from_vgname(vgname, NULL);
+		primary_vginfo = vginfo_from_vgname(vgname, NULL);
 		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host,
 				    primary_vginfo)) {
 			dm_free(vginfo->vgname);
@@ -846,10 +877,9 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 ***/
 	}
 
-	if (info) {
-		info->vginfo = vginfo;
-		list_add(&vginfo->infos, &info->list);
-	} else if (!_lvmcache_update_vgid(info, vginfo, vgid)) /* Orphans */
+	if (info)
+		_vginfo_attach_info(vginfo, info);
+	else if (!_lvmcache_update_vgid(NULL, vginfo, vgid)) /* Orphans */
 		return_0;
 
 	_update_cache_vginfo_lock_state(vginfo, vgname_is_locked(vgname));
@@ -1071,8 +1101,7 @@ struct lvmcache_info *lvmcache_add(struct labeller *labeller, const char *pvid,
 
 static void _lvmcache_destroy_entry(struct lvmcache_info *info)
 {
-	if (!list_empty(&info->list))
-		list_del(&info->list);
+	_vginfo_detach_info(info);
 	strcpy(info->dev->pvid, "");
 	label_destroy(info->label);
 	dm_free(info);
@@ -1084,12 +1113,8 @@ static void _lvmcache_destroy_vgnamelist(struct lvmcache_vginfo *vginfo)
 
 	do {
 		next = vginfo->next;
-		if (vginfo->vgname)
-			dm_free(vginfo->vgname);
-		if (vginfo->creation_host)
-			dm_free(vginfo->creation_host);
-		_free_cached_vgmetadata(vginfo);
-		dm_free(vginfo);
+		if (!_free_vginfo(vginfo))
+			stack;
 	} while ((vginfo = next));
 }
 
@@ -1141,6 +1166,8 @@ void lvmcache_destroy(struct cmd_context *cmd, int retain_orphans)
 		_lock_hash = NULL;
 	}
 
+	if (!list_empty(&_vginfos))
+		log_error("Internal error: _vginfos list should be empty");
 	list_init(&_vginfos);
 
 	if (retain_orphans)
