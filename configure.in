@@ -539,10 +539,9 @@ AC_ARG_WITH(dmdir,
 	    [ DMDIR= ])
 
 # Convert a relative dir name to absolute.
-case x$DMDIR in
-  x/*) ;;
-  x) ;;
-  x*) DMDIR="`pwd`/$DMDIR" ;;
+case $DMDIR in
+  /*) ;;
+  *) DMDIR="`pwd`/$DMDIR" ;;
 esac
 
 ################################################################################
@@ -602,7 +601,6 @@ AC_SUBST(MIRRORS)
 AC_SUBST(OWNER)
 AC_SUBST(GROUP)
 AC_SUBST(CFLAGS)
-AC_SUBST(CPPFLAGS)
 AC_SUBST(COPTIMISE_FLAG)
 AC_SUBST(CLDFLAGS)
 AC_SUBST(CLDWHOLEARCHIVE)
