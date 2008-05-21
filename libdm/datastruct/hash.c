@@ -215,12 +215,14 @@ unsigned dm_hash_get_num_entries(struct dm_hash_table *t)
 
 void dm_hash_iter(struct dm_hash_table *t, dm_hash_iterate_fn f)
 {
-	struct dm_hash_node *c;
+	struct dm_hash_node *c, *n;
 	unsigned i;
 
 	for (i = 0; i < t->num_slots; i++)
-		for (c = t->slots[i]; c; c = c->next)
+		for (c = t->slots[i]; c; c = n) {
+			n = c->next;
 			f(c->data);
+		}
 }
 
 void dm_hash_wipe(struct dm_hash_table *t)
