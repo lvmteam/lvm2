@@ -178,6 +178,7 @@ static int lvchange_resync(struct cmd_context *cmd,
 			      struct logical_volume *lv)
 {
 	int active = 0;
+	int monitored;
 	struct lvinfo info;
 	struct logical_volume *log_lv;
 
@@ -221,6 +222,10 @@ static int lvchange_resync(struct cmd_context *cmd,
 		}
 	}
 
+	/* Activate exclusively to ensure no nodes still have LV active */
+	monitored = dmeventd_monitor_mode();
+	init_dmeventd_monitor(0);
+
 	if (vg_is_clustered(lv->vg) && !activate_lv_excl(cmd, lv)) {
 		log_error("Can't get exclusive access to clustered volume %s",
 			  lv->name);
@@ -231,6 +236,8 @@ static int lvchange_resync(struct cmd_context *cmd,
 		log_error("Unable to deactivate %s for resync", lv->name);
 		return 0;
 	}
+
+	init_dmeventd_monitor(monitored);
 
 	log_lv = first_seg(lv)->log_lv;
 
