@@ -6,6 +6,7 @@ Version 2.02.38 -
 
 Version 2.02.37 - 
 =================================
+  Temporarily disable dmeventd mirror monitoring during lvchange --resync.
   Refactor some vginfo manipulation code.
   Add assertions to trap deprecated P_ and V_ lock usage.
   Add missing mutex around clvmd lvmcache_drop_metadata library call.
