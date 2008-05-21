@@ -36,7 +36,7 @@ void bounds_check(void);
 
 #else
 
-#  define dm_free(p) free(p)
+#  define dm_free(p) do {if (p) free(p); } while (0)
 #  define dbg_realloc(p, s) realloc(p, s)
 #  define dump_memory()
 #  define bounds_check()
