@@ -6,6 +6,9 @@ Version 2.02.38 -
 
 Version 2.02.37 - 
 =================================
+  Avoid spurious duplicate VG messages referring to VGs that are gone.
+  Drop dev_name_confirmed error message to debug level.
+  Fix setpriority error message to signed int.
   Temporarily disable dmeventd mirror monitoring during lvchange --resync.
   Refactor some vginfo manipulation code.
   Add assertions to trap deprecated P_ and V_ lock usage.

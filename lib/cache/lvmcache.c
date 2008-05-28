@@ -31,6 +31,7 @@ static struct dm_hash_table *_vgid_hash = NULL;
 static struct dm_hash_table *_vgname_hash = NULL;
 static struct dm_hash_table *_lock_hash = NULL;
 static struct list _vginfos;
+static int _scanning_in_progress = 0;
 static int _has_scanned = 0;
 static int _vgs_locked = 0;
 static int _vg_global_lock_held = 0;	/* Global lock held when cache wiped? */
@@ -220,6 +221,9 @@ int vgs_locked(void)
 static void _vginfo_attach_info(struct lvmcache_vginfo *vginfo,
 				struct lvmcache_info *info)
 {
+	if (!vginfo)
+		return;
+
 	info->vginfo = vginfo;
 	list_add(&vginfo->infos, &info->list);
 }
@@ -361,6 +365,18 @@ static int _vginfo_is_valid(struct lvmcache_vginfo *vginfo)
 	return 1;
 }
 
+/* vginfo is invalid if it does not contain at least one valid info */
+static int _vginfo_is_invalid(struct lvmcache_vginfo *vginfo)
+{
+	struct lvmcache_info *info;
+
+	list_iterate_items(info, &vginfo->infos)
+		if (_info_is_valid(info))
+			return 0;
+
+	return 1;
+}
+
 /*
  * If valid_only is set, data will only be returned if the cached data is
  * known still to be valid.
@@ -407,7 +423,6 @@ int lvmcache_label_scan(struct cmd_context *cmd, int full_scan)
 	struct device *dev;
 	struct format_type *fmt;
 
-	static int _scanning_in_progress = 0;
 	int r = 0;
 
 	/* Avoid recursion when a PVID can't be found! */
@@ -604,12 +619,14 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 
 	_free_cached_vgmetadata(vginfo);
 
-	dm_hash_remove(_vgname_hash, vginfo->vgname);
-	if (vginfo->next && !dm_hash_insert(_vgname_hash, vginfo->vgname,
-					    vginfo->next)) {
-		log_error("_vgname_hash re-insertion for %s failed",
-			  vginfo->vgname);
-		r = 0;
+	if (vginfo_from_vgname(vginfo->vgname, NULL) == vginfo) {
+		dm_hash_remove(_vgname_hash, vginfo->vgname);
+		if (vginfo->next && !dm_hash_insert(_vgname_hash, vginfo->vgname,
+						    vginfo->next)) {
+			log_error("_vgname_hash re-insertion for %s failed",
+				  vginfo->vgname);
+			r = 0;
+		}
 	}
 
 	if (vginfo->vgname)
@@ -801,7 +818,8 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				   uint32_t vgstatus, const char *creation_host,
 				   const struct format_type *fmt)
 {
-	struct lvmcache_vginfo *vginfo, *primary_vginfo;
+	struct lvmcache_vginfo *vginfo, *primary_vginfo, *orphan_vginfo;
+	struct lvmcache_info *info2, *info3;
 	// struct lvmcache_vginfo  *old_vginfo, *next;
 
 	if (!vgname || (info && info->vginfo && !strcmp(info->vginfo->vgname, vgname)))
@@ -860,7 +878,24 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 			return 0;
 		}
 		list_init(&vginfo->infos);
-		primary_vginfo = vginfo_from_vgname(vgname, NULL);
+
+		/*
+		 * If we're scanning and there's an invalidated entry, remove it.
+		 * Otherwise we risk bogus warnings of duplicate VGs.
+		 */
+		while ((primary_vginfo = vginfo_from_vgname(vgname, NULL)) &&
+		       _scanning_in_progress && _vginfo_is_invalid(primary_vginfo))
+			list_iterate_items_safe(info2, info3, &primary_vginfo->infos) {
+				orphan_vginfo = vginfo_from_vgname(primary_vginfo->fmt->orphan_vg_name, NULL);
+				_drop_vginfo(info2, primary_vginfo);	
+				_vginfo_attach_info(orphan_vginfo, info2);
+				log_debug("lvmcache: %s: now in VG %s%s%s%s",
+					  dev_name(info2->dev),
+					  vgname, orphan_vginfo->vgid[0] ? " (" : "",
+					  orphan_vginfo->vgid[0] ? orphan_vginfo->vgid : "",
+					  orphan_vginfo->vgid[0] ? ")" : "");
+		}
+
 		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host,
 				    primary_vginfo)) {
 			dm_free(vginfo->vgname);
