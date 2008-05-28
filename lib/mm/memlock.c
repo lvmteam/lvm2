@@ -105,7 +105,7 @@ static void _lock_mem(void)
 		log_sys_error("getpriority", "");
 	else
 		if (setpriority(PRIO_PROCESS, 0, _default_priority))
-			log_error("setpriority %u failed: %s",
+			log_error("setpriority %d failed: %s",
 				  _default_priority, strerror(errno));
 }
 
