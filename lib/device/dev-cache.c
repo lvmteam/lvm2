@@ -687,7 +687,8 @@ const char *dev_name_confirmed(struct device *dev, int quiet)
 			continue;
 		}
 
-		log_error("Aborting - please provide new pathname for what "
+		/* Scanning issues this inappropriately sometimes. */
+		log_debug("Aborting - please provide new pathname for what "
 			  "used to be %s", name);
 		return NULL;
 	}
