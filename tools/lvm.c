@@ -236,7 +236,7 @@ int lvm_shell(struct cmd_context *cmd, struct cmdline_context *cmdline)
 			log_error("No such command '%s'.  Try 'help'.",
 				  argv[0]);
 
-                if (ret && !error_message_produced()) {
+                if ((ret != ECMD_PROCESSED) && !error_message_produced()) {
 			log_debug("Internal error: Failed command did not use log_error");
 			log_error("Command failed with status code %d.", ret);
 		}
