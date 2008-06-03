@@ -1,5 +1,6 @@
 Version 2.02.38 - 
 =================================
+  Correct config file line numbers in messages when parsing comments.
   In script-processing mode, stop if any command fails.
   Warn if command exits with non-zero status code without a prior log_error.
   Make clvmd-cman use a hash rather than an array for node updown info.
