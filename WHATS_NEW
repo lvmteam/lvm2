@@ -9,6 +9,7 @@ Version 2.02.38 -
 
 Version 2.02.37 - 
 =================================
+  Drop metadata cache if update fails in vg_revert or vg_commit.
   Avoid spurious duplicate VG messages referring to VGs that are gone.
   Drop dev_name_confirmed error message to debug level.
   Fix setpriority error message to signed int.
