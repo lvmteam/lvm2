@@ -1363,7 +1363,8 @@ int vg_commit(struct volume_group *vg)
 		}
 	}
 
-	if (!drop_cached_metadata(vg))
+	/* If update failed, remove any cached precommitted metadata. */
+	if (!cache_updated && !drop_cached_metadata(vg))
 		log_error("Attempt to drop cached metadata failed "
 			  "after commit for VG %s.", vg->name);
 
@@ -1382,6 +1383,10 @@ int vg_revert(struct volume_group *vg)
 			stack;
 		}
 	}
+
+	if (!drop_cached_metadata(vg))
+		log_error("Attempt to drop cached metadata failed "
+			  "after reverted update for VG %s.", vg->name);
 
 	return 1;
 }
