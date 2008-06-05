@@ -995,6 +995,9 @@ static int _remove_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 			continue;
 		}
 
+		if (!*vgname)
+			continue;
+
 		/* only top level layer has symlinks */
 		if (*layer)
 			continue;
