@@ -191,6 +191,58 @@ void debuglog(const char *fmt, ...)
 	}
 }
 
+static const char *decode_cmd(unsigned char cmdl)
+{
+	static char buf[128];
+	const char *command;
+
+	switch (cmdl) {
+	case CLVMD_CMD_TEST:		
+		command = "TEST";	
+		break;
+	case CLVMD_CMD_LOCK_VG:		
+		command = "LOCK_VG";	
+		break;
+	case CLVMD_CMD_LOCK_LV:		
+		command = "LOCK_LV";	
+		break;
+	case CLVMD_CMD_REFRESH:		
+		command = "REFRESH";	
+		break;
+	case CLVMD_CMD_SET_DEBUG:	
+		command = "SET_DEBUG";	
+		break;
+	case CLVMD_CMD_GET_CLUSTERNAME:	
+		command = "GET_CLUSTERNAME";
+		break;
+	case CLVMD_CMD_VG_BACKUP:	
+		command = "VG_BACKUP";	
+		break;
+	case CLVMD_CMD_REPLY:		
+		command = "REPLY";	
+		break;
+	case CLVMD_CMD_VERSION:		
+		command = "VERSION";	
+		break;
+	case CLVMD_CMD_GOAWAY:		
+		command = "GOAWAY";	
+		break;
+	case CLVMD_CMD_LOCK:		
+		command = "LOCK";	
+		break;
+	case CLVMD_CMD_UNLOCK:		
+		command = "UNLOCK";	
+		break;
+	default:			
+		command = "unknown";    
+		break;
+	}
+
+	sprintf(buf, "%s (0x%x)", command, cmdl);
+
+	return buf;
+}
+
 int main(int argc, char *argv[])
 {
 	int local_sock;
@@ -1169,8 +1221,8 @@ static void process_remote_command(struct clvm_header *msg, int msglen, int fd,
 	/* Get the node name as we /may/ need it later */
 	clops->name_from_csid(csid, nodename);
 
-	DEBUGLOG("process_remote_command %d for clientid 0x%x XID %d on node %s\n",
-		 msg->cmd, msg->clientid, msg->xid, nodename);
+	DEBUGLOG("process_remote_command %s for clientid 0x%x XID %d on node %s\n",
+		 decode_cmd(msg->cmd), msg->clientid, msg->xid, nodename);
 
 	/* Check for GOAWAY and sulk */
 	if (msg->cmd == CLVMD_CMD_GOAWAY) {
@@ -1441,8 +1493,9 @@ static int process_local_command(struct clvm_header *msg, int msglen,
 	int replylen = 0;
 	int status;
 
-	DEBUGLOG("process_local_command: msg=%p, msglen =%d, client=%p\n", msg,
-		 msglen, client);
+	DEBUGLOG("process_local_command: %s msg=%p, msglen =%d, client=%p\n",
+		 decode_cmd(msg->cmd), msg, msglen, client);
+
 	if (replybuf == NULL)
 		return -1;
 

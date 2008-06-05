@@ -61,6 +61,95 @@ struct lv_info {
 	int lock_mode;
 };
 
+static const char *decode_locking_cmd(unsigned char cmdl)
+{
+	static char buf[128];
+	const char *type;
+	const char *scope;
+	const char *command;
+
+	switch (cmdl & LCK_TYPE_MASK) {
+	case LCK_NULL:   
+		type = "NULL";   
+		break;
+	case LCK_READ:   
+		type = "READ";   
+		break;
+	case LCK_PREAD:  
+		type = "PREAD";  
+		break;
+	case LCK_WRITE:  
+		type = "WRITE";  
+		break;
+	case LCK_EXCL:   
+		type = "EXCL";   
+		break;
+	case LCK_UNLOCK: 
+		type = "UNLOCK"; 
+		break;
+	default:
+		type = "unknown";
+		break;
+	}
+
+	switch (cmdl & LCK_SCOPE_MASK) {
+	case LCK_VG: 
+		scope = "VG"; 
+		break;
+	case LCK_LV: 
+		scope = "LV"; 
+		break;
+	default:
+		scope = "unknown";
+		break;
+	}
+
+	switch (cmdl) {
+	case LCK_LV_EXCLUSIVE:  
+		command = "LCK_LV_EXCLUSIVE";  
+		break;
+	case LCK_LV_SUSPEND:    
+		command = "LCK_LV_SUSPEND";    
+		break;
+	case LCK_LV_UNLOCK:        
+		command = "LCK_LV_UNLOCK";     
+		break;
+	case LCK_LV_RESUME:     
+		command = "LCK_LV_RESUME";     
+		break;
+	case LCK_LV_ACTIVATE:   
+		command = "LCK_LV_ACTIVATE";   
+		break;
+	case LCK_LV_DEACTIVATE: 
+		command = "LCK_LV_DEACTIVATE"; 
+		break;
+	default:
+		command = "unknown";
+		break;
+	}
+
+	sprintf(buf, "0x%x %s (%s|%s%s%s%s%s%s)", cmdl, command, type, scope,
+		cmdl & LCK_NONBLOCK   ? "|NONBLOCK" : "",
+		cmdl & LCK_HOLD       ? "|HOLD" : "",
+		cmdl & LCK_LOCAL      ? "|LOCAL" : "",
+		cmdl & LCK_CLUSTER_VG ? "|CLUSTER_VG" : "",
+		cmdl & LCK_CACHE      ? "|CACHE" : "");
+
+	return buf;
+}
+
+static const char *decode_flags(unsigned char flags)
+{
+	static char buf[128];
+
+	sprintf(buf, "0x%x (%s%s%s)", flags,
+		flags & LCK_PARTIAL_MODE	  ? "PARTIAL " : "",
+		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC " : "",
+		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR " : "");
+
+	return buf;
+}
+
 char *get_last_lvm_error()
 {
 	return last_error;
@@ -312,8 +401,8 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 {
 	int status = 0;
 
-	DEBUGLOG("do_lock_lv: resource '%s', cmd = 0x%x, flags = %x\n",
-		 resource, command, lock_flags);
+	DEBUGLOG("do_lock_lv: resource '%s', cmd = %s, flags = %s\n",
+		 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
 	pthread_mutex_lock(&lvm_lock);
 	if (!cmd->config_valid || config_files_changed(cmd)) {
@@ -391,8 +480,8 @@ int pre_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	   before suspending cluster-wide.
 	 */
 	if (command == LCK_LV_SUSPEND) {
-		DEBUGLOG("pre_lock_lv: resource '%s', cmd = 0x%x, flags = %d\n",
-			 resource, command, lock_flags);
+		DEBUGLOG("pre_lock_lv: resource '%s', cmd = %s, flags = %s\n",
+			 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
 		if (hold_lock(resource, LKM_PWMODE, LKF_NOQUEUE))
 			return errno;
@@ -411,8 +500,8 @@ int post_lock_lv(unsigned char command, unsigned char lock_flags,
 		int oldmode;
 
 		DEBUGLOG
-		    ("post_lock_lv: resource '%s', cmd = 0x%x, flags = %d\n",
-		     resource, command, lock_flags);
+		    ("post_lock_lv: resource '%s', cmd = %s, flags = %s\n",
+		     resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
 		/* If the lock state is PW then restore it to what it was */
 		oldmode = get_current_lock(resource);
@@ -505,6 +594,7 @@ static void drop_vg_locks()
  */
 void drop_metadata(const char *vgname)
 {
+	DEBUGLOG("Dropping metadata for VG %s\n", vgname);
 	pthread_mutex_lock(&lvm_lock);
 	lvmcache_drop_metadata(vgname);
 	pthread_mutex_unlock(&lvm_lock);

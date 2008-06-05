@@ -506,7 +506,8 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 		return_NULL;
 	}
 
-	log_debug("Using cached metadata for VG %s.", vginfo->vgname);
+	log_debug("Using cached %smetadata for VG %s.",
+		  vginfo->precommitted ? "pre-committed" : "", vginfo->vgname);
 
 	return vg;
 }
