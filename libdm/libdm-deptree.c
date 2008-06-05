@@ -1276,7 +1276,6 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
 	switch(seg->type) {
 	case SEG_ERROR:
 	case SEG_ZERO:
-		params[0] = '\0';
 	case SEG_LINEAR:
 		break;
 	case SEG_MIRRORED:
@@ -1434,6 +1433,7 @@ static int _emit_segment(struct dm_task *dmt, struct load_segment *seg,
 			return 0;
 		}
 
+		params[0] = '\0';
 		ret = _emit_segment_line(dmt, seg, seg_start, params, paramsize);
 		dm_free(params);
 

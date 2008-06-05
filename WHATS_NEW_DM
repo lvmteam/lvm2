@@ -1,5 +1,6 @@
 Version 1.02.26 - 
 =================================
+  Initialise params buffer to empty string in _emit_segment.
   Skip add_dev_node when ioctls disabled.
   Make dm_hash_iter safe against deletion.
   Accept a NULL pointer to dm_free silently.
