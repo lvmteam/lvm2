@@ -801,7 +801,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		if (lp->zero) {
 			log_error("Aborting. Failed to activate new LV to wipe "
 				  "the start of it.");
-			goto revert_new_lv;
+			goto deactivate_and_revert_new_lv;
 		}
 		log_error("Failed to activate new LV.");
 		return 0;
