@@ -9,6 +9,7 @@ Version 2.02.38 -
 
 Version 2.02.37 - 
 =================================
+  When activating, if precommitted metadata is still cached, assume it's live.
   When removing LV symlinks, skip any where the VG name is not determined.
   Drop metadata cache if update fails in vg_revert or vg_commit.
   Avoid spurious duplicate VG messages referring to VGs that are gone.

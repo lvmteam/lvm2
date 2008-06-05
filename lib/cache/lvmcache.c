@@ -479,8 +479,20 @@ struct volume_group *lvmcache_get_vg(const char *vgid, unsigned precommitted)
 	if (!_vginfo_is_valid(vginfo))
 		return NULL;
 
+	/*
+	 * Don't return cached data if either:
+	 * (i)  precommitted metadata is requested but we don't have it cached
+	 *      - caller should read it off disk;
+	 * (ii) live metadata is requested but we have precommitted metadata cached
+	 *      and no devices are suspended so caller may read it off disk.
+	 *
+	 * If live metadata is requested but we have precommitted metadata cached
+	 * and devices are suspended, we assume this precommitted metadata has
+	 * already been preloaded and committed so it's OK to return it as live.
+	 * Note that we do not clear the PRECOMMITTED flag.
+	 */
 	if ((precommitted && !vginfo->precommitted) ||
-	    (!precommitted && vginfo->precommitted))
+	    (!precommitted && vginfo->precommitted && !memlock()))
 		return NULL;
 
 	if (!(fid =  vginfo->fmt->ops->create_instance(vginfo->fmt,
