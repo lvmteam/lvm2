@@ -651,7 +651,8 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 	if (vginfo->creation_host)
 		dm_free(vginfo->creation_host);
 
-	if (*vginfo->vgid && _vgid_hash)
+	if (*vginfo->vgid && _vgid_hash &&
+	    vginfo_from_vgid(vginfo->vgid) == vginfo)
 		dm_hash_remove(_vgid_hash, vginfo->vgid);
 
 	list_del(&vginfo->list);
