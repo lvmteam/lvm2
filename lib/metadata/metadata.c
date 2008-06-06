@@ -1476,6 +1476,8 @@ static int _update_pv_list(struct list *all_pvs, struct volume_group *vg)
  * and call vg_read again).
  *
  * If precommitted is set, use precommitted metadata if present.
+ *
+ * Either of vgname or vgid may be NULL.
  */
 static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
@@ -1521,6 +1523,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				return_NULL;
 		}
 	}
+
+	/* Now determine the correct vgname if none was supplied */
+	if (!vgname && !(vgname = vgname_from_vgid(cmd->mem, vgid)))
+		return_NULL;
 
 	if (use_precommitted && !(fmt->features & FMT_PRECOMMIT))
 		use_precommitted = 0;
@@ -1752,7 +1758,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	/* Is corresponding vgname already cached? */
 	if ((vginfo = vginfo_from_vgid(vgid)) &&
 	    vginfo->vgname && !is_orphan_vg(vginfo->vgname)) {
-		if ((vg = _vg_read(cmd, vginfo->vgname, vgid,
+		if ((vg = _vg_read(cmd, NULL, vgid,
 				   &consistent, precommitted)) &&
 		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
 			if (!consistent) {
