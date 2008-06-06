@@ -1,5 +1,6 @@
 Version 2.02.38 - 
 =================================
+  Drop cached metadata for disappearing VG in vgmerge.
   In script-processing mode, stop if any command fails.
   Warn if command exits with non-zero status code without a prior log_error.
   Check lv_count in vg_validate.
