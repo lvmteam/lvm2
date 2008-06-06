@@ -120,9 +120,9 @@ struct dm_task *dm_task_create(int type)
 	dmt->type = type;
 	dmt->minor = -1;
 	dmt->major = -1;
-	dmt->uid = DEVICE_UID;
-	dmt->gid = DEVICE_GID;
-	dmt->mode = DEVICE_MODE;
+	dmt->uid = DM_DEVICE_UID;
+	dmt->gid = DM_DEVICE_GID;
+	dmt->mode = DM_DEVICE_MODE;
 	dmt->no_open_count = 0;
 	dmt->read_ahead = DM_READ_AHEAD_AUTO;
 	dmt->read_ahead_flags = 0;
