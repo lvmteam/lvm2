@@ -5,7 +5,7 @@ Version 1.02.26 -
   Make dm_hash_iter safe against deletion.
   Accept a NULL pointer to dm_free silently.
   Add tables_loaded, readonly and suspended columns to reports.
-  Add --prefixes to dmsetup.
+  Add --fieldprefixes to dmsetup.
   Add field name prefix option to reporting functions.
   Calculate string size within dm_pool_grow_object.
 
