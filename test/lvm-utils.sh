@@ -1,7 +1,7 @@
 # Put lvm-related utilities here.
 # This file is sourced from test-lib.sh.
 
-# Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007, 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -112,7 +112,7 @@ init_root_dir_()
 {
   test -n "$test_dir_rand_" \
     || error "Internal error: called init_root_dir_ before" \
-      " defining $test_dir_rand_"
+      "defining \$test_dir_rand_"
 
   # Define these two globals.
   G_root_=$test_dir_rand_/root
