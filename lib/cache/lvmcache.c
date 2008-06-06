@@ -243,6 +243,9 @@ struct lvmcache_vginfo *vginfo_from_vgname(const char *vgname, const char *vgid)
 {
 	struct lvmcache_vginfo *vginfo;
 
+	if (!vgname)
+		return vginfo_from_vgid(vgid);
+
 	if (!_vgname_hash)
 		return NULL;
 
