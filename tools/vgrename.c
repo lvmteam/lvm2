@@ -133,6 +133,8 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		}
 	}
 
+	drop_cached_metadata(vg_old);
+
 	/* store it on disks */
 	log_verbose("Writing out updated volume group");
 	if (!vg_write(vg_old) || !vg_commit(vg_old)) {
