@@ -1,14 +1,14 @@
 Version 2.02.38 - 
 =================================
-  Correct config file line numbers in messages when parsing comments.
   In script-processing mode, stop if any command fails.
   Warn if command exits with non-zero status code without a prior log_error.
-  Make clvmd-cman use a hash rather than an array for node updown info.
   Check lv_count in vg_validate.
   Add --prefixes to reporting tools for field name prefix output format.
 
-Version 2.02.37 - 
-=================================
+Version 2.02.37 - 6th June 2008
+===============================
+  Make clvmd-cman use a hash rather than an array for node updown info.
+  Correct config file line numbers in messages when parsing comments.
   Drop cached metadata when renaming a VG.
   Allow for vginfo changing during _vg_read.
   Decode numbers in clvmd debugging output.
