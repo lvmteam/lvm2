@@ -1757,7 +1757,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 		    !strncmp((char *)vg->id.uuid, vgid, ID_LEN)) {
 			if (!consistent) {
 				log_error("Volume group %s metadata is "
-					  "inconsistent", vginfo->vgname);
+					  "inconsistent", vg->name);
 				if (!partial_mode())
 					return NULL;
 			}

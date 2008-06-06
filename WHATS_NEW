@@ -9,6 +9,7 @@ Version 2.02.38 -
 
 Version 2.02.37 - 
 =================================
+  Allow for vginfo changing during _vg_read.
   Decode numbers in clvmd debugging output.
   Add missing deactivation after activation failure in lvcreate -Zy.
   When activating, if precommitted metadata is still cached, assume it's live.
