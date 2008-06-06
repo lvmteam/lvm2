@@ -61,6 +61,8 @@ struct lv_info {
 	int lock_mode;
 };
 
+#define LCK_MASK (LCK_TYPE_MASK | LCK_SCOPE_MASK)
+
 static const char *decode_locking_cmd(unsigned char cmdl)
 {
 	static char buf[128];
@@ -104,23 +106,20 @@ static const char *decode_locking_cmd(unsigned char cmdl)
 		break;
 	}
 
-	switch (cmdl) {
-	case LCK_LV_EXCLUSIVE:  
+	switch (cmdl & LCK_MASK) {
+	case LCK_LV_EXCLUSIVE & LCK_MASK:
 		command = "LCK_LV_EXCLUSIVE";  
 		break;
-	case LCK_LV_SUSPEND:    
+	case LCK_LV_SUSPEND & LCK_MASK:    
 		command = "LCK_LV_SUSPEND";    
 		break;
-	case LCK_LV_UNLOCK:        
-		command = "LCK_LV_UNLOCK";     
-		break;
-	case LCK_LV_RESUME:     
+	case LCK_LV_RESUME & LCK_MASK:     
 		command = "LCK_LV_RESUME";     
 		break;
-	case LCK_LV_ACTIVATE:   
+	case LCK_LV_ACTIVATE & LCK_MASK:   
 		command = "LCK_LV_ACTIVATE";   
 		break;
-	case LCK_LV_DEACTIVATE: 
+	case LCK_LV_DEACTIVATE & LCK_MASK: 
 		command = "LCK_LV_DEACTIVATE"; 
 		break;
 	default:
