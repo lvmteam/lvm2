@@ -363,6 +363,7 @@ xx(lvs,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--nameprefixes]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
    "\t[-o|--options [+]Field[,Field]]\n"
@@ -377,8 +378,8 @@ xx(lvs,
    "\t[--version]" "\n"
    "\t[LogicalVolume[Path] [LogicalVolume[Path]...]]\n",
 
-   aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
-   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, 
+   aligned_ARG, all_ARG, ignorelockingfailure_ARG, nameprefixes_ARG,
+   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, 
    segments_ARG, separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG,
    units_ARG)
 
@@ -570,8 +571,9 @@ xx(pvs,
    "\t[-a|--all]\n"
    "\t[-d|--debug]" "\n"
    "\t[-h|-?|--help] " "\n"
-   "\t[--noheadings]\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--nameprefixes]\n"
+   "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
    "\t[-o|--options [+]Field[,Field]]\n"
    "\t[-O|--sort [+|-]key1[,[+|-]key2[,...]]]\n"
@@ -585,8 +587,8 @@ xx(pvs,
    "\t[--version]\n"
    "\t[PhysicalVolume [PhysicalVolume...]]\n",
 
-   aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
-   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, 
+   aligned_ARG, all_ARG, ignorelockingfailure_ARG, nameprefixes_ARG,
+   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG,
    segments_ARG, separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG,
    units_ARG)
 
@@ -887,6 +889,7 @@ xx(vgs,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--nameprefixes]\n"
    "\t[--noheadings]\n"
    "\t[--nosuffix]\n"
    "\t[-o|--options [+]Field[,Field]]\n"
@@ -900,8 +903,8 @@ xx(vgs,
    "\t[--version]\n"
    "\t[VolumeGroupName [VolumeGroupName...]]\n",
 
-   aligned_ARG, all_ARG, ignorelockingfailure_ARG, noheadings_ARG,
-   nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, 
+   aligned_ARG, all_ARG, ignorelockingfailure_ARG, nameprefixes_ARG,
+   noheadings_ARG, nolocking_ARG, nosuffix_ARG, options_ARG, partial_ARG, 
    separator_ARG, sort_ARG, trustcache_ARG, unbuffered_ARG, units_ARG)
 
 xx(vgscan,

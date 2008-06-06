@@ -1,3 +1,10 @@
+Version 2.02.38 - 
+=================================
+  In script-processing mode, stop if any command fails.
+  Warn if command exits with non-zero status code without a prior log_error.
+  Check lv_count in vg_validate.
+  Add --nameprefixes to reporting tools for field name prefix output format.
+
 Version 2.02.37 - 6th June 2008
 ===============================
   Make clvmd-cman use a hash rather than an array for node updown info.
