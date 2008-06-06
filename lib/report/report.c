@@ -1091,14 +1091,8 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 	if (headings)
 		report_flags |= DM_REPORT_OUTPUT_HEADINGS;
 
-	if (field_prefixes)
-		report_flags |= DM_REPORT_OUTPUT_FIELD_NAME_PREFIX;
-
 	rh = dm_report_init(report_type, _report_types, _fields, format,
 			    separator, report_flags, keys, cmd);
-
-	if (field_prefixes)
-		dm_report_set_output_field_name_prefix(rh, "lvm2_");
 
 	return rh;
 }

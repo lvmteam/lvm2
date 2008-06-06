@@ -875,8 +875,6 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	int ret = 0;
 	int locking_type;
 
-	init_error_message_produced(0);
-
 	/* each command should start out with sigint flag cleared */
 	sigint_clear();
 
@@ -1098,14 +1096,7 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 			continue;
 		if (!strcmp(argv[0], "quit") || !strcmp(argv[0], "exit"))
 			break;
-		ret = lvm_run_command(cmd, argc, argv);
-		if (ret != ECMD_PROCESSED) {
-			if (!error_message_produced()) {
-				log_debug("Internal error: Failed command did not use log_error");
-				log_error("Command failed with status code %d.", ret);
-			}
-			break;
-		}
+		lvm_run_command(cmd, argc, argv);
 	}
 
 	if (fclose(script))
@@ -1226,11 +1217,6 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 		ret = _run_script(cmd, argc, argv);
 	if (ret == ENO_SUCH_CMD)
 		log_error("No such command.  Try 'help'.");
-
-	if ((ret != ECMD_PROCESSED) && !error_message_produced()) {
-		log_debug("Internal error: Failed command did not use log_error");
-		log_error("Command failed with status code %d.", ret);
-	}
 
       out:
 	lvm_fin(cmd);
