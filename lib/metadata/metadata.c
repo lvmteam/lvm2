@@ -1213,10 +1213,11 @@ int vg_validate(struct volume_group *vg)
 
 	if ((lv_count = (uint32_t) list_size(&vg->lvs)) !=
 	    vg->lv_count + 2 * vg->snapshot_count) {
-		log_debug("Internal error: #internal LVs (%u) != #LVs (%"
+		log_error("Internal error: #internal LVs (%u) != #LVs (%"
 			  PRIu32 ") + 2 * #snapshots (%" PRIu32 ") in VG %s",
 			  list_size(&vg->lvs), vg->lv_count,
 			  vg->snapshot_count, vg->name);
+		r = 0;
 	}
 
 	list_iterate_items(lvl, &vg->lvs) {

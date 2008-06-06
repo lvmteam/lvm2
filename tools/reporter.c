@@ -272,7 +272,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		buffered = 0;
 	if (arg_count(cmd, noheadings_ARG))
 		headings = 0;
-	if (arg_count(cmd, prefixes_ARG)) {
+	if (arg_count(cmd, nameprefixes_ARG)) {
 		aligned = 0;
 		field_prefixes = 1;
 	}

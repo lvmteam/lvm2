@@ -51,6 +51,7 @@ static int _already_logging = 0;
 static int _mirror_in_sync = 0;
 static int _dmeventd_monitor = DEFAULT_DMEVENTD_MONITOR;
 static int _ignore_suspended_devices = 0;
+static int _error_message_produced = 0;
 
 static lvm2_log_fn_t _lvm2_log_fn = NULL;
 
@@ -238,6 +239,16 @@ void init_indent(int indent)
 	_indent = indent;
 }
 
+void init_error_message_produced(int error_message_produced)
+{
+	_error_message_produced = error_message_produced;
+}
+
+int error_message_produced(void)
+{
+	return _error_message_produced;
+}
+
 int test_mode()
 {
 	return _test;
@@ -321,6 +332,9 @@ void print_log(int level, const char *file, int line, const char *format, ...)
 
 	if (_log_suppress == 2)
 		return;
+
+	if (level <= _LOG_ERR)
+		_error_message_produced = 1;
 
 	trformat = _(format);
 
