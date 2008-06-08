@@ -1,5 +1,6 @@
 Version 2.02.38 - 
 =================================
+  Tweak detection of invalid fid after changes to PVs in VG in _vg_read.
   Revert assuming precommitted metadata is live when activating (unnecessary).
   Drop cached metadata for disappearing VG in vgmerge.
   In script-processing mode, stop if any command fails.
