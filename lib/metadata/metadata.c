@@ -1531,15 +1531,15 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	if (use_precommitted && !(fmt->features & FMT_PRECOMMIT))
 		use_precommitted = 0;
 
-	/* Store pvids for later so we can check if any are missing */
-	if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid)))
-		return_NULL;
-
 	/* create format instance with appropriate metadata area */
 	if (!(fid = fmt->ops->create_instance(fmt, vgname, vgid, NULL))) {
 		log_error("Failed to create format instance");
 		return NULL;
 	}
+
+	/* Store pvids for later so we can check if any are missing */
+	if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid)))
+		return_NULL;
 
 	/* Ensure contents of all metadata areas match - else do recovery */
 	list_iterate_items(mda, &fid->metadata_areas) {
