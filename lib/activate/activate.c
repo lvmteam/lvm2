@@ -993,11 +993,7 @@ int lv_activation_filter(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		goto activate;
 
-	/*
-	 * If we're activating and precommitted metadata is still cached,
-	 * we assume it matches the new live metadata.
-	 */
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 1)))
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
 	if (!_passes_activation_filter(cmd, lv)) {
@@ -1022,11 +1018,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	if (!activation())
 		return 1;
 
-	/*
-	 * If we're activating and precommitted metadata is still cached,
-	 * we assume it matches the new live metadata.
-	 */
-	if (!(lv = lv_from_lvid(cmd, lvid_s, 1)))
+	if (!(lv = lv_from_lvid(cmd, lvid_s, 0)))
 		return 0;
 
 	if (filter && !_passes_activation_filter(cmd, lv)) {
