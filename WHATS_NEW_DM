@@ -1,7 +1,7 @@
 Version 1.02.27 -
 ===============================
   Remove --enable-jobs from configure. (Set at runtime instead.)
-  Bring configure.in into line with the lvm2 version.
+  Bring configure.in and list.h into line with the lvm2 versions.
 
 Version 1.02.26 - 6th June 2008
 ===============================
