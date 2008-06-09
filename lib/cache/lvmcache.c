@@ -631,11 +631,14 @@ struct device *device_from_pvid(struct cmd_context *cmd, struct id *pvid)
 
 static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 {
+	struct lvmcache_vginfo *primary_vginfo, *vginfo2;
 	int r = 1;
 
 	_free_cached_vgmetadata(vginfo);
 
-	if (vginfo_from_vgname(vginfo->vgname, NULL) == vginfo) {
+	vginfo2 = primary_vginfo = vginfo_from_vgname(vginfo->vgname, NULL);
+
+	if (vginfo == primary_vginfo) {
 		dm_hash_remove(_vgname_hash, vginfo->vgname);
 		if (vginfo->next && !dm_hash_insert(_vgname_hash, vginfo->vgname,
 						    vginfo->next)) {
@@ -643,7 +646,12 @@ static int _free_vginfo(struct lvmcache_vginfo *vginfo)
 				  vginfo->vgname);
 			r = 0;
 		}
-	}
+	} else do
+		if (vginfo2->next == vginfo) {
+			vginfo2->next = vginfo->next;
+			break;
+		}
+ 	while ((vginfo2 = primary_vginfo->next));
 
 	if (vginfo->vgname)
 		dm_free(vginfo->vgname);
