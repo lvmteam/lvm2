@@ -1,5 +1,7 @@
 Version 2.02.38 - 
 =================================
+  Fix wrong free_count on imported vg from pool device
+  Fix segfault when calling pvcreate on the pool device
   Fix segfault after _free_vginfo by remembering to remove vginfo from list.
   Tweak detection of invalid fid after changes to PVs in VG in _vg_read.
   Revert assuming precommitted metadata is live when activating (unnecessary).
