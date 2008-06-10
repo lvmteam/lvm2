@@ -225,7 +225,7 @@ static int _pool_pv_read(const struct format_type *fmt, const char *pv_name,
 	if (!(pl = read_pool_disk(fmt, dev, mem, NULL)))
 		goto_out;
 
-	if (!import_pool_pv(fmt, fmt->cmd->mem, NULL, pv, pl))
+	if (!import_pool_pv(fmt, fmt->cmd->mem, fmt->orphan_vg_name, pv, pl))
 		goto_out;
 
 	pv->fmt = fmt;
