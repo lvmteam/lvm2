@@ -145,7 +145,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd,
 			  void *handle,
 			  process_single_lv_fn_t process_single)
 {
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 	unsigned process_all = 0;
 	unsigned process_lv = 0;
@@ -223,7 +223,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 					   void *handle))
 {
 	int opt = 0;
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 	int consistent;
 
@@ -421,7 +421,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 {
 	struct pv_segment *pvseg;
 	const char *vg_name = NULL;
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 	int ret;
 
 	if (!vg && !is_orphan(pv)) {
@@ -456,7 +456,7 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 						      void *handle))
 {
 	struct lv_segment *seg;
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 	int ret;
 
 	list_iterate_items(seg, &lv->segments) {
@@ -464,7 +464,7 @@ int process_each_segment_in_lv(struct cmd_context *cmd,
 		if (ret > ret_max)
 			ret_max = ret;
 		if (sigint_caught())
-			return ret_max;
+			break;
 	}
 
 	return ret_max;
@@ -527,7 +527,7 @@ int process_each_vg(struct cmd_context *cmd, int argc, char **argv,
 					   int consistent, void *handle))
 {
 	int opt = 0;
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 
 	struct str_list *sl;
 	struct list *vgnames, *vgids;
@@ -613,7 +613,7 @@ int process_each_pv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 			  const struct list *tags, void *handle,
 			  process_single_pv_fn_t process_single)
 {
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 	struct pv_list *pvl;
 
@@ -642,7 +642,7 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 	struct dev_iter *iter;
 	struct device *dev;
 
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 
 	if (!scan_vgs_for_pvs(cmd)) {
@@ -684,7 +684,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					   void *handle))
 {
 	int opt = 0;
-	int ret_max = 0;
+	int ret_max = ECMD_PROCESSED;
 	int ret = 0;
 
 	struct pv_list *pvl;
