@@ -1,5 +1,6 @@
 Version 1.02.27 -
 ===============================
+  Fix inverted no_flush debug message.
   Remove --enable-jobs from configure. (Set at runtime instead.)
   Bring configure.in and list.h into line with the lvm2 versions.
 
