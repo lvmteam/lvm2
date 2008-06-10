@@ -937,7 +937,7 @@ static int _suspend_node(const char *name, uint32_t major, uint32_t minor,
 	log_verbose("Suspending %s (%" PRIu32 ":%" PRIu32 ")%s%s",
 		    name, major, minor,
 		    skip_lockfs ? "" : " with filesystem sync",
-		    no_flush ? "" : " without device flush");
+		    no_flush ? " without device flush" : "");
 
 	if (!(dmt = dm_task_create(DM_DEVICE_SUSPEND))) {
 		log_error("Suspend dm_task creation failed for %s", name);
