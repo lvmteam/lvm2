@@ -514,9 +514,6 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 		ret_max = ret;
 	}
 
-	if (sigint_caught())
-		return ret_max;
-
 	unlock_vg(cmd, vg_name);
 
 	return ret_max;
