@@ -113,5 +113,5 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 	}
 ************/
 
-	return 0;
+	return ECMD_PROCESSED;
 }
