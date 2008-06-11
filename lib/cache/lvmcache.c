@@ -1015,6 +1015,15 @@ int lvmcache_update_vgname_and_id(struct lvmcache_info *info,
 		vgid = vgname;
 	}
 
+	/* If PV without mdas is already in a real VG, don't make it orphan */
+	if (is_orphan_vg(vgname) && info->vginfo && !list_size(&info->mdas) &&
+	    !is_orphan_vg(info->vginfo->vgname) && memlock())
+		return 1;
+
+	/* If moving PV from orphan to real VG, always mark it valid */
+	if (!is_orphan_vg(vgname))
+		info->status &= ~CACHE_INVALID;
+
 	if (!_lvmcache_update_vgname(info, vgname, vgid, vgstatus,
 				     creation_host, info->fmt) ||
 	    !_lvmcache_update_vgid(info, info->vginfo, vgid) ||
