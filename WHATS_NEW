@@ -1,5 +1,6 @@
 Version 2.02.38 - 
 =================================
+  Fix tracking of validity of PVs with no mdas in lvmcache.
   Fix return values for reporting commands when run with no PVs, LVs, or VGs.
   Add omitted unlock_vg() call when sigint_caught() during vg processing.
   Fix wrong free_count on imported vg from pool device
