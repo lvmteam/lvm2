@@ -66,10 +66,14 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd,
 		if ((lv->status & SNAPSHOT) || lv_is_cow(lv))
 			continue;
 
-		/* Can't deactive a pvmove or log LV */
+		/* Only request activation of mirror LV */
+		if ((lv->status & MIRROR_IMAGE) || (lv->status & MIRROR_LOG))
+			continue;
+
+		/* Can't deactivate a pvmove LV */
 		/* FIXME There needs to be a controlled way of doing this */
 		if (((activate == CHANGE_AN) || (activate == CHANGE_ALN)) &&
-		    ((lv->status & PVMOVE) || (lv->status & MIRROR_LOG)))
+		    ((lv->status & PVMOVE) ))
 			continue;
 
 		if (activate == CHANGE_AN) {
