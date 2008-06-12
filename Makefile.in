@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
-# Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -36,8 +36,8 @@ ifeq ($(MAKECMDGOALS),distclean)
 	     lib/locking \
 	     lib/mirror \
 	     lib/snapshot \
-	     po \
-	     test/mm test/device test/format1 test/regex test/filters
+	     test \
+	     po
   DISTCLEAN_TARGETS += lib/misc/configure.h
 endif
 
