@@ -217,6 +217,7 @@ xx(lvextend,
    "\t[-A|--autobackup y|n]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-d|--debug]\n"
+   "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents [+]LogicalExtentsNumber[%{VG|PVS|FREE}] |\n"
@@ -230,9 +231,9 @@ xx(lvextend,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   alloc_ARG, autobackup_ARG, extents_ARG, mirrors_ARG, nofsck_ARG,
-   resizefs_ARG, size_ARG, stripes_ARG, stripesize_ARG, test_ARG,
-   type_ARG)
+   alloc_ARG, autobackup_ARG, extents_ARG, force_ARG, mirrors_ARG,
+   nofsck_ARG, resizefs_ARG, size_ARG, stripes_ARG, stripesize_ARG,
+   test_ARG, type_ARG)
 
 xx(lvmchange,
    "With the device mapper, this is obsolete and does nothing.",
@@ -339,6 +340,7 @@ xx(lvresize,
    "\t[-A|--autobackup y|n]\n"
    "\t[--alloc AllocationPolicy]\n"
    "\t[-d|--debug]\n"
+   "\t[-f|--force]\n"
    "\t[-h|--help]\n"
    "\t[-i|--stripes Stripes [-I|--stripesize StripeSize]]\n"
    "\t{-l|--extents [+|-]LogicalExtentsNumber[%{VG|LV|PVS|FREE}] |\n"
@@ -351,8 +353,9 @@ xx(lvresize,
    "\t[--version]" "\n"
    "\tLogicalVolume[Path] [ PhysicalVolumePath... ]\n",
 
-   alloc_ARG, autobackup_ARG, extents_ARG, nofsck_ARG, resizefs_ARG,
-   size_ARG, stripes_ARG, stripesize_ARG, test_ARG, type_ARG)
+   alloc_ARG, autobackup_ARG, extents_ARG, force_ARG, nofsck_ARG,
+   resizefs_ARG, size_ARG, stripes_ARG, stripesize_ARG, test_ARG,
+   type_ARG)
 
 xx(lvs,
    "Display information about logical volumes",
