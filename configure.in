@@ -1,8 +1,6 @@
-##
+###############################################################################
 ## Copyright (C) 2000-2004 Sistina Software, Inc. All rights reserved.
-## Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
-##
-## This file is part of LVM2.
+## Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
 ##
 ## This copyrighted material is made available to anyone wishing to use,
 ## modify, copy, or redistribute it subject to the terms and conditions
@@ -18,9 +16,7 @@ AC_PREREQ(2.57)
 dnl -- Process this file with autoconf to produce a configure script.
 AC_INIT
 AC_CONFIG_SRCDIR([lib/device/dev-cache.h])
-
-################################################################################
-AC_CONFIG_HEADERS(lib/misc/configure.h)
+AC_CONFIG_HEADERS([lib/misc/configure.h])
 
 ################################################################################
 dnl -- Setup the directory where autoconf has auxilary files
@@ -32,41 +28,45 @@ AC_CANONICAL_TARGET([])
 
 case "$host_os" in
 	linux*)
-		CFLAGS="$CFLAGS"
 		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS -Wl,--version-script,.export.sym"
 		CLDWHOLEARCHIVE="-Wl,-whole-archive"
 		CLDNOWHOLEARCHIVE="-Wl,-no-whole-archive"
 		LDDEPS="$LDDEPS .export.sym"
 		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
-		LIB_SUFFIX="so"
+		LIB_SUFFIX=so
 		DEVMAPPER=yes
 		ODIRECT=yes
+		DM_IOCTLS=yes
 		SELINUX=yes
 		REALTIME=yes
 		CLUSTER=internal
-		FSADM=no ;;
+		FSADM=no
+		;;
 	darwin*)
 		CFLAGS="$CFLAGS -no-cpp-precomp -fno-common"
 		COPTIMISE_FLAG="-O2"
 		CLDFLAGS="$CLDFLAGS"
 		CLDWHOLEARCHIVE="-all_load"
 		CLDNOWHOLEARCHIVE=
-		LDDEPS="$LDDEPS"
-		LDFLAGS="$LDFLAGS"
-		LIB_SUFFIX="dylib"
+		LIB_SUFFIX=dylib
 		DEVMAPPER=yes
 		ODIRECT=no
+		DM_IOCTLS=no
 		SELINUX=no
 		REALTIME=no
 		CLUSTER=none
-		FSADM=no ;;
+		FSADM=no
+		;;
 esac
 
 ################################################################################
 dnl -- Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
+
+dnl probably no longer needed in 2008, but...
+AC_PROG_GCC_TRADITIONAL
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
@@ -75,14 +75,15 @@ AC_PATH_PROG(CFLOW_CMD, cflow)
 AC_PATH_PROG(CSCOPE_CMD, cscope)
 
 ################################################################################
-dnl -- Checks for header files.
+dnl -- Check for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 
-AC_CHECK_HEADERS(fcntl.h limits.h locale.h stddef.h syslog.h sys/file.h sys/ioctl.h sys/param.h sys/time.h,,AC_MSG_ERROR(bailing out))
-AC_CHECK_HEADERS(assert.h ctype.h libgen.h signal.h stdio.h sys/mman.h sys/resource.h sys/stat.h sys/types.h sys/utsname.h sys/wait.h time.h,,AC_MSG_ERROR(bailing out))
+AC_CHECK_HEADERS([locale.h stddef.h syslog.h sys/file.h sys/time.h assert.h \
+  libgen.h signal.h sys/mman.h sys/resource.h sys/utsname.h sys/wait.h time.h], ,
+  [AC_MSG_ERROR(bailing out)])
 
 case "$host_os" in
 	linux*)
@@ -91,12 +92,19 @@ case "$host_os" in
 		AC_CHECK_HEADERS(machine/endian.h sys/disk.h,,AC_MSG_ERROR(bailing out)) ;;
 esac
 
+AC_CHECK_HEADERS([ctype.h dirent.h errno.h fcntl.h getopt.h inttypes.h limits.h \
+  stdarg.h stdio.h stdlib.h string.h sys/ioctl.h sys/param.h sys/stat.h \
+  sys/types.h unistd.h], , [AC_MSG_ERROR(bailing out)])
+AC_CHECK_HEADERS(termios.h sys/statvfs.h)
+
 ################################################################################
-dnl -- Checks for typedefs, structures, and compiler characteristics.
+dnl -- Check for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
+AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
+AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_TYPE_MODE_T
 AC_CHECK_MEMBERS([struct stat.st_rdev])
@@ -104,7 +112,9 @@ AC_STRUCT_TM
 
 ################################################################################
 dnl -- Check for functions
-AC_CHECK_FUNCS(gethostname getpagesize memset munmap setlocale strcasecmp strchr strdup strncasecmp strerror strrchr strstr strtol strtoul,,AC_MSG_ERROR(bailing out))
+AC_CHECK_FUNCS([gethostname getpagesize memset mkdir rmdir munmap setlocale \
+  strcasecmp strchr strdup strncasecmp strerror strrchr strstr strtol strtoul \
+  uname], , [AC_MSG_ERROR(bailing out)])
 AC_FUNC_ALLOCA
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FORK
@@ -114,14 +124,11 @@ AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_STAT
 AC_FUNC_STRTOD
+AC_FUNC_VPRINTF
 
 ################################################################################
 dnl -- Prefix is /usr by default, the exec_prefix default is setup later
 AC_PREFIX_DEFAULT(/usr)
-
-################################################################################
-dnl -- Parallel make jobs?
-AC_ARG_ENABLE(jobs, [  --enable-jobs=NUM       Number of jobs to run simultaneously], JOBS=-j$enableval, JOBS=-j2)
 
 ################################################################################
 dnl -- Setup the ownership of the files
@@ -129,7 +136,7 @@ AC_MSG_CHECKING(file owner)
 OWNER="root"
 
 AC_ARG_WITH(user,
-  [  --with-user=USER        Set the owner of installed files ],
+  [  --with-user=USER        Set the owner of installed files [[USER=root]] ],
   [ OWNER="$withval" ])
 AC_MSG_RESULT($OWNER)
 
@@ -142,7 +149,7 @@ dnl -- Setup the group ownership of the files
 AC_MSG_CHECKING(group owner)
 GROUP="root"
 AC_ARG_WITH(group,
-  [  --with-group=GROUP      Set the group owner of installed files ],
+  [  --with-group=GROUP      Set the group owner of installed files [[GROUP=root]] ],
   [ GROUP="$withval" ])
 AC_MSG_RESULT($GROUP)
 
@@ -261,13 +268,6 @@ if test x$MIRRORS = xinternal; then
 fi
 
 ################################################################################
-dnl -- Enables staticly-linked tools
-AC_MSG_CHECKING(whether to use static linking)
-AC_ARG_ENABLE(static_link, [  --enable-static_link    Use this to link the tools to their libraries
-                          statically.  Default is dynamic linking],  STATIC_LINK=$enableval, STATIC_LINK=no)
-AC_MSG_RESULT($STATIC_LINK)
-
-################################################################################
 dnl -- Enable readline
 AC_MSG_CHECKING(whether to enable readline)
 AC_ARG_ENABLE(readline, [  --enable-readline       Enable readline support],
@@ -277,13 +277,6 @@ AC_MSG_RESULT($READLINE)
 if test x$READLINE = xyes; then
 	AC_DEFINE([READLINE_SUPPORT], 1, [Define to 1 to include the LVM readline shell.])
 fi
-
-################################################################################
-dnl -- Disable selinux
-AC_MSG_CHECKING(whether to enable selinux support)
-AC_ARG_ENABLE(selinux, [  --disable-selinux       Disable selinux support],
-SELINUX=$enableval)
-AC_MSG_RESULT($SELINUX)
 
 ################################################################################
 dnl -- Disable realtime clock support
@@ -314,7 +307,7 @@ fi
 dnl -- Enable debugging
 AC_MSG_CHECKING(whether to enable debugging)
 AC_ARG_ENABLE(debug,    [  --enable-debug          Enable debugging],
-DEBUG=$enableval, DEBUG=no)
+  DEBUG=$enableval, DEBUG=no)
 AC_MSG_RESULT($DEBUG)
 
 dnl -- Normally turn off optimisation for debug builds
@@ -328,7 +321,7 @@ fi
 dnl -- Override optimisation
 AC_MSG_CHECKING(for C optimisation flag)
 AC_ARG_WITH(optimisation,
-  [  --with-optimisation=OPT C optimisation flag [OPT=-O2] ],
+  [  --with-optimisation=OPT C optimisation flag [[OPT=-O2]] ],
   [ COPTIMISE_FLAG="$withval" ])
 AC_MSG_RESULT($COPTIMISE_FLAG)
 
@@ -386,17 +379,10 @@ if test x$DMEVENTD = xyes; then
 	AC_DEFINE([DMEVENTD], 1, [Define to 1 to enable the device-mapper event daemon.])
 fi
 ################################################################################
-dnl -- Mess with default exec_prefix
+dnl -- Clear default exec_prefix - install into /sbin rather than /usr/sbin
 if [[ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ]];
  then  exec_prefix="";
 fi;
-
-################################################################################
-dnl -- Checks for library functions.
-AC_PROG_GCC_TRADITIONAL
-AC_TYPE_SIGNAL
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(mkdir rmdir uname,,AC_MSG_ERROR(bailing out))
 
 ################################################################################
 dnl -- Check for termcap (Shamelessly copied from parted 1.4.17)
@@ -437,11 +423,29 @@ Features cannot be 'shared' when building statically
 fi
 
 ################################################################################
+dnl -- Enables statically-linked tools
+AC_MSG_CHECKING(whether to use static linking)
+AC_ARG_ENABLE(static_link,
+  [  --enable-static_link    Use this to link the tools to their libraries
+                          statically.  Default is dynamic linking],
+  STATIC_LINK=$enableval, STATIC_LINK=no)
+AC_MSG_RESULT($STATIC_LINK)
+
+################################################################################
+dnl -- Disable selinux
+AC_MSG_CHECKING(whether to enable selinux support)
+AC_ARG_ENABLE(selinux, [  --disable-selinux       Disable selinux support],
+  SELINUX=$enableval)
+AC_MSG_RESULT($SELINUX)
+
+################################################################################
 dnl -- Check for selinux
 if test x$SELINUX = xyes; then
 	AC_CHECK_LIB(sepol, sepol_check_context, HAVE_SEPOL=yes, HAVE_SEPOL=no)
 
 	if test x$HAVE_SEPOL = xyes; then
+		AC_DEFINE([HAVE_SEPOL], 1,
+		  [Define to 1 if sepol_check_context is available.])
 		LIBS="-lsepol $LIBS"
 	fi
 
@@ -454,7 +458,7 @@ if test x$SELINUX = xyes; then
 		AC_MSG_WARN(Disabling selinux)
 	fi
 
-	# With --enable-static_link and selinux enabled, linking lvm.static
+	# With --enable-static_link and selinux enabled, linking
 	# fails on at least Debian unstable due to unsatisfied references
 	# to pthread_mutex_lock and _unlock.  See if we need -lpthread.
 	if test "$STATIC_LINK-$HAVE_SELINUX" = yes-yes; then
@@ -482,7 +486,7 @@ fi
 
 ################################################################################
 dnl -- Check for getopt
-AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 to if getopt_long is available.]))
+AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 if getopt_long is available.]))
 
 ################################################################################
 dnl -- Check for readline (Shamelessly copied from parted 1.4.17)
@@ -517,25 +521,25 @@ if test x$INTL = xyes; then
 	fi;
 
 	AC_ARG_WITH(localedir,
-  		    [  --with-localedir=DIR    Translation files in DIR [PREFIX/share/locale]],
-  		    [ LOCALEDIR="$withval" ],
-  		    [ LOCALEDIR='${prefix}/share/locale' ])
+		    [  --with-localedir=DIR    Translation files in DIR [[PREFIX/share/locale]] ],
+		    [ LOCALEDIR="$withval" ],
+		    [ LOCALEDIR='${prefix}/share/locale' ])
 fi
 
 ################################################################################
 AC_ARG_WITH(confdir,
 	    [  --with-confdir=DIR      Configuration files in DIR [/etc]],
-  	    [ CONFDIR="$withval" ],
- 	    [ CONFDIR='/etc' ])
+	    [ CONFDIR="$withval" ],
+	    [ CONFDIR='/etc' ])
 
 AC_ARG_WITH(staticdir,
 	    [  --with-staticdir=DIR    Static binary in DIR [EXEC_PREFIX/sbin]],
-  	    [ STATICDIR="$withval" ],
- 	    [ STATICDIR='${exec_prefix}/sbin' ])
+	    [ STATICDIR="$withval" ],
+	    [ STATICDIR='${exec_prefix}/sbin' ])
 
 AC_ARG_WITH(dmdir,
 	    [  --with-dmdir=DIR        Build against device-mapper source tree in DIR],
-  	    [ DMDIR="$withval" CPPFLAGS="$CPPFLAGS -I$DMDIR/include"],
+	    [ DMDIR="$withval" CPPFLAGS="$CPPFLAGS -I$DMDIR/include"],
 	    [ DMDIR= ])
 
 # Convert a relative dir name to absolute.
@@ -585,51 +589,56 @@ if test x$MODPROBE_CMD != x; then
 fi
 
 ################################################################################
-if test "-f VERSION"; then
-  LVM_VERSION="\"`cat VERSION`\""
-else
-  LVM_VERSION="Unknown"
-fi
+LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
 
 ################################################################################
-AC_SUBST(JOBS)
-AC_SUBST(STATIC_LINK)
-AC_SUBST(LVM1)
-AC_SUBST(POOL)
-AC_SUBST(SNAPSHOTS)
-AC_SUBST(MIRRORS)
-AC_SUBST(OWNER)
-AC_SUBST(GROUP)
+AC_SUBST(BUILD_DMEVENTD)
 AC_SUBST(CFLAGS)
-AC_SUBST(COPTIMISE_FLAG)
+AC_SUBST(CFLOW_CMD)
 AC_SUBST(CLDFLAGS)
-AC_SUBST(CLDWHOLEARCHIVE)
 AC_SUBST(CLDNOWHOLEARCHIVE)
-AC_SUBST(LDDEPS)
-AC_SUBST(LDFLAGS)
-AC_SUBST(LIB_SUFFIX)
-AC_SUBST(LIBS)
-AC_SUBST(LVM_VERSION)
-AC_SUBST(LVM1_FALLBACK)
+AC_SUBST(CLDWHOLEARCHIVE)
+AC_SUBST(CLUSTER)
+AC_SUBST(CLVMD)
+AC_SUBST(CMDLIB)
+AC_SUBST(COPTIMISE_FLAG)
+AC_SUBST(CSCOPE_CMD)
 AC_SUBST(DEBUG)
 AC_SUBST(DEVMAPPER)
-AC_SUBST(HAVE_LIBDL)
-AC_SUBST(HAVE_SELINUX)
-AC_SUBST(HAVE_REALTIME)
-AC_SUBST(CMDLIB)
-AC_SUBST(MSGFMT)
-AC_SUBST(LOCALEDIR)
-AC_SUBST(CONFDIR)
-AC_SUBST(STATICDIR)
 AC_SUBST(DMDIR)
-AC_SUBST(INTL_PACKAGE)
-AC_SUBST(INTL)
-AC_SUBST(CLVMD)
-AC_SUBST(CLUSTER)
-AC_SUBST(FSADM)
+# FIXME: rename to LVM_USE_DMEVENTD
 AC_SUBST(DMEVENTD)
-AC_SUBST(CFLOW_CMD)
-AC_SUBST(CSCOPE_CMD)
+AC_SUBST(DM_COMPAT)
+AC_SUBST(DM_DEVICE_GID)
+AC_SUBST(DM_DEVICE_MODE)
+AC_SUBST(DM_DEVICE_UID)
+AC_SUBST(DM_IOCTLS)
+AC_SUBST(DM_LIB_VERSION)
+AC_SUBST(FSADM)
+AC_SUBST(GROUP)
+AC_SUBST(HAVE_LIBDL)
+AC_SUBST(HAVE_REALTIME)
+AC_SUBST(HAVE_SELINUX)
+AC_SUBST(INTL)
+AC_SUBST(INTL_PACKAGE)
+AC_SUBST(JOBS)
+AC_SUBST(LDDEPS)
+AC_SUBST(LIBS)
+AC_SUBST(LIB_SUFFIX)
+AC_SUBST(LOCALEDIR)
+AC_SUBST(LVM1)
+AC_SUBST(LVM1_FALLBACK)
+# FIXME: rename to LVM_CONF_DIR
+AC_SUBST(CONFDIR)
+AC_SUBST(LVM_VERSION)
+AC_SUBST(MIRRORS)
+AC_SUBST(MSGFMT)
+AC_SUBST(OWNER)
+AC_SUBST(PKGCONFIG)
+AC_SUBST(POOL)
+AC_SUBST(SNAPSHOTS)
+AC_SUBST(STATICDIR)
+AC_SUBST(STATIC_LINK)
 AC_SUBST([LIB_PTHREAD])
 
 ################################################################################
@@ -638,22 +647,22 @@ dnl -- keep utility scripts running properly
 AC_CONFIG_FILES([
 Makefile
 make.tmpl
+include/Makefile
+lib/Makefile
+man/Makefile
+po/Makefile
+dmeventd/Makefile
 daemons/Makefile
 daemons/clvmd/Makefile
-dmeventd/Makefile
 dmeventd/mirror/Makefile
 dmeventd/snapshot/Makefile
 doc/Makefile
-include/Makefile
-lib/Makefile
 lib/format1/Makefile
 lib/format_pool/Makefile
 lib/locking/Makefile
 lib/mirror/Makefile
 lib/snapshot/Makefile
 test/Makefile
-man/Makefile
-po/Makefile
 scripts/Makefile
 tools/Makefile
 tools/version.h
