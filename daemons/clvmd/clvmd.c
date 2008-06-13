@@ -182,8 +182,10 @@ void debuglog(const char *fmt, ...)
 		va_end(ap);
 	}
 	if (debug == DEBUG_SYSLOG) {
-		if (!syslog_init)
+		if (!syslog_init) {
 			openlog("clvmd", LOG_PID, LOG_DAEMON);
+			syslog_init = 1;
+		}
 
 		va_start(ap,fmt);
 		vsyslog(LOG_DEBUG, fmt, ap);
