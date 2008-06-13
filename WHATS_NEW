@@ -1,10 +1,11 @@
 Version 2.02.39 -
 ================================
+  Fix add_mirror_images not to dereference uninitialized log_lv upon failure.
   Don't call openlog for every debug line output by clvmd.
   Add --force to lvextend and lvresize.
   Fix vgchange to not activate mirror leg and log volumes directly.
   Fix test directory clean up in make distclean.
- 
+
 Version 2.02.38 - 11th June 2008
 ================================
   Fix tracking of validity of PVs with no mdas in lvmcache.
