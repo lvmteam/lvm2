@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -1344,7 +1344,8 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	struct alloc_handle *ah;
 	const struct segment_type *segtype;
 	struct list *parallel_areas;
-	struct logical_volume **img_lvs, *log_lv;
+	struct logical_volume **img_lvs;
+	struct logical_volume *log_lv = NULL;
 
 	if (stripes > 1) {
 		log_error("stripes > 1 is not supported");
@@ -1416,8 +1417,8 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 
   out_remove_log:
-	if (!lv_remove(log_lv) || !vg_write(log_lv->vg) ||
-	    (backup(log_lv->vg), !vg_commit(log_lv->vg)))
+	if (log_lv && (!lv_remove(log_lv) || !vg_write(log_lv->vg) ||
+		       (backup(log_lv->vg), !vg_commit(log_lv->vg))))
 		log_error("Manual intervention may be required to remove "
 			  "abandoned log LV before retrying.");
 
