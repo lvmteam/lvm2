@@ -239,9 +239,9 @@ void init_indent(int indent)
 	_indent = indent;
 }
 
-void init_error_message_produced(int error_message_produced)
+void init_error_message_produced(int value)
 {
-	_error_message_produced = error_message_produced;
+	_error_message_produced = value;
 }
 
 int error_message_produced(void)
