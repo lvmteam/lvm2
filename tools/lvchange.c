@@ -387,8 +387,11 @@ static int lvchange_readahead(struct cmd_context *cmd,
 	}
 
 	if (lv->read_ahead == read_ahead) {
-		log_error("Read ahead is already %u for \"%s\"",
-			  read_ahead, lv->name);
+		if (read_ahead == DM_READ_AHEAD_AUTO)
+			log_error("Read ahead is already auto for \"%s\"", lv->name);
+		else
+			log_error("Read ahead is already %u for \"%s\"",
+				  read_ahead, lv->name);
 		return 0;
 	}
 

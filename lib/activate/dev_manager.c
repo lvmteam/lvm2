@@ -928,8 +928,8 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			break;
 		if (lv_is_cow(lv) && !layer)
 			break;
-		if (max_stripe_size < seg->stripe_size)
-			max_stripe_size = seg->stripe_size;
+		if (max_stripe_size < seg->stripe_size * seg->area_count)
+			max_stripe_size = seg->stripe_size * seg->area_count;
 	}
 
 	if (read_ahead == DM_READ_AHEAD_AUTO) {
