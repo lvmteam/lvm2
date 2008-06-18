@@ -1,5 +1,8 @@
 Version 2.02.39 -
 ================================
+  Improve/Fix read ahead 'auto' calculation for stripe_size
+  Fix lvchange output for -r auto setting if auto is already set
+  Add testcase for read ahead
   Fix ambiguous use of identifier 'error_message_produced'.
   Begin syncing configure.in for merge/unification with device-mapper.
   Fix add_mirror_images not to dereference uninitialized log_lv upon failure.
