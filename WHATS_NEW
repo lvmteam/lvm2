@@ -1,5 +1,6 @@
 Version 2.02.39 -
 ================================
+  Make clvmd return immediately if other nodes are down in an openais cluster.
   Make clvmd return immediately if other nodes are down in a gulm cluster.
   Improve/Fix read ahead 'auto' calculation for stripe_size
   Fix lvchange output for -r auto setting if auto is already set
