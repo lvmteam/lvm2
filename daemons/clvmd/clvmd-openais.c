@@ -452,6 +452,7 @@ static int _cluster_do_node_callback(struct local_client *master_client,
 {
 	struct dm_hash_node *hn;
 	struct node_info *ninfo;
+	int somedown = 0;
 
 	dm_hash_iterate(hn, node_hash)
 	{
@@ -465,8 +466,10 @@ static int _cluster_do_node_callback(struct local_client *master_client,
 
 		if (ninfo->state != NODE_DOWN)
 			callback(master_client, csid, ninfo->state == NODE_CLVMD);
+		if (ninfo->state != NODE_CLVMD)
+			somedown = -1;
 	}
-	return 0;
+	return somedown;
 }
 
 /* Real locking */
