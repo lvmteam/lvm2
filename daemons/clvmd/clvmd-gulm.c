@@ -665,6 +665,7 @@ static int _cluster_do_node_callback(struct local_client *master_client,
 {
     struct dm_hash_node *hn;
     struct node_info *ninfo;
+    int somedown = 0;
 
     dm_hash_iterate(hn, node_hash)
     {
@@ -686,12 +687,14 @@ static int _cluster_do_node_callback(struct local_client *master_client,
 	    client = dm_hash_lookup_binary(sock_hash, csid, GULM_MAX_CSID_LEN);
 
 	}
+	DEBUGLOG("down_callback2. node %s, state = %d\n", ninfo->name, ninfo->state);
 	if (ninfo->state != NODE_DOWN)
 		callback(master_client, csid, ninfo->state == NODE_CLVMD);
 
-
+	if (ninfo->state != NODE_CLVMD)
+		somedown = -1;
     }
-    return 0;
+    return somedown;
 }
 
 /* Convert gulm error codes to unix errno numbers */
