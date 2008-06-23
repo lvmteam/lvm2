@@ -48,18 +48,26 @@ static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
  * 1: At start of device
  * 2: 4K from start of device.
  */
-static uint64_t _v1_sb_offset(uint64_t size, unsigned minor_version)
+typedef enum {
+	MD_MINOR_VERSION_MIN,
+	MD_MINOR_V0 = MD_MINOR_VERSION_MIN,
+	MD_MINOR_V1,
+	MD_MINOR_V2,
+	MD_MINOR_VERSION_MAX = MD_MINOR_V2
+} md_minor_version_t;
+
+static uint64_t _v1_sb_offset(uint64_t size, md_minor_version_t minor_version)
 {
 	uint64_t sb_offset;
 
 	switch(minor_version) {
-	case 0:
+	case MD_MINOR_V0:
 		sb_offset = (size - 8 * 2) & ~(4 * 2 - 1ULL);
 		break;
-	case 1:
+	case MD_MINOR_V1:
 		sb_offset = 0;
 		break;
-	case 2:
+	case MD_MINOR_V2:
 		sb_offset = 4 * 2;
 		break;
 	}
@@ -74,7 +82,7 @@ static uint64_t _v1_sb_offset(uint64_t size, unsigned minor_version)
 int dev_is_md(struct device *dev, uint64_t *sb)
 {
 	int ret = 1;
-	unsigned minor = 0;
+	md_minor_version_t minor;
 	uint64_t size, sb_offset;
 
 	if (!dev_get_size(dev, &size)) {
@@ -96,12 +104,13 @@ int dev_is_md(struct device *dev, uint64_t *sb)
 	if (_dev_has_md_magic(dev, sb_offset))
 		goto out;
 
+	minor = MD_MINOR_VERSION_MIN;
 	/* Version 1, try v1.0 -> v1.2 */
 	do {
 		sb_offset = _v1_sb_offset(size, minor);
 		if (_dev_has_md_magic(dev, sb_offset))
 			goto out;
-	} while (++minor <= 2);
+	} while (++minor <= MD_MINOR_VERSION_MAX);
 
 	ret = 0;
 
