@@ -1,5 +1,6 @@
 Version 2.02.39 -
 ================================
+  Avoid link failure when configuring without --enable-cmdlib.
   Avoid link failure when configuring without --enable-readline.
   Make clvmd return immediately if other nodes are down in an openais cluster.
   Make clvmd return immediately if other nodes are down in a gulm cluster.
