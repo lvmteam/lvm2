@@ -350,6 +350,10 @@ AC_MSG_CHECKING(whether to compile liblvm2cmd.so)
 AC_ARG_ENABLE(cmdlib, [  --enable-cmdlib         Build shared command library],
 CMDLIB=$enableval, CMDLIB=no)
 AC_MSG_RESULT($CMDLIB)
+AC_SUBST([LVM2CMD_LIB])
+test $CMDLIB=yes \
+  && LVM2CMD_LIB=-llvm2cmd \
+  || LVM2CMD_LIB=
 
 ################################################################################
 dnl -- Enable fsadm

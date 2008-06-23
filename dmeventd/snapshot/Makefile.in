@@ -17,7 +17,7 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
 INCLUDES += -I${top_srcdir}/tools
-CLDFLAGS += -L${top_srcdir}/tools -ldevmapper -llvm2cmd
+CLDFLAGS += -L${top_srcdir}/tools -ldevmapper $(LVM2CMD_LIB)
 
 SOURCES = dmeventd_snapshot.c
 
@@ -33,4 +33,3 @@ install: libdevmapper-event-lvm2snapshot.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
 		$(libdir)/$<.$(LIB_VERSION)
 	$(LN_S) -f $<.$(LIB_VERSION) $(libdir)/$<
-
