@@ -1,5 +1,6 @@
 Version 2.02.39 -
 ================================
+  Suppress invalid 'sb_offset' compiler warning with uninitialzed_var().
   Add uninitialzed_var() macro to suppress invalid compiler warnings.
   Suppress 'sb_offset' compiler warning by using enum for md minor sb version. 
   lvm2_run: Don't return uninitialized "ret" for _memlock_inc or _memlock_dec.

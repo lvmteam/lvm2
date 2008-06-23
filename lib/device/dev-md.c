@@ -58,7 +58,7 @@ typedef enum {
 
 static uint64_t _v1_sb_offset(uint64_t size, md_minor_version_t minor_version)
 {
-	uint64_t sb_offset;
+	uint64_t uninitialized_var(sb_offset);
 
 	switch(minor_version) {
 	case MD_MINOR_V0:
