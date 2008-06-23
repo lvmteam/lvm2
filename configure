@@ -685,6 +685,7 @@ CSCOPE_CMD
 ALLOCA
 LIBOBJS
 POW_LIB
+LVM2CMD_LIB
 MSGFMT
 MODPROBE_CMD
 BUILD_DMEVENTD
@@ -8469,14 +8470,6 @@ fi
 { echo "$as_me:$LINENO: result: $READLINE" >&5
 echo "${ECHO_T}$READLINE" >&6; }
 
-if test x$READLINE = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define READLINE_SUPPORT 1
-_ACEOF
-
-fi
-
 ################################################################################
 { echo "$as_me:$LINENO: checking whether to enable realtime support" >&5
 echo $ECHO_N "checking whether to enable realtime support... $ECHO_C" >&6; }
@@ -8590,6 +8583,10 @@ fi
 
 { echo "$as_me:$LINENO: result: $CMDLIB" >&5
 echo "${ECHO_T}$CMDLIB" >&6; }
+
+test $CMDLIB=yes \
+  && LVM2CMD_LIB=-llvm2cmd \
+  || LVM2CMD_LIB=
 
 ################################################################################
 { echo "$as_me:$LINENO: checking whether to install fsadm" >&5
@@ -9516,6 +9513,11 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 fi
+
+
+cat >>confdefs.h <<\_ACEOF
+#define READLINE_SUPPORT 1
+_ACEOF
 
 fi
 
@@ -12001,6 +12003,7 @@ CSCOPE_CMD!$CSCOPE_CMD$ac_delim
 ALLOCA!$ALLOCA$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 POW_LIB!$POW_LIB$ac_delim
+LVM2CMD_LIB!$LVM2CMD_LIB$ac_delim
 MSGFMT!$MSGFMT$ac_delim
 MODPROBE_CMD!$MODPROBE_CMD$ac_delim
 BUILD_DMEVENTD!$BUILD_DMEVENTD$ac_delim
@@ -12026,7 +12029,6 @@ GROUP!$GROUP$ac_delim
 HAVE_LIBDL!$HAVE_LIBDL$ac_delim
 HAVE_REALTIME!$HAVE_REALTIME$ac_delim
 HAVE_SELINUX!$HAVE_SELINUX$ac_delim
-INTL!$INTL$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -12068,6 +12070,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+INTL!$INTL$ac_delim
 INTL_PACKAGE!$INTL_PACKAGE$ac_delim
 JOBS!$JOBS$ac_delim
 LDDEPS!$LDDEPS$ac_delim
@@ -12088,7 +12091,7 @@ LIB_PTHREAD!$LIB_PTHREAD$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 18; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 19; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
