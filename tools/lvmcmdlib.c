@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -79,9 +79,10 @@ int lvm2_run(void *handle, const char *cmdline)
 	}
 
 	/* FIXME Temporary - move to libdevmapper */
+	ret = ECMD_PROCESSED;
 	if (!strcmp(cmdline, "_memlock_inc"))
 		memlock_inc();
-	if (!strcmp(cmdline, "_memlock_dec"))
+	else if (!strcmp(cmdline, "_memlock_dec"))
 		memlock_dec();
 	else
 		ret = lvm_run_command(cmd, argc, argv);

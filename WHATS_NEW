@@ -1,5 +1,6 @@
 Version 2.02.39 -
 ================================
+  lvm2_run: Don't return uninitialized "ret" for _memlock_inc or _memlock_dec.
   Avoid link failure when configuring without --enable-cmdlib.
   Avoid link failure when configuring without --enable-readline.
   Make clvmd return immediately if other nodes are down in an openais cluster.
