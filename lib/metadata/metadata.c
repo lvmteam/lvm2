@@ -1920,7 +1920,7 @@ struct list *get_vgids(struct cmd_context *cmd, int full_scan)
 static int _get_pvs(struct cmd_context *cmd, struct list **pvslist)
 {
 	struct str_list *strl;
-	struct list *results;
+	struct list * uninitialized_var(results);
 	const char *vgname, *vgid;
 	struct list *pvh, *tmp;
 	struct list *vgids;
