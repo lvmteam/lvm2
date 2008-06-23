@@ -25,4 +25,6 @@
 		     (void) (&_a == &_b); \
 		     _a > _b ? _a : _b; })
 
+#define uninitialized_var(x) x = x
+
 #endif
