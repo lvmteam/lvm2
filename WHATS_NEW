@@ -1,17 +1,15 @@
 Version 2.02.39 -
 ================================
-  Suppress invalid 'sb_offset' compiler warning with uninitialzed_var().
-  Add uninitialzed_var() macro to suppress invalid compiler warnings.
-  Suppress 'sb_offset' compiler warning by using enum for md minor sb version. 
-  lvm2_run: Don't return uninitialized "ret" for _memlock_inc or _memlock_dec.
-  Avoid link failure when configuring without --enable-cmdlib.
-  Avoid link failure when configuring without --enable-readline.
-  Make clvmd return immediately if other nodes are down in an openais cluster.
-  Make clvmd return immediately if other nodes are down in a gulm cluster.
-  Improve/Fix read ahead 'auto' calculation for stripe_size
-  Fix lvchange output for -r auto setting if auto is already set
-  Add testcase for read ahead
-  Fix ambiguous use of identifier 'error_message_produced'.
+  Add --unquoted to reporting tools.
+  Add and use uninitialized_var() macro to suppress invalid compiler warnings.
+  Introduce enum for md minor sb version to suppress compiler warning.
+  Avoid undefined return value after _memlock manipulation in lvm2_run.
+  Avoid link failure if configured without --enable-cmdlib or --enable-readline.
+  Make clvmd return at once if other nodes down in a gulm or openais cluster.
+  Fix and improve readahead 'auto' calculation for stripe_size.
+  Fix lvchange output for -r auto setting if auto is already set.
+  Add test case for readahead.
+  Fix ambiguous use of identifier error_message_produced.
   Begin syncing configure.in for merge/unification with device-mapper.
   Fix add_mirror_images not to dereference uninitialized log_lv upon failure.
   Don't call openlog for every debug line output by clvmd.

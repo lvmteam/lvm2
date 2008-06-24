@@ -103,6 +103,7 @@
 #define DEFAULT_REP_BUFFERED 1
 #define DEFAULT_REP_HEADINGS 1
 #define DEFAULT_REP_PREFIXES 0
+#define DEFAULT_REP_QUOTED 1
 #define DEFAULT_REP_SEPARATOR " "
 
 #define DEFAULT_LVS_COLS "lv_name,vg_name,lv_attr,lv_size,origin,snap_percent,move_pv,mirror_log,copy_percent,convert_lv"
