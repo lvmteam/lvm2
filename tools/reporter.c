@@ -159,6 +159,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	const char *keys = NULL, *options = NULL, *separator;
 	int r = ECMD_PROCESSED;
 	int aligned, buffered, headings, field_prefixes, quoted;
+	int columns_as_rows;
 	unsigned args_are_pvs;
 
 	aligned = find_config_tree_int(cmd, "report/aligned",
@@ -173,6 +174,8 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 					      DEFAULT_REP_PREFIXES);
 	quoted = find_config_tree_int(cmd, "report/quoted",
 				     DEFAULT_REP_QUOTED);
+	columns_as_rows = find_config_tree_int(cmd, "report/columns_as_rows",
+					       DEFAULT_REP_COLUMNS_AS_ROWS);
 
 	args_are_pvs = (report_type == PVS || report_type == PVSEGS) ? 1 : 0;
 
@@ -280,10 +283,13 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	}
 	if (arg_count(cmd, unquoted_ARG))
 		quoted = 0;
+	if (arg_count(cmd, rows_ARG))
+		columns_as_rows = 1;
 
 	if (!(report_handle = report_init(cmd, options, keys, &report_type,
 					  separator, aligned, buffered,
-					  headings, field_prefixes, quoted))) {
+					  headings, field_prefixes, quoted,
+					  columns_as_rows))) {
 		stack;
 		return ECMD_FAILED;
 	}
