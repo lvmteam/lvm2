@@ -747,7 +747,7 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
  * Note:
  *   FIXME - liblvm todo - tidy up arguments for external use (fmt, mdas, etc)
  */
-pv_t *pv_create(const struct format_type *fmt,
+pv_t *pv_create(const struct cmd_context *cmd,
 		struct device *dev,
 		struct id *id, uint64_t size,
 		uint64_t pe_start,
@@ -756,7 +756,7 @@ pv_t *pv_create(const struct format_type *fmt,
 		int pvmetadatacopies,
 		uint64_t pvmetadatasize, struct list *mdas)
 {
-	return _pv_create(fmt, dev, id, size, pe_start,
+	return _pv_create(cmd->fmt, dev, id, size, pe_start,
 			  existing_extent_count,
 			  existing_extent_size,
 			  pvmetadatacopies,

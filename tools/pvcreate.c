@@ -225,7 +225,7 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	list_init(&mdas);
-	if (!(pv = pv_create(cmd->fmt, dev, idp, size, pe_start,
+	if (!(pv = pv_create(cmd, dev, idp, size, pe_start,
 			     extent_count, extent_size,
 			     pvmetadatacopies, pvmetadatasize, &mdas))) {
 		log_error("Failed to setup physical volume \"%s\"", pv_name);

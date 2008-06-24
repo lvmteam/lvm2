@@ -112,7 +112,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		    + pe_start - 1;
 
 		list_init(&mdas);
-		if (!(pv = pv_create(cmd->fmt, pv_dev(existing_pv),
+		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
 				     &existing_pv->id, size,
 				     pe_start, pv_pe_count(existing_pv),
 				     pv_pe_size(existing_pv), pvmetadatacopies,
