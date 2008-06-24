@@ -845,7 +845,13 @@ int dm_report_output(struct dm_report *rh)
 
 				free(field_id);
 
-				if (!dm_pool_grow_object(rh->mem, "=\'", 2)) {
+				if (!dm_pool_grow_object(rh->mem, "=", 1)) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
+
+				if (!(rh->flags & DM_REPORT_OUTPUT_FIELD_UNQUOTED) &&
+				    !dm_pool_grow_object(rh->mem, "\'", 1)) {
 					log_error("dm_report: Unable to extend output line");
 					goto bad;
 				}
@@ -885,7 +891,8 @@ int dm_report_output(struct dm_report *rh)
 				}
 			}
 
-			if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX)
+			if ((rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) &&
+			    !(rh->flags & DM_REPORT_OUTPUT_FIELD_UNQUOTED))
 				if (!dm_pool_grow_object(rh->mem, "\'", 1)) {
 					log_error("dm_report: Unable to extend output line");
 					goto bad;

@@ -130,6 +130,7 @@ enum {
 	TREE_ARG,
 	UID_ARG,
 	UNBUFFERED_ARG,
+	UNQUOTED_ARG,
 	UUID_ARG,
 	VERBOSE_ARG,
 	VERSION_ARG,
@@ -1975,7 +1976,7 @@ static int _report_init(struct command *c)
 	char *options = (char *) default_report_options;
 	const char *keys = "";
 	const char *separator = " ";
-	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0;
+	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0, quoted = 1;
 	uint32_t flags = 0;
 	size_t len = 0;
 	int r = 0;
@@ -1989,6 +1990,9 @@ static int _report_init(struct command *c)
 
 	if (_switches[UNBUFFERED_ARG])
 		buffered = 0;
+
+	if (_switches[UNQUOTED_ARG])
+		quoted = 0;
 
 	if (_switches[NAMEPREFIXES_ARG]) {
 		aligned = 0;
@@ -2039,6 +2043,9 @@ static int _report_init(struct command *c)
 
 	if (field_prefixes)
 		flags |= DM_REPORT_OUTPUT_FIELD_NAME_PREFIX;
+
+	if (!quoted)
+		flags |= DM_REPORT_OUTPUT_FIELD_UNQUOTED;
 
 	if (!(_report = dm_report_init(&_report_type,
 				       _report_types, _report_fields,
@@ -2492,6 +2499,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"uid", 1, &ind, UID_ARG},
 		{"uuid", 1, &ind, UUID_ARG},
 		{"unbuffered", 0, &ind, UNBUFFERED_ARG},
+		{"unquoted", 0, &ind, UNQUOTED_ARG},
 		{"verbose", 1, &ind, VERBOSE_ARG},
 		{"version", 0, &ind, VERSION_ARG},
 		{0, 0, 0, 0}
@@ -2646,8 +2654,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		}
 		if ((ind == TREE_ARG))
 			_switches[TREE_ARG]++;
-		if ((ind == UNBUFFERED_ARG))
-			_switches[UNBUFFERED_ARG]++;
+		if ((ind == UNQUOTED_ARG))
+			_switches[UNQUOTED_ARG]++;
 		if ((ind == VERSION_ARG))
 			_switches[VERSION_ARG]++;
 	}
