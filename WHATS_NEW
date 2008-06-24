@@ -1,6 +1,6 @@
 Version 2.02.39 -
 ================================
-  Add --unquoted to reporting tools.
+  Add --unquoted and --rows to reporting tools.
   Add and use uninitialized_var() macro to suppress invalid compiler warnings.
   Introduce enum for md minor sb version to suppress compiler warning.
   Avoid undefined return value after _memlock manipulation in lvm2_run.
