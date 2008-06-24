@@ -28,7 +28,8 @@ typedef int (*field_report_fn) (struct report_handle * dh, struct field * field,
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  report_type_t *report_type, const char *separator,
-		  int aligned, int buffered, int headings, int field_prefixes);
+		  int aligned, int buffered, int headings, int field_prefixes,
+		  int quoted);
 void report_free(void *handle);
 int report_object(void *handle, struct volume_group *vg,
 		  struct logical_volume *lv, struct physical_volume *pv,

@@ -1077,7 +1077,8 @@ static struct dm_report_field_type _fields[] = {
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  report_type_t *report_type, const char *separator,
-		  int aligned, int buffered, int headings, int field_prefixes)
+		  int aligned, int buffered, int headings, int field_prefixes,
+		  int quoted)
 {
 	uint32_t report_flags = 0;
 	void *rh;
@@ -1093,6 +1094,9 @@ void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 
 	if (field_prefixes)
 		report_flags |= DM_REPORT_OUTPUT_FIELD_NAME_PREFIX;
+
+	if (!quoted)
+		report_flags |= DM_REPORT_OUTPUT_FIELD_UNQUOTED;
 
 	rh = dm_report_init(report_type, _report_types, _fields, format,
 			    separator, report_flags, keys, cmd);
