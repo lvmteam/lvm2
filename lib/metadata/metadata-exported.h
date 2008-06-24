@@ -347,7 +347,7 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */
-pv_t *pv_create(const struct format_type *fmt,
+pv_t *pv_create(const struct cmd_context *cmd,
 		      struct device *dev,
 		      struct id *id,
 		      uint64_t size,
