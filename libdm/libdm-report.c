@@ -513,6 +513,14 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 
 	rh->flags |= output_flags & DM_REPORT_OUTPUT_MASK;
 
+	/* With columns_as_rows we must buffer and not align. */
+	if (output_flags & DM_REPORT_OUTPUT_COLUMNS_AS_ROWS) {
+		if (!(output_flags & DM_REPORT_OUTPUT_BUFFERED))
+			rh->flags |= DM_REPORT_OUTPUT_BUFFERED;
+		if (output_flags & DM_REPORT_OUTPUT_ALIGNED)
+			rh->flags &= ~DM_REPORT_OUTPUT_ALIGNED;
+	}
+
 	if (output_flags & DM_REPORT_OUTPUT_BUFFERED)
 		rh->flags |= RH_SORT_REQUIRED;
 
@@ -793,23 +801,146 @@ static int _sort_rows(struct dm_report *rh)
 /*
  * Produce report output
  */
-int dm_report_output(struct dm_report *rh)
+static int _output_field(struct dm_report *rh, struct dm_report_field *field)
+{
+	char *field_id;
+	int32_t width;
+	uint32_t align;
+	const char *repstr;
+	char buf[4096];
+
+	if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) {
+		if (!(field_id = strdup(rh->fields[field->props->field_num].id))) {
+			log_error("dm_report: Failed to copy field name");
+			return 0;
+		}
+
+		if (!dm_pool_grow_object(rh->mem, rh->output_field_name_prefix, 0)) {
+			log_error("dm_report: Unable to extend output line");
+			return 0;
+		}
+
+		if (!dm_pool_grow_object(rh->mem, _toupperstr(field_id), 0)) {
+			log_error("dm_report: Unable to extend output line");
+			return 0;
+		}
+
+		free(field_id);
+
+		if (!dm_pool_grow_object(rh->mem, "=", 1)) {
+			log_error("dm_report: Unable to extend output line");
+			return 0;
+		}
+
+		if (!(rh->flags & DM_REPORT_OUTPUT_FIELD_UNQUOTED) &&
+		    !dm_pool_grow_object(rh->mem, "\'", 1)) {
+			log_error("dm_report: Unable to extend output line");
+			return 0;
+		}
+	}
+
+	repstr = field->report_string;
+	width = field->props->width;
+	if (!(rh->flags & DM_REPORT_OUTPUT_ALIGNED)) {
+		if (!dm_pool_grow_object(rh->mem, repstr, 0)) {
+			log_error("dm_report: Unable to extend output line");
+			return 0;
+		}
+	} else {
+		if (!(align = field->props->flags & DM_REPORT_FIELD_ALIGN_MASK))
+			align = (field->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ? 
+				DM_REPORT_FIELD_ALIGN_RIGHT : DM_REPORT_FIELD_ALIGN_LEFT;
+		if (align & DM_REPORT_FIELD_ALIGN_LEFT) {
+			if (dm_snprintf(buf, sizeof(buf), "%-*.*s",
+					 width, width, repstr) < 0) {
+				log_error("dm_report: left-aligned snprintf() failed");
+				return 0;
+			}
+			if (!dm_pool_grow_object(rh->mem, buf, width)) {
+				log_error("dm_report: Unable to extend output line");
+				return 0;
+			}
+		} else if (align & DM_REPORT_FIELD_ALIGN_RIGHT) {
+			if (dm_snprintf(buf, sizeof(buf), "%*.*s",
+					 width, width, repstr) < 0) {
+				log_error("dm_report: right-aligned snprintf() failed");
+				return 0;
+			}
+			if (!dm_pool_grow_object(rh->mem, buf, width)) {
+				log_error("dm_report: Unable to extend output line");
+				return 0;
+			}
+		}
+	}
+
+	if ((rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) &&
+	    !(rh->flags & DM_REPORT_OUTPUT_FIELD_UNQUOTED))
+		if (!dm_pool_grow_object(rh->mem, "\'", 1)) {
+			log_error("dm_report: Unable to extend output line");
+			return 0;
+		}
+
+	return 1;
+}
+
+static int _output_as_rows(struct dm_report *rh)
+{
+	struct field_properties *fp;
+	struct dm_report_field *field;
+	struct row *row;
+
+	if (!dm_pool_begin_object(rh->mem, 512)) {
+		log_error("dm_report: Unable to allocate output line");
+		return 0;
+	}
+
+	list_iterate_items(fp, &rh->field_props) {
+		if (fp->flags & FLD_HIDDEN)
+			continue;
+
+		if ((rh->flags & DM_REPORT_OUTPUT_HEADINGS)) {
+			if (!dm_pool_grow_object(rh->mem, rh->fields[fp->field_num].heading, 0)) {
+				log_error("dm_report: Failed to extend row for field name");
+				goto bad;
+			}
+			if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
+				log_error("dm_report: Failed to extend row with separator");
+				goto bad;
+			}
+		}
+
+		list_iterate_items(row, &rh->rows) {
+			field = list_item(list_first(&row->fields), struct dm_report_field);
+			if (!_output_field(rh, field))
+				goto bad;
+			list_del(&field->list);
+
+			if (!list_end(&rh->rows, &row->list))
+				if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
+					log_error("dm_report: Unable to extend output line");
+					goto bad;
+				}
+		}
+
+		if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
+			log_error("dm_report: Failed to terminate row");
+			goto bad;
+		}
+		log_print("%s", (char *) dm_pool_end_object(rh->mem));
+	}
+
+	return 1;
+
+      bad:
+	dm_pool_abandon_object(rh->mem);
+	return 0;
+}
+
+static int _output_as_columns(struct dm_report *rh)
 {
 	struct list *fh, *rowh, *ftmp, *rtmp;
 	struct row *row = NULL;
 	struct dm_report_field *field;
-	const char *repstr;
-	char *field_id;
-	char buf[4096];
-	int32_t width;
-	uint32_t align;
-
-	if (list_empty(&rh->rows))
-		return 1;
-
-	/* Sort rows */
-	if ((rh->flags & RH_SORT_REQUIRED))
-		_sort_rows(rh);
 
 	/* If headings not printed yet, calculate field widths and print them */
 	if (!(rh->flags & RH_HEADINGS_PRINTED))
@@ -827,82 +958,15 @@ int dm_report_output(struct dm_report *rh)
 			if (field->props->flags & FLD_HIDDEN)
 				continue;
 
-			if (rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) {
-				if (!(field_id = strdup(rh->fields[field->props->field_num].id))) {
-					log_error("dm_report: Failed to copy field name");
-					goto bad;
-				}
+			if (!_output_field(rh, field))
+				goto bad;
 
-				if (!dm_pool_grow_object(rh->mem, rh->output_field_name_prefix, 0)) {
-					log_error("dm_report: Unable to extend output line");
-					goto bad;
-				}
-
-				if (!dm_pool_grow_object(rh->mem, _toupperstr(field_id), 0)) {
-					log_error("dm_report: Unable to extend output line");
-					goto bad;
-				}
-
-				free(field_id);
-
-				if (!dm_pool_grow_object(rh->mem, "=", 1)) {
-					log_error("dm_report: Unable to extend output line");
-					goto bad;
-				}
-
-				if (!(rh->flags & DM_REPORT_OUTPUT_FIELD_UNQUOTED) &&
-				    !dm_pool_grow_object(rh->mem, "\'", 1)) {
-					log_error("dm_report: Unable to extend output line");
-					goto bad;
-				}
-			}
-
-			repstr = field->report_string;
-			width = field->props->width;
-			if (!(rh->flags & DM_REPORT_OUTPUT_ALIGNED)) {
-				if (!dm_pool_grow_object(rh->mem, repstr, 0)) {
-					log_error("dm_report: Unable to extend output line");
-					goto bad;
-				}
-			} else {
-				if (!(align = field->props->flags & DM_REPORT_FIELD_ALIGN_MASK))
-					align = (field->props->flags & DM_REPORT_FIELD_TYPE_NUMBER) ? 
-						DM_REPORT_FIELD_ALIGN_RIGHT : DM_REPORT_FIELD_ALIGN_LEFT;
-				if (align & DM_REPORT_FIELD_ALIGN_LEFT) {
-					if (dm_snprintf(buf, sizeof(buf), "%-*.*s",
-							 width, width, repstr) < 0) {
-						log_error("dm_report: left-aligned snprintf() failed");
-						goto bad;
-					}
-					if (!dm_pool_grow_object(rh->mem, buf, width)) {
-						log_error("dm_report: Unable to extend output line");
-						goto bad;
-					}
-				} else if (align & DM_REPORT_FIELD_ALIGN_RIGHT) {
-					if (dm_snprintf(buf, sizeof(buf), "%*.*s",
-							 width, width, repstr) < 0) {
-						log_error("dm_report: right-aligned snprintf() failed");
-						goto bad;
-					}
-					if (!dm_pool_grow_object(rh->mem, buf, width)) {
-						log_error("dm_report: Unable to extend output line");
-						goto bad;
-					}
-				}
-			}
-
-			if ((rh->flags & DM_REPORT_OUTPUT_FIELD_NAME_PREFIX) &&
-			    !(rh->flags & DM_REPORT_OUTPUT_FIELD_UNQUOTED))
-				if (!dm_pool_grow_object(rh->mem, "\'", 1)) {
-					log_error("dm_report: Unable to extend output line");
-					goto bad;
-				}
-				
 			if (!list_end(&row->fields, fh))
 				if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
 					log_error("dm_report: Unable to extend output line");
 					goto bad;
 				}
+
 			list_del(&field->list);
 		}
 		if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
@@ -921,4 +985,18 @@ int dm_report_output(struct dm_report *rh)
       bad:
 	dm_pool_abandon_object(rh->mem);
 	return 0;
+}
+
+int dm_report_output(struct dm_report *rh)
+{
+	if (list_empty(&rh->rows))
+		return 1;
+
+	if ((rh->flags & RH_SORT_REQUIRED))
+		_sort_rows(rh);
+
+	if ((rh->flags & DM_REPORT_OUTPUT_COLUMNS_AS_ROWS))
+		return _output_as_rows(rh);
+	else
+		return _output_as_columns(rh);
 }

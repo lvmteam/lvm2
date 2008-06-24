@@ -741,6 +741,7 @@ struct dm_report_field_type {
 #define DM_REPORT_OUTPUT_HEADINGS		0x00000004
 #define DM_REPORT_OUTPUT_FIELD_NAME_PREFIX	0x00000008
 #define DM_REPORT_OUTPUT_FIELD_UNQUOTED		0x00000010
+#define DM_REPORT_OUTPUT_COLUMNS_AS_ROWS	0x00000020
 
 struct dm_report *dm_report_init(uint32_t *report_types,
 				 const struct dm_report_object_type *types,

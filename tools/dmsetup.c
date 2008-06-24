@@ -122,6 +122,7 @@ enum {
 	NOTABLE_ARG,
 	OPTIONS_ARG,
 	READAHEAD_ARG,
+	ROWS_ARG,
 	SEPARATOR_ARG,
 	SHOWKEYS_ARG,
 	SORT_ARG,
@@ -1976,7 +1977,8 @@ static int _report_init(struct command *c)
 	char *options = (char *) default_report_options;
 	const char *keys = "";
 	const char *separator = " ";
-	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0, quoted = 1;
+	int aligned = 1, headings = 1, buffered = 1, field_prefixes = 0;
+	int quoted = 1, columns_as_rows = 0;
 	uint32_t flags = 0;
 	size_t len = 0;
 	int r = 0;
@@ -1990,6 +1992,9 @@ static int _report_init(struct command *c)
 
 	if (_switches[UNBUFFERED_ARG])
 		buffered = 0;
+
+	if (_switches[ROWS_ARG])
+		columns_as_rows = 1;
 
 	if (_switches[UNQUOTED_ARG])
 		quoted = 0;
@@ -2046,6 +2051,9 @@ static int _report_init(struct command *c)
 
 	if (!quoted)
 		flags |= DM_REPORT_OUTPUT_FIELD_UNQUOTED;
+
+	if (columns_as_rows)
+		flags |= DM_REPORT_OUTPUT_COLUMNS_AS_ROWS;
 
 	if (!(_report = dm_report_init(&_report_type,
 				       _report_types, _report_fields,
@@ -2490,6 +2498,7 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 		{"notable", 0, &ind, NOTABLE_ARG},
 		{"options", 1, &ind, OPTIONS_ARG},
 		{"readahead", 1, &ind, READAHEAD_ARG},
+		{"rows", 0, &ind, ROWS_ARG},
 		{"separator", 1, &ind, SEPARATOR_ARG},
 		{"showkeys", 0, &ind, SHOWKEYS_ARG},
 		{"sort", 1, &ind, SORT_ARG},
@@ -2646,6 +2655,8 @@ static int _process_switches(int *argc, char ***argv, const char *dev_dir)
 				}
 			}
 		}
+		if ((ind == ROWS_ARG))
+			_switches[ROWS_ARG]++;
 		if ((ind == SHOWKEYS_ARG))
 			_switches[SHOWKEYS_ARG]++;
 		if ((ind == TABLE_ARG)) {
