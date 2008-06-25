@@ -95,6 +95,7 @@ struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 struct segment_type *init_striped_segtype(struct cmd_context *cmd);
 struct segment_type *init_zero_segtype(struct cmd_context *cmd);
 struct segment_type *init_error_segtype(struct cmd_context *cmd);
+struct segment_type *init_free_segtype(struct cmd_context *cmd);
 
 #ifdef SNAPSHOT_INTERNAL
 struct segment_type *init_snapshot_segtype(struct cmd_context *cmd);

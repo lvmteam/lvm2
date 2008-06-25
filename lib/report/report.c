@@ -303,6 +303,10 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 		return 0;
 	}
 
+	/* Blank if this is a "free space" LV. */
+	if (!*lv->name)
+		goto out;
+
 	if (lv->status & PVMOVE)
 		repstr[0] = 'p';
 	else if (lv->status & CONVERTING)
@@ -332,8 +336,10 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 		repstr[1] = '-';
 	else if (lv->status & LVM_WRITE)
 		repstr[1] = 'w';
-	else
+	else if (lv->status & LVM_READ)
 		repstr[1] = 'r';
+	else
+		repstr[1] = '-';
 
 	repstr[2] = _alloc_policy_char(lv->alloc);
 
@@ -375,6 +381,7 @@ static int _lvstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 		repstr[5] = '-';
 	}
 
+out:
 	dm_report_field_set_value(field, repstr, NULL);
 	return 1;
 }

@@ -61,8 +61,39 @@ static int _pvsegs_sub_single(struct cmd_context *cmd __attribute((unused)),
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
 
-	if (!report_object(handle, vg, seg ? seg->lv : NULL, pvseg->pv, seg,
-			   pvseg))
+	struct logical_volume _free_logical_volume = {
+		.vg = vg,
+		.name = (char *) "",
+	        .snapshot = NULL,
+		.status = VISIBLE_LV,
+		.major = -1,
+		.minor = -1,
+	};
+
+	struct lv_segment _free_lv_segment = {
+        	.lv = &_free_logical_volume,
+        	.le = 0,
+        	.status = 0,
+        	.stripe_size = 0,
+        	.area_count = 0,
+        	.area_len = 0,
+        	.origin = NULL,
+        	.cow = NULL,
+        	.chunk_size = 0,
+        	.region_size = 0,
+        	.extents_copied = 0,
+        	.log_lv = NULL,
+        	.areas = NULL,
+	};
+
+        _free_lv_segment.segtype = get_segtype_from_string(cmd, "free");
+	_free_lv_segment.len = pvseg->len;
+	list_init(&_free_logical_volume.tags);
+	list_init(&_free_logical_volume.segments);
+	list_init(&_free_logical_volume.segs_using_this_lv);
+
+	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
+			   seg ? : &_free_lv_segment, pvseg))
 		ret = ECMD_FAILED;
 
 	return ret;
