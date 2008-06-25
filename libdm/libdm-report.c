@@ -267,8 +267,7 @@ static void _display_fields(struct dm_report *rh)
 			log_warn("%s Fields", desc);
 			log_warn("%*.*s", (int) strlen(desc) + 7,
 				 (int) strlen(desc) + 7,
-				 "------------------------------------------");
-				  
+				 "-------------------------------------------------------------------------------");
 		}
 
 		/* FIXME Add line-wrapping at terminal width (or 80 cols) */
