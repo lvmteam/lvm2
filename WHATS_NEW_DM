@@ -1,5 +1,5 @@
-Version 1.02.27 -
-===============================
+Version 1.02.27 - 25th June 2008
+================================
   Align struct memblock in dbg_malloc for sparc.
   Add --unquoted and --rows to dmsetup.
   Avoid compiler warning about cast in dmsetup.c's OFFSET_OF macro.
