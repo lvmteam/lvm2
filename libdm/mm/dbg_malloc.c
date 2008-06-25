@@ -40,7 +40,7 @@ struct memblock {
 	const char *file;	/* File that allocated */
 	int line;		/* Line that allocated */
 	void *magic;		/* Address of this block */
-};
+} __attribute__((aligned(8)));
 
 static struct {
 	unsigned block_serialno;/* Non-decreasing serialno of block */

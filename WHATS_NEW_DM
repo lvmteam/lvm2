@@ -1,5 +1,6 @@
 Version 1.02.27 -
 ===============================
+  Align struct memblock in dbg_malloc for sparc.
   Add --unquoted and --rows to dmsetup.
   Avoid compiler warning about cast in dmsetup.c's OFFSET_OF macro.
   Fix inverted no_flush debug message.
