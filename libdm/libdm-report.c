@@ -895,8 +895,13 @@ static int _output_as_rows(struct dm_report *rh)
 	}
 
 	list_iterate_items(fp, &rh->field_props) {
-		if (fp->flags & FLD_HIDDEN)
+		if (fp->flags & FLD_HIDDEN) {
+			list_iterate_items(row, &rh->rows) {
+				field = list_item(list_first(&row->fields), struct dm_report_field);
+				list_del(&field->list);
+			}
 			continue;
+		}
 
 		if ((rh->flags & DM_REPORT_OUTPUT_HEADINGS)) {
 			if (!dm_pool_grow_object(rh->mem, rh->fields[fp->field_num].heading, 0)) {
@@ -910,10 +915,11 @@ static int _output_as_rows(struct dm_report *rh)
 		}
 
 		list_iterate_items(row, &rh->rows) {
-			field = list_item(list_first(&row->fields), struct dm_report_field);
-			if (!_output_field(rh, field))
-				goto bad;
-			list_del(&field->list);
+			if ((field = list_item(list_first(&row->fields), struct dm_report_field))) {
+				if (!_output_field(rh, field))
+					goto bad;
+				list_del(&field->list);
+			}
 
 			if (!list_end(&rh->rows, &row->list))
 				if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
