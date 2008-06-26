@@ -508,6 +508,9 @@ static int lvconvert_mirrors(struct cmd_context * cmd, struct logical_volume * l
 	}
 
 	if (lp->mirrors == existing_mirrors) {
+		/*
+		 * Convert Mirror log type
+		 */
 		original_lv = _original_lv(lv);
 		if (!first_seg(original_lv)->log_lv && !corelog) {
 			if (!add_mirror_log(cmd, original_lv, 1,
