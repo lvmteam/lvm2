@@ -1140,6 +1140,8 @@ int remove_mirror_log(struct cmd_context *cmd,
 		      struct list *removable_pvs)
 {
 	float sync_percent;
+	struct lvinfo info;
+	struct volume_group *vg = lv->vg;
 
 	/* Unimplemented features */
 	if (list_size(&lv->segments) != 1) {
@@ -1148,10 +1150,21 @@ int remove_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* Had disk log, switch to core. */
-	if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
-		log_error("Unable to determine mirror sync status.");
+	if (lv_info(cmd, lv, &info, 0, 0) && info.exists) {
+		if (!lv_mirror_percent(cmd, lv, 0, &sync_percent, NULL)) {
+			log_error("Unable to determine mirror sync status.");
+			return 0;
+		}
+	} else if (vg_is_clustered(vg)) {
+		log_error("Unable to convert the log of inactive "
+			  "cluster mirror %s", lv->name);
 		return 0;
-	}
+	} else if (yes_no_prompt("Full resync required to convert "
+				 "inactive mirror %s to core log. "
+				 "Proceed? [y/n]: "))
+		sync_percent = 0;
+	else
+		return 0;
 
 	if (sync_percent >= 100.0)
 		init_mirror_in_sync(1);
@@ -1269,12 +1282,9 @@ int attach_mirror_log(struct lv_segment *seg, struct logical_volume *log_lv)
 	return add_seg_to_segs_using_this_lv(log_lv, seg);
 }
 
-int add_mirror_log(struct cmd_context *cmd,
-		   struct logical_volume *lv,
-		   uint32_t log_count,
-		   uint32_t region_size,
-		   struct list *allocatable_pvs,
-		   alloc_policy_t alloc)
+int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
+		   uint32_t log_count, uint32_t region_size,
+		   struct list *allocatable_pvs, alloc_policy_t alloc)
 {
 	struct alloc_handle *ah;
 	const struct segment_type *segtype;
@@ -1282,14 +1292,28 @@ int add_mirror_log(struct cmd_context *cmd,
 	float sync_percent;
 	int in_sync;
 	struct logical_volume *log_lv;
+	struct lvinfo info;
 
 	/* Unimplemented features */
 	if (log_count > 1) {
 		log_error("log_count > 1 is not supported");
 		return 0;
 	}
+
 	if (list_size(&lv->segments) != 1) {
 		log_error("Multiple-segment mirror is not supported");
+		return 0;
+	}
+
+	/*
+	 * We are unable to convert the log of inactive cluster mirrors
+	 * due to the inability to detect whether the mirror is active
+	 * on remote nodes (even though it is inactive on this node)
+	 */
+	if (vg_is_clustered(lv->vg) &&
+	    !(lv_info(cmd, lv, &info, 0, 0) && info.exists)) {
+		log_error("Unable to convert the log of inactive "
+			  "cluster mirror %s", lv->name);
 		return 0;
 	}
 
