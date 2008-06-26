@@ -629,10 +629,12 @@ static int lvconvert_snapshot(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (org->status & (LOCKED|PVMOVE) || lv_is_cow(org)) {
+	if (org->status & (LOCKED|PVMOVE|MIRRORED) || lv_is_cow(org)) {
 		log_error("Unable to create a snapshot of a %s LV.",
 			  org->status & LOCKED ? "locked" :
-			  org->status & PVMOVE ? "pvmove" : "snapshot");
+			  org->status & PVMOVE ? "pvmove" :
+			  org->status & MIRRORED ? "mirrored" :
+			  "snapshot");
 		return 0;
 	}
 
@@ -707,15 +709,19 @@ static int lvconvert_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return ECMD_FAILED;
 	}
 
-	if (arg_count(cmd, mirrors_ARG) || (lv->status & MIRRORED)) {
-		if (!archive(lv->vg))
+	if (lp->snapshot) {
+		if (lv->status & MIRRORED) {
+			log_error("Unable to convert mirrored LV \"%s\" into a snapshot.", lv->name);
 			return ECMD_FAILED;
-		if (!lvconvert_mirrors(cmd, lv, lp))
-			return ECMD_FAILED;
-	} else if (lp->snapshot) {
+		}
 		if (!archive(lv->vg))
 			return ECMD_FAILED;
 		if (!lvconvert_snapshot(cmd, lv, lp))
+			return ECMD_FAILED;
+	} else if (arg_count(cmd, mirrors_ARG) || (lv->status & MIRRORED)) {
+		if (!archive(lv->vg))
+			return ECMD_FAILED;
+		if (!lvconvert_mirrors(cmd, lv, lp))
 			return ECMD_FAILED;
 	}
 
