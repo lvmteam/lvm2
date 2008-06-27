@@ -1,6 +1,8 @@
 Version 2.02.39 -
 ================================
-  Enhance configure.in and Makefiles to support coverage reports (tgts: cov, covd, cov-reset)
+  Update autoconf to 2008-01-16.
+  Add $DISTCLEAN_DIRS to make.tmpl.in.
+  Create coverage reports with --enable-profiling and make lcov or lcov-dated.
   Fix up cache for PVs without mdas after consistent VG metadata is processed.
   Update validation of safe mirror log type conversions in lvconvert.
   Fix lvconvert to disallow snapshot and mirror combinations.

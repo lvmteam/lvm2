@@ -21,7 +21,10 @@ CC = @CC@
 RANLIB = @RANLIB@
 SHELL = /bin/sh
 INSTALL = @INSTALL@
+MKDIR_P = @MKDIR_P@
 MSGFMT = @MSGFMT@
+LCOV = @LCOV@
+GENHTML = @GENHTML@
 LN_S = @LN_S@
 LIBS = @LIBS@
 DEFS += @DEFS@
@@ -30,9 +33,6 @@ CLDFLAGS += @CLDFLAGS@
 LDDEPS += @LDDEPS@
 LDFLAGS += @LDFLAGS@
 LIB_SUFFIX = @LIB_SUFFIX@
-MKDIR_P = @MKDIR_P@
-LCOV = @LCOV@
-GENHTML = @GENHTML@
 
 # Setup directory variables
 prefix = @prefix@
@@ -206,12 +206,16 @@ $(LIB_STATIC): $(OBJECTS)
 	$(MSGFMT) -o $@ $<
 
 clean: $(SUBDIRS.clean)
-	$(RM) -rf $(CLEAN_DIRTARGETS)
 	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
-	      $(SOURCES:%.c=%.pot) $(LDDEPS)
+	      $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
+	      $(SOURCES:%.c=%.gcda) $(LDDEPS)
 
-distclean: clean $(SUBDIRS.distclean)
+distclean: $(SUBDIRS.distclean)
+	$(RM) -rf $(DISTCLEAN_DIRS)
 	$(RM) $(DISTCLEAN_TARGETS) \
+	      $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
+	      $(SOURCES:%.c=%.pot) $(SOURCES:%.c=%.gcno) \
+	      $(SOURCES:%.c=%.gcda) $(LDDEPS) \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
 	      version.h lvm2.po
