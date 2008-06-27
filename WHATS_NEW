@@ -1,3 +1,6 @@
+Version 2.02.40 - 
+================================
+
 Version 2.02.39 - 27th June 2008
 ================================
   Enable readline by default if available.
@@ -17,12 +20,12 @@ Version 2.02.39 - 27th June 2008
   Fix and improve readahead 'auto' calculation for stripe_size.
   Fix lvchange output for -r auto setting if auto is already set.
   Add test case for readahead.
-  Fix ambiguous use of identifier error_message_produced.
+  Avoid ambiguous use of identifier error_message_produced.
   Begin syncing configure.in for merge/unification with device-mapper.
   Fix add_mirror_images not to dereference uninitialized log_lv upon failure.
   Don't call openlog for every debug line output by clvmd.
   Add --force to lvextend and lvresize.
-  Fix vgchange to not activate mirror leg and log volumes directly.
+  Fix vgchange not to activate component mirror volumes directly.
   Fix test directory clean up in make distclean.
 
 Version 2.02.38 - 11th June 2008
