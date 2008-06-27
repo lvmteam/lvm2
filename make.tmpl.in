@@ -30,6 +30,9 @@ CLDFLAGS += @CLDFLAGS@
 LDDEPS += @LDDEPS@
 LDFLAGS += @LDFLAGS@
 LIB_SUFFIX = @LIB_SUFFIX@
+MKDIR_P = @MKDIR_P@
+LCOV = @LCOV@
+GENHTML = @GENHTML@
 
 # Setup directory variables
 prefix = @prefix@
@@ -203,12 +206,12 @@ $(LIB_STATIC): $(OBJECTS)
 	$(MSGFMT) -o $@ $<
 
 clean: $(SUBDIRS.clean)
+	$(RM) -rf $(CLEAN_DIRTARGETS)
 	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(SOURCES:%.c=%.d) \
 	      $(SOURCES:%.c=%.pot) $(LDDEPS)
 
-distclean: $(SUBDIRS.distclean)
-	$(RM) $(OBJECTS) $(TARGETS) $(CLEAN_TARGETS) $(DISTCLEAN_TARGETS) \
-	      $(SOURCES:%.c=%.d) $(SOURCES:%.c=%.pot) $(LDDEPS) \
+distclean: clean $(SUBDIRS.distclean)
+	$(RM) $(DISTCLEAN_TARGETS) \
 	      config.cache config.log config.status \
 	      Makefile make.tmpl core \
 	      version.h lvm2.po
