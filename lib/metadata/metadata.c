@@ -1488,8 +1488,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	const struct format_type *fmt;
 	struct volume_group *vg, *correct_vg = NULL;
 	struct metadata_area *mda;
+	struct lvmcache_info *info;
 	int inconsistent = 0;
 	int inconsistent_vgid = 0;
+	int inconsistent_pvs = 0;
 	unsigned use_precommitted = precommitted;
 	struct list *pvids;
 	struct pv_list *pvl, *pvl2;
@@ -1564,6 +1566,44 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	/* Ensure every PV in the VG was in the cache */
 	if (correct_vg) {
+		/*
+		 * If the VG has PVs without mdas, they may still be
+		 * orphans in the cache: update the cache state here.
+		 */
+		if (!inconsistent &&
+		    list_size(&correct_vg->pvs) > list_size(pvids)) {
+			list_iterate_items(pvl, &correct_vg->pvs) {
+				if (!pvl->pv->dev) {
+					inconsistent_pvs = 1;
+					break;
+				}
+
+				if (str_list_match_item(pvids, pvl->pv->dev->pvid))
+					continue;
+
+				/*
+				 * PV not marked as belonging to this VG in cache.
+				 * Check it's an orphan without metadata area.
+				 */
+				if (!(info = info_from_pvid(pvl->pv->dev->pvid, 1)) ||
+				   !info->vginfo || !is_orphan_vg(info->vginfo->vgname) ||
+				   list_size(&info->mdas)) {
+					inconsistent_pvs = 1;
+					break;
+				}
+			}
+
+			/* If the check passed, let's update VG and recalculate pvids */
+			if (!inconsistent_pvs) {
+				log_debug("Updating cache for PVs without mdas "
+					  "in VG %s.", vgname);
+				lvmcache_update_vg(correct_vg, use_precommitted);
+
+				if (!(pvids = lvmcache_get_pvids(cmd, vgname, vgid)))
+					return_NULL;
+			}
+		}
+
 		if (list_size(&correct_vg->pvs) != list_size(pvids)) {
 			log_debug("Cached VG %s had incorrect PV list",
 				  vgname);
