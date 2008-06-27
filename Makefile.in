@@ -71,3 +71,36 @@ endif
 
 check: all
 	$(MAKE) -C test all
+
+ifneq ("@LCOV@", "")
+
+CLEAN_DIRTARGETS += $(top_srcdir)/covhtml*
+CLEAN_TARGETS += $(shell find $(top_srcdir) -name '*.gcda' -o -name '*.gcno')
+
+cov-reset:
+	$(LCOV) -d $(top_srcdir)/dmeventd --zerocounters
+	$(LCOV) -d $(top_srcdir)/lib --zerocounters
+	$(LCOV) -d $(top_srcdir)/tools --zerocounters
+
+_cov-common:
+	$(RM) -rf $(_INTERNAL_COVDIR)
+	$(MKDIR_P) $(_INTERNAL_COVDIR)
+	$(LCOV) -b $(top_srcdir)/lib -d $(top_srcdir)/lib -c -o $(_INTERNAL_COVDIR)/lib.info
+	$(LCOV) -b $(top_srcdir)/tools -d $(top_srcdir)/tools -c -o $(_INTERNAL_COVDIR)/tools.info
+	DMEVENTDINFO="$(_INTERNAL_COVDIR)/dmeventd.info" ;\
+	ADMEVENTDINFO="-a $$DMEVENTDINFO" ;\
+	$(LCOV) -b $(top_srcdir)/dmeventd -d $(top_srcdir)/dmeventd -c -o $$DMEVENTDINFO || ADMEVENTDINFO="" ;\
+	$(LCOV) $$ADMEVENTDINFO -a $(_INTERNAL_COVDIR)/lib.info \
+		-a $(_INTERNAL_COVDIR)/tools.info \
+		-o $(_INTERNAL_COVDIR)/lvm.info
+ifneq ("@GENHTML@", "")
+	$(GENHTML) -o $(_INTERNAL_COVDIR) -p $(top_srcdir) $(_INTERNAL_COVDIR)/lvm.info
+endif
+
+cov: _INTERNAL_COVDIR=$(top_srcdir)/covhtml
+cov: _cov-common
+
+covd: _INTERNAL_COVDIR=$(top_srcdir)/covhtml-$(shell date +%F-%k-%M-%S)
+covd: _cov-common
+
+endif
