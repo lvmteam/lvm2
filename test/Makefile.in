@@ -74,6 +74,8 @@ lvm-wrapper: Makefile
 clean:
 	rm -rf init.sh lvm-wrapper bin .bin-dir-stamp
 
+distclean: clean
+
 all: $(T)
-.PHONY: $(T) clean
+.PHONY: $(T) clean distclean
 .NOTPARALLEL:
