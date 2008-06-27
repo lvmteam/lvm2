@@ -1317,7 +1317,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-lvm1_fallback  Use this to fall back and use LVM1 binaries if
                           device-mapper is missing from the kernel
-  --enable-readline       Enable readline support
+  --disable-readline      Disable readline support
   --disable-realtime      Disable realtime clock support
   --enable-debug          Enable debugging
   --enable-profiling      Gather gcov profiling data
@@ -8509,7 +8509,7 @@ echo $ECHO_N "checking whether to enable readline... $ECHO_C" >&6; }
 if test "${enable_readline+set}" = set; then
   enableval=$enable_readline; READLINE=$enableval
 else
-  READLINE=no
+  READLINE=yes
 fi
 
 { echo "$as_me:$LINENO: result: $READLINE" >&5
