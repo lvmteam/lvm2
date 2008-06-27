@@ -1,5 +1,6 @@
 Version 2.02.39 -
 ================================
+  Fix up cache for PVs without mdas after consistent VG metadata is processed.
   Update validation of safe mirror log type conversions in lvconvert.
   Fix lvconvert to disallow snapshot and mirror combinations.
   Fix reporting of LV fields alongside unallocated PV segments.

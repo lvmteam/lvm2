@@ -845,6 +845,7 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 {
 	struct lvmcache_vginfo *vginfo, *primary_vginfo, *orphan_vginfo;
 	struct lvmcache_info *info2, *info3;
+	char mdabuf[32];
 	// struct lvmcache_vginfo  *old_vginfo, *next;
 
 	if (!vgname || (info && info->vginfo && !strcmp(info->vginfo->vgname, vgname)))
@@ -914,11 +915,16 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 				orphan_vginfo = vginfo_from_vgname(primary_vginfo->fmt->orphan_vg_name, NULL);
 				_drop_vginfo(info2, primary_vginfo);	
 				_vginfo_attach_info(orphan_vginfo, info2);
-				log_debug("lvmcache: %s: now in VG %s%s%s%s",
+				if (info2->mdas.n)
+					sprintf(mdabuf, " with %u mdas",
+						list_size(&info2->mdas));
+				else
+					mdabuf[0] = '\0';
+				log_debug("lvmcache: %s: now in VG %s%s%s%s%s",
 					  dev_name(info2->dev),
 					  vgname, orphan_vginfo->vgid[0] ? " (" : "",
 					  orphan_vginfo->vgid[0] ? orphan_vginfo->vgid : "",
-					  orphan_vginfo->vgid[0] ? ")" : "");
+					  orphan_vginfo->vgid[0] ? ")" : "", mdabuf);
 		}
 
 		if (!_insert_vginfo(vginfo, vgid, vgstatus, creation_host,
@@ -947,13 +953,17 @@ static int _lvmcache_update_vgname(struct lvmcache_info *info,
 	/* FIXME Check consistency of list! */
 	vginfo->fmt = fmt;
 
-	if (info)
-		log_debug("lvmcache: %s: now in VG %s%s%s%s",
+	if (info) {
+		if (info->mdas.n)
+			sprintf(mdabuf, " with %u mdas", list_size(&info->mdas));
+		else
+			mdabuf[0] = '\0';
+		log_debug("lvmcache: %s: now in VG %s%s%s%s%s",
 			  dev_name(info->dev),
 			  vgname, vginfo->vgid[0] ? " (" : "",
 			  vginfo->vgid[0] ? vginfo->vgid : "",
-			  vginfo->vgid[0] ? ")" : "");
-	else
+			  vginfo->vgid[0] ? ")" : "", mdabuf);
+	} else
 		log_debug("lvmcache: initialised VG %s", vgname);
 
 	return 1;
