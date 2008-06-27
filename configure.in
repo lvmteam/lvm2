@@ -269,11 +269,11 @@ if test x$MIRRORS = xinternal; then
 fi
 
 ################################################################################
-dnl -- Enable readline
+dnl -- Disable readline
 AC_MSG_CHECKING(whether to enable readline)
 AC_ARG_ENABLE([readline],
-  [  --enable-readline       Enable readline support],
-  [READLINE=$enableval], [READLINE=no])
+  [  --disable-readline      Disable readline support],
+  [READLINE=$enableval], [READLINE=yes])
 AC_MSG_RESULT($READLINE)
 
 ################################################################################

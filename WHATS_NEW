@@ -1,5 +1,6 @@
 Version 2.02.39 -
 ================================
+  Enable readline by default if available.
   Update autoconf to 2008-01-16.
   Add $DISTCLEAN_DIRS to make.tmpl.in.
   Create coverage reports with --enable-profiling and make lcov or lcov-dated.
