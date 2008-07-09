@@ -36,6 +36,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#include <signal.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
 
 #ifdef linux
