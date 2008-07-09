@@ -366,9 +366,10 @@ AC_ARG_ENABLE(cmdlib, [  --enable-cmdlib         Build shared command library],
 CMDLIB=$enableval, CMDLIB=no)
 AC_MSG_RESULT($CMDLIB)
 AC_SUBST([LVM2CMD_LIB])
-test $CMDLIB=yes \
+test x$CMDLIB = xyes \
   && LVM2CMD_LIB=-llvm2cmd \
   || LVM2CMD_LIB=
+
 
 ################################################################################
 dnl -- Enable fsadm
@@ -385,10 +386,17 @@ DMEVENTD=$enableval)
 AC_MSG_RESULT($DMEVENTD)
 
 dnl -- dmeventd currently requires internal mirror support
-if test x$DMEVENTD = xyes && test x$MIRRORS != xinternal; then
-AC_MSG_ERROR(
---enable-dmeventd currently requires --with-mirrors=internal
-)
+if test x$DMEVENTD = xyes; then
+   if test x$MIRRORS != xinternal; then
+      AC_MSG_ERROR(
+	--enable-dmeventd currently requires --with-mirrors=internal
+      )
+   fi
+   if test x$CMDLIB = xno; then
+      AC_MSG_ERROR(
+        --enable-dmeventd requires --enable-cmdlib to be used as well
+      )
+   fi
 fi
 
 if test x$DMEVENTD = xyes; then

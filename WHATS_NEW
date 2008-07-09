@@ -1,5 +1,7 @@
 Version 2.02.40 - 
 ================================
+  Fix dmeventd regression where mirror and snapshot monitoring libraries
+  failed to link against liblvm2cmd.
 
 Version 2.02.39 - 27th June 2008
 ================================
