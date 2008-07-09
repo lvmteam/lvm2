@@ -8726,9 +8726,10 @@ fi
 { echo "$as_me:$LINENO: result: $CMDLIB" >&5
 echo "${ECHO_T}$CMDLIB" >&6; }
 
-test $CMDLIB=yes \
+test x$CMDLIB = xyes \
   && LVM2CMD_LIB=-llvm2cmd \
   || LVM2CMD_LIB=
+
 
 ################################################################################
 { echo "$as_me:$LINENO: checking whether to install fsadm" >&5
@@ -8752,12 +8753,21 @@ fi
 { echo "$as_me:$LINENO: result: $DMEVENTD" >&5
 echo "${ECHO_T}$DMEVENTD" >&6; }
 
-if test x$DMEVENTD = xyes && test x$MIRRORS != xinternal; then
-{ { echo "$as_me:$LINENO: error: --enable-dmeventd currently requires --with-mirrors=internal
-" >&5
+if test x$DMEVENTD = xyes; then
+   if test x$MIRRORS != xinternal; then
+      { { echo "$as_me:$LINENO: error: --enable-dmeventd currently requires --with-mirrors=internal
+      " >&5
 echo "$as_me: error: --enable-dmeventd currently requires --with-mirrors=internal
-" >&2;}
+      " >&2;}
    { (exit 1); exit 1; }; }
+   fi
+   if test x$CMDLIB = xno; then
+      { { echo "$as_me:$LINENO: error: --enable-dmeventd requires --enable-cmdlib to be used as well
+      " >&5
+echo "$as_me: error: --enable-dmeventd requires --enable-cmdlib to be used as well
+      " >&2;}
+   { (exit 1); exit 1; }; }
+   fi
 fi
 
 if test x$DMEVENTD = xyes; then
@@ -10260,7 +10270,7 @@ if test "$ac_res" != no; then
   ac_cv_func_getmntent=yes
 
 cat >>confdefs.h <<\_ACEOF
-#define HAVE_GETMNTENT
+#define HAVE_GETMNTENT 1
 _ACEOF
 
 else
