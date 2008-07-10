@@ -125,6 +125,31 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 	return 1;
 }
 
+static int _read_flag_config(struct config_node *n, int *status, int type)
+{
+	struct config_node *cn;
+	*status = 0;
+
+	if (!(cn = find_config_node(n, "status"))) {
+		log_error("Could not find status flags.");
+		return 0;
+	}
+
+	if (!(read_flags(status, type | STATUS_FLAG, cn->v))) {
+		log_error("Could not read status flags.");
+		return 0;
+	}
+
+	if (cn = find_config_node(n, "flags")) {
+		if (!(read_flags(status, type, cn->v))) {
+			log_error("Could not read flags.");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		    struct volume_group *vg, struct config_node *pvn,
 		    struct config_node *vgn __attribute((unused)),
@@ -181,12 +206,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 
 	memcpy(&pv->vgid, &vg->id, sizeof(vg->id));
 
-	if (!(cn = find_config_node(pvn, "status"))) {
-		log_error("Couldn't find status flags for physical volume.");
-		return 0;
-	}
-
-	if (!(read_flags(&pv->status, PV_FLAGS, cn->v))) {
+	if (!_read_flag_config(pvn, &pv->status, PV_FLAGS)) {
 		log_error("Couldn't read status flags for physical volume.");
 		return 0;
 	}
@@ -493,13 +513,9 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 		return 0;
 	}
 
-	if (!(cn = find_config_node(lvn, "status"))) {
-		log_error("Couldn't find status flags for logical volume.");
-		return 0;
-	}
-
-	if (!(read_flags(&lv->status, LV_FLAGS, cn->v))) {
-		log_error("Couldn't read status flags for logical volume.");
+	if (!_read_flag_config(lvn, &lv->status, LV_FLAGS)) {
+		log_error("Couldn't read status flags for logical volume %s.",
+			  lv->name);
 		return 0;
 	}
 
@@ -692,14 +708,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	if (!(cn = find_config_node(vgn, "status"))) {
-		log_error("Couldn't find status flags for volume group %s.",
-			  vg->name);
-		goto bad;
-	}
-
-	if (!(read_flags(&vg->status, VG_FLAGS, cn->v))) {
-		log_error("Couldn't read status flags for volume group %s.",
+	if (!_read_flag_config(vgn, &vg->status, VG_FLAGS)) {
+		log_error("Error reading flags of volume group %s.",
 			  vg->name);
 		goto bad;
 	}
@@ -855,14 +865,8 @@ static const char *_read_vgname(const struct format_type *fmt,
 		return 0;
 	}
 
-	if (!(cn = find_config_node(vgn, "status"))) {
+	if (!_read_flag_config(vgn, vgstatus, VG_FLAGS)) {
 		log_error("Couldn't find status flags for volume group %s.",
-			  vgname);
-		return 0;
-	}
-
-	if (!(read_flags(vgstatus, VG_FLAGS, cn->v))) {
-		log_error("Couldn't read status flags for volume group %s.",
 			  vgname);
 		return 0;
 	}

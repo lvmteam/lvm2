@@ -25,48 +25,49 @@
 struct flag {
 	const int mask;
 	const char *description;
+	int kind;
 };
 
 static struct flag _vg_flags[] = {
-	{EXPORTED_VG, "EXPORTED"},
-	{RESIZEABLE_VG, "RESIZEABLE"},
-	{PARTIAL_VG, "PARTIAL"},
-	{PVMOVE, "PVMOVE"},
-	{LVM_READ, "READ"},
-	{LVM_WRITE, "WRITE"},
-	{CLUSTERED, "CLUSTERED"},
-	{SHARED, "SHARED"},
-	{PRECOMMITTED, NULL},
-	{0, NULL}
+	{EXPORTED_VG, "EXPORTED", STATUS_FLAG},
+	{RESIZEABLE_VG, "RESIZEABLE", STATUS_FLAG},
+	{PARTIAL_VG, "PARTIAL", STATUS_FLAG},
+	{PVMOVE, "PVMOVE", STATUS_FLAG},
+	{LVM_READ, "READ", STATUS_FLAG},
+	{LVM_WRITE, "WRITE", STATUS_FLAG},
+	{CLUSTERED, "CLUSTERED", STATUS_FLAG},
+	{SHARED, "SHARED", STATUS_FLAG},
+	{PRECOMMITTED, NULL, 0},
+	{0, NULL, 0}
 };
 
 static struct flag _pv_flags[] = {
-	{ALLOCATABLE_PV, "ALLOCATABLE"},
-	{EXPORTED_VG, "EXPORTED"},
-	{0, NULL}
+	{ALLOCATABLE_PV, "ALLOCATABLE", STATUS_FLAG},
+	{EXPORTED_VG, "EXPORTED", STATUS_FLAG},
+	{0, NULL, 0}
 };
 
 static struct flag _lv_flags[] = {
-	{LVM_READ, "READ"},
-	{LVM_WRITE, "WRITE"},
-	{FIXED_MINOR, "FIXED_MINOR"},
-	{VISIBLE_LV, "VISIBLE"},
-	{PVMOVE, "PVMOVE"},
-	{LOCKED, "LOCKED"},
-	{MIRROR_NOTSYNCED, "NOTSYNCED"},
-	{MIRROR_IMAGE, NULL},
-	{MIRROR_LOG, NULL},
-	{MIRRORED, NULL},
-	{VIRTUAL, NULL},
-	{SNAPSHOT, NULL},
-	{ACTIVATE_EXCL, NULL},
-	{CONVERTING, NULL},
-	{0, NULL}
+	{LVM_READ, "READ", STATUS_FLAG},
+	{LVM_WRITE, "WRITE", STATUS_FLAG},
+	{FIXED_MINOR, "FIXED_MINOR", STATUS_FLAG},
+	{VISIBLE_LV, "VISIBLE", STATUS_FLAG},
+	{PVMOVE, "PVMOVE", STATUS_FLAG},
+	{LOCKED, "LOCKED", STATUS_FLAG},
+	{MIRROR_NOTSYNCED, "NOTSYNCED", STATUS_FLAG},
+	{MIRROR_IMAGE, NULL, 0},
+	{MIRROR_LOG, NULL, 0},
+	{MIRRORED, NULL, 0},
+	{VIRTUAL, NULL, 0},
+	{SNAPSHOT, NULL, 0},
+	{ACTIVATE_EXCL, NULL, 0},
+	{CONVERTING, NULL, 0},
+	{0, NULL, 0}
 };
 
 static struct flag *_get_flags(int type)
 {
-	switch (type) {
+	switch (type & ~STATUS_FLAG) {
 	case VG_FLAGS:
 		return _vg_flags;
 
@@ -100,6 +101,9 @@ int print_flags(uint32_t status, int type, char *buffer, size_t size)
 	for (f = 0; flags[f].mask; f++) {
 		if (status & flags[f].mask) {
 			status &= ~flags[f].mask;
+
+			if ((type & STATUS_FLAG) != flags[f].kind)
+				continue;
 
 			/* Internal-only flag? */
 			if (!flags[f].description)
@@ -151,7 +155,7 @@ int read_flags(uint32_t *status, int type, struct config_value *cv)
 				break;
 			}
 
-		if (!flags[f].description) {
+		if (!flags[f].description && (type & STATUS_FLAG)) {
 			log_err("Unknown status flag '%s'.", cv->v.str);
 			return 0;
 		}
@@ -160,6 +164,6 @@ int read_flags(uint32_t *status, int type, struct config_value *cv)
 	}
 
       out:
-	*status = s;
+	*status |= s;
 	return 1;
 }
