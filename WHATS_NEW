@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Add "flags" metadata field (akin to "status") for backward-compatible flags.
   Fix dmeventd monitoring libraries to link against liblvm2cmd again. (2.02.39)
 
 Version 2.02.39 - 27th June 2008

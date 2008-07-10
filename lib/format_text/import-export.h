@@ -36,9 +36,11 @@
  * common code for reading and writing them.
  */
 enum {
+	COMPATIBLE_FLAG = 0x0,
 	VG_FLAGS,
 	PV_FLAGS,
-	LV_FLAGS
+	LV_FLAGS,
+	STATUS_FLAG = 0x8,
 };
 
 struct text_vg_version_ops {
