@@ -125,7 +125,7 @@ static int _read_id(struct id *id, struct config_node *cn, const char *path)
 	return 1;
 }
 
-static int _read_flag_config(struct config_node *n, int *status, int type)
+static int _read_flag_config(struct config_node *n, uint32_t *status, int type)
 {
 	struct config_node *cn;
 	*status = 0;
@@ -140,7 +140,7 @@ static int _read_flag_config(struct config_node *n, int *status, int type)
 		return 0;
 	}
 
-	if (cn = find_config_node(n, "flags")) {
+	if ((cn = find_config_node(n, "flags"))) {
 		if (!(read_flags(status, type, cn->v))) {
 			log_error("Could not read flags.");
 			return 0;
@@ -836,7 +836,7 @@ static const char *_read_vgname(const struct format_type *fmt,
 				struct config_tree *cft, struct id *vgid,
 				uint32_t *vgstatus, char **creation_host)
 {
-	struct config_node *vgn, *cn;
+	struct config_node *vgn;
 	struct dm_pool *mem = fmt->cmd->mem;
 	char *vgname;
 	int old_suppress;
