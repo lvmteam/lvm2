@@ -95,20 +95,14 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 			   struct cmd_context *cmd __attribute((unused)),
 			   struct lv_segment *seg __attribute((unused)),
 			   char *params, uint64_t *total_numerator,
-			   uint64_t *total_denominator, float *percent)
+			   uint64_t *total_denominator)
 {
-	float percent2;
 	uint64_t numerator, denominator;
 
-	if (strchr(params, '/')) {
-		if (sscanf(params, "%" PRIu64 "/%" PRIu64,
-			   &numerator, &denominator) == 2) {
-			*total_numerator += numerator;
-			*total_denominator += denominator;
-		}
-	} else if (sscanf(params, "%f", &percent2) == 1) {
-		*percent += percent2;
-		*percent /= 2;
+	if (sscanf(params, "%" PRIu64 "/%" PRIu64,
+		   &numerator, &denominator) == 2) {
+		*total_numerator += numerator;
+		*total_denominator += denominator;
 	}
 
 	return 1;
