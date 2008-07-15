@@ -379,8 +379,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		    !segtype->ops->target_percent(&dm->target_state, dm->mem,
 						  dm->cmd, seg, params,
 						  &total_numerator,
-						  &total_denominator,
-						  percent))
+						  &total_denominator))
 			goto_out;
 
 	} while (next);
@@ -393,7 +392,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 	if (total_denominator)
 		*percent = (float) total_numerator *100 / total_denominator;
-	else if (*percent < 0)
+	else
 		*percent = 100;
 
 	log_debug("LV percent: %f", *percent);
