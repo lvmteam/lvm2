@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Fix pvchange -M1 -u to preserve existing extent locations when there's a VG.
   Cease recognising snapshot-in-use percentages returned by early devt kernels.
   Add backward-compatible flags field to on-disk format_text metadata.
   Fix dmeventd monitoring libraries to link against liblvm2cmd again. (2.02.39)
