@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Add pvcreate sanity tests, check for label_write() failure in _text_pv_write().
   Fix pvchange -M1 -u to preserve existing extent locations when there's a VG.
   Cease recognising snapshot-in-use percentages returned by early devt kernels.
   Add backward-compatible flags field to on-disk format_text metadata.
