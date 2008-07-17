@@ -38,7 +38,7 @@ test_expect_success \
    lv2=$(this_test_)-test-lv2-$$          &&
    lv3=$(this_test_)-test-lv3-$$'
 
-for mdatype in 1 2
+for mdatype in 2
 do
 test_expect_success \
   "(lvm$mdatype) setup PVs" \
