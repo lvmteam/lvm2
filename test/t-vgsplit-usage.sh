@@ -36,12 +36,17 @@ test_expect_success \
    vg2=$(this_test_)-test-vg2-$$          &&
    lv1=$(this_test_)-test-lv1-$$          &&
    lv2=$(this_test_)-test-lv2-$$          &&
-   lv3=$(this_test_)-test-lv3-$$          &&
-   pvcreate $d1 $d2 $d3 $d4'
+   lv3=$(this_test_)-test-lv3-$$'
+
+for mdatype in 1 2
+do
+test_expect_success \
+  "(lvm$mdatype) setup PVs" \
+  'pvcreate -M$mdatype $d1 $d2 $d3 $d4'
 
 test_expect_success \
-  'vgsplit accepts new vg as destination of split' \
-  'vgcreate $vg1 $d1 $d2 &&
+  "(lvm$mdatype) vgsplit accepts new vg as destination of split" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
    vgsplit $vg1 $vg2 $d1 1>err;
    status=$?; echo status=$status; test $status = 0 &&
    grep "New volume group \"$vg2\" successfully split from \"$vg1\"" err &&
@@ -49,9 +54,9 @@ test_expect_success \
    vgremove $vg2'
 
 test_expect_success \
-  'vgsplit accepts existing vg as destination of split' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgcreate $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit accepts existing vg as destination of split" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype $vg2 $d3 $d4 &&
    vgsplit $vg1 $vg2 $d1 1>err;
    status=$?; echo status=$status; test $status = 0 &&
    grep "Existing volume group \"$vg2\" successfully split from \"$vg1\"" err &&
@@ -59,25 +64,25 @@ test_expect_success \
    vgremove $vg2'
 
 test_expect_success \
-  'vgsplit accepts --maxphysicalvolumes 128 on new VG' \
-  'vgcreate $vg1 $d1 $d2 &&
+  "(lvm$mdatype) vgsplit accepts --maxphysicalvolumes 128 on new VG" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
    vgsplit --maxphysicalvolumes 128 $vg1 $vg2 $d1 &&
    check_vg_field_ $vg2 max_pv 128 &&
    vgremove $vg1 &&
    vgremove $vg2'
 
 test_expect_success \
-  'vgsplit accepts --maxlogicalvolumes 128 on new VG' \
-  'vgcreate $vg1 $d1 $d2 &&
+  "(lvm$mdatype) vgsplit accepts --maxlogicalvolumes 128 on new VG" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
    vgsplit --maxlogicalvolumes 128 $vg1 $vg2 $d1 &&
    check_vg_field_ $vg2 max_lv 128 &&
    vgremove $vg1 &&
    vgremove $vg2'
 
 test_expect_success \
-  'vgsplit rejects split because max_pv of destination would be exceeded' \
-  'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects split because max_pv of destination would be exceeded" \
+  'vgcreate -M$mdatype --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
    vgsplit $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$status; test $status = 5 &&
    grep "^  Maximum number of physical volumes (2) exceeded" err &&
@@ -85,9 +90,9 @@ test_expect_success \
    vgremove $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because maxphysicalvolumes given with existing vg' \
-  'vgcreate --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects split because maxphysicalvolumes given with existing vg" \
+  'vgcreate -M$mdatype --maxphysicalvolumes 2 $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype --maxphysicalvolumes 2 $vg2 $d3 $d4 &&
    vgsplit --maxphysicalvolumes 2 $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
@@ -95,9 +100,9 @@ test_expect_success \
    vgremove $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because maxlogicalvolumes given with existing vg' \
-  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects split because maxlogicalvolumes given with existing vg" \
+  'vgcreate -M$mdatype --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
    vgsplit --maxlogicalvolumes 2 $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
@@ -105,9 +110,9 @@ test_expect_success \
    vgremove $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because alloc given with existing vg' \
-  'vgcreate --alloc cling $vg1 $d1 $d2 &&
-   vgcreate --alloc cling $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects split because alloc given with existing vg" \
+  'vgcreate -M$mdatype --alloc cling $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype --alloc cling $vg2 $d3 $d4 &&
    vgsplit --alloc cling $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
@@ -115,9 +120,9 @@ test_expect_success \
    vgremove $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because clustered given with existing vg' \
-  'vgcreate --clustered n $vg1 $d1 $d2 &&
-   vgcreate --clustered n $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects split because clustered given with existing vg" \
+  'vgcreate -M$mdatype --clustered n $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype --clustered n $vg2 $d3 $d4 &&
    vgsplit --clustered n $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$status; test $status = 5 &&
    grep "^  Volume group \"$vg2\" exists, but new VG option specified" err &&
@@ -125,22 +130,10 @@ test_expect_success \
    vgremove $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because metadata types differ' \
-  'pvcreate -ff -M1 $d3 $d4 &&
-   pvcreate -ff -M2 $d1 $d2 &&
-   vgcreate -M1 $vg1 $d3 $d4 &&
-   vgcreate -M2 $vg2 $d1 $d2 &&
-   vgsplit $vg1 $vg2 $d3 2>err;
-   status=$?; echo status=$status; test $status = 5 &&
-   grep "^  Metadata types differ" err &&
-   vgremove $vg2 &&
-   vgremove $vg1'
-
-test_expect_success \
-  'vgsplit rejects vg with active lv' \
-  'pvcreate -ff -M2 $d3 $d4 &&
-   vgcreate $vg1 $d1 $d2 &&
-   vgcreate $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects vg with active lv" \
+  'pvcreate -ff -M$mdatype $d3 $d4 &&
+   vgcreate -M$mdatype $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype $vg2 $d3 $d4 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
    vgsplit $vg1 $vg2 $d1 2>err;
    status=$?; echo status=$status; test $status = 5 &&
@@ -149,9 +142,9 @@ test_expect_success \
    vgremove -f $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because max_lv is exceeded' \
-  'vgcreate --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
-   vgcreate --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects split because max_lv is exceeded" \
+  'vgcreate -M$mdatype --maxlogicalvolumes 2 $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype --maxlogicalvolumes 2 $vg2 $d3 $d4 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
    lvcreate -l 4 -n $lv2 $vg1 &&
    lvcreate -l 4 -n $lv3 $vg2 &&
@@ -164,8 +157,8 @@ test_expect_success \
    vgremove -f $vg1'
 
 test_expect_success \
-  'verify default - max_lv attribute from new VG is same as source VG' \
-  'vgcreate $vg1 $d1 $d2 &&
+  "(lvm$mdatype) vgsplit verify default - max_lv attribute from new VG is same as source VG" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d1 &&
@@ -174,8 +167,8 @@ test_expect_success \
    vgremove -f $vg1'
 
 test_expect_success \
-  'verify default - max_pv attribute from new VG is same as source VG' \
-  'vgcreate $vg1 $d1 $d2 &&
+  "(lvm$mdatype) vgsplit verify default - max_pv attribute from new VG is same as source VG" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d1 &&
@@ -184,8 +177,8 @@ test_expect_success \
    vgremove -f $vg1'
 
 test_expect_success \
-  'verify default - vg_fmt attribute from new VG is same as source VG' \
-  'vgcreate $vg1 $d1 $d2 &&
+  "(lvm$mdatype) vgsplit verify default - vg_fmt attribute from new VG is same as source VG" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
    vgchange -an $vg1 &&
    vgsplit $vg1 $vg2 $d1 &&
@@ -194,9 +187,9 @@ test_expect_success \
    vgremove -f $vg1'
 
 test_expect_success \
-  'vgsplit rejects split because PV not in VG' \
-  'vgcreate $vg1 $d1 $d2 &&
-   vgcreate $vg2 $d3 $d4 &&
+  "(lvm$mdatype) vgsplit rejects split because PV not in VG" \
+  'vgcreate -M$mdatype $vg1 $d1 $d2 &&
+   vgcreate -M$mdatype $vg2 $d3 $d4 &&
    lvcreate -l 4 -n $lv1 $vg1 &&
    lvcreate -l 4 -n $lv2 $vg1 &&
    vgchange -an $vg1 &&
@@ -204,6 +197,19 @@ test_expect_success \
    status=$?; echo status=$status; test $status = 5 &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
+done
+
+test_expect_success \
+  '(lvm2) vgsplit rejects split because metadata types differ' \
+  'pvcreate -ff -M1 $d3 $d4 &&
+   pvcreate -ff -M2 $d1 $d2 &&
+   vgcreate -M1 $vg1 $d3 $d4 &&
+   vgcreate -M2 $vg2 $d1 $d2 &&
+   vgsplit $vg1 $vg2 $d3 2>err;
+   status=$?; echo status=$status; test $status = 5 &&
+   grep "^  Metadata types differ" err &&
+   vgremove $vg2 &&
+   vgremove $vg1'
 
 test_done
 # Local Variables:
