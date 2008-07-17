@@ -523,8 +523,6 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	struct lvinfo info;
 	uint32_t pv_extent_count;
 
-	status |= lp->permission | VISIBLE_LV;
-
 	if (lp->lv_name && find_lv_in_vg(vg, lp->lv_name)) {
 		log_error("Logical volume \"%s\" already exists in "
 			  "volume group \"%s\"", lp->lv_name, lp->vg_name);
@@ -543,16 +541,6 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		log_error("Metadata only supports readahead values between 2 and 120.");
 		return 0;
 	}
-
-	/*
-	 * Create the pv list.
-	 */
-	if (lp->pv_count) {
-		if (!(pvh = create_pv_list(cmd->mem, vg,
-					   lp->pv_count, lp->pvs, 1)))
-			return_0;
-	} else
-		pvh = &vg->pvs;
 
 	if (lp->stripe_size > vg->extent_size) {
 		log_error("Reducing requested stripe size %s to maximum, "
@@ -594,6 +582,16 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		lp->extents = (uint64_t) tmp_size / vg->extent_size;
 	}
 
+	/*
+	 * Create the pv list.
+	 */
+	if (lp->pv_count) {
+		if (!(pvh = create_pv_list(cmd->mem, vg,
+					   lp->pv_count, lp->pvs, 1)))
+			return_0;
+	} else
+		pvh = &vg->pvs;
+
 	switch(lp->percent) {
 		case PERCENT_VG:
 			lp->extents = lp->extents * vg->extent_count / 100;
@@ -630,6 +628,8 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 			  "device-mapper kernel driver");
 		return 0;
 	}
+
+	status |= lp->permission | VISIBLE_LV;
 
 	if (lp->snapshot) {
 		if (!activation()) {
