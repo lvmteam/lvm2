@@ -28,9 +28,9 @@ test_expect_success \
   'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
    f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
    f3=$(pwd)/3 && d3=$(loop_setup_ "$f3") &&
-   f4=$(pwd)/4 && d4=$(loop_setup_ "$f4")'
+   f4=$(pwd)/4 && d4=$(loop_setup_ "$f4") &&
+   vg1=$(this_test_)-test-vg1-$$'
 
-# x. negative setphysicalvolumesize, metadatasize
 test_expect_success \
   'pvcreate rejects negative setphysicalvolumesize' \
   'pvcreate --setphysicalvolumesize -1024 $d1;
@@ -57,13 +57,11 @@ test_expect_success \
 #  'pvcreate --metadatasize 100000000000000 $d1;
 #   status=$?; echo status=$status; test $status != 0'
 
-# x. metadatacopies < 0, defaults to 1
 test_expect_success \
   'pvcreate rejects metadatacopies < 0' \
   'pvcreate --metadatacopies -1 $d1;
    status=$?; echo status=$status; test $status != 0'
 
-# x. metadatacopies = 0, 1, 2 pass, > 2 fail
 test_expect_success \
   'pvcreate accepts metadatacopies = 0, 1, 2' \
   'pvcreate --metadatacopies 0 $d1 &&
@@ -76,19 +74,16 @@ test_expect_success \
    pvremove $d2 &&
    pvremove $d3'
 
-# x. metadatacopies > 2 fail
 test_expect_success \
   'pvcreate rejects metadatacopies > 2' \
-  'pvcreate --metadatacopies 3 $d1 &&
+  'pvcreate --metadatacopies 3 $d1;
    status=$?; echo status=$status; test $status != 0'
 
-# x. bogus device given
 test_expect_success \
   'pvcreate rejects invalid device' \
-  'pvcreate $d1bogus &&
+  'pvcreate $d1bogus;
    status=$?; echo status=$status; test $status != 0'
 
-# x. labelsector out of range (< 0 or > deviceSizeInSectors)
 test_expect_success \
   'pvcreate rejects labelsector < 0' \
   'pvcreate --labelsector -1 $d1;
