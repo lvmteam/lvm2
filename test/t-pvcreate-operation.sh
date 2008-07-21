@@ -66,6 +66,20 @@ test_expect_success \
    pvremove -f $d2 &&
    pvremove -f $d1'
 
+for i in 0 1 2 3 
+do
+ test_expect_success \
+  "pvcreate (lvm2) succeeds writing LVM label at sector $i" \
+  'pvcreate --labelsector $i $d1 &&
+  dd if=$d1 bs=512 skip=$i count=1 status=noxfer 2>&1 | strings | grep -q LABELONE;
+  test $? == 0 &&
+  pvremove -f $d1'
+done
+
+test_expect_failure \
+  "pvcreate (lvm2) fails writing LVM label at sector 4" \
+  'pvcreate --labelsector 4 $d1'
+
 test_done
 # Local Variables:
 # indent-tabs-mode: nil
