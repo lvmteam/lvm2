@@ -275,57 +275,84 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	return ECMD_FAILED;
 }
 
-int pvcreate(struct cmd_context *cmd, int argc, char **argv)
+/*
+ * Intial sanity checking of command-line arguments and fill in parameters
+ * for pvcreate command.  More comprehensive validation is done in
+ * pvcreate_validate_params().
+ */
+static int pvcreate_fill_params(struct cmd_context *cmd,
+				int argc, char **argv,
+				struct pvcreate_params *pp)
 {
-	int i, r;
-	int ret = ECMD_PROCESSED;
-	struct pvcreate_params pp;
-
 	if (!argc) {
 		log_error("Please enter a physical volume path");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
 	if (arg_count(cmd, restorefile_ARG) && !arg_count(cmd, uuidstr_ARG)) {
 		log_error("--uuid is required with --restorefile");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
 	if (arg_count(cmd, uuidstr_ARG) && argc != 1) {
 		log_error("Can only set uuid on one volume at once");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
 	if (arg_count(cmd, yes_ARG) && !arg_count(cmd, force_ARG)) {
 		log_error("Option y can only be given with option f");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
 	if (arg_int_value(cmd, labelsector_ARG, 0) >= LABEL_SCAN_SECTORS) {
 		log_error("labelsector must be less than %lu",
 			  LABEL_SCAN_SECTORS);
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
 	if (!(cmd->fmt->features & FMT_MDAS) &&
 	    (arg_count(cmd, metadatacopies_ARG) ||
 	     arg_count(cmd, metadatasize_ARG))) {
 		log_error("Metadata parameters only apply to text format");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
 	if (arg_count(cmd, metadatacopies_ARG) &&
 	    arg_int_value(cmd, metadatacopies_ARG, -1) > 2) {
 		log_error("Metadatacopies may only be 0, 1 or 2");
-		return EINVALID_CMD_LINE;
+		return 0;
 	}
 
 	if (arg_count(cmd, zero_ARG))
-		pp.zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
+		pp->zero = strcmp(arg_str_value(cmd, zero_ARG, "y"), "n");
 	else if (arg_count(cmd, restorefile_ARG) || arg_count(cmd, uuidstr_ARG))
-		pp.zero = 0;
+		pp->zero = 0;
 	else
-		pp.zero = 1;
+		pp->zero = 1;
+
+	return 1;
+}
+
+
+static int pvcreate_validate_params(struct cmd_context *cmd,
+				    struct pvcreate_params *pp)
+{
+	return 1;
+}
+
+int pvcreate(struct cmd_context *cmd, int argc, char **argv)
+{
+	int i, r;
+	int ret = ECMD_PROCESSED;
+	struct pvcreate_params pp;
+
+	if (!pvcreate_fill_params(cmd, argc, argv, &pp)) {
+		return EINVALID_CMD_LINE;
+	}
+
+	if (!pvcreate_validate_params(cmd, &pp)) {
+		    return EINVALID_CMD_LINE;
+	}
 
 	for (i = 0; i < argc; i++) {
 		r = pvcreate_single(cmd, argv[i], &pp);
