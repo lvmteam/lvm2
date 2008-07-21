@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Refactor pvcreate to divide parameter parsing & validation from create logic.
   Check for label_write() failure in _text_pv_write().
   Add pvcreate tests and update vgsplit tests to handle lvm1 and lvm2 metadata.
   Fix pvchange -M1 -u to preserve existing extent locations when there's a VG.
