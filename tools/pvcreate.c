@@ -21,6 +21,7 @@ struct pvcreate_params {
 	uint64_t size;
 	int pvmetadatacopies;
 	uint64_t pvmetadatasize;
+	int64_t labelsector;
 };
 
 const char _really_init[] =
@@ -237,8 +238,7 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	log_very_verbose("Writing physical volume data to disk \"%s\"",
 			 pv_name);
 	if (!(pv_write(cmd, (struct physical_volume *)pv, &mdas,
-		       arg_int64_value(cmd, labelsector_ARG,
-						       DEFAULT_LABELSECTOR)))) {
+		       pp->labelsector))) {
 		log_error("Failed to write physical volume \"%s\"", pv_name);
 		goto error;
 	}
@@ -290,6 +290,9 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 		log_error("labelsector must be less than %lu",
 			  LABEL_SCAN_SECTORS);
 		return 0;
+	} else {
+		pp->labelsector = arg_int64_value(cmd, labelsector_ARG,
+						  DEFAULT_LABELSECTOR);
 	}
 
 	if (!(cmd->fmt->features & FMT_MDAS) &&
