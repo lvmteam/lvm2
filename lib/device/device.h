@@ -94,11 +94,6 @@ const char *dev_name_confirmed(struct device *dev, int quiet);
 /* Does device contain md superblock?  If so, where? */
 int dev_is_md(struct device *dev, uint64_t *sb);
 
-/* FIXME Check partition type if appropriate */
-
-#define is_lvm_partition(a) 1
-/* int is_lvm_partition(const char *name); */
-
 int is_partitioned_dev(struct device *dev);
 
 #endif
