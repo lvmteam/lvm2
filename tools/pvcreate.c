@@ -37,13 +37,6 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	struct device *dev;
 	uint64_t md_superblock;
 
-	/* is the partition type set correctly ? */
-	if ((arg_count(cmd, force_ARG) < 1) && !is_lvm_partition(name)) {
-		log_error("%s: Not LVM partition type: use -f to override",
-			  name);
-		return 0;
-	}
-
 	/* Is there a pv here already? */
 	/* FIXME Use partial mode here? */
 	pv = pv_read(cmd, name, NULL, NULL, 0);

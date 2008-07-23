@@ -26,13 +26,6 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 {
 	struct physical_volume *pv;
 
-	/* is the partition type set correctly ? */
-	if ((arg_count(cmd, force_ARG) < 1) && !is_lvm_partition(name)) {
-		log_error("%s: Not LVM partition type: use -f to override",
-			  name);
-		return 0;
-	}
-
 	/* Is there a pv here already? */
 	/* If not, this is an error unless you used -f. */
 	if (!(pv = pv_read(cmd, name, NULL, NULL, 1))) {
