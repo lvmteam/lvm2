@@ -80,6 +80,33 @@ test_expect_failure \
   "pvcreate (lvm2) fails writing LVM label at sector 4" \
   'pvcreate --labelsector 4 $d1'
 
+backupfile=mybackupfile-$(this_test_)
+uuid1=freddy-fred-fred-fred-fred-fred-freddy
+uuid2=freddy-fred-fred-fred-fred-fred-fredie
+bogusuuid=fred
+
+test_expect_failure \
+  'pvcreate rejects uuid option with less than 32 characters' \
+  'pvcreate --uuid $bogusuuid $d1'
+
+test_expect_success \
+  'pvcreate rejects uuid already in use' \
+  'pvcreate --uuid freddy-fred-fred-fred-fred-fred-freddy $d1 &&
+   pvcreate --uuid freddy-fred-fred-fred-fred-fred-freddy $d2;
+   status=$?; echo status=$status; test $status != 0'
+
+test_expect_success \
+  'pvcreate rejects non-existent file given with restorefile' \
+  'pvcreate --uuid $uuid1 --restorefile $backupfile $d1;
+   status=$?; echo status=$status; test $status != 0'
+
+test_expect_success \
+  'pvcreate rejects restorefile with uuid not found in file' \
+  'pvcreate --uuid $uuid1 $d1 &&
+   vgcfgbackup -f $backupfile &&
+   pvcreate --uuid $uuid2 --restorefile $backupfile $d2;
+   status=$?; echo status=$status; test $status != 0'
+
 test_done
 # Local Variables:
 # indent-tabs-mode: nil
