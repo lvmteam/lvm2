@@ -273,7 +273,7 @@ dnl -- Disable readline
 AC_MSG_CHECKING(whether to enable readline)
 AC_ARG_ENABLE([readline],
   [  --disable-readline      Disable readline support],
-  [READLINE=$enableval], [READLINE=yes])
+  [READLINE=$enableval], [READLINE=maybe])
 AC_MSG_RESULT($READLINE)
 
 ################################################################################
@@ -410,9 +410,11 @@ fi;
 
 ################################################################################
 dnl -- Check for termcap (Shamelessly copied from parted 1.4.17)
-if test x$READLINE = xyes; then
-	AC_SEARCH_LIBS(tgetent, ncurses curses termcap termlib, ,
-		AC_MSG_ERROR(
+if test x$READLINE != xno; then
+	AC_SEARCH_LIBS([tgetent], [ncurses curses termcap termlib],
+	  [tg_found=yes], [tg_found=no])
+	test x$READLINE:$tg_found = xyes:no &&
+	  AC_MSG_ERROR(
 termcap could not be found which is required for the
 --enable-readline option (which is enabled by default).  Either disable readline
 support with --disable-readline or download and install termcap from:
@@ -422,7 +424,6 @@ Note: if you are using precompiled packages you will also need the development
 Note: (n)curses also seems to work as a substitute for termcap.  This was
   not found either - but you could try installing that as well.
 )
-	)
 fi
 
 ################################################################################
@@ -514,9 +515,10 @@ AC_CHECK_HEADERS(getopt.h, AC_DEFINE([HAVE_GETOPTLONG], 1, [Define to 1 if getop
 
 ################################################################################
 dnl -- Check for readline (Shamelessly copied from parted 1.4.17)
-if test x$READLINE = xyes; then
-	AC_CHECK_LIB(readline, readline, ,
-		AC_MSG_ERROR(
+if test x$READLINE != xno; then
+	AC_CHECK_LIB([readline], [readline], [rl_found=yes], [rl_found=no])
+	test x$READLINE:$rl_found = xyes:no &&
+	  AC_MSG_ERROR(
 GNU Readline could not be found which is required for the
 --enable-readline option (which is enabled by default).  Either disable readline
 support with --disable-readline or download and install readline from:
@@ -524,12 +526,13 @@ support with --disable-readline or download and install readline from:
 Note: if you are using precompiled packages you will also need the development
 package as well (which may be called readline-devel or something similar).
 )
-	)
-	AC_CHECK_FUNC([rl_completion_matches],
-	  AC_DEFINE([HAVE_RL_COMPLETION_MATCHES], 1,
-	  [Define to 1 if rl_completion_matches() is available.]))
-	AC_DEFINE([READLINE_SUPPORT], 1,
-	  [Define to 1 to include the LVM readline shell.])
+	if test $rl_found = yes; then
+		AC_CHECK_FUNC([rl_completion_matches],
+		  AC_DEFINE([HAVE_RL_COMPLETION_MATCHES], 1,
+		  [Define to 1 if rl_completion_matches() is available.]))
+		AC_DEFINE([READLINE_SUPPORT], 1,
+		  [Define to 1 to include the LVM readline shell.])
+	fi
 fi
 
 ################################################################################
