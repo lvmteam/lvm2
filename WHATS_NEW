@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  configure no longer fails when the readline library is not available
   Remove dead code, is_lvm_partition() - no functional change.
   Refactor pvcreate to divide parameter parsing & validation from create logic.
   Check for label_write() failure in _text_pv_write().
