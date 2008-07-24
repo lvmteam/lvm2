@@ -8509,7 +8509,7 @@ echo $ECHO_N "checking whether to enable readline... $ECHO_C" >&6; }
 if test "${enable_readline+set}" = set; then
   enableval=$enable_readline; READLINE=$enableval
 else
-  READLINE=yes
+  READLINE=maybe
 fi
 
 { echo "$as_me:$LINENO: result: $READLINE" >&5
@@ -8783,7 +8783,7 @@ if [ "x$exec_prefix" = xNONE -a "x$prefix" = xNONE ];
 fi;
 
 ################################################################################
-if test x$READLINE = xyes; then
+if test x$READLINE != xno; then
 	{ echo "$as_me:$LINENO: checking for library containing tgetent" >&5
 echo $ECHO_N "checking for library containing tgetent... $ECHO_C" >&6; }
 if test "${ac_cv_search_tgetent+set}" = set; then
@@ -8864,9 +8864,13 @@ echo "${ECHO_T}$ac_cv_search_tgetent" >&6; }
 ac_res=$ac_cv_search_tgetent
 if test "$ac_res" != no; then
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-
+  tg_found=yes
 else
-  { { echo "$as_me:$LINENO: error: termcap could not be found which is required for the
+  tg_found=no
+fi
+
+	test x$READLINE:$tg_found = xyes:no &&
+	  { { echo "$as_me:$LINENO: error: termcap could not be found which is required for the
 --enable-readline option (which is enabled by default).  Either disable readline
 support with --disable-readline or download and install termcap from:
 	ftp.gnu.org/gnu/termcap
@@ -8885,9 +8889,6 @@ Note: (n)curses also seems to work as a substitute for termcap.  This was
   not found either - but you could try installing that as well.
 " >&2;}
    { (exit 1); exit 1; }; }
-
-fi
-
 fi
 
 ################################################################################
@@ -9488,9 +9489,8 @@ done
 
 
 ################################################################################
-if test x$READLINE = xyes; then
-
-{ echo "$as_me:$LINENO: checking for readline in -lreadline" >&5
+if test x$READLINE != xno; then
+	{ echo "$as_me:$LINENO: checking for readline in -lreadline" >&5
 echo $ECHO_N "checking for readline in -lreadline... $ECHO_C" >&6; }
 if test "${ac_cv_lib_readline_readline+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -9552,14 +9552,13 @@ fi
 { echo "$as_me:$LINENO: result: $ac_cv_lib_readline_readline" >&5
 echo "${ECHO_T}$ac_cv_lib_readline_readline" >&6; }
 if test $ac_cv_lib_readline_readline = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBREADLINE 1
-_ACEOF
-
-  LIBS="-lreadline $LIBS"
-
+  rl_found=yes
 else
-  { { echo "$as_me:$LINENO: error: GNU Readline could not be found which is required for the
+  rl_found=no
+fi
+
+	test x$READLINE:$rl_found = xyes:no &&
+	  { { echo "$as_me:$LINENO: error: GNU Readline could not be found which is required for the
 --enable-readline option (which is enabled by default).  Either disable readline
 support with --disable-readline or download and install readline from:
 	ftp.gnu.org/gnu/readline
@@ -9574,10 +9573,8 @@ Note: if you are using precompiled packages you will also need the development
 package as well (which may be called readline-devel or something similar).
 " >&2;}
    { (exit 1); exit 1; }; }
-
-fi
-
-	{ echo "$as_me:$LINENO: checking for rl_completion_matches" >&5
+	if test $rl_found = yes; then
+		{ echo "$as_me:$LINENO: checking for rl_completion_matches" >&5
 echo $ECHO_N "checking for rl_completion_matches... $ECHO_C" >&6; }
 if test "${ac_cv_func_rl_completion_matches+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -9671,6 +9668,7 @@ cat >>confdefs.h <<\_ACEOF
 #define READLINE_SUPPORT 1
 _ACEOF
 
+	fi
 fi
 
 ################################################################################
