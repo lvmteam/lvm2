@@ -26,6 +26,8 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 {
 	struct physical_volume *pv;
 
+	/* FIXME Check partition type is LVM unless --force is given */
+
 	/* Is there a pv here already? */
 	/* If not, this is an error unless you used -f. */
 	if (!(pv = pv_read(cmd, name, NULL, NULL, 1))) {

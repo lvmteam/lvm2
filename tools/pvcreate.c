@@ -37,6 +37,8 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 	struct device *dev;
 	uint64_t md_superblock;
 
+	/* FIXME Check partition type is LVM unless --force is given */
+
 	/* Is there a pv here already? */
 	/* FIXME Use partial mode here? */
 	pv = pv_read(cmd, name, NULL, NULL, 0);
