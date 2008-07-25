@@ -42,6 +42,18 @@ test_expect_success \
    vgremove -f $vg1 &&
    pvremove -f $d1'
 
+test_expect_success \
+  "pvcreate (lvm$mdatype) fails when PV1 does and PV2 does not belong to VG" \
+  'pvcreate -M$mdatype $d1 &&
+   pvcreate -M$mdatype $d2 &&
+   vgcreate -M$mdatype $vg1 $d1 &&
+   echo pvcreate a second time on $d2 and $d1 &&
+   pvcreate -M$mdatype $d2 $d1;
+   status=$?; echo status=$status; test $status != 0 &&
+   vgremove -f $vg1 &&
+   pvremove -f $d2 &&
+   pvremove -f $d1'
+
 done
 
 test_expect_success \
