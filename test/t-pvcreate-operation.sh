@@ -91,8 +91,8 @@ test_expect_failure \
 
 test_expect_success \
   'pvcreate rejects uuid already in use' \
-  'pvcreate --uuid freddy-fred-fred-fred-fred-fred-freddy $d1 &&
-   pvcreate --uuid freddy-fred-fred-fred-fred-fred-freddy $d2;
+  'pvcreate --uuid $uuid1 $d1 &&
+   pvcreate --uuid $uuid1 $d2;
    status=$?; echo status=$status; test $status != 0'
 
 test_expect_success \
