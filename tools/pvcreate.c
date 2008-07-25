@@ -29,6 +29,7 @@ struct pvcreate_params {
 	uint32_t extent_size;
 	const char *restorefile; /* 0 if no --restorefile option */
 	force_t force;
+	unsigned yes;
 };
 
 const char _really_init[] =
@@ -72,7 +73,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	}
 
 	/* prompt */
-	if (pv && !is_orphan(pv) && !arg_count(cmd, yes_ARG) &&
+	if (pv && !is_orphan(pv) && !pp->yes &&
 	    yes_no_prompt(_really_init, name, pv_vg_name(pv)) == 'n') {
 		log_print("%s: physical volume not initialized", name);
 		return 0;
@@ -114,9 +115,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 
 	/* Wipe superblock? */
 	if (dev_is_md(dev, &md_superblock) &&
-	    ((!pp->idp &&
-	      !pp->restorefile) ||
-	     arg_count(cmd, yes_ARG) ||
+	    ((!pp->idp && !pp->restorefile) || pp->yes ||
 	     (yes_no_prompt("Software RAID md superblock "
 			    "detected on %s. Wipe it? [y/n] ", name) == 'y'))) {
 		log_print("Wiping software RAID md superblock on %s", name);
@@ -292,6 +291,7 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 		return 0;
 	}
 
+	pp->yes = arg_count(cmd, yes_ARG);
 	pp->force = arg_count(cmd, force_ARG);
 
 	if (arg_int_value(cmd, labelsector_ARG, 0) >= LABEL_SCAN_SECTORS) {
