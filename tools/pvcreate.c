@@ -28,6 +28,7 @@ struct pvcreate_params {
 	uint32_t extent_count;
 	uint32_t extent_size;
 	const char *restorefile; /* 0 if no --restorefile option */
+	force_t force;
 };
 
 const char _really_init[] =
@@ -64,7 +65,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 
 	/* Allow partial & exported VGs to be destroyed. */
 	/* We must have -ff to overwrite a non orphan */
-	if (pv && !is_orphan(pv) && arg_count(cmd, force_ARG) != 2) {
+	if (pv && !is_orphan(pv) && pp->force != DONT_PROMPT_OVERRIDE) {
 		log_error("Can't initialize physical volume \"%s\" of "
 			  "volume group \"%s\" without -ff", name, pv_vg_name(pv));
 		return 0;
@@ -129,7 +130,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	if (sigint_caught())
 		return 0;
 
-	if (pv && !is_orphan(pv) && arg_count(cmd, force_ARG)) {
+	if (pv && !is_orphan(pv) && pp->force) {
 		log_warn("WARNING: Forcing physical volume creation on "
 			  "%s%s%s%s", name,
 			  !is_orphan(pv) ? " of volume group \"" : "",
@@ -290,6 +291,8 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 		log_error("Option y can only be given with option f");
 		return 0;
 	}
+
+	pp->force = arg_count(cmd, force_ARG);
 
 	if (arg_int_value(cmd, labelsector_ARG, 0) >= LABEL_SCAN_SECTORS) {
 		log_error("labelsector must be less than %lu",
