@@ -45,7 +45,7 @@ test_expect_success \
 done
 
 test_expect_success \
-  'pvcreate (lvm2) fails when PV with metadatacopies=0 belongs to VG' \
+  'pvcreate (lvm2) fails without -ff when PV with metadatacopies=0 belongs to VG' \
   'pvcreate --metadatacopies 0 $d1 &&
    pvcreate --metadatacopies 1 $d2 &&
    vgcreate $vg1 $d1 $d2 &&
