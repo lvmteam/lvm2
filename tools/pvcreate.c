@@ -153,13 +153,13 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		    (dev != dev_cache_get(pv_name, cmd->filter))) {
 			log_error("uuid %s already in use on \"%s\"",
 				  pp->idp->uuid, dev_name(dev));
-			return ECMD_FAILED;
+			return 0;
 		}
 	}
 
 	if (!lock_vol(cmd, VG_ORPHANS, LCK_VG_WRITE)) {
 		log_error("Can't get lock for orphan PVs");
-		return ECMD_FAILED;
+		return 0;
 	}
 
 	if (!pvcreate_check(cmd, pv_name, pp))
@@ -218,11 +218,11 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	log_print("Physical volume \"%s\" successfully created", pv_name);
 
 	unlock_vg(cmd, VG_ORPHANS);
-	return ECMD_PROCESSED;
+	return 1;
 
       error:
 	unlock_vg(cmd, VG_ORPHANS);
-	return ECMD_FAILED;
+	return 0;
 }
 
 /*
@@ -352,7 +352,7 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 
 int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 {
-	int i, r;
+	int i;
 	int ret = ECMD_PROCESSED;
 	struct pvcreate_params pp;
 
@@ -361,9 +361,9 @@ int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	for (i = 0; i < argc; i++) {
-		r = pvcreate_single(cmd, argv[i], &pp);
-		if (r > ret)
-			ret = r;
+		if (!pvcreate_single(cmd, argv[i], &pp))
+			ret = ECMD_FAILED;
+
 		if (sigint_caught())
 			return ret;
 	}
