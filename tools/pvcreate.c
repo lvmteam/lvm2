@@ -23,11 +23,11 @@ struct pvcreate_params {
 	uint64_t pvmetadatasize;
 	int64_t labelsector;
 	struct id id; /* FIXME: redundant */
-	struct id *idp;
+	struct id *idp; /* 0 if no --uuid option */
 	uint64_t pe_start;
 	uint32_t extent_count;
 	uint32_t extent_size;
-	const char *restorefile;
+	const char *restorefile; /* 0 if no --restorefile option */
 };
 
 const char _really_init[] =
@@ -37,7 +37,8 @@ const char _really_init[] =
  * See if we may pvcreate on this device.
  * 0 indicates we may not.
  */
-static int pvcreate_check(struct cmd_context *cmd, const char *name)
+static int pvcreate_check(struct cmd_context *cmd, const char *name,
+			  struct pvcreate_params *pp)
 {
 	struct physical_volume *pv;
 	struct device *dev;
@@ -112,8 +113,8 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name)
 
 	/* Wipe superblock? */
 	if (dev_is_md(dev, &md_superblock) &&
-	    ((!arg_count(cmd, uuidstr_ARG) &&
-	      !arg_count(cmd, restorefile_ARG)) ||
+	    ((!pp->idp &&
+	      !pp->restorefile) ||
 	     arg_count(cmd, yes_ARG) ||
 	     (yes_no_prompt("Software RAID md superblock "
 			    "detected on %s. Wipe it? [y/n] ", name) == 'y'))) {
@@ -161,7 +162,7 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		return ECMD_FAILED;
 	}
 
-	if (!pvcreate_check(cmd, pv_name))
+	if (!pvcreate_check(cmd, pv_name, pp))
 		goto error;
 
 	if (sigint_caught())
