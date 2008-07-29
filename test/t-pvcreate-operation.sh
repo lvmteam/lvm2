@@ -54,6 +54,16 @@ test_expect_success \
    pvremove -f $d2 &&
    pvremove -f $d1'
 
+# NOTE: Force pvcreate after test completion to ensure clean device
+test_expect_success \
+  "pvcreate (lvm$mdatype) fails on md component device" \
+  'mdadm -C -l raid0 -n 2 /dev/md0 $d1 $d2 &&
+   pvcreate -M$mdatype $d1;
+   status=$?; echo status=$status; test $status != 0 &&
+   mdadm --stop /dev/md0 &&
+   pvcreate -ff -y -M$mdatype $d1 $d2 &&
+   pvremove -f $d1 $d2'
+
 done
 
 test_expect_success \
