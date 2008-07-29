@@ -106,6 +106,9 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		return 0;
 	}
 
+	/*
+ 	 * This test will fail if the device belongs to an MD array.
+	 */
 	if (!dev_test_excl(dev)) {
 		/* FIXME Detect whether device-mapper itself is still using it */
 		log_error("Can't open %s exclusively.  Mounted filesystem?",

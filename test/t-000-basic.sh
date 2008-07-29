@@ -32,4 +32,9 @@ test_expect_success \
   'ensure they are the same' \
   'diff -u actual expected'
 
+# Need mdadm for some pvcreate tests
+test_expect_success \
+  'verify mdadm is installed and in path (needed for pvcreate tests)' \
+  'which mdadm'
+
 test_done
