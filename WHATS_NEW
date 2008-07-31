@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Change clustered mirror kernel module name from cmirror to dm-log-clustered.
   Avoid looping forever in _pv_analyze_mda_raw used by pvck.
   Change lvchange exit status to indicate if any part of the operation failed.
   Fix pvchange and pvremove to handle PVs without mdas.
