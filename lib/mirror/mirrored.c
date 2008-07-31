@@ -375,7 +375,7 @@ static int _mirrored_target_present(const struct lv_segment *seg __attribute((un
 	 * FIXME: Fails incorrectly if cmirror was built into kernel.
 	 */
 	if (attributes) {
-		if (!_mirror_attributes && module_present("cmirror"))
+		if (!_mirror_attributes && module_present("log-clustered"))
 			_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 		*attributes = _mirror_attributes;
 	}
