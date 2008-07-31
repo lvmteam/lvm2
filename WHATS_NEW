@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Refactor _text_pv_read and always return mda list if requested.
   Fix configure to work w/o readline unless --enable-readline used. (2.02.39)
   Remove is_lvm_partition template which has not yet been coded.
   Refactor pvcreate to separate parameter parsing from validation logic.

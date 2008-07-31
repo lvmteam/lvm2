@@ -1396,43 +1396,33 @@ static int _add_raw(struct list *raw_list, struct device_area *dev_area)
 	return 1;
 }
 
-static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct list *mdas)
+static int _get_pv_if_in_vg(struct lvmcache_info *info,
+			    struct physical_volume *pv)
 {
-	struct label *label;
-	struct device *dev;
-	struct lvmcache_info *info;
-	struct metadata_area *mda, *mda_new;
-	struct mda_context *mdac, *mdac_new;
-	struct data_area_list *da;
-
-	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter)))
-		return_0;
-
-	/* FIXME Optimise out repeated reading when cache lock held */
-	if (!(label_read(dev, &label, UINT64_C(0))))
-		return_0;
-	info = (struct lvmcache_info *) label->info;
-
-	/* Have we already cached vgname? */
 	if (info->vginfo && info->vginfo->vgname &&
 	    !is_orphan_vg(info->vginfo->vgname) &&
 	    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
-				 info->vginfo->vgid, info->dev->pvid, pv)) {
+				 info->vginfo->vgid, info->dev->pvid, pv))
 		return 1;
-	}
+
+	return 0;
+}
+
+static int _populate_pv_fields(struct lvmcache_info *info,
+			       struct physical_volume *pv)
+{
+	struct data_area_list *da;
+
+	/* Have we already cached vgname? */
+	if (_get_pv_if_in_vg(info, pv))
+		return 1;
 
 	/* Perform full scan (just the first time) and try again */
 	if (!memlock() && !full_scan_done()) {
-		lvmcache_label_scan(fmt->cmd, 2);
+		lvmcache_label_scan(info->fmt->cmd, 2);
 
-		if (info->vginfo && info->vginfo->vgname &&
-		    !is_orphan_vg(info->vginfo->vgname) &&
-		    get_pv_from_vg_by_id(info->fmt, info->vginfo->vgname,
-					 info->vginfo->vgid,
-					 info->dev->pvid, pv)) {
+		if (_get_pv_if_in_vg(info, pv))
 			return 1;
-		}
 	}
 
 	/* Orphan */
@@ -1445,12 +1435,34 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 	/* Currently only support exactly one data area */
 	if (list_size(&info->das) != 1) {
 		log_error("Must be exactly one data area (found %d) on PV %s",
-			  list_size(&info->das), dev_name(dev));
+			  list_size(&info->das), dev_name(info->dev));
 		return 0;
 	}
 
 	list_iterate_items(da, &info->das)
 		pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
+
+	return 1;
+}
+
+static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
+		    struct physical_volume *pv, struct list *mdas)
+{
+	struct label *label;
+	struct device *dev;
+	struct lvmcache_info *info;
+	struct metadata_area *mda, *mda_new;
+	struct mda_context *mdac, *mdac_new;
+
+	if (!(dev = dev_cache_get(pv_name, fmt->cmd->filter)))
+		return_0;
+
+	if (!(label_read(dev, &label, UINT64_C(0))))
+		return_0;
+	info = (struct lvmcache_info *) label->info;
+
+	if (!_populate_pv_fields(info, pv))
+		return 0;
 
 	if (!mdas)
 		return 1;
