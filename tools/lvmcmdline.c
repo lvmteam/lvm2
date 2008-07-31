@@ -1165,8 +1165,6 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 	_close_stray_fds();
 
 	base = last_path_component(argv[0]);
-	while (*base == '/')
-		base++;
 	if (strcmp(base, "lvm") && strcmp(base, "lvm.static") &&
 	    strcmp(base, "initrd-lvm"))
 		alias = 1;
