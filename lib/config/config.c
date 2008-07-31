@@ -1276,7 +1276,7 @@ unsigned maybe_config_section(const char *str, unsigned len)
 	begin_count = _count_tokens(str, len, TOK_SECTION_B);
 	end_count = _count_tokens(str, len, TOK_SECTION_E);
 
-	if (begin_count && end_count && (begin_count - end_count == 0))
+	if (begin_count && end_count && (begin_count == end_count))
 		return 1;
 	else
 		return 0;

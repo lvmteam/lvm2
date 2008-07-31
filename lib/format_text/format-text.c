@@ -139,7 +139,7 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	struct raw_locn *rlocn;
 	uint64_t area_start;
 	uint64_t area_size;
-	uint64_t prev_sector;
+	uint64_t prev_sector, prev_sector2;
 	uint64_t latest_mrec_offset;
 	int i;
 	uint64_t offset;
@@ -184,8 +184,11 @@ static int _pv_analyze_mda_raw (const struct format_type * fmt,
 	offset2 = size2 = 0;
 	i = 0;
 	while (prev_sector != latest_mrec_offset) {
+		prev_sector2 = prev_sector;
 		prev_sector = _get_prev_sector_circular(area_start, area_size,
 							prev_sector);
+		if (prev_sector > prev_sector2)
+			goto_out;
 		/*
 		 * FIXME: for some reason, the whole metadata region from
 		 * area->start to area->start+area->size is not used.
