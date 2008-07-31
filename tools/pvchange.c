@@ -54,7 +54,6 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	}
 
 	/* If in a VG, must change using volume group. */
-	/* FIXME: handle PVs with no MDAs */
 	if (!is_orphan(pv)) {
 		vg_name = pv_vg_name(pv);
 
@@ -233,8 +232,6 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	struct list *pvslist;
 	struct list mdas;
 
-	list_init(&mdas);
-
 	if (arg_count(cmd, allocatable_ARG) + arg_count(cmd, addtag_ARG) +
 	    arg_count(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) != 1) {
 		log_error("Please give exactly one option of -x, -uuid, "
@@ -256,12 +253,34 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
-			/* FIXME Read VG instead - pv_read will fail */
+			list_init(&mdas);
 			if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1))) {
 				log_error("Failed to read physical volume %s",
 					  pv_name);
 				continue;
 			}
+			/*
+			 * If a PV has no MDAs it may appear to be an
+			 * orphan until the metadata is read off
+			 * another PV in the same VG.  Detecting this
+			 * means checking every VG by scanning every
+			 * PV on the system.
+			 */
+			if (is_orphan(pv) && !list_size(&mdas)) {
+				if (!scan_vgs_for_pvs(cmd)) {
+					log_error("Rescan for PVs without "
+						  "metadata areas failed.");
+					continue;
+				}
+				if (!(pv = pv_read(cmd, pv_name,
+						   NULL, NULL, 1))) {
+					log_error("Failed to read "
+						  "physical volume %s",
+						  pv_name);
+					continue;
+				}
+			}
+
 			total++;
 			done += _pvchange_single(cmd, pv, NULL);
 		}
