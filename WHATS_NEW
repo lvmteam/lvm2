@@ -1,6 +1,6 @@
 Version 2.02.40 - 
 ================================
-  Fix pvchange to handle PVs without mdas.
+  Fix pvchange and pvremove to handle PVs without mdas.
   Refactor _text_pv_read and always return mda list if requested.
   Fix configure to work w/o readline unless --enable-readline used. (2.02.39)
   Remove is_lvm_partition template which has not yet been coded.
