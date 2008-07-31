@@ -23,7 +23,6 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 	struct volume_group *vg = NULL;
 	const char *vg_name = NULL;
 	struct pv_list *pvl;
-	struct list mdas;
 	uint64_t sector;
 	uint32_t orig_pe_alloc_count;
 	/* FIXME Next three only required for format1. */
@@ -37,8 +36,6 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 
 	int allocatable = 0;
 	int tagarg = 0;
-
-	list_init(&mdas);
 
 	if (arg_count(cmd, addtag_ARG))
 		tagarg = addtag_ARG;
@@ -100,7 +97,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return 0;
 		}
 
-		if (!(pv = pv_read(cmd, pv_name, &mdas, &sector, 1))) {
+		if (!(pv = pv_read(cmd, pv_name, NULL, &sector, 1))) {
 			unlock_vg(cmd, vg_name);
 			log_error("Unable to read PV \"%s\"", pv_name);
 			return 0;
