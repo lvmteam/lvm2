@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Avoid looping forever in _pv_analyze_mda_raw used by pvck.
   Change lvchange exit status to indicate if any part of the operation failed.
   Fix pvchange and pvremove to handle PVs without mdas.
   Refactor _text_pv_read and always return mda list if requested.
