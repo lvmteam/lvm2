@@ -24,6 +24,7 @@
 /* Define some portable printing types */
 #define PRIsize_t "zu"
 #define PRIptrdiff_t "td"
+#define PRIpid_t PRId32
 
 struct str_list {
 	struct list list;
