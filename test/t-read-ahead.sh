@@ -54,7 +54,7 @@ test_expect_success "test various read ahead settings" \
    vgcreate -c n "$vg" "$d1" "$d2" "$d3" "$d4" "$d5" &&
    lvcreate -n "$lv" -l 100%FREE -i5 -I256 "$vg"     &&
    lvdisplay "$vg"/"$lv"                             &&
-   lvchange -r auto "$vg"/"$lv" || true | grep auto  &&
+   lvchange -r auto "$vg"/"$lv" 2>&1 | grep auto     &&
    get_lvs_ lv auto                                  &&
    get_lvs_ lv_kernel 5120                           &&
    lvchange -r 400 "$vg/$lv"                         &&
