@@ -2049,6 +2049,27 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 }
 
 /*
+ * remove LVs with its dependencies - LV leaf nodes should be removed first
+ */
+int lv_remove_with_dependencies(struct cmd_context *cmd, struct logical_volume *lv,
+				const force_t force)
+{
+	struct list *snh, *snht;
+
+        if (lv_is_origin(lv)) {
+		/* remove snapshot LVs first */
+		list_iterate_safe(snh, snht, &lv->snapshot_segs) {
+			if (!lv_remove_with_dependencies(cmd, list_struct_base(snh, struct lv_segment,
+									       origin_list)->cow,
+							 force))
+				return 0;
+		}
+	}
+
+        return lv_remove_single(cmd, lv, force);
+}
+
+/*
  * insert_layer_for_segments_on_pv() inserts a layer segment for a segment area.
  * However, layer modification could split the underlying layer segment.
  * This function splits the parent area according to keep the 1:1 relationship

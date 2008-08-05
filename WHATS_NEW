@@ -1,5 +1,7 @@
 Version 2.02.40 - 
 ================================
+  vgremove tries to remove lv snapshot first.
+  Added function lv_remove_with_dependencies().
   Improve file descriptor leak detection to display likely culprit and filename.
   Change clustered mirror kernel module name from cmirror to dm-log-clustered.
   Avoid looping forever in _pv_analyze_mda_raw used by pvck.
