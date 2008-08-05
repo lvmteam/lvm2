@@ -298,8 +298,8 @@ static int remove_lvs_in_vg(struct cmd_context *cmd,
 {
 	struct lv_list *lvl;
 
-	list_iterate_items(lvl, &vg->lvs)
-		if (!lv_remove_single(cmd, lvl->lv, force))
+        while ((lvl = list_first(&vg->lvs)))
+		if (!lv_remove_with_dependencies(cmd, lvl->lv, force))
 			return 0;
 
 	return 1;
