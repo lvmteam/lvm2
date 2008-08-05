@@ -42,19 +42,28 @@ this_test_() { expr "./$0" : '.*/t-\([^/]*\)\.sh$'; }
 test "${test_description}" != "" ||
 error "Test script did not set test_description."
 
+verboselevel=0
 while test "$#" -ne 0
 do
 	case "$1" in
 	-d|--d|--de|--deb|--debu|--debug)
-		debug=t; shift ;;
+		debug=t ;;
 	-i|--i|--im|--imm|--imme|--immed|--immedi|--immedia|--immediat|--immediate)
-		immediate=t; shift ;;
+		immediate=t ;;
 	-h|--h|--he|--hel|--help)
 		echo "$test_description"
 		exit 0 ;;
 	-v|--v|--ve|--ver|--verb|--verbo|--verbos|--verbose)
-		verbose=t; shift ;;
+		verbose=t ;;
+	-vv|-vvv|-vvvv)
+		verboselevel=${#1}
+		verboselevel=$(($verboselevel - 1))
+		verbose=t ;;
+	*)
+		echo "$0: unsupported option $1"
+		exit 0 ;;
 	esac
+        shift
 done
 
 exec 5>&1
