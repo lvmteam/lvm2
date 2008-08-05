@@ -148,10 +148,12 @@ init_root_dir_()
   export DM_DEV_DIR=$G_dev_
 
   # Only the first caller does anything.
-  mkdir -p $G_root_/etc $G_dev_ $G_dev_/mapper
+  mkdir -p $G_root_/etc $G_dev_ $G_dev_/mapper $G_root_/lib
   for i in 0 1 2 3 4 5 6 7; do
     mknod $G_root_/dev/loop$i b 7 $i
   done
+  ln -s $abs_top_builddir/dmeventd/mirror/*.so $G_root_/lib
+  ln -s $abs_top_builddir/dmeventd/snapshot/*.so $G_root_/lib
   cat > $G_root_/etc/lvm.conf <<-EOF
   devices {
     dir = "$G_dev_"
@@ -159,6 +161,18 @@ init_root_dir_()
     filter = [ "a/loop/", "a/mirror/", "a/mapper/", "r/.*/" ]
     cache_dir = "$G_root_/etc"
     sysfs_scan = 0
+  }
+  log {
+    verbose = $verboselevel
+    syslog = 0
+    indent = 1
+  }
+  backup {
+    backup = 0
+    archive = 0
+  }
+  global {
+    library_dir = "$G_root_/lib"
   }
 EOF
 }
