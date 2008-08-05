@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  configure aborts if lcov or genhtml are missing with --enable-profiling
   vgremove tries to remove lv snapshot first.
   Added function lv_remove_with_dependencies().
   Improve file descriptor leak detection to display likely culprit and filename.

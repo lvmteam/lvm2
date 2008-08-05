@@ -333,8 +333,11 @@ AC_MSG_RESULT($PROFILING)
 
 if test "x$PROFILING" = xyes; then
   COPTIMISE_FLAG="$COPTIMISE_FLAG -fprofile-arcs -ftest-coverage"
-  AC_PATH_PROG(LCOV, lcov)
-  AC_PATH_PROG(GENHTML, genhtml)
+  AC_PATH_PROG(LCOV, lcov, no)
+  AC_PATH_PROG(GENHTML, genhtml, no)
+  if test "$LCOV" = no -o "$GENHTML" = no ; then
+    AC_MSG_ERROR([lcov and genhtml are required for profiling])
+  fi
 fi
 
 ################################################################################
