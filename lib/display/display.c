@@ -24,9 +24,9 @@
 
 typedef enum { SIZE_LONG = 0, SIZE_SHORT = 1, SIZE_UNIT = 2 } size_len_t;
 
-static struct {
+static const struct {
 	alloc_policy_t alloc;
-	const char *str;
+	const char str[12]; /* must be changed when size extends 11 chars */
 } _policies[] = {
 	{
 	ALLOC_CONTIGUOUS, "contiguous"}, {
@@ -36,7 +36,7 @@ static struct {
 	ALLOC_INHERIT, "inherit"}
 };
 
-static int _num_policies = sizeof(_policies) / sizeof(*_policies);
+static const int _num_policies = sizeof(_policies) / sizeof(*_policies);
 
 uint64_t units_to_bytes(const char *units, char *unit_type)
 {
@@ -155,7 +155,7 @@ static const char *_display_size(const struct cmd_context *cmd,
 	uint64_t byte = UINT64_C(0);
 	uint64_t units = UINT64_C(1024);
 	char *size_buf = NULL;
-	const char *size_str[][3] = {
+	const char * const size_str[][3] = {
 		{" Exabyte", " EB", "E"},
 		{" Petabyte", " PB", "P"},
 		{" Terabyte", " TB", "T"},
