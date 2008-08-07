@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static char _c[] =
+static const char _c[] =
     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#";
 
 static int _built_inverse;
@@ -110,7 +110,7 @@ int id_create(struct id *id)
  */
 static void _build_inverse(void)
 {
-	char *ptr;
+	const char *ptr;
 
 	if (_built_inverse)
 		return;
