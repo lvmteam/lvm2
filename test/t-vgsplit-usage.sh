@@ -20,7 +20,8 @@ cleanup_()
   test -n "$d2" && losetup -d "$d2"
   test -n "$d3" && losetup -d "$d3"
   test -n "$d4" && losetup -d "$d4"
-  rm -f "$f1" "$f2" "$f3" "$f4"
+  test -n "$d5" && losetup -d "$d5"
+  rm -f "$f1" "$f2" "$f3" "$f4" "$f5"
 }
 
 # FIXME: paramaterize lvm1 vs lvm2 metadata; most of these tests should run
@@ -32,6 +33,7 @@ test_expect_success \
    f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
    f3=$(pwd)/3 && d3=$(loop_setup_ "$f3") &&
    f4=$(pwd)/4 && d4=$(loop_setup_ "$f4") &&
+   f5=$(pwd)/5 && d5=$(loop_setup_ "$f5") &&
    vg1=$(this_test_)-test-vg1-$$          &&
    vg2=$(this_test_)-test-vg2-$$          &&
    lv1=$(this_test_)-test-lv1-$$          &&
@@ -42,7 +44,8 @@ for mdatype in 2
 do
 test_expect_success \
   "(lvm$mdatype) setup PVs" \
-  'pvcreate -M$mdatype $d1 $d2 $d3 $d4'
+  'pvcreate -M$mdatype $d1 $d2 $d3 $d4 &&
+   pvcreate -M$mdatype --metadatacopies 0 $d5'
 
 test_expect_success \
   "(lvm$mdatype) vgsplit accepts new vg as destination of split" \
@@ -197,6 +200,18 @@ test_expect_success \
    status=$?; echo status=$status; test $status = 5 &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
+
+test_expect_success \
+  "(lvm2) vgsplit rejects to give away pv with the last mda copy" '
+   vgcreate -M$mdatype $vg1 $d5 $d2  &&
+   lvcreate -l 10 -n $lv1  $vg1 &&
+   lvchange -an $vg1/$lv1 &&
+   vg_validate_pvlv_counts_ $vg1 2 1 0 &&
+   vgsplit  $vg1 $vg2 $d5;
+   status=$?; echo status=$status; test $status != 0 &&
+   vg_validate_pvlv_counts_ $vg1 2 1 0 &&
+   vgremove -ff $vg1
+'
 done
 
 test_expect_success \
