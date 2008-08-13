@@ -34,8 +34,7 @@ static char *_expand_filename(const char *template, const char *vg_name,
 		dm_free(filename);	
 		return NULL;
 	}
-	if (*last_filename && !strncmp(*last_filename, filename,
-				      strlen(template))) {
+	if (*last_filename && !strncmp(*last_filename, filename, PATH_MAX)) {
 		log_error("VGs must be backed up into different files. "
 			  "Use %%s in filename for VG name.");
 		dm_free(filename);
@@ -70,7 +69,8 @@ static int vg_backup_single(struct cmd_context *cmd, const char *vg_name,
 			return ECMD_FAILED;
 		}
 
-		backup_to_file(filename, vg->cmd->cmd_line, vg);
+		if (!backup_to_file(filename, vg->cmd->cmd_line, vg))
+			return ECMD_FAILED;
 	} else {
 		if (!consistent) {
 			log_error("No backup taken: specify filename with -f "
