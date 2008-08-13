@@ -71,7 +71,7 @@ test_expect_success "test vgexport vgimport tools" \
 test_expect_success "test various lvm utils" \
   'lvmdiskscan &&
    for i in dumpconfig formats segtypes ; do lvm $i ; done &&
-   for i in pr pw an ay -refresh  "-monitor y" "-monitor n" \
+   for i in pr \"p rw\" an ay -refresh  "-monitor y" "-monitor n" \
       "-persistent n" -resync \
       "-addtag MYTAG" "-deltag MYTAG"; \
       do lvchange -$i "$vg"/"$lv" ; done &&
