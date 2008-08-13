@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Fix vgcfgbackup to properly check filename if template is used.
   configure aborts if lcov or genhtml are missing with --enable-profiling
   vgremove tries to remove lv snapshot first.
   Added function lv_remove_with_dependencies().
