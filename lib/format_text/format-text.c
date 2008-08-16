@@ -346,10 +346,8 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 
-	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, mdah)) {
-		dm_pool_free(fmt->cmd->mem, mdah);
+	if (!dev_write(dev, start_byte, MDA_HEADER_SIZE, mdah))
 		return_0;
-	}
 
 	return 1;
 }
@@ -670,6 +668,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
 				   mdah)) {
+		dm_pool_free(fid->fmt->cmd->mem, mdah);
 		log_error("Failed to write metadata area header");
 		goto out;
 	}
@@ -752,6 +751,7 @@ static int _vg_remove_raw(struct format_instance *fid, struct volume_group *vg,
 
 	if (!_raw_write_mda_header(fid->fmt, mdac->area.dev, mdac->area.start,
 				   mdah)) {
+		dm_pool_free(fid->fmt->cmd->mem, mdah);
 		log_error("Failed to write metadata area header");
 		goto out;
 	}
