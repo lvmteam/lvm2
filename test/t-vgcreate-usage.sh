@@ -18,15 +18,19 @@ cleanup_()
 {
   test -n "$d1" && losetup -d "$d1"
   test -n "$d2" && losetup -d "$d2"
-  rm -f "$f1" "$f2"
+  test -n "$d3" && losetup -d "$d3"
+  rm -f "$f1" "$f2" "$f3"
 }
 
 test_expect_success \
   'set up temp files, loopback devices, PVs, vgname' \
   'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
    f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
+   f3=$(pwd)/3 && d3=$(loop_setup_ "$f3") &&
    vg=$(this_test_)-test-vg-$$            &&
-   pvcreate $d1 $d2'
+   pvcreate $d1 $d2                       &&
+   pvcreate --metadatacopies 0 $d3
+'
 
 lv=vgcreate-usage-$$
 
@@ -79,13 +83,31 @@ test_expect_success \
    status=$?; echo status=$status; test $status = 3 &&
    grep "New volume group name \"$vg\" is invalid\$" err'
 
-# FIXME: Not sure why this fails
-#test_expect_success \
-#  'vgcreate rejects MaxLogicalVolumes > 255' \
-#  'vgcreate --metadatatype 1 --maxlogicalvolumes 1024 $vg $d1 $d2 2>err;
-#   cp err save;
-#   status=$?; echo status=$status; test $status = 3 &&
-#   grep "^  Number of volumes may not exceed 255\$" err'
+test_expect_success \
+  'cleanup vg name' '
+   vg=$(this_test_)-test-vg-$$
+'
+
+test_expect_success \
+  "vgcreate rejects repeated invocation (run  2 times)" '
+   vgcreate $vg $d1 $d2 && {
+     vgcreate $vg $d1 $d2;
+     status=$?; echo status=$status; test $status = 5 &&
+     vgremove -ff $vg
+   }
+'
+
+test_expect_success \
+  'vgcreate rejects MaxLogicalVolumes > 255' \
+  'vgcreate --metadatatype 1 --maxlogicalvolumes 1024 $vg $d1 $d2 2>err;
+   status=$?; echo status=$status; test $status = 3 &&
+   grep "^  Number of volumes may not exceed 255\$" err'
+
+test_expect_success \
+  "vgcreate fails when the only pv has --metadatacopies 0" '
+   vgcreate $vg $d3;
+   status=$?; echo status=$status; test $status = 5
+'
 
 test_done
 # Local Variables:
