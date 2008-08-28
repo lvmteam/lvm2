@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Fix vgconvert logical volume id metadata validation.
   Fix lvmdump metadata gather option (-m) to work correctly.
   Fix allocation bug in text metadata format write error path.
   Fix vgcfgbackup to properly check filename if template is used.
