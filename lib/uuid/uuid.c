@@ -67,10 +67,28 @@ int lvnum_from_lvid(union lvid *lvid)
 		lv_num *= sizeof(_c) - 1;
 		if ((c = strchr(_c, lvid->id[1].uuid[i])))
 			lv_num += (int) (c - _c);
+		if (lv_num < 0)
+			lv_num = 0;
 	}
 
 	return lv_num;
 }
+
+int lvid_in_restricted_range(union lvid *lvid)
+{
+	int i;
+
+	for (i = 0; i < ID_LEN - 3; i++)
+		if (lvid->id[1].uuid[i] != '0')
+			return 0;
+
+	for (i = ID_LEN - 3; i < ID_LEN; i++)
+		if (!isdigit(lvid->id[1].uuid[i]))
+			return 0;
+
+	return 1;
+}
+
 
 int id_create(struct id *id)
 {

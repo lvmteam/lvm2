@@ -81,6 +81,17 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
+	/* If converting to restricted lvid, check if lvid is compatible */
+	if (!(vg->fid->fmt->features & FMT_RESTRICTED_LVIDS) &&
+	    cmd->fmt->features & FMT_RESTRICTED_LVIDS)
+		list_iterate_items(lvl, &vg->lvs)
+			if (!lvid_in_restricted_range(&lvl->lv->lvid)) {
+				log_error("Logical volume %s lvid format is"
+					  " incompatible with requested"
+					  " metadata format.", lvl->lv->name);
+				return ECMD_FAILED;
+			}
+
 	/* Attempt to change any LVIDs that are too big */
 	if (cmd->fmt->features & FMT_RESTRICTED_LVIDS) {
 		list_iterate_items(lvl, &vg->lvs) {
