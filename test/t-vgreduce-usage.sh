@@ -35,28 +35,39 @@ test_expect_success \
    lv2=$(this_test_)-test-lv2-$$          &&
    lv3=$(this_test_)-test-lv3-$$'
 
+#TODO --removemissing (+ -- mirrorsonly)
 
 for mdatype in 1 2
 do
 test_expect_success \
   "(lvm$mdatype) setup PVs" '
-  pvcreate -M$mdatype $d1 $d2 
+   pvcreate -M$mdatype $d1 $d2 
+'
+
+test_expect_success \
+  "(lvm$mdatype) vgreduce removes only the specified pv from vg (bz427382)" '
+   vgcreate -M$mdatype $vg1 $d1 $d2 &&
+   vgreduce $vg1 $d1 &&
+   check_pv_field_ $d2 vg_name $vg1 &&
+   vgremove -f $vg1
 '
 
 test_expect_success \
   "(lvm$mdatype) vgreduce rejects removing the last pv (--all)" '
    vgcreate -M$mdatype $vg1 $d1 $d2 &&
-   vgreduce --all $vg1  2>err;
-   vgremove -f $vg1
+   { vgreduce --all $vg1;
+     status=$?; echo status=$status; test $status != 0 &&
+     vgremove -f $vg1
+   }
 '
-   #status=$?; echo status=$status; test $status = 5 &&
 
 test_expect_success \
   "(lvm$mdatype) vgreduce rejects removing the last pv" '
    vgcreate -M$mdatype $vg1 $d1 $d2 &&
-   vgreduce $vg1 $d1 $d2 2>err;
-   status=$?; echo status=$status; test $status = 5 &&
-   vgremove -f $vg1
+   { vgreduce $vg1 $d1 $d2;
+     status=$?; echo status=$status; test $status = 5 &&
+     vgremove -f $vg1
+   }
 '
 
 test_expect_success \
@@ -65,21 +76,21 @@ test_expect_success \
 '
 done
 
-## TODO --mirrorsonly ?
 for mdatype in 2
 do
 test_expect_success \
   "(lvm$mdatype) setup PVs (--metadatacopies 0)" '
-  pvcreate -M$mdatype $d1 $d2 
+  pvcreate -M$mdatype $d1 $d2 &&
   pvcreate --metadatacopies 0 -M$mdatype $d3 $d4
 '
 
 test_expect_success \
   "(lvm$mdatype) vgreduce rejects removing pv with the last mda copy" '
    vgcreate -M$mdatype $vg1 $d1 $d3 &&
-   vgreduce $vg1 $d1 2>err;
-   status=$?; echo status=$status; test $status != 0 &&
-   vgremove -f $vg1
+   { vgreduce $vg1 $d1;
+     status=$?; echo status=$status; test $status != 0 &&
+     vgremove -f $vg1
+   }
 '
 done
 
