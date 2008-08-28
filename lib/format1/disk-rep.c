@@ -194,7 +194,7 @@ int munge_pvd(struct device *dev, struct pv_disk *pvd)
 	if (!_munge_formats(pvd)) {
 		log_very_verbose("format1: Unknown metadata version %d "
 				 "found on %s", pvd->version, dev_name(dev));
-		return 0;
+		return_0;
 	}
 
 	/* If VG is exported, set VG name back to the real name */
@@ -208,7 +208,7 @@ static int _read_pvd(struct device *dev, struct pv_disk *pvd)
 	if (!dev_read(dev, UINT64_C(0), sizeof(*pvd), pvd)) {
 		log_very_verbose("Failed to read PV data from %s",
 				 dev_name(dev));
-		return 0;
+		return_0;
 	}
 
 	return munge_pvd(dev, pvd);
@@ -356,7 +356,7 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 	list_init(&dl->lvds);
 
 	if (!_read_pvd(dev, &dl->pvd))
-		goto_bad;
+		goto bad;
 
 	/*
 	 * is it an orphan ?
