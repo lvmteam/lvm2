@@ -37,6 +37,15 @@ test_expect_success \
 lv=lvcreate-usage-$$
 
 test_expect_success \
+  "lvcreate rejects repeated invocation (run 2 times)" '
+   lvcreate -n $lv -l 4 $vg && 
+   { lvcreate -n $lv -l 4 $vg;
+     status=$?; echo status=$status; test $status = 5 &&
+     lvremove -ff $vg/$lv
+   }
+'
+
+test_expect_success \
   'lvcreate rejects a negative stripe_size' \
   'lvcreate -L 64M -n $lv -i2 --stripesize -4 $vg 2>err;
    status=$?; echo status=$status; test $status = 3 &&

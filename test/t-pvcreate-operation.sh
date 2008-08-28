@@ -33,6 +33,14 @@ test_expect_success \
 
 for mdatype in 1 2
 do
+
+test_expect_success \
+  "pvcreate (lvm$mdatype) succeeds when run repeatedly (pv not in a vg)" '
+   pvcreate -M$mdatype $d1 &&
+   pvcreate -M$mdatype $d1 &&
+   pvremove -f $d1
+'
+
 test_expect_success \
   "pvcreate (lvm$mdatype) fails when PV belongs to VG" \
   'pvcreate -M$mdatype $d1 &&
@@ -63,7 +71,6 @@ test_expect_success \
 #   mdadm --stop /dev/md0 &&
 #   pvcreate -ff -y -M$mdatype $d1 $d2 &&
 #   pvremove -f $d1 $d2'
-
 done
 
 test_expect_success \

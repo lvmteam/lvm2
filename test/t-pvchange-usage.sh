@@ -50,7 +50,7 @@ test_expect_success \
 '
 
 test_expect_success \
-  "vgchange disable/enable allocation for pvs with metadatacopies = $mda" '
+  "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)" '
    pvchange $d1 -x n &&
    check_pv_field_ $d1 pv_attr  --  &&
    pvchange $d1 -x y &&
@@ -77,16 +77,25 @@ test_expect_success \
   "pvchange rejects uuid change under an active lv" '
    lvcreate -l 16 -i 2 -n $lv --alloc anywhere $vg1 &&
    vg_validate_pvlv_counts_ $vg1 2 1 0 &&
-   pvchange -u $d1;
-   status=$?; echo status=$status; test $status = 5 &&
-   lvchange -an "$vg1"/"$lv" &&
-   pvchange -u $d1
+   { pvchange -u $d1;
+     status=$?; echo status=$status; test $status = 5 &&
+     lvchange -an "$vg1"/"$lv" &&
+     pvchange -u $d1
+   }
 '
 
 test_expect_success \
   "cleanup" '
    lvremove -f "$vg1"/"$lv" &&
    vgremove $vg1
+'
+
+test_expect_success \
+  "pvchange reject --addtag to lvm1 pv" '
+   pvcreate -M1 $d1 &&
+   { pvchange $d1 --addtag test;
+     status=$?; echo status=$status; test $status != 0
+   }
 '
 
 test_done
