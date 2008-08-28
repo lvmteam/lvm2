@@ -119,7 +119,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 	if (!dev_read(dev, scan_sector << SECTOR_SHIFT,
 		      LABEL_SCAN_SIZE, readbuf)) {
 		log_debug("%s: Failed to read label area", dev_name(dev));
-		goto out;
+		goto_out;
 	}
 
 	/* Scan a few sectors for a valid label */
@@ -284,7 +284,7 @@ int label_read(struct device *dev, struct label **result,
 	}
 
 	if (!(l = _find_labeller(dev, buf, &sector, scan_sector)))
-		goto_out;
+		goto out;
 
 	if ((r = (l->ops->read)(l, dev, buf, result)) && result && *result)
 		(*result)->sector = sector;
@@ -361,7 +361,7 @@ int label_verify(struct device *dev)
 	}
 
 	if (!(l = _find_labeller(dev, buf, &sector, UINT64_C(0))))
-		goto_out;
+		goto out;
 
 	r = l->ops->verify ? l->ops->verify(l, buf, sector) : 1;
 
