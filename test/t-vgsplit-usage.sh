@@ -40,12 +40,11 @@ test_expect_success \
    lv2=$(this_test_)-test-lv2-$$          &&
    lv3=$(this_test_)-test-lv3-$$'
 
-for mdatype in 2
+for mdatype in 1 2
 do
 test_expect_success \
   "(lvm$mdatype) setup PVs" \
-  'pvcreate -M$mdatype $d1 $d2 $d3 $d4 &&
-   pvcreate -M$mdatype --metadatacopies 0 $d5'
+  'pvcreate -M$mdatype $d1 $d2 $d3 $d4'
 
 test_expect_success \
   "(lvm$mdatype) vgsplit accepts new vg as destination of split" \
@@ -200,19 +199,24 @@ test_expect_success \
    status=$?; echo status=$status; test $status = 5 &&
    vgremove -f $vg2 &&
    vgremove -f $vg1'
+done
+
+test_expect_success \
+  "(lvm2) setup PVs" '
+   pvcreate -M$mdatype --metadatacopies 0 $d5'
 
 test_expect_success \
   "(lvm2) vgsplit rejects to give away pv with the last mda copy" '
-   vgcreate -M$mdatype $vg1 $d5 $d2  &&
+   vgcreate -M2 $vg1 $d5 $d2  &&
    lvcreate -l 10 -n $lv1  $vg1 &&
    lvchange -an $vg1/$lv1 &&
    vg_validate_pvlv_counts_ $vg1 2 1 0 &&
-   vgsplit  $vg1 $vg2 $d5;
-   status=$?; echo status=$status; test $status != 0 &&
-   vg_validate_pvlv_counts_ $vg1 2 1 0 &&
-   vgremove -ff $vg1
+   { vgsplit  $vg1 $vg2 $d5;
+     status=$?; echo status=$status; test $status != 0 &&
+     vg_validate_pvlv_counts_ $vg1 2 1 0 &&
+     vgremove -ff $vg1
+   }
 '
-done
 
 test_expect_success \
   '(lvm2) vgsplit rejects split because metadata types differ' \
