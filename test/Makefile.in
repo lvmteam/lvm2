@@ -48,7 +48,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 
 $(T): init.sh
 	@echo "*** $@ ***"; '$(SHELL_PATH_SQ)' \
-	  $(TESTS_ENVIRONMENT) $@ $(GIT_TEST_OPTS)
+	  $(TESTS_ENVIRONMENT) $@ $(LVM_TEST_OPTS)
 
 .bin-dir-stamp: lvm-wrapper
 	rm -rf bin
