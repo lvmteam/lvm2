@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Fix setting of volume limit count if converting to lvm1 format.
   Fix vgconvert logical volume id metadata validation.
   Fix lvmdump metadata gather option (-m) to work correctly.
   Fix allocation bug in text metadata format write error path.

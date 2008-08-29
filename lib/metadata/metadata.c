@@ -1255,6 +1255,13 @@ int vg_validate(struct volume_group *vg)
 		}
 	}
 
+	if (!(vg->fid->fmt->features & FMT_UNLIMITED_VOLS) &&
+	    (!vg->max_lv || !vg->max_pv)) {
+		log_error("Internal error: Volume group %s has limited PV/LV count"
+			  " but limit is not set.", vg->name);
+		r = 0;
+	}
+
 	return r;
 }
 
