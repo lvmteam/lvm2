@@ -81,6 +81,15 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 		return ECMD_FAILED;
 	}
 
+	/* Set PV/LV limit if converting from unlimited metadata format */
+	if (vg->fid->fmt->features & FMT_UNLIMITED_VOLS &&
+	    !(cmd->fmt->features & FMT_UNLIMITED_VOLS)) {
+		if (!vg->max_lv)
+			vg->max_lv = 255;
+		if (!vg->max_pv)
+			vg->max_pv = 255;
+	}
+
 	/* If converting to restricted lvid, check if lvid is compatible */
 	if (!(vg->fid->fmt->features & FMT_RESTRICTED_LVIDS) &&
 	    cmd->fmt->features & FMT_RESTRICTED_LVIDS)
