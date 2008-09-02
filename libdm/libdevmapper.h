@@ -181,8 +181,9 @@ int dm_task_add_target(struct dm_task *dmt,
 		       uint64_t size, const char *ttype, const char *params);
 
 /*
- * Format major/minor numbers correctly for input to driver
+ * Format major/minor numbers correctly for input to driver.
  */
+#define DM_FORMAT_DEV_BUFSIZE	13	/* Minimum bufsize to handle worst case. */
 int dm_format_dev(char *buf, int bufsize, uint32_t dev_major, uint32_t dev_minor);
 
 /* Use this to retrive target information returned from a STATUS call */
