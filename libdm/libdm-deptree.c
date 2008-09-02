@@ -1243,7 +1243,7 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 			    size_t paramsize, int *pos)
 {
 	struct seg_area *area;
-	char devbuf[10];
+	char devbuf[DM_FORMAT_DEV_BUFSIZE];
 	int tw;
 	const char *prefix = "";
 
@@ -1270,7 +1270,8 @@ static int _emit_segment_line(struct dm_task *dmt, struct load_segment *seg, uin
         int pos = 0;
 	int tw;
         int r;
-	char originbuf[10], cowbuf[10], logbuf[10];
+	char originbuf[DM_FORMAT_DEV_BUFSIZE], cowbuf[DM_FORMAT_DEV_BUFSIZE];
+	char logbuf[DM_FORMAT_DEV_BUFSIZE];
 	const char *logtype;
 
 	switch(seg->type) {

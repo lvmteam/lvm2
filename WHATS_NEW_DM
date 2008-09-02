@@ -1,5 +1,6 @@
 Version 1.02.28 - 
 ================================
+  Extend deptree buffers so the largest possible device numbers fit.
   Added generation of the versioned libdevmapper-event.so for LVM's test
   Underline longer report help text headings.
 
