@@ -292,6 +292,10 @@ int check_lvm1_vg_inactive(struct cmd_context *cmd, const char *vgname)
 	if (is_orphan_vg(vgname))
 		return 1;
 
+	/* LVM1 is only present in 2.4 kernels. */
+	if (strncmp(cmd->kernel_vsn, "2.4.", 4))
+		return 1;
+
 	if (dm_snprintf(path, sizeof(path), "%s/lvm/VGs/%s", cmd->proc_dir,
 			 vgname) < 0) {
 		log_error("LVM1 proc VG pathname too long for %s", vgname);
