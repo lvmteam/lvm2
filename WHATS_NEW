@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Fix pvresize to not allow resize if PV has two metadata areas.
   Fix setting of volume limit count if converting to lvm1 format.
   Fix vgconvert logical volume id metadata validation.
   Fix lvmdump metadata gather option (-m) to work correctly.
