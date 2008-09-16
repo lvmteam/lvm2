@@ -97,9 +97,10 @@ static void _update_cache_info_lock_state(struct lvmcache_info *info,
 	int was_locked = (info->status & CACHE_LOCKED) ? 1 : 0;
 
 	/*
-	 * Cache becomes invalid whenever lock state changes
+	 * Cache becomes invalid whenever lock state changes unless
+	 * exclusive VG_GLOBAL is held (i.e. while scanning).
 	 */
-	if (was_locked != locked) {
+	if (!vgname_is_locked(VG_GLOBAL) && (was_locked != locked)) {
 		info->status |= CACHE_INVALID;
 		*cached_vgmetadata_valid = 0;
 	}
@@ -166,7 +167,7 @@ void lvmcache_drop_metadata(const char *vgname)
 
 		/* Indicate that PVs could now be missing from the cache */
 		init_full_scan_done(0);
-	} else
+	} else if (!vgname_is_locked(VG_GLOBAL))
 		_drop_metadata(vgname);
 }
 
