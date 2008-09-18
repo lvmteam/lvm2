@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Avoid shuffling remaining mirror images when removing one, retaining primary.
   Add missing LV error target activation in _remove_mirror_images.
   Prevent resizing an LV while lvconvert is using it.
   Avoid repeatedly wiping cache while VG_GLOBAL is held in vgscan & pvscan.
