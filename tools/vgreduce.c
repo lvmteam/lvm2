@@ -250,9 +250,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 					    lvl2->lv != seg_lv(mirrored_seg, s))
 						continue;
 					list_del(&lvl2->list);
-					area = mirrored_seg->areas[mimages - 1];
-					mirrored_seg->areas[mimages - 1] = mirrored_seg->areas[s];
-					mirrored_seg->areas[s] = area;
+					if (!shift_mirror_images(mirrored_seg, s))
+						return_0;
 					mimages--;	/* FIXME Assumes uniqueness */
 				}
 			}

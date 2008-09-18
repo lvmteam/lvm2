@@ -136,6 +136,53 @@ uint32_t adjusted_mirror_region_size(uint32_t extent_size, uint32_t extents,
 }
 
 /*
+ * shift_mirror_images
+ * @mirrored_seg
+ * @mimage:  The position (index) of the image to move to the end
+ *
+ * When dealing with removal of legs, we often move a 'removable leg'
+ * to the back of the 'areas' array.  It is critically important not
+ * to simply swap it for the last area in the array.  This would have
+ * the affect of reordering the remaining legs - altering position of
+ * the primary.  So, we must shuffle all of the areas in the array
+ * to maintain their relative position before moving the 'removable
+ * leg' to the end.
+ *
+ * Short illustration of the problem:
+ *   - Mirror consists of legs A, B, C and we want to remove A
+ *   - We swap A and C and then remove A, leaving C, B
+ * This scenario is problematic in failure cases where A dies, because
+ * B becomes the primary.  If the above happens, we effectively throw
+ * away any changes made between the time of failure and the time of
+ * restructuring the mirror.
+ *
+ * So, any time we want to move areas to the end to be removed, use
+ * this function.
+ */
+int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage)
+{
+	int i;
+	struct lv_segment_area area;
+
+	if (mimage >= mirrored_seg->area_count) {
+		log_error("Invalid index (%u) of mirror image supplied "
+			  "to shift_mirror_images()", mimage);
+		return 0;
+	}
+
+	area = mirrored_seg->areas[mimage];
+
+	/* Shift remaining images down to fill the hole */
+	for (i = mimage + 1; i < mirrored_seg->area_count; i++)
+		mirrored_seg->areas[i-1] = mirrored_seg->areas[i];
+
+	/* Place this one at the end */
+	mirrored_seg->areas[i-1] = area;
+
+	return 0;
+}
+
+/*
  * This function writes a new header to the mirror log header to the lv
  *
  * Returns: 1 on success, 0 on failure
@@ -469,13 +516,12 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		for (s = 0; s < mirrored_seg->area_count &&
 			    old_area_count - new_area_count < num_removed; s++) {
 			sub_lv = seg_lv(mirrored_seg, s);
+
 			if (!is_temporary_mirror_layer(sub_lv) &&
 			    _is_mirror_image_removable(sub_lv, removable_pvs)) {
-				/* Swap segment to end */
+				if (!shift_mirror_images(mirrored_seg, s))
+					return_0;
 				new_area_count--;
-				area = mirrored_seg->areas[new_area_count];
-				mirrored_seg->areas[new_area_count] = mirrored_seg->areas[s];
-				mirrored_seg->areas[s] = area;
 			}
 		}
 		if (num_removed && old_area_count == new_area_count)

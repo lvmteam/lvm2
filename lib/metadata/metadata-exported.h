@@ -532,6 +532,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirrors,
 			      struct list *removable_pvs, unsigned remove_log);
 int collapse_mirrored_lv(struct logical_volume *lv);
+int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage);
 
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint32_t lv_type);
