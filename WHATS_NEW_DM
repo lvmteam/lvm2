@@ -1,7 +1,8 @@
-Version 1.02.28 - 
-================================
+Version 1.02.28 - 18th September 2008
+=====================================
+  Only resume devices in dm_tree_preload_children if size changes.
   Extend deptree buffers so the largest possible device numbers fit.
-  Added generation of the versioned libdevmapper-event.so for LVM's test
+  Generate versioned libdevmapper-event.so.
   Underline longer report help text headings.
 
 Version 1.02.27 - 25th June 2008

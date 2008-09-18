@@ -58,6 +58,7 @@ struct dm_task {
 	int no_open_count;
 	int skip_lockfs;
 	int suppress_identical_reload;
+	uint64_t existing_table_size;
 
 	char *uuid;
 };
@@ -69,5 +70,6 @@ struct cmd_data {
 };
 
 int dm_check_version(void);
+uint64_t dm_task_get_existing_table_size(struct dm_task *dmt);
 
 #endif
