@@ -308,6 +308,11 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 		return ECMD_FAILED;
 	}
 
+	if (lv->status & CONVERTING) {
+		log_error("Can't resize %s while lvconvert in progress", lv->name);
+		return ECMD_FAILED;
+	}
+
 	alloc = arg_uint_value(cmd, alloc_ARG, lv->alloc);
 
 	if (lp->size) {
