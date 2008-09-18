@@ -552,6 +552,17 @@ static int _remove_mirror_images(struct logical_volume *lv,
 
 	log_very_verbose("Updating \"%s\" in kernel", mirrored_seg->lv->name);
 
+	/*
+	 * Avoid having same mirror target loaded twice simultaneouly by first
+	 * activating the removed LV which now contains an error segment.
+	 * As it's now detached from mirrored_seg->lv we must activate it
+	 * explicitly.
+	 */
+	if (lv1 && !activate_lv(lv1->vg->cmd, lv1)) {
+		log_error("Problem reactivating removed %s", lv1->name);
+		return 0;
+	}
+
 	if (!resume_lv(mirrored_seg->lv->vg->cmd, mirrored_seg->lv)) {
 		log_error("Problem reactivating %s", mirrored_seg->lv->name);
 		return 0;
