@@ -1551,7 +1551,7 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 		}
 
 		/* Resume device immediately if it has parents and its size changed */
-		if (!dm_tree_node_num_children(child, 1) || !dnode->props.size_changed)
+		if (!dm_tree_node_num_children(child, 1) || !child->props.size_changed)
 			continue;
 
 		if (!child->info.inactive_table && !child->info.suspended)
