@@ -99,6 +99,7 @@ struct load_properties {
 	uint32_t read_ahead_flags;
 
 	unsigned segment_count;
+	unsigned size_changed;
 	struct list segs;
 
 	const char *new_name;
@@ -603,6 +604,7 @@ struct dm_tree_node *dm_tree_add_new_dev(struct dm_tree *dtree,
 		dnode->props.major = major;
 		dnode->props.minor = minor;
 		dnode->props.new_name = NULL;
+		dnode->props.size_changed = 0;
 	} else if (strcmp(name, dnode->name)) {
 		/* Do we need to rename node? */
 		if (!(dnode->props.new_name = dm_pool_strdup(dtree->mem, name))) {
@@ -1494,6 +1496,13 @@ static int _load_node(struct dm_tree_node *dnode)
 		if (r && !dnode->info.inactive_table)
 			log_verbose("Suppressed %s identical table reload.",
 				    dnode->name);
+
+		if ((dnode->props.size_changed =
+		     (dm_task_get_existing_table_size(dmt) == seg_start) ? 0 : 1))
+			log_debug("Table size changed from %" PRIu64 " to %"
+				  PRIu64 " for %s",
+				  dm_task_get_existing_table_size(dmt),
+				  seg_start, dnode->name);
 	}
 
 	dnode->props.segment_count = 0;
@@ -1505,8 +1514,8 @@ out:
 }
 
 int dm_tree_preload_children(struct dm_tree_node *dnode,
-				 const char *uuid_prefix,
-				 size_t uuid_prefix_len)
+			     const char *uuid_prefix,
+			     size_t uuid_prefix_len)
 {
 	void *handle = NULL;
 	struct dm_tree_node *child;
@@ -1541,8 +1550,8 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 			}
 		}
 
-		/* Resume device immediately if it has parents */
-		if (!dm_tree_node_num_children(child, 1))
+		/* Resume device immediately if it has parents and its size changed */
+		if (!dm_tree_node_num_children(child, 1) || !dnode->props.size_changed)
 			continue;
 
 		if (!child->info.inactive_table && !child->info.suspended)
