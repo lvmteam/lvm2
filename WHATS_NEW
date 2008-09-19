@@ -1,5 +1,5 @@
-Version 2.02.40 - 
-================================
+Version 2.02.40 - 19th September 2008
+=====================================
   Allow lvremove to remove LVs from VGs with missing PVs.
   In VG with PVs missing, by default allow activation of LVs that are complete.
   Track PARTIAL_LV and MISSING_PV flags internally.
