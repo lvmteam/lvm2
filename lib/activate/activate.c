@@ -1027,7 +1027,7 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 		return 0;
 	}
 
-	if ((!lv->vg->cmd->partial_activate) && (lv->status & PARTIAL_LV)) {
+	if ((!lv->vg->cmd->partial_activation) && (lv->status & PARTIAL_LV)) {
 		log_error("Refusing activation of partial LV %s. Use --partial to override.",
 			  lv->name);
 		return_0;

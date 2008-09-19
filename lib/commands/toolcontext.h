@@ -69,7 +69,7 @@ struct cmd_context {
 	unsigned is_static:1;	/* Static binary? */
 	unsigned is_long_lived:1;	/* Optimises persistent_filter handling */
 	unsigned handles_missing_pvs:1;
-	unsigned partial_activate:1;
+	unsigned partial_activation:1;
 
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
