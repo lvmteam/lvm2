@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Add device/md_chunk_alignment to lvm.conf.
   Pass struct physical_volume to pe_align and adjust for md chunk size.
   Store sysfs location in struct cmd_context.
   Avoid shuffling remaining mirror images when removing one, retaining primary.
