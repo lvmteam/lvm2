@@ -743,11 +743,11 @@ static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,
 			return_0;
 		dm_tree_node_add_target_area(node, NULL, dlid,
 					     extent_size * seg_le(seg, s));
-	} else {
+	} else
 		dm_tree_node_add_target_area(node,
 					     dm->cmd->stripe_filler,
 					     NULL, UINT64_C(0));
-	}
+
 	return 1;
 }
 

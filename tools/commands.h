@@ -857,8 +857,8 @@ xx(vgreduce,
    "\tVolumeGroupName\n"
    "\t[PhysicalVolumePath...]\n",
 
-   all_ARG, autobackup_ARG, mirrorsonly_ARG, removemissing_ARG,
-   force_ARG, test_ARG)
+   all_ARG, autobackup_ARG, force_ARG, mirrorsonly_ARG, removemissing_ARG,
+   test_ARG)
 
 xx(vgremove,
    "Remove volume group(s)",
