@@ -47,7 +47,6 @@ struct dev_manager {
 
 	struct cmd_context *cmd;
 
-	const char *stripe_filler;
 	void *target_state;
 	uint32_t pvmove_mirror_count;
 
@@ -58,8 +57,6 @@ struct lv_layer {
 	struct logical_volume *lv;
 	const char *old_name;
 };
-
-static const char *stripe_filler = NULL;
 
 static char *_build_dlid(struct dm_pool *mem, const char *lvid, const char *layer)
 {
@@ -443,13 +440,6 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	dm->cmd = cmd;
 	dm->mem = mem;
 
-	if (!stripe_filler) {
-		stripe_filler = find_config_tree_str(cmd,
-						"activation/missing_stripe_filler",
-						DEFAULT_STRIPE_FILLER);
-	}
-	dm->stripe_filler = stripe_filler;
-
 	if (!(dm->vg_name = dm_pool_strdup(dm->mem, vg_name)))
 		goto_bad;
 
@@ -699,6 +689,68 @@ bad:
 	return NULL;
 }
 
+static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
+			       struct lv_segment *seg, int s)
+{
+	char *id, *name;
+	char errid[32];
+	struct dm_tree_node *node;
+	struct lv_segment *seg_i;
+	int segno = -1, i = 0;;
+	uint64_t size = seg->len * seg->lv->vg->extent_size;
+
+	list_iterate_items(seg_i, &seg->lv->segments) {
+		if (seg == seg_i)
+			segno = i;
+		++i;
+	}
+
+	if (segno < 0) {
+		log_error("_add_error_device called with bad segment");
+		return_NULL;
+	}
+
+	sprintf(errid, "missing_%d_%d", segno, s);
+
+	if (!(id = build_dlid(dm, seg->lv->lvid.s, errid))) 
+		return_NULL;
+
+	if (!(name = build_dm_name(dm->mem, seg->lv->vg->name,
+				   seg->lv->name, errid)))
+		return_NULL;
+	if (!(node = dm_tree_add_new_dev(dtree, name, id, 0, 0, 0, 0, 0)))
+		return_NULL;
+	if (!dm_tree_node_add_error_target(node, size))
+		return_NULL;
+
+	return id;
+}
+
+static int _add_error_area(struct dev_manager *dm, struct dm_tree_node *node,
+			   struct lv_segment *seg, int s)
+{
+	char *dlid;
+	uint64_t extent_size = seg->lv->vg->extent_size;
+
+	if (!strcmp(dm->cmd->stripe_filler, "error")) {
+		/*
+		 * FIXME, the tree pointer is first field of dm_tree_node, but
+		 * we don't have the struct definition available.
+		 */
+		struct dm_tree **tree = (struct dm_tree **) node;
+		dlid = _add_error_device(dm, *tree, seg, s);
+		if (!dlid)
+			return_0;
+		dm_tree_node_add_target_area(node, NULL, dlid,
+					     extent_size * seg_le(seg, s));
+	} else {
+		dm_tree_node_add_target_area(node,
+					     dm->cmd->stripe_filler,
+					     NULL, UINT64_C(0));
+	}
+	return 1;
+}
+
 int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		   struct dm_tree_node *node, uint32_t start_area,
 		   uint32_t areas)
@@ -712,11 +764,10 @@ int add_areas_line(struct dev_manager *dm, struct lv_segment *seg,
 		     (!seg_pvseg(seg, s) ||
 		      !seg_pv(seg, s) ||
 		      !seg_dev(seg, s))) ||
-		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s)))
-			dm_tree_node_add_target_area(node,
-							dm->stripe_filler,
-							NULL, UINT64_C(0));
-		else if (seg_type(seg, s) == AREA_PV)
+		    (seg_type(seg, s) == AREA_LV && !seg_lv(seg, s))) {
+			if (!_add_error_area(dm, node, seg, s))
+				return_0;
+		} else if (seg_type(seg, s) == AREA_PV)
 			dm_tree_node_add_target_area(node,
 							dev_name(seg_dev(seg, s)),
 							NULL,

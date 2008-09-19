@@ -92,7 +92,7 @@
 #  define DEFAULT_ACTIVATION 0
 #endif
 
-#define DEFAULT_STRIPE_FILLER "/dev/ioerror"
+#define DEFAULT_STRIPE_FILLER "error"
 #define DEFAULT_MIRROR_REGION_SIZE 512	/* KB */
 #define DEFAULT_INTERVAL 15
 

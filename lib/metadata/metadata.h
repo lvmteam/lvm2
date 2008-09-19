@@ -61,6 +61,14 @@
 //#define MIRROR_NOTSYNCED	0x00080000U	/* LV */
 #define ACTIVATE_EXCL		0x00100000U	/* LV - internal use only */
 #define PRECOMMITTED		0x00200000U	/* VG - internal use only */
+//#define CONVERTING		0x00400000U	/* LV */
+
+//#define MISSING_PV		0x00800000U	/* PV */
+//#define PARTIAL_LV		0x01000000U	/* LV - derived flag, not
+//						   written out in metadata*/
+
+#define POSTORDER_FLAG		0x02000000U /* Not a real flag, reserved for
+					       temporary use inside vg_read. */
 
 //#define LVM_READ              	0x00000100U	/* LV VG */
 //#define LVM_WRITE             	0x00000200U	/* LV VG */

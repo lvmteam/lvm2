@@ -850,13 +850,15 @@ xx(vgreduce,
    "\t[-h|--help]\n"
    "\t[--mirrorsonly]\n"
    "\t[--removemissing]\n"
+   "\t[-f|--force]\n"
    "\t[-t|--test]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\tVolumeGroupName\n"
    "\t[PhysicalVolumePath...]\n",
 
-   all_ARG, autobackup_ARG, mirrorsonly_ARG, removemissing_ARG, test_ARG)
+   all_ARG, autobackup_ARG, mirrorsonly_ARG, removemissing_ARG,
+   force_ARG, test_ARG)
 
 xx(vgremove,
    "Remove volume group(s)",

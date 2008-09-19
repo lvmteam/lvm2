@@ -49,7 +49,6 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	/* FIXME Use partial mode here? */
 	pv = pv_read(cmd, name, NULL, NULL, 0);
 
 	/*
@@ -272,13 +271,11 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 	if (arg_count(cmd, restorefile_ARG)) {
 		pp->restorefile = arg_str_value(cmd, restorefile_ARG, "");
 		/* The uuid won't already exist */
-		init_partial(1);
 		if (!(vg = backup_read_vg(cmd, NULL, pp->restorefile))) {
 			log_error("Unable to read volume group from %s",
 				  pp->restorefile);
 			return 0;
 		}
-		init_partial(0);
 		if (!(existing_pv = find_pv_in_vg_by_uuid(vg, pp->idp))) {
 			log_error("Can't find uuid %s in backup file %s",
 				  uuid, pp->restorefile);

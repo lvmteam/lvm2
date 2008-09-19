@@ -134,10 +134,8 @@ int archive_display(struct cmd_context *cmd, const char *vg_name)
 {
 	int r1, r2;
 
-	init_partial(1);
 	r1 = archive_list(cmd, cmd->archive_params->dir, vg_name);
 	r2 = backup_list(cmd, cmd->backup_params->dir, vg_name);
-	init_partial(0);
 
 	return r1 && r2;
 }
@@ -146,9 +144,7 @@ int archive_display_file(struct cmd_context *cmd, const char *file)
 {
 	int r;
 
-	init_partial(1);
 	r = archive_list_file(cmd, file);
-	init_partial(0);
 
 	return r;
 }
@@ -393,7 +389,7 @@ void check_current_backup(struct volume_group *vg)
 	char path[PATH_MAX];
 	struct volume_group *vg_backup;
 
-	if ((vg->status & PARTIAL_VG) || (vg->status & EXPORTED_VG))
+	if (vg->status & EXPORTED_VG)
 		return;
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s",

@@ -214,7 +214,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem __attribute((unused))
 }
 
 int import_vg(struct dm_pool *mem,
-	      struct volume_group *vg, struct disk_list *dl, int partial)
+	      struct volume_group *vg, struct disk_list *dl)
 {
 	struct vg_disk *vgd = &dl->vgd;
 	memcpy(vg->id.uuid, vgd->vg_uuid, ID_LEN);
@@ -236,10 +236,10 @@ int import_vg(struct dm_pool *mem,
 	if (vgd->vg_status & VG_EXTENDABLE)
 		vg->status |= RESIZEABLE_VG;
 
-	if (partial || (vgd->vg_access & VG_READ))
+	if (vgd->vg_access & VG_READ)
 		vg->status |= LVM_READ;
 
-	if (!partial && (vgd->vg_access & VG_WRITE))
+	if (vgd->vg_access & VG_WRITE)
 		vg->status |= LVM_WRITE;
 
 	if (vgd->vg_access & VG_CLUSTERED)
@@ -254,9 +254,6 @@ int import_vg(struct dm_pool *mem,
 	vg->max_lv = vgd->lv_max;
 	vg->max_pv = vgd->pv_max;
 	vg->alloc = ALLOC_NORMAL;
-
-	if (partial)
-		vg->status |= PARTIAL_VG;
 
 	return 1;
 }

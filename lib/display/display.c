@@ -578,10 +578,7 @@ void vgdisplay_full(const struct volume_group *vg)
 	struct lv_list *lvl;
 	char uuid[64] __attribute((aligned(8)));
 
-	if (vg->status & PARTIAL_VG)
-		active_pvs = list_size(&vg->pvs);
-	else
-		active_pvs = vg->pv_count;
+	active_pvs = vg->pv_count - vg_missing_pv_count(vg);
 
 	log_print("--- Volume group ---");
 	log_print("VG Name               %s", vg->name);
@@ -664,10 +661,7 @@ void vgdisplay_colons(const struct volume_group *vg)
 	const char *access;
 	char uuid[64] __attribute((aligned(8)));
 
-	if (vg->status & PARTIAL_VG)
-		active_pvs = list_size(&vg->pvs);
-	else
-		active_pvs = vg->pv_count;
+	active_pvs = vg->pv_count - vg_missing_pv_count(vg);
 
 	list_iterate_items(lvl, &vg->lvs)
 		if (lv_is_visible(lvl->lv) && !(lvl->lv->status & SNAPSHOT))

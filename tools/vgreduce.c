@@ -16,7 +16,7 @@
 #include "tools.h"
 #include "lv_alloc.h"
 
-static int _remove_pv(struct volume_group *vg, struct pv_list *pvl)
+static int _remove_pv(struct volume_group *vg, struct pv_list *pvl, int silent)
 {
 	char uuid[64] __attribute((aligned(8)));
 
@@ -31,8 +31,9 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl)
 	log_verbose("Removing PV with UUID %s from VG %s", uuid, vg->name);
 
 	if (pvl->pv->pe_alloc_count) {
-		log_error("LVs still present on PV with UUID %s: Can't remove "
-			  "from VG %s", uuid, vg->name);
+		if (!silent)
+			log_error("LVs still present on PV with UUID %s: "
+				  "Can't remove from VG %s", uuid, vg->name);
 		return 0;
 	}
 
@@ -130,11 +131,39 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	return 1;
 }
 
+static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
+{
+	struct pv_list *pvl;
+	struct lv_list *lvl;
+	int r = 1;
+
+	list_iterate_items(lvl, &vg->lvs)
+		if (lvl->lv->status & PARTIAL_LV) {
+			log_warn("WARNING: Partial LV %s needs to be repaired "
+				 "or removed. ", lvl->lv->name);
+			r = 0;
+		}
+
+	if (!r) {
+		cmd->handles_missing_pvs = 1;
+		log_warn("WARNING: There are still partial LVs in VG %s.", vg->name);
+		log_warn("To remove them unconditionally use: vgreduce --removemissing --force.");
+		log_warn("Proceeding to remove empty missing PVs.");
+	}
+
+	list_iterate_items(pvl, &vg->pvs) {
+		if (pvl->pv->dev && !(pvl->pv->status & MISSING_PV))
+			continue;
+		if (r && !_remove_pv(vg, pvl, 0))
+			return_0;
+	}
+
+	return r;
+}
+
 static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 {
-	struct list *pvh, *pvht;
 	struct list *lvh, *lvht;
-	struct pv_list *pvl;
 	struct lv_list *lvl, *lvl2, *lvlt;
 	struct logical_volume *lv;
 	struct physical_volume *pv;
@@ -182,20 +211,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 	}
 
-	/* Remove missing PVs */
-	list_iterate_safe(pvh, pvht, &vg->pvs) {
-		pvl = list_item(pvh, struct pv_list);
-		if (pvl->pv->dev)
-			continue;
-		if (!_remove_pv(vg, pvl))
-			return_0;
-	}
-
-	/* VG is now consistent */
-	vg->status &= ~PARTIAL_VG;
-	vg->status |= LVM_WRITE;
-
-	init_partial(0);
+	if (!_consolidate_vg(cmd, vg))
+		return_0;
 
 	/* FIXME Recovery.  For now people must clean up by hand. */
 
@@ -208,14 +225,11 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 		if (!test_mode()) {
 			/* Suspend lvs_changed */
-			init_partial(1);
 			if (!suspend_lvs(cmd, &lvs_changed)) {
 				stack;
-				init_partial(0);
 				vg_revert(vg);
 				return 0;
 			}
-			init_partial(0);
 		}
 
 		if (!vg_commit(vg)) {
@@ -439,26 +453,26 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 	char *vg_name;
 	int ret = 1;
 	int consistent = 1;
+	int fixed = 1;
+	int repairing = arg_count(cmd, removemissing_ARG);
 
-	if (!argc && !arg_count(cmd, removemissing_ARG)) {
+	if (!argc && !repairing) {
 		log_error("Please give volume group name and "
 			  "physical volume paths");
 		return EINVALID_CMD_LINE;
 	}
-
-	if (!argc && arg_count(cmd, removemissing_ARG)) {
+	
+	if (!argc && repairing) {
 		log_error("Please give volume group name");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_count(cmd, mirrorsonly_ARG) &&
-	    !arg_count(cmd, removemissing_ARG)) {
+	if (arg_count(cmd, mirrorsonly_ARG) && !repairing) {
 		log_error("--mirrorsonly requires --removemissing");
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc == 1 && !arg_count(cmd, all_ARG)
-	    && !arg_count(cmd, removemissing_ARG)) {
+	if (argc == 1 && !arg_count(cmd, all_ARG) && !repairing) {
 		log_error("Please enter physical volume paths or option -a");
 		return EINVALID_CMD_LINE;
 	}
@@ -469,7 +483,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (argc > 1 && arg_count(cmd, removemissing_ARG)) {
+	if (argc > 1 && repairing) {
 		log_error("Please only specify the volume group");
 		return EINVALID_CMD_LINE;
 	}
@@ -490,8 +504,8 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((!(vg = vg_read(cmd, vg_name, NULL, &consistent)) || !consistent) &&
-	    !arg_count(cmd, removemissing_ARG)) {
+	if ((!(vg = vg_read(cmd, vg_name, NULL, &consistent)) || !consistent)
+	    && !repairing) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
@@ -502,16 +516,15 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if (arg_count(cmd, removemissing_ARG)) {
-		if (vg && consistent) {
+	if (repairing) {
+		if (vg && consistent && !vg_missing_pv_count(vg)) {
 			log_error("Volume group \"%s\" is already consistent",
 				  vg_name);
 			unlock_vg(cmd, vg_name);
 			return ECMD_PROCESSED;
 		}
 
-		init_partial(1);
-		consistent = 0;
+		consistent = !arg_count(cmd, force_ARG);
 		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
 			log_error("Volume group \"%s\" not found", vg_name);
 			unlock_vg(cmd, vg_name);
@@ -522,16 +535,17 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 		if (!archive(vg)) {
-			init_partial(0);
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;
 		}
 
-		if (!_make_vg_consistent(cmd, vg)) {
-			init_partial(0);
-			unlock_vg(cmd, vg_name);
-			return ECMD_FAILED;
-		}
+		if (arg_count(cmd, force_ARG)) {
+			if (!_make_vg_consistent(cmd, vg)) {
+				unlock_vg(cmd, vg_name);
+				return ECMD_FAILED;
+			}
+		} else
+			fixed = _consolidate_vg(cmd, vg);
 
 		if (!vg_write(vg) || !vg_commit(vg)) {
 			log_error("Failed to write out a consistent VG for %s",
@@ -542,7 +556,9 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 
 		backup(vg);
 
-		log_print("Wrote out consistent volume group %s", vg_name);
+		if (fixed)
+			log_print("Wrote out consistent volume group %s",
+				  vg_name);
 
 	} else {
 		if (!vg_check_status(vg, EXPORTED_VG | LVM_WRITE | RESIZEABLE_VG)) {

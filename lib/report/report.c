@@ -439,7 +439,7 @@ static int _vgstatus_disp(struct dm_report *rh __attribute((unused)), struct dm_
 	else
 		repstr[2] = '-';
 
-	if (vg->status & PARTIAL_VG)
+	if (vg_missing_pv_count(vg))
 		repstr[3] = 'p';
 	else
 		repstr[3] = '-';

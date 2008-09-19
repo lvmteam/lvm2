@@ -31,6 +31,8 @@ int lvremove(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
+	cmd->handles_missing_pvs = 1;
+
 	return process_each_lv(cmd, argc, argv, LCK_VG_WRITE, NULL,
 			       &lvremove_single);
 }

@@ -194,11 +194,6 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		else
 			log_error("Couldn't find device with uuid '%s'.",
 				  buffer);
-
-		if (partial_mode())
-			vg->status |= PARTIAL_VG;
-		else
-			return 0;
 	}
 
 	if (!(pv->vg_name = dm_pool_strdup(mem, vg->name)))
@@ -210,6 +205,9 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		log_error("Couldn't read status flags for physical volume.");
 		return 0;
 	}
+
+	if (!pv->dev)
+		pv->status |= MISSING_PV;
 
 	/* Late addition */
 	_read_int64(pvn, "dev_size", &pv->size);
@@ -799,11 +797,6 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 	}
 
 	dm_hash_destroy(pv_hash);
-
-	if (vg->status & PARTIAL_VG) {
-		vg->status &= ~LVM_WRITE;
-		vg->status |= LVM_READ;
-	}
 
 	/*
 	 * Finished.
