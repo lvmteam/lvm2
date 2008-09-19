@@ -64,7 +64,6 @@ void fin_syslog(void);
 
 void init_verbose(int level);
 void init_test(int level);
-void init_partial(int level);
 void init_md_filtering(int level);
 void init_pvmove(int level);
 void init_full_scan_done(int level);
@@ -84,7 +83,6 @@ void init_error_message_produced(int error_message_produced);
 void set_cmd_name(const char *cmd_name);
 
 int test_mode(void);
-int partial_mode(void);
 int md_filtering(void);
 int pvmove_mode(void);
 int full_scan_done(void);

@@ -1,5 +1,11 @@
 Version 2.02.40 - 
 ================================
+  In VG with PVs missing, by default allow activation of LVs that are complete.
+  Track PARTIAL_LV and MISSING_PV flags internally.
+  Require --force with --removemissing in vgreduce to remove partial LVs.
+  No longer write out PARTIAL flag into metadata backups.
+  Treat new default activation/missing_stripe_filler "error" as an error target.
+  Remove internal partial_mode.
   Add device/md_chunk_alignment to lvm.conf.
   Pass struct physical_volume to pe_align and adjust for md chunk size.
   Store sysfs location in struct cmd_context.

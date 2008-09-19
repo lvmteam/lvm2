@@ -31,12 +31,12 @@ struct flag {
 static struct flag _vg_flags[] = {
 	{EXPORTED_VG, "EXPORTED", STATUS_FLAG},
 	{RESIZEABLE_VG, "RESIZEABLE", STATUS_FLAG},
-	{PARTIAL_VG, "PARTIAL", STATUS_FLAG},
 	{PVMOVE, "PVMOVE", STATUS_FLAG},
 	{LVM_READ, "READ", STATUS_FLAG},
 	{LVM_WRITE, "WRITE", STATUS_FLAG},
 	{CLUSTERED, "CLUSTERED", STATUS_FLAG},
 	{SHARED, "SHARED", STATUS_FLAG},
+	{PARTIAL_VG, NULL, 0},
 	{PRECOMMITTED, NULL, 0},
 	{0, NULL, 0}
 };
@@ -44,6 +44,7 @@ static struct flag _vg_flags[] = {
 static struct flag _pv_flags[] = {
 	{ALLOCATABLE_PV, "ALLOCATABLE", STATUS_FLAG},
 	{EXPORTED_VG, "EXPORTED", STATUS_FLAG},
+	{MISSING_PV, "MISSING", COMPATIBLE_FLAG},
 	{0, NULL, 0}
 };
 
@@ -62,6 +63,8 @@ static struct flag _lv_flags[] = {
 	{SNAPSHOT, NULL, 0},
 	{ACTIVATE_EXCL, NULL, 0},
 	{CONVERTING, NULL, 0},
+	{PARTIAL_LV, NULL, 0},
+	{POSTORDER_FLAG, NULL, 0},
 	{0, NULL, 0}
 };
 
@@ -155,7 +158,16 @@ int read_flags(uint32_t *status, int type, struct config_value *cv)
 				break;
 			}
 
-		if (!flags[f].description && (type & STATUS_FLAG)) {
+		if (type == VG_FLAGS && !strcmp(cv->v.str, "PARTIAL")) {
+			/*
+			 * Exception: We no longer write this flag out, but it
+			 * might be encountered in old backup files, so restore
+			 * it in that case. It is never part of live metadata
+			 * though, so only vgcfgrestore needs to be concerned
+			 * by this case.
+			 */
+			s |= PARTIAL_VG;
+		} else if (!flags[f].description && (type & STATUS_FLAG)) {
 			log_err("Unknown status flag '%s'.", cv->v.str);
 			return 0;
 		}

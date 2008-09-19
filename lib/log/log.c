@@ -29,7 +29,6 @@ static struct str_list _log_dev_alias;
 
 static int _verbose_level = VERBOSE_BASE_LEVEL;
 static int _test = 0;
-static int _partial = 0;
 static int _md_filtering = 0;
 static int _pvmove = 0;
 static int _full_scan_done = 0;	/* Restrict to one full scan during each cmd */
@@ -154,11 +153,6 @@ void init_test(int level)
 	_test = level;
 }
 
-void init_partial(int level)
-{
-	_partial = level;
-}
-
 void init_md_filtering(int level)
 {
 	_md_filtering = level;
@@ -252,11 +246,6 @@ int error_message_produced(void)
 int test_mode()
 {
 	return _test;
-}
-
-int partial_mode()
-{
-	return _partial;
 }
 
 int md_filtering()

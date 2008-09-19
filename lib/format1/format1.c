@@ -23,7 +23,7 @@
 #include "segtype.h"
 
 /* VG consistency checks */
-static int _check_vgs(struct list *pvs, int *partial)
+static int _check_vgs(struct list *pvs)
 {
 	struct list *pvh, *t;
 	struct disk_list *dl = NULL;
@@ -32,8 +32,6 @@ static int _check_vgs(struct list *pvs, int *partial)
 	uint32_t pv_count = 0;
 	uint32_t exported = 0;
 	int first_time = 1;
-
-	*partial = 0;
 
 	/*
 	 * If there are exported and unexported PVs, ignore exported ones.
@@ -98,10 +96,6 @@ static int _check_vgs(struct list *pvs, int *partial)
 				  dl->vgd.pe_total, dl->vgd.pe_allocated,
 				  dl->vgd.pvg_total);
 			list_del(pvh);
-			if (partial_mode()) {
-				*partial = 1;
-				continue;
-			}
 			return 0;
 		}
 		pv_count++;
@@ -111,9 +105,6 @@ static int _check_vgs(struct list *pvs, int *partial)
 	if (pv_count != first->vgd.pv_cur) {
 		log_error("%d PV(s) found for VG %s: expected %d",
 			  pv_count, first->pvd.vg_name, first->vgd.pv_cur);
-		if (!partial_mode())
-			return 0;
-		*partial = 1;
 	}
 
 	return 1;
@@ -125,7 +116,6 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	struct dm_pool *mem = fid->fmt->cmd->mem;
 	struct volume_group *vg = dm_pool_alloc(mem, sizeof(*vg));
 	struct disk_list *dl;
-	int partial;
 
 	if (!vg)
 		goto_bad;
@@ -142,12 +132,12 @@ static struct volume_group *_build_vg(struct format_instance *fid,
 	list_init(&vg->lvs);
 	list_init(&vg->tags);
 
-	if (!_check_vgs(pvs, &partial))
+	if (!_check_vgs(pvs))
 		goto_bad;
 
 	dl = list_item(pvs->n, struct disk_list);
 
-	if (!import_vg(mem, vg, dl, partial))
+	if (!import_vg(mem, vg, dl))
 		goto_bad;
 
 	if (!import_pvs(fid->fmt, mem, vg, pvs, &vg->pvs, &vg->pv_count))

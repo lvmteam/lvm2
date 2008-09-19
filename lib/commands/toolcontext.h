@@ -66,8 +66,10 @@ struct cmd_context {
 	struct command *command;
 	struct arg *args;
 	char **argv;
-	unsigned is_static;	/* Static binary? */
-	unsigned is_long_lived;	/* Optimises persistent_filter handling */
+	unsigned is_static:1;	/* Static binary? */
+	unsigned is_long_lived:1;	/* Optimises persistent_filter handling */
+	unsigned handles_missing_pvs:1;
+	unsigned partial_activate:1;
 
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
@@ -81,6 +83,7 @@ struct cmd_context {
 
 	struct archive_params *archive_params;
 	struct backup_params *backup_params;
+	const char *stripe_filler;
 
 	/* List of defined tags */
 	struct list tags;

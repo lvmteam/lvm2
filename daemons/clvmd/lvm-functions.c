@@ -413,9 +413,6 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		}
 	}
 
-	if (lock_flags & LCK_PARTIAL_MODE)
-		init_partial(1);
-
 	if (lock_flags & LCK_MIRROR_NOSYNC_MODE)
 		init_mirror_in_sync(1);
 
@@ -453,9 +450,6 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 		status = EINVAL;
 		break;
 	}
-
-	if (lock_flags & LCK_PARTIAL_MODE)
-		init_partial(0);
 
 	if (lock_flags & LCK_MIRROR_NOSYNC_MODE)
 		init_mirror_in_sync(0);

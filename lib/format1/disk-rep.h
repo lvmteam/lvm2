@@ -212,7 +212,7 @@ int export_pv(struct cmd_context *cmd, struct dm_pool *mem,
 	      struct pv_disk *pvd, struct physical_volume *pv);
 
 int import_vg(struct dm_pool *mem,
-	      struct volume_group *vg, struct disk_list *dl, int partial);
+	      struct volume_group *vg, struct disk_list *dl);
 int export_vg(struct vg_disk *vgd, struct volume_group *vg);
 
 int import_lv(struct dm_pool *mem, struct logical_volume *lv, struct lv_disk *lvd);

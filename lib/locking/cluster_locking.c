@@ -315,9 +315,6 @@ static int _lock_for_cluster(unsigned char cmd, uint32_t flags, const char *name
 	args[0] = flags & 0x7F; /* Maskoff lock flags */
 	args[1] = flags & 0xC0; /* Bitmap flags */
 
-	if (partial_mode())
-		args[1] |= LCK_PARTIAL_MODE;
-
 	if (mirror_in_sync())
 		args[1] |= LCK_MIRROR_NOSYNC_MODE;
 

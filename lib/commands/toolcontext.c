@@ -197,6 +197,7 @@ static int _process_config(struct cmd_context *cmd)
 {
 	mode_t old_umask;
 	const char *read_ahead;
+	struct stat st;
 
 	/* umask */
 	cmd->default_settings.umask = find_config_tree_int(cmd,
@@ -261,6 +262,24 @@ static int _process_config(struct cmd_context *cmd)
 	else {
 		log_error("Invalid readahead specification");
 		return 0;
+	}
+
+	cmd->stripe_filler = find_config_tree_str(cmd,
+						  "activation/missing_stripe_filler",
+						  DEFAULT_STRIPE_FILLER);
+	if (strcmp(cmd->stripe_filler, "error")) {
+		if (stat(cmd->stripe_filler, &st)) {
+			log_warn("WARNING: activation/missing_stripe_filler = \"%s\" "
+				 "is invalid,", cmd->stripe_filler);
+			log_warn("         stat failed: %s", strerror(errno));
+			log_warn("Falling back to \"error\" missing_stripe_filler.");
+			cmd->stripe_filler = "error";
+		} else if (!S_ISBLK(st.st_mode)) {
+			log_warn("WARNING: activation/missing_stripe_filler = \"%s\" "
+				 "is not a block device.", cmd->stripe_filler);
+			log_warn("Falling back to \"error\" missing_stripe_filler.");
+			cmd->stripe_filler = "error";
+		}
 	}
 
 	return 1;
@@ -981,6 +1000,7 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 	cmd->args = the_args;
 	cmd->is_static = is_static;
 	cmd->is_long_lived = is_long_lived;
+	cmd->handles_missing_pvs = 0;
 	cmd->hosttags = 0;
 	list_init(&cmd->formats);
 	list_init(&cmd->segtypes);

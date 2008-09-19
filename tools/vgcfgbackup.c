@@ -96,8 +96,7 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 	int ret;
 	char *last_filename = NULL;
 
-	if (partial_mode())
-		init_pvmove(1);
+	init_pvmove(1);
 
 	ret = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, &last_filename,
 			      &vg_backup_single);
