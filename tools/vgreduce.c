@@ -139,7 +139,6 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	struct logical_volume *lv;
 	struct physical_volume *pv;
 	struct lv_segment *seg, *mirrored_seg;
-	struct lv_segment_area area;
 	unsigned s;
 	uint32_t mimages, remove_log;
 	int list_unsafe, only_mirror_images_found;
