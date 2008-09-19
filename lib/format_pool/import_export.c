@@ -173,6 +173,7 @@ int import_pool_pv(const struct format_type *fmt, struct dm_pool *mem,
 	pv->pe_start = POOL_PE_START;
 	pv->pe_count = pv->size / POOL_PE_SIZE;
 	pv->pe_alloc_count = 0;
+	pv->pe_align = 0;
 
 	list_init(&pv->tags);
 	list_init(&pv->segments);

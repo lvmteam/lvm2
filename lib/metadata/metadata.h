@@ -239,7 +239,7 @@ struct format_handler {
 /*
  * Utility functions
  */
-unsigned long pe_align(void);
+unsigned long pe_align(struct physical_volume *pv);
 int vg_validate(struct volume_group *vg);
 
 int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);

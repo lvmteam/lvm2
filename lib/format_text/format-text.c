@@ -1166,7 +1166,7 @@ static int _mda_setup(const struct format_type *fmt,
 	if (!pvmetadatacopies)
 		return 1;
 
-	alignment = pe_align() << SECTOR_SHIFT;
+	alignment = pe_align(pv) << SECTOR_SHIFT;
 	disk_size = pv->size << SECTOR_SHIFT;
 	pe_start <<= SECTOR_SHIFT;
 	pe_end <<= SECTOR_SHIFT;
@@ -1333,7 +1333,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 
 	/* Set pe_start to first aligned sector after any metadata
 	 * areas that begin before pe_start */
-	pv->pe_start = pe_align();
+	pv->pe_start = pe_align(pv);
 	list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
@@ -1342,9 +1342,9 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		     (pv->pe_start << SECTOR_SHIFT))) {
 			pv->pe_start = (mdac->area.start + mdac->area.size)
 			    >> SECTOR_SHIFT;
-			adjustment = pv->pe_start % pe_align();
+			adjustment = pv->pe_start % pe_align(pv);
 			if (adjustment)
-				pv->pe_start += (pe_align() - adjustment);
+				pv->pe_start += (pe_align(pv) - adjustment);
 		}
 	}
 	if (!add_da

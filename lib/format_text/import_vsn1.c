@@ -243,6 +243,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	pv->pe_size = vg->extent_size;
 
 	pv->pe_alloc_count = 0;
+	pv->pe_align = 0;
 	pv->fmt = fid->fmt;
 
 	/* Fix up pv size if missing or impossibly large */

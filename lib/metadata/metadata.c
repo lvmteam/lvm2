@@ -64,9 +64,12 @@ static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
 static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
 						      const struct id *id);
 
-unsigned long pe_align(void)
+unsigned long pe_align(struct physical_volume *pv)
 {
-	return MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
+	if (!pv->pe_align)
+		pv->pe_align = MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
+
+	return pv->pe_align;
 }
 
 /**
@@ -126,8 +129,8 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 
 	/* FIXME Do proper rounding-up alignment? */
 	/* Reserved space for label; this holds 0 for PVs created by LVM1 */
-	if (pv->pe_start < pe_align())
-		pv->pe_start = pe_align();
+	if (pv->pe_start < pe_align(pv))
+		pv->pe_start = pe_align(pv);
 
 	/*
 	 * pe_count must always be calculated by pv_setup
@@ -771,7 +774,7 @@ static void _free_pv(struct dm_pool *mem, struct physical_volume *pv)
 	dm_pool_free(mem, pv);
 }
 
-static struct physical_volume *_alloc_pv(struct dm_pool *mem)
+static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev)
 {
 	struct physical_volume *pv = dm_pool_zalloc(mem, sizeof(*pv));
 
@@ -787,7 +790,9 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem)
 	pv->pe_start = 0;
 	pv->pe_count = 0;
 	pv->pe_alloc_count = 0;
+	pv->pe_align = 0;
 	pv->fmt = NULL;
+	pv->dev = dev;
 
 	pv->status = ALLOCATABLE_PV;
 
@@ -808,7 +813,7 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  uint64_t pvmetadatasize, struct list *mdas)
 {
 	struct dm_pool *mem = fmt->cmd->mem;
-	struct physical_volume *pv = _alloc_pv(mem);
+	struct physical_volume *pv = _alloc_pv(mem, dev);
 
 	if (!pv)
 		return NULL;
@@ -820,8 +825,6 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 			  dev_name(dev));
 		goto bad;
 	}
-
-	pv->dev = dev;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
 		log_error("%s: Couldn't get size.", pv_dev_name(pv));
