@@ -89,6 +89,7 @@ struct cmd_context {
 	char sys_dir[PATH_MAX];
 	char dev_dir[PATH_MAX];
 	char proc_dir[PATH_MAX];
+	char sysfs_dir[PATH_MAX];
 };
 
 struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static, unsigned is_long_lived);
