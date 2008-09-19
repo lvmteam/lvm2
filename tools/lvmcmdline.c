@@ -710,10 +710,10 @@ static int _get_settings(struct cmd_context *cmd)
 	cmd->current_settings.archive = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.archive);
 	cmd->current_settings.backup = arg_int_value(cmd, autobackup_ARG, cmd->current_settings.backup);
 	cmd->current_settings.cache_vgmetadata = cmd->command->flags & CACHE_VGMETADATA ? 1 : 0;
-	cmd->partial_activate = 0;
+	cmd->partial_activation = 0;
 
 	if (arg_count(cmd, partial_ARG)) {
-		cmd->partial_activate = 1;
+		cmd->partial_activation = 1;
 		log_print("Partial mode. Incomplete volume groups will "
 			  "be activated read-only.");
 	}
