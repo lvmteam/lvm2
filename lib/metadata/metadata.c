@@ -66,9 +66,20 @@ static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group 
 
 unsigned long pe_align(struct physical_volume *pv)
 {
-	if (!pv->pe_align)
-		pv->pe_align = MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
+	if (pv->pe_align)
+		goto out;
 
+	pv->pe_align = MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
+
+	/*
+	 * Align to chunk size of underlying md device if present
+	 */
+	if (pv->dev)
+		pv->pe_align = MAX(pv->pe_align,
+				   dev_md_chunk_size(pv->fmt->cmd->sysfs_dir,
+						     pv->dev));
+
+out:
 	return pv->pe_align;
 }
 
