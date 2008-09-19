@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2004 Luca Berra
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -16,6 +16,7 @@
 #include "lib.h"
 #include "metadata.h"
 #include "xlate.h"
+#include "filter.h"
 
 #ifdef linux
 
@@ -124,12 +125,74 @@ out:
 	return ret;
 }
 
+/*
+ * Retrieve chunk size from md device using sysfs.
+ */
+unsigned long dev_md_chunk_size(const char *sysfs_dir, struct device *dev)
+{
+	char path[PATH_MAX+1], buffer[64];
+	FILE *fp;
+	struct stat info;
+	unsigned long chunk_size = 0UL;
+
+	if (MAJOR(dev->dev) != md_major())
+		return 0;
+
+	if (!sysfs_dir || !*sysfs_dir)
+		return_0;
+
+	if (dm_snprintf(path, PATH_MAX, "%s/dev/block/%d:%d/md/chunk_size",
+	    sysfs_dir, MAJOR(dev->dev), MINOR(dev->dev)) < 0) {
+		log_error("dm_snprintf md chunk_size failed");
+		return 0;
+	}
+
+	/* old sysfs structure */
+	if (stat(path, &info) &&
+	    dm_snprintf(path, PATH_MAX, "%s/block/md%d/md/chunk_size",
+			sysfs_dir, MINOR(dev->dev)) < 0) {
+		log_error("dm_snprintf old md chunk size failed");
+		return 0;
+	}
+
+	if (!(fp = fopen(path, "r"))) {
+		log_sys_error("fopen", path);
+		return 0;
+	}
+
+	if (!fgets(buffer, sizeof(buffer), fp)) {
+		log_sys_error("fgets", path);
+		goto out;
+	}
+
+	if (sscanf(buffer, "%lu", &chunk_size) != 1) {
+		log_error("sysfs file %s not in expected format: %s", path,
+			  buffer);
+		goto out;
+	}
+
+	log_very_verbose("Found chunksize %u for md device %s.", chunk_size,
+			 dev_name(dev));
+
+out:
+	if (fclose(fp))
+		log_sys_error("fclose", path);
+
+	return chunk_size;
+}
+
 #else
 
 int dev_is_md(struct device *dev __attribute((unused)),
 	      uint64_t *sb __attribute((unused)))
 {
 	return 0;
+}
+
+unsigned long dev_md_chunk_size(const char *sysfs_dir __attribute((unused)),
+				struct device *dev  __attribute((unused)))
+{
+	return 0UL;
 }
 
 #endif

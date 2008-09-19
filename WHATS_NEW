@@ -1,6 +1,6 @@
 Version 2.02.40 - 
 ================================
-  Pass struct physical_volume to pe_align.
+  Pass struct physical_volume to pe_align and adjust for md chunk size.
   Store sysfs location in struct cmd_context.
   Avoid shuffling remaining mirror images when removing one, retaining primary.
   Add missing LV error target activation in _remove_mirror_images.
