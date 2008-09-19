@@ -1,5 +1,6 @@
 Version 2.02.40 - 
 ================================
+  Allow lvremove to remove LVs from VGs with missing PVs.
   In VG with PVs missing, by default allow activation of LVs that are complete.
   Track PARTIAL_LV and MISSING_PV flags internally.
   Require --force with --removemissing in vgreduce to remove partial LVs.
