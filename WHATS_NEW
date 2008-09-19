@@ -1,3 +1,6 @@
+Version 2.02.41 -
+=====================================
+
 Version 2.02.40 - 19th September 2008
 =====================================
   Allow lvremove to remove LVs from VGs with missing PVs.
