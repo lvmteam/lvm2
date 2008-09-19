@@ -168,6 +168,7 @@ struct physical_volume {
 	uint64_t pe_start;
 	uint32_t pe_count;
 	uint32_t pe_alloc_count;
+	unsigned long pe_align;
 
 	struct list segments;	/* Ordered pv_segments covering complete PV */
 	struct list tags;

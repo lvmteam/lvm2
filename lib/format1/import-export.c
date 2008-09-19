@@ -95,6 +95,7 @@ int import_pv(const struct format_type *fmt, struct dm_pool *mem,
 	pv->pe_start = pvd->pe_start;
 	pv->pe_count = pvd->pe_total;
 	pv->pe_alloc_count = 0;
+	pv->pe_align = 0;
 
 	/* Fix up pv size if missing or impossibly large */
 	if (!pv->size || pv->size > (1ULL << 62)) {
