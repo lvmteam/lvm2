@@ -141,8 +141,7 @@ static const char *decode_flags(unsigned char flags)
 {
 	static char buf[128];
 
-	sprintf(buf, "0x%x (%s%s%s)", flags,
-		flags & LCK_PARTIAL_MODE	  ? "PARTIAL " : "",
+	sprintf(buf, "0x%x (%s%s)", flags,
 		flags & LCK_MIRROR_NOSYNC_MODE	  ? "MIRROR_NOSYNC " : "",
 		flags & LCK_DMEVENTD_MONITOR_MODE ? "DMEVENTD_MONITOR " : "");
 

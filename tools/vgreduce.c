@@ -163,7 +163,9 @@ static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 {
+	struct list *pvh, *pvht;
 	struct list *lvh, *lvht;
+	struct pv_list *pvl;
 	struct lv_list *lvl, *lvl2, *lvlt;
 	struct logical_volume *lv;
 	struct physical_volume *pv;
@@ -190,7 +192,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 				/* FIXME Also check for segs on deleted LVs (incl pvmove) */
 
 				pv = seg_pv(seg, s);
-				if (!pv || !pv_dev(pv)) {
+				if (!pv || !pv_dev(pv) ||
+				    (pv->status & MISSING_PV)) {
 					if (arg_count(cmd, mirrorsonly_ARG) &&
 					    !(lv->status & MIRROR_IMAGE)) {
 						log_error("Non-mirror-image LV %s found: can't remove.", lv->name);
@@ -211,8 +214,21 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 		return 0;
 	}
 
-	if (!_consolidate_vg(cmd, vg))
-		return_0;
+	/*
+	 * Remove missing PVs. FIXME: This duplicates _consolidate_vg above,
+	 * but we cannot use that right now, since the LV removal code in this
+	 * function leaves the VG in a "somewhat inconsistent" state and
+	 * _consolidate_vg doesn't like that -- specifically, mirrors are fixed
+	 * up *after* the PVs are removed. All this should be gradually
+	 * superseded by lvconvert --repair.
+	 */
+	list_iterate_safe(pvh, pvht, &vg->pvs) {
+		pvl = list_item(pvh, struct pv_list);
+		if (pvl->pv->dev)
+			continue;
+		if (!_remove_pv(vg, pvl, 0))
+			return_0;
+	}
 
 	/* FIXME Recovery.  For now people must clean up by hand. */
 
