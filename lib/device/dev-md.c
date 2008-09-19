@@ -171,7 +171,7 @@ unsigned long dev_md_chunk_size(const char *sysfs_dir, struct device *dev)
 		goto out;
 	}
 
-	log_very_verbose("Found chunksize %u for md device %s.", chunk_size,
+	log_very_verbose("Found chunksize %lu for md device %s.", chunk_size,
 			 dev_name(dev));
 
 out:
