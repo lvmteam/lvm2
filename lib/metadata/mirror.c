@@ -179,7 +179,7 @@ int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage)
 	/* Place this one at the end */
 	mirrored_seg->areas[i-1] = area;
 
-	return 0;
+	return 1;
 }
 
 /*
