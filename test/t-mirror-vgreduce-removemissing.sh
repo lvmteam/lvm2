@@ -218,7 +218,7 @@ test_expect_success "basic: fail the 2nd mirror image of 2-way mirrored LV" \
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) &&
    mirrorlog_is_on_ $lv1 $(pv_ 3) &&
    fail_pv_ $(pv_ 2) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lv_is_linear_ $lv1 &&
    lv_is_on_ $lv1 $(pv_ 1)'
 test_expect_success "cleanup" \
@@ -238,7 +238,7 @@ test_3way_mirror_fail_1_()
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) &&
    mirrorlog_is_on_ $lv1 $(pv_ 4) &&
    fail_pv_ $(pv_ $index) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lvs -a -o+devices $vg &&
    mimages_are_on_ $lv1 $(rest_pvs_ $index 3) &&
    mirrorlog_is_on_ $lv1 $(pv_ 4)
@@ -266,7 +266,7 @@ test_3way_mirror_fail_2_()
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) &&
    mirrorlog_is_on_ $lv1 $(pv_ 4) &&
    fail_pv_ $(rest_pvs_ $index 3) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lvs -a -o+devices $vg &&
    lv_is_linear_ $lv1 &&
    lv_is_on_ $lv1 $(pv_ $index)
@@ -295,7 +295,7 @@ test_3way_mirror_plus_1_fail_1_()
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) $(pv_ 4) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(pv_ $index) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lvs -a -o+devices $vg &&
    mimages_are_on_ $lv1 $(rest_pvs_ $index 4) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5)
@@ -324,7 +324,7 @@ test_3way_mirror_plus_1_fail_3_()
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) $(pv_ 4) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(rest_pvs_ $index 4) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lvs -a -o+devices $vg &&
    (mimages_are_on_ $lv1 $(pv_ $index) || lv_is_on_ $lv1 $(pv_ $index)) &&
    ! mirrorlog_is_on_ $lv1 $(pv_ 5)
@@ -353,7 +353,7 @@ test_2way_mirror_plus_2_fail_1_()
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) $(pv_ 4) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(pv_ $index) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lvs -a -o+devices $vg &&
    mimages_are_on_ $lv1 $(rest_pvs_ $index 4) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5)
@@ -382,7 +382,7 @@ test_2way_mirror_plus_2_fail_3_()
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) $(pv_ 4) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(rest_pvs_ $index 4) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lvs -a -o+devices $vg &&
    (mimages_are_on_ $lv1 $(pv_ $index) || lv_is_on_ $lv1 $(pv_ $index)) &&
    ! mirrorlog_is_on_ $lv1 $(pv_ 5)
@@ -406,7 +406,7 @@ test_expect_success "fail mirror log of 2-way mirrored LV" \
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(pv_ 5) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) &&
    ! mirrorlog_is_on_ $lv1 $(pv_ 5)'
 test_expect_success "cleanup" \
@@ -420,7 +420,7 @@ test_expect_success "fail mirror log of 3-way (1 converting) mirrored LV" \
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(pv_ 5) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) &&
    ! mirrorlog_is_on_ $lv1 $(pv_ 5)'
 test_expect_success "cleanup" \
@@ -436,7 +436,7 @@ test_expect_success "fail all mirror images of 2-way mirrored LV" \
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(pv_ 1) $(pv_ 2) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    ! lvs $vg/$lv1'
 test_expect_success "cleanup" \
   "recover_vg_ $(pv_ 1) $(pv_ 2)"
@@ -449,7 +449,7 @@ test_expect_success "fail all mirror images of 3-way (1 converting) mirrored LV"
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) $(pv_ 3) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    fail_pv_ $(pv_ 1) $(pv_ 2) $(pv_ 3) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    ! lvs $vg/$lv1'
 test_expect_success "cleanup" \
   "recover_vg_ $(pv_ 1) $(pv_ 2) $(pv_ 3)"
@@ -468,7 +468,7 @@ test_expect_success "fail a mirror image of one of mirrored LV" \
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
    mirrorlog_is_on_ $lv2 $(pv_ 5) &&
    fail_pv_ $(pv_ 2) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    mimages_are_on_ $lv2 $(pv_ 3) $(pv_ 4) &&
    mirrorlog_is_on_ $lv2 $(pv_ 5) &&
    lv_is_linear_ $lv1 &&
@@ -488,7 +488,7 @@ test_expect_success "fail mirror images, one for each mirrored LV" \
    mirrorlog_is_on_ $lv2 $(pv_ 5) &&
    fail_pv_ $(pv_ 2) &&
    fail_pv_ $(pv_ 4) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    lv_is_linear_ $lv1 &&
    lv_is_on_ $lv1 $(pv_ 1) &&
    lv_is_linear_ $lv2 &&
@@ -505,7 +505,7 @@ test_expect_success "no failures" \
    lvchange -an $vg/$lv1 &&
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5) &&
-   vgreduce --removemissing $vg &&
+   vgreduce --removemissing --force $vg &&
    mimages_are_on_ $lv1 $(pv_ 1) $(pv_ 2) &&
    mirrorlog_is_on_ $lv1 $(pv_ 5)'
 test_expect_success "cleanup" \
