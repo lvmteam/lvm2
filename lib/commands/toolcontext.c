@@ -75,6 +75,49 @@ static int _get_env_vars(struct cmd_context *cmd)
 	return 1;
 }
 
+static void _get_sysfs_dir(struct cmd_context *cmd)
+{
+	static char proc_mounts[PATH_MAX];
+	static char *split[4], buffer[PATH_MAX + 16];
+	FILE *fp;
+	char *sys_mnt = NULL;
+
+	cmd->sysfs_dir[0] = '\0';
+	if (!*cmd->proc_dir) {
+		log_debug("No proc filesystem found: skipping sysfs detection");
+		return;
+	}
+
+	if (dm_snprintf(proc_mounts, sizeof(proc_mounts),
+			 "%s/mounts", cmd->proc_dir) < 0) {
+		log_error("Failed to create /proc/mounts string for sysfs detection");
+		return;
+	}
+
+	if (!(fp = fopen(proc_mounts, "r"))) {
+		log_sys_error("_get_sysfs_dir: fopen %s", proc_mounts);
+		return;
+	}
+
+	while (fgets(buffer, sizeof(buffer), fp)) {
+		if (dm_split_words(buffer, 4, 0, split) == 4 &&
+		    !strcmp(split[2], "sysfs")) {
+			sys_mnt = split[1];
+			break;
+		}
+	}
+
+	if (fclose(fp))
+		log_sys_error("fclose", proc_mounts);
+
+	if (!sys_mnt) {
+		log_error("Failed to find sysfs mount point");
+		return;
+	}
+
+	strncpy(cmd->sysfs_dir, sys_mnt, sizeof(cmd->sysfs_dir));
+}
+
 static void _init_logging(struct cmd_context *cmd)
 {
 	int append = 1;
@@ -188,6 +231,8 @@ static int _process_config(struct cmd_context *cmd)
 			  cmd->proc_dir);
 		cmd->proc_dir[0] = '\0';
 	}
+
+	_get_sysfs_dir(cmd);
 
 	/* activation? */
 	cmd->default_settings.activation = find_config_tree_int(cmd,
@@ -534,7 +579,7 @@ static struct dev_filter *_init_filter_components(struct cmd_context *cmd)
 	 */
 	if (find_config_tree_bool(cmd, "devices/sysfs_scan",
 			     DEFAULT_SYSFS_SCAN)) {
-		if ((filters[nr_filt] = sysfs_filter_create(cmd->proc_dir)))
+		if ((filters[nr_filt] = sysfs_filter_create(cmd->sysfs_dir)))
 			nr_filt++;
 	}
 
