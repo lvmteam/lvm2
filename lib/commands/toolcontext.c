@@ -267,6 +267,12 @@ static int _process_config(struct cmd_context *cmd)
 	cmd->stripe_filler = find_config_tree_str(cmd,
 						  "activation/missing_stripe_filler",
 						  DEFAULT_STRIPE_FILLER);
+
+	/* FIXME Missing error code checks from the stats, not log_warn?, notify if setting overridden, delay message/check till it is actually used (eg consider if lvm shell - file could appear later after this check)? */
+	if (!strcmp(cmd->stripe_filler, "/dev/ioerror") &&
+	    stat(cmd->stripe_filler, &st))
+		cmd->stripe_filler = "error";
+
 	if (strcmp(cmd->stripe_filler, "error")) {
 		if (stat(cmd->stripe_filler, &st)) {
 			log_warn("WARNING: activation/missing_stripe_filler = \"%s\" "
