@@ -491,7 +491,6 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	struct logical_volume *detached_log_lv = NULL;
 	struct logical_volume *lv1 = NULL;
 	struct lv_segment *mirrored_seg = first_seg(lv);
-	struct lv_segment_area area;
 	uint32_t old_area_count = mirrored_seg->area_count;
 	uint32_t new_area_count = mirrored_seg->area_count;
 	struct lv_list *lvl;
