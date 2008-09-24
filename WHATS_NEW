@@ -1,5 +1,6 @@
 Version 2.02.41 -
 =====================================
+  Fix validation of --minor and --major in lvcreate to require -My always.
   Fix release: clvmd build, vgreduce consolidate & tests, /dev/ioerror warning.
 
 Version 2.02.40 - 19th September 2008
