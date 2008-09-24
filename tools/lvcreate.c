@@ -500,6 +500,9 @@ static int _lvcreate_params(struct lvcreate_params *lp, struct cmd_context *cmd,
 				return 0;
 			}
 		}
+	} else if (arg_count(cmd, minor_ARG) || arg_count(cmd, major_ARG)) {
+		log_error("--major and --minor require -My");
+		return 0;
 	}
 
 	lp->pv_count = argc;
