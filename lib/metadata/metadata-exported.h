@@ -75,8 +75,8 @@ struct pv_segment;
 #define PARTIAL_LV              0x01000000U	/* LV - derived flag, not
 						   written out in metadata*/
 
-//#define POSTORDER_FLAG	0x02000000U /* Not a real flag, reserved for
-//					       temporary use inside vg_read. */
+//#define POSTORDER_FLAG	0x02000000U /* Not real flags, reserved for
+//#define POSTORDER_OPEN_FLAG	0x04000000U    temporary use inside vg_read. */
 
 #define LVM_READ              	0x00000100U	/* LV VG */
 #define LVM_WRITE             	0x00000200U	/* LV VG */
