@@ -1871,11 +1871,10 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			/* FIXME Also ensure contents same - checksums same? */
 			if (correct_vg->seqno != vg->seqno) {
 				inconsistent = 1;
-				if (vg->seqno > correct_vg->seqno) {
-					if (!_update_pv_list(&all_pvs, vg))
-						return_NULL;
+				if (!_update_pv_list(&all_pvs, vg))
+					return_NULL;
+				if (vg->seqno > correct_vg->seqno)
 					correct_vg = vg;
-				}
 			}
 		}
 
@@ -2270,6 +2269,7 @@ int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
 
 	pv->vg_name = cmd->fmt->orphan_vg_name;
 	pv->status = ALLOCATABLE_PV;
+	pv->pe_alloc_count = 0;
 
 	if (!dev_get_size(pv->dev, &pv->size)) {
 		log_error("%s: Couldn't get size.", pv_dev_name(pv));
