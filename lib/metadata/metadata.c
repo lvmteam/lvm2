@@ -1199,7 +1199,11 @@ static int _lv_postorder_visit(struct logical_volume *,
 static int _lv_postorder_level(struct logical_volume *lv, void *data)
 {
 	struct _lv_postorder_baton *baton = data;
+	if (lv->status & POSTORDER_OPEN_FLAG)
+		return 1; // a data structure loop has closed...
+	lv->status |= POSTORDER_OPEN_FLAG;
 	int r =_lv_postorder_visit(lv, baton->fn, baton->data);
+	lv->status &= ~POSTORDER_OPEN_FLAG;
 	lv->status |= POSTORDER_FLAG;
 	return r;
 };
