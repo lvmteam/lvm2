@@ -1169,7 +1169,7 @@ static int _allocate(struct alloc_handle *ah,
 		stack;
 
 	areas_size = list_size(pvms);
-	if (areas_size < ah->area_count + ah->log_count) {
+	if (areas_size && areas_size < (ah->area_count + ah->log_count)) {
 		if (ah->alloc != ALLOC_ANYWHERE) {
 			log_error("Not enough PVs with free space available "
 				  "for parallel allocation.");
