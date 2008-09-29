@@ -26,6 +26,8 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 
 all: init.sh
+	sh harness.sh
+
 init.sh: Makefile.in .bin-dir-stamp
 	rm -f $@-t $@
 	echo 'top_srcdir=$(top_srcdir)' >> $@-t
@@ -47,8 +49,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 $(T): init.sh
-	@echo "*** $@ ***"; '$(SHELL_PATH_SQ)' \
-	  $(TESTS_ENVIRONMENT) $@ $(LVM_TEST_OPTS)
+	sh harness.sh $@
 
 .bin-dir-stamp: lvm-wrapper
 	rm -rf bin
@@ -76,6 +77,5 @@ clean:
 
 distclean: clean
 
-all: $(T)
 .PHONY: $(T) clean distclean
 .NOTPARALLEL:
