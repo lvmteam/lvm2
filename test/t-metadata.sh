@@ -1,5 +1,4 @@
-#!/bin/sh
-# Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -9,60 +8,28 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#
-# tests basic functionality of read-ahead and ra regressions
-#
+. ./test-utils.sh
 
-test_description='Test --metadatatype 1'
-privileges_required_=1
+aux prepare_devs 5
 
-. ./test-lib.sh
+pvcreate $dev1
+pvcreate --metadatacopies 0 $dev2
+pvcreate --metadatacopies 0 $dev3
+pvcreate $dev4
+pvcreate --metadatacopies 0 $dev5
 
-cleanup_()
-{
-   vgremove -f "$vg"
-   test -n "$d1" && losetup -d "$d1"
-   test -n "$d2" && losetup -d "$d2"
-   test -n "$d3" && losetup -d "$d3"
-   test -n "$d4" && losetup -d "$d4"
-   test -n "$d5" && losetup -d "$d5"
-   rm -f "$f1" "$f2" "$f3" "$f4" "$f5"
-}
+vgcreate -c n "$vg" $devs
+lvcreate -n $lv -l 1 -i5 -I256 $vg
 
-test_expect_success "set up temp files, loopback devices" \
-  'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
-   f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
-   f3=$(pwd)/3 && d3=$(loop_setup_ "$f3") &&
-   f4=$(pwd)/4 && d4=$(loop_setup_ "$f4") &&
-   f5=$(pwd)/5 && d5=$(loop_setup_ "$f5") &&
-   vg=$(this_test_)-test-vg-$$            &&
-   lv=$(this_test_)-test-lv-$$
-   pvcreate "$d1"                                    &&
-   pvcreate --metadatacopies 0 "$d2"                 &&
-   pvcreate --metadatacopies 0 "$d3"                 &&
-   pvcreate "$d4"                                    &&
-   pvcreate --metadatacopies 0 "$d5"                 &&
-   vgcreate -c n "$vg" "$d1" "$d2" "$d3" "$d4" "$d5" &&
-   lvcreate -n "$lv" -l 1%FREE -i5 -I256 "$vg"'
+pvchange -x n $dev1
+pvchange -x y $dev1
+vgchange -a n $vg
+pvchange --uuid $dev1
+pvchange --uuid $dev2
+vgremove -f $vg
 
-test_expect_success "test medatasize 0" \
-  'pvchange -x n "$d1"   &&
-   pvchange -x y "$d1"   &&
-   vgchange -a n "$vg"   &&
-   pvchange --uuid "$d1" &&
-   pvchange --uuid "$d2" &&
-   vgremove -f "$vg"'
-
-
-test_expect_success "test metadatatype 1" \
-  'pvcreate -M1 "$d1"    &&
-   pvcreate -M1 "$d2"    &&
-   pvcreate -M1 "$d3"    &&
-   vgcreate -M1 "$vg" "$d1" "$d2" "$d3" &&
-   pvchange --uuid "$d1"'
-
-test_done
-
-# Local Variables:
-# indent-tabs-mode: nil
-# End:
+pvcreate -M1 $dev1
+pvcreate -M1 $dev2
+pvcreate -M1 $dev3
+vgcreate -M1 $vg $dev1 $dev2 $dev3
+pvchange --uuid $dev1
