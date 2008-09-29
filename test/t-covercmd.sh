@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright (C) 2007 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -13,21 +12,7 @@
 # tests basic functionality of read-ahead and ra regressions
 #
 
-test_description='Test coverage'
-privileges_required_=1
-
-. ./test-lib.sh
-
-cleanup_()
-{
-  vgremove -f "$vg" 2>/dev/null || true
-  test -n "$d1" && losetup -d "$d1"
-  test -n "$d2" && losetup -d "$d2"
-  test -n "$d3" && losetup -d "$d3"
-  test -n "$d4" && losetup -d "$d4"
-  test -n "$d5" && losetup -d "$d5"
-  rm -f "$f1" "$f2" "$f3" "$f4" "$f5"
-}
+. ./test-utils.sh
 
 get_lvs_()
 {
@@ -37,63 +22,56 @@ get_lvs_()
   esac
 }
 
-test_expect_success "set up temp files, loopback devices" \
-  'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
-   f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
-   f3=$(pwd)/3 && d3=$(loop_setup_ "$f3") &&
-   f4=$(pwd)/4 && d4=$(loop_setup_ "$f4") &&
-   f5=$(pwd)/5 && d5=$(loop_setup_ "$f5") &&
-   vg=$(this_test_)-test-vg-$$            &&
-   lv=$(this_test_)-test-lv-$$
-   pvcreate "$d1"                                    &&
-   pvcreate --metadatacopies 0 "$d2"                 &&
-   pvcreate --metadatacopies 0 "$d3"                 &&
-   pvcreate "$d4"                                    &&
-   pvcreate --metadatacopies 0 "$d5"                 &&
-   vgcreate -c n "$vg" "$d1" "$d2" "$d3" "$d4" "$d5" &&
-   lvcreate -n "$lv" -l 1%FREE -i5 -I256 "$vg"'
+prepare_devs 5
 
-test_expect_success "test *scan and *display tools" \
-  'pvscan              &&
-   vgscan              &&
-   lvscan              &&
-   lvmdiskscan         &&
-   vgdisplay --units k &&
-   lvdisplay --units g &&
-   for i in b k m g t p e H B K M G T P E ; do \
-     pvdisplay --units "$i" "$d1" || return $? ; done'
+pvcreate $dev1
+pvcreate --metadatacopies 0 $dev2
+pvcreate --metadatacopies 0 $dev3
+pvcreate $dev4
+pvcreate --metadatacopies 0 $dev5
+vgcreate -c n $vg $devs
+lvcreate -n $lv -l 5 -i5 -I256 $vg
 
-test_expect_success "test vgexport vgimport tools" \
-  'vgchange -an "$vg"  &&
-   vgexport "$vg"      &&
-   vgimport "$vg"      &&
-   vgchange -ay "$vg"'
+# test *scan and *display tools
+pvscan
+vgscan
+lvscan
+lvmdiskscan
+vgdisplay --units k
+lvdisplay --units g
+for i in b k m g t p e H B K M G T P E ; do
+    pvdisplay --units "$i" "$dev1"
+done
+
+# test vgexport vgimport tools
+vgchange -an $vg
+vgexport $vg
+vgimport $vg
+vgchange -ay $vg
 
 # "-persistent y --major 254 --minor 20"
 # "-persistent n"
-test_expect_success "test various lvm utils" \
-  'for i in dumpconfig formats segtypes 
-     do lvm "$i" || return $? ; done                 &&
-   for i in pr "p rw" an ay "-monitor y" "-monitor n" \
-     -resync -refresh "-addtag MYTAG" "-deltag MYETAG"
-     do lvchange -$i "$vg"/"$lv" || return $? ; done &&
-   pvck "$d1"                                        &&
-   vgck "$vg"                                        &&
-   lvrename "$vg" "$lv" "$lv-rename"                 &&
-   vgcfgbackup -f "$(pwd)/backup.$$" "$vg"           &&
-   vgchange -an "$vg"                                &&
-   vgcfgrestore  -f "$(pwd)/backup.$$" "$vg"         &&
-   vgremove -f "$vg"                                 &&
-   pvresize --setphysicalvolumesize 10M "$d1"'
+# test various lvm utils
+for i in dumpconfig formats segtypes; do
+    lvm "$i"
+done
 
-test_expect_failure "test various errors and obsoleted tools" \
-  'lvmchange          ||
-   lvrename "$vg"     ||
-   lvrename "$vg-xxx" ||
-   lvrename "$vg"  "$vg"/"$lv-rename" "$vg"/"$lv"'
+for i in pr "p rw" an ay "-monitor y" "-monitor n" \
+        -resync -refresh "-addtag MYTAG" "-deltag MYETAG"; do
+    lvchange -$i "$vg"/"$lv"
+done
 
-test_done
+pvck "$d1"
+vgck "$vg"
+lvrename "$vg" "$lv" "$lv-rename"
+vgcfgbackup -f "$(pwd)/backup.$$" "$vg"
+vgchange -an "$vg"
+vgcfgrestore  -f "$(pwd)/backup.$$" "$vg"
+vgremove -f "$vg"
+pvresize --setphysicalvolumesize 10M "$dev1"
 
-# Local Variables:
-# indent-tabs-mode: nil
-# End:
+# test various errors and obsoleted tools
+not lvmchange
+not lvrename "$vg"
+not lvrename "$vg-xxx"
+not lvrename "$vg"  "$vg"/"$lv-rename" "$vg"/"$lv"
