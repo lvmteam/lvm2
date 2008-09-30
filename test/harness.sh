@@ -29,6 +29,7 @@ if test -n "$failed"; then
     for t in $failed; do
 	printf "\t%s\n" $t
     done
+    exit 1
 else
     echo "All tests passed."
 fi
