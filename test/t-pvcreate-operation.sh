@@ -60,18 +60,17 @@ vgremove -f $vg1
 pvremove -f $dev2
 pvremove -f $dev1
 
-test_expect_success \
-  'pvcreate (lvm2) succeeds with -ff when PV with metadatacopies=0 belongs to VG' \
-  'pvcreate --metadatacopies 0 $dev1 &&
-   pvcreate --metadatacopies 1 $dev2 &&
-   vgcreate $vg1 $dev1 $dev2 &&
-   pvcreate -ff -y $dev1 &&
-   vgreduce --removemissing $vg1 &&
-   vgremove -ff $vg1 &&
-   pvremove -f $dev2 &&
-   pvremove -f $dev1'
+# pvcreate (lvm2) succeeds with -ff when PV with metadatacopies=0 belongs to VG
+pvcreate --metadatacopies 0 $dev1 
+pvcreate --metadatacopies 1 $dev2
+vgcreate $vg1 $dev1 $dev2 
+pvcreate -ff -y $dev1 
+vgreduce --removemissing $vg1 
+vgremove -ff $vg1 
+pvremove -f $dev2 
+pvremove -f $dev1
 
-for i in 0 1 2 3 
+for i in 0 1 2 3
 do
 # pvcreate (lvm2) succeeds writing LVM label at sector $i
     pvcreate --labelsector $i $dev1

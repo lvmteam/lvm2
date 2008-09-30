@@ -1,4 +1,4 @@
-# Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 # Copyright (C) 2007 NEC Corporation
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -156,25 +156,25 @@ check_and_cleanup_lvs_
 prepare_lvs_
 lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2
 check_mirror_count_ $vg/$lv1 2
-!(check_mirror_log_ $vg/$lv1)
-lvconvert -m+1 -i1 --mirrorlog core $vg/$lv1 $dev4 &&
-check_no_tmplvs_ $vg/$lv1 &&
-check_mirror_count_ $vg/$lv1 3 &&
-!(check_mirror_log_ $vg/$lv1) &&
-mimages_are_redundant_ $vg $lv1 &&
+not check_mirror_log_ $vg/$lv1
+lvconvert -m+1 -i1 --mirrorlog core $vg/$lv1 $dev4 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 3 
+not check_mirror_log_ $vg/$lv1
+mimages_are_redundant_ $vg $lv1 
 check_and_cleanup_lvs_
 
-test_expect_success "add 2 mirrors to core log mirror" \
-  'prepare_lvs_ &&
-   lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   !(check_mirror_log_ $vg/$lv1) &&
-   lvconvert -m+2 -i1 --mirrorlog core $vg/$lv1 $dev4 $dev5 &&
-   check_no_tmplvs_ $vg/$lv1 &&
-   check_mirror_count_ $vg/$lv1 4 &&
-   !(check_mirror_log_ $vg/$lv1) &&
-   mimages_are_redundant_ $vg $lv1 &&
-   check_and_cleanup_lvs_'
+# add 2 mirrors to core log mirror" 
+prepare_lvs_ 
+lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 
+check_mirror_count_ $vg/$lv1 2 
+not check_mirror_log_ $vg/$lv1 
+lvconvert -m+2 -i1 --mirrorlog core $vg/$lv1 $dev4 $dev5 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 4 
+not check_mirror_log_ $vg/$lv1
+mimages_are_redundant_ $vg $lv1 
+check_and_cleanup_lvs_
 
 # ---
 # add to converting mirror
@@ -195,18 +195,18 @@ check_and_cleanup_lvs_
 # ---
 # add mirror and disk log
 
-test_expect_success "add 1 mirror and disk log" \
-  'prepare_lvs_ &&
-   lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   !(check_mirror_log_ $vg/$lv1) &&
-   lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0-1 &&
-   check_no_tmplvs_ $vg/$lv1 &&
-   check_mirror_count_ $vg/$lv1 3 &&
-   check_mirror_log_ $vg/$lv1 &&
-   mimages_are_redundant_ $vg $lv1 &&
-   mirrorlog_is_on_ $vg/$lv1 $dev3 &&
-   check_and_cleanup_lvs_'
+# "add 1 mirror and disk log" 
+prepare_lvs_ 
+lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 
+check_mirror_count_ $vg/$lv1 2 
+not check_mirror_log_ $vg/$lv1 
+lvconvert -m+1 --mirrorlog disk -i1 $vg/$lv1 $dev4 $dev3:0-1 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 3 
+check_mirror_log_ $vg/$lv1 
+mimages_are_redundant_ $vg $lv1 
+mirrorlog_is_on_ $vg/$lv1 $dev3 
+check_and_cleanup_lvs_
 
 # ---
 # check polldaemon restarts
@@ -226,75 +226,74 @@ check_and_cleanup_lvs_
 # ---------------------------------------------------------------------
 # removal during conversion
 
-test_expect_success "remove newly added mirror" \
-  'prepare_lvs_ &&
-   lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   check_mirror_log_ $vg/$lv1 &&
-   lvconvert -m+1 -b -i100 $vg/$lv1 $dev4 &&
-   lvconvert -m-1 $vg/$lv1 $dev4 &&
-   wait_conversion_ $vg/$lv1 &&
-   check_no_tmplvs_ $vg/$lv1 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   mimages_are_redundant_ $vg $lv1 &&
-   mirrorlog_is_on_ $vg/$lv1 $dev3 &&
-   check_and_cleanup_lvs_'
+# "remove newly added mirror" 
+prepare_lvs_ 
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+check_mirror_count_ $vg/$lv1 2 
+check_mirror_log_ $vg/$lv1 
+lvconvert -m+1 -b -i100 $vg/$lv1 $dev4 
+lvconvert -m-1 $vg/$lv1 $dev4 
+wait_conversion_ $vg/$lv1 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 2 
+mimages_are_redundant_ $vg $lv1 
+mirrorlog_is_on_ $vg/$lv1 $dev3 
+check_and_cleanup_lvs_
 
-test_expect_success "remove one of newly added mirrors" \
-  'prepare_lvs_ &&
-   lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   check_mirror_log_ $vg/$lv1 &&
-   lvconvert -m+2 -b -i100 $vg/$lv1 $dev4 $dev5 &&
-   lvconvert -m-1 $vg/$lv1 $dev4 &&
-   lvconvert -i1 $vg/$lv1 &&
-   wait_conversion_ $vg/$lv1 &&
-   check_no_tmplvs_ $vg/$lv1 &&
-   check_mirror_count_ $vg/$lv1 3 &&
-   mimages_are_redundant_ $vg $lv1 &&
-   mirrorlog_is_on_ $vg/$lv1 $dev3 &&
-   check_and_cleanup_lvs_'
+# "remove one of newly added mirrors" 
+prepare_lvs_ 
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+check_mirror_count_ $vg/$lv1 2 
+check_mirror_log_ $vg/$lv1 
+lvconvert -m+2 -b -i100 $vg/$lv1 $dev4 $dev5 
+lvconvert -m-1 $vg/$lv1 $dev4 
+lvconvert -i1 $vg/$lv1 
+wait_conversion_ $vg/$lv1 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 3 
+mimages_are_redundant_ $vg $lv1 
+mirrorlog_is_on_ $vg/$lv1 $dev3 
+check_and_cleanup_lvs_
 
-test_expect_success "remove from original mirror (the original is still mirror)" \
-  'prepare_lvs_ &&
-   lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev5 $dev3:0-1 &&
-   check_mirror_count_ $vg/$lv1 3 &&
-   check_mirror_log_ $vg/$lv1 &&
-   lvconvert -m+1 -b -i100 $vg/$lv1 $dev4 &&
-   lvconvert -m-1 $vg/$lv1 $dev2 &&
-   lvconvert -i1 $vg/$lv1 &&
-   wait_conversion_ $vg/$lv1 &&
-   check_no_tmplvs_ $vg/$lv1 &&
-   check_mirror_count_ $vg/$lv1 3 &&
-   mimages_are_redundant_ $vg $lv1 &&
-   mirrorlog_is_on_ $vg/$lv1 $dev3 &&
-   check_and_cleanup_lvs_'
+# "remove from original mirror (the original is still mirror)"
+prepare_lvs_ 
+lvcreate -l2 -m2 -n $lv1 $vg $dev1 $dev2 $dev5 $dev3:0-1 
+check_mirror_count_ $vg/$lv1 3 
+check_mirror_log_ $vg/$lv1 
+lvconvert -m+1 -b -i100 $vg/$lv1 $dev4 
+lvconvert -m-1 $vg/$lv1 $dev2 
+lvconvert -i1 $vg/$lv1 
+wait_conversion_ $vg/$lv1 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 3 
+mimages_are_redundant_ $vg $lv1 
+mirrorlog_is_on_ $vg/$lv1 $dev3 
+check_and_cleanup_lvs_
 
-test_expect_success "remove from original mirror (the original becomes linear)" \
-  'prepare_lvs_ &&
-   lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   check_mirror_log_ $vg/$lv1 &&
-   lvconvert -m+1 -b -i100 $vg/$lv1 $dev4 &&
-   lvconvert -m-1 $vg/$lv1 $dev2 &&
-   lvconvert -i1 $vg/$lv1 &&
-   wait_conversion_ $vg/$lv1 &&
-   check_no_tmplvs_ $vg/$lv1 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   mimages_are_redundant_ $vg $lv1 &&
-   mirrorlog_is_on_ $vg/$lv1 $dev3 &&
-   check_and_cleanup_lvs_'
+# "remove from original mirror (the original becomes linear)"
+prepare_lvs_ 
+lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
+check_mirror_count_ $vg/$lv1 2 
+check_mirror_log_ $vg/$lv1 
+lvconvert -m+1 -b -i100 $vg/$lv1 $dev4 
+lvconvert -m-1 $vg/$lv1 $dev2 
+lvconvert -i1 $vg/$lv1 
+wait_conversion_ $vg/$lv1 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 2 
+mimages_are_redundant_ $vg $lv1 
+mirrorlog_is_on_ $vg/$lv1 $dev3 
+check_and_cleanup_lvs_
 
-test_expect_success "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated" \
-  'prepare_lvs_ &&
-   lvcreate -l`pvs --noheadings -ope_count $dev1` -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0 &&
-   check_mirror_count_ $vg/$lv1 2 &&
-   check_mirror_log_ $vg/$lv1 &&
-   lvconvert -m0 $vg/$lv1 $dev1 &&
-   check_no_tmplvs_ $vg/$lv1 &&
-   check_mirror_count_ $vg/$lv1 1 &&
-   check_and_cleanup_lvs_'
+# "rhbz440405: lvconvert -m0 incorrectly fails if all PEs allocated"
+prepare_lvs_ 
+lvcreate -l`pvs --noheadings -ope_count $dev1` -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0 
+check_mirror_count_ $vg/$lv1 2 
+check_mirror_log_ $vg/$lv1 
+lvconvert -m0 $vg/$lv1 $dev1 
+check_no_tmplvs_ $vg/$lv1 
+check_mirror_count_ $vg/$lv1 1 
+check_and_cleanup_lvs_
 
 # ---------------------------------------------------------------------
 
-test_done
