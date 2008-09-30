@@ -18,7 +18,8 @@ for t in $tests; do
 	printf -- "--- Output: $t -"
 	for i in `seq $(($len + 14)) 78`; do echo -n "-"; done; echo
 	printf "%s\n" "$out"
-	for i in `seq 1 78`; do echo -n "-"; done; echo
+	printf -- "--- End: $t ----"
+	for i in `seq $(($len + 14)) 78`; do echo -n "-"; done; echo
 	failed="$failed $t"
     fi
 done
