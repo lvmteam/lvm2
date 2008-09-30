@@ -50,5 +50,5 @@ grep "^  Number of stripes (129) must be between 1 and 128\$" err
 # 'lvcreate rejects an invalid stripe size'
 not lvcreate -L 64M -n $lv -i2 --stripesize 3 $vg 2>err
 grep "^  Invalid stripe size 3\.00 KB\$" err
-case $(lvdisplay $vg) in "") true ;; *) false ;; esac'
+case $(lvdisplay $vg) in "") true ;; *) false ;; esac
 
