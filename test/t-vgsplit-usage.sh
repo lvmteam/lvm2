@@ -77,7 +77,7 @@ grep "^  Volume group \"$vg2\" exists, but new VG option specified" err
 vgremove $vg2 
 vgremove $vg1
 
-# vgsplit rejects split because alloc given with existing vg" \
+# vgsplit rejects split because alloc given with existing vg
 vgcreate -M$mdatype --alloc cling $vg1 $dev1 $dev2 
 vgcreate -M$mdatype --alloc cling $vg2 $dev3 $dev4 
 not vgsplit --alloc cling $vg1 $vg2 $dev1 2>err;
@@ -85,7 +85,7 @@ grep "^  Volume group \"$vg2\" exists, but new VG option specified" err
 vgremove $vg2 
 vgremove $vg1
 
-# vgsplit rejects split because clustered given with existing vg" \
+# vgsplit rejects split because clustered given with existing vg
 vgcreate -M$mdatype --clustered n $vg1 $dev1 $dev2 
 vgcreate -M$mdatype --clustered n $vg2 $dev3 $dev4 
 not vgsplit --clustered n $vg1 $vg2 $dev1 2>err
@@ -93,7 +93,7 @@ grep "^  Volume group \"$vg2\" exists, but new VG option specified" err
 vgremove $vg2 
 vgremove $vg1
 
-# vgsplit rejects vg with active lv" \
+# vgsplit rejects vg with active lv
 pvcreate -M$mdatype -ff $dev3 $dev4 
 vgcreate -M$mdatype $vg1 $dev1 $dev2 
 vgcreate -M$mdatype $vg2 $dev3 $dev4 
@@ -103,7 +103,7 @@ grep "^  Logical volumes in \"$vg1\" must be inactive\$" err
 vgremove -f $vg2 
 vgremove -f $vg1
 
-# vgsplit rejects split because max_lv is exceeded" \
+# vgsplit rejects split because max_lv is exceeded
 vgcreate -M$mdatype --maxlogicalvolumes 2 $vg1 $dev1 $dev2 
 vgcreate -M$mdatype --maxlogicalvolumes 2 $vg2 $dev3 $dev4 
 lvcreate -l 4 -n $lv1 $vg1 
@@ -143,7 +143,7 @@ compare_vg_field_ $vg1 $vg2 vg_fmt
 vgremove -f $vg2 
 vgremove -f $vg1
 
-# vgsplit rejects split because PV not in VG" \
+# vgsplit rejects split because PV not in VG
 vgcreate -M$mdatype $vg1 $dev1 $dev2 
 vgcreate -M$mdatype $vg2 $dev3 $dev4 
 lvcreate -l 4 -n $lv1 $vg1 
