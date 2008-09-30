@@ -597,8 +597,15 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	r = 1;
 
       out:
-	if (!r && !dev_close(mdac->area.dev))
-		stack;
+	if (!r) {
+		if (!dev_close(mdac->area.dev))
+			stack;
+
+                if (fidtc->raw_metadata_buf) {
+                        dm_free(fidtc->raw_metadata_buf);
+                        fidtc->raw_metadata_buf = NULL;
+                }
+	}
 
 	return r;
 }

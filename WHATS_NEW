@@ -1,5 +1,6 @@
 Version 2.02.41 -
 =====================================
+  Free text metadata buffer after a failure writing it.
   Fix misleading error message when there is no allocatable extents in VG.
   Fix handling of PVs which reappeared with old metadata version.
   Fix mirror DSO to call vgreduce with proper parameters.
