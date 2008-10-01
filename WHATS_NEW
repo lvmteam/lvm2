@@ -16,7 +16,7 @@ Version 2.02.40 - 19th September 2008
   No longer write out PARTIAL flag into metadata backups.
   Treat new default activation/missing_stripe_filler "error" as an error target.
   Remove internal partial_mode.
-  Add device/md_chunk_alignment to lvm.conf.
+  Add devices/md_chunk_alignment to lvm.conf.
   Pass struct physical_volume to pe_align and adjust for md chunk size.
   Store sysfs location in struct cmd_context.
   Avoid shuffling remaining mirror images when removing one, retaining primary.
