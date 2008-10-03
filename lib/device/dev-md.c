@@ -133,7 +133,7 @@ unsigned long dev_md_chunk_size(const char *sysfs_dir, struct device *dev)
 	char path[PATH_MAX+1], buffer[64];
 	FILE *fp;
 	struct stat info;
-	unsigned long chunk_size = 0UL;
+	unsigned long chunk_size_bytes = 0UL;
 
 	if (MAJOR(dev->dev) != md_major())
 		return 0;
@@ -165,20 +165,20 @@ unsigned long dev_md_chunk_size(const char *sysfs_dir, struct device *dev)
 		goto out;
 	}
 
-	if (sscanf(buffer, "%lu", &chunk_size) != 1) {
+	if (sscanf(buffer, "%lu", &chunk_size_bytes) != 1) {
 		log_error("sysfs file %s not in expected format: %s", path,
 			  buffer);
 		goto out;
 	}
 
-	log_very_verbose("Found chunksize %lu for md device %s.", chunk_size,
-			 dev_name(dev));
+	log_very_verbose("Device %s md chunk size is %lu bytes.",
+			 dev_name(dev), chunk_size_bytes);
 
 out:
 	if (fclose(fp))
 		log_sys_error("fclose", path);
 
-	return chunk_size;
+	return chunk_size_bytes >> SECTOR_SHIFT;
 }
 
 #else
