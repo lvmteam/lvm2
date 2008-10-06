@@ -9,96 +9,56 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-test_description='Test pvchange option values'
-privileges_required_=1
+# 'Test pvchange option values'
 
-. ./test-lib.sh
+. ./test-utils.sh
 
-cleanup_()
-{
-  test -n "$d1" && losetup -d "$d1"
-  test -n "$d2" && losetup -d "$d2"
-  test -n "$d3" && losetup -d "$d3"
-  test -n "$d4" && losetup -d "$d4"
-  rm -f "$f1" "$f2" "$f3" "$f4"
-}
-
-test_expect_success \
-  'set up temp files, loopback devices, PVs, vgname' \
-  'f1=$(pwd)/1 && d1=$(loop_setup_ "$f1") &&
-   f2=$(pwd)/2 && d2=$(loop_setup_ "$f2") &&
-   f3=$(pwd)/3 && d3=$(loop_setup_ "$f3") &&
-   f4=$(pwd)/4 && d4=$(loop_setup_ "$f4") &&
-   vg1=$(this_test_)-test-vg1-$$ &&
-   lv=$(this_test_)-test-lv-$$'
+aux prepare_devs 4
 
 for mda in 0 1 2 
 do
-test_expect_success \
-  "setup pv with metadatacopies = $mda" '
-   pvcreate $d4 &&
-   pvcreate --metadatacopies $mda $d1 &&
-   vgcreate $vg1 $d1 $d4 
-'
+# "setup pv with metadatacopies = $mda" 
+	pvcreate $dev4 
+	pvcreate --metadatacopies $mda $dev1 
+	vgcreate $vg1 $dev1 $dev4 
 
-test_expect_success \
-  "pvchange adds/dels tag to pvs with metadatacopies = $mda " '
-   pvchange $d1 --addtag test$mda &&
-   check_pv_field_ $d1 pv_tags test$mda &&
-   pvchange $d1 --deltag test$mda &&
-   check_pv_field_ $d1 pv_tags " "
-'
+# "pvchange adds/dels tag to pvs with metadatacopies = $mda " 
+	pvchange $dev1 --addtag test$mda 
+	check_pv_field_ $dev1 pv_tags test$mda 
+	pvchange $dev1 --deltag test$mda 
+	check_pv_field_ $dev1 pv_tags " "
 
-test_expect_success \
-  "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)" '
-   pvchange $d1 -x n &&
-   check_pv_field_ $d1 pv_attr  --  &&
-   pvchange $d1 -x y &&
-   check_pv_field_ $d1 pv_attr  a- 
-'
+# "vgchange disable/enable allocation for pvs with metadatacopies = $mda (bz452982)"
+	pvchange $dev1 -x n 
+	check_pv_field_ $dev1 pv_attr  --  
+	pvchange $dev1 -x y 
+	check_pv_field_ $dev1 pv_attr  a- 
 
-test_expect_success \
-  'remove pv' '
-   vgremove $vg1 &&
-   pvremove $d1 $d4
-'
+# 'remove pv'
+	vgremove $vg1 
+	pvremove $dev1 $dev4
 done
 
-test_expect_success \
-  "pvchange uuid" "
-   pvcreate --metadatacopies 0 $d1 &&
-   pvcreate --metadatacopies 2 $d2 &&
-   vgcreate $vg1 $d1 $d2 &&
-   pvchange -u $d1 &&
-   pvchange -u $d2 &&
-   vg_validate_pvlv_counts_ $vg1 2 0 0
-"
-test_expect_success \
-  "pvchange rejects uuid change under an active lv" '
-   lvcreate -l 16 -i 2 -n $lv --alloc anywhere $vg1 &&
-   vg_validate_pvlv_counts_ $vg1 2 1 0 &&
-   { pvchange -u $d1;
-     status=$?; echo status=$status; test $status = 5 &&
-     lvchange -an "$vg1"/"$lv" &&
-     pvchange -u $d1
-   }
-'
+# "pvchange uuid"
+pvcreate --metadatacopies 0 $dev1 
+pvcreate --metadatacopies 2 $dev2 
+vgcreate $vg1 $dev1 $dev2 
+pvchange -u $dev1 
+pvchange -u $dev2 
+vg_validate_pvlv_counts_ $vg1 2 0 0
 
-test_expect_success \
-  "cleanup" '
-   lvremove -f "$vg1"/"$lv" &&
-   vgremove $vg1
-'
+# "pvchange rejects uuid change under an active lv" 
+lvcreate -l 16 -i 2 -n $lv --alloc anywhere $vg1 
+vg_validate_pvlv_counts_ $vg1 2 1 0 
+not pvchange -u $dev1
+lvchange -an "$vg1"/"$lv" 
+pvchange -u $dev1
 
-test_expect_success \
-  "pvchange reject --addtag to lvm1 pv" '
-   pvcreate -M1 $d1 &&
-   { pvchange $d1 --addtag test;
-     status=$?; echo status=$status; test $status != 0
-   }
-'
+# "cleanup" 
+lvremove -f "$vg1"/"$lv"
+vgremove $vg1
 
-test_done
-# Local Variables:
-# indent-tabs-mode: nil
-# End:
+# "pvchange reject --addtag to lvm1 pv"
+pvcreate -M1 $dev1 
+not pvchange $dev1 --addtag test
+

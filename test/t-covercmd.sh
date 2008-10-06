@@ -1,4 +1,4 @@
-# Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2008 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -22,7 +22,7 @@ get_lvs_()
   esac
 }
 
-prepare_devs 5
+aux prepare_devs 5
 
 pvcreate $dev1
 pvcreate --metadatacopies 0 $dev2
