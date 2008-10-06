@@ -14,9 +14,19 @@ test_description="foo" # silence test-lib for now
 aux() {
     # use just "$@" for verbose operation
     "$@" > /dev/null 2> /dev/null
+	#"$@"
 }
 
 not () { "$@" && exit 1 || return 0; }
+
+STACKTRACE() {
+	trap - ERR;
+	i=0;
+	while FUNC=${FUNCNAME[$i]}; test "$FUNC" != "main"; do 
+		echo "$i ${FUNC}() called from ${BASH_SOURCE[$i]}:${BASH_LINENO[$i]}"
+		i=$(($i + 1));
+	done
+}	
 
 teardown() {
     echo $LOOP
@@ -50,11 +60,32 @@ prepare_loop() {
     test -n "$size" || size=32
 
     test -n "$LOOP" && return 0
-    trap "aux teardown" EXIT # don't forget to clean up
+	trap 'aux teardown' EXIT # don't forget to clean up
+	trap 'set +vex; STACKTRACE; set -vex' ERR
+	#trap - ERR
 
-    LOOPFILE=test.img
-    dd if=/dev/zero of=test.img bs=$((1024*1024)) count=1 seek=$(($size-1))
-    LOOP=`losetup -s -f test.img`
+	LOOPFILE="$PWD/test.img"
+	dd if=/dev/zero of="$LOOPFILE" bs=$((1024*1024)) count=1 seek=$(($size-1))
+	if LOOP=`losetup -s -f "$LOOPFILE" 2>/dev/null`; then
+		return 0
+	elif LOOP=`losetup -f` && losetup $LOOP "$LOOPFILE"; then
+		# no -s support
+		return 0
+	else
+		# no -f support 
+		# Iterate through $G_dev_/loop{,/}{0,1,2,3,4,5,6,7,8,9}
+		for slash in '' /; do
+			for i in 0 1 2 3 4 5 6 7 8 9; do
+				local dev=$G_dev_/loop$slash$i
+				! losetup $dev >/dev/null 2>&1 || continue
+				# got a free
+				losetup "$dev" "$LOOPFILE"
+				LOOP=$dev
+			done
+		done
+		test -n "LOOP" # confirm or fail
+	fi
+	exit 1 # should not be accesible
 }
 
 prepare_devs() {
@@ -142,6 +173,6 @@ prepare_lvmconf() {
 EOF
 }
 
-set -vex
+set -vexE
 aux prepare_lvmconf
 
