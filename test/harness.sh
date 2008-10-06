@@ -5,7 +5,7 @@ test -z "$tests" && tests=`echo t-*.sh`
 
 for t in $tests; do
     printf "Running %-40s" "$t ..."
-    out=`sh ./$t 2>&1`
+    out=`bash ./$t 2>&1`
     ret=$?
     if test $ret = 0; then
 	echo " passed."
