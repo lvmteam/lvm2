@@ -581,6 +581,16 @@ case $DMDIR in
   *) DMDIR="`pwd`/$DMDIR" ;;
 esac
 
+AC_ARG_WITH(usrlibdir,
+	    [  --with-usrlibdir=DIR],
+	    [ usrlibdir="$withval"],
+	    [ usrlibdir='${prefix}/lib' ])
+
+AC_ARG_WITH(usrsbindir,
+	    [  --with-usrsbindir=DIR],
+	    [ usrsbindir="$withval"],
+	    [ usrsbindir='${prefix}/sbin' ])
+
 ################################################################################
 dnl -- Ensure additional headers required
 if test x$READLINE = xyes; then
@@ -673,6 +683,8 @@ AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)
 AC_SUBST([LIB_PTHREAD])
+AC_SUBST(usrlibdir)
+AC_SUBST(usrsbindir)
 
 ################################################################################
 dnl -- First and last lines should not contain files to generate in order to
