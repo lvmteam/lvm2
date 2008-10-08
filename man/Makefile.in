@@ -35,11 +35,24 @@ MAN8CLUSTER=clvmd.8
 MAN5DIR=${mandir}/man5
 MAN8DIR=${mandir}/man8
 
+CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN)
+
 include $(top_srcdir)/make.tmpl
 
 ifneq ("@CLVMD@", "none")
   install: install_cluster
 endif
+
+all: man
+
+.PHONY: man
+
+man: $(MAN5) $(MAN8) $(MAN8CLUSTER)
+
+$(MAN5) $(MAN8) $(MAN8CLUSTER):	Makefile
+
+%: %.in
+	$(SED) -e "s/#VERSION#/$(LVM_VERSION)/" $< > $@
 
 install:
 	@echo "Installing $(MAN8) in $(MAN8DIR)"

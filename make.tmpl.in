@@ -26,6 +26,8 @@ MSGFMT = @MSGFMT@
 LCOV = @LCOV@
 GENHTML = @GENHTML@
 LN_S = @LN_S@
+SED = @SED@
+
 LIBS = @LIBS@
 DEFS += @DEFS@
 CFLAGS += @CFLAGS@
@@ -95,6 +97,8 @@ LDFLAGS += -L$(top_srcdir)/lib -L$(libdir)
 
 STRIP=
 #STRIP = -s
+
+LVM_VERSION := $(shell cat $(top_srcdir)/VERSION)
 
 LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
 		 awk -F '.' '{printf "%s.%s",$$1,$$2}')
