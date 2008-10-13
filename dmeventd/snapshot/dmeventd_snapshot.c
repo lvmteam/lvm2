@@ -99,24 +99,6 @@ static void _parse_snapshot_params(char *params, struct snap_status *stat)
 	stat->max = atoi(p);
 }
 
-/* send unregister command to itself */
-static void _unregister_self(struct dm_task *dmt)
-{
-	const char *name = dm_task_get_name(dmt);
-	struct dm_event_handler *dmevh;
-
-	if (!(dmevh = dm_event_handler_create()))
-		return;
-
-	if (dm_event_handler_set_dev_name(dmevh, name))
-		goto fail;
-
-	dm_event_handler_set_event_mask(dmevh, DM_EVENT_ALL_ERRORS|DM_EVENT_TIMEOUT);
-	dm_event_unregister_handler(dmevh);
-fail:
-	dm_event_handler_destroy(dmevh);
-}
-
 void process_event(struct dm_task *dmt,
 		   enum dm_event_mask event __attribute((unused)),
 		   void **private)
@@ -149,7 +131,6 @@ void process_event(struct dm_task *dmt,
 	 */
 	if (stat.invalid || !stat.max) {
 		syslog(LOG_ERR, "Snapshot %s changed state to: %s\n", device, params);
-		_unregister_self(dmt);
 		*percent_warning = 0;
 		goto out;
 	}

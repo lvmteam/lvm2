@@ -1,5 +1,6 @@
 Version 2.02.41 -
 =====================================
+  Fix snapshot monitoring library to not cancel monitoring invalid snapshot.
   Generate man pages from templates and include version.
   Add usrlibdir and usrsbindir to configure.
   Fix conversion of md chunk size into sectors.
