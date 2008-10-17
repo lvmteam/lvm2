@@ -1,5 +1,6 @@
 Version 2.02.41 -
 =====================================
+  Use temp table to set device size when converting mirrors.
   In resume_mirror_images replace activate_lv with resume_lv as workaround.
   Avoid overwriting in-use on-disk text metadata by forgetting MDA_HEADER_SIZE.
   Fix snapshot monitoring library to not cancel monitoring invalid snapshot.
