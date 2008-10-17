@@ -513,7 +513,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	struct mda_header *mdah;
 	struct pv_list *pvl;
 	int r = 0;
-	uint32_t new_wrap = 0, old_wrap = 0;
+       uint64_t new_wrap = 0, old_wrap = 0, new_end;
 	int found = 0;
 	int noprecommit = 0;
 
@@ -552,10 +552,11 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	if (rlocn && (rlocn->offset + rlocn->size > mdah->size))
 		old_wrap = (rlocn->offset + rlocn->size) - mdah->size;
 
+	new_end = new_wrap ? new_wrap + MDA_HEADER_SIZE :
+			    mdac->rlocn.offset + mdac->rlocn.size;
+
 	if ((new_wrap && old_wrap) ||
-	    (rlocn && ((new_wrap > rlocn->offset) ||
-		       (old_wrap && (mdac->rlocn.offset + mdac->rlocn.size >
-				     rlocn->offset)))) ||
+	    (rlocn && (new_wrap || old_wrap) && (new_end > rlocn->offset)) ||
 	    (mdac->rlocn.size >= mdah->size)) {
 		log_error("VG %s metadata too large for circular buffer",
 			  vg->name);
@@ -573,7 +574,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		goto_out;
 
 	if (new_wrap) {
-		log_debug("Writing metadata to %s at %" PRIu64 " len %" PRIu32,
+               log_debug("Writing metadata to %s at %" PRIu64 " len %" PRIu64,
 			  dev_name(mdac->area.dev), mdac->area.start +
 			  MDA_HEADER_SIZE, new_wrap);
 
@@ -592,7 +593,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		mdac->rlocn.checksum = calc_crc(mdac->rlocn.checksum,
 						fidtc->raw_metadata_buf +
 						mdac->rlocn.size -
-						new_wrap, new_wrap);
+						new_wrap, (uint32_t) new_wrap);
 
 	r = 1;
 
@@ -601,10 +602,10 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 		if (!dev_close(mdac->area.dev))
 			stack;
 
-                if (fidtc->raw_metadata_buf) {
-                        dm_free(fidtc->raw_metadata_buf);
-                        fidtc->raw_metadata_buf = NULL;
-                }
+		if (fidtc->raw_metadata_buf) {
+			dm_free(fidtc->raw_metadata_buf);
+			fidtc->raw_metadata_buf = NULL;
+		}
 	}
 
 	return r;
