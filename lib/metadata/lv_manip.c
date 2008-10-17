@@ -2360,11 +2360,7 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 	struct segment_type *segtype;
 	struct lv_segment *mapseg;
 
-	if (!(segtype = get_segtype_from_string(cmd, "striped")))
-		return_NULL;
-
 	/* create an empty layer LV */
-
 	len = strlen(lv_where->name) + 32;
 	if (!(name = alloca(len))) {
 		log_error("layer name allocation failed. "
@@ -2384,10 +2380,41 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		return NULL;
 	}
 
+	if (strstr(name, "_mimagetmp")) {
+		log_very_verbose("Creating transient 'zero' LV"
+				 " for Mirror -> mirror up-convert.");
+
+		segtype = get_segtype_from_string(cmd, "zero");
+
+		if (!lv_add_virtual_segment(layer_lv, 0, lv_where->le_count, segtype)) {
+			log_error("Creation of intermediate layer LV failed.");
+			return NULL;
+		}
+
+		if (!vg_write(lv_where->vg)) {
+			log_error("Failed to write intermediate VG metadata");
+			return NULL;
+		}
+
+		if (!vg_commit(lv_where->vg)) {
+			log_error("Failed to commit intermediate VG metadata");
+			vg_revert(lv_where->vg);
+			return NULL;
+		}
+
+		if (!activate_lv(cmd, layer_lv)) {
+			log_error("Failed to resume intermediate 'zero' LV, %s", name);
+			return NULL;
+		}
+	}
+
 	log_very_verbose("Inserting layer %s for %s",
 			 layer_lv->name, lv_where->name);
 
 	if (!_move_lv_segments(layer_lv, lv_where, 0, 0))
+		return_NULL;
+
+	if (!(segtype = get_segtype_from_string(cmd, "striped")))
 		return_NULL;
 
 	/* allocate a new linear segment */
