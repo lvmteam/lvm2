@@ -2380,30 +2380,29 @@ struct logical_volume *insert_layer_for_lv(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	if (strstr(name, "_mimagetmp")) {
-		log_very_verbose("Creating transient 'zero' LV"
-				 " for Mirror -> mirror up-convert.");
+	if (lv_is_active(lv_where) && strstr(name, "_mimagetmp")) {
+		log_very_verbose("Creating transient LV %s for mirror conversion in VG %s.", name, lv_where->vg->name);
 
-		segtype = get_segtype_from_string(cmd, "zero");
+		segtype = get_segtype_from_string(cmd, "error");
 
 		if (!lv_add_virtual_segment(layer_lv, 0, lv_where->le_count, segtype)) {
-			log_error("Creation of intermediate layer LV failed.");
+			log_error("Creation of transient LV %s for mirror conversion in VG %s failed.", name, lv_where->vg->name);
 			return NULL;
 		}
 
 		if (!vg_write(lv_where->vg)) {
-			log_error("Failed to write intermediate VG metadata");
+			log_error("Failed to write intermediate VG %s metadata for mirror conversion.", lv_where->vg->name);
 			return NULL;
 		}
 
 		if (!vg_commit(lv_where->vg)) {
-			log_error("Failed to commit intermediate VG metadata");
+			log_error("Failed to commit intermediate VG %s metadata for mirror conversion.", lv_where->vg->name);
 			vg_revert(lv_where->vg);
 			return NULL;
 		}
 
 		if (!activate_lv(cmd, layer_lv)) {
-			log_error("Failed to resume intermediate 'zero' LV, %s", name);
+			log_error("Failed to resume transient error LV %s for mirror conversion in VG %s.", name, lv_where->vg->name);
 			return NULL;
 		}
 	}

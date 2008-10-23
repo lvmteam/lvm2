@@ -1,5 +1,7 @@
 Version 2.02.42 - 
 ===================================
+  Fix temp table activation in mirror conversions not to happen in other cmds.
+  Fix temp table in mirror conversions to use always-present error not zero.
 
 Version 2.02.41 - 17th October 2008
 ===================================
