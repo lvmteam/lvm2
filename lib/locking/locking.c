@@ -233,7 +233,8 @@ int init_locking(int type, struct cmd_context *cmd)
 				return 1;
 		}
 		if (!find_config_tree_int(cmd, "locking/fallback_to_clustered_locking",
-					  DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING))
+			    find_config_tree_int(cmd, "global/fallback_to_clustered_locking",
+						 DEFAULT_FALLBACK_TO_CLUSTERED_LOCKING)))
 			break;
 #endif
 
@@ -255,7 +256,8 @@ int init_locking(int type, struct cmd_context *cmd)
 
 	if ((type == 2 || type == 3) &&
 	    find_config_tree_int(cmd, "locking/fallback_to_local_locking",
-				 DEFAULT_FALLBACK_TO_LOCAL_LOCKING)) {
+	    	    find_config_tree_int(cmd, "global/fallback_to_local_locking",
+					 DEFAULT_FALLBACK_TO_LOCAL_LOCKING))) {
 		log_warn("WARNING: Falling back to local file-based locking.");
 		log_warn("Volume Groups with the clustered attribute will "
 			  "be inaccessible.");
