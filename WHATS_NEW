@@ -1,4 +1,4 @@
-Version 2.02.42 - 
+Version 2.02.42 - 26th October 2008
 ===================================
   Accept locking fallback_to_* options in the global section as documented.
   Fix temp table activation in mirror conversions not to happen in other cmds.
