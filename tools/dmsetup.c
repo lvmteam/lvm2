@@ -21,7 +21,6 @@
 
 #include "configure.h"
 
-#include "libdevmapper.h"
 #include "dm-logging.h"
 
 #include <stdio.h>
