@@ -51,6 +51,7 @@
 ../lib/report/report.h
 ../lib/uuid/uuid.h
 ../libdm/misc/dm-ioctl.h
+../libdm/misc/dm-logging.h
 ../libdm/misc/kdev_t.h
 ../po/pogen.h
 ../tools/version.h
