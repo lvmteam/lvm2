@@ -25,8 +25,8 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include "log.h"
 #include "intl.h"
+#include "lvm-logging.h"
 #include "lvm-types.h"
 #include "lvm-wrappers.h"
 #include "util.h"

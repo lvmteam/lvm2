@@ -28,6 +28,7 @@
 ../lib/label/label.h
 ../lib/locking/locking.h
 ../lib/log/log.h
+../lib/log/lvm-logging.h
 ../lib/metadata/lv_alloc.h
 ../lib/metadata/metadata.h
 ../lib/metadata/metadata-exported.h
@@ -43,6 +44,7 @@
 ../lib/misc/lib.h
 ../lib/misc/lvm-exec.h
 ../lib/misc/lvm-file.h
+../lib/misc/lvm-globals.h
 ../lib/misc/lvm-string.h
 ../lib/misc/lvm-wrappers.h
 ../lib/misc/sharedlib.h

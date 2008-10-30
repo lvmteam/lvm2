@@ -78,6 +78,7 @@ SOURCES =\
 	misc/crc.c \
 	misc/lvm-exec.c \
 	misc/lvm-file.c \
+	misc/lvm-globals.c \
 	misc/lvm-string.c \
 	misc/lvm-wrappers.c \
 	misc/timestamp.c \

@@ -24,7 +24,7 @@
 #include <libdevmapper.h>
 
 #include "lvm-types.h"
-#include "log.h"
+#include "lvm-logging.h"
 #include "activate.h"
 #include "archiver.h"
 #include "lvmcache.h"
