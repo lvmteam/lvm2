@@ -22,7 +22,7 @@
 #include "configure.h"
 
 #include "libdevmapper.h"
-#include "log.h"
+#include "dm-logging.h"
 
 #include <stdio.h>
 #include <stdlib.h>
