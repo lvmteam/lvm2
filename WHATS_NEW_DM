@@ -1,5 +1,6 @@
 Version 1.02.29 -
 =====================================
+  Split out dm-logging.h from log.h.
   Use lvm-types.h.
   Add usrsbindir to configure.
 
