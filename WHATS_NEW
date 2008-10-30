@@ -1,5 +1,6 @@
 Version 2.02.43 -
 ===================================
+  Add libdm subdirectory for libdevmapper files.
 
 Version 2.02.42 - 26th October 2008
 ===================================
