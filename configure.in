@@ -774,6 +774,7 @@ daemons/Makefile
 daemons/clvmd/Makefile
 daemons/dmeventd/Makefile
 daemons/dmeventd/libdevmapper-event.pc
+daemons/dmeventd/plugins/Makefile
 daemons/dmeventd/plugins/mirror/Makefile
 daemons/dmeventd/plugins/snapshot/Makefile
 doc/Makefile
