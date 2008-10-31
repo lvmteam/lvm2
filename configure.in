@@ -611,12 +611,6 @@ AC_ARG_WITH(staticdir,
 	    [ STATICDIR="$withval" ],
 	    [ STATICDIR='${exec_prefix}/sbin' ])
 
-# Convert a relative dir name to absolute.
-case $DMDIR in
-  /*) ;;
-  *) DMDIR="`pwd`/$DMDIR" ;;
-esac
-
 AC_ARG_WITH(usrlibdir,
 	    [  --with-usrlibdir=DIR],
 	    [ usrlibdir="$withval"],
@@ -723,7 +717,6 @@ AC_SUBST(COPTIMISE_FLAG)
 AC_SUBST(CSCOPE_CMD)
 AC_SUBST(DEBUG)
 AC_SUBST(DEVMAPPER)
-AC_SUBST(DMDIR)
 AC_SUBST(DMEVENTD)
 AC_SUBST(DM_COMPAT)
 AC_SUBST(DM_DEVICE_GID)
