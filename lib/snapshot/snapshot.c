@@ -23,7 +23,7 @@
 #include "str_list.h"
 #ifdef DMEVENTD
 #  include "sharedlib.h"
-#  include <libdevmapper-event.h>
+#  include "libdevmapper-event.h"
 #endif
 
 static const char *_snap_name(const struct lv_segment *seg)
