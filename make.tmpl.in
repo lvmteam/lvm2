@@ -80,13 +80,6 @@ ifeq ("@INTL@", "yes")
   DEFS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
 endif
 
-ifneq ("@DMDIR@", "")
-  LDFLAGS += -L@DMDIR@/lib/ioctl
-  ifeq ("@DMEVENTD@", "yes")
-    LDFLAGS += -L@DMDIR@/dmeventd
-  endif
-endif
-
 LDFLAGS += -L$(top_srcdir)/lib -L$(libdir)
 
 #DEFS += -DDEBUG_POOL
@@ -104,10 +97,6 @@ LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
 		 awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
 INCLUDES += -I$(top_srcdir)/include
-
-ifneq ("@DMDIR@", "")
-  INCLUDES += -I@DMDIR@/include
-endif
 
 ifdef DESTDIR
   INCLUDES += -I$(DESTDIR)/usr/include
