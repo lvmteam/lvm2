@@ -1,5 +1,6 @@
 Version 2.02.43 -
 ===================================
+  Remove ancient debian directory.
   Split out lvm-logging.h from log.h and lvm-globals.[ch] from log.[ch].
   Add libdm subdirectory for libdevmapper files.
 
