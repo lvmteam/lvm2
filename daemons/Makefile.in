@@ -19,5 +19,9 @@ ifneq ("@CLVMD@", "none")
   SUBDIRS = clvmd
 endif
 
+ifeq ("@DMEVENTD@", "yes")
+  SUBDIRS += dmeventd/plugins
+endif
+
 include $(top_srcdir)/make.tmpl
 
