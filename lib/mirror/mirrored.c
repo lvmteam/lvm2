@@ -29,7 +29,7 @@
 #include "str_list.h"
 
 #ifdef DMEVENTD
-#  include <libdevmapper-event.h>
+#  include "libdevmapper-event.h"
 #endif
 
 static int _block_on_error_available = 0;
