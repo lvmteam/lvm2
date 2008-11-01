@@ -721,6 +721,8 @@ AC_MSG_RESULT($interface)
 DM_LIB_VERSION="\"`cat VERSION_LIB 2>/dev/null || echo Unknown`\""
 AC_DEFINE_UNQUOTED(DM_LIB_VERSION, $DM_LIB_VERSION, [Library version])
 
+DM_LIB_PATCHLEVEL=`cat VERSION_LIB | awk -F '[[-. ]]' '{printf "%s.%s.%s",$1,$2,$3}'`
+
 LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
 
 ################################################################################
@@ -744,6 +746,7 @@ AC_SUBST(DM_DEVICE_MODE)
 AC_SUBST(DM_DEVICE_UID)
 AC_SUBST(DM_IOCTLS)
 AC_SUBST(DM_LIB_VERSION)
+AC_SUBST(DM_LIB_PATCHLEVEL)
 AC_SUBST(FSADM)
 AC_SUBST(GROUP)
 AC_SUBST(HAVE_LIBDL)

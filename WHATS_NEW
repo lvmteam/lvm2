@@ -1,8 +1,9 @@
 Version 2.02.43 -
 ===================================
+  Use simplified x.y.z version number in libdevmapper.pc.
+  Merge device-mapper into the lvm2 tree.
   Remove ancient debian directory.
   Split out lvm-logging.h from log.h and lvm-globals.[ch] from log.[ch].
-  Add libdm subdirectory for libdevmapper files.
 
 Version 2.02.42 - 26th October 2008
 ===================================

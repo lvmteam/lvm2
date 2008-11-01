@@ -5,7 +5,7 @@ includedir=@includedir@
 
 Name: devmapper
 Description: device-mapper library
-Version: @DM_LIB_VERSION@
+Version: @DM_LIB_PATCHLEVEL@
 Cflags: -I${includedir} 
 Libs: -L${libdir} -ldevmapper
 Libs.private: -lselinux -lsepol
