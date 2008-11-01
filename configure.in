@@ -701,6 +701,8 @@ AC_MSG_RESULT($interface)
 
 ################################################################################
 DM_LIB_VERSION="\"`cat VERSION_LIB 2>/dev/null || echo Unknown`\""
+AC_DEFINE_UNQUOTED(DM_LIB_VERSION, $DM_LIB_VERSION, [Library version])
+
 LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
 
 ################################################################################
