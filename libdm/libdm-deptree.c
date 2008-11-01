@@ -17,11 +17,10 @@
 #include "libdm-common.h"
 #include "list.h"
 #include "kdev_t.h"
+#include "dm-ioctl.h"
 
 #include <stdarg.h>
 #include <sys/param.h>
-
-#include <linux/dm-ioctl.h>
 
 #define MAX_TARGET_PARAMSIZE 500000
 

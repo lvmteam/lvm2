@@ -17,8 +17,8 @@
 #define _LINUX_LIBDM_COMPAT_H
 
 #include "kdev_t.h"
+#include "dm-ioctl.h"
 #include <inttypes.h>
-#include <linux/dm-ioctl.h>
 #include <sys/ioctl.h>
 
 struct dm_task;

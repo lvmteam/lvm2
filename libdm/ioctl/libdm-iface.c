@@ -35,7 +35,7 @@
 #  define MKDEV(x,y) makedev((x),(y))
 #endif
 
-#include <linux/dm-ioctl.h>
+#include "dm-ioctl.h"
 
 /*
  * Ensure build compatibility.  

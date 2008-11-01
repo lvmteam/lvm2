@@ -160,6 +160,24 @@ if test x$GROUP != x; then
 fi
 
 ################################################################################
+dnl -- Setup device node ownership
+AC_MSG_CHECKING(device node uid)
+
+AC_ARG_WITH(device-uid,
+  [  --with-device-uid=UID   Set the owner used for new device nodes [[UID=0]] ],
+  [ DM_DEVICE_UID="$withval" ], [ DM_DEVICE_UID="0" ] )
+AC_MSG_RESULT($DM_DEVICE_UID)
+
+################################################################################
+dnl -- Setup device group ownership
+AC_MSG_CHECKING(device node gid)
+
+AC_ARG_WITH(device-gid,
+  [  --with-device-gid=UID   Set the group used for new device nodes [[GID=0]] ],
+  [ DM_DEVICE_GID="$withval" ], [ DM_DEVICE_GID="0" ] )
+AC_MSG_RESULT($DM_DEVICE_GID)
+
+################################################################################
 dnl -- Setup device mode
 AC_MSG_CHECKING(device node mode)
 

@@ -22,7 +22,7 @@ ifeq ("@INTL@", "yes")
   SUBDIRS += po
 endif
 
-SUBDIRS += lib tools daemons
+SUBDIRS += lib tools daemons libdm
 
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += daemons/clvmd \
@@ -40,10 +40,13 @@ endif
 
 include make.tmpl
 
+libdm: include
+lib: libdm
 daemons: lib
-lib: include
 tools: lib
 po: tools daemons
+
+tools.device-mapper: libdm.device-mapper
 
 ifeq ("@INTL@", "yes")
 lib.pofile: include.pofile

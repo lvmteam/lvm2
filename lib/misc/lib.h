@@ -26,11 +26,17 @@
 #define _FILE_OFFSET_BITS 64
 
 #include "intl.h"
+#include "libdevmapper.h"
 #include "lvm-logging.h"
 #include "lvm-types.h"
 #include "lvm-wrappers.h"
 #include "util.h"
 
-#include <libdevmapper.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 #endif

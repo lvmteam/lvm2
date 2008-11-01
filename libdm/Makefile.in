@@ -32,7 +32,7 @@ SOURCES =\
 	regex/ttree.c \
 	$(interface)/libdm-iface.c
 
-INCLUDES = -I$(interface)
+INCLUDES = -I$(interface) -I.
 
 LIB_STATIC = $(interface)/libdevmapper.a
 
@@ -47,6 +47,8 @@ DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \
 	-DDM_DEVICE_MODE=@DM_DEVICE_MODE@
 
 include ../make.tmpl
+
+device-mapper: all
 
 .PHONY: install_dynamic install_static install_include \
 	install_ioctl install_ioctl_static \

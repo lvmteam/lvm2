@@ -97,6 +97,19 @@ DEFS += -DLVM_SHARED_PATH=\"$(exec_prefix)/sbin/lvm\"
 
 include $(top_srcdir)/make.tmpl
 
+device-mapper: dmsetup
+
+dmsetup: dmsetup.o $(interfacedir)/libdevmapper.$(LIB_SUFFIX)
+	$(CC) -o $@ dmsetup.o $(CFLAGS) $(LDFLAGS) \
+	      -L$(interfacedir) -L$(DESTDIR)/lib -ldevmapper $(LIBS)
+
+dmsetup.static: dmsetup.o $(interfacedir)/libdevmapper.a
+	$(CC) -o $@ dmsetup.o $(CFLAGS) $(LDFLAGS) -static \
+	      -L$(interfacedir) -L$(DESTDIR)/lib -ldevmapper $(LIBS) \
+	      $(LIB_PTHREAD)
+
+all: device-mapper
+
 lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm.o \
 		$(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
