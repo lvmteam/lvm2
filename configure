@@ -708,6 +708,7 @@ DM_DEVICE_MODE
 DM_DEVICE_UID
 DM_IOCTLS
 DM_LIB_VERSION
+DM_LIB_PATCHLEVEL
 FSADM
 GROUP
 HAVE_LIBDL
@@ -11804,9 +11805,12 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+DM_LIB_PATCHLEVEL=`cat VERSION_LIB | awk -F '[-. ]' '{printf "%s.%s.%s",$1,$2,$3}'`
+
 LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
 
 ################################################################################
+
 
 
 
@@ -12598,9 +12602,9 @@ DM_DEVICE_MODE!$DM_DEVICE_MODE$ac_delim
 DM_DEVICE_UID!$DM_DEVICE_UID$ac_delim
 DM_IOCTLS!$DM_IOCTLS$ac_delim
 DM_LIB_VERSION!$DM_LIB_VERSION$ac_delim
+DM_LIB_PATCHLEVEL!$DM_LIB_PATCHLEVEL$ac_delim
 FSADM!$FSADM$ac_delim
 GROUP!$GROUP$ac_delim
-HAVE_LIBDL!$HAVE_LIBDL$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -12642,6 +12646,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+HAVE_LIBDL!$HAVE_LIBDL$ac_delim
 HAVE_REALTIME!$HAVE_REALTIME$ac_delim
 HAVE_SELINUX!$HAVE_SELINUX$ac_delim
 INTL!$INTL$ac_delim
@@ -12672,7 +12677,7 @@ usrsbindir!$usrsbindir$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 28; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 29; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
