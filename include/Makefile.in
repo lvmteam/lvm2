@@ -35,6 +35,8 @@ distclean:
 
 pofile: all
 
+device-mapper: all
+
 clean:
 
 install:

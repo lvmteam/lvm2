@@ -35,7 +35,7 @@ MAN8CLUSTER=clvmd.8
 MAN5DIR=${mandir}/man5
 MAN8DIR=${mandir}/man8
 
-CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN)
+CLEAN_TARGETS=$(MAN5) $(MAN8) $(MAN8CLUSTER) $(FSADMMAN) dmsetup.8
 
 include $(top_srcdir)/make.tmpl
 
@@ -46,6 +46,8 @@ endif
 all: man
 
 .PHONY: man
+
+device-mapper: dmsetup.8
 
 man: $(MAN5) $(MAN8) $(MAN8CLUSTER)
 

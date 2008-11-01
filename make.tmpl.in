@@ -109,12 +109,15 @@ DEPS = $(top_srcdir)/make.tmpl $(top_srcdir)/VERSION Makefile $(INC_LNS)
 OBJECTS = $(SOURCES:%.c=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
 
-.PHONY: all install install_cluster pofile distclean clean cflow
+.PHONY: all install install_cluster pofile distclean clean cflow device-mapper
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
+.PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
 
+SUBDIRS.device-mapper := $(SUBDIRS:=.device-mapper)
 SUBDIRS.install := $(SUBDIRS:=.install)
 SUBDIRS.install_cluster := $(SUBDIRS:=.install_cluster)
+SUBDIRS.install_device-mapper := $(SUBDIRS:=.install_device-mapper)
 SUBDIRS.pofile := $(SUBDIRS:=.pofile)
 SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
@@ -124,17 +127,26 @@ TARGETS += $(LIB_SHARED) $(LIB_STATIC)
 
 all: $(SUBDIRS) $(TARGETS)
 
+device-mapper: $(SUBDIRS.device-mapper)
+
 install: all $(SUBDIRS.install)
 install_cluster: all $(SUBDIRS.install_cluster)
+install_device-mapper: $(SUBDIRS.install_device-mapper)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
+
+$(SUBDIRS.device-mapper):
+	$(MAKE) -C $(@:.device-mapper=) device-mapper
 
 $(SUBDIRS.install): $(SUBDIRS)
 	$(MAKE) -C $(@:.install=) install
 
 $(SUBDIRS.install_cluster): $(SUBDIRS)
 	$(MAKE) -C $(@:.install_cluster=) install_cluster
+
+$(SUBDIRS.install_device-mapper): $(SUBDIRS)
+	$(MAKE) -C $(@:.install_device-mapper=) install_device-mapper
 
 $(SUBDIRS.clean):
 	-$(MAKE) -C $(@:.clean=) clean

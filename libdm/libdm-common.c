@@ -18,13 +18,12 @@
 #include "libdm-common.h"
 #include "list.h"
 #include "kdev_t.h"
+#include "dm-ioctl.h"
 
 #include <stdarg.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-
-#include <linux/dm-ioctl.h>
 
 #ifdef linux
 #  include <linux/fs.h>
