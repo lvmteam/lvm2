@@ -51,6 +51,9 @@ mandir = $(DESTDIR)@mandir@
 localedir = $(DESTDIR)@LOCALEDIR@
 staticdir = $(DESTDIR)@STATICDIR@
 
+interface = @interface@
+interfacedir = $(top_srcdir)/libdm/$(interface)
+
 # setup misc variables
 # define the ownership variables for the binaries and man pages
 OWNER = @OWNER@
@@ -80,7 +83,8 @@ ifeq ("@INTL@", "yes")
   DEFS += -DINTL_PACKAGE=\"@INTL_PACKAGE@\" -DLOCALEDIR=\"@LOCALEDIR@\"
 endif
 
-LDFLAGS += -L$(top_srcdir)/lib -L$(libdir)
+LDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
+CLDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
 
 #DEFS += -DDEBUG_POOL
 #DEFS += -DBOUNDS_CHECK
@@ -93,8 +97,11 @@ STRIP=
 
 LVM_VERSION := $(shell cat $(top_srcdir)/VERSION)
 
-LIB_VERSION := $(shell cat $(top_srcdir)/VERSION | \
-		 awk -F '.' '{printf "%s.%s",$$1,$$2}')
+LIB_VERSION_LVM := $(shell cat $(top_srcdir)/VERSION | \
+		     awk -F '.' '{printf "%s.%s",$$1,$$2}')
+
+LIB_VERSION_DM := $(shell cat $(top_srcdir)/VERSION_DM | \
+		    awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
 INCLUDES += -I$(top_srcdir)/include
 
@@ -123,11 +130,9 @@ SUBDIRS.cflow := $(SUBDIRS:=.cflow)
 SUBDIRS.clean := $(SUBDIRS:=.clean)
 SUBDIRS.distclean := $(SUBDIRS:=.distclean)
 
-TARGETS += $(LIB_SHARED) $(LIB_STATIC)
+TARGETS += $(LIB_SHARED) $(LIB_STATIC) $(VERSIONED_SHLIB)
 
 all: $(SUBDIRS) $(TARGETS)
-
-device-mapper: $(SUBDIRS.device-mapper)
 
 install: all $(SUBDIRS.install)
 install_cluster: all $(SUBDIRS.install_cluster)

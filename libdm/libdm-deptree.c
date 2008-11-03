@@ -55,7 +55,7 @@ struct {
 
 /* Some segment types have a list of areas of other devices attached */
 struct seg_area {
-	struct list list;
+	struct dm_list list;
 
 	struct dm_tree_node *dev_node;
 
@@ -64,14 +64,14 @@ struct seg_area {
 
 /* Per-segment properties */
 struct load_segment {
-	struct list list;
+	struct dm_list list;
 
 	unsigned type;
 
 	uint64_t size;
 
 	unsigned area_count;		/* Linear + Striped + Mirrored */
-	struct list areas;		/* Linear + Striped + Mirrored */
+	struct dm_list areas;		/* Linear + Striped + Mirrored */
 
 	uint32_t stripe_size;		/* Striped */
 
@@ -99,14 +99,14 @@ struct load_properties {
 
 	unsigned segment_count;
 	unsigned size_changed;
-	struct list segs;
+	struct dm_list segs;
 
 	const char *new_name;
 };
 
 /* Two of these used to join two nodes with uses and used_by. */
 struct dm_tree_link {
-	struct list list;
+	struct dm_list list;
 	struct dm_tree_node *node;
 };
 
@@ -117,8 +117,8 @@ struct dm_tree_node {
         const char *uuid;
         struct dm_info info;
 
-        struct list uses;       	/* Nodes this node uses */
-        struct list used_by;    	/* Nodes that use this node */
+        struct dm_list uses;       	/* Nodes this node uses */
+        struct dm_list used_by;    	/* Nodes that use this node */
 
 	int activation_priority;	/* 0 gets activated first */
 
@@ -163,8 +163,8 @@ struct dm_tree *dm_tree_create(void)
 
 	memset(dtree, 0, sizeof(*dtree));
 	dtree->root.dtree = dtree;
-	list_init(&dtree->root.uses);
-	list_init(&dtree->root.used_by);
+	dm_list_init(&dtree->root.uses);
+	dm_list_init(&dtree->root.used_by);
 	dtree->skip_lockfs = 0;
 	dtree->no_flush = 0;
 
@@ -208,14 +208,14 @@ static int _nodes_are_linked(struct dm_tree_node *parent,
 {
 	struct dm_tree_link *dlink;
 
-	list_iterate_items(dlink, &parent->uses)
+	dm_list_iterate_items(dlink, &parent->uses)
 		if (dlink->node == child)
 			return 1;
 
 	return 0;
 }
 
-static int _link(struct list *list, struct dm_tree_node *node)
+static int _link(struct dm_list *list, struct dm_tree_node *node)
 {
 	struct dm_tree_link *dlink;
 
@@ -225,7 +225,7 @@ static int _link(struct list *list, struct dm_tree_node *node)
 	}
 
 	dlink->node = node;
-	list_add(list, &dlink->list);
+	dm_list_add(list, &dlink->list);
 
 	return 1;
 }
@@ -245,13 +245,13 @@ static int _link_nodes(struct dm_tree_node *parent,
 	return 1;
 }
 
-static void _unlink(struct list *list, struct dm_tree_node *node)
+static void _unlink(struct dm_list *list, struct dm_tree_node *node)
 {
 	struct dm_tree_link *dlink;
 
-	list_iterate_items(dlink, list)
+	dm_list_iterate_items(dlink, list)
 		if (dlink->node == node) {
-			list_del(&dlink->list);
+			dm_list_del(&dlink->list);
 			break;
 		}
 }
@@ -326,9 +326,9 @@ static struct dm_tree_node *_create_dm_tree_node(struct dm_tree *dtree,
 	node->context = context;
 	node->activation_priority = 0;
 
-	list_init(&node->uses);
-	list_init(&node->used_by);
-	list_init(&node->props.segs);
+	dm_list_init(&node->uses);
+	dm_list_init(&node->used_by);
+	dm_list_init(&node->props.segs);
 
 	dev = MKDEV(info->major, info->minor);
 
@@ -662,13 +662,13 @@ int dm_tree_node_num_children(struct dm_tree_node *node, uint32_t inverted)
 	if (inverted) {
 		if (_nodes_are_linked(&node->dtree->root, node))
 			return 0;
-		return list_size(&node->used_by);
+		return dm_list_size(&node->used_by);
 	}
 
 	if (_nodes_are_linked(node, &node->dtree->root))
 		return 0;
 
-	return list_size(&node->uses);
+	return dm_list_size(&node->uses);
 }
 
 /*
@@ -706,7 +706,7 @@ static int _children_suspended(struct dm_tree_node *node,
 			       const char *uuid_prefix,
 			       size_t uuid_prefix_len)
 {
-	struct list *list;
+	struct dm_list *list;
 	struct dm_tree_link *dlink;
 	const struct dm_info *dinfo;
 	const char *uuid;
@@ -721,7 +721,7 @@ static int _children_suspended(struct dm_tree_node *node,
 		list = &node->uses;
 	}
 
-	list_iterate_items(dlink, list) {
+	dm_list_iterate_items(dlink, list) {
 		if (!(uuid = dm_tree_node_get_uuid(dlink->node))) {
 			stack;
 			continue;
@@ -776,8 +776,8 @@ struct dm_tree_node *dm_tree_next_child(void **handle,
 					   struct dm_tree_node *parent,
 					   uint32_t inverted)
 {
-	struct list **dlink = (struct list **) handle;
-	struct list *use_list;
+	struct dm_list **dlink = (struct dm_list **) handle;
+	struct dm_list *use_list;
 
 	if (inverted)
 		use_list = &parent->used_by;
@@ -785,11 +785,11 @@ struct dm_tree_node *dm_tree_next_child(void **handle,
 		use_list = &parent->uses;
 
 	if (!*dlink)
-		*dlink = list_first(use_list);
+		*dlink = dm_list_first(use_list);
 	else
-		*dlink = list_next(use_list, *dlink);
+		*dlink = dm_list_next(use_list, *dlink);
 
-	return (*dlink) ? list_item(*dlink, struct dm_tree_link)->node : NULL;
+	return (*dlink) ? dm_list_item(*dlink, struct dm_tree_link)->node : NULL;
 }
 
 /*
@@ -1248,7 +1248,7 @@ static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 	int tw;
 	const char *prefix = "";
 
-	list_iterate_items(area, &seg->areas) {
+	dm_list_iterate_items(area, &seg->areas) {
 		if (!_build_dev_string(devbuf, sizeof(devbuf), area->dev_node))
 			return_0;
 
@@ -1483,7 +1483,7 @@ static int _load_node(struct dm_tree_node *dnode)
 	if (!dm_task_no_open_count(dmt))
 		log_error("Failed to disable open_count");
 
-	list_iterate_items(seg, &dnode->props.segs)
+	dm_list_iterate_items(seg, &dnode->props.segs)
 		if (!_emit_segment(dmt, seg, &seg_start))
 			goto_out;
 
@@ -1616,14 +1616,14 @@ static struct load_segment *_add_segment(struct dm_tree_node *dnode, unsigned ty
 	seg->type = type;
 	seg->size = size;
 	seg->area_count = 0;
-	list_init(&seg->areas);
+	dm_list_init(&seg->areas);
 	seg->stripe_size = 0;
 	seg->persistent = 0;
 	seg->chunk_size = 0;
 	seg->cow = NULL;
 	seg->origin = NULL;
 
-	list_add(&dnode->props.segs, &seg->list);
+	dm_list_add(&dnode->props.segs, &seg->list);
 	dnode->props.segment_count++;
 
 	return seg;
@@ -1747,7 +1747,7 @@ int dm_tree_node_add_mirror_target_log(struct dm_tree_node *node,
 		return 0;
 	}
 
-	seg = list_item(list_last(&node->props.segs), struct load_segment);
+	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
 
 	if (log_uuid) {
 		if (!(seg->uuid = dm_pool_strdup(node->dtree->mem, log_uuid))) {
@@ -1797,7 +1797,7 @@ static int _add_area(struct dm_tree_node *node, struct load_segment *seg, struct
 	area->dev_node = dev_node;
 	area->offset = offset;
 
-	list_add(&seg->areas, &area->list);
+	dm_list_add(&seg->areas, &area->list);
 	seg->area_count++;
 
 	return 1;
@@ -1845,7 +1845,7 @@ int dm_tree_node_add_target_area(struct dm_tree_node *node,
 		return 0;
 	}
 
-	seg = list_item(list_last(&node->props.segs), struct load_segment);
+	seg = dm_list_item(dm_list_last(&node->props.segs), struct load_segment);
 
 	if (!_add_area(node, seg, dev_node, offset))
 		return_0;

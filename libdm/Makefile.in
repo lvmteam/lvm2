@@ -15,7 +15,6 @@
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
-interface = @interface@
 
 SOURCES =\
 	datastruct/bitset.c \
@@ -42,7 +41,8 @@ ifeq ("@LIB_SUFFIX@","dylib")
 else
   LIB_SHARED = $(interface)/libdevmapper.so
 endif
-VERSIONED_SHLIB = libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
+VERSIONED_SHLIB = libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION_DM)
+LIB_VERSION = $(LIB_VERSION_DM)
 
 DEFS += -DDM_DEVICE_UID=@DM_DEVICE_UID@ -DDM_DEVICE_GID=@DM_DEVICE_GID@ \
 	-DDM_DEVICE_MODE=@DM_DEVICE_MODE@
@@ -72,15 +72,15 @@ install_include:
 		$(includedir)/libdevmapper.h
 
 install_dynamic: install_@interface@
-	$(LN_S) -f libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION) \
+	$(LN_S) -f libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION_DM) \
 		$(libdir)/libdevmapper.$(LIB_SUFFIX)
 
 install_static: install_@interface@_static
-	$(LN_S) -f libdevmapper.a.$(LIB_VERSION) $(libdir)/libdevmapper.a
+	$(LN_S) -f libdevmapper.a.$(LIB_VERSION_DM) $(libdir)/libdevmapper.a
 
 install_ioctl: ioctl/libdevmapper.$(LIB_SUFFIX)
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION)
+		$(libdir)/libdevmapper.$(LIB_SUFFIX).$(LIB_VERSION_DM)
 
 install_pkgconfig:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper.pc \
@@ -88,11 +88,13 @@ install_pkgconfig:
 
 install_ioctl_static: ioctl/libdevmapper.a
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< \
-		$(libdir)/libdevmapper.a.$(LIB_VERSION)
+		$(libdir)/libdevmapper.a.$(LIB_VERSION_DM)
 
-$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION): $(interface)/%.$(LIB_SUFFIX)
+$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION_DM): $(interface)/%.$(LIB_SUFFIX)
 	rm -f $@
 	$(LN_S) $< $@
+	rm -f libdevmapper.so
+	$(LN_S) $< libdevmapper.so
 
 .PHONY: distclean_lib distclean
 

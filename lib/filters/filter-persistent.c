@@ -273,7 +273,7 @@ static int _lookup_p(struct dev_filter *f, struct device *dev)
 		l = pf->real->passes_filter(pf->real, dev) ?
 		    PF_GOOD_DEVICE : PF_BAD_DEVICE;
 
-		list_iterate_items(sl, &dev->aliases)
+		dm_list_iterate_items(sl, &dev->aliases)
 			dm_hash_insert(pf->devices, sl->str, l);
 
 	} else if (l == PF_BAD_DEVICE)

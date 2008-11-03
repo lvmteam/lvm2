@@ -33,7 +33,7 @@
  * pointer comparisons are valid.
  */
 struct device {
-	struct list aliases;	/* struct str_list from lvm-types.h */
+	struct dm_list aliases;	/* struct str_list from lvm-types.h */
 	dev_t dev;
 
 	/* private */
@@ -42,14 +42,14 @@ struct device {
 	int block_size;
 	uint32_t flags;
 	uint64_t end;
-	struct list open_list;
+	struct dm_list open_list;
 
 	char pvid[ID_LEN + 1];
 	char _padding[7];
 };
 
 struct device_list {
-	struct list list;
+	struct dm_list list;
 	struct device *dev;
 };
 

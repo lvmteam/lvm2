@@ -518,7 +518,7 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t status = 0;
 	uint64_t tmp_size;
 	struct logical_volume *lv, *org = NULL;
-	struct list *pvh;
+	struct dm_list *pvh;
 	const char *tag = NULL;
 	int origin_active = 0;
 	char lv_name_buf[128];
@@ -690,10 +690,10 @@ static int _lvcreate(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	if (lp->stripes > list_size(pvh) && lp->alloc != ALLOC_ANYWHERE) {
+	if (lp->stripes > dm_list_size(pvh) && lp->alloc != ALLOC_ANYWHERE) {
 		log_error("Number of stripes (%u) must not exceed "
 			  "number of physical volumes (%d)", lp->stripes,
-			  list_size(pvh));
+			  dm_list_size(pvh));
 		return 0;
 	}
 

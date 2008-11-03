@@ -11798,14 +11798,14 @@ fi
 echo "${ECHO_T}$interface" >&6; }
 
 ################################################################################
-DM_LIB_VERSION="\"`cat VERSION_LIB 2>/dev/null || echo Unknown`\""
+DM_LIB_VERSION="\"`cat VERSION_DM 2>/dev/null || echo Unknown`\""
 
 cat >>confdefs.h <<_ACEOF
 #define DM_LIB_VERSION $DM_LIB_VERSION
 _ACEOF
 
 
-DM_LIB_PATCHLEVEL=`cat VERSION_LIB | awk -F '[-. ]' '{printf "%s.%s.%s",$1,$2,$3}'`
+DM_LIB_PATCHLEVEL=`cat VERSION_DM | awk -F '[-. ]' '{printf "%s.%s.%s",$1,$2,$3}'`
 
 LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
 

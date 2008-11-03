@@ -41,16 +41,16 @@ static int _remove_pv(struct volume_group *vg, struct pv_list *pvl, int silent)
 	vg->extent_count -= pvl->pv->pe_count;
 	vg->pv_count--;
 
-	list_del(&pvl->list);
+	dm_list_del(&pvl->list);
 
 	return 1;
 }
 
 static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
-		      int *list_unsafe, struct list *lvs_changed)
+		      int *list_unsafe, struct dm_list *lvs_changed)
 {
 	struct lv_segment *snap_seg;
-	struct list *snh, *snht;
+	struct dm_list *snh, *snht;
 	struct logical_volume *cow;
 	struct lv_list *lvl;
 	struct lvinfo info;
@@ -77,8 +77,8 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	/* Remove snapshot dependencies */
-	list_iterate_safe(snh, snht, &lv->snapshot_segs) {
-		snap_seg = list_struct_base(snh, struct lv_segment,
+	dm_list_iterate_safe(snh, snht, &lv->snapshot_segs) {
+		snap_seg = dm_list_struct_base(snh, struct lv_segment,
 					    origin_list);
 		cow = snap_seg->cow;
 
@@ -120,7 +120,7 @@ static int _remove_lv(struct cmd_context *cmd, struct logical_volume *lv,
 			return 0;
 		}
 		lvl->lv = lv;
-		list_add(lvs_changed, &lvl->list);
+		dm_list_add(lvs_changed, &lvl->list);
 	} else {
 		/* Remove LV immediately. */
 		log_verbose("Removing LV %s from VG %s", lv->name, lv->vg->name);
@@ -137,7 +137,7 @@ static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
 	struct lv_list *lvl;
 	int r = 1;
 
-	list_iterate_items(lvl, &vg->lvs)
+	dm_list_iterate_items(lvl, &vg->lvs)
 		if (lvl->lv->status & PARTIAL_LV) {
 			log_warn("WARNING: Partial LV %s needs to be repaired "
 				 "or removed. ", lvl->lv->name);
@@ -151,7 +151,7 @@ static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
 		log_warn("Proceeding to remove empty missing PVs.");
 	}
 
-	list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (pvl->pv->dev && !(pvl->pv->status & MISSING_PV))
 			continue;
 		if (r && !_remove_pv(vg, pvl, 0))
@@ -163,8 +163,8 @@ static int _consolidate_vg(struct cmd_context *cmd, struct volume_group *vg)
 
 static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 {
-	struct list *pvh, *pvht;
-	struct list *lvh, *lvht;
+	struct dm_list *pvh, *pvht;
+	struct dm_list *lvh, *lvht;
 	struct pv_list *pvl;
 	struct lv_list *lvl, *lvl2, *lvlt;
 	struct logical_volume *lv;
@@ -173,18 +173,18 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	unsigned s;
 	uint32_t mimages, remove_log;
 	int list_unsafe, only_mirror_images_found;
-	LIST_INIT(lvs_changed);
+	DM_LIST_INIT(lvs_changed);
 	only_mirror_images_found = 1;
 
 	/* Deactivate & remove necessary LVs */
       restart_loop:
 	list_unsafe = 0;	/* Set if we delete a different list-member */
 
-	list_iterate_safe(lvh, lvht, &vg->lvs) {
-		lv = list_item(lvh, struct lv_list)->lv;
+	dm_list_iterate_safe(lvh, lvht, &vg->lvs) {
+		lv = dm_list_item(lvh, struct lv_list)->lv;
 
 		/* Are any segments of this LV on missing PVs? */
-		list_iterate_items(seg, &lv->segments) {
+		dm_list_iterate_items(seg, &lv->segments) {
 			for (s = 0; s < seg->area_count; s++) {
 				if (seg_type(seg, s) != AREA_PV)
 					continue;
@@ -222,8 +222,8 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 	 * up *after* the PVs are removed. All this should be gradually
 	 * superseded by lvconvert --repair.
 	 */
-	list_iterate_safe(pvh, pvht, &vg->pvs) {
-		pvl = list_item(pvh, struct pv_list);
+	dm_list_iterate_safe(pvh, pvht, &vg->pvs) {
+		pvl = dm_list_item(pvh, struct pv_list);
 		if (pvl->pv->dev)
 			continue;
 		if (!_remove_pv(vg, pvl, 0))
@@ -232,7 +232,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 	/* FIXME Recovery.  For now people must clean up by hand. */
 
-	if (!list_empty(&lvs_changed)) {
+	if (!dm_list_empty(&lvs_changed)) {
 		if (!vg_write(vg)) {
 			log_error("Failed to write out a consistent VG for %s",
 				  vg->name);
@@ -264,7 +264,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
   lvs_changed_altered:
 		/* Remove lost mirror images from mirrors */
-		list_iterate_items(lvl, &vg->lvs) {
+		dm_list_iterate_items(lvl, &vg->lvs) {
   mirrored_seg_altered:
 			mirrored_seg = first_seg(lvl->lv);
 			if (!seg_is_mirrored(mirrored_seg))
@@ -274,11 +274,11 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			remove_log = 0;
 
 			for (s = 0; s < mirrored_seg->area_count; s++) {
-				list_iterate_items_safe(lvl2, lvlt, &lvs_changed) {
+				dm_list_iterate_items_safe(lvl2, lvlt, &lvs_changed) {
 					if (seg_type(mirrored_seg, s) != AREA_LV ||
 					    lvl2->lv != seg_lv(mirrored_seg, s))
 						continue;
-					list_del(&lvl2->list);
+					dm_list_del(&lvl2->list);
 					if (!shift_mirror_images(mirrored_seg, s))
 						return_0;
 					mimages--;	/* FIXME Assumes uniqueness */
@@ -286,7 +286,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 			}
 
 			if (mirrored_seg->log_lv) {
-				list_iterate_items(seg, &mirrored_seg->log_lv->segments) {
+				dm_list_iterate_items(seg, &mirrored_seg->log_lv->segments) {
 					/* FIXME: The second test shouldn't be required */
 					if ((seg->segtype ==
 					     get_segtype_from_string(vg->cmd, "error"))) {
@@ -343,7 +343,7 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 
 		/* Deactivate error LVs */
 		if (!test_mode()) {
-			list_iterate_items_safe(lvl, lvlt, &lvs_changed) {
+			dm_list_iterate_items_safe(lvl, lvlt, &lvs_changed) {
 				log_verbose("Deactivating (if active) logical volume %s",
 					    lvl->lv->name);
 
@@ -356,13 +356,13 @@ static int _make_vg_consistent(struct cmd_context *cmd, struct volume_group *vg)
 					 * Don't try to lv_remove it.
 					 * Continue work on others.
 					 */
-					list_del(&lvl->list);
+					dm_list_del(&lvl->list);
 				}
 			}
 		}
 
 		/* Remove remaining LVs */
-		list_iterate_items(lvl, &lvs_changed) {
+		dm_list_iterate_items(lvl, &lvs_changed) {
 			log_verbose("Removing LV %s from VG %s", lvl->lv->name,
 				    lvl->lv->vg->name);
 				/* Skip LVs already removed by mirror code */
@@ -411,7 +411,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	log_verbose("Removing \"%s\" from volume group \"%s\"", name, vg->name);
 
 	if (pvl)
-		list_del(&pvl->list);
+		dm_list_del(&pvl->list);
 
 	pv->vg_name = vg->fid->fmt->orphan_vg_name;
 	pv->status = ALLOCATABLE_PV;

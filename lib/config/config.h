@@ -49,7 +49,7 @@ struct config_tree {
 };
 
 struct config_tree_list {
-	struct list list;
+	struct dm_list list;
 	struct config_tree *cft;
 };
 

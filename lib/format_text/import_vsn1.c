@@ -223,8 +223,8 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		return 0;
 	}
 
-	list_init(&pv->tags);
-	list_init(&pv->segments);
+	dm_list_init(&pv->tags);
+	dm_list_init(&pv->segments);
 
 	/* Optional tags */
 	if ((cn = find_config_node(pvn, "tags")) &&
@@ -267,7 +267,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 		return_0;
 
 	vg->pv_count++;
-	list_add(&vg->pvs, &pvl->list);
+	dm_list_add(&vg->pvs, &pvl->list);
 
 	return 1;
 }
@@ -276,15 +276,15 @@ static void _insert_segment(struct logical_volume *lv, struct lv_segment *seg)
 {
 	struct lv_segment *comp;
 
-	list_iterate_items(comp, &lv->segments) {
+	dm_list_iterate_items(comp, &lv->segments) {
 		if (comp->le > seg->le) {
-			list_add(&comp->list, &seg->list);
+			dm_list_add(&comp->list, &seg->list);
 			return;
 		}
 	}
 
 	lv->le_count += seg->len;
-	list_add(&lv->segments, &seg->list);
+	dm_list_add(&lv->segments, &seg->list);
 }
 
 static int _read_segment(struct dm_pool *mem, struct volume_group *vg,
@@ -548,10 +548,10 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 	}
 
 	lv->snapshot = NULL;
-	list_init(&lv->snapshot_segs);
-	list_init(&lv->segments);
-	list_init(&lv->tags);
-	list_init(&lv->segs_using_this_lv);
+	dm_list_init(&lv->snapshot_segs);
+	dm_list_init(&lv->segments);
+	dm_list_init(&lv->tags);
+	dm_list_init(&lv->segs_using_this_lv);
 
 	/* Optional tags */
 	if ((cn = find_config_node(lvn, "tags")) &&
@@ -563,7 +563,7 @@ static int _read_lvnames(struct format_instance *fid __attribute((unused)),
 
 	lv->vg = vg;
 	vg->lv_count++;
-	list_add(&vg->lvs, &lvl->list);
+	dm_list_add(&vg->lvs, &lvl->list);
 
 	return 1;
 }
@@ -609,7 +609,7 @@ static int _read_lvsegs(struct format_instance *fid __attribute((unused)),
 	 */
 	if (lv->status & SNAPSHOT) {
 		vg->lv_count--;
-		list_del(&lvl->list);
+		dm_list_del(&lvl->list);
 		return 1;
 	}
 
@@ -758,7 +758,7 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	list_init(&vg->pvs);
+	dm_list_init(&vg->pvs);
 	if (!_read_sections(fid, "physical_volumes", _read_pv, mem, vg,
 			    vgn, pv_hash, 0)) {
 		log_error("Couldn't find all physical volumes for volume "
@@ -766,8 +766,8 @@ static struct volume_group *_read_vg(struct format_instance *fid,
 		goto bad;
 	}
 
-	list_init(&vg->lvs);
-	list_init(&vg->tags);
+	dm_list_init(&vg->lvs);
+	dm_list_init(&vg->tags);
 
 	/* Optional tags */
 	if ((cn = find_config_node(vgn, "tags")) &&

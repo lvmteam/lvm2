@@ -25,9 +25,9 @@ const char _really_wipe[] =
 static int pvremove_check(struct cmd_context *cmd, const char *name)
 {
 	struct physical_volume *pv;
-	struct list mdas;
+	struct dm_list mdas;
 
-	list_init(&mdas);
+	dm_list_init(&mdas);
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
@@ -47,7 +47,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 	 * means checking every VG by scanning every
 	 * PV on the system.
 	 */
-	if (is_orphan(pv) && !list_size(&mdas)) {
+	if (is_orphan(pv) && !dm_list_size(&mdas)) {
 		if (!scan_vgs_for_pvs(cmd)) {
 			log_error("Rescan for PVs without metadata areas "
 				  "failed.");

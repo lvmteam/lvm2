@@ -148,7 +148,7 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	struct pvcreate_params *pp = (struct pvcreate_params *) handle;
 	void *pv;
 	struct device *dev;
-	struct list mdas;
+	struct dm_list mdas;
 
 	if (pp->idp) {
 		if ((dev = device_from_pvid(cmd, pp->idp)) &&
@@ -176,7 +176,7 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 		goto error;
 	}
 
-	list_init(&mdas);
+	dm_list_init(&mdas);
 	if (!(pv = pv_create(cmd, dev, pp->idp, pp->size, pp->pe_start,
 			     pp->extent_count, pp->extent_size,
 			     pp->pvmetadatacopies,

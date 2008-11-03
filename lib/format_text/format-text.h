@@ -51,13 +51,13 @@ struct labeller *text_labeller_create(const struct format_type *fmt);
 
 int pvhdr_read(struct device *dev, char *buf);
 
-int add_da(struct dm_pool *mem, struct list *das,
+int add_da(struct dm_pool *mem, struct dm_list *das,
 	   uint64_t start, uint64_t size);
-void del_das(struct list *das);
+void del_das(struct dm_list *das);
 
-int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct list *mdas,
+int add_mda(const struct format_type *fmt, struct dm_pool *mem, struct dm_list *mdas,
 	    struct device *dev, uint64_t start, uint64_t size);
-void del_mdas(struct list *mdas);
+void del_mdas(struct dm_list *mdas);
 
 const char *vgname_from_mda(const struct format_type *fmt,
 			    struct device_area *dev_area, struct id *vgid,

@@ -55,7 +55,7 @@ static struct dm_hash_table *_create_lv_maps(struct dm_pool *mem,
 		return NULL;
 	}
 
-	list_iterate_items(ll, &vg->lvs) {
+	dm_list_iterate_items(ll, &vg->lvs) {
 		if (ll->lv->status & SNAPSHOT)
 			continue;
 
@@ -86,7 +86,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 
 	memset(lvs, 0, sizeof(*lvs) * MAX_LV);
 
-	list_iterate_items(ll, &dl->lvds) {
+	dm_list_iterate_items(ll, &dl->lvds) {
 		if (!(lvm = dm_hash_lookup(maps, strrchr((char *)ll->lvd.lv_name, '/')
 					+ 1))) {
 			log_err("Physical volume (%s) contains an "
@@ -105,7 +105,7 @@ static int _fill_lv_array(struct lv_map **lvs,
 }
 
 static int _fill_maps(struct dm_hash_table *maps, struct volume_group *vg,
-		      struct list *pvds)
+		      struct dm_list *pvds)
 {
 	struct disk_list *dl;
 	struct physical_volume *pv;
@@ -113,7 +113,7 @@ static int _fill_maps(struct dm_hash_table *maps, struct volume_group *vg,
 	struct pe_disk *e;
 	uint32_t i, lv_num, le;
 
-	list_iterate_items(dl, pvds) {
+	dm_list_iterate_items(dl, pvds) {
 		pv = find_pv(vg, dl->dev);
 		e = dl->extents;
 
@@ -228,7 +228,7 @@ static int _read_linear(struct cmd_context *cmd, struct lv_map *lvm)
 					    lvm->map[le].pe))
 			return_0;
 
-		list_add(&lvm->lv->segments, &seg->list);
+		dm_list_add(&lvm->lv->segments, &seg->list);
 
 		le += seg->len;
 	}
@@ -307,7 +307,7 @@ static int _read_stripes(struct cmd_context *cmd, struct lv_map *lvm)
 			      lvm->map[first_area_le + st * total_area_len].pe))
 				return_0;
 
-		list_add(&lvm->lv->segments, &seg->list);
+		dm_list_add(&lvm->lv->segments, &seg->list);
 
 		first_area_le += area_len;
 	}
@@ -336,7 +336,7 @@ static int _build_all_segments(struct cmd_context *cmd, struct dm_hash_table *ma
 }
 
 int import_extents(struct cmd_context *cmd, struct volume_group *vg,
-		   struct list *pvds)
+		   struct dm_list *pvds)
 {
 	int r = 0;
 	struct dm_pool *scratch = dm_pool_create("lvm1 import_extents", 10 * 1024);

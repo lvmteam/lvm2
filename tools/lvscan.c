@@ -32,7 +32,7 @@ static int lvscan_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 	inkernel = lv_info(cmd, lv, &info, 1, 0) && info.exists;
 	if (lv_is_origin(lv)) {
-		list_iterate_items_gen(snap_seg, &lv->snapshot_segs,
+		dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs,
 				       origin_list) {
 			if (inkernel &&
 			    (snap_active = lv_snapshot_percent(snap_seg->cow,

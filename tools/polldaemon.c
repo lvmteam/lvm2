@@ -68,7 +68,7 @@ static int _check_mirror_status(struct cmd_context *cmd,
 				const char *name, struct daemon_parms *parms,
 				int *finished)
 {
-	struct list *lvs_changed;
+	struct dm_list *lvs_changed;
 	float segment_percent = 0.0, overall_percent = 0.0;
 	uint32_t event_nr = 0;
 
@@ -196,7 +196,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
 
-	list_iterate_items(lvl, &vg->lvs) {
+	dm_list_iterate_items(lvl, &vg->lvs) {
 		lv_mirr = lvl->lv;
 		if (!(lv_mirr->status & parms->lv_type))
 			continue;

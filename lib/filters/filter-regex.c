@@ -151,7 +151,7 @@ static int _accept_p(struct dev_filter *f, struct device *dev)
 	struct rfilter *rf = (struct rfilter *) f->private;
 	struct str_list *sl;
 
-	list_iterate_items(sl, &dev->aliases) {
+	dm_list_iterate_items(sl, &dev->aliases) {
 		m = dm_regex_match(rf->engine, sl->str);
 
 		if (m >= 0) {

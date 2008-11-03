@@ -32,13 +32,13 @@ static int _pv_resize_single(struct cmd_context *cmd,
 	int consistent = 1;
 	uint64_t size = 0;
 	uint32_t new_pe_count = 0;
-	struct list mdas;
+	struct dm_list mdas;
 	const char *pv_name = pv_dev_name(pv);
 	const char *vg_name;
 	struct lvmcache_info *info;
 	int mda_count = 0;
 
-	list_init(&mdas);
+	dm_list_init(&mdas);
 
 	if (is_orphan_vg(pv_vg_name(pv))) {
 		vg_name = VG_ORPHANS;
@@ -53,7 +53,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			return 0;
 		}
 
-		mda_count = list_size(&mdas);
+		mda_count = dm_list_size(&mdas);
 	} else {
 		vg_name = pv_vg_name(pv);
 
@@ -90,7 +90,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			return 0;
 		}
 
-		mda_count = list_size(&info->mdas);
+		mda_count = dm_list_size(&info->mdas);
 
 		if (!archive(vg))
 			return 0;

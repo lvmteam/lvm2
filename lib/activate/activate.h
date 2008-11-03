@@ -45,9 +45,9 @@ int target_present(const char *target_name, int use_modprobe);
 int target_version(const char *target_name, uint32_t *maj,
                    uint32_t *min, uint32_t *patchlevel);
 int list_segment_modules(struct dm_pool *mem, const struct lv_segment *seg,
-			 struct list *modules);
+			 struct dm_list *modules);
 int list_lv_modules(struct dm_pool *mem, const struct logical_volume *lv,
-		    struct list *modules);
+		    struct dm_list *modules);
 
 void activation_release(void);
 void activation_exit(void);

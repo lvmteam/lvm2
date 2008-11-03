@@ -330,7 +330,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 	uint64_t start, length;
 	char *type = NULL;
 	char *params = NULL;
-	struct list *segh = &lv->segments;
+	struct dm_list *segh = &lv->segments;
 	struct lv_segment *seg = NULL;
 	struct segment_type *segtype;
 
@@ -358,12 +358,12 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 		next = dm_get_next_target(dmt, next, &start, &length, &type,
 					  &params);
 		if (lv) {
-			if (!(segh = list_next(&lv->segments, segh))) {
+			if (!(segh = dm_list_next(&lv->segments, segh))) {
 				log_error("Number of segments in active LV %s "
 					  "does not match metadata", lv->name);
 				goto out;
 			}
-			seg = list_item(segh, struct lv_segment);
+			seg = dm_list_item(segh, struct lv_segment);
 		}
 
 		if (!type || !params || strcmp(type, target_type))
@@ -381,7 +381,7 @@ static int _percent_run(struct dev_manager *dm, const char *name,
 
 	} while (next);
 
-	if (lv && (segh = list_next(&lv->segments, segh))) {
+	if (lv && (segh = dm_list_next(&lv->segments, segh))) {
 		log_error("Number of segments in active LV %s does not "
 			  "match metadata", lv->name);
 		goto out;
@@ -576,7 +576,7 @@ static int _belong_to_vg(const char *vgname, const char *name)
 	old_origin = snap_seg->origin;
 
 	/* Was this the last active snapshot with this origin? */
-	list_iterate_items(lvl, active_head) {
+	dm_list_iterate_items(lvl, active_head) {
 		active = lvl->lv;
 		if ((snap_seg = find_cow(active)) &&
 		    snap_seg->origin == old_origin) {
@@ -657,7 +657,7 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree, struc
 static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logical_volume *lv)
 {
 	struct dm_tree *dtree;
-	struct list *snh, *snht;
+	struct dm_list *snh, *snht;
 	struct lv_segment *seg;
 	uint32_t s;
 
@@ -670,12 +670,12 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, struct logi
 		goto_bad;
 
 	/* Add any snapshots of this LV */
-	list_iterate_safe(snh, snht, &lv->snapshot_segs)
-		if (!_add_lv_to_dtree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow))
+	dm_list_iterate_safe(snh, snht, &lv->snapshot_segs)
+		if (!_add_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow))
 			goto_bad;
 
 	/* Add any LVs used by segments in this LV */
-	list_iterate_items(seg, &lv->segments)
+	dm_list_iterate_items(seg, &lv->segments)
 		for (s = 0; s < seg->area_count; s++)
 			if (seg_type(seg, s) == AREA_LV && seg_lv(seg, s)) {
 				if (!_add_lv_to_dtree(dm, dtree, seg_lv(seg, s)))
@@ -699,7 +699,7 @@ static char *_add_error_device(struct dev_manager *dm, struct dm_tree *dtree,
 	int segno = -1, i = 0;;
 	uint64_t size = seg->len * seg->lv->vg->extent_size;
 
-	list_iterate_items(seg_i, &seg->lv->segments) {
+	dm_list_iterate_items(seg_i, &seg->lv->segments) {
 		if (seg == seg_i)
 			segno = i;
 		++i;
@@ -862,7 +862,7 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 				   const char *layer)
 {
 	uint32_t s;
-	struct list *snh;
+	struct dm_list *snh;
 	struct lv_segment *seg_present;
 
 	/* Ensure required device-mapper targets are loaded */
@@ -915,8 +915,8 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 
 	if (lv_is_origin(seg->lv) && !layer)
 		/* Add any snapshots of this LV */
-		list_iterate(snh, &seg->lv->snapshot_segs)
-			if (!_add_new_lv_to_dtree(dm, dtree, list_struct_base(snh, struct lv_segment, origin_list)->cow, NULL))
+		dm_list_iterate(snh, &seg->lv->snapshot_segs)
+			if (!_add_new_lv_to_dtree(dm, dtree, dm_list_struct_base(snh, struct lv_segment, origin_list)->cow, NULL))
 				return_0;
 
 	return 1;
@@ -970,7 +970,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* Create table */
 	dm->pvmove_mirror_count = 0u;
-	list_iterate_items(seg, &lv->segments) {
+	dm_list_iterate_items(seg, &lv->segments) {
 		if (!_add_segment_to_dtree(dm, dtree, dnode, seg, layer))
 			return_0;
 		/* These aren't real segments in the LVM2 metadata */

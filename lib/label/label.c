@@ -30,13 +30,13 @@
  * Internal labeller struct.
  */
 struct labeller_i {
-	struct list list;
+	struct dm_list list;
 
 	struct labeller *l;
 	char name[0];
 };
 
-static struct list _labellers;
+static struct dm_list _labellers;
 
 static struct labeller_i *_alloc_li(const char *name, struct labeller *l)
 {
@@ -63,23 +63,23 @@ static void _free_li(struct labeller_i *li)
 
 int label_init(void)
 {
-	list_init(&_labellers);
+	dm_list_init(&_labellers);
 	return 1;
 }
 
 void label_exit(void)
 {
-	struct list *c, *n;
+	struct dm_list *c, *n;
 	struct labeller_i *li;
 
 	for (c = _labellers.n; c != &_labellers; c = n) {
 		n = c->n;
-		li = list_item(c, struct labeller_i);
+		li = dm_list_item(c, struct labeller_i);
 		li->l->ops->destroy(li->l);
 		_free_li(li);
 	}
 
-	list_init(&_labellers);
+	dm_list_init(&_labellers);
 }
 
 int label_register_handler(const char *name, struct labeller *handler)
@@ -89,7 +89,7 @@ int label_register_handler(const char *name, struct labeller *handler)
 	if (!(li = _alloc_li(name, handler)))
 		return_0;
 
-	list_add(&_labellers, &li->list);
+	dm_list_add(&_labellers, &li->list);
 	return 1;
 }
 
@@ -97,7 +97,7 @@ struct labeller *label_get_handler(const char *name)
 {
 	struct labeller_i *li;
 
-	list_iterate_items(li, &_labellers)
+	dm_list_iterate_items(li, &_labellers)
 		if (!strcmp(li->name, name))
 			return li->l;
 
@@ -153,7 +153,7 @@ static struct labeller *_find_labeller(struct device *dev, char *buf,
 				continue;
 		}
 
-		list_iterate_items(li, &_labellers) {
+		dm_list_iterate_items(li, &_labellers) {
 			if (li->l->ops->can_handle(li->l, (char *) lh,
 						   sector + scan_sector)) {
 				log_very_verbose("%s: %s label detected",
@@ -228,7 +228,7 @@ int label_remove(struct device *dev)
 			if (xlate64(lh->sector_xl) == sector)
 				wipe = 1;
 		} else {
-			list_iterate_items(li, &_labellers) {
+			dm_list_iterate_items(li, &_labellers) {
 				if (li->l->ops->can_handle(li->l, (char *) lh,
 							   sector)) {
 					wipe = 1;

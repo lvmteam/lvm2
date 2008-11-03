@@ -35,8 +35,8 @@ struct volume_group;
 
 /* One per VG */
 struct lvmcache_vginfo {
-	struct list list;	/* Join these vginfos together */
-	struct list infos;	/* List head for lvmcache_infos */
+	struct dm_list list;	/* Join these vginfos together */
+	struct dm_list infos;	/* List head for lvmcache_infos */
 	const struct format_type *fmt;
 	char *vgname;		/* "" == orphan */
 	uint32_t status;
@@ -50,9 +50,9 @@ struct lvmcache_vginfo {
 
 /* One per device */
 struct lvmcache_info {
-	struct list list;	/* Join VG members together */
-	struct list mdas;	/* list head for metadata areas */
-	struct list das;	/* list head for data areas */
+	struct dm_list list;	/* Join VG members together */
+	struct dm_list mdas;	/* list head for metadata areas */
+	struct dm_list das;	/* list head for data areas */
 	struct lvmcache_vginfo *vginfo;	/* NULL == unknown */
 	struct label *label;
 	const struct format_type *fmt;
@@ -98,14 +98,14 @@ int vgname_is_locked(const char *vgname);
 
 /* Returns list of struct str_lists containing pool-allocated copy of vgnames */
 /* Set full_scan to 1 to reread every filtered device label */
-struct list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan);
+struct dm_list *lvmcache_get_vgnames(struct cmd_context *cmd, int full_scan);
 
 /* Returns list of struct str_lists containing pool-allocated copy of vgids */
 /* Set full_scan to 1 to reread every filtered device label */
-struct list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan);
+struct dm_list *lvmcache_get_vgids(struct cmd_context *cmd, int full_scan);
 
 /* Returns list of struct str_lists containing pool-allocated copy of pvids */
-struct list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
+struct dm_list *lvmcache_get_pvids(struct cmd_context *cmd, const char *vgname,
 				const char *vgid);
 
 /* Returns cached volume group metadata. */

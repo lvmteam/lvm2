@@ -410,7 +410,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 	/* Is there a config file? */
 	if (stat(config_file, &info) == -1) {
 		if (errno == ENOENT) {
-			list_add(&cmd->config_files, &cfl->list);
+			dm_list_add(&cmd->config_files, &cfl->list);
 			goto out;
 		}
 		log_sys_error("stat", config_file);
@@ -425,7 +425,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		return 0;
 	}
 
-	list_add(&cmd->config_files, &cfl->list);
+	dm_list_add(&cmd->config_files, &cfl->list);
 
       out:
 	if (*tag)
@@ -461,7 +461,7 @@ static int _init_tag_configs(struct cmd_context *cmd)
 	struct str_list *sl;
 
 	/* Tag list may grow while inside this loop */
-	list_iterate_items(sl, &cmd->tags) {
+	dm_list_iterate_items(sl, &cmd->tags) {
 		if (!_load_config_file(cmd, sl->str))
 			return_0;
 	}
@@ -481,7 +481,7 @@ static int _merge_config_files(struct cmd_context *cmd)
 		}
 	}
 
-	list_iterate_items(cfl, &cmd->config_files) {
+	dm_list_iterate_items(cfl, &cmd->config_files) {
 		/* Merge all config trees into cmd->cft using merge/tag rules */
 		if (!merge_config_tree(cmd, cmd->cft, cfl->cft))
 			return_0;
@@ -492,10 +492,10 @@ static int _merge_config_files(struct cmd_context *cmd)
 
 static void _destroy_tags(struct cmd_context *cmd)
 {
-	struct list *slh, *slht;
+	struct dm_list *slh, *slht;
 
-	list_iterate_safe(slh, slht, &cmd->tags) {
-		list_del(slh);
+	dm_list_iterate_safe(slh, slht, &cmd->tags) {
+		dm_list_del(slh);
 	}
 }
 
@@ -503,7 +503,7 @@ int config_files_changed(struct cmd_context *cmd)
 {
 	struct config_tree_list *cfl;
 
-	list_iterate_items(cfl, &cmd->config_files) {
+	dm_list_iterate_items(cfl, &cmd->config_files) {
 		if (config_file_changed(cfl->cft))
 			return 1;
 	}
@@ -520,11 +520,11 @@ static void _destroy_tag_configs(struct cmd_context *cmd)
 		cmd->cft = NULL;
 	}
 
-	list_iterate_items(cfl, &cmd->config_files) {
+	dm_list_iterate_items(cfl, &cmd->config_files) {
 		destroy_config_tree(cfl->cft);
 	}
 
-	list_init(&cmd->config_files);
+	dm_list_init(&cmd->config_files);
 }
 
 static int _init_dev_cache(struct cmd_context *cmd)
@@ -725,14 +725,14 @@ static int _init_formats(struct cmd_context *cmd)
 	if (!(fmt = init_lvm1_format(cmd)))
 		return 0;
 	fmt->library = NULL;
-	list_add(&cmd->formats, &fmt->list);
+	dm_list_add(&cmd->formats, &fmt->list);
 #endif
 
 #ifdef POOL_INTERNAL
 	if (!(fmt = init_pool_format(cmd)))
 		return 0;
 	fmt->library = NULL;
-	list_add(&cmd->formats, &fmt->list);
+	dm_list_add(&cmd->formats, &fmt->list);
 #endif
 
 #ifdef HAVE_LIBDL
@@ -764,7 +764,7 @@ static int _init_formats(struct cmd_context *cmd)
 			if (!(fmt = init_format_fn(cmd)))
 				return 0;
 			fmt->library = lib;
-			list_add(&cmd->formats, &fmt->list);
+			dm_list_add(&cmd->formats, &fmt->list);
 		}
 	}
 #endif
@@ -772,14 +772,14 @@ static int _init_formats(struct cmd_context *cmd)
 	if (!(fmt = create_text_format(cmd)))
 		return 0;
 	fmt->library = NULL;
-	list_add(&cmd->formats, &fmt->list);
+	dm_list_add(&cmd->formats, &fmt->list);
 
 	cmd->fmt_backup = fmt;
 
 	format = find_config_tree_str(cmd, "global/format",
 				 DEFAULT_FORMAT);
 
-	list_iterate_items(fmt, &cmd->formats) {
+	dm_list_iterate_items(fmt, &cmd->formats) {
 		if (!strcasecmp(fmt->name, format) ||
 		    (fmt->alias && !strcasecmp(fmt->alias, format))) {
 			cmd->default_settings.fmt = fmt;
@@ -795,7 +795,7 @@ int init_lvmcache_orphans(struct cmd_context *cmd)
 {
 	struct format_type *fmt;
 
-	list_iterate_items(fmt, &cmd->formats)
+	dm_list_iterate_items(fmt, &cmd->formats)
 		if (!lvmcache_add_orphan_vginfo(fmt->orphan_vg_name, fmt))
 			return_0;
 
@@ -813,35 +813,35 @@ static int _init_segtypes(struct cmd_context *cmd)
 	if (!(segtype = init_striped_segtype(cmd)))
 		return 0;
 	segtype->library = NULL;
-	list_add(&cmd->segtypes, &segtype->list);
+	dm_list_add(&cmd->segtypes, &segtype->list);
 
 	if (!(segtype = init_zero_segtype(cmd)))
 		return 0;
 	segtype->library = NULL;
-	list_add(&cmd->segtypes, &segtype->list);
+	dm_list_add(&cmd->segtypes, &segtype->list);
 
 	if (!(segtype = init_error_segtype(cmd)))
 		return 0;
 	segtype->library = NULL;
-	list_add(&cmd->segtypes, &segtype->list);
+	dm_list_add(&cmd->segtypes, &segtype->list);
 
 	if (!(segtype = init_free_segtype(cmd)))
 		return 0;
 	segtype->library = NULL;
-	list_add(&cmd->segtypes, &segtype->list);
+	dm_list_add(&cmd->segtypes, &segtype->list);
 
 #ifdef SNAPSHOT_INTERNAL
 	if (!(segtype = init_snapshot_segtype(cmd)))
 		return 0;
 	segtype->library = NULL;
-	list_add(&cmd->segtypes, &segtype->list);
+	dm_list_add(&cmd->segtypes, &segtype->list);
 #endif
 
 #ifdef MIRRORED_INTERNAL
 	if (!(segtype = init_mirrored_segtype(cmd)))
 		return 0;
 	segtype->library = NULL;
-	list_add(&cmd->segtypes, &segtype->list);
+	dm_list_add(&cmd->segtypes, &segtype->list);
 #endif
 
 #ifdef HAVE_LIBDL
@@ -874,16 +874,16 @@ static int _init_segtypes(struct cmd_context *cmd)
 			if (!(segtype = init_segtype_fn(cmd)))
 				return 0;
 			segtype->library = lib;
-			list_add(&cmd->segtypes, &segtype->list);
+			dm_list_add(&cmd->segtypes, &segtype->list);
 
-			list_iterate_items(segtype2, &cmd->segtypes) {
+			dm_list_iterate_items(segtype2, &cmd->segtypes) {
 				if ((segtype == segtype2) ||
 				     strcmp(segtype2->name, segtype->name))
 					continue;
 				log_error("Duplicate segment type %s: "
 					  "unloading shared library %s",
 					  segtype->name, cv->v.str);
-				list_del(&segtype->list);
+				dm_list_del(&segtype->list);
 				segtype->ops->destroy(segtype);
 				dlclose(lib);
 			}
@@ -1008,10 +1008,10 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 	cmd->is_long_lived = is_long_lived;
 	cmd->handles_missing_pvs = 0;
 	cmd->hosttags = 0;
-	list_init(&cmd->formats);
-	list_init(&cmd->segtypes);
-	list_init(&cmd->tags);
-	list_init(&cmd->config_files);
+	dm_list_init(&cmd->formats);
+	dm_list_init(&cmd->segtypes);
+	dm_list_init(&cmd->tags);
+	dm_list_init(&cmd->config_files);
 
 	strcpy(cmd->sys_dir, DEFAULT_SYS_DIR);
 
@@ -1088,15 +1088,15 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 	return NULL;
 }
 
-static void _destroy_formats(struct list *formats)
+static void _destroy_formats(struct dm_list *formats)
 {
-	struct list *fmtl, *tmp;
+	struct dm_list *fmtl, *tmp;
 	struct format_type *fmt;
 	void *lib;
 
-	list_iterate_safe(fmtl, tmp, formats) {
-		fmt = list_item(fmtl, struct format_type);
-		list_del(&fmt->list);
+	dm_list_iterate_safe(fmtl, tmp, formats) {
+		fmt = dm_list_item(fmtl, struct format_type);
+		dm_list_del(&fmt->list);
 		lib = fmt->library;
 		fmt->ops->destroy(fmt);
 #ifdef HAVE_LIBDL
@@ -1106,15 +1106,15 @@ static void _destroy_formats(struct list *formats)
 	}
 }
 
-static void _destroy_segtypes(struct list *segtypes)
+static void _destroy_segtypes(struct dm_list *segtypes)
 {
-	struct list *sgtl, *tmp;
+	struct dm_list *sgtl, *tmp;
 	struct segment_type *segtype;
 	void *lib;
 
-	list_iterate_safe(sgtl, tmp, segtypes) {
-		segtype = list_item(sgtl, struct segment_type);
-		list_del(&segtype->list);
+	dm_list_iterate_safe(sgtl, tmp, segtypes) {
+		segtype = dm_list_item(sgtl, struct segment_type);
+		dm_list_del(&segtype->list);
 		lib = segtype->library;
 		segtype->ops->destroy(segtype);
 #ifdef HAVE_LIBDL

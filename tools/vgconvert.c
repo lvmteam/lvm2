@@ -23,7 +23,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	struct logical_volume *lv;
 	struct lv_list *lvl;
 	uint64_t size = 0;
-	struct list mdas;
+	struct dm_list mdas;
 	int pvmetadatacopies = 0;
 	uint64_t pvmetadatasize = 0;
 	uint64_t pe_end = 0, pe_start = 0;
@@ -93,7 +93,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	/* If converting to restricted lvid, check if lvid is compatible */
 	if (!(vg->fid->fmt->features & FMT_RESTRICTED_LVIDS) &&
 	    cmd->fmt->features & FMT_RESTRICTED_LVIDS)
-		list_iterate_items(lvl, &vg->lvs)
+		dm_list_iterate_items(lvl, &vg->lvs)
 			if (!lvid_in_restricted_range(&lvl->lv->lvid)) {
 				log_error("Logical volume %s lvid format is"
 					  " incompatible with requested"
@@ -103,7 +103,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 
 	/* Attempt to change any LVIDs that are too big */
 	if (cmd->fmt->features & FMT_RESTRICTED_LVIDS) {
-		list_iterate_items(lvl, &vg->lvs) {
+		dm_list_iterate_items(lvl, &vg->lvs) {
 			lv = lvl->lv;
 			if (lv->status & SNAPSHOT)
 				continue;
@@ -124,14 +124,14 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 	if (active)
 		return ECMD_FAILED;
 
-	list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs) {
 		existing_pv = pvl->pv;
 
 		pe_start = pv_pe_start(existing_pv);
 		pe_end = pv_pe_count(existing_pv) * pv_pe_size(existing_pv)
 		    + pe_start - 1;
 
-		list_init(&mdas);
+		dm_list_init(&mdas);
 		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
 				     &existing_pv->id, size,
 				     pe_start, pv_pe_count(existing_pv),

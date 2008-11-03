@@ -58,11 +58,11 @@ static volatile sig_atomic_t _thread_registries_empty = 1;	/* registries are emp
 static int _debug = 0;
 
 /* List (un)link macros. */
-#define	LINK(x, head)		list_add(head, &(x)->list)
+#define	LINK(x, head)		dm_list_add(head, &(x)->list)
 #define	LINK_DSO(dso)		LINK(dso, &_dso_registry)
 #define	LINK_THREAD(thread)	LINK(thread, &_thread_registry)
 
-#define	UNLINK(x)		list_del(&(x)->list)
+#define	UNLINK(x)		dm_list_del(&(x)->list)
 #define	UNLINK_DSO(x)		UNLINK(x)
 #define	UNLINK_THREAD(x)	UNLINK(x)
 
@@ -101,7 +101,7 @@ static pthread_mutex_t _global_mutex;
 
 /* Data kept about a DSO. */
 struct dso_data {
-	struct list list;
+	struct dm_list list;
 
 	char *dso_name;		/* DSO name (eg, "evms", "dmraid", "lvm2"). */
 
@@ -143,7 +143,7 @@ struct dso_data {
 	int (*unregister_device)(const char *device, const char *uuid,
 				 int major, int minor, void **user);
 };
-static LIST_INIT(_dso_registry);
+static DM_LIST_INIT(_dso_registry);
 
 /* Structure to keep parsed register variables from client message. */
 struct message_data {
@@ -168,7 +168,7 @@ struct message_data {
  * occurs and the event processing function of the DSO gets called.
  */
 struct thread_status {
-	struct list list;
+	struct dm_list list;
 
 	pthread_t thread;
 
@@ -189,14 +189,14 @@ struct thread_status {
 	struct dm_task *current_task;
 	time_t next_time;
 	uint32_t timeout;
-	struct list timeout_list;
+	struct dm_list timeout_list;
 	void *dso_private; /* dso per-thread status variable */
 };
-static LIST_INIT(_thread_registry);
-static LIST_INIT(_thread_registry_unused);
+static DM_LIST_INIT(_thread_registry);
+static DM_LIST_INIT(_thread_registry_unused);
 
 static int _timeout_running;
-static LIST_INIT(_timeout_registry);
+static DM_LIST_INIT(_timeout_registry);
 static pthread_mutex_t _timeout_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t _timeout_cond = PTHREAD_COND_INITIALIZER;
 
@@ -239,7 +239,7 @@ static struct thread_status *_alloc_thread_status(struct message_data *data,
 	ret->dso_data = dso_data;
 	ret->events = data->events.field;
 	ret->timeout = data->timeout.secs;
-	list_init(&ret->timeout_list);
+	dm_list_init(&ret->timeout_list);
 
 	return ret;
 }
@@ -459,7 +459,7 @@ static struct thread_status *_lookup_thread_status(struct message_data *data)
 {
 	struct thread_status *thread;
 
-	list_iterate_items(thread, &_thread_registry)
+	dm_list_iterate_items(thread, &_thread_registry)
 	    if (!strcmp(data->device_uuid, thread->device.uuid))
 		return thread;
 
@@ -489,13 +489,13 @@ static void *_timeout_thread(void *unused __attribute((unused)))
 	pthread_cleanup_push(_exit_timeout, NULL);
 	pthread_mutex_lock(&_timeout_mutex);
 
-	while (!list_empty(&_timeout_registry)) {
+	while (!dm_list_empty(&_timeout_registry)) {
 		struct thread_status *thread;
 
 		timeout.tv_sec = 0;
 		curr_time = time(NULL);
 
-		list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
+		dm_list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
 			if (thread->next_time <= curr_time) {
 				thread->next_time = curr_time + thread->timeout;
 				pthread_kill(thread->thread, SIGALRM);
@@ -522,8 +522,8 @@ static int _register_for_timeout(struct thread_status *thread)
 
 	thread->next_time = time(NULL) + thread->timeout;
 
-	if (list_empty(&thread->timeout_list)) {
-		list_add(&_timeout_registry, &thread->timeout_list);
+	if (dm_list_empty(&thread->timeout_list)) {
+		dm_list_add(&_timeout_registry, &thread->timeout_list);
 		if (_timeout_running)
 			pthread_cond_signal(&_timeout_cond);
 	}
@@ -543,9 +543,9 @@ static int _register_for_timeout(struct thread_status *thread)
 static void _unregister_for_timeout(struct thread_status *thread)
 {
 	pthread_mutex_lock(&_timeout_mutex);
-	if (!list_empty(&thread->timeout_list)) {
-		list_del(&thread->timeout_list);
-		list_init(&thread->timeout_list);
+	if (!dm_list_empty(&thread->timeout_list)) {
+		dm_list_del(&thread->timeout_list);
+		dm_list_init(&thread->timeout_list);
 	}
 	pthread_mutex_unlock(&_timeout_mutex);
 }
@@ -698,7 +698,7 @@ static void _monitor_unregister(void *arg)
 	}
 	/* we may have been relinked to unused registry since we were
 	   called, so check that */
-	list_iterate_items(thread_iter, &_thread_registry_unused)
+	dm_list_iterate_items(thread_iter, &_thread_registry_unused)
 		if (thread_iter == thread) {
 			thread->status = DM_THREAD_DONE;
 			_unlock_mutex();
@@ -839,7 +839,7 @@ static struct dso_data *_lookup_dso(struct message_data *data)
 {
 	struct dso_data *dso_data, *ret = NULL;
 
-	list_iterate_items(dso_data, &_dso_registry)
+	dm_list_iterate_items(dso_data, &_dso_registry)
 	    if (!strcmp(data->dso_name, dso_data->dso_name)) {
 		_lib_get(dso_data);
 		ret = dso_data;
@@ -1110,7 +1110,7 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 	_lock_mutex();
 
 	/* Iterate list of threads checking if we want a particular one. */
-	list_iterate_items(thread, &_thread_registry)
+	dm_list_iterate_items(thread, &_thread_registry)
 		if (_want_registered_device(message_data->dso_name,
 					    message_data->device_uuid,
 					    thread)) {
@@ -1133,10 +1133,10 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 	thread = hit;
 
 	while (1) {
-		if (list_end(&_thread_registry, &thread->list))
+		if (dm_list_end(&_thread_registry, &thread->list))
 			goto out;
 
-		thread = list_item(thread->list.n, struct thread_status);
+		thread = dm_list_item(thread->list.n, struct thread_status);
 		if (_want_registered_device(message_data->dso_name, NULL, thread)) {
 			hit = thread;
 			break;
@@ -1440,12 +1440,12 @@ static void _process_request(struct dm_event_fifos *fifos)
 static void _cleanup_unused_threads(void)
 {
 	int ret;
-	struct list *l;
+	struct dm_list *l;
 	struct thread_status *thread;
 
 	_lock_mutex();
-	while ((l = list_first(&_thread_registry_unused))) {
-		thread = list_item(l, struct thread_status);
+	while ((l = dm_list_first(&_thread_registry_unused))) {
+		thread = dm_list_item(l, struct thread_status);
 		if (thread->processing)
 			break;	/* cleanup on the next round */
 
@@ -1470,7 +1470,7 @@ static void _cleanup_unused_threads(void)
 				break;
 			}
 
-			list_del(l);
+			dm_list_del(l);
 			syslog(LOG_ERR,
 			       "thread can't be on unused list unless !thread->events");
 			thread->status = DM_THREAD_RUNNING;
@@ -1480,7 +1480,7 @@ static void _cleanup_unused_threads(void)
 		}
 
 		if (thread->status == DM_THREAD_DONE) {
-			list_del(l);
+			dm_list_del(l);
 			pthread_join(thread->thread, NULL);
 			_lib_put(thread->dso_data);
 			_free_thread_status(thread);
@@ -1741,8 +1741,8 @@ int main(int argc, char *argv[])
 	while (!_exit_now) {
 		_process_request(&fifos);
 		_cleanup_unused_threads();
-		if (!list_empty(&_thread_registry)
-		    || !list_empty(&_thread_registry_unused))
+		if (!dm_list_empty(&_thread_registry)
+		    || !dm_list_empty(&_thread_registry_unused))
 			_thread_registries_empty = 0;
 		else
 			_thread_registries_empty = 1;

@@ -1165,7 +1165,7 @@ static void _merge_section(struct config_node *cn1, struct config_node *cn2)
 	}
 }
 
-static int _match_host_tags(struct list *tags, struct config_node *tn)
+static int _match_host_tags(struct dm_list *tags, struct config_node *tn)
 {
 	struct config_value *tv;
 	const char *str;

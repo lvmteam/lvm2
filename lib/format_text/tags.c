@@ -19,7 +19,7 @@
 #include "str_list.h"
 #include "lvm-string.h"
 
-int print_tags(struct list *tags, char *buffer, size_t size)
+int print_tags(struct dm_list *tags, char *buffer, size_t size)
 {
 	struct str_list *sl;
 	int first = 1;
@@ -27,7 +27,7 @@ int print_tags(struct list *tags, char *buffer, size_t size)
 	if (!emit_to_buffer(&buffer, &size, "["))
 		return_0;
 
-	list_iterate_items(sl, tags) {
+	dm_list_iterate_items(sl, tags) {
 		if (!first) {
 			if (!emit_to_buffer(&buffer, &size, ", "))
 				return_0;
@@ -44,7 +44,7 @@ int print_tags(struct list *tags, char *buffer, size_t size)
 	return 1;
 }
 
-int read_tags(struct dm_pool *mem, struct list *tags, struct config_value *cv)
+int read_tags(struct dm_pool *mem, struct dm_list *tags, struct config_value *cv)
 {
 	if (cv->type == CFG_EMPTY_ARRAY)
 		return 1;

@@ -35,10 +35,10 @@ struct dm_report {
 	uint32_t keys_count;
 
 	/* Ordered list of fields needed for this report */
-	struct list field_props;
+	struct dm_list field_props;
 
 	/* Rows of report data */
-	struct list rows;
+	struct dm_list rows;
 
 	/* Array of field definitions */
 	const struct dm_report_field_type *fields;
@@ -57,7 +57,7 @@ struct dm_report {
 #define FLD_DESCENDING	0x00000800
 
 struct field_properties {
-	struct list list;
+	struct dm_list list;
 	uint32_t field_num;
 	uint32_t sort_posn;
 	int32_t width;
@@ -69,7 +69,7 @@ struct field_properties {
  * Report data field
  */
 struct dm_report_field {
-	struct list list;
+	struct dm_list list;
 	struct field_properties *props;
 
 	const char *report_string;	/* Formatted ready for display */
@@ -77,9 +77,9 @@ struct dm_report_field {
 };
 
 struct row {
-	struct list list;
+	struct dm_list list;
 	struct dm_report *rh;
-	struct list fields;			  /* Fields in display order */
+	struct dm_list fields;			  /* Fields in display order */
 	struct dm_report_field *(*sort_fields)[]; /* Fields in sort order */
 };
 
@@ -317,13 +317,13 @@ static struct field_properties * _add_field(struct dm_report *rh,
 	fp->flags |= flags;
 
 	/*
-	 * Place hidden fields at the front so list_end() will
+	 * Place hidden fields at the front so dm_list_end() will
 	 * tell us when we've reached the last visible field.
 	 */
 	if (fp->flags & FLD_HIDDEN)
-		list_add_h(&rh->field_props, &fp->list);
+		dm_list_add_h(&rh->field_props, &fp->list);
 	else
-		list_add(&rh->field_props, &fp->list);
+		dm_list_add(&rh->field_props, &fp->list);
 
 	return fp;
 }
@@ -372,7 +372,7 @@ static int _add_sort_key(struct dm_report *rh, uint32_t field_num,
 {
 	struct field_properties *fp, *found = NULL;
 
-	list_iterate_items(fp, &rh->field_props) {
+	dm_list_iterate_items(fp, &rh->field_props) {
 		if (fp->field_num == field_num) {
 			found = fp;
 			break;
@@ -521,8 +521,8 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 	if (output_flags & DM_REPORT_OUTPUT_BUFFERED)
 		rh->flags |= RH_SORT_REQUIRED;
 
-	list_init(&rh->field_props);
-	list_init(&rh->rows);
+	dm_list_init(&rh->field_props);
+	dm_list_init(&rh->rows);
 
 	if ((type = _find_type(rh, rh->report_types)) && type->prefix)
 		rh->field_prefix = type->prefix;
@@ -621,11 +621,11 @@ int dm_report_object(struct dm_report *rh, void *object)
 		return 0;
 	}
 
-	list_init(&row->fields);
-	list_add(&rh->rows, &row->list);
+	dm_list_init(&row->fields);
+	dm_list_add(&rh->rows, &row->list);
 
 	/* For each field to be displayed, call its report_fn */
-	list_iterate_items(fp, &rh->field_props) {
+	dm_list_iterate_items(fp, &rh->field_props) {
 		if (!(field = dm_pool_zalloc(rh->mem, sizeof(*field)))) {
 			log_error("dm_report_object: "
 				  "struct dm_report_field allocation failed");
@@ -653,7 +653,7 @@ int dm_report_object(struct dm_report *rh, void *object)
 		    (field->props->flags & FLD_SORT_KEY)) {
 			(*row->sort_fields)[field->props->sort_posn] = field;
 		}
-		list_add(&row->fields, &field->list);
+		dm_list_add(&row->fields, &field->list);
 	}
 
 	if (!(rh->flags & DM_REPORT_OUTPUT_BUFFERED))
@@ -686,7 +686,7 @@ static int _report_headings(struct dm_report *rh)
 	}
 
 	/* First heading line */
-	list_iterate_items(fp, &rh->field_props) {
+	dm_list_iterate_items(fp, &rh->field_props) {
 		if (fp->flags & FLD_HIDDEN)
 			continue;
 
@@ -706,7 +706,7 @@ static int _report_headings(struct dm_report *rh)
 			goto bad;
 		}
 
-		if (!list_end(&rh->field_props, &fp->list))
+		if (!dm_list_end(&rh->field_props, &fp->list))
 			if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
 				log_error("dm_report: Failed to generate report headings for printing");
 				goto bad;
@@ -778,19 +778,19 @@ static int _sort_rows(struct dm_report *rh)
 	struct row *row;
 
 	if (!(rows = dm_pool_alloc(rh->mem, sizeof(**rows) *
-				list_size(&rh->rows)))) {
+				dm_list_size(&rh->rows)))) {
 		log_error("dm_report: sort array allocation failed");
 		return 0;
 	}
 
-	list_iterate_items(row, &rh->rows)
+	dm_list_iterate_items(row, &rh->rows)
 		(*rows)[count++] = row;
 
 	qsort(rows, count, sizeof(**rows), _row_compare);
 
-	list_init(&rh->rows);
+	dm_list_init(&rh->rows);
 	while (count--)
-		list_add_h(&rh->rows, &(*rows)[count]->list);
+		dm_list_add_h(&rh->rows, &(*rows)[count]->list);
 
 	return 1;
 }
@@ -891,11 +891,11 @@ static int _output_as_rows(struct dm_report *rh)
 		return 0;
 	}
 
-	list_iterate_items(fp, &rh->field_props) {
+	dm_list_iterate_items(fp, &rh->field_props) {
 		if (fp->flags & FLD_HIDDEN) {
-			list_iterate_items(row, &rh->rows) {
-				field = list_item(list_first(&row->fields), struct dm_report_field);
-				list_del(&field->list);
+			dm_list_iterate_items(row, &rh->rows) {
+				field = dm_list_item(dm_list_first(&row->fields), struct dm_report_field);
+				dm_list_del(&field->list);
 			}
 			continue;
 		}
@@ -911,14 +911,14 @@ static int _output_as_rows(struct dm_report *rh)
 			}
 		}
 
-		list_iterate_items(row, &rh->rows) {
-			if ((field = list_item(list_first(&row->fields), struct dm_report_field))) {
+		dm_list_iterate_items(row, &rh->rows) {
+			if ((field = dm_list_item(dm_list_first(&row->fields), struct dm_report_field))) {
 				if (!_output_field(rh, field))
 					goto bad;
-				list_del(&field->list);
+				dm_list_del(&field->list);
 			}
 
-			if (!list_end(&rh->rows, &row->list))
+			if (!dm_list_end(&rh->rows, &row->list))
 				if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
 					log_error("dm_report: Unable to extend output line");
 					goto bad;
@@ -941,7 +941,7 @@ static int _output_as_rows(struct dm_report *rh)
 
 static int _output_as_columns(struct dm_report *rh)
 {
-	struct list *fh, *rowh, *ftmp, *rtmp;
+	struct dm_list *fh, *rowh, *ftmp, *rtmp;
 	struct row *row = NULL;
 	struct dm_report_field *field;
 
@@ -950,34 +950,34 @@ static int _output_as_columns(struct dm_report *rh)
 		_report_headings(rh);
 
 	/* Print and clear buffer */
-	list_iterate_safe(rowh, rtmp, &rh->rows) {
+	dm_list_iterate_safe(rowh, rtmp, &rh->rows) {
 		if (!dm_pool_begin_object(rh->mem, 512)) {
 			log_error("dm_report: Unable to allocate output line");
 			return 0;
 		}
-		row = list_item(rowh, struct row);
-		list_iterate_safe(fh, ftmp, &row->fields) {
-			field = list_item(fh, struct dm_report_field);
+		row = dm_list_item(rowh, struct row);
+		dm_list_iterate_safe(fh, ftmp, &row->fields) {
+			field = dm_list_item(fh, struct dm_report_field);
 			if (field->props->flags & FLD_HIDDEN)
 				continue;
 
 			if (!_output_field(rh, field))
 				goto bad;
 
-			if (!list_end(&row->fields, fh))
+			if (!dm_list_end(&row->fields, fh))
 				if (!dm_pool_grow_object(rh->mem, rh->separator, 0)) {
 					log_error("dm_report: Unable to extend output line");
 					goto bad;
 				}
 
-			list_del(&field->list);
+			dm_list_del(&field->list);
 		}
 		if (!dm_pool_grow_object(rh->mem, "\0", 1)) {
 			log_error("dm_report: Unable to terminate output line");
 			goto bad;
 		}
 		log_print("%s", (char *) dm_pool_end_object(rh->mem));
-		list_del(&row->list);
+		dm_list_del(&row->list);
 	}
 
 	if (row)
@@ -992,7 +992,7 @@ static int _output_as_columns(struct dm_report *rh)
 
 int dm_report_output(struct dm_report *rh)
 {
-	if (list_empty(&rh->rows))
+	if (dm_list_empty(&rh->rows))
 		return 1;
 
 	if ((rh->flags & RH_SORT_REQUIRED))

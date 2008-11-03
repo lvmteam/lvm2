@@ -261,7 +261,7 @@ struct volume_group *backup_read_vg(struct cmd_context *cmd,
 		return NULL;
 	}
 
-	list_iterate_items(mda, &tf->metadata_areas) {
+	dm_list_iterate_items(mda, &tf->metadata_areas) {
 		if (!(vg = mda->ops->vg_read(tf, vg_name, mda)))
 			stack;
 		break;
@@ -291,7 +291,7 @@ int backup_restore_vg(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	/* Add any metadata areas on the PVs */
-	list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 		if (!(info = info_from_pvid(pv->dev->pvid, 0))) {
 			log_error("PV %s missing from cache",
@@ -366,7 +366,7 @@ int backup_to_file(const char *file, const char *desc, struct volume_group *vg)
 	}
 
 	/* Write and commit the metadata area */
-	list_iterate_items(mda, &tf->metadata_areas) {
+	dm_list_iterate_items(mda, &tf->metadata_areas) {
 		if (!(r = mda->ops->vg_write(tf, vg, mda))) {
 			stack;
 			continue;

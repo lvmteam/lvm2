@@ -27,7 +27,7 @@
 #define PRIpid_t PRId32
 
 struct str_list {
-	struct list list;
+	struct dm_list list;
 	const char *str;
 };
 
