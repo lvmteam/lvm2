@@ -135,3 +135,16 @@ dm_report_field_set_value
 dm_report_set_output_field_name_prefix
 dm_regex_create
 dm_regex_match
+dm_list_init
+dm_list_add
+dm_list_add_h
+dm_list_del
+dm_list_move
+dm_list_empty
+dm_list_start
+dm_list_end
+dm_list_first
+dm_list_last
+dm_list_prev
+dm_list_next
+dm_list_size
