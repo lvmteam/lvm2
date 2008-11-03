@@ -572,7 +572,7 @@ void vgdisplay_extents(const struct volume_group *vg __attribute((unused)))
 
 void vgdisplay_full(const struct volume_group *vg)
 {
-	uint32_t access;
+	uint32_t access_str;
 	uint32_t active_pvs;
 	uint32_t lv_count = 0;
 	struct lv_list *lvl;
@@ -589,12 +589,12 @@ void vgdisplay_full(const struct volume_group *vg)
 			  list_size(&vg->fid->metadata_areas));
 		log_print("Metadata Sequence No  %d", vg->seqno);
 	}
-	access = vg->status & (LVM_READ | LVM_WRITE);
+	access_str = vg->status & (LVM_READ | LVM_WRITE);
 	log_print("VG Access             %s%s%s%s",
-		  access == (LVM_READ | LVM_WRITE) ? "read/write" : "",
-		  access == LVM_READ ? "read" : "",
-		  access == LVM_WRITE ? "write" : "",
-		  access == 0 ? "error" : "");
+		  access_str == (LVM_READ | LVM_WRITE) ? "read/write" : "",
+		  access_str == LVM_READ ? "read" : "",
+		  access_str == LVM_WRITE ? "write" : "",
+		  access_str == 0 ? "error" : "");
 	log_print("VG Status             %s%sresizable",
 		  vg->status & EXPORTED_VG ? "exported/" : "",
 		  vg->status & RESIZEABLE_VG ? "" : "NOT ");
@@ -658,7 +658,7 @@ void vgdisplay_colons(const struct volume_group *vg)
 	uint32_t active_pvs;
 	uint32_t lv_count;
 	struct lv_list *lvl;
-	const char *access;
+	const char *access_str;
 	char uuid[64] __attribute((aligned(8)));
 
 	active_pvs = vg->pv_count - vg_missing_pv_count(vg);
@@ -669,16 +669,16 @@ void vgdisplay_colons(const struct volume_group *vg)
 
 	switch (vg->status & (LVM_READ | LVM_WRITE)) {
 		case LVM_READ | LVM_WRITE:
-			access = "r/w";
+			access_str = "r/w";
 			break;
 		case LVM_READ:
-			access = "r";
+			access_str = "r";
 			break;
 		case LVM_WRITE:
-			access = "w";
+			access_str = "w";
 			break;
 		default:
-			access = "";
+			access_str = "";
 	}
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid))) {
@@ -689,7 +689,7 @@ void vgdisplay_colons(const struct volume_group *vg)
 	log_print("%s:%s:%d:-1:%u:%u:%u:-1:%u:%u:%u:%" PRIu64 ":%" PRIu32
 		  ":%u:%u:%u:%s",
 		vg->name,
-		access,
+		access_str,
 		vg->status,
 		/* internal volume group number; obsolete */
 		vg->max_lv,

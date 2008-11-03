@@ -13,7 +13,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "lib.h"
+#include "dmlib.h"
 
 struct dm_hash_node {
 	struct dm_hash_node *next;
