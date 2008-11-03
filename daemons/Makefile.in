@@ -20,8 +20,10 @@ ifneq ("@CLVMD@", "none")
 endif
 
 ifeq ("@DMEVENTD@", "yes")
-  SUBDIRS += dmeventd/plugins
+  SUBDIRS += dmeventd
 endif
+
+device-mapper: dmeventd
 
 include $(top_srcdir)/make.tmpl
 

@@ -18,6 +18,7 @@ VPATH = @srcdir@
 SOURCES = libdevmapper-event.c
 
 LIB_STATIC = libdevmapper-event.a
+LIB_VERSION = $(LIB_VERSION_DM)
 
 ifeq ("@LIB_SUFFIX@","dylib")
   LIB_SHARED = libdevmapper-event.dylib
@@ -29,7 +30,13 @@ endif
 TARGETS = dmeventd
 CLEAN_TARGETS = dmeventd.o
 
-include ../make.tmpl
+ifneq ($(MAKECMDGOALS),device-mapper)
+  SUBDIRS+=plugins
+endif
+
+include $(top_srcdir)/make.tmpl
+
+all: dmeventd
 
 LDFLAGS += -ldl -ldevmapper -lpthread
 CLDFLAGS += -ldl -ldevmapper -lpthread

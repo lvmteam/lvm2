@@ -25,7 +25,7 @@
 #include "list.h"
 #include "dmeventd.h"
 //#include "libmultilog.h"
-#include "log.h"
+#include "dm-logging.h"
 
 #include <dlfcn.h>
 #include <errno.h>
