@@ -277,12 +277,12 @@ static int _check_lvd(struct lv_disk *lvd)
 
 static int _read_lvs(struct disk_list *data)
 {
-	unsigned int i, read = 0;
+	unsigned int i, lvs_read = 0;
 	uint64_t pos;
 	struct lvd_list *ll;
 	struct vg_disk *vgd = &data->vgd;
 
-	for (i = 0; (i < vgd->lv_max) && (read < vgd->lv_cur); i++) {
+	for (i = 0; (i < vgd->lv_max) && (lvs_read < vgd->lv_cur); i++) {
 		pos = data->pvd.lv_on_disk.base + (i * sizeof(struct lv_disk));
 		ll = dm_pool_alloc(data->mem, sizeof(*ll));
 
@@ -295,7 +295,7 @@ static int _read_lvs(struct disk_list *data)
 		if (!_check_lvd(&ll->lvd))
 			continue;
 
-		read++;
+		lvs_read++;
 		list_add(&data->lvds, &ll->list);
 	}
 
