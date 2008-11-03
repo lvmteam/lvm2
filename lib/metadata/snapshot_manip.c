@@ -90,14 +90,14 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 
 	cow->status &= ~VISIBLE_LV;
 
-	list_add(&origin->snapshot_segs, &seg->origin_list);
+	dm_list_add(&origin->snapshot_segs, &seg->origin_list);
 
 	return 1;
 }
 
 int vg_remove_snapshot(struct logical_volume *cow)
 {
-	list_del(&cow->snapshot->origin_list);
+	dm_list_del(&cow->snapshot->origin_list);
 	cow->snapshot->origin->origin_count--;
 
 	if (!lv_remove(cow->snapshot->lv)) {

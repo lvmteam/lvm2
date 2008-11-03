@@ -226,8 +226,8 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 	char *pv_name;
 
 	struct pv_list *pvl;
-	struct list *pvslist;
-	struct list mdas;
+	struct dm_list *pvslist;
+	struct dm_list mdas;
 
 	if (arg_count(cmd, allocatable_ARG) + arg_count(cmd, addtag_ARG) +
 	    arg_count(cmd, deltag_ARG) + arg_count(cmd, uuid_ARG) != 1) {
@@ -250,7 +250,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		log_verbose("Using physical volume(s) on command line");
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
-			list_init(&mdas);
+			dm_list_init(&mdas);
 			if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1))) {
 				log_error("Failed to read physical volume %s",
 					  pv_name);
@@ -263,7 +263,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			 * means checking every VG by scanning every
 			 * PV on the system.
 			 */
-			if (is_orphan(pv) && !list_size(&mdas)) {
+			if (is_orphan(pv) && !dm_list_size(&mdas)) {
 				if (!scan_vgs_for_pvs(cmd)) {
 					log_error("Rescan for PVs without "
 						  "metadata areas failed.");
@@ -287,7 +287,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 
-		list_iterate_items(pvl, pvslist) {
+		dm_list_iterate_items(pvl, pvslist) {
 			total++;
 			done += _pvchange_single(cmd, pvl->pv, NULL);
 		}

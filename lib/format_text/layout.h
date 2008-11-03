@@ -29,7 +29,7 @@ struct disk_locn {
 
 /* Data areas (holding PEs) */
 struct data_area_list {
-	struct list list;
+	struct dm_list list;
 	struct disk_locn disk_locn;
 };
 
@@ -67,8 +67,8 @@ struct mda_header {
 } __attribute__ ((packed));
 
 struct mda_lists {
-	struct list dirs;
-	struct list raws;
+	struct dm_list dirs;
+	struct dm_list raws;
 	struct metadata_area_ops *file_ops;
 	struct metadata_area_ops *raw_ops;
 };

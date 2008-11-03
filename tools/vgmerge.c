@@ -52,23 +52,23 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 	drop_cached_metadata(vg_from);
 
 	/* Merge volume groups */
-	while (!list_empty(&vg_from->pvs)) {
-		struct list *pvh = vg_from->pvs.n;
+	while (!dm_list_empty(&vg_from->pvs)) {
+		struct dm_list *pvh = vg_from->pvs.n;
 		struct physical_volume *pv;
 
-		list_move(&vg_to->pvs, pvh);
+		dm_list_move(&vg_to->pvs, pvh);
 
-		pv = list_item(pvh, struct pv_list)->pv;
+		pv = dm_list_item(pvh, struct pv_list)->pv;
 		pv->vg_name = dm_pool_strdup(cmd->mem, vg_to->name);
 	}
 	vg_to->pv_count += vg_from->pv_count;
 
 	/* Fix up LVIDs */
-	list_iterate_items(lvl1, &vg_to->lvs) {
+	dm_list_iterate_items(lvl1, &vg_to->lvs) {
 		union lvid *lvid1 = &lvl1->lv->lvid;
 		char uuid[64] __attribute((aligned(8)));
 
-		list_iterate_items(lvl2, &vg_from->lvs) {
+		dm_list_iterate_items(lvl2, &vg_from->lvs) {
 			union lvid *lvid2 = &lvl2->lv->lvid;
 
 			if (id_equal(&lvid1->id[1], &lvid2->id[1])) {
@@ -88,16 +88,16 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 		}
 	}
 
-	while (!list_empty(&vg_from->lvs)) {
-		struct list *lvh = vg_from->lvs.n;
+	while (!dm_list_empty(&vg_from->lvs)) {
+		struct dm_list *lvh = vg_from->lvs.n;
 
-		list_move(&vg_to->lvs, lvh);
+		dm_list_move(&vg_to->lvs, lvh);
 	}
 
-	while (!list_empty(&vg_from->fid->metadata_areas)) {
-		struct list *mdah = vg_from->fid->metadata_areas.n;
+	while (!dm_list_empty(&vg_from->fid->metadata_areas)) {
+		struct dm_list *mdah = vg_from->fid->metadata_areas.n;
 
-		list_move(&vg_to->fid->metadata_areas, mdah);
+		dm_list_move(&vg_to->fid->metadata_areas, mdah);
 	}
 
 	vg_to->lv_count += vg_from->lv_count;

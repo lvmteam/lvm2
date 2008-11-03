@@ -80,7 +80,7 @@ static int _lvm1_read(struct labeller *l, struct device *dev, void *buf,
 	*label = info->label;
 
 	info->device_size = xlate32(pvd->pv_size) << SECTOR_SHIFT;
-	list_init(&info->mdas);
+	dm_list_init(&info->mdas);
 
 	info->status &= ~CACHE_INVALID;
 

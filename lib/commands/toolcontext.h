@@ -57,8 +57,8 @@ struct cmd_context {
 	const struct format_type *fmt;	/* Current format to use by default */
 	struct format_type *fmt_backup;	/* Format to use for backups */
 
-	struct list formats;	/* Available formats */
-	struct list segtypes;	/* Available segment types */
+	struct dm_list formats;	/* Available formats */
+	struct dm_list segtypes;	/* Available segment types */
 	const char *hostname;
 	const char *kernel_vsn;
 
@@ -74,7 +74,7 @@ struct cmd_context {
 	struct dev_filter *filter;
 	int dump_filter;	/* Dump filter when exiting? */
 
-	struct list config_files;
+	struct dm_list config_files;
 	int config_valid;
 	struct config_tree *cft;
 	struct config_tree *cft_override;
@@ -86,7 +86,7 @@ struct cmd_context {
 	const char *stripe_filler;
 
 	/* List of defined tags */
-	struct list tags;
+	struct dm_list tags;
 	int hosttags;
 
 	char sys_dir[PATH_MAX];

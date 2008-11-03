@@ -50,12 +50,12 @@ struct text_fid_context {
 };
 
 struct dir_list {
-	struct list list;
+	struct dm_list list;
 	char dir[0];
 };
 
 struct raw_list {
-	struct list list;
+	struct dm_list list;
 	struct device_area dev_area;
 };
 
@@ -96,7 +96,7 @@ static int _mda_in_vg_raw(struct format_instance *fid __attribute((unused)),
 	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
 	struct pv_list *pvl;
 
-	list_iterate_items(pvl, &vg->pvs)
+	dm_list_iterate_items(pvl, &vg->pvs)
 		if (pvl->pv->dev == mdac->area.dev)
 			return 1;
 
@@ -518,7 +518,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 	int noprecommit = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
-	list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (pvl->pv->dev == mdac->area.dev) {
 			found = 1;
 			break;
@@ -626,7 +626,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	int noprecommit = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
-	list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (pvl->pv->dev == mdac->area.dev) {
 			found = 1;
 			break;
@@ -718,7 +718,7 @@ static int _vg_revert_raw(struct format_instance *fid, struct volume_group *vg,
 	int found = 0;
 
 	/* Ignore any mda on a PV outside the VG. vgsplit relies on this */
-	list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (pvl->pv->dev == mdac->area.dev) {
 			found = 1;
 			break;
@@ -981,7 +981,7 @@ static int _scan_file(const struct format_type *fmt)
 {
 	struct dirent *dirent;
 	struct dir_list *dl;
-	struct list *dir_list;
+	struct dm_list *dir_list;
 	char *tmp;
 	DIR *d;
 	struct volume_group *vg;
@@ -991,7 +991,7 @@ static int _scan_file(const struct format_type *fmt)
 
 	dir_list = &((struct mda_lists *) fmt->private)->dirs;
 
-	list_iterate_items(dl, dir_list) {
+	dm_list_iterate_items(dl, dir_list) {
 		if (!(d = opendir(dl->dir))) {
 			log_sys_error("opendir", dl->dir);
 			continue;
@@ -1126,7 +1126,7 @@ const char *vgname_from_mda(const struct format_type *fmt,
 static int _scan_raw(const struct format_type *fmt)
 {
 	struct raw_list *rl;
-	struct list *raw_list;
+	struct dm_list *raw_list;
 	const char *vgname;
 	struct volume_group *vg;
 	struct format_instance fid;
@@ -1136,9 +1136,9 @@ static int _scan_raw(const struct format_type *fmt)
 	raw_list = &((struct mda_lists *) fmt->private)->raws;
 
 	fid.fmt = fmt;
-	list_init(&fid.metadata_areas);
+	dm_list_init(&fid.metadata_areas);
 
-	list_iterate_items(rl, raw_list) {
+	dm_list_iterate_items(rl, raw_list) {
 		/* FIXME We're reading mdah twice here... */
 		if ((vgname = vgname_from_mda(fmt, &rl->dev_area, &vgid, &vgstatus,
 					      NULL, NULL))) {
@@ -1161,7 +1161,7 @@ static int _text_scan(const struct format_type *fmt)
 static int _mda_setup(const struct format_type *fmt,
 		      uint64_t pe_start, uint64_t pe_end,
 		      int pvmetadatacopies,
-		      uint64_t pvmetadatasize, struct list *mdas,
+		      uint64_t pvmetadatasize, struct dm_list *mdas,
 		      struct physical_volume *pv,
 		      struct volume_group *vg __attribute((unused)))
 {
@@ -1289,7 +1289,7 @@ static int _mda_setup(const struct format_type *fmt,
 /* Only for orphans */
 /* Set label_sector to -1 if rewriting existing label into same sector */
 static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv,
-		     struct list *mdas, int64_t label_sector)
+		     struct dm_list *mdas, int64_t label_sector)
 {
 	struct label *label;
 	struct lvmcache_info *info;
@@ -1318,8 +1318,8 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		if (info->mdas.n)
 			del_mdas(&info->mdas);
 		else
-			list_init(&info->mdas);
-		list_iterate_items(mda, mdas) {
+			dm_list_init(&info->mdas);
+		dm_list_iterate_items(mda, mdas) {
 			mdac = mda->metadata_locn;
 			log_debug("Creating metadata area on %s at sector %"
 				  PRIu64 " size %" PRIu64 " sectors",
@@ -1331,18 +1331,18 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		}
 		/* FIXME Temporary until mda creation supported by tools */
 	} else if (!info->mdas.n) {
-		list_init(&info->mdas);
+		dm_list_init(&info->mdas);
 	}
 
 	if (info->das.n)
 		del_das(&info->das);
 	else
-		list_init(&info->das);
+		dm_list_init(&info->das);
 
 	/* Set pe_start to first aligned sector after any metadata
 	 * areas that begin before pe_start */
 	pv->pe_start = pe_align(pv);
-	list_iterate_items(mda, &info->mdas) {
+	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
 		    (mdac->area.start <= (pv->pe_start << SECTOR_SHIFT)) &&
@@ -1362,7 +1362,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	if (!dev_open(pv->dev))
 		return_0;
 
-	list_iterate_items(mda, &info->mdas) {
+	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = mda->metadata_locn;
 		memset(&buf, 0, sizeof(buf));
 		mdah->size = mdac->area.size;
@@ -1385,12 +1385,12 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	return 1;
 }
 
-static int _add_raw(struct list *raw_list, struct device_area *dev_area)
+static int _add_raw(struct dm_list *raw_list, struct device_area *dev_area)
 {
 	struct raw_list *rl;
 
 	/* Already present? */
-	list_iterate_items(rl, raw_list) {
+	dm_list_iterate_items(rl, raw_list) {
 		/* FIXME Check size/overlap consistency too */
 		if (rl->dev_area.dev == dev_area->dev &&
 		    rl->dev_area.start == dev_area->start)
@@ -1402,7 +1402,7 @@ static int _add_raw(struct list *raw_list, struct device_area *dev_area)
 		return 0;
 	}
 	memcpy(&rl->dev_area, dev_area, sizeof(*dev_area));
-	list_add(raw_list, &rl->list);
+	dm_list_add(raw_list, &rl->list);
 
 	return 1;
 }
@@ -1444,20 +1444,20 @@ static int _populate_pv_fields(struct lvmcache_info *info,
 	memcpy(&pv->id, &info->dev->pvid, sizeof(pv->id));
 
 	/* Currently only support exactly one data area */
-	if (list_size(&info->das) != 1) {
+	if (dm_list_size(&info->das) != 1) {
 		log_error("Must be exactly one data area (found %d) on PV %s",
-			  list_size(&info->das), dev_name(info->dev));
+			  dm_list_size(&info->das), dev_name(info->dev));
 		return 0;
 	}
 
-	list_iterate_items(da, &info->das)
+	dm_list_iterate_items(da, &info->das)
 		pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
 
 	return 1;
 }
 
 static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct list *mdas)
+		    struct physical_volume *pv, struct dm_list *mdas)
 {
 	struct label *label;
 	struct device *dev;
@@ -1479,7 +1479,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		return 1;
 
 	/* Add copy of mdas to supplied list */
-	list_iterate_items(mda, &info->mdas) {
+	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (!(mda_new = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda_new)))) {
 			log_error("metadata_area allocation failed");
@@ -1492,7 +1492,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		memcpy(mda_new, mda, sizeof(*mda));
 		memcpy(mdac_new, mdac, sizeof(*mdac));
 		mda_new->metadata_locn = mdac_new;
-		list_add(mdas, &mda_new->list);
+		dm_list_add(mdas, &mda_new->list);
 	}
 
 	return 1;
@@ -1503,22 +1503,22 @@ static void _text_destroy_instance(struct format_instance *fid __attribute((unus
 	return;
 }
 
-static void _free_dirs(struct list *dir_list)
+static void _free_dirs(struct dm_list *dir_list)
 {
-	struct list *dl, *tmp;
+	struct dm_list *dl, *tmp;
 
-	list_iterate_safe(dl, tmp, dir_list) {
-		list_del(dl);
+	dm_list_iterate_safe(dl, tmp, dir_list) {
+		dm_list_del(dl);
 		dm_free(dl);
 	}
 }
 
-static void _free_raws(struct list *raw_list)
+static void _free_raws(struct dm_list *raw_list)
 {
-	struct list *rl, *tmp;
+	struct dm_list *rl, *tmp;
 
-	list_iterate_safe(rl, tmp, raw_list) {
-		list_del(rl);
+	dm_list_iterate_safe(rl, tmp, raw_list) {
+		dm_list_del(rl);
 		dm_free(rl);
 	}
 }
@@ -1567,12 +1567,12 @@ static int _text_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
 		     uint32_t extent_size,
 		     int pvmetadatacopies,
-		     uint64_t pvmetadatasize, struct list *mdas,
+		     uint64_t pvmetadatasize, struct dm_list *mdas,
 		     struct physical_volume *pv, struct volume_group *vg)
 {
 	struct metadata_area *mda, *mda_new, *mda2;
 	struct mda_context *mdac, *mdac_new, *mdac2;
-	struct list *pvmdas;
+	struct dm_list *pvmdas;
 	struct lvmcache_info *info;
 	int found;
 	uint64_t pe_end = 0;
@@ -1588,7 +1588,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 		/* Iterate through all mdas on this PV */
 		if ((info = info_from_pvid(pv->dev->pvid, 0))) {
 			pvmdas = &info->mdas;
-			list_iterate_items(mda, pvmdas) {
+			dm_list_iterate_items(mda, pvmdas) {
 				mda_count++;
 				mdac =
 				    (struct mda_context *) mda->metadata_locn;
@@ -1601,7 +1601,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 
 				/* Ensure it isn't already on list */
 				found = 0;
-				list_iterate_items(mda2, mdas) {
+				dm_list_iterate_items(mda2, mdas) {
 					if (mda2->ops !=
 					    &_metadata_text_raw_ops) continue;
 					mdac2 =
@@ -1628,7 +1628,7 @@ static int _text_pv_setup(const struct format_type *fmt,
 				memcpy(mda_new, mda, sizeof(*mda));
 				memcpy(mdac_new, mdac, sizeof(*mdac));
 				mda_new->metadata_locn = mdac_new;
-				list_add(mdas, &mda_new->list);
+				dm_list_add(mdas, &mda_new->list);
 			}
 		}
 
@@ -1678,7 +1678,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	struct mda_context *mdac, *mdac_new;
 	struct dir_list *dl;
 	struct raw_list *rl;
-	struct list *dir_list, *raw_list, *mdas;
+	struct dm_list *dir_list, *raw_list, *mdas;
 	char path[PATH_MAX];
 	struct lvmcache_vginfo *vginfo;
 	struct lvmcache_info *info;
@@ -1698,18 +1698,18 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 	fid->private = (void *) fidtc;
 
 	fid->fmt = fmt;
-	list_init(&fid->metadata_areas);
+	dm_list_init(&fid->metadata_areas);
 
 	if (!vgname) {
 		if (!(mda = dm_pool_alloc(fmt->cmd->mem, sizeof(*mda))))
 			return_NULL;
 		mda->ops = &_metadata_text_file_backup_ops;
 		mda->metadata_locn = context;
-		list_add(&fid->metadata_areas, &mda->list);
+		dm_list_add(&fid->metadata_areas, &mda->list);
 	} else {
 		dir_list = &((struct mda_lists *) fmt->private)->dirs;
 
-		list_iterate_items(dl, dir_list) {
+		dm_list_iterate_items(dl, dir_list) {
 			if (dm_snprintf(path, PATH_MAX, "%s/%s",
 					 dl->dir, vgname) < 0) {
 				log_error("Name too long %s/%s", dl->dir,
@@ -1722,12 +1722,12 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 				return_NULL;
 			mda->ops = &_metadata_text_file_ops;
 			mda->metadata_locn = context;
-			list_add(&fid->metadata_areas, &mda->list);
+			dm_list_add(&fid->metadata_areas, &mda->list);
 		}
 
 		raw_list = &((struct mda_lists *) fmt->private)->raws;
 
-		list_iterate_items(rl, raw_list) {
+		dm_list_iterate_items(rl, raw_list) {
 			/* FIXME Cache this; rescan below if some missing */
 			if (!_raw_holds_vgname(fid, &rl->dev_area, vgname))
 				continue;
@@ -1742,16 +1742,16 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 			memcpy(&mdac->area, &rl->dev_area, sizeof(mdac->area));
 			mda->ops = &_metadata_text_raw_ops;
 			/* FIXME MISTAKE? mda->metadata_locn = context; */
-			list_add(&fid->metadata_areas, &mda->list);
+			dm_list_add(&fid->metadata_areas, &mda->list);
 		}
 
 		/* Scan PVs in VG for any further MDAs */
 		lvmcache_label_scan(fmt->cmd, 0);
 		if (!(vginfo = vginfo_from_vgname(vgname, vgid)))
 			goto_out;
-		list_iterate_items(info, &vginfo->infos) {
+		dm_list_iterate_items(info, &vginfo->infos) {
 			mdas = &info->mdas;
-			list_iterate_items(mda, mdas) {
+			dm_list_iterate_items(mda, mdas) {
 				mdac =
 				    (struct mda_context *) mda->metadata_locn;
 
@@ -1767,7 +1767,7 @@ static struct format_instance *_text_create_text_instance(const struct format_ty
 				memcpy(mda_new, mda, sizeof(*mda));
 				memcpy(mdac_new, mdac, sizeof(*mdac));
 				mda_new->metadata_locn = mdac_new;
-				list_add(&fid->metadata_areas, &mda_new->list);
+				dm_list_add(&fid->metadata_areas, &mda_new->list);
 			}
 		}
 		/* FIXME Check raw metadata area count - rescan if required */
@@ -1827,18 +1827,18 @@ static struct format_handler _text_handler = {
 	.destroy = _text_destroy
 };
 
-static int _add_dir(const char *dir, struct list *dir_list)
+static int _add_dir(const char *dir, struct dm_list *dir_list)
 {
 	struct dir_list *dl;
 
 	if (dm_create_dir(dir)) {
-		if (!(dl = dm_malloc(sizeof(struct list) + strlen(dir) + 1))) {
+		if (!(dl = dm_malloc(sizeof(struct dm_list) + strlen(dir) + 1))) {
 			log_error("_add_dir allocation failed");
 			return 0;
 		}
 		log_very_verbose("Adding text format metadata dir: %s", dir);
 		strcpy(dl->dir, dir);
-		list_add(dir_list, &dl->list);
+		dm_list_add(dir_list, &dl->list);
 		return 1;
 	}
 
@@ -1846,7 +1846,7 @@ static int _add_dir(const char *dir, struct list *dir_list)
 }
 
 static int _get_config_disk_area(struct cmd_context *cmd,
-				 struct config_node *cn, struct list *raw_list)
+				 struct config_node *cn, struct dm_list *raw_list)
 {
 	struct device_area dev_area;
 	char *id_str;
@@ -1922,8 +1922,8 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 		return NULL;
 	}
 
-	list_init(&mda_lists->dirs);
-	list_init(&mda_lists->raws);
+	dm_list_init(&mda_lists->dirs);
+	dm_list_init(&mda_lists->raws);
 	mda_lists->file_ops = &_metadata_text_file_ops;
 	mda_lists->raw_ops = &_metadata_text_raw_ops;
 	fmt->private = (void *) mda_lists;

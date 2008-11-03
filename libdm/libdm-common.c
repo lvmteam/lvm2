@@ -506,10 +506,10 @@ static int _do_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	return 1;
 }
 
-static LIST_INIT(_node_ops);
+static DM_LIST_INIT(_node_ops);
 
 struct node_op_parms {
-	struct list list;
+	struct dm_list list;
 	node_op_t type;
 	char *dev_name;
 	uint32_t major;
@@ -536,7 +536,7 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 			  uint32_t read_ahead_flags)
 {
 	struct node_op_parms *nop;
-	struct list *noph, *nopht;
+	struct dm_list *noph, *nopht;
 	size_t len = strlen(dev_name) + strlen(old_name) + 2;
 	char *pos;
 
@@ -544,10 +544,10 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	 * Ignore any outstanding operations on the node if deleting it
 	 */
 	if (type == NODE_DEL) {
-		list_iterate_safe(noph, nopht, &_node_ops) {
-			nop = list_item(noph, struct node_op_parms);
+		dm_list_iterate_safe(noph, nopht, &_node_ops) {
+			nop = dm_list_item(noph, struct node_op_parms);
 			if (!strcmp(dev_name, nop->dev_name)) {
-				list_del(&nop->list);
+				dm_list_del(&nop->list);
 				dm_free(nop);
 			}
 		}
@@ -571,22 +571,22 @@ static int _stack_node_op(node_op_t type, const char *dev_name, uint32_t major,
 	_store_str(&pos, &nop->dev_name, dev_name);
 	_store_str(&pos, &nop->old_name, old_name);
 
-	list_add(&_node_ops, &nop->list);
+	dm_list_add(&_node_ops, &nop->list);
 
 	return 1;
 }
 
 static void _pop_node_ops(void)
 {
-	struct list *noph, *nopht;
+	struct dm_list *noph, *nopht;
 	struct node_op_parms *nop;
 
-	list_iterate_safe(noph, nopht, &_node_ops) {
-		nop = list_item(noph, struct node_op_parms);
+	dm_list_iterate_safe(noph, nopht, &_node_ops) {
+		nop = dm_list_item(noph, struct node_op_parms);
 		_do_node_op(nop->type, nop->dev_name, nop->major, nop->minor,
 			    nop->uid, nop->gid, nop->mode, nop->old_name,
 			    nop->read_ahead, nop->read_ahead_flags);
-		list_del(&nop->list);
+		dm_list_del(&nop->list);
 		dm_free(nop);
 	}
 }

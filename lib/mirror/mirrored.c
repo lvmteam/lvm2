@@ -512,7 +512,7 @@ static int _target_unmonitor_events(struct lv_segment *seg, int events)
 
 static int _mirrored_modules_needed(struct dm_pool *mem,
 				    const struct lv_segment *seg,
-				    struct list *modules)
+				    struct dm_list *modules)
 {
 	if (seg->log_lv &&
 	    !list_segment_modules(mem, first_seg(seg->log_lv), modules))

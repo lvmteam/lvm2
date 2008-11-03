@@ -22,7 +22,7 @@ struct segment_type *get_segtype_from_string(struct cmd_context *cmd,
 {
 	struct segment_type *segtype;
 
-	list_iterate_items(segtype, &cmd->segtypes) {
+	dm_list_iterate_items(segtype, &cmd->segtypes) {
 		if (!strcmp(segtype->name, str))
 			return segtype;
 	}

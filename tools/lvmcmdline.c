@@ -120,7 +120,7 @@ int metadatatype_arg(struct cmd_context *cmd, struct arg *a)
 
 	format = a->value;
 
-	list_iterate_items(fmt, &cmd->formats) {
+	dm_list_iterate_items(fmt, &cmd->formats) {
 		if (!strcasecmp(fmt->name, format) ||
 		    !strcasecmp(fmt->name + 3, format) ||
 		    (fmt->alias && !strcasecmp(fmt->alias, format))) {

@@ -69,7 +69,7 @@ static int _errseg_target_present(const struct lv_segment *seg __attribute((unus
 
 static int _errseg_modules_needed(struct dm_pool *mem,
 				  const struct lv_segment *seg __attribute((unused)),
-				  struct list *modules)
+				  struct dm_list *modules)
 {
 	if (!str_list_add(mem, modules, "error")) {
 		log_error("error module string list allocation failed");

@@ -261,7 +261,7 @@ static int _read_uuids(struct disk_list *data)
 		memcpy(ul->uuid, buffer, NAME_LEN);
 		ul->uuid[NAME_LEN - 1] = '\0';
 
-		list_add(&data->uuids, &ul->list);
+		dm_list_add(&data->uuids, &ul->list);
 
 		pos += NAME_LEN;
 		num_read++;
@@ -296,7 +296,7 @@ static int _read_lvs(struct disk_list *data)
 			continue;
 
 		lvs_read++;
-		list_add(&data->lvds, &ll->list);
+		dm_list_add(&data->lvds, &ll->list);
 	}
 
 	return 1;
@@ -336,7 +336,7 @@ static void __update_lvmcache(const struct format_type *fmt,
 	}
 
 	info->device_size = xlate32(dl->pvd.pv_size) << SECTOR_SHIFT;
-	list_init(&info->mdas);
+	dm_list_init(&info->mdas);
 	info->status &= ~CACHE_INVALID;
 }
 
@@ -352,8 +352,8 @@ static struct disk_list *__read_disk(const struct format_type *fmt,
 
 	dl->dev = dev;
 	dl->mem = mem;
-	list_init(&dl->uuids);
-	list_init(&dl->lvds);
+	dm_list_init(&dl->uuids);
+	dm_list_init(&dl->lvds);
 
 	if (!_read_pvd(dev, &dl->pvd))
 		goto_bad;
@@ -426,12 +426,12 @@ struct disk_list *read_disk(const struct format_type *fmt, struct device *dev,
 	return dl;
 }
 
-static void _add_pv_to_list(struct list *head, struct disk_list *data)
+static void _add_pv_to_list(struct dm_list *head, struct disk_list *data)
 {
 	struct pv_disk *pvd;
 	struct disk_list *diskl;
 
-	list_iterate_items(diskl, head) {
+	dm_list_iterate_items(diskl, head) {
 		pvd = &diskl->pvd;
 		if (!strncmp((char *)data->pvd.pv_uuid, (char *)pvd->pv_uuid,
 			     sizeof(pvd->pv_uuid))) {
@@ -443,11 +443,11 @@ static void _add_pv_to_list(struct list *head, struct disk_list *data)
 			}
 			log_very_verbose("Duplicate PV %s - using md %s",
 					 pvd->pv_uuid, dev_name(data->dev));
-			list_del(&diskl->list);
+			dm_list_del(&diskl->list);
 			break;
 		}
 	}
-	list_add(head, &data->list);
+	dm_list_add(head, &data->list);
 }
 
 /*
@@ -457,7 +457,7 @@ static void _add_pv_to_list(struct list *head, struct disk_list *data)
  */
 int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 		   struct dev_filter *filter, struct dm_pool *mem,
-		   struct list *head)
+		   struct dm_list *head)
 {
 	struct dev_iter *iter;
 	struct device *dev;
@@ -468,7 +468,7 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 	/* Fast path if we already saw this VG and cached the list of PVs */
 	if (vg_name && (vginfo = vginfo_from_vgname(vg_name, NULL)) &&
 	    vginfo->infos.n) {
-		list_iterate_items(info, &vginfo->infos) {
+		dm_list_iterate_items(info, &vginfo->infos) {
 			dev = info->dev;
 			if (dev && !(data = read_disk(fmt, dev, mem, vg_name)))
 				break;
@@ -478,11 +478,11 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 		/* Did we find the whole VG? */
 		if (!vg_name || is_orphan_vg(vg_name) ||
 		    (data && *data->pvd.vg_name &&
-		     list_size(head) == data->vgd.pv_cur))
+		     dm_list_size(head) == data->vgd.pv_cur))
 			return 1;
 
 		/* Failed */
-		list_init(head);
+		dm_list_init(head);
 		/* vgcache_del(vg_name); */
 	}
 
@@ -499,7 +499,7 @@ int read_pvs_in_vg(const struct format_type *fmt, const char *vg_name,
 	}
 	dev_iter_destroy(iter);
 
-	if (list_empty(head))
+	if (dm_list_empty(head))
 		return 0;
 
 	return 1;
@@ -528,7 +528,7 @@ static int _write_uuids(struct disk_list *data)
 	uint64_t pos = data->pvd.pv_uuidlist_on_disk.base;
 	uint64_t end = pos + data->pvd.pv_uuidlist_on_disk.size;
 
-	list_iterate_items(ul, &data->uuids) {
+	dm_list_iterate_items(ul, &data->uuids) {
 		if (pos >= end) {
 			log_error("Too many uuids to fit on %s",
 				  dev_name(data->dev));
@@ -576,7 +576,7 @@ static int _write_lvs(struct disk_list *data)
 		return 0;
 	}
 
-	list_iterate_items(ll, &data->lvds) {
+	dm_list_iterate_items(ll, &data->lvds) {
 		offset = sizeof(struct lv_disk) * ll->lvd.lv_number;
 		if (offset + sizeof(struct lv_disk) > data->pvd.lv_on_disk.size) {
 			log_error("lv_number %d too large", ll->lvd.lv_number);
@@ -719,11 +719,11 @@ static int _write_all_pvd(const struct format_type *fmt, struct disk_list *data)
  * little sanity checking, so make sure correct
  * data is passed to here.
  */
-int write_disks(const struct format_type *fmt, struct list *pvs)
+int write_disks(const struct format_type *fmt, struct dm_list *pvs)
 {
 	struct disk_list *dl;
 
-	list_iterate_items(dl, pvs) {
+	dm_list_iterate_items(dl, pvs) {
 		if (!(_write_all_pvd(fmt, dl)))
 			return_0;
 

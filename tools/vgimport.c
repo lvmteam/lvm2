@@ -44,7 +44,7 @@ static int vgimport_single(struct cmd_context *cmd __attribute((unused)),
 
 	vg->status &= ~EXPORTED_VG;
 
-	list_iterate_items(pvl, &vg->pvs) {
+	dm_list_iterate_items(pvl, &vg->pvs) {
 		pv = pvl->pv;
 		pv->status &= ~EXPORTED_VG;
 	}

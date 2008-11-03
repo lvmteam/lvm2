@@ -254,7 +254,7 @@ static int _target_unregister_events(struct lv_segment *seg,
 
 static int _snap_modules_needed(struct dm_pool *mem,
 				const struct lv_segment *seg __attribute((unused)),
-				struct list *modules)
+				struct dm_list *modules)
 {
 	if (!str_list_add(mem, modules, "snapshot")) {
 		log_error("snapshot string list allocation failed");

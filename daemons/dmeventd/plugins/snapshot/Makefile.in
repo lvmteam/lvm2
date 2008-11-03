@@ -27,6 +27,8 @@ else
   LIB_SHARED = libdevmapper-event-lvm2snapshot.so
 endif
 
+LIB_VERSION = $(LIB_VERSION_LVM)
+
 include $(top_srcdir)/make.tmpl
 
 install: libdevmapper-event-lvm2snapshot.$(LIB_SUFFIX)

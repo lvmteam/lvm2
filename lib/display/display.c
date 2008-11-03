@@ -266,7 +266,7 @@ void pvdisplay_segments(const struct physical_volume *pv)
 	if (pv->pe_size)
 		log_print("--- Physical Segments ---");
 
-	list_iterate_items(pvseg, &pv->segments) {
+	dm_list_iterate_items(pvseg, &pv->segments) {
 		log_print("Physical extent %u to %u:",
 			  pvseg->pe, pvseg->pe + pvseg->len - 1);
 
@@ -425,7 +425,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	if (lv_is_origin(lv)) {
 		log_print("LV snapshot status     source of");
 
-		list_iterate_items_gen(snap_seg, &lv->snapshot_segs,
+		dm_list_iterate_items_gen(snap_seg, &lv->snapshot_segs,
 				       origin_list) {
 			if (inkernel &&
 			    (snap_active = lv_snapshot_percent(snap_seg->cow,
@@ -483,7 +483,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 			  display_size(cmd, (uint64_t) snap_seg->chunk_size));
 	}
 
-	log_print("Segments               %u", list_size(&lv->segments));
+	log_print("Segments               %u", dm_list_size(&lv->segments));
 
 /********* FIXME Stripes & stripesize for each segment
 	log_print("Stripe size (KByte)    %u", lv->stripesize / 2);
@@ -551,7 +551,7 @@ int lvdisplay_segments(const struct logical_volume *lv)
 
 	log_print("--- Segments ---");
 
-	list_iterate_items(seg, &lv->segments) {
+	dm_list_iterate_items(seg, &lv->segments) {
 		log_print("Logical extent %u to %u:",
 			  seg->le, seg->le + seg->len - 1);
 
@@ -586,7 +586,7 @@ void vgdisplay_full(const struct volume_group *vg)
 	log_print("Format                %s", vg->fid->fmt->name);
 	if (vg->fid->fmt->features & FMT_MDAS) {
 		log_print("Metadata Areas        %d",
-			  list_size(&vg->fid->metadata_areas));
+			  dm_list_size(&vg->fid->metadata_areas));
 		log_print("Metadata Sequence No  %d", vg->seqno);
 	}
 	access_str = vg->status & (LVM_READ | LVM_WRITE);
@@ -607,7 +607,7 @@ void vgdisplay_full(const struct volume_group *vg)
 			  vg->status & SHARED ? "yes" : "no");
 	}
 
-	list_iterate_items(lvl, &vg->lvs)
+	dm_list_iterate_items(lvl, &vg->lvs)
 		if (lv_is_visible(lvl->lv) && !(lvl->lv->status & SNAPSHOT))
 			lv_count++;
 
@@ -663,7 +663,7 @@ void vgdisplay_colons(const struct volume_group *vg)
 
 	active_pvs = vg->pv_count - vg_missing_pv_count(vg);
 
-	list_iterate_items(lvl, &vg->lvs)
+	dm_list_iterate_items(lvl, &vg->lvs)
 		if (lv_is_visible(lvl->lv) && !(lvl->lv->status & SNAPSHOT))
 			lv_count++;
 
@@ -726,7 +726,7 @@ void display_formats(const struct cmd_context *cmd)
 {
 	const struct format_type *fmt;
 
-	list_iterate_items(fmt, &cmd->formats) {
+	dm_list_iterate_items(fmt, &cmd->formats) {
 		log_print("%s", fmt->name);
 	}
 }
@@ -735,7 +735,7 @@ void display_segtypes(const struct cmd_context *cmd)
 {
 	const struct segment_type *segtype;
 
-	list_iterate_items(segtype, &cmd->segtypes) {
+	dm_list_iterate_items(segtype, &cmd->segtypes) {
 		log_print("%s", segtype->name);
 	}
 }

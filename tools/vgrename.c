@@ -23,7 +23,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	int consistent = 1;
 	int match = 0;
 	int found_id = 0;
-	struct list *vgids;
+	struct dm_list *vgids;
 	struct str_list *sl;
 	char *vg_name_new;
 	const char *vgid = NULL, *vg_name, *vg_name_old;
@@ -41,12 +41,12 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	log_verbose("Checking for existing volume group \"%s\"", vg_name_old);
 
 	/* Avoid duplicates */
-	if (!(vgids = get_vgids(cmd, 0)) || list_empty(vgids)) {
+	if (!(vgids = get_vgids(cmd, 0)) || dm_list_empty(vgids)) {
 		log_error("No complete volume groups found");
 		return 0;
 	}
 
-	list_iterate_items(sl, vgids) {
+	dm_list_iterate_items(sl, vgids) {
 		vgid = sl->str;
 		if (!vgid || !(vg_name = vgname_from_vgid(NULL, vgid)) ||
 		    is_orphan_vg(vg_name))
