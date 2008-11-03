@@ -35,7 +35,7 @@ void init_security_level(int level);
 void init_mirror_in_sync(int in_sync);
 void init_dmeventd_monitor(int reg);
 void init_ignore_suspended_devices(int ignore);
-void init_error_message_produced(int error_message_produced);
+void init_error_message_produced(int produced);
 
 void set_cmd_name(const char *cmd_name);
 

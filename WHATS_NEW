@@ -1,5 +1,6 @@
 Version 2.02.43 -
 ===================================
+  Move list.c into libdevmapper and rename functions.
   Rename a couple of variables that matched function names.
   Use simplified x.y.z version number in libdevmapper.pc.
   Merge device-mapper into the lvm2 tree.

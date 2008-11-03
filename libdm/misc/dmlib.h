@@ -14,35 +14,13 @@
  */
 
 /*
- * This file must be included first by every library source file.
+ * This file must be included first by every device-mapper library source file.
  */
-#ifndef _LVM_LIB_H
-#define _LVM_LIB_H
+#ifndef _DM_LIB_H
+#define _DM_LIB_H
 
-#include "configure.h"
+#define DM
 
-#define _REENTRANT
-#define _GNU_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#include "intl.h"
-#include "libdevmapper.h"
-#include "lvm-globals.h"
-#include "lvm-wrappers.h"
-#include "lvm-types.h"
-#include "util.h"
-
-#ifdef DM
-#  include "dm-logging.h"
-#else
-#  include "lvm-logging.h"
-#endif
-
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include "lib.h"
 
 #endif

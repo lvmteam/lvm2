@@ -8,7 +8,6 @@
 ../lib/config/config.h
 ../lib/config/defaults.h
 ../lib/datastruct/btree.h
-../lib/datastruct/list.h
 ../lib/datastruct/lvm-types.h
 ../lib/datastruct/str_list.h
 ../lib/device/dev-cache.h
@@ -52,8 +51,10 @@
 ../lib/report/report.h
 ../lib/uuid/uuid.h
 ../libdm/libdevmapper.h
+../libdm/datastruct/list.h
 ../libdm/misc/dm-ioctl.h
 ../libdm/misc/dm-logging.h
+../libdm/misc/dmlib.h
 ../libdm/misc/kdev_t.h
 ../po/pogen.h
 ../tools/version.h

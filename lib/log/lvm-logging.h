@@ -16,8 +16,6 @@
 #ifndef _LVM_LOGGING_H
 #define _LVM_LOGGING_H
 
-#include "lvm-globals.h"
-
 void print_log(int level, const char *file, int line, const char *format, ...)
     __attribute__ ((format(printf, 4, 5)));
 
