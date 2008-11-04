@@ -83,9 +83,10 @@ prepare_loop() {
 				LOOP=$dev
 			done
 		done
-		test -n "LOOP" # confirm or fail
+		test -n "$LOOP" # confirm or fail
+		return 0
 	fi
-	exit 1 # should not be accesible
+	exit 1 # should not happen
 }
 
 prepare_devs() {
