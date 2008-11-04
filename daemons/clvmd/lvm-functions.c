@@ -33,7 +33,6 @@
 #include <libdevmapper.h>
 #include <libdlm.h>
 
-#include "list.h"
 #include "lvm-types.h"
 #include "clvm.h"
 #include "clvmd-comms.h"

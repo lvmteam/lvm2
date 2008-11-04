@@ -23,6 +23,7 @@
 #include "defaults.h"
 #include "lvmcache.h"
 
+#include <assert.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <limits.h>

@@ -44,7 +44,6 @@
 #include <ccs.h>
 #include <libgulm.h>
 
-#include "list.h"
 #include "locking.h"
 #include "log.h"
 #include "clvm.h"

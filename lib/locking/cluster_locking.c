@@ -25,6 +25,7 @@
 #include "locking.h"
 #include "locking_types.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <sys/socket.h>
 #include <sys/un.h>

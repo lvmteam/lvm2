@@ -16,7 +16,6 @@
 #include "dmlib.h"
 #include "libdm-targets.h"
 #include "libdm-common.h"
-#include "list.h"
 #include "kdev_t.h"
 #include "dm-ioctl.h"
 

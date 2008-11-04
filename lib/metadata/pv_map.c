@@ -17,6 +17,8 @@
 #include "pv_map.h"
 #include "pv_alloc.h"
 
+#include <assert.h>
+
 /*
  * Areas are maintained in size order, largest first.
  *

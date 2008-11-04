@@ -799,7 +799,7 @@ struct dm_list *dm_list_next(const struct dm_list *head, const struct dm_list *e
  * The containing structure should be the same type as 'v'.
  * The list should be 'struct dm_list list' within the containing structure.
  */
-#define dm_list_iterate_back_items(v, head) list_iterate_back_items_gen(v, (head), list)
+#define dm_list_iterate_back_items(v, head) dm_list_iterate_back_items_gen(v, (head), list)
 
 /*
  * Return the number of elements in a list by walking it.
