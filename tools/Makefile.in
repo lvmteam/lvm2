@@ -66,12 +66,14 @@ TARGETS =\
 	.commands \
 	lvm
 
-INSTALL_TARGETS = install_tools_dynamic
+INSTALL_LVM_TARGETS = install_tools_dynamic
+INSTALL_DMSETUP_TARGETS = install_dmsetup_dynamic
 INSTALL_CMDLIB_TARGETS = install_cmdlib_dynamic
 
 ifeq ("@STATIC_LINK@", "yes")
   TARGETS += lvm.static
-  INSTALL_TARGETS += install_tools_static
+  INSTALL_LVM_TARGETS += install_tools_static
+  INSTALL_DMSETUP_TARGETS += install_dmsetup_static
   INSTALL_CMDLIB_TARGETS += install_cmdlib_static
 endif
 
@@ -84,7 +86,7 @@ CLEAN_TARGETS = liblvm2cmd.so liblvm2cmd.a liblvm2cmd-static.a lvm lvm.o \
 
 ifeq ("@CMDLIB@", "yes")
 	TARGETS += liblvm2cmd.so
-	INSTALL_TARGETS += $(INSTALL_CMDLIB_TARGETS)
+	INSTALL_LVM_TARGETS += $(INSTALL_CMDLIB_TARGETS)
 endif
 
 ifeq ("@DMEVENTD@", "yes")
@@ -182,4 +184,12 @@ install_tools_static: lvm.static
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) lvm.static \
 		$(staticdir)/lvm.static
 
-install: $(INSTALL_TARGETS)
+install_dmsetup_dynamic: dmsetup
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< $(sbindir)/$<
+
+install_dmsetup_static: dmsetup.static
+	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) $< $(sbindir)/$<
+
+install_device-mapper: $(INSTALL_DMSETUP_TARGETS)
+
+install: $(INSTALL_LVM_TARGETS) install_device-mapper
