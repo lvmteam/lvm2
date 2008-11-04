@@ -61,6 +61,8 @@ endif
 
 install: $(INSTALL_TYPE) install_include install_dmeventd
 
+install_device-mapper: install
+
 install_include:
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 444 libdevmapper-event.h \
 		$(includedir)/libdevmapper-event.h

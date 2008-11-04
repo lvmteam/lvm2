@@ -129,7 +129,8 @@ DEPS = $(top_srcdir)/make.tmpl $(top_srcdir)/VERSION Makefile $(INC_LNS)
 OBJECTS = $(SOURCES:%.c=%.o)
 POTFILES = $(SOURCES:%.c=%.pot)
 
-.PHONY: all install install_cluster pofile distclean clean cflow device-mapper
+.PHONY: all install install_cluster pofile distclean clean cflow device-mapper 
+.PHONY: install_device-mapper
 .PHONY: $(SUBDIRS) $(SUBDIRS.install) $(SUBDIRS.clean) $(SUBDIRS.distclean)
 .PHONY: $(SUBDIRS.pofile) $(SUBDIRS.install_cluster) $(SUBDIRS.cflow)
 .PHONY: $(SUBDIRS.device-mapper) $(SUBDIRS.install-device-mapper)
@@ -163,7 +164,7 @@ $(SUBDIRS.install): $(SUBDIRS)
 $(SUBDIRS.install_cluster): $(SUBDIRS)
 	$(MAKE) -C $(@:.install_cluster=) install_cluster
 
-$(SUBDIRS.install_device-mapper): $(SUBDIRS)
+$(SUBDIRS.install_device-mapper): device-mapper
 	$(MAKE) -C $(@:.install_device-mapper=) install_device-mapper
 
 $(SUBDIRS.clean):
