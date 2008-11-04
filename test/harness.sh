@@ -10,6 +10,7 @@ for t in $tests; do
     if test $ret = 0; then
 	echo " passed."
     elif test $ret = 200; then
+        skipped="$skipped $t"
 	echo " skipped."
     else
 	echo " FAILED!"
@@ -25,6 +26,10 @@ for t in $tests; do
 done
 
 if test -n "$failed"; then
+    echo "Tests skipped:"
+    for t in $skipped; do
+	printf "\t%s\n" $t
+    done
     echo "TESTS FAILED:"
     for t in $failed; do
 	printf "\t%s\n" $t
