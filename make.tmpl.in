@@ -86,6 +86,11 @@ endif
 LDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
 CLDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
 
+ifeq ("@DMEVENTD@", "yes")
+  LDFLAGS += -L$(top_srcdir)/daemons/dmeventd
+  CLDFLAGS += -L$(top_srcdir)/daemons/dmeventd
+endif
+
 ifeq ("@DM_COMPAT@", "yes")
   DEFS += -DDM_COMPAT
 endif

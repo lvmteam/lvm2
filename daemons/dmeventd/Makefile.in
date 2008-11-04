@@ -37,6 +37,7 @@ endif
 include $(top_srcdir)/make.tmpl
 
 all: dmeventd
+device-mapper: dmeventd
 
 LDFLAGS += -ldl -ldevmapper -lpthread
 CLDFLAGS += -ldl -ldevmapper -lpthread
