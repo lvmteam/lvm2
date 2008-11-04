@@ -27,4 +27,6 @@ endif
 
 include $(top_srcdir)/make.tmpl
 
+ifeq ("@DMEVENTD@", "yes")
 device-mapper: dmeventd.device-mapper
+endif
