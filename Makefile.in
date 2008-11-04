@@ -43,13 +43,13 @@ include make.tmpl
 libdm: include
 lib: libdm
 daemons: lib
-tools: lib
+tools: lib device-mapper
 po: tools daemons
 
 libdm.device-mapper: include.device-mapper
 daemons.device-mapper: libdm.device-mapper
 tools.device-mapper: libdm.device-mapper
-device-mapper: tools.device-mapper daemons.device-mapper
+device-mapper: tools.device-mapper daemons.device-mapper man.device-mapper
 
 ifeq ("@INTL@", "yes")
 lib.pofile: include.pofile

@@ -15,6 +15,8 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
+.PHONY: dmeventd clvmd
+
 ifneq ("@CLVMD@", "none")
   SUBDIRS = clvmd
 endif
@@ -23,7 +25,6 @@ ifeq ("@DMEVENTD@", "yes")
   SUBDIRS += dmeventd
 endif
 
-device-mapper: dmeventd
-
 include $(top_srcdir)/make.tmpl
 
+device-mapper: dmeventd.device-mapper
