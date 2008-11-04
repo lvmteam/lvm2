@@ -13,6 +13,10 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
+#include <configure.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -42,7 +46,8 @@
 /* LVM2 headers */
 #include "toolcontext.h"
 #include "lvmcache.h"
-#include "log.h"
+#include "lvm-logging.h"
+#include "lvm-globals.h"
 #include "activate.h"
 #include "locking.h"
 #include "archiver.h"

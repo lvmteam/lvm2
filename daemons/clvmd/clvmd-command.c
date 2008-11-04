@@ -50,6 +50,10 @@
 
 */
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
+#include <configure.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
@@ -68,7 +72,7 @@
 #include <libdlm.h>
 
 #include "locking.h"
-#include "log.h"
+#include "lvm-logging.h"
 #include "lvm-functions.h"
 #include "clvmd-comms.h"
 #include "clvm.h"

@@ -18,6 +18,10 @@
  *
  */
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
+#include <configure.h>
 #include <stddef.h>
 #include <sys/socket.h>
 #include <sys/un.h>

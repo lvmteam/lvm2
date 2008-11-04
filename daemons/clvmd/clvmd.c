@@ -17,6 +17,12 @@
  * CLVMD: Cluster LVM daemon
  */
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
+#include <configure.h>
+#include <libdevmapper.h>
+
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -46,7 +52,7 @@
 #include "version.h"
 #include "clvmd.h"
 #include "refresh_clvmd.h"
-#include "log.h"
+#include "lvm-logging.h"
 
 #ifndef TRUE
 #define TRUE 1

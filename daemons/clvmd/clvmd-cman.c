@@ -17,6 +17,10 @@
  * CMAN communication layer for clvmd.
  */
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+
+#include <configure.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -41,7 +45,7 @@
 
 #include "clvmd-comms.h"
 #include "clvm.h"
-#include "log.h"
+#include "lvm-logging.h"
 #include "clvmd.h"
 #include "lvm-functions.h"
 
