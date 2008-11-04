@@ -86,6 +86,14 @@ endif
 LDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
 CLDFLAGS += -L$(top_srcdir)/libdm -L$(top_srcdir)/lib
 
+ifeq ("@DM_COMPAT@", "yes")
+  DEFS += -DDM_COMPAT
+endif
+
+ifeq ("@DM_IOCTLS@", "yes")
+  DEFS += -DDM_IOCTLS
+endif
+
 #DEFS += -DDEBUG_POOL
 #DEFS += -DBOUNDS_CHECK
 
@@ -103,7 +111,7 @@ LIB_VERSION_LVM := $(shell cat $(top_srcdir)/VERSION | \
 LIB_VERSION_DM := $(shell cat $(top_srcdir)/VERSION_DM | \
 		    awk -F '.' '{printf "%s.%s",$$1,$$2}')
 
-INCLUDES += -I$(top_srcdir)/include
+INCLUDES += -I. -I$(top_srcdir)/include
 
 ifdef DESTDIR
   INCLUDES += -I$(DESTDIR)/usr/include

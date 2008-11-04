@@ -39,7 +39,6 @@
 #include "filter-persistent.h"
 #include "filter-regex.h"
 #include "metadata-exported.h"
-#include "list.h"
 #include "locking.h"
 #include "lvm-exec.h"
 #include "lvm-file.h"

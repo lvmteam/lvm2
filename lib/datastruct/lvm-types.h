@@ -16,8 +16,6 @@
 #ifndef _LVM_TYPES_H
 #define _LVM_TYPES_H
 
-#include "list.h"
-
 #include <sys/types.h>
 #include <inttypes.h>
 
