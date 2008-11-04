@@ -57,14 +57,13 @@ $(T): init.sh
 	for i in lvm $$(cat $(top_srcdir)/tools/.commands); do \
 	  ln -s ../lvm-wrapper bin/$$i; \
 	done
-	test -n "@DMDIR@" && ln -s "@DMDIR@/dmsetup/dmsetup" bin/dmsetup
+	ln -s "$(abs_top_builddir)/tools/dmsetup" bin/dmsetup
 	touch $@
 
 lvm-wrapper: Makefile
 	rm -f $@-t $@
 	echo '#!/bin/sh'                                          >  $@-t
-	test -n "@DMDIR@" \
-	  && echo 'export LD_LIBRARY_PATH="@DMDIR@/lib:@DMDIR@/dmeventd"' >> $@-t
+	echo 'export LD_LIBRARY_PATH="$(abs_top_builddir)/libdm:$(abs_top_builddir)/dmeventd"' >> $@-t
 	echo 'cmd=$$(echo ./$$0|sed "s,.*/,,")'                   >> $@-t
 	echo 'test "$$cmd" = lvm &&'                              >> $@-t
 	echo 'exec "$(abs_top_builddir)/tools/lvm" "$$@"'         >> $@-t
