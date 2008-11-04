@@ -19,8 +19,9 @@
 #include "lvmcache.h"
 #include "filter.h"
 #include "xlate.h"
-
 #include "disk_rep.h"
+
+#include <assert.h>
 
 /* FIXME: memcpy might not be portable */
 #define CPIN_8(x, y, z) {memcpy((x), (y), (z));}

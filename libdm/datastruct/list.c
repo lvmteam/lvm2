@@ -14,6 +14,7 @@
  */
 
 #include "lib.h"
+#include <assert.h>
 
 /*
  * Initialise a list before use.

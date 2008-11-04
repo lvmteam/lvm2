@@ -22,7 +22,6 @@
 #include "configure.h"
 #include "libdevmapper.h"
 #include "libdevmapper-event.h"
-#include "list.h"
 #include "dmeventd.h"
 //#include "libmultilog.h"
 #include "dm-logging.h"

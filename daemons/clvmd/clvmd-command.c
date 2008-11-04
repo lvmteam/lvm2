@@ -67,7 +67,6 @@
 #include <libdevmapper.h>
 #include <libdlm.h>
 
-#include "list.h"
 #include "locking.h"
 #include "log.h"
 #include "lvm-functions.h"

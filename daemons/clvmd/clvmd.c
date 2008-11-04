@@ -46,7 +46,6 @@
 #include "version.h"
 #include "clvmd.h"
 #include "refresh_clvmd.h"
-#include "list.h"
 #include "log.h"
 
 #ifndef TRUE
