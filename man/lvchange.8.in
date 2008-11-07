@@ -14,7 +14,7 @@ lvchange \- change attributes of a logical volume
 [\-\-monitor {y|n}]
 [\-M/\-\-persistent y/n] [\-\-minor minor]
 [\-P/\-\-partial]
-[\-p/\-\-permission r/w] [\-r/\-\-readahead ReadAheadSectors|auto|none]
+[\-p/\-\-permission r|rw] [\-r/\-\-readahead ReadAheadSectors|auto|none]
 [\-\-refresh]
 [\-t/\-\-test]
 [\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
@@ -69,7 +69,7 @@ Do not use this if dmeventd is already monitoring a device.
 .I \-M, \-\-persistent y/n
 Set to y to make the minor number specified persistent.
 .TP
-.I \-p, \-\-permission r/w
+.I \-p, \-\-permission r|rw
 Change access permission to read-only or read/write.
 .TP
 .I \-r, \-\-readahead ReadAheadSectors|auto|none

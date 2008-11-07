@@ -14,7 +14,7 @@ lvcreate \- create a logical volume in an existing volume group
 [\-m/\-\-mirrors Mirrors [\-\-nosync] [\-\-mirrorlog {disk|core}] [\-\-corelog]
 [\-R/\-\-regionsize MirrorLogRegionSize]]
 [\-n/\-\-name LogicalVolumeName]
-[\-p/\-\-permission r/rw] [\-r/\-\-readahead ReadAheadSectors|auto|none]
+[\-p/\-\-permission r|rw] [\-r/\-\-readahead ReadAheadSectors|auto|none]
 [\-t/\-\-test]
 [\-v/\-\-verbose] [\-Z/\-\-zero y/n]
 VolumeGroupName [PhysicalVolumePath...]
@@ -113,7 +113,7 @@ The name for the new logical volume.
 Without this option a default names of "lvol#" will be generated where
 # is the LVM internal number of the logical volume.
 .TP
-.I \-p, \-\-permission r/w
+.I \-p, \-\-permission r|rw
 Set access permissions to read only or read and write.
 .br
 Default is read and write.
