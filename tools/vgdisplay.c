@@ -98,8 +98,8 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 	}
 **********/
 
-	process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
-			vgdisplay_single);
+	return process_each_vg(cmd, argc, argv, LCK_VG_READ, 0, NULL,
+			       vgdisplay_single);
 
 /******** FIXME Need to count number processed
 	  Add this to process_each_vg if arg_count(cmd,activevolumegroups_ARG) ?
@@ -112,6 +112,4 @@ int vgdisplay(struct cmd_context *cmd, int argc, char **argv)
 		return LVM_E_NO_VG;
 	}
 ************/
-
-	return ECMD_PROCESSED;
 }
