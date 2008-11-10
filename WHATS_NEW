@@ -1,8 +1,8 @@
 Version 2.02.43 - 10th November 2008
 ====================================
   Merge device-mapper into the lvm2 tree.
-  Fix lvchange and lvcreate man pages permissions option.
-  Fix vgdisplay return code and exit status.
+  Correct prototype for --permission on lvchange and lvcreate man pages.
+  Exit with non-zero status from vgdisplay if couldn't show any requested VG.
   Move list.c into libdevmapper and rename functions.
   Rename a couple of variables that matched function names.
   Use simplified x.y.z version number in libdevmapper.pc.
