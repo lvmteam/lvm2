@@ -13,9 +13,11 @@
 
 . ./test-utils.sh
 
-aux prepare_vg 2
+aux prepare_pvs 2
+aux pvcreate --metadatacopies 0 $dev1
+vgcreate -cn $vg $devs
 
-# "lvcreate rejects repeated invocation (run 2 times)" 
+# "lvcreate rejects repeated invocation (run 2 times) (bz178216)" 
 lvcreate -n $lv -l 4 $vg 
 not lvcreate -n $lv -l 4 $vg
 lvremove -ff $vg/$lv
@@ -45,6 +47,10 @@ lvremove -ff $vg
 # 'lvcreate rejects an invalid number of stripes' 
 not lvcreate -L 64M -n $lv -i129 $vg 2>err
 grep "^  Number of stripes (129) must be between 1 and 128\$" err
+
+# 'lvcreate rejects an invalid regionsize (bz186013)' 
+not lvcreate -L 64M -n $lv -R0 $vg 2>err
+grep "Non-zero region size must be supplied." err
 
 # The case on lvdisplay output is to verify that the LV was not created.
 # 'lvcreate rejects an invalid stripe size'
