@@ -1,11 +1,11 @@
-Version 2.02.43 -
-===================================
+Version 2.02.43 - 10th November 2008
+====================================
+  Merge device-mapper into the lvm2 tree.
   Fix lvchange and lvcreate man pages permissions option.
   Fix vgdisplay return code and exit status.
   Move list.c into libdevmapper and rename functions.
   Rename a couple of variables that matched function names.
   Use simplified x.y.z version number in libdevmapper.pc.
-  Merge device-mapper into the lvm2 tree.
   Remove ancient debian directory.
   Split out lvm-logging.h from log.h and lvm-globals.[ch] from log.[ch].
 
