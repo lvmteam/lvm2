@@ -362,3 +362,11 @@ pvmove -i100 -b $dev1 $dev3
 pvmove --abort 
 check_and_cleanup_lvs_
 
+#COMM "pvmove out of --metadatacopies 0 PV (bz252150)"
+vgremove -ff $vg
+pvcreate $devs
+pvcreate --metadatacopies 0 $dev1 $dev2
+vgcreate $vg $devs
+lvcreate -l4 -n $lv1 $vg $dev1
+pvmove $dev1
+
