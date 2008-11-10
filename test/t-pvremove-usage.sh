@@ -34,6 +34,10 @@ for mdacp in 0 1 2; do
     pvremove $dev3
     pvscan | not grep $dev3
 
+	# bz179473 refuse to wipe non-PV device without -f
+    not pvremove $dev3
+    pvremove -f $dev3
+
     # reset setup
     vgremove -ff $vg
     pvcreate --metadatacopies $mdacp $dev1

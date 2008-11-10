@@ -90,7 +90,13 @@ lv_devices_ $vg/$lv1 "$lv1"_mimage_0 "$lv1"_mimage_1
 #COMM "mirror log is ${lv1}_mlog"
 lv_mirror_log_ $vg/$lv1 "$lv1"_mlog
 
-#COMM "cleanup" 
+# "cleanup" 
+check_and_cleanup_lvs_
+
+#COMM "mirror with name longer than 22 characters (bz221322)"
+name="LVwithanamelogerthan22characters_butidontwonttocounthem"
+lvcreate -m1 -l2 -n"$name" $vg
+lvs $vg/"$name"
 check_and_cleanup_lvs_
 
 # ---------------------------------------------------------------------

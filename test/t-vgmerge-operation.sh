@@ -64,3 +64,18 @@ vg_validate_pvlv_counts_ $vg2 4 1 0
 lvremove -f $vg2/$lv1 
 vgremove -f $vg2
 
+# 'vgmerge rejects LV name collision'
+vgcreate $vg1 $dev1 $dev2
+vgcreate $vg2 $dev3 $dev4
+lvcreate -l 4 -n $lv1 $vg1
+lvcreate -l 4 -n $lv1 $vg2
+vgchange -an $vg1
+aux vg_validate_pvlv_counts_ $vg1 2 1 0
+aux vg_validate_pvlv_counts_ $vg2 2 1 0
+not vgmerge $vg2 $vg1 2>err
+grep "Duplicate logical volume name \"$lv1\" in \"$vg2\" and \"$vg1" err
+aux vg_validate_pvlv_counts_ $vg1 2 1 0
+aux vg_validate_pvlv_counts_ $vg2 2 1 0
+vgremove -f $vg1
+vgremove -f $vg2
+
