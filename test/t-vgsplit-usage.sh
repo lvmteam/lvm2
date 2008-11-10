@@ -25,6 +25,7 @@ do
 pvcreate -M$mdatype $devs
 
 # vgsplit accepts new vg as destination of split
+# lvm1 -- bz244792
 vgcreate -M$mdatype $vg1 $devs
 vgsplit $vg1 $vg2 $dev1 1>err
 grep "New volume group \"$vg2\" successfully split from \"$vg1\"" err 

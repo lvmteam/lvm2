@@ -15,7 +15,7 @@ aux prepare_devs 4
 for mdatype in 1 2
 do
 
-# pvcreate (lvm$mdatype) succeeds when run repeatedly (pv not in a vg)
+# pvcreate (lvm$mdatype) succeeds when run repeatedly (pv not in a vg) (bz178216)
     pvcreate -M$mdatype $dev1
     pvcreate -M$mdatype $dev1
     pvremove -f $dev1

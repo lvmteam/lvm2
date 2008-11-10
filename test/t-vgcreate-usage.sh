@@ -55,7 +55,7 @@ grep "New volume group name \"$vginvalid\" is invalid\$" err
 #not vgcreate $vg $dev1 $dev2 2>err
 #grep "New volume group name \"$vg\" is invalid\$" err
 
-#COMM "vgcreate rejects repeated invocation (run 2 times)"
+#COMM "vgcreate rejects repeated invocation (run 2 times) (bz178216)"
 vgcreate $vg $dev1 $dev2
 not vgcreate $vg $dev1 $dev2
 vgremove -ff $vg
