@@ -119,7 +119,7 @@ lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
 LIB_PTHREAD = @LIB_PTHREAD@
 lvm.static: $(OBJECTS) lvm-static.o $(top_srcdir)/lib/liblvm.a
 	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm-static.o -static \
-		$(LDFLAGS) $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
+		-L$(interfacedir) $(LDFLAGS) $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
 
 liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
 	cat $(top_srcdir)/lib/liblvm.a > $@
