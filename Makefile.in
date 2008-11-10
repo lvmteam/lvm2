@@ -84,18 +84,21 @@ endif
 
 lcov-reset:
 	$(LCOV) -d $(top_srcdir)/dmeventd --zerocounters
+	$(LCOV) -d $(top_srcdir)/libdm --zerocounters
 	$(LCOV) -d $(top_srcdir)/lib --zerocounters
 	$(LCOV) -d $(top_srcdir)/tools --zerocounters
 
 lcov: all
 	$(RM) -rf $(LCOV_REPORTS_DIR)
 	$(MKDIR_P) $(LCOV_REPORTS_DIR)
+	$(LCOV) -b ${top_srcdir}/libdm -d $(top_srcdir)/libdm -c -o $(LCOV_REPORTS_DIR)/libdm.info
 	$(LCOV) -b $(top_srcdir)/lib -d $(top_srcdir)/lib -c -o $(LCOV_REPORTS_DIR)/lib.info
 	$(LCOV) -b $(top_srcdir)/tools -d $(top_srcdir)/tools -c -o $(LCOV_REPORTS_DIR)/tools.info
 	DMEVENTD_INFO="$(LCOV_REPORTS_DIR)/dmeventd.info" ;\
 	DMEVENTD_INFO_A="-a $$DMEVENTDINFO" ;\
 	$(LCOV) -b $(top_srcdir)/dmeventd -d $(top_srcdir)/dmeventd -c -o $$DMEVENTD_INFO || DMEVENTD_INFO_A="" ;\
 	$(LCOV) $$DMEVENTD_INFO_A -a $(LCOV_REPORTS_DIR)/lib.info \
+		-a $(LCOV_REPORTS_DIR)/libdm.info \
 		-a $(LCOV_REPORTS_DIR)/tools.info \
 		-o $(LCOV_REPORTS_DIR)/lvm.info
 ifneq ("@GENHTML@", "")
