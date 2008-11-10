@@ -31,7 +31,6 @@ pvremove $dev1
 
 # x. metadatasize too large
 # For some reason we allow this, even though there's no room for data?
-#test_expect_success \
 ##COMM  'pvcreate rejects metadatasize too large' 
 #not pvcreate --metadatasize 100000000000000 $dev1
 

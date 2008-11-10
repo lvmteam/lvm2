@@ -11,6 +11,8 @@
 . ./test-utils.sh
 
 aux prepare_pvs 3
+# not required, just testing
+aux pvcreate --metadatacopies 0 $dev1
 
 vgcreate $vg $devs
 pvchange --addtag fast $devs
