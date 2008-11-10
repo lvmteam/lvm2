@@ -168,6 +168,13 @@ mimages_are_redundant_ $vg $lv1
 mirrorlog_is_on_ $vg/$lv1 $dev3 
 check_and_cleanup_lvs_
 
+#COMM "lvcreate --nosync is in 100% sync after creation (bz429342)"
+prepare_lvs_ 
+lvcreate -l2 -m1 --nosync -n $lv1 $vg $dev1 $dev2 $dev3:0-1 2>out
+grep "New mirror won't be synchronised." out
+lvs -o copy_percent --noheadings $vg/$lv1 |grep 100.00
+check_and_cleanup_lvs_
+
 # ---
 # convert
 
@@ -186,20 +193,25 @@ lvconvert -m-1 $vg/$lv1
 mimages_are_redundant_ $vg $lv1 
 check_and_cleanup_lvs_
 
+for status in active inactive; do 
+# bz192865 lvconvert log of an inactive mirror lv
 #COMM "convert from disklog to corelog"
 prepare_lvs_ 
 lvcreate -l2 -m1 -n $lv1 $vg $dev1 $dev2 $dev3:0-1 
-lvconvert --mirrorlog core $vg/$lv1 
+	test $status = "inactive" && lvchange -an $vg/$lv1
+	yes | lvconvert --mirrorlog core $vg/$lv1 
 mimages_are_redundant_ $vg $lv1 
 check_and_cleanup_lvs_
 
 #COMM "convert from corelog to disklog"
 prepare_lvs_ 
 lvcreate -l2 -m1 --mirrorlog core -n $lv1 $vg $dev1 $dev2 
+	test $status = "inactive" && lvchange -an $vg/$lv1
 lvconvert --mirrorlog disk $vg/$lv1 $dev3:0-1 
 mimages_are_redundant_ $vg $lv1 
 mirrorlog_is_on_ $vg/$lv1 $dev3 
 check_and_cleanup_lvs_
+done
 
 # ---
 # resize
