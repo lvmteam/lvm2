@@ -170,6 +170,7 @@ prepare_lvmconf() {
   }
   global {
     library_dir = "$G_root_/lib"
+     locking_dir = "$G_root_/var/lock/lvm"
   }
 EOF
 }
