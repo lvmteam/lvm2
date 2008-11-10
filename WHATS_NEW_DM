@@ -1,5 +1,6 @@
-Version 1.02.29 -
-=====================================
+Version 1.02.29 - 10th November 2008
+====================================
+  Merge device-mapper into the LVM2 tree.
   Split out dm-logging.h from log.h.
   Use lvm-types.h.
   Add usrsbindir to configure.
