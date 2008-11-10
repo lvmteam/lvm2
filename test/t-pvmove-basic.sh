@@ -84,6 +84,11 @@ check_and_cleanup_lvs_() {
   check_dev_sum_ $(lvdev_ $vg $lv3)
   lvs -a -o name $vg > out && ! grep ^pvmove out
   lvremove -ff $vg
+	if ! dmsetup table|not grep $vg; then
+		echo "ERROR: lvremove did leave some some mappings in DM behind!" &&
+		return 1
+	fi
+	:
 }
 
 #COMM "check environment setup/cleanup"

@@ -94,6 +94,10 @@ prepare_vg 5
 prepare_lvs_()
 {
 	lvremove -ff $vg;
+	if dmsetup table|grep $vg; then
+		echo "ERROR: lvremove did leave some some mappings in DM behind!"
+		return 1
+	fi
 	:
 }
 
@@ -101,6 +105,10 @@ check_and_cleanup_lvs_()
 {
 	lvs -a -o+devices $vg 
 	lvremove -ff $vg
+	if dmsetup table|grep $vg; then
+		echo "ERROR: lvremove did leave some some mappings in DM behind!"
+		return 1
+	fi
 }
 
 recover_vg_()
