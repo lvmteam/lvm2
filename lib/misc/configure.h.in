@@ -90,9 +90,6 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the <libdevmapper.h> header file. */
-#undef HAVE_LIBDEVMAPPER_H
-
 /* Define to 1 if dynamic libraries are available. */
 #undef HAVE_LIBDL
 
