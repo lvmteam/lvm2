@@ -27,8 +27,6 @@ void init_full_scan_done(int level);
 void init_trust_cache(int trustcache);
 void init_debug(int level);
 void init_cmd_name(int status);
-void init_msg_prefix(const char *prefix);
-void init_indent(int indent);
 void init_ignorelockingfailure(int level);
 void init_lockingfailed(int level);
 void init_security_level(int level);
