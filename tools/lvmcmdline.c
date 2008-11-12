@@ -483,7 +483,7 @@ void lvm_register_commands(void)
 static struct command *_find_command(const char *name)
 {
 	int i;
-	char *base;
+	const char *base;
 
 	base = last_path_component(name);
 
