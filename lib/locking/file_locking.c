@@ -92,7 +92,7 @@ static void _reset_file_locking(void)
 	_release_lock(NULL, 0);
 }
 
-static void _remove_ctrl_c_handler()
+static void _remove_ctrl_c_handler(void)
 {
 	siginterrupt(SIGINT, 0);
 	if (!_handler_installed)
