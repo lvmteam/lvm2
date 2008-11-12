@@ -3,13 +3,13 @@
 pvs \- report information about physical volumes
 .SH SYNOPSIS
 .B pvs
-[\-\-aligned] [\-d/\-\-debug] [\-h/\-?/\-\-help]
+[\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-ignorelockingfailure] [\-\-noheadings] [\-\-nosuffix]
-[\-o/\-\-options [+]Field[,Field]]
-[\-O/\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
+[\-o|\-\-options [+]Field[,Field]]
+[\-O|\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
 [\-\-separator Separator] [\-\-unbuffered]
 [\-\-units hsbkmgtHKMGT]
-[\-v/\-\-verbose] 
+[\-v|\-\-verbose] 
 [\-\-version] [PhysicalVolume [PhysicalVolume...]]
 .SH DESCRIPTION
 pvs produces formatted output about physical volumes.
