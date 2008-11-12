@@ -6,7 +6,7 @@ pvs \- report information about physical volumes
 [\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-ignorelockingfailure] [\-\-noheadings] [\-\-nosuffix]
 [\-o|\-\-options [+]Field[,Field]]
-[\-O|\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
+[\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
 [\-\-separator Separator] [\-\-unbuffered]
 [\-\-units hsbkmgtHKMGT]
 [\-v|\-\-verbose] 
