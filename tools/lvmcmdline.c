@@ -1210,7 +1210,7 @@ static void _exec_lvm1_command(char **argv)
 	log_sys_error("execvp", path);
 }
 
-static void _nonroot_warning()
+static void _nonroot_warning(void)
 {
 	if (getuid() || geteuid())
 		log_warn("WARNING: Running as a non-root user. Functionality may be unavailable.");
