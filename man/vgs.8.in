@@ -3,14 +3,14 @@
 vgs \- report information about volume groups
 .SH SYNOPSIS
 .B vgs
-[\-\-aligned] [\-d/\-\-debug] [\-h/\-?/\-\-help]
+[\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-ignorelockingfailure] [\-\-noheadings] [\-\-nosuffix]
-[\-o/\-\-options [+]Field[,Field]]
-[\-O/\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
-[\-P/\-\-partial]
+[\-o|\-\-options [+]Field[,Field]]
+[\-O|\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
+[\-P|\-\-partial]
 [\-\-separator Separator] [\-\-unbuffered]
 [\-\-units hsbkmgtHKMGT]
-[\-v/\-\-verbose] 
+[\-v|\-\-verbose] 
 [\-\-version] [VolumeGroupName [VolumeGroupName...]]
 .SH DESCRIPTION
 vgs produces formatted output about volume groups.

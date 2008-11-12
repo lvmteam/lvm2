@@ -3,14 +3,14 @@
 lvs \- report information about logical volumes
 .SH SYNOPSIS
 .B lvs
-[\-\-aligned] [\-d/\-\-debug] [\-h/\-?/\-\-help]
+[\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
 [\-\-ignorelockingfailure] [\-\-noheadings] [\-\-nosuffix]
-[\-o/\-\-options [+]Field[,Field]]
-[\-O/\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
-[\-P/\-\-partial] [\-\-segments]
+[\-o|\-\-options [+]Field[,Field]]
+[\-O|\-\-sort [+/-]Key1[,[+/-]Key2[,...]]]
+[\-P|\-\-partial] [\-\-segments]
 [\-\-separator Separator] [\-\-unbuffered]
 [\-\-units hsbkmgtHKMGT]
-[\-v/\-\-verbose] 
+[\-v|\-\-verbose] 
 [\-\-version] [VolumeGroupName [VolumeGroupName...]]
 .SH DESCRIPTION
 lvs produces formatted output about logical volumes.

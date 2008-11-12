@@ -3,10 +3,10 @@
 lvremove \- remove a logical volume
 .SH SYNOPSIS
 .B lvremove
-[\-A/\-\-autobackup y/n] [\-d/\-\-debug] [\-f/\-\-force]
-[\-h/\-?/\-\-help] 
-[\-t/\-\-test]
-[\-v/\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
+[\-A|\-\-autobackup y|n] [\-d|\-\-debug] [\-f|\-\-force]
+[\-h|\-?|\-\-help] 
+[\-t|\-\-test]
+[\-v|\-\-verbose] LogicalVolumePath [LogicalVolumePath...]
 .SH DESCRIPTION
 \fBlvremove\fP removes one or more logical volumes.
 Confirmation will be requested before deactivating any active logical

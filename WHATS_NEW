@@ -1,5 +1,6 @@
 Version 2.02.43 - 10th November 2008
 ====================================
+  Make man pages consistent with either-or options (use "|" everywhere).
   Merge device-mapper into the lvm2 tree.
   Correct prototype for --permission on lvchange and lvcreate man pages.
   Exit with non-zero status from vgdisplay if couldn't show any requested VG.
