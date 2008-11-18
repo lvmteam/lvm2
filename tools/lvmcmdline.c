@@ -1218,7 +1218,7 @@ static void _nonroot_warning(void)
 
 int lvm2_main(int argc, char **argv, unsigned is_static)
 {
-	char *base;
+	const char *base;
 	int ret, alias = 0;
 	struct cmd_context *cmd;
 
