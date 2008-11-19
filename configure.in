@@ -803,6 +803,7 @@ libdm/Makefile
 libdm/libdevmapper.pc
 man/Makefile
 po/Makefile
+scripts/clvmd_init_red_hat
 scripts/Makefile
 test/Makefile
 tools/Makefile
