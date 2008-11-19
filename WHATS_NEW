@@ -1,7 +1,11 @@
-Version 2.02.43 - 10th November 2008
+Version 2.02.44 - 
 ====================================
+  Fix clvmd & dmeventd builds after tree restructuring.
   Cope with snapshot dependencies when removing a whole VG with lvremove.
   Make man pages consistent with either-or options (use "|" everywhere).
+
+Version 2.02.43 - 10th November 2008
+====================================
   Merge device-mapper into the lvm2 tree.
   Correct prototype for --permission on lvchange and lvcreate man pages.
   Exit with non-zero status from vgdisplay if couldn't show any requested VG.
