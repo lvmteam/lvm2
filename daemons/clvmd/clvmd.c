@@ -423,6 +423,9 @@ int main(int argc, char *argv[])
 	/* This needs to be started after cluster initialisation
 	   as it may need to take out locks */
 	DEBUGLOG("starting LVM thread\n");
+
+	/* Don't let anyone else to do work until we are started */
+	pthread_mutex_lock(&lvm_start_mutex);
 	pthread_create(&lvm_thread, NULL, lvm_thread_fn,
 			(void *)(long)using_gulm);
 
@@ -1757,9 +1760,6 @@ static __attribute__ ((noreturn)) void *lvm_thread_fn(void *arg)
 	struct dm_list *cmdl, *tmp;
 	sigset_t ss;
 	int using_gulm = (int)(long)arg;
-
-	/* Don't let anyone else to do work until we are started */
-	pthread_mutex_lock(&lvm_start_mutex);
 
 	DEBUGLOG("LVM thread function started\n");
 

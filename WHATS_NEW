@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Fix startup race in clvmd.
   Generate Red Hat clvmd startup script at configuration time with correct paths.
   Fix clvmd & dmeventd builds after tree restructuring.
   Cope with snapshot dependencies when removing a whole VG with lvremove.
