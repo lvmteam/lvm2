@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Add tinfo to termcap search path for pld-linux.
   Fix startup race in clvmd.
   Generate Red Hat clvmd startup script at configuration time with correct paths.
   Fix clvmd & dmeventd builds after tree restructuring.

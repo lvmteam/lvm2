@@ -472,7 +472,7 @@ fi;
 ################################################################################
 dnl -- Check for termcap (Shamelessly copied from parted 1.4.17)
 if test x$READLINE != xno; then
-	AC_SEARCH_LIBS([tgetent], [ncurses curses termcap termlib],
+	AC_SEARCH_LIBS([tgetent], [tinfo ncurses curses termcap termlib],
 	  [tg_found=yes], [tg_found=no])
 	test x$READLINE:$tg_found = xyes:no &&
 	  AC_MSG_ERROR(
