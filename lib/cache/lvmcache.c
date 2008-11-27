@@ -707,7 +707,11 @@ void lvmcache_del(struct lvmcache_info *info)
 
 static int _lvmcache_update_pvid(struct lvmcache_info *info, const char *pvid)
 {
-	if (!strcmp(info->dev->pvid, pvid))
+	/*
+	 * Nothing to do if already stored with same pvid.
+	 */
+	if (((dm_hash_lookup(_pvid_hash, pvid)) == info) &&
+	    !strcmp(info->dev->pvid, pvid))
 		return 1;
 	if (*info->dev->pvid) {
 		dm_hash_remove(_pvid_hash, info->dev->pvid);
