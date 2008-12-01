@@ -656,7 +656,7 @@ void vgdisplay_full(const struct volume_group *vg)
 void vgdisplay_colons(const struct volume_group *vg)
 {
 	uint32_t active_pvs;
-	uint32_t lv_count;
+	uint32_t lv_count = 0;
 	struct lv_list *lvl;
 	const char *access_str;
 	char uuid[64] __attribute((aligned(8)));
