@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Use displayable_lvs_in_vg and lv_is_displayable for consistency throughout.
   Fix race in vgcreate that would result in second caller overwriting first.
   Fix uninitialised lv_count in vgdisplay -c.
   Don't skip updating pvid hash when lvmcache_info struct got swapped.

@@ -483,6 +483,9 @@ int lv_is_origin(const struct logical_volume *lv);
 int lv_is_cow(const struct logical_volume *lv);
 int lv_is_visible(const struct logical_volume *lv);
 
+/* Test if given LV is visible from user's perspective */
+int lv_is_displayable(const struct logical_volume *lv);
+
 int pv_is_in_vg(struct volume_group *vg, struct physical_volume *pv);
 
 /* Given a cow LV, return return the snapshot lv_segment that uses it */

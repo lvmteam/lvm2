@@ -1715,7 +1715,7 @@ int lv_rename(struct cmd_context *cmd, struct logical_volume *lv,
 	struct lv_names lv_names;
 
 	/* rename is not allowed on sub LVs */
-	if (!lv_is_visible(lv)) {
+	if (!lv_is_displayable(lv)) {
 		log_error("Cannot rename internal LV \"%s\".", lv->name);
 		return 0;
 	}
