@@ -36,6 +36,14 @@ int lv_is_visible(const struct logical_volume *lv)
 	return lv->status & VISIBLE_LV ? 1 : 0;
 }
 
+int lv_is_displayable(const struct logical_volume *lv)
+{
+	if (lv->status & SNAPSHOT)
+		return 0;
+
+	return (lv->status & VISIBLE_LV) || lv_is_cow(lv) ? 1 : 0;
+}
+
 /* Given a cow LV, return the snapshot lv_segment that uses it */
 struct lv_segment *find_cow(const struct logical_volume *lv)
 {

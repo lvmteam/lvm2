@@ -511,7 +511,7 @@ static int _lvname_disp(struct dm_report *rh, struct dm_pool *mem,
 	char *repstr, *lvname;
 	size_t len;
 
-	if (lv_is_visible(lv)) {
+	if (lv_is_displayable(lv)) {
 		repstr = lv->name;
 		return dm_report_field_string(rh, field, (const char **) &repstr);
 	}
@@ -911,12 +911,9 @@ static int _lvcount_disp(struct dm_report *rh, struct dm_pool *mem,
 			 const void *data, void *private)
 {
 	const struct volume_group *vg = (const struct volume_group *) data;
-        struct lv_list *lvl;
-	uint32_t count = 0;
+	uint32_t count;
 
-        dm_list_iterate_items(lvl, &vg->lvs)
-		if (lv_is_visible(lvl->lv) && !(lvl->lv->status & SNAPSHOT))
-			count++;
+	count = displayable_lvs_in_vg(vg);	
 
 	return _uint32_disp(rh, mem, field, &count, private);
 }
