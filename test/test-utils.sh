@@ -73,15 +73,19 @@ prepare_loop() {
 		return 0
 	else
 		# no -f support 
-		# Iterate through $G_dev_/loop{,/}{0,1,2,3,4,5,6,7,8,9}
+		# Iterate through $G_dev_/loop{,/}{0,1,2,3,4,5,6,7}
 		for slash in '' /; do
-			for i in 0 1 2 3 4 5 6 7 8 9; do
+			for i in 0 1 2 3 4 5 6 7; do
 				local dev=$G_dev_/loop$slash$i
 				! losetup $dev >/dev/null 2>&1 || continue
 				# got a free
 				losetup "$dev" "$LOOPFILE"
 				LOOP=$dev
+				break
 			done
+			if [ -n "$LOOP" ]; then 
+				break
+			fi
 		done
 		test -n "$LOOP" # confirm or fail
 		return 0
@@ -99,7 +103,10 @@ prepare_devs() {
 
 	PREFIX="LVMTEST$$"
 
-	local loopsz=`blockdev --getsz $LOOP`
+	if ! loopsz=`blockdev --getsz $LOOP 2>/dev/null`; then
+  		loopsz=`blockdev --getsize $LOOP 2>/dev/null`
+	fi
+
 	local size=$(($loopsz/$n))
 
 	for i in `seq 1 $n`; do
