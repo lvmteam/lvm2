@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Add generic function to read /dev/urandom, used in uuid calculation.
   Use displayable_lvs_in_vg and lv_is_displayable for consistency throughout.
   Fix race in vgcreate that would result in second caller overwriting first.
   Fix uninitialised lv_count in vgdisplay -c.
