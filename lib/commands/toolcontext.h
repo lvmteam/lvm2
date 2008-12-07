@@ -62,6 +62,7 @@ struct cmd_context {
 	const char *hostname;
 	const char *kernel_vsn;
 
+	unsigned rand_seed;
 	char *cmd_line;
 	struct command *command;
 	struct arg *args;

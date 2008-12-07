@@ -19,7 +19,8 @@
 /*
  * Create a temporary filename, and opens a descriptor to the file.
  */
-int create_temp_name(const char *dir, char *buffer, size_t len, int *fd);
+int create_temp_name(const char *dir, char *buffer, size_t len, int *fd,
+		     unsigned *seed);
 
 /*
  * NFS-safe rename of a temporary file to a common name, designed

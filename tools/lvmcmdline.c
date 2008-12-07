@@ -997,11 +997,6 @@ int lvm_split(char *str, int *argc, char **argv, int max)
 	return *argc;
 }
 
-static void _init_rand(void)
-{
-	srand((unsigned) time(NULL) + (unsigned) getpid());
-}
-
 static const char *_get_cmdline(pid_t pid)
 {
 	static char _proc_cmdline[32];
@@ -1095,8 +1090,6 @@ struct cmd_context *init_lvm(unsigned is_static)
 
 	if (!(cmd = create_toolcontext(_cmdline.the_args, is_static, 0)))
 		return_NULL;
-
-	_init_rand();
 
 	_apply_settings(cmd);
 

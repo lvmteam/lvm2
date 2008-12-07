@@ -979,6 +979,14 @@ static int _init_backup(struct cmd_context *cmd)
 	return 1;
 }
 
+static void _init_rand(struct cmd_context *cmd)
+{
+	if (read_urandom(&cmd->rand_seed, sizeof(cmd->rand_seed)))
+		return;
+
+	cmd->rand_seed = (unsigned) time(NULL) + (unsigned) getpid();
+}
+
 /* Entry point */
 struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 				       unsigned is_long_lived)
@@ -1076,6 +1084,8 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 
 	if (!_init_backup(cmd))
 		goto error;
+
+	_init_rand(cmd);
 
 	cmd->default_settings.cache_vgmetadata = 1;
 	cmd->current_settings = cmd->default_settings;
