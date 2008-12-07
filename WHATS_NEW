@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Use better random seed value in temp file creation.
   Add generic function to read /dev/urandom, used in uuid calculation.
   Use displayable_lvs_in_vg and lv_is_displayable for consistency throughout.
   Fix race in vgcreate that would result in second caller overwriting first.

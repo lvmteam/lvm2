@@ -236,7 +236,8 @@ int archive_vg(struct volume_group *vg,
 	/*
 	 * Write the vg out to a temporary file.
 	 */
-	if (!create_temp_name(dir, temp_file, sizeof(temp_file), &fd)) {
+	if (!create_temp_name(dir, temp_file, sizeof(temp_file), &fd,
+			      &vg->cmd->rand_seed)) {
 		log_err("Couldn't create temporary archive name.");
 		return 0;
 	}

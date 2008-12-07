@@ -29,7 +29,8 @@
  * rename the file after successfully writing it.  Grab
  * NFS-supported exclusive fcntl discretionary lock.
  */
-int create_temp_name(const char *dir, char *buffer, size_t len, int *fd)
+int create_temp_name(const char *dir, char *buffer, size_t len, int *fd,
+		     unsigned *seed)
 {
 	int i, num;
 	pid_t pid;
@@ -41,7 +42,7 @@ int create_temp_name(const char *dir, char *buffer, size_t len, int *fd)
 		.l_len = 0
 	};
 
-	num = rand();
+	num = rand_r(seed);
 	pid = getpid();
 	if (gethostname(hostname, sizeof(hostname)) < 0) {
 		log_sys_error("gethostname", "");

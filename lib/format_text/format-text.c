@@ -848,7 +848,8 @@ static int _vg_write_file(struct format_instance *fid __attribute((unused)),
 		return 0;
 	}
 
-	if (!create_temp_name(temp_dir, temp_file, sizeof(temp_file), &fd)) {
+	if (!create_temp_name(temp_dir, temp_file, sizeof(temp_file), &fd,
+			      &vg->cmd->rand_seed)) {
 		log_err("Couldn't create temporary text file name.");
 		return 0;
 	}
