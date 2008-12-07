@@ -806,6 +806,7 @@ po/Makefile
 scripts/clvmd_init_red_hat
 scripts/Makefile
 test/Makefile
+test/api/Makefile
 tools/Makefile
 tools/version.h
 ])
