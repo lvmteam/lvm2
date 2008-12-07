@@ -15,6 +15,7 @@
 
 #include "lib.h"
 #include "uuid.h"
+#include "lvm-wrappers.h"
 
 #include <assert.h>
 #include <sys/stat.h>
@@ -94,24 +95,13 @@ int lvid_in_restricted_range(union lvid *lvid)
 
 int id_create(struct id *id)
 {
-	int randomfile;
 	unsigned i;
 	size_t len = sizeof(id->uuid);
 
 	memset(id->uuid, 0, len);
-	if ((randomfile = open("/dev/urandom", O_RDONLY)) < 0) {
-		log_sys_error("open", "id_create: /dev/urandom");
+	if (!read_urandom(&id->uuid, len)) {
 		return 0;
 	}
-
-	if (read(randomfile, id->uuid, len) != (ssize_t) len) {
-		log_sys_error("read", "id_create: /dev/urandom");
-		if (close(randomfile))
-			stack;
-		return 0;
-	}
-	if (close(randomfile))
-		stack;
 
 	/*
 	 * Skip out the last 2 chars in randomized creation for LVM1

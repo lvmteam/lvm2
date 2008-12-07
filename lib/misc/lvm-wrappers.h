@@ -18,4 +18,9 @@
 
 int lvm_getpagesize(void);
 
+/*
+ * Read 'len' bytes of entropy from /dev/urandom and store in 'buf'.
+ */
+int read_urandom(void *buf, size_t len);
+
 #endif
