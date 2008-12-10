@@ -33,7 +33,7 @@ teardown() {
 	echo $PREFIX
 
 	test -n "$PREFIX" && {
-		rm -rf /dev/$PREFIX*
+		rm -rf $G_root_/dev/$PREFIX*
 		while dmsetup table | grep -q ^$PREFIX; do
 			for s in `dmsetup table | grep ^$PREFIX| cut -f1 -d:`; do
 				dmsetup resume $s 2>/dev/null > /dev/null || true
@@ -52,7 +52,7 @@ teardown() {
 make_ioerror() {
 	echo 0 10000000 error | dmsetup create ioerror
 	dmsetup resume ioerror
-	ln -s /dev/mapper/ioerror /dev/ioerror
+	ln -s $G_dev_/mapper/ioerror $G_dev_/ioerror
 }
 
 prepare_loop() {
