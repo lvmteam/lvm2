@@ -185,6 +185,4 @@ init_root_dir_()
 EOF
 }
 
-if test $(this_test_) != 000-basic; then
-  init_root_dir_
-fi
+init_root_dir_
