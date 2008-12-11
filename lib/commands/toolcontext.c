@@ -784,6 +784,7 @@ static int _init_formats(struct cmd_context *cmd)
 		if (!strcasecmp(fmt->name, format) ||
 		    (fmt->alias && !strcasecmp(fmt->alias, format))) {
 			cmd->default_settings.fmt = fmt;
+			cmd->fmt = cmd->default_settings.fmt;
 			return 1;
 		}
 	}

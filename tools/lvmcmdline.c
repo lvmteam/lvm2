@@ -1094,9 +1094,6 @@ struct cmd_context *init_lvm(unsigned is_static)
 	init_full_scan_done(0);
 	init_mirror_in_sync(0);
 
-	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG,
-				 cmd->current_settings.fmt);
-
 	return cmd;
 }
 
