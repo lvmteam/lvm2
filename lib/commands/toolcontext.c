@@ -162,6 +162,7 @@ static void _init_logging(struct cmd_context *cmd)
 	/* Test mode */
 	cmd->default_settings.test =
 	    find_config_tree_int(cmd, "global/test", 0);
+	init_test(cmd->default_settings.test);
 
 	/* Settings for logging to file */
 	if (find_config_tree_int(cmd, "log/overwrite", DEFAULT_OVERWRITE))
