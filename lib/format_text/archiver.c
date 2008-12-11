@@ -36,7 +36,8 @@ struct backup_params {
 };
 
 int archive_init(struct cmd_context *cmd, const char *dir,
-		 unsigned int keep_days, unsigned int keep_min)
+		 unsigned int keep_days, unsigned int keep_min,
+		 int enabled)
 {
 	if (!(cmd->archive_params = dm_pool_zalloc(cmd->libmem,
 						sizeof(*cmd->archive_params)))) {
@@ -56,7 +57,7 @@ int archive_init(struct cmd_context *cmd, const char *dir,
 
 	cmd->archive_params->keep_days = keep_days;
 	cmd->archive_params->keep_number = keep_min;
-	cmd->archive_params->enabled = 1;
+	archive_enable(cmd, enabled);
 
 	return 1;
 }

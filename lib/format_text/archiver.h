@@ -32,7 +32,8 @@
  */
 
 int archive_init(struct cmd_context *cmd, const char *dir,
-		 unsigned int keep_days, unsigned int keep_min);
+		 unsigned int keep_days, unsigned int keep_min,
+		 int enabled);
 void archive_exit(struct cmd_context *cmd);
 
 void archive_enable(struct cmd_context *cmd, int flag);
