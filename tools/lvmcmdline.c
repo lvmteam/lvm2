@@ -1094,9 +1094,6 @@ struct cmd_context *init_lvm(unsigned is_static)
 	init_full_scan_done(0);
 	init_mirror_in_sync(0);
 
-	init_msg_prefix(cmd->default_settings.msg_prefix);
-	init_cmd_name(cmd->default_settings.cmd_name);
-
 	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG,
 				 cmd->current_settings.fmt);
 
