@@ -1105,7 +1105,6 @@ struct cmd_context *init_lvm(unsigned is_static)
 
 	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG,
 				 cmd->current_settings.fmt);
-	cmd->handles_missing_pvs = 0;
 
 	return cmd;
 }
