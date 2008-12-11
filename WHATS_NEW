@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Refactor init_lvm() for lvmcmdline and clvmd.
   Add liblvm interactive test infrastructure to build.
   Use better random seed value in temp file creation.
   Add generic function to read /dev/urandom, used in uuid calculation.
