@@ -1091,7 +1091,23 @@ struct cmd_context *init_lvm(unsigned is_static)
 	if (!(cmd = create_toolcontext(_cmdline.the_args, is_static, 0)))
 		return_NULL;
 
-	_apply_settings(cmd);
+	init_debug(cmd->current_settings.debug);
+	init_verbose(cmd->current_settings.verbose + VERBOSE_BASE_LEVEL);
+	init_test(cmd->current_settings.test);
+	init_full_scan_done(0);
+	init_mirror_in_sync(0);
+
+	init_msg_prefix(cmd->default_settings.msg_prefix);
+	init_cmd_name(cmd->default_settings.cmd_name);
+
+	archive_enable(cmd, cmd->current_settings.archive);
+	backup_enable(cmd, cmd->current_settings.backup);
+
+	set_activation(cmd->current_settings.activation);
+
+	cmd->fmt = arg_ptr_value(cmd, metadatatype_ARG,
+				 cmd->current_settings.fmt);
+	cmd->handles_missing_pvs = 0;
 
 	return cmd;
 }
