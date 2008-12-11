@@ -1,5 +1,6 @@
 Version 1.02.30 -
 ====================================
+  Replace _dm_snprintf with EMIT_PARAMS macro for creating target lines
 
 Version 1.02.29 - 10th November 2008
 ====================================
