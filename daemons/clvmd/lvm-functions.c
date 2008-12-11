@@ -733,7 +733,6 @@ int init_lvm(int using_gulm)
 	init_syslog(LOG_DAEMON);
 	openlog("clvmd", LOG_PID, LOG_DAEMON);
 	set_activation(cmd->current_settings.activation);
-	backup_enable(cmd, cmd->current_settings.backup);
 	cmd->cmd_line = (char *)"clvmd";
 
 	/* Check lvm.conf is setup for cluster-LVM */

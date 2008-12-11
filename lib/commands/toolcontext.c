@@ -925,7 +925,7 @@ static int _init_backup(struct cmd_context *cmd)
 
 	if (!cmd->sys_dir) {
 		log_warn("WARNING: Metadata changes will NOT be backed up");
-		backup_init(cmd, "");
+		backup_init(cmd, "", 0);
 		archive_init(cmd, "", 0, 0, 0);
 		return 1;
 	}
@@ -973,7 +973,7 @@ static int _init_backup(struct cmd_context *cmd)
 
 	dir = find_config_tree_str(cmd, "backup/backup_dir", default_dir);
 
-	if (!backup_init(cmd, dir)) {
+	if (!backup_init(cmd, dir, cmd->default_settings.backup)) {
 		log_debug("backup_init failed.");
 		return 0;
 	}
