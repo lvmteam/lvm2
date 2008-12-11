@@ -1097,7 +1097,6 @@ struct cmd_context *init_lvm(unsigned is_static)
 	init_msg_prefix(cmd->default_settings.msg_prefix);
 	init_cmd_name(cmd->default_settings.cmd_name);
 
-	archive_enable(cmd, cmd->current_settings.archive);
 	backup_enable(cmd, cmd->current_settings.backup);
 
 	set_activation(cmd->current_settings.activation);
