@@ -1091,9 +1091,6 @@ struct cmd_context *init_lvm(unsigned is_static)
 	if (!(cmd = create_toolcontext(_cmdline.the_args, is_static, 0)))
 		return_NULL;
 
-	init_full_scan_done(0);
-	init_mirror_in_sync(0);
-
 	return cmd;
 }
 

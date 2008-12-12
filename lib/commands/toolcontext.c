@@ -990,6 +990,13 @@ static void _init_rand(struct cmd_context *cmd)
 	cmd->rand_seed = (unsigned) time(NULL) + (unsigned) getpid();
 }
 
+static void _init_globals(struct cmd_context *cmd)
+{
+	init_full_scan_done(0);
+	init_mirror_in_sync(0);
+
+}
+
 /* Entry point */
 struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 				       unsigned is_long_lived)
@@ -1089,6 +1096,8 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 		goto error;
 
 	_init_rand(cmd);
+
+	_init_globals(cmd);
 
 	cmd->default_settings.cache_vgmetadata = 1;
 	cmd->current_settings = cmd->default_settings;
