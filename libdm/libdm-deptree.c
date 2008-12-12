@@ -1224,17 +1224,14 @@ static int _build_dev_string(char *devbuf, size_t bufsize, struct dm_tree_node *
 
 /* simplify string emiting code */
 #define EMIT_PARAMS(p, str...)\
-	do {\
-		const size_t bufsize = paramsize - (size_t)p;\
-		int w;\
-		\
-		if ((w = snprintf(params + p, bufsize, str)) < 0\
-		    || ((size_t)w >= bufsize)) {\
-			stack; /* Out of space */\
-			return -1;\
-		}\
-		p += w;\
-	} while (0)
+do {\
+	int w;\
+	if ((w = dm_snprintf(params + p, paramsize - (size_t) p, str)) < 0) {\
+		stack; /* Out of space */\
+		return -1;\
+	}\
+	p += w;\
+} while (0)
 
 static int _emit_areas_line(struct dm_task *dmt __attribute((unused)),
 			    struct load_segment *seg, char *params,
