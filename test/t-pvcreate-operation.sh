@@ -82,7 +82,7 @@ for i in 0 1 2 3
 do
 # pvcreate (lvm2) succeeds writing LVM label at sector $i
     pvcreate --labelsector $i $dev1
-    dd if=$dev1 bs=512 skip=$i count=1 status=noxfer 2>&1 | strings | grep -q LABELONE;
+    dd if=$dev1 bs=512 skip=$i count=1 2>/dev/null | strings | grep -q LABELONE;
     pvremove -f $dev1
 done
 
