@@ -54,59 +54,68 @@ static struct arg _the_args[ARG_COUNT + 1] = {
 static struct cmdline_context _cmdline;
 
 /* Command line args */
-unsigned arg_count(const struct cmd_context *cmd, int a)
+/* FIXME: struct cmd_context * is unnecessary (large # files ) */
+unsigned arg_count(const struct cmd_context *cmd __attribute((unused)), int a)
 {
-	return cmd->args[a].count;
+	return _the_args[a].count;
 }
 
-const char *arg_value(struct cmd_context *cmd, int a)
+const char *arg_value(struct cmd_context *cmd __attribute((unused)), int a)
 {
-	return cmd->args[a].value;
+	return _the_args[a].value;
 }
 
-const char *arg_str_value(struct cmd_context *cmd, int a, const char *def)
+const char *arg_str_value(struct cmd_context *cmd __attribute((unused)),
+			  int a, const char *def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].value : def;
+	return arg_count(cmd, a) ? _the_args[a].value : def;
 }
 
-int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
+int32_t arg_int_value(struct cmd_context *cmd __attribute((unused)),
+		      int a, const int32_t def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].i_value : def;
+	return arg_count(cmd, a) ? _the_args[a].i_value : def;
 }
 
-uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def)
+uint32_t arg_uint_value(struct cmd_context *cmd __attribute((unused)),
+			int a, const uint32_t def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].ui_value : def;
+	return arg_count(cmd, a) ? _the_args[a].ui_value : def;
 }
 
-int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def)
+int64_t arg_int64_value(struct cmd_context *cmd __attribute((unused)),
+			int a, const int64_t def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].i64_value : def;
+	return arg_count(cmd, a) ? _the_args[a].i64_value : def;
 }
 
-uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def)
+uint64_t arg_uint64_value(struct cmd_context *cmd __attribute((unused)),
+			  int a, const uint64_t def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].ui64_value : def;
+	return arg_count(cmd, a) ? _the_args[a].ui64_value : def;
 }
 
-const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def)
+const void *arg_ptr_value(struct cmd_context *cmd __attribute((unused)),
+			  int a, const void *def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].ptr : def;
+	return arg_count(cmd, a) ? _the_args[a].ptr : def;
 }
 
-sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def)
+sign_t arg_sign_value(struct cmd_context *cmd __attribute((unused)),
+		      int a, const sign_t def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].sign : def;
+	return arg_count(cmd, a) ? _the_args[a].sign : def;
 }
 
-percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def)
+percent_t arg_percent_value(struct cmd_context *cmd __attribute((unused)),
+			    int a, const percent_t def)
 {
-	return arg_count(cmd, a) ? cmd->args[a].percent : def;
+	return arg_count(cmd, a) ? _the_args[a].percent : def;
 }
 
-int arg_count_increment(struct cmd_context *cmd, int a)
+int arg_count_increment(struct cmd_context *cmd __attribute((unused)), int a)
 {
-	return cmd->args[a].count++;
+	return _the_args[a].count++;
 }
 
 int yes_no_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
@@ -1144,7 +1153,7 @@ struct cmd_context *init_lvm(unsigned is_static)
 
 	_cmdline.the_args = &_the_args[0];
 
-	if (!(cmd = create_toolcontext(_cmdline.the_args, is_static, 0)))
+	if (!(cmd = create_toolcontext(is_static, 0)))
 		return_NULL;
 
 	return cmd;
