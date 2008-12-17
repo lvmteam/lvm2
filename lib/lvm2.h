@@ -24,7 +24,7 @@
  */
 struct arg;
 struct cmd_context;
-struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static, unsigned is_long_lived);
+struct cmd_context *create_toolcontext(unsigned is_static, unsigned is_long_lived);
 void destroy_toolcontext(struct cmd_context *cmd);
 
 /*
@@ -37,7 +37,7 @@ lvm_handle_t lvm2_create(void);
  * NULL: Fail - unable to initialise handle.
  * non-NULL: Success - valid LVM2 handle returned
  */
-#define lvm2_create(X) create_toolcontext(NULL,0,1)
+#define lvm2_create(X) create_toolcontext(0,1)
 
 /*
  * lvm2_destroy

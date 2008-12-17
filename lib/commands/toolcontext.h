@@ -65,7 +65,6 @@ struct cmd_context {
 	unsigned rand_seed;
 	char *cmd_line;
 	struct command *command;
-	struct arg *args;
 	char **argv;
 	unsigned is_static:1;	/* Static binary? */
 	unsigned is_long_lived:1;	/* Optimises persistent_filter handling */
@@ -96,7 +95,7 @@ struct cmd_context {
 	char sysfs_dir[PATH_MAX];
 };
 
-struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static, unsigned is_long_lived);
+struct cmd_context *create_toolcontext(unsigned is_static, unsigned is_long_lived);
 void destroy_toolcontext(struct cmd_context *cmd);
 int refresh_toolcontext(struct cmd_context *cmd);
 int config_files_changed(struct cmd_context *cmd);

@@ -998,7 +998,7 @@ static void _init_globals(struct cmd_context *cmd)
 }
 
 /* Entry point */
-struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
+struct cmd_context *create_toolcontext(unsigned is_static,
 				       unsigned is_long_lived)
 {
 	struct cmd_context *cmd;
@@ -1021,7 +1021,6 @@ struct cmd_context *create_toolcontext(struct arg *the_args, unsigned is_static,
 		return NULL;
 	}
 	memset(cmd, 0, sizeof(*cmd));
-	cmd->args = the_args;
 	cmd->is_static = is_static;
 	cmd->is_long_lived = is_long_lived;
 	cmd->handles_missing_pvs = 0;
