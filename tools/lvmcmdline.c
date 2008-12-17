@@ -53,6 +53,62 @@ static struct arg _the_args[ARG_COUNT + 1] = {
 
 static struct cmdline_context _cmdline;
 
+/* Command line args */
+unsigned arg_count(const struct cmd_context *cmd, int a)
+{
+	return cmd->args[a].count;
+}
+
+const char *arg_value(struct cmd_context *cmd, int a)
+{
+	return cmd->args[a].value;
+}
+
+const char *arg_str_value(struct cmd_context *cmd, int a, const char *def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].value : def;
+}
+
+int32_t arg_int_value(struct cmd_context *cmd, int a, const int32_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].i_value : def;
+}
+
+uint32_t arg_uint_value(struct cmd_context *cmd, int a, const uint32_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].ui_value : def;
+}
+
+int64_t arg_int64_value(struct cmd_context *cmd, int a, const int64_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].i64_value : def;
+}
+
+uint64_t arg_uint64_value(struct cmd_context *cmd, int a, const uint64_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].ui64_value : def;
+}
+
+const void *arg_ptr_value(struct cmd_context *cmd, int a, const void *def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].ptr : def;
+}
+
+sign_t arg_sign_value(struct cmd_context *cmd, int a, const sign_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].sign : def;
+}
+
+percent_t arg_percent_value(struct cmd_context *cmd, int a, const percent_t def)
+{
+	return arg_count(cmd, a) ? cmd->args[a].percent : def;
+}
+
+int arg_count_increment(struct cmd_context *cmd, int a)
+{
+	return cmd->args[a].count++;
+}
+
 int yes_no_arg(struct cmd_context *cmd __attribute((unused)), struct arg *a)
 {
 	a->sign = SIGN_NONE;
