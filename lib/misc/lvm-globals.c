@@ -38,6 +38,7 @@ static int _mirror_in_sync = 0;
 static int _dmeventd_monitor = DEFAULT_DMEVENTD_MONITOR;
 static int _ignore_suspended_devices = 0;
 static int _error_message_produced = 0;
+static unsigned _is_static = 0;
 
 void init_verbose(int level)
 {
@@ -104,6 +105,11 @@ void init_ignore_suspended_devices(int ignore)
 void init_cmd_name(int status)
 {
 	_log_cmd_name = status;
+}
+
+void init_is_static(unsigned value)
+{
+	_is_static = value;
 }
 
 void set_cmd_name(const char *cmd)
@@ -198,4 +204,9 @@ int verbose_level()
 int debug_level()
 {
 	return _debug_level;
+}
+
+unsigned is_static(void)
+{
+	return _is_static;
 }

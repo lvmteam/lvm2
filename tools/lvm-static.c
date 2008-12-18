@@ -17,7 +17,8 @@
 
 int main(int argc, char **argv)
 {
-	return lvm2_main(argc, argv, 1);
+	init_is_static(1);
+	return lvm2_main(argc, argv);
 }
 
 int lvm_shell(struct cmd_context *cmd __attribute((unused)),

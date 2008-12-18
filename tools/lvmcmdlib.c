@@ -28,13 +28,14 @@
 #include <time.h>
 #include <sys/resource.h>
 
-void *cmdlib_lvm2_init(unsigned is_static)
+void *cmdlib_lvm2_init(unsigned static_compile)
 {
 	struct cmd_context *cmd;
 
 	lvm_register_commands();
 
-	if (!(cmd = init_lvm(is_static)))
+	init_is_static(static_compile);
+	if (!(cmd = init_lvm()))
 		return NULL;
 
 	return (void *) cmd;

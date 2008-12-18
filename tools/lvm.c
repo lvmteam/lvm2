@@ -18,7 +18,7 @@
 
 int main(int argc, char **argv)
 {
-	return lvm2_main(argc, argv, 0);
+	return lvm2_main(argc, argv);
 }
 
 #ifdef READLINE_SUPPORT
