@@ -228,7 +228,7 @@ int init_locking(int type, struct cmd_context *cmd)
 
 #ifdef HAVE_LIBDL
 	case 2:
-		if (!cmd->is_static) {
+		if (!is_static()) {
 			log_very_verbose("External locking selected.");
 			if (init_external_locking(&_locking, cmd))
 				return 1;

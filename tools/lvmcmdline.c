@@ -1147,13 +1147,13 @@ static void _close_stray_fds(const char *command)
 				  parent_cmdline);
 }
 
-struct cmd_context *init_lvm(unsigned is_static)
+struct cmd_context *init_lvm(void)
 {
 	struct cmd_context *cmd;
 
 	_cmdline.the_args = &_the_args[0];
 
-	if (!(cmd = create_toolcontext(is_static, 0)))
+	if (!(cmd = create_toolcontext(0)))
 		return_NULL;
 
 	return cmd;
@@ -1272,7 +1272,7 @@ static void _nonroot_warning(void)
 		log_warn("WARNING: Running as a non-root user. Functionality may be unavailable.");
 }
 
-int lvm2_main(int argc, char **argv, unsigned is_static)
+int lvm2_main(int argc, char **argv)
 {
 	const char *base;
 	int ret, alias = 0;
@@ -1285,7 +1285,7 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 
 	_close_stray_fds(base);
 
-	if (is_static && strcmp(base, "lvm.static") &&
+	if (is_static() && strcmp(base, "lvm.static") &&
 	    path_exists(LVM_SHARED_PATH) &&
 	    !getenv("LVM_DID_EXEC")) {
 		setenv("LVM_DID_EXEC", base, 1);
@@ -1293,7 +1293,7 @@ int lvm2_main(int argc, char **argv, unsigned is_static)
 		unsetenv("LVM_DID_EXEC");
 	}
 
-	if (!(cmd = init_lvm(is_static)))
+	if (!(cmd = init_lvm()))
 		return -1;
 
 	cmd->argv = argv;

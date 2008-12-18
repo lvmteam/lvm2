@@ -738,7 +738,7 @@ static int _init_formats(struct cmd_context *cmd)
 
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs if not static */
-	if (!cmd->is_static &&
+	if (!is_static() &&
 	    (cn = find_config_tree_node(cmd, "global/format_libraries"))) {
 
 		struct config_value *cv;
@@ -848,7 +848,7 @@ static int _init_segtypes(struct cmd_context *cmd)
 
 #ifdef HAVE_LIBDL
 	/* Load any formats in shared libs unless static */
-	if (!cmd->is_static &&
+	if (!is_static() &&
 	    (cn = find_config_tree_node(cmd, "global/segment_libraries"))) {
 
 		struct config_value *cv;
@@ -998,8 +998,7 @@ static void _init_globals(struct cmd_context *cmd)
 }
 
 /* Entry point */
-struct cmd_context *create_toolcontext(unsigned is_static,
-				       unsigned is_long_lived)
+struct cmd_context *create_toolcontext(unsigned is_long_lived)
 {
 	struct cmd_context *cmd;
 
@@ -1021,7 +1020,6 @@ struct cmd_context *create_toolcontext(unsigned is_static,
 		return NULL;
 	}
 	memset(cmd, 0, sizeof(*cmd));
-	cmd->is_static = is_static;
 	cmd->is_long_lived = is_long_lived;
 	cmd->handles_missing_pvs = 0;
 	cmd->hosttags = 0;

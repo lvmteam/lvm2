@@ -44,7 +44,7 @@ void *load_shared_library(struct cmd_context *cmd, const char *libname,
 	char path[PATH_MAX];
 	void *library;
 
-	if (cmd->is_static) {
+	if (is_static()) {
 		log_error("Not loading shared %s library %s in static mode.",
 			  desc, libname);
 		return NULL;
