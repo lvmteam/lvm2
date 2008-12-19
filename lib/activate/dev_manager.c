@@ -1005,7 +1005,8 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	void *handle = NULL;
 	struct dm_tree_node *child;
 	struct lv_layer *lvlayer;
-	char *vgname, *lvname, *layer;
+	char *old_vgname, *old_lvname, *old_layer;
+	char *new_vgname, *new_lvname, *new_layer;
 	const char *name;
 	int r = 1;
 
@@ -1017,11 +1018,16 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 		name = dm_tree_node_get_name(child);
 
 		if (name && lvlayer->old_name && *lvlayer->old_name && strcmp(name, lvlayer->old_name)) {
-			if (!dm_split_lvm_name(dm->mem, lvlayer->old_name, &vgname, &lvname, &layer)) {
+			if (!dm_split_lvm_name(dm->mem, lvlayer->old_name, &old_vgname, &old_lvname, &old_layer)) {
 				log_error("_create_lv_symlinks: Couldn't split up old device name %s", lvlayer->old_name);
 				return 0;
 			}
-			fs_rename_lv(lvlayer->lv, name, lvname);
+			if (!dm_split_lvm_name(dm->mem, name, &new_vgname, &new_lvname, &new_layer)) {
+				log_error("_create_lv_symlinks: Couldn't split up new device name %s", name);
+				return 0;
+			}
+			if (!fs_rename_lv(lvlayer->lv, name, old_vgname, old_lvname))
+				r = 0;
 		} else if (!dev_manager_lv_mknodes(lvlayer->lv))
 			r = 0;
 	}

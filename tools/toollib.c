@@ -1232,3 +1232,8 @@ int fill_vg_create_params(struct cmd_context *cmd,
 
 	return 0;
 }
+
+int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
+{
+	return suspend_lv(cmd, lv) && resume_lv(cmd, lv);
+}

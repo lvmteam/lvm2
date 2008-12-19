@@ -1084,9 +1084,10 @@ int lv_mknodes(struct cmd_context *cmd, const struct logical_volume *lv)
 	if (!_lv_info(cmd, lv, 1, &info, 0, 0, 0))
 		return_0;
 
-	if (info.exists)
-		r = dev_manager_lv_mknodes(lv);
-	else
+	if (info.exists) {
+		if (lv_is_visible(lv))
+			r = dev_manager_lv_mknodes(lv);
+	} else
 		r = dev_manager_lv_rmnodes(lv);
 
 	fs_unlock();
