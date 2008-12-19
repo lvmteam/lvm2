@@ -2698,9 +2698,13 @@ int set_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!dev_open_quiet(dev))
 		return_0;
 
-	dev_set(dev, UINT64_C(0),
-		sectors ? (size_t) sectors << SECTOR_SHIFT : (size_t) 4096,
-		value);
+	if (!sectors)
+		sectors = UINT64_C(4096) >> SECTOR_SHIFT;
+
+	if (sectors > lv->size)
+		sectors = lv->size;
+
+	dev_set(dev, UINT64_C(0), (size_t) sectors << SECTOR_SHIFT, value);
 	dev_flush(dev);
 	dev_close_immediate(dev);
 
