@@ -168,10 +168,7 @@ static int lvchange_availability(struct cmd_context *cmd,
 static int lvchange_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	log_verbose("Refreshing logical volume \"%s\" (if active)", lv->name);
-	if (!suspend_lv(cmd, lv) || !resume_lv(cmd, lv))
-		return 0;
-
-	return 1;
+	return lv_refresh(cmd, lv);
 }
 
 static int lvchange_resync(struct cmd_context *cmd,

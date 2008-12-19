@@ -100,4 +100,6 @@ int is_reserved_lvname(const char *name);
 int fill_vg_create_params(struct cmd_context *cmd,
 			  char *vg_name, struct vgcreate_params *vp_new,
 			  struct vgcreate_params *vp_def);
+
+int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv);
 #endif
