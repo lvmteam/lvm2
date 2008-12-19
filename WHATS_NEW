@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Calculate mirror log size instead of using 1 extent.
   Check if requested major/minor pair is already used.
   Fix incorrect return value in help function.
   Fix vgrename using UUID in case there are VGs with the same name.
