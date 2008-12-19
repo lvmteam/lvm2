@@ -516,6 +516,7 @@ struct alloc_handle {
 	uint32_t area_count;		/* Number of parallel areas */
 	uint32_t area_multiple;		/* seg->len = area_len * area_multiple */
 	uint32_t log_count;		/* Number of parallel 1-extent logs */
+	uint32_t log_region_size;	/* region size for log device */
 	uint32_t total_area_len;	/* Total number of parallel extents */
 
 	struct dm_list *parallel_areas;	/* PVs to avoid */
@@ -543,6 +544,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 					uint32_t mirrors,
 					uint32_t stripes,
 					uint32_t log_count,
+					uint32_t log_region_size,
 					struct dm_list *parallel_areas)
 {
 	struct alloc_handle *ah;
@@ -582,6 +584,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 	ah->area_count = area_count;
 	ah->log_count = log_count;
+	ah->log_region_size = log_region_size;
 	ah->alloc = alloc;
 	ah->area_multiple = calc_area_multiple(segtype, area_count);
 
@@ -704,6 +707,28 @@ static int _setup_alloced_segments(struct logical_volume *lv,
 }
 
 /*
+ * Returns log device size in extents, algorithm from kernel code
+ */
+#define BYTE_SHIFT 3
+static uint32_t mirror_log_extents(uint32_t region_size, uint32_t pe_size, uint32_t area_len)
+{
+	size_t area_size, bitset_size, log_size, region_count;
+
+	area_size = area_len * pe_size;
+	region_count = dm_div_up(area_size, region_size);
+
+	/* Work out how many "unsigned long"s we need to hold the bitset. */
+	bitset_size = dm_round_up(region_count, sizeof(uint32_t) << BYTE_SHIFT);
+	bitset_size >>= BYTE_SHIFT;
+
+	/* Log device holds both header and bitset. */
+	log_size = dm_round_up((MIRROR_LOG_OFFSET << SECTOR_SHIFT) + bitset_size, 1 << SECTOR_SHIFT);
+	log_size >>= SECTOR_SHIFT;
+
+	return dm_div_up(log_size, pe_size);
+}
+
+/*
  * This function takes a list of pv_areas and adds them to allocated_areas.
  * If the complete area is not needed then it gets split.
  * The part used is removed from the pv_map so it can't be allocated twice.
@@ -745,7 +770,9 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t needed,
 	if (log_area) {
 		ah->log_area.pv = log_area->map->pv;
 		ah->log_area.pe = log_area->start;
-		ah->log_area.len = MIRROR_LOG_SIZE;	/* FIXME Calculate & check this */
+		ah->log_area.len = mirror_log_extents(ah->log_region_size,
+						      pv_pe_size(log_area->map->pv),
+						      area_len);
 		consume_pv_area(log_area, ah->log_area.len);
 	}
 
@@ -817,7 +844,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* FIXME only_single_area_segments used as workaround to skip log LV - needs new param? */
 	if (!only_single_area_segments && seg_is_mirrored(seg) && seg->log_lv) {
-		if (!(r = _for_each_pv(cmd, seg->log_lv, 0, MIRROR_LOG_SIZE,
+		if (!(r = _for_each_pv(cmd, seg->log_lv, 0, seg->log_lv->le_count?:1,
 				       NULL, 0, 0, 0, only_single_area_segments,
 				       fn, data)))
 			stack;
@@ -1256,7 +1283,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 				      const struct segment_type *segtype,
 				      uint32_t stripes,
 				      uint32_t mirrors, uint32_t log_count,
-				      uint32_t extents,
+				      uint32_t log_region_size, uint32_t extents,
 				      struct dm_list *allocatable_pvs,
 				      alloc_policy_t alloc,
 				      struct dm_list *parallel_areas)
@@ -1282,7 +1309,7 @@ struct alloc_handle *allocate_extents(struct volume_group *vg,
 		alloc = vg->alloc;
 
 	if (!(ah = _alloc_init(vg->cmd, vg->cmd->mem, segtype, alloc, mirrors,
-			       stripes, log_count, parallel_areas)))
+			       stripes, log_count, log_region_size, parallel_areas)))
 		return_NULL;
 
 	if (!segtype_is_virtual(segtype) &&
@@ -1577,7 +1604,7 @@ int lv_extend(struct logical_volume *lv,
 	if (segtype_is_virtual(segtype))
 		return lv_add_virtual_segment(lv, status, extents, segtype);
 
-	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors, 0,
+	if (!(ah = allocate_extents(lv->vg, lv, segtype, stripes, mirrors, 0, 0,
 				    extents, allocatable_pvs, alloc, NULL)))
 		return_0;
 

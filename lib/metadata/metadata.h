@@ -34,7 +34,18 @@
 //#define STRIPE_SIZE_LIMIT ((UINT_MAX >> 2) + 1)
 //#define PV_MIN_SIZE ( 512L * 1024L >> SECTOR_SHIFT)	/* 512 KB in sectors */
 //#define MAX_RESTRICTED_LVS 255	/* Used by FMT_RESTRICTED_LVIDS */
-#define MIRROR_LOG_SIZE 1	/* Extents */
+#define MIRROR_LOG_OFFSET	2	/* sectors */
+
+/*
+ * Ceiling(n / sz)
+ */
+#define dm_div_up(n, sz) (((n) + (sz) - 1) / (sz))
+
+/*
+ * Ceiling(n / size) * size
+ */
+#define dm_round_up(n, sz) (dm_div_up((n), (sz)) * (sz))
+
 
 /* Various flags */
 /* Note that the bits no longer necessarily correspond to LVM1 disk format */
