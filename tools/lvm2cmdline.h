@@ -28,7 +28,7 @@ struct cmdline_context {
 
 int lvm2_main(int argc, char **argv);
 
-void *cmdlib_lvm2_init(unsigned is_static);
+void *cmdlib_lvm2_init(unsigned static_compile);
 void lvm_fin(struct cmd_context *cmd);
 
 struct cmd_context *init_lvm(void);
