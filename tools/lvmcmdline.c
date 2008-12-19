@@ -568,14 +568,17 @@ static void _short_usage(const char *name)
 	log_error("Run `%s --help' for more information.", name);
 }
 
-static void _usage(const char *name)
+static int _usage(const char *name)
 {
 	struct command *com = _find_command(name);
 
-	if (!com)
-		return;
+	if (!com) {
+		log_print("%s: no such command.", name);
+		return 0;
+	}
 
 	log_print("%s: %s\n\n%s", com->name, com->desc, com->usage);
+	return 1;
 }
 
 /*
@@ -852,15 +855,18 @@ static void _display_help(void)
 
 int help(struct cmd_context *cmd __attribute((unused)), int argc, char **argv)
 {
+	int ret = ECMD_PROCESSED;
+
 	if (!argc)
 		_display_help();
 	else {
 		int i;
 		for (i = 0; i < argc; i++)
-			_usage(argv[i]);
+			if (!_usage(argv[i]))
+				ret = EINVALID_CMD_LINE;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int _override_settings(struct cmd_context *cmd)
