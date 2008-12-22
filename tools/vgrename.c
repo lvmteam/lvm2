@@ -23,9 +23,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	int consistent = 1;
 	int match = 0;
 	int found_id = 0;
-	int symlinks_refresh_ok = 1;
 	struct dm_list *vgids;
-	struct lv_list *lvl;
 	struct str_list *sl;
 	char *vg_name_new;
 	const char *vgid = NULL, *vg_name, *vg_name_old;
@@ -140,12 +138,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 			log_verbose("Test mode: Skipping rename.");
 
 		else if (lvs_in_vg_activated_by_uuid_only(vg)) {
-			dm_list_iterate_items(lvl, &vg->lvs)
-				if (lv_is_visible(lvl->lv))
-					if (!lv_refresh(cmd, lvl->lv))
-						symlinks_refresh_ok = 0;
-
-			if (!symlinks_refresh_ok) {
+			if (!vg_refresh_visible(cmd, vg)) {
 				log_error("Renaming \"%s\" to \"%s\" failed", 
 					old_path, new_path);
 				goto error;

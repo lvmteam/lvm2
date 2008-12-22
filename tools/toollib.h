@@ -102,4 +102,5 @@ int fill_vg_create_params(struct cmd_context *cmd,
 			  struct vgcreate_params *vp_def);
 
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv);
+int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg);
 #endif

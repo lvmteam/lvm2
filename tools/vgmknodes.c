@@ -18,6 +18,10 @@
 static int _vgmknodes_single(struct cmd_context *cmd, struct logical_volume *lv,
 			     void *handle __attribute((unused)))
 {
+	if (arg_count(cmd, refresh_ARG) && lv_is_visible(lv))
+		if (!lv_refresh(cmd, lv))
+			return ECMD_FAILED;
+
 	if (!lv_mknodes(cmd, lv))
 		return ECMD_FAILED;
 
@@ -26,13 +30,9 @@ static int _vgmknodes_single(struct cmd_context *cmd, struct logical_volume *lv,
 
 int vgmknodes(struct cmd_context *cmd, int argc, char **argv)
 {
-	int r;
+	if (!lv_mknodes(cmd, NULL))
+		return ECMD_FAILED;
 
-	r = process_each_lv(cmd, argc, argv, LCK_VG_READ, NULL,
+	return process_each_lv(cmd, argc, argv, LCK_VG_READ, NULL,
 			    &_vgmknodes_single);
-
-	if (!lv_mknodes(cmd, NULL) && (r < ECMD_FAILED))
-		r = ECMD_FAILED;
-
-	return r;
 }
