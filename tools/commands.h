@@ -665,6 +665,7 @@ xx(vgchange,
    "\t[--ignorelockingfailure]\n"
    "\t[--ignoremonitoring]\n"
    "\t[--monitor {y|n}]\n"
+   "\t[--refresh]\n"
    "\t[-t|--test]" "\n"
    "\t[-u|--uuid] " "\n"
    "\t[-v|--verbose] " "\n"
@@ -682,7 +683,8 @@ xx(vgchange,
    addtag_ARG, alloc_ARG, allocation_ARG, autobackup_ARG, available_ARG,
    clustered_ARG, deltag_ARG, ignorelockingfailure_ARG, ignoremonitoring_ARG,
    logicalvolume_ARG, maxphysicalvolumes_ARG, monitor_ARG, partial_ARG,
-   physicalextentsize_ARG, resizeable_ARG, resizable_ARG, test_ARG, uuid_ARG)
+   physicalextentsize_ARG, refresh_ARG, resizeable_ARG, resizable_ARG,
+   test_ARG, uuid_ARG)
 
 xx(vgck,
    "Check the consistency of volume group(s)",
@@ -834,11 +836,12 @@ xx(vgmknodes,
    "\t[-d|--debug]\n"
    "\t[-h|--help]\n"
    "\t[--ignorelockingfailure]\n"
+   "\t[--refresh]\n"
    "\t[-v|--verbose]\n"
    "\t[--version]" "\n"
    "\t[VolumeGroupName...]\n",
 
-   ignorelockingfailure_ARG)
+   ignorelockingfailure_ARG, refresh_ARG)
 
 xx(vgreduce,
    "Remove physical volume(s) from a volume group",

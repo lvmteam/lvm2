@@ -1237,3 +1237,16 @@ int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv)
 {
 	return suspend_lv(cmd, lv) && resume_lv(cmd, lv);
 }
+
+int vg_refresh_visible(struct cmd_context *cmd, struct volume_group *vg)
+{
+	struct lv_list *lvl;
+	int r = 1;
+	
+	dm_list_iterate_items(lvl, &vg->lvs)
+		if (lv_is_visible(lvl->lv))
+			if (!lv_refresh(cmd, lvl->lv))
+				r = 0;
+	
+	return r;
+}

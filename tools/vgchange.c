@@ -510,6 +510,16 @@ static int _vgchange_uuid(struct cmd_context *cmd __attribute((unused)),
 	return ECMD_PROCESSED;
 }
 
+static int _vgchange_refresh(struct cmd_context *cmd, struct volume_group *vg)
+{
+	log_verbose("Refreshing volume group \"%s\"", vg->name);
+
+	if (!vg_refresh_visible(cmd, vg))
+		return ECMD_FAILED;
+	
+	return ECMD_PROCESSED;
+}
+
 static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 			   struct volume_group *vg, int consistent,
 			   void *handle __attribute((unused)))
@@ -576,6 +586,9 @@ static int vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	else if (arg_count(cmd, clustered_ARG))
 		r = _vgchange_clustered(cmd, vg);
 
+	else if (arg_count(cmd, refresh_ARG))
+		r = _vgchange_refresh(cmd, vg);
+
 	return r;
 }
 
@@ -588,9 +601,9 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	     arg_count(cmd, addtag_ARG) + arg_count(cmd, uuid_ARG) +
 	     arg_count(cmd, physicalextentsize_ARG) +
 	     arg_count(cmd, clustered_ARG) + arg_count(cmd, alloc_ARG) +
-	     arg_count(cmd, monitor_ARG))) {
-		log_error("One of -a, -c, -l, -p, -s, -x, --uuid, --alloc, "
-			  "--addtag or --deltag required");
+	     arg_count(cmd, monitor_ARG) + arg_count(cmd, refresh_ARG))) {
+		log_error("One of -a, -c, -l, -p, -s, -x, --refresh, "
+				"--uuid, --alloc, --addtag or --deltag required");
 		return EINVALID_CMD_LINE;
 	}
 
