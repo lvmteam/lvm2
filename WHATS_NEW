@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Fix lvmdump /sys listing to include virtual devices directory.
   Add "--refresh" functionality to vgchange and vgmknodes.
   Check for maximal LV size when wiping device.
   Calculate mirror log size instead of using 1 extent.
