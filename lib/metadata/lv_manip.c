@@ -844,7 +844,7 @@ static int _for_each_pv(struct cmd_context *cmd, struct logical_volume *lv,
 
 	/* FIXME only_single_area_segments used as workaround to skip log LV - needs new param? */
 	if (!only_single_area_segments && seg_is_mirrored(seg) && seg->log_lv) {
-		if (!(r = _for_each_pv(cmd, seg->log_lv, 0, seg->log_lv->le_count?:1,
+		if (!(r = _for_each_pv(cmd, seg->log_lv, 0, seg->log_lv->le_count,
 				       NULL, 0, 0, 0, only_single_area_segments,
 				       fn, data)))
 			stack;
