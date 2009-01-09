@@ -17,7 +17,15 @@ aux() {
 	#"$@"
 }
 
-not () { "$@" && exit 1 || return 0; }
+not () {
+	"$@" && exit 1 || {
+		err="$?"
+		if test "$err" = 129; then
+			echo "fatal error $err"
+			exit 1
+		fi
+	}
+}
 
 STACKTRACE() {
 	trap - ERR;
@@ -44,7 +52,10 @@ teardown() {
 
 	test -n "$LOOP" && losetup -d $LOOP
 	test -n "$LOOPFILE" && rm -f $LOOPFILE
+}
 
+teardown_() {
+	teardown
 	cleanup_ # user-overridable cleanup
 	testlib_cleanup_ # call test-lib cleanup routine, too
 }
@@ -60,7 +71,7 @@ prepare_loop() {
 	test -n "$size" || size=32
 
 	test -n "$LOOP" && return 0
-	trap 'aux teardown' EXIT # don't forget to clean up
+	trap 'aux teardown_' EXIT # don't forget to clean up
 	trap 'set +vex; STACKTRACE; set -vex' ERR
 	#trap - ERR
 
@@ -144,6 +155,22 @@ enable_dev() {
 		local name=`echo "$dev" | sed -e 's,.*/,,'`
 		dmsetup create $name $name.table || dmsetup load $name $name.table
 		dmsetup resume $dev
+	done
+}
+
+backup_dev() {
+	for dev in "$@"; do
+		dd if=$dev of=$dev.backup bs=1024
+	done
+}
+
+restore_dev() {
+	for dev in "$@"; do
+		test -e $dev.backup || {
+			echo "Internal error: $dev not backed up, can't restore!"
+			exit 1
+		}
+		dd of=$dev if=$dev.backup bs=1024
 	done
 }
 
