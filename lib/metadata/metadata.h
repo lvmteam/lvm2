@@ -139,6 +139,11 @@ struct metadata_area_ops {
 	uint64_t (*mda_free_sectors) (struct metadata_area *mda);
 
 	/*
+	 * Returns number of total sectors in given metadata area.
+	 */
+	uint64_t (*mda_total_sectors) (struct metadata_area *mda);
+
+	/*
 	 * Check if metadata area belongs to vg
 	 */
 	int (*mda_in_vg) (struct format_instance * fi,
