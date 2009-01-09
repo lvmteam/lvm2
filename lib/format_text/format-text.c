@@ -87,6 +87,13 @@ static uint64_t _mda_free_sectors_raw(struct metadata_area *mda)
 	return mdac->free_sectors;
 }
 
+static uint64_t _mda_total_sectors_raw(struct metadata_area *mda)
+{
+	struct mda_context *mdac = (struct mda_context *) mda->metadata_locn;
+
+	return mdac->area.size >> SECTOR_SHIFT;
+}
+
 /*
  * Check if metadata area belongs to vg
  */
@@ -1559,6 +1566,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 	.vg_commit = _vg_commit_raw,
 	.vg_revert = _vg_revert_raw,
 	.mda_free_sectors = _mda_free_sectors_raw,
+	.mda_total_sectors = _mda_total_sectors_raw,
 	.mda_in_vg = _mda_in_vg_raw,
 	.pv_analyze_mda = _pv_analyze_mda_raw,
 };
