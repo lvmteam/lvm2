@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Add pv_mda_size to pvs and vg_mda_size to vgs.
   Fix lvmdump /sys listing to include virtual devices directory.
   Add "--refresh" functionality to vgchange and vgmknodes.
   Check for maximal LV size when wiping device.
