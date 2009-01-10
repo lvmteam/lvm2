@@ -268,6 +268,9 @@ static int _dev_get_size_dev(const struct device *dev, uint64_t *size)
 
 int dev_get_size(const struct device *dev, uint64_t *size)
 {
+	if (!dev)
+		return 0;
+
 	if ((dev->flags & DEV_REGULAR))
 		return _dev_get_size_file(dev, size);
 	else
