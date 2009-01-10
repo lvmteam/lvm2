@@ -926,7 +926,13 @@ static int _vgmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	uint64_t min_mda_size;
 
-	min_mda_size = _find_min_mda_size(&vg->fid->metadata_areas);
+	/*
+	 * An orphan PV will have vg->fid == NULL
+	 */
+	if (vg->fid == NULL)
+		min_mda_size = UINT64_C(0);
+	else
+		min_mda_size = _find_min_mda_size(&vg->fid->metadata_areas);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
@@ -939,6 +945,12 @@ static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint64_t freespace = UINT64_MAX, mda_free;
 	struct metadata_area *mda;
 
+	/*
+	 * An orphan PV will have vg->fid == NULL
+	 */
+	if (vg->fid == NULL)
+		goto calc_done;
+
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
 		if (!mda->ops->mda_free_sectors)
 			continue;
@@ -946,7 +958,7 @@ static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 		if (mda_free < freespace)
 			freespace = mda_free;
 	}
-
+calc_done:
 	if (freespace == UINT64_MAX)
 		freespace = UINT64_C(0);
 

@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Fix pvs segfault when run with orphan PV and vg_mda_size or vg_mda_free.
   Display a 'dev_size' of zero for missing devices in reports.
   Add pv_mda_size to pvs and vg_mda_size to vgs.
   Fix lvmdump /sys listing to include virtual devices directory.
