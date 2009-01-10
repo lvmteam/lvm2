@@ -88,9 +88,12 @@ static int _pvsegs_sub_single(struct cmd_context *cmd __attribute((unused)),
 
         _free_lv_segment.segtype = get_segtype_from_string(cmd, "free");
 	_free_lv_segment.len = pvseg->len;
+	dm_list_init(&_free_lv_segment.tags);
+	dm_list_init(&_free_lv_segment.origin_list);
 	dm_list_init(&_free_logical_volume.tags);
 	dm_list_init(&_free_logical_volume.segments);
 	dm_list_init(&_free_logical_volume.segs_using_this_lv);
+	dm_list_init(&_free_logical_volume.snapshot_segs);
 
 	if (!report_object(handle, vg, seg ? seg->lv : &_free_logical_volume, pvseg->pv,
 			   seg ? : &_free_lv_segment, pvseg))
