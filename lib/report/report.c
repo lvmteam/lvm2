@@ -926,13 +926,7 @@ static int _vgmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 	const struct volume_group *vg = (const struct volume_group *) data;
 	uint64_t min_mda_size;
 
-	/*
-	 * An orphan PV will have vg->fid == NULL
-	 */
-	if (vg->fid == NULL)
-		min_mda_size = UINT64_C(0);
-	else
-		min_mda_size = _find_min_mda_size(&vg->fid->metadata_areas);
+	min_mda_size = _find_min_mda_size(&vg->fid->metadata_areas);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
@@ -945,12 +939,6 @@ static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 	uint64_t freespace = UINT64_MAX, mda_free;
 	struct metadata_area *mda;
 
-	/*
-	 * An orphan PV will have vg->fid == NULL
-	 */
-	if (vg->fid == NULL)
-		goto calc_done;
-
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas) {
 		if (!mda->ops->mda_free_sectors)
 			continue;
@@ -958,7 +946,7 @@ static int _vgmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 		if (mda_free < freespace)
 			freespace = mda_free;
 	}
-calc_done:
+
 	if (freespace == UINT64_MAX)
 		freespace = UINT64_C(0);
 
@@ -1081,8 +1069,17 @@ static int _copypercent_disp(struct dm_report *rh __attribute((unused)), struct 
 /* Report object types */
 
 /* necessary for displaying something for PVs not belonging to VG */
+static struct format_instance _dummy_fid = {
+	.metadata_areas = { &(_dummy_fid.metadata_areas), &(_dummy_fid.metadata_areas) },
+};
+
 static struct volume_group _dummy_vg = {
+	.fid = &_dummy_fid,
 	.name = (char *) "",
+	.system_id = (char *) "",
+	.pvs = { &(_dummy_vg.pvs), &(_dummy_vg.pvs) },
+	.lvs = { &(_dummy_vg.lvs), &(_dummy_vg.lvs) },
+	.tags = { &(_dummy_vg.tags), &(_dummy_vg.tags) },
 };
 
 static void *_obj_get_vg(void *obj)
@@ -1181,6 +1178,10 @@ int report_object(void *handle, struct volume_group *vg,
 		  struct lv_segment *seg, struct pv_segment *pvseg)
 {
 	struct lvm_report_object obj;
+
+	/* The two format fields might as well match. */
+	if (!vg && pv)
+		_dummy_fid.fmt = pv->fmt;
 
 	obj.vg = vg;
 	obj.lv = lv;
