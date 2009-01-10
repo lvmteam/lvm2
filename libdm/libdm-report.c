@@ -254,6 +254,11 @@ static void _display_fields(struct dm_report *rh)
 		if (strlen(rh->fields[f].id) > id_len)
 			id_len = strlen(rh->fields[f].id);
 
+
+	for (type = rh->types; type->data_fn; type++)
+		if (strlen(type->prefix) + 3 > id_len)
+			id_len = strlen(type->prefix) + 3;
+
 	for (f = 0; rh->fields[f].report_fn; f++) {
 		if ((type = _find_type(rh, rh->fields[f].type)) && type->desc)
 			desc = type->desc;
@@ -266,6 +271,9 @@ static void _display_fields(struct dm_report *rh)
 			log_warn("%*.*s", (int) strlen(desc) + 7,
 				 (int) strlen(desc) + 7,
 				 "-------------------------------------------------------------------------------");
+			log_warn("  %sall%-*s - %s", type->prefix,
+				 (int) (id_len - 3 - strlen(type->prefix)), "",
+				 "All fields in this section.");
 		}
 
 		/* FIXME Add line-wrapping at terminal width (or 80 cols) */
