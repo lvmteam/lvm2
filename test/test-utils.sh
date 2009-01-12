@@ -17,16 +17,6 @@ aux() {
 	#"$@"
 }
 
-not () {
-	"$@" && exit 1 || {
-		err="$?"
-		if test "$err" = 129; then
-			echo "fatal error $err"
-			exit 1
-		fi
-	}
-}
-
 STACKTRACE() {
 	trap - ERR;
 	i=0;
