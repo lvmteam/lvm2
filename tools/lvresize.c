@@ -144,7 +144,7 @@ static int do_resizefs_reduce(const struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64,
+	if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64 "K",
 			(uint64_t) lp->extents * vg->extent_size / 2) < 0) {
 		log_error("Couldn't generate new LV size string");
 		return 0;
@@ -635,7 +635,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 				  lp->lv_name);
 			return ECMD_FAILED;
 		}
-		if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64,
+		if (dm_snprintf(size_buf, SIZE_BUF, "%" PRIu64 "K",
 				(uint64_t) lp->extents * vg->extent_size / 2) < 0) {
 		    log_error("Couldn't generate new LV size string");
 		    return ECMD_FAILED;
