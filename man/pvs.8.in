@@ -4,7 +4,7 @@ pvs \- report information about physical volumes
 .SH SYNOPSIS
 .B pvs
 [\-\-aligned] [\-d|\-\-debug] [\-h|\-?|\-\-help]
-[\-\-ignorelockingfailure] [\-\-noheadings] [\-\-nosuffix]
+[\-\-ignorelockingfailure] [\-\-nameprefixes] [\-\-noheadings] [\-\-nosuffix]
 [\-o|\-\-options [+]Field[,Field]]
 [\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
 [\-\-rows]
@@ -19,6 +19,11 @@ See \fBlvm\fP for common options.
 .TP
 .I \-\-aligned
 Use with \-\-separator to align the output columns.
+.TP
+.I \-\-nameprefixes
+Add an "LVM2_" prefix plus the field name to the output.  Useful
+with --noheadings to produce a list of field=value pairs that can
+be used to set environment variables (for example, in \fBudev (7)\fP rules).
 .TP
 .I \-\-noheadings
 Suppress the headings line that is normally the first line of output.
