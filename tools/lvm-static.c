@@ -14,6 +14,7 @@
  */
 
 #include "lvm2cmdline.h"
+#include "lib.h"
 
 int main(int argc, char **argv)
 {
