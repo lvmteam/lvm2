@@ -10,6 +10,7 @@ pvs \- report information about physical volumes
 [\-\-rows] [\-\-segments]
 [\-\-separator Separator] [\-\-unbuffered]
 [\-\-units hsbkmgtHKMGT]
+[\-\-unquoted]
 [\-v|\-\-verbose] 
 [\-\-version] [PhysicalVolume [PhysicalVolume...]]
 .SH DESCRIPTION
@@ -67,6 +68,9 @@ All sizes are output in these units: (h)uman-readable, (s)ectors, (b)ytes,
 (k)ilobytes, (m)egabytes, (g)igabytes, (t)erabytes.  Capitalise to use multiples
 of 1000 (S.I.) instead of 1024.  Can also specify custom (u)nits e.g.
 \-\-units 3M
+.TP
+.I \-\-unquoted
+When used with --nameprefixes, output values in the field=value pairs are not quoted.
 .SH SEE ALSO
 .BR lvm (8),
 .BR pvdisplay (8),
