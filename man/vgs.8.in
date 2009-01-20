@@ -7,7 +7,7 @@ vgs \- report information about volume groups
 [\-\-ignorelockingfailure] [\-\-noheadings] [\-\-nosuffix]
 [\-o|\-\-options [+]Field[,Field]]
 [\-O|\-\-sort [+|-]Key1[,[+|-]Key2[,...]]]
-[\-P|\-\-partial]
+[\-P|\-\-partial] [\-\-rows]
 [\-\-separator Separator] [\-\-unbuffered]
 [\-\-units hsbkmgtHKMGT]
 [\-v|\-\-verbose] 
@@ -58,6 +58,9 @@ Allocation policy: (c)ontiguous, c(l)ing, (n)ormal, (a)nywhere, (i)nherited
 .I \-O, \-\-sort
 Comma-separated ordered list of columns to sort by.  Replaces the default
 selection. Precede any column with - for a reverse sort on that column.
+.TP
+.I \-\-rows
+Output columns as rows.
 .TP
 .I \-\-separator Separator
 String to use to separate each column.  Useful if grepping the output.
