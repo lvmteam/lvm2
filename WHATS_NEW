@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Add --nameprefixes and --rows to pvs, vgs, lvs man pages.
   Fix fsadm failure with block size != 1K.
   Fix pvs segfault when run with orphan PV and some VG fields.
   Display a 'dev_size' of zero for missing devices in reports.
