@@ -391,6 +391,15 @@ int main(int argc, char *argv[])
 			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to OpenAIS");
 		}
 #endif
+#ifdef USE_COROSYNC
+	if (!clops)
+		if ((clops = init_corosync_cluster())) {
+			max_csid_len = COROSYNC_CSID_LEN;
+			max_cluster_message = COROSYNC_MAX_CLUSTER_MESSAGE;
+			max_cluster_member_name_len = COROSYNC_MAX_CLUSTER_MEMBER_NAME_LEN;
+			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to Corosync");
+		}
+#endif
 
 	if (!clops) {
 		DEBUGLOG("Can't initialise cluster interface\n");
