@@ -93,5 +93,22 @@ struct cluster_ops *init_cman_cluster(void);
 struct cluster_ops *init_openais_cluster(void);
 #endif
 
+#ifdef USE_COROSYNC
+#  include <corosync/corotypes.h>
+#  define COROSYNC_CSID_LEN (sizeof(int))
+#  define COROSYNC_MAX_CLUSTER_MESSAGE         65535
+#  define COROSYNC_MAX_CLUSTER_MEMBER_NAME_LEN CS_MAX_NAME_LENGTH
+#  ifndef MAX_CLUSTER_MEMBER_NAME_LEN
+#    define MAX_CLUSTER_MEMBER_NAME_LEN       CS_MAX_NAME_LENGTH
+#  endif
+#  ifndef CMAN_MAX_CLUSTER_MESSAGE
+#    define CMAN_MAX_CLUSTER_MESSAGE          65535
+#  endif
+#  ifndef MAX_CSID_LEN
+#    define MAX_CSID_LEN sizeof(int)
+#  endif
+struct cluster_ops *init_corosync_cluster(void);
+#endif
+
 
 #endif

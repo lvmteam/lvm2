@@ -1,5 +1,6 @@
 Version 2.02.44 - 
 ====================================
+  Add corosync/DLM cluster interface to clvmd
   Add --nameprefixes, --unquoted, --rows to pvs, vgs, lvs man pages.
   Fix fsadm failure with block size != 1K.
   Fix pvs segfault when run with orphan PV and some VG fields.
