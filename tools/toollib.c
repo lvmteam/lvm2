@@ -291,7 +291,7 @@ int process_each_lv(struct cmd_context *cmd, int argc, char **argv,
 			consistent = 1;
 		else
 			consistent = 0;
-		if (!(vg = vg_read(cmd, vgname, NULL, &consistent)) || !consistent) {
+		if (!(vg = vg_read_internal(cmd, vgname, NULL, &consistent)) || !consistent) {
 			unlock_vg(cmd, vgname);
 			if (!vg)
 				log_error("Volume group \"%s\" "
@@ -433,7 +433,7 @@ static int _process_one_vg(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	log_verbose("Finding volume group \"%s\"", vg_name);
-	if (!(vg = vg_read(cmd, vg_name, vgid, &consistent))) {
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent))) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		unlock_vg(cmd, vg_name);
 		return ECMD_FAILED;
@@ -720,7 +720,7 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 					log_error("Can't lock %s: skipping", sll->str);
 					continue;
 				}
-				if (!(vg = vg_read(cmd, sll->str, NULL, &consistent))) {
+				if (!(vg = vg_read_internal(cmd, sll->str, NULL, &consistent))) {
 					log_error("Volume group \"%s\" not found", sll->str);
 					unlock_vg(cmd, sll->str);
 					ret_max = ECMD_FAILED;
@@ -1143,7 +1143,7 @@ struct volume_group *recover_vg(struct cmd_context *cmd, const char *vgname,
 		return NULL;
 	}
 
-	return vg_read(cmd, vgname, NULL, &consistent);
+	return vg_read_internal(cmd, vgname, NULL, &consistent);
 }
 
 int apply_lvname_restrictions(const char *name)

@@ -711,7 +711,7 @@ void lvm_do_backup(const char *vgname)
 
 	DEBUGLOG("Triggering backup of VG metadata for %s. suspended=%d\n", vgname, suspended);
 
-	vg = vg_read(cmd, vgname, NULL /*vgid*/, &consistent);
+	vg = vg_read_internal(cmd, vgname, NULL /*vgid*/, &consistent);
 	if (vg) {
 		if (consistent)
 			check_current_backup(vg);

@@ -224,8 +224,8 @@ int get_pv_from_vg_by_id(const struct format_type *fmt, const char *vg_name,
 	struct pv_list *pvl;
 	int consistent = 0;
 
-	if (!(vg = vg_read(fmt->cmd, vg_name, vgid, &consistent))) {
-		log_error("get_pv_from_vg_by_id: vg_read failed to read VG %s",
+	if (!(vg = vg_read_internal(fmt->cmd, vg_name, vgid, &consistent))) {
+		log_error("get_pv_from_vg_by_id: vg_read_internal failed to read VG %s",
 			  vg_name);
 		return 0;
 	}
@@ -503,7 +503,7 @@ struct volume_group *vg_create(struct cmd_context *cmd, const char *vg_name,
 		return_NULL;
 
 	/* is this vg name already in use ? */
-	if (vg_read(cmd, vg_name, NULL, &consistent)) {
+	if (vg_read_internal(cmd, vg_name, NULL, &consistent)) {
 		log_err("A volume group called '%s' already exists.", vg_name);
 		goto bad;
 	}
@@ -1684,12 +1684,12 @@ int vg_missing_pv_count(const vg_t *vg)
 	return ret;
 }
 
-/* Caller sets consistent to 1 if it's safe for vg_read to correct
+/* Caller sets consistent to 1 if it's safe for vg_read_internal to correct
  * inconsistent metadata on disk (i.e. the VG write lock is held).
  * This guarantees only consistent metadata is returned.
  * If consistent is 0, caller must check whether consistent == 1 on return
  * and take appropriate action if it isn't (e.g. abort; get write lock
- * and call vg_read again).
+ * and call vg_read_internal again).
  *
  * If precommitted is set, use precommitted metadata if present.
  *
@@ -1716,7 +1716,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 
 	if (is_orphan_vg(vgname)) {
 		if (use_precommitted) {
-			log_error("Internal error: vg_read requires vgname "
+			log_error("Internal error: vg_read_internal requires vgname "
 				  "with pre-commit.");
 			return NULL;
 		}
@@ -1974,7 +1974,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	return correct_vg;
 }
 
-struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
+struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vgname,
 			     const char *vgid, int *consistent)
 {
 	struct volume_group *vg;
@@ -2002,7 +2002,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vgname,
 
 /* This is only called by lv_from_lvid, which is only called from
  * activate.c so we know the appropriate VG lock is already held and
- * the vg_read is therefore safe.
+ * the vg_read_internal is therefore safe.
  */
 static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 					    const char *vgid,
@@ -2034,7 +2034,7 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	if (memlock())
 		return NULL;
 
-	/* FIXME Need a genuine read by ID here - don't vg_read by name! */
+	/* FIXME Need a genuine read by ID here - don't vg_read_internal by name! */
 	/* FIXME Disabled vgrenames while active for now because we aren't
 	 *       allowed to do a full scan here any more. */
 
@@ -2218,7 +2218,7 @@ static int _get_pvs(struct cmd_context *cmd, struct dm_list **pvslist)
 			stack;
 			continue;
 		}
-		if (!(vg = vg_read(cmd, vgname, vgid, &consistent))) {
+		if (!(vg = vg_read_internal(cmd, vgname, vgid, &consistent))) {
 			stack;
 			continue;
 		}
@@ -2446,7 +2446,7 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		return NULL;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name, vgid, &consistent)) ||
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent)) ||
 	    ((misc_flags & FAIL_INCONSISTENT) && !consistent)) {
 		log_error("Volume group \"%s\" not found", vg_name);
 		unlock_vg(cmd, vg_name);

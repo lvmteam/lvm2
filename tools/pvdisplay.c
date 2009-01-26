@@ -37,7 +37,7 @@ static int _pvdisplay_single(struct cmd_context *cmd,
 
 	 	/*
 		 * Replace possibly incomplete PV structure with new one
-		 * allocated in vg_read() path.
+		 * allocated in vg_read_internal() path.
 		 */
 		 if (!(pvl = find_pv_in_vg(vg, pv_name))) {
 			 log_error("Unable to find \"%s\" in volume group \"%s\"",

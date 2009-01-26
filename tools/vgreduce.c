@@ -426,7 +426,7 @@ static int _vgreduce_single(struct cmd_context *cmd, struct volume_group *vg,
 	vg->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
 	vg->extent_count -= pv_pe_count(pv);
 
-	if(!(orphan_vg = vg_read(cmd, vg->fid->fmt->orphan_vg_name, NULL, &consistent)) ||
+	if(!(orphan_vg = vg_read_internal(cmd, vg->fid->fmt->orphan_vg_name, NULL, &consistent)) ||
 	   !consistent) {
 		log_error("Unable to read existing orphan PVs");
 		unlock_vg(cmd, VG_ORPHANS);
@@ -520,7 +520,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return ECMD_FAILED;
 	}
 
-	if ((!(vg = vg_read(cmd, vg_name, NULL, &consistent)) || !consistent)
+	if ((!(vg = vg_read_internal(cmd, vg_name, NULL, &consistent)) || !consistent)
 	    && !repairing) {
 		log_error("Volume group \"%s\" doesn't exist", vg_name);
 		unlock_vg(cmd, vg_name);
@@ -541,7 +541,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		consistent = !arg_count(cmd, force_ARG);
-		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
+		if (!(vg = vg_read_internal(cmd, vg_name, NULL, &consistent))) {
 			log_error("Volume group \"%s\" not found", vg_name);
 			unlock_vg(cmd, vg_name);
 			return ECMD_FAILED;

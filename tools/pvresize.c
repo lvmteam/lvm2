@@ -62,7 +62,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!(vg = vg_read(cmd, vg_name, NULL, &consistent))) {
+		if (!(vg = vg_read_internal(cmd, vg_name, NULL, &consistent))) {
 			unlock_vg(cmd, vg_name);
 			log_error("Unable to find volume group of \"%s\"",
 				  pv_name);
