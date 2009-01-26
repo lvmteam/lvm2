@@ -1,8 +1,8 @@
-Version 1.02.30 -
+Version 1.02.30 - 26th January 2009
 ====================================
   Add "all" field to reports expanding to all fields of report type.
-  Add checks for device names in dmsetup and show proper error messages.
-  Replace _dm_snprintf with EMIT_PARAMS macro for creating target lines
+  Enforce device name length and character limitations in libdm.
+  Replace _dm_snprintf with EMIT_PARAMS macro for creating target lines.
 
 Version 1.02.29 - 10th November 2008
 ====================================
