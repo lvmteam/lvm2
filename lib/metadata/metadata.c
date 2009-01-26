@@ -2377,7 +2377,38 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	return 1;
 }
 
+static uint32_t _vg_check_status(const struct volume_group *vg, uint32_t status)
+{
+	uint32_t failure = 0;
 
+	if ((status & CLUSTERED) &&
+	    (vg_is_clustered(vg)) && !locking_is_clustered() &&
+	    !lockingfailed()) {
+		log_error("Skipping clustered volume group %s", vg->name);
+		/* Return because other flags are considered undefined. */
+		return FAILED_CLUSTERED;
+	}
+
+	if ((status & EXPORTED_VG) &&
+	    (vg->status & EXPORTED_VG)) {
+		log_error("Volume group %s is exported", vg->name);
+		failure |= FAILED_EXPORTED;
+	}
+
+	if ((status & LVM_WRITE) &&
+	    !(vg->status & LVM_WRITE)) {
+		log_error("Volume group %s is read-only", vg->name);
+		failure |= FAILED_READ_ONLY;
+	}
+
+	if ((status & RESIZEABLE_VG) &&
+	    !(vg->status & RESIZEABLE_VG)) {
+		log_error("Volume group %s is not resizeable.", vg->name);
+		failure |= FAILED_RESIZEABLE;
+	}
+
+	return failure;
+}
 
 /**
  * vg_check_status - check volume group status flags and log error
@@ -2459,6 +2490,138 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	return vg;
+}
+
+/*
+ * Create a (vg_t) volume group handle from a struct volume_group pointer and a
+ * possible failure code or zero for success.
+ */
+static vg_t *_vg_make_handle(struct cmd_context *cmd,
+			     struct volume_group *vg,
+			     uint32_t failure)
+{
+	if (!vg && !(vg = dm_pool_zalloc(cmd->mem, sizeof(*vg)))) {
+		log_error("Error allocating vg handle.");
+		return_NULL;
+	}
+
+	vg->read_status = failure;
+
+	return (vg_t *)vg;
+}
+
+static vg_t *_recover_vg(struct cmd_context *cmd, const char *lock_name,
+			 const char *vg_name, const char *vgid,
+			 uint32_t lock_flags)
+{
+	int consistent = 1;
+	struct volume_group *vg;
+
+	lock_flags &= ~LCK_TYPE_MASK;
+	lock_flags |= LCK_WRITE;
+
+	unlock_vg(cmd, lock_name);
+
+	dev_close_all();
+
+	if (!lock_vol(cmd, lock_name, lock_flags))
+		return_NULL;
+
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent)))
+		return_NULL;
+
+	if (!consistent)
+		return_NULL;
+
+	return (vg_t *)vg;
+}
+
+/*
+ * Consolidated locking, reading, and status flag checking.
+ *
+ * If the metadata is inconsistent, setting READ_ALLOW_INCONSISTENT in
+ * misc_flags will return it with FAILED_INCONSISTENT set instead of 
+ * giving you nothing.
+ *
+ * Use vg_read_error(vg) to determine the result.  Nonzero means there were
+ * problems reading the volume group.
+ * Zero value means that the VG is open and appropriate locks are held.
+ */
+static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
+			       const char *vgid, uint32_t lock_flags,
+			       uint32_t status_flags, uint32_t misc_flags)
+{
+	struct volume_group *vg = 0;
+	const char *lock_name;
+ 	int consistent = 1;
+	int consistent_in;
+	uint32_t failure = 0;
+	int already_locked;
+
+	if (misc_flags & READ_ALLOW_INCONSISTENT || !(lock_flags & LCK_WRITE))
+		consistent = 0;
+
+	if (!validate_name(vg_name) && !is_orphan_vg(vg_name)) {
+		log_error("Volume group name %s has invalid characters",
+			  vg_name);
+		return NULL;
+	}
+
+	lock_name = is_orphan_vg(vg_name) ? VG_ORPHANS : vg_name;
+	already_locked = vgname_is_locked(lock_name);
+
+	if (!already_locked && !lock_vol(cmd, lock_name, lock_flags)) {
+		log_error("Can't get lock for %s", vg_name);
+		return _vg_make_handle(cmd, vg, FAILED_LOCKING);
+	}
+
+	if (is_orphan_vg(vg_name))
+		status_flags &= ~LVM_WRITE;
+
+	if (misc_flags & READ_CHECK_EXISTENCE)
+		consistent = 0;
+
+	consistent_in = consistent;
+
+	/* If consistent == 1, we get NULL here if correction fails. */
+	if (!(vg = vg_read_internal(cmd, vg_name, vgid, &consistent))) {
+		if (consistent_in && !consistent) {
+			log_error("Volume group \"%s\" inconsistent.", vg_name);
+			failure |= FAILED_INCONSISTENT;
+			goto_bad;
+		}
+
+		if (!(misc_flags & READ_CHECK_EXISTENCE))
+			log_error("Volume group \"%s\" not found", vg_name);
+		else
+			failure |= READ_CHECK_EXISTENCE;
+
+		failure |= FAILED_NOTFOUND;
+		goto_bad;
+	}
+
+	/* consistent == 0 when VG is not found, but failed == FAILED_NOTFOUND */
+	if (!consistent && !failure)
+		if (!(vg = _recover_vg(cmd, lock_name, vg_name, vgid, lock_flags))) {
+			log_error("Recovery of volume group \"%s\" failed.",
+				  vg_name);
+			failure |= FAILED_INCONSISTENT;
+			goto_bad;
+		}
+	
+
+	failure |= _vg_check_status(vg, status_flags);
+	if (failure)
+		goto_bad;
+
+	return _vg_make_handle(cmd, vg, failure);
+
+bad:
+	if (failure != (FAILED_NOTFOUND | READ_CHECK_EXISTENCE) &&
+	    !(misc_flags & LOCK_KEEP) && !already_locked)
+		unlock_vg(cmd, lock_name);
+
+	return _vg_make_handle(cmd, vg, failure);
 }
 
 /*
