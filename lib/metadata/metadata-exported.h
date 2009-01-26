@@ -104,6 +104,29 @@ struct pv_segment;
 #define MIRROR_BY_LV		0x00000002U	/* mirror using whole mimage LVs */
 #define MIRROR_SKIP_INIT_SYNC	0x00000010U	/* skip initial sync */
 
+/* vg_read and vg_read_for_update flags */
+#define READ_ALLOW_INCONSISTENT	0x00010000U
+#define READ_ALLOW_EXPORTED	0x00020000U
+#define READ_REQUIRE_RESIZEABLE	0x00040000U
+#define READ_CHECK_EXISTENCE	0x00080000U	/* Also used in vg->read_status */
+
+/* FIXME Deduce these next requirements internally instead of having caller specify. */
+#define LOCK_NONBLOCKING	0x00000100U	/* Fail if not available immediately. */
+#define LOCK_KEEP		0x00000200U	/* Do not unlock upon read failure. */
+
+/* A meta-flag, useful with toollib for_each_* functions. */
+#define READ_FOR_UPDATE 	0x00100000U
+
+/* vg's "read_status" field */
+#define FAILED_INCONSISTENT	0x00000001U
+#define FAILED_LOCKING		0x00000002U
+#define FAILED_NOTFOUND		0x00000004U
+#define FAILED_READ_ONLY	0x00000008U
+#define FAILED_EXPORTED		0x00000010U
+#define FAILED_RESIZEABLE	0x00000020U
+#define FAILED_CLUSTERED	0x00000040U
+#define FAILED_ALLOCATION	0x00000080U
+
 /* Ordered list - see lv_manip.c */
 typedef enum {
 	ALLOC_INVALID,
@@ -232,6 +255,17 @@ struct volume_group {
 	struct dm_list lvs;
 
 	struct dm_list tags;
+
+	/*
+	 * vg_t handle fields.
+	 * FIXME: Split these out.
+	 */
+
+	/*
+	 * Store result of the last vg_read().
+	 * 0 for success else appropriate FAILURE_* bits set.
+	 */
+	uint32_t read_status;
 };
 
 /* There will be one area for each stripe */
