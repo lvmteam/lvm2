@@ -14,8 +14,10 @@ Version 2.02.44 - 26th January 2009
   Fix incorrect exit status from 'help <command>'.
   Fix vgrename using UUID if there are VGs with identical names.
   Fix segfault when invalid field given in reporting commands.
+  Move is_static from cmd to global is_static().
   Refactor init_lvm() for lvmcmdline and clvmd.
   Add liblvm interactive test infrastructure to build.
+  Add skeleton lvm2.h file in preparation for a shared library interface.
   Use better random seed value in temp file creation.
   Add read_urandom to read /dev/urandom. Use in uuid calculation.
   Use displayable_lvs_in_vg and lv_is_displayable for consistency throughout.
