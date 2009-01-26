@@ -2377,7 +2377,14 @@ int pv_analyze(struct cmd_context *cmd, const char *pv_name,
 	return 1;
 }
 
-static uint32_t _vg_check_status(const struct volume_group *vg, uint32_t status)
+/*
+ * Performs a set of checks against a VG according to bits set in status
+ * and returns FAILED_* bits for those that aren't acceptable.
+ *
+ * FIXME Remove the unnecessary duplicate definitions and return bits directly.
+ */
+static uint32_t _vg_bad_status_bits(const struct volume_group *vg,
+				    uint32_t status)
 {
 	uint32_t failure = 0;
 
@@ -2414,38 +2421,10 @@ static uint32_t _vg_check_status(const struct volume_group *vg, uint32_t status)
  * vg_check_status - check volume group status flags and log error
  * @vg - volume group to check status flags
  * @status - specific status flags to check (e.g. EXPORTED_VG)
- *
- * Returns:
- * 0 - fail
- * 1 - success
  */
 int vg_check_status(const struct volume_group *vg, uint32_t status)
 {
-	if ((status & CLUSTERED) &&
-	    (vg_is_clustered(vg)) && !locking_is_clustered() &&
-	    !lockingfailed()) {
-		log_error("Skipping clustered volume group %s", vg->name);
-		return 0;
-	}
-
-	if ((status & EXPORTED_VG) &&
-	    (vg->status & EXPORTED_VG)) {
-		log_error("Volume group %s is exported", vg->name);
-		return 0;
-	}
-
-	if ((status & LVM_WRITE) &&
-	    !(vg->status & LVM_WRITE)) {
-		log_error("Volume group %s is read-only", vg->name);
-		return 0;
-	}
-	if ((status & RESIZEABLE_VG) &&
-	    !(vg->status & RESIZEABLE_VG)) {
-		log_error("Volume group %s is not resizeable.", vg->name);
-		return 0;
-	}
-
-	return 1;
+	return !_vg_bad_status_bits(vg, status);
 }
 
 /*
@@ -2616,7 +2595,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		}
 	
 
-	failure |= _vg_check_status(vg, status_flags & ~CLUSTERED);
+	failure |= _vg_bad_status_bits(vg, status_flags & ~CLUSTERED);
 	if (failure)
 		goto_bad;
 
