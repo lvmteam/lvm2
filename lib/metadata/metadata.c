@@ -2600,6 +2600,12 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		goto_bad;
 	}
 
+	if (vg_is_clustered(vg) && !locking_is_clustered()) {
+		log_error("Skipping clustered volume group %s", vg->name);
+		failure |= FAILED_CLUSTERED;
+		goto_bad;
+	}
+
 	/* consistent == 0 when VG is not found, but failed == FAILED_NOTFOUND */
 	if (!consistent && !failure)
 		if (!(vg = _recover_vg(cmd, lock_name, vg_name, vgid, lock_flags))) {
@@ -2610,7 +2616,7 @@ static vg_t *_vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		}
 	
 
-	failure |= _vg_check_status(vg, status_flags);
+	failure |= _vg_check_status(vg, status_flags & ~CLUSTERED);
 	if (failure)
 		goto_bad;
 
