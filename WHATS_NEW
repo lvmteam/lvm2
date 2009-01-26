@@ -1,5 +1,6 @@
 Version 2.02.44 - 26th January 2009
 ===================================
+  Fix --enable-static_link after the recent repository changes.
   Add corosync/DLM cluster interface to clvmd.
   Add --nameprefixes, --unquoted, --rows to pvs, vgs, lvs man pages.
   Fix lvresize size conversion for fsadm when block size is not 1K.
