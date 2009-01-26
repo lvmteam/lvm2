@@ -334,7 +334,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	consistent = 0;
-	if ((vg_to = vg_read(cmd, vg_name_to, NULL, &consistent))) {
+	if ((vg_to = vg_read_internal(cmd, vg_name_to, NULL, &consistent))) {
 		existing_vg = 1;
 		if (new_vg_option_specified(cmd)) {
 			log_error("Volume group \"%s\" exists, but new VG "
@@ -451,7 +451,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	 */
 	consistent = 1;
 	if (!test_mode() &&
-	    (!(vg_to = vg_read(cmd, vg_name_to, NULL, &consistent)) ||
+	    (!(vg_to = vg_read_internal(cmd, vg_name_to, NULL, &consistent)) ||
 	     !consistent)) {
 		log_error("Volume group \"%s\" became inconsistent: please "
 			  "fix manually", vg_name_to);

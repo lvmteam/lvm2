@@ -136,7 +136,7 @@ static int _pvs_single(struct cmd_context *cmd, struct volume_group *vg,
 
 		/*
 		 * Replace possibly incomplete PV structure with new one
-		 * allocated in vg_read() path.
+		 * allocated in vg_read_internal() path.
 		*/
 		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
 			log_error("Unable to find \"%s\" in volume group \"%s\"",

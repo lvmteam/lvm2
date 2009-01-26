@@ -75,7 +75,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 		return 0;
 	}
 
-	if (!(vg = vg_read(cmd, vg_name_old, vgid, &consistent)) || !consistent) {
+	if (!(vg = vg_read_internal(cmd, vg_name_old, vgid, &consistent)) || !consistent) {
 		log_error("Volume group %s %s%s%snot found.", vg_name_old,
 		vgid ? "(" : "", vgid ? vgid : "", vgid ? ") " : "");
 		unlock_vg(cmd, vg_name_old);
@@ -107,7 +107,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 	}
 
 	consistent = 0;
-	if ((vg_new = vg_read(cmd, vg_name_new, NULL, &consistent))) {
+	if ((vg_new = vg_read_internal(cmd, vg_name_new, NULL, &consistent))) {
 		log_error("New volume group \"%s\" already exists",
 			  vg_name_new);
 		goto error;
