@@ -2674,6 +2674,46 @@ vg_t *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
 }
 
 /*
+ * Test the validity of a VG handle returned by vg_read() or vg_read_for_update().
+ *
+ * If READ_CHECK_EXISTENCE was supplied the non-existence of the volume group
+ * is not considered an error.
+ *
+ * !vg_read_error() && vg_might_exist() => valid handle to VG.
+ * vg_read_error() && vg_might_exist() => handle invalid, but VG might
+ *					  exist but cannot be read.
+ * !vg_read_error() && !vg_might_exist() => the VG does not exist
+ * vg_read_error() && !vg_might_exist() is impossible.
+ */
+uint32_t vg_read_error(vg_t *vg_handle)
+{
+	if (!vg_handle)
+		return FAILED_ALLOCATION;
+
+	if (vg_handle->read_status & READ_CHECK_EXISTENCE)
+		return vg_handle->read_status &
+		       ~(READ_CHECK_EXISTENCE | FAILED_NOTFOUND);
+
+	return vg_handle->read_status;
+}
+
+/*
+ * Returns true if the volume group already exists.
+ * If unsure, it will return true. It might exist but the read failed
+ * for some other reason.
+ */
+uint32_t vg_might_exist(vg_t *vg_handle)
+{
+	if (!vg_handle)
+		return 1;
+
+	if (vg_handle->read_status == (FAILED_NOTFOUND | READ_CHECK_EXISTENCE))
+		return 0;
+
+	return 1;
+}
+
+/*
  * Gets/Sets for external LVM library
  */
 struct id pv_id(const pv_t *pv)
