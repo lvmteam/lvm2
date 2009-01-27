@@ -387,11 +387,19 @@ vg_t *vg_lock_and_read(struct cmd_context *cmd, const char *vg_name,
 		       uint32_t lock_flags, uint32_t status_flags,
 		       uint32_t misc_flags);
 
-/* Loading volume group metadata. */
+/*
+ * Return a handle to VG metadata.
+ */
 vg_t *vg_read(struct cmd_context *cmd, const char *vg_name,
               const char *vgid, uint32_t flags);
 vg_t *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
                          const char *vgid, uint32_t flags);
+
+/* 
+ * Test validity of a VG handle.
+ */
+uint32_t vg_read_error(vg_t *vg_handle);
+uint32_t vg_might_exist(vg_t *vg_handle);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
 * areas can avoid overlap */
