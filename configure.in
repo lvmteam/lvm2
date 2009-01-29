@@ -324,7 +324,7 @@ AC_MSG_RESULT($REALTIME)
 dnl -- Build cluster LVM daemon
 AC_MSG_CHECKING(whether to build cluster LVM daemon)
 AC_ARG_WITH(clvmd,
-  [  --with-clvmd=TYPE       Build cluster LVM Daemon: cman/gulm/none/all
+  [  --with-clvmd=TYPE       Build cluster LVM Daemon: cman/gulm/corosync/none/all
                           [TYPE=none] ],
   [ CLVMD="$withval" ],
   [ CLVMD="none" ])
