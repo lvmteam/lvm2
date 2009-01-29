@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Mention --with-clvmd=corosync in ./configure
   Replace internal vg_check_status() implementation.
   Rename vg_read() to vg_read_internal().
 
