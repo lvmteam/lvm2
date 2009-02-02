@@ -194,7 +194,7 @@ static int cs_to_errno(cs_error_t err)
 	return -1;
 }
 
-static char *print_csid(const char *csid)
+static char *print_corosync_csid(const char *csid)
 {
 	static char buf[128];
 	int id;
@@ -392,7 +392,7 @@ static int _name_from_csid(const char *csid, char *name)
 	ninfo = dm_hash_lookup_binary(node_hash, csid, COROSYNC_CSID_LEN);
 	if (!ninfo)
 	{
-		sprintf(name, "UNKNOWN %s", print_csid(csid));
+		sprintf(name, "UNKNOWN %s", print_corosync_csid(csid));
 		return -1;
 	}
 
@@ -414,7 +414,7 @@ static void _add_up_node(const char *csid)
 	ninfo = dm_hash_lookup_binary(node_hash, csid, COROSYNC_CSID_LEN);
 	if (!ninfo) {
 		DEBUGLOG("corosync_add_up_node no node_hash entry for csid %s\n",
-			 print_csid(csid));
+			 print_corosync_csid(csid));
 		return;
 	}
 

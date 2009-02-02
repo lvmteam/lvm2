@@ -21,31 +21,26 @@ SOURCES = \
 	lvm-functions.c  \
 	refresh_clvmd.c
 
-ifeq ("@CLVMD@", "gulm")
+ifneq (,$(findstring gulm,, "@CLVMD@,"))
 	GULM = yes
 endif
 
-ifeq ("@CLVMD@", "cman")
+ifneq (,$(findstring cman,, "@CLVMD@,"))
 	CMAN = yes
 endif
 
-ifeq ("@CLVMD@", "openais")
+ifneq (,$(findstring openais,, "@CLVMD@,"))
 	OPENAIS = yes
-	GULM = no
-	CMAN = no
 endif
 
-ifeq ("@CLVMD@", "all")
+ifneq (,$(findstring corosync,, "@CLVMD@,"))
+	COROSYNC = yes
+endif
+
+ifneq (,$(findstring all,, "@CLVMD@,"))
 	GULM = yes
 	CMAN = yes
-	OPENAIS = no
-	COROSYNC = no
-endif
-
-ifeq ("@CLVMD@", "corosync")
-	GULM = no
-	CMAN = no
-	OPENAIS = no
+	OPENAIS = yes
 	COROSYNC = yes
 endif
 

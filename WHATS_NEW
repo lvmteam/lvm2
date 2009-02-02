@@ -1,6 +1,7 @@
 Version 2.02.45 - 
 ===================================
-  Mention --with-clvmd=corosync in ./configure
+  Allow clvmd to be built with all cluster managers & select one on cmdline.
+  Mention --with-clvmd=corosync in ./configure.
   Replace internal vg_check_status() implementation.
   Rename vg_read() to vg_read_internal().
 

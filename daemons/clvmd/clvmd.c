@@ -108,6 +108,8 @@ static int child_pipe[2];
 #define DFAIL_TIMEOUT    5
 #define SUCCESS          0
 
+typedef enum {IF_AUTO, IF_CMAN, IF_GULM, IF_OPENAIS, IF_COROSYNC} if_type_t;
+
 /* Prototypes for code further down */
 static void sigusr2_handler(int sig);
 static void sighup_handler(int sig);
@@ -144,6 +146,7 @@ static void hton_clvm(struct clvm_header *hdr);
 static void ntoh_clvm(struct clvm_header *hdr);
 static void add_reply_to_list(struct local_client *client, int status,
 			      const char *csid, const char *buf, int len);
+static if_type_t parse_cluster_interface(char *ifname);
 
 static void usage(char *prog, FILE *file)
 {
@@ -158,6 +161,20 @@ static void usage(char *prog, FILE *file)
 	fprintf(file, "   -C       Sets debug level (from -d) on all clvmd instances clusterwide\n");
 	fprintf(file, "   -t<secs> Command timeout (default 60 seconds)\n");
 	fprintf(file, "   -T<secs> Startup timeout (default none)\n");
+	fprintf(file, "   -I<cmgr> Cluster manager (default: auto)\n");
+	fprintf(file, "            Available cluster managers: ");
+#ifdef USE_COROSYNC
+	fprintf(file, "corosync ");
+#endif
+#ifdef USE_CMAN
+	fprintf(file, "cman ");
+#endif
+#ifdef USE_OPENAIS
+	fprintf(file, "openais ");
+#endif
+#ifdef USE_GULM
+	fprintf(file, "gulm ");
+#endif
 	fprintf(file, "\n");
 }
 
@@ -258,6 +275,7 @@ int main(int argc, char *argv[])
 	signed char opt;
 	int cmd_timeout = DEFAULT_CMD_TIMEOUT;
 	int start_timeout = 0;
+	if_type_t cluster_iface = IF_AUTO;
 	sigset_t ss;
 	int using_gulm = 0;
 	int debug_opt = 0;
@@ -266,7 +284,7 @@ int main(int argc, char *argv[])
 	/* Deal with command-line arguments */
 	opterr = 0;
 	optind = 0;
-	while ((opt = getopt(argc, argv, "?vVhd::t:RT:C")) != EOF) {
+	while ((opt = getopt(argc, argv, "?vVhd::t:RT:CI:")) != EOF) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0], stdout);
@@ -298,6 +316,9 @@ int main(int argc, char *argv[])
 				usage(argv[0], stderr);
 				exit(1);
 			}
+			break;
+		case 'I':
+			cluster_iface = parse_cluster_interface(optarg);
 			break;
 		case 'T':
 			start_timeout = atoi(optarg);
@@ -365,7 +386,7 @@ int main(int argc, char *argv[])
 
 	/* Start the cluster interface */
 #ifdef USE_CMAN
-	if ((clops = init_cman_cluster())) {
+	if ((cluster_iface == IF_AUTO || cluster_iface == IF_CMAN) && (clops = init_cman_cluster())) {
 		max_csid_len = CMAN_MAX_CSID_LEN;
 		max_cluster_message = CMAN_MAX_CLUSTER_MESSAGE;
 		max_cluster_member_name_len = CMAN_MAX_NODENAME_LEN;
@@ -374,7 +395,7 @@ int main(int argc, char *argv[])
 #endif
 #ifdef USE_GULM
 	if (!clops)
-		if ((clops = init_gulm_cluster())) {
+		if ((cluster_iface == IF_AUTO || cluster_iface == IF_GULM) && (clops = init_gulm_cluster())) {
 			max_csid_len = GULM_MAX_CSID_LEN;
 			max_cluster_message = GULM_MAX_CLUSTER_MESSAGE;
 			max_cluster_member_name_len = GULM_MAX_CLUSTER_MEMBER_NAME_LEN;
@@ -382,22 +403,22 @@ int main(int argc, char *argv[])
 			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to GULM");
 		}
 #endif
-#ifdef USE_OPENAIS
-	if (!clops)
-		if ((clops = init_openais_cluster())) {
-			max_csid_len = OPENAIS_CSID_LEN;
-			max_cluster_message = OPENAIS_MAX_CLUSTER_MESSAGE;
-			max_cluster_member_name_len = OPENAIS_MAX_CLUSTER_MEMBER_NAME_LEN;
-			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to OpenAIS");
-		}
-#endif
 #ifdef USE_COROSYNC
 	if (!clops)
-		if ((clops = init_corosync_cluster())) {
+		if (((cluster_iface == IF_AUTO || cluster_iface == IF_COROSYNC) && (clops = init_corosync_cluster()))) {
 			max_csid_len = COROSYNC_CSID_LEN;
 			max_cluster_message = COROSYNC_MAX_CLUSTER_MESSAGE;
 			max_cluster_member_name_len = COROSYNC_MAX_CLUSTER_MEMBER_NAME_LEN;
 			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to Corosync");
+		}
+#endif
+#ifdef USE_OPENAIS
+	if (!clops)
+		if ((cluster_iface == IF_AUTO || cluster_iface == IF_OPENAIS) && (clops = init_openais_cluster())) {
+			max_csid_len = OPENAIS_CSID_LEN;
+			max_cluster_message = OPENAIS_MAX_CLUSTER_MESSAGE;
+			max_cluster_member_name_len = OPENAIS_MAX_CLUSTER_MEMBER_NAME_LEN;
+			syslog(LOG_NOTICE, "Cluster LVM daemon started - connected to OpenAIS");
 		}
 #endif
 
@@ -2008,3 +2029,20 @@ int sync_unlock(const char *resource, int lockid)
 	return clops->sync_unlock(resource, lockid);
 }
 
+static if_type_t parse_cluster_interface(char *ifname)
+{
+	if_type_t iface = IF_AUTO;
+
+	if (!strcmp(ifname, "auto"))
+		iface = IF_AUTO;
+	if (!strcmp(ifname, "cman"))
+		iface = IF_CMAN;
+	if (!strcmp(ifname, "gulm"))
+		iface = IF_GULM;
+	if (!strcmp(ifname, "openais"))
+		iface = IF_OPENAIS;
+	if (!strcmp(ifname, "corosync"))
+		iface = IF_COROSYNC;
+
+	return iface;
+}
