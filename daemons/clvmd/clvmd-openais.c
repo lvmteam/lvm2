@@ -195,7 +195,7 @@ static int ais_to_errno(SaAisErrorT err)
 	return -1;
 }
 
-static char *print_csid(const char *csid)
+static char *print_openais_csid(const char *csid)
 {
 	static char buf[128];
 	int id;
@@ -415,7 +415,7 @@ static int _name_from_csid(const char *csid, char *name)
 	ninfo = dm_hash_lookup_binary(node_hash, csid, OPENAIS_CSID_LEN);
 	if (!ninfo)
 	{
-		sprintf(name, "UNKNOWN %s", print_csid(csid));
+		sprintf(name, "UNKNOWN %s", print_openais_csid(csid));
 		return -1;
 	}
 
@@ -437,7 +437,7 @@ static void _add_up_node(const char *csid)
 	ninfo = dm_hash_lookup_binary(node_hash, csid, OPENAIS_CSID_LEN);
 	if (!ninfo) {
 		DEBUGLOG("openais_add_up_node no node_hash entry for csid %s\n",
-			 print_csid(csid));
+			 print_openais_csid(csid));
 		return;
 	}
 
