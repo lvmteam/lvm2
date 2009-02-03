@@ -2039,8 +2039,8 @@ static struct volume_group *_vg_read_by_vgid(struct cmd_context *cmd,
 	 *       allowed to do a full scan here any more. */
 
 	// The slow way - full scan required to cope with vgrename
-	if (!(vgnames = get_vgs(cmd, 2))) {
-		log_error("vg_read_by_vgid: get_vgs failed");
+	if (!(vgnames = get_vgnames(cmd, 2))) {
+		log_error("vg_read_by_vgid: get_vgnames failed");
 		return NULL;
 	}
 
@@ -2167,7 +2167,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 }
 
 /* May return empty list */
-struct dm_list *get_vgs(struct cmd_context *cmd, int full_scan)
+struct dm_list *get_vgnames(struct cmd_context *cmd, int full_scan)
 {
 	return lvmcache_get_vgnames(cmd, full_scan);
 }
@@ -2201,7 +2201,7 @@ static int _get_pvs(struct cmd_context *cmd, struct dm_list **pvslist)
 
 	/* Get list of VGs */
 	if (!(vgids = get_vgids(cmd, 0))) {
-		log_error("get_pvs: get_vgs failed");
+		log_error("get_pvs: get_vgids failed");
 		return 0;
 	}
 
