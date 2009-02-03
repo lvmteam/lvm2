@@ -995,8 +995,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, nolocking_ARG))
 		locking_type = 0;
 	else
-		locking_type = find_config_tree_int(cmd,
-					       "global/locking_type", 1);
+		locking_type = -1;
 
 	if (!init_locking(locking_type, cmd)) {
 		log_error("Locking type %d initialisation failed.",

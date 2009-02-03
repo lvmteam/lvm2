@@ -208,11 +208,16 @@ static void _update_vg_lock_count(uint32_t flags)
 
 /*
  * Select a locking type
+ * type: locking type; if < 0, then read config tree value
  */
 int init_locking(int type, struct cmd_context *cmd)
 {
 	init_lockingfailed(0);
 
+	if (type < 0)
+		type = find_config_tree_int(cmd, "global/locking_type", 1);
+		
+	
 	switch (type) {
 	case 0:
 		init_no_locking(&_locking, cmd);
