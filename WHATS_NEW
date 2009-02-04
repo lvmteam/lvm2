@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Add support for ext4 resize in fsadm
   Move locking_type reading inside init_locking().
   Rename get_vgs() to get_vgnames() and clarify related error messages.
   Allow clvmd to be built with all cluster managers & select one on cmdline.

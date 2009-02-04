@@ -19,7 +19,7 @@
 # Needed utilities:
 #   mount, umount, grep, readlink, blockdev, blkid, fsck, xfs_check
 #
-# ext2/ext3: resize2fs, tune2fs
+# ext2/ext3/ext4: resize2fs, tune2fs
 # reiserfs: resize_reiserfs, reiserfstune
 # xfs: xfs_growfs, xfs_info
 #
@@ -80,7 +80,7 @@ tool_usage() {
 	echo "  Options:"
 	echo "    -h | --help         Show this help message"
 	echo "    -v | --verbose      Be verbose"
-	echo "    -e | --ext-offline  unmount filesystem before Ext2/3 resize"
+	echo "    -e | --ext-offline  unmount filesystem before ext2/ext3/ext4 resize"
 	echo "    -f | --force        Bypass sanity checks"
 	echo "    -n | --dry-run      Print commands without running them"
 	echo "    -l | --lvresize     Resize given device (if it is LVM device)"
@@ -226,7 +226,7 @@ validate_parsing() {
 	test -n "$BLOCKSIZE" -a -n "$BLOCKCOUNT" || error "Cannot parse $1 output"
 }
 ####################################
-# Resize ext2/ext3 filesystem
+# Resize ext2/ext3/ext4 filesystem
 # - unmounted or mounted for upsize
 # - unmounted for downsize
 ####################################
@@ -329,7 +329,7 @@ resize() {
 	#IFS=$'\n'  # don't use bash-ism ??
 	IFS="$(printf \"\\n\")"  # needed for parsing output
 	case "$FSTYPE" in
-	  "ext3"|"ext2") resize_ext $NEWSIZE ;;
+	  "ext3"|"ext2"|"ext4") resize_ext $NEWSIZE ;;
 	  "reiserfs") resize_reiser $NEWSIZE ;;
 	  "xfs") resize_xfs $NEWSIZE ;;
 	  *) error "Filesystem \"$FSTYPE\" on device \"$VOLUME\" is not supported by this tool" ;;
