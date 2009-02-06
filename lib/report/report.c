@@ -868,15 +868,14 @@ static int _pvmdafree_disp(struct dm_report *rh, struct dm_pool *mem,
 	const char *pvid = (const char *)(&((struct id *) data)->uuid);
 	struct metadata_area *mda;
 
-	info = info_from_pvid(pvid, 0);
-
-	dm_list_iterate_items(mda, &info->mdas) {
-		if (!mda->ops->mda_free_sectors)
-			continue;
-		mda_free = mda->ops->mda_free_sectors(mda);
-		if (mda_free < freespace)
-			freespace = mda_free;
-	}
+	if ((info = info_from_pvid(pvid, 0)))
+		dm_list_iterate_items(mda, &info->mdas) {
+			if (!mda->ops->mda_free_sectors)
+				continue;
+			mda_free = mda->ops->mda_free_sectors(mda);
+			if (mda_free < freespace)
+				freespace = mda_free;
+		}
 
 	if (freespace == UINT64_MAX)
 		freespace = UINT64_C(0);
@@ -908,13 +907,12 @@ static int _pvmdasize_disp(struct dm_report *rh, struct dm_pool *mem,
 			   const void *data, void *private)
 {
 	struct lvmcache_info *info;
-	uint64_t min_mda_size;
+	uint64_t min_mda_size = 0;
 	const char *pvid = (const char *)(&((struct id *) data)->uuid);
 
-	info = info_from_pvid(pvid, 0);
-
 	/* PVs could have 2 mdas of different sizes (rounding effect) */
-	min_mda_size = _find_min_mda_size(&info->mdas);
+	if ((info = info_from_pvid(pvid, 0)))
+		min_mda_size = _find_min_mda_size(&info->mdas);
 
 	return _size64_disp(rh, mem, field, &min_mda_size, private);
 }
