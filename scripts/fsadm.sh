@@ -43,7 +43,6 @@ RMDIR=rmdir
 BLOCKDEV=blockdev
 BLKID=blkid
 GREP=grep
-CUT=cut
 READLINK=readlink
 READLINK_E="-e"
 FSCK=fsck
@@ -158,8 +157,10 @@ detect_fs() {
         VOLUME=${1#/dev/}
 	VOLUME=$($READLINK $READLINK_E -n "/dev/$VOLUME") || error "Cannot get readlink $1"
 	# use /dev/null as cache file to be sure about the result
-	# use 'cut' to be compatible with older version of blkid that does not provide option '-o value'
-	FSTYPE=$($BLKID -c /dev/null -s TYPE "$VOLUME" | $CUT -d \" -f 2) || error "Cannot get FSTYPE of \"$VOLUME\""
+	# not using option '-o value' to be compatible with older version of blkid
+	FSTYPE=$($BLKID -c /dev/null -s TYPE "$VOLUME") || error "Cannot get FSTYPE of \"$VOLUME\""
+	FSTYPE=${FSTYPE##*TYPE=\"} # cut quotation marks
+	FSTYPE=${FSTYPE%%\"*}
 	verbose "\"$FSTYPE\" filesystem found on \"$VOLUME\""
 }
 
@@ -360,7 +361,7 @@ test -n "$FSADM_RUNNING" && exit 0
 test -n "$TUNE_EXT" -a -n "$RESIZE_EXT" -a -n "$TUNE_REISER" -a -n "$RESIZE_REISER" \
   -a -n "$TUNE_XFS" -a -n "$RESIZE_XFS" -a -n "$MOUNT" -a -n "$UMOUNT" -a -n "$MKDIR" \
   -a -n "$RMDIR" -a -n "$BLOCKDEV" -a -n "$BLKID" -a -n "$GREP" -a -n "$READLINK" \
-  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVRESIZE" -a -n "$CUT" \
+  -a -n "$FSCK" -a -n "$XFS_CHECK" -a -n "LVRESIZE" \
   || error "Required command definitions in the script are missing!"
 
 $($READLINK -e -n / >/dev/null 2>&1) || READLINK_E="-f"
