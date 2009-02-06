@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Fix pvs segfault when pv mda attributes requested for not available PV.
   Add support for ext4 resize in fsadm
   Move locking_type reading inside init_locking().
   Rename get_vgs() to get_vgnames() and clarify related error messages.
