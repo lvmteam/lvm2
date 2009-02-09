@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -158,6 +158,15 @@ out:
 	return ret;
 }
 
+static int _label_single(struct cmd_context *cmd, struct volume_group *vg,
+		       struct physical_volume *pv, void *handle)
+{
+	if (!report_object(handle, vg, NULL, pv, NULL, NULL))
+		return ECMD_FAILED;
+
+	return ECMD_PROCESSED;
+}
+
 static int _pvs_in_vg(struct cmd_context *cmd, const char *vg_name,
 		      struct volume_group *vg,
 		      int consistent __attribute((unused)),
@@ -211,7 +220,9 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	columns_as_rows = find_config_tree_int(cmd, "report/columns_as_rows",
 					       DEFAULT_REP_COLUMNS_AS_ROWS);
 
-	args_are_pvs = (report_type == PVS || report_type == PVSEGS) ? 1 : 0;
+	args_are_pvs = (report_type == PVS ||
+			report_type == LABEL ||
+			report_type == PVSEGS) ? 1 : 0;
 
 	switch (report_type) {
 	case LVS:
@@ -238,6 +249,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 						  "report/vgs_cols_verbose",
 						  DEFAULT_VGS_COLS_VERB);
 		break;
+	case LABEL:
 	case PVS:
 		keys = find_config_tree_str(cmd, "report/pvs_sort",
 				       DEFAULT_PVS_SORT);
@@ -333,7 +345,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		report_type |= LVS;
 	if (report_type & PVSEGS)
 		report_type |= PVS;
-	if ((report_type & LVS) && (report_type & PVS) && !args_are_pvs) {
+	if ((report_type & LVS) && (report_type & (PVS | LABEL)) && !args_are_pvs) {
 		log_error("Can't report LV and PV fields at the same time");
 		dm_report_free(report_handle);
 		return ECMD_FAILED;
@@ -341,8 +353,10 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 
 	/* Change report type if fields specified makes this necessary */
 	if ((report_type & PVSEGS) ||
-	    ((report_type & PVS) && (report_type & LVS)))
+	    ((report_type & (PVS | LABEL)) && (report_type & LVS)))
 		report_type = PVSEGS;
+	else if ((report_type & LABEL) && (report_type & VGS))
+		report_type = PVS;
 	else if (report_type & PVS)
 		report_type = PVS;
 	else if (report_type & SEGS)
@@ -359,10 +373,14 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 		r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
 				    report_handle, &_vgs_single);
 		break;
+	case LABEL:
+		r = process_each_pv(cmd, argc, argv, NULL, LCK_NONE,
+				    1, report_handle, &_label_single);
+		break;
 	case PVS:
 		if (args_are_pvs)
 			r = process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ,
-					    report_handle, &_pvs_single);
+					    0, report_handle, &_pvs_single);
 		else
 			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
 					    report_handle, &_pvs_in_vg);
@@ -374,7 +392,7 @@ static int _report(struct cmd_context *cmd, int argc, char **argv,
 	case PVSEGS:
 		if (args_are_pvs)
 			r = process_each_pv(cmd, argc, argv, NULL, LCK_VG_READ,
-					    report_handle, &_pvsegs_single);
+					    0, report_handle, &_pvsegs_single);
 		else
 			r = process_each_vg(cmd, argc, argv, LCK_VG_READ, 0,
 					    report_handle, &_pvsegs_in_vg);
@@ -411,7 +429,7 @@ int pvs(struct cmd_context *cmd, int argc, char **argv)
 	if (arg_count(cmd, segments_ARG))
 		type = PVSEGS;
 	else
-		type = PVS;
+		type = LABEL;
 
 	return _report(cmd, argc, argv, type);
 }

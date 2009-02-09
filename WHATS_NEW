@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Separate PV label attributes which do not need parse metadata when reporting.
   Remove external dependency on the 'cut' command in fsadm.
   Fix pvs segfault when pv mda attributes requested for not available PV.
   Add support for ext4 resize in fsadm.

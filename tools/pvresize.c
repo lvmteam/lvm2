@@ -226,7 +226,7 @@ int pvresize(struct cmd_context *cmd, int argc, char **argv)
 	params.done = 0;
 	params.total = 0;
 
-	ret = process_each_pv(cmd, argc, argv, NULL, LCK_VG_WRITE, &params,
+	ret = process_each_pv(cmd, argc, argv, NULL, LCK_VG_WRITE, 0, &params,
 			      _pvresize_single);
 
 	log_print("%d physical volume(s) resized / %d physical volume(s) "

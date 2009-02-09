@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2005 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -18,7 +18,14 @@
 
 #include "metadata-exported.h"
 
-typedef enum { LVS = 1, PVS = 2, VGS = 4, SEGS = 8, PVSEGS = 16 } report_type_t;
+typedef enum {
+	LVS	= 1,
+	PVS	= 2,
+	VGS	= 4,
+	SEGS	= 8,
+	PVSEGS	= 16,
+	LABEL	= 32
+} report_type_t;
 
 struct field;
 struct report_handle;
