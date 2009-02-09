@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -621,7 +621,8 @@ static int _process_all_devs(struct cmd_context *cmd, void *handle,
 }
 
 int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
-		    struct volume_group *vg, uint32_t lock_type, void *handle,
+		    struct volume_group *vg, uint32_t lock_type,
+		    int scan_label_only, void *handle,
 		    int (*process_single) (struct cmd_context * cmd,
 					   struct volume_group * vg,
 					   struct physical_volume * pv,
@@ -690,7 +691,8 @@ int process_each_pv(struct cmd_context *cmd, int argc, char **argv,
 				 * PV on the system.
 				 */
 				if (!scanned && is_orphan(pv)) {
-					if (!scan_vgs_for_pvs(cmd)) {
+					if (!scan_label_only &&
+					    !scan_vgs_for_pvs(cmd)) {
 						stack;
 						ret_max = ECMD_FAILED;
 						continue;
