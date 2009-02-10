@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Add option to /etc/sysconfig/cluster to select cluster type for clvmd.
   Allow clvmd to start up if its lockspace already exists.
   Separate PV label attributes which do not need parse metadata when reporting.
   Remove external dependency on the 'cut' command in fsadm.
