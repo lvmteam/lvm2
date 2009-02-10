@@ -26,6 +26,8 @@ CLVMDOPTS="-T20"
 
 [ -f /etc/sysconfig/cluster ] && . /etc/sysconfig/cluster
 
+[ -n "$CLVMD_CLUSTER_IFACE" ] && CLVMDOPTS="$CLVMDOPTS -I $CLVMD_CLUSTER_IFACE" 
+
 LOCK_FILE="/var/lock/subsys/$DAEMON"
 
 start()
