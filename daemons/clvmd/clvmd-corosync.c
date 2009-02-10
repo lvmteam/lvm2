@@ -326,11 +326,6 @@ static int _init_cluster(void)
 	dlm_ls_pthread_init(lockspace);
 	DEBUGLOG("DLM initialisation complete\n");
 
-	err = cpg_initialize(&cpg_handle, &cpg_callbacks);
-	if (err != CS_OK) {
-		return cs_to_errno(err);
-	}
-
 	/* Connect to the clvmd group */
 	strcpy((char *)cpg_group_name.value, "clvmd");
 	cpg_group_name.length = strlen((char *)cpg_group_name.value);
