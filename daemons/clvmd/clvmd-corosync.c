@@ -314,9 +314,14 @@ static int _init_cluster(void)
 	/* Create a lockspace for LV & VG locks to live in */
 	lockspace = dlm_create_lockspace(LOCKSPACE_NAME, 0600);
 	if (!lockspace) {
-		syslog(LOG_ERR, "Unable to create lockspace for CLVM: %m");
-		quorum_finalize(quorum_handle);
-		return -1;
+		if (errno == EEXIST) {
+			lockspace = dlm_open_lockspace(LOCKSPACE_NAME);
+		}
+		if (!lockspace) {
+			syslog(LOG_ERR, "Unable to create lockspace for CLVM: %m");
+			quorum_finalize(quorum_handle);
+			return -1;
+		}
 	}
 	dlm_ls_pthread_init(lockspace);
 	DEBUGLOG("DLM initialisation complete\n");
