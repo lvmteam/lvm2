@@ -42,6 +42,7 @@
 #include <corosync/corotypes.h>
 #include <corosync/cpg.h>
 #include <corosync/quorum.h>
+#include <corosync/confdb.h>
 #include <libdlm.h>
 
 #include "locking.h"
@@ -507,7 +508,6 @@ static int _unlock_resource(const char *resource, int lockid)
 	return 0;
 }
 
-/* We are always quorate ! */
 static int _is_quorate()
 {
 	int quorate;
@@ -556,10 +556,49 @@ static int _cluster_send_message(const void *buf, int msglen, const char *csid,
 	return cs_to_errno(err);
 }
 
-/* We don't have a cluster name to report here */
+/*
+ * We are not necessarily connected to a Red Hat Cluster system,
+ * but if we are, this returns the cluster name from cluster.conf.
+ * I've used confdb rather than ccs to reduce the inter-package
+ * dependancies as well as to allow people to set a cluster name
+ * for themselves even if they are not running on RH cluster.
+ */
 static int _get_cluster_name(char *buf, int buflen)
 {
+	confdb_handle_t handle;
+	int result;
+	int namelen = buflen;
+	unsigned int cluster_handle;
+	confdb_callbacks_t callbacks = {
+		.confdb_key_change_notify_fn = NULL,
+		.confdb_object_create_change_notify_fn = NULL,
+		.confdb_object_delete_change_notify_fn = NULL
+	};
+
+	/* This is a default in case everything else fails */
 	strncpy(buf, "Corosync", buflen);
+
+	/* Look for a cluster name in confdb */
+	result = confdb_initialize (&handle, &callbacks);
+        if (result != CS_OK)
+		return 0;
+
+        result = confdb_object_find_start(handle, OBJECT_PARENT_HANDLE);
+	if (result != CS_OK)
+		goto out;
+
+        result = confdb_object_find(handle, OBJECT_PARENT_HANDLE, (void *)"cluster", strlen("cluster"), &cluster_handle);
+        if (result != CS_OK)
+		goto out;
+
+        result = confdb_key_get(handle, cluster_handle, (void *)"name", strlen("name"), buf, &namelen);
+        if (result != CS_OK)
+		goto out;
+
+	buf[namelen] = '\0';
+
+out:
+	confdb_finalize(handle);
 	return 0;
 }
 
