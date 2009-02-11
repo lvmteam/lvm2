@@ -68,7 +68,7 @@ endif
 
 ifeq ("$(COROSYNC)", "yes")
         SOURCES += clvmd-corosync.c
-        LMLIBS += -lquorum -lcpg -ldlm
+        LMLIBS += -lquorum -lconfdb -lcpg -ldlm
         DEFS += -DUSE_COROSYNC
 endif
 
