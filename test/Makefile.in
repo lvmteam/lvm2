@@ -25,13 +25,16 @@ abs_builddir = @abs_builddir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 
-all: bin/not init.sh
-	sh harness.sh
+all: init.sh
+	./bin/harness $(T)
 
-bin/not: .bin-dir-stamp
+bin/not: .bin-dir-stamp not.c
 	$(CC) -o bin/not not.c
 
-init.sh: Makefile.in .bin-dir-stamp
+bin/harness: .bin-dir-stamp harness.c
+	$(CC) -o bin/harness harness.c
+
+init.sh: Makefile.in .bin-dir-stamp bin/not bin/harness
 	rm -f $@-t $@
 	echo 'top_srcdir=$(top_srcdir)' >> $@-t
 	echo 'abs_top_builddir=$(abs_top_builddir)' >> $@-t
@@ -52,8 +55,8 @@ T = $(wildcard t-*.sh)
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
-$(T): bin/not init.sh
-	sh harness.sh $@
+$(T): init.sh
+	./bin/harness $@
 
 .bin-dir-stamp: lvm-wrapper
 	rm -rf bin
