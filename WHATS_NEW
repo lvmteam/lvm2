@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  No longer require kernel and metadata major numbers to match.
   Add a fully-functional get_cluster_name() to clvmd corosync interface.
   Remove duplicate cpg_initialize from clvmd startup.
   Add option to /etc/sysconfig/cluster to select cluster type for clvmd.

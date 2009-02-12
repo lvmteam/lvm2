@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
+#include <sys/utsname.h>
 #include <limits.h>
 
 #ifdef linux
@@ -63,11 +64,21 @@ static unsigned _dm_version_minor = 0;
 static unsigned _dm_version_patchlevel = 0;
 static int _log_suppress = 0;
 
+/*
+ * If the kernel dm driver only supports one major number
+ * we store it in _dm_device_major.  Otherwise we indicate
+ * which major numbers have been claimed by device-mapper
+ * in _dm_bitset.
+ */
+static unsigned _dm_multiple_major_support = 1;
 static dm_bitset_t _dm_bitset = NULL;
+static uint32_t _dm_device_major = 0;
+
 static int _control_fd = -1;
 static int _version_checked = 0;
 static int _version_ok = 1;
 static unsigned _ioctl_buffer_double_factor = 0;
+
 
 /*
  * Support both old and new major numbers to ease the transition.
@@ -249,12 +260,35 @@ static int _create_control(const char *control, uint32_t major, uint32_t minor)
 }
 #endif
 
+/*
+ * FIXME Update bitset in long-running process if dm claims new major numbers.
+ */
 static int _create_dm_bitset(void)
 {
 #ifdef DM_IOCTLS
-	if (_dm_bitset)
+	struct utsname uts;
+
+	if (_dm_bitset || _dm_device_major)
 		return 1;
 
+	if (uname(&uts))
+		return 0;
+
+	/*
+	 * 2.6 kernels are limited to one major number.
+	 * Assume 2.4 kernels are patched not to.
+	 * FIXME Check _dm_version and _dm_version_minor if 2.6 changes this.
+	 */
+	if (!strncmp(uts.release, "2.6.", 4))
+		_dm_multiple_major_support = 0;
+
+	if (!_dm_multiple_major_support) {
+		if (!_get_proc_number(PROC_DEVICES, DM_NAME, &_dm_device_major))
+			return 0;
+		return 1;
+	}
+
+	/* Multiple major numbers supported */
 	if (!(_dm_bitset = dm_bitset_create(NULL, NUMBER_OF_MAJORS)))
 		return 0;
 
@@ -275,7 +309,10 @@ int dm_is_dm_major(uint32_t major)
 	if (!_create_dm_bitset())
 		return 0;
 
-	return dm_bit(_dm_bitset, major) ? 1 : 0;
+	if (_dm_multiple_major_support)
+		return dm_bit(_dm_bitset, major) ? 1 : 0;
+	else
+		return (major == _dm_device_major) ? 1 : 0;
 }
 
 static int _open_control(void)
@@ -1297,6 +1334,14 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 			log_error("Missing major number for persistent device.");
 			goto bad;
 		}
+
+		if (!_dm_multiple_major_support && dmt->major != _dm_device_major) {
+			log_verbose("Overriding major number of %" PRIu32 
+				    " with %" PRIu32 " for persistent device.",
+				    dmt->major, _dm_device_major);
+			dmt->major = _dm_device_major;
+		}
+
 		dmi->flags |= DM_PERSISTENT_DEV_FLAG;
 		dmi->dev = MKDEV(dmt->major, dmt->minor);
 	}

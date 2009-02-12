@@ -1,5 +1,6 @@
 Version 1.02.31 - 
 ====================================
+  If kernel supports only one dm major number, use in place of any supplied.
 
 Version 1.02.30 - 26th January 2009
 ====================================
