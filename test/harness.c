@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 	       npassed + nfailed + nskipped, npassed, nfailed, nskipped);
 
 	/* print out a summary */
-	if (nfailed || nskipped ) {
+	if (nfailed || nskipped) {
 		for (i = 1; i < argc; ++ i) {
 			switch (status[i]) {
 			case FAILED:
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 			}
 		}
 		printf("\n");
-		return 1;
+		return nfailed > 0 || die;
 	}
 	return !die;
 }
