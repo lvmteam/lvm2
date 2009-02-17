@@ -25,6 +25,10 @@ int main(int args, char **argv) {
 	} else {		/* parent */
 		waitpid(pid, &status, 0);
 		if (!WIFEXITED(status)) {
+			if (WIFSIGNALED(status))
+				fprintf(stderr,
+					"Process %d died of signal %d.\n",
+					pid, WTERMSIG(status));
 			/* did not exit correctly */
 			return FAILURE;
 		}
