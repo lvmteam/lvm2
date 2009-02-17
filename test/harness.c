@@ -106,6 +106,7 @@ void run(int i, char *f) {
 			perror("waitpid");
 			exit(206);
 		}
+		drain();
 		if (WIFEXITED(st)) {
 			if (WEXITSTATUS(st) == 0) {
 				passed(i, f);
