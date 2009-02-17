@@ -71,10 +71,19 @@ static void _free_cached_vgmetadata(struct lvmcache_vginfo *vginfo)
 	log_debug("Metadata cache: VG %s wiped.", vginfo->vgname);
 }
 
-static void _store_metadata(struct lvmcache_vginfo *vginfo,
-			    struct volume_group *vg, unsigned precommitted)
+/*
+ * Cache VG metadata against the vginfo with matching vgid.
+ */
+static void _store_metadata(struct volume_group *vg, unsigned precommitted)
 {
+	char uuid[64] __attribute((aligned(8)));
+	struct lvmcache_vginfo *vginfo;
 	int size;
+
+	if (!(vginfo = vginfo_from_vgid((const char *)&vg->id))) {
+		stack;
+		return;
+	}
 
 	if (vginfo->vgmetadata)
 		_free_cached_vgmetadata(vginfo);
@@ -86,8 +95,14 @@ static void _store_metadata(struct lvmcache_vginfo *vginfo,
 
 	vginfo->precommitted = precommitted;
 
-	log_debug("Metadata cache: VG %s stored (%d bytes%s).", vginfo->vgname,
-		  size, precommitted ? ", precommitted" : "");
+	if (!id_write_format((const struct id *)vginfo->vgid, uuid, sizeof(uuid))) {
+		stack;
+		return;
+	}
+
+	log_debug("Metadata cache: VG %s (%s) stored (%d bytes%s).",
+		  vginfo->vgname, uuid, size,
+		  precommitted ? ", precommitted" : "");
 }
 
 static void _update_cache_info_lock_state(struct lvmcache_info *info,
@@ -1051,7 +1066,6 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 {
 	struct pv_list *pvl;
 	struct lvmcache_info *info;
-	struct lvmcache_vginfo *vginfo;
 	char pvid_s[ID_LEN + 1] __attribute((aligned(8)));
 
 	pvid_s[sizeof(pvid_s) - 1] = '\0';
@@ -1067,9 +1081,8 @@ int lvmcache_update_vg(struct volume_group *vg, unsigned precommitted)
 	}
 
 	/* store text representation of vg to cache */
-	if (vg->cmd->current_settings.cache_vgmetadata &&
-	    (vginfo = vginfo_from_vgname(vg->name, NULL)))
-		_store_metadata(vginfo, vg, precommitted);
+	if (vg->cmd->current_settings.cache_vgmetadata)
+		_store_metadata(vg, precommitted);
 
 	return 1;
 }
