@@ -329,8 +329,9 @@ int label_write(struct device *dev, struct label *label)
 	if (!dev_open(dev))
 		return_0;
 
-	log_info("%s: Writing label to sector %" PRIu64, dev_name(dev),
-		 label->sector);
+	log_info("%s: Writing label to sector %" PRIu64 " with stored offset %"
+		 PRIu32 ".", dev_name(dev), label->sector,
+		 xlate32(lh->offset_xl));
 	if (!dev_write(dev, label->sector << SECTOR_SHIFT, LABEL_SIZE, buf)) {
 		log_debug("Failed to write label to %s", dev_name(dev));
 		r = 0;

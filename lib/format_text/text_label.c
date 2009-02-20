@@ -44,6 +44,8 @@ static int _text_write(struct label *label, void *buf)
 	struct metadata_area *mda;
 	struct mda_context *mdac;
 	struct data_area_list *da;
+	char buffer[64] __attribute((aligned(8)));
+	int da1, mda1, mda2;
 
 	/* FIXME Move to where label is created */
 	strncpy(label->type, LVM2_LABEL, sizeof(label->type));
@@ -54,6 +56,11 @@ static int _text_write(struct label *label, void *buf)
 	info = (struct lvmcache_info *) label->info;
 	pvhdr->device_size_xl = xlate64(info->device_size);
 	memcpy(pvhdr->pv_uuid, &info->dev->pvid, sizeof(struct id));
+	if (!id_write_format((const struct id *)pvhdr->pv_uuid, buffer,
+			     sizeof(buffer))) {
+		stack;
+		buffer[0] = '\0';
+	}
 
 	pvh_dlocn_xl = &pvhdr->disk_areas_xl[0];
 
@@ -84,6 +91,50 @@ static int _text_write(struct label *label, void *buf)
 	/* NULL-termination */
 	pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
 	pvh_dlocn_xl->size = xlate64(UINT64_C(0));
+
+	/* Create debug message with da and mda locations */
+	if (xlate64(pvhdr->disk_areas_xl[0].offset) ||
+	    xlate64(pvhdr->disk_areas_xl[0].size))
+		da1 = 0;
+	else
+		da1 = -1;
+
+	mda1 = da1 + 2;
+	mda2 = mda1 + 1;
+	
+	if (!xlate64(pvhdr->disk_areas_xl[mda1].offset) &&
+	    !xlate64(pvhdr->disk_areas_xl[mda1].size))
+		mda1 = mda2 = 0;
+	else if (!xlate64(pvhdr->disk_areas_xl[mda2].offset) &&
+		 !xlate64(pvhdr->disk_areas_xl[mda2].size))
+		mda2 = 0;
+
+	log_debug("%s: Preparing PV label header %s size %" PRIu64 " with"
+		  "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
+		  "%s%.*" PRIu64 "%s%.*" PRIu64 "%s"
+		  "%s%.*" PRIu64 "%s%.*" PRIu64 "%s",
+		  dev_name(info->dev), buffer, info->device_size, 
+		  (da1 > -1) ? " da1 (" : "",
+		  (da1 > -1) ? 1 : 0,
+		  (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].offset) >> SECTOR_SHIFT : 0,
+		  (da1 > -1) ? "s, " : "",
+		  (da1 > -1) ? 1 : 0,
+		  (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].size) >> SECTOR_SHIFT : 0,
+		  (da1 > -1) ? "s)" : "",
+		  mda1 ? " mda1 (" : "",
+		  mda1 ? 1 : 0,
+		  mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].offset) >> SECTOR_SHIFT : 0,
+		  mda1 ? "s, " : "",
+		  mda1 ? 1 : 0,
+		  mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].size) >> SECTOR_SHIFT : 0,
+		  mda1 ? "s)" : "",
+		  mda2 ? " mda2 (" : "",
+		  mda2 ? 1 : 0,
+		  mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].offset) >> SECTOR_SHIFT : 0,
+		  mda2 ? "s, " : "",
+		  mda2 ? 1 : 0,
+		  mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].size) >> SECTOR_SHIFT : 0,
+		  mda2 ? "s)" : "");
 
 	return 1;
 }
