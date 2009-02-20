@@ -18,6 +18,10 @@ If \fBlvm\fP is invoked with argv[0] set to the name of a specific
 LVM command (for example by using a hard or soft link) it acts as 
 that command.  
 .LP
+On invocation, \fBlvm\fP requires that only the standard file descriptors
+stdin, stdout and stderr are available.  If others are found, they
+get closed and messages are issued warning about the leak.
+.LP
 Where commands take VG or LV names as arguments, the full path name is
 optional.  An LV called "lvol0" in a VG called "vg0" can be specified
 as "vg0/lvol0".  Where a list of VGs is required but is left empty, 
