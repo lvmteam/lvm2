@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Mention the restriction on file descriptors at invocation on the lvm man page.
   Index cached vgmetadata by vgid not vgname to cope with duplicate vgnames.
   No longer require kernel and metadata major numbers to match.
   Add a fully-functional get_cluster_name() to clvmd corosync interface.
