@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -64,7 +64,7 @@ static int _get_env_vars(struct cmd_context *cmd)
 
 	/* Set to "" to avoid using any system directory */
 	if ((e = getenv("LVM_SYSTEM_DIR"))) {
-		if (dm_snprintf(cmd->sys_dir, sizeof(cmd->sys_dir),
+		if (dm_snprintf(cmd->system_dir, sizeof(cmd->system_dir),
 				 "%s", e) < 0) {
 			log_error("LVM_SYSTEM_DIR environment variable "
 				  "is too long.");
@@ -393,7 +393,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 		filler = "_";
 
 	if (dm_snprintf(config_file, sizeof(config_file), "%s/lvm%s%s.conf",
-			 cmd->sys_dir, filler, tag) < 0) {
+			 cmd->system_dir, filler, tag) < 0) {
 		log_error("LVM_SYSTEM_DIR or tag was too long");
 		return 0;
 	}
@@ -442,7 +442,7 @@ static int _load_config_file(struct cmd_context *cmd, const char *tag)
 static int _init_lvm_conf(struct cmd_context *cmd)
 {
 	/* No config file if LVM_SYSTEM_DIR is empty */
-	if (!*cmd->sys_dir) {
+	if (!*cmd->system_dir) {
 		if (!(cmd->cft = create_config_tree(NULL, 0))) {
 			log_error("Failed to create config tree");
 			return 0;
@@ -663,7 +663,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	if (cache_dir || cache_file_prefix) {
 		if (dm_snprintf(cache_file, sizeof(cache_file),
 		    "%s%s%s/%s.cache",
-		    cache_dir ? "" : cmd->sys_dir,
+		    cache_dir ? "" : cmd->system_dir,
 		    cache_dir ? "" : "/",
 		    cache_dir ? : DEFAULT_CACHE_SUBDIR,
 		    cache_file_prefix ? : DEFAULT_CACHE_FILE_PREFIX) < 0) {
@@ -673,7 +673,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	} else if (!(dev_cache = find_config_tree_str(cmd, "devices/cache", NULL)) &&
 		   (dm_snprintf(cache_file, sizeof(cache_file),
 				"%s/%s/%s.cache",
-				cmd->sys_dir, DEFAULT_CACHE_SUBDIR,
+				cmd->system_dir, DEFAULT_CACHE_SUBDIR,
 				DEFAULT_CACHE_FILE_PREFIX) < 0)) {
 		log_error("Persistent cache filename too long.");
 		return 0;
@@ -691,7 +691,7 @@ static int _init_filters(struct cmd_context *cmd, unsigned load_persistent_cache
 	if (find_config_tree_int(cmd, "devices/write_cache_state", 1))
 		cmd->dump_filter = 1;
 
-	if (!*cmd->sys_dir)
+	if (!*cmd->system_dir)
 		cmd->dump_filter = 0;
 
 	/*
@@ -924,7 +924,7 @@ static int _init_backup(struct cmd_context *cmd)
 	char default_dir[PATH_MAX];
 	const char *dir;
 
-	if (!cmd->sys_dir) {
+	if (!cmd->system_dir) {
 		log_warn("WARNING: Metadata changes will NOT be backed up");
 		backup_init(cmd, "", 0);
 		archive_init(cmd, "", 0, 0, 0);
@@ -943,10 +943,10 @@ static int _init_backup(struct cmd_context *cmd)
 					 DEFAULT_ARCHIVE_NUMBER);
 
 	if (dm_snprintf
-	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
+	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,
 	     DEFAULT_ARCHIVE_SUBDIR) == -1) {
 		log_err("Couldn't create default archive path '%s/%s'.",
-			cmd->sys_dir, DEFAULT_ARCHIVE_SUBDIR);
+			cmd->system_dir, DEFAULT_ARCHIVE_SUBDIR);
 		return 0;
 	}
 
@@ -965,10 +965,10 @@ static int _init_backup(struct cmd_context *cmd)
 			     DEFAULT_BACKUP_ENABLED);
 
 	if (dm_snprintf
-	    (default_dir, sizeof(default_dir), "%s/%s", cmd->sys_dir,
+	    (default_dir, sizeof(default_dir), "%s/%s", cmd->system_dir,
 	     DEFAULT_BACKUP_SUBDIR) == -1) {
 		log_err("Couldn't create default backup path '%s/%s'.",
-			cmd->sys_dir, DEFAULT_BACKUP_SUBDIR);
+			cmd->system_dir, DEFAULT_BACKUP_SUBDIR);
 		return 0;
 	}
 
@@ -998,7 +998,8 @@ static void _init_globals(struct cmd_context *cmd)
 }
 
 /* Entry point */
-struct cmd_context *create_toolcontext(unsigned is_long_lived)
+struct cmd_context *create_toolcontext(unsigned is_long_lived,
+				       const char *system_dir)
 {
 	struct cmd_context *cmd;
 
@@ -1028,13 +1029,19 @@ struct cmd_context *create_toolcontext(unsigned is_long_lived)
 	dm_list_init(&cmd->tags);
 	dm_list_init(&cmd->config_files);
 
-	strcpy(cmd->sys_dir, DEFAULT_SYS_DIR);
+	/*
+	 * Environment variable LVM_SYSTEM_DIR overrides this below.
+	 */
+        if (system_dir)
+		strncpy(cmd->system_dir, system_dir, sizeof(cmd->system_dir) - 1);
+	else
+		strcpy(cmd->system_dir, DEFAULT_SYS_DIR);
 
 	if (!_get_env_vars(cmd))
 		goto error;
 
 	/* Create system directory if it doesn't already exist */
-	if (*cmd->sys_dir && !dm_create_dir(cmd->sys_dir)) {
+	if (*cmd->system_dir && !dm_create_dir(cmd->system_dir)) {
 		log_error("Failed to create LVM2 system dir for metadata backups, config "
 			  "files and internal cache.");
 		log_error("Set environment variable LVM_SYSTEM_DIR to alternative location "
