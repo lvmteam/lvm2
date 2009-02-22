@@ -191,7 +191,8 @@ void reset_locking(void)
 
 static void _update_vg_lock_count(uint32_t flags)
 {
-	if ((flags & LCK_SCOPE_MASK) != LCK_VG)
+	if ((flags & LCK_SCOPE_MASK) != LCK_VG ||
+	    (flags & LCK_CACHE))
 		return;
 
 	if ((flags & LCK_TYPE_MASK) == LCK_UNLOCK)
