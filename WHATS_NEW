@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Add --dataalignment to pvcreate to specify alignment of data area.
   Exclude LCK_CACHE locks from _vg_lock_count, fixing interrupt unblocking.
   Provide da and mda locations in debug message when writing text format label.
   Mention the restriction on file descriptors at invocation on the lvm man page.

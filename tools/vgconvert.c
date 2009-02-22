@@ -133,7 +133,7 @@ static int vgconvert_single(struct cmd_context *cmd, const char *vg_name,
 
 		dm_list_init(&mdas);
 		if (!(pv = pv_create(cmd, pv_dev(existing_pv),
-				     &existing_pv->id, size,
+				     &existing_pv->id, size, 0,
 				     pe_start, pv_pe_count(existing_pv),
 				     pv_pe_size(existing_pv), pvmetadatacopies,
 				     pvmetadatasize, &mdas))) {
