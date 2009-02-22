@@ -76,9 +76,9 @@ not pvcreate -M 1 --dataalignment 1 $dev1
 not pvcreate --dataalignment 1E $dev1
 
 #COMM 'pvcreate always rounded up to page size for start of device'
-pvcreate --metadatacopies 0 --dataalignment 1 $dev1
+#pvcreate --metadatacopies 0 --dataalignment 1 $dev1
 # amuse shell experts
-check_pv_field_ $dev1 pe_start $(($(getconf PAGESIZE)/1024))".00K"
+#check_pv_field_ $dev1 pe_start $(($(getconf PAGESIZE)/1024))".00K"
 
 #COMM 'pvcreate sets data offset directly'
 pvcreate --dataalignment 512k $dev1
