@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Exclude LCK_CACHE locks from _vg_lock_count, fixing interrupt unblocking.
   Provide da and mda locations in debug message when writing text format label.
   Mention the restriction on file descriptors at invocation on the lvm man page.
   Index cached vgmetadata by vgid not vgname to cope with duplicate vgnames.
