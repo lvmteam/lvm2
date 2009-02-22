@@ -1,5 +1,7 @@
 Version 2.02.45 - 
 ===================================
+  Move tools/version.h to lib/misc/lvm-version.h.
+  Split LVM_VERSION into MAJOR, MINOR, PATCHLEVEL, RELEASE and RELEASE_DATE.
   Add system_dir parameter to create_toolcontext().
   Add --dataalignment to pvcreate to specify alignment of data area.
   Exclude LCK_CACHE locks from _vg_lock_count, fixing interrupt unblocking.

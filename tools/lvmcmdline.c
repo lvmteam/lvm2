@@ -16,7 +16,7 @@
 #include "tools.h"
 #include "lvm2cmdline.h"
 #include "label.h"
-#include "version.h"
+#include "lvm-version.h"
 
 #include "stub.h"
 #include "lvm2cmd.h"
