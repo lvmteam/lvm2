@@ -1,6 +1,6 @@
 ###############################################################################
 ## Copyright (C) 2000-2004 Sistina Software, Inc. All rights reserved.
-## Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
+## Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
 ##
 ## This copyrighted material is made available to anyone wishing to use,
 ## modify, copy, or redistribute it subject to the terms and conditions
@@ -719,9 +719,18 @@ AC_MSG_RESULT($interface)
 DM_LIB_VERSION="\"`cat VERSION_DM 2>/dev/null || echo Unknown`\""
 AC_DEFINE_UNQUOTED(DM_LIB_VERSION, $DM_LIB_VERSION, [Library version])
 
-DM_LIB_PATCHLEVEL=`cat VERSION_DM | awk -F '[[-. ]]' '{printf "%s.%s.%s",$1,$2,$3}'`
+DM_LIB_PATCHLEVEL=`cat VERSION_DM | $AWK -F '[[-. ]]' '{printf "%s.%s.%s",$1,$2,$3}'`
 
 LVM_VERSION="\"`cat VERSION 2>/dev/null || echo Unknown`\""
+
+VER=`cat VERSION`
+LVM_RELEASE_DATE="\"`echo $VER | $SED 's/.*(//;s/).*//'`\""
+VER=`echo "$VER" | $AWK '{print $1}'`
+LVM_RELEASE="\"`echo "$VER" | $AWK -F '-' '{print $2}'`\""
+VER=`echo "$VER" | $AWK -F '-' '{print $1}'`
+LVM_MAJOR=`echo "$VER" | $AWK -F '.' '{print $1}'`
+LVM_MINOR=`echo "$VER" | $AWK -F '.' '{print $2}'`
+LVM_PATCHLEVEL=`echo "$VER" | $AWK -F '.' '{print $3}'`
 
 ################################################################################
 AC_SUBST(BUILD_DMEVENTD)
@@ -761,6 +770,11 @@ AC_SUBST(LVM1)
 AC_SUBST(LVM1_FALLBACK)
 AC_SUBST(CONFDIR)
 AC_SUBST(LVM_VERSION)
+AC_SUBST(LVM_MAJOR)
+AC_SUBST(LVM_MINOR)
+AC_SUBST(LVM_PATCHLEVEL)
+AC_SUBST(LVM_RELEASE)
+AC_SUBST(LVM_RELEASE_DATE)
 AC_SUBST(MIRRORS)
 AC_SUBST(MSGFMT)
 AC_SUBST(OWNER)
@@ -798,6 +812,7 @@ lib/format1/Makefile
 lib/format_pool/Makefile
 lib/locking/Makefile
 lib/mirror/Makefile
+lib/misc/lvm-version.h
 lib/snapshot/Makefile
 libdm/Makefile
 libdm/libdevmapper.pc
@@ -808,7 +823,6 @@ scripts/Makefile
 test/Makefile
 test/api/Makefile
 tools/Makefile
-tools/version.h
 ])
 AC_OUTPUT
 

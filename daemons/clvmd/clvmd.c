@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2002-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -49,7 +49,7 @@
 #include "clvmd-comms.h"
 #include "lvm-functions.h"
 #include "clvm.h"
-#include "version.h"
+#include "lvm-version.h"
 #include "clvmd.h"
 #include "refresh_clvmd.h"
 #include "lvm-logging.h"

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -20,7 +20,7 @@
 #include "lvm-string.h"
 #include "segtype.h"
 #include "text_export.h"
-#include "version.h"
+#include "lvm-version.h"
 
 #include <stdarg.h>
 #include <time.h>
