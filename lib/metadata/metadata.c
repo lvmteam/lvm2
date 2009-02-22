@@ -46,6 +46,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  struct device *dev,
 				  struct id *id, uint64_t size,
+				  unsigned long data_alignment,
 				  uint64_t pe_start,
 				  uint32_t existing_extent_count,
 				  uint32_t existing_extent_size,
@@ -65,19 +66,22 @@ static struct pv_list *_find_pv_in_vg(const struct volume_group *vg,
 static struct physical_volume *_find_pv_in_vg_by_uuid(const struct volume_group *vg,
 						      const struct id *id);
 
-unsigned long pe_align(struct physical_volume *pv)
+unsigned long set_pe_align(struct physical_volume *pv, unsigned long data_alignment)
 {
 	if (pv->pe_align)
 		goto out;
 
-	pv->pe_align = MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
+	if (data_alignment)
+		pv->pe_align = data_alignment;
+	else 
+		pv->pe_align = MAX(65536UL, lvm_getpagesize()) >> SECTOR_SHIFT;
+
+	if (!pv->dev)
+		goto out;
 
 	/*
 	 * Align to chunk size of underlying md device if present
 	 */
-	if (!pv->dev)
-		goto out;
-
 	if (find_config_tree_bool(pv->fmt->cmd, "devices/md_chunk_alignment",
 				  DEFAULT_MD_CHUNK_ALIGNMENT))
 		pv->pe_align = MAX(pv->pe_align,
@@ -146,18 +150,13 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 	/* Units of 512-byte sectors */
 	pv->pe_size = vg->extent_size;
 
-	/* FIXME Do proper rounding-up alignment? */
-	/* Reserved space for label; this holds 0 for PVs created by LVM1 */
-	if (pv->pe_start < pe_align(pv))
-		pv->pe_start = pe_align(pv);
-
 	/*
 	 * pe_count must always be calculated by pv_setup
 	 */
 	pv->pe_alloc_count = 0;
 
 	if (!fid->fmt->ops->pv_setup(fid->fmt, UINT64_C(0), 0,
-				     vg->extent_size, 0, UINT64_C(0),
+				     vg->extent_size, 0, 0UL, UINT64_C(0),
 				     &fid->metadata_areas, pv, vg)) {
 		log_error("Format-specific setup of physical volume '%s' "
 			  "failed.", pv_name);
@@ -759,6 +758,7 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
  * @dev: PV device to initialize
  * @id: PV UUID to use for initialization
  * @size: size of the PV in sectors
+ * @data_alignment: requested alignment of data
  * @pe_start: physical extent start
  * @existing_extent_count
  * @existing_extent_size
@@ -776,13 +776,14 @@ int vg_split_mdas(struct cmd_context *cmd __attribute((unused)),
 pv_t *pv_create(const struct cmd_context *cmd,
 		struct device *dev,
 		struct id *id, uint64_t size,
+		unsigned long data_alignment,
 		uint64_t pe_start,
 		uint32_t existing_extent_count,
 		uint32_t existing_extent_size,
 		int pvmetadatacopies,
 		uint64_t pvmetadatasize, struct dm_list *mdas)
 {
-	return _pv_create(cmd->fmt, dev, id, size, pe_start,
+	return _pv_create(cmd->fmt, dev, id, size, data_alignment, pe_start,
 			  existing_extent_count,
 			  existing_extent_size,
 			  pvmetadatacopies,
@@ -826,6 +827,7 @@ static struct physical_volume *_alloc_pv(struct dm_pool *mem, struct device *dev
 static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  struct device *dev,
 				  struct id *id, uint64_t size,
+				  unsigned long data_alignment,
 				  uint64_t pe_start,
 				  uint32_t existing_extent_count,
 				  uint32_t existing_extent_size,
@@ -870,13 +872,14 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 	pv->vg_name = fmt->orphan_vg_name;
 
 	if (!fmt->ops->pv_setup(fmt, pe_start, existing_extent_count,
-				existing_extent_size,
+				existing_extent_size, data_alignment,
 				pvmetadatacopies, pvmetadatasize, mdas,
 				pv, NULL)) {
 		log_error("%s: Format-specific setup of physical volume "
 			  "failed.", pv_dev_name(pv));
 		goto bad;
 	}
+
 	return pv;
 
       bad:

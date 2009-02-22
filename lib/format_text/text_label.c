@@ -136,6 +136,12 @@ static int _text_write(struct label *label, void *buf)
 		  mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].size) >> SECTOR_SHIFT : 0,
 		  mda2 ? "s)" : "");
 
+	if (da1 < 0) {
+		log_error("Internal error: %s label header currently requires "
+			  "a data area.", dev_name(info->dev));
+		return 0;
+	}
+
 	return 1;
 }
 

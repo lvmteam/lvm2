@@ -32,6 +32,7 @@
 
 #include <unistd.h>
 #include <sys/file.h>
+#include <sys/param.h>
 #include <limits.h>
 #include <dirent.h>
 #include <ctype.h>
@@ -1182,7 +1183,7 @@ static int _mda_setup(const struct format_type *fmt,
 	if (!pvmetadatacopies)
 		return 1;
 
-	alignment = pe_align(pv) << SECTOR_SHIFT;
+	alignment = pv->pe_align << SECTOR_SHIFT;
 	disk_size = pv->size << SECTOR_SHIFT;
 	pe_start <<= SECTOR_SHIFT;
 	pe_end <<= SECTOR_SHIFT;
@@ -1296,6 +1297,7 @@ static int _mda_setup(const struct format_type *fmt,
 
 /* Only for orphans */
 /* Set label_sector to -1 if rewriting existing label into same sector */
+/* If mdas is supplied it overwrites existing mdas e.g. used with pvcreate */
 static int _text_pv_write(const struct format_type *fmt, struct physical_volume *pv,
 		     struct dm_list *mdas, int64_t label_sector)
 {
@@ -1306,6 +1308,7 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 	char buf[MDA_HEADER_SIZE] __attribute((aligned(8)));
 	struct mda_header *mdah = (struct mda_header *) buf;
 	uint64_t adjustment;
+	struct data_area_list *da;
 
 	/* FIXME Test mode don't update cache? */
 
@@ -1342,14 +1345,24 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		dm_list_init(&info->mdas);
 	}
 
-	if (info->das.n)
+	/*
+	 * If no pe_start supplied but PV already exists,
+	 * preserve existing value.
+	 */
+	if (info->das.n) {
+		if (!pv->pe_start)
+			dm_list_iterate_items(da, &info->das)
+				pv->pe_start = da->disk_locn.offset >> SECTOR_SHIFT;
 		del_das(&info->das);
-	else
+	} else
 		dm_list_init(&info->das);
 
-	/* Set pe_start to first aligned sector after any metadata
-	 * areas that begin before pe_start */
-	pv->pe_start = pe_align(pv);
+	/*
+	 * If pe_start is still unset, set it to first aligned
+	 * sector after any metadata areas that begin before pe_start.
+	 */
+	if (!pv->pe_start)
+		pv->pe_start = pv->pe_align;
 	dm_list_iterate_items(mda, &info->mdas) {
 		mdac = (struct mda_context *) mda->metadata_locn;
 		if (pv->dev == mdac->area.dev &&
@@ -1358,9 +1371,9 @@ static int _text_pv_write(const struct format_type *fmt, struct physical_volume 
 		     (pv->pe_start << SECTOR_SHIFT))) {
 			pv->pe_start = (mdac->area.start + mdac->area.size)
 			    >> SECTOR_SHIFT;
-			adjustment = pv->pe_start % pe_align(pv);
+			adjustment = pv->pe_start % pv->pe_align;
 			if (adjustment)
-				pv->pe_start += (pe_align(pv) - adjustment);
+				pv->pe_start += pv->pe_align - adjustment;
 		}
 	}
 	if (!add_da
@@ -1574,7 +1587,7 @@ static struct metadata_area_ops _metadata_text_raw_ops = {
 /* pvmetadatasize in sectors */
 static int _text_pv_setup(const struct format_type *fmt,
 		     uint64_t pe_start, uint32_t extent_count,
-		     uint32_t extent_size,
+		     uint32_t extent_size, unsigned long data_alignment,
 		     int pvmetadatacopies,
 		     uint64_t pvmetadatasize, struct dm_list *mdas,
 		     struct physical_volume *pv, struct volume_group *vg)
@@ -1665,6 +1678,23 @@ static int _text_pv_setup(const struct format_type *fmt,
 		/* FIXME Default from config file? vgextend cmdline flag? */
 		pv->status |= ALLOCATABLE_PV;
 	} else {
+		if (pe_start)
+			pv->pe_start = pe_start;
+
+		if (!data_alignment)
+			data_alignment = find_config_tree_int(pv->fmt->cmd,
+						      "devices/data_alignment",
+						      0) * 2;
+
+		if (set_pe_align(pv, data_alignment) != data_alignment &&
+		    data_alignment)
+			log_warn("WARNING: %s: Overriding data alignment to "
+				 "%lu sectors (requested %lu sectors)",
+				 pv_dev_name(pv), pv->pe_align, data_alignment);
+
+		if (pv->pe_start < pv->pe_align)
+			pv->pe_start = pv->pe_align;
+
 		if (extent_count)
 			pe_end = pe_start + extent_count * extent_size - 1;
 		if (!_mda_setup(fmt, pe_start, pe_end, pvmetadatacopies,

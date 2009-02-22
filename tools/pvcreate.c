@@ -19,6 +19,7 @@
 struct pvcreate_params {
 	int zero;
 	uint64_t size;
+	uint64_t data_alignment;
 	int pvmetadatacopies;
 	uint64_t pvmetadatasize;
 	int64_t labelsector;
@@ -177,7 +178,8 @@ static int pvcreate_single(struct cmd_context *cmd, const char *pv_name,
 	}
 
 	dm_list_init(&mdas);
-	if (!(pv = pv_create(cmd, dev, pp->idp, pp->size, pp->pe_start,
+	if (!(pv = pv_create(cmd, dev, pp->idp, pp->size,
+			     pp->data_alignment, pp->pe_start,
 			     pp->extent_count, pp->extent_size,
 			     pp->pvmetadatacopies,
 			     pp->pvmetadatasize,&mdas))) {
@@ -305,8 +307,10 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 
 	if (!(cmd->fmt->features & FMT_MDAS) &&
 	    (arg_count(cmd, metadatacopies_ARG) ||
-	     arg_count(cmd, metadatasize_ARG))) {
-		log_error("Metadata parameters only apply to text format");
+	     arg_count(cmd, metadatasize_ARG)   ||
+	     arg_count(cmd, dataalignment_ARG))) {
+		log_error("Metadata and data alignment parameters only "
+			  "apply to text format.");
 		return 0;
 	}
 
@@ -329,6 +333,25 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 	}
 	pp->size = arg_uint64_value(cmd, physicalvolumesize_ARG, UINT64_C(0));
 
+	if (arg_sign_value(cmd, dataalignment_ARG, 0) == SIGN_MINUS) {
+		log_error("Physical volume data alignment may not be negative");
+		return 0;
+	}
+	pp->data_alignment = arg_uint64_value(cmd, dataalignment_ARG, UINT64_C(0));
+
+	if (pp->data_alignment > ULONG_MAX) {
+		log_error("Physical volume data alignment is too big.");
+		return 0;
+	}
+
+	if (pp->data_alignment && pp->pe_start) {
+		if (pp->pe_start % pp->data_alignment)
+			log_warn("WARNING: Ignoring data alignment %" PRIu64
+				 " incompatible with --restorefile value (%"
+				 PRIu64").", pp->data_alignment, pp->pe_start);
+		pp->data_alignment = 0;
+	}
+
 	if (arg_sign_value(cmd, metadatasize_ARG, 0) == SIGN_MINUS) {
 		log_error("Metadata size may not be negative");
 		return 0;
@@ -348,7 +371,6 @@ static int pvcreate_validate_params(struct cmd_context *cmd,
 
 	return 1;
 }
-
 
 int pvcreate(struct cmd_context *cmd, int argc, char **argv)
 {

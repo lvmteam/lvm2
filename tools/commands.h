@@ -462,6 +462,7 @@ xx(pvcreate,
    "\t[-M|--metadatatype 1|2]" "\n"
    "\t[--metadatacopies #copies]" "\n"
    "\t[--metadatasize MetadataSize[kKmMgGtTpPeE]]" "\n"
+   "\t[--dataalignment Alignment[kKmMgGtTpPeE]]" "\n"
    "\t[--setphysicalvolumesize PhysicalVolumeSize[kKmMgGtTpPeE]" "\n"
    "\t[-t|--test] " "\n"
    "\t[-u|--uuid uuid] " "\n"
@@ -471,9 +472,9 @@ xx(pvcreate,
    "\t[--version] " "\n"
    "\tPhysicalVolume [PhysicalVolume...]\n",
 
-   force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG, metadatacopies_ARG,
-   metadatasize_ARG, physicalvolumesize_ARG, restorefile_ARG, uuidstr_ARG,
-   yes_ARG, zero_ARG)
+   dataalignment_ARG, force_ARG, test_ARG, labelsector_ARG, metadatatype_ARG,
+   metadatacopies_ARG, metadatasize_ARG, physicalvolumesize_ARG,
+   restorefile_ARG, uuidstr_ARG, yes_ARG, zero_ARG)
 
 xx(pvdata,
    "Display the on-disk metadata for physical volume(s)",

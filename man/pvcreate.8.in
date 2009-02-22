@@ -13,6 +13,7 @@ pvcreate \- initialize a disk or partition for use by LVM
 .RB [ \-M | \-\-metadatatype type ]
 .RB [ \-\-metadatacopies #copies ]
 .RB [ \-\-metadatasize size ]
+.RB [ \-\-dataalignment alignment ]
 .RB [ \-\-restorefile file ]
 .RB [ \-\-setphysicalvolumesize size ]
 .RB [ \-u | \-\-uuid uuid ]
@@ -88,6 +89,15 @@ to see where the metadata areas are placed.
 .BR \-\-metadatasize " size"
 The approximate amount of space to be set aside for each metadata area.
 (The size you specify may get rounded.)
+.TP
+.BR \-\-dataalignment " alignment"
+Align the offset of the start of the data to a multiple of this number.
+You should also specify an appropriate \fBPhysicalExtentSize\fP when creating
+the Volume Group with \fBvgcreate\fP.
+.sp
+To see the location of the first Physical Extent of an existing Physical Volume
+use \fBpvs -o +pe_start\fP .  It will be a multiple of the requested
+\fBdata_alignment\fP.
 .TP
 .BR \-\-metadatacopies " copies"
 The number of metadata areas to set aside on each PV.  Currently
