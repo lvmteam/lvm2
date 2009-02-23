@@ -868,6 +868,12 @@ static struct physical_volume *_pv_create(const struct format_type *fmt,
 		goto bad;
 	}
 
+	if (pv->size < data_alignment) {
+		log_error("%s: Data alignment must not exceed device size.",
+			  pv_dev_name(pv));
+		goto bad;
+	}
+
 	pv->fmt = fmt;
 	pv->vg_name = fmt->orphan_vg_name;
 
