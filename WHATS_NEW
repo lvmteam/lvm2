@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Add lib/lvm.h and lib/lvm_base.c for the new library interface.
   Move tools/version.h to lib/misc/lvm-version.h.
   Split LVM_VERSION into MAJOR, MINOR, PATCHLEVEL, RELEASE and RELEASE_DATE.
   Add system_dir parameter to create_toolcontext().
