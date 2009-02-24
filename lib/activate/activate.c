@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2007 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -396,6 +396,7 @@ int module_present(const char *target_name)
 	int ret = 0;
 #ifdef MODPROBE_CMD
 	char module[128];
+	const char *argv[3];
 
 	if (dm_snprintf(module, sizeof(module), "dm-%s", target_name) < 0) {
 		log_error("module_present module name too long: %s",
@@ -403,7 +404,11 @@ int module_present(const char *target_name)
 		return 0;
 	}
 
-	ret = exec_cmd(MODPROBE_CMD, module, "", "");
+	argv[0] = MODPROBE_CMD;
+	argv[1] = module;
+	argv[2] = NULL;
+
+	ret = exec_cmd(argv);
 #endif
 	return ret;
 }

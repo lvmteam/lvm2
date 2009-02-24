@@ -1,5 +1,10 @@
 Version 2.02.45 - 
 ===================================
+  Fixed bug where lvresize option -t was not properly passed to fsadm.
+  Using argv[] list in exec_cmd() to allow more params for external commands.
+  Fsadm does not allow checking mounted filesystem.
+  Fsadm no longer accepts 'any other key' as 'no' answer to y/n.
+  Fsadm improved handling of command line options.
   Add lib/lvm.h and lib/lvm_base.c for the new library interface.
   Move tools/version.h to lib/misc/lvm-version.h.
   Split LVM_VERSION into MAJOR, MINOR, PATCHLEVEL, RELEASE and RELEASE_DATE.

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2007 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2007-2009 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -176,8 +176,8 @@ detect_mounted()  {
 # get the full size of device in bytes
 detect_device_size() {
 	# check if blockdev supports getsize64
-	$BLOCKDEV 2>&1 | $GREP getsize64 >/dev/null 
-	if test $? -eq 0; then 
+	$BLOCKDEV 2>&1 | $GREP getsize64 >/dev/null
+	if test $? -eq 0; then
 		DEVSIZE=$($BLOCKDEV --getsize64 "$VOLUME") || error "Cannot read size of device \"$VOLUME\""
 	else
 		DEVSIZE=$($BLOCKDEV --getsize "$VOLUME") || error "Cannot read size of device \"$VOLUME\""
@@ -206,21 +206,22 @@ temp_umount() {
 
 yes_no() {
 	echo -n "$@? [Y|n] "
+
 	if [ -n "$YES" ]; then
-		ANS="y"; echo -n $ANS
-	else
-		read -n 1 ANS
+		echo y ; return 0
 	fi
-	test -n "$ANS" && echo
-	case "$ANS" in
-	  "y" | "Y" | "" ) return 0 ;;
-	esac
-	return 1
+
+	while read -r -s -n 1 ANS ; do
+		case "$ANS" in
+		 "y" | "Y" | "") echo y ; return 0 ;;
+		 "n" | "N") echo n ; return 1 ;;
+		esac
+	done
 }
 
 try_umount() {
 	yes_no "Do you want to unmount \"$MOUNTED\"" && dry $UMOUNT "$MOUNTED" && return 0
-	error "Cannot proceed test with mounted filesystem \"$MOUNTED\""
+	error "Can not proceed with mounted filesystem \"$MOUNTED\""
 }
 
 validate_parsing() {
@@ -250,7 +251,7 @@ resize_ext() {
 		FSFORCE="-f"
 	fi
 
-	verbose "Resizing \"$VOLUME\" $BLOCKCOUNT -> $NEWBLOCKCOUNT blocks ($NEWSIZE bytes, bs:$BLOCKSIZE)"
+	verbose "Resizing filesystem on device \"$VOLUME\" to $NEWSIZE bytes ($BLOCKCOUNT -> $NEWBLOCKCOUNT blocks of $BLOCKSIZE bytes)"
 	dry $RESIZE_EXT $FSFORCE "$VOLUME" $NEWBLOCKCOUNT
 }
 
@@ -260,12 +261,8 @@ resize_ext() {
 # - unmounted for downsize
 #############################
 resize_reiser() {
-	detect_mounted
-	if [ -n "$MOUNTED" ]; then
-		verbose "ReiserFS resizes only unmounted filesystem"
-		try_umount
-		REMOUNT=$MOUNTED
-	fi
+	detect_mounted && verbose "ReiserFS resizes only unmounted filesystem" && try_umount
+	REMOUNT=$MOUNTED
 	verbose "Parsing $TUNE_REISER \"$VOLUME\""
 	for i in $($TUNE_REISER "$VOLUME"); do
 		case "$i" in
@@ -322,7 +319,7 @@ resize() {
 	NEWSIZE=$2
 	detect_fs "$1"
 	detect_device_size
-	verbose "Device \"$VOLUME\" has $DEVSIZE bytes"
+	verbose "Device \"$VOLUME\" size is $DEVSIZE bytes"
 	# if the size parameter is missing use device size
 	#if [ -n "$NEWSIZE" -a $NEWSIZE <
 	test -z "$NEWSIZE" && NEWSIZE=${DEVSIZE}b
@@ -343,6 +340,7 @@ resize() {
 ###################
 check() {
 	detect_fs "$1"
+	detect_mounted && error "Can not fsck device \"$VOLUME\", filesystem mounted on $MOUNTED"
 	case "$FSTYPE" in
 	  "xfs") dry $XFS_CHECK "$VOLUME" ;;
 	  *) dry $FSCK $YES "$VOLUME" ;;
@@ -370,23 +368,24 @@ test $TEST64BIT -eq 1000000000000000 || error "Shell does not handle 64bit arith
 $(echo Y | $GREP Y >/dev/null) || error "Grep does not work properly"
 
 
-if [ "$1" = "" ] ; then
+if [ "$#" -eq 0 ] ; then
 	tool_usage
 fi
 
-while [ "$1" != "" ]
+while [ "$#" -ne 0 ]
 do
-	case "$1" in
-	 "-h"|"--help") tool_usage ;;
-	 "-v"|"--verbose") VERB="-v" ;;
-	 "-n"|"--dry-run") DRY=1 ;;
-	 "-f"|"--force") FORCE="-f" ;;
-	 "-e"|"--ext-offline") EXTOFF=1 ;;
-	 "-y"|"--yes") YES="-y" ;;
-	 "-l"|"--lvresize") DO_LVRESIZE=1 ;;
-	 "check") shift; CHECK=$1 ;;
-	 "resize") shift; RESIZE=$1; shift; NEWSIZE=$1 ;;
-	 *) error "Wrong argument \"$1\". (see: $TOOL --help)"
+	 case "$1" in
+	  "") ;;
+	  "-h"|"--help") tool_usage ;;
+	  "-v"|"--verbose") VERB="-v" ;;
+	  "-n"|"--dry-run") DRY=1 ;;
+	  "-f"|"--force") FORCE="-f" ;;
+	  "-e"|"--ext-offline") EXTOFF=1 ;;
+	  "-y"|"--yes") YES="-y" ;;
+	  "-l"|"--lvresize") DO_LVRESIZE=1 ;;
+	  "check") CHECK="$2" ; shift ;;
+	  "resize") RESIZE="$2"; NEWSIZE="$3" ; shift 2 ;;
+	  *) error "Wrong argument \"$1\". (see: $TOOL --help)"
 	esac
 	shift
 done
