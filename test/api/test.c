@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.  
- * Copyright (C) 2004-2008 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2009 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -16,7 +16,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <readline/readline.h>
-#include "lvm2.h"
+#include "lvm.h"
 
 #define MAX_ARGS 64
 
@@ -48,7 +48,7 @@ static int lvm_split(char *str, int *argc, char **argv, int max)
 	return *argc;
 }
 
-static int lvmapi_test_shell(void *h)
+static int lvmapi_test_shell(lvm_t libh)
 {
 	int argc, i;
 	char *input = NULL, *args[MAX_ARGS], **argv;
@@ -99,18 +99,17 @@ static int lvmapi_test_shell(void *h)
 		      
 int main (int argc, char *argv[])
 {
-	void *h;
+	lvm_t libh;
 
-	h = lvm2_create();
-	if (!h) {
+	libh = lvm_create(NULL);
+	if (!libh) {
 		printf("Unable to open lvm library instance\n");
 		return 1;
 	}
 
-	lvmapi_test_shell(h);
+	lvmapi_test_shell(libh);
 
-	if (h)
-		lvm2_destroy(h);
+	lvm_destroy(libh);
 	return 0;
 }
 
