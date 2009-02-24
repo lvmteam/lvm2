@@ -18,6 +18,6 @@
 
 #include "lib.h"
 
-int exec_cmd(const char *command, const char *fscmd, const char *lv_path,
-	     const char *size);
+int exec_cmd(const char *const argv[]);
+
 #endif
