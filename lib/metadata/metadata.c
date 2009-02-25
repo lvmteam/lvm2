@@ -41,7 +41,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					const char *pv_name,
 					struct dm_list *mdas,
 					uint64_t *label_sector,
-					int warnings);
+					int warnings, int scan_label_only);
 
 static struct physical_volume *_pv_create(const struct format_type *fmt,
 				  struct device *dev,
@@ -1040,7 +1040,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 {
 	struct physical_volume *pv;
 
-	if (!(pv = _pv_read(cmd, pv_name, NULL, NULL, 1))) {
+	if (!(pv = _pv_read(cmd, pv_name, NULL, NULL, 1, 0))) {
 		log_error("Physical volume %s not found", pv_name);
 		return NULL;
 	}
@@ -1049,7 +1049,7 @@ static struct physical_volume *_find_pv_by_name(struct cmd_context *cmd,
 		/* If a PV has no MDAs - need to search all VGs for it */
 		if (!scan_vgs_for_pvs(cmd))
 			return_NULL;
-		if (!(pv = _pv_read(cmd, pv_name, NULL, NULL, 1))) {
+		if (!(pv = _pv_read(cmd, pv_name, NULL, NULL, 1, 0))) {
 			log_error("Physical volume %s not found", pv_name);
 			return NULL;
 		}
@@ -1643,7 +1643,7 @@ static struct volume_group *_vg_read_orphans(struct cmd_context *cmd,
 	}
 
 	dm_list_iterate_items(info, &vginfo->infos) {
-		if (!(pv = _pv_read(cmd, dev_name(info->dev), NULL, NULL, 1))) {
+		if (!(pv = _pv_read(cmd, dev_name(info->dev), NULL, NULL, 1, 0))) {
 			continue;
 		}
 		if (!(pvl = dm_pool_zalloc(cmd->mem, sizeof(*pvl)))) {
@@ -2120,9 +2120,9 @@ struct logical_volume *lv_from_lvid(struct cmd_context *cmd, const char *lvid_s,
  */
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct dm_list *mdas, uint64_t *label_sector,
-				int warnings)
+				int warnings, int scan_label_only)
 {
-	return _pv_read(cmd, pv_name, mdas, label_sector, warnings);
+	return _pv_read(cmd, pv_name, mdas, label_sector, warnings, scan_label_only);
 }
 
 /* FIXME Use label functions instead of PV functions */
@@ -2130,7 +2130,7 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 					const char *pv_name,
 					struct dm_list *mdas,
 					uint64_t *label_sector,
-					int warnings)
+					int warnings, int scan_label_only)
 {
 	struct physical_volume *pv;
 	struct label *label;
@@ -2160,7 +2160,8 @@ static struct physical_volume *_pv_read(struct cmd_context *cmd,
 	dm_list_init(&pv->segments);
 
 	/* FIXME Move more common code up here */
-	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, mdas))) {
+	if (!(info->fmt->ops->pv_read(info->fmt, pv_name, pv, mdas,
+	      scan_label_only))) {
 		log_error("Failed to read existing physical volume '%s'",
 			  pv_name);
 		return NULL;
@@ -2806,5 +2807,5 @@ pv_t *pv_by_path(struct cmd_context *cmd, const char *pv_name)
 	struct dm_list mdas;
 	
 	dm_list_init(&mdas);
-	return _pv_read(cmd, pv_name, &mdas, NULL, 1);
+	return _pv_read(cmd, pv_name, &mdas, NULL, 1, 0);
 }

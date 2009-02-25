@@ -33,7 +33,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 
 	/* Is there a pv here already? */
 	/* If not, this is an error unless you used -f. */
-	if (!(pv = pv_read(cmd, name, &mdas, NULL, 1))) {
+	if (!(pv = pv_read(cmd, name, &mdas, NULL, 1, 0))) {
 		if (arg_count(cmd, force_ARG))
 			return 1;
 		log_error("Physical Volume %s not found", name);
@@ -53,7 +53,7 @@ static int pvremove_check(struct cmd_context *cmd, const char *name)
 				  "failed.");
 			return 0;
 		}
-		if (!(pv = pv_read(cmd, name, NULL, NULL, 1))) {
+		if (!(pv = pv_read(cmd, name, NULL, NULL, 1, 0))) {
 			log_error("Failed to read physical volume %s", name);
 			return 0;
 		}

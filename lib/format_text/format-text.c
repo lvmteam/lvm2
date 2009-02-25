@@ -1441,16 +1441,17 @@ static int _get_pv_if_in_vg(struct lvmcache_info *info,
 }
 
 static int _populate_pv_fields(struct lvmcache_info *info,
-			       struct physical_volume *pv)
+			       struct physical_volume *pv,
+			       int scan_label_only)
 {
 	struct data_area_list *da;
 
 	/* Have we already cached vgname? */
-	if (_get_pv_if_in_vg(info, pv))
+	if (!scan_label_only && _get_pv_if_in_vg(info, pv))
 		return 1;
 
 	/* Perform full scan (just the first time) and try again */
-	if (!memlock() && !full_scan_done()) {
+	if (!scan_label_only && !memlock() && !full_scan_done()) {
 		lvmcache_label_scan(info->fmt->cmd, 2);
 
 		if (_get_pv_if_in_vg(info, pv))
@@ -1478,7 +1479,8 @@ static int _populate_pv_fields(struct lvmcache_info *info,
 }
 
 static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct dm_list *mdas)
+		    struct physical_volume *pv, struct dm_list *mdas,
+		    int scan_label_only)
 {
 	struct label *label;
 	struct device *dev;
@@ -1493,7 +1495,7 @@ static int _text_pv_read(const struct format_type *fmt, const char *pv_name,
 		return_0;
 	info = (struct lvmcache_info *) label->info;
 
-	if (!_populate_pv_fields(info, pv))
+	if (!_populate_pv_fields(info, pv, scan_label_only))
 		return 0;
 
 	if (!mdas)

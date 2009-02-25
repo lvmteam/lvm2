@@ -366,7 +366,7 @@ struct volume_group *vg_read_internal(struct cmd_context *cmd, const char *vg_na
 			     const char *vgid, int *consistent);
 struct physical_volume *pv_read(struct cmd_context *cmd, const char *pv_name,
 				struct dm_list *mdas, uint64_t *label_sector,
-				int warnings);
+				int warnings, int scan_label_only);
 struct dm_list *get_pvs(struct cmd_context *cmd);
 
 /* Set full_scan to 1 to re-read every (filtered) device label */

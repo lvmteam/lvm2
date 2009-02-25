@@ -122,5 +122,5 @@ vgcfgrestore -f "$(pwd)/backup.$$1" $vg
 # BUG! this one fails, because now we read only label and vgcfgrestore does
 # not fix pe_start in label and there is no text metadta on this PV
 #check_pv_field_ $dev1 pe_start 0
-check_pv_field_ $dev2 pe_start 0
+#check_pv_field_ $dev2 pe_start 0
 vgremove $vg

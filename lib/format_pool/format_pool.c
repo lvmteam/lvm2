@@ -203,7 +203,8 @@ static int _pool_pv_setup(const struct format_type *fmt __attribute((unused)),
 
 static int _pool_pv_read(const struct format_type *fmt, const char *pv_name,
 			 struct physical_volume *pv,
-			 struct dm_list *mdas __attribute((unused)))
+			 struct dm_list *mdas __attribute((unused)),
+			 int scan_label_only __attribute((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("pool pv_read", 1024);
 	struct pool_list *pl;

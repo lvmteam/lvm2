@@ -47,7 +47,7 @@ static int _pv_resize_single(struct cmd_context *cmd,
 			return 0;
 		}
 
-		if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1))) {
+		if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1, 0))) {
 			unlock_vg(cmd, vg_name);
 			log_error("Unable to read PV \"%s\"", pv_name);
 			return 0;

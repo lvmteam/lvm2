@@ -259,7 +259,8 @@ static int _format1_vg_write(struct format_instance *fid, struct volume_group *v
 }
 
 static int _format1_pv_read(const struct format_type *fmt, const char *pv_name,
-		    struct physical_volume *pv, struct dm_list *mdas __attribute((unused)))
+		    struct physical_volume *pv, struct dm_list *mdas __attribute((unused)),
+		    int scan_label_only __attribute((unused)))
 {
 	struct dm_pool *mem = dm_pool_create("lvm1 pv_read", 1024);
 	struct disk_list *dl;
