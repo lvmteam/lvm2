@@ -338,6 +338,19 @@ if  test x$CLVMD != xnone && test x$CLUSTER = xnone; then
 	CLUSTER=internal
 fi
 
+dnl -- Look for corosync libraries if required.
+if [[ "x$CLVMD" = xcorosync -o "x$CLVMD" = xall ]]; then
+	PKG_CHECK_MODULES(QUORUM, libquorum, [],
+		[AC_MSG_RESULT([no pkg for quorum library, using -lquorum]);
+		QUORUM_LIBS="-lquorum"])
+	PKG_CHECK_MODULES(CONFDB, libconfdb, [],
+		[AC_MSG_RESULT([no pkg for confdb library, using -lconfdb]);
+		CONFDB_LIBS="-lconfdb"])
+	PKG_CHECK_MODULES(CPG, libcpg, [],
+		[AC_MSG_RESULT([no pkg for libcpg library, using -lcpg]);
+		CPG_LIBS="-lcpg"])
+fi
+
 ################################################################################
 dnl -- Enable debugging
 AC_MSG_CHECKING(whether to enable debugging)
@@ -742,7 +755,12 @@ AC_SUBST(CLDWHOLEARCHIVE)
 AC_SUBST(CLUSTER)
 AC_SUBST(CLVMD)
 AC_SUBST(CMDLIB)
+AC_SUBST(CONFDB_CFLAGS)
+AC_SUBST(CONFDB_LIBS)
+AC_SUBST(CONFDIR)
 AC_SUBST(COPTIMISE_FLAG)
+AC_SUBST(CPG_CFLAGS)
+AC_SUBST(CPG_LIBS)
 AC_SUBST(CSCOPE_CMD)
 AC_SUBST(DEBUG)
 AC_SUBST(DEVMAPPER)
@@ -768,7 +786,6 @@ AC_SUBST(LIB_SUFFIX)
 AC_SUBST(LOCALEDIR)
 AC_SUBST(LVM1)
 AC_SUBST(LVM1_FALLBACK)
-AC_SUBST(CONFDIR)
 AC_SUBST(LVM_VERSION)
 AC_SUBST(LVM_MAJOR)
 AC_SUBST(LVM_MINOR)
@@ -780,6 +797,8 @@ AC_SUBST(MSGFMT)
 AC_SUBST(OWNER)
 AC_SUBST(PKGCONFIG)
 AC_SUBST(POOL)
+AC_SUBST(QUORUM_CFLAGS)
+AC_SUBST(QUORUM_LIBS)
 AC_SUBST(SNAPSHOTS)
 AC_SUBST(STATICDIR)
 AC_SUBST(STATIC_LINK)

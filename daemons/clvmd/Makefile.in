@@ -15,6 +15,13 @@ srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 
+QUORUM_LIBS = @QUORUM_LIBS@
+QUORUM_CFLAGS = @QUORUM_CFLAGS@
+CONFDB_LIBS = @CONFDB_LIBS@
+CONFDB_CFLAGS = @CONFDB_CFLAGS@
+CPG_LIBS = @CPG_LIBS@
+CPG_CFLAGS = @CPG_CFLAGS@
+
 SOURCES = \
 	clvmd-command.c  \
 	clvmd.c          \
@@ -67,9 +74,10 @@ ifeq ("$(OPENAIS)", "yes")
 endif
 
 ifeq ("$(COROSYNC)", "yes")
-        SOURCES += clvmd-corosync.c
-        LMLIBS += -lquorum -lconfdb -lcpg -ldlm
-        DEFS += -DUSE_COROSYNC
+	SOURCES += clvmd-corosync.c
+	LMLIBS += $(QUORUM_LIBS) $(CONFDB_LIBS) $(CPG_LIBS) -ldlm
+	CFLAGS += $(QUORUM_CFLAGS) $(CONFDB_CFLAGS) $(CPG_CFLAGS)
+	DEFS += -DUSE_COROSYNC
 endif
 
 
