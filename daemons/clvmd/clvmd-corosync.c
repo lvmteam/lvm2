@@ -478,6 +478,12 @@ static int _lock_resource(const char *resource, int mode, int flags, int *lockid
 		DEBUGLOG("dlm_ls_lock returned %d\n", errno);
 		return err;
 	}
+	if (lksb.sb_status != 0)
+	{
+		DEBUGLOG("dlm_ls_lock returns lksb.sb_status %d\n", lksb.sb_status);
+		errno = lksb.sb_status;
+		return -1;
+	}
 
 	DEBUGLOG("lock_resource returning %d, lock_id=%x\n", err, lksb.sb_lkid);
 
@@ -504,6 +510,13 @@ static int _unlock_resource(const char *resource, int lockid)
 		DEBUGLOG("Unlock returned %d\n", err);
 		return err;
 	}
+	if (lksb.sb_status != 0)
+	{
+		DEBUGLOG("dlm_ls_unlock_wait returns lksb.sb_status: %d\n", lksb.sb_status);
+		errno = lksb.sb_status;
+		return -1;
+	}   
+
 
 	return 0;
 }
@@ -568,7 +581,7 @@ static int _get_cluster_name(char *buf, int buflen)
 	confdb_handle_t handle;
 	int result;
 	int namelen = buflen;
-	unsigned int cluster_handle;
+	hdb_handle_t cluster_handle;
 	confdb_callbacks_t callbacks = {
 		.confdb_key_change_notify_fn = NULL,
 		.confdb_object_create_change_notify_fn = NULL,
