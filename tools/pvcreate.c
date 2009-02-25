@@ -50,7 +50,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	/* FIXME Check partition type is LVM unless --force is given */
 
 	/* Is there a pv here already? */
-	pv = pv_read(cmd, name, NULL, NULL, 0);
+	pv = pv_read(cmd, name, NULL, NULL, 0, 0);
 
 	/*
 	 * If a PV has no MDAs it may appear to be an orphan until the
@@ -61,7 +61,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	if (pv && is_orphan(pv)) {
 		if (!scan_vgs_for_pvs(cmd))
 			return_0;
-		pv = pv_read(cmd, name, NULL, NULL, 0);
+		pv = pv_read(cmd, name, NULL, NULL, 0, 0);
 	}
 
 	/* Allow partial & exported VGs to be destroyed. */

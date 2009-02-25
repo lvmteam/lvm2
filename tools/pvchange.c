@@ -97,7 +97,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct physical_volume *pv,
 			return 0;
 		}
 
-		if (!(pv = pv_read(cmd, pv_name, NULL, &sector, 1))) {
+		if (!(pv = pv_read(cmd, pv_name, NULL, &sector, 1, 0))) {
 			unlock_vg(cmd, vg_name);
 			log_error("Unable to read PV \"%s\"", pv_name);
 			return 0;
@@ -251,7 +251,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 		for (; opt < argc; opt++) {
 			pv_name = argv[opt];
 			dm_list_init(&mdas);
-			if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1))) {
+			if (!(pv = pv_read(cmd, pv_name, &mdas, NULL, 1, 0))) {
 				log_error("Failed to read physical volume %s",
 					  pv_name);
 				continue;
@@ -270,7 +270,7 @@ int pvchange(struct cmd_context *cmd, int argc, char **argv)
 					continue;
 				}
 				if (!(pv = pv_read(cmd, pv_name,
-						   NULL, NULL, 1))) {
+						   NULL, NULL, 1, 0))) {
 					log_error("Failed to read "
 						  "physical volume %s",
 						  pv_name);

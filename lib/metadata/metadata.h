@@ -201,7 +201,8 @@ struct format_handler {
 	 * Return PV with given path.
 	 */
 	int (*pv_read) (const struct format_type * fmt, const char *pv_name,
-			struct physical_volume * pv, struct dm_list * mdas);
+			struct physical_volume * pv, struct dm_list *mdas,
+			int scan_label_only);
 
 	/*
 	 * Tweak an already filled out a pv ready for importing into a
