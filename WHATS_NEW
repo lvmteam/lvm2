@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Use pkgconfig to obtain corosync library details during configuration.
   Fix error returns in clvmd-corosync interface to DLM.
   Add --refresh to vgchange and vgmknodes man pages.
   Fixed bug where lvresize option -t was not properly passed to fsadm.
