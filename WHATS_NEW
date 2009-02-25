@@ -1,5 +1,6 @@
 Version 2.02.45 - 
 ===================================
+  Add --refresh to vgchange and vgmknodes man pages.
   Fixed bug where lvresize option -t was not properly passed to fsadm.
   Using argv[] list in exec_cmd() to allow more params for external commands.
   Fsadm does not allow checking mounted filesystem.
