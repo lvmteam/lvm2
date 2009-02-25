@@ -25,6 +25,7 @@ vgchange \- change attributes of a volume group
 .RB [ \-P | \-\-partial]
 .RB [ \-s | \-\-physicalextentsize
 .IR PhysicalExtentSize [ \fBkKmMgGtT\fR ]]
+.RB [ \-\-refresh]
 .RB [ -t | \-\-test]
 .RB [ \-v | \-\-verbose]
 .RB [ \-\-version ]
@@ -127,6 +128,12 @@ but having a large number of extents will slow down the tools but have no
 impact on I/O performance to the logical volume.  The smallest PE is 1KB.
  
 The 2.4 kernel has a limitation of 2TB per block device.
+.TP
+.BR \-\-refresh
+If any logical volume in the volume group is active, reload its metadata.
+This is not necessary in normal operation, but may be useful
+if something has gone wrong or if you're doing clustering
+manually without a clustered lock manager.
 .TP
 .BR \-x ", " \-\-resizeable " " { y | n }
 Enables or disables the extension/reduction of this volume group
