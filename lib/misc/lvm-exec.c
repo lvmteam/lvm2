@@ -23,24 +23,18 @@
 /*
  * Create verbose string with list of parameters
  */
-static char *verbose_args(const char *const argv[])
+static char *_verbose_args(const char *const argv[], char *buf, size_t sz)
 {
-	char *buf = 0;
 	int pos = 0;
-	size_t sz = 0;
-	size_t len;
-	int i;
+	int len;
+	unsigned i;
 
-	for (i = 0; argv[i] != NULL; i++) {
-		len = strlen(argv[i]);
-		if (pos + len >= sz) {
-			sz = 64 + (sz + len) * 2;
-			if (!(buf = realloc(buf, sz)))
-				break;
-		}
-		if (pos)
-			buf[pos++] = ' ';
-		memcpy(buf + pos, argv[i], len + 1); /* copy with '\0' */
+	buf[0] = '\0';
+	for (i = 0; argv[i]; i++) {
+		if ((len = dm_snprintf(buf + pos, sz - pos,
+				       "%s ", argv[i])) < 0)
+			/* Truncated */
+			break;
 		pos += len;
 	}
 
@@ -54,10 +48,9 @@ int exec_cmd(const char *const argv[])
 {
 	pid_t pid;
 	int status;
-	char *buf = 0;
+	char buf[PATH_MAX * 2];
 
-	log_verbose("Executing: %s", buf = verbose_args(argv));
-	free(buf);
+	log_verbose("Executing: %s", _verbose_args(argv, buf, sizeof(buf)));
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
@@ -67,7 +60,7 @@ int exec_cmd(const char *const argv[])
 	if (!pid) {
 		/* Child */
 		/* FIXME Use execve directly */
-		execvp(argv[0], (char **const) argv); /* cast to match execvp prototype */
+		execvp(argv[0], (char **const) argv);
 		log_sys_error("execvp", argv[0]);
 		exit(errno);
 	}
