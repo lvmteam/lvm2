@@ -579,7 +579,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	if ((lp->resizefs || (lp->resize == LV_REDUCE)) &&
 	    !_request_confirmation(cmd, vg, lv, lp)) {
 		stack;
-		// return ECMD_FAILED;
+		return ECMD_FAILED;
 	}
 
 	if (lp->resizefs) {
