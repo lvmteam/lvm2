@@ -141,7 +141,8 @@ int target_version(const char *target_name, uint32_t *maj,
 {
 	return 0;
 }
-int target_present(const char *target_name, int use_modprobe)
+int target_present(struct cmd_context *cmd, const char *target_name,
+		   int use_modprobe)
 {
 	return 0;
 }
@@ -391,7 +392,7 @@ int target_version(const char *target_name, uint32_t *maj,
 	return r;
 }
 
-int module_present(const char *target_name)
+int module_present(struct cmd_context *cmd, const char *target_name)
 {
 	int ret = 0;
 #ifdef MODPROBE_CMD
@@ -408,12 +409,13 @@ int module_present(const char *target_name)
 	argv[1] = module;
 	argv[2] = NULL;
 
-	ret = exec_cmd(argv);
+	ret = exec_cmd(cmd, argv);
 #endif
 	return ret;
 }
 
-int target_present(const char *target_name, int use_modprobe)
+int target_present(struct cmd_context *cmd, const char *target_name,
+		   int use_modprobe)
 {
 	uint32_t maj, min, patchlevel;
 
@@ -425,7 +427,7 @@ int target_present(const char *target_name, int use_modprobe)
 		if (target_version(target_name, &maj, &min, &patchlevel))
 			return 1;
 
-		if (!module_present(target_name))
+		if (!module_present(cmd, target_name))
 			return_0;
 	}
 #endif

@@ -40,8 +40,9 @@ int driver_version(char *version, size_t size);
 int library_version(char *version, size_t size);
 int lvm1_present(struct cmd_context *cmd);
 
-int module_present(const char *target_name);
-int target_present(const char *target_name, int use_modprobe);
+int module_present(struct cmd_context *cmd, const char *target_name);
+int target_present(struct cmd_context *cmd, const char *target_name,
+		   int use_modprobe);
 int target_version(const char *target_name, uint32_t *maj,
                    uint32_t *min, uint32_t *patchlevel);
 int list_segment_modules(struct dm_pool *mem, const struct lv_segment *seg,

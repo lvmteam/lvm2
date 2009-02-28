@@ -51,7 +51,7 @@ static int _errseg_add_target_line(struct dev_manager *dm __attribute((unused)),
 	return dm_tree_node_add_error_target(node, len);
 }
 
-static int _errseg_target_present(const struct lv_segment *seg __attribute((unused)),
+static int _errseg_target_present(const struct lv_segment *seg,
 				  unsigned *attributes __attribute((unused)))
 {
 	static int _errseg_checked = 0;
@@ -59,7 +59,8 @@ static int _errseg_target_present(const struct lv_segment *seg __attribute((unus
 
 	/* Reported truncated in older kernels */
 	if (!_errseg_checked &&
-	    (target_present("error", 0) || target_present("erro", 0)))
+	    (target_present(seg->lv->vg->cmd, "error", 0) ||
+	     target_present(seg->lv->vg->cmd, "erro", 0)))
 		_errseg_present = 1;
 
 	_errseg_checked = 1;

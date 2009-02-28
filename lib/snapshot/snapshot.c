@@ -108,15 +108,15 @@ static int _snap_target_percent(void **target_state __attribute((unused)),
 	return 1;
 }
 
-static int _snap_target_present(const struct lv_segment *seg __attribute((unused)),
+static int _snap_target_present(const struct lv_segment *seg,
 				unsigned *attributes __attribute((unused)))
 {
 	static int _snap_checked = 0;
 	static int _snap_present = 0;
 
 	if (!_snap_checked)
-		_snap_present = target_present("snapshot", 1) &&
-		    target_present("snapshot-origin", 0);
+		_snap_present = target_present(seg->lv->vg->cmd, "snapshot", 1) &&
+		    target_present(seg->lv->vg->cmd, "snapshot-origin", 0);
 
 	_snap_checked = 1;
 
