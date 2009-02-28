@@ -33,7 +33,7 @@ static int _pvmove_target_present(struct cmd_context *cmd, int clustered)
 		return_0;
 
 	if (activation() && segtype->ops->target_present &&
-	    !segtype->ops->target_present(NULL, clustered ? &attr : NULL))
+	    !segtype->ops->target_present(cmd, NULL, clustered ? &attr : NULL))
 		found = 0;
 
 	if (activation() && clustered) {

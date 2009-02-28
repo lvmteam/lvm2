@@ -50,14 +50,15 @@ static int _zero_add_target_line(struct dev_manager *dm __attribute((unused)),
 	return dm_tree_node_add_zero_target(node, len);
 }
 
-static int _zero_target_present(const struct lv_segment *seg,
+static int _zero_target_present(struct cmd_context *cmd,
+				const struct lv_segment *seg __attribute((unused)),
 				unsigned *attributes __attribute((unused)))
 {
 	static int _zero_checked = 0;
 	static int _zero_present = 0;
 
 	if (!_zero_checked)
-		_zero_present = target_present(seg->lv->vg->cmd, "zero", 0);
+		_zero_present = target_present(cmd, "zero", 0);
 
 	_zero_checked = 1;
 

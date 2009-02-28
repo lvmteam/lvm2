@@ -343,7 +343,8 @@ static int _mirrored_add_target_line(struct dev_manager *dm, struct dm_pool *mem
 	return add_areas_line(dm, seg, node, start_area, area_count);
 }
 
-static int _mirrored_target_present(const struct lv_segment *seg,
+static int _mirrored_target_present(struct cmd_context *cmd,
+				    const struct lv_segment *seg,
 				    unsigned *attributes)
 {
 	static int _mirrored_checked = 0;
@@ -353,7 +354,7 @@ static int _mirrored_target_present(const struct lv_segment *seg,
 	char vsn[80];
 
 	if (!_mirrored_checked) {
-		_mirrored_present = target_present(seg->lv->vg->cmd, "mirror", 1);
+		_mirrored_present = target_present(cmd, "mirror", 1);
 
 		/*
 		 * block_on_error available with mirror target >= 1.1 and <= 1.11
@@ -375,8 +376,7 @@ static int _mirrored_target_present(const struct lv_segment *seg,
 	 * FIXME: Fails incorrectly if cmirror was built into kernel.
 	 */
 	if (attributes) {
-		if (!_mirror_attributes && module_present(seg->lv->vg->cmd,
-		    "log-clustered"))
+		if (!_mirror_attributes && module_present(cmd, "log-clustered"))
 			_mirror_attributes |= MIRROR_LOG_CLUSTERED;
 		*attributes = _mirror_attributes;
 	}

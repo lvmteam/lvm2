@@ -908,7 +908,8 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 		  layer ? "-" : "", layer ? : "");
 
 	if (seg_present->segtype->ops->target_present &&
-	    !seg_present->segtype->ops->target_present(seg_present, NULL)) {
+	    !seg_present->segtype->ops->target_present(seg_present->lv->vg->cmd,
+						       seg_present, NULL)) {
 		log_error("Can't expand LV %s: %s target support missing "
 			  "from kernel?", seg->lv->name, seg_present->segtype->name);
 		return 0;
