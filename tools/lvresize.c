@@ -138,7 +138,7 @@ enum fsadm_cmd_e { FSADM_CMD_CHECK, FSADM_CMD_RESIZE };
  * FSADM_CMD --dry-run --verbose --force check lv_path
  * FSADM_CMD --dry-run --verbose --force resize lv_path size
  */
-static int _fsadm_cmd(const struct cmd_context *cmd,
+static int _fsadm_cmd(struct cmd_context *cmd,
 		      const struct volume_group *vg,
 		      const struct lvresize_params *lp,
 		      enum fsadm_cmd_e fcmd)
@@ -181,7 +181,7 @@ static int _fsadm_cmd(const struct cmd_context *cmd,
 
 	argv[i] = NULL;
 
-	return exec_cmd(argv);
+	return exec_cmd(cmd, argv);
 }
 
 static int _lvresize_params(struct cmd_context *cmd, int argc, char **argv,
@@ -579,7 +579,7 @@ static int _lvresize(struct cmd_context *cmd, struct volume_group *vg,
 	if ((lp->resizefs || (lp->resize == LV_REDUCE)) &&
 	    !_request_confirmation(cmd, vg, lv, lp)) {
 		stack;
-		return ECMD_FAILED;
+		// return ECMD_FAILED;
 	}
 
 	if (lp->resizefs) {

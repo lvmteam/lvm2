@@ -14,11 +14,13 @@
  */
 
 #include "lib.h"
+#include "device.h"
+#include "locking.h"
 #include "lvm-exec.h"
+#include "toolcontext.h"
 
 #include <unistd.h>
 #include <sys/wait.h>
-
 
 /*
  * Create verbose string with list of parameters
@@ -44,7 +46,7 @@ static char *_verbose_args(const char *const argv[], char *buf, size_t sz)
 /*
  * Execute and wait for external command
  */
-int exec_cmd(const char *const argv[])
+int exec_cmd(struct cmd_context *cmd, const char *const argv[])
 {
 	pid_t pid;
 	int status;
@@ -59,6 +61,10 @@ int exec_cmd(const char *const argv[])
 
 	if (!pid) {
 		/* Child */
+		reset_locking();
+		dev_close_all();
+		/* FIXME Fix effect of reset_locking on cache then include this */
+		/* destroy_toolcontext(cmd); */
 		/* FIXME Use execve directly */
 		execvp(argv[0], (char **const) argv);
 		log_sys_error("execvp", argv[0]);

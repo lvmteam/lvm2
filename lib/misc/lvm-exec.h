@@ -18,6 +18,7 @@
 
 #include "lib.h"
 
-int exec_cmd(const char *const argv[]);
+struct cmd_context;
+int exec_cmd(struct cmd_context *cmd, const char *const argv[]);
 
 #endif
