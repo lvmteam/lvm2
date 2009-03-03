@@ -1,15 +1,15 @@
-Version 2.02.45 - 26th February 2009
-====================================
+Version 2.02.45 - 3rd March 2009
+================================
   Attempt proper clean up in child before executing new binary in exec_cmd().
   Do not scan devices if reporting only attributes from PV label.
   Use pkgconfig to obtain corosync library details during configuration.
   Fix error returns in clvmd-corosync interface to DLM.
   Add --refresh to vgchange and vgmknodes man pages.
-  Fixed bug where lvresize option -t was not properly passed to fsadm.
-  Using argv[] list in exec_cmd() to allow more params for external commands.
-  Fsadm does not allow checking mounted filesystem.
-  Fsadm no longer accepts 'any other key' as 'no' answer to y/n.
-  Fsadm improved handling of command line options.
+  Pass --test from lvresize to fsadm as --dry-run.
+  Supply argv[] list to exec_cmd() to allow for variable number of parameters.
+  Prevent fsadm from checking mounted filesystems.
+  No longer treats any other key as 'no' when prompting in fsadm.
+  Tidy fsadm command line processing.
   Add lib/lvm.h and lib/lvm_base.c for the new library interface.
   Move tools/version.h to lib/misc/lvm-version.h.
   Split LVM_VERSION into MAJOR, MINOR, PATCHLEVEL, RELEASE and RELEASE_DATE.
@@ -25,9 +25,9 @@ Version 2.02.45 - 26th February 2009
   Add option to /etc/sysconfig/cluster to select cluster type for clvmd.
   Allow clvmd to start up if its lockspace already exists.
   Separate PV label attributes which do not need parse metadata when reporting.
-  Remove external dependency on the 'cut' command in fsadm.
+  Remove external dependency on the 'cut' command from fsadm.
   Fix pvs segfault when pv mda attributes requested for not available PV.
-  Add support for ext4 resize in fsadm.
+  Add fsadm support for reszing ext4 filesysystems.
   Move locking_type reading inside init_locking().
   Rename get_vgs() to get_vgnames() and clarify related error messages.
   Allow clvmd to be built with all cluster managers & select one on cmdline.
