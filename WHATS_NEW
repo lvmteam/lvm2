@@ -1,3 +1,6 @@
+Version 2.02.46 - 
+================================
+
 Version 2.02.45 - 3rd March 2009
 ================================
   Avoid scanning empty metadata areas for VG names.
