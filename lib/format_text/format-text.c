@@ -1061,6 +1061,12 @@ const char *vgname_from_mda(const struct format_type *fmt,
 	/* FIXME Cope with returning a list */
 	rlocn = mdah->raw_locns;
 
+	/*
+	 * If no valid offset, do not try to search for vgname
+	 */
+	if (!rlocn->offset)
+		goto out;
+
 	/* Do quick check for a vgname */
 	if (!dev_read(dev_area->dev, dev_area->start + rlocn->offset,
 		      NAME_LEN, buf))

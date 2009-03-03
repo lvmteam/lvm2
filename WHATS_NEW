@@ -1,5 +1,6 @@
 Version 2.02.45 - 3rd March 2009
 ================================
+  Avoid scanning empty metadata areas for VG names.
   Attempt proper clean up in child before executing new binary in exec_cmd().
   Do not scan devices if reporting only attributes from PV label.
   Use pkgconfig to obtain corosync library details during configuration.
