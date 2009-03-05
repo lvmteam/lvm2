@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Flush memory pool and fix locking in clvmd refresh and backup command.
 
 Version 2.02.45 - 3rd March 2009
 ================================

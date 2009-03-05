@@ -406,16 +406,15 @@ int do_lock_lv(unsigned char command, unsigned char lock_flags, char *resource)
 	DEBUGLOG("do_lock_lv: resource '%s', cmd = %s, flags = %s\n",
 		 resource, decode_locking_cmd(command), decode_flags(lock_flags));
 
-	pthread_mutex_lock(&lvm_lock);
 	if (!cmd->config_valid || config_files_changed(cmd)) {
 		/* Reinitialise various settings inc. logging, filters */
 		if (do_refresh_cache()) {
 			log_error("Updated config file invalid. Aborting.");
-			pthread_mutex_unlock(&lvm_lock);
 			return EINVAL;
 		}
 	}
 
+	pthread_mutex_lock(&lvm_lock);
 	if (lock_flags & LCK_MIRROR_NOSYNC_MODE)
 		init_mirror_in_sync(1);
 
@@ -538,9 +537,14 @@ int do_refresh_cache()
 	DEBUGLOG("Refreshing context\n");
 	log_notice("Refreshing context");
 
+	pthread_mutex_lock(&lvm_lock);
+
 	ret = refresh_toolcontext(cmd);
 	init_full_scan_done(0);
 	lvmcache_label_scan(cmd, 2);
+	dm_pool_empty(cmd->mem);
+
+	pthread_mutex_unlock(&lvm_lock);
 
 	return ret==1?0:-1;
 }
@@ -711,14 +715,18 @@ void lvm_do_backup(const char *vgname)
 
 	DEBUGLOG("Triggering backup of VG metadata for %s. suspended=%d\n", vgname, suspended);
 
+	pthread_mutex_lock(&lvm_lock);
+
 	vg = vg_read_internal(cmd, vgname, NULL /*vgid*/, &consistent);
-	if (vg) {
-		if (consistent)
-			check_current_backup(vg);
-	}
-	else {
+
+	if (vg && consistent)
+		check_current_backup(vg);
+	else
 		log_error("Error backing up metadata, can't find VG for group %s", vgname);
-	}
+
+	dm_pool_empty(cmd->mem);
+
+	pthread_mutex_unlock(&lvm_lock);
 }
 
 /* Called to initialise the LVM context of the daemon */
