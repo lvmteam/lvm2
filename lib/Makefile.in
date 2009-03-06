@@ -86,8 +86,7 @@ SOURCES =\
 	report/report.c \
 	striped/striped.c \
 	uuid/uuid.c \
-	zero/zero.c \
-	lvm_base.c
+	zero/zero.c
 
 ifeq ("@LVM1@", "internal")
   SOURCES +=\

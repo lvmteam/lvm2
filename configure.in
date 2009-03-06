@@ -835,6 +835,7 @@ lib/misc/lvm-version.h
 lib/snapshot/Makefile
 libdm/Makefile
 libdm/libdevmapper.pc
+liblvm/Makefile
 man/Makefile
 po/Makefile
 scripts/clvmd_init_red_hat
