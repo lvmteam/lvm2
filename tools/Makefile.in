@@ -77,7 +77,7 @@ ifeq ("@STATIC_LINK@", "yes")
   INSTALL_CMDLIB_TARGETS += install_cmdlib_static
 endif
 
-LVMLIBS = -llvm
+LVMLIBS = -llvm-internal
 
 CLEAN_TARGETS = liblvm2cmd.$(LIB_SUFFIX) liblvm2cmd.a liblvm2cmd-static.a lvm lvm.o \
 		lvm2cmd.o lvm2cmd-static.o lvm2cmdlib.o lvm.static \
@@ -112,21 +112,21 @@ dmsetup.static: dmsetup.o $(interfacedir)/libdevmapper.a
 
 all: device-mapper
 
-lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm.a
+lvm: $(OBJECTS) lvm.o $(top_srcdir)/lib/liblvm-internal.a
 	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm.o \
 		$(LDFLAGS) $(LVMLIBS) $(LIBS) -rdynamic
 
 LIB_PTHREAD = @LIB_PTHREAD@
-lvm.static: $(OBJECTS) lvm-static.o $(top_srcdir)/lib/liblvm.a  $(interfacedir)/libdevmapper.a
+lvm.static: $(OBJECTS) lvm-static.o $(top_srcdir)/lib/liblvm-internal.a  $(interfacedir)/libdevmapper.a
 	$(CC) -o $@ $(CFLAGS) $(OBJECTS) lvm-static.o -static \
 		-L$(interfacedir) $(LDFLAGS) $(LVMLIBS) $(LIBS) $(LIB_PTHREAD) -rdynamic
 
-liblvm2cmd.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
-	cat $(top_srcdir)/lib/liblvm.a > $@
+liblvm2cmd.a: $(top_srcdir)/lib/liblvm-internal.a $(OBJECTS) lvmcmdlib.o lvm2cmd.o
+	cat $(top_srcdir)/lib/liblvm-internal.a > $@
 	$(AR) rs $@ $(OBJECTS) lvmcmdlib.o lvm2cmd.o
 
-liblvm2cmd-static.a: $(top_srcdir)/lib/liblvm.a $(OBJECTS) lvmcmdlib.o lvm2cmd-static.o
-	cat $(top_srcdir)/lib/liblvm.a > $@
+liblvm2cmd-static.a: $(top_srcdir)/lib/liblvm-internal.a $(OBJECTS) lvmcmdlib.o lvm2cmd-static.o
+	cat $(top_srcdir)/lib/liblvm-internal.a > $@
 	$(AR) rs $@ $(OBJECTS) lvmcmdlib.o lvm2cmd-static.o
 
 liblvm2cmd.$(LIB_SUFFIX): liblvm2cmd.a $(LDDEPS)
@@ -141,7 +141,7 @@ liblvm2cmd.$(LIB_SUFFIX): liblvm2cmd.a $(LDDEPS)
 ifneq ("@CFLOW_CMD@", "")
 CFLOW_FLAGS += --cpp="$(CC) -E"
 .PHONY: lvm.cflow
--include $(top_srcdir)/lib/liblvm.cflow
+-include $(top_srcdir)/lib/liblvm-internal.cflow
 lvm.cflow: $(SOURCES)
 	@CFLOW_CMD@ -o$@ $(CFLOW_FLAGS) $(INCLUDES) $(DEFS) $(SOURCES)
 lvm.rxref: $(SOURCES)
