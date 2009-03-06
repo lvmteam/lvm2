@@ -510,7 +510,7 @@ static int _unlock_resource(const char *resource, int lockid)
 		DEBUGLOG("Unlock returned %d\n", err);
 		return err;
 	}
-	if (lksb.sb_status != 0)
+	if (lksb.sb_status != EUNLOCK)
 	{
 		DEBUGLOG("dlm_ls_unlock_wait returns lksb.sb_status: %d\n", lksb.sb_status);
 		errno = lksb.sb_status;
