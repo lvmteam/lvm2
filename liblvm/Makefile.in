@@ -29,7 +29,6 @@ CLEAN_TARGETS += liblvm.cflow
 
 include $(top_srcdir)/make.tmpl
 
-CLDFLAGS += -z now
 LIBS += -ldevmapper -llvm-internal
 
 $(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION): $(interface)/%.$(LIB_SUFFIX)
