@@ -21,6 +21,7 @@ SOURCES =\
 
 LIB_NAME = liblvm
 LIB_VERSION = $(LIB_VERSION_LVM)
+VERSIONED_SHLIB = $(LIB_NAME).$(LIB_SUFFIX).$(LIB_VERSION_LVM)
 
 LIB_STATIC = $(LIB_NAME).a
 LIB_SHARED = $(LIB_NAME).so
@@ -31,11 +32,9 @@ include $(top_srcdir)/make.tmpl
 
 LIBS += -ldevmapper -llvm-internal
 
-$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION): $(interface)/%.$(LIB_SUFFIX)
+$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION): %.$(LIB_SUFFIX)
 	rm -f $@
 	$(LN_S) $< $@
-	rm -f $(LIB_NAME).$(LIB_SUFFIX)
-	$(LN_S) $< $(LIB_NAME).$(LIB_SUFFIX)
 
 liblvm.cflow: $(SOURCES)
 	set -e; (echo -n "SOURCES += "; \
