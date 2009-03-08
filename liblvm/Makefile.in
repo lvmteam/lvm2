@@ -19,13 +19,24 @@ VPATH = @srcdir@
 SOURCES =\
 	lvm_base.c
 
-LIB_STATIC = liblvm.a
+LIB_NAME = liblvm
+LIB_VERSION = $(LIB_VERSION_LVM)
 
-$(SUBDIRS): $(LIB_STATIC)
+LIB_STATIC = $(LIB_NAME).a
+LIB_SHARED = $(LIB_NAME).so
 
 CLEAN_TARGETS += liblvm.cflow
 
 include $(top_srcdir)/make.tmpl
+
+CLDFLAGS += -z now
+LIBS += -ldevmapper -llvm-internal
+
+$(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION): $(interface)/%.$(LIB_SUFFIX)
+	rm -f $@
+	$(LN_S) $< $@
+	rm -f $(LIB_NAME).$(LIB_SUFFIX)
+	$(LN_S) $< $(LIB_NAME).$(LIB_SUFFIX)
 
 liblvm.cflow: $(SOURCES)
 	set -e; (echo -n "SOURCES += "; \

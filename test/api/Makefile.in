@@ -30,10 +30,11 @@ LVMLIBS = -llvm -ldevmapper
 DEFS += -D_REENTRANT
 CFLAGS += -fno-strict-aliasing
 
-LDFLAGS += -L$(top_srcdir)/api/lib
-
 include $(top_srcdir)/make.tmpl
 
-test: $(OBJECTS) $(top_srcdir)/lib/liblvm.a $(top_srcdir)/libdm/libdevmapper.so
+LDFLAGS = -L$(top_srcdir)/libdm -L$(top_srcdir)/liblvm
+CLDFLAGS = -L$(top_srcdir)/libdm -L$(top_srcdir)/liblvm
+
+test: $(OBJECTS) $(top_srcdir)/liblvm/liblvm.a $(top_srcdir)/libdm/libdevmapper.so
 	$(CC) -o test $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LVMLIBS) $(LIBS)
 
