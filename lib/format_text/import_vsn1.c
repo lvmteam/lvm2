@@ -179,7 +179,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	}
 
 	if (!_read_id(&pv->id, pvn, "id")) {
-		log_error("Couldn't read uuid for volume group.");
+		log_error("Couldn't read uuid for physical volume.");
 		return 0;
 	}
 
@@ -213,7 +213,7 @@ static int _read_pv(struct format_instance *fid, struct dm_pool *mem,
 	_read_int64(pvn, "dev_size", &pv->size);
 
 	if (!_read_int64(pvn, "pe_start", &pv->pe_start)) {
-		log_error("Couldn't read extent size for volume group.");
+		log_error("Couldn't read extent size for physical volume.");
 		return 0;
 	}
 
