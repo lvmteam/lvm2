@@ -84,7 +84,7 @@ endif
 TARGETS = \
 	clvmd
 
-LVMLIBS = -llvm -lpthread
+LVMLIBS = -llvm-internal -lpthread
 
 ifeq ("@DMEVENTD@", "yes")
 	LVMLIBS += -ldevmapper-event
@@ -100,7 +100,7 @@ include $(top_srcdir)/make.tmpl
 INSTALL_TARGETS = \
 	install_clvmd
 
-clvmd: $(OBJECTS) $(top_srcdir)/lib/liblvm.a
+clvmd: $(OBJECTS) $(top_srcdir)/lib/liblvm-internal.a
 	$(CC) -o clvmd $(OBJECTS) $(CFLAGS) $(LDFLAGS) \
 		$(LVMLIBS) $(LMLIBS) $(LIBS)
 
