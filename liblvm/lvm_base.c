@@ -16,8 +16,6 @@
 #include "lvm.h"
 #include "toolcontext.h"
 #include "locking.h"
-#include "metadata-exported.h"
-#include "report.h"
 
 lvm_t lvm_create(const char *system_dir)
 {
