@@ -81,6 +81,7 @@ clean:
 	rm -rf init.sh lvm-wrapper bin .bin-dir-stamp
 
 distclean: clean
+	rm -f Makefile
 
 .PHONY: $(T) clean distclean
 .NOTPARALLEL:
