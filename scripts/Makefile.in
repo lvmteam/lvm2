@@ -24,3 +24,6 @@ ifeq ("@FSADM@", "yes")
 	$(INSTALL) -D $(OWNER) $(GROUP) -m 555 $(STRIP) fsadm.sh \
 		$(sbindir)/fsadm
 endif
+
+distclean:
+	$(RM) Makefile clvmd_init_red_hat

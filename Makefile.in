@@ -27,14 +27,16 @@ SUBDIRS += lib tools daemons libdm liblvm
 ifeq ($(MAKECMDGOALS),distclean)
   SUBDIRS += daemons/clvmd \
 	     daemons/dmeventd/plugins \
+	     daemons/dmeventd \
 	     lib/format1 \
 	     lib/format_pool \
 	     lib/locking \
 	     lib/mirror \
 	     lib/snapshot \
+	     test/api \
 	     test \
 	     po
-  DISTCLEAN_TARGETS += lib/misc/configure.h
+  DISTCLEAN_TARGETS += lib/misc/configure.h lib/misc/lvm-version.h
   DISTCLEAN_DIRS += lcov_reports*
 endif
 
