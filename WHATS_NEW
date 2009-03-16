@@ -1,5 +1,7 @@
 Version 2.02.46 - 
 ================================
+  Fix maximal volume count check for snapshots if max_lv set for volume group.
+  Fix lvcreate to remove cow volume if the snapshot creation fails.
   Fix error messages when PV uuid or pe_start reading fails.
   Rename liblvm.a to liblvm-internal.a and build new application library.
   Flush memory pool and fix locking in clvmd refresh and backup command.

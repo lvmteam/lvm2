@@ -76,10 +76,18 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 		return 0;
 	}
 
+	/*
+	 * Set origin lv count in advance to prevent fail because
+	 * of temporary violation of LV limits.
+	 */
+	origin->vg->lv_count--;
+
 	if (!(snap = lv_create_empty(name ? name : "snapshot%d",
 				     lvid, LVM_READ | LVM_WRITE | VISIBLE_LV,
-				     ALLOC_INHERIT, 1, origin->vg)))
+				     ALLOC_INHERIT, 1, origin->vg))) {
+		origin->vg->lv_count++;
 		return_0;
+	}
 
 	snap->le_count = extent_count;
 
@@ -93,7 +101,6 @@ int vg_add_snapshot(const char *name, struct logical_volume *origin,
 
 	origin->origin_count++;
 	origin->vg->snapshot_count++;
-	origin->vg->lv_count--;
 	cow->snapshot = seg;
 
 	cow->status &= ~VISIBLE_LV;
