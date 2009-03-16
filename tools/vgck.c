@@ -33,6 +33,9 @@ static int vgck_single(struct cmd_context *cmd __attribute((unused)),
 	if (!vg_check_status(vg, EXPORTED_VG))
 		return ECMD_FAILED;
 
+	if (!vg_validate(vg))
+		return ECMD_FAILED;
+
 	return ECMD_PROCESSED;
 }
 
