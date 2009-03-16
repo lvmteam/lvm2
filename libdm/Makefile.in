@@ -98,6 +98,8 @@ $(VERSIONED_SHLIB): %.$(LIB_SUFFIX).$(LIB_VERSION_DM): $(interface)/%.$(LIB_SUFF
 	rm -f libdevmapper.$(LIB_SUFFIX)
 	$(LN_S) $< libdevmapper.$(LIB_SUFFIX)
 
+CLEAN_TARGETS += libdevmapper.$(LIB_SUFFIX)
+
 .PHONY: distclean_lib distclean
 
 distclean_lib:
