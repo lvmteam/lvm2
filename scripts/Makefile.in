@@ -25,5 +25,4 @@ ifeq ("@FSADM@", "yes")
 		$(sbindir)/fsadm
 endif
 
-distclean:
-	$(RM) Makefile clvmd_init_red_hat
+DISTCLEAN_TARGETS += clvmd_init_red_hat
