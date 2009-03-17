@@ -45,7 +45,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 {
 	struct physical_volume *pv;
 	struct device *dev;
-	uint64_t md_superblock;
+	uint64_t md_superblock, swap_signature;
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
@@ -125,6 +125,17 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		if (!dev_set(dev, md_superblock, 4, 0)) {
 			log_error("Failed to wipe RAID md superblock on %s",
 				  name);
+			return 0;
+		}
+	}
+
+	if (dev_is_swap(dev, &swap_signature) &&
+	    ((!pp->idp && !pp->restorefile) || pp->yes ||
+	     (yes_no_prompt("Swap signature detected on %s. Wipe it? [y/n] ",
+			    name) == 'y'))) {
+		log_print("Wiping swap signature on %s", name);
+		if (!dev_set(dev, swap_signature, 10, 0)) {
+			log_error("Failed to wipe swap signature on %s", name);
 			return 0;
 		}
 	}
