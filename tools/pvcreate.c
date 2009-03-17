@@ -46,6 +46,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	struct physical_volume *pv;
 	struct device *dev;
 	uint64_t md_superblock, swap_signature;
+	int wipe_md, wipe_swap;
 
 	/* FIXME Check partition type is LVM unless --force is given */
 
@@ -117,7 +118,7 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 	}
 
 	/* Wipe superblock? */
-	if (dev_is_md(dev, &md_superblock) &&
+	if ((wipe_md = dev_is_md(dev, &md_superblock)) == 1 &&
 	    ((!pp->idp && !pp->restorefile) || pp->yes ||
 	     (yes_no_prompt("Software RAID md superblock "
 			    "detected on %s. Wipe it? [y/n] ", name) == 'y'))) {
@@ -129,7 +130,13 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 		}
 	}
 
-	if (dev_is_swap(dev, &swap_signature) &&
+	if (wipe_md == -1) {
+		log_error("Fatal error while trying to detect software "
+			  "RAID md superblock on %s", name);
+		return 0;
+	}
+
+	if ((wipe_swap = dev_is_swap(dev, &swap_signature)) == 1 &&
 	    ((!pp->idp && !pp->restorefile) || pp->yes ||
 	     (yes_no_prompt("Swap signature detected on %s. Wipe it? [y/n] ",
 			    name) == 'y'))) {
@@ -138,6 +145,12 @@ static int pvcreate_check(struct cmd_context *cmd, const char *name,
 			log_error("Failed to wipe swap signature on %s", name);
 			return 0;
 		}
+	}
+
+	if (wipe_swap == -1) {
+		log_error("Fatal error while trying to detect swap "
+			  "signature on %s", name);
+		return 0;
 	}
 
 	if (sigint_caught())
