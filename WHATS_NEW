@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Detect and conditionally wipe swapspace signatures in pvcreate.
   Fix maximal volume count check for snapshots if max_lv set for volume group.
   Fix lvcreate to remove cow volume if the snapshot creation fails.
   Fix error messages when PV uuid or pe_start reading fails.
