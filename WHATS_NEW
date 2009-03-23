@@ -7,6 +7,7 @@ Version 2.02.46 -
   Rename liblvm.a to liblvm-internal.a and build new application library.
   Flush memory pool and fix locking in clvmd refresh and backup command.
   Fix unlocks in clvmd-corosync. Broken in 2.02.45.
+  Fix error message when adding metadata directory to internal list fails.
 
 Version 2.02.45 - 3rd March 2009
 ================================
