@@ -149,6 +149,7 @@ static int vg_rename_path(struct cmd_context *cmd, const char *old_vg_path,
 /******* FIXME Rename any active LVs! *****/
 
 	backup(vg);
+	backup_remove(cmd, vg_name_old);
 
 	unlock_vg(cmd, vg_name_new);
 	unlock_vg(cmd, vg_name_old);
