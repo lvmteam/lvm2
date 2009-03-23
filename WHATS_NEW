@@ -10,6 +10,7 @@ Version 2.02.46 -
   Fix error message when adding metadata directory to internal list fails.
   Fix size and error message of memory allocation at backup initialization.
   Remove old metadata backup file after renaming vg.
+  Restore log_suppress state when metadata backup file is up-to-date.
 
 Version 2.02.45 - 3rd March 2009
 ================================
