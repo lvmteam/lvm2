@@ -154,8 +154,8 @@ int backup_init(struct cmd_context *cmd, const char *dir,
 		int enabled)
 {
 	if (!(cmd->backup_params = dm_pool_zalloc(cmd->libmem,
-					       sizeof(*cmd->archive_params)))) {
-		log_error("archive_params alloc failed");
+					       sizeof(*cmd->backup_params)))) {
+		log_error("backup_params alloc failed");
 		return 0;
 	}
 
