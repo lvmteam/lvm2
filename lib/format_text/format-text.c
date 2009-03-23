@@ -1996,8 +1996,8 @@ struct format_type *create_text_format(struct cmd_context *cmd)
 			}
 
 			if (!_add_dir(cv->v.str, &mda_lists->dirs)) {
-				log_error("Failed to add %s to internal device "
-					  "cache", cv->v.str);
+				log_error("Failed to add %s to text format "
+					  "metadata directory list ", cv->v.str);
 				goto err;
 			}
 		}
