@@ -405,8 +405,10 @@ void check_current_backup(struct volume_group *vg)
 	/* Up-to-date backup exists? */
 	if ((vg_backup = backup_read_vg(vg->cmd, vg->name, path)) &&
 	    (vg->seqno == vg_backup->seqno) &&
-	    (id_equal(&vg->id, &vg_backup->id)))
+	    (id_equal(&vg->id, &vg_backup->id))) {
+		log_suppress(0);
 		return;
+	}
 	log_suppress(0);
 
 	if (vg_backup)
