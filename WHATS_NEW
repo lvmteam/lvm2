@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Fix segfault for vgcfgrestore on VG with missing PVs.
   Block SIGTERM & SIGINT in clvmd subthreads.
   Detect and conditionally wipe swapspace signatures in pvcreate.
   Fix maximal volume count check for snapshots if max_lv set for volume group.
