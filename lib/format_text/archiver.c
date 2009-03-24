@@ -333,6 +333,12 @@ int backup_restore_from_file(struct cmd_context *cmd, const char *vg_name,
 	if (!(vg = backup_read_vg(cmd, vg_name, file)))
 		return_0;
 
+	/*
+	 * If PV is missing, there is already message from read above
+	 */
+	if (vg_missing_pv_count(vg))
+		return_0;
+
 	return backup_restore_vg(cmd, vg);
 }
 
