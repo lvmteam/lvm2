@@ -372,9 +372,11 @@ int main(int argc, char *argv[])
 	signal(SIGHUP,  sighup_handler);
 	signal(SIGPIPE, SIG_IGN);
 
-	/* Block SIGUSR2 in the main process */
+	/* Block SIGUSR2/SIGINT/SIGTERM in process */
 	sigemptyset(&ss);
 	sigaddset(&ss, SIGUSR2);
+	sigaddset(&ss, SIGINT);
+	sigaddset(&ss, SIGTERM);
 	sigprocmask(SIG_BLOCK, &ss, NULL);
 
 	/* Initialise the LVM thread variables */
@@ -669,6 +671,11 @@ static void main_loop(int local_sock, int cmd_timeout)
 {
 	DEBUGLOG("Using timeout of %d seconds\n", cmd_timeout);
 
+	sigset_t ss;
+	sigemptyset(&ss);
+	sigaddset(&ss, SIGINT);
+	sigaddset(&ss, SIGTERM);
+	pthread_sigmask(SIG_UNBLOCK, &ss, NULL);
 	/* Main loop */
 	while (!quit) {
 		fd_set in;
