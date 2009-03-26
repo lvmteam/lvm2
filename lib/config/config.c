@@ -457,9 +457,9 @@ static int _write_config(struct config_node *n, int only_one,
 			line_append(" {");
 			if (!_line_end(outline))
 				return_0;
+			_write_config(n->child, 0, outline, level + 1);
 			if (!_line_start(outline))
 				return_0;
-			_write_config(n->child, 0, outline, level + 1);
 			line_append("%s}", space);
 		} else {
 			/* it's a value */

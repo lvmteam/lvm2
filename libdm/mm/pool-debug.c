@@ -14,6 +14,7 @@
  */
 
 #include "dmlib.h"
+#include <assert.h>
 
 struct block {
 	struct block *next;
@@ -43,7 +44,7 @@ struct dm_pool {
 /* by default things come out aligned for doubles */
 #define DEFAULT_ALIGNMENT __alignof__ (double)
 
-struct pool *dm_pool_create(const char *name, size_t chunk_hint)
+struct dm_pool *dm_pool_create(const char *name, size_t chunk_hint)
 {
 	struct dm_pool *mem = dm_malloc(sizeof(*mem));
 
@@ -130,8 +131,6 @@ static void _append_block(struct dm_pool *p, struct block *b)
 
 static struct block *_new_block(size_t s, unsigned alignment)
 {
-	static const char *_oom = "Out of memory";
-
 	/* FIXME: I'm currently ignoring the alignment arg. */
 	size_t len = sizeof(struct block) + s;
 	struct block *b = dm_malloc(len);
@@ -144,12 +143,12 @@ static struct block *_new_block(size_t s, unsigned alignment)
 	assert(alignment == DEFAULT_ALIGNMENT);
 
 	if (!b) {
-		log_err(_oom);
+		log_err("Out of memory");
 		return NULL;
 	}
 
 	if (!(b->data = dm_malloc(s))) {
-		log_err(_oom);
+		log_err("Out of memory");
 		dm_free(b);
 		return NULL;
 	}
