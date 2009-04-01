@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Make sure clvmd-corosync releases the lockspace when it exits.
   Fix segfault for vgcfgrestore on VG with missing PVs.
   Block SIGTERM & SIGINT in clvmd subthreads.
   Detect and conditionally wipe swapspace signatures in pvcreate.
