@@ -334,7 +334,7 @@ static int _init_cluster(void)
 	if (err != CS_OK) {
 		cpg_finalize(cpg_handle);
 		quorum_finalize(quorum_handle);
-		dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 0);
+		dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
 		syslog(LOG_ERR, "Cannot join clvmd process group");
 		DEBUGLOG("Cannot join clvmd process group: %d\n", err);
 		return cs_to_errno(err);
@@ -345,7 +345,7 @@ static int _init_cluster(void)
 	if (err != CS_OK) {
 		cpg_finalize(cpg_handle);
 		quorum_finalize(quorum_handle);
-		dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 0);
+		dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
 		syslog(LOG_ERR, "Cannot get local node id\n");
 		return cs_to_errno(err);
 	}
@@ -361,7 +361,7 @@ static void _cluster_closedown(void)
 	DEBUGLOG("cluster_closedown\n");
 	unlock_all();
 
-	dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 0);
+	dlm_release_lockspace(LOCKSPACE_NAME, lockspace, 1);
 	cpg_finalize(cpg_handle);
 	quorum_finalize(quorum_handle);
 }
