@@ -955,7 +955,7 @@ static int _init_backup(struct cmd_context *cmd)
 
 	if (!archive_init(cmd, dir, days, min,
 			  cmd->default_settings.archive)) {
-		log_debug("backup_init failed.");
+		log_debug("archive_init failed.");
 		return 0;
 	}
 
