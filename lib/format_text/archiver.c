@@ -397,6 +397,7 @@ void check_current_backup(struct volume_group *vg)
 {
 	char path[PATH_MAX];
 	struct volume_group *vg_backup;
+	int old_suppress;
 
 	if (vg->status & EXPORTED_VG)
 		return;
@@ -407,15 +408,15 @@ void check_current_backup(struct volume_group *vg)
 		return;
 	}
 
-	log_suppress(1);
+	old_suppress = log_suppress(1);
 	/* Up-to-date backup exists? */
 	if ((vg_backup = backup_read_vg(vg->cmd, vg->name, path)) &&
 	    (vg->seqno == vg_backup->seqno) &&
 	    (id_equal(&vg->id, &vg_backup->id))) {
-		log_suppress(0);
+		log_suppress(old_suppress);
 		return;
 	}
-	log_suppress(0);
+	log_suppress(old_suppress);
 
 	if (vg_backup)
 		archive(vg_backup);

@@ -816,10 +816,11 @@ static void _read_desc(struct dm_pool *mem,
 {
 	const char *d;
 	unsigned int u = 0u;
+	int old_suppress;
 
-	log_suppress(1);
+	old_suppress = log_suppress(1);
 	d = find_config_str(cft->root, "description", "");
-	log_suppress(0);
+	log_suppress(old_suppress);
 	*desc = dm_pool_strdup(mem, d);
 
 	get_config_uint32(cft->root, "creation_time", &u);
