@@ -1,5 +1,6 @@
 Version 2.02.46 - 
 ================================
+  Save and restore the previous logging level when log level is changed.
   Fix error message when archive initialization fails.
   Make sure clvmd-corosync releases the lockspace when it exits.
   Fix segfault for vgcfgrestore on VG with missing PVs.

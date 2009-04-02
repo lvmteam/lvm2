@@ -37,6 +37,7 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 	uint32_t chunk_size;
 	const char *org_name, *cow_name;
 	struct logical_volume *org, *cow;
+	int old_suppress;
 
 	seg->lv->status |= SNAPSHOT;
 
@@ -45,21 +46,21 @@ static int _snap_text_import(struct lv_segment *seg, const struct config_node *s
 		return 0;
 	}
 
-	log_suppress(1);
+	old_suppress = log_suppress(1);
 
 	if (!(cow_name = find_config_str(sn, "cow_store", NULL))) {
-		log_suppress(0);
+		log_suppress(old_suppress);
 		log_error("Snapshot cow storage not specified.");
 		return 0;
 	}
 
 	if (!(org_name = find_config_str(sn, "origin", NULL))) {
-		log_suppress(0);
+		log_suppress(old_suppress);
 		log_error("Snapshot origin not specified.");
 		return 0;
 	}
 
-	log_suppress(0);
+	log_suppress(old_suppress);
 
 	if (!(cow = find_lv(seg->lv->vg, cow_name))) {
 		log_error("Unknown logical volume specified for "
