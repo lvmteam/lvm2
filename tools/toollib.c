@@ -364,6 +364,7 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 						      void *handle))
 {
 	struct pv_segment *pvseg;
+	struct pv_list *pvl;
 	const char *vg_name = NULL;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -376,6 +377,18 @@ int process_each_segment_in_pv(struct cmd_context *cmd,
 			log_error("Skipping volume group %s", vg_name);
 			return ECMD_FAILED;
 		}
+
+		/*
+		 * Replace possibly incomplete PV structure with new one
+		 * allocated in vg_read_internal() path.
+		 */
+		if (!(pvl = find_pv_in_vg(vg, pv_dev_name(pv)))) {
+			 log_error("Unable to find %s in volume group %s",
+				   pv_dev_name(pv), vg_name);
+			return ECMD_FAILED;
+		}
+
+		pv = pvl->pv;
 	}
 
 	dm_list_iterate_items(pvseg, &pv->segments) {
