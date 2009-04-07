@@ -1608,16 +1608,12 @@ int lv_extend(struct logical_volume *lv,
 				    extents, allocatable_pvs, alloc, NULL)))
 		return_0;
 
-	if (mirrors < 2) {
-		if (!lv_add_segment(ah, 0, ah->area_count, lv, segtype, stripe_size,
-			    status, 0, NULL))
-			goto_out;
-	} else {
-		if (!_lv_extend_mirror(ah, lv, extents, 0))
-			return_0;
-	}
+	if (mirrors < 2)
+		r = lv_add_segment(ah, 0, ah->area_count, lv, segtype,
+				   stripe_size, status, 0, NULL);
+	else
+		r = _lv_extend_mirror(ah, lv, extents, 0);
 
-      out:
 	alloc_destroy(ah);
 	return r;
 }
