@@ -152,7 +152,7 @@ install: all $(SUBDIRS.install)
 install_cluster: all $(SUBDIRS.install_cluster)
 install_device-mapper: $(SUBDIRS.install_device-mapper)
 
-$(SUBDIRS):
+$(SUBDIRS): $(SUBDIRS.device-mapper)
 	$(MAKE) -C $@
 
 $(SUBDIRS.device-mapper):
