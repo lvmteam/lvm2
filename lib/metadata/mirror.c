@@ -1160,6 +1160,7 @@ int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
 	const struct segment_type *segtype;
 	struct dm_list *parallel_areas;
 	uint32_t adjusted_region_size;
+	int r = 1;
 
 	if (!(parallel_areas = build_parallel_areas_from_lv(cmd, lv)))
 		return_0;
@@ -1180,10 +1181,11 @@ int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!lv_add_mirror_areas(ah, lv, 0, adjusted_region_size)) {
 		log_error("Failed to add mirror areas to %s", lv->name);
-		return 0;
+		r = 0;
 	}
 
-	return 1;
+	alloc_destroy(ah);
+	return r;
 }
 
 /*
@@ -1349,6 +1351,7 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 	int in_sync;
 	struct logical_volume *log_lv;
 	struct lvinfo info;
+	int r = 0;
 
 	/* Unimplemented features */
 	if (log_count > 1) {
@@ -1404,13 +1407,15 @@ int add_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!(log_lv = _set_up_mirror_log(cmd, ah, lv, log_count,
 					  region_size, alloc, in_sync)))
-		return_0;
+		goto_out;
 
 	if (!attach_mirror_log(first_seg(lv), log_lv))
-		return_0;
+		goto_out;
 
+	r = 1;
+out:
 	alloc_destroy(ah);
-	return 1;
+	return r;
 }
 
 /*
@@ -1455,8 +1460,10 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	if (log_count &&
 	    !(log_lv = _set_up_mirror_log(cmd, ah, lv, log_count, region_size,
-					  alloc, mirror_in_sync())))
-		return_0;
+					  alloc, mirror_in_sync()))) {
+		stack;
+		goto out_remove_imgs;
+	}
 
 	/* The log initialization involves vg metadata commit.
 	   So from here on, if failure occurs, the log must be explicitly
@@ -1503,6 +1510,7 @@ int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
 			  "abandoned log LV before retrying.");
 
   out_remove_imgs:
+	alloc_destroy(ah);
 	return 0;
 }
 
