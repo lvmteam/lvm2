@@ -118,10 +118,6 @@ LIB_VERSION_DM := $(shell cat $(top_srcdir)/VERSION_DM | \
 
 INCLUDES += -I. -I$(top_srcdir)/include
 
-ifdef DESTDIR
-  INCLUDES += -I$(DESTDIR)/usr/include
-endif
-
 INC_LNS = $(top_srcdir)/include/.symlinks_created
 
 DEPS = $(top_srcdir)/make.tmpl $(top_srcdir)/VERSION Makefile $(INC_LNS)
